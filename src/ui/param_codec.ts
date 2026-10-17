@@ -299,6 +299,131 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
 // append (see above). 1-3 were the frozen tables K132 dropped; 5 removed
 // K111 stage 2's highlightMode (index 108, K111 stage 3); 6 replaced the
 // fogOfWar flag at 51 with the exploration enum (K76 stage 2c).
+// K398: the panel's range for every numeric param that has one, so a
+// link cannot leave it in either reader (here, and url_state.ts's
+// clampToRanges for the key=value form). A gs of 66 in knot mode needs
+// 16384 GAP rows - past the Pixel's 8192-row texture limit, where the
+// allocation fails and every gap vanishes. Not listed: hueShift (it
+// wraps mod 360, so any finite value is the same design), the two AUTO
+// sentinels backgroundSpeed / backgroundAngle (their sanitizers own
+// them), and the retired snappiness (no panel row). gap's floor is 0,
+// not the slider's 0.04: 0 is "no casing gap", which links have said.
+export const PARAM_RANGES: Readonly<
+  Record<string, readonly [number, number]>
+> = Object.freeze({
+  gridSize: [4, 24],
+  weaveDensity: [0, 1],
+  turnBias: [0, 1],
+  slack: [0, 1],
+  simSpeed: [0, 10],
+  drag: [0, 1],
+  repulsion: [0.4, 1.8],
+  bend: [0.2, 2.5],
+  smooth: [0, 1],
+  stiffness: [0.1, 1.35],
+  gridAlign: [0, 1],
+  threadWidth: [0.15, 0.8],
+  gap: [0, 0.5],
+  moveSpeed: [0.25, 4],
+  cuspRadius: [0, 6],
+  fadeLength: [0, 1.2],
+  flowStrength: [0, 1],
+  flowSpeed: [0, 3],
+  tugLimit: [0.5, 6],
+  snapBack: [0, 12],
+  octaves: [1, 4],
+  soundSpeed: [0.25, 6],
+  volume: [0, 1],
+  reverb: [0, 1],
+  brightness: [0, 1],
+  sustain: [0, 1],
+  shimmer: [0, 1],
+  pickPosition: [0, 1],
+  tonicEmphasis: [0, 1],
+  pulseSpacing: [0.8, 6],
+  pulseReach: [0.5, 15],
+  gamutArc: [40, 360],
+  branchDensity: [0, 1],
+  fourWayFraction: [0, 1],
+  deadEndDensity: [0.05, 1],
+  deadEndLength: [0, 40],
+  hCutShare: [0, 1],
+  exitCorridor: [0, 32],
+  exitTaperRadius: [0, 32],
+  exitTaperStrength: [0, 2],
+  entranceClearance: [0, 12],
+  exitClearance: [0, 20],
+  junctionSpacing: [0.5, 8],
+  trailLength: [1, 30],
+  tension: [0, 1],
+  fowRadius: [1.5, 10],
+  revealDistance: [1, 12],
+  revealFade: [0.35, 4],
+  // junctionBlend: floor-only by pin (a token may say 9; the readers
+  // hold it at 0, never at the slider's 6).
+  appearSpeed: [0.3, 4],
+  backgroundIntensity: [0, 1],
+  backgroundScale: [0.5, 2],
+  backgroundDetail: [0, 2],
+  backgroundFibers: [0, 3],
+  backgroundGrain: [0, 3],
+  settleBudget: [0, 30],
+  loadSettle: [0, 5],
+  playerPace: [2, 30],
+  minoWanderPace: [0, 2],
+  minoHuntPace: [0, 2],
+  minoPaceJitter: [0, 0.5],
+  minoPauseChance: [0, 1],
+  minoPauseMin: [0, 10],
+  minoPauseMax: [0, 10],
+  minoDetect: [0, 100],
+  minoLose: [0, 150],
+  minoCatch: [0.2, 5],
+  minoDeadEnds: [0, 1],
+  minoRoam: [5, 150],
+  minoWake: [0, 20],
+  confettiAmount: [0, 3],
+  pluckWhole: [0, 1.5],
+  markerSize: [0.25, 3],
+  hoverGlow: [0, 1],
+  hoverGlowWidth: [0.3, 1],
+  hoverGlowLength: [0.5, 15],
+  hoverGlowFade: [0, 1.5],
+  pickMargin: [0, 20],
+  pickChoiceRatio: [1, 4],
+  minoSight: [0, 20],
+  minoRoamRuns: [1, 30],
+  minoTerritory: [1, 20],
+  minoAccuracy: [0, 1],
+  minoPause: [0, 1],
+  minoSleep: [0, 99],
+  minoGiveUp: [0, 10],
+  minoRoamMin: [1, 10],
+  minoTurnPull: [0, 1],
+  minoGuardSight: [0, 20],
+  minoGuardAccuracy: [0, 1],
+  minoStalkerAccuracy: [0, 1],
+  fireSpeed: [0.1, 0.95],
+  fireDelay: [0, 40],
+  fireSpeedRt: [0.1, 0.95],
+  fireDelayRt: [0, 40],
+  pluckSize: [0, 3],
+  pluckGhost: [0, 1],
+  rippleStrength: [0, 2],
+  rippleAuto: [0, 2],
+  pluckSheen: [0, 1],
+  pluckTug: [0, 1],
+  autoPluckGain: [0, 1],
+});
+
+// A link value held to its panel range (K398); a param with no range,
+// or a non-finite value, passes through (the readers handle garbage).
+export function clampParamValue(name: string, value: number): number {
+  const range = PARAM_RANGES[name];
+  if (!range || !Number.isFinite(value)) return value;
+  return Math.min(range[1], Math.max(range[0], value));
+}
+
 export const CODEC_VERSION = 6;
 
 // The shortest decimal for a number, after rounding to 6 decimals (slider
@@ -438,7 +563,8 @@ function entryFor(
     }
     case "number": {
       if (typeof value !== "number") return null;
-      const text = numberText(value);
+      // K398: write the clamped value, so one design has one token.
+      const text = numberText(clampParamValue(p.name, value));
       if (text === null) return null;
       if (typeof def === "number" && text === numberText(def)) return null;
       return {

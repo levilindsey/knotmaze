@@ -14,7 +14,7 @@ import {
 } from "../../src/ui/url_state";
 import type { AppearPreset, UrlParams } from "../../src/ui/url_state";
 import { parseLaunch } from "../../src/ui/daily_link";
-import { CODEC_PARAMS, decodeToken, numberText } from "../../src/ui/param_codec";
+import { clampParamValue, CODEC_PARAMS, decodeToken, numberText } from "../../src/ui/param_codec";
 import type { CodecDefaults } from "../../src/ui/param_codec";
 import { DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 import { DEFAULT_CHASE_PARAMS } from "../../src/game/minotaur";
@@ -560,6 +560,28 @@ describe("links", () => {
       withSeed(7, { appearMode: "instant", appearSequence: "instant", gridSize: 12 })
     );
     expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  // K398: a link cannot leave the panel's ranges - gs 66 in knot mode
+  // would need 16384 GAP rows, past the Pixel's 8192, and every gap
+  // vanishes. Both readers clamp (key=value in readNumber's table, the
+  // token in the codec's number reader).
+  it("clamps link values to the panel ranges (K398)", () => {
+    expect(parseParams("?s=7&gs=66").gridSize).toBe(24);
+    expect(parseParams("?s=7&gs=2").gridSize).toBe(4);
+    expect(parseParams("?s=7&tw=9").threadWidth).toBe(0.8);
+    expect(parseParams("?s=7&rep=99").repulsion).toBe(1.8);
+    expect(parseParams("?s=7&rep=0").repulsion).toBe(0.4);
+    expect(parseParams("?7&gs=66").gridSize).toBe(24);
+    const token = encodeParams(withSeed(7, { gridSize: 66, threadWidth: 9 }));
+    expect(parseParams(`?${token}`).gridSize).toBe(24);
+    expect(parseParams(`?${token}`).threadWidth).toBe(0.8);
+    // The codec itself stays lossless; the app's readers clamp.
+    const decoded = decodeToken(token, PARAM_DEFAULTS as unknown as CodecDefaults);
+    expect(decoded.error).toBeNull();
+    // In-range values pass through untouched.
+    expect(parseParams("?s=7&gs=12&tw=.64").gridSize).toBe(12);
+    expect(parseParams("?s=7&gs=12&tw=.64").threadWidth).toBe(0.64);
   });
 
   it("round-trips changed params at their written precision", () => {
@@ -1163,7 +1185,7 @@ describe("links round trip (seeded property test)", () => {
   const expected = (p: UrlParams, back: UrlParams): UrlParams => {
     const e = { ...p } as unknown as Record<string, unknown>;
     for (const c of PARAMS) {
-      if (c.type === "number") e[c.name] = Number(numberText(e[c.name] as number));
+      if (c.type === "number") e[c.name] = clampParamValue(c.name, Number(numberText(e[c.name] as number)));
     }
     const out = e as unknown as UrlParams;
     out.gridAlign = Math.max(0, Math.min(1, out.gridAlign));
