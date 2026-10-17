@@ -118,6 +118,7 @@ describe("links", () => {
       fireSpeedRt: 0.2, fireDelayRt: 20,
       revealFinish: true,
       revealEndCross: "under", revealEndGlow: "bright",
+      minoByLength: false,
     });
   });
 
@@ -746,6 +747,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   burnt: "fbt",
   minoGiveUp: "mlm", minoRoamMin: "mrn", minoTurnPull: "mtp",
   minoGuardSight: "mgs", minoGuardAccuracy: "mga", minoStalkerAccuracy: "msa",
+  minoByLength: "mbl",
   fireClock: "fck",
   fireSpeedRt: "fsr", fireDelayRt: "fdr",
   revealFinish: "rvx",
