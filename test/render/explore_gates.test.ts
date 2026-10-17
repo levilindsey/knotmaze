@@ -20,6 +20,7 @@ import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
 import { buildWalkGraph, type WalkGraph } from "../../src/core/walk_graph";
 import { chainVis, exploreView, type ExplorePiece } from "../../src/game/explore_view";
+import { pushRampedWindow, uwRampScale } from "../../src/render/ribbon/explore_gaps";
 
 function slotParams(strength: number): GapSlotParams {
   return {
@@ -114,6 +115,30 @@ describe("explore gates (K76 2b): the gap gate", () => {
     t.setVis(1, 0.5);
     expect(t.readSlot(1).header[2]).toBe(-1);
     expect(t.readSlot(1).header[7]).toBe(0);
+  });
+});
+
+describe("explore gates (K430): the under-window ramp", () => {
+  it("is the visibility itself, clamped: absent at 0, whole at 1, no step at 0.5", () => {
+    expect(uwRampScale(-0.25)).toBe(0);
+    expect(uwRampScale(0)).toBe(0);
+    expect(uwRampScale(0.25)).toBe(0.25);
+    expect(uwRampScale(0.5)).toBe(0.5);
+    expect(uwRampScale(0.75)).toBe(0.75);
+    expect(uwRampScale(1)).toBe(1);
+    expect(uwRampScale(1.5)).toBe(1);
+    // Continuous across the old binary threshold.
+    expect(uwRampScale(0.5) - uwRampScale(0.4999)).toBeCloseTo(0.0001, 6);
+  });
+
+  it("scales a window's extents toward its center; scale 0 writes no window", () => {
+    const out: number[] = [];
+    pushRampedWindow(out, 10, 2, 3, uwRampScale(0));
+    expect(out).toEqual([]);
+    pushRampedWindow(out, 10, 2, 3, uwRampScale(0.5));
+    expect(out).toEqual([10, 1, 1.5]);
+    pushRampedWindow(out, 20, 4, 1, uwRampScale(1));
+    expect(out).toEqual([10, 1, 1.5, 20, 4, 1]);
   });
 });
 

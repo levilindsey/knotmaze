@@ -249,7 +249,9 @@ slot. Design and calls: `docs/design/K268.md` ("Stage 1 design", "Stage
   explore program fetches and replaces by the profile since stage 2 gave
   the fans and the still pluck the shaped cut (THE CUT IN THE FANS,
   below); only a master program would use it.
-  underWindows and `slotExploreHid` stay binary (0.5), as in 2b.
+  underWindows and `slotExploreHid` stay binary (0.5), as in 2b. (Since
+  K430's ramp, below, the windows scale with vis; `slotExploreHid` still
+  gates the pluck footprints binary at 0.5.)
 - ROW-PARTIAL UPLOAD: the gap texture is a row-dirty source with its own
   uploader, `knot-gap-rows` (registered at module load, as float_rows'),
   so every write marks its row and `upload()` sends each dirty run with
@@ -320,6 +322,35 @@ slot. Design and calls: `docs/design/K268.md` ("Stage 1 design", "Stage
   vis 0.47, whose mode-on cut grew 225 px in the same run). Junctions 56,
   57, 58 and 161 still differ from mode off, with master's counts
   (unattributed; stage 2d's MEASURED entry below rules out two causes).
+
+## THE UNDER-WINDOW RAMP (K430, K268 stage 2 item 2 part 3, 2026-10-16)
+
+Levi picked the ramp over the step and the clip (K430): an under window's
+extents scale with its over pass's visibility (`uwRampScale` /
+`pushRampedWindow` in `ribbon/explore_gaps.ts`; the scale is vis itself,
+clamped - the same scalar the gap strength rides). At vis 1 the window is
+mode off's exactly, at 0 it is absent, and in between the junction web
+retracts smoothly as the gap fades in; the yarn's `underGapVisibility`,
+the pick and the pluck host read the same windows, so they ramp too.
+`slotExploreHid` (vis <= 0.5) still gates only the pluck footprints
+(overHalf / eraseExtent), binary as in 2b.
+
+- OWNERSHIP: `computeGapSlot` pushes a provisional ramped window and
+  marks `slotUwRamp` NaN; `applyExploreGaps` is the sole writer of the
+  ramped windows - it re-derives a chain's windows from the ungated slot
+  data whenever a slot's scale changed (every declaration change, every
+  solve), and bumps `uwRev`, which `rebuildFillets`' key reads, so the
+  fans follow the ramp with no `update()` per move (K76 criterion 2's
+  bargain holds). With the mode off the scale is 1 everywhere and the
+  windows are master's exactly.
+- MEASURED (desktop, census3a, the K431-fixed probe): the renderer's
+  windows match the ramp prediction entry for entry (UWRAMP: 0
+  mismatched, worst delta 2e-9; binary master: 2 entries off by the full
+  extent), and fans rebuilt with the ramp's windows repaint the as-shot
+  fan set at all 9 differing junctions (colors within one 8-bit level,
+  K522's flicker floor) - `attributedUW` judges against the ramp now.
+  census3a as a whole stands 22/31 on both master and this change; the
+  other 9 fails are pre-existing rot (see the K268.md ramp handoff).
 
 ## In the game (stage 2c, 2026-10-15)
 
