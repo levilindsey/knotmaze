@@ -489,6 +489,12 @@ export class RibbonRenderer {
   // (the over pass's visibility, clamped; NaN = a fresh solve invalidated
   // it). See ribbon/explore_gaps.ts uwRampScale.
   /** @internal ribbon */ slotUwRamp = new Float32Array(0);
+  // K268 PROTECT: per gap slot side (0 neg, 1 pos along the under thread),
+  // the covered thread B's chain and pass ctrl where A is over B (-1: no
+  // protect on that side), written by computeGapSlot; applyExploreGaps
+  // turns them into the waiver factors (ribbon/explore_gaps.ts).
+  /** @internal ribbon */ slotProtChain = new Int32Array(0);
+  /** @internal ribbon */ slotProtCtrl = new Float64Array(0);
   // Mask switch (probes A/B the bare base layer) and margin look:
   // "perp" (default): a constant-width CASING around the over thread -
   // the gap's edge is one level set of the distance to the over
@@ -1008,6 +1014,8 @@ export class RibbonRenderer {
     this.slotAllNeg = new Float32Array(this.gaps.slots);
     this.slotAllPos = new Float32Array(this.gaps.slots);
     this.slotUwRamp = new Float32Array(this.gaps.slots).fill(Number.NaN);
+    this.slotProtChain = new Int32Array(this.gaps.slots * 2).fill(-1);
+    this.slotProtCtrl = new Float64Array(this.gaps.slots * 2);
 
     // Junction joinery bookkeeping (fabric only; knot mode has no fused
     // junctions). Arms = directed half-threads leaving each junction.

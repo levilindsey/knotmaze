@@ -20,7 +20,7 @@ import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
 import { buildWalkGraph, type WalkGraph } from "../../src/core/walk_graph";
 import { chainVis, exploreView, type ExplorePiece } from "../../src/game/explore_view";
-import { pushRampedWindow, uwRampScale } from "../../src/render/ribbon/explore_gaps";
+import { protVisScale, pushRampedWindow, uwRampScale } from "../../src/render/ribbon/explore_gaps";
 
 function slotParams(strength: number): GapSlotParams {
   return {
@@ -129,6 +129,17 @@ describe("explore gates (K430): the under-window ramp", () => {
     expect(uwRampScale(1.5)).toBe(1);
     // Continuous across the old binary threshold.
     expect(uwRampScale(0.5) - uwRampScale(0.4999)).toBeCloseTo(0.0001, 6);
+  });
+
+  it("protect's waiver scale is the covered thread's visibility, clamped, with no step at 0.5", () => {
+    expect(protVisScale(-0.25)).toBe(0);
+    expect(protVisScale(0)).toBe(0);
+    expect(protVisScale(0.25)).toBe(0.25);
+    expect(protVisScale(0.5)).toBe(0.5);
+    expect(protVisScale(0.75)).toBe(0.75);
+    expect(protVisScale(1)).toBe(1);
+    expect(protVisScale(1.5)).toBe(1);
+    expect(protVisScale(0.5) - protVisScale(0.4999)).toBeCloseTo(0.0001, 6);
   });
 
   it("scales a window's extents toward its center; scale 0 writes no window", () => {
