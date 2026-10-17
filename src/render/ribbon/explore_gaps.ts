@@ -133,6 +133,15 @@ export function uwRampScale(vis: number): number {
 
 // One ramped window triplet ([center, cutNeg, cutPos] scaled by `scale`)
 // appended to a chain's flat window list; scale 0 appends nothing.
+// K268 PROTECT (stage 2 item 2, the protect part): the waiver A keeps
+// where it covers B scales by B's visibility at B's pass (a per-slot
+// factor the CPU writes, GapMaskTable.setProtVis) - the same clamp as
+// the ramp: no waiver where B is hidden, the full waiver where B shows,
+// and no step at the old binary 0.5 (the pluck footprints keep theirs).
+export function protVisScale(vis: number): number {
+  return vis <= 0 ? 0 : vis >= 1 ? 1 : vis;
+}
+
 export function pushRampedWindow(
   out: number[],
   center: number,
@@ -323,6 +332,20 @@ export class ExploreGaps {
           st.mismatch++;
         }
       }
+      // K268 PROTECT: this slot's waiver follows the covered thread B's
+      // visibility per side (recorded at the solve; -1 = no protect there,
+      // and the mode off restores the full waiver).
+      const protNegCh = this.r.slotProtChain[s * 2];
+      const protPosCh = this.r.slotProtChain[s * 2 + 1];
+      const protNeg =
+        on && protNegCh >= 0
+          ? protVisScale(this.r.exploreVisAt(protNegCh, this.r.slotProtCtrl[s * 2]))
+          : 1;
+      const protPos =
+        on && protPosCh >= 0
+          ? protVisScale(this.r.exploreVisAt(protPosCh, this.r.slotProtCtrl[s * 2 + 1]))
+          : 1;
+      if (this.r.gaps.setProtVis(s, protNeg, protPos)) changed = true;
       const hid = on && v <= 0.5 ? 1 : 0;
       // K430 RAMP: the window follows the visibility continuously, not
       // only at the 0.5 flip below (the footprints stay binary). A fresh

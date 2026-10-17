@@ -27,7 +27,7 @@
 //            seconds) over CROSSING_FADE_IN, from the knot uniforms' clock
 //            (gapStrength), so a reveal / FX gate needs no CPU fade state
 //   texel 2: [winNeg, winPos, hOver, nPts]
-//   texel 3: [-, nProtNeg, nProtPos, flags (1 perp margin, 2 self,
+//   texel 3: [protVisNeg, nProtNeg, nProtPos, flags (1 perp margin, 2 self,
 //            4 SHAPED: K268, the thread reveal's profile below - read only
 //            by the explore program, set only while the reveal is on)]
 //   texel 4: [selfExcl, overBase, kStart, overArcPer] (the SAMP range)
@@ -35,7 +35,7 @@
 //   texel 6: [underTanX, underTanY, marginScaleNeg, marginScalePos]
 //   texel 7: [protNegA, protNegB, protPosA, protPosB] (protect intervals)
 //   texel 8: [margin, fade, sminK, farK] (farK in sampled segments)
-//   texel 9: [overStride, overCount, overClosed, -]
+//   texel 9: [overStride, overCount, overClosed, protVisPos]
 //   texels 10..17: chunk bounding circles [cx, cy, radius, firstPoint],
 //               GAP_CHUNK sampled segments per chunk (a slot over 64 SAMP
 //               points strides at most 3, chord <= 0.3; K399 gate 3)
@@ -62,7 +62,9 @@
 // of a neighboring crossing (A over B), this slot's cosmetic margin and
 // fade are waived for A's fragments that lie over B's ribbon - inside the
 // interval AND within hOver of B's local centerline (the protect
-// polyline); the slot's silhouette still hides. A cyclic triangle (a over
+// polyline); the slot's silhouette still hides. Under the thread reveal
+// the waiver scales by B's visibility per side (setProtVis; the explore
+// programs only), so a hidden B waives nothing. A cyclic triangle (a over
 // b over c over a) squeezed below the casing width otherwise hid every
 // thread inside the region it must cover - a dark triangle at each
 // crossing. Waiving the margin over the whole interval instead erased the
@@ -144,8 +146,8 @@ export const GAP_MAX_PTS = GAP_MAX_CHUNKS * GAP_CHUNK + 1;
 export const GAP_MAX_STRIDE = 3;
 const GAP_CHUNK_BASE = GAP_HDR; // First chunk-circle texel (10).
 // Protect ranges: per side a range texel then its bounding circle.
-const GAP_PROT_NEG = GAP_CHUNK_BASE + GAP_MAX_CHUNKS; // 18
-const GAP_PROT_POS = GAP_PROT_NEG + 2; // 20
+export const GAP_PROT_NEG = GAP_CHUNK_BASE + GAP_MAX_CHUNKS; // 18
+export const GAP_PROT_POS = GAP_PROT_NEG + 2; // 20
 // K268: the shaped-cut profile (see the header), after the protect ranges.
 export const GAP_PROF_BASE = GAP_PROT_POS + 2; // 22
 export const GAP_TEX_W = GAP_PROF_BASE + 3; // 25
@@ -981,6 +983,10 @@ export class GapMaskTable {
   // setShape, so the next setVis always writes).
   private readonly solved: Float32Array;
   private readonly visK: Float64Array;
+  // K268 PROTECT: per slot side, the covered thread B's visibility factor
+  // the explore programs scale the waiver by (1 = as solved; see
+  // setProtVis). Master's programs never read the texels it lives in.
+  private readonly protVis: Float64Array;
 
   constructor(slots: number) {
     this.slots = slots;
@@ -990,6 +996,7 @@ export class GapMaskTable {
     this.source = hit.source;
     this.solved = new Float32Array(slots * 3);
     this.visK = new Float64Array(slots).fill(1);
+    this.protVis = new Float64Array(slots * 2).fill(1);
     // A reused texture may hold another scene's slots: clear them.
     this.data.fill(0);
     for (let s = 0; s < slots; s++) this.clearSlot(s);
@@ -1023,10 +1030,10 @@ export class GapMaskTable {
     d[o + 9] = p.winPos;
     d[o + 10] = p.hOver;
     d[o + 11] = n;
-    // Texel 3: [-, nProtNeg, nProtPos, flags].
+    // Texel 3: [protVisNeg, nProtNeg, nProtPos, flags].
     const nNeg = p.protNeg && p.protNeg.n >= 2 ? p.protNeg.n : 0;
     const nPos = p.protPos && p.protPos.n >= 2 ? p.protPos.n : 0;
-    d[o + 12] = 0;
+    d[o + 12] = 1; // protVisNeg: full waiver until the reveal scales it.
     d[o + 13] = nNeg;
     d[o + 14] = nPos;
     d[o + 15] = (p.perp ? 1 : 0) + (p.selfExcl > 0 ? 2 : 0);
@@ -1058,7 +1065,7 @@ export class GapMaskTable {
     d[o + 36] = p.over.stride;
     d[o + 37] = p.over.count;
     d[o + 38] = p.over.closed ? 1 : 0;
-    d[o + 39] = 0;
+    d[o + 39] = 1; // protVisPos.
     // Chunk bounding circles.
     d.set(p.overChunks.subarray(0, GAP_MAX_CHUNKS * 4), o + GAP_CHUNK_BASE * 4);
     // Protect ranges + circles (signed count in the circle's .w).
@@ -1136,6 +1143,8 @@ export class GapMaskTable {
     this.solved[s3 + 1] = this.data[o + 2];
     this.solved[s3 + 2] = this.data[o + 3];
     this.visK[slot] = 1;
+    this.protVis[slot * 2] = 1;
+    this.protVis[slot * 2 + 1] = 1;
     this.source.mark(slot + 1);
   }
 
@@ -1164,6 +1173,35 @@ export class GapMaskTable {
   // NaN once setShape has written it).
   visOf(slot: number): number {
     return this.visK[slot];
+  }
+
+  // K268 PROTECT (stage 2 item 2, the protect part): scale a slot's
+  // protect waiver by the covered thread B's visibility per side (neg /
+  // pos along the under thread A; gap_mask.ts PROTECT). The factors live
+  // in spare texels master's programs never read (texel 3.x = neg, texel
+  // 9.w = pos; writeSlot solves them at 1), and only the explore programs
+  // multiply by them (explore_glsl.ts EXPLORE_PROT_GLSL), so the mode off
+  // keeps master's waiver exactly. applyExploreGaps is the writer (it
+  // knows B's chain and pass from the solve). Returns whether the table
+  // changed.
+  setProtVis(slot: number, neg: number, pos: number): boolean {
+    const n = neg <= 0 ? 0 : neg >= 1 ? 1 : neg;
+    const q = pos <= 0 ? 0 : pos >= 1 ? 1 : pos;
+    const i = slot * 2;
+    if (this.protVis[i] === n && this.protVis[i + 1] === q) return false;
+    this.protVis[i] = n;
+    this.protVis[i + 1] = q;
+    const o = (slot + 1) * GAP_TEX_W * 4;
+    this.data[o + 12] = n;
+    this.data[o + 39] = q;
+    this.source.mark(slot + 1);
+    return true;
+  }
+
+  // The protect factors setProtVis last applied to a slot ([neg, pos];
+  // 1, 1 as solved).
+  protVisOf(slot: number): [number, number] {
+    return [this.protVis[slot * 2], this.protVis[slot * 2 + 1]];
   }
 
   // K268 THE SHAPED CUT: give a slot a visibility profile (the explore
@@ -1333,6 +1371,7 @@ export class GapMaskTable {
       tan: [d[o + 24], d[o + 25]],
       prot: [d[o + 28], d[o + 29], d[o + 30], d[o + 31]],
       protN: [d[o + 13], d[o + 14]],
+      protVis: [d[o + 12], d[o + 39]],
       bound: [d[o], d[o + 1], d[o + 2], d[o + 3]],
     };
   }

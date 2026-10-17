@@ -401,6 +401,8 @@ export class CrossingGaps {
     // K430: this solve's window push below is provisional; applyExploreGaps
     // owns the ramped windows and re-derives them in the same update().
     this.r.slotUwRamp[slot] = Number.NaN;
+    this.r.slotProtChain[slot * 2] = -1;
+    this.r.slotProtChain[slot * 2 + 1] = -1;
     // K76 2b: the over pass's visibility (1 with the reveal off). The pluck
     // footprints stay binary at 0.5 (shown = false below); the under window
     // RAMPS with it instead (K430: uwShown, at the window push).
@@ -845,6 +847,10 @@ export class CrossingGaps {
         const w0 = (fillHalf * (1 + cosX)) / Math.max(sinX, 0.25);
         const aArc = underCenter + off;
         const o = off < 0 ? 0 : 2;
+        // K268 PROTECT: B (xc.under) and its pass, for the reveal's waiver
+        // factor on this side (applyExploreGaps).
+        this.r.slotProtChain[slot * 2 + (o === 0 ? 0 : 1)] = xc.under.chain;
+        this.r.slotProtCtrl[slot * 2 + (o === 0 ? 0 : 1)] = sampling.renderCtrl(xc.under);
         const pad = PROTECT_PAD_PER_HALF * fillHalf + PROTECT_PAD;
         prot[o] =
           off -

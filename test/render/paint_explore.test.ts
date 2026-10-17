@@ -27,6 +27,8 @@ import {
   EXPLORE_GAP_SURE_GLSL,
   EXPLORE_ITEM_VIS,
   EXPLORE_MAIN_GLSL,
+  EXPLORE_PROT_ANCHOR_GLSL,
+  EXPLORE_PROT_GLSL,
   chainWhole,
   visItem,
   visRange,
@@ -338,6 +340,7 @@ describe("K76 the explore program variant (withExplore)", () => {
     const iKeepAt = v.indexOf(KEEP_AT);
     const iSure = v.indexOf(SURE + EXPLORE_GAP_SURE_GLSL);
     const iCut = v.indexOf(BK + EXPLORE_GAP_CUT_GLSL);
+    const iProt = v.indexOf(EXPLORE_PROT_GLSL);
     const iShape = v.indexOf(EXPLORE_GAP_SHAPE_GLSL + "    highp float e = d - hO - margin;\n");
     const iSmin = v.indexOf("d = mix(d2, d, hb) - sk * hb * (1.0 - hb);");
     const iMain = v.indexOf("void main(void) {");
@@ -349,6 +352,8 @@ describe("K76 the explore program variant (withExplore)", () => {
     expect(iDecl + EXPLORE_DECL_GLSL.length).toBe(iKeepAt);
     expect(iSure).toBeGreaterThan(iKeepAt);
     expect(iCut).toBeGreaterThan(iSure);
+    expect(iProt).toBeGreaterThan(iCut);
+    expect(EXPLORE_PROT_GLSL).toContain("(sd == 0 ? t3.x : t9.w)");
     // K397: the dots' casing shape replaces d after the far-branch
     // smooth-min, just before the casing's distance.
     expect(iSmin).toBeGreaterThan(iCut);
@@ -365,6 +370,7 @@ describe("K76 the explore program variant (withExplore)", () => {
       .replace(EXPLORE_DECL_GLSL, "")
       .replace(EXPLORE_GAP_SURE_GLSL, "")
       .replace(EXPLORE_GAP_CUT_GLSL, "")
+      .replace(EXPLORE_PROT_GLSL, EXPLORE_PROT_ANCHOR_GLSL)
       .replace(EXPLORE_GAP_SHAPE_GLSL, "")
       .replace("  highp float kSideFw = fwidth(vUV.y);\n", "")
       .replace("bool exHere = uKExplore.x > 0.5;\n  ", "")
@@ -379,6 +385,7 @@ describe("K76 the explore program variant (withExplore)", () => {
       expect(t).not.toContain("exploreCutCover");
       expect(t).not.toContain("kExCutOn");
       expect(t).not.toContain("uKExplore");
+      expect(t).not.toContain("(sd == 0 ? t3.x");
     }
   });
 

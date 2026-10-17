@@ -201,6 +201,30 @@ describe("GapMaskTable: the G3-1 row", () => {
     expect(t.polyRange(2)).toEqual([0, 0, 0]);
   });
 
+  it("protect visibility lives in the spare texels, defaults to full and survives a shape", () => {
+    const { ref, arcPer } = gapSampRange(9, 100, true, 4.5, 1, 2);
+    ref.base = 0;
+    const chunks = gapChunkBounds(() => [0, 0] as [number, number], ref.n);
+    const t = new GapMaskTable(4);
+    t.writeSlot(0, slotParams(ref, arcPer, chunks));
+    // Texel 3.x (neg) and texel 9.w (pos): full waiver as solved.
+    expect(t.protVisOf(0)).toEqual([1, 1]);
+    expect(t.readRow(0)[12]).toBe(1);
+    expect(t.readRow(0)[39]).toBe(1);
+    expect(t.setProtVis(0, 0.25, 0)).toBe(true);
+    expect(t.protVisOf(0)).toEqual([0.25, 0]);
+    expect(t.readRow(0)[12]).toBe(0.25);
+    expect(t.readRow(0)[39]).toBe(0);
+    expect(t.setProtVis(0, 0.25, 0)).toBe(false);
+    // A shaped cut (different texels) leaves the protect factors alone.
+    t.setShape(0, { k2b: 1, ramps: [{ aS: 0.5, F: 1, dK: 1, tK: 1, front: false }], max: false });
+    expect(t.protVisOf(0)).toEqual([0.25, 0]);
+    expect(t.readRow(0)[12]).toBe(0.25);
+    // A re-solve restores the full waiver (applyExploreGaps re-derives it).
+    t.writeSlot(0, slotParams(ref, arcPer, chunks));
+    expect(t.protVisOf(0)).toEqual([1, 1]);
+  });
+
   it("setVis and setShape keep their texels on the new row", () => {
     const { ref, arcPer } = gapSampRange(9, 100, true, 4.5, 1, 2);
     ref.base = 0;

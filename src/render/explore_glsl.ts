@@ -37,6 +37,7 @@ import {
   GAP_PROF_F0,
   GAP_PROF_MAX,
   GAP_PROF_R0,
+  GAP_PROT_NEG,
   type GapRamp,
   type GapShape,
 } from "./gap_mask";
@@ -706,6 +707,17 @@ export const EXPLORE_MAIN_GLSL = /* glsl */ `
 // far-branch smooth-min, in every program that takes the shaped cut.
 export const EXPLORE_GAP_SHAPE_GLSL = "    if (exShaped && kExCutOn) d = hO + kExCutSd;\n";
 
+// K268 PROTECT (stage 2 item 2, the protect part): under the thread reveal
+// a slot's protect waiver (gap_mask.ts PROTECT: A keeps its margin where
+// it covers B) scales by B's visibility per side, which the CPU writes
+// into spare gap texels (texel 3.x = neg, texel 9.w = pos; GapMaskTable
+// setProtVis, solved at 1). Where B is hidden the waiver is gone and the
+// casing stands with nothing beyond it; where B shows it stands as
+// before. Only the explore programs carry the scaling (master's gap
+// text and cost are untouched); fans never run it (protect is !fan).
+export const EXPLORE_PROT_ANCHOR_GLSL = `        pr = max(pr, pi * gapProtCover(row,\n          ${GAP_PROT_NEG} + sd * 2, p, hO, pxW));\n`;
+export const EXPLORE_PROT_GLSL = `        pr = max(pr, pi * gapProtCover(row,\n          ${GAP_PROT_NEG} + sd * 2, p, hO, pxW) * (sd == 0 ? t3.x : t9.w));\n`;
+
 // The anchors withExplore inserts at (each must occur exactly once in the
 // section fragment). The declarations go before gapKeepAt (K268: the shaped
 // cut calls them), where the paint library and kSmooth are declared.
@@ -733,6 +745,7 @@ export function exploreGapEdits(fan: boolean, decl: string): [string, string][] 
     [ANCHOR_DECL, decl + EXPLORE_LOOK_GLSL + ANCHOR_DECL],
     [ANCHOR_SURE, ANCHOR_SURE + (fan ? EXPLORE_FAN_SURE_GLSL : EXPLORE_GAP_SURE_GLSL)],
     [ANCHOR_BK, ANCHOR_BK + (fan ? EXPLORE_FAN_CUT_GLSL : EXPLORE_GAP_CUT_GLSL)],
+    [EXPLORE_PROT_ANCHOR_GLSL, EXPLORE_PROT_GLSL],
     [ANCHOR_CASING, EXPLORE_GAP_SHAPE_GLSL + ANCHOR_CASING],
   ];
 }
@@ -778,6 +791,8 @@ export function withExplore(frag: string): string {
   s = s.slice(0, i) + EXPLORE_GAP_SURE_GLSL + s.slice(i);
   i = once(s, ANCHOR_BK) + ANCHOR_BK.length;
   s = s.slice(0, i) + EXPLORE_GAP_CUT_GLSL + s.slice(i);
+  i = once(s, EXPLORE_PROT_ANCHOR_GLSL);
+  s = s.slice(0, i) + EXPLORE_PROT_GLSL + s.slice(i + EXPLORE_PROT_ANCHOR_GLSL.length);
   i = once(s, ANCHOR_CASING);
   s = s.slice(0, i) + EXPLORE_GAP_SHAPE_GLSL + s.slice(i);
   i = once(s, ANCHOR_PXARC) + ANCHOR_PXARC.length;
