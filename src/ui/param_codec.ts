@@ -292,6 +292,17 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   flag("minoByLength"), // 156
   // K323 Stage A (v7): the game mode (appended; classic is the default).
   choice("gameMode", ["classic", "minotaur", "burn"]),
+  // K74 stage 4 (K527/K532): the greedy-trap search and its thresholds.
+  choice("greedyTrap", ["off", "on"]),
+  num("trapTargetF"),
+  num("trapTargetH"),
+  num("trapMaxF"),
+  num("trapMaxH"),
+  num("trapMaxGrow"),
+  num("trapRadius"),
+  num("trapIters"),
+  num("trapTries"),
+  num("trapSurplus"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -354,6 +365,15 @@ export const PARAM_RANGES: Readonly<
   exitCorridor: [0, 32],
   exitTaperRadius: [0, 32],
   exitTaperStrength: [0, 2],
+  trapTargetF: [1, 6],
+  trapTargetH: [1, 8],
+  trapMaxF: [2, 12],
+  trapMaxH: [2, 16],
+  trapMaxGrow: [1, 1.5],
+  trapRadius: [0, 40],
+  trapIters: [0, 24],
+  trapTries: [1, 16],
+  trapSurplus: [1, 2],
   entranceClearance: [0, 12],
   exitClearance: [0, 20],
   junctionSpacing: [0.5, 8],

@@ -158,3 +158,30 @@ only with the files it is about; `generation.md` lists the area's other files.
   near misses at the goal (corridor) and Pullen plus Zhao and Marquez
   2013 (long blind alleys, at `placeLongTails`); RESEARCH entries in
   `notices/credits.ts`. Tests: `test/core/maze_trapzone.test.ts`.
+- *K74 stage 4 (2026-10-16), the greedy-trap search:* `greedyTrap`
+  (codec 153: off | on, default off; never daily-exempt) plus nine
+  sliders beside it (154-162: `trapTargetF` 2.5, `trapTargetH` 3.5,
+  `trapMaxF` 6, `trapMaxH` 8, `trapMaxGrow` 1.15, `trapRadius` 20,
+  `trapIters` 12, `trapTries` 8, `trapSurplus` 1.25) - K532 made every
+  threshold a param (core/greedy_trap.ts DEFAULT_TRAP_SEARCH is the
+  same values). Off, every plan and link is byte-identical (K87, the
+  K74 walk pins and the golden dailies all hold). On, the search runs
+  in generation after H1's plan, H1-in-loop only (the H0 form does not
+  transfer: stage-4 brief finding 2): `core/greedy_search.ts` scores
+  fresh-lattice trials of the applied maze and deletes choice splices /
+  4-way merges from the plan - candidate mapping mnode order, then
+  exact splice-endpoint position, then merge id; spanning sites and
+  the exit guard's sites are never offered, and the searched plan must
+  still pass planReachesAll. The heading walker ranks by the exact
+  cross/dot form (call 4: (q-p).g over |q-p| by sign, then squared
+  cross-multiplication, ties by edge id; q the point 3 u along the run
+  via hypot2 - no normalized division), and acceptance carries call
+  3's floor: a walker over target may not drop below it, nor below
+  1.25x it. Measured on dailies 1-240 (`.claude/probes/K74/stage4/`
+  `build_measure.ts`, `results_build.md`): gF median 2.86 -> 3.38,
+  within 1.5x 20.0% -> 11.7% (call 6's bar passes), both targets
+  38.8% -> 59.2%, route growth max 1.146, generation 25 -> 74 ms
+  median; the exact heading walk differs from the float prototype on
+  25 named mazes (near-tie flips, listed in results_build.md); the 12
+  deepest-cut searched mazes all sleep by 5.2 s. Searched dailies 1-3
+  are pinned in maze_plan_identity.test.ts (K74_WALKS_SEARCHED).

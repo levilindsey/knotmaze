@@ -113,6 +113,23 @@ export interface MazeParams {
   exitFlank: "stub" | "away" | "near";
   exitTaperRadius: number;
   exitTaperStrength: number;
+  // K74 stage 4 (K527/K532), THE GREEDY-TRAP SEARCH: "off" (the default)
+  // keeps every plan byte-identical; "on" runs the H1-in-loop search
+  // (core/greedy_search.ts) over the finished plan. The trap* fields are
+  // its walker targets, caps, growth cap, candidate radius, budgets,
+  // acceptance-floor surplus and tries - every one a slider beside
+  // greedyTrap in the panel, at the stage-4 brief's recommended values
+  // (greedy_trap.ts DEFAULT_TRAP_SEARCH; the two stay in step).
+  greedyTrap: "off" | "on";
+  trapTargetF: number;
+  trapTargetH: number;
+  trapMaxF: number;
+  trapMaxH: number;
+  trapMaxGrow: number;
+  trapRadius: number;
+  trapIters: number;
+  trapTries: number;
+  trapSurplus: number;
   // Lattice radii around the exit / entrance corners kept junction-free, so
   // the endgame isn't cluttered with choices (challenge shaping).
   exitClearance: number;
@@ -149,6 +166,16 @@ export const DEFAULT_MAZE_PARAMS: MazeParams = {
   exitFlank: "away",
   exitTaperRadius: 0,
   exitTaperStrength: 0,
+  greedyTrap: "off",
+  trapTargetF: 2.5,
+  trapTargetH: 3.5,
+  trapMaxF: 6,
+  trapMaxH: 8,
+  trapMaxGrow: 1.15,
+  trapRadius: 20,
+  trapIters: 12,
+  trapTries: 8,
+  trapSurplus: 1.25,
   exitClearance: 12,
   entranceClearance: 2.5,
   junctionSpacing: 2,

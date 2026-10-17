@@ -89,6 +89,16 @@ export const MAZE_PARAM_KEYS = [
   "exitFlank",
   "exitTaperRadius",
   "exitTaperStrength",
+  "greedyTrap",
+  "trapTargetF",
+  "trapTargetH",
+  "trapMaxF",
+  "trapMaxH",
+  "trapMaxGrow",
+  "trapRadius",
+  "trapIters",
+  "trapTries",
+  "trapSurplus",
   "entranceClearance",
   "exitClearance",
   "junctionSpacing",
@@ -97,6 +107,7 @@ export const MAZE_PARAM_KEYS = [
 // A design's maze identity as text (numbers at link precision).
 export function mazeKey(p: UrlParams): string {
   return MAZE_PARAM_KEYS.map((k) => {
+    if (k.startsWith("trap") && p.greedyTrap === "off") return "-";
     if ((k === "deadEndDensity" || k === "deadEndLength") && p.deadEndDensity === 0) {
       return "-";
     }

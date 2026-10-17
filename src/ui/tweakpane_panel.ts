@@ -1034,6 +1034,57 @@ export function buildPanel(
     "How much wider the junction spacing grows at the exit under the taper. 0 = off. Regenerates the maze.",
     D.exitTaperStrength, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
+  const greedyTrapRow = row(
+    fMaze, p, "greedyTrap",
+    { options: { off: "off", on: "on" }, label: "Greedy trap" },
+    "Greedy-trap search: after the maze is planned, delete choice junctions near the exit that let a player who heads straight for the exit through, until both naive walkers take long enough (the targets beside it). Off = today's maze. Regenerates the maze.",
+    D.greedyTrap, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const trapTargetFRow = row(
+    fMaze, p, "trapTargetF", { min: 1, max: 6, step: 0.1, label: "Trap far target" },
+    "How long the far-end greedy walk must get (x the shortest route) before the search stops cutting. Regenerates the maze.",
+    D.trapTargetF, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const trapTargetHRow = row(
+    fMaze, p, "trapTargetH", { min: 1, max: 8, step: 0.1, label: "Trap heading target" },
+    "How long the heading greedy walk must get (x the shortest route) before the search stops cutting. Regenerates the maze.",
+    D.trapTargetH, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const trapMaxFRow = row(
+    fMaze, p, "trapMaxF", { min: 2, max: 12, step: 0.5, label: "Trap far cap" },
+    "No trap may push the far-end greedy walk past this (x the shortest route). Regenerates the maze.",
+    D.trapMaxF, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const trapMaxHRow = row(
+    fMaze, p, "trapMaxH", { min: 2, max: 16, step: 0.5, label: "Trap heading cap" },
+    "No trap may push the heading greedy walk past this (x the shortest route). Regenerates the maze.",
+    D.trapMaxH, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const trapMaxGrowRow = row(
+    fMaze, p, "trapMaxGrow", { min: 1, max: 1.5, step: 0.05, label: "Trap route growth" },
+    "How much longer the shortest route may grow while trapping (x its original length). Regenerates the maze.",
+    D.trapMaxGrow, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const trapRadiusRow = row(
+    fMaze, p, "trapRadius", { min: 0, max: 40, step: 1, label: "Trap radius" },
+    "Only junctions within this distance of the exit (half lattice cells) may be cut as traps. Regenerates the maze.",
+    D.trapRadius, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const trapItersRow = row(
+    fMaze, p, "trapIters", { min: 0, max: 24, step: 1, label: "Trap cuts" },
+    "At most this many junctions the search may delete. Regenerates the maze.",
+    D.trapIters, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const trapTriesRow = row(
+    fMaze, p, "trapTries", { min: 1, max: 16, step: 1, label: "Trap tries" },
+    "Trial deletions tried per round before the search gives up on that round. Regenerates the maze.",
+    D.trapTries, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const trapSurplusRow = row(
+    fMaze, p, "trapSurplus", { min: 1, max: 2, step: 0.05, label: "Trap surplus" },
+    "Banked difficulty the search may not spend: a walker over its target may not drop below it, nor below this x its target. Regenerates the maze.",
+    D.trapSurplus, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
   const branchDensityRow = row(
     fMaze, p, "branchDensity", { min: 0, max: 1, step: 0.05 },
     "How many extra choice junctions the maze adds beyond the minimum needed to connect everything. Regenerates the maze.",
@@ -2317,6 +2368,17 @@ export function buildPanel(
     exitFlankRow.hidden = !fab;
     exitTaperRadiusRow.hidden = !fab;
     exitTaperStrengthRow.hidden = !fab;
+    greedyTrapRow.hidden = !fab;
+    const trapOn = fab && params.greedyTrap === "on";
+    trapTargetFRow.hidden = !trapOn;
+    trapTargetHRow.hidden = !trapOn;
+    trapMaxFRow.hidden = !trapOn;
+    trapMaxHRow.hidden = !trapOn;
+    trapMaxGrowRow.hidden = !trapOn;
+    trapRadiusRow.hidden = !trapOn;
+    trapItersRow.hidden = !trapOn;
+    trapTriesRow.hidden = !trapOn;
+    trapSurplusRow.hidden = !trapOn;
     pathVizRow.hidden = !fab;
     cameraRow.hidden = !fab;
     trailLenRow.hidden = !fab || params.pathViz !== "trail";
