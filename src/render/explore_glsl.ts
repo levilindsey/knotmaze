@@ -553,6 +553,32 @@ highp float kExploreLook(int look, highp float v, highp float u, highp float s,
 // fade's end (t 1), where the second dot's casing reaches.
 bool kExCutOn;
 highp float kExCutSd;
+// K268 FAR-BRANCH (stage 2 item 2, last part): a shaped slot's per-branch
+// state for the vis-weighted far-branch blend (below, at gapKeepAt's
+// smooth-min). exCoverNear / exStrength are the near branch's coverage and
+// the slot's clock strength (gst = exStrength * exCoverNear, set by
+// EXPLORE_GAP_CUT); exBlendCut / exFarOn carry the blended weighted cut
+// the keep line then applies instead of the near branch's own.
+highp float exCoverNear;
+highp float exStrength;
+highp float exBlendCut;
+bool exFarOn;
+// The geometric cut (casing + fade + window-end ramp, times inWinInFoot;
+// a fan adds its silhouette) at centerline distance dv, with gapKeepAt's
+// own margin / fadeP / winM / fade at the near point. Monotone
+// non-increasing in dv. Used only by the far-branch blend.
+highp float exCutAtDist(highp float dv, highp float hOv, highp float marg,
+    highp float fadePv, highp float pxWv, highp float winMv,
+    highp float fadeRaw, highp float inWF, bool isFan) {
+  highp float e = dv - hOv - marg;
+  highp float k = clamp((e + 0.5 * pxWv) / max(fadePv, pxWv), 0.0, 1.0);
+  k = k * k * (3.0 - 2.0 * k);
+  highp float fs = clamp(winMv / max(0.5 * fadeRaw, pxWv), 0.0, 1.0);
+  fs = mix(1.0, fs * fs * (3.0 - 2.0 * fs), clamp(e / pxWv, 0.0, 1.0));
+  highp float c = (1.0 - k) * inWF * fs;
+  if (isFan) c = max(c, 1.0 - clamp((dv - hOv + pxWv) / pxWv + 0.5, 0.0, 1.0));
+  return c;
+}
 highp float exploreCutCover(int row, int fl, highp float A, highp float lat, highp float pxW) {
   kExCutOn = false;
   int look = int(uKExplore.y + 0.5);
@@ -603,6 +629,7 @@ export const EXPLORE_DECL_GLSL = EXPLORE_VIS_GLSL + EXPLORE_LOOK_GLSL;
 // slot with the SHAPED bit searches without the early stop inside the
 // silhouette (the projection must be the true nearest point)...
 export const EXPLORE_GAP_SURE_GLSL = /* glsl */ `    bool exShaped = full && !fan && (fl & ${GAP_FLAG_SHAPED}) != 0 && uKExplore.x > 0.5;
+    exFarOn = false;
     if (exShaped) sure2 = 0.0;
 `;
 // ...and cuts by the over thread's coverage at the nearest point's chain
@@ -620,7 +647,9 @@ export const EXPLORE_GAP_CUT_GLSL = /* glsl */ `    if (exShaped) {
       highp float exBt = exBl > 1e-12 ? clamp(dot(p - exP0, exAb) / exBl, 0.0, 1.0) : 0.0;
       highp float exA = (exT4.z + (float(bk) + exBt) * exT9.x) * exT4.w;
       highp vec4 exP2 = texelFetch(uGapData, ivec2(${GAP_PROF_BASE + 2}, row), 0);
-      gst = gapStrength(exP2.x) * exploreCutCover(row, int(exP2.y + 0.5), exA, sqrt(best), pxW);
+      exCoverNear = exploreCutCover(row, int(exP2.y + 0.5), exA, sqrt(best), pxW);
+      exStrength = gapStrength(exP2.x);
+      gst = exStrength * exCoverNear;
       if (gst <= 0.0) continue;
     }
 `;
@@ -634,6 +663,7 @@ export const EXPLORE_GAP_CUT_GLSL = /* glsl */ `    if (exShaped) {
 // dots' shape cuts (kExCutOn): there the silhouette is the dots' shape,
 // which the fan's own silhouette cut reads through d.
 export const EXPLORE_FAN_SURE_GLSL = /* glsl */ `    bool exShaped = (fl & ${GAP_FLAG_SHAPED}) != 0 && uKExplore.x > 0.5;
+    exFarOn = false;
     highp float exSure2 = sure2;
     if (exShaped) sure2 = 0.0;
 `;
@@ -707,6 +737,57 @@ export const EXPLORE_MAIN_GLSL = /* glsl */ `
 // far-branch smooth-min, in every program that takes the shaped cut.
 export const EXPLORE_GAP_SHAPE_GLSL = "    if (exShaped && kExCutOn) d = hO + kExCutSd;\n";
 
+// K268 FAR-BRANCH (stage 2 item 2, last part): master's smooth-min blends
+// the two branches' DISTANCES (d = smin(d, d2)), then the shaped cut
+// multiplies by the NEAR branch's coverage alone - so it dips toward a
+// hidden far branch (a ghost) and loses a shown far branch behind a
+// hidden near one. The explore programs instead blend the VIS-WEIGHTED
+// CUTS: each branch's geometric cut times its own coverage at its own
+// projection, combined by farBlendCut (the smooth-min's rounding dip
+// survives only in proportion to the visibility both branches share, so
+// equal coverages reproduce master's blended cut exactly and a hidden
+// branch contributes nothing). The dots' shape (kExCutOn) already
+// replaces d past this point, so it keeps master's path. Only the
+// explore programs carry this (master's gap text and cost untouched).
+export const EXPLORE_FAR_ANCHOR_GLSL = `        if (bk2 >= 0) {
+          highp float d2 = sqrt(best2);
+          highp float hb = clamp(0.5 + 0.5 * (d2 - d) / sk, 0.0, 1.0);
+          d = mix(d2, d, hb) - sk * hb * (1.0 - hb);
+        }
+`;
+export const EXPLORE_FAR_GLSL = `        if (bk2 >= 0) {
+          highp float d2 = sqrt(best2);
+          highp float hb = clamp(0.5 + 0.5 * (d2 - d) / sk, 0.0, 1.0);
+          highp float dS = mix(d2, d, hb) - sk * hb * (1.0 - hb);
+          if (exShaped && !kExCutOn) {
+            highp vec2 exF0 = gapPt(row, bk2);
+            highp vec2 exF1 = gapPt(row, bk2 + 1);
+            highp vec2 exFab = exF1 - exF0;
+            highp float exFbl = dot(exFab, exFab);
+            highp float exFbt = exFbl > 1e-12 ? clamp(dot(p - exF0, exFab) / exFbl, 0.0, 1.0) : 0.0;
+            highp float exA2 = (t4.z + (float(bk2) + exFbt) * t9.x) * t4.w;
+            bool exSaveOn = kExCutOn;
+            highp float exSaveSd = kExCutSd;
+            highp float exCoverFar = exploreCutCover(row, fl, exA2, d2, pxW);
+            kExCutOn = exSaveOn;
+            kExCutSd = exSaveSd;
+            highp float exGN = exCutAtDist(d, hO, margin, fadeP, pxW, winM, t8.y, inWin * inFoot, fan);
+            highp float exGF = exCutAtDist(d2, hO, margin, fadeP, pxW, winM, t8.y, inWin * inFoot, fan);
+            highp float exGS = exCutAtDist(dS, hO, margin, fadeP, pxW, winM, t8.y, inWin * inFoot, fan);
+            exBlendCut = max(exCoverNear * exGN, exCoverFar * exGF)
+              + min(exCoverNear, exCoverFar) * (exGS - max(exGN, exGF));
+            exFarOn = true;
+          } else {
+            d = dS;
+          }
+        }
+`;
+// The keep line then applies the blended weighted cut (exBlendCut already
+// carries each branch's coverage, so the strength is the clock's alone).
+export const EXPLORE_KEEP_ANCHOR_GLSL = "    keep = min(keep, 1.0 - cut * gst);\n";
+export const EXPLORE_KEEP_GLSL =
+  "    if (exFarOn) { cut = exBlendCut; gst = exStrength; }\n" + EXPLORE_KEEP_ANCHOR_GLSL;
+
 // K268 PROTECT (stage 2 item 2, the protect part): under the thread reveal
 // a slot's protect waiver (gap_mask.ts PROTECT: A keeps its margin where
 // it covers B) scales by B's visibility per side, which the CPU writes
@@ -733,6 +814,26 @@ const ANCHOR_KCTRL =
 const ANCHOR_GAP = "  float gk = gapKeep(pxW, gTurn);";
 const ANCHOR_CASING = "    highp float e = d - hO - margin;\n";
 
+// The far-branch blend's formula (EXPLORE_FAR_GLSL above), as a pure
+// function the unit tests hold: the stronger branch's vis-weighted cut,
+// plus the smooth-min's rounding dip (geomSmin past the nearer branch's
+// geometric cut) scaled by the visibility both branches share. Equal
+// coverages give coverage * geomSmin exactly (master's blended cut,
+// weighted); a hidden branch (coverage 0) contributes nothing and adds
+// no dip; the result never exceeds the shown branches' weighted cuts
+// plus that shared dip, and never falls below the stronger of them.
+export function farBlendCut(
+  coverNear: number,
+  geomNear: number,
+  coverFar: number,
+  geomFar: number,
+  geomSmin: number
+): number {
+  const near = coverNear * geomNear;
+  const far = coverFar * geomFar;
+  return Math.max(near, far) + Math.min(coverNear, coverFar) * (geomSmin - Math.max(geomNear, geomFar));
+}
+
 // The shaped cut's edits to gapKeepAt in a program other than the section
 // variant (K268 stage 2): the end looks before it, after `decl` (whatever the
 // program lacks of uKExplore and kSmooth), the search without the early stop
@@ -746,6 +847,8 @@ export function exploreGapEdits(fan: boolean, decl: string): [string, string][] 
     [ANCHOR_SURE, ANCHOR_SURE + (fan ? EXPLORE_FAN_SURE_GLSL : EXPLORE_GAP_SURE_GLSL)],
     [ANCHOR_BK, ANCHOR_BK + (fan ? EXPLORE_FAN_CUT_GLSL : EXPLORE_GAP_CUT_GLSL)],
     [EXPLORE_PROT_ANCHOR_GLSL, EXPLORE_PROT_GLSL],
+    [EXPLORE_FAR_ANCHOR_GLSL, EXPLORE_FAR_GLSL],
+    [EXPLORE_KEEP_ANCHOR_GLSL, EXPLORE_KEEP_GLSL],
     [ANCHOR_CASING, EXPLORE_GAP_SHAPE_GLSL + ANCHOR_CASING],
   ];
 }
@@ -793,6 +896,10 @@ export function withExplore(frag: string): string {
   s = s.slice(0, i) + EXPLORE_GAP_CUT_GLSL + s.slice(i);
   i = once(s, EXPLORE_PROT_ANCHOR_GLSL);
   s = s.slice(0, i) + EXPLORE_PROT_GLSL + s.slice(i + EXPLORE_PROT_ANCHOR_GLSL.length);
+  i = once(s, EXPLORE_FAR_ANCHOR_GLSL);
+  s = s.slice(0, i) + EXPLORE_FAR_GLSL + s.slice(i + EXPLORE_FAR_ANCHOR_GLSL.length);
+  i = once(s, EXPLORE_KEEP_ANCHOR_GLSL);
+  s = s.slice(0, i) + EXPLORE_KEEP_GLSL + s.slice(i + EXPLORE_KEEP_ANCHOR_GLSL.length);
   i = once(s, ANCHOR_CASING);
   s = s.slice(0, i) + EXPLORE_GAP_SHAPE_GLSL + s.slice(i);
   i = once(s, ANCHOR_PXARC) + ANCHOR_PXARC.length;

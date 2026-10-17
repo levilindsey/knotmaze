@@ -27,8 +27,13 @@ import {
   EXPLORE_GAP_SURE_GLSL,
   EXPLORE_ITEM_VIS,
   EXPLORE_MAIN_GLSL,
+  EXPLORE_FAR_ANCHOR_GLSL,
+  EXPLORE_FAR_GLSL,
+  EXPLORE_KEEP_ANCHOR_GLSL,
+  EXPLORE_KEEP_GLSL,
   EXPLORE_PROT_ANCHOR_GLSL,
   EXPLORE_PROT_GLSL,
+  farBlendCut,
   chainWhole,
   visItem,
   visRange,
@@ -342,7 +347,8 @@ describe("K76 the explore program variant (withExplore)", () => {
     const iCut = v.indexOf(BK + EXPLORE_GAP_CUT_GLSL);
     const iProt = v.indexOf(EXPLORE_PROT_GLSL);
     const iShape = v.indexOf(EXPLORE_GAP_SHAPE_GLSL + "    highp float e = d - hO - margin;\n");
-    const iSmin = v.indexOf("d = mix(d2, d, hb) - sk * hb * (1.0 - hb);");
+    const iFar = v.indexOf(EXPLORE_FAR_GLSL);
+    const iKeep = v.indexOf(EXPLORE_KEEP_GLSL);
     const iMain = v.indexOf("void main(void) {");
     const iFw = v.indexOf("highp float kSideFw = fwidth(vUV.y);");
     const iCtrl = v.indexOf("bool exHere = uKExplore.x > 0.5;");
@@ -354,10 +360,16 @@ describe("K76 the explore program variant (withExplore)", () => {
     expect(iCut).toBeGreaterThan(iSure);
     expect(iProt).toBeGreaterThan(iCut);
     expect(EXPLORE_PROT_GLSL).toContain("(sd == 0 ? t3.x : t9.w)");
+    // K268 far-branch: the vis-weighted blend replaces master's
+    // distance blend after the shaped cut; the keep line applies it.
+    expect(iFar).toBeGreaterThan(iCut);
+    expect(iKeep).toBeGreaterThan(iFar);
+    expect(EXPLORE_FAR_GLSL).toContain("max(exCoverNear * exGN, exCoverFar * exGF)");
+    expect(EXPLORE_FAR_GLSL).toContain("exploreCutCover(row, fl, exA2, d2, pxW)");
+    expect(EXPLORE_KEEP_GLSL).toContain("cut = exBlendCut; gst = exStrength;");
     // K397: the dots' casing shape replaces d after the far-branch
     // smooth-min, just before the casing's distance.
-    expect(iSmin).toBeGreaterThan(iCut);
-    expect(iShape).toBeGreaterThan(iSmin);
+    expect(iShape).toBeGreaterThan(iFar);
     expect(iMain).toBeGreaterThan(iShape);
     expect(iFw).toBeGreaterThan(iMain);
     expect(iCtrl).toBeGreaterThan(iFw);
@@ -371,6 +383,8 @@ describe("K76 the explore program variant (withExplore)", () => {
       .replace(EXPLORE_GAP_SURE_GLSL, "")
       .replace(EXPLORE_GAP_CUT_GLSL, "")
       .replace(EXPLORE_PROT_GLSL, EXPLORE_PROT_ANCHOR_GLSL)
+      .replace(EXPLORE_FAR_GLSL, EXPLORE_FAR_ANCHOR_GLSL)
+      .replace(EXPLORE_KEEP_GLSL, EXPLORE_KEEP_ANCHOR_GLSL)
       .replace(EXPLORE_GAP_SHAPE_GLSL, "")
       .replace("  highp float kSideFw = fwidth(vUV.y);\n", "")
       .replace("bool exHere = uKExplore.x > 0.5;\n  ", "")
@@ -392,5 +406,23 @@ describe("K76 the explore program variant (withExplore)", () => {
   it("throws on a missing or repeated anchor", () => {
     expect(() => withExplore("void main(void) {}")).toThrow(/anchor/);
     expect(() => withExplore(sectionText + sectionText)).toThrow(/anchor/);
+  });
+});
+
+describe("K268 far-branch blend (farBlendCut)", () => {
+  it("equal coverages reproduce master's blended cut, weighted", () => {
+    expect(farBlendCut(0.7, 0.8, 0.7, 0.5, 0.9)).toBeCloseTo(0.7 * 0.9, 12);
+    expect(farBlendCut(1, 0.8, 1, 0.5, 0.9)).toBeCloseTo(0.9, 12);
+  });
+  it("a hidden branch contributes nothing and adds no dip", () => {
+    expect(farBlendCut(0, 0.9, 1, 0.4, 0.95)).toBeCloseTo(0.4, 12);
+    expect(farBlendCut(1, 0.4, 0, 0.9, 0.95)).toBeCloseTo(0.4, 12);
+    expect(farBlendCut(0, 0.9, 0, 0.4, 0.95)).toBe(0);
+  });
+  it("partial coverages: never below the stronger weighted cut, dip scaled by shared vis", () => {
+    const b = farBlendCut(0.25, 0.8, 1, 0.5, 0.9);
+    expect(b).toBeCloseTo(0.5 + 0.25 * (0.9 - 0.8), 12);
+    expect(b).toBeGreaterThan(0.5);
+    expect(b).toBeLessThan(0.9);
   });
 });
