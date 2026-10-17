@@ -8,9 +8,15 @@
 // Engine-exactness (K108): the far-end walker ranks runs by SQUARED
 // distance to the exit. Lattice positions are multiples of 0.5, so those
 // squares are exact in every engine and preserve the Euclidean order.
-// The heading walker takes its score from the caller; a shipped version
-// must supply an exact heading score (see the stage-4 brief), because the
-// prototype's normalized-dot score divides by a run length.
+// The heading walker (K74 stage 4 build, call 4) ranks runs by an exact
+// cross/dot form instead of the prototype's normalized-dot score: the
+// prototype divides a run direction by its length. `headingComparator`
+// below compares (q-p).g / |q-p| by sign, then by squared
+// cross-multiplication, ties by edge id - no normalization division and
+// no square root in the ranking. The caller supplies q-p per directed
+// run (the seam takes q as the point 3 u along the run, or its far end
+// on a shorter run), computed with hypot2 and division only, the
+// engine-exact operations of K108.
 
 export interface TrapVertexLike {
   edges: readonly number[];
@@ -68,11 +74,17 @@ export function finalPathOf(
 // it takes the best UNUSED run by score (lowest edge id wins a tie), and
 // with none left it backtracks the last run. Mirrors the K74 probe harness
 // walker (`.claude/probes/K74/lib.ts` dfsWalk), minus its endgame window.
-export function greedyWalk(
+type PickBest = (
+  graph: TrapGraphLike,
+  v: string,
+  used: ReadonlySet<number>
+) => number;
+
+function walkWith(
   graph: TrapGraphLike,
   start: string,
   exit: string,
-  score: TrapScore
+  pick: PickBest
 ): TrapWalkResult {
   const used = new Set<number>();
   const stack: { v: string; via: number }[] = [{ v: start, via: -1 }];
@@ -85,16 +97,7 @@ export function greedyWalk(
   while (stack.length && guard++ < 200000) {
     const top = stack[stack.length - 1];
     if (top.v === exit) break;
-    let best = -1;
-    let bestS = Infinity;
-    for (const eid of graph.vertices.get(top.v)!.edges) {
-      if (used.has(eid)) continue;
-      const s = score(top.v, eid);
-      if (s < bestS || (s === bestS && eid < best)) {
-        bestS = s;
-        best = eid;
-      }
-    }
+    const best = pick(graph, top.v, used);
     if (best < 0) {
       const t = stack.pop()!;
       if (t.via >= 0) {
@@ -121,6 +124,100 @@ export function greedyWalk(
     taken,
     takenFrom,
     finalPath: finalPathOf(graph, start, taken, takenFrom),
+  };
+}
+
+export function greedyWalk(
+  graph: TrapGraphLike,
+  start: string,
+  exit: string,
+  score: TrapScore
+): TrapWalkResult {
+  return walkWith(graph, start, exit, (g, v, used) => {
+    let best = -1;
+    let bestS = Infinity;
+    for (const eid of g.vertices.get(v)!.edges) {
+      if (used.has(eid)) continue;
+      const s = score(v, eid);
+      if (s < bestS || (s === bestS && eid < best)) {
+        bestS = s;
+        best = eid;
+      }
+    }
+    return best;
+  });
+}
+
+// The same walker ranked by a comparator instead of a scalar score:
+// compare(v, a, b) < 0 when run a is preferred over run b at v (the
+// lowest edge id wins an exact tie, as in greedyWalk).
+export function greedyWalkRanked(
+  graph: TrapGraphLike,
+  start: string,
+  exit: string,
+  compare: (v: string, a: number, b: number) => number
+): TrapWalkResult {
+  return walkWith(graph, start, exit, (g, v, used) => {
+    let best = -1;
+    for (const eid of g.vertices.get(v)!.edges) {
+      if (used.has(eid)) continue;
+      if (best < 0 || compare(v, eid, best) < 0) best = eid;
+    }
+    return best;
+  });
+}
+
+// Compare two heading candidates by cos = dot / sqrt(len2) (dot =
+// (q-p).g, len2 = |q-p| squared; the goal distance |g| is common to
+// every candidate at one vertex, so it cancels). Exact integer form:
+// sign first (a positive dot beats zero beats a negative one), then
+// squared cross-multiplication - for two negatives the smaller
+// magnitude wins. An exact tie goes to the lower edge id. Returns < 0
+// when a is preferred.
+export function compareHeadingValues(
+  dotA: number,
+  len2A: number,
+  idA: number,
+  dotB: number,
+  len2B: number,
+  idB: number
+): number {
+  const signA = dotA > 0 ? 1 : dotA < 0 ? -1 : 0;
+  const signB = dotB > 0 ? 1 : dotB < 0 ? -1 : 0;
+  if (signA !== signB) return signB - signA < 0 ? -1 : 1;
+  if (signA !== 0 && len2A > 0 && len2B > 0) {
+    const lhs = dotA * dotA * len2B;
+    const rhs = dotB * dotB * len2A;
+    if (lhs !== rhs) {
+      const aWins = signA > 0 ? lhs > rhs : lhs < rhs;
+      return aWins ? -1 : 1;
+    }
+  }
+  return idA - idB;
+}
+
+// The exact heading ranker (call 4): `headingOf` gives each directed
+// run's heading vector q-p (unnormalized, lattice units); the goal
+// vector is exitPos - p. No division and no square root anywhere.
+export function headingComparator(
+  pos: ReadonlyMap<string, readonly [number, number]>,
+  exitPos: readonly [number, number],
+  headingOf: (v: string, eid: number) => readonly [number, number]
+): (v: string, a: number, b: number) => number {
+  return (v, a, b) => {
+    const p = pos.get(v)!;
+    const gx = exitPos[0] - p[0];
+    const gy = exitPos[1] - p[1];
+    const va = headingOf(v, a);
+    const vb = headingOf(v, b);
+    return compareHeadingValues(
+      va[0] * gx + va[1] * gy,
+      va[0] * va[0] + va[1] * va[1],
+      a,
+      vb[0] * gx + vb[1] * gy,
+      vb[0] * vb[0] + vb[1] * vb[1],
+      b
+    );
   };
 }
 
@@ -187,6 +284,10 @@ export interface TrapSearchOptions {
   maxGrow: number; // Optimal route may grow to this x its original length.
   iters: number; // Accepted deletions at most.
   tries: number; // Trial deletions per round at most.
+  // Call 3's acceptance floor: a walker already over its target may not
+  // drop below it, and surplus past surplus x target may not be spent.
+  surplus: number;
+  radius: number; // Trap candidates sit within this of the exit (u).
 }
 
 export const DEFAULT_TRAP_SEARCH: TrapSearchOptions = {
@@ -197,6 +298,8 @@ export const DEFAULT_TRAP_SEARCH: TrapSearchOptions = {
   maxGrow: 1.15,
   iters: 12,
   tries: 8,
+  surplus: 1.25,
+  radius: 20,
 };
 
 // How far the worse-off walker still is from its target (1 = both met).
@@ -207,7 +310,11 @@ export function trapObjective(ev: TrapEval, o: TrapSearchOptions): number {
 // One trial deletion is accepted only if it raises the objective, keeps
 // the optimal route within maxGrow of the original, and creates no trap
 // over the caps. (Section 4.4's "improves both walkers" is this objective
-// in the prototype; see the stage-4 brief.)
+// in the prototype; see the stage-4 brief.) Call 3's floor (K532): the
+// objective may not be raised by spending difficulty already banked - a
+// walker at or over its target may not drop below that target, and a
+// walker over surplus x its target may not drop below that either (its
+// surplus may be spent down to the cap, never past it).
 export function acceptsTrap(
   trial: TrapEval | null,
   current: TrapEval,
@@ -217,6 +324,11 @@ export function acceptsTrap(
   if (!trial || !Number.isFinite(trial.optimal)) return false;
   if (trial.optimal > o.maxGrow * optimal0) return false;
   if (trial.gF > o.maxF || trial.gH > o.maxH) return false;
+  const surplus = o.surplus ?? DEFAULT_TRAP_SEARCH.surplus;
+  const floor = (cur: number, target: number): number =>
+    cur >= surplus * target ? surplus * target : cur >= target ? target : -Infinity;
+  if (trial.gF < floor(current.gF, o.targetF) - 1e-9) return false;
+  if (trial.gH < floor(current.gH, o.targetH) - 1e-9) return false;
   return trapObjective(trial, o) > trapObjective(current, o) + 1e-9;
 }
 

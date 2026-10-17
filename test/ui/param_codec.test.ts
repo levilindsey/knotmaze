@@ -193,6 +193,16 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["exitTaperStrength", "number"], // 155
   ["minoByLength", "boolean"], // K481 stage 2
   ["gameMode", "enum", ["classic", "minotaur", "burn"]], // K323 Stage A (v7)
+  ["greedyTrap", "enum", ["off", "on"]], // K74 stage 4 (K527)
+  ["trapTargetF", "number"],
+  ["trapTargetH", "number"],
+  ["trapMaxF", "number"],
+  ["trapMaxH", "number"],
+  ["trapMaxGrow", "number"],
+  ["trapRadius", "number"],
+  ["trapIters", "number"],
+  ["trapTries", "number"],
+  ["trapSurplus", "number"],
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

@@ -3,6 +3,7 @@ import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "./maze_plan";
 import { planAnchors } from "./shapes";
 import type { AnchorId, ShapeId } from "./shapes";
 import { applyMazePlan, applyMazeCuts } from "./maze_apply";
+import { searchGreedyTrapPlan, trapOptionsOf } from "./greedy_search";
 import { checkStructure, checkAlternation } from "./tangle_graph";
 import type { GenerationParams, TangleGraph } from "./types";
 
@@ -29,6 +30,16 @@ export interface SceneParams {
   exitFlank: "stub" | "away" | "near";
   exitTaperRadius: number;
   exitTaperStrength: number;
+  greedyTrap: "off" | "on";
+  trapTargetF: number;
+  trapTargetH: number;
+  trapMaxF: number;
+  trapMaxH: number;
+  trapMaxGrow: number;
+  trapRadius: number;
+  trapIters: number;
+  trapTries: number;
+  trapSurplus: number;
   entranceClearance: number;
   exitClearance: number;
   junctionSpacing: number;
@@ -58,7 +69,7 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
   // junctions, anchored ends).
   let hueGroup: number[] | undefined;
   if (params.mazeFabric) {
-    const plan = buildMazePlan(graph, {
+    const mazeParams = {
       ...DEFAULT_MAZE_PARAMS,
       branchDensity: params.branchDensity,
       fourWayFraction: params.fourWayFraction,
@@ -69,6 +80,16 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
       exitFlank: params.exitFlank,
       exitTaperRadius: params.exitTaperRadius,
       exitTaperStrength: params.exitTaperStrength,
+      greedyTrap: params.greedyTrap,
+      trapTargetF: params.trapTargetF,
+      trapTargetH: params.trapTargetH,
+      trapMaxF: params.trapMaxF,
+      trapMaxH: params.trapMaxH,
+      trapMaxGrow: params.trapMaxGrow,
+      trapRadius: params.trapRadius,
+      trapIters: params.trapIters,
+      trapTries: params.trapTries,
+      trapSurplus: params.trapSurplus,
       entranceClearance: params.entranceClearance,
       exitClearance: params.exitClearance,
       junctionSpacing: params.junctionSpacing,
@@ -79,7 +100,15 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
         params.startAnchor,
         params.exitAnchor
       ),
-    });
+    };
+    const builtPlan = buildMazePlan(graph, mazeParams);
+    // K74 stage 4: the greedy-trap search runs in generation, over the
+    // finished plan (every trial applies H1 too - H1-in-loop). Off: the
+    // plan ships exactly as built, byte for byte.
+    const plan =
+      params.greedyTrap === "on"
+        ? searchGreedyTrapPlan(genParams, builtPlan, trapOptionsOf(mazeParams))
+        : builtPlan;
     hueGroup = applyMazePlan(graph, plan);
     applyMazeCuts(graph, plan, hueGroup);
   }

@@ -86,6 +86,10 @@ export const PATH_VIZ_MODES: PathViz[] = ["gold", "trail", "string"];
 export type CameraMode = "fit" | "follow";
 export const CAMERA_MODES: CameraMode[] = ["fit", "follow"];
 export const EXIT_FLANKS = ["stub", "away", "near"] as const;
+// K74 stage 4 (K527/K532): the greedy-trap search switch and its slider
+// thresholds (core/greedy_search.ts, greedy_trap.ts DEFAULT_TRAP_SEARCH).
+export type GreedyTrap = "off" | "on";
+export const GREEDY_TRAPS: GreedyTrap[] = ["off", "on"];
 
 // The maze clock (K80; game/minotaur.ts ClockMode): turn = the turn-based
 // maze, realtime = the real-time minotaur mode. K114's beat clock would
@@ -336,6 +340,20 @@ export interface UrlParams {
   exitFlank: ExitFlank;
   exitTaperRadius: number;
   exitTaperStrength: number;
+  // K74 stage 4: the greedy-trap search (off = today's maze, byte for
+  // byte) and its thresholds: the two walker targets, the pathological
+  // caps, the route-growth cap, the candidate radius (u), the deletion
+  // budgets, the acceptance surplus and the trials per round.
+  greedyTrap: GreedyTrap;
+  trapTargetF: number;
+  trapTargetH: number;
+  trapMaxF: number;
+  trapMaxH: number;
+  trapMaxGrow: number;
+  trapRadius: number;
+  trapIters: number;
+  trapTries: number;
+  trapSurplus: number;
   pluckStyle: PluckStyle; // Drag-release feel: soft ease vs ringing string.
   // RENDER-ONLY PLUCKS (taps, auto plucks, string releases): visual swing
   // multiplier [0, 2] (0 = sound only), strobe-ghost strength [0, 1] (the
@@ -721,6 +739,16 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   exitFlank: "away",
   exitTaperRadius: 0,
   exitTaperStrength: 0,
+  greedyTrap: "off", // K74 stage 4 (K527): the search ships off.
+  trapTargetF: 2.5,
+  trapTargetH: 3.5,
+  trapMaxF: 6,
+  trapMaxH: 8,
+  trapMaxGrow: 1.15,
+  trapRadius: 20,
+  trapIters: 12,
+  trapTries: 8,
+  trapSurplus: 1.25,
   pluckStyle: "string",
   pluckSize: 2, // K279 (was 1.75 from 2026-10-11, 1 before).
   pluckGhost: 0.5, // K279 (was 0.35).
@@ -1030,6 +1058,7 @@ export const ENUM_OPTIONS: {
   pathViz: PATH_VIZ_MODES,
   cameraMode: CAMERA_MODES,
   exitFlank: EXIT_FLANKS,
+  greedyTrap: GREEDY_TRAPS,
   colorScheme: COLOR_SCHEMES,
   appearMode: APPEAR_MODES,
   appearSequence: APPEAR_SEQUENCES,
@@ -1337,6 +1366,18 @@ function readLegacy(
     exitFlank: readChoice(query, "xfl", EXIT_FLANKS, D.exitFlank),
     exitTaperRadius: clampTo(readNumber(query, "xtr", D.exitTaperRadius), 32),
     exitTaperStrength: clampTo(readNumber(query, "xtk", D.exitTaperStrength), 2),
+    // K74 stage 4 (&gtp=on&ttf=2.5&tth=3.5&tmf=6&tmh=8&tmg=1.15&trd=20
+    // &tit=12&ttr=8&tsp=1.25).
+    greedyTrap: readChoice(query, "gtp", GREEDY_TRAPS, D.greedyTrap),
+    trapTargetF: readNumber(query, "ttf", D.trapTargetF),
+    trapTargetH: readNumber(query, "tth", D.trapTargetH),
+    trapMaxF: readNumber(query, "tmf", D.trapMaxF),
+    trapMaxH: readNumber(query, "tmh", D.trapMaxH),
+    trapMaxGrow: readNumber(query, "tmg", D.trapMaxGrow),
+    trapRadius: readNumber(query, "trd", D.trapRadius),
+    trapIters: readNumber(query, "tit", D.trapIters),
+    trapTries: readNumber(query, "ttr", D.trapTries),
+    trapSurplus: readNumber(query, "tsp", D.trapSurplus),
     // Its shape and colors (K79 stage B: `&bgsz=2&bgan=90&bgcm=custom
     // &bgc0=101820&bgc1=ffcc66`; colors as pc= takes them, no "#").
     backgroundScale: sanitizeBackgroundScale(

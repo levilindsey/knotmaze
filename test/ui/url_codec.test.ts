@@ -121,6 +121,9 @@ describe("links", () => {
       revealFinish: true,
       revealEndCross: "under", revealEndGlow: "bright",
       minoByLength: false,
+      greedyTrap: "off", trapTargetF: 2.5, trapTargetH: 3.5, trapMaxF: 6,
+      trapMaxH: 8, trapMaxGrow: 1.15, trapRadius: 20, trapIters: 12,
+      trapTries: 8, trapSurplus: 1.25,
     });
   });
 
@@ -777,6 +780,9 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   revealFinish: "rvx",
   revealEndCross: "rve", revealEndGlow: "rvg",
   exitCorridor: "xcr", exitFlank: "xfl", exitTaperRadius: "xtr", exitTaperStrength: "xtk",
+  greedyTrap: "gtp", trapTargetF: "ttf", trapTargetH: "tth", trapMaxF: "tmf",
+  trapMaxH: "tmh", trapMaxGrow: "tmg", trapRadius: "trd", trapIters: "tit",
+  trapTries: "ttr", trapSurplus: "tsp",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
@@ -805,6 +811,8 @@ function otherValue(name: keyof typeof PARAM_DEFAULTS): string | number | boolea
   if (name === "exitTaperStrength") return 1; // K74 stage 3: its default is 0
   if (name === "pluckTug") return 0.3; // K279 wake follow-up: default 0
   if (name === "pickChoiceRatio") return 2; // K298: half of 1.5 is under its floor 1
+  if (name === "trapMaxGrow") return 1.25; // K74 stage 4: half of 1.15 is under its floor 1
+  if (name === "trapSurplus") return 1.5; // K74 stage 4: half of 1.25 is under its floor 1
   return (d as number) * 0.5;
 }
 // As a link writes it: booleans 0/1, colors without the "#".

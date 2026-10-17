@@ -15,6 +15,7 @@ import { dailyParams } from "../../src/ui/daily_link";
 import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
 import { buildWalkGraph } from "../../src/core/walk_graph";
 import { walkFingerprint } from "../../src/game/daily_attempt";
+import { searchGreedyTrapPlan, trapOptionsOf } from "../../src/core/greedy_search";
 import { buildMazePlan as buildMazePlanV1 } from "./fixtures/maze_plan_v1";
 
 // K87: the incremental pickFarthest must pick exactly what the full rescan
@@ -47,6 +48,7 @@ const PRE_K74: Partial<UrlParams> = {
   exitFlank: "stub",
   exitTaperRadius: 0,
   exitTaperStrength: 0,
+  greedyTrap: "off",
 };
 const BASE: UrlParams = { ...PARAM_DEFAULTS, ...PRE_K74 };
 
@@ -73,6 +75,16 @@ function mazeParamsOf(p: UrlParams): MazeParams {
     exitFlank: p.exitFlank,
     exitTaperRadius: p.exitTaperRadius,
     exitTaperStrength: p.exitTaperStrength,
+    greedyTrap: p.greedyTrap ?? "off",
+    trapTargetF: p.trapTargetF ?? 2.5,
+    trapTargetH: p.trapTargetH ?? 3.5,
+    trapMaxF: p.trapMaxF ?? 6,
+    trapMaxH: p.trapMaxH ?? 8,
+    trapMaxGrow: p.trapMaxGrow ?? 1.15,
+    trapRadius: p.trapRadius ?? 20,
+    trapIters: p.trapIters ?? 12,
+    trapTries: p.trapTries ?? 8,
+    trapSurplus: p.trapSurplus ?? 1.25,
     entranceClearance: p.entranceClearance,
     exitClearance: p.exitClearance,
     junctionSpacing: p.junctionSpacing,
@@ -410,6 +422,43 @@ function appliedWalk(p: UrlParams): string {
   applyMazeCuts(g, plan, applyMazePlan(g, plan));
   return walkFingerprint(buildWalkGraph(g)!);
 }
+
+// K74 stage 4 (K527): the searched maze (greedyTrap on, H1-in-loop) for
+// the first dailies, pinned so a later refactor cannot move a published
+// searched maze silently. Daily 1 and 2 need no cut (they match the
+// stage-2 defaults above); daily 3 loses 12 junctions to the search.
+const K74_WALKS_SEARCHED: Record<string, string> = {
+  "daily 1": "w1.189.283.ba405cd2",
+  "daily 2": "w1.185.273.78d9a670",
+  "daily 3": "w1.171.255.07bb0055",
+};
+
+function searchedWalk(p: UrlParams): string {
+  const mp = mazeParamsOf(p);
+  const gen = {
+    gridSize: p.gridSize,
+    weaveDensity: p.weaveDensity,
+    turnBias: p.turnBias,
+    randSeed: p.seed,
+    shape: p.shape,
+  };
+  const plan = searchGreedyTrapPlan(gen, buildMazePlan(graphOf(p), mp), trapOptionsOf(mp));
+  const g = graphOf(p);
+  applyMazeCuts(g, plan, applyMazePlan(g, plan));
+  const wg = buildWalkGraph(g)!;
+  expect(Number.isFinite(wg.optimalLength)).toBe(true);
+  expect(planReachesAll(graphOf(p), plan)).toBe(true);
+  return walkFingerprint(wg);
+}
+
+describe("searched maze at the K74 stage 4 defaults (greedyTrap on)", () => {
+  it("builds the pinned searched walk graphs for dailies 1-3", () => {
+    expect(PARAM_DEFAULTS.greedyTrap).toBe("off");
+    const got: Record<string, string> = {};
+    for (let n = 1; n <= 3; n++) got[`daily ${n}`] = searchedWalk(dailyParams(n));
+    expect(got).toEqual(K74_WALKS_SEARCHED);
+  });
+});
 
 describe("applied maze at the K74 defaults (stage 2, H1)", () => {
   it("builds the pinned walk graphs with H1 off and at the default share", () => {
