@@ -526,3 +526,22 @@ look F. The mazeFabric field stays until K326. No default moves a
 maze: the golden dailies and the K74 pins are unchanged. A2 (the
 remaining folder moves, every-row word labels, the 320 px desktop
 width, the inventory rerun) is ledger K541.
+
+### Stage A2 (K541, 2026-10-16)
+
+Landed, per the K339 tree: Maze is generation only (the anchors join
+it from Design); Path & view (open) holds pathViz, trail, tension,
+pathColor, camera, pulses, marker size, maze stats, the move pad and
+confetti, with Hover glow and Off-screen arrows nested collapsed;
+Look's eleven backdrop-tuning rows nest collapsed under it; Motion
+joins Accessibility, settle/sim-speed rows join the renamed Developer
+folder (last, collapsed), agitation joins Physics, auto-pluck loudness
+joins Sound (Muted and Volume first), and Reset to defaults sits at
+the panel root. Every row carries a word label of at most 23
+characters (three K323 minotaur labels shortened to fit), and the
+desktop panel widens 256 -> 320 px. No param, default or codec change
+(codec stays v7): the golden dailies do not move (suite green, 1404).
+The inventory reran into `K339_inventory.md` (177 rows, 4 buttons, 15
+folders; its script needed an `HTMLElement` global for the K467 help
+gate); labels verified uncut on the desktop (320 px) and the phone
+sheet, and K340 look F checked under High contrast.
