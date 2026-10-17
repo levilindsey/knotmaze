@@ -867,9 +867,6 @@ Every other item below waits on the trigger it names.
   binding patterns and element access; 25 lines of `src/app/probe_hooks.ts` pass 80 columns.
 - **K393** Â· Nothing type-checks `test/`: tsconfig includes `src` only and vitest strips types,
   so a test's type error goes unseen (K5 M1). Fix: a tsconfig over `test/`, run by `npm test`.
-- **K398** Â· The GAP texture passes the Pixel's 8192-row limit at gs 66+ in knot mode (16384 rows)
-  and every gap vanishes (K8 G3-1's brief, `.claude/probes/K8/G3-1/`), because `readNumber` and the
-  codec's `num` don't clamp a link to the panel's ranges (gs [4, 24]). Fix: clamp them.
 - **K403** Â· Doc drift from the K74/K80/K114 briefs: `minotaur_turns.ts` 41-42 puts abbott in stage
   3 (`K80_turns.md`: stage 4); `gameplay-minotaur.md` cites "codec v5 108-116"; `main.ts` 3177-3179
   says tapsWait is off (on, 3283); `K74.md` 104 and 114-116 misname stage 3's sections.
@@ -1237,6 +1234,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K398** · Link values clamp to the panel ranges (PARAM_RANGES in param_codec.ts: on encode, and in url_state's readers; the codec's decode stays lossless, hueShift/background sentinels/junctionBlend's floor keep their pins), so a gs 66+ knot link can no longer overflow the GAP texture. Done in this commit (2026-10-16).
 - **K524** · K80 turns 3b's real-phone contact sheet: shot 2026-10-16 on the real Pixel 11 at 411x753 (master 5558669, PowerVR Vulkan; roam turn 2, hunt turn 47, caught turn 48, all checks pass). `.claude/probes/K80/stage3b/contact_sheet_real.png` beside the emulated sheet; frames + look notes in `shots/phone_real/` (probe `turns_phone_real.mjs`). Done 2026-10-16 (probe evidence only, no commit).
 - **K521** · K74 stage 3 items 7-8 measured: prototype port byte-identical 640/640 (K109/K110 exception list empty); greedy bar fails on dailies 1-240 (gF median 2.86x, 20.0% within 1.5x vs the 15% bar) - owned by stage 4's search (K527), not a stage-3 retune. Done in 4098946 (2026-10-16; evidence `.claude/probes/K74/stage3/out/results_k521.md`).
 - **K270** · K80 turns 3b diagnosed the lavender band: a stale pre-catch telegraph/glow frame at the catch site; turnCaught now re-syncs the minotaur in the same call. Done in dcdfaf4 (2026-10-16).

@@ -3,7 +3,7 @@
 // `?<seed>` or `?<seed>.<blob>`. key=value pairs (`?s=<seed>&am=instant`)
 // still parse, against today's defaults.
 
-import { decodeToken, encodeToken } from "./param_codec";
+import { clampParamValue, decodeToken, encodeToken, PARAM_RANGES } from "./param_codec";
 import type { ParamValue } from "./param_codec";
 import type { ColorScheme, GamutPalette } from "../core/section_colors";
 import { COLOR_SCHEMES, GAMUT_PALETTES } from "../core/section_colors";
@@ -1044,6 +1044,19 @@ export const ENUM_OPTIONS: {
   revealEndGlow: REVEAL_END_GLOWS,
 };
 
+// K398: every numeric param held to the panel's range (param_codec's
+// PARAM_RANGES), in both link readers - the token's numbers clamp in
+// the codec, the key=value reader's here (fromCodecValues included, so
+// paramsFromValues is held too). Non-finite values keep the readers'
+// own garbage handling (a default, or 0), never a range end.
+function clampToRanges(p: Omit<UrlParams, "seed">): void {
+  const rec = p as unknown as Record<string, ParamValue>;
+  for (const name of Object.keys(PARAM_RANGES)) {
+    const v = rec[name];
+    if (typeof v === "number") rec[name] = clampParamValue(name, v);
+  }
+}
+
 function clamp01(v: number): number {
   return Math.max(0, Math.min(1, v));
 }
@@ -1096,6 +1109,7 @@ function fromCodecValues(
   p.fireSpeedRt = clampFireSpeed(p.fireSpeedRt, PARAM_DEFAULTS.fireSpeedRt);
   p.fireDelayRt = clampTo(p.fireDelayRt, FIRE_DELAY_MAX);
   clampPluckEmphasis(p);
+  clampToRanges(p);
   return p;
 }
 
@@ -1192,7 +1206,9 @@ export function parseParams(search: string): UrlParams {
   const head = (amp < 0 ? query : query.slice(0, amp)).replace(/=$/, "");
   if (head === "" || head.includes("=")) {
     const legacy = new URLSearchParams(query);
-    return { seed: readSeed(legacy), ...readLegacy(legacy, PARAM_DEFAULTS) };
+    const legacyParams = readLegacy(legacy, PARAM_DEFAULTS);
+    clampToRanges(legacyParams);
+    return { seed: readSeed(legacy), ...legacyParams };
   }
   const decoded = decodeToken(head, PARAM_DEFAULTS);
   if (decoded.error !== null) {
@@ -1210,7 +1226,9 @@ export function parseParams(search: string): UrlParams {
   applyAppearMode(values);
   if (amp < 0) return { seed, ...values };
   const overrides = new URLSearchParams(query.slice(amp + 1));
-  return { seed, ...readLegacy(overrides, values) };
+  const overridden = readLegacy(overrides, values);
+  clampToRanges(overridden);
+  return { seed, ...overridden };
 }
 
 // The key=value readers: each key the query lacks reads `base` (today's
@@ -1481,7 +1499,9 @@ export function applyLegacyOverrides(
   base: UrlParams,
   query: string
 ): UrlParams {
-  return { seed: base.seed, ...readLegacy(new URLSearchParams(query), base) };
+  const overridden = readLegacy(new URLSearchParams(query), base);
+  clampToRanges(overridden);
+  return { seed: base.seed, ...overridden };
 }
 
 // The appearance group (see APPEAR_MODES). A URL without am= (a short link

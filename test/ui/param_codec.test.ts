@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  clampParamValue,
   CODEC_PARAMS,
   CODEC_VERSION,
   decodeToken,
@@ -534,7 +535,7 @@ describe("token round trip (seeded property test)", () => {
   // What a value reads back as: numbers at their written precision,
   // colors lowercased.
   const canonical = (p: CodecParam, v: ParamValue): ParamValue => {
-    if (p.type === "number") return Number(numberText(v as number));
+    if (p.type === "number") return clampParamValue(p.name, Number(numberText(v as number)));
     if (p.type === "color") return (v as string).toLowerCase();
     return v;
   };
