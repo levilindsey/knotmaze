@@ -427,6 +427,12 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       head: ctx.scene.fabricController?.head ?? null,
       minoAt: ids[tm.state.v],
       state: { ...tm.state },
+      // K481 stage 2: the by-length animation and catch moment.
+      minoSpot: { ...tm.mino },
+      lastTravel: tm.lastTravel,
+      lastContact: tm.lastContact
+        ? { t: tm.lastContact.t, mino: { ...tm.lastContact.mino }, player: { ...tm.lastContact.player } }
+        : null,
       progress: tm.progress,
       lastPath: tm.lastPath.map(([e, b]) => [e, ids[b]]),
       telegraph: tel
@@ -434,6 +440,11 @@ export function installProbeHooks(ctx: ProbeCtx): void {
             from: ids[tel.from],
             steps: tel.steps.map(([e, b]) => [e, ids[b]]),
             dest: ids[tel.dest],
+            // K481 stage 2: by-length stops (ticks) and route spots.
+            fromSpot: tel.fromSpot ? { ...tel.fromSpot } : null,
+            stops: tel.stops
+              ? tel.stops.map((s) => ({ edge: s.edge, travel: s.travel, spot: { ...s.spot } }))
+              : null,
           }
         : null,
       inputs: [...tm.inputs],

@@ -356,6 +356,9 @@ async function main(): Promise<void> {
   // move is a turn, and so is a wait (a tap on your own junction); its run
   // plays over the player's move animation, a wait's over turnWaitDur.
   let turnWait = 0; // Seconds left of a wait's animation (0: none).
+  // K481 stage 2: a by-length catch waiting for its contact moment in the
+  // move (or wait) animation; turnCaught runs when progress reaches it.
+  let pendingTurnCatch: { tm: TurnMinotaur; t: number; wait: boolean } | null = null;
   let turnWaitDur = 0;
   // K80 turns 3a: the head's WAIT CUE (setWaitCue) - while the pointer is
   // in the wait zone the head wears the "hourglass" glyph; this is the glyph
@@ -1718,7 +1721,7 @@ async function main(): Promise<void> {
   // reset on a catch (minoRestart) it is the level restart instead, the
   // tallies carried; with minoLair off the model leaves the minotaur where
   // it caught you. `wait`: caught on a wait (markCaught logs it).
-  const turnCaught = (wait = false): void => {
+  const turnCaught = (wait = false, atContact = false): void => {
     if (!scene.turnMino || !scene.fabric || !scene.fabricController) return;
     const fc = scene.fabricController;
     // K80 turns 3b (section 2.8; K270): the catch site BEFORE the respawn
@@ -1729,10 +1732,19 @@ async function main(): Promise<void> {
     // lavender threads that stale red frame read as a lavender band. The
     // immediate syncMinotaur below (as restartSolve already did) clears it
     // in the same call.
+    // K481 stage 2: a deferred by-length catch ends its animation here;
+    // the marker stands where the respawn already put it.
+    if (atContact) scene.turnMino.finishCatchAnim();
     const site = scene.turnMino.lastCatch;
     const sitePt = new Float32Array(2);
     let hasSite = false;
-    if (site && scene.walkGraph) {
+    // K481 stage 2: at the contact's moment the burst lands on the
+    // contact spot, not on the player's destination vertex.
+    const contact = atContact ? scene.turnMino.lastContact : null;
+    if (contact && scene.fabric) {
+      hasSite = scene.fabric.minoSpotWorld(scene.turnMino.tg.chase, contact.player, sitePt);
+    }
+    if (!hasSite && site && scene.walkGraph) {
       const vid = scene.turnMino.tg.chase.ids[site.player];
       if (vid) { scene.fabric.vertexWorld(vid, sitePt, 0); hasSite = true; }
     }
@@ -1744,7 +1756,11 @@ async function main(): Promise<void> {
     }
     fc.markCaught(wait);
     // The move under way was made in full: its fog lifts as cancelMove's.
-    scene.fabric.cancelMove();
+    // K481 stage 2: at the contact's moment the player never got past
+    // it, so the fog lifts only as far as the dot reached (stopMove);
+    // a runs catch was made in full (cancelMove, above).
+    if (atContact) scene.fabric.stopMove();
+    else scene.fabric.cancelMove();
     fc.respawn(params.minoRefog);
     scene.fabric.clearYarn();
     pendingWin = false;
@@ -1822,8 +1838,46 @@ async function main(): Promise<void> {
       if (r === "moved" || r === "win") minoTurnSound(wasHunting);
       return false;
     }
+    if (deferLengthCatch(false)) return false;
     turnCaught();
     return true;
+  };
+  // K481 stage 2: defer a by-length catch to its contact moment (the
+  // game state has already caught and respawned; the move animation
+  // plays on and tickTurnMino calls turnCaught there). True when the
+  // catch was deferred - the caller then animates the move as usual.
+  // Mid-move input keeps Levi's correction (3b1612f): pointer taps are
+  // ignored while the dot travels and keys/pad/gamepad gate on
+  // held-at-arrival, exactly as for a runs move - the pending catch
+  // rides the same animation and the same gates.
+  const deferLengthCatch = (wait: boolean): boolean => {
+    const tm = scene.turnMino;
+    if (!tm || !tm.cfg.byLength || !tm.lastContact || tm.lastContact.t <= 0.001) return false;
+    pendingTurnCatch = { tm, t: tm.lastContact.t, wait };
+    return true;
+  };
+  // K481 stage 2: how long a wait's turn plays. By runs it is the time
+  // the dot would take over the minotaur's runs; by length, over the
+  // thread it actually travels (its last, possibly partial, segment
+  // counted by its travelled share).
+  const turnWaitSeconds = (): number => {
+    const tm = scene.turnMino;
+    if (!tm || !scene.fabric) return 0;
+    let ctrl = 0;
+    if (tm.cfg.byLength) {
+      for (let i = 0; i < tm.lastPath.length; i++) {
+        const e = tm.lastPath[i][0];
+        const we = scene.walkGraph?.edges[e];
+        const len = tm.tg.chase.len[e];
+        if (we && len > 0) ctrl += ((tm.lastSegLens[i] ?? len) * Math.abs(we.ctrlB - we.ctrlA)) / len;
+      }
+    } else {
+      for (const [e] of tm.lastPath) {
+        const we = scene.walkGraph?.edges[e];
+        if (we) ctrl += we.ctrlB - we.ctrlA;
+      }
+    }
+    return ctrl > 0 ? scene.fabric.moveSeconds(ctrl) : 0;
   };
   // Is world point (x, y) a tap on the player's own junction (the wait)?
   // Within max(1.5 head discs, 0.9) world of it AND nearer it than any
@@ -1890,16 +1944,19 @@ async function main(): Promise<void> {
     noteMove();
     if (r === "moved") minoTurnSound(wasHunting);
     if (r === "caught") {
+      // K481 stage 2: by length, the catch shows at its contact moment
+      // in the wait's own clock too.
+      if (deferLengthCatch(true)) {
+        turnWaitDur = turnWaitSeconds();
+        turnWait = turnWaitDur;
+        updateHud();
+        return true;
+      }
       turnCaught(true);
       return true;
     }
     // Its run(s) play over what the player's dot would take on them.
-    let ctrl = 0;
-    for (const [e] of scene.turnMino.lastPath) {
-      const we = scene.walkGraph?.edges[e];
-      if (we) ctrl += we.ctrlB - we.ctrlA;
-    }
-    turnWaitDur = ctrl > 0 ? scene.fabric.moveSeconds(ctrl) : 0;
+    turnWaitDur = turnWaitSeconds();
     turnWait = turnWaitDur;
     if (turnWaitDur === 0) scene.turnMino.setProgress(1);
     updateHud();
@@ -1916,8 +1973,20 @@ async function main(): Promise<void> {
     } else if (scene.fabric.animating) {
       frac = scene.fabric.moveProgress;
     }
+    if (pendingTurnCatch && pendingTurnCatch.tm !== scene.turnMino) pendingTurnCatch = null;
     scene.fabric.tickCatchFx(dt);
     scene.turnMino.setProgress(frac);
+    // K481 stage 2: the by-length catch shows at its contact moment.
+    if (
+      pendingTurnCatch &&
+      pendingTurnCatch.tm === scene.turnMino &&
+      frac >= pendingTurnCatch.t
+    ) {
+      const w = pendingTurnCatch.wait;
+      pendingTurnCatch = null;
+      turnCaught(w, true);
+      return;
+    }
     scene.fabric.syncMinotaur(scene.turnMino, params.minoFog, scene.turnMino.telegraph());
   };
 

@@ -79,6 +79,8 @@ export interface TurnMinoParams {
   // K80 turns stage 2 (K273): a catch sends it back to its lair (true), or
   // leaves it where its turn ended (false).
   lair: boolean;
+  // K481 stage 2: travel by thread length (the `minoByLength` param).
+  byLength: boolean;
 }
 
 // The defaults: the research's hunter (section 0: prox, stall 0.1, roam 3-8
@@ -101,6 +103,7 @@ export const DEFAULT_TURN_MINO: Readonly<TurnMinoParams> = Object.freeze({
   sleep: 0,
   pull: 0,
   lair: true,
+  byLength: false,
 });
 
 // K294 (K80 turns 3a): per-model defaults. DEFAULT_TURN_MINO's sight and
@@ -138,6 +141,18 @@ export function turnMinoDefaults(model: TurnMinotaurSetting): TurnMinoParams {
 
 export const BY_LENGTH_CATCH_DIST = 0;
 
+// K501 (Levi, 2026-10-16): the by-length TRAVEL SCALE. Travel is the
+// speed factor times the player's move length times this scale (a wait:
+// the median run length). At scale 1 the mode ran deadlier than today's
+// runs mode for the attentive explorer (stalker daily explorer 3.4%
+// today -> 8.9% by-length; at speed one it averages 1.69 hops a turn, its
+// runs shorter than the player's picks), which no catch distance in
+// [0, 1] offsets. Tuned on the turn sim toward today's nine-cell catch
+// rates (stage 2; .claude/probes/K481/sweep_scale_32.md); a code
+// constant, not a panel row - the panel carries only the toggle
+// (decision 1). LENGTH_GAMES is pinned at this value.
+export const BY_LENGTH_TRAVEL_SCALE = 0.65;
+
 // The harness's MinoConfig, trimmed to the two policies stage 1 ships, so
 // the comparison can pass the harness's own configs.
 export interface TurnConfig {
@@ -159,6 +174,9 @@ export interface TurnConfig {
   // default; stage 2 wires the `minoByLength` param to it. Decisions stay
   // in runs (sight, roam, give-up, territory); only the travel changes.
   byLength?: boolean;
+  // K501: travel scale (travel = speed factor x player length x scale;
+  // default 1 here; turnConfig sets BY_LENGTH_TRAVEL_SCALE).
+  travelScale?: number;
   // K481: thread distance at which a by-length contact catches (lattice
   // units; default BY_LENGTH_CATCH_DIST).
   catchDist?: number;
@@ -181,6 +199,11 @@ export function turnConfig(p: TurnMinoParams): TurnConfig {
     sleep: p.sleep,
   };
   if (p.lair === false) base.lair = false;
+  if (p.byLength) {
+    base.byLength = true;
+    base.catchDist = BY_LENGTH_CATCH_DIST;
+    base.travelScale = BY_LENGTH_TRAVEL_SCALE;
+  }
   if (p.speed === "charge") base.chaseSpeed = 2;
   if (p.model === "stalker") return { ...base, policy: "chase" };
   if (p.pull > 0) base.pull = p.pull;
@@ -393,6 +416,12 @@ function stepRandomAny(g: TurnGraph, m: MinoState, noReverse: boolean, rng: Turn
 // at `p` (K481 decision 2): cfg.speed, or the charge speed while it hunts
 // or has the player in sight. Half is 0.5x every turn here, not every
 // other turn as in the runs mode; sleep and pause still gate the turn.
+// K501: the config's travel scale (1 when unset or garbled).
+export function travelScaleOf(cfg: TurnConfig): number {
+  const s = cfg.travelScale;
+  return s !== undefined && Number.isFinite(s) && s > 0 ? s : 1;
+}
+
 export function lengthFactor(g: TurnGraph, cfg: TurnConfig, m: MinoState, p: number): number {
   let f = cfg.speed;
   if (cfg.chaseSpeed && p !== g.start) {
@@ -602,6 +631,9 @@ export function planLengthRoute(
   turn: number,
   maxTravel: number
 ): TurnLengthPlan {
+  // K501: callers pass the unscaled cap (factor x length); the planned
+  // route covers the scaled travel.
+  maxTravel = maxTravel * travelScaleOf(cfg);
   const fromState = cloneMino(m0);
   const factor = lengthFactor(g, cfg, fromState, player);
   const empty = (): TurnLengthPlan => ({
@@ -743,6 +775,69 @@ export function lengthContactDistance(
   return best;
 }
 
+// K481 stage 2: the earliest move fraction t in [0, 1] at which the
+// by-length contact above first holds (null: never). The page shows the
+// catch at this moment of the move animation. Between the route's
+// breakpoints only a shared run can cross the catch distance (its
+// separation is linear in t); everywhere else the least distance falls
+// at a breakpoint, as lengthContactDistance argues.
+export function lengthContactFraction(
+  g: TurnGraph,
+  p: number,
+  e: number,
+  fromSpot: Spot,
+  steps: readonly TurnStep[],
+  segLens: readonly number[],
+  travel: number,
+  catchDist: number
+): number | null {
+  const fracs: number[] = [0, 1];
+  if (travel > 0) {
+    let cum = 0;
+    for (const seg of segLens) {
+      cum += seg;
+      const f = cum / travel;
+      if (f > 0 && f < 1) fracs.push(f);
+    }
+  }
+  fracs.sort((a, b) => a - b);
+  const ts: number[] = [];
+  for (const f of fracs) {
+    if (ts.length === 0 || f - ts[ts.length - 1] > 1e-12) ts.push(f);
+  }
+  const distAt = (t: number): number =>
+    g.chase.spotToSpot(
+      spotAlongLengthRoute(g, fromSpot, steps, segLens, t * travel),
+      playerSpotAt(g, p, e, t),
+      false
+    );
+  for (let i = 0; i < ts.length; i++) {
+    const t = ts[i];
+    if (distAt(t) <= catchDist + 1e-9) return t;
+    if (i + 1 >= ts.length) break;
+    const t1 = ts[i + 1];
+    if (e < 0) continue;
+    const mid = (t + t1) / 2;
+    const mm = spotAlongLengthRoute(g, fromSpot, steps, segLens, mid * travel);
+    if (mm.edge !== e) continue;
+    const sep = (tt: number): number =>
+      spotCoord(g, spotAlongLengthRoute(g, fromSpot, steps, segLens, tt * travel), e) -
+      spotCoord(g, playerSpotAt(g, p, e, tt), e);
+    const d0 = sep(t);
+    const d1 = sep(t1);
+    if (d0 === d1) continue;
+    // |sep| falls to catchDist between the breakpoints.
+    for (const target of [catchDist, -catchDist]) {
+      const f = (target - d0) / (d1 - d0);
+      if (f > 0 && f < 1) return t + (t1 - t) * f;
+    }
+    if ((d0 < 0 && d1 > 0) || (d0 > 0 && d1 < 0)) {
+      return t + (t1 - t) * (Math.abs(d0) / (Math.abs(d0) + Math.abs(d1)));
+    }
+  }
+  return null;
+}
+
 export function contactByLength(
   g: TurnGraph,
   p: number,
@@ -822,6 +917,13 @@ export class TurnMinotaur {
   // vertex, and the vertex the minotaur's turn ended on), for main.ts to
   // burst, sound and vibrate at after the respawn moved both. Null before.
   lastCatch: { player: number; mino: number } | null = null;
+  // K481 stage 2 (by-length catches): the contact's moment - the move
+  // fraction and both spots there - for the page to show the catch when
+  // the animation reaches it. The turn's route (lastPath, lastSegLens,
+  // lastTravel, lastFromSpot) stays readable until finishCatchAnim, so
+  // `mino` keeps walking it while the catch is pending on screen; the
+  // game state itself has already respawned, exactly as a runs catch.
+  lastContact: { t: number; mino: Spot; player: Spot } | null = null;
   private committed: TurnStep[] = [];
   private committedPlan: TurnLengthPlan | null = null;
   private commitState: MinoState | null = null;
@@ -989,7 +1091,7 @@ export class TurnMinotaur {
     this.committed = [];
     this.committedPlan = null;
     this.commitState = null;
-    const wanted = plan.factor * playerLen;
+    const wanted = plan.factor * playerLen * travelScaleOf(this.cfg);
     const realized = this.realizeLengthPlan(plan, wanted);
     this.lastFrom = plan.from;
     this.lastFromSpot = { ...plan.fromSpot };
@@ -1016,9 +1118,19 @@ export class TurnMinotaur {
     const caught =
       p2 !== g.start &&
       contactByLength(g, p, edge, plan.fromSpot, plan.steps, plan.segLens, realized.travel, catchDist);
+    this.lastContact = null;
     if (caught) {
       this.catches++;
       this.lastCatch = { player: p2, mino: this.state.v };
+      const ct = lengthContactFraction(
+        g, p, edge, plan.fromSpot, plan.steps, plan.segLens, realized.travel, catchDist
+      );
+      const t = ct ?? 1;
+      this.lastContact = {
+        t,
+        mino: spotAlongLengthRoute(g, plan.fromSpot, plan.steps, plan.segLens, t * realized.travel),
+        player: playerSpotAt(g, p, edge, t),
+      };
       this.player = g.start;
       this.state =
         this.cfg.lair === false
@@ -1026,11 +1138,9 @@ export class TurnMinotaur {
           : initMino(g);
       this.lifeTurn = 0;
       this.lastFrom = this.state.v;
-      this.lastFromSpot = { ...this.state.spot };
-      this.lastPath = [];
-      this.lastSegLens = [];
-      this.lastTravel = 0;
-      this.progress = 1;
+      // The route (lastFromSpot, lastPath, lastSegLens, lastTravel) stays
+      // for the catch animation: `mino` walks it until finishCatchAnim.
+      this.progress = 0;
       this.commit();
       return "caught";
     }
@@ -1135,7 +1245,7 @@ export class TurnMinotaur {
     const plan = this.committedPlan;
     if (!plan || this.progress < 1) return null;
     const stops = this.lengthChoices().map((c) => {
-      const travel = Math.min(plan.factor * c.length, plan.totalLength);
+      const travel = Math.min(plan.factor * c.length * travelScaleOf(this.cfg), plan.totalLength);
       return {
         edge: c.edge,
         travel,
@@ -1174,6 +1284,12 @@ export class TurnMinotaur {
   get mode(): MinotaurMode {
     if (!this.state.left && !(this.progress < 1 && this.lastPath.length > 0)) return "lair";
     return this.hunting ? "hunt" : "wander";
+  }
+
+  // K481 stage 2: the page has shown the by-length catch at its contact
+  // moment; the marker now stands where the game state already put it.
+  finishCatchAnim(): void {
+    this.progress = 1;
   }
 
   setProgress(frac: number): void {

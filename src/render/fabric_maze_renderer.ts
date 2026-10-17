@@ -1490,6 +1490,65 @@ export class FabricMazeRenderer {
   // run, oriented from the junction it leaves, and a red ring where the
   // minotaur will end its turn (around itself when it stays). Redrawn every
   // frame: the threads move under it.
+  // K481 stage 2: a spot's world point (the by-length catch's burst site).
+  minoSpotWorld(g: ChaseGraph, s: Spot, out: Float32Array | Float64Array): boolean {
+    const at = spotCtrl(this.walk, g, s);
+    this.pointFlowed(at.chain, this.ctrlMod(at.chain, at.ctrl), out as Float32Array, 0);
+    return true;
+  }
+
+  // K481 stage 2, the by-length telegraph's first look: the committed
+  // route from where it stands (mid-run included), sampled segment by
+  // segment, with a tick ring at each choice's stop (the wait's included;
+  // its edge is -1). Stage 3 adds the hover and press lighting.
+  private drawTelegraphLength(g: ChaseGraph, t: TurnTelegraph, r: number, hunting: boolean): void {
+    const gfx = this.teleGfx;
+    gfx.clear();
+    const alphas = telegraphAlphas(hunting, t.steps.length);
+    const w = this.threadWidth;
+    let spot: Spot = { ...t.fromSpot! };
+    for (let s = 0; s < t.steps.length; s++) {
+      const [e, b] = t.steps[s];
+      const we = this.walk.edges[e];
+      if (!we) break;
+      const len = g.len[e];
+      const entry = spot.edge === e ? spot.pos : g.ea[e] === spot.vertex ? 0 : len;
+      const dir = b === g.eb[e] ? 1 : -1;
+      const seg = t.segLens?.[s] ?? len;
+      const n = Math.max(1, Math.ceil(seg / TELEGRAPH_STEP));
+      const pts: number[] = [];
+      for (let k = 0; k <= n; k++) {
+        const pos = entry + (dir * seg * k) / n;
+        const c = we.ctrlA + ((we.ctrlB - we.ctrlA) * pos) / (len || 1);
+        this.pointFlowed(we.chain, this.ctrlMod(we.chain, c), this.scratch, 0);
+        pts.push(this.scratch[0], this.scratch[1]);
+      }
+      if (pts.length >= 4) {
+        gfx.moveTo(pts[0], pts[1]);
+        for (let i = 2; i < pts.length; i += 2) gfx.lineTo(pts[i], pts[i + 1]);
+        gfx.stroke({
+          color: TELEGRAPH_COLOR,
+          width: w * TELEGRAPH_WIDTH,
+          alpha: alphas[s] ?? TELEGRAPH_ALPHA,
+          cap: "round",
+          join: "round",
+        });
+      }
+      spot = { edge: -1, pos: 0, dir: 1, vertex: b };
+    }
+    for (const stop of t.stops ?? []) {
+      const at = spotCtrl(this.walk, g, stop.spot);
+      this.pointFlowed(at.chain, this.ctrlMod(at.chain, at.ctrl), this.scratch, 0);
+      this.polyCircle(gfx, this.scratch[0], this.scratch[1], r * TELEGRAPH_RING_R * 0.55, 32);
+      gfx.stroke({
+        color: TELEGRAPH_COLOR,
+        width: w * TELEGRAPH_RING_W,
+        alpha: alphas[0] ?? TELEGRAPH_ALPHA,
+      });
+    }
+    gfx.visible = true;
+  }
+
   private drawTelegraph(
     g: ChaseGraph,
     t: TurnTelegraph | null,
@@ -1500,6 +1559,12 @@ export class FabricMazeRenderer {
     gfx.clear();
     if (!t) {
       gfx.visible = false;
+      return;
+    }
+    // K481 stage 2: by length, the route starts where it stands and its
+    // stops carry the ticks.
+    if (t.fromSpot && t.segLens && t.stops) {
+      this.drawTelegraphLength(g, t, r, hunting);
       return;
     }
     // K80 turns 3b (section 2.7): the route-shaped telegraph K324 stage 2

@@ -577,6 +577,10 @@ export interface UrlParams {
   minoGuardSight: number;
   minoGuardAccuracy: number;
   minoStalkerAccuracy: number;
+  // K481 stage 2: the turn minotaur travels by thread length instead of
+  // by runs (game/minotaur_turns.ts; the `minoByLength` toggle, off by
+  // default). Live like the other turn rows; not daily-exempt.
+  minoByLength: boolean;
   // K114 burn race (game/fire.ts, brief docs/design/K114_burn.md): the
   // fire, off | fuse; on the turn clock its speed r (fire distance per unit
   // walked, in [FIRE_SPEED_MIN, FIRE_SPEED_MAX]) and its delay h (units
@@ -823,6 +827,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minoGuardSight: TURN_MODEL_DEFAULTS.guard.sight,
   minoGuardAccuracy: TURN_MODEL_DEFAULTS.guard.accuracy,
   minoStalkerAccuracy: TURN_MODEL_DEFAULTS.stalker.accuracy,
+  minoByLength: false, // K481 stage 2: runs mode until toggled.
   // K114: off; the brief's speed and delay. R.6.1 measured them hot (one
   // wrong branch in ten traps 38% of careful players); r 0.6 or a delay of
   // 10-20 is Levi's call (the brief's stage 1 handoff).
@@ -949,6 +954,7 @@ export function turnMinoParamsOf(p: Omit<UrlParams, "seed">): TurnMinoParams {
     pause: clampTo(p.minoPause, 1),
     sleep: clampTo(p.minoSleep, MINO_SLEEP_MAX),
     pull: clampTo(p.minoTurnPull, 1),
+    byLength: p.minoByLength,
     lair: p.minoLair,
   };
 }
@@ -1444,6 +1450,8 @@ function readLegacy(
     minoGuardSight: clampTo(readNumber(query, "mgs", D.minoGuardSight), MINO_SIGHT_MAX),
     minoGuardAccuracy: clampTo(readNumber(query, "mga", D.minoGuardAccuracy), 1),
     minoStalkerAccuracy: clampTo(readNumber(query, "msa", D.minoStalkerAccuracy), 1),
+    // K481 stage 2: travel by length (`&mbl=1`).
+    minoByLength: readBool(query, "mbl", D.minoByLength),
     // K114's burn race (`&fi=fuse&fsp=0.6&fdl=15`).
     fire: readChoice(query, "fi", FIRE_MODES, D.fire),
     fireSpeed: clampFireSpeed(readNumber(query, "fsp", D.fireSpeed)),

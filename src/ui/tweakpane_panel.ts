@@ -1404,6 +1404,10 @@ export function buildPanel(
     { options: { "half (every other turn)": "half", one: "one", "charge (two while hunting)": "charge", two: "two" } },
     "Runs it takes each turn: half = one run every other turn; one; charge = one, two while it hunts you; two. Charge and two always show its next move. Applies live."
   );
+  const minoByLengthRow = turnRow(
+    fMino, "minoByLength", {},
+    "Travel by thread length: each turn it moves its speed times your move's length (times the tuned travel scale), stopping mid-run and turning back on a run; a wait moves it the maze's median run length. Contact is by thread distance through the move. Off: it takes whole runs. Applies live."
+  );
   const minoTelegraphRow = turnRow(
     fMino, "minoTelegraph", {},
     "Show its next move in red: the run it will take and where it will stand, decided when your move ends (forced on at charge and two). Applies live."
@@ -2348,6 +2352,7 @@ export function buildPanel(
     minotaurRow.hidden = !turnClock;
     minoSpeedRow.hidden = !turnMinoOn;
     minoTelegraphRow.hidden = !turnMinoOn;
+    minoByLengthRow.hidden = !turnMinoOn;
     fMinoBehavior.hidden = !turnMinoOn;
     // K294 (K80 turns 3a): each model's own rows. The stalker never roams
     // (no pull, no give-up) and charges within the shared sight.

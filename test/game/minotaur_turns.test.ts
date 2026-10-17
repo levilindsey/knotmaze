@@ -19,6 +19,9 @@ import {
   TurnRng,
   turnSeed,
   TURN_MODEL_DEFAULTS,
+  BY_LENGTH_CATCH_DIST,
+  BY_LENGTH_TRAVEL_SCALE,
+  lengthContactFraction,
 } from "../../src/game/minotaur_turns";
 import type { TurnConfig, TurnMinoParams, TurnStep } from "../../src/game/minotaur_turns";
 import { undoAllowed } from "../../src/game/minotaur";
@@ -133,7 +136,7 @@ function turnGame(walk: WalkGraph, p: TurnMinoParams, maze: number, walkSeed: nu
 // K481: the same scripted game in the by-length mode; the digest also
 // covers its spot and travel, so a travel or contact change moves it.
 function turnGameLength(walk: WalkGraph, p: TurnMinoParams, maze: number, walkSeed: number): string {
-  const t = new TurnMinotaur(walk, { ...turnConfig(p), byLength: true }, turnSeed(maze));
+  const t = new TurnMinotaur(walk, turnConfig({ ...p, byLength: true }), turnSeed(maze));
   const rng = new SeededRNG(walkSeed * 7919 + maze);
   let h = 0x811c9dc5;
   const mix = (s: string): void => {
@@ -162,25 +165,28 @@ function turnGameLength(walk: WalkGraph, p: TurnMinoParams, maze: number, walkSe
   return `${t.turns}/${t.catches}/${t.closeCalls}/${t.seen}/${won}/${h.toString(16)}`;
 }
 
+// K481 stage 2 re-pin: at BY_LENGTH_TRAVEL_SCALE 0.65 through the shipped
+// config (turnConfig of byLength params), with the catch route kept for
+// its animation (lastTravel no longer resets on a catch).
 const LENGTH_GAMES: string[] = [
-    "hunter:3:1 51/0/3/25/W/acbddd26",
-    "hunter:3:2 13/0/0/5/W/e9e9bed3",
-    "guard:3:1 143/5/2/97/W/fab54e46",
-    "guard:3:2 13/0/0/9/W/8038404f",
-    "stalker:3:1 83/2/7/79/W/727bec77",
-    "stalker:3:2 54/3/2/47/W/6b6a3c62",
-    "hunter:17:1 59/2/2/21/W/75debd4a",
-    "hunter:17:2 27/0/0/17/W/9fce3356",
-    "guard:17:1 65/1/1/50/W/2837206e",
-    "guard:17:2 35/2/1/13/W/fc05bad",
-    "stalker:17:1 55/2/3/51/W/4484b34c",
-    "stalker:17:2 27/1/1/24/W/f7f741e7",
-    "hunter:42:1 12/0/2/7/W/8df0880c",
-    "hunter:42:2 9/0/0/4/W/f842b3e1",
-    "guard:42:1 12/0/2/9/W/86d91334",
-    "guard:42:2 9/0/0/7/W/d69f8b4d",
-    "stalker:42:1 12/0/2/10/W/86d91334",
-    "stalker:42:2 9/0/0/7/W/d69f8b4d",
+    "hunter:3:1 51/0/0/6/W/b2ae2d62",
+    "hunter:3:2 51/2/2/7/W/136f28a4",
+    "guard:3:1 157/5/4/107/W/f6026fd4",
+    "guard:3:2 60/3/3/34/W/b1c8eea0",
+    "stalker:3:1 141/5/2/132/W/5e36e0f4",
+    "stalker:3:2 108/6/5/97/W/526e09b6",
+    "hunter:17:1 54/0/4/10/W/d19ae76d",
+    "hunter:17:2 27/0/0/0/W/aff90a90",
+    "guard:17:1 59/1/2/45/W/28357b6c",
+    "guard:17:2 27/0/0/17/W/9d2dc0d",
+    "stalker:17:1 65/1/4/61/W/94509039",
+    "stalker:17:2 27/1/1/24/W/26782ca3",
+    "hunter:42:1 12/0/2/7/W/e5f60263",
+    "hunter:42:2 9/0/0/4/W/89f4188d",
+    "guard:42:1 12/0/2/9/W/3e8b4767",
+    "guard:42:2 9/0/0/7/W/fdbb86b1",
+    "stalker:42:1 12/0/2/10/W/3e8b4767",
+    "stalker:42:2 9/0/0/7/W/fdbb86b1",
 ];
 
 describe("contact (the continuous rule)", () => {
@@ -683,6 +689,27 @@ describe("TurnMinotaur", () => {
       expect(t.state.v).toBe(B);
     });
 
+    it("wires the toggle through turnConfig at the tuned scale (K501)", () => {
+      const off = turnConfig(params());
+      expect(off.byLength).toBeUndefined();
+      const on = turnConfig(params({ byLength: true }));
+      expect(on.byLength).toBe(true);
+      expect(on.catchDist).toBe(BY_LENGTH_CATCH_DIST);
+      expect(on.travelScale).toBe(BY_LENGTH_TRAVEL_SCALE);
+      // A wait travels factor x median x scale.
+      const t = new TurnMinotaur(G2, turnConfig({ ...params({ model: "stalker", accuracy: 1, pause: 0 }), byLength: true }), 1);
+      t.turn(0);
+      t.turn(-1);
+      expect(t.lastTravel).toBeCloseTo(12 * BY_LENGTH_TRAVEL_SCALE, 9);
+    });
+
+    it("finds the contact's moment on a head-on run", () => {
+      const from = spotAtVertex(B);
+      expect(lengthContactFraction(tg2, A, 1, from, [[1, A]], [20], 20, 0)).toBeCloseTo(0.5, 9);
+      expect(lengthContactFraction(tg2, A, 1, from, [[1, A]], [20], 20, 1)).toBeCloseTo(0.475, 9);
+      expect(lengthContactFraction(tg2, S, 0, from, [[1, A]], [20], 5, 0)).toBeNull();
+    });
+
     it("travels the speed factor times the player's run, at each speed", () => {
       const g = tg2;
       const base = initMino(g);
@@ -722,7 +749,16 @@ describe("TurnMinotaur", () => {
       place(t, B, { edge: 2, pos: 8, dir: -1, vertex: C });
       t.state.prev = C;
       expect(t.turn(2)).toBe("caught"); // B -> C at 1x closes on its 0.5x turn back
-      expect(t.lastTravel).toBe(0); // reset by the catch
+      // Stage 2: the route stays for the catch animation (the game state
+      // has already respawned); finishCatchAnim puts the marker there.
+      expect(t.lastTravel).toBe(10);
+      expect(t.lastContact).not.toBeNull();
+      expect(t.lastContact!.t).toBeGreaterThan(0);
+      expect(t.lastContact!.t).toBeLessThan(1);
+      expect(t.mino).toMatchObject({ edge: 2, pos: 8, dir: -1 });
+      t.setProgress(t.lastContact!.t);
+      expect(t.mino.pos).toBeCloseTo(t.lastContact!.mino.pos, 9);
+      t.finishCatchAnim();
       expect(t.catches).toBe(1);
       expect(t.state.v).toBe(X);
       expect(t.mino).toMatchObject({ edge: -1, vertex: X });

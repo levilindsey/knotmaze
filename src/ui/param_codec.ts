@@ -293,6 +293,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   choice("exitFlank", ["stub", "away", "near"]), // 153
   num("exitTaperRadius"), // 154
   num("exitTaperStrength"), // 155
+  // K481 stage 2: the turn minotaur travels by thread length.
+  flag("minoByLength"), // 156
 ]);
 
 // The format version a blob names first. Bump it for anything but an

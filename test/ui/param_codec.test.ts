@@ -196,6 +196,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["exitFlank", "enum", ["stub", "away", "near"]],
   ["exitTaperRadius", "number"],
   ["exitTaperStrength", "number"], // 155
+  ["minoByLength", "boolean"], // 156, K481 stage 2
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
