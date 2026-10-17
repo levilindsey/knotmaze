@@ -425,9 +425,6 @@ Every other item below waits on the trigger it names.
 - **K370** Â· Worker input latency, p50 (target 50 ms): desktop 105 on the daily,
   70 on the knot (in-thread 285; K7 s4); phone 231, first motion 173 (in-thread
   872; K7 s5). Measure each stage first (`k7_latency.mjs`); levers: newest snapshot while grabbed, more drag substeps.
-- **K373** Â· Two cheap boot fixes from K7 s4's trace: the `safeAreaInsets`
-  forced layout (`offscreen_indicators.ts` 797-809, ~35 ms) and `formatDayDate`
-  (`daily_calendar.ts:75`, ~8 ms). Rec: do both.
 - **K376** Â· Look at the reveal's intro close-in, joints now fading with their
   arms (K268 s2, desktop only so far), on the desktop and the phone; fix any of
   the stage's four small residuals that show (`docs/design/K268.md`, "Stage 2 handoff").
@@ -1221,6 +1218,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K373** · Boot fixes: safeAreaInsets is cached and read lazily on the first indicator update (was a forced layout at boot), and formatDayDate reuses one Intl formatter per locale. Done in this commit (2026-10-16).
 - **K436** · Regenerate clears the frame loop's halted flag on the main thread (lifecycle beginLoading/beginSettle), so a halted page recovers without a reload; K454, K469 and K314 were the same defect. Done in this commit (2026-10-16).
 - **K454** · Same defect as K436. Done in this commit (2026-10-16).
 - **K469** · Same defect as K436. Done in this commit (2026-10-16).

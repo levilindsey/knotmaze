@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   EDGE_MARGIN,
   HEAD_INDICATOR_KEY,
@@ -12,6 +12,8 @@ import {
   MINOTAUR_INDICATOR_KEY,
   blendPlacement,
   indicatorFrame,
+  invalidateSafeAreaInsets,
+  safeAreaInsets,
   indicatorPrefs,
   layoutIndicators,
   offscreen,
@@ -313,5 +315,37 @@ describe("the stored indicator settings", () => {
     expect(parseIndicatorScale("9")).toBe(INDICATOR_SCALE_MAX);
     expect(parseIndicatorScale("1.234")).toBe(1.23);
     expect(parseIndicatorScale("0.6")).toBe(0.6);
+  });
+});
+
+// K373: the safe-area probe forces layout, so its result is cached
+// until invalidated (a resize), not re-read on every call.
+describe("safeAreaInsets (K373)", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("reads the probe once until invalidated", () => {
+    let reads = 0;
+    vi.stubGlobal("document", {
+      createElement: () => ({ style: { cssText: "" } }),
+      body: { appendChild: () => {} },
+    });
+    vi.stubGlobal("getComputedStyle", () => {
+      reads++;
+      return {
+        paddingTop: "1px",
+        paddingRight: "2px",
+        paddingBottom: "3px",
+        paddingLeft: "4px",
+      };
+    });
+    invalidateSafeAreaInsets();
+    expect(safeAreaInsets()).toEqual({ top: 1, right: 2, bottom: 3, left: 4 });
+    expect(safeAreaInsets()).toEqual({ top: 1, right: 2, bottom: 3, left: 4 });
+    expect(reads).toBe(1);
+    invalidateSafeAreaInsets();
+    safeAreaInsets();
+    expect(reads).toBe(2);
   });
 });
