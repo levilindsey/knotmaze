@@ -325,12 +325,13 @@ async function main(): Promise<void> {
   app.stage.addChild(root);
   // K279: pluck ripples - a filter on the world container while one lives.
   const ripples = new PluckRipples(root, () => app.screen);
-  // K307 stage 2: THE SHADER WARM-UP (render/shader_warmup.ts, lore:
-  // render-shaders.md). Wave 1, what this mode's intro draws, compiles now,
-  // in parallel with the hidden pre-settle; the first visible frame waits
-  // for it (presettleTick's mayFinish, beginSettle's instant hold). Until
-  // then the background draws nothing (pixi would link it cold), and the
-  // ripple pools its texture after (K279 stage 2; its program is wave 1's).
+  // K307: THE SHADER WARM-UP (render/shader_warmup.ts, lore:
+  // render-shaders.md). Wave 1, what this mode's intro draws, links now
+  // (late-enable, polled), in parallel with the hidden pre-settle; the
+  // first visible frame waits for it (presettleTick's mayFinish,
+  // beginSettle's instant hold). Until then the background draws nothing
+  // (pixi would link it cold), and the ripple pools its texture after
+  // (K279 stage 2; its program is wave 1's).
   const warmup = startShaderWarmup(app.renderer, (n) =>
     warmContextFor(params, look("background"), motion.reduced, n)
   );

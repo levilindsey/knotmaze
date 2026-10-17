@@ -939,3 +939,67 @@ Sources (chromium.googlesource.com, main). Chromium:
 `gpu/ipc/service/command_buffer_stub.cc`, `gpu/config/gpu_finch_features.cc`.
 ANGLE: `src/libANGLE/` (`Context.cpp`, `State.cpp`, `Program.cpp`,
 `BlobCache.cpp`, `renderer/d3d/ProgramD3D.cpp`).
+
+## Stage 3 handoff (2026-10-16, the K307 stage 3 agent)
+
+**Done**, on master (this commit): branch (b) LATE ENABLE shipped, as
+Levi answered in K517 (68535b6).
+
+- `src/render/shader_warmup.ts`: `submit()` issues every link first and
+  only then enables `KHR_parallel_shader_compile` (once,
+  `lateEnabled`); `poll()` reads `LINK_STATUS` once each program's
+  `COMPLETION_STATUS_KHR` reports done. A missing extension settles the
+  warm-up onto blocking reads, now HELD until the trefoil is up
+  (`releaseBlocking`, wired to every `loader.show()` in
+  `src/app/lifecycle.ts`; a timeout releases the hold too) - stage 2's
+  cold read froze a still page at 0.35 s for 2.8 s before the trefoil
+  appeared at 3.36 s. `PARALLEL_DEFAULT` is now true (late enable);
+  `report()` gains `lateEnabled` and its `gateOpenAt` is the completion
+  time, not the blocking poll's start (K386's complaint).
+- Wave 2 now runs on the poll path. Its links (and the three attribute
+  relinks) are issued after the enable, so they can stay memory-only:
+  they spare this visit's first draws and recompile behind the next
+  visit's wave 2. Wave 1 alone sets the warm restart, which is why the
+  registry must list every program first.
+- Tests: `shader_warmup.test.ts` (link-before-enable order, once-only
+  enable, the trefoil hold, hold timeout, default late enable) and a
+  `releaseBlocking` case in `test/app/lifecycle.test.ts`.
+
+**Verification** (desktop, D3D11, RX 6800 XT, perf lock,
+`trace_intro.mjs` on `stage3/builds/shipped`, `?daily&phw=1`, fresh
+profile + restart):
+
+| Build | Cold first visible | Warm restart first visible | Notes |
+|---|---|---|---|
+| shipped late enable | 3.27 s | 0.80 s | loader 0.58-3.25 s turning; poll max 31 ms; worst frame after visible 88 ms; pixi status max 28 ms; unregistered [], failures [] |
+| stage 3 prototype late | 3.28 s | 0.81 s | same, before the hold + report changes |
+| stage 2 blocking (reference) | 3.67 s | 0.81 s | one 2816 ms frame at 0.35 s, trefoil only at 3.36 s |
+
+First sleep: cold 11.39 s, warm 7.28 s (shipped). The dev build's
+unregistered-program check (K427; prod cannot run it) stayed empty
+after wave 2 on the daily (`stage3/dev_check.mjs`).
+
+**K366's first tap** (`.claude/probes/K307/stage2/k366_firsttap.mjs`
+against the shipped build, fresh profiles, designs knot/fabric, looks
+glint/off; full table in `firsttap_k366-s3.json` beside the probe):
+tap 1's worst app-callback frame among its first five is 22 ms (knot,
+both looks) and 39 ms (fabric, `prp=off`; 27 ms glint) - the 35-54 ms
+residual reproduces on fabric only, and with the ripple OFF, so it is
+not the ripple's program (wave 1 warms it; no link happens at the tap).
+Fabric tap 1's pointerup handling itself takes about 50 ms on both
+looks (taps 2-4: 24-37 ms, callback worst 19 ms). Inferred, not traced
+to a function: first-pluck allocation and the fabric paint's first
+re-declare. No fix in this stage; the attribution is the delivery.
+
+**The crbug (d)** is drafted at `.claude/probes/K307/stage3/crbug.md`
+(MakeCurrent path, the flag/no-flag/late/blocking numbers above) for
+Levi to submit. No external submission was attempted.
+
+**Not done:** the phone (programs persist? Android's cache cap, DrDc
+presents through a wait) - rides K156's next pass, as staged. The
+no-extension fallback's frozen-trefoil read is implemented and
+unit-tested but not traced on Vulkan in this stage.
+
+**Evidence:** `.claude/probes/K307/stage3/` (`trace_intro.mjs`,
+`dev_check.mjs`, `crbug.md`, `builds/shipped`, `runs/s3-shipped` beside
+the stage's `s3-late` / `s3-blocking` / `s3-par-*` prototype runs).

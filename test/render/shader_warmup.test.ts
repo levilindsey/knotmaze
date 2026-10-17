@@ -2,9 +2,10 @@ import { describe, it, expect } from "vitest";
 import { PARALLEL_DEFAULT, ShaderWarmup, warmContextFor, type WarmGl } from "../../src/render/shader_warmup";
 import type { WarmSource } from "../../src/render/program_registry";
 
-// K307 stage 2: the warm-up's poll, relink, timeout, failure, no-extension
-// and context-loss paths against a fake GL. The fake answers
-// COMPLETION_STATUS_KHR from a per-program flag the test sets.
+// K307: the warm-up's late enable, poll, relink, timeout, failure,
+// no-extension (blocking, held for the trefoil) and context-loss paths
+// against a fake GL. The fake answers COMPLETION_STATUS_KHR from a
+// per-program flag the test sets and records the link/enable order.
 
 const COMPLETION = 0x91b1;
 const LINK = 0x8b82;
@@ -27,6 +28,7 @@ interface FakeShader {
 
 class FakeGl implements WarmGl {
   lost = false;
+  events: string[] = [];
   programs: FakeProgram[] = [];
   completionQueries = 0;
   statusReads = 0;
@@ -77,6 +79,7 @@ class FakeGl implements WarmGl {
     (p as unknown as FakeProgram).shaders.push(sh as unknown as FakeShader);
   }
   linkProgram(p: WebGLProgram): void {
+    this.events.push("link");
     const fp = p as unknown as FakeProgram;
     fp.links++;
     fp.complete = false;
@@ -115,6 +118,7 @@ class FakeGl implements WarmGl {
   extCalls = 0;
   getExtension(name: string): unknown {
     this.extCalls++;
+    this.events.push("ext");
     return this.parallelExt && name === "KHR_parallel_shader_compile" ? {} : null;
   }
   isContextLost(): boolean {
@@ -143,10 +147,26 @@ function setup(parallel = true, timeoutMs = 15000) {
 describe("shader warm-up (K307)", () => {
   it("links everything at submit and reads nothing until the next poll", () => {
     const { gl, w } = setup();
+    expect(gl.extCalls).toBe(0); // Not at construction: that would enable it.
     w.submit(1, [src("a"), src("b"), src("c")]);
     expect(gl.programs.map((p) => p.links)).toEqual([1, 1, 1]);
     expect(gl.completionQueries + gl.statusReads).toBe(0);
     expect(w.wave1Done).toBe(false);
+  });
+
+  it("enables the extension only after the links, once (late enable)", () => {
+    const { gl, w } = setup();
+    w.submit(1, [src("a"), src("b")]);
+    expect(gl.extCalls).toBe(1);
+    expect(gl.events).toEqual(["link", "link", "ext"]);
+    expect(w.parallel).toBe(true);
+    expect(w.report().lateEnabled).toBe(true);
+    w.setWave2(() => [src("x")]);
+    gl.finish("a", "b");
+    w.poll();
+    w.startWave2(); // A later submit links without asking again.
+    expect(gl.extCalls).toBe(1);
+    expect(gl.events.filter((e) => e === "link")).toHaveLength(3);
   });
 
   it("polls in order and stops at the first program still compiling", () => {
@@ -237,12 +257,17 @@ describe("shader warm-up (K307)", () => {
     expect(gl.programs.every((p) => p.deleted)).toBe(true);
   });
 
-  it("without the extension reads every status at the first poll and skips wave 2", () => {
+  it("without the extension holds its reads for the trefoil, then reads blocking and skips wave 2", () => {
     const { gl, w } = setup(false);
-    expect(w.parallel).toBe(false);
     w.setWave2(() => [src("later")]);
     w.submit(1, [src("a"), src("b")]);
+    expect(gl.extCalls).toBe(1); // Asked once, after the links; absent.
+    expect(w.parallel).toBe(false);
     expect(gl.statusReads).toBe(0);
+    w.poll(); // Held: no read before the trefoil (the still-page fix).
+    expect(gl.statusReads).toBe(0);
+    expect(w.wave1Done).toBe(false);
+    w.releaseBlocking();
     w.poll();
     expect(gl.completionQueries).toBe(0);
     expect(gl.statusReads).toBe(2);
@@ -252,21 +277,34 @@ describe("shader warm-up (K307)", () => {
     expect(w.report().wave2Skipped).toContain("KHR_parallel_shader_compile");
   });
 
-  it("by default never asks for the extension and links blocking", () => {
-    // Asking enables it on the context, and Chrome then keeps every program
-    // linked there off the disk cache (K307 stage 2).
-    expect(PARALLEL_DEFAULT).toBe(false);
+  it("by default polls late-enable and runs wave 2", () => {
+    expect(PARALLEL_DEFAULT).toBe(true);
     const gl = new FakeGl(true);
     const w = new ShaderWarmup(gl, { log: () => {} });
     expect(gl.extCalls).toBe(0);
-    expect(w.parallel).toBe(false);
+    w.setWave2(() => [src("later")]);
     w.submit(1, [src("a"), src("b")]);
+    expect(gl.events).toEqual(["link", "link", "ext"]);
+    expect(w.parallel).toBe(true);
+    gl.finish("a", "b");
     w.poll();
-    expect(gl.completionQueries).toBe(0);
-    expect(gl.statusReads).toBe(2);
     expect(w.wave1Done).toBe(true);
     w.startWave2();
-    expect(w.report().wave2Skipped).toContain("disk cache");
+    expect(gl.programs.map((p) => gl.nameOf(p))).toContain("later");
+    expect(w.report().wave2Skipped).toBeNull();
+  });
+
+  it("a held blocking wave 1 still times out, then reads", () => {
+    const { gl, w, advance } = setup(false);
+    w.submit(1, [src("a")]);
+    advance(15000);
+    w.poll(); // Held, but the gate gives up on time.
+    expect(w.wave1Done).toBe(true);
+    expect(w.report().wave1?.timedOut).toBe(true);
+    expect(gl.statusReads).toBe(0);
+    w.poll(); // The timeout released the hold.
+    expect(gl.statusReads).toBe(1);
+    expect(w.idle).toBe(true);
   });
 
   it("aborts on a lost context: the gate opens and no GL call follows", () => {

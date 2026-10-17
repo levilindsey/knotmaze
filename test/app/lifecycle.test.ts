@@ -10,6 +10,7 @@ import type { UrlParams } from "../../src/ui/url_state";
 // The lifecycle's begin* entry points are where every regenerate lands.
 function fakes() {
   const loop = { halted: true };
+  const released = { n: 0 };
   const renderer = { beginReveal: () => {}, update: () => {} };
   const scene = {
     ps: {},
@@ -36,7 +37,7 @@ function fakes() {
     } as unknown as UrlParams,
     host: host as unknown as LifecycleDeps["host"],
     root: { visible: true } as LifecycleDeps["root"],
-    warmup: { wave1Done: true } as unknown as LifecycleDeps["warmup"],
+    warmup: { wave1Done: true, releaseBlocking: () => released.n++ } as unknown as LifecycleDeps["warmup"],
     loader: { show: () => {}, hide: () => {} },
     physicsTuning: () => ({
       slack: 0, drag: 0, repulsion: 1, bend: 1, smooth: 0,
@@ -50,7 +51,7 @@ function fakes() {
     perfLine: "",
     reveal: null,
   } as unknown as LifecycleDeps;
-  return { deps, loop, scene };
+  return { deps, loop, scene, released };
 }
 
 describe("lifecycle regenerate (K436)", () => {
@@ -66,5 +67,12 @@ describe("lifecycle regenerate (K436)", () => {
     const life = createLifecycle(deps, scene);
     life.beginLoading();
     expect(loop.halted).toBe(false);
+  });
+
+  it("releases the warm-up's blocking hold with the trefoil (K307 stage 3)", () => {
+    const { deps, scene, released } = fakes();
+    const life = createLifecycle(deps, scene);
+    life.beginLoading(); // It shows the loader at once.
+    expect(released.n).toBe(1);
   });
 });
