@@ -22,7 +22,6 @@ export interface SceneParams {
   mazeFabric: boolean;
   branchDensity: number;
   fourWayFraction: number;
-  deadEnds: boolean;
   deadEndDensity: number;
   deadEndLength: number;
   hCutShare: number;
@@ -63,7 +62,7 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
       ...DEFAULT_MAZE_PARAMS,
       branchDensity: params.branchDensity,
       fourWayFraction: params.fourWayFraction,
-      deadEndDensity: params.deadEnds ? params.deadEndDensity : 0,
+      deadEndDensity: params.deadEndDensity,
       deadEndLength: params.deadEndLength,
       hCutShare: params.hCutShare,
       exitCorridor: params.exitCorridor,

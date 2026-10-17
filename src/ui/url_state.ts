@@ -22,12 +22,10 @@ import {
 } from "../game/minotaur";
 import type {
   TurnMinoParams,
-  TurnMinotaurSetting,
   TurnSpeed,
 } from "../game/minotaur_turns";
 import {
   DEFAULT_TURN_MINO,
-  MINOTAUR_SETTINGS,
   TURN_MODEL_DEFAULTS,
   TURN_SPEEDS,
 } from "../game/minotaur_turns";
@@ -94,11 +92,23 @@ export const EXIT_FLANKS = ["stub", "away", "near"] as const;
 // append an option.
 export const CLOCK_MODES: ClockMode[] = ["turn", "realtime"];
 
-// K114's burn race (game/fire.ts): off, or a fuse lit at the entrance that
-// burns the maze behind you. Never with K80's real-time minotaur clock or
-// the turn-aligned minotaur (fireSettingsOf); fireClock picks its clock.
-export type FireMode = "off" | "fuse";
-export const FIRE_MODES: FireMode[] = ["off", "fuse"];
+// K323 Stage A: the game mode (the Game folder's first row). classic =
+// the plain maze; minotaur = the minotaur (its clock is `clock`);
+// burn = the burn race (its clock is `fireClock`).
+export type GameMode = "classic" | "minotaur" | "burn";
+export const GAME_MODES: GameMode[] = ["classic", "minotaur", "burn"];
+// The minotaur's model (the `minotaur` param since K323: no off - the
+// mode itself says whether there is one).
+export type MinotaurModel = "hunter" | "guard" | "stalker";
+export const MINOTAUR_MODELS: MinotaurModel[] = ["hunter", "guard", "stalker"];
+
+// The clock a design plays on: only the minotaur reads `clock`.
+export function clockOf(p: Pick<UrlParams, "gameMode" | "clock">): ClockMode {
+  return p.gameMode === "minotaur" ? p.clock : "turn";
+}
+
+// K114's burn race is gameMode "burn" since K323 Stage A (the fire
+// param is gone); fireClock picks its clock.
 // The fire's clock (K114 stage 2; game/fire_clock.ts): turn (L = the
 // distance walked, stage 1) or realtime (L = FIRE_V_REF lattice units a
 // second since the first move; the dot runs at that pace). Not `clock`,
@@ -327,12 +337,6 @@ export interface UrlParams {
   exitTaperRadius: number;
   exitTaperStrength: number;
   pluckStyle: PluckStyle; // Drag-release feel: soft ease vs ringing string.
-  // RETIRED with the render-only plucks (2026-10-11): the old render ring's
-  // frequency/decay scale - the time-exposure vibration has no visible
-  // frequency, and its decay follows the sound's sustain. Nothing reads it;
-  // it stays only because the codec table lists it (dropping a param is a
-  // codec version bump).
-  snappiness: number;
   // RENDER-ONLY PLUCKS (taps, auto plucks, string releases): visual swing
   // multiplier [0, 2] (0 = sound only), strobe-ghost strength [0, 1] (the
   // speed cue; 0 = pure time-exposure blur), and what vibrates. Live.
@@ -346,10 +350,8 @@ export interface UrlParams {
   // P4 branching maze: generate the spliced maze FABRIC (junctions, 4-way
   // merges, corner entrance/exit) and play it (branch-point taps).
   mazeFabric: boolean;
-  // Dead-end threads in the fabric (wrong turns that end in a tip). ON by
-  // default since K74 (off = a pure braided maze where every wrong turn
-  // loops back).
-  deadEnds: boolean;
+  // Dead ends are deadEndDensity 0 (a pure braided maze) since K323
+  // Stage A merged the deadEnds switch into the density.
   // Traversal-path visualization (fabric gameplay). gold = the classic
   // full recolor. trail = memory mode: no backtracking concept, only a
   // short gold trail of recent path behind the head. string = Ariadne's
@@ -470,6 +472,9 @@ export interface UrlParams {
   // (call F6); `&phw=0` runs it on the main thread. Read once at page start,
   // so a change takes effect on reload. Link-only, no panel row.
   physicsWorker: boolean;
+  // K323: the game mode (see GAME_MODES). Not daily-exempt: a daily is
+  // classic, and choosing another mode leaves the daily.
+  gameMode: GameMode;
   // THE MAZE CLOCK (K80): turn = the turn-based maze; realtime = the
   // real-time minotaur mode (game/minotaur.ts): the player runs at
   // playerPace with no undo, and a minotaur that starts at the finish roams
@@ -498,11 +503,13 @@ export interface UrlParams {
   // K174: the minotaur roams toward the player (DEFAULT_CHASE_PARAMS
   // .roamPull; off = K80's roam), and a catch returns the fog of war to
   // the solve's start (off = explored fog stays, K100).
-  minoToward: boolean;
+  // K323: the minoPull slider ([0, 1]; chaseParamsOf reads it as the
+  // chase's roamPull; 0.5 = the old minoToward on).
+  minoPull: number;
   minoRefog: boolean;
-  // K140's finish confetti: on/off, and the amount in [0,
-  // CONFETTI_AMOUNT_MAX] (1 = the designed burst). Viewer preferences.
-  confetti: boolean;
+  // K140's finish confetti amount in [0, CONFETTI_AMOUNT_MAX] (1 = the
+  // designed burst; 0 = none since K323 merged the on/off switch in).
+  // A viewer preference.
   confettiAmount: number;
   // K180's pluck params (render/pluck_model.ts PLUCK PARAMS): W's amount in
   // [0, PLUCK_WHOLE_MAX] (0 = the pre-K104 pluck), how W meets the unit's
@@ -562,7 +569,7 @@ export interface UrlParams {
   // turns 3a: url_state turnMinoParamsOf picks them by model). With chance
   // minoTurnPull a roam destination is one nearer you (the hunter, the
   // guard). Applies live except `minotaur`, which restarts the solve.
-  minotaur: TurnMinotaurSetting;
+  minotaur: MinotaurModel;
   minoSpeed: TurnSpeed;
   minoTelegraph: boolean;
   minoSight: number;
@@ -589,7 +596,6 @@ export interface UrlParams {
   // K80's real-time chase (`clock`) nor with the turn minotaur
   // (fireSettingsOf); its own clock is fireClock (stage 2). Every change
   // restarts the solve.
-  fire: FireMode;
   fireSpeed: number;
   fireDelay: number;
   // K290 (burn stage 3a): how burnt runs draw, gone | char (BURNT_MODES).
@@ -698,7 +704,6 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   sustain: 0.5,
   shimmer: 0.4,
   pickPosition: 0.4,
-  snappiness: 0.88, // Retired (see UrlParams).
   rootNote: "seed",
   tonicEmphasis: 0.5,
   pulseSpacing: 2.5,
@@ -722,7 +727,6 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   pluckReach: "run",
   physics: true,
   mazeFabric: true,
-  deadEnds: true, // K74 (was off).
   pathViz: "gold",
   cameraMode: "fit",
   trailLength: 10, // K73 (was 5).
@@ -767,6 +771,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K80: the turn-based maze. The chase's tuning is the simulation-picked
   // DEFAULT_CHASE_PARAMS (game/minotaur.ts); K174 made the minotaur's
   // paces fractions of the player's.
+  gameMode: "classic",
   clock: "turn",
   playerPace: DEFAULT_CHASE_PARAMS.playerPace,
   minoWanderPace: WANDER_PACE_FRACTION,
@@ -782,9 +787,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minoRoam: DEFAULT_CHASE_PARAMS.roamRange,
   minoWake: DEFAULT_CHASE_PARAMS.wake,
   minoFog: "always",
-  minoToward: true,
+  minoPull: 0.5,
   minoRefog: true,
-  confetti: true,
   confettiAmount: 1,
   pluckWhole: 0.75, // K279 (was 0.5, K104's WHOLE_AMP).
   pluckCrossings: "through",
@@ -812,7 +816,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // edge); now 4 px, and a choice 1.5x that (6 px).
   pickMargin: 4,
   pickChoiceRatio: 1.5,
-  minotaur: DEFAULT_TURN_MINO.model,
+  minotaur: "hunter",
   minoSpeed: DEFAULT_TURN_MINO.speed,
   minoTelegraph: DEFAULT_TURN_MINO.telegraph,
   minoSight: DEFAULT_TURN_MINO.sight,
@@ -831,7 +835,6 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K114: off; the brief's speed and delay. R.6.1 measured them hot (one
   // wrong branch in ten traps 38% of careful players); r 0.6 or a delay of
   // 10-20 is Levi's call (the brief's stage 1 handoff).
-  fire: "off",
   fireSpeed: 0.75,
   fireDelay: 0,
   // K273: today's respawn (the level goes on, the minotaur to its lair).
@@ -859,17 +862,16 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   revealEndGlow: "bright",
 };
 
-// The burn race a design plays (K114), or null without one. Never on K80's
-// real-time minotaur clock (`clock`) nor with the turn-aligned minotaur
-// (call 3: one antagonist at a time; the panel switches the other off,
-// and a link that sets both plays the minotaur). `clock` is the fire's own
-// clock (fireClock, stage 2), and the speed and delay are that clock's
-// pair (K440: fireSpeed / fireDelay on turn, fireSpeedRt / fireDelayRt on
+// The burn race a design plays (K114; gameMode "burn" since K323), or
+// null without one. The modes are exclusive by construction, so there
+// is no clock or minotaur refusal. `clock` is the fire's own clock
+// (fireClock, stage 2), and the speed and delay are that clock's pair
+// (K440: fireSpeed / fireDelay on turn, fireSpeedRt / fireDelayRt on
 // realtime).
 export function fireSettingsOf(
   p: Omit<UrlParams, "seed">
 ): { speed: number; delay: number; clock: FireClockMode } | null {
-  if (p.fire !== "fuse" || p.clock === "realtime" || p.minotaur !== "off") {
+  if (p.gameMode !== "burn") {
     return null;
   }
   if (p.fireClock === "realtime") {
@@ -981,7 +983,7 @@ export function chaseParamsOf(
     deadEndBias: clamp01(pos(p.minoDeadEnds)),
     roamRange: pos(p.minoRoam),
     wake: pos(p.minoWake),
-    roamPull: p.minoToward ? DEFAULT_CHASE_PARAMS.roamPull : 0,
+    roamPull: clamp01(Number.isFinite(p.minoPull) ? p.minoPull : 0),
     lair: p.minoLair,
   };
 }
@@ -1039,9 +1041,9 @@ export const ENUM_OPTIONS: {
   pluckCrossings: PLUCK_CROSSINGS,
   pluckGlow: PLUCK_GLOWS,
   pluckRipple: PLUCK_RIPPLES,
-  minotaur: MINOTAUR_SETTINGS,
+  minotaur: MINOTAUR_MODELS,
   minoSpeed: TURN_SPEEDS,
-  fire: FIRE_MODES,
+  gameMode: GAME_MODES,
   exploration: EXPLORATION_MODES,
   revealLook: REVEAL_LOOKS,
   burnt: BURNT_MODES,
@@ -1281,7 +1283,6 @@ function readLegacy(
     sustain: readNumber(query, "sus", D.sustain),
     shimmer: readNumber(query, "shm", D.shimmer),
     pickPosition: readNumber(query, "pp", D.pickPosition),
-    snappiness: readNumber(query, "snpy", D.snappiness),
     rootNote: readChoice(query, "rn", ROOT_NOTES, D.rootNote),
     tonicEmphasis: readNumber(query, "tnc", D.tonicEmphasis),
     pulseSpacing: readNumber(query, "psp", D.pulseSpacing),
@@ -1300,7 +1301,6 @@ function readLegacy(
     pluckReach: readChoice(query, "prc", PLUCK_REACHES, D.pluckReach),
     physics: readBool(query, "phy", D.physics),
     mazeFabric: readBool(query, "mf", D.mazeFabric),
-    deadEnds: readBool(query, "de", D.deadEnds),
     pathViz: readChoice(query, "pv", PATH_VIZ_MODES, D.pathViz),
     cameraMode: readChoice(query, "cam", CAMERA_MODES, D.cameraMode),
     trailLength: readNumber(query, "trl", D.trailLength),
@@ -1389,11 +1389,11 @@ function readLegacy(
     minoRoam: readNumber(query, "mrm", D.minoRoam),
     minoWake: readNumber(query, "mwk", D.minoWake),
     minoFog: readChoice(query, "mfg", MINO_FOG_MODES, D.minoFog),
-    // K174 (`&mtw=0&mrf=0`).
-    minoToward: readBool(query, "mtw", D.minoToward),
+    // K323 (`&mpl=0.25&mrf=0`); the old `&mtw=` flag is ignored.
+    minoPull: Math.min(1, Math.max(0, readNumber(query, "mpl", D.minoPull))),
     minoRefog: readBool(query, "mrf", D.minoRefog),
-    // K140's finish confetti (`&cf=0`, `&cfa=2`).
-    confetti: readBool(query, "cf", D.confetti),
+    // K140's finish confetti amount (`&cfa=2`; `&cf=` is ignored since
+    // K323 merged the switch into the amount).
     confettiAmount: clampTo(
       readNumber(query, "cfa", D.confettiAmount),
       CONFETTI_AMOUNT_MAX
@@ -1426,8 +1426,9 @@ function readLegacy(
     // K298's mouse pick margins (`&pkm=2&pkr=3`).
     pickMargin: clampPickMargin(readNumber(query, "pkm", D.pickMargin)),
     pickChoiceRatio: clampPickChoiceRatio(readNumber(query, "pkr", D.pickChoiceRatio)),
-    // K80 turns' turn-aligned minotaur (`&mt=hunter&msp=two&mtg=0`).
-    minotaur: readChoice(query, "mt", MINOTAUR_SETTINGS, D.minotaur),
+    // K80 turns' turn-aligned minotaur model (`&mt=hunter&msp=two&mtg=0`;
+    // `mt=off` reads the default model, hunter).
+    minotaur: readMinotaurModel(query, D.minotaur),
     minoSpeed: readChoice(query, "msp", TURN_SPEEDS, D.minoSpeed),
     minoTelegraph: readBool(query, "mtg", D.minoTelegraph),
     minoSight: clampTo(readNumber(query, "msi", D.minoSight), MINO_SIGHT_MAX),
@@ -1452,8 +1453,10 @@ function readLegacy(
     minoStalkerAccuracy: clampTo(readNumber(query, "msa", D.minoStalkerAccuracy), 1),
     // K481 stage 2: travel by length (`&mbl=1`).
     minoByLength: readBool(query, "mbl", D.minoByLength),
-    // K114's burn race (`&fi=fuse&fsp=0.6&fdl=15`).
-    fire: readChoice(query, "fi", FIRE_MODES, D.fire),
+    // The game mode (`&gm=minotaur`); without `gm`, `fi=fuse` implies
+    // burn and `clk=realtime` or a model implies minotaur (probes).
+    gameMode: readGameMode(query, D.gameMode),
+    // K114's burn race speeds (`&fsp=0.6&fdl=15`; `&fi=` only implies the mode).
     fireSpeed: clampFireSpeed(readNumber(query, "fsp", D.fireSpeed)),
     fireDelay: clampTo(readNumber(query, "fdl", D.fireDelay), FIRE_DELAY_MAX),
     // K273's catch resets (`&mrs=1`, `&mlr=0`).
@@ -1476,6 +1479,32 @@ function readLegacy(
     revealEndCross: readChoice(query, "rve", REVEAL_END_CROSSES, D.revealEndCross),
     revealEndGlow: readChoice(query, "rvg", REVEAL_END_GLOWS, D.revealEndGlow),
   };
+}
+
+// K323: the minotaur model a key=value query names; `mt=off` (the old
+// "no minotaur") reads today's default model.
+function readMinotaurModel(
+  query: URLSearchParams,
+  fallback: MinotaurModel
+): MinotaurModel {
+  if (query.get("mt") === "off") return PARAM_DEFAULTS.minotaur;
+  return readChoice(query, "mt", MINOTAUR_MODELS, fallback);
+}
+
+// K323: the game mode a key=value query names. `gm` wins; without it the
+// old mode keys imply one, so probe links keep opening their mode:
+// `fi=fuse` is burn, `clk=realtime` or a named model is minotaur.
+function readGameMode(
+  query: URLSearchParams,
+  fallback: GameMode
+): GameMode {
+  if (query.has("gm")) return readChoice(query, "gm", GAME_MODES, fallback);
+  if (query.get("fi") === "fuse") return "burn";
+  const mt = query.get("mt");
+  if (query.get("clk") === "realtime" || (mt !== null && mt !== "off" && (MINOTAUR_MODELS as readonly string[]).includes(mt))) {
+    return "minotaur";
+  }
+  return fallback;
 }
 
 // The exploration mode a key=value query names: `xp` wins, then `trv=1`

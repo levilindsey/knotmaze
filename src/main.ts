@@ -31,6 +31,7 @@ import { BackgroundLayer } from "./render/background";
 
 import {
   chaseParamsOf,
+  clockOf,
   fireSettingsOf,
   turnMinoParamsOf,
   writeParams as writeTokenParams,
@@ -1124,7 +1125,7 @@ async function main(): Promise<void> {
       // Memory-trail mode has no backtracking, so no backtrack meter.
       backtrack: params.pathViz === "trail" ? null : c.backtrackDist,
       junctions: c.visitedJunctions.size,
-      deadEnds: params.deadEnds ? c.deadEndTips.size : null,
+      deadEnds: params.deadEndDensity > 0 ? c.deadEndTips.size : null,
       // K80: times caught so far (null: no minotaur).
       catches: liveMino()?.catches ?? null,
       // K80 turns stage 2: the turn minotaur's close calls and turns seen
@@ -1359,7 +1360,7 @@ async function main(): Promise<void> {
     const timeMs = clock.elapsed(performance.now());
     const efficiency = efficiencyOf(c.walk.optimalLength, c.pathLength);
     const backtrack = params.pathViz === "trail" ? null : c.backtrackDist;
-    const deadEnds = params.deadEnds ? c.deadEndTips.size : null;
+    const deadEnds = params.deadEndDensity > 0 ? c.deadEndTips.size : null;
     const moves = c.moveLog.join("");
     const daily =
       attemptDaily !== null && attemptDaily === dailyN ? attemptDaily : null;
@@ -1468,7 +1469,6 @@ async function main(): Promise<void> {
   // floor (sprayUnit). Reduced motion keeps only a small, slow spray.
   const throwConfetti = (): void => {
     const plan = confettiPlan(
-      params.confetti,
       params.confettiAmount,
       motion.reduced,
       app.screen.width,
@@ -1518,7 +1518,7 @@ async function main(): Promise<void> {
     const prevChase = carry ? scene.chase : null;
     const prevTurn = carry ? scene.turnMino : null;
     scene.chase =
-      params.mazeFabric && params.clock === "realtime" && scene.walkGraph && scene.fabric
+      params.mazeFabric && params.gameMode === "minotaur" && clockOf(params) === "realtime" && scene.walkGraph && scene.fabric
         ? new MinotaurChase(scene.walkGraph, chaseParamsOf(params), params.seed)
         : null;
     if (scene.chase && prevChase) scene.chase.carry(prevChase);
@@ -1527,8 +1527,8 @@ async function main(): Promise<void> {
     // is the seed's own (turnSeed), so the same taps meet the same minotaur.
     scene.turnMino =
       params.mazeFabric &&
-      params.clock === "turn" &&
-      params.minotaur !== "off" &&
+      params.gameMode === "minotaur" &&
+      clockOf(params) === "turn" &&
       scene.walkGraph &&
       scene.fabric
         ? new TurnMinotaur(

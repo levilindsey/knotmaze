@@ -7,7 +7,6 @@ import {
   HUNT_PACE_FRACTION,
   MinotaurChase,
   replayChase,
-  undoAllowed,
   WANDER_PACE_FRACTION,
 } from "../../src/game/minotaur";
 import type { ChaseEvent, ChaseParams } from "../../src/game/minotaur";
@@ -296,8 +295,7 @@ describe("MinotaurChase: the player", () => {
   });
 
   it("has no undo: a backtrack is a run walked back in real time", () => {
-    expect(undoAllowed("realtime")).toBe(false);
-    expect(undoAllowed("turn")).toBe(true);
+    // (K263: the old undoAllowed export is gone; there is no move undo.)
     // Reset path restarts the chase, even inside a daily's attempt.
     expect(
       resetPathAction({ dailyAttempt: true, official: false, solved: false, trailMode: false, realtime: true })

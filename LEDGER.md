@@ -19,7 +19,7 @@ one line, `- **K<n>** Â· <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K541.
+Next free ID: K542.
 
 ## Waiting on Levi
 
@@ -329,7 +329,6 @@ Every other item below waits on the trigger it names.
 - **K530** · K481 stage 3: decision 7's telegraph hover/press lighting, the wait tick's hover, the phone treatment, the tint fallback if ticks read badly, and same-state pixel A/Bs with the toggle off; brief `docs/design/K481.md` (Stage 2 handoff).
 - **K531** · Daily determinism at launch (K210 answered by Levi, 2026-10-16): past dailies must be deterministically reconstructible as (app version -> that version's frozen PARAM_DEFAULTS) merged with (daily-specific params/custom overrides for that day); post-launch changes must not significantly alter previous dailies. Implementation: frozen per-version defaults table + per-day override table, published days immutable; folds K82 in; lands at launch prep.
 - **K533** · Backend daily precomputation (Levi, 2026-10-16, future): regularly precompute and cache daily designs on the backend and serve current + previous dailies, moving daily-calculation logic server-side so future dailies cannot be anticipated client-side. Explore/design/implement later alongside accounts/logins/data persistence (K144). Depends on K531's determinism design.
-- **K534** · Panel rebuild unlocked (K339 + K323 answered by Levi, 2026-10-16: all recommendations taken): Stage A (panel rebuild, codec 7) unlocked; K340's nested-folder look follows (rec. look F).
 - **K345** Â· The hover rim stops `rimGap` (0.975 world) short of junctions;
   Levi (2026-10-14) wants it to follow the fillets. Goes in K9's G4-1 (K8
   s1: piece SDFs give webs an across coordinate; fan work now is wasted).
@@ -447,6 +446,7 @@ Every other item below waits on the trigger it names.
   seed row, the dice, Daily, stats (K467 covered the 161 rows only)
 - **K527** · K74 stage 4 build half (`docs/design/K74_stage4.md`): exact heading score, acceptance non-regression floor, `greedyTrap` param (default off, one codec row after 155), H1-in-loop search seam, 1-240 bar + sleep + generation timing. Sim-first half done in 49efe76. Fully answered by Levi (K532); build half unlocked after the render lane.
 - **K532** · K527 answered in full by Levi (2026-10-16): calls 1, 2, 5 yes (ship the greedy-trap search, H1-in-loop only; `greedyTrap` param default off; runs in-generation (a) for now); calls 3, 4, 6 also yes (all recommendations accepted; every numeric threshold becomes a slider beside `greedyTrap`, defaults = recommended values; call 2's code-constant targets/caps amended accordingly). K74 stage 4's build half (K527) unlocked after the render lane.
+- **K541** · Panel Stage A2 (split from K534 per K339's A1/A2 plan): the remaining moves (Maze to generation only, Path & view, Look's Backdrop tuning, Motion/Sound/Physics/Developer reshuffle, Reset to defaults at the root), word labels on every row (K327, at most 23 chars) and the desktop panel width 256 to 320 px; rerun the panel inventory and diff it, with labels uncut at both sizes. Never beside another panel rewrite.
 
 ## Residuals (known, not fixed)
 
@@ -1226,6 +1226,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K534** · Panel Stage A1 (K323 stage 1 + K339 merges, codec 7): `gameMode` (classic/minotaur/burn) in a new Game folder after Design, exploration in Game, Real time as a checkbox over `clock` (`clockOf`), burn as a mode, `minoPull` slider for `minoToward`, minotaur without off, confetti/deadEnds/snappiness/fire codec entries gone (density 0 = braided, amount 0 = none), K340 look F CSS, K263 closed. Golden dailies and K74 pins unchanged (no default moves a maze). Done in this commit (2026-10-16); the rest of Stage A is K541.
 - **K536** · G3-1's browser verification: brute vs pruned 0 px on all 10 G1 links (phw=0) and on def/user/ring on the worker host; G1 census unchanged parent vs 3465090 (naked 0 on the clean set, overcut within ~1%); census2d 23/30 parent vs 24/30 G3-1 (same fail families, PROOF passes only on G3-1), census3a 21/30 on G3-1 within K537's pre-existing set; held still pluck (still:true) and routed web (6 moves) brute 0 px on both builds, cross-build diffs single-level casing edges (gt8 = 4 px); GAP GL readback GPU == CPU mirror exactly (25-texel rows, 4 links x worker + phw=0, gl.getError 0, no lost context); frame bench at rest unchanged (default p50 0.2 ms both, dense mean 5.32 vs 5.24 ms). Section cold compiles equal; the cold first-visible gap is K540 and the phone half is K539. Done 2026-10-16 (verification only, no code commit; evidence `.claude/probes/K8/G3-1/`).
 - **K366** · The first-tap residual measured and attributed on the shipped K307 stage 3 build (e83f203): the 35-54 ms frame reproduces only on fabric (39 ms, ripple off; ~50 ms first pointerup handling), so it is not a shader link (inferred first-pluck allocation / paint re-declare; no fix this stage). Done in e83f203 (2026-10-16); the fix is K535.
 - **K210** · Daily determinism answered by Levi (2026-10-16): past dailies reconstructible as (app version -> frozen PARAM_DEFAULTS) merged with per-day overrides; post-launch changes must not significantly alter previous dailies. Done (answered 2026-10-16); the implementation item is K531 (folds K82, launch prep).

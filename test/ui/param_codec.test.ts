@@ -20,7 +20,7 @@ const D = PARAM_DEFAULTS as unknown as Record<string, ParamValue>;
 // APPEND a new param or enum option, to the table and here. Anything else (a
 // reorder, a removal, a type, an option renamed or moved) bumps
 // CODEC_VERSION: update PIN_VERSION and this list together.
-const PIN_VERSION = 6;
+const PIN_VERSION = 7;
 const ANCHORS = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 const PIN: ReadonlyArray<readonly unknown[]> = [
   ["gridSize", "number"], // 0
@@ -60,7 +60,6 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["sustain", "number"], // 30
   ["shimmer", "number"],
   ["pickPosition", "number"],
-  ["snappiness", "number"],
   [
     "rootNote", "enum",
     ["seed", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],
@@ -75,8 +74,6 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["fourWayFraction", "number"],
   ["deadEndDensity", "number"],
   ["pluckStyle", "enum", ["soft", "string"]],
-  ["mazeFabric", "boolean"], // 45
-  ["deadEnds", "boolean"],
   ["pathViz", "enum", ["gold", "trail", "string"]],
   ["cameraMode", "enum", ["fit", "follow"]],
   ["trailLength", "number"],
@@ -137,17 +134,16 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["minoRoam", "number"],
   ["minoWake", "number"],
   ["minoFog", "enum", ["always", "hunting", "never"]],
-  ["confetti", "boolean"],
   ["confettiAmount", "number"], // 100
   ["pluckWhole", "number"],
   ["pluckCrossings", "enum", ["through", "ride", "pinch"]],
   ["pluckGlow", "enum", ["off", "instead", "with", "fallback"]],
   ["markerSize", "number"], // 104, K98
   ["hoverGlow", "number"], // 105, K145
-  ["minoToward", "boolean"], // 106, K174
+  ["minoPull", "number"], // K323 (was minoToward)
   ["minoRefog", "boolean"], // 107, K174
   // (v4 had K111 stage 2's highlightMode at 108; v5 removed it, K111 stage 3.)
-  ["minotaur", "enum", ["off", "hunter", "guard", "stalker"]], // 108, K80 turns
+  ["minotaur", "enum", ["hunter", "guard", "stalker"]], // K323: no off
   ["minoSpeed", "enum", ["half", "one", "charge", "two"]],
   ["minoTelegraph", "boolean"],
   ["minoSight", "number"],
@@ -157,7 +153,6 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["minoPause", "number"],
   ["minoSleep", "number"], // 116
   ["hCutShare", "number"], // 117, K74 stage 2 (H1)
-  ["fire", "enum", ["off", "fuse"]], // 118, K114
   ["fireSpeed", "number"],
   ["fireDelay", "number"], // 120
   // K279 stage 1.
@@ -196,7 +191,8 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["exitFlank", "enum", ["stub", "away", "near"]],
   ["exitTaperRadius", "number"],
   ["exitTaperStrength", "number"], // 155
-  ["minoByLength", "boolean"], // 156, K481 stage 2
+  ["minoByLength", "boolean"], // K481 stage 2
+  ["gameMode", "enum", ["classic", "minotaur", "burn"]], // K323 Stage A (v7)
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
@@ -245,7 +241,11 @@ describe("codec table", () => {
   it("lists every PARAM_DEFAULTS key exactly once, nothing else", () => {
     const names = CODEC_PARAMS.map((p) => p.name);
     expect(new Set(names).size).toBe(names.length);
-    expect([...names].sort()).toEqual(Object.keys(PARAM_DEFAULTS).sort());
+    // K323 Stage A: mazeFabric stays in PARAM_DEFAULTS until K326 deletes
+    // knot mode, but its codec entry is gone (v7), so it never lists.
+    expect([...names].sort()).toEqual(
+      Object.keys(PARAM_DEFAULTS).filter((k) => k !== "mazeFabric").sort()
+    );
   });
 
   it("types every param by its default; enums list every current option", () => {
@@ -291,20 +291,20 @@ describe("token format", () => {
     expect(encodeToken(0, {}, D)).toBe("0");
     expect(encodeToken(4294967295, {}, D)).toBe("1z141z3");
     expect(decodeToken("1471kin", D)).toEqual({ seed: 2430477599, values: D, error: null });
-    // An all-default blob ("N" = version 6, no entries; earlier builds
-    // wrote v5's "L" and v4's "J") still reads as today's defaults.
-    expect(bitsToBlob(`${V} 1`)).toBe("N");
-    expect(decodeToken("1471kin.N", D)).toEqual({ seed: 2430477599, values: D, error: null });
+    // An all-default blob ("P" = version 7, no entries; earlier builds
+    // wrote v6's "N", v5's "L" and v4's "J") still reads as today's defaults.
+    expect(bitsToBlob(`${V} 1`)).toBe("P");
+    expect(decodeToken("1471kin.P", D)).toEqual({ seed: 2430477599, values: D, error: null });
   });
 
   // Defaults come from the caller: a link reads whatever defaults it is
   // given, and a listed boolean is the given default flipped.
   it("reads a link against the defaults it is given", () => {
-    const moved = { ...D, gridSize: 20, mazeFabric: false };
-    const d = decodeToken("7.MUfTJ4ZJbGRMK", moved);
+    const moved = { ...D, gridSize: 20, physics: false };
+    const d = decodeToken("7.Ox9Mngu", moved);
     expect(d.error).toBeNull();
     expect(d.values.gridSize).toBe(20); // not listed: the given default
-    expect(d.values.mazeFabric).toBe(true); // listed: the given default flipped
+    expect(d.values.physics).toBe(true); // listed: the given default flipped
     expect(d.values.threadWidth).toBe(0.64); // listed: its value
   });
 
@@ -369,22 +369,22 @@ describe("token format", () => {
       threadWidth: 0.64,
       palette: "moss",
       pathColor: "#6c644c",
-      mazeFabric: false,
+      physics: false,
     };
     const bits = [
-      V, // version 5 = gamma(5) = "00101"
+      V, // version 7 = gamma(7) = "00111"
       "00101", // 4 entries = gamma(4 + 1)
       "0001111", // index 14 threadWidth: gamma(14 - -1 = 15)
       "1010 0110 0100 1111", // ".64", then the terminator 15
-      "000011001", // index 39 palette: gamma(39 - 14 = 25)
+      "000011000", // index 38 palette: gamma(38 - 14 = 24)
       "00100", // "moss" = option 3: gamma(3 + 1)
-      "1", // index 40 pathColor: gamma(1)
+      "1", // index 39 pathColor: gamma(1)
       "0110 1100 0110 0100 0100 1100", // 0x6c644c
-      "00101", // index 45 mazeFabric: gamma(5); a boolean has no value bits
+      "000010101", // index 60 physics: gamma(60 - 39 = 21); a boolean has no value bits
     ].join(" ");
     expect(encodeToken(7, values, D)).toBe(`7.${bitsToBlob(bits)}`);
-    expect(encodeToken(7, values, D)).toBe("7.MUfTJ4ZJbGRMK");
-    const back = decodeToken("7.MUfTJ4ZJbGRMK", D);
+    expect(encodeToken(7, values, D)).toBe("7.OUfTJ4YJbGRMCo");
+    const back = decodeToken("7.OUfTJ4YJbGRMCo", D);
     expect(back.error).toBeNull();
     expect(back.values).toEqual(values);
   });
@@ -426,7 +426,7 @@ describe("token format", () => {
 });
 
 describe("token robustness", () => {
-  const good = "7.MUfTJ4ZJbGRMK";
+  const good = "7.OUfTJ4YJbGRMCo";
 
   it("rejects every truncation, keeping the seed", () => {
     const blob = good.slice(2);
@@ -442,7 +442,7 @@ describe("token robustness", () => {
     // Gamma bits (gamma, above), so the cases below follow the table.
     const size = CODEC_PARAMS.length;
     const cases: Array<[string, RegExp]> = [
-      ["7.M!0y", /invalid character/], // "K" holds the version bits
+      ["7.O!0y", /invalid character/], // "O" holds the v7 version bits
       [`7.${bitsToBlob(`${V} 1`)}A`, /trailing data/], // a whole extra char
       // gridSize 1, then a non-zero padding bit.
       [`7.${bitsToBlob(`${V} 010 1 0001 1111 1`)}`, /trailing data/],

@@ -419,7 +419,7 @@ export class ShaderWarmup {
 export interface WarmParams {
   mazeFabric: boolean;
   exploration: string;
-  fire: string;
+  gameMode: string;
   pluckRipple: string;
   backgroundIntensity: number;
   backgroundSpeed: number;
@@ -443,7 +443,7 @@ export function warmContextFor(
     // Broader than url_state's fireSettingsOf on purpose (no clock or
     // minotaur test): warming a program the page never draws costs
     // compile time, missing one freezes the first burn.
-    burn: params.mazeFabric && params.fire !== "off",
+    burn: params.mazeFabric && params.gameMode === "burn",
     reduced,
     ripple: params.pluckRipple !== "off" && !reduced,
     // Mirrors main.ts syncBackground's setShape + configure.

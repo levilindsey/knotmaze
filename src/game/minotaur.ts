@@ -69,13 +69,8 @@ export const REVERSE_MARGIN = 1.5;
 // this mode. K114's beat clock would append a third option.
 export type ClockMode = "turn" | "realtime";
 
-// Levi's call 4: no undo in the real-time mode, free play included. K92's
-// undo/redo asks this; Reset path restarts the chase (resetPathAction).
-// K80 turns: nor while the turn-aligned minotaur (the `minotaur` param,
-// minotaur_turns.ts) is on. A backtrack is a move there, not an undo.
-export function undoAllowed(clock: ClockMode, minotaur: string = "off"): boolean {
-  return clock !== "realtime" && minotaur === "off";
-}
+// (K263, closed in K323 Stage A: the old undoAllowed export had no
+// caller in src and no move undo exists; K92's design undo is separate.)
 
 export interface ChaseParams {
   playerPace: number; // u/s: the player's speed along the threads.

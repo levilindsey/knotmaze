@@ -153,16 +153,14 @@ export interface ConfettiPlan {
 // no screen = a phone's count). Reduced motion drops the rain and keeps
 // REDUCED_SPRAY_SHARE of the spray.
 export function confettiPlan(
-  on: boolean,
   amount: number,
   reduced: boolean,
   width = 0,
   height = 0
 ): ConfettiPlan {
-  const a =
-    on && Number.isFinite(amount)
-      ? Math.max(0, Math.min(CONFETTI_AMOUNT_MAX, amount))
-      : 0;
+  const a = Number.isFinite(amount)
+    ? Math.max(0, Math.min(CONFETTI_AMOUNT_MAX, amount))
+    : 0;
   const spray = Math.round(SPRAY_PER_AMOUNT * a);
   const rain = RAIN_PER_AMOUNT * a * rainScreenScale(width, height);
   return {

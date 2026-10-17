@@ -900,7 +900,6 @@ export function installProbeHooks(ctx: ProbeCtx): void {
     spray: ctx.confetti.sim.spray.alive,
     stats: { ...ctx.confetti.stats },
     plan: confettiPlan(
-      ctx.params.confetti,
       ctx.params.confettiAmount,
       ctx.motion.reduced,
       ctx.app.screen.width,
