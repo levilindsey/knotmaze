@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K548.
+Next free ID: K550.
 
 ## Waiting on Levi
 
@@ -450,6 +450,9 @@ Every other item below waits on the trigger it names.
 - **K543** · K74 stage 4's before/after sheet of three finishes (searched vs shipped, dailies 1-3) was not made in the build stage; make it from `.claude/probes/K74/stage4/build_measure.ts` output or a diag_screenshot pair when Levi wants the look check. Sheet: `.claude/probes/K74/stage4/sheet/contact_sheet.png` (`notes.md` beside it).
 - **K544** · Phone timing for searched designs (`greedyTrap` on: generation median 74 ms desktop Node, p90 197 ms) rides K156's next phone window, as stage 3's did.
 - **K546** · Loss effects (Levi, 2026-10-16): a catch ends early today - animate the player and the minotaur/fire all the way to their meeting point first (contact t is computed in by-length mode; turn and realtime catches leave a visual gap), then a gratuitous contact effect at the meeting point plus a whole-screen loss effect akin to the win confetti. Levi's seeds: an explosion; a flare-up and burn-away; the player indicator ripped in half and falling over. Base to build on: K80 3b's catch feedback (dcdfaf4) and K270's fix; the fire side is K114. Design: `docs/design/K546_loss_effects.md`.
+
+- **K548** · Overnight runner has no usage gate: the 92% weekly pause (Next binding rule) is checked by hand only; 2026-10-15/16 runs 1-6 launched at 88% (under the line, audit 2026-10-18) but nothing stops a launch over it. Add a /usage check to the runner before each batch, or a ledger-stamped usage line per run close.
+- **K549** · Text scene fit ignores the open panel: a wide word's exit side sits under the panel (stage 2 probe stalled at tn97 by mouse; programmatic walk solved). Fit text scenes against the panel-cleared range like mazes (K198 view clamp), or close the panel for text scenes.
 
 ## Residuals (known, not fixed)
 
@@ -1179,7 +1182,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   audit's 2-4x takes gs 18 from 0.76x to real time), only if K7 s5's phone numbers show physics, not
   rendering, as the limit. No threads (Gauss-Seidel can't be colored; SAB needs COOP/COEP).
 - **K320** · Slim or split section-rgb: at 46,850 characters it is the cold critical path (~2.8 s on
-  the desktop, K307 s1). A deploy that changes a shader costs every player one cold compile
+  the desktop, K307 s1; K540 attributed G3-1's +0.39 s cold regression to the enlarged gap
+  shaders' FXC compile gating first paint — this item is its fix). A deploy that changes a shader costs every player one cold compile
   (programs are cached by source), so a smaller or split program shortens every such load.
 - **K338** · K324's side ideas (`docs/design/K324_realtime_minotaur.md`):
   a real-time close-calls stat (section 5), a Search speed knob (4.4),
