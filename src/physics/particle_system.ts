@@ -2681,7 +2681,8 @@ export class ParticleSystem {
         // the substep-end truth that drives the work gate, the global
         // stick block, and the sleep gate.
         fs === 1 ? this.violationList : undefined,
-        this.jnCoverActive
+        this.jnCoverActive,
+        this.anchored
       );
     }
     this.probe("final-collision");

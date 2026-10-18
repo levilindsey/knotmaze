@@ -5,6 +5,8 @@ import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
 import { buildWalkGraph } from "../../src/core/walk_graph";
 import type { WalkGraph } from "../../src/core/walk_graph";
 import { FabricMazeController } from "../../src/game/fabric_controller";
+import { buildSceneGraph } from "../../src/core/scene_graph";
+import { dailyParams, dailyTitle } from "../../src/ui/daily_link";
 
 // P4 Stage 8a: branch-point-only solve state over the walk graph.
 
@@ -467,6 +469,82 @@ describe("real-time respawn (K80)", () => {
     expect(c.moveLog).toEqual(["x", "g", "x", "x"]);
     expect(c.taps).toEqual(taps);
     expect(c.moveCount).toBe(2);
+  });
+});
+
+describe("the daily title walk (K115 stage 3a)", () => {
+  const titledWalk = (): WalkGraph => {
+    const built = buildSceneGraph({
+      ...dailyParams(12),
+      gridSize: 8,
+      title: dailyTitle(12),
+    });
+    expect(built.walk).toBeDefined();
+    return built.walk!;
+  };
+
+  it("writes the title tap by tap, outside every maze meter", () => {
+    const w = titledWalk();
+    const seam = w.mazeStart!;
+    const c = new FabricMazeController(w);
+    expect(c.head).toBe(w.start);
+    // Through the title on the shortest route: every stop is a title
+    // vertex, and nothing counts yet.
+    const titleHeads: string[] = [];
+    for (let guard = 0; guard < 200 && c.head !== seam; guard++) {
+      expect(c.tapEdge(bestChoice(c))).toBe("advance");
+      titleHeads.push(c.head);
+      expect(w.titleVertices!.has(c.head)).toBe(true);
+      expect(c.walkedDist).toBe(0);
+      expect(c.pathLength).toBe(0);
+    }
+    expect(c.head).toBe(seam);
+    expect(titleHeads.length).toBeGreaterThan(4); // letters + connector
+    expect(titleHeads).toContain("texit");
+    expect(c.visitedJunctions.size).toBe(0);
+    expect(c.deadEndTips.size).toBe(0);
+    const titleTaps = c.taps.length;
+    expect(titleTaps).toBe(c.pathEdges.length);
+
+    // Into the maze: meters now count maze arc only.
+    expect(c.tapEdge(bestChoice(c))).toBe("advance");
+    expect(c.head).not.toBe(seam);
+    expect(w.titleVertices!.has(c.head)).toBe(false);
+    const mazeRun = c.pathEdges[c.pathEdges.length - 1];
+    expect(c.pathLength).toBeCloseTo(w.edges[mazeRun].length, 9);
+    expect(c.walkedDist).toBeCloseTo(w.edges[mazeRun].length, 9);
+    for (let i = 0; i < 3 && !c.solved; i++) c.tapEdge(bestChoice(c));
+    const walkedInMaze = c.walkedDist;
+    expect(walkedInMaze).toBeGreaterThan(0);
+    expect(c.pathLength).toBeCloseTo(walkedInMaze, 9);
+    for (const id of c.visitedJunctions) {
+      expect(w.titleVertices!.has(id)).toBe(false);
+    }
+    for (const id of c.deadEndTips) {
+      expect(w.titleVertices!.has(id)).toBe(false);
+    }
+
+    // Backtrack the whole way home, across the seam into the word.
+    while (c.pathEdges.length > 0) {
+      const last = c.pathEdges[c.pathEdges.length - 1];
+      expect(c.tapEdge(last)).toBe("backtrack");
+    }
+    expect(c.head).toBe(w.start);
+    expect(c.pathLength).toBe(0);
+    // Only the maze backtracks were priced (and walked both ways).
+    expect(c.backtrackDist).toBeCloseTo(walkedInMaze, 9);
+    expect(c.walkedDist).toBeCloseTo(2 * walkedInMaze, 9);
+    for (const id of c.visitedJunctions) {
+      expect(w.titleVertices!.has(id)).toBe(false);
+    }
+
+    // A replay reproduces the whole solve, title included.
+    const d = new FabricMazeController(w);
+    expect(d.replay(c.taps)).toBe(true);
+    expect(d.head).toBe(c.head);
+    expect(d.pathEdges).toEqual(c.pathEdges);
+    expect(d.walkedDist).toBe(c.walkedDist);
+    expect(d.backtrackDist).toBe(c.backtrackDist);
   });
 });
 

@@ -204,6 +204,7 @@ const NAME_VERSION = 1;
 // Typed as a full Record, so a new SceneParams field fails to compile here.
 const SCENE_FIELDS: Record<keyof SceneParams, "number" | "boolean" | "string"> = {
   text: "string",
+  title: "string",
   gridSize: "number",
   weaveDensity: "number",
   turnBias: "number",

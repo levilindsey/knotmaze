@@ -281,3 +281,102 @@ band placement gives free, live (unpinned) title, K549's panel fit.
   connector run into the seam, rec. - the word finishes, then you
   step in) or one flourish tap that writes the last letter and the
   swash together?
+
+## Stage 3a handoff (shipped)
+
+Recommendations built as staged: dailies-only derived titles, all
+dailies at once (`DAILY_DEF` stays 2), title taps are ordinary moves.
+
+What shipped:
+
+- `dailyTitle(n)` (`src/ui/daily_link.ts`): `` `Daily #${n}` ``, no
+  codec/`UrlParams` change. Tests pin #1/#12/#999 and both param lists.
+- `SceneParams.title` + `SCENE_FIELDS.title` + `sceneParamsOf`, the
+  worker name build, and the scene wiring
+  (`SceneDeps.dailyTitle`, main.ts owns `dailyN`; the worker prebuild
+  carries the same title). `buildSceneGraph` also returns the forced
+  `walk` for a titled scene (`SceneGraph.walk`), which `scene.ts`
+  prefers over rebuilding unforced.
+- `attachTitle(graph, title)` (`src/core/text_graph.ts`): fitted
+  x-height (build at 3, shrink-only rebuild against `2 * gridSize`),
+  band placement (`TITLE_GAP = 2` above the maze top, centered), the
+  word's exit retyped END -> TURN keeping its waypoint, a Hermite
+  connector resampled to `MAX_EDGE_LU` TURN edges, and the chosen
+  entrance END renamed `tseam` (degree-2 JUNCTION, anchor deleted,
+  node moved to the tail tip). Attach order in `scene_graph.ts` is
+  walk0 -> attach -> forced walk, exactly as briefed; title strands
+  are appended and each gets the first title strand's hue slot.
+- Forced walk (`buildWalkGraph(graph, {start, exit, mazeStart})`):
+  `optimalLength` is dist(seam -> exit), `titleLength` is the arc
+  word-start -> seam, and the title's vertex/edge membership is the
+  bounded BFS from the start that never expands past the seam.
+  `distToExit` still covers the whole graph.
+- Stats: title traversals add 0 to `walkedDist` and `backtrackDist`,
+  `pathLength` sums only non-title path edges, `arrive` never counts a
+  title vertex; taps/moveLog keep title taps and `replay` reproduces
+  them (scripted title walk in `test/game/fabric_controller.test.ts`).
+  The solve clock (`main.ts` `noteMove`) starts on the first arrival
+  at `mazeStart`. Markers/reveal needed no change: the start marker
+  sits on the word's `mentr_a`, the intro writes the word first, and
+  the fit camera frames word + maze (verified in the phone shot).
+
+Evidence:
+
+- Full `npm test`: 1440 passed, 1 skipped (the worker name-build
+  field pins moved 31 -> 32 for `title`); the named invariants (K87
+  plan pin, golden dailies, byte_identity, host_seam, physics_host,
+  worker_host) are green unrefrozen, `npx tsc --noEmit` is clean,
+  and `npm run build` passes.
+- Kill sweep in `test/core/scene_graph.test.ts`: dailies 1-30 and all
+  7 shapes at gs 6/12/18 all attach (seam returned = no maze crossing
+  shipped), with exit and maze optimal unchanged.
+- Sleep kill criterion was real and is fixed at the root: a titled
+  Daily #12 never slept because `ridersPending` counted 31 standing
+  width-floor deficits *inside the pinned word* (probe: all nearest
+  `tn*` nodes, none within 5 LU of the seam; the seam's tail was
+  quiet at maxMove ~9e-4). `applySegmentCollision` now takes the
+  anchored array and does not record a pair whose four endpoints are
+  all pinned - authored text geometry can never be separated, so it
+  is not work pending (standalone words drop 15 -> 0 riders too).
+  New sleep-regression test: the titled daily sleeps; in-page probes
+  report `asleep: true` under both hosts.
+- Screenshots (real time, `scripts/diag_screenshot.mjs` + the stage-3
+  tap probe; `.claude/probes/K115/stage3/`): titled daily at load and
+  after two letter taps, worker and `phw=0`, panel closed, plus a
+  411 px fit shot. The word reads clearly at phone width beside the
+  full maze; the connector lands on the NW seam like an underline;
+  after two taps the head sits inside the second letter with
+  `pathLength`/`walkedDist` still 0 and the page asleep. Note: the
+  shots show Daily #7 because `?daily=12` is out of the launch range
+  on the day they were taken (2026-10-18); the Daily #12 design
+  itself is covered by the tests above.
+
+Deviations from this brief, each forced by a measurement:
+
+- `checkStructure` now accepts a degree-2 JUNCTION (`tangle_graph.ts`)
+  - the only way the brief's degree-2 `tseam` and "checkStructure
+  passes" can both hold.
+- The word's old exit is renamed `texit` (a TURN waypoint) rather
+  than keeping `mexit_a`: the maze's exit ends already own that id.
+  Likewise a decoy `mentr_a` is renamed `mentr_decoy` when the seam
+  was `mentr_b`. (The brief's "no `mexit_a`" test point holds for the
+  word: no appended strand carries it.)
+- The connector gets a third route after the brief's two: around the
+  outside of the maze bounds to a point on the tail's outward line,
+  then in. Heart/tree entrance seams sit on the maze's left flank and
+  both Hermites cross the silhouette there; without the outside route
+  those shapes ship untitled and the sweep above fails.
+- `backtrackDist` also excludes title edges (the brief named
+  walkedDist/pathLength/visited) so the walked = path + 2 x
+  backtrack identity and the star rating stay maze-only, per the
+  section's "outside every maze meter" header. `pathLength` is
+  computed per-edge from the title membership rather than "raw minus
+  titleLength" - the same number once past the seam, and still 0 when
+  the player has backed into the title.
+- `buildTextGraph("Daily #6")` (also #16/#26) already fails strict
+  alternation on its own - the run-phase solver's accepted parity
+  conflicts around the digit 6 - so titled builds of those dailies
+  log the scene invariant warning. Not attach-caused (the standalone
+  word fails identically); the attach fixture (Daily #12) passes
+  structure, alternation and strand partition as briefed.
+

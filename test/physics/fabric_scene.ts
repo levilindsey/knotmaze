@@ -12,7 +12,7 @@ export function fabricScene(query: string): { params: SceneParams; tuning: Physi
   const p = parseParams(query);
   if (!p.mazeFabric) throw new Error(`${query} is not a fabric design`);
   return {
-    params: p,
+    params: { ...p, title: "" },
     tuning: {
       temperature: 0,
       slack: p.slack,

@@ -8,6 +8,7 @@ import {
   dailyParams,
   dailyQuery,
   dailySeed,
+  dailyTitle,
   isDailyDesign,
   matchesDesign,
   mazeKey,
@@ -116,6 +117,17 @@ describe("the daily design", () => {
       };
     });
     expect(got).toEqual(golden);
+  });
+});
+
+describe("the daily title (K115 stage 3a)", () => {
+  it("derives Daily #N from the day number, and is no link param", () => {
+    expect(dailyTitle(1)).toBe("Daily #1");
+    expect(dailyTitle(12)).toBe("Daily #12");
+    expect(dailyTitle(999)).toBe("Daily #999");
+    // Not a UrlParams field: no codec entry, the lists stay untouched.
+    expect(dailyParams(12)).not.toHaveProperty("title");
+    expect(DAILY_DEF).toBe(2);
   });
 });
 

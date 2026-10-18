@@ -38,6 +38,8 @@ import { applySegmentCollision } from "../../src/physics/forces";
 import type { SegmentTopology } from "../../src/physics/forces";
 import { SleepGate, physicsQuiet } from "../../src/physics/sleep_gate";
 import { parseParams } from "../../src/ui/url_state";
+import { buildSceneGraph } from "../../src/core/scene_graph";
+import { dailyParams, dailyTitle } from "../../src/ui/daily_link";
 
 const breathe = (): Promise<void> =>
   new Promise((resolve) => setImmediate(resolve));
@@ -129,6 +131,40 @@ describe("fresh-settle sleep (K41 links)", () => {
   it("the user's rect fabric link sleeps", { timeout: 120000 }, async () => {
     const sim = await simToSleep(USER_RECT_LINK, 12);
     expect(sim).toBeLessThan(12);
+  });
+});
+
+describe("the titled daily (K115 stage 3a)", () => {
+  // Kill criterion: a titled maze sleeps, and the pinned seam does not
+  // pump its tail strand awake.
+  it("Daily #12 with its title thread sleeps", { timeout: 180000 }, async () => {
+    const p = dailyParams(12);
+    const { graph } = buildSceneGraph({ ...p, title: dailyTitle(12) });
+    const ps = new ParticleSystem(graph);
+    const tuning: PhysicsTuning = {
+      temperature: 0,
+      slack: p.slack,
+      drag: p.drag,
+      repulsion: p.repulsion,
+      bend: p.bend,
+      smooth: p.smooth,
+      stiffness: p.stiffness,
+      gridAlign: p.gridAlign,
+      threadWidth: p.threadWidth,
+    };
+    const gate = new SleepGate();
+    let frames = 0;
+    let sleptAt = Number.POSITIVE_INFINITY;
+    while (ps.simTime < 15) {
+      const sim0 = ps.simTime;
+      ps.step(0.1, tuning);
+      if (++frames % 20 === 0) await breathe();
+      if (gate.frame(physicsQuiet(ps), ps.simTime - sim0)) {
+        sleptAt = ps.simTime;
+        break;
+      }
+    }
+    expect(sleptAt).toBeLessThan(15);
   });
 });
 

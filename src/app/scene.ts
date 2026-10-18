@@ -48,6 +48,8 @@ type Camera = ReturnType<typeof createCamera>;
 // for the functions main.ts declares after createScene; accessors for the
 // camera, the indicators and the two pending-banner flags.
 export interface SceneDeps {
+  // K115 stage 3a: the scene's title thread ("" unless a daily is up).
+  dailyTitle: () => string;
   app: Application;
   root: Container;
   params: UrlParams;
@@ -230,10 +232,11 @@ export function createScene(deps: SceneDeps): Scene {
 
     // The lattice, and in fabric mode the maze plan's graph surgery
     // (core/scene_graph.ts; K7 stage 1 moved it there unchanged).
-    const { graph, hueGroup } = buildSceneGraph(params);
+    const sceneParams = { ...params, title: deps.dailyTitle() };
+    const { graph, hueGroup, walk: builtWalk } = buildSceneGraph(sceneParams);
 
     // K7: the host owns the system; `ps` is main's read-only view of it.
-    ps = host.build(graph, params);
+    ps = host.build(graph, sceneParams);
     buildHueGroup = hueGroup;
     buildStrandCount = graph.strands.length;
 
@@ -250,7 +253,7 @@ export function createScene(deps: SceneDeps): Scene {
     // walk start/exit). It keeps the knot-mode data fabric surgery would
     // need: no maze plan (scene_graph skips it), hueGroup undefined, so
     // section colors take their per-chain fallback (section_colors).
-    walkGraph = params.mazeFabric ? buildWalkGraph(graph) : null;
+    walkGraph = params.mazeFabric ? (builtWalk ?? buildWalkGraph(graph)) : null;
 
     renderer = new RibbonRenderer(ps, {
       threadWidth: params.threadWidth,

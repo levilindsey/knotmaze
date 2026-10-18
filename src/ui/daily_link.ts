@@ -62,6 +62,10 @@ export function dailySeed(n: number): number {
 }
 
 // Daily n's design (a fresh object): today's defaults on the day's seed.
+export function dailyTitle(n: number): string {
+  return `Daily #${n}`;
+}
+
 export function dailyParams(n: number): UrlParams {
   return paramsFromValues(dailySeed(n), PARAM_DEFAULTS);
 }

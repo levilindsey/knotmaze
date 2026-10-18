@@ -41,6 +41,7 @@ import {
   DAILY_DEF,
   applyDailyPrefs,
   dailyParams,
+  dailyTitle,
   dailyQuery,
   isDailyDesign,
   mergeDailyPrefs,
@@ -204,7 +205,12 @@ async function main(): Promise<void> {
   // while main boots, and the first rebuild() adopts that build when the
   // params still match (__knotPerf().host.prebuild).
   const host: PhysicsHost = params.physicsWorker
-    ? new WorkerHost(() => rebuild(), { prebuild: params })
+    ? new WorkerHost(() => rebuild(), {
+        prebuild: {
+          ...params,
+          title: launch.daily !== null ? dailyTitle(launch.daily) : "",
+        },
+      })
     : new InThreadHost();
 
   await app.init({
@@ -404,6 +410,7 @@ async function main(): Promise<void> {
   // passed down (the camera, the frame loop, the probe hooks).
   const flags = createLoopFlags();
   const scene = createScene({
+    dailyTitle: () => (dailyN !== null ? dailyTitle(dailyN) : ""),
     app,
     root,
     params,
@@ -1270,6 +1277,16 @@ async function main(): Promise<void> {
     if (clock.state === "paused") {
       clock.resume(performance.now(), document.hidden);
     } else if (!clock.started) {
+      // K115 stage 3a: on a titled daily the clock starts on the first
+      // arrival at the seam (mazeStart), not while writing the title.
+      const w = scene.walkGraph;
+      if (
+        w?.mazeStart &&
+        scene.fabricController &&
+        scene.fabricController.head !== w.mazeStart
+      ) {
+        return;
+      }
       clock.start(performance.now(), document.hidden);
       attemptDay = todayNumber();
       attemptStartedAt = Date.now();
