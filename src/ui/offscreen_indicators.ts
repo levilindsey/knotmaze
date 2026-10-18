@@ -11,9 +11,9 @@
 // - icon(): its glyph, SVG markup drawn in the glyph box (|x|, |y| <=
 //   GLYPH_R - the disc's margin rule already applied);
 // - style: the disc and ink colors;
-// - visible(): whether it may show at all (clients compose their own
-//   conditions; handle.gate() ANDs in more from elsewhere - K76's thread-
-//   reveal mode hides the finish's until the exit has been seen);
+// - visible(): whether it may show at all (clients compose every
+//   condition there - K465: the finish composes its reveal hold inside
+//   visible(); the old handle.gate() hook was never wired, K489);
 // - label(): its tooltip and aria-label;
 // - onTap: what a tap does (main.ts's finish: pan to frame it) - live
 //   only while the environment's tapEnabled() says so (the tap-to-pan
@@ -454,10 +454,6 @@ export interface IndicatorTarget {
 
 export interface IndicatorHandle {
   readonly id: string;
-  // An extra visibility predicate, ANDed with the target's own; returns
-  // its remover. (The hook for modes that hide a target until something
-  // happens - K76's thread-reveal mode and the finish.)
-  gate: (pred: () => boolean) => () => void;
   remove: () => void;
 }
 
@@ -489,7 +485,6 @@ export type IndicatorStatus =
 
 interface Entry {
   target: IndicatorTarget;
-  gates: Array<() => boolean>;
   el: HTMLButtonElement;
   chev: Element | null;
   iconEl: Element | null;
@@ -548,7 +543,6 @@ export class OffscreenIndicators {
     el.appendChild(breathe);
     const e: Entry = {
       target,
-      gates: [],
       el,
       chev: el.querySelector(".km-ind-chev"),
       iconEl: el.querySelector(".km-ind-icon"),
@@ -571,13 +565,6 @@ export class OffscreenIndicators {
     this.entries.push(e);
     return {
       id: target.id,
-      gate: (pred) => {
-        e.gates.push(pred);
-        return () => {
-          const i = e.gates.indexOf(pred);
-          if (i >= 0) e.gates.splice(i, 1);
-        };
-      },
       remove: () => {
         const i = this.entries.indexOf(e);
         if (i >= 0) this.entries.splice(i, 1);
@@ -599,7 +586,7 @@ export class OffscreenIndicators {
     const candidates: Candidate[] = [];
     for (const e of this.entries) {
       e.at = null;
-      if (!e.target.visible() || !e.gates.every((g) => g())) {
+      if (!e.target.visible()) {
         e.status = "hidden";
         e.pending = null;
         continue;

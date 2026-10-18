@@ -508,7 +508,7 @@ Every other item below waits on the trigger it names.
 - **K246** · K174's residuals (`docs/design/K174.md`, "Stage 1 handoff"): pace links unclamped (old
   `mhp=25` = 25x pace); K80 rt probes (`.claude/probes/K80/rt/`) lack K132's `rt_lib.ts` fix;
   `rt_chase.mjs` uses OS temp (fixed in `.claude/probes/K174/rt/`); panel labels clip `mino*` keys.
-- **K243** · Paused instant intro draws no threads (`?b.J&am=instant&fw=0&sp=0`): `beginSettle()`'s
+- **K243** · Paused instant intro draws no threads (FIXED 2026-10-18: beginSettle instant branch now draws its first frame; shot \.claude/probes/K115/k243_after.png\) (`?b.J&am=instant&fw=0&sp=0`): `beginSettle()`'s
   instant branch skips `update()`; fix: `handRendererLook(); renderer.update(); fabric.update(...)`.
   `docs/design/K235_K239.md` ("Stage 1 handoff"); `.claude/probes/K235/k239_paused.mjs`.
 - **K242** · K191's residuals (`docs/design/K154_K169.md`, "Stage 2 handoff"): the fan program's GPU

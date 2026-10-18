@@ -242,6 +242,11 @@ export function createLifecycle(deps: LifecycleDeps, scene: SceneRef) {
       }
       physState = "live";
       startAppearance();
+      // K243: draw the first frame now - a paused page (fw=0) otherwise
+      // never updates and shows no threads.
+      handRendererLook();
+      scene.renderer.update();
+      if (scene.fabric && scene.fabricController) scene.fabric.update(scene.fabricController);
       // A physics-off load cut short by this rebuild left these behind.
       root.visible = true;
       loader.hide();
