@@ -1232,6 +1232,10 @@ export function attachTitle(graph: TangleGraph, title: string): string | null {
 // hole's cell; attachCartouche hangs the fitted word across the hole on
 // two frame junctions. Both follow docs/design/K115_stage4.md: pinned
 // word, landmark route (counted like any maze run), one hue slot.
+// K115 stage 5b: planHoleForBounds is the shared hole planner (the
+// candidate scan factored out of planCartoucheHole); the emblem island
+// (core/emblem_graph.ts planEmblemHole/attachEmblem) reuses the same
+// hole with no frame junctions at all.
 // ---------------------------------------------------------------------------
 
 export const PAD_LU = 2;
@@ -1248,6 +1252,138 @@ export interface CartoucheHole {
 export interface CartouchePlan {
   hole: CartoucheHole;
   xHeight: number;
+}
+
+// The kept mask a hole is stamped into: the full lattice for rect, else
+// the shape's largest component (null = degenerate, no hole anywhere).
+function keptHoleMask(size: number, shape: ShapeId): boolean[] | null {
+  if (shape === "rect") return new Array(size * size).fill(true);
+  return buildCellMask(shape, size);
+}
+
+interface HoleMaskStats {
+  minCx: number;
+  minCy: number;
+  maxCx: number;
+  maxCy: number;
+  centX: number;
+  centY: number;
+  // LU budget for hole content: the mask bbox minus a FRAME_MIN-cell
+  // frame on every side, minus the PAD_LU pad ring (doubled coords).
+  maxW: number;
+  maxH: number;
+}
+
+function holeMaskStats(mask: boolean[], size: number): HoleMaskStats | null {
+  let minCx = size;
+  let minCy = size;
+  let maxCx = -1;
+  let maxCy = -1;
+  let count = 0;
+  let sumX = 0;
+  let sumY = 0;
+  for (let cy = 0; cy < size; cy++) {
+    for (let cx = 0; cx < size; cx++) {
+      if (!mask[cy * size + cx]) continue;
+      if (cx < minCx) minCx = cx;
+      if (cx > maxCx) maxCx = cx;
+      if (cy < minCy) minCy = cy;
+      if (cy > maxCy) maxCy = cy;
+      count++;
+      sumX += 2 * cx + 1;
+      sumY += 2 * cy + 1;
+    }
+  }
+  if (count < 2 || maxCx < 0) return null;
+  const bboxW = maxCx - minCx + 1;
+  const bboxH = maxCy - minCy + 1;
+  return {
+    minCx,
+    minCy,
+    maxCx,
+    maxCy,
+    centX: sumX / count,
+    centY: sumY / count,
+    maxW: (bboxW - 2 * FRAME_MIN) * 2 - 2 * PAD_LU,
+    maxH: (bboxH - 2 * FRAME_MIN) * 2 - 2 * PAD_LU,
+  };
+}
+
+// K115 stage 5b: the kept mask's LU budget for hole content, or null when
+// no hole can be stamped (degenerate mask). Both hole planners shrink
+// their content against this budget exactly the same way.
+export function holeBudget(
+  gridSize: number,
+  shape: ShapeId
+): { maxW: number; maxH: number } | null {
+  const size = Math.max(2, Math.round(gridSize));
+  const mask = keptHoleMask(size, shape);
+  if (mask === null) return null;
+  const stats = holeMaskStats(mask, size);
+  if (stats === null) return null;
+  if (stats.maxW <= 0 || stats.maxH <= 0) return null;
+  return { maxW: stats.maxW, maxH: stats.maxH };
+}
+
+// K115 stage 5b: plan a stamped hole for content of w x h LU (the pad
+// ring included here): the hole is the smallest cell rect holding the
+// content plus PAD_LU on every side, placed FRAME_MIN cells inside the
+// kept mask's bbox, nearest the mask centroid first, whose stamped mask
+// stays one component. Shared by the cartouche word and the emblem
+// island; the word path through here is byte-identical to stage 4a.
+export function planHoleForBounds(
+  w: number,
+  h: number,
+  gridSize: number,
+  shape: ShapeId
+): CartoucheHole | null {
+  if (!(w > 0) || !(h > 0)) return null;
+  const size = Math.max(2, Math.round(gridSize));
+  const mask = keptHoleMask(size, shape);
+  if (mask === null) return null;
+  const stats = holeMaskStats(mask, size);
+  if (stats === null) return null;
+  const W = Math.ceil((w + 2 * PAD_LU) / 2 - 0.000000001);
+  const H = Math.ceil((h + 2 * PAD_LU) / 2 - 0.000000001);
+  if (W < 1 || H < 1) return null;
+  interface Cand {
+    cx: number;
+    cy: number;
+    dist: number;
+  }
+  const cands: Cand[] = [];
+  for (let cy = 0; cy + H <= size; cy++) {
+    for (let cx = 0; cx + W <= size; cx++) {
+      if (cx < stats.minCx + FRAME_MIN || cy < stats.minCy + FRAME_MIN) continue;
+      if (cx + W - 1 > stats.maxCx - FRAME_MIN || cy + H - 1 > stats.maxCy - FRAME_MIN) {
+        continue;
+      }
+      let ok = true;
+      for (let yy = cy - 1; yy <= cy + H && ok; yy++) {
+        for (let xx = cx - 1; xx <= cx + W; xx++) {
+          if (xx < 0 || xx >= size || yy < 0 || yy >= size || !mask[yy * size + xx]) {
+            ok = false;
+            break;
+          }
+        }
+      }
+      if (!ok) continue;
+      const holeCx = 2 * cx + W;
+      const holeCy = 2 * cy + H;
+      const dx = holeCx - stats.centX;
+      const dy = holeCy - stats.centY;
+      cands.push({ cx, cy, dist: dx * dx + dy * dy });
+    }
+  }
+  cands.sort((a, b) => a.dist - b.dist || a.cy - b.cy || a.cx - b.cx);
+  for (const c of cands) {
+    const hole: CartoucheHole = { cx: c.cx, cy: c.cy, w: W, h: H };
+    const stamped = buildCellMask(shape, size, hole);
+    if (stamped === null) continue;
+    if (stamped[c.cy * size + c.cx]) continue;
+    return hole;
+  }
+  return null;
 }
 
 function textHasGlyph(text: string): boolean {
@@ -1282,40 +1418,10 @@ export function planCartoucheHole(
   shape: ShapeId
 ): CartouchePlan | null {
   if (!textHasGlyph(text)) return null;
-  const size = Math.max(2, Math.round(gridSize));
-  let mask: boolean[];
-  if (shape === "rect") {
-    mask = new Array(size * size).fill(true);
-  } else {
-    const kept = buildCellMask(shape, size);
-    if (kept === null) return null;
-    mask = kept;
-  }
-  let minCx = size;
-  let minCy = size;
-  let maxCx = -1;
-  let maxCy = -1;
-  let count = 0;
-  let sumX = 0;
-  let sumY = 0;
-  for (let cy = 0; cy < size; cy++) {
-    for (let cx = 0; cx < size; cx++) {
-      if (!mask[cy * size + cx]) continue;
-      if (cx < minCx) minCx = cx;
-      if (cx > maxCx) maxCx = cx;
-      if (cy < minCy) minCy = cy;
-      if (cy > maxCy) maxCy = cy;
-      count++;
-      sumX += 2 * cx + 1;
-      sumY += 2 * cy + 1;
-    }
-  }
-  if (count < 2 || maxCx < 0) return null;
-  const bboxW = maxCx - minCx + 1;
-  const bboxH = maxCy - minCy + 1;
-  const maxW = (bboxW - 2 * FRAME_MIN) * 2 - 2 * PAD_LU;
-  const maxH = (bboxH - 2 * FRAME_MIN) * 2 - 2 * PAD_LU;
-  if (maxW <= 0 || maxH <= 0) return null;
+  const budget = holeBudget(gridSize, shape);
+  if (budget === null) return null;
+  const maxW = budget.maxW;
+  const maxH = budget.maxH;
   let word = buildTextGraph(text, { xHeight: 3 });
   let wb = graphBounds(word);
   let w = wb[2] - wb[0];
@@ -1332,49 +1438,9 @@ export function planCartoucheHole(
     h = wb[3] - wb[1];
     if (!(w > 0) || !(h > 0)) return null;
   }
-  const W = Math.ceil((w + 2 * PAD_LU) / 2 - 0.000000001);
-  const H = Math.ceil((h + 2 * PAD_LU) / 2 - 0.000000001);
-  if (W < 1 || H < 1) return null;
-  const centX = sumX / count;
-  const centY = sumY / count;
-  interface Cand {
-    cx: number;
-    cy: number;
-    dist: number;
-  }
-  const cands: Cand[] = [];
-  for (let cy = 0; cy + H <= size; cy++) {
-    for (let cx = 0; cx + W <= size; cx++) {
-      if (cx < minCx + FRAME_MIN || cy < minCy + FRAME_MIN) continue;
-      if (cx + W - 1 > maxCx - FRAME_MIN || cy + H - 1 > maxCy - FRAME_MIN) {
-        continue;
-      }
-      let ok = true;
-      for (let yy = cy - 1; yy <= cy + H && ok; yy++) {
-        for (let xx = cx - 1; xx <= cx + W; xx++) {
-          if (xx < 0 || xx >= size || yy < 0 || yy >= size || !mask[yy * size + xx]) {
-            ok = false;
-            break;
-          }
-        }
-      }
-      if (!ok) continue;
-      const holeCx = 2 * cx + W;
-      const holeCy = 2 * cy + H;
-      const dx = holeCx - centX;
-      const dy = holeCy - centY;
-      cands.push({ cx, cy, dist: dx * dx + dy * dy });
-    }
-  }
-  cands.sort((a, b) => a.dist - b.dist || a.cy - b.cy || a.cx - b.cx);
-  for (const c of cands) {
-    const hole: CartoucheHole = { cx: c.cx, cy: c.cy, w: W, h: H };
-    const stamped = buildCellMask(shape, size, hole);
-    if (stamped === null) continue;
-    if (stamped[c.cy * size + c.cx]) continue;
-    return { hole, xHeight };
-  }
-  return null;
+  const hole = planHoleForBounds(w, h, gridSize, shape);
+  if (hole === null) return null;
+  return { hole, xHeight };
 }
 
 function resampleConnector(pts: Pt[]): Pt[] {

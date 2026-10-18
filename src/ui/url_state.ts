@@ -277,6 +277,7 @@ export interface UrlParams {
   text: string; // K115 cursive text design ("" = lattice/maze design).
   cartouche: string; // K115 stage 4a in-maze word ("" = no cartouche).
   emblem: string; // K115 stage 5a standalone emblem ("" = none; an EmblemId).
+  cartoucheShape: string; // K115 stage 5b cartouche emblem ("" = none; an EmblemId).
   seed: number;
   gridSize: number;
   // Lattice silhouette: rect (full lattice) or a sculpted mask shape.
@@ -699,6 +700,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   text: "",
   cartouche: "",
   emblem: "",
+  cartoucheShape: "",
   gridSize: 18,
   shape: "rect",
   startAnchor: "nw",
@@ -1090,6 +1092,7 @@ export const ENUM_OPTIONS: {
   revealEndCross: REVEAL_END_CROSSES,
   revealEndGlow: REVEAL_END_GLOWS,
   emblem: EMBLEM_CHOICES,
+  cartoucheShape: EMBLEM_CHOICES,
 };
 
 // K398: every numeric param held to the panel's range (param_codec's
@@ -1300,6 +1303,7 @@ function readLegacy(
     text: readText(query, "txt", D.text),
     cartouche: readText(query, "car", D.cartouche),
     emblem: readChoice(query, "emb", EMBLEM_CHOICES, D.emblem),
+    cartoucheShape: readChoice(query, "csh", EMBLEM_CHOICES, D.cartoucheShape),
     gridSize: readNumber(query, "gs", D.gridSize),
     shape: readChoice(query, "shp", SHAPES, D.shape),
     startAnchor: readChoice(query, "sa", ANCHORS, D.startAnchor),

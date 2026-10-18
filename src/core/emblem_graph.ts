@@ -14,7 +14,9 @@ import { EMBLEM_DEFS } from "./emblem_data";
 import type { EmblemDef, EmblemId } from "./emblem_data";
 import { NODE_TYPE } from "./types";
 import type { Node, Strand, TangleGraph } from "./types";
-import { assignOverUnder } from "./text_graph";
+import { PAD_LU, assignOverUnder, holeBudget, planHoleForBounds } from "./text_graph";
+import type { CartoucheHole } from "./text_graph";
+import type { ShapeId } from "./shapes";
 import { hypot2 } from "../util/det_math";
 
 export type { EmblemDef, EmblemId } from "./emblem_data";
@@ -24,6 +26,19 @@ type Pt = [number, number];
 
 // Default emblem diameter (LU across the authored bounds' larger axis).
 export const EMBLEM_DIA = 10;
+// K115 stage 5b: an emblem squeezed under this diameter loses its
+// crossings into each other, worse than no emblem (the word's
+// MIN_XHEIGHT argument); planEmblemHole refuses below it.
+export const MIN_EMBLEM_DIA = 6;
+
+export type { CartoucheHole } from "./text_graph";
+
+// K115 stage 5b: a planned emblem island (the 4a hole plus the fitted
+// diameter the island is built at).
+export interface EmblemPlan {
+  hole: CartoucheHole;
+  diameter: number;
+}
 // TURN chains: at most this per edge (the text builder's MAX_EDGE_LU,
 // re-declared; stage 3's attachTitle did the same for its pieces).
 const MAX_EDGE_LU = 1.4;
@@ -210,4 +225,112 @@ export function buildEmblemGraph(
   };
   assignOverUnder(graph);
   return graph;
+}
+
+function emblemBounds(
+  graph: TangleGraph
+): [number, number, number, number] {
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const n of graph.nodes.values()) {
+    if (n.latticePos[0] < x0) x0 = n.latticePos[0];
+    if (n.latticePos[0] > x1) x1 = n.latticePos[0];
+    if (n.latticePos[1] < y0) y0 = n.latticePos[1];
+    if (n.latticePos[1] > y1) y1 = n.latticePos[1];
+  }
+  return [x0, y0, x1, y1];
+}
+
+// K115 stage 5b: fit an emblem into a stamped hole exactly as the
+// cartouche word is fitted (stage 4a): measure once at EMBLEM_DIA,
+// shrink-only against the kept mask's budget, refuse below
+// MIN_EMBLEM_DIA, then plan the hole for the fitted bounds through the
+// shared planner. Null = refused (the caller ships an ordinary maze
+// with no empty hole).
+export function planEmblemHole(
+  emblem: EmblemId,
+  gridSize: number,
+  shape: ShapeId
+): EmblemPlan | null {
+  const budget = holeBudget(gridSize, shape);
+  if (budget === null) return null;
+  let island = buildEmblemGraph(emblem);
+  let b = emblemBounds(island);
+  let w = b[2] - b[0];
+  let h = b[3] - b[1];
+  if (!(w > 0) || !(h > 0)) return null;
+  let diameter = EMBLEM_DIA;
+  if (w > budget.maxW || h > budget.maxH) {
+    const scale = Math.min(budget.maxW / w, budget.maxH / h);
+    diameter = EMBLEM_DIA * scale;
+    if (diameter < MIN_EMBLEM_DIA) return null;
+    island = buildEmblemGraph(emblem, { diameter });
+    b = emblemBounds(island);
+    w = b[2] - b[0];
+    h = b[3] - b[1];
+    if (!(w > 0) || !(h > 0)) return null;
+  }
+  const hole = planHoleForBounds(w, h, gridSize, shape);
+  if (hole === null) return null;
+  return { hole, diameter };
+}
+
+// K115 stage 5b: the cartouche island, the anti-attachCartouche. The
+// emblem is built at the fitted diameter, its bounds' center moved to
+// the hole LU rect's center, and its nodes/edges/strands appended. No
+// frame edge is split, no junction created, no connector, no crossing
+// test: the island floats in the pad ring the hole guarantees. A
+// pinned emblem is then held by its own anchors; a live emblem is held
+// by nothing. Returns false (graph untouched) on an unknown emblem, a
+// bad diameter, an id clash, or placed bounds without PAD_LU of
+// clearance to the hole rect (0.5 LU slack, the 4a test's form).
+export function attachEmblem(
+  graph: TangleGraph,
+  emblem: EmblemId,
+  hole: CartoucheHole,
+  diameter: number
+): boolean {
+  if (!isEmblemId(emblem)) return false;
+  if (!(diameter > 0) || !Number.isFinite(diameter)) return false;
+  const island = buildEmblemGraph(emblem, { diameter });
+  for (const id of island.nodes.keys()) {
+    if (graph.nodes.has(id)) return false;
+  }
+  for (const id of island.edges.keys()) {
+    if (graph.edges.has(id)) return false;
+  }
+  const b = emblemBounds(island);
+  if (!Number.isFinite(b[0])) return false;
+  const holeX0 = 2 * hole.cx;
+  const holeY0 = 2 * hole.cy;
+  const holeX1 = 2 * (hole.cx + hole.w);
+  const holeY1 = 2 * (hole.cy + hole.h);
+  const dx = (holeX0 + holeX1) / 2 - (b[0] + b[2]) / 2;
+  const dy = (holeY0 + holeY1) / 2 - (b[1] + b[3]) / 2;
+  const need = PAD_LU - 0.5;
+  if (
+    b[0] + dx < holeX0 + need - 0.000000001 ||
+    b[2] + dx > holeX1 - need + 0.000000001 ||
+    b[1] + dy < holeY0 + need - 0.000000001 ||
+    b[3] + dy > holeY1 - need + 0.000000001
+  ) {
+    return false;
+  }
+  for (const n of island.nodes.values()) {
+    n.latticePos = [n.latticePos[0] + dx, n.latticePos[1] + dy];
+  }
+  for (const e of island.edges.values()) {
+    e.latticePoints = e.latticePoints.map(
+      (p) => [p[0] + dx, p[1] + dy] as Pt
+    );
+  }
+  for (const n of island.nodes.values()) graph.nodes.set(n.id, n);
+  for (const n of island.nodes.values()) {
+    graph.adjacency.set(n.id, (island.adjacency.get(n.id) ?? []).slice());
+  }
+  for (const e of island.edges.values()) graph.edges.set(e.id, e);
+  for (const s of island.strands) graph.strands.push(s);
+  return true;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildEmblemGraph, EMBLEM_DIA } from "../../src/core/emblem_graph";
+import { attachEmblem, buildEmblemGraph, EMBLEM_DIA, MIN_EMBLEM_DIA, planEmblemHole } from "../../src/core/emblem_graph";
 import { EMBLEM_DEFS, EMBLEM_IDS } from "../../src/core/emblem_data";
 import type { EmblemId } from "../../src/core/emblem_data";
 import { assignOverUnder } from "../../src/core/text_graph";
@@ -157,6 +157,47 @@ describe("emblem graphs (K115 stage 5a)", () => {
     expect(EMBLEM_DEFS.triquetra.pinned).toBe(true);
     expect(EMBLEM_DEFS.solomon.pinned).toBe(true);
     expect(EMBLEM_DEFS.wreath.pinned).toBe(true);
+  });
+
+  it("plans and attaches cartouche islands (K115 stage 5b)", () => {
+    expect(MIN_EMBLEM_DIA).toBe(6);
+    expect(planEmblemHole("star", 18, "rect")).toEqual({
+      hole: { cx: 5, cy: 5, w: 7, h: 7 },
+      diameter: 10,
+    });
+    expect(planEmblemHole("star", 6, "rect")).toBeNull();
+    const empty = (): TangleGraph => ({
+      nodes: new Map(),
+      edges: new Map(),
+      adjacency: new Map(),
+      strands: [],
+      seed: 0,
+      params: { gridSize: 0, weaveDensity: 0, turnBias: 0, randSeed: 0 },
+    });
+    const host = empty();
+    // Too-small hole: no clearance, graph untouched.
+    expect(attachEmblem(host, "star", { cx: 0, cy: 0, w: 2, h: 2 }, 10)).toBe(false);
+    expect(host.nodes.size).toBe(0);
+    // Roomy hole: island appended, centered, checks pass.
+    expect(attachEmblem(host, "solomon", { cx: 0, cy: 0, w: 10, h: 10 }, 10)).toBe(true);
+    expect(host.strands).toHaveLength(2);
+    expect(checkStructure(host)).toBe(true);
+    expect(checkAlternation(host)).toBe(true);
+    expect(checkStrandPartition(host)).toBe(true);
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (const n of host.nodes.values()) {
+      x0 = Math.min(x0, n.latticePos[0]); x1 = Math.max(x1, n.latticePos[0]);
+      y0 = Math.min(y0, n.latticePos[1]); y1 = Math.max(y1, n.latticePos[1]);
+    }
+    expect((x0 + x1) / 2).toBeCloseTo(10, 9);
+    expect((y0 + y1) / 2).toBeCloseTo(10, 9);
+    expect(x0).toBeGreaterThanOrEqual(1.5 - 1e-9);
+    expect(x1).toBeLessThanOrEqual(20 - 1.5 + 1e-9);
+    // Second attach clashes on ids and changes nothing.
+    const before = serialize(host);
+    expect(attachEmblem(host, "star", { cx: 0, cy: 0, w: 10, h: 10 }, 10)).toBe(false);
+    expect(serialize(host)).toBe(before);
+    expect(attachEmblem(empty(), "bogus" as EmblemId, { cx: 0, cy: 0, w: 10, h: 10 }, 10)).toBe(false);
   });
 
   it("throws on an unknown emblem id", () => {

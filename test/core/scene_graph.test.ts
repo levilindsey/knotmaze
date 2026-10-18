@@ -10,7 +10,10 @@ import { planCartoucheHole } from "../../src/core/text_graph";
 import { walkDistances } from "../../src/core/walk_graph";
 import type { WalkGraph } from "../../src/core/walk_graph";
 import { dailyParams, dailyTitle } from "../../src/ui/daily_link";
-import { buildEmblemGraph } from "../../src/core/emblem_graph";
+import { buildEmblemGraph, planEmblemHole } from "../../src/core/emblem_graph";
+import { EMBLEM_IDS } from "../../src/core/emblem_data";
+import { checkAlternation, checkStrandPartition, checkStructure } from "../../src/core/tangle_graph";
+import { NODE_TYPE } from "../../src/core/types";
 
 
 // K115 stage 3a: titled scenes (the daily title thread).
@@ -295,6 +298,213 @@ describe("cartouche scenes (K115 stage 4a)", () => {
           [label, Number.isFinite(d.get(w!.exit)!)],
           label
         ).toEqual([label, true]);
+      }
+    }
+  );
+});
+
+describe("cartouche emblem scenes (K115 stage 5b)", () => {
+  function emblemScene(
+    emblem: string,
+    seed: number,
+    shape: SceneParams["shape"],
+    gridSize: number,
+    over: Partial<SceneParams> = {}
+  ): SceneParams {
+    return {
+      ...dailyParams(1),
+      title: "",
+      cartouche: "",
+      cartoucheShape: emblem,
+      seed,
+      shape,
+      gridSize,
+      ...over,
+    } as SceneParams;
+  }
+
+  // The holed frame alone (no tenant): scene steps up to the cuts.
+  function emblemFrameWalk(base: SceneParams): WalkGraph | null {
+    const plan = planEmblemHole(
+      base.cartoucheShape as (typeof EMBLEM_IDS)[number],
+      base.gridSize,
+      base.shape
+    );
+    if (plan === null) {
+      return buildWalkGraph(
+        buildSceneGraph({ ...base, cartoucheShape: "", cartouche: "" }).graph
+      );
+    }
+    const g = generateLatticeKnotwork({
+      gridSize: base.gridSize,
+      weaveDensity: base.weaveDensity,
+      turnBias: base.turnBias,
+      randSeed: base.seed,
+      shape: base.shape,
+      hole: plan.hole,
+    });
+    const mp = buildMazePlan(g, {
+      ...DEFAULT_MAZE_PARAMS,
+      branchDensity: base.branchDensity,
+      fourWayFraction: base.fourWayFraction,
+      deadEndDensity: base.deadEndDensity,
+      deadEndLength: base.deadEndLength,
+      hCutShare: base.hCutShare,
+      exitCorridor: base.exitCorridor,
+      exitFlank: base.exitFlank,
+      exitTaperRadius: base.exitTaperRadius,
+      exitTaperStrength: base.exitTaperStrength,
+      entranceClearance: base.entranceClearance,
+      exitClearance: base.exitClearance,
+      junctionSpacing: base.junctionSpacing,
+      ...planAnchors(base.shape, base.gridSize, base.startAnchor, base.exitAnchor),
+    });
+    const hg = applyMazePlan(g, mp);
+    applyMazeCuts(g, mp, hg);
+    return buildWalkGraph(g);
+  }
+
+  function expectSameWalk(a: WalkGraph, b: WalkGraph): void {
+    expect([...a.vertices.keys()].sort()).toEqual([...b.vertices.keys()].sort());
+    expect(a.start).toBe(b.start);
+    expect(a.exit).toBe(b.exit);
+    expect(a.optimalLength).toBe(b.optimalLength);
+    expect(a.edges).toEqual(b.edges);
+    const byId = (w: WalkGraph) =>
+      [...w.vertices.values()].sort((x, y) => (x.id < y.id ? -1 : 1));
+    expect(byId(a)).toEqual(byId(b));
+    const dist = (w: WalkGraph) =>
+      [...w.distToExit.entries()].sort((x, y) => (x[0] < y[0] ? -1 : 1));
+    expect(dist(a)).toEqual(dist(b));
+  }
+  it("pins a rect gs 18 emblem island scene (hole + counts + hash)", () => {
+    const plan = planEmblemHole("trefoil", 18, "rect");
+    expect(plan).toEqual({ hole: { cx: 5, cy: 5, w: 7, h: 7 }, diameter: 10 });
+    const s = buildSceneGraph(emblemScene("trefoil", 11, "rect", 18));
+    expect(s.graph.nodes.size).toBe(935);
+    expect(s.graph.edges.size).toBe(1308);
+    expect(s.graph.strands.length).toBe(81);
+    expect(hashText(serialize(s.graph))).toBe("4b8fab24");
+    // One hue slot for the island, at the first emblem strand's index.
+    expect(s.hueGroup).toHaveLength(s.graph.strands.length);
+    expect(s.hueGroup![80]).toBe(80);
+    // The island is centered in its hole with the pad ring to spare.
+    const hx0 = 2 * plan!.hole.cx;
+    const hy0 = 2 * plan!.hole.cy;
+    const hx1 = 2 * (plan!.hole.cx + plan!.hole.w);
+    const hy1 = 2 * (plan!.hole.cy + plan!.hole.h);
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (const strand of s.graph.strands.slice(80)) {
+      expect(strand.isClosed).toBe(true);
+      expect(strand.pinned).toBe(false); // trefoil is live
+      for (const id of strand.nodes) {
+        const n = s.graph.nodes.get(id)!;
+        expect(n.type).not.toBe(NODE_TYPE.JUNCTION);
+        expect(n.type).not.toBe(NODE_TYPE.END);
+        expect(n.waypoint).toBeUndefined();
+        x0 = Math.min(x0, n.latticePos[0]); x1 = Math.max(x1, n.latticePos[0]);
+        y0 = Math.min(y0, n.latticePos[1]); y1 = Math.max(y1, n.latticePos[1]);
+      }
+    }
+    expect((x0 + x1) / 2).toBeCloseTo((hx0 + hx1) / 2, 9);
+    expect((y0 + y1) / 2).toBeCloseTo((hy0 + hy1) / 2, 9);
+    expect(x0).toBeGreaterThanOrEqual(hx0 + 1.5 - 1e-9);
+    expect(x1).toBeLessThanOrEqual(hx1 - 1.5 + 1e-9);
+    expect(y0).toBeGreaterThanOrEqual(hy0 + 1.5 - 1e-9);
+    expect(y1).toBeLessThanOrEqual(hy1 - 1.5 + 1e-9);
+    const again = buildSceneGraph(emblemScene("trefoil", 11, "rect", 18));
+    expect(serialize(again.graph)).toBe(serialize(s.graph));
+  });
+
+  it("lets the emblem win the hole over the word; text still wins overall", () => {
+    const both = buildSceneGraph(
+      emblemScene("trefoil", 11, "rect", 18, { cartouche: "knot" })
+    );
+    const islandOnly = buildSceneGraph(emblemScene("trefoil", 11, "rect", 18));
+    expect(both.graph.nodes.has("cj_a")).toBe(false);
+    expect(both.graph.nodes.has("sn0")).toBe(true);
+    expect(serialize(both.graph)).toBe(serialize(islandOnly.graph));
+    const textWins = buildSceneGraph(
+      emblemScene("star", 11, "rect", 18, { text: "Hi" })
+    );
+    expect(textWins.graph.nodes.has("mentr_a")).toBe(true);
+    expect(textWins.graph.nodes.has("sn0")).toBe(false);
+    // Knot mode ignores the tenant entirely.
+    const knot = buildSceneGraph(
+      emblemScene("star", 11, "rect", 18, { mazeFabric: false })
+    );
+    const knotPlain = buildSceneGraph(
+      emblemScene("", 11, "rect", 18, { mazeFabric: false })
+    );
+    expect(serialize(knot.graph)).toBe(serialize(knotPlain.graph));
+  });
+  it("shrinks to fit a small grid and refuses a tiny one, with no empty hole", () => {
+    const shrunk = planEmblemHole("star", 10, "rect");
+    expect(shrunk).not.toBeNull();
+    expect(shrunk!.diameter).toBeLessThan(10);
+    expect(shrunk!.diameter).toBeGreaterThanOrEqual(6);
+    const s = buildSceneGraph(emblemScene("star", 11, "rect", 10));
+    expect(s.graph.nodes.has("sn0")).toBe(true);
+    for (const emblem of EMBLEM_IDS) {
+      expect(planEmblemHole(emblem, 6, "rect"), emblem).toBeNull();
+      const refused = buildSceneGraph(emblemScene(emblem, 11, "rect", 6));
+      const plain = buildSceneGraph(emblemScene("", 11, "rect", 6));
+      expect(serialize(refused.graph), emblem).toBe(serialize(plain.graph));
+    }
+  });
+
+  it(
+    "keeps the holed walk exactly (island sweep, solvability as in 4a)",
+    { timeout: 180000 },
+    () => {
+      const cases: Array<[string, SceneParams["shape"], number]> = [];
+      for (const emblem of EMBLEM_IDS) {
+        for (const shape of ["rect", "heart", "ring", "circle"] as const) {
+          for (const gs of [12, 18]) cases.push([emblem, shape, gs]);
+        }
+        for (const shape of ["star", "fish", "tree"] as const) {
+          cases.push([emblem, shape, 18]);
+        }
+      }
+      for (const [emblem, shape, gs] of cases) {
+        const base = emblemScene(emblem, 11, shape, gs);
+        const label = `${emblem} ${shape} gs${gs}`;
+        const plan = planEmblemHole(emblem as (typeof EMBLEM_IDS)[number], gs, shape);
+        const s = buildSceneGraph(base);
+        const attached = s.graph.nodes.has("sn0");
+        // Kill criterion: a planned hole is never left tenantless.
+        expect([label, plan !== null, attached], label).toEqual([
+          label,
+          plan !== null,
+          plan !== null ? true : attached,
+        ]);
+        if (plan === null) {
+          const plain = buildSceneGraph(emblemScene("", 11, shape, gs));
+          expect(serialize(s.graph), label).toBe(serialize(plain.graph));
+          const w = s.walk ?? buildWalkGraph(s.graph);
+          expect(w, label).not.toBeNull();
+          expect(Number.isFinite(w!.optimalLength), label).toBe(true);
+          continue;
+        }
+        expect(attached, label).toBe(true);
+        expect(checkStructure(s.graph), label).toBe(true);
+        expect(checkAlternation(s.graph), label).toBe(true);
+        expect(checkStrandPartition(s.graph), label).toBe(true);
+        expect(s.graph.nodes.has("cj_a"), label).toBe(false);
+        // One hue slot per appended strand, all the first one's index.
+        expect(s.hueGroup, label).toHaveLength(s.graph.strands.length);
+        const first = s.graph.strands.findIndex((st) => st.nodes[0].startsWith("sn"));
+        expect(first, label).toBeGreaterThanOrEqual(0);
+        for (let i = first; i < s.graph.strands.length; i++) {
+          expect(s.hueGroup![i], label).toBe(first);
+          expect(s.graph.strands[i].isClosed, label).toBe(true);
+        }
+        const w = s.walk ?? buildWalkGraph(s.graph);
+        expect(w, label).not.toBeNull();
+        expect(Number.isFinite(w!.optimalLength), label).toBe(true);
+        const fw = emblemFrameWalk(base);
+        expect(fw, label).not.toBeNull();
+        expectSameWalk(w!, fw!);
       }
     }
   );

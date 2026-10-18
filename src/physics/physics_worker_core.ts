@@ -207,6 +207,7 @@ const SCENE_FIELDS: Record<keyof SceneParams, "number" | "boolean" | "string"> =
   title: "string",
   cartouche: "string",
   emblem: "string",
+  cartoucheShape: "string",
   gridSize: "number",
   weaveDensity: "number",
   turnBias: "number",
