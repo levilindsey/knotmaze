@@ -896,3 +896,89 @@ Deviations from this brief, for Levi:
    characters" test and the `é🎉` glyph-less cases in the title /
    cartouche tests were rewritten deliberately: `é` renders now,
    the emoji still skips.
+
+### Stage 6c handoff (Greek joined print, as built)
+
+Greek is the script; its face is Hershey Greek print (`greek.jhf`,
+see §2.5). No new link param, codec version or builder entry point:
+the text string names its script by its codepoints.
+
+1. **Data.** Fetched `.claude/probes/K115/data/greek.jhf` from
+   kamalmostafa/hershey-fonts (the same distribution as
+   `scripts.jhf`). Its letters sit at transliteration slots, not
+   alphabet positions (slot G/g is Gamma, Q/q Theta, C/c Chi, F/f
+   Phi, X/x Xi, Y/y Psi, W/w Omega, H/h Eta, Z/z Zeta; case pairs
+   agree on all 24). `.claude/probes/K115/gen_greek.mjs` documents
+   that slot table, parses the `.jhf` with the stage-1 parser and
+   emits `src/core/hershey_greek.ts` (49 entries: U+0391-U+03A1,
+   U+03A3-U+03A9, U+03B1-U+03C1, U+03C2, U+03C3-U+03C9). Re-running
+   the generator reproduces the file byte for byte (verified by
+   SHA-256 before commit). Gaps, documented in the generated
+   header: U+03AA/U+03AB/U+03CA/U+03CB have no glyph (their NFD
+   bases ship bare), and U+03C2 final sigma reuses the medial
+   glyph -- `greek.jhf` has no distinct final-sigma strokes, so
+   Call C7 is answered no-new-glyph: both entries are the slot-s
+   data. Slots J/V/j/v of the file hold no Greek letter.
+2. **Layout.** `src/core/text_graph.ts`: `isGreekCode` covers the
+   brief's ranges; in the cluster walk a Greek base reads
+   `HERSHEY_GREEK`, an ASCII base Script as before (ranges are
+   disjoint, so dispatch is order-free). Entry and exit use the
+   lowercase rule (stroke point nearest the join line; endpoint
+   nearest it with the on-stroke fallback), falling back to the
+   §3.2 class scan (arrive at the join line over a provisional
+   endpoint route) only when no stroke point comes within 6 HU --
+   no `GREEK_JOIN` table was needed for the swept word digraphs.
+   Greek gaps advance as a space; `textHasGlyph` / the cartouche
+   probe count Greek bases too. The Hermite connector, route,
+   `routeGlyph`, cusp, spur and solver machinery are reused
+   unchanged, as are cumulated advance, the two-line split, the
+   cartouche and the title (no em-bleed: the mid-line rise is
+   span-based, not script-aware).
+3. **Final sigma and accents.** A sigma (typed σ or ς) is laid
+   out as final when the next cluster is not a Greek letter,
+   medial otherwise (`λογος` and `λογοσ` build identically -- the
+   shared glyph above). Greek marks (tonos, dialytika) are
+   dropped in 6c: `Αθήνα` builds exactly as `Αθηνα`, with no
+   decorative mark strand; Ϊ/ϋ ship as plain Ι/υ. Greek in 6d.
+4. **Word-edge tails (new, Greek-only).** A Greek first/last
+   glyph's entry/exit often sits mid-stroke, so the generic 4 HU
+   tail retraced its spur and `mentr_a`/`mexit_a` collapsed to
+   degree-2 TURN nodes (single `Α` had both). Greek word edges
+   now step the tail tip 1.5 HU sideways so it diverges from the
+   spur at the entry (which becomes a waypoint junction, as a
+   Latin merge entry already is). Latin tails are byte-identical;
+   every frozen pin passed unmoved (daily-#12 composite, memory
+   pins, Daily #7/#170, `WSeize/slurp`).
+5. **Credits.** No new entry: `greek.jhf` is the same Hershey
+   distribution under the same Use Restriction, and the already
+   shipped `hershey-fonts` acknowledgement travels with it. Its
+   note now names the Greek print letters (wording only;
+   `shipped` unchanged, no fallback, no policy change).
+   `test/notices` gained the covering-entry assertion.
+6. **Tests.** New `test/core/hershey_greek.test.ts` (coverage,
+   integer-only data, the slot mapping pinned by shape, the
+   documented gaps); `test/core/text_graph.test.ts` gained Greek
+   validity for `αβγ`, `Αθηνα`, `αθηνα`, `abcαβγ`, `Welcome αβγ`,
+   `λογος` and all 49 letters (structure / partition / overFirst
+   alternation, pins `αβγ` 96/96/7 and `Αθηνα` 144/144/10,
+   determinism, sigma, tonos-bare) and a connector sweep over
+   twelve Greek/mixed digraphs (no CROSSING between a glyph's
+   exit point and the next waypoint); `test/game/text_walk.test.ts`
+   walks `αβγ` and `Αθηνα` to the exit; `test/ui/param_codec.test.ts`
+   round-trips Greek text at version 8. Suite: 1521 passed, 1
+   skipped, 0 failed (shared tree incl. K550 render work). Build
+   (`npm run build`) and `npx tsc --noEmit` green.
+   An exhaustive 1,152-digraph probe sweep (out of suite, by the
+   builder's exit/waypoint method) flags 5 lowercase pairs --
+   `λγ λη λθ λψ τυ` -- whose connector still meets a glyph stroke;
+   they are the first candidates for the §6c `GREEK_JOIN` extension
+   or the 6d look pass, and are left as this stage's residual.
+7. **Shots** (real renderer, `scripts/diag_screenshot.mjs`, dev
+   port 5220; never virtual time): `.claude/probes/K115/stage6c/`
+   holds `athina_worker.png` and `athina_phw0.png` (`αθηνα`, the
+   unaccented form of `αθήνα`), `welcome_greek_worker.png` and
+   `welcome_greek_phw0.png` (`Welcome αβγ`) and `abg_worker.png`
+   (`αβγ`), worker and in-thread. Greek print letters read as
+   distinct letters joined on the baseline thread, cross-script
+   joins take the same swash, and nothing fuses. A bare URL is
+   the daily, so every shot is an explicit `?txt=` link.

@@ -565,6 +565,15 @@ describe("the tracked credits", () => {
     expect(n).toContain("Cognition, Inc.");
   });
 
+  it("covers the Greek data under the same shipped Hershey entry (K115 stage 6c)", () => {
+    // greek.jhf is the same Hershey distribution as scripts.jhf, under
+    // the same Use Restriction: no new entry, no fallback, no policy
+    // change -- the one shipped acknowledgement already travels with
+    // both files, and its note names the Greek letters.
+    expect(hershey?.shipped).toBe(true);
+    expect(hershey?.note).toContain("Greek");
+  });
+
   it("ship the Hershey acknowledgements as soon as anything in the app mentions the fonts", () => {
     // K115 adds the font data. If a source or public file names Hershey (or
     // is a .jhf file) while the credit is still unshipped, the app would

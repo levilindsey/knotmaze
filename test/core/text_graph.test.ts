@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildTextGraph, attachTitle, attachCartouche, planCartoucheHole, CAPITAL_JOIN, CAPITAL_OVERRIDES } from "../../src/core/text_graph";
 import { HERSHEY_SCRIPT } from "../../src/core/hershey_script";
+import { HERSHEY_GREEK } from "../../src/core/hershey_greek";
 import { SHAPES, buildCellMask } from "../../src/core/shapes";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
@@ -860,6 +861,158 @@ describe("buildTextGraph (K115)", () => {
       const ys = s.nodes.map((id) => uml.nodes.get(id)!.latticePos[1]);
       expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(1 / 3, 2);
       expect(Math.max(...ys) - Math.min(...ys)).toBeCloseTo(1 / 3, 2);
+    }
+  });
+
+  // --- K115 stage 6c: Greek print ------------------------------------
+
+  it("builds Greek and mixed words valid (stage 6c)", () => {
+    for (const word of ["αβγ", "Αθηνα", "αθηνα", "abcαβγ", "Welcome αβγ", "λογος"]) {
+      const graph = buildTextGraph(word);
+      expect(checkStructure(graph), word).toBe(true);
+      expect(checkStrandPartition(graph), word).toBe(true);
+      expect(checkAlternationOverFirst(graph), word).toBe(true);
+      expect(graph.nodes.get("mentr_a")?.type, word).toBe(NODE_TYPE.END);
+      expect(graph.nodes.get("mexit_a")?.type, word).toBe(NODE_TYPE.END);
+    }
+    // Every in-scope letter alone, both cases (final sigma included).
+    const cps: number[] = [];
+    for (let c = 0x391; c <= 0x3a1; c++) cps.push(c);
+    for (let c = 0x3a3; c <= 0x3a9; c++) cps.push(c);
+    for (let c = 0x3b1; c <= 0x3c9; c++) cps.push(c);
+    for (const cp of cps) {
+      const ch = String.fromCodePoint(cp);
+      const graph = buildTextGraph(ch);
+      expect(checkStructure(graph), ch).toBe(true);
+      expect(checkStrandPartition(graph), ch).toBe(true);
+      expect(checkAlternationOverFirst(graph), ch).toBe(true);
+    }
+    // Determinism: building twice is bit-identical.
+    expect(serialize(buildTextGraph("αβγ"))).toBe(serialize(buildTextGraph("αβγ")));
+    expect(serialize(buildTextGraph("Αθηνα"))).toBe(serialize(buildTextGraph("Αθηνα")));
+  });
+
+  it("pins Greek words (stage 6c)", () => {
+    const abc = buildTextGraph("αβγ");
+    expect([abc.nodes.size, abc.edges.size, abc.strands.length]).toEqual([96, 96, 7]);
+    const athena = buildTextGraph("Αθηνα");
+    expect([athena.nodes.size, athena.edges.size, athena.strands.length]).toEqual([144, 144, 10]);
+  });
+
+  it("selects final sigma by position and ships tonos bare (stage 6c)", () => {
+    // greek.jhf has no distinct final glyph, so final and medial sigma
+    // draw identically (documented in hershey_greek.ts); the builder
+    // still resolves sigma from the next cluster (word-final = final).
+    expect(serialize(buildTextGraph("ος"))).toBe(serialize(buildTextGraph("οσ")));
+    expect(serialize(buildTextGraph("λογος"))).toBe(serialize(buildTextGraph("λογοσ")));
+    const logos = buildTextGraph("λογος");
+    expect(checkStructure(logos)).toBe(true);
+    expect(checkAlternationOverFirst(logos)).toBe(true);
+    // Tonos is 6d: accented Greek ships its base bare, with no mark strand.
+    expect(serialize(buildTextGraph("Αθήνα"))).toBe(serialize(buildTextGraph("Αθηνα")));
+    expect(serialize(buildTextGraph("αθήνα"))).toBe(serialize(buildTextGraph("αθηνα")));
+    expect(buildTextGraph("αθήνα").strands.filter((s) => s.decorative)).toHaveLength(0);
+    // Dialytika likewise: Ϊ/ϋ decompose to a plain iota/upsilon, bare.
+    expect(serialize(buildTextGraph("Ϊ"))).toBe(serialize(buildTextGraph("Ι")));
+    expect(serialize(buildTextGraph("ϋ"))).toBe(serialize(buildTextGraph("υ")));
+  });
+
+  it("crosses no glyph stroke with a Greek connector (stage 6c sweep)", () => {
+    // The 6a assertion, Greek form: on the main strand, between a
+    // glyph's exit point and the next glyph's waypoint (its arrive
+    // point) there is no CROSSING node -- the Hermite connector between
+    // them proper-intersects no glyph stroke. Exit/arrive points are
+    // recomputed here from the glyph data by the builder's Greek rule
+    // (stroke point nearest the join line; endpoint nearest it, with
+    // the on-stroke fallback), then located on the built strand.
+    type GPt = [number, number];
+    const gScale = 3 / 9;
+    const gD2 = (a: GPt, b: GPt): number => (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]);
+    const gSeg = (p: GPt, a: GPt, b: GPt): { dd: number; q: GPt } => {
+      const vx = b[0] - a[0];
+      const vy = b[1] - a[1];
+      const len2 = vx * vx + vy * vy;
+      let t = len2 > 0 ? ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / len2 : 0;
+      t = Math.max(0, Math.min(1, t));
+      const q: GPt = [a[0] + vx * t, a[1] + vy * t];
+      return { dd: gD2(p, q), q };
+    };
+    const greekSeamCrosses = (word: string): boolean => {
+      const glyphs: Array<{ strokes: GPt[][]; exit: GPt }> = [];
+      let cursor = 0;
+      for (const ch of word) {
+        const cp = ch.codePointAt(0)!;
+        const glyph = cp > 126 ? HERSHEY_GREEK[cp] : HERSHEY_SCRIPT[cp - 32];
+        if (!glyph) { cursor += 16; continue; }
+        const cursorPrev = cursor;
+        const cursorNext = cursor + (glyph.right - glyph.left);
+        const dx = cursor - glyph.left;
+        cursor = cursorNext;
+        if (glyph.strokes.length === 0) continue;
+        const strokes = glyph.strokes.map((s) => s.map((p) => [p[0] + dx, p[1]] as GPt));
+        let exit = strokes[0][0];
+        let bestD = Infinity;
+        for (const s of strokes) {
+          for (const p of [s[0], s[s.length - 1]]) {
+            const dd = gD2(p, [cursorNext, 4]);
+            if (dd < bestD) { bestD = dd; exit = p; }
+          }
+        }
+        if (bestD > 9) {
+          let best = strokes[0][0];
+          let bd = Infinity;
+          for (const s of strokes) {
+            for (let k = 0; k + 1 < s.length; k++) {
+              const h = gSeg([cursorNext, 4], s[k], s[k + 1]);
+              if (h.dd < bd) { bd = h.dd; best = h.q; }
+            }
+          }
+          exit = best;
+        }
+        void cursorPrev;
+        glyphs.push({ strokes, exit });
+      }
+      const graph = buildTextGraph(word);
+      const verts: GPt[] = [];
+      for (const g of glyphs) for (const s of g.strokes) for (const p of s) verts.push(p);
+      const counts = new Map<string, number>();
+      let off: GPt = [0, 0];
+      let bestN = -1;
+      for (const n of graph.nodes.values()) {
+        const gx = n.latticePos[0] / gScale;
+        const gy = n.latticePos[1] / gScale;
+        for (const v of verts) {
+          const ox = Math.round((v[0] - gx) * 1000);
+          const oy = Math.round((v[1] - gy) * 1000);
+          const key = `${ox},${oy}`;
+          const c = (counts.get(key) ?? 0) + 1;
+          counts.set(key, c);
+          if (c > bestN) { bestN = c; off = [ox / 1000, oy / 1000]; }
+        }
+      }
+      const main = graph.strands[0];
+      const pts: GPt[] = main.nodes.map((id) => {
+        const lu = graph.nodes.get(id)!.latticePos;
+        return [lu[0] / gScale + off[0], lu[1] / gScale + off[1]];
+      });
+      const wpIdx: number[] = [];
+      main.nodes.forEach((id, i) => {
+        if (graph.nodes.get(id)?.waypoint) wpIdx.push(i);
+      });
+      const arriveIdx = wpIdx[1];
+      let exitIdx = -1;
+      let exitD = Infinity;
+      pts.forEach((p, i) => {
+        const dd = gD2(p, glyphs[0].exit);
+        if (dd < exitD) { exitD = dd; exitIdx = i; }
+      });
+      for (let i = exitIdx + 1; i < arriveIdx; i++) {
+        if (graph.nodes.get(main.nodes[i])?.type === NODE_TYPE.CROSSING) return true;
+      }
+      return false;
+    };
+    for (const dg of ["αβ", "βγ", "Αθ", "θη", "ην", "να", "ΑΒ", "ΒΓ", "aα", "αa", "Ωα", "αΩ"]) {
+      expect(greekSeamCrosses(dg), dg).toBe(false);
     }
   });
 
