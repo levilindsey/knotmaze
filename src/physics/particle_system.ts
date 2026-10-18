@@ -578,7 +578,7 @@ export class ParticleSystem {
     // knot-mode graphs have neither, so those paths stay inert.
     const occurrences = new Map<
       string,
-      Array<{ pass: CrossingPass; isOver: boolean }>
+      Array<{ pass: CrossingPass; isOver: boolean; overFirst?: boolean }>
     >();
     const junctionOcc = new Map<
       string,
@@ -602,7 +602,7 @@ export class ParticleSystem {
         if (node.type === NODE_TYPE.CROSSING) {
           const pass: CrossingPass = { chain: chainIdx, ctrl: chain.length };
           const list = occurrences.get(node.id);
-          const entry = { pass, isOver: node.isOver === true };
+          const entry = { pass, isOver: node.isOver === true, overFirst: node.overFirst };
           if (list) list.push(entry);
           else occurrences.set(node.id, [entry]);
         } else if (node.type === NODE_TYPE.JUNCTION) {
@@ -714,6 +714,14 @@ export class ParticleSystem {
       this.setAnchor(p, anchor[0], anchor[1]);
       this.ends.push({ particle: p, chain, anchor });
     }
+
+    // K115: a pinned strand (text) anchors every particle at its start.
+    graph.strands.forEach((strand, chainIdx) => {
+      if (!strand.pinned) return;
+      for (const p of this.chains[chainIdx]) {
+        this.setAnchor(p, this.initial[p * 2], this.initial[p * 2 + 1]);
+      }
+    });
 
     const noiseRng = new SeededRNG((graph.seed ^ 0x9e3779b9) >>> 0);
     this.noise3D = createNoise3D(() => noiseRng.next());
@@ -1263,7 +1271,7 @@ export class ParticleSystem {
   // graph's checkerboard bit (isOver = the "/" pass goes over), using the
   // initial geometry for the diagonal class of each pass.
   private assignCrossings(
-    occurrences: Map<string, Array<{ pass: CrossingPass; isOver: boolean }>>
+    occurrences: Map<string, Array<{ pass: CrossingPass; isOver: boolean; overFirst?: boolean }>>
   ): CrossingInfo[] {
     const crossings: CrossingInfo[] = [];
     for (const list of occurrences.values()) {
@@ -1279,7 +1287,7 @@ export class ParticleSystem {
         return vx * vy > 0;
       };
       const slashFirst = isSlash(list[0].pass);
-      const overFirst = list[0].isOver ? slashFirst : !slashFirst;
+      const overFirst = list[0].overFirst !== undefined ? list[0].overFirst : list[0].isOver ? slashFirst : !slashFirst;
       const over = overFirst ? list[0].pass : list[1].pass;
       const under = overFirst ? list[1].pass : list[0].pass;
 

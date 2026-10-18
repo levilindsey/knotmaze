@@ -133,6 +133,7 @@ type ReadyMsg = Extract<WorkerToMain, { type: "ready" }>;
 // from (main's params object carries much more).
 export function sceneParamsOf(p: SceneParams): SceneParams {
   return {
+    text: p.text,
     gridSize: p.gridSize,
     weaveDensity: p.weaveDensity,
     turnBias: p.turnBias,

@@ -918,6 +918,11 @@ export function buildPanel(
     "How often growing threads turn instead of running straight. Low = long runs, high = curly meanders. Regenerates the design.",
     D.turnBias, regenerateWhenDone
   );
+  row(
+    fDesign, p, "text", { label: "Text" },
+    "Cursive text design: type words to build them as pinned knotwork text instead of the lattice maze. Empty = the usual design. Regenerates the design.",
+    D.text, regenerateWhenDone
+  );
   // SEED ROW: the design's seed as the link's base-36 token (?<seed>...).
   // Typing a seed (or any word - it hashes to one) and pressing Enter loads
   // that design; the dice button in the row rolls a random one. The row

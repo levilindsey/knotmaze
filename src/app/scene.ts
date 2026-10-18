@@ -245,7 +245,8 @@ export function createScene(deps: SceneDeps): Scene {
 
     // The walk graph feeds both the section coloring and (in fabric mode)
     // the gameplay, so it builds before the renderer.
-    walkGraph = params.mazeFabric ? buildWalkGraph(graph) : null;
+    const isText = params.text !== "";
+    walkGraph = !isText && params.mazeFabric ? buildWalkGraph(graph) : null;
 
     renderer = new RibbonRenderer(ps, {
       threadWidth: params.threadWidth,
@@ -259,7 +260,7 @@ export function createScene(deps: SceneDeps): Scene {
           ? hueGroup
           : graph.strands.map(() => 0),
       // Fabric gameplay recolors the actual threads via palette textures.
-      paletteMode: params.mazeFabric,
+      paletteMode: !isText && params.mazeFabric,
       flowSeed: params.seed,
     });
     renderer.setSectionRuns(
@@ -278,7 +279,7 @@ export function createScene(deps: SceneDeps): Scene {
 
     // Branching gameplay over the fabric: branch-point-only solve state +
     // the thread-true paint overlay (the walk graph was built above).
-    if (params.mazeFabric && walkGraph) {
+    if (!isText && params.mazeFabric && walkGraph) {
       fabricController = new FabricMazeController(
         walkGraph,
         params.pathViz === "trail",
