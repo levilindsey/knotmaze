@@ -1,5 +1,7 @@
 import { generateLatticeKnotwork } from "./lattice_grower";
 import { buildTextGraph, attachTitle, attachCartouche, planCartoucheHole } from "./text_graph";
+import { buildEmblemGraph, isEmblemId } from "./emblem_graph";
+import type { EmblemId } from "./emblem_graph";
 import { buildWalkGraph } from "./walk_graph";
 import type { WalkGraph } from "./walk_graph";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "./maze_plan";
@@ -7,7 +9,7 @@ import { planAnchors } from "./shapes";
 import type { AnchorId, ShapeId } from "./shapes";
 import { applyMazePlan, applyMazeCuts } from "./maze_apply";
 import { searchGreedyTrapPlan, trapOptionsOf } from "./greedy_search";
-import { checkStructure, checkAlternation } from "./tangle_graph";
+import { checkStructure, checkAlternation, checkStrandPartition } from "./tangle_graph";
 import type { GenerationParams, TangleGraph } from "./types";
 
 // K7 stage 1: the pure part of a scene build, moved verbatim from main.ts's
@@ -23,6 +25,8 @@ export interface SceneParams {
   title: string;
   // K115 stage 4a: the in-maze cartouche word ("" = none).
   cartouche: string;
+  // K115 stage 5a: standalone emblem scene ("" = none; an EmblemId).
+  emblem: string;
   gridSize: number;
   weaveDensity: number;
   turnBias: number;
@@ -68,6 +72,21 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
   if (params.text !== "") {
     const graph = buildTextGraph(params.text);
     if (!checkStructure(graph) || !checkAlternation(graph)) {
+      console.warn("Knot invariants violated; generation bug.");
+    }
+    return { graph, hueGroup: undefined };
+  }
+  // K115 stage 5a: standalone emblem (text wins; then emblem; then maze).
+  if (params.emblem !== "") {
+    if (!isEmblemId(params.emblem)) {
+      throw new Error(`unknown emblem: ${params.emblem}`);
+    }
+    const graph = buildEmblemGraph(params.emblem as EmblemId);
+    if (
+      !checkStructure(graph) ||
+      !checkAlternation(graph) ||
+      !checkStrandPartition(graph)
+    ) {
       console.warn("Knot invariants violated; generation bug.");
     }
     return { graph, hueGroup: undefined };

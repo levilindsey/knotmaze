@@ -308,6 +308,7 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("trapSurplus"),
   str("text"),
   str("cartouche"),
+  choice("emblem", ["", "star", "trefoil", "triquetra", "solomon", "wreath"]),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
