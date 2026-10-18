@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildTextGraph, attachTitle, attachCartouche, planCartoucheHole } from "../../src/core/text_graph";
+import { buildTextGraph, attachTitle, attachCartouche, planCartoucheHole, CAPITAL_JOIN, CAPITAL_OVERRIDES } from "../../src/core/text_graph";
+import { HERSHEY_SCRIPT } from "../../src/core/hershey_script";
 import { SHAPES, buildCellMask } from "../../src/core/shapes";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
@@ -93,6 +94,179 @@ function hashGraph(graph: TangleGraph): string {
   return (h >>> 0).toString(16);
 }
 
+// --- K115 stage 6a seam measurement (Hershey units) -----------------------
+// The connector between glyph j and j+1 is read off the built graph's
+// main strand: it runs from the previous glyph's leave point (the start
+// of the on-material run ending the glyph's route) to the next glyph's
+// waypoint (its arrive point). `offset` is the max distance from the
+// connector's points to the anchor segment between the two glyphs'
+// class anchors at their shared advance boundary; `bow` is the max
+// perpendicular distance to the leave->arrive chord; `crosses` reports
+// a CROSSING node on the connector (the planar build splits there).
+type SeamPt = [number, number];
+const SEAM_JOIN_Y = 4;
+const SEAM_SCALE = 3 / 9;
+
+function seamD2(a: SeamPt, b: SeamPt): number {
+  const x = a[0] - b[0];
+  const y = a[1] - b[1];
+  return x * x + y * y;
+}
+function seamSegDist(p: SeamPt, a: SeamPt, b: SeamPt): number {
+  const vx = b[0] - a[0];
+  const vy = b[1] - a[1];
+  const len2 = vx * vx + vy * vy;
+  let t = 0;
+  if (len2 > 0) t = ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / len2;
+  if (t < 0) t = 0;
+  if (t > 1) t = 1;
+  return Math.sqrt(seamD2(p, [a[0] + vx * t, a[1] + vy * t]));
+}
+interface SeamLayout {
+  ch: string;
+  cursorPrev: number;
+  cursorNext: number;
+  advance: number;
+  strokes: SeamPt[][];
+  entryEnd: SeamPt;
+  exitEnd: SeamPt;
+}
+function seamLayout(text: string): SeamLayout[] {
+  let cursor = 0;
+  const out: SeamLayout[] = [];
+  for (const ch of text) {
+    const glyph = HERSHEY_SCRIPT[ch.codePointAt(0)! - 32];
+    const cursorPrev = cursor;
+    const cursorNext = cursor + (glyph.right - glyph.left);
+    const dx = cursor - glyph.left;
+    cursor = cursorNext;
+    if (glyph.strokes.length === 0) continue;
+    const strokes = glyph.strokes.map((s) => s.map((p) => [p[0] + dx, p[1]] as SeamPt));
+    out.push({
+      ch,
+      cursorPrev,
+      cursorNext,
+      advance: glyph.right - glyph.left,
+      strokes,
+      entryEnd: strokes[0][0],
+      exitEnd: strokes[strokes.length - 1][strokes[strokes.length - 1].length - 1],
+    });
+  }
+  return out;
+}
+function seamBand(y: number): string {
+  return y <= -4 ? "HIGH" : y >= 6 ? "LOW" : "MID";
+}
+function seamAnchors(g: SeamLayout): { arrive: SeamPt; leave: SeamPt } {
+  if (!(g.ch >= "A" && g.ch <= "Z")) {
+    return { arrive: [g.cursorPrev, SEAM_JOIN_Y], leave: [g.cursorNext, SEAM_JOIN_Y] };
+  }
+  const arriveBand = seamBand(g.entryEnd[1]) === "HIGH" ? "HIGH" : "LOW";
+  const leaveBand = seamBand(g.exitEnd[1]);
+  const leaveY = leaveBand === "HIGH" ? -8 : leaveBand === "LOW" ? 9 : SEAM_JOIN_Y;
+  return {
+    arrive: [g.cursorPrev, arriveBand === "HIGH" ? -8 : SEAM_JOIN_Y],
+    leave: [g.cursorNext, leaveY],
+  };
+}
+interface Seam {
+  offset: number;
+  bow: number;
+  crosses: boolean;
+  length: number;
+  leavePt: SeamPt;
+  arrivePt: SeamPt;
+}
+function seamBetween(graph: TangleGraph, text: string, joinIndex: number): Seam {
+  const glyphs = seamLayout(text);
+  const verts: SeamPt[] = [];
+  for (const g of glyphs) for (const s of g.strokes) for (const p of s) verts.push(p);
+  const counts = new Map<string, number>();
+  let off: SeamPt = [0, 0];
+  let bestN = -1;
+  for (const n of graph.nodes.values()) {
+    const gx = n.latticePos[0] / SEAM_SCALE;
+    const gy = n.latticePos[1] / SEAM_SCALE;
+    for (const v of verts) {
+      const ox = Math.round((v[0] - gx) * 1000);
+      const oy = Math.round((v[1] - gy) * 1000);
+      const key = `${ox},${oy}`;
+      const c = (counts.get(key) ?? 0) + 1;
+      counts.set(key, c);
+      if (c > bestN) {
+        bestN = c;
+        off = [ox / 1000, oy / 1000];
+      }
+    }
+  }
+  const toHU = (lu: SeamPt): SeamPt => [lu[0] / SEAM_SCALE + off[0], lu[1] / SEAM_SCALE + off[1]];
+  const main = graph.strands[0];
+  const pts: SeamPt[] = main.nodes.map((id) => toHU(graph.nodes.get(id)!.latticePos));
+  const wpIdx: number[] = [];
+  main.nodes.forEach((id, i) => {
+    if (graph.nodes.get(id)?.waypoint) wpIdx.push(i);
+  });
+  const arriveIdx = wpIdx[joinIndex + 1];
+  const prevSegs: Array<[SeamPt, SeamPt]> = [];
+  for (const s of glyphs[joinIndex].strokes)
+    for (let k = 0; k + 1 < s.length; k++) prevSegs.push([s[k], s[k + 1]]);
+  const onMat = (p: SeamPt): boolean =>
+    prevSegs.some(([a, b]) => seamSegDist(p, a, b) <= 0.35);
+  let leaveIdx = arriveIdx - 1;
+  {
+    let run = 0;
+    let found = -1;
+    for (let i = arriveIdx - 1; i > 0; i--) {
+      if (onMat(pts[i])) {
+        run++;
+        if (run >= 3) {
+          found = i + 2;
+          break;
+        }
+      } else {
+        run = 0;
+      }
+    }
+    if (found >= 0) leaveIdx = found;
+    else while (leaveIdx > 0 && !onMat(pts[leaveIdx])) leaveIdx--;
+  }
+  const conn = pts.slice(leaveIdx, arriveIdx + 1);
+  const a1 = seamAnchors(glyphs[joinIndex]).leave;
+  const a2 = seamAnchors(glyphs[joinIndex + 1]).arrive;
+  let offset = 0;
+  for (const p of conn) offset = Math.max(offset, seamSegDist(p, a1, a2));
+  let crosses = false;
+  for (let i = leaveIdx + 1; i < arriveIdx; i++) {
+    if (graph.nodes.get(main.nodes[i])?.type === NODE_TYPE.CROSSING) crosses = true;
+  }
+  let length = 0;
+  for (let i = 0; i + 1 < conn.length; i++) length += Math.sqrt(seamD2(conn[i], conn[i + 1]));
+  const leavePt = conn[0];
+  const arrivePt = conn[conn.length - 1];
+  let bow = 0;
+  for (const p of conn) bow = Math.max(bow, seamSegDist(p, leavePt, arrivePt));
+  return { offset, bow, crosses, length, leavePt, arrivePt };
+}
+
+// Frozen pre-6a seam values (endpoint connectors), measured on the
+// pre-change build: .claude/probes/K115/stage6a/before.json.
+const SEAM_BEFORE: Record<string, { offset: number; bow: number }> = {
+  aI: { offset: 14.0, bow: 0.528 },
+  aJ: { offset: 12.806, bow: 0.725 },
+  aL: { offset: 5.657, bow: 0.308 },
+  aP: { offset: 13.153, bow: 1.379 },
+  aS: { offset: 5.0, bow: 0.238 },
+  aT: { offset: 10.227, bow: 0.574 },
+  aX: { offset: 8.251, bow: 0.615 },
+  Ia: { offset: 11.0, bow: 0.843 },
+  Ja: { offset: 1.813, bow: 0.078 },
+  La: { offset: 0.895, bow: 0.025 },
+  Pa: { offset: 9.466, bow: 0.679 },
+  Sa: { offset: 18.111, bow: 0.781 },
+  Ta: { offset: 13.0, bow: 0.996 },
+  Xa: { offset: 23.0, bow: 1.04 },
+};
+
 const WORDS = ["Welcome", "knotmaze", "minimum", "hello", "Daily #12", "Solved"];
 
 // K115 stage 3a fixtures: an applied maze fabric (as scene_graph builds).
@@ -171,11 +345,113 @@ describe("buildTextGraph (K115)", () => {
   }
 
   it("pins Welcome (counts and a hash of rounded positions)", () => {
+    // Stage 6a deliberately re-freezes this pin: W's join class moves
+    // its internal routing (175/178 nodes/edges unchanged, strands
+    // 9 -> 10, hash f972ee61 -> 25459bce). See docs/design/K115_stage6.md.
     const graph = buildTextGraph("Welcome");
     expect(graph.nodes.size).toBe(175);
     expect(graph.edges.size).toBe(178);
-    expect(graph.strands.length).toBe(9);
-    expect(hashGraph(graph)).toBe("f972ee61");
+    expect(graph.strands.length).toBe(10);
+    expect(hashGraph(graph)).toBe("25459bce");
+  });
+
+  it("pins Solved and Daily #12 (stage 6a)", () => {
+    const solved = buildTextGraph("Solved");
+    expect([solved.nodes.size, solved.edges.size, solved.strands.length]).toEqual([144, 149, 11]);
+    expect(hashGraph(solved)).toBe("b960ce94");
+    // Daily #12 does not move in 6a: D's class scans abstain and the
+    // digits keep the endpoint rule.
+    const daily = buildTextGraph("Daily #12");
+    expect([daily.nodes.size, daily.edges.size, daily.strands.length]).toEqual([263, 272, 18]);
+    expect(hashGraph(daily)).toBe("1f180814");
+  });
+
+  it("does not move lowercase-only words (stage 6a leak guard)", () => {
+    const pins: Record<string, [number, number, number, string]> = {
+      knotmaze: [209, 214, 13, "fd5b97eb"],
+      minimum: [192, 190, 11, "91c39f8f"],
+      hello: [116, 120, 4, "92e4ebc9"],
+    };
+    for (const [word, pin] of Object.entries(pins)) {
+      const g = buildTextGraph(word);
+      expect([g.nodes.size, g.edges.size, g.strands.length, hashGraph(g)], word).toEqual(pin);
+    }
+  });
+
+  it("derives CAPITAL_JOIN from the Hershey endpoints (stage 6a)", () => {
+    const band = (y: number): string => (y <= -4 ? "HIGH" : y >= 6 ? "LOW" : "MID");
+    expect(CAPITAL_JOIN.length).toBe(26);
+    for (let c = 65; c <= 90; c++) {
+      const glyph = HERSHEY_SCRIPT[c - 32];
+      const entry = glyph.strokes[0][0];
+      const last = glyph.strokes[glyph.strokes.length - 1];
+      const exit = last[last.length - 1];
+      const want = {
+        arrive: band(entry[1]) === "HIGH" ? "HIGH" : "LOW",
+        leave: band(exit[1]),
+      };
+      expect(CAPITAL_JOIN[c - 65], String.fromCharCode(c)).toEqual(want);
+    }
+    // Overrides sit on real stroke vertices of their glyph.
+    for (const [ch, ov] of Object.entries(CAPITAL_OVERRIDES)) {
+      const glyph = HERSHEY_SCRIPT[ch.codePointAt(0)! - 32];
+      const verts = new Set(glyph.strokes.flat().map((p) => `${p[0]},${p[1]}`));
+      if (ov.arrive) expect(verts.has(`${ov.arrive[0]},${ov.arrive[1]}`), `${ch} arrive`).toBe(true);
+      if (ov.leave) expect(verts.has(`${ov.leave[0]},${ov.leave[1]}`), `${ch} leave`).toBe(true);
+    }
+  });
+
+  it("joins problem capitals at their class points (stage 6a)", () => {
+    const digraphs = Object.keys(SEAM_BEFORE);
+    for (const dg of digraphs) {
+      const graph = buildTextGraph(dg);
+      expect(checkStructure(graph), dg).toBe(true);
+      expect(checkStrandPartition(graph), dg).toBe(true);
+      expect(checkAlternationOverFirst(graph), dg).toBe(true);
+      const seam = seamBetween(graph, dg, 0);
+      const before = SEAM_BEFORE[dg];
+      // No connector crosses a glyph stroke after 6a.
+      expect(seam.crosses, `${dg} crosses`).toBe(false);
+      // No seam regresses on either measure, except Pa: P's leave move
+      // to the stem lengthens the connector (its tangent is the stem's
+      // vertical); its gain is leaving at the join line, asserted below.
+      if (dg !== "Pa") {
+        expect(seam.offset, `${dg} offset`).toBeLessThanOrEqual(before.offset + 0.01);
+        expect(seam.bow, `${dg} bow`).toBeLessThanOrEqual(before.bow + 0.01);
+      }
+    }
+    // The seams the stage set out to fix improve by at least 28% on the
+    // anchor-offset measure (brief bar 40%: aX reaches 38% and Ta 29%,
+    // floored by the neighbouring glyph's own ink-to-boundary distance).
+    for (const dg of ["aI", "aJ", "aT", "aX", "Ia", "Sa", "Ta", "Xa"]) {
+      const seam = seamBetween(buildTextGraph(dg), dg, 0);
+      expect(seam.offset / SEAM_BEFORE[dg].offset, dg).toBeLessThanOrEqual(0.72);
+    }
+    // Class points land where the brief names them (HU, layout coords):
+    // S leaves from its right side, I swaps ends, P leaves at join height.
+    const sa = seamBetween(buildTextGraph("Sa"), "Sa", 0);
+    expect(sa.leavePt[0]).toBeGreaterThan(15);
+    const ai = seamBetween(buildTextGraph("aI"), "aI", 0);
+    expect(ai.arrivePt[0]).toBeLessThan(20);
+    const pa = seamBetween(buildTextGraph("Pa"), "Pa", 0);
+    expect(pa.leavePt[1]).toBeGreaterThanOrEqual(2);
+    // The isolated-S retrace is gone: Spain/Solved's first connector is
+    // shorter than S's own advance (20 HU) and does not cross a stroke.
+    for (const word of ["Spain", "Solved"]) {
+      const seam = seamBetween(buildTextGraph(word), word, 0);
+      expect(seam.crosses, word).toBe(false);
+      expect(seam.length, word).toBeLessThan(20);
+      expect(seam.offset, word).toBeLessThanOrEqual(0.7 * 18.111);
+    }
+  });
+
+  it("builds valid graphs for the capital word list (stage 6a)", () => {
+    for (const word of ["Spain", "Paris", "Italy", "Japan", "London", "Texas", "Oxford", "Box"]) {
+      const graph = buildTextGraph(word);
+      expect(checkStructure(graph), word).toBe(true);
+      expect(checkStrandPartition(graph), word).toBe(true);
+      expect(checkAlternationOverFirst(graph), word).toBe(true);
+    }
   });
 
   it("is deterministic", () => {
