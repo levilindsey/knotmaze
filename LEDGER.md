@@ -113,7 +113,7 @@ Next free ID: K550.
   - owner: nobody (stage 1b closed by session 01a14e0f)
   - branch: mainline; last commit: bc357c4 (1b in cb7d006..bc357c4)
   - evidence: `.claude/probes/K115/` (census, proxies, real shots)
-  - next: Build Stage 4a cartouche (E2) per `docs/design/K115_stage4.md`; its calls C1-C5 await Levi (build as rec). Stage 3a DONE 2026-10-18 (6625160): daily title thread, suite 1440 green, shots `.claude/probes/K115/stage3/`. Residuals from 1b: same-slash crossings rely on overFirst only.
+  - next: Stage 5 shapes brief (star/trefoil/wreath via the stroke builder; design s6), then per-script stage. Stage 4a DONE 2026-10-18 (1e0a2eb): in-maze cartouche, suite 1469 green, shots `.claude/probes/K115/stage4/`. Stage 3a DONE 2026-10-18 (6625160): daily title thread, suite 1440 green, shots `.claude/probes/K115/stage3/`. Residuals from 1b: same-slash crossings rely on overFirst only.
   - brief: `docs/design/K115_stage3.md`; `docs/design/K115_stage1.md`; design `docs/design/K115_cursive_text.md`
 
 - **K114** · Gameplay round 2, designed in
@@ -1173,7 +1173,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K316** · Single-threaded WASM for the collision narrow-phase (~40% of a drag's physics; the
   audit's 2-4x takes gs 18 from 0.76x to real time), only if K7 s5's phone numbers show physics, not
   rendering, as the limit. No threads (Gauss-Seidel can't be colored; SAB needs COOP/COEP).
-- **K320** · Slim or split section-rgb: at 46,850 characters it is the cold critical path (~2.8 s on
+- **K320** · Split section-rgb (design `docs/design/K320_section_rgb.md`, stage 2 brief `docs/design/K320_stage2.md`): stage 0 PASS (split saves ~1.84 s cold), stage 1 slim done (6c592e6), 2a data plane done (ffd3864); 2b (paint samples mask) in flight, 2c after. Was: at 46,850 characters it is the cold critical path (~2.8 s on
   the desktop, K307 s1; K540 attributed G3-1's +0.39 s cold regression to the enlarged gap
   shaders' FXC compile gating first paint — this item is its fix). A deploy that changes a shader costs every player one cold compile
   (programs are cached by source), so a smaller or split program shortens every such load.
