@@ -1,0 +1,1125 @@
+// K115 Stage 1b Part A: cursive text as a free-form TangleGraph.
+//
+// buildTextGraph turns a string into pinned strands drawn from Hershey
+// Script Simplex integer strokes (src/core/hershey_script.ts, data by
+// Dr. A. V. Hershey / James Hurt -- see notices/credits.ts). The layout,
+// planar stroke graph, thread path, Hermite connectors for capitals,
+// opened cusps, junction spurs, dot loops, bar strands and the run-phase
+// over/under solver follow docs/design/K115_cursive_text.md sections
+// 2.3 and 3.1-3.6 and docs/design/K115_stage1.md Part A.
+//
+// Determinism (K108): this file uses only +, -, *, /, Math.sqrt via
+// hypot2, and integer helpers. No other Math functions.
+
+import { HERSHEY_SCRIPT } from "./hershey_script";
+import { NODE_TYPE } from "./types";
+import type { Node, Strand, TangleGraph } from "./types";
+import { hypot2 } from "../util/det_math";
+
+type Pt = [number, number];
+
+const JOIN_Y = 4; // Hershey join line.
+const X_HEIGHT_HU = 9;
+const SPACE_ADVANCE = 16; // The space glyph's right - left.
+const MAX_EDGE_LU = 1.4; // TURN chains: at most this per edge.
+const BLUNT_LU = 0.9; // Opened cusp tip width.
+const ON_TOL2 = 0.25; // Point-on-stroke tolerance, squared (HU).
+const NODE_TOL2 = 0.0025; // Same-node tolerance, squared (HU).
+
+function d2(a: Pt, b: Pt): number {
+  const x = a[0] - b[0];
+  const y = a[1] - b[1];
+  return x * x + y * y;
+}
+
+function lerpPt(a: Pt, b: Pt, t: number): Pt {
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+}
+
+// ---------------------------------------------------------------------------
+// Planar segment graph (used per glyph, then once for the whole word)
+// ---------------------------------------------------------------------------
+
+interface SegIn {
+  a: Pt;
+  b: Pt;
+  stroke: number;
+  seg: number;
+  isMain: boolean;
+}
+
+interface AtomEdge {
+  a: number;
+  b: number;
+  stroke: number;
+  seg: number;
+  isMain: boolean;
+}
+
+interface Built {
+  nodes: Pt[];
+  edges: AtomEdge[];
+  cross: boolean[];
+  // Atomic edge ids per input segment, in segment order.
+  perSeg: number[][];
+}
+
+function segPointDist2(p: Pt, a: Pt, b: Pt): { dd: number; t: number } {
+  const vx = b[0] - a[0];
+  const vy = b[1] - a[1];
+  const len2 = vx * vx + vy * vy;
+  let t = 0;
+  if (len2 > 0) t = ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / len2;
+  if (t < 0) t = 0;
+  if (t > 1) t = 1;
+  const q = lerpPt(a, b, t);
+  return { dd: d2(p, q), t };
+}
+
+function buildPlanar(segs: SegIn[], markers: Pt[]): Built {
+  const splits: Array<Array<{ t: number; p: Pt }>> = segs.map((s) => [
+    { t: 0, p: s.a },
+    { t: 1, p: s.b },
+  ]);
+  const crossPts: Pt[] = [];
+  const addSplit = (i: number, t: number, p: Pt): void => {
+    if (t < -0.000000001 || t > 1.000000001) return;
+    const tt = t < 0 ? 0 : t > 1 ? 1 : t;
+    const list = splits[i];
+    for (const s of list) if (Math.abs(s.t - tt) < 0.000000001) return;
+    list.push({ t: tt, p });
+  };
+
+  // Proper crossings, point-on-segment contacts, collinear overlaps.
+  for (let i = 0; i < segs.length; i++) {
+    for (let j = i; j < segs.length; j++) {
+      const A = segs[i];
+      const B = segs[j];
+      if (j === i) {
+        // A stroke may cross itself; handled below by pair logic with j>i
+        // on distinct segments only, so nothing to do for i === j here.
+        continue;
+      }
+      const p = A.a;
+      const q = A.b;
+      const r = B.a;
+      const s = B.b;
+      const d1x = q[0] - p[0];
+      const d1y = q[1] - p[1];
+      const d2x = s[0] - r[0];
+      const d2y = s[1] - r[1];
+      const den = d1x * d2y - d1y * d2x;
+      if (Math.abs(den) > 0.000000000001) {
+        const t = ((r[0] - p[0]) * d2y - (r[1] - p[1]) * d2x) / den;
+        const u = ((r[0] - p[0]) * d1y - (r[1] - p[1]) * d1x) / den;
+        if (t > 0.000000001 && t < 0.999999999 && u > 0.000000001 && u < 0.999999999) {
+          const at = lerpPt(p, q, t);
+          addSplit(i, t, at);
+          addSplit(j, u, at);
+          crossPts.push(at);
+        }
+      } else {
+        // Parallel: a collinear overlap is split at both projections so
+        // the duplicate atomic edges below collapse into one.
+        const cA = segPointDist2(r, p, q);
+        const cB = segPointDist2(s, p, q);
+        if (cA.dd <= ON_TOL2 && cB.dd <= ON_TOL2) {
+          const lo = Math.min(cA.t, cB.t);
+          const hi = Math.max(cA.t, cB.t);
+          if ((hi - lo) * hypot2(d1x, d1y) > 0.5) {
+            addSplit(i, lo, lerpPt(p, q, lo));
+            addSplit(i, hi, lerpPt(p, q, hi));
+            const eA = segPointDist2(p, r, s);
+            const eB = segPointDist2(q, r, s);
+            addSplit(j, Math.min(eA.t, eB.t), lerpPt(r, s, Math.min(eA.t, eB.t)));
+            addSplit(j, Math.max(eA.t, eB.t), lerpPt(r, s, Math.max(eA.t, eB.t)));
+          }
+        }
+      }
+    }
+  }
+  // Self-crossings within one input list are covered above because the
+  // loops run over segment pairs (distinct SegIn entries), not strokes.
+
+  // Endpoints / vertices (every segment end) and markers on other segments.
+  const probes: Pt[] = [];
+  for (const s of segs) {
+    probes.push(s.a);
+    probes.push(s.b);
+  }
+  for (const m of markers) probes.push(m);
+  for (const p of probes) {
+    for (let i = 0; i < segs.length; i++) {
+      const s = segs[i];
+      if (d2(p, s.a) <= 0.000000001 || d2(p, s.b) <= 0.000000001) continue;
+      const hit = segPointDist2(p, s.a, s.b);
+      if (hit.dd <= ON_TOL2 && hit.t > 0.000000001 && hit.t < 0.999999999) {
+        addSplit(i, hit.t, lerpPt(s.a, s.b, hit.t));
+      }
+    }
+  }
+
+  const nodes: Pt[] = [];
+  const findNode = (p: Pt): number => {
+    for (let i = 0; i < nodes.length; i++) {
+      if (d2(p, nodes[i]) <= NODE_TOL2) return i;
+    }
+    nodes.push([p[0], p[1]]);
+    return nodes.length - 1;
+  };
+
+  const edges: AtomEdge[] = [];
+  const edgeByKey = new Map<string, number>();
+  const perSeg: number[][] = segs.map(() => []);
+  for (let i = 0; i < segs.length; i++) {
+    const list = splits[i].slice().sort((x, y) => x.t - y.t || x.p[0] - y.p[0] || x.p[1] - y.p[1]);
+    for (let k = 0; k + 1 < list.length; k++) {
+      if (list[k + 1].t - list[k].t < 0.000000001) continue;
+      const na = findNode(list[k].p);
+      const nb = findNode(list[k + 1].p);
+      if (na === nb) continue;
+      const key = na < nb ? `${na}_${nb}` : `${nb}_${na}`;
+      let ei = edgeByKey.get(key);
+      if (ei === undefined) {
+        ei = edges.length;
+        edges.push({ a: na, b: nb, stroke: segs[i].stroke, seg: segs[i].seg, isMain: segs[i].isMain });
+        edgeByKey.set(key, ei);
+      } else if (segs[i].isMain) {
+        edges[ei].isMain = true;
+      }
+      if (!perSeg[i].includes(ei)) perSeg[i].push(ei);
+    }
+  }
+
+  const cross = nodes.map((p) => crossPts.some((c) => d2(p, c) <= NODE_TOL2));
+  return { nodes, edges, cross, perSeg };
+}
+
+function nearestNode(built: Built, p: Pt): number {
+  let best = -1;
+  let bestD = Infinity;
+  for (let i = 0; i < built.nodes.length; i++) {
+    const dd = d2(p, built.nodes[i]);
+    if (dd < bestD) {
+      bestD = dd;
+      best = i;
+    }
+  }
+  return best;
+}
+
+// ---------------------------------------------------------------------------
+// Glyph preparation
+// ---------------------------------------------------------------------------
+
+function openCusps(pts: Pt[], xHeight: number): Pt[] {
+  if (pts.length < 3) return pts.slice();
+  const halfHu = BLUNT_LU * (X_HEIGHT_HU / xHeight) * 0.5;
+  const out: Pt[] = [pts[0]];
+  for (let i = 1; i + 1 < pts.length; i++) {
+    const p = pts[i];
+    const ax = p[0] - pts[i - 1][0];
+    const ay = p[1] - pts[i - 1][1];
+    const bx = pts[i + 1][0] - p[0];
+    const by = pts[i + 1][1] - p[1];
+    const la = hypot2(ax, ay);
+    const lb = hypot2(bx, by);
+    const dot = ax * bx + ay * by;
+    // Reversal sharper than about 150 degrees: blunt the tip.
+    if (la > 0 && lb > 0 && dot < 0 && dot * dot > 0.75 * la * la * lb * lb) {
+      const u1x = (pts[i - 1][0] - p[0]) / la;
+      const u1y = (pts[i - 1][1] - p[1]) / la;
+      const u2x = (pts[i + 1][0] - p[0]) / lb;
+      const u2y = (pts[i + 1][1] - p[1]) / lb;
+      let bx2 = u1x + u2x;
+      let by2 = u1y + u2y;
+      const bl = hypot2(bx2, by2);
+      if (bl < 0.000000001) {
+        bx2 = -u1y;
+        by2 = u1x;
+      } else {
+        bx2 = bx2 / bl;
+        by2 = by2 / bl;
+      }
+      const px = -by2;
+      const py = bx2;
+      const c1: Pt = [p[0] + px * halfHu, p[1] + py * halfHu];
+      const c2: Pt = [p[0] - px * halfHu, p[1] - py * halfHu];
+      if (d2(c1, pts[i - 1]) <= d2(c2, pts[i - 1])) out.push(c1, c2);
+      else out.push(c2, c1);
+    } else {
+      out.push(p);
+    }
+  }
+  out.push(pts[pts.length - 1]);
+  return out;
+}
+
+// Drop the parts of a later stroke that retrace an earlier stroke
+// collinearly; the non-overlapping remainder stays, as its own pieces.
+function dropRetraces(strokes: Pt[][]): Pt[][] {
+  const out: Pt[][] = [];
+  for (let si = 0; si < strokes.length; si++) {
+    const stroke = strokes[si];
+    if (si === 0 || out.length === 0) {
+      out.push(stroke);
+      continue;
+    }
+    const pieces: Pt[][] = [];
+    let cur: Pt[] = [];
+    const flush = (): void => {
+      if (cur.length >= 2) pieces.push(cur);
+      cur = [];
+    };
+    for (let k = 0; k + 1 < stroke.length; k++) {
+      const a = stroke[k];
+      const b = stroke[k + 1];
+      const segLen = hypot2(b[0] - a[0], b[1] - a[1]);
+      const bad: Array<[number, number]> = [];
+      if (segLen > 0) {
+        for (const prev of out) {
+          for (let m = 0; m + 1 < prev.length; m++) {
+            const cA = segPointDist2(a, prev[m], prev[m + 1]);
+            const cB = segPointDist2(b, prev[m], prev[m + 1]);
+            if (cA.dd > ON_TOL2 || cB.dd > ON_TOL2) continue;
+            // This segment lies on the earlier one: where do the earlier
+            // segment's ends fall along it?
+            const sA = segPointDist2(prev[m], a, b).t;
+            const sB = segPointDist2(prev[m + 1], a, b).t;
+            const lo = Math.min(sA, sB);
+            const hi = Math.max(sA, sB);
+            if ((hi - lo) * segLen > 0.5) bad.push([lo, hi]);
+          }
+        }
+      }
+      bad.sort((x, y) => x[0] - y[0]);
+      const kept: Array<[number, number]> = [];
+      let at = 0;
+      for (const iv of bad) {
+        if (iv[0] > at) kept.push([at, Math.min(iv[0], 1)]);
+        if (iv[1] > at) at = iv[1];
+      }
+      if (at < 1) kept.push([at, 1]);
+      if (kept.length === 0) {
+        flush();
+        continue;
+      }
+      for (const iv of kept) {
+        if (iv[1] - iv[0] < 0.000000001) continue;
+        const ps = lerpPt(a, b, iv[0]);
+        const pe = lerpPt(a, b, iv[1]);
+        if (cur.length === 0) cur = [ps, pe];
+        else if (d2(cur[cur.length - 1], ps) <= 0.000000001) cur.push(pe);
+        else {
+          flush();
+          cur = [ps, pe];
+        }
+      }
+    }
+    flush();
+    for (const piece of pieces) out.push(piece);
+  }
+  return out;
+}
+
+function closestOnStrokes(strokes: Pt[][], target: Pt): Pt {
+  let best: Pt = strokes[0][0];
+  let bestD = Infinity;
+  for (const s of strokes) {
+    for (let k = 0; k + 1 < s.length; k++) {
+      const hit = segPointDist2(target, s[k], s[k + 1]);
+      if (hit.dd < bestD) {
+        bestD = hit.dd;
+        best = lerpPt(s[k], s[k + 1], hit.t);
+      }
+    }
+  }
+  return best;
+}
+
+function closestEndpoint(strokes: Pt[][], target: Pt): Pt {
+  let best: Pt = strokes[0][0];
+  let bestD = Infinity;
+  for (const s of strokes) {
+    for (const p of [s[0], s[s.length - 1]]) {
+      const dd = d2(p, target);
+      if (dd < bestD) {
+        bestD = dd;
+        best = p;
+      }
+    }
+  }
+  return best;
+}
+
+interface GlyphRoute {
+  routePts: Pt[]; // Absolute HU, entry to exit along the thread path.
+  leftovers: Array<[Pt, Pt]>; // Atomic edges not on the path (HU).
+  dots: Pt[][]; // Tiny closed loops (HU).
+}
+
+function routeGlyph(
+  strokesIn: Pt[][],
+  entryPt: Pt,
+  exitPt: Pt,
+  xHeight: number
+): GlyphRoute {
+  const dots: Pt[][] = [];
+  const activeRaw: Pt[][] = [];
+  for (const s of strokesIn) {
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    for (const p of s) {
+      if (p[0] < minX) minX = p[0];
+      if (p[0] > maxX) maxX = p[0];
+      if (p[1] < minY) minY = p[1];
+      if (p[1] > maxY) maxY = p[1];
+    }
+    const closed = s.length >= 2 && d2(s[0], s[s.length - 1]) <= 0.000000001;
+    if (closed && maxX - minX <= 3 && maxY - minY <= 3) dots.push(s.slice());
+    else activeRaw.push(s.slice());
+  }
+  if (activeRaw.length === 0) return { routePts: [], leftovers: [], dots };
+
+  const opened = activeRaw.map((s) => openCusps(s, xHeight));
+  const strokes = dropRetraces(opened);
+
+  const segs: SegIn[] = [];
+  strokes.forEach((s, si) => {
+    for (let k = 0; k + 1 < s.length; k++) {
+      if (d2(s[k], s[k + 1]) > 0.000000001) {
+        segs.push({ a: s[k], b: s[k + 1], stroke: si, seg: k, isMain: false });
+      }
+    }
+  });
+  const built = buildPlanar(segs, [entryPt, exitPt]);
+  const entryNode = nearestNode(built, entryPt);
+  const exitNode = nearestNode(built, exitPt);
+
+  const adj = new Map<number, Array<{ e: number; to: number }>>();
+  built.edges.forEach((e, ei) => {
+    if (!adj.has(e.a)) adj.set(e.a, []);
+    if (!adj.has(e.b)) adj.set(e.b, []);
+    adj.get(e.a)!.push({ e: ei, to: e.b });
+    adj.get(e.b)!.push({ e: ei, to: e.a });
+  });
+
+  const pathEdges = findRoute(built, adj, entryNode, exitNode);
+  const onPath = new Set(pathEdges);
+  const routePts: Pt[] = [];
+  if (pathEdges.length > 0) {
+    let cur = entryNode;
+    routePts.push(built.nodes[cur]);
+    for (const ei of pathEdges) {
+      const e = built.edges[ei];
+      cur = e.a === cur ? e.b : e.a;
+      routePts.push(built.nodes[cur]);
+    }
+  } else {
+    routePts.push(built.nodes[entryNode]);
+  }
+  const leftovers: Array<[Pt, Pt]> = [];
+  built.edges.forEach((e, ei) => {
+    if (!onPath.has(ei)) leftovers.push([built.nodes[e.a], built.nodes[e.b]]);
+  });
+  return { routePts, leftovers, dots };
+}
+
+// Deterministic trail search entry -> exit. Prefers continuing the same
+// stroke in the same direction, then later strokes, with backtracking;
+// falls back to a shortest path, then to a greedy trail.
+function findRoute(
+  built: Built,
+  adj: Map<number, Array<{ e: number; to: number }>>,
+  entryNode: number,
+  exitNode: number
+): number[] {
+  if (entryNode === exitNode) return [];
+  const exitPos = built.nodes[exitNode];
+  let budget = 20000;
+
+  const score = (
+    cand: { e: number; to: number },
+    inStroke: number,
+    inRel: number,
+    inVec: Pt
+  ): number => {
+    const e = built.edges[cand.e];
+    const rel = cand.to === e.b ? 1 : -1;
+    let base = 0;
+    if (inStroke >= 0) {
+      if (e.stroke === inStroke && rel === inRel) base = 0;
+      else if (e.stroke === inStroke) base = 3;
+      else if (e.stroke === inStroke + 1) base = 1;
+      else if (e.stroke > inStroke) base = 2;
+      else base = 4;
+    }
+    const from = built.nodes[cand.to === e.b ? e.a : e.b];
+    const to = built.nodes[cand.to];
+    const vx = to[0] - from[0];
+    const vy = to[1] - from[1];
+    const vl = hypot2(vx, vy);
+    let dot = 0;
+    if (vl > 0 && (inVec[0] !== 0 || inVec[1] !== 0)) {
+      dot = (vx * inVec[0] + vy * inVec[1]) / vl;
+    }
+    const near = hypot2(to[0] - exitPos[0], to[1] - exitPos[1]) * 0.001;
+    return base - dot * 0.4 + near;
+  };
+
+  const used = new Set<number>();
+  const path: number[] = [];
+  const dfs = (node: number, inStroke: number, inRel: number, inVec: Pt): boolean => {
+    if (node === exitNode) return true;
+    if (budget-- <= 0) return false;
+    const cands = (adj.get(node) ?? [])
+      .filter((c) => !used.has(c.e))
+      .map((c) => ({ c, s: score(c, inStroke, inRel, inVec) }))
+      .sort((x, y) => x.s - y.s || x.c.e - y.c.e);
+    for (const { c } of cands) {
+      const e = built.edges[c.e];
+      const rel = c.to === e.b ? 1 : -1;
+      const from = built.nodes[node];
+      const to = built.nodes[c.to];
+      const il = hypot2(to[0] - from[0], to[1] - from[1]);
+      const vec: Pt = il > 0 ? [(to[0] - from[0]) / il, (to[1] - from[1]) / il] : [0, 0];
+      used.add(c.e);
+      path.push(c.e);
+      if (dfs(c.to, e.stroke, rel, vec)) return true;
+      path.pop();
+      used.delete(c.e);
+      if (budget <= 0) return false;
+    }
+    return false;
+  };
+  if (dfs(entryNode, -1, 0, [0, 0])) return path.slice();
+
+  // Shortest path (BFS over nodes).
+  const prevEdge = new Map<number, number>();
+  const prevNode = new Map<number, number>();
+  const seen = new Set<number>([entryNode]);
+  const queue = [entryNode];
+  while (queue.length > 0) {
+    const n = queue.shift()!;
+    if (n === exitNode) break;
+    for (const c of adj.get(n) ?? []) {
+      if (seen.has(c.to)) continue;
+      seen.add(c.to);
+      prevEdge.set(c.to, c.e);
+      prevNode.set(c.to, n);
+      queue.push(c.to);
+    }
+  }
+  if (seen.has(exitNode) && exitNode !== entryNode) {
+    const out: number[] = [];
+    let n = exitNode;
+    while (n !== entryNode) {
+      out.push(prevEdge.get(n)!);
+      n = prevNode.get(n)!;
+    }
+    return out.reverse();
+  }
+
+  // Greedy trail to wherever the glyph's connected piece leads.
+  const out: number[] = [];
+  const taken = new Set<number>();
+  let node = entryNode;
+  let inStroke = -1;
+  let inRel = 0;
+  let inVec: Pt = [0, 0];
+  for (let guard = 0; guard < built.edges.length + 1; guard++) {
+    const cands = (adj.get(node) ?? [])
+      .filter((c) => !taken.has(c.e))
+      .map((c) => ({ c, s: score(c, inStroke, inRel, inVec) }))
+      .sort((x, y) => x.s - y.s || x.c.e - y.c.e);
+    if (cands.length === 0) break;
+    const c = cands[0].c;
+    const e = built.edges[c.e];
+    taken.add(c.e);
+    out.push(c.e);
+    const from = built.nodes[node];
+    const to = built.nodes[c.to];
+    const il = hypot2(to[0] - from[0], to[1] - from[1]);
+    inVec = il > 0 ? [(to[0] - from[0]) / il, (to[1] - from[1]) / il] : [0, 0];
+    inStroke = e.stroke;
+    inRel = c.to === e.b ? 1 : -1;
+    node = c.to;
+    if (node === exitNode) break;
+  }
+  return out;
+}
+
+// Cubic Hermite samples (excluding both ends) from p to q, tangents
+// scaled by the gap so the connector keeps the neighbours' directions.
+function hermitePts(p: Pt, tanP: Pt, q: Pt, tanQ: Pt): Pt[] {
+  const gap = hypot2(q[0] - p[0], q[1] - p[1]);
+  const lp = hypot2(tanP[0], tanP[1]);
+  const lq = hypot2(tanQ[0], tanQ[1]);
+  // Tangents scaled well under the gap: a full-gap tangent overshoots the
+  // endpoint (and retraces itself) when a glyph's entry direction points
+  // back across the gap, as a digit's does after a word space.
+  const m0: Pt = lp > 0 ? [(tanP[0] / lp) * gap * 0.45, (tanP[1] / lp) * gap * 0.45] : [q[0] - p[0], q[1] - p[1]];
+  const m1: Pt = lq > 0 ? [(tanQ[0] / lq) * gap * 0.45, (tanQ[1] / lq) * gap * 0.45] : [q[0] - p[0], q[1] - p[1]];
+  const out: Pt[] = [];
+  for (let k = 1; k < 8; k++) {
+    const t = k / 8;
+    const t2 = t * t;
+    const t3 = t2 * t;
+    const h1 = 2 * t3 - 3 * t2 + 1;
+    const h2 = t3 - 2 * t2 + t;
+    const h3 = -2 * t3 + 3 * t2;
+    const h4 = t3 - t2;
+    out.push([
+      h1 * p[0] + h2 * m0[0] + h3 * q[0] + h4 * m1[0],
+      h1 * p[1] + h2 * m0[1] + h3 * q[1] + h4 * m1[1],
+    ]);
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// The builder
+// ---------------------------------------------------------------------------
+
+export function buildTextGraph(text: string, opts?: { xHeight?: number }): TangleGraph {
+  const xHeight =
+    opts && opts.xHeight !== undefined && opts.xHeight > 0 ? opts.xHeight : 3;
+  const scale = xHeight / X_HEIGHT_HU;
+
+  // --- Layout and per-glyph routing, in Hershey units. ---
+  let cursor = 0;
+  const mainPts: Pt[] = [];
+  const extraSegs: Array<[Pt, Pt]> = [];
+  const dotLoops: Pt[][] = [];
+
+  const chars = Array.from(text);
+  for (const ch of chars) {
+    const code = ch.codePointAt(0) ?? -1;
+    if (code === 32) {
+      cursor += SPACE_ADVANCE;
+      if (mainPts.length > 0) {
+        const swash: Pt = [cursor, JOIN_Y];
+        if (d2(mainPts[mainPts.length - 1], swash) > 0.000000001) mainPts.push(swash);
+      }
+      continue;
+    }
+    if (code < 32 || code > 126) {
+      cursor += SPACE_ADVANCE; // Unsupported: space advance only.
+      continue;
+    }
+    const glyph = HERSHEY_SCRIPT[code - 32];
+    const cursorPrev = cursor;
+    const cursorNext = cursor + (glyph.right - glyph.left);
+    const dx = cursor - glyph.left;
+    cursor = cursorNext;
+    if (glyph.strokes.length === 0) continue;
+
+    const placed: Pt[][] = glyph.strokes.map((s) =>
+      s.map((p) => [p[0] + dx, p[1]] as Pt)
+    );
+    const isLower = ch >= "a" && ch <= "z";
+    let entryPt: Pt;
+    let exitPt: Pt;
+    if (isLower) {
+      entryPt = closestOnStrokes(placed, [cursorPrev, JOIN_Y]);
+      exitPt = closestEndpoint(placed, [cursorNext, JOIN_Y]);
+      if (d2(exitPt, [cursorNext, JOIN_Y]) > 9) {
+        exitPt = closestOnStrokes(placed, [cursorNext, JOIN_Y]);
+      }
+      // Merge-class letters (a c d e g o q) enter on the body: that point
+      // is exactly the closest stroke point to the join anchor found
+      // above, and their own start stays behind as a spur. Join-class
+      // letters start at that same anchor point.
+    } else {
+      // Capitals, digits, punctuation: first stroke start to last stroke end.
+      entryPt = placed[0][0];
+      const lastStroke = placed[placed.length - 1];
+      exitPt = lastStroke[lastStroke.length - 1];
+    }
+
+    const routed = routeGlyph(placed, entryPt, exitPt, xHeight);
+    for (const seg of routed.leftovers) extraSegs.push(seg);
+    for (const dot of routed.dots) dotLoops.push(dot);
+    if (routed.routePts.length === 0) continue;
+
+    if (mainPts.length === 0) {
+      for (const p of routed.routePts) mainPts.push(p);
+    } else {
+      const p = mainPts[mainPts.length - 1];
+      const q = routed.routePts[0];
+      if (d2(p, q) <= 0.25) {
+        for (let k = 1; k < routed.routePts.length; k++) mainPts.push(routed.routePts[k]);
+      } else {
+        const prev = mainPts.length >= 2 ? mainPts[mainPts.length - 2] : p;
+        const tanP: Pt = [p[0] - prev[0], p[1] - prev[1]];
+        const nxt =
+          routed.routePts.length >= 2 ? routed.routePts[1] : routed.routePts[0];
+        const tanQ: Pt = [nxt[0] - q[0], nxt[1] - q[1]];
+        for (const hp of hermitePts(p, tanP, q, tanQ)) mainPts.push(hp);
+        for (const rp of routed.routePts) mainPts.push(rp);
+      }
+    }
+  }
+
+  if (mainPts.length < 2) {
+    const endX = cursor > 0 ? cursor : X_HEIGHT_HU;
+    mainPts.length = 0;
+    mainPts.push([0, JOIN_Y], [endX, JOIN_Y]);
+  }
+  // Lead-in / lead-out tails: the entrance and exit ends sit 4 HU back
+  // along the path tangents, so mentr_a / mexit_a are degree-1 ends even
+  // when a glyph's entry point is also an interior point of its stroke
+  // (a capital D passes its own start again).
+  {
+    const f = mainPts[0];
+    const fn = mainPts[1];
+    const fl = hypot2(fn[0] - f[0], fn[1] - f[1]);
+    if (fl > 0) mainPts.unshift([f[0] - ((fn[0] - f[0]) / fl) * 4, f[1] - ((fn[1] - f[1]) / fl) * 4]);
+    const l = mainPts[mainPts.length - 1];
+    const lp = mainPts[mainPts.length - 2];
+    const ll = hypot2(l[0] - lp[0], l[1] - lp[1]);
+    if (ll > 0) mainPts.push([l[0] + ((l[0] - lp[0]) / ll) * 4, l[1] + ((l[1] - lp[1]) / ll) * 4]);
+  }
+
+  // --- Whole-word planar graph in HU. ---
+  const segs: SegIn[] = [];
+  for (let k = 0; k + 1 < mainPts.length; k++) {
+    if (d2(mainPts[k], mainPts[k + 1]) > 0.000000001) {
+      segs.push({ a: mainPts[k], b: mainPts[k + 1], stroke: -1, seg: k, isMain: true });
+    }
+  }
+  const mainSegCount = segs.length;
+  for (const seg of extraSegs) {
+    if (d2(seg[0], seg[1]) > 0.000000001) {
+      segs.push({ a: seg[0], b: seg[1], stroke: -2, seg: 0, isMain: false });
+    }
+  }
+  for (const dot of dotLoops) {
+    for (let k = 0; k + 1 < dot.length; k++) {
+      if (d2(dot[k], dot[k + 1]) > 0.000000001) {
+        segs.push({ a: dot[k], b: dot[k + 1], stroke: -3, seg: k, isMain: false });
+      }
+    }
+    const last = dot[dot.length - 1];
+    if (dot.length > 1 && d2(last, dot[0]) > 0.000000001) {
+      segs.push({ a: last, b: dot[0], stroke: -3, seg: dot.length, isMain: false });
+    }
+  }
+  const built = buildPlanar(segs, [mainPts[0], mainPts[mainPts.length - 1]]);
+
+  // --- Scale to LU, normalise the origin, resample into TURN chains. ---
+  let minX = Infinity;
+  let minY = Infinity;
+  const luNodes = built.nodes.map((p) => {
+    const q: Pt = [p[0] * scale, p[1] * scale];
+    if (q[0] < minX) minX = q[0];
+    if (q[1] < minY) minY = q[1];
+    return q;
+  });
+  for (const q of luNodes) {
+    q[0] -= minX;
+    q[1] -= minY;
+  }
+
+  interface FNode {
+    pos: Pt;
+    type: (typeof NODE_TYPE)[keyof typeof NODE_TYPE];
+    cross: boolean;
+  }
+  const fNodes: FNode[] = built.nodes.map((_, i) => ({
+    pos: luNodes[i],
+    type: NODE_TYPE.TURN,
+    cross: built.cross[i],
+  }));
+  interface FEdge {
+    a: number;
+    b: number;
+    isMain: boolean;
+  }
+  const fEdges: FEdge[] = [];
+  // Per atomic edge: expanded final edge ids and node ids, a -> b.
+  const expansion: Array<{ edges: number[]; nodes: number[] }> = [];
+  built.edges.forEach((e) => {
+    const aPos = luNodes[e.a];
+    const bPos = luNodes[e.b];
+    const len = hypot2(bPos[0] - aPos[0], bPos[1] - aPos[1]);
+    let chunks = Math.ceil(len / MAX_EDGE_LU - 0.000000001);
+    if (chunks < 1) chunks = 1;
+    const expEdges: number[] = [];
+    const expNodes: number[] = [e.a];
+    let prev = e.a;
+    for (let c = 1; c < chunks; c++) {
+      const t = c / chunks;
+      const ni = fNodes.length;
+      fNodes.push({ pos: lerpPt(aPos, bPos, t), type: NODE_TYPE.TURN, cross: false });
+      expEdges.push(fEdges.length);
+      fEdges.push({ a: prev, b: ni, isMain: e.isMain });
+      expNodes.push(ni);
+      prev = ni;
+    }
+    expEdges.push(fEdges.length);
+    fEdges.push({ a: prev, b: e.b, isMain: e.isMain });
+    expNodes.push(e.b);
+    expansion.push({ edges: expEdges, nodes: expNodes });
+  });
+
+  // Degrees and feature types.
+  const degree = fNodes.map(() => 0);
+  const adjacencyF: number[][] = fNodes.map(() => []);
+  fEdges.forEach((e, ei) => {
+    degree[e.a] += 1;
+    degree[e.b] += 1;
+    adjacencyF[e.a].push(ei);
+    adjacencyF[e.b].push(ei);
+  });
+  fNodes.forEach((n, i) => {
+    if (i < built.nodes.length) {
+      if (degree[i] === 1) n.type = NODE_TYPE.END;
+      else if (degree[i] === 2) n.type = NODE_TYPE.TURN;
+      else if (degree[i] === 4 && n.cross) n.type = NODE_TYPE.CROSSING;
+      else if (degree[i] >= 3) n.type = NODE_TYPE.JUNCTION;
+      else n.type = NODE_TYPE.TURN;
+    }
+  });
+
+  // The main strand's expanded edge/node sequence.
+  const mainStartBuilt = nearestNode(built, mainPts[0]);
+  const mainEndBuilt = nearestNode(built, mainPts[mainPts.length - 1]);
+  const mainEdgeIds: number[] = [];
+  const mainNodeSeq: number[] = [mainStartBuilt];
+  for (let si = 0; si < mainSegCount; si++) {
+    for (const ei of built.perSeg[si]) {
+      if (!built.edges[ei].isMain) continue;
+      const exp = expansion[ei];
+      let eList = exp.edges;
+      let nList = exp.nodes;
+      if (nList[0] !== mainNodeSeq[mainNodeSeq.length - 1]) {
+        eList = exp.edges.slice().reverse();
+        nList = exp.nodes.slice().reverse();
+      }
+      for (const fe of eList) if (!mainEdgeIds.includes(fe)) mainEdgeIds.push(fe);
+      for (let k = 1; k < nList.length; k++) mainNodeSeq.push(nList[k]);
+    }
+  }
+
+  // Node ids: mentr_a / mexit_a at the path ends, t namespace elsewhere.
+  const nodeIds = fNodes.map((_, i) =>
+    i === mainStartBuilt ? "mentr_a" : i === mainEndBuilt ? "mexit_a" : `tn${i}`
+  );
+
+  // Crossing pass pairing (straightest continuation), for strand tracing.
+  const pairOf = new Map<number, number>();
+  fNodes.forEach((n, ni) => {
+    if (n.type !== NODE_TYPE.CROSSING) return;
+    const incident = adjacencyF[ni].slice();
+    const dirOf = (ei: number): Pt => {
+      const e = fEdges[ei];
+      const other = e.a === ni ? fNodes[e.b].pos : fNodes[e.a].pos;
+      return [other[0] - n.pos[0], other[1] - n.pos[1]];
+    };
+    const left = incident.slice();
+    while (left.length >= 2) {
+      const first = left.shift()!;
+      let bestIdx = 0;
+      let bestDot = Infinity;
+      for (let k = 0; k < left.length; k++) {
+        const dA = dirOf(first);
+        const dB = dirOf(left[k]);
+        const la = hypot2(dA[0], dA[1]);
+        const lb = hypot2(dB[0], dB[1]);
+        const dot = la > 0 && lb > 0 ? (dA[0] * dB[0] + dA[1] * dB[1]) / (la * lb) : 0;
+        if (dot < bestDot) {
+          bestDot = dot;
+          bestIdx = k;
+        }
+      }
+      const partner = left.splice(bestIdx, 1)[0];
+      pairOf.set(first, partner);
+      pairOf.set(partner, first);
+    }
+  });
+
+  // --- Strand tracing: main first, then every remaining edge. ---
+  const usedEdges = new Set<number>(mainEdgeIds);
+  interface RawStrand {
+    edges: number[];
+    nodes: number[];
+    closed: boolean;
+  }
+  const rawStrands: RawStrand[] = [
+    { edges: mainEdgeIds.slice(), nodes: mainNodeSeq.slice(), closed: false },
+  ];
+
+  const startPriority = (ni: number): number => {
+    const t = fNodes[ni].type;
+    if (t === NODE_TYPE.END) return 0;
+    if (t === NODE_TYPE.JUNCTION) return 1;
+    if (t === NODE_TYPE.CROSSING) return 2;
+    return 3;
+  };
+
+  for (;;) {
+    // Choose the next strand's first edge deterministically.
+    let chosen = -1;
+    let chosenStart = -1;
+    let chosenPrio = Infinity;
+    for (let ei = 0; ei < fEdges.length; ei++) {
+      if (usedEdges.has(ei)) continue;
+      const e = fEdges[ei];
+      const pa = startPriority(e.a);
+      const pb = startPriority(e.b);
+      const prio = Math.min(pa, pb);
+      if (prio < chosenPrio || (prio === chosenPrio && (chosen < 0 || ei < chosen))) {
+        chosen = ei;
+        chosenPrio = prio;
+        chosenStart = pa <= pb ? e.a : e.b;
+      }
+    }
+    if (chosen < 0) break;
+
+    const seqEdges: number[] = [];
+    const seqNodes: number[] = [chosenStart];
+    let current = chosenStart;
+    let prevEdge = -1;
+    let closed = false;
+    for (let guard = 0; guard < fEdges.length + 2; guard++) {
+      if (seqEdges.length > 0) {
+        if (current === chosenStart) {
+          closed = true;
+          break;
+        }
+        const ct = fNodes[current].type;
+        if (ct === NODE_TYPE.JUNCTION || ct === NODE_TYPE.END) break;
+      }
+      let nextEdge = -1;
+      if (seqEdges.length === 0) {
+        nextEdge = chosen;
+      } else if (fNodes[current].type === NODE_TYPE.CROSSING) {
+        const p = pairOf.get(prevEdge);
+        if (p !== undefined && !usedEdges.has(p)) nextEdge = p;
+      } else {
+        for (const ei of adjacencyF[current]) {
+          if (ei === prevEdge || usedEdges.has(ei)) continue;
+          if (nextEdge < 0 || ei < nextEdge) nextEdge = ei;
+        }
+      }
+      if (nextEdge < 0) break;
+      const e = fEdges[nextEdge];
+      const nxt = e.a === current ? e.b : e.a;
+      usedEdges.add(nextEdge);
+      seqEdges.push(nextEdge);
+      seqNodes.push(nxt);
+      prevEdge = nextEdge;
+      current = nxt;
+    }
+    if (seqEdges.length === 0) break; // Defensive; cannot happen.
+    rawStrands.push({ edges: seqEdges, nodes: seqNodes, closed });
+  }
+
+  // --- Emit the TangleGraph. ---
+  const nodes = new Map<string, Node>();
+  fNodes.forEach((n, i) => {
+    nodes.set(nodeIds[i], { id: nodeIds[i], type: n.type, latticePos: [n.pos[0], n.pos[1]] });
+  });
+  const edges = new Map<string, { id: string; nodeA: string; nodeB: string; latticePoints: Array<[number, number]> }>();
+  const adjacency = new Map<string, string[]>();
+  for (const id of nodeIds) adjacency.set(id, []);
+  fEdges.forEach((e, ei) => {
+    const id = `te${ei}`;
+    const a = nodeIds[e.a];
+    const b = nodeIds[e.b];
+    edges.set(id, {
+      id,
+      nodeA: a,
+      nodeB: b,
+      latticePoints: [
+        [fNodes[e.a].pos[0], fNodes[e.a].pos[1]],
+        [fNodes[e.b].pos[0], fNodes[e.b].pos[1]],
+      ],
+    });
+    adjacency.get(a)!.push(id);
+    adjacency.get(b)!.push(id);
+  });
+  const strands: Strand[] = rawStrands.map((r) => ({
+    edgeIds: r.edges.map((ei) => `te${ei}`),
+    isClosed: r.closed,
+    nodes: r.nodes.map((ni) => nodeIds[ni]),
+    pinned: true,
+  }));
+
+  const graph: TangleGraph = {
+    nodes,
+    edges,
+    adjacency,
+    strands,
+    seed: 0,
+    params: { gridSize: 0, weaveDensity: 0, turnBias: 0, randSeed: 0 },
+  };
+
+  assignOverUnder(graph);
+  return graph;
+}
+
+// ---------------------------------------------------------------------------
+// Over/under: run-phase parity solver (design section 3.5)
+// ---------------------------------------------------------------------------
+
+function assignOverUnder(graph: TangleGraph): void {
+  // Runs: maximal strand spans between JUNCTION / END stops.
+  interface Pass {
+    strand: number;
+    index: number;
+    run: number;
+    k: number;
+  }
+  const passesByNode = new Map<string, Pass[]>();
+  let runCount = 0;
+
+  graph.strands.forEach((strand, si) => {
+    const unique = strand.isClosed ? strand.nodes.length - 1 : strand.nodes.length;
+    const typeAt = (i: number): string => graph.nodes.get(strand.nodes[i])!.type;
+    const stops: number[] = [];
+    for (let i = 0; i < unique; i++) {
+      if (typeAt(i) === NODE_TYPE.JUNCTION || typeAt(i) === NODE_TYPE.END) stops.push(i);
+    }
+    const runOf = new Array<number>(unique).fill(-1);
+    const kOf = new Array<number>(unique).fill(0);
+    const assignRun = (idxs: number[]): void => {
+      const run = runCount++;
+      let k = 0;
+      for (const i of idxs) {
+        runOf[i] = run;
+        if (typeAt(i) === NODE_TYPE.CROSSING) kOf[i] = k++;
+      }
+    };
+    if (!strand.isClosed) {
+      if (stops.length < 2) {
+        assignRun(strand.nodes.map((_, i) => i).slice(0, unique));
+      } else {
+        for (let s = 0; s + 1 < stops.length; s++) {
+          const idxs: number[] = [];
+          for (let i = stops[s]; i <= stops[s + 1]; i++) idxs.push(i);
+          assignRun(idxs);
+        }
+      }
+    } else if (stops.length === 0) {
+      const idxs: number[] = [];
+      for (let i = 0; i < unique; i++) idxs.push(i);
+      assignRun(idxs);
+    } else {
+      // Rotate so the order starts at the first stop; runs follow, and the
+      // last run wraps around the seam back to that stop.
+      const order: number[] = [];
+      for (let k = 0; k < unique; k++) order.push((stops[0] + k) % unique);
+      const stopSet = new Set(stops);
+      let cur: number[] = [order[0]];
+      for (let k = 1; k < order.length; k++) {
+        cur.push(order[k]);
+        if (stopSet.has(order[k])) {
+          assignRun(cur);
+          cur = [order[k]];
+        }
+      }
+      if (cur.length > 1) {
+        cur.push(order[0]);
+        assignRun(cur);
+      }
+    }
+    for (let i = 0; i < unique; i++) {
+      if (typeAt(i) !== NODE_TYPE.CROSSING) continue;
+      const id = strand.nodes[i];
+      const pass: Pass = { strand: si, index: i, run: runOf[i], k: kOf[i] };
+      const list = passesByNode.get(id);
+      if (list) list.push(pass);
+      else passesByNode.set(id, [pass]);
+    }
+  });
+
+  // Parity union-find over runs.
+  const parent = new Array<number>(runCount);
+  const parity = new Array<number>(runCount).fill(0);
+  const size = new Array<number>(runCount).fill(1);
+  for (let i = 0; i < runCount; i++) parent[i] = i;
+  const find = (x: number): { root: number; par: number } => {
+    let root = x;
+    let acc = 0;
+    while (parent[root] !== root) {
+      acc = acc ^ parity[root];
+      root = parent[root];
+    }
+    // Path compression with parity.
+    let node = x;
+    let suffix = 0;
+    while (parent[node] !== root) {
+      const nxt = parent[node];
+      const p = parity[node];
+      parity[node] = acc ^ suffix;
+      parent[node] = root;
+      suffix = suffix ^ p;
+      node = nxt;
+    }
+    return { root, par: acc };
+  };
+  let conflicts = 0;
+  const union = (a: number, b: number, rhs: number): void => {
+    const fa = find(a);
+    const fb = find(b);
+    if (fa.root === fb.root) {
+      if ((fa.par ^ fb.par) !== rhs) conflicts++;
+      return;
+    }
+    // Attach the smaller tree under the larger; tie: b under a.
+    if (size[fa.root] < size[fb.root]) {
+      parent[fa.root] = fb.root;
+      parity[fa.root] = fa.par ^ fb.par ^ rhs;
+      size[fb.root] += size[fa.root];
+    } else {
+      parent[fb.root] = fa.root;
+      parity[fb.root] = fa.par ^ fb.par ^ rhs;
+      size[fa.root] += size[fb.root];
+    }
+  };
+
+  const crossingIds: string[] = [];
+  for (const [id, node] of graph.nodes) {
+    if (node.type === NODE_TYPE.CROSSING) crossingIds.push(id);
+  }
+  for (const id of crossingIds) {
+    const passes = passesByNode.get(id) ?? [];
+    if (passes.length !== 2) continue;
+    const rhs = 1 ^ (passes[0].k & 1) ^ (passes[1].k & 1);
+    union(passes[0].run, passes[1].run, rhs);
+  }
+  void conflicts; // Accepted where parity is unsatisfiable (design 3.5).
+
+  for (const id of crossingIds) {
+    const node = graph.nodes.get(id)!;
+    const passes = passesByNode.get(id) ?? [];
+    if (passes.length !== 2) {
+      node.overFirst = true;
+      node.isOver = false;
+      continue;
+    }
+    const phi = (run: number): number => find(run).par; // Root phase is 0.
+    const overBit = (pass: Pass): number => phi(pass.run) ^ (pass.k & 1) ^ 1;
+    const firstOver = overBit(passes[0]) === 1;
+    node.overFirst = firstOver;
+    // Slash reading: agree with overFirst wherever the two passes fall in
+    // different slash classes (the only case the old reading can express).
+    const overPass = firstOver ? passes[0] : passes[1];
+    const strand = graph.strands[overPass.strand];
+    const edge = graph.edges.get(strand.edgeIds[overPass.index]);
+    let isSlash = false;
+    if (edge && edge.latticePoints.length >= 2) {
+      const lp = edge.latticePoints;
+      const fwd = edge.nodeA === strand.nodes[overPass.index];
+      const a = fwd ? lp[0] : lp[lp.length - 1];
+      const b = fwd ? lp[1] : lp[lp.length - 2];
+      isSlash = (b[0] - a[0]) * (b[1] - a[1]) > 0;
+    }
+    node.isOver = isSlash;
+  }
+}
+
