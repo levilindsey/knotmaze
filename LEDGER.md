@@ -113,8 +113,8 @@ Next free ID: K550.
   - owner: nobody (stage 1b closed by session 01a14e0f)
   - branch: mainline; last commit: bc357c4 (1b in cb7d006..bc357c4)
   - evidence: `.claude/probes/K115/` (census, proxies, real shots)
-  - next: Stage 2 title thread (E3) brief from `docs/design/K115_cursive_text.md` s4.2; waypoint tap-writing (P2) and per-letter reveal ride it. Residuals from 1b: same-slash crossings rely on overFirst only; spurs travelable but standalone scene has no fabric walk yet.
-  - brief: `docs/design/K115_stage1.md`; design `docs/design/K115_cursive_text.md`
+  - next: Stage 3 title thread (E3) build from `docs/design/K115_stage3.md` (calls C1-C5 for Levi, recs in the brief). Residuals from 1b: same-slash crossings rely on overFirst only.
+  - brief: `docs/design/K115_stage3.md`; `docs/design/K115_stage1.md`; design `docs/design/K115_cursive_text.md`
 
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
