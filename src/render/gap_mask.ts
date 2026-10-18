@@ -818,6 +818,8 @@ highp float gapKeep(highp float pxW, highp float turn) {
 const GAP_ROWS_UPLOAD_ID = "knot-gap-rows";
 
 class GapRowSource extends BufferImageSource {
+  // K320 stage 2a: bumped by every mark (the gap pre-pass's dirty rule).
+  rev = 0;
   readonly dirty: Uint8Array;
   any = false;
   constructor(data: Float32Array, width: number, rows: number) {
@@ -836,10 +838,12 @@ class GapRowSource extends BufferImageSource {
     this.uploadMethodId = GAP_ROWS_UPLOAD_ID;
   }
   mark(row: number): void {
+    this.rev++;
     this.dirty[row] = 1;
     this.any = true;
   }
   markAll(): void {
+    this.rev++;
     this.dirty.fill(1);
     this.any = true;
   }
@@ -1343,6 +1347,11 @@ export class GapMaskTable {
     if (!this.isShaped(slot)) return null;
     const pb = (slot + 1) * GAP_TEX_W * 4 + GAP_PROF_BASE * 4;
     return Array.from(this.data.subarray(pb, pb + 12));
+  }
+
+  // K320 stage 2a: writes so far (the gap pre-pass's dirty rule reads it).
+  get rowRev(): number {
+    return this.source.rev;
   }
 
   // Whether any row waits for upload (tests).

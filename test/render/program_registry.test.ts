@@ -81,13 +81,14 @@ describe("program registry (K307)", () => {
         "pluck-blur",
         "pluck-ripple",
         "section-rgb",
+        "section-rgb-gap",
       ].sort(),
     );
   });
 
   it("follows the mode, the reveal, the fog and reduced motion", () => {
     const knot = wave1Names({ ...DAILY, fabric: false, bgIds: [] });
-    expect(knot).toEqual(["batch", "particles", "pluck-blur", "pluck-ripple", "section-rgb"]);
+    expect(knot).toEqual(["batch", "particles", "pluck-blur", "pluck-ripple", "section-rgb", "section-rgb-gap"]);
     const reveal = wave1Names({ ...DAILY, explore: true, reduced: true, ripple: false });
     expect(reveal).toEqual(
       [
@@ -100,6 +101,7 @@ describe("program registry (K307)", () => {
         "particles",
         "pluck-still-explore",
         "section-rgb-explore",
+        "section-rgb-gap-explore",
       ].sort(),
     );
     const fog = wave1Names({ ...DAILY, fog: true, bgIds: ["mist"] });
@@ -111,7 +113,7 @@ describe("program registry (K307)", () => {
 
   it("warms both sets for a burn race (K290: the first burn switches to -explore)", () => {
     const burn = wave1Names({ ...DAILY, burn: true });
-    for (const n of ["section-rgb", "arm-strip", "junction-field"]) {
+    for (const n of ["section-rgb", "section-rgb-gap", "arm-strip", "junction-field"]) {
       expect(burn).toContain(n);
       expect(burn).toContain(`${n}-explore`);
     }

@@ -19,7 +19,7 @@ import { junctionProgram } from "./junction_field";
 import { markerProgram } from "./marker_mesh";
 import { pluckBlurProgram, pluckStillProgram } from "./pluck_overlay";
 import { rippleProgram } from "./pluck_ripple";
-import { sectionProgram } from "./ribbon/ribbon_shader";
+import { sectionGapProgram, sectionProgram } from "./ribbon/ribbon_shader";
 
 // Program sites per file under src/ (the test's scan, comments stripped):
 // matches of GlProgram.from | new GlProgram( | Shader.from | new Filter |
@@ -34,7 +34,7 @@ export const PROGRAM_SITES: Readonly<Record<string, number>> = {
   "src/render/marker_mesh.ts": 1, // knot-marker
   "src/render/pluck_overlay.ts": 3, // pluck-blur, pluck-still, pluck-still-explore
   "src/render/pluck_ripple.ts": 2, // pluck-ripple: its program and its Filter
-  "src/render/ribbon/ribbon_shader.ts": 2, // section-rgb, section-rgb-explore
+  "src/render/ribbon/ribbon_shader.ts": 4, // section-rgb(+gap), section-rgb-explore(+gap)
 };
 
 // What the current page draws, as the warm-up needs to know it.
@@ -60,6 +60,11 @@ export interface WarmContext {
   bgIds: readonly string[];
   // renderer.limits.maxBatchableTextures: the batcher's source depends on it.
   maxBatchTextures: number;
+  // K320 stage 2a/section 5: the gap mask target can exist on this context
+  // (half-float color buffer + framebuffer check). Absent = supported (the
+  // expected case everywhere WebGL2 runs); false lists no gap program, so
+  // the combined section programs remain the only path, never both.
+  gapSplit?: boolean;
 }
 
 // One program, as the warm-up compiles it.
@@ -77,6 +82,10 @@ export interface ProgramEntry {
   files: readonly string[];
   // Whether the current mode's intro draws it.
   wave1(ctx: WarmContext): boolean;
+  // Whether the program exists at all in this context (default true). A
+  // false entry is in neither wave: never warmed, never drawn (K320 2a:
+  // the gap twins on a context with no half-float target, brief section 5).
+  exists?(ctx: WarmContext): boolean;
   // The program (built lazily, memoized by the factories).
   build(ctx: WarmContext): GlProgram;
 }
@@ -148,6 +157,22 @@ export function programRegistry(): readonly ProgramEntry[] {
       files: [RIBBON],
       wave1: (c) => c.explore || c.burn,
       build: () => sectionProgram(true),
+    },
+    {
+      // K320 stage 2a: the gap-only pre-pass twin (data plane; warmed with
+      // its paint twin in wave 1 from 2a on, so 2b pays no new cold link).
+      name: "section-rgb-gap",
+      files: [RIBBON],
+      exists: (c) => c.gapSplit !== false,
+      wave1: (c) => c.gapSplit !== false && !c.explore,
+      build: () => sectionGapProgram(false),
+    },
+    {
+      name: "section-rgb-gap-explore",
+      files: [RIBBON],
+      exists: (c) => c.gapSplit !== false,
+      wave1: (c) => c.gapSplit !== false && (c.explore || c.burn),
+      build: () => sectionGapProgram(true),
     },
     {
       name: "arm-strip",
@@ -257,7 +282,7 @@ function longestFirst(a: WarmSource, b: WarmSource): number {
 // What the current mode's intro draws: the gating wave.
 export function wave1Sources(ctx: WarmContext): WarmSource[] {
   return programRegistry()
-    .filter((e) => e.wave1(ctx))
+    .filter((e) => (e.exists?.(ctx) ?? true) && e.wave1(ctx))
     .map((e) => source(e, ctx))
     .sort(longestFirst);
 }
@@ -266,7 +291,7 @@ export function wave1Sources(ctx: WarmContext): WarmSource[] {
 // context at the start (the batcher's count; every other variant is listed).
 export function wave2Sources(ctx: WarmContext): WarmSource[] {
   return programRegistry()
-    .filter((e) => !e.wave1(ctx))
+    .filter((e) => (e.exists?.(ctx) ?? true) && !e.wave1(ctx))
     .map((e) => source(e, ctx))
     .sort(longestFirst);
 }
