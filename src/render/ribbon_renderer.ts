@@ -150,7 +150,8 @@ import {
   setGapPrepassEnabled,
   type GapSceneSource,
 } from "./gap_prepass";
-import { bindGap, sectionShader } from "./ribbon/ribbon_shader";
+import { gapSplitActive, setGapSplitActive } from "./fabric_sdf";
+import { bindGap, bindGapMask, sectionShader, sectionShaderExplore } from "./ribbon/ribbon_shader";
 import * as sampling from "./ribbon/sampling";
 import type { PassNeighbors } from "./ribbon/sampling";
 import {
@@ -839,6 +840,22 @@ export class RibbonRenderer {
   setGapPrepass(on: boolean): void {
     setGapPrepassEnabled(on);
   }
+  // K320 2b probe A/B: draw this same state through the mask (true) or
+  // the combined in-shader search (false). Swaps every ribbon (and the
+  // probe triangles) between the split pair and the fallback pair.
+  setGapSplit(split: boolean): void {
+    setGapSplitActive(split);
+    setGapPrepassEnabled(split);
+    const sh = this.explorePieces !== null ? sectionShaderExplore() : sectionShader();
+    for (const f of this.fills) f.mesh.shader = sh;
+    if (this.probeMesh) this.probeMesh.mesh.shader = sh;
+    bindGap(this.gaps.tex);
+    bindGapMask(gapMaskTexture());
+    if (split) this.update();
+  }
+  gapSplitMode(): boolean {
+    return gapSplitActive();
+  }
   get stripRT(): unknown {
     return stripTexture();
   }
@@ -1163,6 +1180,7 @@ export class RibbonRenderer {
     this.gapScene = {
       root: this.root,
       base: baseLayer,
+      gapTex: this.gaps.tex,
       fills: this.fills,
       explore: () => this.explorePieces !== null,
       geomRev: () => this.geomRev,
@@ -1173,6 +1191,7 @@ export class RibbonRenderer {
     };
     registerGapScene(this.gapScene);
     bindGap(this.gaps.tex);
+    bindGapMask(gapMaskTexture());
   }
 
   // Size the G3 tables for this scene and clear its regions (a previous
