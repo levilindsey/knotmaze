@@ -22,7 +22,7 @@
 // paint_explore.test.ts and the probes' dump_variants.ts copies.
 
 import { GlProgram, Shader, Texture } from "pixi.js";
-import { withExplore } from "../explore_glsl";
+import { applyEdits, exploreGapEdits, withExplore } from "../explore_glsl";
 import { GAP_FRAG, GAP_VERT_DECL, GAP_VERT_MAIN, defaultGapTexture } from "../gap_mask";
 import { bindFieldGap } from "../junction_field";
 import {
@@ -38,6 +38,7 @@ import {
   PAINT_VERT_DECL,
   PAINT_VERT_MAIN,
 } from "../paint_glsl";
+import { PAINT_CONST } from "../paint_const";
 import { kGeom, kPaint, kReveal, kStatic, knotUniforms } from "../paint_model";
 import { bindPluckGap } from "../pluck_overlay";
 import { fabricUniforms, sampSource } from "../fabric_sdf";
@@ -69,6 +70,7 @@ ${PAINT_VERT_DECL}
 out vec2 vUV;
 out vec3 vSection;
 out vec4 vColor;
+flat out highp int vChain;
 
 uniform mat3 uProjectionMatrix;
 uniform mat3 uWorldTransformMatrix;
@@ -87,6 +89,7 @@ void main(void) {
   vColor = uColor * uWorldColorAlpha;
 ${GAP_VERT_MAIN}
 ${PAINT_VERT_MAIN}
+  vChain = int(aKey.x + 0.5);
   vSection = kVertSection;
 }
 `;
@@ -205,6 +208,75 @@ export function sectionProgram(explore = false): GlProgram {
 // The ONE shared section shader. (The path color reaches it as a uniform,
 // uKGold - since G2.3 nothing samples mesh.texture, which custom shaders
 // ignore anyway: the olive-smudge lore.)
+// K320 STAGE 2a: THE GAP-ONLY PRE-PASS PROGRAMS (docs/design/K320_stage2.md
+// sections 3.1-3.2, sub-step 2a). Same vertex shader and geometry as the
+// section programs; the fragment is Stage 0's gap skeleton grown to a real
+// output: GAP_FRAG (the unedited search text) plus only what gapKeepAt reads
+// from the paint side (uKFx, CROSSING_FADE_IN for gapStrength). R = gapKeep,
+// G = chain (draw) index + 1, written into the gap mask target by
+// gap_prepass.ts. Nothing consumes the mask yet: the section programs keep
+// their in-shader gapKeep until 2b.
+const GAP_KSMOOTH = ((): string => {
+  const i = PAINT_GATE_THREAD_GLSL.indexOf("highp float kSmooth(");
+  return PAINT_GATE_THREAD_GLSL.slice(i, PAINT_GATE_THREAD_GLSL.indexOf("}\n", i) + 2);
+})();
+export const GAP_ONLY_FRAG = /* glsl */ `#version 300 es
+precision highp float;
+precision highp int;
+flat in highp int vChain;
+uniform vec4 uKFx;
+const float CROSSING_FADE_IN = ${PAINT_CONST.CROSSING_FADE_IN};
+out vec4 finalColor;
+${GAP_FRAG}
+void main(void) {
+  highp vec2 gfw = fwidth(vPos);
+  highp float pxW = max(max(gfw.x, gfw.y), 1e-5);
+  highp float gk = gapKeep(pxW, gapTurn());
+  finalColor = vec4(gk, float(vChain) + 1.0, 0.0, 1.0);
+}
+`;
+let GAP_ONLY_EXPLORE_FRAG: string | null = null;
+export function gapOnlyFragExplore(): string {
+  GAP_ONLY_EXPLORE_FRAG ??= applyEdits(
+    GAP_ONLY_FRAG,
+    exploreGapEdits(false, "uniform vec4 uKExplore;\n" + GAP_KSMOOTH),
+    "gap explore variant",
+  );
+  return GAP_ONLY_EXPLORE_FRAG;
+}
+export function sectionGapProgram(explore = false): GlProgram {
+  if (!explore) {
+    return GlProgram.from({ vertex: SECTION_VERT, fragment: GAP_ONLY_FRAG, name: "section-rgb-gap" });
+  }
+  return GlProgram.from({
+    vertex: SECTION_VERT,
+    fragment: gapOnlyFragExplore(),
+    name: "section-rgb-gap-explore",
+  });
+}
+let GAP_SHADER: SectionShader | null = null;
+let GAP_EXPLORE_SHADER: SectionShader | null = null;
+export function sectionGapShader(explore = false): SectionShader {
+  const have = explore ? GAP_EXPLORE_SHADER : GAP_SHADER;
+  if (have) return have;
+  const sh = new Shader({
+    glProgram: sectionGapProgram(explore),
+    resources: {
+      uGapData: defaultGapTexture().source,
+      uSamp: sampSource(),
+      fabricUniforms: fabricUniforms(),
+      uKStatic: kStatic().source,
+      uKGeom: kGeom().source,
+      uKReveal: kReveal().source,
+      uKPaintData: kPaint().source,
+      knotUniforms: knotUniforms(),
+    },
+  }) as SectionShader;
+  sh.texture = Texture.WHITE;
+  if (explore) GAP_EXPLORE_SHADER = sh;
+  else GAP_SHADER = sh;
+  return sh;
+}
 export function sectionShader(): SectionShader {
   if (!SECTION_SHADER) {
     const sh = new Shader({
@@ -271,4 +343,9 @@ export function bindGap(tex: Texture): void {
   const ex = SECTION_EXPLORE_SHADER;
   if (ex && ex.resources.uGapData !== tex.source) ex.resources.uGapData = tex.source;
   if (ex && ex.resources.uSamp !== samp) ex.resources.uSamp = samp;
+  for (const g of [GAP_SHADER, GAP_EXPLORE_SHADER]) {
+    if (!g) continue;
+    if (g.resources.uGapData !== tex.source) g.resources.uGapData = tex.source;
+    if (g.resources.uSamp !== samp) g.resources.uSamp = samp;
+  }
 }

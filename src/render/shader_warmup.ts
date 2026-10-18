@@ -40,6 +40,7 @@
 
 import type { BackgroundId } from "./background_model";
 import { backgroundWarmIds } from "./background";
+import { detectGapSplit } from "./gap_prepass";
 import { wave1Sources, wave2Sources, type WarmContext, type WarmSource } from "./program_registry";
 
 const VERTEX_SHADER = 0x8b31;
@@ -524,7 +525,7 @@ export function startShaderWarmup(
   const warmup = new ShaderWarmup(gl, opts);
   if (typeof window !== "undefined") window.__knotWarmup = () => warmup.report();
   if (!gl) return warmup;
-  const ctx = ctxOf(r.limits?.maxBatchableTextures ?? 16);
+  const ctx = { ...ctxOf(r.limits?.maxBatchableTextures ?? 16), gapSplit: detectGapSplit(gl) };
   const wave1 = wave1Sources(ctx);
   let wave2: WarmSource[] | null = null;
   const wave2Of = () => (wave2 ??= wave2Sources(ctx));
