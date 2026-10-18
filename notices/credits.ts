@@ -255,7 +255,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
     id: "hershey-fonts",
     title: "Hershey fonts",
     by: "Dr. A. V. Hershey, U.S. National Bureau of Standards; data format by James Hurt, Cognition, Inc.",
-    note: "The single-line cursive letters that text in the maze is drawn from.",
+    note: "The single-line cursive letters and Greek print letters that text in the maze is drawn from.",
     url: "https://github.com/kamalmostafa/hershey-fonts",
     notice: `The Hershey Fonts were originally created by Dr. A. V. Hershey while working at the U. S. National Bureau of Standards.
 

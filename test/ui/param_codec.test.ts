@@ -478,6 +478,17 @@ describe("string param (K115 text)", () => {
     );
   });
 
+  it("round-trips Greek text (K115 stage 6c), version stays 8", () => {
+    expect(CODEC_VERSION).toBe(8);
+    for (const text of ["αβγ", "Αθηνα", "αθηνα", "Welcome αβγ", "café αβγ"]) {
+      const token = encodeToken(7, { ...D, text }, D);
+      const d = decodeToken(token, D);
+      expect(d.error).toBeNull();
+      expect(d.values.text).toBe(text);
+      expect(d.values).toEqual({ ...D, text });
+    }
+  });
+
   it("leaves the default empty string out of the token", () => {
     expect(encodeToken(7, { ...D, text: "" }, D)).toBe("7");
     expect(decodeToken("7", D).values.text).toBe("");

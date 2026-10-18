@@ -181,6 +181,30 @@ describe("text waypoints (K115 stage 2)", () => {
     expect(c.head).toBe("mexit_a");
   });
 
+  it("walks Greek words letter by letter (K115 stage 6c)", () => {
+    for (const word of ["αβγ", "Αθηνα"]) {
+      const { g, walk } = textWalk(word);
+      const wps = waypointsOf(g);
+      expect(wps.length, word).toBe([...word].length + 1);
+      expect(walk.start, word).toBe("mentr_a");
+      expect(walk.exit, word).toBe("mexit_a");
+      expect(g.nodes.get("mentr_a")?.type, word).toBe(NODE_TYPE.END);
+      expect(g.nodes.get("mexit_a")?.type, word).toBe(NODE_TYPE.END);
+      const c = new FabricMazeController(walk);
+      const seen: string[] = [];
+      let result = "";
+      for (let step = 0; step < 200 && !c.solved; step++) {
+        result = c.tapEdge(bestChoice(c));
+        expect(result).toMatch(/advance|win/);
+        if (g.nodes.get(c.head)?.waypoint && seen[seen.length - 1] !== c.head) {
+          seen.push(c.head);
+        }
+      }
+      expect(result, word).toBe("win");
+      expect(seen, word).toEqual(wps);
+    }
+  });
+
   it("offers a spur dead end at a waypoint junction, and back", () => {
     const { walk } = textWalk("Welcome");
     // A waypoint with a one-run dead-end arm (a merge letter's spur).

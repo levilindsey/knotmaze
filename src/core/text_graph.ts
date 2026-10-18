@@ -14,6 +14,8 @@
 // decomposition set; see the cluster walk in buildTextGraph.)
 
 import { HERSHEY_SCRIPT } from "./hershey_script";
+import type { HersheyGlyph } from "./hershey_script";
+import { HERSHEY_GREEK } from "./hershey_greek";
 import { COMBINING_TO_MARK, markPieces } from "./accent_marks";
 import type { MarkPiece } from "./accent_marks";
 import { NODE_TYPE } from "./types";
@@ -686,6 +688,24 @@ function scanClassPoint(
 // The builder
 // ---------------------------------------------------------------------------
 
+// K115 stage 6c: Greek print dispatch. The text string itself names the
+// script by its codepoints (no link param): a cluster whose base lies in
+// the Greek ranges below reads hershey_greek.ts, ASCII reads Script, and
+// anything else advances like a space, exactly as before 6c. Greek tonos
+// and dialytika marks are dropped (the base ships bare) until 6d; the
+// one shaping rule in 6c is final sigma (see the cluster walk).
+export function isGreekCode(code: number): boolean {
+  return (
+    (code >= 0x0391 && code <= 0x03a1) ||
+    (code >= 0x03a3 && code <= 0x03ab) ||
+    (code >= 0x03b1 && code <= 0x03cb)
+  );
+}
+
+function greekGlyphFor(code: number): HersheyGlyph | undefined {
+  return HERSHEY_GREEK[code];
+}
+
 export function buildTextGraph(text: string, opts?: { xHeight?: number }): TangleGraph {
   const xHeight =
     opts && opts.xHeight !== undefined && opts.xHeight > 0 ? opts.xHeight : 3;
@@ -708,6 +728,12 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     below: boolean;
   }
   const pendingMarks: PendingMark[] = [];
+  // Stage 6c: whether the word's first / last routed glyph is Greek.
+  // Their word-edge tails diverge sideways (see the tail block below);
+  // every other word keeps the Latin tail exactly.
+  let firstGreek = false;
+  let lastGreek = false;
+  let seenGlyph = false;
 
   // Input normalization (6b): NFD on the way in, then walk grapheme
   // clusters (a base codepoint plus its trailing combining marks,
@@ -735,7 +761,8 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     }
     clusters.push({ base: cp, code, marks: [] });
   }
-  for (const cluster of clusters) {
+  for (let clusterIndex = 0; clusterIndex < clusters.length; clusterIndex++) {
+    const cluster = clusters[clusterIndex];
     const ch = cluster.base;
     const code = cluster.code;
     if (code === 32) {
@@ -746,11 +773,25 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
       }
       continue;
     }
-    if (code < 32 || code > 126) {
+    let effCode = code;
+    let isGreek = false;
+    let greekGlyph: HersheyGlyph | undefined;
+    if (isGreekCode(code)) {
+      isGreek = true;
+      if (code === 0x03c2 || code === 0x03c3) {
+        const next = clusters[clusterIndex + 1];
+        effCode = next !== undefined && isGreekCode(next.code) ? 0x03c3 : 0x03c2;
+      }
+      greekGlyph = greekGlyphFor(effCode);
+      if (greekGlyph === undefined || greekGlyph.strokes.length === 0) {
+        cursor += SPACE_ADVANCE;
+        continue;
+      }
+    } else if (code < 32 || code > 126) {
       cursor += SPACE_ADVANCE; // Unsupported: space advance only.
       continue;
     }
-    const glyph = HERSHEY_SCRIPT[code - 32];
+    const glyph: HersheyGlyph = isGreek ? greekGlyph! : HERSHEY_SCRIPT[code - 32];
     const cursorPrev = cursor;
     const cursorNext = cursor + (glyph.right - glyph.left);
     const dx = cursor - glyph.left;
@@ -760,8 +801,8 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     const placed: Pt[][] = glyph.strokes.map((s) =>
       s.map((p) => [p[0] + dx, p[1]] as Pt)
     );
-    const isLower = ch >= "a" && ch <= "z";
-    const isCapital = ch >= "A" && ch <= "Z";
+    const isLower = !isGreek && ch >= "a" && ch <= "z";
+    const isCapital = !isGreek && ch >= "A" && ch <= "Z";
     let entryPt: Pt;
     let exitPt: Pt;
     let routed: GlyphRoute | null = null;
@@ -819,6 +860,35 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
             ? provisional
             : routeGlyph(placed, entryPt, exitPt, xHeight);
       }
+    } else if (isGreek) {
+      // Stage 6c joined print: a print glyph has no cursive lead-in, so
+      // entry and exit take the lowercase rule (the stroke point nearest
+      // the join line at each advance edge, with the endpoint-distance
+      // fallback Latin lowercase uses). When no stroke point comes
+      // within 6 HU of the join line, the 6a class scan (arrive LOW)
+      // over a provisional endpoint route picks the entry instead.
+      entryPt = closestOnStrokes(placed, [cursorPrev, JOIN_Y]);
+      exitPt = closestEndpoint(placed, [cursorNext, JOIN_Y]);
+      if (d2(exitPt, [cursorNext, JOIN_Y]) > 9) {
+        exitPt = closestOnStrokes(placed, [cursorNext, JOIN_Y]);
+      }
+      if (d2(entryPt, [cursorPrev, JOIN_Y]) > 36) {
+        const firstPt = placed[0][0];
+        const lastStroke0 = placed[placed.length - 1];
+        const provisional = routeGlyph(
+          placed,
+          firstPt,
+          lastStroke0[lastStroke0.length - 1],
+          xHeight
+        );
+        const scanned = scanClassPoint(
+          provisional.routePts,
+          true,
+          [cursorPrev, JOIN_Y],
+          ARRIVE_SCAN
+        );
+        if (scanned !== null) entryPt = scanned.pt;
+      }
     } else {
       // Digits, punctuation: first stroke start to last stroke end.
       entryPt = placed[0][0];
@@ -830,6 +900,11 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     for (const seg of routed.leftovers) extraSegs.push(seg);
     for (const dot of routed.dots) dotLoops.push(dot);
     if (routed.routePts.length === 0) continue;
+    if (!seenGlyph) {
+      firstGreek = isGreek;
+      seenGlyph = true;
+    }
+    lastGreek = isGreek;
 
     // K115 stage 6b: this glyph's authored marks (a combining mark
     // outside the table is dropped here; its base ships bare).
@@ -838,7 +913,9 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     // capital base's mark 3 HU above its own topmost point instead,
     // and the cedilla hanging from the baseline y = 9. Whether the
     // mark may stay (the no-crossing nudge/drop pass) is decided
-    // after layout, when every neighbour stroke exists.
+    // after layout, when every neighbour stroke exists. Stage 6c: a
+    // Greek base's marks (tonos, dialytika) are dropped here -- the
+    // base ships bare until 6d gives print capitals their own pass.
     {
       const cx = (cursorPrev + cursorNext) / 2;
       let glyphTop = Infinity;
@@ -846,7 +923,8 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
         for (const p of s) if (p[1] < glyphTop) glyphTop = p[1];
       }
       const aboveY = isLower ? -15 : glyphTop - 3;
-      for (const markCode of cluster.marks) {
+      // (Greek bases skip the loop below: their marks array is read as empty.)
+      for (const markCode of isGreek ? [] : cluster.marks) {
         const mark = COMBINING_TO_MARK[markCode];
         if (mark === undefined) continue;
         const below = mark === "cedilla";
@@ -883,6 +961,8 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
   if (mainPts.length < 2) {
     const endX = cursor > 0 ? cursor : X_HEIGHT_HU;
     glyphJoins.length = 0; // No glyph made the path; the line below is bare.
+    firstGreek = false;
+    lastGreek = false;
     mainPts.length = 0;
     mainPts.push([0, JOIN_Y], [endX, JOIN_Y]);
   }
@@ -894,11 +974,28 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     const f = mainPts[0];
     const fn = mainPts[1];
     const fl = hypot2(fn[0] - f[0], fn[1] - f[1]);
-    if (fl > 0) mainPts.unshift([f[0] - ((fn[0] - f[0]) / fl) * 4, f[1] - ((fn[1] - f[1]) / fl) * 4]);
+    if (fl > 0) {
+      // Stage 6c: a Greek first glyph's entry often sits mid-stroke, so
+      // a tail sent straight back retraces its spur and the entrance
+      // collapses to a TURN. A 1.5 HU sideways step makes the tail
+      // diverge from the spur at the entry (which becomes a waypoint
+      // junction, as a Latin merge letter's entry already is).
+      const side = firstGreek ? 1.5 : 0;
+      mainPts.unshift([
+        f[0] - ((fn[0] - f[0]) / fl) * 4 - ((fn[1] - f[1]) / fl) * side,
+        f[1] - ((fn[1] - f[1]) / fl) * 4 + ((fn[0] - f[0]) / fl) * side,
+      ]);
+    }
     const l = mainPts[mainPts.length - 1];
     const lp = mainPts[mainPts.length - 2];
     const ll = hypot2(l[0] - lp[0], l[1] - lp[1]);
-    if (ll > 0) mainPts.push([l[0] + ((l[0] - lp[0]) / ll) * 4, l[1] + ((l[1] - lp[1]) / ll) * 4]);
+    if (ll > 0) {
+      const side = lastGreek ? 1.5 : 0;
+      mainPts.push([
+        l[0] + ((l[0] - lp[0]) / ll) * 4 - ((l[1] - lp[1]) / ll) * side,
+        l[1] + ((l[1] - lp[1]) / ll) * 4 + ((l[0] - lp[0]) / ll) * side,
+      ]);
+    }
   }
 
   // K115 stage 6b: keep a mark only where it crosses nothing. Each
@@ -1365,6 +1462,7 @@ export function attachTitle(graph: TangleGraph, title: string): string | null {
     if (code > 32 && code <= 126 && HERSHEY_SCRIPT[code - 32].strokes.length > 0) {
       hasGlyph = true;
     }
+    if (hasGreekGlyph(code)) hasGlyph = true;
   }
   if (!hasGlyph) return null;
   const walk0 = buildWalkGraph(graph);
@@ -1712,6 +1810,11 @@ export function planHoleForBounds(
   return null;
 }
 
+function hasGreekGlyph(code: number): boolean {
+  const glyph = greekGlyphFor(code);
+  return glyph !== undefined && glyph.strokes.length > 0;
+}
+
 function textHasGlyph(text: string): boolean {
   // NFD first (stage 6b): a precomposed letter counts by its base.
   for (const ch of text.normalize("NFD")) {
@@ -1719,6 +1822,7 @@ function textHasGlyph(text: string): boolean {
     if (code > 32 && code <= 126 && HERSHEY_SCRIPT[code - 32].strokes.length > 0) {
       return true;
     }
+    if (hasGreekGlyph(code)) return true;
   }
   return false;
 }
