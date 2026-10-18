@@ -265,7 +265,7 @@ Cognition, Inc.
 900 Technology Park Drive
 Billerica, MA 01821
 (mit-eddie!ci-dandelion!hurt)`,
-    shipped: false,
+    shipped: true,
   },
 ];
 
