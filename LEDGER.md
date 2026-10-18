@@ -109,11 +109,11 @@ Next free ID: K548.
 
 ## In progress
 
-- **K115** · Cursive text (Levi's calls 2026-10-13: pinned; junction+spur with spurs travelable; one-token links; capitals via generated connector; legibility assumed, stage 1a skipped). Stage 1b: Hershey data + `text_graph.ts` builder + standalone scene.
-  - owner: this session (2026-10-18); brief `docs/design/K115_stage1.md`
-  - branch: mainline; last commit: types seam (`Node.overFirst`, `Strand.pinned`) with this ledger edit
-  - evidence: `.claude/probes/K115/` (probe census + SVG proxies)
-  - next: Part A builder + tests, Part B physics/scene/codec, screenshot, commit
+- **K115** · Cursive text stages 2+ (title thread, in-maze cartouche, shapes, scripts). Stage 1b DONE 2026-10-18: Hershey data + `text_graph.ts` + pinned/overFirst physics + text scene + codec string (v8); suite 1425 green; real-renderer shots `.claude/probes/K115/welcome_real.png`, `daily12_real.png` (`?txt=Welcome`).
+  - owner: nobody (stage 1b closed by session 01a14e0f)
+  - branch: mainline; last commit: bc357c4 (1b in cb7d006..bc357c4)
+  - evidence: `.claude/probes/K115/` (census, proxies, real shots)
+  - next: Stage 2 title thread (E3) brief from `docs/design/K115_cursive_text.md` s4.2; waypoint tap-writing (P2) and per-letter reveal ride it. Residuals from 1b: same-slash crossings rely on overFirst only; spurs travelable but standalone scene has no fabric walk yet.
   - brief: `docs/design/K115_stage1.md`; design `docs/design/K115_cursive_text.md`
 
 - **K114** Â· Gameplay round 2, designed in
