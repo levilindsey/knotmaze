@@ -113,8 +113,8 @@ Next free ID: K551.
   - owner: nobody (stage 1b closed by session 01a14e0f)
   - branch: mainline; last commit: bc357c4 (1b in cb7d006..bc357c4)
   - evidence: `.claude/probes/K115/` (census, proxies, real shots)
-  - next: Stage 5 shapes build 5a (standalone emblems) per `docs/design/K115_stage5.md`, then 5b cartouche island; per-script stage after. Stage 4a DONE 2026-10-18 (1e0a2eb): in-maze cartouche, suite 1469 green, shots `.claude/probes/K115/stage4/`. Stage 3a DONE 2026-10-18 (6625160): daily title thread, suite 1440 green, shots `.claude/probes/K115/stage3/`. Residuals from 1b: same-slash crossings rely on overFirst only.
-  - brief: `docs/design/K115_stage3.md`; `docs/design/K115_stage1.md`; design `docs/design/K115_cursive_text.md`
+  - next: Stage 6 per-script build 6a (join-class capitals) per `docs/design/K115_stage6.md`, then 6b accents, 6c Greek. Stages 5a/5b DONE (2c19d10, dc9bbd0). Stage 4a DONE 2026-10-18 (1e0a2eb): in-maze cartouche, suite 1469 green, shots `.claude/probes/K115/stage4/`. Stage 3a DONE 2026-10-18 (6625160): daily title thread, suite 1440 green, shots `.claude/probes/K115/stage3/`. Residuals from 1b: same-slash crossings rely on overFirst only.
+  - brief: `docs/design/K115_stage6.md`; `docs/design/K115_stage3.md`; `docs/design/K115_stage1.md`; design `docs/design/K115_cursive_text.md`
 
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
