@@ -304,12 +304,13 @@ export const GAP_VERT_MAIN = /* glsl */ `
     vTurnB = tn < 0.5 ? tn + 1.0 : tn;
   }
 `;
-// Fragment LIBRARY (no varyings - shared by the ribbon section shader and
-// the junction-field fan shader): uGapData plus
+// Fragment LIBRARY (no varyings). GAP_FRAG_LIB is the RIBBON form (the
+// section shader and the still pluck); GAP_FRAG_LIB_FAN below is the fan
+// form (junction-field). uGapData plus
 //   gapKeepAt(pxW, p, turn, tanv, ids)
 // = the fraction of the fragment at world point p that stays drawn
 // (1 = untouched). turn is the fragment's arc turn along its chain
-// (gapTurn); turn < 0 marks a FAN fragment: the slot's
+// (gapTurn); in the fan form, turn < 0 marks a FAN fragment: the slot's
 // header tangent, the arc offset projected on it, the casing restricted
 // to the under footprint (full ids only), the over silhouette. pxW (world
 // units per pixel) must come from fwidth() evaluated in UNIFORM control
@@ -382,12 +383,6 @@ vec2 gapOverPt(vec4 t4, vec4 t9, int j) {
     ? ((raw % count) + count) % count
     : clamp(raw, 0, count - 1);
   return sampAt(int(t4.y + 0.5) + idx);
-}
-
-vec2 gapPt(int row, int k) {
-  highp vec4 t4 = texelFetch(uGapData, ivec2(4, row), 0);
-  highp vec4 t9 = texelFetch(uGapData, ivec2(9, row), 0);
-  return gapOverPt(t4, t9, k);
 }
 
 // Nearest point of the sampled range within sqrt(best) (best is the
@@ -515,7 +510,7 @@ highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,
   if (uFabricGap.x < 0.5) return 1.0;
   // Every slot of a ribbon fragment windows the fragment's own chain, so
   // one turn serves them all.
-  bool fan = turn < -0.5;
+  bool fan = false;
   highp float keep = 1.0;
   for (int s = 0; s < ${GAP_SLOTS}; s++) {
     // Fully hidden already: no later slot can change the answer.
@@ -546,24 +541,6 @@ highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,
     highp float fa = 0.0;
     highp vec4 t5 = vec4(0.0);
     highp vec4 t6 = vec4(0.0);
-    if (fan) {
-      // FAN fragment (full ids): the casing applies only inside the UNDER
-      // thread's footprint within the window (a straight line through the
-      // window center along the header tangent stands in for the under
-      // centerline - fine across a tip cap, too coarse for a curving arm
-      // at a joint, which is why junction fans skip the casing). A
-      // full-casing cut grooved webs beside the over thread (dark notches,
-      // raw tucked tips at the ring URL's big-cusp joints).
-      t5 = texelFetch(uGapData, ivec2(5, row), 0);
-      t6 = texelFetch(uGapData, ivec2(6, row), 0);
-      highp vec2 dc = p - t5.zw;
-      offA = dot(dc, t6.xy);
-      highp float lat = abs(dot(dc, vec2(-t6.y, t6.x)));
-      inFoot = clamp((hO - lat) / pxW + 0.5, 0.0, 1.0);
-      highp float mw = min(offA + t2.x, t2.y - offA);
-      inWin = clamp(mw / pxW + 0.5, 0.0, 1.0);
-      winM = mw;
-    } else {
       // Arc offset from the window center along the under chain
       // (wrapped on closed rings), then the window test with a one-pixel
       // AA ramp at its ends.
@@ -575,7 +552,6 @@ highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,
       if (m <= -pxW) continue;
       inWin = clamp(m / pxW + 0.5, 0.0, 1.0);
       winM = m;
-    }
     highp vec4 t3 = texelFetch(uGapData, ivec2(3, row), 0);
     int fl = int(t3.w + 0.5);
     bool perp = (fl & 1) != 0;
@@ -737,6 +713,79 @@ highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,
   return keep;
 }
 `;
+
+// K320 stage 1: the fan-only form of the library (junction-field ships
+// this instead of GAP_FRAG_LIB): the fan window arm in place of the ribbon
+// one, fan = true, and no protect block, gapProtCover or gapInterval (fans
+// never run them: gapKeepAt's protect is !fan, and a fan's search needs no
+// interval). Derived from GAP_FRAG_LIB by exactly-once anchor swaps, like
+// explore_glsl's withExplore; a drifted anchor throws at module load.
+const GAP_WIN_RIBBON = `      // Arc offset from the window center along the under chain
+      // (wrapped on closed rings), then the window test with a one-pixel
+      // AA ramp at its ends.
+      fa = turn * t1.x;
+      highp float off = fa - t1.y;
+      if (t1.z > 0.0) off -= t1.z * floor(off / t1.z + 0.5);
+      offA = off;
+      highp float m = min(off + t2.x, t2.y - off);
+      if (m <= -pxW) continue;
+      inWin = clamp(m / pxW + 0.5, 0.0, 1.0);
+      winM = m;
+`;
+const GAP_WIN_FAN = `      // FAN fragment (full ids): the casing applies only inside the UNDER
+      // thread's footprint within the window (a straight line through the
+      // window center along the header tangent stands in for the under
+      // centerline - fine across a tip cap, too coarse for a curving arm
+      // at a joint, which is why junction fans skip the casing). A
+      // full-casing cut grooved webs beside the over thread (dark notches,
+      // raw tucked tips at the ring URL's big-cusp joints).
+      t5 = texelFetch(uGapData, ivec2(5, row), 0);
+      t6 = texelFetch(uGapData, ivec2(6, row), 0);
+      highp vec2 dc = p - t5.zw;
+      offA = dot(dc, t6.xy);
+      highp float lat = abs(dot(dc, vec2(-t6.y, t6.x)));
+      inFoot = clamp((hO - lat) / pxW + 0.5, 0.0, 1.0);
+      highp float mw = min(offA + t2.x, t2.y - offA);
+      inWin = clamp(mw / pxW + 0.5, 0.0, 1.0);
+      winM = mw;
+`;
+const GAP_PROT_BLOCK = `    if (!fan) {
+      highp vec4 t7 = texelFetch(uGapData, ivec2(7, row), 0);
+      highp float pn = gapInterval(offA, t7.x, t7.y);
+      highp float pp = gapInterval(offA, t7.z, t7.w);
+      for (int sd = 0; sd < 2; sd++) {
+        highp float pi = sd == 0 ? pn : pp;
+        if (pi <= 0.0) continue;
+        pr = max(pr, pi * gapProtCover(row,
+          ${GAP_PROT_NEG} + sd * 2, p, hO, pxW));
+      }
+      t5 = texelFetch(uGapData, ivec2(5, row), 0);
+      t6 = texelFetch(uGapData, ivec2(6, row), 0);
+    }
+`;
+function gapFragLibFan(): string {
+  let s = GAP_FRAG_LIB;
+  const swap = (anchor: string, to: string): void => {
+    const i = s.indexOf(anchor);
+    if (i < 0 || s.indexOf(anchor, i + 1) >= 0) {
+      throw new Error(`fan gap library: anchor not found exactly once: ${anchor.slice(0, 48)}`);
+    }
+    s = s.slice(0, i) + to + s.slice(i + anchor.length);
+  };
+  const dropFn = (from: string): void => {
+    const a = s.indexOf(from);
+    const e = a < 0 ? -1 : s.indexOf("\n}\n", a);
+    if (a < 0 || e < 0) throw new Error(`fan gap library: function not found: ${from.slice(0, 48)}`);
+    s = s.slice(0, a) + s.slice(e + 3);
+  };
+  swap("  bool fan = false;", "  bool fan = true;");
+  swap(GAP_WIN_RIBBON, GAP_WIN_FAN);
+  swap(GAP_PROT_BLOCK, "");
+  dropFn("// How much of p lies over the ribbon");
+  dropFn("// 1 inside the arc interval");
+  return s;
+}
+export const GAP_FRAG_LIB_FAN = gapFragLibFan();
 
 // Ribbon fragment additions: the varyings GAP_VERT_* feed, the library,
 // and gapKeep(pxW) for the section shader.

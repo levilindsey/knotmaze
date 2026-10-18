@@ -325,7 +325,7 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   "paint_glsl.ts: floor(x / 360.0)": [1, "a hue wrap: one off is the same color"],
   "paint_glsl.ts: floor(raw / s)": [1, "kPulseV's crest phase: periodic, either side is the same crest"],
   "gap_mask.ts: floor(da / per + 0.5)": [1, "nearest lap: ambiguous only at the antipode"],
-  "gap_mask.ts: floor(off / t1.z + 0.5)": [1, "nearest lap: ambiguous only at the antipode"],
+  "gap_mask.ts: floor(off / t1.z + 0.5)": [2, "nearest lap: ambiguous only at the antipode (the second site is K320's fan-library anchor copy of the same line, not a second runtime quotient)"],
   "explore_glsl.ts: floor((0.5 * (c0 + c1) - x) / nf + 0.5)": [2, "nearest lap (kExploreAt, K290's kCharAt): ambiguous only at the antipode"],
   "explore_glsl.ts: floor((T0.y - x) / nf + 0.5)": [1, "nearest lap to a fire front (K290 3b's kCharAt): ambiguous only at the antipode, where every front term is 0"],
   "junction_field.ts: floor(ra / TAU)": [1, "an angle wrap for comparisons: TAU instead of 0 is the same direction"],

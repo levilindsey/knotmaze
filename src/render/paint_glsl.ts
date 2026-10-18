@@ -262,11 +262,6 @@ highp float kCtrlNear(KChain c, highp float a, highp float approx) {
   return float(s) + t;
 }
 
-// A decoded arc TURN (gap_mask.ts / RibbonMesh aArcPos) -> world arc:
-// closed rings go once around, open runs span 0.45 of a turn.
-highp float kArcScale(KChain c) {
-  return c.closed ? c.total : c.total / 0.45;
-}
 `;
 
 // Vertex-stage declarations + main-body lines. aKey = (chain, sample
@@ -335,8 +330,11 @@ KChain kFragChain() {
 
 // The FX timing curves and the JOINT GATE (needs KNOT_UNIFORMS_GLSL +
 // PAINT_CONST_GLSL only - the junction fans include just this, not the
-// data library). Mirrors paint_math.ts line for line.
-export const PAINT_GATE_GLSL = /* glsl */ `
+// data library). Mirrors paint_math.ts line for line. K320 stage 1: the
+// thread programs (section, arm strips) ship only PAINT_GATE_THREAD_GLSL
+// (kSmooth + the FX curves kFxColor calls); the fan tail below (the FX
+// weight / solidity chain and the joint gate) is junction-field's alone.
+export const PAINT_GATE_THREAD_GLSL = /* glsl */ `
 highp float kSmooth(highp float x) {
   highp float c = clamp(x, 0.0, 1.0);
   return c * c * (3.0 - 2.0 * c);
@@ -353,6 +351,8 @@ highp float kMaterialize(highp float age, int style) {
   return age >= e ? 1.0 : kSmooth(age / e);
 }
 
+`;
+const PAINT_GATE_FAN_GLSL = /* glsl */ `
 highp float kFxWeight(int style, highp float age) {
   if (style == 1) return kRainbowP(age);
   if (style == 2 || style == 3) return kMaterialize(age, style) - 1.0;
@@ -380,6 +380,9 @@ highp float knotFanAlpha(highp vec4 J1) {
 
 // G2.1 REVEAL + APPEARANCE FX (needs PAINT_DATA_GLSL + KNOT_UNIFORMS_GLSL +
 // PAINT_GATE_GLSL). Every function mirrors paint_math.ts line for line.
+// The full gate (junction fans; pluck_overlay slices kSmooth out of it).
+export const PAINT_GATE_GLSL = PAINT_GATE_THREAD_GLSL + PAINT_GATE_FAN_GLSL;
+
 export const PAINT_FX_GLSL = /* glsl */ `
 struct KIgn {
   bool hit;
@@ -675,7 +678,7 @@ vec3 kSectionAtArc(KChain c, highp float a, highp float seed) {
 `;
 // G2.3 GAMEPLAY PAINT (needs PAINT_DATA_GLSL + KNOT_UNIFORMS_GLSL +
 // PAINT_FX_GLSL). KPAINT layout and semantics: paint_math.ts (kPaintAt).
-export const PAINT_PAINT_GLSL = /* glsl */ `
+const PAINT_PAINT_CORE_GLSL = /* glsl */ `
 highp float kGoldU(highp float p) {
   return p >= 1.0 ? 121.0 / 256.0 : p <= 0.0 ? 115.0 / 256.0 : (115.0 + 6.0 * p) / 256.0;
 }
@@ -893,6 +896,8 @@ vec3 kRimOver(vec3 c, highp float rim) {
   return c + (vec3(1.0) - c) * (K_BAND * clamp(rim, 0.0, 1.0));
 }
 
+`;
+const PAINT_HC_GLSL = /* glsl */ `
 // A High contrast prototype's choice (K111 stage 4): the paint goes toward
 // the pattern's gray "white" (0 black, 1 white) by the band's strength,
 // whatever its hue, and the reveal glow brightens the result as in
@@ -904,6 +909,8 @@ vec3 kHcCompose(vec3 S, highp vec4 st, highp float glow, highp float white) {
   return c + (vec3(1.0) - c) * (K_BAND * clamp(glow, 0.0, 1.0));
 }
 
+`;
+const PAINT_ACROSS_GLSL = /* glsl */ `
 // The paint on a RIBBON (side = vUV.y, the edges at 0 and 1):
 // kComposePaint, except a choice under a High contrast prototype (K111
 // stage 4). 1 CONTRAST: white with a black center line. 2 OUTLINE: a black
@@ -928,6 +935,8 @@ vec3 kComposePaintAcross(vec3 S, highp vec4 st, highp float glow, highp float si
   return kHcCompose(S, st, glow, white);
 }
 
+`;
+const PAINT_FLAT_GLSL = /* glsl */ `
 // The paint where there is no across coordinate (the arm strips the
 // junction webs and fans read): kComposePaint, except that a High contrast
 // prototype's choice is flat white there (K111 stage 4).
@@ -936,3 +945,11 @@ vec3 kComposePaintFlat(vec3 S, highp vec4 st, highp float glow) {
   return kHcCompose(S, st, glow, 1.0);
 }
 `;
+
+// K320 stage 1: per-consumer paint forms. The full library (probes and
+// censuses quote it); the ribbons ship it without kComposePaintFlat (they
+// compose across the ribbon), the arm strips without kComposePaintAcross.
+export const PAINT_PAINT_GLSL =
+  PAINT_PAINT_CORE_GLSL + PAINT_HC_GLSL + PAINT_ACROSS_GLSL + PAINT_FLAT_GLSL;
+export const PAINT_PAINT_RIBBON_GLSL = PAINT_PAINT_CORE_GLSL + PAINT_HC_GLSL + PAINT_ACROSS_GLSL;
+export const PAINT_PAINT_STRIP_GLSL = PAINT_PAINT_CORE_GLSL + PAINT_HC_GLSL + PAINT_FLAT_GLSL;

@@ -61,8 +61,8 @@ import {
   PAINT_CONST_GLSL,
   PAINT_DATA_GLSL,
   PAINT_FX_GLSL,
-  PAINT_GATE_GLSL,
-  PAINT_PAINT_GLSL,
+  PAINT_GATE_THREAD_GLSL,
+  PAINT_PAINT_STRIP_GLSL,
   PAINT_SECTION_GLSL,
 } from "./paint_glsl";
 import {
@@ -197,9 +197,9 @@ ${KNOT_UNIFORMS_GLSL}
 ${PAINT_CONST_GLSL}
 ${PAINT_DATA_GLSL}
 ${PAINT_SECTION_GLSL}
-${PAINT_GATE_GLSL}
+${PAINT_GATE_THREAD_GLSL}
 ${PAINT_FX_GLSL}
-${PAINT_PAINT_GLSL}
+${PAINT_PAINT_STRIP_GLSL}
 
 // The strip's paint edge coverage width (world arc; the row's step).
 highp float kStripPx;

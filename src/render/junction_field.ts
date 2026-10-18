@@ -81,7 +81,7 @@
 
 import { Buffer, BufferUsage, GlProgram, Shader, Texture, UniformGroup } from "pixi.js";
 import type { MeshGeometry } from "pixi.js";
-import { GAP_FRAG_LIB, defaultGapTexture } from "./gap_mask";
+import { GAP_FRAG_LIB_FAN, defaultGapTexture } from "./gap_mask";
 import { FloatRows, ROW_SHIFT } from "./float_rows";
 import { KNOT_UNIFORMS_GLSL, PAINT_CONST_GLSL, PAINT_GATE_GLSL } from "./paint_glsl";
 import { knotUniforms } from "./paint_model";
@@ -395,7 +395,7 @@ flat in vec4 vMaskId;
 in vec4 vColor;
 
 out vec4 finalColor;
-${GAP_FRAG_LIB}
+${GAP_FRAG_LIB_FAN}
 void main(void) {
   vec2 gfw = fwidth(vPos);
   float pxW = max(max(gfw.x, gfw.y), 1e-5);
