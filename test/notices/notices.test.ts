@@ -452,7 +452,7 @@ describe("the page", () => {
     for (const gone of ["Jarzynski", "Olano", "PCG"]) {
       expect(html, gone).not.toContain(gone);
     }
-    expect(html).not.toContain("Hershey");
+    expect(html).toContain("Hershey");
   });
 
   // K277: the research section, after the packages and before the footer.
@@ -803,7 +803,7 @@ describe("the real build", () => {
       expect(body, name).toMatch(/copyright/i);
     }
     // Credits ship, V8's notice for hypot2 among them; the Hershey
-    // acknowledgement waits for K115's data.
+    // acknowledgement ships since K115's data landed.
     expect(html).toContain("Inigo Quilez");
     // K277: the research section ships, after the packages.
     expect(html).toContain('<h2 id="research">Research and techniques</h2>');
@@ -811,7 +811,7 @@ describe("the real build", () => {
     expect(html.indexOf('id="software"')).toBeLessThan(html.indexOf('id="research"'));
     expect(html).toContain("Copyright 2014, the V8 project authors. All rights reserved.");
     expect(html).toContain("THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS");
-    expect(html).not.toContain("Hershey");
+    expect(html).toContain("Hershey");
     // Nothing from the deleted Vite template icons.
     expect(out.some((o) => /vite\.svg|typescript\.svg/.test(o.fileName))).toBe(false);
   }, 120_000);
