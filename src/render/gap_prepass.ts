@@ -48,7 +48,7 @@ import {
   extensions,
 } from "pixi.js";
 import type { Mesh, Renderer, Shader } from "pixi.js";
-import { fabricUniforms, setGapMaskSize, setGapSplitActive } from "./fabric_sdf";
+import { fabricUniforms, gapSplitActive, setGapMaskSize, setGapSplitActive } from "./fabric_sdf";
 import { knotUniformValues } from "./paint_model";
 import { bindGap, bindGapMask, sectionGapShader } from "./ribbon/ribbon_shader";
 
@@ -243,7 +243,7 @@ function targetComplete(renderer: Renderer): boolean {
 // Render the mask now (the system's prerender, or a probe).
 export function renderGapMask(renderer: Renderer): void {
   const src = SCENE;
-  if (!src || !PREPASS_ON || src.fills.length === 0) return;
+  if (!src || !PREPASS_ON || !gapSplitActive() || src.fills.length === 0) return;
   const gl = (renderer as unknown as { gl?: WebGL2RenderingContext }).gl ?? null;
   if (!detectGapSplit(gl)) return;
   ensureMaskSize(renderer.width, renderer.height);
@@ -313,7 +313,7 @@ class GapPrepassSystem {
     this.renderer = renderer;
   }
   prerender(options: { container: Container; target?: unknown }): void {
-    if (this.busy || !SCENE || !PREPASS_ON) return;
+    if (this.busy || !SCENE || !PREPASS_ON || !gapSplitActive()) return;
     if (options.target === (MASK as unknown)) return;
     this.busy = true;
     try {
