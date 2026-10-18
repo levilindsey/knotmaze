@@ -640,8 +640,8 @@ export const EXPLORE_GAP_SURE_GLSL = /* glsl */ `    bool exShaped = full && !fa
 export const EXPLORE_GAP_CUT_GLSL = /* glsl */ `    if (exShaped) {
       highp vec4 exT4 = texelFetch(uGapData, ivec2(4, row), 0);
       highp vec4 exT9 = texelFetch(uGapData, ivec2(9, row), 0);
-      highp vec2 exP0 = gapPt(row, bk);
-      highp vec2 exP1 = gapPt(row, bk + 1);
+      highp vec2 exP0 = gapOverPt(exT4, exT9, bk);
+      highp vec2 exP1 = gapOverPt(exT4, exT9, bk + 1);
       highp vec2 exAb = exP1 - exP0;
       highp float exBl = dot(exAb, exAb);
       highp float exBt = exBl > 1e-12 ? clamp(dot(p - exP0, exAb) / exBl, 0.0, 1.0) : 0.0;
@@ -760,8 +760,8 @@ export const EXPLORE_FAR_GLSL = `        if (bk2 >= 0) {
           highp float hb = clamp(0.5 + 0.5 * (d2 - d) / sk, 0.0, 1.0);
           highp float dS = mix(d2, d, hb) - sk * hb * (1.0 - hb);
           if (exShaped && !kExCutOn) {
-            highp vec2 exF0 = gapPt(row, bk2);
-            highp vec2 exF1 = gapPt(row, bk2 + 1);
+            highp vec2 exF0 = gapOverPt(t4, t9, bk2);
+            highp vec2 exF1 = gapOverPt(t4, t9, bk2 + 1);
             highp vec2 exFab = exF1 - exF0;
             highp float exFbl = dot(exFab, exFab);
             highp float exFbt = exFbl > 1e-12 ? clamp(dot(p - exF0, exFab) / exFbl, 0.0, 1.0) : 0.0;
@@ -846,7 +846,9 @@ export function exploreGapEdits(fan: boolean, decl: string): [string, string][] 
     [ANCHOR_DECL, decl + EXPLORE_LOOK_GLSL + ANCHOR_DECL],
     [ANCHOR_SURE, ANCHOR_SURE + (fan ? EXPLORE_FAN_SURE_GLSL : EXPLORE_GAP_SURE_GLSL)],
     [ANCHOR_BK, ANCHOR_BK + (fan ? EXPLORE_FAN_CUT_GLSL : EXPLORE_GAP_CUT_GLSL)],
-    [EXPLORE_PROT_ANCHOR_GLSL, EXPLORE_PROT_GLSL],
+    // K320 stage 1: a fan's library carries no protect block (fans never
+    // run it), so the fan edits have no protect anchor to scale.
+    ...(fan ? [] : [[EXPLORE_PROT_ANCHOR_GLSL, EXPLORE_PROT_GLSL] as [string, string]]),
     [EXPLORE_FAR_ANCHOR_GLSL, EXPLORE_FAR_GLSL],
     [EXPLORE_KEEP_ANCHOR_GLSL, EXPLORE_KEEP_GLSL],
     [ANCHOR_CASING, EXPLORE_GAP_SHAPE_GLSL + ANCHOR_CASING],
