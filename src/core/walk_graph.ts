@@ -158,6 +158,9 @@ export function buildWalkGraph(
   };
 
   graph.strands.forEach((strand, si) => {
+    // K115 stage 6b: a decorative (accent-mark) strand is never walked:
+    // its END tips are not vertices and it contributes no runs.
+    if (strand.decorative) return;
     const nodeCount = strand.isClosed
       ? strand.nodes.length - 1
       : strand.nodes.length;

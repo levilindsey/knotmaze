@@ -150,6 +150,37 @@ describe("text waypoints (K115 stage 2)", () => {
     expect(c.choices()).toEqual([]);
   });
 
+  it("walks café as four letters; the acute adds no stop (K115 stage 6b)", () => {
+    const { g, walk } = textWalk("café");
+    const plain = textWalk("cafe");
+    const wps = waypointsOf(g);
+    // Four letter waypoints plus the exit, exactly as the bare word.
+    expect(wps.length).toBe(5);
+    expect(wps[wps.length - 1]).toBe("mexit_a");
+    expect(walk.vertices.size).toBe(plain.walk.vertices.size);
+    expect(walk.edges.length).toBe(plain.walk.edges.length);
+    expect(walk.optimalLength).toBeCloseTo(plain.walk.optimalLength, 9);
+    // No mark-strand node is a walk vertex (no false dead ends).
+    for (const s of g.strands) {
+      if (!s.decorative) continue;
+      for (const id of s.nodes) expect(walk.vertices.has(id)).toBe(false);
+    }
+    // One tap per letter, in reading order, to a win.
+    const c = new FabricMazeController(walk);
+    const seen: string[] = [];
+    let result = "";
+    for (let step = 0; step < 200 && !c.solved; step++) {
+      result = c.tapEdge(bestChoice(c));
+      expect(result).toMatch(/advance|win/);
+      if (g.nodes.get(c.head)?.waypoint && seen[seen.length - 1] !== c.head) {
+        seen.push(c.head);
+      }
+    }
+    expect(result).toBe("win");
+    expect(seen).toEqual(wps);
+    expect(c.head).toBe("mexit_a");
+  });
+
   it("offers a spur dead end at a waypoint junction, and back", () => {
     const { walk } = textWalk("Welcome");
     // A waypoint with a one-run dead-end arm (a merge letter's spur).
