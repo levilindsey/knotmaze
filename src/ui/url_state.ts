@@ -274,6 +274,7 @@ export function applyAppearMode(
 
 export interface UrlParams {
   text: string; // K115 cursive text design ("" = lattice/maze design).
+  cartouche: string; // K115 stage 4a in-maze word ("" = no cartouche).
   seed: number;
   gridSize: number;
   // Lattice silhouette: rect (full lattice) or a sculpted mask shape.
@@ -691,6 +692,7 @@ export const LOAD_SETTLE_MAX = 5;
 // CODEC_PARAMS as well (param_codec.ts; a test fails until it is).
 export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   text: "",
+  cartouche: "",
   gridSize: 18,
   shape: "rect",
   startAnchor: "nw",
@@ -1289,6 +1291,7 @@ function readLegacy(
   return {
     ...base,
     text: readText(query, "txt", D.text),
+    cartouche: readText(query, "car", D.cartouche),
     gridSize: readNumber(query, "gs", D.gridSize),
     shape: readChoice(query, "shp", SHAPES, D.shape),
     startAnchor: readChoice(query, "sa", ANCHORS, D.startAnchor),

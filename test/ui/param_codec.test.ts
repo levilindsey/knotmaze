@@ -204,6 +204,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["trapTries", "number"],
   ["trapSurplus", "number"],
   ["text", "string"],
+  ["cartouche", "string"],
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
@@ -280,6 +281,7 @@ describe("codec table", () => {
     const stringParams = Object.keys(D).filter((k) => typeof D[k] === "string");
     expect(stringParams.filter((k) => !enumNames.includes(k))).toEqual([
       "text",
+      "cartouche",
       "pathColor",
       "backgroundBase",
       "backgroundAccent1",
@@ -459,6 +461,28 @@ describe("string param (K115 text)", () => {
   it("leaves the default empty string out of the token", () => {
     expect(encodeToken(7, { ...D, text: "" }, D)).toBe("7");
     expect(decodeToken("7", D).values.text).toBe("");
+  });
+});
+
+describe("string param (K115 stage 4a cartouche)", () => {
+  it("round-trips the cartouche word (space + capital), version stays 8", () => {
+    expect(CODEC_VERSION).toBe(8);
+    for (const cartouche of ["Knot Maze", "knot", "Daily Word", "café"]) {
+      const token = encodeToken(7, { ...D, cartouche }, D);
+      const d = decodeToken(token, D);
+      expect(d.error).toBeNull();
+      expect(d.values.cartouche).toBe(cartouche);
+      expect(d.values).toEqual({ ...D, cartouche });
+    }
+    expect(encodeToken(7, { ...D, cartouche: "" }, D)).toBe("7");
+    // Text still wins as its own design; both strings coexist in a token.
+    const both = decodeToken(
+      encodeToken(7, { ...D, text: "Welcome", cartouche: "Knot Maze" }, D),
+      D
+    );
+    expect(both.error).toBeNull();
+    expect(both.values.text).toBe("Welcome");
+    expect(both.values.cartouche).toBe("Knot Maze");
   });
 });
 

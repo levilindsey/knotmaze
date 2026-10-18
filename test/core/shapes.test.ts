@@ -339,3 +339,60 @@ describe("shaped lattices: maze fabric end to end", () => {
     expect(buildWalkGraph(g)).not.toBeNull();
   });
 });
+
+describe("buildCellMask with a cartouche hole (K115 stage 4a)", () => {
+  it("rect materializes and stamps", () => {
+    const m = buildCellMask("rect", 8, { cx: 3, cy: 3, w: 2, h: 2 });
+    expect(m).not.toBeNull();
+    expect(m!).toHaveLength(64);
+    expect(m![3 * 8 + 3]).toBe(false);
+    expect(m![3 * 8 + 4]).toBe(false);
+    expect(m![4 * 8 + 3]).toBe(false);
+    expect(m![4 * 8 + 4]).toBe(false);
+    expect(m![2 * 8 + 3]).toBe(true);
+    expect(m!.filter(Boolean)).toHaveLength(60);
+  });
+
+  it("no hole reproduces today's masks cell for cell (rect still null)", () => {
+    expect(buildCellMask("rect", 8)).toBeNull();
+    expect(buildCellMask("rect", 8, undefined)).toBeNull();
+    for (const shape of SCULPTED) {
+      expect(buildCellMask(shape, 12)).toEqual(buildCellMask(shape, 12, undefined));
+    }
+  });
+
+  it("a shaped mask stamps after the largest component", () => {
+    const base = buildCellMask("heart", 18)!;
+    expect(base).not.toBeNull();
+    let hole: { cx: number; cy: number; w: number; h: number } | null = null;
+    for (let cy = 1; cy + 3 < 18 && hole === null; cy++) {
+      for (let cx = 1; cx + 3 < 18; cx++) {
+        let ok = true;
+        for (let y = cy; y < cy + 3; y++) {
+          for (let x = cx; x < cx + 3; x++) {
+            if (!base[y * 18 + x]) ok = false;
+          }
+        }
+        if (ok) hole = { cx: cx + 1, cy: cy + 1, w: 1, h: 1 };
+        if (hole !== null) break;
+      }
+    }
+    expect(hole).not.toBeNull();
+    const stamped = buildCellMask("heart", 18, hole!);
+    expect(stamped).not.toBeNull();
+    expect(stamped![hole!.cy * 18 + hole!.cx]).toBe(false);
+    for (let i = 0; i < base.length; i++) {
+      if (i === hole!.cy * 18 + hole!.cx) continue;
+      expect(stamped![i]).toBe(base[i]);
+    }
+  });
+
+  it("a disconnecting hole returns the unstamped mask", () => {
+    const full = buildCellMask("rect", 8, { cx: 0, cy: 3, w: 8, h: 1 });
+    expect(full).not.toBeNull();
+    expect(full!.every(Boolean)).toBe(true);
+    const base = buildCellMask("circle", 18)!;
+    const split = buildCellMask("circle", 18, { cx: 0, cy: 9, w: 18, h: 1 });
+    expect(split).toEqual(base);
+  });
+});

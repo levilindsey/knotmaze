@@ -168,6 +168,49 @@ describe("the titled daily (K115 stage 3a)", () => {
   });
 });
 
+describe("the cartouche design (K115 stage 4a)", () => {
+  // Kill criterion: a cartouche maze sleeps; the two pinned frame
+  // junctions must not pump (junctions are occurrences on a pinned
+  // strand, so they inherit its anchors).
+  it("a rect cartouche design sleeps", { timeout: 180000 }, async () => {
+    const p = dailyParams(1);
+    const { graph } = buildSceneGraph({
+      ...p,
+      title: "",
+      cartouche: "knot",
+      seed: 11,
+      gridSize: 18,
+      shape: "rect",
+    });
+    expect(graph.nodes.has("cj_a")).toBe(true);
+    const ps = new ParticleSystem(graph);
+    const tuning: PhysicsTuning = {
+      temperature: 0,
+      slack: p.slack,
+      drag: p.drag,
+      repulsion: p.repulsion,
+      bend: p.bend,
+      smooth: p.smooth,
+      stiffness: p.stiffness,
+      gridAlign: p.gridAlign,
+      threadWidth: p.threadWidth,
+    };
+    const gate = new SleepGate();
+    let frames = 0;
+    let sleptAt = Number.POSITIVE_INFINITY;
+    while (ps.simTime < 15) {
+      const sim0 = ps.simTime;
+      ps.step(0.1, tuning);
+      if (++frames % 20 === 0) await breathe();
+      if (gate.frame(physicsQuiet(ps), ps.simTime - sim0)) {
+        sleptAt = ps.simTime;
+        break;
+      }
+    }
+    expect(sleptAt).toBeLessThan(15);
+  });
+});
+
 describe("frame-rate independent sleep (K63)", () => {
   // The same trajectory at 10 fps (pixi's 0.1-s cap) and 60 fps must
   // sleep at the same SIMULATED time, up to frame quantization (a loud

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildTextGraph, attachTitle } from "../../src/core/text_graph";
+import { buildTextGraph, attachTitle, attachCartouche, planCartoucheHole } from "../../src/core/text_graph";
+import { SHAPES, buildCellMask } from "../../src/core/shapes";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
@@ -279,6 +280,128 @@ describe("buildTextGraph (K115)", () => {
       height(buildTextGraph("hello")) * 2,
       6
     );
+  });
+
+  it("plans and attaches a cartouche word (K115 stage 4a)", () => {
+    const plan = planCartoucheHole("knot", 18, "rect");
+    expect(plan).not.toBeNull();
+    expect(plan!.xHeight).toBe(3);
+    expect(plan!.hole).toEqual({ cx: 3, cy: 6, w: 12, h: 6 });
+    expect(planCartoucheHole("knot", 18, "rect")).toEqual(plan);
+    // Centered on rect gs 18: the hole's center is the grid's center.
+    expect(plan!.hole.cx + plan!.hole.w / 2).toBe(9);
+    expect(plan!.hole.cy + plan!.hole.h / 2).toBe(9);
+    // The fitted word measured is the word placed: deterministic plans.
+    expect(planCartoucheHole("knot", 18, "circle")).not.toBeNull();
+    for (const shape of SHAPES) {
+      const p = planCartoucheHole("knot", 18, shape);
+      if (p === null) continue;
+      const base =
+        shape === "rect"
+          ? new Array(18 * 18).fill(true)
+          : buildCellMask(shape, 18)!;
+      for (let y = p.hole.cy - 1; y <= p.hole.cy + p.hole.h; y++) {
+        for (let x = p.hole.cx - 1; x <= p.hole.cx + p.hole.w; x++) {
+          expect(base[y * 18 + x], `${shape} ring ${x},${y}`).toBe(true);
+        }
+      }
+    }
+    expect(planCartoucheHole("knotmaze welcome hello", 6, "rect")).toBeNull();
+    expect(planCartoucheHole("", 18, "rect")).toBeNull();
+    expect(planCartoucheHole("é🎉", 18, "rect")).toBeNull();
+    const shrunk = planCartoucheHole("knotmaze", 18, "rect");
+    if (shrunk !== null) {
+      expect(shrunk.xHeight).toBeLessThanOrEqual(3);
+      expect(shrunk.xHeight).toBeGreaterThanOrEqual(2.0);
+    }
+
+    // An applied holed maze (scene steps up to the cuts).
+    const g = generateLatticeKnotwork({
+      gridSize: 18,
+      weaveDensity: 0.35,
+      turnBias: 0.7,
+      randSeed: 11,
+      shape: "rect",
+      hole: plan!.hole,
+    });
+    const mp = buildMazePlan(g, { ...DEFAULT_MAZE_PARAMS });
+    const hg = applyMazePlan(g, mp);
+    applyMazeCuts(g, mp, hg);
+    const mazeEndsBefore = [...g.nodes.values()]
+      .filter((n) => n.id.startsWith("mentr") || n.id.startsWith("mexit"))
+      .map((n) => `${n.id}:${n.latticePos}:${n.anchor ?? ""}`)
+      .sort();
+    const mazeEdgeIds = new Set(g.edges.keys());
+    const strandsBefore = g.strands.length;
+    const junctions = attachCartouche(g, "knot", plan!.hole, plan!.xHeight, 2);
+    expect(junctions).toEqual(["cj_a", "cj_b"]);
+    expect(checkStructure(g)).toBe(true);
+    expect(checkAlternation(g)).toBe(true);
+    expect(checkStrandPartition(g)).toBe(true);
+    for (const id of ["cj_a", "cj_b"]) {
+      expect(g.nodes.get(id)?.type).toBe(NODE_TYPE.JUNCTION);
+      expect(g.adjacency.get(id)).toHaveLength(3);
+    }
+    for (const s of g.strands.slice(strandsBefore)) {
+      expect(s.pinned).toBe(true);
+    }
+    expect(g.nodes.get("cstart")?.type).toBe(NODE_TYPE.TURN);
+    expect(g.nodes.get("cstart")?.waypoint).toBeUndefined();
+    expect(g.nodes.get("cend")?.type).toBe(NODE_TYPE.TURN);
+    expect(g.nodes.get("cend")?.waypoint).toBe(true);
+    const mazeEndsAfter = [...g.nodes.values()]
+      .filter((n) => n.id.startsWith("mentr") || n.id.startsWith("mexit"))
+      .map((n) => `${n.id}:${n.latticePos}:${n.anchor ?? ""}`)
+      .sort();
+    expect(mazeEndsAfter).toEqual(mazeEndsBefore);
+    // Word bounds inside the hole rect inset by 0.5 LU (connectors and
+    // the frame junctions themselves excluded).
+    const hx0 = 2 * plan!.hole.cx;
+    const hy0 = 2 * plan!.hole.cy;
+    const hx1 = 2 * (plan!.hole.cx + plan!.hole.w);
+    const hy1 = 2 * (plan!.hole.cy + plan!.hole.h);
+    for (const s of g.strands.slice(strandsBefore)) {
+      for (const id of s.nodes) {
+        if (id === "cj_a" || id === "cj_b" || id.startsWith("ccn")) continue;
+        const [x, y] = g.nodes.get(id)!.latticePos;
+        expect(x, id).toBeGreaterThanOrEqual(hx0 + 0.5 - 1e-9);
+        expect(x, id).toBeLessThanOrEqual(hx1 - 0.5 + 1e-9);
+        expect(y, id).toBeGreaterThanOrEqual(hy0 + 0.5 - 1e-9);
+        expect(y, id).toBeLessThanOrEqual(hy1 - 0.5 + 1e-9);
+      }
+    }
+    // Connectors proper-intersect no maze or word segment.
+    const wordEdgeIds = new Set(
+      g.strands.slice(strandsBefore).flatMap((s) => s.edgeIds)
+    );
+    for (const e of g.edges.values()) {
+      if (!e.id.startsWith("cce")) continue;
+      const [a, b] = e.latticePoints;
+      for (const otherId of [...mazeEdgeIds, ...wordEdgeIds]) {
+        if (otherId === e.id || otherId.startsWith("cce")) continue;
+        const oe = g.edges.get(otherId);
+        if (!oe) continue;
+        for (let i = 0; i + 1 < oe.latticePoints.length; i++) {
+          expect(
+            properX(a, b, oe.latticePoints[i], oe.latticePoints[i + 1]),
+            `${e.id} x ${otherId}`
+          ).toBe(false);
+        }
+      }
+    }
+    // A null attach leaves the graph as built.
+    const before = serialize(g);
+    expect(attachCartouche(g, "knot", plan!.hole, plan!.xHeight, 2)).toBeNull();
+    expect(serialize(g)).toBe(before);
+    const g2 = generateLatticeKnotwork({
+      gridSize: 8,
+      weaveDensity: 0.3,
+      turnBias: 0.6,
+      randSeed: 5,
+    });
+    const before2 = serialize(g2);
+    expect(attachCartouche(g2, "", { cx: 2, cy: 2, w: 2, h: 2 }, 3)).toBeNull();
+    expect(serialize(g2)).toBe(before2);
   });
 
   it("skips unsupported characters without throwing", () => {

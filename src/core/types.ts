@@ -69,6 +69,11 @@ export interface GenerationParams {
   // Silhouette mask id (core/shapes.ts). Absent or "rect" = the full
   // rectangular lattice, byte-identical to the pre-shape grower.
   shape?: ShapeId;
+  // K115 stage 4a: a rectangular cartouche hole stamped into the kept
+  // mask (integer cell coordinates of the hole's top-left cell; absent
+  // = today, byte-identical). See core/shapes.ts buildCellMask and
+  // core/text_graph.ts planCartoucheHole.
+  hole?: { cx: number; cy: number; w: number; h: number };
 }
 
 export interface ParamFieldConfig {

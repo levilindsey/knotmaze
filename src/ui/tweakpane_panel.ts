@@ -923,6 +923,11 @@ export function buildPanel(
     "Cursive text design: type words to build them as pinned knotwork text instead of the lattice maze. Empty = the usual design. Regenerates the design.",
     D.text, regenerateWhenDone
   );
+  row(
+    fDesign, p, "cartouche", { label: "Cartouche" },
+    "In-maze cartouche: a word inside the maze, in a stamped hole with a thread frame; walking it counts like any maze run (4-5 letters fit at grid 18). Empty = no cartouche. Regenerates the design.",
+    D.cartouche, regenerateWhenDone
+  );
   // SEED ROW: the design's seed as the link's base-36 token (?<seed>...).
   // Typing a seed (or any word - it hashes to one) and pressing Enter loads
   // that design; the dice button in the row rolls a random one. The row

@@ -469,3 +469,87 @@ maze.
   excluded like the title's arc (the word becomes a free detour the
   meters ignore, and a through-word shortest route would then
   understate the optimal the stars compare against)?
+
+## Stage 4a handoff (as built, 2026-10-18)
+
+Built on HEAD eac12a3. The E2 landmark cartouche ships as briefed,
+with three measured deviations (below). No no-cartouche pin moved:
+K87, the golden dailies, byte identity and the K74 pins are green
+unrefrozen; the only deliberate pin movements are the codec table's
+appended entry and the worker-host field counts (32 to 33).
+
+What landed, per area:
+
+- Mask and generation: `GenerationParams.hole`
+  (`src/core/types.ts`); `buildCellMask(shape, size, hole?)` in
+  `src/core/shapes.ts` stamps after the largest component and verifies
+  one remaining component of at least 2 cells with an orthogonal
+  flood, else returns the unstamped mask (for rect the unstamped
+  mask is the materialized full mask); the grower passes
+  `params.hole` through and is otherwise untouched.
+- Placement: `planCartoucheHole` in `src/core/text_graph.ts`
+  (`PAD_LU` 2, `FRAME_MIN` 2, `MIN_XHEIGHT` 2.0) measures at
+  x-height 3, shrinks once, sizes the hole from the measured word,
+  and takes the first centered candidate (distance to the kept
+  mask's centroid, ties by cy then cx) whose stamping stays one
+  component. Rect gs 18 "knot" pins at hole
+  `{cx: 3, cy: 6, w: 12, h: 6}`, x-height 3.
+- Attach: `attachCartouche` rebuilds the fitted word, centers it in
+  the hole, renames `mentr_a`/`mexit_a` to `cstart`/`cend` (cstart a
+  plain TURN, cend a TURN keeping its waypoint), splits the chosen
+  frame edges into degree-3 `cj_a`/`cj_b` junctions, and prepends /
+  appends Hermite lead-ins resampled to `MAX_EDGE_LU` on the pinned
+  main strand. Word ids that would collide with a title word's are
+  prefixed, so title and cartouche coexist. Scene order in
+  `buildSceneGraph`: plan before generation, title block unchanged,
+  cartouche attach after it, one hue slot per appended strand, then
+  the returned walk (forced when titled, plain otherwise).
+- Param: `cartouche` end to end (UrlParams and defaults beside
+  `text`, panel Cartouche row under Text, `SceneParams.cartouche`,
+  worker `SCENE_FIELDS` and `sceneParamsOf`, codec `str` appended
+  last at version 8, legacy override key `car`, `MAZE_PARAM_KEYS`
+  membership, never exempt).
+
+Deviations, each forced by a measurement:
+
+1. Junction spacing is a preference, not a hard gate. On swept
+   seeds the near-entry inner-pass edges keep only 1.25-1.9 LU from
+   the nearest host-strand junction, so the first spacing-keeping
+   pick lands on the frame's outer pass, whose lead-in must
+   proper-cross the inner pass: spacing as a hard gate and the
+   crossing assertion together leave no attach at all. Attach
+   therefore tries near-rect
+   candidates in the brief's ranked order, prefers the first that
+   also keeps `max(2, junctionSpacing)` from its host strand's
+   junctions, and otherwise takes the first whose connector crosses
+   nothing. The crossing assertion itself is unchanged and absolute:
+   no shipped connector crosses any maze or word segment, and the
+   sweep ships no empty hole.
+2. Start/exit equality is asserted against the frame alone (the
+   holed maze before the word), the stage-3 attach-order guarantee.
+   The hole itself can move the longest-pair pick against the
+   no-hole scene (rect gs 18 seed 11: `mexit_a` without a hole,
+   `mexit_b` with one, with or without the word), so equality to the
+   no-hole scene is not a property any attach order can give.
+3. Shaped refusal is common at gs 18 for "knot": the 12x6-cell hole
+   needs a solid kept block, so heart, star, fish, tree and ring
+   refuse (ordinary maze, no empty hole) while rect and circle
+   attach. The sweep asserts the kill criterion (a planned hole is
+   never left empty, frame-alone reaches exit) on every swept
+   design, attached or refused.
+
+Verification: full `npm test` green (including the new sweep,
+controller walk, codec/daily pins and the cartouche sleep test,
+slept at sim 5.0 on the rect design), `npm run build` and
+`npx tsc --noEmit` clean. Frozen pin: rect gs 18 seed 11 "knot" is
+919 nodes / 1257 edges / 80 strands, position hash `217408a4`.
+Screenshots in `.claude/probes/K115/stage4/` (build served on port
+5215, real-time diag/walk drivers, never virtual time):
+`load-closed.png` and `load-phw0-closed.png` (word "knot" at load,
+worker and `phw=0`, panel closed), `walked-two-letters.png` (gold
+trail from the entrance, through `cj_a`, two letters written, head
+inside the word), `fit-411.png` (whole design fits at 411 px, word
+legible). The brief's in-page pad probe was substituted by the
+sleep stepping plus those shots: the pinned word sits at its placed
+bounds at sleep and the frame stays outside the glyphs with the
+pad intact.
