@@ -1177,6 +1177,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   the desktop, K307 s1; K540 attributed G3-1's +0.39 s cold regression to the enlarged gap
   shaders' FXC compile gating first paint — this item is its fix). A deploy that changes a shader costs every player one cold compile
   (programs are cached by source), so a smaller or split program shortens every such load.
+  Design + measurements at bd3933a (frag now 48,737): `docs/design/K320_section_rgb.md` — rec: bundle the slim (Stage 1), prototype the split compile-only first (Stage 0 gate); four calls for Levi at its end.
 - **K338** · K324's side ideas (`docs/design/K324_realtime_minotaur.md`):
   a real-time close-calls stat (section 5), a Search speed knob (4.4),
   and a real-time sentry (roam 0, K296's analog).
