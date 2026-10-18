@@ -106,6 +106,7 @@ export const MAZE_PARAM_KEYS = [
   "entranceClearance",
   "exitClearance",
   "junctionSpacing",
+  "cartouche",
 ] as const satisfies readonly (keyof UrlParams)[];
 
 // A design's maze identity as text (numbers at link precision).

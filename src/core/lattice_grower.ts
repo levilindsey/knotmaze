@@ -60,7 +60,7 @@ export function generateLatticeKnotwork(
   // SHAPED LATTICES: an analytic silhouette mask over the cells (null for
   // rect = the full lattice). Computed without RNG, so the rect path's
   // consumption order is untouched (byte-identity guard).
-  const mask = buildCellMask(params.shape ?? "rect", size);
+  const mask = buildCellMask(params.shape ?? "rect", size, params.hole);
 
   const open = carveWalls(size, weaveDensityField, turnBiasField, mask);
   traceKnot(graph, size, open);

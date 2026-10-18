@@ -1,5 +1,5 @@
 import { generateLatticeKnotwork } from "./lattice_grower";
-import { buildTextGraph, attachTitle } from "./text_graph";
+import { buildTextGraph, attachTitle, attachCartouche, planCartoucheHole } from "./text_graph";
 import { buildWalkGraph } from "./walk_graph";
 import type { WalkGraph } from "./walk_graph";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "./maze_plan";
@@ -21,6 +21,8 @@ export interface SceneParams {
   text: string;
   // K115 stage 3a: the maze's title thread ("" = none; dailies derive it).
   title: string;
+  // K115 stage 4a: the in-maze cartouche word ("" = none).
+  cartouche: string;
   gridSize: number;
   weaveDensity: number;
   turnBias: number;
@@ -70,12 +72,19 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
     }
     return { graph, hueGroup: undefined };
   }
+  // K115 stage 4a: plan the cartouche hole before generation (maze
+  // fabric only; "" and knot mode generate exactly today's maze).
+  const cartouchePlan =
+    params.mazeFabric && params.cartouche
+      ? planCartoucheHole(params.cartouche, params.gridSize, params.shape)
+      : null;
   const genParams: GenerationParams = {
     gridSize: params.gridSize,
     weaveDensity: params.weaveDensity,
     turnBias: params.turnBias,
     randSeed: params.seed,
     shape: params.shape,
+    ...(cartouchePlan ? { hole: cartouchePlan.hole } : {}),
   };
   const graph = generateLatticeKnotwork(genParams);
 
@@ -155,5 +164,35 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
   if (!checkStructure(graph) || !checkAlternation(graph)) {
     console.warn("Knot invariants violated; generation bug.");
   }
+  // K115 stage 4a: hang the cartouche word across its hole AFTER the
+  // title block (the title's walk0 selection never sees the word, so a
+  // cartouche cannot move a daily's start or exit). The word only adds
+  // a route between two frame vertices; the frame alone was planned
+  // solvable, so start/exit and solvability are untouched.
+  if (cartouchePlan) {
+    const strandsBefore = graph.strands.length;
+    const junctions = attachCartouche(
+      graph,
+      params.cartouche,
+      cartouchePlan.hole,
+      cartouchePlan.xHeight,
+      params.junctionSpacing
+    );
+    if (junctions !== null) {
+      if (hueGroup) {
+        for (let i = strandsBefore; i < graph.strands.length; i++) {
+          hueGroup.push(strandsBefore);
+        }
+      }
+      walk = walk?.mazeStart
+        ? buildWalkGraph(graph, {
+            start: walk.start,
+            exit: walk.exit,
+            mazeStart: walk.mazeStart,
+          })
+        : buildWalkGraph(graph);
+    }
+  }
+
   return { graph, hueGroup, walk };
 }

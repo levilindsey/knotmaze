@@ -120,6 +120,23 @@ describe("the daily design", () => {
   });
 });
 
+describe("the cartouche and the daily (K115 stage 4a)", () => {
+  it("stays empty on a daily; maze identity, never exempt", () => {
+    expect(dailyParams(12).cartouche).toBe("");
+    expect(MAZE_PARAM_KEYS).toContain("cartouche");
+    expect((DAILY_EXEMPT_KEYS as readonly string[]).includes("cartouche")).toBe(
+      false
+    );
+    expect(isDailyDesign({ ...dailyParams(12), cartouche: "knot" }, 12)).toBe(
+      false
+    );
+    expect(
+      sameMaze(dailyParams(12), { ...dailyParams(12), cartouche: "knot" })
+    ).toBe(false);
+    expect(DAILY_DEF).toBe(2);
+  });
+});
+
 describe("the daily title (K115 stage 3a)", () => {
   it("derives Daily #N from the day number, and is no link param", () => {
     expect(dailyTitle(1)).toBe("Daily #1");
@@ -184,6 +201,7 @@ function otherValue(key: string, v: unknown): unknown {
   if (typeof v === "number") return v + 0.25;
   // pathColor and the custom background colors (K79).
   if (key === "text") return "Welcome";
+  if (key === "cartouche") return "knot";
   if (typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v)) {
     return v === "#123456" ? "#654321" : "#123456";
   }

@@ -472,6 +472,95 @@ describe("real-time respawn (K80)", () => {
   });
 });
 
+describe("the cartouche walk (K115 stage 4a)", () => {
+  it("walks the word as counted maze ground", () => {
+    const built = buildSceneGraph({
+      ...dailyParams(1),
+      title: "",
+      cartouche: "knot",
+      seed: 11,
+      gridSize: 18,
+      shape: "rect",
+    } as never);
+    const w = (built.walk ?? buildWalkGraph(built.graph))!;
+    expect(w.titleEdges).toBeUndefined();
+    expect(w.vertices.has("cj_a")).toBe(true);
+    expect(w.vertices.has("cj_b")).toBe(true);
+    const pinnedChain = (eid: number): boolean =>
+      built.graph.strands[w.edges[eid].chain].pinned === true;
+    // The main word strand's walk runs, in strand (writing) order.
+    const mainRoute = (): number[] => {
+      const main = built.graph.strands.find(
+        (s) => s.nodes.includes("cstart") && s.nodes.includes("cj_a")
+      )!;
+      const chain = built.graph.strands.indexOf(main);
+      return w.edges
+        .map((e, i) => i)
+        .filter((i) => w.edges[i].chain === chain);
+    };
+    const c = new FabricMazeController(w);
+    for (const eid of routeTo(w, w.start, "cj_a")) {
+      expect(c.tapEdge(eid)).toBe("advance");
+    }
+    expect(c.head).toBe("cj_a");
+    expect(c.visitedJunctions.has("cj_a")).toBe(true);
+    // Two frame runs and the word at the entry junction.
+    const atEntry = c.choices();
+    expect(atEntry).toHaveLength(3);
+    expect(atEntry.filter((e) => pinnedChain(e))).toHaveLength(1);
+    // One tap per run across the word, in writing order, end to end.
+    const route = mainRoute();
+    const distBefore = c.walkedDist;
+    const heads: string[] = [];
+    let at = "cj_a";
+    for (const eid of route) {
+      expect(c.tapEdge(eid)).toBe("advance");
+      heads.push(c.head);
+      const e = w.edges[eid];
+      at = e.va === at ? e.vb : e.va;
+      expect(c.head).toBe(at);
+    }
+    expect(heads[heads.length - 1]).toBe("cj_b");
+    expect(heads).toContain("cend");
+    expect(c.head).toBe("cj_b");
+    expect(c.walkedDist).toBeGreaterThan(distBefore);
+    // The word's arc is counted in the route home, like any maze run.
+    let counted = 0;
+    for (const eid of c.pathEdges) counted += w.edges[eid].length;
+    expect(c.pathLength).toBeCloseTo(counted, 9);
+    expect(c.visitedJunctions.has("cj_a")).toBe(true);
+    expect(c.visitedJunctions.has("cj_b")).toBe(true);
+    // Backtrack over the seam junction and re-advance.
+    const last = c.taps[c.taps.length - 1];
+    expect(c.tapEdge(last)).toBe("backtrack");
+    expect(c.head).not.toBe("cj_b");
+    expect(c.tapEdge(last)).toBe("advance");
+    expect(c.head).toBe("cj_b");
+    // A word spur tip is a dead end like any other.
+    const tip = [...w.vertices.values()].find(
+      (v) =>
+        v.isEnd &&
+        built.graph.strands[v.chain].pinned === true &&
+        v.id !== w.start &&
+        v.id !== w.exit
+    );
+    expect(tip).toBeDefined();
+    const c2 = new FabricMazeController(w);
+    for (const eid of routeTo(w, w.start, tip!.id)) {
+      expect(c2.tapEdge(eid)).toBe("advance");
+    }
+    expect(c2.head).toBe(tip!.id);
+    expect(c2.deadEndTips.has(tip!.id)).toBe(true);
+    expect(c2.choices()).toHaveLength(1);
+    // A replay arrives the same and replays the word walk.
+    const c3 = new FabricMazeController(w);
+    expect(c3.replay(c.taps)).toBe(true);
+    expect(c3.head).toBe(c.head);
+    expect(c3.taps).toEqual(c.taps);
+    expect(c3.pathLength).toBeCloseTo(c.pathLength, 9);
+  });
+});
+
 describe("the daily title walk (K115 stage 3a)", () => {
   const titledWalk = (): WalkGraph => {
     const built = buildSceneGraph({

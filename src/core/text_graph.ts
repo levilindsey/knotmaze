@@ -16,6 +16,8 @@ import { NODE_TYPE } from "./types";
 import type { Node, Strand, TangleGraph } from "./types";
 import { hypot2 } from "../util/det_math";
 import { buildWalkGraph } from "./walk_graph";
+import { buildCellMask } from "./shapes";
+import type { ShapeId } from "./shapes";
 
 type Pt = [number, number];
 
@@ -1222,6 +1224,536 @@ export function attachTitle(graph: TangleGraph, title: string): string | null {
   main.edgeIds.push(...connEdgeIds);
   main.nodes.push(...connNodeIds, "tseam");
   return "tseam";
+}
+
+// ---------------------------------------------------------------------------
+// K115 stage 4a: the cartouche (E2). planCartoucheHole fits a word into a
+// rectangular hole stamped in the kept mask (shapes.ts) and picks the
+// hole's cell; attachCartouche hangs the fitted word across the hole on
+// two frame junctions. Both follow docs/design/K115_stage4.md: pinned
+// word, landmark route (counted like any maze run), one hue slot.
+// ---------------------------------------------------------------------------
+
+export const PAD_LU = 2;
+export const FRAME_MIN = 2;
+export const MIN_XHEIGHT = 2.0;
+
+export interface CartoucheHole {
+  cx: number;
+  cy: number;
+  w: number;
+  h: number;
+}
+
+export interface CartouchePlan {
+  hole: CartoucheHole;
+  xHeight: number;
+}
+
+function textHasGlyph(text: string): boolean {
+  for (const ch of text) {
+    const code = ch.codePointAt(0) ?? -1;
+    if (code > 32 && code <= 126 && HERSHEY_SCRIPT[code - 32].strokes.length > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function graphBounds(
+  graph: TangleGraph
+): [number, number, number, number] {
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const n of graph.nodes.values()) {
+    if (n.latticePos[0] < x0) x0 = n.latticePos[0];
+    if (n.latticePos[0] > x1) x1 = n.latticePos[0];
+    if (n.latticePos[1] < y0) y0 = n.latticePos[1];
+    if (n.latticePos[1] > y1) y1 = n.latticePos[1];
+  }
+  return [x0, y0, x1, y1];
+}
+
+export function planCartoucheHole(
+  text: string,
+  gridSize: number,
+  shape: ShapeId
+): CartouchePlan | null {
+  if (!textHasGlyph(text)) return null;
+  const size = Math.max(2, Math.round(gridSize));
+  let mask: boolean[];
+  if (shape === "rect") {
+    mask = new Array(size * size).fill(true);
+  } else {
+    const kept = buildCellMask(shape, size);
+    if (kept === null) return null;
+    mask = kept;
+  }
+  let minCx = size;
+  let minCy = size;
+  let maxCx = -1;
+  let maxCy = -1;
+  let count = 0;
+  let sumX = 0;
+  let sumY = 0;
+  for (let cy = 0; cy < size; cy++) {
+    for (let cx = 0; cx < size; cx++) {
+      if (!mask[cy * size + cx]) continue;
+      if (cx < minCx) minCx = cx;
+      if (cx > maxCx) maxCx = cx;
+      if (cy < minCy) minCy = cy;
+      if (cy > maxCy) maxCy = cy;
+      count++;
+      sumX += 2 * cx + 1;
+      sumY += 2 * cy + 1;
+    }
+  }
+  if (count < 2 || maxCx < 0) return null;
+  const bboxW = maxCx - minCx + 1;
+  const bboxH = maxCy - minCy + 1;
+  const maxW = (bboxW - 2 * FRAME_MIN) * 2 - 2 * PAD_LU;
+  const maxH = (bboxH - 2 * FRAME_MIN) * 2 - 2 * PAD_LU;
+  if (maxW <= 0 || maxH <= 0) return null;
+  let word = buildTextGraph(text, { xHeight: 3 });
+  let wb = graphBounds(word);
+  let w = wb[2] - wb[0];
+  let h = wb[3] - wb[1];
+  if (!(w > 0) || !(h > 0)) return null;
+  let xHeight = 3;
+  if (w > maxW || h > maxH) {
+    const scale = Math.min(maxW / w, maxH / h);
+    xHeight = 3 * scale;
+    if (xHeight < MIN_XHEIGHT) return null;
+    word = buildTextGraph(text, { xHeight });
+    wb = graphBounds(word);
+    w = wb[2] - wb[0];
+    h = wb[3] - wb[1];
+    if (!(w > 0) || !(h > 0)) return null;
+  }
+  const W = Math.ceil((w + 2 * PAD_LU) / 2 - 0.000000001);
+  const H = Math.ceil((h + 2 * PAD_LU) / 2 - 0.000000001);
+  if (W < 1 || H < 1) return null;
+  const centX = sumX / count;
+  const centY = sumY / count;
+  interface Cand {
+    cx: number;
+    cy: number;
+    dist: number;
+  }
+  const cands: Cand[] = [];
+  for (let cy = 0; cy + H <= size; cy++) {
+    for (let cx = 0; cx + W <= size; cx++) {
+      if (cx < minCx + FRAME_MIN || cy < minCy + FRAME_MIN) continue;
+      if (cx + W - 1 > maxCx - FRAME_MIN || cy + H - 1 > maxCy - FRAME_MIN) {
+        continue;
+      }
+      let ok = true;
+      for (let yy = cy - 1; yy <= cy + H && ok; yy++) {
+        for (let xx = cx - 1; xx <= cx + W; xx++) {
+          if (xx < 0 || xx >= size || yy < 0 || yy >= size || !mask[yy * size + xx]) {
+            ok = false;
+            break;
+          }
+        }
+      }
+      if (!ok) continue;
+      const holeCx = 2 * cx + W;
+      const holeCy = 2 * cy + H;
+      const dx = holeCx - centX;
+      const dy = holeCy - centY;
+      cands.push({ cx, cy, dist: dx * dx + dy * dy });
+    }
+  }
+  cands.sort((a, b) => a.dist - b.dist || a.cy - b.cy || a.cx - b.cx);
+  for (const c of cands) {
+    const hole: CartoucheHole = { cx: c.cx, cy: c.cy, w: W, h: H };
+    const stamped = buildCellMask(shape, size, hole);
+    if (stamped === null) continue;
+    if (stamped[c.cy * size + c.cx]) continue;
+    return { hole, xHeight };
+  }
+  return null;
+}
+
+function resampleConnector(pts: Pt[]): Pt[] {
+  const out: Pt[] = [];
+  for (let i = 0; i + 1 < pts.length; i++) {
+    const a = pts[i];
+    const b = pts[i + 1];
+    const len = hypot2(b[0] - a[0], b[1] - a[1]);
+    let chunks = Math.ceil(len / MAX_EDGE_LU - 0.000000001);
+    if (chunks < 1) chunks = 1;
+    for (let c = 1; c <= chunks; c++) {
+      out.push(c === chunks ? [b[0], b[1]] : lerpPt(a, b, c / chunks));
+    }
+  }
+  return out;
+}
+
+function freshId(graph: TangleGraph, prefix: string): string {
+  let n = 0;
+  while (graph.nodes.has(`${prefix}${n}`) || graph.edges.has(`${prefix}${n}`)) n++;
+  return `${prefix}${n}`;
+}
+
+function splitFrameEdge(
+  graph: TangleGraph,
+  edgeId: string,
+  junctionId: string,
+  pos: Pt
+): void {
+  let strandIdx = -1;
+  let edgeIdx = -1;
+  graph.strands.forEach((s, i) => {
+    const j = s.edgeIds.indexOf(edgeId);
+    if (j >= 0) {
+      strandIdx = i;
+      edgeIdx = j;
+    }
+  });
+  if (strandIdx < 0) throw new Error(`cartouche: edge ${edgeId} not on a strand`);
+  const strand = graph.strands[strandIdx];
+  const edge = graph.edges.get(edgeId)!;
+  const p0 = edge.latticePoints[0];
+  const p1 = edge.latticePoints[edge.latticePoints.length - 1];
+  graph.nodes.set(junctionId, {
+    id: junctionId,
+    type: NODE_TYPE.JUNCTION,
+    latticePos: [pos[0], pos[1]],
+  });
+  graph.adjacency.set(junctionId, []);
+  const e1 = `${junctionId}_e0`;
+  const e2 = `${junctionId}_e1`;
+  graph.edges.set(e1, {
+    id: e1,
+    nodeA: edge.nodeA,
+    nodeB: junctionId,
+    latticePoints: [
+      [p0[0], p0[1]],
+      [pos[0], pos[1]],
+    ],
+  });
+  graph.edges.set(e2, {
+    id: e2,
+    nodeA: junctionId,
+    nodeB: edge.nodeB,
+    latticePoints: [
+      [pos[0], pos[1]],
+      [p1[0], p1[1]],
+    ],
+  });
+  const rm = (nodeId: string): void => {
+    const list = graph.adjacency.get(nodeId)!;
+    const i = list.indexOf(edgeId);
+    if (i >= 0) list.splice(i, 1);
+  };
+  rm(edge.nodeA);
+  rm(edge.nodeB);
+  graph.edges.delete(edgeId);
+  graph.adjacency.get(edge.nodeA)!.push(e1);
+  graph.adjacency.get(junctionId)!.push(e1, e2);
+  graph.adjacency.get(edge.nodeB)!.push(e2);
+  strand.edgeIds.splice(edgeIdx, 1, e1, e2);
+  strand.nodes.splice(edgeIdx + 1, 0, junctionId);
+}
+
+export function attachCartouche(
+  graph: TangleGraph,
+  text: string,
+  hole: CartoucheHole,
+  xHeight: number,
+  junctionSpacing = 2
+): [string, string] | null {
+  if (!textHasGlyph(text)) return null;
+  if (
+    graph.nodes.has("cj_a") ||
+    graph.nodes.has("cj_b") ||
+    graph.nodes.has("cstart") ||
+    graph.nodes.has("cend")
+  ) {
+    return null;
+  }
+  const word = buildTextGraph(text, { xHeight });
+  const wb0 = graphBounds(word);
+  if (!Number.isFinite(wb0[0])) return null;
+  const holeX0 = 2 * hole.cx;
+  const holeY0 = 2 * hole.cy;
+  const holeX1 = 2 * (hole.cx + hole.w);
+  const holeY1 = 2 * (hole.cy + hole.h);
+  const holeCx = (holeX0 + holeX1) / 2;
+  const dx = holeCx - (wb0[0] + wb0[2]) / 2;
+  const dy = (holeY0 + holeY1) / 2 - (wb0[1] + wb0[3]) / 2;
+  for (const n of word.nodes.values()) {
+    n.latticePos = [n.latticePos[0] + dx, n.latticePos[1] + dy];
+  }
+  for (const e of word.edges.values()) {
+    e.latticePoints = e.latticePoints.map(
+      (p) => [p[0] + dx, p[1] + dy] as Pt
+    );
+  }
+  const startNode = word.nodes.get("mentr_a");
+  const endNode = word.nodes.get("mexit_a");
+  if (!startNode || !endNode) return null;
+  const startPos: Pt = [startNode.latticePos[0], startNode.latticePos[1]];
+  const endPos: Pt = [endNode.latticePos[0], endNode.latticePos[1]];
+  const entryPt: Pt = [holeX0, startPos[1]];
+  const exitPt: Pt = [holeX1, endPos[1]];
+  const main0 = word.strands[0];
+  if (!main0 || main0.nodes.length < 2) return null;
+  const secondNode = word.nodes.get(main0.nodes[1]);
+  const prevNode = word.nodes.get(main0.nodes[main0.nodes.length - 2]);
+  if (!secondNode || !prevNode) return null;
+  const firstTan: Pt = [
+    secondNode.latticePos[0] - startPos[0],
+    secondNode.latticePos[1] - startPos[1],
+  ];
+  const lastTan: Pt = [
+    endPos[0] - prevNode.latticePos[0],
+    endPos[1] - prevNode.latticePos[1],
+  ];
+  const minSep = Math.max(2, junctionSpacing);
+  // Frame candidates: every maze edge with a lattice point on the hole
+  // rect's perimeter or a midpoint within 1.0 LU of the rect, ranked by
+  // midpoint distance to the projected lead-in (west half) and lead-out
+  // (east half) points. A candidate's spacing is its Euclidean distance
+  // to the nearest junction on its own host strand (design 4.2's
+  // junctions on the frame; junctions on parallel passes are ordinary
+  // maze spacing). Candidates are tried in ranked order and the first
+  // whose connector crosses nothing wins, preferring one that also
+  // keeps the spacing: on swept seeds the nearest inner-pass edges
+  // keep less than 2 LU from a host junction, and the first
+  // spacing-keeping edge is on the outer pass, whose connector must
+  // cross the inner pass - spacing as a hard gate and the crossing
+  // assertion together leave no attach at all there.
+  interface FCand {
+    edgeId: string;
+    mid: Pt;
+    dEntry: number;
+    dExit: number;
+    clear: number;
+  }
+  const cands: FCand[] = [];
+  for (const e of graph.edges.values()) {
+    const lp = e.latticePoints;
+    if (lp.length < 2) continue;
+    const mid: Pt = [
+      (lp[0][0] + lp[lp.length - 1][0]) / 2,
+      (lp[0][1] + lp[lp.length - 1][1]) / 2,
+    ];
+    const rdx = Math.max(holeX0 - mid[0], 0, mid[0] - holeX1);
+    const rdy = Math.max(holeY0 - mid[1], 0, mid[1] - holeY1);
+    let onPerim = false;
+    for (const p of lp) {
+      const onVert =
+        (Math.abs(p[0] - holeX0) < 0.000000001 ||
+          Math.abs(p[0] - holeX1) < 0.000000001) &&
+        p[1] >= holeY0 - 0.000000001 &&
+        p[1] <= holeY1 + 0.000000001;
+      const onHoriz =
+        (Math.abs(p[1] - holeY0) < 0.000000001 ||
+          Math.abs(p[1] - holeY1) < 0.000000001) &&
+        p[0] >= holeX0 - 0.000000001 &&
+        p[0] <= holeX1 + 0.000000001;
+      if (onVert || onHoriz) onPerim = true;
+    }
+    if (!onPerim && hypot2(rdx, rdy) > 1.0) continue;
+    const host = graph.strands.find((s) => s.edgeIds.includes(e.id));
+    if (!host) continue;
+    let clear = Infinity;
+    for (const id of host.nodes) {
+      const n = graph.nodes.get(id);
+      if (!n || n.type !== NODE_TYPE.JUNCTION) continue;
+      const d = hypot2(mid[0] - n.latticePos[0], mid[1] - n.latticePos[1]);
+      if (d < clear) clear = d;
+    }
+    cands.push({
+      edgeId: e.id,
+      mid,
+      dEntry: hypot2(mid[0] - entryPt[0], mid[1] - entryPt[1]),
+      dExit: hypot2(mid[0] - exitPt[0], mid[1] - exitPt[1]),
+      clear,
+    });
+  }
+  const mazeSegs: Array<[Pt, Pt]> = [];
+  for (const e of graph.edges.values()) {
+    for (let i = 0; i + 1 < e.latticePoints.length; i++) {
+      mazeSegs.push([e.latticePoints[i], e.latticePoints[i + 1]]);
+    }
+  }
+  const wordSegs: Array<[Pt, Pt]> = [];
+  for (const e of word.edges.values()) {
+    for (let i = 0; i + 1 < e.latticePoints.length; i++) {
+      wordSegs.push([e.latticePoints[i], e.latticePoints[i + 1]]);
+    }
+  }
+  const crossesAny = (pts: Pt[]): boolean => {
+    for (let i = 0; i + 1 < pts.length; i++) {
+      for (const [c, d] of mazeSegs) {
+        if (properIntersect(pts[i], pts[i + 1], c, d)) return true;
+      }
+      for (const [c, d] of wordSegs) {
+        if (properIntersect(pts[i], pts[i + 1], c, d)) return true;
+      }
+    }
+    return false;
+  };
+  const byId = (a: FCand, b: FCand): number =>
+    a.edgeId < b.edgeId ? -1 : a.edgeId > b.edgeId ? 1 : 0;
+  const west = cands
+    .filter((c) => c.mid[0] < holeCx)
+    .sort((a, b) => a.dEntry - b.dEntry || byId(a, b));
+  const east = cands
+    .filter((c) => c.mid[0] >= holeCx)
+    .sort((a, b) => a.dExit - b.dExit || byId(a, b));
+  const leadInFor = (mid: Pt): Pt[] => [
+    mid,
+    ...hermitePts(mid, [1, 0], startPos, firstTan),
+    startPos,
+  ];
+  const leadOutFor = (mid: Pt): Pt[] => [
+    endPos,
+    ...hermitePts(endPos, lastTan, mid, [1, 0]),
+    mid,
+  ];
+  const choose = (
+    list: FCand[],
+    make: (mid: Pt) => Pt[],
+    other: Pt | null
+  ): { cand: FCand; pts: Pt[] } | null => {
+    let firstOk: { cand: FCand; pts: Pt[] } | null = null;
+    for (const c of list) {
+      if (
+        other !== null &&
+        hypot2(c.mid[0] - other[0], c.mid[1] - other[1]) <
+          minSep - 0.000000001
+      ) {
+        continue;
+      }
+      const pts = make(c.mid);
+      if (crossesAny(pts)) continue;
+      const hit = { cand: c, pts };
+      if (c.clear >= minSep - 0.000000001) return hit;
+      if (firstOk === null) firstOk = hit;
+    }
+    return firstOk;
+  };
+  const westHit = choose(west, leadInFor, null);
+  if (westHit === null) return null;
+  const eastHit = choose(east, leadOutFor, westHit.cand.mid);
+  if (eastHit === null || eastHit.cand.edgeId === westHit.cand.edgeId) {
+    return null;
+  }
+  const westPick = westHit.cand;
+  const eastPick = eastHit.cand;
+  const cjA: Pt = [westPick.mid[0], westPick.mid[1]];
+  const cjB: Pt = [eastPick.mid[0], eastPick.mid[1]];
+  const leadInRaw: Pt[] = westHit.pts;
+  const leadOutRaw: Pt[] = eastHit.pts;
+
+  renameGraphNode(word, "mentr_a", "cstart");
+  renameGraphNode(word, "mexit_a", "cend");
+  for (const id of [...word.nodes.keys()]) {
+    if (id === "cstart" || id === "cend") continue;
+    if (!graph.nodes.has(id)) continue;
+    let nid = `c${id}`;
+    while (word.nodes.has(nid) || graph.nodes.has(nid)) nid = `c${nid}`;
+    renameGraphNode(word, id, nid);
+  }
+  for (const eid of [...word.edges.keys()]) {
+    if (!graph.edges.has(eid)) continue;
+    let nid = `c${eid}`;
+    while (word.edges.has(nid) || graph.edges.has(nid)) nid = `c${nid}`;
+    const e = word.edges.get(eid)!;
+    word.edges.delete(eid);
+    e.id = nid;
+    word.edges.set(nid, e);
+    for (const list of word.adjacency.values()) {
+      const i = list.indexOf(eid);
+      if (i >= 0) list[i] = nid;
+    }
+    for (const s of word.strands) {
+      for (let i = 0; i < s.edgeIds.length; i++) {
+        if (s.edgeIds[i] === eid) s.edgeIds[i] = nid;
+      }
+    }
+  }
+  const cstart = word.nodes.get("cstart")!;
+  cstart.type = NODE_TYPE.TURN;
+  delete cstart.waypoint;
+  const cend = word.nodes.get("cend")!;
+  cend.type = NODE_TYPE.TURN;
+  splitFrameEdge(graph, westPick.edgeId, "cj_a", cjA);
+  splitFrameEdge(graph, eastPick.edgeId, "cj_b", cjB);
+  for (const n of word.nodes.values()) graph.nodes.set(n.id, n);
+  for (const n of word.nodes.values()) {
+    graph.adjacency.set(n.id, (word.adjacency.get(n.id) ?? []).slice());
+  }
+  for (const e of word.edges.values()) graph.edges.set(e.id, e);
+  const buildConnector = (
+    fromId: string,
+    fromPos: Pt,
+    pts: Pt[],
+    toId: string
+  ): { edgeIds: string[]; nodeIds: string[] } => {
+    const edgeIds: string[] = [];
+    const nodeIds: string[] = [];
+    let prevId = fromId;
+    let prevPos = fromPos;
+    pts.forEach((p, i) => {
+      const isLast = i === pts.length - 1;
+      const nodeId = isLast ? toId : freshId(graph, "ccn");
+      if (!isLast) {
+        graph.nodes.set(nodeId, {
+          id: nodeId,
+          type: NODE_TYPE.TURN,
+          latticePos: [p[0], p[1]],
+        });
+        graph.adjacency.set(nodeId, []);
+        nodeIds.push(nodeId);
+      }
+      const eid = freshId(graph, "cce");
+      graph.edges.set(eid, {
+        id: eid,
+        nodeA: prevId,
+        nodeB: nodeId,
+        latticePoints: [
+          [prevPos[0], prevPos[1]],
+          [p[0], p[1]],
+        ],
+      });
+      graph.adjacency.get(prevId)!.push(eid);
+      graph.adjacency.get(nodeId)!.push(eid);
+      edgeIds.push(eid);
+      prevId = nodeId;
+      prevPos = p;
+    });
+    return { edgeIds, nodeIds };
+  };
+  const leadIn = buildConnector(
+    "cj_a",
+    cjA,
+    resampleConnector(leadInRaw),
+    "cstart"
+  );
+  const leadOut = buildConnector(
+    "cend",
+    endPos,
+    resampleConnector(leadOutRaw),
+    "cj_b"
+  );
+  for (const s of word.strands) graph.strands.push(s);
+  const main = word.strands[0];
+  main.edgeIds = [...leadIn.edgeIds, ...main.edgeIds, ...leadOut.edgeIds];
+  main.nodes = [
+    "cj_a",
+    ...leadIn.nodeIds,
+    ...main.nodes,
+    ...leadOut.nodeIds,
+    "cj_b",
+  ];
+  return ["cj_a", "cj_b"];
 }
 
 // Over/under: run-phase parity solver (design section 3.5)

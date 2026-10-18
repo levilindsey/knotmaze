@@ -2,13 +2,28 @@ import { describe, it, expect } from "vitest";
 import { buildSceneGraph } from "../../src/core/scene_graph";
 import type { SceneParams } from "../../src/core/scene_graph";
 import { buildWalkGraph } from "../../src/core/walk_graph";
-import { SHAPES } from "../../src/core/shapes";
+import { SHAPES, planAnchors } from "../../src/core/shapes";
+import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
+import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
+import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
+import { planCartoucheHole } from "../../src/core/text_graph";
+import { walkDistances } from "../../src/core/walk_graph";
+import type { WalkGraph } from "../../src/core/walk_graph";
 import { dailyParams, dailyTitle } from "../../src/ui/daily_link";
 
 // K115 stage 3a: titled scenes (the daily title thread).
 
 function scene(n: number, over: Partial<SceneParams> = {}): SceneParams {
   return { ...dailyParams(n), title: dailyTitle(n), ...over };
+}
+
+function hashText(text: string): string {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(16);
 }
 
 function serialize(g: {
@@ -125,6 +140,159 @@ describe("titled scenes (K115 stage 3a)", () => {
             `${shape} gs${gridSize}`
           ).toBeCloseTo(walk0.optimalLength, 9);
         }
+      }
+    }
+  );
+});
+
+describe("cartouche scenes (K115 stage 4a)", () => {
+  function cartoucheScene(
+    word: string,
+    seed: number,
+    shape: SceneParams["shape"],
+    gridSize: number
+  ): SceneParams {
+    return {
+      ...dailyParams(1),
+      title: "",
+      cartouche: word,
+      seed,
+      shape,
+      gridSize,
+    } as SceneParams;
+  }
+
+  // The frame alone (holed maze, no word): scene steps up to the cuts.
+  function frameWalk(base: SceneParams): WalkGraph | null {
+    const plan = planCartoucheHole(base.cartouche, base.gridSize, base.shape);
+    if (plan === null) {
+      return buildWalkGraph(
+        buildSceneGraph({ ...base, cartouche: "" }).graph
+      );
+    }
+    const g = generateLatticeKnotwork({
+      gridSize: base.gridSize,
+      weaveDensity: base.weaveDensity,
+      turnBias: base.turnBias,
+      randSeed: base.seed,
+      shape: base.shape,
+      hole: plan.hole,
+    });
+    const mp = buildMazePlan(g, {
+      ...DEFAULT_MAZE_PARAMS,
+      branchDensity: base.branchDensity,
+      fourWayFraction: base.fourWayFraction,
+      deadEndDensity: base.deadEndDensity,
+      deadEndLength: base.deadEndLength,
+      hCutShare: base.hCutShare,
+      exitCorridor: base.exitCorridor,
+      exitFlank: base.exitFlank,
+      exitTaperRadius: base.exitTaperRadius,
+      exitTaperStrength: base.exitTaperStrength,
+      entranceClearance: base.entranceClearance,
+      exitClearance: base.exitClearance,
+      junctionSpacing: base.junctionSpacing,
+      ...planAnchors(base.shape, base.gridSize, base.startAnchor, base.exitAnchor),
+    });
+    const hg = applyMazePlan(g, mp);
+    applyMazeCuts(g, mp, hg);
+    return buildWalkGraph(g);
+  }
+
+  it("pins a rect gs 18 cartouche scene (frozen counts + hash)", () => {
+    const s = buildSceneGraph(cartoucheScene("knot", 11, "rect", 18));
+    expect(s.graph.nodes.size).toBe(919);
+    expect(s.graph.edges.size).toBe(1257);
+    expect(s.graph.strands.length).toBe(80);
+    expect(hashText(serialize(s.graph))).toBe("217408a4");
+    expect(s.walk?.start).toBe("mentr_b");
+    expect(s.walk?.exit).toBe("mexit_b");
+    // One hue slot per appended word strand, all the first one's index.
+    expect(s.hueGroup).toHaveLength(s.graph.strands.length);
+    const pinnedIdx = s.graph.strands
+      .map((st, i) => (st.pinned === true ? i : -1))
+      .filter((i) => i >= 0);
+    expect(pinnedIdx.length).toBeGreaterThan(0);
+    for (const i of pinnedIdx) expect(s.hueGroup![i]).toBe(pinnedIdx[0]);
+    const again = buildSceneGraph(cartoucheScene("knot", 11, "rect", 18));
+    expect(serialize(again.graph)).toBe(serialize(s.graph));
+    expect(again.walk!.edges).toEqual(s.walk!.edges);
+  });
+
+  it("keeps title and cartouche as two hue slots, title first", () => {
+    const s = buildSceneGraph({
+      ...dailyParams(12),
+      title: dailyTitle(12),
+      cartouche: "knot",
+    } as SceneParams);
+    expect(s.walk?.start).toBe("mentr_a");
+    expect(s.walk?.mazeStart).toBe("tseam");
+    expect(s.graph.nodes.has("cj_a")).toBe(true);
+    expect(s.hueGroup).toHaveLength(s.graph.strands.length);
+  });
+
+  it("ships an ordinary maze when the word refuses (gs 6, long word)", () => {
+    const withWord = buildSceneGraph(
+      cartoucheScene("knotmaze welcome", 11, "rect", 6)
+    );
+    const plain = buildSceneGraph(cartoucheScene("", 11, "rect", 6));
+    expect(withWord.graph.nodes.has("cj_a")).toBe(false);
+    expect(serialize(withWord.graph)).toBe(serialize(plain.graph));
+  });
+
+  it(
+    "never disconnects start/exit (solvability sweep)",
+    { timeout: 180000 },
+    () => {
+      const cases: Array<[string, number, SceneParams["shape"], number]> = [];
+      for (const word of ["knot", "maze"]) {
+        for (const seed of [11, 23]) {
+          for (const shape of ["rect", "heart", "ring", "circle"] as const) {
+            for (const gs of [12, 18]) cases.push([word, seed, shape, gs]);
+          }
+        }
+      }
+      for (const shape of SHAPES) cases.push(["knot", 11, shape, 18]);
+      for (const [word, seed, shape, gs] of cases) {
+        const base = cartoucheScene(word, seed, shape, gs);
+        const label = `${word} seed${seed} ${shape} gs${gs}`;
+        const plan = planCartoucheHole(word, gs, shape);
+        const s = buildSceneGraph(base);
+        const attached = s.graph.nodes.has("cj_a");
+        // Kill criterion: a planned hole is never left empty.
+        expect([label, plan !== null, attached], label).toEqual([
+          label,
+          plan !== null,
+          plan !== null ? true : attached,
+        ]);
+        if (plan !== null) expect(attached, label).toBe(true);
+        const w = s.walk ?? buildWalkGraph(s.graph);
+        expect(w, label).not.toBeNull();
+        expect(Number.isFinite(w!.optimalLength), label).toBe(true);
+        const fw = frameWalk(base);
+        expect(fw, label).not.toBeNull();
+        expect([label, w!.start, w!.exit], label).toEqual([
+          label,
+          fw!.start,
+          fw!.exit,
+        ]);
+        // With every word walk edge removed, the frame alone still
+        // connects start to exit.
+        const keep = s.graph.strands.map((st) => st.pinned !== true);
+        const verts = new Map(
+          [...w!.vertices].map(([id, v]) => [
+            id,
+            {
+              ...v,
+              edges: v.edges.filter((eid) => keep[w!.edges[eid].chain]),
+            },
+          ])
+        );
+        const d = walkDistances(verts as never, w!.edges, w!.start);
+        expect(
+          [label, Number.isFinite(d.get(w!.exit)!)],
+          label
+        ).toEqual([label, true]);
       }
     }
   );

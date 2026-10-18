@@ -163,8 +163,12 @@ const SHAPE_FNS: Record<Exclude<ShapeId, "rect">, ShapeFn> = {
 export function buildCellMask(
   shape: ShapeId,
   size: number
-): boolean[] | null {
-  if (shape === "rect") return null;
+, hole?: { cx: number; cy: number; w: number; h: number }): boolean[] | null {
+  if (shape === "rect") {
+    if (hole === undefined) return null;
+    const full: boolean[] = new Array(size * size).fill(true);
+    return stampHole(full, size, hole);
+  }
   const fn = SHAPE_FNS[shape];
   const mask: boolean[] = new Array(size * size).fill(false);
   for (let cy = 0; cy < size; cy++) {
@@ -174,7 +178,62 @@ export function buildCellMask(
       mask[cy * size + cx] = fn(nx, ny);
     }
   }
-  return keepLargestComponent(mask, size) >= 2 ? mask : null;
+  if (keepLargestComponent(mask, size) < 2) return null;
+  if (hole === undefined) return mask;
+  return stampHole(mask, size, hole);
+}
+
+// K115 stage 4a: stamp a cartouche hole into a kept mask. Returns the
+// stamped mask when the remaining cells stay ONE orthogonally-connected
+// component of at least 2 cells, else the unstamped mask (a bad caller
+// must never silently split a maze; planCartoucheHole never passes
+// such a hole, and a test asserts the two agree).
+function stampHole(
+  mask: boolean[],
+  size: number,
+  hole: { cx: number; cy: number; w: number; h: number }
+): boolean[] {
+  const stamped = mask.slice();
+  for (let dy = 0; dy < hole.h; dy++) {
+    for (let dx = 0; dx < hole.w; dx++) {
+      const cx = hole.cx + dx;
+      const cy = hole.cy + dy;
+      if (cx >= 0 && cx < size && cy >= 0 && cy < size) {
+        stamped[cy * size + cx] = false;
+      }
+    }
+  }
+  let kept = 0;
+  let components = 0;
+  const seen: boolean[] = new Array(stamped.length).fill(false);
+  const queue: number[] = [];
+  for (let i = 0; i < stamped.length; i++) {
+    if (!stamped[i]) continue;
+    kept++;
+    if (seen[i]) continue;
+    components++;
+    seen[i] = true;
+    queue.length = 0;
+    queue.push(i);
+    for (let hd = 0; hd < queue.length; hd++) {
+      const j = queue[hd];
+      const x = j % size;
+      const y = (j - x) / size;
+      const visit = (nx: number, ny: number): void => {
+        if (nx < 0 || nx >= size || ny < 0 || ny >= size) return;
+        const k = ny * size + nx;
+        if (stamped[k] && !seen[k]) {
+          seen[k] = true;
+          queue.push(k);
+        }
+      };
+      visit(x + 1, y);
+      visit(x - 1, y);
+      visit(x, y + 1);
+      visit(x, y - 1);
+    }
+  }
+  return components === 1 && kept >= 2 ? stamped : mask;
 }
 
 // Zero every in-mask cell outside the largest orthogonally-connected
