@@ -1180,6 +1180,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   Design + measurements at bd3933a (frag now 48,737): `docs/design/K320_section_rgb.md` — rec: bundle the slim (Stage 1), prototype the split compile-only first (Stage 0 gate); four calls for Levi at its end.
   Stage 0 verdict (eac12a3, probe-only): the split PASSES the >=0.5s gate — cold medians full 3.74s vs paint-only 1.90s / gap-only 0.51s (saving ~1.84s); `.claude/probes/K320/stage0_results.md`.
   Stage 1 done (this commit): the bundled slim (O1+O3; O4 waits on call 1, O7 unmeasured) — section-rgb frag 48,737 -> 46,310, junction-field 29,599 -> 26,305, arm-strip 33,122 -> 31,049, pluck-still 21,075 -> 19,960; budget guard `test/render/k320_slim.test.ts`; evidence `.claude/probes/K320/results.md`. Stage 2 (the split) remains, through the Stage 0 gate and Levi's calls.
+  Stage 2 brief (docs only): `docs/design/K320_stage2.md` — gap pre-pass into a canvas-sized RGBA16F mask (keep + draw index, dirty-gated like the arm strips), paint-only section sampling it; master + explore split, fans/still keep the library; fallback to the combined programs where no half-float target; sub-steps 2a data plane / 2b split / 2c registry + gate measure; five calls at its end (rec: build as designed).
 - **K338** · K324's side ideas (`docs/design/K324_realtime_minotaur.md`):
   a real-time close-calls stat (section 5), a Search speed knob (4.4),
   and a real-time sentry (roam 0, K296's analog).
