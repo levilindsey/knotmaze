@@ -599,3 +599,78 @@ fabric controller/clock starts).
   too, per the brief's own checklist reference, even though the
   delegating brief listed src/physics among the render-adjacent
   area to leave to the K320 agent. No src/render file was touched.
+
+## Stage 5b handoff (cartouche emblems, built)
+
+Built per this brief's picks for 5b only (5c bridge untouched): the
+stage 4a hole reused whole with an emblem island as its tenant - hole
+first (generation), emblem appended after maze surgery, no frame
+junctions at all, decorative and unwalked by construction.
+
+- Hole: the candidate scan is factored out of `planCartoucheHole`
+  into `planHoleForBounds(w, h, gridSize, shape)` plus `holeBudget`
+  (`src/core/text_graph.ts`; `PAD_LU`/`FRAME_MIN`, centroid-ordered
+  scan, one-component trial stamp unchanged). The word path is
+  byte-identical: the rect gs 18 "knot" pin (hole `{cx: 3, cy: 6,
+  w: 12, h: 6}`) and every no-emblem pin stay green unrefrozen.
+  `planEmblemHole(emblem, gridSize, shape)` and `attachEmblem(graph,
+  emblem, hole, diameter): boolean` live in
+  `src/core/emblem_graph.ts` (the planner cannot live in text_graph
+  without an import cycle): measure at `EMBLEM_DIA`, shrink-only
+  against the kept mask's budget, refuse below `MIN_EMBLEM_DIA = 6`.
+  Attach builds at the fitted diameter, centers the bounds on the
+  hole LU rect, appends `sn`/`se` nodes/edges/strands, and refuses
+  (graph untouched) on id clash or placed bounds without `PAD_LU`
+  clearance (0.5 LU slack). No frame edge split, no junction, no
+  connector, no crossing test.
+- Selection: `cartoucheShape` end to end like `emblem` - `UrlParams`
+  beside `emblem`, `PARAM_DEFAULTS ""`, codec
+  `choice("cartoucheShape", ...)` appended LAST (`CODEC_VERSION`
+  still 8), legacy override `csh`, `SCENE_FIELDS` /
+  `sceneParamsOf` (worker field count 34 -> 35), `MAZE_PARAM_KEYS`
+  in, `DAILY_EXEMPT_KEYS` out, panel "Cartouche shape" dropdown
+  under the Cartouche row (naming a shape greys the word row,
+  display only). Precedence in `buildSceneGraph`: text, then
+  standalone emblem, then the maze, where a named `cartoucheShape`
+  takes the hole over a named `cartouche` word and the word is not
+  built; a refused emblem ships an ordinary maze, never a fallback
+  word hole. `cartouche === "" && cartoucheShape === ""` generates
+  exactly today's maze.
+- Walk: the island's strands carry no JUNCTION, END or waypoint
+  nodes, so the walk graph skips each whole; the scene sweep (each
+  emblem x {rect, heart, ring, circle} x gs {12, 18} plus {star,
+  fish, tree} at gs 18, seed 11) asserts attached scenes' walks equal
+  the holed-no-emblem walk exactly (vertices, edges, start, exit,
+  optimal, distToExit), refused designs serialize identically to the
+  plain maze, and a planned hole is never left tenantless. At gs 18
+  heart, fish and ring refuse a diameter-10 emblem (the 7x7 hole
+  plus its frame ring fits no 9x9 in-mask block there); rect, circle,
+  star and tree take every emblem. Rect gs 18 seed-11 trefoil pin:
+  hole `{cx: 5, cy: 5, w: 7, h: 7}` at diameter 10, 935 nodes / 1308
+  edges / 81 strands, hash `4b8fab24`, one hue slot at strand 80.
+  A gs 10 rect shrinks the star to diameter 8; gs 6 refuses all five.
+- Live verdict: no pin flips, and live islands are not demoted to
+  standalone-only. A live star island maze sleeps in the Node battery
+  (sleep gate at sim 5.0 s) with its settled bounds inside its hole
+  rect inset by 0.5 LU; pinned islands hold by their own anchors as
+  in 5a. Section 6's live sentence stands in-maze for star/trefoil.
+- Invariants: with both tenants empty (every default, every daily,
+  knot mode) no table is read and no pin moved - K87, the golden
+  dailies, the K74 walk pins and the physics golden stay green
+  UNREFROZEN. Deliberate pin moves only: the codec table's appended
+  `cartoucheShape` entry, the PARAM_DEFAULTS/override-key pins, the
+  daily maze-key list, and the worker-host field counts (34 -> 35).
+  Full suite 1495 passed, 1 skipped; `npm run build` and
+  `npx tsc --noEmit` green.
+- Screenshots (real-time headed Chrome via
+  `scripts/diag_screenshot.mjs`, never virtual time; vite preview on
+  port 5217, `&snd=none`): `.claude/probes/K115/stage5b/` -
+  `trefoil-load.png` (seed 11 trefoil island at load, appearance
+  trace still drawing), `trefoil-settled.png` (asleep, sim 5.0 s,
+  worker) and `trefoil-settled-phw0.png` (same scene in-thread).
+  All three log 935 nodes / 1308 edges / 81 strands. The panel is
+  open in the shots (the diag harness's default view); the Cartouche
+  row reads greyed behind the named Cartouche shape, as built.
+  Observed in the shot logs: PixiJS `aGap`/`aUV` attribute warnings
+  from the render area's in-flight K550 shader work in the shared
+  checkout - no `src/render` file was touched by this stage.

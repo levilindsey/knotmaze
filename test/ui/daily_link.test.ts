@@ -136,6 +136,14 @@ describe("the cartouche and the daily (K115 stage 4a)", () => {
     expect(DAILY_DEF).toBe(2);
   });
 
+  it("cartoucheShape: stays empty on a daily; maze identity, never exempt (K115 5b)", () => {
+    expect(dailyParams(12).cartoucheShape).toBe("");
+    expect(MAZE_PARAM_KEYS).toContain("cartoucheShape");
+    expect((DAILY_EXEMPT_KEYS as readonly string[]).includes("cartoucheShape")).toBe(false);
+    expect(isDailyDesign({ ...dailyParams(12), cartoucheShape: "star" }, 12)).toBe(false);
+    expect(sameMaze(dailyParams(12), { ...dailyParams(12), cartoucheShape: "star" })).toBe(false);
+  });
+
   it("emblem: stays empty on a daily; maze identity, never exempt (K115 5a)", () => {
     expect(dailyParams(12).emblem).toBe("");
     expect(MAZE_PARAM_KEYS).toContain("emblem");

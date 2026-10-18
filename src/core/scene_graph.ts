@@ -1,6 +1,6 @@
 import { generateLatticeKnotwork } from "./lattice_grower";
 import { buildTextGraph, attachTitle, attachCartouche, planCartoucheHole } from "./text_graph";
-import { buildEmblemGraph, isEmblemId } from "./emblem_graph";
+import { attachEmblem, buildEmblemGraph, isEmblemId, planEmblemHole } from "./emblem_graph";
 import type { EmblemId } from "./emblem_graph";
 import { buildWalkGraph } from "./walk_graph";
 import type { WalkGraph } from "./walk_graph";
@@ -27,6 +27,9 @@ export interface SceneParams {
   cartouche: string;
   // K115 stage 5a: standalone emblem scene ("" = none; an EmblemId).
   emblem: string;
+  // K115 stage 5b: the cartouche hole's emblem tenant ("" = none; an
+  // EmblemId). Wins the hole over `cartouche` when both are named.
+  cartoucheShape: string;
   gridSize: number;
   weaveDensity: number;
   turnBias: number;
@@ -91,19 +94,32 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
     }
     return { graph, hueGroup: undefined };
   }
-  // K115 stage 4a: plan the cartouche hole before generation (maze
-  // fabric only; "" and knot mode generate exactly today's maze).
-  const cartouchePlan =
-    params.mazeFabric && params.cartouche
-      ? planCartoucheHole(params.cartouche, params.gridSize, params.shape)
-      : null;
+  // K115 stages 4a/5b: plan the cartouche hole before generation (maze
+  // fabric only; both tenants empty and knot mode generate exactly
+  // today's maze). One hole, one tenant: a named cartoucheShape takes
+  // the hole over a named cartouche word, and the word is not built.
+  let cartouchePlan: ReturnType<typeof planCartoucheHole> = null;
+  let emblemPlan: ReturnType<typeof planEmblemHole> = null;
+  if (params.mazeFabric && params.cartoucheShape !== "") {
+    if (!isEmblemId(params.cartoucheShape)) {
+      throw new Error(`unknown emblem: ${params.cartoucheShape}`);
+    }
+    emblemPlan = planEmblemHole(
+      params.cartoucheShape as EmblemId,
+      params.gridSize,
+      params.shape
+    );
+  } else if (params.mazeFabric && params.cartouche) {
+    cartouchePlan = planCartoucheHole(params.cartouche, params.gridSize, params.shape);
+  }
+  const hole = emblemPlan?.hole ?? cartouchePlan?.hole;
   const genParams: GenerationParams = {
     gridSize: params.gridSize,
     weaveDensity: params.weaveDensity,
     turnBias: params.turnBias,
     randSeed: params.seed,
     shape: params.shape,
-    ...(cartouchePlan ? { hole: cartouchePlan.hole } : {}),
+    ...(hole ? { hole } : {}),
   };
   const graph = generateLatticeKnotwork(genParams);
 
@@ -210,6 +226,25 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
             mazeStart: walk.mazeStart,
           })
         : buildWalkGraph(graph);
+    }
+  }
+  // K115 stage 5b: float the emblem island in its hole AFTER the title
+  // block, in the cartouche's place. The island's strands carry no
+  // JUNCTION, END or waypoint nodes, so the walk graph skips each one
+  // whole: the returned walk is the holed frame's walk exactly, and no
+  // walk rebuild is needed (a title walk, when present, stands).
+  if (emblemPlan) {
+    const strandsBefore = graph.strands.length;
+    const attached = attachEmblem(
+      graph,
+      params.cartoucheShape as EmblemId,
+      emblemPlan.hole,
+      emblemPlan.diameter
+    );
+    if (attached && hueGroup) {
+      for (let i = strandsBefore; i < graph.strands.length; i++) {
+        hueGroup.push(strandsBefore);
+      }
     }
   }
 

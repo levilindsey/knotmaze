@@ -206,6 +206,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["text", "string"],
   ["cartouche", "string"],
   ["emblem", "enum", ["", "star", "trefoil", "triquetra", "solomon", "wreath"]],
+  ["cartoucheShape", "enum", ["", "star", "trefoil", "triquetra", "solomon", "wreath"]],
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
@@ -498,6 +499,18 @@ describe("enum param (K115 stage 5a emblem)", () => {
       expect(d.values).toEqual({ ...D, emblem });
     }
     expect(encodeToken(7, { ...D, emblem: "" }, D)).toBe("7");
+  });
+
+  it("round-trips every cartoucheShape option, version stays 8 (K115 5b)", () => {
+    expect(CODEC_VERSION).toBe(8);
+    for (const cartoucheShape of ["", "star", "trefoil", "triquetra", "solomon", "wreath"]) {
+      const token = encodeToken(7, { ...D, cartoucheShape }, D);
+      const d = decodeToken(token, D);
+      expect(d.error).toBeNull();
+      expect(d.values.cartoucheShape).toBe(cartoucheShape);
+      expect(d.values).toEqual({ ...D, cartoucheShape });
+    }
+    expect(encodeToken(7, { ...D, cartoucheShape: "" }, D)).toBe("7");
   });
 });
 

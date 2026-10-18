@@ -137,6 +137,7 @@ export function sceneParamsOf(p: SceneParams): SceneParams {
     title: p.title,
     cartouche: p.cartouche,
     emblem: p.emblem,
+    cartoucheShape: p.cartoucheShape,
     gridSize: p.gridSize,
     weaveDensity: p.weaveDensity,
     turnBias: p.turnBias,

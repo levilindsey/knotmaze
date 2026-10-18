@@ -66,7 +66,7 @@ describe("links", () => {
   // table too (the codec tests say so).
   it("pins the defaults table", () => {
     expect(PARAM_DEFAULTS).toEqual({
-      text: "", cartouche: "", emblem: "", gridSize: 18, shape: "rect", startAnchor: "nw", exitAnchor: "se",
+      text: "", cartouche: "", emblem: "", cartoucheShape: "", gridSize: 18, shape: "rect", startAnchor: "nw", exitAnchor: "se",
       weaveDensity: 0.35, turnBias: 0.7, slack: 0.55, simSpeed: 5, drag: 0.5,
       repulsion: 1.45, bend: 2, smooth: 0.75, stiffness: 1, gridAlign: 0.1,
       threadWidth: 0.52, gap: 0.04, moveSpeed: 1, cuspRadius: 3,
@@ -730,7 +730,7 @@ describe("key=value links", () => {
 // went out by email), so a key is never renamed or dropped, and a new param
 // gets one here and in readLegacy.
 const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
-  text: "txt", cartouche: "car", emblem: "emb", gridSize: "gs", shape: "shp", startAnchor: "sa", exitAnchor: "xa",
+  text: "txt", cartouche: "car", emblem: "emb", cartoucheShape: "csh", gridSize: "gs", shape: "shp", startAnchor: "sa", exitAnchor: "xa",
   weaveDensity: "wd", turnBias: "tb", slack: "sl", simSpeed: "sp", drag: "dr",
   repulsion: "rep", bend: "bd", smooth: "sm", stiffness: "st", gridAlign: "ga",
   threadWidth: "tw", gap: "gap", moveSpeed: "ms", cuspRadius: "cr",

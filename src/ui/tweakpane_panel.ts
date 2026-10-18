@@ -345,6 +345,11 @@ export function buildPanel(
     // value, shown dimmed.
     ".kp-row.kp-overridden .tp-lblv_v{opacity:.4}" +
     ".kp-row.kp-overridden .tp-lblv_l{opacity:.6;font-style:italic}" +
+    // K115 stage 5b: the cartouche word row greys while a cartouche
+    // shape tenants the hole (display only; the builder's precedence
+    // governs links that name both).
+    ".kp-row.kp-greyed .tp-lblv_v{opacity:.4}" +
+    ".kp-row.kp-greyed .tp-lblv_l{opacity:.6}" +
     // Folder disclosure marker: a plain triangle (right when collapsed,
     // down when expanded) instead of Tweakpane's default icon; it spins
     // 90 degrees on toggle. Tweakpane marks an open folder with the
@@ -923,7 +928,7 @@ export function buildPanel(
     "Cursive text design: type words to build them as pinned knotwork text instead of the lattice maze. Empty = the usual design. Regenerates the design.",
     D.text, regenerateWhenDone
   );
-  row(
+  const cartoucheRow = row(
     fDesign, p, "cartouche", { label: "Cartouche" },
     "In-maze cartouche: a word inside the maze, in a stamped hole with a thread frame; walking it counts like any maze run (4-5 letters fit at grid 18). Empty = no cartouche. Regenerates the design.",
     D.cartouche, regenerateWhenDone
@@ -936,6 +941,15 @@ export function buildPanel(
     },
     "Standalone emblem: a predefined knot shape shown alone instead of the lattice maze. None = the usual design. Regenerates the design.",
     D.emblem, regenerateWhenDone
+  );
+  row(
+    fDesign, p, "cartoucheShape",
+    {
+      label: "Cartouche shape",
+      options: { none: "", star: "star", trefoil: "trefoil", triquetra: "triquetra", solomon: "solomon", wreath: "wreath" },
+    },
+    "Cartouche shape: a predefined knot emblem floating as a decorative island inside the cartouche hole (found visually, never walked or counted). Wins the hole over the Cartouche word. None = the word (or no cartouche). Regenerates the design.",
+    D.cartoucheShape, regenerateWhenDone
   );
   // SEED ROW: the design's seed as the link's base-36 token (?<seed>...).
   // Typing a seed (or any word - it hashes to one) and pressing Enter loads
@@ -2405,6 +2419,8 @@ export function buildPanel(
   // The full conditional-visibility map (the 2026-10-10 audit): a row
   // hides whenever the feature it tunes is off or owned by another mode.
   refreshCond = (): void => {
+    // K115 stage 5b: a named cartouche shape greys the word row.
+    cartoucheRow.element.classList.toggle("kp-greyed", params.cartoucheShape !== "");
     const fab = params.mazeFabric;
     fGame.hidden = !fab;
     startAnchorRow.hidden = !fab;
