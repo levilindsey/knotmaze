@@ -525,3 +525,77 @@ rotation or mirroring in links.
   denser (2,12) wreath, or a lower floor that squeezes emblems
   into smaller mazes at some legibility cost?
 
+
+## Stage 5a handoff (standalone emblems, built)
+
+Built per this brief's picks for 5a only (5b cartouche island untouched):
+offline tables, builder, `emblem` param end to end, standalone scene
+sibling of the text scene, walk treatment by construction (no walk
+vertices on a closed emblem, so `buildWalkGraph` returns null and no
+fabric controller/clock starts).
+
+- Data: `.claude/probes/K115/gen_emblems.mjs` (probe code, trig allowed)
+  regenerates `src/core/emblem_data.ts` byte for byte; verified by
+  re-running it (identical SHA-256 twice). Tables are 6 dp decimal
+  literals; crossing points are the SAME literal on every pass, so the
+  builder's coincidence match (squared distance in canonical units,
+  tolerance 1e-12) is exact.
+- Per shape (at `EMBLEM_DIA = 10`): star 35 nodes / 40 edges / 1 strand /
+  5 crossings, LIVE; trefoil 69/72/1/3, LIVE; triquetra 33/36/1/3,
+  PINNED (pin counts/hash frozen in test/core/emblem_graph.test.ts);
+  solomon 60/64/2/4, PINNED; wreath 136/144/2/8, PINNED.
+  checkStructure / checkAlternation / checkStrandPartition pass for all
+  five, solver conflicts zero (assignOverUnder now returns the accepted
+  conflict count; its text call site is unchanged), no END/JUNCTION/
+  waypoint nodes, every strand closed, minimum along-strand crossing
+  arc at least 2.2 LU and every crossing angle at least 30 degrees
+  (recomputed with hypot2 and squared cosines, no trig).
+- Solomon is two rounded rectangles (1.8 x 1.0 and 1.0 x 1.8, corner
+  radius 0.25, crossings at (+-0.5, +-0.5)), NOT stadiums: a stadium's
+  cap centres sit on the other loop's sides and the threads kiss
+  tangentially at four extra non-crossing points. The wreath's two
+  components are `r = 0.72 +/- 0.22 sin(4t)` sampled every 5 degrees,
+  meeting at r = 0.72 every 45 degrees (8 crossings); the triquetra is
+  three pointed lobes (crossings on R = 0.28, tips on R = 1, inner arcs
+  bowed to the centre, visits A B C A B C) rather than sampled circle
+  arcs - the pointed cusps are the glyph, and it reads pointed in the
+  shot. These are generator-side readings of the brief's definitions;
+  topology, alternation and the shipped diameters are its contract.
+- Live verdict: no pin flips. A live star and a live trefoil both
+  settle and sleep in the Node battery (sleep gate tripped at sim
+  5.0 s for both). Diameter retention measured from the probe: star
+  10.000 -> 8.440 LU (0.844), trefoil 10.000 -> 9.779 LU (0.978), both
+  above the 0.7 budget, with the centroid inside the central half of
+  the authored bounds. Section 6's live sentence stands, as-is, for
+  two shapes. Pinned triquetra/solomon/wreath hold every particle
+  exact over 120 steps.
+- Invariants: `emblem === ""` (every default, every daily, knot mode)
+  reads no table; no no-emblem pin moved. Only deliberate pin moves:
+  codec table appended `choice("emblem", ["", "star", "trefoil",
+  "triquetra", "solomon", "wreath"])` LAST (CODEC_VERSION still 8),
+  `SCENE_FIELDS.emblem` (worker field count 33 -> 34 in
+  test/physics/worker_host.test.ts), PARAM_DEFAULTS / OVERRIDE_KEYS /
+  daily pins for the new key. `emblem` joins MAZE_PARAM_KEYS and stays
+  out of DAILY_EXEMPT_KEYS, so an emblem edit on a daily leaves the
+  daily by the ordinary rule. K87 / golden dailies / byte_identity
+  green UNREFROZEN: full suite 1487 passed, 1 skipped.
+- Screenshots (real-time headed Chrome via
+  scripts/diag_screenshot.mjs, never virtual time; vite preview on
+  port 5216): .claude/probes/K115/stage5/{star,trefoil,triquetra,
+  solomon,wreath}-load.png at load (all asleep, sim 5.0 s), and
+  star-tugged.png from tug_shot.mjs in the same folder (a live star
+  dragged by mouse, shot mid-recovery: deformable, crossings intact,
+  recovering). Shots used `&snd=none`: observed along the way - the
+  translucent halo sometimes seen on a thread is the app's ambient
+  auto-pluck overlay (`soundMode = music` default, `?s=7&emb=...`
+  shots without it show ghosted threads on emblems and on today's
+  text/maze scenes alike, and it moves between shots). It is not an
+  emblem defect; clean shots turned the ambient plucks off.
+  Minor: on triquetra-load.png two small dark gap slivers cut the
+  lower-left lobe where an inner arc passes close by - the ordinary
+  crossing-gap cut at a close approach; the figure still reads.
+- Deviation note: `sceneParamsOf` / `SCENE_FIELDS` live under
+  src/physics (the K7 worker seam), so the emblem field landed there
+  too, per the brief's own checklist reference, even though the
+  delegating brief listed src/physics among the render-adjacent
+  area to leave to the K320 agent. No src/render file was touched.

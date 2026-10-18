@@ -13,6 +13,7 @@ import type { AppearSequence, AppearFxMode } from "../core/reveal_plan";
 import { APPEAR_SEQUENCES, APPEAR_FX_MODES } from "../core/reveal_plan";
 import type { ShapeId, AnchorId } from "../core/shapes";
 import { SHAPES, ANCHORS } from "../core/shapes";
+import { EMBLEM_IDS } from "../core/emblem_data";
 import type { ChaseParams, ClockMode } from "../game/minotaur";
 import type { FireClock } from "../game/fire";
 import {
@@ -275,6 +276,7 @@ export function applyAppearMode(
 export interface UrlParams {
   text: string; // K115 cursive text design ("" = lattice/maze design).
   cartouche: string; // K115 stage 4a in-maze word ("" = no cartouche).
+  emblem: string; // K115 stage 5a standalone emblem ("" = none; an EmblemId).
   seed: number;
   gridSize: number;
   // Lattice silhouette: rect (full lattice) or a sculpted mask shape.
@@ -690,9 +692,13 @@ export const LOAD_SETTLE_MAX = 5;
 // leaves the param out means, and moves every daily (K132: accepted
 // before launch). A new param must be appended to the codec's
 // CODEC_PARAMS as well (param_codec.ts; a test fails until it is).
+// K115 stage 5a: the emblem choices ("" = none), shared by codec/panel.
+export const EMBLEM_CHOICES: readonly string[] = ["", ...EMBLEM_IDS];
+
 export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   text: "",
   cartouche: "",
+  emblem: "",
   gridSize: 18,
   shape: "rect",
   startAnchor: "nw",
@@ -1083,6 +1089,7 @@ export const ENUM_OPTIONS: {
   fireClock: FIRE_CLOCKS,
   revealEndCross: REVEAL_END_CROSSES,
   revealEndGlow: REVEAL_END_GLOWS,
+  emblem: EMBLEM_CHOICES,
 };
 
 // K398: every numeric param held to the panel's range (param_codec's
@@ -1292,6 +1299,7 @@ function readLegacy(
     ...base,
     text: readText(query, "txt", D.text),
     cartouche: readText(query, "car", D.cartouche),
+    emblem: readChoice(query, "emb", EMBLEM_CHOICES, D.emblem),
     gridSize: readNumber(query, "gs", D.gridSize),
     shape: readChoice(query, "shp", SHAPES, D.shape),
     startAnchor: readChoice(query, "sa", ANCHORS, D.startAnchor),

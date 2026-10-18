@@ -1759,7 +1759,11 @@ export function attachCartouche(
 // Over/under: run-phase parity solver (design section 3.5)
 // ---------------------------------------------------------------------------
 
-function assignOverUnder(graph: TangleGraph): void {
+// K115 stage 5a: exported for the emblem builder (emblem_graph.ts), which
+// reuses this solver for closed strands; its text call site is unchanged.
+// Returns the accepted-conflict count (0 = perfectly alternating phases
+// exist); the solver still assigns best-effort phases when it is not 0.
+export function assignOverUnder(graph: TangleGraph): number {
   // Runs: maximal strand spans between JUNCTION / END stops.
   interface Pass {
     strand: number;
@@ -1885,7 +1889,7 @@ function assignOverUnder(graph: TangleGraph): void {
     const rhs = 1 ^ (passes[0].k & 1) ^ (passes[1].k & 1);
     union(passes[0].run, passes[1].run, rhs);
   }
-  void conflicts; // Accepted where parity is unsatisfiable (design 3.5).
+  // Accepted where parity is unsatisfiable (design 3.5); returned for tests.
 
   for (const id of crossingIds) {
     const node = graph.nodes.get(id)!;
@@ -1914,5 +1918,6 @@ function assignOverUnder(graph: TangleGraph): void {
     }
     node.isOver = isSlash;
   }
+  return conflicts;
 }
 

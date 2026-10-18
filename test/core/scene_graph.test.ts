@@ -10,6 +10,8 @@ import { planCartoucheHole } from "../../src/core/text_graph";
 import { walkDistances } from "../../src/core/walk_graph";
 import type { WalkGraph } from "../../src/core/walk_graph";
 import { dailyParams, dailyTitle } from "../../src/ui/daily_link";
+import { buildEmblemGraph } from "../../src/core/emblem_graph";
+
 
 // K115 stage 3a: titled scenes (the daily title thread).
 
@@ -296,4 +298,31 @@ describe("cartouche scenes (K115 stage 4a)", () => {
       }
     }
   );
+});
+
+describe("standalone emblem scenes (K115 stage 5a)", () => {
+  it("builds the emblem alone, ignoring maze params, with no walk", () => {
+    const s = buildSceneGraph(scene(12, { title: "", emblem: "star", gridSize: 6, shape: "heart" }));
+    const emblem = buildEmblemGraph("star");
+    expect(serialize(s.graph)).toBe(serialize(emblem));
+    expect(s.hueGroup).toBeUndefined();
+    expect(s.walk).toBeUndefined();
+    expect(buildWalkGraph(s.graph)).toBeNull();
+    expect(s.graph.nodes.has("mentr_a")).toBe(false);
+  });
+
+  it("gives text precedence over emblem", () => {
+    const s = buildSceneGraph(scene(12, { title: "", text: "Hi", emblem: "star" }));
+    expect(s.graph.nodes.has("mentr_a")).toBe(true);
+    const t = buildSceneGraph(scene(12, { title: "", text: "Hi", emblem: "" }));
+    expect(serialize(s.graph)).toBe(serialize(t.graph));
+  });
+
+  it("builds every emblem standalone twice bit-identically", () => {
+    for (const emblem of ["star", "trefoil", "triquetra", "solomon", "wreath"] as const) {
+      const a = buildSceneGraph(scene(3, { title: "", emblem }));
+      const b = buildSceneGraph(scene(3, { title: "", emblem }));
+      expect(serialize(a.graph)).toBe(serialize(b.graph));
+    }
+  });
 });
