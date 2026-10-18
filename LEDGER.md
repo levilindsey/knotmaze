@@ -109,6 +109,13 @@ Next free ID: K548.
 
 ## In progress
 
+- **K115** · Cursive text (Levi's calls 2026-10-13: pinned; junction+spur with spurs travelable; one-token links; capitals via generated connector; legibility assumed, stage 1a skipped). Stage 1b: Hershey data + `text_graph.ts` builder + standalone scene.
+  - owner: this session (2026-10-18); brief `docs/design/K115_stage1.md`
+  - branch: mainline; last commit: types seam (`Node.overFirst`, `Strand.pinned`) with this ledger edit
+  - evidence: `.claude/probes/K115/` (probe census + SVG proxies)
+  - next: Part A builder + tests, Part B physics/scene/codec, screenshot, commit
+  - brief: `docs/design/K115_stage1.md`; design `docs/design/K115_cursive_text.md`
+
 - **K114** Â· Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -361,8 +368,7 @@ Every other item below waits on the trigger it names.
   before the fans are deleted. Also closes G1's x160 leftover (`.claude/rules/render-gaps.md`); webs
   carry the traveled route as the smooth union of the traveled pieces only (K81).
 - **K115** Â· Cursive text and shapes: Hershey Script Simplex (`docs/design/K115_cursive_text.md`,
-  ded57f7; `docs/design/levi_notes_2026-10-13.md`; `.claude/probes/K115/`). Next: stage 1 brief.
-  K122: `shipped: true` on `hershey-fonts` in `notices/credits.ts` with the data.
+  ded57f7; `docs/design/levi_notes_2026-10-13.md`; `.claude/probes/K115/`). Stage 1b building (`docs/design/K115_stage1.md`); see In progress.
 - **K116** Â· Pluck instruments, accompaniment, lowest priority (`docs/design/K116_instruments.md`,
   2e60b00, `docs/design/levi_notes_2026-10-13.md`): skeleton (drone, bass, `pluckVoice` presets),
   then marimba, bells; `pvc`, `acc`, `acl` daily-exempt; Pixel audio probe first; loop K125.
