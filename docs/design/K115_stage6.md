@@ -823,3 +823,76 @@ Deviations from this brief, for Levi:
    its advance edge - and the 19 HU W->e gap is mostly the `e`
    side, which 6a does not touch. The Welcome pin still moved
    because W's arrive/internal routing changed.
+
+## Stage 6b handoff (implemented 2026-10-18)
+
+Landed: nine precomposed letters (`é è ê à á ü ö ñ ç`) render as an
+ASCII Hershey base plus one floating authored mark. Six marks are
+authored in HU in `src/core/accent_marks.ts` (acute, grave,
+circumflex, diaeresis as two 1x1 dot loops 4 HU apart, tilde,
+cedilla), placed centred on the base glyph's advance centre with an
+above box bottom at `y = -15` (a capital base's mark 3 HU above its
+own topmost point) and the cedilla hanging 4 HU below the baseline.
+Marks are floating strands exactly like `i`/`j` dots: open marks are
+TURN chains between two ENDs, diaeresis dots are closed loops, all
+`pinned: true` and flagged `Strand.decorative`
+(`src/core/types.ts`); `buildWalkGraph` skips a decorative strand
+whole, so marks add no walk vertices, runs, taps, or length. A
+placement whose segments cross - or come within the 0.5 HU
+point-on-stroke tolerance of - any letter, connector, dot or kept
+mark nudges away from the letters by 1 HU steps to at most 3 and is
+then dropped (the base ships bare).
+
+Input normalization follows the brief: the builder's first step is
+`text.normalize("NFD")`, then a grapheme-cluster walk (base plus
+trailing U+0300-U+036F marks). A mark with no base (string start or
+after a space) and a mark outside the six authored ones (e.g.
+U+030C) are dropped without advancing. `buildTextGraph("café")` and
+`buildTextGraph("cafe\u0301")` are bit-identical (asserted for
+every letter and both test words). No codec change:
+`CODEC_VERSION` stays 8 and the string codec's NFC round-trip gains
+the nine letters as test cases only. No credits change - the marks
+are authored here, not Hershey data. `attachTitle` /
+`textHasGlyph` now test the NFD form, so an accented-only title or
+cartouche word counts as glyphs; ASCII behavior is unchanged.
+
+Words covered (structure, strand partition and overFirst
+alternation asserted for each): the nine letters singly, plus
+`café`, `crème`, `garçon`, `jalapeño`, `über` (`Émile` joins the
+no-crossing sweep). `café` pins at 89 nodes / 89 edges / 6 strands,
+hash `7a845615`, with 4 letter waypoints; its walk equals `cafe`'s
+(11 vertices, 12 runs, identical optimal length). Full suite 1510
+passed / 1 skipped, with 2 failures confined to
+`test/render/{gap_split,k320_slim}.test.ts` shader char budgets,
+which measure the K550 render work in flight in the shared tree,
+untouched here; `npm run build` and `npx tsc --noEmit` are green.
+The pre-6b pins do not move (`Welcome` stays 175/178/10, hash
+`25459bce`; the lowercase corpus is unchanged), and K87, the golden
+dailies and `byte_identity` are untouched. Real-renderer shots
+(`scripts/diag_screenshot.mjs`, dev server on port 5219):
+`.claude/probes/K115/stage6b/cafe_worker.png` (worker host) and
+`garcon_phw0.png` (`phw=0`). The acute floats clear over the `é`,
+not fused; the cedilla hangs visibly below the `ç` as a small hook.
+
+Deviations from this brief, for Levi:
+
+1. **The cedilla rides 1 HU low.** Its authored top at the baseline
+   lands exactly on the `c` foot segment and would fuse into a
+   JUNCTION spur instead of a floating two-END strand, so the
+   keep-check counts touching (within 0.5 HU) as crossing and the
+   nudge budget moves it down 1: it hangs from `y = 10` to `y = 14`,
+   not 9 to 13. Same 4 HU hook, fully below the letter.
+2. **Half-unit mark coordinates.** Circumflex (2.5 HU rise), tilde
+   (1.5 HU amplitude) and the 1x1 diaeresis dots sit on a 0.5 HU
+   grid, not pure integers; 0.5 is exact in binary floating point,
+   so K108 determinism holds. The circumflex is one polyline
+   through its peak (two segments meeting) rather than two
+   separate strokes.
+3. **The mechanism generalizes past the nine.** Because the
+   builder normalizes, any precomposed character decomposing to an
+   ASCII base plus one of the six marks also renders (e.g. `É`,
+   `ý`); the nine remain the tested, pinned set.
+4. The old `buildTextGraph("aé🎉b")` "skips unsupported
+   characters" test and the `é🎉` glyph-less cases in the title /
+   cartouche tests were rewritten deliberately: `é` renders now,
+   the emoji still skips.

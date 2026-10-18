@@ -5,6 +5,7 @@ import { SHAPES, buildCellMask } from "../../src/core/shapes";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
+import { buildWalkGraph } from "../../src/core/walk_graph";
 import { checkAlternation } from "../../src/core/tangle_graph";
 import { checkStrandPartition, checkStructure } from "../../src/core/tangle_graph";
 import { NODE_TYPE } from "../../src/core/types";
@@ -515,7 +516,7 @@ describe("buildTextGraph (K115)", () => {
   });
 
   it("attachTitle returns null, graph untouched, for glyph-less titles", () => {
-    for (const title of ["", "   ", "é🎉"]) {
+    for (const title of ["", "   ", "🎉"]) {
       const graph = appliedMaze();
       const before = serialize(graph);
       expect(attachTitle(graph, title)).toBeNull();
@@ -584,7 +585,7 @@ describe("buildTextGraph (K115)", () => {
     }
     expect(planCartoucheHole("knotmaze welcome hello", 6, "rect")).toBeNull();
     expect(planCartoucheHole("", 18, "rect")).toBeNull();
-    expect(planCartoucheHole("é🎉", 18, "rect")).toBeNull();
+    expect(planCartoucheHole("🎉", 18, "rect")).toBeNull();
     const shrunk = planCartoucheHole("knotmaze", 18, "rect");
     if (shrunk !== null) {
       expect(shrunk.xHeight).toBeLessThanOrEqual(3);
@@ -680,11 +681,203 @@ describe("buildTextGraph (K115)", () => {
     expect(serialize(g2)).toBe(before2);
   });
 
-  it("skips unsupported characters without throwing", () => {
+  it("renders é and still skips unsupported characters (stage 6b)", () => {
     const graph = buildTextGraph("aé🎉b");
     expect(graph.nodes.get("mentr_a")?.type).toBe(NODE_TYPE.END);
     expect(graph.nodes.get("mexit_a")?.type).toBe(NODE_TYPE.END);
     expect(checkStructure(graph)).toBe(true);
     expect(checkStrandPartition(graph)).toBe(true);
+    // é now renders (one floating acute strand); the emoji still
+    // skips, so the word keeps three letter waypoints plus the exit.
+    expect(graph.strands.filter((s) => s.decorative)).toHaveLength(1);
+    const wps = graph.strands[0].nodes.filter(
+      (id) => graph.nodes.get(id)?.waypoint
+    );
+    expect(wps).toHaveLength(4);
+  });
+
+  // --- K115 stage 6b: accents and diacritics -------------------------
+
+  const ACCENTS: Record<string, { nfd: string; deco: number; closed: boolean }> = {
+    "é": { nfd: "e\u0301", deco: 1, closed: false },
+    "è": { nfd: "e\u0300", deco: 1, closed: false },
+    "ê": { nfd: "e\u0302", deco: 1, closed: false },
+    "à": { nfd: "a\u0300", deco: 1, closed: false },
+    "á": { nfd: "a\u0301", deco: 1, closed: false },
+    "ü": { nfd: "u\u0308", deco: 2, closed: true },
+    "ö": { nfd: "o\u0308", deco: 2, closed: true },
+    "ñ": { nfd: "n\u0303", deco: 1, closed: false },
+    "ç": { nfd: "c\u0327", deco: 1, closed: false },
+  };
+
+  it("builds each accented letter with its floating mark (stage 6b)", () => {
+    for (const [letter, spec] of Object.entries(ACCENTS)) {
+      const graph = buildTextGraph(letter);
+      expect(checkStructure(graph), letter).toBe(true);
+      expect(checkStrandPartition(graph), letter).toBe(true);
+      expect(checkAlternationOverFirst(graph), letter).toBe(true);
+      const deco = graph.strands.filter((s) => s.decorative);
+      expect(deco.length, letter).toBe(spec.deco);
+      for (const s of deco) {
+        expect(s.pinned, letter).toBe(true);
+        expect(s.isClosed, letter).toBe(spec.closed);
+        if (spec.closed) {
+          // A diaeresis dot: a tiny closed loop, no stops at all.
+          expect(s.nodes[0], letter).toBe(s.nodes[s.nodes.length - 1]);
+          for (const id of s.nodes) {
+            expect(graph.nodes.get(id)?.type, letter).toBe(NODE_TYPE.TURN);
+          }
+        } else {
+          // An open mark: TURN nodes between two decorative ENDs.
+          expect(graph.nodes.get(s.nodes[0])?.type, letter).toBe(NODE_TYPE.END);
+          expect(graph.nodes.get(s.nodes[s.nodes.length - 1])?.type, letter).toBe(
+            NODE_TYPE.END
+          );
+          for (const id of s.nodes.slice(1, -1)) {
+            expect(graph.nodes.get(id)?.type, letter).toBe(NODE_TYPE.TURN);
+          }
+        }
+      }
+    }
+  });
+
+  it("builds accented words valid (stage 6b)", () => {
+    for (const word of ["café", "crème", "garçon", "jalapeño", "über"]) {
+      const graph = buildTextGraph(word);
+      expect(checkStructure(graph), word).toBe(true);
+      expect(checkStrandPartition(graph), word).toBe(true);
+      expect(checkAlternationOverFirst(graph), word).toBe(true);
+      expect(graph.strands.some((s) => s.decorative), word).toBe(true);
+    }
+  });
+
+  it("makes NFC and NFD spellings bit-identical (stage 6b)", () => {
+    for (const [letter, spec] of Object.entries(ACCENTS)) {
+      expect(serialize(buildTextGraph(letter)), letter).toBe(
+        serialize(buildTextGraph(spec.nfd))
+      );
+    }
+    expect(serialize(buildTextGraph("café"))).toBe(
+      serialize(buildTextGraph("cafe\u0301"))
+    );
+    expect(serialize(buildTextGraph("garçon"))).toBe(
+      serialize(buildTextGraph("garc\u0327on"))
+    );
+  });
+
+  it("pins café (stage 6b)", () => {
+    const graph = buildTextGraph("café");
+    expect([graph.nodes.size, graph.edges.size, graph.strands.length]).toEqual([
+      89, 89, 6,
+    ]);
+    expect(hashGraph(graph)).toBe("7a845615");
+  });
+
+  it("gives café one waypoint per letter and no mark walk vertices (stage 6b)", () => {
+    const accented = buildTextGraph("café");
+    const plain = buildTextGraph("cafe");
+    const letterWps = (g: TangleGraph): string[] =>
+      g.strands[0].nodes.filter(
+        (id) => g.nodes.get(id)?.waypoint && id !== "mexit_a"
+      );
+    // Four letters (c a f é), one waypoint each; marks add none.
+    expect(letterWps(accented)).toHaveLength(4);
+    expect(letterWps(plain)).toHaveLength(4);
+    const walkA = buildWalkGraph(accented);
+    const walkP = buildWalkGraph(plain);
+    expect(walkA).not.toBeNull();
+    expect(walkP).not.toBeNull();
+    // Marks contribute no vertices, runs, or length.
+    expect(walkA!.vertices.size).toBe(walkP!.vertices.size);
+    expect(walkA!.edges.length).toBe(walkP!.edges.length);
+    expect(walkA!.optimalLength).toBeCloseTo(walkP!.optimalLength, 9);
+    const decoNodes = new Set(
+      accented.strands
+        .filter((s) => s.decorative)
+        .flatMap((s) => s.nodes)
+    );
+    expect(decoNodes.size).toBeGreaterThan(0);
+    for (const id of decoNodes) expect(walkA!.vertices.has(id)).toBe(false);
+  });
+
+  it("crosses no stroke with any mark segment (stage 6b)", () => {
+    for (const word of ["café", "crème", "garçon", "jalapeño", "über", "Émile"]) {
+      const graph = buildTextGraph(word);
+      const decoEdges = new Set(
+        graph.strands.filter((s) => s.decorative).flatMap((s) => s.edgeIds)
+      );
+      expect(decoEdges.size, word).toBeGreaterThan(0);
+      for (const e of graph.edges.values()) {
+        if (!decoEdges.has(e.id)) continue;
+        const [a, b] = e.latticePoints;
+        for (const other of graph.edges.values()) {
+          if (other.id === e.id || decoEdges.has(other.id)) continue;
+          for (let i = 0; i + 1 < other.latticePoints.length; i++) {
+            expect(
+              properX(a, b, other.latticePoints[i], other.latticePoints[i + 1]),
+              `${word} ${e.id} x ${other.id}`
+            ).toBe(false);
+          }
+        }
+      }
+    }
+  });
+
+  it("hangs the cedilla below the letter and spaces the diaeresis (stage 6b)", () => {
+    // In "ç" the letter never descends below its baseline, so the
+    // whole cedilla (nudged 1 HU clear of the foot) sits below every
+    // letter node, spanning its 4 HU drop (4/3 LU at xHeight 3).
+    const ced = buildTextGraph("ç");
+    const deco = ced.strands.filter((s) => s.decorative);
+    expect(deco).toHaveLength(1);
+    const decoIds = new Set(deco[0].nodes);
+    const decoYs = deco[0].nodes.map((id) => ced.nodes.get(id)!.latticePos[1]);
+    let letterMaxY = -Infinity;
+    for (const n of ced.nodes.values()) {
+      if (!decoIds.has(n.id) && n.latticePos[1] > letterMaxY) {
+        letterMaxY = n.latticePos[1];
+      }
+    }
+    expect(Math.min(...decoYs)).toBeGreaterThan(letterMaxY);
+    expect(Math.max(...decoYs) - Math.min(...decoYs)).toBeCloseTo(4 / 3, 2);
+    // Diaeresis: two dot loops whose centres sit 4 HU apart.
+    const uml = buildTextGraph("ü");
+    const dots = uml.strands.filter((s) => s.decorative);
+    expect(dots).toHaveLength(2);
+    const centres = dots.map((s) => {
+      const xs = s.nodes.map((id) => uml.nodes.get(id)!.latticePos[0]);
+      const ys = s.nodes.map((id) => uml.nodes.get(id)!.latticePos[1]);
+      return [
+        (Math.min(...xs) + Math.max(...xs)) / 2,
+        (Math.min(...ys) + Math.max(...ys)) / 2,
+      ] as const;
+    });
+    centres.sort((p, q) => p[0] - q[0]);
+    expect(centres[1][0] - centres[0][0]).toBeCloseTo(4 / 3, 2);
+    expect(centres[1][1] - centres[0][1]).toBeCloseTo(0, 6);
+    for (const s of dots) {
+      const xs = s.nodes.map((id) => uml.nodes.get(id)!.latticePos[0]);
+      const ys = s.nodes.map((id) => uml.nodes.get(id)!.latticePos[1]);
+      expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(1 / 3, 2);
+      expect(Math.max(...ys) - Math.min(...ys)).toBeCloseTo(1 / 3, 2);
+    }
+  });
+
+  it("drops stray and unsupported combining marks (stage 6b)", () => {
+    // A leading mark has no base; a mark after a space rides nothing;
+    // a caron (U+030C) is not authored. None throws or advances.
+    expect(serialize(buildTextGraph("\u0301abc"))).toBe(
+      serialize(buildTextGraph("abc"))
+    );
+    expect(serialize(buildTextGraph("a \u0301c"))).toBe(
+      serialize(buildTextGraph("a c"))
+    );
+    expect(serialize(buildTextGraph("a\u030cb"))).toBe(
+      serialize(buildTextGraph("ab"))
+    );
+    // An authored mark survives an extra unsupported one untouched.
+    expect(serialize(buildTextGraph("e\u0301\u030c"))).toBe(
+      serialize(buildTextGraph("é"))
+    );
   });
 });

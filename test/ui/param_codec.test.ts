@@ -460,6 +460,24 @@ describe("string param (K115 text)", () => {
     expect(token).toBe(encodeToken(7, { ...D, text: "café" }, D));
   });
 
+  it("round-trips the nine accented letters (K115 stage 6b), version stays 8", () => {
+    expect(CODEC_VERSION).toBe(8);
+    for (const text of ["é", "è", "ê", "à", "á", "ü", "ö", "ñ", "ç", "café", "garçon", "crème"]) {
+      const token = encodeToken(7, { ...D, text }, D);
+      const d = decodeToken(token, D);
+      expect(d.error).toBeNull();
+      expect(d.values.text).toBe(text);
+      expect(d.values).toEqual({ ...D, text });
+    }
+    // A decomposed (NFD) spelling encodes to the NFC token.
+    expect(encodeToken(7, { ...D, text: "garc\u0327on" }, D)).toBe(
+      encodeToken(7, { ...D, text: "garçon" }, D)
+    );
+    expect(encodeToken(7, { ...D, text: "cafe\u0301" }, D)).toBe(
+      encodeToken(7, { ...D, text: "café" }, D)
+    );
+  });
+
   it("leaves the default empty string out of the token", () => {
     expect(encodeToken(7, { ...D, text: "" }, D)).toBe("7");
     expect(decodeToken("7", D).values.text).toBe("");

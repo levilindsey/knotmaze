@@ -46,6 +46,11 @@ export interface Strand {
   // anchored at its authored position by the physics. Lattice strands
   // never set it, so their behavior is unchanged.
   pinned?: boolean;
+  // K115 stage 6b: a floating accent mark (not letter material). The walk
+  // graph skips a decorative strand whole, so its END tips never become
+  // walk vertices or dead ends. Only the text builder's mark emitter sets
+  // it; letter-body spurs stay travelable.
+  decorative?: boolean;
 }
 
 // Main combinatorial graph. (The legacy single-strand MazeGraph - the old

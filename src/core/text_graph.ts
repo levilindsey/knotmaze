@@ -9,9 +9,13 @@
 // 2.3 and 3.1-3.6 and docs/design/K115_stage1.md Part A.
 //
 // Determinism (K108): this file uses only +, -, *, /, Math.sqrt via
-// hypot2, and integer helpers. No other Math functions.
+// hypot2, and integer helpers. No other Math functions. (Stage 6b
+// also calls String.normalize("NFD") over a closed, Unicode-frozen
+// decomposition set; see the cluster walk in buildTextGraph.)
 
 import { HERSHEY_SCRIPT } from "./hershey_script";
+import { COMBINING_TO_MARK, markPieces } from "./accent_marks";
+import type { MarkPiece } from "./accent_marks";
 import { NODE_TYPE } from "./types";
 import type { Node, Strand, TangleGraph } from "./types";
 import { hypot2 } from "../util/det_math";
@@ -696,10 +700,44 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
   const glyphJoins: Pt[] = [];
   const extraSegs: Array<[Pt, Pt]> = [];
   const dotLoops: Pt[][] = [];
+  // K115 stage 6b: accent marks wait here (HU, placed) until the whole
+  // word is laid out; only then can their no-crossing check see every
+  // neighbour stroke, nudge, and drop (see the mark pass below).
+  interface PendingMark {
+    pieces: MarkPiece[];
+    below: boolean;
+  }
+  const pendingMarks: PendingMark[] = [];
 
-  const chars = Array.from(text);
-  for (const ch of chars) {
-    const code = ch.codePointAt(0) ?? -1;
+  // Input normalization (6b): NFD on the way in, then walk grapheme
+  // clusters (a base codepoint plus its trailing combining marks,
+  // U+0300-U+036F, which covers U+0327). A precomposed letter and its
+  // decomposed spelling are the same clusters, so one code path
+  // serves both wire forms (the codec already sends NFC; see
+  // param_codec). Decompositions of this closed set are frozen by
+  // Unicode's normalization stability policy, so NFD is identical
+  // on every engine for the letters it can produce here.
+  interface Cluster {
+    base: string;
+    code: number;
+    marks: number[];
+  }
+  const clusters: Cluster[] = [];
+  for (const cp of Array.from(text.normalize("NFD"))) {
+    const code = cp.codePointAt(0) ?? -1;
+    if (code >= 0x0300 && code <= 0x036f) {
+      // A combining mark joins its base; with no base (string
+      // start) or after a space it has nothing to ride on and is
+      // dropped, with no advance.
+      const prev = clusters[clusters.length - 1];
+      if (prev !== undefined && prev.code !== 32) prev.marks.push(code);
+      continue;
+    }
+    clusters.push({ base: cp, code, marks: [] });
+  }
+  for (const cluster of clusters) {
+    const ch = cluster.base;
+    const code = cluster.code;
     if (code === 32) {
       cursor += SPACE_ADVANCE;
       if (mainPts.length > 0) {
@@ -793,6 +831,32 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     for (const dot of routed.dots) dotLoops.push(dot);
     if (routed.routePts.length === 0) continue;
 
+    // K115 stage 6b: this glyph's authored marks (a combining mark
+    // outside the table is dropped here; its base ships bare).
+    // Placement: centred on the advance centre, an above mark's box
+    // bottom at y = -15 (3 HU clear of the -12 ascender top), a
+    // capital base's mark 3 HU above its own topmost point instead,
+    // and the cedilla hanging from the baseline y = 9. Whether the
+    // mark may stay (the no-crossing nudge/drop pass) is decided
+    // after layout, when every neighbour stroke exists.
+    {
+      const cx = (cursorPrev + cursorNext) / 2;
+      let glyphTop = Infinity;
+      for (const s of glyph.strokes) {
+        for (const p of s) if (p[1] < glyphTop) glyphTop = p[1];
+      }
+      const aboveY = isLower ? -15 : glyphTop - 3;
+      for (const markCode of cluster.marks) {
+        const mark = COMBINING_TO_MARK[markCode];
+        if (mark === undefined) continue;
+        const below = mark === "cedilla";
+        pendingMarks.push({
+          pieces: markPieces(mark, cx, below ? 9 : aboveY),
+          below,
+        });
+      }
+    }
+
     if (mainPts.length === 0) {
       glyphJoins.push([routed.routePts[0][0], routed.routePts[0][1]]);
       for (const p of routed.routePts) mainPts.push(p);
@@ -837,6 +901,89 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     if (ll > 0) mainPts.push([l[0] + ((l[0] - lp[0]) / ll) * 4, l[1] + ((l[1] - lp[1]) / ll) * 4]);
   }
 
+  // K115 stage 6b: keep a mark only where it crosses nothing. Each
+  // mark's segments are proper-intersection-tested against every
+  // letter stroke, connector and dot in the word, and against marks
+  // already kept; a crossing placement nudges away from the letters
+  // by 1 HU steps (up for an above mark, down for the cedilla), at
+  // most 3, and then the mark is dropped - the base ships bare. A
+  // missing accent is a typo; a stroke through a letter is a
+  // different letter.
+  const acceptedMarks: MarkPiece[] = [];
+  {
+    const refSegs: Array<[Pt, Pt]> = [];
+    for (let k = 0; k + 1 < mainPts.length; k++) {
+      refSegs.push([mainPts[k], mainPts[k + 1]]);
+    }
+    for (const seg of extraSegs) refSegs.push(seg);
+    for (const dot of dotLoops) {
+      for (let k = 0; k + 1 < dot.length; k++) refSegs.push([dot[k], dot[k + 1]]);
+      if (dot.length > 1) refSegs.push([dot[dot.length - 1], dot[0]]);
+    }
+    const keptSegs: Array<[Pt, Pt]> = [];
+    // Segment-segment distance, squared: for non-crossing segments
+    // the minimum is attained at an endpoint. A mark that merely
+    // touches a stroke (the cedilla's top on the foot segment, say)
+    // still fuses with it in the planar build, so closeness within
+    // the point-on-stroke tolerance counts as a crossing here.
+    const segSegDist2 = (a: Pt, b: Pt, c: Pt, d: Pt): number => {
+      let m = segPointDist2(a, c, d).dd;
+      const v1 = segPointDist2(b, c, d).dd;
+      if (v1 < m) m = v1;
+      const v2 = segPointDist2(c, a, b).dd;
+      if (v2 < m) m = v2;
+      const v3 = segPointDist2(d, a, b).dd;
+      if (v3 < m) m = v3;
+      return m;
+    };
+    const tooClose = (a: Pt, b: Pt, c: Pt, d: Pt): boolean =>
+      properIntersect(a, b, c, d) || segSegDist2(a, b, c, d) <= ON_TOL2;
+    const pieceSegs = (pieces: MarkPiece[]): Array<[Pt, Pt]> => {
+      const out: Array<[Pt, Pt]> = [];
+      for (const piece of pieces) {
+        for (let k = 0; k + 1 < piece.pts.length; k++) {
+          out.push([piece.pts[k], piece.pts[k + 1]]);
+        }
+        if (piece.closed && piece.pts.length > 1) {
+          out.push([piece.pts[piece.pts.length - 1], piece.pts[0]]);
+        }
+      }
+      return out;
+    };
+    for (const pending of pendingMarks) {
+      for (let shift = 0; shift <= 3; shift++) {
+        const dy = pending.below ? shift : -shift;
+        const pieces: MarkPiece[] = pending.pieces.map((piece) => ({
+          closed: piece.closed,
+          pts: piece.pts.map((p) => [p[0], p[1] + dy] as Pt),
+        }));
+        const cand = pieceSegs(pieces);
+        let crosses = false;
+        for (const [a, b] of cand) {
+          for (const [c, d] of refSegs) {
+            if (tooClose(a, b, c, d)) {
+              crosses = true;
+              break;
+            }
+          }
+          if (crosses) break;
+          for (const [c, d] of keptSegs) {
+            if (tooClose(a, b, c, d)) {
+              crosses = true;
+              break;
+            }
+          }
+          if (crosses) break;
+        }
+        if (!crosses) {
+          for (const piece of pieces) acceptedMarks.push(piece);
+          for (const seg of cand) keptSegs.push(seg);
+          break;
+        }
+      }
+    }
+  }
+
   // --- Whole-word planar graph in HU. ---
   const segs: SegIn[] = [];
   for (let k = 0; k + 1 < mainPts.length; k++) {
@@ -859,6 +1006,33 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     const last = dot[dot.length - 1];
     if (dot.length > 1 && d2(last, dot[0]) > 0.000000001) {
       segs.push({ a: last, b: dot[0], stroke: -3, seg: dot.length, isMain: false });
+    }
+  }
+  // Accent marks (stroke -4): floating pieces, kept clear of every
+  // stroke above, so the planar build leaves each as its own strand.
+  for (const piece of acceptedMarks) {
+    for (let k = 0; k + 1 < piece.pts.length; k++) {
+      if (d2(piece.pts[k], piece.pts[k + 1]) > 0.000000001) {
+        segs.push({
+          a: piece.pts[k],
+          b: piece.pts[k + 1],
+          stroke: -4,
+          seg: k,
+          isMain: false,
+        });
+      }
+    }
+    if (piece.closed && piece.pts.length > 1) {
+      const last = piece.pts[piece.pts.length - 1];
+      if (d2(last, piece.pts[0]) > 0.000000001) {
+        segs.push({
+          a: last,
+          b: piece.pts[0],
+          stroke: -4,
+          seg: piece.pts.length,
+          isMain: false,
+        });
+      }
     }
   }
   const built = buildPlanar(segs, [mainPts[0], mainPts[mainPts.length - 1]]);
@@ -895,6 +1069,8 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
   const fEdges: FEdge[] = [];
   // Per atomic edge: expanded final edge ids and node ids, a -> b.
   const expansion: Array<{ edges: number[]; nodes: number[] }> = [];
+  // Final (expanded) edge indices that came from accent marks.
+  const markFinalEdges = new Set<number>();
   built.edges.forEach((e) => {
     const aPos = luNodes[e.a];
     const bPos = luNodes[e.b];
@@ -917,6 +1093,7 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     fEdges.push({ a: prev, b: e.b, isMain: e.isMain });
     expNodes.push(e.b);
     expansion.push({ edges: expEdges, nodes: expNodes });
+    if (e.stroke === -4) for (const fe of expEdges) markFinalEdges.add(fe);
   });
 
   // Degrees and feature types.
@@ -1008,6 +1185,7 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     edges: number[];
     nodes: number[];
     closed: boolean;
+    decorative?: boolean;
   }
   const rawStrands: RawStrand[] = [
     { edges: mainEdgeIds.slice(), nodes: mainNodeSeq.slice(), closed: false },
@@ -1076,7 +1254,13 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
       current = nxt;
     }
     if (seqEdges.length === 0) break; // Defensive; cannot happen.
-    rawStrands.push({ edges: seqEdges, nodes: seqNodes, closed });
+    rawStrands.push({
+      edges: seqEdges,
+      nodes: seqNodes,
+      closed,
+      decorative:
+        seqEdges.length > 0 && seqEdges.every((fe) => markFinalEdges.has(fe)),
+    });
   }
 
   // --- Emit the TangleGraph. ---
@@ -1113,6 +1297,7 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     isClosed: r.closed,
     nodes: r.nodes.map((ni) => nodeIds[ni]),
     pinned: true,
+    ...(r.decorative ? { decorative: true } : {}),
   }));
 
   const graph: TangleGraph = {
@@ -1175,7 +1360,7 @@ function properIntersect(a: Pt, b: Pt, c: Pt, d: Pt): boolean {
 
 export function attachTitle(graph: TangleGraph, title: string): string | null {
   let hasGlyph = false;
-  for (const ch of title) {
+  for (const ch of title.normalize("NFD")) {
     const code = ch.codePointAt(0) ?? -1;
     if (code > 32 && code <= 126 && HERSHEY_SCRIPT[code - 32].strokes.length > 0) {
       hasGlyph = true;
@@ -1528,7 +1713,8 @@ export function planHoleForBounds(
 }
 
 function textHasGlyph(text: string): boolean {
-  for (const ch of text) {
+  // NFD first (stage 6b): a precomposed letter counts by its base.
+  for (const ch of text.normalize("NFD")) {
     const code = ch.codePointAt(0) ?? -1;
     if (code > 32 && code <= 126 && HERSHEY_SCRIPT[code - 32].strokes.length > 0) {
       return true;
