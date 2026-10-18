@@ -16,6 +16,11 @@ export interface Node {
   type: NodeType;
   latticePos: [number, number];  // Doubled-lattice position (turns may be fractional).
   isOver?: boolean;              // For crossings: true if the "/" (NE-SW) pass goes over.
+  // K115 free-form crossings: when set, the first pass in strand order is
+  // the over pass when true. Physics and checkAlternation prefer this over
+  // the slash reading, which is ambiguous off the lattice. Lattice graphs
+  // never set it, so their behavior is unchanged.
+  overFirst?: boolean;
   // P4 maze: entrance/exit END nodes are pinned to this world position by the
   // physics; free END tips (dead-end stubs) carry no anchor.
   anchor?: [number, number];
@@ -33,6 +38,10 @@ export interface Strand {
   edgeIds: string[];
   isClosed: boolean;  // true if it forms a loop.
   nodes: string[];    // nodes traversed; first and last may be the same if closed.
+  // K115: every particle of a pinned strand (nodes and edge midpoints) is
+  // anchored at its authored position by the physics. Lattice strands
+  // never set it, so their behavior is unchanged.
+  pinned?: boolean;
 }
 
 // Main combinatorial graph. (The legacy single-strand MazeGraph - the old
