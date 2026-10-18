@@ -3,7 +3,9 @@
 // (after applyMazePlan + applyMazeCuts), no physics, no render, no RNG.
 //
 // Vertices are the graph's JUNCTION and END nodes - the only places a walker
-// has a decision (or a terminus). Edges are maximal runs of thread between
+// has a decision (or a terminus) - plus K115 waypoint nodes (text letter
+// boundaries: degree-2 stops where the walker pauses, never branches).
+// Edges are maximal runs of thread between
 // two consecutive vertices along a strand; CROSSING and TURN nodes are
 // interior to runs (following a strand through a crossing is "going
 // straight" by construction, so a crossing is never a decision point). The
@@ -99,8 +101,11 @@ export function buildWalkGraph(graph: TangleGraph): WalkGraph | null {
   const edges: WalkEdge[] = [];
 
   const isVertex = (id: string): boolean => {
-    const t = graph.nodes.get(id)!.type;
-    return t === NODE_TYPE.JUNCTION || t === NODE_TYPE.END;
+    const n = graph.nodes.get(id)!;
+    // K115: a waypoint (a text letter boundary) stops a run even at
+    // degree 2. It is never a branch: its walk degree stays 2 (its two
+    // path neighbours), unless it coincides with a junction.
+    return n.type === NODE_TYPE.JUNCTION || n.type === NODE_TYPE.END || n.waypoint === true;
   };
 
   const vertexAt = (id: string, chain: number, ctrl: number): WalkVertex => {

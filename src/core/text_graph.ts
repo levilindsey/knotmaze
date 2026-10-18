@@ -591,6 +591,10 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
   // --- Layout and per-glyph routing, in Hershey units. ---
   let cursor = 0;
   const mainPts: Pt[] = [];
+  // K115 stage 2: the main-path join point of each glyph (HU, reading
+  // order) - where its lead-in begins. Mapped to graph nodes below and
+  // flagged `waypoint`, one per glyph on the path.
+  const glyphJoins: Pt[] = [];
   const extraSegs: Array<[Pt, Pt]> = [];
   const dotLoops: Pt[][] = [];
 
@@ -645,13 +649,17 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     if (routed.routePts.length === 0) continue;
 
     if (mainPts.length === 0) {
+      glyphJoins.push([routed.routePts[0][0], routed.routePts[0][1]]);
       for (const p of routed.routePts) mainPts.push(p);
     } else {
       const p = mainPts[mainPts.length - 1];
       const q = routed.routePts[0];
       if (d2(p, q) <= 0.25) {
+        // The lead-in joins at the previous point itself.
+        glyphJoins.push([p[0], p[1]]);
         for (let k = 1; k < routed.routePts.length; k++) mainPts.push(routed.routePts[k]);
       } else {
+        glyphJoins.push([q[0], q[1]]);
         const prev = mainPts.length >= 2 ? mainPts[mainPts.length - 2] : p;
         const tanP: Pt = [p[0] - prev[0], p[1] - prev[1]];
         const nxt =
@@ -665,6 +673,7 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
 
   if (mainPts.length < 2) {
     const endX = cursor > 0 ? cursor : X_HEIGHT_HU;
+    glyphJoins.length = 0; // No glyph made the path; the line below is bare.
     mainPts.length = 0;
     mainPts.push([0, JOIN_Y], [endX, JOIN_Y]);
   }
@@ -809,6 +818,13 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     i === mainStartBuilt ? "mentr_a" : i === mainEndBuilt ? "mexit_a" : `tn${i}`
   );
 
+  // K115 stage 2: waypoint built-node indices - each glyph's join point
+  // (its entry is a main-path vertex by construction, so the nearest
+  // built node is exact), plus the exit end.
+  const waypointBuilt = new Set<number>();
+  for (const jp of glyphJoins) waypointBuilt.add(nearestNode(built, jp));
+  waypointBuilt.add(mainEndBuilt);
+
   // Crossing pass pairing (straightest continuation), for strand tracing.
   const pairOf = new Map<number, number>();
   fNodes.forEach((n, ni) => {
@@ -921,7 +937,12 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
   // --- Emit the TangleGraph. ---
   const nodes = new Map<string, Node>();
   fNodes.forEach((n, i) => {
-    nodes.set(nodeIds[i], { id: nodeIds[i], type: n.type, latticePos: [n.pos[0], n.pos[1]] });
+    nodes.set(nodeIds[i], {
+      id: nodeIds[i],
+      type: n.type,
+      latticePos: [n.pos[0], n.pos[1]],
+      ...(waypointBuilt.has(i) ? { waypoint: true } : {}),
+    });
   });
   const edges = new Map<string, { id: string; nodeA: string; nodeB: string; latticePoints: Array<[number, number]> }>();
   const adjacency = new Map<string, string[]>();
