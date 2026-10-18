@@ -113,7 +113,7 @@ Next free ID: K550.
   - owner: nobody (stage 1b closed by session 01a14e0f)
   - branch: mainline; last commit: bc357c4 (1b in cb7d006..bc357c4)
   - evidence: `.claude/probes/K115/` (census, proxies, real shots)
-  - next: Stage 3 title thread (E3) build from `docs/design/K115_stage3.md` (calls C1-C5 for Levi, recs in the brief). Residuals from 1b: same-slash crossings rely on overFirst only.
+  - next: Stage 4 cartouche (E2) brief; calls C1-C4 in `docs/design/K115_stage3.md` await Levi (built as rec). Stage 3a DONE 2026-10-18 (6625160): daily title thread, suite 1440 green, shots `.claude/probes/K115/stage3/`. Residuals from 1b: same-slash crossings rely on overFirst only.
   - brief: `docs/design/K115_stage3.md`; `docs/design/K115_stage1.md`; design `docs/design/K115_cursive_text.md`
 
 - **K114** · Gameplay round 2, designed in
@@ -508,9 +508,6 @@ Every other item below waits on the trigger it names.
 - **K246** · K174's residuals (`docs/design/K174.md`, "Stage 1 handoff"): pace links unclamped (old
   `mhp=25` = 25x pace); K80 rt probes (`.claude/probes/K80/rt/`) lack K132's `rt_lib.ts` fix;
   `rt_chase.mjs` uses OS temp (fixed in `.claude/probes/K174/rt/`); panel labels clip `mino*` keys.
-- **K243** · Paused instant intro draws no threads (FIXED 2026-10-18: beginSettle instant branch now draws its first frame; shot \.claude/probes/K115/k243_after.png\) (`?b.J&am=instant&fw=0&sp=0`): `beginSettle()`'s
-  instant branch skips `update()`; fix: `handRendererLook(); renderer.update(); fabric.update(...)`.
-  `docs/design/K235_K239.md` ("Stage 1 handoff"); `.claude/probes/K235/k239_paused.mjs`.
 - **K242** · K191's residuals (`docs/design/K154_K169.md`, "Stage 2 handoff"): the fan program's GPU
   cost during fades and stage 1's phone hash cost are unmeasured; the tap-time fade-out and a full
   web restored on load are unit-tested only; the knot and fog A/B against stage 1 was not rerun.
@@ -822,9 +819,6 @@ Every other item below waits on the trigger it names.
 - **K367** · Ripple burst oddities (K279 s2): the wave phase reads +0.4-0.5 ms
   outside the ripple's draws (one unpinned run per build; rerun interleaved),
   and every ripple phase has a 9.5-10.7 ms worst frame (4.2-5.1 without).
-- **K369** · `index.html` links no icon while `public/favicon.svg` ships
-  unlinked, so Chrome asks for `/favicon.ico` (a 404 in every probe log; K279
-  s2, unchecked). The link must be relative (the levi.dev proxy).
 - **K372** · Fabric `?b` doesn't sleep again within 30 s after a drag, on any
   host, master included (K7 s4). Rec: a short sonnet probe of whether and when
   it sleeps.
@@ -978,8 +972,6 @@ Every other item below waits on the trigger it names.
   (docs/design/K467.md Handoff)
 - **K487** · The shipped probes .claude/probes/K92/undo.mjs and K198/stage2/pan.mjs predate the
   phone sheet; sheet-aware copies are in .claude/probes/K467/
-- **K489** · `finishIndicator.gate()` is unused: main.ts calls it nowhere (K465 Handoff); remove it
-  or wire it
 - **K490** · A console "Failed to load resource ... 404" on every load of K465's preview build (not
   a pageerror; cause not investigated): check master's build and name the URL.
   K466 saw it on a vite dev server too (`.claude/probes/K466/sheet/key.txt`), so it is not
@@ -1234,6 +1226,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K529** · K500's other half: a touch press on a beyond run lighting its glow, in the realtime chase (desktop mouse hover verified; touch unprobed).
 
 ## Done
+
+- **K243** · Paused instant intro draws no threads: beginSettle instant branch now draws its first frame. Done in 0f8e277 (2026-10-18).
+- **K489** · Dead finishIndicator.gate() hook removed (visible() composes the hold; never wired). Done in 0f8e277 (2026-10-18).
+- **K369** · Favicon linked relatively (./favicon.svg) in index.html. Done in 0f8e277 (2026-10-18).
 
 - **K541** · Panel Stage A2: remaining moves, word labels (at most 23 chars) on every row, desktop width 320 px, inventory rerun. Done in 2c351ae (2026-10-16).
 
