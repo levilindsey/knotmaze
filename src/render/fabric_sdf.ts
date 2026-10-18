@@ -71,7 +71,10 @@ export function fabricUniforms(): UniformGroup {
 // here (no import cycle: gap_prepass and ribbon_shader both import this
 // module) — the paint shader's choice (mask sample vs the combined
 // in-shader search) and the warm-up's registry both read the one flag.
-let GAP_SPLIT = true;
+// K320 2b landed the split dark: parity is blocked on K550 (split cuts
+// wider bars), so the combined in-shader path stays the default until
+// 2c proves 0 px. detectGapSplit only gates capability, not this flag.
+let GAP_SPLIT = false;
 export function gapSplitActive(): boolean {
   return GAP_SPLIT;
 }
