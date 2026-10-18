@@ -916,3 +916,35 @@ export function withExplore(frag: string): string {
   s = s.slice(0, i) + EXPLORE_MAIN_GLSL + s.slice(i);
   return s;
 }
+
+// K320 stage 2b: the paint fragment's explore variant. After the split the
+// paint program samples the gap mask (gapKeepFromMask) and carries no gap
+// library, so only the thread-visibility half of withExplore applies here:
+// the VIS/look declarations (the shaped cut's coverage stays in the gap
+// program, where the mask is written), the side derivative, the exact ctrl
+// and the visibility main before the mask sample. The fragment must hold
+// the mask stub (GAP_MASK_FRAG in ribbon_shader.ts) and the paint chunks.
+const ANCHOR_GAP_MASK = "  float gk = gapKeepFromMask(kc.ch);";
+const PAINT_LOOK_END = "// K268 THE SHAPED CUT:";
+export const EXPLORE_PAINT_DECL_GLSL = ((): string => {
+  const cut = EXPLORE_LOOK_GLSL.indexOf(PAINT_LOOK_END);
+  if (cut < 0) throw new Error("explore paint decl: shaped-cut marker missing");
+  return EXPLORE_VIS_GLSL + EXPLORE_LOOK_GLSL.slice(0, cut);
+})();
+export function withExplorePaint(frag: string): string {
+  let s = frag;
+  once(s, ANCHOR_MAIN);
+  let i = once(s, "void main(void) {");
+  s = s.slice(0, i) + EXPLORE_PAINT_DECL_GLSL + "\n" + s.slice(i);
+  i = once(s, ANCHOR_PXARC) + ANCHOR_PXARC.length;
+  s = s.slice(0, i) + "  highp float kSideFw = fwidth(vUV.y);\n" + s.slice(i);
+  i = once(s, ANCHOR_KCTRL);
+  s =
+    s.slice(0, i) +
+    "bool exHere = uKExplore.x > 0.5;\n  " +
+    "highp float kctrl = fxHere || paintHere || exHere ? kCtrlNear(kc, kpt.x, kpt.y) : 0.0;" +
+    s.slice(i + ANCHOR_KCTRL.length);
+  i = once(s, ANCHOR_GAP_MASK);
+  s = s.slice(0, i) + EXPLORE_MAIN_GLSL + s.slice(i);
+  return s;
+}

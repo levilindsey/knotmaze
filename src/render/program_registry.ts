@@ -19,7 +19,7 @@ import { junctionProgram } from "./junction_field";
 import { markerProgram } from "./marker_mesh";
 import { pluckBlurProgram, pluckStillProgram } from "./pluck_overlay";
 import { rippleProgram } from "./pluck_ripple";
-import { sectionGapProgram, sectionProgram } from "./ribbon/ribbon_shader";
+import { sectionGapProgram, sectionProgramFor } from "./ribbon/ribbon_shader";
 
 // Program sites per file under src/ (the test's scan, comments stripped):
 // matches of GlProgram.from | new GlProgram( | Shader.from | new Filter |
@@ -150,13 +150,13 @@ export function programRegistry(): readonly ProgramEntry[] {
       name: "section-rgb",
       files: [RIBBON],
       wave1: (c) => !c.explore,
-      build: () => sectionProgram(false),
+      build: (c) => sectionProgramFor(c.gapSplit !== false, false),
     },
     {
       name: "section-rgb-explore",
       files: [RIBBON],
       wave1: (c) => c.explore || c.burn,
-      build: () => sectionProgram(true),
+      build: (c) => sectionProgramFor(c.gapSplit !== false, true),
     },
     {
       // K320 stage 2a: the gap-only pre-pass twin (data plane; warmed with

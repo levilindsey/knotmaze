@@ -48,9 +48,9 @@ import {
   extensions,
 } from "pixi.js";
 import type { Mesh, Renderer, Shader } from "pixi.js";
-import { fabricUniforms } from "./fabric_sdf";
+import { fabricUniforms, setGapMaskSize, setGapSplitActive } from "./fabric_sdf";
 import { knotUniformValues } from "./paint_model";
-import { sectionGapShader } from "./ribbon/ribbon_shader";
+import { bindGap, bindGapMask, sectionGapShader } from "./ribbon/ribbon_shader";
 
 // ---------------------------------------------------------------------------
 // Pure parts (test/render/gap_split.test.ts; no GL).
@@ -64,6 +64,12 @@ export function gapMaskEncode(keep: number, chain: number): [number, number, num
 // (-1 = no ribbon covers the texel; that fragment keeps 1.0, brief 3.3).
 export function gapMaskChain(texel: ArrayLike<number>): number {
   return Math.round(texel[1]) - 1;
+}
+
+// The paint fragment's sampler (GAP_MASK_FRAG gapKeepFromMask), CPU twin:
+// 1.0 where another ribbon owns the texel, else the stored keep.
+export function gapKeepFromMask(texel: ArrayLike<number>, self: number): number {
+  return gapMaskChain(texel) !== self ? 1.0 : texel[0];
 }
 
 // The paint pass's mask coordinate for a canvas fragment: Pixi flips the
@@ -91,6 +97,7 @@ export function detectGapSplit(gl: GlLike | null): boolean {
     !!gl.getExtension("EXT_color_buffer_half_float"),
   );
   SPLIT_GL = gl;
+  setGapSplitActive(SPLIT_OK);
   return SPLIT_OK;
 }
 
@@ -154,6 +161,8 @@ function ensureMaskSize(w: number, h: number): boolean {
   const rt = gapMaskTexture();
   const width = Math.max(1, Math.round(w));
   const height = Math.max(1, Math.round(h));
+  setGapMaskSize(width, height);
+  bindGapMask(rt);
   if (rt.width === width && rt.height === height) return false;
   rt.resize(width, height, 1);
   return true;
@@ -166,6 +175,7 @@ function ensureMaskSize(w: number, h: number): boolean {
 export interface GapSceneSource {
   root: Container;
   base: Container;
+  gapTex: import("pixi.js").Texture;
   fills: ReadonlyArray<{ mesh: Mesh }>;
   explore(): boolean;
   geomRev(): number;
@@ -222,6 +232,7 @@ function targetComplete(renderer: Renderer): boolean {
     renderer.renderTarget.bind(gapMaskTexture());
     if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
       SPLIT_OK = false;
+      setGapSplitActive(false);
     }
   } catch {
     // No check possible: the extension answer stands.
@@ -254,6 +265,7 @@ export function renderGapMask(renderer: Renderer): void {
   };
   if (!gapMaskDirty(LAST, next)) return;
   LAST = next;
+  bindGap(src.gapTex);
   const gapShader: Shader = sectionGapShader(next.explore);
   const root = src.root;
   const hidden: Array<[Container, boolean]> = [];
@@ -316,6 +328,7 @@ class GapPrepassSystem {
     FRAMEBUFFER_CHECKED = false;
     SPLIT_OK = null;
     SPLIT_GL = null;
+    setGapSplitActive(true);
   }
   destroy(): void {}
 }

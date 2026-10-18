@@ -65,6 +65,35 @@ export function fabricUniforms(): UniformGroup {
 // The gap globals (see the header): enabled and the probe tint come from
 // GapMaskTable.setEnabled; brute is a probe switch (the renderer's
 // gapBrute toggle), never a link or panel value.
+// K320 stage 2b: the split's shared state — whether the gap mask target
+// can exist on this context (the half-float check in gap_prepass.ts) and
+// the mask's size uniform the paint fragments read for the Y flip. Kept
+// here (no import cycle: gap_prepass and ribbon_shader both import this
+// module) — the paint shader's choice (mask sample vs the combined
+// in-shader search) and the warm-up's registry both read the one flag.
+let GAP_SPLIT = true;
+export function gapSplitActive(): boolean {
+  return GAP_SPLIT;
+}
+export function setGapSplitActive(on: boolean): void {
+  GAP_SPLIT = on;
+}
+
+let GAP_MASK_UNIFORMS: UniformGroup | null = null;
+export function gapMaskUniforms(): UniformGroup {
+  if (!GAP_MASK_UNIFORMS) {
+    GAP_MASK_UNIFORMS = new UniformGroup({
+      uGapSize: { value: new Float32Array([1, 1]), type: "vec2<f32>" },
+    });
+  }
+  return GAP_MASK_UNIFORMS;
+}
+export function setGapMaskSize(w: number, h: number): void {
+  const v = (gapMaskUniforms().uniforms as unknown as { uGapSize: Float32Array }).uGapSize;
+  v[0] = Math.max(1, Math.round(w));
+  v[1] = Math.max(1, Math.round(h));
+}
+
 export function setFabricGap(enabled: boolean, probe: boolean, brute = false): void {
   const v = (fabricUniforms().uniforms as unknown as { uFabricGap: Float32Array }).uFabricGap;
   v[0] = enabled ? 1 : 0;

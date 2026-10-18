@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K550.
+Next free ID: K551.
 
 ## Waiting on Levi
 
@@ -1173,7 +1173,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K316** · Single-threaded WASM for the collision narrow-phase (~40% of a drag's physics; the
   audit's 2-4x takes gs 18 from 0.76x to real time), only if K7 s5's phone numbers show physics, not
   rendering, as the limit. No threads (Gauss-Seidel can't be colored; SAB needs COOP/COEP).
-- **K320** · Split section-rgb (design `docs/design/K320_section_rgb.md`, stage 2 brief `docs/design/K320_stage2.md`): stage 0 PASS (split saves ~1.84 s cold), stage 1 slim done (6c592e6), 2a data plane done (ffd3864); 2b (paint samples mask) in flight, 2c after. Was: at 46,850 characters it is the cold critical path (~2.8 s on
+- **K320** · Split section-rgb (design `docs/design/K320_section_rgb.md`, stage 2 brief `docs/design/K320_stage2.md`): stage 0 PASS (split saves ~1.84 s cold), stage 1 slim done (6c592e6), 2a data plane done (ffd3864), 2b paint-samples-mask landed (this commit; cold paint 29,414 chars/1,735 ms vs combined 46,361/3,217 ms, D3D11 medians); 2c after K550. Was: at 46,850 characters it is the cold critical path (~2.8 s on
   the desktop, K307 s1; K540 attributed G3-1's +0.39 s cold regression to the enlarged gap
   shaders' FXC compile gating first paint — this item is its fix). A deploy that changes a shader costs every player one cold compile
   (programs are cached by source), so a smaller or split program shortens every such load.
@@ -1181,6 +1181,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   Stage 0 verdict (eac12a3, probe-only): the split PASSES the >=0.5s gate — cold medians full 3.74s vs paint-only 1.90s / gap-only 0.51s (saving ~1.84s); `.claude/probes/K320/stage0_results.md`.
   Stage 1 done (this commit): the bundled slim (O1+O3; O4 waits on call 1, O7 unmeasured) — section-rgb frag 48,737 -> 46,310, junction-field 29,599 -> 26,305, arm-strip 33,122 -> 31,049, pluck-still 21,075 -> 19,960; budget guard `test/render/k320_slim.test.ts`; evidence `.claude/probes/K320/results.md`. Stage 2 (the split) remains, through the Stage 0 gate and Levi's calls.
   Stage 2 brief (docs only): `docs/design/K320_stage2.md` — gap pre-pass into a canvas-sized RGBA16F mask (keep + draw index, dirty-gated like the arm strips), paint-only section sampling it; master + explore split, fans/still keep the library; fallback to the combined programs where no half-float target; sub-steps 2a data plane / 2b split / 2c registry + gate measure; five calls at its end (rec: build as designed).
+- **K550** · K320 2b parity blocker (found at 2b landing): same-state split-vs-combined A/B (`.claude/probes/K320/stage2_ab.mjs`, frozen G1 states) is NOT 0px: def 12,353 px / fat 29,669 / user 8,701 / knot 26,201 differing (max 185; split-vs-split control 0 px). Split cuts wider transverse bars at crossings than the in-shader path (mask image `.claude/probes/K320/mask_keep.png` reads as correct casing gaps; Y flip and +-1 texel row ruled out — both far worse; owner rule helps 34.5k->12.3k). Named suspect: the gap pass's per-fragment terms (pxW / fade width) evaluated in the pre-pass render differ from the main pass. 2c must not start until this is root-caused and the A/B is 0px (or K433 one-level); the fallback pair (`&gapSplit` off via `RibbonRenderer.setGapSplit`) renders the pre-split pixels meanwhile.
 - **K338** · K324's side ideas (`docs/design/K324_realtime_minotaur.md`):
   a real-time close-calls stat (section 5), a Search speed knob (4.4),
   and a real-time sentry (roam 0, K296's analog).

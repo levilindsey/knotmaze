@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 import {
   GAP_MASK_FLIP_Y,
+  gapKeepFromMask,
   gapMaskChain,
   gapMaskDirty,
   gapMaskEncode,
@@ -31,6 +32,16 @@ describe("gap mask texel encode/decode", () => {
   it("an empty texel (the clear) has no owner", () => {
     expect(gapMaskChain([0, 0, 0, 0])).toBe(-1);
     expect(gapMaskChain(gapMaskEncode(0.5, 0))).toBe(0);
+  });
+});
+
+describe("gap mask sampler (paint twin, brief 3.3)", () => {
+  it("applies the stored keep only to its owner texel", () => {
+    expect(gapKeepFromMask(gapMaskEncode(0.25, 3), 3)).toBe(0.25);
+    expect(gapKeepFromMask(gapMaskEncode(0.25, 3), 2)).toBe(1.0);
+    expect(gapKeepFromMask([0, 0, 0, 0], 0)).toBe(1.0);
+    expect(gapKeepFromMask(gapMaskEncode(0, 0), 0)).toBe(0);
+    expect(gapKeepFromMask(gapMaskEncode(1, 0), 0)).toBe(1);
   });
 });
 
