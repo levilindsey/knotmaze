@@ -20,7 +20,7 @@ const D = PARAM_DEFAULTS as unknown as Record<string, ParamValue>;
 // APPEND a new param or enum option, to the table and here. Anything else (a
 // reorder, a removal, a type, an option renamed or moved) bumps
 // CODEC_VERSION: update PIN_VERSION and this list together.
-const PIN_VERSION = 7;
+const PIN_VERSION = 8;
 const ANCHORS = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 const PIN: ReadonlyArray<readonly unknown[]> = [
   ["gridSize", "number"], // 0
@@ -203,6 +203,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["trapIters", "number"],
   ["trapTries", "number"],
   ["trapSurplus", "number"],
+  ["text", "string"],
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
@@ -262,7 +263,7 @@ describe("codec table", () => {
     const enumNames = Object.keys(ENUM_OPTIONS);
     for (const p of CODEC_PARAMS) {
       const def = D[p.name];
-      if (p.type === "number" || p.type === "boolean") {
+      if (p.type === "number" || p.type === "boolean" || p.type === "string") {
         expect([p.name, typeof def]).toEqual([p.name, p.type]);
       } else if (p.type === "color") {
         expect([p.name, def]).toEqual([p.name, expect.stringMatching(/^#[0-9a-f]{6}$/)]);
@@ -275,9 +276,10 @@ describe("codec table", () => {
         expect(p.options).toContain(def);
       }
     }
-    // Every string param is an enum except the colors.
+    // Every string param is an enum except the colors and the text string.
     const stringParams = Object.keys(D).filter((k) => typeof D[k] === "string");
     expect(stringParams.filter((k) => !enumNames.includes(k))).toEqual([
+      "text",
       "pathColor",
       "backgroundBase",
       "backgroundAccent1",
@@ -301,17 +303,17 @@ describe("token format", () => {
     expect(encodeToken(0, {}, D)).toBe("0");
     expect(encodeToken(4294967295, {}, D)).toBe("1z141z3");
     expect(decodeToken("1471kin", D)).toEqual({ seed: 2430477599, values: D, error: null });
-    // An all-default blob ("P" = version 7, no entries; earlier builds
+    // An all-default blob ("EQ" = version 8, no entries; earlier builds
     // wrote v6's "N", v5's "L" and v4's "J") still reads as today's defaults.
-    expect(bitsToBlob(`${V} 1`)).toBe("P");
-    expect(decodeToken("1471kin.P", D)).toEqual({ seed: 2430477599, values: D, error: null });
+    expect(bitsToBlob(`${V} 1`)).toBe("EQ");
+    expect(decodeToken("1471kin.EQ", D)).toEqual({ seed: 2430477599, values: D, error: null });
   });
 
   // Defaults come from the caller: a link reads whatever defaults it is
   // given, and a listed boolean is the given default flipped.
   it("reads a link against the defaults it is given", () => {
     const moved = { ...D, gridSize: 20, physics: false };
-    const d = decodeToken("7.Ox9Mngu", moved);
+    const d = decodeToken("7.EMfTJ4Lg", moved);
     expect(d.error).toBeNull();
     expect(d.values.gridSize).toBe(20); // not listed: the given default
     expect(d.values.physics).toBe(true); // listed: the given default flipped
@@ -325,6 +327,7 @@ describe("token format", () => {
       ["1471kin.U", 2430477599, /^old link version 2$/],
       // K76 stage 2c: v5 (before the exploration mode).
       ["1471kin.L", 2430477599, /^old link version 5$/],
+      ["7.OUfTJ4YJbGRMCo", 7, /^old link version 7$/],
       ["1471kin.c", 2430477599, /^old link version 3$/],
       ["7.ZR9MnhklsZEwo", 7, /^old link version 3$/],
       ["7.RR9MnhklsZEwo", 7, /^old link version 2$/],
@@ -382,7 +385,7 @@ describe("token format", () => {
       physics: false,
     };
     const bits = [
-      V, // version 7 = gamma(7) = "00111"
+      V, // version 8 = gamma(8) = "0001000"
       "00101", // 4 entries = gamma(4 + 1)
       "0001111", // index 14 threadWidth: gamma(14 - -1 = 15)
       "1010 0110 0100 1111", // ".64", then the terminator 15
@@ -393,8 +396,8 @@ describe("token format", () => {
       "000010101", // index 60 physics: gamma(60 - 39 = 21); a boolean has no value bits
     ].join(" ");
     expect(encodeToken(7, values, D)).toBe(`7.${bitsToBlob(bits)}`);
-    expect(encodeToken(7, values, D)).toBe("7.OUfTJ4YJbGRMCo");
-    const back = decodeToken("7.OUfTJ4YJbGRMCo", D);
+    expect(encodeToken(7, values, D)).toBe("7.EFH0yeGCWxkTAq");
+    const back = decodeToken("7.EFH0yeGCWxkTAq", D);
     expect(back.error).toBeNull();
     expect(back.values).toEqual(values);
   });
@@ -430,13 +433,37 @@ describe("token format", () => {
 
   it("reads `<seed>.` (a trailing sentence period) as the bare seed", () => {
     expect(decodeToken("1471kin.", D)).toEqual(decodeToken("1471kin", D));
-    expect(decodeToken("7.MUfTJ4ZJbGRMK.", D)).toEqual(decodeToken("7.MUfTJ4ZJbGRMK", D));
+    expect(decodeToken("7.EFH0yeGCWxkTAq.", D)).toEqual(decodeToken("7.EFH0yeGCWxkTAq", D));
     expect(decodeToken("1471kin", D).error).toBeNull();
   });
 });
 
+describe("string param (K115 text)", () => {
+  it("round-trips text, including unicode", () => {
+    for (const text of ["Welcome", "knotmaze", "Daily #12", "café ✦", "hello world"]) {
+      const token = encodeToken(7, { ...D, text }, D);
+      const d = decodeToken(token, D);
+      expect(d.error).toBeNull();
+      expect(d.values.text).toBe(text);
+      expect(d.values).toEqual({ ...D, text });
+    }
+  });
+
+  it("normalizes to NFC on encode", () => {
+    const decomposed = "cafe\u0301";
+    const token = encodeToken(7, { ...D, text: decomposed }, D);
+    expect(decodeToken(token, D).values.text).toBe("café");
+    expect(token).toBe(encodeToken(7, { ...D, text: "café" }, D));
+  });
+
+  it("leaves the default empty string out of the token", () => {
+    expect(encodeToken(7, { ...D, text: "" }, D)).toBe("7");
+    expect(decodeToken("7", D).values.text).toBe("");
+  });
+});
+
 describe("token robustness", () => {
-  const good = "7.OUfTJ4YJbGRMCo";
+  const good = "7.EFH0yeGCWxkTAq";
 
   it("rejects every truncation, keeping the seed", () => {
     const blob = good.slice(2);
@@ -452,7 +479,7 @@ describe("token robustness", () => {
     // Gamma bits (gamma, above), so the cases below follow the table.
     const size = CODEC_PARAMS.length;
     const cases: Array<[string, RegExp]> = [
-      ["7.O!0y", /invalid character/], // "O" holds the v7 version bits
+      ["7.E!0y", /invalid character/], // "E" holds the v8 version bits
       [`7.${bitsToBlob(`${V} 1`)}A`, /trailing data/], // a whole extra char
       // gridSize 1, then a non-zero padding bit.
       [`7.${bitsToBlob(`${V} 010 1 0001 1111 1`)}`, /trailing data/],
@@ -530,6 +557,10 @@ describe("token round trip (seeded property test)", () => {
         const hex = Math.floor(rand() * 0x1000000).toString(16).padStart(6, "0");
         return "#" + (rand() < 0.2 ? hex.toUpperCase() : hex);
       }
+      case "string": {
+        const samples = ["", "Welcome", "knotmaze", "café", "Daily #12", "✦ é", "hello world"];
+        return samples[Math.floor(rand() * samples.length)];
+      }
       case "number": {
         const r = rand();
         const decimal =
@@ -548,6 +579,7 @@ describe("token round trip (seeded property test)", () => {
   const canonical = (p: CodecParam, v: ParamValue): ParamValue => {
     if (p.type === "number") return clampParamValue(p.name, Number(numberText(v as number)));
     if (p.type === "color") return (v as string).toLowerCase();
+    if (p.type === "string") return (v as string).normalize("NFC");
     return v;
   };
 

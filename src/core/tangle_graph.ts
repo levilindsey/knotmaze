@@ -116,6 +116,7 @@ export function checkStructure(graph: TangleGraph): boolean {
 // a crossing from the sequence, and the two flanking passes legitimately
 // repeat parity.
 export function checkAlternation(graph: TangleGraph): boolean {
+  const seenCrossings = new Set<string>();
   for (const strand of graph.strands) {
     // Tokens along the strand: a boolean per crossing pass (goes over?),
     // "J" per junction interruption.
@@ -157,7 +158,13 @@ export function checkAlternation(graph: TangleGraph): boolean {
         vy = next.latticePos[1] - node.latticePos[1];
       }
       const isSlash = vx * vy > 0;
-      tokens.push(isSlash ? node.isOver === true : node.isOver !== true);
+      if (node.overFirst !== undefined) {
+        const isFirst = !seenCrossings.has(node.id);
+        seenCrossings.add(node.id);
+        tokens.push(isFirst ? node.overFirst : !node.overFirst);
+      } else {
+        tokens.push(isSlash ? node.isOver === true : node.isOver !== true);
+      }
     }
 
     const firstJ = tokens.indexOf("J");

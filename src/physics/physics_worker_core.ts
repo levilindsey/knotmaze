@@ -203,6 +203,7 @@ const NAME_VERSION = 1;
 // Every SceneParams field and its type: what a name must carry, in order.
 // Typed as a full Record, so a new SceneParams field fails to compile here.
 const SCENE_FIELDS: Record<keyof SceneParams, "number" | "boolean" | "string"> = {
+  text: "string",
   gridSize: "number",
   weaveDensity: "number",
   turnBias: "number",

@@ -1,4 +1,5 @@
 import { generateLatticeKnotwork } from "./lattice_grower";
+import { buildTextGraph } from "./text_graph";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "./maze_plan";
 import { planAnchors } from "./shapes";
 import type { AnchorId, ShapeId } from "./shapes";
@@ -15,6 +16,7 @@ import type { GenerationParams, TangleGraph } from "./types";
 // The params a scene graph is built from: a structural subset of the
 // link's params (ui/url_state.ts UrlParams), so core imports nothing from ui.
 export interface SceneParams {
+  text: string;
   gridSize: number;
   weaveDensity: number;
   turnBias: number;
@@ -54,6 +56,13 @@ export interface SceneGraph {
 }
 
 export function buildSceneGraph(params: SceneParams): SceneGraph {
+  if (params.text !== "") {
+    const graph = buildTextGraph(params.text);
+    if (!checkStructure(graph) || !checkAlternation(graph)) {
+      console.warn("Knot invariants violated; generation bug.");
+    }
+    return { graph, hueGroup: undefined };
+  }
   const genParams: GenerationParams = {
     gridSize: params.gridSize,
     weaveDensity: params.weaveDensity,

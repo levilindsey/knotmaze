@@ -171,6 +171,7 @@ function otherValue(key: string, v: unknown): unknown {
   if (typeof v === "boolean") return !v;
   if (typeof v === "number") return v + 0.25;
   // pathColor and the custom background colors (K79).
+  if (key === "text") return "Welcome";
   if (typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v)) {
     return v === "#123456" ? "#654321" : "#123456";
   }

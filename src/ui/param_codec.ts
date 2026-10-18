@@ -20,6 +20,8 @@
 //                 number   its shortest decimal (numberText: ".25", "-.5"),
 //                          4 bits per char - 0-9, "." = 10, "-" = 11 - then
 //                          15 terminates (12-14 reserved)
+//                 string   gamma(byteLength), then that many UTF-8 bytes
+//                          (8 bits each); NFC-normalized on encode
 //
 // gamma(n), n >= 1 (Elias gamma) = floor(log2 n) zeros, then n in binary.
 //
@@ -42,7 +44,7 @@
 export type ParamValue = number | boolean | string;
 
 export type CodecParam =
-  | { readonly name: string; readonly type: "number" | "boolean" | "color" }
+  | { readonly name: string; readonly type: "number" | "boolean" | "color" | "string" }
   | {
       readonly name: string;
       readonly type: "enum";
@@ -56,6 +58,7 @@ const num = (name: string): CodecParam => Object.freeze({ name, type: "number" }
 const flag = (name: string): CodecParam =>
   Object.freeze({ name, type: "boolean" });
 const color = (name: string): CodecParam => Object.freeze({ name, type: "color" });
+const str = (name: string): CodecParam => Object.freeze({ name, type: "string" });
 const choice = (name: string, options: readonly string[]): CodecParam =>
   Object.freeze({ name, type: "enum", options: Object.freeze([...options]) });
 
@@ -303,13 +306,14 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("trapIters"),
   num("trapTries"),
   num("trapSurplus"),
+  str("text"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
 // append (see above). 1-3 were the frozen tables K132 dropped; 5 removed
 // K111 stage 2's highlightMode (index 108, K111 stage 3); 6 replaced the
 // fogOfWar flag at 51 with the exploration enum (K76 stage 2c); 7 is
-// K323 Stage A (see above).
+// K323 Stage A (see above). v8 (K115): the text string param appended.
 // v7 (K323 Stage A): snappiness, mazeFabric (codec only; the field stays
 // until K326), deadEnds, confetti and fire left the table; minotaur lost
 // its off option; minoToward became the minoPull slider; gameMode was
@@ -448,7 +452,7 @@ export function clampParamValue(name: string, value: number): number {
   return Math.min(range[1], Math.max(range[0], value));
 }
 
-export const CODEC_VERSION = 7;
+export const CODEC_VERSION = 8;
 
 // The shortest decimal for a number, after rounding to 6 decimals (slider
 // steps leave float noise behind - 1.4500000000000002, or 1.7e-17 for a
@@ -566,6 +570,20 @@ function entryFor(
   value: unknown,
   def: ParamValue | undefined
 ): Entry | null {
+  if (p.type === "string") {
+    if (typeof value !== "string") return null;
+    const text = value.normalize("NFC");
+    const defText = typeof def === "string" ? def.normalize("NFC") : def;
+    if (text === defText) return null;
+    const bytes = new TextEncoder().encode(text);
+    return {
+      index,
+      write: (w) => {
+        w.gamma(bytes.length);
+        for (const b of bytes) w.write(b, 8);
+      },
+    };
+  }
   switch (p.type) {
     case "boolean":
       // A listed boolean is its default flipped: it needs a boolean default.
@@ -636,6 +654,16 @@ function readValue(
   p: CodecParam,
   def: ParamValue | undefined
 ): ParamValue {
+  if (p.type === "string") {
+    const len = r.gamma();
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) bytes[i] = r.read(8);
+    try {
+      return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    } catch {
+      throw new Error(`${p.name} is not valid UTF-8`);
+    }
+  }
   switch (p.type) {
     case "boolean":
       if (typeof def !== "boolean") throw new Error(`${p.name} is no flag`);
