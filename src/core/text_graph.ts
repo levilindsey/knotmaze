@@ -15,6 +15,7 @@ import { HERSHEY_SCRIPT } from "./hershey_script";
 import { NODE_TYPE } from "./types";
 import type { Node, Strand, TangleGraph } from "./types";
 import { hypot2 } from "../util/det_math";
+import { buildWalkGraph } from "./walk_graph";
 
 type Pt = [number, number];
 
@@ -25,6 +26,7 @@ const MAX_EDGE_LU = 1.4; // TURN chains: at most this per edge.
 const BLUNT_LU = 0.9; // Opened cusp tip width.
 const ON_TOL2 = 0.25; // Point-on-stroke tolerance, squared (HU).
 const NODE_TOL2 = 0.0025; // Same-node tolerance, squared (HU).
+export const TITLE_GAP = 2; // LU between a title band's bottom and the maze top.
 
 function d2(a: Pt, b: Pt): number {
   const x = a[0] - b[0];
@@ -984,6 +986,244 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
 }
 
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// K115 stage 3a: attach a title word to an applied maze's entrance tail.
+// The word is built at the fitted x-height, placed in a band above the
+// maze, and its main strand is extended by a Hermite connector to the
+// chosen entrance END, which becomes the degree-2 JUNCTION `tseam`.
+// Returns the seam id, or null (graph untouched) when the title builds
+// no glyphs or the connector would cross maze material twice over.
+// ---------------------------------------------------------------------------
+
+function renameGraphNode(graph: TangleGraph, oldId: string, newId: string): void {
+  const node = graph.nodes.get(oldId);
+  if (!node || oldId === newId) return;
+  graph.nodes.delete(oldId);
+  node.id = newId;
+  graph.nodes.set(newId, node);
+  const adj = graph.adjacency.get(oldId);
+  graph.adjacency.delete(oldId);
+  graph.adjacency.set(newId, adj ?? []);
+  for (const e of graph.edges.values()) {
+    if (e.nodeA === oldId) e.nodeA = newId;
+    if (e.nodeB === oldId) e.nodeB = newId;
+  }
+  for (const s of graph.strands) {
+    for (let i = 0; i < s.nodes.length; i++) {
+      if (s.nodes[i] === oldId) s.nodes[i] = newId;
+    }
+  }
+}
+
+function orient(a: Pt, b: Pt, c: Pt): number {
+  return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+}
+
+function properIntersect(a: Pt, b: Pt, c: Pt, d: Pt): boolean {
+  const o1 = orient(a, b, c);
+  const o2 = orient(a, b, d);
+  const o3 = orient(c, d, a);
+  const o4 = orient(c, d, b);
+  return (
+    ((o1 > 0 && o2 < 0) || (o1 < 0 && o2 > 0)) &&
+    ((o3 > 0 && o4 < 0) || (o3 < 0 && o4 > 0))
+  );
+}
+
+export function attachTitle(graph: TangleGraph, title: string): string | null {
+  let hasGlyph = false;
+  for (const ch of title) {
+    const code = ch.codePointAt(0) ?? -1;
+    if (code > 32 && code <= 126 && HERSHEY_SCRIPT[code - 32].strokes.length > 0) {
+      hasGlyph = true;
+    }
+  }
+  if (!hasGlyph) return null;
+  const walk0 = buildWalkGraph(graph);
+  if (!walk0) return null;
+  const seamOld = walk0.start;
+  const seamNode0 = graph.nodes.get(seamOld);
+  if (!seamNode0) return null;
+
+  let mazeMinX = Infinity;
+  let mazeMinY = Infinity;
+  let mazeMaxX = -Infinity;
+  for (const e of graph.edges.values()) {
+    for (const p of e.latticePoints) {
+      if (p[0] < mazeMinX) mazeMinX = p[0];
+      if (p[0] > mazeMaxX) mazeMaxX = p[0];
+      if (p[1] < mazeMinY) mazeMinY = p[1];
+    }
+  }
+  if (!Number.isFinite(mazeMinX)) return null;
+  const declaredWidth = 2 * (graph.params.gridSize ?? 0);
+  const mazeWidth = declaredWidth > 0 ? declaredWidth : mazeMaxX - mazeMinX;
+  const seamPos: Pt = seamNode0.anchor
+    ? [seamNode0.anchor[0], seamNode0.anchor[1]]
+    : [seamNode0.latticePos[0], seamNode0.latticePos[1]];
+  // The tail strand's neighbour of the seam: the connector arrives along
+  // the tail's own line (seam -> neighbour is the player's way in).
+  let neighbourPos: Pt | null = null;
+  for (const s of graph.strands) {
+    const i = s.nodes.indexOf(seamOld);
+    if (i < 0) continue;
+    const nId = i + 1 < s.nodes.length ? s.nodes[i + 1] : s.nodes[i - 1];
+    const n = nId ? graph.nodes.get(nId) : undefined;
+    if (n) neighbourPos = [n.latticePos[0], n.latticePos[1]];
+    break;
+  }
+  if (!neighbourPos) return null;
+
+  let word = buildTextGraph(title, { xHeight: 3 });
+  const wordBounds = (): [number, number, number, number] => {
+    let x0 = Infinity;
+    let y0 = Infinity;
+    let x1 = -Infinity;
+    let y1 = -Infinity;
+    for (const n of word.nodes.values()) {
+      if (n.latticePos[0] < x0) x0 = n.latticePos[0];
+      if (n.latticePos[0] > x1) x1 = n.latticePos[0];
+      if (n.latticePos[1] < y0) y0 = n.latticePos[1];
+      if (n.latticePos[1] > y1) y1 = n.latticePos[1];
+    }
+    return [x0, y0, x1, y1];
+  };
+  let wb = wordBounds();
+  const wordWidth = wb[2] - wb[0];
+  if (wordWidth > mazeWidth && wordWidth > 0) {
+    word = buildTextGraph(title, { xHeight: (3 * mazeWidth) / wordWidth });
+    wb = wordBounds();
+  }
+  const dx = (mazeMinX + mazeMaxX) / 2 - (wb[0] + wb[2]) / 2;
+  const dy = mazeMinY - TITLE_GAP - wb[3];
+  for (const n of word.nodes.values()) {
+    n.latticePos = [n.latticePos[0] + dx, n.latticePos[1] + dy];
+  }
+  for (const e of word.edges.values()) {
+    e.latticePoints = e.latticePoints.map(
+      (p) => [p[0] + dx, p[1] + dy] as Pt
+    );
+  }
+  wb = wordBounds();
+
+  renameGraphNode(word, "mexit_a", "texit");
+  const endNode = word.nodes.get("texit");
+  if (!endNode) return null;
+  endNode.type = NODE_TYPE.TURN; // Keeps its waypoint: the writing stops here.
+  const main = word.strands[0];
+  const prevId = main.nodes[main.nodes.length - 2];
+  const prevNode = prevId ? word.nodes.get(prevId) : undefined;
+  if (!prevNode) return null;
+  const endPos: Pt = [endNode.latticePos[0], endNode.latticePos[1]];
+  const tanP: Pt = [endPos[0] - prevNode.latticePos[0], endPos[1] - prevNode.latticePos[1]];
+  const tanQ: Pt = [neighbourPos[0] - seamPos[0], neighbourPos[1] - seamPos[1]];
+
+  const mazeSegs: Array<[Pt, Pt]> = [];
+  for (const e of graph.edges.values()) {
+    for (let i = 0; i + 1 < e.latticePoints.length; i++) {
+      mazeSegs.push([e.latticePoints[i], e.latticePoints[i + 1]]);
+    }
+  }
+  let connPts: Pt[] | null = null;
+  for (let attempt = 0; attempt < 3 && !connPts; attempt++) {
+    let pts: Pt[];
+    if (attempt === 2) {
+      // Last resort: around the outside of the maze's bounds to a point
+      // on the tail's own outward line, then in along it (the tail
+      // escape already cleared that corridor).
+      const ox = seamPos[0] - neighbourPos[0];
+      const oy = seamPos[1] - neighbourPos[1];
+      const ol = hypot2(ox, oy);
+      if (ol <= 0) break;
+      const via: Pt = [seamPos[0] + (ox / ol) * 3, seamPos[1] + (oy / ol) * 3];
+      const boxL = mazeMinX - 3;
+      const boxR = mazeMaxX + 3;
+      const sideX =
+        Math.abs(via[0] - boxL) <= Math.abs(via[0] - boxR) ? boxL : boxR;
+      pts = [endPos, [sideX, endPos[1]], [sideX, via[1]], via, seamPos];
+    } else {
+      const samples = hermitePts(endPos, tanP, seamPos, tanQ);
+      if (attempt === 1 && samples.length > 3) {
+        samples[3] = [samples[3][0], wb[1]]; // Mid control to the band's top edge.
+      }
+      pts = [endPos, ...samples, seamPos];
+    }
+    let crosses = false;
+    for (let i = 0; i + 1 < pts.length && !crosses; i++) {
+      for (const [c, d] of mazeSegs) {
+        if (properIntersect(pts[i], pts[i + 1], c, d)) {
+          crosses = true;
+          break;
+        }
+      }
+    }
+    if (!crosses) connPts = pts;
+  }
+  if (!connPts) return null;
+
+  // Resample the connector into TURN edges of at most MAX_EDGE_LU.
+  const connNodes: Pt[] = [];
+  for (let i = 0; i + 1 < connPts.length; i++) {
+    const a = connPts[i];
+    const b = connPts[i + 1];
+    const len = hypot2(b[0] - a[0], b[1] - a[1]);
+    let chunks = Math.ceil(len / MAX_EDGE_LU - 0.000000001);
+    if (chunks < 1) chunks = 1;
+    for (let c = 1; c <= chunks; c++) {
+      connNodes.push(c === chunks ? [b[0], b[1]] : lerpPt(a, b, c / chunks));
+    }
+  }
+  if (connNodes.length === 0) connNodes.push(seamPos);
+
+  // Mutate the maze: seam first (freeing mentr_a for the word's start).
+  renameGraphNode(graph, seamOld, "tseam");
+  const seam = graph.nodes.get("tseam")!;
+  seam.type = NODE_TYPE.JUNCTION;
+  delete seam.anchor;
+  seam.latticePos = [seamPos[0], seamPos[1]];
+  if (graph.nodes.has("mentr_a")) renameGraphNode(graph, "mentr_a", "mentr_decoy");
+
+  for (const n of word.nodes.values()) graph.nodes.set(n.id, n);
+  for (const n of word.nodes.values()) {
+    graph.adjacency.set(n.id, (word.adjacency.get(n.id) ?? []).slice());
+  }
+  for (const e of word.edges.values()) graph.edges.set(e.id, e);
+
+  let prevConnId = "texit";
+  let prevConnPos = endPos;
+  const connEdgeIds: string[] = [];
+  const connNodeIds: string[] = [];
+  connNodes.forEach((p, i) => {
+    const isSeam = i === connNodes.length - 1;
+    const nodeId = isSeam ? "tseam" : `tcn${i}`;
+    if (!isSeam) {
+      graph.nodes.set(nodeId, { id: nodeId, type: NODE_TYPE.TURN, latticePos: [p[0], p[1]] });
+      graph.adjacency.set(nodeId, []);
+      connNodeIds.push(nodeId);
+    }
+    const eid = `tce${i}`;
+    graph.edges.set(eid, {
+      id: eid,
+      nodeA: prevConnId,
+      nodeB: nodeId,
+      latticePoints: [
+        [prevConnPos[0], prevConnPos[1]],
+        [p[0], p[1]],
+      ],
+    });
+    graph.adjacency.get(prevConnId)!.push(eid);
+    graph.adjacency.get(nodeId)!.push(eid);
+    connEdgeIds.push(eid);
+    prevConnId = nodeId;
+    prevConnPos = p;
+  });
+
+  for (const s of word.strands) graph.strands.push(s);
+  main.edgeIds.push(...connEdgeIds);
+  main.nodes.push(...connNodeIds, "tseam");
+  return "tseam";
+}
+
 // Over/under: run-phase parity solver (design section 3.5)
 // ---------------------------------------------------------------------------
 

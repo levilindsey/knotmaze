@@ -56,6 +56,13 @@ export interface WalkGraph {
   // Shortest distance from every reachable vertex to the exit (Dijkstra
   // field): powers solve hints and scripted verification.
   distToExit: Map<string, number>;
+  // K115 stage 3a, titled graphs only: the seam vertex where the title
+  // meets the maze tail, the title's lattice arc (start -> mazeStart),
+  // and the title's walk membership (vertices incl. the seam, edges).
+  mazeStart?: string;
+  titleLength?: number;
+  titleVertices?: Set<string>;
+  titleEdges?: Set<number>;
 }
 
 // Deterministic Dijkstra over the walk multigraph: the walk distance from
@@ -96,7 +103,16 @@ export function walkDistances(
 
 // Build the walk graph and pick the start/exit tails. Returns null when the
 // graph carries no cut ends (not an applied maze fabric).
-export function buildWalkGraph(graph: TangleGraph): WalkGraph | null {
+export interface WalkForce {
+  start: string; // The walk's start (a title word's mentr_a).
+  exit: string; // The exit chosen before the title was attached.
+  mazeStart?: string; // The seam vertex (titled graphs).
+}
+
+export function buildWalkGraph(
+  graph: TangleGraph,
+  force?: WalkForce
+): WalkGraph | null {
   const vertices = new Map<string, WalkVertex>();
   const edges: WalkEdge[] = [];
 
@@ -194,7 +210,14 @@ export function buildWalkGraph(graph: TangleGraph): WalkGraph | null {
 
   const entrances = ENTRANCE_END_IDS.filter((id) => vertices.has(id));
   const exits = EXIT_END_IDS.filter((id) => vertices.has(id));
-  if (entrances.length === 0 || exits.length === 0) return null;
+  if (force) {
+    if (!vertices.has(force.start) || !vertices.has(force.exit)) return null;
+    if (force.mazeStart !== undefined && !vertices.has(force.mazeStart)) {
+      return null;
+    }
+  } else if (entrances.length === 0 || exits.length === 0) {
+    return null;
+  }
 
   const dijkstra = (source: string): Map<string, number> =>
     walkDistances(vertices, edges, source);
@@ -203,8 +226,8 @@ export function buildWalkGraph(graph: TangleGraph): WalkGraph | null {
   // among the four tail combinations (deterministic difficulty maximizer);
   // the other two tails stay in the graph as unmarked decoys. Canonical
   // combo order breaks ties.
-  let start = entrances[0];
-  let exit = exits[0];
+  let start: string = entrances[0];
+  let exit: string = exits[0];
   let best = -Infinity;
   for (const s of entrances) {
     const dist = dijkstra(s);
@@ -217,7 +240,43 @@ export function buildWalkGraph(graph: TangleGraph): WalkGraph | null {
       }
     }
   }
-  const optimalLength = Number.isFinite(best) ? best : Infinity;
+  if (force) {
+    start = force.start;
+    exit = force.exit;
+  }
+  const optimalLength = force?.mazeStart
+    ? dijkstra(force.mazeStart).get(exit) ?? Infinity
+    : Number.isFinite(best)
+      ? best
+      : Infinity;
+
+  // K115 stage 3a: the title's arc and membership (titled graphs only).
+  // The title side is what reaches the seam from the start without
+  // passing it; the seam itself is a title vertex, its tail run is not.
+  let titleLength: number | undefined;
+  let titleVertices: Set<string> | undefined;
+  let titleEdges: Set<number> | undefined;
+  if (force?.mazeStart) {
+    const seam = force.mazeStart;
+    titleLength = dijkstra(start).get(seam) ?? Infinity;
+    titleVertices = new Set<string>([start]);
+    titleEdges = new Set<number>();
+    const q2 = [start];
+    titleVertices.add(start);
+    while (q2.length > 0) {
+      const v = q2.shift()!;
+      if (v === seam) continue;
+      for (const eid of vertices.get(v)!.edges) {
+        const e = edges[eid];
+        const other = e.va === v ? e.vb : e.va;
+        titleEdges.add(eid);
+        if (!titleVertices.has(other)) {
+          titleVertices.add(other);
+          q2.push(other);
+        }
+      }
+    }
+  }
 
   return {
     vertices,
@@ -226,5 +285,13 @@ export function buildWalkGraph(graph: TangleGraph): WalkGraph | null {
     exit,
     optimalLength,
     distToExit: dijkstra(exit),
+    ...(force?.mazeStart
+      ? {
+          mazeStart: force.mazeStart,
+          titleLength,
+          titleVertices,
+          titleEdges,
+        }
+      : {}),
   };
 }

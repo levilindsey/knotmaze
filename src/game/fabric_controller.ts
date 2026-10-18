@@ -228,9 +228,16 @@ export class FabricMazeController {
     return n > 0 ? this.pathEdges[n - 1] : -1;
   }
 
+  // K115 stage 3a: a title run is walked but outside every maze meter.
+  private isTitleEdge(eid: number): boolean {
+    return this.walk.titleEdges?.has(eid) ?? false;
+  }
+
   get pathLength(): number {
     let sum = 0;
-    for (const eid of this.pathEdges) sum += this.walk.edges[eid].length;
+    for (const eid of this.pathEdges) {
+      if (!this.isTitleEdge(eid)) sum += this.walk.edges[eid].length;
+    }
     return sum;
   }
 
@@ -311,8 +318,8 @@ export class FabricMazeController {
     ) {
       this.pathEdges.pop();
       this.pathVertices.pop();
-      this.backtrackDist += e.length;
-      this.walkedDist += e.length;
+      if (!this.isTitleEdge(edgeId)) this.backtrackDist += e.length;
+      if (!this.isTitleEdge(edgeId)) this.walkedDist += e.length;
       this.moveLog.push("b");
       this.taps.push(edgeId);
       this.fireArrive(head, depart, e.length, this.head);
@@ -323,7 +330,7 @@ export class FabricMazeController {
     const far = e.va === head ? e.vb : e.va;
     this.moveLog.push(this.onShortestRoute(head, e.length, far) ? "g" : "d");
     this.taps.push(edgeId);
-    this.walkedDist += e.length;
+    if (!this.isTitleEdge(edgeId)) this.walkedDist += e.length;
     this.pathEdges.push(edgeId);
     this.pathVertices.push(far);
     this.arrive(far);
@@ -369,6 +376,9 @@ export class FabricMazeController {
   }
 
   private arrive(id: string): void {
+    // K115 stage 3a: title vertices (waypoints, spur tips, the seam)
+    // never count as visited junctions or dead ends.
+    if (this.walk.titleVertices?.has(id)) return;
     const v = this.walk.vertices.get(id);
     if (!v) return;
     if (!v.isEnd) this.visitedJunctions.add(id);

@@ -1,5 +1,7 @@
 import { generateLatticeKnotwork } from "./lattice_grower";
-import { buildTextGraph } from "./text_graph";
+import { buildTextGraph, attachTitle } from "./text_graph";
+import { buildWalkGraph } from "./walk_graph";
+import type { WalkGraph } from "./walk_graph";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "./maze_plan";
 import { planAnchors } from "./shapes";
 import type { AnchorId, ShapeId } from "./shapes";
@@ -17,6 +19,8 @@ import type { GenerationParams, TangleGraph } from "./types";
 // link's params (ui/url_state.ts UrlParams), so core imports nothing from ui.
 export interface SceneParams {
   text: string;
+  // K115 stage 3a: the maze's title thread ("" = none; dailies derive it).
+  title: string;
   gridSize: number;
   weaveDensity: number;
   turnBias: number;
@@ -51,6 +55,9 @@ export interface SceneParams {
 
 export interface SceneGraph {
   graph: TangleGraph;
+  // K115 stage 3a: the forced walk of a titled maze (undefined when the
+  // scene is untitled: the caller builds the walk as before).
+  walk?: WalkGraph | null;
   // The build's strand hue groups (maze plan; undefined in knot mode).
   hueGroup: number[] | undefined;
 }
@@ -77,6 +84,7 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
   // particle system builds the fabric natively (open chains, fused
   // junctions, anchored ends).
   let hueGroup: number[] | undefined;
+  let walk: WalkGraph | null | undefined;
   if (params.mazeFabric) {
     const mazeParams = {
       ...DEFAULT_MAZE_PARAMS,
@@ -120,10 +128,32 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
         : builtPlan;
     hueGroup = applyMazePlan(graph, plan);
     applyMazeCuts(graph, plan, hueGroup);
+    // K115 stage 3a: hang the title on the entrance tail AFTER the
+    // start/exit selection (walk0), so the title's arc can never pick a
+    // different start. Title "" runs none of this: byte-identical.
+    if (params.title) {
+      const walk0 = buildWalkGraph(graph);
+      if (walk0) {
+        const strandsBefore = graph.strands.length;
+        const seam = attachTitle(graph, params.title);
+        if (seam !== null) {
+          if (hueGroup) {
+            for (let i = strandsBefore; i < graph.strands.length; i++) {
+              hueGroup.push(strandsBefore);
+            }
+          }
+          walk = buildWalkGraph(graph, {
+            start: "mentr_a",
+            exit: walk0.exit,
+            mazeStart: seam,
+          });
+        }
+      }
+    }
   }
 
   if (!checkStructure(graph) || !checkAlternation(graph)) {
     console.warn("Knot invariants violated; generation bug.");
   }
-  return { graph, hueGroup };
+  return { graph, hueGroup, walk };
 }

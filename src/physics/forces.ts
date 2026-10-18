@@ -230,7 +230,12 @@ export function applySegmentCollision(
   passCover: PassCover | undefined,
   collector?: EmergentCollector,
   violations?: ViolationList,
-  jnCover?: JunctionCover
+  jnCover?: JunctionCover,
+  // K115: particles pinned at authored positions (text strands). A pair
+  // whose four endpoints are all pinned can never be separated, so its
+  // standing deficit is authored geometry, not work pending: it is not
+  // recorded as a violation (it would hold the sleep gate awake forever).
+  anchored?: Uint8Array
 ): void {
   const cellSize = Math.max(1, minDist * 2);
   if (!buildGrid(positions, particleCount, cellSize)) return;
@@ -453,6 +458,13 @@ export function applySegmentCollision(
                 const hardDef = Math.max(0, renderWidth * scale - d2d);
                 if (
                   violations &&
+                  !(
+                    anchored !== undefined &&
+                    anchored[i] === 1 &&
+                    anchored[i2] === 1 &&
+                    anchored[j] === 1 &&
+                    anchored[j2] === 1
+                  ) &&
                   hardDef > VIOLATION_MIN_DEPTH &&
                   violations.n * 3 < violations.data.length
                 ) {
