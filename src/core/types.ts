@@ -21,6 +21,10 @@ export interface Node {
   // the slash reading, which is ambiguous off the lattice. Lattice graphs
   // never set it, so their behavior is unchanged.
   overFirst?: boolean;
+  // K115: a letter-boundary stop on a text scene's main path (the walk
+  // graph treats it as a vertex even at degree 2, so each tap writes the
+  // next letter). Lattice graphs never set it.
+  waypoint?: boolean;
   // P4 maze: entrance/exit END nodes are pinned to this world position by the
   // physics; free END tips (dead-end stubs) carry no anchor.
   anchor?: [number, number];

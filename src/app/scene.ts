@@ -245,8 +245,12 @@ export function createScene(deps: SceneDeps): Scene {
 
     // The walk graph feeds both the section coloring and (in fabric mode)
     // the gameplay, so it builds before the renderer.
-    const isText = params.text !== "";
-    walkGraph = !isText && params.mazeFabric ? buildWalkGraph(graph) : null;
+    // K115 stage 2: a text scene plays like a fabric scene (its word is
+    // the maze: walk graph, controller, markers at mentr_a/mexit_a via
+    // walk start/exit). It keeps the knot-mode data fabric surgery would
+    // need: no maze plan (scene_graph skips it), hueGroup undefined, so
+    // section colors take their per-chain fallback (section_colors).
+    walkGraph = params.mazeFabric ? buildWalkGraph(graph) : null;
 
     renderer = new RibbonRenderer(ps, {
       threadWidth: params.threadWidth,
@@ -260,7 +264,7 @@ export function createScene(deps: SceneDeps): Scene {
           ? hueGroup
           : graph.strands.map(() => 0),
       // Fabric gameplay recolors the actual threads via palette textures.
-      paletteMode: !isText && params.mazeFabric,
+      paletteMode: params.mazeFabric,
       flowSeed: params.seed,
     });
     renderer.setSectionRuns(
@@ -279,7 +283,7 @@ export function createScene(deps: SceneDeps): Scene {
 
     // Branching gameplay over the fabric: branch-point-only solve state +
     // the thread-true paint overlay (the walk graph was built above).
-    if (!isText && params.mazeFabric && walkGraph) {
+    if (params.mazeFabric && walkGraph) {
       fabricController = new FabricMazeController(
         walkGraph,
         params.pathViz === "trail",
