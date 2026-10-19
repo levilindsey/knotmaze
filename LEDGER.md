@@ -109,13 +109,6 @@ Next free ID: K551.
 
 ## In progress
 
-- **K115** · Cursive text stages 2+ (title thread, in-maze cartouche, shapes, scripts). Stage 1b DONE 2026-10-18: Hershey data + `text_graph.ts` + pinned/overFirst physics + text scene + codec string (v8); suite 1425 green; real-renderer shots `.claude/probes/K115/welcome_real.png`, `daily12_real.png` (`?txt=Welcome`).
-  - owner: nobody (stage 1b closed by session 01a14e0f)
-  - branch: mainline; last commit: bc357c4 (1b in cb7d006..bc357c4)
-  - evidence: `.claude/probes/K115/` (census, proxies, real shots)
-  - next: Stage 7 build (live date titles in the stage-3a slot; brief `docs/design/K115_stage7.md`), then RUN_FLAG.TEXT color. Stages 2-6c ALL DONE 2026-10-18 (walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0, capitals e64f4d6, accents fa1b1ae, Greek 54612f2); suite 1521 green at 54612f2. Residuals from 1b: same-slash crossings rely on overFirst only.
-  - brief: `docs/design/K115_stage6.md`; `docs/design/K115_stage3.md`; `docs/design/K115_stage1.md`; design `docs/design/K115_cursive_text.md`
-
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
