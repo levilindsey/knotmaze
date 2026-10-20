@@ -269,15 +269,6 @@ Next free ID: K567.
   - evidence: `.claude/probes/K459/`
   - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii) (`docs/design/K459.md`, Handoff); the free cap's checks are K477
   - brief: `docs/design/K459.md`
-- **K552** · Title-thread flag (Levi, 2026-10-19): dailies draw no title thread by default; a checkbox param
-  (default off, appended to the codec) draws it, with the maze topology the same either way (the title attaches after
-  the plan: `src/core/scene_graph.ts` 175-196). Generalizes stage 3's 3b (`docs/design/K115_stage3.md` 208). Brief:
-  `docs/design/K552.md`.
-  - owner: agent `a8b6ffda6521b4107` of claude session 91b19e11 (sonnet, the rebase onto K558; started 2026-10-19 21:38, 1 h cap); stage done by agent `a2068d642ae85e250` at `d8e6bb8` (ended 21:4x, tree clean)
-  - branch: `worktree-agent-a2068d642ae85e250`, worktree `.claude/worktrees/agent-a2068d642ae85e250`; last commit: `d8e6bb8`
-  - evidence: `.claude/probes/K552/` in the worktree (`settle_ab_d8.txt`, `topology_run.txt`, `page/` probes A-F; `vite-cache/` is disposable)
-  - next: the rebase agent's report (penReverse then dailyTitleThread in the four tables, pins re-frozen, K558's titled tests flagged on); then agent_merge -Done with the probes, the full suite and the build (last run before 23e8264); then Levi's C4 call
-  - brief: `docs/design/K552.md`
 - **K550** · K320 2b parity blocker: the split stays dark until its A/B passes (`docs/design/K320_stage2.md` sections
   7-8). Sessions 1-2: `.claude/probes/K320/k550_diagnosis.md` (the row fix and three keeps in `k550_two_keep.patch`;
   the wall is MSAA sample coverage). Levi (2026-10-19): one try at the edge gap; waive the gate only if it fails.
@@ -1286,6 +1277,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K552** · Dailies draw no title thread by default; dailyTitleThread (dtt=1) draws it over the same maze (maze-form attempts, title moves off the share grid, the row disabled off a daily). Done in 06ed74d (2026-10-19).
 - **K558** · Text crossings follow pen order (the later stroke over; penReverse, pnr=1, reverses it); maze and emblem crossings keep alternation. Done in 0b4c5db (2026-10-19).
 - **K553** · K320's split drew no gaps off dsf 1: the gap mask was sized in CSS px but read by gl_FragCoord in device px; gap_prepass sizes it in device px (fitGapTarget), guarded by gap_split.test.ts and k553_probe.mjs splitAssert. Done in 60511ed (2026-10-19).
 - **K551** · Crossing gaps gone on every half-float GPU since 2026-10-18 (K320's split turned on by capability and drew no gaps on D3D11): the split stays dark, the warm-up follows the draw flag. Done in f18dd07 (2026-10-19).
