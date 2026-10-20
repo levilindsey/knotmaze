@@ -473,6 +473,15 @@ export function buildPanel(
     ".kp-has-help .kp-i{display:inline-block}" +
     ".kp-has-help>.tp-lblv_l{cursor:pointer;" +
     "-webkit-tap-highlight-color:transparent}}" +
+    // K552: a disabled row that must still explain itself (Title thread off
+    // a daily). Tweakpane's disabled rule puts pointer-events:none on the
+    // whole row, which hides its tooltip and its label-tap help, so the row
+    // takes them back. Its control stays inert: the checkbox view carries
+    // its own tp-v-disabled (Tweakpane's rule still applies to it), the
+    // input is disabled, and the value cell is made inert here as well.
+    ".tp-rotv .kp-tip-when-disabled.tp-v-disabled{pointer-events:auto}" +
+    ".tp-rotv .kp-tip-when-disabled.tp-v-disabled>.tp-lblv_v" +
+    "{pointer-events:none}" +
     // The top bar's strip behind the sheet's buttons (shown only by the
     // sheet, below).
     ".kp-bar{display:none;position:fixed;z-index:29;top:0;left:0;right:0;" +
@@ -1412,6 +1421,9 @@ export function buildPanel(
     () => callbacks.onTitleThreadChange()
   );
   titleThreadRow.disabled = true;
+  // Disabled, it still shows why (the tooltip and the label-tap help); the
+  // reset glyph keeps its own disabled guard (row()).
+  titleThreadRow.element.classList.add("kp-tip-when-disabled");
   const resetPathBtn = button(
     fGame,
     "Reset path",
