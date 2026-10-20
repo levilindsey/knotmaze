@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K551.
+Next free ID: K558.
 
 ## Waiting on Levi
 
@@ -115,24 +115,32 @@ Next free ID: K551.
   1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that
   swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
   K280, residuals K281).
-  - owner: nobody since 2026-10-15 12:31 (stage 2 merged at cebb75e; agent `a58dfc230583f43e4` of claude session 05e60da0, worktree on K161's sweep list)
+  - owner: nobody since 2026-10-15 12:31 (stage 2 merged at cebb75e; agent `a58dfc230583f43e4` of claude session 05e60da0, worktree since removed, K161)
   - branch: mainline; last commit: `cebb75e`
   - evidence: `.claude/probes/K114/stage2/` (`burn_sim_rt.ts`, `proposal.md`, `results_rt*.md`, `rt_page.mjs`, `perf_attr.ps1`, `vref_probe.mjs`, shots `out_rt*/`); stage 1's: `.claude/probes/K114/burn/` (`results_tuning_rebased.md`, `burn_sim.ts`, `burn_page.mjs`)
   - next: K441's profile (K461 done: `rt_page.mjs` passes `fsr` / `fdr`). Stage 3: the burn look as a shader with K290's burnt toggle; the spider follows the minotaur's controls (K174). Stage 2's residuals K442-K447
   - brief: `docs/design/K114_stage2.md` (Stage 2 handoff); stage 1's handoff: `docs/design/K114_burn.md`
+- **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
+  2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
+  capitals e64f4d6, accents fa1b1ae, Greek 54612f2 (suite 1521 green). Levi (2026-10-19, Daily #8): redesign first.
+  - owner: nobody since 2026-10-18 06:55 (muse 01a14e0f-d5b1-7152-a08b-9768f176e3c7 built stages 1b-6c and the stage 7 brief; session closed 2026-10-19 15:44)
+  - branch: mainline; last commit: `eaeabb0` (code at `54612f2`)
+  - evidence: `.claude/probes/K115/`
+  - next: the redesign (Levi, 2026-10-19): crossings only, never junctions, except dead-end stubs; over = the later stroke in pen order, a checkbox reverses it; smooth continuous paths (no sharp angles, no jitter); bespoke glyph and ligature rules allowed, prototyped and verified before any mass generation; final ς its own glyph; the digit-6 fix (K555). Then stage 7's live dates, K557
+  - brief: `docs/design/K115_stage7.md` (until the redesign brief replaces it); `docs/design/K115_stage6.md`; `docs/design/K115_cursive_text.md`
 - **K74** · Maze design, decided (Levi, 2026-10-13;
   `docs/design/K74_maze_design.md`): every mechanism gets params whose
   neutral value turns it off. Stage 1 (long-tail dead ends) and stage 2
   (H1, the fused arm cut; calls K261, residuals K278) merged; stage 3 is
   the trap-zone finish, stage 4 the greedy-trap search and K46's bands.
   - owner: nobody since 2026-10-15 08:31 (stage 3's brief merged in 9f1ada2; docs agent
-    `ae4714d103b5fd3bf` of claude session 05e60da0, worktree on K161's sweep list). Stage 2's agent
+    `ae4714d103b5fd3bf` of claude session 05e60da0, worktree removed 2026-10-19, K161). Stage 2's agent
     a2c61932e9e358104 (session d8031183) finished; worktrees removed by the K161 sweep
     2026-10-15, branches kept
   - branch: mainline; last commit: `49efe76` (stage 4 sim-first; stage 3 9ccf360, stages 1-2 fbf5b5c..faa9a52)
   - evidence: `.claude/probes/K74/` (stage 2 in `stage2/`, sheets in
-    `out/`); the design agent's branch `worktree-agent-aeaf1e61bcecaaf0b` (its worktree swept
-    2026-10-15, probes copied to the main checkout)
+    `out/`); the design agent's probes, copied from its swept worktree 2026-10-15 (its branch,
+    patch-identical with master, deleted 2026-10-19)
   - next: K521 done in 4098946; stage 4 build half done in 7d794b5 (K527/K532: greedy-trap search behind `greedyTrap`, H1-in-loop only; gF median 2.86 -> 3.38, within-1.5x 20.0% -> 11.7%, both-targets 38.8% -> 59.2%, generation 25 -> 74 ms median; off = byte-identical). Left: the before/after sheet K543 and the phone timing K544.
     Dead-end branches as deeper traps are out of scope; K80's brief does not settle them
   - brief: `docs/design/K74_stage3.md`; stage 2's handoff: `docs/design/K74.md`; stage 4's brief: `docs/design/K74_stage4.md`
@@ -181,16 +189,6 @@ Next free ID: K551.
     `docs/design/K7_worker.md` Design 10
   - env: none; the pass builds and serves both builds itself (ports
     5480-5489); check nobody is using the phone first (K234)
-- **K161** · Disk: probe runs leave `knotmaze-*` Chrome profiles in `$env:TEMP`, and stale
-  worktrees pile up (79). Levi approved the cleanup (2026-10-14, item 2). Profiles: 1172 deleted
-  2026-10-15 06:56 (+36 GB); they return until K150's delete-on-exit lands. Worktrees: 75 removed
-  by the script 2026-10-15 07:24 and 3 unmerged ones by hand, probes copied first (+6.7 GB; C:
-  56.9 GB free); branches kept, except 10 dead ones deleted (every commit on master).
-  - owner: nobody since 2026-10-15 07:25 (the worktree sweep done; claude session 05e60da0)
-  - branch: mainline (no code); last commit: n/a
-  - evidence: `.claude/probes/K161/cleanup.ps1` (`-DryRun` first) and `cleanup.log`
-  - next: run `cleanup.ps1 -Ids (Get-Content .claude/probes/K161/ids_05e60da0.txt)` (`-DryRun` first): the 32 agent worktrees left at coordinator 05e60da0's hand-off, each merged or superseded by master (the script copies probes and unlinks junctions first). Four are locked by that session's Claude process (pid 12264) and go only once it exits (a /clear keeps it); rerun the same list then. Delete `.claude/worktrees/agent-a092bd665532db806` if it is still there (an empty dir the last sweep left). 8 branches ahead of master have no worktree (Levi's: `backup-pp-gaps-prerebase`, `k279-stage1-prerebase`, K49's `ac664e8a`). Rerun the script for the profiles when C: runs low.
-  - brief: the header of `.claude/probes/K161/cleanup.ps1`
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
   dead ends. Stages 1-2 merged (stage 2: 189b024..f799991; MAX fixed, joints fade).
@@ -277,7 +275,8 @@ Binding for every stage:
   merge renumbers.
 - Usage: pause at 92% of the week (Levi, 2026-10-15): launch nothing
   new, and pause running agents with their WIP committed. The week
-  resets Monday 2026-10-19 11:59; it stood at 88% on 10-15 18:03.
+  reset Monday 2026-10-19 11:59 (about 1% at the start); the next reset
+  is Monday 2026-10-26 11:59.
 
 Running agents are listed under In progress, each with its own next step.
 The queue (coordinator, overnight 2026-10-15/16):
@@ -293,6 +292,7 @@ The queue (coordinator, overnight 2026-10-15/16):
 7. Overnight run 6 done (2026-10-16, final run): K522+K523 (5558669; census2d flicker floor + attributedUW/lifted-exit port, m10 30/30) and K524 (real-Pixel sheet, no commit). Residual K528 (census2d first-frame drift, localize only if it grows). Next queue: Levi first - K515 (K480's look), K525 (K80 3b's look, real sheet now in), K399 (G3-1 after it), K527's six calls, and the rest of Waiting on Levi; then ungated work in their sections.
 8. Batch close (2026-10-16): fixes ea2e468 (K398/K346/K436/K454/K469/K314/K373/K526/K461/K500; residual K529), K481 stage 2 a69b5cb (stage 3 = K530), K307 stage 3 e83f203 (K366 measured/attributed, fix = K535; K386 narrowed), G3-1 3465090 (browser verification = K536), K430 ramp 377bc41 (K268 stays In progress; residuals K537, K538; K431 narrowed). Levi answered K210 (-> K531, folds K82), K527 in full (-> K532) and K339/K323 (-> K534, Stage A unlocked); backend dailies filed as K533. Refreshed queue by value - Levi gates first: K515 (K480's look), K525 (K80 3b's look, real sheet in), then the rest of Waiting on Levi; then ungated, in order: K530 (K481 stage 3), K534 (panel Stage A), K527's build half (after the render lane), K536 (G3-1 browser verification), K268's remaining item-2 parts, then work in their sections.
 9. Batch 2 close (2026-10-16): K481 stage 3 31b2238 (K530/K481 done; look call K545), panel Stage A1 35f3ec2 (K534 done; A2 = K541), K74 stage 4 build 7d794b5 (K527/K532 done; sheet K543, phone timing K544), G3-1 verified (K536 done in c946ae2; residuals K539, K540), K268 PROTECT 1fc9458 (far-branch smooth-min remains). Queue by value - Levi gates first: K515 (K480's look), K525 (K80 3b's look, real sheet in), K545 (K481 stage 3's look), then the rest of Waiting on Levi; K531 (daily determinism) lands at launch prep and K533 (backend dailies) with the backend/accounts work; then ungated: K268's far-branch smooth-min, K543/K544 when wanted / in K156's next phone window, then work in their sections.
+10. New week (2026-10-19): Levi's calls - final ς gets its own glyph; dailies draw no title thread unless a flag asks (K552, maze topology the same either way); the cursive is redesigned before any mass generation (K115: crossings only, later-over-earlier in pen order with a reverse checkbox, smooth paths). K551 done (f18dd07, gaps back live). Next: K552 and K115's redesign stage 1 (agents), claude-config's dedupe fix (CC81); K161 done. Later: K553, then K550.
 
 Levi's order of 2026-10-14 23:00-23:55, kept as history (most of it has
 merged):
@@ -318,8 +318,15 @@ merged):
 - **K412** · K7's worker-chunk modulepreload on a real network (measured only on localhost): a
   fresh-profile load of https://levi.dev/knotmaze/ through `stage7/k7_frames.mjs`; its `wk` column
   reads `c` when the worker's fetch came from the cache through the proxy. Rides K7's phone pass.
+- **K552** · Title-thread flag (Levi, 2026-10-19): dailies draw no title thread by default; a checkbox param
+  (default off, appended to the codec) draws it, with the maze topology the same either way (the title attaches after
+  the plan: `src/core/scene_graph.ts` 169-178). Generalizes stage 3's 3b (`docs/design/K115_stage3.md` 208).
 
 Every other item below waits on the trigger it names.
+
+- **K557** · `RUN_FLAG.TEXT`: one text color for the cursive, optionally a reading-order gradient, plus a paint
+  override for lent segments (`docs/design/K115_cursive_text.md` 572-583; deferred by `K115_stage4.md` 252-266).
+  After K115's redesign.
 
 
 
@@ -360,8 +367,6 @@ Every other item below waits on the trigger it names.
 - **K9** · G4: smooth-union SDF junction webs (cuspRadius = blend radius); A/B crops at cr 1, 3, 6
   before the fans are deleted. Also closes G1's x160 leftover (`.claude/rules/render-gaps.md`); webs
   carry the traveled route as the smooth union of the traveled pieces only (K81).
-- **K115** · Cursive text and shapes: Hershey Script Simplex (`docs/design/K115_cursive_text.md`,
-  ded57f7; `docs/design/levi_notes_2026-10-13.md`; `.claude/probes/K115/`). Stage 1b building (`docs/design/K115_stage1.md`); see In progress.
 - **K116** · Pluck instruments, accompaniment, lowest priority (`docs/design/K116_instruments.md`,
   2e60b00, `docs/design/levi_notes_2026-10-13.md`): skeleton (drone, bass, `pluckVoice` presets),
   then marimba, bells; `pvc`, `acc`, `acl` daily-exempt; Pixel audio probe first; loop K125.
@@ -1001,6 +1006,11 @@ Every other item below waits on the trigger it names.
 - **K538** · Pluck footprints (overHalf/eraseExtent) still step binary at vis 0.5; only underWindows ramp (by design in the K430 stage). Evidence `.claude/probes/K268/stage3a/out/census_ramp6/`.
 - **K547** · The far-branch blend has no isolating GPU census yet: census3a's shaped slots cut 0 px at reach 2.5 in its state (PROOF vacuous since G3-1, K537), so it is proved by the farBlendCut formula tests, shader-text pins and the 22/31 no-regression census, not a pixel diff at a tight over bend with one branch shown and the other hidden. Build that state (a shaped slot whose over polyline bends back within farK, one branch across a frontier) and judge hidden (no dip) vs shown (master's blended cut, weighted). Evidence .claude/probes/K268/stage3a/out/census_far1/. Census attempt 2026-10-18 (build 0f8e277, far_census.mjs, out/far_k547/, results_K547.md): state unbuildable in the walked state - bend-back pairs and 1-vs-0 cover splits exist (0.53-0.83 world), but medial fragments are never mid-fade inside the window (CPU joint count 0; GPU both-shown vs sminK=0 = 0 hard px on 10 candidates, incl. fl=0.3 and over-branch cinch attempts), and every bend candidate's reject control is 0 px (neighbour-covered cuts). No defect found; the blend remains formula/text-pin proved only. Missing: a strong slot whose over chain rides parallel at 0.66-0.75 (e.g. fat-thread adjacent-corridor state or a held tug).
 - **K542** · PROTECT's biting-triangle GPU census is still owed: in walked fabric states at rest the waiver's range is empty (protect intervals overlap slot windows on 137/570 sides, but no on-screen fragment sits in the margin band over B - the triangles are not world-squeezed until a cinch/tug), so the protect stage proved the chain by the CPU census (706 sides, factors = vis(B) exactly, incl. 544 hidden / 22 shown) plus the shader-text unit tests, and a manufactured bite changed 0 px for the same reason. Build a squeezed state (a cinched cyclic triangle under the reveal, e.g. a physics tug on fabric) and judge hidden (on == waiver-off) vs shown (on == waiver-full) there. Evidence .claude/probes/K268/stage3a/out/protect_final/ + census_protect2/ (22/31, the ramp baseline). Census attempt 2026-10-18 (build 0f8e277, protect_bite.mjs, out/protect_k542/, results_K542.md): shown state marginally built - cinching B onto A at off* on slot 3 side 0 (sin ~ 1) yields 6 faithful bite points (first non-zero in this state family); judged on == waiver-full (5 hard px vs 2 A/A churn, correct direction) but on vs waiver-off also only 5 px, below the decisive bar. Hidden state unbuildable here (no on-screen over-shown + A-shown + perpendicular slot with B hidden). No defect found; decisive census still owed - needs a bigger bite (held tug, iterated cinch), a zoomed bite clip and differing A/B section colors.
+- **K555** · K115 residuals its redesign must absorb or re-check: the joins λγ λη λθ λψ τυ meet a glyph stroke
+  (`docs/design/K115_stage6.md` 971-975), 6a's five CAPITAL_OVERRIDES (800-809), the digit-6 conflict
+  (`docs/design/K115_stage3.md` 376-381), and 1b's same-slash crossings that rely on overFirst alone.
+- **K556** · K115 emblems: a shape under MIN_EMBLEM_DIA (6 LU) is refused silently
+  (`docs/design/K115_stage5.md` 261, 620), and the triquetra shows gap slivers (594-596).
 ## Approved, to schedule (2026-10-11)
 
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
@@ -1175,6 +1185,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   Stage 1 done (this commit): the bundled slim (O1+O3; O4 waits on call 1, O7 unmeasured) — section-rgb frag 48,737 -> 46,310, junction-field 29,599 -> 26,305, arm-strip 33,122 -> 31,049, pluck-still 21,075 -> 19,960; budget guard `test/render/k320_slim.test.ts`; evidence `.claude/probes/K320/results.md`. Stage 2 (the split) remains, through the Stage 0 gate and Levi's calls.
   Stage 2 brief (docs only): `docs/design/K320_stage2.md` — gap pre-pass into a canvas-sized RGBA16F mask (keep + draw index, dirty-gated like the arm strips), paint-only section sampling it; master + explore split, fans/still keep the library; fallback to the combined programs where no half-float target; sub-steps 2a data plane / 2b split / 2c registry + gate measure; five calls at its end (rec: build as designed).
 - **K550** · K320 2b parity blocker: split stays dark; 2c must not start until the A/B is 0px (or K433 one-level). Diagnosis .claude/probes/K320/k550_diagnosis.md (probes `k550_*.mjs`). Session 1: the shipped mask row is off by one (`- 2 -` -> `- 1 -` = the `gapMaskTexel` twin; def 40,829 -> 12,353). Session 2 (finisher): the row fix + a three-keep mask (owner / under / deep gap passes, chain+arc-turn fragment identity in mask B) solves the stacking AND the dominant same-chain double-coverage term (def 12,353 -> 5,603, darker 6,246 -> 714; fat 6,789, user 3,051, knot 6,773; explore unmeasured - its single-capture control is 36,252, needs the K428 multi-capture form). WIP preserved uncommitted in `.claude/probes/K320/k550_two_keep.patch` (`git apply`-verified on ca60b72; tree left at HEAD). BLOCKER for the flip: MSAA sample coverage - canvas edge fragments (`>=` 1 sample, center-extrapolated varyings) are never recorded by the center-rule mask and paint at 1.0; temp `antialias: false` collapses def to 2,020 / gt1 343, and even that floor fails the brief's gt1 = 0 gate. No exact fix exists in this architecture (WebGL2 cannot sample an unresolved MSAA target; expansion/SSAA measured worse). Levi's call: waive the gate for 1-px edge diffs via the brief's contact sheets, or kill the split and keep Stage 1.
+- **K553** · Why K320's split drew no crossing gaps when capability turned it on (K551; D3D11 desktop, live
+  2026-10-18): off, the same build draws them. Undiagnosed; gates K320 2c together with K550. Evidence
+  `.claude/probes/K551/` (`gaps_check.mjs`; shots `out/` before the fix, `out_fix/`, `out_live/`).
+- **K554** · K115 6d: Greek tonos and dialytika (dropped today) and glyphs for U+03AA/03AB/03CA/03CB, or
+  Cyrillic (`docs/design/K115_cursive_text.md` C6, 520-526). `docs/design/K115_stage6.md` 6c items 1 and 3 (917-942).
 - **K338** · K324's side ideas (`docs/design/K324_realtime_minotaur.md`):
   a real-time close-calls stat (section 5), a Search speed knob (4.4),
   and a real-time sentry (roam 0, K296's analog).
@@ -1225,6 +1240,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K551** · Crossing gaps gone on every half-float GPU since 2026-10-18 (K320's split turned on by capability and drew no gaps on D3D11): the split stays dark, the warm-up follows the draw flag. Done in f18dd07 (2026-10-19).
+- **K161** · Disk cleanup: profiles and 78 worktrees swept 2026-10-15; the last three worktrees, the empty folder and two dead branches went 2026-10-19 (`.claude/probes/K161/cleanup.log`). Profiles return until K150 lands. Done in this commit (2026-10-19).
 - **K243** · Paused instant intro draws no threads: beginSettle instant branch now draws its first frame. Done in 0f8e277 (2026-10-18).
 - **K489** · Dead finishIndicator.gate() hook removed (visible() composes the hold; never wired). Done in 0f8e277 (2026-10-18).
 - **K369** · Favicon linked relatively (./favicon.svg) in index.html. Done in 0f8e277 (2026-10-18).
