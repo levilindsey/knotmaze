@@ -273,10 +273,10 @@ Next free ID: K567.
   (default off, appended to the codec) draws it, with the maze topology the same either way (the title attaches after
   the plan: `src/core/scene_graph.ts` 175-196). Generalizes stage 3's 3b (`docs/design/K115_stage3.md` 208). Brief:
   `docs/design/K552.md`.
-  - owner: agent `a8b6ffda6521b4107` of claude session 91b19e11 (sonnet, the rebase onto K558; started 2026-10-19 21:45, 1 h cap); stage done by agent `a2068d642ae85e250` at `10a6d4b`
-  - branch: `worktree-agent-a2068d642ae85e250`, worktree `.claude/worktrees/agent-a2068d642ae85e250`; last commit: `10a6d4b`
-  - evidence: `.claude/probes/K552/` in the worktree (`settle_ab_d8.txt`, `topology_run.txt`, `page/` with 22 shots)
-  - next: the rebase agent's report (penReverse then dailyTitleThread in the four tables, pins re-frozen, K558's titled tests flagged on); then agent_merge -Done with the probes; then Levi's C4 call
+  - owner: agent `a8b6ffda6521b4107` of claude session 91b19e11 (sonnet, the rebase onto K558; started 2026-10-19 21:38, 1 h cap); stage done by agent `a2068d642ae85e250` at `d8e6bb8` (ended 21:4x, tree clean)
+  - branch: `worktree-agent-a2068d642ae85e250`, worktree `.claude/worktrees/agent-a2068d642ae85e250`; last commit: `d8e6bb8`
+  - evidence: `.claude/probes/K552/` in the worktree (`settle_ab_d8.txt`, `topology_run.txt`, `page/` probes A-F; `vite-cache/` is disposable)
+  - next: the rebase agent's report (penReverse then dailyTitleThread in the four tables, pins re-frozen, K558's titled tests flagged on); then agent_merge -Done with the probes, the full suite and the build (last run before 23e8264); then Levi's C4 call
   - brief: `docs/design/K552.md`
 - **K550** · K320 2b parity blocker: the split stays dark until its A/B passes (`docs/design/K320_stage2.md` sections
   7-8). Sessions 1-2: `.claude/probes/K320/k550_diagnosis.md` (the row fix and three keeps in `k550_two_keep.patch`;
