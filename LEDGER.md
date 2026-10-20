@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K558.
+Next free ID: K559.
 
 ## Waiting on Levi
 
@@ -320,7 +320,11 @@ merged):
   reads `c` when the worker's fetch came from the cache through the proxy. Rides K7's phone pass.
 - **K552** · Title-thread flag (Levi, 2026-10-19): dailies draw no title thread by default; a checkbox param
   (default off, appended to the codec) draws it, with the maze topology the same either way (the title attaches after
-  the plan: `src/core/scene_graph.ts` 169-178). Generalizes stage 3's 3b (`docs/design/K115_stage3.md` 208).
+  the plan: `src/core/scene_graph.ts` 175-196). Generalizes stage 3's 3b (`docs/design/K115_stage3.md` 208). Brief:
+  `docs/design/K552.md`.
+- **K558** · Pen-order crossings (Levi, 2026-10-19): at every text crossing the later stroke in writing order goes
+  over; a checkbox param (default off) reverses it. Text only: the maze and the emblems keep alternation. Brief:
+  `docs/design/K558.md`.
 
 Every other item below waits on the trigger it names.
 
