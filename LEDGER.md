@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K559.
+Next free ID: K563.
 
 ## Waiting on Levi
 
@@ -106,6 +106,12 @@ Next free ID: K559.
 
 - **K525** · Levi's look call on K80 turns 3b, built as recommended: telegraph roam 0.45 / hunt 0.95 with the second run at half, the 0.45 s catch ring burst, and the fog bleed at 0.16. `.claude/probes/K80/stage3b/contact_sheet.png`. The real-phone sheet is now `.claude/probes/K80/stage3b/contact_sheet_real.png` (K524): hunt 0.95 reads clearly at fit zoom, roam 0.45 is effectively invisible at fit zoom, the catch ring had mostly faded by the shot, and fog bleed 0.16 is unexercised (fog off in this design).
 - **K545** · K481 stage 3's look for Levi (built as recommended in 31b2238): lit tick + moved ring on hover/press, phone bigger ticks with the caught-choice tint at the head (desktop ticks alone); the real-phone sheet rides the next phone window (this stage was emulated 411x753 only) and Levi's call whether the tint should show on desktop too. `docs/design/K481.md` (Stage 3 handoff); `.claude/probes/K481/stage3/`.
+- **K559** · K115 stage 8's six glyph calls (`docs/design/K115_glyphs.md` section 11; recommendation
+  in brackets): (1) i/j dots: [a short slanted pill] or a round ring; (2) lifted-pen strokes (dots,
+  t-bars, accents, #) walkable? [no]; (3) [a looped hand, loops >= 0.47 x-height] or unlooped; (4)
+  titles below maze size 8 (Daily #10 on 2026-10-21 needs ~9): [overhang down to size 6, then "#8"
+  at 4-5]; (5) Hershey: [replace it whole, kept as the fallback for unauthored characters]; (6) only
+  if stage 9 cannot solve the oval-letter join: [wider spacing] or a stroke through the oval.
 
 ## In progress
 
@@ -123,11 +129,11 @@ Next free ID: K559.
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
   capitals e64f4d6, accents fa1b1ae, Greek 54612f2 (suite 1521 green). Levi (2026-10-19, Daily #8): redesign first.
-  - owner: nobody since 2026-10-19 21:31 (merged; agent `ac64a844a1d15b9d7` of claude session 91b19e11)
+  - owner: nobody since 2026-10-19 21:27 (stage 8 done: agent `ac64a844a1d15b9d7` of claude session 91b19e11; stage 9 waits on Levi's calls)
   - branch: mainline; last commit: `584998a`
-  - evidence: `.claude/probes/K115/stage8/`
-  - next: Levi's six calls; then stage 9 (docs/design/K115_stage9.md), starting with the oval-letter join
-  - brief: `docs/design/K115_stage8.md`; the design so far: `docs/design/K115_cursive_text.md`
+  - evidence: `.claude/probes/K115/stage8/` (metrics harness `metrics.ts`, `baseline.txt`, `o_entry_check.txt`, `notes.md`)
+  - next: Levi's six calls (K559); then stage 9 from its brief, starting with the oval-letter join (K115_glyphs.md section 4); then stage 7's live dates (docs/design/K115_stage7.md), K557
+  - brief: `docs/design/K115_stage9.md`; the design: `docs/design/K115_glyphs.md`
 - **K74** · Maze design, decided (Levi, 2026-10-13;
   `docs/design/K74_maze_design.md`): every mechanism gets params whose
   neutral value turns it off. Stage 1 (long-tail dead ends) and stage 2
@@ -1014,9 +1020,25 @@ Every other item below waits on the trigger it names.
 - **K542** · PROTECT's biting-triangle GPU census is still owed: in walked fabric states at rest the waiver's range is empty (protect intervals overlap slot windows on 137/570 sides, but no on-screen fragment sits in the margin band over B - the triangles are not world-squeezed until a cinch/tug), so the protect stage proved the chain by the CPU census (706 sides, factors = vis(B) exactly, incl. 544 hidden / 22 shown) plus the shader-text unit tests, and a manufactured bite changed 0 px for the same reason. Build a squeezed state (a cinched cyclic triangle under the reveal, e.g. a physics tug on fabric) and judge hidden (on == waiver-off) vs shown (on == waiver-full) there. Evidence .claude/probes/K268/stage3a/out/protect_final/ + census_protect2/ (22/31, the ramp baseline). Census attempt 2026-10-18 (build 0f8e277, protect_bite.mjs, out/protect_k542/, results_K542.md): shown state marginally built - cinching B onto A at off* on slot 3 side 0 (sin ~ 1) yields 6 faithful bite points (first non-zero in this state family); judged on == waiver-full (5 hard px vs 2 A/A churn, correct direction) but on vs waiver-off also only 5 px, below the decisive bar. Hidden state unbuildable here (no on-screen over-shown + A-shown + perpendicular slot with B hidden). No defect found; decisive census still owed - needs a bigger bite (held tug, iterated cinch), a zoomed bite clip and differing A/B section colors.
 - **K555** · K115 residuals its redesign must absorb or re-check: the joins λγ λη λθ λψ τυ meet a glyph stroke
   (`docs/design/K115_stage6.md` 971-975), 6a's five CAPITAL_OVERRIDES (800-809), the digit-6 conflict
-  (`docs/design/K115_stage3.md` 376-381), and 1b's same-slash crossings that rely on overFirst alone.
+  (`docs/design/K115_stage3.md` 376-381), and 1b's same-slash crossings that rely on overFirst alone. K558 adds (c) a connector touching
+  a lifted stroke's end makes a junction (Daily #12's #) and (d) the loops and bars of l, e and t are junctions
+  (`docs/design/K558.md` Handoff). Stage 8's design absorbs them (`docs/design/K115_glyphs.md`); close when stage 9 lands.
 - **K556** · K115 emblems: a shape under MIN_EMBLEM_DIA (6 LU) is refused silently
   (`docs/design/K115_stage5.md` 261, 620), and the triquetra shows gap slivers (594-596).
+- **K560** · Decorative text threads never show under the thread reveal (today's accents; K115's
+  lifted strokes next), and a hidden thread on top cuts no gap in the thread under it
+  (`docs/design/K115_glyphs.md`, kill criterion 2: visible strokes plus a two-pass crossing lint).
+- **K561** · K320 2c's pre-flip checks from K553 (`docs/design/K553.md` Handoff, "Not done"):
+  splitAssert (`.claude/probes/K553/k553_probe.mjs`) at dsf 1, 1.5 and 2; a failed framebuffer check
+  (`targetComplete`, gap_prepass.ts) leaves the fills on the split program, so no gaps draw; the
+  pass re-renders every frame under the intro or flow (47-52 renders vs 5, 0.47-0.88 ms each;
+  gap_prepass.ts:126 or ribbon_renderer.ts:2200); the first pass after setGapSplit(true) costs
+  458-533 ms (a cold link); a phone pass; a context loss with the split on.
+- **K562** · K558's residuals (`docs/design/K558.md` Handoff): (a)+(b) spur pen order is untested (a
+  spur taken for a lifted stroke; a spur attached before the pass it crosses needs a retrace-spur
+  fixture); (e) "20" makes a three-pass node that keeps alternation (#20 on 2026-10-31, #120,
+  #200-209, #220, #320): K115 stage 9's two-pass lint or a planarizer fix; (f) the panel tooltip's
+  and the rule comment's examples come true only with K115's glyphs.
 ## Approved, to schedule (2026-10-11)
 
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
