@@ -5,13 +5,14 @@
 // vs the in-shader gapKeep, 0 texels) is the browser probe's, not this
 // file's. Brief: docs/design/K320_stage2.md sections 3.2, 5, 6 (2a), 9.
 import { describe, expect, it } from "vitest";
-import { Container, DOMAdapter, Mesh, MeshGeometry, Texture, type Adapter } from "pixi.js";
+import { Container, DOMAdapter, Mesh, MeshGeometry, RenderTexture, Texture, type Adapter } from "pixi.js";
 import {
   GAP_MASK_FLIP_Y,
   GAP_PREPASS_STATS,
   clearGapScene,
   detectGapSplit,
   ensureGapMaskSize,
+  fitGapTarget,
   gapKeepFromMask,
   gapMaskChain,
   gapMaskDirty,
@@ -220,6 +221,20 @@ describe("K553: the mask is sized in the canvas's device pixels", () => {
     expect(sizeOf()).toEqual([1600, 900, 1]);
     expect([rt.frame.width, rt.frame.height]).toEqual([1600, 900]);
     expect(uGapSize()).toEqual([1600, 900]);
+  });
+
+  it("fitGapTarget: any further mask target takes the same rule", () => {
+    const rt = RenderTexture.create({ width: 1, height: 1, resolution: 1, format: "rgba16float", dynamic: true });
+    expect(fitGapTarget(rt, 822, 1506, 2)).toBe(true);
+    expect([rt.source.pixelWidth, rt.source.pixelHeight, rt.source.resolution]).toEqual([822, 1506, 2]);
+    expect([rt.frame.width, rt.frame.height]).toEqual([411, 753]);
+    expect(fitGapTarget(rt, 822, 1506, 2)).toBe(false);
+    // Same pixels, new resolution (a dpr change that keeps the device size):
+    // Pixi emits no "resize", so the frame must still follow.
+    const same = RenderTexture.create({ width: 822, height: 1506, resolution: 1, format: "rgba16float", dynamic: true });
+    expect(fitGapTarget(same, 822, 1506, 2)).toBe(true);
+    expect([same.source.pixelWidth, same.source.pixelHeight, same.source.resolution]).toEqual([822, 1506, 2]);
+    expect([same.frame.width, same.frame.height]).toEqual([411, 753]);
   });
 
   it("renderGapMask: the split arms the pass, at the renderer's resolution", () => {

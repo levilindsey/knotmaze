@@ -187,6 +187,14 @@ export function ensureGapMaskSize(cssW: number, cssH: number, resolution: number
   const [pw, ph] = gapMaskPixelSize(cssW, cssH, res);
   setGapMaskSize(pw, ph);
   bindGapMask(rt);
+  return fitGapTarget(rt, pw, ph, res);
+}
+
+// One target to pw x ph device pixels at resolution res (its frame in CSS
+// px, as the canvas's is); true when it changed. Any further target the
+// paint indexes by gl_FragCoord sizes through this too, or it repeats
+// K553 at dsf != 1.
+export function fitGapTarget(rt: RenderTexture, pw: number, ph: number, res: number): boolean {
   const src = rt.source;
   if (src.pixelWidth === pw && src.pixelHeight === ph && src.resolution === res) return false;
   rt.resize(pw / res, ph / res, res);
