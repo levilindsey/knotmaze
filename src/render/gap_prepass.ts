@@ -10,7 +10,9 @@
 //
 //   TARGET: one RenderTexture for the page (grown in place, never
 //   destroyed - the PALETTE_CACHE rule), rgba16float, NEAREST, no mipmaps,
-//   no MSAA, 1:1 device pixels with the canvas (renderer.width x height).
+//   no MSAA, 1:1 device pixels with the canvas: renderer.width x height
+//   (CSS px) at renderer.resolution, as the canvas itself is (K553; see
+//   ensureGapMaskSize - a CSS-sized target drew no gaps at dsf 1.5).
 //   R = gapKeep (half float resolves ~0.0005 near 1, two orders below the
 //   0.002 discard), G = draw index + 1 as an exact integer (half float is
 //   exact to 2048), B = 0, A = 1. 0 in G = no ribbon covers the texel.
@@ -110,6 +112,8 @@ export interface GapDirtyInputs {
   view: readonly [number, number, number, number, number, number];
   canvasW: number;
   canvasH: number;
+  // The renderer's resolution (K553): the target's device size follows it.
+  canvasRes: number;
   fabricGap: readonly [number, number, number];
   explore: boolean;
   shapeRev: number;
@@ -126,6 +130,7 @@ export function gapMaskDirty(prev: GapDirtyInputs | null, next: GapDirtyInputs):
     prev.geomRev !== next.geomRev ||
     prev.canvasW !== next.canvasW ||
     prev.canvasH !== next.canvasH ||
+    prev.canvasRes !== next.canvasRes ||
     prev.explore !== next.explore ||
     prev.shapeRev !== next.shapeRev ||
     prev.fxTicking !== next.fxTicking
@@ -157,14 +162,37 @@ export function gapMaskTexture(): RenderTexture {
   return MASK;
 }
 
-function ensureMaskSize(w: number, h: number): boolean {
+// The target's device size for a canvas of cssW x cssH CSS px at a
+// resolution: Pixi's own rounding (TextureSource.resize), so it equals the
+// canvas's pixel size whenever cssW x cssH is renderer.width x height.
+export function gapMaskPixelSize(cssW: number, cssH: number, resolution: number): [number, number] {
+  const res = resolution > 0 ? resolution : 1;
+  return [Math.max(1, Math.round(cssW * res)), Math.max(1, Math.round(cssH * res))];
+}
+
+// K553: size the target in DEVICE pixels. The paint pass indexes the mask
+// by gl_FragCoord (GAP_MASK_FRAG), which counts the canvas's device pixels,
+// and uGapSize is that pixel size. The target takes the renderer's
+// resolution, as the canvas does: Pixi's render-target projection divides
+// the viewport by the source's resolution, so the camera's CSS-unit world
+// transform fills the whole device-sized target and every texel lines up
+// with the canvas pixel the paint reads it for. Until K553 the target was
+// renderer.width x height at resolution 1 (CSS px): right at dsf 1 only.
+// At dsf 1.5 the paint read the texel for 1.5x its own position, which
+// another chain or nothing owned, so the split drew almost no gaps (K551,
+// Levi's Daily #8; both enabling paths alike). Returns true on a resize.
+export function ensureGapMaskSize(cssW: number, cssH: number, resolution: number): boolean {
   const rt = gapMaskTexture();
-  const width = Math.max(1, Math.round(w));
-  const height = Math.max(1, Math.round(h));
-  setGapMaskSize(width, height);
+  const res = resolution > 0 ? resolution : 1;
+  const [pw, ph] = gapMaskPixelSize(cssW, cssH, res);
+  setGapMaskSize(pw, ph);
   bindGapMask(rt);
-  if (rt.width === width && rt.height === height) return false;
-  rt.resize(width, height, 1);
+  const src = rt.source;
+  if (src.pixelWidth === pw && src.pixelHeight === ph && src.resolution === res) return false;
+  rt.resize(pw / res, ph / res, res);
+  // The frame follows the source only on a pixel-size change ("resize"):
+  // a resolution change at the same pixel size must refresh it too.
+  rt.update();
   return true;
 }
 
@@ -246,7 +274,7 @@ export function renderGapMask(renderer: Renderer): void {
   if (!src || !PREPASS_ON || !gapSplitActive() || src.fills.length === 0) return;
   const gl = (renderer as unknown as { gl?: WebGL2RenderingContext }).gl ?? null;
   if (!detectGapSplit(gl)) return;
-  ensureMaskSize(renderer.width, renderer.height);
+  ensureGapMaskSize(renderer.width, renderer.height, renderer.resolution);
   if (!targetComplete(renderer)) return;
   const t0 = performance.now();
   const world = freshWorld(src.root);
@@ -258,6 +286,7 @@ export function renderGapMask(renderer: Renderer): void {
     view: [world.a, world.b, world.c, world.d, world.tx, world.ty],
     canvasW: renderer.width,
     canvasH: renderer.height,
+    canvasRes: renderer.resolution,
     fabricGap: [fg[0], fg[1], fg[2]],
     explore: src.explore(),
     shapeRev: src.shapeRev(),
