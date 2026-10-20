@@ -123,11 +123,11 @@ Next free ID: K559.
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
   capitals e64f4d6, accents fa1b1ae, Greek 54612f2 (suite 1521 green). Levi (2026-10-19, Daily #8): redesign first.
-  - owner: nobody since 2026-10-18 06:55 (muse 01a14e0f-d5b1-7152-a08b-9768f176e3c7 built stages 1b-6c and the stage 7 brief; session closed 2026-10-19 15:44)
-  - branch: mainline; last commit: `eaeabb0` (code at `54612f2`)
-  - evidence: `.claude/probes/K115/`
-  - next: the redesign (Levi, 2026-10-19): crossings only, never junctions, except dead-end stubs; over = the later stroke in pen order, a checkbox reverses it; smooth continuous paths (no sharp angles, no jitter); bespoke glyph and ligature rules allowed, prototyped and verified before any mass generation; final ς its own glyph; the digit-6 fix (K555). Then stage 7's live dates, K557
-  - brief: `docs/design/K115_stage7.md` (until the redesign brief replaces it); `docs/design/K115_stage6.md`; `docs/design/K115_cursive_text.md`
+  - owner: agent `ac64a844a1d15b9d7` of claude session 91b19e11 (opus, started 2026-10-19 20:00, 2 h cap ~22:00)
+  - branch: `worktree-agent-ac64a844a1d15b9d7`, worktree `.claude/worktrees/agent-ac64a844a1d15b9d7`; last commit: `c24cc97`
+  - evidence: `.claude/probes/K115/stage8/`
+  - next: stage 8 (research, docs only): defect attribution, junction census, the glyph design docs/design/K115_glyphs.md, metrics harness, the stage 9 brief; Levi's look call on stage 9 before any mass authoring; then stage 7's live dates (docs/design/K115_stage7.md), K557
+  - brief: `docs/design/K115_stage8.md`; the design so far: `docs/design/K115_cursive_text.md`
 - **K74** · Maze design, decided (Levi, 2026-10-13;
   `docs/design/K74_maze_design.md`): every mechanism gets params whose
   neutral value turns it off. Stage 1 (long-tail dead ends) and stage 2
@@ -258,6 +258,23 @@ Next free ID: K559.
   - evidence: `.claude/probes/K459/`
   - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii) (`docs/design/K459.md`, Handoff); the free cap's checks are K477
   - brief: `docs/design/K459.md`
+- **K552** · Title-thread flag (Levi, 2026-10-19): dailies draw no title thread by default; a checkbox param
+  (default off, appended to the codec) draws it, with the maze topology the same either way (the title attaches after
+  the plan: `src/core/scene_graph.ts` 175-196). Generalizes stage 3's 3b (`docs/design/K115_stage3.md` 208). Brief:
+  `docs/design/K552.md`.
+  - owner: agent `a2068d642ae85e250` of claude session 91b19e11 (opus, started 2026-10-19 20:00, 2 h cap ~22:00)
+  - branch: `worktree-agent-a2068d642ae85e250`, worktree `.claude/worktrees/agent-a2068d642ae85e250`; last commit: `c24cc97`
+  - evidence: `.claude/probes/K552/`
+  - next: the stage per the brief: the daily-exempt flag (default off), the sceneTitle gate, the topology pin, maze-form attempts; then the coordinator merges K552 before K558
+  - brief: `docs/design/K552.md`
+- **K558** · Pen-order crossings (Levi, 2026-10-19): at every text crossing the later stroke in writing order goes
+  over; a checkbox param (default off) reverses it. Text only: the maze and the emblems keep alternation. Brief:
+  `docs/design/K558.md`.
+  - owner: agent `ac645b913261ef81e` of claude session 91b19e11 (opus, started 2026-10-19 20:00, 2 h cap ~22:00)
+  - branch: `worktree-agent-ac645b913261ef81e`, worktree `.claude/worktrees/agent-ac645b913261ef81e`; last commit: `c24cc97`
+  - evidence: `.claude/probes/K558/`
+  - next: the stage per the brief: pen-time keys on SegIn, the pen-order assignment for text, the reverse param, the checkAlternation exemption; merge after K552 (param order K552 then K558)
+  - brief: `docs/design/K558.md`
 
 ## Next, in order
 
@@ -318,13 +335,6 @@ merged):
 - **K412** · K7's worker-chunk modulepreload on a real network (measured only on localhost): a
   fresh-profile load of https://levi.dev/knotmaze/ through `stage7/k7_frames.mjs`; its `wk` column
   reads `c` when the worker's fetch came from the cache through the proxy. Rides K7's phone pass.
-- **K552** · Title-thread flag (Levi, 2026-10-19): dailies draw no title thread by default; a checkbox param
-  (default off, appended to the codec) draws it, with the maze topology the same either way (the title attaches after
-  the plan: `src/core/scene_graph.ts` 175-196). Generalizes stage 3's 3b (`docs/design/K115_stage3.md` 208). Brief:
-  `docs/design/K552.md`.
-- **K558** · Pen-order crossings (Levi, 2026-10-19): at every text crossing the later stroke in writing order goes
-  over; a checkbox param (default off) reverses it. Text only: the maze and the emblems keep alternation. Brief:
-  `docs/design/K558.md`.
 
 Every other item below waits on the trigger it names.
 
