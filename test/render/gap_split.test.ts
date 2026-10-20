@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 import {
   GAP_MASK_FLIP_Y,
+  detectGapSplit,
   gapKeepFromMask,
   gapMaskChain,
   gapMaskDirty,
@@ -15,6 +16,7 @@ import {
   gapSplitSupported,
   type GapDirtyInputs,
 } from "../../src/render/gap_prepass";
+import { gapSplitActive } from "../../src/render/fabric_sdf";
 import { GAP_ONLY_FRAG, gapOnlyFragExplore } from "../../src/render/ribbon/ribbon_shader";
 import { programRegistry, type WarmContext } from "../../src/render/program_registry";
 
@@ -148,6 +150,20 @@ describe("gap split fallback selection (brief section 5)", () => {
       if (e.name.includes("gap")) expect(e.exists?.(ctx(true)) ?? true).toBe(true);
     }
   });
+});
+
+// K551: capability turned the split on, and it shipped live from
+// 2026-10-18 drawing no crossing gaps on the desktop. It stays dark until
+// K320 2c proves parity; only setGapSplit (the probe A/B) turns it on.
+describe("K551: the split stays dark", () => {
+  const capable = { getExtension: (n: string) => (n === "EXT_color_buffer_half_float" ? {} : null) };
+
+  it("capability alone never turns it on", () => {
+    expect(gapSplitActive()).toBe(false);
+    expect(detectGapSplit(capable)).toBe(true);
+    expect(gapSplitActive()).toBe(false);
+  });
+  // The warm-up's side: shader_warmup.test.ts ("K551").
 });
 
 describe("K320 stage 2a: gap program texts", () => {
