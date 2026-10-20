@@ -951,6 +951,13 @@ export function buildPanel(
     "Cartouche shape: a predefined knot emblem floating as a decorative island inside the cartouche hole (found visually, never walked or counted). Wins the hole over the Cartouche word. None = the word (or no cartouche). Regenerates the design.",
     D.cartoucheShape, regenerateWhenDone
   );
+  // K558: which stroke of a cursive crossing lies on top (text, title and
+  // cartouche words). Off = pen order, the later stroke over.
+  row(
+    fDesign, p, "penReverse", { label: "Earlier stroke on top" },
+    "Cursive text crossings: each stroke passes over the strokes drawn before it, as a pen draws (a t's bar over its stem, an l's downstroke over its upstroke). Check to reverse it, so the earlier stroke lies on top. Applies to the Text, the daily's title and the Cartouche word. Regenerates the design.",
+    D.penReverse, regenerateWhenDone
+  );
   // SEED ROW: the design's seed as the link's base-36 token (?<seed>...).
   // Typing a seed (or any word - it hashes to one) and pressing Enter loads
   // that design; the dice button in the row rolls a random one. The row

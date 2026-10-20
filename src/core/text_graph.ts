@@ -6,7 +6,9 @@
 // planar stroke graph, thread path, Hermite connectors for capitals,
 // opened cusps, junction spurs, dot loops, bar strands and the run-phase
 // over/under solver follow docs/design/K115_cursive_text.md sections
-// 2.3 and 3.1-3.6 and docs/design/K115_stage1.md Part A.
+// 2.3 and 3.1-3.6 and docs/design/K115_stage1.md Part A. Since K558 the
+// text's over/under follows pen order instead (assignPenOrder: the later
+// stroke goes over); the emblems keep the run-phase solver.
 //
 // Determinism (K108): this file uses only +, -, *, /, Math.sqrt via
 // hypot2, and integer helpers. No other Math functions. (Stage 6b
@@ -35,6 +37,12 @@ const BLUNT_LU = 0.9; // Opened cusp tip width.
 const ON_TOL2 = 0.25; // Point-on-stroke tolerance, squared (HU).
 const NODE_TOL2 = 0.0025; // Same-node tolerance, squared (HU).
 export const TITLE_GAP = 2; // LU between a title band's bottom and the maze top.
+// K558 pen clock (assignPenOrder): the pause between two strokes, in HU
+// of pen travel; the step between spurs that leave from one junction; and
+// the smallest pen-time gap that still orders a crossing's passes.
+const PEN_GAP = 1;
+const PEN_EPS = 0.00001;
+const PEN_TIE = 0.000000001;
 
 function d2(a: Pt, b: Pt): number {
   const x = a[0] - b[0];
@@ -56,6 +64,11 @@ interface SegIn {
   stroke: number;
   seg: number;
   isMain: boolean;
+  // K558: pen time at a and at b (absent = 0). A piece of a split segment
+  // inherits it interpolated, so every atomic edge knows when the pen drew
+  // each of its ends; assignPenOrder reads that at the crossings.
+  penA?: number;
+  penB?: number;
 }
 
 interface AtomEdge {
@@ -64,6 +77,9 @@ interface AtomEdge {
   stroke: number;
   seg: number;
   isMain: boolean;
+  // K558: pen time at node a and at node b (the creating segment's keys).
+  pa: number;
+  pb: number;
 }
 
 interface Built {
@@ -189,13 +205,29 @@ function buildPlanar(segs: SegIn[], markers: Pt[]): Built {
       const nb = findNode(list[k + 1].p);
       if (na === nb) continue;
       const key = na < nb ? `${na}_${nb}` : `${nb}_${na}`;
+      const s0 = segs[i].penA ?? 0;
+      const s1 = segs[i].penB ?? 0;
+      const pk = s0 + (s1 - s0) * list[k].t;
+      const pk1 = s0 + (s1 - s0) * list[k + 1].t;
       let ei = edgeByKey.get(key);
       if (ei === undefined) {
         ei = edges.length;
-        edges.push({ a: na, b: nb, stroke: segs[i].stroke, seg: segs[i].seg, isMain: segs[i].isMain });
+        edges.push({
+          a: na,
+          b: nb,
+          stroke: segs[i].stroke,
+          seg: segs[i].seg,
+          isMain: segs[i].isMain,
+          pa: pk,
+          pb: pk1,
+        });
         edgeByKey.set(key, ei);
-      } else if (segs[i].isMain) {
+      } else if (segs[i].isMain && !edges[ei].isMain) {
+        // A collinear duplicate: the main path's pen keys win.
         edges[ei].isMain = true;
+        const fwd = edges[ei].a === na;
+        edges[ei].pa = fwd ? pk : pk1;
+        edges[ei].pb = fwd ? pk1 : pk;
       }
       if (!perSeg[i].includes(ei)) perSeg[i].push(ei);
     }
@@ -362,10 +394,25 @@ function closestEndpoint(strokes: Pt[][], target: Pt): Pt {
   return best;
 }
 
+// K558: a leftover edge's pen keys. kA / kB are the glyph's own stroke
+// clock at the edge's two ends (its strokes in order, each along its own
+// direction: stroke offset + arc, a 1 HU gap between strokes). attach >= 0
+// marks a SPUR, material that hangs off the route at a non-crossing node:
+// the pen draws it as it leaves routePts[attach] (that node's first
+// visit). -1 marks a LIFTED stroke, drawn after the whole body: material
+// that meets the route only at proper crossings (a t-bar), or not at all.
+interface LeftoverPen {
+  kA: number;
+  kB: number;
+  attach: number;
+}
+
 interface GlyphRoute {
   routePts: Pt[]; // Absolute HU, entry to exit along the thread path.
   leftovers: Array<[Pt, Pt]>; // Atomic edges not on the path (HU).
   dots: Pt[][]; // Tiny closed loops (HU).
+  pens: LeftoverPen[]; // K558: one per leftover, in the same order.
+  strokeTotal: number; // K558: the length of the glyph's stroke clock.
 }
 
 function routeGlyph(
@@ -391,18 +438,33 @@ function routeGlyph(
     if (closed && maxX - minX <= 3 && maxY - minY <= 3) dots.push(s.slice());
     else activeRaw.push(s.slice());
   }
-  if (activeRaw.length === 0) return { routePts: [], leftovers: [], dots };
+  if (activeRaw.length === 0) {
+    return { routePts: [], leftovers: [], dots, pens: [], strokeTotal: 0 };
+  }
 
   const opened = activeRaw.map((s) => openCusps(s, xHeight));
   const strokes = dropRetraces(opened);
 
+  // K558: each segment carries the glyph's stroke clock (see LeftoverPen).
   const segs: SegIn[] = [];
+  let strokeClock = 0;
   strokes.forEach((s, si) => {
     for (let k = 0; k + 1 < s.length; k++) {
+      const len = hypot2(s[k + 1][0] - s[k][0], s[k + 1][1] - s[k][1]);
       if (d2(s[k], s[k + 1]) > 0.000000001) {
-        segs.push({ a: s[k], b: s[k + 1], stroke: si, seg: k, isMain: false });
+        segs.push({
+          a: s[k],
+          b: s[k + 1],
+          stroke: si,
+          seg: k,
+          isMain: false,
+          penA: strokeClock,
+          penB: strokeClock + len,
+        });
       }
+      strokeClock += len;
     }
+    strokeClock += PEN_GAP;
   });
   const built = buildPlanar(segs, [entryPt, exitPt]);
   const entryNode = nearestNode(built, entryPt);
@@ -430,11 +492,68 @@ function routeGlyph(
   } else {
     routePts.push(built.nodes[entryNode]);
   }
-  const leftovers: Array<[Pt, Pt]> = [];
-  built.edges.forEach((e, ei) => {
-    if (!onPath.has(ei)) leftovers.push([built.nodes[e.a], built.nodes[e.b]]);
+  // K558: spur or lifted. Leftover edges group into components joined at
+  // nodes off the route; a component that touches the route at a
+  // non-crossing node is a spur, attached at the earliest such touch.
+  const routeIdx = new Map<number, number>(); // Built node -> first route index.
+  {
+    let cur = entryNode;
+    routeIdx.set(cur, 0);
+    pathEdges.forEach((ei, j) => {
+      const e = built.edges[ei];
+      cur = e.a === cur ? e.b : e.a;
+      if (!routeIdx.has(cur)) routeIdx.set(cur, j + 1);
+    });
+  }
+  const leftIdx: number[] = [];
+  built.edges.forEach((_, ei) => {
+    if (!onPath.has(ei)) leftIdx.push(ei);
   });
-  return { routePts, leftovers, dots };
+  const parent = leftIdx.map((_, i) => i);
+  const find = (x: number): number => {
+    let r = x;
+    while (parent[r] !== r) r = parent[r];
+    while (parent[x] !== r) {
+      const nxt = parent[x];
+      parent[x] = r;
+      x = nxt;
+    }
+    return r;
+  };
+  const owner = new Map<number, number>(); // Off-route node -> a leftover.
+  leftIdx.forEach((ei, li) => {
+    const e = built.edges[ei];
+    for (const n of [e.a, e.b]) {
+      if (routeIdx.has(n)) continue;
+      const o = owner.get(n);
+      if (o === undefined) {
+        owner.set(n, li);
+      } else {
+        const ra = find(o);
+        const rb = find(li);
+        if (ra !== rb) parent[rb] = ra;
+      }
+    }
+  });
+  const attachOf = new Map<number, number>(); // Component root -> route index.
+  leftIdx.forEach((ei, li) => {
+    const e = built.edges[ei];
+    for (const n of [e.a, e.b]) {
+      const j = routeIdx.get(n);
+      if (j === undefined || built.cross[n]) continue;
+      const r = find(li);
+      const prev = attachOf.get(r);
+      if (prev === undefined || j < prev) attachOf.set(r, j);
+    }
+  });
+  const leftovers: Array<[Pt, Pt]> = [];
+  const pens: LeftoverPen[] = [];
+  leftIdx.forEach((ei, li) => {
+    const e = built.edges[ei];
+    leftovers.push([built.nodes[e.a], built.nodes[e.b]]);
+    pens.push({ kA: e.pa, kB: e.pb, attach: attachOf.get(find(li)) ?? -1 });
+  });
+  return { routePts, leftovers, dots, pens, strokeTotal: strokeClock };
 }
 
 // Deterministic trail search entry -> exit. Prefers continuing the same
@@ -706,7 +825,14 @@ function greekGlyphFor(code: number): HersheyGlyph | undefined {
   return HERSHEY_GREEK[code];
 }
 
-export function buildTextGraph(text: string, opts?: { xHeight?: number }): TangleGraph {
+// K558: `penReverse` flips every text crossing (the earlier stroke goes
+// over); see assignPenOrder.
+export interface TextGraphOpts {
+  xHeight?: number;
+  penReverse?: boolean;
+}
+
+export function buildTextGraph(text: string, opts?: TextGraphOpts): TangleGraph {
   const xHeight =
     opts && opts.xHeight !== undefined && opts.xHeight > 0 ? opts.xHeight : 3;
   const scale = xHeight / X_HEIGHT_HU;
@@ -720,12 +846,25 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
   const glyphJoins: Pt[] = [];
   const extraSegs: Array<[Pt, Pt]> = [];
   const dotLoops: Pt[][] = [];
+  // K558: pen-time bookkeeping, one record per routed glyph in reading
+  // order (assignPenOrder documents the clock). routeMap holds the mainPts
+  // index of each of the glyph's routePts; extraPens and dotGlyph run
+  // parallel to extraSegs and dotLoops.
+  interface GlyphPen {
+    routeMap: number[];
+    strokeTotal: number;
+    lifted: boolean;
+  }
+  const glyphPens: GlyphPen[] = [];
+  const extraPens: Array<{ g: number; pen: LeftoverPen }> = [];
+  const dotGlyph: number[] = [];
   // K115 stage 6b: accent marks wait here (HU, placed) until the whole
   // word is laid out; only then can their no-crossing check see every
   // neighbour stroke, nudge, and drop (see the mark pass below).
   interface PendingMark {
     pieces: MarkPiece[];
     below: boolean;
+    glyph: number; // K558: the glyph it belongs to (glyphPens index).
   }
   const pendingMarks: PendingMark[] = [];
   // Stage 6c: whether the word's first / last routed glyph is Greek.
@@ -897,8 +1036,17 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     }
 
     if (routed === null) routed = routeGlyph(placed, entryPt, exitPt, xHeight);
-    for (const seg of routed.leftovers) extraSegs.push(seg);
-    for (const dot of routed.dots) dotLoops.push(dot);
+    const gPen: GlyphPen = { routeMap: [], strokeTotal: routed.strokeTotal, lifted: false };
+    const gOrd = glyphPens.length;
+    glyphPens.push(gPen);
+    routed.leftovers.forEach((seg, i) => {
+      extraSegs.push(seg);
+      extraPens.push({ g: gOrd, pen: routed!.pens[i] });
+    });
+    for (const dot of routed.dots) {
+      dotLoops.push(dot);
+      dotGlyph.push(gOrd);
+    }
     if (routed.routePts.length === 0) continue;
     if (!seenGlyph) {
       firstGreek = isGreek;
@@ -931,20 +1079,29 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
         pendingMarks.push({
           pieces: markPieces(mark, cx, below ? 9 : aboveY),
           below,
+          glyph: gOrd,
         });
       }
     }
 
+    // K558: gPen.routeMap records where each route point lands in mainPts.
     if (mainPts.length === 0) {
       glyphJoins.push([routed.routePts[0][0], routed.routePts[0][1]]);
-      for (const p of routed.routePts) mainPts.push(p);
+      for (const p of routed.routePts) {
+        gPen.routeMap.push(mainPts.length);
+        mainPts.push(p);
+      }
     } else {
       const p = mainPts[mainPts.length - 1];
       const q = routed.routePts[0];
       if (d2(p, q) <= 0.25) {
         // The lead-in joins at the previous point itself.
         glyphJoins.push([p[0], p[1]]);
-        for (let k = 1; k < routed.routePts.length; k++) mainPts.push(routed.routePts[k]);
+        gPen.routeMap.push(mainPts.length - 1);
+        for (let k = 1; k < routed.routePts.length; k++) {
+          gPen.routeMap.push(mainPts.length);
+          mainPts.push(routed.routePts[k]);
+        }
       } else {
         glyphJoins.push([q[0], q[1]]);
         const prev = mainPts.length >= 2 ? mainPts[mainPts.length - 2] : p;
@@ -953,12 +1110,19 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
           routed.routePts.length >= 2 ? routed.routePts[1] : routed.routePts[0];
         const tanQ: Pt = [nxt[0] - q[0], nxt[1] - q[1]];
         for (const hp of hermitePts(p, tanP, q, tanQ)) mainPts.push(hp);
-        for (const rp of routed.routePts) mainPts.push(rp);
+        for (const rp of routed.routePts) {
+          gPen.routeMap.push(mainPts.length);
+          mainPts.push(rp);
+        }
       }
     }
   }
 
+  // K558: a bare line has no glyph on it, so every routeMap is stale and
+  // all the extra material counts as lifted.
+  let bareLine = false;
   if (mainPts.length < 2) {
+    bareLine = true;
     const endX = cursor > 0 ? cursor : X_HEIGHT_HU;
     glyphJoins.length = 0; // No glyph made the path; the line below is bare.
     firstGreek = false;
@@ -970,11 +1134,13 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
   // along the path tangents, so mentr_a / mexit_a are degree-1 ends even
   // when a glyph's entry point is also an interior point of its stroke
   // (a capital D passes its own start again).
+  let leadShift = 0; // K558: 1 when the lead-in tail shifted mainPts.
   {
     const f = mainPts[0];
     const fn = mainPts[1];
     const fl = hypot2(fn[0] - f[0], fn[1] - f[1]);
     if (fl > 0) {
+      leadShift = 1;
       // Stage 6c: a Greek first glyph's entry often sits mid-stroke, so
       // a tail sent straight back retraces its spur and the entrance
       // collapses to a TURN. A 1.5 HU sideways step makes the tail
@@ -1007,6 +1173,7 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
   // missing accent is a typo; a stroke through a letter is a
   // different letter.
   const acceptedMarks: MarkPiece[] = [];
+  const acceptedMarkGlyph: number[] = []; // K558: parallel to acceptedMarks.
   {
     const refSegs: Array<[Pt, Pt]> = [];
     for (let k = 0; k + 1 < mainPts.length; k++) {
@@ -1073,10 +1240,71 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
           if (crosses) break;
         }
         if (!crosses) {
-          for (const piece of pieces) acceptedMarks.push(piece);
+          for (const piece of pieces) {
+            acceptedMarks.push(piece);
+            acceptedMarkGlyph.push(pending.glyph);
+          }
           for (const seg of cand) keptSegs.push(seg);
           break;
         }
+      }
+    }
+  }
+
+  // --- K558: the pen clock, in HU of pen travel (assignPenOrder has the
+  // order). The body is one stroke: cum[k] is the arc along mainPts, lead
+  // tails included, from mentr_a to point k.
+  const cum: number[] = [0];
+  for (let k = 0; k + 1 < mainPts.length; k++) {
+    const a = mainPts[k];
+    const b = mainPts[k + 1];
+    cum.push(cum[k] + hypot2(b[0] - a[0], b[1] - a[1]));
+  }
+  const bodyLen = cum[cum.length - 1];
+  // Where the pen leaves the body for extra segment i (a mainPts index),
+  // or -1 when the segment is lifted.
+  const spurAt = (i: number): number => {
+    if (bareLine) return -1;
+    const { g, pen } = extraPens[i];
+    if (pen.attach < 0) return -1;
+    const at = glyphPens[g].routeMap[pen.attach];
+    return at === undefined ? -1 : at + leadShift;
+  };
+  for (let i = 0; i < extraPens.length; i++) {
+    if (spurAt(i) < 0) glyphPens[extraPens[i].g].lifted = true;
+  }
+  const polyLen = (pts: Pt[], closed: boolean): number => {
+    let s = 0;
+    for (let k = 0; k + 1 < pts.length; k++) {
+      s += hypot2(pts[k + 1][0] - pts[k][0], pts[k + 1][1] - pts[k][1]);
+    }
+    if (closed && pts.length > 1) {
+      const l = pts[pts.length - 1];
+      s += hypot2(pts[0][0] - l[0], pts[0][1] - l[1]);
+    }
+    return s;
+  };
+  // After the body, glyph by glyph: its lifted strokes (on its own stroke
+  // clock), then its dots, then its kept accent pieces.
+  const liftStart: number[] = glyphPens.map(() => 0);
+  const dotStart: number[] = dotLoops.map(() => 0);
+  const markStart: number[] = acceptedMarks.map(() => 0);
+  {
+    let clock = bodyLen + PEN_GAP;
+    for (let g = 0; g < glyphPens.length; g++) {
+      if (glyphPens[g].lifted) {
+        liftStart[g] = clock;
+        clock += glyphPens[g].strokeTotal + PEN_GAP;
+      }
+      for (let i = 0; i < dotLoops.length; i++) {
+        if (dotGlyph[i] !== g) continue;
+        dotStart[i] = clock;
+        clock += polyLen(dotLoops[i], true) + PEN_GAP;
+      }
+      for (let i = 0; i < acceptedMarks.length; i++) {
+        if (acceptedMarkGlyph[i] !== g) continue;
+        markStart[i] = clock;
+        clock += polyLen(acceptedMarks[i].pts, acceptedMarks[i].closed) + PEN_GAP;
       }
     }
   }
@@ -1085,53 +1313,107 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
   const segs: SegIn[] = [];
   for (let k = 0; k + 1 < mainPts.length; k++) {
     if (d2(mainPts[k], mainPts[k + 1]) > 0.000000001) {
-      segs.push({ a: mainPts[k], b: mainPts[k + 1], stroke: -1, seg: k, isMain: true });
+      segs.push({
+        a: mainPts[k],
+        b: mainPts[k + 1],
+        stroke: -1,
+        seg: k,
+        isMain: true,
+        penA: cum[k],
+        penB: cum[k + 1],
+      });
     }
   }
   const mainSegCount = segs.length;
-  for (const seg of extraSegs) {
+  extraSegs.forEach((seg, i) => {
     if (d2(seg[0], seg[1]) > 0.000000001) {
-      segs.push({ a: seg[0], b: seg[1], stroke: -2, seg: 0, isMain: false });
+      // A spur rides the moment the pen leaves its junction, ordered among
+      // its siblings by the glyph's stroke clock (PEN_EPS per HU keeps it
+      // short of the next body node); a lifted stroke runs on its glyph's
+      // slot after the body.
+      const { g, pen } = extraPens[i];
+      const at = spurAt(i);
+      const base = at >= 0 ? cum[at] : liftStart[g];
+      const rate = at >= 0 ? PEN_EPS : 1;
+      segs.push({
+        a: seg[0],
+        b: seg[1],
+        stroke: -2,
+        seg: 0,
+        isMain: false,
+        penA: base + rate * pen.kA,
+        penB: base + rate * pen.kB,
+      });
     }
-  }
-  for (const dot of dotLoops) {
+  });
+  dotLoops.forEach((dot, di) => {
+    let arc = dotStart[di];
     for (let k = 0; k + 1 < dot.length; k++) {
+      const len = hypot2(dot[k + 1][0] - dot[k][0], dot[k + 1][1] - dot[k][1]);
       if (d2(dot[k], dot[k + 1]) > 0.000000001) {
-        segs.push({ a: dot[k], b: dot[k + 1], stroke: -3, seg: k, isMain: false });
+        segs.push({
+          a: dot[k],
+          b: dot[k + 1],
+          stroke: -3,
+          seg: k,
+          isMain: false,
+          penA: arc,
+          penB: arc + len,
+        });
       }
+      arc += len;
     }
     const last = dot[dot.length - 1];
     if (dot.length > 1 && d2(last, dot[0]) > 0.000000001) {
-      segs.push({ a: last, b: dot[0], stroke: -3, seg: dot.length, isMain: false });
+      const len = hypot2(dot[0][0] - last[0], dot[0][1] - last[1]);
+      segs.push({
+        a: last,
+        b: dot[0],
+        stroke: -3,
+        seg: dot.length,
+        isMain: false,
+        penA: arc,
+        penB: arc + len,
+      });
     }
-  }
+  });
   // Accent marks (stroke -4): floating pieces, kept clear of every
   // stroke above, so the planar build leaves each as its own strand.
-  for (const piece of acceptedMarks) {
+  acceptedMarks.forEach((piece, mi) => {
+    let arc = markStart[mi];
     for (let k = 0; k + 1 < piece.pts.length; k++) {
-      if (d2(piece.pts[k], piece.pts[k + 1]) > 0.000000001) {
+      const p0 = piece.pts[k];
+      const p1 = piece.pts[k + 1];
+      const len = hypot2(p1[0] - p0[0], p1[1] - p0[1]);
+      if (d2(p0, p1) > 0.000000001) {
         segs.push({
-          a: piece.pts[k],
-          b: piece.pts[k + 1],
+          a: p0,
+          b: p1,
           stroke: -4,
           seg: k,
           isMain: false,
+          penA: arc,
+          penB: arc + len,
         });
       }
+      arc += len;
     }
     if (piece.closed && piece.pts.length > 1) {
       const last = piece.pts[piece.pts.length - 1];
       if (d2(last, piece.pts[0]) > 0.000000001) {
+        const len = hypot2(piece.pts[0][0] - last[0], piece.pts[0][1] - last[1]);
         segs.push({
           a: last,
           b: piece.pts[0],
           stroke: -4,
           seg: piece.pts.length,
           isMain: false,
+          penA: arc,
+          penB: arc + len,
         });
       }
     }
-  }
+  });
   const built = buildPlanar(segs, [mainPts[0], mainPts[mainPts.length - 1]]);
 
   // --- Scale to LU, normalise the origin, resample into TURN chains. ---
@@ -1164,6 +1446,8 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     isMain: boolean;
   }
   const fEdges: FEdge[] = [];
+  // K558: each final edge's pen time at its a and b ends (parallel).
+  const fEdgePen: Array<[number, number]> = [];
   // Per atomic edge: expanded final edge ids and node ids, a -> b.
   const expansion: Array<{ edges: number[]; nodes: number[] }> = [];
   // Final (expanded) edge indices that came from accent marks.
@@ -1177,17 +1461,22 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     const expEdges: number[] = [];
     const expNodes: number[] = [e.a];
     let prev = e.a;
+    let prevPen = e.pa;
     for (let c = 1; c < chunks; c++) {
       const t = c / chunks;
       const ni = fNodes.length;
       fNodes.push({ pos: lerpPt(aPos, bPos, t), type: NODE_TYPE.TURN, cross: false });
       expEdges.push(fEdges.length);
       fEdges.push({ a: prev, b: ni, isMain: e.isMain });
+      const pen = e.pa + (e.pb - e.pa) * t;
+      fEdgePen.push([prevPen, pen]);
+      prevPen = pen;
       expNodes.push(ni);
       prev = ni;
     }
     expEdges.push(fEdges.length);
     fEdges.push({ a: prev, b: e.b, isMain: e.isMain });
+    fEdgePen.push([prevPen, e.pb]);
     expNodes.push(e.b);
     expansion.push({ edges: expEdges, nodes: expNodes });
     if (e.stroke === -4) for (const fe of expEdges) markFinalEdges.add(fe);
@@ -1406,7 +1695,11 @@ export function buildTextGraph(text: string, opts?: { xHeight?: number }): Tangl
     params: { gridSize: 0, weaveDensity: 0, turnBias: 0, randSeed: 0 },
   };
 
-  assignOverUnder(graph);
+  // K558: over/under follows pen order (assignPenOrder); emblems keep
+  // assignOverUnder.
+  const edgePen = new Map<string, [number, number]>();
+  fEdgePen.forEach((pen, ei) => edgePen.set(`te${ei}`, pen));
+  assignPenOrder(graph, edgePen, opts?.penReverse === true);
   return graph;
 }
 
@@ -1455,7 +1748,7 @@ function properIntersect(a: Pt, b: Pt, c: Pt, d: Pt): boolean {
   );
 }
 
-export function attachTitle(graph: TangleGraph, title: string): string | null {
+export function attachTitle(graph: TangleGraph, title: string, penReverse = false): string | null {
   let hasGlyph = false;
   for (const ch of title.normalize("NFD")) {
     const code = ch.codePointAt(0) ?? -1;
@@ -1500,7 +1793,7 @@ export function attachTitle(graph: TangleGraph, title: string): string | null {
   }
   if (!neighbourPos) return null;
 
-  let word = buildTextGraph(title, { xHeight: 3 });
+  let word = buildTextGraph(title, { xHeight: 3, penReverse });
   const wordBounds = (): [number, number, number, number] => {
     let x0 = Infinity;
     let y0 = Infinity;
@@ -1517,7 +1810,7 @@ export function attachTitle(graph: TangleGraph, title: string): string | null {
   let wb = wordBounds();
   const wordWidth = wb[2] - wb[0];
   if (wordWidth > mazeWidth && wordWidth > 0) {
-    word = buildTextGraph(title, { xHeight: (3 * mazeWidth) / wordWidth });
+    word = buildTextGraph(title, { xHeight: (3 * mazeWidth) / wordWidth, penReverse });
     wb = wordBounds();
   }
   const dx = (mazeMinX + mazeMaxX) / 2 - (wb[0] + wb[2]) / 2;
@@ -1961,7 +2254,8 @@ export function attachCartouche(
   text: string,
   hole: CartoucheHole,
   xHeight: number,
-  junctionSpacing = 2
+  junctionSpacing = 2,
+  penReverse = false
 ): [string, string] | null {
   if (!textHasGlyph(text)) return null;
   if (
@@ -1972,7 +2266,7 @@ export function attachCartouche(
   ) {
     return null;
   }
-  const word = buildTextGraph(text, { xHeight });
+  const word = buildTextGraph(text, { xHeight, penReverse });
   const wb0 = graphBounds(word);
   if (!Number.isFinite(wb0[0])) return null;
   const holeX0 = 2 * hole.cx;
@@ -2251,6 +2545,138 @@ export function attachCartouche(
     "cj_b",
   ];
   return ["cj_a", "cj_b"];
+}
+
+// ---------------------------------------------------------------------------
+// K558: text over/under follows pen order (docs/design/K558.md).
+// ---------------------------------------------------------------------------
+//
+// Levi (2026-10-19): drawn in cursive with one stroke from start to end,
+// "every later piece of thread goes over the earlier piece". Every piece
+// of text carries a PEN TIME, the moment a writer's pen reaches it, in HU
+// of pen travel. buildTextGraph emits these pen times:
+//
+// 1. The body. The main path (mainPts, lead-in tail to lead-out tail) is
+//    one stroke from mentr_a, in traversal order; its pen time is the arc
+//    length along it. A loop's second visit is the later one, so the down
+//    pass of an l or an e goes over its up pass.
+// 2. Spurs. Leftover glyph material that hangs off the route at a
+//    non-crossing node (a dropRetraces or openCusps branch, a merge
+//    letter's own start) is drawn as the pen leaves that node, on its
+//    first visit. The spurs leaving one node are ordered by the glyph's
+//    stroke clock, at PEN_EPS per HU, so a spur never reaches the next
+//    body node's time.
+// 3. Lifted strokes, after the whole body (Call C1). This is material
+//    that meets the route only at proper crossings, or not at all (a
+//    t-bar, the strokes of #). They come glyph by glyph, left to right.
+//    Each glyph plays its lifted strokes on its own stroke clock (its
+//    strokes in order, each along its own direction, PEN_GAP apart).
+//    Then come its dots (i, j), then its kept accent pieces. PEN_GAP
+//    separates every slot. On a bare line (no glyph made the path),
+//    everything is lifted.
+//
+// At each crossing the pass with the later pen time goes over, and
+// `reverse` puts the earlier one over. Equal pen times (a gap of PEN_TIE
+// or less) mean two overlapping pieces, which is a builder bug. Such a
+// crossing warns, is listed in the result's ties and gets overFirst =
+// true; no tie is broken by a guess.
+//
+// SOURCE-AGNOSTIC. The function reads only the graph and a map from each
+// final edge id to that edge's pen times at nodeA and nodeB. The builder
+// emits each SegIn with pen keys (penA / penB), and buildPlanar
+// interpolates them onto every piece it splits a segment into. K115's
+// glyph redesign replaces the glyph source and keeps "emit SegIn with pen
+// keys", so it inherits this unchanged; any other builder can call it the
+// same way.
+//
+// overFirst says whether the FIRST pass in strand order (strands in
+// index order, a closed strand's repeated start skipped: the enumeration
+// of assignOverUnder, assignCrossings and checkAlternation) goes over.
+// isOver is derived as assignOverUnder derives it. Every crossing is
+// marked penOrder, so checkAlternation skips it.
+
+const PEN_TIMES = new WeakMap<Node, [number, number]>();
+
+// K558: a text crossing's two pass pen times in strand order (the first
+// is the pass overFirst names); undefined for any other node.
+export function crossingPenTimes(node: Node): [number, number] | undefined {
+  return PEN_TIMES.get(node);
+}
+
+export interface PenOrderResult {
+  crossings: number; // CROSSING nodes assigned.
+  ties: string[]; // Crossings whose two passes had equal pen times.
+}
+
+// The slash class of a pass's first lattice segment, as assignOverUnder
+// reads it (isOver).
+function passIsSlash(graph: TangleGraph, strandIdx: number, index: number): boolean {
+  const strand = graph.strands[strandIdx];
+  const edge = graph.edges.get(strand.edgeIds[index]);
+  if (!edge || edge.latticePoints.length < 2) return false;
+  const lp = edge.latticePoints;
+  const fwd = edge.nodeA === strand.nodes[index];
+  const a = fwd ? lp[0] : lp[lp.length - 1];
+  const b = fwd ? lp[1] : lp[lp.length - 2];
+  return (b[0] - a[0]) * (b[1] - a[1]) > 0;
+}
+
+export function assignPenOrder(
+  graph: TangleGraph,
+  edgePen: Map<string, [number, number]>,
+  reverse: boolean
+): PenOrderResult {
+  interface PenPass {
+    strand: number;
+    index: number;
+    pen: number;
+  }
+  const passesByNode = new Map<string, PenPass[]>();
+  graph.strands.forEach((strand, si) => {
+    const unique = strand.isClosed ? strand.nodes.length - 1 : strand.nodes.length;
+    for (let i = 0; i < unique; i++) {
+      const id = strand.nodes[i];
+      if (graph.nodes.get(id)!.type !== NODE_TYPE.CROSSING) continue;
+      // A pass's pen time: its outgoing edge's time at this node.
+      const eid = i < strand.edgeIds.length ? strand.edgeIds[i] : strand.edgeIds[i - 1];
+      const edge = graph.edges.get(eid);
+      const pens = edgePen.get(eid);
+      const pen = edge && pens ? (edge.nodeA === id ? pens[0] : pens[1]) : NaN;
+      const pass: PenPass = { strand: si, index: i, pen };
+      const list = passesByNode.get(id);
+      if (list) list.push(pass);
+      else passesByNode.set(id, [pass]);
+    }
+  });
+
+  const result: PenOrderResult = { crossings: 0, ties: [] };
+  for (const [id, node] of graph.nodes) {
+    if (node.type !== NODE_TYPE.CROSSING) continue;
+    result.crossings++;
+    node.penOrder = true;
+    const passes = passesByNode.get(id) ?? [];
+    if (passes.length !== 2) {
+      node.overFirst = true;
+      node.isOver = false;
+      continue;
+    }
+    const gap = passes[0].pen - passes[1].pen;
+    let firstOver: boolean;
+    if (!(gap > PEN_TIE || gap < -PEN_TIE)) {
+      console.warn(
+        `K558: text crossing ${id} has equal pen times (${passes[0].pen}, ${passes[1].pen}); a builder bug`
+      );
+      result.ties.push(id);
+      firstOver = true;
+    } else {
+      firstOver = reverse ? gap < 0 : gap > 0;
+    }
+    node.overFirst = firstOver;
+    PEN_TIMES.set(node, [passes[0].pen, passes[1].pen]);
+    const overPass = firstOver ? passes[0] : passes[1];
+    node.isOver = passIsSlash(graph, overPass.strand, overPass.index);
+  }
+  return result;
 }
 
 // Over/under: run-phase parity solver (design section 3.5)

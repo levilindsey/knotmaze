@@ -21,6 +21,10 @@ export interface Node {
   // the slash reading, which is ambiguous off the lattice. Lattice graphs
   // never set it, so their behavior is unchanged.
   overFirst?: boolean;
+  // K558: a text crossing whose overFirst follows pen order (the later
+  // stroke over, text_graph.ts assignPenOrder), not alternation, so
+  // checkAlternation skips it. Lattice and emblem graphs never set it.
+  penOrder?: true;
   // K115: a letter-boundary stop on a text scene's main path (the walk
   // graph treats it as a vertex even at degree 2, so each tap writes the
   // next letter). Lattice graphs never set it.

@@ -135,6 +135,10 @@ export function checkAlternation(graph: TangleGraph): boolean {
         continue;
       }
       if (node.type !== NODE_TYPE.CROSSING) continue;
+      // K558: text crossings follow pen order, not alternation (a t-bar
+      // over its stem, a loop's first pass under); the check stays the
+      // maze's and the emblems'.
+      if (node.penOrder === true) continue;
       if (i + 1 >= strand.nodes.length) continue; // open strand ends here
 
       // Direction of this pass: the first segment of its own edge toward
