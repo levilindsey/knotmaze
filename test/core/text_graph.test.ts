@@ -11,54 +11,19 @@ import { checkAlternation } from "../../src/core/tangle_graph";
 import { checkStrandPartition, checkStructure } from "../../src/core/tangle_graph";
 import { NODE_TYPE } from "../../src/core/types";
 import type { TangleGraph } from "../../src/core/types";
+import { penOracle, ALL_NODES } from "./pen_oracle";
 
 // K115 Stage 1b Part A: cursive text graphs.
 //
-// Alternation is verified here with overFirst semantics (the first pass
-// in strand order is over iff node.overFirst), replicating what physics
-// and checkAlternation do once they prefer that field. The older slash
-// reading of isOver cannot express a crossing whose two passes fall in
-// the same slash class, so at this commit checkAlternation itself is not
-// the oracle for text graphs.
+// Over/under is verified with K558's pen-order oracle (test/core/
+// pen_oracle.ts): at every crossing the later stroke is over, read from
+// the graph where it decides (a loop on the main strand, a lifted stroke,
+// a spur against the body) and from the builder's pen times elsewhere.
+// Text crossings do not alternate in general, so alternation is no longer
+// the oracle (checkAlternation skips them: node.penOrder).
 
-function checkAlternationOverFirst(graph: TangleGraph): boolean {
-  const seenCrossings = new Set<string>();
-  for (const strand of graph.strands) {
-    const tokens: Array<boolean | "J"> = [];
-    const count = strand.isClosed ? strand.nodes.length - 1 : strand.nodes.length;
-    for (let i = 0; i < count; i++) {
-      const node = graph.nodes.get(strand.nodes[i])!;
-      if (node.type === NODE_TYPE.JUNCTION) {
-        tokens.push("J");
-        continue;
-      }
-      if (node.type !== NODE_TYPE.CROSSING) continue;
-      const isFirst = !seenCrossings.has(node.id);
-      seenCrossings.add(node.id);
-      tokens.push(isFirst ? node.overFirst === true : node.overFirst !== true);
-    }
-    const firstJ = tokens.indexOf("J");
-    if (strand.isClosed && firstJ < 0) {
-      const passes = tokens as boolean[];
-      if (passes.length < 2) continue;
-      for (let i = 0; i < passes.length; i++) {
-        if (passes[i] === passes[(i + 1) % passes.length]) return false;
-      }
-    } else {
-      const n = tokens.length;
-      let prev: boolean | null = null;
-      for (let k = 0; k < n; k++) {
-        const t = strand.isClosed ? tokens[(firstJ + 1 + k) % n] : tokens[k];
-        if (t === "J") {
-          prev = null;
-          continue;
-        }
-        if (prev !== null && prev === t) return false;
-        prev = t;
-      }
-    }
-  }
-  return true;
+function penFailures(graph: TangleGraph): string[] {
+  return penOracle(graph, ALL_NODES).failures;
 }
 
 function crossingOccurrences(graph: TangleGraph): Map<string, number> {
@@ -305,7 +270,7 @@ describe("buildTextGraph (K115)", () => {
       const graph = buildTextGraph(word);
       expect(checkStructure(graph)).toBe(true);
       expect(checkStrandPartition(graph)).toBe(true);
-      expect(checkAlternationOverFirst(graph)).toBe(true);
+      expect(penFailures(graph)).toEqual([]);
 
       // Entrance and exit ends, at the ends of the main (first) strand.
       expect(graph.nodes.get("mentr_a")?.type).toBe(NODE_TYPE.END);
@@ -354,7 +319,7 @@ describe("buildTextGraph (K115)", () => {
     expect(graph.nodes.size).toBe(175);
     expect(graph.edges.size).toBe(178);
     expect(graph.strands.length).toBe(10);
-    expect(hashGraph(graph)).toBe("25459bce");
+    expect(hashGraph(graph)).toBe("a65154f3");
   });
 
   it("pins Solved and Daily #12 (stage 6a)", () => {
@@ -365,13 +330,13 @@ describe("buildTextGraph (K115)", () => {
     // digits keep the endpoint rule.
     const daily = buildTextGraph("Daily #12");
     expect([daily.nodes.size, daily.edges.size, daily.strands.length]).toEqual([263, 272, 18]);
-    expect(hashGraph(daily)).toBe("1f180814");
+    expect(hashGraph(daily)).toBe("504da3be");
   });
 
   it("does not move lowercase-only words (stage 6a leak guard)", () => {
     const pins: Record<string, [number, number, number, string]> = {
-      knotmaze: [209, 214, 13, "fd5b97eb"],
-      minimum: [192, 190, 11, "91c39f8f"],
+      knotmaze: [209, 214, 13, "ec256f6d"],
+      minimum: [192, 190, 11, "32569025"],
       hello: [116, 120, 4, "92e4ebc9"],
     };
     for (const [word, pin] of Object.entries(pins)) {
@@ -409,7 +374,7 @@ describe("buildTextGraph (K115)", () => {
       const graph = buildTextGraph(dg);
       expect(checkStructure(graph), dg).toBe(true);
       expect(checkStrandPartition(graph), dg).toBe(true);
-      expect(checkAlternationOverFirst(graph), dg).toBe(true);
+      expect(penFailures(graph), dg).toEqual([]);
       const seam = seamBetween(graph, dg, 0);
       const before = SEAM_BEFORE[dg];
       // No connector crosses a glyph stroke after 6a.
@@ -452,7 +417,7 @@ describe("buildTextGraph (K115)", () => {
       const graph = buildTextGraph(word);
       expect(checkStructure(graph), word).toBe(true);
       expect(checkStrandPartition(graph), word).toBe(true);
-      expect(checkAlternationOverFirst(graph), word).toBe(true);
+      expect(penFailures(graph), word).toEqual([]);
     }
   });
 
@@ -716,7 +681,7 @@ describe("buildTextGraph (K115)", () => {
       const graph = buildTextGraph(letter);
       expect(checkStructure(graph), letter).toBe(true);
       expect(checkStrandPartition(graph), letter).toBe(true);
-      expect(checkAlternationOverFirst(graph), letter).toBe(true);
+      expect(penFailures(graph), letter).toEqual([]);
       const deco = graph.strands.filter((s) => s.decorative);
       expect(deco.length, letter).toBe(spec.deco);
       for (const s of deco) {
@@ -747,7 +712,7 @@ describe("buildTextGraph (K115)", () => {
       const graph = buildTextGraph(word);
       expect(checkStructure(graph), word).toBe(true);
       expect(checkStrandPartition(graph), word).toBe(true);
-      expect(checkAlternationOverFirst(graph), word).toBe(true);
+      expect(penFailures(graph), word).toEqual([]);
       expect(graph.strands.some((s) => s.decorative), word).toBe(true);
     }
   });
@@ -871,7 +836,7 @@ describe("buildTextGraph (K115)", () => {
       const graph = buildTextGraph(word);
       expect(checkStructure(graph), word).toBe(true);
       expect(checkStrandPartition(graph), word).toBe(true);
-      expect(checkAlternationOverFirst(graph), word).toBe(true);
+      expect(penFailures(graph), word).toEqual([]);
       expect(graph.nodes.get("mentr_a")?.type, word).toBe(NODE_TYPE.END);
       expect(graph.nodes.get("mexit_a")?.type, word).toBe(NODE_TYPE.END);
     }
@@ -885,7 +850,7 @@ describe("buildTextGraph (K115)", () => {
       const graph = buildTextGraph(ch);
       expect(checkStructure(graph), ch).toBe(true);
       expect(checkStrandPartition(graph), ch).toBe(true);
-      expect(checkAlternationOverFirst(graph), ch).toBe(true);
+      expect(penFailures(graph), ch).toEqual([]);
     }
     // Determinism: building twice is bit-identical.
     expect(serialize(buildTextGraph("αβγ"))).toBe(serialize(buildTextGraph("αβγ")));
@@ -907,7 +872,7 @@ describe("buildTextGraph (K115)", () => {
     expect(serialize(buildTextGraph("λογος"))).toBe(serialize(buildTextGraph("λογοσ")));
     const logos = buildTextGraph("λογος");
     expect(checkStructure(logos)).toBe(true);
-    expect(checkAlternationOverFirst(logos)).toBe(true);
+    expect(penFailures(logos)).toEqual([]);
     // Tonos is 6d: accented Greek ships its base bare, with no mark strand.
     expect(serialize(buildTextGraph("Αθήνα"))).toBe(serialize(buildTextGraph("Αθηνα")));
     expect(serialize(buildTextGraph("αθήνα"))).toBe(serialize(buildTextGraph("αθηνα")));
