@@ -312,6 +312,7 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   choice("cartoucheShape", ["", "star", "trefoil", "triquetra", "solomon", "wreath"]),
   // K558: reverse the pen-order rule for text crossings (the earlier stroke on top).
   flag("penReverse"),
+  flag("dailyTitleThread"), // K552
 ]);
 
 // The format version a blob names first. Bump it for anything but an

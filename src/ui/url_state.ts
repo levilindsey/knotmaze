@@ -646,6 +646,12 @@ export interface UrlParams {
   // K558: text crossings follow pen order, the later stroke over the
   // earlier (core/text_graph.ts assignPenOrder); on reverses it.
   penReverse: boolean;
+  // K552: a daily writes its name ("Daily #N") as a title thread at its
+  // entrance (K115 stage 3a), off by default (Levi, 2026-10-19). A playback
+  // preference (DAILY_EXEMPT_KEYS): a daily keeps it and stores it, and the
+  // maze is the same either way. Off a daily it does nothing: daily_link.ts
+  // sceneTitle is the one gate. Not a live effect (it changes the graph).
+  dailyTitleThread: boolean;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -905,6 +911,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   revealEndGlow: "bright",
   // K558: the later stroke goes over, as a pen draws.
   penReverse: false,
+  // K552: dailies are untitled unless the player turns the thread on.
+  dailyTitleThread: false,
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1552,6 +1560,8 @@ function readLegacy(
     revealEndGlow: readChoice(query, "rvg", REVEAL_END_GLOWS, D.revealEndGlow),
     // K558's reverse switch (`&pnr=1`: the earlier stroke on top).
     penReverse: readBool(query, "pnr", D.penReverse),
+    // K552's daily title thread (`?daily=8&dtt=1`).
+    dailyTitleThread: readBool(query, "dtt", D.dailyTitleThread),
   };
 }
 

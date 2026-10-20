@@ -125,6 +125,7 @@ describe("links", () => {
       trapMaxH: 8, trapMaxGrow: 1.15, trapRadius: 20, trapIters: 12,
       trapTries: 8, trapSurplus: 1.25,
       penReverse: false,
+      dailyTitleThread: false,
     });
   });
 
@@ -785,6 +786,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   trapMaxH: "tmh", trapMaxGrow: "tmg", trapRadius: "trd", trapIters: "tit",
   trapTries: "ttr", trapSurplus: "tsp",
   penReverse: "pnr",
+  dailyTitleThread: "dtt",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

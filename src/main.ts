@@ -41,11 +41,11 @@ import {
   DAILY_DEF,
   applyDailyPrefs,
   dailyParams,
-  dailyTitle,
   dailyQuery,
   isDailyDesign,
   mergeDailyPrefs,
   parseLaunch,
+  sceneTitle,
 } from "./ui/daily_link";
 import { formatDayDate, todayNumber } from "./game/daily_calendar";
 import {
@@ -206,10 +206,9 @@ async function main(): Promise<void> {
   // params still match (__knotPerf().host.prebuild).
   const host: PhysicsHost = params.physicsWorker
     ? new WorkerHost(() => rebuild(), {
-        prebuild: {
-          ...params,
-          title: launch.daily !== null ? dailyTitle(launch.daily) : "",
-        },
+        // K552: the same title gate as every createScene below, so a daily's
+        // prebuild (untitled by default, titled with the pref) is adopted.
+        prebuild: { ...params, title: sceneTitle(launch.daily, params) },
       })
     : new InThreadHost();
 
@@ -410,7 +409,7 @@ async function main(): Promise<void> {
   // passed down (the camera, the frame loop, the probe hooks).
   const flags = createLoopFlags();
   const scene = createScene({
-    dailyTitle: () => (dailyN !== null ? dailyTitle(dailyN) : ""),
+    dailyTitle: () => sceneTitle(dailyN, params),
     app,
     root,
     params,
