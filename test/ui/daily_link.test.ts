@@ -397,6 +397,8 @@ describe("the daily design and its exempt preferences (K56)", () => {
       "markerSize",
       // K558, proposed with it (Call C2): which stroke goes over.
       "penReverse",
+      // K552 (Levi: the title thread "a flag ... default to off").
+      "dailyTitleThread",
     ]);
     for (const k of DAILY_EXEMPT_KEYS) {
       expect(Object.keys(PARAM_DEFAULTS)).toContain(k);

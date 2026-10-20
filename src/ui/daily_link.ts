@@ -70,6 +70,20 @@ export function dailyParams(n: number): UrlParams {
   return paramsFromValues(dailySeed(n), PARAM_DEFAULTS);
 }
 
+// K552, THE ONE TITLE GATE: the title thread a scene builds with (K115
+// stage 3a's SceneParams.title). A daily writes its name only with the
+// player's `dailyTitleThread` preference on (Levi, 2026-10-19: off by
+// default); an ordinary design never does. Both scene builds read it: the
+// worker's prebuild (main.ts) and every createScene (SceneDeps.dailyTitle),
+// so the prebuild matches the first build and is adopted. K115 stage 7's
+// live titles slot in here.
+export function sceneTitle(
+  daily: number | null,
+  params: Pick<UrlParams, "dailyTitleThread">
+): string {
+  return daily !== null && params.dailyTitleThread ? dailyTitle(daily) : "";
+}
+
 // The params that decide the MAZE - the walk graph, its start/exit and its
 // optimal length: the lattice (seed, size, shape, growth), the anchors and
 // every maze-plan knob. Everything else (look, sound, physics, path display,
@@ -199,6 +213,10 @@ export const DAILY_EXEMPT_KEYS = [
   // K558's pen-order switch: only which stroke of a text crossing is on
   // top, never the maze or its walk (Call C2 of docs/design/K558.md).
   "penReverse",
+  // K552's title thread: the daily's name written at its entrance. The
+  // maze is the same with or without it (test/core/title_topology.test.ts)
+  // and an attempt survives the toggle (daily_attempt.ts, maze form).
+  "dailyTitleThread",
 ] as const satisfies readonly (keyof UrlParams)[];
 
 const EXEMPT: ReadonlySet<string> = new Set(DAILY_EXEMPT_KEYS);
