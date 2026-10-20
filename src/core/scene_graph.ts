@@ -199,6 +199,7 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
             exit: walk0.exit,
             mazeStart: seam,
             mazeNames,
+            titleChains: [strandsBefore, graph.strands.length],
           });
         }
       }
@@ -235,6 +236,7 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
             exit: walk.exit,
             mazeStart: walk.mazeStart,
             mazeNames: walk.mazeNames,
+            titleChains: walk.titleChains,
           })
         : buildWalkGraph(graph);
     }
