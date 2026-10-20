@@ -267,14 +267,6 @@ Next free ID: K559.
   - evidence: `.claude/probes/K552/`
   - next: the stage per the brief: the daily-exempt flag (default off), the sceneTitle gate, the topology pin, maze-form attempts; then the coordinator merges K552 before K558
   - brief: `docs/design/K552.md`
-- **K558** · Pen-order crossings (Levi, 2026-10-19): at every text crossing the later stroke in writing order goes
-  over; a checkbox param (default off) reverses it. Text only: the maze and the emblems keep alternation. Brief:
-  `docs/design/K558.md`.
-  - owner: agent `ac645b913261ef81e` of claude session 91b19e11 (opus, started 2026-10-19 20:00, 2 h cap ~22:00)
-  - branch: `worktree-agent-ac645b913261ef81e`, worktree `.claude/worktrees/agent-ac645b913261ef81e`; last commit: `c24cc97`
-  - evidence: `.claude/probes/K558/`
-  - next: the stage per the brief: pen-time keys on SegIn, the pen-order assignment for text, the reverse param, the checkAlternation exemption; merge after K552 (param order K552 then K558)
-  - brief: `docs/design/K558.md`
 
 ## Next, in order
 
@@ -1251,6 +1243,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K558** · Text crossings follow pen order (the later stroke over; penReverse, pnr=1, reverses it); maze and emblem crossings keep alternation. Done in 0b4c5db (2026-10-19).
 - **K553** · K320's split drew no gaps off dsf 1: the gap mask was sized in CSS px but read by gl_FragCoord in device px; gap_prepass sizes it in device px (fitGapTarget), guarded by gap_split.test.ts and k553_probe.mjs splitAssert. Done in 60511ed (2026-10-19).
 - **K551** · Crossing gaps gone on every half-float GPU since 2026-10-18 (K320's split turned on by capability and drew no gaps on D3D11): the split stays dark, the warm-up follows the draw flag. Done in f18dd07 (2026-10-19).
 - **K161** · Disk cleanup: profiles and 78 worktrees swept 2026-10-15; the last three worktrees, the empty folder and two dead branches went 2026-10-19 (`.claude/probes/K161/cleanup.log`). Profiles return until K150 lands. Done in this commit (2026-10-19).
