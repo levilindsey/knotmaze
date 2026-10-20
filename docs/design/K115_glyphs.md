@@ -470,21 +470,212 @@ zero JUNCTIONs. Today it has 17 and 16.
 
 ## 6. Floating strokes as separate strands
 
-(pending: walk graph, forced title walk, stats, fog, reveal; the dot)
+**A lifted-pen stroke is its own open strand.** That covers t-bars, i
+and j dots, accents, the x's second diagonal, the strokes of '#' and a
+capital's floating bar. Each has two free ENDs and touches the body only
+at proper crossings.
 
-## 7. Pen order
+**The mechanism exists today.** Accents are class −4 (mark) segments,
+and a strand whose edges are all marks is decorative
+(`text_graph.ts:1358`). The new builder emits every floating stroke
+through the same class.
 
-(pending: K558's key)
+What the code does with one (checked 2026-10-19; the helper's report is
+in `notes.md`):
+
+| Concern | Today's code | Verdict |
+|---|---|---|
+| Walk graph | decorative strands are skipped (`walk_graph.ts:161-163`); crossings are not walk vertices, so the walk passes straight through them | fine: a floating stroke is not walkable (Call 2) |
+| Forced title walk | start `mentr_a`, exit `walk0.exit`, seam `tseam`: the main strand only | unchanged |
+| Stats, stars, trail, fire, minotaur, audio | walk-keyed (`runForCtrl` is null off the walk, `app/audio_map.ts:107-124`) | unaffected |
+| Fog | spatial; only walked runs lay stamps, so a stroke shows inside holes and its tails stay fogged | acceptable: the body around it is revealed |
+| Thread reveal | **never visible**: pieces come from walk edges only (`explore_view.ts:204`), a pieceless chain is culled (`explore_gaps.ts:275`), its vis is 0 (`ribbon_renderer.ts:4055-4068`); a hidden OVER stroke cuts no gap, so the walked thread draws uncut | **must fix in stage 9**: show a floating strand once a run it crosses is revealed |
+| Crossing passes | `assignCrossings` throws unless a crossing has exactly two passes (`particle_system.ts:1277-1280`) | covered by the lint's two-pass rule (section 5) |
+| Colour | the off-walk fallback, an arbitrary constant per chain (`section_colors.ts:256-266`) | stage 9: the colour of the first body run it crosses |
+| Reveal plan | draw mode gives it its own pen; trace and bloom use the loop fallback (`reveal_plan.ts:312-342`); a gap waits for its later pass (`ribbon_renderer.ts:1779-1788`) | check on the contact sheets |
+| Picking | moves iterate walk edges, so a stroke cannot steal a tap; `pickThread` loops every chain, so a stroke is pluckable while the reveal is off | accept |
+| Over/under | K558: a later pen key goes over | section 7 |
+
+**Kill criterion 2 does not trip** (section 12). Two local fixes cover
+it: the reveal's visibility rule and the two-pass lint.
+
+**The dot (Call 1).** The recommendation is a short slanted pill: a
+floating strand with about 0.2 xh of centreline (0.4 LU at the floor,
+0.92 LU drawn with its two caps, about 1.8 ribbon widths), slanted with
+the hand and ≥ 0.60 LU clear of the body. Stage 9's sheets settle the
+length.
+
+## 7. Pen order (K558's key)
+
+The builder emits every segment with K558's pen key. K558's contract:
+- one monotone key per `SegIn`;
+- the later key goes over (K558's param reverses it);
+- equal keys on two crossing segments are a bug;
+- text is exempt from `checkAlternation`.
+
+Keys are assigned in this order:
+
+1. **The body, in writing order:** the lead-in, then each glyph's body
+   from entry to exit, then the connector to the next glyph, and so on
+   to the lead-out. Keys increase along the strand.
+2. **Then the floating strokes**, glyph by glyph left to right, and
+   within a glyph in authored order. The i's dot comes after the whole
+   body. In '#' the order is the left vertical, then the right vertical,
+   then the upper bar.
+
+**Over/under then falls out with no parity solve:**
+- a self-crossing of the body puts its later pass over;
+- a floating stroke goes over the body;
+- the later of two floating strokes goes over the earlier.
+
+**The cases K555 listed cannot conflict:**
+- **The digit 6:** the bowl's closing pass is later than the
+  downstroke, so it goes over, whatever alternation would say.
+- **Same-slash crossings:** no slash class is consulted; only keys order
+  a crossing.
+- **'#':** the lower bar (body) goes under both verticals and the upper
+  bar (last) over both, giving a woven '#'.
 
 ## 8. Constraints with numbers
 
-(pending: ribbon width, clearance, crossing angle, the physics constants that
-do or do not bind a pinned word, bend radius, the x-height floor and the
-Daily #8 fit at gs 6 / 12 / 18)
+| Constraint | Number | Source | Binds pinned text? |
+|---|---|---|---|
+| Ribbon width | tw 0.52 LU, half-width h 0.26 | `threadWidth` default; text draws with it | yes |
+| Casing | 0.60 LU centre to centre between passes that do not cross (tw + 2 × gap 0.04); the collision margin is 1.16 · tw = 0.603 | the defaults | yes, as render geometry: closer passes merge into one band |
+| END clearance | 0.56 LU from the tip to the other centreline (casing half 0.30 + cap 0.26) | derived | yes |
+| Crossing angle | drawn above sin 0.25 (14.5°), the gaps' protect floor and the emergent collector's limit; riders reach their full floor by sin 0.55 (33.4°) | `render-gaps.md`, P3.32 | yes: author at ≥ 0.55, target ≥ 0.64 |
+| Crossing spacing | ≥ 0.30 / sin θ1 + 0.30 / sin θ2 along a pass | derived from the casing | yes |
+| Bend radius | over-tight below 1.0 h (0.26 LU); floor 1.15 h (0.30 LU) | `bend_radius.ts` | yes |
+| Counter | hole ≥ 0.8 widths, so a centreline span ≥ 0.94 LU | the kink-eye target (`physics-kinks.md`) | yes |
+| `MIN_PASS_SEPARATION` 1.6, `DEPTH_WINDOW` 1.4, `KINK_MIN_SEPARATION` 2.6, corridor pitch 2.0 | ctrl units | `particle_system.ts` | **no**: they budget the sliding bindings of free threads. Pinned text never steps them (stage 3a measured standing width deficits on pinned words that still sleep) |
+| x-height | titles: 3 LU, shrinking to fit `2 * gridSize` with no floor; cartouches: ≥ `MIN_XHEIGHT` 2.0 | `attachTitle`; `text_graph.ts:1667` | none: this is the input |
+
+Two of the rules agree by construction. A bar crossing two parallel legs
+d apart at angle θ meets them d / sin θ apart along the bar, and rule 4
+asks for 0.60 / sin θ. So legs that keep the 0.60 casing clearance also
+satisfy the crossing spacing.
+
+### The x-height floor
+
+**The counter rule binds first.** A counter that is a fraction f of the
+x-height needs xh ≥ 0.94 / f:
+
+| Feature | Counter (fraction of xh) | Needs xh ≥ |
+|---|---|---|
+| e's eye, n and m counters | about 0.5 | 1.88 |
+| o | about 0.6 | 1.57 |
+| a Palmer l loop | about 0.4 | 2.35 |
+
+**The bend rule** (R ≥ 0.30 LU) with a hand whose tightest turn is
+0.15 xh needs xh ≥ 2.0. The crossing angle is scale-free, and the
+crossing spacing follows from the clearance (above).
+
+**The floor is xh 2.0 LU, the same as `MIN_XHEIGHT`,** with loops
+authored at ≥ 0.47 xh and turns at R ≥ 0.15 xh. A Palmer-proportioned l
+loop (0.4 xh) would push the floor to 2.35, so the hand's loops are
+slightly rounder than Palmer's. The floor scales with the ribbon:
+2.0 × tw / 0.52, so 1.4 LU at tw 0.36.
+
+### Daily #8 at gs 6, 12 and 18
+
+**The new hand's width (inferred).** The glyphs are not authored yet, so
+this is an estimate, not a measurement. Advances in x-heights:
+
+| D | a | i | l | y | space | # | 8 | lead tails |
+|---|---|---|---|---|---|---|---|---|
+| 1.1 | 0.9 | 0.45 | 0.45 | 0.85 | 0.6 | 1.2 | 0.8 | 2 × 0.4 |
+
+They sum to 7.15 xh, and looser joins (+0.15 per join) give 8.2: call it
+7 to 8.5 xh. Today's Hershey measures 13.9 xh (41.67 LU at xh 3).
+
+| gs | Declared width (`2 * gs`) | New hand's xh | Fits at the 2.0 floor? | Today's Hershey xh |
+|---|---|---|---|---|
+| 6 | 12 LU | 1.41-1.71 | **no**: kill criterion 1 trips | 0.86 |
+| 12 | 24 LU | 2.82-3 | yes | 1.73 |
+| 18 (default) | 36 LU | 3 (capped) | yes | 2.59 |
+
+**The smallest gs that fits** is gs ≥ (the word's width in x-heights),
+because 2 · gs ≥ 2.0 × width: **about gs 8** (7 to 9). Hershey at the
+same floor would need gs 14. The `gridSize` slider runs 4-24, so titles
+at gs 4-7 need Call 4.
 
 ## 9. Layer 2 sampling spec
 
-(pending)
+**Today.** A text edge contributes two controls: its start node, and its
+chord midpoint, `(pa + pb) / 2` from `edge.latticePoints`
+(`particle_system.ts:625-628`). The renderer draws a centripetal
+Catmull-Rom through every control (`ribbon_renderer.ts:957-966`, with
+count = max(48, round(arc / 0.09))). Pinned text never relaxes, so
+those controls are what renders. That is J1.
+
+**The spec:**
+
+1. **Nodes go on the Bézier** at:
+   - every crossing (the refined point; crossings are graph nodes);
+   - every END;
+   - every curvature maximum of the authored curve, so the spline cannot
+     cut the tightest turn;
+   - elsewhere, at spacing ≤ min(0.5 LU, 0.6 R), where R is the authored
+     local radius.
+2. **Each edge's slot control sits on the Bézier** at the edge's
+   mid-ARC point, not its chord midpoint.
+   - A text edge carries that point in a new optional field (say
+     `edge.mid`), and line 628 uses it when present.
+   - Knot and maze edges never carry it, so the knot-mode golden stays
+     byte-identical.
+   - Controls are then ≤ min(0.25 LU, 0.3 R) apart: at the 0.30 LU floor
+     that is 0.09 LU, the renderer's own sample spacing.
+3. **Spacing is near-uniform:** CV ≤ 0.15 per run between forced nodes.
+   A forced node (a crossing or an END) redistributes its free
+   neighbours instead of leaving a short edge beside a long one. Today
+   edges run from 0.037 to 1.39 LU, CV 0.48.
+4. **Sampling happens at the final x-height,** in LU. Shrink-to-fit
+   rebuilds the samples; it never scales a sampled polyline.
+
+### Calibration
+
+From `baseline.txt`, "Calibration, on-curve controls":
+
+| Reference (on-curve controls) | Control spacing (LU) | Ripple | max \|dκ/ds\| | Bend |
+|---|---|---|---|---|
+| circle R 1 | 0.375 | 0.06 | 0.8 | 3.62 h |
+| circle R 1 | 0.25 | 0.03 | 0.5 | 3.73 h |
+| circle R 0.5 | 0.375 | 0.65 | 9.1 | 1.42 h |
+| circle R 0.5 | 0.15 | 0.06 | 1.5 | 1.87 h |
+| figure-eight 3 LU tall | 0.15 | 2.30 | 15.4 | 0.93 h |
+| figure-eight 3 LU tall | 0.10 | 2.02 | 11.1 | 1.00 h |
+
+- **Ripple** is the curvature's swing inside a ±0.5 LU arc window,
+  relative to its mean there (`metrics.ts`).
+- The figure-eight's 1.8-2.0 is the shape's own curvature change inside
+  the window, the same at every spacing.
+- Within the spec (controls ≤ 0.3 R), a circle ripples by about 3%
+  (R 0.5 at 0.15: 0.06 against κ 2).
+
+### Gates for stage 9
+
+Per scene, on the worst strand:
+
+- **Ripple:** max ≤ 2.3 and p95 ≤ 1.9 (the on-curve figure-eight at
+  0.15 LU, the reference that must pass); circles ≤ 5%.
+- **max |dκ/ds| ≤ 15.4** (the same reference). The exception is an
+  authored G1 joint where the curvature itself steps: the harness names
+  the joint, and a step there is not jitter.
+- **Bend ≥ 1.15 h** wherever the authored R ≥ 0.30 LU. The figure-eight
+  reference reads 1.00 h because its own R is 0.26, so the authored 8
+  must keep R ≥ 0.30.
+- **Clearance:** ≥ 0.60 LU between passes that do not cross; END tips
+  ≥ 0.56 LU from other threads.
+- **Crossings:** sin ≥ 0.55.
+- **Topology:** zero JUNCTIONs, and ENDs = 2 + 2 × (floating strokes).
+- **Position error:** Hausdorff distance from the rendered spline to the
+  Bézier ≤ 0.02 LU. This is a new metric that stage 9 adds; stage 8 did
+  not measure it.
+
+**Particle count (inferred):** about 1 to 1.5 times today's. Nodes are
+≤ 0.5 LU apart against today's 0.75 median, with no sub-0.1 LU splits.
+Text is pinned, and the renderer's sample count depends only on arc
+length, so the cost is negligible. Stage 9 measures it.
 
 ## 10. Named cases
 
