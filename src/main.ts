@@ -1278,13 +1278,16 @@ async function main(): Promise<void> {
     if (clock.state === "paused") {
       clock.resume(performance.now(), document.hidden);
     } else if (!clock.started) {
-      // K115 stage 3a: on a titled daily the clock starts on the first
-      // arrival at the seam (mazeStart), not while writing the title.
+      // K115 stage 3a, K552: on a titled daily the clock starts on the
+      // first MAZE move, the move from the seam (mazeStart) into the maze,
+      // never while writing the title: the untitled maze starts it on that
+      // same move (its first, from the start), so both clocks read the same.
       const w = scene.walkGraph;
+      const c = scene.fabricController;
       if (
-        w?.mazeStart &&
-        scene.fabricController &&
-        scene.fabricController.head !== w.mazeStart
+        w?.titleEdges &&
+        c &&
+        (c.taps.length === 0 || w.titleEdges.has(c.taps[c.taps.length - 1]))
       ) {
         return;
       }
@@ -2152,6 +2155,7 @@ async function main(): Promise<void> {
   // The daily on screen changed (entered or left): mode badge, tab title.
   const dailyChanged = (): void => {
     document.title = dailyN !== null ? `KnotMaze · Daily #${dailyN}` : "KnotMaze";
+    panel.setOnDaily(dailyN !== null); // K552: the title row.
     updateDailyLabel();
     updateHud();
   };

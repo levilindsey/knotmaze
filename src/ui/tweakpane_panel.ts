@@ -177,6 +177,9 @@ export interface PanelCallbacks {
   // K98: the markers' size (the player's dot, the start, the finish, the
   // minotaur): render-only, applied live.
   onMarkerSizeChange: () => void;
+  // K552: the daily's title thread (dailyTitleThread): a daily rebuilds
+  // and keeps its attempt; off a daily it builds nothing.
+  onTitleThreadChange: () => void;
   // Audio-only change (sound mode / pitch space / octaves): re-derive the
   // pitch assignment without rebuilding the scene.
   onAudioChange: () => void;
@@ -208,6 +211,10 @@ export interface PanelApi {
   markOverridden: (keys: readonly string[]) => void;
   // The daily row's label (today's number turns at local midnight).
   setDailyLabel: (text: string, tip: string) => void;
+  // K552: a daily is on screen (or not): the rows that only mean something
+  // on a daily are disabled off one, never hidden (the panel keeps its
+  // layout, Call C3).
+  setOnDaily: (on: boolean) => void;
   // K92: the panel's open state (the hamburger), and a listener for its
   // changes (the undo buttons and the mode badge move with it).
   isOpen: () => boolean;
@@ -232,6 +239,8 @@ interface ChangeEvent {
 interface RowApi {
   element: HTMLElement;
   hidden: boolean;
+  // Tweakpane's own switch (K552: the title row off a daily).
+  disabled?: boolean;
   refresh?: () => void;
   on: (event: "change", cb: (ev: ChangeEvent) => void) => unknown;
 }
@@ -727,6 +736,8 @@ export function buildPanel(
       btn.addEventListener("pointerdown", (e) => {
         e.stopPropagation();
         e.preventDefault();
+        // K552: a disabled row keeps its value, the reset glyph included.
+        if (api.disabled === true) return;
         if (custom) {
           if (!custom.modified()) return;
           custom.reset();
@@ -1391,6 +1402,16 @@ export function buildPanel(
       callbacks.onMarkerSizeChange();
     }
   );
+  // K552: the daily's title thread, a playback preference (daily-exempt).
+  // It changes the graph, so a daily rebuilds, and keeps the attempt (the
+  // maze is the same either way). Disabled off a daily (setOnDaily).
+  const titleThreadRow = row(
+    fPath, p, "dailyTitleThread", { label: "Title thread" },
+    "Write the daily's name as a thread at the entrance. The maze is the same either way, and your attempt is kept. Dailies only.",
+    D.dailyTitleThread,
+    () => callbacks.onTitleThreadChange()
+  );
+  titleThreadRow.disabled = true;
   const resetPathBtn = button(
     fGame,
     "Reset path",
@@ -2754,6 +2775,9 @@ export function buildPanel(
     setDailyLabel: (text, tip) => {
       if (dailyApi.title !== text) dailyApi.title = text;
       dailyApi.element.title = tip;
+    },
+    setOnDaily: (on) => {
+      if (titleThreadRow.disabled !== !on) titleThreadRow.disabled = !on;
     },
     isOpen: () => open,
     onOpenChange: (cb) => {

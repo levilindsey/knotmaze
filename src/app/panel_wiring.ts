@@ -383,6 +383,18 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
       deps.writeParams(params);
       deps.invalidate();
     },
+    // K552: the daily's title thread. On a daily the graph changes, so the
+    // scene rebuilds, and rebuild() saves the attempt first and restores it
+    // into the new scene (attempts are in maze form, game/daily_attempt.ts).
+    // Off a daily the flag builds nothing: only the link changes.
+    onTitleThreadChange: () => {
+      if (deps.dailyN === null) {
+        deps.writeParams(params);
+        return;
+      }
+      deps.rebuild();
+      deps.wake();
+    },
     onPlayDaily: () => deps.playDaily(todayNumber(), true),
     onShowDailyStats: () => deps.showDailyStats(),
     // K468: a pop of the settings sheet's history entry (Android Back, or the
