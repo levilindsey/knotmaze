@@ -643,6 +643,9 @@ export interface UrlParams {
   // stays where it caught you), the fog under minoRefog (above).
   minoRestart: boolean;
   minoLair: boolean;
+  // K558: text crossings follow pen order, the later stroke over the
+  // earlier (core/text_graph.ts assignPenOrder); on reverses it.
+  penReverse: boolean;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -900,6 +903,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K466: ends move out from under crossings, and their halos are bright.
   revealEndCross: "under",
   revealEndGlow: "bright",
+  // K558: the later stroke goes over, as a pen draws.
+  penReverse: false,
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1545,6 +1550,8 @@ function readLegacy(
     // K466's ends (`&xp=threads&rve=under&rvg=soft` is K76's look).
     revealEndCross: readChoice(query, "rve", REVEAL_END_CROSSES, D.revealEndCross),
     revealEndGlow: readChoice(query, "rvg", REVEAL_END_GLOWS, D.revealEndGlow),
+    // K558's reverse switch (`&pnr=1`: the earlier stroke on top).
+    penReverse: readBool(query, "pnr", D.penReverse),
   };
 }
 

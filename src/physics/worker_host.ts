@@ -168,6 +168,7 @@ export function sceneParamsOf(p: SceneParams): SceneParams {
     junctionSpacing: p.junctionSpacing,
     startAnchor: p.startAnchor,
     exitAnchor: p.exitAnchor,
+    penReverse: p.penReverse,
   };
 }
 

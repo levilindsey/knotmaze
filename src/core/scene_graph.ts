@@ -60,6 +60,8 @@ export interface SceneParams {
   junctionSpacing: number;
   startAnchor: AnchorId;
   exitAnchor: AnchorId;
+  // K558: text crossings put the EARLIER stroke over (pen order reversed).
+  penReverse: boolean;
 }
 
 export interface SceneGraph {
@@ -73,7 +75,7 @@ export interface SceneGraph {
 
 export function buildSceneGraph(params: SceneParams): SceneGraph {
   if (params.text !== "") {
-    const graph = buildTextGraph(params.text);
+    const graph = buildTextGraph(params.text, { penReverse: params.penReverse });
     if (!checkStructure(graph) || !checkAlternation(graph)) {
       console.warn("Knot invariants violated; generation bug.");
     }
@@ -179,7 +181,7 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
       const walk0 = buildWalkGraph(graph);
       if (walk0) {
         const strandsBefore = graph.strands.length;
-        const seam = attachTitle(graph, params.title);
+        const seam = attachTitle(graph, params.title, params.penReverse);
         if (seam !== null) {
           if (hueGroup) {
             for (let i = strandsBefore; i < graph.strands.length; i++) {
@@ -211,7 +213,8 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
       params.cartouche,
       cartouchePlan.hole,
       cartouchePlan.xHeight,
-      params.junctionSpacing
+      params.junctionSpacing,
+      params.penReverse
     );
     if (junctions !== null) {
       if (hueGroup) {

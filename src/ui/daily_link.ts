@@ -196,6 +196,9 @@ export const DAILY_EXEMPT_KEYS = [
   // K98's marker size: only the look of the markers. Proposed for Levi's
   // review with K98 (K57).
   "markerSize",
+  // K558's pen-order switch: only which stroke of a text crossing is on
+  // top, never the maze or its walk (Call C2 of docs/design/K558.md).
+  "penReverse",
 ] as const satisfies readonly (keyof UrlParams)[];
 
 const EXEMPT: ReadonlySet<string> = new Set(DAILY_EXEMPT_KEYS);
