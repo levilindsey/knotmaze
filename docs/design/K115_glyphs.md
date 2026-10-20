@@ -257,19 +257,216 @@ floating stroke's own free ENDs). Specifically:
 
 ## 3. Representation
 
-(pending: cubic Beziers, integer control points on a finer grid, G1 joints,
-K108-exact evaluation, fixed-parameter evaluation, arc length by fixed
-sampling)
+### The unit: 72 glyph units (GU) per x-height
+
+- **Hershey embeds exactly.** 72 = 8 × 9, so 1 HU = 8 GU. Every Hershey
+  coordinate embeds exactly, and the old data and the new compare point
+  for point.
+- **Proportions are whole units.** 72's divisors are 2, 3, 4, 6, 8, 9,
+  12, 18, 24 and 36, so halves, thirds, quarters, sixths, eighths, ninths
+  and twelfths of the x-height are whole units. Those are the
+  proportions a hand is drawn in.
+- **Fine enough.** 1 GU is 0.042 LU at xh 3 and 0.028 LU at the 2.0
+  floor. Rounding to the grid moves a point at most 0.021 LU, under a
+  tenth of the ribbon's half-width (0.26).
+- **Lines:** the baseline is y = 0, the join line y = 32 (Hershey's 4 HU)
+  and the x-height y = 72.
+
+### A stroke is a chain of cubic Béziers with integer control points
+
+- **Segments.** Segment i is (P0, P1, P2, P3), all in GU, and
+  consecutive segments share their end point.
+- **Every interior joint is G1.** The incoming handle P3 − P2 and the
+  outgoing handle Q1 − Q0 point the same way.
+  - The check is exact in integers: their cross product is 0 and their
+    dot product is positive.
+  - Neither handle may be zero.
+- **Joint directions.** An author writes each joint's direction as a
+  primitive integer vector (a, b), with gcd 1, and each handle as a
+  whole multiple of it, so G1 holds by construction. A direction with no
+  small integer form takes the nearest one: (7, 4) is 29.7° for 30°.
+- **No corners anywhere.** A cusp becomes a loop (section 5's counter
+  rule) or a rounded turn. The turn needs R ≥ 0.30 LU at the floor
+  x-height, which is 10.8 GU. The authoring rule is therefore **R ≥
+  11 GU everywhere (0.15 xh)**, checked on the evaluated polyline.
+
+### Evaluation is exact (K108)
+
+- **Points.** A segment is evaluated at t = k/64, for k = 0..64, as an
+  integer Bernstein sum over 64³ = 2^18:
+
+  B(k) = [(64−k)³ P0 + 3(64−k)² k P1 + 3(64−k) k² P2 + k³ P3] / 2^18
+
+  - The weights are integers that sum to 2^18.
+  - With |P| ≤ 2^12 GU (57 x-heights, far more than any glyph), every
+    product and partial sum is an integer below 2^31, exact in a double.
+  - The division by a power of two is exact.
+
+  So each point is a dyadic rational, with the same bits in every
+  engine.
+- **Placement.** The glyph's integer origin (in GU) is added before
+  scaling. That stays exact: under 2^40, with 18 fractional bits.
+- **Scale.** Converting to LU is one multiply and one divide,
+  (B · xh) / 72. Each is correctly rounded IEEE arithmetic, so the result
+  is deterministic everywhere.
+- **Arc length.** Sum each segment's 64 chords, each
+  `Math.sqrt(dx*dx + dy*dy)` (never `Math.hypot`), in a fixed order. The
+  result is deterministic, not exact, which is all K108 asks.
+- **Crossings.**
+  - Candidates come from the 64-chord polylines: bounding boxes first,
+    then chord-chord tests.
+  - Each candidate is refined on the cubics by 4 Newton steps using
+    only + − × ÷.
+  - A refinement that does not converge to within 1e-9 is a lint error,
+    never a fallback.
+
+### The glyph record
+
+```ts
+interface Glyph {
+  ch: string;                  // one code point; ς (U+03C2) is its own
+  advance: number;             // GU
+  entries: Entry[];            // a low entry, plus a high one if the glyph takes H exits
+  exit: { at: Pt; cls: "B" | "H" | "D" };
+  body: CubicPath;             // pen down, from an entry to the exit
+  floats: CubicPath[];         // lifted-pen strokes, in pen order
+  crossings: number;           // declared; the lint checks it
+}
+interface Entry { at: Pt; kind: "b" | "o" | "m"; from: "low" | "high" }
+type CubicPath = Pt[];         // P0, then 3 points per segment (integers, GU)
+```
+
+The data lives in a module like today's `hershey_script.ts`, one record
+per code point.
 
 ## 4. Joins
 
-(pending: entry/exit per glyph as a point plus a tangent class; one G1
-connector per class pair; the ligature table; capitals and Greek)
+**Each glyph declares where it is entered and where it exits.** An
+entry or exit is a point on the body plus a tangent class. The body runs
+from the entry to the exit, so a connector never lands mid-stroke. That
+removes the J and L classes of section 2.
+
+**Exits:**
+
+| Class | Where | Tangent | Latin glyphs |
+|---|---|---|---|
+| B | the baseline swing, ending on the join line (y 32) | rising, about 50° | a d e h i k l m n t u x, most |
+| H | high, near the x-height | heading right, level or dipping | o v w b, and r s in some forms |
+| D | after a descender loop, on the join line | rising, about 65° | f g j q y z |
+
+**Entries.** Each glyph declares a low entry, which takes B and D exits.
+A glyph that is entered differently after a high exit also declares a
+high entry, which takes H exits: after o, the n starts at the top of its
+first hump. These are contextual forms, as in real cursive fonts. Each
+entry's kind fixes its tangent:
+- **b, an upstroke** on the join line, rising (i u t e l b h k f j r s
+  w);
+- **o, an oval's top**: about 2 o'clock, heading up and left into a
+  counter-clockwise oval (a c d g o q);
+- **m, an overturn**: rising into a hump that turns over (m n v x y z).
+
+**The connector.** One cubic per join:
+- P0 is the exit point and P3 the entry point.
+- P1 = exit + tE · L1 and P2 = entry − tN · L2, where tE and tN are the
+  class tangents (primitive integer vectors).
+- L1 and L2 are about a third of the chord, rounded to whole multiples.
+
+The connector is G1 at both ends by construction. The next glyph's
+origin is placed so the connector's chord matches the pair's spacing: a
+default per class pair, or the ligature table's.
+
+**The lint.** It runs at the floor, xh 2.0, where every rule is
+tightest, over every glyph and every class pair before any mass
+authoring. It checks:
+- bend R ≥ 0.30 LU;
+- clearance ≥ 0.60 LU between non-adjacent passes, except at declared
+  crossings;
+- every crossing at sin ≥ 0.55;
+- no third pass inside a crossing's overlap span;
+- ENDs only where declared;
+- the declared crossing count.
+
+**The ligature table** holds the pairs that fail the lint. Each is keyed
+by (previous character, next character) and gives a bespoke connector
+(its own cubic path), plus an alternate form of either glyph where the
+pair needs one: a b whose high exit drops lower before e, for example.
+These are the bespoke cases Levi allowed. They are written and verified
+before the mass data.
+
+**Capitals, Greek, digits and punctuation** use the same record.
+- A capital declares its exit, and an entry for mid-word use.
+- Greek declares its entries, which ends today's mid-stroke "lowercase
+  rule": σ ο α δ are entered mid-body now, class L.
+- A space is a low swash connector between two words of one strand,
+  linted like any other.
+- The word's first glyph gets a lead-in from a free start (an A END) and
+  its last glyph a lead-out (the other A END), both linted.
 
 ## 5. Crossings only
 
-(pending: every meeting a proper X; retrace -> loop; T-meet -> crossing to a
-free END or separated strokes; ENDs enumerated per glyph)
+### The rules
+
+The numbers come from section 8.
+
+1. **Every meeting of two passes is a proper X.**
+   - There are exactly two passes, each G1 through the node, crossing at
+     sin θ ≥ 0.55 (33°); the target is ≥ 0.64 (40°).
+   - No pass starts, ends or turns on another pass, and no two passes
+     are tangent.
+2. **A retrace becomes a loop or a spread turn.** Wherever Hershey goes
+   up a stroke and back down it (the stems of i u t n m r, the stems of
+   a d q, o's closure), the two directions separate into one of:
+   - **a loop**, whose counter (the largest circle inside the
+     centreline) spans ≥ 0.94 LU at the floor, which is ≥ 0.47 xh, with
+     one crossing at its neck;
+   - **a spread turn**: R ≥ 0.30 LU, with the legs ≥ 0.60 LU apart until
+     they diverge, and no crossing.
+3. **A T-meet becomes a crossing that runs on, or the strokes
+   separate.**
+   - **Runs on:** the arriving stroke crosses and continues
+     ≥ 0.56 / sin θ LU (0.65 at 60°) to a free END, which is a floating
+     stroke's end or the word's end.
+   - **Separate:** the END's tip stays ≥ 0.56 LU from the other
+     centreline.
+4. **Crossings keep their distance.** Along one pass, consecutive
+   crossings are ≥ 0.30 / sin θ1 + 0.30 / sin θ2 apart: 0.69 LU at 60°,
+   0.93 at 40°. Their overlap spans must not touch, and no third pass
+   enters one: `assignCrossings` throws on any crossing that does not
+   have exactly two passes (`particle_system.ts:1277-1280`).
+5. **Clearance.** Two passes that do not cross stay ≥ 0.60 LU apart,
+   centre to centre (the casing). This is measured between non-adjacent
+   samples.
+6. **The ENDs are fixed by construction.**
+   - A word's body has exactly two: its lead-in start and its lead-out
+     finish (class A).
+   - Each floating stroke has two.
+   - A glyph contributes 2 × (its floating strokes) and nothing else: no
+     spur, no stub, no cut piece.
+
+### ENDs and crossings for the stage 9 set
+
+These are the targets the authoring must meet; the lint checks each
+declared count.
+
+| Glyph | Body | Floats | ENDs | Crossings |
+|---|---|---|---|---|
+| D | stem and bowl in one stroke, from an entry loop at the foot | 0 | 0 | 1-2: the entry loop, the bowl's return across the stem |
+| a | oval, closure, stem | 0 | 0 | 1: the closure across its entry |
+| i | a spread or looped stem | dot | 2 | 0 spread, 1 looped |
+| l | ascender loop | 0 | 0 | 1 |
+| y | hump, descender loop | 0 | 0 | 1: the descender loop across the stem |
+| space | low swash connector | 0 | 0 | 0 |
+| # | the lower bar | the 2 verticals and the upper bar | 6 | 4 (section 10) |
+| 8 | both bowls in one stroke | 0 | 0 | 1-2: the waist, plus the exit across the entry if it is entered at the top |
+| e | upstroke, eye, exit | 0 | 0 | 1 |
+| o | oval, closure, high exit | 0 | 0 | 1 |
+| t | a spread or looped stem | bar | 2 | 2: the bar across both legs; +1 if looped |
+| n | hump, a spread first leg, the second hump | 0 | 0 | 0 spread, 1 looped |
+| 6 | one stroke: the bowl closes across the downstroke | 0 | 0 | 1 |
+| ς | one stroke | 0 | 0 | 0 |
+
+"Daily #8" then has 10 ENDs (2 lead tails, 2 for the dot, 6 for '#') and
+zero JUNCTIONs. Today it has 17 and 16.
 
 ## 6. Floating strokes as separate strands
 
