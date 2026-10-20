@@ -545,7 +545,7 @@ Keys are assigned in this order:
 | Ribbon width | tw 0.52 LU, half-width h 0.26 | `threadWidth` default; text draws with it | yes |
 | Casing | 0.60 LU centre to centre between passes that do not cross (tw + 2 × gap 0.04); the collision margin is 1.16 · tw = 0.603 | the defaults | yes, as render geometry: closer passes merge into one band |
 | END clearance | 0.56 LU from the tip to the other centreline (casing half 0.30 + cap 0.26) | derived | yes |
-| Crossing angle | drawn above sin 0.25 (14.5°), the gaps' protect floor and the emergent collector's limit; riders reach their full floor by sin 0.55 (33.4°) | `render-gaps.md`, P3.32 | yes: author at ≥ 0.55, target ≥ 0.64 |
+| Crossing angle | the renderer handles a crossing above sin 0.25 (14.5°): the floor of the gaps' protect interval and the emergent collector's limit. Free threads' collision floor reaches full strength at sin 0.55 (33.4°) and below | `render-gaps.md`; `physics-collision.md` P3.32 | the 0.25 floor binds. 0.55 is this design's margin, borrowed from the P3.32 ramp, not a renderer limit (a crossing's overlap span grows as 1 / sin θ). Author at ≥ 0.55, target ≥ 0.64 |
 | Crossing spacing | ≥ 0.30 / sin θ1 + 0.30 / sin θ2 along a pass | derived from the casing | yes |
 | Bend radius | over-tight below 1.0 h (0.26 LU); floor 1.15 h (0.30 LU) | `bend_radius.ts` | yes |
 | Counter | hole ≥ 0.8 widths, so a centreline span ≥ 0.94 LU | the kink-eye target (`physics-kinks.md`) | yes |
