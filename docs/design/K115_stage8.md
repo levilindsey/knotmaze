@@ -338,9 +338,25 @@ last commit from `git rev-parse HEAD`, because the hook re-dates.
 | 4. Harness | `.claude/probes/K115/stage8/metrics.ts` |
 | 6. Stage 9 brief | `docs/design/K115_stage9.md` |
 
+### Found at the end: the o-kind join is open
+
+There was not enough time to author glyphs for the SVG, so a geometry
+check of section 4's joins ran instead (`o_entry_check.mjs`). It found
+that the generic connector cannot reach an o-kind entry (a c d g o q,
+and α δ θ ο σ):
+- every case tried cut the oval;
+- 58-79% of the connector ran inside the oval.
+
+Going over the oval's shoulder clears it by 0.60 LU, but only with the
+previous exit 48-64 GU to the left and the arrival 16-24 GU above the top.
+
+The glyphs doc now records this as open (section 4), with Call 6. The
+stage 9 brief starts with this join and has a kill criterion for it.
+
 ### Not done
 
-- **The paper or SVG prototype (item 5).**
+- **The paper or SVG prototype (item 5).** The o-kind finding says to
+  author that join first. Stage 9's work item 1 does.
 - **Headed pixel shots.** Every stage 8 number is geometric: the
   harness rebuilds the graph, the chain controls and the renderer's
   centripetal Catmull-Rom sampling in Node. No pixel was measured.
@@ -392,6 +408,7 @@ Elsewhere:
 | `make_traced.mjs` | generates `traced_text_graph.ts`, a copy of `text_graph.ts` with read-only trace hooks |
 | `vite.node.config.mjs` | the vite-node config, with a private cacheDir |
 | `baseline.txt`, `baseline.json` | the outputs |
+| `o_entry_check.mjs`, `o_entry_check.txt` | the o-kind join check (plain `node`) and its output |
 | `notes.md` | code facts and the helper's report on non-walk strands |
 
 To re-run it from the worktree root:
@@ -404,6 +421,8 @@ To re-run it from the worktree root:
 
 ### Next
 
-1. Levi answers the calls in glyphs doc section 11.
+1. Levi answers the calls in glyphs doc section 11. Call 6, the o-kind
+   join, is his only if stage 9 cannot clear it.
 2. K558 and K552 merge.
-3. Stage 9 runs per `docs/design/K115_stage9.md`.
+3. Stage 9 runs per `docs/design/K115_stage9.md`, starting with the
+   o-kind join.
