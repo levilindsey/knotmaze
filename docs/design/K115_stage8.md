@@ -321,3 +321,89 @@ Your final report covers:
 It ends with a `Ledger items` list (new follow-ups, residuals, decisions
 for Levi) and the K115 handle fields (branch, last commit, evidence,
 next).
+
+## Handoff
+
+2026-10-19, 19:59 to about 21:30. Agent `ac64a844a1d15b9d7` of claude
+session 91b19e11, on branch `worktree-agent-ac64a844a1d15b9d7`. Take the
+last commit from `git rev-parse HEAD`, because the hook re-dates.
+
+### Done
+
+| Item | Where |
+|---|---|
+| 1. Attribution | glyphs doc section 1 |
+| 2. Census | glyphs doc section 2 |
+| 3. Design | `docs/design/K115_glyphs.md`, sections 3-12 (the calls are section 11) |
+| 4. Harness | `.claude/probes/K115/stage8/metrics.ts` |
+| 6. Stage 9 brief | `docs/design/K115_stage9.md` |
+
+### Not done
+
+- **The paper or SVG prototype (item 5).**
+- **Headed pixel shots.** Every stage 8 number is geometric: the
+  harness rebuilds the graph, the chain controls and the renderer's
+  centripetal Catmull-Rom sampling in Node. No pixel was measured.
+- **Ripple attribution per site.** Ripple is pooled per scene; only the
+  over-tight sites are attributed.
+- **The Hausdorff metric.** Stage 9 adds it.
+- **The new hand's width is an estimate** (7 to 8.5 xh, from planned
+  advances). The first kill criterion's verdict at gs 6 rests on it.
+  Stage 9 measures the authored width.
+
+### Baseline numbers
+
+"Daily #8" at xh 3 (`baseline.txt`):
+
+| Measure | Value |
+|---|---|
+| Samples over-tight (< 1.0 h) | 99 of 3196 (3.1%) |
+| Samples under the 1.15 h floor | 114 |
+| Over-tight sites | glyph vertex 38 (min 0.13 h), cusp corner 6 (0.26 h), junction 5 (0.04 h), connector 1 (0.11 h) |
+| Pooled ripple | p50 0.14, p95 2.95, max 34.5 |
+| Edge lengths | 0.037-1.39 LU (median 0.745, CV 0.48) |
+| Clearance | min 0.066 LU against 0.60 |
+| Crossing sin | 0.88, 0.66, 0.35, 0.86 |
+| Topology | 16 JUNCTIONs (K 11, J 4, L 1); 17 ENDs (8 spurs, D 7, A 2); 4 CROSSINGs |
+
+Shrunk to fit:
+
+| gs | xh | Samples over-tight | Clearance |
+|---|---|---|---|
+| 18 | 2.59 | 3.4% | 0.047 LU |
+| 12 | 1.73 | 6.3% | 0.058 LU |
+| 6 | 0.86 | 13.9% | 0.039 LU |
+
+Elsewhere:
+- **"minimum":** 7.0% of samples over-tight, with 58 sites at glyph
+  vertices.
+- **Calibration:** a perfect circle of R 1 at today's 0.75 LU node
+  spacing renders with ripple 3.45 and min R 0.95 h through chord-midpoint
+  controls. With on-curve controls at the same spacing it renders with
+  ripple 0.06.
+
+### Evidence
+
+`.claude/probes/K115/stage8/`, untracked; copy it at the merge. It holds:
+
+| File | What it is |
+|---|---|
+| `metrics.ts` | the harness |
+| `make_traced.mjs` | generates `traced_text_graph.ts`, a copy of `text_graph.ts` with read-only trace hooks |
+| `vite.node.config.mjs` | the vite-node config, with a private cacheDir |
+| `baseline.txt`, `baseline.json` | the outputs |
+| `notes.md` | code facts and the helper's report on non-walk strands |
+
+To re-run it from the worktree root:
+1. `node .claude/probes/K115/stage8/make_traced.mjs`. Do this after any
+   `text_graph.ts` change; each anchor must match once.
+2. `node node_modules/vite-node/vite-node.mjs --config
+   .claude/probes/K115/stage8/vite.node.config.mjs
+   .claude/probes/K115/stage8/metrics.ts`, which writes `baseline.txt`
+   and `baseline.json`.
+
+### Next
+
+1. Levi answers the calls in glyphs doc section 11.
+2. K558 and K552 merge.
+3. Stage 9 runs per `docs/design/K115_stage9.md`.
