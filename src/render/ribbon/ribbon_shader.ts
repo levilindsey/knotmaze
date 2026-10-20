@@ -19,8 +19,9 @@
 // of FXC on the desktop, render-shaders.md): any edit to it compiles cold
 // once for every player. K320 stage 2b: SECTION_FRAG is the paint half
 // (it samples the gap pre-pass mask, GAP_MASK_FRAG below); the combined
-// in-shader search survives only as SECTION_FRAG_COMBINED, drawn where
-// no half-float target exists (gapSplitActive false) and warmed only there. Two readers slice SECTION_FRAG out of this file's
+// in-shader search is SECTION_FRAG_COMBINED, drawn and warmed whenever
+// gapSplitActive() is false: the default everywhere while the split stays
+// dark (K550, K551). Two readers slice SECTION_FRAG out of this file's
 // text, from its declaration to the next backtick-semicolon:
 // paint_explore.test.ts and the probes' dump_variants.ts copies.
 

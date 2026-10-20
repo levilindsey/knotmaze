@@ -81,7 +81,8 @@ export function gapMaskTexel(fragX: number, fragY: number, height: number): [num
 
 // The registry/pass fallback (brief section 5): a half-float color buffer
 // (either extension) can hold the target; otherwise the combined programs
-// stay the only path and no pass runs. Never both.
+// stay the only path and no pass runs. Never both. Capability only (K551):
+// detectGapSplit never turns the split on (fabric_sdf.ts GAP_SPLIT).
 export function gapSplitSupported(hasColorBufferFloat: boolean, hasColorBufferHalfFloat: boolean): boolean {
   return hasColorBufferFloat || hasColorBufferHalfFloat;
 }
@@ -97,7 +98,6 @@ export function detectGapSplit(gl: GlLike | null): boolean {
     !!gl.getExtension("EXT_color_buffer_half_float"),
   );
   SPLIT_GL = gl;
-  setGapSplitActive(SPLIT_OK);
   return SPLIT_OK;
 }
 
@@ -323,12 +323,12 @@ class GapPrepassSystem {
     }
   }
   // A restored context drops the target's contents: re-render next frame.
+  // The split flag stays as it was (K551: only setGapSplit turns it on).
   contextChange(): void {
     LAST = null;
     FRAMEBUFFER_CHECKED = false;
     SPLIT_OK = null;
     SPLIT_GL = null;
-    setGapSplitActive(true);
   }
   destroy(): void {}
 }

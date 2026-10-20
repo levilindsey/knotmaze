@@ -40,7 +40,7 @@
 
 import type { BackgroundId } from "./background_model";
 import { backgroundWarmIds } from "./background";
-import { detectGapSplit } from "./gap_prepass";
+import { gapSplitActive } from "./fabric_sdf";
 import { wave1Sources, wave2Sources, type WarmContext, type WarmSource } from "./program_registry";
 
 const VERTEX_SHADER = 0x8b31;
@@ -513,6 +513,16 @@ declare global {
   }
 }
 
+// The registry context the warm-up selects with: the page's settings plus
+// the draw path's own split flag (ribbon_shader sectionProgram), never the
+// capability. K551 warmed the split's programs on every half-float GPU.
+export function warmupContext(
+  ctxOf: (maxBatchTextures: number) => WarmContext,
+  maxBatchTextures: number
+): WarmContext {
+  return { ...ctxOf(maxBatchTextures), gapSplit: gapSplitActive() };
+}
+
 // Start the warm-up on the app's renderer: wave 1 now, wave 2 when main
 // asks. No WebGL (or a WebGPU renderer) means nothing to warm.
 export function startShaderWarmup(
@@ -525,7 +535,7 @@ export function startShaderWarmup(
   const warmup = new ShaderWarmup(gl, opts);
   if (typeof window !== "undefined") window.__knotWarmup = () => warmup.report();
   if (!gl) return warmup;
-  const ctx = { ...ctxOf(r.limits?.maxBatchableTextures ?? 16), gapSplit: detectGapSplit(gl) };
+  const ctx = warmupContext(ctxOf, r.limits?.maxBatchableTextures ?? 16);
   const wave1 = wave1Sources(ctx);
   let wave2: WarmSource[] | null = null;
   const wave2Of = () => (wave2 ??= wave2Sources(ctx));

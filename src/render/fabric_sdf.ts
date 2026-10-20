@@ -71,9 +71,14 @@ export function fabricUniforms(): UniformGroup {
 // here (no import cycle: gap_prepass and ribbon_shader both import this
 // module) — the paint shader's choice (mask sample vs the combined
 // in-shader search) and the warm-up's registry both read the one flag.
-// K320 2b landed the split dark: parity is blocked on K550 (split cuts
-// wider bars), so the combined in-shader path stays the default until
-// 2c proves 0 px. detectGapSplit only gates capability, not this flag.
+// K320 2b meant to land the split dark: parity is blocked on K550 (split
+// cuts wider bars), so the combined in-shader path stays the default
+// until 2c proves 0 px. K551: detectGapSplit and the pre-pass system's
+// contextChange set this flag from capability, so the split went live on
+// every half-float GPU from 2026-10-18, and on the desktop (D3D11) it drew
+// no crossing gaps at all (.claude/probes/K551/). Only the renderer's
+// setGapSplit (the probe A/B) sets it now; the pre-pass's framebuffer
+// check may still clear it.
 let GAP_SPLIT = false;
 export function gapSplitActive(): boolean {
   return GAP_SPLIT;
