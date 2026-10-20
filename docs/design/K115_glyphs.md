@@ -38,6 +38,9 @@ wait on Levi. Next: `docs/design/K115_stage9.md`.
 - **What fits:** "Daily #8" fits `2 * gridSize` at gs 12 and 18 but not
   at gs 6. That trips the first kill criterion. The smallest gs that
   fits is about 8; today's Hershey needs gs 14 at the same floor.
+- **Still open:** the join into an oval letter (a c d g o q). The generic
+  connector cuts the oval (section 4), so stage 9 settles this join
+  first.
 
 ## 1. Defect attribution
 
@@ -374,6 +377,35 @@ entry's kind fixes its tangent:
 The connector is G1 at both ends by construction. The next glyph's
 origin is placed so the connector's chord matches the pair's spacing: a
 default per class pair, or the ligature table's.
+
+**The o-kind join is still open.** This was found at the end of stage 8
+(`.claude/probes/K115/stage8/o_entry_check.mjs` and its `.txt`).
+- **The generic cubic cannot reach an o-kind entry.** It was tested from
+  a B exit (50°, y 32) into 2 o'clock on a 50 × 72 GU oval, heading 112°,
+  with the previous exit 12 to 48 GU to the left:
+  - every connector cut the oval once;
+  - 58-79% of its length ran inside the oval;
+  - its midpoint sat near the oval's centre.
+
+  The entry turns the stroke back to the left, so a connector from the
+  left has to pass through the oval to approach 2 o'clock from below
+  right.
+- **Going over the left shoulder clears the oval, but costs spacing.**
+  The connector arrives above the top, heading right. It clears the oval
+  by 0.60 LU only when:
+  - it arrives 16-24 GU above the top;
+  - the previous exit is 48-64 GU (0.67-0.89 xh) to the left.
+
+  Even then the CCW oval still has to start from there: a turn at the top
+  that the lint must pass.
+- **Stage 9 settles the join first,** before any other glyph, for a c d g
+  o q and the Greek o-kind letters (α δ θ ο σ). In order:
+  1. the over-the-shoulder entry with a looped or spread top turn;
+  2. any other entry form that passes the lint.
+
+  If neither passes, the o-kind letters take a declared crossing: the
+  connector crosses the oval's left side. The o then reads with a stroke
+  through it, and that look goes to Levi (section 11).
 
 **The lint.** It runs at the floor, xh 2.0, where every rule is
 tightest, over every glyph and every class pair before any mass
@@ -838,6 +870,13 @@ class, and rules 1 and 4 still apply.
      once the set is complete.
    - Fix the `dropRetraces` tolerance mismatch (ON_TOL 0.5 HU against
      NODE_TOL 0.05 HU, section 1) only if the fallback outlives stage 10.
+6. **The o-kind join** (section 4). This is only a call if stage 9 cannot
+   clear it.
+   - The choice is between wider spacing before a c d g o q, with the
+     connector going over the oval's shoulder, and a stroke through the
+     oval, which is a declared crossing.
+   - **Recommended: the wider spacing.** A stroke through an o reads as
+     another letter (ø).
 
 ## 12. Kill criteria
 

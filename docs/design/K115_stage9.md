@@ -72,7 +72,11 @@ o, t, n, 6 and ς.
    - the exact evaluator: points, tangents, curvature, arc length, and
      crossings between two paths;
    - the set's data.
-   Author at xh 2.0 first, where every rule is tightest. Commit.
+   Author at xh 2.0 first, where every rule is tightest.
+   **Start with the o-kind join** (the a of "Daily", and o). Stage 8
+   found that section 4's generic connector cuts the oval (glyphs doc
+   section 4, "The o-kind join is still open"). Settle it, in the order
+   that section gives, before authoring the other glyphs. Commit.
 2. **The lint** (`src/core/glyphs/glyph_lint.ts`):
    - It applies rules 1-6 at xh 2.0 and 3.0, over every glyph and every
      class pair the set uses.
@@ -163,6 +167,12 @@ o, t, n, 6 and ς.
 
 ## Kill criteria
 
+- **The o-kind join cannot pass the lint** without a crossing through
+  the oval. Report:
+  - the closest forms, with their spacing;
+  - each form's crossings.
+
+  Levi then makes the glyphs doc's Call 6.
 - **A glyph in the set cannot pass the lint at xh 2.0** without breaking
   the crossings-only rule. Report:
   - which glyph, and which rule;
@@ -183,6 +193,7 @@ o, t, n, 6 and ς.
 - **The dot's length and slant,** and the loop sizes, if the sheets
   question them.
 - **The title fit below gs 8,** if Call 4 is still open.
+- **The o-kind join** (Call 6), if its kill criterion trips.
 
 ## Out of scope
 
