@@ -1275,12 +1275,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K529** · K500's other half: a touch press on a beyond run lighting its glow, in the realtime chase (desktop mouse hover verified; touch unprobed).
 - **K566** · Skip the intro replay on a title toggle (K552: ready 13.5 s after turning the title on,
   6.9 s after off; the clock pauses meanwhile).
-- **K567** · If K320's split is revived (K550): use it only while cold: draw with the split while
-  the combined program pre-compiles off-thread (KHR_parallel_shader_compile; Chrome's program cache
-  is keyed by source, so Pixi's later link of the same text should read ~25 ms, K307), then swap. Or
-  the cheaper try forms (stencil early reject, 2 offsets, owner keep only, an edge band), a paint
-  that reads neighbouring mask texels on a miss, sample positions read at boot
-  (`docs/design/K550_stage3.md` Recommendation). All untested.
+- **K567** · If K320's split is revived (K550): draw with it only while cold, then swap to a combined program
+  pre-compiled off-thread; or the cheaper try forms. All untested (`docs/ledger_notes.md` K567).
 
 ## Done
 
