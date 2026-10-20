@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K563.
+Next free ID: K567.
 
 ## Waiting on Levi
 
@@ -112,6 +112,11 @@ Next free ID: K563.
   titles below maze size 8 (Daily #10 on 2026-10-21 needs ~9): [overhang down to size 6, then "#8"
   at 4-5]; (5) Hershey: [replace it whole, kept as the fallback for unauthored characters]; (6) only
   if stage 9 cannot solve the oval-letter join: [wider spacing] or a stroke through the oval.
+- **K563** · K552's C4: a titled daily's walk that loops around a title loop has no untitled form;
+  as built, it survives a toggle away and back and the first move on the other form drops it
+  (`docs/design/K552.md` Handoff). Options: (a) as built; (b) park attempts per fingerprint (store
+  shape, `v` bump); (c) the controller collapses a title loop back to the seam; (d) the title as a
+  tree, no loops. [Rec: (a) now, (d) with K115's glyph redesign.]
 
 ## In progress
 
@@ -268,11 +273,19 @@ Next free ID: K563.
   (default off, appended to the codec) draws it, with the maze topology the same either way (the title attaches after
   the plan: `src/core/scene_graph.ts` 175-196). Generalizes stage 3's 3b (`docs/design/K115_stage3.md` 208). Brief:
   `docs/design/K552.md`.
-  - owner: agent `a2068d642ae85e250` of claude session 91b19e11 (opus, started 2026-10-19 20:00, 2 h cap ~22:00)
-  - branch: `worktree-agent-a2068d642ae85e250`, worktree `.claude/worktrees/agent-a2068d642ae85e250`; last commit: `c24cc97`
-  - evidence: `.claude/probes/K552/`
-  - next: the stage per the brief: the daily-exempt flag (default off), the sceneTitle gate, the topology pin, maze-form attempts; then the coordinator merges K552 before K558
+  - owner: agent `a8b6ffda6521b4107` of claude session 91b19e11 (sonnet, the rebase onto K558; started 2026-10-19 21:45, 1 h cap); stage done by agent `a2068d642ae85e250` at `10a6d4b`
+  - branch: `worktree-agent-a2068d642ae85e250`, worktree `.claude/worktrees/agent-a2068d642ae85e250`; last commit: `10a6d4b`
+  - evidence: `.claude/probes/K552/` in the worktree (`settle_ab_d8.txt`, `topology_run.txt`, `page/` with 22 shots)
+  - next: the rebase agent's report (penReverse then dailyTitleThread in the four tables, pins re-frozen, K558's titled tests flagged on); then agent_merge -Done with the probes; then Levi's C4 call
   - brief: `docs/design/K552.md`
+- **K550** · K320 2b parity blocker: the split stays dark until its A/B passes (`docs/design/K320_stage2.md` sections
+  7-8). Sessions 1-2: `.claude/probes/K320/k550_diagnosis.md` (the row fix and three keeps in `k550_two_keep.patch`;
+  the wall is MSAA sample coverage). Levi (2026-10-19): one try at the edge gap; waive the gate only if it fails.
+  - owner: agent `a6e7569fb69c908c3` of claude session 91b19e11 (opus, started 2026-10-19 21:39, 2 h cap ~23:39)
+  - branch: `worktree-agent-a6e7569fb69c908c3`, worktree `.claude/worktrees/agent-a6e7569fb69c908c3`; last commit: `39d0ca6`
+  - evidence: `.claude/probes/K550/`
+  - next: stage 3 per the brief: rebase the patch onto K553, re-baseline at dsf 1 and 1.5, the coverage-matched pre-pass try, attribution, sheets, cost; then the merge and Levi's ship / waive / kill call
+  - brief: `docs/design/K550_stage3.md`
 
 ## Next, in order
 
@@ -1022,7 +1035,8 @@ Every other item below waits on the trigger it names.
   (`docs/design/K115_stage6.md` 971-975), 6a's five CAPITAL_OVERRIDES (800-809), the digit-6 conflict
   (`docs/design/K115_stage3.md` 376-381), and 1b's same-slash crossings that rely on overFirst alone. K558 adds (c) a connector touching
   a lifted stroke's end makes a junction (Daily #12's #) and (d) the loops and bars of l, e and t are junctions
-  (`docs/design/K558.md` Handoff). Stage 8's design absorbs them (`docs/design/K115_glyphs.md`); close when stage 9 lands.
+  (`docs/design/K558.md` Handoff). K552 adds: glyph waypoints
+  land on cursive crossings (`text_graph.ts` `nearestNode`), so every title has self-loops and parallel runs. Stage 8's design absorbs them (`docs/design/K115_glyphs.md`); close when stage 9 lands.
 - **K556** · K115 emblems: a shape under MIN_EMBLEM_DIA (6 LU) is refused silently
   (`docs/design/K115_stage5.md` 261, 620), and the triquetra shows gap slivers (594-596).
 - **K560** · Decorative text threads never show under the thread reveal (today's accents; K115's
@@ -1039,6 +1053,12 @@ Every other item below waits on the trigger it names.
   fixture); (e) "20" makes a three-pass node that keeps alternation (#20 on 2026-10-31, #120,
   #200-209, #220, #320): K115 stage 9's two-pass lint or a planarizer fix; (f) the panel tooltip's
   and the rule comment's examples come true only with K115's glyphs.
+- **K564** · Titled dailies 6, 16 and 26 each log "Knot invariants violated; generation bug." once;
+  untitled builds never do (K552, `.claude/probes/K552/invariant_warns.*`).
+- **K565** · Leaving a titled daily by a live edit does not rebuild: the title stays, so fire,
+  minotaur and fog start from the word (read from code, not exercised; stage 3a, K552 Handoff).
+  K552's row tooltip ("your attempt is kept") also overstates: a move on the other form drops the
+  raw loop walk (C4).
 ## Approved, to schedule (2026-10-11)
 
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
@@ -1212,7 +1232,6 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   Stage 0 verdict (eac12a3, probe-only): the split PASSES the >=0.5s gate — cold medians full 3.74s vs paint-only 1.90s / gap-only 0.51s (saving ~1.84s); `.claude/probes/K320/stage0_results.md`.
   Stage 1 done (this commit): the bundled slim (O1+O3; O4 waits on call 1, O7 unmeasured) — section-rgb frag 48,737 -> 46,310, junction-field 29,599 -> 26,305, arm-strip 33,122 -> 31,049, pluck-still 21,075 -> 19,960; budget guard `test/render/k320_slim.test.ts`; evidence `.claude/probes/K320/results.md`. Stage 2 (the split) remains, through the Stage 0 gate and Levi's calls.
   Stage 2 brief (docs only): `docs/design/K320_stage2.md` — gap pre-pass into a canvas-sized RGBA16F mask (keep + draw index, dirty-gated like the arm strips), paint-only section sampling it; master + explore split, fans/still keep the library; fallback to the combined programs where no half-float target; sub-steps 2a data plane / 2b split / 2c registry + gate measure; five calls at its end (rec: build as designed).
-- **K550** · K320 2b parity blocker: split stays dark; 2c must not start until the A/B is 0px (or K433 one-level). Diagnosis .claude/probes/K320/k550_diagnosis.md (probes `k550_*.mjs`). Session 1: the shipped mask row is off by one (`- 2 -` -> `- 1 -` = the `gapMaskTexel` twin; def 40,829 -> 12,353). Session 2 (finisher): the row fix + a three-keep mask (owner / under / deep gap passes, chain+arc-turn fragment identity in mask B) solves the stacking AND the dominant same-chain double-coverage term (def 12,353 -> 5,603, darker 6,246 -> 714; fat 6,789, user 3,051, knot 6,773; explore unmeasured - its single-capture control is 36,252, needs the K428 multi-capture form). WIP preserved uncommitted in `.claude/probes/K320/k550_two_keep.patch` (`git apply`-verified on ca60b72; tree left at HEAD). BLOCKER for the flip: MSAA sample coverage - canvas edge fragments (`>=` 1 sample, center-extrapolated varyings) are never recorded by the center-rule mask and paint at 1.0; temp `antialias: false` collapses def to 2,020 / gt1 343, and even that floor fails the brief's gt1 = 0 gate. No exact fix exists in this architecture (WebGL2 cannot sample an unresolved MSAA target; expansion/SSAA measured worse). Levi's call: waive the gate for 1-px edge diffs via the brief's contact sheets, or kill the split and keep Stage 1.
 - **K554** · K115 6d: Greek tonos and dialytika (dropped today) and glyphs for U+03AA/03AB/03CA/03CB, or
   Cyrillic (`docs/design/K115_cursive_text.md` C6, 520-526). `docs/design/K115_stage6.md` 6c items 1 and 3 (917-942).
 - **K338** · K324's side ideas (`docs/design/K324_realtime_minotaur.md`):
@@ -1262,6 +1281,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   ENDS; docs/design/K466.md Handoff).
 
 - **K529** · K500's other half: a touch press on a beyond run lighting its glow, in the realtime chase (desktop mouse hover verified; touch unprobed).
+- **K566** · Skip the intro replay on a title toggle (K552: ready 13.5 s after turning the title on,
+  6.9 s after off; the clock pauses meanwhile).
 
 ## Done
 
