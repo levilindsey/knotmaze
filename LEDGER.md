@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K567.
+Next free ID: K568.
 
 ## Waiting on Levi
 
@@ -117,6 +117,15 @@ Next free ID: K567.
   (`docs/design/K552.md` Handoff). Options: (a) as built; (b) park attempts per fingerprint (store
   shape, `v` bump); (c) the controller collapses a title loop back to the seam; (d) the title as a
   tree, no loops. [Rec: (a) now, (d) with K115's glyph redesign.]
+- **K550** · Kill or waive K320's gap split (`docs/design/K550_stage3.md` Handoff, Recommendation). Stage 3's one try
+  (a coverage-matched pre-pass) cut the MSAA edge class 91% but costs +11.1 ms per moving frame at 3200x1800. The split
+  alone costs +1.77 ms (+0.68 ms at phone size, desktop GPU) against K320's +0.3 ms budget, to save about 1.5 s of cold
+  compile per shader-changing deploy, and cuts holes at kink-eye roots (`.claude/probes/K550/out/sheets/def15_stack_*.png`).
+  [Rec: kill: revert the split (2a `ffd3864`, 2b `f485641`, the dark switches `5bfba38` `f18dd07`, K553's mask sizing
+  `4b5085d`..`60511ed`), keep Stage 1 (`6c592e6`), drop K561. Waive: merge `92e1c0e` alone, never the try's commits.]
+  - branch: `worktree-agent-a6e7569fb69c908c3` (desktop only, unpushed), worktree `.claude/worktrees/agent-a6e7569fb69c908c3`
+    kept; last commit: `d27b35c`
+  - evidence: `.claude/probes/K550/` (`out/sheets/`, `k550_cost.mjs`, `k550_cold.mjs`, `k550_attr.mjs`)
 
 ## In progress
 
@@ -269,14 +278,6 @@ Next free ID: K567.
   - evidence: `.claude/probes/K459/`
   - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii) (`docs/design/K459.md`, Handoff); the free cap's checks are K477
   - brief: `docs/design/K459.md`
-- **K550** · K320 2b parity blocker: the split stays dark until its A/B passes (`docs/design/K320_stage2.md` sections
-  7-8). Sessions 1-2: `.claude/probes/K320/k550_diagnosis.md` (the row fix and three keeps in `k550_two_keep.patch`;
-  the wall is MSAA sample coverage). Levi (2026-10-19): one try at the edge gap; waive the gate only if it fails.
-  - owner: agent `a6e7569fb69c908c3` of claude session 91b19e11 (opus, started 2026-10-19 21:39, 2 h cap ~23:39)
-  - branch: `worktree-agent-a6e7569fb69c908c3`, worktree `.claude/worktrees/agent-a6e7569fb69c908c3`; last commit: `39d0ca6`
-  - evidence: `.claude/probes/K550/`
-  - next: stage 3 per the brief: rebase the patch onto K553, re-baseline at dsf 1 and 1.5, the coverage-matched pre-pass try, attribution, sheets, cost; then the merge and Levi's ship / waive / kill call
-  - brief: `docs/design/K550_stage3.md`
 
 ## Next, in order
 
@@ -1274,6 +1275,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K529** · K500's other half: a touch press on a beyond run lighting its glow, in the realtime chase (desktop mouse hover verified; touch unprobed).
 - **K566** · Skip the intro replay on a title toggle (K552: ready 13.5 s after turning the title on,
   6.9 s after off; the clock pauses meanwhile).
+- **K567** · If K320's split is revived (K550): use it only while cold: draw with the split while
+  the combined program pre-compiles off-thread (KHR_parallel_shader_compile; Chrome's program cache
+  is keyed by source, so Pixi's later link of the same text should read ~25 ms, K307), then swap. Or
+  the cheaper try forms (stencil early reject, 2 offsets, owner keep only, an edge band), a paint
+  that reads neighbouring mask texels on a miss, sample positions read at boot
+  (`docs/design/K550_stage3.md` Recommendation). All untested.
 
 ## Done
 
