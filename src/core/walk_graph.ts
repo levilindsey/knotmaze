@@ -63,6 +63,11 @@ export interface WalkGraph {
   titleLength?: number;
   titleVertices?: Set<string>;
   titleEdges?: Set<number>;
+  // K552: the maze's own vertex ids, titled id -> untitled id, for the
+  // few vertices attachTitle renamed (the seam was the maze's start, and
+  // a leftover mentr_a became mentr_decoy). A vertex not listed keeps its
+  // id. The maze form (game/daily_attempt.ts) reads it.
+  mazeNames?: ReadonlyMap<string, string>;
 }
 
 // Deterministic Dijkstra over the walk multigraph: the walk distance from
@@ -107,6 +112,7 @@ export interface WalkForce {
   start: string; // The walk's start (a title word's mentr_a).
   exit: string; // The exit chosen before the title was attached.
   mazeStart?: string; // The seam vertex (titled graphs).
+  mazeNames?: ReadonlyMap<string, string>; // K552: see WalkGraph.
 }
 
 export function buildWalkGraph(
@@ -294,6 +300,7 @@ export function buildWalkGraph(
           titleLength,
           titleVertices,
           titleEdges,
+          ...(force.mazeNames ? { mazeNames: force.mazeNames } : {}),
         }
       : {}),
   };

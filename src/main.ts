@@ -57,6 +57,7 @@ import type { DailyResult, SolveRecord } from "./game/daily_store";
 import {
   attemptRecord as savedAttemptOf,
   exploredRuns,
+  mazeTaps,
   restoreAttempt,
   walkFingerprint,
 } from "./game/daily_attempt";
@@ -1200,7 +1201,8 @@ async function main(): Promise<void> {
     if (dailyN === null || document.hidden || !scene.fabricController) return;
     const saved = dailyStore.attempt(dailyN);
     if (!saved || saved.savedAt <= attemptSyncedAt) return;
-    const mine = scene.fabricController.taps;
+    // K552: saved taps are in maze form (game/daily_attempt.ts).
+    const mine = mazeTaps(scene.fabricController);
     attemptSyncedAt = saved.savedAt;
     if (
       saved.taps.length === mine.length &&

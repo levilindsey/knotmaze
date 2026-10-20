@@ -1,6 +1,7 @@
 import type { Application, Container } from "pixi.js";
 import type { KnotSynth } from "../audio/knot_synth";
 import type { SnoreSfx } from "../audio/snore_sfx";
+import { mazeTaps, walkFingerprint } from "../game/daily_attempt";
 import { todayNumber } from "../game/daily_calendar";
 import { dailyHistory } from "../game/daily_store";
 import type { DailyStore, SolveRecord } from "../game/daily_store";
@@ -196,6 +197,12 @@ export function installProbeHooks(ctx: ProbeCtx): void {
     path: ctx.scene.fabricController ? [...ctx.scene.fabricController.pathEdges] : [],
     head: ctx.scene.fabricController?.head ?? null,
     backtrack: ctx.scene.fabricController?.backtrackDist ?? 0,
+    // K552: the title thread on screen, the solve's maze-form taps (what a
+    // saved attempt holds) and the walk's maze-portion fingerprint.
+    titled: ctx.scene.walkGraph?.mazeStart !== undefined,
+    mazeStart: ctx.scene.walkGraph?.mazeStart ?? null,
+    mazeTaps: ctx.scene.fabricController ? mazeTaps(ctx.scene.fabricController) : [],
+    maze: ctx.scene.walkGraph ? walkFingerprint(ctx.scene.walkGraph) : null,
     // K47/K56: the saved attempt of the daily on screen, and the prefs.
     saved: ctx.dailyN !== null ? (ctx.dailyStore.attempt(ctx.dailyN) ?? null) : null,
     exempt: [...DAILY_EXEMPT_KEYS],

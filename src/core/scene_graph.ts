@@ -188,10 +188,17 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
               hueGroup.push(strandsBefore);
             }
           }
+          // K552: the ids attachTitle renamed, so a titled walk can name
+          // its maze portion as the untitled walk does (the maze form).
+          const mazeNames = new Map<string, string>([[seam, walk0.start]]);
+          if (graph.nodes.has("mentr_decoy")) {
+            mazeNames.set("mentr_decoy", "mentr_a");
+          }
           walk = buildWalkGraph(graph, {
             start: "mentr_a",
             exit: walk0.exit,
             mazeStart: seam,
+            mazeNames,
           });
         }
       }
@@ -227,6 +234,7 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
             start: walk.start,
             exit: walk.exit,
             mazeStart: walk.mazeStart,
+            mazeNames: walk.mazeNames,
           })
         : buildWalkGraph(graph);
     }
