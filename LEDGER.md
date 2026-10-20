@@ -123,10 +123,10 @@ Next free ID: K559.
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
   capitals e64f4d6, accents fa1b1ae, Greek 54612f2 (suite 1521 green). Levi (2026-10-19, Daily #8): redesign first.
-  - owner: agent `ac64a844a1d15b9d7` of claude session 91b19e11 (opus, started 2026-10-19 20:00, 2 h cap ~22:00)
-  - branch: `worktree-agent-ac64a844a1d15b9d7`, worktree `.claude/worktrees/agent-ac64a844a1d15b9d7`; last commit: `c24cc97`
+  - owner: nobody since 2026-10-19 21:31 (merged; agent `ac64a844a1d15b9d7` of claude session 91b19e11)
+  - branch: mainline; last commit: `584998a`
   - evidence: `.claude/probes/K115/stage8/`
-  - next: stage 8 (research, docs only): defect attribution, junction census, the glyph design docs/design/K115_glyphs.md, metrics harness, the stage 9 brief; Levi's look call on stage 9 before any mass authoring; then stage 7's live dates (docs/design/K115_stage7.md), K557
+  - next: Levi's six calls; then stage 9 (docs/design/K115_stage9.md), starting with the oval-letter join
   - brief: `docs/design/K115_stage8.md`; the design so far: `docs/design/K115_cursive_text.md`
 - **K74** · Maze design, decided (Levi, 2026-10-13;
   `docs/design/K74_maze_design.md`): every mechanism gets params whose
