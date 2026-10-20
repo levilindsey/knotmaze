@@ -207,6 +207,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["cartouche", "string"],
   ["emblem", "enum", ["", "star", "trefoil", "triquetra", "solomon", "wreath"]],
   ["cartoucheShape", "enum", ["", "star", "trefoil", "triquetra", "solomon", "wreath"]],
+  ["penReverse", "boolean"],
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

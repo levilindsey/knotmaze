@@ -735,3 +735,32 @@ describe("the worker core's probe messages and failure (K7)", () => {
     expect(w.stats.frames).toBe(1);
   });
 });
+
+describe("the worker core in lockstep on a pen-order text scene (K558)", () => {
+  it("matches bit for bit with the reverse switch on, through a drag, and both sleep", () => {
+    const query = "?7&txt=Daily%20%238&pnr=1";
+    const { params } = fabricScene(query);
+    expect(params.text).toBe("Daily #8");
+    expect(params.penReverse).toBe(true);
+    // The switch reached the build: every text crossing is flipped against
+    // the same scene with it off.
+    const on = fabricGraph(params);
+    const off = fabricGraph(fabricScene("?7&txt=Daily%20%238").params);
+    let flipped = 0;
+    for (const [id, n] of on.nodes) {
+      if (n.penOrder !== true) continue;
+      expect(n.overFirst, id).toBe(!off.nodes.get(id)!.overFirst);
+      flipped++;
+    }
+    expect(flipped).toBe(4);
+    const ls = new Lockstep();
+    ls.init(query);
+    expect(ls.live.crossings.length).toBeGreaterThan(0);
+    const dt = 1 / 60;
+    for (let f = 0; f < 20; f++) ls.frame(dt);
+    circle(ls, dt, 60);
+    for (let f = 0; f < 10; f++) ls.frame(dt);
+    expect(ls.untilAsleep(dt, 1500)).toBeGreaterThan(0);
+    expect(ls.m.workerAsleep).toBe(true);
+  });
+});
