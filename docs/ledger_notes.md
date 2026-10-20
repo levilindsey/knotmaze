@@ -4437,3 +4437,7 @@ thermalservice` (status 0) and park the tab between runs
 (`.claude/probes/K4/phone_blank.mjs`). Vsync-capped fps cannot show the
 headroom left; a load-amplified bench (a higher render resolution)
 would.
+
+## K550 (2026-10-19, shortened at stage 3's launch)
+
+K320 2b parity blocker: split stays dark; 2c must not start until the A/B is 0px (or K433 one-level). Diagnosis .claude/probes/K320/k550_diagnosis.md (probes `k550_*.mjs`). Session 1: the shipped mask row is off by one (`- 2 -` -> `- 1 -` = the `gapMaskTexel` twin; def 40,829 -> 12,353). Session 2 (finisher): the row fix + a three-keep mask (owner / under / deep gap passes, chain+arc-turn fragment identity in mask B) solves the stacking AND the dominant same-chain double-coverage term (def 12,353 -> 5,603, darker 6,246 -> 714; fat 6,789, user 3,051, knot 6,773; explore unmeasured - its single-capture control is 36,252, needs the K428 multi-capture form). WIP preserved uncommitted in `.claude/probes/K320/k550_two_keep.patch` (`git apply`-verified on ca60b72; tree left at HEAD). BLOCKER for the flip: MSAA sample coverage - canvas edge fragments (`>=` 1 sample, center-extrapolated varyings) are never recorded by the center-rule mask and paint at 1.0; temp `antialias: false` collapses def to 2,020 / gt1 343, and even that floor fails the brief's gt1 = 0 gate. No exact fix exists in this architecture (WebGL2 cannot sample an unresolved MSAA target; expansion/SSAA measured worse). Levi's call: waive the gate for 1-px edge diffs via the brief's contact sheets, or kill the split and keep Stage 1.
