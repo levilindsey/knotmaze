@@ -230,6 +230,9 @@ describe("K552 the title never changes the maze", () => {
         where.push(...graphDiffs(U, T, tw, uw.start).slice(0, 5));
         if (walkFingerprint(tw) !== walkFingerprint(uw)) where.push("fingerprint");
         if (walkFingerprint(uw) !== k47Fingerprint(uw)) where.push("untitled fingerprint moved");
+        // The title's own runs are not pinned: every daily's holds cycles
+        // (glyph waypoints land on cursive crossings), and daily_attempt.ts
+        // saves the one walk that matters raw (mazeFormExact).
         if (where.length > 0) failures.push(`${c.label}: ${where.join("; ")}`);
       }
       expect(failures).toEqual([]);

@@ -214,7 +214,8 @@ const isRunList = (x: unknown, max: number): x is number[] =>
   Array.isArray(x) && x.length <= max && x.every((e) => isCount(e));
 
 // A stored attempt, checked field by field (null when unusable). The tap
-// list and the move log must agree (one letter per tap); the path is a
+// list and the move log must agree (one letter per tap, except a K552 raw
+// record's title taps); the path is a
 // subset of the taps' runs by construction, so it can be no longer.
 export function validAttempt(x: unknown): DailyAttempt | null {
   if (typeof x !== "object" || x === null) return null;
@@ -224,11 +225,14 @@ export function validAttempt(x: unknown): DailyAttempt | null {
   if (!isRunList(a.taps, MAX_ATTEMPT_TAPS) || a.taps.length === 0) return null;
   if (!isRunList(a.path, a.taps.length)) return null;
   if (typeof a.moves !== "string" || !/^[gdb]*$/.test(a.moves)) return null;
-  if (a.moves.length !== a.taps.length) return null;
   if (!isNum(a.backtrack) || a.backtrack < 0) return null;
   if (typeof a.maze !== "string" || a.maze.length === 0 || a.maze.length > 200) {
     return null;
   }
+  // A raw record (K552: maze "t1.", daily_attempt.ts rawFingerprint) also
+  // holds the title's taps, which log no move.
+  const raw = a.maze.startsWith("t1.");
+  if (raw ? a.moves.length > a.taps.length : a.moves.length !== a.taps.length) return null;
   return {
     startedAt: a.startedAt,
     day: a.day,

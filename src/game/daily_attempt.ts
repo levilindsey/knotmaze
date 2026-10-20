@@ -22,13 +22,20 @@
 // the title's forced walk (titlePrefix: the shortest walk from the start
 // to the seam, taps the player makes anyway), then the maze taps.
 //
-// One titled walk does not survive the round trip, and its restore is
-// refused ("path") rather than rebuilt wrong: the title's runs hold
-// cycles, so a walk that comes back to the seam by a maze advance, enters
-// the title, returns to the seam around a title cycle (advances all the
-// way) and then takes the entrance run again advances where the title-free
-// replay backtracks. The heads, the walked meter and so the stars agree;
-// the path, the backtrack meter and the move log would not.
+// THE ONE WALK THE MAZE FORM CANNOT HOLD. Every daily's title has cycles
+// (its glyph waypoints land on cursive crossings, text_graph.ts
+// nearestNode, so the title's runs include self-loops and parallel runs).
+// A walk that reaches the seam by a maze advance along run m, goes into
+// the title, comes back to the seam around a cycle (advancing all the way)
+// and then taps m advances on the titled scene, where a title-free replay
+// backtracks. The heads, the walked meter and the stars agree; the path,
+// the backtrack meter and the move log do not. mazeFormExact finds that
+// walk (both stacks simulated over the taps), and such a solve is saved
+// RAW instead: its own run ids, keyed by rawFingerprint (the whole titled
+// walk). A raw record restores exactly on the scene it was made on (a
+// reload, a toggle away and back before the next move) and is refused
+// ("maze") on the other form, where it stays stored until a move there
+// saves over it.
 
 import type { WalkGraph } from "../core/walk_graph";
 import { walkDistances } from "../core/walk_graph";
@@ -81,10 +88,35 @@ function fromMazeRuns(walk: WalkGraph, runs: readonly number[]): number[] {
   return runs.map((m) => (Number.isInteger(m) && m >= 0 && m < fromMaze.length ? fromMaze[m] : -1));
 }
 
-// The maze-form taps of the solve on a controller (what a saved record of
-// it holds), for comparing a stored attempt with the live one.
+// Does the maze form hold this solve? False only for the walk described in
+// the header: a maze tap the titled controller advanced on while a
+// title-free replay would backtrack. Both stacks are simulated over the
+// taps by the controller's rule (a tap on the path's last run backtracks;
+// memory-trail mode never does). Always true on an untitled walk.
+export function mazeFormExact(c: FabricMazeController): boolean {
+  const title = c.walk.titleEdges;
+  if (!title || c.trailMode) return true;
+  const full: number[] = [];
+  const maze: number[] = [];
+  for (const t of c.taps) {
+    const pops = full.length > 0 && full[full.length - 1] === t;
+    if (!title.has(t)) {
+      const mazePops = maze.length > 0 && maze[maze.length - 1] === t;
+      if (pops !== mazePops) return false;
+      if (mazePops) maze.pop();
+      else maze.push(t);
+    }
+    if (pops) full.pop();
+    else full.push(t);
+  }
+  return true;
+}
+
+// The taps a saved record of the solve holds (maze form, or raw when the
+// maze form cannot hold it), for comparing a stored attempt with the live
+// one.
 export function mazeTaps(c: FabricMazeController): number[] {
-  return toMazeRuns(c.walk, c.taps);
+  return mazeFormExact(c) ? toMazeRuns(c.walk, c.taps) : [...c.taps];
 }
 
 // The title's forced walk (titled walks; [] otherwise): the shortest walk
@@ -128,12 +160,8 @@ export function titlePrefix(walk: WalkGraph): number[] {
 // untitled walk share one fingerprint, and an untitled walk's is the one
 // K47 computed.
 export function walkFingerprint(walk: WalkGraph): string {
-  let h = 0x811c9dc5;
-  const add = (s: string): void => {
-    for (let i = 0; i < s.length; i++) {
-      h = Math.imul(h ^ s.charCodeAt(i), 0x01000193) >>> 0;
-    }
-  };
+  const fnv = fnvHash();
+  const add = fnv.add;
   const title = walk.titleEdges;
   const names = walk.mazeNames;
   const name = (id: string): string => names?.get(id) ?? id;
@@ -151,8 +179,30 @@ export function walkFingerprint(walk: WalkGraph): string {
       ends.add(b);
     }
   }
-  const hex = h.toString(16).padStart(8, "0");
-  return `w1.${title ? ends.size : walk.vertices.size}.${runs}.${hex}`;
+  return `w1.${title ? ends.size : walk.vertices.size}.${runs}.${fnv.hex()}`;
+}
+
+function fnvHash(): { add: (s: string) => void; hex: () => string } {
+  let h = 0x811c9dc5;
+  return {
+    add: (s: string): void => {
+      for (let i = 0; i < s.length; i++) {
+        h = Math.imul(h ^ s.charCodeAt(i), 0x01000193) >>> 0;
+      }
+    },
+    hex: () => h.toString(16).padStart(8, "0"),
+  };
+}
+
+// A titled walk's whole identity (K47's hash over every run, the title's
+// included, from the true start), the key of a raw record; "t1." never
+// equals a walkFingerprint. "" on an untitled walk, which has no raw form.
+export function rawFingerprint(walk: WalkGraph): string {
+  if (!walk.titleEdges) return "";
+  const fnv = fnvHash();
+  fnv.add(`${walk.start}>${walk.exit};`);
+  for (const e of walk.edges) fnv.add(`${e.va}>${e.vb}:${Math.round(e.length * 1e6)};`);
+  return `t1.${walk.vertices.size}.${walk.edges.length}.${fnv.hex()}`;
 }
 
 export interface AttemptInfo {
@@ -166,22 +216,25 @@ export interface AttemptInfo {
 
 // The record of the solve in progress, in maze form (null before its first
 // maze move). The move log holds maze moves only (the controller logs no
-// title move), so it lines up with the taps.
+// title move), so it lines up with the taps. A solve the maze form cannot
+// hold (mazeFormExact) is saved raw: its own run ids, keyed by
+// rawFingerprint instead of info.maze.
 export function attemptRecord(
   c: FabricMazeController,
   info: AttemptInfo
 ): DailyAttempt | null {
-  const taps = toMazeRuns(c.walk, c.taps);
-  if (taps.length === 0) return null;
+  const exact = mazeFormExact(c);
+  const taps = exact ? toMazeRuns(c.walk, c.taps) : [...c.taps];
+  if (toMazeRuns(c.walk, c.taps).length === 0) return null;
   return {
     startedAt: info.startedAt,
     day: info.day,
     elapsedMs: Math.max(0, Math.round(info.elapsedMs)),
     taps,
-    path: toMazeRuns(c.walk, c.pathEdges),
+    path: exact ? toMazeRuns(c.walk, c.pathEdges) : [...c.pathEdges],
     moves: c.moveLog.join(""),
     backtrack: c.backtrackDist,
-    maze: info.maze,
+    maze: exact ? info.maze : rawFingerprint(c.walk),
     def: info.def,
     savedAt: info.savedAt,
   };
@@ -196,12 +249,15 @@ export function restoreAttempt(
   a: DailyAttempt,
   maze: string
 ): RestoreOutcome {
-  if (a.maze !== maze) {
+  // A raw record (K552) replays only onto the titled walk it was made on.
+  const raw = a.maze !== maze && a.maze === rawFingerprint(c.walk);
+  if (a.maze !== maze && !raw) {
     c.reset();
     return "maze";
   }
-  if (!c.replay([...titlePrefix(c.walk), ...fromMazeRuns(c.walk, a.taps)])) return "taps";
-  const path = toMazeRuns(c.walk, c.pathEdges);
+  const taps = raw ? a.taps : [...titlePrefix(c.walk), ...fromMazeRuns(c.walk, a.taps)];
+  if (!c.replay(taps)) return "taps";
+  const path = raw ? c.pathEdges : toMazeRuns(c.walk, c.pathEdges);
   const same = path.length === a.path.length && path.every((e, i) => e === a.path[i]);
   if (!same) {
     c.reset();
