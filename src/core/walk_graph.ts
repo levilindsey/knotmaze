@@ -68,6 +68,10 @@ export interface WalkGraph {
   // a leftover mentr_a became mentr_decoy). A vertex not listed keeps its
   // id. The maze form (game/daily_attempt.ts) reads it.
   mazeNames?: ReadonlyMap<string, string>;
+  // K552: the title's strands, [from, to) in graph.strands. Every run on
+  // them is a title run, including one the start cannot reach (a letter's
+  // detached stroke, which the seam-bounded search alone left as maze).
+  titleChains?: readonly [number, number];
 }
 
 // Deterministic Dijkstra over the walk multigraph: the walk distance from
@@ -113,6 +117,7 @@ export interface WalkForce {
   exit: string; // The exit chosen before the title was attached.
   mazeStart?: string; // The seam vertex (titled graphs).
   mazeNames?: ReadonlyMap<string, string>; // K552: see WalkGraph.
+  titleChains?: readonly [number, number]; // K552: see WalkGraph.
 }
 
 export function buildWalkGraph(
@@ -285,6 +290,18 @@ export function buildWalkGraph(
         }
       }
     }
+    // K552: a title strand the start cannot reach is title too, never
+    // maze (its runs touch no maze vertex: the title meets the maze only
+    // at the seam).
+    if (force.titleChains) {
+      const [from, to] = force.titleChains;
+      for (const e of edges) {
+        if (e.chain < from || e.chain >= to) continue;
+        titleEdges.add(e.id);
+        titleVertices.add(e.va);
+        titleVertices.add(e.vb);
+      }
+    }
   }
 
   return {
@@ -301,6 +318,7 @@ export function buildWalkGraph(
           titleVertices,
           titleEdges,
           ...(force.mazeNames ? { mazeNames: force.mazeNames } : {}),
+          ...(force.titleChains ? { titleChains: force.titleChains } : {}),
         }
       : {}),
   };
