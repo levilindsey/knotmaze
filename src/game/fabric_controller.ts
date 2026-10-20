@@ -93,7 +93,9 @@ export class FabricMazeController {
   // Distinct dead-end tips the head has arrived at: END vertices other
   // than the start and the exit (main.ts shows them only with deadEnds on).
   deadEndTips = new Set<string>();
-  // One entry per accepted move: g(ood) / d(etour) / b(acktrack).
+  // One entry per accepted move: g(ood) / d(etour) / b(acktrack). K552: a
+  // move on a title run is not logged (the share grid and a saved attempt
+  // are maze-only, game/daily_attempt.ts's maze form).
   moveLog: MoveKind[] = [];
   // The run of every accepted tap, in order (replay() reproduces the rest).
   taps: number[] = [];
@@ -318,9 +320,11 @@ export class FabricMazeController {
     ) {
       this.pathEdges.pop();
       this.pathVertices.pop();
-      if (!this.isTitleEdge(edgeId)) this.backtrackDist += e.length;
-      if (!this.isTitleEdge(edgeId)) this.walkedDist += e.length;
-      this.moveLog.push("b");
+      if (!this.isTitleEdge(edgeId)) {
+        this.backtrackDist += e.length;
+        this.walkedDist += e.length;
+        this.moveLog.push("b");
+      }
       this.taps.push(edgeId);
       this.fireArrive(head, depart, e.length, this.head);
       return "backtrack";
@@ -328,7 +332,9 @@ export class FabricMazeController {
 
     // A self-loop run returns to the same vertex; everything else crosses.
     const far = e.va === head ? e.vb : e.va;
-    this.moveLog.push(this.onShortestRoute(head, e.length, far) ? "g" : "d");
+    if (!this.isTitleEdge(edgeId)) {
+      this.moveLog.push(this.onShortestRoute(head, e.length, far) ? "g" : "d");
+    }
     this.taps.push(edgeId);
     if (!this.isTitleEdge(edgeId)) this.walkedDist += e.length;
     this.pathEdges.push(edgeId);
