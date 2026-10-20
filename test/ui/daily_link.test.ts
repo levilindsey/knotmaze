@@ -395,6 +395,8 @@ describe("the daily design and its exempt preferences (K56)", () => {
       "confettiAmount",
       // K98, proposed with it.
       "markerSize",
+      // K558, proposed with it (Call C2): which stroke goes over.
+      "penReverse",
     ]);
     for (const k of DAILY_EXEMPT_KEYS) {
       expect(Object.keys(PARAM_DEFAULTS)).toContain(k);

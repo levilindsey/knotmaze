@@ -124,6 +124,7 @@ describe("links", () => {
       greedyTrap: "off", trapTargetF: 2.5, trapTargetH: 3.5, trapMaxF: 6,
       trapMaxH: 8, trapMaxGrow: 1.15, trapRadius: 20, trapIters: 12,
       trapTries: 8, trapSurplus: 1.25,
+      penReverse: false,
     });
   });
 
@@ -783,6 +784,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   greedyTrap: "gtp", trapTargetF: "ttf", trapTargetH: "tth", trapMaxF: "tmf",
   trapMaxH: "tmh", trapMaxGrow: "tmg", trapRadius: "trd", trapIters: "tit",
   trapTries: "ttr", trapSurplus: "tsp",
+  penReverse: "pnr",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

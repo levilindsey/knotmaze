@@ -25,6 +25,13 @@ import type { TangleGraph } from "../../src/core/types";
 // alone decides the pairs the graph cannot (two spurs, two lifted strokes,
 // whose order is the glyphs' and their stroke clocks').
 //
+// A crossing that does not have exactly two passes is MALFORMED: listed in
+// `malformed`, not in `failures`. Pen order needs two passes, so the builder
+// gives it assignOverUnder's fallback (overFirst true, isOver false, no pen
+// times), which the oracle checks. Today's one source is "20": the 0's
+// loop closes on the connector from the 2, a node where the main strand
+// passes and two strands end (a topology residual, not a pen-order one).
+//
 // `isText` picks the text's crossings (all of them for a standalone word;
 // the title's or the cartouche's in a maze scene). The text's main strand
 // is the first strand, in index order, through a text node.
@@ -35,6 +42,7 @@ export interface PenOracleReport {
   lifted: number; // Decided by the graph: a lifted stroke over main or a spur.
   spurMain: number; // Decided by the graph: a spur touching main after the pass.
   penOnly: number; // Decided only by the builder's pen times.
+  malformed: string[]; // Crossings without exactly two passes (the fallback).
   failures: string[];
 }
 
@@ -53,6 +61,7 @@ export function penOracle(
     lifted: 0,
     spurMain: 0,
     penOnly: 0,
+    malformed: [],
     failures: [],
   };
   // Passes in assignPenOrder's enumeration: strands in index order, a closed
@@ -130,7 +139,10 @@ export function penOracle(
     };
     if (node.penOrder !== true) fail("not marked penOrder");
     if (list.length !== 2) {
-      fail(`${list.length} passes`);
+      report.malformed.push(id);
+      if (node.overFirst !== true || node.isOver !== false || crossingPenTimes(node) !== undefined) {
+        fail(`${list.length} passes without the fallback`);
+      }
       continue;
     }
     const pt = crossingPenTimes(node);
