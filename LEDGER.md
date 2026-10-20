@@ -275,6 +275,14 @@ Next free ID: K559.
   - evidence: `.claude/probes/K558/`
   - next: the stage per the brief: pen-time keys on SegIn, the pen-order assignment for text, the reverse param, the checkAlternation exemption; merge after K552 (param order K552 then K558)
   - brief: `docs/design/K558.md`
+- **K553** · Why K320's split drew no crossing gaps when capability turned it on (K551; D3D11 desktop, live
+  2026-10-18): off, the same build draws them. Undiagnosed; gates K320 2c together with K550. Evidence
+  `.claude/probes/K551/` (`gaps_check.mjs`; shots `out/` before the fix, `out_fix/`, `out_live/`).
+  - owner: agent `ab57cd38a8b19fba4` of claude session 91b19e11 (opus, started 2026-10-19 20:02, 2 h cap ~22:02)
+  - branch: `worktree-agent-ab57cd38a8b19fba4`, worktree `.claude/worktrees/agent-ab57cd38a8b19fba4`; last commit: `7d2f943`
+  - evidence: `.claude/probes/K553/`
+  - next: diagnose the capability path's empty gaps on the broken build (f18dd07^), fix if contained, add the guard; then K550's next stage (Levi took the rec, 2026-10-19)
+  - brief: `docs/design/K553.md`
 
 ## Next, in order
 
@@ -1199,9 +1207,6 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   Stage 1 done (this commit): the bundled slim (O1+O3; O4 waits on call 1, O7 unmeasured) — section-rgb frag 48,737 -> 46,310, junction-field 29,599 -> 26,305, arm-strip 33,122 -> 31,049, pluck-still 21,075 -> 19,960; budget guard `test/render/k320_slim.test.ts`; evidence `.claude/probes/K320/results.md`. Stage 2 (the split) remains, through the Stage 0 gate and Levi's calls.
   Stage 2 brief (docs only): `docs/design/K320_stage2.md` — gap pre-pass into a canvas-sized RGBA16F mask (keep + draw index, dirty-gated like the arm strips), paint-only section sampling it; master + explore split, fans/still keep the library; fallback to the combined programs where no half-float target; sub-steps 2a data plane / 2b split / 2c registry + gate measure; five calls at its end (rec: build as designed).
 - **K550** · K320 2b parity blocker: split stays dark; 2c must not start until the A/B is 0px (or K433 one-level). Diagnosis .claude/probes/K320/k550_diagnosis.md (probes `k550_*.mjs`). Session 1: the shipped mask row is off by one (`- 2 -` -> `- 1 -` = the `gapMaskTexel` twin; def 40,829 -> 12,353). Session 2 (finisher): the row fix + a three-keep mask (owner / under / deep gap passes, chain+arc-turn fragment identity in mask B) solves the stacking AND the dominant same-chain double-coverage term (def 12,353 -> 5,603, darker 6,246 -> 714; fat 6,789, user 3,051, knot 6,773; explore unmeasured - its single-capture control is 36,252, needs the K428 multi-capture form). WIP preserved uncommitted in `.claude/probes/K320/k550_two_keep.patch` (`git apply`-verified on ca60b72; tree left at HEAD). BLOCKER for the flip: MSAA sample coverage - canvas edge fragments (`>=` 1 sample, center-extrapolated varyings) are never recorded by the center-rule mask and paint at 1.0; temp `antialias: false` collapses def to 2,020 / gt1 343, and even that floor fails the brief's gt1 = 0 gate. No exact fix exists in this architecture (WebGL2 cannot sample an unresolved MSAA target; expansion/SSAA measured worse). Levi's call: waive the gate for 1-px edge diffs via the brief's contact sheets, or kill the split and keep Stage 1.
-- **K553** · Why K320's split drew no crossing gaps when capability turned it on (K551; D3D11 desktop, live
-  2026-10-18): off, the same build draws them. Undiagnosed; gates K320 2c together with K550. Evidence
-  `.claude/probes/K551/` (`gaps_check.mjs`; shots `out/` before the fix, `out_fix/`, `out_live/`).
 - **K554** · K115 6d: Greek tonos and dialytika (dropped today) and glyphs for U+03AA/03AB/03CA/03CB, or
   Cyrillic (`docs/design/K115_cursive_text.md` C6, 520-526). `docs/design/K115_stage6.md` 6c items 1 and 3 (917-942).
 - **K338** · K324's side ideas (`docs/design/K324_realtime_minotaur.md`):
