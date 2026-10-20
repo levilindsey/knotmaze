@@ -275,14 +275,6 @@ Next free ID: K559.
   - evidence: `.claude/probes/K558/`
   - next: the stage per the brief: pen-time keys on SegIn, the pen-order assignment for text, the reverse param, the checkAlternation exemption; merge after K552 (param order K552 then K558)
   - brief: `docs/design/K558.md`
-- **K553** · Why K320's split drew no crossing gaps when capability turned it on (K551; D3D11 desktop, live
-  2026-10-18): off, the same build draws them. Undiagnosed; gates K320 2c together with K550. Evidence
-  `.claude/probes/K551/` (`gaps_check.mjs`; shots `out/` before the fix, `out_fix/`, `out_live/`).
-  - owner: agent `ab57cd38a8b19fba4` of claude session 91b19e11 (opus, started 2026-10-19 20:02, 2 h cap ~22:02)
-  - branch: `worktree-agent-ab57cd38a8b19fba4`, worktree `.claude/worktrees/agent-ab57cd38a8b19fba4`; last commit: `7d2f943`
-  - evidence: `.claude/probes/K553/`
-  - next: diagnose the capability path's empty gaps on the broken build (f18dd07^), fix if contained, add the guard; then K550's next stage (Levi took the rec, 2026-10-19)
-  - brief: `docs/design/K553.md`
 
 ## Next, in order
 
@@ -1259,6 +1251,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K553** · K320's split drew no gaps off dsf 1: the gap mask was sized in CSS px but read by gl_FragCoord in device px; gap_prepass sizes it in device px (fitGapTarget), guarded by gap_split.test.ts and k553_probe.mjs splitAssert. Done in 60511ed (2026-10-19).
 - **K551** · Crossing gaps gone on every half-float GPU since 2026-10-18 (K320's split turned on by capability and drew no gaps on D3D11): the split stays dark, the warm-up follows the draw flag. Done in f18dd07 (2026-10-19).
 - **K161** · Disk cleanup: profiles and 78 worktrees swept 2026-10-15; the last three worktrees, the empty folder and two dead branches went 2026-10-19 (`.claude/probes/K161/cleanup.log`). Profiles return until K150 lands. Done in this commit (2026-10-19).
 - **K243** · Paused instant intro draws no threads: beginSettle instant branch now draws its first frame. Done in 0f8e277 (2026-10-18).
