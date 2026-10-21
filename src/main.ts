@@ -68,6 +68,7 @@ import { shareText } from "./game/share_text";
 import { parScore } from "./game/par";
 import { catchHeart, heartsToast, livesOf, type HeartLoss } from "./game/lives";
 import { newSword, swordSpot, type SwordAvoid, type SwordPhase } from "./game/sword";
+import type { SwordShown } from "./ui/maze_hud";
 import { rateCuts, rateRun, ratingForResult, walkedOf } from "./game/star_rating";
 import { LossBanner, MazeHud, WinBanner } from "./ui/maze_hud";
 import type { HudSnapshot } from "./ui/maze_hud";
@@ -447,6 +448,12 @@ async function main(): Promise<void> {
   const heartsShown = (): { left: number; of: number } | null => {
     syncHearts();
     return liveMino() && heartsOf > 0 ? { left: heartsLeft, of: heartsOf } : null;
+  };
+  // K137 stage 3b: the sword the HUD, the banner and the hooks show (null:
+  // off, none laid, or no minotaur running).
+  const swordShown = (): SwordShown | null => {
+    const s = liveMino()?.sword ?? null;
+    return s ? { phase: s.phase, left: s.left, slainAt: s.slainAt } : null;
   };
   // K114 CUT: the scissors are armed (the next tap cuts), and a cut tapped
   // while the dot travels, waiting for the move to end (-1: none; the
@@ -1279,6 +1286,7 @@ async function main(): Promise<void> {
       hearts: heartsShown(),
       // K114 walker: Lead's par, Delay's walk and the walk it wanted.
       walker: walkerScoreFn(),
+      sword: swordShown(), // K137 stage 3b
     };
   };
   // The HUD and the mode badge (it re-fits around the HUD's new size).
@@ -1594,6 +1602,11 @@ async function main(): Promise<void> {
         cuts: c.cutOn ? c.cutCount : null, // K114
         hearts: heartsShown()?.left ?? null, // K137 stage 3a
         walker: walkerScore, // K114 walker
+        // K137 stage 3b: the move the sword was taken on (null: never).
+        swordTaken: (() => {
+          const t = liveMino()?.sword?.takenAt ?? -1;
+          return t > 0 ? t : null;
+        })(),
       }),
       url: daily !== null ? dailyUrl(daily) : location.href,
     };
@@ -1634,6 +1647,7 @@ async function main(): Promise<void> {
       cuts: c.cutOn ? c.cutCount : null, // K114
       hearts: heartsShown(), // K137 stage 3a
       walker: walkerScore, // K114 walker
+      sword: swordShown(), // K137 stage 3b
     });
     updateHud();
     throwConfetti();

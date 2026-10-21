@@ -14,6 +14,7 @@ import {
   statRows,
 } from "../../src/ui/maze_hud";
 import type { StatEntry } from "../../src/ui/maze_hud";
+import type { SwordPhase } from "../../src/game/sword";
 
 const BASE = {
   timeMs: 61_000,
@@ -74,7 +75,8 @@ describe("what each figure means (K274)", () => {
   const LOSS = { timeMs: 61_000, walked: 20, closest: 0.44 };
 
   // K137's rule rows (kept out of FULL, whose exact rows are pinned).
-  // K139's collapse row too, K114's cuts and Delay's walker row, and K137 stage 3a's hearts.
+  // K139's collapse row too, K114's cuts and Delay's walker row, and K137 stage 3a's hearts
+  // and stage 3b's sword.
   const RULES = {
     snapped: 3,
     parLeft: { par: 12, left: 4 },
@@ -83,6 +85,7 @@ describe("what each figure means (K274)", () => {
     cuts: 2,
     hearts: { left: 2, of: 3 },
     walker: { mode: "delay" as const, walk: 5, shortest: 3 },
+    sword: { phase: "fleeing" as const, left: 3, slainAt: -1 },
   };
   const shown = (): StatEntry[] => [
     ...statEntries(FULL),
@@ -271,5 +274,33 @@ describe("K137 stage 3a hearts row", () => {
     const ids = win.map((r) => r.id);
     expect(ids.indexOf("hearts")).toBe(ids.indexOf("caught") + 1);
     expect(win.find((r) => r.id === "hearts")?.value).toBe("1 / 3");
+  });
+});
+
+describe("K137 stage 3b sword row", () => {
+  it("reads ready, N left, used or slain on move N, after the hearts, only while laid", () => {
+    const row = (phase: SwordPhase, left = 0, slainAt = -1) =>
+      gameEntries({ catches: 0, hearts: { left: 3, of: 3 }, sword: { phase, left, slainAt } })
+        .map((r) => [r.id, r.label, r.value]);
+    expect(row("ready")).toEqual([
+      ["caught", "caught", "0"],
+      ["hearts", "hearts", "3 / 3"],
+      ["sword", "sword", "ready"],
+    ]);
+    expect(row("fleeing", 3)[2]).toEqual(["sword", "sword", "3 left"]);
+    expect(row("used")[2]).toEqual(["sword", "sword", "used"]);
+    expect(row("slain", 0, 9)[2]).toEqual(["sword", "sword", "slain on move 9"]);
+    expect(gameEntries({ catches: 1, sword: null }).map((r) => r.id)).toEqual(["caught"]);
+    expect(gameEntries({ catches: 1 }).map((r) => r.id)).toEqual(["caught"]);
+  });
+
+  it("shows on the win banner's rows after the catches", () => {
+    const win = statEntries({
+      timeMs: 61_000, path: 12, optimal: 9, efficiency: null, backtrack: null,
+      junctions: 3, deadEnds: null, catches: 0, sword: { phase: "slain", left: 0, slainAt: 7 },
+    });
+    const ids = win.map((r) => r.id);
+    expect(ids.indexOf("sword")).toBe(ids.indexOf("caught") + 1);
+    expect(win.find((r) => r.id === "sword")?.value).toBe("slain on move 7");
   });
 });

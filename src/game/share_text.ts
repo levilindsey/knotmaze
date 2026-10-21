@@ -36,6 +36,9 @@ export interface ShareInfo {
   hearts?: number | null;
   // K114 walker: the walker's score (null or absent: no walker).
   walker?: WalkerScore | null;
+  // K137 stage 3b: the move the sword was taken on (null or absent: the
+  // sword off, none laid, or never taken).
+  swordTaken?: number | null;
 }
 
 // K114 walker: the title line's tag. Lead: "✂️ 4, par 3" (no par part when
@@ -81,12 +84,14 @@ export function shareText(info: ShareInfo): string {
       : "";
   // K137 stage 3a: " · ❤️ N left" while lives are on.
   const hearts = info.hearts != null ? ` · \u2764\uFE0F ${info.hearts} left` : "";
+  // K137 stage 3b: " · ⚔️ on move N", the move the sword was taken on.
+  const sword = info.swordTaken != null ? ` · ⚔️ on move ${info.swordTaken}` : "";
   const eff =
     info.efficiency === null
       ? ""
       : ` · \u{1F3AF} ${efficiencyPercent(info.efficiency)}%`;
   const lines = [
-    `${title} \u{1F9F6}${stars}${mino}${hearts}${snap}${par}${cut}`,
+    `${title} \u{1F9F6}${stars}${mino}${hearts}${sword}${snap}${par}${cut}`,
     `⏱️ ${formatDuration(info.timeMs)}${eff}`,
   ];
   if (info.collapse) lines.push(collapseLine(info.collapse));

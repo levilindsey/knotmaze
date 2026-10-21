@@ -19,6 +19,7 @@ import type { StatId } from "../game/maze_stats";
 import { starExplanation, starLabel } from "../game/star_rating";
 import type { StarRating } from "../game/star_rating";
 import type { WalkerScore } from "../game/walker";
+import type { SwordPhase } from "../game/sword";
 
 export interface HudSnapshot {
   // The stats rows (the showMazeStats setting).
@@ -62,6 +63,22 @@ export interface HudSnapshot {
   // K114 walker (absent elsewhere): Lead's par, Delay's walk and the walk
   // it wanted.
   walker?: WalkerScore | null;
+  // K137 stage 3b (absent elsewhere): the sword, while it is on and laid.
+  sword?: SwordShown | null;
+}
+
+// K137 stage 3b: what the sword row reads (game/sword.ts SwordState).
+export interface SwordShown {
+  phase: SwordPhase;
+  left: number;
+  slainAt: number;
+}
+
+// "ready", "5 left", "used" or "slain on move 9".
+export function swordValue(s: SwordShown): string {
+  if (s.phase === "fleeing") return `${s.left} left`;
+  if (s.phase === "slain") return `slain on move ${s.slainAt}`;
+  return s.phase;
 }
 
 // Distances read x10 as whole numbers, as the HUD always has.
@@ -75,7 +92,7 @@ type StatFields = Pick<
   | "timeMs" | "path" | "optimal" | "efficiency" | "backtrack" | "junctions" | "deadEnds"
   | "catches" | "chasedMs" | "fireLead" | "closestCall" | "closeCalls" | "seen"
   | "restarts" | "snapped" | "parLeft" | "parStrokes" | "collapse" | "cuts"
-  | "hearts" | "walker"
+  | "hearts" | "walker" | "sword"
 >;
 
 // A row (K274): its id names its line in STATS (game/maze_stats.ts), which
@@ -94,7 +111,7 @@ const entry = (id: StatId, value: string): StatEntry => ({ id, label: STATS[id].
 type GameFields = Pick<
   HudSnapshot,
   | "catches" | "fireLead" | "closestCall" | "snapped" | "parLeft" | "parStrokes" | "collapse"
-  | "cuts" | "hearts" | "walker"
+  | "cuts" | "hearts" | "walker" | "sword"
 >;
 // K137 stage 3a: "hearts 2 / 3" while lives are on.
 const heartsValue = (h: { left: number; of: number }): string => `${h.left} / ${h.of}`;
@@ -102,6 +119,7 @@ export function gameEntries(s: GameFields): StatEntry[] {
   const rows: StatEntry[] = [];
   if (s.catches != null) rows.push(entry("caught", String(s.catches)));
   if (s.hearts) rows.push(entry("hearts", heartsValue(s.hearts)));
+  if (s.sword) rows.push(entry("sword", swordValue(s.sword))); // K137 s3b
   if (s.fireLead != null) rows.push(entry("fireLead", fmtDist(s.fireLead)));
   if (s.closestCall != null) rows.push(entry("closestCall", fmtDist(s.closestCall)));
   rows.push(...ruleEntries(s)); // K137
@@ -120,6 +138,7 @@ export function statEntries(s: StatFields): StatEntry[] {
   if (s.deadEnds !== null) rows.push(entry("deadEnds", String(s.deadEnds)));
   if (s.catches != null) rows.push(entry("caught", String(s.catches)));
   if (s.hearts) rows.push(entry("hearts", heartsValue(s.hearts)));
+  if (s.sword) rows.push(entry("sword", swordValue(s.sword))); // K137 s3b
   if (s.closeCalls != null) rows.push(entry("closeCalls", String(s.closeCalls)));
   if (s.seen != null) rows.push(entry("seen", String(s.seen)));
   if (s.chasedMs != null) rows.push(entry("chased", formatDuration(s.chasedMs)));
@@ -452,6 +471,8 @@ export interface WinInfo {
   hearts?: { left: number; of: number } | null;
   // K114 walker: the walker's score (absent or null: no walker).
   walker?: WalkerScore | null;
+  // K137 stage 3b: the sword (absent or null: off, or none laid).
+  sword?: SwordShown | null;
   // Show the daily stats button.
   stats: boolean;
 }
