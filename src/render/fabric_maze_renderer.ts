@@ -52,7 +52,7 @@ import type { MinoFog, PathViz } from "../ui/url_state";
 import { spotCtrl } from "../game/minotaur";
 import type { ChaseGraph, MinotaurMode, Spot } from "../game/minotaur";
 import type { SwordState } from "../game/sword";
-import type { TurnTelegraph } from "../game/minotaur_turns";
+import type { ExtraView, TurnTelegraph } from "../game/minotaur_turns";
 import { firePassed, runBurnAt, type Fire } from "../game/fire";
 import { finishHold, finishLifted } from "../game/explore_finish";
 import { ARRIVAL_BIAS, coveredByDot, pickRun } from "../game/tap_pick";
@@ -81,6 +81,8 @@ export interface MinotaurView {
   readonly sword?: SwordState | null;
   readonly fleeing?: boolean;
   readonly slain?: boolean;
+  // K137 stage 3d: the extra monsters (sleepers, followers; absent: none).
+  readonly extraViews?: readonly ExtraView[];
 }
 import { FogBackdrop } from "./background";
 import { fogArcStations, moveEnds, travelOrder } from "./fog_arc";
@@ -302,6 +304,18 @@ const TICK_POOL: MarkerMesh[] = [];
 // the marker radius.
 const TICK_OFFSET = 1.15;
 const TICK_SCALE = 0.7;
+// K137 stage 3d: the extra monsters' meshes (sleepers, followers), grown on
+// demand and page-lifetime like the ticks. The look (s3d call 4, a stand-in
+// for stage 4): asleep, either kind wears the minotaur's glyph, dimmed and
+// smaller (a follower hides in plain sight); a follower counting down wears
+// the spider's glyph on an amber dot; awake, its kind's glyph on a red dot.
+const EXTRA_POOL: MarkerMesh[] = [];
+const EXTRA_ASLEEP_SCALE = 0.8;
+const EXTRA_ASLEEP_ALPHA = 0.55;
+const EXTRA_WAITING_ALPHA = 0.85;
+const EXTRA_DOT = 1.3; // The colored dot's radius, in marker radii.
+const EXTRA_RED: readonly number[] = [0.86, 0.12, 0.08];
+const EXTRA_AMBER: readonly number[] = [1, 0.68, 0.18];
 // The compass: an arrow COMPASS_DIST marker radii from the head along the
 // good arm's chord to COMPASS_REACH ctrl along it, COMPASS_SIZE radii long.
 const COMPASS_DIST = 1.9;
@@ -686,6 +700,9 @@ export class FabricMazeRenderer {
   // K80: the minotaur (syncMinotaur): its marker over its red highlight,
   // one layer above the other markers, moved above or below the fog.
   private minoLayer: Container;
+  // K137 stage 3d: the extra monsters' markers, just under the minotaur.
+  private extraLayer: Container;
+  private extraMeshes: MarkerMesh[] = [];
   private minoGlow: Sprite;
   // K137 stage 3b: the telegraph's ink, FLEE_BLUE while the minotaur flees.
   private teleInk = TELEGRAPH_COLOR;
@@ -791,7 +808,8 @@ export class FabricMazeRenderer {
       this.markers.minotaur.mesh
     );
     this.minoLayer.visible = false;
-    this.overContainer.addChild(this.minoLayer);
+    this.extraLayer = new Container();
+    this.overContainer.addChild(this.extraLayer, this.minoLayer);
     for (const m of Object.values(this.markers)) m.hide();
     // K408: the meshes outlive the scene; a new one starts with the start
     // marker shown (the fade's first retarget only learns the set).
@@ -1689,6 +1707,7 @@ export class FabricMazeRenderer {
   ): void {
     this.minoShown = false;
     this.syncSword(chase);
+    this.syncExtras(chase, fog);
     // K137 stage 3b: a minotaur slain by the sword is gone for the solve.
     if (!chase || chase.slain) {
       this.minoLayer.visible = false;
@@ -1797,6 +1816,71 @@ export class FabricMazeRenderer {
     this.pointFlowed(at.chain, ctrl, this.scratch, 0);
     mk.setGlyph(markerGlyph(this.markerGlyphIds.sword, "sword"));
     mk.place(this.scratch[0], this.scratch[1], this.markerRadius());
+  }
+
+  // K137 stage 3d: the extra monsters at their spots (the turn clock's
+  // extraViews; real time has none yet), the minotaur slain or not (they
+  // play on). Each waits for the intro and hides where the thread reveal
+  // has not shown its point, like the sword; the layer sits under the fog
+  // sprite unless minoFog is "always" (then over it, as the minotaur; under
+  // "hunting" they stay under: the rule reads the minotaur's hunt).
+  private syncExtras(chase: MinotaurView | null, fog: MinoFog): void {
+    const views = chase?.extraViews ?? [];
+    const over = fog === "always";
+    const r = this.markerRadius();
+    let n = 0;
+    for (const v of views) {
+      if (!chase) break;
+      const at = spotCtrl(this.walk, chase.g, v.spot);
+      const ctrl = this.ctrlMod(at.chain, at.ctrl);
+      if (this.revealQuery && this.revealQuery(at.chain, ctrl) < 0.98) continue;
+      if (!over && this.explore.on && this.ribbons.exploreVisAt(at.chain, ctrl) < 0.98) continue;
+      this.pointFlowed(at.chain, ctrl, this.scratch, 0);
+      const mk = this.extraMesh(n++);
+      const role = v.phase !== "asleep" && v.kind === "follower" ? "spider" : "minotaur";
+      mk.setGlyph(markerGlyph(this.markerGlyphIds[role], role));
+      if (v.phase === "asleep") {
+        mk.clearRing();
+        mk.mesh.alpha = EXTRA_ASLEEP_ALPHA;
+        mk.place(this.scratch[0], this.scratch[1], r * EXTRA_ASLEEP_SCALE);
+      } else {
+        mk.setRingColor(v.phase === "waiting" ? EXTRA_AMBER : EXTRA_RED);
+        mk.mesh.alpha = v.phase === "waiting" ? EXTRA_WAITING_ALPHA : 1;
+        mk.place(this.scratch[0], this.scratch[1], r, r * EXTRA_DOT);
+      }
+    }
+    for (let i = n; i < this.extraMeshes.length; i++) this.extraMeshes[i].hide();
+    this.extraLayer.visible = n > 0;
+    if (n === 0) return;
+    const kids = this.overContainer.children;
+    const li = kids.indexOf(this.extraLayer);
+    const fi = this.fogSprite ? kids.indexOf(this.fogSprite) : -1;
+    if (over && fi > li) {
+      // Over the fog, just under the minotaur's layer.
+      this.overContainer.setChildIndex(this.extraLayer, kids.length - 1);
+      this.overContainer.setChildIndex(this.minoLayer, kids.length - 1);
+    } else if (!over && fi >= 0 && li > fi) {
+      this.overContainer.setChildIndex(this.extraLayer, fi);
+    }
+  }
+
+  // The extras' meshes for this scene, borrowed from EXTRA_POOL.
+  private extraMesh(i: number): MarkerMesh {
+    while (this.extraMeshes.length <= i) {
+      const j = this.extraMeshes.length;
+      const mk = EXTRA_POOL[j] ?? (EXTRA_POOL[j] = new MarkerMesh());
+      this.extraLayer.addChild(mk.mesh);
+      this.extraMeshes.push(mk);
+    }
+    return this.extraMeshes[i];
+  }
+
+  // The extras' markers on screen, for the probes: world x, y and radius.
+  get extraMarkers(): { x: number; y: number; r: number; alpha: number }[] {
+    if (!this.extraLayer.visible) return [];
+    return this.extraMeshes
+      .filter((m) => m.mesh.visible)
+      .map((m) => ({ x: m.mesh.position.x, y: m.mesh.position.y, r: m.mesh.scale.x, alpha: m.mesh.alpha }));
   }
 
   // K80 turns, the telegraph's first look: a red line along each committed
@@ -4061,7 +4145,7 @@ export class FabricMazeRenderer {
   destroy(): void {
     // The marker meshes outlive the scene (markerMeshes): hand them back
     // before the containers go (the minotaur's sits in minoLayer).
-    for (const mk of [...Object.values(this.markers), ...this.ticks]) {
+    for (const mk of [...Object.values(this.markers), ...this.ticks, ...this.extraMeshes]) {
       mk.mesh.removeFromParent();
       mk.hide();
     }
