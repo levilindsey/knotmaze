@@ -553,6 +553,7 @@ highp float gapProtCover(int row, int base, highp vec2 p,
     highp float hh = l2 > 1e-12 ? clamp(dot(pa, ab) / l2, 0.0, 1.0) : 0.0;
     highp vec2 q = pa - ab * hh;
     best = min(best, dot(q, q));
+    a = b;
   }
   return clamp((h - sqrt(best)) / pxW + 0.5, 0.0, 1.0);
 }
