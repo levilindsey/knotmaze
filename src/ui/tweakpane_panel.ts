@@ -1587,7 +1587,7 @@ export function buildPanel(
   );
   // K174: the minotaur's paces as multiples of yours (playerPace). No step
   // (Tweakpane's step grid would snap a link's 0.73, K130); an edit keeps
-  // 2 decimals, so 0.7 x 10 stays exactly the default's 7.
+  // 2 decimals, so 0.9 x 10 stays exactly the default's 9 (K324's re-tune).
   const paceRow = (key: "minoWanderPace" | "minoHuntPace", label: string, tipText: string): RowApi => {
     const r = row(
       fMino, p, key,
