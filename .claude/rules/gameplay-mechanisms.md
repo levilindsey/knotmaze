@@ -555,5 +555,6 @@ gameplay-panel.md's TURNSTILES AND HIDDEN RUNS ROWS. The headers of
   the section colors; after a backtrack the arrival run is the path's
   previous run, so re-entering the run just retraced can be refused; the
   HUD reads "0 / 0 found" when nothing was placed; outside the thread
-  reveal a press-drag may grab a hidden run's particles (`grabAt` reads
-  `ps.nearest`; unverified).
+  reveal a press on a hidden run grabs its particles and tugs the unseen
+  thread instead of panning (by reading: `grabAt` and `onThread` take
+  `ps.nearest`, which knows no gone span; not run in the page).
