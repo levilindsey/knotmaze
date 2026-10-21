@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K667.
+Next free ID: K671.
 
 ## Waiting on Levi
 
@@ -146,6 +146,9 @@ Next free ID: K667.
 - **K664** · K74 s3's trap-zone finish (9ccf360, K637) lengthens greedy games: 3+ catches 23% to
   33%, solve p90 181 to 310 s, 6% of no-minotaur greedy walks unfinished at 900 s; the dailies ship
   it. Wanted? Rec: keep (it is the trap).
+- **K667** · K324 s3's real-time defaults: stalker accuracy 0.45, guard sight 20 / 30 u, guard
+  accuracy 0.4 (the turn clock's: 0.3, 30 / 40, 0.3). Rec: keep; greedy catches then match the
+  hunter's, 2.5-2.7 a game (sim table: `docs/design/K324_s3.md` Handoff).
 
 ## In progress
 
@@ -1220,6 +1223,13 @@ Every other item below waits on the trigger it names.
 - **K665** · K137's fog check after Undo varies run to run: IoU 0.956-0.981 over 8 runs, lowest on
   the phone; the rerun used a 0.95 bar. The guessed cause, K100's live-vs-restore noise, is untested
   (`.claude/probes/K137/rerun/`).
+- **K668** · K324's stalker hunts only while charging: seen and closing in, it reads wander in the
+  HUD and in the plan's `hunting` flag. Follow-up: a distinct stalk state (`src/game/minotaur.ts`).
+- **K669** · K324's guard routes only over runs with both ends in its territory, so it skips a
+  shorter route that leaves and comes back (`src/game/minotaur.ts`).
+- **K670** · K324's page probe (`.claude/probes/K324/k324_page_s3.mjs`, untracked): in the
+  stand-still phase a caught player stands unseen on the entrance, and its hunted-the-walking-player
+  label is wrong.
 
 ## Approved, to schedule (2026-10-11)
 
