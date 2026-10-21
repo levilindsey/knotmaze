@@ -15,8 +15,8 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/ui/mode_badge.ts`, `test/ui/mode_badge.test.ts`
 - `gameplay-indicators.md`: OFF-SCREEN INDICATORS (K73), THE HEAD (K148) and THE TOASTS CLEAR THE CONTROLS (K698)
   paths: `src/ui/offscreen_indicators.ts`, `src/ui/head_indicator.ts`, `test/ui/offscreen_indicators.test.ts`, `test/ui/head_indicator.test.ts`, `src/app/frame_loop.ts`, `src/ui/share.ts`, `src/ui/toast_place.ts`, `test/ui/toast_place.test.ts`
-- `gameplay-minotaur.md`: REAL-TIME MINOTAUR (K80), THE MINOTAUR'S CONTROLS (K174), TURN-ALIGNED MINOTAUR (K80 turns), THE SWORD (K137 stage 3b), SPRINT (K137 stage 3c), SLEEPERS AND THE FOLLOWER (K137 stage 3d)
-  paths: `src/game/minotaur.ts`, `test/game/minotaur.test.ts`, `src/game/minotaur_turns.ts`, `test/game/minotaur_turns.test.ts`, `src/game/sword.ts`, `test/game/sword.test.ts`, `src/game/sprint.ts`, `test/game/sprint.test.ts`, `src/ui/sprint_button.ts`, `src/game/monsters.ts`, `test/game/monsters.test.ts`
+- `gameplay-minotaur.md`: REAL-TIME MINOTAUR (K80), THE MINOTAUR'S CONTROLS (K174), TURN-ALIGNED MINOTAUR (K80 turns), THE SWORD (K137 stage 3b), SPRINT (K137 stage 3c), SLEEPERS AND THE FOLLOWER (K137 stage 3d), LURES AND SNARES (K137 stage 4)
+  paths: `src/game/minotaur.ts`, `test/game/minotaur.test.ts`, `src/game/minotaur_turns.ts`, `test/game/minotaur_turns.test.ts`, `src/game/sword.ts`, `test/game/sword.test.ts`, `src/game/sprint.ts`, `test/game/sprint.test.ts`, `src/ui/sprint_button.ts`, `src/game/monsters.ts`, `test/game/monsters.test.ts`, `src/game/lures.ts`, `test/game/lures.test.ts`, `src/game/snares.ts`, `test/game/snares.test.ts`, `src/ui/tool_buttons.ts`
 - `gameplay-fire.md`: BURN RACE (K114)
   paths: `src/game/fire.ts`, `src/game/fire_clock.ts`,
   `test/game/fire.test.ts`, `test/game/fire_clock.test.ts`

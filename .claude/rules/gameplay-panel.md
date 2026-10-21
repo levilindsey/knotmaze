@@ -236,6 +236,23 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   the two. Restarts the solve.". Params: gameplay-links.md's SLEEPERS
   PARAMS; the rules: gameplay-minotaur.md's SLEEPERS AND THE FOLLOWER.
 
+- LURES AND SNARES ROWS (K137 stage 4, 2026-10-21): "Lures" (`lures`, a
+  0..5 slider, step 1, 0 reads "off") and "Snares" (`snares`, 0..3) sit
+  right after "Sleeper kind" in the Game folder, turn clock only: hidden
+  with the minotaur off or in real time (`!minoOn || realtime`). The
+  snares row still shows by length, where the button hides and a snare is
+  refused (a residual). Both restart the solve (onClockChange), which
+  refills the stocks. Tooltips: "Turn clock: arm the note button (or L),
+  then tap a run to pluck it. The minotaur, and any sleeper in range,
+  hears it and heads for the run's nearer end; it costs no move. Out of
+  range nothing hears it, and the lure is spent anyway. Restarts the
+  solve." and "Turn clock, by runs: arm the loop button (or N), then tap
+  a run touching your junction. The first monster to step onto it stops
+  at the near end and stands there three turns; it still catches you if
+  you walk onto it. One snare a run. Restarts the solve.". Params:
+  gameplay-links.md's LURES AND SNARES PARAMS; the rules:
+  gameplay-minotaur.md's LURES AND SNARES.
+
 - AIDS ROWS (K137 stage 2, 2026-10-21): "Ariadne's spool" (`spool`),
   "Spool slack (x fewest)" (`spoolSlack`, [0.1, 1], no step, K130, an edit
   keeps the 0.05 grid; hidden while the spool is off), "Hints" (`hints`, a
