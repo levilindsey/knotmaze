@@ -132,6 +132,15 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   compiles cold once; SwiftShader compiles all eight
   (`.claude/probes/K397/stage2/`: `dump_variants.ts`,
   `compile_glsl.mjs`, `out/variants/`). No new program site or variant.
+- **The fire in world units grew two** (K409, 2026-10-20;
+  render-explore.md, THE FIRE IN WORLD UNITS): the section's explore
+  variant 62077 -> 62429 characters and `arm-strip-explore` 36698 ->
+  37050 (kCharAt's front shapes and world widths);
+  `junction-field-explore` 35809, `pluck-still-explore` 28826 and the
+  masters (46014, 31049, 26239, 19664) unchanged. The K397 lengths above
+  were already stale at 3a3d937 (changes since went unrecorded). Each
+  changed text compiles cold once; SwiftShader compiles all eight
+  (`.claude/probes/K409/variants/`). No new program site or variant.
 - **The stub's free end changed pluck-blur** (K459, 2026-10-15;
   render-pluck.md, K459): PLUCK_VERT passes `vCap` (the cap coordinate,
   aUV.y) and PLUCK_FRAG narrows the thread over the stub's cap, so

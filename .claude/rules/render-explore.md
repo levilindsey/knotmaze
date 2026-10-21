@@ -601,7 +601,9 @@ through this mode's programs. Brief and record: `docs/design/K114_burn.md`,
   0.75, |vUV.y - 0.5| < EXPLORE_ASH_HALF 0.15). The section program
   recolors rgb only, just before `aM *= ev`, so the crossing gaps cut
   char like thread; the arm strip (`kStripChar`) chars without the ash
-  core. No CPU twin (K152 item 3).
+  core. No CPU twin until K409 (K152 item 3): `paint_math.ts`
+  `kCharAtCpu` mirrors kCharAt (CHAR, FRONT, SMOLDER) line for line,
+  held by `test/render/paint_fire.test.ts` (K410).
 - JOINTS: the gate decides which junctions hide (2b's rule, on the
   reveal's own pieces through `exploreGateVisAt`); the declared pieces,
   which lack the burnt thread, hide a junction only when every arm is gone.
@@ -653,17 +655,22 @@ plus the `burn` FX. Brief and record: `docs/design/K114_burn.md`, "Stage
 - SHADERS: items `EXPLORE_ITEM_FRONT` (7, T0 = (type, c, dir, kind)) and
   `EXPLORE_ITEM_SMOLDER` (8, a span) in the KPAINT item rows, read by
   kCharAt, which sets two globals: `kFireEmber` and `kFireSmolder`. A
-  front darkens the unburnt side under char over FRONT_BAND 0.7 ctrl
-  (meeting the span's own ramp, no seam); the ember peaks at the front,
-  EMBER_AHEAD 0.25 ctrl into the unburnt side and EMBER_BEHIND 0.55 into
-  the burnt one (0xff7a1a at 0.95, a hot core 0xffe08a inside |vUV.y -
-  0.5| < 0.22); smolder is a centerline (0xff3b1f at 0.9, half 0.225).
+  front darkens the unburnt side over FRONT_BAND 0.7 ctrl under BOTH
+  looks (the band lies on unburnt thread, which gone does not cut; this
+  entry said "under char" until K599 corrected it), meeting the span's
+  own ramp (no seam); the ember peaks at the front, EMBER_AHEAD 0.25
+  ctrl into the unburnt side and EMBER_BEHIND 0.55 into the burnt one
+  (0xff7a1a at 0.95, a hot core 0xffe08a inside |vUV.y - 0.5| < 0.22);
+  smolder is a centerline (0xff3b1f at 0.9, half 0.225). K409 moved
+  these widths to world units and the whole ember ahead under gone
+  (THE FIRE IN WORLD UNITS, below).
   `kEmberLook` applies them after kCharLook inside `if (exHere)`, so the
   crossing gaps cut them like thread; the arm strip gets the ember, not
   the smolder line. Static: no fire clock in the shaders; the motion is
-  the FX's. Band widths are in CTRL (about 1.93 ctrl per lattice unit),
-  so short in world terms. K299's ring-lap scan lists the front's
-  nearest-lap floor as a reviewed site.
+  the FX's. 3b's band widths were in CTRL (about 1.93 ctrl per lattice
+  unit), so short in world terms and uneven: 2.68 to 7.02 CSS px a ctrl
+  over daily #12's 29 fronts at the phone's fit (K409). K299's ring-lap
+  scan lists the front's nearest-lap floor as a reviewed site.
 - UNSEEN FRONTS DRAW AS NOTHING (`FIRE_UNSEEN_FRONTS` false; Levi
   accepted): under the reveal the ember scales by the declared
   visibility like char, and `tickFireFx` skips a front whose
@@ -686,7 +693,8 @@ plus the `burn` FX. Brief and record: `docs/design/K114_burn.md`, "Stage
   kind-0 fronts at c 12 and 20 where the CPU points put them
   (`ember_dbg2.mjs`, `ember_dbg3.mjs`, seed 7). Under char, a glowing
   band at the char's end in normal colors; under gone, the ember's
-  behind part lies on gone thread, so only a rim at the cut end shows.
+  behind part lies on gone thread, so only a rim at the cut end shows
+  (K409 draws the whole ember ahead of the cut under gone, below).
   The lit fuse used the world sum (marker radius + thread width) as a
   run's LATTICE distance (a lattice unit is about 0.65 world at seed 7's
   entrance), so its ember centered at 731 px against the disc's rim at
@@ -715,6 +723,48 @@ plus the `burn` FX. Brief and record: `docs/design/K114_burn.md`, "Stage
   0.04-0.1); at 4x 0.85-0.89 and 0.8-0.9 (master 0.26-0.29 and 0.2-0.4).
   Desktop contact sheet (the lit fuse, early, mid and late; gone and
   char; the reveal off and on): `.claude/probes/K290/stage3b/out/sheet/`.
+
+## THE FIRE IN WORLD UNITS (K409, 2026-10-20)
+
+Levi's calls (brief and handoff `docs/design/K409.md`): the band and the
+ember get fixed WORLD widths matched to today's median, under both looks;
+under gone the whole ember goes on the unburnt side; the band stays under
+gone (K599); the ember draws over the smoke (not built, below).
+
+- WIDTHS. A ctrl is 2.68 / 4.84 / 7.02 CSS px (min / median / max) over
+  daily #12's 29 fronts at the phone's fit (8.8233 CSS px per world), so
+  EXPLORE_WORLD_PER_CTRL = 4.84 / 8.8233 = 0.5485 and FRONT_BAND 0.384,
+  EMBER_AHEAD 0.137, EMBER_BEHIND 0.302 world (3b's 0.7, 0.25, 0.55 ctrl
+  at the median). kCharAt measures `w` with kArcU (the world arc it
+  already had); the band's ramp in at the front stays EXPLORE_CHAR_EDGE
+  0.08 ctrl, so it still meets the span's own ramp without a seam.
+- SHAPES, T0.w (`frontShape`): EXPLORE_FRONT_CHAR 0 (band, two-sided
+  ember), EXPLORE_FRONT_FUSE 1 (the lit fuse: two-sided ember, no band,
+  under both looks, as 3b drew it; nothing behind it has burnt) and
+  EXPLORE_FRONT_GONE 2 (band, the ember over AHEAD + BEHIND 0.439 world
+  ahead of the cut; its behind falloff is kept and lies on gone thread).
+  The renderer picks gone by `exploreBurn.char === null`.
+- COVERAGE. A front's slot references span `frontRange`: each world width
+  times 2 / the chain's smallest world length of a ctrl (writePaintItems'
+  `minArcPerCtrl`, the cap items' margin of 2), + 0.05 ctrl.
+- CPU TWIN (K410): `paint_math.ts` `kCharAtCpu` mirrors kCharAt line for
+  line (CHAR, FRONT, SMOLDER; the arc table summed in f64 and stored f32,
+  as KGEOM is); `test/render/paint_fire.test.ts` holds the parity, the
+  shapes and the coverage.
+- VARIANTS. Section explore 62077 -> 62429 characters and
+  `arm-strip-explore` 36698 -> 37050; the others unchanged
+  (`render-shaders.md`).
+- NOT BUILT: the ember over the smoke. The cheapest correct route found:
+  an overlay Mesh per chain with fronts, sharing the RibbonMesh's
+  attribute buffers with its own index buffer (the quads near each
+  front), drawn with a second Shader over the same explore GlProgram and
+  a uniform pass mode (0 today; 1 the base pass skips the ember; 2 the
+  overlay draws only the ember, premultiplied, discarding where
+  kFireEmber is 0), placed in the fabric's overContainer just above the
+  burn FX and under the start marker, and bound in bindGap. No new
+  program text past the mode branch, so one cold compile. Residuals to
+  check: the AA edge fringe where the two passes meet, and fans near
+  junctions (the overlay covers ribbons only).
 
 ## THE DOTS (K397 stage 2, 2026-10-15)
 
