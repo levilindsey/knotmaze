@@ -143,10 +143,15 @@ import type { CutMode, CutResult, FabricAction } from "./cut";
 import { carryChain, cutVerdict, distancesToExit } from "./cut";
 import { hintsOf, liveDistances, nextGoodArm } from "./hints";
 import { spoolCapacity, spoolRefuses, spoolShareUsed } from "./spool";
+import type { ColorRuleMode } from "./color_rule";
+import { colorRule, placeColors } from "./color_rule";
+import { ICE_SHARE_MAX, iceRule, placeIce } from "./ice";
+import type { RuleMove, RuleSearch, WalkRule } from "./rule_search";
+import { composeRules, ruleSearch } from "./rule_search";
 
 // K137: the solve's rules beyond the clock: fragile runs and par (K139:
-// and collapse; K114: cut). Change them only with a reset() after (main.ts
-// restarts the solve).
+// and collapse; K114: cut; K138: ice runs and the color rule). Change them
+// only with a reset() after (main.ts restarts the solve).
 export interface FabricRules {
   fragile?: FragileMode;
   parMode?: ParMode;
@@ -157,6 +162,38 @@ export interface FabricRules {
   // hints a solve (0 = none).
   spool?: number | null;
   hints?: number;
+  // K138: the share of core runs that are icy (0: off), and the color rule.
+  ice?: number;
+  colorRule?: ColorRuleMode;
+}
+
+// K138: what the rules' placement reads beyond the walk: the design's seed
+// and the walker map's continuation table (a thunk: built on first use).
+export interface RuleSource {
+  seed: number;
+  cont: () => Int32Array;
+}
+
+// K138: one placement of the rules on this walk (per ice share and color
+// mode). `placed`: every rule on found a solvable layout (else the HUD says
+// so and the rule that did place plays alone); `bites`: the layout changes
+// the best route.
+export interface RuleLook {
+  icy: Uint8Array | null;
+  colors: Int8Array | null;
+  mode: ColorRuleMode;
+  placed: boolean;
+  bites: boolean;
+  draws: number;
+}
+
+interface RulePlacement extends RuleLook {
+  key: string;
+  rule: WalkRule | null;
+  // Memos: the kit's fewest taps per search node, and the search from the
+  // start (per backtracks flag).
+  fwd: Map<string, number>;
+  start: Map<boolean, RuleSearch>;
 }
 
 export type FabricTapResult =
@@ -166,7 +203,8 @@ export type FabricTapResult =
   | "noop" // after solving (or a K114 burn-race loss, K137 stranded or out of strokes)
   | "win" // advanced onto the exit tail (K139 free collapse: the move that ended the game)
   | "smolder" // K114: refused, the fire reaches the arm's far end first
-  | "spool"; // K137 s2: refused, the move would pay yarn out past the spool
+  | "spool" // K137 s2: refused, the move would pay yarn out past the spool
+  | "refused"; // K138: a rule refuses the run (the color rule, or a slide that breaks it); nothing changes
 
 export class FabricMazeController {
   readonly walk: WalkGraph;
@@ -277,16 +315,38 @@ export class FabricMazeController {
   hintsUsed = 0;
   chalk = new Set<string>();
 
+  // K138 rules (ice runs and the color rule; rule_search.ts is the kit):
+  // the settings (setRules decides; change them only with a reset() after),
+  // the placement source, the placements made (per setting; the walk never
+  // changes), the one in play and its rule (null: no rule), the rule's
+  // state, and per forward move the path length and the state before it (a
+  // backtrack undoes the whole move).
+  iceShare = 0;
+  colorMode: ColorRuleMode = "off";
+  private ruleSource: RuleSource | null;
+  private placements = new Map<string, RulePlacement>();
+  private placement: RulePlacement | null = null;
+  rule: WalkRule | null = null;
+  ruleState = 0;
+  private moveStarts: number[] = [];
+  private stateStack: number[] = [];
+  // The kit's runs left: while a move carries on, the value at its end;
+  // otherwise memoized per tap count.
+  private pendingLeft = Infinity;
+  private leftMemo = { taps: -1, trail: false, value: Infinity };
+
   constructor(
     walk: WalkGraph,
     trailMode = false,
     fire: Fire | null = null,
-    rules: FabricRules = {}
+    rules: FabricRules = {},
+    ruleSource: RuleSource | null = null
   ) {
     this.walk = walk;
     this.trailMode = trailMode;
     this.fire = fire;
     this.distToExit = walk.distToExit;
+    this.ruleSource = ruleSource;
     this.setRules(rules);
     this.reset();
   }
@@ -314,6 +374,18 @@ export class FabricMazeController {
     // K137 s2: the hints a solve; none in the walker's modes (it walks).
     const walker = this.cutMode === "lead" || this.cutMode === "delay";
     this.hintsMax = walker ? 0 : hintsOf(rules.hints ?? 0);
+    // K138: the rules only with collapse, fragile, the cut, the fire and the
+    // spool off (par composes: its F and strict's runs left come from the
+    // kit; a hint and the compass point along the kit's route).
+    const ruled =
+      !collapsing &&
+      this.fragile === "off" &&
+      this.cutMode === "off" &&
+      !this.fire &&
+      this.spoolSlack === null;
+    const share = rules.ice ?? 0;
+    this.iceShare = ruled && share > 0 ? Math.min(ICE_SHARE_MAX, share) : 0;
+    this.colorMode = ruled ? rules.colorRule ?? "off" : "off";
   }
 
   // K137 s2: a real restart (not Undo's replay) clears the hints used and
@@ -361,6 +433,7 @@ export class FabricMazeController {
   // the exit) and the spool (a refused arm can still be the good one).
   goodArm(): number {
     if (this.choices().length === 0) return -1;
+    if (this.rule) return this.ruleGoodArm();
     const fire = this.fire;
     const L = fire ? this.fireL : 0;
     const gone = this.breakable || this.cuts.size > 0;
@@ -380,6 +453,156 @@ export class FabricMazeController {
     return true;
   }
 
+  // K138: the placement for the current settings (null: no rule on, or no
+  // source), made once per setting.
+  private placeRules(): RulePlacement | null {
+    const src = this.ruleSource;
+    if (!src || (this.iceShare === 0 && this.colorMode === "off")) return null;
+    const key = `${this.iceShare}|${this.colorMode}`;
+    const made = this.placements.get(key);
+    if (made) return made;
+    const cont = this.iceShare > 0 ? src.cont() : null;
+    const ice = cont ? placeIce(this.walk, cont, this.iceShare, src.seed) : null;
+    const icy = ice?.layout ?? null;
+    const col =
+      this.colorMode === "off"
+        ? null
+        : placeColors(this.walk, this.colorMode, src.seed, cont && icy ? { cont, icy } : null);
+    const rules: WalkRule[] = [];
+    if (cont && icy) rules.push(iceRule(this.walk, cont, icy));
+    if (col?.layout) rules.push(colorRule(this.walk, this.colorMode, col.layout));
+    const p: RulePlacement = {
+      key,
+      icy,
+      colors: col?.layout ?? null,
+      mode: this.colorMode,
+      placed: (!ice || ice.layout !== null) && (!col || col.layout !== null),
+      bites: col ? col.bites : ice?.bites ?? false,
+      draws: Math.max(ice?.draws ?? 0, col?.draws ?? 0),
+      rule: rules.length === 0 ? null : rules.length === 1 ? rules[0] : composeRules(...rules),
+      fwd: new Map(),
+      start: new Map(),
+    };
+    this.placements.set(key, p);
+    return p;
+  }
+
+  // K138: is a rule in play (ice or the color rule, with a layout)?
+  get rulesOn(): boolean {
+    return this.rule !== null;
+  }
+
+  // K138: the rules' layout for the looks and the HUD (null: none on).
+  get ruleLook(): RuleLook | null {
+    return this.placement;
+  }
+
+  // K138: names the layout in play ("" none): a new value = the run colors
+  // change (main.ts recolors).
+  get ruleKey(): string {
+    return this.placement?.key ?? "";
+  }
+
+  // K138: the color rule's state, the last color walked + 1 (0: none yet).
+  // The ice rule has one state, so the composed state is the color's.
+  get colorState(): number {
+    return this.placement?.colors ? this.ruleState : 0;
+  }
+
+  // K138: Undo replays the actions (replayActions) with the cut or a rule
+  // on: a move may carry on along several runs.
+  get replaysActions(): boolean {
+    return this.cutOn || this.rule !== null;
+  }
+
+  // K138: the kit's fewest taps to the exit from a search node (memoized
+  // per placement).
+  private ruleFwd(vertex: string, state: number, last: number, back: boolean): number {
+    const p = this.placement!;
+    const key = `${vertex}|${state}|${last}|${back ? 1 : 0}`;
+    let v = p.fwd.get(key);
+    if (v === undefined) {
+      v = ruleSearch(this.walk, p.rule!, { vertex, state, last }, back).fewest;
+      p.fwd.set(key, v);
+    }
+    return v;
+  }
+
+  // K138: the kit's search from the start (memoized per placement).
+  private ruleStart(): RuleSearch {
+    const p = this.placement!;
+    const back = !this.trailMode;
+    let s = p.start.get(back);
+    if (!s) {
+      s = ruleSearch(this.walk, p.rule!, undefined, back);
+      p.start.set(back, s);
+    }
+    return s;
+  }
+
+  // K138: the fewest taps to the exit from a node with `undoable` earlier
+  // moves on the stack: k backtracks (each undoes a whole move), then
+  // forward taps only (an optimal walk never undoes a move of its own).
+  // Trail mode has no backtracks.
+  private ruleLeftFrom(vertex: string, state: number, last: number, undoable: number): number {
+    const back = !this.trailMode;
+    let best = this.ruleFwd(vertex, state, last, back);
+    if (!back) return best;
+    for (let k = 1, i = undoable; i > 0 && k < best; k++) {
+      i--;
+      const d = this.moveStarts[i];
+      const f = this.ruleFwd(
+        this.pathVertices[d],
+        this.stateStack[i],
+        d > 0 ? this.pathEdges[d - 1] : -1,
+        back
+      );
+      if (k + f < best) best = k + f;
+    }
+    return best;
+  }
+
+  // K138: the kit's runs left from the head (see runsLeft).
+  private ruleRunsLeft(): number {
+    if (this.carry.length > 0) return this.pendingLeft;
+    const m = this.leftMemo;
+    if (m.taps === this.taps.length && m.trail === this.trailMode) return m.value;
+    const value = this.ruleLeftFrom(this.head, this.ruleState, this.arrivalEdge, this.moveStarts.length);
+    this.leftMemo = { taps: this.taps.length, trail: this.trailMode, value };
+    return value;
+  }
+
+  // K138: a hint's and the compass's arm under a rule: the backtrack when
+  // undoing the last move leads to fewer taps, else the first tap of the
+  // kit's best route on (-1: no legal route left).
+  private ruleGoodArm(): number {
+    const back = !this.trailMode;
+    const last = this.arrivalEdge;
+    const fwd = this.ruleFwd(this.head, this.ruleState, last, back);
+    if (back && this.moveStarts.length > 0 && this.ruleRunsLeft() < fwd) return last;
+    if (!Number.isFinite(fwd)) return -1;
+    const from = { vertex: this.head, state: this.ruleState, last };
+    return ruleSearch(this.walk, this.rule!, from, back).route[0] ?? -1;
+  }
+
+  // K138: the runs out of the head the rule refuses (the backtrack run is
+  // never refused; nothing while a move carries on).
+  refusedChoices(): number[] {
+    const rule = this.rule;
+    if (!rule || this.carry.length > 0 || this.solved || this.parLost) return [];
+    const head = this.head;
+    const back = this.trailMode ? -1 : this.arrivalEdge;
+    return this.walk.vertices
+      .get(head)!
+      .edges.filter((eid) => eid !== back && rule.step(head, eid, this.ruleState) === null);
+  }
+
+  // K138: the shortest walk to the exit the rules allow (with no rule the
+  // walk's own optimal length), for the stars and the efficiency.
+  get optimal(): number {
+    return this.rule ? this.ruleStart().shortest : this.walk.optimalLength;
+  }
+
   reset(): void {
     this.breakLimits =
       this.collapse !== "off" ? collapseLimits(this.walk) : fragileLimits(this.walk, this.fragile);
@@ -388,8 +611,19 @@ export class FabricMazeController {
     this.stranded = false;
     this.justBroke = -1;
     this.collapsedUnits = 0;
+    // K138: the rule in play (a placement made once per setting).
+    this.placement = this.placeRules();
+    this.rule = this.placement?.rule ?? null;
+    this.ruleState = this.rule?.start ?? 0;
+    this.moveStarts = [];
+    this.stateStack = [];
+    this.pendingLeft = Infinity;
+    this.leftMemo = { taps: -1, trail: false, value: Infinity };
     this.openRuns ??= runsToExit(this.walk);
-    this.fewestRuns = this.openRuns.get(this.walk.start) ?? Infinity;
+    // K138: under a rule, par's F is the kit's fewest legal taps.
+    this.fewestRuns = this.rule
+      ? this.ruleStart().fewest
+      : this.openRuns.get(this.walk.start) ?? Infinity;
     this.par = parFor(this.fewestRuns, this.parSlack);
     // K137 s2: the spool holds par's measure times (1 + slack).
     this.spoolCap =
@@ -429,7 +663,7 @@ export class FabricMazeController {
       // "noop", so no saved list holds one; a replay of a stranded game's
       // taps ends stranded.
       const r = Number.isInteger(eid) ? this.tapEdge(eid) : "reject";
-      if (r === "reject" || r === "noop" || r === "smolder" || r === "spool") {
+      if (r === "reject" || r === "noop" || r === "smolder" || r === "spool" || r === "refused") {
         this.reset();
         return false;
       }
@@ -449,7 +683,7 @@ export class FabricMazeController {
     };
     const step = (eid: number): boolean => {
       const r = Number.isInteger(eid) ? this.tapEdge(eid) : "reject";
-      return r !== "reject" && r !== "noop" && r !== "smolder" && r !== "spool";
+      return r !== "reject" && r !== "noop" && r !== "smolder" && r !== "spool" && r !== "refused";
     };
     for (const a of actions) {
       if (a.kind === "cut") {
@@ -528,6 +762,13 @@ export class FabricMazeController {
     // K137: the breaks stay; the strand and the par are judged anew from
     // the start.
     this.justBroke = -1;
+    // K138: a rule starts over too (no minotaur plays under one today).
+    if (this.rule) {
+      this.ruleState = this.rule.start;
+      this.moveStarts = [];
+      this.stateStack = [];
+      this.carry = [];
+    }
     this.judge();
   }
 
@@ -584,6 +825,14 @@ export class FabricMazeController {
     let edges = this.walk.vertices.get(this.head)!.edges;
     // K137: never a broken run (K114: nor a cut one).
     if (this.breakable || this.cuts.size > 0) edges = edges.filter((eid) => !this.broken(eid));
+    // K138: never a run the rule refuses (refusedChoices lists them; the
+    // backtrack run stays, and a carried move's next run is the carry's).
+    const rule = this.rule;
+    if (rule && this.carry.length === 0) {
+      const head = this.head;
+      const back = this.trailMode ? -1 : this.arrivalEdge;
+      edges = edges.filter((eid) => eid === back || rule.step(head, eid, this.ruleState) !== null);
+    }
     const fire = this.fire;
     if (!fire) return edges;
     const L = this.fireL;
@@ -665,19 +914,22 @@ export class FabricMazeController {
   }
 
   // K137: the fewest unbroken runs from the head to the exit (Infinity:
-  // stranded).
+  // stranded). K138: under a rule, the kit's fewest legal taps (a backtrack
+  // counts one tap and undoes a whole move).
   get runsLeft(): number {
+    if (this.rule) return this.ruleRunsLeft();
     if (!this.breakable && this.cuts.size === 0) return this.openRuns!.get(this.head) ?? Infinity;
     return runsToExit(this.walk, (eid) => this.broken(eid)).get(this.head) ?? Infinity;
   }
 
   // K137 par: the strokes so far (moves) and the strokes left before par.
+  // K138: under a rule a stroke is a tap (an action): a slide is one.
   get strokes(): number {
-    return this.taps.length;
+    return this.rule ? this.actions.length : this.taps.length;
   }
 
   get strokesLeft(): number {
-    return this.par - this.taps.length;
+    return this.par - this.strokes;
   }
 
   tapEdge(edgeId: number): FabricTapResult {
@@ -700,15 +952,32 @@ export class FabricMazeController {
       this.pathEdges.length > 0 &&
       edgeId === this.pathEdges[this.pathEdges.length - 1]
     ) {
+      // K138: a fresh backtrack under a rule undoes the whole move: the
+      // state comes back, and the move's other runs wait in the carry,
+      // newest first (each the path's top in turn).
+      let undo: number[] | null = null;
+      if (this.rule && !carrying && this.moveStarts.length > 0) {
+        const d = this.moveStarts.pop()!;
+        this.ruleState = this.stateStack.pop()!;
+        undo = this.pathEdges.slice(d, -1).reverse();
+        this.pendingLeft = this.ruleLeftFrom(
+          this.pathVertices[d],
+          this.ruleState,
+          d > 0 ? this.pathEdges[d - 1] : -1,
+          this.moveStarts.length
+        );
+      }
       this.pathEdges.pop();
       this.pathVertices.pop();
       if (!this.isTitleEdge(edgeId)) {
         this.backtrackDist += e.length;
         this.walkedDist += e.length;
-        this.moveLog.push("b");
+        // K138: under a rule one entry per tap (a whole undo is one "b").
+        if (!this.rule || !carrying) this.moveLog.push("b");
       }
       this.taps.push(edgeId);
       this.logMove(head, edgeId, carrying);
+      if (undo) this.carry = undo;
       this.cross(edgeId);
       this.fireArrive(head, depart, e.length, this.head);
       this.judge();
@@ -719,13 +988,37 @@ export class FabricMazeController {
     // changing nothing (a retrace above reels in, so the limit never traps).
     if (spoolRefuses(this.pathEdges.length, this.spoolCap)) return "spool";
 
+    // K138: a fresh tap under a rule asks the rule first: a refusal changes
+    // nothing; otherwise the rest of the move (ice's slide) waits in the
+    // carry, and the move logs one entry, good when the kit's fewest taps
+    // from its end are one fewer than from its start.
+    let move: RuleMove | null = null;
+    let good = false;
+    if (this.rule && !carrying) {
+      move = this.rule.step(head, edgeId, this.ruleState);
+      if (!move) return "refused";
+      const before = this.ruleRunsLeft();
+      const fwd = this.ruleFwd(move.to, move.state, move.runs[move.runs.length - 1], !this.trailMode);
+      // The new move's own undo leads back to `before`.
+      const after = this.trailMode ? fwd : Math.min(fwd, 1 + before);
+      good = Number.isFinite(after) && after === before - 1;
+      this.pendingLeft = after;
+    }
+
     // A self-loop run returns to the same vertex; everything else crosses.
     const far = e.va === head ? e.vb : e.va;
     if (!this.isTitleEdge(edgeId)) {
-      this.moveLog.push(this.onShortestRoute(head, e.length, far) ? "g" : "d");
+      if (!this.rule) this.moveLog.push(this.onShortestRoute(head, e.length, far) ? "g" : "d");
+      else if (move) this.moveLog.push(good ? "g" : "d");
     }
     this.taps.push(edgeId);
     this.logMove(head, edgeId, carrying);
+    if (move) {
+      this.moveStarts.push(this.pathEdges.length);
+      this.stateStack.push(this.ruleState);
+      this.ruleState = move.state;
+      this.carry = move.runs.slice(1);
+    }
     this.cross(edgeId);
     if (!this.isTitleEdge(edgeId)) this.walkedDist += e.length;
     this.pathEdges.push(edgeId);
@@ -804,9 +1097,11 @@ export class FabricMazeController {
     }
     const strict = this.parMode === "strict";
     if (!this.breakable && !strict) return;
+    // K138: a move under a rule is judged once its carry is walked.
+    if (this.rule && this.carry.length > 0) return;
     const left = this.runsLeft;
     if (this.breakable) this.stranded = !Number.isFinite(left);
-    if (strict && strictLost(left, this.par, this.taps.length)) this.parLost = true;
+    if (strict && strictLost(left, this.par, this.strokes)) this.parLost = true;
   }
 
   // K114: an arrival's margin lowers the closest call; no safe arm left
