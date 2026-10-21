@@ -92,7 +92,7 @@ describe("links", () => {
       backgroundBase: "#151b28", backgroundAccent1: "#7ab8cd",
       backgroundAccent2: "#cdb17a", backgroundAccent3: "#aa7acd",
       settleBudget: 12, loadSettle: 0.45, physicsWorker: true,
-      clock: "turn", playerPace: 10, minoWanderPace: 0.5, minoHuntPace: 0.7,
+      clock: "turn", playerPace: 10, minoWanderPace: 0.5, minoHuntPace: 0.9,
       minoPaceJitter: 0.2, minoPauseChance: 0.3, minoPauseMin: 0.5,
       minoPauseMax: 2, minoDetect: 15, minoLose: 25, minoCatch: 1,
       gameMode: "classic",
@@ -516,14 +516,15 @@ describe("links", () => {
   });
 
   // K174: the minotaur's paces are fractions of the player's, taken in
-  // chaseParamsOf; the defaults' products are exactly the K80 paces.
+  // chaseParamsOf; the defaults' products are exact (5 and 9 since K324's
+  // re-tune raised the hunt fraction to 0.9).
   it("reads the minotaur's paces as fractions of the player's", () => {
     const d = chaseParamsOf(PARAM_DEFAULTS);
     expect(d.wanderPace).toBe(5);
-    expect(d.approachPace).toBe(7);
+    expect(d.approachPace).toBe(9);
     const fast = chaseParamsOf(parseParams("?7&plp=20"));
     expect(fast.wanderPace).toBe(10);
-    expect(fast.approachPace).toBe(14);
+    expect(fast.approachPace).toBe(18);
     expect(chaseParamsOf(parseParams("?7&mpl=0")).roamPull).toBe(0);
     expect(chaseParamsOf(parseParams("?7&mpl=0.5")).roamPull).toBe(DEFAULT_CHASE_PARAMS.roamPull);
     expect(chaseParamsOf(parseParams("?7&mpl=1")).roamPull).toBe(1);

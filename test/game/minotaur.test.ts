@@ -434,17 +434,17 @@ describe("K174: the minotaur's controls", () => {
   // / hunts / catches / digest of every tick. On hCutShare 0 mazes these
   // equalled master's chase before K174 (d644ec5); K80 turns stage 2
   // re-froze them on today's H1 mazes. K324 stage 1 re-froze them at its
-  // defaults (junction stops, the next leg picked on arrival): no longer
-  // K80's chase, even at zero stops, since a rest cut short by spotting or
-  // a catch throws away the leg it picked on arrival, three draws K80 never
-  // made.
+  // defaults (junction stops, the next leg picked on arrival, the hunt pace
+  // 0.9 of yours): no longer K80's chase, even at zero stops, since a rest
+  // cut short by spotting or a catch throws away the leg it picked on
+  // arrival, three draws K80 never made.
   const K80_DIGESTS = [
-    "14400/6/5/aa55b7ed",
-    "14400/8/8/9a98f791",
-    "14400/5/4/9e4b7393",
-    "13302/6/5/576b5a06",
-    "14400/5/4/93e7348a",
-    "14400/11/7/53cdb3e3",
+    "14400/6/5/2ce89fe1",
+    "14400/8/8/58e5eae2",
+    "14400/6/6/765d50cf",
+    "14400/5/5/221be723",
+    "14400/8/7/bdcdf70e",
+    "14400/6/6/c8734925",
   ];
 
   it("the chase at roamPull 0 is pinned tick for tick", () => {
@@ -494,8 +494,8 @@ describe("K174: the minotaur's controls", () => {
 
   it("the paces are fractions of the player's, exactly", () => {
     expect(WANDER_PACE_FRACTION * DEFAULT_CHASE_PARAMS.playerPace).toBe(5);
-    expect(HUNT_PACE_FRACTION * DEFAULT_CHASE_PARAMS.playerPace).toBe(7);
+    expect(HUNT_PACE_FRACTION * DEFAULT_CHASE_PARAMS.playerPace).toBe(9);
     expect(DEFAULT_CHASE_PARAMS.wanderPace).toBe(5);
-    expect(DEFAULT_CHASE_PARAMS.approachPace).toBe(7);
+    expect(DEFAULT_CHASE_PARAMS.approachPace).toBe(9);
   });
 });

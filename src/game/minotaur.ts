@@ -143,23 +143,26 @@ export interface ChasePlan {
 }
 
 // K174: the minotaur's paces as fractions of the player's (Levi: "0.7 of
-// your speed"). Links and the panel carry the fractions (minoWanderPace,
-// minoHuntPace); ChaseParams carries their products with playerPace, so
-// one playerPace edit scales the whole chase. 0.5 x 10 and 0.7 x 10 are
-// exactly 5 and 7 in doubles (url_codec.test.ts checks it).
+// your speed"; 0.9 since K324's re-tune, below). Links and the panel carry
+// the fractions (minoWanderPace, minoHuntPace); ChaseParams carries their
+// products with playerPace, so one playerPace edit scales the whole chase.
+// 0.5 x 10 and 0.9 x 10 are exactly 5 and 9 in doubles (url_codec.test.ts
+// checks it).
 export const WANDER_PACE_FRACTION = 0.5;
-export const HUNT_PACE_FRACTION = 0.7;
+export const HUNT_PACE_FRACTION = 0.9;
 const PLAYER_PACE = 10;
 
 // The defaults come from a headless simulation (2026-10-13, 288 default
 // mazes, scripted greedy and fleeing players; the table and how to rerun it
-// are in .claude/rules/gameplay-minotaur.md, REAL-TIME MINOTAUR). approachPace 7 =
-// 0.7 x playerPace: a player who keeps moving away outruns a hunt.
+// are in .claude/rules/gameplay-minotaur.md, REAL-TIME MINOTAUR).
 // roamPull 0.5 (K174, the same simulation): a greedy player meets it in 63%
 // of games instead of 56%, at 1.68 catches a game (median 1), 74% of games
 // with 0 to 2; pull 1 adds only 3 points of meetings for 0.26 catches more.
 // The junction stops (K324, Levi's calls q1-q2): 0.2-0.6 s while it roams,
-// half that while it hunts (gameplay-minotaur.md has the re-tune).
+// half that while it hunts. They slow its hunt, so K324 raised the hunt pace
+// from 0.7 to 0.9 of yours to keep today's catch rates (question 3; the
+// table is gameplay-minotaur.md's K324 entry). A player who keeps moving
+// away still outruns a hunt between its stops.
 // url_state.ts PARAM_DEFAULTS reads these, so a retune edits only them (and
 // moves every link that leaves them out).
 export const DEFAULT_CHASE_PARAMS: Readonly<ChaseParams> = Object.freeze({
