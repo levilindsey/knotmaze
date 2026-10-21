@@ -9,13 +9,16 @@ import type { Glyph } from "../../src/core/glyphs/glyph_types";
 
 /**
  * Known failures: glyph -> the rules it is allowed to break (and only
- * those). The a's o-kind J is a same-way tangent fork: its connector-in and
- * oval-out arms leave J together (1 degree; the thorn on the stills), and
- * at xh 2 the connector's arch runs 0.56 LU from the oval's shoulder. Both
- * wait on Levi's call (docs/design/K115_stage9.md, Handoff).
+ * those). K580: the a's o-kind J is a TANGENT join (its connector-in and
+ * oval-out arms leave J together and draw as one tapered root), so the fork
+ * and crotch-clearance rules give way to the taper checks. At xh 2 the
+ * root's outline leaves the strokes' ribbons by 0.022 LU at its part point
+ * R (a tooth with a 31 degree kink); at xh 3 it stays inside (0.0001).
+ * Fix: part the root where the strokes' NEAREST gap reaches the thread
+ * width (the medial axis), not at the equal-arc pair (docs/design/K580.md).
  */
 const KNOWN: Record<string, Record<number, string[]>> = {
-  a: { 2: ["fork-angle", "clearance"], 3: ["fork-angle"] },
+  a: { 2: ["taper-g1"] },
 };
 
 const rulesOf = (g: Glyph, xh: number): string[] => lintGlyph(g, xh).errors.map((e) => e.rule);
@@ -65,7 +68,34 @@ describe("glyph lint: the authored set", () => {
       const j = r.forks.find((f) => f.junction === 6 && f.cos > 0)!;
       expect(j.cos).toBeLessThan(LINT.forkMinCos);
       expect(j.dClearLU).toBeLessThanOrEqual(LINT.forkMaxLU);
+      // No tangent spur, so no taper and no waived rule.
+      expect(r.tapers).toEqual([]);
     }
+  });
+
+  it("K580: the tangent a's root parts, tapers monotonically from double width and closes its crotch in time", () => {
+    for (const xh of [2, 3]) {
+      const r = lintGlyph(GLYPHS.get("a")!, xh);
+      expect(r.tapers.map((t) => t.junction), `xh ${xh}`).toEqual([6]);
+      const t = r.tapers[0];
+      expect(t.monotone).toBe(true);
+      // The root leaves R at the strokes' combined width: sep = the thread width.
+      expect(t.mR).toBeCloseTo(2, 6);
+      expect(t.aRLU).toBeGreaterThan(0);
+      expect(t.partLU).toBeGreaterThanOrEqual(t.aRLU);
+      expect(t.clearLU - t.aRLU).toBeLessThanOrEqual(LINT.forkMaxLU);
+      // The waived rules stay waived: the crotch is the taper's to judge.
+      const rules = r.errors.map((e) => e.rule);
+      expect(rules).not.toContain("fork-angle");
+      expect(rules).not.toContain("clearance");
+    }
+  });
+
+  it("K580: a root bulging out of the strokes fails taper-g1, inside them passes", () => {
+    const r2 = lintGlyph(GLYPHS.get("a")!, 2).tapers[0];
+    const r3 = lintGlyph(GLYPHS.get("a")!, 3).tapers[0];
+    expect(r2.bulgeLU).toBeGreaterThan(LINT.taperBulgeLU);
+    expect(r3.bulgeLU).toBeLessThanOrEqual(LINT.taperBulgeLU);
   });
 
   it("the i's fork reaches full clearance within the measured distance", () => {

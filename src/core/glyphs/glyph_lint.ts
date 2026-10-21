@@ -17,7 +17,18 @@
 //   (pi/2 x 0.60 LU of arc: a legal U-turn's legs);
 // - END tips (spur tips, float ends) >= 0.56 LU from every other thread,
 //   and a spur that crosses a thread runs on >= 0.56/sin LU past it;
-// - radii: R >= 11 GU (error), a G2 warning where R < 0.6 LU.
+// - radii: R >= 11 GU (error), a G2 warning where R < 0.6 LU;
+// - K580, a TANGENT join (a spur declared `tangent`: its two body arms
+//   leave J along one line and draw as one tapered root, glyph_graph.ts
+//   tangentRoot): the fork rule is waived for the arms that leave together,
+//   and the clearance floor between them up to where their gap reaches it
+//   (the crotch). Checked instead: the strokes part (a part point R
+//   exists); the root's width falls monotonically to normal width at J; its
+//   outline stays inside the two strokes' ribbons (LINT.taperBulgeLU), so
+//   the drawn edges are the strokes' own outer edges, G1 by construction
+//   (where each root edge starts against its outer edge, and at what angle,
+//   is reported, not judged); and the crotch reaches the clearance floor
+//   within LINT.forkMaxLU of R (the fork rule's measured distance).
 // The body is extended at both ends by straight lead tails along its entry
 // and exit tangents (the joins concatenate exactly, so a neighbor leaves
 // along the same line): an arm that runs off the glyph keeps its fork
@@ -25,6 +36,8 @@
 
 import type { CubicPath, Glyph, Pt } from "./glyph_types";
 import {
+  bezAt,
+  bezDeriv,
   densePath,
   findCrossings,
   g1Failures,
@@ -33,6 +46,7 @@ import {
   segOf,
   type SegRef,
 } from "./glyph_eval";
+import { tangentRoot, TAPER_PART_LU } from "./glyph_graph";
 
 export const GU_PER_XH = 72;
 
@@ -60,7 +74,46 @@ export const LINT = {
   forkMaxLU: 1.2,
   /** Lead tail length (LU) the body is extended by at each end. */
   leadLU: 2,
+  /** K580: the thread width (LU) the taper's edges are measured at. */
+  threadLU: 0.52,
+  /**
+   * K580: how far (LU) a tapered root's outline may leave the two strokes'
+   * ribbons. Inside them, the drawn outline IS the strokes' outer edges, G1
+   * by construction; outside, the root draws an edge of its own, which
+   * starts at R with a kink (the root's edge is not G1 with the outer edge:
+   * 31 degrees at xh 2, 9 at xh 3, measured against the nearest outer-edge
+   * point). The authored a: 0.022 at R (xh 2), 0.0001 (xh 3). Not
+   * calibrated on stills: 0.01 is 2% of the thread width.
+   */
+  taperBulgeLU: 0.01,
 } as const;
+
+/**
+ * K580: a tangent join's taper, measured on the authored cubics. The root
+ * runs from the part point R (where the two strokes' centerlines are a
+ * thread width apart, paired by equal arc from J) to J.
+ */
+export interface TaperReport {
+  junction: number;
+  /** Equal-arc distance (LU) from J to R. */
+  aRLU: number;
+  /** The width multiplier at R (1 at J). */
+  mR: number;
+  /** Worst gap (LU) and kink (cos) between a root edge and its stroke's outer edge at R. */
+  edgeGapLU: number;
+  edgeCos: number;
+  /** How far the root's outline leaves the two strokes' ribbons, in LU. */
+  bulgeLU: number;
+  /** The width falls monotonically from R to J and is normal width at J. */
+  monotone: boolean;
+  /**
+   * Arc (LU) from J along each stroke to where its ribbon leaves the other
+   * stroke's (nearest centerline distance >= the thread width) and to where
+   * the gap reaches the clearance floor; the larger of the two strokes.
+   */
+  partLU: number;
+  clearLU: number;
+}
 
 export interface LintIssue {
   rule: string;
@@ -85,6 +138,8 @@ export interface LintReport {
   errors: LintIssue[];
   warnings: LintIssue[];
   forks: ForkReport[];
+  /** K580: one per tangent join. */
+  tapers: TaperReport[];
   crossings: Array<{ pos: [number, number]; sin: number }>;
   ends: number;
   junctions: number;
@@ -348,8 +403,10 @@ export function lintGlyph(g: Glyph, xh: number): LintReport {
         const cos = ua[0] * ub[0] + ua[1] * ub[1];
         d0.set(`${A.name}-${B.name}`, dc);
         forks.push({ junction: s.at, arms: [A.name, B.name], cos, dClearLU: dc / k });
-        // The fork rule binds the pair that leaves together (cos > 0).
-        if (cos > 0) {
+        // The fork rule binds the pair that leaves together (cos > 0). A
+        // tangent join draws that pair as one tapered root (K580): checked
+        // below instead.
+        if (cos > 0 && !s.tangent) {
           if (cos > LINT.forkMinCos) errors.push({ rule: "fork-angle", msg: `junction ${s.at} ${A.name}/${B.name}: arms open by less than 15 degrees (cos ${cos.toFixed(4)})`, at: [g.body[s.at][0], g.body[s.at][1]] });
           if (!(dc / k <= LINT.forkMaxLU)) errors.push({ rule: "fork-distance", msg: `junction ${s.at} ${A.name}/${B.name}: full clearance at ${(dc / k).toFixed(2)} LU > ${LINT.forkMaxLU}`, at: [g.body[s.at][0], g.body[s.at][1]] });
         }
@@ -357,6 +414,149 @@ export function lintGlyph(g: Glyph, xh: number): LintReport {
     }
     junctions.push({ joint: s.at, spur: 1 + i, arms, d0 });
   });
+
+  // --- K580: tangent joins. ---
+  interface Crotch { sJ: number; spanC: number; spanO: number }
+  const crotches: Crotch[] = [];
+  const tapers: TaperReport[] = [];
+  const H = (LINT.threadLU / 2) * k;
+  g.spurs.forEach((s) => {
+    if (!s.tangent) return;
+    const at: [number, number] = [g.body[s.at][0], g.body[s.at][1]];
+    const root = tangentRoot(g.body, s.at, TAPER_PART_LU * k);
+    if (!root) {
+      errors.push({ rule: "taper", msg: `junction ${s.at}: the tangent strokes never part to the thread width`, at });
+      return;
+    }
+    const sJ = body.arc0 + densePath(g.body)[(s.at / 3) * K_STEPS].s;
+    const C = (a: number): [number, number] => posAt(body, sJ - a);
+    const O = (a: number): [number, number] => posAt(body, sJ + a);
+    // The width falls monotonically from R to J and is normal at J.
+    let monotone = root.sepAt(0) <= 1e-6 * k;
+    for (let n = 1, prev = root.sepAt(0); n <= 64; n++) {
+      const sep = root.sepAt((root.aR * n) / 64);
+      if (sep < prev - 1e-9 * k) monotone = false;
+      prev = sep;
+    }
+    if (!monotone) errors.push({ rule: "taper-monotone", msg: `junction ${s.at}: the root's width does not fall monotonically to normal width at J`, at });
+    // The root's edges at R against the strokes' outer edges.
+    const segs = segCount(root.path);
+    const rootEdge = (p: number, side: number): [number, number] => {
+      const si = Math.min(segs - 1, Math.floor(p));
+      const seg = segOf(root.path, si);
+      const q = bezAt(seg, p - si);
+      const d = unit(bezDeriv(seg, p - si));
+      const w = H + root.sepAt(root.aR * (1 - p / segs)) / 2;
+      return [q[0] - d[1] * w * side, q[1] + d[0] * w * side];
+    };
+    const strokeEdge = (S: (a: number) => [number, number], T: (a: number) => [number, number], a: number): [number, number] => {
+      const p = S(a);
+      const t = unit([S(a - 1)[0] - S(a + 1)[0], S(a - 1)[1] - S(a + 1)[1]]);
+      let n: [number, number] = [-t[1], t[0]];
+      const o = T(a);
+      if (n[0] * (p[0] - o[0]) + n[1] * (p[1] - o[1]) < 0) n = [-n[0], -n[1]];
+      return [p[0] + n[0] * H, p[1] + n[1] * H];
+    };
+    const p0 = root.path[0];
+    const t0 = unit([root.path[1][0] - p0[0], root.path[1][1] - p0[1]]);
+    // Each edge's start at R against the NEAREST point of its stroke's outer
+    // edge (the strokes part asymmetrically, so the equal-arc point at aR is
+    // not the nearest one), and its direction against that edge's tangent.
+    let edgeGap = 0;
+    let edgeCos = 1;
+    for (const [S, T] of [[C, O], [O, C]] as const) {
+      const sp = S(root.aR);
+      const side = -t0[1] * (sp[0] - p0[0]) + t0[0] * (sp[1] - p0[1]) > 0 ? 1 : -1;
+      const e0 = rootEdge(0, side);
+      const e1 = rootEdge(0.05, side);
+      let gap = Infinity;
+      let aN = root.aR;
+      for (let a = Math.max(1, root.aR - 0.5 * k); a <= root.aR + 0.5 * k; a += 0.25) {
+        const se = strokeEdge(S, T, a);
+        const d = dist(e0[0], e0[1], se[0], se[1]);
+        if (d < gap) {
+          gap = d;
+          aN = a;
+        }
+      }
+      const s0 = strokeEdge(S, T, aN + 1);
+      const s1 = strokeEdge(S, T, aN - 1);
+      edgeGap = Math.max(edgeGap, gap);
+      const ue = unit([e1[0] - e0[0], e1[1] - e0[1]]);
+      const us = unit([s1[0] - s0[0], s1[1] - s0[1]]);
+      edgeCos = Math.min(edgeCos, ue[0] * us[0] + ue[1] * us[1]);
+    }
+    // How far the root's outline leaves the two strokes' ribbons (their
+    // union is what the untapered join draws), over the whole root.
+    let bulge = 0;
+    for (let p = 0; p <= segs + 1e-9; p += 0.05) {
+      for (const side of [1, -1]) {
+        const e = rootEdge(p, side);
+        let near = Infinity;
+        for (let a = 0; a <= 2 * root.aR; a += 0.5) {
+          const c = C(a);
+          const o = O(a);
+          near = Math.min(near, dist(e[0], e[1], c[0], c[1]), dist(e[0], e[1], o[0], o[1]));
+        }
+        bulge = Math.max(bulge, near - H);
+      }
+    }
+    if (bulge > LINT.taperBulgeLU * k) {
+      errors.push({ rule: "taper-g1", msg: `junction ${s.at}: a root edge meets its stroke's outer edge ${(edgeGap / k).toFixed(3)} LU off, cos ${edgeCos.toFixed(4)}, bulge ${(bulge / k).toFixed(3)} LU`, at });
+    }
+    // The crotch: along each stroke from R, the nearest distance to the
+    // other stroke, until it reaches the thread width (the ribbons part) and
+    // the clearance floor.
+    const reach = (S: (a: number) => [number, number], other: (a: number) => [number, number], aMax: number, aOther: number) => {
+      let part = Infinity;
+      let clear = Infinity;
+      for (let a = root.aR; a <= aMax; a += 0.5) {
+        const p = S(a);
+        let near = Infinity;
+        for (let b = 0; b <= aOther; b += 0.5) {
+          const q = other(b);
+          near = Math.min(near, dist(p[0], p[1], q[0], q[1]));
+        }
+        if (part === Infinity && near >= 2 * H) part = a;
+        if (near >= CLEAR) {
+          clear = a;
+          break;
+        }
+      }
+      return { part, clear };
+    };
+    const maxC = sJ;
+    const maxO = body.len - sJ;
+    const rc = reach(C, O, maxC, maxO);
+    const ro = reach(O, C, maxO, maxC);
+    const part = Math.max(rc.part, ro.part);
+    const clear = Math.max(rc.clear, ro.clear);
+    if (!(clear - root.aR <= LINT.forkMaxLU * k)) {
+      errors.push({ rule: "taper-crotch", msg: `junction ${s.at}: the crotch reaches the clearance floor ${((clear - root.aR) / k).toFixed(2)} LU past R > ${LINT.forkMaxLU}`, at });
+    }
+    crotches.push({ sJ, spanC: rc.clear, spanO: ro.clear });
+    tapers.push({
+      junction: s.at,
+      aRLU: root.aR / k,
+      mR: 1 + root.sepAt(root.aR) / (2 * H),
+      edgeGapLU: edgeGap / k,
+      edgeCos,
+      bulgeLU: bulge / k,
+      monotone,
+      partLU: part / k,
+      clearLU: clear / k,
+    });
+  });
+  /** A body pair across a tangent join's crotch (the taper checks it). */
+  const crotchExempt = (P: number, ap: number, Q: number, aq: number): boolean => {
+    if (P !== 0 || Q !== 0) return false;
+    const a1 = Math.min(ap, aq);
+    const a2 = Math.max(ap, aq);
+    for (const c of crotches) {
+      if (a1 <= c.sJ && a2 >= c.sJ && c.sJ - a1 < c.spanC && a2 - c.sJ < c.spanO) return true;
+    }
+    return false;
+  };
 
   /** Arm membership of a sample (path id, arc) at junction J, or null. */
   const armOf = (J: Junction, id: number, a: number): { name: ArmName; d: number } | null => {
@@ -405,6 +605,7 @@ export function lintGlyph(g: Glyph, xh: number): LintReport {
           if (d >= CLEAR && d >= minClear) continue;
           if (crossExempt(P, rp.arc[i], Q, rq.arc[j])) continue;
           if (forkExempt(P, rp.arc[i], Q, rq.arc[j])) continue;
+          if (crotchExempt(P, rp.arc[i], Q, rq.arc[j])) continue;
           // Lead tails meet only through the neighbors: skip lead-lead pairs.
           if (P === 0 && Q === 0 && (rp.arc[i] < body.arc0 || rp.arc[i] > bodyEnd) && (rq.arc[j] < body.arc0 || rq.arc[j] > bodyEnd)) continue;
           if (d < minClear) minClear = d;
@@ -461,6 +662,7 @@ export function lintGlyph(g: Glyph, xh: number): LintReport {
     errors,
     warnings,
     forks,
+    tapers,
     crossings,
     ends: g.spurs.length + 2 * g.floats.length,
     junctions: g.spurs.length,
