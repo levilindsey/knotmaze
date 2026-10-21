@@ -213,6 +213,8 @@ export const LIVE_EFFECTS = {
     "ice", "colorRule",
     // K114's beat rider: a new tempo, beat length or cap restarts the ride.
     "beatTempo", "beatLength", "beatCap",
+    // K138 stage 2: turnstiles and hidden runs (a restart places them anew).
+    "turnstiles", "hiddenRuns",
   ],
 } as const satisfies Record<string, readonly string[]>;
 

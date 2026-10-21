@@ -366,6 +366,10 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("beatTempo"),
   num("beatLength"),
   num("beatCap"),
+  // 205-206, K138 stage 2: turnstile junctions (0 off, 1..8; game/turnstiles.ts)
+  // and hidden runs (0 off, 1..4; game/hidden_runs.ts).
+  num("turnstiles"),
+  num("hiddenRuns"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -528,6 +532,8 @@ export const PARAM_RANGES: Readonly<
   beatTempo: [40, 180],
   beatLength: [0.5, 8], // K114 beat rider: lattice units of run a beat covers
   beatCap: [1, 8], // K114 beat rider: the most beats a run takes
+  turnstiles: [0, 8], // K138 stage 2 (TURNSTILES_MAX)
+  hiddenRuns: [0, 4], // K138 stage 2 (HIDDEN_MAX)
 });
 
 // A link value held to its panel range (K398); a param with no range,

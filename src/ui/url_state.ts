@@ -809,6 +809,13 @@ export interface UrlParams {
   beatTempo: number;
   beatLength: number;
   beatCap: number;
+  // K138 stage 2 (design 4.12, 4.27; game/turnstiles.ts, game/hidden_runs.ts):
+  // turnstiles, 0 off or 1..TURNSTILES_MAX 8 three-arm junctions whose open
+  // pair turns one step per move; hiddenRuns, 0 off or 1..HIDDEN_MAX 4
+  // shortcut runs hidden until a pluck of their note within 3 runs reveals
+  // them. The classic game only, dropped with ice and the color rule.
+  turnstiles: number;
+  hiddenRuns: number;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1119,6 +1126,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   beatTempo: 100,
   beatLength: 2, // K114 call 3: the median run (4.2 lattice units) takes 2 beats
   beatCap: 4,
+  // K138 stage 2: no turnstiles, no hidden runs.
+  turnstiles: 0,
+  hiddenRuns: 0,
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1168,6 +1178,8 @@ export function fabricRulesOf(
     | "ice"
     | "colorRule"
     | "clock"
+    | "turnstiles"
+    | "hiddenRuns"
   >
 ): FabricRules {
   return {
@@ -1183,6 +1195,9 @@ export function fabricRulesOf(
     // K138: ice and the color rule, the classic game's only.
     ice: p.gameMode === "classic" ? p.ice : 0,
     colorRule: p.gameMode === "classic" ? p.colorRule : "off",
+    // K138 stage 2: turnstiles and hidden runs, likewise.
+    turnstiles: p.gameMode === "classic" ? p.turnstiles : 0,
+    hiddenRuns: p.gameMode === "classic" ? p.hiddenRuns : 0,
   };
 }
 
@@ -1903,6 +1918,10 @@ function readLegacy(
     beatTempo: readNumber(query, "btp", D.beatTempo),
     beatLength: readNumber(query, "btl", D.beatLength),
     beatCap: readNumber(query, "btc", D.beatCap),
+    // K138 stage 2's turnstiles and hidden runs (`&tst=4&hid=2`;
+    // PARAM_RANGES clamps them to 0..8 and 0..4).
+    turnstiles: readNumber(query, "tst", D.turnstiles),
+    hiddenRuns: readNumber(query, "hid", D.hiddenRuns),
   };
 }
 

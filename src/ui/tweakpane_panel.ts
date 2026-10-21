@@ -41,6 +41,8 @@ import { PAR_SLACK_MAX, PAR_SLACK_MIN } from "../game/par";
 import { SPOOL_SLACK_MAX, SPOOL_SLACK_MIN } from "../game/spool";
 import { HINTS_MAX } from "../game/hints";
 import { ICE_SHARE_MAX, ICE_SHARE_ON } from "../game/ice";
+import { TURNSTILES_MAX } from "../game/turnstiles";
+import { HIDDEN_MAX } from "../game/hidden_runs";
 import { LIVES_MAX, LIVES_RECOMMENDED, livesOf } from "../game/lives";
 import { SWORD_MOVES_MAX, SWORD_MOVES_MIN } from "../game/sword";
 import {
@@ -1692,6 +1694,20 @@ export function buildPanel(
     "Each run has a color, and a move must follow the rule. alternate: never the same color twice in a row (light, dark, light...). cycle: three colors in a fixed order, then the first again. A run the rule forbids is refused. Backtracking steps the rule back too. The fewest moves and par follow the rule. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
     D.colorRule, () => callbacks.onClockChange()
   );
+  // K138 stage 2 (game/turnstiles.ts, game/hidden_runs.ts): turnstile
+  // junctions and hidden runs, the same scope and restart as ice.
+  const turnstilesRow = row(
+    fGame, p, "turnstiles",
+    { min: 0, max: TURNSTILES_MAX, step: 1, label: "Turnstiles" },
+    "Turnstile junctions (0: none). At a turnstile only two of its three runs connect, and the open pair turns one step with every move you make, backtracks included; the closed run shows dim. Going back the way you came is always allowed. The fewest moves and par read the turnstiles. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
+    D.turnstiles, () => callbacks.onClockChange()
+  );
+  const hiddenRunsRow = row(
+    fGame, p, "hiddenRuns",
+    { min: 0, max: HIDDEN_MAX, step: 1, label: "Hidden runs" },
+    "Hidden shortcut runs (0: none). A hidden run draws nothing and cannot be tapped until you pluck a thread of the same note within three runs of it; then it shows for the rest of the solve (Undo past the pluck hides it again). Par and the stars rate the maze without them; the HUD shows the shorter par with them too. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
+    D.hiddenRuns, () => callbacks.onClockChange()
+  );
 
   // K80: the real-time chase's tuning (game/minotaur.ts ChaseParams; the
   // defaults were picked by a headless simulation). All live. Since K80
@@ -2916,6 +2932,8 @@ export function buildPanel(
     // K138 stage 1: the classic game only, as the cut's row.
     iceRow.hidden = !fab || params.gameMode !== "classic";
     colorRuleRow.hidden = !fab || params.gameMode !== "classic";
+    turnstilesRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 2
+    hiddenRunsRow.hidden = !fab || params.gameMode !== "classic";
     // Under the thread reveal too (K76 stage 2c: the same two settings).
     minoFogRow.hidden = !minoOn || !(fog || threads);
     // K137 stage 3a: lives replace the level row while on (game/lives.ts).
