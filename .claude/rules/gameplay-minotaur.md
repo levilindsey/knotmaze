@@ -847,7 +847,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   - A SNARE goes on a run with an end at the head's junction, the run
     behind you included (`snareRuns`, `canSnare`), one snare a run for the
     attempt (a spent one included). By runs only: `setSnare` refuses by
-    length, and the button hides there. The first monster whose turn would
+    length, and the button and the panel row hide there. The first monster whose turn would
     step onto a set snare's run stops at its near end (`snareCut`,
     minotaur_turns.ts `cutAtSnare`: the committed path is cut there, and the
     snare springs when that move plays) and is HELD: it stands for its
@@ -905,8 +905,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
     under an armed tool is the cut's pick, which can light a neighbour run;
     a live switch to by length keeps the laid snares, which then never
     spring; a follower's first appearance step is not snare-checked; by
-    length clears a lure one hop later than by runs; the snares row shows
-    by length while the button hides; L and N may clash with K138's keys;
+    length clears a lure one hop later than by runs; L and N may clash
+    with K138's keys;
     the ring is a stand-in (no glyph); real-time lures, snares and extras
     wait for `MinotaurChase`; no s3b sims for the tools; saved attempts do
     not cover them.

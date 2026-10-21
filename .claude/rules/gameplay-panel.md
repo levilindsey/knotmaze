@@ -239,9 +239,9 @@ only with the files it is about; `gameplay.md` lists the area's other files.
 - LURES AND SNARES ROWS (K137 stage 4, 2026-10-21): "Lures" (`lures`, a
   0..5 slider, step 1, 0 reads "off") and "Snares" (`snares`, 0..3) sit
   right after "Sleeper kind" in the Game folder, turn clock only: hidden
-  with the minotaur off or in real time (`!minoOn || realtime`). The
-  snares row still shows by length, where the button hides and a snare is
-  refused (a residual). Both restart the solve (onClockChange), which
+  with the minotaur off or in real time (`!minoOn || realtime`), and
+  "Snares" also while "Travel by length" is on (`minoByLength`), where the
+  button hides and a snare is refused. Both restart the solve (onClockChange), which
   refills the stocks. Tooltips: "Turn clock: arm the note button (or L),
   then tap a run to pluck it. The minotaur, and any sleeper in range,
   hears it and heads for the run's nearer end; it costs no move. Out of
