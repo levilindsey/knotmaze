@@ -126,7 +126,7 @@ describe("links", () => {
       trapTries: 8, trapSurplus: 1.25,
       penReverse: false,
       dailyTitleThread: false,
-      minoStopMin: 0, minoStopMax: 0, minoHuntStop: 0.5, minoTurnBack: 1.5,
+      minoStopMin: 0.2, minoStopMax: 0.6, minoHuntStop: 0.5, minoTurnBack: 1.5,
       minoTipReach: 2, minoRoamNear: 0.25, minoTelegraphRuns: 1,
     });
   });

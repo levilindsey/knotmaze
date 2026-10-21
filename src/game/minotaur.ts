@@ -33,7 +33,8 @@
 // - WANDER: it picks a destination and walks there by the shortest route
 //   at the leg's pace (wanderPace x (1 +- paceJitter)), pausing at a
 //   junction it passes with chance pauseChance and always at the
-//   destination (pauseMin..pauseMax seconds: the long stop). With chance
+//   destination (pauseMin..pauseMax seconds: the long stop), where it
+//   picks the next destination as it arrives (K324 2.3). With chance
 //   deadEndBias the destination is a dead-end tip (its hunting ground, up
 //   to tipReach x roamRange away), otherwise a junction roamNear x
 //   roamRange..roamRange away (K324 made the 2 and the 1/4 params).
@@ -157,6 +158,8 @@ const PLAYER_PACE = 10;
 // roamPull 0.5 (K174, the same simulation): a greedy player meets it in 63%
 // of games instead of 56%, at 1.68 catches a game (median 1), 74% of games
 // with 0 to 2; pull 1 adds only 3 points of meetings for 0.26 catches more.
+// The junction stops (K324, Levi's calls q1-q2): 0.2-0.6 s while it roams,
+// half that while it hunts (gameplay-minotaur.md has the re-tune).
 // url_state.ts PARAM_DEFAULTS reads these, so a retune edits only them (and
 // moves every link that leaves them out).
 export const DEFAULT_CHASE_PARAMS: Readonly<ChaseParams> = Object.freeze({
@@ -175,8 +178,8 @@ export const DEFAULT_CHASE_PARAMS: Readonly<ChaseParams> = Object.freeze({
   wake: 2,
   roamPull: 0.5,
   lair: true,
-  stopMin: 0,
-  stopMax: 0,
+  stopMin: 0.2,
+  stopMax: 0.6,
   huntStop: 0.5,
   turnBack: 1.5,
   tipReach: 2,
@@ -642,6 +645,8 @@ export class MinotaurChase {
         return;
       }
       this.mode = "wander";
+      // A destination rest picked its next leg on arrival (K324 2.3); the
+      // lair, a catch's pause and a pick that found nothing pick here.
       if (this.dest < 0 || this.dest === m.vertex) this.pickDest();
     }
     if (this.hold > 0) {
@@ -693,9 +698,10 @@ export class MinotaurChase {
     return ticksOf(this.mode === "hunt" ? s * P.huntStop : s);
   }
 
-  // Wandering, arrived at a vertex: pause at the destination (then pick the
-  // next), or at a passing junction by chance. True = it paused. Always
-  // two RNG draws, whatever the branch.
+  // Wandering, arrived at a vertex: pause at the destination and pick the
+  // next one now (K324 2.3: on arrival, so plan() can show the next leg
+  // through the rest), or pause at a passing junction by chance. True = it
+  // paused. Always two RNG draws, then pickDest's three at a destination.
   private roamArrival(): boolean {
     const P = this.params;
     const u1 = this.rng.next();
@@ -705,6 +711,7 @@ export class MinotaurChase {
     if (v === this.dest) {
       this.dest = -1;
       this.startPause(pause);
+      this.pickDest();
       return true;
     }
     if (!this.g.isEnd[v] && u1 < P.pauseChance) {
@@ -880,9 +887,10 @@ export class MinotaurChase {
   // the chase uses (roamEdgeFrom, huntEdgeFrom, shouldReverse).
   // - Roaming: its current run (lead), then up to `reach` runs of its
   //   route to the destination, `dest` set when the route reaches it; at
-  //   a vertex (a junction stop, a rest) the runs from there. No
-  //   destination yet (it picks one when it leaves): nothing after the
-  //   lead.
+  //   a vertex (a junction stop, a rest) the runs from there; a rest at a
+  //   destination already shows the next leg (picked on arrival, 2.3). No
+  //   destination yet (a catch's pause with minoLair off: it picks one when
+  //   it leaves): nothing after the lead.
   // - Hunting: its current run in the direction it will keep, then up to
   //   `reach` runs toward the player's spot now (live: it follows them).
   // - In its lair: nothing, except the exit tail's run during the last
