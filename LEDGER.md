@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K636.
+Next free ID: K642.
 
 ## Waiting on Levi
 
@@ -128,6 +128,9 @@ Next free ID: K636.
 - **K630** · K244: should a press in a junction core also silence its release when the grabbed
   particle's site draws? Today 8 of 12 core presses pluck a drawn neighbour. Rec: no; what sounds
   always draws, at the grabbed site.
+- **K636** · K324 s1's two calls (`docs/design/K324_s1.md`, Handoff): (a) hunt pace 0.9 of yours
+  restores the greedy player's catches, the fleers within 4-5 points; rec keep (revert: `git revert
+  fd230f1`); (b) five panel labels cut to 23 characters; rec keep.
 
 ## In progress
 
@@ -316,6 +319,14 @@ Next free ID: K636.
   - evidence: `.claude/probes/K525/`
   - next: baseline sheet against K524's, then append mtl (rims|line|both, default rims) and build the TELE paint item; the phone step after 18:25 (Levi's)
   - brief: `docs/design/K525_telegraph.md`
+- **K631** · Phone passes owed: K409's sheet (`.claude/probes/K409/phone/run_phone.ps1`, lock owner
+  `K409 a5c384f`, a fresh -Deadline); K244's: core releases silent, auto plucks draw, dense_phone.
+  Close the stray `localhost:5278` tab first (K578's `phone_teardown.ps1`).
+  - owner: agent `a55c06bc8f3a6e909` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 18:26, 1 h cap ~19:26)
+  - branch: mainline; last commit: `ee6debd`
+  - evidence: .claude/probes/K631/, .claude/probes/K409/phone/out/sheet/
+  - next: Part 1 (K409's sheet), then Part 2 (K244's counts on the phone)
+  - brief: `docs/design/K631_phone.md`
 
 ## Next, in order
 
@@ -371,9 +382,6 @@ merged):
 13. K326 A.
 14. K318, K336, K337.
 
-- **K631** · Phone passes owed: K409's sheet (`.claude/probes/K409/phone/run_phone.ps1`, lock owner
-  `K409 a5c384f`, a fresh -Deadline); K244's: core releases silent, auto plucks draw, dense_phone.
-  Close the stray `localhost:5278` tab first (K578's `phone_teardown.ps1`).
 - **K441** · The real-time fire's frame cost (K114 s2 item 6): 0.6-1.2 ms more a frame than turn
   (drawFire's re-declare 0.6, HUD writes 0.1, 0.5 unattributed). Profile, then fix inside drawFire or
   main's fire frame; elsewhere is s2, after K137 s1 and K525. `docs/design/K441_fire_frame.md` (queued).
@@ -518,6 +526,9 @@ Every other item below waits on the trigger it names.
 - **K186** · K140's confetti calls, answered (Levi, 2026-10-20): no confetti under reduced motion;
   confetti on every win banner, not only a live finish; colors and amount by the sliders. Rides
   K336's agent (launched 2026-10-20). `docs/design/K140.md` ("Stage 1 handoff").
+- **K637** · The minotaur sim's baseline rose from 1.66 catches a game (K278 (c), 10-14) to 2.50 at
+  bcd907c, cause unknown: bisect with K324's harness (`.claude/probes/K324/rt/`) across 9ccf360 (K74
+  s3) and 35f3ec2 (K534's minoPull); sonnet.
 
 ## Residuals (known, not fixed)
 
@@ -1150,6 +1161,17 @@ Every other item below waits on the trigger it names.
   (`ribbon_renderer.ts`, after K525).
 - **K633** · K244: a site is tested at schedule time but drawn up to 0.3 s later (0 misses in 844
   notes); no headless release test (`input_pointer.ts` needs pixi and a canvas).
+- **K638** · K324 s1: the queued fleer escapes 76-83% of hunts against 75% at baseline, at every
+  hunt pace tried up to 1.0 (`docs/design/K324_s1.md`, Handoff).
+- **K639** · The main checkout's `.claude/probes/{K80,K174,K155}/rt/rt_lib.ts` (line 42) read
+  `deadEnds`, removed in 35f3ec2, so re-runs build mazes without dead ends; build through
+  `buildSceneGraph` as K324's copy does.
+- **K640** · K546 s1's travel window: while a runs catch travels, the HUD's mode, the head's glow
+  and the close-calls and seen rows already show the after-catch state (only caught waits), and a
+  wait queued then lands on the landing frame (`docs/design/K546_s1.md`).
+- **K641** · Older catch quirks K546 s1 found: an empty by-length route shows the minotaur at its
+  lair during the travel; `turnCaught`'s pluck takes the entrance's pitch; `minoRestart` shows no
+  burst (`docs/design/K546_s1.md`).
 
 ## Approved, to schedule (2026-10-11)
 
