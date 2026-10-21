@@ -59,7 +59,8 @@ export type StatId =
   | "strokes"
   | "collapsed"
   | "cuts"
-  | "hearts";
+  | "hearts"
+  | "walker";
 
 export const STATS: Record<StatId, { label: string; line: string }> = {
   // TIME above (SolveClock). The Burnt banner shows it too, for a run the
@@ -230,7 +231,18 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "Runs you cut with the scissors. A cut deletes a whole run for the " +
       "rest of the attempt; a junction left with two runs is no choice any " +
       "more, so a move through it carries on. A cut that would leave no way " +
-      "to the exit is refused.",
+      "to the exit is refused. When you lead the walker, par is the fewest " +
+      "cuts that bring it to the exit.",
+  },
+  // K114 walker: Delay's walker, FabricMazeController.taps.length (the
+  // runs it has walked) against delayRoute's length on the uncut maze
+  // (game/walker.ts).
+  walker: {
+    label: "walker",
+    line:
+      "Runs the walker has walked so far, then the shortest walk it wanted, " +
+      "from the entrance to the exit on the uncut maze. The longer you keep " +
+      "it from the exit, the better.",
   },
   // K137 stage 3a: main.ts's heartsLeft of livesOf(lives) (game/lives.ts),
   // while lives are on under a minotaur.

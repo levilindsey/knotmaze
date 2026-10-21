@@ -36,6 +36,19 @@ describe("K114 cut tag", () => {
       expect(none).not.toContain("\u2702");
     }
   });
+
+  it("K114 walker: Lead's cuts and par, Delay's walk and the walk it wanted", () => {
+    const lead = (cuts: number, par: number | null) =>
+      title({ ...BASE, cuts, walker: { mode: "lead", par } });
+    expect(lead(4, 3).endsWith(" \u00b7 \u2702\ufe0f 4, par 3")).toBe(true);
+    expect(lead(0, 0).endsWith(" \u00b7 \u2702\ufe0f 0, par 0")).toBe(true);
+    expect(lead(2, null).endsWith(" \u00b7 \u2702\ufe0f 2")).toBe(true);
+    const delay = (walk: number) =>
+      title({ ...BASE, cuts: 5, walker: { mode: "delay", walk, shortest: 18 } });
+    expect(delay(61).endsWith(" \u00b7 \u{1F422} 61 runs (it wanted 18)")).toBe(true);
+    expect(delay(1).endsWith(" \u00b7 \u{1F422} 1 run (it wanted 18)")).toBe(true);
+    expect(delay(61)).not.toContain("\u2702");
+  });
 });
 
 describe("K137 stage 3a hearts tag", () => {

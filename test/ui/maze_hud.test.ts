@@ -74,7 +74,7 @@ describe("what each figure means (K274)", () => {
   const LOSS = { timeMs: 61_000, walked: 20, closest: 0.44 };
 
   // K137's rule rows (kept out of FULL, whose exact rows are pinned).
-  // K139's collapse row too, K114's cuts and K137 stage 3a's hearts.
+  // K139's collapse row too, K114's cuts and Delay's walker row, and K137 stage 3a's hearts.
   const RULES = {
     snapped: 3,
     parLeft: { par: 12, left: 4 },
@@ -82,6 +82,7 @@ describe("what each figure means (K274)", () => {
     collapse: { pct: 58, par: "\u226562%" },
     cuts: 2,
     hearts: { left: 2, of: 3 },
+    walker: { mode: "delay" as const, walk: 5, shortest: 3 },
   };
   const shown = (): StatEntry[] => [
     ...statEntries(FULL),
@@ -235,6 +236,19 @@ describe("K114 cuts row", () => {
     });
     expect(win.at(-1)?.id).toBe("cuts");
     expect(win.at(-1)?.value).toBe("1");
+  });
+
+  it("K114 walker: Lead's cuts against par, Delay's walk against its shortest", () => {
+    const lead = (par: number | null) =>
+      ruleEntries({ cuts: 4, walker: { mode: "lead", par } }).map((r) => [r.id, r.value]);
+    expect(lead(3)).toEqual([["cuts", "4 · par 3"]]);
+    expect(lead(0)).toEqual([["cuts", "4 · par 0"]]);
+    expect(lead(null)).toEqual([["cuts", "4 · par —"]]);
+    const delay = ruleEntries({ cuts: 2, walker: { mode: "delay", walk: 61, shortest: 18 } });
+    expect(delay.map((r) => [r.id, r.label, r.value])).toEqual([
+      ["cuts", "cuts", "2"],
+      ["walker", "walker", "61 · shortest 18"],
+    ]);
   });
 });
 

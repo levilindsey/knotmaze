@@ -7,6 +7,7 @@
 
 import { efficiencyPercent, formatDuration, moveGrid } from "./maze_stats";
 import { starGlyphs } from "./star_rating";
+import type { WalkerScore } from "./walker";
 
 export interface ShareInfo {
   daily: number | null; // null = an ordinary design
@@ -33,6 +34,18 @@ export interface ShareInfo {
   cuts?: number | null;
   // K137 stage 3a: the hearts left at the finish (null or absent: lives off).
   hearts?: number | null;
+  // K114 walker: the walker's score (null or absent: no walker).
+  walker?: WalkerScore | null;
+}
+
+// K114 walker: the title line's tag. Lead: "✂️ 4, par 3" (no par part when
+// there is none; zero cuts included, since a par-0 maze is a score). Delay:
+// "🐢 61 runs (it wanted 18)".
+export function walkerTag(w: WalkerScore, cuts: number): string {
+  if (w.mode === "lead") {
+    return `✂️ ${cuts}${w.par != null ? `, par ${w.par}` : ""}`;
+  }
+  return `\u{1F422} ${w.walk} run${w.walk === 1 ? "" : "s"} (it wanted ${w.shortest})`;
 }
 
 // K139: the collapse line under the time, "🧱 Collapse to the finish: 58% ·
@@ -60,7 +73,12 @@ export function shareText(info: ShareInfo): string {
   const snap = info.snapped != null ? ` · snapped ${info.snapped}` : "";
   const par = info.parScore ? ` · \u26F3 ${info.parScore}` : "";
   // K114: " · ✂️ N" once a run was cut.
-  const cut = info.cuts ? ` · \u2702\uFE0F ${info.cuts}` : "";
+  // K114 walker: its tag instead, in the walker's modes.
+  const cut = info.walker
+    ? ` · ${walkerTag(info.walker, info.cuts ?? 0)}`
+    : info.cuts
+      ? ` · \u2702\uFE0F ${info.cuts}`
+      : "";
   // K137 stage 3a: " · ❤️ N left" while lives are on.
   const hearts = info.hearts != null ? ` · \u2764\uFE0F ${info.hearts} left` : "";
   const eff =

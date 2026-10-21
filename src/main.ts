@@ -113,6 +113,10 @@ import {
 } from "./ui/undo_stack";
 import { UndoButtons } from "./ui/undo_buttons";
 import { CutButtons } from "./ui/cut_buttons";
+import { WalkerButtons } from "./ui/walker_buttons";
+import type { WalkerKey } from "./ui/walker_buttons";
+import { walkerMapOf, leadRoute, leadPar, delayNext, delayRoute } from "./game/walker";
+import type { WalkerMap, LeadRoute, ParResult, WalkerScore } from "./game/walker";
 import type { CutKey } from "./ui/cut_buttons";
 import { MotionSetting, browserMotionQuery } from "./ui/motion";
 import {
@@ -447,6 +451,15 @@ async function main(): Promise<void> {
   // latest wins). The machinery is below, by handleFabricTap.
   let cutArmed = false;
   let pendingCut = -1;
+  // K114 WALKER (cut "lead" / "delay"; the machinery is below cutTick):
+  // Lead's walker is off along its route ("walk", walkerIdx the next of
+  // its states) or waiting for Go ("plan"); walkerDriving is true only
+  // inside the walker's own move (in a walker mode nothing else moves the
+  // head); walkerScoreFn feeds the HUD and is assigned with the machinery.
+  let walkerState: "plan" | "walk" = "plan";
+  let walkerIdx = 0;
+  let walkerDriving = false;
+  let walkerScoreFn: () => WalkerScore | null = () => null;
   // The physics host (`host`) is made before app.init (K7 stage 5's start
   // gate, above).
   // K5 M4: the scene `let`s (ps, the renderers, the walk graph, the fabric,
@@ -740,6 +753,7 @@ async function main(): Promise<void> {
       setWaitCue: (on) => setWaitCue(on),
       tapReach: () => tapReach(),
       cutArmed: () => cutArmed,
+      cutPick: () => !!scene.fabricController?.walkerMode,
     },
     scene
   );
@@ -871,6 +885,13 @@ async function main(): Promise<void> {
     arm: () => setCutArmed(!cutArmed),
     undo: () => cutUndo(),
   });
+  // K114 WALKER (ui/walker_buttons.ts): Go, Reset and Undo in the scissors'
+  // corner while a walker mode is on (cutTick shows them).
+  const walkerButtons = new WalkerButtons({
+    go: () => walkerGo(),
+    reset: () => walkerReset(),
+    undo: () => walkerUndo(),
+  });
   // Armed: the button lit, a crosshair; put down, the cut glow goes too.
   const setCutArmed = (on: boolean): void => {
     if (on === cutArmed) return;
@@ -928,6 +949,7 @@ async function main(): Promise<void> {
       menuButton,
       undoButtons.el, // K92 (display none closed).
       cutButtons.el, // K114 (hidden: none).
+      walkerButtons.el, // K114 walker (hidden: none).
       // (The panel: env.panel below, K198 stage 2.)
       stamp,
       document.querySelector<HTMLElement>(".km-pad"), // K120 (hidden: none).
@@ -1253,6 +1275,8 @@ async function main(): Promise<void> {
       ...ruleFields(c),
       // K137 stage 3a: the hearts left (null: lives off or no minotaur).
       hearts: heartsShown(),
+      // K114 walker: Lead's par, Delay's walk and the walk it wanted.
+      walker: walkerScoreFn(),
     };
   };
   // The HUD and the mode badge (it re-fits around the HUD's new size).
@@ -1530,7 +1554,10 @@ async function main(): Promise<void> {
     // meter starts over with the level and the catches carry, so the
     // popover says which catches' walks it holds (`respawns`, K293 (a)).
     const mino = liveMino();
-    const rating = c.collapseOn
+    // K114 walker: the walker walked, not you, so no stars (Lead's against
+    // par wait on Levi, the brief's call 4).
+    const rating =
+      c.collapseOn || c.walkerMode
       ? null
       : mino
         ? rateRun(c.walkedDist, c.walk.optimalLength, mino.catches, c.respawns)
@@ -1558,6 +1585,7 @@ async function main(): Promise<void> {
         collapse: collapse ? { mode: collapseMode, ...collapse } : null,
         cuts: c.cutOn ? c.cutCount : null, // K114
         hearts: heartsShown()?.left ?? null, // K137 stage 3a
+        walker: walkerScoreFn(), // K114 walker
       }),
       url: daily !== null ? dailyUrl(daily) : location.href,
     };
@@ -1597,6 +1625,7 @@ async function main(): Promise<void> {
       collapse,
       cuts: c.cutOn ? c.cutCount : null, // K114
       hearts: heartsShown(), // K137 stage 3a
+      walker: walkerScoreFn(), // K114 walker
     });
     updateHud();
     throwConfetti();
@@ -2537,6 +2566,9 @@ async function main(): Promise<void> {
     }
     // K137: stranded or out of strokes: a tap shows the banner again.
     if (ruleLoss.over()) return ruleLoss.tapWhileOver(pendingLoss);
+    // K114 walker: a tap on a run cuts it (no scissors to arm); elsewhere
+    // it plucks or pans as anywhere.
+    if (scene.fabricController.walkerMode) return walkerTap(x, y, pt);
     // K114: armed scissors: the tap cuts (or puts them down) instead.
     if (cutArmed) return cutTap(x, y, pt);
     // K80 turns: with the turn minotaur on, a tap on your own junction is
@@ -2579,6 +2611,9 @@ async function main(): Promise<void> {
   // share it). Returns true when the move was taken.
   const moveAlong = (eid: number): boolean => {
     if (!scene.fabric || !scene.fabricController) return false;
+    // K114 walker: in a walker mode only the walker moves (keys, the pad,
+    // the gamepad and routes take nothing).
+    if (scene.fabricController.walkerMode && !walkerDriving) return false;
     const hunt0 = scene.turnMino?.hunting ?? false;
     const result = scene.fabricController.tapEdge(eid);
     moveHuntWas = hunt0;
@@ -2644,11 +2679,18 @@ async function main(): Promise<void> {
       return;
     }
     if (fc.solved || !fc.cutOn) return;
-    const refused = r === "refused";
+    cutRefused(fc, eid, r === "refused");
+  };
+  // Why a cut was not made: a toast and a dull pluck (a run that is
+  // cuttable but was not cut, say an "invalid" one, says nothing). K114
+  // walker: the refusal is checked from the walker's junction.
+  const cutRefused = (fc: FabricMazeController, eid: number, refused: boolean): void => {
     if (!refused && cuttable(fc.walk, eid)) return;
     showToast(
       refused
-        ? "That cut would leave no way to the exit."
+        ? fc.walkerMode
+          ? "That cut would leave the walker no way to the exit."
+          : "That cut would leave no way to the exit."
         : fc.walk.titleEdges?.has(eid)
           ? "The title's runs can't be cut."
           : "The runs at the entrance and the exit can't be cut.",
@@ -2678,6 +2720,7 @@ async function main(): Promise<void> {
   const carryStep = (): boolean => {
     const fc = scene.fabricController;
     if (!fc || !fc.cutOn) return false;
+    if (fc.walkerMode) return walkerStep(fc); // K114 walker: always in charge.
     if (fc.carry.length > 0) {
       if (dotMoving()) return true;
       const next = fc.carry[0];
@@ -2702,6 +2745,10 @@ async function main(): Promise<void> {
   };
   // The scissors' keys: X arms or puts down, Esc puts down, U undoes.
   const cutKey = (k: CutKey): boolean => {
+    // K114 walker: U undoes there too; X and Esc have no scissors to move.
+    if (scene.fabricController?.walkerMode) {
+      return k === "undo" && walkerButtons.isShown ? walkerKey("undo") : false;
+    }
     if (!scene.fabricController?.cutOn || !cutButtons.isShown) return false;
     if (k === "arm") setCutArmed(!cutArmed);
     else if (k === "undo") cutUndo();
@@ -2721,14 +2768,278 @@ async function main(): Promise<void> {
   };
   const cutTick = (): void => {
     const fc = scene.fabricController;
-    const on = !!fc && fc.cutOn && keysLive() && !panelCoversCut();
+    const walker = fc?.walkerMode ?? null;
+    // K114 walker: the walker modes have their own buttons, no scissors.
+    const on = !!fc && fc.cutOn && !walker && keysLive() && !panelCoversCut();
     cutButtons.setShown(on);
+    walkerTick(fc, walker);
     if (!on) {
       if (cutArmed) setCutArmed(false);
-      if (!fc || fc.solved || !fc.cutOn) pendingCut = -1;
+      if (!fc || fc.solved || !fc.cutOn || walker) pendingCut = -1;
       return;
     }
     cutButtons.setUndo(fc.actions.length > 0);
+  };
+
+  // K114 WALKER (game/walker.ts; brief docs/design/K114_walker.md). The cut
+  // modes "lead" and "delay" hand the moves to a walker, and a tap on any
+  // live run cuts it (walkerTap; the refusals are the scissors', checked
+  // from the walker's junction). LEAD: the walker follows the thread from
+  // the start, turning the fixed way at a strand end (walker.ts); the
+  // player cuts, then Go sends it off, one run per head-dot move (the
+  // move's own animation is its clock: walkerStep takes the next run on
+  // each arrival). A walk that comes back to a state it was in goes in
+  // circles: a toast, and back to the start with the cuts kept. DELAY: the
+  // walker takes the shortest way to the exit from where it stands,
+  // replanning around every cut; each turn is a cut or a pass (Go, "Let it
+  // walk"), then it takes one run. The route thread (syncWalker: the
+  // telegraph in the walker's colour, its next run brightest) shows where
+  // it will go. The HUD's rows: Lead's cuts against par, Delay's walk
+  // against the walk it wanted (walkerScoreFn).
+  interface WalkerMemo {
+    fc: FabricMazeController;
+    map: WalkerMap;
+    // leadPar's answer, found the first time the HUD asks.
+    par: ParResult | null;
+    // Delay's route in runs on the uncut maze.
+    shortest: number;
+    restarts: number;
+    mode: "lead" | "delay" | null;
+    routeKey: string;
+    route: LeadRoute;
+    delayKey: string;
+    delayRuns: number[];
+  }
+  let walkerMemo: WalkerMemo | null = null;
+  // The memo for this controller, its Lead route as the cuts stand. A new
+  // controller, a restart (reset() moves `restarts`) or a mode change puts
+  // Lead back to planning.
+  const walkerOf = (fc: FabricMazeController): WalkerMemo | null => {
+    if (!fc.walkerMode || !scene.tangle) return null;
+    let m = walkerMemo;
+    if (!m || m.fc !== fc) {
+      m = walkerMemo = {
+        fc,
+        map: walkerMapOf(scene.tangle, fc.walk),
+        par: null,
+        shortest: delayRoute(fc.walk, fc.walk.start, new Set()).length,
+        restarts: -1,
+        mode: null,
+        routeKey: "\u0000",
+        route: { states: [], end: "none", loopAt: -1 },
+        delayKey: "\u0000",
+        delayRuns: [],
+      };
+    }
+    if (m.restarts !== fc.restarts || m.mode !== fc.walkerMode) {
+      m.restarts = fc.restarts;
+      m.mode = fc.walkerMode;
+      walkerState = "plan";
+      walkerIdx = 0;
+    }
+    const key = fc.cutRuns().join(",");
+    if (key !== m.routeKey) {
+      m.routeKey = key;
+      m.route = leadRoute(m.map, fc.cuts);
+    }
+    return m;
+  };
+  // The walker's own move (moveAlong refuses every other mover).
+  const walkerMove = (run: number): boolean => {
+    walkerDriving = true;
+    try {
+      return moveAlong(run);
+    } finally {
+      walkerDriving = false;
+    }
+  };
+  // The state `actions` rebuild, laid out as undoMove lays it (a replay that
+  // fails restarts the solve). Lead's planning keeps its cuts through it.
+  const walkerRestore = (actions: FabricMazeController["actions"]): void => {
+    const fc = scene.fabricController;
+    if (!fc || !scene.fabric) return;
+    pendingCut = -1;
+    if (!fc.replayActions(actions)) {
+      restartSolve();
+      updateHud();
+      return;
+    }
+    routeRuns = [];
+    routeFc = null;
+    chaseRoute = [];
+    pendingWin = false;
+    pendingLoss = false;
+    ruleLoss.reset();
+    scene.fabric.cancelMove();
+    scene.fabric.restoreYarn(fc.taps);
+    scene.fabric.exploreRestore(fc);
+    scene.fabric.update(fc);
+    scene.fabric.exploreRuns(exploredRuns(fc));
+    saveAttempt();
+    updateHud();
+    wake();
+  };
+  // Lead's walk ended short of the exit: say why, then back to the start
+  // with the cuts kept.
+  const walkerBack = (msg: string): void => {
+    const fc = scene.fabricController;
+    if (!fc) return;
+    showToast(msg, CUT_TOAST_MS);
+    walkerState = "plan";
+    walkerIdx = 0;
+    walkerRestore(fc.actions.filter((a) => a.kind === "cut"));
+  };
+  // Every frame first in keyStep (carryStep): Lead's next run on each
+  // arrival. Always true: in a walker mode nothing else moves.
+  const walkerStep = (fc: FabricMazeController): boolean => {
+    pendingCut = -1;
+    if (fc.walkerMode !== "lead" || walkerState !== "walk") return true;
+    const m = walkerOf(fc);
+    if (!m || walkerState !== "walk") return true;
+    if (dotMoving() || pendingWin || pendingLoss || fc.solved) return true;
+    if (walkerIdx < m.route.states.length) {
+      const run = m.route.states[walkerIdx++] >> 1;
+      if (!walkerMove(run)) walkerBack("The walker can't go on.");
+      return true;
+    }
+    walkerBack(
+      m.route.end === "loop" ? "It's going in circles." : "The walker has no way to go."
+    );
+    return true;
+  };
+  // Delay's turn: the walker takes one run of its way to the exit.
+  const walkerTurn = (fc: FabricMazeController): void => {
+    const run = delayNext(fc.walk, fc.head, fc.cuts);
+    if (run >= 0) walkerMove(run);
+  };
+  // A tap in a walker mode: on a live run it cuts (Delay's walker then
+  // takes its turn); anywhere else, or while Lead's walker walks, it falls
+  // through to pluck and pan.
+  const walkerTap = (x: number, y: number, pt: string): boolean => {
+    const fc = scene.fabricController;
+    if (!fc || !scene.fabric) return false;
+    if (fc.walkerMode === "lead" && walkerState === "walk") return false;
+    const eid = scene.fabric.cutAt(x, y, fc, pickRadius(pt, true));
+    if (eid < 0) return false;
+    if (fc.solved || dotMoving() || pendingWin) return true;
+    const r = fc.cut(eid);
+    if (r === "cut") {
+      cutPluck(eid, SNAP_OCTAVE, SNAP_STRENGTH);
+      scene.fabric.update(fc);
+      if (fc.walkerMode === "delay") walkerTurn(fc);
+      updateHud();
+      return true;
+    }
+    cutRefused(fc, eid, r === "refused");
+    return true;
+  };
+  const walkerGo = (): void => {
+    const fc = scene.fabricController;
+    if (!fc || !fc.walkerMode || fc.solved || dotMoving() || pendingWin) return;
+    if (fc.walkerMode === "delay") {
+      walkerTurn(fc);
+      updateHud();
+      return;
+    }
+    const m = walkerOf(fc);
+    if (!m || walkerState === "walk") return;
+    walkerState = "walk";
+    walkerIdx = 0;
+    updateHud();
+  };
+  // Lead: back to the start with the cuts kept (after a finish, a fresh
+  // solve); Delay: the walk starts over.
+  const walkerReset = (): void => {
+    const fc = scene.fabricController;
+    if (!fc || !fc.walkerMode) return;
+    if (fc.walkerMode === "lead" && !fc.solved) {
+      walkerState = "plan";
+      walkerIdx = 0;
+      walkerRestore(fc.actions.filter((a) => a.kind === "cut"));
+      return;
+    }
+    restartSolve();
+    updateHud();
+  };
+  // Lead (planning): the last cut back. Delay: the last turn back, a cut
+  // with the run after it, or a pass's run.
+  const walkerUndo = (): void => {
+    const fc = scene.fabricController;
+    if (!fc || !fc.walkerMode || fc.solved || dotMoving() || pendingWin) return;
+    const acts = fc.actions;
+    if (acts.length === 0) return;
+    if (fc.walkerMode === "lead") {
+      if (walkerState === "walk") return;
+      walkerRestore(acts.slice(0, -1));
+      return;
+    }
+    let n = acts.length;
+    if (acts[n - 1].kind === "move") n--;
+    if (n > 0 && acts[n - 1].kind === "cut") n--;
+    walkerRestore(acts.slice(0, n));
+  };
+  // The walker's keys (G goes, U undoes), while its buttons show.
+  const walkerKey = (k: WalkerKey): boolean => {
+    if (!scene.fabricController?.walkerMode || !walkerButtons.isShown) return false;
+    if (k === "go") walkerGo();
+    else walkerUndo();
+    return true;
+  };
+  walkerScoreFn = (): WalkerScore | null => {
+    const fc = scene.fabricController;
+    const m = fc ? walkerOf(fc) : null;
+    if (!fc || !m) return null;
+    if (fc.walkerMode === "lead") {
+      if (!m.par) m.par = leadPar(m.map);
+      return { mode: "lead", par: Number.isFinite(m.par.par) ? m.par.par : null };
+    }
+    return { mode: "delay", walk: fc.taps.length, shortest: m.shortest };
+  };
+  const panelCoversWalker = (): boolean => {
+    if (!panel.isOpen()) return false;
+    const r = camera.panelWrap?.getBoundingClientRect();
+    return !!r && r.width > 0 && walkerButtons.covered(r);
+  };
+  // Every frame (cutTick): the buttons, and the route thread. Lead shows
+  // its whole walk (from the run under way while it walks), Delay its way
+  // to the exit as the cuts stand.
+  const walkerTick = (
+    fc: FabricMazeController | null,
+    walker: "lead" | "delay" | null
+  ): void => {
+    const m = fc && walker ? walkerOf(fc) : null;
+    let runs: number[] | null = null;
+    if (fc && m && !fc.solved) {
+      if (walker === "lead") {
+        const from = walkerState === "walk" ? Math.max(0, walkerIdx - 1) : 0;
+        runs = m.route.states.slice(from).map((d) => d >> 1);
+      } else {
+        const key = `${fc.head}|${m.routeKey}`;
+        if (key !== m.delayKey) {
+          m.delayKey = key;
+          m.delayRuns = delayRoute(fc.walk, fc.head, fc.cuts);
+        }
+        runs = m.delayRuns;
+      }
+    }
+    scene.fabric?.syncWalker(runs);
+    const shown = !!fc && !!m && keysLive() && !panelCoversWalker();
+    walkerButtons.setShown(shown);
+    if (!shown || !fc || !m) return;
+    const busy = dotMoving() || pendingWin || fc.solved;
+    const walking = walker === "lead" && walkerState === "walk";
+    walkerButtons.setGo(
+      walker === "lead" ? "Go" : "Let it walk",
+      walker === "lead"
+        ? "Go (G): send the walker off"
+        : "Let it walk (G): no cut this turn, the walker takes one run",
+      !walking && !busy && (walker === "delay" || m.route.end !== "none")
+    );
+    walkerButtons.setReset(walking || fc.actions.length > 0);
+    walkerButtons.setUndo(
+      !walking && !busy && fc.actions.length > 0,
+      walker === "lead" ? "Undo (U): take back the last cut" : "Undo (U): take back the last turn"
+    );
   };
 
   // K5 M6: key input (K120's moves by direction, the move pad, the
@@ -2760,6 +3071,7 @@ async function main(): Promise<void> {
       contextLost: () => glContextLost,
       carryStep: () => carryStep(),
       cutKey: (k) => cutKey(k),
+      walkerKey: (k) => walkerKey(k),
     },
     scene
   );

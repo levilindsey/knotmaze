@@ -53,6 +53,13 @@ import { cuttable, distancesToExit } from "./cut";
 
 export type WalkerMode = "lead" | "delay";
 
+// What the HUD, the win banner and the share say of a walker game: Lead's
+// par (null: none found within the budget), Delay's walk and the walk it
+// wanted, both in runs.
+export type WalkerScore =
+  | { mode: "lead"; par: number | null }
+  | { mode: "delay"; walk: number; shortest: number };
+
 type WalkerWalk = Pick<
   WalkGraph,
   "vertices" | "edges" | "start" | "exit" | "mazeStart" | "titleEdges" | "distToExit"
