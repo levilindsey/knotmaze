@@ -286,6 +286,11 @@ export function createScene(deps: SceneDeps): Scene {
             return body >= 0 && t.footC ? { ...t, body } : t;
           })
         : undefined,
+      // K580 s5: per chain, a glyph strand (core Strand.glyph); undefined
+      // for a scene without glyphs, so nothing else reads a flag.
+      glyph: graph.strands.some((s) => s.glyph)
+        ? graph.strands.map((s) => s.glyph === true)
+        : undefined,
     });
     renderer.setSectionRuns(
       buildSectionRuns(
