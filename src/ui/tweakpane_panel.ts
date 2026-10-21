@@ -47,6 +47,8 @@ import { ONE_WAY_MAX } from "../game/one_way";
 import { LIVES_MAX, LIVES_RECOMMENDED, livesOf } from "../game/lives";
 import { SWORD_MOVES_MAX, SWORD_MOVES_MIN } from "../game/sword";
 import { SLEEPERS_MAX } from "../game/monsters";
+import { LURES_MAX } from "../game/lures"; // K137 stage 4
+import { SNARES_MAX } from "../game/snares";
 import {
   BACKGROUND_ACCENTS_USED,
   BACKGROUND_ANGLE_AUTO,
@@ -2060,6 +2062,20 @@ export function buildPanel(
     "Turn clock: wakes hunts you once woken; follows trails your path a run or two behind, so stopping or turning back lets it catch you (the entrance puts it back to sleep); both mixes the two. Restarts the solve.",
     D.sleepKind, () => callbacks.onClockChange()
   );
+  // K137 stage 4 (4.10, 4.30; game/lures.ts, game/snares.ts): the lures
+  // and snares, turn clock only. A restart refills both (onClockChange).
+  const luresRow = row(
+    fMino, p, "lures",
+    { min: 0, max: LURES_MAX, step: 1, format: (v: number) => (v === 0 ? "off" : String(v)), label: "Lures" },
+    "Turn clock: arm the note button (or L), then tap a run to pluck it. The minotaur, and any sleeper in range, hears it and heads for the run's nearer end; it costs no move. Out of range nothing hears it, and the lure is spent anyway. Restarts the solve.",
+    D.lures, () => callbacks.onClockChange()
+  );
+  const snaresRow = row(
+    fMino, p, "snares",
+    { min: 0, max: SNARES_MAX, step: 1, format: (v: number) => (v === 0 ? "off" : String(v)), label: "Snares" },
+    "Turn clock, by runs: arm the knot button (or N), then tap a run touching your junction. The first monster to step onto it stops at the near end and stands there three turns; it still catches you if you walk onto it. One snare a run. Restarts the solve.",
+    D.snares, () => callbacks.onClockChange()
+  );
   // K80 turns stage 2 (K273): what a catch resets, on both clocks. While
   // the level row is on a catch resets everything, so the other two hide.
   const minoRestartRow = chaseRow(
@@ -2974,6 +2990,9 @@ export function buildPanel(
     // K137 stage 3d: the extra monsters play on the turn clock only.
     sleepersRow.hidden = !minoOn || realtime;
     sleepKindRow.hidden = !minoOn || realtime || params.sleepers <= 0;
+    // K137 stage 4: the lures and snares play on the turn clock only.
+    luresRow.hidden = !minoOn || realtime;
+    snaresRow.hidden = !minoOn || realtime;
     minoRestartRow.hidden = !minoOn || livesOn;
     minoLairRow.hidden = !minoOn || restartOn;
     minoRefogRow.hidden = !minoOn || !(fog || threads) || restartOn;

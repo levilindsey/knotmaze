@@ -209,6 +209,8 @@ export const LIVE_EFFECTS = {
     "sprint", // K137 stage 3c: a restart gives sprint back.
     // K137 stage 3d: the extra monsters (a new chase lays them anew).
     "sleepers", "sleepKind",
+    // K137 stage 4: the lures and snares (a restart refills both).
+    "lures", "snares",
     // K137 stage 2: the spool and the hints (a restart refills both).
     "spool", "spoolSlack", "hints",
     // K138 stage 1: ice and the color rule (a restart places them anew).

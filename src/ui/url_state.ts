@@ -828,6 +828,12 @@ export interface UrlParams {
   // K138 stage 3: one-way runs, 0 off or the share of the maze's core runs
   // (0..ONE_WAY_MAX 0.6) walked one way only. The classic game only.
   oneWay: number;
+  // K137 stage 4, 4.10 and 4.30 (game/lures.ts, game/snares.ts): the stock
+  // of lure plucks (0 off, 1..5) and of snares (0 off, 1..3) an attempt
+  // carries under a turn-clock chase; a level restart refills both. Free
+  // play only.
+  lures: number;
+  snares: number;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1146,6 +1152,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   sleepKind: "wake",
   // K138 stage 3: no one-way runs.
   oneWay: 0,
+  // K137 stage 4: no lures, no snares.
+  lures: 0,
+  snares: 0,
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1949,6 +1958,10 @@ function readLegacy(
     sleepKind: readChoice(query, "slk", SLEEP_KINDS, D.sleepKind),
     // K138 stage 3's one-way share (`&ow=0.4`; PARAM_RANGES clamps 0..0.6).
     oneWay: readNumber(query, "ow", D.oneWay),
+    // K137 stage 4's lures and snares (`&lur=3&snr=2`; PARAM_RANGES clamps
+    // them to 0..5 and 0..3).
+    lures: readNumber(query, "lur", D.lures),
+    snares: readNumber(query, "snr", D.snares),
   };
 }
 

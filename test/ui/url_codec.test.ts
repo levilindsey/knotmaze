@@ -146,6 +146,7 @@ describe("links", () => {
       turnstiles: 0, hiddenRuns: 0, // K138 stage 2
       sleepers: 0, sleepKind: "wake", // K137 stage 3d
       oneWay: 0, // K138 stage 3
+      lures: 0, snares: 0, // K137 stage 4
     });
   });
 
@@ -951,6 +952,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   turnstiles: "tst", hiddenRuns: "hid", // K138 stage 2
   sleepers: "slp", sleepKind: "slk", // K137 stage 3d
   oneWay: "ow", // K138 stage 3
+  lures: "lur", snares: "snr", // K137 stage 4
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
@@ -994,6 +996,8 @@ if (name === "cartouche") return "knot";
   if (name === "hiddenRuns") return 2; // K138 stage 2: its default is 0 (off)
   if (name === "sleepers") return 2; // K137 stage 3d: its default is 0 (off)
   if (name === "oneWay") return 0.4; // K138 stage 3: its default is 0 (off)
+  if (name === "lures") return 3; // K137 stage 4: both default to 0 (off)
+  if (name === "snares") return 2;
   return (d as number) * 0.5;
 }
 // As a link writes it: booleans 0/1, colors without the "#".
