@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K746.
+Next free ID: K749.
 
 ## Waiting on Levi
 
@@ -224,6 +224,10 @@ Next free ID: K746.
   compass follow the best legal route; refusals go through K480 targetAt, not a
   refused-runs-in-reach check; cycle glyphs on the head runs deferred (call 4). No grayscale or
   colorblind review of the rule colors yet (alternate 0.8/0.3, cycle 0.8/0.5/0.22)
+- **K746** · K137 sprint calls (`docs/design/K137_s3c.md` Handoff, alternatives there): by length
+  the pair turn travels half their summed length; in real time a press arms the next two runs, not
+  the one under way; key F (Q sits on A in AZERTY); a catch while armed spends it; a restart gives
+  it back
 
 ## In progress
 
@@ -383,11 +387,11 @@ Next free ID: K746.
 - **K137** · K80 section 4's cheap (S, S-M) mechanisms, each toggled (Levi 10-13), after the
   minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus
   Levi's sleeper variant. `K80_gameplay_additions.md`, stages in `sooner_20261020.md`; M: K138, M-L/L: K141.
-  - owner: nobody since 2026-10-21 03:56 (merged; agent `ab709d9c4cd9eaa76` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `8e6ff46d`
-  - evidence: `.claude/probes/K137/s3c/`
-  - next: stage 3d (docs/design/K137_s3d.md): the s3c remainder first (the monster list with every pin identical, sleepers 4.9, the follower), then lures, snares, mud
-  - brief: `docs/design/K137_s3c.md`
+  - owner: agent `a75c80b994febd2dc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus-5-5, started 2026-10-21 03:56, 2 h cap ~05:56)
+  - branch: `worktree-agent-a75c80b994febd2dc`, worktree `.claude/worktrees/agent-a75c80b994febd2dc`; last commit: `6acad00b`
+  - evidence: `.claude/probes/K137/s3d/`
+  - next: stage 3d (cap ~05:56): the s3c remainder first (the monster list, sleepers 4.9, the follower), then lures, snares, mud; then stage 4 look pieces
+  - brief: `docs/design/K137_s3d.md`
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
@@ -1359,6 +1363,11 @@ Every other item below waits on the trigger it names.
 - **K744** · K138 s1 page gaps: blips of other colors at some junctions under the rule colors (cause
   unverified, maybe the junction webs); not page-checked: a backtrack undoing a slide, ice with
   alternate, strict par lost under a rule, the share (`docs/design/K138_s1.md` Handoff)
+- **K747** · The sword takenAt and slainAt count minotaur turns, so after a sprint on the turn clock
+  they read one less than the move (K137 s3c Handoff)
+- **K748** · Sprint polish (K137 s3c): a focus outline lingers on the sprint button after F; no real
+  phone pass yet (emulated 411x753). The s3a fragile page check is weak on the hunter and the fire
+  side is unit-tested only
 
 ## Approved, to schedule (2026-10-11)
 
