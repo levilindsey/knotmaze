@@ -1307,6 +1307,11 @@ export class TurnMinotaur {
     return this.progress >= 1 ? x.phase : x.shown;
   }
 
+  // K137 s3d: every extra as the renderer draws it (empty without extras).
+  get extraViews(): ExtraView[] {
+    return this.extras.map((x, i) => ({ spot: this.extraSpot(i), phase: this.extraPhase(i), kind: x.kind }));
+  }
+
   // K137 s3b: it flees the sword / the one-use sword slew it.
   get fleeing(): boolean {
     return swordFleeing(this.sword);
@@ -2054,6 +2059,13 @@ export interface TurnExtra {
   homing: boolean; // Follower: it lost you (you hid at the entrance); walking home.
   lastFrom: number;
   lastPath: TurnStep[];
+}
+
+// What the renderer draws for one extra: where it stands, its phase, its kind.
+export interface ExtraView {
+  readonly spot: Spot;
+  readonly phase: MonsterPhase;
+  readonly kind: MonsterKind;
 }
 
 function homeState(v: number): MinoState {
