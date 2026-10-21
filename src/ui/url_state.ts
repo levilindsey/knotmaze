@@ -22,6 +22,7 @@ import { FRAGILE_MODES } from "../game/fragile";
 import type { ParMode } from "../game/par";
 import { PAR_MODES, PAR_SLACK_DEFAULT } from "../game/par";
 import {
+  CHASE_MODEL_DEFAULTS,
   DEFAULT_CHASE_PARAMS,
   HUNT_PACE_FRACTION,
   WANDER_PACE_FRACTION,
@@ -557,6 +558,16 @@ export interface UrlParams {
   minoTipReach: number;
   minoRoamNear: number;
   minoTelegraphRuns: number;
+  // K324 stage 3: the real-time guard's territory around the exit tail's
+  // junction, its sight (spots you within / loses you beyond; u along the
+  // threads) and accuracy, and the real-time stalker's accuracy. Separate
+  // from the turn clock's rows (runs, not u: K440's WHY TWO PARAMS);
+  // `minotaur` picks the model on both clocks.
+  minoGuardRoam: number;
+  minoGuardDetect: number;
+  minoGuardLose: number;
+  minoGuardAccuracyRt: number;
+  minoStalkerAccuracyRt: number;
   // K140's finish confetti amount in [0, CONFETTI_AMOUNT_MAX] (1 = the
   // designed burst; 0 = none since K323 merged the on/off switch in).
   // A viewer preference.
@@ -896,6 +907,11 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minoTipReach: DEFAULT_CHASE_PARAMS.tipReach,
   minoRoamNear: DEFAULT_CHASE_PARAMS.roamNear,
   minoTelegraphRuns: 1,
+  minoGuardRoam: CHASE_MODEL_DEFAULTS.guard.territory, // K324 stage 3
+  minoGuardDetect: CHASE_MODEL_DEFAULTS.guard.detect,
+  minoGuardLose: CHASE_MODEL_DEFAULTS.guard.lose,
+  minoGuardAccuracyRt: CHASE_MODEL_DEFAULTS.guard.accuracy,
+  minoStalkerAccuracyRt: CHASE_MODEL_DEFAULTS.stalker.accuracy,
   confettiAmount: 1,
   confettiShine: 1, // K337
   foilShare: 0.3, // K337
@@ -1125,6 +1141,15 @@ export function chaseParamsOf(
     turnBack: pos(p.minoTurnBack),
     tipReach: pos(p.minoTipReach),
     roamNear: clamp01(pos(p.minoRoamNear)),
+    // K324 stage 3: the model (the turn clock's row, both clocks) and the
+    // guard's and the stalker's real-time knobs; the chase keeps the
+    // guard's lose >= its detect.
+    model: p.minotaur === "guard" || p.minotaur === "stalker" ? p.minotaur : "hunter",
+    territory: pos(p.minoGuardRoam),
+    guardDetect: pos(p.minoGuardDetect),
+    guardLose: pos(p.minoGuardLose),
+    guardAccuracy: clamp01(pos(p.minoGuardAccuracyRt)),
+    stalkerAccuracy: clamp01(pos(p.minoStalkerAccuracyRt)),
   };
 }
 
@@ -1575,6 +1600,13 @@ function readLegacy(
     minoTipReach: readNumber(query, "mdr", D.minoTipReach),
     minoRoamNear: readNumber(query, "mnr", D.minoRoamNear),
     minoTelegraphRuns: readNumber(query, "mtn", D.minoTelegraphRuns),
+    // K324 stage 3 (`&mgr=40&mgd=20&mgl=30&mgx=.5&msx=.5`); the ranges
+    // clamp them (PARAM_RANGES).
+    minoGuardRoam: readNumber(query, "mgr", D.minoGuardRoam),
+    minoGuardDetect: readNumber(query, "mgd", D.minoGuardDetect),
+    minoGuardLose: readNumber(query, "mgl", D.minoGuardLose),
+    minoGuardAccuracyRt: readNumber(query, "mgx", D.minoGuardAccuracyRt),
+    minoStalkerAccuracyRt: readNumber(query, "msx", D.minoStalkerAccuracyRt),
     // K140's finish confetti amount (`&cfa=2`; `&cf=` is ignored since
     // K323 merged the switch into the amount).
     confettiAmount: clampTo(

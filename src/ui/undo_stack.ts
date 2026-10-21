@@ -169,6 +169,9 @@ export const LIVE_EFFECTS = {
     // K324: the junction stops, turn-back, roam window, telegraph reach.
     "minoStopMin", "minoStopMax", "minoHuntStop", "minoTurnBack",
     "minoTipReach", "minoRoamNear", "minoTelegraphRuns",
+    // K324 stage 3: the real-time guard's and stalker's knobs.
+    "minoGuardRoam", "minoGuardDetect", "minoGuardLose",
+    "minoGuardAccuracyRt", "minoStalkerAccuracyRt",
   ],
   // K80 turns: the turn-aligned minotaur's tuning.
   onTurnMinoChange: [

@@ -814,6 +814,110 @@ export class MinotaurChase {
     }
   }
 
+  // K324 stage 3: the run it leaves its vertex along. The hunter hunts
+  // (huntEdgeFrom) or roams (roamEdge), as K80 did; the guard roams its
+  // territory and hunts by decideFrom; the stalker always decides.
+  private chooseRun(): [number, 1 | -1] | null {
+    const P = this.params;
+    const v = this.mino.vertex;
+    const hunting = this.mode === "hunt";
+    if (P.model !== "guard" && P.model !== "stalker") {
+      return hunting ? this.huntEdgeFrom(v) : this.roamEdge();
+    }
+    if (P.model === "guard" && !hunting) {
+      this.aimed = true;
+      return this.roamEdge();
+    }
+    const d = this.decideFrom(v, this.decisions, this.lastEdge);
+    if (d.drew) this.decisions++;
+    this.aimed = d.aimed;
+    if (!hunting && d.pace >= 0) this.legPace = d.pace;
+    return d.choice;
+  }
+
+  // K324 stage 3: the guard's hunting step and the stalker's every step at
+  // vertex v, from decision k of the counter stream (seed, k). While it sees
+  // you (you are off the tails), with chance q (guardAccuracy or
+  // stalkerAccuracy) the best run toward you (huntEdgeFrom); otherwise a
+  // random run, never a tail, and for a stalker that cannot see you never
+  // `back` (the run it came along) while it has another. Three draws (u1
+  // aims, u2 picks the random run, u3 the stalker's leg pace), none for the
+  // exit tail out of its lair. Pure: plan() asks it ahead at k + i.
+  decideFrom(v: number, k: number, back: number): ChaseDecision {
+    const g = this.g;
+    const P = this.params;
+    if (v === g.exit) {
+      const tail = g.adj[v][0];
+      const choice: [number, 1 | -1] | null =
+        tail === undefined ? null : [tail, g.ea[tail] === v ? 1 : -1];
+      return { choice, aimed: false, pace: -1, drew: false };
+    }
+    const r = this.aimRng.at(k);
+    const u1 = r.next();
+    const u2 = r.next();
+    const u3 = r.next();
+    const pace = P.wanderPace * (1 + P.paceJitter * (2 * u3 - 1));
+    const seen = !this.invisible();
+    const q = P.model === "guard" ? P.guardAccuracy : P.stalkerAccuracy;
+    if (seen && u1 < q) {
+      const best = this.huntEdgeFrom(v);
+      if (best) return { choice: best, aimed: true, pace, drew: true };
+    }
+    let runs: number[] = [];
+    for (const eid of g.adj[v]) if (!g.barred[eid] && runs.indexOf(eid) < 0) runs.push(eid);
+    if (!seen && P.model === "stalker" && runs.length > 1 && back >= 0) {
+      const ahead = runs.filter((eid) => eid !== back);
+      if (ahead.length > 0) runs = ahead;
+    }
+    if (runs.length === 0) return { choice: null, aimed: false, pace, drew: true };
+    const eid = runs[Math.min(runs.length - 1, Math.floor(u2 * runs.length))];
+    return { choice: [eid, g.ea[eid] === v ? 1 : -1], aimed: false, pace, drew: true };
+  }
+
+  // K324 stage 3: the guard's territory, rebuilt when params.territory
+  // changes. Home = the exit tail's junction; radius = territory, or home's
+  // shortest run out when that is longer (so it always has somewhere to
+  // go). A vertex is in when it lies within radius of home along the
+  // threads it may use; a run when its farthest point does, which is
+  // (d[a] + d[b] + len) / 2 from home (a shortest-path tree's runs all
+  // qualify, so the territory is connected).
+  territory(): ChaseTerritory {
+    const P = this.params;
+    if (this.terr && this.terr.asked === P.territory) return this.terr;
+    const g = this.g;
+    const tail = g.adj[g.exit][0];
+    const home =
+      tail === undefined ? g.exit : g.ea[tail] === g.exit ? g.eb[tail] : g.ea[tail];
+    let shortest = Infinity;
+    for (const eid of g.adj[home]) {
+      if (g.barred[eid] || g.ea[eid] === g.eb[eid]) continue;
+      if (g.len[eid] < shortest) shortest = g.len[eid];
+    }
+    const asked = P.territory;
+    const radius = shortest < Infinity && !(asked >= shortest) ? shortest : asked;
+    const d = g.from(home, true);
+    const vin = new Uint8Array(g.ids.length);
+    for (let i = 0; i < vin.length; i++) if (d[i] <= radius) vin[i] = 1;
+    const ein = new Uint8Array(g.len.length);
+    for (let e = 0; e < ein.length; e++) {
+      if (g.barred[e]) continue;
+      if (d[g.ea[e]] + d[g.eb[e]] + g.len[e] <= 2 * radius) ein[e] = 1;
+    }
+    this.terr = { asked, home, radius, vin, ein, routes: new Map() };
+    return this.terr;
+  }
+
+  // Distances to `dest` through the territory's runs (cached per territory).
+  private territoryRoute(dest: number): Float64Array {
+    const t = this.territory();
+    let r = t.routes.get(dest);
+    if (!r) {
+      r = this.g.fromOver(dest, t.ein);
+      t.routes.set(dest, r);
+    }
+    return r;
+  }
+
   // K324 3.1-3.2: a junction stop's length in ticks, from the counter
   // stream (seed, arrival count): roaming uniform in [stopMin, stopMax] s,
   // hunting that times huntStop.
@@ -871,14 +975,31 @@ export class MinotaurChase {
     const tips: number[] = [];
     const near: number[] = [];
     const any: number[] = [];
-    for (let i = 0; i < g.ids.length; i++) {
-      if (i === here || i === g.start || i === g.exit) continue;
-      if (!(d[i] < Infinity)) continue;
-      any.push(i);
-      if (g.isEnd[i]) {
-        if (d[i] <= P.tipReach * P.roamRange) tips.push(i);
-      } else if (d[i] >= P.roamNear * P.roamRange && d[i] <= P.roamRange) {
-        near.push(i);
+    if (P.model === "guard") {
+      // K324 stage 3: the guard's candidates are its territory's vertices
+      // (tips, or junctions), home excepted; none, it heads home.
+      const t = this.territory();
+      for (let i = 0; i < g.ids.length; i++) {
+        if (i === here || i === t.home || i === g.start || i === g.exit) continue;
+        if (!t.vin[i] || !(d[i] < Infinity)) continue;
+        any.push(i);
+        if (g.isEnd[i]) tips.push(i);
+        else near.push(i);
+      }
+      if (any.length === 0 && here !== t.home) {
+        near.push(t.home);
+        any.push(t.home);
+      }
+    } else {
+      for (let i = 0; i < g.ids.length; i++) {
+        if (i === here || i === g.start || i === g.exit) continue;
+        if (!(d[i] < Infinity)) continue;
+        any.push(i);
+        if (g.isEnd[i]) {
+          if (d[i] <= P.tipReach * P.roamRange) tips.push(i);
+        } else if (d[i] >= P.roamNear * P.roamRange && d[i] <= P.roamRange) {
+          near.push(i);
+        }
       }
     }
     let pool = u1 < P.deadEndBias && tips.length > 0 ? tips : near;
@@ -940,11 +1061,19 @@ export class MinotaurChase {
       return [tail, g.ea[tail] === v ? 1 : -1];
     }
     if (dest < 0) return null;
-    const toDest = g.from(dest, true);
+    // K324 stage 3: a guard inside its territory, bound for a vertex in it,
+    // keeps to the territory's runs.
+    let ok: Uint8Array | null = null;
+    if (this.params.model === "guard") {
+      const t = this.territory();
+      if (t.vin[v] && t.vin[dest]) ok = t.ein;
+    }
+    const toDest = ok ? this.territoryRoute(dest) : g.from(dest, true);
     let best: [number, 1 | -1] | null = null;
     let bestCost = Infinity;
     for (const eid of g.adj[v]) {
       if (g.barred[eid]) continue;
+      if (ok && !ok[eid]) continue;
       const far = g.ea[eid] === v ? g.eb[eid] : g.ea[eid];
       const cost = g.len[eid] + toDest[far];
       if (cost < bestCost) {

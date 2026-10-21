@@ -333,6 +333,13 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   choice("fragile", ["off", "crack", "snap"]),
   choice("parMode", ["off", "strict", "strokes"]),
   num("parSlack"),
+  // K324 stage 3: the real-time guard's territory, sight and accuracy and
+  // the real-time stalker's accuracy (185-189).
+  num("minoGuardRoam"),
+  num("minoGuardDetect"),
+  num("minoGuardLose"),
+  num("minoGuardAccuracyRt"),
+  num("minoStalkerAccuracyRt"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -443,6 +450,11 @@ export const PARAM_RANGES: Readonly<
   minoTipReach: [0.5, 4],
   minoRoamNear: [0, 1],
   minoTelegraphRuns: [0, 3],
+  minoGuardRoam: [5, 150], // K324 stage 3
+  minoGuardDetect: [0, 100],
+  minoGuardLose: [0, 150],
+  minoGuardAccuracyRt: [0, 1],
+  minoStalkerAccuracyRt: [0, 1],
   confettiAmount: [0, 3],
   confettiShine: [0, 2], // K337 (CONFETTI_SHINE_MAX)
   foilShare: [0, 1], // K337
