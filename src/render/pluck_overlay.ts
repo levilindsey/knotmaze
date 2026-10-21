@@ -108,8 +108,10 @@ import {
   wholeAmplitude,
   wholeRoom,
   wholeShape,
+  wouldPluck,
 } from "./pluck_model";
 import type { PluckCrossings, PluckGlow } from "./pluck_model";
+import { paintArcAt } from "./ribbon/sampling";
 
 // How the whole-segment term W meets the rest of the weave (K104; the pick
 // is Levi's decision): "overlap" = W displaces the unit, running into a
@@ -903,6 +905,37 @@ export class PluckOverlay {
   lastSkip: PluckSkip = "none";
   resetSkip(): void {
     this.lastSkip = "none";
+  }
+  // K244: would a pluck at (chain, ctrl) draw anything? The pure verdict
+  // (pluck_model.ts wouldPluck: false in a junction core and for a lobe too
+  // short to exist) on the LIVE nodes, with the ctrl turned into an arc the way
+  // renderer.pluck does (a closed chain wraps, an open one clamps). Geometry
+  // only: hot, held and pluckSize 0 are not asked and stay sound-only. A
+  // chain with no samples cannot draw, so it answers false.
+  // The nodes move with the knot (pluckNodes walks every crossing per call),
+  // so a tester is for ONE decision, a pick or a release: it reads each
+  // chain's nodes once, and a caller makes a new one next time.
+  siteTester(): (chain: number, ctrl: number) => boolean {
+    const seen = new Map<
+      number,
+      { samples: SplineSamples; nodes: PluckNode[]; closed: boolean } | null
+    >();
+    return (chain, ctrl) => {
+      let c = seen.get(chain);
+      if (c === undefined) {
+        const samples = this.host.samples(chain);
+        c =
+          samples && samples.totalLength > 0
+            ? { samples, nodes: this.host.nodes(chain), closed: this.host.closed(chain) }
+            : null;
+        seen.set(chain, c);
+      }
+      if (!c || !Number.isFinite(ctrl)) return false;
+      const len = c.samples.controlArcLengths.length;
+      if (len === 0) return false;
+      const k = c.closed ? ((ctrl % len) + len) % len : Math.max(0, Math.min(len - 1, ctrl));
+      return wouldPluck(c.nodes, c.samples.totalLength, c.closed, paintArcAt(c.samples, k, c.closed));
+    };
   }
   private host: PluckHost;
   private active: ActivePluck[] = [];

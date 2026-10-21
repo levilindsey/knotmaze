@@ -1214,3 +1214,35 @@ export function tapLobes(
     core: vibrating[1] - vibrating[0] < LOBE_MIN_LEN && inside,
   };
 }
+
+// Would a pluck at this tap draw anything? (K244, Levi 2026-10-20: "Players
+// shouldn't be able to pluck junction cores.") tapLobes' verdict as one
+// boolean, for the callers that decide BEFORE they play: an auto pluck
+// choosing its site, a drag's release. True when the tap holds a lobe with
+// LOBE_MIN_LEN of vibrating arc. False in a junction core (K235), and for a
+// degenerate lobe (no tapped lobe at all). It reads `core` and the vibrating
+// span from tapLobes, so the core test still lives in one place. The
+// overlay's other skips - hot, held, pluckSize 0 - are not geometry and stay
+// out of it.
+export function drawsPluck(t: TapLobes): boolean {
+  return (
+    t.tapped !== null &&
+    t.vibrating !== null &&
+    !t.core &&
+    t.vibrating[1] - t.vibrating[0] >= LOBE_MIN_LEN
+  );
+}
+
+// drawsPluck for a plain (unfretted) pluck at `tapArc` of a chain whose nodes
+// are `nodes` (ascending by arc, an open chain's ends included). The tapped
+// lobe depends on the nodes and the arc alone - reach and a walk-run span only
+// shape its neighbors - so none are asked.
+export function wouldPluck(
+  nodes: ReadonlyArray<{ readonly arc: number; readonly hide: number }>,
+  total: number,
+  closed: boolean,
+  tapArc: number
+): boolean {
+  if (!(total > 0)) return false;
+  return drawsPluck(tapLobes(nodes, total, closed, tapArc, 0));
+}

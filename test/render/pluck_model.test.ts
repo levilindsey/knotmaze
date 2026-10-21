@@ -15,6 +15,7 @@ import {
   cueStrength,
   cueWeight,
   drawnSwing,
+  drawsPluck,
   envelope,
   freeEndX,
   pinFreeEnds,
@@ -62,6 +63,7 @@ import {
   wholeAmplitude,
   wholeRoom,
   wholeShape,
+  wouldPluck,
   yInst,
 } from "../../src/render/pluck_model";
 import type { PeakLobe, PeakStations } from "../../src/render/pluck_model";
@@ -1282,6 +1284,97 @@ describe("a tap inside a junction core (K235)", () => {
     const open = [node(0), node(3, 0.5), node(6), node(9)];
     expect(tapLobes(open, 9, false, 3.61, 1, [2, 3.62], true).core).toBe(true);
     expect(tapLobes(open, 9, false, 5, 1, [2, 3.62], true).core).toBe(false);
+  });
+});
+
+// K244 (Levi, 2026-10-20: "Players shouldn't be able to pluck junction cores"):
+// auto plucks and a drag's release decide BEFORE they play, so they need
+// tapLobes' verdict as one boolean. wouldPluck is it for a plain pluck.
+describe("would a pluck here draw anything? (K244)", () => {
+  const node = (arc: number, hide = 0) => ({ arc, hide });
+  // A junction's two arms 0.9 apart, each hiding 0.5 + the ramp: arcs 3..3.9
+  // are the core. The lobes either side have room.
+  const core = [node(1), node(3, 0.5), node(3.9, 0.5), node(8)];
+
+  it("a mid-run site plucks", () => {
+    const nodes = [node(1), node(3, 0.5), node(6), node(8)];
+    for (const arc of [1.5, 2, 4.5, 5.5, 7, 9, 0.2]) {
+      expect(wouldPluck(nodes, 10, true, arc)).toBe(true);
+    }
+    // No hide zones anywhere: every site of a long enough lobe plucks.
+    const plain = [node(1), node(3), node(6), node(8)];
+    for (const arc of [1.01, 2, 3.5, 5.99, 7, 9, 0.5]) {
+      expect(wouldPluck(plain, 10, true, arc)).toBe(true);
+    }
+  });
+
+  it("a site inside a junction core refuses", () => {
+    for (const arc of [3.05, 3.3, 3.45, 3.6, 3.85]) {
+      expect(wouldPluck(core, 10, true, arc)).toBe(false);
+    }
+    // One wide hide zone is enough, as for tapLobes.
+    expect(wouldPluck([node(1), node(3, 0.5), node(3.55), node(8)], 10, true, 3.2)).toBe(false);
+  });
+
+  it("a degenerate lobe (under LOBE_MIN_LEN) refuses", () => {
+    const nodes = [node(1), node(3), node(3.04), node(8)];
+    expect(tapLobes(nodes, 10, true, 3.02, 0).tapped).toBeNull();
+    expect(wouldPluck(nodes, 10, true, 3.02)).toBe(false);
+    // Its neighbors still pluck.
+    expect(wouldPluck(nodes, 10, true, 2)).toBe(true);
+    expect(wouldPluck(nodes, 10, true, 5)).toBe(true);
+  });
+
+  it("says yes exactly where tapLobes finds room to vibrate, across a whole chain", () => {
+    // A sweep of one closed chain: false only inside (3, 3.9), the core, and
+    // true everywhere else; every answer is the tapLobes verdict, read off
+    // its own fields (so the core test is not copied here).
+    for (let i = 0; i < 200; i++) {
+      const arc = i * 0.05 + 0.013;
+      const t = tapLobes(core, 10, true, arc, 0);
+      const room = t.tapped !== null && t.vibrating !== null && t.vibrating[1] - t.vibrating[0] >= LOBE_MIN_LEN;
+      expect(wouldPluck(core, 10, true, arc)).toBe(room);
+      expect(wouldPluck(core, 10, true, arc)).toBe(!(arc > 3 && arc < 3.9));
+      expect(drawsPluck(t)).toBe(room);
+    }
+  });
+
+  it("an arc past the seam reads as the same site", () => {
+    expect(wouldPluck(core, 10, true, 3.4 + 10)).toBe(false);
+    expect(wouldPluck(core, 10, true, 3.4 - 10)).toBe(false);
+    expect(wouldPluck(core, 10, true, 6 + 10)).toBe(true);
+  });
+
+  it("open chains: an end node's marker gap that swallows a lobe makes it a core", () => {
+    const gap = [node(0, 0.6), node(0.5), node(5)];
+    expect(wouldPluck(gap, 5, false, 0.2)).toBe(false);
+    expect(wouldPluck(gap, 5, false, 3)).toBe(true);
+    // A start node with a small gap leaves room.
+    expect(wouldPluck([node(0, 0.3), node(1.0), node(5, 0.3)], 5, false, 0.5)).toBe(true);
+  });
+
+  it("a closed chain with no nodes is one long lobe: it plucks, unless it cannot hold one", () => {
+    expect(wouldPluck([], 10, true, 4)).toBe(true);
+    expect(wouldPluck([], 0.04, true, 0.02)).toBe(false);
+  });
+
+  it("a chain with no length cannot pluck", () => {
+    expect(wouldPluck([], 0, true, 0)).toBe(false);
+    expect(wouldPluck(core, 0, true, 3.4)).toBe(false);
+    expect(wouldPluck(core, Number.NaN, true, 3.4)).toBe(false);
+  });
+
+  it("drawsPluck also refuses a fretted tap past the fret whose lobe has no room (not a core)", () => {
+    // K397's fade tap: lobe [3, 3.62] under a 0.5 hide zone leaves 0.02. It
+    // is not a core (the tap lay past the fret), but nothing would draw.
+    const nodes = [node(1), node(3, 0.5), node(6), node(8)];
+    const fade = tapLobes(nodes, 10, true, 5, 1, [2, 3.62], true);
+    expect(fade.core).toBe(false);
+    expect(drawsPluck(fade)).toBe(false);
+    // A fretted tap with room draws.
+    expect(drawsPluck(tapLobes(nodes, 10, true, 4.5, 1, [2, 5], true))).toBe(true);
+    // And a core refuses, whatever the fret.
+    expect(drawsPluck(tapLobes(nodes, 10, true, 3.61, 1, [2, 3.62], true))).toBe(false);
   });
 });
 
