@@ -209,11 +209,15 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   random otherwise). Speed half (odd lifeTurns) | one | charge (two runs
   a turn while it hunts or has you in sight; the stalker charges within
   sight) | two; pause = chance it stands still a turn; sleep = turns in
-  its lair first. A CATCH happens at the tap that makes it (stage 1
-  animates no catching move): turnCaught cancels the move, respawns
-  (re-fog under minoRefog), clears the yarn, bumps the HUD's caught row,
-  toasts "Caught! Back to the entrance.", and the model puts you at the
-  start and it in its lair (lifeTurn 0) and re-commits. Display: lair
+  its lair first. A CATCH is decided at the tap that makes it: the model
+  counts it, puts you at the start and it in its lair (lifeTurn 0) and
+  re-commits at once. The page SHOWS it at its contact moment (K546
+  stage 1, as by length does; TURNS BY LENGTH below): the move or wait
+  plays on until the two markers meet, then turnCaught stops the move,
+  respawns (re-fog under minoRefog), clears the yarn, bumps the HUD's
+  caught row and toasts "Caught! Back to the entrance.". Until K546 a
+  runs catch did all of that at the tap, cancelling the move with the
+  two still apart (stage 1 animated no catching move). Display: lair
   until it leaves; hunt = the stalker sees you or prox mode != 0 (the
   committed state); else wander, with real time's glow alphas. PARAMS,
   108-116 (codec v5 then, v6 since K76 stage 2c), after minoRefog (107;
@@ -357,7 +361,36 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   burst (on the contact spot), the fog lift (`stopMove`) and the
   respawn until the move or wait animation reaches that fraction, on
   the same mid-move input gates as a runs move (Levi's 3b1612f
-  correction). The first telegraph draws the route from where it
+  correction). BY RUNS TOO since K546 stage 1 (2026-10-20, brief and
+  handoff docs/design/K546_s1.md): `runsContact` gives a runs catch its
+  `lastContact` (`lengthContactFraction` along the minotaur's path at
+  the path's whole length, catch distance 0; t = 1 only as a fallback):
+  a same-vertex or stand catch meets at t = 1, a head-on swap inside
+  your run, a wait where its path reaches you, and the earliest zero can
+  be an overtake before the case contact() named (accepted). The turn
+  keeps `lastFrom` / `lastPath` for the animation (`catchRoute`,
+  progress 0) until `setProgress` reaches 1 or `finishCatchAnim` ends it
+  (`endCatchRoute`); contact() still decides, so TURN_GAMES,
+  LENGTH_GAMES, K87 and the golden dailies held. One `pendingCatch`
+  {tm, t, wait} serves both modes: the count is taken at the tap (the
+  HUD subtracts the pending catch until it lands), and the toast, the
+  HUD row, the burst (`minoSpotWorld(lastContact.player)`), the sound
+  and the vibration come at the contact, with `stopMove` (an undeferred
+  catch still cancels); a contact at t 0 lands on the next frame.
+  MEASURED (`.claude/probes/K546/k546_page.mjs`,
+  `?7&am=instant&snd=none&fw=0&phy=0&mt=stalker&msa=1&ms=0.35`, the
+  four cases found by headless clones of the page's TurnMinotaur,
+  replayed with a rAF sampler and in-page frame copies; JSON and stills
+  in `out/runs/` and `out/length/` there): before (21e83cb) the burst fired on the tap's
+  frame with the two markers 3.3-11.8 touching distances (2 radii)
+  apart, 75-271 CSS px at 1400x900 and 30-109 at 411x753; now they meet
+  first in all four cases at both sizes, 0-0.08 of a touching distance
+  apart on the frame before the burst (under 2 CSS px), the burst
+  within 0.06 world of both, after 32 (head-on, t 0.5) to 342 frames of
+  travel. A by-length catch (`&mbl=1`: 9 taps, t 0.71) is unchanged:
+  225 frames to the burst on both builds and a byte-identical burst
+  frame.
+  The first telegraph draws the route from where it
   stands with a tick ring at each choice's stop, the wait's included;
   hover and press lighting is stage 3. Probed at 1400x900 and a phone
   viewport (`.claude/probes/K481/out_stage2/`). STAGE 3 (K530, 2026-10-16;
@@ -376,7 +409,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   idle 0 px desktop, phone idle 403 px (the bigger ticks only);
   evidence `.claude/probes/K481/stage3/`.
 
-- TURNS STAGE 3b (2026-10-16; sections 2.7, 2.8, 2.10): the telegraph draws one stroke a run with `mino_feedback.telegraphAlphas` (roam 0.45, hunt 0.95, later runs half; the ring follows the first), route-shaped for K324 stage 2 to reuse; the chevrons still wait for it. A catch records `TurnMinotaur.lastCatch` (player and minotaur vertices, both travel modes) and main.ts bursts a red ring there (`showCatchBurst`/`tickCatchFx`, static under reduced motion), plucks the caught run an octave down plus its semitone neighbor, and vibrates 60 ms. K270 DIAGNOSED: `turnCaught` updated the controller but left the minotaur layer showing its pre-catch telegraph and glow at the site until the next frame's `syncMinotaur` — over the pink/lavender threads that stale red frame read as a lavender band; `turnCaught` now re-syncs in the same call. Sounds (`mino_feedback.turnCue`): a growl (two low plucks) on the turn it first sees you, a heartbeat double pluck ending within two runs, else a footstep per run walked, strength fading to 0 at 6 runs; no pan (KnotSynth has none). Fog (2.10): when `minoFog` keeps it hidden under fog of war, only its glow bleeds through at `MINO_FOG_BLEED_ALPHA` 0.16, over the fog, with no marker or telegraph. Tests: `test/game/mino_feedback.test.ts`. Sheet: `.claude/probes/K80/stage3b/contact_sheet.png` (desktop + emulated phone; the real-phone sheet waits for a phone window).
+- TURNS STAGE 3b (2026-10-16; sections 2.7, 2.8, 2.10): the telegraph draws one stroke a run with `mino_feedback.telegraphAlphas` (roam 0.45, hunt 0.95, later runs half; the ring follows the first), route-shaped for K324 stage 2 to reuse; the chevrons still wait for it. A catch records `TurnMinotaur.lastCatch` (player and minotaur vertices, both travel modes) and main.ts bursts a red ring (`showCatchBurst`/`tickCatchFx`, static under reduced motion) where the two meet, `minoSpotWorld(lastContact.player)` (by runs since K546; at the tap, on lastCatch's vertices, before), plucks the caught run an octave down plus its semitone neighbor, and vibrates 60 ms. K270 DIAGNOSED: `turnCaught` updated the controller but left the minotaur layer showing its pre-catch telegraph and glow at the site until the next frame's `syncMinotaur` — over the pink/lavender threads that stale red frame read as a lavender band; `turnCaught` now re-syncs in the same call. Sounds (`mino_feedback.turnCue`): a growl (two low plucks) on the turn it first sees you, a heartbeat double pluck ending within two runs, else a footstep per run walked, strength fading to 0 at 6 runs; no pan (KnotSynth has none). Fog (2.10): when `minoFog` keeps it hidden under fog of war, only its glow bleeds through at `MINO_FOG_BLEED_ALPHA` 0.16, over the fog, with no marker or telegraph. Tests: `test/game/mino_feedback.test.ts`. Sheet: `.claude/probes/K80/stage3b/contact_sheet.png` (desktop + emulated phone; the real-phone sheet waits for a phone window).
 - CATCH RESETS (K80 turns stage 2, K273, 2026-10-14; Levi: "a toggle to
   conditionally reset the level/Minotaur/fog when dying to the
   Minotaur"). Both clocks, shared rows after minoSleep / the real-time
