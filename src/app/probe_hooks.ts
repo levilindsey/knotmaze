@@ -411,6 +411,11 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       catches: ch.catches,
       restarts: ch.restarts,
       hearts: ctx.hearts, // K137 stage 3a
+      // K137 stage 3b: the sword (null: off or none laid) and its id.
+      sword: ch.sword ? { ...ch.sword, at: ch.g.ids[ch.sword.spot] } : null,
+      fleeing: ch.fleeing,
+      slain: ch.slain,
+      walked: ch.walked,
       moves: ctx.scene.fabricController ? ctx.scene.fabricController.moveLog.join("") : "",
       huntSeconds: ch.huntSeconds,
       finished: ch.finished,
@@ -477,6 +482,10 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       seen: tm.seen,
       restarts: tm.restarts,
       hearts: ctx.hearts, // K137 stage 3a
+      // K137 stage 3b: the sword (null: off or none laid) and its id.
+      sword: tm.sword ? { ...tm.sword, at: ids[tm.sword.spot] } : null,
+      fleeing: tm.fleeing,
+      slain: tm.slain,
       moves: ctx.scene.fabricController ? ctx.scene.fabricController.moveLog.join("") : "",
       turns: tm.turns,
       lifeTurn: tm.lifeTurn,

@@ -61,6 +61,16 @@ describe("K137 stage 3a hearts tag", () => {
   });
 });
 
+describe("K137 stage 3b sword tag", () => {
+  it("puts the move the sword was taken on after the hearts, only once taken", () => {
+    const t = title({ ...BASE, stars: 2, catches: 0, hearts: 3, swordTaken: 5, snapped: 0 });
+    expect(t.endsWith(" · \u{1F402} 0 · ❤️ 3 left · ⚔️ on move 5 · snapped 0")).toBe(true);
+    for (const none of [title({ ...BASE, catches: 0, swordTaken: null }), title({ ...BASE, catches: 0 })]) {
+      expect(none).not.toContain("⚔");
+    }
+  });
+});
+
 describe("K139 collapse line", () => {
   it("puts the mode, the score and par on a line under the time, before the grid", () => {
     const fin = shareText({ ...BASE, efficiency: null, collapse: { mode: "finish", pct: 58, par: "≥62%" } });

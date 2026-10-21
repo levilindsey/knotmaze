@@ -60,7 +60,8 @@ export type StatId =
   | "collapsed"
   | "cuts"
   | "hearts"
-  | "walker";
+  | "walker"
+  | "sword";
 
 export const STATS: Record<StatId, { label: string; line: string }> = {
   // TIME above (SolveClock). The Burnt banner shows it too, for a run the
@@ -252,6 +253,16 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "Hearts left, of the lives you started with. Each catch costs one " +
       "and sends you back to the entrance; losing the last starts the level " +
       "over with every heart back, and your catches still count.",
+  },
+  // K137 stage 3b: the sword's SwordState (game/sword.ts) on either clock,
+  // while the sword is on and was laid down.
+  sword: {
+    label: "sword",
+    line:
+      "The sword: ready until you walk onto it, then the moves the minotaur " +
+      "still flees you (runs walked in real time). Touch it while it flees: " +
+      "timed sends it back to its lair, one use slays it for good. Used once " +
+      "the flight is over.",
   },
 };
 
