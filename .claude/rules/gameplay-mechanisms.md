@@ -19,9 +19,16 @@ paths:
   - "src/ui/aid_buttons.ts"
   - "test/game/spool.test.ts"
   - "test/game/hints.test.ts"
+  - "src/game/rule_search.ts"
+  - "src/game/ice.ts"
+  - "src/game/color_rule.ts"
+  - "test/game/rule_search.test.ts"
+  - "test/game/ice.test.ts"
+  - "test/game/color_rule.test.ts"
+  - "test/game/rule_controller.test.ts"
 ---
 
-# Gameplay lore: fragile runs, par (K137), collapse (K139), the cut (K114) and the aids (K137 stage 2)
+# Gameplay lore: fragile runs, par (K137), collapse (K139), the cut (K114), the aids (K137 stage 2), ice and the color rule (K138 stage 1)
 
 Written by K137 stage 1 (2026-10-20; brief `docs/design/K137_s1.md`,
 design `docs/design/K80_gameplay_additions.md` section 4.3); `gameplay.md`
