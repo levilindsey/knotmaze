@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K768.
+Next free ID: K774.
 
 ## Waiting on Levi
 
@@ -245,6 +245,12 @@ Next free ID: K768.
   under `clk=beat` (`fabricRulesOf`), never designed or played against the rider (a refused
   auto-move may stall it). Drop the rules under the beat, or have the rider take the next legal arm?
   (`docs/design/K114_beat.md` decision 7 drops only the cut, the walker and Undo)
+- **K768** · K137 s3d calls 1-4 and 8, built as recommended (Handoff of `docs/design/K137_s3d.md`,
+  The calls): a catch resets everything but keeps the woken count; no warning before the extra
+  monsters move; the follower waits 1-2 moves with a 0.25 shortcut chance (the harshest piece: the
+  greedy sim player goes from 2.22 to 9.40 catches a game, 15% unfinished at 600 moves); the
+  follower looks like a sleeper asleep, amber waiting, red awake; the share tag shows N woken
+  whenever a sleeper plays, 0 included
 
 ## In progress
 
@@ -419,7 +425,7 @@ Next free ID: K768.
   - brief: `docs/design/K138_s3.md`
 - **K767** · Phone sitting 5 (turnstiles, hidden runs, the beat rider on real touches; hard stop
   06:50 for Levi)
-  - owner: claude agent ae8f98c0876724a72 of session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet-5-5, started 2026-10-21 05:38, cap 1 h, hard stop 06:50)
+  - owner: claude agent ae8f98c0876724a72 of session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet-5-5, started 2026-10-21 05:28, cap 1 h, hard stop 06:50; 3 sonnet helpers)
   - branch: mainline (probes only, no commits)
   - evidence: `.claude/probes/K767/`
   - next: turnstiles, hidden runs (and the K764 press), the beat rider and its corner on real touches
@@ -638,10 +644,6 @@ Every other item below waits on the trigger it names.
 - **K728** · Real-time seeker for the K708 sim (a sword-seeking player on MinotaurChase): the
   real-time sword best case is unmeasured and informs K727 (.claude/probes/K708/rt/, a sweep takes
   about 35 s)
-- **K765** · CLAUDE.md Project Structure lacks the K138 game files (`rule_search.ts`, `ice.ts`,
-  `color_rule.ts`, `turnstiles.ts`, `hidden_runs.ts`) and the K114 beat files (`beat_clock.ts`,
-  `beat_rider.ts`, `ui/beat_pause.ts`, `app/beat_frame.ts`); add them after the K137 s3d merge, with
-  its modules
 
 ## Residuals (known, not fixed)
 
@@ -1429,6 +1431,18 @@ Every other item below waits on the trigger it names.
 - **K764** · A press on a hidden, burnt or cut run grabs and tugs the unseen thread instead of
   panning, which gives its position away (from the code: `grabAt`/`onThread` in
   `src/app/input_pointer.ts` skip none of them; fix: skip them there). K138 s3 starts with it
+- **K769** · K137 s3d: with the minotaur traveling by length, the extra monsters still step one run
+  a move; under `clk=beat` the sleeper rows show and the extras are laid (read from the code,
+  untested)
+- **K770** · K137 s3d: the s3b Decided 2 look is not met: the sleep look is static, and awake extras
+  draw at the minotaur size
+- **K771** · K137 s3d: the extra monsters have no off-screen indicator, the fog hunting setting
+  keeps them fogged while they hunt, and the K481 catch tint ignores them
+- **K772** · K137 s3d: an extra monster catch while the minotaur flees the sword sends it to its
+  lair and leaves the sword fleeing (as built, untested); saved attempts do not cover the extra
+  monsters
+- **K773** · K137 s3d: the probe hooks are only on `__knotTurnMino()`, and the build stamp of
+  `.claude/probes/K137/s3d/monsters_page.mjs` reads null
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1693,6 +1707,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K745** · Frost on icy runs is a flat color; a texture would read better (K138 s1)
 - **K752** · A cutPluck counter or last-pluck stamp in the probe hooks, so a refusal pluck is
   checkable at snd=none (K749: cutPluck is synth-only)
+- **K765** · CLAUDE.md Project Structure lists about half of `src/game`, `src/ui` and `src/app`
+  (2026-10-21: 23 game, 12 ui and 17 app files unlisted, among them K138's rules, K114's beat and
+  K137's monsters). List them all (about 50 lines against the 400-line budget), or point at the
+  headers as the `app/` line already does? Untouched until then
 
 ## Done
 
