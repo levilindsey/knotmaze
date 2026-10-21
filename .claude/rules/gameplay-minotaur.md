@@ -6,6 +6,9 @@ paths:
   - "test/game/minotaur_turns.test.ts"
   - "src/game/sword.ts"
   - "test/game/sword.test.ts"
+  - "src/game/sprint.ts"
+  - "test/game/sprint.test.ts"
+  - "src/ui/sprint_button.ts"
 ---
 
 # Gameplay lore: the real-time minotaur
@@ -678,3 +681,63 @@ only with the files it is about; `gameplay.md` lists the area's other files.
     that hides the layer (turn, both viewports, and desktop real time;
     the phone's real-time flee ran out first, spent), the moves left
     only falling, no page errors.
+
+- SPRINT (K137 stage 3c, 4.29, 2026-10-21; brief and Handoff
+  `docs/design/K137_s3c.md`, design `docs/design/K137_s3b.md`'s "Sprint
+  (4.29)"). Both clocks, free play, once per attempt: `sprint` (`spr`: off
+  | on). game/sprint.ts (pure) holds the state machine and the key; the
+  clocks hold the mechanics.
+  - TURN CLOCK (`TurnMinotaur`): two player moves make one minotaur
+    turn. The first is a SKIPPED turn (`turn(edge, {sprint: "skip"})`,
+    private `skipTurn`): the minotaur stands, `turns` and `lifeTurn`
+    stay, contact is checked against where it stands, and `skips` records
+    the move's index in `inputs`; a wait cannot start a sprint, and a
+    second skip is rejected while one is pending (`sprintPending`). The
+    next move plays the turn. BY LENGTH that turn travels for half the
+    pair's summed length (`pairLen`; s3a call 5, as designed), so a
+    sprint halves its travel per move. `replayTurnMinotaur(..., skips)`
+    rebuilds it. The sword's `takenAt` / `slainAt` count minotaur turns,
+    so after a sprint they read one less than the player's moves (a
+    residual).
+  - REAL TIME (`MinotaurChase`): `sprint()` arms the NEXT two departures
+    at twice playerPace (`sprintLeft` 2; `sprints` records the tick,
+    apart from `inputs`); in movePlayer a departure with `sprintLeft > 0`
+    spends one and runs sprinted (`rem * 2` while on the run, `toEnd /
+    2` at its end: exact, K108). `sprintActive` and `playerSpeed` read it
+    (the dot's pace). A catch clears both (spent). Rejected while armed or
+    running, or once finished. Pressed before the first move it records
+    tick 0 (the chase does not tick before the first tap).
+    `replayChase(..., sprints)` re-arms it at each recorded tick, after
+    that tick's taps.
+  - STATE (main.ts `sprintState`, game/sprint.ts `SprintState`): ready |
+    armed | first | used. `sprintToggle`: ready arms; armed disarms on
+    the turn clock before its first sprinted move (real time spends it at
+    once, no disarm). `sprintAfterMove(s, run)` after each accepted turn
+    move: armed + a run is the skip (first, or used on a catch or win);
+    first goes to used; an armed sprint stays armed through a wait but a
+    catch spends it. Every `restartChase` gives it back (the scene build,
+    a level restart, a Reset path, the last heart, minoRestart:
+    "starting over"); a catch while armed or mid-sprint spends it.
+  - INPUT: the lightning button (ui/sprint_button.ts, bottom left at the
+    scissors' spot: K114's cut is the classic game's and the walker's,
+    never a chase's, so the two never show together; Hint and Chalk sit
+    60 px above; class `km-control`; gold while armed, dimmed when it
+    cannot act; shown while the keys are live and the panel is closed)
+    and the key F (`sprintKeyOf`, by `key`; app/input_keys.ts). Not Q:
+    WASD reads by code, so AZERTY prints Q where A moves.
+  - ROWS: "sprint" in the HUD and the win banner (maze_stats STATS:
+    ready / armed / 1 more move / running / used; `sprintValue`), and the
+    share title's " · ⚡ used" (share_text `sprintUsed`).
+    Hooks: `__knotSprint()` (press), and `sprint`, `sprintShown`,
+    `sprintLeft`, `sprintActive`, `sprints` on `__knotChase()`; `sprint`,
+    `sprintShown`, `skips`, `sprintPending` on `__knotTurnMino()`.
+  - OFF: no state, no button, no row, so K80_DIGESTS, MODEL_DIGESTS,
+    TURN_GAMES, LENGTH_GAMES, K87, the golden dailies and byte identity
+    held. Tests: `test/game/sprint.test.ts` (the state machine, both
+    clocks on hand-built graphs and real mazes, replays, by length) and
+    the stats and share tests. PAGE CHECK:
+    `.claude/probes/K137/s3c/sprint_page.mjs` (probes.md, K137 stage 3c)
+    on seed 7, desktop and 411x753, each clock: all passed (a real click
+    and the real F key, the gold armed look, the turn clock's standing
+    minotaur then one turn, real time's doubled pace for two runs, the HUD
+    rows, used after, no page errors).

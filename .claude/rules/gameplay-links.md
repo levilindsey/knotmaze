@@ -536,3 +536,14 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `?<seed>&am=instant&cru=cycle`. The rules: gameplay-mechanisms.md's Ice
   and the color rule; the rows: gameplay-panel.md's ICE AND COLOR RULE
   ROWS.
+- SPRINT PARAM (K137 stage 3c, 2026-10-21; brief `docs/design/K137_s3c.md`):
+  `sprint` (`spr`: off | on, SPRINT_MODES in game/sprint.ts) is APPENDED
+  at 201, after K138 stage 1's ice and color rule; CODEC_VERSION stays 8. Not daily-exempt, not a
+  MAZE key. Under onClockChange in undo_stack.ts's LIVE_EFFECTS (a change
+  restarts the solve, which gives the sprint back). Pins that moved: the
+  table pin, url_codec.test.ts's defaults table and OVERRIDE_KEYS (`spr`).
+  The golden snapshot, the golden dailies, K87 and the minotaur digests
+  did not move: off is bit-identical. Probe links:
+  `?<seed>&am=instant&mt=hunter&spr=on&snd=none` (add `&clk=realtime` for
+  real time). The rules: gameplay-minotaur.md's SPRINT; the row:
+  gameplay-panel.md's SPRINT ROW.

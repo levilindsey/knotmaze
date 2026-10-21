@@ -210,6 +210,17 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   time. Restarts the solve.". Params: gameplay-links.md's SWORD PARAMS;
   the rules: gameplay-minotaur.md's THE SWORD.
 
+- SPRINT ROW (K137 stage 3c, 2026-10-21): "Sprint" (off / on, `sprint`)
+  sits right after "Sword lasts" in the Game folder, shared by both
+  clocks and hidden with the minotaur off (`sprintRow.hidden =
+  !minoOn`). It restarts the solve (onClockChange), which gives the sprint
+  back. Tooltip: "Once a game, the lightning button (or F) spends a
+  sprint: on the turn clock your next two moves cost the minotaur one
+  turn; in real time you run your next two runs at twice your pace. A
+  catch spends it; starting over gives it back. Restarts the solve."
+  Param: gameplay-links.md's SPRINT PARAM; the rules:
+  gameplay-minotaur.md's SPRINT.
+
 - AIDS ROWS (K137 stage 2, 2026-10-21): "Ariadne's spool" (`spool`),
   "Spool slack (x fewest)" (`spoolSlack`, [0.1, 1], no step, K130, an edit
   keeps the 0.05 grid; hidden while the spool is off), "Hints" (`hints`, a
