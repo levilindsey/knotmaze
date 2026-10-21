@@ -323,13 +323,15 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   off), `parMode` (`pa`: off | strict | strokes, default off) and
   `parSlack` (`par`, a number, default 1 since step 5 (0.25 before),
   clamped to [0, 1]: PAR_SLACK_MIN / MAX in game/par.ts; the codec's
-  clamp table and the panel row read the same range) are APPENDED after
-  K337's `foilShare` (170), at 171-173 on their branch; whoever merges
-  second re-appends after the others (K324's 171-177, the confetti lane,
-  K525) and renumbers (the brief's param hotspot). CODEC_VERSION does not
-  move (append only). The option lists follow FRAGILE_MODES and
-  PAR_MODES. Neither daily-exempt nor MAZE keys: a daily plays with both
-  off, and turning one on leaves the daily. All three are under
+  clamp table and the panel row read the same range) are APPENDED at
+  178-180, after K324 stage 1's `minoTelegraphRuns` (177). They were
+  171-173 on their branch until it rebased onto K324 stage 1, which
+  renumbered them and re-froze the table pin; the confetti lane and K525
+  append too, and whoever merges second renumbers (the brief's param
+  hotspot). CODEC_VERSION does not move (append only). The option lists
+  follow FRAGILE_MODES and PAR_MODES. Neither daily-exempt nor MAZE
+  keys: a daily plays with both off, and turning one on leaves the
+  daily. All three are under
   onClockChange in undo_stack.ts's LIVE_EFFECTS (a change restarts the
   solve: FabricMazeController.setRules, then reset());
   `fabricRulesOf` (url_state.ts) carries them into the controller. Pins
