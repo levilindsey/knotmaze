@@ -1144,6 +1144,215 @@ export function kSectionAtArc(
   return c0;
 }
 
+// ---------------------------------------------------------------------------
+// K620: THE GLYPH ROOT'S PAINT (render-paint.md, THE ROOT'S PAINT). A tapered
+// root (K580, core Strand.taper) is the first stretch of its spur's chain, R
+// (arc 0) to J (arc arcJ). Each side of its centerline takes its stroke's
+// paint: the body chain's section, FX and rainbow at the side's foot, with
+// the lateral position mapped onto the stroke's across coordinate. Both
+// sides give way to the spur's paint at J (the root chain's own ribbon color
+// there) by the junction ramp's ease (kEase, uKSect.y = core blendEase).
+// KSTATIC C1.w (paintBase, 0 on every other chain) = 1 + the KGEOM texel of
+// the chain's ROOT TABLE:
+//   H0 (body chain, sideSign, NR, 0)    H1 (arcJ, ctrlJ, 0, 0)
+//   then NR entries of two texels, uniform in the root's arc from R to J:
+//   E0 (arcC, arcO, hw, 0): the body's arcs of C's and O's feet, the root's
+//      half-width (world);
+//   E1 (uvMC, uvEC, uvMO, uvEO): the stroke's across coordinate (its vUV.y)
+//      under the root's centerline and under the root's edge on that side.
+// sideSign is +1 when C lies on the root ribbon's vUV.y > 0.5 side.
+export const ROOT_HEAD = 2;
+export const ROOT_ENTRY = 2;
+
+export interface KRoot {
+  base: number; // KGEOM texel of H0
+  body: number; // the strokes' chain (C arrives at J on it, O leaves)
+  side: number; // sideSign
+  n: number; // NR
+  arcJ: number; // J's arc on the root chain
+  ctrlJ: number; // J's ctrl on the root chain (2 * joint)
+}
+
+// The root table's KGEOM texel for chain `ch` (C1.w - 1), or -1 (no root).
+export function kRootPtr(D: KData, ch: number): number {
+  return Math.round(D.stat[ch * 8 + 7]) - 1;
+}
+
+// GLSL twin: the H0/H1 read (kRootHead).
+export function kRootOf(D: KData, ch: number, out?: KRoot): KRoot | null {
+  const p = kRootPtr(D, ch);
+  if (p < 0) return null;
+  const g = D.geom;
+  const o = p * 4;
+  const r = out ?? ({} as KRoot);
+  r.base = p;
+  r.body = Math.round(g[o]);
+  r.side = g[o + 1];
+  r.n = Math.round(g[o + 2]);
+  r.arcJ = g[o + 4];
+  r.ctrlJ = g[o + 5];
+  return r;
+}
+
+// Packs a root table at KGEOM texel `base`. e0 / e1: NR entries of 4 floats
+// each (E0, E1 above). Returns the table's texel count.
+export function writeRootTable(
+  geom: Float32Array,
+  base: number,
+  body: number,
+  sideSign: number,
+  arcJ: number,
+  ctrlJ: number,
+  e0: ArrayLike<number>,
+  e1: ArrayLike<number>
+): number {
+  const n = Math.floor(e0.length / 4);
+  const o = base * 4;
+  geom[o] = body;
+  geom[o + 1] = sideSign;
+  geom[o + 2] = n;
+  geom[o + 3] = 0;
+  geom[o + 4] = arcJ;
+  geom[o + 5] = ctrlJ;
+  geom[o + 6] = 0;
+  geom[o + 7] = 0;
+  for (let i = 0; i < n; i++) {
+    const t = o + (ROOT_HEAD + i * ROOT_ENTRY) * 4;
+    for (let j = 0; j < 4; j++) {
+      geom[t + j] = e0[i * 4 + j];
+      geom[t + 4 + j] = e1[i * 4 + j];
+    }
+  }
+  return ROOT_HEAD + n * ROOT_ENTRY;
+}
+
+// GLSL twin: kRootAt - the table lerped at root arc `alpha` (clamped to
+// [0, arcJ]): out[0..3] = E0, out[4..7] = E1.
+export function kRootAt(D: KData, r: KRoot, alpha: number, out: Float64Array | number[]): void {
+  const f = Math.min(Math.max(alpha / r.arcJ, 0), 1) * (r.n - 1);
+  const i0 = Math.min(r.n - 2, Math.floor(f));
+  const t = f - i0;
+  const a = (r.base + ROOT_HEAD + i0 * ROOT_ENTRY) * 4;
+  const b = a + ROOT_ENTRY * 4;
+  const g = D.geom;
+  for (let j = 0; j < 8; j++) out[j] = g[a + j] + (g[b + j] - g[a + j]) * t;
+}
+
+const ROOT_T = new Float64Array(8);
+const ROOT_BODY = {} as KChain;
+const ROOT_C = new Float32Array(3);
+const ROOT_O = new Float32Array(3);
+const ROOT_J = new Float32Array(3);
+
+// GLSL twin: the vertex shader's root block at a sample of root arc `alpha`
+// - each side's section at its feet, the stroke ribbon's own color there
+// (kSectionAtArc on the body). The fragment sees them lerped between the
+// bracketing samples, like any section.
+export function kRootVertSection(
+  D: KData,
+  U: KUniforms,
+  r: KRoot,
+  alpha: number,
+  outC: Float32Array | number[],
+  outO: Float32Array | number[]
+): void {
+  kRootAt(D, r, alpha, ROOT_T);
+  const b = kChain(D, r.body, ROOT_BODY);
+  kSectionAtArc(D, U, b, ROOT_T[0], -1, outC);
+  kSectionAtArc(D, U, b, ROOT_T[1], -1, outO);
+}
+
+// GLSL twin: the vertex shader's flat spur color - the root chain's own
+// ribbon section at J (kSectionAtArc there), what the spur shows at J.
+export function kRootSpurSection(
+  D: KData,
+  U: KUniforms,
+  root: KChain,
+  r: KRoot,
+  out: Float32Array | number[]
+): void {
+  kSectionAtArc(D, U, root, r.arcJ, -1, out);
+}
+
+// The fragment's interpolated vertex sections at root arc `alpha`: what the
+// GPU interpolates between the two bracketing samples (kSampleBracket).
+export function kRootFragSections(
+  D: KData,
+  U: KUniforms,
+  root: KChain,
+  r: KRoot,
+  alpha: number,
+  outC: Float32Array | number[],
+  outO: Float32Array | number[]
+): void {
+  kSampleBracket(root, alpha, SEC_K);
+  const k0 = SEC_K[0];
+  const k1 = SEC_K[1];
+  const fr = SEC_K[2];
+  const c0 = new Float32Array(3);
+  const o0 = new Float32Array(3);
+  kRootVertSection(D, U, r, k0 * root.arcPer, c0, o0);
+  kRootVertSection(D, U, r, k1 * root.arcPer, outC, outO);
+  for (let i = 0; i < 3; i++) {
+    outC[i] = c0[i] + (outC[i] - c0[i]) * fr;
+    outO[i] = o0[i] + (outO[i] - o0[i]) * fr;
+  }
+}
+
+// One side's paint: its interpolated section, then the stroke's FX and
+// rainbow at the foot (arc on the body, across coordinate uv). In place on
+// rgb; returns the materialize alpha.
+function kRootSide(
+  D: KData,
+  U: KUniforms,
+  b: KChain,
+  arc: number,
+  uv: number,
+  rgb: Float32Array | number[]
+): number {
+  return kShadeFx(D, U, b, kCtrlOfArc(D, b, arc), arc / b.arcPer, uv, rgb);
+}
+
+// GLSL twin: kRootPaint - a root fragment's color before the gameplay paint
+// (what SECTION_FRAG's `base` and `aM` become). `alpha` = the fragment's arc
+// on the root chain (< arcJ), `side` = its vUV.y, `pxW` = world per pixel,
+// secC / secO = the interpolated vertex sections (kRootFragSections), secJ
+// = kRootSpurSection. The centerline seam gets one pixel of coverage.
+export function kRootPaint(
+  D: KData,
+  U: KUniforms,
+  root: KChain,
+  r: KRoot,
+  alpha: number,
+  side: number,
+  pxW: number,
+  secC: ArrayLike<number>,
+  secO: ArrayLike<number>,
+  secJ: ArrayLike<number>,
+  out: { rgb: Float32Array | number[]; alpha: number }
+): void {
+  kRootAt(D, r, alpha, ROOT_T);
+  const b = kChain(D, r.body, ROOT_BODY);
+  const e = Math.min(Math.abs(side - 0.5) * 2, 1);
+  const lat = (side - 0.5) * r.side * 2 * ROOT_T[2];
+  const covC = Math.min(Math.max(0.5 + lat / pxW, 0), 1);
+  for (let i = 0; i < 3; i++) {
+    ROOT_C[i] = secC[i];
+    ROOT_O[i] = secO[i];
+    ROOT_J[i] = secJ[i];
+  }
+  const aC = kRootSide(D, U, b, ROOT_T[0], ROOT_T[4] + (ROOT_T[5] - ROOT_T[4]) * e, ROOT_C);
+  const aO = kRootSide(D, U, b, ROOT_T[1], ROOT_T[6] + (ROOT_T[7] - ROOT_T[6]) * e, ROOT_O);
+  const aJ = kShadeFx(D, U, root, r.ctrlJ, r.arcJ / root.arcPer, side, ROOT_J);
+  const w = kEase(U, Math.min(Math.max(alpha / r.arcJ, 0), 1));
+  for (let i = 0; i < 3; i++) {
+    const s = ROOT_O[i] + (ROOT_C[i] - ROOT_O[i]) * covC;
+    out.rgb[i] = s + (ROOT_J[i] - s) * w;
+  }
+  const sa = aO + (aC - aO) * covC;
+  out.alpha = sa + (aJ - sa) * w;
+}
+
 // RUNS layout writer: run r at texels base + 4r .. + 3 (see above).
 export function writeRunTexels(
   stat: Float32Array,
