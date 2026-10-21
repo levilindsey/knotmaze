@@ -88,6 +88,8 @@ describe("what each figure means (K274)", () => {
     sword: { phase: "fleeing" as const, left: 3, slainAt: -1 },
     // K137 stage 3c: sprint's row.
     sprint: "armed",
+    // K137 stage 3d: the sleepers woken.
+    woken: 1,
     // K137 stage 2: the aids' rows.
     spool: { used: 3, cap: 12 },
     hints: { left: 1, of: 3 },
@@ -346,6 +348,24 @@ describe("K137 stage 3c sprint row", () => {
     const ids = win.map((r) => r.id);
     expect(ids.indexOf("sprint")).toBe(ids.indexOf("caught") + 1);
     expect(win.find((r) => r.id === "sprint")?.value).toBe("used");
+  });
+});
+
+describe("K137 stage 3d woken row", () => {
+  it("shows the sleepers woken after sprint, in the HUD and on the win banner, only while sleepers are on", () => {
+    const hud = gameEntries({ catches: 0, sprint: "ready", woken: 0 });
+    expect(hud.map((r) => [r.id, r.label, r.value]).slice(1)).toEqual([
+      ["sprint", "sprint", "ready"],
+      ["woken", "woken", "0"],
+    ]);
+    expect(gameEntries({ catches: 0, woken: null }).map((r) => r.id)).toEqual(["caught"]);
+    const win = statEntries({
+      timeMs: 61_000, path: 12, optimal: 9, efficiency: null, backtrack: null,
+      junctions: 3, deadEnds: null, catches: 1, woken: 2,
+    });
+    const ids = win.map((r) => r.id);
+    expect(ids.indexOf("woken")).toBe(ids.indexOf("caught") + 1);
+    expect(win.find((r) => r.id === "woken")?.value).toBe("2");
   });
 });
 

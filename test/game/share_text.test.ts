@@ -97,6 +97,17 @@ describe("K137 stage 3c sprint tag", () => {
   });
 });
 
+describe("K137 stage 3d woken tag", () => {
+  it("counts the sleepers woken after sprint's tag, 0 included, only while sleepers are on", () => {
+    const t = title({ ...BASE, catches: 1, sprintUsed: true, woken: 2, snapped: 0 });
+    expect(t.endsWith(" · \u{1F402} 1 · ⚡ used · \u{1F634} 2 woken · snapped 0")).toBe(true);
+    expect(title({ ...BASE, catches: 0, woken: 0 })).toContain(" · \u{1F634} 0 woken");
+    for (const none of [title({ ...BASE, catches: 0, woken: null }), title({ ...BASE, catches: 0 })]) {
+      expect(none).not.toContain("woken");
+    }
+  });
+});
+
 describe("K137 stage 2 aids tags", () => {
   it("ends the title with the spool's share used and the hints used", () => {
     const t = title({ ...BASE, cuts: 0, spool: { used: 9, cap: 11 }, hintsUsed: 2 });

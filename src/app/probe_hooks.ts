@@ -505,6 +505,23 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       sword: tm.sword ? { ...tm.sword, at: ids[tm.sword.spot] } : null,
       fleeing: tm.fleeing,
       slain: tm.slain,
+      // K137 stage 3d: the extra monsters (sleepers, the follower): kind,
+      // phase (asleep / waiting / awake), where each stands (its spot, and
+      // the vertex id while it is on one), and home's id; the sleepers
+      // woken this attempt, and the extra whose catch was last (-1: none).
+      monsters: tm.extras.map((x, i) => {
+        const v = tm.extraViews[i];
+        return {
+          kind: x.kind,
+          phase: v.phase,
+          spot: { ...v.spot },
+          at: v.spot.edge < 0 ? ids[v.spot.vertex] : null,
+          home: ids[x.home],
+          trail: x.trail.length,
+        };
+      }),
+      woken: tm.woken,
+      lastCatcher: tm.lastCatcher,
       moves: ctx.scene.fabricController ? ctx.scene.fabricController.moveLog.join("") : "",
       turns: tm.turns,
       lifeTurn: tm.lifeTurn,

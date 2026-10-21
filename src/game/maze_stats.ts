@@ -63,6 +63,7 @@ export type StatId =
   | "walker"
   | "sword"
   | "sprint"
+  | "woken"
   | "spool"
   | "spoolUsed"
   | "hints"
@@ -282,6 +283,16 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "Sprint, once a game: your next two moves cost the minotaur one turn " +
       "(in real time you run your next two runs at twice your pace). A catch " +
       "spends it; starting over gives it back.",
+  },
+  // K137 stage 3d: TurnMinotaur.woken, the sleepers woken this attempt (a
+  // follower setting off is not counted), while sleepers are on under the
+  // turn clock's chase (game/monsters.ts).
+  woken: {
+    label: "woken",
+    line:
+      "Sleepers you woke: each lies on a junction off the shortest way and " +
+      "wakes when you walk onto it, then hunts you as the minotaur does. A " +
+      "catch puts every monster back to sleep.",
   },
   // K137 stage 2: game/spool.ts spoolGauge of the controller's spoolUsed
   // (pathEdges.length) against spoolCap (parFor(fewestRuns, spoolSlack)).
