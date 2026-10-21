@@ -333,3 +333,26 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   minotaur_turns.test.ts (the six stalker rows of TURN_GAMES and four of
   LENGTH_GAMES; hunter and guard rows held). Held: the codec table pin
   (order did not change), the pinned tokens and the golden dailies.
+
+- JUNCTION STOP PARAMS (K324 stage 1, 2026-10-20; brief
+  `docs/design/K324_s1.md`, design 4.2): seven numbers APPENDED at
+  171-177, after K337's `foilShare` (170); CODEC_VERSION stays 8.
+  `minoStopMin` (`mhn`, 0.2, [0, 2]), `minoStopMax` (`mhx`, 0.6, [0, 2]),
+  `minoHuntStop` (`mhh`, 0.5, [0, 1]), `minoTurnBack` (`mrv`, 1.5,
+  [0, 10]; was REVERSE_MARGIN), `minoTipReach` (`mdr`, 2, [0.5, 4]),
+  `minoRoamNear` (`mnr`, 0.25, [0, 1]) and `minoTelegraphRuns` (`mtn`, 1,
+  [0, 3], an integer; inert until stage 2 draws plan()). The six chase
+  knobs' defaults read DEFAULT_CHASE_PARAMS, and chaseParamsOf carries
+  them into ChaseParams; a link may store a max below the min (the params
+  keep it), and chaseParamsOf plays the max at least the min. url_state.ts
+  clamps each in every reader (link, override key, panel). Neither
+  daily-exempt nor MAZE keys (a daily plays without the minotaur). All
+  seven are LIVE_EFFECTS under onChaseChange (undo_stack.ts). The same
+  stage moved `minoHuntPace` (`mhp`) 0.7 -> 0.9 in place
+  (HUNT_PACE_FRACTION; gameplay-minotaur.md's JUNCTION STOPS AND THE
+  PLAN). Pins that moved: the table pin (`test/ui/param_codec.test.ts`),
+  url_codec.test.ts's defaults table, OVERRIDE_KEYS, the override-keys
+  case and the paces case, plus its new test "orders the junction stop
+  pair and clamps K324's knobs". The golden dailies did not move. The
+  confetti lane (K186 + K336) and K525 append too: whoever merges second
+  renumbers (the brief's "param hotspot").
