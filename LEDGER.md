@@ -346,10 +346,10 @@ Next free ID: K721.
 - **K137** · K80 section 4's cheap (S, S-M) mechanisms, each toggled (Levi 10-13), after the
   minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus
   Levi's sleeper variant. `K80_gameplay_additions.md`, stages in `sooner_20261020.md`; M: K138, M-L/L: K141.
-  - owner: agent `af34a0e5755494326` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 00:02, 2 h cap ~02:02)
-  - branch: `worktree-agent-af34a0e5755494326`, worktree `.claude/worktrees/agent-af34a0e5755494326`; last commit: `b12b378`
+  - owner: nobody since 2026-10-21 01:18 (merged; agent `af34a0e5755494326` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `cb748ff`
   - evidence: `.claude/probes/K137/s3b/`
-  - next: stage 3b: the sword and sprint, then the monster list, sleepers, follower, lures, snares, mud
+  - next: stage 2, the aids (docs/design/K137_s2.md); then s3c: sprint (4.29) and the monster list, from the K137_s3b.md Remainder
   - brief: `docs/design/K137_s3b.md`
 - **K643** · K580's glyph-lint upkeep: lintGlyph takes the taper part as an argument (it hardcodes
   TAPER_PART_LU, so tp60 lints only through a probe copy); calibrate taperBulgeLU (0.01) and the
