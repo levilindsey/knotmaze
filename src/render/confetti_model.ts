@@ -36,15 +36,18 @@
 // the link clamp read it). The pools hold the max, so the caps are hard.
 // K317 (Levi, 2026-10-14: "more confetti by default, both from the top, but
 // especially from the finish marker") doubled the rain and quadrupled the
-// spray.
-export const RAIN_PER_AMOUNT = 280;
-export const SPRAY_PER_AMOUNT = 160;
+// spray. K568 (Levi, 2026-10-20: "make the confetti from the top last a bit
+// longer", and "double the number of particles" of the spray) doubled the
+// spray again, and the rain grew with its 1.5x longer RAIN_WINDOW, so its
+// opening wave releases as densely as K317's (636 pieces/s at amount 1).
+export const RAIN_PER_AMOUNT = 420;
+export const SPRAY_PER_AMOUNT = 320;
 export const CONFETTI_AMOUNT_MAX = 3;
 export const RAIN_SCREEN_MAX = 3;
 export const RAIN_CAP = RAIN_PER_AMOUNT * CONFETTI_AMOUNT_MAX * RAIN_SCREEN_MAX;
 export const SPRAY_CAP = SPRAY_PER_AMOUNT * CONFETTI_AMOUNT_MAX;
 // Reduced motion keeps K140's 16 pieces at amount 1 (40% of its 40).
-export const REDUCED_SPRAY_SHARE = 0.1;
+export const REDUCED_SPRAY_SHARE = 0.05;
 // The screen RAIN_PER_AMOUNT was tuned on: the Pixel 11's layout viewport,
 // CSS px, where K140's 140 pieces read as a dense fall.
 export const RAIN_REF_W = 411;
@@ -66,8 +69,10 @@ export const RAIN_REF_H = 753;
 // terminal speeds below every piece leaves the screen first: the highest
 // and slowest at most about 5.5 s after its release, 5.1 s at the most in
 // a 360-burst census). The census that chose these:
-// `.claude/probes/K335/variants.mjs`.
-export const RAIN_WINDOW = 2.2;
+// `.claude/probes/K335/variants.mjs`. K568 stretched the window 1.5x (2.2 s
+// before) and RAIN_PER_AMOUNT with it: the same opening, then a fall that
+// stays dense for longer (`.claude/probes/K568/census.mjs`).
+export const RAIN_WINDOW = 3.3;
 export const RAIN_TAPER = 4;
 export const RAIN_TOP_SPREAD = 0.12;
 export const RAIN_LIFE_MAX = 6.5;
@@ -79,8 +84,8 @@ const RAIN_TERM_SPAN = 0.14;
 
 // Spray: lifetimes, drag (1/s); speeds, the fountain's lift and gravity in
 // units (sprayUnit) per second; the last SPRAY_FADE share of a life fades
-// out. A piece flies out ~1.8-4.4 units against the drag, then sinks at a
-// unit per second while it fades.
+// out. A piece flies out ~0.9-8.8 units against the drag (~1.8-4.4 before
+// K568), then sinks at a unit per second while it fades.
 export const SPRAY_LIFE_MIN = 1.4;
 export const SPRAY_LIFE_MAX = 2.4;
 export const SPRAY_LIFT = 2.2;
@@ -209,8 +214,9 @@ function paper(d: Float32Array, o: number, len: number, rand: () => number): voi
 
 // K335: a rain piece's release delay for a uniform u in [0, 1): the inverse
 // of the tapered release's CDF, 1 - (1 - t / RAIN_WINDOW)^(RAIN_TAPER + 1).
-// 21% of the pieces leave in the first 0.1 s and 52% by 0.3 s (K140: 20%
-// and 42%), so the opening wave keeps its density.
+// The opening wave keeps its density: at amount 1 on the phone, 60 pieces
+// leave in the first 0.1 s and 159 by 0.3 s (14% and 38% of 420; K335: 58
+// and 146 of 280; K140: 28 and 59 of 140).
 export function rainDelay(u: number): number {
   return RAIN_WINDOW * (1 - Math.pow(1 - u, 1 / (RAIN_TAPER + 1)));
 }
@@ -280,13 +286,15 @@ export function spawnSpray(
     const c = Math.cos(a);
     const sn = Math.sin(a);
     const r0 = unit * (0.9 + 0.3 * rand());
-    // About the rain's paper size (8-14 CSS px at the usual zooms).
-    paper(d, o, unit * (0.5 + 0.3 * rand()), rand);
+    // Smaller than the rain's paper: 5-8 CSS px at the usual zooms (K568;
+    // 8-14 before).
+    paper(d, o, unit * (0.3 + 0.2 * rand()), rand);
     // Reduced motion has no flutter: show each piece's full face.
     if (slow) d[o + FLIP] = 0;
     d[o + X] = cx + c * r0;
     d[o + Y] = cy + sn * r0;
-    const sp = unit * (6 + rand() * 9) * pace;
+    // K568: twice the top speed and three times the spread (6-15 before).
+    const sp = unit * (3 + rand() * 27) * pace;
     // A slight fountain: everything leaves a little upward (+y is down).
     d[o + VX] = c * sp;
     d[o + VY] = sn * sp - unit * SPRAY_LIFT * pace;
