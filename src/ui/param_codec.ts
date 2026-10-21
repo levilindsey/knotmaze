@@ -197,7 +197,7 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("loadSettle"), // 83
   // K80's real-time minotaur mode: the maze clock, the chase's tuning
   // (game/minotaur.ts DEFAULT_CHASE_PARAMS), how it shows under fog.
-  choice("clock", ["turn", "realtime"]), // 84
+  choice("clock", ["turn", "realtime", "beat"]), // 84 (beat: K114, appended)
   num("playerPace"), // 85
   num("minoWanderPace"),
   num("minoHuntPace"),
@@ -362,6 +362,10 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   choice("colorRule", ["off", "alternate", "cycle"]),
   // 201, K137 stage 3c (4.29): sprint (SPRINT_MODES order, game/sprint.ts).
   choice("sprint", ["off", "on"]),
+  // K114's beat rider (202-204): tempo, the length a beat covers, the cap.
+  num("beatTempo"),
+  num("beatLength"),
+  num("beatCap"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -519,6 +523,11 @@ export const PARAM_RANGES: Readonly<
   spoolSlack: [0.1, 1], // K137 stage 2 (SPOOL_SLACK_MIN..MAX)
   hints: [0, 5], // K137 stage 2 (HINTS_MAX)
   ice: [0, 0.5], // K138 (ICE_SHARE_MAX)
+  // K114 beat rider. 180 at most: the head's ring pulses on every beat, and
+  // 3.6 keeps a flash under three a second.
+  beatTempo: [40, 180],
+  beatLength: [0.5, 8], // K114 beat rider: world units a beat covers
+  beatCap: [1, 8], // K114 beat rider: the most beats a run takes
 });
 
 // A link value held to its panel range (K398); a param with no range,

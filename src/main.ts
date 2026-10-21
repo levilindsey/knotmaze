@@ -33,6 +33,7 @@ import { BackgroundLayer } from "./render/background";
 import {
   chaseParamsOf,
   clockOf,
+  minoClockOf,
   fabricRulesOf,
   fireSettingsOf,
   turnMinoParamsOf,
@@ -1787,7 +1788,7 @@ async function main(): Promise<void> {
     scene.turnMino =
       params.mazeFabric &&
       params.gameMode === "minotaur" &&
-      clockOf(params) === "turn" &&
+      minoClockOf(params) === "turn" && // K114: the beat rider's too
       scene.walkGraph &&
       scene.fabric
         ? new TurnMinotaur(

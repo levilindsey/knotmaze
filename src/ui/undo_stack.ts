@@ -211,6 +211,8 @@ export const LIVE_EFFECTS = {
     "spool", "spoolSlack", "hints",
     // K138 stage 1: ice and the color rule (a restart places them anew).
     "ice", "colorRule",
+    // K114's beat rider: a new tempo, beat length or cap restarts the ride.
+    "beatTempo", "beatLength", "beatCap",
   ],
 } as const satisfies Record<string, readonly string[]>;
 
