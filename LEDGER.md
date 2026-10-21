@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K759.
+Next free ID: K766.
 
 ## Waiting on Levi
 
@@ -236,6 +236,11 @@ Next free ID: K759.
 - **K754** · K114 beat: feel the tempo at 80, 100 and 132 bpm and L 2 vs 3
   (`?7&clk=beat&btp=<bpm>&btl=<L>&am=instant`); at L 2 about a quarter of runs hit the 4-beat cap
   (`btc`). Calls 1-10 in the Handoff of `docs/design/K114_beat.md`
+- **K759** · K138 s2 calls 1-5, built as recommended (Handoff of `docs/design/K138_s2.md`): the
+  turnstile clock is the move count in every mode, real time too; each turnstile starts at its own
+  seeded phase; only a pluck on the same note within 3 runs reveals a hidden run (taps and
+  music-mode auto plucks do not); Undo past a reveal hides the run again; par, strict mode and stars
+  rate the maze without hidden runs
 
 ## In progress
 
@@ -622,6 +627,10 @@ Every other item below waits on the trigger it names.
 - **K728** · Real-time seeker for the K708 sim (a sword-seeking player on MinotaurChase): the
   real-time sword best case is unmeasured and informs K727 (.claude/probes/K708/rt/, a sweep takes
   about 35 s)
+- **K765** · CLAUDE.md Project Structure lacks the K138 game files (`rule_search.ts`, `ice.ts`,
+  `color_rule.ts`, `turnstiles.ts`, `hidden_runs.ts`) and the K114 beat files (`beat_clock.ts`,
+  `beat_rider.ts`, `ui/beat_pause.ts`, `app/beat_frame.ts`); add them after the K137 s3d merge, with
+  its modules
 
 ## Residuals (known, not fixed)
 
@@ -1400,6 +1409,15 @@ Every other item below waits on the trigger it names.
 - **K758** · The bottom-left corner has no layout of its own: the beat pause rises 60 px above the
   sprint button by hand (`65c4f78a`), and a third control there would need the same (compare K738 at
   the top)
+- **K760** · K138 s2: turnstile bands show the next phase while a move animates, and the contrast of
+  a band depends on the section colors (`src/game/turnstiles.ts`)
+- **K761** · K138 s2: the rule search models waiting detours of up to 4 taps, so the fewest and par
+  can overstate a maze that rewards a longer wait at a turnstile (`src/game/rule_search.ts`)
+- **K762** · K138 s2: after a backtrack, a turnstile can refuse re-entering the run just retraced
+- **K763** · K138 s2: the HUD reads 0 / 0 found when no hidden run was placed
+- **K764** · A press on a hidden, burnt or cut run grabs and tugs the unseen thread instead of
+  panning, which gives its position away (from the code: `grabAt`/`onThread` in
+  `src/app/input_pointer.ts` skip none of them; fix: skip them there). K138 s3 starts with it
 
 ## Approved, to schedule (2026-10-11)
 
