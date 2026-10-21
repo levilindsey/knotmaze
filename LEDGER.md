@@ -314,10 +314,10 @@ Next free ID: K705.
 - **K580** · The a's J join, Levi's call (2026-10-20): tangent, its shared stretch a TAPERED spur that
   leaves the junction as wide as both merging strokes and narrows to normal where they turn collinear.
   Open calls: K606; the paint stage is K620. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
-  - owner: agent `a0dcb13da4f154ba7` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 22:03, 2 h cap ~00:03)
-  - branch: `worktree-agent-a0dcb13da4f154ba7`, worktree `.claude/worktrees/agent-a0dcb13da4f154ba7`; last commit: `330980d`
+  - owner: nobody since 2026-10-20 23:30 (merged; agent `a0dcb13da4f154ba7` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `7a24b3d`
   - evidence: `.claude/probes/K580/`
-  - next: stage 4: the i joint notch, K675 partial blends, K676 crescents (brief steps 1-7)
+  - next: stage 5 brief to write: the glyph tuck-waist fix (a stadium cap cover from T to J, or no glyph tuck, behind a glyph-only flag), measured by real.mjs against the full stroke from J, A/B at 0 px (K580_s4.md Handoff)
   - brief: `docs/design/K580_s4.md`
 - **K546** · Loss effects (Levi, 2026-10-16): a catch ends early today - animate the player and the minotaur/fire all the way to their meeting point first (contact t is computed in by-length mode; turn and realtime catches leave a visual gap), then a gratuitous contact effect at the meeting point plus a whole-screen loss effect akin to the win confetti. Levi's seeds: an explosion; a flare-up and burn-away; the player indicator ripped in half and falling over. Base to build on: K80 3b's catch feedback (dcdfaf4) and K270's fix; the fire side is K114. Design: `docs/design/K546_loss_effects.md`. Its q8 is answered (K525).
   - owner: nobody since 2026-10-20 18:25 (merged; agent `a57e1aa8c7ba233b0` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
