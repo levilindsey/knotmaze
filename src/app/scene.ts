@@ -1,7 +1,14 @@
 import type { Application, Container } from "pixi.js";
 import { buildSceneGraph } from "../core/scene_graph";
 import { GLYPHS2 } from "./glyph_switch";
-import { buildSectionRuns, setGamutConfig } from "../core/section_colors";
+import {
+  buildSectionRuns,
+  ruleRunTable,
+  setGamutConfig,
+  type RunChain,
+  type SectionRuns,
+} from "../core/section_colors";
+import { walkerMapOf } from "../game/walker";
 import { buildWalkGraph } from "../core/walk_graph";
 import type { WalkGraph } from "../core/walk_graph";
 import type { TangleGraph } from "../core/types";
@@ -194,22 +201,36 @@ export function createScene(deps: SceneDeps): Scene {
   // Recolor the live scene in place (the look color rows, and K111's high
   // contrast, which swaps the palette and the route color): no rebuild, no
   // wake. The background follows through syncBackground().
+  // K138: the scheme's run table, with the movement rules' looks over it
+  // (frost on icy runs, the color rule's colors) while a rule is in play.
+  // main.ts recolors when the controller's ruleKey changes (setRules).
+  function withRuleLooks(base: SectionRuns, chains: RunChain[], effHue: number): SectionRuns {
+    const look = fabricController?.ruleLook;
+    if (!look || !walkGraph) return base;
+    return ruleRunTable(base, walkGraph, chains, look, effHue);
+  }
+
   function recolorScene(): void {
     if (!renderer || !ps) return;
     const effHue = (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
     setGamutConfig(params.gamutArc, look("palette"));
+    const chains = ps.chains.map((c, i) => ({ len: c.length, closed: ps!.chainBreakAfter[i] < 0 }));
     renderer.recolor(
       effHue,
       parseInt(look("pathColor").slice(1), 16),
       params.colorScheme === "strands"
         ? buildHueGroup
         : new Array<number>(buildStrandCount).fill(0),
-      buildSectionRuns(
-        params.colorScheme,
-        walkGraph,
-        ps.chains.map((c, i) => ({ len: c.length, closed: ps!.chainBreakAfter[i] < 0 })),
-        buildHueGroup,
-        params.seed,
+      withRuleLooks(
+        buildSectionRuns(
+          params.colorScheme,
+          walkGraph,
+          chains,
+          buildHueGroup,
+          params.seed,
+          effHue
+        ),
+        chains,
         effHue
       ),
       params.colorScheme,
@@ -292,29 +313,40 @@ export function createScene(deps: SceneDeps): Scene {
         ? graph.strands.map((s) => s.glyph === true)
         : undefined,
     });
-    renderer.setSectionRuns(
-      buildSectionRuns(
-        params.colorScheme,
-        walkGraph,
-        ps.chains.map((c, i) => ({ len: c.length, closed: ps!.chainBreakAfter[i] < 0 })),
-        hueGroup,
-        params.seed,
-        effHue // The gamut anchor; matches style.baseHue.
-      ),
+    const runChains = ps.chains.map((c, i) => ({ len: c.length, closed: ps!.chainBreakAfter[i] < 0 }));
+    const baseRuns = buildSectionRuns(
       params.colorScheme,
+      walkGraph,
+      runChains,
+      hueGroup,
       params.seed,
-      params.junctionBlend
+      effHue // The gamut anchor; matches style.baseHue.
     );
+    renderer.setSectionRuns(baseRuns, params.colorScheme, params.seed, params.junctionBlend);
 
     // Branching gameplay over the fabric: branch-point-only solve state +
     // the thread-true paint overlay (the walk graph was built above).
     if (params.mazeFabric && walkGraph) {
+      const ruleWalk = walkGraph;
+      let cont: Int32Array | null = null;
       fabricController = new FabricMazeController(
         walkGraph,
         pathVizOf(params) === "trail",
         fireOf(walkGraph), // K114: null with the fire off.
-        fabricRulesOf(params) // K137: fragile runs and par.
+        fabricRulesOf(params), // K137: fragile runs and par.
+        // K138: what ice and the color rule place from (the walker map's
+        // continuation table, built only when a rule is on).
+        { seed: params.seed, cont: () => (cont ??= walkerMapOf(graph, ruleWalk).cont) }
       );
+      // K138: the rules' looks over the scheme's table.
+      if (fabricController.ruleLook) {
+        renderer.setSectionRuns(
+          withRuleLooks(baseRuns, runChains, effHue),
+          params.colorScheme,
+          params.seed,
+          params.junctionBlend
+        );
+      }
       fabric = new FabricMazeRenderer(
         ps,
         walkGraph,

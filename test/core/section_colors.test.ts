@@ -11,7 +11,11 @@ import { describe, expect, it } from "vitest";
 import {
   buildSectionRuns,
   evalRunSection,
+  FROST_RGB,
   gamutRgb,
+  RULE_FREE_RGB,
+  ruleColorRgb,
+  ruleRunTable,
   type ColorScheme,
   type RGB,
   type RunChain,
@@ -315,6 +319,76 @@ describe("run form vs the frozen segment field (pre-G2.2)", () => {
     if (process.env.SECDBG) {
       for (const [sc, d] of [["segments", 0.88], ["segments", 3], ["strands", 0], ["strands", 0.88], ["strands", 3], ["depth", 0]] as const) {
         console.log("parity", sc, d, (compare(sc, d) * 255).toFixed(2), "/255");
+      }
+    }
+  });
+});
+
+// K138 stage 1: the rules' look over a scheme's table.
+describe("ruleRunTable (K138 ice and color rule)", () => {
+  const luma = (c: RGB): number => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+
+  it("paints icy runs frost and colored runs their color, every slot of the run", () => {
+    const walk = makeWalk();
+    for (const scheme of ["segments", "depth", "mono", "noise", "strands"] as ColorScheme[]) {
+      const base = buildSectionRuns(scheme, walk, CHAINS, undefined, SEED, HUE);
+      const icy = new Uint8Array(walk.edges.length);
+      icy[1] = 1;
+      const colors = new Int8Array([0, -1, 1, -1, 0, 1]);
+      const sr = ruleRunTable(base, walk, CHAINS, { icy, colors, mode: "alternate" }, HUE);
+      expect(sr.noise).toBe(base.noise);
+      expect(sr.slotRun.map((a) => a.length)).toEqual(base.slotRun.map((a) => a.length));
+      // e1 (chain 0, 10..30) is icy: frost on every slot it owns.
+      for (let s = 10; s < 31; s++) {
+        expect(sr.runs[sr.slotRun[0][s]].colA).toEqual(FROST_RGB);
+      }
+      // e0 (chain 0, 0..10) is light, e2 (chain 1) dark, e3 free grey.
+      const light = ruleColorRgb("alternate", 0, HUE);
+      const dark = ruleColorRgb("alternate", 1, HUE);
+      for (let s = 0; s < 10; s++) expect(sr.runs[sr.slotRun[0][s]].colA).toEqual(light);
+      for (let s = 0; s < 25; s++) expect(sr.runs[sr.slotRun[1][s]].colA).toEqual(dark);
+      for (let s = 0; s < 13; s++) expect(sr.runs[sr.slotRun[2][s]].colA).toEqual(RULE_FREE_RGB);
+      // The closed chain's seam run (e5, 17..29 unwrapped) wraps to 0..4.
+      for (const s of [17, 20, 23, 0, 4]) {
+        expect(sr.runs[sr.slotRun[4][s]].colA).toEqual(dark);
+      }
+      for (const s of [5, 10, 16]) expect(sr.runs[sr.slotRun[4][s]].colA).toEqual(light);
+      // Flat records: one color end to end, no ramps.
+      for (const r of sr.runs.slice(base.runs.length)) {
+        expect(r.flags).toBe(0);
+        expect(r.colMid).toEqual(r.colA);
+        expect(r.colB).toEqual(r.colA);
+      }
+      // The decorative chain keeps the base scheme's records.
+      expect(sr.slotRun[3]).toEqual(base.slotRun[3]);
+      // The base table is not touched.
+      expect(base.runs.length).toBeLessThan(sr.runs.length);
+    }
+  });
+
+  it("leaves a run with no look on the base scheme's record", () => {
+    const walk = makeWalk();
+    const base = buildSectionRuns("segments", walk, CHAINS, undefined, SEED, HUE);
+    const icy = new Uint8Array(walk.edges.length);
+    icy[3] = 1;
+    const sr = ruleRunTable(base, walk, CHAINS, { icy, colors: null, mode: "off" }, HUE);
+    expect(sr.runs.length).toBe(base.runs.length + 1);
+    for (let s = 0; s < 31; s++) expect(sr.slotRun[0][s]).toBe(base.slotRun[0][s]);
+    for (let s = 0; s < 13; s++) expect(sr.runs[sr.slotRun[2][s]].colA).toEqual(FROST_RGB);
+  });
+
+  it("parts the rule's colors in lightness, so they read in grayscale", () => {
+    for (const hue of [0, 60, 120, 200, 300]) {
+      const a = [0, 1].map((k) => luma(ruleColorRgb("alternate", k, hue)));
+      expect(a[0] - a[1]).toBeGreaterThan(0.4);
+      const c = [0, 1, 2].map((k) => luma(ruleColorRgb("cycle", k, hue)));
+      expect(c[0] - c[1]).toBeGreaterThan(0.2);
+      expect(c[1] - c[2]).toBeGreaterThan(0.2);
+      for (const k of [0, 1, 2]) {
+        for (const v of ruleColorRgb("cycle", k, hue)) {
+          expect(v).toBeGreaterThanOrEqual(0);
+          expect(v).toBeLessThanOrEqual(1);
+        }
       }
     }
   });

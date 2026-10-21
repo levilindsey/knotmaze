@@ -1276,12 +1276,12 @@ async function main(): Promise<void> {
       showStats: settings.showMazeStats,
       timeMs: clock.elapsed(performance.now()),
       path: c.pathLength,
-      optimal: c.walk.optimalLength,
+      optimal: c.optimal,
       // A finished route's metric: shown from the arrival on (K139: never
       // in a collapse game, where a long trail is the goal).
       efficiency:
         c.solved && clock.state === "stopped" && !c.collapseOn
-          ? efficiencyOf(c.walk.optimalLength, c.pathLength)
+          ? efficiencyOf(c.optimal, c.pathLength)
           : null,
       // Memory-trail mode has no backtracking, so no backtrack meter.
       backtrack: pathVizOf(params) === "trail" ? null : c.backtrackDist,
@@ -1548,7 +1548,7 @@ async function main(): Promise<void> {
     // daily anyway (collapse is no exempt key).
     const efficiency = c.collapseOn
       ? null
-      : efficiencyOf(c.walk.optimalLength, c.pathLength);
+      : efficiencyOf(c.optimal, c.pathLength);
     const backtrack = pathVizOf(params) === "trail" ? null : c.backtrackDist;
     const deadEnds = params.deadEndDensity > 0 ? c.deadEndTips.size : null;
     const moves = c.moveLog.join("");
@@ -1560,7 +1560,7 @@ async function main(): Promise<void> {
         day: attemptDay,
         timeMs: Math.round(timeMs),
         path: c.pathLength,
-        optimal: c.walk.optimalLength,
+        optimal: c.optimal,
         efficiency,
         backtrack: c.backtrackDist,
         junctions: c.visitedJunctions.size,
@@ -1594,8 +1594,8 @@ async function main(): Promise<void> {
           ? rateCuts(c.cutCount, walkerScore.par, walkerScore.upper)
           : null
         : mino
-          ? rateRun(c.walkedDist, c.walk.optimalLength, mino.catches, c.respawns)
-          : rateRun(walkedOf(c.pathLength, c.backtrackDist), c.walk.optimalLength);
+          ? rateRun(c.walkedDist, c.optimal, mino.catches, c.respawns)
+          : rateRun(walkedOf(c.pathLength, c.backtrackDist), c.optimal);
     const stars = rating?.stars ?? null;
     // K139: the collapse score against par (null: collapse off).
     const collapse = ruleFields(c).collapse ?? null;
@@ -1647,7 +1647,7 @@ async function main(): Promise<void> {
       timeMs,
       efficiency,
       path: c.pathLength,
-      optimal: c.walk.optimalLength,
+      optimal: c.optimal,
       backtrack,
       junctions: c.visitedJunctions.size,
       deadEnds,
@@ -1899,8 +1899,11 @@ async function main(): Promise<void> {
     if (scene.fabricController) scene.fabricController.fire = fireOf(scene.fabricController.walk);
     // K137: fragile runs and par as the params on screen say (a rules row
     // restarts the solve through here).
+    const ruleKey0 = scene.fabricController?.ruleKey ?? "";
     scene.fabricController?.setRules(fabricRulesOf(params));
     scene.fabricController?.reset();
+    // K138: a new layout of ice or the color rule repaints the runs.
+    if ((scene.fabricController?.ruleKey ?? "") !== ruleKey0) scene.recolorScene();
     // K137 stage 2: a restart clears the hints used and the chalk marks; a
     // catch's level restart (carry) keeps them, as it keeps the tallies.
     if (!carry) scene.fabricController?.clearAids();
@@ -1933,7 +1936,8 @@ async function main(): Promise<void> {
   const undoMove = (): void => {
     const fc = scene.fabricController;
     if (!fc || !scene.fabric) return;
-    const cutting = fc.cutOn;
+    // K138: and with ice or the color rule on (a slide is one move).
+    const cutting = fc.replaysActions;
     if ((cutting ? fc.actions.length : fc.taps.length) === 0) return;
     pendingCut = -1;
     hintOff(); // K137 stage 2
@@ -2780,6 +2784,25 @@ async function main(): Promise<void> {
     spoolToastAt = t;
     showToast("Out of yarn: retrace your last run to reel some in.", 2500);
   };
+  // K138: a move the color rule forbids (a run of the wrong color, or a
+  // slide over the ice that ends on one) is refused, changing nothing: a
+  // dull pluck, and a toast at most once per 1.5 s (as the smolder's).
+  let ruleToastAt = -Infinity;
+  const ruleRefused = (eid: number): void => {
+    cutPluck(eid, REFUSE_OCTAVE, REFUSE_STRENGTH);
+    const t = performance.now();
+    if (t - ruleToastAt < 1500) return;
+    ruleToastAt = t;
+    const mode = scene.fabricController?.ruleLook?.mode;
+    showToast(
+      mode === "cycle"
+        ? "Cycle the colors: light, then middle, then dark, then light again."
+        : mode === "alternate"
+          ? "Alternate the shades: light, then dark, then light."
+          : "That move breaks the rules.",
+      2500
+    );
+  };
   // One move along run `eid` from the head, as a tap on it (K120's keys
   // share it). Returns true when the move was taken.
   const moveAlong = (eid: number): boolean => {
@@ -2815,6 +2838,7 @@ async function main(): Promise<void> {
       // moved (the tap is taken: no tug).
       if (result === "smolder") smolderToast();
       else if (result === "spool") spoolRefused(eid); // K137 stage 2
+      else if (result === "refused") ruleRefused(eid); // K138
     }
     updateHud();
     // No wake(): a move touches markers, paint and the yarn only, and the
@@ -2893,7 +2917,8 @@ async function main(): Promise<void> {
   // a waiting cut once the move is over. True while the carry is in charge.
   const carryStep = (): boolean => {
     const fc = scene.fabricController;
-    if (!fc || !fc.cutOn) return false;
+    // K138: ice's slides carry on too, with the cut off.
+    if (!fc || (!fc.cutOn && fc.carry.length === 0)) return false;
     if (fc.walkerMode) return walkerStep(fc); // K114 walker: always in charge.
     if (fc.carry.length > 0) {
       if (dotMoving()) return true;
