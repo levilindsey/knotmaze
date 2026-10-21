@@ -616,6 +616,26 @@ export function installProbeHooks(ctx: ProbeCtx): void {
         chalk: [...c.chalk],
         compassRun: fb.compassRun,
       },
+      // K138 stage 1: the ice and color rule (null: no rule on). `mode`:
+      // the color rule's mode ("" without one); `icy`: the icy runs;
+      // `colors`: each run's color (-1: free); `state`: the color state (the
+      // last color + 1, 0 at the start); `placed` / `bites` / `draws`: the
+      // placement; `key`: the placement's key; `optimal`: the shortest legal
+      // length; `carry`: a slide's runs still to play.
+      rules: c.rulesOn
+        ? {
+            mode: c.ruleLook?.mode ?? "",
+            icy: c.ruleLook?.icy ? [...c.ruleLook.icy].flatMap((v, i) => (v ? [i] : [])) : [],
+            colors: c.ruleLook?.colors ? [...c.ruleLook.colors] : null,
+            state: c.colorState,
+            placed: c.ruleLook?.placed ?? false,
+            bites: c.ruleLook?.bites ?? false,
+            draws: c.ruleLook?.draws ?? 0,
+            key: c.ruleKey,
+            optimal: c.optimal,
+            carry: c.carry.length,
+          }
+        : null,
       // K114: the burn race (null: no fire). `smoldering`: the head's arms
       // whose tap the fire refuses; `banner`: the Burnt banner shows.
       fire: c.fire
