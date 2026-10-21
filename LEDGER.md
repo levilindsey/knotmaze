@@ -339,11 +339,11 @@ Next free ID: K717.
 - **K137** · K80 section 4's cheap (S, S-M) mechanisms, each toggled (Levi 10-13), after the
   minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus
   Levi's sleeper variant. `K80_gameplay_additions.md`, stages in `sooner_20261020.md`; M: K138, M-L/L: K141.
-  - owner: nobody since 2026-10-20 23:59 (merged; agent `a52e4207fa7a36be7` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `4541a9d`
-  - evidence: `.claude/probes/K137/s3a/`
-  - next: stage 3b next; the sword (4.7) and sprint (4.29) are unbuilt, designs in the K137_s3a.md Handoff
-  - brief: `docs/design/K137_s3a.md`
+  - owner: agent `af34a0e5755494326` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 00:02, 2 h cap ~02:02)
+  - branch: `worktree-agent-af34a0e5755494326`, worktree `.claude/worktrees/agent-af34a0e5755494326`; last commit: `b12b378`
+  - evidence: `.claude/probes/K137/s3b/`
+  - next: stage 3b: the sword and sprint, then the monster list, sleepers, follower, lures, snares, mud
+  - brief: `docs/design/K137_s3b.md`
 
 ## Next, in order
 
