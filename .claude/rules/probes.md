@@ -39,7 +39,9 @@ key=value link (`?s=1471kin&am=instant`) or after a token
 `location.search` has no keys to read - read settings via
 `window.__knotParams()`. AUDIO IS GATED on a trusted user
 gesture: a probe that expects sound must `page.mouse.click` (or press a
-key) first, and `window.__knotSynth` exists only once the gate has opened
+key) first, and `window.__knotSynth` exists only once a context exists
+(K720: the gate opened with sound on, or a later play with sound on; at
+`snd=none` or Muted it stays undefined through every input)
 (scripts/diag_audio.mjs injects an OfflineAudioContext, which bypasses it).
 
 PROBE LORE (2026-10-13, K83): **a same-state A/B needs every clock

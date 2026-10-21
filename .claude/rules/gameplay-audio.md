@@ -22,6 +22,44 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   music-mode plucks before it are silent no-ops, so Chrome's "AudioContext
   was not allowed to start" warning is gone.
 
+- SOUND OFF OPENS NO AUDIO (K720, 2026-10-21; worktree agent; brief and
+  handoff `docs/design/K720.md`). Why: a running context keeps a phone's
+  audio output awake (battery) and on Android may take the audio focus
+  (found by K717's phone sitting; probes-phone.md's K704 gotcha). With
+  sound off (`settings.muted`, or `soundMode` none: `soundIsOn`; volume 0
+  does not count) the gate's first activating input only records that
+  the gate is open (`unlocked`) and creates nothing. `ensure()` is the
+  ONE place a context is made (`provided ?? new AudioContext()`): null
+  while the gate is closed or `soundOn()` is false (`setSoundOn`,
+  installed by `app/auto_audio.ts`; true until then). With sound on
+  nothing changed: the gate's listener makes the context inside the
+  gesture (iOS), and the listeners now disarm only once a context RUNS.
+  Plays that make it: a pluck (pluck() and playSample() go through
+  ensure()); the song (music's tick calls `synth.open()` before
+  `audioTime()`, so the panel's switch needs no reload and the song moves
+  to the audio clock); the snore (`play()` calls `host.open()`, and the
+  panel's preload decodes through ensure() as before, so with sound on
+  and the gate open it makes one too; with sound off the decode waits on
+  `whenOpen`, a context, not the gate). A context made
+  outside a gesture runs in Chrome after an activation; elsewhere the
+  still-armed listeners resume it at the next input (unverified on iOS).
+  MEASURED (`.claude/probes/K720/k720_probe.mjs`, `results.md`; knot
+  links, headed Chrome off-screen, contexts counted by an AudioContext
+  subclass, base 6c2068d0 against K720): `snd=none`, a click, a touch, a
+  drag pluck and tap plucks made 0 contexts (base: 1, in the first
+  click's pointerdown); the panel's switch to music made 1, running, at
+  the first tick, its song on the audio clock with the 1.2 s lead-in;
+  none -> manual made 1 in the first tap pluck's pointerdown; Muted set
+  before any input held 0 through every input, and unmuting made 1. The
+  default link's first click or touch made 1 in its pointerdown /
+  pointerup on both builds, with the same song grid and peaks. 0
+  resume() calls on either build: Chrome constructs a context running
+  after an activation. SIDE EFFECT: the minotaur's cues (catch notes,
+  growl, heartbeat, footsteps: bare `synth.pluck` calls in main.ts) never
+  checked Muted or sound mode none (Muted is read per call, not a master
+  gain) and sounded under both; they are silent with sound off now, like
+  every other sound.
+
 - AUTO PLUCKS' VOLUME (K279 stage 1, 2026-10-14; brief
   `docs/design/K279.md`). Levi: "I want manual plucks to be louder than
   auto plucks". Auto plucks (the random and music sound modes) play
@@ -49,7 +87,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
     the first 50 ms (-37 dB), swell to -14 dB by 200 ms, loud 200-450 ms,
     fade 500-850 ms, silent by 900 ms.
   - THE SOUND (`audio/snore_sfx.ts`, `SnoreSfx`): `KnotSynth.decodeSample`
-    (null while the autoplay gate is closed) and `playSample` go out
+    (null while no context exists and none may be made: the gate closed,
+    or K720's sound off) and `playSample` go out
     through `sfxBus`, a gain that follows the master `volume` straight to
     the destination, past the body EQ and the hall (a string's room would
     smear a recording). SNORE_GAIN 0.5, from `.claude/probes/K325/
@@ -60,7 +99,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
     when the panel opens (`onOpenChange`); a panel that starts open (the
     desktop default) preloads from `requestIdleCallback` (4 s timeout; a 2 s
     timer where there is none). The bytes are fetched once, a COPY is
-    decoded (a decode detaches its buffer) and only once the gate is open;
+    decoded (a decode detaches its buffer) and only once a context exists
+    (K720: before, once the gate was open);
     a failed fetch retries on the next preload or play, bytes that will not
     decode give up with one warning.
   - PLAY: a mouse or pen plays on `pointerenter`; a touch plays on
@@ -98,7 +138,13 @@ only with the files it is about; `gameplay.md` lists the area's other files.
     still opens the link at once. A page that loads with sticky activation
     (a same-origin link into the game) opens the gate at construction, and
     its first hover does play. Open: decode on an OfflineAudioContext before
-    the gate so a first touch can play.
+    the gate so a first touch can play. K720: with sound off the first
+    input creates no context, so once sound is turned on in manual mode
+    the first snore play makes the context and plays nothing (the decode
+    starts then); the next play sounds. Music's next tick or a random
+    pluck makes the context first, so there the first hover plays. With
+    sticky activation the gate opens at construction and creates nothing;
+    with sound on the preload's decode makes the context, as before.
   - PROBE: `.claude/probes/K325/snore.mjs <base> [A..F]` (headed Chrome
     off-screen: desktop mouse, silent configs, volume, phone touch
     emulation, keyboard Enter, first-ever touch; `results.md`). Hooks:
