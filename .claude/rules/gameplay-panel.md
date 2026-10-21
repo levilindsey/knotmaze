@@ -211,6 +211,26 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   or, with minoLair off, where it caught you. Params: gameplay-links.md;
   behavior: gameplay-minotaur.md.
 
+- REAL-TIME TUNING ROWS (K324 stage 1, 2026-10-20; brief
+  `docs/design/K324_s1.md`, q8): the collapsed "Minotaur tuning"
+  subfolder (K323) now shows under BOTH clocks while the game is the
+  minotaur (`fMinoBehavior.hidden = !gameMino`; before, only on the turn
+  clock). The turn clock's model rows and minoPause / minoSleep hide in
+  real time; real time's seven rows (in `rtRows`) hide on the turn clock.
+  Real time's own rows (paces through the lair wait) are created before
+  the subfolder, so it sits after them and before the shared rows
+  (minoFog on). The seven, in order: "Junction stop, min (s)", "Junction
+  stop, max (s)", "Stop while hunting (x)", "Turn-back margin", "Dead-end
+  reach (x roam)" and "Nearest roam (x roam)" (`tuneRow`: no step, K130;
+  an edit keeps 2 decimals), then "Telegraph reach (runs)" (an integer
+  slider, 0-3, whose tooltip says the telegraph is not drawn yet). Each
+  tooltip starts "Real time:" and says it applies live (onChaseChange,
+  LIVE_EFFECTS). LABELS: the brief's five longer ones ("Junction stop,
+  shortest (s)", "Junction stop, longest (s)", "Junction stop while
+  hunting (x)", "Dead-end reach (x roam range)", "Nearest roam (x roam
+  range)") break K327's 23 characters, so the rows carry the shorter
+  ones; keys and values are the brief's. Params: gameplay-links.md's
+  JUNCTION STOP PARAMS; behavior: gameplay-minotaur.md.
 - ROW HELP (K467, 2026-10-15; brief `docs/design/K467.md`; Levi: "tooltip
   type information for param controls on mobile"; the coordinator's
   recommendation, no long press, no (i) buttons): a tap or click on a

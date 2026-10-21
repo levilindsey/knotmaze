@@ -32,7 +32,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   detectStart and ends beyond detectEnd, both THREAD distance through the
   walk graph minus the two tails; it runs at approachPace on the shortest
   path to the player, re-planned every tick, and turns back mid-run only
-  when that is shorter by REVERSE_MARGIN 1.5. THE TAILS ARE A SANCTUARY:
+  when that is shorter by REVERSE_MARGIN 1.5 (the param minoTurnBack
+  since K324 stage 1). THE TAILS ARE A SANCTUARY:
   barred to it, a player on either is unseen and uncatchable. A CATCH
   (catchDist) is a respawn, not a loss: the player goes back to the
   entrance (FabricMazeController.respawn: the path, yarn and trail follow
@@ -78,11 +79,13 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   Levi's answers to K80's six calls). PACES ARE FRACTIONS of playerPace:
   minoWanderPace / minoHuntPace (`mwp` / `mhp`, panel "(x your pace)",
   0-2, no step, shown to 2 decimals) default to WANDER_PACE_FRACTION 0.5
-  and HUNT_PACE_FRACTION 0.7. ChaseParams stays in u/s: url_state.ts's
+  and HUNT_PACE_FRACTION 0.7 (0.9 since K324 stage 1, the entry below).
+  ChaseParams stays in u/s: url_state.ts's
   chaseParamsOf multiplies, so one playerPace edit scales the chase, and
   0.5 x 10 and 0.7 x 10 are exactly master's 5 and 7 in doubles (the
   default chase replays K80's tick for tick: minotaur.test.ts's
-  K80_DIGESTS). Links are not clamped: a K80 probe link's `mhp=25` now
+  K80_DIGESTS; K324 stage 1's stops and 0.9, exactly 9, re-froze them).
+  Links are not clamped: a K80 probe link's `mhp=25` now
   means 25 x your pace. ROAM TOWARD THE PLAYER: `minoToward` (`mtw`,
   default on) sets ChaseParams.roamPull to DEFAULT_CHASE_PARAMS' 0.5, off
   to 0. With chance roamPull a roam leg draws its destination only among
@@ -125,6 +128,55 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   non-instant intro (no chase tick during the pre-settle or the intro;
   it waits in its lair for the first tap).
 
+- JUNCTION STOPS AND THE PLAN (K324 stage 1, 2026-10-20; brief
+  docs/design/K324_s1.md, whose Handoff holds the full tables; design
+  docs/design/K324_realtime_minotaur.md 2.2, 2.3, 3.1-3.4, 4.2). Real
+  time only: the turn clock is untouched (TURN_GAMES, LENGTH_GAMES held).
+  STOPS: it stops at EVERY junction it reaches, never at a dead-end tip,
+  for stopMin..stopMax s (minoStopMin / minoStopMax, 0.2 / 0.6;
+  chaseParamsOf plays the max at least the min), huntStop x that while it hunts
+  (minoHuntStop 0.5). The draw is a COUNTER stream (`TurnRng` from
+  minotaur_turns.ts on seedMix(seed), indexed by the chase's junction
+  `arrivals`), never the sequential rng, so a stop shifts no roam draw.
+  `hold` = ticks of stop left. A long stop (pauseChance, mode "pause")
+  replaces the junction stop; spotting you never cuts a junction stop
+  short, though it still cuts a long one (q4). Stops 0 / 0 = none (commit
+  1 shipped the machinery at zero with K80_DIGESTS unchanged). PICK ON
+  ARRIVAL (q7): a roaming leg picks its next destination as it arrives,
+  before the stop, so plan() can show it. CAVEAT: that pick draws from
+  the sequential rng at once, so a pick a spot or a catch discards during
+  the stop still advanced the rng; design 2.3 / 3.3's claim that the draws
+  are unchanged is inexact (replays stay exact). CONSTANTS TO PARAMS:
+  REVERSE_MARGIN -> minoTurnBack (`turnBack` 1.5), the roam window's
+  roamRange / 4 -> minoRoamNear (`roamNear` 0.25), the tip reach ->
+  minoTipReach (`tipReach` 2, x roamRange); the defaults are the old
+  values. plan(reach): read-only, the next `reach` runs of its route
+  (PLAN_REACH_MAX 8) as ChasePlan `{lead, steps: [edge, farVertex][],
+  dest, hunting}`; empty in the lair until its last LAIR_TELL 0.5 s.
+  minoTelegraphRuns (`mtn`, 1) is the reach stage 2's telegraph will draw;
+  it is inert until then. HUNT PACE 0.7 -> 0.9 (q3: keep the catch rates
+  the stops cost). MEASURED on K80's real-time sim (copied, fixed, to
+  `.claude/probes/K324/rt/`; 288 H1 mazes x 3 reps, pull 0.5; catches a
+  game / % of hunts escaped): baseline bcd907c (no stops, 0.7) greedy
+  2.50 / 6%, fleer 0.86 / 50%, queued fleer 0.51 / 75%; with stops, hunt
+  pace 0.7 / 0.8 / 0.9 / 1.0: greedy 1.95 / 2.20 / 2.61 / 2.68, fleer
+  0.43 / 0.51 / 0.72 / 1.28 (escapes 79 / 73 / 55 / 29%), queued fleer
+  0.39 / 0.42 / 0.43 / 0.46 (83 / 81 / 79 / 76%). At 0.9 the greedy solve
+  median is 83.1 s (80.8 baseline); the queued fleer keeps about 4 points
+  more escapes at any pace. 0.9 departs from the brief's fallback ("leave
+  the default"): a call for Levi; reverting is one constant and its pins.
+  The still-player test reads 69.1 s at pull 0, 48.8 s at pull 1 (ratio
+  0.71, bound 0.8). TESTS: minotaur.test.ts's K324 block (ranges and no
+  tip stop, a long stop replaces, a zero stop costs no tick, spotting
+  keeps a junction stop, replay, the lair plan, roaming and hunting plans
+  against the runs walked). PINS MOVED: K80_DIGESTS (twice), the paces
+  test, url_codec.test.ts's defaults table and paces case, the codec
+  table pin; held: the golden dailies, K87, byte_identity. HOOK:
+  `__knotChase()` adds `hold`, `holdSeconds`, `arrivals`, `plan`
+  (plan(minoTelegraphRuns)) and `plan8`. PAGE CHECK:
+  `.claude/probes/K324/k324_page.mjs <base> [outDir] [seed] [secs]` wraps
+  the live chase's step and records every tick (60 s unseen: 29 arrivals,
+  18 stops of 24-70 ticks, 11 long stops, a tip held 0, no stray motion).
 ## The turn-aligned minotaur
 
 - TURN-ALIGNED MINOTAUR (K80 turns stage 1, 2026-10-14;

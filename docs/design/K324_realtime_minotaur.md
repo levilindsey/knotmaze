@@ -292,7 +292,7 @@ params. Keys marked new were checked unused in `src` and `test` at
 |---|---|---|---|
 | playerPace (plp) | 10 | [2, 30] | Game > Minotaur: "Your speed (units/s)" |
 | minoWanderPace (mwp) | 0.5 | [0, 2] | "Wander speed (x yours)" |
-| minoHuntPace (mhp) | 0.7 (re-tune, 3.4) | [0, 2] | "Hunt speed (x yours)" |
+| minoHuntPace (mhp) | 0.9 (stage 1's re-tune, 3.4; was 0.7) | [0, 2] | "Hunt speed (x yours)" |
 | minoPaceJitter (mpj) | 0.2 | [0, 0.5] | "Speed variation" |
 | minoPauseChance (mpc) | 0.3 | [0, 1] | "Chance of a long stop" |
 | minoPauseMin (mpn) | 0.5 | [0, 10] | "Long stop, shortest (s)" |
@@ -439,3 +439,8 @@ folder, the tuning subfolder, the codec bump, `minoPull`).
 ## 8. Handoffs
 
 (Stage agents append theirs here: what landed, measurements, residuals.)
+
+- STAGE 1 (2026-10-20): the junction stops, pick on arrival, `plan()`,
+  the seven params and the hunt pace 0.9. What landed, the baseline and
+  re-tune tables, the pins and what is left: the Handoff at the end of
+  `docs/design/K324_s1.md`.
