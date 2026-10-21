@@ -13,7 +13,10 @@
 // fieldProfLen, fieldProbe, tipDiscScale are facade accessors onto these).
 // RibbonRenderer owns one Joinery (its `joinery`): tickPaintPalette calls
 // rebuildFillets through the facade delegation the probes patch, and
-// G4-2 deletes this file (docs/design/K5_K6_split.md 2.3).
+// G4-2 deletes this file (docs/design/K5_K6_split.md 2.3). Since the move,
+// K580 s5 gave a glyph's fused spur tips the STADIUM (geometry in
+// tip_stadium.ts), in the cap cover and in its host-axis fallback, and
+// pushDisc returns its gate so the fallback's stadium can share it.
 //
 //   FILLET_REACH_PER_HALF .. DISC_SIN  372-432   joinery constants
 //   ERASE_WIDTH_PAD                    495-497   rebuildFillets' pad
@@ -836,14 +839,16 @@ export class Joinery {
       ax: number,
       ay: number,
       gateCtrl: number
-    ): void => {
+    ): [number, number] | null => {
       // A lone cap disc (free tip / host fallback) reads its own thread -
       // and gates on it (shown once revealed there, fading with its FX; a
-      // gate still far off skips the cap this rebuild).
+      // gate still far off skips the cap this rebuild). Returns the gate
+      // (null when skipped), so a glyph's stadium can share it.
       const j1 = this.r.jointGate("c" + chain + ":" + gateCtrl, [[chain, gateCtrl]]);
-      if (j1[0] > fxNowJ + GATE_LEAD) return;
+      if (j1[0] > fxNowJ + GATE_LEAD) return null;
       const rb = writeAxis(cx, cy, j1, chain, arc0, ax, ay, gateCtrl, r);
       fm.pushFan(cx, cy, discRim(cx, cy, r), rb);
+      return j1;
     };
     // Local thread direction at an arc (two nearby probes), into
     // axisScratch.
@@ -1566,7 +1571,7 @@ export class Joinery {
       const closedH = this.r.ps.chainBreakAfter[tip.hostChain] < 0;
       const arcH = sampling.paintArcAt(hostSamples, tip.hostCtrl, closedH);
       axisAt(tip.hostChain, arcH);
-      pushDisc(
+      const j1H = pushDisc(
         cx,
         cy,
         fillHalf * 0.99,
@@ -1576,6 +1581,35 @@ export class Joinery {
         this.axisScratch[1],
         tip.hostCtrl
       );
+      // K580 s5: a glyph junction can reach here. At xh 2 its arms' probes
+      // 0.8 ctrl out all fall within 0.15 of J (the arm-drop rule in the
+      // records loop), so its record keeps under two arms and the search
+      // above skips it: the a's stem foot, the notaper J and the i's joint
+      // take this fallback. The stadium (as in the cap cover) then wears
+      // the fallback disc's host material through its own axis record,
+      // its strip row wide enough to span the band.
+      if (j1H && this.r.style.glyph && this.r.style.glyph[tip.chain]) {
+        const st = this.r.glyphTipStroke[tip.chain * 2 + (tip.atEnd ? 1 : 0)];
+        const band = st ? stadiumRim(st, fillHalf * TIP_DISC_SIDE, this.stadiumApex) : null;
+        if (band) {
+          let reach = fillHalf * 0.99;
+          for (let i = 0; i < band.length; i += 2) {
+            reach = Math.max(reach, Math.hypot(band[i] - cx, band[i + 1] - cy));
+          }
+          const rb = writeAxis(
+            cx,
+            cy,
+            j1H,
+            tip.hostChain,
+            arcH,
+            this.axisScratch[0],
+            this.axisScratch[1],
+            tip.hostCtrl,
+            reach
+          );
+          fm.pushFan(this.stadiumApex[0], this.stadiumApex[1], band, rb);
+        }
+      }
     }
 
     // Upload this rebuild's geometry and records.

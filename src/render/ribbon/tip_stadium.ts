@@ -1,5 +1,10 @@
 // K580 s5: THE STADIUM CAP COVER's geometry (pure; joinery.ts draws it,
 // ribbon_renderer.ts records its input). New file, no moved code.
+// joinery.ts draws it in two places: in the cap cover, wearing the junction
+// field, and in the cap cover's host-axis fallback, wearing the host's
+// material, where the cap cover finds no record (at xh 2 every arm's probe
+// 0.8 ctrl out falls within 0.15 of J, so the junction's record keeps
+// under the two arms the cap cover's search needs).
 //
 // A fused spur tip is TUCKED (ribbon_renderer.ts tuckFusedTips): the spur
 // is drawn from T, trim = min(0.75h, total / 4) up its own stroke from the
