@@ -1439,6 +1439,7 @@ export class Joinery {
     // Rounded caps: dead-end tips get a disc at the terminal wearing
     // their own live material (nothing overlaps a free tip).
     const hideJn = this.r.exploreHideJn; // K76 2b: the joint gate.
+    const taperJn = this.r.taperHideJn; // K580: a tapered root's joint.
     const hideFree = this.r.exploreHideFree;
     for (let ti = 0; ti < this.r.freeTips.length; ti++) {
       const tip = this.r.freeTips[ti];
@@ -1502,7 +1503,7 @@ export class Joinery {
       }
       if (rec) {
         if (rec.j1[0] > fxNowJ + GATE_LEAD) continue;
-        if (hideJn && hideJn[rec.jn]) continue;
+        if ((hideJn && hideJn[rec.jn]) || (taperJn && taperJn[rec.jn])) continue;
         fm = layerFor(rec);
         setFanMask(rec.mask);
         // CAP COVER (TIP_DISC_SCALE): the disc reaches the tucked cap's
@@ -1858,7 +1859,11 @@ export class Joinery {
       const jy = rec.jy;
       const arms = rec.arms;
       if (arms.length < 2) continue;
-      if (rec.j1[0] > fxNowJ + GATE_LEAD || (hideJn && hideJn[rec.jn])) {
+      if (
+        rec.j1[0] > fxNowJ + GATE_LEAD ||
+        (hideJn && hideJn[rec.jn]) ||
+        (taperJn && taperJn[rec.jn])
+      ) {
         // Nothing of a gated joint draws this rebuild, its bands included
         // (K76 2b: nor of a joint the thread reveal hides).
         rec.routes.length = 0;
