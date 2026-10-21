@@ -37,14 +37,17 @@ export function glyphI(fork: ForkAngle = 30): Glyph {
   const body: Knot[] = [
     [0, 32, LOW[0], LOW[1], 0, 1],
     // The junction J: arrives along the upstroke, leaves down the stem.
-    [16, 50, a[0], a[1], a[2], 5, -1, -4],
-    [18, 2, 1, 0, 6, 8],
-    [40, 32, LOW[0], LOW[1], 2, 0],
+    [16, 50, a[0], a[1], a[2], 6, -1, -4],
+    // The round bottom the lint forced (R >= 11 GU, legs >= 0.60 LU apart
+    // at xh 2): the first form turned at (18, 2) with R 1.9 GU, the thorn.
+    [10, 22, -1, -4, 3, 3],
+    [26, 2, 1, 0, 10, 14],
+    [58, 32, LOW[0], LOW[1], 2, 0],
   ];
   return {
     ch: "i",
     entry: { at: [0, 32], dir: LOW, kind: "b" },
-    exit: { at: [40, 32], dir: LOW, cls: "B" },
+    exit: { at: [58, 32], dir: LOW, cls: "B" },
     body: knotsToPath(body),
     spurs: [
       {
@@ -78,19 +81,20 @@ export function glyphI(fork: ForkAngle = 30): Glyph {
 const A_GLYPH: Glyph = {
   ch: "a",
   entry: { at: [0, 32], dir: LOW, kind: "o" },
-  exit: { at: [104, 32], dir: LOW, cls: "B" },
+  exit: { at: [120, 32], dir: LOW, cls: "B" },
   body: knotsToPath([
     [0, 32, LOW[0], LOW[1], 0, 2],
-    [12, 62, 1, 2, 4, 4],
+    [12, 62, 1, 2, 5, 5],
     // J: the connector arrives heading right; the oval leaves heading left.
-    [46, 72, 1, 0, 16, 10, -1, 0],
+    [46, 72, 1, 0, 16, 14, -1, 0],
     [28, 36, 0, -1, 20, 20],
-    [46, 0, 1, 0, 9, 9],
+    [46, 0, 1, 0, 13, 13],
     // J2: the closure arrives along the stem's slant; the tail leaves
-    // down-right (fork 45 degrees off the closure).
-    [66, 24, 1, 4, 3, 6, 1, -1],
-    [84, 4, 1, 0, 8, 8],
-    [104, 32, LOW[0], LOW[1], 2, 0],
+    // down-right (the fork opens 41 degrees off the closure).
+    [66, 24, 1, 4, 3, 6, 1, -2],
+    // The tail's round bottom (the lint: R 5.5 GU at the first form's).
+    [88, 4, 1, 0, 10, 14],
+    [120, 32, LOW[0], LOW[1], 2, 0],
   ]),
   spurs: [
     {

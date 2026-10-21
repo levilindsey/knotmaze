@@ -169,7 +169,7 @@ export function sceneParamsOf(p: SceneParams): SceneParams {
     startAnchor: p.startAnchor,
     exitAnchor: p.exitAnchor,
     penReverse: p.penReverse,
-    glyphs2: p.glyphs2 ?? "",
+    glyphs2: p.glyphs2,
   };
 }
 
