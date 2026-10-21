@@ -170,6 +170,13 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   exit's never break, that a strand is undone or restarted, and that
   strokes reads golf style (+2, E, -1). Params: gameplay-links.md's
   FRAGILE AND PAR PARAMS; the rules: gameplay-mechanisms.md.
+- COLLAPSE ROW (K139, 2026-10-20): "Collapse" (off / finish / free) in
+  the Game folder after "Par slack (x fewest)", fabric mode only, in every
+  game mode; it restarts the solve (onClockChange; undo_stack.ts lists it
+  there). The tooltip gives the rule and both modes, and says it overrides
+  Fragile runs and Par (whose rows stay visible) and restarts the solve.
+  Param: gameplay-links.md's COLLAPSE PARAM; the rules:
+  gameplay-mechanisms.md's Collapse.
 
 - FIRE CLOCK ROW (K114 stage 2, 2026-10-15): "clock" (turn / realtime,
   `fireClock`) in the Burn race folder, hidden while the fire is off; it
