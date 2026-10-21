@@ -80,6 +80,7 @@ import { GAP_SLOTS } from "../gap_mask";
 import { CUT_BIAS, GATE_LEAD, JOINT_CLEAR_REACH_SCALE } from "./crossing_gaps";
 import { EXPLORE_JOINT_MIN } from "./explore_gaps";
 import * as sampling from "./sampling";
+import { stadiumRim } from "./tip_stadium";
 import type { RibbonRenderer, RouteJArm } from "../ribbon_renderer";
 
 // JUNCTION JOINERY. Fused arms (bridge/stub/merge terminals) tuck their
@@ -166,6 +167,8 @@ export class Joinery {
   // Per junction: the gap slots masking its fans (pooled; rebuildFillets).
   private jointMaskPool: Float32Array[] = [];
   private tipMaskScratch = new Float32Array(GAP_SLOTS);
+  // K580 s5: the stadium cap cover's fan apex (tip_stadium.ts stadiumRim).
+  private stadiumApex: number[] = [0, 0];
   // Junction-field arm profiles, pooled across fillet rebuilds (fixed
   // length per rebuild geometry; reset when the length changes).
   private fieldProfPool: Float32Array[] = [];
@@ -1535,6 +1538,16 @@ export class Joinery {
           rim[i + 1] = cy + uy * s + ux * l;
         }
         emitFan(rec, cx, cy, rim);
+        // K580 s5, THE STADIUM (tip_stadium.ts): a glyph spur's cover also
+        // runs back along its untucked stroke to J, at +-TIP_DISC_SIDE
+        // half-widths with a round end around J, filling the waist between
+        // the disc above and the body's round piece at J. Glyph-only: maze
+        // bridges keep the tuck and the disc alone.
+        if (this.r.style.glyph && this.r.style.glyph[tip.chain]) {
+          const st = this.r.glyphTipStroke[tip.chain * 2 + (tip.atEnd ? 1 : 0)];
+          const band = st ? stadiumRim(st, side, this.stadiumApex) : null;
+          if (band) emitFan(rec, this.stadiumApex[0], this.stadiumApex[1], band);
+        }
         setFanMask(null);
         fm = fmBottom;
         continue;

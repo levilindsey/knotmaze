@@ -76,6 +76,11 @@ export interface Strand {
   // the other strand through the joint node, which carries both strokes (C
   // into the joint, O out of it); `sideC` = TangentRoot's.
   taper?: { sep: number[]; joint: number; footC?: number[]; footO?: number[]; sideC?: 1 | -1 };
+  // K580 s5 (#glyphs2 only): a GLYPH strand. The glyph graph sets it on
+  // every strand it builds (tapered and notaper, floats included), and the
+  // renderer reads it per chain: a glyph's fused spur tip gets the stadium
+  // cap cover (joinery.ts), which maze bridges must not.
+  glyph?: true;
 }
 
 // Main combinatorial graph. (The legacy single-strand MazeGraph - the old

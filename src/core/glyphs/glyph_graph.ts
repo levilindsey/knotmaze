@@ -967,6 +967,9 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
       pinned: true,
       ...(r.kind === "float" ? { decorative: true } : {}),
       ...(taper ? { taper } : {}),
+      // K580 s5: every glyph strand, in tapered and notaper mode alike
+      // (core Strand.glyph; the renderer's stadium cap cover reads it).
+      glyph: true,
     });
   });
 

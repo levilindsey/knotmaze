@@ -154,6 +154,7 @@ import {
 } from "./ribbon/crossing_gaps";
 import { ExploreGaps } from "./ribbon/explore_gaps";
 import { FILLET_REACH_PER_HALF, Joinery } from "./ribbon/joinery";
+import { tipStrokeWrite } from "./ribbon/tip_stadium";
 
 // K8 G3-0: the probe capture (captureScene / restoreScene): plain JSON, typed
 // arrays as base64.
@@ -277,6 +278,11 @@ export interface RibbonStyle {
     footO?: number[];
     sideC?: number;
   } | null)[];
+  // K580 s5 (#glyphs2): per chain, a glyph strand (core Strand.glyph;
+  // absent = none). A glyph chain's fused spur tip keeps its untucked
+  // stroke from J to the tuck point (tuckFusedTips), and rebuildFillets
+  // draws the stadium cap cover along it (joinery.ts).
+  glyph?: boolean[];
 }
 
 // PAINT: gameplay recoloring, declared by the fabric overlay and rendered by
@@ -728,6 +734,11 @@ export class RibbonRenderer {
     this.joinery.fusedTips = v;
   }
   private chainTipFused: Array<[boolean, boolean]> = [];
+  // K580 s5: a glyph chain's fused tip keeps its UNTUCKED stroke from J to
+  // the tuck point (ribbon/tip_stadium.ts, TipStroke), at index chain * 2 +
+  // (atEnd ? 1 : 0). tuckFusedTips writes it, joinery.ts's stadium cap
+  // cover reads it. Grown, never shrunk; empty without style.glyph.
+  /** @internal ribbon */ glyphTipStroke: (Float32Array | null)[] = [];
   // filletLayer lives in ribbon/joinery.ts (K5 R5) with its comment; the
   // constructor and the probes read it here.
   get filletLayer(): Joinery["filletLayer"] {
@@ -2272,7 +2283,7 @@ export class RibbonRenderer {
       // crossing. The fillet pass rounds the resulting butt joint.
       if (brk >= 0) {
         const [fusedA, fusedB] = this.chainTipFused[i];
-        if (fusedA || fusedB) this.tuckFusedTips(samples, fusedA, fusedB);
+        if (fusedA || fusedB) this.tuckFusedTips(samples, fusedA, fusedB, i);
       }
       this.chainSamples[i] = samples;
       // G2: this frame's arc table for the shaders (KGEOM), and the
@@ -4314,7 +4325,8 @@ export class RibbonRenderer {
   private tuckFusedTips(
     samples: SplineSamples,
     atStart: boolean,
-    atEnd: boolean
+    atEnd: boolean,
+    chain: number
   ): void {
     const total = samples.totalLength;
     // Tuck 3/4 of the way to the host's near edge: the remaining overlap
@@ -4322,6 +4334,37 @@ export class RibbonRenderer {
     // the tucked cap and the (curved) host edge.
     const trim = Math.min((this.style.threadWidth / 2) * 0.75, total * 0.25);
     const arcPer = total / (samples.count - 1);
+    // K580 s5: a glyph chain keeps each tucked end's untucked stroke, J to
+    // T, for the stadium cap cover (joinery.ts), copied before any clamp.
+    if (this.style.glyph && this.style.glyph[chain]) {
+      const S = this.sampleScratch;
+      if (atStart) {
+        const kEnd = Math.min(samples.count - 1, Math.ceil(trim / arcPer));
+        let buf = this.glyphTipStroke[chain * 2] ?? null;
+        for (let k = 0; k < kEnd; k++) {
+          const p = samples.positions;
+          const t = samples.tangents;
+          buf = tipStrokeWrite(buf, k, p[k * 2], p[k * 2 + 1], t[k * 2], t[k * 2 + 1]);
+        }
+        this.sampleAt(samples, trim, S, 0);
+        buf = tipStrokeWrite(buf, kEnd, S[0], S[1], S[2], S[3]);
+        this.glyphTipStroke[chain * 2] = buf;
+      }
+      if (atEnd) {
+        const k0 = Math.max(1, samples.count - Math.ceil(trim / arcPer));
+        let buf = this.glyphTipStroke[chain * 2 + 1] ?? null;
+        let i = 0;
+        // k0 can sit at or past T (its range rounds outward): stop at T.
+        for (let k = samples.count - 1; k >= k0 && k * arcPer > total - trim; k--, i++) {
+          const p = samples.positions;
+          const t = samples.tangents;
+          buf = tipStrokeWrite(buf, i, p[k * 2], p[k * 2 + 1], -t[k * 2], -t[k * 2 + 1]);
+        }
+        this.sampleAt(samples, total - trim, S, 0);
+        buf = tipStrokeWrite(buf, i, S[0], S[1], -S[2], -S[3]);
+        this.glyphTipStroke[chain * 2 + 1] = buf;
+      }
+    }
     const clamp = (arc: number, from: number, to: number): void => {
       this.sampleAt(samples, arc, this.sampleScratch, 0);
       const [x, y, tx, ty] = this.sampleScratch;
