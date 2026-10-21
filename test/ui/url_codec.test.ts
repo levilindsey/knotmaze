@@ -143,6 +143,7 @@ describe("links", () => {
       ice: 0, colorRule: "off", // K138 stage 1
       sprint: "off", // K137 stage 3c
       beatTempo: 100, beatLength: 2, beatCap: 4, // K114 beat rider
+      turnstiles: 0, hiddenRuns: 0, // K138 stage 2
     });
   });
 
@@ -945,6 +946,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   ice: "ice", colorRule: "cru", // K138 stage 1
   sprint: "spr", // K137 stage 3c
   beatTempo: "btp", beatLength: "btl", beatCap: "btc", // K114 beat rider
+  turnstiles: "tst", hiddenRuns: "hid", // K138 stage 2
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
@@ -984,6 +986,8 @@ if (name === "cartouche") return "knot";
   if (name === "lives") return 3; // K137 stage 3a: its default is 0 (off)
   if (name === "hints") return 3; // K137 stage 2: its default is 0 (none)
   if (name === "ice") return 0.25; // K138 stage 1: its default is 0 (off)
+  if (name === "turnstiles") return 4; // K138 stage 2: its default is 0 (off)
+  if (name === "hiddenRuns") return 2; // K138 stage 2: its default is 0 (off)
   return (d as number) * 0.5;
 }
 // As a link writes it: booleans 0/1, colors without the "#".

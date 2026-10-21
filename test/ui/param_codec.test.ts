@@ -245,6 +245,8 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["beatTempo", "number"], // K114 beat rider
   ["beatLength", "number"],
   ["beatCap", "number"],
+  ["turnstiles", "number"], // K138 stage 2
+  ["hiddenRuns", "number"],
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
