@@ -550,8 +550,10 @@ only with the files it is about; `gameplay.md` lists the area's other files.
 - TURNSTILES AND HIDDEN RUNS PARAMS (K138 stage 2, 2026-10-21; brief
   `docs/design/K138_s2.md`): `turnstiles` (`tst`, a number, PARAM_RANGES
   [0, 8] = TURNSTILES_MAX, default 0 = off) and `hiddenRuns` (`hid`, [0, 4]
-  = HIDDEN_MAX, default 0 = off) are APPENDED at 202-203, after the sprint;
-  CODEC_VERSION stays 8. Neither daily-exempt nor a MAZE key. LIVE_EFFECTS:
+  = HIDDEN_MAX, default 0 = off) are APPENDED at 205-206, after K114's beat
+  rider (202-204); CODEC_VERSION stays 8. They were 202-203 on their branch
+  until it rebased onto 6e143bbf (the beat rider), which renumbered them and
+  re-froze the table pin. Neither daily-exempt nor a MAZE key. LIVE_EFFECTS:
   both under onClockChange (a change restarts the solve and places them
   anew). `fabricRulesOf` passes them in the classic game only. Pins that
   moved: the table pin, url_codec.test.ts's defaults table, OVERRIDE_KEYS
