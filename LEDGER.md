@@ -407,10 +407,9 @@ merged):
 - **K620** · K580's root paint (Levi 2026-10-20: "K580 rec sgtm"): each side of the root takes its
   stroke's paint and blends into the spur's at J. `paint_math.ts` work, after K525 and K580 s3;
   inputs in `docs/design/K580_s2.md` "For K620"; `.claude/probes/K580/sheets/a_join_zoom.png`.
-- **K409** · Levi's burn calls 1-3 merged (6b9eb8f..3231d59): world-unit widths, the Gone ember
-  ahead of the cut, the band kept. Left: step 4, the ember over the smoke (NOT BUILT in
-  `render-explore.md`), after K525 (paint files) and K623/K624. The phone sheet passed (K631 part 1,
-  10-20). `docs/design/K409.md`.
+- **K409** · Levi's burn calls 1-3 merged (6b9eb8f..3231d59). Left: step 4, the ember over the smoke
+  (NOT BUILT in `render-explore.md`), after K525 (paint files) and K623/K624. The phone sheet passed
+  (K631 part 1, 10-20). `docs/design/K409.md`.
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
