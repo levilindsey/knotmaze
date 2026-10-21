@@ -346,6 +346,10 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   choice("cut", ["off", "on", "lead", "delay"]), // K114 walker: lead, delay appended
   // 192, K137 stage 3a: lives (0 off, 1..5 hearts; game/lives.ts).
   num("lives"),
+  // 193-194, K137 stage 3b (4.7): the sword (SWORD_MODES order,
+  // game/sword.ts) and its flee's length (moves, or runs walked).
+  choice("sword", ["off", "timed", "oneuse"]),
+  num("swordMoves"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -499,6 +503,7 @@ export const PARAM_RANGES: Readonly<
   pluckTug: [0, 1],
   autoPluckGain: [0, 1],
   lives: [0, 5], // K137 stage 3a (LIVES_MAX)
+  swordMoves: [4, 20], // K137 stage 3b (SWORD_MOVES_MIN..MAX)
 });
 
 // A link value held to its panel range (K398); a param with no range,
