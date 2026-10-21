@@ -332,6 +332,14 @@ Next free ID: K664.
   - evidence: `.claude/probes/K637/`
   - next: Protocol diff and harness check, then the endpoints 02194b4 and bcd907c, then 9ccf360 and 35f3ec2 first
   - brief: `docs/design/K637.md`
+- **K441** · The real-time fire's frame cost (K114 s2 item 6): 0.6-1.2 ms more a frame than turn
+  (drawFire's re-declare 0.6, HUD writes 0.1, 0.5 unattributed). Profile, then fix inside drawFire or
+  main's fire frame; elsewhere is s2, after K137 s1 and K525. `docs/design/K441_fire_frame.md` (queued).
+  - owner: agent `a14002cf1416cdbd8` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 19:07, 1 h cap ~20:07)
+  - branch: `worktree-agent-a14002cf1416cdbd8`, worktree `.claude/worktrees/agent-a14002cf1416cdbd8`; last commit: `da03e7d`
+  - evidence: `.claude/probes/K441/`
+  - next: Profile the real-time fire vs turn on post-K409 code (desktop and 4x throttle, perf lock), then fix inside drawFire or main's fire frame
+  - brief: `docs/design/K441_fire_frame.md`
 
 ## Next, in order
 
@@ -387,9 +395,6 @@ merged):
 13. K326 A.
 14. K318, K336, K337.
 
-- **K441** · The real-time fire's frame cost (K114 s2 item 6): 0.6-1.2 ms more a frame than turn
-  (drawFire's re-declare 0.6, HUD writes 0.1, 0.5 unattributed). Profile, then fix inside drawFire or
-  main's fire frame; elsewhere is s2, after K137 s1 and K525. `docs/design/K441_fire_frame.md` (queued).
 - **K139** · Collapse mode (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`): no backtracking,
   each run collapses behind you. `collapse` (off | finish | free); rides 4.3's snap (`fragile`,
   K137) and R.3.4's longest thread (`docs/design/K80_gameplay_additions.md`). S-M, after 4.3.
