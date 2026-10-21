@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K681.
+Next free ID: K687.
 
 ## Waiting on Levi
 
@@ -153,6 +153,10 @@ Next free ID: K681.
 - **K680** · Streamer coverage: on desk the K336 streamers cover a fair part of the knot at 2-3 s
   (K653 sheets, `.claude/probes/K653/out/`). Keep, or thin them? Rec: decide after the phone look
   (K646).
+- **K681** · K139 collapse mode, six calls, each built as recommended (`docs/design/K139.md`,
+  Design): score by length collapsed; free ends only when stranded; a finish strand = Stranded +
+  Undo; overrides fragile and par; chase and fire allowed (Restart only); snap look + sound (plays
+  every move).
 
 ## In progress
 
@@ -1261,6 +1265,17 @@ Every other item below waits on the trigger it names.
 - **K679** · K653 fix (987d98f) has no still pair, pixel A/B or test: nothing in test/ reaches
   syncMinotaur and the frozen-scene probe never shows the glow; a headed real-GPU real-chase probe
   at mfg=never would (`docs/design/K653_checks.md` Handoff).
+- **K682** · Collapse par always reads with >=: the 20k-step longest-trail search (and 200k) runs
+  out on every measured maze (dailies 1-60, 20 grid-24); proving the maximum needs a stronger bound
+  (`docs/design/K139.md` Handoff).
+- **K683** · Collapse UI leftovers (K139): the win banner still shows path/optimal, backtracked,
+  junctions and dead ends (optimal means nothing in free); the exit marker shows in free mode; a
+  Burnt loss in free mode shows no score.
+- **K684** · Collapse par runs synchronously on the main thread at its first read: desk at most 38
+  ms, phone estimated near 190 ms (unmeasured; next phone pass). A worker or idle-time slice would
+  hide it (K139).
+- **K685** · K137: with collapse off, a respawn into stranded (fragile) or out of strokes (strict
+  par) shows no banner until the next tap (found by K139).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1509,6 +1524,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   Only if that race matters on phones; after K139. `docs/design/K441_fire_frame.md` Handoff.
 - **K674** · Profile `tickPlucks` while plucks decay after a move: K441 inferred about 15 ms a frame
   at 4x CPU, against 1.6 asleep (untested). With K189.
+- **K686** · Star thresholds for collapse games (K139 shows a percentage against par, no stars).
 
 ## Done
 
