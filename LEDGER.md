@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K704.
+Next free ID: K705.
 
 ## Waiting on Levi
 
@@ -1272,6 +1272,10 @@ Every other item below waits on the trigger it names.
   (`.claude/probes/K324/census/census_tele.mjs`)
 - **K701** · Section shader lengths rose again, limits now 47,750 / 64,150 characters (K324 s2: +85
   each; `test/render/k320_slim.test.ts`)
+- **K704** · Phone probes can play the game music into Levi audiobook: soundMode defaults to music
+  (volume 0.33) and a real CDP touch unlocks audio. The K662 and K703 part 1 daily runs loaded the
+  bare URL. Fix: snd=none on every kit link (K578 phone kit, K662 run_daily2 and phone_conf daily
+  case; check ?daily&snd=none stays the daily) plus a GOTCHA in .claude/rules/probes-phone.md
 
 ## Approved, to schedule (2026-10-11)
 
