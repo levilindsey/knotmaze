@@ -189,7 +189,8 @@ describe("MinotaurChase: the approach and the catch", () => {
   const hunt = P({ playerPace: 0, approachPace: 10, detectStart: 100, detectEnd: 200, catchDist: 0.5 });
 
   it("approaches along the shortest path and catches", () => {
-    const sim = new MinotaurChase(G1, hunt, 1);
+    // No junction stops: a pace check (K324's own tests hold the stops).
+    const sim = new MinotaurChase(G1, { ...hunt, stopMin: 0, stopMax: 0 }, 1);
     sim.place("minotaur", "A", "hunt");
     sim.place("player", "D");
     const runs: number[] = [];
@@ -432,17 +433,21 @@ describe("K174: the minotaur's controls", () => {
   // The chase at roamPull 0 on mazes 3, 17 and 42 with seeds 1 and 2: ticks
   // / hunts / catches / digest of every tick. On hCutShare 0 mazes these
   // equalled master's chase before K174 (d644ec5); K80 turns stage 2
-  // re-froze them on today's H1 mazes, the roamPull 0 path unchanged.
+  // re-froze them on today's H1 mazes. K324 stage 1 re-froze them at its
+  // defaults (junction stops, the next leg picked on arrival): no longer
+  // K80's chase, even at zero stops, since a rest cut short by spotting or
+  // a catch throws away the leg it picked on arrival, three draws K80 never
+  // made.
   const K80_DIGESTS = [
-    "14400/8/8/fa6fd229",
-    "14400/6/6/3d3ccfca",
-    "14400/7/7/41b15849",
-    "14400/7/7/a14ee569",
-    "14400/6/4/a1a7149",
-    "14400/8/7/ec00c9b6",
+    "14400/6/5/aa55b7ed",
+    "14400/8/8/9a98f791",
+    "14400/5/4/9e4b7393",
+    "13302/6/5/576b5a06",
+    "14400/5/4/93e7348a",
+    "14400/11/7/53cdb3e3",
   ];
 
-  it("roamPull 0 plays K80's chase tick for tick", () => {
+  it("the chase at roamPull 0 is pinned tick for tick", () => {
     const rows: string[] = [];
     for (const maze of MAZES) {
       const walk = mazeWalk(maze);
