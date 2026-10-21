@@ -264,10 +264,10 @@ Next free ID: K590.
 - **K573** · Regain G3-1's gap search on the phone (K572: `3465090` costs 57 ms of render sync where
   the old search cost 10; the desktop shows +0.6 ms). Same pixels; gate with `k572_gapoff.mjs` ABBA
   on the phone. `docs/design/K573.md`.
-  - owner: agent `a58a59169309e0bd8` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 12:21, 2 h cap ~14:21)
-  - branch: `worktree-agent-a58a59169309e0bd8`, worktree `.claude/worktrees/agent-a58a59169309e0bd8`; last commit: `a6387e8`
+  - owner: nobody since 2026-10-20 14:05 (merged; agent `a58a59169309e0bd8` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `3e2b6cf`
   - evidence: `.claude/probes/K573/`
-  - next: Step 1's exact changes (one sampAt per segment, no % in the loop, the early reject), measured on the phone
+  - next: Levi's call on step 2 (7db3fd9, branch worktree-agent-a58a59169309e0bd8): keep it (knot's phone gap search 27.7 -> 19.3 ms; casing-edge pixels move 1-3 levels on at most 0.1% of a frame) or stop at step 1; then rebase, test and merge (docs/design/K573.md, the Coordinator note)
   - brief: `docs/design/K573.md`
 - **K456** · No webglcontextlost / webglcontextrestored handler anywhere in `src/` (K6-1's brief
   research); what a lost context does to the page is untested.
