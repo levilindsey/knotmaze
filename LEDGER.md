@@ -19,13 +19,16 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K580.
+Next free ID: K585.
 
 ## Waiting on Levi
 
 
 
 
+- **K580** · K115 stage 9's calls: the a's J join (tangent fails the lint with a thorn; landed
+  passes at the same width; or wider spacing; rec landed), the fork rule (≥15°, clear within 1.2
+  LU), wider i and a (GU 40→58, 104→120). Handoff: `docs/design/K115_stage9.md`
 - **K261** · K74 stage 2's two calls, built as recommended (Levi may
   change either): the H-cut share is 1; a partial share cuts an even
   stride. `docs/design/K74.md` ("Calls for Levi").
@@ -107,6 +110,9 @@ Next free ID: K580.
 - **K525** · Levi's look call on K80 turns 3b, built as recommended: telegraph roam 0.45 / hunt 0.95 with the second run at half, the 0.45 s catch ring burst, and the fog bleed at 0.16. `.claude/probes/K80/stage3b/contact_sheet.png`. The real-phone sheet is now `.claude/probes/K80/stage3b/contact_sheet_real.png` (K524): hunt 0.95 reads clearly at fit zoom, roam 0.45 is effectively invisible at fit zoom, the catch ring had mostly faded by the shot, and fog bleed 0.16 is unexercised (fog off in this design).
 - **K545** · K481 stage 3's look for Levi (built as recommended in 31b2238): lit tick + moved ring on hover/press, phone bigger ticks with the caught-choice tint at the head (desktop ticks alone); the real-phone sheet is in (round 2026-10-20, `.claude/probes/rounds/2026-10-20-d0406df/k545/sheet_k545.png`: a press lights choice 0, the lit tick subtle on a still) and Levi's call whether the tint should show on desktop too. `docs/design/K481.md` (Stage 3 handoff); `.claude/probes/K481/stage3/`.
 - **K571** · The title toggle leaves the daily: either form can earn the daily's credit, and a flip switches to custom and resets progress (Levi 2026-10-20). Asked whether the remembered title pref then reopens the daily in the new form, from scratch, and counts; then build it. `docs/ledger_notes.md` (K571).
+- **K581** · K558's C1 (lifted-pen strokes after the whole text's body, left to right) and C2 (pnr
+  exempt from the daily, a look preference) stand as built unless vetoed (`docs/design/K558.md`,
+  Calls). K552's C1-C3 are revisited by K571's build.
 
 ## In progress
 
@@ -124,10 +130,10 @@ Next free ID: K580.
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
   capitals e64f4d6, accents fa1b1ae, Greek 54612f2 (suite 1521 green). Levi (2026-10-19, Daily #8): redesign first.
-  - owner: agent `adaaf5d46393d3aeb` of claude session 91b19e11 (opus, started 2026-10-20 11:15, 2 h cap ~13:15)
-  - branch: `worktree-agent-adaaf5d46393d3aeb`, worktree `.claude/worktrees/agent-adaaf5d46393d3aeb`; last commit: `d2a82a9`
+  - owner: nobody since 2026-10-20 12:48 (the stage 9 agent of claude session 91b19e11 stopped at its kill criterion, the a's J, after its handoff)
+  - branch: `worktree-agent-adaaf5d46393d3aeb`, worktree `.claude/worktrees/agent-adaaf5d46393d3aeb`; last commit: `347df4f`
   - evidence: .claude/probes/K115/stage9/ (its worktree); stage 8's .claude/probes/K115/stage8/ (main checkout)
-  - next: stage 9: the fork rule and the spur forms first, then the lint, builder, edge.mid, reveal, metrics, sheets; then Levi's look, stage 7's live dates, K557, K569
+  - next: Levi's calls (K580); then the rest of the set under the lint, the class-pair lint and items 5-7 (reveal, metrics, sheets); then Levi's look, the final ς (K582), stage 7's live dates, K557, K569
   - brief: `docs/design/K115_stage9.md`
 - **K74** · Maze design, decided (Levi, 2026-10-13;
   `docs/design/K74_maze_design.md`): every mechanism gets params whose
@@ -457,6 +463,8 @@ Every other item below waits on the trigger it names.
 - **K578** · While confetti falls, every frame redraws the whole maze, gap search and all: the phone
   drops from 60 to 45 fps, the confetti's own share about 2 fps (K572). Cache the still maze in a
   texture under the confetti. `docs/design/K572.md` (Handoff).
+- **K582** · Final ς gets its own glyph (Levi took stage 6's rec, 2026-10-19); live Greek still
+  draws σ. Build it in the stage 9+ glyph set after K580 (`docs/design/K115_glyphs.md`).
 
 ## Residuals (known, not fixed)
 
@@ -1038,6 +1046,11 @@ Every other item below waits on the trigger it names.
 - **K576** · On the worker host (K7) two loads of one link freeze at different sim times (4.967-5.017
   s), so their rest states differ; in-thread they match, so probes pin `&phw=0` or `&phy=0`. Fix
   idea (untested): sleep only on a fixed substep grid. `docs/design/K550_kill.md` (Handoff).
+- **K583** · K115 stage 9's glyphs: the i's dot draws as a rotated square; an untraced notch under
+  the a's J spur and at the i's fork (`.claude/probes/K115/stage9/shots4/ai_land_xh2.png`); a crotch
+  hairline at xh 3 (`LINT.forkMaxLU`).
+- **K584** · An optional SceneParams field silently drops from the worker-name build and loses the
+  worker's fast start; only `worker_host.test.ts` catches it, since tsc skips tests (K393).
 ## Approved, to schedule (2026-10-11)
 
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
