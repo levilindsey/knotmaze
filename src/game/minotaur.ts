@@ -99,6 +99,7 @@ import { SeededRNG } from "../util/random";
 // each uses the other's bindings only inside functions, so either may load
 // first.
 import { TurnRng, type TurnStep } from "./minotaur_turns";
+import { newSword, swordSpend, swordTake, swordTouch, type SwordState } from "./sword";
 
 export const CHASE_HZ = 120;
 const DT = 1 / CHASE_HZ;
@@ -286,7 +287,9 @@ export type ChaseEvent =
   | { kind: "arrive"; vertex: string } // The player reached a vertex.
   | { kind: "spotted" } // It started hunting the player.
   | { kind: "lost" } // It lost the player.
-  | { kind: "caught" }; // Player at the entrance, minotaur in its lair.
+  | { kind: "caught" } // Player at the entrance, minotaur in its lair.
+  // K137 s3b: the sword taken, a touch while it fled, the flee run out.
+  | { kind: "sword"; what: "taken" | "banish" | "slay" | "spent" };
 
 export interface ChaseInput {
   tick: number; // The tick the tap applies before.
@@ -568,6 +571,12 @@ export class MinotaurChase {
   // far (null: nothing breaks).
   private limits: ArrayLike<number> | null = null;
   private crossings: Uint32Array | null = null;
+  // K137 s3b (4.7): the sword (null: none, the default: nothing below
+  // reads or draws, so every digest holds), runs the player has walked
+  // (the flee counts them, s3a call 3) and the last touch while it fled.
+  sword: SwordState | null = null;
+  walked = 0;
+  lastTouch: { kind: "banish" | "slay"; tick: number } | null = null;
 
   constructor(walk: WalkGraph, params: ChaseParams, seed: number) {
     this.g = new ChaseGraph(walk);
@@ -624,6 +633,117 @@ export class MinotaurChase {
     }
     this.limits = any ? limits : null;
     this.crossings = any ? new Uint32Array(this.g.len.length) : null;
+  }
+
+  // K137 s3b: the sword for this chase (null: none). Call before the first
+  // tick (main.ts restartChase, replayChase).
+  setSword(s: SwordState | null): void {
+    this.sword = s;
+  }
+
+  // K137 s3b: it flees the sword / the one-use sword slew it.
+  get fleeing(): boolean {
+    return this.sword !== null && this.sword.phase === "fleeing";
+  }
+
+  get slain(): boolean {
+    return this.sword !== null && this.sword.phase === "slain";
+  }
+
+  // K137 s3b: the player arrived at vertex v. Taking the sword turns it
+  // round on its run (Pac-Man), ends any stop and any hunt; while it flees
+  // each run walked spends one.
+  private swordArrive(v: number, out: ChaseEvent[]): void {
+    const s = this.sword as SwordState;
+    if (s.phase === "fleeing") {
+      swordSpend(s);
+      if (s.left === 0) out.push({ kind: "sword", what: "spent" });
+      return;
+    }
+    if (!swordTake(s, v, this.walked)) return;
+    out.push({ kind: "sword", what: "taken" });
+    const m = this.mino;
+    if (this.mode === "hunt" || this.mode === "pause") {
+      this.mode = "wander";
+      this.timer = 0;
+    }
+    this.hold = 0;
+    this.dest = -1;
+    this.aimed = true;
+    if (m.edge >= 0) m.dir = m.dir > 0 ? -1 : 1;
+  }
+
+  // K137 s3b: a touch while it flees, no catch: timed banishes it to its
+  // lair (it waits `wake` there), one-use slays it.
+  private swordTouched(out: ChaseEvent[]): void {
+    const kind = swordTouch(this.sword as SwordState, this.walked);
+    this.lastTouch = { kind, tick: this.tick };
+    out.push({ kind: "sword", what: kind });
+    this.hold = 0;
+    this.dest = -1;
+    this.aimed = true;
+    this.lastEdge = -1;
+    if (kind === "banish") {
+      this.mino = { edge: -1, pos: 0, dir: 1, vertex: this.g.exit };
+      this.mode = "lair";
+      this.timer = ticksOf(this.params.wake);
+    } else {
+      this.mode = "wander";
+      this.timer = 0;
+    }
+  }
+
+  // K137 s3b: fleeing at its vertex: the run whose far end is farthest from
+  // the player (thread distance it may use; out of reach counts farthest),
+  // ties the lowest run id, no draw. null = it holds: in its lair, or while
+  // every run closes in on you (a tip, a pocket), as the turn flee does.
+  fleeEdgeFrom(v: number): [number, 1 | -1] | null {
+    const g = this.g;
+    if (v === g.exit) return null;
+    const far2 = (d: number): number => (d < Infinity ? d : Number.MAX_VALUE);
+    let best: [number, 1 | -1] | null = null;
+    let bestD = -1;
+    for (const eid of g.adj[v]) {
+      if (g.barred[eid] || g.blocked[eid]) continue;
+      const far = g.ea[eid] === v ? g.eb[eid] : g.ea[eid];
+      const dd = far2(g.spotToVertex(this.player, far, true));
+      if (dd > bestD || (dd === bestD && best !== null && eid < best[0])) {
+        bestD = dd;
+        best = [eid, g.ea[eid] === v ? 1 : -1];
+      }
+    }
+    if (best === null || bestD < far2(g.spotToVertex(this.player, v, true))) return null;
+    return best;
+  }
+
+  // K137 s3b: a fleeing tick: wander pace, no stops, no sight, no turning
+  // back mid-run (it turned once, at the pickup); each vertex asks
+  // fleeEdgeFrom, and a hold waits there a tick.
+  private moveFleeing(): void {
+    const g = this.g;
+    const m = this.mino;
+    let rem = this.params.wanderPace * DT;
+    for (let guard = 0; guard < 64 && rem > 0; guard++) {
+      if (m.edge < 0) {
+        const choice = this.fleeEdgeFrom(m.vertex);
+        if (!choice) return;
+        const [eid, dir] = choice;
+        m.edge = eid;
+        m.dir = dir;
+        m.pos = dir > 0 ? 0 : g.len[eid];
+      }
+      const L = g.len[m.edge];
+      const toEnd = m.dir > 0 ? L - m.pos : m.pos;
+      if (rem < toEnd) {
+        m.pos += m.dir * rem;
+        return;
+      }
+      rem -= toEnd;
+      m.vertex = m.dir > 0 ? g.eb[m.edge] : g.ea[m.edge];
+      this.lastEdge = m.edge;
+      m.edge = -1;
+      m.pos = 0;
+    }
   }
 
   // K137-b: the runs broken so far, in id order (probes, tests).
@@ -722,7 +842,19 @@ export class MinotaurChase {
   step(out: ChaseEvent[] = []): ChaseEvent[] {
     this.movePlayer(out);
     this.moveMinotaur();
-    if (
+    // K137 s3b: slain, it is gone (no contact, no sight); fleeing, a touch
+    // banishes or slays it instead of catching you and it spots no one.
+    const sword = this.sword !== null && (this.sword.phase === "fleeing" || this.sword.phase === "slain");
+    if (sword) {
+      if (
+        !this.finished &&
+        this.sword!.phase === "fleeing" &&
+        !this.invisible() &&
+        this.contactDistance() <= this.params.catchDist
+      ) {
+        this.swordTouched(out);
+      }
+    } else if (
       !this.finished &&
       !this.invisible() &&
       this.contactDistance() <= this.params.catchDist
@@ -831,6 +963,10 @@ export class MinotaurChase {
         if (this.mode === "hunt") this.mode = "wander";
         return;
       }
+      if (this.sword !== null) {
+        this.walked++;
+        this.swordArrive(v, out);
+      }
     }
   }
 
@@ -838,6 +974,10 @@ export class MinotaurChase {
     const g = this.g;
     const m = this.mino;
     const P = this.params;
+    if (this.sword !== null && this.sword.phase !== "ready" && this.sword.phase !== "used") {
+      if (this.sword.phase === "fleeing") this.moveFleeing();
+      return;
+    }
     if (this.mode === "lair" || this.mode === "pause") {
       if (this.timer > 0) {
         this.timer--;
@@ -1256,6 +1396,9 @@ export class MinotaurChase {
     const deciding = P.model === "stalker" || (P.model === "guard" && hunting);
     const out: ChasePlan = { lead: null, steps: [], dest: -1, hunting };
     const n = Math.min(PLAN_REACH_MAX, Math.max(0, Math.floor(reach) || 0));
+    // K137 s3b: slain, no plan; fleeing, its flee route (fleeEdgeFrom on).
+    if (this.slain) return { lead: null, steps: [], dest: -1, hunting: false };
+    if (this.fleeing) return this.fleePlan(n);
     if (this.mode === "lair") {
       if (m.edge >= 0 || this.timer > ticksOf(LAIR_TELL)) return out;
       const first = this.roamEdgeFrom(m.vertex, -1);
@@ -1311,6 +1454,30 @@ export class MinotaurChase {
     return out;
   }
 
+  // K137 s3b: the flee's plan: the run it is on in its direction, then
+  // fleeEdgeFrom's runs from where you stand now, until it would hold.
+  private fleePlan(n: number): ChasePlan {
+    const g = this.g;
+    const m = this.mino;
+    const out: ChasePlan = { lead: null, steps: [], dest: -1, hunting: false };
+    let v: number;
+    if (m.edge >= 0) {
+      out.lead = { edge: m.edge, pos: m.pos, dir: m.dir };
+      v = m.dir > 0 ? g.eb[m.edge] : g.ea[m.edge];
+    } else {
+      v = m.vertex;
+    }
+    for (let i = 0; i < n; i++) {
+      const choice = this.fleeEdgeFrom(v);
+      if (!choice) break;
+      const [eid, dir] = choice;
+      const far = dir > 0 ? g.eb[eid] : g.ea[eid];
+      out.steps.push([eid, far]);
+      v = far;
+    }
+    return out;
+  }
+
   // Spotting and losing the player: the hunter's and the stalker's charge
   // read the shared sight (detectStart / detectEnd), the guard its own
   // (guardDetect / guardLose). Lost, the hunter and the guard check where
@@ -1357,10 +1524,12 @@ export function replayChase(
   seed: number,
   inputs: readonly ChaseInput[],
   ticks: number,
-  limits: ArrayLike<number> | null = null
+  limits: ArrayLike<number> | null = null,
+  sword: { spot: number; mode: "timed" | "oneuse"; moves: number } | null = null
 ): MinotaurChase {
   const sim = new MinotaurChase(walk, params, seed);
   if (limits) sim.setBreakLimits(limits);
+  if (sword) sim.setSword(newSword(sword.spot, sword.mode, sword.moves));
   let k = 0;
   while (sim.tick < ticks) {
     while (k < inputs.length && inputs[k].tick === sim.tick) {
