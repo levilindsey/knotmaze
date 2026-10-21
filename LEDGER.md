@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K590.
+Next free ID: K599.
 
 ## Waiting on Levi
 
@@ -46,7 +46,8 @@ Next free ID: K590.
   leave it (rec.)? `docs/design/K274_K277.md`.
 - **K251** · A displaced edge indicator crosses the open phone panel in a 0.25 s slide (K198): keep
   it, or fade the disc out and back in? `docs/design/K198.md` ("Stage 2 handoff"); sheet
-  `.claude/probes/K198/stage2/out/contact_sheet.png`.
+  `.claude/probes/K198/stage2/out/contact_sheet.png`. The phone half is moot since K468's
+  full-screen sheet: desktop and tablet only.
 - **K245** · How hard should the minotaur roam toward the player (K174)?
   `minoToward` sets roamPull 0.5 (63% of games meet it). Keep 0.5; add a
   slider? `docs/design/K174.md`.
@@ -61,7 +62,8 @@ Next free ID: K590.
   ("Stage 1 handoff"); screenshots `.claude/probes/K111/out/`.
 - **K229** · K92's badge row puts the open panel's top at 90 px (100 on
   phones, was 50). Accept it, or move the badge elsewhere while the
-  panel is open? `.claude/probes/K92/out/phone_open.png`.
+  panel is open? `.claude/probes/K92/out/phone_open.png`. The phone side is moot since
+  K468's full-screen sheet: only the desktop and tablet side panel loses the row.
 - **K225** · The markers' default size (K98): `markerSize` 1.08 is about
   5 CSS px on the phone and barely reads. Keep it, raise it, or add a
   minimum on-screen size? `.claude/probes/K98/sheet_k98.png`.
@@ -108,7 +110,7 @@ Next free ID: K590.
   and fog-4 (27.9 and 28.5% caught against 20 and 12); stage 2's dailies-only criterion would
   keep 0.25-0.3. Keep 0.45? `docs/design/K80_turns_stage3.md` ("Stage 3a handoff").
 
-- **K515** · K480 stage 2's look, built as recommended (Levi may change): a hovered tap's whole route at the hover breath, its tapped run keeping the rim glow, non-route branched arms keeping their trains; plus page-probing the hover route with a real pointer (desktop, and in K500's phone pass). `docs/design/K480.md` ("Stage 2 handoff").
+- **K515** · K480 stage 2's look, built as recommended (Levi may change): a hovered tap's whole route at the hover breath, its tapped run keeping the rim glow, non-route branched arms keeping their trains; plus page-probing the hover route with a real pointer (desktop, and in K500's phone pass). `docs/design/K480.md` ("Stage 2 handoff"). The page probe is partly done: desktop by K500, the touch half in K529.
 
 - **K525** · Levi's look call on K80 turns 3b, built as recommended: telegraph roam 0.45 / hunt 0.95 with the second run at half, the 0.45 s catch ring burst, and the fog bleed at 0.16. `.claude/probes/K80/stage3b/contact_sheet.png`. The real-phone sheet is now `.claude/probes/K80/stage3b/contact_sheet_real.png` (K524): hunt 0.95 reads clearly at fit zoom, roam 0.45 is effectively invisible at fit zoom, the catch ring had mostly faded by the shot, and fog bleed 0.16 is unexercised (fog off in this design).
 - **K545** · K481 stage 3's look for Levi (built as recommended in 31b2238): lit tick + moved ring on hover/press, phone bigger ticks with the caught-choice tint at the head (desktop ticks alone); the real-phone sheet is in (round 2026-10-20, `.claude/probes/rounds/2026-10-20-d0406df/k545/sheet_k545.png`: a press lights choice 0, the lit tick subtle on a still) and Levi's call whether the tint should show on desktop too. `docs/design/K481.md` (Stage 3 handoff); `.claude/probes/K481/stage3/`.
@@ -119,6 +121,15 @@ Next free ID: K590.
 - **K586** · Confetti shine strength (`cfh`, default 1, range 0-2) and foil share (`cff`, default
   0.3): pick from `.claude/probes/K337/sheet/strengths_phone.png` or `strengths_desk.png`, or try
   `&cfh=` / `&cff=` live. Built at the defaults (K337).
+- **K573** · G3-1's phone gap search: step 1 merged (`3e2b6cf`, 0 px), knot gs24 60.7 → 27.7 ms
+  (pre-G3-1 9.7), dense 36.0 → 31.3 (16.7). Levi's call: keep step 2 (`7db3fd9`, a per-slot
+  curvature stride: 19.3 / 23.7 ms; casing-edge pixels move 1-3 levels on ≤0.1% of a frame; fixes
+  the 65-point tail cut, K591) or stop at step 1. `docs/design/K573.md` (Handoff, Coordinator note).
+  - owner: nobody since 2026-10-20 14:05 (merged; agent `a58a59169309e0bd8` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `3e2b6cf`
+  - evidence: `.claude/probes/K573/`
+  - next: Levi's call on step 2 (7db3fd9, branch worktree-agent-a58a59169309e0bd8): keep it (knot's phone gap search 27.7 -> 19.3 ms; casing-edge pixels move 1-3 levels on at most 0.1% of a frame) or stop at step 1; then rebase, test and merge (docs/design/K573.md, the Coordinator note)
+  - brief: `docs/design/K573.md`
 
 ## In progress
 
@@ -261,14 +272,6 @@ Next free ID: K590.
   - evidence: `.claude/probes/K459/`
   - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii) (`docs/design/K459.md`, Handoff); the free cap's checks are K477
   - brief: `docs/design/K459.md`
-- **K573** · Regain G3-1's gap search on the phone (K572: `3465090` costs 57 ms of render sync where
-  the old search cost 10; the desktop shows +0.6 ms). Same pixels; gate with `k572_gapoff.mjs` ABBA
-  on the phone. `docs/design/K573.md`.
-  - owner: nobody since 2026-10-20 14:05 (merged; agent `a58a59169309e0bd8` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `3e2b6cf`
-  - evidence: `.claude/probes/K573/`
-  - next: Levi's call on step 2 (7db3fd9, branch worktree-agent-a58a59169309e0bd8): keep it (knot's phone gap search 27.7 -> 19.3 ms; casing-edge pixels move 1-3 levels on at most 0.1% of a frame) or stop at step 1; then rebase, test and merge (docs/design/K573.md, the Coordinator note)
-  - brief: `docs/design/K573.md`
 - **K456** · No webglcontextlost / webglcontextrestored handler anywhere in `src/` (K6-1's brief
   research); what a lost context does to the page is untested.
   - owner: agent ab96ea9e54f382fb5 of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 13:23, 2 h cap ~15:23)
@@ -480,6 +483,18 @@ Every other item below waits on the trigger it names.
   draws σ. Build it in the stage 9+ glyph set after K580 (`docs/design/K115_glyphs.md`).
 - **K587** · Confetti shine on the Pixel: frame rate and look in K156's next pass. The model bench
   says +21-60 µs a frame; the desktop frame A/B was not run (K337 handoff).
+- **K590** · G3-1's phone gap search, the rest: with K573 step 2 knot is still 2.0x the pre-G3-1
+  build (19.3 vs 9.7 ms; 2.9x with step 1 alone). Untried levers, each its own brief: a per-chunk
+  stride (a layout change; helps dense too), drop gapSeg's per-segment division (store u = d/|d|^2
+  per point), cheaper `sampAt` index math. Knot's walk halved but its search fell only 30%: measure
+  what lies outside the walk first. `docs/design/K573.md` (`Next, if knot must reach 1.5x`).
+- **K595** · Same-chain collision by rest material, not slot count: `applySegmentCollision` skips
+  same-chain pairs by a fixed 2 slots (`src/physics/forces.ts` ~272); skip or fade the floor where
+  the rest material between two segments is below `collisionDist`. Fixes K596 (skip 3 on chain 56 or
+  45 alone ends the cycle). First a kink-loop and eye-width census (KINK EYES), `byte_identity` as
+  the guard; regression `?b&am=instant`, 5 s central drag, sleep within +5 s; a browser check on
+  both hosts. Symptom levers (results.md `Levers`) only if this fails. `docs/design/K372.md`
+  (Handoff).
 
 ## Residuals (known, not fixed)
 
@@ -1057,6 +1072,21 @@ Every other item below waits on the trigger it names.
   worker's fast start; only `worker_host.test.ts` catches it, since tsc skips tests (K393).
 - **K588** · The confetti palette's warm white (0xfff4e0) reads as a foil flash in still frames;
   dropping or tinting it would make the flashes stand out (K337 handoff).
+- **K591** · Master's gap search drops a gap run's tail past 65 SAMP points (its point count floors
+  where it should ceil). K573 step 2 (`7db3fd9`) fixes it; if step 2 is rejected it needs its own
+  exact fix. `docs/design/K573.md` (step 2).
+- **K592** · The gap search rounds indices with `int(x + 0.5)`, which truncates toward zero, so a
+  negative kStart rounds the wrong way (`src/render/gap_mask.ts`, `int(t4.z + 0.5)` and the range's
+  start). Check whether kStart can go negative. From K573's agent report.
+- **K593** · `scripts/preview.ps1` fails in an agent worktree that has no `node_modules` junction
+  (K573's run). Make it find or make the junction, or fail with that message.
+- **K594** · Phone kit flakes in K573's run: the adb server died 3x at 12:45-12:47 (unexplained);
+  starting the kit in the foreground hangs the tool; `cleanup.mjs` timed out (exit 2) after a
+  watchdog trip with Chrome in the background; two stale reverse tunnels (5960, 5961) stayed on the
+  phone. `.claude/probes/K573/logs/`.
+- **K596** · Fabric `?b` (today's defaults) can stay awake forever after a drag: a six-substep limit
+  cycle at max move 0.0197 per substep, above QUIET_EPS 0.015; 1 of 23 fabric seeds,
+  history-dependent (5 of 6 grab points re-sleep). Fix: K595. `.claude/probes/K372/results.md`.
 ## Approved, to schedule (2026-10-11)
 
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
@@ -1283,6 +1313,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   needs K307's warm-up (Levi asked 10-20; K572: ~2 fps on the phone).
 - **K589** · A sheet of other foil flash sizes: sharper foil (p 128) halves the flashing time,
   softer (p 32) doubles it; so far only counted (K337 handoff).
+- **K597** · Census: how many seeds and gestures leave same-chain pairs under the collision floor on
+  compressed material (K372's mechanism), to size K595. Harness: `.claude/probes/K372/` (`drag.ts`,
+  `cycle.ts`).
+- **K598** · K372's open questions: what couples chains 56 and 45 on `?b`; chain 53's hot site at
+  p1238-1240; why the drag history picks the awake basin. `.claude/probes/K372/results.md`.
 
 ## Done
 
