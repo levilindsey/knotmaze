@@ -526,6 +526,17 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   probe: `.claude/probes/K6/K6-1/loop_shadow.mjs <base> <outDir> <case>`
   (knotfw0 | knot | fabric | daily | chase | reduced | drift; phases load,
   rest, tap, drag, finish).
+- K370 (2026-10-20), latency probes and locks: `.claude/probes/K370/`
+  (`k370_latency.mjs`: a drag step's stages, from the event to the frame
+  that covers 90% of it; `k370_profile.mjs`, a sourcemapped CPU profile
+  of main; `run_k370.ps1` batches; `phone_part.ps1`, `cpu_check.ps1`)
+  and `docs/design/K370.md`. GOTCHAS: `npm.ps1` (npm's PowerShell shim)
+  loses a `--`, so call `npm.cmd` when a script needs args after it. A
+  lock check matches its owner EXACTLY: run_k370's owner-PREFIX check let
+  a second batch take over another batch's perf lock (and would have
+  released it). A wait for "lock released" also matched "phone lock
+  released": anchor it with `^`. On the phone, toybox `top -o <fields>`
+  without `-s <field>` sorts by NAME, not CPU.
 
 ## Census and diagnosis rules
 
