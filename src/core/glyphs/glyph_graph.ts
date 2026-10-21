@@ -65,6 +65,8 @@ export interface GlyphBuildOpts {
 
 /** K580: the default part point (LU): the default thread width (0.52). */
 export const TAPER_PART_LU = 0.52;
+/** K580: steps of the root's taper profile (Strand.taper.sep). */
+export const TAPER_PROFILE_N = 16;
 /** K580: Hermite segments in a root. */
 const ROOT_SEGS = 4;
 
@@ -634,12 +636,16 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
     if (r.kind === "float") floatBase += tab.cum[tab.cum.length - 1] + FLOAT_GAP;
     let taper: Strand["taper"];
     if (r.root) {
+      // The profile at TAPER_PROFILE_N + 1 even steps of the root's arc,
+      // R to J (the root has only 2-3 nodes, too few to carry it).
       const root = r.root;
-      const sep = chain.map((c, i) => {
-        if (i >= jIdx) return 0;
-        const p = pAtArc(tab, c.arc);
-        return p >= root.segs ? 0 : root.sepAt(root.aR * (1 - p / root.segs)) * sc;
-      });
+      const arcR = chain[0].arc;
+      const span = chain[jIdx].arc - arcR;
+      const sep: number[] = [];
+      for (let k = 0; k <= TAPER_PROFILE_N; k++) {
+        const p = pAtArc(tab, arcR + (span * k) / TAPER_PROFILE_N);
+        sep.push(k === TAPER_PROFILE_N || p >= root.segs ? 0 : root.sepAt(root.aR * (1 - p / root.segs)) * sc);
+      }
       taper = { sep, joint: jIdx };
     }
     strands.push({

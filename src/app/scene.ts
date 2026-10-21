@@ -270,6 +270,10 @@ export function createScene(deps: SceneDeps): Scene {
       // Fabric gameplay recolors the actual threads via palette textures.
       paletteMode: params.mazeFabric,
       flowSeed: params.seed,
+      // K580 (#glyphs2): tangent spurs' tapered roots (core Strand.taper).
+      taper: graph.strands.some((s) => s.taper)
+        ? graph.strands.map((s) => s.taper ?? null)
+        : undefined,
     });
     renderer.setSectionRuns(
       buildSectionRuns(

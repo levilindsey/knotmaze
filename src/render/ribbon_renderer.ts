@@ -263,6 +263,10 @@ export interface RibbonStyle {
   flowSeed?: number;
   // Traversal-highlight color (the "gold"); accent strips cache per color.
   pathColor?: number;
+  // K580 (#glyphs2): per chain, a tangent spur's tapered root (core
+  // Strand.taper; null or absent = none). update() widens the root's ribbon
+  // and rebuildFillets skips the junction the root ends at.
+  taper?: ({ sep: number[]; joint: number } | null)[];
 }
 
 // PAINT: gameplay recoloring, declared by the fabric overlay and rendered by
@@ -748,6 +752,8 @@ export class RibbonRenderer {
   // the one update() last used per chain (the pluck light path reuses it).
   private widthScratch = new Map<number, Float32Array>();
   private widthLast: (Float32Array | null)[] = [];
+  // K580: per-chain scratch for withTaper's composed multiplier.
+  private taperScratch = new Map<number, Float32Array>();
   // RENDER-ONLY PLUCKS (pluck_overlay.ts): the overlay itself, each
   // crossing's static footprints - along its over thread (the over pass's
   // stretch that covers the under thread's gap) and along its under
@@ -1102,6 +1108,24 @@ export class RibbonRenderer {
           }
         }
       }
+    }
+
+    // K580: the junctions a tapered root ends at (J, where the root meets
+    // the spur and the two merged strokes): the root covers the merge, so
+    // rebuildFillets draws no web there.
+    if (style.taper && style.taper.some((t) => t)) {
+      const hide = new Uint8Array(this.junctionArms.length);
+      let any = false;
+      this.junctionArms.forEach((jn, jnIdx) => {
+        for (const a of jn.arms) {
+          const tp = style.taper![a.chain];
+          if (tp && a.slot === 2 * tp.joint) {
+            hide[jnIdx] = 1;
+            any = true;
+          }
+        }
+      });
+      this.taperHideJn = any ? hide : null;
     }
 
     // G3-0: the scene's table layout and its static per-chain records.
@@ -2199,7 +2223,7 @@ export class RibbonRenderer {
         this.chainFxDone(i)
       );
       this.kcv[i] = kChain(this.kd, i, this.kcv[i]);
-      const width = this.widthMulFor(i, samples);
+      const width = this.withTaper(i, samples, this.widthMulFor(i, samples));
       this.widthLast[i] = width;
       const mul = this.withPluckCollapse(i, samples.count, width);
       this.fills[i].update(
@@ -3080,6 +3104,41 @@ export class RibbonRenderer {
       baseSampleCount: (c) => this.fills[c].sampleCount,
       gapIds: (c) => this.idScratch.get(c) ?? null,
     };
+  }
+
+  // K580 (#glyphs2): compose a tapered root's width into the multiplier
+  // (null = 1): 1 + sep / threadWidth along the root, the profile read at
+  // the sample's share of the root's arc on this frame's arc table, so the
+  // root's edges sit on the merged strokes' outer edges; 1 from the joint
+  // on. A chain without a taper returns `base` untouched.
+  private withTaper(
+    chain: number,
+    samples: SplineSamples,
+    base: Float32Array | null
+  ): Float32Array | null {
+    const tp = this.style.taper?.[chain];
+    if (!tp) return base;
+    const count = samples.count;
+    let buf = this.taperScratch.get(chain);
+    if (!buf || buf.length !== count) {
+      buf = new Float32Array(count);
+      this.taperScratch.set(chain, buf);
+    }
+    const c = this.kcv[chain];
+    const arcJ = kCA(this.kd, c, 2 * tp.joint);
+    const n = tp.sep.length - 1;
+    const tw = this.style.threadWidth;
+    for (let k = 0; k < count; k++) {
+      const a = kSampleArc(c, k);
+      let m = 1;
+      if (arcJ > 0 && a < arcJ) {
+        const f = (a / arcJ) * n;
+        const i0 = Math.min(n - 1, Math.floor(f));
+        m = 1 + (tp.sep[i0] + (tp.sep[i0 + 1] - tp.sep[i0]) * (f - i0)) / tw;
+      }
+      buf[k] = (base ? base[k] : 1) * m;
+    }
+    return buf;
   }
 
   // Compose a chain's pluck collapse into the width multiplier update()
@@ -3972,6 +4031,8 @@ export class RibbonRenderer {
   // The joint gate's hidden sets: ribbon/explore_gaps.ts (K5 R2) computes
   // them (THE JOINT GATE); rebuildFillets reads them here.
   /** @internal ribbon */ exploreHideJn: Uint8Array | null = null;
+  // K580: the junctions tapered roots end at (no web; the constructor).
+  /** @internal ribbon */ taperHideJn: Uint8Array | null = null;
   /** @internal ribbon */ exploreHideFree: Uint8Array | null = null;
 
   // exploreJointShown: ribbon/explore_gaps.ts (K5 R2); syncExploreJoints

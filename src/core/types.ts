@@ -61,10 +61,11 @@ export interface Strand {
   decorative?: boolean;
   // K580 (#glyphs2 only): a TAPERED ROOT. The strand starts on the midline
   // of two body strokes that meet tangentially at a junction and runs to
-  // that junction (node index `joint`) before its own path. `sep` holds,
-  // per node, the centerline separation (LU) of the two strokes the root
-  // covers there (0 from the joint on); the renderer widens the ribbon to
-  // 1 + sep / threadWidth, so the root's edges are the strokes' outer edges.
+  // that junction (node index `joint`) before its own path. `sep` is the
+  // centerline separation (LU) of the two strokes the root covers, at even
+  // steps of the root's arc from its start (R) to the joint (0 there); the
+  // renderer widens the ribbon to 1 + sep / threadWidth, so the root's
+  // edges are the strokes' outer edges.
   taper?: { sep: number[]; joint: number };
 }
 
