@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K662.
+Next free ID: K664.
 
 ## Waiting on Levi
 
@@ -140,6 +140,9 @@ Next free ID: K662.
 - **K656** · K137's snap strands 40 of 50 greedy and explorer games (crack: none; the design
   expected about 2 in 3): healing runs, a hard label, or a way out under the chase or fire (no Undo
   there). Rec: the hard label.
+- **K662** · The phone for one sitting of about 1 h: plugged in, unlocked, on the home screen, left
+  alone. It runs K631 part 2 (K244's counts, ~25 min), then K646, K651 and K644 from the same setup
+  (a closed tab drops the wake lock).
 
 ## In progress
 
@@ -320,14 +323,15 @@ Next free ID: K662.
   - evidence: `.claude/probes/K525/`
   - next: baseline sheet against K524's, then append mtl (rims|line|both, default rims) and build the TELE paint item; the phone step after 18:25 (Levi's)
   - brief: `docs/design/K525_telegraph.md`
-- **K631** · Phone passes owed: K409's sheet (`.claude/probes/K409/phone/run_phone.ps1`, lock owner
-  `K409 a5c384f`, a fresh -Deadline); K244's: core releases silent, auto plucks draw, dense_phone.
-  Close the stray `localhost:5278` tab first (K578's `phone_teardown.ps1`).
-  - owner: agent `a55c06bc8f3a6e909` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 18:26, 1 h cap ~19:26)
-  - branch: mainline; last commit: `ee6debd`
-  - evidence: .claude/probes/K631/, .claude/probes/K409/phone/out/sheet/
-  - next: Part 1 (K409's sheet), then Part 2 (K244's counts on the phone)
+- **K631** · Phone passes owed: K244's on the phone (core releases silent, auto plucks draw,
+  dense_phone). K409's sheet is done (18:37, 3231d59: fine at phone scale). Part 2 waits on the
+  phone (K662).
+  - owner: nobody since 2026-10-20 18:50 (agent `a55c06bc8f3a6e909` of claude session 91b19e11-7759-4638-ba60-4705b011b94f, stopped: the phone dozed and stayed locked through the idle gate)
+  - branch: mainline; last commit: `62a70c1` (no commits; the probes are on disk)
+  - evidence: `.claude/probes/K631/` (`k631_phone.mjs`, `run_part2.ps1`, `builds/`, `logs/`), `.claude/probes/K409/phone/out/sheet/`
+  - next: with the phone plugged in, unlocked and on the home screen, `pwsh -File .claude/probes/K631/run_part2.ps1` (a 4-cell smoke, then 12 cells, ~25 min); read `out/phone` with `.claude/probes/K244/summarize.mjs` against `docs/design/K244_cores.md`'s desktop counts
   - brief: `docs/design/K631_phone.md`
+  - env: `.claude/probes/K631/run_part2.ps1` (takes the phone lock, serves the builds on port 5631, sets up and tears down the phone)
 - **K637** · The minotaur sim's baseline rose from 1.66 catches a game (K278 (c), 10-14) to 2.50 at
   bcd907c, cause unknown: bisect with K324's harness (`.claude/probes/K324/rt/`) across 9ccf360 (K74
   s3) and 35f3ec2 (K534's minoPull); sonnet.
@@ -403,9 +407,10 @@ merged):
 - **K620** · K580's root paint (Levi 2026-10-20: "K580 rec sgtm"): each side of the root takes its
   stroke's paint and blends into the spur's at J. `paint_math.ts` work, after K525 and K580 s3;
   inputs in `docs/design/K580_s2.md` "For K620"; `.claude/probes/K580/sheets/a_join_zoom.png`.
-- **K409** · Levi's burn calls 1-3 merged (6b9eb8f..3231d59): world-unit widths, the Gone ember ahead
-  of the cut, the band kept. Left: step 4, the ember over the smoke (NOT BUILT in `render-explore.md`),
-  after K525 (paint files) and K623/K624; the phone pass is K631. `docs/design/K409.md`.
+- **K409** · Levi's burn calls 1-3 merged (6b9eb8f..3231d59): world-unit widths, the Gone ember
+  ahead of the cut, the band kept. Left: step 4, the ember over the smoke (NOT BUILT in
+  `render-explore.md`), after K525 (paint files) and K623/K624. The phone sheet passed (K631 part 1,
+  10-20). `docs/design/K409.md`.
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
@@ -1218,6 +1223,9 @@ Every other item below waits on the trigger it names.
   K155's 2.57, and the star split moved from 28/52/19 to 56/32/12.
 - **K660** · K155's sim kit (`.claude/probes/K155/rt/`) is stale: `rt_lib.buildMaze` lacks K74
   s2-4's params, and its codecDefaults call broke with K132 (K137 report).
+- **K663** · K244 leftovers (K631): the unfretted predicate under the thread reveal needs
+  `ribbon_renderer.ts` (free once K525 merges); a site tested at schedule time draws up to
+  MUSIC_LOOKAHEAD (0.3 s) plus output latency later, unobserved; no headless release test.
 
 ## Approved, to schedule (2026-10-11)
 
