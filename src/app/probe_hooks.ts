@@ -617,7 +617,7 @@ export function installProbeHooks(ctx: ProbeCtx): void {
         compassRun: fb.compassRun,
       },
       // K138 stage 1: the ice and color rule (null: no rule on). `mode`:
-      // the color rule's mode ("" without one); `icy`: the icy runs;
+      // the color rule's mode ("off" without one); `icy`: the icy runs;
       // `colors`: each run's color (-1: free); `state`: the color state (the
       // last color + 1, 0 at the start); `placed` / `bites` / `draws`: the
       // placement; `key`: the placement's key; `optimal`: the shortest legal

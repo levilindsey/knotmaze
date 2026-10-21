@@ -419,3 +419,56 @@ THE CHALK TICK AND THE COMPASS. The headers of `spool.ts`, `hints.ts` and
   to its limit and a reel-in, a hint, chalk on and off and the pref off,
   the compass at every rest; ends in a CHECK summary; stills and JSON in
   `out/`, results in `results.md`).
+
+## Ice and the color rule (K138 stage 1)
+
+Written by K138 stage 1 (2026-10-21; brief `docs/design/K138_s1.md`, whose
+Design and Handoff sections hold the calls, the census and the page
+results; plan `docs/design/K138_plan.md`; design
+`docs/design/K80_gameplay_additions.md` 4.18 and 4.19). The classic game
+only; neither is daily-exempt. Params: gameplay-links.md's ICE AND COLOR
+RULE PARAMS; rows: gameplay-panel.md's ICE AND COLOR RULE ROWS. The headers
+of `rule_search.ts` (the kit: rules, the search, composition, placement),
+`ice.ts` and `color_rule.ts` are the spec.
+
+- THE CONTROLLER: `setRules` keeps one composed rule (null unless ice or
+  the color rule is on, collapse, fragile runs, the cut, the fire and the
+  spool are off, and the placement found a layout). A fresh tap asks
+  `rule.step`: null returns `"refused"` and changes nothing (replay treats
+  it as a failure); otherwise `ruleState` moves on and `carry` takes the
+  rest of a slide, which main's `carryStep` walks one run per arrival at
+  the walk's own pace (call 7). A fresh backtrack undoes the whole move
+  (call 1): the state comes back from `stateStack`. Under a rule a stroke
+  is a tap (a slide counts one), Undo replays the actions
+  (`replayActions`), par's F and strict's runs-left come from the kit, and
+  `optimal` (the kit's shortest legal length) feeds the stars and the
+  efficiency. `choices()` leaves refused runs out, so they never pulse;
+  `refusedChoices()` lists them.
+- A TAP ON A REFUSED RUN picks no choice. K480's `targetAt` takes the run
+  as a one-run route, and `executeRouteRun` hands it to `moveAlong`, whose
+  `"refused"` result plays `cutPluck(eid, REFUSE_OCTAVE, REFUSE_STRENGTH)`
+  and toasts the rule ("Cycle the colors: light, then middle, then dark,
+  then light again." or "Alternate the shades: light, then dark, then
+  light."), at most once per 1.5 s; the route clears. A route planned
+  further out does not read the rule: it walks until its first refused run
+  and stops there with the same toast (a residual).
+- THE LOOKS (`section_colors.ts` `ruleRunTable`, applied by scene.ts at the
+  build and in `recolorScene`): one flat override record per walk run,
+  frost (FROST_RGB 0.86, 0.95, 1.0) on icy runs and the rule colors on
+  colored ones (ALTERNATE_LUMAS 0.8 / 0.3, CYCLE_LUMAS 0.8 / 0.5 / 0.22 over
+  the design's gamut); exempt runs keep the scheme's own records.
+- THE AIDS (call 5): the spool turns the rules off; hints and the compass
+  follow the kit's route under a rule; the chalk is independent.
+- MEASURED (a Node census, 50 seeds at today's defaults,
+  `.claude/probes/K138/s1/census/results_after.md`): every config placed
+  and bit on 50 of 50, in at most 2 draws. Legal against plain, medians:
+  fewest taps ice 0.929, alternate 1.345, cycle 1.481, ice + alternate
+  1.267; shortest length 1.044, 1.364, 1.399, 1.575.
+- PROBES: `__knotFabric().rules` (null with no rule; `mode`, "off" without
+  a color rule; `icy`, `colors`, `state`, `placed`, `bites`, `draws`,
+  `key`, `optimal`, `carry`). `.claude/probes/K138/s1/rules_page.mjs <base>
+  ice|alternate|cycle [desktop|phone] [seed]` (real clicks or touch taps on
+  `?<seed>&am=instant&snd=none&ice=0.25` or `&cru=<mode>`: a slide and its
+  checks, or a refused run, its toast and the next move; a CHECK summary).
+  GOTCHA: refused runs are not in `__knotFabric().choices`; read them from
+  the controller's `refusedChoices()`.

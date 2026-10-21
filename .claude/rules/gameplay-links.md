@@ -522,3 +522,17 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   bit-identical. Probe links: `?<seed>&am=instant&sp2=1&sps=0.3&hn=3&cmp=1`.
   The rules: gameplay-mechanisms.md's The aids; the rows:
   gameplay-panel.md's AIDS ROWS.
+
+- ICE AND COLOR RULE PARAMS (K138 stage 1, 2026-10-21; brief
+  `docs/design/K138_s1.md`): `ice` (`ice`, a number, PARAM_RANGES [0, 0.5]
+  = ICE_SHARE_MAX, default 0 = off; the panel keeps a 0.05 grid) and
+  `colorRule` (`cru`, off | alternate | cycle, default off) are APPENDED at
+  199-200, after the aids'; CODEC_VERSION stays 8. Neither daily-exempt nor
+  a MAZE key. LIVE_EFFECTS: both under onClockChange (a change restarts the
+  solve). `fabricRulesOf` passes them in the classic game only. Pins that
+  moved: the table pin, url_codec.test.ts's defaults table and
+  OVERRIDE_KEYS. The golden snapshot, the golden dailies and K87 did not
+  move: off is bit-identical. Probe links: `?<seed>&am=instant&ice=0.25`,
+  `?<seed>&am=instant&cru=cycle`. The rules: gameplay-mechanisms.md's Ice
+  and the color rule; the rows: gameplay-panel.md's ICE AND COLOR RULE
+  ROWS.
