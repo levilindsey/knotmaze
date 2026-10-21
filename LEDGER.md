@@ -26,9 +26,6 @@ Next free ID: K623.
 
 
 
-- **K620** · K580's tapered root paints as its own flat wedge (a hard diagonal edge at R, a seam at
-  J). Paint each side with its stroke's paint, blending into the spur's at J (rec), or draw the
-  strokes over the root? `.claude/probes/K580/sheets/a_join_zoom.png`.
 - **K617** · HIGH_CONTRAST_MARKER_MIN (1.5) now sits under the default markerSize 2 (K225), so High
   contrast no longer enlarges the markers. Rec: raise it to about 2.75 (the old 1.4x ratio).
   `src/ui/accessibility.ts`; `docs/design/K194_defaults.md` (Handoff).
@@ -269,7 +266,7 @@ Next free ID: K623.
   - brief: `docs/design/K578.md`
 - **K580** · The a's J join, Levi's call (2026-10-20): tangent, its shared stretch a TAPERED spur that
   leaves the junction as wide as both merging strokes and narrows to normal where they turn collinear.
-  Open calls: K606, K620. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
+  Open calls: K606; the paint stage is K620. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
   - owner: agent `ab7690d7d949d34d6` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 16:48, 2 h cap ~18:48)
   - branch: `worktree-agent-ab7690d7d949d34d6`, worktree `.claude/worktrees/agent-ab7690d7d949d34d6`; last commit: `6e3e913`
   - evidence: `.claude/probes/K580/`
@@ -496,6 +493,9 @@ Every other item below waits on the trigger it names.
 - **K186** · K140's confetti calls, answered (Levi, 2026-10-20): no confetti under reduced motion;
   confetti on every win banner, not only a live finish; colors and amount by the sliders. Rides the
   confetti lane after K578. `docs/design/K140.md` ("Stage 1 handoff").
+- **K620** · K580 stage 3, the tapered root's paint (Levi 2026-10-20: "K580 rec sgtm"): each side of
+  the root takes its own stroke's paint and blends into the spur's at J. Renderer paint work, after
+  K409 merges (`paint_math.ts`). `.claude/probes/K580/sheets/a_join_zoom.png`.
 
 ## Residuals (known, not fixed)
 
