@@ -178,11 +178,11 @@ Next free ID: K703.
   1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that
   swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
   K280, residuals K281).
-  - owner: nobody since 2026-10-20 22:19 (merged; agent `a1cdbc33c6dba02ff` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `5bb8b6f`
-  - evidence: `.claude/probes/K114/cut/`
-  - next: stage 2, the walker: Lead the walker, Delay it, the Keep it in probe (docs/design/K114_walker.md)
-  - brief: `docs/design/K114_cut.md`
+  - owner: agent `a0437651435d16c14` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 22:23, 2 h cap ~00:23)
+  - branch: `worktree-agent-a0437651435d16c14`, worktree `.claude/worktrees/agent-a0437651435d16c14`; last commit: `489ac5b`
+  - evidence: `.claude/probes/K114/walker/`
+  - next: the walker and par solver (pure) with the par census, then Lead the walker on the page, Delay it, the Keep it in probe
+  - brief: `docs/design/K114_walker.md`
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
   capitals e64f4d6, accents fa1b1ae, Greek 54612f2 (suite 1521 green). Levi (2026-10-19, Daily #8): redesign first.
@@ -328,10 +328,10 @@ Next free ID: K703.
 - **K137** · K80 section 4's cheap (S, S-M) mechanisms, each toggled (Levi 10-13), after the
   minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus
   Levi's sleeper variant. `K80_gameplay_additions.md`, stages in `sooner_20261020.md`; M: K138, M-L/L: K141.
-  - owner: nobody since 2026-10-20 19:26 (merged; agent `adfeea92c9e0ef17b` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `f8b5341`
-  - evidence: `.claude/probes/K137/`
-  - next: launch stage 3a (K137-b blocking, lives, sword, sprint) from its brief once K324 s2 merges; stage 2 (4.15 spool, 4.28 hints) waits on K655, K656
+  - owner: agent `a52e4207fa7a36be7` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 22:23, 2 h cap ~00:23)
+  - branch: `worktree-agent-a52e4207fa7a36be7`, worktree `.claude/worktrees/agent-a52e4207fa7a36be7`; last commit: `489ac5b`
+  - evidence: `.claude/probes/K137/s3a/`
+  - next: stage 3a: K137-b (a broken run blocks the minotaur and the fire), 4.32 lives, 4.7 the sword, 4.29 sprint
   - brief: `docs/design/K137_s3a.md`
 
 ## Next, in order
