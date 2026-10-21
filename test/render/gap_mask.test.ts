@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 import {
   GAP_CHUNK,
+  GAP_FRAG_LIB,
   GAP_MAX_CHUNKS,
   GAP_MAX_PTS,
   GAP_MAX_STRIDE,
@@ -64,6 +65,126 @@ describe("gapSampRange: rounded outward", () => {
     // A mid-size span strides 2, a small one stays 1.
     expect(gapSampRange(9, 100, true, 4.5, 4.5, 4.5).ref.stride).toBe(2);
     expect(gapSampRange(9, 100, true, 4.5, 1, 1).ref.stride).toBe(1);
+  });
+});
+
+// K573: the search walks the SAMP index instead of calling gapOverPt per
+// point. gapRange decodes the range once (GLSL int() truncates toward
+// zero, as Math.trunc), gapAt reads a chunk's first point by master's
+// gapOverPt formula, and gapNext then wraps a ring's index with ONE compare
+// per step, which is exact only while stride <= count on a ring. These pin
+// that invariant and the walk's equality with the formula, chunk by chunk
+// (the search) and in one run (the protect loop), on the ranges
+// gapSampRange makes.
+describe("K573: the search's SAMP index walk", () => {
+  const trunc = (x: number) => Math.trunc(x);
+  const clampI = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, x));
+  // Master's gapOverPt index (JS % truncates like the GPU's int %).
+  const formula = (kStart: number, stride: number, count: number, closed: boolean, j: number) => {
+    const raw = trunc(kStart + 0.5) + j * stride;
+    return closed ? ((raw % count) + count) % count : clampI(raw, 0, count - 1);
+  };
+  // gapAt and gapNext, as the shader writes them.
+  const at = (r: number, count: number, closed: boolean) =>
+    closed ? ((r % count) + count) % count : clampI(r, 0, count - 1);
+  const run = (r: number, stride: number, count: number, closed: boolean, nSeg: number) => {
+    let i = at(r, count, closed);
+    const idx = [i];
+    for (let j = 0; j < nSeg; j++) {
+      r += stride;
+      i += stride;
+      i = closed ? (i < count ? i : i - count) : clampI(r, 0, count - 1);
+      idx.push(i);
+    }
+    return idx;
+  };
+  // gapNearestFast/Full's walk: the indices each processed chunk reads, in
+  // order (its first point, then one per segment).
+  const walkChunks = (kStart: number, stride: number, count: number, closed: boolean, nPts: number) => {
+    const nSeg = Math.max(nPts - 1, 0);
+    const nCh = nPts >= 2 ? Math.floor((nPts - 2) / GAP_CHUNK) + 1 : 0;
+    const out: { k0: number; idx: number[] }[] = [];
+    for (let c = 0; c < GAP_MAX_CHUNKS && c < nCh; c++) {
+      const k0 = c * GAP_CHUNK;
+      const segs = Math.min(GAP_CHUNK, nSeg - k0);
+      out.push({ k0, idx: run(trunc(kStart + 0.5) + k0 * stride, stride, count, closed, segs) });
+    }
+    return out;
+  };
+  // gapProtCover's walk: one run of nPts points from kStart.
+  const walkProt = (kStart: number, stride: number, count: number, closed: boolean, nPts: number) =>
+    run(trunc(kStart + 0.5), stride, count, closed, Math.min(64, nPts - 1));
+  // Ranges as gapSampRange makes them: small and large rings, open runs at
+  // both ends, seam crossings (negative kStart), strides 1 to 3, a reach
+  // wider than the ring.
+  const cases: { ref: ReturnType<typeof gapSampRange>["ref"] }[] = [];
+  for (const count of [1, 2, 3, 5, 8, 33, 66, 100, 200, 401]) {
+    for (const closed of [true, false]) {
+      for (const total of [0.5, 9, 40]) {
+        for (const center of [0, 0.03, 0.2, 4.5, total * 0.97, total]) {
+          for (const reach of [0.05, 1, 3, 6, 50]) {
+            cases.push(gapSampRange(total, count, closed, center, reach, reach * 0.7));
+          }
+        }
+      }
+    }
+  }
+
+  it("a ring's stride never exceeds its sample count (one compare wraps)", () => {
+    let rings = 0;
+    for (const { ref } of cases) {
+      expect(ref.stride).toBeGreaterThanOrEqual(1);
+      expect(ref.stride).toBeLessThanOrEqual(GAP_MAX_STRIDE);
+      if (!ref.closed) continue;
+      rings++;
+      expect(ref.stride).toBeLessThanOrEqual(ref.count);
+    }
+    expect(rings).toBeGreaterThan(100);
+  });
+
+  it("the walk reads gapOverPt's points, chunk by chunk and in the protect run", () => {
+    let negative = 0;
+    let strided = 0;
+    for (const { ref } of cases) {
+      // The row stores kStart as a float32; the shader truncates kStart + 0.5.
+      const k = Math.fround(ref.kStart);
+      if (k < 0) negative++;
+      if (ref.stride > 1) strided++;
+      for (const { k0, idx } of walkChunks(k, ref.stride, ref.count, ref.closed, ref.n)) {
+        idx.forEach((v, j) => expect(v).toBe(formula(k, ref.stride, ref.count, ref.closed, k0 + j)));
+        expect(idx.length).toBeGreaterThanOrEqual(2);
+      }
+      const prot = walkProt(k, ref.stride, ref.count, ref.closed, ref.n);
+      prot.forEach((v, j) => expect(v).toBe(formula(k, ref.stride, ref.count, ref.closed, j)));
+    }
+    expect(negative).toBeGreaterThan(10);
+    expect(strided).toBeGreaterThan(10);
+  });
+
+  it("the shader carries each segment's end point and wraps with one compare", () => {
+    const body = (name: string) => {
+      const p = GAP_FRAG_LIB.indexOf(name);
+      expect(p).toBeGreaterThan(0);
+      return GAP_FRAG_LIB.slice(p, GAP_FRAG_LIB.indexOf("\n}\n", p));
+    };
+    // The step: one compare on a ring, a clamp on an open run, no int %
+    // and no float-to-int conversion.
+    const next = body("highp vec2 gapNext(");
+    expect(next).toContain("i = ring ? (i < g.z ? i : i - g.z) : clamp(r, 0, g.z - 1);");
+    expect(next).not.toContain("%");
+    expect(next).not.toContain("int(");
+    // A chunk's first point: master's gapOverPt formula, which gapOverPt
+    // itself now reads through.
+    expect(body("highp vec2 gapAt(")).toContain("i = ring ? ((r % g.z) + g.z) % g.z : clamp(r, 0, g.z - 1);");
+    expect(body("vec2 gapOverPt(")).toContain("return gapAt(g.w + j * g.y, i, g, t9.z > 0.5);");
+    for (const name of ["void gapNearestFast(", "void gapNearestFull(", "highp float gapProtCover("]) {
+      const b = body(name);
+      expect(b).toContain("highp vec2 a = gapAt(r, i, g, ring);");
+      expect(b).toContain("highp vec2 b = gapNext(r, i, g, ring);");
+      expect(b).toContain("a = b;");
+      expect(b).not.toContain("gapOverPt(");
+      expect(b).not.toContain("%");
+    }
   });
 });
 
