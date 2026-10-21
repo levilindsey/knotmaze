@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K572.
+Next free ID: K573.
 
 ## Waiting on Levi
 
@@ -106,12 +106,7 @@ Next free ID: K572.
 
 - **K525** · Levi's look call on K80 turns 3b, built as recommended: telegraph roam 0.45 / hunt 0.95 with the second run at half, the 0.45 s catch ring burst, and the fog bleed at 0.16. `.claude/probes/K80/stage3b/contact_sheet.png`. The real-phone sheet is now `.claude/probes/K80/stage3b/contact_sheet_real.png` (K524): hunt 0.95 reads clearly at fit zoom, roam 0.45 is effectively invisible at fit zoom, the catch ring had mostly faded by the shot, and fog bleed 0.16 is unexercised (fog off in this design).
 - **K545** · K481 stage 3's look for Levi (built as recommended in 31b2238): lit tick + moved ring on hover/press, phone bigger ticks with the caught-choice tint at the head (desktop ticks alone); the real-phone sheet is in (round 2026-10-20, `.claude/probes/rounds/2026-10-20-d0406df/k545/sheet_k545.png`: a press lights choice 0, the lit tick subtle on a still) and Levi's call whether the tint should show on desktop too. `docs/design/K481.md` (Stage 3 handoff); `.claude/probes/K481/stage3/`.
-- **K571** · The title toggle leaves the daily (Levi 2026-10-20: "What actually counts as the
-  "daily" for score-keeping credit, is either with or without the title. Toggling the title should
-  switch the maze mode to custom, _and_ should reset progress."). Asked: the title setting is
-  remembered (a DAILY_EXEMPT pref, `daily_link.ts:219`), so after a flip the daily reopens in the
-  new form from scratch and that run counts; OK? Then build it (`daily_link.ts`, `daily_attempt.ts`,
-  main.ts `savePrefsNow`, `tweakpane_panel.ts`).
+- **K571** · The title toggle leaves the daily: either form can earn the daily's credit, and a flip switches to custom and resets progress (Levi 2026-10-20). Asked whether the remembered title pref then reopens the daily in the new form, from scratch, and counts; then build it. `docs/ledger_notes.md` (K571).
 
 ## In progress
 
@@ -129,11 +124,11 @@ Next free ID: K572.
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
   capitals e64f4d6, accents fa1b1ae, Greek 54612f2 (suite 1521 green). Levi (2026-10-19, Daily #8): redesign first.
-  - owner: nobody since 2026-10-19 21:27 (stage 8 done: agent `ac64a844a1d15b9d7` of claude session 91b19e11; stage 9 waits on Levi's calls)
-  - branch: mainline; last commit: `584998a`
-  - evidence: `.claude/probes/K115/stage8/` (metrics harness `metrics.ts`, `baseline.txt`, `o_entry_check.txt`, `notes.md`)
-  - next: Levi's call 3 (K559; calls 1, 2, 4-6 and K563's (d) answered 2026-10-20, in the brief); then stage 9 from its brief, starting with the oval-letter join (K115_glyphs.md section 4); then stage 7's live dates (docs/design/K115_stage7.md), K557
-  - brief: `docs/design/K115_stage9.md`; the design: `docs/design/K115_glyphs.md`
+  - owner: agent `adaaf5d46393d3aeb` of claude session 91b19e11 (opus, started 2026-10-20 11:15, 2 h cap ~13:15)
+  - branch: `worktree-agent-adaaf5d46393d3aeb`, worktree `.claude/worktrees/agent-adaaf5d46393d3aeb`; last commit: `c6a0d7e`
+  - evidence: .claude/probes/K115/stage9/ (its worktree); stage 8's .claude/probes/K115/stage8/ (main checkout)
+  - next: stage 9: the fork rule and the spur forms first, then the lint, builder, edge.mid, reveal, metrics, sheets; then Levi's look, stage 7's live dates, K557, K569
+  - brief: `docs/design/K115_stage9.md`
 - **K74** · Maze design, decided (Levi, 2026-10-13;
   `docs/design/K74_maze_design.md`): every mechanism gets params whose
   neutral value turns it off. Stage 1 (long-tail dead ends) and stage 2
@@ -257,6 +252,19 @@ Next free ID: K572.
 - **K550** · Kill K320's gap split (Levi 2026-10-20: "Go with your kill rec."; `docs/design/K550_stage3.md`): revert its six
   code commits (`ffd3864`..`a688909`), keep Stage 1 (`6c592e6`), prove 0 px (`docs/design/K550_kill.md`). Stage 3's branch
   `worktree-agent-a6e7569fb69c908c3` (`d27b35c`) stays for K567; its worktree goes once the kill merges.
+  - owner: agent `aabae6dc5db6e48b5` of claude session 91b19e11 (sonnet, started 2026-10-20 11:15, 1 h cap ~12:15)
+  - branch: `worktree-agent-aabae6dc5db6e48b5`, worktree `.claude/worktrees/agent-aabae6dc5db6e48b5`; last commit: `c6a0d7e`
+  - evidence: .claude/probes/K550/kill/ (its worktree)
+  - next: the revert, the cleanup, then Verify: suite, shader-source diff, 0 px same-state A/B
+  - brief: `docs/design/K550_kill.md`
+- **K572** · The phone renders 1.5-3.7x slower at d0406df than at 65a7787 (round 2026-10-20: render
+  sync knot gs24 74.3 vs 20.2 ms; load 40.7 vs 48.3 fps; K568's confetti 44.9 vs 60 fps, maybe the
+  same cause). Attribute it.
+  - owner: agent `a7b781cc87de80024` of claude session 91b19e11 (sonnet, started 2026-10-20 11:15, 1 h cap ~12:15)
+  - branch: `worktree-agent-a7b781cc87de80024`, worktree `.claude/worktrees/agent-a7b781cc87de80024`; last commit: `c6a0d7e`
+  - evidence: .claude/probes/K572/ (its worktree); the round's .claude/probes/rounds/2026-10-20-d0406df/ (main checkout)
+  - next: reproduce on the desktop, bisect 65a7787..d0406df on knot gs24 render sync, confirm on the phone, then K568's own cost
+  - brief: `docs/design/K572.md`
 
 ## Next, in order
 
