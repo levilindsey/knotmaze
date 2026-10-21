@@ -549,6 +549,20 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   released": anchor it with `^`. On the phone, toybox `top -o <fields>`
   without `-s <field>` sorts by NAME, not CPU.
 
+- K137 stage 3b (2026-10-21), the sword: `.claude/probes/K137/s3b/`
+  holds `sword_page.mjs <base> desktop|phone <outDir> <seed>
+  turn|realtime oneuse|timed <moves>` (real clicks on
+  `?<seed>&am=instant&mt=hunter&swd=<mode>&swm=<moves>`; it walks to the
+  sword, then onto the minotaur, and ends in a CHECK summary; outputs in
+  `out/`) and `vite.private-cache.config.ts`, the private dev server's
+  config. GOTCHA: the frame loop returns early while
+  `__knotPerf().state` is "loading" (the warm-up and the hidden
+  pre-settle; a fresh profile's cold shader compiles make it long), so a
+  real-time chase does not tick then. A probe that walks a real-time
+  chase waits for the state to leave "loading", then calls
+  `__knotLoop({continuous: true})`; walked earlier, the chase read tick
+  0 throughout.
+
 ## Census and diagnosis rules
 
 - *From P3.38 (the pull-outward merge), lesson:* LESSON: the

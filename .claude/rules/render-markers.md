@@ -104,3 +104,15 @@ only with the files it is about; `render.md` lists the area's other files.
   fire passes its thread point, and back in on a restart; its gap slot
   follows the fade's target. The record: gameplay-fire.md's THE START
   MARKER BURNS.
+
+- THE SWORD MARKER (K137 stage 3b, 2026-10-21): the role "sword"
+  (`MarkerRole`, and so a mesh role) with one placeholder design,
+  "sword" (point up: a tapering blade, a crossguard, the grip and a
+  pommel dot), for Levi to replace. FabricMazeRenderer `markers.sword`
+  (page-lifetime like the others) sits at the sword's spot at
+  markerRadius while the sword is ready, on either clock (`syncSword`,
+  called from syncMinotaur), under the fog sprite like the exit marker;
+  it waits for the intro to draw its thread and hides where the thread
+  reveal has not shown its point (vis below 0.98). marker_glyphs.test.ts
+  checks its fit like every glyph's. The rules: gameplay-minotaur.md's
+  THE SWORD.
