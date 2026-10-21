@@ -130,8 +130,8 @@ Next free ID: K585.
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
   capitals e64f4d6, accents fa1b1ae, Greek 54612f2 (suite 1521 green). Levi (2026-10-19, Daily #8): redesign first.
-  - owner: nobody since 2026-10-20 12:48 (the stage 9 agent of claude session 91b19e11 stopped at its kill criterion, the a's J, after its handoff)
-  - branch: `worktree-agent-adaaf5d46393d3aeb`, worktree `.claude/worktrees/agent-adaaf5d46393d3aeb`; last commit: `347df4f`
+  - owner: nobody since 2026-10-20 13:01 (merged)
+  - branch: mainline; last commit: `b90c5df`
   - evidence: .claude/probes/K115/stage9/ (its worktree); stage 8's .claude/probes/K115/stage8/ (main checkout)
   - next: Levi's calls (K580); then the rest of the set under the lint, the class-pair lint and items 5-7 (reveal, metrics, sheets); then Levi's look, the final ς (K582), stage 7's live dates, K557, K569
   - brief: `docs/design/K115_stage9.md`
