@@ -90,6 +90,22 @@ describe("planRoute (K480 decision 1-2)", () => {
     const route = planRoute(G, "S", { edge: 3, at: 1 }, 100)!;
     expect(route).toEqual([0, 1, 2, 3]);
   });
+
+  it("K137: refuses a blocked (broken) run and routes around blocked runs", () => {
+    const no1 = (eid: number): boolean => eid === 1;
+    // The broken run itself, even leaving the head.
+    expect(planRoute(G, "S", { edge: 1, at: 0.5 }, 100, no1)).toBeNull();
+    expect(planRoute(G, "A", { edge: 1, at: 0.2 }, 100, no1)).toBeNull();
+    // B-C near B: B is cut off (its runs are the broken one, the tapped
+    // one and the dead end), so the route comes in through C the long way.
+    expect(planRoute(G, "S", { edge: 2, at: 0.5 }, 100, no1)).toEqual([0, 4, 2]);
+    expect(planRoute(G, "S", { edge: 2, at: 0.5 }, 7.49, no1)).toBeNull();
+    expect(planRoute(G, "S", { edge: 2, at: 0.5 }, 7.5, no1)).toEqual([0, 4, 2]);
+    // The dead end beyond B: B reached the long way, through C.
+    expect(planRoute(G, "S", { edge: 5, at: 0.5 }, 100, no1)).toEqual([0, 4, 2, 5]);
+    // Nothing blocked: the planner as before.
+    expect(planRoute(G, "S", { edge: 2, at: 0.5 }, 100, () => false)).toEqual([0, 1, 2]);
+  });
 });
 
 describe("litArms (K480 stage 2, decision 1: the branching light)", () => {
@@ -116,6 +132,19 @@ describe("litArms (K480 stage 2, decision 1: the branching light)", () => {
     // B is still reached the long way (A-C-B), from C's end.
     expect(arms.map((a) => a.edge)).toEqual([0, 4, 2, 3, 5]);
     expect(arms.find((a) => a.edge === 2)).toEqual({ edge: 2, atA: false, dist0: 7, cont: true });
+  });
+
+  it("K137: a blocked (broken) run neither lights nor carries light, at the head too", () => {
+    // The head's only run broken: nothing lights.
+    expect(litArms(G, "S", 10, undefined, (eid) => eid === 0)).toEqual([]);
+    // From A with A-B broken: B is lit the long way round, from C's end.
+    const arms = litArms(G, "A", 10, undefined, (eid) => eid === 1);
+    expect(arms.map((a) => a.edge).sort((x, y) => x - y)).toEqual([0, 2, 3, 4, 5]);
+    expect(arms.find((a) => a.edge === 2)).toEqual({ edge: 2, atA: false, dist0: 5, cont: true });
+    expect(arms.find((a) => a.edge === 5)).toEqual({ edge: 5, atA: true, dist0: 6, cont: false });
+    // The gate (beyond-head arms) still applies beside it.
+    const gated = litArms(G, "A", 10, (eid) => eid !== 2, (eid) => eid === 1);
+    expect(gated.map((a) => a.edge).sort((x, y) => x - y)).toEqual([0, 3, 4]);
   });
 
   it("a self-loop at the head lights from both ends, as today's choices do", () => {

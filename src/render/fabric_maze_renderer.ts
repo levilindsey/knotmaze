@@ -628,6 +628,9 @@ export class FabricMazeRenderer {
   private fireFxTurn = 0;
   private burnFronts: BurnFront[] | null = null;
   private burnSmolder: BurntSpan[] | null = null;
+  // K137: the broken runs syncBroken last found (null = none), which
+  // syncExplore subtracts whatever the burnt look.
+  private brokenSpans: BurntSpan[] | null = null;
   private fogFireLights: number[] = [];
   private fogFireDrawn: number[] = [];
   private fireDrawn = false;
@@ -1184,11 +1187,14 @@ export class FabricMazeRenderer {
       ) {
         continue;
       }
+      if (controller.broken(e.id)) continue; // K137: a broken run is gone.
       const m = this.scanRun(e, x, y, controller, maxD, "both");
       if (!m) continue;
       const d2 = m.d * m.d;
       if (d2 >= best2) continue;
-      const route = planRoute(this.walk, controller.head, { edge: e.id, at: m.at }, reach);
+      const route = planRoute(this.walk, controller.head, { edge: e.id, at: m.at }, reach, (r) =>
+        controller.broken(r)
+      );
       if (!route) continue;
       best2 = d2;
       best = { eid: e.id, at: m.at, d: m.d, route };
@@ -2006,6 +2012,28 @@ export class FabricMazeRenderer {
       }
     }
     fx.tick(dt);
+  }
+
+  // K137: the broken runs as spans for syncExplore (null = none). The run
+  // the dot is crossing when it breaks goes behind the dot: only the
+  // stretch it has swept is gone until it arrives (a run breaks once the
+  // move completes).
+  private syncBroken(controller: FabricMazeController): void {
+    let spans: BurntSpan[] | null = null;
+    if (controller.fragileOn) {
+      const a = this.anim;
+      for (const eid of controller.brokenRuns()) {
+        const e = this.walk.edges[eid];
+        if (a && a.e.id === eid) {
+          const lo = Math.min(a.from, a.cur);
+          const hi = Math.max(a.from, a.cur);
+          if (hi - lo > 1e-6) (spans ??= []).push({ chain: e.chain, b0: lo, b1: hi });
+          continue;
+        }
+        (spans ??= []).push(this.burnSpan(e, 0, e.length));
+      }
+    }
+    this.brokenSpans = spans;
   }
 
   // K290: run `e` from lattice distance x0 to x1 as a burnt span of its
@@ -2863,6 +2891,7 @@ export class FabricMazeRenderer {
   private emitAnimFrame(controller: FabricMazeController): void {
     const a = this.anim!;
     this.exploreEpoch(controller, false); // K76 stage 2c.
+    this.syncBroken(controller); // K137: the run breaking behind the dot.
     this.syncExplore(); // K76: the dot uncovers its run.
     this.syncYarn(controller);
     this.ribbons.setRim(this.rimDecl());
@@ -2925,6 +2954,7 @@ export class FabricMazeRenderer {
     // K76 stage 2c: always, so turning the reveal on mid-solve shows the
     // real walk.
     this.exploreEpoch(controller, true);
+    this.syncBroken(controller);
     this.syncExplore();
     this.syncYarn(controller);
     // String mode: the yarn is the traversal record - no gold spans or
@@ -2995,7 +3025,10 @@ export class FabricMazeRenderer {
         }
         return true;
       };
-      for (const lit of litArms(this.walk, controller.head, this.ribbons.pulseReach, gate)) {
+      // K137: a broken run neither lights nor carries the light, the head's
+      // arms included (the gate sees only arms beyond the head).
+      const blocked = controller.fragileOn ? (eid: number) => controller.broken(eid) : undefined;
+      for (const lit of litArms(this.walk, controller.head, this.ribbons.pulseReach, gate, blocked)) {
         if (lit.dist0 === 0) continue; // The choices above already lit these.
         const e = this.walk.edges[lit.edge];
         pulses.push({
@@ -3290,12 +3323,17 @@ export class FabricMazeRenderer {
     const spans = this.burnSpans;
     const fronts = this.burnFronts;
     const smolder = this.burnSmolder;
-    const burning = !!(spans || fronts || smolder);
+    // K137: broken runs vanish through the burn's machinery, subtracted in
+    // every case whatever burntLook says; the fire's spans stay as they are.
+    const broken = this.brokenSpans;
+    const burning = !!(spans || fronts || smolder || broken);
     const gone = this.burntLook === "gone";
     if (!this.explore.on) {
       if (burning) {
         this.exploreLast = null;
-        this.ribbons.setExplore(this.burnOnlyPieces(spans ?? [], gone), this.explore.look, 1, {
+        let whole = this.burnOnlyPieces(spans ?? [], gone);
+        if (broken) whole = subtractBurnt(whole, broken, this.ringN);
+        this.ribbons.setExplore(whole, this.explore.look, 1, {
           gate: null,
           char: gone ? null : spans,
           fronts,
@@ -3364,12 +3402,14 @@ export class FabricMazeRenderer {
           }))
         );
       }
-      this.ribbons.setExplore(
-        gone && spans ? subtractBurnt(shown, spans, this.ringN) : shown,
-        this.explore.look,
-        1,
-        { gate: pieces, char: gone ? null : spans, fronts, smolder }
-      );
+      let out = gone && spans ? subtractBurnt(shown, spans, this.ringN) : shown;
+      if (broken) out = subtractBurnt(out, broken, this.ringN);
+      this.ribbons.setExplore(out, this.explore.look, 1, {
+        gate: pieces,
+        char: gone ? null : spans,
+        fronts,
+        smolder,
+      });
     } else {
       this.ribbons.setExplore(pieces, this.explore.look, 1);
     }
