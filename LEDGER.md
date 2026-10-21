@@ -412,11 +412,11 @@ Next free ID: K767.
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
-  - owner: nobody since 2026-10-21 05:25 (merged; agent `af6986ab9ceec29c6` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `df179dd6`
-  - evidence: `.claude/probes/K138/s2/`
-  - next: stage 3: one-way runs, locks and keys (docs/design/K138_s3.md), which starts with the s2 remainder (the turnstile third-arm dim, the hidden-run press fix K764, two page cases)
-  - brief: `docs/design/K138_s2.md`
+  - owner: agent `a10af88563aec2ec1` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus-5-5, started 2026-10-21 05:26, 2 h cap ~07:26)
+  - branch: `worktree-agent-a10af88563aec2ec1`, worktree `.claude/worktrees/agent-a10af88563aec2ec1`; last commit: `1f402b31`
+  - evidence: `.claude/probes/K138/s3/`
+  - next: stage 3: the s2 remainder, one-way runs, locks and keys (exit, shortcut, colors), the census, the page, lore
+  - brief: `docs/design/K138_s3.md`
 
 ## Next, in order
 
