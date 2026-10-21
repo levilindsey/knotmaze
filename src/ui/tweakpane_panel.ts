@@ -1621,8 +1621,8 @@ export function buildPanel(
   // Restarts the solve.
   const cutRow = row(
     fGame, p, "cut",
-    { options: { off: "off", on: "on" }, label: "Cut" },
-    "Scissors: delete whole runs. Press the scissors button (or X), then tap a run to cut it; Esc or a second press puts them away. A junction left with two runs is no longer a decision: a move through it carries on. A cut that would leave no way to the exit is refused, and the entrance's and the exit's runs cannot be cut. Undo (the button or U) takes back one move or one cut. Classic game only; off while Fragile runs, Par or Collapse is on. Restarts the solve.",
+    { options: { off: "off", on: "on", lead: "lead", delay: "delay" }, label: "Cut" },
+    "Scissors: delete whole runs. on: press the scissors button (or X), then tap a run to cut it; Esc or a second press puts them away. A junction left with two runs is no longer a decision: a move through it carries on. lead: a walker takes the same turn at every junction (straight on, else the next run clockwise); tap runs to cut them, then Go. Reach the exit in as few cuts as you can (par shown); if it goes in circles you are back to planning, cuts kept. delay: a walker takes the shortest way out; each turn cut a run or pass (Let it walk), then it walks one run. Make its walk as long as you can. A cut that would leave no way to the exit is refused, and the entrance's and the exit's runs cannot be cut. Undo (the button or U) takes back one move or one cut. Classic game only; off while Fragile runs, Par or Collapse is on. Restarts the solve.",
     D.cut, () => callbacks.onClockChange()
   );
 

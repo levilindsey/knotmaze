@@ -1,4 +1,5 @@
 import type { WalkGraph } from "../core/walk_graph";
+import type { TangleGraph } from "../core/types";
 import type { ParticleSystem } from "../physics/particle_system";
 import type { RibbonRenderer } from "../render/ribbon_renderer";
 import type { DebugRenderer } from "../render/debug_renderer";
@@ -22,6 +23,9 @@ export interface SceneRef {
   readonly renderer: RibbonRenderer | null;
   readonly debug: DebugRenderer | null;
   readonly walkGraph: WalkGraph | null;
+  // K114 walker: the build's tangle graph in fabric mode (the walker's
+  // map reads the strands' headings), else null.
+  readonly tangle: TangleGraph | null;
   // The build's strand hue groups (maze plan; undefined in knot mode) and
   // strand count, kept for live recolors.
   readonly buildHueGroup: number[] | undefined;

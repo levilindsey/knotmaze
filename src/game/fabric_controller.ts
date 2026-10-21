@@ -384,6 +384,12 @@ export class FabricMazeController {
     return this.cutMode !== "off";
   }
 
+  // K114 walker: the walker's mode ("lead" or "delay"), or null when the
+  // cut is off or the player's own scissors ("on").
+  get walkerMode(): "lead" | "delay" | null {
+    return this.cutMode === "lead" || this.cutMode === "delay" ? this.cutMode : null;
+  }
+
   // K114 cut: the cut runs, in id order.
   cutRuns(): number[] {
     return [...this.cuts].sort((a, b) => a - b);
@@ -644,7 +650,10 @@ export class FabricMazeController {
       return;
     }
     this.actions.push({ kind: "move", run: eid });
-    if (this.cuts.size > 0) this.carry = carryChain(this.walk, this.cuts, from, eid).slice(1);
+    // K114 walker: a walker takes one run per move, so no contraction there.
+    if (this.cutMode === "on" && this.cuts.size > 0) {
+      this.carry = carryChain(this.walk, this.cuts, from, eid).slice(1);
+    }
   }
 
   // K137: one crossing of the run; `justBroke` names it when this one
