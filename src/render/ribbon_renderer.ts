@@ -79,6 +79,7 @@ import {
   kRimAcross,
   kRimOver,
   kRimScale,
+  kTeleOver,
 
   knotSection,
   smoothInv,
@@ -89,7 +90,7 @@ import {
   type KPaintState,
   type KIgn,
 } from "./paint_math";
-import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM } from "./paint_const";
+import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM, PAINT_ITEM_TELE } from "./paint_const";
 import { PluckOverlay } from "./pluck_overlay";
 import type { PluckHost, PluckNode } from "./pluck_overlay";
 import { MAX_ROUTES, recordData } from "./junction_field";
@@ -314,6 +315,21 @@ export interface PaintRim {
   c1: number;
   at: number;
 }
+// K525: one piece of the minotaur's telegraph route, lit along both rims
+// in the telegraph's colour (a whole run, or part of one). Its ctrl span is
+// unwrapped as PaintRim's (c1 > c0; a closed chain's c1 may pass its
+// length). `alpha` is the piece's own strength (the second run at half).
+// `j0` / `j1` say whether that end is a junction (it skips rimGap(), as
+// the hover glow does) or a mid-run point (the minotaur's spot, a
+// by-length stop: no gap, a short fade, TELE_MID_FADE).
+export interface PaintTele {
+  chain: number;
+  c0: number;
+  c1: number;
+  alpha: number;
+  j0: boolean;
+  j1: boolean;
+}
 // K81: a route (junction_routes.ts PaintRoute) resolved against the static
 // junction arms: the arm it arrived by and the arm it left by (null = a
 // one-arm route), as junction arms (chain, particle slot, direction).
@@ -404,6 +420,14 @@ const MIN_SAMPLES = 48;
 // visibility (pickThread, exploreShownAt: taps, hover, plucks, the tug's
 // grab).
 const EXPLORE_PICK_VIS = 0.5;
+// K525: the telegraph rims' end fades (world units of arc). A junction end
+// fades in over TELE_JUNCTION_FADE past the web's reach (rimGap, as the
+// hover glow's hoverGlowFade does); a mid-run end (the minotaur's spot, a
+// by-length stop) has no gap and fades over TELE_MID_FADE. Both are capped
+// at RIM_END_SHARE of half the piece less its gap, so a short piece still
+// peaks. CPU-side numbers in the item, never GLSL text.
+const TELE_JUNCTION_FADE = 0.2;
+const TELE_MID_FADE = 0.3;
 // rebuildFillets' erase-width pad lives in ribbon/joinery.ts (K5 R5).
 
 function hslToHex(h: number, s: number, l: number): number {
@@ -583,6 +607,10 @@ export class RibbonRenderer {
   private paintRim: PaintRim | null = null;
   private rimKey = "";
   private rimAt = 0;
+  // K525: the telegraph's route pieces (setTelegraph) and the key of the
+  // KPAINT items they last wrote; the colour and strength ride uKTele.
+  private paintTele: PaintTele[] | null = null;
+  private teleKey = "";
   /** @internal ribbon */ paintClock = 0;
   // K81 route bands (junction_routes.ts): the path's passes through
   // junctions, oldest first; routeKey keys the fillet rebuild that draws
@@ -640,6 +668,12 @@ export class RibbonRenderer {
   // 0.75 before). main.ts syncs both every tick.
   hoverGlowLength = 3;
   hoverGlowFade = 0.2;
+  // K525: the telegraph rims' strength and colour (0xRRGGBB), sent as
+  // uKTele (w = the strength while a route is set). The fabric sets them
+  // with the route; a piece's alpha multiplies the strength. teleColor is
+  // TELEGRAPH_COLOR unless a sheet overrides it.
+  teleStrength = 0;
+  teleColor = 0xff2418;
   // High contrast's highlight prototype (K111 stage 4, K265; main.ts syncs
   // it every tick: 0 unless High contrast is on), sent as uKBase.y. 0 =
   // today's pulses.
@@ -1974,7 +2008,12 @@ export class RibbonRenderer {
         // The hover glow (K145), shaped across at `side` and composed over
         // the paint (K298) as SECTION_FRAG does.
         const rim = st.rim > 0 ? st.rim * kRimAcross(side, U.uKGold[3]) : 0;
+        // K525: the telegraph's rims, the same shape across at the strength
+        // uKTele.w, mixed toward its colour before the hover's whitening.
+        const tl =
+          st.tele > 0 && U.uKTele ? st.tele * kRimAcross(side, U.uKGold[3]) * U.uKTele[3] : 0;
         kComposePaint(U, rgb, st, kGlow(data, U, c, ctrl));
+        if (tl > 0) kTeleOver(U, rgb, tl);
         if (rim > 0) kRimOver(rgb, rim);
         return [rgb[0], rgb[1], rgb[2], a];
       },
@@ -2008,6 +2047,7 @@ export class RibbonRenderer {
           band: false,
           v: 0,
           rim: 0,
+          tele: 0,
         });
         return { ...st, glow: kGlow(data, U, c, ctrl) };
       },
@@ -2581,6 +2621,32 @@ export class RibbonRenderer {
   private rimGap(): number {
     const fillHalf = this.style.threadWidth / 2;
     return Math.max(fillHalf * FILLET_REACH_PER_HALF * this.cuspRadius, 2 * fillHalf);
+  }
+
+  // K525: declare the minotaur's telegraph route as rim pieces (null or
+  // empty = none). KPAINT is rewritten only when a piece, the junction gap
+  // or the strength turning on or off changes; the colour and the strength
+  // ride uKTele, so a roam turning into a hunt rewrites no texel. The
+  // turn minotaur's route changes only on a tap.
+  setTelegraph(pieces: PaintTele[] | null): void {
+    this.paintTele = pieces && pieces.length > 0 ? pieces : null;
+    this.syncTeleItem();
+  }
+
+  // The KPAINT key of the telegraph's items ("" = none).
+  private teleItemKey(): string {
+    const t = this.paintTele;
+    if (!t || !(this.teleStrength > 0)) return "";
+    let k = `${this.rimGap()}`;
+    for (const p of t) {
+      k += `|${p.chain},${p.c0},${p.c1},${p.alpha},${p.j0 ? 1 : 0}${p.j1 ? 1 : 0}`;
+    }
+    return k;
+  }
+
+  private syncTeleItem(): void {
+    if (!this.style.paletteMode) return;
+    if (this.teleItemKey() !== this.teleKey) this.writePaintItems();
   }
 
   // K81: a walk ctrl's particle slot on its chain (walk ctrls are particle
@@ -3209,7 +3275,7 @@ export class RibbonRenderer {
     const ctrl = kCtrlOfArc(D, c, an);
     kComposePaint(U, out, kPaintAt(D, U, c, ctrl, an, px, this.paintTmp), kGlow(D, U, c, ctrl));
   }
-  /** @internal ribbon */ paintTmp: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+  /** @internal ribbon */ paintTmp: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
 
   // The NODES a plucked chain passes (pluck_overlay.ts PluckNode): every
   // registered crossing pass (footprint = its erase extents + fade when
@@ -3476,6 +3542,18 @@ export class RibbonRenderer {
     U.uKSect[3] = Math.max(0, this.hoverGlowFade);
     // K111 stage 4: High contrast's highlight prototype (0 = the pulses).
     U.uKBase[1] = this.hcLook;
+    // K525, the telegraph rims: their items follow the route and the
+    // strength turning on or off; the colour and the strength are uniforms
+    // (0 while no item is written, so the paint is the telegraph-less one).
+    this.syncTeleItem();
+    const T = U.uKTele;
+    if (T) {
+      const tc = this.teleColor;
+      T[0] = ((tc >> 16) & 255) / 255;
+      T[1] = ((tc >> 8) & 255) / 255;
+      T[2] = (tc & 255) / 255;
+      T[3] = this.teleKey !== "" ? Math.max(0, this.teleStrength) : 0;
+    }
     // Junction fillets ride the same tick: live positions, live paint.
     this.rebuildFillets();
     this.tickWebFade();
@@ -3660,6 +3738,29 @@ export class RibbonRenderer {
         items.push(...smolderItem(s));
         const [lo, hi] = charRange(s);
         touch(s.chain, lo, hi, i);
+      }
+    }
+    // K525: the telegraph's route pieces, (TELE, c0, c1, alpha, gap0, gap1,
+    // fade0, fade1), before the hover glow's RIM so that one stays last. A
+    // junction end skips the web's reach (rimGap, as the glow does), a
+    // mid-run end none.
+    this.teleKey = this.teleItemKey();
+    if (this.teleKey !== "" && this.paintTele) {
+      const gap = this.rimGap();
+      for (const t of this.paintTele) {
+        if (t.chain >= n || !(t.c1 > t.c0)) continue;
+        const i = items.length / 8;
+        items.push(
+          PAINT_ITEM_TELE,
+          t.c0,
+          t.c1,
+          t.alpha,
+          t.j0 ? gap : 0,
+          t.j1 ? gap : 0,
+          t.j0 ? TELE_JUNCTION_FADE : TELE_MID_FADE,
+          t.j1 ? TELE_JUNCTION_FADE : TELE_MID_FADE
+        );
+        touch(t.chain, t.c0, t.c1, i);
       }
     }
     // K145: the hover glow's run, (RIM, c0, c1, end gap).

@@ -42,7 +42,7 @@ import {
   type GapShape,
 } from "./gap_mask";
 
-// The VIS item type (T0.x). PAINT_ITEM uses 1-4.
+// The VIS item type (T0.x). PAINT_ITEM uses 1-4, PAINT_ITEM_TELE 9 (K525).
 export const EXPLORE_ITEM_VIS = 5;
 // K290 (burn stage 3a): the CHAR item type, a burnt stretch the `char` look
 // darkens: T0 = (CHAR, b0, b1, -), T1 unused. Like VIS, not a PAINT_ITEM:

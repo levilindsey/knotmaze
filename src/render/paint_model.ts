@@ -71,6 +71,9 @@ export function knotUniforms(): UniformGroup {
       // K76 thread reveal (on, look, breath, threadWidth): declared only by
       // the explore program (explore_glsl.ts); programs without it skip it.
       uKExplore: v4(0, 0, 1, 0.52),
+      // K525 telegraph rims (rgb, strength): declared only by the ribbon
+      // programs (paint_glsl PAINT_ACROSS_GLSL); programs without it skip it.
+      uKTele: v4(),
       uKKnots: {
         value: new Float32Array(MAX_KNOTS * 4),
         type: "vec4<f32>",

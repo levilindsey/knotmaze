@@ -157,9 +157,14 @@ void main(void) {
   // The hover glow (K145): kst.w is its strength along the thread, shaped
   // across the ribbon here (only the ribbons have an across coordinate).
   highp float krim = kst.w > 0.0 ? kst.w * kRimAcross(vUV.y) : 0.0;
+  // The telegraph rims (K525): kTele (set by kPaintAt, so only where the
+  // paint ran) shaped across as the hover glow is, times uKTele.w.
+  highp float ktl = paintHere && kTele > 0.0 ? kTele * kRimAcross(vUV.y) * uKTele.w : 0.0;
   // A High contrast prototype shapes a choice across the ribbon (K111
   // stage 4; kComposePaint itself under today's look).
   vec3 rgb = paintHere ? kComposePaintAcross(base, kst, kgl, vUV.y) : base;
+  // K525: the telegraph's red over the paint, under the hover glow.
+  if (ktl > 0.0) rgb = kTeleOver(rgb, ktl);
   // K298: the hover glow composes OVER the paint, so it shows on a hovered
   // choice at every breath phase of its own hover band (a max with the
   // band hid it under the breath). Off a band and the reveal glow this is

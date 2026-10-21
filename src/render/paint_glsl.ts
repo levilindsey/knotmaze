@@ -24,7 +24,7 @@
 //   KGEOM at geomBase:          G0 = (total, arcPer, fxDone, -), then the
 //                               control arcs packed 4 per texel (slot order)
 
-import { PAINT_CONST, glslConstBlock } from "./paint_const";
+import { PAINT_CONST, PAINT_ITEM_TELE, glslConstBlock } from "./paint_const";
 
 const W1 = (1 << PAINT_CONST.K_ROW_SHIFT) - 1;
 const S = PAINT_CONST.K_ROW_SHIFT;
@@ -703,6 +703,13 @@ int kHcLook() {
 // size at this pixel, for the chevrons (kPaintAt sets them with st.z).
 highp float kHcD;
 highp float kHcPx;
+// The turn minotaur's telegraph rims along the thread at this pixel (K525):
+// the strongest TELE item's alpha times its end ramps. kPaintAt sets it
+// (0 when no item covers the pixel); the ribbon shapes it across
+// (kRimAcross) and scales it by uKTele.w. Not a PAINT_ITEM (paint_const.ts
+// PAINT_ITEM_TELE), so its id is declared here, beside its only reader.
+highp float kTele;
+const int PI_TELE = ${PAINT_ITEM_TELE};
 
 highp float kPulseV(highp float d, highp float span, bool inward, bool hovered, highp float dist0, bool cont) {
   if (d < 0.0 || d > span) return 0.0;
@@ -746,8 +753,10 @@ highp float kRimAcross(highp float side) {
 
 // (p, band, v, rim): the gold ramp amount, a pulse band and its strength,
 // and the hover glow along the thread (K145; kRimAcross shapes it across).
+// Also sets kTele, the telegraph rims along the thread (K525).
 highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px) {
   highp vec4 st = vec4(0.0);
+  kTele = 0.0;
   if (uKPaint.x < 0.5) return st;
   int n = c.nCtrl;
   int sl = clamp(int(floor(ctrl)), 0, n - 1);
@@ -834,6 +843,21 @@ highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px)
       highp float g = uKReach.z * (1.0 - kSmooth(d / max(uKSect.z, 1e-4))) *
         kSmooth((dEnd - T0.w) / fade);
       st.w = max(st.w, g);
+    } else if (type == PI_TELE) {
+      // K525: one piece of the telegraphed route, [c0, c1] unwrapped. Each
+      // end has its own gap (T1.x, T1.y: the web's reach at a junction end,
+      // 0 mid-run) and fade (T1.z, T1.w), the fade clamped as the hover
+      // rim's is, so a short piece still glows in full mid-piece.
+      highp float u0 = kArcU(c, T0.y);
+      highp float u1 = kArcU(c, T0.z);
+      highp float u = arc;
+      if (c.closed) u = u0 + kWrap(arc - u0, total);
+      if (u < u0 || u > u1) continue;
+      highp float hl = 0.5 * (u1 - u0);
+      highp float f0 = clamp(RIM_END_SHARE * (hl - T1.x), 1e-4, max(T1.z, 1e-4));
+      highp float f1 = clamp(RIM_END_SHARE * (hl - T1.y), 1e-4, max(T1.w, 1e-4));
+      highp float g = T0.w * min(kSmooth((u - u0 - T1.x) / f0), kSmooth((u1 - u - T1.y) / f1));
+      kTele = max(kTele, g);
     }
   }
   return st;
@@ -933,6 +957,16 @@ vec3 kComposePaintAcross(vec3 S, highp vec4 st, highp float glow, highp float si
     white = clamp(sd / max(kHcPx, 1e-4) + 0.5, 0.0, 1.0);
   }
   return kHcCompose(S, st, glow, white);
+}
+
+// The telegraph rims (K525): uKTele = (rgb, strength), declared here, so
+// only the ribbon programs carry it (the strips, webs and fans draw no rim,
+// as the hover glow's). t is kTele times kRimAcross times the strength: the
+// rims mix toward the telegraph color, after the paint and before the hover
+// glow (kRimOver), so a hovered run on the route shows both.
+uniform vec4 uKTele;
+vec3 kTeleOver(vec3 c, highp float t) {
+  return c + (uKTele.rgb - c) * clamp(t, 0.0, 1.0);
 }
 
 `;
