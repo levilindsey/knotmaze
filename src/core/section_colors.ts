@@ -574,6 +574,135 @@ export function ruleRunTable(
   return { runs, slotRun, noise: base.noise };
 }
 
+// ---- K138 STAGE 4: THE TURNSTILE'S THIRD-ARM DIM ------------------------
+
+// A walk run end to dim: the arm a turnstile's phase closes (end 0 = the
+// run's va / ctrlA end, 1 = its vb / ctrlB end).
+export interface RunDim {
+  run: number;
+  end: 0 | 1;
+}
+
+// How far the closed arm's end goes toward the page ink, and how far past
+// the junction blend (lattice units) the dim ramps back to the arm's own
+// color. A DATA change: run records, no uniform and no shader text.
+export const TURNSTILE_DIM = 0.6;
+export const TURNSTILE_DIM_LATTICE = 1.5;
+
+// The slots a walk run owns (buildSectionRuns' half-open span, plus an
+// open chain's last slot when the run ends there).
+function edgeSlots(e: { ctrlA: number; ctrlB: number }, g: RunChain): number[] {
+  const n = g.len;
+  const out: number[] = [];
+  for (let s = Math.ceil(e.ctrlA - 1e-9); s < e.ctrlB - 1e-9; s++) {
+    const k = g.closed ? ((s % n) + n) % n : s;
+    if (k >= 0 && k < n) out.push(k);
+  }
+  if (!g.closed && n > 0 && Math.abs(e.ctrlB - (n - 1)) < 1e-9) out.push(n - 1);
+  return out;
+}
+
+// The table with each dimmed run's end darkened toward `ink`. A run that
+// one record covers exactly (strands, segments, the rule overrides) keeps
+// that record's colors and ramps (gamut coordinates turned to RGB); any
+// other run (under mono's chain-long record, a sweep, or several records)
+// gets a fresh record through the colors drawn now at its ends and middle.
+// The noise scheme's runs keep their look (no RGB to darken).
+export function dimRunTable(
+  table: SectionRuns,
+  walk: WalkGraph,
+  chains: RunChain[],
+  dims: readonly RunDim[],
+  ink: RGB,
+  baseHue: number,
+  dist: number
+): SectionRuns {
+  if (dims.length === 0) return table;
+  const ends = new Map<number, number>(); // run -> bit 1: end A, bit 2: end B
+  for (const d of dims) ends.set(d.run, (ends.get(d.run) ?? 0) | (d.end === 0 ? 1 : 2));
+  const runs = table.runs.slice();
+  const slotRun = table.slotRun.map((a) => a.slice());
+  const dimmed = (c: RGB): RGB => [
+    c[0] + (ink[0] - c[0]) * TURNSTILE_DIM,
+    c[1] + (ink[1] - c[1]) * TURNSTILE_DIM,
+    c[2] + (ink[2] - c[2]) * TURNSTILE_DIM,
+  ];
+  for (const [id, bits] of ends) {
+    const e = walk.edges[id];
+    const g = e ? chains[e.chain] : undefined;
+    if (!e || !g) continue;
+    const c = e.chain;
+    const slots = edgeSlots(e, g);
+    if (slots.length === 0) continue;
+    const r0 = slotRun[c][slots[0]];
+    if (slots.some((s) => runs[slotRun[c][s]].flags & RUN_FLAG.NOISE)) continue;
+    const span = e.ctrlB - e.ctrlA;
+    let rec: RunSection;
+    let fresh = false;
+    const src = runs[r0];
+    if (
+      slots.every((s) => slotRun[c][s] === r0) &&
+      !(src.flags & RUN_FLAG.SWEEP) &&
+      Math.abs(src.ctrlA - e.ctrlA) < 1e-6 &&
+      Math.abs(src.ctrlB - e.ctrlB) < 1e-6
+    ) {
+      const gam = (src.flags & RUN_FLAG.GAMUT) !== 0;
+      const rgb = (v: RGB): RGB => (gam ? gamutRgb(baseHue, v[0]) : [v[0], v[1], v[2]]);
+      rec = {
+        ...src,
+        flags: src.flags & ~RUN_FLAG.GAMUT,
+        colA: rgb(src.colA),
+        colMid: rgb(src.colMid),
+        colB: rgb(src.colB),
+      };
+    } else {
+      const n = g.len;
+      const at = (ctrl: number, slotCtrl: number): RGB => {
+        const k = g.closed ? ((Math.floor(slotCtrl) % n) + n) % n : Math.min(n - 1, Math.max(0, Math.floor(slotCtrl)));
+        const cm = g.closed ? ((ctrl % n) + n) % n : ctrl;
+        return evalRunSection(runs[slotRun[c][k]], cm, n, g.closed, dist, baseHue);
+      };
+      const mid = e.ctrlA + span / 2;
+      fresh = true;
+      rec = {
+        chain: c,
+        ctrlA: e.ctrlA,
+        ctrlB: e.ctrlB,
+        r0A: span / 2,
+        r0B: span / 2,
+        // The blend extension as a scheme record's: an undimmed end's ramp
+        // stays the half run, a dimmed end ramps over the blend + reach.
+        perLattice: e.length > 0 ? span / e.length : 0,
+        flags: RUN_FLAG.RAMP_A | RUN_FLAG.RAMP_B,
+        colA: at(e.ctrlA, e.ctrlA),
+        colMid: at(mid, mid),
+        colB: at(e.ctrlB, e.ctrlB - 1e-6),
+      };
+    }
+    const perLat = rec.perLattice > 0 ? rec.perLattice : e.length > 0 ? span / e.length : 0;
+    const reach = TURNSTILE_DIM_LATTICE * perLat;
+    // A fresh record's half-run ramps only stand in for the colors along the
+    // run, so its dimmed end ramps over `reach` alone; a copied record keeps
+    // a longer ramp of its own.
+    if (bits & 1) {
+      const at0 = rec.flags & RUN_FLAG.RAMP_A ? rec.colA : rec.colMid;
+      rec.r0A = fresh ? reach : Math.max(rec.flags & RUN_FLAG.RAMP_A ? rec.r0A : 0, reach);
+      rec.colA = dimmed(at0);
+      rec.flags |= RUN_FLAG.RAMP_A;
+    }
+    if (bits & 2) {
+      const at1 = rec.flags & RUN_FLAG.RAMP_B ? rec.colB : rec.colMid;
+      rec.r0B = fresh ? reach : Math.max(rec.flags & RUN_FLAG.RAMP_B ? rec.r0B : 0, reach);
+      rec.colB = dimmed(at1);
+      rec.flags |= RUN_FLAG.RAMP_B;
+    }
+    const idx = runs.length;
+    runs.push(rec);
+    for (const s of slots) slotRun[c][s] = idx;
+  }
+  return { runs, slotRun, noise: table.noise };
+}
+
 // One constant RGB run per chain (knot mode: each strand's tint).
 export function constantSectionRuns(
   chains: RunChain[],

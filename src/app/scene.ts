@@ -3,12 +3,16 @@ import { buildSceneGraph } from "../core/scene_graph";
 import { GLYPHS2 } from "./glyph_switch";
 import {
   buildSectionRuns,
+  dimRunTable,
   ruleRunTable,
   setGamutConfig,
   type RunChain,
+  type RGB,
+  type RunDim,
   type SectionRuns,
 } from "../core/section_colors";
 import { walkerMapOf } from "../game/walker";
+import { closedArmEnds } from "../game/turnstiles";
 import { buildWalkGraph } from "../core/walk_graph";
 import type { WalkGraph } from "../core/walk_graph";
 import type { TangleGraph } from "../core/types";
@@ -204,10 +208,64 @@ export function createScene(deps: SceneDeps): Scene {
   // K138: the scheme's run table, with the movement rules' looks over it
   // (frost on icy runs, the color rule's colors) while a rule is in play.
   // main.ts recolors when the controller's ruleKey changes (setRules).
+  // K138 s4: the turnstiles' closed arms dim at their turnstile end
+  // (dimRunTable), so the open pair's band reads. A DATA change: syncRuleDim
+  // re-installs the run table when a move turns the turnstiles, and
+  // installRuns uploads only the changed texels; no uniform, no shader text.
+  let runBase: { runs: SectionRuns; chains: RunChain[]; effHue: number } | null = null;
+  let dimKey = "";
+  function ruleDims(): RunDim[] {
+    const fc = fabricController;
+    const ts = fc?.ruleLook?.turnstiles;
+    if (!fc || !ts || fc.solved || !walkGraph) return []; // As the bands.
+    return closedArmEnds(walkGraph, ts, fc.rulePhase);
+  }
+  const dimKeyOf = (d: RunDim[]): string => d.map((x) => `${x.run}.${x.end}`).join(",");
+  function inkRgb(): RGB {
+    const v = pageInk();
+    return [((v >> 16) & 255) / 255, ((v >> 8) & 255) / 255, (v & 255) / 255];
+  }
   function withRuleLooks(base: SectionRuns, chains: RunChain[], effHue: number): SectionRuns {
+    runBase = { runs: base, chains, effHue };
     const look = fabricController?.ruleLook;
-    if (!look || !walkGraph) return base;
-    return ruleRunTable(base, walkGraph, chains, look, effHue);
+    if (!look || !walkGraph) {
+      dimKey = "";
+      return base;
+    }
+    const dims = ruleDims();
+    dimKey = dimKeyOf(dims);
+    return dimRunTable(
+      ruleRunTable(base, walkGraph, chains, look, effHue),
+      walkGraph,
+      chains,
+      dims,
+      inkRgb(),
+      effHue,
+      params.junctionBlend
+    );
+  }
+  // syncRuleDim runs every frame: it compares what ruleDims reads (the
+  // controller, its layout, the clock, solved) and allocates nothing while
+  // those hold.
+  let dimFc: FabricMazeController | null = null;
+  let dimLook: unknown = null;
+  let dimPhase = -1;
+  let dimSolved = false;
+  function syncRuleDim(): void {
+    const fc = fabricController;
+    if (!renderer || !runBase || !fc?.ruleLook?.turnstiles) return;
+    if (fc === dimFc && fc.ruleLook === dimLook && fc.rulePhase === dimPhase && fc.solved === dimSolved) return;
+    dimFc = fc;
+    dimLook = fc.ruleLook;
+    dimPhase = fc.rulePhase;
+    dimSolved = fc.solved;
+    if (dimKeyOf(ruleDims()) === dimKey) return;
+    renderer.setSectionRuns(
+      withRuleLooks(runBase.runs, runBase.chains, runBase.effHue),
+      params.colorScheme,
+      params.seed,
+      params.junctionBlend
+    );
   }
 
   function recolorScene(): void {
@@ -473,5 +531,6 @@ export function createScene(deps: SceneDeps): Scene {
     syncBackground,
     recolorScene,
     rebuild,
+    syncRuleDim,
   };
 }

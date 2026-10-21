@@ -60,6 +60,25 @@ export function closedArm(t: Turnstile, phase: number): number {
   return t.arms[(openIndex(t, phase) + 2) % 3];
 }
 
+// K138 s4: every turnstile's closed arm at clock `phase`, as the run's end
+// at the turnstile (0: va, 1: vb). The page dims those ends so the open
+// pair's band reads (section_colors dimRunTable).
+export function closedArmEnds(
+  walk: RuleWalk,
+  layout: TurnstileLayout,
+  phase: number
+): { run: number; end: 0 | 1 }[] {
+  const out: { run: number; end: 0 | 1 }[] = [];
+  for (const t of layout) {
+    const run = closedArm(t, phase);
+    const e = walk.edges[run];
+    if (!e) continue;
+    if (e.va === t.vertex) out.push({ run, end: 0 });
+    if (e.vb === t.vertex) out.push({ run, end: 1 });
+  }
+  return out;
+}
+
 // May the head leave turnstile `t` by `run`, having arrived by `last` (-1:
 // none), at clock `phase`?
 export function turnstileAllows(t: Turnstile, run: number, last: number, phase: number): boolean {

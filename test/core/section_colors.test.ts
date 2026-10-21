@@ -10,12 +10,15 @@
 import { describe, expect, it } from "vitest";
 import {
   buildSectionRuns,
+  dimRunTable,
   evalRunSection,
   FROST_RGB,
   gamutRgb,
   RULE_FREE_RGB,
   ruleColorRgb,
   ruleRunTable,
+  TURNSTILE_DIM,
+  TURNSTILE_DIM_LATTICE,
   type ColorScheme,
   type RGB,
   type RunChain,
@@ -391,5 +394,105 @@ describe("ruleRunTable (K138 ice and color rule)", () => {
         }
       }
     }
+  });
+});
+
+// K138 stage 4: the turnstile's closed arm, dimmed by run records.
+describe("dimRunTable (K138 s4 turnstile dim)", () => {
+  const INK: RGB = [0.08, 0.1, 0.16];
+  const dimmed = (c: RGB): RGB => [
+    c[0] + (INK[0] - c[0]) * TURNSTILE_DIM,
+    c[1] + (INK[1] - c[1]) * TURNSTILE_DIM,
+    c[2] + (INK[2] - c[2]) * TURNSTILE_DIM,
+  ];
+  // e1's B end (chain 0, ctrl 30) and e2's A end (chain 1, ctrl 0): both at J2
+  // and J1 respectively, as closedArmEnds would name them.
+  const DIMS = [
+    { run: 1, end: 1 as const },
+    { run: 2, end: 0 as const },
+  ];
+
+  it("returns the table itself when nothing is dimmed", () => {
+    const walk = makeWalk();
+    const base = buildSectionRuns("segments", walk, CHAINS, undefined, SEED, HUE);
+    expect(dimRunTable(base, walk, CHAINS, [], INK, HUE, 0.88)).toBe(base);
+  });
+
+  it("darkens the closed end toward the ink and leaves the rest of the run", () => {
+    const walk = makeWalk();
+    for (const scheme of ["segments", "depth", "mono", "strands"] as ColorScheme[]) {
+      for (const dist of [0, 0.88, 3]) {
+        const base = buildSectionRuns(scheme, walk, CHAINS, undefined, SEED, HUE);
+        const n0 = base.runs.length;
+        const slots0 = base.slotRun.map((a) => a.slice());
+        const sr = dimRunTable(base, walk, CHAINS, DIMS, INK, HUE, dist);
+        const tag = `${scheme} dist ${dist}`;
+        // The dimmed ends.
+        expectRgbClose(at(sr, 0, 30, dist), dimmed(at(base, 0, 30, dist)), 9);
+        expectRgbClose(at(sr, 1, 0, dist), dimmed(at(base, 1, 0, dist)), 9);
+        // The open ends and the middles keep the scheme's colors.
+        expectRgbClose(at(sr, 0, 10, dist), at(base, 0, 10, dist), 9);
+        expectRgbClose(at(sr, 0, 20, dist), at(base, 0, 20, dist), 9);
+        expectRgbClose(at(sr, 1, 24, dist), at(base, 1, 24, dist), 9);
+        expectRgbClose(at(sr, 1, 12, dist), at(base, 1, 12, dist), 9);
+        // One new record a dimmed run, no gamut coordinates in it.
+        expect(sr.runs.length, tag).toBe(n0 + 2);
+        for (const r of sr.runs.slice(n0)) expect(r.flags & RUN_FLAG.GAMUT).toBe(0);
+        // Every other slot keeps its record; the base table is untouched.
+        expect(sr.slotRun[0].slice(0, 10), tag).toEqual(slots0[0].slice(0, 10));
+        for (const c of [2, 3, 4]) expect(sr.slotRun[c], tag).toEqual(slots0[c]);
+        expect(base.runs.length).toBe(n0);
+        expect(base.slotRun).toEqual(slots0);
+        expect(sr.noise).toBe(base.noise);
+      }
+    }
+  });
+
+  it("ramps a run under a chain-long record through a fresh record, the dim over the reach alone", () => {
+    const walk = makeWalk();
+    const base = buildSectionRuns("mono", walk, CHAINS, undefined, SEED, HUE);
+    // Precondition: one mono record spans e0 and e1, so e1 needs its own.
+    expect(base.slotRun[0][0]).toBe(base.slotRun[0][20]);
+    const sr = dimRunTable(base, walk, CHAINS, [{ run: 1, end: 1 }], INK, HUE, 0);
+    const rec = sr.runs[sr.slotRun[0][20]];
+    expect(rec.ctrlA).toBe(10);
+    expect(rec.ctrlB).toBe(30);
+    expect(rec.perLattice).toBe(1); // span 20 over length 20
+    expect(rec.r0A).toBe(10); // the undimmed end: the half run
+    expect(rec.r0B).toBe(TURNSTILE_DIM_LATTICE * 1);
+    expect(rec.flags).toBe(RUN_FLAG.RAMP_A | RUN_FLAG.RAMP_B);
+    // Past the dim's ramp the run reads its middle color, undimmed.
+    expectRgbClose(at(sr, 0, 30 - TURNSTILE_DIM_LATTICE - 0.01), rec.colMid, 12);
+    // e0 keeps the chain's record.
+    for (let s = 0; s < 10; s++) expect(sr.slotRun[0][s]).toBe(base.slotRun[0][s]);
+  });
+
+  it("dims both ends of a run in one record", () => {
+    const walk = makeWalk();
+    const base = buildSectionRuns("segments", walk, CHAINS, undefined, SEED, HUE);
+    const sr = dimRunTable(base, walk, CHAINS, [{ run: 3, end: 0 }, { run: 3, end: 1 }], INK, HUE, 0.88);
+    expect(sr.runs.length).toBe(base.runs.length + 1);
+    expectRgbClose(at(sr, 2, 0, 0.88), dimmed(at(base, 2, 0, 0.88)), 9);
+    expectRgbClose(at(sr, 2, 12, 0.88), dimmed(at(base, 2, 12, 0.88)), 9);
+    expectRgbClose(at(sr, 2, 6, 0.88), at(base, 2, 6, 0.88), 9);
+  });
+
+  it("leaves the noise scheme's runs alone", () => {
+    const walk = makeWalk();
+    const base = buildSectionRuns("noise", walk, CHAINS, undefined, SEED, HUE);
+    const sr = dimRunTable(base, walk, CHAINS, DIMS, INK, HUE, 0.88);
+    expect(sr.runs.length).toBe(base.runs.length);
+    expect(sr.slotRun).toEqual(base.slotRun);
+  });
+
+  it("dims across a closed chain's seam", () => {
+    const walk = makeWalk();
+    const base = buildSectionRuns("segments", walk, CHAINS, undefined, SEED, HUE);
+    // e5 runs 17..29 unwrapped: its B end is ctrl 5 on the ring.
+    const sr = dimRunTable(base, walk, CHAINS, [{ run: 5, end: 1 }], INK, HUE, 0);
+    expectRgbClose(at(sr, 4, 4.999), dimmed(at(base, 4, 4.999)), 2);
+    expectRgbClose(at(sr, 4, 17), at(base, 4, 17), 9);
+    for (let s = 5; s < 17; s++) expect(sr.slotRun[4][s]).toBe(base.slotRun[4][s]);
+    for (const s of [17, 20, 23, 0, 4]) expect(sr.slotRun[4][s]).toBe(base.runs.length);
   });
 });
