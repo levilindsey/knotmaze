@@ -34,7 +34,12 @@ export const CUT_MODES: readonly CutMode[] = ["off", "on", "lead", "delay"];
 
 // One player action: a move (its first run; the runs it carries on along
 // follow from the cuts) or a cut. FabricMazeController.actions lists them.
-export type FabricAction = { kind: "move"; run: number } | { kind: "cut"; run: number };
+// K138 s2: a reveal (a pluck found a hidden run) is an action too, so Undo
+// past it hides the run again; it is not a stroke.
+export type FabricAction =
+  | { kind: "move"; run: number }
+  | { kind: "cut"; run: number }
+  | { kind: "reveal"; run: number };
 
 // A cut's outcome (FabricMazeController.cut): done, refused (it would leave
 // no route to the exit), or not a cut at all (cut off, not cuttable, already

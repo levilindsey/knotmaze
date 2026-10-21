@@ -148,6 +148,10 @@ import { colorRule, placeColors } from "./color_rule";
 import { ICE_SHARE_MAX, iceRule, placeIce } from "./ice";
 import type { RuleMove, RuleSearch, WalkRule } from "./rule_search";
 import { composeRules, ruleSearch } from "./rule_search";
+import type { TurnstileLayout } from "./turnstiles";
+import { placeTurnstiles, turnstileRule, TURNSTILES_MAX } from "./turnstiles";
+import type { HiddenLayout } from "./hidden_runs";
+import { hiddenOver, placeHidden, HIDDEN_MAX } from "./hidden_runs";
 
 // K137: the solve's rules beyond the clock: fragile runs and par (K139:
 // and collapse; K114: cut; K138: ice runs and the color rule). Change them
@@ -165,6 +169,9 @@ export interface FabricRules {
   // K138: the share of core runs that are icy (0: off), and the color rule.
   ice?: number;
   colorRule?: ColorRuleMode;
+  // K138 s2: turnstile junctions (0: off) and hidden runs (0: off).
+  turnstiles?: number;
+  hiddenRuns?: number;
 }
 
 // K138: what the rules' placement reads beyond the walk: the design's seed
@@ -182,6 +189,9 @@ export interface RuleLook {
   icy: Uint8Array | null;
   colors: Int8Array | null;
   mode: ColorRuleMode;
+  // K138 s2: the turnstiles and the hidden runs (null: none placed).
+  turnstiles: TurnstileLayout | null;
+  hidden: HiddenLayout | null;
   placed: boolean;
   bites: boolean;
   draws: number;
@@ -189,11 +199,20 @@ export interface RuleLook {
 
 interface RulePlacement extends RuleLook {
   key: string;
+  // The rule with no hidden run revealed (par's), and with all revealed.
   rule: WalkRule | null;
-  // Memos: the kit's fewest taps per search node, and the search from the
-  // start (per backtracks flag).
+  base: WalkRule | null;
+  // Ice and the color rule alone (null: neither), to tell a turnstile's
+  // refusal from theirs.
+  pre: WalkRule | null;
+  // K138 s2: the rule per reveal set (key: the revealed runs, sorted).
+  byReveal: Map<string, WalkRule>;
+  // Memos: the kit's fewest taps per search node (and reveal set), and the
+  // search from the start with none revealed (per backtracks flag), and
+  // with all revealed.
   fwd: Map<string, number>;
   start: Map<boolean, RuleSearch>;
+  startAll: Map<boolean, RuleSearch>;
 }
 
 export type FabricTapResult =
@@ -204,7 +223,11 @@ export type FabricTapResult =
   | "win" // advanced onto the exit tail (K139 free collapse: the move that ended the game)
   | "smolder" // K114: refused, the fire reaches the arm's far end first
   | "spool" // K137 s2: refused, the move would pay yarn out past the spool
-  | "refused"; // K138: a rule refuses the run (the color rule, or a slide that breaks it); nothing changes
+  | "refused"; // K138: a rule refuses the run (the color rule, or a slide that breaks it; s2: a closed turnstile); nothing changes
+
+// K138 s2: why a tap is refused (FabricMazeController.refusalOf), for the
+// toast: a hidden run, a closed turnstile, or ice / the color rule.
+export type RuleRefusal = "hidden" | "turnstile" | "rule";
 
 export class FabricMazeController {
   readonly walk: WalkGraph;
@@ -323,6 +346,12 @@ export class FabricMazeController {
   // backtrack undoes the whole move).
   iceShare = 0;
   colorMode: ColorRuleMode = "off";
+  // K138 s2: turnstiles and hidden runs asked for (0: off), and the hidden
+  // runs revealed this solve (reveal(); Undo past a reveal hides it again).
+  turnstileCount = 0;
+  hiddenCount = 0;
+  revealed = new Set<number>();
+  private revealKey = "";
   private ruleSource: RuleSource | null;
   private placements = new Map<string, RulePlacement>();
   private placement: RulePlacement | null = null;
@@ -333,7 +362,7 @@ export class FabricMazeController {
   // The kit's runs left: while a move carries on, the value at its end;
   // otherwise memoized per tap count.
   private pendingLeft = Infinity;
-  private leftMemo = { taps: -1, trail: false, value: Infinity };
+  private leftMemo = { taps: -1, trail: false, reveals: 0, value: Infinity };
 
   constructor(
     walk: WalkGraph,
@@ -386,6 +415,10 @@ export class FabricMazeController {
     const share = rules.ice ?? 0;
     this.iceShare = ruled && share > 0 ? Math.min(ICE_SHARE_MAX, share) : 0;
     this.colorMode = ruled ? rules.colorRule ?? "off" : "off";
+    const clampCount = (n: number | undefined, max: number): number =>
+      ruled && n && n > 0 ? Math.min(max, Math.floor(n)) : 0;
+    this.turnstileCount = clampCount(rules.turnstiles, TURNSTILES_MAX);
+    this.hiddenCount = clampCount(rules.hiddenRuns, HIDDEN_MAX);
   }
 
   // K137 s2: a real restart (not Undo's replay) clears the hints used and
@@ -457,8 +490,16 @@ export class FabricMazeController {
   // source), made once per setting.
   private placeRules(): RulePlacement | null {
     const src = this.ruleSource;
-    if (!src || (this.iceShare === 0 && this.colorMode === "off")) return null;
-    const key = `${this.iceShare}|${this.colorMode}`;
+    if (
+      !src ||
+      (this.iceShare === 0 &&
+        this.colorMode === "off" &&
+        this.turnstileCount === 0 &&
+        this.hiddenCount === 0)
+    ) {
+      return null;
+    }
+    const key = `${this.iceShare}|${this.colorMode}|${this.turnstileCount}|${this.hiddenCount}`;
     const made = this.placements.get(key);
     if (made) return made;
     const cont = this.iceShare > 0 ? src.cont() : null;
@@ -471,17 +512,45 @@ export class FabricMazeController {
     const rules: WalkRule[] = [];
     if (cont && icy) rules.push(iceRule(this.walk, cont, icy));
     if (col?.layout) rules.push(colorRule(this.walk, this.colorMode, col.layout));
+    const composed = (): WalkRule | null =>
+      rules.length === 0 ? null : rules.length === 1 ? rules[0] : composeRules(...rules);
+    // K138 s2: the turnstiles bite against (and compose with) ice and the
+    // color rule; the hidden runs against all three.
+    const pre = composed();
+    const ts = placeTurnstiles(this.walk, this.turnstileCount, src.seed, pre);
+    if (ts.layout && ts.layout.length > 0) rules.push(turnstileRule(this.walk, ts.layout));
+    const base = composed();
+    // A hidden run is never icy, nor a run a slide carries on along (a slide
+    // would stop short of it, refused whole).
+    const noHide = new Set<number>();
+    if (cont && icy) {
+      for (let r = 0; r < icy.length; r++) {
+        if (icy[r] === 0) continue;
+        noHide.add(r);
+        for (const c of [cont[2 * r], cont[2 * r + 1]]) if (c >= 0) noHide.add(c >> 1);
+      }
+    }
+    const hid = placeHidden(this.walk, this.hiddenCount, src.seed, base, (r) => noHide.has(r));
+    const hidden = hid.layout && hid.layout.length > 0 ? hid.layout : null;
+    const parts = [ice, col, this.turnstileCount > 0 ? ts : null, this.hiddenCount > 0 ? hid : null];
+    const last = [...parts].reverse().find((x) => x !== null) ?? null;
     const p: RulePlacement = {
       key,
       icy,
       colors: col?.layout ?? null,
       mode: this.colorMode,
-      placed: (!ice || ice.layout !== null) && (!col || col.layout !== null),
-      bites: col ? col.bites : ice?.bites ?? false,
-      draws: Math.max(ice?.draws ?? 0, col?.draws ?? 0),
-      rule: rules.length === 0 ? null : rules.length === 1 ? rules[0] : composeRules(...rules),
+      turnstiles: ts.layout && ts.layout.length > 0 ? ts.layout : null,
+      hidden,
+      placed: parts.every((x) => !x || x.layout !== null),
+      bites: last?.bites ?? false,
+      draws: Math.max(...parts.map((x) => x?.draws ?? 0)),
+      rule: hidden ? hiddenOver(this.walk, base, hidden) : base,
+      base,
+      pre,
+      byReveal: new Map(),
       fwd: new Map(),
       start: new Map(),
+      startAll: new Map(),
     };
     this.placements.set(key, p);
     return p;
@@ -517,36 +586,98 @@ export class FabricMazeController {
 
   // K138: the kit's fewest taps to the exit from a search node (memoized
   // per placement).
-  private ruleFwd(vertex: string, state: number, last: number, back: boolean): number {
+  private ruleFwd(vertex: string, state: number, last: number, back: boolean, phase: number): number {
     const p = this.placement!;
-    const key = `${vertex}|${state}|${last}|${back ? 1 : 0}`;
+    const rule = this.rule!;
+    const ph = phase % (rule.period ?? 1);
+    const key = `${this.revealKey}|${vertex}|${state}|${last}|${back ? 1 : 0}|${ph}`;
     let v = p.fwd.get(key);
     if (v === undefined) {
-      v = ruleSearch(this.walk, p.rule!, { vertex, state, last }, back).fewest;
+      v = ruleSearch(this.walk, rule, { vertex, state, last, phase: ph }, back).fewest;
       p.fwd.set(key, v);
     }
     return v;
   }
 
-  // K138: the kit's search from the start (memoized per placement).
-  private ruleStart(): RuleSearch {
+  // K138: the kit's search from the start (memoized per placement). K138
+  // s2: with no hidden run revealed (par's measure, call 5), or with all
+  // revealed (`all`: the shorter par the HUD shows beside it).
+  private ruleStart(all = false): RuleSearch {
     const p = this.placement!;
     const back = !this.trailMode;
-    let s = p.start.get(back);
+    const memo = all ? p.startAll : p.start;
+    let s = memo.get(back);
     if (!s) {
-      s = ruleSearch(this.walk, p.rule!, undefined, back);
-      p.start.set(back, s);
+      const rule = all && p.hidden ? p.base : p.rule;
+      s = rule
+        ? ruleSearch(this.walk, rule, undefined, back)
+        : ruleSearch(this.walk, hiddenOver(this.walk, null, []), undefined, back);
+      memo.set(back, s);
     }
     return s;
+  }
+
+  // K138 s2: a hidden run is shown and walkable (revealed, or not hidden).
+  isHidden(eid: number): boolean {
+    const h = this.placement?.hidden;
+    return !!h && h.includes(eid) && !this.revealed.has(eid);
+  }
+
+  // K138 s2: the hidden runs still hidden, in layout order.
+  hiddenRuns(): number[] {
+    const h = this.placement?.hidden;
+    return h ? h.filter((r) => !this.revealed.has(r)) : [];
+  }
+
+  // K138 s2: reveal a hidden run for the rest of the solve (a pluck found
+  // it; main.ts's pluck hook). An action, so Undo past it hides it again
+  // (call 4). False when it is not hidden or already revealed, or the solve
+  // is over. Changes the rule (the kit's searches from here see the run).
+  reveal(eid: number): boolean {
+    const p = this.placement;
+    if (!p?.hidden || !this.isHidden(eid) || this.solved) return false;
+    this.revealed.add(eid);
+    this.actions.push({ kind: "reveal", run: eid });
+    this.applyReveals();
+    return true;
+  }
+
+  private applyReveals(): void {
+    const p = this.placement;
+    if (!p?.hidden) return;
+    const key = [...this.revealed].sort((a, b) => a - b).join(",");
+    this.revealKey = key;
+    let rule = p.byReveal.get(key);
+    if (!rule) {
+      rule = hiddenOver(this.walk, p.base, p.hidden, this.revealed);
+      p.byReveal.set(key, rule);
+    }
+    this.rule = rule;
+    // The runs left from here change with the rule.
+    if (this.carry.length === 0) this.pendingLeft = Infinity;
+  }
+
+  // K138 s2: the fewest taps from the start with every hidden run revealed
+  // (Infinity: no hidden runs, or none placed).
+  get fewestWithHidden(): number {
+    return this.placement?.hidden ? this.ruleStart(true).fewest : Infinity;
   }
 
   // K138: the fewest taps to the exit from a node with `undoable` earlier
   // moves on the stack: k backtracks (each undoes a whole move), then
   // forward taps only (an optimal walk never undoes a move of its own).
   // Trail mode has no backtracks.
-  private ruleLeftFrom(vertex: string, state: number, last: number, undoable: number): number {
+  // K138 s2: `phase` is the clock at the node (the moves made), and each
+  // backtrack is a move, so the k-th backtrack's node is at phase + k.
+  private ruleLeftFrom(
+    vertex: string,
+    state: number,
+    last: number,
+    undoable: number,
+    phase: number
+  ): number {
     const back = !this.trailMode;
-    let best = this.ruleFwd(vertex, state, last, back);
+    let best = this.ruleFwd(vertex, state, last, back, phase);
     if (!back) return best;
     for (let k = 1, i = undoable; i > 0 && k < best; k++) {
       i--;
@@ -555,7 +686,8 @@ export class FabricMazeController {
         this.pathVertices[d],
         this.stateStack[i],
         d > 0 ? this.pathEdges[d - 1] : -1,
-        back
+        back,
+        phase + k
       );
       if (k + f < best) best = k + f;
     }
@@ -566,9 +698,17 @@ export class FabricMazeController {
   private ruleRunsLeft(): number {
     if (this.carry.length > 0) return this.pendingLeft;
     const m = this.leftMemo;
-    if (m.taps === this.taps.length && m.trail === this.trailMode) return m.value;
-    const value = this.ruleLeftFrom(this.head, this.ruleState, this.arrivalEdge, this.moveStarts.length);
-    this.leftMemo = { taps: this.taps.length, trail: this.trailMode, value };
+    if (m.taps === this.taps.length && m.trail === this.trailMode && m.reveals === this.revealed.size) {
+      return m.value;
+    }
+    const value = this.ruleLeftFrom(
+      this.head,
+      this.ruleState,
+      this.arrivalEdge,
+      this.moveStarts.length,
+      this.strokes
+    );
+    this.leftMemo = { taps: this.taps.length, trail: this.trailMode, reveals: this.revealed.size, value };
     return value;
   }
 
@@ -578,11 +718,43 @@ export class FabricMazeController {
   private ruleGoodArm(): number {
     const back = !this.trailMode;
     const last = this.arrivalEdge;
-    const fwd = this.ruleFwd(this.head, this.ruleState, last, back);
+    const phase = this.strokes;
+    const fwd = this.ruleFwd(this.head, this.ruleState, last, back, phase);
     if (back && this.moveStarts.length > 0 && this.ruleRunsLeft() < fwd) return last;
     if (!Number.isFinite(fwd)) return -1;
-    const from = { vertex: this.head, state: this.ruleState, last };
+    const from = { vertex: this.head, state: this.ruleState, last, phase };
     return ruleSearch(this.walk, this.rule!, from, back).route[0] ?? -1;
+  }
+
+  // K138 s2: the rule's move for a fresh tap on `eid` from the head (null:
+  // refused), with the arrival run and the clock (the moves made).
+  ruleMove(eid: number): RuleMove | null {
+    const rule = this.rule;
+    if (!rule) return null;
+    return rule.step(this.head, eid, this.ruleState, this.arrivalEdge, this.strokes);
+  }
+  private ruleAllows(eid: number): boolean {
+    return this.ruleMove(eid) !== null;
+  }
+
+  // K138 s2: why a fresh tap on `eid` is refused (null: it is not). A tap
+  // that ice and the color rule allow but the whole rule refuses met a
+  // closed turnstile (a slide never carries onto a hidden run).
+  refusalOf(eid: number): RuleRefusal | null {
+    if (this.isHidden(eid)) return "hidden";
+    const p = this.placement;
+    if (!p || !this.rule || this.ruleAllows(eid)) return null;
+    if (!p.turnstiles) return "rule";
+    if (!p.pre) return "turnstile";
+    const pm = p.pre.step(this.head, eid, this.ruleState % p.pre.states, this.arrivalEdge, this.strokes);
+    return pm ? "turnstile" : "rule";
+  }
+
+  // K138 s2: the clock the turnstiles turn on (call 1): the moves made, an
+  // advance or a backtrack alike (a slide is one), mod the rule's period.
+  // A backtrack turns it on too; Undo turns it back.
+  get rulePhase(): number {
+    return this.strokes % (this.rule?.period ?? 1);
   }
 
   // K138: the runs out of the head the rule refuses (the backtrack run is
@@ -594,7 +766,7 @@ export class FabricMazeController {
     const back = this.trailMode ? -1 : this.arrivalEdge;
     return this.walk.vertices
       .get(head)!
-      .edges.filter((eid) => eid !== back && rule.step(head, eid, this.ruleState) === null);
+      .edges.filter((eid) => eid !== back && !this.isHidden(eid) && !this.ruleAllows(eid));
   }
 
   // K138: the shortest walk to the exit the rules allow (with no rule the
@@ -618,7 +790,11 @@ export class FabricMazeController {
     this.moveStarts = [];
     this.stateStack = [];
     this.pendingLeft = Infinity;
-    this.leftMemo = { taps: -1, trail: false, value: Infinity };
+    this.leftMemo = { taps: -1, trail: false, reveals: 0, value: Infinity };
+    // K138 s2: every hidden run hidden again (Undo replays the reveals it
+    // keeps).
+    this.revealed = new Set();
+    this.revealKey = "";
     this.openRuns ??= runsToExit(this.walk);
     // K138: under a rule, par's F is the kit's fewest legal taps.
     this.fewestRuns = this.rule
@@ -688,6 +864,10 @@ export class FabricMazeController {
     for (const a of actions) {
       if (a.kind === "cut") {
         if (this.cut(a.run) !== "cut") return fail();
+        continue;
+      }
+      if (a.kind === "reveal") {
+        if (!this.reveal(a.run)) return fail();
         continue;
       }
       if (!step(a.run)) return fail();
@@ -829,9 +1009,8 @@ export class FabricMazeController {
     // backtrack run stays, and a carried move's next run is the carry's).
     const rule = this.rule;
     if (rule && this.carry.length === 0) {
-      const head = this.head;
       const back = this.trailMode ? -1 : this.arrivalEdge;
-      edges = edges.filter((eid) => eid === back || rule.step(head, eid, this.ruleState) !== null);
+      edges = edges.filter((eid) => eid === back || this.ruleAllows(eid));
     }
     const fire = this.fire;
     if (!fire) return edges;
@@ -925,7 +1104,9 @@ export class FabricMazeController {
   // K137 par: the strokes so far (moves) and the strokes left before par.
   // K138: under a rule a stroke is a tap (an action): a slide is one.
   get strokes(): number {
-    return this.rule ? this.actions.length : this.taps.length;
+    // K138 s2: a reveal is an action but not a stroke (a pluck is not a
+    // move); each reveal action reveals a distinct run.
+    return this.rule ? this.actions.length - this.revealed.size : this.taps.length;
   }
 
   get strokesLeft(): number {
@@ -964,7 +1145,8 @@ export class FabricMazeController {
           this.pathVertices[d],
           this.ruleState,
           d > 0 ? this.pathEdges[d - 1] : -1,
-          this.moveStarts.length
+          this.moveStarts.length,
+          this.strokes + 1
         );
       }
       this.pathEdges.pop();
@@ -994,13 +1176,22 @@ export class FabricMazeController {
     // from its end are one fewer than from its start.
     let move: RuleMove | null = null;
     let good = false;
+    // K138 s2: a hidden run is not there to tap.
+    if (!carrying && this.isHidden(edgeId)) return "reject";
     if (this.rule && !carrying) {
-      move = this.rule.step(head, edgeId, this.ruleState);
+      move = this.ruleMove(edgeId);
       if (!move) return "refused";
       const before = this.ruleRunsLeft();
-      const fwd = this.ruleFwd(move.to, move.state, move.runs[move.runs.length - 1], !this.trailMode);
-      // The new move's own undo leads back to `before`.
-      const after = this.trailMode ? fwd : Math.min(fwd, 1 + before);
+      const clock = this.strokes + 1;
+      const fwd = this.ruleFwd(move.to, move.state, move.runs[move.runs.length - 1], !this.trailMode, clock);
+      // The new move's own undo leads back to the head, one move later on
+      // the clock (with no clock, to `before`).
+      const P = this.rule.period ?? 1;
+      const undone =
+        P === 1
+          ? before
+          : this.ruleLeftFrom(head, this.ruleState, this.arrivalEdge, this.moveStarts.length, clock + 1);
+      const after = this.trailMode ? fwd : Math.min(fwd, 1 + undone);
       good = Number.isFinite(after) && after === before - 1;
       this.pendingLeft = after;
     }
