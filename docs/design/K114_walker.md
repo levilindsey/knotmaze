@@ -290,3 +290,37 @@ coordinator). Started 2026-10-20 22:23 PT; the 2 h cap is 00:23.
   hypot2; its `${v}|${eid}` key collides on self-loops, so the walker
   keeps per-run-end headings), `src/app/scene.ts` (graph + walk graph
   + controller built together).
+
+## Design
+
+- **State.** A directed run `d = 2 run + dir` (dir 0: va to vb, arriving
+  at vb; dir 1: vb to va). Leaving a run by its end k (0 = va, 1 = vb)
+  is `2 run + k`, so turning back is `d ^ 1`.
+- **WalkerMap** (`src/game/walker.ts`, built once per maze from the
+  tangle graph and the walk graph): per run end, the heading (greedy
+  search's 3 u look along the run's lattice polyline, exact ops) and the
+  same-strand continuation. At vb (ctrl `ctrlB`) the strand goes on into
+  the run of the same chain whose `ctrlA` is `ctrlB` (mod `2 nodeCount`
+  on a closed strand), at va into the run whose `ctrlB` is `ctrlA`; none
+  means the strand ends at that junction (a splice bridge, H1's trimmed
+  strand, a title seam).
+- **Lead's step** at the vertex `d` arrives at: an END turns back; else
+  the preference list is the continuation, then the other run ends
+  clockwise from straight on (s = minus the arrival heading; sorted by
+  half-plane, then the sign of the cross product, ties by run id: no
+  atan2), then back. It takes the first live one. A repeated `d` is a
+  loop (the walk is deterministic, so it would repeat forever). The route
+  is the walk to the exit or to the first repeat.
+- **Delay's step:** among the live runs at the walker's vertex, the least
+  `length + distance(far end)` (stage 1's `distancesToExit` with the cuts
+  removed), ties by run id.
+- **Par:** R.3.9's model is a Dijkstra over directed states: taking the
+  k-th entry of the preference list costs k cuts (none past an uncuttable
+  run). Its cheapest route gives a candidate cut set, checked by
+  simulating the walker. The exact search is a depth-first walk over
+  partial assignments (each run cut, live or open): the walk runs as the
+  rule says until the first open run in a preference list, then branches
+  (take it: live; or cut it: one more cut), with iterative deepening on
+  the cut count up to the candidate's size minus one. It is exact (a
+  repeated state is a loop whatever is decided later) within a step
+  budget; past the budget the candidate is reported as an upper bound.
