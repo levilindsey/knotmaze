@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K571.
+Next free ID: K572.
 
 ## Waiting on Levi
 
@@ -105,19 +105,13 @@ Next free ID: K571.
 - **K515** · K480 stage 2's look, built as recommended (Levi may change): a hovered tap's whole route at the hover breath, its tapped run keeping the rim glow, non-route branched arms keeping their trains; plus page-probing the hover route with a real pointer (desktop, and in K500's phone pass). `docs/design/K480.md` ("Stage 2 handoff").
 
 - **K525** · Levi's look call on K80 turns 3b, built as recommended: telegraph roam 0.45 / hunt 0.95 with the second run at half, the 0.45 s catch ring burst, and the fog bleed at 0.16. `.claude/probes/K80/stage3b/contact_sheet.png`. The real-phone sheet is now `.claude/probes/K80/stage3b/contact_sheet_real.png` (K524): hunt 0.95 reads clearly at fit zoom, roam 0.45 is effectively invisible at fit zoom, the catch ring had mostly faded by the shot, and fog bleed 0.16 is unexercised (fog off in this design).
-- **K545** · K481 stage 3's look for Levi (built as recommended in 31b2238): lit tick + moved ring on hover/press, phone bigger ticks with the caught-choice tint at the head (desktop ticks alone); the real-phone sheet rides the next phone window (this stage was emulated 411x753 only) and Levi's call whether the tint should show on desktop too. `docs/design/K481.md` (Stage 3 handoff); `.claude/probes/K481/stage3/`.
-- **K559** · K115's glyph call 3 (`docs/design/K115_glyphs.md` section 11): [a looped hand, loops
-  >= 0.47 x-height] or unlooped (spread hairpins at every retrace). Calls 1, 2, 4, 5, 6 answered
-  2026-10-20 as recommended (section 11); asked again in plainer words 2026-10-20.
-- **K550** · Kill or waive K320's gap split (`docs/design/K550_stage3.md` Handoff, Recommendation). Stage 3's one try
-  (a coverage-matched pre-pass) cut the MSAA edge class 91% but costs +11.1 ms per moving frame at 3200x1800. The split
-  alone costs +1.77 ms (+0.68 ms at phone size, desktop GPU) against K320's +0.3 ms budget, to save about 1.5 s of cold
-  compile per shader-changing deploy, and cuts holes at kink-eye roots (`.claude/probes/K550/out/sheets/def15_stack_*.png`).
-  [Rec: kill: revert the split (2a `ffd3864`, 2b `f485641`, the dark switches `5bfba38` `f18dd07`, K553's mask sizing
-  `4b5085d`..`60511ed`), keep Stage 1 (`6c592e6`), drop K561. Waive: merge `92e1c0e` alone, never the try's commits.]
-  - branch: `worktree-agent-a6e7569fb69c908c3` (desktop only, unpushed), worktree `.claude/worktrees/agent-a6e7569fb69c908c3`
-    kept; last commit: `d27b35c`
-  - evidence: `.claude/probes/K550/` (`out/sheets/`, `k550_cost.mjs`, `k550_cold.mjs`, `k550_attr.mjs`)
+- **K545** · K481 stage 3's look for Levi (built as recommended in 31b2238): lit tick + moved ring on hover/press, phone bigger ticks with the caught-choice tint at the head (desktop ticks alone); the real-phone sheet is in (round 2026-10-20, `.claude/probes/rounds/2026-10-20-d0406df/k545/sheet_k545.png`: a press lights choice 0, the lit tick subtle on a still) and Levi's call whether the tint should show on desktop too. `docs/design/K481.md` (Stage 3 handoff); `.claude/probes/K481/stage3/`.
+- **K571** · The title toggle leaves the daily (Levi 2026-10-20: "What actually counts as the
+  "daily" for score-keeping credit, is either with or without the title. Toggling the title should
+  switch the maze mode to custom, _and_ should reset progress."). Asked: the title setting is
+  remembered (a DAILY_EXEMPT pref, `daily_link.ts:219`), so after a flip the daily reopens in the
+  new form from scratch and that run counts; OK? Then build it (`daily_link.ts`, `daily_attempt.ts`,
+  main.ts `savePrefsNow`, `tweakpane_panel.ts`).
 
 ## In progress
 
@@ -184,11 +178,11 @@ Next free ID: K571.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c
   merged e6c6034..aa3cdd1).
-  - owner: agent `afcc3ca4881b292aa` of claude session 91b19e11 (sonnet, started 2026-10-20 10:17, 1 h cap ~11:17)
-  - branch: `worktree-agent-afcc3ca4881b292aa`, worktree `.claude/worktrees/agent-afcc3ca4881b292aa`; last commit: `4271c9b`
-  - evidence: .claude/probes/rounds/2026-10-20-<head sha>/ (main checkout)
-  - next: round 2026-10-20 runs (idle wait, K568 confetti, K545, K447, K539, K544, frames); then file its Ledger items and merge its handoff. Left for later windows: K253's portrait A/A floor (-Moves 0,7,11), K307's phone measures, K98 + K92 (K230), the 14 dropped looks (K233), K232's load cells at 3 reps; looks cope with K301's width flip
-  - brief: docs/design/K156.md (Round 2026-10-20)
+  - owner: nobody since 2026-10-20 11:05 (round 2026-10-20 done: agent afcc3ca4881b292aa of claude session 91b19e11)
+  - branch: mainline; last commit: `071aa32`
+  - evidence: .claude/probes/rounds/2026-10-20-d0406df/ (main checkout; probes p_common.mjs, k544/k545/k447/k539_phone.mjs)
+  - next: later windows: the second frames rep with fabric m11's A/A floor (-Moves 0,7,11; K253), K307's phone measures, K98 + K92 (K230), the 14 dropped looks (K233), K232's load cells at 3 reps; kit: myPage falls back to the unique about:blank page, the round's probes move to tracked scripts/phone_pass/, looks cope with K301's width flip
+  - brief: docs/design/K156.md (Round 2026-10-20 and its handoff)
   - env: none; the pass builds and serves both builds itself (ports
     5480-5489); check nobody is using the phone first (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
@@ -260,6 +254,9 @@ Next free ID: K571.
   - evidence: `.claude/probes/K459/`
   - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii) (`docs/design/K459.md`, Handoff); the free cap's checks are K477
   - brief: `docs/design/K459.md`
+- **K550** · Kill K320's gap split (Levi 2026-10-20: "Go with your kill rec."; `docs/design/K550_stage3.md`): revert its six
+  code commits (`ffd3864`..`a688909`), keep Stage 1 (`6c592e6`), prove 0 px (`docs/design/K550_kill.md`). Stage 3's branch
+  `worktree-agent-a6e7569fb69c908c3` (`d27b35c`) stays for K567; its worktree goes once the kill merges.
 
 ## Next, in order
 
@@ -445,7 +442,6 @@ Every other item below waits on the trigger it names.
 - **K486** · Touch help for the panel's buttons: Reset path, Replay settle, Reset to defaults, the
   seed row, the dice, Daily, stats (K467 covered the 161 rows only)
 - **K543** · K74 stage 4's before/after sheet of three finishes (searched vs shipped, dailies 1-3) was not made in the build stage; make it from `.claude/probes/K74/stage4/build_measure.ts` output or a diag_screenshot pair when Levi wants the look check. Sheet: `.claude/probes/K74/stage4/sheet/contact_sheet.png` (`notes.md` beside it).
-- **K544** · Phone timing for searched designs (`greedyTrap` on: generation median 74 ms desktop Node, p90 197 ms) rides K156's next phone window, as stage 3's did.
 - **K546** · Loss effects (Levi, 2026-10-16): a catch ends early today - animate the player and the minotaur/fire all the way to their meeting point first (contact t is computed in by-length mode; turn and realtime catches leave a visual gap), then a gratuitous contact effect at the meeting point plus a whole-screen loss effect akin to the win confetti. Levi's seeds: an explosion; a flare-up and burn-away; the player indicator ripped in half and falling over. Base to build on: K80 3b's catch feedback (dcdfaf4) and K270's fix; the fire side is K114. Design: `docs/design/K546_loss_effects.md`.
 
 - **K548** · Overnight runner has no usage gate: the 92% weekly pause (Next binding rule) is checked by hand only; 2026-10-15/16 runs 1-6 launched at 88% (under the line, audit 2026-10-18) but nothing stops a launch over it. Add a /usage check to the runner before each batch, or a ledger-stamped usage line per run close.
@@ -924,8 +920,6 @@ Every other item below waits on the trigger it names.
   unmeasured; K440's proposal rests on it.
 - **K446** · The real-time fire clock is not re-synced after a replay; unreachable today, since only
   dailies replay and they run with the fire off (K114 s2).
-- **K447** · K114 s2's real-time fire has no hardware phone pass (shot in Chrome at 411x753 only);
-  take it in the next phone window (K411), with K440's 1.7 s head start.
 - **K450** · K279's tug (`ptg`, default 0) ignores the thread reveal (K397 stage 2;
   `docs/design/K397.md`, Stage 2 handoff, Residuals).
 - **K451** · Plucks under the reveal (K397 stage 2's frets): a fretted lobe's node end doesn't
@@ -1002,7 +996,6 @@ Every other item below waits on the trigger it names.
 
 - **K528** · census2d's long-sequence drift against the FIRST mode-off frame (K522): 11,343 exact px (1,077 hard) over the m10 census while visitAll vs the contemporaneous mode-off-again frame is exactly 0 px; candidates are the follow-camera tail and one-level backdrop flicker (K519) - localize only if it grows (`.claude/probes/K76/stage2d/out_k522_m10e/`, `docs/design/K397.md` Stage 6 handoff).
 - **K535** · First-tap residual after K366's attribution (K307 stage 3): fabric tap 1 costs one ~39 ms callback frame (27 ms with glint) and ~50 ms of first pointerup handling on desktop, knot unaffected, ripple program not involved; inferred first-pluck allocation and the fabric paint's first re-declare, not traced to a function. Traced 2026-10-18 (`.claude/probes/K307/stage2/k535_results.md`): ~25 ms first-gesture AudioContext creation in `KnotSynth.ensure()` + ~14 ms first fabric paint re-declare (rebuildFillets/computeGapSlot). Fix candidates listed there; not yet fixed.
-- **K539** · G3-1's phone half, unrun in K536's pass (phone locked, Chrome closed, 2026-10-16): dense / max-fabric / knot gs24 links on the Pixel with gl.getError 0, no lost context, gaps as on master, plus the phone frame bench at rest; rides K156's next phone window.
 - **K540** · Cold first-visible is ~0.7-0.9 s later on 3465090 than on its parent e83f203 in two interleaved trace_intro pairs (3.36/3.45 s vs 4.10/4.22 s, fresh profiles, phw=0), while section-rgb(-explore) link-status times are equal (43.7-48.3 vs 46.0 ms; explore 61.4 vs 51.7 ms, one run) - unattributed (not the section compile); bisect the load path before calling it a regression. Evidence `.claude/probes/K8/G3-1/` (`k536*` trace runs) and `.claude/probes/K307/runs/k536*/`. Attributed 2026-10-18: real cold-only regression, +0.39 s mean over 8 interleaved pairs (median +0.51, 7/8 positive; K536's pairs overstated it — the parent's own spread is 1.2 s); the wave-1 gate waits on the cold FXC compile of G3-1's enlarged gap-search shaders (section-rgb fs +1,117 chars), warm restart and Vulkan show no gap. Full record `.claude/probes/K8/G3-1/k540_results.md`; fixing (trimming the GAP search's GLSL cost) is the K8 lane's call.
 - **K537** · census3a's 9 pre-existing fails on master (probe sanity 21-23/29 vs 80% bar; solid crossings' mode-on cuts 0-14px vs 109-142 off; slot restore; three 434px attribution restores; visitAll/mode-off-again ~11.3k px lower-half bbox; PROOF vacuous since G3-1) - identical on baseline 3465090 (22/31 with the K430 ramp vs 20/31 without; ramp-specific judgements pass). Next census owner ports census2d's K522/K523 judgements wholesale or retires census3a for census2d; may share K432's backdrop mechanism.
 - **K538** · Pluck footprints (overHalf/eraseExtent) still step binary at vis 0.5; only underWindows ramp (by design in the K430 stage). Evidence `.claude/probes/K268/stage3a/out/census_ramp6/`.
@@ -1019,12 +1012,6 @@ Every other item below waits on the trigger it names.
 - **K560** · Decorative text threads never show under the thread reveal (today's accents; K115's
   lifted strokes next), and a hidden thread on top cuts no gap in the thread under it
   (`docs/design/K115_glyphs.md`, kill criterion 2: visible strokes plus a two-pass crossing lint).
-- **K561** · K320 2c's pre-flip checks from K553 (`docs/design/K553.md` Handoff, "Not done"):
-  splitAssert (`.claude/probes/K553/k553_probe.mjs`) at dsf 1, 1.5 and 2; a failed framebuffer check
-  (`targetComplete`, gap_prepass.ts) leaves the fills on the split program, so no gaps draw; the
-  pass re-renders every frame under the intro or flow (47-52 renders vs 5, 0.47-0.88 ms each;
-  gap_prepass.ts:126 or ribbon_renderer.ts:2200); the first pass after setGapSplit(true) costs
-  458-533 ms (a cold link); a phone pass; a context loss with the split on.
 - **K562** · K558's residuals (`docs/design/K558.md` Handoff): (a)+(b) spur pen order is untested (a
   spur taken for a lifted stroke; a spur attached before the pass it crosses needs a retrace-spur
   fixture); (e) "20" makes a three-pass node that keeps alternation (#20 on 2026-10-31, #120,
@@ -1265,6 +1252,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K447** · The real-time fire on the phone (round 2026-10-20): escaped, 3 stars, 47.6 fps in the race vs 49.5 at rest; the burn costs about 2 fps (0.23 ms a frame). Done in 071aa32 (2026-10-20).
+- **K539** · G3-1's phone half (round 2026-10-20): pruned = brute at 0 px, GL clean, no context loss; the head's 1.5-3.7x render cost went to K572. Done in 071aa32 (2026-10-20).
+- **K544** · Phone timing for searched designs (round 2026-10-20): median 125 ms, p90 260, max 364 with greedyTrap on vs 67 ms off, 1.7x the desktop's median. Done in 071aa32 (2026-10-20).
+- **K561** · K320 2c's pre-flip checks. Dropped: K550 kills the split, Levi's call (2026-10-20).
+- **K559** · K115's glyph call 3: Levi took the looped hand with no spread turns, a junction and a dead-end spur where one would go (K115_glyphs.md section 11). Done in e8a0154 (2026-10-20).
 - **K570** · Spray gravity: the finish spray falls under gravity (Levi, 2026-10-20). Done in 1768283 (2026-10-20).
 - **K563** · K552's C4, the title-loop walk: Levi (2026-10-20) took (a) as built and (d), a tree title, with K115's redesign (now in `docs/design/K115_stage9.md`, "No title loops"). Done in 06ed74d (2026-10-20).
 - **K568** · Confetti retune (Levi, 2026-10-20): the rain from the top lasts a bit longer; the finish spray gets smaller pieces, twice the top speed, a wider speed spread and twice the pieces. Done in 6fd8e70 (2026-10-20).
