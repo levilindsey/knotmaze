@@ -71,6 +71,19 @@ describe("K137 stage 3b sword tag", () => {
   });
 });
 
+describe("K137 stage 2 aids tags", () => {
+  it("ends the title with the spool's share used and the hints used", () => {
+    const t = title({ ...BASE, cuts: 0, spool: { used: 9, cap: 11 }, hintsUsed: 2 });
+    expect(t).toBe("Knotmaze \u{1F9F6} · \u{1F9F6} 82% of the spool · \u{1F4A1}2");
+  });
+
+  it("leaves them out with the spool off and no hint used", () => {
+    for (const info of [BASE, { ...BASE, spool: null, hintsUsed: 0 }, { ...BASE, hintsUsed: null }]) {
+      expect(title(info)).toBe("Knotmaze \u{1F9F6}");
+    }
+  });
+});
+
 describe("K139 collapse line", () => {
   it("puts the mode, the score and par on a line under the time, before the grid", () => {
     const fin = shareText({ ...BASE, efficiency: null, collapse: { mode: "finish", pct: 58, par: "≥62%" } });

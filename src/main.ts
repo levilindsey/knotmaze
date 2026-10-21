@@ -1622,6 +1622,9 @@ async function main(): Promise<void> {
           const t = liveMino()?.sword?.takenAt ?? -1;
           return t > 0 ? t : null;
         })(),
+        // K137 stage 2: the spool's share used and the hints used.
+        spool: c.spoolOn ? { used: c.spoolUsed, cap: c.spoolCap } : null,
+        hintsUsed: c.hintsMax > 0 ? c.hintsUsed : null,
       }),
       url: daily !== null ? dailyUrl(daily) : location.href,
     };
