@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K753.
+Next free ID: K759.
 
 ## Waiting on Levi
 
@@ -230,6 +230,12 @@ Next free ID: K753.
   the pair turn travels half their summed length; in real time a press arms the next two runs, not
   the one under way; key F (Q sits on A in AZERTY); a catch while armed spends it; a restart gives
   it back
+- **K753** · K114 beat: the default turn fire burns a hesitant beat player at 0:14 (every forced
+  move steps it; `fsp=0.1&fdl=40` passed 12/12). Want a beat-specific fire pace? (Handoff of
+  `docs/design/K114_beat.md`)
+- **K754** · K114 beat: feel the tempo at 80, 100 and 132 bpm and L 2 vs 3
+  (`?7&clk=beat&btp=<bpm>&btl=<L>&am=instant`); at L 2 about a quarter of runs hit the 4-beat cap
+  (`btc`). Calls 1-10 in the Handoff of `docs/design/K114_beat.md`
 
 ## In progress
 
@@ -242,7 +248,7 @@ Next free ID: K753.
   - owner: nobody since 2026-10-21 05:15 (merged; agent `a178a00897a4044dc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
   - branch: mainline; last commit: `e1fe321b`
   - evidence: `.claude/probes/K114/beat/`
-  - next: the beat remainder (Handoff of docs/design/K114_beat.md): item 6 the pulse, item 8 the HUD tempo row, share tag and panel rows, the lore; then Levi calls K706, K707 and the beat calls, a phone pass, then the spider and K688 healing cuts after K137 s3d, then Pluck Hero
+  - next: the beat remainder (Handoff of docs/design/K114_beat.md): item 6 the pulse, item 8 the HUD tempo row, share tag and panel rows, the lore, keys and the move pad checked on the page; then Levi calls K706, K707 and the beat calls, a phone pass, then the spider and K688 healing cuts after K137 s3d, then Pluck Hero
   - brief: `docs/design/K114_beat.md`
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
@@ -1384,6 +1390,16 @@ Every other item below waits on the trigger it names.
 - **K751** · Phone coverage gaps after K749: the F key and its focus-visible outline (K137 s3c),
   sprint with the sword or lives, the K747 off-by-one after a sprint, and the cut refusal for no way
   to the exit (seed 7 has none in free play); for the next phone pass
+- **K755** · K114 beat: a note can land up to the audio output latency plus one frame late
+  (`src/app/beat_frame.ts`)
+- **K756** · K114 beat: no wait action under the beat, and the pause has no key
+  (`src/ui/beat_pause.ts`)
+- **K757** · K114 beat: the audio gate in `src/app/auto_audio.ts` guards a bug inferred from the
+  code, not observed; whether manual mode dropped notes before it was not measured, and random sound
+  mode was not run
+- **K758** · The bottom-left corner has no layout of its own: the beat pause rises 60 px above the
+  sprint button by hand (`65c4f78a`), and a third control there would need the same (compare K738 at
+  the top)
 
 ## Approved, to schedule (2026-10-11)
 
