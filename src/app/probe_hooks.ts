@@ -656,6 +656,17 @@ export function installProbeHooks(ctx: ProbeCtx): void {
             key: c.ruleKey,
             optimal: c.optimal,
             carry: c.carry.length,
+            // K138 s2: the turnstiles ({vertex, arms, phase0} each, the
+            // arms in vertex.edges order) and the clock (`phase`: strokes
+            // mod 3); the hidden runs laid, those revealed, those still
+            // hidden; the fewest strokes with every hidden run revealed.
+            turnstiles: c.ruleLook?.turnstiles ?? null,
+            phase: c.rulePhase,
+            hidden: c.ruleLook?.hidden ?? null,
+            revealed: [...c.revealed],
+            unrevealed: c.hiddenRuns(),
+            fewest: c.fewestRuns,
+            fewestWithHidden: c.fewestWithHidden,
           }
         : null,
       // K114: the burn race (null: no fire). `smoldering`: the head's arms

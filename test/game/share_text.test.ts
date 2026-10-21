@@ -129,3 +129,27 @@ describe("K139 collapse line", () => {
     }
   });
 });
+
+describe("K138 rule tags", () => {
+  it("ends the title with ice, the color rule, the turnstiles and the hidden runs", () => {
+    const t = title({
+      ...BASE,
+      ice: 25,
+      colorRule: "cycle",
+      turnstiles: 4,
+      hidden: { found: 1, of: 2 },
+    });
+    expect(t).toBe("Knotmaze \u{1F9F6} · \u{1F9CA} 25% · \u{1F3A8} cycle · \u{1F504} 4 · \u{1F47B} 1/2");
+  });
+
+  it("leaves each out while its rule is off", () => {
+    for (const info of [
+      BASE,
+      { ...BASE, ice: null, colorRule: null, turnstiles: null, hidden: null },
+      { ...BASE, colorRule: "" },
+    ]) {
+      expect(title(info)).toBe("Knotmaze \u{1F9F6}");
+    }
+    expect(title({ ...BASE, turnstiles: 0 })).toBe("Knotmaze \u{1F9F6} · \u{1F504} 0");
+  });
+});

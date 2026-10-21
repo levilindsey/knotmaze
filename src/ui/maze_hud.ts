@@ -76,6 +76,25 @@ export interface HudSnapshot {
   hints?: { left: number; of: number } | null;
   spoolUsed?: number | null;
   hintsUsed?: number | null;
+  // K138 (absent elsewhere): the rules row ("ice 25% · cycle"), the
+  // turnstiles laid, and the hidden runs found of those laid with the
+  // fewest moves without and with them.
+  rules?: string | null;
+  turnstiles?: number | null;
+  hidden?: HiddenShown | null;
+}
+
+// K138 stage 2: what the hidden row reads.
+export interface HiddenShown {
+  found: number;
+  of: number;
+  fewest: number;
+  withAll: number;
+}
+
+// K138 stage 2: "1 / 2 found · fewest 16, 14 with them" (a dash for no way).
+export function hiddenValue(h: HiddenShown): string {
+  return `${h.found} / ${h.of} found \u00B7 fewest ${fmtPar(h.fewest)}, ${fmtPar(h.withAll)} with them`;
 }
 
 // K137 stage 3b: what the sword row reads (game/sword.ts SwordState).
@@ -512,6 +531,11 @@ export interface WinInfo {
   // hints used (absent or null: that aid off).
   spoolUsed?: number | null;
   hintsUsed?: number | null;
+  // K138: the rules row, the turnstiles and the hidden runs (absent or
+  // null: that rule off).
+  rules?: string | null;
+  turnstiles?: number | null;
+  hidden?: HiddenShown | null;
   // Show the daily stats button.
   stats: boolean;
 }
@@ -616,6 +640,7 @@ export type RuleFields = Pick<
   HudSnapshot,
   | "snapped" | "parLeft" | "parStrokes" | "collapse" | "cuts" | "walker"
   | "spool" | "hints" | "spoolUsed" | "hintsUsed"
+  | "rules" | "turnstiles" | "hidden"
 >;
 
 // A par or a count of moves; an infinite par (no way to the exit) reads as
@@ -655,6 +680,11 @@ export function ruleEntries(s: RuleFields): StatEntry[] {
   // (left of the setting); at the finish "spool used 62%", "hints used 1".
   if (s.spool) rows.push(entry("spool", spoolGauge(s.spool.used, s.spool.cap)));
   if (s.hints) rows.push(entry("hints", `${s.hints.left} / ${s.hints.of}`));
+  // K138: "rules ice 25% · cycle", "turnstiles 4", "hidden 1 / 2 found ·
+  // fewest 16, 14 with them".
+  if (s.rules) rows.push(entry("rules", s.rules));
+  if (s.turnstiles != null) rows.push(entry("turnstiles", String(s.turnstiles)));
+  if (s.hidden) rows.push(entry("hidden", hiddenValue(s.hidden)));
   if (s.spoolUsed != null) rows.push(entry("spoolUsed", `${s.spoolUsed}%`));
   if (s.hintsUsed != null) rows.push(entry("hintsUsed", String(s.hintsUsed)));
   return rows;
