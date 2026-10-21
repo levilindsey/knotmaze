@@ -338,6 +338,11 @@ export interface PaintTele {
   alpha: number;
   j0: boolean;
   j1: boolean;
+  // K654 (K324 stage 2): the end that rides uKTeleAt (0: c0, 1: c1; the
+  // real-time minotaur's lead, which then holds its whole run) and that
+  // end's ctrl now. KPAINT keys on the fixed fields only; `at` is a uniform.
+  ride?: 0 | 1;
+  at?: number;
 }
 // K81: a route (junction_routes.ts PaintRoute) resolved against the static
 // junction arms: the arm it arrived by and the arm it left by (null = a
@@ -620,6 +625,8 @@ export class RibbonRenderer {
   // KPAINT items they last wrote; the colour and strength ride uKTele.
   private paintTele: PaintTele[] | null = null;
   private teleKey = "";
+  // K654: the riding end's ctrl (uKTeleAt.x; 0 with no riding piece).
+  private teleAt = 0;
   /** @internal ribbon */ paintClock = 0;
   // K81 route bands (junction_routes.ts): the path's passes through
   // junctions, oldest first; routeKey keys the fillet rebuild that draws
@@ -2642,9 +2649,14 @@ export class RibbonRenderer {
   // empty = none). KPAINT is rewritten only when a piece, the junction gap
   // or the strength turning on or off changes; the colour and the strength
   // ride uKTele, so a roam turning into a hunt rewrites no texel. The
-  // turn minotaur's route changes only on a tap.
+  // turn minotaur's route changes only on a tap. K654: the real-time
+  // minotaur's lead rides its spot (`ride`, `at`): the key leaves `at` out
+  // and the tick sends it as uKTeleAt.x, so a walking minotaur rewrites no
+  // texel until its pieces change (a new run, a new plan).
   setTelegraph(pieces: PaintTele[] | null): void {
     this.paintTele = pieces && pieces.length > 0 ? pieces : null;
+    this.teleAt = 0;
+    if (this.paintTele) for (const p of this.paintTele) if (p.ride !== undefined) this.teleAt = p.at ?? 0;
     this.syncTeleItem();
   }
 
@@ -2654,7 +2666,7 @@ export class RibbonRenderer {
     if (!t || !(this.teleStrength > 0)) return "";
     let k = `${this.rimGap()}`;
     for (const p of t) {
-      k += `|${p.chain},${p.c0},${p.c1},${p.alpha},${p.j0 ? 1 : 0}${p.j1 ? 1 : 0}`;
+      k += `|${p.chain},${p.c0},${p.c1},${p.alpha},${p.j0 ? 1 : 0}${p.j1 ? 1 : 0}${p.ride ?? ""}`;
     }
     return k;
   }
@@ -3645,6 +3657,8 @@ export class RibbonRenderer {
       T[2] = (tc & 255) / 255;
       T[3] = this.teleKey !== "" ? Math.max(0, this.teleStrength) : 0;
     }
+    // K654: the riding end (the walking minotaur's spot), every frame.
+    if (U.uKTeleAt) U.uKTeleAt[0] = this.teleAt;
     // Junction fillets ride the same tick: live positions, live paint.
     this.rebuildFillets();
     this.tickWebFade();
@@ -3834,7 +3848,8 @@ export class RibbonRenderer {
     // K525: the telegraph's route pieces, (TELE, c0, c1, alpha, gap0, gap1,
     // fade0, fade1), before the hover glow's RIM so that one stays last. A
     // junction end skips the web's reach (rimGap, as the glow does), a
-    // mid-run end none.
+    // mid-run end none. K654: a riding end (a mid-run end) writes its fade
+    // NEGATIVE, which tells the shader to read its ctrl from uKTeleAt.x.
     this.teleKey = this.teleItemKey();
     if (this.teleKey !== "" && this.paintTele) {
       const gap = this.rimGap();
@@ -3848,8 +3863,8 @@ export class RibbonRenderer {
           t.alpha,
           t.j0 ? gap : 0,
           t.j1 ? gap : 0,
-          t.j0 ? TELE_JUNCTION_FADE : TELE_MID_FADE,
-          t.j1 ? TELE_JUNCTION_FADE : TELE_MID_FADE
+          t.ride === 0 ? -TELE_MID_FADE : t.j0 ? TELE_JUNCTION_FADE : TELE_MID_FADE,
+          t.ride === 1 ? -TELE_MID_FADE : t.j1 ? TELE_JUNCTION_FADE : TELE_MID_FADE
         );
         touch(t.chain, t.c0, t.c1, i);
       }

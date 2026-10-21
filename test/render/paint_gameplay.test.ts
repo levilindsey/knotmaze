@@ -1185,6 +1185,91 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
       }
     }
   });
+
+  // K324 stage 2 (K654): the lead piece RIDES. Its item holds the whole run
+  // [ctrlA, ctrlB] and marks the end at the minotaur's spot with a negative
+  // fade (gap 0); kPaintAt reads that end's ctrl from uKTeleAt.x, so the
+  // spot moves every frame with no texel written. A riding piece must paint
+  // exactly what the fixed piece [at, ctrlB] (or [ctrlA, at]) with a mid-run
+  // end paints, and uKTeleAt must move no piece that does not ride.
+  it("K324 s2: a riding lead piece paints the fixed piece from uKTeleAt, on open and closed chains", () => {
+    const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
+    const PX = 0.02;
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
+    const RIDE = { g: 0, f: -0.3 }; // The riding end (-TELE_MID_FADE).
+    for (const closed of [false, true]) {
+      const r = rng(closed ? 6542 : 6541);
+      const ch = randomChain(r, closed ? 70 : 90, closed);
+      const n = ch.controlArcLengths.length;
+      const total = ch.totalLength;
+      const cMax = closed ? n - 1e-9 : n - 1;
+      const N = 4000;
+      const arcs: number[] = [];
+      for (let i = 0; i < N || (!closed && i === N); i++) arcs.push((total * i) / N);
+      const runs: [string, number, number, typeof TJ][] = closed
+        ? [
+            ["a run across the seam", n - 12, n + 12, TJ],
+            ["a seam run, ctrlB = n", n - 20, n, TJ],
+          ]
+        : [
+            ["a whole run", 10, 80, TJ],
+            ["a run to a by-length stop", 10, 51.25, TM],
+          ];
+      for (const [name, cA, cB, far] of runs) {
+        for (const ride of [0, 1] as const) {
+          for (const frac of [0, 0.004, 0.37, 0.5, 0.93, 0.999]) {
+            const at = Math.fround(cA + (cB - cA) * frac);
+            const riding = ride === 0 ? tele(cA, cB, 1, RIDE, far) : tele(cA, cB, 1, far, RIDE);
+            const fixed = ride === 0 ? tele(at, cB, 1, TM, far) : tele(cA, at, 1, far, TM);
+            const UR = uniforms(k);
+            UR.uKTeleAt = new Float32Array([at, 0, 0, 0]);
+            const DR = scene(ch.controlArcLengths, total, ch.count, closed, [], [], [], UR, [], [riding]);
+            const UF = uniforms(k);
+            const DF = scene(ch.controlArcLengths, total, ch.count, closed, [], [], [], UF, [], [fixed]);
+            const cR = kChain(DR, 0);
+            const cF = kChain(DF, 0);
+            let diff = 0;
+            let lit = 0;
+            for (const a of arcs) {
+              const ctrl = ctrlAt(DF, a, cMax);
+              const g = kPaintAt(DR, UR, cR, ctrl, a, PX, st).tele;
+              const want = kPaintAt(DF, UF, cF, ctrl, a, PX, st).tele;
+              if (g !== want) diff++;
+              if (g > 0.01) lit++;
+            }
+            expect([name, ride, frac, diff]).toEqual([name, ride, frac, 0]);
+            // Not vacuous: a piece well clear of its gaps lights.
+            if (frac > 0.3 && frac < 0.6) expect(lit).toBeGreaterThan(0);
+          }
+        }
+      }
+    }
+    // uKTeleAt moves no piece that does not ride, and an absent uniform
+    // (the mirror's default) reads as the shader's zero vector.
+    const r = rng(6543);
+    const ch = randomChain(r, 90, false);
+    const n = ch.controlArcLengths.length;
+    const still = [tele(10, 30, 1, TJ, TM), tele(25, 80, 0.5, TM, TJ)];
+    const U0 = uniforms(k);
+    const D0 = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], [], U0, [], still);
+    const U1 = uniforms(k);
+    U1.uKTeleAt = new Float32Array([47.5, 3, 2, 1]);
+    const D1 = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], [], U1, [], still);
+    const riding = [tele(10, 80, 1, RIDE, TJ)];
+    const UA = uniforms(k);
+    const DA = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], [], UA, [], riding);
+    const UZ = uniforms(k);
+    UZ.uKTeleAt = new Float32Array(4);
+    const DZ = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], [], UZ, [], riding);
+    let moved = 0;
+    let absentBad = 0;
+    for (let a = 0; a <= ch.totalLength; a += 0.01) {
+      const ctrl = ctrlAt(D0, a, n - 1);
+      if (kPaintAt(D0, U0, kChain(D0, 0), ctrl, a, PX, st).tele !== kPaintAt(D1, U1, kChain(D1, 0), ctrl, a, PX, st).tele) moved++;
+      if (kPaintAt(DA, UA, kChain(DA, 0), ctrl, a, PX, st).tele !== kPaintAt(DZ, UZ, kChain(DZ, 0), ctrl, a, PX, st).tele) absentBad++;
+    }
+    expect([moved, absentBad]).toEqual([0, 0]);
+  });
 });
 
 // The mirror's smoothstep on [0, 1] (3x^2 - 2x^3, clamped).
