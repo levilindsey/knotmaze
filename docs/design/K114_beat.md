@@ -198,7 +198,8 @@ beat is reachable by links only (`&clk=beat`).
   (`:root[data-beat-paused='1'] canvas`) and shows a centred "Paused"
   pill; taps and moves do not queue while held. An open panel over it
   hides the button but keeps the pause; an ended game or the beat going
-  off releases it.
+  off releases it. K137's sprint button sits in the same corner, so the
+  pause rises 60 px above it while it shows (`setRaised`, 65c4f78a).
 - `src/ui/url_state.ts`: `CLOCK_MODES` gains `beat`, read in every game
   mode (`clockOf`); `minoClockOf` plays the minotaur on the turn clock
   under the beat; `fabricRulesOf` drops the cut (and so the walker) under
@@ -279,6 +280,10 @@ in headed Chrome off-screen, a fresh profile per run, links
   of 63 polls over 0.01; `snd=music` after it (0773c56e), 14/14, peak
   0.094, 15 of 62 polls over 0.01, and 23 plucks for the 21-run path, as
   under manual: no song note played under the beat.
+- The corner (`corner.mjs desktop|phone`, after the rebase): with
+  `&mt=hunter&spr=on` both buttons show and do not overlap (desktop: the
+  pause at y 768-816, the sprint at 828-876; phone viewport likewise,
+  12 px apart); without sprint the pause keeps its spot. 2/2 on each.
 
 **Residuals:**
 1. The auto tick's gate (`src/app/auto_audio.ts`, 0773c56e): under the
@@ -298,8 +303,10 @@ in headed Chrome off-screen, a fresh profile per run, links
    0:14). A beat-specific fire pace may be wanted.
 5. The clock stops once the game ends or the dot rests (by design).
 6. The pause sits where the cut's button is (both cannot show: the cut
-   is off under the beat); K137's sprint button placement was checked at
-   the rebase (see the handle).
+   is off under the beat). K137's sprint button (master, s3c) took the
+   same spot, so under `clk=beat&mt=...&spr=on` the two overlapped; the
+   pause now rises above it (65c4f78a). A third control in that corner
+   would need the same: the corner has no layout of its own.
 
 **Remainder** (the next stage):
 - Item 6: the head ring pulses on quarter notes; reduced motion gives
@@ -314,4 +321,16 @@ in headed Chrome off-screen, a fresh profile per run, links
   first tap; read the clock with `__knotParams().clock`).
 - A real phone pass, and Levi's feel of the tempo and L.
 
-**Handle fields:** HANDLE_FIELDS
+**Handle fields:**
+- owner: nobody since 2026-10-21 05:2x (claude agent a178a00897a4044dc
+  of the coordinator's session, stopped at the stage's 2 h cap)
+- branch: `worktree-agent-a178a00897a4044dc`, worktree
+  `.claude/worktrees/agent-a178a00897a4044dc`, rebased onto 95be99e8;
+  last commit: the commit that adds these fields (code: 65c4f78a), WIP,
+  unpushed
+- evidence: `.claude/probes/K114/beat/` (`beat_page.mjs`, `corner.mjs`,
+  `vite.private-cache.config.ts`, `out/`)
+- next: item 6 (the pulse), then item 8 (the HUD tempo row, the share
+  tag, the panel rows), the lore entries, keys and the pad on the page
+- brief: `docs/design/K114_beat.md`
+- env: `npx vite --config .claude/probes/K114/beat/vite.private-cache.config.ts --port 5730 --strictPort --host 127.0.0.1`
