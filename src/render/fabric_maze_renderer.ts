@@ -1540,7 +1540,7 @@ export class FabricMazeRenderer {
   private drawTelegraphLength(g: ChaseGraph, t: TurnTelegraph, r: number, hunting: boolean): void {
     const gfx = this.teleGfx;
     gfx.clear();
-    const alphas = telegraphAlphas(hunting, t.steps.length);
+    const alphas = telegraphAlphas(hunting, t.steps.length, this.telegraphCoarse);
     const w = this.threadWidth;
     let spot: Spot = { ...t.fromSpot! };
     // K525: the line draws for the line and both looks only.
@@ -1660,7 +1660,7 @@ export class FabricMazeRenderer {
     // rewrites no texel; setTelegraph rewrites KPAINT only when the pieces
     // change.
     if (this.telegraphLook !== "line") {
-      this.ribbons.teleStrength = telegraphRimStrength(hunting);
+      this.ribbons.teleStrength = telegraphRimStrength(hunting, this.telegraphCoarse);
       this.ribbons.setTelegraph(telegraphPieces(g, this.walk.edges, t));
     } else this.ribbons.setTelegraph(null);
     // K481 stage 2: by length, the route starts where it stands and its
@@ -1672,8 +1672,9 @@ export class FabricMazeRenderer {
     // K80 turns 3b (section 2.7): the route-shaped telegraph K324 stage 2
     // reuses — one stroke per run so each run carries its own alpha
     // (mino_feedback.telegraphAlphas: faint roaming, bright hunting, the
-    // second run at half). The chevrons wait for K324 stage 2.
-    const alphas = telegraphAlphas(hunting, t.steps.length);
+    // second run at half; K525: roam 0.7 on a coarse pointer). The
+    // chevrons wait for K324 stage 2.
+    const alphas = telegraphAlphas(hunting, t.steps.length, this.telegraphCoarse);
     const w = this.threadWidth;
     let a = t.from;
     let prev: number[] | null = null;

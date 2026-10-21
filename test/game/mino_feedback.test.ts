@@ -5,6 +5,11 @@ import {
   MINO_FOG_BLEED_ALPHA,
   TELEGRAPH_ALPHA_HUNT,
   TELEGRAPH_ALPHA_ROAM,
+  TELEGRAPH_ALPHA_ROAM_COARSE,
+  TELEGRAPH_RIM_HUNT,
+  TELEGRAPH_RIM_ROAM,
+  TELEGRAPH_RIM_ROAM_COARSE,
+  telegraphRimStrength,
   catchBurstAt,
   catchNotes,
   footstepPan,
@@ -34,6 +39,29 @@ describe("telegraphAlphas (2.7)", () => {
       TELEGRAPH_ALPHA_ROAM * 0.5,
     ]);
     expect(telegraphAlphas(true, 0)).toEqual([]);
+  });
+
+  it("K525: roams at 0.7 on a coarse pointer; hunt and the later share are unchanged", () => {
+    expect(TELEGRAPH_ALPHA_ROAM_COARSE).toBe(0.7);
+    expect(telegraphAlphas(false, 2, true)).toEqual([
+      TELEGRAPH_ALPHA_ROAM_COARSE,
+      TELEGRAPH_ALPHA_ROAM_COARSE * 0.5,
+    ]);
+    expect(telegraphAlphas(true, 2, true)).toEqual(telegraphAlphas(true, 2, false));
+    expect(telegraphAlphas(false, 1, false)).toEqual([TELEGRAPH_ALPHA_ROAM]);
+  });
+});
+
+describe("telegraphRimStrength (K525)", () => {
+  it("roams fainter than it hunts, stronger on a coarse pointer, hunt the same on both", () => {
+    expect(telegraphRimStrength(false, false)).toBe(TELEGRAPH_RIM_ROAM);
+    expect(telegraphRimStrength(false, true)).toBe(TELEGRAPH_RIM_ROAM_COARSE);
+    expect(telegraphRimStrength(true, false)).toBe(TELEGRAPH_RIM_HUNT);
+    expect(telegraphRimStrength(true, true)).toBe(TELEGRAPH_RIM_HUNT);
+    expect(telegraphRimStrength(false)).toBe(TELEGRAPH_RIM_ROAM);
+    expect(TELEGRAPH_RIM_ROAM).toBeLessThan(TELEGRAPH_RIM_ROAM_COARSE);
+    expect(TELEGRAPH_RIM_ROAM_COARSE).toBeLessThanOrEqual(TELEGRAPH_RIM_HUNT);
+    expect(TELEGRAPH_RIM_HUNT).toBeLessThanOrEqual(1);
   });
 });
 
