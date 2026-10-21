@@ -162,8 +162,9 @@ What every stage shares:
 - Rule params are neither daily-exempt nor maze keys. They restart the
   solve, not the build. Free play only: no saved attempts, no store
   version.
-- A HUD row, a share tag and a stat (`maze_hud.ts`, `share_text.ts`,
-  `maze_stats.ts`). The share tags are the ones section 4 names.
+- A HUD row (`maze_hud.ts`). A share tag in words, the rule's name,
+  where section 4 asks for one (`share_text.ts`). A stat only where
+  section 4 names one (`maze_stats.ts`).
 - Off is bit-identical: the golden, K87, the golden dailies,
   `K80_DIGESTS`, `MODEL_DIGESTS`, `TURN_GAMES` and `LENGTH_GAMES`.
 
