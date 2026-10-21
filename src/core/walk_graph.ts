@@ -78,11 +78,13 @@ export interface WalkGraph {
 // `source` to every vertex (Infinity where unreachable). O(V^2) scan with
 // id tie-breaking; the walk graph is small. buildWalkGraph's start/exit
 // choice and distToExit use it, and so does the burn race's fire (K114,
-// game/fire.ts: distances from WalkGraph.start).
+// game/fire.ts: distances from WalkGraph.start). K114 cut: `removed` runs
+// are skipped (the cut runs, game/cut.ts distancesToExit).
 export function walkDistances(
   vertices: ReadonlyMap<string, WalkVertex>,
   edges: readonly WalkEdge[],
-  source: string
+  source: string,
+  removed?: ReadonlySet<number>
 ): Map<string, number> {
   const dist = new Map<string, number>();
   const done = new Set<string>();
@@ -101,6 +103,7 @@ export function walkDistances(
     if (cur === null) break;
     done.add(cur);
     for (const eid of vertices.get(cur)!.edges) {
+      if (removed?.has(eid)) continue;
       const e = edges[eid];
       const other = e.va === cur ? e.vb : e.va;
       const nd = curD + e.length;
