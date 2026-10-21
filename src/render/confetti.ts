@@ -90,22 +90,23 @@ class PieceLayer {
   }
 
   // After a spawn: the container draws exactly the live rows' slots.
-  attach(): void {
+  attach(shine: number): void {
     const kids = this.container.particleChildren;
     kids.length = 0;
     for (let i = 0; i < this.pool.alive; i++) kids.push(this.slots[i]);
     this.container.update();
-    this.sync();
+    this.sync(shine);
   }
 
   // Mirror the pool into the slots; hide (and detach) once it is empty.
-  sync(): void {
+  // `shine` is the burst's specular strength (K337, ConfettiSim.shine).
+  sync(shine: number): void {
     const d = this.pool.data;
     const n = this.pool.alive;
     const look = this.look;
     for (let i = 0; i < n; i++) {
       const p = this.slots[i];
-      pieceLook(d, i, this.spray, look);
+      pieceLook(d, i, this.spray, look, shine);
       p.x = d[i * F + X];
       p.y = d[i * F + Y];
       p.alpha = look.alpha;
@@ -167,16 +168,16 @@ export class ConfettiLayer {
   ): void {
     if (!this.sim.burst(plan, width, height, cx, cy, unit, rand)) return;
     this.stats.bursts++;
-    this.rain.attach();
-    this.spray.attach();
+    this.rain.attach(this.sim.shine);
+    this.spray.attach(this.sim.shine);
     this.follow(world);
   }
 
   // Drop every piece (a rebuild, the setting turned off).
   clear(): void {
     this.sim.clear();
-    this.rain.sync();
-    this.spray.sync();
+    this.rain.sync(0);
+    this.spray.sync(0);
   }
 
   // One frame: step and mirror the live pieces. A single early return when
@@ -185,8 +186,8 @@ export class ConfettiLayer {
     if (!this.sim.active) return;
     this.stats.frames++;
     this.sim.step(dt, height);
-    this.rain.sync();
-    this.spray.sync();
+    this.rain.sync(this.sim.shine);
+    this.spray.sync(this.sim.shine);
     this.follow(world);
   }
 

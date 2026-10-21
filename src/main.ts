@@ -1495,7 +1495,9 @@ async function main(): Promise<void> {
       params.confettiAmount,
       motion.reduced,
       app.screen.width,
-      app.screen.height
+      app.screen.height,
+      params.confettiShine,
+      params.foilShare
     );
     if (plan.rain === 0 && plan.spray === 0) return;
     flags.push(Flag.OVERLAY); // K6-3: wake a stopped loop for the burst.

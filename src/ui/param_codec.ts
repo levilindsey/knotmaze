@@ -313,6 +313,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // K558: reverse the pen-order rule for text crossings (the earlier stroke on top).
   flag("penReverse"),
   flag("dailyTitleThread"), // K552
+  num("confettiShine"), // K337: the confetti's specular strength
+  num("foilShare"), // K337: the share of foil pieces
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -417,6 +419,8 @@ export const PARAM_RANGES: Readonly<
   minoWake: [0, 20],
   minoPull: [0, 1],
   confettiAmount: [0, 3],
+  confettiShine: [0, 2], // K337 (CONFETTI_SHINE_MAX)
+  foilShare: [0, 1], // K337
   pluckWhole: [0, 1.5],
   markerSize: [0.25, 3],
   hoverGlow: [0, 1],

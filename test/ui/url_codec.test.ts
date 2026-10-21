@@ -98,7 +98,7 @@ describe("links", () => {
       gameMode: "classic",
       minoDeadEnds: 0.4, minoRoam: 30, minoWake: 2, minoFog: "always",
       minoPull: 0.5, minoRefog: true,
-      confettiAmount: 1,
+      confettiAmount: 1, confettiShine: 1, foilShare: 0.3,
       pluckWhole: 0.75, pluckCrossings: "through", pluckGlow: "off",
       pluckRipple: "glint", rippleStrength: 1, rippleAuto: 0.35,
       pluckSheen: 0.5, pluckTug: 0, tugAuto: false, autoPluckGain: 0.5,
@@ -418,6 +418,27 @@ describe("links", () => {
     expect(
       parseParams(`?${encodeParams(withSeed(7, { confettiAmount: 7 }))}`).confettiAmount
     ).toBe(3);
+  });
+  // K337: the confetti's shine and foil share, their clamps and the round
+  // trip.
+  it("reads the confetti shine and foil share from override keys", () => {
+    const p = parseParams("?7&cfh=1.5&cff=0.6");
+    expect([p.confettiShine, p.foilShare]).toEqual([1.5, 0.6]);
+    expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+    const off = parseParams("?7&cfh=0&cff=0");
+    expect([off.confettiShine, off.foilShare]).toEqual([0, 0]);
+    expect(parseParams(`?${encodeParams(off)}`)).toEqual(off);
+    // The strength clamps to [0, 2] and the share to [0, 1]; garbage reads
+    // as the default.
+    expect(parseParams("?7&cfh=9").confettiShine).toBe(2);
+    expect(parseParams("?7&cfh=-1").confettiShine).toBe(0);
+    expect(parseParams("?7&cfh=x").confettiShine).toBe(PARAM_DEFAULTS.confettiShine);
+    expect(parseParams("?7&cff=3").foilShare).toBe(1);
+    expect(parseParams("?7&cff=-1").foilShare).toBe(0);
+    expect(parseParams("?7&cff=x").foilShare).toBe(PARAM_DEFAULTS.foilShare);
+    const big = withSeed(7, { confettiShine: 7, foilShare: 7 });
+    const back = parseParams(`?${encodeParams(big)}`);
+    expect([back.confettiShine, back.foilShare]).toEqual([2, 1]);
   });
 
   // K180: the pluck params' override keys, the whole amount's clamp, the
@@ -761,7 +782,8 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoDetect: "mdt", minoLose: "mls", minoCatch: "mct", minoDeadEnds: "mde",
   minoRoam: "mrm", minoWake: "mwk", minoFog: "mfg", minoPull: "mpl",
   minoRefog: "mrf", gameMode: "gm",
-  confettiAmount: "cfa", pluckWhole: "pw", pluckCrossings: "pcx",
+  confettiAmount: "cfa", confettiShine: "cfh", foilShare: "cff",
+  pluckWhole: "pw", pluckCrossings: "pcx",
   pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg", hoverGlowWidth: "hgw",
   revealDistance: "rvd", revealFade: "rvf", revealLook: "rvl",
   hoverGlowLength: "hgl", hoverGlowFade: "hgf",

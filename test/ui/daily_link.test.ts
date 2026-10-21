@@ -393,6 +393,9 @@ describe("the daily design and its exempt preferences (K56)", () => {
       "physicsWorker",
       // K140, proposed with it.
       "confettiAmount",
+      // K337: the confetti's shine and foil share, with the amount.
+      "confettiShine",
+      "foilShare",
       // K98, proposed with it.
       "markerSize",
       // K558, proposed with it (Call C2): which stroke goes over.

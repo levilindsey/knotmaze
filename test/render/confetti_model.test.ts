@@ -3,13 +3,20 @@ import {
   AGE,
   CONFETTI_AMOUNT_MAX,
   CONFETTI_MAX_DT,
+  CONFETTI_SHINE_MAX,
+  COLOR,
   ConfettiPool,
   ConfettiSim,
   F,
   FLIP,
   FLIP_RATE,
+  FOIL_SPEC,
+  HALF,
   LEN,
   LIFE,
+  LIGHT,
+  MAT,
+  PAPER_SPEC,
   RAIN_CAP,
   RAIN_FADE,
   RAIN_LIFE_MAX,
@@ -20,6 +27,7 @@ import {
   RAIN_TAPER,
   RAIN_TOP_SPREAD,
   RAIN_WINDOW,
+  SHINE_AMBIENT,
   SPIN,
   SPRAY_CAP,
   SPRAY_DRAG,
@@ -39,9 +47,11 @@ import {
   rainDelay,
   rainReleaseDensity,
   rainScreenScale,
-  shadeHex,
+  litHex,
+  shadeNormal,
   spawnRain,
   spawnSpray,
+  specular,
   sprayUnit,
   stepRain,
   stepSpray,
@@ -78,12 +88,22 @@ describe("confettiPlan: how many pieces a finish throws", () => {
       rain: RAIN_PER_AMOUNT,
       spray: SPRAY_PER_AMOUNT,
       slow: false,
+      foil: 0,
+      shine: 0,
     });
-    expect(confettiPlan(0.5, false)).toEqual({ rain: 210, spray: 160, slow: false });
+    expect(confettiPlan(0.5, false)).toEqual({
+      rain: 210,
+      spray: 160,
+      slow: false,
+      foil: 0,
+      shine: 0,
+    });
     expect(confettiPlan(CONFETTI_AMOUNT_MAX, false)).toEqual({
       rain: RAIN_PER_AMOUNT * CONFETTI_AMOUNT_MAX,
       spray: SPRAY_CAP,
       slow: false,
+      foil: 0,
+      shine: 0,
     });
   });
 
@@ -96,7 +116,13 @@ describe("confettiPlan: how many pieces a finish throws", () => {
     expect(rainScreenScale(1400, 900)).toBeCloseTo(2.059, 3);
     expect(rainScreenScale(1920, 1080)).toBeCloseTo(2.537, 3);
     const desk = confettiPlan(1, false, 1400, 900);
-    expect(desk).toEqual({ rain: 865, spray: SPRAY_PER_AMOUNT, slow: false });
+    expect(desk).toEqual({
+      rain: 865,
+      spray: SPRAY_PER_AMOUNT,
+      slow: false,
+      foil: 0,
+      shine: 0,
+    });
     // A huge screen at the top amount fills the pool exactly.
     expect(rainScreenScale(3840, 2160)).toBe(RAIN_SCREEN_MAX);
     expect(confettiPlan(CONFETTI_AMOUNT_MAX, false, 3840, 2160).rain).toBe(RAIN_CAP);
@@ -121,13 +147,15 @@ describe("confettiPlan: how many pieces a finish throws", () => {
   });
 
   it("drops the rain and keeps a slow 5% spray with reduced motion", () => {
-    expect(confettiPlan(1, true)).toEqual({ rain: 0, spray: 16, slow: true });
+    const none = { foil: 0, shine: 0 };
+    expect(confettiPlan(1, true)).toEqual({ rain: 0, spray: 16, slow: true, ...none });
     expect(confettiPlan(CONFETTI_AMOUNT_MAX, true)).toEqual({
       rain: 0,
       spray: 48,
       slow: true,
+      ...none,
     });
-    expect(confettiPlan(0, true)).toEqual({ rain: 0, spray: 0, slow: true });
+    expect(confettiPlan(0, true)).toEqual({ rain: 0, spray: 0, slow: true, ...none });
   });
 });
 
@@ -482,7 +510,7 @@ describe("pieceLook", () => {
     expect(pieceLook(pool.data, 0, true, look).alpha).toBeCloseTo(0.5, 5);
     pool.data[AGE] = life;
     expect(pieceLook(pool.data, 0, true, look).alpha).toBe(0);
-    // Edge-on: a sliver at 0.55 of the color.
+    // Edge-on: a sliver.
     pool.data[AGE] = 0;
     pool.data[FLIP] = Math.PI / 2;
     pieceLook(pool.data, 0, true, look);
@@ -493,9 +521,219 @@ describe("pieceLook", () => {
     expect(look.short).toBeGreaterThan(0.3 * look.long);
   });
 
-  it("shades a color toward black", () => {
-    expect(shadeHex(0xffffff, 1)).toBe(0xffffff);
-    expect(shadeHex(0xffffff, 0.5)).toBe(0x808080);
-    expect(shadeHex(0xffd23f, 0)).toBe(0);
+  it("scales a color (saturating) and mixes it toward white", () => {
+    expect(litHex(0xffffff, 1, 0)).toBe(0xffffff);
+    expect(litHex(0xffffff, 0.5, 0)).toBe(0x808080);
+    expect(litHex(0xffd23f, 0, 0)).toBe(0);
+    // Each channel saturates at 255 before the mix.
+    expect(litHex(0x204080, 4, 0)).toBe(0x80ffff);
+    expect(litHex(0x000000, 1, 0.5)).toBe(0x808080);
+    expect(litHex(0x204080, 1, 1)).toBe(0xffffff);
+  });
+});
+
+// A seeded unit normal, uniform on the sphere.
+function unitNormal(rand: () => number): [number, number, number] {
+  const z = 2 * rand() - 1;
+  const a = rand() * Math.PI * 2;
+  const r = Math.sqrt(1 - z * z);
+  return [r * Math.cos(a), r * Math.sin(a), z];
+}
+
+// H tipped `deg` degrees toward the screen's normal (or away, negative).
+function tippedHalf(deg: number): [number, number, number] {
+  const [hx, hy, hz] = HALF;
+  // The unit vector in the plane of H and +z, perpendicular to H.
+  let ux = -hz * hx;
+  let uy = -hz * hy;
+  let uz = 1 - hz * hz;
+  const n = Math.hypot(ux, uy, uz);
+  ux /= n;
+  uy /= n;
+  uz /= n;
+  const t = (deg * Math.PI) / 180;
+  const c = Math.cos(t);
+  const s = Math.sin(t);
+  return [hx * c + ux * s, hy * c + uy * s, hz * c + uz * s];
+}
+
+function channels(c: number): number[] {
+  return [(c >> 16) & 255, (c >> 8) & 255, c & 255];
+}
+
+describe("the shine (K337)", () => {
+  it("peaks where the normal is the half vector H", () => {
+    const [hx, hy, hz] = HALF;
+    // H = normalize(L + V), with the eye V = (0, 0, 1).
+    const lx = LIGHT[0];
+    const ly = LIGHT[1];
+    const lz = LIGHT[2] + 1;
+    const ln = Math.hypot(lx, ly, lz);
+    expect([hx, hy, hz].map((v) => +v.toFixed(12))).toEqual(
+      [lx / ln, ly / ln, lz / ln].map((v) => +v.toFixed(12))
+    );
+    expect(specular(hx, hy, hz, true, 1)).toBeCloseTo(FOIL_SPEC, 9);
+    expect(specular(hx, hy, hz, false, 1)).toBeCloseTo(PAPER_SPEC, 9);
+    const rand = seeded(21);
+    for (let k = 0; k < 2000; k++) {
+      const [x, y, z] = unitNormal(rand);
+      for (const foil of [false, true]) {
+        expect(specular(x, y, z, foil, 1)).toBeLessThanOrEqual(
+          specular(hx, hy, hz, foil, 1)
+        );
+      }
+    }
+    for (const deg of [-5, 5]) {
+      const [x, y, z] = tippedHalf(deg);
+      expect(specular(x, y, z, false, 1)).toBeLessThan(PAPER_SPEC);
+      expect(specular(x, y, z, true, 1)).toBeLessThan(FOIL_SPEC);
+    }
+    // Foil facing H flashes white, whatever its color.
+    for (const c of [0xffd23f, 0x2040a0, 0x000000]) {
+      expect(shadeNormal(c, hx, hy, hz, true, 1)).toBe(0xffffff);
+    }
+  });
+
+  it("lights a piece's back as its front: the normal flips", () => {
+    const rand = seeded(22);
+    for (let k = 0; k < 500; k++) {
+      const [x, y, z] = unitNormal(rand);
+      for (const foil of [false, true]) {
+        expect(shadeNormal(0x3fa0ff, -x, -y, -z, foil, 1)).toBe(
+          shadeNormal(0x3fa0ff, x, y, z, foil, 1)
+        );
+      }
+    }
+    // In pieceLook: half a turn of the flip shows the back, lit the same.
+    const pool = new ConfettiPool(1);
+    spawnRain(pool, 1, 411, 753, seeded(23), 1);
+    pool.data[AGE] = 0;
+    const a: PieceLook = { alpha: 0, long: 0, short: 0, rotation: 0, tint: 0 };
+    const b: PieceLook = { ...a };
+    for (let flip = 0; flip < 6.3; flip += 0.05) {
+      pool.data[FLIP] = flip;
+      pieceLook(pool.data, 0, false, a, 1);
+      pool.data[FLIP] = flip + Math.PI;
+      pieceLook(pool.data, 0, false, b, 1);
+      const ca = channels(a.tint);
+      const cb = channels(b.tint);
+      for (let j = 0; j < 3; j++) expect(Math.abs(ca[j] - cb[j])).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("gives foil a brighter, sharper flash than paper", () => {
+    expect(FOIL_SPEC).toBeGreaterThan(PAPER_SPEC);
+    // The half-peak width: the first tip off H where each falls below half.
+    const halfWidth = (foil: boolean): number => {
+      const peak = foil ? FOIL_SPEC : PAPER_SPEC;
+      for (let deg = 0; deg < 90; deg += 0.1) {
+        const [x, y, z] = tippedHalf(deg);
+        if (specular(x, y, z, foil, 1) < peak / 2) return deg;
+      }
+      return 90;
+    };
+    const foil = halfWidth(true);
+    const paper = halfWidth(false);
+    expect(foil).toBeLessThan(paper / 2);
+    expect(foil).toBeGreaterThan(3);
+    // A paper piece facing H only brightens toward white; foil reaches it.
+    expect(shadeNormal(0x2040a0, ...HALF, false, 1)).not.toBe(0xffffff);
+  });
+
+  it("lights by the light alone at strength 0 (ambient + diffuse, no flash)", () => {
+    // Strength 0 is the look reduced motion gets: no specular on either
+    // material. A face-on piece shows its exact color...
+    expect(shadeNormal(0xffd23f, 0, 0, 1, true, 0)).toBe(0xffd23f);
+    expect(shadeNormal(0xffd23f, 0, 0, 1, false, 0)).toBe(0xffd23f);
+    // ...one facing the light brightens (k = 1.331, saturating)...
+    expect(shadeNormal(0xffd23f, ...LIGHT, true, 0)).toBe(0xffff54);
+    // ...and one turned from it keeps SHINE_AMBIENT of its color.
+    expect(SHINE_AMBIENT).toBe(0.5);
+    expect(shadeNormal(0xffd23f, 0.8, 0.6, 0, false, 0)).toBe(0x806920);
+    // No flash where the shine would peak, for either material.
+    expect(specular(...HALF, true, 0)).toBe(0);
+    expect(shadeNormal(0xffd23f, ...HALF, true, 0)).toBe(
+      shadeNormal(0xffd23f, ...HALF, false, 0)
+    );
+    // Garbage strengths are 0 too.
+    expect(specular(...HALF, true, NaN)).toBe(0);
+    expect(specular(...HALF, true, -1)).toBe(0);
+  });
+
+  it("keeps the light and drops the flashes with reduced motion", () => {
+    const plan = confettiPlan(1, true, 411, 753, CONFETTI_SHINE_MAX, 1);
+    expect([plan.shine, plan.foil]).toEqual([0, 1]);
+    const sim = new ConfettiSim();
+    sim.burst(plan, 411, 753, 0, 0, 1, seeded(24));
+    expect(sim.shine).toBe(0);
+    // No flutter: every piece shows its full face, so its tint is its color.
+    const look: PieceLook = { alpha: 0, long: 0, short: 0, rotation: 0, tint: 0 };
+    for (let f = 0; f < 30; f++) {
+      sim.step(DT, 753);
+      const d = sim.spray.data;
+      for (let i = 0; i < sim.spray.alive; i++) {
+        expect(d[i * F + MAT]).toBe(1);
+        expect(pieceLook(d, i, true, look, sim.shine).tint).toBe(d[i * F + COLOR]);
+      }
+    }
+  });
+
+  it("clamps the strength and the share, and reads garbage as none", () => {
+    expect(confettiPlan(1, false, 0, 0, 50, 7)).toMatchObject({
+      shine: CONFETTI_SHINE_MAX,
+      foil: 1,
+    });
+    expect(confettiPlan(1, false, 0, 0, NaN, -1)).toMatchObject({ shine: 0, foil: 0 });
+    expect(confettiPlan(1, false, 0, 0, 0.75, 0.4)).toMatchObject({ shine: 0.75, foil: 0.4 });
+  });
+
+  it("cuts the foil share from foil, and takes no draw at share 0", () => {
+    // Share 0 draws no material: the same pieces as before K337.
+    const counted = (seed: number): [() => number, () => number] => {
+      const r = seeded(seed);
+      let n = 0;
+      return [
+        () => {
+          n++;
+          return r();
+        },
+        () => n,
+      ];
+    };
+    const [r0, n0] = counted(25);
+    const [r1, n1] = counted(25);
+    const p0 = new ConfettiPool(100);
+    const p1 = new ConfettiPool(100);
+    spawnRain(p0, 100, 411, 753, r0, 0);
+    spawnRain(p1, 100, 411, 753, r1, 0.5);
+    expect(n1() - n0()).toBe(100);
+    for (let i = 0; i < 100; i++) expect(p0.data[i * F + MAT]).toBe(0);
+    // The share holds over many pieces, rain and spray alike.
+    const share = (pool: ConfettiPool): number => {
+      let foil = 0;
+      for (let i = 0; i < pool.alive; i++) foil += pool.data[i * F + MAT];
+      return foil / pool.alive;
+    };
+    const spray = new ConfettiPool(SPRAY_CAP);
+    spawnSpray(spray, SPRAY_CAP, 0, 0, 1, false, seeded(26), 0.3);
+    expect(share(spray)).toBeCloseTo(0.3, 1);
+    const rain = new ConfettiPool(RAIN_CAP);
+    spawnRain(rain, RAIN_CAP, 1400, 900, seeded(27), 0.3);
+    expect(share(rain)).toBeCloseTo(0.3, 1);
+    const all = new ConfettiPool(200);
+    spawnSpray(all, 200, 0, 0, 1, false, seeded(28), 1);
+    expect(share(all)).toBe(1);
+  });
+
+  it("takes the burst's strength, and keeps it for pieces still in the air", () => {
+    const sim = new ConfettiSim();
+    expect(sim.shine).toBe(0);
+    sim.burst(confettiPlan(1, false, 411, 753, 1.5, 0.3), 411, 753, 0, 0, 1, seeded(29));
+    expect(sim.shine).toBe(1.5);
+    // An empty plan throws nothing and changes nothing.
+    sim.burst(confettiPlan(0, false, 411, 753, 0, 0), 411, 753, 0, 0, 1, seeded(30));
+    expect(sim.shine).toBe(1.5);
+    sim.burst(confettiPlan(1, false, 411, 753, 0.5, 0.3), 411, 753, 0, 0, 1, seeded(31));
+    expect(sim.shine).toBe(0.5);
   });
 });

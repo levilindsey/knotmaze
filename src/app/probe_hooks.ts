@@ -910,7 +910,9 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       ctx.params.confettiAmount,
       ctx.motion.reduced,
       ctx.app.screen.width,
-      ctx.app.screen.height
+      ctx.app.screen.height,
+      ctx.params.confettiShine,
+      ctx.params.foilShare
     ),
     sceneAnimating: ctx.sceneWasAnimating,
     rainVisible: ctx.confetti.rainContainer.visible,
