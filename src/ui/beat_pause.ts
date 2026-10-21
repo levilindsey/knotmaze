@@ -30,7 +30,8 @@ function injectStyle(): void {
     ".km-beat-pause:focus-visible{outline:2px solid #8ea0c0;outline-offset:2px}" +
     ":root[data-beat-paused='1'] canvas{visibility:hidden}" +
     ".km-beat-paused-label{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);" +
-    "z-index:17;pointer-events:none;display:none;color:#c9d3e6;" +
+    "z-index:17;pointer-events:none;display:none;color:#e4ecf8;" +
+    "background:#1b2233e0;padding:10px 20px;border-radius:22px;" +
     "font:600 20px/1.2 system-ui,sans-serif;letter-spacing:0.08em}" +
     ":root[data-beat-paused='1'] .km-beat-paused-label{display:block}";
   document.head.appendChild(s);
