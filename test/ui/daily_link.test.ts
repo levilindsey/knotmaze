@@ -396,6 +396,9 @@ describe("the daily design and its exempt preferences (K56)", () => {
       // K337: the confetti's shine and foil share, with the amount.
       "confettiShine",
       "foilShare",
+      // K336: the side cannons and their amount, with the rest.
+      "confettiCannons",
+      "cannonAmount",
       // K98, proposed with it.
       "markerSize",
       // K558, proposed with it (Call C2): which stroke goes over.

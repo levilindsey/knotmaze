@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   AGE,
+  CANNON_AMOUNT_MAX,
+  CANNON_APEX_X,
+  CANNON_APEX_Y,
+  CANNON_CAP,
+  CANNON_DELAY_MAX,
+  CANNON_LIFE_MAX,
+  CANNON_PER_AMOUNT,
+  CANNON_SPREAD,
+  CANNON_STAGGER,
+  CANNON_TERM,
+  CANNON_Y,
   CONFETTI_AMOUNT_MAX,
   CONFETTI_MAX_DT,
   CONFETTI_SHINE_MAX,
@@ -8,7 +19,9 @@ import {
   ConfettiPool,
   ConfettiSim,
   F,
+  FINISH_CANNONS,
   FLIP,
+  FLIP_RATE,
   FOIL_SPEC,
   HALF,
   LEN,
@@ -28,6 +41,7 @@ import {
   RAIN_WINDOW,
   ROT,
   SHINE_AMBIENT,
+  SPIN,
   SPRAY_CAP,
   SPRAY_DRAG,
   SPRAY_GRAVITY,
@@ -36,23 +50,36 @@ import {
   SPRAY_LIFT,
   SPRAY_MIN_PX,
   SPRAY_PER_AMOUNT,
+  SWAY,
+  SWAY_AMP,
+  SWAY_RATE,
+  TERM,
   VX,
   VY,
   X,
   Y,
+  aimCannon,
   confettiPlan,
+  confettiPlanFor,
+  finishCannons,
   pieceLook,
+  planThrows,
   rainDelay,
+  rainPieceScale,
   rainReleaseDensity,
   rainScreenScale,
   litHex,
   shadeNormal,
+  spawnCannon,
   spawnRain,
   spawnSpray,
   specular,
   sprayUnit,
+  stepCannon,
   stepRain,
   stepSpray,
+  type CannonSpec,
+  type ConfettiSettings,
   type PieceLook,
 } from "../../src/render/confetti_model";
 
@@ -85,18 +112,21 @@ describe("confettiPlan: how many pieces a finish throws", () => {
     expect(confettiPlan(1, false)).toEqual({
       rain: RAIN_PER_AMOUNT,
       spray: SPRAY_PER_AMOUNT,
+      cannon: 0,
       foil: 0,
       shine: 0,
     });
     expect(confettiPlan(0.5, false)).toEqual({
       rain: 210,
       spray: 160,
+      cannon: 0,
       foil: 0,
       shine: 0,
     });
     expect(confettiPlan(CONFETTI_AMOUNT_MAX, false)).toEqual({
       rain: RAIN_PER_AMOUNT * CONFETTI_AMOUNT_MAX,
       spray: SPRAY_CAP,
+      cannon: 0,
       foil: 0,
       shine: 0,
     });
@@ -114,6 +144,7 @@ describe("confettiPlan: how many pieces a finish throws", () => {
     expect(desk).toEqual({
       rain: 865,
       spray: SPRAY_PER_AMOUNT,
+      cannon: 0,
       foil: 0,
       shine: 0,
     });
@@ -428,6 +459,266 @@ describe("the spray (world space)", () => {
     expect(runOut(sim, 900)).toBeLessThanOrEqual(SPRAY_LIFE_MAX + DT);
   });
 
+});
+
+describe("the side cannons (screen space, K336)", () => {
+  it("throws CANNON_PER_AMOUNT a cannon at amount 1 on the phone, scaled as the rain is", () => {
+    const phone = (ca: number) =>
+      confettiPlan(1, false, RAIN_REF_W, RAIN_REF_H, 0, 0, ca).cannon;
+    expect([phone(0), phone(0.5), phone(1), phone(3)]).toEqual([
+      0,
+      CANNON_PER_AMOUNT / 2,
+      CANNON_PER_AMOUNT,
+      3 * CANNON_PER_AMOUNT,
+    ]);
+    // The rain's screen scale: a desktop's blasts are as dense.
+    expect(confettiPlan(1, false, 1400, 900, 0, 0, 1).cannon).toBe(309);
+    expect(confettiPlan(1, false, 1400, 900, 0, 0, 3).cannon).toBe(926);
+    // The top amount on a huge screen fills the pool exactly.
+    expect(
+      FINISH_CANNONS *
+        confettiPlan(1, false, 3840, 2160, 0, 0, CANNON_AMOUNT_MAX).cannon
+    ).toBe(CANNON_CAP);
+    // Garbage reads as none, too much as the max.
+    for (const ca of [-1, NaN, Infinity * 0]) expect([ca, phone(ca)]).toEqual([ca, 0]);
+    expect(phone(50)).toBe(phone(CANNON_AMOUNT_MAX));
+    // The confetti amount is the master switch, and reduced motion throws
+    // none (K186).
+    expect(confettiPlan(0, false, 1400, 900, 0, 0, 1).cannon).toBe(0);
+    expect(confettiPlan(1, true, 1400, 900, 0, 0, 1).cannon).toBe(0);
+    // The cannons change nothing else in the plan.
+    const off = confettiPlan(1, false, 1400, 900, 1, 0.3, 0);
+    const on = confettiPlan(1, false, 1400, 900, 1, 0.3, 2);
+    expect({ ...on, cannon: 0 }).toEqual(off);
+  });
+
+  it("reads the app's params: cannons off throws none (confettiPlanFor)", () => {
+    const s: ConfettiSettings = {
+      confettiAmount: 1,
+      confettiShine: 1,
+      foilShare: 0.3,
+      confettiCannons: true,
+      cannonAmount: 1,
+    };
+    const on = confettiPlanFor(s, false, 1400, 900);
+    expect(on).toEqual(confettiPlan(1, false, 1400, 900, 1, 0.3, 1));
+    for (const cannonAmount of [1, 3]) {
+      expect(
+        confettiPlanFor({ ...s, confettiCannons: false, cannonAmount }, false, 1400, 900)
+      ).toEqual({ ...on, cannon: 0 });
+    }
+    expect(planThrows(on)).toBe(true);
+    expect(planThrows({ rain: 0, spray: 0, cannon: 1, foil: 0, shine: 0 })).toBe(true);
+    expect(planThrows(confettiPlanFor(s, true, 1400, 900))).toBe(false);
+    expect(planThrows(confettiPlanFor({ ...s, confettiAmount: 0 }, false, 1400, 900))).toBe(false);
+  });
+
+  it("aims a piece so its arc tops out at the aimed point (aimCannon)", () => {
+    for (const [w, h] of [
+      [411, 753],
+      [1400, 900],
+    ]) {
+      const x0 = -20;
+      const y0 = CANNON_Y * h;
+      const ax = CANNON_APEX_X * w;
+      const ay = CANNON_APEX_Y * h;
+      const aim = aimCannon(x0, y0, ax, ay, h);
+      const pool = new ConfettiPool(1);
+      const o = pool.alloc() * F;
+      const d = pool.data;
+      d[o + X] = x0;
+      d[o + Y] = y0;
+      d[o + VX] = Math.cos(aim.angle) * aim.speed;
+      d[o + VY] = Math.sin(aim.angle) * aim.speed;
+      d[o + LIFE] = CANNON_LIFE_MAX;
+      d[o + TERM] = CANNON_TERM * h;
+      d[o + LEN] = 10;
+      // No sway (SWAY_AMP 0): the drag and the fall alone.
+      let topX = x0;
+      let topY = y0;
+      const fine = 1 / 2000;
+      for (let k = 0; k < CANNON_LIFE_MAX / fine && pool.alive > 0; k++) {
+        stepCannon(pool, fine, h);
+        if (pool.alive > 0 && d[o + Y] < topY) {
+          topY = d[o + Y];
+          topX = d[o + X];
+        }
+      }
+      expect([w, Math.abs(topX - ax) < 1, Math.abs(topY - ay) < 1]).toEqual([w, true, true]);
+    }
+  });
+
+  it("fires inward and upward from just off each side (finishCannons)", () => {
+    for (const [w, h] of [
+      [411, 753],
+      [753, 411],
+      [1400, 900],
+      [3840, 2160],
+    ]) {
+      const [left, right] = finishCannons(w, h, 100);
+      expect(left.x).toBeLessThan(0);
+      expect(right.x).toBeGreaterThan(w);
+      for (const c of [left, right]) {
+        expect(c.y).toBeCloseTo(CANNON_Y * h, 9);
+        expect([c.paper, c.spread]).toEqual([100, CANNON_SPREAD]);
+        expect(c.delay + c.volley).toBeLessThanOrEqual(CANNON_DELAY_MAX);
+        // Every direction in the spread points up (screen +y is down) and in.
+        for (const da of [-c.spread, 0, c.spread]) {
+          expect(Math.sin(c.angle + da)).toBeLessThan(0);
+          expect(Math.cos(c.angle + da) * (w / 2 - c.x)).toBeGreaterThan(0);
+        }
+      }
+      // Mirror images, the right one CANNON_STAGGER s later.
+      expect(right.x - w).toBeCloseTo(-left.x, 9);
+      expect(right.angle).toBeCloseTo(Math.PI - left.angle, 12);
+      expect([left.delay, right.delay]).toEqual([0, CANNON_STAGGER]);
+    }
+  });
+
+  it("arcs every piece up over the screen, its top well inside, and out by the bottom", () => {
+    for (const [w, h] of [
+      [411, 753],
+      [753, 411],
+      [1400, 900],
+    ]) {
+      const per = confettiPlan(1, false, w, h, 0, 0, 1).cannon;
+      const pool = new ConfettiPool(CANNON_CAP);
+      const rand = seeded(w + 1);
+      for (const c of finishCannons(w, h, per)) {
+        spawnCannon(pool, c, h, rainPieceScale(w, h), 0.3, rand);
+      }
+      expect(pool.alive).toBe(FINISH_CANNONS * per);
+      const worst = { top: Infinity, edge: Infinity, exit: Infinity, age: 0 };
+      for (let i = 0; i < pool.alive; i++) {
+        // Each piece flown alone, so its row never moves.
+        const one = new ConfettiPool(1);
+        one.alloc();
+        one.data.set(pool.data.subarray(i * F, (i + 1) * F));
+        const d = one.data;
+        const fromLeft = d[X] < w / 2;
+        // Released within CANNON_DELAY_MAX, wholly off the screen.
+        expect(-d[AGE]).toBeGreaterThanOrEqual(0);
+        expect(-d[AGE]).toBeLessThanOrEqual(CANNON_DELAY_MAX);
+        expect(fromLeft ? -d[X] : d[X] - w).toBeGreaterThan(d[LEN] / 2);
+        let topX = 0;
+        let topY = Infinity;
+        let last = { x: 0, y: 0, age: 0 };
+        while (one.alive > 0) {
+          stepCannon(one, DT, h);
+          if (one.alive === 0 || d[AGE] <= 0) continue;
+          if (d[Y] < topY) {
+            topY = d[Y];
+            topX = d[X];
+          }
+          last = { x: d[X], y: d[Y], age: d[AGE] };
+        }
+        // The top of the arc lands inside the screen, above the cannons.
+        expect(topY).toBeLessThan(CANNON_Y * h);
+        worst.top = Math.min(worst.top, topY / h);
+        worst.edge = Math.min(worst.edge, topX / w, 1 - topX / w);
+        // It fell out of the bottom (the step kills a piece past the edge),
+        // inside the screen's width, before the backstop's fade.
+        expect(last.y - d[LEN]).toBeGreaterThan(h);
+        worst.exit = Math.min(worst.exit, last.x / w, 1 - last.x / w);
+        worst.age = Math.max(worst.age, last.age);
+      }
+      // Census (8 seeds): tops 0.18-0.53 h down, 0.08-0.51 w in from their
+      // own side; every piece out by the bottom within 5.1 s of release.
+      expect([w, worst.top > 0.12]).toEqual([w, true]);
+      expect([w, worst.edge > 0.04]).toEqual([w, true]);
+      expect([w, worst.exit > 0.04]).toEqual([w, true]);
+      expect(worst.age).toBeLessThan(CANNON_LIFE_MAX - RAIN_FADE);
+    }
+  });
+
+  it("flies the same path at any frame rate, a mid-frame release included", () => {
+    const h = 900;
+    const fly = (fps: number, t: number): number[] => {
+      const pool = new ConfettiPool(1);
+      const o = pool.alloc() * F;
+      const d = pool.data;
+      d[o + X] = -30;
+      d[o + Y] = 720;
+      d[o + VX] = 500;
+      d[o + VY] = -900;
+      d[o + AGE] = -0.0123;
+      d[o + LIFE] = CANNON_LIFE_MAX;
+      d[o + TERM] = CANNON_TERM * h;
+      d[o + LEN] = 12;
+      d[o + SWAY] = 0.7;
+      d[o + SWAY_RATE] = 2.1;
+      d[o + SWAY_AMP] = 14;
+      d[o + SPIN] = 3;
+      d[o + FLIP_RATE] = 9;
+      const n = Math.round(t * fps);
+      for (let k = 0; k < n; k++) stepCannon(pool, 1 / fps, h);
+      return [X, Y, VX, VY, ROT, FLIP].map((f) => d[o + f]);
+    };
+    // Whole frames at every rate: multiples of 1 / 6 s.
+    for (const t of [1 / 6, 0.5, 1.5]) {
+      const ref = fly(240, t);
+      for (const fps of [30, 60, 144]) {
+        // Float32 rows: rounding, not the frame rate, is the difference.
+        const got = fly(fps, t);
+        for (let f = 0; f < ref.length; f++) {
+          expect([t, fps, f, Math.abs(got[f] - ref[f]) < 0.05]).toEqual([t, fps, f, true]);
+        }
+      }
+    }
+    // Before its release a piece holds still.
+    expect(fly(60, 0)).toEqual(fly(240, 0));
+    const held = fly(100, 0.01);
+    expect([held[0], held[1]]).toEqual([-30, 720]);
+  });
+
+  it("bounds every life: none outlives CANNON_DELAY_MAX + CANNON_LIFE_MAX", () => {
+    const pool = new ConfettiPool(CANNON_CAP);
+    const rand = seeded(77);
+    const [left, right] = finishCannons(1400, 900, 300);
+    // A spec past the bounds is clamped into them.
+    const wild: CannonSpec = { ...right, delay: 50, volley: NaN };
+    for (const c of [left, wild]) spawnCannon(pool, c, 900, 1, 0, rand);
+    for (let i = 0; i < pool.alive; i++) {
+      const wait = -pool.data[i * F + AGE];
+      expect(wait >= 0 && wait <= CANNON_DELAY_MAX).toBe(true);
+    }
+    // A screen too tall to fall out of: only the backstop ends them.
+    let t = 0;
+    while (pool.alive > 0 && t < 30) {
+      stepCannon(pool, DT, 1e9);
+      t += DT;
+    }
+    expect(pool.alive).toBe(0);
+    expect(t).toBeGreaterThan(CANNON_LIFE_MAX);
+    expect(t).toBeLessThanOrEqual(CANNON_DELAY_MAX + CANNON_LIFE_MAX + DT);
+  });
+
+  it("throws the cannons last, so the rain and spray are unchanged", () => {
+    const [w, h] = [1400, 900];
+    const plain = confettiPlan(1, false, w, h, 1, 0.3, 0);
+    const full = confettiPlan(1, false, w, h, 1, 0.3, 1);
+    const a = new ConfettiSim();
+    const b = new ConfettiSim();
+    a.burst(plain, w, h, 3, 4, 1, seeded(21));
+    expect(b.burst(full, w, h, 3, 4, 1, seeded(21))).toBe(true);
+    expect([a.cannon.alive, b.cannon.alive]).toEqual([0, FINISH_CANNONS * full.cannon]);
+    const live = (p: ConfettiPool) => Array.from(p.data.subarray(0, p.alive * F));
+    expect(live(b.rain)).toEqual(live(a.rain));
+    expect(live(b.spray)).toEqual(live(a.spray));
+    b.clear();
+    expect(b.active).toBe(false);
+    // Cannons alone hold the sim active until their last piece falls out.
+    const c = new ConfettiSim();
+    const only = { rain: 0, spray: 0, cannon: 100, foil: 0, shine: 1 };
+    expect(c.burst(only, w, h, 0, 0, 1, seeded(22))).toBe(true);
+    expect(c.active).toBe(true);
+    const t = runOut(c, h);
+    expect(c.active).toBe(false);
+    expect(t).toBeGreaterThan(3);
+    expect(t).toBeLessThan(CANNON_DELAY_MAX + CANNON_LIFE_MAX);
+    // No screen, no cannons.
+    expect(new ConfettiSim().burst(only, 0, 0, 0, 0, 1)).toBe(false);
+  });
 });
 
 describe("ConfettiSim: the animating flag", () => {

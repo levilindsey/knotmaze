@@ -52,6 +52,7 @@ import {
   readsDetail,
 } from "../render/background_model";
 import {
+  CANNON_AMOUNT_MAX,
   CONFETTI_AMOUNT_MAX,
   CONFETTI_SHINE_MAX,
 } from "../render/confetti_model";
@@ -1390,7 +1391,7 @@ export function buildPanel(
       pointerScale: 0.01,
       format: (v: number) => v.toFixed(2),
     },
-    "How much confetti a finish throws: 1 = the default, 0 = none, up to 3x.",
+    "How much confetti a finish throws: 1 = the default, 0 = none, up to 3x. Reduced motion throws none.",
     D.confettiAmount, () => {
       params.confettiAmount = Math.round(params.confettiAmount * 100) / 100;
       callbacks.onConfettiChange();
@@ -1409,7 +1410,7 @@ export function buildPanel(
       pointerScale: 0.01,
       format: (v: number) => v.toFixed(2),
     },
-    "How brightly the confetti flashes as pieces turn through the light: 1 = the default, 0 = lit but no flashes, up to 2x. Reduced motion keeps the light and drops the flashes.",
+    "How brightly the confetti flashes as pieces turn through the light: 1 = the default, 0 = lit but no flashes, up to 2x.",
     D.confettiShine, () => {
       params.confettiShine = Math.round(params.confettiShine * 100) / 100;
       callbacks.onConfettiChange();
@@ -1428,6 +1429,31 @@ export function buildPanel(
     "The share of pieces that are foil: foil flashes near white for a moment as it turns through the light, while paper shows a soft sheen. 0 = all paper, 1 = all foil.",
     D.foilShare, () => {
       params.foilShare = Math.round(params.foilShare * 100) / 100;
+      callbacks.onConfettiChange();
+    }
+  );
+  // K336: the side cannons (on/off) and their own amount, which shows only
+  // while they are on. Daily-exempt, like the amount; both apply at the
+  // next finish.
+  const confettiCannonsRow = row(
+    fPath, p, "confettiCannons", { label: "Side cannons" },
+    "Two cannons just past the left and right edges of the screen fire confetti in and up when you finish, and it falls back in an arc.",
+    D.confettiCannons,
+    () => callbacks.onConfettiChange()
+  );
+  const cannonAmountRow = row(
+    fPath, p, "cannonAmount",
+    {
+      label: "Cannon amount",
+      min: 0,
+      max: CANNON_AMOUNT_MAX,
+      keyScale: 0.05,
+      pointerScale: 0.01,
+      format: (v: number) => v.toFixed(2),
+    },
+    "How much confetti the side cannons fire: 1 = the default, 0 = none, up to 3x.",
+    D.cannonAmount, () => {
+      params.cannonAmount = Math.round(params.cannonAmount * 100) / 100;
       callbacks.onConfettiChange();
     }
   );
@@ -2658,6 +2684,9 @@ export function buildPanel(
     confettiAmountRow.hidden = !fab;
     confettiShineRow.hidden = !fab || params.confettiAmount <= 0;
     foilShareRow.hidden = confettiShineRow.hidden || params.confettiShine <= 0;
+    confettiCannonsRow.hidden = !fab || params.confettiAmount <= 0;
+    cannonAmountRow.hidden =
+      confettiCannonsRow.hidden || !params.confettiCannons;
     markerSizeRow.hidden = !fab;
     resetPathBtn.hidden = !fab;
     pulseSpacingRow.hidden = !fab;

@@ -87,7 +87,11 @@ import {
   markerRadiusFor,
 } from "./render/marker_glyphs";
 import { ConfettiLayer } from "./render/confetti";
-import { confettiPlan, sprayUnit } from "./render/confetti_model";
+import {
+  confettiPlanFor,
+  planThrows,
+  sprayUnit,
+} from "./render/confetti_model";
 import { PluckRipples } from "./render/pluck_ripple";
 import { startShaderWarmup, warmContextFor } from "./render/shader_warmup";
 import { openDailyStats } from "./ui/daily_stats_view";
@@ -1499,17 +1503,16 @@ async function main(): Promise<void> {
   // K140: a finish's confetti, with its banner (every finish: dailies, free
   // play, replays, real time) - the rain over the screen and the spray
   // around the exit marker, in units of the marker's radius with a CSS px
-  // floor (sprayUnit). Reduced motion throws none (K186: the plan is empty).
+  // floor (sprayUnit), and K336's side cannons. Reduced motion throws none
+  // (K186: the plan is empty).
   const throwConfetti = (): void => {
-    const plan = confettiPlan(
-      params.confettiAmount,
+    const plan = confettiPlanFor(
+      params,
       motion.reduced,
       app.screen.width,
-      app.screen.height,
-      params.confettiShine,
-      params.foilShare
+      app.screen.height
     );
-    if (plan.rain === 0 && plan.spray === 0) return;
+    if (!planThrows(plan)) return;
     flags.push(Flag.OVERLAY); // K6-3: wake a stopped loop for the burst.
     let cx = NaN;
     let cy = NaN;

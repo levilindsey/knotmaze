@@ -99,6 +99,7 @@ describe("links", () => {
       minoDeadEnds: 0.4, minoRoam: 30, minoWake: 2, minoFog: "always",
       minoPull: 0.5, minoRefog: true,
       confettiAmount: 1, confettiShine: 1, foilShare: 0.3,
+      confettiCannons: true, cannonAmount: 1,
       pluckWhole: 0.75, pluckCrossings: "through", pluckGlow: "fallback",
       pluckRipple: "glint", rippleStrength: 1, rippleAuto: 0.35,
       pluckSheen: 0.5, pluckTug: 0, tugAuto: false, autoPluckGain: 0.5,
@@ -450,6 +451,18 @@ describe("links", () => {
     const big = withSeed(7, { confettiShine: 7, foilShare: 7 });
     const back = parseParams(`?${encodeParams(big)}`);
     expect([back.confettiShine, back.foilShare]).toEqual([2, 1]);
+  });
+  // K336: the side cannons' switch and amount, the clamp and the round trip.
+  it("reads the side cannons and their amount from override keys", () => {
+    const p = parseParams("?7&cfc=0&cfn=2.5");
+    expect([p.confettiCannons, p.cannonAmount]).toEqual([false, 2.5]);
+    expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+    expect(parseParams("?7&cfc=1").confettiCannons).toBe(true);
+    expect(parseParams("?7&cfn=9").cannonAmount).toBe(3);
+    expect(parseParams("?7&cfn=-1").cannonAmount).toBe(0);
+    expect(parseParams("?7&cfn=x").cannonAmount).toBe(PARAM_DEFAULTS.cannonAmount);
+    const big = withSeed(7, { cannonAmount: 7 });
+    expect(parseParams(`?${encodeParams(big)}`).cannonAmount).toBe(3);
   });
 
   // K180: the pluck params' override keys, the whole amount's clamp, the
@@ -827,6 +840,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoRoam: "mrm", minoWake: "mwk", minoFog: "mfg", minoPull: "mpl",
   minoRefog: "mrf", gameMode: "gm",
   confettiAmount: "cfa", confettiShine: "cfh", foilShare: "cff",
+  confettiCannons: "cfc", cannonAmount: "cfn",
   pluckWhole: "pw", pluckCrossings: "pcx",
   pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg", hoverGlowWidth: "hgw",
   revealDistance: "rvd", revealFade: "rvf", revealLook: "rvl",

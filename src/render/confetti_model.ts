@@ -23,6 +23,12 @@
 //           radius with a CSS px floor (sprayUnit), so a zoomed-out phone
 //           still sees pieces; the view copies the world root's transform,
 //           so the burst stays on the finish as the camera moves.
+//   CANNONS (K336) - SCREEN space: blasts of paper from points just off the
+//           left and right edges, angled in and up (finishCannons), arcing
+//           over under linear drag toward a terminal fall and leaving by
+//           the bottom edge. A cannon is a reusable emitter (CannonSpec:
+//           a point, a direction, a cone, a speed, a count, a volley), so
+//           K318's themes can aim cannons elsewhere.
 // SHINE (K337): one directional light, upper left and toward the viewer,
 // lights every piece from a real 3D normal (its spin in the screen's plane
 // and its flip about its long axis): ambient + diffuse, plus a specular
@@ -37,8 +43,9 @@
 // on mid-fall drops the pieces in the air (panel_wiring.ts).
 //
 // Render-only and bounded: nothing here touches the physics, and every
-// piece dies within RAIN_WINDOW + RAIN_LIFE_MAX (rain) or SPRAY_LIFE_MAX
-// (spray) seconds, so the frame loop's OVERLAY poll (K6-1) clears.
+// piece dies within RAIN_WINDOW + RAIN_LIFE_MAX (rain), SPRAY_LIFE_MAX
+// (spray) or CANNON_DELAY_MAX + CANNON_LIFE_MAX (cannons) seconds, so the
+// frame loop's OVERLAY poll (K6-1) clears.
 
 // Pieces at amount 1 (the rain's on a phone-sized screen: rainScreenScale
 // multiplies it on bigger ones), and the amount's top (the panel slider and
@@ -109,6 +116,46 @@ const SPRAY_FADE = 0.4;
 // zoom draws the marker radius ~7 px, where unit-sized pieces were specks.
 export const SPRAY_MIN_PX = 16;
 
+// K336 SIDE CANNONS. Levi (2026-10-14): "Let's also add some blasts of
+// confetti and streamers from specific points just outside the left and
+// rigth sides of the screen, angled in and up, and then apply gravity to
+// make these fall in an arc". Each cannon throws CANNON_PER_AMOUNT pieces of
+// paper at amount 1 (`cannonAmount`, its own slider, 0 to CANNON_AMOUNT_MAX)
+// on the reference phone, and rainScreenScale multiplies it as it does the
+// rain, so a desktop's blasts are as dense. The pool holds the max.
+export const CANNON_PER_AMOUNT = 150;
+export const CANNON_AMOUNT_MAX = 3;
+export const FINISH_CANNONS = 2;
+export const CANNON_CAP =
+  CANNON_PER_AMOUNT * CANNON_AMOUNT_MAX * RAIN_SCREEN_MAX * FINISH_CANNONS;
+// The motion, closed-form so K579's GPU confetti can evaluate it from a
+// piece's launch alone: linear drag CANNON_DRAG (1/s) toward a terminal fall
+// of CANNON_TERM screen heights/s (gravity = drag x terminal speed; it
+// follows the screen, as the rain's speeds do), plus the rain's sway and
+// flutter. stepCannon integrates it exactly, so the arcs are the same at
+// any frame rate. Every piece leaves within CANNON_DELAY_MAX s of the burst
+// and lives at most CANNON_LIFE_MAX s after its release (a backstop: one
+// that has not fallen out by then fades over RAIN_FADE s, as the rain does).
+export const CANNON_DRAG = 1.2;
+export const CANNON_TERM = 0.3;
+export const CANNON_LIFE_MAX = 7;
+export const CANNON_DELAY_MAX = 1;
+// The finish's blasts: each cannon's pieces leave over CANNON_VOLLEY s,
+// front-loaded, the right cannon CANNON_STAGGER s after the left; each
+// piece's speed is CANNON_SPEED_MIN to CANNON_SPEED_MIN + CANNON_SPEED_SPAN
+// of the aimed speed, its direction within CANNON_SPREAD rad of the aim.
+export const CANNON_VOLLEY = 0.22;
+export const CANNON_STAGGER = 0.08;
+export const CANNON_SPEED_MIN = 0.75;
+export const CANNON_SPEED_SPAN = 0.35;
+export const CANNON_SPREAD = 0.12;
+// Where, in shares of the screen: both cannons at CANNON_Y of the height,
+// just off their edges, aimed so the arcs' tops land CANNON_APEX_X of the
+// width in from their own side and CANNON_APEX_Y of the height down.
+export const CANNON_Y = 0.8;
+export const CANNON_APEX_X = 0.3;
+export const CANNON_APEX_Y = 0.32;
+
 // K337 SHINE: the specular strength's top (the slider and the link clamp).
 export const CONFETTI_SHINE_MAX = 2;
 
@@ -120,11 +167,12 @@ export const CONFETTI_COLORS: readonly number[] = [
 
 // Pool row layout (Float32 fields).
 export const F = 18;
-export const X = 0; // Position (rain: CSS px; spray: world).
+export const X = 0; // Position (rain, cannons: CSS px; spray: world).
 export const Y = 1;
 export const VX = 2; // Velocity per second.
 export const VY = 3;
-export const AGE = 4; // Seconds since release (rain: negative until then).
+// Seconds since release (rain, cannons: negative until then).
+export const AGE = 4;
 export const LIFE = 5; // Seconds the piece may live after release.
 export const LEN = 6; // Long side.
 export const ASPECT = 7; // Short side / long side.
@@ -132,11 +180,12 @@ export const ROT = 8; // Radians.
 export const SPIN = 9; // Radians/s.
 export const FLIP = 10; // Flutter phase, radians (cos = the visible width).
 export const FLIP_RATE = 11;
-export const SWAY = 12; // Rain: sway phase, radians.
+export const SWAY = 12; // Rain, cannons: sway phase, radians.
 export const SWAY_RATE = 13;
-export const SWAY_AMP = 14; // Rain: sway speed amplitude, px/s.
+export const SWAY_AMP = 14; // Rain, cannons: sway speed amplitude, px/s.
 export const COLOR = 15; // 0xrrggbb (exact in f32).
-export const TERM = 16; // Rain: terminal speed px/s; spray: gravity.
+// Rain, cannons: terminal speed px/s; spray: gravity.
+export const TERM = 16;
 export const MAT = 17; // K337: the material, 0 paper or 1 foil.
 
 export class ConfettiPool {
@@ -166,10 +215,21 @@ export class ConfettiPool {
 export interface ConfettiPlan {
   rain: number;
   spray: number;
+  // K336: paper pieces per side cannon (0 = no cannons).
+  cannon: number;
   // K337: the share of pieces cut from foil, and the specular's strength
   // (0 = the diffuse light only).
   foil: number;
   shine: number;
+}
+
+// The app's confetti params, as UrlParams names them (confettiPlanFor).
+export interface ConfettiSettings {
+  confettiAmount: number;
+  confettiShine: number;
+  foilShare: number;
+  confettiCannons: boolean;
+  cannonAmount: number;
 }
 
 // [0, max], garbage 0.
@@ -178,28 +238,59 @@ function clampNum(v: number, max: number): number {
 }
 
 // How many pieces a finish throws on a width x height CSS px screen:
-// `amount` scales both effects (clamped to [0, CONFETTI_AMOUNT_MAX]; off,
-// garbage or 0 = none), and the screen scales the rain (rainScreenScale;
-// no screen = a phone's count). Reduced motion throws nothing (K186).
-// K337: `shine` is the specular's strength ([0, CONFETTI_SHINE_MAX]) and
-// `foilShare` the share of pieces cut from foil ([0, 1]); none = no foil,
-// no specular.
+// `amount` scales the rain and the spray (clamped to [0,
+// CONFETTI_AMOUNT_MAX]; garbage or 0 = no confetti at all, the cannons
+// included), and the screen scales the rain and the cannons
+// (rainScreenScale; no screen = a phone's count). Reduced motion throws
+// nothing (K186). K337: `shine` is the specular's strength ([0,
+// CONFETTI_SHINE_MAX]) and `foilShare` the share of pieces cut from foil
+// ([0, 1]); none = no foil, no specular. K336: `cannonAmount` scales the
+// side cannons on its own ([0, CANNON_AMOUNT_MAX]; 0 = none).
 export function confettiPlan(
   amount: number,
   reduced: boolean,
   width = 0,
   height = 0,
   shine = 0,
-  foilShare = 0
+  foilShare = 0,
+  cannonAmount = 0
 ): ConfettiPlan {
   const a = reduced ? 0 : clampNum(amount, CONFETTI_AMOUNT_MAX);
-  const rain = RAIN_PER_AMOUNT * a * rainScreenScale(width, height);
+  const screen = rainScreenScale(width, height);
+  const ca = a > 0 ? clampNum(cannonAmount, CANNON_AMOUNT_MAX) : 0;
   return {
-    rain: Math.min(RAIN_CAP, Math.round(rain)),
+    rain: Math.min(RAIN_CAP, Math.round(RAIN_PER_AMOUNT * a * screen)),
     spray: Math.min(SPRAY_CAP, Math.round(SPRAY_PER_AMOUNT * a)),
+    cannon: Math.min(
+      CANNON_CAP / FINISH_CANNONS,
+      Math.round(CANNON_PER_AMOUNT * ca * screen)
+    ),
     foil: clampNum(foilShare, 1),
     shine: clampNum(shine, CONFETTI_SHINE_MAX),
   };
+}
+
+// confettiPlan from the app's params (the cannons off = cannon amount 0).
+export function confettiPlanFor(
+  s: ConfettiSettings,
+  reduced: boolean,
+  width: number,
+  height: number
+): ConfettiPlan {
+  return confettiPlan(
+    s.confettiAmount,
+    reduced,
+    width,
+    height,
+    s.confettiShine,
+    s.foilShare,
+    s.confettiCannons ? s.cannonAmount : 0
+  );
+}
+
+// Whether a plan throws anything.
+export function planThrows(p: ConfettiPlan): boolean {
+  return p.rain + p.spray + p.cannon > 0;
 }
 
 // A rain piece's size factor: it follows the screen a little (phones get
@@ -392,6 +483,187 @@ export function stepSpray(pool: ConfettiPool, dt: number): void {
   }
 }
 
+// K336 A CANNON, a reusable emitter (K318's themes may aim others): a launch
+// point (CSS px), a direction (radians in the screen's axes, +y down, so up
+// is negative), a cone (+-spread rad about it), a speed (px/s; each piece
+// takes CANNON_SPEED_MIN to CANNON_SPEED_MIN + CANNON_SPEED_SPAN of it), a
+// count of paper pieces, and a timing: the first piece leaves `delay` s
+// after the burst, the rest over `volley` s, front-loaded. The finish's two
+// are finishCannons.
+export interface CannonSpec {
+  x: number;
+  y: number;
+  angle: number;
+  speed: number;
+  spread: number;
+  paper: number;
+  delay: number;
+  volley: number;
+}
+
+// The launch speed whose path rises exactly `rise` px under linear drag k
+// toward a terminal fall vt: launched straight up at v, a piece tops out
+// (v - vt ln(1 + v / vt)) / k above its start, which grows with v
+// (bisection; 48 halvings are far below a pixel).
+function launchSpeedForRise(rise: number, k: number, vt: number): number {
+  const f = (v: number): number => (v - vt * Math.log(1 + v / vt)) / k;
+  let lo = 0;
+  let hi = Math.max(1, vt);
+  while (f(hi) < rise && hi < 1e7) hi *= 2;
+  for (let it = 0; it < 48; it++) {
+    const mid = 0.5 * (lo + hi);
+    if (f(mid) < rise) lo = mid;
+    else hi = mid;
+  }
+  return 0.5 * (lo + hi);
+}
+
+// The direction and speed that carry a cannon piece from (x0, y0) to the top
+// of its arc at (ax, ay), CSS px on a screen `height` px tall, under the
+// cannons' drag and fall (stepCannon). The top comes when the vertical speed
+// reaches 0, at t* = ln(1 + vy / vt) / k, and by then the piece has covered
+// vy / (vt + vy) of its whole horizontal travel, vx / k.
+export function aimCannon(
+  x0: number,
+  y0: number,
+  ax: number,
+  ay: number,
+  height: number
+): { angle: number; speed: number } {
+  const k = CANNON_DRAG;
+  const vt = Math.max(1e-6, CANNON_TERM * height);
+  const vy = launchSpeedForRise(Math.max(0, y0 - ay), k, vt);
+  const share = vy / (vt + vy);
+  const vx = share > 1e-9 ? ((ax - x0) * k) / share : 0;
+  return { angle: Math.atan2(-vy, vx), speed: Math.sqrt(vx * vx + vy * vy) };
+}
+
+// The finish's two cannons on a width x height CSS px screen: just off the
+// left and right edges (clear of the largest piece) at CANNON_Y of the
+// height, aimed in and up so the arcs top out CANNON_APEX_X of the width in
+// from their own side and CANNON_APEX_Y of the height down; `paper` pieces
+// each, the right cannon CANNON_STAGGER s after the left.
+export function finishCannons(
+  width: number,
+  height: number,
+  paper: number
+): CannonSpec[] {
+  const off = 0.02 * width + 16 * rainPieceScale(width, height);
+  const y0 = CANNON_Y * height;
+  const aim = aimCannon(
+    -off,
+    y0,
+    CANNON_APEX_X * width,
+    CANNON_APEX_Y * height,
+    height
+  );
+  const base = {
+    y: y0,
+    speed: aim.speed,
+    spread: CANNON_SPREAD,
+    paper,
+    volley: CANNON_VOLLEY,
+  };
+  return [
+    { ...base, x: -off, angle: aim.angle, delay: 0 },
+    { ...base, x: width + off, angle: Math.PI - aim.angle, delay: CANNON_STAGGER },
+  ];
+}
+
+// Queue a cannon's pieces (screen space, CSS px, a screen `height` px tall);
+// `scale` sizes the paper as the rain's (rainPieceScale), `foil` is the foil
+// share (K337). A piece leaves delay + volley u^2 s after the burst (u
+// uniform), always within CANNON_DELAY_MAX.
+export function spawnCannon(
+  pool: ConfettiPool,
+  c: CannonSpec,
+  height: number,
+  scale: number,
+  foil: number,
+  rand: () => number
+): void {
+  const d = pool.data;
+  const vt = CANNON_TERM * height;
+  const volley = clampNum(c.volley, CANNON_DELAY_MAX);
+  const delay = clampNum(c.delay, CANNON_DELAY_MAX - volley);
+  for (let k = 0; k < c.paper; k++) {
+    const i = pool.alloc();
+    if (i < 0) return;
+    const o = i * F;
+    paper(d, o, (9 + rand() * 7) * scale, foil, rand);
+    const a = c.angle + c.spread * (2 * rand() - 1);
+    const sp = c.speed * (CANNON_SPEED_MIN + CANNON_SPEED_SPAN * rand());
+    d[o + X] = c.x + (rand() - 0.5) * 8 * scale;
+    d[o + Y] = c.y + (rand() - 0.5) * 8 * scale;
+    d[o + VX] = Math.cos(a) * sp;
+    d[o + VY] = Math.sin(a) * sp;
+    const u = rand();
+    d[o + AGE] = -(delay + volley * u * u);
+    d[o + LIFE] = CANNON_LIFE_MAX;
+    d[o + TERM] = vt;
+    d[o + SPIN] = (rand() - 0.5) * 10;
+    d[o + FLIP_RATE] = 6 + rand() * 8;
+    d[o + SWAY] = rand() * Math.PI * 2;
+    d[o + SWAY_RATE] = 1.4 + rand() * 1.8;
+    // Half the rain's sway: a fuller one carried a phone arc's top off the
+    // edge (`.claude/probes/K336/cannon_census.mjs`).
+    d[o + SWAY_AMP] = (5 + rand() * 12) * scale;
+  }
+}
+
+// Advance cannon pieces by dt seconds over a screen `height` CSS px tall,
+// exactly: under linear drag k toward the terminal fall vt (TERM), a piece
+// t s after (x, y, vx, vy) is at x + vx g, y + vt t + (vy - vt) g, with
+// g = (1 - e^(-k t)) / k, moving at vx e^(-k t), vt + (vy - vt) e^(-k t);
+// the sway adds (A / w)(sin(p + w t) - sin p). A piece released mid-frame
+// moves only for its own share of the frame, so a path is the same at any
+// frame rate. A piece dies once it falls past the bottom edge, or at LIFE.
+export function stepCannon(
+  pool: ConfettiPool,
+  dt: number,
+  height: number
+): void {
+  const d = pool.data;
+  const dampDt = Math.exp(-CANNON_DRAG * dt);
+  let i = 0;
+  while (i < pool.alive) {
+    const o = i * F;
+    const age = d[o + AGE] + dt;
+    d[o + AGE] = age;
+    if (age <= 0) {
+      i++;
+      continue;
+    }
+    if (
+      age >= d[o + LIFE] ||
+      (d[o + VY] > 0 && d[o + Y] - d[o + LEN] > height)
+    ) {
+      pool.kill(i);
+      continue;
+    }
+    const t = age < dt ? age : dt;
+    const damp = t === dt ? dampDt : Math.exp(-CANNON_DRAG * t);
+    const gain = (1 - damp) / CANNON_DRAG;
+    const vt = d[o + TERM];
+    const vy = d[o + VY];
+    d[o + X] += d[o + VX] * gain;
+    d[o + Y] += vt * t + (vy - vt) * gain;
+    d[o + VX] *= damp;
+    d[o + VY] = vt + (vy - vt) * damp;
+    const w = d[o + SWAY_RATE];
+    const ph = d[o + SWAY];
+    const ph1 = ph + w * t;
+    d[o + SWAY] = ph1;
+    d[o + X] +=
+      w > 0
+        ? (d[o + SWAY_AMP] / w) * (Math.sin(ph1) - Math.sin(ph))
+        : d[o + SWAY_AMP] * Math.cos(ph) * t;
+    d[o + ROT] += d[o + SPIN] * t;
+    d[o + FLIP] += d[o + FLIP_RATE] * t;
+    i++;
+  }
+}
+
 // K337 SHINE. One directional light, upper left and toward the viewer, in
 // the screen's axes (+x right, +y down, +z toward the viewer; the spray's
 // world root never rotates, so its pieces share those axes). The eye looks
@@ -497,9 +769,9 @@ export function litHex(c: number, k: number, s: number): number {
 
 // What the view draws for row i: alpha, the two scales' lengths (long side,
 // visible short side), the rotation and the lit tint. `spray` picks the
-// spray's fade (the last SPRAY_FADE share of its life; the rain fades over
-// RAIN_FADE s before its backstop); `shine` is the burst's specular
-// strength (ConfettiSim.shine).
+// spray's fade (the last SPRAY_FADE share of its life; the rain and the
+// cannons fade over RAIN_FADE s before their backstop); `shine` is the
+// burst's specular strength (ConfettiSim.shine).
 export interface PieceLook {
   alpha: number;
   long: number;
@@ -561,23 +833,26 @@ export function pieceLook(
 // tab's first frame back) they resume instead of jumping.
 export const CONFETTI_MAX_DT = 0.1;
 
-// Both effects' pools and their clock, with no pixi (render/confetti.ts
+// The effects' pools and their clock, with no pixi (render/confetti.ts
 // mirrors the pools into particles). `active` is what the frame loop's
 // OVERLAY poll reads (K6-1): true from a burst until the last piece dies.
 export class ConfettiSim {
   readonly rain = new ConfettiPool(RAIN_CAP);
   readonly spray = new ConfettiPool(SPRAY_CAP);
+  readonly cannon = new ConfettiPool(CANNON_CAP); // K336: screen space
   // K337: the last burst's specular strength (pieceLook's `shine`); pieces
   // still in the air from an earlier burst take it too.
   shine = 0;
 
   get active(): boolean {
-    return this.rain.alive > 0 || this.spray.alive > 0;
+    return this.rain.alive > 0 || this.spray.alive > 0 || this.cannon.alive > 0;
   }
 
   // Throw a finish's confetti: plan.rain over a width x height CSS px
-  // screen, and plan.spray around the world point (cx, cy) in `unit`s
-  // (sprayUnit). Returns whether anything was thrown.
+  // screen, plan.spray around the world point (cx, cy) in `unit`s
+  // (sprayUnit), and plan.cannon pieces from each of the finish's cannons
+  // (finishCannons; spawned last, so a plan without cannons throws the same
+  // rain and spray for the same draws). Returns whether anything was thrown.
   burst(
     plan: ConfettiPlan,
     width: number,
@@ -596,20 +871,29 @@ export class ConfettiSim {
       spawnSpray(this.spray, plan.spray, cx, cy, unit, rand, plan.foil);
       thrown = true;
     }
+    if (plan.cannon > 0 && width > 0 && height > 0) {
+      const scale = rainPieceScale(width, height);
+      for (const c of finishCannons(width, height, plan.cannon)) {
+        spawnCannon(this.cannon, c, height, scale, plan.foil, rand);
+      }
+      thrown = true;
+    }
     if (thrown) this.shine = plan.shine;
     return thrown;
   }
 
-  // Advance both effects by dt seconds (clamped to CONFETTI_MAX_DT;
+  // Advance every effect by dt seconds (clamped to CONFETTI_MAX_DT;
   // garbage steps 0) over a screen `height` CSS px tall.
   step(dt: number, height: number): void {
     const s = dt > 0 ? Math.min(dt, CONFETTI_MAX_DT) : 0;
     if (this.rain.alive > 0) stepRain(this.rain, s, height);
     if (this.spray.alive > 0) stepSpray(this.spray, s);
+    if (this.cannon.alive > 0) stepCannon(this.cannon, s, height);
   }
 
   clear(): void {
     this.rain.clear();
     this.spray.clear();
+    this.cannon.clear();
   }
 }

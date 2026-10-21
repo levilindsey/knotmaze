@@ -12,7 +12,7 @@ import type { PhysicsHost } from "../physics/physics_host";
 import { hashDump } from "../physics/probe_dump";
 import type { BackgroundLayer } from "../render/background";
 import type { ConfettiLayer } from "../render/confetti";
-import { confettiPlan } from "../render/confetti_model";
+import { confettiPlanFor } from "../render/confetti_model";
 import { EXPLORE_LOOKS } from "../render/explore_glsl";
 import type { FabricMazeRenderer } from "../render/fabric_maze_renderer";
 import type { PluckRipple } from "../render/pluck_model";
@@ -920,14 +920,13 @@ export function installProbeHooks(ctx: ProbeCtx): void {
     active: ctx.confetti.active,
     rain: ctx.confetti.sim.rain.alive,
     spray: ctx.confetti.sim.spray.alive,
+    cannon: ctx.confetti.sim.cannon.alive, // K336
     stats: { ...ctx.confetti.stats },
-    plan: confettiPlan(
-      ctx.params.confettiAmount,
+    plan: confettiPlanFor(
+      ctx.params,
       ctx.motion.reduced,
       ctx.app.screen.width,
-      ctx.app.screen.height,
-      ctx.params.confettiShine,
-      ctx.params.foilShare
+      ctx.app.screen.height
     ),
     sceneAnimating: ctx.sceneWasAnimating,
     rainVisible: ctx.confetti.rainContainer.visible,

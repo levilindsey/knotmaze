@@ -324,6 +324,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("minoTipReach"),
   num("minoRoamNear"),
   num("minoTelegraphRuns"),
+  flag("confettiCannons"), // K336: the side cannons
+  num("cannonAmount"), // K336: the side cannons' amount
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -437,6 +439,7 @@ export const PARAM_RANGES: Readonly<
   confettiAmount: [0, 3],
   confettiShine: [0, 2], // K337 (CONFETTI_SHINE_MAX)
   foilShare: [0, 1], // K337
+  cannonAmount: [0, 3], // K336 (CANNON_AMOUNT_MAX)
   pluckWhole: [0, 1.5],
   markerSize: [0.25, 3],
   hoverGlow: [0, 1],
