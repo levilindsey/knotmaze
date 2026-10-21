@@ -333,6 +333,14 @@ Next free ID: K704.
   - evidence: `.claude/probes/K137/s3a/`
   - next: stage 3a: K137-b (a broken run blocks the minotaur and the fire), 4.32 lives, 4.7 the sword, 4.29 sprint
   - brief: `docs/design/K137_s3a.md`
+- **K703** · Overnight phone sitting 1 (Levi left the phone unlocked on its charger, 2026-10-20
+  23:05): K114 cut and K324 s2 telegraph on the phone (feeds K694, K695, K698), then K687 and K177.
+  docs/design/K703_phone.md
+  - owner: agent `a9ed72f7f8dee6604` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 23:05, 1 h cap ~00:05)
+  - branch: mainline; last commit: `3f68474`
+  - evidence: `.claude/probes/K703/`
+  - next: parts 1-4 per the brief; then a second sitting for the K580 s4, walker and K137 s3a merges
+  - brief: `docs/design/K703_phone.md`
 
 ## Next, in order
 
@@ -550,9 +558,6 @@ Every other item below waits on the trigger it names.
 - **K690** · K620 checks not run: the root-pixel census (GPU against the CPU mirror), CPU-mirror
   tests on the real a (xh 2 and 3, tp52 and tp60), a cold-compile time with `trace_intro.mjs`
   (`docs/design/K620.md`)
-- **K703** · Overnight phone sitting 1 (Levi left the phone unlocked on its charger, 2026-10-20
-  23:05): K114 cut and K324 s2 telegraph on the phone (feeds K694, K695, K698), then K687 and K177.
-  docs/design/K703_phone.md
 
 ## Residuals (known, not fixed)
 
