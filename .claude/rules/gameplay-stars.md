@@ -87,3 +87,14 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   two-star cap, which already counts every catch. Tests:
   star_rating.test.ts; probe: `.claude/probes/K80/stage3/banner/`
   (probe_stars.mjs, turnmino and turnmino_restart).
+
+- LEAD THE WALKER'S STARS (K114 walker, 2026-10-20; brief
+  `docs/design/K114_walker.md`, call 4). In the cut's walker modes the
+  walker walks, not you, so the walk rating does not apply. Lead rates
+  the cuts against par instead: `rateCuts(cuts, par)` gives 3 at par or
+  under (an upper-bound par can be beaten), 2 one cut over, 1 beyond, and
+  no rating for a count that is not a whole number >= 0. The rating
+  carries `cuts: {cuts, par}`, with ratio NaN and walked / optimal 0.
+  `starExplanation` then gives `cutRules()` and "You led the walker out
+  with N cuts; par is P.". Delay has no rating, and neither has a Lead
+  maze with no par. The share's title wears the stars as for any rating.

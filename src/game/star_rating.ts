@@ -47,6 +47,37 @@ export interface StarRating {
   // Of those, the catches whose walk `walked` holds: the ones since the
   // level last started over (0..catches; null without a minotaur).
   walkedCatches: number | null;
+  // K114 walker: Lead the walker's cuts against its par (absent: a walk
+  // rating). The walker walked, not you, so a Lead rating holds no walk:
+  // ratio is NaN and walked / optimal 0, and the explanation reads this.
+  cuts?: { cuts: number; par: number };
+}
+
+// K114 walker, Lead the walker (the brief's call 4): three stars at par or
+// under (an upper-bound par can be beaten), two one cut over, one beyond.
+// No rating for a count that is not a whole number >= 0.
+export function rateCuts(cuts: number, par: number): StarRating | null {
+  if (!Number.isInteger(cuts) || cuts < 0) return null;
+  if (!Number.isInteger(par) || par < 0) return null;
+  const stars: StarCount = cuts <= par ? 3 : cuts === par + 1 ? 2 : 1;
+  return {
+    stars,
+    ratio: Number.NaN,
+    walked: 0,
+    optimal: 0,
+    catches: null,
+    walkedCatches: null,
+    cuts: { cuts, par },
+  };
+}
+
+// What each of Lead's stars needs.
+export function cutRules(): string[] {
+  return [
+    "★★★ at par: the fewest cuts that lead the walker out",
+    "★★ one cut over par",
+    "★ any finish",
+  ];
 }
 
 // Every run walked, from a turn-based record: the finished path plus each
@@ -127,6 +158,13 @@ const times = (n: number): string =>
 
 // The tap explanation: the rules, then where this run landed.
 export function starExplanation(r: StarRating): string[] {
+  if (r.cuts) {
+    const { cuts, par } = r.cuts;
+    return [
+      ...cutRules(),
+      `You led the walker out with ${cuts === 1 ? "1 cut" : `${cuts} cuts`}; par is ${par}.`,
+    ];
+  }
   let landed =
     `You walked ${fmtRatio(r.ratio)} the shortest route: ` +
     `${hudDist(r.walked)} against ${hudDist(r.optimal)}, ` +

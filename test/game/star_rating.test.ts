@@ -2,7 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   THREE_STAR_RATIO,
   TWO_STAR_RATIO,
+  cutRules,
   fmtRatio,
+  rateCuts,
   rateRun,
   ratingForResult,
   ratioShown,
@@ -199,5 +201,36 @@ describe("share text stars (K155)", () => {
     expect(
       shareText({ daily: 12, replay: true, timeMs: 5000, efficiency: null, moves: "", stars: null })
     ).toBe("Knotmaze Daily #12 (replay) \u{1F9F6}\n⏱️ 0:05");
+  });
+});
+
+describe("Lead the walker's stars (K114 walker)", () => {
+  it("rates the cuts against par: 3 at or under, 2 one over, 1 beyond", () => {
+    expect(rateCuts(2, 2)?.stars).toBe(3);
+    expect(rateCuts(1, 2)?.stars).toBe(3);
+    expect(rateCuts(3, 2)?.stars).toBe(2);
+    expect(rateCuts(4, 2)?.stars).toBe(1);
+    expect(rateCuts(0, 0)?.stars).toBe(3);
+    expect(rateCuts(1, 0)?.stars).toBe(2);
+    expect(rateCuts(2, 0)?.stars).toBe(1);
+  });
+
+  it("gives no rating for a count that is not a whole number >= 0", () => {
+    expect(rateCuts(-1, 2)).toBeNull();
+    expect(rateCuts(1.5, 2)).toBeNull();
+    expect(rateCuts(1, Number.NaN)).toBeNull();
+    expect(rateCuts(1, Infinity)).toBeNull();
+  });
+
+  it("explains Lead's rules, the tier earned among them, then the cuts", () => {
+    const r = rateCuts(3, 2)!;
+    expect(r.cuts).toEqual({ cuts: 3, par: 2 });
+    expect(r.catches).toBeNull();
+    const lines = starExplanation(r);
+    expect(lines.slice(0, 3)).toEqual(cutRules());
+    expect(lines[3]).toBe("You led the walker out with 3 cuts; par is 2.");
+    expect(starExplanation(rateCuts(1, 1)!)[3]).toBe(
+      "You led the walker out with 1 cut; par is 1."
+    );
   });
 });
