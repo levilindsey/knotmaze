@@ -385,6 +385,10 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       hold: ch.hold,
       holdSeconds: ch.hold / CHASE_HZ,
       arrivals: ch.arrivals,
+      // K324 stage 3: the model it plays and its decisions so far (the
+      // guard's hunting steps and the stalker's every step draw one).
+      model: ch.params.model,
+      decisions: ch.decisions,
       plan: ch.plan(ctx.params.minoTelegraphRuns),
       plan8: ch.plan(8),
       player: { ...ch.player },
