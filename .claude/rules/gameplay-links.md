@@ -327,8 +327,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   182-184, after K525's `minoTelegraphLook` (181). They were 171-173 on
   their branch, 178-180 after the rebase onto b1ec927 (K324 stage 1) and
   182-184 after the one onto da03e7d (K336's 178-180, K525's 181); each
-  renumber re-froze the table pin. K324 stage 3 appends more minotaur
-  params: whoever merges second renumbers (the brief's param hotspot).
+  renumber re-froze the table pin. K324 stage 3, rebased after it, took
+  185-189 (REAL-TIME MODEL PARAMS below).
   CODEC_VERSION does not move (append only). The option lists
   follow FRAGILE_MODES and PAR_MODES. Neither daily-exempt nor MAZE
   keys: a daily plays with both off, and turning one on leaves the
@@ -418,3 +418,33 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   OVERRIDE_KEYS. The golden snapshot, the golden dailies and K87 did not
   move. What it does: gameplay-minotaur.md's TELEGRAPH LOOK; the row:
   gameplay-panel.md.
+
+- REAL-TIME MODEL PARAMS (K324 stage 3, 2026-10-20; brief
+  `docs/design/K324_s3.md`): five numbers APPENDED at 185-189, after
+  K137 stage 1's 182-184; CODEC_VERSION stays 8. `minoGuardRoam` (`mgr`,
+  the guard's territory in world units around the exit's junction, 30,
+  [5, 150]), `minoGuardDetect` (`mgd`, 20, [0, 100]), `minoGuardLose`
+  (`mgl`, 30, [0, 150]; the chase plays it at least `mgd`),
+  `minoGuardAccuracyRt` (`mgx`, 0.4, [0, 1]) and `minoStalkerAccuracyRt`
+  (`msx`, 0.45, [0, 1]). Their defaults read CHASE_MODEL_DEFAULTS
+  (minotaur.ts), as K294's turn rows read TURN_MODEL_DEFAULTS. The
+  hunter keeps `minoDetect` / `minoLose`, and the stalker's charge reads
+  that same pair. WHY NOT K294's rows (`mgs`, `mga`, `msa`): the turn
+  clock's sight counts runs and the real-time one world units, and the
+  two stalkers play different accuracies (0.3 and 0.45). A link lists
+  only what differs from today's defaults (K132), so separate params mean
+  switching the clock never rewrites a value (K440's fire pair, same
+  reasoning). PARAM_RANGES clamps each in both link readers and the
+  panel's sliders share the ranges; chaseParamsOf reads negative or
+  non-finite values as 0 and the accuracies through clamp01, and carries
+  `minotaur` (now both clocks' model) and the five into ChaseParams.
+  Neither daily-exempt nor MAZE keys (a daily plays without the
+  minotaur). All five are LIVE_EFFECTS under onChaseChange
+  (undo_stack.ts). They were 178-182 on their branch, 182-186 after the
+  rebase onto K336 (178-180) and K525 (181), and 185-189 after the one
+  onto 07c0189 (K137); each renumber re-froze the table pin. Pins that
+  moved: the table pin (`test/ui/param_codec.test.ts`), url_codec.test.ts's
+  defaults table and OVERRIDE_KEYS, plus its new test "reads the
+  real-time guard and stalker". The golden dailies, K87 and K80_DIGESTS
+  did not move. What they do: gameplay-minotaur.md's REAL-TIME GUARD AND
+  STALKER; the rows: gameplay-panel.md's REAL-TIME MODEL ROWS.

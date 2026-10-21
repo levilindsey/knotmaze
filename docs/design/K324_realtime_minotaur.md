@@ -459,7 +459,7 @@ folder, the tuning subfolder, the codec bump, `minoPull`).
   guard keeps a territory of 30 u around the exit tail's junction (the
   turn guard's 6 runs at about 5 u a run), spots you within 20 u, loses
   you beyond 30 u and aims at 0.4; the stalker aims at 0.45 and charges
-  within the shared sight. Five params (codec 182-186), the Behavior row
+  within the shared sight. Five params (codec 185-189), the Behavior row
   in real time, K80's rows moved into "Minotaur tuning", the hunter
   byte-identical (K80_DIGESTS unchanged) and digests for the other two.
   The sim table, the page check and what is left: the Handoff at the end
