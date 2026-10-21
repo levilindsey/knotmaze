@@ -269,6 +269,21 @@ Next free ID: K590.
   - evidence: `.claude/probes/K573/`
   - next: Step 1's exact changes (one sampAt per segment, no % in the loop, the early reject), measured on the phone
   - brief: `docs/design/K573.md`
+- **K456** · No webglcontextlost / webglcontextrestored handler anywhere in `src/` (K6-1's brief
+  research); what a lost context does to the page is untested.
+  - owner: agent ab96ea9e54f382fb5 of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 13:23, 2 h cap ~15:23)
+  - branch: `worktree-agent-ab96ea9e54f382fb5`, worktree `.claude/worktrees/agent-ab96ea9e54f382fb5`; last commit: `11e6ba1`
+  - evidence: `.claude/probes/K456/` (results.md, the forced-loss probe)
+  - next: measure today's loss behaviour per case, pick the handling, build it with the probe
+  - brief: `docs/design/K456.md`
+- **K372** · Fabric `?b` doesn't sleep again within 30 s after a drag, on any
+  host, master included (K7 s4). Rec: a short sonnet probe of whether and when
+  it sleeps.
+  - owner: agent a6dc49adc6ee83c05 of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 13:23, 1 h cap ~14:23)
+  - branch: `worktree-agent-a6dc49adc6ee83c05`, worktree `.claude/worktrees/agent-a6dc49adc6ee83c05`; last commit: `11e6ba1`
+  - evidence: `.claude/probes/K372/results.md`
+  - next: time the re-sleep after drags on ?b and two seeds; name the blocker of any run awake at 180 s
+  - brief: `docs/design/K372.md`
 
 ## Next, in order
 
@@ -828,9 +843,6 @@ Every other item below waits on the trigger it names.
 - **K367** · Ripple burst oddities (K279 s2): the wave phase reads +0.4-0.5 ms
   outside the ripple's draws (one unpinned run per build; rerun interleaved),
   and every ripple phase has a 9.5-10.7 ms worst frame (4.2-5.1 without).
-- **K372** · Fabric `?b` doesn't sleep again within 30 s after a drag, on any
-  host, master included (K7 s4). Rec: a short sonnet probe of whether and when
-  it sleeps.
 - **K374** · 31 freeze-patch probes and 6 timing wrappers still patch `ps.step` and run
   only with `&phw=0` (`.claude/probes/K7/stage4/ports/FREEZE_PATCH_FILES.md`), and K8's
   `g3_probe.mjs` (496, 553) and `g3_probe_batch4.mjs` (470) throw on a default build. Port each when next needed.
@@ -945,8 +957,6 @@ Every other item below waits on the trigger it names.
   the fade. Inferred occlusion, not inspected (`.claude/probes/K397/stage2/out_s2/`).
 - **K455** · At fw=0 the worker's exact sleep state is never drawn: gateFrame applies the snapshot
   after that frame's geometry pass (inferred; K6-1 measures it, K6-2's GEOM gating would draw it).
-- **K456** · No webglcontextlost / webglcontextrestored handler anywhere in `src/` (K6-1's brief
-  research); what a lost context does to the page is untested.
 - **K457** · `probe_daily.mjs` (K19-K20) has stale front expectations (K6-1's brief research).
 - **K458** · K6-3's stopped ticker must keep the wall-clock animations: the camera's follow delay
   and tween hold (camera.ts 153), tickFireFx (fabric 1443), the key hold and step timers (main
