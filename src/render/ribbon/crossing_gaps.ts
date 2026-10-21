@@ -773,13 +773,16 @@ export class CrossingGaps {
     // no longer builds a fine polyline; the march reaches above are the
     // range, rounded outward to whole samples by gapSampRange, strided
     // to the 64-segment cap at most 3 - never stretched, never cut).
+    // K573 step 2: strided as coarse as the pre-G3-1 polyline's bounds
+    // allow (chord <= 0.3, sagitta <= 0.0015 on the range's tightest bend).
     const { ref: overRef, arcPer: overArcPer } = gapSampRange(
       totalO,
       overSamples.count,
       overSamples.closed,
       overCenter,
       reachNeg,
-      reachPos
+      reachPos,
+      overSamples.positions
     );
     overRef.base = this.r.g3SampBase(crossing.over.chain);
     const overAt = (j: number): readonly [number, number] => {
@@ -880,7 +883,8 @@ export class CrossingGaps {
           bSamples.closed,
           bArc,
           bNeg,
-          bPos
+          bPos,
+          bSamples.positions
         );
         pref.base = this.r.g3SampBase(xc.under.chain);
         const bAt = (j: number): readonly [number, number] => {
