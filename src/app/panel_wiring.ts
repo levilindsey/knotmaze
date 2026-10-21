@@ -514,6 +514,12 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
     scene.renderer.appearFx = params.appearFx;
     deps.flags.push(Flag.GEOM); // K6-2: a look change asks for a geometry pass
   }
+  // K186: no confetti under reduced motion. A finish throws none
+  // (confettiPlan), and turning it on mid-fall drops the pieces in the air
+  // (before applyAccessibility, whose forced pass then draws them gone).
+  motion.subscribe(() => {
+    if (motion.reduced) deps.confetti.clear();
+  });
   motion.subscribe(applyAccessibility);
   contrast.subscribe(applyAccessibility);
   panel.markOverridden(overriddenKeys(a11y));

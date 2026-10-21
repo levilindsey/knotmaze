@@ -9,7 +9,6 @@ import {
   ConfettiSim,
   F,
   FLIP,
-  FLIP_RATE,
   FOIL_SPEC,
   HALF,
   LEN,
@@ -29,7 +28,6 @@ import {
   RAIN_WINDOW,
   ROT,
   SHINE_AMBIENT,
-  SPIN,
   SPRAY_CAP,
   SPRAY_DRAG,
   SPRAY_GRAVITY,
@@ -38,7 +36,6 @@ import {
   SPRAY_LIFT,
   SPRAY_MIN_PX,
   SPRAY_PER_AMOUNT,
-  TERM,
   VX,
   VY,
   X,
@@ -88,21 +85,18 @@ describe("confettiPlan: how many pieces a finish throws", () => {
     expect(confettiPlan(1, false)).toEqual({
       rain: RAIN_PER_AMOUNT,
       spray: SPRAY_PER_AMOUNT,
-      slow: false,
       foil: 0,
       shine: 0,
     });
     expect(confettiPlan(0.5, false)).toEqual({
       rain: 210,
       spray: 160,
-      slow: false,
       foil: 0,
       shine: 0,
     });
     expect(confettiPlan(CONFETTI_AMOUNT_MAX, false)).toEqual({
       rain: RAIN_PER_AMOUNT * CONFETTI_AMOUNT_MAX,
       spray: SPRAY_CAP,
-      slow: false,
       foil: 0,
       shine: 0,
     });
@@ -120,7 +114,6 @@ describe("confettiPlan: how many pieces a finish throws", () => {
     expect(desk).toEqual({
       rain: 865,
       spray: SPRAY_PER_AMOUNT,
-      slow: false,
       foil: 0,
       shine: 0,
     });
@@ -135,8 +128,8 @@ describe("confettiPlan: how many pieces a finish throws", () => {
     ]) {
       expect(rainScreenScale(w, h)).toBe(1);
     }
-    // Reduced motion still throws no rain on any screen.
-    expect(confettiPlan(1, true, 1920, 1080).rain).toBe(0);
+    // Reduced motion throws nothing on any screen (K186).
+    expect(confettiPlan(1, true, 1920, 1080)).toMatchObject({ rain: 0, spray: 0 });
   });
 
   it("caps the amount and reads zero or garbage as none", () => {
@@ -147,16 +140,18 @@ describe("confettiPlan: how many pieces a finish throws", () => {
     }
   });
 
-  it("drops the rain and keeps a slow 5% spray with reduced motion", () => {
-    const none = { foil: 0, shine: 0 };
-    expect(confettiPlan(1, true)).toEqual({ rain: 0, spray: 16, slow: true, ...none });
-    expect(confettiPlan(CONFETTI_AMOUNT_MAX, true)).toEqual({
-      rain: 0,
-      spray: 48,
-      slow: true,
-      ...none,
-    });
-    expect(confettiPlan(0, true)).toEqual({ rain: 0, spray: 0, slow: true, ...none });
+  it("throws nothing with reduced motion, whatever the settings (K186)", () => {
+    // Levi (2026-10-20): "None on reduced motion."
+    for (const amount of [0, 0.5, 1, CONFETTI_AMOUNT_MAX, 50]) {
+      for (const [w, h] of [
+        [0, 0],
+        [411, 753],
+        [1920, 1080],
+      ]) {
+        const p = confettiPlan(amount, true, w, h, CONFETTI_SHINE_MAX, 1);
+        expect([amount, w, p.rain, p.spray]).toEqual([amount, w, 0, 0]);
+      }
+    }
   });
 });
 
@@ -357,7 +352,7 @@ describe("the spray (world space)", () => {
   it("bursts from a ring around the finish", () => {
     const pool = new ConfettiPool(SPRAY_CAP);
     const unit = 2;
-    spawnSpray(pool, SPRAY_PER_AMOUNT, 100, -50, unit, false, seeded(4));
+    spawnSpray(pool, SPRAY_PER_AMOUNT, 100, -50, unit, seeded(4));
     let mx = 0;
     let my = 0;
     for (let i = 0; i < pool.alive; i++) {
@@ -379,7 +374,7 @@ describe("the spray (world space)", () => {
   it("flies out a few units, in units of the marker", () => {
     const unit = 3;
     const pool = new ConfettiPool(SPRAY_CAP);
-    spawnSpray(pool, SPRAY_PER_AMOUNT, 0, 0, unit, false, seeded(12));
+    spawnSpray(pool, SPRAY_PER_AMOUNT, 0, 0, unit, seeded(12));
     // The farthest each piece gets from the center before it dies, and
     // sideways (gravity pulls only down, so the drag alone bounds that).
     const far = new Float64Array(pool.alive);
@@ -406,7 +401,7 @@ describe("the spray (world space)", () => {
   it("bends over into a fall under gravity (K570)", () => {
     const unit = 2;
     const pool = new ConfettiPool(SPRAY_CAP);
-    spawnSpray(pool, SPRAY_PER_AMOUNT, 0, 0, unit, false, seeded(13));
+    spawnSpray(pool, SPRAY_PER_AMOUNT, 0, 0, unit, seeded(13));
     const n = pool.alive;
     for (let k = 0; k < Math.round(1.2 / DT); k++) stepSpray(pool, DT);
     expect(pool.alive).toBe(n);
@@ -433,20 +428,6 @@ describe("the spray (world space)", () => {
     expect(runOut(sim, 900)).toBeLessThanOrEqual(SPRAY_LIFE_MAX + DT);
   });
 
-  it("flies at half speed with no spin or flutter under reduced motion", () => {
-    const fast = new ConfettiPool(SPRAY_CAP);
-    const slow = new ConfettiPool(SPRAY_CAP);
-    spawnSpray(fast, 16, 0, 0, 1, false, seeded(6));
-    spawnSpray(slow, 16, 0, 0, 1, true, seeded(6));
-    for (let i = 0; i < 16; i++) {
-      const o = i * F;
-      expect(slow.data[o + VX]).toBeCloseTo(fast.data[o + VX] / 2, 5);
-      expect(slow.data[o + VY]).toBeCloseTo(fast.data[o + VY] / 2, 5);
-      expect(slow.data[o + LIFE]).toBeCloseTo(fast.data[o + LIFE] * 0.8, 5);
-      expect(slow.data[o + TERM]).toBeCloseTo(fast.data[o + TERM] / 2, 5);
-      expect([slow.data[o + SPIN], slow.data[o + FLIP_RATE], slow.data[o + FLIP]]).toEqual([0, 0, 0]);
-    }
-  });
 });
 
 describe("ConfettiSim: the animating flag", () => {
@@ -469,12 +450,11 @@ describe("ConfettiSim: the animating flag", () => {
     expect(sim.active).toBe(false);
   });
 
-  it("goes idle with reduced motion too (spray only)", () => {
+  it("throws nothing (and stays idle) under reduced motion (K186)", () => {
     const sim = new ConfettiSim();
-    sim.burst(confettiPlan(1, true), 1400, 900, 0, 0, 1, seeded(8));
-    expect([sim.rain.alive, sim.spray.alive]).toEqual([0, 16]);
-    expect(runOut(sim, 900)).toBeLessThanOrEqual(SPRAY_LIFE_MAX * 0.8 + DT);
-    expect(sim.active).toBe(false);
+    const plan = confettiPlan(1, true, 1400, 900, 1, 0.3);
+    expect(sim.burst(plan, 1400, 900, 0, 0, 1, seeded(8))).toBe(false);
+    expect([sim.active, sim.rain.alive, sim.spray.alive, sim.shine]).toEqual([false, 0, 0, 0]);
   });
 
   it("clamps a stalled frame, and a garbage step moves nothing", () => {
@@ -502,7 +482,7 @@ describe("ConfettiSim: the animating flag", () => {
 describe("pieceLook", () => {
   it("fades a spray piece over the end of its life and shades its back", () => {
     const pool = new ConfettiPool(1);
-    spawnSpray(pool, 1, 0, 0, 1, false, seeded(11));
+    spawnSpray(pool, 1, 0, 0, 1, seeded(11));
     const look: PieceLook = { alpha: 0, long: 0, short: 0, rotation: 0, tint: 0 };
     const life = pool.data[LIFE];
     pool.data[AGE] = 0;
@@ -642,8 +622,8 @@ describe("the shine (K337)", () => {
   });
 
   it("lights by the light alone at strength 0 (ambient + diffuse, no flash)", () => {
-    // Strength 0 is the look reduced motion gets: no specular on either
-    // material. A face-on piece shows its exact color...
+    // Strength 0: no specular on either material. A face-on piece shows its
+    // exact color...
     expect(shadeNormal(0xffd23f, 0, 0, 1, true, 0)).toBe(0xffd23f);
     expect(shadeNormal(0xffd23f, 0, 0, 1, false, 0)).toBe(0xffd23f);
     // ...one facing the light brightens (k = 1.331, saturating)...
@@ -659,24 +639,6 @@ describe("the shine (K337)", () => {
     // Garbage strengths are 0 too.
     expect(specular(...HALF, true, NaN)).toBe(0);
     expect(specular(...HALF, true, -1)).toBe(0);
-  });
-
-  it("keeps the light and drops the flashes with reduced motion", () => {
-    const plan = confettiPlan(1, true, 411, 753, CONFETTI_SHINE_MAX, 1);
-    expect([plan.shine, plan.foil]).toEqual([0, 1]);
-    const sim = new ConfettiSim();
-    sim.burst(plan, 411, 753, 0, 0, 1, seeded(24));
-    expect(sim.shine).toBe(0);
-    // No flutter: every piece shows its full face, so its tint is its color.
-    const look: PieceLook = { alpha: 0, long: 0, short: 0, rotation: 0, tint: 0 };
-    for (let f = 0; f < 30; f++) {
-      sim.step(DT, 753);
-      const d = sim.spray.data;
-      for (let i = 0; i < sim.spray.alive; i++) {
-        expect(d[i * F + MAT]).toBe(1);
-        expect(pieceLook(d, i, true, look, sim.shine).tint).toBe(d[i * F + COLOR]);
-      }
-    }
   });
 
   it("clamps the strength and the share, and reads garbage as none", () => {
@@ -716,13 +678,13 @@ describe("the shine (K337)", () => {
       return foil / pool.alive;
     };
     const spray = new ConfettiPool(SPRAY_CAP);
-    spawnSpray(spray, SPRAY_CAP, 0, 0, 1, false, seeded(26), 0.3);
+    spawnSpray(spray, SPRAY_CAP, 0, 0, 1, seeded(26), 0.3);
     expect(share(spray)).toBeCloseTo(0.3, 1);
     const rain = new ConfettiPool(RAIN_CAP);
     spawnRain(rain, RAIN_CAP, 1400, 900, seeded(27), 0.3);
     expect(share(rain)).toBeCloseTo(0.3, 1);
     const all = new ConfettiPool(200);
-    spawnSpray(all, 200, 0, 0, 1, false, seeded(28), 1);
+    spawnSpray(all, 200, 0, 0, 1, seeded(28), 1);
     expect(share(all)).toBe(1);
   });
 

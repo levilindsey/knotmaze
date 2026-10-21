@@ -30,10 +30,11 @@
 // foil (shadeNormal). Computed per piece per frame into the tint the view
 // already sets: no shader program (a new one compiles cold at the finish
 // and freezes the win, K307).
-// REDUCED MOTION (the Motion setting): no rain - a full-screen fall is the
-// large-area motion WCAG 2.3.3 asks to avoid - and a small, slow spray:
-// REDUCED_SPRAY_SHARE of the pieces at half speed, with no spin or flutter.
-// The shine keeps its diffuse term and drops the specular flashes.
+// REDUCED MOTION (the Motion setting): no confetti at all (K186, Levi
+// 2026-10-20: "None on reduced motion"). A full-screen fall is the
+// large-area motion WCAG 2.3.3 asks to avoid, and K140's small slow spray
+// is gone with it: confettiPlan throws nothing, and turning reduced motion
+// on mid-fall drops the pieces in the air (panel_wiring.ts).
 //
 // Render-only and bounded: nothing here touches the physics, and every
 // piece dies within RAIN_WINDOW + RAIN_LIFE_MAX (rain) or SPRAY_LIFE_MAX
@@ -54,8 +55,6 @@ export const CONFETTI_AMOUNT_MAX = 3;
 export const RAIN_SCREEN_MAX = 3;
 export const RAIN_CAP = RAIN_PER_AMOUNT * CONFETTI_AMOUNT_MAX * RAIN_SCREEN_MAX;
 export const SPRAY_CAP = SPRAY_PER_AMOUNT * CONFETTI_AMOUNT_MAX;
-// Reduced motion keeps K140's 16 pieces at amount 1 (40% of its 40).
-export const REDUCED_SPRAY_SHARE = 0.05;
 // The screen RAIN_PER_AMOUNT was tuned on: the Pixel 11's layout viewport,
 // CSS px, where K140's 140 pieces read as a dense fall.
 export const RAIN_REF_W = 411;
@@ -167,10 +166,8 @@ export class ConfettiPool {
 export interface ConfettiPlan {
   rain: number;
   spray: number;
-  // Reduced motion: the spray flies at half speed with no spin.
-  slow: boolean;
   // K337: the share of pieces cut from foil, and the specular's strength
-  // (0 = the diffuse light only, as under reduced motion).
+  // (0 = the diffuse light only).
   foil: number;
   shine: number;
 }
@@ -183,9 +180,8 @@ function clampNum(v: number, max: number): number {
 // How many pieces a finish throws on a width x height CSS px screen:
 // `amount` scales both effects (clamped to [0, CONFETTI_AMOUNT_MAX]; off,
 // garbage or 0 = none), and the screen scales the rain (rainScreenScale;
-// no screen = a phone's count). Reduced motion drops the rain and keeps
-// REDUCED_SPRAY_SHARE of the spray. K337: `shine` is the specular's
-// strength ([0, CONFETTI_SHINE_MAX]; reduced motion drops it) and
+// no screen = a phone's count). Reduced motion throws nothing (K186).
+// K337: `shine` is the specular's strength ([0, CONFETTI_SHINE_MAX]) and
 // `foilShare` the share of pieces cut from foil ([0, 1]); none = no foil,
 // no specular.
 export function confettiPlan(
@@ -196,18 +192,13 @@ export function confettiPlan(
   shine = 0,
   foilShare = 0
 ): ConfettiPlan {
-  const a = clampNum(amount, CONFETTI_AMOUNT_MAX);
-  const spray = Math.round(SPRAY_PER_AMOUNT * a);
+  const a = reduced ? 0 : clampNum(amount, CONFETTI_AMOUNT_MAX);
   const rain = RAIN_PER_AMOUNT * a * rainScreenScale(width, height);
   return {
-    rain: reduced ? 0 : Math.min(RAIN_CAP, Math.round(rain)),
-    spray: Math.min(
-      SPRAY_CAP,
-      reduced ? Math.round(spray * REDUCED_SPRAY_SHARE) : spray
-    ),
-    slow: reduced,
+    rain: Math.min(RAIN_CAP, Math.round(rain)),
+    spray: Math.min(SPRAY_CAP, Math.round(SPRAY_PER_AMOUNT * a)),
     foil: clampNum(foilShare, 1),
-    shine: reduced ? 0 : clampNum(shine, CONFETTI_SHINE_MAX),
+    shine: clampNum(shine, CONFETTI_SHINE_MAX),
   };
 }
 
@@ -317,12 +308,10 @@ export function spawnSpray(
   cx: number,
   cy: number,
   unit: number,
-  slow: boolean,
   rand: () => number,
   foil = 0
 ): void {
   const d = pool.data;
-  const pace = slow ? 0.5 : 1;
   for (let k = 0; k < n; k++) {
     const i = pool.alloc();
     if (i < 0) return;
@@ -335,25 +324,18 @@ export function spawnSpray(
     // Smaller than the rain's paper: 5-8 CSS px at the usual zooms (K568;
     // 8-14 before).
     paper(d, o, unit * (0.3 + 0.2 * rand()), foil, rand);
-    // Reduced motion has no flutter: show each piece's full face.
-    if (slow) d[o + FLIP] = 0;
     d[o + X] = cx + c * r0;
     d[o + Y] = cy + sn * r0;
     // K568: twice the top speed and three times the spread (6-15 before).
-    const sp = unit * (3 + rand() * 27) * pace;
+    const sp = unit * (3 + rand() * 27);
     // A slight fountain: everything leaves a little upward (+y is down).
     d[o + VX] = c * sp;
-    d[o + VY] = sn * sp - unit * SPRAY_LIFT * pace;
+    d[o + VY] = sn * sp - unit * SPRAY_LIFT;
     d[o + AGE] = 0;
-    d[o + LIFE] =
-      (SPRAY_LIFE_MIN + rand() * (SPRAY_LIFE_MAX - SPRAY_LIFE_MIN)) *
-      (slow ? 0.8 : 1);
-    d[o + TERM] = unit * SPRAY_GRAVITY * pace;
-    // Drawn either way, so a reduced burst is the same burst, slowed.
-    const spin = (rand() - 0.5) * 14;
-    const flipRate = 6 + rand() * 8;
-    d[o + SPIN] = slow ? 0 : spin;
-    d[o + FLIP_RATE] = slow ? 0 : flipRate;
+    d[o + LIFE] = SPRAY_LIFE_MIN + rand() * (SPRAY_LIFE_MAX - SPRAY_LIFE_MIN);
+    d[o + TERM] = unit * SPRAY_GRAVITY;
+    d[o + SPIN] = (rand() - 0.5) * 14;
+    d[o + FLIP_RATE] = 6 + rand() * 8;
     d[o + SWAY] = 0;
     d[o + SWAY_RATE] = 0;
     d[o + SWAY_AMP] = 0;
@@ -479,7 +461,7 @@ const TWO_PI = 2 * Math.PI;
 // The tint of a piece of `color` whose unit normal is (nx, ny, nz); a piece
 // showing its back (nz < 0) lights as its front, so the normal flips.
 // `shine` scales the specular: 0 is the diffuse light alone (the setting at
-// 0, and reduced motion).
+// 0).
 export function shadeNormal(
   color: number,
   nx: number,
@@ -611,7 +593,7 @@ export class ConfettiSim {
       thrown = true;
     }
     if (plan.spray > 0 && unit > 0 && Number.isFinite(cx + cy)) {
-      spawnSpray(this.spray, plan.spray, cx, cy, unit, plan.slow, rand, plan.foil);
+      spawnSpray(this.spray, plan.spray, cx, cy, unit, rand, plan.foil);
       thrown = true;
     }
     if (thrown) this.shine = plan.shine;
