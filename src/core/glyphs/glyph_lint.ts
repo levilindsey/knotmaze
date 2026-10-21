@@ -105,7 +105,8 @@ export const LINT = {
    * K643 calibrated it on stills of injected bumps (`#glyphs2=bulge<b>`,
    * lintGlyph's bulgeLU; the lint reads 0.95-0.97 of each): a bump draws
    * at its full height, 2.7 device px per 0.01 LU on the desk (1600x1000,
-   * dsf 3) and 1.2 at phone scale (411x753, dsf 2), so the desk is the
+   * dsf 3) and 0.65-1.2 at phone scale (411x753, dsf 2, where the word
+   * fits the width, so xh 3 and "ai" draw smaller), so the desk is the
    * tighter. On the xh 3 root's nearly straight outer edge a bump first
    * shows on the desk at 0.015 (the edge rises and falls again; plain at
    * 0.022; at phone scale faint at 0.015, plain at 0.022), and 0.01 still
