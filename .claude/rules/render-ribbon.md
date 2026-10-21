@@ -135,34 +135,87 @@ certifies (the P3.24 probe rule again, render edition).
   fold renders as a clean thinned fold at ANY radius - verified at
   radius 0.13 vs half-width 0.26.
 
-- *K580 s3 (2026-10-20), the convex side: round joins past 110 deg*
-  (`ribbon_mesh.ts` ROUND JOINS; record `docs/design/K580_s3.md`). The
-  miter put the outer vertex up to 2h out along the sample TANGENT's
-  normal (cosHalf floored at 0.5), and at a cusp with unequal legs the
-  tangent follows one leg: a thorn h past the stroke's edges (the a's J,
-  about 0.25 LU on the raster) and a chord cutting inside the next leg.
-  Past ROUND_DOT_START (110 deg) a sample gets ROUND_ARC_SEGMENTS (8) pool
-  vertices after the strip's 2n (7 arc points at h between the two legs'
-  outer normals, then B, the outgoing leg's corner): the outgoing quad's
-  outer index is rewired to B and a fan from the inner vertex covers A..B.
+- *K580 s3 + s4 (2026-10-20), the convex side: round joins past 90 deg*
+  (`ribbon_mesh.ts` ROUND JOINS; records `docs/design/K580_s3.md` and
+  `K580_s4.md`). The miter put the outer vertex up to 2h out along the
+  sample TANGENT's normal (cosHalf floored at 0.5), and at a cusp with
+  unequal legs the tangent follows one leg: a thorn h past the stroke's
+  edges (the a's J, about 0.25 LU on the raster) and a chord cutting
+  inside the next leg. Past ROUND_DOT_START (90 deg; s3 shipped 110,
+  K675 lowered it) a sample gets ROUND_ARC_SEGMENTS (8) pool vertices
+  after the strip's 2n (7 arc points at h between the two legs' outer
+  normals, then B, the outgoing leg's corner): the outgoing quad's outer
+  index is rewired to B and a fan from the inner vertex covers A..B.
   Inner and outer vertices sit on the TRUE bisector of the normalized
-  legs; the concave clamp above is unchanged (0.3h at a cusp). From 110
-  to 120 deg (ROUND_DOT_FULL) every round vertex blends from master's
-  miter vertex by a smoothstep of the cosine (the pool starts collapsed
-  on it), so a swept turn moves the outline continuously; below 110 deg
-  every vertex is bit-identical. Edge-value attributes copy the sample's
-  outer vertex; the pool grows by doubling (no steady-state allocation).
-  K81's cover strips re-emit the fan through `RibbonMesh.coverPairs`;
-  a strip with no room left drops the arc (as before). Measured: same
-  state A/B (K550's ab_probe, `phw=0`) 0 px in knot, maze, reveal and burn
-  at dsf 1 and 2; the J's outer offset R 2.000h -> 1.000h; Node bench
-  update() 0.997-1.015x of master (noise). Pinned by
-  `test/render/ribbon_round.test.ts`. NOT the miter: the i's joint notch
-  in "ai" (the ideal's own concave corner between the junction's round
-  piece, centred on the mean of the arms' slot samples in joinery.ts, and
-  chain 3's end), and the open-end crescents beside a spur's tip. The
-  root's paint (each side wears its stroke's section, blending into the
-  spur's at J): render-paint.md, THE ROOT'S PAINT (K620).
+  legs; the concave clamp above is unchanged (0.3h at a cusp). From 90 to
+  100 deg (ROUND_DOT_FULL; s3 had 110 to 120) every round vertex blends
+  from master's miter vertex by a smoothstep of the cosine (the pool
+  starts collapsed on it), so a swept turn moves the outline
+  continuously; below 90 deg every vertex is bit-identical. The band sits
+  in a measured gap: no sample of knot, maze, reveal, burn or kinky turns
+  past 90 deg, and every glyph cusp turns 103-114 deg (the a's J2 at xh 2
+  113.5, the i's sample 222 at xh 3 110.8, both only partly round under
+  s3), so all of them are now fully round; K675 also removed a 0.108 LU
+  thorn (1190 px) at aland's a stem foot at xh 2 (sample 106, 103.4 deg,
+  a pure miter under s3). The rule is per sample: a cusp split over two
+  samples that each turn under 90 deg stays on the miter. aland's a J at
+  xh 3 splits 64.5 + 89.1 deg, and a 0.075 LU spike stays there in both
+  builds (K677; that the miter makes it is inferred). Edge-value
+  attributes copy the sample's outer vertex; the pool grows by doubling
+  (no steady-state allocation). K81's cover strips re-emit the fan through
+  `RibbonMesh.coverPairs`; a strip with no room left drops the arc (as
+  before, K678). Measured: same state A/B (K550's ab_probe, `phw=0`) 0 px
+  in knot, maze, reveal and burn at dsf 1 and 2, after s3 and again after
+  K675; the J's outer offset R 2.000h -> 1.000h; Node bench update()
+  0.997-1.015x of master (noise; K675 changed only constants). Pinned by
+  `test/render/ribbon_round.test.ts`. The spur tips beside a cusp are
+  the next entry, not the miter. The root's paint (each side wears its
+  stroke's section, blending into the spur's at J): render-paint.md, THE
+  ROOT'S PAINT (K620).
+
+- *K580 s4 (2026-10-20), a fused spur tip: the tuck, the cap cover and
+  the waist* (record `docs/design/K580_s4.md`, Handoff). A fused spur's
+  start is TUCKED: `tuckFusedTips` (ribbon_renderer.ts, from update()
+  where `chainTipFused`) collapses its first samples onto sampleAt(trim),
+  trim = min(0.75h, total/4), so the spur is drawn from T, 0.75h up its
+  own stroke from the junction J (the i's junction: J (4.3333, 1.6944),
+  T (4.3806, 1.5053) at xh 2; J (6.5, 2.5417), T (6.5473, 2.3525) at xh
+  3). Maze bridges rely on the tuck. joinery.ts's CAP COVER draws a 1.06h
+  disc at T (TIP_DISC_SCALE; rim clamped to |l| <= TIP_DISC_SIDE 0.995h
+  and s >= -0.99h), skipped where `taperJn`, `hideJn` or the reveal say:
+  `taperHideJn` skips it only at the a's J in tapered mode, and the i's
+  spur cap cover IS drawn. The junction round piece's centre (the mean of
+  `sampleAtSafe(paintArcAt(slot))` over the arms) reads a spur arm's
+  TUCKED slot, since rebuildFillets runs after the tuck (inferred, not
+  measured). THE WAIST: the body's round disc at J and the spur's cap
+  disc at T, radius h and 0.75h apart, leave a concave waist on the
+  outline. It is one mechanism at the i's joint, the a's stem foot and
+  the notaper J. `.claude/probes/K580/real.mjs` (headed, real GPU)
+  measures the render against two ideals, T (the tucked samples, s3's
+  raster ideal) and U (the untucked stroke from J). Against T the real
+  render is within 0.007 LU at every turn window: the raster's i's-joint
+  notch (0.107 / 0.227 LU) and its open-end crescents (about 0.1 LU) were
+  fills-only artefacts that the cap cover and the junction pieces cover.
+  Against U the waist reads 0.027 / 0.018 LU (the i's joint, xh 2 / 3),
+  0.028-0.030 / 0.014-0.018 (the stem foot) and 0.023-0.024 / 0.016-0.017
+  (the notaper J). CENTRING THE ROUND PIECE AT J (the particle mean, not
+  the arms' slot mean) WAS BUILT AND MEASURED (a throwaway build;
+  `.claude/probes/K580/real_s4_exp/`, `real_table.mjs`): no change at the
+  i's joint or the stems at xh 2, and worse at xh 3 (against U the i's
+  joint 0.018 -> 0.028, the stem foot 0.014 -> 0.021, the notaper J 0.016
+  -> 0.028; against T none -> 0.007). Today's rule, pulled toward T by
+  the spur's tucked slot, already covers part of the waist: don't retry
+  it. The one gain: ai's tapered a's J at xh 2, 0.059 -> 0.031 (what "a"
+  alone reads), so that excess IS the centre rule's. What would reach
+  0.01 (not built): a glyph-confined stadium cap cover (a capsule from T
+  back to J, radius about 0.995h), or no tuck at glyph spur tips.
+  `taperJn` exists only in tapered mode, so either needs a glyph flag
+  that notaper has too. Free ends read about 0.26 LU against the
+  round-capped ideal, and the taper root's start 0.50-0.55: by design
+  (flat and tapered ends). The tapered a's J reads 0.031 LU (a, xh 2),
+  0.035 (a, xh 3), 0.059 (ai, xh 2) and 0.034 (ai, xh 3) against both
+  ideals (the cap cover is skipped there), and notaper 0.007 against T;
+  apart from ai's xh 2 excess, not attributed.
 
 - *From P3.28 (torn crossings after a small pull), displayF:* Passes now carry a RENDER-ONLY `displayF` (the raw joint slide
   target, before easing/clamps, stale-frozen through static mode);
