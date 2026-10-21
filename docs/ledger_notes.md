@@ -4449,3 +4449,13 @@ If K320's split is revived (K550): use it only while cold: draw with the split w
 ## K571 (2026-10-20)
 
 The title toggle leaves the daily (Levi 2026-10-20: "What actually counts as the "daily" for score-keeping credit, is either with or without the title. Toggling the title should switch the maze mode to custom, _and_ should reset progress."). Asked: the title setting is remembered (a DAILY_EXEMPT pref, `daily_link.ts:219`), so after a flip the daily reopens in the new form from scratch and that run counts; OK? Then build it (`daily_link.ts`, `daily_attempt.ts`, main.ts `savePrefsNow`, `tweakpane_panel.ts`).
+
+## K595 (2026-10-20, shortened at filing)
+
+Same-chain collision by rest material, not slot count: `applySegmentCollision` skips
+same-chain pairs by a fixed 2 slots (`src/physics/forces.ts` ~272); skip or fade the floor where
+the rest material between two segments is below `collisionDist`. Fixes K596 (skip 3 on chain 56 or
+45 alone ends the cycle). First a kink-loop and eye-width census (KINK EYES), `byte_identity` as
+the guard; regression `?b&am=instant`, 5 s central drag, sleep within +5 s; a browser check on
+both hosts. Symptom levers (results.md `Levers`) only if this fails. `docs/design/K372.md`
+(Handoff).

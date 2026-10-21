@@ -279,6 +279,14 @@ Next free ID: K599.
   - evidence: `.claude/probes/K456/` (results.md, the forced-loss probe)
   - next: measure today's loss behaviour per case, pick the handling, build it with the probe
   - brief: `docs/design/K456.md`
+- **K370** · Worker input latency, p50 (target 50 ms): desktop 105 on the daily,
+  70 on the knot (in-thread 285; K7 s4); phone 231, first motion 173 (in-thread
+  872; K7 s5). Measure each stage first (`k7_latency.mjs`); levers: newest snapshot while grabbed, more drag substeps.
+  - owner: agent `aa8bfad6d1cc3d6bf` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 14:14, 2 h cap ~16:14)
+  - branch: `worktree-agent-aa8bfad6d1cc3d6bf`, worktree `.claude/worktrees/agent-aa8bfad6d1cc3d6bf`; last commit: `ba3769b`
+  - evidence: `.claude/probes/K370/`
+  - next: rebuild k7_latency.mjs on master with per-stage timestamps; measure desktop (daily, knot) and the phone daily on both hosts
+  - brief: `docs/design/K370.md`
 
 ## Next, in order
 
@@ -442,9 +450,6 @@ Every other item below waits on the trigger it names.
 
 
 
-- **K370** · Worker input latency, p50 (target 50 ms): desktop 105 on the daily,
-  70 on the knot (in-thread 285; K7 s4); phone 231, first motion 173 (in-thread
-  872; K7 s5). Measure each stage first (`k7_latency.mjs`); levers: newest snapshot while grabbed, more drag substeps.
 - **K376** · Look at the reveal's intro close-in, joints now fading with their
   arms (K268 s2, desktop only so far), on the desktop and the phone; fix any of
   the stage's four small residuals that show (`docs/design/K268.md`, "Stage 2 handoff").
@@ -480,13 +485,9 @@ Every other item below waits on the trigger it names.
   stride (a layout change; helps dense too), drop gapSeg's per-segment division (store u = d/|d|^2
   per point), cheaper `sampAt` index math. Knot's walk halved but its search fell only 30%: measure
   what lies outside the walk first. `docs/design/K573.md` (`Next, if knot must reach 1.5x`).
-- **K595** · Same-chain collision by rest material, not slot count: `applySegmentCollision` skips
-  same-chain pairs by a fixed 2 slots (`src/physics/forces.ts` ~272); skip or fade the floor where
-  the rest material between two segments is below `collisionDist`. Fixes K596 (skip 3 on chain 56 or
-  45 alone ends the cycle). First a kink-loop and eye-width census (KINK EYES), `byte_identity` as
-  the guard; regression `?b&am=instant`, 5 s central drag, sleep within +5 s; a browser check on
-  both hosts. Symptom levers (results.md `Levers`) only if this fails. `docs/design/K372.md`
-  (Handoff).
+- **K595** · Police same-chain collision by rest material, not a fixed 2-slot skip
+  (`src/physics/forces.ts` ~272): fixes K596. Census the kink loops and eyes first; regression
+  `?b&am=instant` + 5 s drag sleeps within +5 s. `docs/ledger_notes.md` (K595), `docs/design/K372.md`.
 
 ## Residuals (known, not fixed)
 
