@@ -122,7 +122,8 @@ only with the files it is about; `render.md` lists the area's other files.
   again, let's have a dropdown param to test. panel slider: Definitely!"
   Three viewer preferences in Touch & feel, appended to codec v4 at
   101-103 (after K140's 99-100) and listed in DAILY_EXEMPT_KEYS:
-  `pluckWhole` (pw, [0, 1.5], default 0.5 = K104's WHOLE_AMP),
+  `pluckWhole` (pw, [0, 1.5], default 0.5 = K104's WHOLE_AMP; 0.75 since
+  K279),
   `pluckCrossings` (pcx, through | ride | pinch, default through) and
   `pluckGlow` (pgl, off | instead | with | fallback, default fallback
   since K194, off before). At K180 the defaults were K104's look, pixel
@@ -236,11 +237,12 @@ only with the files it is about; `render.md` lists the area's other files.
   has no `tapped` and stays `skipOther`) still sound. A side channel
   rather than a new return type, so ribbon_renderer.ts (renderer.pluck
   forwards add()'s boolean) stayed untouched.
-- OTHER SOUND PATHS, checked and left alone: a drag's release (endDrag:
-  a real tug with its own snap-back visual), auto plucks (random and music
-  modes: a note must sound whatever the geometry) and key moves (silent).
-  There is no strum path. An auto pluck or a release can still land in a
-  core and sound with no overlay.
+- OTHER SOUND PATHS, checked at K235 and left alone then: a drag's
+  release (endDrag: a real tug with its own snap-back visual), auto
+  plucks (random and music modes: a note must sound whatever the geometry)
+  and key moves (silent). There is no strum path. K244 (2026-10-20, the
+  "Nothing plucks a junction core" entry below) closed the first two: an
+  auto pluck and a release no longer land in a core or sound there.
 - VERIFIED (`.claude/probes/K235/k235_taps.mjs <host> <out> <label>
   [cases]`: REAL mouse and touch taps at the middle of every span between
   two crossing nodes, the synth's own pluck counter `__knotSynth().plucks`,
@@ -684,12 +686,14 @@ only with the files it is about; `render.md` lists the area's other files.
   and sounds, as K235 left it. STILL SOUNDING with nothing drawn, in
   main.ts (K6-1's file, not touched): "hot" (a chain mid-intro),
   "held", pluckSize 0 and an unfretted degenerate lobe or failed layout
-  ("other"), plus auto plucks (main.ts's auto path ignores lastSkip, by
-  K76 2c's design) and drag releases (by design). FOLLOW-UP (the
-  coordinator, 2026-10-15, after the merge): tapPluck plays a tap's note
-  only when its pluck drew, so "hot", "held", pluckSize 0 and "other"
-  taps are silent too and keep their ripple and tug (a core tap has
-  neither). Auto plucks and drag releases are unchanged.
+  ("other"), plus, until K244, auto plucks (main.ts's auto path ignored
+  lastSkip, by K76 2c's design) and drag releases (by design). FOLLOW-UP
+  (the coordinator, 2026-10-15, after the merge): tapPluck plays a tap's
+  note only when its pluck drew, so "hot", "held", pluckSize 0 and
+  "other" taps are silent too and keep their ripple and tug (a core tap
+  has neither). Auto plucks and drag releases were unchanged then; K244
+  (2026-10-20) keeps both out of a core (its entry, below), and their
+  "hot", "held" and pluckSize 0 cases still sound.
 - TESTS (pluck_model.test.ts): "a free end (K459): the stub's lobe
   swings most at its free tip" and "a free end (K459): a node inside the
   cap pins it to the solid end".
@@ -715,3 +719,68 @@ only with the files it is about; `render.md` lists the area's other files.
   cap (f5's collapse hides 0 px, at pluckSize 3 too, `out_psz3.log`, and
   f12's cap is pinned). The pluck-blur program's text
   changed (render-shaders.md).
+
+## Nothing plucks a junction core (K244)
+
+- NOTHING PLUCKS A JUNCTION CORE (K244, 2026-10-20; worktree agent; brief
+  and handoff `docs/design/K244_cores.md`). Levi: "Players shouldn't be
+  able to pluck junction cores." K235 silenced a TAP in a core and left
+  two sound paths; K244 closes both. Auto plucks (random and music modes)
+  choose only a site that would draw, and a drag released in a core plucks
+  nothing: no note, no vibration, no ripple, under both pluck styles. The
+  drag still ends and the thread still eases home or springs free (physics,
+  not a pluck). `tapPluck` is untouched (K235, K459).
+- THE PREDICATE (pluck_model.ts, pure): `drawsPluck(TapLobes)` and
+  `wouldPluck(nodes, total, closed, tapArc)` are tapLobes' verdict as one
+  boolean: a tapped lobe with at least LOBE_MIN_LEN of vibrating arc and
+  not a `core`. The core test still lives in `tapLobes` alone.
+  `PluckOverlay.siteTester()` asks it of (chain, ctrl) on the LIVE nodes
+  (the ctrl becomes an arc through `paintArcAt`, as `renderer.pluck` does:
+  a closed chain wraps, an open one clamps). It reads each chain's nodes
+  once, because `pluckNodes` walks every crossing per call and the nodes
+  move with the knot: make one tester per decision (a pick, a release).
+  GEOMETRY ONLY: "hot", "held" and pluckSize 0 are not asked and stay
+  sound-only, as K459 left them for auto plucks.
+- AUTO PLUCKS (`src/app/auto_pick.ts`, pure and tested; wired by
+  `siteResolver()` in auto_audio.ts): `triggerAutoPluck` resolves the
+  site BEFORE `synth.pluck` and plays nothing when a segment has none.
+  Random mode takes a random segment among those with a site
+  (`pickRandomSegment`: PICK_TRIES 12 uniform draws, then an exact
+  sweep, so the answer is uniform among the valid ones and exact when few
+  are). Music mode asks `segmentsNear(assign, freq, valid)`, which
+  returns the valid segments of the nearest pitch class that has any
+  (ties to the lower), so the song's true pitch still plays and the
+  segment that moves is a valid one; a note with no valid segment
+  anywhere is skipped. A fabric segment plucks its run's midpoint, where
+  its plucks always landed, else the nearest drawable place outward along
+  the run (`nearestValidCtrl`, step 0.5; `audioSegSite` carries the run's
+  `c0`/`c1` now); a run that is all core has no site. A knot strand keeps
+  its random place along the strand, now a random drawable one
+  (`findValidCtrl`: 12 tries, then a 0.25 ctrl sweep). The resolver
+  memoizes per decision (one random tick, one music note), so the pick and
+  the pluck share one site.
+- DRAG RELEASE (input_pointer.ts `endDrag` and `beginRelease(style, freq,
+  pluckable)`): `pluckable` is the tester's verdict at the grabbed
+  particle's ctrl, the point the old release plucked. False skips
+  `synth.pluck`, and the string style then skips the overlay pluck and its
+  ripple. The soft style draws no overlay, so the note is its whole gate.
+  The verdict is the grabbed particle's, not the press point's: a press at
+  a core span's midpoint can grab a particle outside the core, and that
+  release plucks (and sounds) there, as what sounds is what draws.
+- RESIDUALS: (1) the site is tested when a note is scheduled and drawn up
+  to MUSIC_LOOKAHEAD 0.3 s + the output latency later (random mode: the
+  latency), so a knot that moves can in principle carry a marginal site
+  into a core in between; (2) UNDER THE THREAD REVEAL the overlay clips to
+  the solid span with `fret: true` (K397), whose verdict this unfretted
+  predicate does not mirror, so a mid-reveal chain can still sound with
+  nothing drawn (not exercised: the probes load `am=instant`); (3) "hot",
+  "held" and pluckSize 0 plucks stay sound-only for auto plucks and
+  releases, by design (the call was cores).
+- TESTS: pluck_model.test.ts "would a pluck here draw anything? (K244)"
+  (a core, a degenerate lobe, a mid-run site, a closed wrap, an open
+  clamp), test/app/auto_pick.test.ts (random and music never choose an
+  invalid segment, uniform among the valid, the nearest-pitch fallback,
+  the sweep's exactness, a knot's ctrl, a fabric run's outward search) and
+  pitch_space.test.ts's two `segmentsNear` filter tests. The release gate
+  has no headless test (input_pointer.ts needs the pixi app and a canvas):
+  the probe covers it.
