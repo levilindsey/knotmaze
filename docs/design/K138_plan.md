@@ -208,8 +208,9 @@ real-time chase and the burn race.
   about one arm in three, and only where two runs at a junction share a
   color. Two shades bite harder and read better, so alternate replaces
   it.
-- The state is the last color walked (four states, with "none").
-  Backtrack restores the state from before the move.
+- The state is the last color walked, "none" at the start: three
+  states under alternate, four under cycle. Backtrack restores the state
+  from before the move.
 - Icy runs carry no color: the rule skips them. A slide that would end
   on a run of the wrong color is refused before it starts.
 - Both clocks: no clock. A refused tap is not a move.
@@ -505,3 +506,35 @@ real-time chase and the burn race.
    built; only 4.31 changes generation. Rec: yes.
 6. Turnstiles and tides step on the move clock in every mode, real time
    included. Rec: yes.
+
+## Handoff
+
+Written (2026-10-21, 01:09-01:45):
+- The "## Plan" section above: what the reading found, the rule kit, the
+  13 mechanism entries, the stage order and six questions for Levi.
+- `docs/design/K138_s1.md`: the first stage's brief (the rule kit, 4.19
+  ice runs, 4.18 the color rule), ready to launch. Its agents table is
+  left for the coordinator, and its ports (5390-5393) need confirming.
+
+Left:
+- Launch s1. A worktree agent branches from `origin/master`, so the two
+  K138 docs must be on master first (this branch fast-forwards from
+  3103ed4; it touches only `docs/design/K138_*.md`).
+- The s2-s8 briefs, each written when its stage is next (the "Waits on"
+  column).
+- Levi's six questions above. s1 builds on the recs of 2, 3 and 4.
+
+Handle fields:
+- owner: nobody since 2026-10-21 01:45 (agent `a8880b1b86770b4ed` of
+  claude session 91b19e11-7759-4638-ba60-4705b011b94f; the planning
+  stage is done).
+- branch: `worktree-agent-a8880b1b86770b4ed`, worktree
+  `.claude/worktrees/agent-a8880b1b86770b4ed`; last commit: the commit
+  that adds this Handoff (the s1 brief is `fc7e14f`).
+- evidence: `docs/design/K138_plan.md` ("## Plan"),
+  `docs/design/K138_s1.md`.
+- next: put both docs on master, fill the s1 brief's agents table and
+  launch K138 s1 (opus, 2 h cap), beside K137 s2 under the "your rows"
+  rule or after it merges.
+- brief: `docs/design/K138_s1.md` (s1); the "## Plan" section of
+  `docs/design/K138_plan.md` (the stages after it).
