@@ -230,7 +230,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   real time; real time's seven rows (in `rtRows`) hide on the turn clock.
   Real time's own rows (paces through the lair wait) are created before
   the subfolder, so it sits after them and before the shared rows
-  (minoFog on). The seven, in order: "Junction stop, min (s)", "Junction
+  (minoFog on); stage 3 moved them into it (REAL-TIME MODEL ROWS,
+  below). The seven, in order: "Junction stop, min (s)", "Junction
   stop, max (s)", "Stop while hunting (x)", "Turn-back margin", "Dead-end
   reach (x roam)" and "Nearest roam (x roam)" (`tuneRow`: no step, K130;
   an edit keeps 2 decimals), then "Telegraph reach (runs)" (an integer
@@ -242,6 +243,32 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   range)") break K327's 23 characters, so the rows carry the shorter
   ones; keys and values are the brief's. Params: gameplay-links.md's
   JUNCTION STOP PARAMS; behavior: gameplay-minotaur.md.
+- REAL-TIME MODEL ROWS (K324 stage 3, 2026-10-20; brief
+  `docs/design/K324_s3.md`): the Behavior row (`minotaur`: Hunter / Guard
+  / Stalker, Game folder) shows under BOTH clocks while the game is the
+  minotaur (`minotaurRow.hidden = !gameMino`; before, turn clock only)
+  and picks real time's model too; it still restarts the solve
+  (onClockChange). K80's real-time rows ("Wander speed" through "Lair
+  wait (s)") are now created INSIDE "Minotaur tuning" by `chaseRow` (in
+  `rtRows`, hidden on the turn clock); `chaseRow(..., true)` keeps the
+  shared rows ("Seen through fog", "Catch restarts level", "Lair after a
+  catch", "Catch restores fog") in the Game folder after the subfolder.
+  New rows, after "Loses you beyond": the guard's "Territory" ([5, 150]
+  u, step 1), "Spots you within" ([0, 100]), "Loses you beyond" ([0,
+  150]) and "Accuracy", then the stalker's "Accuracy" (both [0, 1], no
+  step, K130; an edit keeps 2 decimals). BY MODEL (refreshCond, real
+  time): minoDetect / minoLose show for the hunter and the stalker (its
+  charge reads them), the guard's four for the guard, the stalker's
+  accuracy for the stalker; the long stops, "Visits dead ends" and
+  "Roams toward you" for the hunter and the guard; "Roam range",
+  "Dead-end reach" and "Nearest roam" for the hunter only; the paces,
+  speed variation, catch distance, lair wait, the junction stops, the
+  turn-back margin and the telegraph reach for all three. Labels repeat
+  ("Spots you within", "Loses you beyond", "Accuracy"), so probes find
+  rows by key or tooltip; each tooltip names its model ("Guard:",
+  "Stalker:") and says it applies live (onChaseChange, LIVE_EFFECTS).
+  Params: gameplay-links.md's REAL-TIME MODEL PARAMS; behavior:
+  gameplay-minotaur.md's REAL-TIME GUARD AND STALKER.
 - TELEGRAPH LOOK ROW (K525, 2026-10-20; brief
   `docs/design/K525_telegraph.md`): "Telegraph look" (Rims / Line /
   Both, `minoTelegraphLook`) sits in the Game folder right under "Show its

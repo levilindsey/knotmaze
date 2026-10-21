@@ -203,6 +203,13 @@ earlier. It changes chases at the default pull 0.5 (not at pull 0), so
 it lands in the same commit that re-freezes the digests at the new stop
 defaults (3.3).
 
+CORRECTION (K324 stage 3, 2026-10-20): the draws DO change. A pick made
+on arrival that a spot or a catch then throws away has still used
+pickDest's 3 draws, which a pick on rest end never made, so every later
+draw shifts on such a chase (stage 1's deviation 3, `K324_s1.md`).
+Replays stay exact: `replayChase` makes the same picks from the same
+taps.
+
 ## 3. Junction stops
 
 ### 3.1 The rule
@@ -258,7 +265,8 @@ keep that:
    keep the old digests as a pinned "stops 0, pick on rest end" case
    only if pick-on-arrival is made a switch; otherwise say in the commit
    that the old pin moved (pre-launch, CLAUDE.md's first Key Design
-   Decision).
+   Decision). Pick on arrival moves the digests even at pull 0: a pick a
+   spot or a catch throws away still used its draws (2.3's correction).
 
 ### 3.4 What stops cost the minotaur, and the re-tune
 
@@ -269,8 +277,11 @@ player escapes more and a still player is reached later. Recommended:
 keep today's catch rates (section 7, question 3) by re-tuning on the
 K80 sim harness on H1 mazes (`.claude/probes/K80/turns2/rt/`): stop
 ranges 0 vs the proposal, hunt pace 0.7 to 0.9 of yours, against
-today's greedy player (1.66 catches a game at pull 0.5), the fleers'
-escapes (54-58%, 75-77% with queued taps) and the still-player test
+today's greedy player (2.50 catches a game at pull 0.5; this section
+first said 1.66, measured on mazes before 9ccf360, K74 stage 3's
+trap-zone finish, which K637 found raised the rate as intended), the
+fleers' escapes (50-55%, 75-78% with queued taps; 54-58% and 75-77%
+before 9ccf360) and the still-player test
 (minotaur.test.ts: ratio 0.67, bound 0.8). The chosen defaults and the
 table go into `gameplay-minotaur.md`.
 
@@ -444,3 +455,12 @@ folder, the tuning subfolder, the codec bump, `minoPull`).
   the seven params and the hunt pace 0.9. What landed, the baseline and
   re-tune tables, the pins and what is left: the Handoff at the end of
   `docs/design/K324_s1.md`.
+- STAGE 3 (2026-10-20): real time plays the guard and the stalker. The
+  guard keeps a territory of 30 u around the exit tail's junction (the
+  turn guard's 6 runs at about 5 u a run), spots you within 20 u, loses
+  you beyond 30 u and aims at 0.4; the stalker aims at 0.45 and charges
+  within the shared sight. Five params (codec 182-186), the Behavior row
+  in real time, K80's rows moved into "Minotaur tuning", the hunter
+  byte-identical (K80_DIGESTS unchanged) and digests for the other two.
+  The sim table, the page check and what is left: the Handoff at the end
+  of `docs/design/K324_s3.md`.
