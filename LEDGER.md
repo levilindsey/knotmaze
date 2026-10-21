@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K578.
+Next free ID: K580.
 
 ## Waiting on Levi
 
@@ -249,6 +249,22 @@ Next free ID: K578.
   - evidence: `.claude/probes/K459/`
   - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii) (`docs/design/K459.md`, Handoff); the free cap's checks are K477
   - brief: `docs/design/K459.md`
+- **K573** · Regain G3-1's gap search on the phone (K572: `3465090` costs 57 ms of render sync where
+  the old search cost 10; the desktop shows +0.6 ms). Same pixels; gate with `k572_gapoff.mjs` ABBA
+  on the phone. `docs/design/K573.md`.
+  - owner: agent `a58a59169309e0bd8` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 12:21, 2 h cap ~14:21)
+  - branch: `worktree-agent-a58a59169309e0bd8`, worktree `.claude/worktrees/agent-a58a59169309e0bd8`; last commit: `a6387e8`
+  - evidence: `.claude/probes/K573/`
+  - next: Step 1's exact changes (one sampAt per segment, no % in the loop, the early reject), measured on the phone
+  - brief: `docs/design/K573.md`
+- **K337** · Confetti shine (Levi 10-14): spin and flip give each piece a 3D normal lit by one
+  upper-left light (diffuse plus a Blinn-Phong flash); reduced motion keeps the diffuse term. With
+  K335, K336 (`docs/design/K335_confetti.md`); deferred with K336 (draft in its patch).
+  - owner: agent `a90a739afc9cb7d3b` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 12:21, 2 h cap ~14:21)
+  - branch: `worktree-agent-a90a739afc9cb7d3b`, worktree `.claude/worktrees/agent-a90a739afc9cb7d3b`; last commit: `a6387e8`
+  - evidence: `.claude/probes/K337/`
+  - next: Port the draft's shine (pieceShade, litHex) onto today's model, then the view's tint, sheets and settings
+  - brief: `docs/design/K337.md`
 
 ## Next, in order
 
@@ -406,9 +422,6 @@ Every other item below waits on the trigger it names.
 - **K336** · Side cannons (Levi 10-14): finish confetti and streamers blast in from both edges. With
   K335, K337 (`docs/design/K335_confetti.md`); deferred. Draft `docs/design/K336_K337_draft.patch`
   (on K335's merge); codec `cfc`/`cfn`/`cfs`/`cfh`/`cff`; phone fps rides K156's next pass.
-- **K337** · Confetti shine (Levi 10-14): spin and flip give each piece a 3D normal lit by one
-  upper-left light (diffuse plus a Blinn-Phong flash); reduced motion keeps the diffuse term. With
-  K335, K336 (`docs/design/K335_confetti.md`); deferred with K336 (draft in its patch).
 - **K365** · K279's phone round: run the fixed `k279_phone.mjs`, pick the
   ripple's CSS floor (56 or 68; rec 56 unless it reads small), and only if the
   phone drops frames, a bbox replay (K279.md "Stage 2 handoff").
@@ -441,9 +454,10 @@ Every other item below waits on the trigger it names.
 - **K569** · After K115 stage 9 (Levi, 2026-10-20): some lifted-pen strokes (dots, bars, accents)
   become maze threads, each a separate thread through the point, forced crossings at both ends with
   it underneath so it ends where the glyph wants. `docs/design/K115_glyphs.md` section 11, call 2.
-- **K573** · Regain G3-1's gap search on the phone (K572: `3465090` costs 57 ms of render sync where
-  the old search cost 10; the desktop shows +0.6 ms). Same pixels; gate with `k572_gapoff.mjs` ABBA
-  on the phone. `docs/design/K573.md`.
+- **K578** · While confetti falls, every frame redraws the whole maze, gap search included: the
+  phone fell from 60 to 45 fps over K568's fall, of which the confetti's own cost is about 2 fps
+  (K572). Cache the still maze in a texture and draw the confetti over it. `docs/design/K572.md`
+  (Handoff).
 
 ## Residuals (known, not fixed)
 
@@ -1246,6 +1260,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K577** · Worker-host A/Bs: try `__knotStepUntil(5)` after the freeze to make them reproducible,
   and promote the K550 kill's `ab_probe.mjs` to a tracked `scripts/` probe if more A/Bs follow
   (`docs/design/K550_kill.md`, Handoff).
+- **K579** · GPU confetti: upload each piece's launch once and move it in a vertex shader (its
+  gravity, drag, flutter and spin are closed-form), dropping the per-frame CPU sim and upload. Pays
+  if K318's themes raise the counts; needs K307's warm-up (Levi asked 10-20; confetti's own phone
+  cost ~2 fps, K572).
 
 ## Done
 
