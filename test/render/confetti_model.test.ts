@@ -27,6 +27,7 @@ import {
   RAIN_TAPER,
   RAIN_TOP_SPREAD,
   RAIN_WINDOW,
+  ROT,
   SHINE_AMBIENT,
   SPIN,
   SPRAY_CAP,
@@ -735,5 +736,87 @@ describe("the shine (K337)", () => {
     expect(sim.shine).toBe(1.5);
     sim.burst(confettiPlan(1, false, 411, 753, 0.5, 0.3), 411, 753, 0, 0, 1, seeded(31));
     expect(sim.shine).toBe(0.5);
+  });
+
+  it("draws pieceLook's tint as shadeNormal lights the piece's normal", () => {
+    // pieceLook's one-sine path against the reference, rain and spray,
+    // paper and foil, through the flutter and the spin.
+    const sim = new ConfettiSim();
+    sim.burst(confettiPlan(1, false, 411, 753, 1, 0.5), 411, 753, 200, 400, 16, seeded(33));
+    const look: PieceLook = { alpha: 0, long: 0, short: 0, rotation: 0, tint: 0 };
+    let checked = 0;
+    let exact = 0;
+    let worst = 0;
+    for (let f = 0; f < 90; f++) {
+      sim.step(DT, 753);
+      for (const [pool, spray] of [
+        [sim.rain, false],
+        [sim.spray, true],
+      ] as const) {
+        const d = pool.data;
+        for (let i = 0; i < pool.alive; i++) {
+          const o = i * F;
+          if (d[o + AGE] < 0) continue;
+          const cf = Math.cos(d[o + FLIP]);
+          const sf = Math.sin(d[o + FLIP]);
+          const rot = d[o + ROT];
+          const foil = d[o + MAT] === 1;
+          const want = shadeNormal(d[o + COLOR], sf * Math.sin(rot), -sf * Math.cos(rot), cf, foil, sim.shine);
+          const got = pieceLook(d, i, spray, look, sim.shine).tint;
+          const a = channels(want);
+          const b = channels(got);
+          for (let j = 0; j < 3; j++) worst = Math.max(worst, Math.abs(a[j] - b[j]));
+          if (want === got) exact++;
+          checked++;
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(20000);
+    expect(worst).toBeLessThanOrEqual(1);
+    expect(exact / checked).toBeGreaterThan(0.999);
+  });
+  it("flashes only a few foil pieces at once, some near white (defaults, phone)", () => {
+    // The census (.claude/probes/K337/census.mjs) over six seeds read a
+    // median of 2 foil pieces flashing (specular > 0.5) a frame in the
+    // first 4 s, p90 4, max 9, and 1.55% of the foil's time on screen.
+    const W = 411;
+    const H = 753;
+    const sim = new ConfettiSim();
+    sim.burst(confettiPlan(1, false, W, H, 1, 0.3), W, H, W / 2, H * 0.6, 16, seeded(32));
+    const perFrame: number[] = [];
+    let foilSeen = 0;
+    let flashing = 0;
+    let nearWhite = 0;
+    for (let f = 0; f < 240; f++) {
+      sim.step(DT, H);
+      let n = 0;
+      for (const pool of [sim.rain, sim.spray]) {
+        const d = pool.data;
+        for (let i = 0; i < pool.alive; i++) {
+          const o = i * F;
+          if (d[o + AGE] < 0 || d[o + MAT] !== 1) continue;
+          if (pool === sim.rain && (d[o + Y] < 0 || d[o + Y] > H)) continue;
+          const cf = Math.cos(d[o + FLIP]);
+          const sf = Math.sin(d[o + FLIP]);
+          const rot = d[o + ROT];
+          const z = cf < 0 ? -1 : 1;
+          const s = specular(z * sf * Math.sin(rot), -z * sf * Math.cos(rot), z * cf, true, sim.shine);
+          foilSeen++;
+          if (s > 0.5) {
+            flashing++;
+            n++;
+          }
+          if (s > 0.8) nearWhite++;
+        }
+      }
+      perFrame.push(n);
+    }
+    perFrame.sort((a, b) => a - b);
+    expect(foilSeen).toBeGreaterThan(10000);
+    expect(perFrame[120]).toBeLessThanOrEqual(4);
+    expect(perFrame[239]).toBeLessThanOrEqual(15);
+    expect(flashing / foilSeen).toBeLessThan(0.03);
+    expect(flashing / foilSeen).toBeGreaterThan(0.005);
+    expect(nearWhite).toBeGreaterThan(20);
   });
 });

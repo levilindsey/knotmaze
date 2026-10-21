@@ -455,14 +455,26 @@ export function specular(
   foil: boolean,
   shine: number
 ): number {
-  if (!(shine > 0)) return 0;
-  let h = nx * HALF[0] + ny * HALF[1] + nz * HALF[2];
-  if (!(h > 0)) return 0;
+  return specularAt(nx * HALF[0] + ny * HALF[1] + nz * HALF[2], foil, shine);
+}
+
+// The same from n.H itself.
+function specularAt(h: number, foil: boolean, shine: number): number {
+  if (!(shine > 0) || !(h > 0)) return 0;
   const q = foil ? FOIL_SQUARINGS : PAPER_SQUARINGS;
   for (let j = 0; j < q; j++) h *= h;
   const s = shine * (foil ? FOIL_SPEC : PAPER_SPEC) * h;
   return s > 1 ? 1 : s;
 }
+
+// pieceLook's path to the same tint with one sine where the normal takes
+// two: L's and H's screen-plane parts are parallel (V has none), so a
+// normal (sf sin rot, -sf cos rot, cf) dots with them as
+// sf (Lx sin rot - Ly cos rot) = sf L_XY sin(rot - L_ANG), divided by H_N
+// for H. shadeNormal is the reference (the tests hold the two together).
+const L_XY = Math.sqrt(LIGHT[0] ** 2 + LIGHT[1] ** 2);
+const L_ANG = Math.atan2(LIGHT[1], LIGHT[0]);
+const TWO_PI = 2 * Math.PI;
 
 // The tint of a piece of `color` whose unit normal is (nx, ny, nz); a piece
 // showing its back (nz < 0) lights as its front, so the normal flips.
@@ -536,20 +548,29 @@ export function pieceLook(
   // keeps an edge-on piece a sliver, not a gap in the fall.
   const flip = d[o + FLIP];
   const cf = Math.cos(flip);
-  const sf = Math.sin(flip);
+  // sin flip without a second sine: its size is sqrt(1 - cf^2), its sign
+  // that of the phase's half turn.
+  let sf = Math.sqrt(1 - cf * cf);
+  if (flip - TWO_PI * Math.floor(flip / TWO_PI) > Math.PI) sf = -sf;
   const rot = d[o + ROT];
   out.long = d[o + LEN];
   out.short = d[o + LEN] * d[o + ASPECT] * (0.12 + 0.88 * Math.abs(cf));
   out.rotation = rot;
   // The normal: +z turned about the long axis a = (cos rot, sin rot, 0) by
-  // the flip, cf (0, 0, 1) + sf (a x z) = (sf sin rot, -sf cos rot, cf).
-  out.tint = shadeNormal(
+  // the flip, cf (0, 0, 1) + sf (a x z) = (sf sin rot, -sf cos rot, cf);
+  // shadeNormal's light, with its screen-plane dot products from one sine
+  // (L_XY above). The back face (cf < 0) flips the normal.
+  let t = sf * L_XY * Math.sin(rot - L_ANG);
+  let z = cf;
+  if (z < 0) {
+    t = -t;
+    z = -z;
+  }
+  const ndl = t + LIGHT[2] * z;
+  out.tint = litHex(
     d[o + COLOR],
-    sf * Math.sin(rot),
-    -sf * Math.cos(rot),
-    cf,
-    d[o + MAT] === 1,
-    shine
+    SHINE_AMBIENT + SHINE_DIFFUSE * (ndl > 0 ? ndl : 0),
+    specularAt(t / H_N + HALF[2] * z, d[o + MAT] === 1, shine)
   );
   return out;
 }
