@@ -184,21 +184,11 @@ Next free ID: K570.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c
   merged e6c6034..aa3cdd1).
-  - owner: nobody since 2026-10-14 19:45 (round 14c's agent
-    a04122e6bc4e56b02 (sonnet) finished; worktree removed by the K161 sweep 2026-10-15, branch kept)
-  - branch: mainline; last commit: `aa3cdd1`
-  - evidence: `.claude/probes/rounds/2026-10-14c-0e865bf/`,
-    `.../2026-10-14-48da84d/`, `.../2026-10-14-81d31a5/`;
-    `.claude/probes/K156/3c/`; the A/A in `.claude/probes/K253/aa3/`
-  - next: the next phone window Levi lends: frames (done 2026-10-16 after K513's gate fix: `-Phase frames -Reps 2` A/A on 65a7787, emulation REAL, all cells within noise; fabric ~59.5-60 fps, knot ~60.3 fps, load first sleep 16.3-17.5 s; evidence `.claude/probes/rounds/2026-10-16-65a7787/`; `-Phase frames -Reps
-    2` on K253's portrait floor; K300's `-Moves` fix waits for the next
-    A/A), K307's phone measures, the finish frame rate under K317's
-    confetti, K98 and K92 (K230), the 14 dropped looks (K233), K232's
-    load cells at 3 reps; looks cope with
-    K301's width flip
-  - brief: `docs/design/K156.md` ("Round 2026-10-14c handoff"; the next
-    round gets its own section); K7 stage 5's phone plan is
-    `docs/design/K7_worker.md` Design 10
+  - owner: agent `afcc3ca4881b292aa` of claude session 91b19e11 (sonnet, started 2026-10-20 10:17, 1 h cap ~11:17)
+  - branch: `worktree-agent-afcc3ca4881b292aa`, worktree `.claude/worktrees/agent-afcc3ca4881b292aa`; last commit: `4271c9b`
+  - evidence: .claude/probes/rounds/2026-10-20-<head sha>/ (main checkout)
+  - next: round 2026-10-20 runs (idle wait, K568 confetti, K545, K447, K539, K544, frames); then file its Ledger items and merge its handoff. Left for later windows: K253's portrait A/A floor (-Moves 0,7,11), K307's phone measures, K98 + K92 (K230), the 14 dropped looks (K233), K232's load cells at 3 reps; looks cope with K301's width flip
+  - brief: docs/design/K156.md (Round 2026-10-20)
   - env: none; the pass builds and serves both builds itself (ports
     5480-5489); check nobody is using the phone first (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
