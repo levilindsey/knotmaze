@@ -334,6 +334,14 @@ export class FabricMazeController {
   get spoolShare(): number {
     return spoolShareUsed(this.pathEdges.length, this.spoolCap);
   }
+  // Would a tap on `eid` pay yarn out past the spool? A retrace of the
+  // yarn's last run reels in and is never refused. The real-time chase asks
+  // before it sets off along a run (its departure taps the controller).
+  spoolWouldRefuse(eid: number): boolean {
+    if (!this.spoolOn) return false;
+    if (!this.trailMode && eid === this.pathEdges[this.pathEdges.length - 1]) return false;
+    return spoolRefuses(this.pathEdges.length, this.spoolCap);
+  }
 
   // K137 s2: hints left this solve; useHint() spends one (false when none
   // is left, the hints are off or the solve is over).

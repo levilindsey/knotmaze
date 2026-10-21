@@ -20,6 +20,7 @@ import { starExplanation, starLabel } from "../game/star_rating";
 import type { StarRating } from "../game/star_rating";
 import type { WalkerScore } from "../game/walker";
 import type { SwordPhase } from "../game/sword";
+import { spoolGauge } from "../game/spool";
 
 export interface HudSnapshot {
   // The stats rows (the showMazeStats setting).
@@ -65,6 +66,13 @@ export interface HudSnapshot {
   walker?: WalkerScore | null;
   // K137 stage 3b (absent elsewhere): the sword, while it is on and laid.
   sword?: SwordShown | null;
+  // K137 stage 2 (absent elsewhere): the spool while it is on (runs paid
+  // out of its capacity) and the hints left while hints are on; the win
+  // banner's share of the spool used (a whole percent) and hints used.
+  spool?: { used: number; cap: number } | null;
+  hints?: { left: number; of: number } | null;
+  spoolUsed?: number | null;
+  hintsUsed?: number | null;
 }
 
 // K137 stage 3b: what the sword row reads (game/sword.ts SwordState).
@@ -92,7 +100,7 @@ type StatFields = Pick<
   | "timeMs" | "path" | "optimal" | "efficiency" | "backtrack" | "junctions" | "deadEnds"
   | "catches" | "chasedMs" | "fireLead" | "closestCall" | "closeCalls" | "seen"
   | "restarts" | "snapped" | "parLeft" | "parStrokes" | "collapse" | "cuts"
-  | "hearts" | "walker" | "sword"
+  | "hearts" | "walker" | "sword" | "spool" | "hints" | "spoolUsed" | "hintsUsed"
 >;
 
 // A row (K274): its id names its line in STATS (game/maze_stats.ts), which
@@ -111,7 +119,7 @@ const entry = (id: StatId, value: string): StatEntry => ({ id, label: STATS[id].
 type GameFields = Pick<
   HudSnapshot,
   | "catches" | "fireLead" | "closestCall" | "snapped" | "parLeft" | "parStrokes" | "collapse"
-  | "cuts" | "hearts" | "walker" | "sword"
+  | "cuts" | "hearts" | "walker" | "sword" | "spool" | "hints" | "spoolUsed" | "hintsUsed"
 >;
 // K137 stage 3a: "hearts 2 / 3" while lives are on.
 const heartsValue = (h: { left: number; of: number }): string => `${h.left} / ${h.of}`;
@@ -176,6 +184,10 @@ export function ensureHudStyles(): void {
     ".km-hud .k{color:#8ea0c0;white-space:nowrap}" +
     ".km-hud .v{color:#e4ecf8;text-align:right;white-space:nowrap;" +
     "font-variant-numeric:tabular-nums}" +
+    // K137 stage 2: the spool gauge's flash on a refused move.
+    "@keyframes km-flash{0%,40%{color:#ff8a7a;text-shadow:0 0 6px #ff5a40}" +
+    "100%{color:#e4ecf8;text-shadow:none}}" +
+    ".km-hud .v.km-flash{animation:km-flash .7s ease-out}" +
     // Win banner: top-center on wide screens, bottom-center on narrow ones
     // (clear of the HUD in the top-left and the menu in the top-right).
     ".km-banner{position:fixed;left:50%;transform:translateX(-50%);" +
@@ -383,6 +395,8 @@ export class MazeHud {
   // K114 stage 2: the fire's lead row, which the real-time fire counts
   // down every frame (setFireLead).
   private leadCell: HTMLElement | null = null;
+  // K137 stage 2: the spool row, which flashes when a move is refused.
+  private spoolCell: HTMLElement | null = null;
   private lastSig = "";
 
   constructor() {
@@ -413,6 +427,7 @@ export class MazeHud {
     this.el.textContent = "";
     this.timeCell = null;
     this.leadCell = null;
+    this.spoolCell = null;
     for (const [k, v] of rows) {
       const kEl = document.createElement("span");
       kEl.className = "k";
@@ -422,8 +437,19 @@ export class MazeHud {
       vEl.textContent = v;
       if (k === "time") this.timeCell = vEl;
       if (k === STATS.fireLead.label) this.leadCell = vEl;
+      if (k === STATS.spool.label) this.spoolCell = vEl;
       this.el.append(kEl, vEl);
     }
+  }
+
+  // K137 stage 2: a refused move flashes the spool gauge (the animation
+  // restarts on every refusal: drop the class, reflow, put it back).
+  flashSpool(): void {
+    const cell = this.spoolCell;
+    if (!cell || this.el.hidden) return;
+    cell.classList.remove("km-flash");
+    void cell.offsetWidth;
+    cell.classList.add("km-flash");
   }
 
   // K114 stage 2: the real-time fire's lead, every frame (one text node,
@@ -473,6 +499,10 @@ export interface WinInfo {
   walker?: WalkerScore | null;
   // K137 stage 3b: the sword (absent or null: off, or none laid).
   sword?: SwordShown | null;
+  // K137 stage 2: the share of the spool used, a whole percent, and the
+  // hints used (absent or null: that aid off).
+  spoolUsed?: number | null;
+  hintsUsed?: number | null;
   // Show the daily stats button.
   stats: boolean;
 }
@@ -575,7 +605,8 @@ export function lossEntries(l: LossInfo): StatEntry[] {
 // K114's cuts and walker.
 export type RuleFields = Pick<
   HudSnapshot,
-  "snapped" | "parLeft" | "parStrokes" | "collapse" | "cuts" | "walker"
+  | "snapped" | "parLeft" | "parStrokes" | "collapse" | "cuts" | "walker"
+  | "spool" | "hints" | "spoolUsed" | "hintsUsed"
 >;
 
 // A par or a count of moves; an infinite par (no way to the exit) reads as
@@ -609,6 +640,12 @@ export function ruleEntries(s: RuleFields): StatEntry[] {
   if (s.walker && s.walker.mode === "delay") {
     rows.push(entry("walker", `${s.walker.walk} · shortest ${s.walker.shortest}`));
   }
+  // K137 stage 2: "spool ██████░░ 75%" (the share left), "hints 2 / 3"
+  // (left of the setting); at the finish "spool used 62%", "hints used 1".
+  if (s.spool) rows.push(entry("spool", spoolGauge(s.spool.used, s.spool.cap)));
+  if (s.hints) rows.push(entry("hints", `${s.hints.left} / ${s.hints.of}`));
+  if (s.spoolUsed != null) rows.push(entry("spoolUsed", `${s.spoolUsed}%`));
+  if (s.hintsUsed != null) rows.push(entry("hintsUsed", String(s.hintsUsed)));
   return rows;
 }
 

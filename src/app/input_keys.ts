@@ -31,6 +31,8 @@ import { cutKeyOf } from "../ui/cut_buttons";
 import type { CutKey } from "../ui/cut_buttons";
 import { walkerKeyOf } from "../ui/walker_buttons";
 import type { WalkerKey } from "../ui/walker_buttons";
+import { aidKeyOf } from "../ui/aid_buttons";
+import type { AidKey } from "../ui/aid_buttons";
 import { MovePad } from "../ui/move_pad";
 import type { UrlParams } from "../ui/url_state";
 import type { SceneRef } from "./scene_ref";
@@ -77,6 +79,9 @@ export interface KeyInputDeps {
   // K114 WALKER (main.ts): G sends the walker off (Lead) or lets it take a
   // run (Delay); U comes through cutKey. True when the key acted.
   walkerKey?: (k: WalkerKey) => boolean;
+  // K137 stage 2 AIDS (main.ts): H lights a hint, C ticks or rubs out the
+  // head's junction, while their buttons show. True when the key acted.
+  aidKey?: (k: AidKey) => boolean;
 }
 
 export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
@@ -498,6 +503,13 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
       if (walkerKeyOf(e) === "go" && deps.walkerKey) {
         if (e.repeat || keyBelongsElsewhere(e) || !keysLive()) return;
         if (deps.walkerKey("go")) e.preventDefault();
+        return;
+      }
+      // K137 stage 2: the aids' keys (H, C), while their buttons show.
+      const ak = aidKeyOf(e);
+      if (ak !== null && deps.aidKey) {
+        if (e.repeat || keyBelongsElsewhere(e) || !keysLive()) return;
+        if (deps.aidKey(ak)) e.preventDefault();
         return;
       }
       // K80 turns 3a: the WAIT key (`.`, or Space off a button or link),

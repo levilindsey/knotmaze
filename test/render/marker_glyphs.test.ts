@@ -84,7 +84,7 @@ describe("marker glyphs (K83)", () => {
     }
   });
 
-  it("the shipped set: play, flag, ring and dot, horns, spider, sword", () => {
+  it("the shipped set: play, flag, ring and dot, horns, spider, sword, tick", () => {
     expect(DEFAULT_GLYPHS).toEqual({
       start: "play",
       exit: "flag",
@@ -92,6 +92,7 @@ describe("marker glyphs (K83)", () => {
       minotaur: "horns",
       spider: "spider",
       sword: "sword",
+      tick: "tick",
     });
     for (const role of ROLES) {
       const ids = glyphsForRole(role);
@@ -217,8 +218,16 @@ describe("marker glyphs (K83)", () => {
     expect(g.dots[0]).toBeCloseTo(0, 6);
   });
 
+  it("the chalk tick (K137 stage 2): one stroke of two legs", () => {
+    expect(glyphsForRole("tick")).toEqual(["tick"]);
+    expect(markerGlyph("here", "tick").id).toBe("tick");
+    const g = MARKER_GLYPHS.get("tick")!;
+    expect([g.lines.length, g.rings.length / 3, g.dots.length / 3]).toEqual([1, 0, 0]);
+    expect(g.lines[0].length).toBe(6);
+  });
+
   it("fits a glyph's outer ink to any radius (the off-screen indicator's box)", () => {
-    for (const role of [...ROLES, "minotaur" as const, "spider" as const, "sword" as const]) {
+    for (const role of [...ROLES, "minotaur" as const, "spider" as const, "sword" as const, "tick" as const]) {
       const id = DEFAULT_GLYPHS[role];
       const svg = markerGlyphSvgFit(id, role, 10.75);
       const k = Number(svg.match(/^<g transform="scale\(([\d.]+)\)">/)![1]);

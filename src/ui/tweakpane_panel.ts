@@ -38,6 +38,8 @@ import {
 } from "./url_state";
 import { gridAlignSlider, gridAlignStrength } from "./grid_align_curve";
 import { PAR_SLACK_MAX, PAR_SLACK_MIN } from "../game/par";
+import { SPOOL_SLACK_MAX, SPOOL_SLACK_MIN } from "../game/spool";
+import { HINTS_MAX } from "../game/hints";
 import { LIVES_MAX, LIVES_RECOMMENDED, livesOf } from "../game/lives";
 import { SWORD_MOVES_MAX, SWORD_MOVES_MIN } from "../game/sword";
 import {
@@ -99,6 +101,9 @@ export interface PanelSettings {
   // K120 viewer preference (persisted per browser; ui/move_pad.ts): the
   // four-way move pad, on by default for coarse pointers.
   movePad: boolean;
+  // K137 stage 2 viewer preference (persisted per browser; ui/aid_buttons.ts):
+  // chalk marks, off by default.
+  chalk: boolean;
   // K53 viewer preference (persisted per browser by ui/motion.ts): follow
   // the OS's reduce-motion setting, or override it either way.
   motion: MotionPref;
@@ -129,6 +134,7 @@ const SETTINGS_DEFAULTS: PanelSettings = {
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
     window.matchMedia("(pointer: coarse)").matches,
+  chalk: false,
   motion: "system",
   reducedMotion: false,
   highContrast: false,
@@ -152,6 +158,10 @@ export interface PanelCallbacks {
   onIndicatorSizeChange: (scale: number) => void;
   onTapToPanToggle: (on: boolean) => void;
   onMovePadToggle: (on: boolean) => void;
+  // K137 stage 2: the chalk preference; the compass (a design param that
+  // restarts nothing).
+  onChalkToggle: (on: boolean) => void;
+  onAidsChange: () => void;
   onMotionChange: (pref: MotionPref) => void;
   // K111: the Accessibility group's switches (viewer preferences).
   onReducedMotionToggle: (on: boolean) => void;
@@ -1383,6 +1393,13 @@ export function buildPanel(
     SETTINGS_DEFAULTS.movePad,
     () => callbacks.onMovePadToggle(settings.movePad === true)
   );
+  // K137 stage 2: chalk marks (ui/aid_buttons.ts), a viewer preference.
+  const chalkRow = row(
+    fPath, s, "chalk", { label: "Chalk marks" },
+    "A Chalk button (or C) ticks the junction you stand on, or rubs its tick out, to remember where you have been. The marks clear on a restart. Remembered per browser.",
+    SETTINGS_DEFAULTS.chalk,
+    () => callbacks.onChalkToggle(settings.chalk === true)
+  );
   // K140: the finish confetti amount (0 = none since K323 merged the
   // on/off switch into it). Daily-exempt (how a finish celebrates, not
   // what was played). No step (K130); an edit keeps 2 decimals.
@@ -1626,6 +1643,33 @@ export function buildPanel(
     { options: { off: "off", on: "on", lead: "lead", delay: "delay" }, label: "Cut" },
     "Scissors: delete whole runs. on: press the scissors button (or X), then tap a run to cut it; Esc or a second press puts them away. A junction left with two runs is no longer a decision: a move through it carries on. lead: a walker takes the same turn at every junction (straight on, else the next run clockwise); tap runs to cut them, then Go. Reach the exit in as few cuts as you can (par shown); if it goes in circles you are back to planning, cuts kept. delay: a walker takes the shortest way out; each turn cut a run or pass (Let it walk), then it walks one run. Make its walk as long as you can. A cut that would leave no way to the exit is refused, and the entrance's and the exit's runs cannot be cut. Undo (the button or U) takes back one move or one cut. Classic game only; off while Fragile runs, Par or Collapse is on. Restarts the solve.",
     D.cut, () => callbacks.onClockChange()
+  );
+  // K137 stage 2 (game/spool.ts, game/hints.ts): the player's aids. The
+  // spool, its slack and the hints restart the solve; the compass does not.
+  const spoolRow = row(
+    fGame, p, "spool", { label: "Ariadne's spool" },
+    "Your yarn pays out behind you as you walk and reels back in when you retrace your last run (or undo). It is only so long: the fewest runs to the exit plus the slack below. A move past its end is refused. Restarts the solve.",
+    D.spool, () => callbacks.onClockChange()
+  );
+  const spoolSlackRow = row(
+    fGame, p, "spoolSlack",
+    { min: SPOOL_SLACK_MIN, max: SPOOL_SLACK_MAX, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label: "Spool slack (x fewest)" },
+    "Yarn past the fewest runs, as a fraction of the fewest: at 0.3 a maze whose shortest route takes 10 runs gives 13 runs of yarn. Restarts the solve.",
+    D.spoolSlack, () => {
+      params.spoolSlack = Math.round(params.spoolSlack * 20) / 20;
+      callbacks.onClockChange();
+    }
+  );
+  const hintsRow = row(
+    fGame, p, "hints",
+    { min: 0, max: HINTS_MAX, step: 1, label: "Hints" },
+    "Hints per solve (0: none). The Hint button (or H) lights the run that starts the shortest way to the exit for two seconds. A restart gives them back. Restarts the solve.",
+    D.hints, () => callbacks.onClockChange()
+  );
+  const compassRow = row(
+    fGame, p, "compass", { label: "Compass" },
+    "A small arrow beside you points along the run that starts the shortest way to the exit (not straight at the exit), updated after every move.",
+    D.compass, () => callbacks.onAidsChange()
   );
 
   // K80: the real-time chase's tuning (game/minotaur.ts ChaseParams; the
@@ -2836,6 +2880,10 @@ export function buildPanel(
     parSlackRow.hidden = !fab || params.parMode === "off";
     collapseRow.hidden = !fab; // K139, every game mode too
     cutRow.hidden = !fab || params.gameMode !== "classic"; // K114
+    spoolRow.hidden = !fab; // K137 stage 2
+    spoolSlackRow.hidden = !fab || !params.spool;
+    hintsRow.hidden = !fab;
+    compassRow.hidden = !fab;
     // Under the thread reveal too (K76 stage 2c: the same two settings).
     minoFogRow.hidden = !minoOn || !(fog || threads);
     // K137 stage 3a: lives replace the level row while on (game/lives.ts).
@@ -2855,6 +2903,7 @@ export function buildPanel(
     indicatorSizeRow.hidden = !fab;
     tapToPanRow.hidden = !fab;
     movePadRow.hidden = !fab;
+    chalkRow.hidden = !fab;
     confettiAmountRow.hidden = !fab;
     confettiShineRow.hidden = !fab || params.confettiAmount <= 0;
     foilShareRow.hidden = confettiShineRow.hidden || params.confettiShine <= 0;
