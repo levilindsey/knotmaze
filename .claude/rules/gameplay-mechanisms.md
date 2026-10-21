@@ -322,7 +322,10 @@ state, the map, both rules and the par search.
 - THE ROWS: Lead's HUD and banner row "cuts N · par P" (a dash when no
   par is known); Delay adds "walker W · shortest S" (STATS `walker`). The
   share title ends ` · ✂️ N, par P` (Lead) or ` · 🐢 W runs (it wanted S)`
-  (Delay). No stars in either mode (rating null; Call 4 in the brief).
+  (Delay). STARS (Call 4 in the brief): Lead rates the cuts against par
+  (`rateCuts`, star_rating.ts: 3 at par or under, 2 one cut over, 1
+  beyond; the popover gives Lead's rules, then "You led the walker out
+  with N cuts; par is P."); Delay has none (rating null).
 - SCOPE: as the cut's (the classic game, free play). Not built: Keep it
   in, Show it, Race the solver, Lead's action variant, cuts with the
   minotaur or the fire (K688), dailies and saved attempts.

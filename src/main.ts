@@ -67,7 +67,7 @@ import { SolveClock, efficiencyOf } from "./game/maze_stats";
 import { shareText } from "./game/share_text";
 import { parScore } from "./game/par";
 import { catchHeart, heartsToast, livesOf, type HeartLoss } from "./game/lives";
-import { rateRun, ratingForResult, walkedOf } from "./game/star_rating";
+import { rateCuts, rateRun, ratingForResult, walkedOf } from "./game/star_rating";
 import { LossBanner, MazeHud, WinBanner } from "./ui/maze_hud";
 import type { HudSnapshot } from "./ui/maze_hud";
 import { ModeBadge, modeBadgeFor } from "./ui/mode_badge";
@@ -1555,14 +1555,20 @@ async function main(): Promise<void> {
     // meter starts over with the level and the catches carry, so the
     // popover says which catches' walks it holds (`respawns`, K293 (a)).
     const mino = liveMino();
-    // K114 walker: the walker walked, not you, so no stars (Lead's against
-    // par wait on Levi, the brief's call 4).
+    // K114 walker: the walker walked, not you, so Lead's stars rate the cuts
+    // against par (the brief's call 4: 3 at par, 2 at par + 1, 1 beyond)
+    // and Delay has none.
+    const walkerScore = walkerScoreFn();
     const rating =
-      c.collapseOn || c.walkerMode
+      c.collapseOn
       ? null
-      : mino
-        ? rateRun(c.walkedDist, c.walk.optimalLength, mino.catches, c.respawns)
-        : rateRun(walkedOf(c.pathLength, c.backtrackDist), c.walk.optimalLength);
+      : c.walkerMode
+        ? walkerScore?.mode === "lead" && walkerScore.par !== null
+          ? rateCuts(c.cutCount, walkerScore.par)
+          : null
+        : mino
+          ? rateRun(c.walkedDist, c.walk.optimalLength, mino.catches, c.respawns)
+          : rateRun(walkedOf(c.pathLength, c.backtrackDist), c.walk.optimalLength);
     const stars = rating?.stars ?? null;
     // K139: the collapse score against par (null: collapse off).
     const collapse = ruleFields(c).collapse ?? null;
@@ -1586,7 +1592,7 @@ async function main(): Promise<void> {
         collapse: collapse ? { mode: collapseMode, ...collapse } : null,
         cuts: c.cutOn ? c.cutCount : null, // K114
         hearts: heartsShown()?.left ?? null, // K137 stage 3a
-        walker: walkerScoreFn(), // K114 walker
+        walker: walkerScore, // K114 walker
       }),
       url: daily !== null ? dailyUrl(daily) : location.href,
     };
@@ -1626,7 +1632,7 @@ async function main(): Promise<void> {
       collapse,
       cuts: c.cutOn ? c.cutCount : null, // K114
       hearts: heartsShown(), // K137 stage 3a
-      walker: walkerScoreFn(), // K114 walker
+      walker: walkerScore, // K114 walker
     });
     updateHud();
     throwConfetti();
