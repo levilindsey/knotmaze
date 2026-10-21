@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K675.
+Next free ID: K679.
 
 ## Waiting on Levi
 
@@ -298,7 +298,7 @@ Next free ID: K675.
   - owner: nobody since 2026-10-20 20:11 (merged; agent `ac987d906d2085fb9` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
   - branch: mainline; last commit: `883b00a`
   - evidence: `.claude/probes/K580/`
-  - next: stage 4, the i joint notch (0.107 LU at xh 2, 0.227 at xh 3): move the junction round piece centre (joinery.ts ~1017-1060) or fix the glyph junction slots (src/core/glyphs/); needs a brief (K580_s3.md Handoff)
+  - next: stage 4, the i joint notch (0.107 LU at xh 2, 0.227 at xh 3): move the junction round piece centre (joinery.ts ~1017-1060) or fix the glyph junction slots (src/core/glyphs/); with K675 and K676; after K620 merges (it adds Strand.taper fields); needs a brief (K580_s3.md Handoff)
   - brief: `docs/design/K580_s3.md`
 - **K324** · Real-time minotaur, more alive and tunable (`docs/design/K324_realtime_minotaur.md`,
   091e4dc; Levi took section 7's recs): s1 (sim); s2 (render) once K525 owns the look: its route
@@ -1246,6 +1246,18 @@ Every other item below waits on the trigger it names.
 - **K673** · An awake knot frame is 19.3 ms at 1x (110 at 4x CPU) against 9.5-9.9 (47) slept, and
   the first sleep takes about 5 sim-s (9-24 s wall on the worker host): phones pay it through the
   settle and the first moves. Likely K611; K441 Handoff.
+- **K675** · K580 s3 partial round blends: the a J2 at xh 2 (113.5 deg) is only partly round (1.824
+  h to 1.389 h), the i joint sample at xh 3 (110.8 deg) barely. A lower ROUND_DOT_START rounds both;
+  re-run the count first (`docs/design/K580_s3.md` Residuals).
+- **K676** · Open-end crescents beside spur tips (the a stem bite, the notaper J bites, about 0.1
+  LU) in the K580 s3 fills-only raster: not yet checked against the real end caps
+  (`docs/design/K580_s3.md` Residuals).
+- **K677** · aland only: a square step on the lower edge of the a J at xh 3 (both builds); the
+  second bite of a at xh 2 grew 0.080 to 0.090 LU under K580 s3. Neither investigated
+  (`docs/design/K580_s3.md`).
+- **K678** · A K81 cover strip with fewer than 9 pairs of room drops a round join arc (falls back to
+  the sample pair); no A/B scene reaches it (`RibbonMesh.coverPairs`, the joinery.ts cover loop;
+  K580 s3).
 
 ## Approved, to schedule (2026-10-11)
 
