@@ -85,8 +85,10 @@ export const LINT = {
    * by construction; outside, the root draws an edge of its own, which
    * starts at R with a kink (the root's edge is not G1 with the outer edge:
    * 31 degrees at xh 2, 9 at xh 3, measured against the nearest outer-edge
-   * point). The authored a: 0.022 at R (xh 2), 0.0001 (xh 3). Not
-   * calibrated on stills: 0.01 is 2% of the thread width.
+   * point). The authored a: stage 1's equal-arc root 0.022 at R (xh 2),
+   * 0.0001 (xh 3); stage 2's medial root 0.0002 and 0.0003 (its far side
+   * sinks into O instead, by 0.053 and 0.049: the inset). Not calibrated
+   * on stills: 0.01 is 2% of the thread width.
    */
   taperBulgeLU: 0.01,
 } as const;
