@@ -129,7 +129,7 @@ describe("links", () => {
       dailyTitleThread: false,
       minoStopMin: 0.2, minoStopMax: 0.6, minoHuntStop: 0.5, minoTurnBack: 1.5,
       minoTipReach: 2, minoRoamNear: 0.25, minoTelegraphRuns: 1,
-      fragile: "off", parMode: "off", parSlack: 0.25,
+      fragile: "off", parMode: "off", parSlack: 1,
     });
   });
 
