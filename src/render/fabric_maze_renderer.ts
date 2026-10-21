@@ -44,7 +44,8 @@ import type {
   PaintRim,
   PaintTele,
 } from "./ribbon_renderer";
-import { legRoutes, pathLegs, traveledRoutes } from "./junction_routes";
+import { legRoutes, pairRoutes, pathLegs, traveledRoutes } from "./junction_routes";
+import { openPair } from "../game/turnstiles";
 import type { PaintRoute } from "./junction_routes";
 import { trailFade, trailSpans } from "./trail_paint";
 import type { MinoFog, PathViz } from "../ui/url_state";
@@ -1280,12 +1281,17 @@ export class FabricMazeRenderer {
         continue;
       }
       if (controller.broken(e.id)) continue; // K137: a broken run is gone.
+      if (controller.isHidden(e.id)) continue; // K138 s2: so is a hidden one.
       const m = this.scanRun(e, x, y, controller, maxD, "both");
       if (!m) continue;
       const d2 = m.d * m.d;
       if (d2 >= best2) continue;
-      const route = planRoute(this.walk, controller.head, { edge: e.id, at: m.at }, reach, (r) =>
-        controller.broken(r)
+      const route = planRoute(
+        this.walk,
+        controller.head,
+        { edge: e.id, at: m.at },
+        reach,
+        (r) => controller.broken(r) || controller.isHidden(r)
       );
       if (!route) continue;
       best2 = d2;
@@ -2363,6 +2369,13 @@ export class FabricMazeRenderer {
         (spans ??= []).push(this.burnSpan(e, 0, e.length));
       }
     }
+    // K138 s2: an unrevealed hidden run is gone the same way, so it draws
+    // nothing and picks nothing (the pickers read the shown pieces) until a
+    // pluck reveals it.
+    for (const eid of controller.hiddenRuns()) {
+      const e = this.walk.edges[eid];
+      (spans ??= []).push(this.burnSpan(e, 0, e.length));
+    }
     this.brokenSpans = spans;
   }
 
@@ -3230,6 +3243,23 @@ export class FabricMazeRenderer {
     return { spans, caps, routes, traveled };
   }
 
+  // K138 s2: each turnstile's open pair as a band through its junction
+  // (junction_routes.ts pairRoutes) at the phase the next move meets (the
+  // controller has already counted a move in flight), listed before the
+  // path's routes so they draw over it. None once solved.
+  private turnstileBands(controller: FabricMazeController): PaintRoute[] {
+    const ts = controller.ruleLook?.turnstiles;
+    if (!ts || controller.solved) return [];
+    const phase = controller.rulePhase;
+    return pairRoutes(
+      this.walk.edges,
+      ts.map((t) => {
+        const [a, b] = openPair(t, phase);
+        return { vertex: t.vertex, a, b };
+      })
+    );
+  }
+
   // K81: the route bands of the whole path (fullPath mode), the move in
   // flight folded in (junction_routes.ts pathLegs), and K127's traveled
   // passes (the same, less the far end of the move in flight).
@@ -3264,7 +3294,7 @@ export class FabricMazeRenderer {
     if (this.pathViz === "string") {
       // The yarn is the record: no gold spans or caps; pulses stay quiet
       // mid-move exactly like the other modes.
-      this.ribbons.setPaint([], [], [], []);
+      this.ribbons.setPaint([], [], [], this.turnstileBands(controller));
       this.drawMarkers(controller, a.e.chain, a.cur, false);
       this.drawYarn();
       this.renderFog();
@@ -3276,7 +3306,7 @@ export class FabricMazeRenderer {
         trail.spans,
         [],
         trail.caps,
-        trail.routes,
+        [...this.turnstileBands(controller), ...trail.routes],
         trail.traveled
       );
       this.drawMarkers(controller, a.e.chain, a.cur, false);
@@ -3299,7 +3329,7 @@ export class FabricMazeRenderer {
       spans,
       [],
       this.buildCaps(controller),
-      passes.routes,
+      [...this.turnstileBands(controller), ...passes.routes],
       passes.traveled
     );
     this.drawMarkers(controller, a.e.chain, a.cur, false);
@@ -3413,7 +3443,13 @@ export class FabricMazeRenderer {
         });
       }
     }
-    this.ribbons.setPaint(spans, pulses, caps, passes.routes, passes.traveled);
+    this.ribbons.setPaint(
+      spans,
+      pulses,
+      caps,
+      [...this.turnstileBands(controller), ...passes.routes],
+      passes.traveled
+    );
     this.ribbons.setRim(this.rimDecl());
     // K100: the fog's explored memory belongs to one solve. It starts over
     // when the solve restarts (Reset path's restart, a clock change, a

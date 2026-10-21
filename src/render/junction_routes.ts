@@ -104,6 +104,27 @@ export function edgeArm(e: RouteEdge, atA: boolean): RouteArm {
     : { chain: e.chain, ctrl: e.ctrlB, dir: -1 };
 }
 
+// K138 s2 TURNSTILES: each pair of runs a junction lets through as one band
+// across it (arm `a` in, arm `b` out), so a turnstile's open pair reads as
+// one thread through the joint and its third arm meets the band. The
+// renderer lists these BEFORE the path's routes, so the path's bands draw
+// over them and a full record drops them first.
+export function pairRoutes(
+  edges: readonly RouteEdge[],
+  pairs: readonly { vertex: string; a: number; b: number }[]
+): PaintRoute[] {
+  const out: PaintRoute[] = [];
+  for (const p of pairs) {
+    const ea = edges[p.a];
+    const eb = edges[p.b];
+    if (!ea || !eb || p.a === p.b) continue;
+    const a = edgeArm(ea, ea.va === p.vertex);
+    const b = edgeArm(eb, eb.va === p.vertex);
+    out.push({ chain: a.chain, ctrl: a.ctrl, dir: a.dir, outChain: b.chain, outCtrl: b.ctrl, outDir: b.dir });
+  }
+  return out;
+}
+
 // The path's legs, with the move in flight folded in the way the paint
 // folds it. The controller is already updated when a move starts: an
 // ADVANCE has pushed its edge (the last leg, partially swept: from -> cur),
