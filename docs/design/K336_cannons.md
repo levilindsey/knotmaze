@@ -205,3 +205,146 @@ re-read this brief and `git log` before going on. Any helper runs on
 sonnet with a 1 h cap under this same rule.
 
 End your report with the item's handle fields and a `Ledger items` list.
+
+## Handoff (2026-10-20, agent ac1c3e02f6979bc7f, at the cap)
+
+Steps 1-5 and 8 are done, and so is most of 7. Step 6 was tuned from
+the pure-model census, not from frame sheets, and the master-vs-branch
+sheets were never shot. The branch is rebased onto master `b1ec927`
+(K324 stage 1, K546 stage 1) and was never pushed.
+
+### What landed
+
+- `7e06a10` **K186: no confetti under reduced motion.**
+  - The plan is empty under reduced motion, throwConfetti returns early,
+    and turning reduced motion on mid-fall clears the layer
+    (panel_wiring.ts).
+  - REDUCED_SPRAY_SHARE and the slowed fall are gone.
+  - Banner paths: `.claude/probes/K336/banners/results.md`. Every
+    finish path throws one burst; a reload after an official finish
+    shows no banner, by design.
+  - Path 8 is Levi's call: Reset path during the winning move throws
+    the confetti and records the result, but shows no banner.
+- `d245775` **K336: the side cannons** (model, view, settings).
+- `89287ed` **K336: the streamers** (model, view, setting). The finish
+  spray throws none. That was the draft's call, kept without a sheet.
+- `8de7351` lore; `b63de23` the rebase's renumber.
+- Every new piece is drawn inside ConfettiLayer: two more
+  ParticleContainers above the world root (spray, streamers, cannons,
+  rain). Only Flag.OVERLAY is raised, and `src/app/frame_loop.ts` is
+  untouched.
+
+### The defaults picked
+
+- Side cannons on (`cfc`).
+- Cannon amount 1 (`cfn`, 0-3).
+- Streamers 0.2 (`cfs`, 0-1).
+- Codec 178-180, CODEC_VERSION 8, daily-exempt.
+
+The constants:
+
+- Cannons just off each side at 0.8 of the height.
+- Arcs top out 0.3 w in from their side and 0.32 h down.
+- Speed 0.75-1.1x, spread +-0.12 rad.
+- Volley 0.22 s, with the right cannon 0.08 s later.
+- Drag 1.2/s toward a terminal fall of 0.3 h/s.
+- 150 pieces a cannon at amount 1 on the phone, scaled by
+  rainScreenScale (309 at 1400x900), capped at 2700.
+- Streamers have 14 segments, at most 100 a cannon, and sag 0.06 h/s.
+- The 7 s and 8 s backstops never fired in the census.
+
+The full record is render-confetti.md's "Side cannons and streamers
+(K336)" section.
+
+### Verification
+
+- **Tests.** `npm test` after the rebase: 1658 passed, 1 skipped.
+  `tsc --noEmit` is clean. `npm run build` was green before the rebase
+  (a8a2985) and was not re-run after it.
+- **Census** (pure model, 8 seeds):
+  - cannon paper: `.claude/probes/K336/cannon_census_a8a2985.txt`;
+  - streamers: render-confetti.md's CENSUS entry.
+
+  Every piece leaves by the bottom edge, and the last one leaves
+  5.0-5.9 s after the burst, before the rain (6.2-7.7 s).
+- **The animating flag** (page check on a8a2985 under the perf lock;
+  `flag_bench_a8a2985.log`): PASS at desktop 1600x900 and phone
+  411x753.
+  - The last cannon paper died at 5.07 s (desktop) and 4.91 s (phone)
+    after the burst.
+  - The last streamer died at 5.46 s and 5.21 s.
+  - The last rain died at 6.81 s and 6.40 s.
+  - The loop stopped at 6.92 s and 6.46 s.
+  - No sample had a piece alive with the layer inactive or the loop
+    stopped.
+  - The unit tests hold `active` on cannon paper alone and on streamers
+    alone.
+- **CPU bench** (`bench_sim.mjs`, 1400x900; per frame, mean / p95 in
+  ms; full table in render-confetti.md's COST entry):
+
+  | Cannons | Amount 1 | Amount 3 |
+  |---|---|---|
+  | Off | 0.065 / 0.12 | 0.19 / 0.37 |
+  | Defaults | 0.22 / 0.37 | 0.34 / 0.61 |
+  | Max (cfn 3, cfs 1) | 0.39 / 0.65 | 0.51 / 0.89 |
+
+  A streamer costs about 13 paper pieces.
+- **Not done:**
+  - the master-vs-branch sheets (`.claude/probes/K336/sheet/`) and the
+    curl strip;
+  - K140's frame A/B (the GPU side);
+  - the phone pass. Levi had the phone until 18:25.
+
+### Pins moved
+
+- `test/ui/param_codec.test.ts`'s table pin: +3 rows, after K324's
+  171-177.
+- `test/ui/url_codec.test.ts`'s defaults table and OVERRIDE_KEYS, plus
+  new cases for `cfc`, `cfn` and `cfs`.
+- `test/ui/daily_link.test.ts`'s exempt set.
+- `test/render/confetti_model.test.ts`: reduced motion now expects
+  nothing, and there are new K336 blocks.
+
+The golden dailies, K87 and the knot-mode golden did not move.
+
+### What's left
+
+1. **The sheets.** `.claude/probes/K336/sheet.mjs` is ready and has
+   never run. It is a copy of K335's with this agent's lock owner, the
+   `owner | start | what` lock line, a wait of `MAXWAIT` minutes
+   (default 10), no rain chart, and `MASTER` / `BRANCH` env labels. Run
+   `node sheet.mjs <masterBase> <branchBase> [outDir]` against two
+   `scripts/preview.ps1` builds: master `4d57c02` against the branch
+   `a8a2985` (the pre-rebase head), or a fresh pair. It shoots 1400x900
+   and 411x753 at 0.1-1.0 s and 1.5-3.0 s. Still to add: a strip of
+   streamers curling (2x crops). Re-tune if the arcs or the 0.2 share
+   look wrong.
+2. **K140's frame A/B** (`k140_ab.mjs` and `run_ab.ps1` in the main
+   checkout's `.claude/probes/K140/`), at amounts 1 and 3 with the
+   cannons on and off, under the perf lock.
+3. **The phone pass:**
+   - the cannons and streamers' look and frame time at amounts 1 and 3;
+   - the K186 banner paths on the phone;
+   - a `banners/banners.mjs` rerun on the final build.
+4. **Path 8**, for Levi (above).
+5. **Residuals:**
+   - The streamer body's sag is only approximately frame-rate
+     independent: the follow runs once a frame.
+   - On the phone the closest cannon arc tops out 0.081 w from its edge
+     (the median is 0.26 w).
+
+### Handle
+
+- owner: nobody since 2026-10-20 ~19:00 (agent ac1c3e02f6979bc7f of
+  claude session 91b19e11-7759-4638-ba60-4705b011b94f, stopped at its
+  2 h cap)
+- branch: `worktree-agent-ac1c3e02f6979bc7f`, worktree
+  `.claude/worktrees/agent-ac1c3e02f6979bc7f`; last commit: this
+  handoff (on master `b1ec927`, unpushed)
+- evidence: `.claude/probes/K336/` (untracked): the censuses,
+  `flag_check.mjs`, `bench_sim.mjs`, `bench_locked.ps1`,
+  `flag_bench_a8a2985.log`, `banners/`, `look.mjs` + `look_locked.ps1`,
+  `sheet.mjs`
+- next: the sheets and the curl strip, then K140's frame A/B under the
+  perf lock, then the phone pass
+- brief: `docs/design/K336_cannons.md`
