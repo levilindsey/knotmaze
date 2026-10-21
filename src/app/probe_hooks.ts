@@ -602,6 +602,20 @@ export function installProbeHooks(ctx: ProbeCtx): void {
         : null,
       // K114 walker (null: no walker): WalkerProbe.
       walker: ctx.walker,
+      // K137 stage 2: the aids. `spool`: the yarn's runs used and its
+      // capacity (null: off); the hints (max 0: off) and the lit hint's run
+      // (-1: none); `goodArm`: the next good arm (-1: none); `chalk`: the
+      // ticked junctions; `compassRun`: the compass's arm (-1: none shown).
+      aids: {
+        spool: c.spoolOn ? { used: c.spoolUsed, cap: c.spoolCap, share: c.spoolShare } : null,
+        hintsMax: c.hintsMax,
+        hintsLeft: c.hintsLeft,
+        hintsUsed: c.hintsUsed,
+        hintRun: fb.hintRun,
+        goodArm: c.goodArm(),
+        chalk: [...c.chalk],
+        compassRun: fb.compassRun,
+      },
       // K114: the burn race (null: no fire). `smoldering`: the head's arms
       // whose tap the fire refuses; `banner`: the Burnt banner shows.
       fire: c.fire
