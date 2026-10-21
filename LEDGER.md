@@ -430,11 +430,23 @@ Next free ID: K785.
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
-  - owner: nobody since 2026-10-21 07:06 (merged; agent `a10af88563aec2ec1` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `d6449fee`
-  - evidence: `.claude/probes/K138/s3/`
-  - next: stage 4: the turnstile third-arm dim, then locks and keys whole (item 2 of docs/design/K138_s3.md; its Handoff has the calls and the remainder)
-  - brief: `docs/design/K138_s3.md`
+  - owner: agent `ac022c74b0ce97669` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 07:21, 2 h cap ~09:21)
+  - branch: `worktree-agent-ac022c74b0ce97669`, worktree `.claude/worktrees/agent-ac022c74b0ce97669`; last commit: `3abeabb6`
+  - evidence: `.claude/probes/K138/s4/`
+  - next: stage 4: the turnstile third-arm dim, then locks and keys whole (docs/design/K138_s4.md)
+  - brief: `docs/design/K138_s4.md`
+- **K774** · K114 beat rider with the hunter: a catch never lands (K767, real phone and desk:
+  `.claude/probes/K767/out/catch_desk_sprint`, `notes.md`). The model counts it and respawns both,
+  but no HUD count, toast, heart or banner follows: the rider departs the next run in the same
+  `advance` as the arrival and `beginMove` snaps the animation, so `moveProgress` never reaches 1
+  and the deferred catch (`pendingCatch.t = 1`) never lands (inferred). Fix: land a pending catch
+  when its animation is snapped or the rider departs; check the walker too; make `beat_phone.mjs`
+  check B need the heart or toast
+  - owner: agent `a472d1436c1b03aba` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 07:21, 2 h cap ~09:21)
+  - branch: `worktree-agent-a472d1436c1b03aba`, worktree `.claude/worktrees/agent-a472d1436c1b03aba`; last commit: `3abeabb6`
+  - evidence: `.claude/probes/K774/`
+  - next: verify the snapped-animation cause, land the catch exactly once, regression tests, the desk page check, the fixed phone probe (docs/design/K774.md)
+  - brief: `docs/design/K774.md`
 
 ## Next, in order
 
@@ -490,13 +502,6 @@ merged):
 13. K326 A.
 14. K318, K336, K337.
 
-- **K774** · K114 beat rider with the hunter: a catch never lands (K767, real phone and desk:
-  `.claude/probes/K767/out/catch_desk_sprint`, `notes.md`). The model counts it and respawns both,
-  but no HUD count, toast, heart or banner follows: the rider departs the next run in the same
-  `advance` as the arrival and `beginMove` snaps the animation, so `moveProgress` never reaches 1
-  and the deferred catch (`pendingCatch.t = 1`) never lands (inferred). Fix: land a pending catch
-  when its animation is snapped or the rider departs; check the walker too; make `beat_phone.mjs`
-  check B need the heart or toast
 - **K784** · Phone sitting 6 on real touches: one-way runs (K138 s3, ow), lures and snares (K137 s4,
   lur and snr; emulated only so far), the K775 overflow, and a touch press on an unrevealed hidden
   run (the K764 case)
