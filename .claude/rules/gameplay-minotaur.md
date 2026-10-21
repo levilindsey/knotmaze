@@ -177,6 +177,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `.claude/probes/K324/k324_page.mjs <base> [outDir] [seed] [secs]` wraps
   the live chase's step and records every tick (60 s unseen: 29 arrivals,
   18 stops of 24-70 ticks, 11 long stops, a tip held 0, no stray motion).
+
 ## The turn-aligned minotaur
 
 - TURN-ALIGNED MINOTAUR (K80 turns stage 1, 2026-10-14;
