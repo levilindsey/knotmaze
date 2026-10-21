@@ -38,4 +38,7 @@ export interface SceneRef {
   // The running appearance animation (startAppearance, beginLoading,
   // beginSettle).
   readonly reveal: RevealAnimator | null;
+  // K138 s4: re-dims the turnstiles' closed arms when a move turns them (a
+  // run-table data change; a no-op while nothing changed). Called per frame.
+  readonly syncRuleDim?: () => void;
 }

@@ -3,6 +3,7 @@ import { FabricMazeController, type FabricRules } from "../../src/game/fabric_co
 import { composeRules, plainRule, ruleSearch, type RuleWalk } from "../../src/game/rule_search";
 import {
   closedArm,
+  closedArmEnds,
   openPair,
   placeTurnstiles,
   turnstileAllows,
@@ -62,6 +63,31 @@ describe("turnstiles: the rule", () => {
     expect(turnstileAllows(t, 2, 2, 0)).toBe(true); // back the way you came
     expect(turnstileAllows(t, 0, -1, 0)).toBe(true);
     expect(turnstileAllows(t, 2, -1, 0)).toBe(false);
+  });
+
+  it("names the closed arm's end at the junction for the page's dim (K138 s4)", () => {
+    const w = tee();
+    // J is run 0's vb and runs 1 and 2's va.
+    expect(closedArmEnds(w, [at(0)], 0)).toEqual([{ run: 2, end: 0 }]);
+    expect(closedArmEnds(w, [at(0)], 1)).toEqual([{ run: 0, end: 1 }]);
+    expect(closedArmEnds(w, [at(0)], 2)).toEqual([{ run: 1, end: 0 }]);
+    expect(closedArmEnds(w, [at(0)], 3)).toEqual(closedArmEnds(w, [at(0)], 0));
+    expect(closedArmEnds(w, [], 0)).toEqual([]);
+    // Real mazes: one end per turnstile, every phase, at the junction.
+    for (const seed of [1, 7]) {
+      const m = ruleMaze(seed).walk;
+      const p = placeTurnstiles(m, 4, seed);
+      for (let ph = 0; ph < 3; ph++) {
+        const ends = closedArmEnds(m, p.layout!, ph);
+        expect(ends.length).toBe(p.layout!.length);
+        ends.forEach((d, i) => {
+          const t = p.layout![i];
+          expect(d.run).toBe(closedArm(t, ph));
+          const e = m.edges[d.run];
+          expect(d.end === 0 ? e.va : e.vb).toBe(t.vertex);
+        });
+      }
+    }
   });
 
   it("judges only the turnstile's own junction", () => {

@@ -587,6 +587,9 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
           scene.fabric.setExploreHold(exploreHold);
           scene.fabricController.trailMode = pathVizOf(params) === "trail";
         }
+        // K138 s4: the turnstiles' closed-arm dim follows the move clock (a
+        // run-table data change; a no-op unless the turnstiles turned).
+        scene.syncRuleDim?.();
         // K6-2: the fog's wobble is PAINT_AMBIENT, its intro PAINT (the
         // fabric poll); nothing else in tickFog moves at rest.
         if ((need & (Flag.PAINT | Flag.PAINT_AMBIENT | Flag.REVEAL)) !== 0) {
