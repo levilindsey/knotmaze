@@ -59,8 +59,10 @@ import {
   MINO_FOG_BLEED_ALPHA,
   catchBurstAt,
   telegraphAlphas,
+  telegraphRimStrength,
   telegraphTickLook,
 } from "../game/mino_feedback";
+import { telegraphPieces } from "./telegraph_route";
 
 // What syncMinotaur draws: the real-time chase (MinotaurChase) or the
 // turn-aligned minotaur (K80 turns, TurnMinotaur) - where it stands on the
@@ -605,6 +607,12 @@ export class FabricMazeRenderer {
   // only by drawTelegraphLength, so the runs telegraph is untouched.
   telegraphHoverEdge: number | null = null;
   telegraphCoarse = false;
+  // K525: the telegraph's look (minoTelegraphLook, mtl): rims along the
+  // route's threads (the ribbons' TELE paint item, telegraph_route.ts),
+  // today's line, or both. scene.ts and the panel's onTurnMinoChange set
+  // it; the destination ring, the by-length ticks and the coarse tint draw
+  // for every look.
+  telegraphLook: "rims" | "line" | "both" = "rims";
   // K114: the burn race (drawFire); fireDrawn = a fire is declared (cleared
   // once the fire is off). fireDirty: update() ran since the last draw (the
   // threads, flow or game state moved); fireKey: the fire's clock and state
@@ -1439,12 +1447,14 @@ export class FabricMazeRenderer {
     this.minoShown = false;
     if (!chase) {
       this.minoLayer.visible = false;
+      this.ribbons.setTelegraph(null);
       return;
     }
     const at = spotCtrl(this.walk, chase.g, chase.mino);
     const ctrl = this.ctrlMod(at.chain, at.ctrl);
     if (this.revealQuery && this.revealQuery(at.chain, ctrl) < 0.98) {
       this.minoLayer.visible = false;
+      this.ribbons.setTelegraph(null);
       return;
     }
     const over = fog === "always" || (fog === "hunting" && chase.mode === "hunt");
@@ -1453,6 +1463,7 @@ export class FabricMazeRenderer {
     // thread point is not solid (the exit marker's test).
     if (!over && this.explore.on && this.ribbons.exploreVisAt(at.chain, ctrl) < 0.98) {
       this.minoLayer.visible = false;
+      this.ribbons.setTelegraph(null);
       return;
     }
     const m = chase.mino;
@@ -1493,6 +1504,7 @@ export class FabricMazeRenderer {
       this.markers.minotaur.hide();
       this.teleGfx.clear();
       this.teleGfx.visible = false;
+      this.ribbons.setTelegraph(null);
       this.minoGlow.alpha = MINO_FOG_BLEED_ALPHA;
     }
     this.minoShown = true;
@@ -1531,7 +1543,8 @@ export class FabricMazeRenderer {
     const alphas = telegraphAlphas(hunting, t.steps.length);
     const w = this.threadWidth;
     let spot: Spot = { ...t.fromSpot! };
-    for (let s = 0; s < t.steps.length; s++) {
+    // K525: the line draws for the line and both looks only.
+    for (let s = 0; this.telegraphLook !== "rims" && s < t.steps.length; s++) {
       const [e, b] = t.steps[s];
       const we = this.walk.edges[e];
       if (!we) break;
@@ -1639,8 +1652,17 @@ export class FabricMazeRenderer {
     gfx.clear();
     if (!t) {
       gfx.visible = false;
+      this.ribbons.setTelegraph(null);
       return;
     }
+    // K525: the rims (the ribbons' TELE paint item) for every look but the
+    // line. Roam vs hunt rides the strength (uKTele.w), so a mode switch
+    // rewrites no texel; setTelegraph rewrites KPAINT only when the pieces
+    // change.
+    if (this.telegraphLook !== "line") {
+      this.ribbons.teleStrength = telegraphRimStrength(hunting);
+      this.ribbons.setTelegraph(telegraphPieces(g, this.walk.edges, t));
+    } else this.ribbons.setTelegraph(null);
     // K481 stage 2: by length, the route starts where it stands and its
     // stops carry the ticks.
     if (t.fromSpot && t.segLens && t.stops) {
@@ -1655,7 +1677,8 @@ export class FabricMazeRenderer {
     const w = this.threadWidth;
     let a = t.from;
     let prev: number[] | null = null;
-    for (let s = 0; s < t.steps.length; s++) {
+    // K525: the line draws for the line and both looks only.
+    for (let s = 0; this.telegraphLook !== "rims" && s < t.steps.length; s++) {
       const [e, b] = t.steps[s];
       const we = this.walk.edges[e];
       if (!we) break;
