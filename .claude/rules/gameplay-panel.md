@@ -177,7 +177,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   Fragile runs and Par (whose rows stay visible) and restarts the solve.
   Param: gameplay-links.md's COLLAPSE PARAM; the rules:
   gameplay-mechanisms.md's Collapse.
-- CUT ROW (K114, 2026-10-20): "Cut" (off / on) in the Game folder after
+- CUT ROW (K114, 2026-10-20): "Cut" (off / on / lead / delay since the
+  walker stage; the tooltip says what lead and delay ask) in the Game folder after
   "Collapse", fabric mode and the classic game only; it restarts the solve
   (onClockChange; undo_stack.ts lists it there). It stays visible while
   Fragile runs, Par or Collapse is on, which turn it off (setRules). The

@@ -5,6 +5,9 @@ paths:
   - "src/game/collapse.ts"
   - "src/game/cut.ts"
   - "src/ui/cut_buttons.ts"
+  - "src/game/walker.ts"
+  - "src/ui/walker_buttons.ts"
+  - "test/game/walker.test.ts"
   - "src/app/rule_loss.ts"
   - "test/game/fragile.test.ts"
   - "test/game/par.test.ts"
@@ -273,3 +276,59 @@ whose Handoff has the calls and their alternatives; design
   (`{mode, runs, count, armed, pending, shown, actions, carry}`, null with
   the cut off), `.runPoint(eid, frac)` (a run's screen and world point) and
   `.toWorld(x, y)`; choices' `cost` reads the live distances.
+
+## The walker (K114)
+
+Written by K114's walker stage (2026-10-20; brief
+`docs/design/K114_walker.md`, whose Handoff has the calls and their
+alternatives; design `docs/design/K80_gameplay_additions.md` R.3.9 and
+R.4.3). The header of `src/game/walker.ts` is the spec: the directed
+state, the map, both rules and the par search.
+
+- MODES: the cut param's `lead` and `delay` (CUT_MODES; the controller's
+  `walkerMode`). The head is a WALKER and the player's only verb is the
+  cut: keys, the move pad and the gamepad never move it (main.ts
+  `moveAlong` refuses unless `walkerDriving`), and `carryStep` hands every
+  arrival to `walkerStep`. Carry is empty in walker modes (no
+  contraction). A tap on a live run cuts it, no scissors to arm
+  (`walkerTap`; the pointer's `cutPick` dep makes a touch press on a run a
+  pending tap and the hover glow light the run under a crosshair). The
+  refusal toasts "That cut would leave the walker no way to the exit.".
+- LEAD (puzzle): the walker follows its strand, else the next run end
+  clockwise from straight on ("keeps right"), else back; an END sends it
+  back. The ROUTE THREAD (`syncWalker`, fabric_maze_renderer.ts) shows
+  the whole route as the cuts stand (`leadRoute`, recomputed when the cut
+  set changes). Go walks it one run per arrival (the dot's move is the
+  clock); at its end the exit wins, a LOOP ("It's going in circles.") or a
+  dead stop ("The walker has no way to go.") puts the walker back at the
+  entrance with the cuts kept (`walkerBack`: replayActions of the cut
+  actions only). Undo takes the last cut back while planning; Reset clears
+  the cuts, or ends a walk. PAR (`leadPar`): the fewest cuts that bring it
+  to the exit, the exact search under PAR_STEP_BUDGET 400k directed steps
+  and PAR_MAX_CUTS 12, else the checked model's cut set as an upper bound;
+  memoized per controller, found the first time the HUD asks. Dailies
+  1-30: all exact, par 0:1, 1:7, 2:12, 3:9, 4:1, 1.1 s for all thirty
+  (daily 23: 74k steps).
+- DELAY (action-free turns): the walker takes the live run with the least
+  length + distance to the exit (`delayNext`, ties by run id). Each turn
+  is a cut, after which it walks one run, or "Let it walk" (a pass). Undo
+  takes the last turn back (its move, then its cut). The route thread
+  shows its way out from the head (`delayRoute`). The cut's refusal keeps
+  a way to the exit, so the walker always gets there.
+- THE BUTTONS (`src/ui/walker_buttons.ts`): Go (or "Let it walk"), Reset
+  and Undo, bottom left like the scissors, shown while a walker mode is
+  on, the keys are live and no open panel covers them. Keys: G is Go, U is
+  Undo (`walkerKeyOf`; `cutKey` passes only U to the walker).
+- THE ROWS: Lead's HUD and banner row "cuts N · par P" (a dash when no
+  par is known); Delay adds "walker W · shortest S" (STATS `walker`). The
+  share title ends ` · ✂️ N, par P` (Lead) or ` · 🐢 W runs (it wanted S)`
+  (Delay). No stars in either mode (rating null; Call 4 in the brief).
+- SCOPE: as the cut's (the classic game, free play). Not built: Keep it
+  in, Show it, Race the solver, Lead's action variant, cuts with the
+  minotaur or the fire (K688), dailies and saved attempts.
+- HOOK: `__knotFabric().walker` (`WalkerProbe` in probe_hooks.ts:
+  {mode, state, idx, par, parCuts, cuts, route, end, walk, shortest,
+  shown}, null with no walker). Probes: `.claude/probes/K114/walker/`
+  (`par_census.ts`, `balance.ts`: the Keep-it-in balance probe; run with
+  `node node_modules\vite-node\vite-node.mjs --config <that
+  folder>\vite.node.config.mjs <that folder>\<script>.ts <out.md>`).

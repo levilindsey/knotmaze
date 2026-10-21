@@ -45,6 +45,28 @@ import type { LoopFlags } from "./loop_flags";
 import type { SceneRef } from "./scene_ref";
 import type { ContextLossHandle } from "./context_loss";
 
+// K114 walker: __knotFabric().walker. `state`: Lead's "plan" or "walk"
+// (Delay: "turns"); `idx`: the next route state Lead walks; `par` and
+// `parCuts`: Lead's par and a cut set that meets it (null and [] in Delay,
+// or when no cut set reaches the exit); `cuts`: the cut runs; `route`: the
+// runs Lead's route takes from the entrance, or Delay's way to the exit
+// from the head as the cuts stand; `end`: where Lead's route ends (Delay:
+// null); `walk`: the runs walked; `shortest`: the uncut maze's route in
+// runs; `shown`: the Go, Reset and Undo buttons show.
+export interface WalkerProbe {
+  mode: "lead" | "delay";
+  state: "plan" | "walk" | "turns";
+  idx: number;
+  par: number | null;
+  parCuts: number[];
+  cuts: number[];
+  route: number[];
+  end: "exit" | "loop" | "none" | null;
+  walk: number;
+  shortest: number;
+  shown: boolean;
+}
+
 // K5 (docs/design/K5_K6_split.md 2.2, M1 step 5): everything the probe
 // hooks reach in main(). The hooks read it at call time, never at install
 // time: the scene is null until the first rebuild(), and main.ts builds
@@ -173,6 +195,8 @@ export interface ProbeCtx {
   // no minotaur), in __knotChase() and __knotTurnMino().
   readonly hearts: { left: number; of: number } | null;
   readonly cutShown: boolean;
+  // K114 walker: the walker's view (null: no walker; WalkerProbe).
+  readonly walker: WalkerProbe | null;
   // main()'s `let`s the hooks also write: get/set pairs (written by several
   // regions, so main.ts keeps them until their owners move).
   chaseRunning: boolean;
@@ -567,6 +591,8 @@ export function installProbeHooks(ctx: ProbeCtx): void {
             carry: [...c.carry],
           }
         : null,
+      // K114 walker (null: no walker): WalkerProbe.
+      walker: ctx.walker,
       // K114: the burn race (null: no fire). `smoldering`: the head's arms
       // whose tap the fire refuses; `banner`: the Burnt banner shows.
       fire: c.fire

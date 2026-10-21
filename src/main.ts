@@ -134,6 +134,7 @@ import { createLoader } from "./ui/loader";
 import { createStamp } from "./app/stamp";
 import { GLYPHS2 } from "./app/glyph_switch";
 import { installProbeHooks } from "./app/probe_hooks";
+import type { WalkerProbe } from "./app/probe_hooks";
 import { createFrameLoop } from "./app/frame_loop";
 import { createLoopFlags, Flag } from "./app/loop_flags";
 import { createLifecycle } from "./app/lifecycle";
@@ -2995,6 +2996,31 @@ async function main(): Promise<void> {
     }
     return { mode: "delay", walk: fc.taps.length, shortest: m.shortest };
   };
+  // The probe hook's view (__knotFabric().walker; null: no walker). Lead's
+  // par is found on the first read, as the HUD's is.
+  const walkerProbe = (): WalkerProbe | null => {
+    const fc = scene.fabricController;
+    const m = fc ? walkerOf(fc) : null;
+    if (!fc || !m || !fc.walkerMode) return null;
+    const lead = fc.walkerMode === "lead";
+    if (lead && !m.par) m.par = leadPar(m.map);
+    const par = lead && m.par ? m.par : null;
+    return {
+      mode: fc.walkerMode,
+      state: lead ? walkerState : "turns",
+      idx: walkerIdx,
+      par: par && Number.isFinite(par.par) ? par.par : null,
+      parCuts: par ? [...par.cuts] : [],
+      cuts: fc.cutRuns(),
+      route: lead
+        ? m.route.states.map((d) => d >> 1)
+        : delayRoute(fc.walk, fc.head, fc.cuts),
+      end: lead ? m.route.end : null,
+      walk: fc.taps.length,
+      shortest: m.shortest,
+      shown: walkerButtons.isShown,
+    };
+  };
   const panelCoversWalker = (): boolean => {
     if (!panel.isOpen()) return false;
     const r = camera.panelWrap?.getBoundingClientRect();
@@ -3412,6 +3438,9 @@ async function main(): Promise<void> {
     },
     get cutShown() {
       return cutButtons.isShown;
+    },
+    get walker() {
+      return walkerProbe();
     },
     get chaseRunning() {
       return chaseRunning;
