@@ -239,10 +239,10 @@ Next free ID: K753.
   1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that
   swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
   K280, residuals K281).
-  - owner: agent `a178a00897a4044dc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus-5-5, started 2026-10-21 03:31, 2 h cap ~05:31)
-  - branch: `worktree-agent-a178a00897a4044dc`, worktree `.claude/worktrees/agent-a178a00897a4044dc`; last commit: `29bc3f7e`
+  - owner: nobody since 2026-10-21 05:15 (merged; agent `a178a00897a4044dc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `e1fe321b`
   - evidence: `.claude/probes/K114/beat/`
-  - next: the beat rider stage (cap ~05:31): the clock option, the beat clock, the rider, notes, pause, the visual beat, enemies per move, HUD, share, panel; then Levi calls K706 and K707, a phone pass, K688 healing cuts
+  - next: the beat remainder (Handoff of docs/design/K114_beat.md): item 6 the pulse, item 8 the HUD tempo row, share tag and panel rows, the lore; then Levi calls K706, K707 and the beat calls, a phone pass, then the spider and K688 healing cuts after K137 s3d, then Pluck Hero
   - brief: `docs/design/K114_beat.md`
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
