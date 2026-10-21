@@ -1860,7 +1860,13 @@ async function main(): Promise<void> {
     if (!scene.chase) return;
     if (scene.chase.playerMoving) scene.fabric.setMoveProgress(scene.chase.playerProgress, fc);
     else if (scene.fabric.animating) scene.fabric.setMoveProgress(1, fc);
-    scene.fabric.syncMinotaur(scene.chase, params.minoFog);
+    // K324 stage 2: the real-time telegraph, the chase's read-only plan
+    // (render only: it draws no RNG and moves no digest).
+    scene.fabric.syncMinotaur(
+      scene.chase,
+      params.minoFog,
+      params.minoTelegraph ? scene.chase.plan(params.minoTelegraphRuns) : null
+    );
   };
 
   // K114 stage 2, THE REAL-TIME FIRE (game/fire_clock.ts), in tickAnim's
