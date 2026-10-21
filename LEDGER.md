@@ -403,7 +403,7 @@ Next free ID: K750.
 - **K749** · Phone sitting 4 (sonnet, 2026-10-21 early): the K698 toasts, K138 s1 ice and the color
   rule, K137 s3c sprint, on real touches; the K739 glow stills if time allows.
   `docs/design/K749_phone.md`
-  - owner: claude 91b19e11-7759-4638-ba60-4705b011b94f (sonnet agent, launching 04:10)
+  - owner: claude agent ab35a519d3b90f110 of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, 1 h cap from about 04:12)
   - branch: mainline (probes only, in the main checkout); last commit: n/a (probes only; builds origin/master into .claude/probes/K749/builds/)
   - evidence: .claude/probes/K749/ (notes.md, out/)
   - next: parts 1-3 of the brief on the real Pixel; then the coordinator files the results
