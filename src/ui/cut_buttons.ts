@@ -2,12 +2,13 @@
 // main.ts wires them). Two round buttons, bottom left, styled like the move
 // pad (K120, bottom right), shown only while the cut is on, the keys are
 // live and no open panel covers them (main.ts cutTick: a phone's settings
-// sheet does, a desktop's side panel does not). The scissors arm the next tap on the maze
-// (it cuts the run under it instead of moving); a second press disarms, and
-// the button stays lit while armed. Undo pops one action, a move (with the
-// runs it carried on along) or a cut. The keys are cutKeyOf's: X arms or
-// disarms, Esc disarms, U undoes (by the typed letter, so every layout's X
-// and U; WASD and the arrows move by their codes and never reach it).
+// sheet does, a desktop's side panel does not). The scissors arm the next
+// tap on the maze (it cuts the run under it instead of moving); a second
+// press disarms, and the button stays lit while armed. Undo pops one
+// action, a move (with the runs it carried on along) or a cut. The keys are
+// cutKeyOf's: X arms or disarms, Esc disarms, U undoes (by the typed
+// letter, so every layout's X and U; WASD and the arrows move by their
+// codes and never reach it).
 
 export interface CutButtonsHooks {
   arm: () => void;

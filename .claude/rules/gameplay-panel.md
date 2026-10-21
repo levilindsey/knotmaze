@@ -177,6 +177,14 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   Fragile runs and Par (whose rows stay visible) and restarts the solve.
   Param: gameplay-links.md's COLLAPSE PARAM; the rules:
   gameplay-mechanisms.md's Collapse.
+- CUT ROW (K114, 2026-10-20): "Cut" (off / on) in the Game folder after
+  "Collapse", fabric mode and the classic game only; it restarts the solve
+  (onClockChange; undo_stack.ts lists it there). It stays visible while
+  Fragile runs, Par or Collapse is on, which turn it off (setRules). The
+  tooltip gives the scissors and their keys (X, Esc, U), the contraction,
+  the refusal, the uncuttable runs, Undo and the scope. Param:
+  gameplay-links.md's CUT PARAM; the rules: gameplay-mechanisms.md's The
+  cut.
 
 - FIRE CLOCK ROW (K114 stage 2, 2026-10-15): "clock" (turn / realtime,
   `fireClock`) in the Burn race folder, hidden while the fire is off; it
