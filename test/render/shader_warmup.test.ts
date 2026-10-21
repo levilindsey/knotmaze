@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { PARALLEL_DEFAULT, ShaderWarmup, warmContextFor, warmupContext, type WarmGl } from "../../src/render/shader_warmup";
-import { programRegistry, type WarmContext, type WarmSource } from "../../src/render/program_registry";
-import { setGapSplitActive } from "../../src/render/fabric_sdf";
+import { PARALLEL_DEFAULT, ShaderWarmup, warmContextFor, type WarmGl } from "../../src/render/shader_warmup";
+import type { WarmSource } from "../../src/render/program_registry";
 
 // K307: the warm-up's late enable, poll, relink, timeout, failure,
 // no-extension (blocking, held for the trefoil) and context-loss paths
@@ -357,38 +356,6 @@ describe("shader warm-up (K307)", () => {
     const { w } = setup();
     w.submit(1, []);
     expect(w.wave1Done).toBe(true);
-  });
-
-  // K551: the warm-up warmed the split's programs because the GPU could
-  // hold the mask. It must follow the draw path's flag, which stays dark
-  // whatever the extensions say (gap_split.test.ts, "K551").
-  it("K551: selects the gap programs only while the split is on", () => {
-    const ctxOf = (maxBatchTextures: number): WarmContext => ({
-      fabric: true,
-      explore: false,
-      burn: false,
-      fog: false,
-      reduced: false,
-      ripple: false,
-      bgIds: [],
-      maxBatchTextures,
-    });
-    const wave1Of = (split: boolean): string[] => {
-      setGapSplitActive(split);
-      try {
-        const c = warmupContext(ctxOf, 16);
-        expect(c.gapSplit).toBe(split);
-        return programRegistry()
-          .filter((e) => (e.exists?.(c) ?? true) && e.wave1(c))
-          .map((e) => e.name);
-      } finally {
-        setGapSplitActive(false);
-      }
-    };
-    const dark = wave1Of(false);
-    expect(dark).toContain("section-rgb");
-    expect(dark.some((n) => n.includes("gap"))).toBe(false);
-    expect(wave1Of(true)).toContain("section-rgb-gap");
   });
 
   it("builds the context the page's settings need", () => {

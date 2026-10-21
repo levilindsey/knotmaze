@@ -141,17 +141,7 @@ import {
 } from "./samp_table";
 import { setFabricGapBrute, setSampSource } from "./fabric_sdf";
 import { EMERGENT_MAX, EMERGENT_ROW } from "../physics/particle_system";
-import {
-  GAP_PREPASS_STATS,
-  clearGapScene,
-  fxClockTicking,
-  gapMaskTexture,
-  registerGapScene,
-  setGapPrepassEnabled,
-  type GapSceneSource,
-} from "./gap_prepass";
-import { gapSplitActive, setGapSplitActive } from "./fabric_sdf";
-import { bindGap, bindGapMask, sectionShader, sectionShaderExplore } from "./ribbon/ribbon_shader";
+import { bindGap, sectionShader } from "./ribbon/ribbon_shader";
 import * as sampling from "./ribbon/sampling";
 import type { PassNeighbors } from "./ribbon/sampling";
 import {
@@ -451,8 +441,6 @@ export class RibbonRenderer {
   // slot ids + junction fan masks are assigned from these), scratch
   // polylines, and the per-sample id scratch per chain.
   /** @internal ribbon */ gaps: GapMaskTable;
-  // K320 stage 2a: this renderer's gap pre-pass registration (gap_prepass.ts).
-  private gapScene: GapSceneSource | null = null;
   /** @internal ribbon */ emergentBase = 0;
   /** @internal ribbon */ markerBase = 0;
   /** @internal ribbon */ chainWins = new Map<number, number[]>();
@@ -829,33 +817,6 @@ export class RibbonRenderer {
   get stripStats(): { renders: number; ms: number; rows: number; lines: number } {
     return STRIP_STATS;
   }
-  // K320 stage 2a diagnostics (probes): the gap pre-pass's counters, its
-  // mask target, and the on/off A/B switch (off = no pass, today's pixels).
-  get gapPrepassStats(): { renders: number; ms: number } {
-    return GAP_PREPASS_STATS;
-  }
-  get gapMaskRT(): unknown {
-    return gapMaskTexture();
-  }
-  setGapPrepass(on: boolean): void {
-    setGapPrepassEnabled(on);
-  }
-  // K320 2b probe A/B: draw this same state through the mask (true) or
-  // the combined in-shader search (false). Swaps every ribbon (and the
-  // probe triangles) between the split pair and the fallback pair.
-  setGapSplit(split: boolean): void {
-    setGapSplitActive(split);
-    setGapPrepassEnabled(split);
-    const sh = this.explorePieces !== null ? sectionShaderExplore() : sectionShader();
-    for (const f of this.fills) f.mesh.shader = sh;
-    if (this.probeMesh) this.probeMesh.mesh.shader = sh;
-    bindGap(this.gaps.tex);
-    bindGapMask(gapMaskTexture());
-    if (split) this.update();
-  }
-  gapSplitMode(): boolean {
-    return gapSplitActive();
-  }
   get stripRT(): unknown {
     return stripTexture();
   }
@@ -1175,23 +1136,7 @@ export class RibbonRenderer {
     this.initG3Tables();
     // G3-1: point every gap reader at this scene's SAMP table.
     setSampSource(g3Tables().samp.source as never);
-    // K320 stage 2a: the gap pre-pass draws this scene's base ribbons into
-    // its mask target whenever the search inputs move (gap_prepass.ts).
-    this.gapScene = {
-      root: this.root,
-      base: baseLayer,
-      gapTex: this.gaps.tex,
-      fills: this.fills,
-      explore: () => this.explorePieces !== null,
-      geomRev: () => this.geomRev,
-      sampRev: () => g3Tables().samp.rev,
-      gapRev: () => this.gaps.rowRev,
-      shapeRev: () => this.gaps.rowRev,
-      fxTicking: () => fxClockTicking(this.fxLive),
-    };
-    registerGapScene(this.gapScene);
     bindGap(this.gaps.tex);
-    bindGapMask(gapMaskTexture());
   }
 
   // Size the G3 tables for this scene and clear its regions (a previous
@@ -4222,7 +4167,6 @@ export class RibbonRenderer {
   }
 
   destroy(): void {
-    if (this.gapScene) clearGapScene(this.gapScene);
     this.root.destroy({ children: true });
     // The accent texture and section shader deliberately survive
     // (page-lifetime singletons) - see their comment for why destroying

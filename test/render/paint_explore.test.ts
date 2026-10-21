@@ -33,15 +33,12 @@ import {
   EXPLORE_KEEP_GLSL,
   EXPLORE_PROT_ANCHOR_GLSL,
   EXPLORE_PROT_GLSL,
-  EXPLORE_PAINT_DECL_GLSL,
   farBlendCut,
   chainWhole,
   visItem,
   visRange,
   withExplore,
-  withExplorePaint,
 } from "../../src/render/explore_glsl";
-import { GAP_MASK_FRAG } from "../../src/render/ribbon/ribbon_shader";
 import { chainVis, type ExplorePiece } from "../../src/game/explore_view";
 
 function rng(seed: number): () => number {
@@ -316,13 +313,9 @@ describe("K76 the explore program variant (withExplore)", () => {
     /\r\n/g,
     "\n"
   );
-  const start = src.indexOf("export const SECTION_FRAG_COMBINED = /* glsl */ `");
+  const start = src.indexOf("const SECTION_FRAG = /* glsl */ `");
   const end = src.indexOf("`;", start);
   const sectionText = src.slice(start, end).replace("${GAP_FRAG}", GAP_FRAG);
-  // K320 2b: the paint half the split draws (mask sample, no search).
-  const pStart = src.indexOf("const SECTION_FRAG = /* glsl */ `");
-  const pEnd = src.indexOf("`;", pStart);
-  const paintText = src.slice(pStart, pEnd).replace("${GAP_MASK_FRAG}", GAP_MASK_FRAG);
   const KEEP_AT = "highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,";
   const SURE = "    highp float sure2 = sure > 0.0 ? sure * sure : 0.0;\n";
   const BK = "    if (bk < 0) continue; // Nothing of this slot within reach.\n";
@@ -408,35 +401,6 @@ describe("K76 the explore program variant (withExplore)", () => {
       expect(t).not.toContain("uKExplore");
       expect(t).not.toContain("(sd == 0 ? t3.x");
     }
-  });
-
-  it("K320 2b: the paint half takes only the visibility edits, no search", () => {
-    expect(paintText).not.toContain("gapKeepAt");
-    expect(paintText).toContain("gapKeepFromMask(kc.ch)");
-    const v = withExplorePaint(paintText);
-    const iDecl = v.indexOf(EXPLORE_PAINT_DECL_GLSL);
-    const iMain = v.indexOf("void main(void) {");
-    const iFw = v.indexOf("highp float kSideFw = fwidth(vUV.y);");
-    const iCtrl = v.indexOf("bool exHere = uKExplore.x > 0.5;");
-    const iVis = v.indexOf(EXPLORE_MAIN_GLSL);
-    const iGap = v.indexOf("  float gk = gapKeepFromMask(kc.ch);");
-    expect(iDecl).toBeGreaterThan(0);
-    expect(iMain).toBe(iDecl + EXPLORE_PAINT_DECL_GLSL.length + 1);
-    expect(iFw).toBeGreaterThan(iMain);
-    expect(iCtrl).toBeGreaterThan(iFw);
-    expect(iVis).toBeGreaterThan(iCtrl);
-    expect(iGap).toBeGreaterThan(iVis);
-    expect(v).not.toContain("gapKeepAt");
-    expect(v).not.toContain("exploreCutCover");
-    expect(v.split("texelFetch(uGapMask").length - 1).toBe(1);
-    const back = v
-      .replace(EXPLORE_PAINT_DECL_GLSL + "\n", "")
-      .replace("  highp float kSideFw = fwidth(vUV.y);\n", "")
-      .replace("bool exHere = uKExplore.x > 0.5;\n  ", "")
-      .replace("fxHere || paintHere || exHere ?", "fxHere || paintHere ?")
-      .replace(EXPLORE_MAIN_GLSL, "");
-    expect(back).toBe(paintText);
-    expect(() => withExplorePaint("void main(void) {}")).toThrow(/anchor/);
   });
 
   it("throws on a missing or repeated anchor", () => {
