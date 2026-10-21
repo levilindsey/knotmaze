@@ -22,8 +22,10 @@ import {
   BY_LENGTH_CATCH_DIST,
   BY_LENGTH_TRAVEL_SCALE,
   lengthContactFraction,
+  runsContact,
 } from "../../src/game/minotaur_turns";
 import type { TurnConfig, TurnMinoParams, TurnStep } from "../../src/game/minotaur_turns";
+import type { Spot } from "../../src/game/minotaur";
 import { SeededRNG } from "../../src/util/random";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEAD_END_DENSITY_ON, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
@@ -913,5 +915,130 @@ describe("TurnMinotaur", () => {
     t.setProgress(1);
     expect(t.mino).toMatchObject({ edge: -1, vertex: t.state.v });
     expect(v0).toBe(C);
+  });
+});
+
+// K546 stage 1: a catch by runs meets first. runsContact locates the catch
+// contact() declared (the earliest move fraction at thread distance 0);
+// the page shows it there, while the game state caught at the tap.
+describe("K546 runs contact", () => {
+  const tg = new TurnGraph(G1);
+  const gap = (a: Spot, b: Spot): number => tg.chase.spotToSpot(a, b, false);
+
+  it("meets head-on inside a swapped run", () => {
+    // You run A -> B (run 1, length 10) as it runs B -> A on it.
+    expect(contact(A, 1, B, B, [[1, A]])).toBe(true);
+    const r = runsContact(tg, A, 1, B, [[1, A]]);
+    expect(r.t).toBeCloseTo(0.5, 12);
+    expect(r.player).toMatchObject({ edge: 1, dir: 1 });
+    expect(r.player.pos).toBeCloseTo(5, 9);
+    expect(r.mino.edge).toBe(1);
+    expect(r.mino.pos).toBeCloseTo(5, 9);
+    expect(gap(r.mino, r.player)).toBeLessThan(1e-9);
+  });
+
+  it("meets a wait where its path first touches the junction", () => {
+    // You wait at B; it runs C -> B -> A (runs 2 and 1, 10 each), past you.
+    expect(contact(B, -1, B, C, [[2, B], [1, A]])).toBe(true);
+    const r = runsContact(tg, B, -1, C, [[2, B], [1, A]]);
+    expect(r.t).toBeCloseTo(0.5, 12);
+    expect(r.player).toEqual(spotAtVertex(B));
+    expect(gap(r.mino, r.player)).toBeLessThan(1e-9);
+  });
+
+  it("meets on your destination when it stands there", () => {
+    expect(contact(A, 1, B, B, [])).toBe(true);
+    const r = runsContact(tg, A, 1, B, []);
+    expect(r.t).toBe(1);
+    expect(r.mino).toEqual(spotAtVertex(B));
+    expect(gap(r.mino, r.player)).toBeLessThan(1e-9);
+  });
+
+  it("meets on the run it overruns your vertex onto", () => {
+    // You run A -> B; it runs C -> B (10), at B when you are halfway, and
+    // on past B onto your run, B -> A (10): 10 t = 10 - 20 (t - 1/2).
+    expect(contact(A, 1, B, C, [[2, B], [1, A]])).toBe(true);
+    const r = runsContact(tg, A, 1, C, [[2, B], [1, A]]);
+    expect(r.t).toBeCloseTo(2 / 3, 12);
+    expect(r.player.pos).toBeCloseTo(20 / 3, 9);
+    expect(r.mino.edge).toBe(1);
+    expect(gap(r.mino, r.player)).toBeLessThan(1e-9);
+  });
+
+  it("meets at the end when both end on one vertex", () => {
+    // You run A -> B (10); it runs D -> B (8): both reach B at t = 1.
+    expect(contact(A, 1, B, D, [[4, B]])).toBe(true);
+    const r = runsContact(tg, A, 1, D, [[4, B]]);
+    expect(r.t).toBe(1);
+    expect(r.mino).toEqual(spotAtVertex(B));
+    expect(gap(r.mino, r.player)).toBeLessThan(1e-9);
+  });
+
+  it("counts the catch at the tap while the catching move still plays", () => {
+    // The stalker walks the loop head-on into you (see "counts a catch").
+    const t = new TurnMinotaur(G1, turnConfig(params({ model: "stalker", accuracy: 1, pause: 0, sleep: 1 })), 1);
+    t.turn(0);
+    t.turn(-1);
+    expect(t.turn(5)).toBe("caught");
+    // The game state: counted, you at the entrance, it in its lair.
+    expect([t.catches, t.player, t.state.v]).toEqual([1, S, X]);
+    // The screen: its route still plays, the telegraph waits for the end.
+    const c = t.lastContact!;
+    expect(c.t).toBeGreaterThan(0);
+    expect(c.t).toBeLessThan(1);
+    expect(t.lastFrom).toBe(C);
+    expect(t.lastPath).toEqual([[5, A]]);
+    expect(t.telegraph()).toBeNull();
+    t.setProgress(c.t);
+    expect(gap(t.mino, c.mino)).toBeLessThan(1e-9);
+    expect(t.catches).toBe(1);
+    t.finishCatchAnim();
+    expect(t.mino).toEqual(spotAtVertex(X));
+    expect(t.lastPath).toEqual([]);
+    expect(t.telegraph()).not.toBeNull();
+    // Its next move starts from the lair, as stage 1's instant catch left it.
+    expect(t.turn(0)).toBe("moved");
+    expect(t.lastContact).toBeNull();
+  });
+
+  it("puts every runs catch of many games on one point inside the move", () => {
+    let waits = 0;
+    let early = 0;
+    let atEnd = 0;
+    for (const seed of [2, 5, 8, 13]) {
+      const walk = realMaze(seed);
+      for (const model of ["hunter", "guard", "stalker"] as const) {
+        for (const speed of ["one", "two", "charge"] as const) {
+          const cfg = turnConfig(params({ model, speed, sight: 4, accuracy: 0.9, pause: 0 }));
+          const t = new TurnMinotaur(walk, cfg, seed * 31 + 7);
+          const rng = new SeededRNG(seed * 7 + 1);
+          for (let i = 0; i < 400 && !t.finished; i++) {
+            const before = t.catches;
+            const r = t.turn(randomTap(t, rng, 0.2));
+            if (r !== "caught") {
+              expect(t.lastContact).toBeNull();
+              t.setProgress(1);
+              continue;
+            }
+            const c = t.lastContact!;
+            expect(c.t).toBeGreaterThanOrEqual(0);
+            expect(c.t).toBeLessThanOrEqual(1);
+            expect(t.g.spotToSpot(c.mino, c.player, false)).toBeLessThan(1e-9);
+            expect(t.catches).toBe(before + 1);
+            // The marker reaches the contact spot along its route.
+            t.setProgress(Math.min(c.t, 1 - 1e-9));
+            expect(t.g.spotToSpot(t.mino, c.mino, false)).toBeLessThan(1e-6);
+            t.finishCatchAnim();
+            expect(t.mino).toEqual(spotAtVertex(t.state.v));
+            if (t.inputs[t.inputs.length - 1] < 0) waits++;
+            else if (c.t < 1) early++;
+            else atEnd++;
+          }
+        }
+      }
+    }
+    expect(waits).toBeGreaterThan(5);
+    expect(early).toBeGreaterThan(5);
+    expect(atEnd).toBeGreaterThan(5);
   });
 });
