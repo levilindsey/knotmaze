@@ -419,6 +419,11 @@ Next free ID: K768.
   - brief: `docs/design/K138_s3.md`
 - **K767** · Phone sitting 5 (turnstiles, hidden runs, the beat rider on real touches; hard stop
   06:50 for Levi)
+  - owner: claude agent ae8f98c0876724a72 of session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet-5-5, started 2026-10-21 05:38, cap 1 h, hard stop 06:50)
+  - branch: mainline (probes only, no commits)
+  - evidence: `.claude/probes/K767/`
+  - next: turnstiles, hidden runs (and the K764 press), the beat rider and its corner on real touches
+  - brief: `docs/design/K767_phone.md`
 
 ## Next, in order
 
