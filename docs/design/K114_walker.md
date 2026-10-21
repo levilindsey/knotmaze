@@ -328,12 +328,18 @@ coordinator). Started 2026-10-20 22:23 PT; the 2 h cap is 00:23.
 ## Handoff
 
 Stopped 2026-10-21 at about 00:01 PT, inside the cap. All four items are
-built and verified, and so are Lead's stars (call 4). The branch is
-rebased onto origin/master (13 new commits, no conflicts; K137 s3a had
-not landed, so its HUD, stats, share and star rows, `star_rating.ts`
-included, are still to meet these at its merge or this one). `npm test`: 1813 passed, 1 skipped. `npm run
-build` passes. The codec pin moves by `cut`'s two new options only; no
-other pin moved.
+built and verified, and so are Lead's stars (call 4). Rebased again on
+2026-10-21 at about 00:10, at the coordinator's request, onto
+origin/master `fe944a1`, which holds K137 stage 3a (`4541a9d`: `lives`,
+its hearts rows in the HUD, the banner and the share). Every conflict
+kept both sides: `cut`'s options gain `lead` and `delay` in place and
+`lives` stays at 192 after it (CODEC_VERSION stays 8), and the hearts
+and walker fields, rows and tags sit side by side in `maze_stats.ts`,
+`share_text.ts`, `maze_hud.ts`, its test and main.ts. They never meet in
+one game: lives run only under the minotaur, and the cut only in the
+classic game. `npm test`: 1843 passed, 1 skipped. `npm run build`
+passes. The codec pin moves by `cut`'s two new options only; no other
+pin moved, and none needed a re-freeze.
 
 ### What landed
 
@@ -495,7 +501,11 @@ touch at 411x753, dsf 2.625) on `?7&am=instant&ct=lead|delay`. All four
 runs pass on the rebased build, with 0 page errors: Lead 20/20 on
 desktop and on phone (with the stars), Delay 12/12 on both. JSON is in
 `page/out/`, and the pre-rebase runs, which also passed, are in
-`page/out/pre_rebase/`.
+`page/out/pre_rebase/`. On top of K137 stage 3a, the desktop runs pass
+again (Lead 20/20, Delay 12/12, 0 page errors; the phone runs were not
+repeated), and `page/lives_smoke.mjs` passes 4/4: a minotaur game with
+`mlv=3` shows `caught 0 hearts 3 / 3`, lives off shows no hearts row,
+and Lead and Delay show their rows and no hearts.
 
 **Lead (seed 7)**
 - Par is 1, cutting run 196.
@@ -549,16 +559,18 @@ Stills are in `.claude/probes/K114/walker/shots/`, named
   claude session 91b19e11-7759-4638-ba60-4705b011b94f, stage done).
 - branch: `worktree-agent-a0437651435d16c14`, worktree
   `.claude/worktrees/agent-a0437651435d16c14`. Last commit: this
-  Handoff, on top of `8dc55c8` (unpushed).
+  Handoff's rebase note, on top of the Handoff and `d07a428` (unpushed;
+  rebased onto `fe944a1`, so the merge is a fast-forward).
 - evidence: `.claude/probes/K114/walker/` in the worktree (untracked):
   - `par_census.md`, `balance.md`;
-  - `page/walker_page.mjs`, `page/out/`, `page/logs/`;
+  - `page/walker_page.mjs`, `page/lives_smoke.mjs`, `page/out/`,
+    `page/logs/`;
   - `shots/`.
 - next:
   - Levi's calls 1-6 and the phone question;
   - the walker's dot glow;
   - a phone pass;
-  - merge, resolving K137 s3a's rows.
+  - merge (K137 s3a's rows are resolved).
 - brief: `docs/design/K114_walker.md`.
 - env: serve the worktree with `node node_modules\vite\bin\vite.js
   --config .claude\probes\K114\walker\page\vite.private-cache.config.ts
