@@ -191,10 +191,10 @@ export const LIVE_EFFECTS = {
   // Last: the solve starts over in the new clock mode (or with the turn
   // minotaur switched or swapped, K80 turns, or K114's fire changed: a
   // new speed or delay moves every vertex's burn time; K440's real-time
-  // pair likewise).
+  // pair likewise; or K137's fragile runs or par changed).
   onClockChange: [
     "gameMode", "clock", "minotaur", "fireSpeed", "fireDelay", "fireClock",
-    "fireSpeedRt", "fireDelayRt",
+    "fireSpeedRt", "fireDelayRt", "fragile", "parMode", "parSlack",
   ],
 } as const satisfies Record<string, readonly string[]>;
 

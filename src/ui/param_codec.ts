@@ -328,6 +328,11 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("cannonAmount"), // K336: the side cannons' amount
   num("streamerShare"), // K336: the cannons' streamer share
   choice("minoTelegraphLook", ["rims", "line", "both"]), // 181, K525: the telegraph's look
+  // 182-184, K137 stage 1: fragile runs and par (FRAGILE_MODES and
+  // PAR_MODES order, game/fragile.ts and game/par.ts).
+  choice("fragile", ["off", "crack", "snap"]),
+  choice("parMode", ["off", "strict", "strokes"]),
+  num("parSlack"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -467,6 +472,7 @@ export const PARAM_RANGES: Readonly<
   fireDelay: [0, 40],
   fireSpeedRt: [0.1, 0.95],
   fireDelayRt: [0, 40],
+  parSlack: [0, 1], // K137 (PAR_SLACK_MIN, PAR_SLACK_MAX)
   pluckSize: [0, 3],
   pluckGhost: [0, 1],
   rippleStrength: [0, 2],

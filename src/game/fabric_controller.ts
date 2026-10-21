@@ -199,10 +199,15 @@ export class FabricMazeController {
     this.walk = walk;
     this.trailMode = trailMode;
     this.fire = fire;
+    this.setRules(rules);
+    this.reset();
+  }
+
+  // K137: new rules; they take at the next reset() (main.ts restartSolve).
+  setRules(rules: FabricRules): void {
     this.fragile = rules.fragile ?? "off";
     this.parMode = rules.parMode ?? "off";
     this.parSlack = rules.parSlack ?? PAR_SLACK_DEFAULT;
-    this.reset();
   }
 
   reset(): void {

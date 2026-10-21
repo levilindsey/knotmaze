@@ -222,6 +222,9 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["cannonAmount", "number"], // K336
   ["streamerShare", "number"], // K336
   ["minoTelegraphLook", "enum", ["rims", "line", "both"]], // K525
+  ["fragile", "enum", ["off", "crack", "snap"]], // K137
+  ["parMode", "enum", ["off", "strict", "strokes"]], // K137
+  ["parSlack", "number"], // K137
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

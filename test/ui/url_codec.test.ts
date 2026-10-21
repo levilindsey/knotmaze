@@ -129,6 +129,7 @@ describe("links", () => {
       dailyTitleThread: false,
       minoStopMin: 0.2, minoStopMax: 0.6, minoHuntStop: 0.5, minoTurnBack: 1.5,
       minoTipReach: 2, minoRoamNear: 0.25, minoTelegraphRuns: 1,
+      fragile: "off", parMode: "off", parSlack: 0.25,
     });
   });
 
@@ -874,6 +875,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   dailyTitleThread: "dtt",
   minoStopMin: "mhn", minoStopMax: "mhx", minoHuntStop: "mhh", minoTurnBack: "mrv",
   minoTipReach: "mdr", minoRoamNear: "mnr", minoTelegraphRuns: "mtn",
+  fragile: "fg", parMode: "pa", parSlack: "par",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

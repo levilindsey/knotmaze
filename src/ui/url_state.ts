@@ -16,6 +16,11 @@ import { SHAPES, ANCHORS } from "../core/shapes";
 import { EMBLEM_IDS } from "../core/emblem_data";
 import type { ChaseParams, ClockMode } from "../game/minotaur";
 import type { FireClock } from "../game/fire";
+import type { FabricRules } from "../game/fabric_controller";
+import type { FragileMode } from "../game/fragile";
+import { FRAGILE_MODES } from "../game/fragile";
+import type { ParMode } from "../game/par";
+import { PAR_MODES, PAR_SLACK_DEFAULT } from "../game/par";
 import {
   DEFAULT_CHASE_PARAMS,
   HUNT_PACE_FRACTION,
@@ -689,6 +694,15 @@ export interface UrlParams {
   // maze is the same either way. Off a daily it does nothing: daily_link.ts
   // sceneTitle is the one gate. Not a live effect (it changes the graph).
   dailyTitleThread: boolean;
+  // K137 stage 1 (brief docs/design/K137_s1.md): FRAGILE RUNS, off | crack
+  // | snap (game/fragile.ts: a run breaks behind you after 2 or 1
+  // crossings; END runs never), and PAR, off | strict | strokes
+  // (game/par.ts: P = F + round(parSlack x F) runs; strict loses the moment
+  // no finish fits, strokes only scores). Every change restarts the solve
+  // (FabricMazeController.setRules, then reset()). Not daily-exempt.
+  fragile: FragileMode;
+  parMode: ParMode;
+  parSlack: number;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -967,6 +981,10 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   penReverse: false,
   // K552: dailies are untitled unless the player turns the thread on.
   dailyTitleThread: false,
+  // K137: no fragile runs, no par; the slack is K137's pick (game/par.ts).
+  fragile: "off",
+  parMode: "off",
+  parSlack: PAR_SLACK_DEFAULT,
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -993,6 +1011,14 @@ export function fireSettingsOf(
     delay: clampTo(p.fireDelay, FIRE_DELAY_MAX),
     clock: "turn",
   };
+}
+
+// K137: the solve's rules beyond the clock (fragile runs and par), as
+// the controller takes them (FabricMazeController's FabricRules).
+export function fabricRulesOf(
+  p: Pick<UrlParams, "fragile" | "parMode" | "parSlack">
+): FabricRules {
+  return { fragile: p.fragile, parMode: p.parMode, parSlack: p.parSlack };
 }
 
 // [HOVER_GLOW_WIDTH_MIN, HOVER_GLOW_WIDTH_MAX]; garbage reads as the default.
@@ -1168,6 +1194,8 @@ export const ENUM_OPTIONS: {
   revealEndGlow: REVEAL_END_GLOWS,
   emblem: EMBLEM_CHOICES,
   cartoucheShape: EMBLEM_CHOICES,
+  fragile: FRAGILE_MODES,
+  parMode: PAR_MODES,
 };
 
 // K398: every numeric param held to the panel's range (param_codec's
@@ -1652,6 +1680,11 @@ function readLegacy(
     penReverse: readBool(query, "pnr", D.penReverse),
     // K552's daily title thread (`?daily=8&dtt=1`).
     dailyTitleThread: readBool(query, "dtt", D.dailyTitleThread),
+    // K137's fragile runs and par (`&fg=crack&pa=strict&par=0.5`; the
+    // slack clamps through PARAM_RANGES).
+    fragile: readChoice(query, "fg", FRAGILE_MODES, D.fragile),
+    parMode: readChoice(query, "pa", PAR_MODES, D.parMode),
+    parSlack: readNumber(query, "par", D.parSlack),
   };
 }
 

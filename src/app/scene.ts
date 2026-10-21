@@ -27,6 +27,7 @@ import type { A11yKey } from "../ui/accessibility";
 import type { OffscreenIndicators } from "../ui/offscreen_indicators";
 import type { PanelSettings } from "../ui/tweakpane_panel";
 import type { UrlParams } from "../ui/url_state";
+import { fabricRulesOf } from "../ui/url_state";
 import type { createCamera } from "./camera";
 import type { SceneRef } from "./scene_ref";
 
@@ -295,7 +296,8 @@ export function createScene(deps: SceneDeps): Scene {
       fabricController = new FabricMazeController(
         walkGraph,
         params.pathViz === "trail",
-        fireOf(walkGraph) // K114: null with the fire off.
+        fireOf(walkGraph), // K114: null with the fire off.
+        fabricRulesOf(params) // K137: fragile runs and par.
       );
       fabric = new FabricMazeRenderer(
         ps,
