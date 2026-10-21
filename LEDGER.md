@@ -288,6 +288,14 @@ Next free ID: K623.
   - evidence: `.claude/probes/K244/`
   - next: baseline auto-pluck and release core counts, then one tapLobes-based predicate
   - brief: `docs/design/K244_cores.md`
+- **K324** · Real-time minotaur, more alive and tunable (`docs/design/K324_realtime_minotaur.md`,
+  091e4dc; Levi took section 7's recs): s1 (sim) after K323 s1; s2 (render) after s1, K7 s2, K307
+  s2, K329 (checks K270's band); s3 (guard, stalker) after s1. Rel. K245 K247 K271 K293 K294 K296.
+  - owner: agent `a3a9d69fff8b37f72` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 16:55, 2 h cap ~18:55)
+  - branch: `worktree-agent-a3a9d69fff8b37f72`, worktree `.claude/worktrees/agent-a3a9d69fff8b37f72`; last commit: `bcd907c`
+  - evidence: `.claude/probes/K324/`
+  - next: stage 1: baseline the K80 sim harness, then the hold counter, counter stream, roam/hunt edges, plan(), seven params at zero (K80_DIGESTS unchanged)
+  - brief: `docs/design/K324_s1.md`
 
 ## Next, in order
 
@@ -418,9 +426,6 @@ Every other item below waits on the trigger it names.
 - **K313** · A loader that looks like the maze (`docs/design/K313_loader.md`; Levi 10-14, approved):
   a trefoil maze with over/under gaps, fixed-length trail, drawn by an OffscreenCanvas worker
   inlined in `index.html` (static SVG first). After K307's warm-up; measure the phone's first frame.
-- **K324** · Real-time minotaur, more alive and tunable (`docs/design/K324_realtime_minotaur.md`,
-  091e4dc; Levi took section 7's recs): s1 (sim) after K323 s1; s2 (render) after s1, K7 s2, K307
-  s2, K329 (checks K270's band); s3 (guard, stalker) after s1. Rel. K245 K247 K271 K293 K294 K296.
 - **K326** · Drop knot mode (`mazeFabric`; `docs/design/K323_game_mode.md` s4-5): A freezes a golden
   (after K7 s2); B deletes (after A, K323 s1, K307 s2, K329), retargets `scripts/fold_census.*`,
   `test/physics/byte_identity.test.ts`; optional C: knot paint (after B, K111 s5).
