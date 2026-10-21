@@ -21,14 +21,17 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/game/fire.ts`, `src/game/fire_clock.ts`,
   `test/game/fire.test.ts`, `test/game/fire_clock.test.ts`
 - `gameplay-mechanisms.md`: FRAGILE RUNS AND PAR (K137), COLLAPSE (K139),
-  THE CUT (K114), THE AIDS (K137 stage 2)
+  THE CUT (K114), THE AIDS (K137 stage 2), ICE AND THE COLOR RULE (K138 stage 1)
   paths: `src/game/fragile.ts`, `src/game/par.ts`, `src/game/collapse.ts`,
   `src/game/cut.ts`, `src/ui/cut_buttons.ts`, `src/app/rule_loss.ts`,
   `test/game/fragile.test.ts`, `test/game/par.test.ts`,
   `test/game/collapse.test.ts`, `test/game/cut.test.ts`,
   `test/ui/cut_buttons.test.ts`, `src/game/spool.ts`, `src/game/hints.ts`,
   `src/ui/aid_buttons.ts`, `test/game/spool.test.ts`,
-  `test/game/hints.test.ts`
+  `test/game/hints.test.ts`, `src/game/rule_search.ts`, `src/game/ice.ts`,
+  `src/game/color_rule.ts`, `test/game/rule_search.test.ts`,
+  `test/game/ice.test.ts`, `test/game/color_rule.test.ts`,
+  `test/game/rule_controller.test.ts`
 - `gameplay-fog.md`: THE FOG RESETS ON A RESTART ONLY (K100), a catch's re-fog (K174)
   paths: `src/game/fabric_controller.ts`, `src/game/daily_attempt.ts`, `src/render/fabric_maze_renderer.ts`, `src/render/fog_arc.ts`, `test/render/fog_arc.test.ts`, `test/game/fabric_controller.test.ts`, `test/game/daily_attempt.test.ts`
 - `gameplay-links.md`: link decoder details, codec v4, LOAD SETTLE PARAMS (K147), MARKER SIZE PARAM (K98), BURN RACE PARAMS (K114), PLUCK EMPHASIS PARAMS (K279)
