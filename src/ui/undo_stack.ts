@@ -172,7 +172,7 @@ export const LIVE_EFFECTS = {
   ],
   // K80 turns: the turn-aligned minotaur's tuning.
   onTurnMinoChange: [
-    "minoSpeed", "minoTelegraph", "minoSight", "minoRoamRuns",
+    "minoSpeed", "minoTelegraph", "minoTelegraphLook", "minoSight", "minoRoamRuns",
     "minoTerritory", "minoAccuracy", "minoPause", "minoSleep",
     "minoGiveUp", "minoRoamMin", "minoTurnPull", "minoGuardSight",
     "minoGuardAccuracy", "minoStalkerAccuracy",

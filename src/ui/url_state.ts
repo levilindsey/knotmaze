@@ -110,6 +110,13 @@ export const GAME_MODES: GameMode[] = ["classic", "minotaur", "burn"];
 // mode itself says whether there is one).
 export type MinotaurModel = "hunter" | "guard" | "stalker";
 export const MINOTAUR_MODELS: MinotaurModel[] = ["hunter", "guard", "stalker"];
+// K525: how the turn minotaur's telegraph draws (`mtl`). rims: both edges
+// of its route light red, a paint item on the ribbons (render-paint.md's
+// TELEGRAPH RIMS); line: the red line over the route (K80 turns' look);
+// both: the line and the rims. The destination ring and the by-length
+// ticks draw in every look.
+export type TelegraphLook = "rims" | "line" | "both";
+export const TELEGRAPH_LOOKS: TelegraphLook[] = ["rims", "line", "both"];
 
 // The clock a design plays on: only the minotaur reads `clock`.
 export function clockOf(p: Pick<UrlParams, "gameMode" | "clock">): ClockMode {
@@ -622,6 +629,9 @@ export interface UrlParams {
   minotaur: MinotaurModel;
   minoSpeed: TurnSpeed;
   minoTelegraph: boolean;
+  // K525: the telegraph's look (TELEGRAPH_LOOKS). Render-only, live like
+  // minoTelegraph; not daily-exempt (a daily plays without a minotaur).
+  minoTelegraphLook: TelegraphLook;
   minoSight: number;
   minoRoamRuns: number;
   minoTerritory: number;
@@ -909,6 +919,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minotaur: "hunter",
   minoSpeed: DEFAULT_TURN_MINO.speed,
   minoTelegraph: DEFAULT_TURN_MINO.telegraph,
+  minoTelegraphLook: "rims", // K525
   minoSight: DEFAULT_TURN_MINO.sight,
   minoRoamRuns: DEFAULT_TURN_MINO.roam,
   minoTerritory: DEFAULT_TURN_MINO.territory,
@@ -1147,6 +1158,7 @@ export const ENUM_OPTIONS: {
   pluckRipple: PLUCK_RIPPLES,
   minotaur: MINOTAUR_MODELS,
   minoSpeed: TURN_SPEEDS,
+  minoTelegraphLook: TELEGRAPH_LOOKS,
   gameMode: GAME_MODES,
   exploration: EXPLORATION_MODES,
   revealLook: REVEAL_LOOKS,
@@ -1587,6 +1599,8 @@ function readLegacy(
     minotaur: readMinotaurModel(query, D.minotaur),
     minoSpeed: readChoice(query, "msp", TURN_SPEEDS, D.minoSpeed),
     minoTelegraph: readBool(query, "mtg", D.minoTelegraph),
+    // K525's telegraph look (`&mtl=line` is K80 turns' red line).
+    minoTelegraphLook: readChoice(query, "mtl", TELEGRAPH_LOOKS, D.minoTelegraphLook),
     minoSight: clampTo(readNumber(query, "msi", D.minoSight), MINO_SIGHT_MAX),
     minoRoamRuns: clampRuns(
       readNumber(query, "mro", D.minoRoamRuns),
