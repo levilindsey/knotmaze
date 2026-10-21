@@ -239,6 +239,8 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["spoolSlack", "number"],
   ["hints", "number"],
   ["compass", "boolean"],
+  ["ice", "number"], // K138 stage 1
+  ["colorRule", "enum", ["off", "alternate", "cycle"]],
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

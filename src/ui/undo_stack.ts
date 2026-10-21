@@ -208,6 +208,8 @@ export const LIVE_EFFECTS = {
     "sword", "swordMoves",
     // K137 stage 2: the spool and the hints (a restart refills both).
     "spool", "spoolSlack", "hints",
+    // K138 stage 1: ice and the color rule (a restart places them anew).
+    "ice", "colorRule",
   ],
 } as const satisfies Record<string, readonly string[]>;
 

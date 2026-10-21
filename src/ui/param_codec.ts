@@ -356,6 +356,10 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("spoolSlack"),
   num("hints"),
   flag("compass"),
+  // 199-200, K138 stage 1: the share of core runs that are icy (game/ice.ts)
+  // and the color rule (COLOR_RULE_MODES order, game/color_rule.ts).
+  num("ice"),
+  choice("colorRule", ["off", "alternate", "cycle"]),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -512,6 +516,7 @@ export const PARAM_RANGES: Readonly<
   swordMoves: [4, 20], // K137 stage 3b (SWORD_MOVES_MIN..MAX)
   spoolSlack: [0.1, 1], // K137 stage 2 (SPOOL_SLACK_MIN..MAX)
   hints: [0, 5], // K137 stage 2 (HINTS_MAX)
+  ice: [0, 0.5], // K138 (ICE_SHARE_MAX)
 });
 
 // A link value held to its panel range (K398); a param with no range,
