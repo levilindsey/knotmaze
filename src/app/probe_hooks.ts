@@ -202,8 +202,9 @@ export interface ProbeCtx {
   pressSprint(): boolean;
   // K137 stage 4: the lures and snares (their HUD rows, null: that tool
   // off), the armed tool, whether the buttons show, the snares laid and
-  // the model's lure counts, in __knotTurnMino(); and a press of a tool's
-  // button (the button's and L / N's path; true when it acted).
+  // the model's lure counts and the run the last armed tap picked (-1:
+  // none), in __knotTurnMino(); and a press of a tool's button (the
+  // button's and L / N's path; true when it acted).
   readonly tools: {
     lures: { left: number; of: number } | null;
     snares: { left: number; of: number } | null;
@@ -212,6 +213,7 @@ export interface ProbeCtx {
     laid: { edge: number; phase: string; holder: number | null; left: number }[];
     lured: number;
     heardBy: number;
+    tapEdge: number;
   };
   pressTool(k: "lure" | "snare"): boolean;
   readonly cutShown: boolean;
@@ -788,6 +790,12 @@ export function installProbeHooks(ctx: ProbeCtx): void {
         x: (x - ctx.root.position.x) / ctx.root.scale.x,
         y: (y - ctx.root.position.y) / ctx.root.scale.y,
       }),
+      // K137 stage 4: the run an armed tool's (or the scissors') tap at a
+      // SCREEN point picks (the renderer's cutAt, nearest within maxD world;
+      // -1: none). runPoint is the physics curve, so a run's middle can sit
+      // on a crossing and pick the other run: probes check before a click.
+      cutPick: (x: number, y: number, maxD = 2) =>
+        fb.cutAt((x - ctx.root.position.x) / ctx.root.scale.x, (y - ctx.root.position.y) / ctx.root.scale.y, c, maxD),
       // Probe helper: the walk-edge ids of a fewest-runs route from the
       // head to the nearest dead-end tip not in `exclude` (BFS, never
       // through the exit), or null when there is none.

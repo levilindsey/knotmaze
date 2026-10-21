@@ -3320,11 +3320,15 @@ async function main(): Promise<void> {
     updateHud();
     invalidate();
   };
+  // The run the last armed tool tap picked (-1: none), for the probes: at
+  // phone scale a tap at a run's drawn middle can pick a neighbour.
+  let toolTapEdge = -1;
   const toolTap = (x: number, y: number, pt: string): boolean => {
     const fc = scene.fabricController;
     const kind = toolArmed;
     if (!fc || !scene.fabric || kind === null) return false;
     const eid = scene.fabric.cutAt(x, y, fc, pickRadius(pt, true));
+    toolTapEdge = eid;
     if (eid < 0) setToolArmed(null);
     else useTool(kind, eid);
     return true;
@@ -4065,6 +4069,7 @@ async function main(): Promise<void> {
         laid: tm ? tm.snares.map((s) => ({ ...s })) : [],
         lured: tm?.lured ?? 0,
         heardBy: tm?.heardBy ?? 0,
+        tapEdge: toolTapEdge,
       };
     },
     pressTool: (k: ToolKind) => pressTool(k),
