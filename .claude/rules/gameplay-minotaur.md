@@ -224,7 +224,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   89%. The first guess (guard sight 30 / 40, accuracy 0.7; stalker 0.7)
   caught the greedy player 6.4 and 6.3 times; the territory barely
   matters (20 / 30 / 45 u: 7.2 / 6.4 / 6.3 at 0.7). PARAMS: five numbers,
-  codec 182-186 (gameplay-links.md), LIVE_EFFECTS under onChaseChange;
+  codec 185-189 (gameplay-links.md), LIVE_EFFECTS under onChaseChange;
   rows: gameplay-panel.md. TESTS: minotaur.test.ts's "K324 stage 3"
   block (the hunter reads no model knob; MODEL_DIGESTS pin both models
   tick for tick; replayChase per model; a roaming guard stays in or
