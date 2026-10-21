@@ -152,8 +152,12 @@ two checks not run (below). All probes and results are untracked under
   The two `opening` sheets (viewed): master shows only the top rain; the
   branch adds two fans from the side edges at about 0.8 of the height at
   0.1 s, and streamers curling up and across from 0.6 s (on the phone they
-  cover the maze's lower half at 1.0 s). The `top_edge` sheets and the
-  frames from 1.5 s were not looked at. The sheets' link is knot mode (no
+  cover the maze's lower half at 1.0 s). The desktop `top_edge` sheet (the
+  frames at 1.5-3.0 s, viewed): the branch's streamers arc over at 1.5 s,
+  then fall in two clouds about 0.3 of the width in from each side and, by
+  3.0 s, hang as vertical strips over the lower half of the maze (a fair
+  part of the knot is covered; the look call is Levi's); master has only the
+  thinning rain. The phone `top_edge` sheet was not looked at. The sheets' link is knot mode (no
   exit marker), so their bursts have NO spray (spray alive 0).
   `out/sheet_k336/`.
 - The finish spray throws no streamers (`finish_spray_check.mjs`, a fabric
