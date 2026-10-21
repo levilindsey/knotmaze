@@ -233,8 +233,23 @@ only with the files it is about; `render.md` lists the area's other files.
   - UNIFORMS, NOT TEXELS. The colour and the strength ride uKTele (rgb,
     w = `ribbons.teleStrength`), so a roam/hunt flip rewrites no texel;
     KPAINT is rewritten only when the pieces change (`teleItemKey`).
-  - ALPHA is relative: 1 for the first run (or the lead piece), and
-    TELEGRAPH_LATER_SHARE (0.5) for every later run.
+  - RIDING (K654, K324 stage 2, 2026-10-20). The real-time lead's piece
+    holds its WHOLE run's fixed range, and a NEGATIVE fade marks the end
+    at the minotaur's spot. The TELE branch reads that end's ctrl from
+    the ribbon-only `uniform vec4 uKTeleAt` (x, `ribbons.teleAt`) in
+    place of the item's c0 or c1, and takes abs() of both fades; that
+    end's gap is 0. teleItemKey keys the ride flag, not the ctrl, so a
+    walking minotaur rewrites KPAINT only when its route changes (the
+    hover point rides uKReach.w the same way). Its own uniform, not the
+    free uKInk.z, because K620 was editing the paint files. Mirror:
+    paint_math.ts's `uKTeleAt`; parity in paint_gameplay.test.ts (a
+    riding piece paints exactly the fixed piece, on open and closed
+    chains; uKTeleAt moves no piece that does not ride). The section's
+    two texts grew 85 characters (render-shaders.md).
+  - ALPHA is relative: 1 for the first run, and TELEGRAPH_LATER_SHARE
+    (0.5) for every later run. With a lead (real time), the lead and the
+    first whole run after it both take 1: rule (B), K324 stage 2;
+    gameplay-minotaur.md's REAL-TIME TELEGRAPH has the flip to (A).
   - ENDS. A junction end skips rimGap (the web's reach, as the hover glow
     does) and fades in over TELE_JUNCTION_FADE (0.2 world); a mid-run end
     (the minotaur's spot, a by-length stop) has no gap and fades over
@@ -243,11 +258,17 @@ only with the files it is about; `render.md` lists the area's other files.
     counts as a junction end, so a run under two gaps (1.95 world at
     defaults) shows no rims, only the ring.
   - ROUTE. `render/telegraph_route.ts` `telegraphPieces(g, runs, t,
-    lead)` turns the telegraph into pieces: by runs, or by length
+    lead, ride)` turns the telegraph into pieces: by runs, or by length
     (fromSpot, segLens, stops). A missing run ends the route, and the lap
-    math goes through kLapOf/kWrap (K299). `lead` takes K324's ChasePlan
-    shape and is unused until K324 stage 2. Tests:
+    math goes through kLapOf/kWrap (K299). The real-time chase's ChasePlan
+    reaches it through `chaseRoute(g, plan)` (K324 stage 2): `lead` is the
+    partial run from the minotaur's spot, and `ride` gives its piece the
+    riding end (RIDING above); the turn minotaur passes no lead. Tests:
     `test/render/telegraph_route.test.ts`.
+  - THE LINE LOOK UNDER THE REVEAL (K652, K271; K324 stage 2): the rims
+    draw nothing over thread the thread reveal hides, but the line look's
+    Graphics strokes did. They now skip it on both clocks (`teleShown`,
+    `teleStroke`; gameplay-minotaur.md's REAL-TIME TELEGRAPH).
   - STRENGTH (`telegraphRimStrength`, mino_feedback.ts; first values,
     untuned): roam 0.6, roam on a coarse pointer 0.8, hunt 1. The line
     look keeps its alphas but roams at 0.7 on a coarse pointer
@@ -265,9 +286,12 @@ only with the files it is about; `render.md` lists the area's other files.
     `&mt=hunter&mtg=0` (`s6/hm_desktop.log`, `s6/hm_line.log`,
     `s6/hm_mtg0.log`). Section text:
     render-shaders.md. Sheets: `.claude/probes/K525/s6/`
-    (`tele_states.mjs`; separate runs, not same-state). Not done: the GPU
-    vs mirror census (`census_rim.mjs` was not adapted for TELE), the
-    Pixel pass and tuning.
+    (`tele_states.mjs`; separate runs, not same-state). Not done: the
+    Pixel pass and tuning. The GPU vs mirror census for TELE (K324
+    stage 2 adapted `census_rim.mjs` as `.claude/probes/K324/census/`
+    `census_tele.mjs`, run by `run_census.ps1` under the perf lock;
+    whether it ran, and its table, are in `docs/design/K324_s2.md`'s
+    Handoff).
 
 - RING LAPS ARE INTEGER-CORRECTED (K299, 2026-10-14; Levi: a choice's
   pulse missing, another drawn backward, a gold sliver on the next run

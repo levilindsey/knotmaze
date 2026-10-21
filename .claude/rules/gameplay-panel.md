@@ -250,7 +250,9 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   stop, max (s)", "Stop while hunting (x)", "Turn-back margin", "Dead-end
   reach (x roam)" and "Nearest roam (x roam)" (`tuneRow`: no step, K130;
   an edit keeps 2 decimals), then "Telegraph reach (runs)" (an integer
-  slider, 0-3, whose tooltip says the telegraph is not drawn yet). Each
+  slider, 0-3; since K324 stage 2 its tooltip reads "Real time: how many
+  runs of its next move show (with Show its next move), past the run it
+  is on. Applies live."). Each
   tooltip starts "Real time:" and says it applies live (onChaseChange,
   LIVE_EFFECTS). LABELS: the brief's five longer ones ("Junction stop,
   shortest (s)", "Junction stop, longest (s)", "Junction stop while
@@ -295,6 +297,17 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   take in red; line draws a red line over it; both draws the two. The
   ring where it will stand shows in every look. Applies live." Param:
   gameplay-links.md's TELEGRAPH LOOK PARAM; the look: gameplay-minotaur.md.
+  BOTH CLOCKS (K324 stage 2, 2026-10-20; brief `docs/design/K324_s2.md`):
+  "Show its next move" (`minoTelegraph`) shows whenever the game is the
+  minotaur (`minoTelegraphRow.hidden = !gameMino`), and real time draws
+  it. Its tooltip: "Show its next move in red. Turn clock: the run it
+  will take and where it will stand, decided when your move ends (forced
+  on at charge and two). Real time: the rest of the run it is on and the
+  runs it plans next (Telegraph reach), with a ring where it is headed
+  once the route reaches it; faint while it roams, bright while it
+  hunts. Applies live." The look row hides when `!gameMino || (realtime
+  ? !params.minoTelegraph : !telegraphOn(...))`: in real time it follows
+  the checkbox alone (no speed forces it there).
 - ROW HELP (K467, 2026-10-15; brief `docs/design/K467.md`; Levi: "tooltip
   type information for param controls on mobile"; the coordinator's
   recommendation, no long press, no (i) buttons): a tap or click on a

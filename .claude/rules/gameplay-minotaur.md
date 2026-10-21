@@ -487,8 +487,49 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   holds the look
   (`fabric.telegraphLook`, set by scene.ts and live by the panel);
   drawTelegraph skips the strokes under rims and the pieces under line.
-  The fog's bleed shows no telegraph in any look. Real time draws none
-  yet (K324 stage 2).
+  The fog's bleed shows no telegraph in any look.
+- REAL-TIME TELEGRAPH (K324 stage 2, 2026-10-20; brief and handoff
+  `docs/design/K324_s2.md`). With `minoTelegraph` on, main.ts's tickChase
+  hands syncMinotaur `chase.plan(minoTelegraphRuns)` (read-only: no
+  digest moved), and `chaseRoute` (`render/telegraph_route.ts`) turns the
+  ChasePlan into the route drawTelegraph draws, in all three looks:
+  - the LEAD, the partial run from the minotaur's spot to the end it
+    walks toward (dropped when empty, at that end);
+  - then the whole runs;
+  - then the ring, only when `dest >= 0`: a plan that stops short of its
+    destination (reach, or a hunter tracking you) has none.
+  - In its lair: nothing until the last LAIR_TELL (0.5 s) of its wait,
+    then the exit tail's first run (plan() already did this, 2.1).
+  - ALPHAS, rule (B): the lead AND the first whole run after it at the
+    look's alpha, every later run at TELEGRAPH_LATER_SHARE (0.5); roam
+    and hunt as on the turn clock (`telegraphRimStrength`,
+    `telegraphAlphas`). Rule (A), the lead counting as the first run, is
+    a two-place flip: `first = false` once telegraphPieces pushes the
+    lead's piece, and the line look's `alphas[s + 1]` when there is a
+    lead.
+  - The lead's moving end rides a uniform (K654; render-paint.md's
+    TELEGRAPH RIMS), so a walking minotaur rewrites KPAINT only when its
+    route changes.
+  - HIDDEN THREAD (K652, K271): under the thread reveal the line look's
+    strokes, its ticks and the ring skip thread the reveal hides, on
+    both clocks (`teleShown`: `exploreVisAt` >= TELE_VIS_MIN 0.5;
+    `teleStroke` bisects a stroke's edge TELE_VIS_BISECT (6) times). The
+    rims already drew nothing there.
+  - The telegraph's panel rows show on both clocks (gameplay-panel.md).
+  - MEASURED (desktop RX 6800 XT, perf lock; `.claude/probes/K324/`
+    `k324_page_s2.mjs`, `run_s2_page.ps1`, results in `out_page_s2/`).
+    plan() costs 0.005-0.007 ms a frame on average (the 0.2 ms max is
+    timer granularity; budget 0.05), and syncMinotaur 0.042-0.045 ms
+    against 0.015 with the telegraph off. Texture uploads rise 3-5 row
+    calls/s (135 against 129) and 2-3% of row bytes. Over a perfq run
+    KPAINT was rewritten 0.9 times a second, and the riding end moved on
+    15 frames a second (each one a KPAINT rewrite before K654, now only
+    the uniform). A catch hides the telegraph in the same call (K270
+    holds). NO FLICKER, so no hysteresis: 0 next-run changes in 1.6 s of
+    hunting on the page, and headless (`flicker/flicker.ts`, K174's
+    players on 48 seeds, reach 1) 0.14 changes per hunting second over
+    1802 s, 10 of them straight back, one under 0.1 s apart (a 2-tick
+    blip).
 - CATCH RESETS (K80 turns stage 2, K273, 2026-10-14; Levi: "a toggle to
   conditionally reset the level/Minotaur/fog when dying to the
   Minotaur"). Both clocks, shared rows after minoSleep / the real-time
