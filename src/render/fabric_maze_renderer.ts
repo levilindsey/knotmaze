@@ -108,6 +108,29 @@ const WALKER_COLOR = 0x3fd0ff;
 const WALKER_STRENGTH = 0.9;
 const WALKER_TRAIL_ALPHA = 0.5;
 const TELE_RED = 0xff2418;
+// K713: the walker's dot glow (placeWalkerGlow; K114_walker.md: "the head
+// dot with a glow of its own, in the walker's colour (as 2.8 gives the
+// minotaur its red highlight), so it reads as not you"): the minotaur
+// highlight's gradient and size (MINO_GLOW_DIAM radii) in WALKER_COLOR,
+// at this opacity (the minotaur's runs 0.4 to 1 by mode).
+const WALKER_GLOW_ALPHA = 0.9;
+let WALKER_GLOW_TEX: Texture | null = null;
+function walkerGlowTexture(): Texture {
+  if (WALKER_GLOW_TEX) return WALKER_GLOW_TEX;
+  const N = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = N;
+  canvas.height = N;
+  const ctx = canvas.getContext("2d")!;
+  const grad = ctx.createRadialGradient(N / 2, N / 2, 0, N / 2, N / 2, N / 2);
+  grad.addColorStop(0, "rgba(110,225,255,0.95)");
+  grad.addColorStop(0.45, "rgba(63,208,255,0.55)");
+  grad.addColorStop(1, "rgba(30,170,255,0)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, N, N);
+  WALKER_GLOW_TEX = Texture.from(canvas);
+  return WALKER_GLOW_TEX;
+}
 // K137 stage 2: a hint's rims, mint against the walker's cyan (they never
 // share a game) and the minotaur's red.
 const HINT_COLOR = 0x7dffc4;
@@ -1326,6 +1349,32 @@ export class FabricMazeRenderer {
     this.setTeleColor(WALKER_COLOR);
     this.setTeleStrength(WALKER_STRENGTH);
     this.setTele(this.walkerPieces);
+  }
+
+  // K713: the walker's dot glow, right under the head marker (above the
+  // yarn and the start) while a walker mode is on; drawMarkers places it
+  // with the head every time it places the head. Built on first use, so a
+  // scene with no walker never makes the sprite; the texture is
+  // page-lifetime (destroy's containers take the sprite, not the texture).
+  private walkerGlow: Sprite | null = null;
+  private placeWalkerGlow(controller: FabricMazeController, r: number): void {
+    if (!controller.walkerMode) {
+      if (this.walkerGlow) this.walkerGlow.visible = false;
+      return;
+    }
+    let g = this.walkerGlow;
+    if (!g) {
+      g = new Sprite(walkerGlowTexture());
+      g.anchor.set(0.5);
+      g.alpha = WALKER_GLOW_ALPHA;
+      this.overContainer.addChildAt(g, this.overContainer.getChildIndex(this.markers.head.mesh));
+      this.walkerGlow = g;
+    }
+    const d = r * MINO_GLOW_DIAM;
+    g.position.set(this.headX, this.headY);
+    g.width = d;
+    g.height = d;
+    g.visible = true;
   }
 
   // K137 stage 2: a HINT lights one run in the telegraph's rim look (K525's
@@ -3480,6 +3529,7 @@ export class FabricMazeRenderer {
     this.glowSprite.position.set(this.headX, this.headY);
     m.head.setGlyph(markerGlyph(this.markerGlyphIds.head, "head"));
     m.head.place(this.headX, this.headY, r);
+    this.placeWalkerGlow(controller, r); // K713
     this.drawAids(controller, dotChain >= 0, r); // K137 stage 2
 
     // Start/exit discs sit at the renderer's OWN sample of their ctrl
