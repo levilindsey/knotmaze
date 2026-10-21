@@ -1714,7 +1714,7 @@ export function buildPanel(
   const oneWayRow = row(
     fGame, p, "oneWay",
     { min: 0, max: ONE_WAY_MAX, pointerScale: 0.01, format: (v: number) => (v === 0 ? "off" : v.toFixed(2)), label: "One-way runs" },
-    "Some runs are one-way: chevrons along the run point the way, and a tap against them is refused. A backtrack over a one-way run is refused too (Undo always works). The share of the maze's loop runs that are one-way; 0.3 is a good start, 0 is off. The way out never closes. The fewest moves and par follow the arrows. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
+    "Some runs are one-way: chevrons along the run point the way, and a tap against them is refused. A backtrack over a one-way run is refused too. The share of the maze's loop runs that are one-way; 0.3 is a good start, 0 is off. The way out never closes. The fewest moves and par follow the arrows. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
     D.oneWay, () => {
       params.oneWay = Math.round(params.oneWay * 20) / 20;
       callbacks.onClockChange();
