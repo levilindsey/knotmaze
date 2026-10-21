@@ -305,8 +305,8 @@ Next free ID: K689.
   - owner: nobody since 2026-10-20 20:11 (merged; agent `ac987d906d2085fb9` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
   - branch: mainline; last commit: `883b00a`
   - evidence: `.claude/probes/K580/`
-  - next: stage 4, the i joint notch (0.107 LU at xh 2, 0.227 at xh 3): move the junction round piece centre (joinery.ts ~1017-1060) or fix the glyph junction slots (src/core/glyphs/); with K675 and K676; after K620 merges (it adds Strand.taper fields); needs a brief (K580_s3.md Handoff)
-  - brief: `docs/design/K580_s3.md`
+  - next: launch stage 4 (the i joint notch, K675, K676) from its brief once K620 merges
+  - brief: `docs/design/K580_s4.md`
 - **K324** · Real-time minotaur, more alive and tunable (`docs/design/K324_realtime_minotaur.md`,
   091e4dc; Levi took section 7's recs): s1 (sim); s2 (render) once K525 owns the look: its route
   pieces, a moving lead, the chevrons, perf; s3 (guard, stalker) after s1. Rel. K245 K247 K271 K293 K294 K296.
@@ -327,8 +327,8 @@ Next free ID: K689.
   - owner: nobody since 2026-10-20 19:26 (merged; agent `adfeea92c9e0ef17b` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
   - branch: mainline; last commit: `f8b5341`
   - evidence: `.claude/probes/K137/`
-  - next: Levi's slack and snap calls (K655, K656), then stage 2's brief (4.15 spool, 4.28 hints)
-  - brief: `docs/design/K137_s1.md`
+  - next: launch stage 3a (K137-b blocking, lives, sword, sprint) from its brief once K324 s2 merges; stage 2 (4.15 spool, 4.28 hints) waits on K655, K656
+  - brief: `docs/design/K137_s3a.md`
 - **K620** · K580's root paint (Levi 2026-10-20: "K580 rec sgtm"): each side of the root takes its
   stroke's paint and blends into the spur's at J. `paint_math.ts` work, after K525 and K580 s3;
   inputs in `docs/design/K580_s2.md` "For K620"; `.claude/probes/K580/sheets/a_join_zoom.png`.
