@@ -1,16 +1,21 @@
-// K140 FINISH CONFETTI, the view: two ParticleContainers (one draw call
-// each) over the scene - the RAIN in screen space and the SPRAY in world
-// space (it copies the world root's transform every frame it draws, so the
-// burst stays on the finish as the camera moves). The motion and the counts
-// are render/confetti_model.ts (ConfettiSim); this file only mirrors pool
-// rows into pixi Particles, appear_fx.ts's pattern: slot i renders pool row
-// i, dead slots collapse to scale 0, and once both pools drain the
-// containers hide and tick() is a single early return - no per-frame work,
-// and `active` (the frame loop's OVERLAY poll, K6-1) is false again.
+// K140 FINISH CONFETTI, the view: ParticleContainers (one draw call each)
+// over the scene - the RAIN and the side CANNONS (K336) in screen space and
+// the SPRAY in world space (it copies the world root's transform every frame
+// it draws, so the burst stays on the finish as the camera moves). The
+// motion and the counts are render/confetti_model.ts (ConfettiSim); this
+// file only mirrors pool rows into pixi Particles, appear_fx.ts's pattern:
+// slot i renders pool row i, dead slots collapse to scale 0, and once every
+// pool drains the containers hide and tick() is a single early return - no
+// per-frame work, and `active` (the frame loop's OVERLAY poll, K6-1) is
+// false again.
 //
-// Both containers sit ABOVE the world root on the stage (the rain topmost)
-// and take no pointer events; the win banner and the HUD are DOM over the
-// canvas, so the pieces never block input or hide them.
+// Every container sits ABOVE the world root on the stage, in the order
+// spray, cannons, rain (topmost), and takes no pointer events; the win
+// banner and the HUD are DOM over the canvas, so the pieces never block
+// input or hide them. main.ts adds the spray and the rain; the cannons'
+// container follows the rain onto its parent, just below it (the rain's
+// "added" event), so a layer K578's still-maze cache puts under the
+// confetti stays under all of it.
 //
 // The paper texture is built once and kept for the page's lifetime (the
 // PALETTE_CACHE lore: never destroy a texture retained render state may
@@ -137,10 +142,23 @@ export class ConfettiLayer {
   readonly sim = new ConfettiSim();
   private readonly rain = new PieceLayer(this.sim.rain, false);
   private readonly spray = new PieceLayer(this.sim.spray, true);
+  // K336: the side cannons, screen space like the rain.
+  private readonly cannon = new PieceLayer(this.sim.cannon, false);
   // Probe counters: bursts thrown, and frames stepped with pieces alive.
   readonly stats = { bursts: 0, frames: 0 };
 
-  // Add these to the stage above the world root, in this order.
+  constructor() {
+    // Pixi emits "added" on a child after it joins its parent's children.
+    this.rain.container.on("added", (parent: Container) => {
+      parent.addChildAt(
+        this.cannon.container,
+        parent.getChildIndex(this.rain.container)
+      );
+    });
+  }
+
+  // Add these to the stage above the world root, in this order (the
+  // cannons' container then joins just below the rain).
   get sprayContainer(): ParticleContainer {
     return this.spray.container;
   }
@@ -170,6 +188,7 @@ export class ConfettiLayer {
     this.stats.bursts++;
     this.rain.attach(this.sim.shine);
     this.spray.attach(this.sim.shine);
+    this.cannon.attach(this.sim.shine);
     this.follow(world);
   }
 
@@ -178,6 +197,7 @@ export class ConfettiLayer {
     this.sim.clear();
     this.rain.sync(0);
     this.spray.sync(0);
+    this.cannon.sync(0);
   }
 
   // One frame: step and mirror the live pieces. A single early return when
@@ -188,6 +208,7 @@ export class ConfettiLayer {
     this.sim.step(dt, height);
     this.rain.sync(this.sim.shine);
     this.spray.sync(this.sim.shine);
+    this.cannon.sync(this.sim.shine);
     this.follow(world);
   }
 

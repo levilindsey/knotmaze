@@ -31,6 +31,7 @@ import {
   TURN_SPEEDS,
 } from "../game/minotaur_turns";
 import {
+  CANNON_AMOUNT_MAX,
   CONFETTI_AMOUNT_MAX,
   CONFETTI_SHINE_MAX,
 } from "../render/confetti_model";
@@ -553,6 +554,11 @@ export interface UrlParams {
   // share of foil pieces in [0, 1]. Viewer preferences, read at the burst.
   confettiShine: number;
   foilShare: number;
+  // K336: the side cannons (on/off) and their own amount in
+  // [0, CANNON_AMOUNT_MAX] (1 = the designed volley). Viewer preferences,
+  // read at the burst; a confetti amount of 0 still throws nothing.
+  confettiCannons: boolean;
+  cannonAmount: number;
   // K180's pluck params (render/pluck_model.ts PLUCK PARAMS): W's amount in
   // [0, PLUCK_WHOLE_MAX] (0 = the pre-K104 pluck), how W meets the unit's
   // crossings, and the glow. Viewer preferences.
@@ -867,6 +873,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   confettiAmount: 1,
   confettiShine: 1, // K337
   foilShare: 0.3, // K337
+  confettiCannons: true, // K336
+  cannonAmount: 1, // K336
   pluckWhole: 0.75, // K279 (was 0.5, K104's WHOLE_AMP).
   pluckCrossings: "through",
   // K194 (Levi, 2026-10-20): fallback (was off, K104's look): W, plus the cue
@@ -1194,6 +1202,7 @@ function fromCodecValues(
   p.confettiAmount = clampTo(p.confettiAmount, CONFETTI_AMOUNT_MAX);
   p.confettiShine = clampTo(p.confettiShine, CONFETTI_SHINE_MAX);
   p.foilShare = clampTo(p.foilShare, 1);
+  p.cannonAmount = clampTo(p.cannonAmount, CANNON_AMOUNT_MAX);
   p.pluckWhole = clampTo(p.pluckWhole, PLUCK_WHOLE_MAX);
   p.markerSize = sanitizeMarkerSize(p.markerSize);
   p.hoverGlow = clampTo(p.hoverGlow, 1);
@@ -1534,6 +1543,12 @@ function readLegacy(
       CONFETTI_SHINE_MAX
     ),
     foilShare: clampTo(readNumber(query, "cff", D.foilShare), 1),
+    // K336's side cannons (`&cfc=0`, `&cfn=2`).
+    confettiCannons: readBool(query, "cfc", D.confettiCannons),
+    cannonAmount: clampTo(
+      readNumber(query, "cfn", D.cannonAmount),
+      CANNON_AMOUNT_MAX
+    ),
     // K180's pluck params (`&pw=1&pcx=ride&pgl=fallback`).
     pluckWhole: clampTo(readNumber(query, "pw", D.pluckWhole), PLUCK_WHOLE_MAX),
     pluckCrossings: readChoice(query, "pcx", PLUCK_CROSSINGS, D.pluckCrossings),

@@ -218,6 +218,8 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["minoTipReach", "number"],
   ["minoRoamNear", "number"],
   ["minoTelegraphRuns", "number"],
+  ["confettiCannons", "boolean"], // K336
+  ["cannonAmount", "number"], // K336
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
