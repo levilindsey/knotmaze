@@ -3644,11 +3644,14 @@ export class RibbonRenderer {
         touch(s.chain, lo, hi, i);
       }
       // K290 stage 3b: the fire's fronts and the smoldering arms (kCharAt).
+      // K409: a front's widths are world lengths; under gone (no char
+      // spans) the whole ember lies ahead of the cut.
+      const gone = this.exploreBurn?.char === null;
       for (const f of this.exploreBurn?.fronts ?? []) {
         if (f.chain >= n) continue;
         const i = items.length / 8;
-        items.push(...frontItem(f));
-        const [lo, hi] = frontRange(f);
+        items.push(...frontItem(f, gone));
+        const [lo, hi] = frontRange(f, gone, minArcPerCtrl(f.chain));
         touch(f.chain, lo, hi, i);
       }
       for (const s of this.exploreBurn?.smolder ?? []) {
