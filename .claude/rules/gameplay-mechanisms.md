@@ -26,9 +26,13 @@ paths:
   - "test/game/ice.test.ts"
   - "test/game/color_rule.test.ts"
   - "test/game/rule_controller.test.ts"
+  - "src/game/turnstiles.ts"
+  - "src/game/hidden_runs.ts"
+  - "test/game/turnstiles.test.ts"
+  - "test/game/hidden_runs.test.ts"
 ---
 
-# Gameplay lore: fragile runs, par (K137), collapse (K139), the cut (K114), the aids (K137 stage 2), ice and the color rule (K138 stage 1)
+# Gameplay lore: fragile runs, par (K137), collapse (K139), the cut (K114), the aids (K137 stage 2), ice and the color rule (K138 stage 1), turnstiles and hidden runs (K138 stage 2)
 
 Written by K137 stage 1 (2026-10-20; brief `docs/design/K137_s1.md`,
 design `docs/design/K80_gameplay_additions.md` section 4.3); `gameplay.md`
@@ -479,3 +483,75 @@ of `rule_search.ts` (the kit: rules, the search, composition, placement),
   checks, or a refused run, its toast and the next move; a CHECK summary).
   GOTCHA: refused runs are not in `__knotFabric().choices`; read them from
   the controller's `refusedChoices()`.
+
+## Turnstiles and hidden runs (K138 stage 2)
+
+Written by K138 stage 2 (2026-10-21; brief `docs/design/K138_s2.md`, whose
+Handoff holds the calls, the census and the page results; design
+`docs/design/K80_gameplay_additions.md` 4.12 and 4.27). The classic game
+only, off under the same switches as ice; neither is daily-exempt. Params:
+gameplay-links.md's TURNSTILES AND HIDDEN RUNS PARAMS; rows:
+gameplay-panel.md's TURNSTILES AND HIDDEN RUNS ROWS. The headers of
+`turnstiles.ts` and `hidden_runs.ts` are the spec.
+
+- THE KIT: `WalkRule.step(from, run, state, last?, phase?)` now sees the
+  arrival run and the move clock, and `ruleSearch(walk, rule, {vertex,
+  state, last, phase})` searches from any node. A rule with `period` > 1
+  runs `clockSearch`, which adds bounce edges (out and back, 2 taps) and
+  deep bounces (4 taps) so a player can wait out a turnstile; longer
+  excursions are not modeled (a residual). The search bars the arrival
+  run at its source, so a dead end has no route: a retreat is the
+  controller's backtrack.
+- THE CONTROLLER: `refusalOf(eid)` names why a fresh tap is refused
+  ("hidden" | "turnstile" | "rule" | null); `strokes` (the clock, call 1)
+  is the actions minus the reveals, in every mode, real time included; a
+  reveal is an action `{kind: "reveal", run}`, so Undo past one replays
+  the rest and hides the run again (call 4). `hiddenRuns()`, `reveal`,
+  `isHidden`, `revealed` and `fewestWithHidden` serve the app.
+- TURNSTILES: three runs at a junction, two connected at a time; the open
+  pair is `(phase0 + clock) % 3` (call 2: phase0 seeded per junction), and
+  the arrival run always lets you back out. A band through the junction
+  (`junction_routes.ts`, drawn by `fabric_maze_renderer.ts`) shows the open
+  pair; a refused tap toasts "That turnstile is closed this way. It turns
+  one step with every move." with the refusal pluck. Under ice a slide
+  through a closed turnstile is refused whole.
+- HIDDEN RUNS: an unrevealed one draws nothing (its spans are gone, like a
+  burnt run's), is not a choice and is untappable (`edgeAt` and
+  `pickThread` skip it). A pluck (a tap's, or a drag's release) on thread
+  of the same note within REVEAL_RUNS 3 runs reveals every such hidden run
+  (`main.ts` `revealByPluck`, call 3; a pluck on the hidden run itself
+  reveals nothing) with the toast "A hidden run appears." (or "N hidden
+  runs appear."). Auto plucks (music mode) do not reveal. Under the thread
+  reveal an unexplored run is empty space, so only explored thread can
+  reveal (the page check's near pluck found none at seed 7).
+- PAR (call 5): par, strict, the stars and the efficiency rate the maze
+  without the hidden runs; the HUD's hidden row also shows the fewest with
+  them ("1 / 2 found · fewest 16, 14 with them").
+- HUD AND SHARE: rows "rules" (stage 1's ice share and color rule),
+  "turnstiles" and "hidden" (their `STATS` lines in `maze_stats.ts`, the
+  values from `app/rule_loss.ts` `ruleFields`); share tags ` · 🧊 25%`,
+  ` · 🎨 cycle`, ` · 🔄 4` and ` · 👻 1/2` (`ruleShareTags`).
+- MEASURED (a Node census, seeds 1-50 at today's defaults,
+  `.claude/probes/K138/s2/census/results.md`): every config placed and bit
+  on 50 of 50, the same layout twice. Legal against plain, medians: fewest
+  taps tst 2 1.065, tst 4 1.067, tst 8 1.138, hid 2 1.087, hid 4 1.215, tst
+  4 + ice 0.25 1.065; shortest length 1.014, 1.030, 1.047, 1.057, 1.123,
+  1.102. Draws at most 7 (tst 2). With every hidden run revealed, fewest /
+  plain = 1.000.
+- PROBES: `__knotFabric().rules` adds `turnstiles` ({vertex, arms,
+  phase0}), `phase`, `hidden`, `revealed`, `unrevealed`, `fewest`,
+  `fewestWithHidden` and `notes` (each run's pluck note). `.claude/probes/
+  K138/s2/s2_page.mjs <base> turnstile|hidden [desktop|phone] [seed]` (env
+  EXTRA appends link keys; on `?<seed>&am=instant&snd=none&tst=4` or
+  `&hid=4`: a refused arm, going back through a closed turnstile, the arm
+  opening a move later; or a tap on a hidden run, a far pluck, a near
+  pluck, the walk; then the finish and the share; a CHECK summary).
+  GOTCHA: a probe that finishes by the kit's route must backtrack at a
+  dead end (the search has no route there).
+- RESIDUALS: the third arm of a turnstile is not dimmed; the bands show
+  the next phase during a move's animation; a band's contrast depends on
+  the section colors; after a backtrack the arrival run is the path's
+  previous run, so re-entering the run just retraced can be refused; the
+  HUD reads "0 / 0 found" when nothing was placed; outside the thread
+  reveal a press-drag may grab a hidden run's particles (`grabAt` reads
+  `ps.nearest`; unverified).
