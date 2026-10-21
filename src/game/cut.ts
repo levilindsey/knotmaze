@@ -21,7 +21,8 @@
 // run this move already took (no loops). Advances and backtracks alike: each
 // run of the chain goes to its far end, whichever the controller calls it. A
 // vertex with two runs to begin with (the K115 title seam, a title waypoint)
-// is never contracted. A self-loop counts twice, as its vertex lists it.
+// is never contracted. Runs are counted by their ends at the vertex, so a
+// self-loop (listed once in WalkVertex.edges) counts twice.
 
 import type { WalkGraph } from "../core/walk_graph";
 import { runsToExit, walkDistances } from "../core/walk_graph";
@@ -72,23 +73,35 @@ export function cutVerdict(
   return cutStrands(walk, head, cuts, eid) ? "refused" : "cut";
 }
 
-// The live runs at a vertex, as it lists them (a self-loop twice).
-export function liveRuns(walk: Pick<WalkGraph, "vertices">, v: string, cuts: ReadonlySet<number>): number[] {
+// The run ends at a vertex, live ones only when `cuts` is given: each
+// incident run once, a self-loop twice.
+export function runEnds(
+  walk: Pick<WalkGraph, "vertices" | "edges">,
+  v: string,
+  cuts?: ReadonlySet<number>
+): number[] {
+  const out: number[] = [];
   const vert = walk.vertices.get(v);
-  return vert ? vert.edges.filter((r) => !cuts.has(r)) : [];
+  if (!vert) return out;
+  for (const r of vert.edges) {
+    if (cuts?.has(r)) continue;
+    out.push(r);
+    const e = walk.edges[r];
+    if (e && e.va === e.vb) out.push(r);
+  }
+  return out;
 }
 
 // Is `v` contracted (see the header's CONTRACTION)?
 export function contracted(
-  walk: Pick<WalkGraph, "vertices" | "exit">,
+  walk: Pick<WalkGraph, "vertices" | "edges" | "exit">,
   v: string,
   cuts: ReadonlySet<number>
 ): boolean {
   const vert = walk.vertices.get(v);
-  if (!vert || vert.isEnd || v === walk.exit || vert.edges.length < 3) return false;
-  let live = 0;
-  for (const r of vert.edges) if (!cuts.has(r)) live++;
-  return live === 2;
+  if (!vert || vert.isEnd || v === walk.exit) return false;
+  if (runEnds(walk, v).length < 3) return false;
+  return runEnds(walk, v, cuts).length === 2;
 }
 
 // The runs a move along `first` from `from` walks: `first`, then every run it
@@ -109,19 +122,10 @@ export function carryChain(
     if (!e) break;
     at = e.va === at ? e.vb : e.va;
     if (!contracted(walk, at, cuts)) break;
-    // The other live run: the vertex's live entries but one of `run`'s.
-    let next = -1;
-    let skipped = false;
-    for (const r of walk.vertices.get(at)!.edges) {
-      if (cuts.has(r)) continue;
-      if (r === run && !skipped) {
-        skipped = true;
-        continue;
-      }
-      next = r;
-      break;
-    }
-    if (next < 0 || taken.has(next)) break;
+    // The other live end: the vertex's two live ends but the one arrived by.
+    const ends = runEnds(walk, at, cuts);
+    const next = ends[0] === run ? ends[1] : ends[0];
+    if (taken.has(next)) break;
     taken.add(next);
     out.push(next);
     run = next;
