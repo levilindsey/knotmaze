@@ -148,10 +148,10 @@ line".
   `.claude/probes/K139/par_curve.txt`, `par_time.log`): the search trips
   on EVERY maze at every budget up to 200k, so par always reads "≥". At
   20k it sits a mean 1.4-2.1 points below the 200k search (max 11-14;
-  equal on 12-20 of 60 and 12-14 of 20). Desktop under the perf lock
-  (median of 3, 15 large mazes): 20k costs a median 10 ms, p90 12-34,
-  max 38 (40k: 20 / 74; 60k: 30 / 116). A phone is about 5x (estimated;
-  the real timing is owed, K662).
+  equal on 17-20 of the 60 dailies, 12-14 of the 20 large mazes). Desktop
+  under the perf lock (median of 3, 15 large mazes): 20k costs a median
+  10 ms, p90 12-34, max 38 (40k: 20 / 74; 60k: 30 / 116). A phone is
+  about 5x (estimated; the real timing is owed, K662).
 - THE ROWS: "collapsed N% · par M%" (maze_hud `ruleEntries`, from
   rule_loss `ruleFields`; help line `collapsed` in maze_stats.ts) in the
   HUD (even with the stat rows off), the win banner and the Stranded
