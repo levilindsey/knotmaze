@@ -210,6 +210,18 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   time. Restarts the solve.". Params: gameplay-links.md's SWORD PARAMS;
   the rules: gameplay-minotaur.md's THE SWORD.
 
+- AIDS ROWS (K137 stage 2, 2026-10-21): "Ariadne's spool" (`spool`),
+  "Spool slack (x fewest)" (`spoolSlack`, [0.1, 1], no step, K130, an edit
+  keeps the 0.05 grid; hidden while the spool is off), "Hints" (`hints`, a
+  0..5 slider, step 1) and "Compass" (`compass`) sit after "Cut" in the
+  Game folder, fabric mode only, in every game mode. The spool, its slack
+  and the hints restart the solve (onClockChange); the compass applies
+  live (onAidsChange). "Chalk marks" (`chalk`, a viewer pref stored as
+  `knotmaze.chalk`, never in a link) sits in Path & view. Tooltips say what
+  each does, with the slack's worked example (0.3 on a 10-run shortest
+  route gives 13 runs of yarn). Params: gameplay-links.md's AIDS PARAMS;
+  the rules: gameplay-mechanisms.md's The aids.
+
 - FIRE CLOCK ROW (K114 stage 2, 2026-10-15): "clock" (turn / realtime,
   `fireClock`) in the Burn race folder, hidden while the fire is off; it
   runs onClockChange (a change restarts the solve; undo_stack.ts lists it

@@ -14,9 +14,14 @@ paths:
   - "test/game/collapse.test.ts"
   - "test/game/cut.test.ts"
   - "test/ui/cut_buttons.test.ts"
+  - "src/game/spool.ts"
+  - "src/game/hints.ts"
+  - "src/ui/aid_buttons.ts"
+  - "test/game/spool.test.ts"
+  - "test/game/hints.test.ts"
 ---
 
-# Gameplay lore: fragile runs, par (K137), collapse (K139) and the cut (K114)
+# Gameplay lore: fragile runs, par (K137), collapse (K139), the cut (K114) and the aids (K137 stage 2)
 
 Written by K137 stage 1 (2026-10-20; brief `docs/design/K137_s1.md`,
 design `docs/design/K80_gameplay_additions.md` section 4.3); `gameplay.md`
@@ -335,3 +340,67 @@ state, the map, both rules and the par search.
   (`par_census.ts`, `balance.ts`: the Keep-it-in balance probe; run with
   `node node_modules\vite-node\vite-node.mjs --config <that
   folder>\vite.node.config.mjs <that folder>\<script>.ts <out.md>`).
+
+## The aids (K137 stage 2)
+
+Written by K137 stage 2 (2026-10-21; brief `docs/design/K137_s2.md`, whose
+Design and Handoff sections hold the calls and the page results; design
+`docs/design/K80_gameplay_additions.md` 4.15, 4.16 and 4.28). Free play
+only; none is daily-exempt. Params: gameplay-links.md's AIDS PARAMS; rows:
+gameplay-panel.md's AIDS ROWS; the tick and the compass: render-markers.md's
+THE CHALK TICK AND THE COMPASS. The headers of `spool.ts`, `hints.ts` and
+`src/ui/aid_buttons.ts` are the spec.
+
+- ARIADNE'S SPOOL (`spool.ts`, 4.15): the yarn IS `pathEdges`, the path
+  stack, so a tap on its top run reels in, any other tap pays out and Undo
+  replays one tap fewer. Measure: par's (call 1), capacity =
+  `spoolCapacity(fewestRuns, spoolSlack)` = `parFor`, title runs counted,
+  default slack 0.3. Controller: `spoolOn`, `spoolCap`, `spoolUsed` (=
+  `pathEdges.length`), `spoolShare`, `spoolWouldRefuse(eid)` (a retrace of
+  the top run never refuses). tapEdge's result "spool" refuses a push past
+  the capacity after the burnt and smolder checks and changes and logs
+  nothing (replay treats it as a failure); main toasts "Out of yarn:
+  retrace your last run to reel some in." (throttled) and flashes the HUD
+  gauge. The spool forces the string look (`pathVizOf`, url_state.ts, at
+  every pathViz read, so the pathViz row is inert under it) and turns the
+  cut off (setRules' `plain`). The reel-in look: the newest yarn event is
+  clipped to the dot in reverse while a backtrack retraces it, then popped
+  at the move's end; restores rebuild the yarn from `pathEdges`. HUD
+  "spool ████████ 100%" shows the share LEFT (SPOOL_GAUGE_CELLS 8); the
+  stats and the finish show the share USED; share " · 🧶 82% of the spool".
+- HINTS (`hints.ts`, 4.28): `hints` 0-5 a solve. `nextGoodArm` = the
+  head's live arm minimizing its length plus the far end's walk distance
+  to the exit (`liveDistances`: broken and cut runs removed; lowest id on a
+  tie), -1 at the exit or with no route; the controller's `goodArm()`.
+  It ignores the minotaur, the fire and the spool, so with the minotaur a
+  hint still points to the exit. Hint (the button or H) spends one
+  (`useHint()`; `hintsLeft`, `hintsUsed`) and lights the arm for
+  HINT_SECONDS 2 in K525's rim look, in mint (0x7dffc4, against the
+  walker's cyan); a move ends it early. While lit it takes the one
+  telegraph slot and puts the base telegraph back after. HUD "hints 2 /
+  3"; share " · 💡1".
+- THE COMPASS (`compass`, its own flag: call 2): a small mint arrow beside
+  the resting head along `goodArm()`'s first stretch, never aimed at the
+  exit itself, found once per move, hidden while the dot moves, once
+  solved and in walker modes.
+- CHALK (4.16): a viewer pref (`knotmaze.chalk`, `chalkPref`, a panel row,
+  never a link). The Chalk button and C toggle a tick on the head's
+  junction (`toggleChalk`; `chalk` is the set of marked junctions). With
+  the pref off the button and the ticks hide and C does nothing.
+- RESTART VS UNDO: the hints used and the chalk marks live on the
+  controller and `reset()` keeps them (Undo replays through it); main's
+  real restart clears them (`clearAids`). Not a catch's level restart
+  (the carry keeps both). Hints, the compass and chalk are off in walker
+  modes.
+- BUTTONS (`AidButtons`, `src/ui/aid_buttons.ts`): Hint (a count badge)
+  and Chalk, one group bottom left above the cut buttons' row, clear of
+  the move pad at the bottom right (call 3); the bottom toasts (K698) sit
+  below them on the phone.
+- HOOK: `__knotFabric().aids` {spool: {used, cap, share} or null,
+  hintsMax, hintsLeft, hintsUsed, hintRun, goodArm, chalk, compassRun}.
+  Probe: `.claude/probes/K137/s2/aids_page.mjs <base> [desktop|phone]
+  [seed] [slack]` (real clicks or touch taps on
+  `?<seed>&am=instant&snd=none&sp2=1&sps=<slack>&hn=3&cmp=1`: a spool run
+  to its limit and a reel-in, a hint, chalk on and off and the pref off,
+  the compass at every rest; ends in a CHECK summary; stills and JSON in
+  `out/`, results in `results.md`).

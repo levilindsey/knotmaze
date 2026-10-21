@@ -150,8 +150,9 @@ export const LIVE_EFFECTS = {
     "hoverGlowWidth", "hoverGlowLength", "hoverGlowFade",
     "revealDistance", "revealFade", "revealLook", "burnt", "revealFinish",
     "revealEndCross", "revealEndGlow",
-    "compass", // K137 stage 2 (main.ts reads it every frame)
   ],
+  // K137 stage 2: the compass row's effect (main.ts reads it every frame).
+  onAidsChange: ["compass"],
   onRecolor: [
     "colorScheme", "junctionBlend", "hueShift", "gamutArc", "palette",
     "pathColor",

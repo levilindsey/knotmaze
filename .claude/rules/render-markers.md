@@ -116,3 +116,16 @@ only with the files it is about; `render.md` lists the area's other files.
   reveal has not shown its point (vis below 0.98). marker_glyphs.test.ts
   checks its fit like every glyph's. The rules: gameplay-minotaur.md's
   THE SWORD.
+
+- THE CHALK TICK AND THE COMPASS (K137 stage 2, 2026-10-21): the role
+  "tick" (a mesh role) with one placeholder design, "tick" (a check mark),
+  for Levi to replace. FabricMazeRenderer `drawAids` (after drawMarkers in
+  update(), so it redraws only with the markers) places a pooled tick
+  (`TICK_POOL`, page-lifetime) by each marked junction at TICK_SCALE 0.7
+  of markerRadius, TICK_OFFSET 1.15 radii up and right, under the head
+  marker; and the COMPASS, a mint triangle (HINT_COLOR 0x7dffc4, a dark
+  0.12 r outline) drawn in the markers' Graphics, COMPASS_DIST 1.9 radii
+  from the head toward the point COMPASS_REACH 1 ctrl along `goodArm()`,
+  COMPASS_SIZE 0.75 r long. Main toggles both with `invalidate()` (a
+  one-shot render), never a wake. marker_glyphs.test.ts checks the tick's
+  fit like every glyph's. The rules: gameplay-mechanisms.md's The aids.
