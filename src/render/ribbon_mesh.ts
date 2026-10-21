@@ -52,8 +52,9 @@ function addGapAttributes(
 }
 
 
-// ROUND JOINS (K580 s3). A sample that turns past ROUND_DOT_START (a 110
-// deg turn) stops mitering on its outer side: the strip's outer edge
+// ROUND JOINS (K580 s3; the band moved to 90-100 deg in s4). A sample that
+// turns past ROUND_DOT_START (a 90 deg turn) stops mitering on its outer
+// side: the strip's outer edge
 // follows the round-joined ideal (every point within the half-width of
 // the centerline) instead. The miter put the outer vertex up to 2h out
 // along the sample TANGENT's normal, and at a cusp with unequal legs that
@@ -69,18 +70,25 @@ function addGapAttributes(
 // Both inner and outer vertices sit on the TRUE outer bisector of the two
 // normalized legs (a - b), not the tangent's normal. The concave clamp is
 // unchanged (the inner vertex keeps master's distance, 0.3h at a cusp).
-// CONTINUITY: between 110 and 120 deg (ROUND_DOT_FULL, where the old 2x
-// miter clamp began) every round vertex blends, by a smoothstep of the
-// turn's cosine, from master's miter vertex to its round position, so the
-// extra vertices start collapsed on the miter vertex and a turn swept
-// through the threshold moves the outline continuously. Below 110 deg
-// nothing changes: every vertex is bit-identical to the plain miter.
-// The 1-degree sweep test bounds the largest step (ribbon_round.test.ts).
+// CONTINUITY: between 90 and 100 deg (ROUND_DOT_FULL) every round vertex
+// blends, by a smoothstep of the turn's cosine, from master's miter vertex
+// to its round position, so the extra vertices start collapsed on the
+// miter vertex and a turn swept through the threshold moves the outline
+// continuously. Below 90 deg nothing changes: every vertex is
+// bit-identical to the plain miter. The 1-degree sweep test bounds the
+// largest step (ribbon_round.test.ts).
+// WHY 90/100 (K580 s4, K675): stage 3's 110/120 left the glyph cusps that
+// turn 103-114 deg partly mitered (the a's J2 at xh 2, 113.5 deg, had its
+// outer vertex 1.39h out; the i's joint sample at xh 3, 110.8 deg, barely
+// blended). Every glyph cusp now turns past 100 deg and is fully round.
+// No sample of the glyph-free scenes (knot, maze, reveal, burn, a kinky
+// knot) turns past 90 deg (stage 3 and 4's counts), so they stay bit for
+// bit on the miter.
 export const ROUND_ARC_SEGMENTS = 8;
-/** cos(110 deg): a sharper turn starts to round. */
-export const ROUND_DOT_START = -0.3420201433256687;
-/** cos(120 deg): from here the join is fully round. */
-export const ROUND_DOT_FULL = -0.5;
+/** cos(90 deg): a sharper turn starts to round. */
+export const ROUND_DOT_START = 0;
+/** cos(100 deg): from here the join is fully round. */
+export const ROUND_DOT_FULL = -0.17364817766693033;
 
 // The round joins one extrusion found, in sample order: the sample, its
 // outer side (0 = left, vertex 2i; 1 = right, vertex 2i + 1) and the
@@ -189,7 +197,7 @@ export function extrudeRibbon(
     by /= lb;
     const dot = ax * bx + ay * by;
     // cos^2(half-angle) = (1 + cos(angle)) / 2; clamp keeps miter <= 2x
-    // (only blends now: past 120 deg the outer side is round).
+    // (only blends now: past 100 deg the outer side is round).
     const cosHalf = Math.sqrt(Math.max((1 + dot) / 2, 0.25));
     const w = halfWidth / cosHalf;
 
@@ -242,7 +250,7 @@ export function extrudeRibbon(
       const outerRight = cross > 0;
       const sg = outerRight ? 1 : -1;
       // The true outer bisector: a - b points out of the turn (|a - b| =
-      // 2 sin(turn / 2) >= 1.6 here).
+      // 2 sin(turn / 2) >= 1.41 here).
       let mx = ax - bx;
       let my = ay - by;
       const ml = Math.sqrt(mx * mx + my * my);

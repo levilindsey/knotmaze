@@ -1,7 +1,8 @@
 // K580 stage 3: the ribbon's round joins (src/render/ribbon_mesh.ts,
-// extrudeRibbon and RibbonMesh's pool). Past a 110 deg turn a sample's
-// outer side follows the round-joined ideal instead of mitering; below
-// it every vertex is master's. Each case rasterizes the REAL mesh
+// extrudeRibbon and RibbonMesh's pool). Past a 90 deg turn (stage 4,
+// K675; stage 3 started at 110) a sample's outer side follows the
+// round-joined ideal instead of mitering, fully from 100 deg; below 90
+// every vertex is master's. Each case rasterizes the REAL mesh
 // (RibbonMesh's own position and index buffers, pool and fans included)
 // against the ideal outline - every point within h of the centerline -
 // the way K580 stage 2's raster probe did: "outside" is the deepest mesh
@@ -320,37 +321,39 @@ function maxTurnDeg(pos: Float32Array, n: number): number {
 }
 
 describe("round joins: the threshold constants", () => {
-  it("start rounding at 110 deg and are fully round from 120 deg", () => {
-    expect(ROUND_DOT_START).toBeCloseTo(Math.cos((110 * Math.PI) / 180), 15);
-    expect(ROUND_DOT_FULL).toBe(-0.5);
+  it("start rounding at 90 deg and are fully round from 100 deg", () => {
+    expect(ROUND_DOT_START).toBe(0);
+    expect(ROUND_DOT_FULL).toBeCloseTo(Math.cos((100 * Math.PI) / 180), 15);
   });
 });
 
 describe("round joins: below the threshold nothing moves", () => {
-  it("a 100 deg turn keeps master's vertices, bit for bit", () => {
-    for (const tangent of ["center", "a", "b"] as Tangent[]) {
-      for (const mirror of [false, true]) {
-        const s = turn(100, { legA: 0.03, legB: SP, tangent, mirror });
-        const want = new Float32Array(s.n * 4);
-        masterExtrude(want, s.pos, s.tan, s.n, false, H);
-        const got = new Float32Array(s.n * 4);
-        const joins = new RoundJoins();
-        extrudeRibbon(got, joins, s.pos, s.tan, s.n, false, H);
-        expect(joins.count).toBe(0);
-        for (let k = 0; k < want.length; k++) expect(Object.is(got[k], want[k])).toBe(true);
-        // And the mesh: no pool, the quads alone.
-        const { V, I } = draw(s);
-        expect(I.length).toBe((s.n - 1) * 6);
-        for (let k = 0; k < want.length; k++) expect(Object.is(V[k], want[k])).toBe(true);
+  it("an 85 or 89.9 deg turn keeps master's vertices, bit for bit", () => {
+    for (const deg of [85, 89.9]) {
+      for (const tangent of ["center", "a", "b"] as Tangent[]) {
+        for (const mirror of [false, true]) {
+          const s = turn(deg, { legA: 0.03, legB: SP, tangent, mirror });
+          const want = new Float32Array(s.n * 4);
+          masterExtrude(want, s.pos, s.tan, s.n, false, H);
+          const got = new Float32Array(s.n * 4);
+          const joins = new RoundJoins();
+          extrudeRibbon(got, joins, s.pos, s.tan, s.n, false, H);
+          expect(joins.count).toBe(0);
+          for (let k = 0; k < want.length; k++) expect(Object.is(got[k], want[k])).toBe(true);
+          // And the mesh: no pool, the quads alone.
+          const { V, I } = draw(s);
+          expect(I.length).toBe((s.n - 1) * 6);
+          for (let k = 0; k < want.length; k++) expect(Object.is(V[k], want[k])).toBe(true);
+        }
       }
     }
   });
 
-  it("any ribbon whose turns all stay under 110 deg is bit-identical, widthMul too", () => {
+  it("any ribbon whose turns all stay under 90 deg is bit-identical, widthMul too", () => {
     const n = 240;
     for (let seed = 1; seed <= 6; seed++) {
-      const { pos, tan } = wiggle(n, seed, 108);
-      expect(maxTurnDeg(pos, n)).toBeLessThan(110);
+      const { pos, tan } = wiggle(n, seed, 88);
+      expect(maxTurnDeg(pos, n)).toBeLessThan(90);
       const mulA = new Float32Array(n);
       const mulB = new Float32Array(n);
       for (let i = 0; i < n; i++) {
@@ -427,6 +430,34 @@ describe("round joins: past the threshold the outline is the round ideal", () =>
     }
   });
 
+  it("K675: the glyph cusps that turn 103 to 114 deg are fully round", () => {
+    // Stage 3's 110/120 band left these partly mitered (the a's J2 at xh 2,
+    // 113.5 deg: its outer vertex 1.39h out). Fully round: the outer main
+    // vertex and every pool vertex sit h from the corner. Also the
+    // nearest-to-band angles a glyph shows (103.4, 104.9) and 100 itself.
+    for (const deg of [100, 103.4, 104.9, 108.7, 110.8, 113.5]) {
+      for (const tangent of ["center", "a", "b"] as Tangent[]) {
+        for (const mirror of [false, true]) {
+          const s = turn(deg, { legA: 0.03, tangent, mirror });
+          const { m, V, I } = draw(s);
+          const c = s.corner;
+          const outer = mirror ? 0 : 1; // a left turn's outer side is the right
+          const tag = `${deg} ${tangent} ${mirror}`;
+          expect(Math.hypot(V[c * 4 + outer * 2], V[c * 4 + outer * 2 + 1]), tag).toBeCloseTo(H, 6);
+          const joins = (m as unknown as { joins: RoundJoins }).joins;
+          expect(joins.count, tag).toBe(1);
+          for (let k = 0; k < K; k++) {
+            expect(Math.hypot(joins.pos[k * 2], joins.pos[k * 2 + 1]), `${tag} ${k}`).toBeCloseTo(H, 6);
+          }
+          const sc = score(V, I, s);
+          expect(sc.outside, tag).toBeLessThan(TOL);
+          expect(sc.bare, tag).toBeLessThan(TOL);
+          m.destroy();
+        }
+      }
+    }
+  });
+
   it("pool vertices carry their sample's static attributes, on the outer edge", () => {
     const s = turn(150, { legA: 0.03 });
     const { m, I } = draw(s);
@@ -482,14 +513,14 @@ describe("round joins: the K81 cover strip re-emits the fill's own triangles", (
   };
 
   it("at a round join (either side) the strip's triangles are the fill's, fan included", () => {
-    for (const deg of [100, 115, 150, 180]) {
+    for (const deg of [85, 95, 115, 150, 180]) {
       for (const mirror of [false, true]) {
         const s = turn(deg, { legA: 0.03, mirror });
         const { m, V, I } = draw(s);
         const pts: number[] = [];
         let pairs = 0;
         for (let k = 0; k < s.n; k++) pairs += m.coverPairs(k, pts, 1000);
-        const want = deg > 110 ? s.n + K : s.n;
+        const want = deg > 90 ? s.n + K : s.n;
         expect(pairs, `${deg} ${mirror}`).toBe(want);
         expect(pts.length, `${deg} ${mirror}`).toBe(4 * want);
         expect([...strip(pts)].sort(), `${deg} ${mirror}`).toEqual([...tris(V, I)].sort());
@@ -536,13 +567,13 @@ describe("round joins: a turn swept through the threshold moves continuously", (
     return best;
   }
 
-  it("1 deg steps from 100 to 130 deg: the largest step is bounded, and shrinks with the step", () => {
+  it("1 deg steps from 80 to 120 deg: the largest step is bounded, and shrinks with the step", () => {
     const n = turn(100, { legA: 0.05 }).n;
     const mesh = new RibbonMesh(n, false, 0xffffff, true, 0);
     let worst = 0;
     let worstAt = 0;
-    let prev = cornerVerts(100, mesh);
-    for (let deg = 101; deg <= 130; deg++) {
+    let prev = cornerVerts(80, mesh);
+    for (let deg = 81; deg <= 120; deg++) {
       const cur = cornerVerts(deg, mesh);
       const j = maxJump(prev, cur);
       if (j > worst) {
@@ -551,33 +582,34 @@ describe("round joins: a turn swept through the threshold moves continuously", (
       }
       prev = cur;
     }
-    // The fastest vertex is the pool's last one, B: it travels about 2.4h
-    // across the 10 deg band (from the miter tip to h out along leg b's
-    // normal), and a smoothstep's peak slope is 1.5x its mean, so it moves
-    // 0.36h in the degree at 116 deg (measured 0.090 LU at h 0.25).
-    // Outside the band a corner vertex moves about 0.02h a degree.
+    // The fastest vertex is the pool's last one, B: it travels about 1.9h
+    // across the 10 deg band (from the miter tip, 1.41h out at 90 deg, to
+    // h out along leg b's normal; stage 3's 110-120 band was 2.4h), and a
+    // smoothstep's peak slope is 1.5x its mean, so it moves about 0.28h in
+    // the degree at the band's middle. Outside the band a corner vertex
+    // moves about 0.02h a degree.
     expect(worst).toBeLessThan(0.4 * H);
-    expect(worstAt).toBeGreaterThan(110);
-    expect(worstAt).toBeLessThanOrEqual(120);
+    expect(worstAt).toBeGreaterThan(90);
+    expect(worstAt).toBeLessThanOrEqual(100);
     // A pop would not shrink with the step: at 0.1 deg the worst is ~10x
     // smaller.
     let fine = 0;
-    prev = cornerVerts(109, mesh);
+    prev = cornerVerts(89, mesh);
     for (let k = 1; k <= 120; k++) {
-      const cur = cornerVerts(109 + k * 0.1, mesh);
+      const cur = cornerVerts(89 + k * 0.1, mesh);
       fine = Math.max(fine, maxJump(prev, cur));
       prev = cur;
     }
     expect(fine).toBeLessThan(worst / 6);
     // The pool starts collapsed on the miter vertex.
-    const before = cornerVerts(109.999, mesh);
-    const after = cornerVerts(110.001, mesh);
+    const before = cornerVerts(89.999, mesh);
+    const after = cornerVerts(90.001, mesh);
     expect(maxJump(before, after)).toBeLessThan(1e-4);
     mesh.destroy();
   });
 
-  it("the outline meets the target at every degree from 120 deg up", () => {
-    for (let deg = 120; deg <= 180; deg += 2) {
+  it("the outline meets the target at every degree from 100 deg up", () => {
+    for (let deg = 100; deg <= 180; deg += 2) {
       const s = turn(deg, { legA: 0.05, tangent: "a" });
       const { m, V, I } = draw(s);
       const sc = score(V, I, s, H, 0.6, 300);
@@ -590,7 +622,7 @@ describe("round joins: a turn swept through the threshold moves continuously", (
   it("a sample that crosses the threshold back and forth stops allocating", () => {
     const n = turn(100).n;
     const mesh = new RibbonMesh(n, false, 0xffffff, true, 0);
-    const a = turn(105, { legA: 0.05 });
+    const a = turn(85, { legA: 0.05 });
     const b = turn(140, { legA: 0.05 });
     mesh.update(b.pos, b.tan, H);
     const g = mesh.mesh.geometry;
