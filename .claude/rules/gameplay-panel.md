@@ -222,6 +222,17 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   route gives 13 runs of yarn). Params: gameplay-links.md's AIDS PARAMS;
   the rules: gameplay-mechanisms.md's The aids.
 
+- ICE AND COLOR RULE ROWS (K138 stage 1, 2026-10-21): "Ice (share of
+  runs)" (`ice`, [0, 0.5], no step, K130, an edit keeps the 0.05 grid; 0
+  reads "off") and "Color rule" (`colorRule`: off / alternate / cycle) sit
+  after "Compass" in the Game folder, fabric mode and the classic game
+  only (hidden otherwise, as the cut's row). Both restart the solve
+  (onClockChange). They stay visible while fragile runs, collapse, the cut
+  or the spool turns the rules off (as K139's rows do); the tooltips say
+  so, what each rule does, and that the fewest moves and par follow it.
+  Params: gameplay-links.md's ICE AND COLOR RULE PARAMS; the rules:
+  gameplay-mechanisms.md's Ice and the color rule.
+
 - FIRE CLOCK ROW (K114 stage 2, 2026-10-15): "clock" (turn / realtime,
   `fireClock`) in the Burn race folder, hidden while the fire is off; it
   runs onClockChange (a change restarts the solve; undo_stack.ts lists it
