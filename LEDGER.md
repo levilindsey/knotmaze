@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K742.
+Next free ID: K746.
 
 ## Waiting on Levi
 
@@ -219,6 +219,11 @@ Next free ID: K742.
 - **K739** · K698 walker glow (K713): the minotaur highlight in the walker cyan under the head, at
   its hunting size (3.8 radii) and full opacity, since the plain size read as a faint fringe. Right
   size and opacity? Stills `.claude/probes/K698/shots/` (`docs/design/K698_polish.md` Handoff)
+- **K742** · K138 s1 calls (`docs/design/K138_s1.md` Handoff): call 5 built differently, the rules
+  turn off while the spool is on (alt: a slide pays its whole length to the spool); hints and the
+  compass follow the best legal route; refusals go through K480 targetAt, not a
+  refused-runs-in-reach check; cycle glyphs on the head runs deferred (call 4). No grayscale or
+  colorblind review of the rule colors yet (alternate 0.8/0.3, cycle 0.8/0.5/0.22)
 
 ## In progress
 
@@ -386,11 +391,11 @@ Next free ID: K742.
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
-  - owner: nobody since 2026-10-21 03:45 (merged; agent `a5c8d4138b6217bdc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `10f8919e`
-  - evidence: `.claude/probes/K138/s1/`
-  - next: stage 2 (docs/design/K138_s2.md): the s1 remainder first (the HUD rows, the share title tag), then turnstiles and hidden runs; then s3-s8 per docs/design/K138_plan.md
-  - brief: `docs/design/K138_s1.md`
+  - owner: agent `af6986ab9ceec29c6` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus-5-5, started 2026-10-21 03:45, 2 h cap ~05:45)
+  - branch: `worktree-agent-af6986ab9ceec29c6`, worktree `.claude/worktrees/agent-af6986ab9ceec29c6`; last commit: `76a81897`
+  - evidence: `.claude/probes/K138/s2/`
+  - next: stage 2 (cap ~05:45): the s1 remainder (HUD rows, share title tag), turnstiles, hidden runs; then s3-s8 per docs/design/K138_plan.md (s6 and s7 first once K137 s3c merges)
+  - brief: `docs/design/K138_s2.md`
 
 ## Next, in order
 
@@ -1349,6 +1354,11 @@ Every other item below waits on the trigger it names.
   a walked pickup; No hints left is unreachable by tap (Hint disables at 0)
 - **K741** · cutRules() still says the fewest cuts when the Lead par is only an upper bound (par at
   most P) (`docs/design/K698_polish.md` Handoff)
+- **K743** · K480 planRoute ignores the rules (K138 s1): a tap past the choices walks part of a
+  route and stops at its first refused run; plan with ruleSearch (`docs/design/K138_s1.md` Handoff)
+- **K744** · K138 s1 page gaps: blips of other colors at some junctions under the rule colors (cause
+  unverified, maybe the junction webs); not page-checked: a backtrack undoing a slide, ice with
+  alternate, strict par lost under a rule, the share (`docs/design/K138_s1.md` Handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1610,6 +1620,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K735** · K643 leftovers: a crotch injection that keeps the minimum radius, to prove forkMaxLU
   1.2 past 0.79 LU; test/render/ribbon_round.test.ts hard-codes TOL 0.01 instead of importing
   LINT.taperBulgeLU
+- **K745** · Frost on icy runs is a flat color; a texture would read better (K138 s1)
 
 ## Done
 
