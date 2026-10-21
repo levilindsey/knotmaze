@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K720.
+Next free ID: K721.
 
 ## Waiting on Levi
 
@@ -176,7 +176,7 @@ Next free ID: K720.
 - **K706** · K114 walker calls, built as rec (docs/design/K114_walker.md, Calls for Levi): 1 the
   walker keeps right at a strand end; 2 Lead is a puzzle, Go locks the cuts; 3 the whole route
   shows, the next run full; 4 Lead stars 3 at par, 2 at par+1, else 1; 5 in Delay each cut or pass
-  is a turn; 6 nothing special for par 0
+  is a turn; 6 nothing special for par 0. R.6.2 phone strip: `.claude/probes/K717/out/walker/r62_sheet.png`
 - **K707** · Keep it in balance (K114 walker probe): R.3.9 says moat 3 tips it to the walker, but
   the cutter wins 30 of 30 at radius 0-3 at one run a turn, 27-29 of 30 at two; pick the knob and
   define moat (.claude/probes/K114/walker/balance.md)
@@ -184,6 +184,9 @@ Next free ID: K720.
   LU): accept the square-offset root outline, or lean it (a taper change)? Waist spikes vs T
   (0.012-0.023): accept U as the target? The notaper J seam colour: glyph-only fix (joinery.ts) or
   leave to G4?
+- **K715** · adb deaths: a Muse hopnbop session ran headless Godot 4.7.2 (--import, GUT); an editor
+  exit runs adb kill-server (shutdown_adb_on_exit, default true; editor settings written at death 2,
+  23:50:21; a Godot crash 23:31:56 before death 1). Set it false (claude-config Setup-GodotAndroid.ps1)?
 
 ## In progress
 
@@ -348,14 +351,6 @@ Next free ID: K720.
   - evidence: `.claude/probes/K137/s3b/`
   - next: stage 3b: the sword and sprint, then the monster list, sleepers, follower, lures, snares, mud
   - brief: `docs/design/K137_s3b.md`
-- **K717** · Overnight phone sitting 2: K704 kit silence and K709 adb reconnect, then K137 s3a
-  lives, the K114 walker (an R.6.2 strip for Levi), K177 and the K687 frame cells
-  (docs/design/K717_phone.md)
-  - owner: agent `aa715134c99f25b6b` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-21 00:04, 1 h cap ~01:04)
-  - branch: mainline; last commit: `9e594af`
-  - evidence: `.claude/probes/K717/`
-  - next: part 0 (K704, K709), then parts 1-4
-  - brief: `docs/design/K717_phone.md`
 
 ## Next, in order
 
@@ -564,9 +559,6 @@ Every other item below waits on the trigger it names.
 - **K441** · The real-time fire's frame cost, profiled (9850741): about 1% of a frame (+0.23 ms at 1x,
   +1.85 at 4x CPU, nearly all `ExploreGaps.setExplore`); no fix built. Owed: a same-state rerun under
   the perf lock, realtime stand after the first sleep (`docs/design/K441_fire_frame.md` Handoff, Owed).
-- **K687** · Phone rerun (K662 leftovers): default confetti frame times with the audiobook paused at
-  thermal status 0 (`.claude/probes/K662/run_daily2.ps1`, with snd=none). The daily paths 2b and 3
-  passed in K703.
 - **K688** · Healing cuts against monsters (Levi took R.3.5, decision 6): a cut closes again after a
   few moves; cut with the minotaur or the fire. After the K114 walker stage
   (`docs/design/K80_gameplay_additions.md` R.3.5).
@@ -576,9 +568,16 @@ Every other item below waits on the trigger it names.
 - **K708** · K137 sims for lives and the sword (s3a step 7, unrun): teach the K80 turn sim
   (.claude/probes/K80/turns2/) to respawn and count catches, then run its six cells
   (docs/design/K137_s3a.md, The sim table)
-- **K709** · Phone kit hardening (K703): phone_setup, wait_idle and run_parts should reconnect after
-  an adb restart and re-add the reverse and the 9222 forward; lib703 END should take a date-time or
-  a minutes cap, since HH:mm cannot cross midnight
+- **K709** · Phone kit hardening: the adb reconnect is built (K717, `.claude/probes/K578/phone/`
+  adb_reconnect*.ps1 and watchdog_reconnect.ps1, on by default) but only its healthy-link no-op is
+  tested; lib703 END cannot cross midnight; run_k717 skips a late probe; walker_phone takes 1 candidate
+- **K720** · Sound off still opens audio: under snd=none or mute the first touch creates and resumes
+  the AudioContext (knot_synth ensure, via the autoplay gate) and plucks reach resume(). Every play
+  path is gated, so nothing should sound; create it only once sound is on. A daily drops snd from
+  the address bar, so a reload plays music (K717)
+- **K698** · Phone toasts cover the bottom controls (Pixel 411x753): the cut refusal over Undo (K703,
+  gone by 1.7 s; a touch still reaches Undo), the lives toasts over the move pad, the walker toasts over
+  .km-walk and the pad (K717 `out/lives`, `out/walker`). Place toasts clear of the controls.
 
 ## Residuals (known, not fixed)
 
@@ -855,9 +854,6 @@ Every other item below waits on the trigger it names.
 - **K176** · K80's entrance-tail trap: after losing a player on the
   entrance tail, the minotaur pauses at that tail's junction and catches
   them about 3 s later (`.claude/probes/K80/rt/results.md`).
-- **K177** · K80's last unrun check: the minotaur's indicator on the phone itself (K174 checked it
-  on the desktop in 411x753 emulation); K703 lost it to an adb death, rerun with
-  `.claude/probes/K703/run_parts.ps1 -Parts ind`. Chases are not saved or replayable.
 - **K178** · Since K122 the private-cache vite wrappers of K19-K20, K79, K99 and K104 fail with
   ERR_MODULE_NOT_FOUND; K80's (`.claude/probes/K80/rt/vite.private-cache.config.ts`, which loads the
   config with `loadConfigFromFile`) works (`.claude/rules/probes.md`).
@@ -1278,8 +1274,6 @@ Every other item below waits on the trigger it names.
   the seam at R with strand colours, seed 9 (`docs/design/K620.md`)
 - **K692** · A light band across the glyph root at J, on master before K620 too (K620 residual b;
   `.claude/probes/K620/sheets/k620_zoom.png`)
-- **K698** · K114 cut: on a phone the refusal toast overlaps the Undo button (Pixel, K703: 1210 px2,
-  gone by 1.7 s); a real touch on Undo 433 ms after the refusal still reaches it (`src/ui/cut_buttons.ts`)
 - **K699** · Two visibility rules side by side: the K120 move pad hides while the panel is open, the
   K114 scissors show beside the desktop side panel (`src/ui/move_pad.ts`, `src/ui/cut_buttons.ts`)
 - **K700** · K324 s2 GPU census skips the non-riding lead and the hunt strength (the CPU parity test
@@ -1287,10 +1281,6 @@ Every other item below waits on the trigger it names.
   (`.claude/probes/K324/census/census_tele.mjs`)
 - **K701** · Section shader lengths rose again, limits now 47,750 / 64,150 characters (K324 s2: +85
   each; `test/render/k320_slim.test.ts`)
-- **K704** · Phone probes can play the game music into Levi audiobook: soundMode defaults to music
-  (volume 0.33) and a real CDP touch unlocks audio. The K662 and K703 part 1 daily runs loaded the
-  bare URL. Fix: snd=none on every kit link (K578 phone kit, K662 run_daily2 and phone_conf daily
-  case; check ?daily&snd=none stays the daily) plus a GOTCHA in .claude/rules/probes-phone.md
 - **K710** · K137-b: in real time a catch can still land through a broken run, since contact uses
   the plain thread distance (docs/design/K137_s3a.md, Residuals a)
 - **K711** · K137-b edges (K137_s3a.md Residuals b-f): runBurnAt may draw a burnt broken run as
@@ -1304,9 +1294,6 @@ Every other item below waits on the trigger it names.
   (docs/design/K114_walker.md Handoff)
 - **K714** · K114 balance probe: its cutter keeps cutting once the walker is inside the fence;
   dailies 1, 12, 23, 28 and 29 have a one-run fence at radius 1, so Keep it in is trivial there
-- **K715** · The adb server died twice in K703 (2026-10-20 23:33 and 23:50:21) and restarted without
-  the TCP device; killer unknown. Checked: no WER crash, no scheduled task in either window, no
-  other adb client or live local session; DCOM 10010 at 23:50:16 (.claude/probes/K703/notes.md)
 - **K719** · K580 s5 leftovers: an unidentified gap-mask slot bites the a bowl in ai at xh 2 (0.059
   vs 0.031); the 0.15 arm-drop rule leaves every glyph junction recordless at xh 2; the stadium is
   unmeasured on a glyphs2 maze title; U spikes over 0.01 in ai (0.014, 0.017).
@@ -1567,6 +1554,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K687** · Quiet confetti cell (K717, build ea22989, thermal 0, audiobook paused): 97 of 308 frames over 25 ms (31%, none over 34) vs 23% hot and playing (K662), so neither explains the misses; the cost is K645. Done in cdaaff1 (2026-10-21).
+- **K177** · Minotaur indicator on the Pixel (K717): shown at the edge; a real tap frames the minotaur (scale 31.6 to 7.5 in 0.9 s), holds past 3 s, and the follow camera eases back by 5 s. Done in cdaaff1 (2026-10-21).
+- **K704** · Phone kit links all carry snd=none (K578 kit, phone_conf, k578_confetti, lib717; K717) plus the GOTCHA in probes-phone.md; the app side is K720. Done in 47fe24d (2026-10-21).
+- **K717** · Phone sitting 2 (2026-10-21 00:04-00:55): kit silenced (K704), adb reconnect built (K709), lives, the walker, K177 and K687 ran; findings in K698, K715, K720. Done in cdaaff1 (2026-10-21).
 - **K703** · Overnight phone sitting 1: K687 paths 2b and 3 pass, K114 cut 15 of 15, the K324 s2 telegraph sheet (K695), K698 confirmed; Part 4 (K177) lost to an adb death. Done in 57a4827 (2026-10-21).
 - **K676** · Open-end crescents beside spur tips (the a stem bite, the notaper J bites, about 0.1 LU) in the K580 s3 fills-only raster; the Pixel shows the a stem notch by its foot disc too (K662). Done in ad3e715 (2026-10-20).
 - **K675** · K580 s3 partial round blends: the a J2 at xh 2 (113.5 deg) is only partly round (1.824 h to 1.389 h), the i joint sample at xh 3 (110.8 deg) barely. Done in e2adfd9 (2026-10-20).
