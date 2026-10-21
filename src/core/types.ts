@@ -29,6 +29,11 @@ export interface Node {
   // graph treats it as a vertex even at degree 2, so each tap writes the
   // next letter). Lattice graphs never set it.
   waypoint?: boolean;
+  // K580 (#glyphs2 only): a tapered root's start R, a degree-1 TURN where
+  // the root strand begins on the midline of two body strokes. Never a walk
+  // vertex or a dead end (its run to the junction precedes the strand's
+  // first stop). Lattice graphs never set it.
+  rootStart?: true;
   // P4 maze: entrance/exit END nodes are pinned to this world position by the
   // physics; free END tips (dead-end stubs) carry no anchor.
   anchor?: [number, number];

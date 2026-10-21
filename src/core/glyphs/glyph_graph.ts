@@ -503,6 +503,8 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
   const nodePos = new Map<string, [number, number]>(); // GU, y up
   const nodeType = new Map<string, Node["type"]>();
   const waypoints = new Set<string>();
+  // K580: tapered roots' start nodes (degree-1 TURNs).
+  const rootStarts = new Set<string>();
   let nextNode = 0;
   const freshId = (): string => `tn${nextNode++}`;
   interface ChainNode {
@@ -548,6 +550,7 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
         else if (e.f.kind === "start" || e.f.kind === "end") type = NODE_TYPE.END;
         nodeType.set(id, type);
         if (e.f.kind === "waypoint") waypoints.add(id);
+        if (e.f.kind === "root") rootStarts.add(id);
       }
       chain.push({ id, arc: e.arc });
       if (i + 1 < kept.length) {
@@ -590,6 +593,7 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
       type: nodeType.get(id)!,
       latticePos: norm(q),
       ...(waypoints.has(id) ? { waypoint: true } : {}),
+      ...(rootStarts.has(id) ? { rootStart: true as const } : {}),
     });
   }
   const edges = new Map<string, Edge>();
