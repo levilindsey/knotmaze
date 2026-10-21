@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import {
   buildMazePlan,
@@ -17,6 +17,10 @@ import { buildWalkGraph } from "../../src/core/walk_graph";
 import { walkFingerprint } from "../../src/game/daily_attempt";
 import { searchGreedyTrapPlan, trapOptionsOf } from "../../src/core/greedy_search";
 import { buildMazePlan as buildMazePlanV1 } from "./fixtures/maze_plan_v1";
+
+// K697: 11-24 s a file when the machine is idle, 45-60 s beside parallel
+// agents' suites, past vitest.config.ts's 30 s.
+vi.setConfig({ testTimeout: 120_000 });
 
 // K87: the incremental pickFarthest must pick exactly what the full rescan
 // did - every link and daily was built with it. Whole plans, today's module
