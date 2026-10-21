@@ -38,6 +38,7 @@ import {
 import { gridAlignSlider, gridAlignStrength } from "./grid_align_curve";
 import { PAR_SLACK_MAX, PAR_SLACK_MIN } from "../game/par";
 import { LIVES_MAX, LIVES_RECOMMENDED, livesOf } from "../game/lives";
+import { SWORD_MOVES_MAX, SWORD_MOVES_MIN } from "../game/sword";
 import {
   BACKGROUND_ACCENTS_USED,
   BACKGROUND_ANGLE_AUTO,
@@ -1927,6 +1928,19 @@ export function buildPanel(
     `Hearts: each catch costs one and sends you back to the entrance as usual; losing the last restarts the level (your catches still count) with every heart back. ${LIVES_RECOMMENDED} is a good start. Off: catches cost nothing (Catch restarts level decides). Applies live.`,
     true
   );
+  // K137 stage 3b (4.7, game/sword.ts): the sword, on both clocks.
+  const swordRow = chaseRow(
+    "sword",
+    { options: { off: "off", timed: "timed", "one use": "oneuse" }, label: "Sword" },
+    "A sword lies a few runs off the shortest way. Take it and the minotaur flees you for a while: touch it then and timed sends it back to its lair, one use slays it for good. Restarts the solve.",
+    true
+  );
+  const swordMovesRow = chaseRow(
+    "swordMoves",
+    { min: SWORD_MOVES_MIN, max: SWORD_MOVES_MAX, step: 1, label: "Sword lasts" },
+    "How long the minotaur flees once you take the sword: moves on the turn clock (a wait counts), runs walked in real time. Restarts the solve.",
+    true
+  );
   // K80 turns stage 2 (K273): what a catch resets, on both clocks. While
   // the level row is on a catch resets everything, so the other two hide.
   const minoRestartRow = chaseRow(
@@ -2825,6 +2839,8 @@ export function buildPanel(
     const livesOn = livesOf(params.lives) > 0;
     const restartOn = params.minoRestart && !livesOn;
     livesRow.hidden = !minoOn;
+    swordRow.hidden = !minoOn; // K137 stage 3b
+    swordMovesRow.hidden = !minoOn || params.sword === "off";
     minoRestartRow.hidden = !minoOn || livesOn;
     minoLairRow.hidden = !minoOn || restartOn;
     minoRefogRow.hidden = !minoOn || !(fog || threads) || restartOn;

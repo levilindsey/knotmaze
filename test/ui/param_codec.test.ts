@@ -233,6 +233,8 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["collapse", "enum", ["off", "finish", "free"]], // K139
   ["cut", "enum", ["off", "on", "lead", "delay"]], // K114 (+ the walker's lead, delay)
   ["lives", "number"], // K137 stage 3a
+  ["sword", "enum", ["off", "timed", "oneuse"]], // K137 stage 3b
+  ["swordMoves", "number"],
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

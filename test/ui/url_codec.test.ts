@@ -135,6 +135,7 @@ describe("links", () => {
       collapse: "off",
       cut: "off", // K114
       lives: 0, // K137 stage 3a
+      sword: "off", swordMoves: 8, // K137 stage 3b
     });
   });
 
@@ -910,6 +911,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   collapse: "cl",
   cut: "ct", // K114
   lives: "mlv", // K137 stage 3a
+  sword: "swd", swordMoves: "swm", // K137 stage 3b
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

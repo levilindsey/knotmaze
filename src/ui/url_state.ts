@@ -23,6 +23,8 @@ import type { CollapseMode } from "../game/collapse";
 import { COLLAPSE_MODES } from "../game/collapse";
 import type { CutMode } from "../game/cut";
 import { CUT_MODES } from "../game/cut";
+import type { SwordMode } from "../game/sword";
+import { SWORD_MODES, SWORD_MOVES_DEFAULT } from "../game/sword";
 import type { ParMode } from "../game/par";
 import { PAR_MODES, PAR_SLACK_DEFAULT } from "../game/par";
 import {
@@ -734,6 +736,13 @@ export interface UrlParams {
   // A catch costs one; the last restarts the level. While on, minoRestart
   // is ignored. Either clock, free play only (not daily-exempt).
   lives: number;
+  // K137 stage 3b, 4.7 (game/sword.ts): the SWORD, off | timed | oneuse,
+  // under a chase: taking it (4-8 runs off the optimal route) makes the
+  // minotaur flee for swordMoves moves (runs walked in real time); a touch
+  // while it flees banishes it to its lair (timed, the sword spent) or
+  // slays it (oneuse). Free play only (not daily-exempt).
+  sword: SwordMode;
+  swordMoves: number;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1027,6 +1036,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   cut: "off",
   // K137 stage 3a: no hearts (today's catches).
   lives: 0,
+  // K137 stage 3b: no sword; its flee 8 moves when on.
+  sword: "off",
+  swordMoves: SWORD_MOVES_DEFAULT,
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1257,6 +1269,7 @@ export const ENUM_OPTIONS: {
   parMode: PAR_MODES,
   collapse: COLLAPSE_MODES,
   cut: CUT_MODES,
+  sword: SWORD_MODES, // K137 stage 3b
 };
 
 // K398: every numeric param held to the panel's range (param_codec's
@@ -1759,6 +1772,9 @@ function readLegacy(
     cut: readChoice(query, "ct", CUT_MODES, D.cut),
     // K137 stage 3a's lives (`&mlv=3`; PARAM_RANGES clamps to 0..5).
     lives: readNumber(query, "mlv", D.lives),
+    // K137 stage 3b's sword (`&swd=timed&swm=12`; PARAM_RANGES clamps 4..20).
+    sword: readChoice(query, "swd", SWORD_MODES, D.sword),
+    swordMoves: readNumber(query, "swm", D.swordMoves),
   };
 }
 
