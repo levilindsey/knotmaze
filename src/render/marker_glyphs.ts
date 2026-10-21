@@ -41,7 +41,9 @@ export const GLYPH_MAX_CIRCLES = 8;
 // screen floor, so the slider means the same at every zoom. Anything that
 // needs a marker's size (the off-screen indicators, the confetti) reads
 // markerRadiusFor or the fabric renderer's markerRadius(), never a copy.
-export const MARKER_SIZE_DEFAULT = 1.08;
+// K225 (Levi, 2026-10-20): the default is 2 (it was 1.08, the pre-K83 head
+// dot), so the disc is twice a thread's width and its glyph reads.
+export const MARKER_SIZE_DEFAULT = 2;
 export const MARKER_SIZE_MIN = 0.25;
 export const MARKER_SIZE_MAX = 3;
 
@@ -70,12 +72,13 @@ export function markerRadiusFor(
 // never drops below the pre-K83 start/finish disc (0.95 tw, nearly twice
 // the thread's half-width, so the color always shows beyond the thread it
 // ends), and once the icon disc outgrows it, a constant 0.41 tw rim shows
-// around the disc. The two meet at the default (0.54 + 0.41 = 0.95), where
+// around the disc. The two meet at size 1.08 (0.54 + 0.41 = 0.95), where
 // the look is exactly the pre-K83 pair: a 0.95 tw colored disc and the
-// head's 0.54 tw dot. Rim width: 0.825 tw at size 0.25, 0.41 tw from the
-// default to 3 (dot radius 1.91 tw there). A rim proportional to the icon
-// (R = 1.76 r) would sink under the thread's own width below size 0.57 and
-// grow to 1.14 tw blobs at 3.
+// head's 0.54 tw dot (K98's default; K225's default is 2, dot radius 1.41
+// tw). Rim width: 0.825 tw at size 0.25, 0.41 tw from size 1.08 to 3 (dot
+// radius 1.91 tw there). A rim proportional to the icon (R = 1.76 r) would
+// sink under the thread's own width below size 0.57 and grow to 1.14 tw
+// blobs at 3.
 export const MARKER_DOT_MIN_TW = 0.95;
 export const MARKER_RING_TW = 0.41;
 export function markerDotRadiusFor(

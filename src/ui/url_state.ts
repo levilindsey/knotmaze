@@ -851,7 +851,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   foilShare: 0.3, // K337
   pluckWhole: 0.75, // K279 (was 0.5, K104's WHOLE_AMP).
   pluckCrossings: "through",
-  pluckGlow: "off",
+  // K194 (Levi, 2026-10-20): fallback (was off, K104's look): W, plus the cue
+  // only on a tap whose W cannot show. Neutral: off.
+  pluckGlow: "fallback",
   // K279 stage 2 (Levi's K288 pick; stage 1 had wave). Neutral: off.
   pluckRipple: "glint",
   rippleStrength: 1,
@@ -893,8 +895,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minoByLength: false, // K481 stage 2: runs mode until toggled.
   // K114: off; the brief's speed and delay. R.6.1 measured them hot (one
   // wrong branch in ten traps 38% of careful players); r 0.6 or a delay of
-  // 10-20 is Levi's call (the brief's stage 1 handoff).
-  fireSpeed: 0.75,
+  // 10-20 was Levi's call (the brief's stage 1 handoff). K280 (Levi,
+  // 2026-10-20): the speed is 0.6 (was 0.75, the brief's); the delay stays 0.
+  fireSpeed: 0.6,
   fireDelay: 0,
   // K273: today's respawn (the level goes on, the minotaur to its lair).
   minoRestart: false,
@@ -911,7 +914,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // real-time fire's own pair, stage 2's proposal (docs/design/
   // K114_stage2.md, the Stage 2 handoff's item 7): a 20 / 12 = 1.7 s head
   // start, and on every test daily the best route allows at least 1.1 s of
-  // thinking a decision. The turn pair keeps 0.75 / 0.
+  // thinking a decision. The turn pair keeps its own, 0.6 / 0 since K280
+  // (0.75 / 0 before).
   fireSpeedRt: 0.2,
   fireDelayRt: 20,
   // K465: the finish shows under the thread reveal (Levi, 2026-10-15).

@@ -122,17 +122,21 @@ describe("marker glyphs (K83)", () => {
 
   it("one marker size (K98): the disc's diameter in thread widths", () => {
     expect([MARKER_SIZE_MIN, MARKER_SIZE_DEFAULT, MARKER_SIZE_MAX]).toEqual([
-      0.25, 1.08, 3,
+      0.25, 2, 3,
     ]);
-    // The default is the pre-K83 head dot: radius 0.54 tw.
-    expect(markerRadiusFor(1)).toBeCloseTo(0.54, 12);
-    expect(markerRadiusFor(0.52)).toBeCloseTo(0.2808, 12);
+    // The default (K225: 2; 1.08 until then) is a disc two thread widths
+    // across: radius 1 tw. K98's old default was the pre-K83 head dot,
+    // radius 0.54 tw.
+    expect(markerRadiusFor(1)).toBeCloseTo(1, 12);
+    expect(markerRadiusFor(1, 1.08)).toBeCloseTo(0.54, 12);
+    expect(markerRadiusFor(0.52)).toBeCloseTo(0.52, 12);
+    expect(markerRadiusFor(0.52, 1.08)).toBeCloseTo(0.2808, 12);
     expect(markerRadiusFor(0.52, 0.25)).toBeCloseTo(0.065, 12);
     expect(markerRadiusFor(0.52, 3)).toBeCloseTo(0.78, 12);
     // Clamped to the slider's range; garbage reads as the default.
     expect(markerRadiusFor(1, 0.1)).toBeCloseTo(0.125, 12);
     expect(markerRadiusFor(1, 9)).toBeCloseTo(1.5, 12);
-    expect(markerRadiusFor(1, Number.NaN)).toBeCloseTo(0.54, 12);
+    expect(markerRadiusFor(1, Number.NaN)).toBeCloseTo(1, 12);
     expect(sanitizeMarkerSize(Number.POSITIVE_INFINITY)).toBe(MARKER_SIZE_DEFAULT);
     expect(sanitizeMarkerSize(-2)).toBe(MARKER_SIZE_MIN);
     expect(sanitizeMarkerSize(2)).toBe(2);
@@ -148,10 +152,11 @@ describe("marker glyphs (K83)", () => {
     // [size, dot radius, rim beyond the icon disc], both in thread widths.
     const cases: Array<[number, number, number]> = [
       [0.25, 0.95, 0.825],
-      // The default: exactly the pre-K83 pair, a 0.95 tw colored disc
-      // around the head's 0.54 tw dot.
-      [MARKER_SIZE_DEFAULT, 0.95, 0.41],
-      [2, 1.41, 0.41],
+      // K98's default (1.08): exactly the pre-K83 pair, a 0.95 tw colored
+      // disc around the head's 0.54 tw dot.
+      [1.08, 0.95, 0.41],
+      // The default since K225: a 1.41 tw colored dot around the 1 tw disc.
+      [MARKER_SIZE_DEFAULT, 1.41, 0.41],
       [3, 1.91, 0.41],
     ];
     for (const [size, dotTw, rimTw] of cases) {

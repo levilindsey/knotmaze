@@ -115,10 +115,13 @@ export const DEFAULT_TURN_MINO: Readonly<TurnMinoParams> = Object.freeze({
 // stalker's: chase1/T, section 0's stalker at accuracy 1): the guard
 // keeps accuracy 0.3 and sees 4 runs (stage 1's sight), the stalker steps
 // best 0.45 of the time (`.claude/probes/K80/stage3/sweep_3a_*64.md`; the
-// table is in docs/design/K80_turns_stage3.md's handoff).
+// table is in docs/design/K80_turns_stage3.md's handoff). K421 (Levi,
+// 2026-10-20) took the stalker's accuracy to 0.3, the value stage 2's
+// dailies-only criterion kept (the handoff's OPEN FOR LEVI: 0.45 overshot
+// section 0 on the daily 80% and fog-4 cells).
 export const TURN_MODEL_DEFAULTS = Object.freeze({
   guard: Object.freeze({ sight: 4, accuracy: 0.3 }),
-  stalker: Object.freeze({ accuracy: 0.45 }),
+  stalker: Object.freeze({ accuracy: 0.3 }),
 });
 
 // The defaults one model plays with: DEFAULT_TURN_MINO plus that model's

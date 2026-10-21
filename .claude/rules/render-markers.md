@@ -50,12 +50,15 @@ only with the files it is about; `render.md` lists the area's other files.
   with color showing around the icon at the default, and simpler minotaur
   and spider glyphs. THE PARAM: `markerSize` (`mks`, codec index 104,
   daily-exempt; K57 reviews the list) is the black disc's DIAMETER in
-  thread widths, default 1.08 (the pre-K83 head dot, radius 0.54 tw),
-  clamped to [0.25, 3] (sanitizeMarkerSize). markerRadiusFor(tw, size,
+  thread widths, default 1.08 at K98 (the pre-K83 head dot, radius 0.54
+  tw) and 2 since K225 (2026-10-20; Levi: 1.08 is about 5 CSS px on the
+  phone), clamped to [0.25, 3] (sanitizeMarkerSize; the slider top stays
+  3). markerRadiusFor(tw, size,
   scale) = size / 2 x tw x scale (scale: setMarkerStyle's probe
   multiplier), with NO world or screen floor, so the slider means the
-  same at every zoom. The default SHRANK (K83's discs are size 3 wherever
-  tw >= 0.37, larger below it). Panel:
+  same at every zoom. K98's default SHRANK them (K83's discs are size 3
+  wherever tw >= 0.37, larger below it); K225's 2 is two thirds of K83's
+  wherever tw >= 0.37. Panel:
   the maze folder after the confetti rows, fabric mode only, no step
   (keyScale 0.05, 2 decimals). main.ts sets fabric.markerSize at
   construction and every fabric tick (a no-op unless it moved); a slider
@@ -63,8 +66,10 @@ only with the files it is about; `render.md` lists the area's other files.
   markers without waking the physics. THE RING CALL: the start and finish
   sit on a dot of their thread's color of radius markerDotRadiusFor =
   max(0.95 tw, r + 0.41 tw) (MARKER_DOT_MIN_TW, MARKER_RING_TW). The two
-  terms meet at the default, which is exactly the pre-K83 pair (a 0.95 tw
-  colored disc around the 0.54 tw dot); above it the rim stays 0.41 tw,
+  terms met at K98's default (size 1.08), exactly the pre-K83 pair (a
+  0.95 tw colored disc around the 0.54 tw dot); above it the rim stays
+  0.41 tw (the default 2 since K225 draws a 1.41 tw dot around a 1 tw
+  disc),
   below it the 0.95 tw floor holds (rim 0.825 tw at 0.25), so the color
   always shows past the thread it ends. A rim proportional to the disc
   (1.76 r) would sink under the thread's half-width below size 0.57. The
@@ -85,10 +90,11 @@ only with the files it is about; `render.md` lists the area's other files.
   stays as the alternative. "spider" (its own role: a two-dot body, eight
   mirrored legs) has NO mesh (MeshRole excludes it) until K114 (Levi's
   call 7) decides what it marks. MEASURED (tw 0.52; 21.7 CSS px per world
-  unit on the 1400x900 desktop, 9.0 on the 411x753 phone): the default
-  disc is 12.2 CSS px across on the desktop (K83: 33.9) and 5.1 on the
+  unit on the 1400x900 desktop, 9.0 on the 411x753 phone): K98's default
+  disc was 12.2 CSS px across on the desktop (K83: 33.9) and 5.1 on the
   phone (K83: 14.1, the minotaur 20 with its floor), where the glyphs
-  barely read. Sheet: `.claude/probes/K98/sheet_k98.png` (+ .html);
+  barely read; K225's default 2 gives 22.6 and 9.4 (the colored dot
+  31.8 and 13.2), by the same scale. Sheet: `.claude/probes/K98/sheet_k98.png` (+ .html);
   `k98_shot.mjs` freezes a real-time maze after sleep and switches sizes
   live, `build_sheets.mjs` assembles it.
 

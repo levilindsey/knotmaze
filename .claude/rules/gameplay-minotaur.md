@@ -211,7 +211,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `minoGiveUp` and `minoRoamMin` (both 3) replace LOSE_MARGIN and
   ROAM_MIN (K324 section 4.3); `minoTurnPull` (0); K294's per-model
   sight and accuracy: the guard `minoGuardSight` 4 / `minoGuardAccuracy`
-  0.3, the stalker `minoStalkerAccuracy` 0.45, while the hunter keeps
+  0.3, the stalker `minoStalkerAccuracy` 0.45 (0.3 since K421, below),
+  while the hunter keeps
   minoSight 2 / minoAccuracy 0.3 and the stalker's charge reads
   minoSight (TURN_MODEL_DEFAULTS; turnMinoParamsOf picks by model). THE
   PULL (wanderDest): with chance pull a roam's destination is drawn only
@@ -230,7 +231,12 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   stalker (0.3 -> 0.45) 100.8 -> 90.5 (0.6 scored 87.6 with daily cells
   34.3 vs 24.9). OPEN FOR LEVI: the stalker's daily 80% and fog-4 cells
   overshoot section 0's (27.9 / 28.5 vs 20 / 12); stage 2's dailies-only
-  criterion would keep 0.25-0.3. PIN: test/game/minotaur_turns.test.ts
+  criterion would keep 0.25-0.3. K421 (2026-10-20) CLOSED IT: Levi set
+  `minoStalkerAccuracy` back to 0.3 (0.45 caught 27.9% at 80% against a
+  20% target); only PARAM_DEFAULTS and `turnMinoDefaults` read the row,
+  so the stalker rows of TURN_GAMES (all six) and LENGTH_GAMES (four of
+  six; maze 42's hold) re-froze and the hunter and guard rows held.
+  PIN: test/game/minotaur_turns.test.ts
   TURN_GAMES, 18 whole games (seeds x the three models x scripted walks
   with waits) played at turnMinoDefaults(model) and digested; K294
   re-froze the guard and stalker rows (all but stalker:42:2), the hunter

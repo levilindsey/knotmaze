@@ -124,8 +124,10 @@ only with the files it is about; `render.md` lists the area's other files.
   101-103 (after K140's 99-100) and listed in DAILY_EXEMPT_KEYS:
   `pluckWhole` (pw, [0, 1.5], default 0.5 = K104's WHOLE_AMP),
   `pluckCrossings` (pcx, through | ride | pinch, default through) and
-  `pluckGlow` (pgl, off | instead | with | fallback, default off). The
-  defaults are K104's look, pixel for pixel. How W meets NEIGHBORING
+  `pluckGlow` (pgl, off | instead | with | fallback, default fallback
+  since K194, off before). At K180 the defaults were K104's look, pixel
+  for pixel (K279 and K194 have moved some; `&pgl=off` is the K104 glow).
+  How W meets NEIGHBORING
   threads stays "overlap" (Levi: "current is good"), not a param. main.ts
   re-syncs all three into `plucks.setWhole(amp, crossings, glow)` every
   frame (as it does the size), so a probe sets them with the link keys,
@@ -151,7 +153,8 @@ only with the files it is about; `render.md` lists the area's other files.
 - GLOW (the cue: the unit brightens toward white by up to CUE_WHITE on
   W's sine shape `wsOf` and the pluck's clock, whatever W's amount, so
   instead and with light it at pluckWhole 0 too). OFF; INSTEAD = K104's
-  wholeMode "cue" (lobes + cue, no W); WITH = W + cue; FALLBACK = W, plus
+  wholeMode "cue" (lobes + cue, no W); WITH = W + cue; FALLBACK (the
+  default since K194) = W, plus
   the cue only for a tap whose W cannot show by K104's census criterion
   (drawn peak under SHOW_MIN_H 0.6 h or SHOW_MIN_PX 2 CSS px at the
   current zoom, `pluckShows`). STILL PLUCKS (reduced motion) ignore all

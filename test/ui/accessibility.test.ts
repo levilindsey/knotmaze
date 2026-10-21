@@ -413,6 +413,10 @@ describe("the override values are real choices", () => {
 
   it("raise a default that is below the floor", () => {
     expect(PARAM_DEFAULTS.gap).toBeLessThan(HIGH_CONTRAST_GAP_MIN);
-    expect(PARAM_DEFAULTS.markerSize).toBeLessThan(HIGH_CONTRAST_MARKER_MIN);
+    // markerSize no longer qualifies: K225 (2026-10-20) raised its default
+    // to 2, above the floor (1.5), so High contrast lifts only a stored
+    // size under 1.5 (the 0.8 viewer above) and leaves the default as it
+    // is. Whether the floor should rise with it is Levi's call (K194's
+    // handoff).
   });
 });

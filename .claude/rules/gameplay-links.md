@@ -54,7 +54,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   LOAD_SETTLE_MAX 5); override keys `stb` / `lds`.
 
 - MARKER SIZE PARAM (K98, 2026-10-14): `markerSize` (`mks`, the markers'
-  diameter in thread widths, default 1.08, clamped to [0.25, 3]) is
+  diameter in thread widths, default 2 since K225, 1.08 before; clamped
+  to [0.25, 3]) is
   APPENDED to codec v4 at index 104 and is a DAILY_EXEMPT_KEY: it changes
   only how the markers look, so the golden dailies do not move (K57
   reviews the exempt list). Panel: the maze folder, after the confetti
@@ -79,7 +80,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `hcs` keeps its share when the default changes.
 
 - BURN RACE PARAMS (K114 stage 1, 2026-10-14): `fire` (`fi`, off | fuse),
-  `fireSpeed` (`fsp`, 0.75) and `fireDelay` (`fdl`, 0) are APPENDED to
+  `fireSpeed` (`fsp`, 0.6 since K280, 0.75 before) and `fireDelay` (`fdl`,
+  0) are APPENDED to
   codec v5 at 118-120, after K74's `hCutShare` (117); CODEC_VERSION stays
   5. Not daily-exempt. They were 117-119 on their branch until it rebased
   onto K74 stage 2, which renumbered them and re-froze the table pin
@@ -119,7 +121,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   LIVE_EFFECTS, the callback their rows run, so an undo of one applies
   it live instead of rebuilding.
 - Neutral (master's look and sound):
-  `&prp=off&psh=0&ptg=0&pag=1&psz=1.75&pgh=.35&pw=.5`.
+  `&prp=off&psh=0&ptg=0&pag=1&psz=1.75&pgh=.35&pw=.5`, plus `&pgl=off`
+  since K194 made the glow `fallback`.
 
 - CATCH RESET PARAMS (K80 turns stage 2, K273, 2026-10-14):
   `minoRestart` (`mrs`, default off) and `minoLair` (`mlr`, default on)
@@ -219,7 +222,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `minoTurnPull` (`mtp`, default 0, [0, 1]), and K294's per-model rows
   `minoGuardSight` (`mgs`, default 4, [0, MINO_SIGHT_MAX]),
   `minoGuardAccuracy` (`mga`, 0.3) and `minoStalkerAccuracy` (`msa`,
-  0.45), whose defaults read TURN_MODEL_DEFAULTS (minotaur_turns.ts);
+  0.3 since K421, 0.45 before), whose defaults read TURN_MODEL_DEFAULTS
+  (minotaur_turns.ts);
   `minoSight` / `minoAccuracy` stay the hunter's. url_state.ts clamps
   each in every reader (link, override key, panel); turnMinoParamsOf
   picks the sight and accuracy by model. Not daily-exempt (a daily plays
@@ -258,8 +262,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `fireClock`; the other pair is kept, not played. WHY TWO PARAMS, not
   one pair whose default follows the clock: a link lists only what
   differs from today's defaults (K132), so `&fi=fuse&fck=realtime` plays
-  0.2 / 20 and every turn link keeps 0.75 / 0, and switching the clock
-  never rewrites a value. Pins that moved: the table pin
+  0.2 / 20 and every turn link keeps the turn pair's 0.6 / 0 (0.75 / 0
+  until K280), and switching the clock never rewrites a value. Pins that moved: the table pin
   (`test/ui/param_codec.test.ts`), url_codec.test.ts's defaults table,
   OVERRIDE_KEYS (`fsr`, `fdr`) and the `fsp` floor cases (0 and 0.05 read
   0.1); its new test "plays each fire clock's own speed and delay". The
@@ -313,3 +317,19 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `exitTaperStrength`; override keys `xcr`, `xfl`, `xtr`, `xtk`. Defaults
   corridor 24 / away / 0 / 0, so links without them build the trap-zone
   finish. CODEC_VERSION stays 6 (append only).
+
+- FOUR DEFAULTS RETUNED (K194, K225, K280, K421, 2026-10-20; brief
+  `docs/design/K194_defaults.md`; Levi's report-card calls): `pluckGlow`
+  (`pgl`) off -> fallback, `markerSize` (`mks`) 1.08 -> 2 (the slider keeps
+  its top, 3), `fireSpeed` (`fsp`) 0.75 -> 0.6 (`fireDelay` stays 0; the
+  real-time pair `fsr` / `fdr` is unchanged; `clampFireSpeed` reads the
+  default dynamically, so its fallback follows) and `minoStalkerAccuracy`
+  (`msa`) 0.45 -> 0.3 (TURN_MODEL_DEFAULTS.stalker.accuracy, read only by
+  PARAM_DEFAULTS and `turnMinoDefaults`). Pre-launch, so changed in place:
+  no codec bump, and an older link that did not list one of the four now
+  reads the new value (K132). Pins that moved: url_codec.test.ts (the
+  defaults table and the `mks`, `fsp`, K440-pair and `pgl` cases),
+  marker_glyphs.test.ts (the size range and the radius and dot cases) and
+  minotaur_turns.test.ts (the six stalker rows of TURN_GAMES and four of
+  LENGTH_GAMES; hunter and guard rows held). Held: the codec table pin
+  (order did not change), the pinned tokens and the golden dailies.
