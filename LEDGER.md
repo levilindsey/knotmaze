@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K586.
+Next free ID: K590.
 
 ## Waiting on Levi
 
@@ -116,6 +116,9 @@ Next free ID: K586.
 - **K581** · K558's C1 (lifted-pen strokes after the whole text's body, left to right) and C2 (pnr
   exempt from the daily, a look preference) stand as built unless vetoed (`docs/design/K558.md`,
   Calls). K552's C1-C3 are revisited by K571's build.
+- **K586** · Confetti shine strength (`cfh`, default 1, range 0-2) and foil share (`cff`, default
+  0.3): pick from `.claude/probes/K337/sheet/strengths_phone.png` or `strengths_desk.png`, or try
+  `&cfh=` / `&cff=` live. Built at the defaults (K337).
 
 ## In progress
 
@@ -269,10 +272,10 @@ Next free ID: K586.
 - **K337** · Confetti shine (Levi 10-14): spin and flip give each piece a 3D normal lit by one
   upper-left light (diffuse plus a Blinn-Phong flash); reduced motion keeps the diffuse term. With
   K335, K336 (`docs/design/K335_confetti.md`); deferred with K336 (draft in its patch).
-  - owner: agent `a90a739afc9cb7d3b` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 12:21, 2 h cap ~14:21)
-  - branch: `worktree-agent-a90a739afc9cb7d3b`, worktree `.claude/worktrees/agent-a90a739afc9cb7d3b`; last commit: `a6387e8`
+  - owner: nobody since 2026-10-20 13:11 (agent finished; claude session 91b19e11 merges it once the perf lock frees)
+  - branch: `worktree-agent-a90a739afc9cb7d3b`, worktree `.claude/worktrees/agent-a90a739afc9cb7d3b`; last commit: `5e14657`
   - evidence: `.claude/probes/K337/`
-  - next: Port the draft's shine (pieceShade, litHex) onto today's model, then the view's tint, sheets and settings
+  - next: merge with agent_merge (-Probes .claude/probes/K337, npm test + build), then Levi's strength call (K586)
   - brief: `docs/design/K337.md`
 
 ## Next, in order
@@ -468,6 +471,8 @@ Every other item below waits on the trigger it names.
   texture under the confetti. `docs/design/K572.md` (Handoff).
 - **K582** · Final ς gets its own glyph (Levi took stage 6's rec, 2026-10-19); live Greek still
   draws σ. Build it in the stage 9+ glyph set after K580 (`docs/design/K115_glyphs.md`).
+- **K587** · Confetti shine on the Pixel: frame rate and look in K156's next pass. The model bench
+  says +21-60 µs a frame; the desktop frame A/B was not run (K337 handoff).
 
 ## Residuals (known, not fixed)
 
@@ -758,18 +763,15 @@ Every other item below waits on the trigger it names.
 - **K188** · K140's residuals (`docs/design/K140.md`, "Stage 1 handoff"): `restartSolve()` leaves
   pieces in the air; the open desktop panel covers the spray when the exit is at the lower right;
   the rain takes 5.5-6.2 s to fall out, longer below 10 fps.
-- **K189** · Fabric mode's `sceneAnimating()` is always true, so K24's
-  ticker stop never fires in fabric: about 10 ms of JS a frame at 1x CPU,
-  64 ms at 4x (K140's measurement, `docs/design/K140.md`).
+- **K189** · Fabric at defaults never rests: while music mode's auto plucks ring (the default
+  sound) every frame draws; with sound off, the flow and choice pulses still draw at K6-3's
+  30 fps cadence. K140's 10 ms of JS a frame predates K6-3: measure on the phone first (K156).
 - **K287** · K268 s1 residuals (a)-(g): full proof sweep unrun; MAX case and an over thread's tip
   lack GPU checks; no mode-off A/B after the K114 rebase; phone slot proof needs `__knotExplore`
   (K156 10-14c census passed). `docs/design/K268.md` ("Not done in stage 1", Calls).
 - **K289** · K279 stage 1's last residual: (g) no webm clips of the plucks.
   Stage 2 closed a, c (a cull, not a bounded filterArea), d, i, j and k; (e)
   is K368. `docs/design/K279.md` ("Stage 2 handoff").
-- **K291** · CI: ad2618a's deploy warned that checkout@v4, setup-node@v4 and wrangler-action@v3
-  target Node 20, and `ubuntu-latest` becomes Ubuntu 26 on 2026-10-19. Bump them to Node 24
-  releases; if the next deploy fails, pin `ubuntu-24.04`. `.github/workflows/deploy.yml`.
 - **K295** · `.claude/probes/K155/probe_stars.mjs` is stale: it expects 4 rules lines in the stars
   popover (stat lines follow since K274) and today among the History rows (own row since K146). Only
   `.claude/probes/K80/turns2/banner/probe_stars.mjs` is fixed.
@@ -1054,6 +1056,8 @@ Every other item below waits on the trigger it names.
   hairline at xh 3 (`LINT.forkMaxLU`).
 - **K584** · An optional SceneParams field silently drops from the worker-name build and loses the
   worker's fast start; only `worker_host.test.ts` catches it, since tsc skips tests (K393).
+- **K588** · The confetti palette's warm white (0xfff4e0) reads as a foil flash in still frames;
+  dropping or tinting it would make the flashes stand out (K337 handoff).
 ## Approved, to schedule (2026-10-11)
 
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
@@ -1278,9 +1282,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K579** · GPU confetti: upload each launch once and move the pieces in a vertex shader (the
   motion is closed-form), dropping the per-frame CPU sim and upload. Pays if K318 raises the counts;
   needs K307's warm-up (Levi asked 10-20; K572: ~2 fps on the phone).
+- **K589** · A sheet of other foil flash sizes: sharper foil (p 128) halves the flashing time,
+  softer (p 32) doubles it; so far only counted (K337 handoff).
 
 ## Done
 
+- **K291** · CI's actions moved to their Node 24 releases (checkout v7, setup-node v7, wrangler-action v4); the deploy passed on `ubuntu-latest` with no Node 20 warning, so no runner pin. Done in f2303c0 (2026-10-20).
 - **K320** · Split section-rgb: killed by K550 (revert 08d9db5); Stage 1's slim kept (6c592e6). Done in 08d9db5 (2026-10-20).
 - **K550** · K320's gap split killed: its six code commits reverted, Stage 1 kept (6c592e6); 0 px in 8 A/B cells, 27 of 29 programs byte-identical (two vertex shaders lose a dead vChain). Done in d732a47 (2026-10-20).
 - **K572** · The phone's render regression is G3-1's gap search (`3465090`): 57 ms a frame on the phone where the old search cost 10; K320 stage 1 adds about 4 ms; K568's own confetti costs about 2 fps. Done in f1f2b01 (2026-10-20).
