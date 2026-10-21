@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K705.
+Next free ID: K717.
 
 ## Waiting on Levi
 
@@ -162,13 +162,24 @@ Next free ID: K705.
   blend (`docs/design/K620.md`)
 - **K694** · K114 cut calls, built as rec (`docs/design/K114_cut.md` Handoff): 1 scissors and Undo
   bottom left, U undoes (Z also moves on AZERTY); 2 a cut tapped mid-move waits for the move; 3 a
-  cut counts only toward the cuts row and the share tag
+  cut counts only toward the cuts row and the share tag. Phone (K703): 15 of 15 checks pass
 - **K695** · K324 s2 is live: real-time games show the minotaur next move by default (mtg=0 off).
   Brightness: built B, the lead and the first whole run full, later runs half; A counts the lead as
-  run 1. Rec B (`docs/design/K324_s2.md` Handoff)
+  run 1. Rec B (`docs/design/K324_s2.md` Handoff). Phone sheet: `.claude/probes/K703/out/rt_p34b/sheet.png`
 - **K696** · K324 question 9 (`docs/design/K324_realtime_minotaur.md` section 7): K80 2.7 flowing
   chevrons for both telegraphs, now that stage 2 is live? The last open look piece of K80. Rec:
   decide after seeing stage 2 on the phone
+- **K705** · K137 s3a calls (docs/design/K137_s3a.md, Calls for Levi): 1 a minotaur on a breaking
+  run finishes it; 2 a catch under lives returns you to the entrance; 3 the sword in real time, runs
+  or seconds; 4 a pale-blue flee telegraph; 5 sprint reach in by-length mode; 6 the hearts tag shows
+  with no heart lost
+- **K706** · K114 walker calls, built as rec (docs/design/K114_walker.md, Calls for Levi): 1 the
+  walker keeps right at a strand end; 2 Lead is a puzzle, Go locks the cuts; 3 the whole route
+  shows, the next run full; 4 Lead stars 3 at par, 2 at par+1, else 1; 5 in Delay each cut or pass
+  is a turn; 6 nothing special for par 0
+- **K707** · Keep it in balance (K114 walker probe): R.3.9 says moat 3 tips it to the walker, but
+  the cutter wins 30 of 30 at radius 0-3 at one run a turn, 27-29 of 30 at two; pick the knob and
+  define moat (.claude/probes/K114/walker/balance.md)
 
 ## In progress
 
@@ -333,14 +344,6 @@ Next free ID: K705.
   - evidence: `.claude/probes/K137/s3a/`
   - next: stage 3b next; the sword (4.7) and sprint (4.29) are unbuilt, designs in the K137_s3a.md Handoff
   - brief: `docs/design/K137_s3a.md`
-- **K703** · Overnight phone sitting 1 (Levi left the phone unlocked on its charger, 2026-10-20
-  23:05): K114 cut and K324 s2 telegraph on the phone (feeds K694, K695, K698), then K687 and K177.
-  docs/design/K703_phone.md
-  - owner: agent `a9ed72f7f8dee6604` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 23:05, 1 h cap ~00:05)
-  - branch: mainline; last commit: `3f68474`
-  - evidence: `.claude/probes/K703/`
-  - next: parts 1-4 per the brief; then a second sitting for the K580 s4, walker and K137 s3a merges
-  - brief: `docs/design/K703_phone.md`
 
 ## Next, in order
 
@@ -549,15 +552,21 @@ Every other item below waits on the trigger it names.
 - **K441** · The real-time fire's frame cost, profiled (9850741): about 1% of a frame (+0.23 ms at 1x,
   +1.85 at 4x CPU, nearly all `ExploreGaps.setExplore`); no fix built. Owed: a same-state rerun under
   the perf lock, realtime stand after the first sleep (`docs/design/K441_fire_frame.md` Handoff, Owed).
-- **K687** · Phone rerun (K662 leftovers): the daily paths 2b (reload after the official finish) and
-  3 (replay), and default confetti frame times with the audiobook paused at thermal status 0
-  (`.claude/probes/K662/run_daily2.ps1`).
+- **K687** · Phone rerun (K662 leftovers): default confetti frame times with the audiobook paused at
+  thermal status 0 (`.claude/probes/K662/run_daily2.ps1`, with snd=none). The daily paths 2b and 3
+  passed in K703.
 - **K688** · Healing cuts against monsters (Levi took R.3.5, decision 6): a cut closes again after a
   few moves; cut with the minotaur or the fire. After the K114 walker stage
   (`docs/design/K80_gameplay_additions.md` R.3.5).
 - **K690** · K620 checks not run: the root-pixel census (GPU against the CPU mirror), CPU-mirror
   tests on the real a (xh 2 and 3, tp52 and tp60), a cold-compile time with `trace_intro.mjs`
   (`docs/design/K620.md`)
+- **K708** · K137 sims for lives and the sword (s3a step 7, unrun): teach the K80 turn sim
+  (.claude/probes/K80/turns2/) to respawn and count catches, then run its six cells
+  (docs/design/K137_s3a.md, The sim table)
+- **K709** · Phone kit hardening (K703): phone_setup, wait_idle and run_parts should reconnect after
+  an adb restart and re-add the reverse and the 9222 forward; lib703 END should take a date-time or
+  a minutes cap, since HH:mm cannot cross midnight
 
 ## Residuals (known, not fixed)
 
@@ -835,8 +844,8 @@ Every other item below waits on the trigger it names.
   entrance tail, the minotaur pauses at that tail's junction and catches
   them about 3 s later (`.claude/probes/K80/rt/results.md`).
 - **K177** · K80's last unrun check: the minotaur's indicator on the phone itself (K174 checked it
-  on the desktop in 411x753 emulation); the next phone pass shows it. Chases are not saved or
-  replayable (`replayChase` exists; the dailies stay turn-based).
+  on the desktop in 411x753 emulation); K703 lost it to an adb death, rerun with
+  `.claude/probes/K703/run_parts.ps1 -Parts ind`. Chases are not saved or replayable.
 - **K178** · Since K122 the private-cache vite wrappers of K19-K20, K79, K99 and K104 fail with
   ERR_MODULE_NOT_FOUND; K80's (`.claude/probes/K80/rt/vite.private-cache.config.ts`, which loads the
   config with `loadConfigFromFile`) works (`.claude/rules/probes.md`).
@@ -1257,8 +1266,8 @@ Every other item below waits on the trigger it names.
   the seam at R with strand colours, seed 9 (`docs/design/K620.md`)
 - **K692** · A light band across the glyph root at J, on master before K620 too (K620 residual b;
   `.claude/probes/K620/sheets/k620_zoom.png`)
-- **K698** · K114 cut: on a phone the refusal toast overlaps the Undo button for its 2.5 s (taps
-  pass through; `src/ui/cut_buttons.ts`)
+- **K698** · K114 cut: on a phone the refusal toast overlaps the Undo button (Pixel, K703: 1210 px2,
+  gone by 1.7 s); a real touch on Undo 433 ms after the refusal still reaches it (`src/ui/cut_buttons.ts`)
 - **K699** · Two visibility rules side by side: the K120 move pad hides while the panel is open, the
   K114 scissors show beside the desktop side panel (`src/ui/move_pad.ts`, `src/ui/cut_buttons.ts`)
 - **K700** · K324 s2 GPU census skips the non-riding lead and the hunt strength (the CPU parity test
@@ -1270,6 +1279,22 @@ Every other item below waits on the trigger it names.
   (volume 0.33) and a real CDP touch unlocks audio. The K662 and K703 part 1 daily runs loaded the
   bare URL. Fix: snd=none on every kit link (K578 phone kit, K662 run_daily2 and phone_conf daily
   case; check ?daily&snd=none stays the daily) plus a GOTCHA in .claude/rules/probes-phone.md
+- **K710** · K137-b: in real time a catch can still land through a broken run, since contact uses
+  the plain thread distance (docs/design/K137_s3a.md, Residuals a)
+- **K711** · K137-b edges (K137_s3a.md Residuals b-f): runBurnAt may draw a burnt broken run as
+  burning; safeArms and fireTrapped count broken arms safe; refire is O(V^2) per breaking move;
+  __knotChaseTap ignores broken runs; broken-run counts need main.ts to report every accepted run
+- **K712** · Lives (K137 s3a): hearts are in neither Undo nor saved attempts, and default 3 when
+  switched on is tooltip advice only (a toggle or a 0-to-3 snap would make it real; K137_s3a.md
+  Residuals g)
+- **K713** · K114 walker: no glow on the walker dot (only the route rims); the move pad shows in
+  walker modes though it refuses moves; an upper-bound par shows as a plain par
+  (docs/design/K114_walker.md Handoff)
+- **K714** · K114 balance probe: its cutter keeps cutting once the walker is inside the fence;
+  dailies 1, 12, 23, 28 and 29 have a one-run fence at radius 1, so Keep it in is trivial there
+- **K715** · The adb server died twice in K703 (2026-10-20 23:33 and 23:50:21) and restarted without
+  the TCP device; killer unknown. Checked: no WER crash, no scheduled task in either window, no
+  other adb client or live local session; DCOM 10010 at 23:50:16 (.claude/probes/K703/notes.md)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1521,9 +1546,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K686** · Star thresholds for collapse games (K139 shows a percentage against par, no stars).
 - **K702** · K114 cut: a long carried chain of collapsed runs animates run by run; make it one glide
   (`carryStep` in main.ts)
+- **K716** · Smarter walker and cutter strategies for the K114 balance probe
+  (.claude/probes/K114/walker/balance.ts)
 
 ## Done
 
+- **K703** · Overnight phone sitting 1: K687 paths 2b and 3 pass, K114 cut 15 of 15, the K324 s2 telegraph sheet (K695), K698 confirmed; Part 4 (K177) lost to an adb death. Done in 57a4827 (2026-10-21).
 - **K676** · Open-end crescents beside spur tips (the a stem bite, the notaper J bites, about 0.1 LU) in the K580 s3 fills-only raster; the Pixel shows the a stem notch by its foot disc too (K662). Done in ad3e715 (2026-10-20).
 - **K675** · K580 s3 partial round blends: the a J2 at xh 2 (113.5 deg) is only partly round (1.824 h to 1.389 h), the i joint sample at xh 3 (110.8 deg) barely. Done in e2adfd9 (2026-10-20).
 - **K697** · maze_plan_identity and the physics_host lockstep test run near the 30 s timeout under parallel agent load (45 and 60 s a file loaded, 11 and 24 s clean): raise their timeouts before they flake an agent merge or CI (K324 s2 report). Done in 9992d71 (2026-10-20).
