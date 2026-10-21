@@ -777,3 +777,298 @@ describe("K324: junction stops and the plan", () => {
     });
   });
 });
+
+describe("K324 stage 3: the guard and the stalker", () => {
+  // Explicit knobs, so a retune of CHASE_MODEL_DEFAULTS leaves the pins.
+  const GUARD: Partial<ChaseParams> = {
+    model: "guard", territory: 30, guardDetect: 30, guardLose: 40, guardAccuracy: 0.7,
+  };
+  const STALKER: Partial<ChaseParams> = { model: "stalker", stalkerAccuracy: 0.7 };
+  const MAZES = [3, 17, 42];
+  // Same as K80_DIGESTS, for each model at the knobs above (roamPull 0.5).
+  const MODEL_DIGESTS = {
+    guard: [
+      "14400/13/8/d6f721de",
+      "14400/12/8/3f210c54",
+      "14400/11/6/d833900c",
+      "14400/10/4/4a0effa8",
+      "14400/12/9/d7b4e467",
+      "10418/9/7/1cd5cd84",
+    ],
+    stalker: [
+      "14400/8/8/bcee63b9",
+      "14400/8/6/1e23b134",
+      "6163/4/2/c52e75b4",
+      "14400/8/8/2b1bf50",
+      "7837/6/4/e4ca5f7d",
+      "14400/12/9/23ce8542",
+    ],
+  };
+
+  const junctionsOf = (g: ChaseGraph): number[] => {
+    const out: number[] = [];
+    for (let i = 0; i < g.ids.length; i++) {
+      if (i !== g.start && i !== g.exit && !g.isEnd[i]) out.push(i);
+    }
+    return out;
+  };
+  const openRuns = (g: ChaseGraph, v: number): number[] => {
+    const out: number[] = [];
+    for (const e of g.adj[v]) if (!g.barred[e] && out.indexOf(e) < 0) out.push(e);
+    return out;
+  };
+
+  it("the hunter reads none of the models' knobs", () => {
+    const walk = mazeWalk(17);
+    const odd = { territory: 7, guardDetect: 3, guardLose: 90, guardAccuracy: 0.1, stalkerAccuracy: 0.2 };
+    for (const seed of [1, 2]) {
+      expect(chaseDigest(walk, P({ ...odd, roamPull: 0 }), seed)).toBe(
+        chaseDigest(walk, P({ roamPull: 0 }), seed)
+      );
+    }
+  });
+
+  it("the guard and the stalker are pinned tick for tick", () => {
+    const rows = { guard: [] as string[], stalker: [] as string[] };
+    for (const maze of MAZES) {
+      const walk = mazeWalk(maze);
+      for (const seed of [1, 2]) {
+        rows.guard.push(chaseDigest(walk, P(GUARD), seed));
+        rows.stalker.push(chaseDigest(walk, P(STALKER), seed));
+      }
+    }
+    expect(rows).toEqual(MODEL_DIGESTS);
+  });
+
+  it("replayChase reproduces each model exactly", () => {
+    const walk = mazeWalk(17);
+    for (const over of [GUARD, STALKER]) {
+      const params = P(over);
+      const live = new MinotaurChase(walk, params, 3);
+      const pick = new SeededRNG(77);
+      for (let i = 0; i < 90 * CHASE_HZ && !live.finished; i++) {
+        if (i % 41 === 0) {
+          const runs = live.g.adj[live.g.index.get(live.decisionVertex)!];
+          live.tap(runs[Math.floor(pick.next() * runs.length)]);
+        }
+        live.step();
+      }
+      expect(live.arrivals).toBeGreaterThan(10);
+      expect(live.decisions).toBeGreaterThan(0);
+      const again = replayChase(walk, params, 3, live.inputs, live.tick);
+      expect(again.tick).toBe(live.tick);
+      expect(again.player).toEqual(live.player);
+      expect(again.mino).toEqual(live.mino);
+      expect(again.mode).toBe(live.mode);
+      expect(again.hold).toBe(live.hold);
+      expect(again.arrivals).toBe(live.arrivals);
+      expect(again.decisions).toBe(live.decisions);
+      expect(again.catches).toBe(live.catches);
+      expect(again.huntTicks).toBe(live.huntTicks);
+      expect(again.plan(8)).toEqual(live.plan(8));
+    }
+  });
+
+  it("a roaming guard never leaves its territory, and walks back into it", () => {
+    for (const maze of MAZES) {
+      const walk = mazeWalk(maze);
+      for (const territory of [12, 30]) {
+        // The player stays on the entrance, unseen: it only roams.
+        const sim = new MinotaurChase(walk, P({ ...GUARD, territory, wake: 0 }), maze);
+        const g = sim.g;
+        const t = sim.territory();
+        expect(t.radius).toBeGreaterThanOrEqual(territory);
+        const seen = new Set<number>();
+        for (let i = 0; i < 120 * CHASE_HZ; i++) {
+          sim.step();
+          expect(sim.mode).not.toBe("hunt");
+          const m = sim.mino;
+          if (m.edge >= 0 ? g.barred[m.edge] === 1 : m.vertex === g.exit) continue;
+          expect(g.spotToVertex(m, t.home, true)).toBeLessThanOrEqual(t.radius + 1e-9);
+          if (m.edge < 0) seen.add(m.vertex);
+        }
+        expect(seen.size).toBeGreaterThan(2);
+        // Put it outside, as a hunt might leave it: it walks back in and
+        // stays (a guard bound inside keeps to the territory's runs).
+        const d = g.from(t.home, true);
+        let far = -1;
+        for (const v of junctionsOf(g)) if (d[v] < Infinity && (far < 0 || d[v] > d[far])) far = v;
+        expect(d[far]).toBeGreaterThan(t.radius);
+        sim.place("minotaur", g.ids[far], "wander");
+        let inside = false;
+        for (let i = 0; i < 120 * CHASE_HZ; i++) {
+          sim.step();
+          const dist = g.spotToVertex(sim.mino, t.home, true);
+          if (inside) expect(dist).toBeLessThanOrEqual(t.radius + 1e-9);
+          else if (sim.mino.edge < 0 && t.vin[sim.mino.vertex]) inside = true;
+        }
+        expect(inside).toBe(true);
+      }
+    }
+  });
+
+  it("each hunting step aims with the model's accuracy, else steps at random", () => {
+    const walk = mazeWalk(17);
+    const N = 3000;
+    for (const model of ["guard", "stalker"] as const) {
+      for (const q of [0.3, 0.8]) {
+        const sim = new MinotaurChase(
+          walk,
+          P(model === "guard" ? { ...GUARD, guardAccuracy: q } : { ...STALKER, stalkerAccuracy: q }),
+          5
+        );
+        const g = sim.g;
+        const js = junctionsOf(g);
+        const v = js.find((j) => openRuns(g, j).length >= 3)!;
+        const far = js.find((j) => j !== v && g.from(v, true)[j] > 10)!;
+        sim.place("player", g.ids[far]);
+        const best = sim.huntEdgeFrom(v)!;
+        const picks = new Map<number, number>();
+        let aimed = 0;
+        for (let k = 0; k < N; k++) {
+          const d = sim.decideFrom(v, k, -1);
+          expect(d.drew).toBe(true);
+          if (d.aimed) {
+            aimed++;
+            expect(d.choice).toEqual(best);
+          } else {
+            picks.set(d.choice![0], (picks.get(d.choice![0]) ?? 0) + 1);
+          }
+        }
+        const sd = Math.sqrt((q * (1 - q)) / N);
+        expect(Math.abs(aimed / N - q)).toBeLessThan(4 * sd);
+        // The random step: every open run, none favored much.
+        const runs = openRuns(g, v);
+        expect(picks.size).toBe(runs.length);
+        const misses = N - aimed;
+        for (const n of picks.values()) expect(Math.abs(n / misses - 1 / runs.length)).toBeLessThan(0.06);
+        // Unseen (on the entrance), it never aims; the stalker keeps off the
+        // run it came along.
+        sim.place("player", g.ids[g.start]);
+        const back = runs[0];
+        for (let k = 0; k < 500; k++) {
+          const d = sim.decideFrom(v, k, back);
+          expect(d.aimed).toBe(false);
+          if (model === "stalker") expect(d.choice![0]).not.toBe(back);
+        }
+      }
+    }
+  });
+
+  it("the stalker hunts once you are in sight, and charges within the shared sight", () => {
+    // Unseen on the entrance: it walks the maze and never hunts.
+    const walk = mazeWalk(17);
+    const blind = new MinotaurChase(walk, P({ ...STALKER, wake: 0 }), 4);
+    const events = run(blind, 60 * CHASE_HZ);
+    expect(events.some((e) => e.kind === "spotted")).toBe(false);
+    expect(blind.huntTicks).toBe(0);
+    expect(blind.decisions).toBeGreaterThan(10);
+    // A still player far off, in sight but beyond the charge: at accuracy 1
+    // it walks straight to them, charging only near the end.
+    const g = blind.g;
+    const d = g.from(blind.territory().home, true); // From the exit tail's junction.
+    let far = -1;
+    for (const v of junctionsOf(g)) if (d[v] < Infinity && (far < 0 || d[v] > d[far])) far = v;
+    const sure = new MinotaurChase(walk, P({ ...STALKER, stalkerAccuracy: 1, playerPace: 0, wake: 0 }), 4);
+    sure.place("player", g.ids[far]);
+    let wandering = 0;
+    let caught = false;
+    for (let i = 0; i < 120 * CHASE_HZ && !caught; i++) {
+      caught = sure.step().some((e) => e.kind === "caught");
+      if (!caught && sure.mode === "wander") wandering++;
+    }
+    expect(caught).toBe(true);
+    expect(wandering).toBeGreaterThan(0);
+    expect(sure.huntTicks).toBeGreaterThan(0);
+    // In charge sight at once (G1: D is 8 u from B, detectStart 15).
+    const near = new MinotaurChase(G1, P({ ...STALKER, stalkerAccuracy: 1, playerPace: 0, wake: 0 }), 1);
+    near.place("minotaur", "B", "wander");
+    near.place("player", "D");
+    expect(near.step()).toContainEqual({ kind: "spotted" });
+    runUntil(near, "caught", 10 * CHASE_HZ);
+    expect(near.catches).toBe(1);
+  });
+
+  // The plan per model against the runs then walked, nothing intervening:
+  // the roaming guard and the unseen stalker (the player stays on the
+  // entrance), and both tracking a still player until they reach them.
+  const runsFrom = (log: readonly [number, number][], k: number, n: number): [number, number][] => {
+    const out: [number, number][] = [];
+    let gap = true;
+    for (let j = k; j < log.length && out.length < n; j++) {
+      const [e, d] = log[j];
+      if (e < 0) {
+        gap = true;
+        continue;
+      }
+      const last = out[out.length - 1];
+      if (gap || last[0] !== e || last[1] !== d) out.push([e, d]);
+      gap = false;
+    }
+    return out;
+  };
+  const wantOf = (g: ChaseGraph, plan: ChasePlan): [number, number][] => {
+    const want: [number, number][] = [];
+    if (plan.lead) want.push([plan.lead.edge, g.ea[plan.lead.edge] === g.eb[plan.lead.edge] ? 0 : plan.lead.dir]);
+    for (const [e, far] of plan.steps) want.push([e, g.ea[e] === g.eb[e] ? 0 : far === g.eb[e] ? 1 : -1]);
+    return want;
+  };
+
+  it("an unseen roaming guard's and stalker's plans equal the runs they walk", () => {
+    const walk = mazeWalk(17);
+    for (const over of [GUARD, STALKER]) {
+      const sim = new MinotaurChase(walk, P({ ...over, pauseChance: 0 }), 2);
+      const g = sim.g;
+      const log: [number, number][] = [];
+      const plans: { k: number; plan: ChasePlan }[] = [];
+      for (let i = 0; i < 140 * CHASE_HZ; i++) {
+        if (i % 29 === 0 && i < 100 * CHASE_HZ && sim.mode !== "lair") plans.push({ k: log.length, plan: sim.plan(8) });
+        log.push([sim.mino.edge, sim.mino.dir]);
+        sim.step();
+      }
+      let runs = 0;
+      for (const { k, plan } of plans) {
+        expect(plan.hunting).toBe(false);
+        const want = wantOf(g, plan);
+        const got = runsFrom(log, k, want.length).map(([e, d]): [number, number] => [e, g.ea[e] === g.eb[e] ? 0 : d]);
+        expect(got).toEqual(want);
+        runs += want.length;
+      }
+      expect(plans.length).toBeGreaterThan(100);
+      expect(runs).toBeGreaterThan(300);
+    }
+  });
+
+  it("a tracking guard's and stalker's plans equal the runs they walk to a still player", () => {
+    const walk = mazeWalk(17);
+    let checked = 0;
+    for (const over of [
+      { ...GUARD, guardDetect: 1000, guardLose: 1000 },
+      STALKER,
+    ]) {
+      const params = P({ ...over, playerPace: 0, catchDist: 0.5 });
+      const g = new MinotaurChase(walk, params, 1).g;
+      const js = junctionsOf(g);
+      for (let k = 0; k < 8; k++) {
+        const a = js[(k * 7) % js.length];
+        const b = js[(k * 13 + 5) % js.length];
+        if (a === b) continue;
+        const sim = new MinotaurChase(walk, params, k + 1);
+        sim.place("minotaur", g.ids[a], over.model === "guard" ? "hunt" : "wander");
+        sim.place("player", g.ids[b]);
+        const plan = sim.plan(8);
+        expect(plan.lead).toBeNull();
+        const log: [number, number][] = [];
+        for (let i = 0; i < 120 * CHASE_HZ; i++) {
+          if (sim.step().some((e) => e.kind === "caught")) break;
+          log.push([sim.mino.edge, sim.mino.dir]);
+        }
+        const want = wantOf(g, plan);
+        const got = runsFrom(log, 0, want.length).map(([e, d]): [number, number] => [e, g.ea[e] === g.eb[e] ? 0 : d]);
+        expect(got).toEqual(want);
+        checked++;
+      }
+    }
+    expect(checked).toBeGreaterThan(10);
+  });
+});
