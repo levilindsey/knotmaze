@@ -33,6 +33,7 @@ import { BackgroundLayer } from "./render/background";
 import {
   chaseParamsOf,
   clockOf,
+  beatSettingsOf,
   minoClockOf,
   fabricRulesOf,
   fireSettingsOf,
@@ -136,6 +137,7 @@ import {
   type A11yKey,
 } from "./ui/accessibility";
 import { KnotSynth } from "./audio/knot_synth";
+import { createBeat, type BeatFrame } from "./app/beat_frame";
 import { SnoreSfx, fetchSnore } from "./audio/snore_sfx";
 import { attachSnoreLink } from "./ui/snore_link";
 import { SongScheduler } from "./audio/song_scheduler";
@@ -488,6 +490,11 @@ async function main(): Promise<void> {
   let walkerState: "plan" | "walk" = "plan";
   let walkerIdx = 0;
   let walkerDriving = false;
+  // K114 beat rider (app/beat_frame.ts): the beat, and whether a move is its own.
+  let beat: BeatFrame | null = null;
+  let beatDriving = false;
+  let beatTook = false;
+  const beatOn = (): boolean => clockOf(params) === "beat" && scene.fabricController !== null;
   let walkerScoreFn: () => WalkerScore | null = () => null;
   // The physics host (`host`) is made before app.init (K7 stage 5's start
   // gate, above).
@@ -870,7 +877,8 @@ async function main(): Promise<void> {
     },
     timeMs: () => clock.elapsed(performance.now()),
     // The taps hold the whole state only without a minotaur or a fire.
-    canUndo: () => !scene.chase && !scene.turnMino && !scene.fabricController?.fire,
+    canUndo: () =>
+      !scene.chase && !scene.turnMino && !scene.fabricController?.fire && !beatOn(),
     undo: () => undoMove(),
     restart: () => {
       restartSolve();
@@ -1945,6 +1953,7 @@ async function main(): Promise<void> {
     pendingLoss = false;
     ruleLoss.reset(); // K137
     fireClock.reset(); // K114 stage 2: idle until the next first move.
+    beat?.reset(); // K114 beat rider: Restart restarts the beat.
     restartChase(carry);
     hideWin();
     if (scene.fabric && scene.fabricController) scene.fabric.update(scene.fabricController);
@@ -2774,6 +2783,14 @@ async function main(): Promise<void> {
     // junction, and the head disc sits over it; onHead leaves the runs'
     // arms to the runs). K80 turns 3a: through inputWait, so mid-turn it
     // waits for the arrival as a tap on a run does.
+    // K114 beat rider: a tap on an arm of the junction ahead queues it, mid-
+    // run included (the last one before the junction wins).
+    if (beatOn()) {
+      const eid = scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius(pt, true));
+      if (eid < 0) return false;
+      if (!(settings.muted || params.soundMode === "none" || !(params.volume > 0))) synth.open();
+      return beat?.queue(eid) ?? false;
+    }
     if (inWaitZone(x, y)) return inputWait();
     // Levi's correction (2026-10-15, over K334): a tap or click on a run
     // while the dot travels is IGNORED - it queues nothing and replaces
@@ -2842,8 +2859,12 @@ async function main(): Promise<void> {
     // K114 walker: in a walker mode only the walker moves (keys, the pad,
     // the gamepad and routes take nothing).
     if (scene.fabricController.walkerMode && !walkerDriving) return false;
+    // K114 beat rider: under the beat a key, the pad or a route queues the
+    // arm for the junction ahead; only the beat commits moves.
+    if (beatOn() && !beatDriving) return beat?.queue(eid) ?? false;
     const hunt0 = scene.turnMino?.hunting ?? false;
     const result = scene.fabricController.tapEdge(eid);
+    beatTook = result === "advance" || result === "backtrack" || result === "win";
     moveHuntWas = hunt0;
     scene.fabric.setHover(-1);
     scene.fabric.setTelegraphHover(null);
@@ -2879,6 +2900,42 @@ async function main(): Promise<void> {
     // settings), for nothing.
     return result !== "reject";
   };
+  // K114 beat rider: the beat (app/beat_frame.ts). Its departures commit
+  // through moveAlong; the dot rides on the beat's clock.
+  const beatSound = (): boolean =>
+    !(settings.muted || params.soundMode === "none" || !(params.volume > 0));
+  beat = createBeat({
+    settings: () => (scene.fabricController && scene.fabric ? beatSettingsOf(params) : null),
+    walkKey: () => scene.fabricController?.walk ?? null,
+    buildMap: () =>
+      scene.tangle && scene.fabricController
+        ? walkerMapOf(scene.tangle, scene.fabricController.walk)
+        : null,
+    head: () => scene.fabricController?.head ?? null,
+    commit: (run) => {
+      beatDriving = true;
+      beatTook = false;
+      try {
+        moveAlong(run);
+      } finally {
+        beatDriving = false;
+      }
+      return beatTook;
+    },
+    progress: (frac) => {
+      if (scene.fabric && scene.fabricController) scene.fabric.setMoveProgress(frac, scene.fabricController);
+    },
+    animating: () => scene.fabric?.animating ?? false,
+    audio: () => {
+      if (!beatSound()) return null;
+      const time = synth.audioTime();
+      return time === null ? null : { time, latency: synth.outputLatency() };
+    },
+    note: (run, when) => {
+      const e = scene.walkGraph?.edges[run];
+      if (e) synth.pluck(freqForCtrl(e.chain, (e.ctrlA + e.ctrlB) / 2), 0.8, when);
+    },
+  });
 
   // K114 CUT (game/cut.ts; brief docs/design/K114_cut.md). Armed, a tap on
   // any live run cuts it (FabricMazeRenderer.cutAt; empty space or a cut
@@ -3497,7 +3554,9 @@ async function main(): Promise<void> {
         (scene.turnMino !== null && turnWait > 0) ||
         (pendingCatch !== null && pendingCatch.tm === scene.turnMino) ||
         keyInput.keyHold ||
-        moveWait.waiting !== null,
+        moveWait.waiting !== null ||
+        (beat !== null && beat.needsFrame()),
+      tickBeat: (dt: number) => beat?.tick(dt) ?? false,
       // The auto sound's clock (random plucks, the music's grid).
       audioNeedsFrame: () =>
         audioMap.audioAssign !== null &&

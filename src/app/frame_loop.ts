@@ -115,6 +115,9 @@ export interface FrameLoopDeps {
   // CAMERA: the camera has not converged, or an indicator's show delay runs.
   flags: LoopFlags;
   gameNeedsFrame: () => boolean;
+  // K114 beat rider: steps the beat and drives the riding dot; true while
+  // it does (the renderer's own move animation then waits).
+  tickBeat?: (dt: number) => boolean;
   audioNeedsFrame: () => boolean;
   cameraNeedsFrame: () => boolean;
   // main.ts's and the lifecycle's `let`s: read only,
@@ -610,7 +613,10 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
           // K114 stage 2: the real-time fire's clock moves the dot.
           else if (realtimeFire()) tickFire(ticker.deltaMS / 1000);
           else {
-            scene.fabric.tickAnim(ticker.deltaMS / 1000, scene.fabricController);
+            // K114 beat rider: the beat drives the dot while it rides.
+            if (!(deps.tickBeat?.(ticker.deltaMS / 1000) ?? false)) {
+              scene.fabric.tickAnim(ticker.deltaMS / 1000, scene.fabricController);
+            }
             // K80 turns: the turn minotaur rides the move just stepped.
             if (scene.turnMino) tickTurnMino(ticker.deltaMS / 1000);
           }
