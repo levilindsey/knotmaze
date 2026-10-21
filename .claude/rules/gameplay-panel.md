@@ -277,6 +277,18 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   on. Restarts the solve." Params: gameplay-links.md's TURNSTILES AND
   HIDDEN RUNS PARAMS; the rules: gameplay-mechanisms.md's Turnstiles and
   hidden runs.
+- ONE-WAY RUNS ROW (K138 stage 3, 2026-10-21): "One-way runs" (`oneWay`,
+  [0, 0.6] = ONE_WAY_MAX, no step (K130), an edit keeps the 0.05 grid; 0
+  reads "off") sits after "Hidden runs" in the Game folder, with the same
+  scope and visibility as the ice row (fabric mode and the classic game
+  only). It restarts the solve (onClockChange). Tooltip: "Some runs are
+  one-way: chevrons along the run point the way, and a tap against them is
+  refused. A backtrack over a one-way run is refused too. The share of the
+  maze's loop runs that are one-way; 0.3 is a good start, 0 is off. The way
+  out never closes. The fewest moves and par follow the arrows. Classic game
+  only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts
+  the solve." Param: gameplay-links.md's ONE-WAY RUNS PARAM; the rules:
+  gameplay-mechanisms.md's One-way runs.
 
 - FIRE CLOCK ROW (K114 stage 2, 2026-10-15): "clock" (turn / realtime,
   `fireClock`) in the Burn race folder, hidden while the fire is off; it

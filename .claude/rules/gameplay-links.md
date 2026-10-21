@@ -579,3 +579,17 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `?<seed>&am=instant&mt=hunter&slp=2&slk=both&snd=none` (turn clock
   only). The rules: gameplay-minotaur.md's SLEEPERS AND THE FOLLOWER; the
   rows: gameplay-panel.md's SLEEPERS ROWS.
+- ONE-WAY RUNS PARAM (K138 stage 3, 2026-10-21; brief
+  `docs/design/K138_s3.md`): `oneWay` (`ow`, a number, PARAM_RANGES [0,
+  0.6] = ONE_WAY_MAX, default 0 = off; the panel keeps a 0.05 grid) is
+  APPENDED at 209, after K137 stage 3d's sleepers (207-208); CODEC_VERSION
+  stays 8. It was 207 on its branch until the rebase onto a71e7409 (K137
+  stage 3d), which renumbered it and re-froze the table pin. Neither
+  daily-exempt nor a MAZE key. LIVE_EFFECTS: under onClockChange (a change
+  restarts the solve and lays the runs anew). `fabricRulesOf` passes it in
+  the classic game only. Pins that moved: the table pin, url_codec.test.ts's
+  defaults table, OVERRIDE_KEYS and its off-default value (0.4). The golden
+  snapshot, the golden dailies and K87 did not move: off is bit-identical
+  (share 0 draws nothing). Probe link: `?<seed>&am=instant&snd=none&ow=0.4`.
+  The rules: gameplay-mechanisms.md's One-way runs; the row:
+  gameplay-panel.md's ONE-WAY RUNS ROW.
