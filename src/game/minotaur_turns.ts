@@ -869,6 +869,38 @@ export function contact(p: number, e: number, p2: number, m0: number, path: Turn
   return false;
 }
 
+// K546 stage 1: where a catch by runs that contact() declared happens, for
+// the page to show it at that moment of the move animation: the earliest
+// move fraction t at thread distance 0, and both spots there. A turn by
+// runs splits its path by run length over the player's one animation
+// (`mino`), so at fraction t the minotaur is t x the path's length along
+// it and the player t x their run (playerSpotAt; a wait stands at p).
+// Both motions are piecewise linear in t, so lengthContactFraction at that
+// travel and catch distance 0 solves it exactly. contact() stays the
+// authority, and each of its catches meets: on the same vertex at t = 1
+// (it ends where you end, or stands where you arrive), a head-on swap
+// crossing inside your run, a wait at the breakpoint where its path
+// reaches you. The earliest zero can come before the one contact() named
+// (it overtakes you on your run first). t = 1 is only a fallback.
+export function runsContact(
+  g: TurnGraph,
+  p: number,
+  e: number,
+  m0: number,
+  path: readonly TurnStep[]
+): { t: number; mino: Spot; player: Spot } {
+  const segLens = path.map(([f]) => g.chase.len[f]);
+  let total = 0;
+  for (const s of segLens) total += s;
+  const from = spotAtVertex(m0);
+  const t = lengthContactFraction(g, p, e, from, path, segLens, total, 0) ?? 1;
+  return {
+    t,
+    mino: spotAlongLengthRoute(g, from, path, segLens, t * total),
+    player: playerSpotAt(g, p, e, t),
+  };
+}
+
 export type TurnResult = "moved" | "caught" | "win" | "reject" | "noop";
 
 // The minotaur's next move as the telegraph shows it.
@@ -926,13 +958,18 @@ export class TurnMinotaur {
   // vertex, and the vertex the minotaur's turn ended on), for main.ts to
   // burst, sound and vibrate at after the respawn moved both. Null before.
   lastCatch: { player: number; mino: number } | null = null;
-  // K481 stage 2 (by-length catches): the contact's moment - the move
-  // fraction and both spots there - for the page to show the catch when
-  // the animation reaches it. The turn's route (lastPath, lastSegLens,
-  // lastTravel, lastFromSpot) stays readable until finishCatchAnim, so
-  // `mino` keeps walking it while the catch is pending on screen; the
-  // game state itself has already respawned, exactly as a runs catch.
+  // K481 stage 2 (by-length catches), K546 stage 1 (by runs too): the
+  // contact's moment - the move fraction and both spots there - for the
+  // page to show the catch when the animation reaches it. Null after a
+  // turn that caught nothing. The turn's route stays readable until the
+  // animation ends (finishCatchAnim, or setProgress reaching 1), so `mino`
+  // keeps walking it while the catch is pending on screen: by length
+  // lastPath, lastSegLens, lastTravel and lastFromSpot; by runs lastFrom
+  // and lastPath (catchRoute), which then clear as an instant catch left
+  // them. The game state itself has already respawned at the tap.
   lastContact: { t: number; mino: Spot; player: Spot } | null = null;
+  // K546: a runs catch's route is still showing (lastFrom, lastPath).
+  private catchRoute = false;
   private committed: TurnStep[] = [];
   private committedPlan: TurnLengthPlan | null = null;
   private commitState: MinoState | null = null;
@@ -1002,6 +1039,8 @@ export class TurnMinotaur {
     this.lastFrom = from;
     this.lastPath = path;
     this.progress = 0;
+    this.lastContact = null;
+    this.catchRoute = false;
     // Seen: a turn it took hunting you (the hunting getter's rule).
     if (
       this.state.left &&
@@ -1017,6 +1056,8 @@ export class TurnMinotaur {
     if (contact(p, edge, p2, from, path)) {
       this.catches++;
       this.lastCatch = { player: p2, mino: this.state.v };
+      // K546: where the two meet, before the respawn moves both.
+      this.lastContact = runsContact(g, p, edge, from, path);
       this.player = g.start;
       // K273: back to its lair, or it stays where its turn ended (a fresh
       // roam from there; its sleep and parity count from now, as a spawn's).
@@ -1025,9 +1066,10 @@ export class TurnMinotaur {
           ? { v: this.state.v, prev: -1, dest: -1, mode: 0, lastSeen: -1, left: true, spot: { ...this.state.spot } }
           : initMino(g);
       this.lifeTurn = 0;
-      this.lastFrom = this.state.v;
-      this.lastPath = [];
-      this.progress = 1;
+      // K546: the catching route (lastFrom, lastPath, progress 0) stays
+      // for the animation until it ends (endCatchRoute); stage 1 cleared
+      // it here, and so showed no catching move.
+      this.catchRoute = true;
       this.commit();
       return "caught";
     }
@@ -1100,6 +1142,7 @@ export class TurnMinotaur {
     this.committed = [];
     this.committedPlan = null;
     this.commitState = null;
+    this.catchRoute = false; // K546: a runs catch's route, if one was showing.
     const wanted = plan.factor * playerLen * travelScaleOf(this.cfg);
     const realized = this.realizeLengthPlan(plan, wanted);
     this.lastFrom = plan.from;
@@ -1305,14 +1348,27 @@ export class TurnMinotaur {
     return this.hunting ? "hunt" : "wander";
   }
 
-  // K481 stage 2: the page has shown the by-length catch at its contact
-  // moment; the marker now stands where the game state already put it.
+  // K481 stage 2, K546 (by runs too): the page has shown the catch at its
+  // contact moment; the marker now stands where the game state already
+  // put it.
   finishCatchAnim(): void {
     this.progress = 1;
+    this.endCatchRoute();
   }
 
   setProgress(frac: number): void {
     this.progress = frac >= 1 ? 1 : frac <= 0 ? 0 : frac;
+    if (this.progress >= 1) this.endCatchRoute();
+  }
+
+  // K546: a runs catch's route has played; lastFrom and lastPath read as
+  // stage 1's instant catch left them (the respawned vertex, no path), so
+  // every later read, the pinned digests' included, is unchanged.
+  private endCatchRoute(): void {
+    if (!this.catchRoute) return;
+    this.catchRoute = false;
+    this.lastFrom = this.state.v;
+    this.lastPath = [];
   }
 
   // Where it stands for the renderer: along the last turn's steps, split by
@@ -1329,9 +1385,10 @@ export class TurnMinotaur {
       );
     }
     const path = this.lastPath;
-    if (path.length === 0 || this.progress >= 1) {
-      return { edge: -1, pos: 0, dir: 1, vertex: this.state.v };
-    }
+    if (this.progress >= 1) return { edge: -1, pos: 0, dir: 1, vertex: this.state.v };
+    // A turn it stood still: where it stands, which a runs catch's respawn
+    // has already left (K546: you walked into it there).
+    if (path.length === 0) return { edge: -1, pos: 0, dir: 1, vertex: this.lastFrom };
     const g = this.tg.chase;
     let total = 0;
     for (const [e] of path) total += g.len[e];
