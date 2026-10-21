@@ -3049,7 +3049,10 @@ async function main(): Promise<void> {
       }
     }
     scene.fabric?.syncWalker(runs);
-    const shown = !!fc && !!m && keysLive() && !panelCoversWalker();
+    // After a finish, once the banner is closed, the buttons come back with
+    // only Reset live: it starts a fresh solve (walkerReset).
+    const after = !!fc && fc.solved && !pendingWin && !banner.shown;
+    const shown = !!fc && !!m && (keysLive() || after) && !panelCoversWalker();
     walkerButtons.setShown(shown);
     if (!shown || !fc || !m) return;
     const busy = dotMoving() || pendingWin || fc.solved;
