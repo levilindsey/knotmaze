@@ -577,6 +577,14 @@ export class MinotaurChase {
   sword: SwordState | null = null;
   walked = 0;
   lastTouch: { kind: "banish" | "slay"; tick: number } | null = null;
+  // K137 s3c (4.29), SPRINT: the next `sprintLeft` departures run at twice
+  // playerPace (sprint() arms two). `sprints` holds the ticks sprint() was
+  // called before, apart from `inputs` (main.ts reads inputs' length as the
+  // tap count), so replayChase rebuilds it. Never armed: nothing below
+  // reads them and every digest holds.
+  readonly sprints: number[] = [];
+  sprintLeft = 0;
+  private sprinting = false;
 
   constructor(walk: WalkGraph, params: ChaseParams, seed: number) {
     this.g = new ChaseGraph(walk);
@@ -823,6 +831,25 @@ export class MinotaurChase {
     return "queued";
   }
 
+  // K137 s3c: arm a sprint (the next two departures at twice playerPace).
+  // Refused once finished or while one is still armed or running.
+  sprint(): "armed" | "reject" {
+    if (this.finished || this.sprintLeft > 0 || this.sprinting) return "reject";
+    this.sprintLeft = 2;
+    this.sprints.push(this.tick);
+    return "armed";
+  }
+
+  // K137 s3c: a sprint is armed or under way (the HUD, the dot's pace).
+  get sprintActive(): boolean {
+    return this.sprintLeft > 0 || this.sprinting;
+  }
+
+  // K137 s3c: the player's pace on the run they are on (main.ts's dot).
+  get playerSpeed(): number {
+    return this.sprinting ? this.params.playerPace * 2 : this.params.playerPace;
+  }
+
   // Run the whole ticks `seconds` of wall time cover.
   advance(seconds: number, out: ChaseEvent[] = []): ChaseEvent[] {
     if (!(seconds > 0)) return out;
@@ -908,6 +935,9 @@ export class MinotaurChase {
   private respawn(): void {
     this.player = { edge: -1, pos: 0, dir: 1, vertex: this.g.start };
     this.queued = -1;
+    // K137 s3c: a catch ends a sprint (it is spent, s3b call 1).
+    this.sprintLeft = 0;
+    this.sprinting = false;
     if (this.params.lair === false) {
       this.mode = "pause";
     } else {
@@ -944,14 +974,28 @@ export class MinotaurChase {
         }
         out.push({ kind: "depart", edge: eid });
         this.crossRun(eid);
+        // K137 s3c: a sprinted departure (x2 and /2 are exact, K108).
+        if (this.sprintLeft > 0) {
+          this.sprintLeft--;
+          this.sprinting = true;
+        }
       }
       const L = g.len[p.edge];
       const toEnd = p.dir > 0 ? L - p.pos : p.pos;
-      if (rem < toEnd) {
-        p.pos += p.dir * rem;
-        return;
+      if (this.sprinting) {
+        if (rem * 2 < toEnd) {
+          p.pos += p.dir * (rem * 2);
+          return;
+        }
+        rem -= toEnd / 2;
+        this.sprinting = false;
+      } else {
+        if (rem < toEnd) {
+          p.pos += p.dir * rem;
+          return;
+        }
+        rem -= toEnd;
       }
-      rem -= toEnd;
       const v = p.dir > 0 ? g.eb[p.edge] : g.ea[p.edge];
       p.edge = -1;
       p.pos = 0;
@@ -1525,16 +1569,24 @@ export function replayChase(
   inputs: readonly ChaseInput[],
   ticks: number,
   limits: ArrayLike<number> | null = null,
-  sword: { spot: number; mode: "timed" | "oneuse"; moves: number } | null = null
+  sword: { spot: number; mode: "timed" | "oneuse"; moves: number } | null = null,
+  sprints: readonly number[] = []
 ): MinotaurChase {
   const sim = new MinotaurChase(walk, params, seed);
   if (limits) sim.setBreakLimits(limits);
   if (sword) sim.setSword(newSword(sword.spot, sword.mode, sword.moves));
   let k = 0;
+  let s = 0;
   while (sim.tick < ticks) {
     while (k < inputs.length && inputs[k].tick === sim.tick) {
       sim.tap(inputs[k].edge);
       k++;
+    }
+    // K137 s3c: a sprint armed before this tick (after its taps: main.ts
+    // arms between frames, and a tap and an arm in one tick commute).
+    while (s < sprints.length && sprints[s] === sim.tick) {
+      sim.sprint();
+      s++;
     }
     sim.step();
   }

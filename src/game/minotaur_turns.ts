@@ -1133,6 +1133,18 @@ export class TurnMinotaur {
   sword: SwordState | null = null;
   private commitFlee = false;
   lastTouch: { kind: "banish" | "slay"; player: number; turn: number } | null = null;
+  // K137 s3c (4.29), SPRINT: two player moves make one minotaur turn. The
+  // first is a SKIPPED turn (turn(edge, {sprint: "skip"})): the minotaur
+  // stands, `turns` and `lifeTurn` stay, and `skips` records its index in
+  // `inputs` so a replay rebuilds it. The second is an ordinary turn; by
+  // length it travels for half the pair's summed length (`skipLen`, the
+  // first move's length, -1 when no skip is pending). `standSpot`: where a
+  // by-length minotaur stood when a skipped move walked into it, for the
+  // catch animation (the respawn has already moved it). With no skip
+  // nothing here is read, so every pin holds.
+  readonly skips: number[] = [];
+  private skipLen = -1;
+  private standSpot: Spot | null = null;
 
   constructor(walk: WalkGraph | TurnGraph, cfg: TurnConfig, seed: number) {
     this.tg = walk instanceof TurnGraph ? walk : new TurnGraph(walk);
@@ -1264,7 +1276,10 @@ export class TurnMinotaur {
   }
 
   // One turn: the player runs `edge` from their vertex (-1 = waits there).
-  turn(edge: number): TurnResult {
+  // K137 s3c: `{sprint: "skip"}` makes it a sprint's first move (skipTurn).
+  turn(edge: number, opts?: { sprint?: "skip" }): TurnResult {
+    if (opts?.sprint === "skip") return this.skipTurn(edge);
+    this.standSpot = null;
     if (this.cfg.byLength) return this.turnByLength(edge);
     if (this.finished) return "noop";
     const g = this.tg;
@@ -1282,6 +1297,7 @@ export class TurnMinotaur {
     this.turns++;
     this.lifeTurn++;
     this.inputs.push(edge);
+    this.skipLen = -1;
     // K137 s3b: the one-use sword slew it; the sword taken on this move.
     if (this.sword !== null) {
       if (this.slain) return this.slainTurn(edge, p2);
@@ -1367,6 +1383,112 @@ export class TurnMinotaur {
     return "moved";
   }
 
+  // K137 s3c (4.29): a sprint's first move, a SKIPPED minotaur turn. The
+  // player runs `edge` (a wait cannot start a sprint) while the minotaur
+  // stands: no turn is counted, no draw is taken, and contact is the
+  // standing rule (runs: you arrive where it stands; by length: your run
+  // passes within the catch distance of its spot). The next turn() is the
+  // sprint's second move. Rejected while a skip is pending.
+  private skipTurn(edge: number): TurnResult {
+    if (this.finished) return "noop";
+    const g = this.tg;
+    const p = this.player;
+    if (this.skipLen >= 0 || edge < 0) return "reject";
+    if (!Number.isInteger(edge) || edge >= g.chase.ea.length) return "reject";
+    const a = g.chase.ea[edge];
+    const b = g.chase.eb[edge];
+    if (a !== p && b !== p) return "reject";
+    const p2 = a === p ? b : a;
+    this.standSpot = null;
+    this.skips.push(this.inputs.length);
+    this.inputs.push(edge);
+    if (this.sword !== null) {
+      if (this.slain) {
+        this.skipLen = g.chase.len[edge];
+        return this.slainTurn(edge, p2);
+      }
+      this.takeSword(p2);
+      this.lastTouch = null;
+    }
+    const flee = this.fleeing;
+    const from = this.state.v;
+    const spot: Spot = { ...this.state.spot };
+    this.lastFrom = from;
+    this.lastPath = [];
+    this.lastSegLens = [];
+    this.lastTravel = 0;
+    this.lastFromSpot = { ...spot };
+    this.progress = 0;
+    this.lastContact = null;
+    this.catchRoute = false;
+    this.crossRun(edge);
+    if (p2 === g.exit) {
+      this.player = p2;
+      this.finished = true;
+      return "win";
+    }
+    const byLength = this.cfg.byLength === true;
+    const catchDist = this.cfg.catchDist ?? BY_LENGTH_CATCH_DIST;
+    const touched = byLength
+      ? p2 !== g.start && contactByLength(g, p, edge, spot, [], [], 0, catchDist)
+      : contact(p, edge, p2, from, []);
+    if (flee) {
+      // K137 s3b: no catch while it flees: a touch banishes or slays it.
+      if (touched) this.touchSword(p2);
+      else swordSpend(this.sword);
+      this.player = p2;
+      this.skipLen = g.chase.len[edge];
+      this.commit();
+      return "moved";
+    }
+    if (touched) {
+      this.catches++;
+      this.lastCatch = { player: p2, mino: this.state.v };
+      if (byLength) {
+        const t = lengthContactFraction(g, p, edge, spot, [], [], 0, catchDist) ?? 1;
+        this.lastContact = { t, mino: { ...spot }, player: playerSpotAt(g, p, edge, t) };
+        this.standSpot = { ...spot };
+      } else {
+        this.lastContact = runsContact(g, p, edge, from, []);
+      }
+      this.player = g.start;
+      this.state =
+        this.cfg.lair === false
+          ? { v: this.state.v, prev: -1, dest: -1, mode: 0, lastSeen: -1, left: true, spot: { ...this.state.spot } }
+          : initMino(g);
+      this.lifeTurn = 0;
+      // A runs catch keeps lastFrom (where it stood) until the animation
+      // ends, as turn()'s catchRoute does.
+      this.catchRoute = !byLength;
+      this.skipLen = -1;
+      this.commit();
+      return "caught";
+    }
+    if (this.state.left && p2 !== g.start) {
+      if (byLength) {
+        const d = g.chase.spotToVertex(this.state.spot, p2, false);
+        if (d <= g.medianLength + 1e-9) this.closeCalls++;
+      } else if (this.tg.hopd(p2, this.state.v) === 1) {
+        this.closeCalls++;
+      }
+    }
+    this.player = p2;
+    this.skipLen = g.chase.len[edge];
+    this.commit();
+    return "moved";
+  }
+
+  // K137 s3c: a sprint's pair shares one turn's travel by length: half the
+  // two moves' summed length (s3a call 5). `l` alone with no skip pending.
+  private pairLen(l: number): number {
+    return this.skipLen >= 0 ? (this.skipLen + l) / 2 : l;
+  }
+
+  // K137 s3c: is a sprint's second move due (its first was skipped)?
+  get sprintPending(): boolean {
+    return this.skipLen >= 0;
+  }
+
   // K481: the choice travels at the player's vertex, for the telegraph's
   // ticks and the sim: each incident run, plus the wait (the median).
   lengthChoices(): { edge: number; length: number }[] {
@@ -1395,6 +1517,9 @@ export class TurnMinotaur {
     this.turns++;
     this.lifeTurn++;
     this.inputs.push(edge);
+    // K137 s3c: a sprint's second move travels for half the pair's length.
+    const playerLen = this.pairLen(edge < 0 ? g.medianLength : g.chase.len[edge]);
+    this.skipLen = -1;
     // K137 s3b: the one-use sword slew it; the sword taken on this move.
     if (this.sword !== null) {
       if (this.slain) return this.slainTurn(edge, p2);
@@ -1402,7 +1527,6 @@ export class TurnMinotaur {
       this.lastTouch = null;
     }
     const flee = this.fleeing;
-    const playerLen = edge < 0 ? g.medianLength : g.chase.len[edge];
     let plan: TurnLengthPlan;
     let seenAt = p2;
     if (flee) {
@@ -1570,7 +1694,14 @@ export class TurnMinotaur {
       // K137 s3b: the flee by length, long enough for the longest choice.
       let maxRun = this.tg.medianLength;
       for (const c of this.lengthChoices()) maxRun = Math.max(maxRun, c.length);
-      const fp = planFleeLength(this.tg, this.cfg, this.state, this.player, this.lifeTurn + 1, this.cfg.speed * maxRun);
+      const fp = planFleeLength(
+        this.tg,
+        this.cfg,
+        this.state,
+        this.player,
+        this.lifeTurn + 1,
+        this.cfg.speed * this.pairLen(maxRun)
+      );
       this.committedPlan = fp;
       this.committed = fp.steps.slice();
       this.commitState = cloneMino(fp.stateAfter);
@@ -1587,7 +1718,7 @@ export class TurnMinotaur {
       this.player,
       this.rng.at(this.turns + 1),
       this.lifeTurn + 1,
-      factor * maxLen
+      factor * this.pairLen(maxLen)
     );
     this.committedPlan = plan;
     this.committed = plan.steps.slice();
@@ -1629,7 +1760,7 @@ export class TurnMinotaur {
     const g = this.tg;
     const catchDist = this.cfg.catchDist ?? BY_LENGTH_CATCH_DIST;
     const stops = this.lengthChoices().map((c) => {
-      const travel = Math.min(plan.factor * c.length * travelScaleOf(this.cfg), plan.totalLength);
+      const travel = Math.min(plan.factor * this.pairLen(c.length) * travelScaleOf(this.cfg), plan.totalLength);
       const p2 =
         c.edge < 0 ? this.player : g.chase.ea[c.edge] === this.player ? g.chase.eb[c.edge] : g.chase.ea[c.edge];
       // K137 s3b: a flee touches, never catches.
@@ -1678,7 +1809,7 @@ export class TurnMinotaur {
 
   // Real time's display modes (the marker's glow reads them).
   get mode(): MinotaurMode {
-    if (!this.state.left && !(this.progress < 1 && this.lastPath.length > 0)) return "lair";
+    if (!this.state.left && !(this.progress < 1 && (this.lastPath.length > 0 || this.standSpot !== null))) return "lair";
     return this.hunting ? "hunt" : "wander";
   }
 
@@ -1687,6 +1818,7 @@ export class TurnMinotaur {
   // put it.
   finishCatchAnim(): void {
     this.progress = 1;
+    this.standSpot = null;
     this.endCatchRoute();
   }
 
@@ -1709,6 +1841,8 @@ export class TurnMinotaur {
   // run length (two runs share the player's one animation).
   get mino(): Spot {
     if (this.cfg.byLength) {
+      // K137 s3c: a sprint's skipped move walked into it where it stood.
+      if (this.standSpot !== null && this.progress < 1) return { ...this.standSpot };
       if (this.lastPath.length === 0 || this.progress >= 1) return { ...this.state.spot };
       return spotAlongLengthRoute(
         this.tg,
@@ -1742,6 +1876,23 @@ export class TurnMinotaur {
     }
     return { edge: -1, pos: 0, dir: 1, vertex: this.state.v };
   }
+}
+
+// K137 s3c: a game rebuilt from its inputs and skips (a sprint's first moves,
+// TurnMinotaur.skips): the same taps give the same minotaur.
+export function replayTurnMinotaur(
+  walk: WalkGraph | TurnGraph,
+  cfg: TurnConfig,
+  seed: number,
+  inputs: readonly number[],
+  skips: readonly number[] = []
+): TurnMinotaur {
+  const tm = new TurnMinotaur(walk, cfg, seed);
+  const skip = new Set(skips);
+  for (let i = 0; i < inputs.length; i++) {
+    tm.turn(inputs[i], skip.has(i) ? { sprint: "skip" } : undefined);
+  }
+  return tm;
 }
 
 // The design seed's own stream for the turn minotaur ("TURN").
