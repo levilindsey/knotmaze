@@ -104,7 +104,7 @@ import {
 import { PluckRipples } from "./render/pluck_ripple";
 import { startShaderWarmup, warmContextFor } from "./render/shader_warmup";
 import { openDailyStats } from "./ui/daily_stats_view";
-import { shareOrCopy, showToast } from "./ui/share";
+import { setToastAvoid, shareOrCopy, showToast } from "./ui/share";
 import { SHEET_QUERY } from "./ui/panel_sheet";
 import { wirePanel } from "./app/panel_wiring";
 import type { PanelSettings } from "./ui/tweakpane_panel";
@@ -985,6 +985,9 @@ async function main(): Promise<void> {
     scale: () => settings.indicatorSize,
     panel: () => ({ box: camera.panelBox, open: camera.panelT }),
   });
+  // K698: the toast sits above the same chrome (only the shown controls in
+  // its column at the bottom lift it; ui/toast_place.ts).
+  setToastAvoid(() => indicators.chrome());
   // Start an eased move that puts world (x1, y1) at the screen's center at
   // scale s1 (placeWorldAt clamps it every frame); see camTween.
   const startCamTween = (
