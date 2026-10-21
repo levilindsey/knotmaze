@@ -270,11 +270,11 @@ Next free ID: K623.
 - **K580** · The a's J join, Levi's call (2026-10-20): tangent, its shared stretch a TAPERED spur that
   leaves the junction as wide as both merging strokes and narrows to normal where they turn collinear.
   Open calls: K606, K620. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
-  - owner: nobody since 2026-10-20 16:47 (merged; agent `ae18d8a4a4f0949e9` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `1ab5e52`
+  - owner: agent `ab7690d7d949d34d6` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 16:48, 2 h cap ~18:48)
+  - branch: `worktree-agent-ab7690d7d949d34d6`, worktree `.claude/worktrees/agent-ab7690d7d949d34d6`; last commit: `6e3e913`
   - evidence: `.claude/probes/K580/`
-  - next: Levi's paint call on the tapered root (sheets in .claude/probes/K580/sheets/); stage 2, the medial-axis root (docs/design/K580_s2.md)
-  - brief: `docs/design/K580.md`
+  - next: stage 2: the medial-axis root (nearest-point pairing), the tp52/tp60 sheet, the thorn at J, the ai notch
+  - brief: `docs/design/K580_s2.md`
 - **K409** · Build Levi's burn calls (2026-10-20, every rec.): ember and band widths in world units
   (today's medians); under Gone the whole ember on the unburnt side; the band kept; the ember over
   the smoke. K290's last stage, with K410 and K599. `K114_burn.md` 3c handoff item 4.
@@ -283,6 +283,14 @@ Next free ID: K623.
   - evidence: `.claude/probes/K409/`
   - next: baseline sheets, then the world-unit widths
   - brief: `docs/design/K409.md`
+- **K244** · Levi 2026-10-20: nothing plucks a junction core. Auto plucks (random, music) choose
+  only valid segments up front, and a drag released in a core plucks nothing (K235 silenced core
+  taps). After K370 merges (the input path). `render-pluck.md` (K235).
+  - owner: agent `ae12adbf3756a741a` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 16:48, 1 h cap ~17:48)
+  - branch: `worktree-agent-ae12adbf3756a741a`, worktree `.claude/worktrees/agent-ae12adbf3756a741a`; last commit: `6e3e913`
+  - evidence: `.claude/probes/K244/`
+  - next: baseline auto-pluck and release core counts, then one tapLobes-based predicate
+  - brief: `docs/design/K244_cores.md`
 
 ## Next, in order
 
@@ -479,9 +487,6 @@ Every other item below waits on the trigger it names.
 - **K595** · Police same-chain collision by rest material, not a fixed 2-slot skip
   (`src/physics/forces.ts` ~272): fixes K596. Census the kink loops and eyes first; regression
   `?b&am=instant` + 5 s drag sleeps within +5 s. `docs/ledger_notes.md` (K595), `docs/design/K372.md`.
-- **K244** · Levi 2026-10-20: nothing plucks a junction core. Auto plucks (random, music) choose
-  only valid segments up front, and a drag released in a core plucks nothing (K235 silenced core
-  taps). After K370 merges (the input path). `render-pluck.md` (K235).
 - **K525** · The minotaur's telegraph (Levi 2026-10-20): a treatment dropdown whose new default
   lights the run's rims like the hover highlight, today's line kept as an option; roam must read on
   the phone at fit zoom. Full text: `docs/ledger_notes.md` (K525).
