@@ -259,11 +259,20 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
   // Release the current drag. string: free the physics now and set the
   // released unit vibrating (amplitude from the release offset, swinging
   // from the side it was pulled toward); soft: ease home (snapBack).
-  const beginRelease = (style: "soft" | "string", freq: number): void => {
+  // K244 (Levi, 2026-10-20: "Players shouldn't be able to pluck junction
+  // cores."): `pluckable` false (the release sits in a core, where a pluck
+  // would draw nothing) plucks nothing: no vibration or ripple here, and
+  // endDrag played no note. The drag still ends and the thread still
+  // eases home or springs free, as the physics always did.
+  const beginRelease = (
+    style: "soft" | "string",
+    freq: number,
+    pluckable = true
+  ): void => {
     if (style === "string" && scene.ps && scene.renderer && scene.ps.grabbedParticle >= 0) {
       const p = scene.ps.grabbedParticle;
       const chain = scene.ps.chainOfParticle(p);
-      if (chain >= 0) {
+      if (chain >= 0 && pluckable) {
         const arr = scene.ps.chains[chain];
         const slot = arr.indexOf(p);
         const dx = dragPos[0] - grabOrigin[0];
@@ -786,14 +795,23 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
     } else if (scene.ps.grabbedParticle >= 0 && snapMode === "none") {
       wake();
       const chain = scene.ps.chainOfParticle(scene.ps.grabbedParticle);
-      const freq =
-        chain >= 0
-          ? freqForCtrl(chain, scene.ps.chains[chain].indexOf(scene.ps.grabbedParticle))
-          : 220;
-      if (!settings.muted && params.soundMode !== "none" && chain >= 0) {
+      const slot =
+        chain >= 0 ? scene.ps.chains[chain].indexOf(scene.ps.grabbedParticle) : -1;
+      const freq = chain >= 0 ? freqForCtrl(chain, slot) : 220;
+      // K244: would a pluck at the release draw anything (the same verdict
+      // as a tap's and an auto pluck's, PluckOverlay.siteTester)? In a
+      // junction core it would not, so the release plays no note under
+      // either pluck style and, in the string style, starts no vibration or
+      // ripple (beginRelease). Hot, held and pluckSize 0 are not asked and
+      // keep their sound, as before.
+      const pluckable =
+        chain >= 0 &&
+        !!scene.renderer &&
+        scene.renderer.plucks.siteTester()(chain, slot);
+      if (!settings.muted && params.soundMode !== "none" && pluckable) {
         synth.pluck(freq, Math.max(0.35, Math.min(1, dragVel / 25)));
       }
-      beginRelease(params.pluckStyle, freq);
+      beginRelease(params.pluckStyle, freq, pluckable);
     }
     if (app.canvas.hasPointerCapture(e.pointerId)) {
       app.canvas.releasePointerCapture(e.pointerId);
