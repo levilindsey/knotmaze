@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K767.
+Next free ID: K768.
 
 ## Waiting on Levi
 
@@ -417,6 +417,8 @@ Next free ID: K767.
   - evidence: `.claude/probes/K138/s3/`
   - next: stage 3: the s2 remainder, one-way runs, locks and keys (exit, shortcut, colors), the census, the page, lore
   - brief: `docs/design/K138_s3.md`
+- **K767** · Phone sitting 5 (turnstiles, hidden runs, the beat rider on real touches; hard stop
+  06:50 for Levi)
 
 ## Next, in order
 
