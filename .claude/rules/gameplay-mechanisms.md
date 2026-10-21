@@ -340,9 +340,11 @@ state, the map, both rules and the par search.
   the keys still refuse). THE WALKER'S GLOW: while a walker mode is on,
   before Go and while walking, the dot wears a glow in WALKER_COLOR
   (`placeWalkerGlow`, fabric_maze_renderer.ts: one Sprite just under the
-  head mesh, at the head, the minotaur highlight's gradient and
-  MINO_GLOW_DIAM, alpha WALKER_GLOW_ALPHA 0.9, untuned); syncMinotaur is
-  untouched.
+  head mesh, at the head, the minotaur highlight's gradient at its
+  hunting size, MINO_GLOW_DIAM_HUNT, and WALKER_GLOW_ALPHA 1; at the plain
+  3 radii and 0.9 it showed only as a faint fringe past the head's rings,
+  `.claude/probes/K698/` stills). The size and alpha are open to tuning.
+  syncMinotaur is untouched.
 - SCOPE: as the cut's (the classic game, free play). Not built: Keep it
   in, Show it, Race the solver, Lead's action variant, cuts with the
   minotaur or the fire (K688), dailies and saved attempts.

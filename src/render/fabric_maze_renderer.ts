@@ -111,9 +111,10 @@ const TELE_RED = 0xff2418;
 // K713: the walker's dot glow (placeWalkerGlow; K114_walker.md: "the head
 // dot with a glow of its own, in the walker's colour (as 2.8 gives the
 // minotaur its red highlight), so it reads as not you"): the minotaur
-// highlight's gradient and size (MINO_GLOW_DIAM radii) in WALKER_COLOR,
-// at this opacity (the minotaur's runs 0.4 to 1 by mode).
-const WALKER_GLOW_ALPHA = 0.9;
+// highlight's gradient in WALKER_COLOR, at its hunting size and opacity
+// (MINO_GLOW_DIAM_HUNT radii, alpha 1). At the plain size (3 radii, 0.9) it
+// showed only as a faint fringe past the head's rings in the K698 stills.
+const WALKER_GLOW_ALPHA = 1;
 let WALKER_GLOW_TEX: Texture | null = null;
 function walkerGlowTexture(): Texture {
   if (WALKER_GLOW_TEX) return WALKER_GLOW_TEX;
@@ -1370,7 +1371,7 @@ export class FabricMazeRenderer {
       this.overContainer.addChildAt(g, this.overContainer.getChildIndex(this.markers.head.mesh));
       this.walkerGlow = g;
     }
-    const d = r * MINO_GLOW_DIAM;
+    const d = r * MINO_GLOW_DIAM_HUNT;
     g.position.set(this.headX, this.headY);
     g.width = d;
     g.height = d;
