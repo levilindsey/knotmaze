@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K688.
+Next free ID: K689.
 
 ## Waiting on Levi
 
@@ -166,11 +166,11 @@ Next free ID: K688.
   1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that
   swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
   K280, residuals K281).
-  - owner: nobody since 2026-10-15 12:31 (stage 2 merged at cebb75e; agent `a58dfc230583f43e4` of claude session 05e60da0, worktree since removed, K161)
-  - branch: mainline; last commit: `cebb75e`
-  - evidence: `.claude/probes/K114/stage2/` (`burn_sim_rt.ts`, `proposal.md`, `results_rt*.md`, `rt_page.mjs`, `perf_attr.ps1`, `vref_probe.mjs`, shots `out_rt*/`); stage 1's: `.claude/probes/K114/burn/` (`results_tuning_rebased.md`, `burn_sim.ts`, `burn_page.mjs`)
-  - next: K441 (queued, `docs/design/K441_fire_frame.md`); stage 3 is done (K290, K409). Then the shortlist: the cut verb plus walker, the spider (K627), the beat rider, the Pluck Hero MVP (`docs/design/sooner_20261020.md` queue item 7). Stage 2's residuals K442-K447
-  - brief: `docs/design/K114_stage2.md` (Stage 2 handoff); stage 1's handoff: `docs/design/K114_burn.md`
+  - owner: agent `a1cdbc33c6dba02ff` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 21:09, 2 h cap ~23:09)
+  - branch: `worktree-agent-a1cdbc33c6dba02ff`, worktree `.claude/worktrees/agent-a1cdbc33c6dba02ff`; last commit: `33438ef`
+  - evidence: `.claude/probes/K114/cut/`
+  - next: the cut verb (stage 1, until about 23:10); then the walker stage (Lead the walker, R.4.3 + R.3.9), the spider (K627), the beat rider and the Pluck Hero MVP
+  - brief: `docs/design/K114_cut.md`
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
   capitals e64f4d6, accents fa1b1ae, Greek 54612f2 (suite 1521 green). Levi (2026-10-19, Daily #8): redesign first.
@@ -548,6 +548,9 @@ Every other item below waits on the trigger it names.
 - **K687** · Phone rerun (K662 leftovers): the daily paths 2b (reload after the official finish) and
   3 (replay), and default confetti frame times with the audiobook paused at thermal status 0
   (`.claude/probes/K662/run_daily2.ps1`).
+- **K688** · Healing cuts against monsters (Levi took R.3.5, decision 6): a cut closes again after a
+  few moves; cut with the minotaur or the fire. After the K114 walker stage
+  (`docs/design/K80_gameplay_additions.md` R.3.5).
 
 ## Residuals (known, not fixed)
 
