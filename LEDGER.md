@@ -386,10 +386,10 @@ Next free ID: K742.
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
-  - owner: agent `a5c8d4138b6217bdc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 02:16, 2 h cap ~04:16)
-  - branch: `worktree-agent-a5c8d4138b6217bdc`, worktree `.claude/worktrees/agent-a5c8d4138b6217bdc`; last commit: `65ee13a6`
+  - owner: nobody since 2026-10-21 03:45 (merged; agent `a5c8d4138b6217bdc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `10f8919e`
   - evidence: `.claude/probes/K138/s1/`
-  - next: stage 1: the rule kit, ice runs, the color rule; then s2-s8 per the K138_plan.md stage order
+  - next: stage 2 (docs/design/K138_s2.md): the s1 remainder first (the HUD rows, the share title tag), then turnstiles and hidden runs; then s3-s8 per docs/design/K138_plan.md
   - brief: `docs/design/K138_s1.md`
 
 ## Next, in order
