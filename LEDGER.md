@@ -1022,10 +1022,9 @@ Every other item below waits on the trigger it names.
   same sign in both pairs, inside one p10-p90 band; K572).
 - **K575** · `0733182` (K115 1b-B) does not build, a hazard for any bisect across it (K572; not
   diagnosed).
-- **K576** · On the worker host (K7) two loads of one link freeze at different sim times
-  (4.967-5.017 s), so they rest in different states; in-thread rests the same every load. Probes use
-  `&phw=0` or `&phy=0` (probes.md). Untested fix idea: let the sleep fire only on a fixed substep
-  grid. `docs/design/K550_kill.md` (Handoff).
+- **K576** · On the worker host (K7) two loads of one link freeze at different sim times (4.967-5.017
+  s), so their rest states differ; in-thread they match, so probes pin `&phw=0` or `&phy=0`. Fix
+  idea (untested): sleep only on a fixed substep grid. `docs/design/K550_kill.md` (Handoff).
 ## Approved, to schedule (2026-10-11)
 
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
