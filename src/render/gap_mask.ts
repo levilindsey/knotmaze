@@ -389,13 +389,24 @@ vec2 gapOverPt(vec4 t4, vec4 t9, int j) {
 // squared reach on entry); the nearest segment (-1: none within reach)
 // comes back through bk. Fast form: no exclusions. K573: each segment
 // carries the previous one's end point, so a chunk reads its points once
-// (its first point, then one sampAt per segment). A processed chunk never
-// starts past the last segment (nCh), so no fetch is wasted.
+// (its first point, then one sampAt per segment), and the inner loop walks
+// the SAMP index with no int % and no float-to-int conversion: the range
+// is decoded once (gapOverPt's maths), a ring's start is wrapped once into
+// [0, count) and its index wraps with one compare (stride <= count on a
+// ring, gapSampRange; gap_mask.test.ts pins it), an open run clamps. A
+// processed chunk never starts past the last segment (nCh), so no fetch is
+// wasted.
 void gapNearestFast(int row, int nCh, highp vec2 p,
     highp float sure2, highp vec4 t4, highp vec4 t9, int nPts,
     inout highp float best, inout int bk) {
   bool brute = uFabricGap.z > 0.5;
   int nSeg = max(nPts - 1, 0);
+  int base = int(t4.y + 0.5);
+  int stride = max(int(t9.x + 0.5), 1);
+  int count = max(int(t9.y + 0.5), 1);
+  bool closed = t9.z > 0.5;
+  int r0 = int(t4.z + 0.5);
+  if (closed) r0 = ((r0 % count) + count) % count;
   for (int c = 0; c < ${GAP_MAX_CHUNKS}; c++) {
     if (c >= nCh) break;
     if (!brute && best < sure2) break;
@@ -405,11 +416,20 @@ void gapNearestFast(int row, int nCh, highp vec2 p,
       highp float lb = length(p - cc.xy) - cc.z;
       if (lb > 0.0 && lb * lb >= best) continue;
     }
-    highp vec2 a = gapOverPt(t4, t9, k0);
+    int r = r0 + k0 * stride;
+    int i = closed ? r % count : clamp(r, 0, count - 1);
+    highp vec2 a = sampAt(base + i);
     for (int j = 0; j < ${GAP_CHUNK}; j++) {
       int k = k0 + j;
       if (k >= nSeg) break;
-      highp vec2 b = gapOverPt(t4, t9, k + 1);
+      r += stride;
+      if (closed) {
+        i += stride;
+        if (i >= count) i -= count;
+      } else {
+        i = clamp(r, 0, count - 1);
+      }
+      highp vec2 b = sampAt(base + i);
       gapSeg(p, a, b, k, best, bk);
       a = b;
     }
@@ -423,6 +443,13 @@ void gapNearestFull(int row, int nCh, highp vec2 p,
     inout highp float best, inout int bk) {
   bool brute = uFabricGap.z > 0.5;
   int nSeg = max(nPts - 1, 0);
+  // The decoded range and the index walk of gapNearestFast.
+  int base = int(t4.y + 0.5);
+  int stride = max(int(t9.x + 0.5), 1);
+  int count = max(int(t9.y + 0.5), 1);
+  bool closed = t9.z > 0.5;
+  int r0 = int(t4.z + 0.5);
+  if (closed) r0 = ((r0 % count) + count) % count;
   for (int c = 0; c < ${GAP_MAX_CHUNKS}; c++) {
     if (c >= nCh) break;
     if (!brute && best < sure2) break;
@@ -438,11 +465,20 @@ void gapNearestFull(int row, int nCh, highp vec2 p,
     }
     // The carried point (gapNearestFast): a skipped segment still reads
     // its end point, the next segment's start.
-    highp vec2 a = gapOverPt(t4, t9, k0);
+    int r = r0 + k0 * stride;
+    int i = closed ? r % count : clamp(r, 0, count - 1);
+    highp vec2 a = sampAt(base + i);
     for (int j = 0; j < ${GAP_CHUNK}; j++) {
       int k = k0 + j;
       if (k >= nSeg) break;
-      highp vec2 b = gapOverPt(t4, t9, k + 1);
+      r += stride;
+      if (closed) {
+        i += stride;
+        if (i >= count) i -= count;
+      } else {
+        i = clamp(r, 0, count - 1);
+      }
+      highp vec2 b = sampAt(base + i);
       gapSegFull(p, a, b, k, ex, fa, s0, st, per, skipLo, skipHi, best, bk);
       a = b;
     }
@@ -496,14 +532,21 @@ highp float gapProtCover(int row, int base, highp vec2 p,
   int pcount = max(int(abs(bc.w) + 0.5), 1);
   bool pclosed = bc.w < -0.5;
   highp float best = reach * reach;
-  // K573: the previous segment's end point is carried (one sampAt each).
-  int ia = pclosed ? ((k0 % pcount) + pcount) % pcount : clamp(k0, 0, pcount - 1);
-  highp vec2 a = sampAt(pbase + ia);
+  // K573: the previous segment's end point is carried (one sampAt each),
+  // and the index walks as in gapNearestFast (one wrap, no int %).
+  int r = k0;
+  int i = pclosed ? ((r % pcount) + pcount) % pcount : clamp(r, 0, pcount - 1);
+  highp vec2 a = sampAt(pbase + i);
   for (int j = 0; j < 64; j++) {
     if (j >= n - 1) break;
-    int rb = k0 + j * stride + stride;
-    int ib = pclosed ? ((rb % pcount) + pcount) % pcount : clamp(rb, 0, pcount - 1);
-    highp vec2 b = sampAt(pbase + ib);
+    r += stride;
+    if (pclosed) {
+      i += stride;
+      if (i >= pcount) i -= pcount;
+    } else {
+      i = clamp(r, 0, pcount - 1);
+    }
+    highp vec2 b = sampAt(pbase + i);
     highp vec2 ab = b - a;
     highp vec2 pa = p - a;
     highp float l2 = dot(ab, ab);
