@@ -140,7 +140,15 @@ export interface CollapsePar {
 // the exit; free mode spends its unknown end on the largest charge. Finish
 // mode also prunes a node whose reachable part has lost the exit. Doubled
 // units keep the halves integral.
-export function collapsePar(walk: WalkGraph, mode: "finish" | "free", budget = PAR_STEP_BUDGET): CollapsePar {
+//
+// `onBetter` (probes only) hears each improvement: the steps so far and the
+// new best units.
+export function collapsePar(
+  walk: WalkGraph,
+  mode: "finish" | "free",
+  budget = PAR_STEP_BUDGET,
+  onBetter?: (steps: number, units: number) => void
+): CollapsePar {
   const total = totalUnits(walk);
   const index = new Map<string, number>();
   for (const id of walk.vertices.keys()) index.set(id, index.size);
@@ -230,6 +238,10 @@ export function collapsePar(walk: WalkGraph, mode: "finish" | "free", budget = P
     return 2 * cur + 2 * reach - (charge - top);
   };
 
+  // A node: head v, `cur` units walked. Children are tried longest run
+  // first (the adjacency order). Ordering them by their bound instead was
+  // measured on dailies 1-4: about twice the cost a step and a lower par
+  // at every budget on three of the four (.claude/probes/K139, explore2).
   const dfs = (v: number, cur: number): void => {
     if (steps >= budget) {
       tripped = true;
@@ -239,6 +251,7 @@ export function collapsePar(walk: WalkGraph, mode: "finish" | "free", budget = P
     if (t < 0 && cur > best) {
       best = cur;
       bestTrail = stack.slice();
+      onBetter?.(steps, best);
     }
     const b = bound2(v, cur);
     if (b < 0 || b <= 2 * best) return;
@@ -253,10 +266,9 @@ export function collapsePar(walk: WalkGraph, mode: "finish" | "free", budget = P
         if (cur + w[e] > best) {
           best = cur + w[e];
           bestTrail = stack.slice();
+          onBetter?.(steps, best);
         }
-      } else {
-        dfs(y, cur + w[e]);
-      }
+      } else dfs(y, cur + w[e]);
       stack.pop();
       used[e] = 0;
       if (tripped) return;
