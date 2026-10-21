@@ -1928,18 +1928,20 @@ export function buildPanel(
     `Hearts: each catch costs one and sends you back to the entrance as usual; losing the last restarts the level (your catches still count) with every heart back. ${LIVES_RECOMMENDED} is a good start. Off: catches cost nothing (Catch restarts level decides). Applies live.`,
     true
   );
-  // K137 stage 3b (4.7, game/sword.ts): the sword, on both clocks.
-  const swordRow = chaseRow(
-    "sword",
+  // K137 stage 3b (4.7, game/sword.ts): the sword, on both clocks. Shared
+  // rows like lives, but they restart the solve (onClockChange): a new
+  // chase lays the sword down, or none.
+  const swordRow = row(
+    fMino, p, "sword",
     { options: { off: "off", timed: "timed", "one use": "oneuse" }, label: "Sword" },
     "A sword lies a few runs off the shortest way. Take it and the minotaur flees you for a while: touch it then and timed sends it back to its lair, one use slays it for good. Restarts the solve.",
-    true
+    D.sword, () => callbacks.onClockChange()
   );
-  const swordMovesRow = chaseRow(
-    "swordMoves",
+  const swordMovesRow = row(
+    fMino, p, "swordMoves",
     { min: SWORD_MOVES_MIN, max: SWORD_MOVES_MAX, step: 1, label: "Sword lasts" },
     "How long the minotaur flees once you take the sword: moves on the turn clock (a wait counts), runs walked in real time. Restarts the solve.",
-    true
+    D.swordMoves, () => callbacks.onClockChange()
   );
   // K80 turns stage 2 (K273): what a catch resets, on both clocks. While
   // the level row is on a catch resets everything, so the other two hide.

@@ -174,9 +174,6 @@ export const LIVE_EFFECTS = {
     "minoGuardAccuracyRt", "minoStalkerAccuracyRt",
     // K137 stage 3a: lives (main.ts refills the hearts when it changes).
     "lives",
-    // K137 stage 3b: the sword (a new chase lays it down, or none).
-    "sword",
-    "swordMoves",
   ],
   // K80 turns: the turn-aligned minotaur's tuning.
   onTurnMinoChange: [
@@ -205,6 +202,8 @@ export const LIVE_EFFECTS = {
     "fireSpeedRt", "fireDelayRt", "fragile", "parMode", "parSlack",
     "collapse", // K139
     "cut", // K114
+    // K137 stage 3b: the sword (a new chase lays it down, or none).
+    "sword", "swordMoves",
   ],
 } as const satisfies Record<string, readonly string[]>;
 
