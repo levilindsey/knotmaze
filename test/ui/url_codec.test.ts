@@ -130,6 +130,8 @@ describe("links", () => {
       minoStopMin: 0.2, minoStopMax: 0.6, minoHuntStop: 0.5, minoTurnBack: 1.5,
       minoTipReach: 2, minoRoamNear: 0.25, minoTelegraphRuns: 1,
       fragile: "off", parMode: "off", parSlack: 1,
+      minoGuardRoam: 30, minoGuardDetect: 30, minoGuardLose: 40,
+      minoGuardAccuracyRt: 0.7, minoStalkerAccuracyRt: 0.7,
     });
   });
 
@@ -572,6 +574,8 @@ describe("links", () => {
       roamPull: 0, lair: false,
       stopMin: 0.1, stopMax: 0.4, huntStop: 0.25, turnBack: 2, tipReach: 1.5,
       roamNear: 0.5,
+      model: "hunter", territory: 30, guardDetect: 30, guardLose: 40,
+      guardAccuracy: 0.7, stalkerAccuracy: 0.7,
     });
     // The telegraph's reach is the renderer's (stage 2), not the chase's.
     expect(p.minoTelegraphRuns).toBe(2);
@@ -606,6 +610,28 @@ describe("links", () => {
     const big = withSeed(7, { minoStopMax: 9, minoTipReach: 9, minoTelegraphRuns: 7 });
     const back = parseParams(`?${encodeParams(big)}`);
     expect([back.minoStopMax, back.minoTipReach, back.minoTelegraphRuns]).toEqual([2, 4, 3]);
+  });
+
+  // K324 stage 3: the Behavior row picks the real-time model too, and the
+  // guard's and stalker's knobs read from their own keys, clamped.
+  it("reads the real-time guard and stalker", () => {
+    const g = parseParams("?7&clk=realtime&mt=guard&mgr=20&mgd=12&mgl=18&mgx=0.4&msx=0.9");
+    const c = chaseParamsOf(g);
+    expect([c.model, c.territory, c.guardDetect, c.guardLose]).toEqual(["guard", 20, 12, 18]);
+    expect([c.guardAccuracy, c.stalkerAccuracy]).toEqual([0.4, 0.9]);
+    expect(parseParams(`?${encodeParams(g)}`)).toEqual(g);
+    expect(chaseParamsOf(parseParams("?7&clk=realtime&mt=stalker")).model).toBe("stalker");
+    expect(chaseParamsOf(parseParams("?7&clk=realtime&mt=hunter")).model).toBe("hunter");
+    const pick = (q: UrlParams) => [
+      q.minoGuardRoam, q.minoGuardDetect, q.minoGuardLose,
+      q.minoGuardAccuracyRt, q.minoStalkerAccuracyRt,
+    ];
+    expect(pick(parseParams("?7&mgr=999&mgd=999&mgl=999&mgx=3&msx=3"))).toEqual([
+      150, 100, 150, 1, 1,
+    ]);
+    expect(pick(parseParams("?7&mgr=-1&mgd=-1&mgl=-1&mgx=-1&msx=-1"))).toEqual([
+      5, 0, 0, 0, 0,
+    ]);
   });
 
   it("keeps the maze-plan knobs equal to DEFAULT_MAZE_PARAMS", () => {
@@ -876,6 +902,8 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoStopMin: "mhn", minoStopMax: "mhx", minoHuntStop: "mhh", minoTurnBack: "mrv",
   minoTipReach: "mdr", minoRoamNear: "mnr", minoTelegraphRuns: "mtn",
   fragile: "fg", parMode: "pa", parSlack: "par",
+  minoGuardRoam: "mgr", minoGuardDetect: "mgd", minoGuardLose: "mgl",
+  minoGuardAccuracyRt: "mgx", minoStalkerAccuracyRt: "msx",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
