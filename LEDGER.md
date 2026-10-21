@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K607.
+Next free ID: K610.
 
 ## Waiting on Levi
 
@@ -583,7 +583,8 @@ Every other item below waits on the trigger it names.
   trimming the text would cut it (`docs/design/K173.md`).
 - **K212** · PixiJS warns "Attribute aGap/aGapId/aUV is not present in the shader" on every
   load (K132's probes; Levi's console 2026-10-14, K311). Find which mesh binds attributes its
-  program does not declare (`docs/design/K299_choice_pulse_bug.md`).
+  program does not declare (`docs/design/K299_choice_pulse_bug.md`). On 2026-10-20 a run
+  printed 10 of them, adding aEnv, aCol and aClipA/B/F (K406's probe).
 - **K208** · `restoreYarn` keeps its own copy of the travel-direction
   rule; it could share `travelOrder` / `moveEnds` (`src/render/fog_arc.ts`,
   K100).
@@ -1082,6 +1083,17 @@ Every other item below waits on the trigger it names.
 - **K605** · K456 step 1 flake: master's never-returns run died once with Execution context was
   destroyed, 19 s after load and before any loss; nothing in `src/` navigates; not seen again.
   `.claude/probes/K456/results.md` (One flake).
+- **K607** · Probes: a clipped page.screenshot taken after a zoom or a pluck lost the pluck blur and
+  backdrop (K406's sheet) and drifted the view about (+291, +342) CSS px (K515's); full-frame shots
+  never did. Cause unproven (puppeteer's clip path suspected). Workaround: one full-frame shot per
+  state, crops cut in a second page. `.claude/probes/K406/sheet/notes.md`,
+  `.claude/probes/K515/hover/notes.md`.
+- **K608** · K515's hover route: in the zoom-3 diff, a thin sliver is darker with the hover, at the
+  seam between the route's two lit stretches. Undiagnosed.
+  `.claude/probes/K515/hover/zoom3/sheet_diff.png`.
+- **K609** · K395's example loop `9:133` no longer exists in `?7` (2026-10-20), so render-pluck.md's
+  Pluck loop tip entry and probes-pluck.md's K395 recipe point at a loop that no longer reproduces.
+  K406's sheet used chain 2, key 427 (`.claude/probes/K406/sheet/notes.md`).
 
 ## Approved, to schedule (2026-10-11)
 
