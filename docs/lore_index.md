@@ -13,8 +13,8 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/game/star_rating.ts`, `src/game/fabric_controller.ts`, `src/game/share_text.ts`, `src/ui/maze_hud.ts`, `src/ui/daily_stats_view.ts`, `test/game/star_rating.test.ts`, `test/game/fabric_controller.test.ts`, `test/game/fabric_trail.test.ts`
 - `gameplay-badge.md`: MODE BADGE (K73, K151)
   paths: `src/ui/mode_badge.ts`, `test/ui/mode_badge.test.ts`
-- `gameplay-indicators.md`: OFF-SCREEN INDICATORS (K73) and THE HEAD (K148)
-  paths: `src/ui/offscreen_indicators.ts`, `src/ui/head_indicator.ts`, `test/ui/offscreen_indicators.test.ts`, `test/ui/head_indicator.test.ts`, `src/app/frame_loop.ts`
+- `gameplay-indicators.md`: OFF-SCREEN INDICATORS (K73), THE HEAD (K148) and THE TOASTS CLEAR THE CONTROLS (K698)
+  paths: `src/ui/offscreen_indicators.ts`, `src/ui/head_indicator.ts`, `test/ui/offscreen_indicators.test.ts`, `test/ui/head_indicator.test.ts`, `src/app/frame_loop.ts`, `src/ui/share.ts`, `src/ui/toast_place.ts`, `test/ui/toast_place.test.ts`
 - `gameplay-minotaur.md`: REAL-TIME MINOTAUR (K80), THE MINOTAUR'S CONTROLS (K174), TURN-ALIGNED MINOTAUR (K80 turns), THE SWORD (K137 stage 3b)
   paths: `src/game/minotaur.ts`, `test/game/minotaur.test.ts`, `src/game/minotaur_turns.ts`, `test/game/minotaur_turns.test.ts`, `src/game/sword.ts`, `test/game/sword.test.ts`
 - `gameplay-fire.md`: BURN RACE (K114)

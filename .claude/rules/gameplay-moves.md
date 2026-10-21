@@ -82,7 +82,10 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   605..737) and nearly all of the maze, so a pad there has nothing to
   steer, and stacking the panel over it would cut the pad in half at a
   short panel's edge. The keys still move with the panel open. Checked by
-  `.claude/probes/K92/undo.mjs <base> <out> phone`.
+  `.claude/probes/K92/undo.mjs <base> <out> phone`. K713 (2026-10-21):
+  it hides in the cut's walker modes too (Lead, Delay: the walker moves,
+  not you; moveAlong refuses the keys there), and comes back when the mode
+  goes off (`.claude/probes/K698/k698.mjs pad phone`).
 
 - TIE CYCLES, CHORDS AND THE MOVE WAIT (K329 + K333 + K334, 2026-10-14;
   the key_moves.ts header; main.ts keyPress, queueTap, stepWaiting).

@@ -565,6 +565,19 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   `__knotLoop({continuous: true})`; walked earlier, the chase read tick
   0 throughout.
 
+- K698 + K713 (2026-10-21), the toasts, the walker's glow and the pad:
+  `.claude/probes/K698/k698.mjs <cut|aids|lives|walker|sword|glow|pad>
+  <phone|land|desk> [seed]` (real taps, touch on phone and land; `run.ps1
+  case:vp ...` runs a batch in parallel; out/ and shots/). An in-page
+  recorder (evaluateOnNewDocument) rect-checks EVERY toast 400 ms after it
+  shows against every visible control (buttons, links, inputs,
+  [role=button], `.km-ind/.km-pad/.km-aid/.km-cut/.km-walk/.km-control/
+  .km-banner`), plus pointer events and centring. `sword` shows the
+  sword's three texts through the app's own showToast: a dev server's
+  `await import("/src/ui/share.ts")` in the page is the module instance
+  main.ts uses (same URL). `walker_page/` holds K114's walker page driver
+  patched for port 5698 and its private-cache dev server config.
+
 ## Census and diagnosis rules
 
 - *From P3.38 (the pull-outward merge), lesson:* LESSON: the

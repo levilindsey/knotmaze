@@ -98,3 +98,6 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `starExplanation` then gives `cutRules()` and "You led the walker out
   with N cuts; par is P.". Delay has no rating, and neither has a Lead
   maze with no par. The share's title wears the stars as for any rating.
+  K713 (2026-10-21): an upper-bound par (the search's model, not proven
+  fewest) passes `rateCuts(cuts, par, true)`: the same stars, `cuts.upper`
+  set (left out when false), and the last line reads "par is at most P".

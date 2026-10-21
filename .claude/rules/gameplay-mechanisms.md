@@ -331,6 +331,18 @@ state, the map, both rules and the par search.
   (`rateCuts`, star_rating.ts: 3 at par or under, 2 one cut over, 1
   beyond; the popover gives Lead's rules, then "You led the walker out
   with N cuts; par is P."); Delay has none (rating null).
+- K713 (2026-10-21; brief `docs/design/K698_polish.md`): AN UPPER-BOUND
+  PAR (the search ran out, `par.exact` false) reads `par ≤ P` in the HUD
+  and banner row, the share title (` · ✂️ N, par ≤ P`; WalkerShare
+  `upper`) and the popover ("par is at most P"; `rateCuts(cuts, par,
+  upper)`, the stars unchanged); an exact par, 0 included (K706 call 6),
+  reads as before. THE MOVE PAD HIDES in walker modes (frame_loop.ts;
+  the keys still refuse). THE WALKER'S GLOW: while a walker mode is on,
+  before Go and while walking, the dot wears a glow in WALKER_COLOR
+  (`placeWalkerGlow`, fabric_maze_renderer.ts: one Sprite just under the
+  head mesh, at the head, the minotaur highlight's gradient and
+  MINO_GLOW_DIAM, alpha WALKER_GLOW_ALPHA 0.9, untuned); syncMinotaur is
+  untouched.
 - SCOPE: as the cut's (the classic game, free play). Not built: Keep it
   in, Show it, Race the solver, Lead's action variant, cuts with the
   minotaur or the fire (K688), dailies and saved attempts.
@@ -394,8 +406,9 @@ THE CHALK TICK AND THE COMPASS. The headers of `spool.ts`, `hints.ts` and
   modes.
 - BUTTONS (`AidButtons`, `src/ui/aid_buttons.ts`): Hint (a count badge)
   and Chalk, one group bottom left above the cut buttons' row, clear of
-  the move pad at the bottom right (call 3); the bottom toasts (K698) sit
-  below them on the phone.
+  the move pad at the bottom right (call 3); since K698 the toasts rise
+  above the group, as above every bottom control in their column
+  (gameplay-indicators.md, THE TOASTS CLEAR THE CONTROLS).
 - HOOK: `__knotFabric().aids` {spool: {used, cap, share} or null,
   hintsMax, hintsLeft, hintsUsed, hintRun, goodArm, chalk, compassRun}.
   Probe: `.claude/probes/K137/s2/aids_page.mjs <base> [desktop|phone]
