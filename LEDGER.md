@@ -344,6 +344,14 @@ Next free ID: K718.
   - evidence: `.claude/probes/K137/s3b/`
   - next: stage 3b: the sword and sprint, then the monster list, sleepers, follower, lures, snares, mud
   - brief: `docs/design/K137_s3b.md`
+- **K717** · Overnight phone sitting 2: K704 kit silence and K709 adb reconnect, then K137 s3a
+  lives, the K114 walker (an R.6.2 strip for Levi), K177 and the K687 frame cells
+  (docs/design/K717_phone.md)
+  - owner: agent `aa715134c99f25b6b` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-21 00:04, 1 h cap ~01:04)
+  - branch: mainline; last commit: `9e594af`
+  - evidence: `.claude/probes/K717/`
+  - next: part 0 (K704, K709), then parts 1-4
+  - brief: `docs/design/K717_phone.md`
 
 ## Next, in order
 
@@ -567,9 +575,6 @@ Every other item below waits on the trigger it names.
 - **K709** · Phone kit hardening (K703): phone_setup, wait_idle and run_parts should reconnect after
   an adb restart and re-add the reverse and the 9222 forward; lib703 END should take a date-time or
   a minutes cap, since HH:mm cannot cross midnight
-- **K717** · Overnight phone sitting 2: K704 kit silence and K709 adb reconnect, then K137 s3a
-  lives, the K114 walker (an R.6.2 strip for Levi), K177 and the K687 frame cells
-  (docs/design/K717_phone.md)
 
 ## Residuals (known, not fixed)
 
