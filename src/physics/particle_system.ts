@@ -625,7 +625,12 @@ export class ParticleSystem {
         if (i < strand.edgeIds.length) {
           const edge = graph.edges.get(strand.edgeIds[i])!;
           const [pa, pb] = edge.latticePoints;
-          chain.push(addParticle((pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2));
+          // K115 stage 9: a glyph text edge carries its authored curve's
+          // mid-arc point, so the slot sits on the curve, not the chord.
+          // Knot and maze edges never carry one (byte-identical path).
+          const mid = edge.mid;
+          if (mid !== undefined) chain.push(addParticle(mid[0], mid[1]));
+          else chain.push(addParticle((pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2));
         }
       }
       return chain;

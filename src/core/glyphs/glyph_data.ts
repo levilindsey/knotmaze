@@ -67,13 +67,18 @@ export function glyphI(fork: ForkAngle = 30): Glyph {
 
 // The a in Levi's o-kind form (call 6): the entry connector arches over
 // the oval's left shoulder onto J at the top and runs on along the top as
-// the spur J-S; the oval leaves J counter-clockwise, rises on the right
-// inside the spur's arc and crosses it steeply, up to the stem's top; the
-// stem's retrace is a second spur (J2-T).
+// the spur J-S; the oval leaves J counter-clockwise. Its right side is the
+// stem: the closure rises to J2 low on the right, where the tail leaves
+// down to the exit, and runs on up the stem's slant as a second spur
+// (J2-T) that crosses the first steeply (one crossing). The first form
+// (d2a82a9) put J2 above the run-on, so the closure AND the stem crossed
+// it (two crossings, and the stem 10 GU from the bowl).
+// At xh 2 the rules set the lengths: the crossing sits >= 0.60 LU from J,
+// and both tips run on >= 0.56 / sin(theta) LU past it (section 5 rule 3).
 const A_GLYPH: Glyph = {
   ch: "a",
   entry: { at: [0, 32], dir: LOW, kind: "o" },
-  exit: { at: [98, 32], dir: LOW, cls: "B" },
+  exit: { at: [104, 32], dir: LOW, cls: "B" },
   body: knotsToPath([
     [0, 32, LOW[0], LOW[1], 0, 2],
     [12, 62, 1, 2, 4, 4],
@@ -81,25 +86,25 @@ const A_GLYPH: Glyph = {
     [46, 72, 1, 0, 16, 10, -1, 0],
     [28, 36, 0, -1, 20, 20],
     [46, 0, 1, 0, 9, 9],
-    [62, 34, 0, 1, 18, 10],
-    // J2: the closure arrives up-right; the stem leaves down.
-    [74, 76, 1, 3, 4, 8, 0, -1],
-    [78, 4, 1, 0, 8, 8],
-    [98, 32, LOW[0], LOW[1], 2, 0],
+    // J2: the closure arrives along the stem's slant; the tail leaves
+    // down-right (fork 45 degrees off the closure).
+    [66, 24, 1, 4, 3, 6, 1, -1],
+    [84, 4, 1, 0, 8, 8],
+    [104, 32, LOW[0], LOW[1], 2, 0],
   ]),
   spurs: [
     {
       at: 6,
       path: knotsToPath([
-        [46, 72, 1, 0, 0, 14],
-        [88, 46, 1, -2, 6, 0],
+        [46, 72, 1, 0, 0, 18],
+        [100, 70, 1, 0, 18, 0],
       ]),
     },
     {
-      at: 18,
+      at: 15,
       path: knotsToPath([
-        [74, 76, 1, 3, 0, 2],
-        [78, 88, 1, 3, 2, 0],
+        [66, 24, 1, 4, 0, 3],
+        [83, 92, 1, 4, 3, 0],
       ]),
     },
   ],

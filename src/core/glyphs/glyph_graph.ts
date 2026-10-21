@@ -46,6 +46,8 @@ export interface GlyphBuildOpts {
   xHeight: number;
   /** Fork measurement: the k-th i takes FORK_VARIANTS[k % 6]. */
   forks?: boolean;
+  /** Fork measurement: every i takes this FORK_VARIANTS angle. */
+  fork?: number;
 }
 
 export interface GlyphBuildStats {
@@ -234,8 +236,9 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
       continue;
     }
     let g: Glyph = GLYPHS.get(ch)!;
-    if (ch === "i" && opts.forks) {
-      g = glyphI(FORK_VARIANTS[iCount % FORK_VARIANTS.length]);
+    if (ch === "i" && (opts.forks || opts.fork !== undefined)) {
+      const f = opts.fork !== undefined ? FORK_VARIANTS.find((v) => v === opts.fork) : FORK_VARIANTS[iCount % FORK_VARIANTS.length];
+      g = glyphI(f ?? 30);
       iCount++;
     }
     let dx: number;
