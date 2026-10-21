@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K576.
+Next free ID: K578.
 
 ## Waiting on Levi
 
@@ -1022,6 +1022,10 @@ Every other item below waits on the trigger it names.
   same sign in both pairs, inside one p10-p90 band; K572).
 - **K575** · `0733182` (K115 1b-B) does not build, a hazard for any bisect across it (K572; not
   diagnosed).
+- **K576** · On the worker host (K7) two loads of one link freeze at different sim times
+  (4.967-5.017 s), so they rest in different states; in-thread rests the same every load. Probes use
+  `&phw=0` or `&phy=0` (probes.md). Untested fix idea: let the sleep fire only on a fixed substep
+  grid. `docs/design/K550_kill.md` (Handoff).
 ## Approved, to schedule (2026-10-11)
 
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
@@ -1187,14 +1191,6 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K316** · Single-threaded WASM for the collision narrow-phase (~40% of a drag's physics; the
   audit's 2-4x takes gs 18 from 0.76x to real time), only if K7 s5's phone numbers show physics, not
   rendering, as the limit. No threads (Gauss-Seidel can't be colored; SAB needs COOP/COEP).
-- **K320** · Split section-rgb (design `docs/design/K320_section_rgb.md`, stage 2 brief `docs/design/K320_stage2.md`): stage 0 PASS (split saves ~1.84 s cold), stage 1 slim done (6c592e6), 2a data plane done (ffd3864), 2b paint-samples-mask landed (this commit; cold paint 29,414 chars/1,735 ms vs combined 46,361/3,217 ms, D3D11 medians); 2c after K550. Was: at 46,850 characters it is the cold critical path (~2.8 s on
-  the desktop, K307 s1; K540 attributed G3-1's +0.39 s cold regression to the enlarged gap
-  shaders' FXC compile gating first paint — this item is its fix). A deploy that changes a shader costs every player one cold compile
-  (programs are cached by source), so a smaller or split program shortens every such load.
-  Design + measurements at bd3933a (frag now 48,737): `docs/design/K320_section_rgb.md` — rec: bundle the slim (Stage 1), prototype the split compile-only first (Stage 0 gate); four calls for Levi at its end.
-  Stage 0 verdict (eac12a3, probe-only): the split PASSES the >=0.5s gate — cold medians full 3.74s vs paint-only 1.90s / gap-only 0.51s (saving ~1.84s); `.claude/probes/K320/stage0_results.md`.
-  Stage 1 done (this commit): the bundled slim (O1+O3; O4 waits on call 1, O7 unmeasured) — section-rgb frag 48,737 -> 46,310, junction-field 29,599 -> 26,305, arm-strip 33,122 -> 31,049, pluck-still 21,075 -> 19,960; budget guard `test/render/k320_slim.test.ts`; evidence `.claude/probes/K320/results.md`. Stage 2 (the split) remains, through the Stage 0 gate and Levi's calls.
-  Stage 2 brief (docs only): `docs/design/K320_stage2.md` — gap pre-pass into a canvas-sized RGBA16F mask (keep + draw index, dirty-gated like the arm strips), paint-only section sampling it; master + explore split, fans/still keep the library; fallback to the combined programs where no half-float target; sub-steps 2a data plane / 2b split / 2c registry + gate measure; five calls at its end (rec: build as designed).
 - **K554** · K115 6d: Greek tonos and dialytika (dropped today) and glyphs for U+03AA/03AB/03CA/03CB, or
   Cyrillic (`docs/design/K115_cursive_text.md` C6, 520-526). `docs/design/K115_stage6.md` 6c items 1 and 3 (917-942).
 - **K338** · K324's side ideas (`docs/design/K324_realtime_minotaur.md`):
@@ -1248,9 +1244,13 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   6.9 s after off; the clock pauses meanwhile).
 - **K567** · If K320's split is revived (K550): draw with it only while cold, then swap to a combined program
   pre-compiled off-thread; or the cheaper try forms. All untested (`docs/ledger_notes.md` K567).
+- **K577** · Worker-host A/Bs: try `__knotStepUntil(5)` after the freeze to make them reproducible,
+  and promote the K550 kill's `ab_probe.mjs` to a tracked `scripts/` probe if more A/Bs follow
+  (`docs/design/K550_kill.md`, Handoff).
 
 ## Done
 
+- **K320** · Split section-rgb: killed by K550 (revert 08d9db5); Stage 1's slim kept (6c592e6). Done in 08d9db5 (2026-10-20).
 - **K550** · K320's gap split killed: its six code commits reverted, Stage 1 kept (6c592e6); 0 px in 8 A/B cells, 27 of 29 programs byte-identical (two vertex shaders lose a dead vChain). Done in d732a47 (2026-10-20).
 - **K572** · The phone's render regression is G3-1's gap search (`3465090`): 57 ms a frame on the phone where the old search cost 10; K320 stage 1 adds about 4 ms; K568's own confetti costs about 2 fps. Done in f1f2b01 (2026-10-20).
 - **K447** · The real-time fire on the phone (round 2026-10-20): escaped, 3 stars, 47.6 fps in the race vs 49.5 at rest; the burn costs about 2 fps (0.23 ms a frame). Done in 071aa32 (2026-10-20).
