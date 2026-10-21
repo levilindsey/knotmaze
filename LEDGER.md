@@ -251,10 +251,10 @@ Next free ID: K610.
 - **K370** · Worker input latency, p50 (target 50 ms): desktop 105 on the daily,
   70 on the knot (in-thread 285; K7 s4); phone 231, first motion 173 (in-thread
   872; K7 s5). Measure each stage first (`k7_latency.mjs`); levers: newest snapshot while grabbed, more drag substeps.
-  - owner: agent `aa8bfad6d1cc3d6bf` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 14:14, 2 h cap ~16:14)
-  - branch: `worktree-agent-aa8bfad6d1cc3d6bf`, worktree `.claude/worktrees/agent-aa8bfad6d1cc3d6bf`; last commit: `ba3769b`
+  - owner: nobody since 2026-10-20 15:55 (merged; agent `aa8bfad6d1cc3d6bf` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `8feca6b`
   - evidence: `.claude/probes/K370/`
-  - next: rebuild k7_latency.mjs on master with per-stage timestamps; measure desktop (daily, knot) and the phone daily on both hosts
+  - next: next stage: the phone worker's 2.1-2.9x substep cost (read cpu6's clock during a drag; time a worker drag with main's rendering paused), after re-measuring the phone on the merged build; brief to write
   - brief: `docs/design/K370.md`
 - **K578** · While confetti falls, every frame redraws the whole maze, gap search and all: the phone
   drops from 60 to 45 fps, the confetti's own share about 2 fps (K572). Cache the still maze in a
