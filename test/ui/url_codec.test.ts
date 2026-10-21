@@ -138,6 +138,7 @@ describe("links", () => {
       sword: "off", swordMoves: 8, // K137 stage 3b
       spool: false, spoolSlack: 0.3, hints: 0, compass: false, // K137 stage 2
       ice: 0, colorRule: "off", // K138 stage 1
+      sprint: "off", // K137 stage 3c
     });
   });
 
@@ -916,6 +917,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   sword: "swd", swordMoves: "swm", // K137 stage 3b
   spool: "sp2", spoolSlack: "sps", hints: "hn", compass: "cmp", // K137 stage 2
   ice: "ice", colorRule: "cru", // K138 stage 1
+  sprint: "spr", // K137 stage 3c
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
