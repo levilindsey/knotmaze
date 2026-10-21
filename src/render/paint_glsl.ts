@@ -277,6 +277,12 @@ out highp vec2 vSamp;
 flat out highp vec4 vKC0;
 flat out highp vec4 vKC1;
 flat out highp vec4 vKG0;
+// K620: a tapered root's (1 + table texel, sideSign, arcJ, ctrlJ), its
+// sides' sections at their feet, and the spur's section at J.
+flat out highp vec4 vKR0;
+out vec3 vKRC;
+out vec3 vKRO;
+flat out vec3 vKRJ;
 // The vertex's section color (PAINT_VERT_MAIN; needs PAINT_SECTION_GLSL).
 vec3 kVertSection;
 `;
@@ -296,6 +302,29 @@ export const PAINT_VERT_MAIN = /* glsl */ `
     vKC1 = vec4(kc1.xyz, float(kch));
     vKG0 = kg0;
     kVertSection = knotSection(kc, kctrl);
+    // K620: a tapered root (C1.w = 1 + its table's KGEOM texel; paint_math
+    // kRootVertSection, kRootSpurSection).
+    vKR0 = vec4(0.0);
+    vKRC = vec3(0.0);
+    vKRO = vec3(0.0);
+    vKRJ = vec3(0.0);
+    if (kc1.w > 0.5) {
+      int kt = int(kc1.w + 0.5) - 1;
+      highp vec4 kh0 = kG(kt);
+      highp vec4 kh1 = kG(kt + 1);
+      if (kh1.x > 0.0) {
+        highp float kf = clamp(aKey.y * kc.arcPer / kh1.x, 0.0, 1.0) * (kh0.z - 1.0);
+        int ki = min(int(kh0.z + 0.5) - 2, int(floor(kf)));
+        highp vec4 ke = mix(kG(kt + 2 + 2 * ki), kG(kt + 4 + 2 * ki), kf - float(ki));
+        int kbc = int(kh0.x + 0.5);
+        highp vec4 kb1 = kS(2 * kbc + 1);
+        KChain kb = kChainOf(kbc, kS(2 * kbc), kb1, kG(int(kb1.x + 0.5)));
+        vKR0 = vec4(kc1.w, kh0.y, kh1.xy);
+        vKRC = kSectionAtArc(kb, ke.x, -1.0);
+        vKRO = kSectionAtArc(kb, ke.y, -1.0);
+        vKRJ = kSectionAtArc(kc, kh1.x, -1.0);
+      }
+    }
   }
 `;
 
@@ -307,6 +336,10 @@ in highp vec2 vSamp;
 flat in highp vec4 vKC0;
 flat in highp vec4 vKC1;
 flat in highp vec4 vKG0;
+flat in highp vec4 vKR0;
+in vec3 vKRC;
+in vec3 vKRO;
+flat in vec3 vKRJ;
 `;
 // The fragment's wrap-pair picks (uniform control flow), then its arc and
 // approximate ctrl. Needs PAINT_DATA_GLSL.
@@ -325,6 +358,46 @@ highp vec2 kFragPoint(KChain c) {
 }
 KChain kFragChain() {
   return kChainOf(int(vKC1.w + 0.5), vKC0, vKC1, vKG0);
+}
+`;
+
+// K620 THE ROOT'S PAINT (section fragment only; needs PAINT_FX_GLSL and
+// PAINT_FRAG_DECL; paint_math.ts kRootSide / kRootPaint mirror it line for
+// line). A tapered root's fragment at root arc `a` (< arcJ): each side wears
+// its stroke's paint at its foot (the section the vertex sampled there,
+// vKRC / vKRO, then the stroke's FX at the foot, the across coordinate
+// mapped from the root's onto the stroke's), the centerline seam gets one
+// pixel of coverage, and both blend into the spur's paint at J (vKRJ plus
+// the root's FX at ctrlJ) by the junction ramps' ease (kEase, uKSect.y).
+export const ROOT_FRAG_GLSL = /* glsl */ `
+vec3 kRootSide(KChain b, highp float arc, highp float uv, vec3 rgb, out highp float al) {
+  highp float pR;
+  rgb = kFxColor(b, kCtrlOfArc(b, arc), arc / b.arcPer, rgb, pR, al);
+  if (pR > 0.0) rgb = kRainbowBlend(rgb, pR, uv);
+  return rgb;
+}
+vec3 kRootPaint(KChain kc, highp float a, highp float pxW, out highp float al) {
+  int kt = int(vKR0.x + 0.5) - 1;
+  highp vec4 h0 = kG(kt);
+  highp float u = clamp(a / vKR0.z, 0.0, 1.0);
+  highp float f = u * (h0.z - 1.0);
+  int i0 = min(int(h0.z + 0.5) - 2, int(floor(f)));
+  int ea = kt + 2 + 2 * i0;
+  highp vec4 e0 = mix(kG(ea), kG(ea + 2), f - float(i0));
+  highp vec4 e1 = mix(kG(ea + 1), kG(ea + 3), f - float(i0));
+  int bc = int(h0.x + 0.5);
+  highp vec4 b1 = kS(2 * bc + 1);
+  KChain b = kChainOf(bc, kS(2 * bc), b1, kG(int(b1.x + 0.5)));
+  highp float e = min(abs(vUV.y - 0.5) * 2.0, 1.0);
+  highp float covC = clamp(0.5 + (vUV.y - 0.5) * vKR0.y * 2.0 * e0.z / pxW, 0.0, 1.0);
+  highp float aC, aO, aJ, pJ;
+  vec3 c = kRootSide(b, e0.x, mix(e1.x, e1.y, e), vKRC, aC);
+  vec3 o = kRootSide(b, e0.y, mix(e1.z, e1.w, e), vKRO, aO);
+  vec3 j = kFxColor(kc, vKR0.w, vKR0.z / kc.arcPer, vKRJ, pJ, aJ);
+  if (pJ > 0.0) j = kRainbowBlend(j, pJ, vUV.y);
+  highp float w = u + (u * u * (3.0 - 2.0 * u) - u) * uKSect.y;
+  al = mix(mix(aO, aC, covC), aJ, w);
+  return mix(mix(o, c, covC), j, w);
 }
 `;
 
