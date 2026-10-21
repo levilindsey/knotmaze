@@ -448,3 +448,19 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   real-time guard and stalker". The golden dailies, K87 and K80_DIGESTS
   did not move. What they do: gameplay-minotaur.md's REAL-TIME GUARD AND
   STALKER; the rows: gameplay-panel.md's REAL-TIME MODEL ROWS.
+
+- COLLAPSE PARAM (K139, 2026-10-20; brief `docs/design/K139.md`):
+  `collapse` (`cl`: off | finish | free, default off; the option list
+  follows COLLAPSE_MODES in game/collapse.ts) is APPENDED at 190, after
+  K324 stage 3's 185-189; CODEC_VERSION stays 8. Neither daily-exempt nor
+  a MAZE key: a daily plays with it off, and turning it on leaves the
+  daily. Under onClockChange in undo_stack.ts's LIVE_EFFECTS (a change
+  restarts the solve: setRules, then reset()); `fabricRulesOf`
+  (url_state.ts) carries it into the controller, where it overrides
+  `fragile`, `parMode` and `parSlack` (their rows stay visible). Pins
+  that moved: the table pin (`test/ui/param_codec.test.ts`),
+  url_codec.test.ts's defaults table and OVERRIDE_KEYS (`cl`). The golden
+  snapshot, the golden dailies and K87 did not move. Probe links:
+  `?<seed>&am=instant&cl=finish` (or `cl=free`). The rules:
+  gameplay-mechanisms.md's COLLAPSE; the row: the Game folder, after
+  "Par slack (x fewest)", fabric only, in every game mode.

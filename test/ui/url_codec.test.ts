@@ -132,6 +132,7 @@ describe("links", () => {
       fragile: "off", parMode: "off", parSlack: 1,
       minoGuardRoam: 30, minoGuardDetect: 20, minoGuardLose: 30,
       minoGuardAccuracyRt: 0.4, minoStalkerAccuracyRt: 0.45,
+      collapse: "off",
     });
   });
 
@@ -904,6 +905,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   fragile: "fg", parMode: "pa", parSlack: "par",
   minoGuardRoam: "mgr", minoGuardDetect: "mgd", minoGuardLose: "mgl",
   minoGuardAccuracyRt: "mgx", minoStalkerAccuracyRt: "msx",
+  collapse: "cl",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
