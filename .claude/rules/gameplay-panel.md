@@ -231,6 +231,17 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   range)") break K327's 23 characters, so the rows carry the shorter
   ones; keys and values are the brief's. Params: gameplay-links.md's
   JUNCTION STOP PARAMS; behavior: gameplay-minotaur.md.
+- TELEGRAPH LOOK ROW (K525, 2026-10-20; brief
+  `docs/design/K525_telegraph.md`): "Telegraph look" (Rims / Line /
+  Both, `minoTelegraphLook`) sits in the Game folder right under "Show its
+  next move", a turnRow (onTurnMinoChange, so undo_stack.ts lists it under
+  that callback's LIVE_EFFECTS and an undo applies it live). refreshCond
+  hides it unless the turn minotaur is on and a telegraph shows
+  (`telegraphOn`: the checkbox, or speed charge or two, which force it
+  on). Tooltip: "Telegraph look: rims light both edges of the run it will
+  take in red; line draws a red line over it; both draws the two. The
+  ring where it will stand shows in every look. Applies live." Param:
+  gameplay-links.md's TELEGRAPH LOOK PARAM; the look: gameplay-minotaur.md.
 - ROW HELP (K467, 2026-10-15; brief `docs/design/K467.md`; Levi: "tooltip
   type information for param controls on mobile"; the coordinator's
   recommendation, no long press, no (i) buttons): a tap or click on a

@@ -209,6 +209,61 @@ only with the files it is about; `render.md` lists the area's other files.
     glow shows at every breath phase (+21 to +7 over the band), no
     blowout.
 
+- TELEGRAPH RIMS (K525, 2026-10-20; brief and handoff
+  `docs/design/K525_telegraph.md`; Levi's call, per the K525 ledger note:
+  a dropdown whose new default lights the minotaur's next run along its
+  rims the way the hover glow does, with the line kept as an option, and
+  roam must read on the phone at fit zoom). `minoTelegraphLook` (`mtl`:
+  rims, the default, | line | both; gameplay-links.md) picks the look.
+  The ring where it will stand draws in every look. One KPAINT item per
+  ROUTE PIECE, `(TELE 9, c0, c1, alpha, gap0, gap1, fade0, fade1)`,
+  written before the hover glow's RIM so that one stays last.
+  PAINT_ITEM_TELE is its own export in paint_const.ts, not a PAINT_ITEM,
+  so the constant block the webs and plucks include keeps its text.
+  - SHADER. kPaintAt keeps the strongest piece's alpha times its end ramps
+    in `kTele` (no hover-point falloff). SECTION_FRAG multiplies it by
+    kRimAcross(vUV.y) and uKTele.w, then mixes toward uKTele.rgb
+    (`kTeleOver`) after the paint and before kRimOver, so a hovered run
+    on the route shows both. kRimAcross carries uKGold.w, so the rims
+    follow the viewer's "Hover glow thickness" (`hgw`) too. Only the
+    ribbon reads it: arm strips, webs, fans and plucks draw no telegraph
+    rim (their GLSL leaves both chunks out, byte for byte, K320). Mirror:
+    paint_math.ts (`kTeleOver`, the TELE branch of kPaintAt); parity in
+    paint_gameplay.test.ts.
+  - UNIFORMS, NOT TEXELS. The colour and the strength ride uKTele (rgb,
+    w = `ribbons.teleStrength`), so a roam/hunt flip rewrites no texel;
+    KPAINT is rewritten only when the pieces change (`teleItemKey`).
+  - ALPHA is relative: 1 for the first run (or the lead piece), and
+    TELEGRAPH_LATER_SHARE (0.5) for every later run.
+  - ENDS. A junction end skips rimGap (the web's reach, as the hover glow
+    does) and fades in over TELE_JUNCTION_FADE (0.2 world); a mid-run end
+    (the minotaur's spot, a by-length stop) has no gap and fades over
+    TELE_MID_FADE (0.3). Both fades are clamped as the hover glow's is
+    (RIM_END_SHARE of half the piece less its gaps). Every walk vertex
+    counts as a junction end, so a run under two gaps (1.95 world at
+    defaults) shows no rims, only the ring.
+  - ROUTE. `render/telegraph_route.ts` `telegraphPieces(g, runs, t,
+    lead)` turns the telegraph into pieces: by runs, or by length
+    (fromSpot, segLens, stops). A missing run ends the route, and the lap
+    math goes through kLapOf/kWrap (K299). `lead` takes K324's ChasePlan
+    shape and is unused until K324 stage 2. Tests:
+    `test/render/telegraph_route.test.ts`.
+  - STRENGTH (`telegraphRimStrength`, mino_feedback.ts; first values,
+    untuned): roam 0.6, roam on a coarse pointer 0.8, hunt 1. The line
+    look keeps its alphas but roams at 0.7 on a coarse pointer
+    (TELEGRAPH_ALPHA_ROAM_COARSE; desktop 0.45, hunt 0.95), and 3b's
+    destination ring, which takes the first run's alpha, with it; the
+    ticks keep K481's alphas.
+  - CLEARS. A null telegraph, the bleed branch and syncMinotaur's three
+    hides clear the pieces (`ribbons.setTelegraph(null)`).
+  - MEASURED (desktop RX 6800 XT, perf lock, 3200x1800, the hunter after 3
+    moves, phw=0; `.claude/probes/K525/s6/gpu_*.log`). The ribbon program
+    ran 2.818/2.852 ms per frame on master and 2.813/2.799 on the branch
+    (noise; 92.6 draws). Section text: render-shaders.md. Sheets:
+    `.claude/probes/K525/s6/` (`tele_states.mjs`). Not done: the GPU vs
+    mirror census (`census_rim.mjs` was not adapted for TELE), the phone
+    pass and tuning.
+
 - RING LAPS ARE INTEGER-CORRECTED (K299, 2026-10-14; Levi: a choice's
   pulse missing, another drawn backward, a gold sliver on the next run
   after a move; brief and handoff `docs/design/K299_choice_pulse_bug.md`).

@@ -410,6 +410,23 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   evidence `.claude/probes/K481/stage3/`.
 
 - TURNS STAGE 3b (2026-10-16; sections 2.7, 2.8, 2.10): the telegraph draws one stroke a run with `mino_feedback.telegraphAlphas` (roam 0.45, hunt 0.95, later runs half; the ring follows the first), route-shaped for K324 stage 2 to reuse; the chevrons still wait for it. A catch records `TurnMinotaur.lastCatch` (player and minotaur vertices, both travel modes) and main.ts bursts a red ring (`showCatchBurst`/`tickCatchFx`, static under reduced motion) where the two meet, `minoSpotWorld(lastContact.player)` (by runs since K546; at the tap, on lastCatch's vertices, before), plucks the caught run an octave down plus its semitone neighbor, and vibrates 60 ms. K270 DIAGNOSED: `turnCaught` updated the controller but left the minotaur layer showing its pre-catch telegraph and glow at the site until the next frame's `syncMinotaur` — over the pink/lavender threads that stale red frame read as a lavender band; `turnCaught` now re-syncs in the same call. Sounds (`mino_feedback.turnCue`): a growl (two low plucks) on the turn it first sees you, a heartbeat double pluck ending within two runs, else a footstep per run walked, strength fading to 0 at 6 runs; no pan (KnotSynth has none). Fog (2.10): when `minoFog` keeps it hidden under fog of war, only its glow bleeds through at `MINO_FOG_BLEED_ALPHA` 0.16, over the fog, with no marker or telegraph. Tests: `test/game/mino_feedback.test.ts`. Sheet: `.claude/probes/K80/stage3b/contact_sheet.png` (desktop + emulated phone; the real-phone sheet waits for a phone window).
+- TELEGRAPH LOOK (K525, 2026-10-20; brief and handoff
+  `docs/design/K525_telegraph.md`): `minoTelegraphLook` (`mtl`, rims |
+  line | both, default rims; gameplay-links.md) picks how the turn
+  telegraph draws. RIMS (the new default) light both edges of each run on
+  the route in red through the ribbon shader, as the hover glow does
+  (render-paint.md's TELEGRAPH RIMS): roam 0.6, roam on a coarse pointer
+  0.8, hunt 1 (`telegraphRimStrength`), later runs at half. LINE is 3b's
+  stroke, whose roam alpha is 0.7 on a coarse pointer since K525
+  (`telegraphAlphas(hunting, runs, coarse)`; desktop 0.45, hunt 0.95).
+  BOTH draws the two. The destination ring and K481's ticks draw in every
+  look: the ring at the first run's line alpha (so 0.7 roaming on a
+  coarse pointer too), the ticks at K481's alphas. The fabric renderer
+  holds the look
+  (`fabric.telegraphLook`, set by scene.ts and live by the panel);
+  drawTelegraph skips the strokes under rims and the pieces under line.
+  The fog's bleed shows no telegraph in any look. Real time draws none
+  yet (K324 stage 2).
 - CATCH RESETS (K80 turns stage 2, K273, 2026-10-14; Levi: "a toggle to
   conditionally reset the level/Minotaur/fog when dying to the
   Minotaur"). Both clocks, shared rows after minoSleep / the real-time

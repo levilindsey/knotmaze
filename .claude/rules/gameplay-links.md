@@ -371,3 +371,22 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   its cases for the three keys) and daily_link.test.ts's exempt set. The
   render side is render-confetti.md's K336 section. K324 stage 3 appends
   more minotaur params: whoever merges second renumbers.
+
+- TELEGRAPH LOOK PARAM (K525, 2026-10-20; brief
+  `docs/design/K525_telegraph.md`): `minoTelegraphLook` (`mtl`: rims |
+  line | both, default rims) is APPENDED at 178, after K324's 171-177;
+  CODEC_VERSION stays 8. It was 158 on its branch until the rebase onto
+  b1ec927 (K324 stage 1) renumbered it and re-froze the table pin.
+  url_state reads it with readChoice (`TELEGRAPH_LOOKS`); an unknown
+  option reads the default. Neither daily-exempt nor a MAZE key (a daily
+  plays without the minotaur). A LIVE_EFFECT under onTurnMinoChange
+  (undo_stack.ts); scene.ts and panel_wiring.ts copy it to
+  `fabric.telegraphLook`. Override key `mtl`; `&mtl=line` draws stage
+  3b's strokes with their desktop alphas unchanged in code (a coarse
+  pointer's line roams at 0.7 now). No same-state A/B against master has
+  confirmed that pixel for pixel: tele_states shots differ run to run.
+  Pins that moved: the table pin
+  (`test/ui/param_codec.test.ts`), url_codec.test.ts's defaults table and
+  OVERRIDE_KEYS. The golden snapshot, the golden dailies and K87 did not
+  move. What it does: gameplay-minotaur.md's TELEGRAPH LOOK; the row:
+  gameplay-panel.md.
