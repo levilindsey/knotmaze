@@ -564,6 +564,19 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   chase waits for the state to leave "loading", then calls
   `__knotLoop({continuous: true})`; walked earlier, the chase read tick
   0 throughout.
+- K137 stage 3c (2026-10-21), sprint: `.claude/probes/K137/s3c/` holds
+  `sprint_page.mjs <base> [desktop|phone] [outDir] [seed=7]
+  [clock=turn|realtime]` (on `?<seed>&am=instant[&clk=realtime]
+  &mt=hunter&spr=on&snd=none`: a real click on the sprint button, the
+  real F key, the walk through the moveAlong and chase-tap hooks; it
+  checks the button's armed look, the minotaur standing through the turn
+  clock's first sprinted move and moving on the second, real time's
+  doubled pace for two runs, the HUD rows and used after, and ends in a
+  CHECK summary; stills and JSON in `out/`, the Chrome profile in the
+  probes folder) and `vite.private-cache.config.ts`, s3b's wrapper
+  (vite's `loadConfigFromFile`; the K19-K20 copy the launch brief names
+  fails with ERR_MODULE_NOT_FOUND, the K80 GOTCHA above). s3b's
+  `sword_page.mjs` links carry `&snd=off`: new links take `&snd=none`.
 
 - K698 + K713 (2026-10-21), the toasts, the walker's glow and the pad:
   `.claude/probes/K698/k698.mjs <cut|aids|lives|walker|sword|glow|pad>
