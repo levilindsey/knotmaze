@@ -67,6 +67,7 @@ import { SolveClock, efficiencyOf } from "./game/maze_stats";
 import { shareText } from "./game/share_text";
 import { parScore } from "./game/par";
 import { catchHeart, heartsToast, livesOf, type HeartLoss } from "./game/lives";
+import { newSword, swordSpot, type SwordAvoid, type SwordPhase } from "./game/sword";
 import { rateCuts, rateRun, ratingForResult, walkedOf } from "./game/star_rating";
 import { LossBanner, MazeHud, WinBanner } from "./ui/maze_hud";
 import type { HudSnapshot } from "./ui/maze_hud";
@@ -1740,8 +1741,47 @@ async function main(): Promise<void> {
     const limits = fcb && fcb.fragileOn ? fcb.breakLimits : null;
     scene.chase?.setBreakLimits(limits);
     scene.turnMino?.setBreakLimits(limits);
+    laySword();
     turnWait = 0;
     scene.fabric?.syncMinotaur(liveMino(), params.minoFog, scene.turnMino?.telegraph() ?? null);
+  };
+
+  // K137 stage 3b (4.7, game/sword.ts): a new chase lays the sword down,
+  // 4-8 runs off the shortest way on the seed's own stream, clear of the
+  // lair's doorstep (one run around the exit tail's junction) or the
+  // guard's territory; none while the param is off or no spot qualifies.
+  // `swordSeen` is the phase the page last announced (toasts, HUD).
+  let swordSeen: SwordPhase | null = null;
+  const laySword = (): void => {
+    swordSeen = null;
+    const m = scene.chase ?? scene.turnMino;
+    if (!m || params.sword === "off") return;
+    const avoid: SwordAvoid =
+      params.minotaur !== "guard"
+        ? { hops: 1 }
+        : scene.chase
+          ? { dist: params.minoGuardRoam }
+          : { hops: params.minoTerritory };
+    const spot = swordSpot(m.g, params.seed, avoid);
+    if (spot < 0) return;
+    const s = newSword(spot, params.sword, params.swordMoves);
+    scene.chase?.setSword(s);
+    scene.turnMino?.setSword(s);
+    swordSeen = s.phase;
+  };
+
+  // The sword's news since the last look, on either clock: a toast for each
+  // change of phase or touch (taken, banished, slain, spent).
+  const swordNews = (touch: "banish" | "slay" | null): void => {
+    const s = (scene.chase ?? scene.turnMino)?.sword ?? null;
+    if (!s) return;
+    if (touch === "banish") showToast("Banished to its lair!", 2200);
+    else if (touch === "slay") showToast("Slain! The maze is yours.", 2600);
+    else if (s.phase !== swordSeen) {
+      if (s.phase === "fleeing") showToast("You have the sword! It flees.", 2200);
+      else if (s.phase === "used" && swordSeen === "fleeing") showToast("The sword is spent.", 2000);
+    }
+    swordSeen = s.phase;
   };
 
   // A catch's toast (K80, both clocks; K273: or the level restarts).
@@ -1939,6 +1979,10 @@ async function main(): Promise<void> {
           scene.fabric.update(fc);
           updateHud();
           showCaughtToast(scene.chase.catches, false, heart);
+        } else if (ev.kind === "sword") {
+          // K137 stage 3b: taken, banished, slain or spent.
+          swordNews(ev.what === "banish" || ev.what === "slay" ? ev.what : null);
+          updateHud();
         }
       }
     }
@@ -2119,6 +2163,7 @@ async function main(): Promise<void> {
     const wasHunting = scene.turnMino.hunting;
     const r = scene.turnMino.turn(eid);
     turnWait = 0;
+    swordNews(scene.turnMino.lastTouch?.kind ?? null); // K137 stage 3b
     if (r === "reject" && !turnWarned) {
       turnWarned = true;
       console.warn(`K80 turns: the minotaur refused run ${eid} (out of step)`);
@@ -2232,6 +2277,7 @@ async function main(): Promise<void> {
     const wasHunting = scene.turnMino.hunting;
     const r = scene.turnMino.turn(-1);
     if (r === "reject" || r === "noop") return false;
+    swordNews(scene.turnMino.lastTouch?.kind ?? null); // K137 stage 3b
     noteMove();
     if (r === "moved") minoTurnSound(wasHunting);
     if (r === "caught") {
