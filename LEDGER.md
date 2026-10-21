@@ -382,11 +382,19 @@ Next free ID: K734.
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
-  - owner: nobody since 2026-10-21 01:45 (merged; agent `a8880b1b86770b4ed` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `f4aa1b0`
-  - evidence: `docs/design/K138_plan.md`
-  - next: launch s1 (the rule kit, ice runs, the color rule) from docs/design/K138_s1.md on ports 5390-5393; s2-s8 per the K138_plan.md stage order
-  - brief: `docs/design/K138_plan.md`
+  - owner: agent `a5c8d4138b6217bdc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 02:16, 2 h cap ~04:16)
+  - branch: `worktree-agent-a5c8d4138b6217bdc`, worktree `.claude/worktrees/agent-a5c8d4138b6217bdc`; last commit: `65ee13a6`
+  - evidence: `.claude/probes/K138/s1/`
+  - next: stage 1: the rule kit, ice runs, the color rule; then s2-s8 per the K138_plan.md stage order
+  - brief: `docs/design/K138_s1.md`
+- **K726** · Phone sitting 3 (sonnet, after K720 merges): the K718 glyph cases at the Pixel real
+  size, the sword on real touches, K720 (no AudioContext under snd=none).
+  `docs/design/K726_phone.md`
+  - owner: agent afbc3cd74fdd226a2 of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-21 02:16, 1 h cap ~03:16)
+  - branch: mainline (probes only, in the main checkout); last commit: `65ee13a6`
+  - evidence: `.claude/probes/K726/`
+  - next: parts 1-3 on one origin/master build: K718 glyph pages and sheets, the sword on real touches, K720 audio counts
+  - brief: `docs/design/K726_phone.md`
 
 ## Next, in order
 
@@ -601,9 +609,6 @@ Every other item below waits on the trigger it names.
 - **K698** · Phone toasts cover the bottom controls (Pixel 411x753): the cut refusal over Undo (K703,
   gone by 1.7 s; a touch still reaches Undo), the lives toasts over the move pad, the walker toasts over
   .km-walk and the pad (K717 `out/lives`, `out/walker`). Place toasts clear of the controls.
-- **K726** · Phone sitting 3 (sonnet, after K720 merges): the K718 glyph cases at the Pixel real
-  size, the sword on real touches, K720 (no AudioContext under snd=none).
-  `docs/design/K726_phone.md`
 - **K728** · Real-time seeker for the K708 sim (a sword-seeking player on MinotaurChase): the
   real-time sword best case is unmeasured and informs K727 (.claude/probes/K708/rt/, a sweep takes
   about 35 s)
