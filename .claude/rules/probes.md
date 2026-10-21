@@ -96,6 +96,16 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
 
 ## Probe gotchas, hooks and tooling
 
+- *K550 (2026-10-20), the worker host:* two loads of one link do NOT
+  sleep in the same state on the default worker host (K7): they froze at
+  sim 4.967, 5.0 and 5.017 s with different state hashes, so a
+  same-build control read 88-8039 px. A same-state A/B runs with `&phy=0`
+  (physics off) or `&phw=0` (in-thread, the same state every load) and
+  checks the `__knotPhysDump` hashes. A burn needs its FX pinned
+  (`F.tickFireFx = function () {}`, then `F.fireFx.clear()`), and knot
+  mode needs a sensitivity control other than debug view 5 (hide
+  `renderer.root`). Recipe: the K550 kill's `ab_probe.mjs`
+  (`.claude/probes/K550/kill/`).
 - *K75 (2026-10-12), cross-build frames:* a frozen page keeps the flow
   undulation at whatever flow time it had when frozen (main.ts re-syncs
   flowStrength every tick, so `freeze()`'s `flowStrength = 0` does not
@@ -452,7 +462,8 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   (maxΔ 1), which master against master shows too (the probe's page
   order); k83_ab pins it too since K381, older recipes do not. A ROUND
   TRIP'S CONTROL MUST DIFFER: the physics is deterministic, so two loads
-  of one link sleep in the same state, and batch4's six capture/restore
+  of one link sleep in the same state (in-thread or with physics off; not
+  on the worker host, K550 above), and batch4's six capture/restore
   round trips passed with controls of 0 px, proving nothing. Perturb the
   restoring page before its control shot (every particle by 0.06 sin/cos,
   every displayF by 0.02) and require control > 0. Hooks:
