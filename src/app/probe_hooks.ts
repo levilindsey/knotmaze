@@ -684,6 +684,8 @@ export function installProbeHooks(ctx: ProbeCtx): void {
             unrevealed: c.hiddenRuns(),
             fewest: c.fewestRuns,
             fewestWithHidden: c.fewestWithHidden,
+            // K138 s3: the one-way runs, [run, entry vertex] each.
+            oneWay: c.ruleLook?.oneWay ? [...c.ruleLook.oneWay] : null,
             // Each run's note (the pitch a pluck at its middle plays; a
             // reveal matches it), only while hidden runs are laid.
             notes: c.ruleLook?.hidden

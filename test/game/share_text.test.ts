@@ -153,6 +153,13 @@ describe("K138 rule tags", () => {
     expect(t).toBe("Knotmaze \u{1F9F6} · \u{1F9CA} 25% · \u{1F3A8} cycle · \u{1F504} 4 · \u{1F47B} 1/2");
   });
 
+  it("ends with the one-way runs laid (K138 stage 3)", () => {
+    expect(title({ ...BASE, hidden: { found: 1, of: 2 }, oneWay: 12 })).toBe(
+      "Knotmaze \u{1F9F6} · \u{1F47B} 1/2 · \u23E9 12"
+    );
+    expect(title({ ...BASE, oneWay: null })).toBe("Knotmaze \u{1F9F6}");
+  });
+
   it("leaves each out while its rule is off", () => {
     for (const info of [
       BASE,

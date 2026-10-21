@@ -31,7 +31,9 @@
 // kit has no backtrack move (the search bars the arrival run), so par is the
 // directed search. In the game a backtrack retraces a whole move, so the
 // controller refuses one whose move took a one-way run (oneWayBlocksBack);
-// Undo replays the actions, so it is always allowed.
+// Undo replays the actions, so it is always allowed. With a clock
+// (turnstiles) the kit's bounces backtrack, so the rule's blocksBack keeps
+// them off such a move too.
 
 import type { RuleWalk, WalkRule, Placement } from "./rule_search";
 import { composeRules, exemptRun, meterLength, placeRule, plainRule, ruleRng, ruleSearch } from "./rule_search";
@@ -79,6 +81,7 @@ export function oneWayRule(walk: RuleWalk, layout: OneWayLayout): WalkRule {
   return {
     states: 1,
     start: 0,
+    blocksBack: (runs) => oneWayBlocksBack(layout, runs),
     step(from, run, state) {
       const e = walk.edges[run];
       if (!e || (e.va !== from && e.vb !== from)) return null;

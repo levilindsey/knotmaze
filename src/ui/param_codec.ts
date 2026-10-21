@@ -374,6 +374,9 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // and their kind (SLEEP_KINDS order, game/monsters.ts).
   num("sleepers"),
   choice("sleepKind", ["wake", "follow", "both"]),
+  // 209, K138 stage 3: one-way runs (0 off, else the share of the core runs;
+  // game/one_way.ts).
+  num("oneWay"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -539,6 +542,7 @@ export const PARAM_RANGES: Readonly<
   turnstiles: [0, 8], // K138 stage 2 (TURNSTILES_MAX)
   hiddenRuns: [0, 4], // K138 stage 2 (HIDDEN_MAX)
   sleepers: [0, 3], // K137 stage 3d (SLEEPERS_MAX)
+  oneWay: [0, 0.6], // K138 stage 3 (ONE_WAY_MAX)
 });
 
 // A link value held to its panel range (K398); a param with no range,

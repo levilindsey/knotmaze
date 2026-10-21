@@ -22,7 +22,7 @@
 // K114's spider (K98 landed the glyph and the role); K137 stage 3d's
 // follower wears it while it walks (fabric_maze_renderer.ts syncExtras).
 // "sword": K137 stage 3b's sword, at its spot until the player takes it.
-export type MarkerRole = "start" | "exit" | "head" | "minotaur" | "spider" | "sword" | "tick";
+export type MarkerRole = "start" | "exit" | "head" | "minotaur" | "spider" | "sword" | "tick" | "chevron";
 
 // Stroke width and rim margin, in disc radii. The margin equals the stroke
 // (the brief); the outer ink therefore reaches radius 1 - MARKER_MARGIN.
@@ -471,6 +471,14 @@ const DESIGNS: GlyphDesign[] = [
     label: "chalk tick",
     lines: pen().M(5.2, 12.6).L(10, 17.4).L(18.8, 7.2).lines(),
   },
+  {
+    // K138 stage 3: a ONE-WAY CHEVRON, pointing +x (the renderer turns the
+    // mesh along the run's way); a placeholder for Levi to replace.
+    id: "oneway",
+    role: "chevron",
+    label: "one-way chevron",
+    lines: pen().M(8.4, 5.4).L(15.6, 12).L(8.4, 18.6).lines(),
+  },
 ];
 
 // Legs given for the left side (hip, knee, foot), mirrored to the right
@@ -586,6 +594,7 @@ export const DEFAULT_GLYPHS: Readonly<Record<MarkerRole, string>> = {
   spider: DESIGNS.find((d) => d.role === "spider")!.id,
   sword: DESIGNS.find((d) => d.role === "sword")!.id,
   tick: DESIGNS.find((d) => d.role === "tick")!.id,
+  chevron: DESIGNS.find((d) => d.role === "chevron")!.id,
 };
 
 // Every glyph id of a role, the default first.

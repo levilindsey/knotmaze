@@ -43,6 +43,7 @@ import { HINTS_MAX } from "../game/hints";
 import { ICE_SHARE_MAX, ICE_SHARE_ON } from "../game/ice";
 import { TURNSTILES_MAX } from "../game/turnstiles";
 import { HIDDEN_MAX } from "../game/hidden_runs";
+import { ONE_WAY_MAX } from "../game/one_way";
 import { LIVES_MAX, LIVES_RECOMMENDED, livesOf } from "../game/lives";
 import { SWORD_MOVES_MAX, SWORD_MOVES_MIN } from "../game/sword";
 import { SLEEPERS_MAX } from "../game/monsters";
@@ -1709,6 +1710,16 @@ export function buildPanel(
     "Hidden shortcut runs (0: none). A hidden run draws nothing and cannot be tapped until you pluck a thread of the same note within three runs of it; then it shows for the rest of the solve (Undo past the pluck hides it again). Par and the stars rate the maze without them; the HUD shows the shorter par with them too. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
     D.hiddenRuns, () => callbacks.onClockChange()
   );
+  // K138 stage 3 (game/one_way.ts): one-way runs, the same scope and restart.
+  const oneWayRow = row(
+    fGame, p, "oneWay",
+    { min: 0, max: ONE_WAY_MAX, pointerScale: 0.01, format: (v: number) => (v === 0 ? "off" : v.toFixed(2)), label: "One-way runs" },
+    "Some runs are one-way: chevrons along the run point the way, and a tap against them is refused. A backtrack over a one-way run is refused too (Undo always works). The share of the maze's loop runs that are one-way; 0.3 is a good start, 0 is off. The way out never closes. The fewest moves and par follow the arrows. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
+    D.oneWay, () => {
+      params.oneWay = Math.round(params.oneWay * 20) / 20;
+      callbacks.onClockChange();
+    }
+  );
 
   // K80: the real-time chase's tuning (game/minotaur.ts ChaseParams; the
   // defaults were picked by a headless simulation). All live. Since K80
@@ -2950,6 +2961,7 @@ export function buildPanel(
     colorRuleRow.hidden = !fab || params.gameMode !== "classic";
     turnstilesRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 2
     hiddenRunsRow.hidden = !fab || params.gameMode !== "classic";
+    oneWayRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 3
     // Under the thread reveal too (K76 stage 2c: the same two settings).
     minoFogRow.hidden = !minoOn || !(fog || threads);
     // K137 stage 3a: lives replace the level row while on (game/lives.ts).

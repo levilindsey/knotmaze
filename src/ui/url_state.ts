@@ -825,6 +825,9 @@ export interface UrlParams {
   // your trail) | both (alternating). Free play only.
   sleepers: number;
   sleepKind: SleepKind;
+  // K138 stage 3: one-way runs, 0 off or the share of the maze's core runs
+  // (0..ONE_WAY_MAX 0.6) walked one way only. The classic game only.
+  oneWay: number;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1141,6 +1144,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K137 stage 3d: no extra monsters (sleepKind waits for a count).
   sleepers: 0,
   sleepKind: "wake",
+  // K138 stage 3: no one-way runs.
+  oneWay: 0,
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1192,6 +1197,7 @@ export function fabricRulesOf(
     | "clock"
     | "turnstiles"
     | "hiddenRuns"
+    | "oneWay"
   >
 ): FabricRules {
   return {
@@ -1210,6 +1216,8 @@ export function fabricRulesOf(
     // K138 stage 2: turnstiles and hidden runs, likewise.
     turnstiles: p.gameMode === "classic" ? p.turnstiles : 0,
     hiddenRuns: p.gameMode === "classic" ? p.hiddenRuns : 0,
+    // K138 stage 3: one-way runs, likewise.
+    oneWay: p.gameMode === "classic" ? p.oneWay : 0,
   };
 }
 
@@ -1939,6 +1947,8 @@ function readLegacy(
     // clamps the count to 0..3).
     sleepers: readNumber(query, "slp", D.sleepers),
     sleepKind: readChoice(query, "slk", SLEEP_KINDS, D.sleepKind),
+    // K138 stage 3's one-way share (`&ow=0.4`; PARAM_RANGES clamps 0..0.6).
+    oneWay: readNumber(query, "ow", D.oneWay),
   };
 }
 

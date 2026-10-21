@@ -58,6 +58,8 @@ export interface ShareInfo {
   colorRule?: string | null;
   turnstiles?: number | null;
   hidden?: { found: number; of: number } | null;
+  // K138 stage 3: the one-way runs laid.
+  oneWay?: number | null;
 }
 
 // K114 walker: the title line's tag. Lead: "✂️ 4, par 3" (no par part when
@@ -119,7 +121,9 @@ export function shareText(info: ShareInfo): string {
     (info.ice != null ? ` · \u{1F9CA} ${info.ice}%` : "") +
     (info.colorRule ? ` · \u{1F3A8} ${info.colorRule}` : "") +
     (info.turnstiles != null ? ` · \u{1F504} ${info.turnstiles}` : "") +
-    (info.hidden ? ` · \u{1F47B} ${info.hidden.found}/${info.hidden.of}` : "");
+    (info.hidden ? ` · \u{1F47B} ${info.hidden.found}/${info.hidden.of}` : "") +
+    // K138 stage 3: " · ⏩ 12" (one-way runs laid).
+    (info.oneWay != null ? ` · \u23E9 ${info.oneWay}` : "");
   const eff =
     info.efficiency === null
       ? ""

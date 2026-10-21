@@ -93,6 +93,7 @@ describe("marker glyphs (K83)", () => {
       spider: "spider",
       sword: "sword",
       tick: "tick",
+      chevron: "oneway",
     });
     for (const role of ROLES) {
       const ids = glyphsForRole(role);
@@ -226,8 +227,19 @@ describe("marker glyphs (K83)", () => {
     expect(g.lines[0].length).toBe(6);
   });
 
+  it("the one-way chevron (K138 stage 3): one stroke of two legs, pointing +x", () => {
+    expect(glyphsForRole("chevron")).toEqual(["oneway"]);
+    expect(markerGlyph("here", "chevron").id).toBe("oneway");
+    const g = MARKER_GLYPHS.get("oneway")!;
+    expect([g.lines.length, g.rings.length / 3, g.dots.length / 3]).toEqual([1, 0, 0]);
+    expect(g.lines[0].length).toBe(6);
+    // The tip (the middle point) is the rightmost, on the center line.
+    expect(g.lines[0][2]).toBeGreaterThan(g.lines[0][0]);
+    expect(g.lines[0][3]).toBeCloseTo(0, 6);
+  });
+
   it("fits a glyph's outer ink to any radius (the off-screen indicator's box)", () => {
-    for (const role of [...ROLES, "minotaur" as const, "spider" as const, "sword" as const, "tick" as const]) {
+    for (const role of [...ROLES, "minotaur" as const, "spider" as const, "sword" as const, "tick" as const, "chevron" as const]) {
       const id = DEFAULT_GLYPHS[role];
       const svg = markerGlyphSvgFit(id, role, 10.75);
       const k = Number(svg.match(/^<g transform="scale\(([\d.]+)\)">/)![1]);

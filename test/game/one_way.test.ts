@@ -13,6 +13,7 @@ import {
 } from "../../src/game/one_way";
 import { iceRule, placeIce } from "../../src/game/ice";
 import { ruleMaze } from "./rule_fixtures";
+import { ruleFields, ruleShareTags } from "../../src/app/rule_loss";
 
 // K138 stage 3: one-way runs (one_way.ts) and the controller's one-way rule.
 
@@ -387,5 +388,30 @@ describe("one-way runs: the controller", () => {
     }
     for (const n of placedOf.values()) expect(n).toBeGreaterThanOrEqual(4);
     expect(placedOf.size).toBe(2);
+  });
+
+  it("composes with turnstiles and hidden runs, and fills the HUD row and the share tag", () => {
+    let placed = 0;
+    for (const seed of [1, 2, 3, 5, 7]) {
+      const c = make(seed, { oneWay: 0.3, turnstiles: 3, hiddenRuns: 1 });
+      expect(c.rulesOn).toBe(true);
+      const look = c.ruleLook!;
+      if (!look.oneWay) {
+        expect(look.placed).toBe(false);
+        continue;
+      }
+      placed++;
+      expect(ruleFields(c).oneWay).toBe(look.oneWay.size);
+      expect(ruleShareTags(c).oneWay).toBe(look.oneWay.size);
+      const best = ruleSearch(c.walk, c.rule!);
+      expect(best.solvable).toBe(true);
+      for (const run of best.route) expect(["advance", "backtrack", "win"]).toContain(tap(c, run));
+      expect(c.solved).toBe(true);
+    }
+    expect(placed).toBeGreaterThanOrEqual(4);
+    // Off: no row, no tag.
+    const off = make(3, {});
+    expect(ruleFields(off).oneWay).toBeNull();
+    expect(ruleShareTags(off).oneWay).toBeNull();
   });
 });
