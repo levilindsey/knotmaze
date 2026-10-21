@@ -66,7 +66,12 @@ export type StatId =
   | "spool"
   | "spoolUsed"
   | "hints"
-  | "hintsUsed";
+  | "hintsUsed"
+  // K138: the rules row (stage 1's ice and color rule), the turnstiles and
+  // the hidden runs (stage 2).
+  | "rules"
+  | "turnstiles"
+  | "hidden";
 
 export const STATS: Record<StatId, { label: string; line: string }> = {
   // TIME above (SolveClock). The Burnt banner shows it too, for a run the
@@ -306,6 +311,33 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
   hintsUsed: {
     label: "hints used",
     line: "Hints you used on the way to the exit.",
+  },
+  // K138 (the row came with stage 2): ice's share and the color rule, and
+  // "no layout" when one found no layout on this maze.
+  rules: {
+    label: "rules",
+    line:
+      "The run rules in play: ice and the share of icy runs (you slide on " +
+      "across them), and the color rule (alternate or cycle the shades). " +
+      "\"no layout\": a rule found no layout on this maze and is off.",
+  },
+  // K138 stage 2: the turnstiles laid.
+  turnstiles: {
+    label: "turnstiles",
+    line:
+      "Turnstile junctions. Each connects two of its three runs, and the " +
+      "open pair turns one step with every move you make. Going back the " +
+      "way you came is always allowed.",
+  },
+  // K138 stage 2: the hidden runs found of those laid; the fewest moves
+  // without them (the rating's) and with them.
+  hidden: {
+    label: "hidden",
+    line:
+      "Hidden runs found of those in the maze. A hidden run draws nothing " +
+      "until you pluck a thread of the same note within three runs of it. " +
+      "Fewest: the fewest moves to the exit without the hidden runs (what " +
+      "the stars rate against), then with them.",
   },
 };
 

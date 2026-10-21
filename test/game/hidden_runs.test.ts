@@ -11,6 +11,7 @@ import {
   REVEAL_RUNS,
 } from "../../src/game/hidden_runs";
 import { ruleMaze } from "./rule_fixtures";
+import { ruleFields, ruleShareTags, rulesValue } from "../../src/app/rule_loss";
 
 // K138 stage 2: hidden runs (hidden_runs.ts) and the reveals in the
 // controller.
@@ -182,6 +183,35 @@ describe("hidden runs: the controller", () => {
       checked++;
     }
     expect(checked).toBeGreaterThan(0);
+  });
+
+  it("fills the HUD rows and the share tags", () => {
+    const c = make(3, { hiddenRuns: 2, turnstiles: 4, ice: 0.25 });
+    const look = c.ruleLook!;
+    const f = ruleFields(c);
+    expect(f.rules).toBe("ice 25%");
+    expect(f.turnstiles).toBe(look.turnstiles!.length);
+    expect(f.hidden).toEqual({
+      found: 0,
+      of: look.hidden!.length,
+      fewest: c.fewestRuns,
+      withAll: c.fewestWithHidden,
+    });
+    expect(ruleShareTags(c)).toEqual({
+      ice: 25,
+      colorRule: null,
+      turnstiles: look.turnstiles!.length,
+      hidden: { found: 0, of: look.hidden!.length },
+    });
+    expect(c.reveal(look.hidden![0])).toBe(true);
+    expect(ruleFields(c).hidden!.found).toBe(1);
+    expect(ruleShareTags(c).hidden).toEqual({ found: 1, of: look.hidden!.length });
+    // Off: no rows, no tags.
+    const off = make(3, {});
+    const g = ruleFields(off);
+    expect([g.rules, g.turnstiles, g.hidden]).toEqual([null, null, null]);
+    expect(ruleShareTags(off)).toEqual({ ice: null, colorRule: null, turnstiles: null, hidden: null });
+    expect(rulesValue(make(3, { colorRule: "alternate" }))).toBe("alternate");
   });
 
   it("composes with turnstiles and ice", () => {

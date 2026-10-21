@@ -1699,7 +1699,7 @@ export function buildPanel(
   const turnstilesRow = row(
     fGame, p, "turnstiles",
     { min: 0, max: TURNSTILES_MAX, step: 1, label: "Turnstiles" },
-    "Turnstile junctions (0: none). At a turnstile only two of its three runs connect, and the open pair turns one step with every move you make, backtracks included; the closed run shows dim. Going back the way you came is always allowed. The fewest moves and par read the turnstiles. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
+    "Turnstile junctions (0: none). At a turnstile only two of its three runs connect, and the open pair turns one step with every move you make, backtracks included; a band through the junction shows the open pair. Going back the way you came is always allowed. The fewest moves and par read the turnstiles. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
     D.turnstiles, () => callbacks.onClockChange()
   );
   const hiddenRunsRow = row(

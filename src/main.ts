@@ -157,7 +157,7 @@ import { createPointerInput } from "./app/input_pointer";
 import { createKeyInput } from "./app/input_keys";
 import { createLossCover, installContextLoss } from "./app/context_loss";
 import { createAutoAudio } from "./app/auto_audio";
-import { SNAP_OCTAVE, SNAP_STRENGTH, createRuleLoss, ruleFields } from "./app/rule_loss";
+import { SNAP_OCTAVE, SNAP_STRENGTH, createRuleLoss, ruleFields, ruleShareTags } from "./app/rule_loss";
 import {
   FOLLOW_DELAY,
   FOLLOW_RAMP,
@@ -1633,7 +1633,8 @@ async function main(): Promise<void> {
           : rateRun(walkedOf(c.pathLength, c.backtrackDist), c.optimal);
     const stars = rating?.stars ?? null;
     // K139: the collapse score against par (null: collapse off).
-    const collapse = ruleFields(c).collapse ?? null;
+    const ruleRows = ruleFields(c); // K138: the rules' rows for the banner.
+    const collapse = ruleRows.collapse ?? null;
     const collapseMode = c.collapse === "free" ? "free" : "finish";
     lastWin = {
       text: shareText({
@@ -1665,6 +1666,7 @@ async function main(): Promise<void> {
         // K137 stage 2: the spool's share used and the hints used.
         spool: c.spoolOn ? { used: c.spoolUsed, cap: c.spoolCap } : null,
         hintsUsed: c.hintsMax > 0 ? c.hintsUsed : null,
+        ...ruleShareTags(c), // K138: the rules' tags.
       }),
       url: daily !== null ? dailyUrl(daily) : location.href,
     };
@@ -1710,6 +1712,10 @@ async function main(): Promise<void> {
       // K137 stage 2: the share of the spool paid out, and the hints used.
       spoolUsed: c.spoolOn ? spoolPercentUsed(c.spoolUsed, c.spoolCap) : null,
       hintsUsed: c.hintsMax > 0 ? c.hintsUsed : null,
+      // K138: the rules row, the turnstiles and the hidden runs found.
+      rules: ruleRows.rules,
+      turnstiles: ruleRows.turnstiles,
+      hidden: ruleRows.hidden,
     });
     updateHud();
     throwConfetti();

@@ -48,6 +48,13 @@ export interface ShareInfo {
   // absent: the spool off), and the hints used (null, absent or 0: no tag).
   spool?: { used: number; cap: number } | null;
   hintsUsed?: number | null;
+  // K138: the rules' title tags (null or absent: that rule off): ice's share
+  // of the runs (a whole percent), the color rule's mode, the turnstiles
+  // laid, and the hidden runs found of those laid.
+  ice?: number | null;
+  colorRule?: string | null;
+  turnstiles?: number | null;
+  hidden?: { found: number; of: number } | null;
 }
 
 // K114 walker: the title line's tag. Lead: "✂️ 4, par 3" (no par part when
@@ -101,12 +108,19 @@ export function shareText(info: ShareInfo): string {
   const spoolT = info.spool ? spoolTag(info.spool.used, info.spool.cap) : null;
   const hintT = info.hintsUsed != null ? hintsTag(info.hintsUsed) : null;
   const aids = `${spoolT ? ` · ${spoolT}` : ""}${hintT ? ` · ${hintT}` : ""}`;
+  // K138: " · 🧊 25%" (ice), " · 🎨 cycle" (the color rule), " · 🔄 4"
+  // (turnstiles), " · 👻 1/2" (hidden runs found of those laid).
+  const rules =
+    (info.ice != null ? ` · \u{1F9CA} ${info.ice}%` : "") +
+    (info.colorRule ? ` · \u{1F3A8} ${info.colorRule}` : "") +
+    (info.turnstiles != null ? ` · \u{1F504} ${info.turnstiles}` : "") +
+    (info.hidden ? ` · \u{1F47B} ${info.hidden.found}/${info.hidden.of}` : "");
   const eff =
     info.efficiency === null
       ? ""
       : ` · \u{1F3AF} ${efficiencyPercent(info.efficiency)}%`;
   const lines = [
-    `${title} \u{1F9F6}${stars}${mino}${hearts}${sword}${sprint}${snap}${par}${cut}${aids}`,
+    `${title} \u{1F9F6}${stars}${mino}${hearts}${sword}${sprint}${snap}${par}${cut}${aids}${rules}`,
     `⏱️ ${formatDuration(info.timeMs)}${eff}`,
   ];
   if (info.collapse) lines.push(collapseLine(info.collapse));

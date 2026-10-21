@@ -7,6 +7,7 @@
 // frame loop's keyStep slot, after the move's tick.
 import { parText } from "../game/collapse";
 import type { FabricMazeController } from "../game/fabric_controller";
+import type { ShareInfo } from "../game/share_text";
 import { ruleLossEntries } from "../ui/maze_hud";
 import type { LossBanner, RuleFields } from "../ui/maze_hud";
 
@@ -55,6 +56,47 @@ export function ruleFields(fc: FabricMazeController): RuleFields {
     // spoolUsed and hintsUsed ride main.ts's WinInfo, not these).
     spool: fc.spoolOn ? { used: fc.spoolUsed, cap: fc.spoolCap } : null,
     hints: fc.hintsMax > 0 ? { left: fc.hintsLeft, of: fc.hintsMax } : null,
+    // K138: the rules row, the turnstiles laid and the hidden runs found.
+    rules: rulesValue(fc),
+    turnstiles: fc.turnstileCount > 0 ? (fc.ruleLook?.turnstiles?.length ?? 0) : null,
+    hidden:
+      fc.hiddenCount > 0
+        ? {
+            found: fc.revealed.size,
+            of: fc.ruleLook?.hidden?.length ?? 0,
+            fewest: fc.fewestRuns,
+            withAll: fc.fewestWithHidden,
+          }
+        : null,
+  };
+}
+
+// K138 stage 1's row (built in stage 2): "ice 25% · cycle", "alternate",
+// "ice 25% · no layout" (a rule that found no layout is off); null with
+// neither ice nor the color rule on.
+export function rulesValue(fc: FabricMazeController): string | null {
+  const ice = fc.iceShare > 0;
+  const color = fc.colorMode !== "off";
+  if (!ice && !color) return null;
+  const look = fc.ruleLook;
+  const parts: string[] = [];
+  if (ice) parts.push(`ice ${Math.round(fc.iceShare * 100)}%`);
+  if (color) parts.push(fc.colorMode);
+  if ((ice && !look?.icy) || (color && !look?.colors)) parts.push("no layout");
+  return parts.join(" \u00B7 ");
+}
+
+// K138: the share title's rule tags (null: that rule off, or not laid).
+export function ruleShareTags(
+  fc: FabricMazeController
+): Pick<ShareInfo, "ice" | "colorRule" | "turnstiles" | "hidden"> {
+  const look = fc.ruleLook;
+  return {
+    ice: fc.iceShare > 0 && look?.icy ? Math.round(fc.iceShare * 100) : null,
+    colorRule: fc.colorMode !== "off" && look?.colors ? fc.colorMode : null,
+    turnstiles: fc.turnstileCount > 0 && look?.turnstiles ? look.turnstiles.length : null,
+    hidden:
+      fc.hiddenCount > 0 && look?.hidden ? { found: fc.revealed.size, of: look.hidden.length } : null,
   };
 }
 
