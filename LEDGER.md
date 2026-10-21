@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K766.
+Next free ID: K767.
 
 ## Waiting on Levi
 
@@ -241,6 +241,10 @@ Next free ID: K766.
   seeded phase; only a pluck on the same note within 3 runs reveals a hidden run (taps and
   music-mode auto plucks do not); Undo past a reveal hides the run again; par, strict mode and stars
   rate the maze without hidden runs
+- **K766** · K114 beat x K138 rules: ice, the color rule, turnstiles and hidden runs pass through
+  under `clk=beat` (`fabricRulesOf`), never designed or played against the rider (a refused
+  auto-move may stall it). Drop the rules under the beat, or have the rider take the next legal arm?
+  (`docs/design/K114_beat.md` decision 7 drops only the cut, the walker and Undo)
 
 ## In progress
 
