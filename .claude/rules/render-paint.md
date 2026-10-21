@@ -287,11 +287,21 @@ only with the files it is about; `render.md` lists the area's other files.
     `s6/hm_mtg0.log`). Section text:
     render-shaders.md. Sheets: `.claude/probes/K525/s6/`
     (`tele_states.mjs`; separate runs, not same-state). Not done: the
-    Pixel pass and tuning. The GPU vs mirror census for TELE (K324
-    stage 2 adapted `census_rim.mjs` as `.claude/probes/K324/census/`
-    `census_tele.mjs`, run by `run_census.ps1` under the perf lock;
-    whether it ran, and its table, are in `docs/design/K324_s2.md`'s
-    Handoff).
+    Pixel pass and tuning.
+  - CENSUS (K324 stage 2, 2026-10-20; `.claude/probes/K324/census/`
+    `census_tele.mjs`, adapted from `census_rim.mjs`, run by
+    `run_census.ps1` under the perf lock). GPU against the mirror, with a
+    riding lead (`ride` 1, roam strength 0.6, seed 7 real time, phw=0) at
+    two uKTeleAt values 3.9 ctrl apart, the same KPAINT key in both:
+    every class within 0.62/255 and none over 2/255 in 9,905 samples (the
+    riding piece, its moving end, the fixed pieces and controls off every
+    piece). Its sanity checks read large where they should: strength 0.6
+    to 1 gives 52-61/255, and uKTeleAt.x + 0.35 gives 61-84/255 on the
+    riding piece alone. Not covered: `ride` 0 and hunt strength on the
+    GPU (the mirror's parity test covers both ends). PROBE GOTCHA: the
+    real-time chase starts at the first accepted tap and g2lib's freeze
+    does not stop it; the census stubs `__knotChaseObj().advance` and
+    `.step` to hold a riding piece still.
 
 - RING LAPS ARE INTEGER-CORRECTED (K299, 2026-10-14; Levi: a choice's
   pulse missing, another drawn backward, a gold sliver on the next run
