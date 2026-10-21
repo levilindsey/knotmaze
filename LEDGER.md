@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K610.
+Next free ID: K617.
 
 ## Waiting on Levi
 
@@ -55,9 +55,6 @@ Next free ID: K610.
 
 
 
-- **K194** · The defaults batch (Levi 2026-10-20; K225, K280 and K421 ride it): the pluck glow's
-  default goes `off` -> `fallback` (crossings stay `through`); then time `peakEstimate` on the
-  desktop and the Pixel and dedupe its times. `docs/design/K194_defaults.md`.
 - **K162** · K147's calls: the slow-motion first settle, the defaults (`settleBudget` 12 ms,
   `loadSettle` 0.45 s), daily-exempt, a drag budget. Levi plays first. Since K7 the budget runs
   only in-thread (`phw=0` or a failed worker): calls 1-3 cover that fallback. `docs/design/K147.md`.
@@ -106,6 +103,9 @@ Next free ID: K610.
 - **K606** · K580's rest: Q3, the wider i and a (i 40 -> 58 GU, a 104 -> 120; built so, reversible);
   and my reading of Q2: the fork rule (15 deg, 1.2 LU) stays for ordinary forks, waived for tangent
   joins. `docs/design/K115_stage9.md` (Handoff).
+- **K610** · Grab chase rate, a feel A/B (0.6 per constraint iteration; try 0.8 and 1.0): 4 substeps
+  reach 90% of a drag step today; at 2 the daily's physics work drops from 53 to about 26 ms.
+  A feel call (K370's 50 ms needs it or 2.5x cheaper substeps). `docs/design/K370.md`.
 
 ## In progress
 
@@ -229,7 +229,7 @@ Next free ID: K610.
   - owner: nobody since 2026-10-15 11:29 (stage 3c's agent `ab1de7b1a6f3f605a` of claude session 05e60da0 finished; merged 11:30, worktree on K161's sweep list). Stage 3b's agent `a7c0069bafcb78c52` finished 08:53, merged 08:56, worktree on K161's sweep list
   - branch: mainline; last commit: `9636263`
   - evidence: `.claude/probes/K290/stage3c/` (`out/sheets/`: phone, fog, unseen-front and width sheets; `out/width_phone/` and `out/width_desk/` measure.txt; scripts incl. `width_probe.mjs`; `builds/e6e1734`), `stage3b/` and `stage3a/`; burn stage 1's `.claude/probes/K114/`
-  - next: Levi's width call K409 (3c's facts), the change if any, then K410 (the mirror). K5 R1's split is not re-probed under a burn: K114 s2 (from 12c5e0a, past R1) shoots burnt frames on it. Open: the grown explore variant's cold-link timing and a cold-cache first-burn trace. K408 rides K114 s2
+  - next: K409 builds the last stage (with K410 and K599; see its handle) and K290 closes with it. Open after it: the grown explore variant's cold-link timing and a cold-cache first-burn trace. K408 rides K114 s2
   - brief: `docs/design/K114_burn.md`, Stage 3c handoff (item 4: the width facts)
 - **K397** · The thread reveal's stub artifacts (Levi, 2026-10-15 08:01 and 08:06, phone, `?2gozcj.MgaM`):
   stage 2 fixed issues 1, 2, 4 and 5 (092aca0); left is issue 3, the dark U at a tucked tip's root. At 13:39
@@ -248,9 +248,9 @@ Next free ID: K610.
   - evidence: `.claude/probes/K459/`
   - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii) (`docs/design/K459.md`, Handoff); the free cap's checks are K477
   - brief: `docs/design/K459.md`
-- **K370** · Worker input latency, p50 (target 50 ms): desktop 105 on the daily,
-  70 on the knot (in-thread 285; K7 s4); phone 231, first motion 173 (in-thread
-  872; K7 s5). Measure each stage first (`k7_latency.mjs`); levers: newest snapshot while grabbed, more drag substeps.
+- **K370** · Worker input latency, p50 (target 50 ms). Stage 1 merged (8feca6b): raw pointer
+  input on; desktop means daily 118 -> 110 ms, knot 93; phone about 185 (before 0753b3c). 50 ms
+  needs fewer or cheaper substeps (K610, K316), main's drag frame under 12 ms (K611), and B.
   - owner: nobody since 2026-10-20 15:55 (merged; agent `aa8bfad6d1cc3d6bf` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
   - branch: mainline; last commit: `8feca6b`
   - evidence: `.claude/probes/K370/`
@@ -272,6 +272,22 @@ Next free ID: K610.
   - evidence: `.claude/probes/K580/`
   - next: the taper geometry on the authored cubics (where the strokes part, root width, profile), stills at xh 2 and 3; then the width consumers, the lint, contact sheets
   - brief: `docs/design/K580.md`
+- **K409** · Build Levi's burn calls (2026-10-20, every rec.): ember and band widths in world units
+  (today's medians); under Gone the whole ember on the unburnt side; the band kept; the ember over
+  the smoke. K290's last stage, with K410 and K599. `K114_burn.md` 3c handoff item 4.
+  - owner: agent `a5c384f568fe18b7a` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 15:59, 2 h cap ~17:59)
+  - branch: `worktree-agent-a5c384f568fe18b7a`, worktree `.claude/worktrees/agent-a5c384f568fe18b7a`; last commit: `3a3d937`
+  - evidence: `.claude/probes/K409/`
+  - next: baseline sheets, then the world-unit widths
+  - brief: `docs/design/K409.md`
+- **K194** · The defaults batch (Levi 2026-10-20; K225, K280 and K421 ride it): the pluck glow's
+  default goes `off` -> `fallback` (crossings stay `through`); then time `peakEstimate` on the
+  desktop and the Pixel and dedupe its times. `docs/design/K194_defaults.md`.
+  - owner: agent `a035f2e7898cd9be7` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 15:59, 1 h cap ~16:59)
+  - branch: `worktree-agent-a035f2e7898cd9be7`, worktree `.claude/worktrees/agent-a035f2e7898cd9be7`; last commit: `3a3d937`
+  - evidence: `.claude/probes/K194/`
+  - next: change the four defaults and re-pin, then time peakEstimate
+  - brief: `docs/design/K194_defaults.md`
 
 ## Next, in order
 
@@ -468,9 +484,6 @@ Every other item below waits on the trigger it names.
 - **K595** · Police same-chain collision by rest material, not a fixed 2-slot skip
   (`src/physics/forces.ts` ~272): fixes K596. Census the kink loops and eyes first; regression
   `?b&am=instant` + 5 s drag sleeps within +5 s. `docs/ledger_notes.md` (K595), `docs/design/K372.md`.
-- **K409** · Build Levi's burn calls (2026-10-20, every rec.): ember and band widths in world units
-  (today's medians); under Gone the whole ember on the unburnt side; the band kept; the ember over
-  the smoke. K290's last stage, with K410 and K599. `K114_burn.md` 3c handoff item 4.
 - **K225** · Levi 2026-10-20: the markers' default size (`markerSize`) goes 1.08 -> 2 (1.08 is
   about 5 CSS px on the phone). Rides K194's defaults batch. `.claude/probes/K98/sheet_k98.png`.
 - **K280** · Levi 2026-10-20: the turn clock's burn race cools, `fireSpeed` 0.75 -> 0.6 with
@@ -487,6 +500,9 @@ Every other item below waits on the trigger it names.
   line kept as an option; roam must read on the phone at fit zoom (the line: about 0.7 on touch,
   0.45 on desktop, hunt 0.95); K546's first phone sheet shows roam, a catch and the fog glow
   together. Today: `.claude/probes/K80/stage3b/contact_sheet_real.png` (K524).
+- **K611** · Main's drag frame is 19-26 ms (a drag runs at 30 fps); `RibbonRenderer.update` is 63%
+  (gap slots 28%, splines 22%, tickPaint 17%). K370's 50 ms needs it under 12 ms. Overlaps K5
+  R3/R4 and G3-2. `docs/design/K370.md` ("The gap to 50 ms", 2).
 
 ## Residuals (known, not fixed)
 
@@ -1098,6 +1114,18 @@ Every other item below waits on the trigger it names.
 - **K609** · K395's example loop `9:133` no longer exists in `?7` (2026-10-20), so render-pluck.md's
   Pluck loop tip entry and probes-pluck.md's K395 recipe point at a loop that no longer reproduces.
   K406's sheet used chain 2, key 427 (`.claude/probes/K406/sheet/notes.md`).
+- **K612** · The desktop worker's substeps cost 1.2x in-thread ones on the same page (13.4 against
+  10.8 ms on the daily); not attributed, maybe the phone's 2.1-2.9x cause. Rides K370's next stage.
+  `docs/design/K370.md`.
+- **K613** · Re-measure raw pointer input's knot jitter (K370 lever B): the final pass read
+  0.22-0.24 against 0.08-0.16 with it off, the lever pass 0.13 against 0.13. `docs/design/K370.md`
+  (Verdicts).
+- **K614** · The phone's 53 ms input queue (CDP touch, so a lower bound for a real finger): not
+  attributed; main's drag frames overrunning the vsync are the likely cause (K611).
+  `docs/design/K370.md` (Phone).
+- **K615** · The in-thread host (the fallback) takes 240-600 ms a drag step: real-time stepping
+  spirals to 12 substeps a frame (K279's WAKE COST), and only cheaper substeps help it.
+  `docs/design/K370.md`.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1330,6 +1358,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   `cycle.ts`).
 - **K598** · K372's open questions: what couples chains 56 and 45 on `?b`; chain 53's hot site at
   p1238-1240; why the drag history picks the awake basin. `.claude/probes/K372/results.md`.
+- **K616** · K370's lever A (`grabExact`, off: the newest snapshot while grabbed) saves about 9 ms
+  on the daily but doubles the jitter; revisit only with a jitter fix. `docs/design/K370.md`
+  (Verdicts).
 
 ## Done
 
