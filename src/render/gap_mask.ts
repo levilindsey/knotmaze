@@ -176,11 +176,61 @@ export interface GapSampRef {
   closed: boolean;
 }
 
+// K573 step 2: the walk's error bounds, the pre-G3-1 polyline's (e83f203's
+// adaptive resolution): a chord at most GAP_POLY_SPACING_MAX long whose
+// sagitta (s^2 * curvature / 8) stays under GAP_POLY_SAG_TOL on the
+// tightest bend of the range.
+export const GAP_POLY_SPACING_MAX = 0.3;
+export const GAP_POLY_SAG_TOL = 0.0015;
+
+// The largest stride (1..GAP_MAX_STRIDE samples) whose chord keeps those
+// bounds on the tightest bend of raw samples lo..hi of a chain's flat
+// [x, y, ...] positions (rings wrap; an open chain's two end samples have
+// no bend). The bend is tan(turn) / mean leg - never below the turn
+// angle, so never coarser than e83f203's rule; a turn of 90 degrees or
+// more between samples keeps every sample.
+export function gapCurveStride(
+  pos: ArrayLike<number>,
+  count: number,
+  closed: boolean,
+  lo: number,
+  hi: number,
+  arcPer: number
+): number {
+  let kMax = 0;
+  for (let m = lo; m <= hi; m++) {
+    let i = m;
+    if (closed) i = ((m % count) + count) % count;
+    else if (m < 1 || m > count - 2) continue;
+    const a = closed && i === 0 ? count - 1 : i - 1;
+    const b = closed && i === count - 1 ? 0 : i + 1;
+    const ax = pos[i * 2] - pos[a * 2];
+    const ay = pos[i * 2 + 1] - pos[a * 2 + 1];
+    const bx = pos[b * 2] - pos[i * 2];
+    const by = pos[b * 2 + 1] - pos[i * 2 + 1];
+    const la = Math.sqrt(ax * ax + ay * ay);
+    const lb = Math.sqrt(bx * bx + by * by);
+    if (la < 1e-9 || lb < 1e-9) continue;
+    const dot = ax * bx + ay * by;
+    if (dot <= 0) return 1;
+    kMax = Math.max(kMax, Math.abs(ax * by - ay * bx) / dot / (0.5 * (la + lb)));
+  }
+  const spacing =
+    kMax > 1e-6
+      ? Math.min(GAP_POLY_SPACING_MAX, Math.sqrt((8 * GAP_POLY_SAG_TOL) / kMax))
+      : GAP_POLY_SPACING_MAX;
+  return Math.max(1, Math.min(GAP_MAX_STRIDE, Math.floor(spacing / arcPer + 1e-9)));
+}
+
 // The SAMP range covering chain arcs [center - neg, center + pos] of a
 // chain with `count` samples over `total` arc, rounded OUTWARD to whole
-// samples (every sample the reach touches is held), then strided to the
-// GAP_MAX_PTS cap (stride at most GAP_MAX_STRIDE; the reach is never
-// cut). arcPer = arc per sample (closed: total / count; open: total /
+// samples (every sample the reach touches is held), then strided: at
+// least enough for the GAP_MAX_PTS cap, and with the chain's `positions`
+// (K573 step 2) as coarse as gapCurveStride allows - at most
+// GAP_MAX_STRIDE, at most a ring's count. The walk never cuts the reach:
+// its last point reaches the rounded end (a ring wraps past it; an open
+// chain's walk shifts back to end on the chain's last sample, or strides
+// finer). arcPer = arc per sample (closed: total / count; open: total /
 // (count - 1)).
 export function gapSampRange(
   total: number,
@@ -188,7 +238,8 @@ export function gapSampRange(
   closed: boolean,
   center: number,
   neg: number,
-  pos: number
+  pos: number,
+  positions?: ArrayLike<number>
 ): { ref: GapSampRef; arcPer: number } {
   const arcPer = count > 1 ? total / (closed ? count : count - 1) : Math.max(total, 1);
   if (count < 1 || !(total > 0)) {
@@ -205,12 +256,33 @@ export function gapSampRange(
     kHi = count - 1;
   }
   const nRaw = kHi - kLo + 1;
-  const stride =
+  const sMin =
     nRaw <= GAP_MAX_PTS ? 1 : Math.min(GAP_MAX_STRIDE, Math.ceil((nRaw - 1) / (GAP_MAX_PTS - 1)));
+  let stride = sMin;
+  if (positions && nRaw > 2) {
+    const sCap = closed ? Math.min(GAP_MAX_STRIDE, count) : GAP_MAX_STRIDE;
+    const sCurve = gapCurveStride(
+      positions, count, closed, kLo - GAP_MAX_STRIDE, kHi + GAP_MAX_STRIDE, arcPer
+    );
+    stride = Math.max(sMin, Math.min(sCap, sCurve));
+  }
   // A reach spanning the whole ring (never in practice: reaches are a
   // few world against laps of tens) still caps at GAP_MAX_PTS points.
-  const n = Math.min(GAP_MAX_PTS, Math.floor((nRaw - 1) / stride) + 1);
-  return { ref: { base: 0, kStart: kLo, n, stride, count, closed }, arcPer };
+  const nOf = (s: number) => Math.min(GAP_MAX_PTS, Math.ceil((nRaw - 1) / s) + 1);
+  let n = nOf(stride);
+  let kStart = kLo;
+  if (!closed) {
+    // Every point a real sample: end on the chain's last sample, or stride
+    // finer (stride 1 always fits; only an over-cap open range clamps).
+    kStart = Math.min(kLo, count - 1 - (n - 1) * stride);
+    while (kStart < 0 && stride > sMin) {
+      stride--;
+      n = nOf(stride);
+      kStart = Math.min(kLo, count - 1 - (n - 1) * stride);
+    }
+    kStart = Math.max(0, kStart);
+  }
+  return { ref: { base: 0, kStart, n, stride, count, closed }, arcPer };
 }
 
 // Chunk bounding circles for a sampled range: GAP_MAX_CHUNKS texels
@@ -607,9 +679,10 @@ highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,
     // more), so the search may stop there.
     highp float reach = full ? hO + (t0.z - t0.w) + 2.0 * pxW : hO + pxW;
     // Zoom-aware tolerance (G3-1): the sure exit's inset floors at one
-    // SAMP stride, so at high zoom (pxW below the sampled chord) the
-    // early exit never trusts the coarse samples past a pixel.
-    highp float tol = max(pxW, t4.w * float(max(int(t9.x + 0.5), 1)));
+    // SAMP sample's arc. Not at the stride (K573 step 2): every d below
+    // comes from the same strided walk, so a pixel of inset already keeps
+    // the verdict, and a stride-3 inset left a thin thread no sure zone.
+    highp float tol = max(pxW, t4.w);
     highp float sure = hO - ((full && !fan) ? 1.0 : 1.5) * tol;
     highp float sure2 = sure > 0.0 ? sure * sure : 0.0;
     highp float best = reach * reach;

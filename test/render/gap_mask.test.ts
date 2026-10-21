@@ -117,13 +117,23 @@ describe("K573: the search's SAMP index walk", () => {
   // Ranges as gapSampRange makes them: small and large rings, open runs at
   // both ends, seam crossings (negative kStart), strides 1 to 3, a reach
   // wider than the ring.
+  // K573 step 2: each also with positions (a ring on a circle, an open run
+  // straight), so the curvature stride and the open walk's shift are walked.
   const cases: { ref: ReturnType<typeof gapSampRange>["ref"] }[] = [];
   for (const count of [1, 2, 3, 5, 8, 33, 66, 100, 200, 401]) {
     for (const closed of [true, false]) {
       for (const total of [0.5, 9, 40]) {
+        const pos = new Float64Array(count * 2);
+        for (let i = 0; i < count; i++) {
+          const a = (i / count) * 2 * Math.PI;
+          const s = (i / Math.max(count - 1, 1)) * total;
+          pos[i * 2] = closed ? (Math.cos(a) * total) / (2 * Math.PI) : s;
+          pos[i * 2 + 1] = closed ? (Math.sin(a) * total) / (2 * Math.PI) : 0;
+        }
         for (const center of [0, 0.03, 0.2, 4.5, total * 0.97, total]) {
           for (const reach of [0.05, 1, 3, 6, 50]) {
             cases.push(gapSampRange(total, count, closed, center, reach, reach * 0.7));
+            cases.push(gapSampRange(total, count, closed, center, reach, reach * 0.7, pos));
           }
         }
       }
@@ -185,6 +195,138 @@ describe("K573: the search's SAMP index walk", () => {
       expect(b).not.toContain("gapOverPt(");
       expect(b).not.toContain("%");
     }
+  });
+});
+
+// K573 step 2: with the chain's positions, gapSampRange strides as coarse
+// as the pre-G3-1 polyline's bounds allow on the range's tightest bend
+// (chord <= GAP_POLY_SPACING_MAX, sagitta <= GAP_POLY_SAG_TOL), and the walk
+// still covers the rounded reach. Chains are resampled at uniform arc, as
+// SAMP holds them.
+describe("K573 step 2: the curvature stride", () => {
+  // count samples at uniform arc along a dense polyline of f over [0, 1].
+  const resample = (f: (t: number) => [number, number], count: number, closed: boolean) => {
+    const N = 20000;
+    const xs: number[] = [];
+    const ys: number[] = [];
+    const cum: number[] = [0];
+    for (let i = 0; i <= N; i++) {
+      const [x, y] = f(i / N);
+      xs.push(x);
+      ys.push(y);
+      if (i > 0) cum.push(cum[i - 1] + Math.sqrt((x - xs[i - 1]) ** 2 + (y - ys[i - 1]) ** 2));
+    }
+    const total = cum[N];
+    const step = total / (closed ? count : count - 1);
+    const pos = new Float64Array(count * 2);
+    let seg = 0;
+    for (let i = 0; i < count; i++) {
+      const s = Math.min(i * step, total);
+      while (seg < N - 1 && cum[seg + 1] < s) seg++;
+      const u = cum[seg + 1] > cum[seg] ? (s - cum[seg]) / (cum[seg + 1] - cum[seg]) : 0;
+      pos[i * 2] = xs[seg] + (xs[seg + 1] - xs[seg]) * u;
+      pos[i * 2 + 1] = ys[seg] + (ys[seg + 1] - ys[seg]) * u;
+    }
+    return { pos, total };
+  };
+  const segDist = (px: number, py: number, ax: number, ay: number, bx: number, by: number) => {
+    const dx = bx - ax;
+    const dy = by - ay;
+    const l2 = dx * dx + dy * dy;
+    const h = l2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l2)) : 0;
+    return Math.sqrt((px - ax - dx * h) ** 2 + (py - ay - dy * h) ** 2);
+  };
+
+  it("a straight run strides to the cap; a bend tighter than the bounds keeps every sample", () => {
+    const line = resample((t) => [t * 18, 0], 200, false);
+    expect(gapSampRange(line.total, 200, false, 9, 2, 2, line.pos).ref.stride).toBe(GAP_MAX_STRIDE);
+    // Radius 0.5: spacing sqrt(8 * 0.0015 * 0.5) = 0.077 below one sample (0.09).
+    const c = resample((t) => [0.5 * Math.cos(t * 2 * Math.PI), 0.5 * Math.sin(t * 2 * Math.PI)], 35, true);
+    expect(gapSampRange(c.total, 35, true, 1, 0.5, 0.5, c.pos).ref.stride).toBe(1);
+    // Radius 2: spacing 0.155, one sample 0.0898: stride 1. Radius 8: 0.31 -> 3.
+    const c2 = resample((t) => [2 * Math.cos(t * 2 * Math.PI), 2 * Math.sin(t * 2 * Math.PI)], 140, true);
+    expect(gapSampRange(c2.total, 140, true, 3, 1, 1, c2.pos).ref.stride).toBe(1);
+    const c8 = resample((t) => [8 * Math.cos(t * 2 * Math.PI), 8 * Math.sin(t * 2 * Math.PI)], 560, true);
+    expect(gapSampRange(c8.total, 560, true, 3, 1, 1, c8.pos).ref.stride).toBe(3);
+    // Without positions: master's rule (stride only for the cap).
+    expect(gapSampRange(line.total, 200, false, 9, 2, 2).ref.stride).toBe(1);
+  });
+
+  it("keeps the bounds and covers the reach on smooth chains", () => {
+    let checked = 0;
+    const strides = [0, 0, 0, 0];
+    const chains: { pos: Float64Array; total: number; count: number; closed: boolean }[] = [];
+    for (const [a, b, scale] of [[0.3, 0.1, 4], [0.5, 0.2, 2.5], [0.15, 0.05, 8], [0.6, 0.3, 1.5]]) {
+      const f = (t: number): [number, number] => {
+        const th = t * 2 * Math.PI;
+        const r = scale * (1 + a * Math.sin(3 * th) + b * Math.cos(7 * th + 1));
+        return [r * Math.cos(th), r * Math.sin(th)];
+      };
+      const probe = resample(f, 4000, true);
+      const count = Math.max(8, Math.round(probe.total / 0.09));
+      chains.push({ ...resample(f, count, true), count, closed: true });
+    }
+    for (const [amp, len] of [[0.4, 1.2], [1.2, 0.8], [0.1, 3], [2, 0.5]]) {
+      const f = (t: number): [number, number] => [t * 15, amp * Math.sin((t * 15) / len)];
+      const probe = resample(f, 4000, false);
+      const count = Math.round(probe.total / 0.09) + 1;
+      chains.push({ ...resample(f, count, false), count, closed: false });
+    }
+    for (const ch of chains) {
+      const arcPer = ch.total / (ch.closed ? ch.count : ch.count - 1);
+      const P = (i: number) => {
+        const k = ch.closed ? ((i % ch.count) + ch.count) % ch.count : Math.max(0, Math.min(ch.count - 1, i));
+        return [ch.pos[k * 2], ch.pos[k * 2 + 1]] as const;
+      };
+      for (let center = 0; center <= ch.total; center += ch.total / 37) {
+        for (const [neg, pos] of [[0.3, 0.3], [1, 2], [3, 3], [0.05, 1.5]]) {
+          const { ref } = gapSampRange(ch.total, ch.count, ch.closed, center, neg, pos, ch.pos);
+          checked++;
+          strides[ref.stride]++;
+          expect(ref.stride).toBeGreaterThanOrEqual(1);
+          expect(ref.stride).toBeLessThanOrEqual(GAP_MAX_STRIDE);
+          expect(ref.n).toBeLessThanOrEqual(GAP_MAX_PTS);
+          // Coverage: the walk starts at or before the rounded reach and
+          // ends at or past it (an open chain: on its own samples).
+          let kLo = Math.floor((center - neg) / arcPer);
+          let kHi = Math.ceil((center + pos) / arcPer);
+          if (!ch.closed) {
+            kLo = Math.max(0, Math.min(ch.count - 1, kLo));
+            kHi = Math.max(kLo, Math.min(ch.count - 1, kHi));
+          }
+          const last = ref.kStart + (ref.n - 1) * ref.stride;
+          expect(ref.kStart).toBeLessThanOrEqual(kLo);
+          expect(ref.kStart).toBeGreaterThanOrEqual(kLo - (ref.stride - 1));
+          expect(last).toBeGreaterThanOrEqual(kHi);
+          if (!ch.closed) {
+            expect(ref.kStart).toBeGreaterThanOrEqual(0);
+            expect(last).toBeLessThanOrEqual(ch.count - 1);
+          } else {
+            expect(last).toBeLessThanOrEqual(kHi + ref.stride - 1);
+          }
+          // The bounds hold wherever the bend chose the stride; a stride the
+          // 65-point cap forces (master's rule) keeps no bound.
+          const nRaw = kHi - kLo + 1;
+          const sMin = nRaw <= GAP_MAX_PTS ? 1 : Math.min(GAP_MAX_STRIDE, Math.ceil((nRaw - 1) / (GAP_MAX_PTS - 1)));
+          if (ref.stride === sMin) continue;
+          // Each chord at most 0.3 long, every skipped sample within the
+          // sagitta tolerance of it (5% slack for the discrete bend estimate).
+          for (let j = 0; j + 1 < ref.n; j++) {
+            const r0 = ref.kStart + j * ref.stride;
+            const [ax, ay] = P(r0);
+            const [bx, by] = P(r0 + ref.stride);
+            expect(Math.hypot(bx - ax, by - ay)).toBeLessThanOrEqual(0.3 * 1.0001);
+            for (let m = 1; m < ref.stride; m++) {
+              const [px, py] = P(r0 + m);
+              expect(segDist(px, py, ax, ay, bx, by)).toBeLessThanOrEqual(0.0015 * 1.05);
+            }
+          }
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(200);
+    expect(strides[1]).toBeGreaterThan(10);
+    expect(strides[3]).toBeGreaterThan(10);
   });
 });
 
