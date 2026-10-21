@@ -275,10 +275,10 @@ Next free ID: K623.
 - **K409** · Build Levi's burn calls (2026-10-20, every rec.): ember and band widths in world units
   (today's medians); under Gone the whole ember on the unburnt side; the band kept; the ember over
   the smoke. K290's last stage, with K410 and K599. `K114_burn.md` 3c handoff item 4.
-  - owner: agent `a5c384f568fe18b7a` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 15:59, 2 h cap ~17:59)
-  - branch: `worktree-agent-a5c384f568fe18b7a`, worktree `.claude/worktrees/agent-a5c384f568fe18b7a`; last commit: `3a3d937`
+  - owner: nobody since 2026-10-20 17:04 (merged; agent `a5c384f568fe18b7a` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `3231d59`
   - evidence: `.claude/probes/K409/`
-  - next: baseline sheets, then the world-unit widths
+  - next: Levi's call on the glow over the band (A-D, the branch ships A); step 4, the ember over the smoke, as its own stage; the phone pass (docs/design/K578_K409_phone.md)
   - brief: `docs/design/K409.md`
 - **K244** · Levi 2026-10-20: nothing plucks a junction core. Auto plucks (random, music) choose
   only valid segments up front, and a drag released in a core plucks nothing (K235 silenced core
