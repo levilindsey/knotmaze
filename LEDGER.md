@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K599.
+Next free ID: K601.
 
 ## Waiting on Levi
 
@@ -32,15 +32,15 @@ Next free ID: K599.
 - **K580** · K115 stage 9's calls: the a's J join (tangent fails the lint with a thorn; landed
   passes at the same width; or wider spacing; rec landed), the fork rule (≥15°, clear within 1.2
   LU), wider i and a (GU 40→58, 104→120). Handoff: `docs/design/K115_stage9.md`
-- **K261** · K74 stage 2's two calls, built as recommended (Levi may
-  change either): the H-cut share is 1; a partial share cuts an even
-  stride. `docs/design/K74.md` ("Calls for Levi").
+- **K261** · K74 stage 2's two calls, built as rec. (Levi may change either): the H-cut share is 1;
+  a partial share cuts an even stride. `greedyTrap` is off, so dailies 1-240 sit at 20.0% within
+  1.5x (bar 15%). `docs/design/K74.md` ("Calls for Levi").
 - **K260** · The burn race's calls 2-4 (K114), built as rec.: Reset keeps the fire (fuse relit); the
-  fire and the turn minotaur are exclusive; fog stays its own param. `docs/design/K114_burn.md`
-  ("Calls for Levi").
+  fire and the turn minotaur are exclusive (structural since K534's `gameMode`); fog stays its own
+  param. `docs/design/K114_burn.md` ("Calls for Levi").
 - **K280** · The burn race's heat (K114): built `fireSpeed` 0.75, `fireDelay` 0 is hot for careless
-  players; rec. r 0.6, h 0. `docs/design/K114_burn.md` ("R.6.1"); numbers
-  `.claude/probes/K114/burn/results_tuning_rebased.md`.
+  players; rec. r 0.6, h 0 for the turn clock (real time reads K440's `fsr`/`fdr`). `K114_burn.md`
+  ("R.6.1"); numbers `.claude/probes/K114/burn/results_tuning_rebased.md`.
 - **K282** · The HUD's stats have no explanation during play (only the
   end banners explain them). Add an info button or a long press, or
   leave it (rec.)? `docs/design/K274_K277.md`.
@@ -49,11 +49,11 @@ Next free ID: K599.
   `.claude/probes/K198/stage2/out/contact_sheet.png`. The phone half is moot since K468's
   full-screen sheet: desktop and tablet only.
 - **K245** · How hard should the minotaur roam toward the player (K174)?
-  `minoToward` sets roamPull 0.5 (63% of games meet it). Keep 0.5; add a
-  slider? `docs/design/K174.md`.
-- **K244** · Should auto plucks and a drag's release go silent in
-  junction cores too (K235 silenced taps)? Its agent left them.
-  `render-pluck.md` (K235).
+  K534's `minoPull` slider defaults to 0.5 (63% of games meet it); only
+  that default needs confirming. `docs/design/K174.md`.
+- **K244** · Auto plucks (random, music) that land on a junction core still sound with
+  nothing drawn, and so does a drag's release there; K235 silenced core taps. Silence
+  these too? `render-pluck.md` (K235).
 - **K241** · Should a reset's gold webs fade out too (K191's call 1)?
   Only a backtrack fades; a fade needs a second shader base.
   `docs/design/K154_K169.md` ("Stage 2 handoff").
@@ -67,52 +67,52 @@ Next free ID: K599.
 - **K225** · The markers' default size (K98): `markerSize` 1.08 is about
   5 CSS px on the phone and barely reads. Keep it, raise it, or add a
   minimum on-screen size? `.claude/probes/K98/sheet_k98.png`.
-- **K90** · Min bend radius (1a-1b merged 6f97b92..feb12a0): ship, tune or stop (rec. stop)? Test
-  `__knotSplineBend(true)`. `docs/design/K90_bend_radius.md`, `docs/design/K90.md`,
-  `.claude/probes/K90/out_1b/`. K213 first, never with K8; G3-2 waits (K361 q13; Levi: not sure).
+- **K90** · Min bend radius (1a-1b merged 6f97b92..feb12a0): ship, tune or stop (rec. stop; the
+  design doc says tune, then ship)? Test `__knotSplineBend(true)`. `docs/design/K90_bend_radius.md`,
+  `K90.md`, `.claude/probes/K90/out_1b/`. K213 first, never with K8; G3-2 waits (K361 q13; Levi unsure).
 
 
 
 - **K194** · K180's calls: defaults (crossings `through`, glow `off` or `fallback`); (2) moot
   (K235). If `fallback` ships, time `peakEstimate` on the Pixel. `docs/design/K180.md` ("Stage 1
   handoff"); play https://levi.dev/knotmaze/?7&pw=1&pcx=ride&pgl=fallback
-- **K162** · K147's calls: the slow-motion first settle, the defaults
-  (`settleBudget` 12 ms, `loadSettle` 0.45 s), daily-exempt, a drag
-  budget. Levi plays first. `docs/design/K147.md`.
+- **K162** · K147's calls: the slow-motion first settle, the defaults (`settleBudget` 12 ms,
+  `loadSettle` 0.45 s), daily-exempt, a drag budget. Levi plays first. Since K7 the budget runs
+  only in-thread (`phw=0` or a failed worker): calls 1-3 cover that fallback. `docs/design/K147.md`.
 - **K184** · K155's star calls, built as noted: exactly two stars for
   greedy solves; catches cap a finish at two; "2.2× the shortest route",
   not a percent. `docs/design/K155.md` ("Stage 1 handoff").
-- **K185** · The still pluck's cold-link stall (about 340 ms, first
-  use): (a) accept it (rec.), (b) `KHR_parallel_shader_compile`, or (c)
-  warm it at load? `docs/design/K104.md` ("Stage 1c handoff").
-- **K186** · K140's confetti calls: reduced motion's slow spray or none; confetti on every win
-  banner or only a live finish; the colors and amount. `docs/design/K140.md` ("Stage 1 handoff");
-  play https://levi.dev/knotmaze/?7 (`&cfa=3` for the most).
+- **K185** · The still pluck's cold-link stall (about 340 ms, first use): (a) accept it (rec.),
+  (b) `KHR_parallel_shader_compile`, or (c) warm it at load? Probably moot: a later shader warm-up
+  links its program early (unmeasured). `docs/design/K104.md` ("Stage 1c handoff").
+- **K186** · K140's confetti calls: reduced motion's slow spray or none; confetti on every win banner
+  or only a live finish; the colors and amount (answered by the sliders and Levi's 2026-10-20 tuning).
+  `docs/design/K140.md` ("Stage 1 handoff"); play https://levi.dev/knotmaze/?7 (`&cfa=3` for the most).
 
 
 
 - **K394** · The overnight of 2026-10-14/15 (`docs/design/overnight_2026-10-15.md`): eight
   calls (F1-F8), each built as recommended (rec: keep all). Its six questions are answered
-  (2026-10-15) except K339's and K361's spline bend (K90).
+  (2026-10-15) except the spline bend (K90; asked in K339 and K361).
 - **K400** · K114 s2 (`docs/design/K114_stage2.md` "Questions"; recs build unless Levi objects):
-  realtime dot at constant pace, moveSpeed unused (rec. (a)); one fireSpeed/fireDelay, both clocks;
-  lose when the fire reaches you; realtime queues taps; `fireClock` a Burn race row (K323).
-- **K401** · K80 turns s3 (`docs/design/K80_turns_stage3.md` "Questions"; recs build unless Levi
-  objects): 3a now, 3b after K290 3b, chevrons after K324 s2; guard/stalker rows per model (rec.
-  (c)); wait keys `.`, Space; pad center waits; turn pull own param (0); K293 (d), (f) stay lore.
+  realtime dot at constant pace, moveSpeed unused (rec. (a)); one fireSpeed/fireDelay (K440 split it:
+  `fsr`/`fdr`); lose when the fire reaches you; realtime queues taps; `fireClock` a Burn race row (K323).
+- **K401** · K80 turns s3 (`docs/design/K80_turns_stage3.md` "Questions"), all six built as rec.;
+  only the chevrons wait (on K324 s2): 3a, 3b after K290 3b; guard/stalker rows per model (rec. (c));
+  wait keys `.`, Space; pad center waits; turn pull own param (0); K293 (d), (f) stay lore.
 - **K406** · K395's CAP_ROUND: 1.5 (as built, = COLLAPSE_ROUND) or 3 (tip inner edge turns +19° to
   +42° not +31° to +56°, flat arch, 0.02-0.03 world less inner swing; 6 looks like 3). Live as
-  `PluckOverlay.capRound`; sheets `.claude/probes/K395/out/`. Stays 1.5 until Levi picks.
+  `PluckOverlay.capRound`; sheets `.claude/probes/K395/out/`. Stays 1.5; decide with K405 (same tip).
 - **K409** · The fire's widths are in ctrl (band 0.7, ember 0.25/0.55), a 2.6x spread; on the phone
   the gone ember is a ~1.7 px rim. Options: world units; ember onto the unburnt side under gone; no
   band under gone; ember over smoke (rec.: all but the third). `K114_burn.md` 3c handoff item 4.
 - **K421** · The stalker's accuracy default (K294: 0.45) overshoots section 0 on the dailies at 80%
-  and fog-4 (27.9 and 28.5% caught against 20 and 12); stage 2's dailies-only criterion would
-  keep 0.25-0.3. Keep 0.45? `docs/design/K80_turns_stage3.md` ("Stage 3a handoff").
+  and fog-4 (27.9 and 28.5% caught against 20 and 12; fog-4's 12% is out of reach): rec. 0.3 (the
+  dailies-only criterion allows 0.25-0.3). Keep 0.45? `docs/design/K80_turns_stage3.md` (3a handoff).
 
 - **K515** · K480 stage 2's look, built as recommended (Levi may change): a hovered tap's whole route at the hover breath, its tapped run keeping the rim glow, non-route branched arms keeping their trains; plus page-probing the hover route with a real pointer (desktop, and in K500's phone pass). `docs/design/K480.md` ("Stage 2 handoff"). The page probe is partly done: desktop by K500, the touch half in K529.
 
-- **K525** · Levi's look call on K80 turns 3b, built as recommended: telegraph roam 0.45 / hunt 0.95 with the second run at half, the 0.45 s catch ring burst, and the fog bleed at 0.16. `.claude/probes/K80/stage3b/contact_sheet.png`. The real-phone sheet is now `.claude/probes/K80/stage3b/contact_sheet_real.png` (K524): hunt 0.95 reads clearly at fit zoom, roam 0.45 is effectively invisible at fit zoom, the catch ring had mostly faded by the shot, and fog bleed 0.16 is unexercised (fog off in this design).
+- **K525** · Levi's look call on K80 turns 3b, built as recommended: telegraph roam 0.45 / hunt 0.95 with the second run at half, the 0.45 s catch ring burst, and the fog bleed at 0.16. `.claude/probes/K80/stage3b/contact_sheet.png`. The real-phone sheet is now `.claude/probes/K80/stage3b/contact_sheet_real.png` (K524): hunt 0.95 reads clearly at fit zoom, roam 0.45 is effectively invisible at fit zoom, the catch ring had mostly faded by the shot, and fog bleed 0.16 is unexercised (fog off in this design). The same answer settles K546's q8.
 - **K545** · K481 stage 3's look for Levi (built as recommended in 31b2238): lit tick + moved ring on hover/press, phone bigger ticks with the caught-choice tint at the head (desktop ticks alone); the real-phone sheet is in (round 2026-10-20, `.claude/probes/rounds/2026-10-20-d0406df/k545/sheet_k545.png`: a press lights choice 0, the lit tick subtle on a still) and Levi's call whether the tint should show on desktop too. `docs/design/K481.md` (Stage 3 handoff); `.claude/probes/K481/stage3/`.
 - **K571** · The title toggle leaves the daily: either form can earn the daily's credit, and a flip switches to custom and resets progress (Levi 2026-10-20). Asked whether the remembered title pref then reopens the daily in the new form, from scratch, and counts; then build it. `docs/ledger_notes.md` (K571).
 - **K581** · K558's C1 (lifted-pen strokes after the whole text's body, left to right) and C2 (pnr
@@ -120,7 +120,7 @@ Next free ID: K599.
   Calls). K552's C1-C3 are revisited by K571's build.
 - **K586** · Confetti shine strength (`cfh`, default 1, range 0-2) and foil share (`cff`, default
   0.3): pick from `.claude/probes/K337/sheet/strengths_phone.png` or `strengths_desk.png`, or try
-  `&cfh=` / `&cff=` live. Built at the defaults (K337).
+  `&cfh=` / `&cff=` live. Built at the defaults (K337); nobody has watched it live yet.
 - **K573** · G3-1's phone gap search: step 1 merged (`3e2b6cf`, 0 px), knot gs24 60.7 → 27.7 ms
   (pre-G3-1 9.7), dense 36.0 → 31.3 (16.7). Levi's call: keep step 2 (`7db3fd9`, a per-slot
   curvature stride: 19.3 / 23.7 ms; casing-edge pixels move 1-3 levels on ≤0.1% of a frame; fixes
@@ -481,10 +481,8 @@ Every other item below waits on the trigger it names.
 - **K587** · Confetti shine on the Pixel: frame rate and look in K156's next pass. The model bench
   says +21-60 µs a frame; the desktop frame A/B was not run (K337 handoff).
 - **K590** · G3-1's phone gap search, the rest: with K573 step 2 knot is still 2.0x the pre-G3-1
-  build (19.3 vs 9.7 ms; 2.9x with step 1 alone). Untried levers, each its own brief: a per-chunk
-  stride (a layout change; helps dense too), drop gapSeg's per-segment division (store u = d/|d|^2
-  per point), cheaper `sampAt` index math. Knot's walk halved but its search fell only 30%: measure
-  what lies outside the walk first. `docs/design/K573.md` (`Next, if knot must reach 1.5x`).
+  build (19.3 vs 9.7 ms). Three untried levers; measure what lies outside the walk first.
+  `docs/design/K573.md` ("Next, if knot must reach 1.5x"); full text `docs/ledger_notes.md`.
 - **K595** · Police same-chain collision by rest material, not a fixed 2-slot skip
   (`src/physics/forces.ts` ~272): fixes K596. Census the kink loops and eyes first; regression
   `?b&am=instant` + 5 s drag sleeps within +5 s. `docs/ledger_notes.md` (K595), `docs/design/K372.md`.
@@ -554,7 +552,7 @@ Every other item below waits on the trigger it names.
   power` activity ages). `docs/design/K156.md` ("Round 2026-10-14b handoff").
 - **K232** · Round 2026-10-14b (K156): the default link's load (`?b.J`, 54a2b43 vs 48da84d) is
   borderline worse: p95 33.4 -> 50.0 ms, first sleep 18.4 -> 19.6 s (2 reps). Rerun with 3 reps once
-  the floor matches (K193, K195, K197). `.claude/probes/rounds/2026-10-14-48da84d/pass/summary.md`
+  the floor matches (K193, K195, K197); pre-worker numbers. `.claude/probes/rounds/2026-10-14-48da84d/pass/summary.md`
 - **K230** · K92 did not check the badge's last fit level (bare icon) with the panel open; its phone
   checks were desktop emulation, so K156's next phone pass covers K92 (`gameplay-badge.md`). No
   phone look reaches the badge's fit levels at 411 px: use an emulated narrower viewport.
@@ -612,7 +610,7 @@ Every other item below waits on the trigger it names.
   which phones lack (`src/ui/daily_stats_view.ts`).
 - **K197** · The phone's load settles later over ab6d330..54a2b43 (K156, 2026-10-14): first sleep
   8.0 -> 19.3 s, p95 33 -> 50 ms; likely K147's settle budget (b0a1c49..97293e7): attribute with the
-  frames phase `-Base b0a1c49~1 -Head 97293e7`. Is 19 s acceptable? Levi's call.
+  frames phase `-Base b0a1c49~1 -Head 97293e7`. Is 19 s acceptable? Levi's call. Pre-worker numbers: remeasure on the K7 host first.
 - **K190** · Unmeasured costs from K154+K169 (aaa3dda): the new hash adds 37-60% to the drifting
   backgrounds on the desktop; the phone and the fan program in a web fade are unmeasured. Measure at
   K79's K52 phone gate, vellum-drift first (`docs/design/K154_K169.md`, "Stage 1 handoff").
@@ -1073,13 +1071,16 @@ Every other item below waits on the trigger it names.
   start). Check whether kStart can go negative. From K573's agent report.
 - **K593** · `scripts/preview.ps1` fails in an agent worktree that has no `node_modules` junction
   (K573's run). Make it find or make the junction, or fail with that message.
-- **K594** · Phone kit flakes in K573's run: the adb server died 3x at 12:45-12:47 (unexplained);
-  starting the kit in the foreground hangs the tool; `cleanup.mjs` timed out (exit 2) after a
-  watchdog trip with Chrome in the background; two stale reverse tunnels (5960, 5961) stayed on the
-  phone. `.claude/probes/K573/logs/`.
+- **K594** · Phone kit flakes in K573's run: adb died 3x (unexplained), a foreground kit start hangs
+  the tool, `cleanup.mjs` timed out after a watchdog trip, two reverse tunnels stayed on the phone.
+  `.claude/probes/K573/logs/`; full text `docs/ledger_notes.md`.
 - **K596** · Fabric `?b` (today's defaults) can stay awake forever after a drag: a six-substep limit
   cycle at max move 0.0197 per substep, above QUIET_EPS 0.015; 1 of 23 fabric seeds,
   history-dependent (5 of 6 grab points re-sleep). Fix: K595. `.claude/probes/K372/results.md`.
+- **K599** · `.claude/rules/render-explore.md` THE BURN (and a test comment) says the dark band draws
+  under Char only; it draws under Gone too (K409's card). Fix with K409's answer.
+- **K600** · `.claude/rules/gameplay-links.md` lacks the `gm` key (`gameMode`) and a K534 entry.
+
 ## Approved, to schedule (2026-10-11)
 
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time

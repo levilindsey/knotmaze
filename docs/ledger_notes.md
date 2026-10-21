@@ -4459,3 +4459,18 @@ the rest material between two segments is below `collisionDist`. Fixes K596 (ski
 the guard; regression `?b&am=instant`, 5 s central drag, sleep within +5 s; a browser check on
 both hosts. Symptom levers (results.md `Levers`) only if this fails. `docs/design/K372.md`
 (Handoff).
+
+## K590 (2026-10-20, shortened)
+
+- **K590** · G3-1's phone gap search, the rest: with K573 step 2 knot is still 2.0x the pre-G3-1
+  build (19.3 vs 9.7 ms; 2.9x with step 1 alone). Untried levers, each its own brief: a per-chunk
+  stride (a layout change; helps dense too), drop gapSeg's per-segment division (store u = d/|d|^2
+  per point), cheaper `sampAt` index math. Knot's walk halved but its search fell only 30%: measure
+  what lies outside the walk first. `docs/design/K573.md` (`Next, if knot must reach 1.5x`).
+
+## K594 (2026-10-20, shortened)
+
+- **K594** · Phone kit flakes in K573's run: the adb server died 3x at 12:45-12:47 (unexplained);
+  starting the kit in the foreground hangs the tool; `cleanup.mjs` timed out (exit 2) after a
+  watchdog trip with Chrome in the background; two stale reverse tunnels (5960, 5961) stayed on the
+  phone. `.claude/probes/K573/logs/`.
