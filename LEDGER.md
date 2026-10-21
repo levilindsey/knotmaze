@@ -64,9 +64,6 @@ Next free ID: K617.
 - **K185** · The still pluck's cold-link stall (about 340 ms, first use): (a) accept it (rec.),
   (b) `KHR_parallel_shader_compile`, or (c) warm it at load? Probably moot: a later shader warm-up
   links its program early (unmeasured). `docs/design/K104.md` ("Stage 1c handoff").
-- **K186** · K140's confetti calls: reduced motion's slow spray or none; confetti on every win banner
-  or only a live finish; the colors and amount (answered by the sliders and Levi's 2026-10-20 tuning).
-  `docs/design/K140.md` ("Stage 1 handoff"); play https://levi.dev/knotmaze/?7 (`&cfa=3` for the most).
 
 
 
@@ -503,6 +500,9 @@ Every other item below waits on the trigger it names.
 - **K611** · Main's drag frame is 19-26 ms (a drag runs at 30 fps); `RibbonRenderer.update` is 63%
   (gap slots 28%, splines 22%, tickPaint 17%). K370's 50 ms needs it under 12 ms. Overlaps K5
   R3/R4 and G3-2. `docs/design/K370.md` ("The gap to 50 ms", 2).
+- **K186** · K140's confetti calls, answered (Levi, 2026-10-20): no confetti under reduced motion;
+  confetti on every win banner, not only a live finish; colors and amount by the sliders. Rides the
+  confetti lane after K578. `docs/design/K140.md` ("Stage 1 handoff").
 
 ## Residuals (known, not fixed)
 
