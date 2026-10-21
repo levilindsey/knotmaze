@@ -135,6 +135,33 @@ certifies (the P3.24 probe rule again, render edition).
   fold renders as a clean thinned fold at ANY radius - verified at
   radius 0.13 vs half-width 0.26.
 
+- *K580 s3 (2026-10-20), the convex side: round joins past 110 deg*
+  (`ribbon_mesh.ts` ROUND JOINS; record `docs/design/K580_s3.md`). The
+  miter put the outer vertex up to 2h out along the sample TANGENT's
+  normal (cosHalf floored at 0.5), and at a cusp with unequal legs the
+  tangent follows one leg: a thorn h past the stroke's edges (the a's J,
+  about 0.25 LU on the raster) and a chord cutting inside the next leg.
+  Past ROUND_DOT_START (110 deg) a sample gets ROUND_ARC_SEGMENTS (8) pool
+  vertices after the strip's 2n (7 arc points at h between the two legs'
+  outer normals, then B, the outgoing leg's corner): the outgoing quad's
+  outer index is rewired to B and a fan from the inner vertex covers A..B.
+  Inner and outer vertices sit on the TRUE bisector of the normalized
+  legs; the concave clamp above is unchanged (0.3h at a cusp). From 110
+  to 120 deg (ROUND_DOT_FULL) every round vertex blends from master's
+  miter vertex by a smoothstep of the cosine (the pool starts collapsed
+  on it), so a swept turn moves the outline continuously; below 110 deg
+  every vertex is bit-identical. Edge-value attributes copy the sample's
+  outer vertex; the pool grows by doubling (no steady-state allocation).
+  K81's cover strips re-emit the fan through `RibbonMesh.coverPairs`;
+  a strip with no room left drops the arc (as before). Measured: same
+  state A/B (K550's ab_probe, `phw=0`) 0 px in knot, maze, reveal and burn
+  at dsf 1 and 2; the J's outer offset R 2.000h -> 1.000h; Node bench
+  update() 0.997-1.015x of master (noise). Pinned by
+  `test/render/ribbon_round.test.ts`. NOT the miter: the i's joint notch
+  in "ai" (the ideal's own concave corner between the junction's round
+  piece, centred on the mean of the arms' slot samples in joinery.ts, and
+  chain 3's end), and the open-end crescents beside a spur's tip.
+
 - *From P3.28 (torn crossings after a small pull), displayF:* Passes now carry a RENDER-ONLY `displayF` (the raw joint slide
   target, before easing/clamps, stale-frozen through static mode);
   `RibbonRenderer.renderCtrl()` prefers it everywhere crossing
