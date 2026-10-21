@@ -41,9 +41,14 @@ export const COLLAPSE_MODES: readonly CollapseMode[] = ["off", "finish", "free"]
 // Integer units per unit of run length.
 export const UNITS_PER_LENGTH = 1000;
 
-// Nodes the par search may expand per maze (measured in step 4 of the brief;
-// see PAR_STEP_BUDGET's note in docs/design/K139.md's Handoff).
-export const PAR_STEP_BUDGET = 60_000;
+// Nodes the par search may expand per maze and mode. Measured (K139 step 4,
+// dailies 1-60 and 15 gridSize-24 mazes, `.claude/probes/K139/`): the
+// search trips on every one at any budget up to 200k, so par reads
+// ">= N%". At 20k par sits a mean 1.4-2.1 points below the 200k search's
+// (40k: 1.0-2.0) and costs a median 10 ms, at most 38 ms, on the desktop
+// under the perf lock (40k: 20 / 74 ms); a phone is about 5x slower
+// (K74's estimate; the real phone timing is owed, K662).
+export const PAR_STEP_BUDGET = 20_000;
 
 // Is the run part of the maze (not a title run)?
 export function mazeRun(walk: WalkGraph, eid: number): boolean {

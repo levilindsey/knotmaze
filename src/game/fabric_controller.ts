@@ -86,6 +86,17 @@
 // the strokes left (P - taps) sets `parLost`: every tap is a "noop" and
 // choices() is empty, as after a burn loss, until reset(). Under strokes
 // nothing is ever lost; the finish reads strokes against par.
+//
+// K139 COLLAPSE (game/collapse.ts; brief docs/design/K139.md): `collapse`
+// (finish | free) rides the fragile machinery with collapse.ts's limits
+// (every maze run breaks after one crossing, END runs too; title runs
+// never), overriding `fragile` and `parMode` (setRules). A walk is a
+// trail: the run behind you is broken, so there is no backtrack.
+// `collapsedUnits` sums each broken run's units (the score). finish: the
+// exit wins and the strand is K137's. free: the exit is a dead end, never
+// a win, and the game ends stranded when no unbroken maze run is reachable
+// from the head (`freeStranded`). `collapsePar` (the step-budgeted search)
+// runs once per walk and mode, on first read.
 
 import type { WalkGraph } from "../core/walk_graph";
 import { runsToExit } from "../core/walk_graph";
@@ -103,13 +114,24 @@ import {
 } from "./fragile";
 import type { ParMode } from "./par";
 import { PAR_SLACK_DEFAULT, parFor, strictLost } from "./par";
+import type { CollapseMode, CollapsePar } from "./collapse";
+import {
+  collapseLimits,
+  collapsePar as searchCollapsePar,
+  freeStranded,
+  runUnits,
+  sharePercent,
+  totalUnits,
+} from "./collapse";
 
-// K137: the solve's rules beyond the clock: fragile runs and par. Change
-// them only with a reset() after (main.ts restarts the solve).
+// K137: the solve's rules beyond the clock: fragile runs and par (K139:
+// and collapse). Change them only with a reset() after (main.ts restarts
+// the solve).
 export interface FabricRules {
   fragile?: FragileMode;
   parMode?: ParMode;
   parSlack?: number;
+  collapse?: CollapseMode;
 }
 
 export type FabricTapResult =
@@ -190,6 +212,13 @@ export class FabricMazeController {
   // runsToExit with nothing blocked (the walk never changes).
   private openRuns: Map<string, number> | null = null;
 
+  // K139 collapse: the mode (change it only with a reset() after), the
+  // units collapsed so far, and per mode the par (computed on first read).
+  collapse: CollapseMode = "off";
+  collapsedUnits = 0;
+  private collapseTotalUnits = -1;
+  private collapseParOf: Partial<Record<CollapseMode, CollapsePar>> = {};
+
   constructor(
     walk: WalkGraph,
     trailMode = false,
@@ -205,17 +234,22 @@ export class FabricMazeController {
 
   // K137: new rules; they take at the next reset() (main.ts restartSolve).
   setRules(rules: FabricRules): void {
-    this.fragile = rules.fragile ?? "off";
-    this.parMode = rules.parMode ?? "off";
+    // K139: collapse overrides fragile and par (its own limits and par).
+    this.collapse = rules.collapse ?? "off";
+    const collapsing = this.collapse !== "off";
+    this.fragile = collapsing ? "off" : rules.fragile ?? "off";
+    this.parMode = collapsing ? "off" : rules.parMode ?? "off";
     this.parSlack = rules.parSlack ?? PAR_SLACK_DEFAULT;
   }
 
   reset(): void {
-    this.breakLimits = fragileLimits(this.walk, this.fragile);
+    this.breakLimits =
+      this.collapse !== "off" ? collapseLimits(this.walk) : fragileLimits(this.walk, this.fragile);
     this.breakable = anyBreakable(this.breakLimits);
     this.crossings = new Uint32Array(this.walk.edges.length);
     this.stranded = false;
     this.justBroke = -1;
+    this.collapsedUnits = 0;
     this.openRuns ??= runsToExit(this.walk);
     this.fewestRuns = this.openRuns.get(this.walk.start) ?? Infinity;
     this.par = parFor(this.fewestRuns, this.parSlack);
@@ -481,7 +515,8 @@ export class FabricMazeController {
     this.pathVertices.push(far);
     this.arrive(far);
     this.fireArrive(head, depart, e.length, far);
-    if (far === this.walk.exit) {
+    // K139: in a free collapse game the exit is only a dead end.
+    if (far === this.walk.exit && this.collapse !== "free") {
       this.solved = true;
       return "win";
     }
@@ -490,16 +525,49 @@ export class FabricMazeController {
   }
 
   // K137: one crossing of the run; `justBroke` names it when this one
-  // broke it.
+  // broke it. K139: a collapse adds the run's units to the score.
   private cross(eid: number): void {
     const n = ++this.crossings[eid];
     this.justBroke = this.breakable && n === this.breakLimits[eid] ? eid : -1;
+    if (this.justBroke >= 0 && this.collapse !== "off") {
+      this.collapsedUnits += runUnits(this.walk, eid);
+    }
+  }
+
+  // K139: is a collapse game on?
+  get collapseOn(): boolean {
+    return this.collapse !== "off";
+  }
+
+  // K139: the maze's units (every maze run's), the score's denominator.
+  get collapseTotal(): number {
+    if (this.collapseTotalUnits < 0) this.collapseTotalUnits = totalUnits(this.walk);
+    return this.collapseTotalUnits;
+  }
+
+  // K139: the score, the share of the maze collapsed (a whole percent,
+  // rounded down).
+  get collapsePercent(): number {
+    return sharePercent(this.collapsedUnits, this.collapseTotal);
+  }
+
+  // K139: the par of this walk under the current collapse mode (null:
+  // collapse off). The search runs once per walk and mode, on first read.
+  get collapsePar(): CollapsePar | null {
+    const mode = this.collapse;
+    if (mode === "off") return null;
+    return (this.collapseParOf[mode] ??= searchCollapsePar(this.walk, mode));
   }
 
   // K137: after a move (or a respawn), from the head: stranded (fragile
   // on) and the strict par loss (which stays lost until reset()).
   private judge(): void {
     if (this.solved) return;
+    if (this.collapse === "free") {
+      // K139: the game ends when no unbroken maze run is reachable.
+      this.stranded = freeStranded(this.walk, this.head, (eid) => this.broken(eid));
+      return;
+    }
     const strict = this.parMode === "strict";
     if (!this.breakable && !strict) return;
     const left = this.runsLeft;
