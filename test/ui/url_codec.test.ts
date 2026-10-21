@@ -130,8 +130,8 @@ describe("links", () => {
       minoStopMin: 0.2, minoStopMax: 0.6, minoHuntStop: 0.5, minoTurnBack: 1.5,
       minoTipReach: 2, minoRoamNear: 0.25, minoTelegraphRuns: 1,
       fragile: "off", parMode: "off", parSlack: 1,
-      minoGuardRoam: 30, minoGuardDetect: 30, minoGuardLose: 40,
-      minoGuardAccuracyRt: 0.7, minoStalkerAccuracyRt: 0.7,
+      minoGuardRoam: 30, minoGuardDetect: 20, minoGuardLose: 30,
+      minoGuardAccuracyRt: 0.4, minoStalkerAccuracyRt: 0.45,
     });
   });
 
@@ -574,8 +574,8 @@ describe("links", () => {
       roamPull: 0, lair: false,
       stopMin: 0.1, stopMax: 0.4, huntStop: 0.25, turnBack: 2, tipReach: 1.5,
       roamNear: 0.5,
-      model: "hunter", territory: 30, guardDetect: 30, guardLose: 40,
-      guardAccuracy: 0.7, stalkerAccuracy: 0.7,
+      model: "hunter", territory: 30, guardDetect: 20, guardLose: 30,
+      guardAccuracy: 0.4, stalkerAccuracy: 0.45,
     });
     // The telegraph's reach is the renderer's (stage 2), not the chase's.
     expect(p.minoTelegraphRuns).toBe(2);
