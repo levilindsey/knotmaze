@@ -29,6 +29,9 @@ import type { SceneRef } from "./scene_ref";
 // physics off, a camera pan). Taps sound at TAP_STRENGTH.
 const TAP_SLOP_PX: Record<string, number> = { mouse: 4, pen: 6, touch: 10 };
 const TAP_STRENGTH = 0.55;
+// K370: whether a committed drag posts on pointerrawupdate (the raw-input
+// lever) when window.__knotRawDrag is unset.
+const RAW_DRAG_DEFAULT = false;
 
 // What pointer input reads from main(): values and functions, each
 // assigned once, plus closures over what main.ts declares after this
@@ -176,15 +179,19 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
   let lastMoveT = 0;
   let snapMode: "none" | "soft" = "none";
 
-  const boundedDragTo = (x: number, y: number): void => {
-    if (!scene.ps) return;
+  // The drag target for a pointer at (x, y): L tanh(r / L) from the grab.
+  const boundTarget = (x: number, y: number, out: Float64Array): void => {
     const L = Math.max(0.1, params.tugLimit * params.threadWidth);
     const dx = x - grabOrigin[0];
     const dy = y - grabOrigin[1];
     const r = Math.hypot(dx, dy);
     const s = r > 1e-9 ? (L * Math.tanh(r / L)) / r : 0;
-    dragPos[0] = grabOrigin[0] + dx * s;
-    dragPos[1] = grabOrigin[1] + dy * s;
+    out[0] = grabOrigin[0] + dx * s;
+    out[1] = grabOrigin[1] + dy * s;
+  };
+  const boundedDragTo = (x: number, y: number): void => {
+    if (!scene.ps) return;
+    boundTarget(x, y, dragPos);
     host.dragTo(dragPos[0], dragPos[1]);
   };
 
@@ -585,6 +592,25 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
     app.canvas.style.cursor = "grabbing";
     wake();
   };
+  // K370, the raw-input lever (`window.__knotRawDrag`; RAW_DRAG_DEFAULT
+  // when unset). Chrome holds a pointermove for the next frame (rAF-
+  // aligned); pointerrawupdate fires as the input arrives. On a committed
+  // drag it posts the bounded target at once, so the worker steps toward
+  // it sooner. pointermove still runs as before (dragPos, dragVel, wake)
+  // and posts the same target again, which the worker coalesces.
+  const rawTarget = new Float64Array(2);
+  app.canvas.addEventListener("pointerrawupdate", (ev) => {
+    const flag = (globalThis as { __knotRawDrag?: boolean }).__knotRawDrag;
+    if (!(typeof flag === "boolean" ? flag : RAW_DRAG_DEFAULT)) return;
+    // lib.dom types pointerrawupdate as a plain Event.
+    const e = ev as PointerEvent;
+    if (!scene.ps || pinch || dragPan || pendingPluck) return;
+    if (e.pointerType === "touch" && touchLocked) return;
+    if (scene.ps.grabbedParticle < 0 || snapMode !== "none") return;
+    const [x, y] = toLattice(e);
+    boundTarget(x, y, rawTarget);
+    host.dragTo(rawTarget[0], rawTarget[1]);
+  });
   app.canvas.addEventListener("pointermove", (e) => {
     if (!scene.ps) return;
     if (e.pointerType === "touch") {

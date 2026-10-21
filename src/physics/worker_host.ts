@@ -98,6 +98,9 @@ export interface WorkerHostOptions {
   readyTimeoutMs?: number;
   // Interpolation when no probe override is set.
   interpolate?: boolean;
+  // K370: draw the newest snapshot exactly from a grab until the next
+  // sleep, when no probe override is set.
+  grabExact?: boolean;
   // Pause the worker while the page is hidden (default: when there is a
   // document).
   watchVisibility?: boolean;
@@ -106,6 +109,9 @@ export interface WorkerHostOptions {
 // The probe hook's shape (window.__knotHostOpts).
 interface ProbeOpts {
   interpolate?: boolean;
+  // K370: from a grab until the next sleep, draw the newest snapshot
+  // exactly (no interpolation delay).
+  grabExact?: boolean;
 }
 
 // An epoch-ms time from the worker (physics_worker_core's epochMs) on
@@ -258,6 +264,7 @@ export class WorkerHost implements PhysicsHost {
   private readonly onFallback: () => void;
   private readonly readyTimeoutMs: number;
   private readonly interpolateDefault: boolean;
+  private readonly grabExactDefault: boolean;
 
   private mirror: MirrorSystem | null = null;
   private genN = 0;
@@ -298,6 +305,9 @@ export class WorkerHost implements PhysicsHost {
   private readonly intervals: number[] = [];
   private appliedSeq = -1;
   private appliedExact = false;
+  // K370: set by a grab, cleared at the next sleep or build. While set (and
+  // grabExact is on), a frame draws the newest snapshot exactly.
+  private exactHold = false;
   private lastLag = 0;
   private lastTuning: PhysicsTuning = { ...DEFAULT_TUNING };
   private tuningPosted = false;
@@ -339,6 +349,7 @@ export class WorkerHost implements PhysicsHost {
     this.onFallback = onFallback;
     this.readyTimeoutMs = opts.readyTimeoutMs ?? READY_TIMEOUT_MS;
     this.interpolateDefault = opts.interpolate ?? true;
+    this.grabExactDefault = opts.grabExact ?? false;
     const name = opts.prebuild
       ? workerNameOf(sceneParamsOf(opts.prebuild), this.lastTuning)
       : PLAIN_NAME;
@@ -433,6 +444,7 @@ export class WorkerHost implements PhysicsHost {
     this.intervals.length = 0;
     this.appliedSeq = -1;
     this.appliedExact = false;
+    this.exactHold = false;
     this.lastLag = 0;
     this.settleKind = "";
     this.settled = null;
@@ -472,6 +484,7 @@ export class WorkerHost implements PhysicsHost {
     if (!m) return -1;
     const r = m.grabAt(particle, x, y);
     this.postInput({ type: "grab", gen: this.genN, particle, x, y });
+    if (r >= 0) this.exactHold = true;
     return r;
   }
   dragTo(x: number, y: number): void {
@@ -539,6 +552,7 @@ export class WorkerHost implements PhysicsHost {
       return;
     }
     this.asleepFlag = true;
+    this.exactHold = false;
     if (this.mirror) this.postInput({ type: "sleep", gen: this.genN });
   }
 
@@ -550,7 +564,10 @@ export class WorkerHost implements PhysicsHost {
     this.postRaw({ type: "frame", gen: this.genN, dt, ignoreTemp: !live });
     this.framesPosted++;
     if (!live && this.liveWall0 >= 0) this.recordFirstSleep("mode");
-    this.applyHeld(performance.timeOrigin + now, this.interpolating());
+    this.applyHeld(
+      performance.timeOrigin + now,
+      this.interpolating() && !(this.exactHold && this.grabExact()),
+    );
     return Number.isFinite(m.maxMove);
   }
 
@@ -566,6 +583,7 @@ export class WorkerHost implements PhysicsHost {
     // Asleep: show the final state exactly (an interpolated frame trails).
     this.applyHeld(Infinity, false);
     this.asleepFlag = true;
+    this.exactHold = false;
     if (this.liveWall0 >= 0) this.recordFirstSleep("sleep");
     return true;
   }
@@ -726,6 +744,8 @@ export class WorkerHost implements PhysicsHost {
       kind: "worker",
       reason: "",
       interpolate: this.interpolating(),
+      grabExact: this.grabExact(),
+      exactHold: this.exactHold,
       delayMs: this.lastDelay,
       lastT: this.lastT,
       snapshots: this.snapsIn,
@@ -817,6 +837,13 @@ export class WorkerHost implements PhysicsHost {
     const o = (globalThis as { __knotHostOpts?: ProbeOpts }).__knotHostOpts;
     if (o && typeof o.interpolate === "boolean") return o.interpolate;
     return this.interpolateDefault;
+  }
+
+  // K370: whether a grab turns interpolation off until the next sleep.
+  private grabExact(): boolean {
+    const o = (globalThis as { __knotHostOpts?: ProbeOpts }).__knotHostOpts;
+    if (o && typeof o.grabExact === "boolean") return o.grabExact;
+    return this.grabExactDefault;
   }
 
   private postRaw(msg: MainToWorker, transfer: Transferable[] = []): void {
