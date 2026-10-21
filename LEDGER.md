@@ -960,9 +960,6 @@ Every other item below waits on the trigger it names.
 - **K464** · K5 R2's leftovers (`docs/design/K5_R2.md`, Stage R2 handoff): the G3 and
   FILLET_REACH_PER_HALF facade getters (with R4 or G3's data plane), stale facade comments, the G3-0
   hooks' home (R5), GapSource solve() (R3 or G3-1).
-- **K470** · No app-level WebGL context-loss handling: only `probe_hooks.ts` listens for
-  `webglcontextlost`, to count losses. What a lost context does to the custom data textures on a
-  phone is untested (K6-1).
 - **K473** · Unverified: `fusedTips`' `hostOf` takes the group's first other member, so at a joint
   of 3+ threads the host can be a stub (K397 s3; `docs/design/K397.md`, Stage 3 handoff).
 - **K474** · An 18 px notch at stub 79's joint (host 56), which K397 s3's fix removes, has no gap
@@ -1279,6 +1276,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K470** · No app-level WebGL context-loss handling: only `probe_hooks.ts` listens for `webglcontextlost`, to count losses. Dropped: duplicate of K456 (2026-10-20).
 - **K337** · Confetti shine: one light from the upper left; foil pieces flash, paper ones sheen (`cfh` strength 1, `cff` foil share 0.3); strength call K586. Done in 9538392 (2026-10-20).
 - **K291** · CI's actions moved to their Node 24 releases (checkout v7, setup-node v7, wrangler-action v4); the deploy passed on `ubuntu-latest` with no Node 20 warning, so no runner pin. Done in f2303c0 (2026-10-20).
 - **K320** · Split section-rgb: killed by K550 (revert 08d9db5); Stage 1's slim kept (6c592e6). Done in 08d9db5 (2026-10-20).
