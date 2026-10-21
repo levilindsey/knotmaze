@@ -71,6 +71,7 @@ import { shareText } from "./game/share_text";
 import { parScore } from "./game/par";
 import { spoolPercentUsed } from "./game/spool";
 import { HINT_SECONDS } from "./game/hints";
+import { revealedBy, runAtCtrl } from "./game/hidden_runs";
 import { catchHeart, heartsToast, livesOf, type HeartLoss } from "./game/lives";
 import { newSword, swordSpot, type SwordAvoid, type SwordPhase } from "./game/sword";
 import { sprintAfterMove, sprintToggle, sprintValue, type SprintState } from "./game/sprint";
@@ -793,6 +794,7 @@ async function main(): Promise<void> {
       tapReach: () => tapReach(),
       cutArmed: () => cutArmed,
       cutPick: () => !!scene.fabricController?.walkerMode,
+      onPluck: (chain, ctrl) => revealByPluck(chain, ctrl),
     },
     scene
   );
@@ -2846,7 +2848,13 @@ async function main(): Promise<void> {
     const t = performance.now();
     if (t - ruleToastAt < 1500) return;
     ruleToastAt = t;
-    const mode = scene.fabricController?.ruleLook?.mode;
+    const fc = scene.fabricController;
+    const mode = fc?.ruleLook?.mode;
+    // K138 s2: a closed turnstile says so (the toast's pluck is the same).
+    if (fc?.refusalOf(eid) === "turnstile") {
+      showToast("That turnstile is closed this way. It turns one step with every move.", 2500);
+      return;
+    }
     showToast(
       mode === "cycle"
         ? "Cycle the colors: light, then middle, then dark, then light again."
@@ -2855,6 +2863,31 @@ async function main(): Promise<void> {
           : "That move breaks the rules.",
       2500
     );
+  };
+  // K138 s2: a pluck on a thread (a tap's, or a drag's release) shows the
+  // hidden runs of its note within REVEAL_RUNS runs of the plucked run, for
+  // the rest of the solve (call 3; hidden_runs.ts revealedBy). A reveal is
+  // an action, not a move: the strokes, the clock and the turnstiles stay.
+  const revealByPluck = (chain: number, ctrl: number): void => {
+    const fc = scene.fabricController;
+    if (!fc || !scene.fabric || !scene.ps) return;
+    const hidden = fc.hiddenRuns();
+    if (hidden.length === 0) return;
+    const walk = fc.walk;
+    const run = runAtCtrl(walk, chain, ctrl, scene.ps.chains[chain]?.length ?? Infinity);
+    if (run < 0) return;
+    const noteOf = (eid: number): number | null => {
+      const e = walk.edges[eid];
+      return e ? freqForCtrl(e.chain, (e.ctrlA + e.ctrlB) / 2) : null;
+    };
+    let shown = 0;
+    for (const h of revealedBy(walk, hidden, new Set(), run, noteOf)) {
+      if (fc.reveal(h)) shown++;
+    }
+    if (shown === 0) return;
+    scene.fabric.update(fc);
+    updateHud();
+    showToast(shown === 1 ? "A hidden run appears." : `${shown} hidden runs appear.`, 2000);
   };
   // One move along run `eid` from the head, as a tap on it (K120's keys
   // share it). Returns true when the move was taken.

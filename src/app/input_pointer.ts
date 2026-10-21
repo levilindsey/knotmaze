@@ -82,6 +82,9 @@ export interface PointerInputDeps {
   // press on one is a pending tap, as a choice's is, and the hover glows
   // the run a click would cut under a crosshair; elsewhere a press pans.
   cutPick?: () => boolean;
+  // K138 s2: a pluck sounded on a thread at a chain ctrl (a tap's, or a
+  // drag's release on pointerup): main shows the hidden runs it finds.
+  onPluck?: (chain: number, ctrl: number) => void;
 }
 
 export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
@@ -347,6 +350,7 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
     if (drawn && !settings.muted && params.soundMode !== "none") {
       synth.pluck(freq, TAP_STRENGTH);
     }
+    deps.onPluck?.(hit.chain, hit.ctrl); // K138 s2: hidden runs.
     // K279: the tap's ripple and tug (a core tap has neither).
     startRipple(hit.chain, { arc: hit.arc }, params.rippleStrength);
     tugAt(hit.chain, { arc: hit.arc }, hit.side, params.pluckTug);
@@ -837,6 +841,7 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
         synth.pluck(freq, Math.max(0.35, Math.min(1, dragVel / 25)));
       }
       beginRelease(params.pluckStyle, freq, pluckable);
+      if (pluckable && e.type === "pointerup") deps.onPluck?.(chain, slot); // K138 s2.
     }
     if (app.canvas.hasPointerCapture(e.pointerId)) {
       app.canvas.releasePointerCapture(e.pointerId);
