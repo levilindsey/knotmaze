@@ -66,6 +66,7 @@ import {
   telegraphTickLook,
 } from "../game/mino_feedback";
 import { chaseRoute, telegraphPieces } from "./telegraph_route";
+import type { Snare } from "../game/snares"; // K137 stage 4
 import type { ChaseRoute, PlanRoute } from "./telegraph_route";
 
 // What syncMinotaur draws: the real-time chase (MinotaurChase) or the
@@ -83,6 +84,8 @@ export interface MinotaurView {
   readonly slain?: boolean;
   // K137 stage 3d: the extra monsters (sleepers, followers; absent: none).
   readonly extraViews?: readonly ExtraView[];
+  // K137 stage 4 (4.30): the snares laid (TurnMinotaur.snares; absent: none).
+  readonly snares?: readonly Snare[];
 }
 import { FogBackdrop } from "./background";
 import { fogArcStations, moveEnds, travelOrder } from "./fog_arc";
@@ -325,6 +328,19 @@ const EXTRA_WAITING_ALPHA = 0.85;
 const EXTRA_DOT = 1.3; // The colored dot's radius, in marker radii.
 const EXTRA_RED: readonly number[] = [0.86, 0.12, 0.08];
 const EXTRA_AMBER: readonly number[] = [1, 0.68, 0.18];
+// K137 stage 4 (4.30): the snares' stand-in ring (syncSnares): its radius in
+// marker radii and its gold (the armed tool button's).
+const SNARE_RING = 0.62;
+const SNARE_GOLD = 0xe8c45a;
+const SNARE_SIDES = 28;
+function ringPoints(x: number, y: number, r: number): number[] {
+  const pts: number[] = [];
+  for (let i = 0; i < SNARE_SIDES; i++) {
+    const a = (i / SNARE_SIDES) * Math.PI * 2;
+    pts.push(x + Math.cos(a) * r, y + Math.sin(a) * r);
+  }
+  return pts;
+}
 // The compass: an arrow COMPASS_DIST marker radii from the head along the
 // good arm's chord to COMPASS_REACH ctrl along it, COMPASS_SIZE radii long.
 const COMPASS_DIST = 1.9;
@@ -712,6 +728,9 @@ export class FabricMazeRenderer {
   // K137 stage 3d: the extra monsters' markers, just under the minotaur.
   private extraLayer: Container;
   private extraMeshes: MarkerMesh[] = [];
+  // K137 stage 4 (4.30): the snares' stand-in rings (syncSnares), under the
+  // monsters.
+  private snareGfx: Graphics;
   private minoGlow: Sprite;
   // K137 stage 3b: the telegraph's ink, FLEE_BLUE while the minotaur flees.
   private teleInk = TELEGRAPH_COLOR;
@@ -818,7 +837,9 @@ export class FabricMazeRenderer {
     );
     this.minoLayer.visible = false;
     this.extraLayer = new Container();
-    this.overContainer.addChild(this.extraLayer, this.minoLayer);
+    this.snareGfx = new Graphics();
+    this.snareGfx.visible = false;
+    this.overContainer.addChild(this.snareGfx, this.extraLayer, this.minoLayer);
     for (const m of Object.values(this.markers)) m.hide();
     // K408: the meshes outlive the scene; a new one starts with the start
     // marker shown (the fade's first retarget only learns the set).
@@ -1717,6 +1738,7 @@ export class FabricMazeRenderer {
     this.minoShown = false;
     this.syncSword(chase);
     this.syncExtras(chase, fog);
+    this.syncSnares(chase); // K137 stage 4
     // K137 stage 3b: a minotaur slain by the sword is gone for the solve.
     if (!chase || chase.slain) {
       this.minoLayer.visible = false;
@@ -1873,6 +1895,40 @@ export class FabricMazeRenderer {
     }
   }
 
+  // K137 stage 4 (4.30): the snares, a STAND-IN look until a glyph pass
+  // (K138 stage 3 owns the glyph table's new entries): a gold ring at each
+  // laid run's middle, filled while it holds a monster; a spent snare goes.
+  // Redrawn every frame while one is laid (the threads move); it hides
+  // where the thread reveal has not shown its point, like the extras.
+  private syncSnares(chase: MinotaurView | null): void {
+    const g = this.snareGfx;
+    const snares = chase?.snares ?? [];
+    if (!snares.some((s) => s.phase !== "spent")) {
+      if (g.visible) {
+        g.clear();
+        g.visible = false;
+      }
+      return;
+    }
+    g.clear();
+    g.visible = true;
+    const r = this.markerRadius() * SNARE_RING;
+    for (const s of snares) {
+      if (s.phase === "spent") continue;
+      const e = this.walk.edges[s.edge];
+      if (!e) continue;
+      const ctrl = this.ctrlMod(e.chain, (e.ctrlA + e.ctrlB) / 2);
+      if (this.revealQuery && this.revealQuery(e.chain, ctrl) < 0.98) continue;
+      if (this.explore.on && this.ribbons.exploreVisAt(e.chain, ctrl) < 0.98) continue;
+      this.pointFlowed(e.chain, ctrl, this.scratch, 0);
+      const x = this.scratch[0];
+      const y = this.scratch[1];
+      // Explicit polygons: a Graphics circle tessellates from its raw,
+      // sub-unit world radius.
+      g.poly(ringPoints(x, y, r), true).stroke({ width: r * 0.3, color: SNARE_GOLD, alpha: 0.95 });
+      if (s.phase === "holding") g.poly(ringPoints(x, y, r * 0.55), true).fill({ color: SNARE_GOLD, alpha: 0.6 });
+    }
+  }
   // The extras' meshes for this scene, borrowed from EXTRA_POOL.
   private extraMesh(i: number): MarkerMesh {
     while (this.extraMeshes.length <= i) {

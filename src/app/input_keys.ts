@@ -28,6 +28,7 @@ import type {
   WaitingMove,
 } from "../ui/key_moves";
 import { cutKeyOf } from "../ui/cut_buttons";
+import { toolKeyOf, type ToolKind } from "../ui/tool_buttons"; // K137 stage 4
 import type { CutKey } from "../ui/cut_buttons";
 import { walkerKeyOf } from "../ui/walker_buttons";
 import type { WalkerKey } from "../ui/walker_buttons";
@@ -86,6 +87,10 @@ export interface KeyInputDeps {
   // K137 stage 3c SPRINT (main.ts): F spends the sprint (or disarms it on
   // the turn clock), while its button shows. True when the key acted.
   sprintKey?: () => boolean;
+  // K137 stage 4 LURES and SNARES (main.ts): L arms the lure and N the
+  // snare (a second press puts it down), while their buttons show. True
+  // when the key acted.
+  toolKey?: (k: ToolKind) => boolean;
 }
 
 export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
@@ -520,6 +525,13 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
       if (sprintKeyOf(e) && deps.sprintKey) {
         if (e.repeat || keyBelongsElsewhere(e) || !keysLive()) return;
         if (deps.sprintKey()) e.preventDefault();
+        return;
+      }
+      // K137 stage 4: the lure and snare keys (L, N), while their buttons show.
+      const tk = toolKeyOf(e);
+      if (tk !== null && deps.toolKey) {
+        if (e.repeat || keyBelongsElsewhere(e) || !keysLive()) return;
+        if (deps.toolKey(tk)) e.preventDefault();
         return;
       }
       // K80 turns 3a: the WAIT key (`.`, or Space off a button or link),

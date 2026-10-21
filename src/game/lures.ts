@@ -17,7 +17,7 @@
 // - A follower ignores it (s3b's rec).
 // The committed move is re-decided at once, so the telegraph shows the lured
 // route. A lure nobody hears still uses a lure; main.ts toasts "Nothing heard
-// it.".
+// the lure.".
 //
 // Pure: no state, no draws. The graph is TurnGraph's shape (typed here so
 // that minotaur_turns.ts can import this module).

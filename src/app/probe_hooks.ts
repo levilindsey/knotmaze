@@ -200,6 +200,20 @@ export interface ProbeCtx {
   readonly sprint: string | null;
   readonly sprintShown: boolean;
   pressSprint(): boolean;
+  // K137 stage 4: the lures and snares (their HUD rows, null: that tool
+  // off), the armed tool, whether the buttons show, the snares laid and
+  // the model's lure counts, in __knotTurnMino(); and a press of a tool's
+  // button (the button's and L / N's path; true when it acted).
+  readonly tools: {
+    lures: { left: number; of: number } | null;
+    snares: { left: number; of: number } | null;
+    armed: "lure" | "snare" | null;
+    shown: boolean;
+    laid: { edge: number; phase: string; holder: number | null; left: number }[];
+    lured: number;
+    heardBy: number;
+  };
+  pressTool(k: "lure" | "snare"): boolean;
   readonly cutShown: boolean;
   // K114 walker: the walker's view (null: no walker; WalkerProbe).
   readonly walker: WalkerProbe | null;
@@ -522,6 +536,7 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       }),
       woken: tm.woken,
       lastCatcher: tm.lastCatcher,
+      tools: ctx.tools, // K137 stage 4: lures and snares
       moves: ctx.scene.fabricController ? ctx.scene.fabricController.moveLog.join("") : "",
       turns: tm.turns,
       lifeTurn: tm.lifeTurn,
@@ -574,6 +589,9 @@ export function installProbeHooks(ctx: ProbeCtx): void {
   // K137 stage 3c: press sprint as its button or F would (either clock).
   (window as unknown as Record<string, unknown>).__knotSprint = (): boolean =>
     ctx.pressSprint();
+  // K137 stage 4: press the lure or snare button as it or L / N would.
+  (window as unknown as Record<string, unknown>).__knotTool = (k: "lure" | "snare"): boolean =>
+    ctx.pressTool(k);
   (window as unknown as Record<string, unknown>).__knotTurnMinoObj = () =>
     ctx.scene.turnMino;
   // Fabric-maze diagnostics: solve state, metrics, and each current choice

@@ -76,6 +76,8 @@ import { catchHeart, heartsToast, livesOf, type HeartLoss } from "./game/lives";
 import { newSword, swordSpot, type SwordAvoid, type SwordPhase } from "./game/sword";
 import { monsterSpecs, sleepersOf } from "./game/monsters";
 import { sprintAfterMove, sprintToggle, sprintValue, type SprintState } from "./game/sprint";
+import { luresOf } from "./game/lures"; // K137 stage 4
+import { snaresOf } from "./game/snares";
 import type { SwordShown } from "./ui/maze_hud";
 import { rateCuts, rateRun, ratingForResult, walkedOf } from "./game/star_rating";
 import { LossBanner, MazeHud, WinBanner } from "./ui/maze_hud";
@@ -124,6 +126,7 @@ import {
 import { UndoButtons } from "./ui/undo_buttons";
 import { CutButtons } from "./ui/cut_buttons";
 import { SprintButton } from "./ui/sprint_button";
+import { ToolButtons, type ToolKind } from "./ui/tool_buttons"; // K137 stage 4
 import { WalkerButtons } from "./ui/walker_buttons";
 import { AidButtons, CHALK_KEY, chalkPref, type AidKey } from "./ui/aid_buttons";
 import type { WalkerKey } from "./ui/walker_buttons";
@@ -486,6 +489,23 @@ async function main(): Promise<void> {
     const tm = scene.turnMino;
     return tm && tm.extras.some((x) => x.kind === "sleeper") ? tm.woken : null;
   };
+  // K137 stage 4 (4.10, 4.30): LURES and SNARES (game/lures.ts,
+  // game/snares.ts; TurnMinotaur.lure and setSnare). The turn clock only
+  // (real time has neither yet), snares by runs only. The stocks left this
+  // attempt (restartChase refills them) and the armed tool (null: none; the
+  // next tap on a run uses it, toolTap; the buttons and the L and N keys arm
+  // it, pressTool).
+  let luresLeft = 0;
+  let snaresLeft = 0;
+  let toolArmed: ToolKind | null = null;
+  const luresOn = (): boolean => luresOf(params.lures) > 0 && scene.turnMino !== null;
+  const snaresOn = (): boolean =>
+    snaresOf(params.snares) > 0 && scene.turnMino !== null && !scene.turnMino.cfg.byLength;
+  // The HUD and the banner rows (null: that tool off).
+  const luresShown = (): { left: number; of: number } | null =>
+    luresOn() ? { left: luresLeft, of: luresOf(params.lures) } : null;
+  const snaresShown = (): { left: number; of: number } | null =>
+    snaresOn() ? { left: snaresLeft, of: snaresOf(params.snares) } : null;
   // K114 CUT: the scissors are armed (the next tap cuts), and a cut tapped
   // while the dot travels, waiting for the move to end (-1: none; the
   // latest wins). The machinery is below, by handleFabricTap.
@@ -799,7 +819,7 @@ async function main(): Promise<void> {
       inWaitZone: (x, y) => inWaitZone(x, y),
       setWaitCue: (on) => setWaitCue(on),
       tapReach: () => tapReach(),
-      cutArmed: () => cutArmed,
+      cutArmed: () => cutArmed || toolArmed !== null, // K137 stage 4: tools too
       cutPick: () => !!scene.fabricController?.walkerMode,
       onPluck: (chain, ctrl) => revealByPluck(chain, ctrl),
     },
@@ -956,6 +976,31 @@ async function main(): Promise<void> {
       pressSprint();
     },
   });
+  // K137 stage 4: the lure and snare buttons (ui/tool_buttons.ts) in the
+  // sprint row (toolTick, every frame, shows them).
+  const toolButtons = new ToolButtons({
+    press: (k) => {
+      pressTool(k);
+    },
+  });
+  // The armed tool shown: the button lit, a crosshair; put down, the hover
+  // glow goes too (as for the scissors). toolTick applies it every frame, so
+  // a restart that drops the tool shows on the next frame.
+  let toolArmedShown: ToolKind | null = null;
+  const syncToolArmed = (): void => {
+    if (toolArmed === toolArmedShown) return;
+    toolArmedShown = toolArmed;
+    toolButtons.setArmed(toolArmed);
+    if (cutArmed) return;
+    app.canvas.style.cursor = toolArmed ? "crosshair" : "default";
+    if (!toolArmed && scene.fabric && scene.fabricController && scene.fabric.setGlow(-1, 0)) {
+      scene.fabric.update(scene.fabricController);
+    }
+  };
+  const setToolArmed = (k: ToolKind | null): void => {
+    toolArmed = k;
+    syncToolArmed();
+  };
   // Armed: the button lit, a crosshair; put down, the cut glow goes too.
   const setCutArmed = (on: boolean): void => {
     if (on === cutArmed) return;
@@ -1015,6 +1060,7 @@ async function main(): Promise<void> {
       cutButtons.el, // K114 (hidden: none).
       walkerButtons.el, // K114 walker (hidden: none).
       sprintButton.isShown ? sprintButton.el : null, // K137 stage 3c
+      toolButtons.isShown ? toolButtons.el : null, // K137 stage 4
       // (The panel: env.panel below, K198 stage 2.)
       stamp,
       document.querySelector<HTMLElement>(".km-pad"), // K120 (hidden: none).
@@ -1348,6 +1394,8 @@ async function main(): Promise<void> {
       sword: swordShown(), // K137 stage 3b
       sprint: sprintShown(), // K137 stage 3c
       woken: wokenShown(), // K137 stage 3d
+      lures: luresShown(), // K137 stage 4
+      snares: snaresShown(),
     };
   };
   // The HUD and the mode badge (it re-fits around the HUD's new size).
@@ -1672,6 +1720,9 @@ async function main(): Promise<void> {
         // K137 stage 3c: sprint was spent (null: off).
         sprintUsed: sprintOn() ? sprintState === "first" || sprintState === "used" : null,
         woken: wokenShown(), // K137 stage 3d
+        // K137 stage 4: the lures and snares used (null: that tool off).
+        luresUsed: luresOn() ? luresOf(params.lures) - luresLeft : null,
+        snaresUsed: snaresOn() ? snaresOf(params.snares) - snaresLeft : null,
         // K137 stage 2: the spool's share used and the hints used.
         spool: c.spoolOn ? { used: c.spoolUsed, cap: c.spoolCap } : null,
         hintsUsed: c.hintsMax > 0 ? c.hintsUsed : null,
@@ -1719,6 +1770,8 @@ async function main(): Promise<void> {
       sword: swordShown(), // K137 stage 3b
       sprint: sprintShown(), // K137 stage 3c
       woken: wokenShown(), // K137 stage 3d
+      lures: luresShown(), // K137 stage 4
+      snares: snaresShown(),
       // K137 stage 2: the share of the spool paid out, and the hints used.
       spoolUsed: c.spoolOn ? spoolPercentUsed(c.spoolUsed, c.spoolCap) : null,
       hintsUsed: c.hintsMax > 0 ? c.hintsUsed : null,
@@ -1804,6 +1857,10 @@ async function main(): Promise<void> {
   const restartChase = (carry = false): void => {
     refillHearts(); // K137 stage 3a: every heart back.
     sprintState = "ready"; // K137 stage 3c: sprint back.
+    // K137 stage 4: the lures and snares back, the tool put down.
+    luresLeft = luresOf(params.lures);
+    snaresLeft = snaresOf(params.snares);
+    toolArmed = null;
     const prevChase = carry ? scene.chase : null;
     const prevTurn = carry ? scene.turnMino : null;
     scene.chase =
@@ -2825,6 +2882,8 @@ async function main(): Promise<void> {
     // it plucks or pans as anywhere.
     if (scene.fabricController.walkerMode) return walkerTap(x, y, pt);
     // K114: armed scissors: the tap cuts (or puts them down) instead.
+    // K137 stage 4: an armed lure or snare: the tap uses it (or puts it down).
+    if (toolArmed !== null) return toolTap(x, y, pt);
     if (cutArmed) return cutTap(x, y, pt);
     // K80 turns: with the turn minotaur on, a tap on your own junction is
     // the wait move (before the runs: a short run's tap zone reaches the
@@ -3125,6 +3184,11 @@ async function main(): Promise<void> {
   };
   // The scissors' keys: X arms or puts down, Esc puts down, U undoes.
   const cutKey = (k: CutKey): boolean => {
+    // K137 stage 4: Esc puts an armed lure or snare down first.
+    if (k === "disarm" && toolArmed !== null) {
+      setToolArmed(null);
+      return true;
+    }
     // K114 walker: U undoes there too; X and Esc have no scissors to move.
     if (scene.fabricController?.walkerMode) {
       return k === "undo" && walkerButtons.isShown ? walkerKey("undo") : false;
@@ -3205,12 +3269,95 @@ async function main(): Promise<void> {
     sprintButton.setShown(on);
     sprintButton.setLook(sprintState === "used" ? "used" : sprintState === "ready" ? "ready" : "armed");
   };
+  // K137 stage 4 (4.10, 4.30): LURES and SNARES. A press arms the tool (a
+  // second press, Esc or a tap off the runs puts it down), and the next tap
+  // on a run uses it at once, mid-move too (the turn already happened at the
+  // tap). Refused while the maze is solved, a win or a catch waits, the
+  // buttons are hidden or that stock is spent.
+  const pressTool = (k: ToolKind): boolean => {
+    if (!toolButtons.isShown) return false;
+    const fc = scene.fabricController;
+    if (!fc || fc.solved || pendingWin) return false;
+    if (toolArmed === k) {
+      setToolArmed(null);
+      return true;
+    }
+    const left = k === "lure" ? (luresOn() ? luresLeft : 0) : snaresOn() ? snaresLeft : 0;
+    if (left <= 0) return false;
+    if (cutArmed) setCutArmed(false); // one armed thing at a time
+    setToolArmed(k);
+    return true;
+  };
+  const LURE_STRENGTH = 0.8;
+  const useTool = (kind: ToolKind, eid: number): void => {
+    const tm = scene.turnMino;
+    if (!tm || pendingCatch) return;
+    if (kind === "lure") {
+      const heard = tm.lure(eid);
+      setToolArmed(null);
+      if (heard < 0) return;
+      luresLeft = Math.max(0, luresLeft - 1);
+      cutPluck(eid, 1, LURE_STRENGTH);
+      showToast(
+        heard === 0
+          ? "Nothing heard the lure."
+          : heard === 1
+            ? "Something heard the lure."
+            : `${heard} heard the lure.`,
+        CUT_TOAST_MS
+      );
+    } else {
+      if (!tm.setSnare(eid)) {
+        // The snare stays armed: tap a run at your junction.
+        showToast("A snare goes on a run at your junction, one to a run.", CUT_TOAST_MS);
+        cutPluck(eid, REFUSE_OCTAVE, REFUSE_STRENGTH);
+        return;
+      }
+      snaresLeft = Math.max(0, snaresLeft - 1);
+      setToolArmed(null);
+      cutPluck(eid, SNAP_OCTAVE, SNAP_STRENGTH);
+    }
+    updateHud();
+    invalidate();
+  };
+  const toolTap = (x: number, y: number, pt: string): boolean => {
+    const fc = scene.fabricController;
+    const kind = toolArmed;
+    if (!fc || !scene.fabric || kind === null) return false;
+    const eid = scene.fabric.cutAt(x, y, fc, pickRadius(pt, true));
+    if (eid < 0) setToolArmed(null);
+    else useTool(kind, eid);
+    return true;
+  };
+  // Every frame (cutTick): the buttons show while a tool is on under the
+  // turn clock minotaur, the keys are live and no open panel covers them;
+  // hidden, the tool goes down. A snare sprung since the last frame says so.
+  let snaresSprung = 0;
+  const toolTick = (): void => {
+    const lure = luresOn();
+    const snare = snaresOn();
+    toolButtons.setTools(lure, snare);
+    toolButtons.setCounts(luresLeft, snaresLeft);
+    toolButtons.setShift(sprintButton.isShown);
+    const r = panel.isOpen() ? camera.panelWrap?.getBoundingClientRect() : null;
+    const on = (lure || snare) && keysLive() && !(r && r.width > 0 && toolButtons.covered(r));
+    toolButtons.setShown(on);
+    if (!on || (toolArmed === "lure" && !lure) || (toolArmed === "snare" && !snare)) {
+      toolArmed = null;
+    }
+    syncToolArmed();
+    const tm = scene.turnMino;
+    let sprung = 0;
+    if (tm) for (const s of tm.snares) if (s.phase !== "set") sprung++;
+    if (sprung > snaresSprung) showToast("Snared! It stands three turns.", CUT_TOAST_MS);
+    snaresSprung = sprung;
+  };
   // K114 beat rider: the pause shows while the beat plays (the keys live);
   // an open panel over it hides it but keeps a pause, and an ended game or
   // the beat going off lets the pause go.
   const beatPauseTick = (): void => {
     const live = beatOn() && keysLive();
-    beatPause.setRaised(sprintButton.isShown);
+    beatPause.setRaised(sprintButton.isShown || toolButtons.isShown);
     if (!live && beatPause.isHeld) {
       beatPause.setHeld(false);
       beat?.setHeld(false);
@@ -3221,6 +3368,7 @@ async function main(): Promise<void> {
   const cutTick = (): void => {
     aidTick();
     sprintTick();
+    toolTick(); // K137 stage 4
     const fc = scene.fabricController;
     const walker = fc?.walkerMode ?? null;
     // K114 walker: the walker modes have their own buttons, no scissors.
@@ -3559,6 +3707,7 @@ async function main(): Promise<void> {
       walkerKey: (k) => walkerKey(k),
       aidKey: (k) => aidKey(k),
       sprintKey: () => pressSprint(), // K137 stage 3c
+      toolKey: (k) => pressTool(k), // K137 stage 4
     },
     scene
   );
@@ -3904,6 +4053,21 @@ async function main(): Promise<void> {
       return sprintButton.isShown;
     },
     pressSprint: () => pressSprint(),
+    // K137 stage 4: the lures and snares (stocks, the armed tool, the laid
+    // snares, the model counts) and a press.
+    get tools() {
+      const tm = scene.turnMino;
+      return {
+        lures: luresShown(),
+        snares: snaresShown(),
+        armed: toolArmed,
+        shown: toolButtons.isShown,
+        laid: tm ? tm.snares.map((s) => ({ ...s })) : [],
+        lured: tm?.lured ?? 0,
+        heardBy: tm?.heardBy ?? 0,
+      };
+    },
+    pressTool: (k: ToolKind) => pressTool(k),
     get pendingCut() {
       return pendingCut;
     },
