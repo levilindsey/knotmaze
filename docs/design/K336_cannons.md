@@ -292,10 +292,20 @@ The full record is render-confetti.md's "Side cannons and streamers
   | Max (cfn 3, cfs 1) | 0.39 / 0.65 | 0.51 / 0.89 |
 
   A streamer costs about 13 paper pieces.
+- **A first look** (`look.mjs` on a8a2985 under the perf lock at 18:50,
+  after a first try waited 14 min behind K525's GPU batch and skipped;
+  frames in `.claude/probes/K336/look_a8a2985/`, 1400x900 and 411x753,
+  0.15-3.5 s after `__knotConfettiBurst()` on a knot at rest).
+  - Both cannons fire up and inward from the sides.
+  - The paper turns over and falls in two clouds, about 0.3 w in from
+    each side.
+  - The streamers read as curling ribbons.
+  - No context loss.
+  - Alive per side: 247 paper and 62 streamers on the desktop, 120 and
+    30 on the phone (309 and 150 pieces a cannon).
+  - It is only a sanity look: there is no master beside it, and nothing
+    was tuned from it.
 - **Not done:**
-  - any look at the cannons and streamers on the page: no frame of them
-    has been seen yet. `look_locked.ps1` waited 14 min for the perf
-    lock, which K525's GPU batch held from 18:29, and skipped at 18:46;
   - the master-vs-branch sheets (`.claude/probes/K336/sheet/`) and the
     curl strip;
   - K140's frame A/B (the GPU side);
@@ -349,8 +359,8 @@ The golden dailies, K87 and the knot-mode golden did not move.
   handoff (on master `635ae58`, unpushed)
 - evidence: `.claude/probes/K336/` (untracked): the censuses,
   `flag_check.mjs`, `bench_sim.mjs`, `bench_locked.ps1`,
-  `flag_bench_a8a2985.log`, `banners/`, `look.mjs` + `look_locked.ps1`,
-  `sheet.mjs`
+  `flag_bench_a8a2985.log`, `banners/`, `look.mjs` + `look_locked.ps1`
+  (frames: `look_a8a2985/`), `sheet.mjs`
 - next: the sheets and the curl strip, then K140's frame A/B under the
   perf lock, then the phone pass
 - brief: `docs/design/K336_cannons.md`
