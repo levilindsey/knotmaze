@@ -394,7 +394,7 @@ only with the files it is about; `render.md` lists the area's other files.
   Flag.OVERLAY is raised: `confetti.active` covers all four pools.
 - SETTINGS. "Side cannons" (`confettiCannons`, `cfc`, on), "Cannon
   amount" (`cannonAmount`, `cfn`, 0-3, default 1) and "Streamers"
-  (`streamerShare`, `cfs`, 0-1, default 0.2): codec indices 171-173
+  (`streamerShare`, `cfs`, 0-1, default 0.2): codec indices 178-180
   (gameplay-links.md), daily-exempt, in the undo stack's confetti group.
   The rows hide in knot mode and at confetti amount 0; Cannon amount
   also hides while the cannons are off, and Streamers while the cannons
