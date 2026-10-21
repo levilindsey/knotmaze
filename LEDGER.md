@@ -388,6 +388,14 @@ Next free ID: K736.
   - evidence: `.claude/probes/K726/`
   - next: parts 1-3 on one origin/master build: K718 glyph pages and sheets, the sword on real touches, K720 audio counts
   - brief: `docs/design/K726_phone.md`
+- **K698** · Phone toasts cover the bottom controls (Pixel 411x753): the cut refusal over Undo (K703,
+  gone by 1.7 s; a touch still reaches Undo), the lives toasts over the move pad, the walker toasts over
+  .km-walk and the pad (K717 `out/lives`, `out/walker`). Place toasts clear of the controls.
+  - owner: agent `aef1574433a327ce7` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 02:31, 2 h cap ~04:31)
+  - branch: `worktree-agent-aef1574433a327ce7`, worktree `.claude/worktrees/agent-aef1574433a327ce7`; last commit: `bc75c91a`
+  - evidence: `.claude/probes/K698/`
+  - next: toasts above the bottom controls, the walker dot glow, no pad in walker modes, par <= n when inexact (with K713)
+  - brief: `docs/design/K698_polish.md`
 
 ## Next, in order
 
@@ -599,9 +607,6 @@ Every other item below waits on the trigger it names.
 - **K709** · Phone kit hardening: the adb reconnect is built (K717, `.claude/probes/K578/phone/`
   adb_reconnect*.ps1 and watchdog_reconnect.ps1, on by default) but only its healthy-link no-op is
   tested; lib703 END cannot cross midnight; run_k717 skips a late probe; walker_phone takes 1 candidate
-- **K698** · Phone toasts cover the bottom controls (Pixel 411x753): the cut refusal over Undo (K703,
-  gone by 1.7 s; a touch still reaches Undo), the lives toasts over the move pad, the walker toasts over
-  .km-walk and the pad (K717 `out/lives`, `out/walker`). Place toasts clear of the controls.
 - **K728** · Real-time seeker for the K708 sim (a sword-seeking player on MinotaurChase): the
   real-time sword best case is unmeasured and informs K727 (.claude/probes/K708/rt/, a sweep takes
   about 35 s)
