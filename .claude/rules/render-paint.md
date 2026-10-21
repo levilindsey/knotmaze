@@ -330,6 +330,35 @@ only with the files it is about; `render.md` lists the area's other files.
   CODEC_VERSION 5. Stage 2's record (modes, tuning, GPU): `docs/design/
   K111.md` "Stage 2 handoff", probes `.claude/probes/K111/stage2/`.
 
+- THE ROOT'S PAINT (K620, 2026-10-20; brief and handoff
+  `docs/design/K620.md`). A glyph root (K580's tapered stub, from R where
+  it leaves its body stroke to J where it joins the spur) wore its own
+  chain's section, so it stepped against the strokes beside it at R and
+  along its outer edges. Now each side takes its stroke's section at its
+  foot (the body chain at the root table's arcC on the C side, arcO on
+  the O side), and both blend into the spur's at J with the junction ease
+  (kEase of u = arc / arcJ, uKSect.y). Across, one antialiased pixel on
+  the centerline, not widened: covC = clamp(0.5 + (vUV.y - 0.5) sideSign
+  2 hw / pxW). DATA: KSTATIC texel (2ch+1).w = 1 + the root table's KGEOM
+  texel (0 = no root); the table is H0 (body, sideSign, NR 17, 0), H1
+  (arcJ, ctrlJ), then 17 entries of E0 (arcC, arcO, hw, 0) and E1 (uvMC,
+  uvEC, uvMO, uvEO; written, unread since 8ac37a0). The vertex shader
+  (root chains only) passes vKR0 flat (ptr, sideSign, arcJ, ctrlJ), vKRC
+  and vKRO (kSectionAtArc of the body at the two arcs) and vKRJ flat (the
+  root's own section at arcJ). SECTION_FRAG replaces `base` with
+  kRootSection BEFORE the FX, so the root chain's own reveal, rainbow and
+  burn apply once over the blend. THE FX FALLBACK holds for every FX: the
+  strokes' FX are not sampled at the feet. K307: FXC inlines every call,
+  and 729c1bf's three extra kFxColor calls slowed every cold load by
+  6-33 s and timed out wave 1 (15 s) on the reveal and burn A/B loads; a
+  blend of sections adds 762 characters and no kFxColor (render-shaders.md).
+  Mirror: paint_math.ts kRootSection, kRootPaint and their readers (kRootPtr,
+  kRootOf, kRootAt, kRootVertSection, kRootSpurSection, kRootFragSections);
+  `test/render/paint_root.test.ts` (a synthetic scene, no FX: R equals the
+  stroke at its foot, J the spur, the seam's AA, a monotone ease). The
+  residuals (the scalloped seam, the light band at J, the tab at R) are in
+  the K620 handoff.
+
 RENDER LORE (hard-won, 2026-10-09; the strip is RETIRED by G2.3 - paint is
  per pixel now, nothing interpolates U): **the palette strip's ORDER was
 load-bearing.** Per-vertex UVs interpolate linearly between samples, so

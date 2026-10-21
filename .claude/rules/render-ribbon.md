@@ -160,7 +160,9 @@ certifies (the P3.24 probe rule again, render edition).
   `test/render/ribbon_round.test.ts`. NOT the miter: the i's joint notch
   in "ai" (the ideal's own concave corner between the junction's round
   piece, centred on the mean of the arms' slot samples in joinery.ts, and
-  chain 3's end), and the open-end crescents beside a spur's tip.
+  chain 3's end), and the open-end crescents beside a spur's tip. The
+  root's paint (each side wears its stroke's section, blending into the
+  spur's at J): render-paint.md, THE ROOT'S PAINT (K620).
 
 - *From P3.28 (torn crossings after a small pull), displayF:* Passes now carry a RENDER-ONLY `displayF` (the raw joint slide
   target, before easing/clamps, stale-frozen through static mode);
