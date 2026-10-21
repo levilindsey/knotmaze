@@ -42,6 +42,7 @@ import type {
   PulseArm,
   PaintCap,
   PaintRim,
+  PaintTele,
 } from "./ribbon_renderer";
 import { legRoutes, pathLegs, traveledRoutes } from "./junction_routes";
 import type { PaintRoute } from "./junction_routes";
@@ -92,6 +93,14 @@ import type {
 } from "../game/explore_view";
 import { AppearFxSystem } from "./appear_fx";
 import { EXPLORE_LOOK_DEFAULT, exploreLookHasHalo } from "./explore_glsl";
+
+// K114 walker (syncWalker): the route thread's colour and strength on the
+// telegraph's rims, the runs after the next one at WALKER_TRAIL_ALPHA, and
+// the minotaur's red (RibbonRenderer.teleColor's default) to put back.
+const WALKER_COLOR = 0x3fd0ff;
+const WALKER_STRENGTH = 0.9;
+const WALKER_TRAIL_ALPHA = 0.5;
+const TELE_RED = 0xff2418;
 
 // K76 THREAD REVEAL (stage 2a; docs/design/K76.md): a newly visited
 // vertex's arms grow out over this many seconds (eased), and the halo
@@ -1225,6 +1234,45 @@ export class FabricMazeRenderer {
       }
     }
     return best;
+  }
+
+  // K114 walker: the walker's route as the telegraph's rims (K525's TELE
+  // paint item) in the walker's colour, the next run full and the rest at
+  // WALKER_TRAIL_ALPHA. The walker never shares a game with the minotaur
+  // (the cut is the classic game's), so the telegraph is free; main calls
+  // this every frame in a walker mode, so a restart's setTelegraph(null)
+  // is undone on the next frame (setTelegraph rewrites KPAINT only when the
+  // pieces change). null or no runs clears it once and puts the red back.
+  private walkerKey: string | null = null;
+  private walkerPieces: PaintTele[] = [];
+  syncWalker(runs: readonly number[] | null): void {
+    if (!runs || runs.length === 0) {
+      if (this.walkerKey === null) return;
+      this.walkerKey = null;
+      this.walkerPieces = [];
+      this.ribbons.teleColor = TELE_RED;
+      this.ribbons.teleStrength = 0;
+      this.ribbons.setTelegraph(null);
+      return;
+    }
+    const key = runs.join(",");
+    if (key !== this.walkerKey) {
+      this.walkerKey = key;
+      const seen = new Set<number>();
+      const pieces: PaintTele[] = [];
+      for (let i = 0; i < runs.length; i++) {
+        const r = runs[i];
+        const e = this.walk.edges[r];
+        if (!e || seen.has(r)) continue;
+        seen.add(r);
+        const alpha = i === 0 ? 1 : WALKER_TRAIL_ALPHA;
+        pieces.push({ chain: e.chain, c0: e.ctrlA, c1: e.ctrlB, alpha, j0: true, j1: true });
+      }
+      this.walkerPieces = pieces;
+    }
+    this.ribbons.teleColor = WALKER_COLOR;
+    this.ribbons.teleStrength = WALKER_STRENGTH;
+    this.ribbons.setTelegraph(this.walkerPieces);
   }
 
   // K76 stage 2c: under the thread reveal, hidden thread is empty space
