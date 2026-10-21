@@ -53,13 +53,17 @@ export class BeatRider {
   // The beat the first run leaves on, once a tap asked for it (-1: none).
   startBeat = -1;
 
-  constructor(
-    readonly map: WalkerMap,
-    public tempo: number,
-    public unit: number,
-    public cap: number,
-    at: string
-  ) {
+  readonly map: WalkerMap;
+  // Beats a minute, lattice units a beat covers, the most beats a run takes.
+  tempo: number;
+  unit: number;
+  cap: number;
+
+  constructor(map: WalkerMap, tempo: number, unit: number, cap: number, at: string) {
+    this.map = map;
+    this.tempo = tempo;
+    this.unit = unit;
+    this.cap = cap;
     this.at = at;
   }
 
