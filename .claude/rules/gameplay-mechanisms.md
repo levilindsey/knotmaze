@@ -547,7 +547,13 @@ gameplay-panel.md's TURNSTILES AND HIDDEN RUNS ROWS. The headers of
   EXTRA appends link keys; on `?<seed>&am=instant&snd=none&tst=4` or
   `&hid=4`: a refused arm, going back through a closed turnstile, the arm
   opening a move later; or a tap on a hidden run, a far pluck, a near
-  pluck, the walk; then the finish and the share; a CHECK summary).
+  pluck, the walk; then the finish and the share; a CHECK summary). K138
+  stage 3's copy, `.claude/probes/K138/s3/s2_page_h1zoom.mjs`, adds env
+  ZOOMH1=1 (H1 zoomed to 8x, its empty point 0.5 tw + 12 px clear: the
+  unfiltered view has none at zoom 1) and EXPLORE_NEAR=1 (the walk takes
+  the near same-note run first, so H3 runs under `xp=threads`; a setup
+  click that lands on a choice's unrevealed far part falls back to the
+  move hook, counted).
   GOTCHA: a probe that finishes by the kit's route must backtrack at a
   dead end (the search has no route there). A hint and the compass do:
   at a turnstile dead end `goodArm()` is the backtrack (ruleGoodArm's
