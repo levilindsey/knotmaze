@@ -194,6 +194,12 @@ export interface ProbeCtx {
   // K137 stage 3a: the hearts left of the lives setting (null: lives off or
   // no minotaur), in __knotChase() and __knotTurnMino().
   readonly hearts: { left: number; of: number } | null;
+  // K137 stage 3c: sprint's state (ready | armed | first | used; null:
+  // sprint off or no minotaur), whether its button shows, and a press of it
+  // (the button's and F's path; true when it acted).
+  readonly sprint: string | null;
+  readonly sprintShown: boolean;
+  pressSprint(): boolean;
   readonly cutShown: boolean;
   // K114 walker: the walker's view (null: no walker; WalkerProbe).
   readonly walker: WalkerProbe | null;
@@ -411,6 +417,13 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       catches: ch.catches,
       restarts: ch.restarts,
       hearts: ctx.hearts, // K137 stage 3a
+      // K137 stage 3c: sprint (main.ts's state; the chase's sprinted
+      // departures left and the ticks it was armed at).
+      sprint: ctx.sprint,
+      sprintShown: ctx.sprintShown,
+      sprintLeft: ch.sprintLeft,
+      sprintActive: ch.sprintActive,
+      sprints: [...ch.sprints],
       // K137 stage 3b: the sword (null: off or none laid) and its id.
       sword: ch.sword ? { ...ch.sword, at: ch.g.ids[ch.sword.spot] } : null,
       fleeing: ch.fleeing,
@@ -482,6 +495,12 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       seen: tm.seen,
       restarts: tm.restarts,
       hearts: ctx.hearts, // K137 stage 3a
+      // K137 stage 3c: sprint (main.ts's state; the turns the minotaur
+      // skipped, as input indices, and whether a skip waits for its pair).
+      sprint: ctx.sprint,
+      sprintShown: ctx.sprintShown,
+      skips: [...tm.skips],
+      sprintPending: tm.sprintPending,
       // K137 stage 3b: the sword (null: off or none laid) and its id.
       sword: tm.sword ? { ...tm.sword, at: ids[tm.sword.spot] } : null,
       fleeing: tm.fleeing,
@@ -535,6 +554,9 @@ export function installProbeHooks(ctx: ProbeCtx): void {
   ): boolean => ctx.moveAlong(edge);
   (window as unknown as Record<string, unknown>).__knotTurnWait = (): boolean =>
     ctx.waitTurn();
+  // K137 stage 3c: press sprint as its button or F would (either clock).
+  (window as unknown as Record<string, unknown>).__knotSprint = (): boolean =>
+    ctx.pressSprint();
   (window as unknown as Record<string, unknown>).__knotTurnMinoObj = () =>
     ctx.scene.turnMino;
   // Fabric-maze diagnostics: solve state, metrics, and each current choice

@@ -75,6 +75,7 @@ describe("K137 s3c: sprint's state machine and key", () => {
     const w = sprintAfterMove("armed", false);
     expect(w.skip).toBe(false);
     expect(w.next("moved")).toBe("armed");
+    expect(w.next("caught")).toBe("used"); // a catch spends an armed sprint
     // The second move, run or wait, spends it whatever the answer.
     for (const run of [true, false]) {
       const f = sprintAfterMove("first", run);

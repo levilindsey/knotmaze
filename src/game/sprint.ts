@@ -40,6 +40,9 @@ export function sprintAfterMove(
     return { skip: true, next: (r) => (r === "moved" ? "first" : "used") };
   }
   if (s === "first") return { skip: false, next: () => "used" };
+  // An armed sprint stays armed through a wait, but a catch spends it (as
+  // the real-time chase's respawn does).
+  if (s === "armed") return { skip: false, next: (r) => (r === "caught" ? "used" : s) };
   return { skip: false, next: () => s };
 }
 
