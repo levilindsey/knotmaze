@@ -13,9 +13,18 @@
 
 import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM, RUN_FLAG } from "./paint_const";
 import {
+  EXPLORE_CHAR_EDGE,
   EXPLORE_DOT_AT,
   EXPLORE_DOT_R,
   EXPLORE_DOTS_SPAN,
+  EXPLORE_EMBER_AHEAD,
+  EXPLORE_EMBER_BEHIND,
+  EXPLORE_FRONT_BAND,
+  EXPLORE_FRONT_FUSE,
+  EXPLORE_FRONT_GONE,
+  EXPLORE_ITEM_CHAR,
+  EXPLORE_ITEM_FRONT,
+  EXPLORE_ITEM_SMOLDER,
   EXPLORE_ITEM_VIS,
 } from "./explore_glsl";
 import { GAP_PROF_F0, GAP_PROF_MAX, GAP_PROF_R0 } from "./gap_mask";
@@ -1495,6 +1504,78 @@ export function kExploreAt(
   }
   out.v = best;
   return out;
+}
+
+// K410: the burn's globals beside kCharAt's return (kFireEmber, kFireSmolder).
+export interface KFireState {
+  ember: number;
+  smolder: number;
+}
+
+// GLSL twin: kCharAt (explore_glsl.ts; K290 stages 3a and 3b, K409's world
+// widths and shapes) - how charred a chain point is (the CHAR items and each
+// FRONT's band, summed, at most 1), and in `out` the ember (the max over the
+// FRONT items) and the smolder (the max over the SMOLDER items). Only a
+// chain whose KPAINT flag .y is set scans.
+export function kCharAtCpu(
+  D: KData,
+  U: KUniforms,
+  c: KChain,
+  ctrl: number,
+  out: KFireState
+): number {
+  out.ember = 0;
+  out.smolder = 0;
+  const P = D.paint;
+  if (P[c.ch * 4 + 1] < 0.5) return 0;
+  const n = c.nCtrl;
+  const sl = Math.max(0, Math.min(n - 1, Math.floor(ctrl)));
+  const io = (c.idx + sl) * 4;
+  const first = Math.round(P[io]);
+  const cnt = Math.min(32, Math.round(P[io + 1]));
+  const refBase = Math.round(U.uKPaint[1]);
+  const itemBase = Math.round(U.uKPaint[2]);
+  const inv = 1 / EXPLORE_CHAR_EDGE;
+  const ramp = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
+  let sum = 0;
+  for (let k = 0; k < cnt; k++) {
+    const r = first + k;
+    const item = Math.round(P[(refBase + (r >> 2)) * 4 + (r & 3)]);
+    const o = (itemBase + 2 * item) * 4;
+    const ty = Math.round(P[o]);
+    if (ty === EXPLORE_ITEM_FRONT) {
+      const fc = P[o + 1];
+      const dir = P[o + 2];
+      const shape = P[o + 3];
+      let x = ctrl;
+      if (c.closed) x += n * Math.floor((fc - x) / n + 0.5);
+      // s > 0 on the unburnt side (ctrl), w the same in world arc.
+      const s = (x - fc) * dir;
+      const w = (kArcU(D, c, x) - kArcU(D, c, fc)) * dir;
+      if (Math.abs(shape - EXPLORE_FRONT_FUSE) > 0.5) {
+        sum += (1 - smoothstepGl(0, EXPLORE_FRONT_BAND, w)) * ramp(s * inv + 0.5);
+      }
+      const ahead =
+        shape > EXPLORE_FRONT_GONE - 0.5
+          ? EXPLORE_EMBER_AHEAD + EXPLORE_EMBER_BEHIND
+          : EXPLORE_EMBER_AHEAD;
+      const e =
+        w >= 0
+          ? 1 - smoothstepGl(0, ahead, w)
+          : 1 - smoothstepGl(0, EXPLORE_EMBER_BEHIND, -w);
+      if (e > out.ember) out.ember = e;
+      continue;
+    }
+    if (ty !== EXPLORE_ITEM_CHAR && ty !== EXPLORE_ITEM_SMOLDER) continue;
+    const c0 = P[o + 1];
+    const c1 = P[o + 2];
+    let x = ctrl;
+    if (c.closed) x += n * Math.floor((0.5 * (c0 + c1) - x) / n + 0.5);
+    const cr = ramp((x - c0) * inv + 0.5) * ramp((c1 - x) * inv + 0.5);
+    if (ty === EXPLORE_ITEM_CHAR) sum += cr;
+    else if (cr > out.smolder) out.smolder = cr;
+  }
+  return Math.min(sum, 1);
 }
 
 // GLSL twin: kExDotsSd (explore_glsl.ts, K397) - the signed world distance

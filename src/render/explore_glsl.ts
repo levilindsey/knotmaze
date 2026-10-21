@@ -69,27 +69,48 @@ export function charRange(s: { b0: number; b1: number }): [number, number] {
   return [s.b0 - EXPLORE_CHAR_EDGE, s.b1 + EXPLORE_CHAR_EDGE];
 }
 
-// K290 stage 3b: the FIRE FRONT item, T0 = (FRONT, c, dir, kind), T1 unused:
-// c = the front's unwrapped chain ctrl, dir = +-1 the ctrl direction of the
-// UNBURNT side, kind 0 = a burning front (the char band ahead, the ember
-// at the front), 1 = the lit fuse (the ember only, before the fire
-// spreads). Like CHAR, not a PAINT_ITEM; kCharAt reads it (chains with the
-// flag .y). Static: the shaders have no fire clock (uKFx2 runs only during
-// the appearance reveal), so the motion is the `burn` FX particles'.
+// K290 stage 3b: the FIRE FRONT item, T0 = (FRONT, c, dir, shape), T1
+// unused: c = the front's unwrapped chain ctrl, dir = +-1 the ctrl direction
+// of the UNBURNT side, shape (K409) = EXPLORE_FRONT_CHAR (a burning front
+// under the char look: the band ahead, the ember on both sides),
+// EXPLORE_FRONT_FUSE (the lit fuse: the ember only, before the fire
+// spreads, under both looks) or EXPLORE_FRONT_GONE (a burning front under
+// gone: the band ahead, the whole ember ahead of the cut). Like CHAR, not a
+// PAINT_ITEM; kCharAt reads it (chains with the flag .y). Static: the
+// shaders have no fire clock (uKFx2 runs only during the appearance
+// reveal), so the motion is the `burn` FX particles'.
 export const EXPLORE_ITEM_FRONT = 7;
+export const EXPLORE_FRONT_CHAR = 0;
+export const EXPLORE_FRONT_FUSE = 1;
+export const EXPLORE_FRONT_GONE = 2;
 // K290 stage 3b: the SMOLDER item, T0 = (SMOLDER, c0, c1, -): a smoldering
 // arm's stretch from the head to its first burnt stretch, a thin hot line
 // along the centerline (stage 1's red stroke, now under the gaps).
 export const EXPLORE_ITEM_SMOLDER = 8;
-// The char band ahead of a front (ctrl): a thread blackens before it
-// vanishes. Full char at the front, smoothly to none BAND ahead; it ramps
-// in over EXPLORE_CHAR_EDGE behind the front, so under the char look it
-// meets the burnt span's own ramp without a seam.
-export const EXPLORE_FRONT_BAND = 0.7;
-// The ember: a glow peaking at the front, AHEAD ctrl into the unburnt side
-// and BEHIND ctrl into the burnt one (seen only under char: gone cuts it).
-export const EXPLORE_EMBER_AHEAD = 0.25;
-export const EXPLORE_EMBER_BEHIND = 0.55;
+// K409: the band and the ember are WORLD lengths (Levi, 2026-10-20: "fixed
+// widths in world units, matched to today's median, so the average look
+// doesn't move. This applies under both looks"). Stage 3b drew them in
+// ctrl (band 0.7, ember 0.25 ahead and 0.55 behind), and a ctrl stretches
+// with the thread: over Daily #12's 29 fronts on the phone's fit camera
+// (s 8.8233 CSS px per world unit) a ctrl was 2.68 / 4.84 / 7.02 CSS px
+// (min / median / max; K114_burn.md, stage 3c, item 4). Each width is its
+// ctrl value times that median, 4.84 / 8.8233 = 0.5486 world per ctrl. The
+// shader measures them along the thread with kArcU (paint_glsl.ts), the
+// world arc it already has.
+export const EXPLORE_WORLD_PER_CTRL = 4.84 / 8.8233;
+// The char band ahead of a front, under both looks: a thread blackens
+// before it burns. Full char at the front, smoothly to none BAND (world)
+// ahead; it ramps in over EXPLORE_CHAR_EDGE ctrl behind the front, so under
+// the char look it meets the burnt span's own ramp without a seam.
+export const EXPLORE_FRONT_BAND = 0.384; // 0.7 ctrl at the median.
+// The ember: a glow peaking at the front, AHEAD (world) into the unburnt
+// side and BEHIND into the burnt one. Under gone the burnt side is cut
+// away, so there (K409, Levi: "the whole ember goes on the unburnt side")
+// it reaches AHEAD + BEHIND ahead of the cut; its behind part, kept, lies
+// on gone thread. The lit fuse keeps both sides under both looks: nothing
+// behind it has burnt.
+export const EXPLORE_EMBER_AHEAD = 0.137; // 0.25 ctrl at the median.
+export const EXPLORE_EMBER_BEHIND = 0.302; // 0.55 ctrl at the median.
 export const EXPLORE_EMBER_RGB = [0xff / 255, 0x7a / 255, 0x1a / 255] as const;
 export const EXPLORE_EMBER_ALPHA = 0.95;
 // The ember's hot core: its centerline half-width (vUV.y), color and power.
@@ -99,14 +120,31 @@ export const EXPLORE_SMOLDER_RGB = [0xff / 255, 0x3b / 255, 0x1f / 255] as const
 export const EXPLORE_SMOLDER_ALPHA = 0.9;
 export const EXPLORE_SMOLDER_HALF = 0.225;
 
-// One fire front as a FRONT item, and the unwrapped ctrl range its slot
-// references must cover.
-export function frontItem(f: { c: number; dir: number; kind: number }): number[] {
-  return [EXPLORE_ITEM_FRONT, f.c, f.dir < 0 ? -1 : 1, f.kind, 0, 0, 0, 0];
+// One fire front as a FRONT item (`gone` = the burnt look is gone), and the
+// unwrapped ctrl range its slot references must cover. The widths are world
+// lengths, so the range divides them by the chain's smallest world length
+// of a ctrl, `arcPerCtrl` (writePaintItems' minArcPerCtrl), with the cap
+// items' margin of 2 for a thread that stretches before the next
+// declaration.
+export function frontShape(kind: number, gone: boolean): number {
+  return kind !== 0 ? EXPLORE_FRONT_FUSE : gone ? EXPLORE_FRONT_GONE : EXPLORE_FRONT_CHAR;
 }
-export function frontRange(f: { c: number; dir: number }): [number, number] {
-  const ahead = Math.max(EXPLORE_FRONT_BAND, EXPLORE_EMBER_AHEAD) + 0.05;
-  const behind = Math.max(EXPLORE_EMBER_BEHIND, EXPLORE_CHAR_EDGE) + 0.05;
+export function frontItem(f: { c: number; dir: number; kind: number }, gone: boolean): number[] {
+  return [EXPLORE_ITEM_FRONT, f.c, f.dir < 0 ? -1 : 1, frontShape(f.kind, gone), 0, 0, 0, 0];
+}
+export function frontAheadWorld(shape: number): number {
+  const ember =
+    shape === EXPLORE_FRONT_GONE ? EXPLORE_EMBER_AHEAD + EXPLORE_EMBER_BEHIND : EXPLORE_EMBER_AHEAD;
+  return shape === EXPLORE_FRONT_FUSE ? ember : Math.max(EXPLORE_FRONT_BAND, ember);
+}
+export function frontRange(
+  f: { c: number; dir: number; kind: number },
+  gone: boolean,
+  arcPerCtrl: number
+): [number, number] {
+  const k = 2 / Math.max(arcPerCtrl, 0.05);
+  const ahead = frontAheadWorld(frontShape(f.kind, gone)) * k + 0.05;
+  const behind = Math.max(EXPLORE_EMBER_BEHIND * k, EXPLORE_CHAR_EDGE) + 0.05;
   return f.dir < 0 ? [f.c - ahead, f.c + behind] : [f.c - behind, f.c + ahead];
 }
 export function smolderItem(s: { b0: number; b1: number }): number[] {
@@ -401,12 +439,15 @@ highp float kExploreAt(KChain c, highp float ctrl) {
 // (burnt stretches, unwrapped ctrls) its slot references, each a linear
 // ramp of EXPLORE_CHAR_EDGE ctrl centered on either end, summed (abutting
 // spans make exactly 1 at their shared end). Only chains whose KPAINT flag
-// .y is set scan. No CPU twin (K152 item 3).
+// .y is set scan.
 const int PI_CHAR = ${EXPLORE_ITEM_CHAR};
 // K290 stage 3b: the same scan reads the FRONT items (the char band ahead of
 // a front joins the sum; the ember's glow, the max over fronts, goes to
 // kFireEmber) and the SMOLDER items (kFireSmolder, 1 on a smoldering arm's
-// stretch, ramped at its ends like char).
+// stretch, ramped at its ends like char). K409: the band and the ember
+// measure w, the world arc from the front (kArcU), and the shape .w picks
+// the band (not on the lit fuse) and the ember's reach ahead (gone: all of
+// it). CPU twin: paint_math.ts kCharAtCpu.
 const int PI_FRONT = ${EXPLORE_ITEM_FRONT};
 const int PI_SMOLDER = ${EXPLORE_ITEM_SMOLDER};
 highp float kFireEmber;
@@ -435,15 +476,18 @@ highp float kCharAt(KChain c, highp float ctrl) {
     if (ty == PI_FRONT) {
       highp float x = ctrl;
       if (c.closed) x += nf * floor((T0.y - x) / nf + 0.5);
-      // s > 0 on the unburnt side.
+      // s > 0 on the unburnt side (ctrl), w the same in world arc.
       highp float s = (x - T0.y) * T0.z;
-      if (T0.w < 0.5) {
-        sum += (1.0 - smoothstep(0.0, ${glslF(EXPLORE_FRONT_BAND)}, s)) *
+      highp float w = (kArcU(c, x) - kArcU(c, T0.y)) * T0.z;
+      if (abs(T0.w - ${glslF(EXPLORE_FRONT_FUSE)}) > 0.5) {
+        sum += (1.0 - smoothstep(0.0, ${glslF(EXPLORE_FRONT_BAND)}, w)) *
           clamp(s * ${glslF(1 / EXPLORE_CHAR_EDGE)} + 0.5, 0.0, 1.0);
       }
-      highp float e = s >= 0.0
-        ? 1.0 - smoothstep(0.0, ${glslF(EXPLORE_EMBER_AHEAD)}, s)
-        : 1.0 - smoothstep(0.0, ${glslF(EXPLORE_EMBER_BEHIND)}, -s);
+      highp float e = w >= 0.0
+        ? 1.0 - smoothstep(0.0, T0.w > ${glslF(EXPLORE_FRONT_GONE - 0.5)}
+          ? ${glslF(EXPLORE_EMBER_AHEAD + EXPLORE_EMBER_BEHIND)}
+          : ${glslF(EXPLORE_EMBER_AHEAD)}, w)
+        : 1.0 - smoothstep(0.0, ${glslF(EXPLORE_EMBER_BEHIND)}, -w);
       kFireEmber = max(kFireEmber, e);
       continue;
     }
