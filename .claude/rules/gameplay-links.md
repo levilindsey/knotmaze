@@ -383,8 +383,12 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   (undo_stack.ts); scene.ts and panel_wiring.ts copy it to
   `fabric.telegraphLook`. Override key `mtl`; `&mtl=line` draws stage
   3b's strokes with their desktop alphas unchanged in code (a coarse
-  pointer's line roams at 0.7 now). No same-state A/B against master has
-  confirmed that pixel for pixel: tele_states shots differ run to run.
+  pointer's line roams at 0.7 now). On desktop it matched master pixel
+  for pixel: a same-state A/B with the hunter (hm_probe ab, 1400x900,
+  phy=0, clocks pinned) read 0 px in 24 of 24 shots, and the minotaur
+  did draw (3735 px against the same probe without it;
+  `.claude/probes/K525/s6/hm_line.log`). The tele_states sheets are
+  separate runs, not same-state.
   Pins that moved: the table pin
   (`test/ui/param_codec.test.ts`), url_codec.test.ts's defaults table and
   OVERRIDE_KEYS. The golden snapshot, the golden dailies and K87 did not

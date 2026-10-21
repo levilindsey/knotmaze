@@ -259,10 +259,15 @@ only with the files it is about; `render.md` lists the area's other files.
   - MEASURED (desktop RX 6800 XT, perf lock, 3200x1800, the hunter after 3
     moves, phw=0; `.claude/probes/K525/s6/gpu_*.log`). The ribbon program
     ran 2.818/2.852 ms per frame on master and 2.813/2.799 on the branch
-    (noise; 92.6 draws). Section text: render-shaders.md. Sheets:
-    `.claude/probes/K525/s6/` (`tele_states.mjs`). Not done: the GPU vs
-    mirror census (`census_rim.mjs` was not adapted for TELE), the phone
-    pass and tuning.
+    (noise; 92.6 draws). Same-state A/Bs against master (hm_probe ab,
+    1400x900, phy=0, clocks pinned) read 0 px in 24 of 24 shots each,
+    with no minotaur, with `&mt=hunter&mtl=line` and with
+    `&mt=hunter&mtg=0` (`s6/hm_desktop.log`, `s6/hm_line.log`,
+    `s6/hm_mtg0.log`). Section text:
+    render-shaders.md. Sheets: `.claude/probes/K525/s6/`
+    (`tele_states.mjs`; separate runs, not same-state). Not done: the GPU
+    vs mirror census (`census_rim.mjs` was not adapted for TELE), the
+    Pixel pass and tuning.
 
 - RING LAPS ARE INTEGER-CORRECTED (K299, 2026-10-14; Levi: a choice's
   pulse missing, another drawn backward, a gold sliver on the next run
