@@ -23,9 +23,12 @@ describe("K580: the tangent a's tapered root", () => {
       // from R to J; joint: J's index in the strand's nodes.
       const { sep, joint } = s.taper!;
       expect(sep.length).toBe(TAPER_PROFILE_N + 1);
-      // The thread width at R, so the width multiplier 1 + sep / thread
-      // width reads 2 there.
-      expect(sep[0] / TAPER_PART_LU).toBeCloseTo(1, 6);
+      // At R the strokes' inner edges touch, so the root spans both threads
+      // at least: the width multiplier 1 + sep / thread width reads 2 or a
+      // little more (2.01 at xh 2, 2.15 at xh 3: the root's normal crosses
+      // the strokes obliquely there).
+      expect(sep[0] / TAPER_PART_LU).toBeGreaterThanOrEqual(1 - 1e-6);
+      expect(sep[0] / TAPER_PART_LU).toBeLessThanOrEqual(1.3);
       for (let i = 1; i < sep.length; i++) expect(sep[i], `step ${i}`).toBeLessThanOrEqual(sep[i - 1] + 1e-12);
       expect(sep[sep.length - 1]).toBe(0);
       // R is a degree-1 TURN that starts the root; J is the junction.
@@ -36,13 +39,22 @@ describe("K580: the tangent a's tapered root", () => {
     });
   }
 
-  it("the part point: where the paired strokes sit one thread width apart", () => {
+  it("the part point: where the strokes' medial gap reaches one thread width", () => {
     for (const xh of [2, 3]) {
       const k = GU_PER_XH / xh;
       const root = tangentRoot(GLYPHS.get("a")!.body, 6, TAPER_PART_LU * k)!;
       expect(root).not.toBeNull();
-      expect(root.sepAt(root.aR) / k).toBeCloseTo(TAPER_PART_LU, 6);
+      // R is on the medial axis, r from both strokes, with 2r the part.
+      expect((2 * root.rAt(root.aR)) / k).toBeCloseTo(TAPER_PART_LU, 6);
+      expect(root.rAt(0)).toBe(0);
+      // The width there reaches past both threads (the nearer outer edge).
+      expect(root.sepAt(root.aR) / k).toBeGreaterThanOrEqual(TAPER_PART_LU - 1e-6);
       expect(root.sepAt(0)).toBeCloseTo(0, 9);
+      // Both feet lie on their strokes, past J.
+      expect(root.aR).toBeGreaterThan(0);
+      expect(root.bR).toBeGreaterThan(0);
+      expect(root.footC(root.aR)).toBeGreaterThan(0);
+      expect(root.footO(root.aR)).toBeGreaterThan(0);
     }
   });
 

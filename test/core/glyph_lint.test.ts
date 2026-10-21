@@ -9,17 +9,14 @@ import type { Glyph } from "../../src/core/glyphs/glyph_types";
 
 /**
  * Known failures: glyph -> the rules it is allowed to break (and only
- * those). K580: the a's o-kind J is a TANGENT join (its connector-in and
- * oval-out arms leave J together and draw as one tapered root), so the fork
- * and crotch-clearance rules give way to the taper checks. At xh 2 the
- * root's outline leaves the strokes' ribbons by 0.022 LU at its part point
- * R (a tooth with a 31 degree kink); at xh 3 it stays inside (0.0001).
- * Fix: part the root where the strokes' NEAREST gap reaches the thread
- * width (the medial axis), not at the equal-arc pair (docs/design/K580.md).
+ * those). None today. K580: the a's o-kind J is a TANGENT join (its
+ * connector-in and oval-out arms leave J together and draw as one tapered
+ * root), so the fork and crotch-clearance rules give way to the taper
+ * checks. Stage 1's equal-arc root failed taper-g1 at xh 2 (0.022 LU out
+ * of the strokes at R); stage 2's medial root stays inside at both sizes
+ * (docs/design/K580_s2.md).
  */
-const KNOWN: Record<string, Record<number, string[]>> = {
-  a: { 2: ["taper-g1"] },
-};
+const KNOWN: Record<string, Record<number, string[]>> = {};
 
 const rulesOf = (g: Glyph, xh: number): string[] => lintGlyph(g, xh).errors.map((e) => e.rule);
 
@@ -79,11 +76,16 @@ describe("glyph lint: the authored set", () => {
       expect(r.tapers.map((t) => t.junction), `xh ${xh}`).toEqual([6]);
       const t = r.tapers[0];
       expect(t.monotone).toBe(true);
-      // The root leaves R at the strokes' combined width: sep = the thread width.
-      expect(t.mR).toBeCloseTo(2, 6);
+      // The root leaves R at least at the strokes' combined width (their
+      // inner edges touch there): 2.01 at xh 2, 2.15 at xh 3.
+      expect(t.mR).toBeGreaterThanOrEqual(2 - 1e-6);
+      expect(t.mR).toBeLessThanOrEqual(2.3);
       expect(t.aRLU).toBeGreaterThan(0);
+      expect(t.bRLU).toBeGreaterThan(0);
       expect(t.partLU).toBeGreaterThanOrEqual(t.aRLU);
-      expect(t.clearLU - t.aRLU).toBeLessThanOrEqual(LINT.forkMaxLU);
+      expect(t.crotchLU).toBeLessThanOrEqual(LINT.forkMaxLU);
+      // The ribbons stop overlapping by R (stage 1: 0.26 LU past it at xh 2).
+      expect(t.overlapLU).toBeLessThanOrEqual(0);
       // The waived rules stay waived: the crotch is the taper's to judge.
       const rules = r.errors.map((e) => e.rule);
       expect(rules).not.toContain("fork-angle");
@@ -91,11 +93,15 @@ describe("glyph lint: the authored set", () => {
     }
   });
 
-  it("K580: a root bulging out of the strokes fails taper-g1, inside them passes", () => {
-    const r2 = lintGlyph(GLYPHS.get("a")!, 2).tapers[0];
-    const r3 = lintGlyph(GLYPHS.get("a")!, 3).tapers[0];
-    expect(r2.bulgeLU).toBeGreaterThan(LINT.taperBulgeLU);
-    expect(r3.bulgeLU).toBeLessThanOrEqual(LINT.taperBulgeLU);
+  it("K580: the medial root's outline stays inside the strokes; its far side sinks in a little", () => {
+    for (const xh of [2, 3]) {
+      const t = lintGlyph(GLYPHS.get("a")!, xh).tapers[0];
+      expect(t.bulgeLU, `xh ${xh}`).toBeLessThanOrEqual(LINT.taperBulgeLU);
+      // The nearer outer edge bounds the width, so the other side lies
+      // inside O's ribbon: 0.053 LU at xh 2, 0.049 at xh 3.
+      expect(t.insetLU, `xh ${xh}`).toBeGreaterThan(0);
+      expect(t.insetLU, `xh ${xh}`).toBeLessThanOrEqual(0.1);
+    }
   });
 
   it("the i's fork reaches full clearance within the measured distance", () => {
