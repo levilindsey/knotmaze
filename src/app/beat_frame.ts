@@ -109,6 +109,27 @@ export function createBeat(deps: BeatDeps): BeatFrame {
     return false;
   };
 
+  // Probe hook: the rider and the clock (probes.md, K114 beat).
+  if (typeof window !== "undefined") {
+    (window as unknown as Record<string, unknown>).__knotBeat = () => ({
+      on: rider !== null,
+      ticks: clock.ticks,
+      running: clock.running,
+      held: clock.isHeld,
+      d: rider ? rider.d : -1,
+      run: rider && rider.d >= 0 ? rider.d >> 1 : -1,
+      ahead: rider ? rider.ahead : null,
+      queued: rider ? rider.queued : -1,
+      startBeat: rider ? rider.startBeat : -1,
+      t0: rider ? rider.t0 : 0,
+      t1: rider ? rider.t1 : 0,
+      tempo: rider ? rider.tempo : 0,
+      phase: rider ? beatPhase(clock.ticks, rider.tempo) : -1,
+      // The runs the rider would try at the junction ahead, in order.
+      order: rider ? rider.order(rider.ahead, rider.d).map((x) => x >> 1) : [],
+    });
+  }
+
   return {
     clock,
     rider: () => rider,
