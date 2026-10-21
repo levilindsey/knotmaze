@@ -338,14 +338,6 @@ Next free ID: K687.
   - next: with the phone plugged in, unlocked and on the home screen, `pwsh -File .claude/probes/K631/run_part2.ps1` (a 4-cell smoke, then 12 cells, ~25 min); read `out/phone` with `.claude/probes/K244/summarize.mjs` against `docs/design/K244_cores.md`'s desktop counts
   - brief: `docs/design/K631_phone.md`
   - env: `.claude/probes/K631/run_part2.ps1` (takes the phone lock, serves the builds on port 5631, sets up and tears down the phone)
-- **K139** · Collapse mode (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`): no backtracking,
-  each run collapses behind you. `collapse` (off | finish | free); rides 4.3's snap (`fragile`,
-  K137) and R.3.4's longest thread (`docs/design/K80_gameplay_additions.md`). S-M, after 4.3.
-  - owner: agent `afd338f77eaa5ec8c` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 19:42, 2 h cap ~21:42)
-  - branch: `worktree-agent-afd338f77eaa5ec8c`, worktree `.claude/worktrees/agent-afd338f77eaa5ec8c`; last commit: `f6ad8cf`
-  - evidence: `.claude/probes/K139/`
-  - next: build collapse mode per the brief (pure module, search timing, wiring, param 190, page driver)
-  - brief: `docs/design/K139.md`
 - **K662** · The phone sitting (Levi plugged it in at 20:00, on AC with stay-awake): K631 part 2
   (K244's counts), K646 + K587 (confetti), K651 (telegraph rims), K644 if K580 s3 has merged.
   - owner: agent `aadd6b0b7905a1619` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 20:06, 1 h cap ~21:06)
@@ -1528,6 +1520,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K139** · collapse mode (cl, codec 190): every run collapses once crossed; finish and free; score = share collapsed against a 20k-step par; calls K681, residuals K682-K685. Done in 961cd53 (2026-10-20).
 - **K653** · syncMinotaur fog-bleed layer flip fixed (no lift-back while it bleeds): 0 moves in 208 syncs, was 209 of 209; K650 b and K645 a done (K653_checks.md Handoff). Done in 4ae42ee (2026-10-20).
 - **K637** · The minotaur sim's 1.66 to 2.50 greedy catches is 9ccf360 (K74 s3's trap-zone finish), intended; harness ruled out; 2.50 is the baseline (`.claude/probes/K637/`). Done in 41fa173 (2026-10-20).
 - **K525** · The telegraph lights the route's rims by default (mtl at codec 181; the line stays an option); follow-ups K649-K654. Done in 5e88352 (2026-10-20).
