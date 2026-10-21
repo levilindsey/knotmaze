@@ -451,12 +451,15 @@ describe("TurnMinotaur", () => {
         const steps = tel.steps.map((s) => [...s]);
         const from = tel.from;
         const r = t.turn(randomTap(t, rng));
-        expect(t.lastFrom).toBe(r === "caught" ? t.state.v : from);
-        if (r === "moved") {
-          expect(t.lastPath).toEqual(steps);
-          expect(t.state.v).toBe(tel.dest);
-        }
+        // K546: a catch's route stays on screen until its animation ends.
+        expect(t.lastFrom).toBe(from);
+        if (r === "moved" || r === "caught") expect(t.lastPath).toEqual(steps);
+        if (r === "moved") expect(t.state.v).toBe(tel.dest);
         t.setProgress(1);
+        if (r === "caught") {
+          expect(t.lastFrom).toBe(t.state.v);
+          expect(t.lastPath).toEqual([]);
+        }
       }
     }
   });
@@ -506,6 +509,10 @@ describe("TurnMinotaur", () => {
     expect(t.state.v).toBe(X);
     expect(t.state.left).toBe(false);
     expect(t.lifeTurn).toBe(0);
+    // K546: the catching move plays to the contact first, then it stands
+    // in its lair.
+    expect(t.lastContact).not.toBeNull();
+    t.setProgress(1);
     expect(t.mode).toBe("lair");
     expect(t.turn(0)).toBe("moved");
     expect(t.state.v).toBe(X); // asleep again
