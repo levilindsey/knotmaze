@@ -329,14 +329,6 @@ Next free ID: K689.
   - evidence: `.claude/probes/K137/`
   - next: launch stage 3a (K137-b blocking, lives, sword, sprint) from its brief once K324 s2 merges; stage 2 (4.15 spool, 4.28 hints) waits on K655, K656
   - brief: `docs/design/K137_s3a.md`
-- **K620** · K580's root paint (Levi 2026-10-20: "K580 rec sgtm"): each side of the root takes its
-  stroke's paint and blends into the spur's at J. `paint_math.ts` work, after K525 and K580 s3;
-  inputs in `docs/design/K580_s2.md` "For K620"; `.claude/probes/K580/sheets/a_join_zoom.png`.
-  - owner: agent `a0856de69ce5faec3` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 20:18, 2 h cap ~22:18)
-  - branch: `worktree-agent-a0856de69ce5faec3`, worktree `.claude/worktrees/agent-a0856de69ce5faec3`; last commit: `c6a65e3`
-  - evidence: `.claude/probes/K620/`
-  - next: option A root paint: the mirror math, the data path, the GLSL, census, A/B and stills (brief)
-  - brief: `docs/design/K620.md`
 
 ## Next, in order
 
@@ -1500,6 +1492,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K620** · the glyph root paints as a blend of the stroke section colours from R to the spur at J (CPU mirror, KGEOM and KSTATIC data, GLSL); maze and burn moved 3-5 px of one level (the vertex block). Done in d54c09b (2026-10-20).
 - **K662** · The phone sitting (2026-10-20, 20:06-20:50): parts 1-4 ran (K631, K646, K587, K651, K644 closed); Levi took the phone back before the daily paths (K687). Done in 9cca8b5 (2026-10-20).
 - **K631** · K244 on the phone (round 2026-10-20): auto plucks with nothing drawn 0 of 372 on the K244 builds (base 8 of 186); drawn releases 47 of 47; taps alike on both builds. Done in 9cca8b5 (2026-10-20).
 - **K646** · Phone pass for K336 + K186 (round 2026-10-20): six banner paths show 1 burst each; frames flat in amount (23-26% over 25 ms, max 34 ms, hot and with audio on); daily paths 2b/3 and a quiet rerun in K687. Done in 9cca8b5 (2026-10-20).
