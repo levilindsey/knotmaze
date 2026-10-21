@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K750.
+Next free ID: K753.
 
 ## Waiting on Levi
 
@@ -219,6 +219,8 @@ Next free ID: K750.
 - **K739** · K698 walker glow (K713): the minotaur highlight in the walker cyan under the head, at
   its hunting size (3.8 radii) and full opacity, since the plain size read as a faint fringe. Right
   size and opacity? Stills `.claude/probes/K698/shots/` (`docs/design/K698_polish.md` Handoff)
+  - Real phone sheet (K749): `.claude/probes/K749/out/glow/sheet_glow.png`; on seed 7 the
+    minotaur's start marker sits about 5 css px from the start dot, so its glow is partly hidden
 - **K742** · K138 s1 calls (`docs/design/K138_s1.md` Handoff): call 5 built differently, the rules
   turn off while the spool is on (alt: a slide pays its whole length to the spool); hints and the
   compass follow the best legal route; refusals go through K480 targetAt, not a
@@ -400,14 +402,6 @@ Next free ID: K750.
   - evidence: `.claude/probes/K138/s2/`
   - next: stage 2 (cap ~05:45): the s1 remainder (HUD rows, share title tag), turnstiles, hidden runs; then s3-s8 per docs/design/K138_plan.md (s6 and s7 first once K137 s3c merges)
   - brief: `docs/design/K138_s2.md`
-- **K749** · Phone sitting 4 (sonnet, 2026-10-21 early): the K698 toasts, K138 s1 ice and the color
-  rule, K137 s3c sprint, on real touches; the K739 glow stills if time allows.
-  `docs/design/K749_phone.md`
-  - owner: claude agent ab35a519d3b90f110 of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, 1 h cap from about 04:12)
-  - branch: mainline (probes only, in the main checkout); last commit: n/a (probes only; builds origin/master into .claude/probes/K749/builds/)
-  - evidence: .claude/probes/K749/ (notes.md, out/)
-  - next: parts 1-3 of the brief on the real Pixel; then the coordinator files the results
-  - brief: `docs/design/K749_phone.md`
 
 ## Next, in order
 
@@ -1360,10 +1354,15 @@ Every other item below waits on the trigger it names.
 - **K738** · HUD rows vs the mode badge at 411x753: the sword row (slain on move NN) clears the Free
   play badge by only 13 css px (K726, `.claude/probes/K726/out/sword/stills/`); the K137 s3c/s3d and
   K138 HUD rows may push it under the badge
+  - Real phone (K749): with stat rows on, the badge covers the HUD (2.9 px at path 1234 / 886,
+    49.7 x 42 css px with the sword slain row, hiding the time and path values); stats off, slain
+    clears by 12.7 px; at 360 px wide est. 38 px overlap. Fix: a width cap with wrap, the badge
+    moving, or the HUD stepping under it. Sheet `.claude/probes/K749/out/hudgrow_g/sheet_hudgrow.png`
 - **K740** · Toast placement gaps (K698 Handoff): a control that appears while a toast shows does
   not move it; the panel and the phone settings sheet are not avoided; the aids group is found by
   its class, not the indicators avoid list; the sword toasts were checked shown directly, not after
   a walked pickup; No hints left is unreachable by tap (Hint disables at 0)
+  - K749: after a walked pickup on the real phone, all three sword toasts clear the pad
 - **K741** · cutRules() still says the fewest cuts when the Lead par is only an upper bound (par at
   most P) (`docs/design/K698_polish.md` Handoff)
 - **K743** · K480 planRoute ignores the rules (K138 s1): a tap past the choices walks part of a
@@ -1371,11 +1370,20 @@ Every other item below waits on the trigger it names.
 - **K744** · K138 s1 page gaps: blips of other colors at some junctions under the rule colors (cause
   unverified, maybe the junction webs); not page-checked: a backtrack undoing a slide, ice with
   alternate, strict par lost under a rule, the share (`docs/design/K138_s1.md` Handoff)
+  - Real phone (K749): the patches show at real size at nearly every junction in both rules (dark
+    magenta among pink, dark teal among olive); a backtrack undoing a 3-run slide passed. Next:
+    trace each patch to its run, or hide the web meshes. `.claude/probes/K749/out/rules/`
 - **K747** · The sword takenAt and slainAt count minotaur turns, so after a sprint on the turn clock
   they read one less than the move (K137 s3c Handoff)
 - **K748** · Sprint polish (K137 s3c): a focus outline lingers on the sprint button after F; no real
   phone pass yet (emulated 411x753). The s3a fragile page check is weak on the hunter and the fire
   side is unit-tested only
+- **K750** · Lives on the phone (K749): one read gave hearts {left:3, of:3} beside catches 1 while
+  the toast said 2 hearts left; a lagging hearts state or the probe read timing; the HUD hearts row
+  after a catch was not checked (`.claude/probes/K749/notes.md`)
+- **K751** · Phone coverage gaps after K749: the F key and its focus-visible outline (K137 s3c),
+  sprint with the sword or lives, the K747 off-by-one after a sprint, and the cut refusal for no way
+  to the exit (seed 7 has none in free play); for the next phone pass
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1638,9 +1646,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   1.2 past 0.79 LU; test/render/ribbon_round.test.ts hard-codes TOL 0.01 instead of importing
   LINT.taperBulgeLU
 - **K745** · Frost on icy runs is a flat color; a texture would read better (K138 s1)
+- **K752** · A cutPluck counter or last-pluck stamp in the probe hooks, so a refusal pluck is
+  checkable at snd=none (K749: cutPluck is synth-only)
 
 ## Done
 
+- **K749** · Phone sitting 4 (04:23-04:41, tested build 4a1dd4d5): K698 toasts clear every control on real touches (settled gap 9.9 css px, none cut off); ice slides and both color rules pass with backtracks; sprint passes on both clocks; K738 confirmed as a real overlap and K744 blips seen at real size; `.claude/probes/K749/out/`. Done in 4a1dd4d5 (2026-10-21).
 - **K713** · K114 walker leftovers: the walker glow (K739 asks Levi about its size), no move pad in Lead or Delay, par at most P for an upper-bound par; in K698. Done in e558c7ef (2026-10-21).
 - **K698** · Toasts clear the bottom controls (src/ui/toast_place.ts: 10 px above the highest control in their column, re-placed on resize; controls found by class km-control and the known control classes); with K713: the walker glow, no move pad in Lead or Delay, par at most P for an upper-bound Lead par. Done in e558c7ef (2026-10-21).
 - **K726** · Phone sitting 3 (02:16-03:02, tested build 65ee13a6): the K718 glyph pages and sheets, the sword on real touches on both clocks (0 failures), K720 silence verified (0 AudioContexts); sword toasts over the pad went to K698; `.claude/probes/K726/out/`. Done in 65ee13a6 (2026-10-21).
