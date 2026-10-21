@@ -16,11 +16,14 @@
 export type ParMode = "off" | "strict" | "strokes";
 export const PAR_MODES: readonly ParMode[] = ["off", "strict", "strokes"];
 
-// The slack slider's range and default (the default picked by K137's
-// numbers, step 5 of the brief: `.claude/probes/K137/`).
+// The slack slider's range and default. The default, P = 2F, is K137's
+// step 5 (the brief's Handoff has the table; `.claude/probes/K137/`): over
+// 50 mazes K155's careful player finishes strict 89% of the time, K155's
+// greedy walker 30% (its best in this range: it needs slack 3.4 for half,
+// since it re-walks dead ends), the careful player at noise 0.2 49.5%.
 export const PAR_SLACK_MIN = 0;
 export const PAR_SLACK_MAX = 1;
-export const PAR_SLACK_DEFAULT = 0.25;
+export const PAR_SLACK_DEFAULT = 1;
 
 // P = F + round(slack x F). The slack counts in hundredths, so the
 // product is an integer over 100 and the rounding is the same on every
