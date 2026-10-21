@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K736.
+Next free ID: K738.
 
 ## Waiting on Levi
 
@@ -208,6 +208,10 @@ Next free ID: K736.
   plays music. Options: keep snd (or every DAILY_EXEMPT_KEYS preference) in the rewritten daily
   address; save the sound mode per viewer the way Motion is saved; or document it
   (docs/design/K720.md Handoff)
+- **K736** · K137 s2 calls, built as rec (docs/design/K137_s2.md Handoff): 1 the spool holds par
+  runs plus a 0.3 slack (seed 7: 17 runs); 2 the compass is its own setting (cmp, off), not an
+  endless hint; 3 on the phone Hint and Chalk sit bottom left above the cut buttons; 4 the chalk
+  tick glyph is a placeholder
 
 ## In progress
 
@@ -1343,6 +1347,11 @@ Every other item below waits on the trigger it names.
   (docs/design/K720.md Handoff)
 - **K734** · K643: a hairline seam inside the i fork junction at xh 3, in the build at 6278cf8b,
   cause unknown (docs/design/K643.md Handoff)
+- **K737** · K137 s2 (K137_s2.md Handoff): with fragile runs or collapse the spool can leave no
+  legal move at its limit (Undo or restart gets out); a lit hint hides the minotaur warning up to 2
+  s; the path-display row does nothing under the spool; hints and the compass ignore the fire; a
+  catch restart keeps hints used and chalk; the aids are off in walker modes; saved attempts keep no
+  chalk or hints used (store version); the compass shares the hint mint
 
 ## Approved, to schedule (2026-10-11)
 
