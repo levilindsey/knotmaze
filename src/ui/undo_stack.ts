@@ -166,6 +166,9 @@ export const LIVE_EFFECTS = {
     "minoPauseChance", "minoPauseMin", "minoPauseMax", "minoDetect",
     "minoLose", "minoCatch", "minoDeadEnds", "minoRoam", "minoWake",
     "minoFog", "minoPull", "minoRefog", "minoRestart", "minoLair",
+    // K324: the junction stops, turn-back, roam window, telegraph reach.
+    "minoStopMin", "minoStopMax", "minoHuntStop", "minoTurnBack",
+    "minoTipReach", "minoRoamNear", "minoTelegraphRuns",
   ],
   // K80 turns: the turn-aligned minotaur's tuning.
   onTurnMinoChange: [

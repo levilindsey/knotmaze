@@ -126,6 +126,8 @@ describe("links", () => {
       trapTries: 8, trapSurplus: 1.25,
       penReverse: false,
       dailyTitleThread: false,
+      minoStopMin: 0, minoStopMax: 0, minoHuntStop: 0.5, minoTurnBack: 1.5,
+      minoTipReach: 2, minoRoamNear: 0.25, minoTelegraphRuns: 1,
     });
   });
 
@@ -539,7 +541,8 @@ describe("links", () => {
   it("reads the real-time mode from override keys", () => {
     const p = parseParams(
       "?7&clk=realtime&plp=12&mwp=0.25&mhp=0.75&mpj=0.1&mpc=0.5&mpn=1&mpx=3" +
-        "&mdt=10&mls=20&mct=1.5&mde=0.6&mrm=40&mwk=3&mfg=hunting&mpl=0&mrf=0&mlr=0"
+        "&mdt=10&mls=20&mct=1.5&mde=0.6&mrm=40&mwk=3&mfg=hunting&mpl=0&mrf=0&mlr=0" +
+        "&mhn=0.1&mhx=0.4&mhh=0.25&mrv=2&mdr=1.5&mnr=0.5&mtn=2"
     );
     expect(p.clock).toBe("realtime");
     expect(chaseParamsOf(p)).toEqual({
@@ -547,7 +550,11 @@ describe("links", () => {
       pauseChance: 0.5, pauseMin: 1, pauseMax: 3, detectStart: 10,
       detectEnd: 20, catchDist: 1.5, deadEndBias: 0.6, roamRange: 40, wake: 3,
       roamPull: 0, lair: false,
+      stopMin: 0.1, stopMax: 0.4, huntStop: 0.25, turnBack: 2, tipReach: 1.5,
+      roamNear: 0.5,
     });
+    // The telegraph's reach is the renderer's (stage 2), not the chase's.
+    expect(p.minoTelegraphRuns).toBe(2);
     expect(chaseParamsOf(parseParams("?7&clk=realtime")).lair).toBe(true);
     expect(p.gameMode).toBe("minotaur");
     expect(p.minoFog).toBe("hunting");
@@ -556,6 +563,29 @@ describe("links", () => {
     // An unknown clock reads as the default; the token round-trips the mode.
     expect(parseParams("?7&clk=beat").clock).toBe("turn");
     expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+  });
+
+  // K324: the link keeps both stop lengths as written; the chase reads the
+  // max held at least the min. Every new knob clamps to its range.
+  it("orders the junction stop pair and clamps K324's knobs", () => {
+    const p = parseParams("?7&clk=realtime&mhn=0.8&mhx=0.3");
+    expect([p.minoStopMin, p.minoStopMax]).toEqual([0.8, 0.3]);
+    const c = chaseParamsOf(p);
+    expect([c.stopMin, c.stopMax]).toEqual([0.8, 0.8]);
+    const pick = (q: UrlParams) => [
+      q.minoStopMin, q.minoStopMax, q.minoHuntStop, q.minoTurnBack,
+      q.minoTipReach, q.minoRoamNear, q.minoTelegraphRuns,
+    ];
+    expect(pick(parseParams("?7&mhn=5&mhx=9&mhh=2&mrv=20&mdr=9&mnr=3&mtn=7"))).toEqual([
+      2, 2, 1, 10, 4, 1, 3,
+    ]);
+    expect(pick(parseParams("?7&mhn=-1&mhx=-1&mhh=-1&mrv=-1&mdr=0&mnr=-1&mtn=-1"))).toEqual([
+      0, 0, 0, 0, 0.5, 0, 0,
+    ]);
+    // The same clamps through a token.
+    const big = withSeed(7, { minoStopMax: 9, minoTipReach: 9, minoTelegraphRuns: 7 });
+    const back = parseParams(`?${encodeParams(big)}`);
+    expect([back.minoStopMax, back.minoTipReach, back.minoTelegraphRuns]).toEqual([2, 4, 3]);
   });
 
   it("keeps the maze-plan knobs equal to DEFAULT_MAZE_PARAMS", () => {
@@ -822,6 +852,8 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   trapTries: "ttr", trapSurplus: "tsp",
   penReverse: "pnr",
   dailyTitleThread: "dtt",
+  minoStopMin: "mhn", minoStopMax: "mhx", minoHuntStop: "mhh", minoTurnBack: "mrv",
+  minoTipReach: "mdr", minoRoamNear: "mnr", minoTelegraphRuns: "mtn",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
@@ -854,6 +886,10 @@ if (name === "cartouche") return "knot";
   if (name === "pickChoiceRatio") return 2; // K298: half of 1.5 is under its floor 1
   if (name === "trapMaxGrow") return 1.25; // K74 stage 4: half of 1.15 is under its floor 1
   if (name === "trapSurplus") return 1.5; // K74 stage 4: half of 1.25 is under its floor 1
+  // K324: the junction stops default to 0 (off); the reach is whole runs.
+  if (name === "minoStopMin") return 0.3;
+  if (name === "minoStopMax") return 0.9;
+  if (name === "minoTelegraphRuns") return 2;
   return (d as number) * 0.5;
 }
 // As a link writes it: booleans 0/1, colors without the "#".

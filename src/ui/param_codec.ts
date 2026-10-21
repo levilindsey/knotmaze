@@ -315,6 +315,15 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   flag("dailyTitleThread"), // K552
   num("confettiShine"), // K337: the confetti's specular strength
   num("foilShare"), // K337: the share of foil pieces
+  // K324 (design 4.2): the real-time minotaur's junction stops, turn-back
+  // margin, roam window and telegraph reach.
+  num("minoStopMin"),
+  num("minoStopMax"),
+  num("minoHuntStop"),
+  num("minoTurnBack"),
+  num("minoTipReach"),
+  num("minoRoamNear"),
+  num("minoTelegraphRuns"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -418,6 +427,13 @@ export const PARAM_RANGES: Readonly<
   minoRoam: [5, 150],
   minoWake: [0, 20],
   minoPull: [0, 1],
+  minoStopMin: [0, 2], // K324
+  minoStopMax: [0, 2],
+  minoHuntStop: [0, 1],
+  minoTurnBack: [0, 10],
+  minoTipReach: [0.5, 4],
+  minoRoamNear: [0, 1],
+  minoTelegraphRuns: [0, 3],
   confettiAmount: [0, 3],
   confettiShine: [0, 2], // K337 (CONFETTI_SHINE_MAX)
   foilShare: [0, 1], // K337

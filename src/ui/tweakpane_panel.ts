@@ -1585,74 +1585,6 @@ export function buildPanel(
     fMino, "minoTelegraph", { label: "Show its next move" },
     "Show its next move in red: the run it will take and where it will stand, decided when your move ends (forced on at charge and two). Applies live."
   );
-  const fMinoBehavior = folder("Minotaur tuning", false, fGame);
-  // K294 (K80 turns 3a): sight and accuracy are per model. minoSight is the
-  // hunter's, and the stalker's charge reads it too, so it also shows for
-  // the stalker at charge; the guard has its own sight and accuracy rows,
-  // the stalker its own accuracy row.
-  const minoSightRow = turnRow(
-    fMinoBehavior, "minoSight", { min: 0, max: MINO_SIGHT_MAX, step: 1, label: "Sight (runs)" },
-    "Hunter: sight, in runs. It hunts you once you are this few runs away and gives up beyond minoGiveUp more. The stalker charges within this sight. It never sees you on the entrance tail. Applies live."
-  );
-  const minoGuardSightRow = turnRow(
-    fMinoBehavior, "minoGuardSight", { min: 0, max: MINO_SIGHT_MAX, step: 1, label: "Sight (runs)" },
-    "Guard: sight, in runs. It hunts you once you are this few runs away and gives up beyond minoGiveUp more. It never sees you on the entrance tail. Applies live."
-  );
-  // K324 section 4.3 (K80 turns 3a): the two constants the harness fixed.
-  const minoGiveUpRow = turnRow(
-    fMinoBehavior, "minoGiveUp", { min: 0, max: MINO_GIVE_UP_MAX, step: 1, label: "Give-up margin (runs)" },
-    "How many runs past its sight you must get before it gives up the hunt; then it checks where it last saw you. Applies live."
-  );
-  // K272: roam and territory start at 1 (0 stood still, or walked at
-  // random); 1 = destinations one run away, or next to the finish.
-  const minoRoamMinRow = turnRow(
-    fMinoBehavior, "minoRoamMin", { min: MINO_RUNS_MIN, max: MINO_ROAM_MIN_MAX, step: 1, label: "Roam nearest (runs)" },
-    "Hunter: the nearest it roams in one go, in runs (minoRoamRuns if that is less). Applies live."
-  );
-  const minoRoamRunsRow = turnRow(
-    fMinoBehavior, "minoRoamRuns", { min: MINO_RUNS_MIN, max: MINO_ROAM_RUNS_MAX, step: 1, label: "Roam range (runs)" },
-    "Hunter: the farthest it roams in one go, in runs. Applies live."
-  );
-  const minoTerritoryRow = turnRow(
-    fMinoBehavior, "minoTerritory", { min: MINO_RUNS_MIN, max: MINO_TERRITORY_MAX, step: 1, label: "Territory (runs)" },
-    "Guard: it roams only to junctions within this many runs of the finish. Applies live."
-  );
-  const chanceRow = (
-    key: "minoAccuracy" | "minoGuardAccuracy" | "minoStalkerAccuracy" | "minoTurnPull" | "minoPause",
-    label: string,
-    tipText: string
-  ): RowApi =>
-    row(
-      fMinoBehavior, p, key,
-      { min: 0, max: 1, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label },
-      tipText, D[key], () => {
-        params[key] = Math.round(params[key] * 100) / 100;
-        callbacks.onTurnMinoChange();
-      }
-    );
-  const minoTurnPullRow = chanceRow(
-    "minoTurnPull", "Roams toward you",
-    "The chance a roam ends nearer you than where it stands (when any such junction is in range); otherwise anywhere in range. It still roams; only where a roam ends leans toward you. Applies live."
-  );
-  const minoAccuracyRow = chanceRow(
-    "minoAccuracy", "Accuracy",
-    "Hunter: while it hunts, the chance each step takes a shortest way to you; otherwise it steps at random. Applies live."
-  );
-  const minoGuardAccuracyRow = chanceRow(
-    "minoGuardAccuracy", "Accuracy",
-    "Guard: while it hunts, the chance each step takes a shortest way to you; otherwise it steps at random. Applies live."
-  );
-  const minoStalkerAccuracyRow = chanceRow(
-    "minoStalkerAccuracy", "Accuracy",
-    "Stalker: the chance each step takes a shortest way to you (always, while you are off the entrance tail); otherwise it steps at random. Applies live."
-  );
-  chanceRow("minoPause", "Chance it waits a turn", "The chance it stands still for a turn. Applies live.");
-  // K293 (e): true with minoLair off too (a catch leaves it where it caught
-  // you, and it sleeps again there).
-  turnRow(
-    fMinoBehavior, "minoSleep", { min: 0, max: MINO_SLEEP_MAX, step: 1, label: "Lair sleep (turns)" },
-    "Turns it waits before it first moves: at the start, and again after each catch (in its lair, or where it caught you while minoLair is off). Applies live."
-  );
   // K174: the minotaur's paces as multiples of yours (playerPace). No step
   // (Tweakpane's step grid would snap a link's 0.73, K130); an edit keeps
   // 2 decimals, so 0.7 x 10 stays exactly the default's 7.
@@ -1719,6 +1651,130 @@ export function buildPanel(
   chaseRow(
     "minoWake", { min: 0, max: 20, step: 0.5, label: "Lair wait (s)" },
     "Seconds it waits in its lair at the finish, at the start and after each catch. Applies live."
+  );
+  // K324: the tuning subfolder sits after each clock's own rows (real
+  // time's above, created first since K324; the turn clock's hide in real
+  // time) and before the shared rows. It holds the turn clock's model rows
+  // and real time's K324 rows, each shown only under its clock.
+  const fMinoBehavior = folder("Minotaur tuning", false, fGame);
+  // K294 (K80 turns 3a): sight and accuracy are per model. minoSight is the
+  // hunter's, and the stalker's charge reads it too, so it also shows for
+  // the stalker at charge; the guard has its own sight and accuracy rows,
+  // the stalker its own accuracy row.
+  const minoSightRow = turnRow(
+    fMinoBehavior, "minoSight", { min: 0, max: MINO_SIGHT_MAX, step: 1, label: "Sight (runs)" },
+    "Hunter: sight, in runs. It hunts you once you are this few runs away and gives up beyond minoGiveUp more. The stalker charges within this sight. It never sees you on the entrance tail. Applies live."
+  );
+  const minoGuardSightRow = turnRow(
+    fMinoBehavior, "minoGuardSight", { min: 0, max: MINO_SIGHT_MAX, step: 1, label: "Sight (runs)" },
+    "Guard: sight, in runs. It hunts you once you are this few runs away and gives up beyond minoGiveUp more. It never sees you on the entrance tail. Applies live."
+  );
+  // K324 section 4.3 (K80 turns 3a): the two constants the harness fixed.
+  const minoGiveUpRow = turnRow(
+    fMinoBehavior, "minoGiveUp", { min: 0, max: MINO_GIVE_UP_MAX, step: 1, label: "Give-up margin (runs)" },
+    "How many runs past its sight you must get before it gives up the hunt; then it checks where it last saw you. Applies live."
+  );
+  // K272: roam and territory start at 1 (0 stood still, or walked at
+  // random); 1 = destinations one run away, or next to the finish.
+  const minoRoamMinRow = turnRow(
+    fMinoBehavior, "minoRoamMin", { min: MINO_RUNS_MIN, max: MINO_ROAM_MIN_MAX, step: 1, label: "Roam nearest (runs)" },
+    "Hunter: the nearest it roams in one go, in runs (minoRoamRuns if that is less). Applies live."
+  );
+  const minoRoamRunsRow = turnRow(
+    fMinoBehavior, "minoRoamRuns", { min: MINO_RUNS_MIN, max: MINO_ROAM_RUNS_MAX, step: 1, label: "Roam range (runs)" },
+    "Hunter: the farthest it roams in one go, in runs. Applies live."
+  );
+  const minoTerritoryRow = turnRow(
+    fMinoBehavior, "minoTerritory", { min: MINO_RUNS_MIN, max: MINO_TERRITORY_MAX, step: 1, label: "Territory (runs)" },
+    "Guard: it roams only to junctions within this many runs of the finish. Applies live."
+  );
+  const chanceRow = (
+    key: "minoAccuracy" | "minoGuardAccuracy" | "minoStalkerAccuracy" | "minoTurnPull" | "minoPause",
+    label: string,
+    tipText: string
+  ): RowApi =>
+    row(
+      fMinoBehavior, p, key,
+      { min: 0, max: 1, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label },
+      tipText, D[key], () => {
+        params[key] = Math.round(params[key] * 100) / 100;
+        callbacks.onTurnMinoChange();
+      }
+    );
+  const minoTurnPullRow = chanceRow(
+    "minoTurnPull", "Roams toward you",
+    "The chance a roam ends nearer you than where it stands (when any such junction is in range); otherwise anywhere in range. It still roams; only where a roam ends leans toward you. Applies live."
+  );
+  const minoAccuracyRow = chanceRow(
+    "minoAccuracy", "Accuracy",
+    "Hunter: while it hunts, the chance each step takes a shortest way to you; otherwise it steps at random. Applies live."
+  );
+  const minoGuardAccuracyRow = chanceRow(
+    "minoGuardAccuracy", "Accuracy",
+    "Guard: while it hunts, the chance each step takes a shortest way to you; otherwise it steps at random. Applies live."
+  );
+  const minoStalkerAccuracyRow = chanceRow(
+    "minoStalkerAccuracy", "Accuracy",
+    "Stalker: the chance each step takes a shortest way to you (always, while you are off the entrance tail); otherwise it steps at random. Applies live."
+  );
+  const minoPauseRow = chanceRow("minoPause", "Chance it waits a turn", "The chance it stands still for a turn. Applies live.");
+  // K293 (e): true with minoLair off too (a catch leaves it where it caught
+  // you, and it sleeps again there).
+  const minoSleepRow = turnRow(
+    fMinoBehavior, "minoSleep", { min: 0, max: MINO_SLEEP_MAX, step: 1, label: "Lair sleep (turns)" },
+    "Turns it waits before it first moves: at the start, and again after each catch (in its lair, or where it caught you while minoLair is off). Applies live."
+  );
+  // K324: the junction stops, turn-back margin, roam window and telegraph
+  // reach (design 4.2), in the tuning subfolder under real time (q8). No
+  // step on the continuous ones (K130), an edit keeps 2 decimals.
+  const tuneRow = (
+    key: "minoStopMin" | "minoStopMax" | "minoHuntStop" | "minoTurnBack" | "minoTipReach" | "minoRoamNear",
+    min: number,
+    max: number,
+    label: string,
+    tipText: string
+  ): RowApi => {
+    const r = row(
+      fMinoBehavior, p, key,
+      { min, max, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label },
+      tipText, D[key], () => {
+        params[key] = Math.round(params[key] * 100) / 100;
+        callbacks.onChaseChange();
+      }
+    );
+    rtRows.push(r);
+    return r;
+  };
+  tuneRow(
+    "minoStopMin", 0, 2, "Junction stop, min (s)",
+    "Real time: it stops at every junction it reaches (never at a dead-end tip) for a time drawn between this and the max, in seconds; a long stop replaces it. 0 for both: no junction stops. Applies live."
+  );
+  tuneRow(
+    "minoStopMax", 0, 2, "Junction stop, max (s)",
+    "Real time: the longest junction stop, in seconds (at least the min). Applies live."
+  );
+  tuneRow(
+    "minoHuntStop", 0, 1, "Stop while hunting (x)",
+    "Real time: its junction stops while it hunts you, as a multiple of the roaming ones (0 = none, 1 = as long). Spotting you does not cut a junction stop short. Applies live."
+  );
+  tuneRow(
+    "minoTurnBack", 0, 10, "Turn-back margin",
+    "Real time: while it hunts, it turns back mid-run only when the way to you behind it is shorter than the way ahead by more than this, along the threads (lattice units). Applies live."
+  );
+  tuneRow(
+    "minoTipReach", 0.5, 4, "Dead-end reach (x roam)",
+    "Real time: how far away a dead-end tip may be for a roam to head there, as a multiple of Roam range. Applies live."
+  );
+  tuneRow(
+    "minoRoamNear", 0, 1, "Nearest roam (x roam)",
+    "Real time: the nearest junction a roam heads for, as a multiple of Roam range (0.25 = a quarter of it). Applies live."
+  );
+  rtRows.push(
+    row(
+      fMinoBehavior, p, "minoTelegraphRuns", { min: 0, max: 3, step: 1, label: "Telegraph reach (runs)" },
+      "Real time: how many runs of its next move show, past the run it is on. Not drawn yet: the real-time telegraph comes in a later build. Applies live.",
+      D.minoTelegraphRuns, () => callbacks.onChaseChange()
+    )
   );
   const minoFogRow = chaseRow(
     "minoFog",
@@ -2555,12 +2611,16 @@ export function buildPanel(
     minoSpeedRow.hidden = !turnMinoOn;
     minoTelegraphRow.hidden = !turnMinoOn;
     minoByLengthRow.hidden = !turnMinoOn;
-    fMinoBehavior.hidden = !turnMinoOn;
+    // K324: the tuning subfolder shows under both clocks; each clock's rows
+    // in it hide under the other (real time's K324 rows are in rtRows).
+    fMinoBehavior.hidden = !gameMino;
+    minoPauseRow.hidden = !turnMinoOn;
+    minoSleepRow.hidden = !turnMinoOn;
     // K294 (K80 turns 3a): each model's own rows. The stalker never roams
     // (no pull, no give-up) and charges within the shared sight.
-    const hunter = params.minotaur === "hunter";
-    const guard = params.minotaur === "guard";
-    const stalker = params.minotaur === "stalker";
+    const hunter = turnMinoOn && params.minotaur === "hunter";
+    const guard = turnMinoOn && params.minotaur === "guard";
+    const stalker = turnMinoOn && params.minotaur === "stalker";
     minoSightRow.hidden = !(hunter || (stalker && params.minoSpeed === "charge"));
     minoGuardSightRow.hidden = !guard;
     minoGiveUpRow.hidden = !(hunter || guard);
