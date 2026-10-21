@@ -203,3 +203,22 @@ When you stop:
 - report.
 
 End your report with the item's handle fields and a `Ledger items` list.
+
+## Working notes
+
+- Agent `K114 cut` of claude session 91b19e11. Started 2026-10-20
+  9:09 PM; the 2 h cap is 11:09 PM. Branch
+  `worktree-agent-a1cdbc33c6dba02ff` (worktree
+  `.claude/worktrees/agent-a1cdbc33c6dba02ff`); node_modules is a
+  junction (delete it with `(Get-Item node_modules).Delete()` first).
+- Probes (untracked): `.claude/probes/K114/cut/` holds copies of K139's
+  `k137_lib.ts`, `vite.node.config.mjs` and `page/` (k139_page.mjs,
+  run_page.ps1, vite.private-cache.config.ts). Ports 5114-5117.
+- Where things are: the controller's setRules / reset / replay / tapEdge
+  and `onShortestRoute` (the only `walk.distToExit` read in game code);
+  `walk_graph.ts` `walkDistances` (no removed set yet) and `runsToExit`
+  (takes `blocked`); the renderer's `syncBroken` (reads `fragileOn` and
+  `brokenRuns()`), `targetAt` (skips `controller.broken`), `edgeAt`;
+  main.ts `undoMove` (replays `taps.slice(0, -1)`; only the Stranded
+  banner calls it today), `handleFabricTap`, `moveAlong`, the K480 route
+  (`routeStep` on each arrival, from keyStep); `input_keys.ts` keydown.
