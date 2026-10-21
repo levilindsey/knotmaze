@@ -73,6 +73,20 @@ export const LINT = {
    * i at xh 3 (1.20 LU; 1.08 at xh 2; `shots3`). The first i form drew
    * cleanly at 0.97 LU for every angle >= 15, so the angle, not this
    * distance, separated clean from broken in the measurement.
+   * K643 checked both rules that read it on stills at the desk (1600x1000,
+   * dsf 3) and phone scale (411x753, dsf 2). fork-distance: the i's fork
+   * in "ai" (1.08 LU at xh 2, 1.20 at xh 3) shows no fork defect at either
+   * (only a hairline seam inside the xh 3 junction, in today's build too).
+   * taper-crotch: `widenCrotch` (glyph_inject.ts, `#glyphs2=crotch<L>`)
+   * lengthens the a's crotch smoothly to 0.67 LU at xh 2 and 0.79 at xh 3,
+   * and both draw cleanly; past that the release down C bends under the
+   * radius floor (9.4 GU at 0.68, xh 2; 8.3 at 0.92, xh 3) and the stills
+   * show those kinks, not a crotch defect. (The dark half-disc in some
+   * cells is K580 s5's unidentified gap-mask slot, which comes and goes
+   * with any perturbation, a 0.002 bump included: see the K643 Handoff.)
+   * No crotch length read badly, so 1.2 stays; on the taper side it is
+   * evidenced only to 0.79. Sheets: `.claude/probes/K643/sheets/`
+   * `crotch_*.png` and `bulge_*_ifork_x*.png`.
    */
   forkMaxLU: 1.2,
   /** Lead tail length (LU) the body is extended by at each end. */
@@ -87,8 +101,18 @@ export const LINT = {
    * 31 degrees at xh 2, 9 at xh 3, measured against the nearest outer-edge
    * point). The authored a: stage 1's equal-arc root 0.022 at R (xh 2),
    * 0.0001 (xh 3); stage 2's medial root 0.0002 and 0.0003 (its far side
-   * sinks into O instead, by 0.053 and 0.049: the inset). Not calibrated
-   * on stills: 0.01 is 2% of the thread width.
+   * sinks into O instead, by 0.053 and 0.049: the inset).
+   * K643 calibrated it on stills of injected bumps (`#glyphs2=bulge<b>`,
+   * lintGlyph's bulgeLU; the lint reads 0.95-0.97 of each): a bump draws
+   * at its full height, 2.7 device px per 0.01 LU on the desk (1600x1000,
+   * dsf 3) and 1.2 at phone scale (411x753, dsf 2), so the desk is the
+   * tighter. On the xh 3 root's nearly straight outer edge a bump first
+   * shows on the desk at 0.015 (the edge rises and falls again; plain at
+   * 0.022; at phone scale faint at 0.015, plain at 0.022), and 0.01 still
+   * reads as a smooth edge at both; xh 2's curved edge hides even 0.03.
+   * So 0.01 holds and stays. Sheets: `.claude/probes/K643/sheets/`
+   * `bulge_desk*.png` (first defect: `bulge_desk_edge_x3_mag4.png`, the
+   * 0.015 cell) and `bulge_phone*.png`.
    */
   taperBulgeLU: 0.01,
 } as const;
