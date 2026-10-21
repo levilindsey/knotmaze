@@ -410,11 +410,11 @@ Next free ID: K774.
 - **K137** · K80 section 4's cheap (S, S-M) mechanisms, each toggled (Levi 10-13), after the
   minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus
   Levi's sleeper variant. `K80_gameplay_additions.md`, stages in `sooner_20261020.md`; M: K138, M-L/L: K141.
-  - owner: nobody since 2026-10-21 05:36 (merged; agent `a75c80b994febd2dc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `d881ec31`
-  - evidence: `.claude/probes/K137/s3d/`
-  - next: the s3d remainder (Handoff of docs/design/K137_s3d.md): lures 4.10, snares 4.30, muddy runs 4.33, real-time extras; then stage 4, the look pieces (docs/design/K137_s4.md)
-  - brief: `docs/design/K137_s3d.md`
+  - owner: agent `ab3d78ded2f219f62` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus-5-5, started 2026-10-21 05:40, 2 h cap ~07:40)
+  - branch: `worktree-agent-ab3d78ded2f219f62`, worktree `.claude/worktrees/agent-ab3d78ded2f219f62`; last commit: `cbe6e0cc`
+  - evidence: `.claude/probes/K137/s4/`
+  - next: the s3d remainder (lures, snares, muddy runs, real-time extras), then the s4 look pieces (scent, fray, darkness, sonar, tunnels)
+  - brief: `docs/design/K137_s4.md`
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
