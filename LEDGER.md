@@ -19,13 +19,16 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K585.
+Next free ID: K586.
 
 ## Waiting on Levi
 
 
 
 
+- **K585** · Mark picks in the open-work report (https://claude.ai/artifact/63Q6FoNk7Bux3BhYQBt5g2):
+  Sooner marks, answers and notes save to its db (`picks/<id>`, `notes/general`). Read them with
+  ArtifactData, then reorder the ledger.
 - **K580** · K115 stage 9's calls: the a's J join (tangent fails the lint with a thorn; landed
   passes at the same width; or wider spacing; rec landed), the fork rule (≥15°, clear within 1.2
   LU), wider i and a (GU 40→58, 104→120). Handoff: `docs/design/K115_stage9.md`
@@ -130,9 +133,9 @@ Next free ID: K585.
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
   capitals e64f4d6, accents fa1b1ae, Greek 54612f2 (suite 1521 green). Levi (2026-10-19, Daily #8): redesign first.
-  - owner: nobody since 2026-10-20 13:01 (merged)
+  - owner: nobody since 2026-10-20 13:01 (stage 9 merged at b90c5df; waits on Levi's calls, K580)
   - branch: mainline; last commit: `b90c5df`
-  - evidence: .claude/probes/K115/stage9/ (its worktree); stage 8's .claude/probes/K115/stage8/ (main checkout)
+  - evidence: .claude/probes/K115/stage9/ (main checkout since the merge: stills shots1-4, the a search, suite_final.log); stage 8's .claude/probes/K115/stage8/
   - next: Levi's calls (K580); then the rest of the set under the lint, the class-pair lint and items 5-7 (reveal, metrics, sheets); then Levi's look, the final ς (K582), stage 7's live dates, K557, K569
   - brief: `docs/design/K115_stage9.md`
 - **K74** · Maze design, decided (Levi, 2026-10-13;
