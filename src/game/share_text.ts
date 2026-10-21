@@ -22,6 +22,10 @@ export interface ShareInfo {
   // catches, and the turn clock's close calls (real time has none: null).
   catches?: number | null;
   closeCalls?: number | null;
+  // K137: the runs broken (fragile runs on), and par's score ("+N", "E",
+  // "\u2212N"; null or "" for none).
+  snapped?: number | null;
+  parScore?: string | null;
 }
 
 // The title line's minotaur tag: "🐂 2" when it caught you, "🐂 0 · 5 close
@@ -38,12 +42,15 @@ export function shareText(info: ShareInfo): string {
   const stars = info.stars != null ? ` ${starGlyphs(info.stars)}` : "";
   const mino =
     info.catches != null ? ` · ${minotaurTag(info.catches, info.closeCalls)}` : "";
+  // K137: the fragile and par tags, beside the minotaur's.
+  const snap = info.snapped != null ? ` · snapped ${info.snapped}` : "";
+  const par = info.parScore ? ` · \u26F3 ${info.parScore}` : "";
   const eff =
     info.efficiency === null
       ? ""
       : ` · \u{1F3AF} ${efficiencyPercent(info.efficiency)}%`;
   const lines = [
-    `${title} \u{1F9F6}${stars}${mino}`,
+    `${title} \u{1F9F6}${stars}${mino}${snap}${par}`,
     `⏱️ ${formatDuration(info.timeMs)}${eff}`,
   ];
   const grid = moveGrid(info.moves);

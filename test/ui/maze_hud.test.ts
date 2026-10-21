@@ -4,7 +4,15 @@
 import { describe, expect, it } from "vitest";
 import { STATS, explainedStats, efficiencyOf, efficiencyPercent } from "../../src/game/maze_stats";
 import { rateRun, walkedOf } from "../../src/game/star_rating";
-import { gameEntries, gameRows, lossEntries, statEntries, statRows } from "../../src/ui/maze_hud";
+import {
+  gameEntries,
+  gameRows,
+  lossEntries,
+  ruleEntries,
+  ruleLossEntries,
+  statEntries,
+  statRows,
+} from "../../src/ui/maze_hud";
 import type { StatEntry } from "../../src/ui/maze_hud";
 
 const BASE = {
@@ -65,10 +73,13 @@ describe("what each figure means (K274)", () => {
   };
   const LOSS = { timeMs: 61_000, walked: 20, closest: 0.44 };
 
+  // K137's rule rows (kept out of FULL, whose exact rows are pinned).
+  const RULES = { snapped: 3, parLeft: { par: 12, left: 4 }, parStrokes: { par: 12, strokes: 9 } };
   const shown = (): StatEntry[] => [
     ...statEntries(FULL),
     ...gameEntries(FULL),
     ...lossEntries(LOSS),
+    ...gameEntries(RULES),
   ];
 
   it("every row that can show has a line, and every line has a row", () => {
@@ -146,5 +157,35 @@ describe("what each figure means (K274)", () => {
     expect(explainedStats(["fireLead", "closestCall"])).toEqual(["fireLead", "closestCall"]);
     expect(explainedStats(["time", "path"])).toEqual(["time", "path"]);
     expect(explainedStats([])).toEqual([]);
+  });
+});
+
+describe("K137 rule rows", () => {
+  it("reads snapped N, par P \u00B7 L left and strokes S / par P", () => {
+    const rows = ruleEntries({
+      snapped: 3,
+      parLeft: { par: 12, left: 4 },
+      parStrokes: { par: 12, strokes: 9 },
+    });
+    expect(rows.map((r) => [r.id, r.label, r.value])).toEqual([
+      ["snapped", "snapped", "3"],
+      ["par", "par", "12 \u00B7 4 left"],
+      ["strokes", "strokes", "9 / par 12"],
+    ]);
+  });
+
+  it("leaves out a rule that is off, and dashes an infinite par", () => {
+    expect(ruleEntries({ snapped: null, parLeft: null, parStrokes: null })).toEqual([]);
+    expect(ruleEntries({ parLeft: { par: Infinity, left: Infinity } })[0].value).toBe(
+      "\u2014 \u00B7 \u2014 left"
+    );
+    expect(ruleEntries({ parStrokes: { par: Infinity, strokes: 5 } })[0].value).toBe(
+      "5 / par \u2014"
+    );
+  });
+
+  it("puts the rule rows under time and walked on the rule banners", () => {
+    const ids = ruleLossEntries({ timeMs: 61000, walked: 12.5, snapped: 2 }).map((r) => r.id);
+    expect(ids).toEqual(["time", "walked", "snapped"]);
   });
 });

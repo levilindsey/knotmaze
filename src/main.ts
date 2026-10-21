@@ -64,6 +64,7 @@ import {
 } from "./game/daily_attempt";
 import { SolveClock, efficiencyOf } from "./game/maze_stats";
 import { shareText } from "./game/share_text";
+import { parScore } from "./game/par";
 import { rateRun, ratingForResult, walkedOf } from "./game/star_rating";
 import { LossBanner, MazeHud, WinBanner } from "./ui/maze_hud";
 import type { HudSnapshot } from "./ui/maze_hud";
@@ -134,6 +135,7 @@ import { createPointerInput } from "./app/input_pointer";
 import { createKeyInput } from "./app/input_keys";
 import { createLossCover, installContextLoss } from "./app/context_loss";
 import { createAutoAudio } from "./app/auto_audio";
+import { createRuleLoss, ruleFields } from "./app/rule_loss";
 import {
   FOLLOW_DELAY,
   FOLLOW_RAMP,
@@ -762,6 +764,38 @@ async function main(): Promise<void> {
     banner.hide();
     if (lossBanner.shown) lossBanner.hide();
   };
+  // K137: the rule losses (stranded by fragile runs, out of strokes under
+  // strict par) share the Burnt banner and the frame loop's pendingLoss;
+  // their sounds obey the volume and sound settings.
+  const ruleLoss = createRuleLoss({
+    controller: () => scene.fabricController,
+    banner: lossBanner,
+    animating: () => !!scene.fabric?.animating,
+    soundOn: () => !settings.muted && params.soundMode !== "none" && params.volume > 0,
+    pluck: (f, s, when) => synth.pluck(f, s, when),
+    audioTime: () => synth.audioTime(),
+    freqForRun: (eid) => {
+      const e = scene.walkGraph?.edges[eid];
+      return e ? freqForCtrl(e.chain, (e.ctrlA + e.ctrlB) / 2) : null;
+    },
+    freqAtHead: () => {
+      const fc = scene.fabricController;
+      const v = fc ? scene.walkGraph?.vertices.get(fc.head) : undefined;
+      return v ? freqForCtrl(v.chain, v.ctrl) : null;
+    },
+    stopClock: () => {
+      if (clock.state === "running") clock.stop(performance.now());
+    },
+    timeMs: () => clock.elapsed(performance.now()),
+    // The taps hold the whole state only without a minotaur or a fire.
+    canUndo: () => !scene.chase && !scene.turnMino && !scene.fabricController?.fire,
+    undo: () => undoMove(),
+    restart: () => {
+      restartSolve();
+      updateHud();
+    },
+    updateHud: () => updateHud(),
+  });
   // K73 + K151 MODE BADGE (ui/mode_badge.ts): what the solve on screen is,
   // left of the hamburger. "Free play" off the daily (a tap = the panel's
   // Daily button, so an X fades in), "Daily #N" on the attempt that counts
@@ -1158,6 +1192,8 @@ async function main(): Promise<void> {
       // closest call once it is over (null: no fire).
       fireLead: c.fire && !c.solved && !c.fireLost ? c.fireLeadHere : null,
       closestCall: c.fire && (c.solved || c.fireLost) ? c.fireClosest : null,
+      // K137: snapped, par and strokes (null while their rule is off).
+      ...ruleFields(c),
     };
   };
   // The HUD and the mode badge (it re-fits around the HUD's new size).
@@ -1446,6 +1482,9 @@ async function main(): Promise<void> {
         // K80 turns stage 2: the title's minotaur tag (🐂).
         catches: mino ? mino.catches : null,
         closeCalls: scene.turnMino ? scene.turnMino.closeCalls : null,
+        // K137: the fragile and par tags.
+        snapped: c.fragileOn ? c.brokenRuns().length : null,
+        parScore: c.parMode !== "off" ? parScore(c.strokes, c.par) : null,
       }),
       url: daily !== null ? dailyUrl(daily) : location.href,
     };
@@ -1607,12 +1646,47 @@ async function main(): Promise<void> {
     scene.fabric?.clearYarn();
     pendingWin = false;
     pendingLoss = false;
+    ruleLoss.reset(); // K137
     fireClock.reset(); // K114 stage 2: idle until the next first move.
     restartChase(carry);
     hideWin();
     if (scene.fabric && scene.fabricController) scene.fabric.update(scene.fabricController);
     resetAttempt();
     wake();
+  };
+
+  // K137: the Stranded banner's Undo. The taps but the last, replayed the
+  // way a reload restores an attempt: the yarn, the reveal, update() (the
+  // replay's reset moved `restarts`, so the fog's stamps clear), then the
+  // fog laid again from the taps (exploreRuns); the clock runs on. Offered
+  // only while the taps hold the whole state (no minotaur, no fire).
+  const undoMove = (): void => {
+    const fc = scene.fabricController;
+    if (!fc || !scene.fabric || fc.taps.length === 0) return;
+    if (!fc.replay(fc.taps.slice(0, -1))) {
+      restartSolve();
+      updateHud();
+      return;
+    }
+    routeRuns = [];
+    routeFc = null;
+    chaseRoute = [];
+    pendingWin = false;
+    pendingLoss = false;
+    ruleLoss.reset();
+    scene.fabric.cancelMove();
+    scene.fabric.restoreYarn(fc.taps);
+    scene.fabric.exploreRestore(fc);
+    scene.fabric.update(fc);
+    scene.fabric.exploreRuns(exploredRuns(fc));
+    saveAttempt();
+    updateHud();
+    wake();
+  };
+  // K137: the frame loop's loss slot: the Burnt banner, or a rule's.
+  const showLoss = (): void => {
+    if (scene.fabricController?.fireLost) showFireLoss();
+    else ruleLoss.show();
   };
 
   // A tap queues a run from the decision vertex (where the player stands,
@@ -1638,7 +1712,8 @@ async function main(): Promise<void> {
       scene.fabricController.walk,
       scene.chase.decisionVertex,
       { edge: t.eid, at: t.at },
-      tapReach()
+      tapReach(),
+      (r) => scene.fabricController!.broken(r) // K137: around broken runs.
     );
     if (!route || !chaseAlong(route[0])) return false;
     chaseRoute = route.slice(1);
@@ -1648,7 +1723,10 @@ async function main(): Promise<void> {
   const chaseAlong = (eid: number): boolean => {
     if (!scene.chase || !scene.fabric || !scene.fabricController) return false;
     chaseRoute = []; // A fresh tap or key replaces a queued route (K480).
-    if (eid < 0 || scene.chase.tap(eid) === "reject") return false;
+    // K137: a broken run is gone.
+    if (eid < 0 || scene.fabricController?.broken(eid) || scene.chase.tap(eid) === "reject") {
+      return false;
+    }
     chaseRunning = true;
     if (scene.fabric.setHover(-1)) scene.fabric.update(scene.fabricController);
     return true;
@@ -1673,6 +1751,7 @@ async function main(): Promise<void> {
             continue;
           }
           noteMove();
+          if (ruleLoss.afterMove(fc)) pendingLoss = true; // K137
           scene.fabric.setHover(-1);
           scene.fabric.beginMove(
             ev.edge,
@@ -1684,7 +1763,9 @@ async function main(): Promise<void> {
           // K480: feed a multi-run tap's next run to the chase as this
           // one departs (it leaves on arrival, from its far vertex).
           if (chaseRoute.length > 0 && scene.chase) {
-            if (scene.chase.tap(chaseRoute[0]) === "reject") chaseRoute = [];
+            if (fc.broken(chaseRoute[0]) || scene.chase.tap(chaseRoute[0]) === "reject") {
+              chaseRoute = [];
+            }
             else chaseRoute.shift();
           }
           updateHud();
@@ -2328,6 +2409,8 @@ async function main(): Promise<void> {
       showFireLoss();
       return true;
     }
+    // K137: stranded or out of strokes: a tap shows the banner again.
+    if (ruleLoss.over()) return ruleLoss.tapWhileOver(pendingLoss);
     // K80 turns: with the turn minotaur on, a tap on your own junction is
     // the wait move (before the runs: a short run's tap zone reaches the
     // junction, and the head disc sits over it; onHead leaves the runs'
@@ -2377,6 +2460,7 @@ async function main(): Promise<void> {
     // the thread to catch up. The win banner waits for the arrival.
     if (result === "advance" || result === "backtrack" || result === "win") {
       noteMove();
+      if (ruleLoss.afterMove(scene.fabricController!)) pendingLoss = true; // K137
       // K80 turns: the move is the minotaur's turn too; a catch leaves
       // nothing to animate (the player is back at the entrance).
       if (turnAfterMove(eid)) return true;
@@ -2513,8 +2597,11 @@ async function main(): Promise<void> {
       presettleTick,
       warmHoldTick,
       showFabricWin,
-      showFireLoss,
-      keyStep,
+      showFireLoss: showLoss, // K137: a rule loss too.
+      keyStep: () => {
+        keyStep();
+        ruleLoss.step(); // K137: a snap sounds as the dot arrives.
+      },
       autoAudioTick,
       freeze,
       flags,

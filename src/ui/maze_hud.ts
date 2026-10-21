@@ -45,6 +45,11 @@ export interface HudSnapshot {
   // smallest lead at any arrival) once it is over.
   fireLead?: number | null;
   closestCall?: number | null;
+  // K137 (absent elsewhere): the runs broken so far (fragile runs on);
+  // strict par's par and the moves left; the strokes mode's strokes and par.
+  snapped?: number | null;
+  parLeft?: { par: number; left: number } | null;
+  parStrokes?: { par: number; strokes: number } | null;
 }
 
 // Distances read x10 as whole numbers, as the HUD always has.
@@ -57,7 +62,7 @@ type StatFields = Pick<
   HudSnapshot,
   | "timeMs" | "path" | "optimal" | "efficiency" | "backtrack" | "junctions" | "deadEnds"
   | "catches" | "chasedMs" | "fireLead" | "closestCall" | "closeCalls" | "seen"
-  | "restarts"
+  | "restarts" | "snapped" | "parLeft" | "parStrokes"
 >;
 
 // A row (K274): its id names its line in STATS (game/maze_stats.ts), which
@@ -73,12 +78,16 @@ const entry = (id: StatId, value: string): StatEntry => ({ id, label: STATS[id].
 
 // The rows that are part of the game, not stats (K80's catches, K114's
 // fire): the HUD shows them with the stat rows off too.
-type GameFields = Pick<HudSnapshot, "catches" | "fireLead" | "closestCall">;
+type GameFields = Pick<
+  HudSnapshot,
+  "catches" | "fireLead" | "closestCall" | "snapped" | "parLeft" | "parStrokes"
+>;
 export function gameEntries(s: GameFields): StatEntry[] {
   const rows: StatEntry[] = [];
   if (s.catches != null) rows.push(entry("caught", String(s.catches)));
   if (s.fireLead != null) rows.push(entry("fireLead", fmtDist(s.fireLead)));
   if (s.closestCall != null) rows.push(entry("closestCall", fmtDist(s.closestCall)));
+  rows.push(...ruleEntries(s)); // K137
   return rows;
 }
 
@@ -101,6 +110,7 @@ export function statEntries(s: StatFields): StatEntry[] {
   }
   if (s.fireLead != null) rows.push(entry("fireLead", fmtDist(s.fireLead)));
   if (s.closestCall != null) rows.push(entry("closestCall", fmtDist(s.closestCall)));
+  rows.push(...ruleEntries(s)); // K137
   return rows;
 }
 
@@ -144,6 +154,8 @@ export function ensureHudStyles(): void {
     // K114: the Burnt banner (LossBanner).
     ".km-banner.km-burnt{border-color:#e8643c}" +
     ".km-banner.km-burnt .km-head{color:#ffb27a}" +
+    ".km-banner.km-rule{border-color:#d9b44a}" +
+    ".km-banner.km-rule .km-head{color:#f0d488}" +
     `.km-banner .km-sub{font:12px/1.45 ${sans};color:#8ea0c0;margin:0 0 8px}` +
     ".km-banner .km-rows{display:grid;grid-template-columns:1fr auto;" +
     "column-gap:24px;text-align:left}" +
@@ -511,6 +523,49 @@ export function lossEntries(l: LossInfo): StatEntry[] {
   ];
 }
 
+// K137's rule fields (the HUD's, the rule banners' and the share's).
+export type RuleFields = Pick<HudSnapshot, "snapped" | "parLeft" | "parStrokes">;
+
+// A par or a count of moves; an infinite par (no way to the exit) reads as
+// a dash.
+function fmtPar(n: number): string {
+  return Number.isFinite(n) ? String(n) : "\u2014";
+}
+
+// K137's rows: "snapped N" (fragile runs), "par P \u00B7 L left" (strict
+// par), "strokes S / par P" (the strokes mode); each absent while its rule
+// is off.
+export function ruleEntries(s: RuleFields): StatEntry[] {
+  const rows: StatEntry[] = [];
+  if (s.snapped != null) rows.push(entry("snapped", String(s.snapped)));
+  if (s.parLeft) {
+    rows.push(entry("par", `${fmtPar(s.parLeft.par)} \u00B7 ${fmtPar(s.parLeft.left)} left`));
+  }
+  if (s.parStrokes) {
+    rows.push(entry("strokes", `${s.parStrokes.strokes} / par ${fmtPar(s.parStrokes.par)}`));
+  }
+  return rows;
+}
+
+// The Stranded and Out of strokes banners' rows.
+export function ruleLossEntries(l: { timeMs: number; walked: number } & RuleFields): StatEntry[] {
+  return [entry("time", formatDuration(l.timeMs)), entry("walked", fmtDist(l.walked)), ...ruleEntries(l)];
+}
+
+export interface RuleButton {
+  label: string;
+  onClick: () => void;
+}
+
+// K137: a rule loss's banner (LossBanner.showRule).
+export interface RuleBanner {
+  title: string;
+  sub: string;
+  entries: StatEntry[];
+  primary: RuleButton;
+  secondary?: RuleButton;
+}
+
 // The Burnt banner: where the win banner sits, an ember border, one
 // primary button (Try again: main.ts restarts with the fuse relit) and the
 // close button.
@@ -533,6 +588,7 @@ export class LossBanner {
 
   show(l: LossInfo): void {
     const el = this.el;
+    el.className = "km-banner km-burnt"; // K137: showRule may have changed it.
     el.textContent = "";
     const head = document.createElement("div");
     head.className = "km-head";
@@ -565,6 +621,45 @@ export class LossBanner {
     // K274: the info button sits under the sentence, as the stars do on the
     // win banner.
     el.append(head, sub, ...statsInfoWidget(entries), rows, btns, x);
+    el.hidden = false;
+  }
+
+  // K137: a rule loss (Stranded, Out of strokes) in the same place, with a
+  // gold border, its own title and sentence, and an optional second button.
+  showRule(r: RuleBanner): void {
+    const el = this.el;
+    el.className = "km-banner km-rule";
+    el.textContent = "";
+    const head = document.createElement("div");
+    head.className = "km-head";
+    head.textContent = r.title;
+    const sub = document.createElement("div");
+    sub.className = "km-sub";
+    sub.textContent = r.sub;
+    const rows = rowsEl(r.entries);
+    const btns = document.createElement("div");
+    btns.className = "km-btns";
+    const button = (b: RuleButton, primary: boolean): HTMLButtonElement => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = primary ? "km-btn km-primary" : "km-btn";
+      btn.textContent = b.label;
+      btn.addEventListener("click", () => {
+        this.hide();
+        b.onClick();
+      });
+      return btn;
+    };
+    btns.appendChild(button(r.primary, true));
+    if (r.secondary) btns.appendChild(button(r.secondary, false));
+    const x = document.createElement("button");
+    x.type = "button";
+    x.className = "km-x";
+    x.textContent = "\u00D7";
+    x.title = "Close";
+    x.setAttribute("aria-label", "Close");
+    x.addEventListener("click", () => this.hide());
+    el.append(head, sub, ...statsInfoWidget(r.entries), rows, btns, x);
     el.hidden = false;
   }
 

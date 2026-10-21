@@ -53,7 +53,10 @@ export type StatId =
   | "restarts"
   | "fireLead"
   | "closestCall"
-  | "walked";
+  | "walked"
+  | "snapped"
+  | "par"
+  | "strokes";
 
 export const STATS: Record<StatId, { label: string; line: string }> = {
   // TIME above (SolveClock). The Burnt banner shows it too, for a run the
@@ -177,6 +180,34 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
     line:
       "Every run you walked this attempt, forward and back. The fire's " +
       "clock runs on it, not on time.",
+  },
+  // K137: FabricMazeController.brokenRuns() (game/fragile.ts: snap breaks a
+  // run at its first crossing, crack at its second).
+  snapped: {
+    label: "snapped",
+    line:
+      "Runs that broke behind you. Under snap a run breaks the first time " +
+      "you cross it, under crack the second; a broken run is gone for the " +
+      "rest of the attempt.",
+  },
+  // K137: game/par.ts parFor (the fewest runs to the exit plus the slack)
+  // and strokesLeft, under strict par.
+  par: {
+    label: "par",
+    line:
+      "The moves this maze allows (the fewest runs from the entrance to the " +
+      "exit, plus some slack), then how many are left. Every run walked is " +
+      "a move, backing up included; once the exit is more runs away than " +
+      "you have moves left, the attempt is lost.",
+  },
+  // K137: FabricMazeController.strokes against par, in the strokes mode.
+  strokes: {
+    label: "strokes",
+    line:
+      "Your moves so far against par, the moves this maze allows (the " +
+      "fewest runs from the entrance to the exit, plus some slack). Every " +
+      "run walked is a move, backing up included; going over par still " +
+      "finishes, and the share says by how much.",
   },
 };
 
