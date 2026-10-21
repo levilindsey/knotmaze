@@ -40,6 +40,7 @@ import { gridAlignSlider, gridAlignStrength } from "./grid_align_curve";
 import { PAR_SLACK_MAX, PAR_SLACK_MIN } from "../game/par";
 import { SPOOL_SLACK_MAX, SPOOL_SLACK_MIN } from "../game/spool";
 import { HINTS_MAX } from "../game/hints";
+import { ICE_SHARE_MAX, ICE_SHARE_ON } from "../game/ice";
 import { LIVES_MAX, LIVES_RECOMMENDED, livesOf } from "../game/lives";
 import { SWORD_MOVES_MAX, SWORD_MOVES_MIN } from "../game/sword";
 import {
@@ -1671,6 +1672,26 @@ export function buildPanel(
     "A small arrow beside you points along the run that starts the shortest way to the exit (not straight at the exit), updated after every move.",
     D.compass, () => callbacks.onAidsChange()
   );
+  // K138 stage 1 (game/ice.ts, game/color_rule.ts): the movement rules, the
+  // classic game only; off while collapse, fragile runs, the cut, the fire
+  // or the spool is on (FabricMazeController.setRules), their rows kept
+  // visible as K139's are. The share slider takes no step (K130) and an edit
+  // keeps the 0.05 grid. Both restart the solve.
+  const iceRow = row(
+    fGame, p, "ice",
+    { min: 0, max: ICE_SHARE_MAX, pointerScale: 0.01, format: (v: number) => (v === 0 ? "off" : v.toFixed(2)), label: "Ice (share of runs)" },
+    `Some runs are icy (frosted): a move onto ice slides on, run after run, to the next junction where you can stop, and counts as one move. A backtrack undoes the whole slide. The share of runs that are icy; ${ICE_SHARE_ON} is a good start, 0 is off. The fewest moves and par read the slides. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.`,
+    D.ice, () => {
+      params.ice = Math.round(params.ice * 20) / 20;
+      callbacks.onClockChange();
+    }
+  );
+  const colorRuleRow = row(
+    fGame, p, "colorRule",
+    { options: { off: "off", alternate: "alternate", cycle: "cycle" }, label: "Color rule" },
+    "Each run has a color, and a move must follow the rule. alternate: never the same color twice in a row (light, dark, light...). cycle: three colors in a fixed order, then the first again. A run the rule forbids is refused. Backtracking steps the rule back too. The fewest moves and par follow the rule. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
+    D.colorRule, () => callbacks.onClockChange()
+  );
 
   // K80: the real-time chase's tuning (game/minotaur.ts ChaseParams; the
   // defaults were picked by a headless simulation). All live. Since K80
@@ -2884,6 +2905,9 @@ export function buildPanel(
     spoolSlackRow.hidden = !fab || !params.spool;
     hintsRow.hidden = !fab;
     compassRow.hidden = !fab;
+    // K138 stage 1: the classic game only, as the cut's row.
+    iceRow.hidden = !fab || params.gameMode !== "classic";
+    colorRuleRow.hidden = !fab || params.gameMode !== "classic";
     // Under the thread reveal too (K76 stage 2c: the same two settings).
     minoFogRow.hidden = !minoOn || !(fog || threads);
     // K137 stage 3a: lives replace the level row while on (game/lives.ts).
