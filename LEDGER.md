@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K730.
+Next free ID: K734.
 
 ## Waiting on Levi
 
@@ -200,6 +200,13 @@ Next free ID: K730.
   catches; the turn clock bites only at 2) and swordMoves 8 (a turn-clock breather: a seeker touches
   the minotaur in 0.5%, 19.3% at 20; if it should slay, change the flee rule or its pace)
   (docs/design/K708.md)
+- **K730** · K720 call 1: the minotaur sounds (catch notes, growl, heartbeat, footsteps) ignored
+  Muted and none and played under both; they are now silent with sound off like every other sound.
+  Keep that (rec), or give them their own setting? (docs/design/K720.md Handoff)
+- **K731** · K720 call 2: the daily address-bar rewrite drops snd, so a reload of a snd=none daily
+  plays music. Options: keep snd (or every DAILY_EXEMPT_KEYS preference) in the rewritten daily
+  address; save the sound mode per viewer the way Motion is saved; or document it
+  (docs/design/K720.md Handoff)
 
 ## In progress
 
@@ -1326,6 +1333,11 @@ Every other item below waits on the trigger it names.
 - **K729** · K708 sim gaps: lives modelled off (run-outs and restarts unsimulated), the turn clock
   has hunter rows only, and the seeker is a greedy chaser, not a flee-tree predictor
   (docs/design/K708.md, Left over)
+- **K732** · K720 residuals: iOS unverified (a context created outside a tap waits for the next tap;
+  a suspended context keeps the song on the wall clock and skips the 1.2 s lead-in); in manual mode
+  the first snore hover after sound turns on creates the context but plays nothing (decode the snore
+  on an OfflineAudioContext); the snore and fabric mode under snd=none unchecked in a browser
+  (docs/design/K720.md Handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1581,6 +1593,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   (.claude/probes/K114/walker/balance.ts)
 - **K725** · K138 flourishes: a note per color for the color rule (`src/audio/`, after K720),
   glitter on ice runs, turnstiles and tides timed to the beat (`K138_plan.md` Handoff)
+- **K733** · Sound off, further (K720): count volume 0 as sound off (the first input still creates a
+  context today), and suspend the context when sound turns off after one exists (a running context
+  costs battery and audio focus like the original bug) (docs/design/K720.md Handoff)
 
 ## Done
 
