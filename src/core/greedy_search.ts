@@ -98,8 +98,9 @@ function buildMaze(
   return { graph, wg, pos, headings: headingVectors(graph, wg) };
 }
 
-// A run's lattice polyline, va -> vb (as stored on its strand).
-function runPoly(
+// A run's lattice polyline, va -> vb (as stored on its strand). K114's
+// walker (game/walker.ts) reads it for its per-run-end headings.
+export function runPoly(
   graph: TangleGraph,
   e: WalkGraph["edges"][number]
 ): Array<[number, number]> {
