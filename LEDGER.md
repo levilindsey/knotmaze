@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K664.
+Next free ID: K667.
 
 ## Waiting on Levi
 
@@ -143,6 +143,9 @@ Next free ID: K664.
 - **K662** · The phone for one sitting of about 1 h: plugged in, unlocked, on the home screen, left
   alone. It runs K631 part 2 (K244's counts, ~25 min), then K646, K651 and K644 from the same setup
   (a closed tab drops the wake lock).
+- **K664** · K74 s3's trap-zone finish (9ccf360, K637) lengthens greedy games: 3+ catches 23% to
+  33%, solve p90 181 to 310 s, 6% of no-minotaur greedy walks unfinished at 900 s; the dailies ship
+  it. Wanted? Rec: keep (it is the trap).
 
 ## In progress
 
@@ -324,14 +327,6 @@ Next free ID: K664.
   - next: with the phone plugged in, unlocked and on the home screen, `pwsh -File .claude/probes/K631/run_part2.ps1` (a 4-cell smoke, then 12 cells, ~25 min); read `out/phone` with `.claude/probes/K244/summarize.mjs` against `docs/design/K244_cores.md`'s desktop counts
   - brief: `docs/design/K631_phone.md`
   - env: `.claude/probes/K631/run_part2.ps1` (takes the phone lock, serves the builds on port 5631, sets up and tears down the phone)
-- **K637** · The minotaur sim's baseline rose from 1.66 catches a game (K278 (c), 10-14) to 2.50 at
-  bcd907c, cause unknown: bisect with K324's harness (`.claude/probes/K324/rt/`) across 9ccf360 (K74
-  s3) and 35f3ec2 (K534's minoPull); sonnet.
-  - owner: agent `a11c3b4a1d90a3e01` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 18:58, 1 h cap ~19:58)
-  - branch: `worktree-agent-a11c3b4a1d90a3e01`, worktree `.claude/worktrees/agent-a11c3b4a1d90a3e01`; last commit: `62a70c1`
-  - evidence: `.claude/probes/K637/`
-  - next: Protocol diff and harness check, then the endpoints 02194b4 and bcd907c, then 9ccf360 and 35f3ec2 first
-  - brief: `docs/design/K637.md`
 - **K441** · The real-time fire's frame cost (K114 s2 item 6): 0.6-1.2 ms more a frame than turn
   (drawFire's re-declare 0.6, HUD writes 0.1, 0.5 unattributed). Profile, then fix inside drawFire or
   main's fire frame; elsewhere is s2, after K137 s1 and K525. `docs/design/K441_fire_frame.md` (queued).
@@ -1199,8 +1194,8 @@ Every other item below waits on the trigger it names.
 - **K638** · K324 s1: the queued fleer escapes 76-83% of hunts against 75% at baseline, at every
   hunt pace tried up to 1.0 (`docs/design/K324_s1.md`, Handoff).
 - **K639** · The main checkout's `.claude/probes/{K80,K174,K155}/rt/rt_lib.ts` (line 42) read
-  `deadEnds`, removed in 35f3ec2, so re-runs build mazes without dead ends; build through
-  `buildSceneGraph` as K324's copy does.
+  `deadEnds`, removed in 35f3ec2, so re-runs build mazes with no dead ends (K637: 4.16 catches
+  against 2.50). Make them fail loudly, or build through `buildSceneGraph` as K324's copy does.
 - **K640** · K546 s1's travel window: while a runs catch travels, the HUD's mode, the head's glow
   and the close-calls and seen rows already show the after-catch state (only caught waits), and a
   wait queued then lands on the landing frame (`docs/design/K546_s1.md`).
@@ -1222,6 +1217,9 @@ Every other item below waits on the trigger it names.
 - **K663** · K244 leftovers (K631): the unfretted predicate under the thread reveal needs
   `ribbon_renderer.ts` (free once K525 merges); a site tested at schedule time draws up to
   MUSIC_LOOKAHEAD (0.3 s) plus output latency later, unobserved; no headless release test.
+- **K665** · K137's fog check after Undo varies run to run: IoU 0.956-0.981 over 8 runs, lowest on
+  the phone; the rerun used a 0.95 bar. The guessed cause, K100's live-vs-restore noise, is untested
+  (`.claude/probes/K137/rerun/`).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1463,9 +1461,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   `.claude/probes/K578/phone/wait_idle.ps1`. A 31 s gate still lost 6 cells to a touch 3.5 min in
   (K578's phone check).
 - **K661** · A HUD popover for K137's rows (strokes, par, snapped).
+- **K666** · Sim runs report the greedy player's catches per 100 s of play and the fleers' escapes
+  beside raw catches: the trap lengthens greedy games, so raw catches move with game length (K637).
 
 ## Done
 
+- **K637** · The minotaur sim's 1.66 to 2.50 greedy catches is 9ccf360 (K74 s3's trap-zone finish), intended; harness ruled out; 2.50 is the baseline (`.claude/probes/K637/`). Done in 41fa173 (2026-10-20).
 - **K525** · The telegraph lights the route's rims by default (mtl at codec 181; the line stays an option); follow-ups K649-K654. Done in 5e88352 (2026-10-20).
 - **K186** · K140's confetti calls: none under reduced motion, every win banner throws. Done in e7affd6 (2026-10-20).
 - **K336** · Side cannons and streamers (codec 178-180), with K186 (none under reduced motion, every banner throws). Done in e7affd6 (2026-10-20).
