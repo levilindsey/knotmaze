@@ -186,6 +186,16 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   gameplay-links.md's CUT PARAM; the rules: gameplay-mechanisms.md's The
   cut.
 
+- LIVES ROW (K137 stage 3a, 2026-10-20): "Lives" (a 0..5 slider, step 1,
+  0 shown as "off") is a shared chase row (both clocks) just before "Catch
+  restarts level", hidden with the minotaur off. While it is above 0 the
+  Catch restarts level row hides and is ignored, and the rows that hide
+  under minoRestart (minoLair, minoRefog) show again (refreshCond's
+  `restartOn = minoRestart && !livesOn`). The tooltip gives the rule, the
+  recommended 3 and what off means. Applies live (onChaseChange). Param:
+  gameplay-links.md's LIVES PARAM; the rules: gameplay-minotaur.md's
+  LIVES.
+
 - FIRE CLOCK ROW (K114 stage 2, 2026-10-15): "clock" (turn / realtime,
   `fireClock`) in the Burn race folder, hidden while the fire is off; it
   runs onClockChange (a change restarts the solve; undo_stack.ts lists it

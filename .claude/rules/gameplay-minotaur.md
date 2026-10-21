@@ -567,3 +567,43 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   rate the walk since the level last started over, which the popover
   says since stage 3a (K293 (a); gameplay-stars.md). The win banner has
   no move grid.
+
+- LIVES (K137 stage 3a, 4.32, 2026-10-20; brief and handoff
+  `docs/design/K137_s3a.md`). Both clocks, free play. `lives` (`mlv`, 0
+  off, 1..5; game/lives.ts, pure: `catchHeart` returns off | spent |
+  restart). main.ts keeps `heartsLeft` / `heartsOf`: `restartChase`
+  refills them (so the scene build, every level restart and a Reset path
+  do), and `syncHearts` refills them when the setting changes. A catch,
+  where it lands (tickChase's "caught" event; `turnCaught`, at contact),
+  takes one heart and does today's respawn with the toast "Caught! N
+  hearts left."; the catch that takes the last restarts the level
+  (`restartSolve(true)`, the tallies carried as under minoRestart) with
+  every heart back and the toast "Out of hearts! Starting over.". Off,
+  minoRestart decides as before; on, minoRestart is ignored (its row
+  hides). Rows: the HUD and the win banner show "hearts L / N" after
+  "caught" (maze_stats STATS line); the share title adds "❤️ L left"
+  after the minotaur's tag. Hook: `hearts` ({left, of} or null) in
+  `__knotChase()` and `__knotTurnMino()`. Not checked on a page yet (the
+  handoff). Call 2 (Levi's): a catch under lives returns you to the
+  entrance; the alternatives are the last junction or a checkpoint.
+
+- BROKEN RUNS BLOCK IT (K137-b, stage 3a, 2026-10-20; the brief's Design
+  section). With fragile runs or collapse on (`fc.fragileOn`: any run can
+  break), the minotaur treats a broken run as a wall on both clocks. It
+  counts its own crossings from the controller's limits
+  (`setBreakLimits(fc.breakLimits)` in main.ts `restartChase`, null when
+  nothing can break), one per accepted player run: the turn clock
+  in `TurnMinotaur.turn(edge)`, real time at the player's `depart` in
+  `movePlayer`, so `replayChase(..., limits)` rebuilds the blocked set
+  with no controller. Turn clock: `TurnGraph(walk, blocked)` skips blocked
+  runs (`UNREACH` 32767 while anything is blocked), `moves()` skips them,
+  a Spot on one goes only ahead; the turn already committed over the
+  breaking move plays out (call 1: it finishes the run it is on) and the
+  next `commit()` routes around. Real time: `ChaseGraph.block(eid)`
+  (restricted searches skip it, cache cleared); roam, the guard's
+  territory, random, stalker, aimed and plan() choices skip blocked runs;
+  a player on a blocked run is hunted at the vertex it leads to. CONTACT
+  stays the unrestricted thread distance, so a real-time catch "through"
+  a broken run is possible (a residual). Off (nothing breakable), both
+  minotaurs are bit-identical: K80_DIGESTS, MODEL_DIGESTS, TURN_GAMES and
+  LENGTH_GAMES held. Tests: `test/game/k137b_block.test.ts`.

@@ -76,6 +76,12 @@ PAR ROWS, COLLAPSE ROW and CUT ROW. The headers of `fragile.ts`, `par.ts`,
   walk as its fragile-off game, 1150 of 1150); snap strands greedy and
   explorer on 40/50 (dailies 25/30), random on 397/400, careful never. The
   design expected snap near 20 of 30.
+- BROKEN RUNS BLOCK THE CHASES (K137-b, stage 3a, 2026-10-20; brief
+  `docs/design/K137_s3a.md`): a broken run is a wall for the minotaur on
+  both clocks (gameplay-minotaur.md's BROKEN RUNS BLOCK IT) and for the
+  fire (gameplay-fire.md's BROKEN RUNS STOP THE FIRE). Call 1 (Levi's):
+  built, it is blocked; the alternatives are that it crosses, or that its
+  own crossings break runs too.
 
 ## Par
 
