@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K739.
+Next free ID: K742.
 
 ## Waiting on Levi
 
@@ -216,6 +216,9 @@ Next free ID: K739.
   runs plus a 0.3 slack (seed 7: 17 runs); 2 the compass is its own setting (cmp, off), not an
   endless hint; 3 on the phone Hint and Chalk sit bottom left above the cut buttons; 4 the chalk
   tick glyph is a placeholder
+- **K739** · K698 walker glow (K713): the minotaur highlight in the walker cyan under the head, at
+  its hunting size (3.8 radii) and full opacity, since the plain size read as a faint fringe. Right
+  size and opacity? Stills `.claude/probes/K698/shots/` (`docs/design/K698_polish.md` Handoff)
 
 ## In progress
 
@@ -225,10 +228,10 @@ Next free ID: K739.
   1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that
   swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
   K280, residuals K281).
-  - owner: nobody since 2026-10-21 00:20 (merged; agent `a0437651435d16c14` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `c2c67ca`
-  - evidence: `.claude/probes/K114/walker/`
-  - next: launch the beat rider (docs/design/K114_beat.md) when a code slot opens; Levi calls K706 and K707; a phone pass (K717 part 2); then K688 healing cuts
+  - owner: agent `a178a00897a4044dc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus-5-5, started 2026-10-21 03:31, 2 h cap ~05:31)
+  - branch: `worktree-agent-a178a00897a4044dc`, worktree `.claude/worktrees/agent-a178a00897a4044dc`; last commit: `29bc3f7e`
+  - evidence: `.claude/probes/K114/beat/`
+  - next: the beat rider stage (cap ~05:31): the clock option, the beat clock, the rider, notes, pause, the visual beat, enemies per move, HUD, share, panel; then Levi calls K706 and K707, a phone pass, K688 healing cuts
   - brief: `docs/design/K114_beat.md`
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
@@ -1313,9 +1316,6 @@ Every other item below waits on the trigger it names.
 - **K712** · Lives (K137 s3a): hearts are in neither Undo nor saved attempts, and default 3 when
   switched on is tooltip advice only (a toggle or a 0-to-3 snap would make it real; K137_s3a.md
   Residuals g)
-- **K713** · K114 walker: no glow on the walker dot (only the route rims); the move pad shows in
-  walker modes though it refuses moves; an upper-bound par shows as a plain par
-  (docs/design/K114_walker.md Handoff)
 - **K714** · K114 balance probe: its cutter keeps cutting once the walker is inside the fence;
   dailies 1, 12, 23, 28 and 29 have a one-run fence at radius 1, so Keep it in is trivial there
 - **K719** · K580 s5 leftovers: an unidentified gap-mask slot bites the a bowl in ai at xh 2 (0.059
@@ -1343,6 +1343,12 @@ Every other item below waits on the trigger it names.
 - **K738** · HUD rows vs the mode badge at 411x753: the sword row (slain on move NN) clears the Free
   play badge by only 13 css px (K726, `.claude/probes/K726/out/sword/stills/`); the K137 s3c/s3d and
   K138 HUD rows may push it under the badge
+- **K740** · Toast placement gaps (K698 Handoff): a control that appears while a toast shows does
+  not move it; the panel and the phone settings sheet are not avoided; the aids group is found by
+  its class, not the indicators avoid list; the sword toasts were checked shown directly, not after
+  a walked pickup; No hints left is unreachable by tap (Hint disables at 0)
+- **K741** · cutRules() still says the fewest cuts when the Lead par is only an upper bound (par at
+  most P) (`docs/design/K698_polish.md` Handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1607,6 +1613,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K713** · K114 walker leftovers: the walker glow (K739 asks Levi about its size), no move pad in Lead or Delay, par at most P for an upper-bound par; in K698. Done in e558c7ef (2026-10-21).
 - **K698** · Toasts clear the bottom controls (src/ui/toast_place.ts: 10 px above the highest control in their column, re-placed on resize; controls found by class km-control and the known control classes); with K713: the walker glow, no move pad in Lead or Delay, par at most P for an upper-bound Lead par. Done in e558c7ef (2026-10-21).
 - **K726** · Phone sitting 3 (02:16-03:02, tested build 65ee13a6): the K718 glyph pages and sheets, the sword on real touches on both clocks (0 failures), K720 silence verified (0 AudioContexts); sword toasts over the pad went to K698; `.claude/probes/K726/out/`. Done in 65ee13a6 (2026-10-21).
 - **K643** · lintGlyph takes the taper part; bulge and crotch probe flags; both bounds kept (taperBulgeLU 0.01; forkMaxLU 1.2, crotches proven to 0.79 LU). Done in 6278cf8b (2026-10-21).
