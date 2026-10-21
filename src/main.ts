@@ -71,6 +71,7 @@ import { spoolPercentUsed } from "./game/spool";
 import { HINT_SECONDS } from "./game/hints";
 import { catchHeart, heartsToast, livesOf, type HeartLoss } from "./game/lives";
 import { newSword, swordSpot, type SwordAvoid, type SwordPhase } from "./game/sword";
+import { sprintAfterMove, sprintToggle, sprintValue, type SprintState } from "./game/sprint";
 import type { SwordShown } from "./ui/maze_hud";
 import { rateCuts, rateRun, ratingForResult, walkedOf } from "./game/star_rating";
 import { LossBanner, MazeHud, WinBanner } from "./ui/maze_hud";
@@ -118,6 +119,7 @@ import {
 } from "./ui/undo_stack";
 import { UndoButtons } from "./ui/undo_buttons";
 import { CutButtons } from "./ui/cut_buttons";
+import { SprintButton } from "./ui/sprint_button";
 import { WalkerButtons } from "./ui/walker_buttons";
 import { AidButtons, CHALK_KEY, chalkPref, type AidKey } from "./ui/aid_buttons";
 import type { WalkerKey } from "./ui/walker_buttons";
@@ -462,6 +464,16 @@ async function main(): Promise<void> {
     const s = liveMino()?.sword ?? null;
     return s ? { phase: s.phase, left: s.left, slainAt: s.slainAt } : null;
   };
+  // K137 stage 3c, SPRINT (game/sprint.ts): once a game under either clock's
+  // minotaur. restartChase gives it back; a catch spends it (the turn
+  // clock's sprintAfterMove, the chase's respawn); the button and F arm it
+  // (pressSprint). The real-time chase holds its own two departures
+  // (MinotaurChase.sprint); sprintTick follows them.
+  let sprintState: SprintState = "ready";
+  const sprintOn = (): boolean => params.sprint === "on" && liveMino() !== null;
+  // The HUD and the banner's row (null: off, or no minotaur running).
+  const sprintShown = (): string | null =>
+    sprintOn() ? sprintValue(sprintState, scene.chase !== null) : null;
   // K114 CUT: the scissors are armed (the next tap cuts), and a cut tapped
   // while the dot travels, waiting for the move to end (-1: none; the
   // latest wins). The machinery is below, by handleFabricTap.
@@ -916,6 +928,13 @@ async function main(): Promise<void> {
       chalkToggle();
     },
   });
+  // K137 stage 3c SPRINT (ui/sprint_button.ts): the lightning button in the
+  // scissors' spot (sprintTick, every frame, shows it).
+  const sprintButton = new SprintButton({
+    press: () => {
+      pressSprint();
+    },
+  });
   // Armed: the button lit, a crosshair; put down, the cut glow goes too.
   const setCutArmed = (on: boolean): void => {
     if (on === cutArmed) return;
@@ -974,6 +993,7 @@ async function main(): Promise<void> {
       undoButtons.el, // K92 (display none closed).
       cutButtons.el, // K114 (hidden: none).
       walkerButtons.el, // K114 walker (hidden: none).
+      sprintButton.isShown ? sprintButton.el : null, // K137 stage 3c
       // (The panel: env.panel below, K198 stage 2.)
       stamp,
       document.querySelector<HTMLElement>(".km-pad"), // K120 (hidden: none).
@@ -1305,6 +1325,7 @@ async function main(): Promise<void> {
       // K114 walker: Lead's par, Delay's walk and the walk it wanted.
       walker: walkerScoreFn(),
       sword: swordShown(), // K137 stage 3b
+      sprint: sprintShown(), // K137 stage 3c
     };
   };
   // The HUD and the mode badge (it re-fits around the HUD's new size).
@@ -1625,6 +1646,8 @@ async function main(): Promise<void> {
           const t = liveMino()?.sword?.takenAt ?? -1;
           return t > 0 ? t : null;
         })(),
+        // K137 stage 3c: sprint was spent (null: off).
+        sprintUsed: sprintOn() ? sprintState === "first" || sprintState === "used" : null,
         // K137 stage 2: the spool's share used and the hints used.
         spool: c.spoolOn ? { used: c.spoolUsed, cap: c.spoolCap } : null,
         hintsUsed: c.hintsMax > 0 ? c.hintsUsed : null,
@@ -1669,6 +1692,7 @@ async function main(): Promise<void> {
       hearts: heartsShown(), // K137 stage 3a
       walker: walkerScore, // K114 walker
       sword: swordShown(), // K137 stage 3b
+      sprint: sprintShown(), // K137 stage 3c
       // K137 stage 2: the share of the spool paid out, and the hints used.
       spoolUsed: c.spoolOn ? spoolPercentUsed(c.spoolUsed, c.spoolCap) : null,
       hintsUsed: c.hintsMax > 0 ? c.hintsUsed : null,
@@ -1749,6 +1773,7 @@ async function main(): Promise<void> {
   // catch count survives the restart.
   const restartChase = (carry = false): void => {
     refillHearts(); // K137 stage 3a: every heart back.
+    sprintState = "ready"; // K137 stage 3c: sprint back.
     const prevChase = carry ? scene.chase : null;
     const prevTurn = carry ? scene.turnMino : null;
     scene.chase =
@@ -2274,7 +2299,10 @@ async function main(): Promise<void> {
   const turnAfterMove = (eid: number): boolean => {
     if (!scene.turnMino) return false;
     const wasHunting = scene.turnMino.hunting;
-    const r = scene.turnMino.turn(eid);
+    // K137 stage 3c: an armed sprint makes this move its skipped turn.
+    const sa = sprintOn() ? sprintAfterMove(sprintState, true) : null;
+    const r = scene.turnMino.turn(eid, sa?.skip ? { sprint: "skip" } : undefined);
+    if (sa && (r === "moved" || r === "caught" || r === "win")) sprintState = sa.next(r);
     turnWait = 0;
     swordNews(scene.turnMino.lastTouch?.kind ?? null); // K137 stage 3b
     if (r === "reject" && !turnWarned) {
@@ -2390,6 +2418,9 @@ async function main(): Promise<void> {
     const wasHunting = scene.turnMino.hunting;
     const r = scene.turnMino.turn(-1);
     if (r === "reject" || r === "noop") return false;
+    // K137 stage 3c: a wait is never the skipped turn; it ends a sprint
+    // under way (its second move), and an armed one stays armed.
+    if (sprintOn()) sprintState = sprintAfterMove(sprintState, false).next(r);
     swordNews(scene.turnMino.lastTouch?.kind ?? null); // K137 stage 3b
     noteMove();
     if (r === "moved") minoTurnSound(wasHunting);
@@ -2991,8 +3022,42 @@ async function main(): Promise<void> {
       invalidate();
     }
   };
+  // K137 stage 3c: SPRINT (game/sprint.ts). A press arms it (the turn clock:
+  // the next run is the skipped turn; real time: the chase's next two
+  // departures run at twice your pace), a second press before the turn
+  // clock's first sprinted move disarms it. Refused while the maze is
+  // solved, a win waits or the button is hidden.
+  const pressSprint = (): boolean => {
+    if (!sprintOn() || !sprintButton.isShown) return false;
+    const fc = scene.fabricController;
+    if (!fc || fc.solved || pendingWin) return false;
+    const chase = scene.chase;
+    const next = sprintToggle(sprintState, chase !== null);
+    if (next === sprintState) return false;
+    if (chase && next === "armed" && chase.sprint() !== "armed") return false;
+    sprintState = next;
+    sprintTick();
+    updateHud();
+    return true;
+  };
+  // Every frame: real time follows the chase (both sprinted departures
+  // taken: used; one taken: running), then the button's visibility and look.
+  const sprintTick = (): void => {
+    const c = scene.chase;
+    if (c && (sprintState === "armed" || sprintState === "first")) {
+      const was = sprintState;
+      if (!c.sprintActive) sprintState = "used";
+      else if (c.sprintLeft < 2) sprintState = "first";
+      if (sprintState !== was) updateHud();
+    }
+    const r = panel.isOpen() ? camera.panelWrap?.getBoundingClientRect() : null;
+    const on = sprintOn() && keysLive() && !(r && r.width > 0 && sprintButton.covered(r));
+    sprintButton.setShown(on);
+    sprintButton.setLook(sprintState === "used" ? "used" : sprintState === "ready" ? "ready" : "armed");
+  };
   const cutTick = (): void => {
     aidTick();
+    sprintTick();
     const fc = scene.fabricController;
     const walker = fc?.walkerMode ?? null;
     // K114 walker: the walker modes have their own buttons, no scissors.
@@ -3329,6 +3394,7 @@ async function main(): Promise<void> {
       cutKey: (k) => cutKey(k),
       walkerKey: (k) => walkerKey(k),
       aidKey: (k) => aidKey(k),
+      sprintKey: () => pressSprint(), // K137 stage 3c
     },
     scene
   );
@@ -3664,6 +3730,14 @@ async function main(): Promise<void> {
     get hearts() {
       return heartsShown(); // K137 stage 3a
     },
+    // K137 stage 3c: sprint's state, its button and a press.
+    get sprint() {
+      return sprintOn() ? sprintState : null;
+    },
+    get sprintShown() {
+      return sprintButton.isShown;
+    },
+    pressSprint: () => pressSprint(),
     get pendingCut() {
       return pendingCut;
     },
