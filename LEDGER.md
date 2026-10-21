@@ -371,14 +371,6 @@ Next free ID: K734.
   - evidence: `.claude/probes/K137/s2/`
   - next: stage 2, the aids: spool, hints and compass, chalk; then s3c (sprint, the monster list) from the K137_s3b.md Remainder
   - brief: `docs/design/K137_s2.md`
-- **K643** · K580's glyph-lint upkeep: lintGlyph takes the taper part as an argument (it hardcodes
-  TAPER_PART_LU, so tp60 lints only through a probe copy); calibrate taperBulgeLU (0.01) and the
-  crotch bound (1.2 LU) with bulges injected through a probe flag (`docs/design/K580_s2.md` step 5).
-  - owner: agent `aac9189f4fdd58179` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 01:09, 2 h cap ~03:09)
-  - branch: `worktree-agent-aac9189f4fdd58179`, worktree `.claude/worktrees/agent-aac9189f4fdd58179`; last commit: `6c2068d`
-  - evidence: `.claude/probes/K643/`
-  - next: the part argument, injected bulge and crotch cases, calibration sheets, tests
-  - brief: `docs/design/K643.md`
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
@@ -1604,6 +1596,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K643** · lintGlyph takes the taper part; bulge and crotch probe flags; both bounds kept (taperBulgeLU 0.01; forkMaxLU 1.2, crotches proven to 0.79 LU). Done in 6278cf8b (2026-10-21).
 - **K720** · sound off opens no audio: no AudioContext until sound is on and something plays (plucks, song, snore; the minotaur sounds now obey Muted and none too); switching sound on works without a reload; K720.md Handoff. Done in 72270da2 (2026-10-21).
 - **K708** · lives and sword sims: 3 hearts bite only blind real-time play; at swordMoves 8 the sword is a breather (slays in 0.5% even for a seeker); K708.md Handoff. Done in 7d1b41ce (2026-10-21).
 - **K687** · Quiet confetti cell (K717, build ea22989, thermal 0, audiobook paused): 97 of 308 frames over 25 ms (31%, none over 34) vs 23% hot and playing (K662), so neither explains the misses; the cost is K645. Done in cdaaff1 (2026-10-21).
