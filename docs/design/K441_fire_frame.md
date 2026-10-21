@@ -190,7 +190,7 @@ A same-physics-state rerun: the realtime stand AFTER the first sleep (the perf l
 
 ### Verify
 
-No `src/` change (docs only), so nothing moves: no pin, no codec param. `npm run build` not run (nothing to build). `npm test` was NOT run: the perf lock was K580's from 19:55:07 and then K139's from 20:03:00 (a CPU timing run), and a suite run is CPU-heavy. The branch is master 4529246 plus this docs file, so its result is master's; the merge round runs it.
+No `src/` change (docs only), so nothing moves: no pin, no codec param. `npm run build` not run (nothing to build). `npm test` passed on this branch (master 4529246 plus docs): 120 files passed, 1 skipped; 1714 tests passed, 1 skipped; 111 s, 20:04-20:06 under the perf lock (K580 held it from 19:55:07 and K139 from 20:03:00 until just before). `npm run build` not run: no `src/` change.
 
 ### The item's handle
 
