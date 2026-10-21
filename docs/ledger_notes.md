@@ -4474,3 +4474,10 @@ both hosts. Symptom levers (results.md `Levers`) only if this fails. `docs/desig
   starting the kit in the foreground hangs the tool; `cleanup.mjs` timed out (exit 2) after a
   watchdog trip with Chrome in the background; two stale reverse tunnels (5960, 5961) stayed on the
   phone. `.claude/probes/K573/logs/`.
+## K525 (2026-10-20, shortened)
+
+The minotaur's telegraph (Levi 2026-10-20): a treatment dropdown (a param appended to the codec)
+whose new default lights the run's rims the way the hover highlight does, with today's line kept as
+an option; roam must read on the phone at fit zoom (the line: about 0.7 on touch, 0.45 on desktop,
+hunt 0.95); K546's first phone sheet shows roam, a catch and the fog glow together. Today:
+`.claude/probes/K80/stage3b/contact_sheet_real.png` (K524).

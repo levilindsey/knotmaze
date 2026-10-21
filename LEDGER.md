@@ -19,13 +19,19 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K617.
+Next free ID: K623.
 
 ## Waiting on Levi
 
 
 
 
+- **K620** · K580's tapered root paints as its own flat wedge (a hard diagonal edge at R, a seam at
+  J). Paint each side with its stroke's paint, blending into the spur's at J (rec), or draw the
+  strokes over the root? `.claude/probes/K580/sheets/a_join_zoom.png`.
+- **K617** · HIGH_CONTRAST_MARKER_MIN (1.5) now sits under the default markerSize 2 (K225), so High
+  contrast no longer enlarges the markers. Rec: raise it to about 2.75 (the old 1.4x ratio).
+  `src/ui/accessibility.ts`; `docs/design/K194_defaults.md` (Handoff).
 - **K585** · Mark picks in the open-work report (https://claude.ai/artifact/63Q6FoNk7Bux3BhYQBt5g2):
   Sooner marks, answers and notes save to its db (`picks/<id>`, `notes/general`). Read them with
   ArtifactData, then reorder the ledger.
@@ -263,7 +269,7 @@ Next free ID: K617.
   - brief: `docs/design/K578.md`
 - **K580** · The a's J join, Levi's call (2026-10-20): tangent, its shared stretch a TAPERED spur that
   leaves the junction as wide as both merging strokes and narrows to normal where they turn collinear.
-  Open calls: K606. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
+  Open calls: K606, K620. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
   - owner: nobody since 2026-10-20 16:47 (merged; agent `ae18d8a4a4f0949e9` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
   - branch: mainline; last commit: `1ab5e52`
   - evidence: `.claude/probes/K580/`
@@ -473,22 +479,12 @@ Every other item below waits on the trigger it names.
 - **K595** · Police same-chain collision by rest material, not a fixed 2-slot skip
   (`src/physics/forces.ts` ~272): fixes K596. Census the kink loops and eyes first; regression
   `?b&am=instant` + 5 s drag sleeps within +5 s. `docs/ledger_notes.md` (K595), `docs/design/K372.md`.
-- **K225** · Levi 2026-10-20: the markers' default size (`markerSize`) goes 1.08 -> 2 (1.08 is
-  about 5 CSS px on the phone). Rides K194's defaults batch. `.claude/probes/K98/sheet_k98.png`.
-- **K280** · Levi 2026-10-20: the turn clock's burn race cools, `fireSpeed` 0.75 -> 0.6 with
-  `fireDelay` 0 (real time keeps `fsr`/`fdr`). Rides K194's defaults batch. `K114_burn.md`
-  ("R.6.1"); numbers `.claude/probes/K114/burn/results_tuning_rebased.md`.
-- **K421** · Levi 2026-10-20: the stalker's accuracy default (`minoStalkerAccuracy`) goes 0.45 ->
-  0.3 (0.45 caught 27.9% at 80% against a 20% target). Rides K194's defaults batch.
-  `docs/design/K80_turns_stage3.md` (3a handoff).
 - **K244** · Levi 2026-10-20: nothing plucks a junction core. Auto plucks (random, music) choose
   only valid segments up front, and a drag released in a core plucks nothing (K235 silenced core
   taps). After K370 merges (the input path). `render-pluck.md` (K235).
-- **K525** · The minotaur's telegraph (Levi 2026-10-20): a treatment dropdown (a param appended to
-  the codec) whose new default lights the run's rims the way the hover highlight does, with today's
-  line kept as an option; roam must read on the phone at fit zoom (the line: about 0.7 on touch,
-  0.45 on desktop, hunt 0.95); K546's first phone sheet shows roam, a catch and the fog glow
-  together. Today: `.claude/probes/K80/stage3b/contact_sheet_real.png` (K524).
+- **K525** · The minotaur's telegraph (Levi 2026-10-20): a treatment dropdown whose new default
+  lights the run's rims like the hover highlight, today's line kept as an option; roam must read on
+  the phone at fit zoom. Full text: `docs/ledger_notes.md` (K525).
 - **K611** · Main's drag frame is 19-26 ms (a drag runs at 30 fps); `RibbonRenderer.update` is 63%
   (gap slots 28%, splines 22%, tickPaint 17%). K370's 50 ms needs it under 12 ms. Overlaps K5
   R3/R4 and G3-2. `docs/design/K370.md` ("The gap to 50 ms", 2).
@@ -1118,6 +1114,14 @@ Every other item below waits on the trigger it names.
 - **K615** · The in-thread host (the fallback) takes 240-600 ms a drag step: real-time stepping
   spirals to 12 substeps a frame (K279's WAKE COST), and only cheaper substeps help it.
   `docs/design/K370.md`.
+- **K619** · K194 timed music-mode auto plucks with physics off; the live-physics link went untimed.
+  `docs/design/K194_defaults.md` (Handoff).
+- **K621** · K580's taper reaches only the ribbon width, the fans and the end cap; hit tests and
+  plucks, crossing gaps (they quote h), trail paint, RADII, the reveal, fog and physics ignore it
+  (#glyphs2 only). `docs/design/K580.md` (Handoff).
+- **K622** · K580's root takes stroke-order keys just before J's, so a stroke-order reveal would
+  draw the whole root the moment J draws; nothing orders by them yet.
+  `src/core/glyphs/glyph_graph.ts`.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1353,9 +1357,14 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K616** · K370's lever A (`grabExact`, off: the newest snapshot while grabbed) saves about 9 ms
   on the daily but doubles the jitter; revisit only with a jitter fix. `docs/design/K370.md`
   (Verdicts).
+- **K618** · peakEstimateOf: hoist `Math.exp` out of the per-station loop, only if 0.11-0.16 ms a
+  tap ever matters (K194 timings). `src/render/pluck_model.ts`.
 
 ## Done
 
+- **K421** · Levi 2026-10-20: the stalker's accuracy default (`minoStalkerAccuracy`) goes 0.45 -> 0.3 (0.45 caught 27.9% at 80% against a 20% target). Done in ab73daa (2026-10-20).
+- **K280** · Levi 2026-10-20: the turn clock's burn race cools, `fireSpeed` 0.75 -> 0.6 with `fireDelay` 0 (real time keeps `fsr`/`fdr`). Done in ab73daa (2026-10-20).
+- **K225** · Levi 2026-10-20: the markers' default size (`markerSize`) goes 1.08 -> 2 (1.08 is about 5 CSS px on the phone). Done in ab73daa (2026-10-20).
 - **K194** · four defaults (pluck glow fallback, marker size 2, fire speed 0.6, stalker accuracy 0.3) and peakEstimate deduped (0.11-0.16 ms a tap). Done in ab73daa (2026-10-20).
 - **K282** · The HUD's stats have no explanation during play (only the end banners explain them). Dropped: Levi 2026-10-20: leave it; the end banners explain the stats (2026-10-20).
 - **K213** · Before K90's bend bound ships: the min regression (hard clamp worsens 24 of 585 scans, soft 4; `k90_minrows.mjs`), `controlArcLengths`, tests and a CPU mirror, hit tests on moved samples, the phone's rebuild cost (`docs/design/K90.md`, Stage 1b handoff). Dropped: K90 stopped (Levi 2026-10-20), so the bend bound never ships (2026-10-20).
