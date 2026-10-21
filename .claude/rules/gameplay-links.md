@@ -464,3 +464,17 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `?<seed>&am=instant&cl=finish` (or `cl=free`). The rules:
   gameplay-mechanisms.md's COLLAPSE; the row: the Game folder, after
   "Par slack (x fewest)", fabric only, in every game mode.
+
+- CUT PARAM (K114, 2026-10-20; brief `docs/design/K114_cut.md`): `cut`
+  (`ct`: off | on, default off; the option list follows CUT_MODES in
+  game/cut.ts) is APPENDED at 191, after K139's collapse; CODEC_VERSION
+  stays 8. Neither daily-exempt nor a MAZE key: a daily plays with it off,
+  and turning it on leaves the daily. Under onClockChange in
+  undo_stack.ts's LIVE_EFFECTS (a change restarts the solve);
+  `fabricRulesOf` (url_state.ts) passes it for the classic game only, and
+  setRules drops it while fragile, par or collapse is on. Pins that moved:
+  the table pin (`test/ui/param_codec.test.ts`), url_codec.test.ts's
+  defaults table and OVERRIDE_KEYS (`ct`). The golden snapshot, the golden
+  dailies and K87 did not move. Probe links: `?<seed>&am=instant&ct=on`.
+  The rules: gameplay-mechanisms.md's The cut; the row: gameplay-panel.md's
+  CUT ROW.

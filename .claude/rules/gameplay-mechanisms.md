@@ -3,20 +3,24 @@ paths:
   - "src/game/fragile.ts"
   - "src/game/par.ts"
   - "src/game/collapse.ts"
+  - "src/game/cut.ts"
+  - "src/ui/cut_buttons.ts"
   - "src/app/rule_loss.ts"
   - "test/game/fragile.test.ts"
   - "test/game/par.test.ts"
   - "test/game/collapse.test.ts"
+  - "test/game/cut.test.ts"
+  - "test/ui/cut_buttons.test.ts"
 ---
 
-# Gameplay lore: fragile runs, par (K137) and collapse (K139)
+# Gameplay lore: fragile runs, par (K137), collapse (K139) and the cut (K114)
 
 Written by K137 stage 1 (2026-10-20; brief `docs/design/K137_s1.md`,
 design `docs/design/K80_gameplay_additions.md` section 4.3); `gameplay.md`
 lists the area's other files. Params: gameplay-links.md's FRAGILE AND PAR
-PARAMS and COLLAPSE PARAM; rows: gameplay-panel.md's FRAGILE AND PAR ROWS
-and COLLAPSE ROW. The headers of `fragile.ts`, `par.ts`, `collapse.ts` and
-`src/app/rule_loss.ts` are the spec.
+PARAMS, COLLAPSE PARAM and CUT PARAM; rows: gameplay-panel.md's FRAGILE AND
+PAR ROWS, COLLAPSE ROW and CUT ROW. The headers of `fragile.ts`, `par.ts`,
+`collapse.ts`, `cut.ts` and `src/app/rule_loss.ts` are the spec.
 
 ## Fragile runs
 
@@ -182,3 +186,84 @@ line".
   `__knotFabric().collapse` (`{mode, units, total, pct, par: {units,
   total, tripped, steps}}`); the controller is not a window hook, so wrap
   `__knotFabricRenderer().syncBroken` to capture it (`k137_lib.ts`).
+
+## The cut (K114)
+
+Written by K114's cut stage (2026-10-20; brief `docs/design/K114_cut.md`,
+whose Handoff has the calls and their alternatives; design
+`docs/design/K80_gameplay_additions.md` R.4.1). The header of
+`src/game/cut.ts` is the spec.
+
+- THE VERB: the scissors delete a whole run for the rest of the solve
+  (until Undo or a restart). Walk graph and render only: the physics is
+  untouched. CUTTABLE: every maze run but the start tail (`mazeStart ??
+  start`), the exit tail and K115 title runs; a dead-end stub can be cut,
+  which prunes the dead end. REFUSED: a cut that would leave no route over
+  live runs from the head to the exit (`cutStrands`: runsToExit with the
+  cuts blocked), so a game with cuts is never stranded. A refusal or an
+  uncuttable run toasts why ("That cut would leave no way to the exit.",
+  "The title's runs can't be cut.", "The runs at the entrance and the exit
+  can't be cut.") with a dull pluck (REFUSE_OCTAVE 0.5, REFUSE_STRENGTH
+  0.35), and the scissors stay armed.
+- CONTRACTION (`carryChain`): a vertex that had three or more runs and has
+  exactly two live ones now is no decision. A move arriving there carries
+  on along its other live run, through every contracted vertex, until a
+  vertex with three or more live runs, an END, the exit, or a run this move
+  already took. A vertex with two runs to begin with (the K115 title seam,
+  a title waypoint) never contracts; a self-loop counts twice. LAZY:
+  tapEdge applies the move's first run and sets `carry` (the rest of the
+  chain); main.ts `carryStep` (first in keyStep, ahead of K480's route and
+  the keys) walks `carry[0]` on each arrival, one run per moveAlong, so the
+  per-run animation is unchanged and `taps` and the move log list the
+  carried runs too. While a carry is pending any other tapEdge is a
+  reject, and cut() is "invalid".
+- ACTIONS AND UNDO: the controller logs `actions` (`{kind: "move", run}`
+  per player move, its first run; `{kind: "cut", run}`); with the cut off
+  they match `taps` one to one. `replayActions(actions)` resets and replays
+  (each cut through cut(), each move through tapEdge plus its carry; a
+  failure resets and returns false). Undo (the button or U) replays all
+  but the last action, then undoMove's restore sequence: a move comes back
+  with every run it carried on along, a cut comes back whole.
+- DISTANCES: `distToExit` is a controller field, the walk graph's own
+  while nothing is cut, else `distancesToExit(walk, cuts)` (walkDistances
+  with a removed set), recomputed on every cut, Undo and reset;
+  onShortestRoute reads it. Stars keep the uncut `walk.optimalLength`.
+- SCOPE: the classic game only (fabricRulesOf passes `cut` for gameMode
+  classic, so never with a minotaur or the burn race), and setRules drops
+  it while fragile, par or collapse is on. Not daily-exempt, so in practice
+  free play only.
+- THE SCISSORS (`src/ui/cut_buttons.ts`, wired in main.ts): two round
+  buttons bottom left, the scissors and Undo, styled like K120's move pad
+  (bottom right). `cutTick` (every frame) shows them while the cut is on,
+  the keys are live and no open panel covers them (`panelCoversCut`: a
+  phone's settings sheet does; the desktop's side panel, open by default,
+  leaves their corner clear); hidden by visibility so that `covered()` can
+  measure them, and hiding puts the scissors down. The scissors arm the
+  next tap on the maze (lit, aria-pressed, a crosshair; on a mouse the K145
+  glow lights the run a click would cut, `FabricMazeRenderer.cutAt`): a
+  tap on a live run cuts it (`pickRadius(pt, true)`); a tap on empty space
+  or a cut run, a second press or Esc puts them down. Keys by `e.key`
+  (`cutKeyOf`): X arms or disarms, Esc disarms, U undoes; not Z, which is
+  WASD's up (KeyW) on AZERTY. An armed tap while the dot moves or a carry
+  is pending waits as `pendingCut` (one slot, the latest wins) and lands
+  when the move ends (Call 2); a finished solve or the cut turned off drops
+  it. Undo is disabled with no actions.
+- LOOK AND SOUND: a cut run is K137's gone thread (syncBroken draws
+  `cutRuns()` beside the broken runs; shader_warmup puts the explore
+  variants in wave 1 when the cut is on) and plays the snap sound.
+- THE ROWS: the HUD's "cuts N" while the cut is on (zero included;
+  maze_hud's `entry("cuts", ...)`, the STATS line `cuts` in maze_stats.ts)
+  and the win banner's; the share title's ` · ✂️ N` once a run was cut
+  (share_text). Cuts count toward nothing else (Call 3): not the stars,
+  the efficiency or par.
+- PROBES (`.claude/probes/K114/cut/`): `page/cut_page.mjs <desktop|phone>
+  [seed] [extra]` on a private-cache dev server (port 5114,
+  `page/vite.private-cache.config.ts`): real clicks or touch taps through
+  the buttons and (desktop) the keys, an empty-tap disarm, a cut and its
+  Undo, a contracted move in one tap and its Undo, a refused cut at a
+  dead-end stub, a mid-move cut queued, a solve by live distances, the
+  banner row and the share tag. Seed 7 passed desktop 22/22 and phone
+  (411x753) 20/20; stills in `shots/`. Hooks: `__knotFabric().cut`
+  (`{mode, runs, count, armed, pending, shown, actions, carry}`, null with
+  the cut off), `.runPoint(eid, frac)` (a run's screen and world point) and
+  `.toWorld(x, y)`; choices' `cost` reads the live distances.
