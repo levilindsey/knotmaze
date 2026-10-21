@@ -25,6 +25,8 @@ function injectStyle(): void {
     "background:#1b2233b8;box-shadow:0 0 0 1px #3a4254 inset;color:#c9d3e6;" +
     "cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}" +
     ".km-beat-pause.km-on{visibility:visible}" +
+    // Above K137's sprint button, which shares this corner, while it shows.
+    ".km-beat-pause.km-up{bottom:max(84px,calc(env(safe-area-inset-bottom) + 72px))}" +
     ".km-beat-pause svg{width:22px;height:22px}" +
     ".km-beat-pause:hover{background:#2a3247d0;color:#e4ecf8}" +
     ".km-beat-pause:focus-visible{outline:2px solid #8ea0c0;outline-offset:2px}" +
@@ -41,6 +43,8 @@ export interface BeatPause {
   readonly el: HTMLButtonElement;
   readonly isHeld: boolean;
   setShown(on: boolean): void;
+  // Lifts the button above the sprint button (both sit bottom left).
+  setRaised(on: boolean): void;
   setHeld(held: boolean): void;
   covered(rect: DOMRect): boolean;
 }
@@ -87,6 +91,9 @@ export function createBeatPause(onToggle: (held: boolean) => void): BeatPause {
       if (on === shown) return;
       shown = on;
       el.classList.toggle("km-on", on);
+    },
+    setRaised(on: boolean) {
+      el.classList.toggle("km-up", on);
     },
     setHeld,
     covered(r: DOMRect) {

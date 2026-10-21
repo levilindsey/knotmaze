@@ -3122,6 +3122,7 @@ async function main(): Promise<void> {
   // the beat going off lets the pause go.
   const beatPauseTick = (): void => {
     const live = beatOn() && keysLive();
+    beatPause.setRaised(sprintButton.isShown);
     if (!live && beatPause.isHeld) {
       beatPause.setHeld(false);
       beat?.setHeld(false);
