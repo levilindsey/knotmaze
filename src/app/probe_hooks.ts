@@ -42,6 +42,7 @@ import type { OpenPanel, PanBounds } from "../ui/view_clamp";
 import { flagNames, VISUAL, Flag } from "./loop_flags";
 import type { LoopFlags } from "./loop_flags";
 import type { SceneRef } from "./scene_ref";
+import type { ContextLossHandle } from "./context_loss";
 
 // K5 (docs/design/K5_K6_split.md 2.2, M1 step 5): everything the probe
 // hooks reach in main(). The hooks read it at call time, never at install
@@ -158,6 +159,10 @@ export interface ProbeCtx {
   // K6-3: the frame loop's stopped state and its continuous switch.
   readonly loopStopped: boolean;
   setLoopContinuous(on: boolean): void;
+  // K456: the lost-context handling (src/app/context_loss.ts) and whether
+  // the frame loop is suspended for it.
+  contextLoss: ContextLossHandle;
+  readonly loopSuspended: boolean;
   readonly turnWait: number;
   // main()'s `let`s the hooks also write: get/set pairs (written by several
   // regions, so main.ts keeps them until their owners move).
@@ -953,6 +958,12 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       track: tracker ? tracker.report() : lastTrack,
     };
   };
+  // K456: the lost-context state (losses, restores, whether the message
+  // shows, the visible lost time) and whether the frame loop is suspended.
+  (window as unknown as Record<string, unknown>).__knotContext = () => ({
+    ...ctx.contextLoss.report(),
+    suspended: ctx.loopSuspended,
+  });
   (window as unknown as Record<string, unknown>).__knotSetBackground = (
     id: UrlParams["background"],
     intensity?: number,

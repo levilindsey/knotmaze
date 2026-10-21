@@ -325,6 +325,15 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   let emptyStreak = 0;
   let cadenceAccumMs = 0;
   let idleTimer: ReturnType<typeof setInterval> | null = null;
+  // K456 (docs/design/K456.md, Design): a lost WebGL context suspends the
+  // loop. suspend() stops the ticker and keeps it stopped (nothing ticks,
+  // steps or draws into the lost context) until resume(), which the
+  // restored context calls; the first frame after a resume re-renders the
+  // background's texture (a RenderTexture comes back empty from a
+  // restore), runs the restore hooks and draws, whatever the flags say.
+  let suspended = false;
+  let restorePending = false;
+  const restoreHooks: Array<() => void> = [];
   const stopTicker = (): void => {
     if (stopped) return;
     stopped = true;
@@ -345,7 +354,9 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     }
   };
   const ensureRunning = (): void => {
-    if (!stopped) return;
+    // K456: a suspended loop (a lost WebGL context) stays stopped until
+    // resume(); pushes and the idle poll land here and wait.
+    if (!stopped || suspended) return;
     stopped = false;
     emptyStreak = 0;
     cadenceAccumMs = 0;
@@ -361,8 +372,30 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     flags.mode = on ? "continuous" : "ondemand";
     if (on) ensureRunning();
   };
+  const suspend = (): void => {
+    if (suspended) return;
+    suspended = true;
+    if (idleTimer !== null) {
+      clearInterval(idleTimer);
+      idleTimer = null;
+    }
+    if (!stopped) {
+      stopped = true;
+      app.ticker.stop();
+    }
+  };
+  const resume = (): void => {
+    if (!suspended) return;
+    suspended = false;
+    restorePending = true;
+    // The rest/paused pass's forced update, then a push that restarts the
+    // ticker (onPush = ensureRunning).
+    renderDirty = true;
+    flags.push(Flag.GEOM);
+  };
 
   const onTick = (ticker: Ticker): void => {
+    if (suspended) return;
     const c0 = performance.now();
     revealMs = 0;
     // K6-3: the rest cadence. An ambient-only need runs the whole tick at
@@ -370,7 +403,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     // counted), and the tick that runs gets the accumulated dt, so every
     // dt clock (paint, fog, background drift, flow) advances as before.
     let eff = ticker;
-    if (!continuous && ambientOnly(flags.need)) {
+    if (!continuous && !restorePending && ambientOnly(flags.need)) {
       cadenceAccumMs += ticker.deltaMS;
       if (cadenceAccumMs < REST_CADENCE_MS) return;
       eff = { deltaMS: cadenceAccumMs, elapsedMS: cadenceAccumMs } as Ticker;
@@ -395,7 +428,16 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     // K6-3: draw only on a visual need (every frame in continuous mode);
     // the canvas keeps its last frame otherwise. Stop after two workless
     // frames so the last change is drawn before the ticker halts.
-    if (continuous || (closed.need & VISUAL) !== 0) app.render();
+    if (restorePending) {
+      // K456: the restore redraw (K578's still-maze cache would refill in
+      // a restore hook: its RenderTexture comes back empty too).
+      restorePending = false;
+      if (warmup.wave1Done) background.renderTexture();
+      for (const fn of restoreHooks) fn();
+      app.render();
+    } else if (continuous || (closed.need & VISUAL) !== 0) {
+      app.render();
+    }
     if (!continuous) {
       emptyStreak = hasWork(closed.need) || hasWork(closed.polls) ? 0 : emptyStreak + 1;
       if (emptyStreak >= 2) stopTicker();
@@ -857,6 +899,15 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     note,
     start,
     setContinuous,
+    // K456: a lost WebGL context (src/app/context_loss.ts).
+    suspend,
+    resume,
+    onRestore: (fn: () => void): void => {
+      restoreHooks.push(fn);
+    },
+    get suspended() {
+      return suspended;
+    },
     get stopped() {
       return stopped;
     },
