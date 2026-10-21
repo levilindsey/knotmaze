@@ -204,7 +204,10 @@ can play into Levi's audiobook. Every link a probe loads carries
 `&snd=none`, and the kit checks that the page reports soundMode none at
 each load. Never reload a daily: `?daily&snd=none` loads silent but
 rewrites the address bar to the bare URL, so a reload plays music. Load
-the full link again instead. Even under none, the first touch opens an
-AudioContext (K720), so judge silence by the sound mode, not by counting
-contexts after a touch. Read the media session's real state before a
-sitting; a brief's numbers go stale.
+the full link again instead. Before K720 even none opened an
+AudioContext at the first touch; since K720 (2026-10-21) sound off (none,
+or Muted) makes no context through any input until sound is turned on
+and something plays (`gameplay-audio.md`), so on a build with K720 no
+context after a touch also means silent (`window.__knotSynth` stays
+undefined). Still check the sound mode at each load. Read the media
+session's real state before a sitting; a brief's numbers go stale.
