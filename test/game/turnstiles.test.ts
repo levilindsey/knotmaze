@@ -285,4 +285,35 @@ describe("turnstiles: the controller", () => {
     const plain = ruleSearch(c.walk, plainRule(c.walk));
     expect(best.fewest).toBeGreaterThanOrEqual(plain.fewest);
   });
+
+  it("at a turnstile dead end, a hint and the compass point back out", () => {
+    // Seeded walks along fresh runs only, until every fresh arm at the head
+    // is a closed turnstile arm: the kit has no route on (it bars the
+    // arrival run), and the backtrack is the only choice left.
+    let found = 0;
+    for (const seed of SEEDS) {
+      let s = seed;
+      const pick = (n: number): number => {
+        s = (s * 48271) % 2147483647;
+        return s % n;
+      };
+      for (let walkNo = 0; walkNo < 40; walkNo++) {
+        const c = make(seed, { turnstiles: 8 });
+        for (let step = 0; step < 30 && !c.solved; step++) {
+          const back = c.arrivalEdge;
+          const fresh = c.choices().filter((e) => e !== back);
+          if (fresh.length === 0) {
+            if (c.refusedChoices().length > 0 && Number.isFinite(c.runsLeft)) {
+              expect(c.choices()).toEqual([back]);
+              expect(c.goodArm()).toBe(back);
+              found++;
+            }
+            break;
+          }
+          tap(c, fresh[pick(fresh.length)]);
+        }
+      }
+    }
+    expect(found).toBeGreaterThan(0);
+  });
 });

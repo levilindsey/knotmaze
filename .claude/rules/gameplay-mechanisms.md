@@ -547,7 +547,9 @@ gameplay-panel.md's TURNSTILES AND HIDDEN RUNS ROWS. The headers of
   opening a move later; or a tap on a hidden run, a far pluck, a near
   pluck, the walk; then the finish and the share; a CHECK summary).
   GOTCHA: a probe that finishes by the kit's route must backtrack at a
-  dead end (the search has no route there).
+  dead end (the search has no route there). A hint and the compass do:
+  at a turnstile dead end `goodArm()` is the backtrack (ruleGoodArm's
+  undo search; turnstiles.test.ts checks 260 seeded dead ends).
 - RESIDUALS: the third arm of a turnstile is not dimmed; the bands show
   the next phase during a move's animation; a band's contrast depends on
   the section colors; after a backtrack the arrival run is the path's
