@@ -131,9 +131,7 @@ function scene(chains: FireChain[], U: KUniforms, gone: boolean): KData {
       srcCount: 0,
       paintBase: 0,
     });
-    const cal: number[] = [0];
-    for (let i = 1; i < c.n; i++) cal.push(cal[i - 1] + c.steps[i - 1]);
-    const total = c.closed ? cal[c.n - 1] + c.steps[c.n - 1] : cal[c.n - 1];
+    const { cal, total } = arcTable(c);
     writeGeomTable(geom, geomBase[ch], total, 64, c.closed, cal);
   });
   const items: number[] = [];
@@ -176,6 +174,14 @@ function scene(chains: FireChain[], U: KUniforms, gone: boolean): KData {
 
 // ---- The reference: every item, its own arc map, f32 inputs ----
 
+// A chain's control arcs (f64 sums of the steps) and its total.
+function arcTable(fc: FireChain): { cal: number[]; total: number } {
+  const cal: number[] = [0];
+  for (let i = 1; i < fc.n; i++) cal.push(cal[i - 1] + fc.steps[i - 1]);
+  const total = fc.closed ? cal[fc.n - 1] + fc.steps[fc.n - 1] : cal[fc.n - 1];
+  return { cal, total };
+}
+
 const f32 = Math.fround;
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 const ss = (e0: number, e1: number, x: number): number => {
@@ -183,20 +189,22 @@ const ss = (e0: number, e1: number, x: number): number => {
   return u * u * (3 - 2 * u);
 };
 
-// Unwrapped world arc of an unwrapped ctrl, from the f32 control arcs.
+// Unwrapped world arc of an unwrapped ctrl, from the control arcs as the
+// KGEOM table stores them (f64 sums, each rounded to f32 on store).
 function arcOf(fc: FireChain, x: number): number {
-  const cal: number[] = [0];
-  for (let i = 1; i < fc.n; i++) cal.push(f32(cal[i - 1] + fc.steps[i - 1]));
-  const total = f32(fc.closed ? cal[fc.n - 1] + fc.steps[fc.n - 1] : cal[fc.n - 1]);
-  let lap = 0;
-  let y = x;
-  if (fc.closed) {
-    lap = Math.floor(x / fc.n);
-    y = x - lap * fc.n;
+  const t = arcTable(fc);
+  const cal = t.cal.map(f32);
+  const total = f32(t.total);
+  if (!fc.closed) {
+    const i = Math.max(0, Math.min(fc.n - 1, Math.floor(x)));
+    const a1 = i + 1 < fc.n ? cal[i + 1] : total;
+    return Math.min(total, cal[i] + (a1 - cal[i]) * (x - i));
   }
-  const i = Math.max(0, Math.min(fc.n - 1, Math.floor(y)));
+  const fl = Math.floor(x);
+  const lap = Math.floor(fl / fc.n);
+  const i = fl - lap * fc.n;
   const a1 = i + 1 < fc.n ? cal[i + 1] : total;
-  return lap * total + cal[i] + (a1 - cal[i]) * (y - i);
+  return cal[i] + (a1 - cal[i]) * (x - fl) + total * lap;
 }
 
 // The ctrl copy of x nearest c on a ring (x itself on an open chain).
@@ -389,8 +397,11 @@ describe("K409: the fire's widths are world lengths", () => {
     return { band: band * apc, ahead: ahead * apc, behind: behind * apc };
   }
 
-  it("keeps the median look: each width is its stage-3b ctrl value at 0.5486 world per ctrl", () => {
-    expect(EXPLORE_WORLD_PER_CTRL).toBeCloseTo(0.5486, 4);
+  it("keeps the median look: each width is its stage-3b ctrl value at 0.5485 world per ctrl", () => {
+    // Daily #12's 29 fronts at the phone's fit: 4.84 CSS px per ctrl over
+    // 8.8233 CSS px per world unit (K409.md, step 2).
+    expect(EXPLORE_WORLD_PER_CTRL).toBeCloseTo(4.84 / 8.8233, 12);
+    expect(EXPLORE_WORLD_PER_CTRL).toBeCloseTo(0.5485, 4);
     expect(EXPLORE_FRONT_BAND / EXPLORE_WORLD_PER_CTRL).toBeCloseTo(0.7, 2);
     expect(EXPLORE_EMBER_AHEAD / EXPLORE_WORLD_PER_CTRL).toBeCloseTo(0.25, 2);
     expect(EXPLORE_EMBER_BEHIND / EXPLORE_WORLD_PER_CTRL).toBeCloseTo(0.55, 2);
@@ -466,6 +477,8 @@ describe("K409: the fire's widths are world lengths", () => {
           for (let q = 1; q <= 4000; q++) {
             const x = f.c + (sgn * q) / 400;
             if (!fc.closed && (x < 0 || x > fc.n - 1)) break;
+            // A ring's nearest copy of the front flips past half a lap.
+            if (fc.closed && q / 400 >= fc.n / 2) break;
             const v = reference(solo, x, gone);
             if (v.ch > 0 || v.ember > 0) last = x;
           }
