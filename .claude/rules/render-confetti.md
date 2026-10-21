@@ -29,7 +29,7 @@ only with the files it is about; `render.md` lists the area's other files.
   life is the backstop, 6 s before K335). The SPRAY is
   WORLD space: a jittered ring around the exit marker
   (`renderer.markerWorld`), flung out against drag with a slight
-  fountain lift, sinking and fading within 1.4-2.4 s; its container
+  fountain lift, falling (K570 below) and fading within 1.4-2.4 s; its container
   copies the world root's transform, so the burst stays on the finish
   as the camera moves.
 - COUNTS. Amount 1 (`cfa`, 0-3; `cf` turns it off) = 420 rain pieces on
@@ -186,7 +186,8 @@ only with the files it is about; `render.md` lists the area's other files.
   (the top doubled, the spread 9 -> 27 units/s, the floor halved);
   SPRAY_PER_AMOUNT 160 -> 320. Each piece's farthest distance from the
   finish (unit 1, 60 seeds): min 1.73, p10 3.01, median 6.02, p90 9.04,
-  max 11.18 units (before 2.54, 3.16, 4.34, 5.55, 6.94). Lifetimes are
+  max 11.18 units (before 2.54, 3.16, 4.34, 5.55, 6.94; all before K570's
+  gravity, below). Lifetimes are
   unchanged, so the spray still runs out 2.37-2.40 s after a finish.
   REDUCED_SPRAY_SHARE 0.1 -> 0.05 keeps reduced motion at 16 pieces at
   amount 1 (48 at 3), at half pace (1.5-15 units/s).
@@ -203,3 +204,34 @@ only with the files it is about; `render.md` lists the area's other files.
   today's `confettiPlan(amount, reduced, w, h)`; K335's copy calls an older
   signature and fails), master_confetti_model.ts (the model
   before K568). Run with plain `node` (Node 23 strips the types).
+
+## Spray gravity (K570)
+
+- SPRAY GRAVITY (K570, 2026-10-20; model only, no view change). Levi:
+  "let's add some gravity to confetti-from-finish-marker particles".
+  Since K140 each spray piece's TERM (its gravity, units/s²) was
+  unit·3.4·pace: against SPRAY_DRAG 3.4, a terminal sink of 1 unit/s,
+  which did not read as a fall. SPRAY_GRAVITY 17 makes it 5 units/s (80
+  CSS px/s at the 16 px unit floor; the rain falls at 180-286 px/s on the
+  phone), so each path bends over into a fall: a piece launched straight
+  up at 30 units/s rises ~6 units and turns over at ~0.57 s. Reduced
+  motion halves it with the pace (8.5, a 2.5 units/s fall). Lifetimes are
+  unchanged, so the spray still runs out 2.37-2.40 s after a finish, and
+  so is the cost (the same per-piece operations).
+- CENSUS (`.claude/probes/K570/gravity.mjs`, the pure model; unit 1, 60
+  seeds x 320 pieces, TERM rewritten per candidate; g 3.4 -> 17; a drop
+  is a piece's y below its own spawn). Drop at the fade's start, median /
+  p90: 0.28 / 5.26 -> 3.83 / 8.91 units; at death 1.02 / 6.12 -> 7.62 /
+  12.95. Below the finish at the fade's start: 52% -> 79%. Highest rise
+  9.24 -> 7.31. Farthest from the finish, median / max: 6.02 / 11.18 ->
+  9.08 / 19.73. The live cloud's mean y (+ = below the finish) at 0.25,
+  0.5, ... 2.25 s: -0.3 -0.2 -0.1 0.1 0.4 0.6 0.9 1.1 1.2 -> 0.1 0.9 1.9
+  3.1 4.4 5.6 6.9 8.1 9.3. The other candidates, median drop at death /
+  max distance: g 8.5 3.49 / 14.39, 13.6 5.96 / 17.59, 20.4 9.27 / 21.87,
+  27.2 12.60 / 26.15.
+- PROBES (`.claude/probes/K570/`, untracked): gravity.mjs `[g ...]` (the
+  census above), sheet.mjs `<out.png> [g ...]` (headless Chrome draws the
+  pure model's pieceLook on a 2D canvas: a row per gravity, frames at
+  0.15, 0.4, 0.8, 1.2, 1.6 and 2.0 s, 12 px a unit, one seed for every
+  row; candidates.png holds 3.4, 13.6, 17 and 20.4). Run with plain
+  `node`.

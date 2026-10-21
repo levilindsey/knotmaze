@@ -18,11 +18,11 @@
 //           nothing (rainDelay), and the release heights spread, so the
 //           wave's top thins out instead of ending in a straight line.
 //   SPRAY - WORLD space: a burst from a ring around the exit marker, flung
-//           outward against drag, sinking under a light gravity and fading
-//           out within SPRAY_LIFE_MAX s. Its unit is the marker radius with
-//           a CSS px floor (sprayUnit), so a zoomed-out phone still sees
-//           pieces; the view copies the world root's transform, so the
-//           burst stays on the finish as the camera moves.
+//           outward against drag, then falling under gravity (K570) and
+//           fading out within SPRAY_LIFE_MAX s. Its unit is the marker
+//           radius with a CSS px floor (sprayUnit), so a zoomed-out phone
+//           still sees pieces; the view copies the world root's transform,
+//           so the burst stays on the finish as the camera moves.
 // REDUCED MOTION (the Motion setting): no rain - a full-screen fall is the
 // large-area motion WCAG 2.3.3 asks to avoid - and a small, slow spray:
 // REDUCED_SPRAY_SHARE of the pieces at half speed, with no spin or flutter.
@@ -82,14 +82,21 @@ const RAIN_EASE = 2.4;
 const RAIN_TERM_MIN = 0.24;
 const RAIN_TERM_SPAN = 0.14;
 
-// Spray: lifetimes, drag (1/s); speeds, the fountain's lift and gravity in
-// units (sprayUnit) per second; the last SPRAY_FADE share of a life fades
-// out. A piece flies out ~0.9-8.8 units against the drag (~1.8-4.4 before
-// K568), then sinks at a unit per second while it fades.
+// Spray: lifetimes, drag (1/s); speeds and the fountain's lift in units
+// (sprayUnit) per second, gravity in units per second squared; the last
+// SPRAY_FADE share of a life fades out. A piece flies out ~0.9-8.8 units
+// against the drag (~1.8-4.4 before K568), and its path bends over into a
+// fall at SPRAY_GRAVITY / SPRAY_DRAG = 5 units per second. K570 (Levi,
+// 2026-10-20: "let's add some gravity to confetti-from-finish-marker
+// particles") made gravity 5x the 3.4 before it, whose 1 unit/s sink did
+// not read as a fall: the burst's cloud now sinks ~9 units below the
+// finish by its last pieces' deaths (~1 before;
+// `.claude/probes/K570/gravity.mjs`).
 export const SPRAY_LIFE_MIN = 1.4;
 export const SPRAY_LIFE_MAX = 2.4;
 export const SPRAY_LIFT = 2.2;
-const SPRAY_DRAG = 3.4;
+export const SPRAY_DRAG = 3.4;
+export const SPRAY_GRAVITY = 17;
 const SPRAY_FADE = 0.4;
 // The spray's unit never drops below this many CSS px: the phone's default
 // zoom draws the marker radius ~7 px, where unit-sized pieces were specks.
@@ -302,7 +309,7 @@ export function spawnSpray(
     d[o + LIFE] =
       (SPRAY_LIFE_MIN + rand() * (SPRAY_LIFE_MAX - SPRAY_LIFE_MIN)) *
       (slow ? 0.8 : 1);
-    d[o + TERM] = unit * 3.4 * pace;
+    d[o + TERM] = unit * SPRAY_GRAVITY * pace;
     // Drawn either way, so a reduced burst is the same burst, slowed.
     const spin = (rand() - 0.5) * 14;
     const flipRate = 6 + rand() * 8;

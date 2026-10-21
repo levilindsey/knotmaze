@@ -22,11 +22,14 @@ import {
   RAIN_WINDOW,
   SPIN,
   SPRAY_CAP,
+  SPRAY_DRAG,
+  SPRAY_GRAVITY,
   SPRAY_LIFE_MAX,
   SPRAY_LIFE_MIN,
   SPRAY_LIFT,
   SPRAY_MIN_PX,
   SPRAY_PER_AMOUNT,
+  TERM,
   VX,
   VY,
   X,
@@ -348,8 +351,10 @@ describe("the spray (world space)", () => {
     const unit = 3;
     const pool = new ConfettiPool(SPRAY_CAP);
     spawnSpray(pool, SPRAY_PER_AMOUNT, 0, 0, unit, false, seeded(12));
-    // The farthest each piece gets from the center before it dies.
+    // The farthest each piece gets from the center before it dies, and
+    // sideways (gravity pulls only down, so the drag alone bounds that).
     const far = new Float64Array(pool.alive);
+    let side = 0;
     const n = pool.alive;
     const steps = Math.floor(SPRAY_LIFE_MIN / DT) - 1;
     for (let k = 0; k < steps; k++) {
@@ -359,12 +364,37 @@ describe("the spray (world space)", () => {
       for (let i = 0; i < n; i++) {
         const r = Math.hypot(pool.data[i * F + X], pool.data[i * F + Y]);
         far[i] = Math.max(far[i], r);
+        side = Math.max(side, Math.abs(pool.data[i * F + X]));
       }
     }
-    // K568's census, 60 bursts: 1.7-11.2 units (2.5-6.9 before).
     const sorted = Array.from(far).sort((a, b) => a - b);
     expect(sorted[0]).toBeGreaterThan(1.5 * unit);
-    expect(sorted[n - 1]).toBeLessThan(12 * unit);
+    // K568: the ring's 1.2 units plus the top speed's 30 / 3.4 of drag.
+    expect(side).toBeLessThan(10.1 * unit);
+    expect(side).toBeGreaterThan(8 * unit);
+  });
+
+  it("bends over into a fall under gravity (K570)", () => {
+    const unit = 2;
+    const pool = new ConfettiPool(SPRAY_CAP);
+    spawnSpray(pool, SPRAY_PER_AMOUNT, 0, 0, unit, false, seeded(13));
+    const n = pool.alive;
+    for (let k = 0; k < Math.round(1.2 / DT); k++) stepSpray(pool, DT);
+    expect(pool.alive).toBe(n);
+    // By 1.2 s every piece falls, at nearly the terminal speed, and the
+    // cloud has sunk well below the finish (its mean ~4 units down).
+    const fall = (SPRAY_GRAVITY / SPRAY_DRAG) * unit;
+    let vy = 0;
+    let y = 0;
+    for (let i = 0; i < n; i++) {
+      expect(pool.data[i * F + VY]).toBeGreaterThan(0.85 * fall);
+      vy += pool.data[i * F + VY] / n;
+      y += pool.data[i * F + Y] / n;
+    }
+    // The step's explicit gravity settles 3% fast at 60 fps (5.14 units/s).
+    expect(vy).toBeGreaterThan(0.95 * fall);
+    expect(vy).toBeLessThan(1.05 * fall);
+    expect(y).toBeGreaterThan(3 * unit);
   });
 
   it("dies within SPRAY_LIFE_MAX", () => {
@@ -384,6 +414,7 @@ describe("the spray (world space)", () => {
       expect(slow.data[o + VX]).toBeCloseTo(fast.data[o + VX] / 2, 5);
       expect(slow.data[o + VY]).toBeCloseTo(fast.data[o + VY] / 2, 5);
       expect(slow.data[o + LIFE]).toBeCloseTo(fast.data[o + LIFE] * 0.8, 5);
+      expect(slow.data[o + TERM]).toBeCloseTo(fast.data[o + TERM] / 2, 5);
       expect([slow.data[o + SPIN], slow.data[o + FLIP_RATE], slow.data[o + FLIP]]).toEqual([0, 0, 0]);
     }
   });
