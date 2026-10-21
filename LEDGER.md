@@ -269,14 +269,6 @@ Next free ID: K590.
   - evidence: `.claude/probes/K573/`
   - next: Step 1's exact changes (one sampAt per segment, no % in the loop, the early reject), measured on the phone
   - brief: `docs/design/K573.md`
-- **K337** · Confetti shine (Levi 10-14): spin and flip give each piece a 3D normal lit by one
-  upper-left light (diffuse plus a Blinn-Phong flash); reduced motion keeps the diffuse term. With
-  K335, K336 (`docs/design/K335_confetti.md`); deferred with K336 (draft in its patch).
-  - owner: nobody since 2026-10-20 13:11 (agent finished; claude session 91b19e11 merges it once the perf lock frees)
-  - branch: `worktree-agent-a90a739afc9cb7d3b`, worktree `.claude/worktrees/agent-a90a739afc9cb7d3b`; last commit: `5e14657`
-  - evidence: `.claude/probes/K337/`
-  - next: merge with agent_merge (-Probes .claude/probes/K337, npm test + build), then Levi's strength call (K586)
-  - brief: `docs/design/K337.md`
 
 ## Next, in order
 
@@ -1287,6 +1279,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K337** · Confetti shine: one light from the upper left; foil pieces flash, paper ones sheen (`cfh` strength 1, `cff` foil share 0.3); strength call K586. Done in 9538392 (2026-10-20).
 - **K291** · CI's actions moved to their Node 24 releases (checkout v7, setup-node v7, wrangler-action v4); the deploy passed on `ubuntu-latest` with no Node 20 warning, so no runner pin. Done in f2303c0 (2026-10-20).
 - **K320** · Split section-rgb: killed by K550 (revert 08d9db5); Stage 1's slim kept (6c592e6). Done in 08d9db5 (2026-10-20).
 - **K550** · K320's gap split killed: its six code commits reverted, Stage 1 kept (6c592e6); 0 px in 8 A/B cells, 27 of 29 programs byte-identical (two vertex shaders lose a dead vChain). Done in d732a47 (2026-10-20).
