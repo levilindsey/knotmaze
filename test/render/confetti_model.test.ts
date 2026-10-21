@@ -76,7 +76,7 @@ describe("confettiPlan: how many pieces a finish throws", () => {
       spray: SPRAY_PER_AMOUNT,
       slow: false,
     });
-    expect(confettiPlan(0.5, false)).toEqual({ rain: 140, spray: 80, slow: false });
+    expect(confettiPlan(0.5, false)).toEqual({ rain: 210, spray: 160, slow: false });
     expect(confettiPlan(CONFETTI_AMOUNT_MAX, false)).toEqual({
       rain: RAIN_PER_AMOUNT * CONFETTI_AMOUNT_MAX,
       spray: SPRAY_CAP,
@@ -93,7 +93,7 @@ describe("confettiPlan: how many pieces a finish throws", () => {
     expect(rainScreenScale(1400, 900)).toBeCloseTo(2.059, 3);
     expect(rainScreenScale(1920, 1080)).toBeCloseTo(2.537, 3);
     const desk = confettiPlan(1, false, 1400, 900);
-    expect(desk).toEqual({ rain: 576, spray: SPRAY_PER_AMOUNT, slow: false });
+    expect(desk).toEqual({ rain: 865, spray: SPRAY_PER_AMOUNT, slow: false });
     // A huge screen at the top amount fills the pool exactly.
     expect(rainScreenScale(3840, 2160)).toBe(RAIN_SCREEN_MAX);
     expect(confettiPlan(CONFETTI_AMOUNT_MAX, false, 3840, 2160).rain).toBe(RAIN_CAP);
@@ -117,7 +117,7 @@ describe("confettiPlan: how many pieces a finish throws", () => {
     }
   });
 
-  it("drops the rain and keeps a slow 10% spray with reduced motion", () => {
+  it("drops the rain and keeps a slow 5% spray with reduced motion", () => {
     expect(confettiPlan(1, true)).toEqual({ rain: 0, spray: 16, slow: true });
     expect(confettiPlan(CONFETTI_AMOUNT_MAX, true)).toEqual({
       rain: 0,
@@ -179,16 +179,18 @@ describe("the rain (screen space)", () => {
       expect(pool.data[o + Y]).toBeLessThan(0);
       delays.push(-pool.data[o + AGE]);
     }
-    // The sampled delays follow the CDF (2520 draws: a share's sd ~0.01).
-    for (const t of [0.1, 0.3, 0.6, 1, 1.5]) {
+    // The sampled delays follow the CDF (3780 draws: a share's sd ~0.008).
+    for (const t of [0.1, 0.3, 0.6, 1, 1.5, 2.2]) {
       const share = delays.filter((d) => d < t).length / delays.length;
       expect(Math.abs(share - releasedBy(t)), `share by ${t} s`).toBeLessThan(0.04);
     }
-    // The opening keeps K140's density: about a fifth of the pieces leave
-    // in the first 0.1 s (K140's window * r^1.5 released (0.1/1.1)^(2/3),
-    // 20%), half by 0.3 s.
-    expect(releasedBy(0.1)).toBeGreaterThan(0.2);
-    expect(releasedBy(0.3)).toBeGreaterThan(0.5);
+    // The opening keeps K335's density in pieces per second: K568 stretched
+    // the window 1.5x and the count with it, so at amount 1 on the phone
+    // 636 pieces/s leave at first, 60 in the first 0.1 s and 159 by 0.3 s
+    // (K335: 58 and 146 of 280; K140: 28 and 59 of 140).
+    expect(RAIN_PER_AMOUNT * rainReleaseDensity(0)).toBeCloseTo((280 * (RAIN_TAPER + 1)) / 2.2, 3);
+    expect(RAIN_PER_AMOUNT * releasedBy(0.1)).toBeGreaterThan(58);
+    expect(RAIN_PER_AMOUNT * releasedBy(0.3)).toBeGreaterThan(145);
   });
 
   it("tapers the releases to nothing, with no step (K335)", () => {
@@ -201,7 +203,7 @@ describe("the rain (screen space)", () => {
     // The density integrates to 1, falls monotonically from its start to 0
     // at the window's end, and never jumps: no 1 ms step moves it by more
     // than 0.5% of its start (K140's window ended on a drop from 0.6 /s to 0).
-    const n = 2200;
+    const n = Math.round(RAIN_WINDOW * 1000);
     const h = RAIN_WINDOW / n;
     const start = rainReleaseDensity(0);
     expect(start).toBeCloseTo((RAIN_TAPER + 1) / RAIN_WINDOW, 12);
@@ -310,10 +312,11 @@ describe("the rain (screen space)", () => {
       expect([w, h, sim.rain.alive]).toEqual([w, h, 0]);
       // Every piece fell out before the backstop's fade began.
       expect(maxAge + DT).toBeLessThan(RAIN_LIFE_MAX - RAIN_FADE);
-      // A ~3-5 s fall after a release that tapers out by about 1.8 s (the
-      // window's last fifth releases next to nothing).
-      expect(t).toBeGreaterThan(3);
-      expect(t).toBeLessThan(7);
+      // A ~3-5 s fall after a release that tapers out by about 2.7 s (the
+      // window's last fifth releases next to nothing): the last piece goes
+      // 6.2-7.7 s after the finish (K568's census; 5.6-6.8 s before).
+      expect(t).toBeGreaterThan(6);
+      expect(t).toBeLessThan(8);
     }
   });
 });
@@ -358,9 +361,10 @@ describe("the spray (world space)", () => {
         far[i] = Math.max(far[i], r);
       }
     }
+    // K568's census, 60 bursts: 1.7-11.2 units (2.5-6.9 before).
     const sorted = Array.from(far).sort((a, b) => a - b);
-    expect(sorted[0]).toBeGreaterThan(2 * unit);
-    expect(sorted[n - 1]).toBeLessThan(7 * unit);
+    expect(sorted[0]).toBeGreaterThan(1.5 * unit);
+    expect(sorted[n - 1]).toBeLessThan(12 * unit);
   });
 
   it("dies within SPRAY_LIFE_MAX", () => {

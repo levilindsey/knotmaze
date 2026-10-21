@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K568.
+Next free ID: K569.
 
 ## Waiting on Levi
 
@@ -468,6 +468,8 @@ Every other item below waits on the trigger it names.
 
 - **K548** · Overnight runner has no usage gate: the 92% weekly pause (Next binding rule) is checked by hand only; 2026-10-15/16 runs 1-6 launched at 88% (under the line, audit 2026-10-18) but nothing stops a launch over it. Add a /usage check to the runner before each batch, or a ledger-stamped usage line per run close.
 - **K549** · Text scene fit ignores the open panel: a wide word's exit side sits under the panel (stage 2 probe stalled at tn97 by mouse; programmatic walk solved). Fit text scenes against the panel-cleared range like mazes (K198 view clamp), or close the panel for text scenes.
+- **K568** · Confetti retune (Levi, 2026-10-20): the rain from the top lasts a bit longer; the
+  finish spray gets smaller pieces, twice the top speed, a wider speed spread and twice the pieces.
 
 ## Residuals (known, not fixed)
 
