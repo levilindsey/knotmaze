@@ -526,7 +526,7 @@ export const PARAM_RANGES: Readonly<
   // K114 beat rider. 180 at most: the head's ring pulses on every beat, and
   // 3.6 keeps a flash under three a second.
   beatTempo: [40, 180],
-  beatLength: [0.5, 8], // K114 beat rider: world units a beat covers
+  beatLength: [0.5, 8], // K114 beat rider: lattice units of run a beat covers
   beatCap: [1, 8], // K114 beat rider: the most beats a run takes
 });
 
