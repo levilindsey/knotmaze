@@ -33,9 +33,10 @@
 // - WANDER: it picks a destination and walks there by the shortest route
 //   at the leg's pace (wanderPace x (1 +- paceJitter)), pausing at a
 //   junction it passes with chance pauseChance and always at the
-//   destination (pauseMin..pauseMax seconds). With chance deadEndBias the
-//   destination is a dead-end tip (its hunting ground, up to 2 x
-//   roamRange away), otherwise a junction roamRange/4..roamRange away.
+//   destination (pauseMin..pauseMax seconds: the long stop). With chance
+//   deadEndBias the destination is a dead-end tip (its hunting ground, up
+//   to tipReach x roamRange away), otherwise a junction roamNear x
+//   roamRange..roamRange away (K324 made the 2 and the 1/4 params).
 //   ROAM TOWARD THE PLAYER (K174, `roamPull`): with chance roamPull a leg
 //   picks among those candidates only the ones nearer the player than
 //   where it stands (thread distance), so it drifts their way without
@@ -47,23 +48,43 @@
 //   hunting it runs at approachPace along the shortest path to the player's
 //   exact position, re-planned every tick: at a junction it takes the
 //   run that starts the shortest path; mid-run it turns back only when that
-//   is shorter by more than REVERSE_MARGIN (no dithering on near-ties).
+//   is shorter by more than turnBack (no dithering on near-ties).
 //   Losing the player, it walks to where it last saw them, then roams.
+// - JUNCTION STOPS (K324, docs/design/K324_realtime_minotaur.md section
+//   3): it stops at every junction it reaches (never at a dead-end tip),
+//   roaming or hunting, for stopMin..stopMax s while it roams and that
+//   times huntStop while it hunts. A long stop replaces it where one
+//   starts. The stop is a `hold` tick counter: the mode stays wander or
+//   hunt, so detection, the glow and huntTicks go on, and spotting the
+//   player does not cut it short (it still cuts a long stop). The lengths
+//   come from a counter-based stream on the seed and the junction
+//   arrivals (TurnRng), never from the sequential rng, and a stop that
+//   rounds to 0 ticks costs no tick, so stops of 0 are K80's chase
+//   exactly.
+// - THE PLAN (K324 2.2): plan(reach) says, without changing or drawing
+//   anything, which runs it will take next (the telegraph's route); the
+//   chase makes its choices through the same functions.
 // - CATCH: contact within catchDist (thread distance, off the tails)
 //   sends the player back to the entrance and the minotaur back to its
 //   lair, and counts it; the solve continues (main.ts keeps the clock).
 
 import type { WalkGraph } from "../core/walk_graph";
 import { SeededRNG } from "../util/random";
+// The counter-based stream (K324 3.2). The modules import each other, but
+// each uses the other's bindings only inside functions, so either may load
+// first.
+import { TurnRng, type TurnStep } from "./minotaur_turns";
 
 export const CHASE_HZ = 120;
 const DT = 1 / CHASE_HZ;
 // A stalled tab (GC, a background throttle) runs at most this many ticks
 // per advance(): 0.25 s.
 export const MAX_STEPS_PER_ADVANCE = 30;
-// Mid-run, a hunting minotaur turns back only when the way behind is
-// shorter by more than this (lattice units).
-export const REVERSE_MARGIN = 1.5;
+// K324 2.1: in its lair, plan() shows the exit tail's run this long (s)
+// before it leaves.
+export const LAIR_TELL = 0.5;
+// plan()'s longest reach (runs after the lead).
+const PLAN_REACH_MAX = 8;
 
 // The maze clock (the `clock` param): turn = the turn-based maze, realtime =
 // this mode. K114's beat clock would append a third option.
@@ -92,6 +113,32 @@ export interface ChaseParams {
   // K273 (K80 turns stage 2): a catch sends it back to its lair (true), or
   // leaves it where it caught you, pausing `wake` s (false).
   lair: boolean;
+  // K324: a stop at every junction it reaches (never a dead-end tip),
+  // uniform in [stopMin, stopMax] s while it roams and that times huntStop
+  // while it hunts; a long stop replaces it. 0 = none (K80's chase).
+  stopMin: number; // s
+  stopMax: number; // s (kept >= stopMin)
+  huntStop: number; // [0, 1]: a hunting stop as a share of the roaming draw.
+  // K324: mid-run, a hunting minotaur turns back only when the way behind
+  // is shorter by more than this (u; K80's REVERSE_MARGIN).
+  turnBack: number;
+  // K324: the roam window as multiples of roamRange: dead-end tips within
+  // tipReach x roamRange, junctions from roamNear x roamRange (K80's 2 and
+  // 1/4).
+  tipReach: number;
+  roamNear: number;
+}
+
+// K324 2.2: what the minotaur will do next, for the telegraph (plan()).
+export interface ChasePlan {
+  // Its current run from its spot, in the direction it will keep; null =
+  // it stands at a vertex.
+  lead: { edge: number; pos: number; dir: 1 | -1 } | null;
+  // Whole runs after the lead, [edge, nextVertex] (as TurnTelegraph).
+  steps: TurnStep[];
+  // The roaming destination when the route reaches it, else -1.
+  dest: number;
+  hunting: boolean; // The look: bright while it hunts.
 }
 
 // K174: the minotaur's paces as fractions of the player's (Levi: "0.7 of
@@ -128,6 +175,12 @@ export const DEFAULT_CHASE_PARAMS: Readonly<ChaseParams> = Object.freeze({
   wake: 2,
   roamPull: 0.5,
   lair: true,
+  stopMin: 0,
+  stopMax: 0,
+  huntStop: 0.5,
+  turnBack: 1.5,
+  tipReach: 2,
+  roamNear: 0.25,
 });
 
 // Where an entity stands: at a vertex (edge < 0), or on a run `pos` units
@@ -350,18 +403,26 @@ export class MinotaurChase {
   player: Spot;
   mino: Spot;
   mode: MinotaurMode = "lair";
+  // K324: ticks left in a junction stop (0 = none; read-only outside).
+  // The mode stays wander or hunt meanwhile.
+  hold = 0;
+  // K324: junction arrivals since the chase began, the stop stream's
+  // counter (read-only outside).
+  arrivals = 0;
   private queued = -1;
   private timer = 0; // Ticks left in the lair or a pause.
   private dest = -1; // Roam destination (vertex index), -1 = pick one.
   private legPace = 0;
   private acc = 0; // advance()'s wall-time accumulator.
   private rng: SeededRNG;
+  private stopRng: TurnRng;
 
   constructor(walk: WalkGraph, params: ChaseParams, seed: number) {
     this.g = new ChaseGraph(walk);
     this.params = { ...params };
     this.setParams(params);
     this.rng = new SeededRNG(seedMix(seed));
+    this.stopRng = new TurnRng(seedMix(seed));
     this.player = { edge: -1, pos: 0, dir: 1, vertex: this.g.start };
     this.mino = { edge: -1, pos: 0, dir: 1, vertex: this.g.exit };
     this.timer = ticksOf(this.params.wake);
@@ -377,6 +438,9 @@ export class MinotaurChase {
     }
     if (!(this.params.pauseMax >= this.params.pauseMin)) {
       this.params.pauseMax = this.params.pauseMin;
+    }
+    if (!(this.params.stopMax >= this.params.stopMin)) {
+      this.params.stopMax = this.params.stopMin;
     }
   }
 
@@ -497,6 +561,7 @@ export class MinotaurChase {
       if (mode) this.mode = mode;
       this.timer = ticksOf(timer);
       this.dest = -1;
+      this.hold = 0;
     }
   }
 
@@ -520,6 +585,7 @@ export class MinotaurChase {
     }
     this.timer = ticksOf(this.params.wake);
     this.dest = -1;
+    this.hold = 0;
   }
 
   private movePlayer(out: ChaseEvent[]): void {
@@ -578,17 +644,22 @@ export class MinotaurChase {
       this.mode = "wander";
       if (this.dest < 0 || this.dest === m.vertex) this.pickDest();
     }
+    if (this.hold > 0) {
+      this.hold--;
+      return;
+    }
     let rem = (this.mode === "hunt" ? P.approachPace : this.legPace) * DT;
     for (let guard = 0; guard < 64 && rem > 0; guard++) {
       if (m.edge < 0) {
-        const choice = this.mode === "hunt" ? this.huntEdge() : this.roamEdge();
+        const choice =
+          this.mode === "hunt" ? this.huntEdgeFrom(m.vertex) : this.roamEdge();
         if (!choice) return;
         const [eid, dir] = choice;
         m.edge = eid;
         m.dir = dir;
         m.pos = dir > 0 ? 0 : g.len[eid];
-      } else if (this.mode === "hunt") {
-        this.maybeReverse();
+      } else if (this.mode === "hunt" && this.shouldReverse(m)) {
+        m.dir = m.dir > 0 ? -1 : 1;
       }
       const L = g.len[m.edge];
       const toEnd = m.dir > 0 ? L - m.pos : m.pos;
@@ -600,8 +671,26 @@ export class MinotaurChase {
       m.vertex = m.dir > 0 ? g.eb[m.edge] : g.ea[m.edge];
       m.edge = -1;
       m.pos = 0;
+      // K324: every junction arrival draws its stop first, so the stream's
+      // index never depends on what happens next; a long stop replaces it,
+      // and a stop that rounds to 0 ticks keeps the tick's movement.
+      const stop = g.isEnd[m.vertex] ? 0 : this.junctionStop();
       if (this.mode === "wander" && this.roamArrival()) return;
+      if (stop > 0) {
+        this.hold = stop;
+        return;
+      }
     }
+  }
+
+  // K324 3.1-3.2: a junction stop's length in ticks, from the counter
+  // stream (seed, arrival count): roaming uniform in [stopMin, stopMax] s,
+  // hunting that times huntStop.
+  private junctionStop(): number {
+    const P = this.params;
+    const u = this.stopRng.at(this.arrivals++).next();
+    const s = P.stopMin + (P.stopMax - P.stopMin) * u;
+    return ticksOf(this.mode === "hunt" ? s * P.huntStop : s);
   }
 
   // Wandering, arrived at a vertex: pause at the destination (then pick the
@@ -654,8 +743,8 @@ export class MinotaurChase {
       if (!(d[i] < Infinity)) continue;
       any.push(i);
       if (g.isEnd[i]) {
-        if (d[i] <= 2 * P.roamRange) tips.push(i);
-      } else if (d[i] >= P.roamRange / 4 && d[i] <= P.roamRange) {
+        if (d[i] <= P.tipReach * P.roamRange) tips.push(i);
+      } else if (d[i] >= P.roamNear * P.roamRange && d[i] <= P.roamRange) {
         near.push(i);
       }
     }
@@ -699,19 +788,26 @@ export class MinotaurChase {
     return tail === undefined ? v : g.ea[tail] === v ? g.eb[tail] : g.ea[tail];
   }
 
-  // Wandering at a vertex: the first run of the shortest route to the
-  // destination (the exit tail out of its lair). Null = stay.
+  // Wandering at its vertex: picks a destination when it has none or
+  // stands on it (out of its lair), then roamEdgeFrom. Null = stay.
   private roamEdge(): [number, 1 | -1] | null {
-    const g = this.g;
     const v = this.mino.vertex;
+    if (v !== this.g.exit && (this.dest < 0 || this.dest === v)) this.pickDest();
+    return this.roamEdgeFrom(v, this.dest);
+  }
+
+  // Wandering at vertex v toward `dest`: the first run of the shortest
+  // route there (the exit tail out of its lair). Pure (K324 2.2: the chase
+  // and plan() both ask it). Null = stay, or no destination.
+  roamEdgeFrom(v: number, dest = this.dest): [number, 1 | -1] | null {
+    const g = this.g;
     if (v === g.exit) {
       const tail = g.adj[v][0];
       if (tail === undefined) return null;
       return [tail, g.ea[tail] === v ? 1 : -1];
     }
-    if (this.dest < 0 || this.dest === v) this.pickDest();
-    if (this.dest < 0) return null;
-    const toDest = g.from(this.dest, true);
+    if (dest < 0) return null;
+    const toDest = g.from(dest, true);
     let best: [number, 1 | -1] | null = null;
     let bestCost = Infinity;
     for (const eid of g.adj[v]) {
@@ -726,12 +822,11 @@ export class MinotaurChase {
     return best;
   }
 
-  // Hunting at a vertex: the run that starts the shortest path to the
+  // Hunting at vertex v: the run that starts the shortest path to the
   // player's exact position (a self-loop the player is on: the shorter way
-  // round). Null = no way (it loses them next detect()).
-  private huntEdge(): [number, 1 | -1] | null {
+  // round). Pure (K324 2.2). Null = no way (it loses them next detect()).
+  huntEdgeFrom(v: number): [number, 1 | -1] | null {
     const g = this.g;
-    const v = this.mino.vertex;
     const p = this.player;
     let best: [number, 1 | -1] | null = null;
     let bestCost = Infinity;
@@ -760,11 +855,12 @@ export class MinotaurChase {
     return best;
   }
 
-  // Hunting mid-run: turn back when the way behind is clearly shorter.
-  private maybeReverse(): void {
+  // Hunting mid-run at spot m: whether the way behind is clearly shorter
+  // (by more than turnBack), so it turns back. Pure (K324 2.2).
+  shouldReverse(m: Spot = this.mino): boolean {
     const g = this.g;
-    const m = this.mino;
     const p = this.player;
+    if (m.edge < 0) return false;
     const L = g.len[m.edge];
     const toEnd = m.dir > 0 ? L - m.pos : m.pos;
     const ahead = m.dir > 0 ? g.eb[m.edge] : g.ea[m.edge];
@@ -776,7 +872,68 @@ export class MinotaurChase {
       if (delta * m.dir >= 0) fwd = Math.min(fwd, Math.abs(delta));
       else back = Math.min(back, Math.abs(delta));
     }
-    if (back + REVERSE_MARGIN < fwd) m.dir = m.dir > 0 ? -1 : 1;
+    return back + this.params.turnBack < fwd;
+  }
+
+  // K324 2.2: the route it will take next, for the telegraph. Read-only:
+  // it changes nothing and draws nothing, and it asks the choice functions
+  // the chase uses (roamEdgeFrom, huntEdgeFrom, shouldReverse).
+  // - Roaming: its current run (lead), then up to `reach` runs of its
+  //   route to the destination, `dest` set when the route reaches it; at
+  //   a vertex (a junction stop, a rest) the runs from there. No
+  //   destination yet (it picks one when it leaves): nothing after the
+  //   lead.
+  // - Hunting: its current run in the direction it will keep, then up to
+  //   `reach` runs toward the player's spot now (live: it follows them).
+  // - In its lair: nothing, except the exit tail's run during the last
+  //   LAIR_TELL s of its wait.
+  // reach 0 = the lead only.
+  plan(reach: number): ChasePlan {
+    const g = this.g;
+    const m = this.mino;
+    const hunting = this.mode === "hunt";
+    const out: ChasePlan = { lead: null, steps: [], dest: -1, hunting };
+    const n = Math.min(PLAN_REACH_MAX, Math.max(0, Math.floor(reach) || 0));
+    if (this.mode === "lair") {
+      if (m.edge >= 0 || this.timer > ticksOf(LAIR_TELL)) return out;
+      const first = this.roamEdgeFrom(m.vertex, -1);
+      if (first) out.steps.push([first[0], first[1] > 0 ? g.eb[first[0]] : g.ea[first[0]]]);
+      return out;
+    }
+    let v: number;
+    if (m.edge >= 0) {
+      const dir = hunting && this.shouldReverse(m) ? (m.dir > 0 ? -1 : 1) : m.dir;
+      out.lead = { edge: m.edge, pos: m.pos, dir };
+      v = dir > 0 ? g.eb[m.edge] : g.ea[m.edge];
+    } else {
+      v = m.vertex;
+    }
+    const p = this.player;
+    const dest = this.dest;
+    if (!hunting) {
+      if (dest >= 0 && v === dest && out.lead) {
+        out.dest = dest;
+        return out;
+      }
+      if (v !== g.exit && (dest < 0 || dest === v)) return out;
+    } else if (out.lead && (p.edge === out.lead.edge || (p.edge < 0 && p.vertex === v))) {
+      return out; // It meets the player on this run.
+    }
+    for (let i = 0; i < n; i++) {
+      const choice = hunting ? this.huntEdgeFrom(v) : this.roamEdgeFrom(v, dest);
+      if (!choice) break;
+      const [eid, dir] = choice;
+      const far = dir > 0 ? g.eb[eid] : g.ea[eid];
+      out.steps.push([eid, far]);
+      v = far;
+      if (hunting) {
+        if (p.edge === eid || (p.edge < 0 && p.vertex === far)) break;
+      } else if (far === dest) {
+        out.dest = dest;
+        break;
+      }
+    }
+    return out;
   }
 
   private detect(out: ChaseEvent[]): void {

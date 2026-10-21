@@ -211,6 +211,13 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["dailyTitleThread", "boolean"], // K552
   ["confettiShine", "number"], // K337
   ["foilShare", "number"], // K337
+  ["minoStopMin", "number"], // K324
+  ["minoStopMax", "number"],
+  ["minoHuntStop", "number"],
+  ["minoTurnBack", "number"],
+  ["minoTipReach", "number"],
+  ["minoRoamNear", "number"],
+  ["minoTelegraphRuns", "number"],
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

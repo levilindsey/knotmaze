@@ -533,6 +533,17 @@ export interface UrlParams {
   // chase's roamPull; 0.5 = the old minoToward on).
   minoPull: number;
   minoRefog: boolean;
+  // K324 (design 4.2): the real-time minotaur's junction stops (seconds,
+  // and the hunting multiple), its turn-back margin (u), the roam window's
+  // two ends (multiples of minoRoam) and the telegraph's reach (runs; read
+  // by ChaseClock.plan's caller, drawn in K324 stage 2).
+  minoStopMin: number;
+  minoStopMax: number;
+  minoHuntStop: number;
+  minoTurnBack: number;
+  minoTipReach: number;
+  minoRoamNear: number;
+  minoTelegraphRuns: number;
   // K140's finish confetti amount in [0, CONFETTI_AMOUNT_MAX] (1 = the
   // designed burst; 0 = none since K323 merged the on/off switch in).
   // A viewer preference.
@@ -846,6 +857,13 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minoFog: "always",
   minoPull: 0.5,
   minoRefog: true,
+  minoStopMin: DEFAULT_CHASE_PARAMS.stopMin, // K324
+  minoStopMax: DEFAULT_CHASE_PARAMS.stopMax,
+  minoHuntStop: DEFAULT_CHASE_PARAMS.huntStop,
+  minoTurnBack: DEFAULT_CHASE_PARAMS.turnBack,
+  minoTipReach: DEFAULT_CHASE_PARAMS.tipReach,
+  minoRoamNear: DEFAULT_CHASE_PARAMS.roamNear,
+  minoTelegraphRuns: 1,
   confettiAmount: 1,
   confettiShine: 1, // K337
   foilShare: 0.3, // K337
@@ -1030,8 +1048,9 @@ export function turnMinoParamsOf(p: Omit<UrlParams, "seed">): TurnMinoParams {
 
 // The real-time chase's tuning from a design's params (K80). Negative or
 // non-finite values read as 0; the chase keeps detectEnd >= detectStart
-// and pauseMax >= pauseMin itself. The minotaur's paces are fractions of
-// the player's (K174), taken here, so the chase stays in u/s.
+// and pauseMax >= pauseMin itself, and the junction stop's max is held at
+// least its min here (K324) and there. The minotaur's paces are fractions
+// of the player's (K174), taken here, so the chase stays in u/s.
 export function chaseParamsOf(
   p: Omit<UrlParams, "seed">
 ): ChaseParams {
@@ -1052,6 +1071,12 @@ export function chaseParamsOf(
     wake: pos(p.minoWake),
     roamPull: clamp01(Number.isFinite(p.minoPull) ? p.minoPull : 0),
     lair: p.minoLair,
+    stopMin: pos(p.minoStopMin),
+    stopMax: Math.max(pos(p.minoStopMin), pos(p.minoStopMax)),
+    huntStop: clamp01(pos(p.minoHuntStop)),
+    turnBack: pos(p.minoTurnBack),
+    tipReach: pos(p.minoTipReach),
+    roamNear: clamp01(pos(p.minoRoamNear)),
   };
 }
 
@@ -1488,6 +1513,15 @@ function readLegacy(
     // K323 (`&mpl=0.25&mrf=0`); the old `&mtw=` flag is ignored.
     minoPull: Math.min(1, Math.max(0, readNumber(query, "mpl", D.minoPull))),
     minoRefog: readBool(query, "mrf", D.minoRefog),
+    // K324 (`&mhn=0.1&mhx=0.4&mhh=0.5&mrv=2&mdr=2&mnr=0.25&mtn=2`); the
+    // ranges clamp them (PARAM_RANGES), the stop pair in chaseParamsOf.
+    minoStopMin: readNumber(query, "mhn", D.minoStopMin),
+    minoStopMax: readNumber(query, "mhx", D.minoStopMax),
+    minoHuntStop: readNumber(query, "mhh", D.minoHuntStop),
+    minoTurnBack: readNumber(query, "mrv", D.minoTurnBack),
+    minoTipReach: readNumber(query, "mdr", D.minoTipReach),
+    minoRoamNear: readNumber(query, "mnr", D.minoRoamNear),
+    minoTelegraphRuns: readNumber(query, "mtn", D.minoTelegraphRuns),
     // K140's finish confetti amount (`&cfa=2`; `&cf=` is ignored since
     // K323 merged the switch into the amount).
     confettiAmount: clampTo(
