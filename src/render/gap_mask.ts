@@ -387,7 +387,10 @@ vec2 gapOverPt(vec4 t4, vec4 t9, int j) {
 
 // Nearest point of the sampled range within sqrt(best) (best is the
 // squared reach on entry); the nearest segment (-1: none within reach)
-// comes back through bk. Fast form: no exclusions.
+// comes back through bk. Fast form: no exclusions. K573: each segment
+// carries the previous one's end point, so a chunk reads its points once
+// (its first point, then one sampAt per segment). A processed chunk never
+// starts past the last segment (nCh), so no fetch is wasted.
 void gapNearestFast(int row, int nCh, highp vec2 p,
     highp float sure2, highp vec4 t4, highp vec4 t9, int nPts,
     inout highp float best, inout int bk) {
@@ -402,10 +405,13 @@ void gapNearestFast(int row, int nCh, highp vec2 p,
       highp float lb = length(p - cc.xy) - cc.z;
       if (lb > 0.0 && lb * lb >= best) continue;
     }
+    highp vec2 a = gapOverPt(t4, t9, k0);
     for (int j = 0; j < ${GAP_CHUNK}; j++) {
       int k = k0 + j;
       if (k >= nSeg) break;
-      gapSeg(p, gapOverPt(t4, t9, k), gapOverPt(t4, t9, k + 1), k, best, bk);
+      highp vec2 b = gapOverPt(t4, t9, k + 1);
+      gapSeg(p, a, b, k, best, bk);
+      a = b;
     }
   }
 }
@@ -430,11 +436,15 @@ void gapNearestFull(int row, int nCh, highp vec2 p,
       highp float lb = length(p - cc.xy) - cc.z;
       if (lb > 0.0 && lb * lb >= best) continue;
     }
+    // The carried point (gapNearestFast): a skipped segment still reads
+    // its end point, the next segment's start.
+    highp vec2 a = gapOverPt(t4, t9, k0);
     for (int j = 0; j < ${GAP_CHUNK}; j++) {
       int k = k0 + j;
       if (k >= nSeg) break;
-      gapSegFull(p, gapOverPt(t4, t9, k), gapOverPt(t4, t9, k + 1), k,
-        ex, fa, s0, st, per, skipLo, skipHi, best, bk);
+      highp vec2 b = gapOverPt(t4, t9, k + 1);
+      gapSegFull(p, a, b, k, ex, fa, s0, st, per, skipLo, skipHi, best, bk);
+      a = b;
     }
   }
 }
@@ -486,13 +496,13 @@ highp float gapProtCover(int row, int base, highp vec2 p,
   int pcount = max(int(abs(bc.w) + 0.5), 1);
   bool pclosed = bc.w < -0.5;
   highp float best = reach * reach;
+  // K573: the previous segment's end point is carried (one sampAt each).
+  int ia = pclosed ? ((k0 % pcount) + pcount) % pcount : clamp(k0, 0, pcount - 1);
+  highp vec2 a = sampAt(pbase + ia);
   for (int j = 0; j < 64; j++) {
     if (j >= n - 1) break;
-    int ra = k0 + j * stride;
-    int rb = ra + stride;
-    int ia = pclosed ? ((ra % pcount) + pcount) % pcount : clamp(ra, 0, pcount - 1);
+    int rb = k0 + j * stride + stride;
     int ib = pclosed ? ((rb % pcount) + pcount) % pcount : clamp(rb, 0, pcount - 1);
-    highp vec2 a = sampAt(pbase + ia);
     highp vec2 b = sampAt(pbase + ib);
     highp vec2 ab = b - a;
     highp vec2 pa = p - a;
