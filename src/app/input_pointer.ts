@@ -78,6 +78,10 @@ export interface PointerInputDeps {
   // cuts, or disarms on empty space), and the hover glows the run a click
   // would cut (FabricMazeRenderer.cutAt) under a crosshair.
   cutArmed?: () => boolean;
+  // K114 WALKER: a tap on any live run cuts (no scissors to arm). A touch
+  // press on one is a pending tap, as a choice's is, and the hover glows
+  // the run a click would cut under a crosshair; elsewhere a press pans.
+  cutPick?: () => boolean;
 }
 
 export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
@@ -541,6 +545,8 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
           scene.fabric &&
           scene.fabricController &&
           ((deps.cutArmed?.() ?? false) ||
+            ((deps.cutPick?.() ?? false) &&
+              scene.fabric.cutAt(x, y, scene.fabricController, pickRadius("touch", true)) >= 0) ||
             scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius("touch", true)) >= 0 ||
             scene.fabric.targetAt(x, y, scene.fabricController, pickRadius("touch", true), tapReach()) !== null ||
             inWaitZone(x, y)) // K80 turns 3a: a tap on the head waits.
@@ -708,15 +714,16 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
       params.mazeFabric &&
       scene.fabric &&
       scene.fabricController &&
-      (deps.cutArmed?.() ?? false)
+      ((deps.cutArmed?.() ?? false) || (deps.cutPick?.() ?? false))
     ) {
       // K114: armed scissors light the run a click would cut (the K145
       // glow, centered under the pointer), no choice, under a crosshair.
+      // The walker's modes the same, the crosshair only over a run.
       const cut = scene.fabric.cutAt(x, y, scene.fabricController, pickRadius(e.pointerType, true));
       const glow = cut >= 0 ? scene.fabric.setGlowRun(cut, x, y) : scene.fabric.setGlow(-1, 0);
       const routeChanged = scene.fabric.setHoverRoute(null);
       if (scene.fabric.setHover(-1) || glow || routeChanged) scene.fabric.update(scene.fabricController);
-      app.canvas.style.cursor = "crosshair";
+      app.canvas.style.cursor = (deps.cutArmed?.() ?? false) || cut >= 0 ? "crosshair" : "default";
     } else if (params.mazeFabric && scene.fabric && scene.fabricController) {
       // Hover: light the choosable run under the pointer (the paint pass
       // animates it even while the physics sleeps - no wake needed), or

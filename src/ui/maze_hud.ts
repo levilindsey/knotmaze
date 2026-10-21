@@ -18,6 +18,7 @@ import { efficiencyPercent, explainedStats, formatDuration, STATS } from "../gam
 import type { StatId } from "../game/maze_stats";
 import { starExplanation, starLabel } from "../game/star_rating";
 import type { StarRating } from "../game/star_rating";
+import type { WalkerScore } from "../game/walker";
 
 export interface HudSnapshot {
   // The stats rows (the showMazeStats setting).
@@ -58,6 +59,9 @@ export interface HudSnapshot {
   // K137 stage 3a (absent elsewhere): the hearts left of the lives setting,
   // while lives are on under a minotaur.
   hearts?: { left: number; of: number } | null;
+  // K114 walker (absent elsewhere): Lead's par, Delay's walk and the walk
+  // it wanted.
+  walker?: WalkerScore | null;
 }
 
 // Distances read x10 as whole numbers, as the HUD always has.
@@ -71,7 +75,7 @@ type StatFields = Pick<
   | "timeMs" | "path" | "optimal" | "efficiency" | "backtrack" | "junctions" | "deadEnds"
   | "catches" | "chasedMs" | "fireLead" | "closestCall" | "closeCalls" | "seen"
   | "restarts" | "snapped" | "parLeft" | "parStrokes" | "collapse" | "cuts"
-  | "hearts"
+  | "hearts" | "walker"
 >;
 
 // A row (K274): its id names its line in STATS (game/maze_stats.ts), which
@@ -90,7 +94,7 @@ const entry = (id: StatId, value: string): StatEntry => ({ id, label: STATS[id].
 type GameFields = Pick<
   HudSnapshot,
   | "catches" | "fireLead" | "closestCall" | "snapped" | "parLeft" | "parStrokes" | "collapse"
-  | "cuts" | "hearts"
+  | "cuts" | "hearts" | "walker"
 >;
 // K137 stage 3a: "hearts 2 / 3" while lives are on.
 const heartsValue = (h: { left: number; of: number }): string => `${h.left} / ${h.of}`;
@@ -446,6 +450,8 @@ export interface WinInfo {
   cuts?: number | null;
   // K137 stage 3a: the hearts left (absent or null: lives off).
   hearts?: { left: number; of: number } | null;
+  // K114 walker: the walker's score (absent or null: no walker).
+  walker?: WalkerScore | null;
   // Show the daily stats button.
   stats: boolean;
 }
@@ -545,10 +551,10 @@ export function lossEntries(l: LossInfo): StatEntry[] {
 
 // K137's rule fields (the HUD's, the rule banners' and the share's), and
 // K139's collapse.
-// K114's cuts.
+// K114's cuts and walker.
 export type RuleFields = Pick<
   HudSnapshot,
-  "snapped" | "parLeft" | "parStrokes" | "collapse" | "cuts"
+  "snapped" | "parLeft" | "parStrokes" | "collapse" | "cuts" | "walker"
 >;
 
 // A par or a count of moves; an infinite par (no way to the exit) reads as
@@ -571,8 +577,17 @@ export function ruleEntries(s: RuleFields): StatEntry[] {
   }
   // K139: "collapsed N% · par M%" (par "≥M%" once its search gave up).
   if (s.collapse) rows.push(entry("collapsed", `${s.collapse.pct}% · par ${s.collapse.par}`));
-  // K114: "cuts N" while the cut is on (zero included).
-  if (s.cuts != null) rows.push(entry("cuts", String(s.cuts)));
+  // K114: "cuts N" while the cut is on (zero included); Lead's walker adds
+  // its par, "cuts N · par P" (a dash while there is none). Delay's walker:
+  // "walker W · shortest S", the runs it has walked and its uncut route.
+  if (s.cuts != null) {
+    const w = s.walker;
+    const par = w && w.mode === "lead" ? ` · par ${fmtPar(w.par ?? Infinity)}` : "";
+    rows.push(entry("cuts", `${s.cuts}${par}`));
+  }
+  if (s.walker && s.walker.mode === "delay") {
+    rows.push(entry("walker", `${s.walker.walk} · shortest ${s.walker.shortest}`));
+  }
   return rows;
 }
 

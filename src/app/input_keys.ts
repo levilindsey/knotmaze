@@ -29,6 +29,8 @@ import type {
 } from "../ui/key_moves";
 import { cutKeyOf } from "../ui/cut_buttons";
 import type { CutKey } from "../ui/cut_buttons";
+import { walkerKeyOf } from "../ui/walker_buttons";
+import type { WalkerKey } from "../ui/walker_buttons";
 import { MovePad } from "../ui/move_pad";
 import type { UrlParams } from "../ui/url_state";
 import type { SceneRef } from "./scene_ref";
@@ -72,6 +74,9 @@ export interface KeyInputDeps {
   // keys (cutKeyOf; true when the key acted).
   carryStep?: () => boolean;
   cutKey?: (k: CutKey) => boolean;
+  // K114 WALKER (main.ts): G sends the walker off (Lead) or lets it take a
+  // run (Delay); U comes through cutKey. True when the key acted.
+  walkerKey?: (k: WalkerKey) => boolean;
 }
 
 export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
@@ -487,6 +492,12 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
       if (ck !== null && deps.cutKey) {
         if (e.repeat || keyBelongsElsewhere(e) || !keysLive()) return;
         if (deps.cutKey(ck)) e.preventDefault();
+        return;
+      }
+      // K114 walker: G (Go / Let it walk), while the walker's buttons show.
+      if (walkerKeyOf(e) === "go" && deps.walkerKey) {
+        if (e.repeat || keyBelongsElsewhere(e) || !keysLive()) return;
+        if (deps.walkerKey("go")) e.preventDefault();
         return;
       }
       // K80 turns 3a: the WAIT key (`.`, or Space off a button or link),
