@@ -2,18 +2,21 @@
 paths:
   - "src/game/fragile.ts"
   - "src/game/par.ts"
+  - "src/game/collapse.ts"
   - "src/app/rule_loss.ts"
   - "test/game/fragile.test.ts"
   - "test/game/par.test.ts"
+  - "test/game/collapse.test.ts"
 ---
 
-# Gameplay lore: fragile runs and par (K137)
+# Gameplay lore: fragile runs, par (K137) and collapse (K139)
 
 Written by K137 stage 1 (2026-10-20; brief `docs/design/K137_s1.md`,
 design `docs/design/K80_gameplay_additions.md` section 4.3); `gameplay.md`
 lists the area's other files. Params: gameplay-links.md's FRAGILE AND PAR
-PARAMS; rows: gameplay-panel.md's FRAGILE AND PAR ROWS. The headers of
-`fragile.ts`, `par.ts` and `src/app/rule_loss.ts` are the spec.
+PARAMS and COLLAPSE PARAM; rows: gameplay-panel.md's FRAGILE AND PAR ROWS
+and COLLAPSE ROW. The headers of `fragile.ts`, `par.ts`, `collapse.ts` and
+`src/app/rule_loss.ts` are the spec.
 
 ## Fragile runs
 
@@ -21,8 +24,9 @@ PARAMS; rows: gameplay-panel.md's FRAGILE AND PAR ROWS. The headers of
   it takes before it breaks (Infinity: never). A crossing is one
   completed move along the run, advance or backtrack alike. snap = 1 (it
   breaks after its first crossing), crack = 2 (it cracks after the first
-  and breaks after the second). K139's collapse is meant to ride the same
-  machinery (`breakLimits(walk, 1)`, or a table of its own).
+  and breaks after the second). K139's collapse rides the same machinery
+  with a table of its own (`collapseLimits`, END runs included; Collapse,
+  below).
 - EXEMPT RUNS (limit Infinity): a run with an END vertex at either end
   (the start's and the exit's tails and every dead-end stub's: such a run
   is walked only in and back out, so breaking it would strand the player
@@ -104,4 +108,77 @@ PARAMS; rows: gameplay-panel.md's FRAGILE AND PAR ROWS. The headers of
   strokes); a non-finite value shows "—". rule_loss `ruleFields(fc)`
   builds all three (null: that rule is off) for the HUD, the banners and
   the share. `maze_stats.ts` carries their help lines. The win banner
-  does not show them yet: showFabricWin belongs to the confetti lane.
+  shows only K139's collapse row (`WinInfo.collapse`); K137's three rows
+  are not passed to it yet.
+
+## Collapse (K139)
+
+Brief `docs/design/K139.md` (its Handoff lists Levi's six calls and their
+alternatives). Levi, 2026-10-13: "You cannot backtrack, segments collapse
+behind you; try to collapse as much of the level as possible while still
+reaching the finish line. Or, alternatively, without reaching the finish
+line".
+
+- THE RULE (`collapse.ts` `collapseLimits`): every MAZE run gets limit 1,
+  so a walk is a trail. END runs collapse too: the start tail on the first
+  move, a stub when you enter it (stranding you at its tip), the exit tail
+  on the finish. K115 title runs never collapse and score nothing. While
+  collapse is on, setRules turns `fragile` and `parMode` off (their rows
+  stay visible; parSlack is kept, unused).
+- THE MODES: finish: reaching the exit wins; no unbroken route to it is
+  K137's strand. free: tapEdge treats the exit as a dead end, and judge()
+  sets `solved` once `freeStranded` holds (no unbroken maze run reachable
+  from the head), after every move and every respawn; that move returns
+  "win" and the game is never `stranded`. A free end is a FINISH (banner
+  "N% collapsed", Share, confetti). To stop early, walk into a stub or the
+  exit tail.
+- THE SCORE: the share of the maze's thread LENGTH collapsed. Units are
+  `round(length x 1000)` (exact integer sums on every engine, K108);
+  cross() adds a run's units when it breaks (`collapsedUnits`), and
+  `sharePercent` floors to a whole percent.
+- PAR (`collapsePar`): the longest trail from `mazeStart ?? start`, to the
+  exit (finish) or ending anywhere (free). A DFS with an admissible bound,
+  children longest first (ordering by bound measured worse), capped at
+  PAR_STEP_BUDGET (20k nodes, never wall-clock time: one link, one par).
+  The controller's `collapsePar` getter runs it once per walk and mode, on
+  first read, synchronously on the main thread. `tripped` reads "≥N%"
+  (rule_loss `parText`; "—" with no trail). The HUD, banner and share must
+  never call a tripped par the maximum.
+- MEASURED (step 4; dailies 1-60 and 20 gridSize-24 mazes;
+  `.claude/probes/K139/par_curve.txt`, `par_time.log`): the search trips
+  on EVERY maze at every budget up to 200k, so par always reads "≥". At
+  20k it sits a mean 1.4-2.1 points below the 200k search (max 11-14;
+  equal on 12-20 of 60 and 12-14 of 20). Desktop under the perf lock
+  (median of 3, 15 large mazes): 20k costs a median 10 ms, p90 12-34,
+  max 38 (40k: 20 / 74; 60k: 30 / 116). A phone is about 5x (estimated;
+  the real timing is owed, K662).
+- THE ROWS: "collapsed N% · par M%" (maze_hud `ruleEntries`, from
+  rule_loss `ruleFields`; help line `collapsed` in maze_stats.ts) in the
+  HUD (even with the stat rows off), the win banner and the Stranded
+  banner. Win heading: free "N% collapsed", finish "Solved! N% collapsed".
+  Share line (share_text `collapseLine`): "🧱 Free collapse: N% · par M%"
+  or "🧱 Collapse to the finish: ...". No efficiency (HUD or banner), no
+  stars, no daily result (collapse is not daily-exempt, so a collapse game
+  is never a daily). OPEN: the banner still shows path / optimal,
+  backtracked, junctions and dead ends.
+- THE STRAND (finish): K137's Stranded banner, "Every way to the exit has
+  collapsed behind you.", with Undo and Restart (Restart only under the
+  chase, the turn minotaur or the fire). Undo replays the taps, so the run
+  comes back whole and its units come off the score.
+- CHASE AND FIRE are allowed. A catch respawns at the start; main.ts then
+  raises pendingWin when `fc.solved` and pendingLoss when
+  `fc.collapseOn && ruleLoss.over()`, so a finish game whose start tail
+  has collapsed is stranded at once and a free one ends with its score.
+  tickChase holds the chase once a free game has ended and the dot is in
+  (`freeEnded`). Burnt runs block like collapsed ones. Par ignores both.
+- LOOK AND SOUND: a collapse is snap's broken run (syncBroken, the explore
+  programs; shader_warmup puts the explore variants in wave 1 when collapse
+  is on) and plays the snap sound, on every collapse.
+- PROBES (`.claude/probes/K139/`): `par_measure.ts` + `par_curve.mjs` (the
+  budget curve), `par_time.ts` + `run_time.ps1` (timing, perf lock),
+  `page/k139_page.mjs <finish|free|strand> <desktop|phone> [seed]` +
+  `run_page.ps1` (real taps on a private-cache dev server; 16, 17 and 13
+  checks; seed 7 passed all six runs, stills in `shots/`). Hooks:
+  `__knotFabric().collapse` (`{mode, units, total, pct, par: {units,
+  total, tripped, steps}}`); the controller is not a window hook, so wrap
+  `__knotFabricRenderer().syncBroken` to capture it (`k137_lib.ts`).
