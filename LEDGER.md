@@ -278,14 +278,6 @@ Next free ID: K636.
   - evidence: `.claude/probes/K580/`
   - next: stage 2: the medial-axis root (nearest-point pairing), the tp52/tp60 sheet, the thorn at J, the ai notch
   - brief: `docs/design/K580_s2.md`
-- **K244** · Levi 2026-10-20: nothing plucks a junction core. Auto plucks (random, music) choose
-  only valid segments up front, and a drag released in a core plucks nothing (K235 silenced core
-  taps). After K370 merges (the input path). `render-pluck.md` (K235).
-  - owner: agent `ae12adbf3756a741a` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 16:48, 1 h cap ~17:48)
-  - branch: `worktree-agent-ae12adbf3756a741a`, worktree `.claude/worktrees/agent-ae12adbf3756a741a`; last commit: `6e3e913`
-  - evidence: `.claude/probes/K244/`
-  - next: baseline auto-pluck and release core counts, then one tapLobes-based predicate
-  - brief: `docs/design/K244_cores.md`
 - **K324** · Real-time minotaur, more alive and tunable (`docs/design/K324_realtime_minotaur.md`,
   091e4dc; Levi took section 7's recs): s1 (sim); s2 (render) once K525 owns the look: its route
   pieces, a moving lead, the chevrons, perf; s3 (guard, stalker) after s1. Rel. K245 K247 K271 K293 K294 K296.
@@ -1401,6 +1393,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K244** · No junction-core plucks: auto plucks pick only drawn sites and a release in a core is silent (0 of 844 notes undrawn). Done in ff67e4d (2026-10-20).
 - **K578** · While confetti falls, every frame redraws the whole maze (phone 60 -> 45 fps, K572, before K573). Dropped: the phone's fall is ~50 fps and not CPU-bound (a tenfold CPU cut gave +0.5 fps), and the cache never engages in the maze (PAINT_AMBIENT every frame). Branch kept; K634 (2026-10-20).
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or char (CHAR items in the explore programs). Done in 3231d59 (2026-10-20).
 - **K599** · `.claude/rules/render-explore.md` THE BURN (and a test comment) says the dark band draws under Char only; it draws under Gone too (K409's card). Done in 3231d59 (2026-10-20).
