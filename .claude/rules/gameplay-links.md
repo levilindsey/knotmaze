@@ -324,11 +324,12 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `parSlack` (`par`, a number, default 1 since step 5 (0.25 before),
   clamped to [0, 1]: PAR_SLACK_MIN / MAX in game/par.ts; the codec's
   clamp table and the panel row read the same range) are APPENDED at
-  178-180, after K324 stage 1's `minoTelegraphRuns` (177). They were
-  171-173 on their branch until it rebased onto K324 stage 1, which
-  renumbered them and re-froze the table pin; the confetti lane and K525
-  append too, and whoever merges second renumbers (the brief's param
-  hotspot). CODEC_VERSION does not move (append only). The option lists
+  182-184, after K525's `minoTelegraphLook` (181). They were 171-173 on
+  their branch, 178-180 after the rebase onto b1ec927 (K324 stage 1) and
+  182-184 after the one onto da03e7d (K336's 178-180, K525's 181); each
+  renumber re-froze the table pin. K324 stage 3 appends more minotaur
+  params: whoever merges second renumbers (the brief's param hotspot).
+  CODEC_VERSION does not move (append only). The option lists
   follow FRAGILE_MODES and PAR_MODES. Neither daily-exempt nor MAZE
   keys: a daily plays with both off, and turning one on leaves the
   daily. All three are under
