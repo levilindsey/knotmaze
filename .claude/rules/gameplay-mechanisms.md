@@ -30,9 +30,11 @@ paths:
   - "src/game/hidden_runs.ts"
   - "test/game/turnstiles.test.ts"
   - "test/game/hidden_runs.test.ts"
+  - "src/game/one_way.ts"
+  - "test/game/one_way.test.ts"
 ---
 
-# Gameplay lore: fragile runs, par (K137), collapse (K139), the cut (K114), the aids (K137 stage 2), ice and the color rule (K138 stage 1), turnstiles and hidden runs (K138 stage 2)
+# Gameplay lore: fragile runs, par (K137), collapse (K139), the cut (K114), the aids (K137 stage 2), ice and the color rule (K138 stage 1), turnstiles and hidden runs (K138 stage 2), one-way runs (K138 stage 3)
 
 Written by K137 stage 1 (2026-10-20; brief `docs/design/K137_s1.md`,
 design `docs/design/K80_gameplay_additions.md` section 4.3); `gameplay.md`
@@ -558,3 +560,81 @@ gameplay-panel.md's TURNSTILES AND HIDDEN RUNS ROWS. The headers of
   reveal a press on a hidden run grabs its particles and tugs the unseen
   thread instead of panning (by reading: `grabAt` and `onThread` take
   `ps.nearest`, which knows no gone span; not run in the page).
+
+## One-way runs (K138 stage 3)
+
+Written by K138 stage 3 (2026-10-21; brief `docs/design/K138_s3.md`, whose
+Handoff holds the calls, the census and the page results; design
+`docs/design/K80_gameplay_additions.md` 4.2). The classic game only, off
+under the same switches as ice; not daily-exempt. Param:
+gameplay-links.md's ONE-WAY RUNS PARAM; row: gameplay-panel.md's ONE-WAY
+RUNS ROW. The header of `one_way.ts` is the spec.
+
+- THE ORIENTATION (`oneWayCore`): the CORE is the largest 2-edge-connected
+  piece of the walk graph over the runs that may turn one-way (no exempt
+  run, no self-loop); the bridges (Tarjan, by run id) split off the pockets
+  and tails, which stay two-way. One DFS of the core, rooted on the base
+  route, orients every core run (Robbins); a draw orients round(share x
+  core runs) of them and reverses the whole subset on a coin. NO TRAPS
+  without ice: a subset of a strongly connected orientation keeps every
+  vertex reaching the exit (one_way.test.ts: strongly connected on every
+  real core; random walks at 0.6 never stuck).
+- PLACEMENT (`placeOneWay`): after the turnstiles and before the hidden
+  runs, against the rules beneath composed. A weighted draw without
+  replacement from the "oneWay" stream (ROUTE_WEIGHT 4 tickets for a run of
+  the base route, 1 for any other), kept by the kit's placeRule (the first
+  solvable draw that bites, else the last solvable). Share 0 places nothing
+  and draws nothing, so off is bit-identical. Under the color rule a
+  directed walk must also keep the colors, so a draw can fail (seed 1,
+  alternate, 0.4): then nothing is one-way and the rules beneath still play.
+- THE RULE (`oneWayRule`; call 5): a one-way run may be tapped only from
+  its entry, and par, strict, the stars and the fewest moves are the
+  directed search. A backtrack retraces a whole move, so the controller
+  refuses one whose move took a one-way run (`oneWayBlocksBack`), and a
+  clocked search (turnstiles) keeps its bounces off such a move
+  (`WalkRule.blocksBack`, which `composeRules` carries).
+- REFUSALS: `refusalOf(eid)` returns "oneWay" for a run tapped against its
+  arrow and for the arrival run when its backtrack is refused; main.ts
+  `ruleRefused` toasts "That run is one-way: follow the arrows." or "No
+  going back over a one-way run." with the refusal pluck.
+- UNDO: the controller's Undo (main.ts `undoMove`: the actions but the
+  last, replayed) is never refused, but NO UNDO CONTROL SHOWS beside the
+  rules. The cut's and the walker's bars need the cut, which turns the
+  rules off, and the only rule-loss banner with Undo (Stranded) needs
+  fragile runs or collapse, which turn them off too. So the brief's "Undo
+  is always allowed" holds at the controller only (a ledger item for Levi).
+- CHEVRONS (call 2): marker glyphs (`marker_glyphs.ts` role "chevron",
+  design "oneway", a placeholder for Levi's own), drawn by
+  `fabric_maze_renderer.ts` `drawOneWay` from a page-lifetime pool
+  (CHEVRON_POOL): one at a run's middle, two (at 0.3 and 0.7) on a run
+  longer than CHEVRON_LONG 16 ctrl, CHEVRON_SCALE 0.55 marker radii, turned
+  along the way by the tangent over CHEVRON_TANGENT 0.4 ctrl. A mesh, and so
+  a draw call, per chevron (seed 7 at 0.4: 116; not timed).
+- WITH A CHASE (call 1): the rules bind the player only, as s1 did for ice
+  and the color rule. No chase file reads the one-way layout; stage 6 makes
+  the minotaur and the fire obey the rules.
+- HUD AND SHARE: the row "one-way" (the runs laid; `maze_stats.ts`,
+  `rule_loss.ts` `ruleFields`) and the share tag ` · ⏩ <n>`
+  (`ruleShareTags`).
+- MEASURED (a Node census, seeds 1-50 at today's defaults,
+  `.claude/probes/K138/s3/census/results.md`): every config placed and bit
+  on 50 of 50 and laid the same layout twice; draws median 1. Laid,
+  medians: 53 / 106.5 / 160 of a 266.5-run core at ow 0.2 / 0.4 / 0.6, 6 /
+  9 / 11 of them on the 14-run plain route. Legal against plain, medians:
+  fewest taps 1.172 / 1.342 / 1.500, shortest length 1.146 / 1.300 /
+  1.417; ow 0.4 + ice 0.25 1.445 and 1.527, ow 0.4 + tst 4 1.408 and
+  1.303.
+- PROBES: `__knotFabric().rules.oneWay` ([run, entry vertex] pairs) and
+  `__knotFabricRenderer().chevronCount`. `.claude/probes/K138/s3/
+  ow_page.mjs <base> [desktop|phone] [seed=7]` (env EXTRA appends link
+  keys; on `?<seed>&am=instant&snd=none&ow=0.4`: the HUD row, a tap against
+  an arrow, a one-way run walked, its backtrack refused, the controller's
+  Undo, the finish and the share; a CHECK summary): 18 of 18 on desktop and
+  at 411x753 with touch taps. GOTCHA: `&ct=on` turns every rule off, so a
+  one-way probe never reaches the cut's Undo button.
+- RESIDUALS (inferred from the rules, none seen in the page): with ice a
+  move can be a slide, so the NO TRAPS argument fails and nothing checks
+  for a trap; at a turnstile whose open pair leaves out the arrival run, a
+  one-way arrival leaves the player no move; and no control rescues either
+  (UNDO above). Unchecked: the chevrons under the fog and the thread
+  reveal. The chevron's look is a placeholder.
