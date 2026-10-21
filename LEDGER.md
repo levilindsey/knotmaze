@@ -372,15 +372,6 @@ Next free ID: K730.
   - evidence: `.claude/probes/K643/`
   - next: the part argument, injected bulge and crotch cases, calibration sheets, tests
   - brief: `docs/design/K643.md`
-- **K720** · Sound off still opens audio: under snd=none or mute the first touch creates and resumes
-  the AudioContext (knot_synth ensure, via the autoplay gate) and plucks reach resume(). Every play
-  path is gated, so nothing should sound; create it only once sound is on. A daily drops snd from
-  the address bar, so a reload plays music (K717)
-  - owner: agent `a1426841a5a579075` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 01:09, 2 h cap ~03:09)
-  - branch: `worktree-agent-a1426841a5a579075`, worktree `.claude/worktrees/agent-a1426841a5a579075`; last commit: `6c2068d`
-  - evidence: `.claude/probes/K720/`
-  - next: no AudioContext until a sound plays; Node tests; browser counts
-  - brief: `docs/design/K720.md`
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
@@ -1593,6 +1584,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K720** · sound off opens no audio: no AudioContext until sound is on and something plays (plucks, song, snore; the minotaur sounds now obey Muted and none too); switching sound on works without a reload; K720.md Handoff. Done in 72270da2 (2026-10-21).
 - **K708** · lives and sword sims: 3 hearts bite only blind real-time play; at swordMoves 8 the sword is a breather (slays in 0.5% even for a seeker); K708.md Handoff. Done in 7d1b41ce (2026-10-21).
 - **K687** · Quiet confetti cell (K717, build ea22989, thermal 0, audiobook paused): 97 of 308 frames over 25 ms (31%, none over 34) vs 23% hot and playing (K662), so neither explains the misses; the cost is K645. Done in cdaaff1 (2026-10-21).
 - **K177** · Minotaur indicator on the Pixel (K717): shown at the edge; a real tap frames the minotaur (scale 31.6 to 7.5 in 0.9 s), holds past 3 s, and the follow camera eases back by 5 s. Done in cdaaff1 (2026-10-21).
