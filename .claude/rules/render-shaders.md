@@ -153,6 +153,18 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   dumped variants standalone and linked 13/13 programs in a headless
   SwiftShader telegraph scene (plain and `xp=threads`). No new program
   site or variant.
+- **The root's paint grew the section's two** (K620, 2026-10-20;
+  render-paint.md, THE ROOT'S PAINT): section-rgb 46811 -> 47573
+  characters and its explore variant 63226 -> 63988 (inferred from
+  K320's own measure, 46,844 -> 47,606 and 63,259 -> 64,021, +762 each:
+  ROOT_FRAG_GLSL, the vKR* varyings and one SECTION_FRAG line); the
+  others are unchanged byte for byte. K320's budgets rose to 47,650 and
+  64,050. Each changed text compiles cold once. The first cut (729c1bf)
+  sampled the strokes' FX at the feet, three more inlined kFxColor
+  calls: every branch load ran 6-33 s slower and the reveal and burn
+  loads timed out wave 1 (15 s, 10-13 programs still compiling); the
+  section-only blend (8ac37a0) adds no kFxColor call (its numbers: the
+  K620 handoff). No new program site or variant.
 - **The stub's free end changed pluck-blur** (K459, 2026-10-15;
   render-pluck.md, K459): PLUCK_VERT passes `vCap` (the cap coordinate,
   aUV.y) and PLUCK_FRAG narrows the thread over the stub's cap, so
