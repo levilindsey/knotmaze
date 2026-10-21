@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K777.
+Next free ID: K778.
 
 ## Waiting on Levi
 
@@ -251,6 +251,9 @@ Next free ID: K777.
   greedy sim player goes from 2.22 to 9.40 catches a game, 15% unfinished at 600 moves); the
   follower looks like a sleeper asleep, amber waiting, red awake; the share tag shows N woken
   whenever a sleeper plays, 0 included
+- **K777** · Refresh the open-work report (K585, `.claude/probes/report_20261020/`) with the 30-odd
+  Waiting on Levi items filed since 2026-10-20, so they can be marked on the phone? A sonnet agent,
+  about 0.5% of the week (offered 2026-10-21 morning)
 
 ## In progress
 
