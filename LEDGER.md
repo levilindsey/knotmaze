@@ -264,10 +264,10 @@ Next free ID: K617.
 - **K580** · The a's J join, Levi's call (2026-10-20): tangent, its shared stretch a TAPERED spur that
   leaves the junction as wide as both merging strokes and narrows to normal where they turn collinear.
   Open calls: K606. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
-  - owner: agent `ae18d8a4a4f0949e9` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 15:18, 2 h cap ~17:18)
-  - branch: `worktree-agent-ae18d8a4a4f0949e9`, worktree `.claude/worktrees/agent-ae18d8a4a4f0949e9`; last commit: `c78a364`
+  - owner: nobody since 2026-10-20 16:47 (merged; agent `ae18d8a4a4f0949e9` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `1ab5e52`
   - evidence: `.claude/probes/K580/`
-  - next: the taper geometry on the authored cubics (where the strokes part, root width, profile), stills at xh 2 and 3; then the width consumers, the lint, contact sheets
+  - next: Levi's paint call on the tapered root (sheets in .claude/probes/K580/sheets/); stage 2, the medial-axis root (docs/design/K580_s2.md)
   - brief: `docs/design/K580.md`
 - **K409** · Build Levi's burn calls (2026-10-20, every rec.): ember and band widths in world units
   (today's medians); under Gone the whole ember on the unburnt side; the band kept; the ember over
