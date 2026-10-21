@@ -121,15 +121,6 @@ Next free ID: K606.
 - **K586** · Confetti shine strength (`cfh`, default 1, range 0-2) and foil share (`cff`, default
   0.3): pick from `.claude/probes/K337/sheet/strengths_phone.png` or `strengths_desk.png`, or try
   `&cfh=` / `&cff=` live. Built at the defaults (K337); nobody has watched it live yet.
-- **K573** · G3-1's phone gap search: step 1 merged (`3e2b6cf`, 0 px), knot gs24 60.7 → 27.7 ms
-  (pre-G3-1 9.7), dense 36.0 → 31.3 (16.7). Levi's call: keep step 2 (`7db3fd9`, a per-slot
-  curvature stride: 19.3 / 23.7 ms; casing-edge pixels move 1-3 levels on ≤0.1% of a frame; fixes
-  the 65-point tail cut, K591) or stop at step 1. `docs/design/K573.md` (Handoff, Coordinator note).
-  - owner: nobody since 2026-10-20 14:05 (merged; agent `a58a59169309e0bd8` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `3e2b6cf`
-  - evidence: `.claude/probes/K573/`
-  - next: Levi's call on step 2 (7db3fd9, branch worktree-agent-a58a59169309e0bd8): keep it (knot's phone gap search 27.7 -> 19.3 ms; casing-edge pixels move 1-3 levels on at most 0.1% of a frame) or stop at step 1; then rebase, test and merge (docs/design/K573.md, the Coordinator note)
-  - brief: `docs/design/K573.md`
 - **K601** · K456's three cover calls, built as rec. (Levi may change any): the ink cover hides the
   HUD and panel for the whole loss; its message and Reload wait 3 s of visible loss; no automatic
   reload, so a failing GPU cannot loop the page. `docs/design/K456.md` (Handoff).
@@ -1327,6 +1318,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K573** · G3-1's phone gap search: step 1 (3e2b6cf) plus step 2, a per-slot curvature stride (knot gs24 search 60.7 -> 19.3 ms on the phone; fixes K591). Done in 0753b3c (2026-10-20).
 - **K456** · A lost WebGL context: the loop suspends, a cover (message + Reload after 3 s) blocks input, the restore redraws exactly. Done in f01ac12 (2026-10-20).
 - **K372** · Fabric ?b's after-drag non-sleep is a same-chain collision limit cycle (fix K595, residual K596). Done in 86c472b (2026-10-20).
 - **K470** · No app-level WebGL context-loss handling: only `probe_hooks.ts` listens for `webglcontextlost`, to count losses. Dropped: duplicate of K456 (2026-10-20).
