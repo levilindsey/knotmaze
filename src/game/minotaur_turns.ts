@@ -41,6 +41,7 @@
 
 import type { WalkGraph } from "../core/walk_graph";
 import { ChaseGraph, type MinotaurMode, type Spot } from "./minotaur";
+import { swordFleeing, swordSpend, swordTake, swordTouch, type SwordState } from "./sword";
 
 // The `minotaur` param: off, or the movement model (section 2.3). K80
 // stage 3 appends "abbott".
@@ -578,6 +579,54 @@ export function decide(
   return out;
 }
 
+// K137 s3b (4.7): one flee hop from `m` with the player at p: the move whose
+// far end lies farthest from p in runs (one a broken run cuts off counts as
+// farthest), ties to the lowest run id, no draw. At a vertex it holds when
+// every move would close in; mid-run it takes the better end. Null: it holds.
+function fleeHop(g: TurnGraph, m: MinoState, p: number): TurnStep | null {
+  const mid = m.spot.edge >= 0;
+  const cands: TurnStep[] = mid
+    ? spotEnds(g, m.spot)
+        .filter((w) => allowed(g, w))
+        .map((w) => [m.spot.edge, w] as TurnStep)
+    : moves(g, m.v);
+  let best: TurnStep | null = null;
+  let bestD = -1;
+  for (const mv of cands) {
+    const d = g.hopd(mv[1], p);
+    if (d > bestD || (d === bestD && best !== null && mv[0] < best[0])) {
+      best = mv;
+      bestD = d;
+    }
+  }
+  if (best === null) return null;
+  if (!mid && bestD < g.hopd(m.v, p)) return null;
+  return best;
+}
+
+// K137 s3b: one turn of the flee (runs): the speed's steps (no charge), each
+// a fleeHop; still asleep in its lair it stays. It forgets its hunt and roam
+// (mode 0), so it comes out of the flee roaming. Mutates `m`.
+export function fleeTurn(g: TurnGraph, cfg: TurnConfig, m: MinoState, p: number, turn: number): TurnStep[] {
+  const out: TurnStep[] = [];
+  m.mode = 0;
+  m.dest = -1;
+  m.lastSeen = -1;
+  if (!m.left && turn <= (cfg.sleep ?? 0)) return out;
+  if (cfg.speed < 1 && turn % 2 === 0) return out;
+  const steps = Math.max(1, Math.round(cfg.speed));
+  for (let s = 0; s < steps; s++) {
+    const mv = fleeHop(g, m, p);
+    if (!mv) break;
+    out.push(mv);
+    m.prev = m.v;
+    m.v = mv[1];
+    m.left = true;
+    m.spot = spotAtVertex(m.v);
+  }
+  return out;
+}
+
 // K481: one hop of a by-length route, decided from `m` (which may stand
 // mid-run). The decision rules and draw order mirror decide()'s per-run
 // step; arrival transitions (checking the last-seen vertex, picking a new
@@ -710,6 +759,61 @@ export function planLengthRoute(
     if (!(seg > 0)) break;
     const prevV = g.other(mv[0], mv[1]);
     m.prev = prevV;
+    m.v = mv[1];
+    m.left = true;
+    m.spot = spotAtVertex(m.v);
+    steps.push(mv);
+    segLens.push(seg);
+    total += seg;
+    cumLens.push(total);
+    stepStates.push(cloneMino(m));
+  }
+  return {
+    from: fromState.v,
+    fromSpot: { ...fromState.spot },
+    fromState,
+    steps,
+    segLens,
+    cumLens,
+    totalLength: total,
+    factor,
+    maxTravel,
+    stateAfter: cloneMino(m),
+    stepStates,
+  };
+}
+
+// K137 s3b (4.7): the flee by length: fleeHops until the scaled travel is
+// covered or it holds; the factor is the speed alone (no charge). Shaped as
+// planLengthRoute's plan, so realizing, contact and the telegraph's stops
+// read it unchanged.
+export function planFleeLength(
+  g: TurnGraph,
+  cfg: TurnConfig,
+  m0: MinoState,
+  player: number,
+  turn: number,
+  maxTravel: number
+): TurnLengthPlan {
+  maxTravel = maxTravel * travelScaleOf(cfg);
+  const fromState = cloneMino(m0);
+  fromState.mode = 0;
+  fromState.dest = -1;
+  fromState.lastSeen = -1;
+  const factor = cfg.speed;
+  const m = cloneMino(fromState);
+  const steps: TurnStep[] = [];
+  const segLens: number[] = [];
+  const cumLens: number[] = [];
+  const stepStates: MinoState[] = [];
+  let total = 0;
+  const asleep = !m.left && turn <= (cfg.sleep ?? 0);
+  for (let guard = 0; !asleep && guard < 10000 && total < maxTravel - 1e-9; guard++) {
+    const mv = fleeHop(g, m, player);
+    if (!mv) break;
+    const seg = lengthSegment(g, m, mv);
+    if (!(seg > 0)) break;
+    m.prev = g.other(mv[0], mv[1]);
     m.v = mv[1];
     m.left = true;
     m.spot = spotAtVertex(m.v);
@@ -1022,6 +1126,13 @@ export class TurnMinotaur {
   private committed: TurnStep[] = [];
   private committedPlan: TurnLengthPlan | null = null;
   private commitState: MinoState | null = null;
+  // K137 s3b (4.7): the sword (null: none, the default, which reads and
+  // draws nothing, so every pin holds), whether the committed move is a
+  // flee, and the last touch while it fled (the turn it happened; null
+  // after a turn without one) for the page's burst and toast.
+  sword: SwordState | null = null;
+  private commitFlee = false;
+  lastTouch: { kind: "banish" | "slay"; player: number; turn: number } | null = null;
 
   constructor(walk: WalkGraph | TurnGraph, cfg: TurnConfig, seed: number) {
     this.tg = walk instanceof TurnGraph ? walk : new TurnGraph(walk);
@@ -1042,6 +1153,63 @@ export class TurnMinotaur {
   setConfig(cfg: TurnConfig): void {
     this.cfg = cfg;
     this.commit();
+  }
+
+  // K137 s3b: the sword for this game (null: none). Called before the
+  // first turn; the next move is re-committed.
+  setSword(s: SwordState | null): void {
+    this.sword = s;
+    this.commit();
+  }
+
+  // K137 s3b: it flees the sword / the one-use sword slew it.
+  get fleeing(): boolean {
+    return swordFleeing(this.sword);
+  }
+
+  get slain(): boolean {
+    return this.sword !== null && this.sword.phase === "slain";
+  }
+
+  // K137 s3b: arriving on the sword's spot takes it; a committed move that
+  // was no flee is dropped (the flee is decided now).
+  private takeSword(p2: number): void {
+    if (!swordTake(this.sword, p2, this.turns)) return;
+    if (!this.commitFlee) {
+      this.committed = [];
+      this.committedPlan = null;
+      this.commitState = null;
+    }
+  }
+
+  // K137 s3b: a touch while it flees, no catch: timed sends it to its lair
+  // (its sleep counts from now), one-use slays it.
+  private touchSword(p2: number): void {
+    const kind = swordTouch(this.sword as SwordState, this.turns);
+    this.lastTouch = { kind, player: p2, turn: this.turns };
+    if (kind === "banish") {
+      this.state = initMino(this.tg);
+      this.lifeTurn = 0;
+    }
+  }
+
+  // K137 s3b: a turn after the one-use sword slew it: the player moves.
+  private slainTurn(edge: number, p2: number): TurnResult {
+    this.lastFrom = this.state.v;
+    this.lastPath = [];
+    this.lastSegLens = [];
+    this.lastTravel = 0;
+    this.progress = 0;
+    this.lastContact = null;
+    this.lastTouch = null;
+    this.catchRoute = false;
+    this.crossRun(edge);
+    this.player = p2;
+    if (p2 === this.tg.exit) {
+      this.finished = true;
+      return "win";
+    }
+    return "moved";
   }
 
   // A level restart's new minotaur takes over the old one's tallies.
@@ -1114,12 +1282,26 @@ export class TurnMinotaur {
     this.turns++;
     this.lifeTurn++;
     this.inputs.push(edge);
+    // K137 s3b: the one-use sword slew it; the sword taken on this move.
+    if (this.sword !== null) {
+      if (this.slain) return this.slainTurn(edge, p2);
+      this.takeSword(p2);
+      this.lastTouch = null;
+    }
+    const flee = this.fleeing;
     const from = this.state.v;
     let path: TurnStep[];
     // Where the player stood when this turn was decided: the telegraph
     // decided it before the move, from p; without one it is decided now.
     let seenAt = p2;
-    if (this.cfg.telegraph && this.commitState) {
+    if (flee) {
+      if (this.cfg.telegraph && this.commitState && this.commitFlee) {
+        path = this.committed;
+        this.state = this.commitState;
+      } else {
+        path = fleeTurn(g, this.cfg, this.state, p2, this.lifeTurn);
+      }
+    } else if (this.cfg.telegraph && this.commitState) {
       path = this.committed;
       this.state = this.commitState;
       seenAt = p;
@@ -1135,6 +1317,7 @@ export class TurnMinotaur {
     this.catchRoute = false;
     // Seen: a turn it took hunting you (the hunting getter's rule).
     if (
+      !flee &&
       this.state.left &&
       (this.cfg.policy === "chase" ? seenAt !== g.start : this.state.mode !== 0)
     ) {
@@ -1145,6 +1328,14 @@ export class TurnMinotaur {
       this.player = p2;
       this.finished = true;
       return "win";
+    }
+    if (flee) {
+      // K137 s3b: no catch while it flees: a touch banishes or slays it.
+      if (contact(p, edge, p2, from, path)) this.touchSword(p2);
+      else swordSpend(this.sword);
+      this.player = p2;
+      this.commit();
+      return "moved";
     }
     if (contact(p, edge, p2, from, path)) {
       this.catches++;
@@ -1204,10 +1395,22 @@ export class TurnMinotaur {
     this.turns++;
     this.lifeTurn++;
     this.inputs.push(edge);
+    // K137 s3b: the one-use sword slew it; the sword taken on this move.
+    if (this.sword !== null) {
+      if (this.slain) return this.slainTurn(edge, p2);
+      this.takeSword(p2);
+      this.lastTouch = null;
+    }
+    const flee = this.fleeing;
     const playerLen = edge < 0 ? g.medianLength : g.chase.len[edge];
     let plan: TurnLengthPlan;
     let seenAt = p2;
-    if (this.cfg.telegraph && this.committedPlan) {
+    if (flee) {
+      plan =
+        this.cfg.telegraph && this.committedPlan && this.commitFlee
+          ? this.committedPlan
+          : planFleeLength(g, this.cfg, this.state, p2, this.lifeTurn, this.cfg.speed * playerLen);
+    } else if (this.cfg.telegraph && this.committedPlan) {
       plan = this.committedPlan;
       seenAt = p;
     } else if (this.cfg.telegraph && this.commitState) {
@@ -1255,7 +1458,7 @@ export class TurnMinotaur {
       this.cfg.policy === "chase"
         ? seenAt !== g.start
         : realized.hunted || this.state.mode !== 0;
-    if (this.state.left && hunted) this.seen++;
+    if (!flee && this.state.left && hunted) this.seen++;
     this.crossRun(edge);
     if (p2 === g.exit) {
       this.player = p2;
@@ -1263,6 +1466,16 @@ export class TurnMinotaur {
       return "win";
     }
     const catchDist = this.cfg.catchDist ?? BY_LENGTH_CATCH_DIST;
+    if (flee) {
+      // K137 s3b: no catch while it flees: a touch banishes or slays it.
+      const touched = contactByLength(g, p, edge, plan.fromSpot, plan.steps, plan.segLens, realized.travel, catchDist);
+      if (touched) this.touchSword(p2);
+      else swordSpend(this.sword);
+      this.lastContact = null;
+      this.player = p2;
+      this.commit();
+      return "moved";
+    }
     const caught =
       p2 !== g.start &&
       contactByLength(g, p, edge, plan.fromSpot, plan.steps, plan.segLens, realized.travel, catchDist);
@@ -1346,10 +1559,22 @@ export class TurnMinotaur {
   }
 
   private commitLength(): void {
-    if (!this.cfg.telegraph || this.finished) {
+    this.commitFlee = false;
+    if (!this.cfg.telegraph || this.finished || this.slain) {
       this.committed = [];
       this.committedPlan = null;
       this.commitState = null;
+      return;
+    }
+    if (this.fleeing) {
+      // K137 s3b: the flee by length, long enough for the longest choice.
+      let maxRun = this.tg.medianLength;
+      for (const c of this.lengthChoices()) maxRun = Math.max(maxRun, c.length);
+      const fp = planFleeLength(this.tg, this.cfg, this.state, this.player, this.lifeTurn + 1, this.cfg.speed * maxRun);
+      this.committedPlan = fp;
+      this.committed = fp.steps.slice();
+      this.commitState = cloneMino(fp.stateAfter);
+      this.commitFlee = true;
       return;
     }
     const factor = lengthFactor(this.tg, this.cfg, this.state, this.player);
@@ -1372,9 +1597,18 @@ export class TurnMinotaur {
   // The telegraph: decide the next turn now, from where the player stands.
   private commit(): void {
     if (this.cfg.byLength) return this.commitLength();
-    if (!this.cfg.telegraph || this.finished) {
+    this.commitFlee = false;
+    if (!this.cfg.telegraph || this.finished || this.slain) {
       this.committed = [];
       this.commitState = null;
+      return;
+    }
+    if (this.fleeing) {
+      // K137 s3b: the flee, from where the player stands (no draw).
+      const f = cloneMino(this.state);
+      this.committed = fleeTurn(this.tg, this.cfg, f, this.player, this.lifeTurn + 1);
+      this.commitState = f;
+      this.commitFlee = true;
       return;
     }
     const c = { ...this.state };
@@ -1398,7 +1632,9 @@ export class TurnMinotaur {
       const travel = Math.min(plan.factor * c.length * travelScaleOf(this.cfg), plan.totalLength);
       const p2 =
         c.edge < 0 ? this.player : g.chase.ea[c.edge] === this.player ? g.chase.eb[c.edge] : g.chase.ea[c.edge];
+      // K137 s3b: a flee touches, never catches.
       const caught =
+        !this.commitFlee &&
         p2 !== g.exit &&
         p2 !== g.start &&
         contactByLength(g, this.player, c.edge, plan.fromSpot, plan.steps, plan.segLens, travel, catchDist);
@@ -1433,6 +1669,8 @@ export class TurnMinotaur {
   // checks where it last saw you (the committed move's state, telegraphed).
   get hunting(): boolean {
     if (!this.state.left) return false;
+    // K137 s3b: fleeing the sword, or slain, it hunts nobody.
+    if (this.sword !== null && this.sword.phase !== "ready" && this.sword.phase !== "used") return false;
     if (this.cfg.policy === "chase") return this.player !== this.tg.start;
     const m = this.commitState ?? this.state;
     return m.mode !== 0;
