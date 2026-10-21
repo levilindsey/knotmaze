@@ -5,11 +5,12 @@ import {
   ChaseGraph,
   DEFAULT_CHASE_PARAMS,
   HUNT_PACE_FRACTION,
+  LAIR_TELL,
   MinotaurChase,
   replayChase,
   WANDER_PACE_FRACTION,
 } from "../../src/game/minotaur";
-import type { ChaseEvent, ChaseParams } from "../../src/game/minotaur";
+import type { ChaseEvent, ChaseParams, ChasePlan } from "../../src/game/minotaur";
 import { resetPathAction } from "../../src/game/daily_attempt";
 import { SeededRNG } from "../../src/util/random";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
@@ -497,5 +498,282 @@ describe("K174: the minotaur's controls", () => {
     expect(HUNT_PACE_FRACTION * DEFAULT_CHASE_PARAMS.playerPace).toBe(9);
     expect(DEFAULT_CHASE_PARAMS.wanderPace).toBe(5);
     expect(DEFAULT_CHASE_PARAMS.approachPace).toBe(9);
+  });
+});
+
+// K324 stage 1 (docs/design/K324_s1.md): the junction stops and the plan.
+describe("K324: junction stops and the plan", () => {
+  const ticksOf = (s: number): number => (s > 0 ? Math.round(s * CHASE_HZ) : 0);
+  // The player stands on the entrance (unseen), so it only roams; no long
+  // stops at the junctions it passes.
+  const roam = P({ wake: 0, deadEndBias: 0.5, pauseChance: 0 });
+  const huntAt = (over: Partial<ChaseParams> = {}): ChaseParams =>
+    P({ playerPace: 0, approachPace: 10, detectStart: 100, detectEnd: 200, catchDist: 0.5, ...over });
+
+  // Each tick's [edge, dir] -> the runs walked from index k on: a run
+  // counts again after it stood at a vertex (a tip's way back).
+  const runsFrom = (log: readonly [number, number][], k: number, n: number): [number, number][] => {
+    const out: [number, number][] = [];
+    let gap = true;
+    for (let j = k; j < log.length && out.length < n; j++) {
+      const [e, d] = log[j];
+      if (e < 0) {
+        gap = true;
+        continue;
+      }
+      const last = out[out.length - 1];
+      if (gap || last[0] !== e || last[1] !== d) out.push([e, d]);
+      gap = false;
+    }
+    return out;
+  };
+
+  it("every junction arrival holds within its range, and never at a tip", () => {
+    const lo = ticksOf(roam.stopMin);
+    const hi = ticksOf(roam.stopMax);
+    let holds = 0;
+    let tips = 0;
+    for (const seed of [1, 2, 3]) {
+      const sim = new MinotaurChase(G1, roam, seed);
+      let standing = 0;
+      let at = { ...sim.mino };
+      for (let i = 0; i < 60 * CHASE_HZ; i++) {
+        const before = sim.arrivals;
+        const wasOnRun = sim.mino.edge >= 0;
+        sim.step();
+        const m = sim.mino;
+        if (standing > 0) {
+          expect(m).toEqual(at); // It stands out the whole stop.
+          standing--;
+        }
+        if (sim.arrivals > before) {
+          expect(sim.arrivals).toBe(before + 1);
+          expect(m.edge).toBe(-1);
+          expect(sim.g.isEnd[m.vertex]).toBe(false);
+          if (sim.mode === "pause") {
+            expect(sim.hold).toBe(0); // Its destination: the rest replaces it.
+          } else {
+            expect(sim.hold).toBeGreaterThanOrEqual(lo);
+            expect(sim.hold).toBeLessThanOrEqual(hi);
+            holds++;
+            standing = sim.hold;
+            at = { ...m };
+          }
+        } else if (wasOnRun && m.edge < 0 && sim.g.isEnd[m.vertex]) {
+          expect(sim.hold).toBe(0); // A tip: no stop, no draw.
+          tips++;
+        }
+      }
+    }
+    expect(holds).toBeGreaterThan(20);
+    expect(tips).toBeGreaterThan(3);
+    // Hunting, the stop is huntStop times the roaming draw (the same
+    // arrival, so the same draw): A -> B, then B's stop.
+    const holdAtB = (huntStop: number): number => {
+      const sim = new MinotaurChase(G1, huntAt({ huntStop }), 1);
+      sim.place("minotaur", "A", "hunt");
+      sim.place("player", "D");
+      for (let i = 0; i < 5 * CHASE_HZ && sim.arrivals === 0; i++) sim.step();
+      expect(sim.g.ids[sim.mino.vertex]).toBe("B");
+      expect(sim.mode).toBe("hunt");
+      return sim.hold;
+    };
+    const full = holdAtB(1);
+    const half = holdAtB(0.5);
+    expect(full).toBeGreaterThanOrEqual(lo);
+    expect(full).toBeLessThanOrEqual(hi);
+    expect(Math.abs(half - full / 2)).toBeLessThanOrEqual(1);
+  });
+
+  it("a long stop replaces the junction stop", () => {
+    const sim = new MinotaurChase(G1, P({ wake: 0, pauseChance: 1 }), 4);
+    let arrivals = 0;
+    for (let i = 0; i < 60 * CHASE_HZ; i++) {
+      const before = sim.arrivals;
+      sim.step();
+      expect(sim.hold).toBe(0);
+      if (sim.arrivals > before) {
+        arrivals++;
+        expect(sim.mode).toBe("pause");
+      }
+    }
+    expect(arrivals).toBeGreaterThan(5);
+  });
+
+  it("a zero stop costs no tick", () => {
+    // Hunting A -> B -> D: every tick moves the whole pace, B's included.
+    const sim = new MinotaurChase(G1, huntAt({ stopMin: 0, stopMax: 0 }), 1);
+    sim.place("minotaur", "A", "hunt");
+    sim.place("player", "D");
+    let prev = { ...sim.mino };
+    let ticks = 0;
+    for (; ticks < 10 * CHASE_HZ; ticks++) {
+      if (sim.step().some((e) => e.kind === "caught")) break;
+      expect(sim.g.spotToSpot(prev, sim.mino, false)).toBeCloseTo(10 / CHASE_HZ, 9);
+      prev = { ...sim.mino };
+    }
+    expect(sim.catches).toBe(1);
+    expect(ticks).toBeGreaterThan(CHASE_HZ);
+    expect(sim.arrivals).toBe(1); // B's stop was drawn: 0 ticks.
+    // Stops that all round to 0 ticks are no stops, tick for tick: the
+    // stream never touches the sequential rng.
+    const trace = (stopMax: number): string => {
+      const s = new MinotaurChase(G1, P({ wake: 0, pauseChance: 0.4, stopMin: 0, stopMax }), 8);
+      const out: string[] = [];
+      for (let i = 0; i < 60 * CHASE_HZ; i++) {
+        s.step();
+        out.push(`${s.mino.edge}:${s.mino.pos}:${s.mode}`);
+      }
+      return out.join(",");
+    };
+    expect(trace(0.004)).toBe(trace(0));
+  });
+
+  it("spotting keeps a junction stop but cuts a long one", () => {
+    // A still player: placed mid-run, a moving one would run on.
+    const params = P({ wake: 0, pauseChance: 0, deadEndBias: 0, playerPace: 0 });
+    const sim = new MinotaurChase(G1, params, 5);
+    for (let i = 0; i < 60 * CHASE_HZ && sim.hold === 0; i++) sim.step();
+    const h = sim.hold;
+    expect(h).toBeGreaterThan(1);
+    const at = { ...sim.mino };
+    const v = at.vertex;
+    // The player appears 5 u off along a run it may take: within
+    // detectStart, beyond catchDist.
+    const g = sim.g;
+    const e = g.adj[v].find((x) => !g.barred[x])!;
+    sim.place("player", { edge: e, pos: g.ea[e] === v ? 5 : g.len[e] - 5, dir: 1 });
+    expect(sim.step()).toEqual([{ kind: "spotted" }]);
+    expect(sim.mode).toBe("hunt");
+    expect(sim.hold).toBe(h - 1);
+    run(sim, h - 1);
+    expect(sim.mino).toEqual(at); // It stood out its stop...
+    run(sim, 1);
+    expect(sim.mino.edge).toBe(e); // ...then went for the player.
+    // A long stop ends when it spots you: it leaves on the next tick.
+    const rest = new MinotaurChase(G1, params, 5);
+    rest.place("minotaur", "B", "pause", 100);
+    rest.place("player", { edge: 4, pos: 5, dir: 1 }); // 5 u from B, toward D
+    expect(rest.step()).toEqual([{ kind: "spotted" }]);
+    run(rest, 1);
+    expect(rest.mino.edge).toBe(4);
+  });
+
+  it("replayChase reproduces a chase with stops", () => {
+    const walk = mazeWalk(17);
+    const params = P(); // Today's defaults: stops on.
+    const live = new MinotaurChase(walk, params, 3);
+    const pick = new SeededRNG(77);
+    let held = 0;
+    for (let i = 0; i < 90 * CHASE_HZ && !live.finished; i++) {
+      if (i % 41 === 0) {
+        const runs = live.g.adj[live.g.index.get(live.decisionVertex)!];
+        live.tap(runs[Math.floor(pick.next() * runs.length)]);
+      }
+      live.step();
+      if (live.hold > 0) held++;
+    }
+    expect(live.arrivals).toBeGreaterThan(10);
+    expect(held).toBeGreaterThan(0);
+    expect(live.huntTicks).toBeGreaterThan(0);
+    const again = replayChase(walk, params, 3, live.inputs, live.tick);
+    expect(again.tick).toBe(live.tick);
+    expect(again.player).toEqual(live.player);
+    expect(again.mino).toEqual(live.mino);
+    expect(again.mode).toBe(live.mode);
+    expect(again.hold).toBe(live.hold);
+    expect(again.arrivals).toBe(live.arrivals);
+    expect(again.catches).toBe(live.catches);
+    expect(again.huntTicks).toBe(live.huntTicks);
+    expect(again.plan(8)).toEqual(live.plan(8));
+  });
+
+  it("in its lair it plans nothing until the last LAIR_TELL s, then the exit tail", () => {
+    const sim = new MinotaurChase(G1, P({ wake: 2 }), 1);
+    const none: ChasePlan = { lead: null, steps: [], dest: -1, hunting: false };
+    expect(sim.plan(8)).toEqual(none);
+    run(sim, ticksOf(2) - ticksOf(LAIR_TELL) - 1);
+    expect(sim.plan(8)).toEqual(none);
+    run(sim, 1);
+    expect(sim.plan(8)).toEqual({ ...none, steps: [[3, sim.g.index.get("C")!]] });
+  });
+
+  it("a roaming plan equals the runs it then walks when nothing intervenes", () => {
+    // The player stays unseen on the entrance and no junction it passes
+    // makes it rest, so only its own route decides.
+    const walk = mazeWalk(17);
+    const sim = new MinotaurChase(walk, P({ pauseChance: 0 }), 2);
+    const g = sim.g;
+    const log: [number, number][] = [];
+    const plans: { k: number; plan: ChasePlan; resting: boolean }[] = [];
+    // Plans stop 40 s before the log does, so each plan's runs are all walked.
+    for (let i = 0; i < 140 * CHASE_HZ; i++) {
+      if (i % 29 === 0 && i < 100 * CHASE_HZ && sim.mode !== "lair") {
+        plans.push({ k: log.length, plan: sim.plan(8), resting: sim.mode === "pause" });
+      }
+      log.push([sim.mino.edge, sim.mino.dir]);
+      sim.step();
+    }
+    let runs = 0;
+    let restLegs = 0;
+    for (const { k, plan, resting } of plans) {
+      expect(plan.hunting).toBe(false);
+      const want: [number, number][] = [];
+      if (plan.lead) want.push([plan.lead.edge, plan.lead.dir]);
+      for (const [e, far] of plan.steps) want.push([e, g.ea[e] === g.eb[e] ? 0 : far === g.eb[e] ? 1 : -1]);
+      const got = runsFrom(log, k, want.length).map(([e, d]): [number, number] => [e, g.ea[e] === g.eb[e] ? 0 : d]);
+      expect(got).toEqual(want);
+      runs += want.length;
+      if (resting && plan.steps.length > 0) restLegs++;
+    }
+    expect(plans.length).toBeGreaterThan(100);
+    expect(runs).toBeGreaterThan(300);
+    // A rest at a destination already shows the next leg (2.3).
+    expect(restLegs).toBeGreaterThan(5);
+  });
+
+  it("a hunting plan's next run is huntEdgeFrom's choice for a still player, and the route it runs", () => {
+    const walk = mazeWalk(17);
+    const params = huntAt({ detectStart: 1000, detectEnd: 1000 });
+    const g = new MinotaurChase(walk, params, 1).g;
+    const junctions: number[] = [];
+    for (let i = 0; i < g.ids.length; i++) {
+      if (i !== g.start && i !== g.exit && !g.isEnd[i]) junctions.push(i);
+    }
+    let checked = 0;
+    for (let k = 0; k < 10; k++) {
+      const a = junctions[(k * 7) % junctions.length];
+      const b = junctions[(k * 13 + 5) % junctions.length];
+      if (a === b) continue;
+      const sim = new MinotaurChase(walk, params, k + 1);
+      sim.place("minotaur", g.ids[a], "hunt");
+      sim.place("player", g.ids[b]);
+      const first = sim.huntEdgeFrom(a);
+      if (!first) continue;
+      const plan = sim.plan(8);
+      expect(plan.hunting).toBe(true);
+      expect(plan.lead).toBeNull();
+      expect(plan.steps[0]).toEqual([first[0], first[1] > 0 ? g.eb[first[0]] : g.ea[first[0]]]);
+      const log: [number, number][] = [];
+      for (let i = 0; i < 60 * CHASE_HZ; i++) {
+        if (sim.step().some((e) => e.kind === "caught")) break;
+        log.push([sim.mino.edge, sim.mino.dir]);
+      }
+      expect(sim.catches).toBe(1);
+      const got = runsFrom(log, 0, plan.steps.length).map(([e]) => e);
+      expect(got).toEqual(plan.steps.map(([e]) => e));
+      checked++;
+    }
+    expect(checked).toBeGreaterThan(5);
+    // Mid-run it shows the way it will keep: turned back (G1, behind it).
+    const back = new MinotaurChase(G1, huntAt(), 1);
+    back.place("minotaur", { edge: 2, pos: 2, dir: 1 }, "hunt"); // B -> C
+    back.place("player", "D");
+    expect(back.plan(8)).toEqual({
+      lead: { edge: 2, pos: 2, dir: -1 },
+      steps: [[4, back.g.index.get("D")!]],
+      dest: -1,
+      hunting: true,
+    });
   });
 });
