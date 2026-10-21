@@ -62,6 +62,7 @@ import {
   INDICATOR_SCALE_MIN,
 } from "./offscreen_indicators";
 import { PLUCK_WHOLE_MAX, RIPPLE_STRENGTH_MAX } from "../render/pluck_model";
+import { telegraphOn } from "../game/minotaur_turns";
 import type { MotionPref } from "./motion";
 import {
   SHEET_FONT_PX,
@@ -1627,6 +1628,13 @@ export function buildPanel(
     fMino, "minoTelegraph", { label: "Show its next move" },
     "Show its next move in red: the run it will take and where it will stand, decided when your move ends (forced on at charge and two). Applies live."
   );
+  // K525: how the telegraph draws. Hidden while no telegraph shows (the
+  // row above off at half or one; charge and two force it on).
+  const minoTelegraphLookRow = turnRow(
+    fMino, "minoTelegraphLook",
+    { options: { Rims: "rims", Line: "line", Both: "both" }, label: "Telegraph look" },
+    "Telegraph look: rims light both edges of the run it will take in red; line draws a red line over it; both draws the two. The ring where it will stand shows in every look. Applies live."
+  );
   // K174: the minotaur's paces as multiples of yours (playerPace). No step
   // (Tweakpane's step grid would snap a link's 0.73, K130); an edit keeps
   // 2 decimals, so 0.9 x 10 stays exactly the default's 9 (K324's re-tune).
@@ -2652,6 +2660,9 @@ export function buildPanel(
     minotaurRow.hidden = !turnMinoOn;
     minoSpeedRow.hidden = !turnMinoOn;
     minoTelegraphRow.hidden = !turnMinoOn;
+    minoTelegraphLookRow.hidden =
+      !turnMinoOn ||
+      !telegraphOn({ telegraph: params.minoTelegraph, speed: params.minoSpeed });
     minoByLengthRow.hidden = !turnMinoOn;
     // K324: the tuning subfolder shows under both clocks; each clock's rows
     // in it hide under the other (real time's K324 rows are in rtRows).

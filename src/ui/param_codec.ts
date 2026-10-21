@@ -327,6 +327,7 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   flag("confettiCannons"), // K336: the side cannons
   num("cannonAmount"), // K336: the side cannons' amount
   num("streamerShare"), // K336: the cannons' streamer share
+  choice("minoTelegraphLook", ["rims", "line", "both"]), // 181, K525: the telegraph's look
 ]);
 
 // The format version a blob names first. Bump it for anything but an
