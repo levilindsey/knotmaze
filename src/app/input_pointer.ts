@@ -30,8 +30,12 @@ import type { SceneRef } from "./scene_ref";
 const TAP_SLOP_PX: Record<string, number> = { mouse: 4, pen: 6, touch: 10 };
 const TAP_STRENGTH = 0.55;
 // K370: whether a committed drag posts on pointerrawupdate (the raw-input
-// lever) when window.__knotRawDrag is unset.
-const RAW_DRAG_DEFAULT = false;
+// lever) when window.__knotRawDrag is unset, and the least time between two
+// raw posts (a 1000 Hz mouse would otherwise post a target, and the worker
+// pack a snapshot, every millisecond; the worker applies input only between
+// substeps of about 10 ms).
+const RAW_DRAG_DEFAULT = true;
+const RAW_MIN_MS = 4;
 
 // What pointer input reads from main(): values and functions, each
 // assigned once, plus closures over what main.ts declares after this
@@ -189,10 +193,18 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
     out[0] = grabOrigin[0] + dx * s;
     out[1] = grabOrigin[1] + dy * s;
   };
+  // K370: the raw-input lever's newest post (NaN once pointermove has run
+  // after it) and its time. pointermove skips posting a target the raw
+  // handler already posted, so a step costs the worker one input as before.
+  const rawPosted = new Float64Array([NaN, NaN]);
+  let rawPostedAt = -Infinity;
   const boundedDragTo = (x: number, y: number): void => {
     if (!scene.ps) return;
     boundTarget(x, y, dragPos);
-    host.dragTo(dragPos[0], dragPos[1]);
+    const posted = dragPos[0] === rawPosted[0] && dragPos[1] === rawPosted[1];
+    rawPosted[0] = NaN;
+    rawPosted[1] = NaN;
+    if (!posted) host.dragTo(dragPos[0], dragPos[1]);
   };
 
   // End any release animation immediately (new grab, regenerate): free
@@ -587,6 +599,8 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
     grabOrigin[1] = scene.ps.positions[p * 2 + 1];
     dragPos[0] = grabOrigin[0];
     dragPos[1] = grabOrigin[1];
+    rawPosted[0] = NaN;
+    rawPosted[1] = NaN;
     dragVel = 0;
     lastMoveT = e.timeStamp;
     app.canvas.style.cursor = "grabbing";
@@ -594,11 +608,11 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
   };
   // K370, the raw-input lever (`window.__knotRawDrag`; RAW_DRAG_DEFAULT
   // when unset). Chrome holds a pointermove for the next frame (rAF-
-  // aligned); pointerrawupdate fires as the input arrives. On a committed
-  // drag it posts the bounded target at once, so the worker steps toward
-  // it sooner. pointermove still runs as before (dragPos, dragVel, wake)
-  // and posts the same target again, which the worker coalesces.
-  const rawTarget = new Float64Array(2);
+  // aligned); pointerrawupdate fires as the input arrives (secure contexts
+  // only). On a committed drag it posts the bounded target at once, at most
+  // every RAW_MIN_MS, so the worker steps toward it sooner. pointermove
+  // still runs as before (dragPos, dragVel, wake) and posts only a target
+  // the raw handler has not.
   app.canvas.addEventListener("pointerrawupdate", (ev) => {
     const flag = (globalThis as { __knotRawDrag?: boolean }).__knotRawDrag;
     if (!(typeof flag === "boolean" ? flag : RAW_DRAG_DEFAULT)) return;
@@ -607,9 +621,12 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
     if (!scene.ps || pinch || dragPan || pendingPluck) return;
     if (e.pointerType === "touch" && touchLocked) return;
     if (scene.ps.grabbedParticle < 0 || snapMode !== "none") return;
+    const now = performance.now();
+    if (now - rawPostedAt < RAW_MIN_MS) return;
+    rawPostedAt = now;
     const [x, y] = toLattice(e);
-    boundTarget(x, y, rawTarget);
-    host.dragTo(rawTarget[0], rawTarget[1]);
+    boundTarget(x, y, rawPosted);
+    host.dragTo(rawPosted[0], rawPosted[1]);
   });
   app.canvas.addEventListener("pointermove", (e) => {
     if (!scene.ps) return;
