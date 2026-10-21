@@ -165,6 +165,11 @@ export interface ProbeCtx {
   contextLoss: ContextLossHandle;
   readonly loopSuspended: boolean;
   readonly turnWait: number;
+  // K114: the scissors armed, a cut waiting for the move to end (-1: none),
+  // and whether the scissors and Undo buttons show.
+  readonly cutArmed: boolean;
+  readonly pendingCut: number;
+  readonly cutShown: boolean;
   // main()'s `let`s the hooks also write: get/set pairs (written by several
   // regions, so main.ts keeps them until their owners move).
   chaseRunning: boolean;
@@ -541,6 +546,21 @@ export function installProbeHooks(ctx: ProbeCtx): void {
               par: { units: p.units, total: p.total, tripped: p.tripped, steps: p.steps },
             };
           })()
+        : null,
+      // K114: the cut (null: cut off). `runs`: the cut runs; `actions`: the
+      // action log's length (moves and cuts); `carry`: the runs a move has
+      // still to carry on along; `pending`: a cut waiting for the move to end.
+      cut: c.cutOn
+        ? {
+            mode: c.cutMode,
+            runs: c.cutRuns(),
+            count: c.cutCount,
+            armed: ctx.cutArmed,
+            pending: ctx.pendingCut,
+            shown: ctx.cutShown,
+            actions: c.actions.map((a) => `${a.kind}:${a.run}`),
+            carry: [...c.carry],
+          }
         : null,
       // K114: the burn race (null: no fire). `smoldering`: the head's arms
       // whose tap the fire refuses; `banner`: the Burnt banner shows.

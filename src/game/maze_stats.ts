@@ -57,7 +57,8 @@ export type StatId =
   | "snapped"
   | "par"
   | "strokes"
-  | "collapsed";
+  | "collapsed"
+  | "cuts";
 
 export const STATS: Record<StatId, { label: string; line: string }> = {
   // TIME above (SolveClock). The Burnt banner shows it too, for a run the
@@ -220,6 +221,15 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "rounded down, then par: the most one walk can collapse (reaching the " +
       "finish, unless the game is free). A ≥ means the search for par " +
       "stopped early, so the true best may be higher.",
+  },
+  // K114: FabricMazeController.cutCount (game/cut.ts), while the cut is on.
+  cuts: {
+    label: "cuts",
+    line:
+      "Runs you cut with the scissors. A cut deletes a whole run for the " +
+      "rest of the attempt; a junction left with two runs is no choice any " +
+      "more, so a move through it carries on. A cut that would leave no way " +
+      "to the exit is refused.",
   },
 };
 

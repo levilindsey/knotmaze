@@ -93,6 +93,8 @@ export interface FrameLoopDeps {
   fireSet: () => void;
   setWaitCue: (on: boolean) => void;
   keysLive: () => boolean;
+  // K114: show the scissors while the cut is on and the keys are live.
+  cutTick?: () => void;
   // K499: poll the gamepad once a frame (edges only; never wakes).
   pollGamepad: () => void;
   handRendererLook: () => void;
@@ -638,6 +640,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       movePad.setShown(settings.movePad && keysLive() && !panel.isOpen());
       // K80 turns 3a: the pad's center waits while the turn minotaur is on.
       movePad.setWait(scene.turnMino !== null);
+      deps.cutTick?.(); // K114: the scissors, beside the pad.
       // K80 turns 3a: the wait cue leaves with the head (a key move, a
       // catch) or the minotaur; the next pointer move puts it back.
       if (

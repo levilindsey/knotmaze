@@ -27,6 +27,8 @@ import type {
   LastPress,
   WaitingMove,
 } from "../ui/key_moves";
+import { cutKeyOf } from "../ui/cut_buttons";
+import type { CutKey } from "../ui/cut_buttons";
 import { MovePad } from "../ui/move_pad";
 import type { UrlParams } from "../ui/url_state";
 import type { SceneRef } from "./scene_ref";
@@ -64,6 +66,12 @@ export interface KeyInputDeps {
   // K456: true while the WebGL context is lost (src/app/context_loss.ts):
   // nothing on screen to steer, so keys, the pad and the gamepad wait.
   contextLost?: () => boolean;
+  // K114 CUT (main.ts): a move through a contracted junction carries on,
+  // one run per arrival, ahead of anything else keyStep does (true while
+  // it is in charge), then a cut tapped mid-move lands; and the scissors'
+  // keys (cutKeyOf; true when the key acted).
+  carryStep?: () => boolean;
+  cutKey?: (k: CutKey) => boolean;
 }
 
 export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
@@ -96,6 +104,11 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
   // What the hold moved in: a tap, a reset, a catch or a rebuild ends it.
   let keyHoldFc: FabricMazeController | null = null;
   let keyHoldTaps = 0;
+  // What a hold or a waiting press counts as "the solve moved": the taps,
+  // or with K114's cut on the actions (a move's carried runs are taps, and
+  // must not end the hold that made it).
+  const solveLen = (fc: FabricMazeController | null): number =>
+    !fc ? 0 : fc.cutOn ? fc.actions.length : fc.taps.length;
   let keyHoldChase: MinotaurChase | null = null;
   let keyHoldTurnMino: TurnMinotaur | null = null;
   let keyHoldInputs = 0;
@@ -113,7 +126,7 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
     fc: scene.fabricController,
     chase: scene.chase,
     turnMino: scene.turnMino,
-    taps: scene.fabricController?.taps.length ?? 0,
+    taps: solveLen(scene.fabricController),
     inputs: scene.chase?.inputs.length ?? 0,
     catches: scene.chase?.catches ?? scene.turnMino?.catches ?? 0,
   });
@@ -203,7 +216,7 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
   const noteKeyMove = (): void => {
     keyHold = true;
     keyHoldFc = scene.fabricController;
-    keyHoldTaps = scene.fabricController?.taps.length ?? 0;
+    keyHoldTaps = solveLen(scene.fabricController);
     keyHoldChase = scene.chase;
     keyHoldTurnMino = scene.turnMino;
     if (scene.chase) {
@@ -374,6 +387,7 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
   };
   // Every frame, after the move animation (or the chase) stepped.
   const keyStep = (): void => {
+    if (deps.carryStep?.()) return; // K114: a move carrying on.
     if (stepWaiting(performance.now())) return;
     if (routeStep()) return; // K480: a multi-run tap's next run, on arrival.
     if (!keyHold) return;
@@ -406,7 +420,7 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
         endKeyHold(); // A tap took over.
         return;
       }
-    } else if (fc.taps.length !== keyHoldTaps) {
+    } else if (solveLen(fc) !== keyHoldTaps) {
       endKeyHold(); // A tap, Reset path or a restore moved the solve.
       return;
     }
@@ -468,6 +482,13 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
   window.addEventListener("keydown", (e) => {
     const dir = keyDirOf(e);
     if (dir === null) {
+      // K114: the scissors' keys (X, Esc, U), while the cut is on.
+      const ck = cutKeyOf(e);
+      if (ck !== null && deps.cutKey) {
+        if (e.repeat || keyBelongsElsewhere(e) || !keysLive()) return;
+        if (deps.cutKey(ck)) e.preventDefault();
+        return;
+      }
       // K80 turns 3a: the WAIT key (`.`, or Space off a button or link),
       // with the turn minotaur on; one wait a press (no hold). Shift is let
       // through for `.` (some layouts need it).
