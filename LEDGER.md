@@ -287,10 +287,10 @@ Next free ID: K636.
   - next: s3 (guard, stalker in real time) next; s2 (render) once K525 lands
   - brief: `docs/design/K324_s1.md`
 - **K546** · Loss effects (Levi, 2026-10-16): a catch ends early today - animate the player and the minotaur/fire all the way to their meeting point first (contact t is computed in by-length mode; turn and realtime catches leave a visual gap), then a gratuitous contact effect at the meeting point plus a whole-screen loss effect akin to the win confetti. Levi's seeds: an explosion; a flare-up and burn-away; the player indicator ripped in half and falling over. Base to build on: K80 3b's catch feedback (dcdfaf4) and K270's fix; the fire side is K114. Design: `docs/design/K546_loss_effects.md`. Its q8 is answered (K525).
-  - owner: agent `a57e1aa8c7ba233b0` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 17:05, 2 h cap ~19:05)
-  - branch: `worktree-agent-a57e1aa8c7ba233b0`, worktree `.claude/worktrees/agent-a57e1aa8c7ba233b0`; last commit: `21e83cb`
+  - owner: nobody since 2026-10-20 18:25 (merged; agent `a57e1aa8c7ba233b0` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `5a8fa18`
   - evidence: `.claude/probes/K546/`
-  - next: baseline deterministic catches by runs, then a pure finder in minotaur_turns.ts
+  - next: Levi looks at the stills (`.claude/probes/K546/out/runs/`); stages 2-4 wait on K629
   - brief: `docs/design/K546_s1.md`
 - **K336** · Side cannons (Levi 10-14): finish confetti and streamers blast in from both edges. With
   K335, K337 (`docs/design/K335_confetti.md`); deferred. Draft `docs/design/K336_K337_draft.patch`
