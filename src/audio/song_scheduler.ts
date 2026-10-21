@@ -1,7 +1,7 @@
 // K101: music mode's note scheduler. A song runs on a grid of note start
 // times, in seconds of one clock: the audio clock once the context runs, wall
-// time before the autoplay gate opens (nothing sounds then; the plucks still
-// animate). Each tick hands out every note that starts before now +
+// time while none runs (before the autoplay gate opens: nothing sounds then;
+// the plucks still animate). Each tick hands out every note that starts before now +
 // lookahead, with its exact start time, so the synth can start it on the
 // right sample instead of at the next frame. The next note goes one slot
 // after the last one's start, not after the frame that played it, so a late
@@ -35,8 +35,8 @@ export class SongScheduler {
   }
 
   // The notes (rests included) that start before now + lookahead. `clock`
-  // names the time base: a change of clock (wall to audio at the autoplay
-  // gate) keeps the song's place and plays its next note now. `rate` scales
+  // names the time base: a change of clock (wall to audio once the context
+  // runs) keeps the song's place and plays its next note now. `rate` scales
   // the tempo (soundSpeed).
   due(
     song: Song,

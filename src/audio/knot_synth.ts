@@ -262,10 +262,18 @@ const REVERB_WET_SCALE = 0.4;
 // plucks from the first frames. So no live context exists until the first
 // ACTIVATION-TRIGGERING input (the HTML spec's list: keydown, mousedown,
 // pointerdown from a mouse, pointerup from touch/pen, touchend); plucks
-// before it are silent no-ops. The context is created and resumed INSIDE
-// that input's handler - iOS Safari unlocks audio only there. Listeners
-// capture on window, so the unlock runs before the app's own handler for
-// the same event (a tap-pluck sounds on the very first tap).
+// before it are silent no-ops. With sound on, the context is created and
+// resumed INSIDE that input's handler - iOS Safari unlocks audio only
+// there. Listeners capture on window, so the unlock runs before the app's
+// own handler for the same event (a tap-pluck sounds on the very first
+// tap).
+// K720: WITH SOUND OFF (muted, or sound mode none: soundIsOn) the input
+// only opens the gate and NO context exists until the first play with sound
+// on (a pluck, a song note, the snore), since a running context keeps the
+// phone's audio output awake and can take Android's audio focus. After an
+// activation Chrome starts a late context running without a gesture of its
+// own; the listeners stay armed until a context RUNS, so on iOS the next
+// input resumes one created outside a gesture.
 const UNLOCK_EVENTS = [
   "keydown",
   "mousedown",
@@ -282,6 +290,13 @@ type ActivationNavigator = Navigator & {
 export function clampPan(v: number): number {
   if (!Number.isFinite(v)) return 0;
   return Math.max(-1, Math.min(1, v));
+}
+
+// K720: whether sound is on: not muted and a sound mode other than none.
+// Volume 0 does not count as off. The app installs it (setSoundOn, from
+// app/auto_audio.ts); the synth reads it at every play and at the gate.
+export function soundIsOn(muted: boolean, soundMode: string): boolean {
+  return !muted && soundMode !== "none";
 }
 
 export class KnotSynth {
@@ -330,8 +345,14 @@ export class KnotSynth {
 
   // False until the autoplay gate opens (an injected context needs none).
   private unlocked: boolean;
-  // K325: callbacks waiting for the gate (whenUnlocked).
-  private unlockWaiters: Array<() => void> = [];
+  // K720: whether sound is on (soundIsOn), read live at every play and at
+  // the gate. On until the app installs its own (setSoundOn), so probes,
+  // diag scripts and tests that never install one play as before.
+  private soundOn: () => boolean = () => true;
+  // K325, K720: callbacks waiting for a context (whenOpen).
+  private openWaiters: Array<() => void> = [];
+  // Removes the gate's listeners; null once they are gone (or never armed).
+  private disarm: (() => void) | null = null;
   // K325: one-shot samples (playSample) reach the output on their own bus.
   // It follows the master volume but skips the harp's body EQ and hall,
   // which would color a recorded sound.
@@ -344,17 +365,23 @@ export class KnotSynth {
     if (!this.unlocked && typeof window !== "undefined") this.armUnlock();
   }
 
+  // K720: installs the sound-on test (see soundIsOn). While it says off,
+  // the gate creates nothing, no context is created, and plucks and
+  // samples play nothing, even on a context that already exists.
+  setSoundOn(on: () => boolean): void {
+    this.soundOn = on;
+  }
+
   // Opens the autoplay gate on the first activation-triggering input (see
   // UNLOCK_EVENTS). Where the browser reports transient activation, its
   // verdict decides (a touch pointerdown does not activate; its pointerup
   // does); engines without navigator.userActivation accept every listed
-  // event except a non-mouse pointerdown.
+  // event except a non-mouse pointerdown. A page that already has sticky
+  // activation starts with the gate open. Either way the listeners stay
+  // until a context runs (K720: openGate).
   private armUnlock(): void {
     const nav = navigator as ActivationNavigator;
-    if (nav.userActivation?.hasBeenActive) {
-      this.unlocked = true;
-      return;
-    }
+    if (nav.userActivation?.hasBeenActive) this.unlocked = true;
     const onInput = (e: Event): void => {
       if (!e.isTrusted) return;
       const active = nav.userActivation
@@ -364,34 +391,55 @@ export class KnotSynth {
             (e as PointerEvent).pointerType !== "mouse"
           );
       if (!active) return;
-      for (const t of UNLOCK_EVENTS) {
-        window.removeEventListener(t, onInput, true);
-      }
-      this.unlocked = true;
-      this.ensure();
-      this.runUnlockWaiters();
+      this.openGate();
     };
     for (const t of UNLOCK_EVENTS) {
       window.addEventListener(t, onInput, { capture: true, passive: true });
     }
+    this.disarm = (): void => {
+      for (const t of UNLOCK_EVENTS) {
+        window.removeEventListener(t, onInput, true);
+      }
+      this.disarm = null;
+    };
   }
 
-  // Runs cb once the autoplay gate is open: at once if it already is, else
-  // from the gate's own handler, inside the unlocking gesture and after the
-  // context exists (K325: the snore decodes then).
-  whenUnlocked(cb: () => void): void {
-    if (this.unlocked) cb();
-    else this.unlockWaiters.push(cb);
+  // K720: the gate's handler, inside the activating input. It records that
+  // the gate is open; with sound on it also creates the context (or resumes
+  // a suspended one: ensure), and once a context runs the listeners go.
+  // With sound off it creates nothing, and the listeners stay so that a
+  // later input can still resume a context made outside a gesture (iOS).
+  private openGate(): void {
+    this.unlocked = true;
+    const ctx = this.soundOn() ? this.ensure() : this.ctx;
+    if (ctx && ctx.state === "running") this.disarm?.();
   }
 
-  private runUnlockWaiters(): void {
-    const waiting = this.unlockWaiters;
-    this.unlockWaiters = [];
+  // K720: creates the context for a play with sound on, once the gate is
+  // open; true when a context exists. Music mode calls it before reading
+  // the audio clock, the snore before a play it cannot make yet.
+  open(): boolean {
+    if (!this.ctx) this.ensure();
+    return this.ctx !== null;
+  }
+
+  // Runs cb once a context exists: at once if one does, else right after
+  // ensure() creates it (inside the unlocking gesture when the gate's own
+  // handler creates it). K325: the snore decodes then. K720: before, it ran
+  // when the gate opened, but with sound off that creates no context.
+  whenOpen(cb: () => void): void {
+    if (this.ctx) cb();
+    else this.openWaiters.push(cb);
+  }
+
+  private runOpenWaiters(): void {
+    const waiting = this.openWaiters;
+    this.openWaiters = [];
     for (const cb of waiting) {
       try {
         cb();
       } catch {
-        // One waiter's failure must not stop the others or the gate.
+        // One waiter's failure must not stop the others or the play.
       }
     }
   }
@@ -452,9 +500,10 @@ export class KnotSynth {
     return Number.isFinite(l) ? Math.max(0, Math.min(0.25, l)) : 0;
   }
 
-  // The audio clock in seconds while the context runs; null before the
-  // autoplay gate opens and while the context is suspended or closed. A
-  // pluck's `when` is on this clock.
+  // The audio clock in seconds while the context runs; null while no
+  // context exists (before the autoplay gate opens, and K720: with sound off
+  // since the page loaded) and while it is suspended or closed. A pluck's
+  // `when` is on this clock.
   audioTime(): number | null {
     const ctx = this.ctx;
     return ctx && ctx.state === "running" ? ctx.currentTime : null;
@@ -484,18 +533,20 @@ export class KnotSynth {
   }
 
   // K325: decodes an encoded sound (MP3 and the like) for playSample, at the
-  // context's own sample rate. Resolves null while the autoplay gate is
-  // closed (no context yet: retry from whenUnlocked); rejects on bytes the
-  // browser cannot decode. The buffer is detached by the decode.
+  // context's own sample rate. Resolves null while no context exists and
+  // none may be made (the gate closed, or K720: sound off; retry from
+  // whenOpen); never null once one exists, whatever the sound setting.
+  // Rejects on bytes the browser cannot decode. The buffer is detached by
+  // the decode.
   decodeSample(bytes: ArrayBuffer): Promise<AudioBuffer | null> {
-    const ctx = this.ensure();
+    const ctx = this.ctx ?? this.ensure();
     return ctx ? ctx.decodeAudioData(bytes) : Promise.resolve(null);
   }
 
   // K325: plays a decoded sample once on the sample bus, at `gain` [0, 1]
-  // before the master volume. False (and silent) while the gate is closed or
-  // the context is not running. Overlapping calls overlap; the caller keeps
-  // a sample from stacking on itself.
+  // before the master volume. False (and silent) while the gate is closed,
+  // with sound off (K720) or while the context is not running. Overlapping
+  // calls overlap; the caller keeps a sample from stacking on itself.
   playSample(buf: AudioBuffer, gain = 1): boolean {
     const ctx = this.ensure();
     if (!ctx || !this.sfxBus) return false;
@@ -515,11 +566,16 @@ export class KnotSynth {
     return true;
   }
 
-  // Null until the autoplay gate opens; the gate's own handler makes the
-  // first call, inside the unlocking gesture.
+  // Null until the autoplay gate opens; with sound on, the gate's own
+  // handler makes the first call, inside the unlocking gesture. K720: null
+  // with sound off, so nothing creates or resumes a context then; the first
+  // call with sound on creates it (a play, or the gate) and runs whenOpen's
+  // callbacks.
   private ensure(): BaseAudioContext | null {
-    if (!this.unlocked) return null;
+    if (!this.unlocked || !this.soundOn()) return null;
+    let created = false;
     if (!this.ctx) {
+      created = true;
       this.ctx = this.provided ?? new AudioContext();
       this.master = this.ctx.createGain();
       this.master.gain.value = this.volume;
@@ -589,16 +645,18 @@ export class KnotSynth {
         }
         return peak;
       };
-      (window as unknown as Record<string, unknown>).__knotSynth = () => ({
-        plucks: self.stats.plucks,
-        lastFreq: self.stats.lastFreq,
-        samples: self.stats.samples,
-        state: self.ctx ? self.ctx.state : "none",
-        engine: self.engine,
-        peak: peakOf(self.analyser!),
-        sfxPeak: peakOf(self.sfxAnalyser!),
-        currentTime: self.ctx ? self.ctx.currentTime : 0,
-      });
+      if (typeof window !== "undefined") {
+        (window as unknown as Record<string, unknown>).__knotSynth = () => ({
+          plucks: self.stats.plucks,
+          lastFreq: self.stats.lastFreq,
+          samples: self.stats.samples,
+          state: self.ctx ? self.ctx.state : "none",
+          engine: self.engine,
+          peak: peakOf(self.analyser!),
+          sfxPeak: peakOf(self.sfxAnalyser!),
+          currentTime: self.ctx ? self.ctx.currentTime : 0,
+        });
+      }
       // Kick off the string-engine load exactly once per context.
       const aw = this.ctx.audioWorklet;
       if (aw && typeof AudioWorkletNode !== "undefined") {
@@ -626,11 +684,16 @@ export class KnotSynth {
         this.readyPromise = Promise.resolve();
       }
     }
-    if (this.ctx instanceof AudioContext && this.ctx.state === "suspended") {
+    if (
+      typeof AudioContext !== "undefined" &&
+      this.ctx instanceof AudioContext &&
+      this.ctx.state === "suspended"
+    ) {
       // Outside a gesture (an iOS interruption, say) this can reject; the
       // next tap-pluck retries from inside its gesture.
       this.ctx.resume().catch(() => undefined);
     }
+    if (created) this.runOpenWaiters();
     return this.ctx;
   }
 
@@ -638,6 +701,7 @@ export class KnotSynth {
   // seconds, see audioTime) starts the note on that sample; omitted or past,
   // it starts at once. `auto` (K279): an auto pluck, played on the auto bus.
   // `pan` (K526): a StereoPanner value in [-1, 1]; 0 (the default) centers.
+  // A silent no-op before the gate opens and, K720, with sound off.
   pluck(freq: number, strength: number, when?: number, auto = false, pan = 0): void {
     const ctx = this.ensure();
     if (!ctx || !this.master) return;
