@@ -150,6 +150,7 @@ export const LIVE_EFFECTS = {
     "hoverGlowWidth", "hoverGlowLength", "hoverGlowFade",
     "revealDistance", "revealFade", "revealLook", "burnt", "revealFinish",
     "revealEndCross", "revealEndGlow",
+    "compass", // K137 stage 2 (main.ts reads it every frame)
   ],
   onRecolor: [
     "colorScheme", "junctionBlend", "hueShift", "gamutArc", "palette",
@@ -204,6 +205,8 @@ export const LIVE_EFFECTS = {
     "cut", // K114
     // K137 stage 3b: the sword (a new chase lays it down, or none).
     "sword", "swordMoves",
+    // K137 stage 2: the spool and the hints (a restart refills both).
+    "spool", "spoolSlack", "hints",
   ],
 } as const satisfies Record<string, readonly string[]>;
 

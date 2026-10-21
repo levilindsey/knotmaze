@@ -14,6 +14,7 @@ import type { MovePad } from "../ui/move_pad";
 import type { OffscreenIndicators } from "../ui/offscreen_indicators";
 import type { PanelApi, PanelSettings } from "../ui/tweakpane_panel";
 import type { UrlParams } from "../ui/url_state";
+import { pathVizOf } from "../ui/url_state";
 import { CAM_MAX_DT } from "./camera";
 import type { PhysState } from "./lifecycle";
 import {
@@ -557,7 +558,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
         const fogHold = params.exploration === "fog" && params.fowIntro && revealing;
         const exploreHold = params.exploration === "threads" && params.fowIntro && revealing;
         const fv: readonly (number | string | boolean)[] = [
-          params.moveSpeed, params.pathViz, params.tension, params.trailLength,
+          params.moveSpeed, pathVizOf(params), params.tension, params.trailLength,
           look("markerSize"), a11y.reducedMotion, a11y.highContrast, fogHold, exploreHold,
           params.exploration, params.fowRadius, params.revealDistance, params.revealFade,
           params.revealLook, params.burnt, params.revealFinish, params.revealEndCross,
@@ -566,8 +567,8 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
         if (fabricSync === null || fabricSync.f !== scene.fabric || fabricSync.c !== scene.fabricController || fv.some((x, i) => x !== fabricSync!.v[i])) {
           fabricSync = { f: scene.fabric, c: scene.fabricController, v: fv };
           scene.fabric.moveSpeed = params.moveSpeed;
-          scene.fabric.trailMode = params.pathViz === "trail";
-          scene.fabric.pathViz = params.pathViz;
+          scene.fabric.trailMode = pathVizOf(params) === "trail";
+          scene.fabric.pathViz = pathVizOf(params);
           scene.fabric.tension = params.tension;
           scene.fabric.trailLength = params.trailLength;
           syncExploration(scene.fabric);
@@ -581,7 +582,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
           // and its release closes in on what you have explored the same way.
           scene.fabric.setFogHold(fogHold);
           scene.fabric.setExploreHold(exploreHold);
-          scene.fabricController.trailMode = params.pathViz === "trail";
+          scene.fabricController.trailMode = pathVizOf(params) === "trail";
         }
         // K6-2: the fog's wobble is PAINT_AMBIENT, its intro PAINT (the
         // fabric poll); nothing else in tickFog moves at rest.

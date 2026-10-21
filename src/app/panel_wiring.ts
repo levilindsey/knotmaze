@@ -34,6 +34,7 @@ import {
   clampHoverGlowWidth,
   newSeed,
   turnMinoParamsOf,
+  pathVizOf,
 } from "../ui/url_state";
 import type { UrlParams } from "../ui/url_state";
 import { Flag, type LoopFlags } from "./loop_flags";
@@ -236,11 +237,11 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
     // asleep/paused ticker branches).
     onTrailChange: () => {
       if (scene.fabricController) {
-        scene.fabricController.trailMode = params.pathViz === "trail";
+        scene.fabricController.trailMode = pathVizOf(params) === "trail";
       }
       if (scene.fabric && scene.fabricController) {
-        scene.fabric.trailMode = params.pathViz === "trail";
-        scene.fabric.pathViz = params.pathViz;
+        scene.fabric.trailMode = pathVizOf(params) === "trail";
+        scene.fabric.pathViz = pathVizOf(params);
         scene.fabric.tension = params.tension;
         scene.fabric.trailLength = params.trailLength;
         deps.syncExploration(scene.fabric);

@@ -34,6 +34,7 @@ import {
   applyAppearMode,
   seedFromText,
   seedText,
+  pathVizOf,
 } from "./url_state";
 import { gridAlignSlider, gridAlignStrength } from "./grid_align_curve";
 import { PAR_SLACK_MAX, PAR_SLACK_MIN } from "../game/par";
@@ -2745,8 +2746,8 @@ export function buildPanel(
     trapSurplusRow.hidden = !trapOn;
     pathVizRow.hidden = !fab;
     cameraRow.hidden = !fab;
-    trailLenRow.hidden = !fab || params.pathViz !== "trail";
-    tensionRow.hidden = !fab || params.pathViz !== "string";
+    trailLenRow.hidden = !fab || pathVizOf(params) !== "trail";
+    tensionRow.hidden = !fab || pathVizOf(params) !== "string";
     fowRow.hidden = !fab;
     const fog = fab && params.exploration === "fog";
     const threads = fab && params.exploration === "threads";
@@ -2873,7 +2874,7 @@ export function buildPanel(
     // K298: knot mode has no choices (the mouse margin row always shows).
     pickChoiceRatioRow.hidden = !fab;
     // The gold recolor paints in gold/trail modes; the yarn replaces it.
-    pathColorRow.hidden = !fab || params.pathViz === "string";
+    pathColorRow.hidden = !fab || pathVizOf(params) === "string";
     // Music mode derives its pitch set from the song itself; manual and
     // random are the modes where the space/octaves choices apply.
     const freePitch =

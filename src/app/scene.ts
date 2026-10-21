@@ -28,7 +28,7 @@ import type { A11yKey } from "../ui/accessibility";
 import type { OffscreenIndicators } from "../ui/offscreen_indicators";
 import type { PanelSettings } from "../ui/tweakpane_panel";
 import type { UrlParams } from "../ui/url_state";
-import { fabricRulesOf } from "../ui/url_state";
+import { fabricRulesOf, pathVizOf } from "../ui/url_state";
 import type { createCamera } from "./camera";
 import type { SceneRef } from "./scene_ref";
 
@@ -311,7 +311,7 @@ export function createScene(deps: SceneDeps): Scene {
     if (params.mazeFabric && walkGraph) {
       fabricController = new FabricMazeController(
         walkGraph,
-        params.pathViz === "trail",
+        pathVizOf(params) === "trail",
         fireOf(walkGraph), // K114: null with the fire off.
         fabricRulesOf(params) // K137: fragile runs and par.
       );
@@ -324,8 +324,8 @@ export function createScene(deps: SceneDeps): Scene {
       fabric.telegraphCoarse =
         window.matchMedia("(pointer: coarse)").matches || window.innerWidth <= 700;
       fabric.telegraphLook = params.minoTelegraphLook; // K525
-      fabric.trailMode = params.pathViz === "trail";
-      fabric.pathViz = params.pathViz;
+      fabric.trailMode = pathVizOf(params) === "trail";
+      fabric.pathViz = pathVizOf(params);
       fabric.tension = params.tension;
       fabric.trailLength = params.trailLength;
       syncExploration(fabric);
