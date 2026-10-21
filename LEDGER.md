@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K569.
+Next free ID: K570.
 
 ## Waiting on Levi
 
@@ -106,17 +106,9 @@ Next free ID: K569.
 
 - **K525** · Levi's look call on K80 turns 3b, built as recommended: telegraph roam 0.45 / hunt 0.95 with the second run at half, the 0.45 s catch ring burst, and the fog bleed at 0.16. `.claude/probes/K80/stage3b/contact_sheet.png`. The real-phone sheet is now `.claude/probes/K80/stage3b/contact_sheet_real.png` (K524): hunt 0.95 reads clearly at fit zoom, roam 0.45 is effectively invisible at fit zoom, the catch ring had mostly faded by the shot, and fog bleed 0.16 is unexercised (fog off in this design).
 - **K545** · K481 stage 3's look for Levi (built as recommended in 31b2238): lit tick + moved ring on hover/press, phone bigger ticks with the caught-choice tint at the head (desktop ticks alone); the real-phone sheet rides the next phone window (this stage was emulated 411x753 only) and Levi's call whether the tint should show on desktop too. `docs/design/K481.md` (Stage 3 handoff); `.claude/probes/K481/stage3/`.
-- **K559** · K115 stage 8's six glyph calls (`docs/design/K115_glyphs.md` section 11; recommendation
-  in brackets): (1) i/j dots: [a short slanted pill] or a round ring; (2) lifted-pen strokes (dots,
-  t-bars, accents, #) walkable? [no]; (3) [a looped hand, loops >= 0.47 x-height] or unlooped; (4)
-  titles below maze size 8 (Daily #10 on 2026-10-21 needs ~9): [overhang down to size 6, then "#8"
-  at 4-5]; (5) Hershey: [replace it whole, kept as the fallback for unauthored characters]; (6) only
-  if stage 9 cannot solve the oval-letter join: [wider spacing] or a stroke through the oval.
-- **K563** · K552's C4: a titled daily's walk that loops around a title loop has no untitled form;
-  as built, it survives a toggle away and back and the first move on the other form drops it
-  (`docs/design/K552.md` Handoff). Options: (a) as built; (b) park attempts per fingerprint (store
-  shape, `v` bump); (c) the controller collapses a title loop back to the seam; (d) the title as a
-  tree, no loops. [Rec: (a) now, (d) with K115's glyph redesign.]
+- **K559** · K115's glyph call 3 (`docs/design/K115_glyphs.md` section 11): [a looped hand, loops
+  >= 0.47 x-height] or unlooped (spread hairpins at every retrace). Calls 1, 2, 4, 5, 6 answered
+  2026-10-20 as recommended (section 11); asked again in plainer words 2026-10-20.
 - **K550** · Kill or waive K320's gap split (`docs/design/K550_stage3.md` Handoff, Recommendation). Stage 3's one try
   (a coverage-matched pre-pass) cut the MSAA edge class 91% but costs +11.1 ms per moving frame at 3200x1800. The split
   alone costs +1.77 ms (+0.68 ms at phone size, desktop GPU) against K320's +0.3 ms budget, to save about 1.5 s of cold
@@ -146,7 +138,7 @@ Next free ID: K569.
   - owner: nobody since 2026-10-19 21:27 (stage 8 done: agent `ac64a844a1d15b9d7` of claude session 91b19e11; stage 9 waits on Levi's calls)
   - branch: mainline; last commit: `584998a`
   - evidence: `.claude/probes/K115/stage8/` (metrics harness `metrics.ts`, `baseline.txt`, `o_entry_check.txt`, `notes.md`)
-  - next: Levi's six calls (K559); then stage 9 from its brief, starting with the oval-letter join (K115_glyphs.md section 4); then stage 7's live dates (docs/design/K115_stage7.md), K557
+  - next: Levi's call 3 (K559; calls 1, 2, 4-6 and K563's (d) answered 2026-10-20, in the brief); then stage 9 from its brief, starting with the oval-letter join (K115_glyphs.md section 4); then stage 7's live dates (docs/design/K115_stage7.md), K557
   - brief: `docs/design/K115_stage9.md`; the design: `docs/design/K115_glyphs.md`
 - **K74** · Maze design, decided (Levi, 2026-10-13;
   `docs/design/K74_maze_design.md`): every mechanism gets params whose
@@ -468,8 +460,9 @@ Every other item below waits on the trigger it names.
 
 - **K548** · Overnight runner has no usage gate: the 92% weekly pause (Next binding rule) is checked by hand only; 2026-10-15/16 runs 1-6 launched at 88% (under the line, audit 2026-10-18) but nothing stops a launch over it. Add a /usage check to the runner before each batch, or a ledger-stamped usage line per run close.
 - **K549** · Text scene fit ignores the open panel: a wide word's exit side sits under the panel (stage 2 probe stalled at tn97 by mouse; programmatic walk solved). Fit text scenes against the panel-cleared range like mazes (K198 view clamp), or close the panel for text scenes.
-- **K568** · Confetti retune (Levi, 2026-10-20): the rain from the top lasts a bit longer; the
-  finish spray gets smaller pieces, twice the top speed, a wider speed spread and twice the pieces.
+- **K569** · After K115 stage 9 (Levi, 2026-10-20): some lifted-pen strokes (dots, bars, accents)
+  become maze threads, each a separate thread through the point, forced crossings at both ends with
+  it underneath so it ends where the glyph wants. `docs/design/K115_glyphs.md` section 11, call 2.
 
 ## Residuals (known, not fixed)
 
@@ -1282,6 +1275,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K563** · K552's C4, the title-loop walk: Levi (2026-10-20) took (a) as built and (d), a tree title, with K115's redesign (now in `docs/design/K115_stage9.md`, "No title loops"). Done in 06ed74d (2026-10-20).
+- **K568** · Confetti retune (Levi, 2026-10-20): the rain from the top lasts a bit longer; the finish spray gets smaller pieces, twice the top speed, a wider speed spread and twice the pieces. Done in 6fd8e70 (2026-10-20).
 - **K552** · Dailies draw no title thread by default; dailyTitleThread (dtt=1) draws it over the same maze (maze-form attempts, title moves off the share grid, the row disabled off a daily). Done in 06ed74d (2026-10-19).
 - **K558** · Text crossings follow pen order (the later stroke over; penReverse, pnr=1, reverses it); maze and emblem crossings keep alternation. Done in 0b4c5db (2026-10-19).
 - **K553** · K320's split drew no gaps off dsf 1: the gap mask was sized in CSS px but read by gl_FragCoord in device px; gap_prepass sizes it in device px (fitGapTarget), guarded by gap_split.test.ts and k553_probe.mjs splitAssert. Done in 60511ed (2026-10-19).

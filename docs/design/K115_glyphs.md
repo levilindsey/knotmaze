@@ -825,6 +825,27 @@ class, and rules 1 and 4 still apply.
 
 ## 11. Calls for Levi
 
+**Levi's answers (2026-10-20).** Calls 1, 2, 4, 5 and 6 are decided as
+recommended; call 3 is open.
+
+- **1. Dots:** the pill ("Yes").
+- **2. Lifted-pen strokes:** not walkable, "for now". He wants a
+  follow-up afterwards: some of them become maze threads, each a
+  separate thread that weaves through the point, with crossings forced
+  at both ends of the stroke and the stroke's thread underneath, so it
+  ends where the glyph wants it (ledger K569).
+- **3. Looped or unlooped:** asked again with a plainer explanation. Until
+  he answers, stage 9 builds the looped hand.
+- **4. Small mazes:** (a) overhang down to gs 6, then (b) "#8" at gs 4-5
+  ("sgtm").
+- **5. Hershey:** replace it whole, kept as the fallback ("Probably
+  fine").
+- **6. The o-kind join:** wider spacing, if stage 9 cannot solve the
+  join ("Probably fine").
+- **K563** (the title loop, K552's C4): (a) as built now, and (d) the
+  title as a tree with this redesign (stage 9's brief, "No title
+  loops").
+
 1. **Dots.**
    - A round dot is impossible: a closed ring of this ribbon needs a
      0.94 LU counter, so it is at least 1.46 LU across, 0.73 xh at the
