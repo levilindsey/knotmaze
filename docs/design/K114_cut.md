@@ -258,3 +258,140 @@ End your report with the item's handle fields and a `Ledger items` list.
      until the move ends: one pending slot, the latest tap wins. The
      controller refuses cut() while a carry is pending.
   3. Cuts count toward nothing but the cuts row.
+
+## Handoff
+
+Agent `K114 cut` of claude session 91b19e11, 2026-10-20, 9:09 PM to
+about 10:20 PM: the stage is done, inside the 2 h cap. Branch
+`worktree-agent-a1cdbc33c6dba02ff`, rebased on master `e642df6`,
+unpushed.
+
+### What landed
+
+- `src/game/cut.ts` (pure, the spec in its header): `cuttable`,
+  `cutStrands`, `cutVerdict`, `runEnds`, `contracted`, `carryChain`,
+  `distancesToExit`, the `FabricAction` / `CutResult` / `CutMode` types.
+  `walk_graph.ts` `walkDistances` takes a removed set.
+- `FabricMazeController`: `cut(eid)` ("cut" | "refused" | "invalid"),
+  `cutOn`, `cutMode`, `cutRuns()`, `cutCount`, the action log `actions`,
+  `carry`, `replayActions(actions)`, and `distToExit` as a live field;
+  `broken(eid)` includes cut runs, so choices, the pick and planRoute skip
+  them. With the cut off nothing changes: actions and taps are one to one
+  and the distances are the walk graph's own.
+- The param `cut` (`ct`: off | on, default off), appended at codec index
+  191 after collapse (CODEC_VERSION stays 8); the "Cut" row in the Game
+  folder after Collapse (classic game only, restarts the solve);
+  fabricRulesOf and setRules keep it to the classic game with fragile, par
+  and collapse off; shader warmup puts the explore variants in wave 1.
+- `src/ui/cut_buttons.ts` and main.ts: the scissors and Undo buttons
+  (bottom left), X / Esc / U (`input_keys.ts`), the armed tap (`cutTap`),
+  the lazy carry (`carryStep`, first in keyStep), the waiting cut,
+  `applyCut` (snap sound; a refusal's toast and dull pluck), Undo through
+  `replayActions`. `src/app/input_pointer.ts`: the armed hover glow
+  (`FabricMazeRenderer.cutAt`, mouse) under a crosshair, and a touch press
+  taken as a tap while armed. syncBroken draws the cut runs as K137's gone
+  thread. The HUD and banner "cuts N" row (with its STATS line) and the
+  share title's ` · ✂️ N`. Probe hooks: `__knotFabric().cut`, `.runPoint`,
+  `.toWorld`; choices' cost reads the live distances.
+- Tests: `test/game/cut.test.ts` (the rules, contraction with self-loops
+  and two-run vertices, refusals, distances, the action log, replay and
+  the carry), `test/ui/cut_buttons.test.ts`, share_text and maze_hud rows,
+  and the codec pins (param_codec's table pin, url_codec's defaults and
+  OVERRIDE_KEYS `ct`). The golden snapshot, the golden dailies and K87 did
+  not move.
+- Lore: gameplay-mechanisms.md "The cut (K114)", gameplay-links.md CUT
+  PARAM, gameplay-panel.md CUT ROW, the lore_index row.
+- Outside the "Yours" list, for the tap routing K5 moved out of main.ts:
+  `input_pointer.ts`, `frame_loop.ts` (cutTick beside the move pad),
+  `probe_hooks.ts`, `shader_warmup.ts`. None of K324 stage 2's or K620's
+  files.
+
+### Calls for Levi
+
+1. **The scissors' place and keys.** Built: two round buttons at the
+   bottom left (the scissors, then Undo), styled like K120's move pad at
+   the bottom right and above the build stamp; X arms or disarms, Esc
+   disarms, U undoes. They show beside the desktop's side panel (it leaves
+   that corner clear) and hide under a phone's settings sheet.
+   Alternatives: top left under the HUD (crowds its stat rows), beside the
+   hamburger (crowds the mode badge on a phone), or inside the move pad
+   (it is a viewer preference and hides with the panel). The Design
+   section above says Z for Undo: built U, because the keys go by the
+   typed letter and AZERTY's Z key is WASD's up (KeyW), so Z would move
+   and undo at once; Ctrl+Z is the other option.
+2. **A cut tapped mid-move.** Built: it waits (one `pendingCut` slot, the
+   latest tap wins) and lands when the move ends, its carried runs
+   included; the scissors go down at the tap. Alternative: cut at once,
+   with the run under the dot cut by syncBroken's swept-stretch rule;
+   that needs cut() to accept a run the move is on or about to carry on
+   along (it refuses while a carry is pending, since the chain was
+   computed under the old cuts).
+3. **What a cut counts toward.** Built: only the cuts row (HUD, banner)
+   and the share tag. The stars keep the uncut optimal
+   (`walk.optimalLength`), efficiency reads the route you ended on, and
+   par is off with the cut on. Alternatives: each cut costs strokes (if
+   par and the cut ever combine), cuts cap the stars (as a catch does), or
+   the stars rate against the cut maze's optimal (cutting would then make
+   three stars easier).
+
+Smaller calls, also built: a refused cut and an uncuttable run keep the
+scissors armed (a tap on empty space or a cut run puts them down); the
+armed glow is mouse-only (touch has no hover); the Undo button and U
+work only with the cut on (the Stranded banner keeps its own Undo).
+
+### For the walker stage (`docs/design/K114_walker.md`)
+
+- Its "stage 1's `replay(actions)`" is
+  `FabricMazeController.replayActions(actions)`; `replay(taps)` is still
+  K47's tap replay. A failed replay resets and returns false.
+- `carryChain` and `contracted` read only the walk graph and the cut set;
+  `carry` is set only by tapEdge with cuts present.
+- `distancesToExit(walk, cuts)` returns the walk graph's own map while
+  nothing is cut: never mutate it.
+
+### Page results
+
+- `npm test` after the rebase: 125 files and 1778 tests passed (1 skipped), tsc clean. `npm run build`: passes.
+- `.claude/probes/K114/cut/page/cut_page.mjs desktop 7`: 22 checks, 0
+  FAIL; `phone 7` (411x753, touch taps, its own browser): 20 checks, 0
+  FAIL. Each: the buttons shown and clear of the chrome, Undo disabled
+  before any action; arm by the button (desktop: X, Esc, X too, and the
+  crosshair); an empty-space tap disarms; run 220 (a junction arm by the
+  entrance) cut, the HUD's "cuts 1", Undo live, no longer a choice; Undo
+  (button; desktop: U too) puts it back; the contracted move [0, 221] to
+  node_14 with one tap, its Undo (the whole move, the cut stays) and the
+  move again; a refused cut at dead end mdead4_b's stub 15 (toast, still
+  armed; a second press disarms); a cut tapped mid-move waits (pending
+  while the dot moves) and lands; solved by real taps in 31 taps; the
+  banner's "cuts 2", the buttons hidden after the finish, the share title
+  "Knotmaze 🧶 ★★☆ · ✂️ 2". Stills (`shots/`): `cut_<vp>_arm_before` /
+  `_after` (the cut junction arm), `_crossing_before` / `_after` (the cut
+  run where it crossed run 197), `_cut_full`, `_carried`, `_refused`,
+  `_banner`. The cut run vanishes as K137's gone thread, and the junction
+  it left draws with its two remaining arms.
+- No performance measurements (the perf lock was K620's).
+
+### Residuals
+
+- The refusal toast (bottom center, pointer-events none) overlaps the
+  Undo button on a phone for its 2.5 s.
+- A long carried chain animates run by run (one moveAlong each, no pause
+  between), not as one glide.
+- K120's move pad still hides whenever the panel is open, while the
+  scissors show beside the desktop's side panel (two rules side by side).
+- The driver's `panelOpen` diagnostic reads true on a phone (it measures
+  the wrapper, not `panel.isOpen()`); probe-only.
+
+### Handle fields
+
+- owner: nobody since 2026-10-20 about 10:20 PM (agent `K114 cut` of
+  claude session 91b19e11-7759-4638-ba60-4705b011b94f; done)
+- branch: `worktree-agent-a1cdbc33c6dba02ff`, worktree
+  `.claude/worktrees/agent-a1cdbc33c6dba02ff`; last commit: this
+  handoff's (unpushed)
+- evidence: `.claude/probes/K114/cut/` (`page/cut_page.mjs`, `out/`,
+  `shots/`, `npm_test_rebased.log`, `build_rebased.log`)
+- next: merge (agent_merge.ps1), then Levi's calls 1-3
+- brief: `docs/design/K114_cut.md`
+- env: the driver's dev server,
+  `.claude/probes/K114/cut/page/vite.private-cache.config.ts` on port 5114
