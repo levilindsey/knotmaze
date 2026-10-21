@@ -11,7 +11,7 @@
 // Precision: the GPU evaluates in fp32 from the same fp32 texel values; the
 // mirror runs in f64. Censuses compare at <= 2/255.
 
-import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM, RUN_FLAG } from "./paint_const";
+import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM, PAINT_ITEM_TELE, RUN_FLAG } from "./paint_const";
 import {
   EXPLORE_CHAR_EDGE,
   EXPLORE_DOT_AT,
@@ -307,6 +307,9 @@ export interface KUniforms {
   // K76 thread reveal (on, look, breath, threadWidth): read only by the
   // explore program (explore_glsl.ts); absent = the mode is off.
   uKExplore?: Float32Array;
+  // K525 telegraph rims (rgb, strength): read only by the ribbon programs
+  // (paint_glsl PAINT_ACROSS_GLSL); absent = no telegraph.
+  uKTele?: Float32Array;
 }
 
 export const MAX_KNOTS = 8;
@@ -1263,13 +1266,15 @@ export function kPulseV(
 }
 
 // Paint state at a point: the gold ramp amount p (the thread's own paint),
-// whether a pulse band brightens it, with strength v, and the hover glow
-// along the thread (K145; kRimAcross shapes it across the ribbon).
+// whether a pulse band brightens it, with strength v, the hover glow along
+// the thread (K145; kRimAcross shapes it across the ribbon) and the turn
+// minotaur's telegraph rims along it (K525; the GLSL's kTele global).
 export interface KPaintState {
   p: number;
   band: boolean;
   v: number;
   rim: number;
+  tele: number;
 }
 
 // The hover glow's width (the hoverGlowWidth param, in half-widths) as the
@@ -1318,6 +1323,7 @@ export function kPaintAt(
   out.band = false;
   out.v = 0;
   out.rim = 0;
+  out.tele = 0;
   if (U.uKPaint[0] < 0.5) return out;
   const P = D.paint;
   const n = c.nCtrl;
@@ -1415,6 +1421,23 @@ export function kPaintAt(
         (1 - smooth01(d / Math.max(U.uKSect[2], 1e-4))) *
         smooth01((dEnd - P[o + 3]) / fade);
       if (g > out.rim) out.rim = g;
+    } else if (type === PAINT_ITEM_TELE) {
+      // K525: one piece of the telegraphed route, [c0, c1] unwrapped:
+      // T0 = (TELE, c0, c1, alpha), T1 = (gap0, gap1, fade0, fade1). Each
+      // end has its own gap (the web's reach at a junction end, 0 mid-run)
+      // and fade, the fade clamped as the hover rim's is, so a short piece
+      // still glows in full mid-piece. No hover-point falloff: the whole
+      // piece lights.
+      const u0 = kArcU(D, c, cA);
+      const u1 = kArcU(D, c, cB);
+      let u = arc;
+      if (c.closed) u = u0 + kWrap(arc - u0, total);
+      if (u < u0 || u > u1) continue;
+      const hl = 0.5 * (u1 - u0);
+      const f0 = Math.min(Math.max(PAINT_CONST.RIM_END_SHARE * (hl - P[o + 4]), 1e-4), Math.max(P[o + 6], 1e-4));
+      const f1 = Math.min(Math.max(PAINT_CONST.RIM_END_SHARE * (hl - P[o + 5]), 1e-4), Math.max(P[o + 7], 1e-4));
+      const g = P[o + 3] * Math.min(smooth01((u - u0 - P[o + 4]) / f0), smooth01((u1 - u - P[o + 5]) / f1));
+      if (g > out.tele) out.tele = g;
     }
   }
   return out;
@@ -1782,7 +1805,18 @@ export function kRimOver(S: Float32Array | number[], rim: number): void {
   for (let i = 0; i < 3; i++) S[i] = S[i] + (1 - S[i]) * w;
 }
 
-const PAINT_TMP: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+// GLSL twin: kTeleOver - the telegraph's colour over a painted color (K525,
+// in place): a mix toward uKTele.rgb by t (kTele x kRimAcross x strength),
+// applied after the paint and before the hover glow's whitening, so a
+// hovered run on the route shows both.
+export function kTeleOver(U: KUniforms, S: Float32Array | number[], t: number): void {
+  const T = U.uKTele;
+  if (!T) return;
+  const k = Math.max(0, Math.min(1, t));
+  for (let i = 0; i < 3; i++) S[i] = S[i] + (T[i] - S[i]) * k;
+}
+
+const PAINT_TMP: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
 
 // The ribbon shader's full color at a material point (section S in place,
 // FX, then the paint): what a probe vertex there renders, before the
@@ -1805,7 +1839,10 @@ export function kShadeAll(
   const a = kShadeFx(D, U, c, ctrl, arc / c.arcPer, side, S);
   const st = kPaintAt(D, U, c, ctrl, arc, px, PAINT_TMP);
   const rim = st.rim > 0 ? st.rim * kRimAcross(side, U.uKGold[3]) : 0;
+  // K525: the telegraph rims, shaped across as the hover glow is.
+  const tl = st.tele > 0 && U.uKTele ? st.tele * kRimAcross(side, U.uKGold[3]) * U.uKTele[3] : 0;
   kComposePaint(U, S, st, kGlow(D, U, c, ctrl));
+  if (tl > 0) kTeleOver(U, S, tl);
   if (rim > 0) kRimOver(S, rim);
   return a;
 }

@@ -126,6 +126,15 @@ export const FX_STYLE = {
 // per-arm band family retired by K75 (a crest brightens the pixel's own
 // paint now - see kComposePaint). RIM (K145) is the hover glow's run.
 export const PAINT_ITEM = { SPAN: 1, CAP: 2, PULSE: 3, RIM: 4 } as const;
+// TELE (K525): one piece of the turn minotaur's telegraphed route, drawn as
+// red rims along both edges: T0 = (TELE, c0, c1, alpha), T1 = (gap0, gap1,
+// fade0, fade1). It is 9 because explore_glsl.ts's VIS, CHAR, FRONT and
+// SMOLDER items (5-8) share this item table. Not a PAINT_ITEM entry:
+// glslConstBlock emits a PI_ constant for every entry into PAINT_CONST_GLSL,
+// which the junction field and the plucks include too, so an entry would
+// change their program text (a cold compile each, K307) for an item only the
+// ribbons draw. kPaintAt's own chunk declares PI_TELE (paint_glsl.ts).
+export const PAINT_ITEM_TELE = 9;
 export const ITEM_FLAG = { INWARD: 1, HOVER: 4 } as const;
 
 // RUNS flags (R1.w).
