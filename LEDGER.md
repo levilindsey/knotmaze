@@ -338,6 +338,22 @@ Next free ID: K671.
   - evidence: `.claude/probes/K441/`
   - next: Profile the real-time fire vs turn on post-K409 code (desktop and 4x throttle, perf lock), then fix inside drawFire or main's fire frame
   - brief: `docs/design/K441_fire_frame.md`
+- **K139** · Collapse mode (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`): no backtracking,
+  each run collapses behind you. `collapse` (off | finish | free); rides 4.3's snap (`fragile`,
+  K137) and R.3.4's longest thread (`docs/design/K80_gameplay_additions.md`). S-M, after 4.3.
+  - owner: agent `afd338f77eaa5ec8c` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 19:42, 2 h cap ~21:42)
+  - branch: `worktree-agent-afd338f77eaa5ec8c`, worktree `.claude/worktrees/agent-afd338f77eaa5ec8c`; last commit: `f6ad8cf`
+  - evidence: `.claude/probes/K139/`
+  - next: build collapse mode per the brief (pure module, search timing, wiring, param 190, page driver)
+  - brief: `docs/design/K139.md`
+- **K653** · Possible master bug, read but not measured (K525): syncMinotaur's layer reorder in
+  `fabric_maze_renderer.ts` (~1495-1499) may undo itself every other sync while the fog bleeds.
+  Probe it.
+  - owner: agent `af0bb199d326234d3` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 19:42, 1 h cap ~20:42)
+  - branch: `worktree-agent-af0bb199d326234d3`, worktree `.claude/worktrees/agent-af0bb199d326234d3`; last commit: `f6ad8cf`
+  - evidence: `.claude/probes/K653/`
+  - next: probe the layer reorder, then K650's census and SwiftShader compile, then K645's sheets and A/B
+  - brief: `docs/design/K653_checks.md`
 
 ## Next, in order
 
@@ -393,9 +409,6 @@ merged):
 13. K326 A.
 14. K318, K336, K337.
 
-- **K139** · Collapse mode (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`): no backtracking,
-  each run collapses behind you. `collapse` (off | finish | free); rides 4.3's snap (`fragile`,
-  K137) and R.3.4's longest thread (`docs/design/K80_gameplay_additions.md`). S-M, after 4.3.
 - **K579** · GPU confetti: upload each launch once, move the pieces in a vertex shader, no per-frame
   CPU sim or upload. Pays if K318 raises the counts (Levi asked 10-20); needs K307's warm-up;
   streamers need a CPU sim. The phone's fall isn't CPU-bound (K578). K628.
@@ -550,9 +563,6 @@ Every other item below waits on the trigger it names.
   `census_rim.mjs`) and the SwiftShader compile of the two longer shader texts (only D3D11 ran).
 - **K651** · Pixel sheet for K525's rims: roam, hunt, a catch and the fog glow, beside K524's. With
   the next phone agent (K644).
-- **K653** · Possible master bug, read but not measured (K525): syncMinotaur's layer reorder in
-  `fabric_maze_renderer.ts` (~1495-1499) may undo itself every other sync while the fog bleeds.
-  Probe it.
 - **K654** · K324 s2 input (K525): a moving end can ride a uniform like the hover point
   (`uKReach.w`), so a moving minotaur rewrites no texel; today a changed lead rewrites the paint
   texture.
