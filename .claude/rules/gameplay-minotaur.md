@@ -102,10 +102,13 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   the fleers' escape rates do not move (53%, 76% with queued taps). Pull
   1 reaches 66% for 1.94 catches: most of the gain comes by 0.5, so one
   strength and no slider. RE-MEASURED ON H1 MAZES (K278 (c), K80 turns
-  stage 2; `.claude/probes/K80/turns2/rt/`): pull 0 / 0.25 / 0.5 / 0.75
-  / 1 gives a greedy player 1.29 / 1.47 / 1.66 / 1.73 / 2.02 catches,
-  spotted in 57 / 61 / 61 / 65 / 65% of games; the fleers' escapes stay
-  near 54-58% (75-77% queued), so 0.5 stays. minotaur.test.ts's
+  stage 2; `.claude/probes/K80/turns2/rt/`), and again at 9ccf360 (K637;
+  the main checkout's `.claude/probes/K637/results.md`): pull 0 / 0.25 /
+  0.5 / 0.75 / 1 gives a greedy player 2.19 / 2.38 / 2.50 / 2.93 / 3.25
+  catches; the fleers escape 50-55% (75-78% with queued taps), so 0.5
+  still holds. The rise from 1.66 at pull 0.5 is K74 stage 3's trap-zone
+  finish (9ccf360: the exit corridor about +0.62, the away flank +0.22,
+  the H1 guard +0.13), intended; the harness is ruled out. minotaur.test.ts's
   still-player test now runs on H1 mazes (no `hCutShare: 0`), averaged
   over mazes 100-119 x 6 seeds: 65.6 s to reach a still player at pull
   0, 43.9 s at pull 1 (ratio 0.67, bound 0.8); K80_DIGESTS re-frozen. THE CEILING: a fifth of greedy solves end
@@ -178,12 +181,71 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   the live chase's step and records every tick (60 s unseen: 29 arrivals,
   18 stops of 24-70 ticks, 11 long stops, a tip held 0, no stray motion).
 
+- REAL-TIME GUARD AND STALKER (K324 stage 3, 2026-10-20; brief and
+  Handoff docs/design/K324_s3.md, which hold the full tables; design 8;
+  the module header's THE MODELS). The Behavior row (`minotaur`) picks
+  real time's model too (ChaseParams.model). THE HUNTER is stage 1's
+  chase, byte-identical (K80_DIGESTS unchanged), and reads none of the
+  new knobs. THE GUARD roams only its TERRITORY (`territory()`, cached
+  per value): home = the exit tail's junction; a vertex is in within
+  `territory` u of home along the threads (radius = territory, or home's
+  shortest run out when longer), a run when its farthest point is
+  ((d[a] + d[b] + len) / 2 <= radius, so the territory is connected).
+  Roam destinations are territory vertices (here, home, start and exit
+  excepted; tips with chance deadEndBias, roamPull as the hunter's); a
+  guard routes along territory runs only while both it and its
+  destination are in (`territoryRoute`), so one caught or left outside
+  walks the shortest way back. TERRITORY CONVERSION: the turn guard's 6
+  runs x about 5 u a run = 30 u. It spots you within guardDetect and
+  loses you beyond guardLose (its own sight, wherever you are; lose kept
+  >= detect); hunting, each junction takes the best run with chance
+  guardAccuracy, else a random one; lost, it checks where it last saw
+  you, then roams home. THE STALKER has no destinations and no long
+  stops (junction stops apply): while it sees you (you off the tails)
+  each junction aims with chance stalkerAccuracy, else a random run;
+  unseen, a random run, never back the way it came while it has another.
+  Within the hunter's shared sight (detectStart / detectEnd) it CHARGES:
+  mode hunt, approachPace, still at chance accuracy. Its "hunt" is that
+  charge only, so a stalker closing in at wander pace reads "wander" in
+  the HUD and the glow. DECISIONS: the guard's hunting steps and every
+  stalker step draw from a second counter stream (aimRng on seedMix,
+  indexed by `decisions`; three draws: aim, random run, the stalker's
+  leg pace), never the sequential rng, so plan() reads them ahead
+  (decideFrom at decisions + i) and a hunt turns back mid-run only after
+  an aimed choice (`aimed`). DEFAULTS (CHASE_MODEL_DEFAULTS, K294's shape
+  beside TURN_MODEL_DEFAULTS since the units differ): guard territory 30,
+  detect 20, lose 30, accuracy 0.4; stalker accuracy 0.45. The straight
+  sight conversion (30 / 40, twice the hunter's as the turn guard's 4
+  runs are twice its 2) kept a player hunted most of a solve. MEASURED
+  (stage 1's sim, 288 H1 mazes x 3 reps, pull 0.5; catches a game / %
+  of hunts escaped; greedy, fleer, queued fleer): hunter 2.61 / 5%,
+  0.72 / 55%, 0.43 / 79%; guard 2.49 / 56%, 0.78 / 89%, 0.86 / 89%
+  (hunted about 25-28 s a game); stalker 2.72 / 48%, 0.56 / 88%, 0.50 /
+  89%. The first guess (guard sight 30 / 40, accuracy 0.7; stalker 0.7)
+  caught the greedy player 6.4 and 6.3 times; the territory barely
+  matters (20 / 30 / 45 u: 7.2 / 6.4 / 6.3 at 0.7). PARAMS: five numbers,
+  codec 182-186 (gameplay-links.md), LIVE_EFFECTS under onChaseChange;
+  rows: gameplay-panel.md. TESTS: minotaur.test.ts's "K324 stage 3"
+  block (the hunter reads no model knob; MODEL_DIGESTS pin both models
+  tick for tick; replayChase per model; a roaming guard stays in or
+  walks back; accuracy as a rate; the stalker's sight and charge; plans
+  equal the runs walked, unseen and tracking). HOOK: `__knotChase()`
+  adds `model` and `decisions`. PAGE CHECK:
+  `.claude/probes/K324/k324_page_s3.mjs <base> <model> [outDir] [seed]
+  [secs]` (env PHASEB=walk|stand; `run_s3_page.ps1` runs specs
+  `model:phase:seed` under the perf lock): every model held its stops,
+  stood still through them and planned validly on every tick, with no
+  page errors (the Handoff has the runs).
+
 ## The turn-aligned minotaur
 
 - TURN-ALIGNED MINOTAUR (K80 turns stage 1, 2026-10-14;
   game/minotaur_turns.ts, brief docs/design/K80_turns.md). `minotaur`
-  (`mt`) = off (default) | hunter | guard | stalker, on the turn clock
-  only (ignored under clk=realtime, whose panel hides the turn rows). AN
+  (`mt`) = hunter (the default since 35f3ec2, K534) | guard | stalker
+  (K323 removed off); `gameMode` decides whether a minotaur plays at
+  all. Stage 1 read it on the turn clock only; since K324 stage 3 real
+  time plays the same three models with its own rows (REAL-TIME GUARD
+  AND STALKER above), and each clock's panel hides the other's rows. AN
   EXACT PORT of the brief's research harness (section 0) on ChaseGraph
   plus a hop matrix (TurnGraph): walk edge id === chase edge index, vertex
   order = walk.vertices order, candidates sorted by run id. RULES: every
