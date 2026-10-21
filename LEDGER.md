@@ -329,22 +329,6 @@ Next free ID: K688.
   - evidence: `.claude/probes/K137/`
   - next: Levi's slack and snap calls (K655, K656), then stage 2's brief (4.15 spool, 4.28 hints)
   - brief: `docs/design/K137_s1.md`
-- **K631** · Phone passes owed: K244's on the phone (core releases silent, auto plucks draw,
-  dense_phone). K409's sheet is done (18:37, 3231d59: fine at phone scale). Part 2 waits on the
-  phone (K662).
-  - owner: nobody since 2026-10-20 18:50 (agent `a55c06bc8f3a6e909` of claude session 91b19e11-7759-4638-ba60-4705b011b94f, stopped: the phone dozed and stayed locked through the idle gate)
-  - branch: mainline; last commit: `62a70c1` (no commits; the probes are on disk)
-  - evidence: `.claude/probes/K631/` (`k631_phone.mjs`, `run_part2.ps1`, `builds/`, `logs/`), `.claude/probes/K409/phone/out/sheet/`
-  - next: with the phone plugged in, unlocked and on the home screen, `pwsh -File .claude/probes/K631/run_part2.ps1` (a 4-cell smoke, then 12 cells, ~25 min); read `out/phone` with `.claude/probes/K244/summarize.mjs` against `docs/design/K244_cores.md`'s desktop counts
-  - brief: `docs/design/K631_phone.md`
-  - env: `.claude/probes/K631/run_part2.ps1` (takes the phone lock, serves the builds on port 5631, sets up and tears down the phone)
-- **K662** · The phone sitting (Levi plugged it in at 20:00, on AC with stay-awake): K631 part 2
-  (K244's counts), K646 + K587 (confetti), K651 (telegraph rims), K644 if K580 s3 has merged.
-  - owner: agent `aadd6b0b7905a1619` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 20:06, 1 h cap ~21:06)
-  - branch: mainline; last commit: `1b96ae6`
-  - evidence: .claude/probes/K662/ (results.md, builds/, sheets), .claude/probes/K631/out/phone/
-  - next: parts 1-4 per the brief; on report file the results into K631, K646, K587, K651, K644
-  - brief: `docs/design/K662_phone.md`
 - **K620** · K580's root paint (Levi 2026-10-20: "K580 rec sgtm"): each side of the root takes its
   stroke's paint and blends into the spur's at J. `paint_math.ts` work, after K525 and K580 s3;
   inputs in `docs/design/K580_s2.md` "For K620"; `.claude/probes/K580/sheets/a_join_zoom.png`.
@@ -529,8 +513,6 @@ Every other item below waits on the trigger it names.
   it underneath so it ends where the glyph wants. `docs/design/K115_glyphs.md` section 11, call 2.
 - **K582** · Final ς gets its own glyph (Levi took stage 6's rec, 2026-10-19); live Greek still
   draws σ. Build it in the stage 9+ glyph set after K580 (`docs/design/K115_glyphs.md`).
-- **K587** · Confetti shine on the Pixel: frame rate and look in K156's next pass. The model bench
-  says +21-60 µs a frame; the desktop frame A/B was not run (K337 handoff).
 - **K590** · G3-1's phone gap search, the rest: with K573 step 2 knot is still 2.0x the pre-G3-1
   build (19.3 vs 9.7 ms). Three untried levers; measure what lies outside the walk first.
   `docs/design/K573.md` ("Next, if knot must reach 1.5x"); full text `docs/ledger_notes.md`.
@@ -543,22 +525,14 @@ Every other item below waits on the trigger it names.
 - **K643** · K580's glyph-lint upkeep: lintGlyph takes the taper part as an argument (it hardcodes
   TAPER_PART_LU, so tp60 lints only through a probe copy); calibrate taperBulgeLU (0.01) and the
   crotch bound (1.2 LU) with bulges injected through a probe flag (`docs/design/K580_s2.md` step 5).
-- **K644** · Phone pass for K580's glyph look (s2's medial root, s3's round outer side): "a", "ai",
-  "ia" and "aa" on the Pixel at xh 2 and 3, after K580 s3 merges, with the next phone agent (K631's
-  kit; s2 shot only desktop Chrome at phone scale).
 - **K645** · K336's last unrun check: K140's GPU frame A/B at amounts 1 and 3, cannons on/off, under
   the perf lock (recipe in `docs/design/K653_checks.md` Handoff). The sheets, curl strip and spray
   count are done (K653): the finish spray throws no streamers.
-- **K646** · Phone pass for K336 + K186: the cannons' and streamers' look and frame time at cannon
-  amounts 1 and 3, K186's banner paths, and a `banners/banners.mjs` rerun on the final build. With
-  the next phone agent (K644).
 - **K649** · K525's tuning: rim strengths 0.6/0.8/1 and fades 0.2/0.3; junction-end gaps (runs under
   1.95 world get no rims; try gap 0 at interior junctions); the ticks' touch alphas vs the line's
   0.7; the fog glow (a dim dot on the Pixel, K662); the sheet extras. `docs/design/K525_telegraph.md` Handoff.
 - **K650** · K525's unrun check: the GPU-vs-mirror census for the TELE paint item (adapt
   `census_rim.mjs`; K324 s2 runs it with the moving end). SwiftShader is done (K653: 8/8 compile, 13/13 link).
-- **K651** · Pixel sheet for K525's rims: roam, hunt, a catch and the fog glow, beside K524's. With
-  the next phone agent (K644).
 - **K654** · K324 s2 input (K525): a moving end can ride a uniform like the hover point
   (`uKReach.w`), so a moving minotaur rewrites no texel; today a changed lead rewrites the paint
   texture.
@@ -1523,6 +1497,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K662** · The phone sitting (2026-10-20, 20:06-20:50): parts 1-4 ran (K631, K646, K587, K651, K644 closed); Levi took the phone back before the daily paths (K687). Done in 9cca8b5 (2026-10-20).
+- **K631** · K244 on the phone (round 2026-10-20): auto plucks with nothing drawn 0 of 372 on the K244 builds (base 8 of 186); drawn releases 47 of 47; taps alike on both builds. Done in 9cca8b5 (2026-10-20).
+- **K646** · Phone pass for K336 + K186 (round 2026-10-20): six banner paths show 1 burst each; frames flat in amount (23-26% over 25 ms, max 34 ms, hot and with audio on); daily paths 2b/3 and a quiet rerun in K687. Done in 9cca8b5 (2026-10-20).
+- **K644** · Phone pass for K580 glyphs (round 2026-10-20): 16 stills at xh 2 and 3, all asleep by 5.9 s; the J smooth, no s2 regression; the a stem notch is K676. Done in 9cca8b5 (2026-10-20).
+- **K651** · Pixel sheet for K525 rims (round 2026-10-20): red edges and the destination circle read well; the fog glow is a dim dot (K649). Done in 9cca8b5 (2026-10-20).
+- **K587** · Confetti shine on the Pixel (round 2026-10-20): shine 0 vs 2 both 24% of frames over 25 ms, no measurable cost (`.claude/probes/K662/results.md`). Done in 9cca8b5 (2026-10-20).
 - **K139** · collapse mode (cl, codec 190): every run collapses once crossed; finish and free; score = share collapsed against a 20k-step par; calls K681, residuals K682-K685. Done in 961cd53 (2026-10-20).
 - **K653** · syncMinotaur fog-bleed layer flip fixed (no lift-back while it bleeds): 0 moves in 208 syncs, was 209 of 209; K650 b and K645 a done (K653_checks.md Handoff). Done in 4ae42ee (2026-10-20).
 - **K637** · The minotaur sim's 1.66 to 2.50 greedy catches is 9ccf360 (K74 s3's trap-zone finish), intended; harness ruled out; 2.50 is the baseline (`.claude/probes/K637/`). Done in 41fa173 (2026-10-20).
