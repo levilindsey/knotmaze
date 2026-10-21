@@ -621,6 +621,20 @@ export function installProbeHooks(ctx: ProbeCtx): void {
         fb.vertexWorld(id, out, 0);
         return toScreen(out[0], out[1]);
       },
+      // K114 probe helpers: a point `frac` of the way along any run (its
+      // screen point and world point), and a screen point's world point.
+      runPoint: (eid: number, frac = 0.5) => {
+        const e = wg.edges[eid];
+        if (!e) return null;
+        const len = sys.chains[e.chain].length;
+        const f = e.ctrlA + frac * (e.ctrlB - e.ctrlA);
+        sys.pointOnChain(e.chain, ((f % len) + len) % len, out, 0);
+        return { ...toScreen(out[0], out[1]), wx: out[0], wy: out[1] };
+      },
+      toWorld: (x: number, y: number) => ({
+        x: (x - ctx.root.position.x) / ctx.root.scale.x,
+        y: (y - ctx.root.position.y) / ctx.root.scale.y,
+      }),
       // Probe helper: the walk-edge ids of a fewest-runs route from the
       // head to the nearest dead-end tip not in `exclude` (BFS, never
       // through the exit), or null when there is none.
