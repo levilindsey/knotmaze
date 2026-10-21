@@ -351,11 +351,11 @@ Next free ID: K724.
 - **K137** · K80 section 4's cheap (S, S-M) mechanisms, each toggled (Levi 10-13), after the
   minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus
   Levi's sleeper variant. `K80_gameplay_additions.md`, stages in `sooner_20261020.md`; M: K138, M-L/L: K141.
-  - owner: nobody since 2026-10-21 01:18 (merged; agent `af34a0e5755494326` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `cb748ff`
-  - evidence: `.claude/probes/K137/s3b/`
-  - next: stage 2, the aids (docs/design/K137_s2.md); then s3c: sprint (4.29) and the monster list, from the K137_s3b.md Remainder
-  - brief: `docs/design/K137_s3b.md`
+  - owner: agent `ab30886de55748da0` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 01:20, 2 h cap ~03:20)
+  - branch: `worktree-agent-ab30886de55748da0`, worktree `.claude/worktrees/agent-ab30886de55748da0`; last commit: `9784f35`
+  - evidence: `.claude/probes/K137/s2/`
+  - next: stage 2, the aids: spool, hints and compass, chalk; then s3c (sprint, the monster list) from the K137_s3b.md Remainder
+  - brief: `docs/design/K137_s2.md`
 - **K643** · K580's glyph-lint upkeep: lintGlyph takes the taper part as an argument (it hardcodes
   TAPER_PART_LU, so tp60 lints only through a probe copy); calibrate taperBulgeLU (0.01) and the
   crotch bound (1.2 LU) with bulges injected through a probe flag (`docs/design/K580_s2.md` step 5).
@@ -381,6 +381,14 @@ Next free ID: K724.
   - evidence: `docs/design/K138_plan.md`
   - next: the planner pass: the plan, the K138 s1 brief, questions for Levi
   - brief: `docs/design/K138_plan.md`
+- **K708** · K137 sims for lives and the sword (s3a step 7, unrun): teach the K80 turn sim
+  (.claude/probes/K80/turns2/) to respawn and count catches, then run its six cells
+  (docs/design/K137_s3a.md, The sim table)
+  - owner: agent `ace2e470ae344d299` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-21 01:20, 1 h cap ~02:20)
+  - branch: `worktree-agent-ace2e470ae344d299`, worktree `.claude/worktrees/agent-ace2e470ae344d299`; last commit: `9784f35`
+  - evidence: `.claude/probes/K708/`
+  - next: respawn and the sword in both sims, then the tables
+  - brief: `docs/design/K708.md`
 
 ## Next, in order
 
@@ -589,9 +597,6 @@ Every other item below waits on the trigger it names.
 - **K690** · K620 checks not run: the root-pixel census (GPU against the CPU mirror), CPU-mirror
   tests on the real a (xh 2 and 3, tp52 and tp60), a cold-compile time with `trace_intro.mjs`
   (`docs/design/K620.md`)
-- **K708** · K137 sims for lives and the sword (s3a step 7, unrun): teach the K80 turn sim
-  (.claude/probes/K80/turns2/) to respawn and count catches, then run its six cells
-  (docs/design/K137_s3a.md, The sim table)
 - **K709** · Phone kit hardening: the adb reconnect is built (K717, `.claude/probes/K578/phone/`
   adb_reconnect*.ps1 and watchdog_reconnect.ps1, on by default) but only its healthy-link no-op is
   tested; lib703 END cannot cross midnight; run_k717 skips a late probe; walker_phone takes 1 candidate
