@@ -51,6 +51,10 @@ export function ruleFields(fc: FabricMazeController): RuleFields {
     parStrokes: fc.parMode === "strokes" ? { par: fc.par, strokes: fc.strokes } : null,
     collapse: par ? { pct: fc.collapsePercent, par: parText(par) } : null,
     cuts: fc.cutOn ? fc.cutCount : null, // K114
+    // K137 stage 2: the spool's gauge and the hints left (the finish's
+    // spoolUsed and hintsUsed ride main.ts's WinInfo, not these).
+    spool: fc.spoolOn ? { used: fc.spoolUsed, cap: fc.spoolCap } : null,
+    hints: fc.hintsMax > 0 ? { left: fc.hintsLeft, of: fc.hintsMax } : null,
   };
 }
 

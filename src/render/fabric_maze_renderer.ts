@@ -108,6 +108,10 @@ const WALKER_COLOR = 0x3fd0ff;
 const WALKER_STRENGTH = 0.9;
 const WALKER_TRAIL_ALPHA = 0.5;
 const TELE_RED = 0xff2418;
+// K137 stage 2: a hint's rims, mint against the walker's cyan (they never
+// share a game) and the minotaur's red.
+const HINT_COLOR = 0x7dffc4;
+const HINT_STRENGTH = 1;
 
 // K76 THREAD REVEAL (stage 2a; docs/design/K76.md): a newly visited
 // vertex's arms grow out over this many seconds (eased), and the halo
@@ -251,7 +255,7 @@ const START_HIDDEN: ReadonlySet<number> = new Set();
 // The marker meshes live for the page (each scene's overlay borrows them;
 // destroy() hands them back undestroyed - the PALETTE_CACHE lore). The
 // spider glyph has no mesh yet (K114 decides what it marks).
-type MeshRole = Exclude<MarkerRole, "spider">;
+type MeshRole = Exclude<MarkerRole, "spider" | "tick">;
 let MARKER_MESHES: Record<MeshRole, MarkerMesh> | null = null;
 function markerMeshes(): Record<MeshRole, MarkerMesh> {
   if (!MARKER_MESHES) {
@@ -265,6 +269,19 @@ function markerMeshes(): Record<MeshRole, MarkerMesh> {
   }
   return MARKER_MESHES;
 }
+// K137 stage 2: the chalk ticks' meshes, grown on demand and page-lifetime
+// like the markers (each scene borrows the first N; destroy() hands them back).
+const TICK_POOL: MarkerMesh[] = [];
+// A tick sits up and right of its junction (in marker radii), so the head's
+// disc never covers the tick on the junction it stands on, at this share of
+// the marker radius.
+const TICK_OFFSET = 1.15;
+const TICK_SCALE = 0.7;
+// The compass: an arrow COMPASS_DIST marker radii from the head along the
+// good arm's chord to COMPASS_REACH ctrl along it, COMPASS_SIZE radii long.
+const COMPASS_DIST = 1.9;
+const COMPASS_SIZE = 0.75;
+const COMPASS_REACH = 1;
 
 // Hit-test sampling density along runs (ctrl units).
 const SAMPLE_STEP = 0.25;
@@ -548,6 +565,9 @@ export class FabricMazeRenderer {
   private yarnGfx: Graphics;
   private yarnEvents: YarnEvent[] = [];
   private yarnSeed = 0;
+  // K137 s2: the spool's pass being reeled in (the newest event, clipped
+  // back with the dot while the backtrack animates, popped when it lands).
+  private reeling: YarnEvent | null = null;
   // Fog of war (main.ts syncs the first two every tick; see FOG block).
   fogOfWar = false;
   fowRadius = 4;
@@ -1283,9 +1303,9 @@ export class FabricMazeRenderer {
       if (this.walkerKey === null) return;
       this.walkerKey = null;
       this.walkerPieces = [];
-      this.ribbons.teleColor = TELE_RED;
-      this.ribbons.teleStrength = 0;
-      this.ribbons.setTelegraph(null);
+      this.setTeleColor(TELE_RED);
+      this.setTeleStrength(0);
+      this.setTele(null);
       return;
     }
     const key = runs.join(",");
@@ -1303,9 +1323,53 @@ export class FabricMazeRenderer {
       }
       this.walkerPieces = pieces;
     }
-    this.ribbons.teleColor = WALKER_COLOR;
-    this.ribbons.teleStrength = WALKER_STRENGTH;
-    this.ribbons.setTelegraph(this.walkerPieces);
+    this.setTeleColor(WALKER_COLOR);
+    this.setTeleStrength(WALKER_STRENGTH);
+    this.setTele(this.walkerPieces);
+  }
+
+  // K137 stage 2: a HINT lights one run in the telegraph's rim look (K525's
+  // TELE paint item) in HINT_COLOR, until main's timer (HINT_SECONDS) or a
+  // move (beginMove) clears it. While it is lit it holds the one telegraph
+  // slot: every other writer goes through setTele / setTeleColor /
+  // setTeleStrength, which keep the BASE telegraph (the minotaur's or the
+  // walker's; hints are off in walker modes) without drawing it, and
+  // clearHint puts the latest base back.
+  private teleBase: PaintTele[] | null = null;
+  private teleBaseColor = TELE_RED;
+  private teleBaseStrength = 0;
+  private hintPieces: PaintTele[] | null = null;
+  // The run a hint lights (-1: none), for the probes.
+  hintRun = -1;
+  private setTele(p: PaintTele[] | null): void {
+    this.teleBase = p;
+    if (!this.hintPieces) this.ribbons.setTelegraph(p);
+  }
+  private setTeleColor(c: number): void {
+    this.teleBaseColor = c;
+    if (!this.hintPieces) this.ribbons.teleColor = c;
+  }
+  private setTeleStrength(s: number): void {
+    this.teleBaseStrength = s;
+    if (!this.hintPieces) this.ribbons.teleStrength = s;
+  }
+  showHint(eid: number): boolean {
+    const e = this.walk.edges[eid];
+    if (!e) return false;
+    this.hintRun = eid;
+    this.hintPieces = [{ chain: e.chain, c0: e.ctrlA, c1: e.ctrlB, alpha: 1, j0: true, j1: true }];
+    this.ribbons.teleColor = HINT_COLOR;
+    this.ribbons.teleStrength = HINT_STRENGTH;
+    this.ribbons.setTelegraph(this.hintPieces);
+    return true;
+  }
+  clearHint(): void {
+    if (!this.hintPieces) return;
+    this.hintPieces = null;
+    this.hintRun = -1;
+    this.ribbons.teleColor = this.teleBaseColor;
+    this.ribbons.teleStrength = this.teleBaseStrength;
+    this.ribbons.setTelegraph(this.teleBase);
   }
 
   // K76 stage 2c: under the thread reveal, hidden thread is empty space
@@ -1418,6 +1482,8 @@ export class FabricMazeRenderer {
     this.finishFogArc();
     if (this.anim) this.exploreArrive(this.anim);
     this.anim = null;
+    this.endReel();
+    this.clearHint(); // K137 stage 2: a move ends a hint early
     const e = this.walk.edges[edgeId];
     // A self-loop run's direction is unknowable: it sweeps A -> B (moveEnds,
     // shared with the fog's restore, K100).
@@ -1425,8 +1491,12 @@ export class FabricMazeRenderer {
     this.anim = { e, from, to, cur: from, kind };
     // String mode: every move - advance OR backtrack - lays one new yarn
     // pass in the dot's travel direction (the backtrack pass IS the
-    // U-turning return; nothing is removed).
-    if (this.pathViz === "string") this.pushYarnEvent(e, from, to);
+    // U-turning return; nothing is removed). K137 s2: under the spool a
+    // backtrack REELS IN the newest pass instead (the yarn is the path).
+    if (this.pathViz === "string") {
+      if (kind === "backtrack" && controller.spoolOn) this.beginReel(e, from, to, controller);
+      else this.pushYarnEvent(e, from, to);
+    }
     this.emitAnimFrame(controller);
   }
 
@@ -1434,6 +1504,7 @@ export class FabricMazeRenderer {
     this.finishFogArc();
     if (this.anim) this.exploreArrive(this.anim);
     this.anim = null;
+    this.endReel();
   }
 
   // K80's catch: the move ends where the dot is, and the fog (which a
@@ -1447,6 +1518,7 @@ export class FabricMazeRenderer {
       this.seenPartial.push({ edge: a.e.id, from: a.from, cur: a.cur });
     }
     this.anim = null;
+    this.endReel();
   }
 
   // K99: lift the fog at the stations of the in-flight move between `prev`
@@ -1510,6 +1582,7 @@ export class FabricMazeRenderer {
     if (arrived) {
       this.exploreArrive(a);
       this.anim = null;
+      this.endReel();
       this.update(controller);
       return;
     }
@@ -1535,6 +1608,7 @@ export class FabricMazeRenderer {
     if (f >= 1) {
       this.exploreArrive(a);
       this.anim = null;
+      this.endReel();
       this.update(controller);
       return;
     }
@@ -1562,7 +1636,7 @@ export class FabricMazeRenderer {
     // K137 stage 3b: a minotaur slain by the sword is gone for the solve.
     if (!chase || chase.slain) {
       this.minoLayer.visible = false;
-      this.ribbons.setTelegraph(null);
+      this.setTele(null);
       return;
     }
     // K137 stage 3b: pale blue while it flees (the walker never shares a
@@ -1570,12 +1644,12 @@ export class FabricMazeRenderer {
     const flee = chase.fleeing === true;
     this.minoGlow.texture = flee ? minoFleeGlowTexture() : minoGlowTexture();
     this.teleInk = flee ? FLEE_BLUE : TELEGRAPH_COLOR;
-    this.ribbons.teleColor = flee ? FLEE_BLUE : TELE_RED;
+    this.setTeleColor(flee ? FLEE_BLUE : TELE_RED);
     const at = spotCtrl(this.walk, chase.g, chase.mino);
     const ctrl = this.ctrlMod(at.chain, at.ctrl);
     if (this.revealQuery && this.revealQuery(at.chain, ctrl) < 0.98) {
       this.minoLayer.visible = false;
-      this.ribbons.setTelegraph(null);
+      this.setTele(null);
       return;
     }
     const over = fog === "always" || (fog === "hunting" && chase.mode === "hunt");
@@ -1584,7 +1658,7 @@ export class FabricMazeRenderer {
     // thread point is not solid (the exit marker's test).
     if (!over && this.explore.on && this.ribbons.exploreVisAt(at.chain, ctrl) < 0.98) {
       this.minoLayer.visible = false;
-      this.ribbons.setTelegraph(null);
+      this.setTele(null);
       return;
     }
     const m = chase.mino;
@@ -1629,7 +1703,7 @@ export class FabricMazeRenderer {
       this.markers.minotaur.hide();
       this.teleGfx.clear();
       this.teleGfx.visible = false;
-      this.ribbons.setTelegraph(null);
+      this.setTele(null);
       this.minoGlow.alpha = MINO_FOG_BLEED_ALPHA;
     }
     this.minoShown = true;
@@ -1852,7 +1926,7 @@ export class FabricMazeRenderer {
     gfx.clear();
     if (!t) {
       gfx.visible = false;
-      this.ribbons.setTelegraph(null);
+      this.setTele(null);
       return;
     }
     // K324 stage 2: the real-time route (chaseRoute) leads with the partial
@@ -1865,9 +1939,9 @@ export class FabricMazeRenderer {
     // change, and the lead's moving end rides uKTeleAt (K654), so a
     // walking minotaur rewrites none until it changes runs.
     if (this.telegraphLook !== "line") {
-      this.ribbons.teleStrength = telegraphRimStrength(hunting, this.telegraphCoarse);
-      this.ribbons.setTelegraph(telegraphPieces(g, this.walk.edges, t, lead, true));
-    } else this.ribbons.setTelegraph(null);
+      this.setTeleStrength(telegraphRimStrength(hunting, this.telegraphCoarse));
+      this.setTele(telegraphPieces(g, this.walk.edges, t, lead, true));
+    } else this.setTele(null);
     // K481 stage 2: by length, the route starts where it stands and its
     // stops carry the ticks.
     if (!live && t.fromSpot && t.segLens && t.stops) {
@@ -2360,9 +2434,31 @@ export class FabricMazeRenderer {
     });
   }
 
+  // K137 s2: start reeling in the newest pass, the one this backtrack
+  // retraces (laid from the move's 	o to its rom). A yarn out of step
+  // with the path is laid again from it instead, without an animation.
+  private beginReel(e: WalkEdge, from: number, to: number, controller: FabricMazeController): void {
+    const y = this.yarnEvents[this.yarnEvents.length - 1];
+    if (y && y.chain === e.chain && Math.abs(y.c0 - to) < 1e-6 && Math.abs(y.c1 - from) < 1e-6) {
+      this.reeling = y;
+    } else {
+      this.reeling = null;
+      this.rebuildYarnFromPath(controller);
+    }
+  }
+
+  // The reel-in landed (or was cut short): the pass is picked up.
+  private endReel(): void {
+    const y = this.reeling;
+    if (!y) return;
+    this.reeling = null;
+    if (this.yarnEvents[this.yarnEvents.length - 1] === y) this.yarnEvents.pop();
+  }
+
   // Entering string mode mid-game re-lays the current path as a single
   // chain of advances (the backtrack history is not retained elsewhere).
   private rebuildYarnFromPath(controller: FabricMazeController): void {
+    this.reeling = null;
     this.yarnEvents.length = 0;
     const pe = controller.pathEdges;
     const pv = controller.pathVertices;
@@ -2386,6 +2482,16 @@ export class FabricMazeRenderer {
       }
       return;
     }
+    // K137 s2: under the spool the yarn IS the path stack (plus the pass
+    // being reeled in): an undo, a restore or a catch lays it again.
+    if (controller.spoolOn) {
+      const want = controller.pathEdges.length + (this.reeling ? 1 : 0);
+      if (this.yarnEvents.length !== want) {
+        this.reeling = null;
+        this.rebuildYarnFromPath(controller);
+      }
+      return;
+    }
     // NOTE: an EMPTY path no longer clears the yarn - backtracking all
     // the way to the start leaves the laid string on the maze (it is
     // never picked up, per the Ariadne model). Only the explicit reset
@@ -2397,6 +2503,7 @@ export class FabricMazeRenderer {
 
   // Explicit reset (the panel button): drop the laid string.
   clearYarn(): void {
+    this.reeling = null;
     this.yarnEvents.length = 0;
     this.yarnGfx.clear();
   }
@@ -2406,6 +2513,7 @@ export class FabricMazeRenderer {
   // (the head after a tap is the run's other end, a self-loop runs A -> B;
   // the pass seeds count up the same way). Then update() draws it.
   restoreYarn(taps: readonly number[]): void {
+    this.reeling = null;
     this.yarnEvents.length = 0;
     if (this.pathViz !== "string") return;
     let head = this.walk.start;
@@ -2464,14 +2572,16 @@ export class FabricMazeRenderer {
     const a = this.anim;
     for (let ev = 0; ev < this.yarnEvents.length; ev++) {
       const y = this.yarnEvents[ev];
-      // The newest pass unspools with the dot while its move animates.
+      // The newest pass unspools with the dot while its move animates
+      // (K137 s2: or the spool reels it back in, the same clip run back).
       let tClip = 1;
       if (
         a &&
         ev === this.yarnEvents.length - 1 &&
-        y.chain === a.e.chain &&
-        Math.abs(y.c0 - a.from) < 1e-6 &&
-        Math.abs(y.c1 - a.to) < 1e-6
+        (y === this.reeling ||
+          (y.chain === a.e.chain &&
+            Math.abs(y.c0 - a.from) < 1e-6 &&
+            Math.abs(y.c1 - a.to) < 1e-6))
       ) {
         const span = y.c1 - y.c0;
         tClip =
@@ -3370,6 +3480,7 @@ export class FabricMazeRenderer {
     this.glowSprite.position.set(this.headX, this.headY);
     m.head.setGlyph(markerGlyph(this.markerGlyphIds.head, "head"));
     m.head.place(this.headX, this.headY, r);
+    this.drawAids(controller, dotChain >= 0, r); // K137 stage 2
 
     // Start/exit discs sit at the renderer's OWN sample of their ctrl
     // (markerWorld), concentric with the gap slots the renderer cuts for
@@ -3415,6 +3526,77 @@ export class FabricMazeRenderer {
         alpha: 0.9,
       });
     }
+  }
+
+  // K137 stage 2: the CHALK TICKS (a pooled tick marker by each marked
+  // junction, TICK_OFFSET up and right) and the COMPASS (main sets
+  // compassOn from the param): an arrow beside the resting head along
+  // controller.goodArm(), found once per move (keyed on the head, the taps,
+  // the actions and the restarts), hidden while the dot moves, once solved
+  // and in the walker's modes. Never aimed at the exit itself.
+  compassOn = false;
+  chalkOn = false;
+  private compassKey = "";
+  private compassArm = -1;
+  private ticks: MarkerMesh[] = [];
+  // The arm the compass shows (-1: none), for the probes.
+  get compassRun(): number {
+    return this.compassOn ? this.compassArm : -1;
+  }
+  private drawAids(controller: FabricMazeController, moving: boolean, r: number): void {
+    let n = 0;
+    if (this.chalkOn && controller.chalk.size > 0) {
+      const glyph = markerGlyph(this.markerGlyphIds.tick, "tick");
+      for (const v of controller.chalk) {
+        if (!this.walk.vertices.has(v)) continue;
+        const mk = this.tickMesh(n++);
+        mk.setGlyph(glyph);
+        this.vertexWorld(v, this.scratch, 0);
+        mk.place(this.scratch[0] + r * TICK_OFFSET, this.scratch[1] - r * TICK_OFFSET, r * TICK_SCALE);
+      }
+    }
+    for (let i = n; i < this.ticks.length; i++) this.ticks[i].hide();
+    if (!this.compassOn || controller.solved || controller.walkerMode) {
+      this.compassArm = -1;
+      this.compassKey = "";
+      return;
+    }
+    const key = `${controller.head}|${controller.taps.length}|${controller.actions.length}|${controller.restarts}`;
+    if (key !== this.compassKey) {
+      this.compassKey = key;
+      this.compassArm = controller.goodArm();
+    }
+    const e = this.walk.edges[this.compassArm];
+    if (moving || !e) return;
+    const fromA = e.va === controller.head;
+    const k = Math.min(COMPASS_REACH, (e.ctrlB - e.ctrlA) / 2);
+    this.pointFlowed(e.chain, this.ctrlMod(e.chain, fromA ? e.ctrlA + k : e.ctrlB - k), this.scratch, 0);
+    let dx = this.scratch[0] - this.headX;
+    let dy = this.scratch[1] - this.headY;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (!(len > 1e-6)) return;
+    dx /= len;
+    dy /= len;
+    const c = r * COMPASS_DIST;
+    const s = r * COMPASS_SIZE;
+    const cx = this.headX + dx * c;
+    const cy = this.headY + dy * c;
+    const bx = cx - dx * s * 0.6;
+    const by = cy - dy * s * 0.6;
+    const w = s * 0.75;
+    const g = this.gfx;
+    g.poly([cx + dx * s, cy + dy * s, bx - dy * w, by + dx * w, bx + dy * w, by - dx * w]);
+    g.fill({ color: HINT_COLOR, alpha: 0.95 });
+    g.stroke({ color: 0x0b0f18, width: r * 0.12, alpha: 0.9 });
+  }
+  private tickMesh(i: number): MarkerMesh {
+    while (this.ticks.length <= i) {
+      const j = this.ticks.length;
+      const mk = TICK_POOL[j] ?? (TICK_POOL[j] = new MarkerMesh());
+      this.overContainer.addChildAt(mk.mesh, this.overContainer.getChildIndex(this.markers.head.mesh));
+      this.ticks.push(mk);
+    }
+    return this.ticks[i];
   }
 
   // --- K76 THREAD REVEAL (stage 2a; the event-fed model is stage 2c) -----
@@ -3792,7 +3974,7 @@ export class FabricMazeRenderer {
   destroy(): void {
     // The marker meshes outlive the scene (markerMeshes): hand them back
     // before the containers go (the minotaur's sits in minoLayer).
-    for (const mk of Object.values(this.markers)) {
+    for (const mk of [...Object.values(this.markers), ...this.ticks]) {
       mk.mesh.removeFromParent();
       mk.hide();
     }

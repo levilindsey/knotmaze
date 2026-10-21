@@ -19,6 +19,7 @@ import {
 } from "../ui/accessibility";
 import type { MotionSetting } from "../ui/motion";
 import { MOVE_PAD_KEY } from "../ui/move_pad";
+import { CHALK_KEY } from "../ui/aid_buttons";
 import {
   HEAD_INDICATOR_KEY,
   INDICATOR_SIZE_KEY,
@@ -202,6 +203,21 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
       } catch {
         // Storage unavailable: the choice just doesn't persist.
       }
+    },
+    // K137 stage 2: stored here; one render pass shows or hides the Chalk
+    // button and the ticks (main.ts aidTick).
+    onChalkToggle: (on) => {
+      try {
+        localStorage.setItem(CHALK_KEY, on ? "1" : "0");
+      } catch {
+        // Storage unavailable: the choice just doesn't persist.
+      }
+      deps.invalidate();
+    },
+    // The compass: the link, then one render pass (aidTick redraws it).
+    onAidsChange: () => {
+      deps.writeParams(params);
+      deps.invalidate();
     },
     // Stored by the setting itself; the next frame's readers and the
     // stylesheets (the root attribute) follow at once.

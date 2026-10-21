@@ -86,6 +86,11 @@ describe("what each figure means (K274)", () => {
     hearts: { left: 2, of: 3 },
     walker: { mode: "delay" as const, walk: 5, shortest: 3 },
     sword: { phase: "fleeing" as const, left: 3, slainAt: -1 },
+    // K137 stage 2: the aids' rows.
+    spool: { used: 3, cap: 12 },
+    hints: { left: 1, of: 3 },
+    spoolUsed: 62,
+    hintsUsed: 2,
   };
   const shown = (): StatEntry[] => [
     ...statEntries(FULL),
@@ -302,5 +307,24 @@ describe("K137 stage 3b sword row", () => {
     const ids = win.map((r) => r.id);
     expect(ids.indexOf("sword")).toBe(ids.indexOf("caught") + 1);
     expect(win.find((r) => r.id === "sword")?.value).toBe("slain on move 7");
+  });
+});
+
+describe("K137 stage 2 aids rows", () => {
+  it("shows the spool gauge and the hints left in play, the shares at the finish", () => {
+    const rows = (s: Parameters<typeof ruleEntries>[0]): Array<[string, string]> =>
+      ruleEntries(s).map((r) => [r.label, r.value]);
+    expect(rows({ spool: { used: 3, cap: 12 }, hints: { left: 1, of: 3 } })).toEqual([
+      ["spool", "\u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591 75%"],
+      ["hints", "1 / 3"],
+    ]);
+    expect(rows({ spool: { used: 12, cap: 12 } })).toEqual([
+      ["spool", "\u2591".repeat(8) + " 0%"],
+    ]);
+    expect(rows({ spoolUsed: 62, hintsUsed: 0 })).toEqual([
+      ["spool used", "62%"],
+      ["hints used", "0"],
+    ]);
+    expect(rows({ spool: null, hints: null, spoolUsed: null, hintsUsed: null })).toEqual([]);
   });
 });

@@ -61,7 +61,11 @@ export type StatId =
   | "cuts"
   | "hearts"
   | "walker"
-  | "sword";
+  | "sword"
+  | "spool"
+  | "spoolUsed"
+  | "hints"
+  | "hintsUsed";
 
 export const STATS: Record<StatId, { label: string; line: string }> = {
   // TIME above (SolveClock). The Burnt banner shows it too, for a run the
@@ -263,6 +267,35 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "still flees you (runs walked in real time). Touch it while it flees: " +
       "timed sends it back to its lair, one use slays it for good. Used once " +
       "the flight is over.",
+  },
+  // K137 stage 2: game/spool.ts spoolGauge of the controller's spoolUsed
+  // (pathEdges.length) against spoolCap (parFor(fewestRuns, spoolSlack)).
+  spool: {
+    label: "spool",
+    line:
+      "Yarn left on Ariadne's spool. Each run you walk pays out one run of " +
+      "yarn, loops included; walking back along the last run reels it in, " +
+      "and so does Undo. A move past the spool is refused.",
+  },
+  // K137 stage 2: spoolPercentUsed at the finish (game/spool.ts).
+  spoolUsed: {
+    label: "spool used",
+    line:
+      "The share of the spool paid out when you reached the exit: the runs " +
+      "on your yarn against the spool, which holds the fewest runs to the " +
+      "exit plus the slack.",
+  },
+  // K137 stage 2: the controller's hintsLeft of hintsOf(hints).
+  hints: {
+    label: "hints",
+    line:
+      "Hints left this solve. A hint lights the next run of the shortest way " +
+      "to the exit for two seconds; a restart gives them all back.",
+  },
+  // K137 stage 2: the controller's hintsUsed at the finish.
+  hintsUsed: {
+    label: "hints used",
+    line: "Hints you used on the way to the exit.",
   },
 };
 

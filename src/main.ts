@@ -67,6 +67,8 @@ import {
 import { SolveClock, efficiencyOf } from "./game/maze_stats";
 import { shareText } from "./game/share_text";
 import { parScore } from "./game/par";
+import { spoolPercentUsed } from "./game/spool";
+import { HINT_SECONDS } from "./game/hints";
 import { catchHeart, heartsToast, livesOf, type HeartLoss } from "./game/lives";
 import { newSword, swordSpot, type SwordAvoid, type SwordPhase } from "./game/sword";
 import type { SwordShown } from "./ui/maze_hud";
@@ -117,6 +119,7 @@ import {
 import { UndoButtons } from "./ui/undo_buttons";
 import { CutButtons } from "./ui/cut_buttons";
 import { WalkerButtons } from "./ui/walker_buttons";
+import { AidButtons, CHALK_KEY, chalkPref, type AidKey } from "./ui/aid_buttons";
 import type { WalkerKey } from "./ui/walker_buttons";
 import { walkerMapOf, leadRoute, leadPar, delayNext, delayRoute } from "./game/walker";
 import type { WalkerMap, LeadRoute, ParResult, WalkerScore } from "./game/walker";
@@ -299,8 +302,10 @@ async function main(): Promise<void> {
   // K120: the move pad, on by default for coarse pointers.
   const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
   let movePadOn = movePadPref(null, coarsePointer);
+  let chalkOn = false; // K137 stage 2: the chalk viewer preference.
   try {
     movePadOn = movePadPref(localStorage.getItem(MOVE_PAD_KEY), coarsePointer);
+    chalkOn = chalkPref(localStorage.getItem(CHALK_KEY));
     statsShown = localStorage.getItem(STATS_KEY) === "1";
     // Opt-in since 2026-10-12 (Levi: the win banner carries the stats).
     mazeStatsShown = localStorage.getItem(MAZE_STATS_KEY) === "1";
@@ -323,6 +328,7 @@ async function main(): Promise<void> {
     indicatorSize: indPrefs.scale,
     tapToPan,
     movePad: movePadOn,
+    chalk: chalkOn,
     motion: motion.pref,
     reducedMotion: motion.reduced,
     highContrast: contrast.high,
@@ -901,6 +907,14 @@ async function main(): Promise<void> {
     go: () => walkerGo(),
     reset: () => walkerReset(),
     undo: () => walkerUndo(),
+  });
+  // K137 stage 2 AIDS (ui/aid_buttons.ts): Hint and Chalk, one row above the
+  // scissors' corner (aidTick, every frame, shows them).
+  const aidButtons = new AidButtons({
+    hint: () => useHint(),
+    chalk: () => {
+      chalkToggle();
+    },
   });
   // Armed: the button lit, a crosshair; put down, the cut glow goes too.
   const setCutArmed = (on: boolean): void => {
@@ -1649,6 +1663,9 @@ async function main(): Promise<void> {
       hearts: heartsShown(), // K137 stage 3a
       walker: walkerScore, // K114 walker
       sword: swordShown(), // K137 stage 3b
+      // K137 stage 2: the share of the spool paid out, and the hints used.
+      spoolUsed: c.spoolOn ? spoolPercentUsed(c.spoolUsed, c.spoolCap) : null,
+      hintsUsed: c.hintsMax > 0 ? c.hintsUsed : null,
     });
     updateHud();
     throwConfetti();
@@ -1810,6 +1827,61 @@ async function main(): Promise<void> {
     showToast(n === 1 ? `Caught! ${then}` : `Caught ${n} times. ${then}`, 2500);
   };
 
+  // K137 stage 2: THE HINT (game/hints.ts). Hint (H) spends one of the
+  // `hints` param's hints and lights the next good arm (controller.goodArm:
+  // the head's run that starts the shortest live way to the exit) in the
+  // telegraph's rim look for HINT_SECONDS; a move puts it out at once
+  // (the renderer's beginMove), the timer otherwise. A restart gives the
+  // hints back (clearAids). Each change asks one render pass (invalidate),
+  // never the physics.
+  let hintTimer: ReturnType<typeof setTimeout> | null = null;
+  const hintOff = (): void => {
+    if (hintTimer !== null) clearTimeout(hintTimer);
+    hintTimer = null;
+    scene.fabric?.clearHint();
+  };
+  const useHint = (): void => {
+    const fc = scene.fabricController;
+    const fabric = scene.fabric;
+    if (!fc || !fabric || fc.hintsMax <= 0 || fc.solved) return;
+    if (fc.hintsLeft <= 0) {
+      showToast("No hints left. A restart gives them back.", 2200);
+      return;
+    }
+    const arm = fc.goodArm();
+    if (arm < 0 || !fc.useHint()) return;
+    hintOff();
+    fabric.showHint(arm);
+    hintTimer = setTimeout(() => {
+      hintTimer = null;
+      scene.fabric?.clearHint();
+      invalidate();
+    }, HINT_SECONDS * 1000);
+    invalidate();
+    updateHud();
+  };
+  // CHALK: a tick on the head's junction, or rubbed out (the viewer's chalk
+  // preference on; never in the walker's modes, where the head is not the
+  // player's). The marks clear on a restart (clearAids).
+  const chalkToggle = (): boolean => {
+    const fc = scene.fabricController;
+    if (!fc || !scene.fabric || !settings.chalk || fc.walkerMode || fc.solved) return false;
+    fc.toggleChalk();
+    scene.fabric.update(fc);
+    invalidate();
+    return true;
+  };
+  // The keys H and C (input_keys.ts), live while their buttons show.
+  let aidHintShown = false;
+  let aidChalkShown = false;
+  const aidKey = (k: AidKey): boolean => {
+    if (k === "hint") {
+      if (!aidHintShown) return false;
+      useHint();
+      return true;
+    }
+    return aidChalkShown ? chalkToggle() : false;
+  };
   // A fresh solve on the same maze (Reset path, a clock change, K114's
   // Burnt banner, K273's catch toggle): a new chase or none, the fuse
   // relit, nothing recorded; the clock restarts (resetAttempt: idle until
@@ -1823,6 +1895,10 @@ async function main(): Promise<void> {
     // restarts the solve through here).
     scene.fabricController?.setRules(fabricRulesOf(params));
     scene.fabricController?.reset();
+    // K137 stage 2: a restart clears the hints used and the chalk marks; a
+    // catch's level restart (carry) keeps them, as it keeps the tallies.
+    if (!carry) scene.fabricController?.clearAids();
+    hintOff();
     routeRuns = [];
     routeFc = null;
     chaseRoute = [];
@@ -1854,6 +1930,7 @@ async function main(): Promise<void> {
     const cutting = fc.cutOn;
     if ((cutting ? fc.actions.length : fc.taps.length) === 0) return;
     pendingCut = -1;
+    hintOff(); // K137 stage 2
     if (
       !(cutting
         ? fc.replayActions(fc.actions.slice(0, -1))
@@ -1911,7 +1988,8 @@ async function main(): Promise<void> {
       (r) => scene.fabricController!.broken(r) // K137: around broken runs.
     );
     if (!route || !chaseAlong(route[0])) return false;
-    chaseRoute = route.slice(1);
+    // K137 stage 2: a first run the spool refused queues none of the rest.
+    if (!scene.fabricController.spoolWouldRefuse(route[0])) chaseRoute = route.slice(1);
     return true;
   };
   // Queue run `eid` as a tap on it would (K120's keys share it).
@@ -1919,9 +1997,14 @@ async function main(): Promise<void> {
     if (!scene.chase || !scene.fabric || !scene.fabricController) return false;
     chaseRoute = []; // A fresh tap or key replaces a queued route (K480).
     // K137: a broken run is gone.
-    if (eid < 0 || scene.fabricController?.broken(eid) || scene.chase.tap(eid) === "reject") {
-      return false;
+    if (eid < 0 || scene.fabricController.broken(eid)) return false;
+    // K137 stage 2: a run past the spool is refused before the chase sets
+    // off along it (its departure taps the controller); taken, so no tug.
+    if (scene.fabricController.spoolWouldRefuse(eid)) {
+      spoolRefused(eid);
+      return true;
     }
+    if (scene.chase.tap(eid) === "reject") return false;
     chaseRunning = true;
     if (scene.fabric.setHover(-1)) scene.fabric.update(scene.fabricController);
     return true;
@@ -1942,7 +2025,7 @@ async function main(): Promise<void> {
       for (const ev of chaseEvents) {
         if (ev.kind === "depart") {
           const result = fc.tapEdge(ev.edge);
-          if (result === "reject" || result === "noop") {
+          if (result === "reject" || result === "noop" || result === "spool") {
             if (!chaseWarned) {
               chaseWarned = true;
               console.warn(`K80: the controller refused run ${ev.edge} (${result})`);
@@ -1962,7 +2045,12 @@ async function main(): Promise<void> {
           // K480: feed a multi-run tap's next run to the chase as this
           // one departs (it leaves on arrival, from its far vertex).
           if (chaseRoute.length > 0 && scene.chase) {
-            if (fc.broken(chaseRoute[0]) || scene.chase.tap(chaseRoute[0]) === "reject") {
+            const next = chaseRoute[0];
+            // K137 stage 2: the spool refuses the next run before it queues.
+            if (fc.spoolWouldRefuse(next)) {
+              chaseRoute = [];
+              spoolRefused(next);
+            } else if (fc.broken(next) || scene.chase.tap(next) === "reject") {
               chaseRoute = [];
             }
             else chaseRoute.shift();
@@ -2675,6 +2763,17 @@ async function main(): Promise<void> {
     smolderToastAt = t;
     showToast("Smoldering: the fire gets to the end of that run first.", 2500);
   };
+  // K137 stage 2: a move past the spool is refused: the HUD gauge flashes,
+  // a dull pluck, and a toast at most once per 1.5 s (as the smolder's).
+  let spoolToastAt = -Infinity;
+  const spoolRefused = (eid: number): void => {
+    hud.flashSpool();
+    cutPluck(eid, REFUSE_OCTAVE, REFUSE_STRENGTH);
+    const t = performance.now();
+    if (t - spoolToastAt < 1500) return;
+    spoolToastAt = t;
+    showToast("Out of yarn: retrace your last run to reel some in.", 2500);
+  };
   // One move along run `eid` from the head, as a tap on it (K120's keys
   // share it). Returns true when the move was taken.
   const moveAlong = (eid: number): boolean => {
@@ -2709,6 +2808,7 @@ async function main(): Promise<void> {
       // K114: the fire reaches that arm's far end first. Say why nothing
       // moved (the tap is taken: no tug).
       if (result === "smolder") smolderToast();
+      else if (result === "spool") spoolRefused(eid); // K137 stage 2
     }
     updateHud();
     // No wake(): a move touches markers, paint and the yarn only, and the
@@ -2834,7 +2934,34 @@ async function main(): Promise<void> {
     const r = camera.panelWrap?.getBoundingClientRect();
     return !!r && r.width > 0 && cutButtons.covered(r);
   };
+  // K137 stage 2: the aid buttons (shown while their aid is on, the keys are
+  // live and no open panel covers them) and the renderer's chalk and
+  // compass switches (a change redraws the markers once).
+  const aidTick = (): void => {
+    const fc = scene.fabricController;
+    const live = !!fc && !fc.walkerMode && keysLive();
+    const hint = live && fc.hintsMax > 0;
+    const chalk = live && settings.chalk === true;
+    aidHintShown = hint;
+    aidChalkShown = chalk;
+    aidButtons.setButtons(hint, chalk);
+    const r = panel.isOpen() ? camera.panelWrap?.getBoundingClientRect() : null;
+    aidButtons.setVisible((hint || chalk) && !(r && r.width > 0 && aidButtons.covered(r)));
+    if (hint) aidButtons.setHint(fc.hintsLeft, (scene.fabric?.hintRun ?? -1) >= 0);
+    if (chalk) aidButtons.setChalk(fc.chalk.has(fc.head));
+    const fabric = scene.fabric;
+    if (!fabric || !fc) return;
+    const compass = params.compass && !fc.walkerMode;
+    const marks = settings.chalk === true;
+    if (fabric.compassOn !== compass || fabric.chalkOn !== marks) {
+      fabric.compassOn = compass;
+      fabric.chalkOn = marks;
+      fabric.update(fc);
+      invalidate();
+    }
+  };
   const cutTick = (): void => {
+    aidTick();
     const fc = scene.fabricController;
     const walker = fc?.walkerMode ?? null;
     // K114 walker: the walker modes have their own buttons, no scissors.
@@ -3168,6 +3295,7 @@ async function main(): Promise<void> {
       carryStep: () => carryStep(),
       cutKey: (k) => cutKey(k),
       walkerKey: (k) => walkerKey(k),
+      aidKey: (k) => aidKey(k),
     },
     scene
   );

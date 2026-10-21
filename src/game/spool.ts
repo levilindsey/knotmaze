@@ -36,8 +36,24 @@ export function spoolRefuses(used: number, capacity: number): boolean {
   return used + 1 > capacity;
 }
 
+// The share used as a whole percent (the share tag's and the win banner's).
+export function spoolPercentUsed(used: number, capacity: number): number {
+  return Math.round(spoolShareUsed(used, capacity) * 100);
+}
+
 // The share text's tag: "🧶 82% of the spool" (the share used at the finish).
 export function spoolTag(used: number, capacity: number): string | null {
   if (!Number.isFinite(capacity) || capacity <= 0) return null;
-  return `🧶 ${Math.round(spoolShareUsed(used, capacity) * 100)}% of the spool`;
+  return `🧶 ${spoolPercentUsed(used, capacity)}% of the spool`;
+}
+
+// The HUD's gauge: the share LEFT as SPOOL_GAUGE_CELLS cells and a whole
+// percent, rounded down, so a spool one run from empty never reads full
+// and an empty one reads 0%.
+export const SPOOL_GAUGE_CELLS = 8;
+export function spoolGauge(used: number, capacity: number): string {
+  const left = 1 - spoolShareUsed(used, capacity);
+  const full = Math.max(0, Math.min(SPOOL_GAUGE_CELLS, Math.floor(left * SPOOL_GAUGE_CELLS + 1e-9)));
+  const pct = Math.floor(left * 100 + 1e-9);
+  return "█".repeat(full) + "░".repeat(SPOOL_GAUGE_CELLS - full) + ` ${pct}%`;
 }
