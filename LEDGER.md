@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K738.
+Next free ID: K739.
 
 ## Waiting on Levi
 
@@ -185,9 +185,13 @@ Next free ID: K738.
   (0.012-0.023): accept U as the target? The notaper J seam colour: glyph-only fix (joinery.ts) or
   leave to G4? K643 measured against the bounds (K643.md Handoff): the J bite is 3.1-5.9x the 0.01
   bound but broad, and smooth in stills; the waist spikes are 1.2-2.3x vs T, 0.001-0.003 vs U.
+  Phone (K726, Pixel real size): the J bite shows only on ai xh2 tapered (~7 device px); the notaper
+  disc is a faint ellipse at xh2; waist spikes 1-4 device px, invisible at 1x; aland at a xh3 has a
+  2 px tooth, a hairline arc seam and a 1-3 px waist ledge. Sheets: `.claude/probes/K726/out/glyph/`
 - **K715** · adb deaths: a Muse hopnbop session ran headless Godot 4.7.2 (--import, GUT); an editor
   exit runs adb kill-server (shutdown_adb_on_exit, default true; editor settings written at death 2,
   23:50:21; a Godot crash 23:31:56 before death 1). Set it false (claude-config Setup-GodotAndroid.ps1)?
+  No deaths during K726 (2026-10-21 02:16-03:02).
 - **K721** · K137 sword calls (s3a calls 3, 4), built as recommended: in real time the flee counts
   runs walked (alt: seconds); while it flees the telegraph turns pale blue 0x8fd0ff (alt: no
   telegraph, the glow alone). `K137_s3b.md` Handoff, The calls
@@ -384,14 +388,6 @@ Next free ID: K738.
   - evidence: `.claude/probes/K138/s1/`
   - next: stage 1: the rule kit, ice runs, the color rule; then s2-s8 per the K138_plan.md stage order
   - brief: `docs/design/K138_s1.md`
-- **K726** · Phone sitting 3 (sonnet, after K720 merges): the K718 glyph cases at the Pixel real
-  size, the sword on real touches, K720 (no AudioContext under snd=none).
-  `docs/design/K726_phone.md`
-  - owner: agent afbc3cd74fdd226a2 of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-21 02:16, 1 h cap ~03:16)
-  - branch: mainline (probes only, in the main checkout); last commit: `65ee13a6`
-  - evidence: `.claude/probes/K726/`
-  - next: parts 1-3 on one origin/master build: K718 glyph pages and sheets, the sword on real touches, K720 audio counts
-  - brief: `docs/design/K726_phone.md`
 - **K698** · Phone toasts cover the bottom controls (Pixel 411x753): the cut refusal over Undo (K703,
   gone by 1.7 s; a touch still reaches Undo), the lives toasts over the move pad, the walker toasts over
   .km-walk and the pad (K717 `out/lives`, `out/walker`). Place toasts clear of the controls.
@@ -1352,6 +1348,9 @@ Every other item below waits on the trigger it names.
   s; the path-display row does nothing under the spool; hints and the compass ignore the fire; a
   catch restart keeps hints used and chalk; the aids are off in walker modes; saved attempts keep no
   chalk or hints used (store version); the compass shares the hint mint
+- **K738** · HUD rows vs the mode badge at 411x753: the sword row (slain on move NN) clears the Free
+  play badge by only 13 css px (K726, `.claude/probes/K726/out/sword/stills/`); the K137 s3c/s3d and
+  K138 HUD rows may push it under the badge
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1616,6 +1615,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K726** · Phone sitting 3 (02:16-03:02, tested build 65ee13a6): the K718 glyph pages and sheets, the sword on real touches on both clocks (0 failures), K720 silence verified (0 AudioContexts); sword toasts over the pad went to K698; `.claude/probes/K726/out/`. Done in 65ee13a6 (2026-10-21).
 - **K643** · lintGlyph takes the taper part; bulge and crotch probe flags; both bounds kept (taperBulgeLU 0.01; forkMaxLU 1.2, crotches proven to 0.79 LU). Done in 6278cf8b (2026-10-21).
 - **K720** · sound off opens no audio: no AudioContext until sound is on and something plays (plucks, song, snore; the minotaur sounds now obey Muted and none too); switching sound on works without a reload; K720.md Handoff. Done in 72270da2 (2026-10-21).
 - **K708** · lives and sword sims: 3 hearts bite only blind real-time play; at swordMoves 8 the sword is a breather (slays in 0.5% even for a seeker); K708.md Handoff. Done in 7d1b41ce (2026-10-21).
