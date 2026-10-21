@@ -574,9 +574,23 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   doubled pace for two runs, the HUD rows and used after, and ends in a
   CHECK summary; stills and JSON in `out/`, the Chrome profile in the
   probes folder) and `vite.private-cache.config.ts`, s3b's wrapper
-  (vite's `loadConfigFromFile`; the K19-K20 copy the launch brief names
-  fails with ERR_MODULE_NOT_FOUND, the K80 GOTCHA above). s3b's
+  (vite's `loadConfigFromFile`; the K19-K20 copy failed with the K80
+  GOTCHA above's ERR_MODULE_NOT_FOUND until it took the same wrapper on
+  2026-10-21). s3b's
   `sword_page.mjs` links carry `&snd=off`: new links take `&snd=none`.
+  `s3a_page.mjs <base> banner|fragile [desktop|phone] [outDir] [seed=7]
+  [turn|realtime] [hunter|guard|stalker]` runs stage 3a's two unrun
+  checks: `banner` (turn clock, `&mt=hunter&swd=oneuse&swm=20&mlv=3
+  &spr=on`) walks to the sword, slays the minotaur, presses F and walks
+  to the exit, then reads `#maze-banner`'s rows (hearts `n / 3`, sword
+  slain on move N, sprint used); `fragile` (`&fg=snap`) walks unbroken,
+  not-yet-walked arms away from the minotaur and checks after every move
+  that its route (the turn telegraph; real time's plan and plan8) uses
+  no broken run, with a counterfactual (`near` / `far`: runs from the
+  minotaur to the player over all runs / unbroken runs only; far > near
+  means a route that ignored breaks would cross one). GOTCHA: the
+  start's runs are exempt and never break, so a walk that takes the
+  first choice shuttles on run 0 and breaks nothing.
 
 - K698 + K713 (2026-10-21), the toasts, the walker's glow and the pad:
   `.claude/probes/K698/k698.mjs <cut|aids|lives|walker|sword|glow|pad>
