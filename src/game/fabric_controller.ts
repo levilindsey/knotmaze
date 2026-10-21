@@ -152,6 +152,8 @@ import type { TurnstileLayout } from "./turnstiles";
 import { placeTurnstiles, turnstileRule, TURNSTILES_MAX } from "./turnstiles";
 import type { HiddenLayout } from "./hidden_runs";
 import { hiddenOver, placeHidden, HIDDEN_MAX } from "./hidden_runs";
+import type { OneWayLayout } from "./one_way";
+import { oneWayBlocksBack, oneWayRule, placeOneWay, ONE_WAY_MAX } from "./one_way";
 
 // K137: the solve's rules beyond the clock: fragile runs and par (K139:
 // and collapse; K114: cut; K138: ice runs and the color rule). Change them
@@ -172,6 +174,8 @@ export interface FabricRules {
   // K138 s2: turnstile junctions (0: off) and hidden runs (0: off).
   turnstiles?: number;
   hiddenRuns?: number;
+  // K138 s3: the share of core runs that are one-way (0: off).
+  oneWay?: number;
 }
 
 // K138: what the rules' placement reads beyond the walk: the design's seed
@@ -192,6 +196,8 @@ export interface RuleLook {
   // K138 s2: the turnstiles and the hidden runs (null: none placed).
   turnstiles: TurnstileLayout | null;
   hidden: HiddenLayout | null;
+  // K138 s3: the one-way runs (null: none placed).
+  oneWay: OneWayLayout | null;
   placed: boolean;
   bites: boolean;
   draws: number;
@@ -227,7 +233,8 @@ export type FabricTapResult =
 
 // K138 s2: why a tap is refused (FabricMazeController.refusalOf), for the
 // toast: a hidden run, a closed turnstile, or ice / the color rule.
-export type RuleRefusal = "hidden" | "turnstile" | "rule";
+// K138 s3: or a one-way run, against its arrow (a tap, or a backtrack).
+export type RuleRefusal = "hidden" | "turnstile" | "rule" | "oneWay";
 
 export class FabricMazeController {
   readonly walk: WalkGraph;
@@ -350,6 +357,8 @@ export class FabricMazeController {
   // runs revealed this solve (reveal(); Undo past a reveal hides it again).
   turnstileCount = 0;
   hiddenCount = 0;
+  // K138 s3: the share of core runs that are one-way (0: off).
+  oneWayShare = 0;
   revealed = new Set<number>();
   private revealKey = "";
   private ruleSource: RuleSource | null;
@@ -359,6 +368,9 @@ export class FabricMazeController {
   ruleState = 0;
   private moveStarts: number[] = [];
   private stateStack: number[] = [];
+  // K138 s3: per forward move, did it take a one-way run (its backtrack is
+  // refused)?
+  private backLocked: boolean[] = [];
   // The kit's runs left: while a move carries on, the value at its end;
   // otherwise memoized per tap count.
   private pendingLeft = Infinity;
@@ -419,6 +431,8 @@ export class FabricMazeController {
       ruled && n && n > 0 ? Math.min(max, Math.floor(n)) : 0;
     this.turnstileCount = clampCount(rules.turnstiles, TURNSTILES_MAX);
     this.hiddenCount = clampCount(rules.hiddenRuns, HIDDEN_MAX);
+    const ow = rules.oneWay ?? 0;
+    this.oneWayShare = ruled && ow > 0 ? Math.min(ONE_WAY_MAX, ow) : 0;
   }
 
   // K137 s2: a real restart (not Undo's replay) clears the hints used and
@@ -495,11 +509,12 @@ export class FabricMazeController {
       (this.iceShare === 0 &&
         this.colorMode === "off" &&
         this.turnstileCount === 0 &&
-        this.hiddenCount === 0)
+        this.hiddenCount === 0 &&
+        this.oneWayShare === 0)
     ) {
       return null;
     }
-    const key = `${this.iceShare}|${this.colorMode}|${this.turnstileCount}|${this.hiddenCount}`;
+    const key = `${this.iceShare}|${this.colorMode}|${this.turnstileCount}|${this.hiddenCount}|${this.oneWayShare}`;
     const made = this.placements.get(key);
     if (made) return made;
     const cont = this.iceShare > 0 ? src.cont() : null;
@@ -519,6 +534,11 @@ export class FabricMazeController {
     const pre = composed();
     const ts = placeTurnstiles(this.walk, this.turnstileCount, src.seed, pre);
     if (ts.layout && ts.layout.length > 0) rules.push(turnstileRule(this.walk, ts.layout));
+    // K138 s3: the one-way runs bite against (and compose with) the rules
+    // above; the hidden runs against them all.
+    const ow = placeOneWay(this.walk, this.oneWayShare, src.seed, composed());
+    const oneWay = ow.layout && ow.layout.size > 0 ? ow.layout : null;
+    if (oneWay) rules.push(oneWayRule(this.walk, oneWay));
     const base = composed();
     // A hidden run is never icy, nor a run a slide carries on along (a slide
     // would stop short of it, refused whole).
@@ -532,7 +552,13 @@ export class FabricMazeController {
     }
     const hid = placeHidden(this.walk, this.hiddenCount, src.seed, base, (r) => noHide.has(r));
     const hidden = hid.layout && hid.layout.length > 0 ? hid.layout : null;
-    const parts = [ice, col, this.turnstileCount > 0 ? ts : null, this.hiddenCount > 0 ? hid : null];
+    const parts = [
+      ice,
+      col,
+      this.turnstileCount > 0 ? ts : null,
+      this.oneWayShare > 0 ? ow : null,
+      this.hiddenCount > 0 ? hid : null,
+    ];
     const last = [...parts].reverse().find((x) => x !== null) ?? null;
     const p: RulePlacement = {
       key,
@@ -541,6 +567,7 @@ export class FabricMazeController {
       mode: this.colorMode,
       turnstiles: ts.layout && ts.layout.length > 0 ? ts.layout : null,
       hidden,
+      oneWay,
       placed: parts.every((x) => !x || x.layout !== null),
       bites: last?.bites ?? false,
       draws: Math.max(...parts.map((x) => x?.draws ?? 0)),
@@ -681,6 +708,9 @@ export class FabricMazeController {
     if (!back) return best;
     for (let k = 1, i = undoable; i > 0 && k < best; k++) {
       i--;
+      // K138 s3: a move that took a one-way run cannot be backtracked, nor
+      // anything before it.
+      if (this.backLocked[i]) break;
       const d = this.moveStarts[i];
       const f = this.ruleFwd(
         this.pathVertices[d],
@@ -720,10 +750,18 @@ export class FabricMazeController {
     const last = this.arrivalEdge;
     const phase = this.strokes;
     const fwd = this.ruleFwd(this.head, this.ruleState, last, back, phase);
-    if (back && this.moveStarts.length > 0 && this.ruleRunsLeft() < fwd) return last;
+    if (back && this.moveStarts.length > 0 && !this.backRefused() && this.ruleRunsLeft() < fwd) return last;
     if (!Number.isFinite(fwd)) return -1;
     const from = { vertex: this.head, state: this.ruleState, last, phase };
     return ruleSearch(this.walk, this.rule!, from, back).route[0] ?? -1;
+  }
+
+  // K138 s3: is a backtrack refused now? It retraces the last move whole,
+  // against the arrow of any one-way run that move took (Undo is always
+  // allowed). Never mid-move or in trail mode.
+  backRefused(): boolean {
+    const n = this.backLocked.length;
+    return n > 0 && this.backLocked[n - 1] && !this.trailMode && this.carry.length === 0;
   }
 
   // K138 s2: the rule's move for a fresh tap on `eid` from the head (null:
@@ -742,6 +780,12 @@ export class FabricMazeController {
   // closed turnstile (a slide never carries onto a hidden run).
   refusalOf(eid: number): RuleRefusal | null {
     if (this.isHidden(eid)) return "hidden";
+    // K138 s3: a backtrack over a one-way run, or a tap against its arrow.
+    if (!this.trailMode && eid === this.arrivalEdge && this.pathEdges.length > 0) {
+      return this.backRefused() ? "oneWay" : null;
+    }
+    const ow = this.placement?.oneWay;
+    if (ow && ow.has(eid) && ow.get(eid) !== this.head && !this.ruleAllows(eid)) return "oneWay";
     const p = this.placement;
     if (!p || !this.rule || this.ruleAllows(eid)) return null;
     if (!p.turnstiles) return "rule";
@@ -766,7 +810,9 @@ export class FabricMazeController {
     const back = this.trailMode ? -1 : this.arrivalEdge;
     return this.walk.vertices
       .get(head)!
-      .edges.filter((eid) => eid !== back && !this.isHidden(eid) && !this.ruleAllows(eid));
+      .edges.filter((eid) =>
+        eid === back ? this.backRefused() : !this.isHidden(eid) && !this.ruleAllows(eid)
+      );
   }
 
   // K138: the shortest walk to the exit the rules allow (with no rule the
@@ -789,6 +835,7 @@ export class FabricMazeController {
     this.ruleState = this.rule?.start ?? 0;
     this.moveStarts = [];
     this.stateStack = [];
+    this.backLocked = [];
     this.pendingLeft = Infinity;
     this.leftMemo = { taps: -1, trail: false, reveals: 0, value: Infinity };
     // K138 s2: every hidden run hidden again (Undo replays the reveals it
@@ -947,6 +994,7 @@ export class FabricMazeController {
       this.ruleState = this.rule.start;
       this.moveStarts = [];
       this.stateStack = [];
+      this.backLocked = [];
       this.carry = [];
     }
     this.judge();
@@ -1010,7 +1058,7 @@ export class FabricMazeController {
     const rule = this.rule;
     if (rule && this.carry.length === 0) {
       const back = this.trailMode ? -1 : this.arrivalEdge;
-      edges = edges.filter((eid) => eid === back || this.ruleAllows(eid));
+      edges = edges.filter((eid) => (eid === back ? !this.backRefused() : this.ruleAllows(eid)));
     }
     const fire = this.fire;
     if (!fire) return edges;
@@ -1136,10 +1184,13 @@ export class FabricMazeController {
       // K138: a fresh backtrack under a rule undoes the whole move: the
       // state comes back, and the move's other runs wait in the carry,
       // newest first (each the path's top in turn).
+      // K138 s3: a backtrack against a one-way run's arrow changes nothing.
+      if (this.rule && !carrying && this.backRefused()) return "refused";
       let undo: number[] | null = null;
       if (this.rule && !carrying && this.moveStarts.length > 0) {
         const d = this.moveStarts.pop()!;
         this.ruleState = this.stateStack.pop()!;
+        this.backLocked.pop();
         undo = this.pathEdges.slice(d, -1).reverse();
         this.pendingLeft = this.ruleLeftFrom(
           this.pathVertices[d],
@@ -1176,6 +1227,7 @@ export class FabricMazeController {
     // from its end are one fewer than from its start.
     let move: RuleMove | null = null;
     let good = false;
+    let locked = false;
     // K138 s2: a hidden run is not there to tap.
     if (!carrying && this.isHidden(edgeId)) return "reject";
     if (this.rule && !carrying) {
@@ -1191,7 +1243,10 @@ export class FabricMazeController {
         P === 1
           ? before
           : this.ruleLeftFrom(head, this.ruleState, this.arrivalEdge, this.moveStarts.length, clock + 1);
-      const after = this.trailMode ? fwd : Math.min(fwd, 1 + undone);
+      // K138 s3: a move over a one-way run cannot be backtracked.
+      const ow = this.placement?.oneWay ?? null;
+      locked = !!ow && oneWayBlocksBack(ow, move.runs);
+      const after = this.trailMode || locked ? fwd : Math.min(fwd, 1 + undone);
       good = Number.isFinite(after) && after === before - 1;
       this.pendingLeft = after;
     }
@@ -1207,6 +1262,7 @@ export class FabricMazeController {
     if (move) {
       this.moveStarts.push(this.pathEdges.length);
       this.stateStack.push(this.ruleState);
+      this.backLocked.push(locked);
       this.ruleState = move.state;
       this.carry = move.runs.slice(1);
     }
