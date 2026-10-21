@@ -421,6 +421,36 @@ export class RibbonMesh {
     return this.vertexData;
   }
 
+  // K580 s3: sample k as the K81 cover strip re-emits it, appended to
+  // `out` as pushStrip's pairs ([lx, ly, rx, ry] each; triangles (a, b, c),
+  // (b, d, c) between consecutive pairs). A plain sample is its own pair.
+  // A round join's sample (ROUND JOINS above) adds one pair per pool vertex,
+  // the outer side swapped to it and the inner vertex kept, when `room`
+  // (pairs this sample may use) allows: the strip's triangles are then the
+  // fill's fan and its B-rewired outgoing quad, plus degenerate slivers.
+  // Without the room the corner's arc goes uncovered, as before K580 s3.
+  // Returns the pairs appended.
+  coverPairs(k: number, out: number[], room: number): number {
+    const V = this.vertexData;
+    out.push(V[k * 4], V[k * 4 + 1], V[k * 4 + 2], V[k * 4 + 3]);
+    const joins = this.joins;
+    if (joins.count === 0 || room < 1 + ROUND_ARC_SEGMENTS) return 1;
+    let j = 0;
+    while (j < joins.count && joins.sample[j] !== k) j++;
+    if (j === joins.count) return 1;
+    const side = joins.side[j];
+    const ix = V[k * 4 + (1 - side) * 2];
+    const iy = V[k * 4 + (1 - side) * 2 + 1];
+    const base = 4 * this.sampleCount + j * ROUND_ARC_SEGMENTS * 2;
+    for (let p = 0; p < ROUND_ARC_SEGMENTS; p++) {
+      const px = V[base + p * 2];
+      const py = V[base + p * 2 + 1];
+      if (side === 1) out.push(ix, iy, px, py);
+      else out.push(px, py, ix, iy);
+    }
+    return 1 + ROUND_ARC_SEGMENTS;
+  }
+
   // PER-PIXEL GAPS: per-sample slot ids (GAP_SLOTS per sample, -1 = none).
   // Uploads only when they differ from the last call - window membership
   // changes far less often than positions.

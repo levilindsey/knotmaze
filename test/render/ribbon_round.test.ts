@@ -456,6 +456,60 @@ describe("round joins: past the threshold the outline is the round ideal", () =>
   });
 });
 
+describe("round joins: the K81 cover strip re-emits the fill's own triangles", () => {
+  // The non-degenerate triangles of a mesh, as position triples in a
+  // canonical order (orientation ignored).
+  const tris = (V: ArrayLike<number>, I: ArrayLike<number>): Set<string> => {
+    const out = new Set<string>();
+    for (let t = 0; t + 2 < I.length; t += 3) {
+      const p = [I[t], I[t + 1], I[t + 2]].map((v) => [V[v * 2], V[v * 2 + 1]]);
+      const area = (p[1][0] - p[0][0]) * (p[2][1] - p[0][1]) - (p[1][1] - p[0][1]) * (p[2][0] - p[0][0]);
+      if (Math.abs(area) < 1e-12) continue;
+      out.add(p.map((q) => `${q[0]},${q[1]}`).sort().join("|"));
+    }
+    return out;
+  };
+  // pushStrip's triangulation of a pair list.
+  const strip = (pts: number[]): Set<string> => {
+    const V: number[] = [];
+    const I: number[] = [];
+    for (let q = 0; q < pts.length; q += 2) V.push(pts[q], pts[q + 1]);
+    for (let s = 0; s + 1 < pts.length / 4; s++) {
+      const a = 2 * s, b = a + 1, c = a + 2, d = a + 3;
+      I.push(a, b, c, b, d, c);
+    }
+    return tris(V, I);
+  };
+
+  it("at a round join (either side) the strip's triangles are the fill's, fan included", () => {
+    for (const deg of [100, 115, 150, 180]) {
+      for (const mirror of [false, true]) {
+        const s = turn(deg, { legA: 0.03, mirror });
+        const { m, V, I } = draw(s);
+        const pts: number[] = [];
+        let pairs = 0;
+        for (let k = 0; k < s.n; k++) pairs += m.coverPairs(k, pts, 1000);
+        const want = deg > 110 ? s.n + K : s.n;
+        expect(pairs, `${deg} ${mirror}`).toBe(want);
+        expect(pts.length, `${deg} ${mirror}`).toBe(4 * want);
+        expect([...strip(pts)].sort(), `${deg} ${mirror}`).toEqual([...tris(V, I)].sort());
+        m.destroy();
+      }
+    }
+  });
+
+  it("without room for the fan a round sample falls back to its own pair", () => {
+    const s = turn(150, { legA: 0.03 });
+    const { m } = draw(s);
+    const pts: number[] = [];
+    expect(m.coverPairs(s.corner, pts, K)).toBe(1);
+    expect(pts.length).toBe(4);
+    expect(m.coverPairs(s.corner, pts, K + 1)).toBe(1 + K);
+    expect(pts.length).toBe(4 * (2 + K));
+    m.destroy();
+  });
+});
+
 describe("round joins: a turn swept through the threshold moves continuously", () => {
   // The corner's outline vertices at one turn: its two main vertices, then
   // its K pool vertices (a sample with no join: K copies of its outer
