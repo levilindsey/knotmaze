@@ -2652,11 +2652,18 @@ async function main(): Promise<void> {
     return true;
   };
   // Every frame (the frame loop, beside the move pad): the buttons show
-  // while the cut is on, the keys are live and the panel is closed; hidden,
-  // the scissors are down, and a finished solve drops a waiting cut.
+  // while the cut is on, the keys are live and no open panel covers them (a
+  // phone's settings sheet does; a desktop's side panel, open by default,
+  // leaves their corner clear); hidden, the scissors are down, and a
+  // finished solve drops a waiting cut.
+  const panelCoversCut = (): boolean => {
+    if (!panel.isOpen()) return false;
+    const r = camera.panelWrap?.getBoundingClientRect();
+    return !!r && r.width > 0 && cutButtons.covered(r);
+  };
   const cutTick = (): void => {
     const fc = scene.fabricController;
-    const on = !!fc && fc.cutOn && keysLive() && !panel.isOpen();
+    const on = !!fc && fc.cutOn && keysLive() && !panelCoversCut();
     cutButtons.setShown(on);
     if (!on) {
       if (cutArmed) setCutArmed(false);
