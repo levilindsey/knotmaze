@@ -985,7 +985,9 @@ All params are appended with off defaults.
 - **Daily and share:** "✨ 5/5". Efficiency = par tour / your route.
 - **Cost:** M. **Risk:** tedium beyond about 6 pickups.
 - **Params:** `pickups` (`pk2`; 0-9; 0), `pickupsRequired` (`pkr`; flag;
-  true).
+  true). (`pkr` is taken: K298's `pickChoiceRatio`. The K138 plan uses
+  `pk2` for required pickups and `pkb` for bonus ones, and drops
+  `pickupsRequired`.)
 
 ### 4.5 Bonus pickups and stars
 
