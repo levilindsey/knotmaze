@@ -61,6 +61,9 @@ export interface KeyInputDeps {
   readonly turnWait: number;
   readonly pendingWin: boolean;
   readonly pendingLoss: boolean;
+  // K456: true while the WebGL context is lost (src/app/context_loss.ts):
+  // nothing on screen to steer, so keys, the pad and the gamepad wait.
+  contextLost?: () => boolean;
 }
 
 export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
@@ -181,7 +184,8 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
     // K114: a lost burn race (or one whose loss is landing) takes no moves.
     !scene.fabricController.fireLost &&
     !deps.pendingLoss &&
-    !(scene.chase?.finished ?? false);
+    !(scene.chase?.finished ?? false) &&
+    !(deps.contextLost?.() ?? false);
   const setKeyHover = (eid: number): void => {
     // K481 stage 3: a held key's pick lights its telegraph tick too.
     if (!scene.fabric || !scene.fabricController) return;
@@ -574,6 +578,8 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
     movePad,
     pollGamepad,
     inputWait,
+    // K456: a lost WebGL context drops every held key, as blur does.
+    dropKeys,
     get keyHold() {
       return keyHold;
     },

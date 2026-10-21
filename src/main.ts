@@ -127,6 +127,7 @@ import { BACKGROUND, createScene } from "./app/scene";
 import { createAudioMap } from "./app/audio_map";
 import { createPointerInput } from "./app/input_pointer";
 import { createKeyInput } from "./app/input_keys";
+import { createLossCover, installContextLoss } from "./app/context_loss";
 import { createAutoAudio } from "./app/auto_audio";
 import {
   FOLLOW_DELAY,
@@ -1305,8 +1306,11 @@ async function main(): Promise<void> {
     }
     saveAttempt();
   };
+  // K456: true while the WebGL context is lost (src/app/context_loss.ts,
+  // installed after the frame loop): the clock stays hidden through it.
+  let glContextLost = false;
   document.addEventListener("visibilitychange", () => {
-    clock.setHidden(document.hidden, performance.now());
+    clock.setHidden(document.hidden || glContextLost, performance.now());
     if (document.hidden) {
       saveAttempt();
       savePrefsNow();
@@ -2411,6 +2415,7 @@ async function main(): Promise<void> {
       get pendingLoss() {
         return pendingLoss;
       },
+      contextLost: () => glContextLost,
     },
     scene
   );
@@ -2424,6 +2429,7 @@ async function main(): Promise<void> {
     movePad,
     pollGamepad,
     inputWait,
+    dropKeys,
   } = keyInput;
 
   // K5 M6: the auto audio (Stage 20's auto plucks, music mode's
@@ -2557,6 +2563,34 @@ async function main(): Promise<void> {
   const { wake, invalidate, frameCost, revealCost } = loop;
   loop.start();
 
+  // K456: a lost WebGL context (src/app/context_loss.ts). Pixi restores
+  // its resources itself; the page saves, stops drawing into the void,
+  // covers the canvas and refuses input until the restore, then redraws
+  // (the frame loop's resume re-renders the background's texture).
+  const contextLoss = installContextLoss({
+    canvas: app.canvas,
+    isHidden: () => document.hidden,
+    now: () => performance.now(),
+    cover: createLossCover(
+      document,
+      () => app.canvas.style.background,
+      () => location.reload()
+    ),
+    onLost: () => {
+      glContextLost = true;
+      saveAttempt();
+      savePrefsNow();
+      clock.setHidden(true, performance.now());
+      loop.suspend();
+      dropKeys();
+    },
+    onRestored: () => {
+      glContextLost = false;
+      clock.setHidden(document.hidden, performance.now());
+      loop.resume();
+    },
+  });
+
   // The probe hooks (window.__knot*): src/app/probe_hooks.ts.
   installProbeHooks({
     scene,
@@ -2574,6 +2608,7 @@ async function main(): Promise<void> {
     indicators,
     loopFlags: flags,
     stampEl: stamp,
+    contextLoss,
     lossBanner,
     modeBadge,
     motion,
@@ -2689,6 +2724,9 @@ async function main(): Promise<void> {
       return loop.stopped;
     },
     setLoopContinuous: (on: boolean) => loop.setContinuous(on),
+    get loopSuspended() {
+      return loop.suspended;
+    },
     get turnWait() {
       return turnWait;
     },
