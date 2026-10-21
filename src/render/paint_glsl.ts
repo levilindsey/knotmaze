@@ -361,43 +361,28 @@ KChain kFragChain() {
 }
 `;
 
-// K620 THE ROOT'S PAINT (section fragment only; needs PAINT_FX_GLSL and
-// PAINT_FRAG_DECL; paint_math.ts kRootSide / kRootPaint mirror it line for
-// line). A tapered root's fragment at root arc `a` (< arcJ): each side wears
-// its stroke's paint at its foot (the section the vertex sampled there,
-// vKRC / vKRO, then the stroke's FX at the foot, the across coordinate
-// mapped from the root's onto the stroke's), the centerline seam gets one
-// pixel of coverage, and both blend into the spur's paint at J (vKRJ plus
-// the root's FX at ctrlJ) by the junction ramps' ease (kEase, uKSect.y).
+// K620 THE ROOT'S PAINT (section fragment only; needs PAINT_FRAG_DECL;
+// paint_math.ts kRootSection mirrors it line for line). A tapered root's
+// fragment at root arc `a` (< arcJ): each side wears its stroke's SECTION at
+// its foot (what the vertex sampled there, vKRC / vKRO), the centerline seam
+// gets one pixel of coverage, and both blend into the spur's section at J
+// (vKRJ) by the junction ramps' ease (kEase, uKSect.y). It replaces the
+// fragment's base color BEFORE the FX, so the root's own FX apply once, as on
+// every other chain: a stroke's FX sampled at the foot would cost two more
+// inlined kFxColor calls in FXC's compile of section-rgb, the intro's
+// critical path (K307), so the brief's FX fallback holds for every FX.
 export const ROOT_FRAG_GLSL = /* glsl */ `
-vec3 kRootSide(KChain b, highp float arc, highp float uv, vec3 rgb, out highp float al) {
-  highp float pR;
-  rgb = kFxColor(b, kCtrlOfArc(b, arc), arc / b.arcPer, rgb, pR, al);
-  if (pR > 0.0) rgb = kRainbowBlend(rgb, pR, uv);
-  return rgb;
-}
-vec3 kRootPaint(KChain kc, highp float a, highp float pxW, out highp float al) {
+vec3 kRootSection(highp float a, highp float pxW) {
   int kt = int(vKR0.x + 0.5) - 1;
-  highp vec4 h0 = kG(kt);
   highp float u = clamp(a / vKR0.z, 0.0, 1.0);
-  highp float f = u * (h0.z - 1.0);
-  int i0 = min(int(h0.z + 0.5) - 2, int(floor(f)));
+  highp float nr = kG(kt).z;
+  highp float f = u * (nr - 1.0);
+  int i0 = min(int(nr + 0.5) - 2, int(floor(f)));
   int ea = kt + 2 + 2 * i0;
-  highp vec4 e0 = mix(kG(ea), kG(ea + 2), f - float(i0));
-  highp vec4 e1 = mix(kG(ea + 1), kG(ea + 3), f - float(i0));
-  int bc = int(h0.x + 0.5);
-  highp vec4 b1 = kS(2 * bc + 1);
-  KChain b = kChainOf(bc, kS(2 * bc), b1, kG(int(b1.x + 0.5)));
-  highp float e = min(abs(vUV.y - 0.5) * 2.0, 1.0);
-  highp float covC = clamp(0.5 + (vUV.y - 0.5) * vKR0.y * 2.0 * e0.z / pxW, 0.0, 1.0);
-  highp float aC, aO, aJ, pJ;
-  vec3 c = kRootSide(b, e0.x, mix(e1.x, e1.y, e), vKRC, aC);
-  vec3 o = kRootSide(b, e0.y, mix(e1.z, e1.w, e), vKRO, aO);
-  vec3 j = kFxColor(kc, vKR0.w, vKR0.z / kc.arcPer, vKRJ, pJ, aJ);
-  if (pJ > 0.0) j = kRainbowBlend(j, pJ, vUV.y);
+  highp float hw = mix(kG(ea).z, kG(ea + 2).z, f - float(i0));
+  highp float covC = clamp(0.5 + (vUV.y - 0.5) * vKR0.y * 2.0 * hw / pxW, 0.0, 1.0);
   highp float w = u + (u * u * (3.0 - 2.0 * u) - u) * uKSect.y;
-  al = mix(mix(aO, aC, covC), aJ, w);
-  return mix(mix(o, c, covC), j, w);
+  return mix(mix(vKRO, vKRC, covC), vKRJ, w);
 }
 `;
 

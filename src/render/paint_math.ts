@@ -1240,9 +1240,6 @@ export function kRootAt(D: KData, r: KRoot, alpha: number, out: Float64Array | n
 
 const ROOT_T = new Float64Array(8);
 const ROOT_BODY = {} as KChain;
-const ROOT_C = new Float32Array(3);
-const ROOT_O = new Float32Array(3);
-const ROOT_J = new Float32Array(3);
 
 // GLSL twin: the vertex shader's root block at a sample of root arc `alpha`
 // - each side's section at its feet, the stroke ribbon's own color there
@@ -1299,25 +1296,38 @@ export function kRootFragSections(
   }
 }
 
-// One side's paint: its interpolated section, then the stroke's FX and
-// rainbow at the foot (arc on the body, across coordinate uv). In place on
-// rgb; returns the materialize alpha.
-function kRootSide(
+// GLSL twin: kRootSection - a root fragment's section (what SECTION_FRAG's
+// `base` becomes, before the FX). `alpha` = the fragment's arc on the root
+// chain (< arcJ), `side` = its vUV.y, `pxW` = world per pixel, secC / secO =
+// the interpolated vertex sections (kRootFragSections), secJ =
+// kRootSpurSection. The centerline seam gets one pixel of coverage.
+export function kRootSection(
   D: KData,
   U: KUniforms,
-  b: KChain,
-  arc: number,
-  uv: number,
-  rgb: Float32Array | number[]
-): number {
-  return kShadeFx(D, U, b, kCtrlOfArc(D, b, arc), arc / b.arcPer, uv, rgb);
+  r: KRoot,
+  alpha: number,
+  side: number,
+  pxW: number,
+  secC: ArrayLike<number>,
+  secO: ArrayLike<number>,
+  secJ: ArrayLike<number>,
+  out: Float32Array | number[]
+): void {
+  kRootAt(D, r, alpha, ROOT_T);
+  const lat = (side - 0.5) * r.side * 2 * ROOT_T[2];
+  const covC = Math.min(Math.max(0.5 + lat / pxW, 0), 1);
+  const w = kEase(U, Math.min(Math.max(alpha / r.arcJ, 0), 1));
+  for (let i = 0; i < 3; i++) {
+    const s = secO[i] + (secC[i] - secO[i]) * covC;
+    out[i] = s + (secJ[i] - s) * w;
+  }
 }
 
-// GLSL twin: kRootPaint - a root fragment's color before the gameplay paint
-// (what SECTION_FRAG's `base` and `aM` become). `alpha` = the fragment's arc
-// on the root chain (< arcJ), `side` = its vUV.y, `pxW` = world per pixel,
-// secC / secO = the interpolated vertex sections (kRootFragSections), secJ
-// = kRootSpurSection. The centerline seam gets one pixel of coverage.
+// A root fragment's color before the gameplay paint (SECTION_FRAG's `base`
+// and `aM`): kRootSection, then the ROOT chain's own FX at the fragment, as
+// on every other chain. The strokes' FX are not sampled at the feet (the
+// brief's fallback, for every FX): two more kFxColor calls would grow FXC's
+// cold compile of section-rgb, the intro's critical path (K307).
 export function kRootPaint(
   D: KData,
   U: KUniforms,
@@ -1331,26 +1341,8 @@ export function kRootPaint(
   secJ: ArrayLike<number>,
   out: { rgb: Float32Array | number[]; alpha: number }
 ): void {
-  kRootAt(D, r, alpha, ROOT_T);
-  const b = kChain(D, r.body, ROOT_BODY);
-  const e = Math.min(Math.abs(side - 0.5) * 2, 1);
-  const lat = (side - 0.5) * r.side * 2 * ROOT_T[2];
-  const covC = Math.min(Math.max(0.5 + lat / pxW, 0), 1);
-  for (let i = 0; i < 3; i++) {
-    ROOT_C[i] = secC[i];
-    ROOT_O[i] = secO[i];
-    ROOT_J[i] = secJ[i];
-  }
-  const aC = kRootSide(D, U, b, ROOT_T[0], ROOT_T[4] + (ROOT_T[5] - ROOT_T[4]) * e, ROOT_C);
-  const aO = kRootSide(D, U, b, ROOT_T[1], ROOT_T[6] + (ROOT_T[7] - ROOT_T[6]) * e, ROOT_O);
-  const aJ = kShadeFx(D, U, root, r.ctrlJ, r.arcJ / root.arcPer, side, ROOT_J);
-  const w = kEase(U, Math.min(Math.max(alpha / r.arcJ, 0), 1));
-  for (let i = 0; i < 3; i++) {
-    const s = ROOT_O[i] + (ROOT_C[i] - ROOT_O[i]) * covC;
-    out.rgb[i] = s + (ROOT_J[i] - s) * w;
-  }
-  const sa = aO + (aC - aO) * covC;
-  out.alpha = sa + (aJ - sa) * w;
+  kRootSection(D, U, r, alpha, side, pxW, secC, secO, secJ, out.rgb);
+  out.alpha = kShadeFx(D, U, root, kCtrlOfArc(D, root, alpha), alpha / root.arcPer, side, out.rgb);
 }
 
 // RUNS layout writer: run r at texels base + 4r .. + 3 (see above).
