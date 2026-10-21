@@ -79,18 +79,6 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   folder, after deadEndLength, fabric mode only. A link that lists
   `hcs` keeps its share when the default changes.
 
-- CONFETTI CANNON PARAMS (K336, 2026-10-20): `confettiCannons` (`cfc`,
-  default on), `cannonAmount` (`cfn`, [0, 3], default 1) and
-  `streamerShare` (`cfs`, [0, 1], default 0.2) are APPENDED at indices
-  171-173, after K337's `confettiShine` and `foilShare` (169-170);
-  CODEC_VERSION stays 8. All three are DAILY_EXEMPT_KEYS (viewer
-  preferences, like `cf` and `cfa`), so the golden dailies do not move.
-  url_state.ts clamps the two numbers; override keys `cfc` / `cfn` /
-  `cfs`. K324 stage 1 appends seven minotaur params beside them
-  (`mhn` ... `mtn`): whichever lands second renumbers its rows and
-  re-freezes param_codec.test.ts's key-order pin and url_codec.test.ts's
-  defaults table. The render side is render-confetti.md's K336 section.
-
 - BURN RACE PARAMS (K114 stage 1, 2026-10-14): `fire` (`fi`, off | fuse),
   `fireSpeed` (`fsp`, 0.6 since K280, 0.75 before) and `fireDelay` (`fdl`,
   0) are APPENDED to
@@ -368,3 +356,18 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   pair and clamps K324's knobs". The golden dailies did not move. The
   confetti lane (K186 + K336) and K525 append too: whoever merges second
   renumbers (the brief's "param hotspot").
+
+- CONFETTI CANNON PARAMS (K336, 2026-10-20; brief
+  `docs/design/K336_cannons.md`): `confettiCannons` (`cfc`, default on),
+  `cannonAmount` (`cfn`, [0, 3], default 1) and `streamerShare` (`cfs`,
+  [0, 1], default 0.2) are APPENDED at 178-180, after K324 stage 1's
+  171-177; CODEC_VERSION stays 8. They were 171-173 on their branch until
+  it rebased onto K324 stage 1, which renumbered them and re-froze the
+  table pin (`test/ui/param_codec.test.ts`). All three are
+  DAILY_EXEMPT_KEYS (viewer preferences, like `cf` and `cfa`), so the
+  golden dailies do not move. url_state.ts clamps the two numbers in
+  every reader; override keys `cfc` / `cfn` / `cfs`. Pins that moved: the
+  table pin, url_codec.test.ts's defaults table and OVERRIDE_KEYS (plus
+  its cases for the three keys) and daily_link.test.ts's exempt set. The
+  render side is render-confetti.md's K336 section. K324 stage 3 appends
+  more minotaur params: whoever merges second renumbers.
