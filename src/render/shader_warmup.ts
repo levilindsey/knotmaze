@@ -424,6 +424,8 @@ export interface WarmParams {
   fragile?: string;
   // K139: collapse (off | finish | free); absent reads as off.
   collapse?: string;
+  // K114: cut (off | on); absent reads as off.
+  cut?: string;
   pluckRipple: string;
   backgroundIntensity: number;
   backgroundSpeed: number;
@@ -450,12 +452,14 @@ export function warmContextFor(
     // runs too, whose first snap switches every ribbon, strip and fan onto
     // the explore programs as the first burn does (broken runs vanish
     // through the burn's machinery). K139: collapse too (its first move
-    // collapses the start tail).
+    // collapses the start tail). K114: cut too (a cut run vanishes the way
+    // a broken one does).
     burn:
       params.mazeFabric &&
       (params.gameMode === "burn" ||
         (params.fragile ?? "off") !== "off" ||
-        (params.collapse ?? "off") !== "off"),
+        (params.collapse ?? "off") !== "off" ||
+        (params.cut ?? "off") !== "off"),
     reduced,
     ripple: params.pluckRipple !== "off" && !reduced,
     // Mirrors main.ts syncBackground's setShape + configure.

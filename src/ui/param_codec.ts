@@ -342,6 +342,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("minoStalkerAccuracyRt"),
   // 190, K139: collapse (COLLAPSE_MODES order, game/collapse.ts).
   choice("collapse", ["off", "finish", "free"]),
+  // 191, K114: cut (CUT_MODES order, game/cut.ts).
+  choice("cut", ["off", "on"]),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
