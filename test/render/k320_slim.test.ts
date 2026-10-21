@@ -45,8 +45,13 @@ const STILL_EXPLORE_FRAG = withExploreStill(PLUCK_STILL_FRAG);
 
 describe("K320 stage 1: char budgets", () => {
   it("keeps the slimmed fragments under budget", () => {
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(46_600);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(62_700);
+    // K525 (2026-10-20) raised the section's two on purpose: the telegraph
+    // rims (paint_glsl.ts TELE_ITEM_GLSL, ribbon-only) add 797 characters to
+    // both (46,047 -> 46,844 and 62,462 -> 63,259 here), one cold compile
+    // of section-rgb and its explore variant per player. The strip, the
+    // junction field and the plucks keep their text byte for byte.
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(46_900);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(63_300);
     expect(STRIP_FRAG.length).toBeLessThanOrEqual(31_400);
     expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(26_600);
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_300);
