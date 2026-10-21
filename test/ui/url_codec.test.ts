@@ -99,15 +99,15 @@ describe("links", () => {
       minoDeadEnds: 0.4, minoRoam: 30, minoWake: 2, minoFog: "always",
       minoPull: 0.5, minoRefog: true,
       confettiAmount: 1, confettiShine: 1, foilShare: 0.3,
-      pluckWhole: 0.75, pluckCrossings: "through", pluckGlow: "off",
+      pluckWhole: 0.75, pluckCrossings: "through", pluckGlow: "fallback",
       pluckRipple: "glint", rippleStrength: 1, rippleAuto: 0.35,
       pluckSheen: 0.5, pluckTug: 0, tugAuto: false, autoPluckGain: 0.5,
-      markerSize: 1.08,
+      markerSize: 2,
       hoverGlow: 0.4,
       minotaur: "hunter", minoSpeed: "one", minoTelegraph: true, minoSight: 2,
       minoRoamRuns: 8, minoTerritory: 6, minoAccuracy: 0.3, minoPause: 0.1,
       minoSleep: 0,
-      fireSpeed: 0.75, fireDelay: 0,
+      fireSpeed: 0.6, fireDelay: 0,
       minoRestart: false, minoLair: true,
       hoverGlowWidth: 0.85,
       hoverGlowLength: 3, hoverGlowFade: 0.2,
@@ -115,7 +115,7 @@ describe("links", () => {
       revealDistance: 2.5, revealFade: 1, revealLook: "beacon",
       burnt: "gone",
       minoGiveUp: 3, minoRoamMin: 3, minoTurnPull: 0,
-      minoGuardSight: 4, minoGuardAccuracy: 0.3, minoStalkerAccuracy: 0.45,
+      minoGuardSight: 4, minoGuardAccuracy: 0.3, minoStalkerAccuracy: 0.3,
       fireClock: "turn",
       fireSpeedRt: 0.2, fireDelayRt: 20,
       revealFinish: true,
@@ -186,15 +186,18 @@ describe("links", () => {
   // K98: the marker size's override key, its clamp to [0.25, 3], and the
   // token round trip.
   it("reads the marker size from its override key", () => {
-    const p = parseParams("?7&mks=2");
-    expect(p.markerSize).toBe(2);
+    const p = parseParams("?7&mks=1.5");
+    expect(p.markerSize).toBe(1.5);
     expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
-    // The default stays out of the token.
-    expect(encodeParams(parseParams("?7&mks=1.08"))).toBe("7");
+    // The default (2 since K225; 1.08 before) stays out of the token, and
+    // the old default is now an ordinary listed value.
+    expect(encodeParams(parseParams("?7&mks=2"))).toBe("7");
+    expect(encodeParams(parseParams("?7&mks=1.08"))).not.toBe("7");
+    expect(parseParams("?7&mks=1.08").markerSize).toBe(1.08);
     expect(parseParams("?7&mks=9").markerSize).toBe(3);
     expect(parseParams("?7&mks=0").markerSize).toBe(0.25);
     expect(parseParams("?7&mks=-1").markerSize).toBe(0.25);
-    expect(parseParams("?7&mks=x").markerSize).toBe(1.08);
+    expect(parseParams("?7&mks=x").markerSize).toBe(2);
     expect(
       parseParams(`?${encodeParams(withSeed(7, { markerSize: 7 }))}`).markerSize
     ).toBe(3);
@@ -219,20 +222,25 @@ describe("links", () => {
   // K114/K323: the burn race is gameMode burn (`fi=fuse` implies it; `gm`
   // names it directly), with its clamps and the token round trip.
   it("reads the burn race from its override keys", () => {
-    const p = parseParams("?7&fi=fuse&fsp=0.6&fdl=12.5");
+    // 0.5, not the default (0.6 since K280; 0.75 before), so the token lists it.
+    const p = parseParams("?7&fi=fuse&fsp=0.5&fdl=12.5");
     expect(p.gameMode).toBe("burn");
-    expect(parseParams("?7&gm=burn&fsp=0.6&fdl=12.5").gameMode).toBe("burn");
+    expect(parseParams("?7&gm=burn&fsp=0.5&fdl=12.5").gameMode).toBe("burn");
     expect(parseParams("?7&gm=classic").gameMode).toBe("classic");
-    expect([p.fireSpeed, p.fireDelay]).toEqual([0.6, 12.5]);
+    expect([p.fireSpeed, p.fireDelay]).toEqual([0.5, 12.5]);
     expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
-    expect(fireSettingsOf(p)).toEqual({ speed: 0.6, delay: 12.5, clock: "turn" });
+    expect(fireSettingsOf(p)).toEqual({ speed: 0.5, delay: 12.5, clock: "turn" });
     // Clamps: speed to [0.1, 0.95] (K440 lowered the floor from 0.3;
-    // garbage = the default), delay to [0, 40].
+    // garbage = the default, 0.6), delay to [0, 40].
     expect(parseParams("?7&fsp=2").fireSpeed).toBe(0.95);
     expect(parseParams("?7&fsp=0").fireSpeed).toBe(0.1);
     expect(parseParams("?7&fsp=0.05").fireSpeed).toBe(0.1);
     expect(parseParams("?7&fsp=0.25").fireSpeed).toBe(0.25);
-    expect(parseParams("?7&fsp=x").fireSpeed).toBe(0.75);
+    expect(parseParams("?7&fsp=x").fireSpeed).toBe(0.6);
+    // The old default is an ordinary listed value now.
+    expect(parseParams("?7&fsp=0.75").fireSpeed).toBe(0.75);
+    expect(encodeParams(parseParams("?7&fsp=0.75"))).not.toBe("7");
+    expect(encodeParams(parseParams("?7&fsp=0.6"))).toBe("7");
     expect(parseParams("?7&fdl=99").fireDelay).toBe(40);
     expect(parseParams("?7&fdl=-3").fireDelay).toBe(0);
     expect(
@@ -243,13 +251,13 @@ describe("links", () => {
     expect(fireSettingsOf(PARAM_DEFAULTS)).toBeNull();
     expect(fireSettingsOf({ ...p, gameMode: "classic" })).toBeNull();
     expect(fireSettingsOf({ ...p, clock: "realtime" })).toEqual({
-      speed: 0.6, delay: 12.5, clock: "turn",
+      speed: 0.5, delay: 12.5, clock: "turn",
     });
     expect(fireSettingsOf({ ...p, minotaur: "guard" })).toEqual({
-      speed: 0.6, delay: 12.5, clock: "turn",
+      speed: 0.5, delay: 12.5, clock: "turn",
     });
     expect(fireSettingsOf(parseParams("?7&fi=fuse"))).toEqual({
-      speed: 0.75,
+      speed: 0.6,
       delay: 0,
       clock: "turn",
     });
@@ -271,7 +279,8 @@ describe("links", () => {
   });
 
   // K440 (Levi, 2026-10-15): the real-time fire has its own speed and delay
-  // (fsr 0.2, fdr 20); the turn clock keeps fsp 0.75 / fdl 0. Each clock
+  // (fsr 0.2, fdr 20); the turn clock keeps fsp 0.6 / fdl 0 (0.75 / 0 until
+  // K280, 2026-10-20). Each clock
   // plays its own pair, both clamp like the turn pair did (speed to [0.1,
   // 0.95] since K440, delay to [0, 40]), and a link lists neither while it
   // holds its default.
@@ -287,12 +296,12 @@ describe("links", () => {
     );
     expect(listed.sort()).toEqual(["fireClock", "gameMode"]);
     expect(parseParams(`?${token}`)).toEqual(rt);
-    // The turn link keeps 0.75 / 0, whatever the real-time pair holds.
+    // The turn link keeps 0.6 / 0, whatever the real-time pair holds.
     const turn = parseParams("?7&fi=fuse");
-    expect(fireSettingsOf(turn)).toEqual({ speed: 0.75, delay: 0, clock: "turn" });
+    expect(fireSettingsOf(turn)).toEqual({ speed: 0.6, delay: 0, clock: "turn" });
     expect(
       fireSettingsOf({ ...turn, fireSpeedRt: 0.5, fireDelayRt: 33 })
-    ).toEqual({ speed: 0.75, delay: 0, clock: "turn" });
+    ).toEqual({ speed: 0.6, delay: 0, clock: "turn" });
     // And the real-time clock ignores the turn pair.
     expect(
       fireSettingsOf({ ...rt, fireSpeed: 0.9, fireDelay: 7 })
@@ -300,7 +309,7 @@ describe("links", () => {
     // Override keys, and the token round trip of a changed pair.
     const set = parseParams("?7&fi=fuse&fck=realtime&fsr=0.35&fdr=30");
     expect([set.fireSpeedRt, set.fireDelayRt]).toEqual([0.35, 30]);
-    expect([set.fireSpeed, set.fireDelay]).toEqual([0.75, 0]);
+    expect([set.fireSpeed, set.fireDelay]).toEqual([0.6, 0]);
     expect(fireSettingsOf(set)).toEqual({ speed: 0.35, delay: 30, clock: "realtime" });
     expect(parseParams(`?${encodeParams(set)}`)).toEqual(set);
     // Clamps: speed to [0.1, 0.95] (garbage = the real-time default),
@@ -444,9 +453,10 @@ describe("links", () => {
   // K180: the pluck params' override keys, the whole amount's clamp, the
   // option lists, and the token round trip.
   it("reads the pluck params from override keys", () => {
-    const p = parseParams("?7&pw=1&pcx=ride&pgl=fallback");
+    // pgl=with, not the default (fallback since K194; off before).
+    const p = parseParams("?7&pw=1&pcx=ride&pgl=with");
     expect([p.pluckWhole, p.pluckCrossings, p.pluckGlow]).toEqual([
-      1, "ride", "fallback",
+      1, "ride", "with",
     ]);
     expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
     for (const pcx of ["through", "ride", "pinch"]) {
@@ -458,9 +468,12 @@ describe("links", () => {
       expect(parseParams(`?${encodeParams(q)}`)).toEqual(q);
     }
     // Defaults stay out of the token; unknown options read as the default.
-    expect(encodeParams(parseParams("?7&pw=0.75&pcx=through&pgl=off"))).toBe("7");
+    expect(encodeParams(parseParams("?7&pw=0.75&pcx=through&pgl=fallback"))).toBe("7");
+    // K194: off (K104's look) is a listed value now.
+    expect(encodeParams(parseParams("?7&pgl=off"))).not.toBe("7");
+    expect(parseParams("?7&pgl=off").pluckGlow).toBe("off");
     expect(parseParams("?7&pcx=wobble").pluckCrossings).toBe("through");
-    expect(parseParams("?7&pgl=bright").pluckGlow).toBe("off");
+    expect(parseParams("?7&pgl=bright").pluckGlow).toBe("fallback");
     // The amount clamps to [0, 1.5]; garbage reads as the default.
     expect(parseParams("?7&pw=9").pluckWhole).toBe(1.5);
     expect(parseParams("?7&pw=-1").pluckWhole).toBe(0);

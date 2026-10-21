@@ -1495,7 +1495,7 @@ export function buildPanel(
   const fireSpeedRow = row(
     fFire, p, "fireSpeed",
     { min: FIRE_SPEED_MIN, max: FIRE_SPEED_MAX, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label: "Fire speed (x yours)" },
-    "The fire's speed as a fraction of yours: at 0.75 it burns 3 units of thread while you walk 4. Restarts the solve.",
+    "The fire's speed as a fraction of yours: at 0.6 it burns 3 units of thread while you walk 5. Restarts the solve.",
     D.fireSpeed, () => {
       params.fireSpeed = Math.round(params.fireSpeed * 100) / 100;
       callbacks.onClockChange();

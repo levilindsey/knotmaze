@@ -166,20 +166,23 @@ function turnGameLength(walk: WalkGraph, p: TurnMinoParams, maze: number, walkSe
 
 // K481 stage 2 re-pin: at BY_LENGTH_TRAVEL_SCALE 0.65 through the shipped
 // config (turnConfig of byLength params), with the catch route kept for
-// its animation (lastTravel no longer resets on a catch).
+// its animation (lastTravel no longer resets on a catch). K421's stalker
+// accuracy 0.45 -> 0.3 moved the four stalker rows of mazes 3 and 17; the
+// two of maze 42 held (the stalker hunts the whole game there, as the guard
+// does), as did every hunter and guard row.
 const LENGTH_GAMES: string[] = [
     "hunter:3:1 51/0/0/6/W/b2ae2d62",
     "hunter:3:2 51/2/2/7/W/136f28a4",
     "guard:3:1 157/5/4/107/W/f6026fd4",
     "guard:3:2 60/3/3/34/W/b1c8eea0",
-    "stalker:3:1 141/5/2/132/W/5e36e0f4",
-    "stalker:3:2 108/6/5/97/W/526e09b6",
+    "stalker:3:1 95/2/5/91/W/302bd8de",
+    "stalker:3:2 60/3/3/53/W/b45d84f4",
     "hunter:17:1 54/0/4/10/W/d19ae76d",
     "hunter:17:2 27/0/0/0/W/aff90a90",
     "guard:17:1 59/1/2/45/W/28357b6c",
     "guard:17:2 27/0/0/17/W/9d2dc0d",
-    "stalker:17:1 65/1/4/61/W/94509039",
-    "stalker:17:2 27/1/1/24/W/26782ca3",
+    "stalker:17:1 65/1/0/61/W/40548a64",
+    "stalker:17:2 27/0/2/25/W/a57b821",
     "hunter:42:1 12/0/2/7/W/e5f60263",
     "hunter:42:2 9/0/0/4/W/89f4188d",
     "guard:42:1 12/0/2/9/W/3e8b4767",
@@ -618,26 +621,27 @@ describe("TurnMinotaur", () => {
   // calls/seen/won/digest of every turn (the tap, the result, where both
   // stand, its mode and path). It moves when a rule or a default the
   // models read moves; re-freeze it and name what moved in the commit
-  // (item 8's K294 values moved every guard and stalker row).
+  // (item 8's K294 values moved every guard and stalker row; K421's stalker
+  // accuracy 0.45 -> 0.3 moved the six stalker rows, hunter and guard held).
   const TURN_GAMES = [
     "hunter:3:1 51/0/5/38/W/ca93db16",
     "hunter:3:2 60/3/9/40/W/84a9d9b4",
     "guard:3:1 184/11/26/134/W/b23c6b93",
     "guard:3:2 57/3/10/42/W/27581535",
-    "stalker:3:1 33/1/3/29/W/a6d955e8",
-    "stalker:3:2 93/8/7/80/W/36c84619",
+    "stalker:3:1 74/5/4/65/W/f4cd8769",
+    "stalker:3:2 13/0/0/12/W/e0854163",
     "hunter:17:1 28/1/1/17/W/def279f5",
     "hunter:17:2 27/1/2/14/W/942b271f",
     "guard:17:1 54/2/1/35/W/ebb27a3",
     "guard:17:2 27/0/5/18/W/27ae3de3",
-    "stalker:17:1 28/1/1/21/W/c5733b9b",
-    "stalker:17:2 92/7/9/82/W/9ee1b7a8",
+    "stalker:17:1 28/1/0/23/W/3e6f4e8",
+    "stalker:17:2 27/1/2/23/W/b674c00c",
     "hunter:42:1 29/3/2/18/W/a6272f21",
     "hunter:42:2 51/4/4/16/W/58e2ff77",
     "guard:42:1 55/2/6/50/W/354502f",
     "guard:42:2 58/6/9/43/W/5147971",
-    "stalker:42:1 156/15/22/131/W/a2ecf311",
-    "stalker:42:2 97/10/21/77/W/cfdef67e",
+    "stalker:42:1 55/3/2/48/W/14182a38",
+    "stalker:42:2 53/6/11/44/W/5233847e",
   ];
 
   it("plays the pinned games at the defaults", () => {

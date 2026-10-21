@@ -176,8 +176,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   fireSpeed, fireDelay, burnt (the clock row moved up from after
   fireDelay so it sits above the pair it picks). A clock change only
   swaps which rows show: no value is refreshed, so no row's handler runs.
-  Each reset glyph returns its own pair's default (0.75 / 0 turn, 0.2 /
-  20 realtime). Ranges [0.1, 0.95] (FIRE_SPEED_MIN since K440; 0.3 before)
+  Each reset glyph returns its own pair's default (0.6 / 0 turn since
+  K280, 0.75 / 0 before; 0.2 / 20 realtime). Ranges [0.1, 0.95] (FIRE_SPEED_MIN since K440; 0.3 before)
   and [0, 40] for both pairs. The real-time tooltips quote the dot's fixed
   pace (12 lattice units a second; "a run is about 4"): 0.2 burns 2.4
   units a second, 1 for every 5 the dot walks; a delay of 20 is about 1.7

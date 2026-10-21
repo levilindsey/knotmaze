@@ -77,7 +77,9 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   "custom" with backgroundBase #000000 (a black page, the fog follows),
   palette "pastel" (the lightest preset, already the default, so a no-op
   on default designs), pathColor #ffff00, fadeLength 0 (crisp crossing
-  cuts), gap max(stored, 0.12) and markerSize max(stored, 1.5). Its
+  cuts), gap max(stored, 0.12) and markerSize max(stored, 1.5) (K225's
+  default 2 sits above that floor, so since 2026-10-20 it lifts only a
+  stored size under 1.5, not the default; raising it is open). Its
   choices keep the pulses (stage 3 removed stage 2's "contrast" mode)
   until Levi picks one of three PROTOTYPE looks (K111 stage 4, K265:
   "Maybe the high contrast highlights should get new treatment"):

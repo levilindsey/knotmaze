@@ -64,7 +64,8 @@ files.
   with flow off; under 4x CPU throttling (a phone proxy) about 11 ms, the
   frame interval's median 69 -> 87 ms. PARAMS (codec v5 118-120, after K74's
   `hCutShare` 117; 117-119 before the branch rebased onto K74 stage 2):
-  `fire` `fi` (off | fuse), `fireSpeed` `fsp` (0.75, [0.1, 0.95]; the
+  `fire` `fi` (off | fuse), `fireSpeed` `fsp` (0.6 since K280, 0.75
+  before; [0.1, 0.95]; the
   floor was 0.3 until K440), `fireDelay` `fdl` (0, [0, 40] lattice units;
   since K440 these two are the turn clock's, and realtime has its own,
   REAL-TIME FIRE below); not daily-exempt, and a
@@ -191,7 +192,9 @@ files.
     (`.claude/probes/K114/stage2/proposal.md`) proposed realtime 0.2 / 20
     (1.7 s head start; 1.1-1.5 s a decision), which is now realtime's own
     default: `fireSpeedRt` (`fsr`, 0.2) and `fireDelayRt` (`fdr`, 20),
-    while `fireSpeed` / `fireDelay` stay the turn clock's 0.75 / 0.
+    while `fireSpeed` / `fireDelay` stay the turn clock's (0.75 / 0 then,
+    0.6 / 0 since K280, which cooled the turn race: K114's R.6.1 table
+    above has the r 0.6 rows).
     `fireSettingsOf` (url_state.ts) returns the pair of the design's
     `fireClock`, so `&fi=fuse&fck=realtime` plays 0.2 / 20 and a turn link
     is unchanged. The speed floor dropped to 0.1 for both pairs (Levi's
@@ -200,7 +203,7 @@ files.
     `.claude/probes/K440/k440_page.mjs`): on `?7&fi=fuse&fck=realtime`
     the start marker hid on the first frame the clock passed 20, 1.672
     and 1.682 s after the clock's zero in two runs (20 / 12 = 1.667 s);
-    without `fck` the race played 0.75 / 0. Links and pins:
+    without `fck` the race played the turn pair (0.75 / 0 then). Links and pins:
     gameplay-links.md's REAL-TIME FIRE PAIR; rows: gameplay-panel.md's
     EACH CLOCK'S OWN ROWS.
   - Hook: `__knotFabric().fire` adds clock, L, now, departL, arriveL,
