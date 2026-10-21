@@ -28,6 +28,16 @@ describe("K137 share tags", () => {
   });
 });
 
+describe("K114 cut tag", () => {
+  it("adds the scissors and the cut count last, only for a cut made", () => {
+    const t = title({ ...BASE, stars: 3, snapped: 1, cuts: 2 });
+    expect(t.endsWith(" · snapped 1 · \u2702\uFE0F 2")).toBe(true);
+    for (const none of [title({ ...BASE, cuts: 0 }), title({ ...BASE, cuts: null }), title(BASE)]) {
+      expect(none).not.toContain("\u2702");
+    }
+  });
+});
+
 describe("K139 collapse line", () => {
   it("puts the mode, the score and par on a line under the time, before the grid", () => {
     const fin = shareText({ ...BASE, efficiency: null, collapse: { mode: "finish", pct: 58, par: "≥62%" } });

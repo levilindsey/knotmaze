@@ -133,6 +133,7 @@ describe("links", () => {
       minoGuardRoam: 30, minoGuardDetect: 20, minoGuardLose: 30,
       minoGuardAccuracyRt: 0.4, minoStalkerAccuracyRt: 0.45,
       collapse: "off",
+      cut: "off", // K114
     });
   });
 
@@ -906,6 +907,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoGuardRoam: "mgr", minoGuardDetect: "mgd", minoGuardLose: "mgl",
   minoGuardAccuracyRt: "mgx", minoStalkerAccuracyRt: "msx",
   collapse: "cl",
+  cut: "ct", // K114
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

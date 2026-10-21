@@ -50,6 +50,7 @@ export function ruleFields(fc: FabricMazeController): RuleFields {
     parLeft: fc.parMode === "strict" ? { par: fc.par, left: fc.strokesLeft } : null,
     parStrokes: fc.parMode === "strokes" ? { par: fc.par, strokes: fc.strokes } : null,
     collapse: par ? { pct: fc.collapsePercent, par: parText(par) } : null,
+    cuts: fc.cutOn ? fc.cutCount : null, // K114
   };
 }
 

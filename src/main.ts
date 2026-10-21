@@ -10,6 +10,7 @@ import { WorkerHost } from "./physics/worker_host";
 import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
 import { EXPLORE_LOOKS } from "./render/explore_glsl";
 import { FabricMazeController } from "./game/fabric_controller";
+import { cuttable } from "./game/cut";
 import { finishHold } from "./game/explore_finish";
 import { buildFire } from "./game/fire";
 import { FireClock } from "./game/fire_clock";
@@ -110,6 +111,8 @@ import {
   type DesignState,
 } from "./ui/undo_stack";
 import { UndoButtons } from "./ui/undo_buttons";
+import { CutButtons } from "./ui/cut_buttons";
+import type { CutKey } from "./ui/cut_buttons";
 import { MotionSetting, browserMotionQuery } from "./ui/motion";
 import {
   ContrastSetting,
@@ -135,7 +138,7 @@ import { createPointerInput } from "./app/input_pointer";
 import { createKeyInput } from "./app/input_keys";
 import { createLossCover, installContextLoss } from "./app/context_loss";
 import { createAutoAudio } from "./app/auto_audio";
-import { createRuleLoss, ruleFields } from "./app/rule_loss";
+import { SNAP_OCTAVE, SNAP_STRENGTH, createRuleLoss, ruleFields } from "./app/rule_loss";
 import {
   FOLLOW_DELAY,
   FOLLOW_RAMP,
@@ -409,6 +412,11 @@ async function main(): Promise<void> {
   let routeFc: FabricMazeController | null = null;
   let chaseRoute: number[] = [];
   let moveHuntWas = false;
+  // K114 CUT: the scissors are armed (the next tap cuts), and a cut tapped
+  // while the dot travels, waiting for the move to end (-1: none; the
+  // latest wins). The machinery is below, by handleFabricTap.
+  let cutArmed = false;
+  let pendingCut = -1;
   // The physics host (`host`) is made before app.init (K7 stage 5's start
   // gate, above).
   // K5 M4: the scene `let`s (ps, the renderers, the walk graph, the fabric,
@@ -701,6 +709,7 @@ async function main(): Promise<void> {
       inWaitZone: (x, y) => inWaitZone(x, y),
       setWaitCue: (on) => setWaitCue(on),
       tapReach: () => tapReach(),
+      cutArmed: () => cutArmed,
     },
     scene
   );
@@ -826,6 +835,22 @@ async function main(): Promise<void> {
   };
   panelMidDrag = () => panel.midDrag();
   panel.onOpenChange(() => fitModeBadge());
+  // K114 CUT (ui/cut_buttons.ts): the scissors and Undo, bottom left while
+  // the cut is on and the keys are live (cutTick, every frame).
+  const cutButtons = new CutButtons({
+    arm: () => setCutArmed(!cutArmed),
+    undo: () => cutUndo(),
+  });
+  // Armed: the button lit, a crosshair; put down, the cut glow goes too.
+  const setCutArmed = (on: boolean): void => {
+    if (on === cutArmed) return;
+    cutArmed = on;
+    cutButtons.setArmed(on);
+    app.canvas.style.cursor = on ? "crosshair" : "default";
+    if (!on && scene.fabric && scene.fabricController && scene.fabric.setGlow(-1, 0)) {
+      scene.fabric.update(scene.fabricController);
+    }
+  };
   // K325: the credit link snores on hover and touch-down, and a touch tap
   // opens it a beat later. The file loads when the panel shows; a panel that
   // starts open (the desktop default) waits for an idle moment first.
@@ -872,6 +897,7 @@ async function main(): Promise<void> {
       modeBadge.el,
       menuButton,
       undoButtons.el, // K92 (display none closed).
+      cutButtons.el, // K114 (hidden: none).
       // (The panel: env.panel below, K198 stage 2.)
       stamp,
       document.querySelector<HTMLElement>(".km-pad"), // K120 (hidden: none).
@@ -1498,6 +1524,7 @@ async function main(): Promise<void> {
         snapped: c.fragileOn && !c.collapseOn ? c.brokenRuns().length : null,
         parScore: c.parMode !== "off" ? parScore(c.strokes, c.par) : null,
         collapse: collapse ? { mode: collapseMode, ...collapse } : null,
+        cuts: c.cutOn ? c.cutCount : null, // K114
       }),
       url: daily !== null ? dailyUrl(daily) : location.href,
     };
@@ -1535,6 +1562,7 @@ async function main(): Promise<void> {
       closestCall: c.fire ? c.fireClosest : null,
       rating,
       collapse,
+      cuts: c.cutOn ? c.cutCount : null, // K114
     });
     updateHud();
     throwConfetti();
@@ -1660,6 +1688,8 @@ async function main(): Promise<void> {
     routeRuns = [];
     routeFc = null;
     chaseRoute = [];
+    pendingCut = -1; // K114
+    setCutArmed(false);
     scene.fabric?.cancelMove();
     scene.fabric?.clearYarn();
     pendingWin = false;
@@ -1678,10 +1708,19 @@ async function main(): Promise<void> {
   // replay's reset moved `restarts`, so the fog's stamps clear), then the
   // fog laid again from the taps (exploreRuns); the clock runs on. Offered
   // only while the taps hold the whole state (no minotaur, no fire).
+  // K114: with the cut on, Undo pops one ACTION instead (a move, with the
+  // runs it carried on along, or a cut), through replayActions.
   const undoMove = (): void => {
     const fc = scene.fabricController;
-    if (!fc || !scene.fabric || fc.taps.length === 0) return;
-    if (!fc.replay(fc.taps.slice(0, -1))) {
+    if (!fc || !scene.fabric) return;
+    const cutting = fc.cutOn;
+    if ((cutting ? fc.actions.length : fc.taps.length) === 0) return;
+    pendingCut = -1;
+    if (
+      !(cutting
+        ? fc.replayActions(fc.actions.slice(0, -1))
+        : fc.replay(fc.taps.slice(0, -1)))
+    ) {
       restartSolve();
       updateHud();
       return;
@@ -2440,6 +2479,8 @@ async function main(): Promise<void> {
     }
     // K137: stranded or out of strokes: a tap shows the banner again.
     if (ruleLoss.over()) return ruleLoss.tapWhileOver(pendingLoss);
+    // K114: armed scissors: the tap cuts (or puts them down) instead.
+    if (cutArmed) return cutTap(x, y, pt);
     // K80 turns: with the turn minotaur on, a tap on your own junction is
     // the wait move (before the runs: a short run's tap zone reaches the
     // junction, and the head disc sits over it; onHead leaves the runs'
@@ -2516,6 +2557,115 @@ async function main(): Promise<void> {
     return result !== "reject";
   };
 
+  // K114 CUT (game/cut.ts; brief docs/design/K114_cut.md). Armed, a tap on
+  // any live run cuts it (FabricMazeRenderer.cutAt; empty space or a cut
+  // run puts the scissors down). A cut tapped while the dot travels or
+  // carries on waits for the move to end (pendingCut, the latest wins;
+  // carryStep lands it). A cut puts the scissors down and snaps (K137's
+  // snap: the run's pitch, an octave up); a refused cut (no way left to
+  // the exit) or a run that cannot be cut says why with a dull pluck, and
+  // the scissors stay armed. Render-only: no wake, as for a move.
+  const CUT_TOAST_MS = 2500;
+  const REFUSE_OCTAVE = 0.5;
+  const REFUSE_STRENGTH = 0.35;
+  const cutPluck = (eid: number, octave: number, strength: number): void => {
+    if (settings.muted || params.soundMode === "none" || !(params.volume > 0)) return;
+    const e = scene.walkGraph?.edges[eid];
+    if (e) synth.pluck(freqForCtrl(e.chain, (e.ctrlA + e.ctrlB) / 2) * octave, strength);
+  };
+  const applyCut = (eid: number): void => {
+    const fc = scene.fabricController;
+    if (!fc || !scene.fabric) return;
+    const r = fc.cut(eid);
+    if (r === "cut") {
+      setCutArmed(false);
+      if (routeRuns.includes(eid)) clearRoute();
+      cutPluck(eid, SNAP_OCTAVE, SNAP_STRENGTH);
+      scene.fabric.update(fc);
+      updateHud();
+      return;
+    }
+    if (fc.solved || !fc.cutOn) return;
+    const refused = r === "refused";
+    if (!refused && cuttable(fc.walk, eid)) return;
+    showToast(
+      refused
+        ? "That cut would leave no way to the exit."
+        : fc.walk.titleEdges?.has(eid)
+          ? "The title's runs can't be cut."
+          : "The runs at the entrance and the exit can't be cut.",
+      CUT_TOAST_MS
+    );
+    cutPluck(eid, REFUSE_OCTAVE, REFUSE_STRENGTH);
+  };
+  const cutTap = (x: number, y: number, pt: string): boolean => {
+    const fc = scene.fabricController;
+    if (!fc || !scene.fabric) return false;
+    const eid = scene.fabric.cutAt(x, y, fc, pickRadius(pt, true));
+    if (eid < 0) {
+      setCutArmed(false);
+      return true;
+    }
+    if (dotMoving() || fc.carry.length > 0) {
+      pendingCut = eid;
+      setCutArmed(false);
+      return true;
+    }
+    applyCut(eid);
+    return true;
+  };
+  // Every frame first in keyStep: the run a move carries on along, on each
+  // arrival (a route in flight walks on when its next run is that one), then
+  // a waiting cut once the move is over. True while the carry is in charge.
+  const carryStep = (): boolean => {
+    const fc = scene.fabricController;
+    if (!fc || !fc.cutOn) return false;
+    if (fc.carry.length > 0) {
+      if (dotMoving()) return true;
+      const next = fc.carry[0];
+      if (routeRuns.length > 0) {
+        if (routeRuns[0] === next) routeRuns.shift();
+        else clearRoute();
+      }
+      if (!moveAlong(next)) fc.carry.length = 0; // Never stall on a refusal.
+      return true;
+    }
+    if (pendingCut >= 0 && !dotMoving()) {
+      const eid = pendingCut;
+      pendingCut = -1;
+      applyCut(eid);
+    }
+    return false;
+  };
+  const cutUndo = (): void => {
+    const fc = scene.fabricController;
+    if (!fc || !fc.cutOn || fc.actions.length === 0) return;
+    undoMove();
+  };
+  // The scissors' keys: X arms or puts down, Esc puts down, U undoes.
+  const cutKey = (k: CutKey): boolean => {
+    if (!scene.fabricController?.cutOn || !cutButtons.isShown) return false;
+    if (k === "arm") setCutArmed(!cutArmed);
+    else if (k === "undo") cutUndo();
+    else if (cutArmed) setCutArmed(false);
+    else return false;
+    return true;
+  };
+  // Every frame (the frame loop, beside the move pad): the buttons show
+  // while the cut is on, the keys are live and the panel is closed; hidden,
+  // the scissors are down, and a finished solve drops a waiting cut.
+  const cutTick = (): void => {
+    const fc = scene.fabricController;
+    const on = !!fc && fc.cutOn && keysLive() && !panel.isOpen();
+    cutButtons.setShown(on);
+    if (!on) {
+      if (cutArmed) setCutArmed(false);
+      if (!fc || fc.solved || !fc.cutOn) pendingCut = -1;
+      return;
+    }
+    cutButtons.setUndo(fc.actions.length > 0);
+  };
+
   // K5 M6: key input (K120's moves by direction, the move pad, the
   // gamepad poll) is src/app/input_keys.ts. The session functions it
   // moves through stay here for M7 and come in as its deps; keyHold and
@@ -2543,6 +2693,8 @@ async function main(): Promise<void> {
         return pendingLoss;
       },
       contextLost: () => glContextLost,
+      carryStep: () => carryStep(),
+      cutKey: (k) => cutKey(k),
     },
     scene
   );
@@ -2620,6 +2772,7 @@ async function main(): Promise<void> {
       fireSet,
       setWaitCue,
       keysLive,
+      cutTick,
       pollGamepad,
       handRendererLook,
       loadingTick,
@@ -2870,6 +3023,15 @@ async function main(): Promise<void> {
     },
     get turnWait() {
       return turnWait;
+    },
+    get cutArmed() {
+      return cutArmed;
+    },
+    get pendingCut() {
+      return pendingCut;
+    },
+    get cutShown() {
+      return cutButtons.isShown;
     },
     get chaseRunning() {
       return chaseRunning;

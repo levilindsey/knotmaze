@@ -1202,6 +1202,25 @@ export class FabricMazeRenderer {
     return best;
   }
 
+  // K114 CUT: the run an armed scissors tap at a world point cuts, or -1:
+  // among every run not cut yet (choices or not, anywhere in the maze), the
+  // nearest shown sample within maxD, both junction neighborhoods excluded
+  // as for a run past the choices (scanRun's "both", so fogged thread does
+  // not count). Runs that cannot be cut count too, so the tap can say why.
+  cutAt(x: number, y: number, controller: FabricMazeController, maxD: number): number {
+    let best = -1;
+    let bestD = maxD;
+    for (const e of this.walk.edges) {
+      if (controller.broken(e.id)) continue;
+      const m = this.scanRun(e, x, y, controller, bestD, "both");
+      if (m && m.d < bestD) {
+        best = e.id;
+        bestD = m.d;
+      }
+    }
+    return best;
+  }
+
   // K76 stage 2c: under the thread reveal, hidden thread is empty space
   // for every tap and hover (the ribbons' exploreShownAt). K290: so is
   // burnt thread under the `burnt` param's "gone", reveal on or off.
@@ -2034,6 +2053,14 @@ export class FabricMazeRenderer {
           if (hi - lo > 1e-6) (spans ??= []).push({ chain: e.chain, b0: lo, b1: hi });
           continue;
         }
+        (spans ??= []).push(this.burnSpan(e, 0, e.length));
+      }
+    }
+    // K114: a cut run is gone whole at once (a cut waits for the move to
+    // end, so the dot is never on it).
+    if (controller.cutOn) {
+      for (const eid of controller.cutRuns()) {
+        const e = this.walk.edges[eid];
         (spans ??= []).push(this.burnSpan(e, 0, e.length));
       }
     }
@@ -3031,7 +3058,11 @@ export class FabricMazeRenderer {
       };
       // K137: a broken run neither lights nor carries the light, the head's
       // arms included (the gate sees only arms beyond the head).
-      const blocked = controller.fragileOn ? (eid: number) => controller.broken(eid) : undefined;
+      // K114: nor does a cut run.
+      const blocked =
+        controller.fragileOn || controller.cutOn
+          ? (eid: number) => controller.broken(eid)
+          : undefined;
       for (const lit of litArms(this.walk, controller.head, this.ribbons.pulseReach, gate, blocked)) {
         if (lit.dist0 === 0) continue; // The choices above already lit these.
         const e = this.walk.edges[lit.edge];
