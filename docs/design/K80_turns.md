@@ -692,8 +692,13 @@ Verification (on the rebased branch):
   | stalker/T | treelike | - / 15 / 1 | - / 37 / 13 | - / 29 / 17 |
   | stalker/T | deadends | - / 16 / 1 | - / 36 / 18 | - / 36 / 17 |
 
-- Real time on today's mazes (K174's sim, 288 seeds x 3 reps,
-  `rt/results.md`), by roamPull 0 / 0.25 / 0.5 / 0.75 / 1:
+- Real time on the mazes of 2026-10-14, before K74 stage 3's
+  trap-zone finish (9ccf360). K637 (2026-10-20) measured that finish
+  raising the greedy catches to 2.19 / 2.38 / 2.50 / 2.93 / 3.25, with
+  fleers escaping 50-55% and 75-78% queued
+  (`.claude/probes/K637/results.md`). The 2026-10-14 numbers (K174's
+  sim, 288 seeds x 3 reps, `rt/results.md`), by roamPull 0 / 0.25 /
+  0.5 / 0.75 / 1:
   - the greedy player's catches: 1.29 / 1.47 / 1.66 / 1.73 / 2.02 (K174
     before H1: 1.32 at 0, 1.68 at 0.5, 1.94 at 1);
   - the greedy player spotted: 57 / 61 / 61 / 65 / 65%;
