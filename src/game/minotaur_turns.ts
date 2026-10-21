@@ -42,6 +42,16 @@
 import type { WalkGraph } from "../core/walk_graph";
 import { ChaseGraph, type MinotaurMode, type Spot } from "./minotaur";
 import { swordFleeing, swordSpend, swordTake, swordTouch, type SwordState } from "./sword";
+import { lureTarget } from "./lures";
+import {
+  canSnare,
+  heldIndex,
+  holdTurn,
+  releaseSnares,
+  snareCut,
+  springSnare,
+  type Snare,
+} from "./snares";
 import {
   FOLLOW_SHORTCUT,
   followDelay,
@@ -338,6 +348,10 @@ export interface MinoState {
   lastSeen: number;
   left: boolean; // has left its lair
   spot: Spot;
+  // K137 s4 (4.10): a lure it heard (game/lures.ts): the vertex it heads
+  // for before its model's rules, -1 or absent = none. Absent until a lure
+  // is heard, so a game without lures carries no such field.
+  lure?: number;
 }
 
 // One step of a turn: [run, the vertex it ends on].
@@ -550,6 +564,20 @@ export function decide(
   };
   for (let s = 0; s < steps; s++) {
     let mv: TurnStep | null = null;
+    // K137 s4 (4.10): a lure it heard comes first; at it (or cut off from
+    // it) the lure is spent and the model's rules decide.
+    if (m.lure !== undefined && m.lure >= 0) {
+      if (m.v === m.lure || cutOff(g, m.v, m.lure)) m.lure = -1;
+      else {
+        mv = stepToward(g, m.v, m.lure, rng);
+        if (mv) {
+          apply(mv);
+          if (m.v === m.lure) m.lure = -1;
+          continue;
+        }
+        m.lure = -1;
+      }
+    }
     if (cfg.policy === "chase") {
       if (visibleP < 0) mv = stepRandom(g, m, true, rng);
       else if (rng.next() < (cfg.q ?? 1)) mv = stepToward(g, m.v, visibleP, rng);
@@ -620,6 +648,7 @@ export function fleeTurn(g: TurnGraph, cfg: TurnConfig, m: MinoState, p: number,
   m.mode = 0;
   m.dest = -1;
   m.lastSeen = -1;
+  if (m.lure !== undefined) m.lure = -1;
   if (!m.left && turn <= (cfg.sleep ?? 0)) return out;
   if (cfg.speed < 1 && turn % 2 === 0) return out;
   const steps = Math.max(1, Math.round(cfg.speed));
@@ -648,6 +677,15 @@ function decideLengthHop(
   rng: TurnRng
 ): TurnStep | null {
   const atVertex = m.spot.edge < 0;
+  // K137 s4 (4.10): a lure it heard comes first, as in decide().
+  if (m.lure !== undefined && m.lure >= 0) {
+    if ((atVertex && m.v === m.lure) || cutOff(g, m.v, m.lure)) m.lure = -1;
+    else {
+      const lv = stepTowardAny(g, m, m.lure, rng);
+      if (lv) return lv;
+      m.lure = -1;
+    }
+  }
   if (cfg.policy === "chase") {
     if (visibleP < 0) return stepRandomAny(g, m, true, rng);
     if (rng.next() < (cfg.q ?? 1)) return stepTowardAny(g, m, visibleP, rng);
@@ -684,6 +722,35 @@ function decideLengthHop(
         : stepRandomAny(g, m, true, rng);
   }
   return mv;
+}
+
+// K137 s4 (4.10, 4.30): a lure or a snare used before input `at` (free in
+// time), recorded so that replayTurnMinotaur rebuilds it.
+export interface TurnTool {
+  at: number;
+  kind: "lure" | "snare";
+  edge: number;
+}
+
+// K137 s4 (4.30): cut a monster's path (decided from state `before` into
+// `m`) at its first step onto a set snare: the path stops at that run's near
+// end and m stands there. Returns the snare's index, or -1 (no cut). The
+// rest of what the decision left in m (its mode, destination, lure) stays.
+function cutAtSnare(snares: readonly Snare[], path: TurnStep[], before: MinoState, m: MinoState): number {
+  const cut = snareCut(snares, path);
+  if (cut === null) return -1;
+  const i = cut.step;
+  path.length = i;
+  if (i === 0) {
+    m.v = before.v;
+    m.prev = before.prev;
+    m.left = before.left;
+  } else {
+    m.v = path[i - 1][1];
+    m.prev = i > 1 ? path[i - 2][1] : before.v;
+  }
+  m.spot = spotAtVertex(m.v);
+  return cut.snare;
 }
 
 // K137-b: has a broken run cut vertex b off from vertex a? Always false in
@@ -808,6 +875,7 @@ export function planFleeLength(
   fromState.mode = 0;
   fromState.dest = -1;
   fromState.lastSeen = -1;
+  if (fromState.lure !== undefined) fromState.lure = -1;
   const factor = cfg.speed;
   const m = cloneMino(fromState);
   const steps: TurnStep[] = [];
@@ -1162,6 +1230,18 @@ export class TurnMinotaur {
   readonly extras: TurnExtra[] = [];
   woken = 0;
   lastCatcher = -1;
+  // K137 s4 (4.10, 4.30): LURES and SNARES, free in time (lure(), setSnare()).
+  // `tools` records each use before input `at` (inputs.length then), so a
+  // replay rebuilds them; `snares` holds the laid ones (snares.ts);
+  // `commitSnare`: the snare the committed move springs, -1 none. Empty
+  // unless a lure or snare is used, and then nothing below runs or draws,
+  // so every pin holds. `lured`: lures used, `heardBy`: the last lure's
+  // listeners (0: nobody heard it).
+  readonly tools: TurnTool[] = [];
+  readonly snares: Snare[] = [];
+  private commitSnare = -1;
+  lured = 0;
+  heardBy = 0;
 
   constructor(walk: WalkGraph | TurnGraph, cfg: TurnConfig, seed: number) {
     this.tg = walk instanceof TurnGraph ? walk : new TurnGraph(walk);
@@ -1199,6 +1279,67 @@ export class TurnMinotaur {
     specs.forEach((s, i) => this.extras.push(newTurnExtra(s, seed, i)));
   }
 
+  // K137 s4 (4.10): a LURE plucked on run `edge`, free in time (no turn
+  // passes; lures.ts states the rules). The minotaur (not fleeing, not
+  // slain) and every sleeper within LURE_RANGE runs head for the run's
+  // nearer end, the minotaur forgetting its hunt and roam; an asleep sleeper
+  // wakes (woken++); a follower ignores it. The next move is re-committed,
+  // so the telegraph shows the lured route. Returns how many heard it (0:
+  // nobody, the lure is still used), or -1 when refused (finished, a bad run).
+  lure(edge: number): number {
+    const g = this.tg;
+    if (this.finished || !Number.isInteger(edge) || edge < 0 || edge >= g.chase.ea.length) return -1;
+    this.tools.push({ at: this.inputs.length, kind: "lure", edge });
+    this.lured++;
+    let heard = 0;
+    if (!this.slain && !this.fleeing) {
+      const t = lureTarget(g, this.state.v, edge);
+      if (t >= 0) {
+        this.state.lure = t;
+        this.state.mode = 0;
+        this.state.dest = -1;
+        heard++;
+      }
+    }
+    for (const x of this.extras) {
+      if (x.kind !== "sleeper") continue;
+      const t = lureTarget(g, x.state.v, edge);
+      if (t < 0) continue;
+      if (x.phase === "asleep") {
+        x.phase = "awake";
+        x.shown = "awake";
+        x.life = 0;
+        this.woken++;
+      }
+      x.state.lure = t;
+      x.state.mode = 0;
+      x.state.dest = -1;
+      heard++;
+    }
+    this.heardBy = heard;
+    this.commit();
+    return heard;
+  }
+
+  // K137 s4 (4.30): a SNARE laid on run `edge`, free in time (snares.ts
+  // states the rules): the run must touch your junction and hold no snare.
+  // By runs only (by length refuses: a residual). Re-commits, so the
+  // telegraph previews the cut. False when refused.
+  setSnare(edge: number): boolean {
+    const g = this.tg;
+    if (this.finished || this.cfg.byLength) return false;
+    if (!canSnare(this.snares, g.chase.ea, g.chase.eb, this.player, edge)) return false;
+    this.tools.push({ at: this.inputs.length, kind: "snare", edge });
+    this.snares.push({ edge, phase: "set", holder: null, left: 0 });
+    this.commit();
+    return true;
+  }
+
+  // K137 s4: is monster `who` (-1 the minotaur, i extra i) held now?
+  heldBySnare(who: number): boolean {
+    return this.snares.length > 0 && heldIndex(this.snares, who) >= 0;
+  }
+
   // K137 s3d: the extras' part of an accepted move p -(edge)-> p2 (-1: a
   // wait), after the minotaur's, which caught nobody. `stand`: a sprint's
   // skipped move, when every monster stands. A sleeper wakes on a move
@@ -1221,9 +1362,20 @@ export class TurnMinotaur {
       let live = false;
       if (x.kind === "follower" && x.phase !== "asleep" && !x.homing && edge >= 0) x.trail.push([edge, p2]);
       if (x.phase === "awake") {
-        if (!stand) {
+        if (!stand && this.snares.length > 0 && holdTurn(this.snares, i)) {
+          // K137 s4 (4.30): a snare holds it; it stands.
+        } else if (!stand) {
+          const before = this.snares.length > 0 ? cloneMino(x.state) : null;
+          const at0 = x.at;
           const rng = x.rng.at(this.turns);
           path = x.kind === "sleeper" ? decide(g, cfg, x.state, p, ++x.life, rng) : followStep(g, x, p, rng);
+          if (before !== null && x.phase === "awake") {
+            const k = cutAtSnare(this.snares, path, before, x.state);
+            if (k >= 0) {
+              if (x.kind === "follower") x.at = at0;
+              springSnare(this.snares[k], i);
+            }
+          }
         }
         live = x.phase === "awake";
       } else if (x.phase === "waiting") {
@@ -1278,6 +1430,8 @@ export class TurnMinotaur {
     }
     this.skipLen = -1;
     for (const y of this.extras) sleepExtra(y);
+    // K137 s4 (4.30): every holder went home; their snares are spent.
+    if (this.snares.length > 0) releaseSnares(this.snares);
     this.commit();
     return "caught";
   }
@@ -1340,6 +1494,7 @@ export class TurnMinotaur {
     if (kind === "banish") {
       this.state = initMino(this.tg);
       this.lifeTurn = 0;
+      if (this.snares.length > 0) releaseSnares(this.snares, -1);
     }
   }
 
@@ -1454,20 +1609,35 @@ export class TurnMinotaur {
     // Where the player stood when this turn was decided: the telegraph
     // decided it before the move, from p; without one it is decided now.
     let seenAt = p2;
-    if (flee) {
+    // K137 s4 (4.30): held by a snare it stands; a path onto a set snare
+    // stops at the run's near end and springs it (the committed move was
+    // cut already, commitSnare). No snares: none of this runs.
+    let sprung = -1;
+    if (this.snares.length > 0 && holdTurn(this.snares, -1)) {
+      path = [];
+      if (this.cfg.telegraph && this.commitState) seenAt = p;
+    } else if (flee) {
       if (this.cfg.telegraph && this.commitState && this.commitFlee) {
         path = this.committed;
         this.state = this.commitState;
+        sprung = this.commitSnare;
       } else {
+        const before = this.snares.length > 0 ? cloneMino(this.state) : null;
         path = fleeTurn(g, this.cfg, this.state, p2, this.lifeTurn);
+        if (before !== null) sprung = cutAtSnare(this.snares, path, before, this.state);
       }
     } else if (this.cfg.telegraph && this.commitState) {
       path = this.committed;
       this.state = this.commitState;
       seenAt = p;
+      sprung = this.commitSnare;
     } else {
+      const before = this.snares.length > 0 ? cloneMino(this.state) : null;
       path = decide(g, this.cfg, this.state, p2, this.lifeTurn, this.rng.at(this.turns));
+      if (before !== null) sprung = cutAtSnare(this.snares, path, before, this.state);
     }
+    if (sprung >= 0) springSnare(this.snares[sprung], -1);
+    this.commitSnare = -1;
     this.committed = [];
     this.commitState = null;
     this.lastFrom = from;
@@ -1518,6 +1688,8 @@ export class TurnMinotaur {
       // it here, and so showed no catching move.
       this.catchRoute = true;
       this.extrasOnCatch();
+      // K137 s4 (4.30): every holder went home; their snares are spent.
+      if (this.snares.length > 0) releaseSnares(this.snares);
       this.commit();
       return "caught";
     }
@@ -1894,9 +2066,17 @@ export class TurnMinotaur {
   private commit(): void {
     if (this.cfg.byLength) return this.commitLength();
     this.commitFlee = false;
+    this.commitSnare = -1;
     if (!this.cfg.telegraph || this.finished || this.slain) {
       this.committed = [];
       this.commitState = null;
+      return;
+    }
+    if (this.snares.length > 0 && heldIndex(this.snares, -1) >= 0) {
+      // K137 s4 (4.30): held by a snare, it stands.
+      this.committed = [];
+      this.commitState = cloneMino(this.state);
+      this.commitFlee = this.fleeing;
       return;
     }
     if (this.fleeing) {
@@ -1905,6 +2085,7 @@ export class TurnMinotaur {
       this.committed = fleeTurn(this.tg, this.cfg, f, this.player, this.lifeTurn + 1);
       this.commitState = f;
       this.commitFlee = true;
+      if (this.snares.length > 0) this.commitSnare = cutAtSnare(this.snares, this.committed, this.state, f);
       return;
     }
     const c = { ...this.state };
@@ -1917,6 +2098,7 @@ export class TurnMinotaur {
       this.rng.at(this.turns + 1)
     );
     this.commitState = c;
+    if (this.snares.length > 0) this.commitSnare = cutAtSnare(this.snares, this.committed, this.state, c);
   }
 
   private telegraphLength(): TurnTelegraph | null {
@@ -2188,21 +2370,34 @@ function alongPath(g: ChaseGraph, from: number, path: readonly TurnStep[], progr
 
 // K137 s3c: a game rebuilt from its inputs and skips (a sprint's first moves,
 // TurnMinotaur.skips): the same taps give the same minotaur. K137 s3d:
-// `monsters`, the extras and the design seed their streams draw from.
+// `monsters`, the extras and the design seed their streams draw from. K137
+// s4: `tools`, the lures and snares used (TurnMinotaur.tools), each applied
+// before its input.
 export function replayTurnMinotaur(
   walk: WalkGraph | TurnGraph,
   cfg: TurnConfig,
   seed: number,
   inputs: readonly number[],
   skips: readonly number[] = [],
-  monsters: { specs: readonly MonsterSpec[]; seed: number } | null = null
+  monsters: { specs: readonly MonsterSpec[]; seed: number } | null = null,
+  tools: readonly TurnTool[] = []
 ): TurnMinotaur {
   const tm = new TurnMinotaur(walk, cfg, seed);
   if (monsters) tm.setMonsters(monsters.specs, monsters.seed);
   const skip = new Set(skips);
+  let k = 0;
+  const useTools = (at: number): void => {
+    for (; k < tools.length && tools[k].at <= at; k++) {
+      const t = tools[k];
+      if (t.kind === "lure") tm.lure(t.edge);
+      else tm.setSnare(t.edge);
+    }
+  };
   for (let i = 0; i < inputs.length; i++) {
+    useTools(i);
     tm.turn(inputs[i], skip.has(i) ? { sprint: "skip" } : undefined);
   }
+  useTools(inputs.length);
   return tm;
 }
 
