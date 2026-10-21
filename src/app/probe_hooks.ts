@@ -586,6 +586,9 @@ export function installProbeHooks(ctx: ProbeCtx): void {
             // K408: the start marker's target (shown until the fire passes
             // the start) and its drawn fade level.
             startMarker: fb.startMarkerState,
+            // K137-b: the broken runs the fire no longer burns along (it
+            // burns on around them from the move that broke each).
+            blocked: c.brokenRuns(),
           }
         : null,
       // K100: the solve's restarts, and the fog's explored stamps.

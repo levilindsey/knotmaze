@@ -118,7 +118,7 @@ import type { WalkGraph } from "../core/walk_graph";
 import { runsToExit } from "../core/walk_graph";
 import type { MoveKind } from "./maze_stats";
 import type { Fire } from "./fire";
-import { armSafe, fireLead, fireTime, fireTrapped, runBurnAt } from "./fire";
+import { armSafe, fireLead, fireTime, fireTrapped, refire, runBurnAt } from "./fire";
 import type { FragileMode } from "./fragile";
 import {
   anyBreakable,
@@ -194,8 +194,18 @@ export class FabricMazeController {
   trailMode: boolean;
 
   // K114 burn race: the fire (null = off). Change it only with a reset()
-  // after (main.ts restarts the solve).
-  fire: Fire | null;
+  // after (main.ts restarts the solve). K137-b: a move that breaks a run
+  // refires it (fire.ts refire: it burns on without the broken runs), so
+  // the getter reads the live fire; reset() restores the one set.
+  private fireBuilt: Fire | null = null;
+  private fireLive: Fire | null = null;
+  get fire(): Fire | null {
+    return this.fireLive;
+  }
+  set fire(fire: Fire | null) {
+    this.fireBuilt = fire;
+    this.fireLive = fire;
+  }
   // No safe arm was left at the head: the race is lost.
   fireLost = false;
   // The closest call so far, T(v) - L over every arrival (Infinity before
@@ -288,6 +298,7 @@ export class FabricMazeController {
     this.fewestRuns = this.openRuns.get(this.walk.start) ?? Infinity;
     this.par = parFor(this.fewestRuns, this.parSlack);
     this.parLost = false;
+    this.fireLive = this.fireBuilt;
     this.fireLost = false;
     this.fireClosest = Infinity;
     this.fireNow = 0;
@@ -692,12 +703,20 @@ export class FabricMazeController {
   // loses the race (the exit wins instead). Real time: the move left
   // `from` at `depart` and arrives at depart + len; the departure's margin
   // counts too (not the first move's), and nothing is lost on arrival.
+  // K137-b: a move that broke a run refires the fire at the move's end
+  // clock (walkedDist; real time, the arrival) before the arrival's margin
+  // and the trap test read it; the departure's margin reads it as it was.
   private fireArrive(from: string, depart: number, len: number, at: string): void {
-    const fire = this.fire;
-    if (!fire) return;
+    const before = this.fireLive;
+    if (!before) return;
+    let fire = before;
+    if (this.justBroke >= 0) {
+      const end = fire.clock === "realtime" ? depart + len : this.walkedDist;
+      fire = this.fireLive = refire(this.walk, before, end, (eid) => this.broken(eid));
+    }
     if (fire.clock === "realtime") {
       if (this.taps.length > 1) {
-        const left = fireLead(fire, from, depart);
+        const left = fireLead(before, from, depart);
         if (left < this.fireClosest) this.fireClosest = left;
       }
       this.fireDepartL = depart;

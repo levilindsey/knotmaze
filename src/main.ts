@@ -1662,6 +1662,13 @@ async function main(): Promise<void> {
           )
         : null;
     if (scene.turnMino && prevTurn) scene.turnMino.carry(prevTurn);
+    // K137-b: a run that breaks (fragile, collapse) is gone for the
+    // minotaur too: it counts your crossings against the controller's
+    // limits (restartSolve resets the controller before this).
+    const fcb = scene.fabricController;
+    const limits = fcb && fcb.fragileOn ? fcb.breakLimits : null;
+    scene.chase?.setBreakLimits(limits);
+    scene.turnMino?.setBreakLimits(limits);
     turnWait = 0;
     scene.fabric?.syncMinotaur(liveMino(), params.minoFog, scene.turnMino?.telegraph() ?? null);
   };
