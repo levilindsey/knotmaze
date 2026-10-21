@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K625.
+Next free ID: K636.
 
 ## Waiting on Levi
 
@@ -111,6 +111,23 @@ Next free ID: K625.
   A feel call (K370's 50 ms needs it or 2.5x cheaper substeps). `docs/design/K370.md`.
 - **K624** · The lit fuse keeps the ember on both sides and no band under both looks (K409; Levi's
   calls don't cover it). Give it Gone's shape too? Rec: yes, one fire look.
+- **K625** · K137's calls (`sooner_20261020.md`): (a) stages s2 helpers, s3a/s3b minotaur, s4 looks;
+  (b) a broken run blocks the minotaur and fire; (c) strict par's slack: K155's middle profile
+  strict half the time; (d) dead ends exempt from snaps. Rec: all yes.
+- **K626** · K525's telegraph styles (`mtl`): rims, line, both (or a fourth), in red or white like
+  the hover. Red can't pass for your hover but reads worse on a red section. Rec: the three, in red;
+  K525's sheet shows white too.
+- **K627** · K114's spider (call 7): S, the minotaur engine with its own icon, or M, which adds
+  spinning webs. Rec: S first.
+- **K628** · Confetti: (C-1) does the finish spray throw streamers? Rec: K336's sheet decides. (C-2)
+  when does K579 (GPU confetti) go? The phone check: the fall is ~50 fps, not CPU-bound (a tenfold
+  CPU cut gave +0.5 fps). Rec: after K318 s1.
+- **K629** · K546's Q1-Q7 (`K546_loss_effects.md`) set stages 2-4. Rec, the design's: sparks; contact, 0.35 s, ~1 s, no
+  skip; ash + vignette; a `lossAmount` slider; fire ends Burnt at the beat's end; full beat, then
+  restart; dull pluck + thump (fire too).
+- **K630** · K244: should a press in a junction core also silence its release when the grabbed
+  particle's site draws? Today 8 of 12 core presses pluck a drawn neighbour. Rec: no; what sounds
+  always draws, at the grabbed site.
 
 ## In progress
 
@@ -123,7 +140,7 @@ Next free ID: K625.
   - owner: nobody since 2026-10-15 12:31 (stage 2 merged at cebb75e; agent `a58dfc230583f43e4` of claude session 05e60da0, worktree since removed, K161)
   - branch: mainline; last commit: `cebb75e`
   - evidence: `.claude/probes/K114/stage2/` (`burn_sim_rt.ts`, `proposal.md`, `results_rt*.md`, `rt_page.mjs`, `perf_attr.ps1`, `vref_probe.mjs`, shots `out_rt*/`); stage 1's: `.claude/probes/K114/burn/` (`results_tuning_rebased.md`, `burn_sim.ts`, `burn_page.mjs`)
-  - next: K441's profile (K461 done: `rt_page.mjs` passes `fsr` / `fdr`). Stage 3: the burn look as a shader with K290's burnt toggle; the spider follows the minotaur's controls (K174). Stage 2's residuals K442-K447
+  - next: K441 (queued, `docs/design/K441_fire_frame.md`); stage 3 is done (K290, K409). Then the shortlist: the cut verb plus walker, the spider (K627), the beat rider, the Pluck Hero MVP (`docs/design/sooner_20261020.md` queue item 7). Stage 2's residuals K442-K447
   - brief: `docs/design/K114_stage2.md` (Stage 2 handoff); stage 1's handoff: `docs/design/K114_burn.md`
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
@@ -253,14 +270,6 @@ Next free ID: K625.
   - evidence: `.claude/probes/K370/`
   - next: next stage: the phone worker's 2.1-2.9x substep cost (read cpu6's clock during a drag; time a worker drag with main's rendering paused), after re-measuring the phone on the merged build; brief to write
   - brief: `docs/design/K370.md`
-- **K578** · While confetti falls, every frame redraws the whole maze (phone 60 -> 45 fps, K572,
-  before K573). Stage 1, unmerged: a still-maze cache, 0-1 px off a full draw on a still knot. Blocks
-  merging: a stale picture after a context restore (up to 284 px); at the default flow it never runs.
-  - owner: agent `a010af78d9bc89c27` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, the phone check, started 2026-10-20 17:03, 1 h cap ~18:03); stage 1's agent stopped at its cap 17:05
-  - branch: `worktree-agent-a129cb0eb5eacb36a`, worktree `.claude/worktrees/agent-a129cb0eb5eacb36a`; last commit: `9803631` (code `0093049`; WIP, unpushed)
-  - evidence: `.claude/probes/K578/` in that worktree (untracked); the phone check's in the main checkout's `.claude/probes/K578/phone/`
-  - next: the phone check (today's fall at defaults; the cache's gain at fw=0). Still slow: Levi's call on pausing the flow during the fall, then stage 2 (fill by copying the canvas, equal by construction and no MSAA buffer; the restore fix; the texture made ahead, a 13-14.5 ms first-fill hitch). Not slow: drop
-  - brief: `docs/design/K578.md` (stage 1's handoff is on the branch); `docs/design/K578_K409_phone.md`
 - **K580** · The a's J join, Levi's call (2026-10-20): tangent, its shared stretch a TAPERED spur that
   leaves the junction as wide as both merging strokes and narrows to normal where they turn collinear.
   Open calls: K606; the paint stage is K620. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
@@ -278,8 +287,8 @@ Next free ID: K625.
   - next: baseline auto-pluck and release core counts, then one tapLobes-based predicate
   - brief: `docs/design/K244_cores.md`
 - **K324** · Real-time minotaur, more alive and tunable (`docs/design/K324_realtime_minotaur.md`,
-  091e4dc; Levi took section 7's recs): s1 (sim) after K323 s1; s2 (render) after s1, K7 s2, K307
-  s2, K329 (checks K270's band); s3 (guard, stalker) after s1. Rel. K245 K247 K271 K293 K294 K296.
+  091e4dc; Levi took section 7's recs): s1 (sim); s2 (render) once K525 owns the look: its route
+  pieces, a moving lead, the chevrons, perf; s3 (guard, stalker) after s1. Rel. K245 K247 K271 K293 K294 K296.
   - owner: agent `a3a9d69fff8b37f72` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 16:55, 2 h cap ~18:55)
   - branch: `worktree-agent-a3a9d69fff8b37f72`, worktree `.claude/worktrees/agent-a3a9d69fff8b37f72`; last commit: `bcd907c`
   - evidence: `.claude/probes/K324/`
@@ -301,7 +310,7 @@ Next free ID: K625.
   - brief: `docs/design/K336_cannons.md`
 - **K137** · K80 section 4's cheap (S, S-M) mechanisms, each toggled (Levi 10-13), after the
   minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus
-  Levi's sleeper variant. `docs/design/K80_gameplay_additions.md`; M: K138, M-L and L: K141.
+  Levi's sleeper variant. `K80_gameplay_additions.md`, stages in `sooner_20261020.md`; M: K138, M-L/L: K141.
   - owner: agent `adfeea92c9e0ef17b` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 17:19, 2 h cap ~19:19)
   - branch: `worktree-agent-adfeea92c9e0ef17b`, worktree `.claude/worktrees/agent-adfeea92c9e0ef17b`; last commit: `c7d6b68`
   - evidence: `.claude/probes/K137/`
@@ -370,6 +379,27 @@ merged):
 13. K326 A.
 14. K318, K336, K337.
 
+- **K631** · Phone passes owed: K409's sheet (`.claude/probes/K409/phone/run_phone.ps1`, lock owner
+  `K409 a5c384f`, a fresh -Deadline); K244's: core releases silent, auto plucks draw, dense_phone.
+  Close the stray `localhost:5278` tab first (K578's `phone_teardown.ps1`).
+- **K441** · The real-time fire's frame cost (K114 s2 item 6): 0.6-1.2 ms more a frame than turn
+  (drawFire's re-declare 0.6, HUD writes 0.1, 0.5 unattributed). Profile, then fix inside drawFire or
+  main's fire frame; elsewhere is s2, after K137 s1 and K525. `docs/design/K441_fire_frame.md` (queued).
+- **K139** · Collapse mode (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`): no backtracking,
+  each run collapses behind you. `collapse` (off | finish | free); rides 4.3's snap (`fragile`,
+  K137) and R.3.4's longest thread (`docs/design/K80_gameplay_additions.md`). S-M, after 4.3.
+- **K579** · GPU confetti: upload each launch once, move the pieces in a vertex shader, no per-frame
+  CPU sim or upload. Pays if K318 raises the counts (Levi asked 10-20); needs K307's warm-up;
+  streamers need a CPU sim. The phone's fall isn't CPU-bound (K578). K628.
+- **K620** · K580 stage 3, the tapered root's paint (Levi 2026-10-20: "K580 rec sgtm"): each side of
+  the root takes its own stroke's paint and blends into the spur's at J. Renderer paint work, after
+  K409 merges (`paint_math.ts`). `.claude/probes/K580/sheets/a_join_zoom.png`.
+- **K409** · Levi's burn calls 1-3 merged (6b9eb8f..3231d59): world-unit widths, the Gone ember ahead
+  of the cut, the band kept. Left: step 4, the ember over the smoke (NOT BUILT in `render-explore.md`),
+  after K525 (paint files) and K623/K624; the phone pass is K631. `docs/design/K409.md`.
+- **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
+  after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
+  4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
 - **K412** · K7's worker-chunk modulepreload on a real network (measured only on localhost): a
   fresh-profile load of https://levi.dev/knotmaze/ through `stage7/k7_frames.mjs`; its `wk` column
   reads `c` when the worker's fetch came from the cache through the proxy. Rides K7's phone pass.
@@ -391,12 +421,6 @@ Every other item below waits on the trigger it names.
 - **K240** · High contrast for the DOM chrome (K111 follow-up): a CSS layer on
   `:root[data-contrast="high"]` (already set) for the panel, HUD and badge (TS-injected styles).
   Small; after K238's review.
-- **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
-  after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
-  4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation (check solvability). M-L, L: K141.
-- **K139** · Collapse mode (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`): no backtracking,
-  each run collapses behind you. `collapse` (off | finish | free); rides 4.3's snap (`fragile`,
-  K137) and R.3.4's longest thread (`docs/design/K80_gameplay_additions.md`). S-M, after 4.3.
 - **K46** · Daily variety: no weekly arc; THEMES (constraint sets); per-day overrides later (K82).
   Engine-exact (K108); memory-trail themes: trailLength 5 (K73). `docs/design/K46_daily_variety.md`
   (8b1eb90), `docs/design/K46.md`, `.claude/probes/K46/`, branch `worktree-agent-a78c73cec4770a14d`.
@@ -475,9 +499,6 @@ Every other item below waits on the trigger it names.
   session's memory (claude-config `rules/sessions.md`, "Environment belongs in scripts").
 - **K368** · A ring for the ripple under High contrast (K289 e; Levi, 2026-10-15: yes):
   `HIGH_CONTRAST_OVERRIDES` (`src/ui/accessibility.ts`); the glint has little room on light threads over black (inferred, not shot; fallback a stronger glint). Small: a unit test and a screenshot.
-- **K441** · The real-time fire's frame cost (K114 s2 item 6): 0.6-1.2 ms more a frame than turn
-  (drawFire's re-declare 0.6, HUD writes 0.1, 0.5 unattributed). CPU-profile a turn and a realtime
-  stand at one burnt share (K461 first), then decide a re-declare throttle. `docs/design/K114_stage2.md`.
 - **K485** · Pixel pass for the phone sheet and row help (scripts/phone.ps1): the sheet query, Back,
   the peek, help taps; K467 ran only in phone emulation
 - **K486** · Touch help for the panel's buttons: Reset path, Replay settle, Reset to defaults, the
@@ -505,12 +526,6 @@ Every other item below waits on the trigger it names.
 - **K186** · K140's confetti calls, answered (Levi, 2026-10-20): no confetti under reduced motion;
   confetti on every win banner, not only a live finish; colors and amount by the sliders. Rides
   K336's agent (launched 2026-10-20). `docs/design/K140.md` ("Stage 1 handoff").
-- **K620** · K580 stage 3, the tapered root's paint (Levi 2026-10-20: "K580 rec sgtm"): each side of
-  the root takes its own stroke's paint and blends into the spur's at J. Renderer paint work, after
-  K409 merges (`paint_math.ts`). `.claude/probes/K580/sheets/a_join_zoom.png`.
-- **K409** · Levi's burn calls 1-3 merged (6b9eb8f..3231d59): world-unit widths, the Gone ember ahead
-  of the cut, the band kept. Left: step 4, the ember over the smoke, as its own stage (NOT BUILT in
-  `render-explore.md`); the phone pass rides the K578 phone check; calls K623, K624. `docs/design/K409.md`.
 
 ## Residuals (known, not fixed)
 
@@ -964,9 +979,9 @@ Every other item below waits on the trigger it names.
   4924-5182 at 4afb8dc) stay on the renderer's facade through K5 R2; R5 gives them a part, e.g. `ribbon/scene_probe.ts`
   (`docs/design/K5_R2.md`, Questions 1).
 - **K442** · `src/game/maze_stats.ts` STATS: the walked and fire lead lines are false under the
-  real-time fire (K114 s2).
+  real-time fire (K114 s2). After K137 s1, which edits `maze_stats.ts`.
 - **K443** · Two panel rows labelled `clock`: K80's in Maze (turn-based | real time) and the fire's
-  in Burn race (turn | realtime). Match the wording or rename one (K114 s2).
+  in Burn race (turn | realtime). Match the wording or rename one (K114 s2); rides a later param stage.
 - **K444** · K408's start-marker fade: the gap slot moves in one frame when the fade starts, and the
   exit marker still hides without a fade (K114 s2; `.claude/rules/render-markers.md`).
 - **K445** · K114 s2's real-time burn sim (`.claude/probes/K114/stage2/burn_sim_rt.ts`) models
@@ -1138,6 +1153,11 @@ Every other item below waits on the trigger it names.
 - **K622** · K580's root takes stroke-order keys just before J's, so a stroke-order reveal would
   draw the whole root the moment J draws; nothing orders by them yet.
   `src/core/glyphs/glyph_graph.ts`.
+- **K632** · K244: under the thread reveal the pluck overlay clips (`fret: true`, K397), so a
+  mid-reveal chain can still sound with nothing drawn; pass `exploreSolidSpan` to the site tester
+  (`ribbon_renderer.ts`, after K525).
+- **K633** · K244: a site is tested at schedule time but drawn up to 0.3 s later (0 misses in 844
+  notes); no headless release test (`input_pointer.ts` needs pixi and a canvas).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1360,9 +1380,6 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K577** · Worker-host A/Bs: try `__knotStepUntil(5)` after the freeze to make them reproducible,
   and promote the K550 kill's `ab_probe.mjs` to a tracked `scripts/` probe if more A/Bs follow
   (`docs/design/K550_kill.md`, Handoff).
-- **K579** · GPU confetti: upload each launch once and move the pieces in a vertex shader (the
-  motion is closed-form), dropping the per-frame CPU sim and upload. Pays if K318 raises the counts;
-  needs K307's warm-up (Levi asked 10-20; K572: ~2 fps on the phone).
 - **K589** · A sheet of other foil flash sizes: sharper foil (p 128) halves the flashing time,
   softer (p 32) doubles it; so far only counted (K337 handoff).
 - **K597** · Census: how many seeds and gestures leave same-chain pairs under the collision floor on
@@ -1375,9 +1392,16 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   (Verdicts).
 - **K618** · peakEstimateOf: hoist `Math.exp` out of the per-station loop, only if 0.11-0.16 ms a
   tap ever matters (K194 timings). `src/render/pluck_model.ts`.
+- **K634** · The confetti fall's late frames on the phone (~50 fps, 1 in 5 frames at 33 ms): GPU or
+  compositor? A tenfold CPU cut gave +0.5 fps. Measure with `scripts/bench_frame.mjs --cdp`; data in
+  `.claude/probes/K578/phone/`.
+- **K635** · Phone kit: a read-only idle gate before a pass (awake, unlocked, no touch for 30 s),
+  `.claude/probes/K578/phone/wait_idle.ps1`. A 31 s gate still lost 6 cells to a touch 3.5 min in
+  (K578's phone check).
 
 ## Done
 
+- **K578** · While confetti falls, every frame redraws the whole maze (phone 60 -> 45 fps, K572, before K573). Dropped: the phone's fall is ~50 fps and not CPU-bound (a tenfold CPU cut gave +0.5 fps), and the cache never engages in the maze (PAINT_AMBIENT every frame). Branch kept; K634 (2026-10-20).
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or char (CHAR items in the explore programs). Done in 3231d59 (2026-10-20).
 - **K599** · `.claude/rules/render-explore.md` THE BURN (and a test comment) says the dark band draws under Char only; it draws under Gone too (K409's card). Done in 3231d59 (2026-10-20).
 - **K410** · The fire's FRONT and SMOLDER paint items into `paint_math`'s mirror and the parity tests, once K409 settles the look (K152 item 3; `K114_burn.md` 3b handoff). Done in 3231d59 (2026-10-20).
@@ -1609,4 +1633,3 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 - **K48** · Desktop Share keeps copying to the clipboard (Levi); no change needed. Done (2026-10-13).
 - **K53** · Reduced motion: Levi chose an in-app Motion setting (follow system / full / reduced, a viewer preference); built in K79. Done (2026-10-13).
-
