@@ -323,13 +323,13 @@ K409/K631 held the phone lock from 18:25, so the coordinator's rule (skip
 it if the phone is not free with 20 min left) applied.
 
 **What landed** on branch `worktree-agent-ae18c5a4888bb8280`, rebased onto
-master 635ae58 (after K324 stage 1, K546 stage 1 and K580's glyphs) and
-never pushed:
-- `c828d66`, the param: `minoTelegraphLook` (`mtl`: rims | line | both,
-  default rims), appended at codec index 178 after K324's 171-177.
-  CODEC_VERSION stays 8. Its message body still says 158 and v6, from
-  before the rebases.
-- `f14dae9` and `0127e10`, the paint:
+master 62a70c1 (after K324 stage 1, K546 stage 1, K580's glyphs and
+K336's cannons) and never pushed:
+- `fd4b723`, the param: `minoTelegraphLook` (`mtl`: rims | line | both,
+  default rims), appended at codec index 181, after K324's 171-177 and
+  K336's 178-180. CODEC_VERSION stays 8. Its message body still says 158
+  and v6, from before the rebases.
+- `a70c380` and `7a06607`, the paint:
   - PAINT_ITEM_TELE 9 lives in kPaintAt's item loop, so it is in every
     SECTION_FRAG variant. There is no new program and nothing new to
     warm.
@@ -339,19 +339,21 @@ never pushed:
   - The mirror is in paint_math.ts. Parity tests in
     paint_gameplay.test.ts cover a whole run, lead and tail partials,
     both on one run, widths 0.3/0.85/1, alphas 0.45/0.95 and a seam run.
-- `7df56f3`, the route: `src/render/telegraph_route.ts`
+- `aec2be6`, the route: `src/render/telegraph_route.ts`
   `telegraphPieces(g, runs, t, lead)` covers by runs, by length, and a
   `lead` in the ChasePlan shape (tested on a synthetic route). Also the
   look switch in drawTelegraph and drawTelegraphLength, and the clears in
   the bleed branch and syncMinotaur's three hides.
-- `1d3773b`, the alphas: the line roams at 0.7 on a coarse pointer, and
+- `65952a6`, the alphas: the line roams at 0.7 on a coarse pointer, and
   `telegraphRimStrength`.
-- `1b7bd12`, the lore: TELEGRAPH RIMS in render-paint.md, the K525 bullet
+- `7bad589`, the lore: TELEGRAPH RIMS in render-paint.md, the K525 bullet
   in render-shaders.md, gameplay-minotaur.md, gameplay-panel.md and
   gameplay-links.md. Its message cites the pre-rebase SHAs 4f02843 and
   757b378.
-- The commit that adds this handoff also puts the A/B results in the
-  lore.
+- `d930111` adds this handoff and puts the A/B results in the lore.
+- The last commit moves `mtl` from 178 to 181 in the lore and this
+  handoff, after the rebase onto 62a70c1. Code and pins took 181 in the
+  rebased `fd4b723`. No pixel changes.
 
 **Strengths and ends** (first values, untuned):
 - **Rims:** roam 0.6, roam on a coarse pointer 0.8, hunt 1. Each piece's
@@ -370,10 +372,11 @@ never pushed:
   alphas.
 
 **Numbers:**
-- **Tests:** `npm test` after the second rebase passed 117 files and
-  1657 tests (`.claude/probes/K525/vitest_rebased2.log`).
-- **Build:** `tsc`, `tsc -p notices` and `vite build` pass on 1b7bd12
-  (`build_final.log`).
+- **Tests:** `npm test` after the third rebase (onto 62a70c1, `mtl` at
+  181) passed 117 files and 1672 tests, with 1 skipped
+  (`.claude/probes/K525/vitest_rebased3.log`).
+- **Build:** `tsc`, `tsc -p notices` and `vite build` pass on the same
+  tree (`build_rebased3.log`).
 - **Pins moved:**
   - `param_codec.test.ts`'s key-order pin, and `url_codec.test.ts`'s
     defaults table and OVERRIDE_KEYS, by `mtl` only.
@@ -403,7 +406,8 @@ never pushed:
   - `&mt=hunter&mtl=line`: 24 of 24 at 0 px (`s6/hm_line.log`). The
     minotaur did draw: 3735 px against the run without it.
   - `&mt=hunter&mtg=0` (the brief's "mtg off"), final code 1b7bd12
-    against master 635ae58: 24 of 24 at 0 px (`s6/hm_mtg0.log`,
+    (step 8 before the rebase onto 62a70c1, now 7bad589) against master
+    635ae58: 24 of 24 at 0 px (`s6/hm_mtg0.log`,
     `s6_mtg_ab.ps1`). The minotaur drew: 880 px against the no-minotaur
     run, and 2895 px against the line run, whose telegraph it lacks.
   - The first two pairs are master 8b7411e against the branch's
@@ -451,10 +455,11 @@ never pushed:
 
 **Handle fields:**
 - owner: nobody since 18:54 2026-10-20 (claude agent ae18c5a4888bb8280
-  of claude session 91b19e11, stopped at its stage end)
+  of claude session 91b19e11, stopped at its stage end; resumed at 19:00
+  only to rebase onto 62a70c1 and move `mtl` to 181)
 - branch: `worktree-agent-ae18c5a4888bb8280`, worktree
-  `.claude/worktrees/agent-ae18c5a4888bb8280`; last commit: this
-  handoff's commit, on 1b7bd12 (unpushed)
+  `.claude/worktrees/agent-ae18c5a4888bb8280`; last commit: the 181
+  renumber, on d930111 (unpushed)
 - evidence: `.claude/probes/K525/` (baseline/, s6/, s6_batch.ps1,
   s6_line_ab.ps1, s6_mtg_ab.ps1, crop_zoom.ps1, gpu_k525.mjs,
   tele_states.mjs, hm_probe.mjs, mksheet.mjs, pxdiff.mjs)
