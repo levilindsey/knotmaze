@@ -72,9 +72,14 @@ export async function copyText(text: string): Promise<boolean> {
 // a touch (pointer-events none, maze_hud.ts's .km-toast).
 let toastEl: HTMLDivElement | null = null;
 let toastTimer = 0;
-// The controls it keeps clear of: these, the edge indicators, and whatever
-// setToastAvoid names (main.ts: the chrome the indicators avoid).
-const TOAST_AVOID = ".km-cut,.km-walk,.km-pad,.km-banner,.km-ind";
+// The controls it keeps clear of: anything with class TOAST_AVOID_CLASS, the
+// scissors, the walker's buttons, the aids (K137), the move pad, the banner,
+// the edge indicators, and whatever setToastAvoid names (main.ts: the chrome
+// the indicators avoid). A NEW CONTROL near the bottom of the screen adds
+// TOAST_AVOID_CLASS to its element (a group's box counts as one).
+export const TOAST_AVOID_CLASS = "km-control";
+const TOAST_AVOID =
+  `.${TOAST_AVOID_CLASS},.km-cut,.km-walk,.km-aid,.km-pad,.km-banner,.km-ind`;
 let avoidSource: (() => ReadonlyArray<Element | null>) | null = null;
 export function setToastAvoid(source: () => ReadonlyArray<Element | null>): void {
   avoidSource = source;

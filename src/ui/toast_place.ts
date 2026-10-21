@@ -2,8 +2,8 @@
 // in test/ui/toast_place.test.ts). The toast is centred at the bottom of the
 // screen, at the CSS floor (max(18px, the safe area)). A control anchored to
 // the bottom of the screen that shares the toast's column (the scissors and
-// Undo, the walker's buttons, the move pad, a phone's win banner, an edge
-// indicator) lifts it to TOAST_GAP above that control's top; the highest
+// Undo, the walker's buttons, the aids, the move pad, a phone's win banner,
+// an edge indicator) lifts it to TOAST_GAP above that control's top; the highest
 // such top wins. It never goes below the floor or off the top. A control
 // beside the toast's column leaves it where it is (the desktop's pad, far
 // right, does not lift a centred toast).
