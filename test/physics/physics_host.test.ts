@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { InThreadHost, PhysicsCore, LOAD_SIM_CAP } from "../../src/physics/physics_host";
 import {
   PhysicsWorkerCore,
@@ -14,6 +14,10 @@ import { readSnapshot, snapshotBytes, fingerprintOf } from "../../src/physics/sn
 import { ParticleSystem, SUBSTEP } from "../../src/physics/particle_system";
 import type { PhysicsTuning } from "../../src/physics/particle_system";
 import { fabricScene, fabricGraph, bits } from "./fabric_scene";
+
+// K697: 11-24 s a file when the machine is idle, 45-60 s beside parallel
+// agents' suites, past vitest.config.ts's 30 s.
+vi.setConfig({ testTimeout: 120_000 });
 
 // K7 stage 2 (docs/design/K7_worker.md, stage 2's tests): the worker core
 // and main's mirror against the in-thread host, bit for bit, in Node. On
