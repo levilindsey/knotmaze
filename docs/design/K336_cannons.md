@@ -210,12 +210,13 @@ End your report with the item's handle fields and a `Ledger items` list.
 
 Steps 1-5 and 8 are done, and so is most of 7. Step 6 was tuned from
 the pure-model census, not from frame sheets, and the master-vs-branch
-sheets were never shot. The branch is rebased onto master `b1ec927`
-(K324 stage 1, K546 stage 1) and was never pushed.
+sheets were never shot. The branch is rebased onto master `635ae58`
+(after K324 stage 1, K546 stage 1 and K580 stage 2) and was never
+pushed.
 
 ### What landed
 
-- `7e06a10` **K186: no confetti under reduced motion.**
+- `34b7c45` **K186: no confetti under reduced motion.**
   - The plan is empty under reduced motion, throwConfetti returns early,
     and turning reduced motion on mid-fall clears the layer
     (panel_wiring.ts).
@@ -225,10 +226,11 @@ sheets were never shot. The branch is rebased onto master `b1ec927`
     shows no banner, by design.
   - Path 8 is Levi's call: Reset path during the winning move throws
     the confetti and records the result, but shows no banner.
-- `d245775` **K336: the side cannons** (model, view, settings).
-- `89287ed` **K336: the streamers** (model, view, setting). The finish
+- `f0d8f5d` **K336: the side cannons** (model, view, settings).
+- `cbc42a9` **K336: the streamers** (model, view, setting). The finish
   spray throws none. That was the draft's call, kept without a sheet.
-- `8de7351` lore; `b63de23` the rebase's renumber.
+- `e32bb3e` lore; `f4cea42` the rebase's renumber; `d2c8364` and the
+  next commit, this handoff.
 - Every new piece is drawn inside ConfettiLayer: two more
   ParticleContainers above the world root (spray, streamers, cannons,
   rain). Only Flag.OVERLAY is raised, and `src/app/frame_loop.ts` is
@@ -258,7 +260,8 @@ The full record is render-confetti.md's "Side cannons and streamers
 
 ### Verification
 
-- **Tests.** `npm test` after the rebase: 1658 passed, 1 skipped.
+- **Tests.** `npm test` after the rebase onto `635ae58`: 1658 passed,
+  1 skipped (the same on `b1ec927`).
   `tsc --noEmit` is clean. `npm run build` was green before the rebase
   (a8a2985) and was not re-run after it.
 - **Census** (pure model, 8 seeds):
@@ -290,6 +293,9 @@ The full record is render-confetti.md's "Side cannons and streamers
 
   A streamer costs about 13 paper pieces.
 - **Not done:**
+  - any look at the cannons and streamers on the page: no frame of them
+    has been seen yet. `look_locked.ps1` waited 14 min for the perf
+    lock, which K525's GPU batch held from 18:29, and skipped at 18:46;
   - the master-vs-branch sheets (`.claude/probes/K336/sheet/`) and the
     curl strip;
   - K140's frame A/B (the GPU side);
@@ -335,12 +341,12 @@ The golden dailies, K87 and the knot-mode golden did not move.
 
 ### Handle
 
-- owner: nobody since 2026-10-20 ~19:00 (agent ac1c3e02f6979bc7f of
+- owner: nobody since 2026-10-20 18:55 (agent ac1c3e02f6979bc7f of
   claude session 91b19e11-7759-4638-ba60-4705b011b94f, stopped at its
   2 h cap)
 - branch: `worktree-agent-ac1c3e02f6979bc7f`, worktree
   `.claude/worktrees/agent-ac1c3e02f6979bc7f`; last commit: this
-  handoff (on master `b1ec927`, unpushed)
+  handoff (on master `635ae58`, unpushed)
 - evidence: `.claude/probes/K336/` (untracked): the censuses,
   `flag_check.mjs`, `bench_sim.mjs`, `bench_locked.ps1`,
   `flag_bench_a8a2985.log`, `banners/`, `look.mjs` + `look_locked.ps1`,
