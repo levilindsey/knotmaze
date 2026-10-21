@@ -1229,15 +1229,9 @@ Every other item below waits on the trigger it names.
 - **K673** · An awake knot frame is 19.3 ms at 1x (110 at 4x CPU) against 9.5-9.9 (47) slept, and
   the first sleep takes about 5 sim-s (9-24 s wall on the worker host): phones pay it through the
   settle and the first moves. Likely K611; K441 Handoff.
-- **K675** · K580 s3 partial round blends: the a J2 at xh 2 (113.5 deg) is only partly round (1.824
-  h to 1.389 h), the i joint sample at xh 3 (110.8 deg) barely. A lower ROUND_DOT_START rounds both;
-  re-run the count first (`docs/design/K580_s3.md` Residuals).
-- **K676** · Open-end crescents beside spur tips (the a stem bite, the notaper J bites, about 0.1
-  LU) in the K580 s3 fills-only raster; the Pixel shows the a stem notch by its foot disc too (K662).
-  Not yet checked against the real end caps (`docs/design/K580_s3.md` Residuals).
-- **K677** · aland only: a square step on the lower edge of the a J at xh 3 (both builds); the
-  second bite of a at xh 2 grew 0.080 to 0.090 LU under K580 s3. Neither investigated
-  (`docs/design/K580_s3.md`).
+- **K677** · aland only: a_x3_l cusp spike (0.075 LU) and a_x2_l square-step bites (0.089, 0.060),
+  the same on master and K580 s4 (not a regression); K675 removed its 0.108 stem-foot thorn. Not
+  investigated (`docs/design/K580_s4.md` real-render table).
 - **K678** · A K81 cover strip with fewer than 9 pairs of room drops a round join arc (falls back to
   the sample pair); no A/B scene reaches it (`RibbonMesh.coverPairs`, the joinery.ts cover loop;
   K580 s3).
@@ -1530,6 +1524,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K676** · Open-end crescents beside spur tips (the a stem bite, the notaper J bites, about 0.1 LU) in the K580 s3 fills-only raster; the Pixel shows the a stem notch by its foot disc too (K662). Done in ad3e715 (2026-10-20).
+- **K675** · K580 s3 partial round blends: the a J2 at xh 2 (113.5 deg) is only partly round (1.824 h to 1.389 h), the i joint sample at xh 3 (110.8 deg) barely. Done in e2adfd9 (2026-10-20).
 - **K697** · maze_plan_identity and the physics_host lockstep test run near the 30 s timeout under parallel agent load (45 and 60 s a file loaded, 11 and 24 s clean): raise their timeouts before they flake an agent merge or CI (K324 s2 report). Done in 9992d71 (2026-10-20).
 - **K324** · the real-time telegraph: lead, whole runs, ring on the real-time clock; uKTeleAt (K654); no line look over hidden thread (K652, K271); panel rows on both clocks. Done in 031e09a (2026-10-20).
 - **K620** · the glyph root paints as a blend of the stroke section colours from R to the spur at J (CPU mirror, KGEOM and KSTATIC data, GLSL); maze and burn moved 3-5 px of one level (the vertex block). Done in d54c09b (2026-10-20).
