@@ -225,12 +225,17 @@ const PLAYER_PACE = 10;
 // beside minotaur_turns.ts's TURN_MODEL_DEFAULTS (K294's shape) because the
 // units differ: u along the threads, not runs, and the real-time hunter
 // aims every step, so the turn table's accuracies do not carry over. The
-// territory converts the turn guard's 6 runs (docs/design/K324_s3.md's
-// Handoff says how); the sight doubles the hunter's, as the turn guard's 4
-// runs double the hunter's 2. Tuned on stage 1's sim (the Handoff's table).
+// territory converts the turn guard's 6 runs at about 5 u a run
+// (docs/design/K324_s3.md's Handoff says how). The sight starts wider than
+// the hunter's 15 / 25, as the turn guard's 4 runs are wider than the
+// hunter's 2, but the straight conversion (twice, 30 / 40) kept a player
+// hunted for most of a solve; tuned on stage 1's sim (the Handoff's table)
+// to about the hunter's catches a game: the guard spots you from further,
+// hunts more often and aims worse; the stalker always closes in, charges
+// within the hunter's sight and is escaped about half the time.
 export const CHASE_MODEL_DEFAULTS = Object.freeze({
-  guard: Object.freeze({ territory: 30, detect: 30, lose: 40, accuracy: 0.7 }),
-  stalker: Object.freeze({ accuracy: 0.7 }),
+  guard: Object.freeze({ territory: 30, detect: 20, lose: 30, accuracy: 0.4 }),
+  stalker: Object.freeze({ accuracy: 0.45 }),
 });
 
 // url_state.ts PARAM_DEFAULTS reads these, so a retune edits only them (and
