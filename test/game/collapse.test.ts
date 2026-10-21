@@ -11,6 +11,7 @@ import {
   totalUnits,
   UNITS_PER_LENGTH,
 } from "../../src/game/collapse";
+import { FabricMazeController } from "../../src/game/fabric_controller";
 import { SeededRNG } from "../../src/util/random";
 
 // K139: collapse mode (game/collapse.ts): limits, the free end, the score
@@ -232,5 +233,76 @@ describe("collapse par search", () => {
     const fin = collapsePar(g, "finish");
     expect(fin.units).toBe(-1);
     expect(parText(fin)).toBe("—");
+  });
+});
+
+describe("collapse in the controller", () => {
+  const make = (collapse: "off" | "finish" | "free") =>
+    new FabricMazeController(graph(RUNS, "S", "X"), false, null, { collapse });
+
+  it("finish: every run collapses behind you, no backtrack, the exit wins", () => {
+    const c = make("finish");
+    expect(c.collapseOn).toBe(true);
+    expect(c.tapEdge(0)).toBe("advance");
+    expect(c.broken(0)).toBe(true);
+    expect(c.justBroke).toBe(0);
+    expect(c.collapsedUnits).toBe(2 * U);
+    expect(c.tapEdge(0)).toBe("reject"); // the run behind you is gone
+    expect(c.choices().sort()).toEqual([1, 3]);
+    expect(c.tapEdge(3)).toBe("advance");
+    expect(c.tapEdge(4)).toBe("advance");
+    expect(c.tapEdge(2)).toBe("win");
+    expect(c.solved).toBe(true);
+    expect(c.collapsedUnits).toBe(8 * U);
+    expect(c.collapseTotal).toBe(12 * U);
+    expect(c.collapsePercent).toBe(66);
+    expect(c.collapsePar!.units).toBe(8 * U);
+  });
+
+  it("finish: a stub strands you; Undo (a replay of the taps but the last) comes back", () => {
+    const c = make("finish");
+    for (const eid of [0, 3, 5]) c.tapEdge(eid);
+    expect(c.head).toBe("D");
+    expect(c.stranded).toBe(true);
+    expect(c.tapEdge(4)).toBe("noop");
+    expect(c.replay(c.taps.slice(0, -1))).toBe(true);
+    expect(c.stranded).toBe(false);
+    expect(c.head).toBe("c");
+    expect(c.collapsedUnits).toBe(4 * U);
+    // A catch's respawn at the start: its tail has collapsed.
+    c.respawn();
+    expect(c.stranded).toBe(true);
+  });
+
+  it("free: the exit is a dead end, not a win; the game ends stranded", () => {
+    const c = make("free");
+    expect(c.tapEdge(0)).toBe("advance");
+    expect(c.tapEdge(1)).toBe("advance");
+    expect(c.stranded).toBe(false);
+    expect(c.tapEdge(2)).toBe("advance"); // onto the exit: no win
+    expect(c.solved).toBe(false);
+    expect(c.stranded).toBe(true);
+    expect(c.collapsePercent).toBe(58); // 7 of 12
+    const d = make("free");
+    for (const eid of [0, 3, 4, 1]) expect(d.tapEdge(eid)).toBe("advance");
+    expect(d.head).toBe("a");
+    expect(d.stranded).toBe(true); // a's three runs are gone
+    expect(d.collapsePercent).toBe(75); // par's 9 of 12
+    expect(d.collapsePar!.units).toBe(9 * U);
+  });
+
+  it("collapse overrides fragile and par; off leaves the controller as it was", () => {
+    const g = graph(RUNS, "S", "X");
+    const c = new FabricMazeController(g, false, null, { collapse: "finish", fragile: "crack", parMode: "strict" });
+    expect(c.fragile).toBe("off");
+    expect(c.parMode).toBe("off");
+    expect(Array.from(c.breakLimits)).toEqual(Array.from(collapseLimits(g)));
+    const off = make("off");
+    expect(off.collapseOn).toBe(false);
+    expect(off.collapsePar).toBeNull();
+    expect(off.fragileOn).toBe(false);
+    expect(off.tapEdge(0)).toBe("advance");
+    expect(off.tapEdge(0)).toBe("backtrack");
+    expect(off.collapsedUnits).toBe(0);
   });
 });
