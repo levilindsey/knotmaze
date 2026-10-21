@@ -4,6 +4,7 @@ import type { SnoreSfx } from "../audio/snore_sfx";
 import { mazeTaps, walkFingerprint } from "../game/daily_attempt";
 import { todayNumber } from "../game/daily_calendar";
 import { dailyHistory } from "../game/daily_store";
+import { CHASE_HZ } from "../game/minotaur";
 import type { DailyStore, SolveRecord } from "../game/daily_store";
 import type { SolveClock } from "../game/maze_stats";
 import type { PhysicsTuning } from "../physics/particle_system";
@@ -359,7 +360,11 @@ export function installProbeHooks(ctx: ProbeCtx): void {
   // K80 real-time chase diagnostics (null outside the real-time mode): the
   // chase's state, with the minotaur's SCREEN point while fabric draws it.
   // __knotChaseTap(edge) queues a run as a tap on it would (and starts the
-  // chase); __knotChaseObj() is the live MinotaurChase.
+  // chase); __knotChaseObj() is the live MinotaurChase. K324 stage 1: `hold`
+  // is the junction stop it is standing out (ticks left, 0 = none; a long
+  // stop is mode "pause"), `arrivals` its junction arrivals so far, `plan`
+  // the route the telegraph will show (plan() at minoTelegraphRuns) and
+  // `plan8` the longest reach.
   (window as unknown as Record<string, unknown>).__knotChase = () => {
     if (!ctx.scene.chase) return null;
     const ch = ctx.scene.chase;
@@ -377,6 +382,11 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       huntSeconds: ch.huntSeconds,
       finished: ch.finished,
       mode: ch.mode,
+      hold: ch.hold,
+      holdSeconds: ch.hold / CHASE_HZ,
+      arrivals: ch.arrivals,
+      plan: ch.plan(ctx.params.minoTelegraphRuns),
+      plan8: ch.plan(8),
       player: { ...ch.player },
       playerAt: at(ch.player),
       mino: { ...ch.mino },
