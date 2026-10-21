@@ -377,6 +377,10 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // 209, K138 stage 3: one-way runs (0 off, else the share of the core runs;
   // game/one_way.ts).
   num("oneWay"),
+  // 210-211, K137 stage 4 (4.10, 4.30): the lure plucks' stock (0 off,
+  // 1..5; game/lures.ts) and the snares' (0 off, 1..3; game/snares.ts).
+  num("lures"),
+  num("snares"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -543,6 +547,8 @@ export const PARAM_RANGES: Readonly<
   hiddenRuns: [0, 4], // K138 stage 2 (HIDDEN_MAX)
   sleepers: [0, 3], // K137 stage 3d (SLEEPERS_MAX)
   oneWay: [0, 0.6], // K138 stage 3 (ONE_WAY_MAX)
+  lures: [0, 5], // K137 stage 4 (LURES_MAX)
+  snares: [0, 3], // K137 stage 4 (SNARES_MAX)
 });
 
 // A link value held to its panel range (K398); a param with no range,
