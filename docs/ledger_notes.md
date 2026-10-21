@@ -4445,3 +4445,7 @@ K320 2b parity blocker: split stays dark; 2c must not start until the A/B is 0px
 ## K567 (2026-10-19)
 
 If K320's split is revived (K550): use it only while cold: draw with the split while the combined program pre-compiles off-thread (KHR_parallel_shader_compile; Chrome's program cache is keyed by source, so Pixi's later link of the same text should read ~25 ms, K307), then swap. Or the cheaper try forms (stencil early reject, 2 offsets, owner keep only, an edge band), a paint that reads neighbouring mask texels on a miss, sample positions read at boot (`docs/design/K550_stage3.md` Recommendation). All untested.
+
+## K571 (2026-10-20)
+
+The title toggle leaves the daily (Levi 2026-10-20: "What actually counts as the "daily" for score-keeping credit, is either with or without the title. Toggling the title should switch the maze mode to custom, _and_ should reset progress."). Asked: the title setting is remembered (a DAILY_EXEMPT pref, `daily_link.ts:219`), so after a flip the daily reopens in the new form from scratch and that run counts; OK? Then build it (`daily_link.ts`, `daily_attempt.ts`, main.ts `savePrefsNow`, `tweakpane_panel.ts`).
