@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K672.
+Next free ID: K675.
 
 ## Waiting on Levi
 
@@ -331,14 +331,6 @@ Next free ID: K672.
   - next: with the phone plugged in, unlocked and on the home screen, `pwsh -File .claude/probes/K631/run_part2.ps1` (a 4-cell smoke, then 12 cells, ~25 min); read `out/phone` with `.claude/probes/K244/summarize.mjs` against `docs/design/K244_cores.md`'s desktop counts
   - brief: `docs/design/K631_phone.md`
   - env: `.claude/probes/K631/run_part2.ps1` (takes the phone lock, serves the builds on port 5631, sets up and tears down the phone)
-- **K441** · The real-time fire's frame cost (K114 s2 item 6): 0.6-1.2 ms more a frame than turn
-  (drawFire's re-declare 0.6, HUD writes 0.1, 0.5 unattributed). Profile, then fix inside drawFire or
-  main's fire frame; elsewhere is s2, after K137 s1 and K525. `docs/design/K441_fire_frame.md` (queued).
-  - owner: nobody since 2026-10-20 20:09 (merged; agent `a14002cf1416cdbd8` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `9850741`
-  - evidence: `.claude/probes/K441/`
-  - next: the same-state rerun under the perf lock, realtime stand after the first sleep (recipe: K441_fire_frame.md Handoff, Owed), then close K441 or open s2
-  - brief: `docs/design/K441_fire_frame.md`
 - **K139** · Collapse mode (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`): no backtracking,
   each run collapses behind you. `collapse` (off | finish | free); rides 4.3's snap (`fragile`,
   K137) and R.3.4's longest thread (`docs/design/K80_gameplay_additions.md`). S-M, after 4.3.
@@ -580,6 +572,9 @@ Every other item below waits on the trigger it names.
 - **K658** · K137's page gaps: real clicks and touch taps, a click while stranded, sound, the
   real-time clocks with fragile or par, the panel rows, chase + fragile edge cases.
   `.claude/probes/K137/page/`.
+- **K441** · The real-time fire's frame cost, profiled (9850741): about 1% of a frame (+0.23 ms at 1x,
+  +1.85 at 4x CPU, nearly all `ExploreGaps.setExplore`); no fix built. Owed: a same-state rerun under
+  the perf lock, realtime stand after the first sleep (`docs/design/K441_fire_frame.md` Handoff, Owed).
 
 ## Residuals (known, not fixed)
 
@@ -1248,6 +1243,9 @@ Every other item below waits on the trigger it names.
 - **K670** · K324's page probe (`.claude/probes/K324/k324_page_s3.mjs`, untracked): in the
   stand-still phase a caught player stands unseen on the entrance, and its hunted-the-walking-player
   label is wrong.
+- **K673** · An awake knot frame is 19.3 ms at 1x (110 at 4x CPU) against 9.5-9.9 (47) slept, and
+  the first sleep takes about 5 sim-s (9-24 s wall on the worker host): phones pay it through the
+  settle and the first moves. Likely K611; K441 Handoff.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1491,6 +1489,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K661** · A HUD popover for K137's rows (strokes, par, snapped).
 - **K666** · Sim runs report the greedy player's catches per 100 s of play and the fleers' escapes
   beside raw catches: the trap lengthens greedy games, so raw catches move with game length (K637).
+- **K672** · K441 s2: incremental `ExploreGaps.setExplore` (re-declare only the chains whose burn
+  changed) saves at most 0.23 ms a frame at 1x, 1.85 at 4x CPU, in the real-time burn race only.
+  Only if that race matters on phones; after K139. `docs/design/K441_fire_frame.md` Handoff.
+- **K674** · Profile `tickPlucks` while plucks decay after a move: K441 inferred about 15 ms a frame
+  at 4x CPU, against 1.6 asleep (untested). With K189.
 
 ## Done
 

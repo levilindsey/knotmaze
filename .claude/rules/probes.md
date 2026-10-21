@@ -316,7 +316,12 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   (`&fsp=0.3&fdl=40`, stage 2's runs) now races at 0.2 / 20, so pass
   `EXTRA=&fsr=0.3&fdr=40` to repeat stage 2's measurements. K440's page
   check: `.claude/probes/K440/k440_page.mjs <base> <outDir> [seed]`
-  (`run_k440.ps1` under the perf lock).
+  (`run_k440.ps1` under the perf lock). GOTCHA (K441, 2026-10-20): a
+  realtime-vs-turn frame comparison must fix the physics state. Wait for
+  `asleep` in both stands: a slept knot takes `restFrame` and an awake
+  one the full tick (`frame_loop.ts` ~770), which alone made a +10 ms
+  (1x) gap in K441's first stands. Stage 2's "0.5 ms unattributed" may
+  be the same confound.
 - K111 stage 4 (2026-10-14), hover probes: a TOUCH press on a choice
   lights nothing (main.ts only sets pendingTap), so a phone-size hovered
   choice needs a MOUSE at the phone viewport (`phonemouse`: 411x753 dsf
