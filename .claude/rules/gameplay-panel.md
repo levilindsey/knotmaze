@@ -221,6 +221,21 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   Param: gameplay-links.md's SPRINT PARAM; the rules:
   gameplay-minotaur.md's SPRINT.
 
+- SLEEPERS ROWS (K137 stage 3d, 2026-10-21): "Sleepers" (`sleepers`, a
+  0..3 slider, step 1, 0 reads "off") and "Sleeper kind" (`sleepKind`:
+  wakes / follows / both) sit right after "Sprint" in the Game folder,
+  turn clock only: hidden with the minotaur off or in real time, and
+  "Sleeper kind" also while the count is 0. Both restart the solve
+  (onClockChange): a new chase lays the monsters. Tooltips: "Turn clock:
+  more monsters asleep in the maze, a few runs off the shortest way. Walk
+  a run next to one and it wakes and hunts you as the minotaur does; any
+  catch sends you back to the entrance and every monster back to sleep.
+  Restarts the solve." and "Turn clock: wakes hunts you once woken;
+  follows trails your path a run or two behind, so stopping or turning
+  back lets it catch you (the entrance puts it back to sleep); both mixes
+  the two. Restarts the solve.". Params: gameplay-links.md's SLEEPERS
+  PARAMS; the rules: gameplay-minotaur.md's SLEEPERS AND THE FOLLOWER.
+
 - AIDS ROWS (K137 stage 2, 2026-10-21): "Ariadne's spool" (`spool`),
   "Spool slack (x fewest)" (`spoolSlack`, [0.1, 1], no step, K130, an edit
   keeps the 0.05 grid; hidden while the spool is off), "Hints" (`hints`, a

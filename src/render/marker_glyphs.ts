@@ -19,7 +19,8 @@
 // design below (the tests check its fit and that the shader can draw it).
 
 // "minotaur": K80's real-time chaser (drawn only in that mode). "spider":
-// K114's spider (K98 landed the glyph and the role; nothing draws it yet).
+// K114's spider (K98 landed the glyph and the role); K137 stage 3d's
+// follower wears it while it walks (fabric_maze_renderer.ts syncExtras).
 // "sword": K137 stage 3b's sword, at its spot until the player takes it.
 export type MarkerRole = "start" | "exit" | "head" | "minotaur" | "spider" | "sword" | "tick";
 

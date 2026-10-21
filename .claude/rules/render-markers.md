@@ -117,6 +117,25 @@ only with the files it is about; `render.md` lists the area's other files.
   checks its fit like every glyph's. The rules: gameplay-minotaur.md's
   THE SWORD.
 
+- THE EXTRA MONSTERS' MARKERS (K137 stage 3d, 2026-10-21; s3d call 4, a
+  stand-in for stage 4's look): no new glyph. FabricMazeRenderer
+  `syncExtras` (called from syncMinotaur) places one MarkerMesh per extra
+  in the turn clock's `extraViews`, borrowed from the page-lifetime
+  EXTRA_POOL into `extraLayer`, just under the minotaur's layer. ASLEEP,
+  either kind wears the minotaur's glyph at EXTRA_ASLEEP_SCALE 0.8 of
+  markerRadius, alpha EXTRA_ASLEEP_ALPHA 0.55, no dot (a follower hides
+  in plain sight). A follower WAITING wears K98's spider glyph (its first
+  use) on an amber dot (EXTRA_AMBER) at alpha 0.85; AWAKE, its kind's
+  glyph on a red dot (EXTRA_RED) at alpha 1; the dot is EXTRA_DOT 1.3
+  radii. Each waits for the intro to draw its point and hides where the
+  thread reveal has not shown it (vis below 0.98), like the sword. The
+  layer sits under the fog sprite unless minoFog is "always" (then over
+  it, under the minotaur); under "hunting" they stay under, since that
+  rule reads the minotaur's hunt (a residual). Probe hook:
+  `extraMarkers` (layer-local x, y, scale and alpha; page points need
+  `mesh.getGlobalPosition()`, probes.md's K137 stage 3d). The rules:
+  gameplay-minotaur.md's SLEEPERS AND THE FOLLOWER.
+
 - THE CHALK TICK AND THE COMPASS (K137 stage 2, 2026-10-21): the role
   "tick" (a mesh role) with one placeholder design, "tick" (a check mark),
   for Levi to replace. FabricMazeRenderer `drawAids` (after drawMarkers in

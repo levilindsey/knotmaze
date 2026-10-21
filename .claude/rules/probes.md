@@ -591,6 +591,25 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   means a route that ignored breaks would cross one). GOTCHA: the
   start's runs are exempt and never break, so a walk that takes the
   first choice shuttles on run 0 and breaks nothing.
+- K137 stage 3d (2026-10-21), sleepers and the follower:
+  `.claude/probes/K137/s3d/monsters_page.mjs <base> [desktop|phone]
+  [outDir] [seed=7] [kind=both] [n=2]` (on `?<seed>&am=instant&mt=hunter
+  &slp=<n>&slk=<kind>&snd=none`, turn clock; real clicks on the choices'
+  screen points, falling back to `__knotTurnMove` only when a click did
+  not land, counted). It checks the monsters laid (each asleep at home),
+  a dimmed marker per monster, the HUD's woken row (absent without a
+  sleeper), walks onto the first sleeper (awake, woken 1, a full-alpha
+  marker), walks onto the follower's junction and off (waiting on an
+  amber marker, then awake), then a catch (every monster home asleep,
+  woken kept) and no page errors, and ends in a CHECK summary; stills
+  (`_m<i>` marker crops, `_hud`) and JSON in `out/`, the Chrome profile in
+  the probes folder. `vite.private-cache.config.ts` is s3c's wrapper.
+  GOTCHA: the renderer's `extraMarkers` are LAYER-LOCAL (the layer sits in
+  the view's transform), so page points come from each
+  `extraMeshes[i].mesh.getGlobalPosition()` plus the canvas rect. A walk
+  back onto a follower's junction on the move its wait ends is a catch
+  (the harsh follower, call 3), so a driver that wants to see it awake
+  walks away from home first.
 
 - K698 + K713 (2026-10-21), the toasts, the walker's glow and the pad:
   `.claude/probes/K698/k698.mjs <cut|aids|lives|walker|sword|glow|pad>
