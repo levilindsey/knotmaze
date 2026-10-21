@@ -49,10 +49,10 @@ export interface ShareInfo {
 
 // K114 walker: the title line's tag. Lead: "✂️ 4, par 3" (no par part when
 // there is none; zero cuts included, since a par-0 maze is a score). Delay:
-// "🐢 61 runs (it wanted 18)".
+// "🐢 61 runs (it wanted 18)". K713: an upper-bound par reads "par ≤ 3".
 export function walkerTag(w: WalkerScore, cuts: number): string {
   if (w.mode === "lead") {
-    return `✂️ ${cuts}${w.par != null ? `, par ${w.par}` : ""}`;
+    return `✂️ ${cuts}${w.par != null ? `, par ${w.upper ? "≤ " : ""}${w.par}` : ""}`;
   }
   return `\u{1F422} ${w.walk} run${w.walk === 1 ? "" : "s"} (it wanted ${w.shortest})`;
 }

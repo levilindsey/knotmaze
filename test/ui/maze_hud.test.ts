@@ -258,6 +258,21 @@ describe("K114 cuts row", () => {
       ["walker", "walker", "61 · shortest 18"],
     ]);
   });
+
+  it("K713: an upper-bound par reads par ≤ P, only when inexact", () => {
+    const lead = (par: number | null, upper?: boolean) =>
+      ruleEntries({ cuts: 4, walker: { mode: "lead", par, upper } }).map((r) => [r.id, r.value]);
+    expect(lead(3, true)).toEqual([["cuts", "4 · par ≤ 3"]]);
+    expect(lead(3, false)).toEqual([["cuts", "4 · par 3"]]);
+    expect(lead(3)).toEqual([["cuts", "4 · par 3"]]);
+    // K706 call 6: par 0 stays a plain par.
+    expect(lead(0, false)).toEqual([["cuts", "4 · par 0"]]);
+    // No par known: the dash, never "≤ —".
+    expect(lead(null, true)).toEqual([["cuts", "4 · par —"]]);
+    // Delay has no par to mark.
+    const delay = ruleEntries({ cuts: 2, walker: { mode: "delay", walk: 61, shortest: 18 } });
+    expect(delay.map((r) => r.value).join(" ")).not.toContain("≤");
+  });
 });
 
 describe("K137 stage 3a hearts row", () => {

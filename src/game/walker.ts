@@ -55,9 +55,11 @@ export type WalkerMode = "lead" | "delay";
 
 // What the HUD, the win banner and the share say of a walker game: Lead's
 // par (null: none found within the budget), Delay's walk and the walk it
-// wanted, both in runs.
+// wanted, both in runs. K713: `upper` true marks Lead's par as an upper
+// bound (the search ran past its budget: ParResult.exact false), which
+// they show as "par ≤ P"; absent or false, the par is exact.
 export type WalkerScore =
-  | { mode: "lead"; par: number | null }
+  | { mode: "lead"; par: number | null; upper?: boolean }
   | { mode: "delay"; walk: number; shortest: number };
 
 type WalkerWalk = Pick<

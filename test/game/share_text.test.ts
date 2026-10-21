@@ -49,6 +49,18 @@ describe("K114 cut tag", () => {
     expect(delay(1).endsWith(" \u00b7 \u{1F422} 1 run (it wanted 18)")).toBe(true);
     expect(delay(61)).not.toContain("\u2702");
   });
+
+  it("K713: an upper-bound par reads par \u2264 P, only when inexact", () => {
+    const lead = (cuts: number, par: number | null, upper?: boolean) =>
+      title({ ...BASE, cuts, walker: { mode: "lead", par, upper } });
+    expect(lead(4, 3, true).endsWith(" \u00b7 \u2702\ufe0f 4, par \u2264 3")).toBe(true);
+    expect(lead(4, 3, false).endsWith(" \u00b7 \u2702\ufe0f 4, par 3")).toBe(true);
+    expect(lead(4, 3).endsWith(" \u00b7 \u2702\ufe0f 4, par 3")).toBe(true);
+    // K706 call 6: par 0 stays a plain par.
+    expect(lead(0, 0, false).endsWith(" \u00b7 \u2702\ufe0f 0, par 0")).toBe(true);
+    // No par known: no par part at all.
+    expect(lead(2, null, true).endsWith(" \u00b7 \u2702\ufe0f 2")).toBe(true);
+  });
 });
 
 describe("K137 stage 3a hearts tag", () => {
