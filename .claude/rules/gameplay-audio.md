@@ -141,10 +141,12 @@ only with the files it is about; `gameplay.md` lists the area's other files.
     the gate so a first touch can play. K720: with sound off the first
     input creates no context, so once sound is turned on in manual mode
     the first snore play makes the context and plays nothing (the decode
-    starts then); the next play sounds. Music's next tick or a random
-    pluck makes the context first, so there the first hover plays. With
-    sticky activation the gate opens at construction and creates nothing;
-    with sound on the preload's decode makes the context, as before.
+    starts then); the next play sounds. Music's next tick makes the
+    context at once, and random mode's first pluck 0.8 s after the
+    switch, so there a hover after that (and the decode) plays. With sticky activation the
+    gate opens at construction and creates nothing; with sound on the
+    preload's decode makes the context, as before. (All from the code
+    and `snore_sfx.test.ts`; K720's browser check did not run the snore.)
   - PROBE: `.claude/probes/K325/snore.mjs <base> [A..F]` (headed Chrome
     off-screen: desktop mouse, silent configs, volume, phone touch
     emulation, keyboard Enter, first-ever touch; `results.md`). Hooks:
