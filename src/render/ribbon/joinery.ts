@@ -1557,7 +1557,11 @@ export class Joinery {
         fm = fmBottom;
         continue;
       }
-      // No junction within reach (shouldn't happen): host-axis fallback.
+      // No junction record within reach: host-axis fallback. It does
+      // happen: a record whose arms' probes fall within 0.15 of its centre
+      // (the records loop's `len < 0.15` skip) keeps fewer than 2 arms,
+      // and the search above skips it. At xh 2 every glyph junction's
+      // record does (K580 s5).
       if (
         this.r.explorePieces &&
         (this.r.exploreVisAt(tip.hostChain, tip.hostCtrl) <= EXPLORE_JOINT_MIN ||

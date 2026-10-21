@@ -207,15 +207,76 @@ certifies (the P3.24 probe rule again, render edition).
   the spur's tucked slot, already covers part of the waist: don't retry
   it. The one gain: ai's tapered a's J at xh 2, 0.059 -> 0.031 (what "a"
   alone reads), so that excess IS the centre rule's. What would reach
-  0.01 (not built): a glyph-confined stadium cap cover (a capsule from T
-  back to J, radius about 0.995h), or no tuck at glyph spur tips.
+  0.01: a glyph-confined stadium cap cover (a capsule from T back to J,
+  radius about 0.995h; K580 s5 built it, the next entry), or no tuck at
+  glyph spur tips.
   `taperJn` exists only in tapered mode, so either needs a glyph flag
   that notaper has too. Free ends read about 0.26 LU against the
   round-capped ideal, and the taper root's start 0.50-0.55: by design
   (flat and tapered ends). The tapered a's J reads 0.031 LU (a, xh 2),
   0.035 (a, xh 3), 0.059 (ai, xh 2) and 0.034 (ai, xh 3) against both
   ideals (the cap cover is skipped there), and notaper 0.007 against T;
-  apart from ai's xh 2 excess, not attributed.
+  K580 s5 attributed it (the next entry).
+
+- *K580 s5 (2026-10-21), the glyph stadium: the waist closed, the
+  tapered a's J and the notaper seam attributed* (record
+  `docs/design/K580_s5.md`, Handoff; probes `.claude/probes/K580/s5/`).
+  - **A glyph spur's cap cover is a STADIUM, glyph-only.** `Strand.glyph`
+    (generation.md) reaches the renderer as `RibbonStyle.glyph`, per
+    chain, in tapered and notaper mode alike. For a glyph chain,
+    tuckFusedTips records the untucked stroke from J out to T
+    (`glyphTipStroke[chain * 2 + atEnd]`, `ribbon/tip_stadium.ts`'s
+    `tipStrokeWrite`: J first, unit tangents J -> T) before it collapses
+    the samples. joinery.ts then fans `stadiumRim`'s band from (J + T) / 2:
+    the stroke's two offsets at TIP_DISC_SIDE (0.995h), joined by a
+    semicircle around J and flat at T. It is drawn in the cap cover's
+    record branch (junction-field material) and in its host-axis fallback
+    (an axis record in the host chain's material, under the fallback
+    disc's gate, which pushDisc now returns, null when it skips).
+    Maze bridges keep the tuck and the disc alone.
+  - **At xh 2 the fallback IS the glyph path** (its "shouldn't happen"
+    comment is stale). The records loop drops an arm whose probe 0.8 ctrl
+    out lies within 0.15 of J (`if (len < 0.15) continue;`). At xh 2 every
+    arm of a glyph junction does, so the record keeps fewer than 2 arms
+    and the cap cover's record search skips it. At xh 3 the record
+    branch draws it. The first cut (stadium in the record branch only)
+    closed every xh 3 waist and changed nothing at xh 2.
+  - **Measured** with real.mjs, master 0f3b31f against the branch
+    (`table_s5b.txt`). Against U every waist closes:
+    - the stem foot, 0.028-0.030 / 0.014-0.018 (xh 2 / 3) -> none;
+    - the i's joint, 0.027 / 0.018 -> none / 0.002;
+    - the notaper J, 0.023-0.024 / 0.016-0.017 -> 0.001-0.002;
+    - aland's J, 0.020-0.023 -> 0.001-0.002.
+
+    The spike against U (real_table's SU) moves nowhere. The spike
+    against T grows (the stem foot 0.009 -> 0.023, the notaper J 0 ->
+    0.017), because the stadium fills toward U, which lies outside T by
+    construction: read a glyph tip's spikes against U. The same-state
+    A/B (K550's ab_probe, `phw=0`) is in the Handoff.
+  - **The tapered a's J is not the cap cover.** In tapered mode that J
+    has no fused tip (the stem foot is the only one), so taperHideJn's
+    skip there costs nothing. Its bite (0.031 / 0.035 LU for "a", 0.059 /
+    0.034 for "ai") is the IDEAL's. real.mjs's root ideal is a union of
+    discs of radius w = (dl + dr) / 2 per sample. The tapered root (w 0.5
+    -> 0.26, -dw/ds about 0.3) is drawn with perpendicular offsets, which
+    sit inside the disc union's envelope: the envelope leans forward,
+    about 0.018 on a straight taper and more on the bowl's concave side.
+    - At the bite the rendered edge is the bowl c0's fill edge. The depth
+      comes from the root c1's discs 0.36-0.4 LU back (`attr.mjs`: nomask
+      and nofans 0 px; `ideal_at.mjs`).
+    - Closing it puts the root's vertices on the envelope, n sqrt(1 - k^2)
+      + t k with k = -dw/ds. That changes the taper's outline: not built.
+    - In "ai" a gap-mask slot also hides c0 around the a's J (nomask
+      covers the bite; no emergent row; the slot is not identified). That
+      is ai's excess over "a". Stage 4's centring experiment also took ai
+      to 0.031; how the two relate is not measured.
+  - **The notaper J's lighter disc and diagonal line are the fans'
+    material.** The fallback disc (and now the stadium) wear the host
+    chain's axis paint (writeAxis at arcH), not the section paint of the
+    ribbons beneath. Hiding both fan meshes changes 21280 px (branch) and
+    13909 (master), and the luma at J goes 145 -> 151 in both. It is
+    pre-existing; the stadium only smooths master's two-disc outline. It
+    belongs to the junction material (G4, K678).
 
 - *From P3.28 (torn crossings after a small pull), displayF:* Passes now carry a RENDER-ONLY `displayF` (the raw joint slide
   target, before easing/clamps, stale-frozen through static mode);
