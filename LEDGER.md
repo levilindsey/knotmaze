@@ -328,10 +328,10 @@ Next free ID: K705.
 - **K137** · K80 section 4's cheap (S, S-M) mechanisms, each toggled (Levi 10-13), after the
   minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus
   Levi's sleeper variant. `K80_gameplay_additions.md`, stages in `sooner_20261020.md`; M: K138, M-L/L: K141.
-  - owner: agent `a52e4207fa7a36be7` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 22:23, 2 h cap ~00:23)
-  - branch: `worktree-agent-a52e4207fa7a36be7`, worktree `.claude/worktrees/agent-a52e4207fa7a36be7`; last commit: `489ac5b`
+  - owner: nobody since 2026-10-20 23:59 (merged; agent `a52e4207fa7a36be7` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `4541a9d`
   - evidence: `.claude/probes/K137/s3a/`
-  - next: stage 3a: K137-b (a broken run blocks the minotaur and the fire), 4.32 lives, 4.7 the sword, 4.29 sprint
+  - next: stage 3b next; the sword (4.7) and sprint (4.29) are unbuilt, designs in the K137_s3a.md Handoff
   - brief: `docs/design/K137_s3a.md`
 - **K703** · Overnight phone sitting 1 (Levi left the phone unlocked on its charger, 2026-10-20
   23:05): K114 cut and K324 s2 telegraph on the phone (feeds K694, K695, K698), then K687 and K177.
