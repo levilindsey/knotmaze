@@ -23,9 +23,17 @@
 //           radius with a CSS px floor (sprayUnit), so a zoomed-out phone
 //           still sees pieces; the view copies the world root's transform,
 //           so the burst stays on the finish as the camera moves.
+// SHINE (K337): one directional light, upper left and toward the viewer,
+// lights every piece from a real 3D normal (its spin in the screen's plane
+// and its flip about its long axis): ambient + diffuse, plus a specular
+// flash mixed toward white - a soft sheen on paper, a short bright flash on
+// foil (shadeNormal). Computed per piece per frame into the tint the view
+// already sets: no shader program (a new one compiles cold at the finish
+// and freezes the win, K307).
 // REDUCED MOTION (the Motion setting): no rain - a full-screen fall is the
 // large-area motion WCAG 2.3.3 asks to avoid - and a small, slow spray:
 // REDUCED_SPRAY_SHARE of the pieces at half speed, with no spin or flutter.
+// The shine keeps its diffuse term and drops the specular flashes.
 //
 // Render-only and bounded: nothing here touches the physics, and every
 // piece dies within RAIN_WINDOW + RAIN_LIFE_MAX (rain) or SPRAY_LIFE_MAX
@@ -102,6 +110,9 @@ const SPRAY_FADE = 0.4;
 // zoom draws the marker radius ~7 px, where unit-sized pieces were specks.
 export const SPRAY_MIN_PX = 16;
 
+// K337 SHINE: the specular strength's top (the slider and the link clamp).
+export const CONFETTI_SHINE_MAX = 2;
+
 // The festive set (0xrrggbb): the path's gold first, then saturated hues
 // that read on the dark page and over any design's gamut, and a warm white.
 export const CONFETTI_COLORS: readonly number[] = [
@@ -109,7 +120,7 @@ export const CONFETTI_COLORS: readonly number[] = [
 ];
 
 // Pool row layout (Float32 fields).
-export const F = 17;
+export const F = 18;
 export const X = 0; // Position (rain: CSS px; spray: world).
 export const Y = 1;
 export const VX = 2; // Velocity per second.
@@ -127,6 +138,7 @@ export const SWAY_RATE = 13;
 export const SWAY_AMP = 14; // Rain: sway speed amplitude, px/s.
 export const COLOR = 15; // 0xrrggbb (exact in f32).
 export const TERM = 16; // Rain: terminal speed px/s; spray: gravity.
+export const MAT = 17; // K337: the material, 0 paper or 1 foil.
 
 export class ConfettiPool {
   readonly capacity: number;
@@ -157,22 +169,34 @@ export interface ConfettiPlan {
   spray: number;
   // Reduced motion: the spray flies at half speed with no spin.
   slow: boolean;
+  // K337: the share of pieces cut from foil, and the specular's strength
+  // (0 = the diffuse light only, as under reduced motion).
+  foil: number;
+  shine: number;
+}
+
+// [0, max], garbage 0.
+function clampNum(v: number, max: number): number {
+  return Number.isFinite(v) ? Math.max(0, Math.min(max, v)) : 0;
 }
 
 // How many pieces a finish throws on a width x height CSS px screen:
 // `amount` scales both effects (clamped to [0, CONFETTI_AMOUNT_MAX]; off,
 // garbage or 0 = none), and the screen scales the rain (rainScreenScale;
 // no screen = a phone's count). Reduced motion drops the rain and keeps
-// REDUCED_SPRAY_SHARE of the spray.
+// REDUCED_SPRAY_SHARE of the spray. K337: `shine` is the specular's
+// strength ([0, CONFETTI_SHINE_MAX]; reduced motion drops it) and
+// `foilShare` the share of pieces cut from foil ([0, 1]); none = no foil,
+// no specular.
 export function confettiPlan(
   amount: number,
   reduced: boolean,
   width = 0,
-  height = 0
+  height = 0,
+  shine = 0,
+  foilShare = 0
 ): ConfettiPlan {
-  const a = Number.isFinite(amount)
-    ? Math.max(0, Math.min(CONFETTI_AMOUNT_MAX, amount))
-    : 0;
+  const a = clampNum(amount, CONFETTI_AMOUNT_MAX);
   const spray = Math.round(SPRAY_PER_AMOUNT * a);
   const rain = RAIN_PER_AMOUNT * a * rainScreenScale(width, height);
   return {
@@ -182,6 +206,8 @@ export function confettiPlan(
       reduced ? Math.round(spray * REDUCED_SPRAY_SHARE) : spray
     ),
     slow: reduced,
+    foil: clampNum(foilShare, 1),
+    shine: reduced ? 0 : clampNum(shine, CONFETTI_SHINE_MAX),
   };
 }
 
@@ -210,13 +236,22 @@ export function sprayUnit(markerRadius: number, pxPerWorld: number): number {
   return Math.max(markerRadius, floor);
 }
 
-// One piece's paper: a strip (70%) or a near square, sized by `len`.
-function paper(d: Float32Array, o: number, len: number, rand: () => number): void {
+// One piece's paper: a strip (70%) or a near square, sized by `len`; foil
+// with probability `foil` (K337). The material takes a draw only when foil
+// is on, so a foil share of 0 throws exactly the pieces it did before.
+function paper(
+  d: Float32Array,
+  o: number,
+  len: number,
+  foil: number,
+  rand: () => number
+): void {
   d[o + LEN] = len;
   d[o + ASPECT] = rand() < 0.3 ? 0.75 + 0.2 * rand() : 0.36 + 0.16 * rand();
   d[o + ROT] = rand() * Math.PI * 2;
   d[o + FLIP] = rand() * Math.PI * 2;
   d[o + COLOR] = CONFETTI_COLORS[Math.floor(rand() * CONFETTI_COLORS.length)];
+  d[o + MAT] = foil > 0 && rand() < foil ? 1 : 0;
 }
 
 // K335: a rain piece's release delay for a uniform u in [0, 1): the inverse
@@ -236,13 +271,15 @@ export function rainReleaseDensity(t: number): number {
   return ((RAIN_TAPER + 1) / RAIN_WINDOW) * Math.pow(1 - t / RAIN_WINDOW, RAIN_TAPER);
 }
 
-// Queue `n` rain pieces over a width x height CSS px screen.
+// Queue `n` rain pieces over a width x height CSS px screen; `foil` is the
+// foil share (K337).
 export function spawnRain(
   pool: ConfettiPool,
   n: number,
   width: number,
   height: number,
-  rand: () => number
+  rand: () => number,
+  foil = 0
 ): void {
   const d = pool.data;
   const s = rainPieceScale(width, height);
@@ -250,7 +287,7 @@ export function spawnRain(
     const i = pool.alloc();
     if (i < 0) return;
     const o = i * F;
-    paper(d, o, (9 + rand() * 7) * s, rand);
+    paper(d, o, (9 + rand() * 7) * s, foil, rand);
     d[o + X] = -0.04 * width + rand() * 1.08 * width;
     // A dense opening that tapers to nothing; the later the release, the
     // higher a piece may start (K335).
@@ -272,7 +309,8 @@ export function spawnRain(
   }
 }
 
-// Burst `n` spray pieces from a ring around (cx, cy), world units.
+// Burst `n` spray pieces from a ring around (cx, cy), world units; `foil`
+// is the foil share (K337).
 export function spawnSpray(
   pool: ConfettiPool,
   n: number,
@@ -280,7 +318,8 @@ export function spawnSpray(
   cy: number,
   unit: number,
   slow: boolean,
-  rand: () => number
+  rand: () => number,
+  foil = 0
 ): void {
   const d = pool.data;
   const pace = slow ? 0.5 : 1;
@@ -295,7 +334,7 @@ export function spawnSpray(
     const r0 = unit * (0.9 + 0.3 * rand());
     // Smaller than the rain's paper: 5-8 CSS px at the usual zooms (K568;
     // 8-14 before).
-    paper(d, o, unit * (0.3 + 0.2 * rand()), rand);
+    paper(d, o, unit * (0.3 + 0.2 * rand()), foil, rand);
     // Reduced motion has no flutter: show each piece's full face.
     if (slow) d[o + FLIP] = 0;
     d[o + X] = cx + c * r0;
@@ -371,9 +410,102 @@ export function stepSpray(pool: ConfettiPool, dt: number): void {
   }
 }
 
+// K337 SHINE. One directional light, upper left and toward the viewer, in
+// the screen's axes (+x right, +y down, +z toward the viewer; the spray's
+// world root never rotates, so its pieces share those axes). The eye looks
+// straight down the screen's normal, V = (0, 0, 1), and H is the half
+// vector normalize(L + V): a piece whose normal is H mirrors the light
+// into the eye. LIGHT_RAW points 53 degrees off the screen's normal, so H
+// sits 26.5 degrees off it, toward the upper left.
+const LIGHT_RAW = [-0.5, -0.62, 0.6] as const;
+const L_N = Math.sqrt(LIGHT_RAW[0] ** 2 + LIGHT_RAW[1] ** 2 + LIGHT_RAW[2] ** 2);
+export const LIGHT: readonly [number, number, number] = [
+  LIGHT_RAW[0] / L_N,
+  LIGHT_RAW[1] / L_N,
+  LIGHT_RAW[2] / L_N,
+];
+const H_N = Math.sqrt(LIGHT[0] ** 2 + LIGHT[1] ** 2 + (LIGHT[2] + 1) ** 2);
+export const HALF: readonly [number, number, number] = [
+  LIGHT[0] / H_N,
+  LIGHT[1] / H_N,
+  (LIGHT[2] + 1) / H_N,
+];
+// Ambient + diffuse: a face-on piece (n = +z) shows its full color, one
+// turned away from the light keeps SHINE_AMBIENT of it, and one turned
+// toward the light brightens past it (each channel saturates at 255).
+// K140's shading, 0.55 + 0.45 |cos flip|, had no light direction.
+export const SHINE_AMBIENT = 0.5;
+export const SHINE_DIFFUSE = (1 - SHINE_AMBIENT) / LIGHT[2];
+// The specular: (n.H)^p, mixed toward white by the strength times the
+// material's peak. Paper is a soft sheen (p = 2^PAPER_SQUARINGS, at most
+// PAPER_SPEC of the way to white at strength 1), foil a short bright flash
+// (p = 2^FOIL_SQUARINGS, reaching white). p is a power of two, so the power
+// is a few multiplies.
+export const PAPER_SPEC = 0.3;
+export const FOIL_SPEC = 1;
+export const PAPER_SQUARINGS = 3;
+export const FOIL_SQUARINGS = 6;
+
+// The specular's mix toward white, in [0, 1], for a front-facing unit normal
+// (nx, ny, nz): shine x the material's peak x (n.H)^p. Its peak is at n = H.
+export function specular(
+  nx: number,
+  ny: number,
+  nz: number,
+  foil: boolean,
+  shine: number
+): number {
+  if (!(shine > 0)) return 0;
+  let h = nx * HALF[0] + ny * HALF[1] + nz * HALF[2];
+  if (!(h > 0)) return 0;
+  const q = foil ? FOIL_SQUARINGS : PAPER_SQUARINGS;
+  for (let j = 0; j < q; j++) h *= h;
+  const s = shine * (foil ? FOIL_SPEC : PAPER_SPEC) * h;
+  return s > 1 ? 1 : s;
+}
+
+// The tint of a piece of `color` whose unit normal is (nx, ny, nz); a piece
+// showing its back (nz < 0) lights as its front, so the normal flips.
+// `shine` scales the specular: 0 is the diffuse light alone (the setting at
+// 0, and reduced motion).
+export function shadeNormal(
+  color: number,
+  nx: number,
+  ny: number,
+  nz: number,
+  foil: boolean,
+  shine: number
+): number {
+  if (nz < 0) {
+    nx = -nx;
+    ny = -ny;
+    nz = -nz;
+  }
+  const ndl = nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2];
+  const k = SHINE_AMBIENT + SHINE_DIFFUSE * (ndl > 0 ? ndl : 0);
+  return litHex(color, k, specular(nx, ny, nz, foil, shine));
+}
+
+// 0xrrggbb scaled by `k` (each channel saturating at 255), then mixed toward
+// white by `s` in [0, 1].
+export function litHex(c: number, k: number, s: number): number {
+  let r = ((c >> 16) & 255) * k;
+  let g = ((c >> 8) & 255) * k;
+  let b = (c & 255) * k;
+  if (r > 255) r = 255;
+  if (g > 255) g = 255;
+  if (b > 255) b = 255;
+  r += (255 - r) * s;
+  g += (255 - g) * s;
+  b += (255 - b) * s;
+  return (Math.round(r) << 16) | (Math.round(g) << 8) | Math.round(b);
+}
+
 // What the view draws for row i: alpha, the two scales' lengths (long side,
-// visible short side) and the shaded tint. `fadeShare` is the share of the
-// life over which the piece fades out (rain: RAIN_FADE of its LIFE).
+// visible short side), the rotation and the lit tint. `spray` picks the
+// spray's fade (the last SPRAY_FADE share of its life; the rain fades over
+// RAIN_FADE s before its backstop); `shine` is the burst's specular
+// strength (ConfettiSim.shine).
 export interface PieceLook {
   alpha: number;
   long: number;
@@ -386,7 +518,8 @@ export function pieceLook(
   d: Float32Array,
   i: number,
   spray: boolean,
-  out: PieceLook
+  out: PieceLook,
+  shine = 0
 ): PieceLook {
   const o = i * F;
   const age = d[o + AGE];
@@ -401,21 +534,24 @@ export function pieceLook(
   out.alpha = Math.max(0, Math.min(1, (life - age) / fade));
   // The flutter: |cos| of the flip phase is the visible width; a floor
   // keeps an edge-on piece a sliver, not a gap in the fall.
-  const w = Math.abs(Math.cos(d[o + FLIP]));
+  const flip = d[o + FLIP];
+  const cf = Math.cos(flip);
+  const sf = Math.sin(flip);
+  const rot = d[o + ROT];
   out.long = d[o + LEN];
-  out.short = d[o + LEN] * d[o + ASPECT] * (0.12 + 0.88 * w);
-  out.rotation = d[o + ROT];
-  // The back side (edge-on) reads darker: shade 0.55 .. 1.
-  out.tint = shadeHex(d[o + COLOR], 0.55 + 0.45 * w);
+  out.short = d[o + LEN] * d[o + ASPECT] * (0.12 + 0.88 * Math.abs(cf));
+  out.rotation = rot;
+  // The normal: +z turned about the long axis a = (cos rot, sin rot, 0) by
+  // the flip, cf (0, 0, 1) + sf (a x z) = (sf sin rot, -sf cos rot, cf).
+  out.tint = shadeNormal(
+    d[o + COLOR],
+    sf * Math.sin(rot),
+    -sf * Math.cos(rot),
+    cf,
+    d[o + MAT] === 1,
+    shine
+  );
   return out;
-}
-
-// 0xrrggbb scaled toward black by `k` in [0, 1].
-export function shadeHex(c: number, k: number): number {
-  const r = Math.round(((c >> 16) & 255) * k);
-  const g = Math.round(((c >> 8) & 255) * k);
-  const b = Math.round((c & 255) * k);
-  return (r << 16) | (g << 8) | b;
 }
 
 // The longest step the pieces take in one frame: after a stall (a hidden
@@ -428,6 +564,9 @@ export const CONFETTI_MAX_DT = 0.1;
 export class ConfettiSim {
   readonly rain = new ConfettiPool(RAIN_CAP);
   readonly spray = new ConfettiPool(SPRAY_CAP);
+  // K337: the last burst's specular strength (pieceLook's `shine`); pieces
+  // still in the air from an earlier burst take it too.
+  shine = 0;
 
   get active(): boolean {
     return this.rain.alive > 0 || this.spray.alive > 0;
@@ -447,13 +586,14 @@ export class ConfettiSim {
   ): boolean {
     let thrown = false;
     if (plan.rain > 0 && width > 0 && height > 0) {
-      spawnRain(this.rain, plan.rain, width, height, rand);
+      spawnRain(this.rain, plan.rain, width, height, rand, plan.foil);
       thrown = true;
     }
     if (plan.spray > 0 && unit > 0 && Number.isFinite(cx + cy)) {
-      spawnSpray(this.spray, plan.spray, cx, cy, unit, plan.slow, rand);
+      spawnSpray(this.spray, plan.spray, cx, cy, unit, plan.slow, rand, plan.foil);
       thrown = true;
     }
+    if (thrown) this.shine = plan.shine;
     return thrown;
   }
 

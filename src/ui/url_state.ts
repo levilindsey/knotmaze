@@ -30,7 +30,10 @@ import {
   TURN_MODEL_DEFAULTS,
   TURN_SPEEDS,
 } from "../game/minotaur_turns";
-import { CONFETTI_AMOUNT_MAX } from "../render/confetti_model";
+import {
+  CONFETTI_AMOUNT_MAX,
+  CONFETTI_SHINE_MAX,
+} from "../render/confetti_model";
 import type {
   PluckCrossings,
   PluckGlow,
@@ -534,6 +537,11 @@ export interface UrlParams {
   // designed burst; 0 = none since K323 merged the on/off switch in).
   // A viewer preference.
   confettiAmount: number;
+  // K337: the confetti's shine - its specular strength in
+  // [0, CONFETTI_SHINE_MAX] (0 = lit by the light, no flashes) and the
+  // share of foil pieces in [0, 1]. Viewer preferences, read at the burst.
+  confettiShine: number;
+  foilShare: number;
   // K180's pluck params (render/pluck_model.ts PLUCK PARAMS): W's amount in
   // [0, PLUCK_WHOLE_MAX] (0 = the pre-K104 pluck), how W meets the unit's
   // crossings, and the glow. Viewer preferences.
@@ -839,6 +847,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minoPull: 0.5,
   minoRefog: true,
   confettiAmount: 1,
+  confettiShine: 1, // K337
+  foilShare: 0.3, // K337
   pluckWhole: 0.75, // K279 (was 0.5, K104's WHOLE_AMP).
   pluckCrossings: "through",
   pluckGlow: "off",
@@ -1153,6 +1163,8 @@ function fromCodecValues(
   p.settleBudget = clampTo(p.settleBudget, SETTLE_BUDGET_MAX);
   p.loadSettle = clampTo(p.loadSettle, LOAD_SETTLE_MAX);
   p.confettiAmount = clampTo(p.confettiAmount, CONFETTI_AMOUNT_MAX);
+  p.confettiShine = clampTo(p.confettiShine, CONFETTI_SHINE_MAX);
+  p.foilShare = clampTo(p.foilShare, 1);
   p.pluckWhole = clampTo(p.pluckWhole, PLUCK_WHOLE_MAX);
   p.markerSize = sanitizeMarkerSize(p.markerSize);
   p.hoverGlow = clampTo(p.hoverGlow, 1);
@@ -1478,6 +1490,12 @@ function readLegacy(
       readNumber(query, "cfa", D.confettiAmount),
       CONFETTI_AMOUNT_MAX
     ),
+    // K337's shine (`&cfh=1.5&cff=0.5`).
+    confettiShine: clampTo(
+      readNumber(query, "cfh", D.confettiShine),
+      CONFETTI_SHINE_MAX
+    ),
+    foilShare: clampTo(readNumber(query, "cff", D.foilShare), 1),
     // K180's pluck params (`&pw=1&pcx=ride&pgl=fallback`).
     pluckWhole: clampTo(readNumber(query, "pw", D.pluckWhole), PLUCK_WHOLE_MAX),
     pluckCrossings: readChoice(query, "pcx", PLUCK_CROSSINGS, D.pluckCrossings),

@@ -51,7 +51,10 @@ import {
   isAutoSpeed,
   readsDetail,
 } from "../render/background_model";
-import { CONFETTI_AMOUNT_MAX } from "../render/confetti_model";
+import {
+  CONFETTI_AMOUNT_MAX,
+  CONFETTI_SHINE_MAX,
+} from "../render/confetti_model";
 import { MARKER_SIZE_MAX, MARKER_SIZE_MIN } from "../render/marker_glyphs";
 import {
   INDICATOR_SCALE_MAX,
@@ -1393,6 +1396,41 @@ export function buildPanel(
       callbacks.onConfettiChange();
     }
   );
+  // K337: the confetti's shine (its specular strength) and the share of
+  // foil pieces, which shows only while the shine is on. Daily-exempt,
+  // like the amount; both apply at the next finish.
+  const confettiShineRow = row(
+    fPath, p, "confettiShine",
+    {
+      label: "Confetti shine",
+      min: 0,
+      max: CONFETTI_SHINE_MAX,
+      keyScale: 0.05,
+      pointerScale: 0.01,
+      format: (v: number) => v.toFixed(2),
+    },
+    "How brightly the confetti flashes as pieces turn through the light: 1 = the default, 0 = lit but no flashes, up to 2x. Reduced motion keeps the light and drops the flashes.",
+    D.confettiShine, () => {
+      params.confettiShine = Math.round(params.confettiShine * 100) / 100;
+      callbacks.onConfettiChange();
+    }
+  );
+  const foilShareRow = row(
+    fPath, p, "foilShare",
+    {
+      label: "Foil confetti",
+      min: 0,
+      max: 1,
+      keyScale: 0.05,
+      pointerScale: 0.01,
+      format: (v: number) => v.toFixed(2),
+    },
+    "The share of pieces that are foil: foil flashes near white for a moment as it turns through the light, while paper shows a soft sheen. 0 = all paper, 1 = all foil.",
+    D.foilShare, () => {
+      params.foilShare = Math.round(params.foilShare * 100) / 100;
+      callbacks.onConfettiChange();
+    }
+  );
   // K98: the markers' diameter in thread widths. Daily-exempt (only the
   // look). No step, like the confetti amount: an edit keeps 2 decimals.
   const markerSizeRow = row(
@@ -2558,6 +2596,8 @@ export function buildPanel(
     tapToPanRow.hidden = !fab;
     movePadRow.hidden = !fab;
     confettiAmountRow.hidden = !fab;
+    confettiShineRow.hidden = !fab || params.confettiAmount <= 0;
+    foilShareRow.hidden = confettiShineRow.hidden || params.confettiShine <= 0;
     markerSizeRow.hidden = !fab;
     resetPathBtn.hidden = !fab;
     pulseSpacingRow.hidden = !fab;

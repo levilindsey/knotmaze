@@ -174,7 +174,7 @@ export const LIVE_EFFECTS = {
     "minoGiveUp", "minoRoamMin", "minoTurnPull", "minoGuardSight",
     "minoGuardAccuracy", "minoStalkerAccuracy",
   ],
-  onConfettiChange: ["confettiAmount"],
+  onConfettiChange: ["confettiAmount", "confettiShine", "foilShare"],
   onAudioChange: [
     "soundMode", "pitchSpace", "octaves", "rootNote", "tonicEmphasis",
     "soundSpeed",

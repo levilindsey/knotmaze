@@ -207,6 +207,9 @@ export const DAILY_EXEMPT_KEYS = [
   // K140's finish confetti: how a finish celebrates, not what was played.
   // Proposed for Levi's review with K140.
   "confettiAmount",
+  // K337's confetti shine and foil share: the same celebration's look.
+  "confettiShine",
+  "foilShare",
   // K98's marker size: only the look of the markers. Proposed for Levi's
   // review with K98 (K57).
   "markerSize",
