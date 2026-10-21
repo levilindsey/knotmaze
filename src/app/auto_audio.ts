@@ -5,7 +5,7 @@ import type { SongScheduler } from "../audio/song_scheduler";
 import { SCARBOROUGH_FAIR } from "../audio/songs";
 import type { PhysicsHost } from "../physics/physics_host";
 import type { PanelSettings } from "../ui/tweakpane_panel";
-import type { UrlParams } from "../ui/url_state";
+import { clockOf, type UrlParams } from "../ui/url_state";
 import {
   findValidCtrl,
   nearestValidCtrl,
@@ -200,6 +200,16 @@ export function createAutoAudio(deps: AutoAudioDeps, scene: SceneRef) {
     if (!scene.ps) return;
     if (!audioMap.audioAssign || settings.muted) {
       synth.cancelScheduled();
+      return;
+    }
+    // K114: under the beat rider the player's moves are the music: each
+    // departure plucks its run's note on the beat's audio time
+    // (app/beat_frame.ts). No song or random plucks play underneath, and
+    // nothing here may cancel those notes (cancelScheduled drops every
+    // voice not yet sounding).
+    if (clockOf(params) === "beat" && scene.fabricController !== null) {
+      audioMap.nextRandomPluck = 0;
+      songSched.reset();
       return;
     }
     const nowS = performance.now() / 1000;
