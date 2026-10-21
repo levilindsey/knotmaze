@@ -83,6 +83,20 @@ describe("K137 stage 3b sword tag", () => {
   });
 });
 
+describe("K137 stage 3c sprint tag", () => {
+  it("says sprint was used after the sword's tag, only once used", () => {
+    const t = title({ ...BASE, catches: 1, hearts: 2, swordTaken: 4, sprintUsed: true, snapped: 0 });
+    expect(t.endsWith(" · \u{1F402} 1 · ❤️ 2 left · ⚔️ on move 4 · ⚡ used · snapped 0")).toBe(true);
+    for (const none of [
+      title({ ...BASE, catches: 0, sprintUsed: false }),
+      title({ ...BASE, catches: 0, sprintUsed: null }),
+      title({ ...BASE, catches: 0 }),
+    ]) {
+      expect(none).not.toContain("⚡");
+    }
+  });
+});
+
 describe("K137 stage 2 aids tags", () => {
   it("ends the title with the spool's share used and the hints used", () => {
     const t = title({ ...BASE, cuts: 0, spool: { used: 9, cap: 11 }, hintsUsed: 2 });
