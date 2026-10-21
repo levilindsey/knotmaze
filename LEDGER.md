@@ -376,10 +376,10 @@ Next free ID: K724.
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
-  - owner: agent `a8880b1b86770b4ed` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 01:09, 1.5 h cap ~02:39)
-  - branch: `worktree-agent-a8880b1b86770b4ed`, worktree `.claude/worktrees/agent-a8880b1b86770b4ed`; last commit: `6c2068d`
+  - owner: nobody since 2026-10-21 01:45 (merged; agent `a8880b1b86770b4ed` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `f4aa1b0`
   - evidence: `docs/design/K138_plan.md`
-  - next: the planner pass: the plan, the K138 s1 brief, questions for Levi
+  - next: launch s1 (the rule kit, ice runs, the color rule) from docs/design/K138_s1.md on ports 5390-5393; s2-s8 per the K138_plan.md stage order
   - brief: `docs/design/K138_plan.md`
 - **K708** · K137 sims for lives and the sword (s3a step 7, unrun): teach the K80 turn sim
   (.claude/probes/K80/turns2/) to respawn and count catches, then run its six cells
