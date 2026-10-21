@@ -638,7 +638,14 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       // K120: the move pad shows while the keys are live (knot mode too:
       // there it hides). K224: and the panel is closed (an open panel is
       // the whole screen on a phone, and the pad sat on its rows).
-      movePad.setShown(settings.movePad && keysLive() && !panel.isOpen());
+      // K713: and no walker mode is on (Lead and Delay refuse every move;
+      // the keys still toast why).
+      movePad.setShown(
+        settings.movePad &&
+          keysLive() &&
+          !panel.isOpen() &&
+          !scene.fabricController?.walkerMode
+      );
       // K80 turns 3a: the pad's center waits while the turn minotaur is on.
       movePad.setWait(scene.turnMino !== null);
       deps.cutTick?.(); // K114: the scissors, beside the pad.

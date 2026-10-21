@@ -529,6 +529,12 @@ export class OffscreenIndicators {
     });
   }
 
+  // K698: the chrome it keeps clear of (env.avoid), for the toast
+  // (ui/share.ts setToastAvoid), so the two never keep separate lists.
+  chrome(): ReadonlyArray<Element | null> {
+    return this.env.avoid();
+  }
+
   add(target: IndicatorTarget): IndicatorHandle {
     const style = target.style ?? DARK_DISC;
     const el = document.createElement("button");
