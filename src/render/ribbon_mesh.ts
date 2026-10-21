@@ -52,6 +52,257 @@ function addGapAttributes(
 }
 
 
+// ROUND JOINS (K580 s3). A sample that turns past ROUND_DOT_START (a 110
+// deg turn) stops mitering on its outer side: the strip's outer edge
+// follows the round-joined ideal (every point within the half-width of
+// the centerline) instead. The miter put the outer vertex up to 2h out
+// along the sample TANGENT's normal, and at a cusp with unequal legs that
+// tangent follows one leg: the vertex landed h past the stroke's edges (a
+// thorn, K580's a's J), and the chord from it to the next outer vertex cut
+// inside the next leg's edge (a notch, the i's joint in "ai"). A round
+// sample instead gets ROUND_ARC_SEGMENTS extra vertices from a pool past
+// the strip's 2n: arc points around the sample at the half-width, swept
+// from the incoming leg's outer normal to the outgoing leg's, plus B, the
+// outgoing leg's own corner. The incoming quad keeps the sample's main
+// outer vertex (A, the incoming leg's corner), the outgoing quad's outer
+// index is rewired to B, and a fan from the inner vertex covers A..B.
+// Both inner and outer vertices sit on the TRUE outer bisector of the two
+// normalized legs (a - b), not the tangent's normal. The concave clamp is
+// unchanged (the inner vertex keeps master's distance, 0.3h at a cusp).
+// CONTINUITY: between 110 and 120 deg (ROUND_DOT_FULL, where the old 2x
+// miter clamp began) every round vertex blends, by a smoothstep of the
+// turn's cosine, from master's miter vertex to its round position, so the
+// extra vertices start collapsed on the miter vertex and a turn swept
+// through the threshold moves the outline continuously. Below 110 deg
+// nothing changes: every vertex is bit-identical to the plain miter.
+// The 1-degree sweep test bounds the largest step (ribbon_round.test.ts).
+export const ROUND_ARC_SEGMENTS = 8;
+/** cos(110 deg): a sharper turn starts to round. */
+export const ROUND_DOT_START = -0.3420201433256687;
+/** cos(120 deg): from here the join is fully round. */
+export const ROUND_DOT_FULL = -0.5;
+
+// The round joins one extrusion found, in sample order: the sample, its
+// outer side (0 = left, vertex 2i; 1 = right, vertex 2i + 1) and the
+// ROUND_ARC_SEGMENTS pool vertex positions (the arc's interior points,
+// then B). Grows by doubling, so steady state allocates nothing.
+export class RoundJoins {
+  count = 0;
+  sample: Int32Array;
+  side: Uint8Array;
+  pos: Float32Array;
+
+  constructor(capacity = 4) {
+    this.sample = new Int32Array(capacity);
+    this.side = new Uint8Array(capacity);
+    this.pos = new Float32Array(capacity * ROUND_ARC_SEGMENTS * 2);
+  }
+
+  // Append a join; returns its first float in `pos`.
+  push(sample: number, side: number): number {
+    if (this.count === this.sample.length) {
+      const cap = this.sample.length * 2;
+      const s = new Int32Array(cap);
+      s.set(this.sample);
+      this.sample = s;
+      const d = new Uint8Array(cap);
+      d.set(this.side);
+      this.side = d;
+      const p = new Float32Array(cap * ROUND_ARC_SEGMENTS * 2);
+      p.set(this.pos);
+      this.pos = p;
+    }
+    const j = this.count++;
+    this.sample[j] = sample;
+    this.side[j] = side;
+    return j * ROUND_ARC_SEGMENTS * 2;
+  }
+}
+
+// The strip's vertex computation, pure (no GPU), so tests can run it:
+// writes [lx, ly, rx, ry] per sample into out[0, 4n) and refills `joins`
+// with the round samples. See update() for the arguments.
+export function extrudeRibbon(
+  out: Float32Array,
+  joins: RoundJoins,
+  positions: Float32Array,
+  tangents: Float32Array,
+  n: number,
+  closed: boolean,
+  halfWidth: number,
+  offset = 0,
+  widthMul: Float32Array | null = null
+): void {
+  joins.count = 0;
+  for (let i = 0; i < n; i++) {
+    const s = (offset + i) * 2;
+    const sPrev = (offset + ((i - 1 + n) % n)) * 2;
+    const sNext = (offset + ((i + 1) % n)) * 2;
+    const cx = positions[s];
+    const cy = positions[s + 1];
+
+    // Miter: at a sharp join the perpendicular offset must lengthen to
+    // halfWidth / cos(half-angle) along the bisector (which the
+    // centered-difference tangent already is), or the outline dimples at
+    // every kink apex.
+    let ax = cx - positions[sPrev];
+    let ay = cy - positions[sPrev + 1];
+    let bx = positions[sNext] - cx;
+    let by = positions[sNext + 1] - cy;
+    // An OPEN ribbon's tips have no join: the wrapped "neighbor" above is
+    // the far end of the thread, and mitering against that phantom leg
+    // flares the tip into a wedge. Duplicate the one real leg so the tip
+    // gets a plain perpendicular cap (dot = 1 -> w = halfWidth).
+    if (!closed) {
+      if (i === 0) {
+        ax = bx;
+        ay = by;
+      } else if (i === n - 1) {
+        bx = ax;
+        by = ay;
+      }
+    }
+    let la = Math.hypot(ax, ay);
+    let lb = Math.hypot(bx, by);
+    // ZERO-LENGTH LEGS: a bridge's tucked tip collapses its last samples
+    // onto one point, so a leg can have no direction. Normalizing the
+    // zero vector left it zero, dot came out 0 - read as a 90-degree turn
+    // - and the miter widened those samples to 1.41x: the tip cap flared
+    // past the ribbon's sides as thin spurs ("sticky-outy bits" at every
+    // tucked bridge tip). Borrow the other leg; both zero = straight.
+    if (la < 1e-6 && lb < 1e-6) {
+      ax = bx = 1;
+      ay = by = 0;
+      la = lb = 1;
+    } else if (la < 1e-6) {
+      ax = bx;
+      ay = by;
+      la = lb;
+    } else if (lb < 1e-6) {
+      bx = ax;
+      by = ay;
+      lb = la;
+    }
+    ax /= la;
+    ay /= la;
+    bx /= lb;
+    by /= lb;
+    const dot = ax * bx + ay * by;
+    // cos^2(half-angle) = (1 + cos(angle)) / 2; clamp keeps miter <= 2x
+    // (only blends now: past 120 deg the outer side is round).
+    const cosHalf = Math.sqrt(Math.max((1 + dot) / 2, 0.25));
+    const w = halfWidth / cosHalf;
+
+    // CONCAVE-SIDE CLAMP: where the centerline turns tighter than the
+    // offset length, the inner vertices of consecutive samples cross
+    // past the local center of curvature and the strip self-overlaps -
+    // rendered as a jagged sawtooth seam inside the fill (the
+    // "parallel threads merged" user artifact was this, a single
+    // over-tight fold). The inner offset may never exceed the local
+    // turn radius; the ribbon instead thins into the fold. Floor at
+    // 30% width so the strip never fully collapses.
+    let wInner = w;
+    let innerCap = Infinity;
+    const sinHalf = Math.sqrt(Math.max((1 - dot) / 2, 0));
+    if (sinHalf > 1e-4) {
+      const radius = ((la + lb) / 4) * (cosHalf / sinHalf);
+      innerCap = Math.max(radius * 0.95, halfWidth * 0.3);
+      wInner = Math.min(w, innerCap);
+    }
+    const cross = ax * by - ay * bx;
+    let wLeft = cross > 0 ? wInner : w;
+    let wRight = cross > 0 ? w : wInner;
+    if (widthMul) {
+      const m = widthMul[i];
+      if (m > 1) {
+        // SWELL (appearance FX): the outer side grows freely, but the
+        // concave side still may never pass the local turn radius - a
+        // swollen strip would fold back into the sawtooth seam.
+        const grown = w * m;
+        const grownInner = Math.min(grown, Math.max(innerCap, wInner));
+        wLeft = cross > 0 ? grownInner : grown;
+        wRight = cross > 0 ? grown : grownInner;
+      } else {
+        wLeft *= m;
+        wRight *= m;
+      }
+    }
+
+    const nx = -tangents[s + 1];
+    const ny = tangents[s];
+    let lx = cx + nx * wLeft;
+    let ly = cy + ny * wLeft;
+    let rx = cx - nx * wRight;
+    let ry = cy - ny * wRight;
+
+    if (dot < ROUND_DOT_START) {
+      // ROUND JOIN (see ROUND_ARC_SEGMENTS). t: 0 = master's miter, 1 = round.
+      const u = (ROUND_DOT_START - dot) / (ROUND_DOT_START - ROUND_DOT_FULL);
+      const t = u >= 1 ? 1 : u * u * (3 - 2 * u);
+      const outerRight = cross > 0;
+      const sg = outerRight ? 1 : -1;
+      // The true outer bisector: a - b points out of the turn (|a - b| =
+      // 2 sin(turn / 2) >= 1.6 here).
+      let mx = ax - bx;
+      let my = ay - by;
+      const ml = Math.sqrt(mx * mx + my * my);
+      mx /= ml;
+      my /= ml;
+      // Outer normals of the two legs, and the arc's radius.
+      const nax = sg * ay;
+      const nay = -sg * ax;
+      const nbx = sg * by;
+      const nby = -sg * bx;
+      const rad = widthMul ? halfWidth * widthMul[i] : halfWidth;
+      const wIn = outerRight ? wLeft : wRight;
+      // Master's outer (pm) and inner (qm) vertices start the blend.
+      const pmx = outerRight ? rx : lx;
+      const pmy = outerRight ? ry : ly;
+      const qmx = outerRight ? lx : rx;
+      const qmy = outerRight ? ly : ry;
+      const ox = pmx + (cx + nax * rad - pmx) * t;
+      const oy = pmy + (cy + nay * rad - pmy) * t;
+      const ix = qmx + (cx - mx * wIn - qmx) * t;
+      const iy = qmy + (cy - my * wIn - qmy) * t;
+      if (outerRight) {
+        rx = ox;
+        ry = oy;
+        lx = ix;
+        ly = iy;
+      } else {
+        lx = ox;
+        ly = oy;
+        rx = ix;
+        ry = iy;
+      }
+      // The arc from leg a's outer normal to leg b's, through the
+      // bisector: the turn angle in ROUND_ARC_SEGMENTS equal steps.
+      const step = (sg * Math.acos(dot < -1 ? -1 : dot)) / ROUND_ARC_SEGMENTS;
+      const cs = Math.cos(step);
+      const sn = Math.sin(step);
+      const base = joins.push(i, outerRight ? 1 : 0);
+      const P = joins.pos;
+      let ex = nax;
+      let ey = nay;
+      for (let k = 1; k < ROUND_ARC_SEGMENTS; k++) {
+        const e2 = ex * cs - ey * sn;
+        ey = ex * sn + ey * cs;
+        ex = e2;
+        P[base + (k - 1) * 2] = pmx + (cx + ex * rad - pmx) * t;
+        P[base + (k - 1) * 2 + 1] = pmy + (cy + ey * rad - pmy) * t;
+      }
+      // B, exactly on leg b's outer edge.
+      P[base + (ROUND_ARC_SEGMENTS - 1) * 2] = pmx + (cx + nbx * rad - pmx) * t;
+      P[base + (ROUND_ARC_SEGMENTS - 1) * 2 + 1] = pmy + (cy + nby * rad - pmy) * t;
+    }
+
+    out[i * 4] = lx;
+    out[i * 4 + 1] = ly;
+    out[i * 4 + 2] = rx;
+    out[i * 4 + 3] = ry;
+  }
+}
+
 export class RibbonMesh {
   mesh: Mesh;
   readonly sampleCount: number;
@@ -67,6 +318,20 @@ export class RibbonMesh {
   private tanData: Float32Array | null = null;
   private maskData: Float32Array | null = null;
   private maskSample: Float32Array | null = null;
+  // ROUND JOINS: the static attributes a pool vertex copies from its
+  // sample, the index data (quads, then ROUND_ARC_SEGMENTS fan triangles
+  // per pool slot), the pool's size (allocated lazily, doubling: a ribbon
+  // that never turns sharply never grows) and the slots' current owners.
+  private uvData: Float32Array;
+  private arcData: Float32Array | null = null;
+  private keyData: Float32Array | null = null;
+  private indexData: Uint32Array;
+  private readonly quadCount: number;
+  private readonly joins = new RoundJoins();
+  private slotCap = 0;
+  private slotUsed = 0;
+  private slotSample = new Int32Array(0);
+  private slotSide = new Uint8Array(0);
 
   constructor(
     sampleCount: number,
@@ -80,6 +345,7 @@ export class RibbonMesh {
     this.vertexData = new Float32Array(sampleCount * 4); // 2 verts per sample.
 
     const uvs = new Float32Array(sampleCount * 4);
+    this.uvData = uvs;
     for (let i = 0; i < sampleCount; i++) {
       const u = i / (closed ? sampleCount : Math.max(sampleCount - 1, 1));
       uvs[i * 4] = u;
@@ -89,7 +355,9 @@ export class RibbonMesh {
     }
 
     const quadCount = closed ? sampleCount : sampleCount - 1;
+    this.quadCount = quadCount;
     const indices = new Uint32Array(quadCount * 6);
+    this.indexData = indices;
     for (let i = 0; i < quadCount; i++) {
       const a = i * 2;
       const b = i * 2 + 1;
@@ -122,6 +390,7 @@ export class RibbonMesh {
         arcPos[i * 4 + 2] = c;
         arcPos[i * 4 + 3] = s;
       }
+      this.arcData = arcPos;
       this.tanData = new Float32Array(sampleCount * 4);
       this.maskData = new Float32Array(sampleCount * 2 * GAP_SLOTS).fill(-1);
       this.maskSample = new Float32Array(sampleCount * GAP_SLOTS).fill(-1);
@@ -138,6 +407,7 @@ export class RibbonMesh {
         key[i * 4 + 2] = chain;
         key[i * 4 + 3] = i;
       }
+      this.keyData = key;
       addFloatAttribute(geometry, "aKey", key, 2);
     }
     this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
@@ -175,6 +445,10 @@ export class RibbonMesh {
         md[(k * 2 + 1) * GAP_SLOTS + c] = v;
       }
     }
+    // A round join's pool vertices take their sample's ids.
+    for (let j = 0; j < this.slotUsed; j++) {
+      this.copySlotStatic(md, GAP_SLOTS, j);
+    }
     uploadAll(this.mesh.geometry, "aMaskId");
   }
 
@@ -183,7 +457,10 @@ export class RibbonMesh {
   // sample to read. `widthMul` (REVEAL mask, Stage 22) scales each
   // sample's extrusion width in [0, 1]: unrevealed samples collapse to the
   // centerline (zero-area triangles rasterize nothing). null = all 1, the
-  // zero-cost default - the multiply never runs.
+  // zero-cost default - the multiply never runs. The vertex math is
+  // extrudeRibbon (pure, tested); round joins (ROUND_ARC_SEGMENTS) also
+  // fill the pool vertices past 2n and rewire the strip when the set of
+  // round samples changes.
   update(
     positions: Float32Array,
     tangents: Float32Array,
@@ -192,109 +469,22 @@ export class RibbonMesh {
     widthMul: Float32Array | null = null
   ): void {
     const n = this.sampleCount;
-    for (let i = 0; i < n; i++) {
-      const s = (offset + i) * 2;
-      const sPrev = (offset + ((i - 1 + n) % n)) * 2;
-      const sNext = (offset + ((i + 1) % n)) * 2;
-      const cx = positions[s];
-      const cy = positions[s + 1];
-
-      // Miter: at a sharp join the perpendicular offset must lengthen to
-      // halfWidth / cos(half-angle) along the bisector (which the
-      // centered-difference tangent already is), or the outline dimples at
-      // every kink apex.
-      let ax = cx - positions[sPrev];
-      let ay = cy - positions[sPrev + 1];
-      let bx = positions[sNext] - cx;
-      let by = positions[sNext + 1] - cy;
-      // An OPEN ribbon's tips have no join: the wrapped "neighbor" above is
-      // the far end of the thread, and mitering against that phantom leg
-      // flares the tip into a wedge. Duplicate the one real leg so the tip
-      // gets a plain perpendicular cap (dot = 1 -> w = halfWidth).
-      if (!this.closed) {
-        if (i === 0) {
-          ax = bx;
-          ay = by;
-        } else if (i === n - 1) {
-          bx = ax;
-          by = ay;
-        }
-      }
-      let la = Math.hypot(ax, ay);
-      let lb = Math.hypot(bx, by);
-      // ZERO-LENGTH LEGS: a bridge's tucked tip collapses its last samples
-      // onto one point, so a leg can have no direction. Normalizing the
-      // zero vector left it zero, dot came out 0 - read as a 90-degree turn
-      // - and the miter widened those samples to 1.41x: the tip cap flared
-      // past the ribbon's sides as thin spurs ("sticky-outy bits" at every
-      // tucked bridge tip). Borrow the other leg; both zero = straight.
-      if (la < 1e-6 && lb < 1e-6) {
-        ax = bx = 1;
-        ay = by = 0;
-        la = lb = 1;
-      } else if (la < 1e-6) {
-        ax = bx;
-        ay = by;
-        la = lb;
-      } else if (lb < 1e-6) {
-        bx = ax;
-        by = ay;
-        lb = la;
-      }
-      ax /= la;
-      ay /= la;
-      bx /= lb;
-      by /= lb;
-      const dot = ax * bx + ay * by;
-      // cos^2(half-angle) = (1 + cos(angle)) / 2; clamp keeps miter <= 2x.
-      const cosHalf = Math.sqrt(Math.max((1 + dot) / 2, 0.25));
-      const w = halfWidth / cosHalf;
-
-      // CONCAVE-SIDE CLAMP: where the centerline turns tighter than the
-      // offset length, the inner vertices of consecutive samples cross
-      // past the local center of curvature and the strip self-overlaps -
-      // rendered as a jagged sawtooth seam inside the fill (the
-      // "parallel threads merged" user artifact was this, a single
-      // over-tight fold). The inner offset may never exceed the local
-      // turn radius; the ribbon instead thins into the fold. Floor at
-      // 30% width so the strip never fully collapses.
-      let wInner = w;
-      let innerCap = Infinity;
-      const sinHalf = Math.sqrt(Math.max((1 - dot) / 2, 0));
-      if (sinHalf > 1e-4) {
-        const radius = ((la + lb) / 4) * (cosHalf / sinHalf);
-        innerCap = Math.max(radius * 0.95, halfWidth * 0.3);
-        wInner = Math.min(w, innerCap);
-      }
-      const cross = ax * by - ay * bx;
-      let wLeft = cross > 0 ? wInner : w;
-      let wRight = cross > 0 ? w : wInner;
-      if (widthMul) {
-        const m = widthMul[i];
-        if (m > 1) {
-          // SWELL (appearance FX): the outer side grows freely, but the
-          // concave side still may never pass the local turn radius - a
-          // swollen strip would fold back into the sawtooth seam.
-          const grown = w * m;
-          const grownInner = Math.min(grown, Math.max(innerCap, wInner));
-          wLeft = cross > 0 ? grownInner : grown;
-          wRight = cross > 0 ? grown : grownInner;
-        } else {
-          wLeft *= m;
-          wRight *= m;
-        }
-      }
-
-      const nx = -tangents[s + 1];
-      const ny = tangents[s];
-      this.vertexData[i * 4] = cx + nx * wLeft;
-      this.vertexData[i * 4 + 1] = cy + ny * wLeft;
-      this.vertexData[i * 4 + 2] = cx - nx * wRight;
-      this.vertexData[i * 4 + 3] = cy - ny * wRight;
-    }
+    const joins = this.joins;
+    extrudeRibbon(
+      this.vertexData,
+      joins,
+      positions,
+      tangents,
+      n,
+      this.closed,
+      halfWidth,
+      offset,
+      widthMul
+    );
+    if (joins.count > 0 || this.slotUsed > 0) this.syncJoins();
     uploadAll(this.mesh.geometry, "aPosition");
     // The gap shader's under tangent (arc-length margin): both verts of a
-    // sample share the sample tangent.
+    // sample share the sample tangent, and so do its pool vertices.
     const td = this.tanData;
     if (td) {
       for (let i = 0; i < n; i++) {
@@ -306,7 +496,168 @@ export class RibbonMesh {
         td[i * 4 + 2] = tx;
         td[i * 4 + 3] = ty;
       }
+      for (let j = 0; j < joins.count; j++) {
+        const s = (offset + joins.sample[j]) * 2;
+        const tx = tangents[s];
+        const ty = tangents[s + 1];
+        let f = (2 * n + j * ROUND_ARC_SEGMENTS) * 2;
+        for (let k = 0; k < ROUND_ARC_SEGMENTS; k++) {
+          td[f++] = tx;
+          td[f++] = ty;
+        }
+      }
       uploadAll(this.mesh.geometry, "aTan");
+    }
+  }
+
+  // ROUND JOINS, per frame: grow the pool if this frame has more round
+  // samples than any before, rewire the strip if the round samples (or
+  // their outer sides) changed, then copy the pool positions in.
+  private syncJoins(): void {
+    const joins = this.joins;
+    const count = joins.count;
+    if (count > this.slotCap) this.growSlots(count);
+    let same = count === this.slotUsed;
+    for (let j = 0; same && j < count; j++) {
+      if (
+        joins.sample[j] !== this.slotSample[j] ||
+        joins.side[j] !== this.slotSide[j]
+      ) {
+        same = false;
+      }
+    }
+    if (!same) this.rewire();
+    const P = joins.pos;
+    const V = this.vertexData;
+    const base = 4 * this.sampleCount;
+    for (let f = 0, e = count * ROUND_ARC_SEGMENTS * 2; f < e; f++) {
+      V[base + f] = P[f];
+    }
+  }
+
+  // Make the pool hold `need` slots (doubling, at least 2): every
+  // per-vertex array grows to 2n + cap * ROUND_ARC_SEGMENTS vertices and
+  // the index array to the quads plus ROUND_ARC_SEGMENTS fan triangles per
+  // slot (zeros: degenerate until wired). Contents are kept.
+  private growSlots(need: number): void {
+    const K = ROUND_ARC_SEGMENTS;
+    let cap = Math.max(this.slotCap * 2, 2);
+    while (cap < need) cap *= 2;
+    const verts = 2 * this.sampleCount + cap * K;
+    const g = this.mesh.geometry;
+    const grow = (old: Float32Array, per: number, fill = 0): Float32Array => {
+      const a = new Float32Array(verts * per);
+      a.set(old);
+      if (fill !== 0) a.fill(fill, old.length);
+      return a;
+    };
+    this.vertexData = grow(this.vertexData, 2);
+    g.getBuffer("aPosition").data = this.vertexData;
+    this.uvData = grow(this.uvData, 2);
+    g.getBuffer("aUV").data = this.uvData;
+    if (this.arcData) {
+      this.arcData = grow(this.arcData, 2);
+      g.getBuffer("aArcPos").data = this.arcData;
+    }
+    if (this.tanData) {
+      this.tanData = grow(this.tanData, 2);
+      g.getBuffer("aTan").data = this.tanData;
+    }
+    if (this.maskData) {
+      this.maskData = grow(this.maskData, GAP_SLOTS, -1);
+      g.getBuffer("aMaskId").data = this.maskData;
+    }
+    if (this.keyData) {
+      this.keyData = grow(this.keyData, 2);
+      g.getBuffer("aKey").data = this.keyData;
+    }
+    const idx = new Uint32Array(this.quadCount * 6 + cap * K * 3);
+    idx.set(this.indexData);
+    this.indexData = idx;
+    g.indexBuffer.data = idx;
+    const ss = new Int32Array(cap);
+    ss.set(this.slotSample);
+    this.slotSample = ss;
+    const sd = new Uint8Array(cap);
+    sd.set(this.slotSide);
+    this.slotSide = sd;
+    this.slotCap = cap;
+  }
+
+  // Wire this frame's round joins into the strip. Slot j's pool vertices
+  // are v0 = 2n + j * K .. v0 + K - 1 (the arc's interior points, then B).
+  // Sample i's outgoing quad (quad i) takes B in place of the main outer
+  // vertex; the incoming quad keeps the main vertex (A); K triangles fan
+  // from the inner (hub) vertex over A, the arc and B.
+  private rewire(): void {
+    const K = ROUND_ARC_SEGMENTS;
+    const n = this.sampleCount;
+    const I = this.indexData;
+    const fan0 = this.quadCount * 6;
+    for (let j = 0; j < this.slotUsed; j++) {
+      const i = this.slotSample[j];
+      if (i < this.quadCount) {
+        if (this.slotSide[j] === 1) {
+          I[i * 6 + 1] = 2 * i + 1;
+          I[i * 6 + 3] = 2 * i + 1;
+        } else {
+          I[i * 6] = 2 * i;
+        }
+      }
+      I.fill(0, fan0 + j * K * 3, fan0 + (j + 1) * K * 3);
+    }
+    const joins = this.joins;
+    for (let j = 0; j < joins.count; j++) {
+      const i = joins.sample[j];
+      const side = joins.side[j];
+      const v0 = 2 * n + j * K;
+      const outer = 2 * i + side;
+      const hub = 2 * i + 1 - side;
+      if (i < this.quadCount) {
+        if (side === 1) {
+          I[i * 6 + 1] = v0 + K - 1;
+          I[i * 6 + 3] = v0 + K - 1;
+        } else {
+          I[i * 6] = v0 + K - 1;
+        }
+      }
+      let f = fan0 + j * K * 3;
+      let prev = outer;
+      for (let k = 0; k < K; k++) {
+        I[f++] = hub;
+        I[f++] = prev;
+        I[f++] = v0 + k;
+        prev = v0 + k;
+      }
+      this.slotSample[j] = i;
+      this.slotSide[j] = side;
+    }
+    this.slotUsed = joins.count;
+    // The pool vertices' static attributes: their sample's, on the outer
+    // edge (aUV.y is the across-width coordinate, so the casing and the
+    // highlight run on around the arc).
+    for (let j = 0; j < this.slotUsed; j++) {
+      this.copySlotStatic(this.uvData, 2, j);
+      if (this.arcData) this.copySlotStatic(this.arcData, 2, j);
+      if (this.keyData) this.copySlotStatic(this.keyData, 2, j);
+      if (this.maskData) this.copySlotStatic(this.maskData, GAP_SLOTS, j);
+    }
+    const g = this.mesh.geometry;
+    g.indexBuffer.update(this.indexData.byteLength);
+    uploadAll(g, "aUV");
+    if (this.arcData) uploadAll(g, "aArcPos");
+    if (this.keyData) uploadAll(g, "aKey");
+    if (this.maskData) uploadAll(g, "aMaskId");
+  }
+
+  // Copy slot j's sample's outer-vertex values (`per` floats a vertex)
+  // to its ROUND_ARC_SEGMENTS pool vertices.
+  private copySlotStatic(a: Float32Array, per: number, j: number): void {
+    const K = ROUND_ARC_SEGMENTS;
+    const src = (2 * this.slotSample[j] + this.slotSide[j]) * per;
+    let dst = (2 * this.sampleCount + j * K) * per;
+    for (let k = 0; k < K; k++) {
+      for (let c = 0; c < per; c++) a[dst++] = a[src + c];
     }
   }
 
