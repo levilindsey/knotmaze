@@ -2146,17 +2146,17 @@ export class Joinery {
           kHi = Math.min(cnt - 1, kHi);
         }
         if (kHi - kLo < 1) continue;
-        const V = fill.vertices;
         const pts: number[] = [];
         for (let k = kLo; k <= kHi; k++) {
           const kk = X.closed ? ((k % cnt) + cnt) % cnt : k;
-          for (let c = 0; c < 4; c += 2) {
-            const vx = V[kk * 4 + c];
-            const vy = V[kk * 4 + c + 1];
-            pts.push(vx, vy);
-            const r = Math.hypot(vx - rec.jx, vy - rec.jy);
-            if (r > rec.rMax) rec.rMax = r;
-          }
+          // K580 s3: a round join's sample brings its fan's pairs, as long
+          // as the strip stays within COVER_STRIP_PTS pairs (its share of
+          // the mesh's capacity): one pair is kept for every later sample.
+          fill.coverPairs(kk, pts, COVER_STRIP_PTS - pts.length / 4 - (kHi - k));
+        }
+        for (let q = 0; q < pts.length; q += 2) {
+          const r = Math.hypot(pts[q] - rec.jx, pts[q + 1] - rec.jy);
+          if (r > rec.rMax) rec.rMax = r;
         }
         fm = jointTop && !X.dives ? fmTop : fmBottom;
         fm.pushStrip(pts, rec.rb);
