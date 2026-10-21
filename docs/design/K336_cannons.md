@@ -1,7 +1,7 @@
 # K336 + K186: side cannons and streamers; no confetti under reduced motion
 
-Ledger: K336 (the handle). K186 rides it. One stage, opus, 2 h cap. Start
-only after K578 (the still-maze cache) has merged to master.
+Ledger: K336 (the handle). K186 rides it. One stage, opus, 2 h cap.
+Build on master.
 
 ## Levi's calls
 
@@ -54,10 +54,14 @@ only after K578 (the still-maze cache) has merged to master.
   - They are viewer preferences in `DAILY_EXEMPT_KEYS`
     (`src/ui/daily_link.ts` :152).
   - `CODEC_PARAMS` ends with `foilShare`. `CODEC_VERSION` is 8.
-- **K578** puts a cache of the still maze under the confetti. Read its
-  handoff in `docs/design/K578.md` before you start: new pieces must draw
-  in the confetti's own layer, above the cache, and must raise only the
-  confetti's visual need.
+- **K578** (a cache of the still maze under the confetti,
+  `docs/design/K578.md`) is parked and unmerged. If it resumes, it
+  rebases onto this lane. So that its cache can still treat a fall as
+  confetti-only:
+  - draw every new piece inside `ConfettiLayer`, above the world root;
+  - raise no visual need but the one `throwConfetti` already raises
+    (`Flag.OVERLAY`);
+  - stay out of `src/app/frame_loop.ts`.
 
 ## Steps
 
@@ -122,8 +126,8 @@ only after K578 (the still-maze cache) has merged to master.
      `.claude/probes/K140/`) at amounts 1 and 3, cannons on and off,
      under the perf lock. Also time the pure sim per frame (K140's
      `bench_sim.mjs`).
-   - Confirm in the page that a fall with cannons still uses K578's cache.
-     Use its probe switch: cache on and off, 0 px.
+   - Confirm that the layer's animating flag holds the loop awake until
+     the last cannon piece and streamer dies, then lets it stop.
    - `npm test` and `npm run build` pass. The codec, defaults and exempt
      pins grow only by the appended keys. The golden dailies, K87 and the
      knot-mode golden don't move.
