@@ -4,6 +4,7 @@ import { GLYPHS2 } from "./glyph_switch";
 import { buildSectionRuns, setGamutConfig } from "../core/section_colors";
 import { buildWalkGraph } from "../core/walk_graph";
 import type { WalkGraph } from "../core/walk_graph";
+import type { TangleGraph } from "../core/types";
 import type { ParticleSystem } from "../physics/particle_system";
 import type { PhysicsHost } from "../physics/physics_host";
 import { RibbonRenderer } from "../render/ribbon_renderer";
@@ -127,6 +128,7 @@ export function createScene(deps: SceneDeps): Scene {
   let renderer: RibbonRenderer | null = null;
   let debug: DebugRenderer | null = null;
   let walkGraph: WalkGraph | null = null;
+  let tangle: TangleGraph | null = null; // K114 walker (SceneRef.tangle)
   // The build's strand hue groups (maze plan; undefined in knot mode) +
   // strand count, kept for live recolors (the Look color controls).
   let buildHueGroup: number[] | undefined;
@@ -256,6 +258,7 @@ export function createScene(deps: SceneDeps): Scene {
     // need: no maze plan (scene_graph skips it), hueGroup undefined, so
     // section colors take their per-chain fallback (section_colors).
     walkGraph = params.mazeFabric ? (builtWalk ?? buildWalkGraph(graph)) : null;
+    tangle = params.mazeFabric ? graph : null;
 
     renderer = new RibbonRenderer(ps, {
       threadWidth: params.threadWidth,
@@ -393,6 +396,9 @@ export function createScene(deps: SceneDeps): Scene {
     },
     get walkGraph() {
       return walkGraph;
+    },
+    get tangle() {
+      return tangle;
     },
     get buildHueGroup() {
       return buildHueGroup;

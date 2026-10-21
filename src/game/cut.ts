@@ -27,8 +27,10 @@
 import type { WalkGraph } from "../core/walk_graph";
 import { runsToExit, walkDistances } from "../core/walk_graph";
 
-export type CutMode = "off" | "on";
-export const CUT_MODES: readonly CutMode[] = ["off", "on"];
+// K114 walker (game/walker.ts): "lead" and "delay" cut against a walker
+// instead of for the player's own walk. Appended, so links keep their index.
+export type CutMode = "off" | "on" | "lead" | "delay";
+export const CUT_MODES: readonly CutMode[] = ["off", "on", "lead", "delay"];
 
 // One player action: a move (its first run; the runs it carries on along
 // follow from the cuts) or a cut. FabricMazeController.actions lists them.

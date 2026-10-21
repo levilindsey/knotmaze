@@ -343,7 +343,7 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // 190, K139: collapse (COLLAPSE_MODES order, game/collapse.ts).
   choice("collapse", ["off", "finish", "free"]),
   // 191, K114: cut (CUT_MODES order, game/cut.ts).
-  choice("cut", ["off", "on"]),
+  choice("cut", ["off", "on", "lead", "delay"]), // K114 walker: lead, delay appended
   // 192, K137 stage 3a: lives (0 off, 1..5 hearts; game/lives.ts).
   num("lives"),
 ]);

@@ -231,7 +231,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["minoGuardAccuracyRt", "number"],
   ["minoStalkerAccuracyRt", "number"],
   ["collapse", "enum", ["off", "finish", "free"]], // K139
-  ["cut", "enum", ["off", "on"]], // K114
+  ["cut", "enum", ["off", "on", "lead", "delay"]], // K114 (+ the walker's lead, delay)
   ["lives", "number"], // K137 stage 3a
 ];
 
