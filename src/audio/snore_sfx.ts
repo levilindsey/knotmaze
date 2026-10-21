@@ -2,16 +2,16 @@
 // (public/snoring-cat-snore.mp3: 64 kbps mono MP3, 7.8 KB, encoded from
 // hopnbop's single_cat_snore.wav) that the panel's "Made by Snoring Cat" link
 // plays on hover and on touch-down (ui/snore_link.ts drives the link). This
-// module owns the sound: the lazy load, the decode once the autoplay gate has
-// opened, the level, the "never stacked" rule and the clock the link's
+// module owns the sound: the lazy load, the decode once an audio context
+// exists, the level, the "never stacked" rule and the clock the link's
 // traversal delay reads. It knows nothing of the DOM or of KnotSynth beyond
 // the SampleHost slice, so the tests drive it with fakes. Lore:
-// .claude/rules/gameplay-audio.md (K325).
+// .claude/rules/gameplay-audio.md (K325, K720).
 
 // What play() did. "started": the snore began now. "sounding": one is already
 // playing, so this call added nothing (never stacked). "unavailable": nothing
 // could sound - silenced in the settings, not loaded or decoded yet, or the
-// audio gate or context is not open.
+// audio gate is closed or no context runs.
 export type PlayResult = "started" | "sounding" | "unavailable";
 
 // The snore's level before the master volume. Measured offline at volume 1
@@ -24,11 +24,17 @@ export const SNORE_GAIN = 0.5;
 
 // The slice of KnotSynth this module plays through.
 export interface SampleHost {
-  // Runs cb once the autoplay gate is open (at once if it already is).
-  whenUnlocked(cb: () => void): void;
-  // Null while the gate is closed; rejects on undecodable bytes.
+  // K720: runs cb once an audio context exists (at once if one does). With
+  // sound off none is made, even once the autoplay gate is open.
+  whenOpen(cb: () => void): void;
+  // K720: makes the context for a play, if the gate is open and sound is on;
+  // true when one exists.
+  open(): boolean;
+  // Null while no context exists and none may be made, never once one
+  // exists; rejects on undecodable bytes.
   decodeSample(bytes: ArrayBuffer): Promise<AudioBuffer | null>;
-  // False when nothing could sound (gate closed, context not running).
+  // False when nothing could sound (gate closed, sound off, context not
+  // running).
   playSample(buf: AudioBuffer, gain: number): boolean;
   // Seconds from scheduling a sound to hearing it (0 when unknown).
   outputLatency(): number;
@@ -55,7 +61,7 @@ export class SnoreSfx {
   private buffer: AudioBuffer | null = null;
   private loading = false; // A fetch is in flight.
   private decoding = false; // A decode is in flight.
-  private gateWait = false; // Registered with host.whenUnlocked.
+  private ctxWait = false; // Registered with host.whenOpen.
   private broken = false; // The bytes would not decode: give up.
   // The clock of the last snore: when play() started it, how long it sounds
   // (the sample plus the output latency), and the latency itself.
@@ -98,9 +104,12 @@ export class SnoreSfx {
   // Plays the snore unless one is still sounding. Silent (and "unavailable")
   // while the settings silence it, and until the file has loaded and decoded:
   // a call that finds it not ready starts the load, so the next one can play.
+  // K720: it is a play, so it also makes the audio context the decode needs
+  // (with sound off since the page loaded, none exists yet).
   play(): PlayResult {
     if (!this.enabled()) return "unavailable";
     if (!this.buffer) {
+      this.host.open();
       this.preload();
       return "unavailable";
     }
@@ -134,7 +143,7 @@ export class SnoreSfx {
           this.bytes = null;
           this.stats.decodes++;
         } else {
-          this.awaitGate(); // No context yet.
+          this.awaitContext(); // No context yet.
         }
       },
       () => {
@@ -145,11 +154,11 @@ export class SnoreSfx {
     );
   }
 
-  private awaitGate(): void {
-    if (this.gateWait) return;
-    this.gateWait = true;
-    this.host.whenUnlocked(() => {
-      this.gateWait = false;
+  private awaitContext(): void {
+    if (this.ctxWait) return;
+    this.ctxWait = true;
+    this.host.whenOpen(() => {
+      this.ctxWait = false;
       this.decodeWhenPossible();
     });
   }

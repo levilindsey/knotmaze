@@ -1,4 +1,4 @@
-import type { KnotSynth } from "../audio/knot_synth";
+import { soundIsOn, type KnotSynth } from "../audio/knot_synth";
 import type { PitchAssignment } from "../audio/pitch_space";
 import { noteToFreq } from "../audio/pitch_space";
 import type { SongScheduler } from "../audio/song_scheduler";
@@ -85,6 +85,12 @@ export function createAutoAudio(deps: AutoAudioDeps, scene: SceneRef) {
     startRipple,
     tugAt,
   } = deps;
+  // K720: the synth reads the sound setting itself, so with sound off
+  // (muted, or sound mode none) its gate creates no AudioContext and nothing
+  // plays; the first play with sound on creates it. Installed here, the
+  // audio module's one hook in main(), which builds this before any input
+  // can arrive (main() runs on synchronously from the synth's construction).
+  synth.setSoundOn(() => soundIsOn(settings.muted, params.soundMode));
   // ---- Stage 20: auto plucks (random + music modes), RENDER-ONLY: the
   // sound plays and the segment's unit vibrates (render/pluck_overlay.ts) -
   // no grab, no pull, no wake, so they never disturb the knot and may play
@@ -223,8 +229,11 @@ export function createAutoAudio(deps: AutoAudioDeps, scene: SceneRef) {
     } else if (params.soundMode === "music") {
       // K101: notes start on the audio clock's grid, handed out
       // MUSIC_LOOKAHEAD ahead so a slow frame cannot delay or stretch them.
-      // Before the autoplay gate (silent plucks, visuals only) the grid runs
-      // on wall time with no lookahead.
+      // While no context runs (before the autoplay gate: silent plucks,
+      // visuals only) the grid runs on wall time with no lookahead. K720: the
+      // song is a play, so it makes the context (the gate open, sound on);
+      // with sound off since the page loaded, the gate made none.
+      synth.open();
       const audioNow = synth.audioTime();
       const clock = audioNow === null ? "wall" : "audio";
       const now = audioNow ?? nowS;

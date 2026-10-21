@@ -6,55 +6,64 @@ import {
   type SampleHost,
 } from "../../src/audio/snore_sfx";
 
-// K325: the snore as a sound - the lazy load, the decode once the autoplay
-// gate is open, the level, the never-stacked rule and the clock behind the
-// link's traversal delay. A fake host and a fake clock stand in for
-// KnotSynth and performance.now.
+// K325: the snore as a sound - the lazy load, the decode once an audio
+// context exists (K720: a play with sound on makes one), the level, the
+// never-stacked rule and the clock behind the link's traversal delay. A fake
+// host and a fake clock stand in for KnotSynth and performance.now.
 
 const DURATION = 0.915;
 
 interface FakeHost extends SampleHost {
-  unlocked: boolean;
+  hasCtx: boolean; // An audio context exists.
+  canOpen: boolean; // open() may make one (the gate open, sound on).
+  opens: number; // open() calls.
   decodeFails: boolean;
   playOk: boolean;
   latency: number;
   decodeCalls: number;
   received: ArrayBuffer[];
   plays: Array<{ gain: number }>;
-  unlock(): void;
+  create(): void; // A context comes to exist (as KnotSynth's ensure() does).
 }
 
-function makeHost(unlocked = true): FakeHost {
+function makeHost(hasCtx = true, canOpen = hasCtx): FakeHost {
   let waiters: Array<() => void> = [];
   const h: FakeHost = {
-    unlocked,
+    hasCtx,
+    canOpen,
+    opens: 0,
     decodeFails: false,
     playOk: true,
     latency: 0,
     decodeCalls: 0,
     received: [],
     plays: [],
-    whenUnlocked(cb) {
-      if (h.unlocked) cb();
+    whenOpen(cb) {
+      if (h.hasCtx) cb();
       else waiters.push(cb);
+    },
+    open() {
+      h.opens++;
+      if (!h.hasCtx && h.canOpen) h.create();
+      return h.hasCtx;
     },
     decodeSample(bytes) {
       h.decodeCalls++;
       h.received.push(bytes);
-      if (!h.unlocked) return Promise.resolve(null);
+      if (!h.hasCtx) return Promise.resolve(null);
       if (h.decodeFails) return Promise.reject(new Error("bad bytes"));
       return Promise.resolve({ duration: DURATION } as AudioBuffer);
     },
     playSample(_buf, gain) {
-      if (!h.playOk) return false;
+      if (!h.hasCtx || !h.playOk) return false;
       h.plays.push({ gain });
       return true;
     },
     outputLatency() {
       return h.latency;
     },
-    unlock() {
-      h.unlocked = true;
+    create() {
+      h.hasCtx = true;
       const w = waiters;
       waiters = [];
       for (const cb of w) cb();
@@ -77,8 +86,8 @@ interface Rig {
   failNextLoad: { on: boolean };
 }
 
-function rig(unlocked = true): Rig {
-  const host = makeHost(unlocked);
+function rig(hasCtx = true, canOpen = hasCtx): Rig {
+  const host = makeHost(hasCtx, canOpen);
   const enabled = { on: true };
   const clock = { t: 0 };
   const failNextLoad = { on: false };
@@ -135,18 +144,56 @@ describe("SnoreSfx loading", () => {
     expect(r.host.received[0]!.byteLength).toBe(r.loads.original.byteLength);
   });
 
-  it("waits for the audio gate before decoding", async () => {
-    const r = rig(false);
+  it("waits for an audio context before decoding", async () => {
+    const r = rig(false); // No context, and none may be made (gate closed).
     await ready(r);
     expect(r.loads.n).toBe(1);
     expect(r.sfx.play()).toBe("unavailable");
+    expect(r.host.hasCtx).toBe(false);
     expect(r.sfx.stats.decodes).toBe(0);
-    r.host.unlock();
+    r.host.create(); // Another sound makes the context.
     await flush();
     expect(r.sfx.stats.decodes).toBe(1);
-    // The bytes are fetched once, the gate is waited on once.
+    // The bytes are fetched once, the context is waited on once.
     expect(r.loads.n).toBe(1);
     expect(r.sfx.play()).toBe("started");
+  });
+
+  it("a play makes the context it needs (K720)", async () => {
+    // The gate is open and sound is on, but nothing has played yet, so no
+    // context exists (sound was off until now). The panel's preload fetched
+    // the bytes and waits; the first play makes the context and decodes.
+    const r = rig(false, true);
+    await ready(r);
+    expect(r.host.hasCtx).toBe(false);
+    expect(r.sfx.stats.decodes).toBe(0);
+    expect(r.sfx.play()).toBe("unavailable");
+    expect(r.host.opens).toBe(1);
+    expect(r.host.hasCtx).toBe(true);
+    await flush();
+    expect(r.sfx.stats).toEqual({ fetches: 1, decodes: 1, plays: 0 });
+    expect(r.sfx.play()).toBe("started");
+    expect(r.host.opens).toBe(1); // A ready snore asks for nothing more.
+  });
+
+  it("a play with nothing preloaded makes the context, then loads (K720)", async () => {
+    const r = rig(false, true);
+    expect(r.sfx.play()).toBe("unavailable");
+    expect(r.host.hasCtx).toBe(true);
+    await flush();
+    expect(r.loads.n).toBe(1);
+    expect(r.sfx.stats.decodes).toBe(1);
+    expect(r.sfx.play()).toBe("started");
+  });
+
+  it("a silenced play makes no context and fetches nothing (K720)", async () => {
+    const r = rig(false, true);
+    r.enabled.on = false;
+    expect(r.sfx.play()).toBe("unavailable");
+    await flush();
+    expect(r.host.opens).toBe(0);
+    expect(r.host.hasCtx).toBe(false);
+    expect(r.loads.n).toBe(0);
   });
 
   it("retries a failed fetch on the next preload", async () => {
