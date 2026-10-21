@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K726.
+Next free ID: K727.
 
 ## Waiting on Levi
 
@@ -607,6 +607,9 @@ Every other item below waits on the trigger it names.
 - **K698** · Phone toasts cover the bottom controls (Pixel 411x753): the cut refusal over Undo (K703,
   gone by 1.7 s; a touch still reaches Undo), the lives toasts over the move pad, the walker toasts over
   .km-walk and the pad (K717 `out/lives`, `out/walker`). Place toasts clear of the controls.
+- **K726** · Phone sitting 3 (sonnet, after K720 merges): the K718 glyph cases at the Pixel real
+  size, the sword on real touches, K720 (no AudioContext under snd=none).
+  `docs/design/K726_phone.md`
 
 ## Residuals (known, not fixed)
 
