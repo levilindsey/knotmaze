@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K721.
+Next free ID: K724.
 
 ## Waiting on Levi
 
@@ -187,6 +187,11 @@ Next free ID: K721.
 - **K715** · adb deaths: a Muse hopnbop session ran headless Godot 4.7.2 (--import, GUT); an editor
   exit runs adb kill-server (shutdown_adb_on_exit, default true; editor settings written at death 2,
   23:50:21; a Godot crash 23:31:56 before death 1). Set it false (claude-config Setup-GodotAndroid.ps1)?
+- **K721** · K137 sword calls (s3a calls 3, 4), built as recommended: in real time the flee counts
+  runs walked (alt: seconds); while it flees the telegraph turns pale blue 0x8fd0ff (alt: no
+  telegraph, the glow alone). `K137_s3b.md` Handoff, The calls
+- **K722** · The sword glyph is a placeholder (`marker_glyphs.ts` sword, K137 s3b) until Levi
+  designs it
 
 ## In progress
 
@@ -1313,6 +1318,9 @@ Every other item below waits on the trigger it names.
   vs 0.031); the 0.15 arm-drop rule leaves every glyph junction recordless at xh 2; the stadium is
   unmeasured on a glyphs2 maze title; U spikes over 0.01 in ai (0.014, 0.017).
   `docs/design/K580_s5.md`.
+- **K723** · K137 s3a page checks unrun: a broken run turning the minotaur plan and the fire, and
+  the finish banner hearts row (`K137_s3a.md` Handoff); the sword has had no real-phone pass (phone
+  sitting 3)
 
 ## Approved, to schedule (2026-10-11)
 
