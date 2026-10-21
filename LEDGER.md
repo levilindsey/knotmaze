@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K778.
+Next free ID: K785.
 
 ## Waiting on Levi
 
@@ -254,6 +254,15 @@ Next free ID: K778.
 - **K777** · Refresh the open-work report (K585, `.claude/probes/report_20261020/`) with the 30-odd
   Waiting on Levi items filed since 2026-10-20, so they can be marked on the phone? A sonnet agent,
   about 0.5% of the week (offered 2026-10-21 morning)
+- **K778** · K138 s3: no Undo control shows while the rules are on (Undo works only inside the
+  controller; the Stranded banner needs fragile runs or collapse, which turn the rules off), so a
+  regretted one-way move leaves only Restart. An Undo control beside the rules, or a Stranded-style
+  check that offers it? (docs/design/K138_s3.md, Residuals)
+- **K779** · K137 s4 lures and snares: 20 calls built as recommended, alternatives in the
+  docs/design/K137_s4.md Handoff. The weightiest: both tools take no turn; a lure carries 6 runs and
+  a cut or broken run blocks it; a lured minotaur drops its hunt; a snare goes only on a run at your
+  junction and holds 3 turns; a held monster can still catch you; stocks refill only on a level
+  restart
 
 ## In progress
 
@@ -488,6 +497,11 @@ merged):
   and the deferred catch (`pendingCatch.t = 1`) never lands (inferred). Fix: land a pending catch
   when its animation is snapped or the rider departs; check the walker too; make `beat_phone.mjs`
   check B need the heart or toast
+- **K784** · Phone sitting 6 on real touches: one-way runs (K138 s3, ow), lures and snares (K137 s4,
+  lur and snr; emulated only so far), the K775 overflow, and a touch press on an unrevealed hidden
+  run (the K764 case)
+- **K783** · Simulated games for lures and snares (the K708 harness: catches per game at stocks 0-3)
+  to set their stocks; saved attempts do not record the tools yet (K137 s4 Handoff)
 - **K579** · GPU confetti: upload each launch once, move the pieces in a vertex shader, no per-frame
   CPU sim or upload. Pays if K318 raises the counts (Levi asked 10-20); needs K307's warm-up;
   streamers need a CPU sim. The phone's fall isn't CPU-bound (K578). K628.
@@ -1433,13 +1447,6 @@ Every other item below waits on the trigger it names.
   can overstate a maze that rewards a longer wait at a turnstile (`src/game/rule_search.ts`)
 - **K762** · K138 s2: after a backtrack, a turnstile can refuse re-entering the run just retraced
 - **K763** · K138 s2: the HUD reads 0 / 0 found when no hidden run was placed
-- **K764** · A press on a hidden, burnt or cut run grabs and tugs the unseen thread instead of
-  panning, which gives its position away (from the code: `grabAt`/`onThread` in
-  `src/app/input_pointer.ts` skip none of them; fix: skip them there). K138 s3 starts with it.
-  K767 phone, unsettled: every press landed inside a shown thread's reach, so it grabbed by design.
-  From the code, a press with no thread in reach pans while `exploreOn`; the open case is
-  `exploreOn` false (`ps.nearest`, `input_pointer.ts` near 149 and 159). Probe rework:
-  `.claude/probes/K767/notes.md`
 - **K769** · K137 s3d: with the minotaur traveling by length, the extra monsters still step one run
   a move; under `clk=beat` the sleeper rows show and the extras are laid (read from the code,
   untested)
@@ -1455,6 +1462,18 @@ Every other item below waits on the trigger it names.
 - **K775** · K138 s2: the hidden runs HUD row (found / of) overflows its box and runs under the menu
   button at hid=2 and hid=4 on the phone (a 288 px value in a 327 px box, the last word cut off;
   K767, `.claude/probes/K767/out/hidden/stills/tiles/`)
+- **K780** · K138 s3 one-way traps, inferred from the rules, not seen: a slide over ice crosses
+  several runs, and nothing checks that every vertex still reaches the exit under ice plus one-way
+  (the census checks the start only); at a turnstile whose open pair leaves out a one-way arrival,
+  the refused backtrack can leave no move (docs/design/K138_s3.md, Residuals)
+- **K781** · K138 s3 one-way chevrons: a placeholder design, each its own mesh and draw call (116 at
+  seed 7, ow 0.4; not timed), unchecked under the fog and the thread reveal. With the color rule
+  leaving no solvable draw (seed 1, alternate, 0.4) nothing is one-way and the HUD row reads 0
+- **K782** · K137 s4 lure and snare residuals (docs/design/K137_s4.md Handoff): the Snared toast
+  fires before the monster reaches the snare; an armed tool lights any run on hover; a live switch
+  to travel by length keeps snares that never spring, rings drawn; the follower first step skips the
+  snare check; under length a lure clears one hop late (read, untested); untested under clk=beat;
+  the ring is a stand-in for a glyph
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1728,6 +1747,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K764** · A press on a hidden, burnt or cut run grabs and tugs the unseen thread instead of panning, which gives its position away (from the code: `grabAt`/`onThread` in `src/app/input_pointer.ts` skip none of them; fix: skip them there). Dropped: not reproduced (K138 s3, desktop, both hosts): a press on an unrevealed hidden run pans, since every unseen span reaches the ribbons as explore pieces (exploreOn true) and the pickers skip it; cut, broken and burnt runs share that code; touch goes to K784 (2026-10-21).
 - **K767** · Phone sitting 5 on real touches (turnstiles, hidden runs, the beat rider): all three play; found the beat-plus-hunter catch bug (K774) and the hidden runs HUD overflow (K775); K764 unsettled; sheets in .claude/probes/K767/out/. Done in caa4f8ea (2026-10-21).
 - **K749** · Phone sitting 4 (04:23-04:41, tested build 4a1dd4d5): K698 toasts clear every control on real touches (settled gap 9.9 css px, none cut off); ice slides and both color rules pass with backtracks; sprint passes on both clocks; K738 confirmed as a real overlap and K744 blips seen at real size; `.claude/probes/K749/out/`. Done in 4a1dd4d5 (2026-10-21).
 - **K713** · K114 walker leftovers: the walker glow (K739 asks Levi about its size), no move pad in Lead or Delay, par at most P for an upper-bound par; in K698. Done in e558c7ef (2026-10-21).
