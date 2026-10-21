@@ -743,6 +743,16 @@ export interface UrlParams {
   // slays it (oneuse). Free play only (not daily-exempt).
   sword: SwordMode;
   swordMoves: number;
+  // K137 stage 2, the player's aids (free play; none daily-exempt).
+  // spool (4.15, game/spool.ts): Ariadne's spool holds the fewest runs
+  // times (1 + spoolSlack); a move past it is refused, a retrace reels in.
+  // It forces the string look (pathVizOf) and turns the cut off.
+  spool: boolean;
+  spoolSlack: number;
+  // hints (4.28, game/hints.ts): 0 off or 1..5 hints a solve, each lighting
+  // the next good arm for 2 s. compass: an arrow at the head along it.
+  hints: number;
+  compass: boolean;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1039,6 +1049,11 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K137 stage 3b: no sword; its flee 8 moves when on.
   sword: "off",
   swordMoves: SWORD_MOVES_DEFAULT,
+  // K137 stage 2: no aids; the spool's slack 0.3 when on (call 1).
+  spool: false,
+  spoolSlack: 0.3,
+  hints: 0,
+  compass: false,
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1072,7 +1087,10 @@ export function fireSettingsOf(
 // (FabricMazeController's FabricRules). Cutting is the classic game's only:
 // never with a minotaur or the burn race.
 export function fabricRulesOf(
-  p: Pick<UrlParams, "fragile" | "parMode" | "parSlack" | "collapse" | "cut" | "gameMode">
+  p: Pick<
+    UrlParams,
+    "fragile" | "parMode" | "parSlack" | "collapse" | "cut" | "gameMode" | "spool" | "spoolSlack" | "hints"
+  >
 ): FabricRules {
   return {
     fragile: p.fragile,
@@ -1080,7 +1098,16 @@ export function fabricRulesOf(
     parSlack: p.parSlack,
     collapse: p.collapse,
     cut: p.gameMode === "classic" ? p.cut : "off",
+    // K137 stage 2: the spool's slack (null = off) and the hints a solve.
+    spool: p.spool ? p.spoolSlack : null,
+    hints: p.hints,
   };
+}
+
+// K137 stage 2: the path look the game plays. Ariadne's spool shows its
+// yarn, so it plays the string look (the path stack) whatever pathViz says.
+export function pathVizOf(p: Pick<UrlParams, "pathViz" | "spool">): PathViz {
+  return p.spool ? "string" : p.pathViz;
 }
 
 // [HOVER_GLOW_WIDTH_MIN, HOVER_GLOW_WIDTH_MAX]; garbage reads as the default.
@@ -1775,6 +1802,12 @@ function readLegacy(
     // K137 stage 3b's sword (`&swd=timed&swm=12`; PARAM_RANGES clamps 4..20).
     sword: readChoice(query, "swd", SWORD_MODES, D.sword),
     swordMoves: readNumber(query, "swm", D.swordMoves),
+    // K137 stage 2's aids (`&sp2=1&sps=.5&hn=3&cmp=1`; PARAM_RANGES clamps
+    // the slack to 0.1..1 and the hints to 0..5).
+    spool: readBool(query, "sp2", D.spool),
+    spoolSlack: readNumber(query, "sps", D.spoolSlack),
+    hints: readNumber(query, "hn", D.hints),
+    compass: readBool(query, "cmp", D.compass),
   };
 }
 

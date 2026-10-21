@@ -141,6 +141,8 @@ import {
 } from "./collapse";
 import type { CutMode, CutResult, FabricAction } from "./cut";
 import { carryChain, cutVerdict, distancesToExit } from "./cut";
+import { hintsOf, liveDistances, nextGoodArm } from "./hints";
+import { spoolCapacity, spoolRefuses, spoolShareUsed } from "./spool";
 
 // K137: the solve's rules beyond the clock: fragile runs and par (K139:
 // and collapse; K114: cut). Change them only with a reset() after (main.ts
@@ -151,6 +153,10 @@ export interface FabricRules {
   parSlack?: number;
   collapse?: CollapseMode;
   cut?: CutMode;
+  // K137 stage 2: the spool's slack (null or absent = no spool) and the
+  // hints a solve (0 = none).
+  spool?: number | null;
+  hints?: number;
 }
 
 export type FabricTapResult =
@@ -159,7 +165,8 @@ export type FabricTapResult =
   | "reject" // the run is not incident to the current head (or K137: broken; K114: cut, or not the run a contracted move carries on along)
   | "noop" // after solving (or a K114 burn-race loss, K137 stranded or out of strokes)
   | "win" // advanced onto the exit tail (K139 free collapse: the move that ended the game)
-  | "smolder"; // K114: refused, the fire reaches the arm's far end first
+  | "smolder" // K114: refused, the fire reaches the arm's far end first
+  | "spool"; // K137 s2: refused, the move would pay yarn out past the spool
 
 export class FabricMazeController {
   readonly walk: WalkGraph;
@@ -258,6 +265,18 @@ export class FabricMazeController {
   carry: number[] = [];
   distToExit: Map<string, number>;
 
+  // K137 stage 2, the player's aids. The spool: its slack (null = off;
+  // change it only with a reset() after) and its capacity in runs (fixed at
+  // reset(); Infinity = no spool). The yarn paid out is pathEdges.length.
+  // Hints a solve and the hints used, and the chalk marks (junction ids):
+  // reset() leaves those two alone, because Undo replays through it; a real
+  // restart calls clearAids() (main.ts restartSolve).
+  spoolSlack: number | null = null;
+  spoolCap = Infinity;
+  hintsMax = 0;
+  hintsUsed = 0;
+  chalk = new Set<string>();
+
   constructor(
     walk: WalkGraph,
     trailMode = false,
@@ -280,10 +299,77 @@ export class FabricMazeController {
     this.fragile = collapsing ? "off" : rules.fragile ?? "off";
     this.parMode = collapsing ? "off" : rules.parMode ?? "off";
     this.parSlack = rules.parSlack ?? PAR_SLACK_DEFAULT;
+    // K137 s2: the spool's slack (null: no spool).
+    this.spoolSlack = rules.spool ?? null;
     // K114: cutting only with every rule above off and no fire (main.ts
     // passes `cut` for the classic game only, so never with a minotaur).
-    const plain = !collapsing && this.fragile === "off" && this.parMode === "off" && !this.fire;
+    // K137 s2: nor with the spool (the yarn is the path stack).
+    const plain =
+      !collapsing &&
+      this.fragile === "off" &&
+      this.parMode === "off" &&
+      !this.fire &&
+      this.spoolSlack === null;
     this.cutMode = plain ? rules.cut ?? "off" : "off";
+    // K137 s2: the hints a solve; none in the walker's modes (it walks).
+    const walker = this.cutMode === "lead" || this.cutMode === "delay";
+    this.hintsMax = walker ? 0 : hintsOf(rules.hints ?? 0);
+  }
+
+  // K137 s2: a real restart (not Undo's replay) clears the hints used and
+  // the chalk marks.
+  clearAids(): void {
+    this.hintsUsed = 0;
+    this.chalk.clear();
+  }
+
+  // K137 s2: the yarn paid out (runs), and whether the spool is on.
+  get spoolOn(): boolean {
+    return Number.isFinite(this.spoolCap);
+  }
+  get spoolUsed(): number {
+    return this.pathEdges.length;
+  }
+  // The share of the spool paid out, 0..1 (0 without a spool).
+  get spoolShare(): number {
+    return spoolShareUsed(this.pathEdges.length, this.spoolCap);
+  }
+
+  // K137 s2: hints left this solve; useHint() spends one (false when none
+  // is left, the hints are off or the solve is over).
+  get hintsLeft(): number {
+    return Math.max(0, this.hintsMax - this.hintsUsed);
+  }
+  useHint(): boolean {
+    if (this.hintsLeft <= 0 || this.solved) return false;
+    this.hintsUsed++;
+    return true;
+  }
+
+  // K137 s2: the next good arm from the head, for a hint and the compass:
+  // the first run of the shortest route to the exit over the runs still
+  // there (never a broken, cut or burnt one), or -1 (solved, lost, at the
+  // exit, or no route left). It ignores the minotaur (it still points to
+  // the exit) and the spool (a refused arm can still be the good one).
+  goodArm(): number {
+    if (this.choices().length === 0) return -1;
+    const fire = this.fire;
+    const L = fire ? this.fireL : 0;
+    const gone = this.breakable || this.cuts.size > 0;
+    const live =
+      gone || fire
+        ? (eid: number): boolean =>
+            !this.broken(eid) && !(fire && runBurnAt(this.walk, fire, eid, L).state === "burnt")
+        : undefined;
+    return nextGoodArm(this.walk, liveDistances(this.walk, live), this.head, live);
+  }
+
+  // K137 s2: chalk a tick on a junction (the head's by default), or rub it
+  // out. True when the junction is marked afterwards.
+  toggleChalk(at: string = this.head): boolean {
+    if (this.chalk.delete(at)) return false;
+    this.chalk.add(at);
+    return true;
   }
 
   reset(): void {
@@ -297,6 +383,9 @@ export class FabricMazeController {
     this.openRuns ??= runsToExit(this.walk);
     this.fewestRuns = this.openRuns.get(this.walk.start) ?? Infinity;
     this.par = parFor(this.fewestRuns, this.parSlack);
+    // K137 s2: the spool holds par's measure times (1 + slack).
+    this.spoolCap =
+      this.spoolSlack === null ? Infinity : spoolCapacity(this.fewestRuns, this.spoolSlack);
     this.parLost = false;
     this.fireLive = this.fireBuilt;
     this.fireLost = false;
@@ -332,7 +421,7 @@ export class FabricMazeController {
       // "noop", so no saved list holds one; a replay of a stranded game's
       // taps ends stranded.
       const r = Number.isInteger(eid) ? this.tapEdge(eid) : "reject";
-      if (r === "reject" || r === "noop" || r === "smolder") {
+      if (r === "reject" || r === "noop" || r === "smolder" || r === "spool") {
         this.reset();
         return false;
       }
@@ -352,7 +441,7 @@ export class FabricMazeController {
     };
     const step = (eid: number): boolean => {
       const r = Number.isInteger(eid) ? this.tapEdge(eid) : "reject";
-      return r !== "reject" && r !== "noop" && r !== "smolder";
+      return r !== "reject" && r !== "noop" && r !== "smolder" && r !== "spool";
     };
     for (const a of actions) {
       if (a.kind === "cut") {
@@ -617,6 +706,10 @@ export class FabricMazeController {
       this.judge();
       return this.solved ? "win" : "backtrack"; // K139: a free collapse game's end
     }
+
+    // K137 s2: a move that would pay yarn out past the spool is refused,
+    // changing nothing (a retrace above reels in, so the limit never traps).
+    if (spoolRefuses(this.pathEdges.length, this.spoolCap)) return "spool";
 
     // A self-loop run returns to the same vertex; everything else crosses.
     const far = e.va === head ? e.vb : e.va;

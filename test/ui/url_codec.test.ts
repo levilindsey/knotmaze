@@ -136,6 +136,7 @@ describe("links", () => {
       cut: "off", // K114
       lives: 0, // K137 stage 3a
       sword: "off", swordMoves: 8, // K137 stage 3b
+      spool: false, spoolSlack: 0.3, hints: 0, compass: false, // K137 stage 2
     });
   });
 
@@ -912,6 +913,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   cut: "ct", // K114
   lives: "mlv", // K137 stage 3a
   sword: "swd", swordMoves: "swm", // K137 stage 3b
+  spool: "sp2", spoolSlack: "sps", hints: "hn", compass: "cmp", // K137 stage 2
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
@@ -949,6 +951,7 @@ if (name === "cartouche") return "knot";
   if (name === "minoStopMax") return 0.9;
   if (name === "minoTelegraphRuns") return 2;
   if (name === "lives") return 3; // K137 stage 3a: its default is 0 (off)
+  if (name === "hints") return 3; // K137 stage 2: its default is 0 (none)
   return (d as number) * 0.5;
 }
 // As a link writes it: booleans 0/1, colors without the "#".

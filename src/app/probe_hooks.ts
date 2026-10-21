@@ -36,7 +36,7 @@ import type { ModeBadge } from "../ui/mode_badge";
 import type { MotionSetting } from "../ui/motion";
 import type { MovePad } from "../ui/move_pad";
 import type { OffscreenIndicators } from "../ui/offscreen_indicators";
-import { REVEAL_END_CROSSES, REVEAL_END_GLOWS } from "../ui/url_state";
+import { REVEAL_END_CROSSES, REVEAL_END_GLOWS, pathVizOf } from "../ui/url_state";
 import type { UrlParams } from "../ui/url_state";
 import { panRange } from "../ui/view_clamp";
 import type { OpenPanel, PanBounds } from "../ui/view_clamp";
@@ -635,7 +635,7 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       restarts: c.restarts,
       fog: fb.fogProbe(),
       trailMode: c.trailMode,
-      pathViz: ctx.params.pathViz,
+      pathViz: pathVizOf(ctx.params),
       trailLength: ctx.params.trailLength,
       pathEdges: [...c.pathEdges],
       choices: c.choices().map((eid) => {

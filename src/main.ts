@@ -37,6 +37,7 @@ import {
   fireSettingsOf,
   turnMinoParamsOf,
   writeParams as writeTokenParams,
+  pathVizOf,
 } from "./ui/url_state";
 import type { UrlParams } from "./ui/url_state";
 import {
@@ -1266,7 +1267,7 @@ async function main(): Promise<void> {
           ? efficiencyOf(c.walk.optimalLength, c.pathLength)
           : null,
       // Memory-trail mode has no backtracking, so no backtrack meter.
-      backtrack: params.pathViz === "trail" ? null : c.backtrackDist,
+      backtrack: pathVizOf(params) === "trail" ? null : c.backtrackDist,
       junctions: c.visitedJunctions.size,
       deadEnds: params.deadEndDensity > 0 ? c.deadEndTips.size : null,
       // K80: times caught so far (null: no minotaur).
@@ -1531,7 +1532,7 @@ async function main(): Promise<void> {
     const efficiency = c.collapseOn
       ? null
       : efficiencyOf(c.walk.optimalLength, c.pathLength);
-    const backtrack = params.pathViz === "trail" ? null : c.backtrackDist;
+    const backtrack = pathVizOf(params) === "trail" ? null : c.backtrackDist;
     const deadEnds = params.deadEndDensity > 0 ? c.deadEndTips.size : null;
     const moves = c.moveLog.join("");
     const daily =
@@ -1548,7 +1549,7 @@ async function main(): Promise<void> {
         junctions: c.visitedJunctions.size,
         deadEnds,
         moves,
-        viz: params.pathViz,
+        viz: pathVizOf(params),
         def: DAILY_DEF,
       };
       attemptRecord = dailyStore.recordSolve(daily, result);

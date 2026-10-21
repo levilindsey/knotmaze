@@ -350,6 +350,12 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // game/sword.ts) and its flee's length (moves, or runs walked).
   choice("sword", ["off", "timed", "oneuse"]),
   num("swordMoves"),
+  // 195-198, K137 stage 2: the player's aids - Ariadne's spool and its
+  // slack (game/spool.ts), hints a solve and the compass (game/hints.ts).
+  flag("spool"),
+  num("spoolSlack"),
+  num("hints"),
+  flag("compass"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -504,6 +510,8 @@ export const PARAM_RANGES: Readonly<
   autoPluckGain: [0, 1],
   lives: [0, 5], // K137 stage 3a (LIVES_MAX)
   swordMoves: [4, 20], // K137 stage 3b (SWORD_MOVES_MIN..MAX)
+  spoolSlack: [0.1, 1], // K137 stage 2 (SPOOL_SLACK_MIN..MAX)
+  hints: [0, 5], // K137 stage 2 (HINTS_MAX)
 });
 
 // A link value held to its panel range (K398); a param with no range,
