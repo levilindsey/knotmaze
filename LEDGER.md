@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K573.
+Next free ID: K576.
 
 ## Waiting on Levi
 
@@ -125,7 +125,7 @@ Next free ID: K573.
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
   capitals e64f4d6, accents fa1b1ae, Greek 54612f2 (suite 1521 green). Levi (2026-10-19, Daily #8): redesign first.
   - owner: agent `adaaf5d46393d3aeb` of claude session 91b19e11 (opus, started 2026-10-20 11:15, 2 h cap ~13:15)
-  - branch: `worktree-agent-adaaf5d46393d3aeb`, worktree `.claude/worktrees/agent-adaaf5d46393d3aeb`; last commit: `c6a0d7e`
+  - branch: `worktree-agent-adaaf5d46393d3aeb`, worktree `.claude/worktrees/agent-adaaf5d46393d3aeb`; last commit: `d2a82a9`
   - evidence: .claude/probes/K115/stage9/ (its worktree); stage 8's .claude/probes/K115/stage8/ (main checkout)
   - next: stage 9: the fork rule and the spur forms first, then the lint, builder, edge.mid, reveal, metrics, sheets; then Levi's look, stage 7's live dates, K557, K569
   - brief: `docs/design/K115_stage9.md`
@@ -176,7 +176,7 @@ Next free ID: K573.
   - owner: nobody since 2026-10-20 11:05 (round 2026-10-20 done: agent afcc3ca4881b292aa of claude session 91b19e11)
   - branch: mainline; last commit: `071aa32`
   - evidence: .claude/probes/rounds/2026-10-20-d0406df/ (main checkout; probes p_common.mjs, k544/k545/k447/k539_phone.mjs)
-  - next: later windows: the second frames rep with fabric m11's A/A floor (-Moves 0,7,11; K253), K307's phone measures, K98 + K92 (K230), the 14 dropped looks (K233), K232's load cells at 3 reps; kit: myPage falls back to the unique about:blank page, the round's probes move to tracked scripts/phone_pass/, looks cope with K301's width flip
+  - next: later windows: the second frames rep with fabric m11's A/A floor (-Moves 0,7,11; K253), K307's phone measures, K98 + K92 (K230), the 14 dropped looks (K233), K232's load cells at 3 reps; kit: myPage falls back to the unique about:blank page, the round's probes move to tracked scripts/phone_pass/ (the round's `p_common.mjs` `KIT` path points at an agent's worktree, K572), looks cope with K301's width flip
   - brief: docs/design/K156.md (Round 2026-10-20 and its handoff)
   - env: none; the pass builds and serves both builds itself (ports
     5480-5489); check nobody is using the phone first (K234)
@@ -257,14 +257,6 @@ Next free ID: K573.
   - evidence: .claude/probes/K550/kill/ (its worktree)
   - next: the cleanup commit, then Verify: suite, shader-source diff, 0 px same-state A/B
   - brief: `docs/design/K550_kill.md`
-- **K572** · The phone renders 1.5-3.7x slower at d0406df than at 65a7787 (round 2026-10-20: render
-  sync knot gs24 74.3 vs 20.2 ms; load 40.7 vs 48.3 fps; K568's confetti 44.9 vs 60 fps, maybe the
-  same cause). Attribute it.
-  - owner: agent `a7b781cc87de80024` of claude session 91b19e11 (sonnet, started 2026-10-20 11:15, 1 h cap ~12:15)
-  - branch: `worktree-agent-a7b781cc87de80024`, worktree `.claude/worktrees/agent-a7b781cc87de80024`; last commit: `c6a0d7e`
-  - evidence: .claude/probes/K572/ (its worktree); the round's .claude/probes/rounds/2026-10-20-d0406df/ (main checkout)
-  - next: reproduce on the desktop, bisect 65a7787..d0406df on knot gs24 render sync, confirm on the phone, then K568's own cost
-  - brief: `docs/design/K572.md`
 
 ## Next, in order
 
@@ -457,6 +449,9 @@ Every other item below waits on the trigger it names.
 - **K569** · After K115 stage 9 (Levi, 2026-10-20): some lifted-pen strokes (dots, bars, accents)
   become maze threads, each a separate thread through the point, forced crossings at both ends with
   it underneath so it ends where the glyph wants. `docs/design/K115_glyphs.md` section 11, call 2.
+- **K573** · Regain G3-1's gap search on the phone (K572: `3465090` costs 57 ms of render sync where
+  the old search cost 10; the desktop shows +0.6 ms). Same pixels; gate with `k572_gapoff.mjs` ABBA
+  on the phone. `docs/design/K573.md`.
 
 ## Residuals (known, not fixed)
 
@@ -1031,6 +1026,10 @@ Every other item below waits on the trigger it names.
   minotaur and fog start from the word (read from code, not exercised; stage 3a, K552 Handoff).
   K552's row tooltip ("your attempt is kept") also overstates: a move on the other form drops the
   raw loop walk (C4).
+- **K574** · K320 stage 1 (`6c592e6`) costs about 4 ms of phone render sync (ABBA 69.9 vs 74.1 ms,
+  same sign in both pairs, inside one p10-p90 band; K572).
+- **K575** · `0733182` (K115 1b-B) does not build, a hazard for any bisect across it (K572; not
+  diagnosed).
 ## Approved, to schedule (2026-10-11)
 
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
@@ -1260,6 +1259,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K572** · The phone's render regression is G3-1's gap search (`3465090`): 57 ms a frame on the phone where the old search cost 10; K320 stage 1 adds about 4 ms; K568's own confetti costs about 2 fps. Done in f1f2b01 (2026-10-20).
 - **K447** · The real-time fire on the phone (round 2026-10-20): escaped, 3 stars, 47.6 fps in the race vs 49.5 at rest; the burn costs about 2 fps (0.23 ms a frame). Done in 071aa32 (2026-10-20).
 - **K539** · G3-1's phone half (round 2026-10-20): pruned = brute at 0 px, GL clean, no context loss; the head's 1.5-3.7x render cost went to K572. Done in 071aa32 (2026-10-20).
 - **K544** · Phone timing for searched designs (round 2026-10-20): median 125 ms, p90 260, max 364 with greedyTrap on vs 67 ms off, 1.7x the desktop's median. Done in 071aa32 (2026-10-20).

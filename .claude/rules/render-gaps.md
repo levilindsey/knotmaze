@@ -194,6 +194,14 @@ attribution, same-state proofs) is in `probes-census.md` and
   SAMP central-difference tangents, protect and today's smooth-min
   AS-IS (K268 item 4 lands after). The marker disc is nPts 0 (the
   center in texel 5). Tests: `test/render/gap_mask.test.ts`.
+- **The phone pays for it (K572, 2026-10-20).** The SAMP search costs 57
+  ms of phone render sync (Pixel 11, knot gs24; 10 ms before `3465090`)
+  where the desktop showed +0.6 ms: two dependent `sampAt` fetches per
+  segment, each with an int `%` and conversions, at 0.09 world spacing
+  where the old row read one texel at up to 0.3. Gate any change to the
+  search or its SAMP reads on the phone (`.claude/probes/K572/
+  k572_gapoff.mjs`: gap on vs off in one page, ABBA), never on a desktop
+  timing. The fix is K573.
 
 ## RENDER LORE (per-pixel gaps)
 
