@@ -495,3 +495,16 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   bit-identical. Probe links: `?<seed>&am=instant&mt=hunter&mlv=3`. The
   rules: gameplay-minotaur.md's LIVES; the row: gameplay-panel.md's LIVES
   ROW.
+
+- SWORD PARAMS (K137 stage 3b, 2026-10-21; brief `docs/design/K137_s3b.md`):
+  `sword` (`swd`: off | timed | oneuse, SWORD_MODES) and `swordMoves`
+  (`swm`: a number, PARAM_RANGES [4, 20], default 8) are APPENDED at
+  193-194, after `lives`; CODEC_VERSION stays 8. Neither daily-exempt nor
+  a MAZE key. Under onClockChange in undo_stack.ts's LIVE_EFFECTS (a
+  change restarts the solve, which lays a new sword or none). Pins that
+  moved: the table pin, url_codec.test.ts's defaults table and
+  OVERRIDE_KEYS (`swd`, `swm`). The golden snapshot, the golden dailies,
+  K87 and the minotaur digests did not move: off is bit-identical. Probe
+  links: `?<seed>&am=instant&mt=hunter&swd=oneuse&swm=20` (add
+  `&clk=realtime` for real time). The rules: gameplay-minotaur.md's THE
+  SWORD; the rows: gameplay-panel.md's SWORD ROWS.

@@ -4,6 +4,8 @@ paths:
   - "test/game/minotaur.test.ts"
   - "src/game/minotaur_turns.ts"
   - "test/game/minotaur_turns.test.ts"
+  - "src/game/sword.ts"
+  - "test/game/sword.test.ts"
 ---
 
 # Gameplay lore: the real-time minotaur
@@ -607,3 +609,72 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   a broken run is possible (a residual). Off (nothing breakable), both
   minotaurs are bit-identical: K80_DIGESTS, MODEL_DIGESTS, TURN_GAMES and
   LENGTH_GAMES held. Tests: `test/game/k137b_block.test.ts`.
+
+- THE SWORD (K137 stage 3b, 4.7, 2026-10-21; brief, Design section and
+  Handoff `docs/design/K137_s3b.md`). Both clocks, free play. `sword`
+  (`swd`: off | timed | oneuse) and `swordMoves` (`swm`, 4..20, default
+  8); game/sword.ts (pure) holds where it lies and its state, shared by
+  both clocks.
+  - WHERE (`swordSpot(g, seed, avoid)`): a vertex 4-8 runs
+    (SWORD_RING_MIN..MAX) off one shortest start-exit route (run hops
+    from its vertices, a multi-source BFS; route ties to the lowest run
+    id), never the start, the exit or either tail's junction, and clear
+    of the lair: 1 hop around the exit tail's junction for the hunter
+    and the stalker, the guard's territory for the guard (minoTerritory
+    hops on the turn clock, minoGuardRoam u in real time). Dead-end tips
+    first, else junctions, sorted by vertex index, one drawn from its
+    own counter stream (TurnRng on seed xor "SWRD"), so no other draw
+    shifts. None in range: no sword. main.ts `laySword` lays it in every
+    `restartChase` (the scene build, a level restart, a Reset path), on
+    whichever clock plays.
+  - STATE (`SwordState`: phase ready | fleeing | used | slain, left,
+    takenAt, slainAt, banished): arriving on the spot takes it. While it
+    flees a touch is no catch: timed banishes it to its lair and spends
+    the sword (used); one use slays it (slain: no turns, contact or
+    sight for the rest of the attempt, and its layer hides). At left 0
+    the sword is spent (used) and it plays on from where it stands.
+  - TURN CLOCK (`TurnMinotaur`): the pickup turn already flees (left =
+    moves - 1 after it), and each later accepted move spends one, a wait
+    included. The committed move is re-decided at the pickup, so the
+    telegraph shows the reversal. A flee hop (`fleeHop`) takes the move
+    whose far end lies farthest from you in runs (one a broken run cuts
+    off counts farthest), ties to the lowest run id, no draw; at a
+    vertex it holds when every move would close in. It forgets its hunt
+    and roam (mode 0), so it comes out of the flee roaming; the speed
+    applies, charge does not. By length, `planFleeLength` chains flee
+    hops over the scaled travel in planLengthRoute's shape, so
+    realizing, contact and the ticks read it unchanged. A banish counts
+    its sleep from that turn.
+  - REAL TIME (`MinotaurChase`): the pickup turns it round on its run
+    (Pac-Man) and ends any stop and any hunt; left starts at `moves` and
+    falls per run you walk (s3a call 3, as built: counted as each run
+    ends). It flees at wanderPace with no stops and no sight, never
+    turning back mid-run; at each vertex `fleeEdgeFrom` takes the run
+    whose far end is farthest from you by thread distance (ties to the
+    lowest id), and it holds when every run closes in. A banish puts it
+    in its lair for `wake` s. plan() returns the flee route
+    (`fleePlan`), so the real-time telegraph shows it.
+    `replayChase(..., sword)` rebuilds it from the taps. Events:
+    `{kind: "sword", what: taken | banish | slay | spent}`.
+  - LOOK (render-markers.md's THE SWORD MARKER): the sword glyph at its
+    spot until taken; while it flees, its glow, the telegraph's strokes,
+    ring and ticks, and the rims are FLEE_BLUE 0x8fd0ff instead of red
+    (s3a call 4, pale blue as built; the walker never shares a game with
+    the minotaur, so the rims' `teleColor` is free). Toasts: "You have
+    the sword! It flees.", "Banished to its lair!", "Slain! The maze is
+    yours." and "The sword is spent.". Rows: "sword" in the HUD and the
+    win banner (ready / N left / used / slain on move N; maze_stats
+    STATS), and the share title's "⚔️ on move N" (the pickup move).
+    Hooks: `sword`, `fleeing` and `slain` on `__knotChase()` and
+    `__knotTurnMino()`.
+  - OFF: no sword object and no draw, so K80_DIGESTS, MODEL_DIGESTS,
+    TURN_GAMES, LENGTH_GAMES, K87, the golden dailies and byte identity
+    held. Tests: `test/game/sword.test.ts`. PAGE CHECK:
+    `.claude/probes/K137/s3b/sword_page.mjs` (probes.md, K137 stage 3b)
+    on seed 7: the desktop on turn oneuse 20 and timed 8 and realtime
+    oneuse 8 and 20 and timed 8, and a phone viewport on both clocks at
+    oneuse 20, all passed: the pickup on move 12 and its toast, the HUD
+    rows, the pale blue ink and red again once spent, a slay on move 25
+    that hides the layer (turn, both viewports, and desktop real time;
+    the phone's real-time flee ran out first, spent), the moves left
+    only falling, no page errors.

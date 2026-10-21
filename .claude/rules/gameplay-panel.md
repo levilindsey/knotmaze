@@ -197,6 +197,19 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   gameplay-links.md's LIVES PARAM; the rules: gameplay-minotaur.md's
   LIVES.
 
+- SWORD ROWS (K137 stage 3b, 2026-10-21): "Sword" (off / timed / one
+  use, `sword`) and "Sword lasts" (`swordMoves`, a 4..20 slider, step 1)
+  sit right after "Lives" in the Game folder, shared by both clocks and
+  hidden with the minotaur off; "Sword lasts" also hides while the sword
+  is off. Both restart the solve (onClockChange): a new chase lays the
+  sword down, or none. Tooltips: "A sword lies a few runs off the
+  shortest way. Take it and the minotaur flees you for a while: touch it
+  then and timed sends it back to its lair, one use slays it for good.
+  Restarts the solve." and "How long the minotaur flees once you take the
+  sword: moves on the turn clock (a wait counts), runs walked in real
+  time. Restarts the solve.". Params: gameplay-links.md's SWORD PARAMS;
+  the rules: gameplay-minotaur.md's THE SWORD.
+
 - FIRE CLOCK ROW (K114 stage 2, 2026-10-15): "clock" (turn / realtime,
   `fireClock`) in the Burn race folder, hidden while the fire is off; it
   runs onClockChange (a change restarts the solve; undo_stack.ts lists it
