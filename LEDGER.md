@@ -310,10 +310,10 @@ Next free ID: K664.
 - **K137** · K80 section 4's cheap (S, S-M) mechanisms, each toggled (Levi 10-13), after the
   minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus
   Levi's sleeper variant. `K80_gameplay_additions.md`, stages in `sooner_20261020.md`; M: K138, M-L/L: K141.
-  - owner: agent `adfeea92c9e0ef17b` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 17:19, 2 h cap ~19:19)
-  - branch: `worktree-agent-adfeea92c9e0ef17b`, worktree `.claude/worktrees/agent-adfeea92c9e0ef17b`; last commit: `c7d6b68`
+  - owner: nobody since 2026-10-20 19:26 (merged; agent `adfeea92c9e0ef17b` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `f8b5341`
   - evidence: `.claude/probes/K137/`
-  - next: stage 1: fragile (fg off|crack|snap) pure + controller tests, then par (pa off|strict|strokes), then the params and the page
+  - next: Levi's slack and snap calls (K655, K656), then stage 2's brief (4.15 spool, 4.28 hints)
   - brief: `docs/design/K137_s1.md`
 - **K631** · Phone passes owed: K244's on the phone (core releases silent, auto plucks draw,
   dense_phone). K409's sheet is done (18:37, 3231d59: fine at phone scale). Part 2 waits on the
