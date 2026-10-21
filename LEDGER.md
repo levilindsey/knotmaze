@@ -283,6 +283,14 @@ Next free ID: K606.
   - evidence: `.claude/probes/K370/`
   - next: rebuild k7_latency.mjs on master with per-stage timestamps; measure desktop (daily, knot) and the phone daily on both hosts
   - brief: `docs/design/K370.md`
+- **K578** · While confetti falls, every frame redraws the whole maze, gap search and all: the phone
+  drops from 60 to 45 fps, the confetti's own share about 2 fps (K572). Cache the still maze in a
+  texture under the confetti. `docs/design/K572.md` (Handoff).
+  - owner: agent `a129cb0eb5eacb36a` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 15:06, 2 h cap ~17:06)
+  - branch: `worktree-agent-a129cb0eb5eacb36a`, worktree `.claude/worktrees/agent-a129cb0eb5eacb36a`; last commit: `31101eb`
+  - evidence: `.claude/probes/K578/`
+  - next: baseline the fall (phone fps, desktop frame cost), then design and build the cache in the frame loop draw step
+  - brief: `docs/design/K578.md`
 
 ## Next, in order
 
@@ -469,9 +477,6 @@ Every other item below waits on the trigger it names.
 - **K569** · After K115 stage 9 (Levi, 2026-10-20): some lifted-pen strokes (dots, bars, accents)
   become maze threads, each a separate thread through the point, forced crossings at both ends with
   it underneath so it ends where the glyph wants. `docs/design/K115_glyphs.md` section 11, call 2.
-- **K578** · While confetti falls, every frame redraws the whole maze, gap search and all: the phone
-  drops from 60 to 45 fps, the confetti's own share about 2 fps (K572). Cache the still maze in a
-  texture under the confetti. `docs/design/K572.md` (Handoff).
 - **K582** · Final ς gets its own glyph (Levi took stage 6's rec, 2026-10-19); live Greek still
   draws σ. Build it in the stage 9+ glyph set after K580 (`docs/design/K115_glyphs.md`).
 - **K587** · Confetti shine on the Pixel: frame rate and look in K156's next pass. The model bench
