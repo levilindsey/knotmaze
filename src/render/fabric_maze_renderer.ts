@@ -1498,9 +1498,13 @@ export class FabricMazeRenderer {
     const kids = this.overContainer.children;
     const li = kids.indexOf(this.minoLayer);
     const fi = this.fogSprite ? kids.indexOf(this.fogSprite) : -1;
+    // K653: a bleed rides on top like an `over` minotaur (its comment below),
+    // so only a minotaur that is neither over nor bleeding goes back under.
+    // Without the `!bleed` the second branch undid the first on every other
+    // sync while the fog bled.
     if ((over || bleed) && fi > li) {
       this.overContainer.setChildIndex(this.minoLayer, kids.length - 1);
-    } else if (!over && fi >= 0 && li > fi) {
+    } else if (!over && !bleed && fi >= 0 && li > fi) {
       this.overContainer.setChildIndex(this.minoLayer, fi);
     }
     // K80 turns 3b (section 2.10): under fog of war, when the fog rule
