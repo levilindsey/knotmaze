@@ -42,6 +42,14 @@
 import type { WalkGraph } from "../core/walk_graph";
 import { ChaseGraph, type MinotaurMode, type Spot } from "./minotaur";
 import { swordFleeing, swordSpend, swordTake, swordTouch, type SwordState } from "./sword";
+import {
+  FOLLOW_SHORTCUT,
+  followDelay,
+  monsterRng,
+  type MonsterKind,
+  type MonsterPhase,
+  type MonsterSpec,
+} from "./monsters";
 
 // The `minotaur` param: off, or the movement model (section 2.3). K80
 // stage 3 appends "abbott".
@@ -1145,6 +1153,15 @@ export class TurnMinotaur {
   readonly skips: number[] = [];
   private skipLen = -1;
   private standSpot: Spot | null = null;
+  // K137 s3d: the extra monsters (sleepers, followers; monsters.ts), which
+  // step after the minotaur on every accepted move (extrasTurn). Empty
+  // unless setMonsters lays some, and then nothing below runs or draws,
+  // so every pin holds. `woken`: sleepers woken this attempt (a level
+  // restart carries it). `lastCatcher`: who made the last catch (-1 the
+  // minotaur, i extra i).
+  readonly extras: TurnExtra[] = [];
+  woken = 0;
+  lastCatcher = -1;
 
   constructor(walk: WalkGraph | TurnGraph, cfg: TurnConfig, seed: number) {
     this.tg = walk instanceof TurnGraph ? walk : new TurnGraph(walk);
@@ -1172,6 +1189,122 @@ export class TurnMinotaur {
   setSword(s: SwordState | null): void {
     this.sword = s;
     this.commit();
+  }
+
+  // K137 s3d: the extras for this game (monsters.ts monsterSpecs; `seed` is
+  // the design seed their own streams draw from). Called before the first
+  // turn.
+  setMonsters(specs: readonly MonsterSpec[], seed: number): void {
+    this.extras.length = 0;
+    specs.forEach((s, i) => this.extras.push(newTurnExtra(s, seed, i)));
+  }
+
+  // K137 s3d: the extras' part of an accepted move p -(edge)-> p2 (-1: a
+  // wait), after the minotaur's, which caught nobody. `stand`: a sprint's
+  // skipped move, when every monster stands. A sleeper wakes on a move
+  // along a run that touches its junction and neither moves nor catches on
+  // that move; awake it decides as a hunter from p, where you stood (as the
+  // telegraph decides the minotaur), so it never catches you from behind
+  // unless you walk into it, wait where it arrives or are cornered. A
+  // follower sets off when you leave its junction, appears there `delay`
+  // moves later and walks your trail. Contact is the minotaur's rule.
+  // Returns the catching extra, or -1.
+  private extrasTurn(p: number, edge: number, p2: number, stand: boolean): number {
+    if (this.extras.length === 0) return -1;
+    const g = this.tg;
+    const cfg = extraConfig(this.cfg);
+    let caught = -1;
+    for (let i = 0; i < this.extras.length; i++) {
+      const x = this.extras[i];
+      const from = x.state.v;
+      let path: TurnStep[] = [];
+      let live = false;
+      if (x.kind === "follower" && x.phase !== "asleep" && !x.homing && edge >= 0) x.trail.push([edge, p2]);
+      if (x.phase === "awake") {
+        if (!stand) {
+          const rng = x.rng.at(this.turns);
+          path = x.kind === "sleeper" ? decide(g, cfg, x.state, p, ++x.life, rng) : followStep(g, x, p, rng);
+        }
+        live = x.phase === "awake";
+      } else if (x.phase === "waiting") {
+        if (!stand && --x.wait <= 0) {
+          x.phase = "awake";
+          path = followStep(g, x, p, x.rng.at(this.turns));
+          live = x.phase === "awake";
+        }
+      } else if (x.kind === "sleeper") {
+        if (edge >= 0 && (p === x.home || p2 === x.home)) {
+          x.phase = "awake";
+          x.life = 0;
+          this.woken++;
+        }
+      } else if (edge >= 0 && p === x.home && p2 !== x.home) {
+        x.phase = "waiting";
+        x.wait = x.delay;
+        x.trail = [[edge, p2]];
+        x.at = 0;
+      }
+      x.lastFrom = from;
+      x.lastPath = path;
+      x.shown = x.phase;
+      if (live && caught < 0 && contact(p, edge, p2, from, path)) caught = i;
+    }
+    return caught;
+  }
+
+  // K137 s3d: a catch by extra i: the minotaur's catch (s3b call 1): you to
+  // the entrance, the minotaur to its lair (or where it stands, lair off),
+  // every extra back on its junction, asleep. The minotaur's own route of
+  // this move plays out for the animation (catchRoute, as its own catch).
+  private extraCatch(i: number, p: number, edge: number, p2: number): TurnResult {
+    const g = this.tg;
+    const x = this.extras[i];
+    this.catches++;
+    this.lastCatcher = i;
+    this.lastCatch = { player: p2, mino: x.state.v };
+    this.lastContact = runsContact(g, p, edge, x.lastFrom, x.lastPath);
+    this.player = g.start;
+    this.state =
+      this.cfg.lair === false
+        ? { v: this.state.v, prev: -1, dest: -1, mode: 0, lastSeen: -1, left: true, spot: { ...this.state.spot } }
+        : initMino(g);
+    this.lifeTurn = 0;
+    if (this.cfg.byLength) {
+      // It stood this move: show it there until the animation ends.
+      if (this.lastPath.length === 0) this.standSpot = { ...this.lastFromSpot };
+      this.lastFrom = this.state.v;
+    } else {
+      this.catchRoute = true;
+    }
+    this.skipLen = -1;
+    for (const y of this.extras) sleepExtra(y);
+    this.commit();
+    return "caught";
+  }
+
+  // K137 s3d: the minotaur caught you: the extras stood this move and go
+  // back to sleep (the minotaur's own catch block calls this).
+  private extrasOnCatch(): void {
+    this.lastCatcher = -1;
+    for (const x of this.extras) {
+      x.lastFrom = x.state.v;
+      x.lastPath = [];
+      x.shown = x.phase;
+      sleepExtra(x);
+    }
+  }
+
+  // K137 s3d: where extra i stands for the renderer, along its last turn's
+  // steps (the minotaur's split by run length), and the phase it shows.
+  extraSpot(i: number): Spot {
+    const x = this.extras[i];
+    if (this.progress >= 1) return spotAtVertex(x.state.v);
+    return alongPath(this.tg.chase, x.lastFrom, x.lastPath, this.progress);
+  }
+
+  extraPhase(i: number): MonsterPhase {
+    const x = this.extras[i];
+    return this.progress >= 1 ? x.phase : x.shown;
   }
 
   // K137 s3b: it flees the sword / the one-use sword slew it.
@@ -1206,7 +1339,9 @@ export class TurnMinotaur {
   }
 
   // K137 s3b: a turn after the one-use sword slew it: the player moves.
-  private slainTurn(edge: number, p2: number): TurnResult {
+  // K137 s3d: the extras still play (`stand` on a sprint's skipped move).
+  private slainTurn(edge: number, p2: number, stand = false): TurnResult {
+    const p = this.player;
     this.lastFrom = this.state.v;
     this.lastPath = [];
     this.lastSegLens = [];
@@ -1216,11 +1351,14 @@ export class TurnMinotaur {
     this.lastTouch = null;
     this.catchRoute = false;
     this.crossRun(edge);
-    this.player = p2;
     if (p2 === this.tg.exit) {
+      this.player = p2;
       this.finished = true;
       return "win";
     }
+    const xi = this.extrasTurn(p, edge, p2, stand);
+    if (xi >= 0) return this.extraCatch(xi, p, edge, p2);
+    this.player = p2;
     return "moved";
   }
 
@@ -1230,6 +1368,7 @@ export class TurnMinotaur {
     this.closeCalls = prev.closeCalls;
     this.seen = prev.seen;
     this.restarts = prev.restarts;
+    this.woken = prev.woken;
   }
 
   // K137-b: the runs that break and after how many crossings (the
@@ -1349,6 +1488,9 @@ export class TurnMinotaur {
       // K137 s3b: no catch while it flees: a touch banishes or slays it.
       if (contact(p, edge, p2, from, path)) this.touchSword(p2);
       else swordSpend(this.sword);
+      // K137 s3d: the extras ignore the sword.
+      const xf = this.extrasTurn(p, edge, p2, false);
+      if (xf >= 0) return this.extraCatch(xf, p, edge, p2);
       this.player = p2;
       this.commit();
       return "moved";
@@ -1370,9 +1512,13 @@ export class TurnMinotaur {
       // for the animation until it ends (endCatchRoute); stage 1 cleared
       // it here, and so showed no catching move.
       this.catchRoute = true;
+      this.extrasOnCatch();
       this.commit();
       return "caught";
     }
+    // K137 s3d: the extras step after it.
+    const xi = this.extrasTurn(p, edge, p2, false);
+    if (xi >= 0) return this.extraCatch(xi, p, edge, p2);
     // A close call: the move ends one run from it (out of its lair; the
     // start is a sanctuary). K137-b: one unbroken run (this.tg).
     if (this.state.left && p2 !== g.start && this.tg.hopd(p2, this.state.v) === 1) {
@@ -1405,7 +1551,7 @@ export class TurnMinotaur {
     if (this.sword !== null) {
       if (this.slain) {
         this.skipLen = g.chase.len[edge];
-        return this.slainTurn(edge, p2);
+        return this.slainTurn(edge, p2, true);
       }
       this.takeSword(p2);
       this.lastTouch = null;
@@ -1436,6 +1582,9 @@ export class TurnMinotaur {
       // K137 s3b: no catch while it flees: a touch banishes or slays it.
       if (touched) this.touchSword(p2);
       else swordSpend(this.sword);
+      // K137 s3d: every extra stands too.
+      const xf = this.extrasTurn(p, edge, p2, true);
+      if (xf >= 0) return this.extraCatch(xf, p, edge, p2);
       this.player = p2;
       this.skipLen = g.chase.len[edge];
       this.commit();
@@ -1461,9 +1610,13 @@ export class TurnMinotaur {
       // ends, as turn()'s catchRoute does.
       this.catchRoute = !byLength;
       this.skipLen = -1;
+      this.extrasOnCatch();
       this.commit();
       return "caught";
     }
+    // K137 s3d: every extra stands too.
+    const xi = this.extrasTurn(p, edge, p2, true);
+    if (xi >= 0) return this.extraCatch(xi, p, edge, p2);
     if (this.state.left && p2 !== g.start) {
       if (byLength) {
         const d = g.chase.spotToVertex(this.state.spot, p2, false);
@@ -1596,6 +1749,9 @@ export class TurnMinotaur {
       if (touched) this.touchSword(p2);
       else swordSpend(this.sword);
       this.lastContact = null;
+      // K137 s3d: the extras ignore the sword (a run a turn on both travels).
+      const xf = this.extrasTurn(p, edge, p2, false);
+      if (xf >= 0) return this.extraCatch(xf, p, edge, p2);
       this.player = p2;
       this.commit();
       return "moved";
@@ -1626,9 +1782,13 @@ export class TurnMinotaur {
       // The route (lastFromSpot, lastPath, lastSegLens, lastTravel) stays
       // for the catch animation: `mino` walks it until finishCatchAnim.
       this.progress = 0;
+      this.extrasOnCatch();
       this.commit();
       return "caught";
     }
+    // K137 s3d: the extras step after it, a run a turn.
+    const xi = this.extrasTurn(p, edge, p2, false);
+    if (xi >= 0) return this.extraCatch(xi, p, edge, p2);
     // Close call (decision 9): the move ends within one median run of
     // thread from it, out of its lair and off the sanctuary.
     if (this.state.left && p2 !== g.start) {
@@ -1878,16 +2038,155 @@ export class TurnMinotaur {
   }
 }
 
+// K137 s3d: an extra monster on the turn clock (monsters.ts has the rules).
+export interface TurnExtra {
+  readonly kind: MonsterKind;
+  readonly home: number;
+  readonly delay: number; // Follower: moves after you leave home before it appears.
+  readonly rng: TurnRng;
+  phase: MonsterPhase;
+  shown: MonsterPhase; // The phase its last turn ended in (before a catch's reset).
+  state: MinoState;
+  life: number; // Turns since it woke (decide's sleep and half-speed parity).
+  wait: number; // Follower: turns left before it appears.
+  trail: TurnStep[]; // Follower: your moves since you left its junction.
+  at: number; // Follower: the trail step it takes next (-1: off the trail).
+  homing: boolean; // Follower: it lost you (you hid at the entrance); walking home.
+  lastFrom: number;
+  lastPath: TurnStep[];
+}
+
+function homeState(v: number): MinoState {
+  return { v, prev: -1, dest: -1, mode: 0, lastSeen: -1, left: true, spot: spotAtVertex(v) };
+}
+
+export function newTurnExtra(s: MonsterSpec, seed: number, i: number): TurnExtra {
+  return {
+    kind: s.kind,
+    home: s.home,
+    delay: s.kind === "follower" ? followDelay(seed, i) : 0,
+    rng: monsterRng(seed, i),
+    phase: "asleep",
+    shown: "asleep",
+    state: homeState(s.home),
+    life: 0,
+    wait: 0,
+    trail: [],
+    at: 0,
+    homing: false,
+    lastFrom: s.home,
+    lastPath: [],
+  };
+}
+
+// Back to sleep on its junction (a catch, or a follower home again).
+function sleepExtra(x: TurnExtra): void {
+  x.phase = "asleep";
+  x.state = homeState(x.home);
+  x.life = 0;
+  x.wait = 0;
+  x.trail = [];
+  x.at = 0;
+  x.homing = false;
+}
+
+// The extras' config: the minotaur's pace, sight and accuracy as a hunter
+// (prox), with no telegraph, sleep, territory or pull, by runs.
+export function extraConfig(cfg: TurnConfig): TurnConfig {
+  const out: TurnConfig = {
+    policy: "prox",
+    speed: cfg.speed,
+    telegraph: false,
+    q: cfg.q,
+    stall: cfg.stall,
+    see: cfg.see,
+    lose: cfg.lose,
+    sleep: 0,
+  };
+  if (cfg.chaseSpeed) out.chaseSpeed = cfg.chaseSpeed;
+  if (!cfg.home && cfg.rMin != null && cfg.rMax != null) {
+    out.rMin = cfg.rMin;
+    out.rMax = cfg.rMax;
+  }
+  return out;
+}
+
+// The step after the follower's newest place on its trail at w (-1: off it).
+function trailIndexAfter(x: TurnExtra, w: number): number {
+  for (let j = x.trail.length - 1; j >= 0; j--) if (x.trail[j][1] === w) return j + 1;
+  return w === x.home ? 0 : -1;
+}
+
+// K137 s3d: one follower step with the player at p (where the turn found
+// them, as a telegraph decides): the next run of your trail, or (chance
+// FOLLOW_SHORTCUT, or off the trail) a step toward you, rejoining the trail
+// where it lands on it. You at the entrance: it loses you and walks home,
+// where it sleeps again.
+function followStep(g: TurnGraph, x: TurnExtra, p: number, rng: TurnRng): TurnStep[] {
+  const m = x.state;
+  let mv: TurnStep | null = null;
+  if (!x.homing && p === g.start) x.homing = true;
+  if (!x.homing) {
+    const next = x.at >= 0 && x.at < x.trail.length ? x.trail[x.at] : null;
+    const onTrail =
+      next !== null &&
+      allowed(g, next[1]) &&
+      !g.isBlocked(next[0]) &&
+      (g.chase.ea[next[0]] === m.v || g.chase.eb[next[0]] === m.v);
+    if (onTrail && rng.next() >= FOLLOW_SHORTCUT) {
+      mv = next;
+      x.at++;
+    } else if (!cutOff(g, m.v, p)) {
+      mv = stepToward(g, m.v, p, rng);
+      if (mv) x.at = trailIndexAfter(x, mv[1]);
+    }
+  } else if (m.v === x.home) {
+    sleepExtra(x);
+    return [];
+  } else {
+    mv = stepToward(g, m.v, x.home, rng);
+  }
+  if (!mv) return [];
+  m.prev = m.v;
+  m.v = mv[1];
+  m.spot = spotAtVertex(m.v);
+  return [mv];
+}
+
+// Where a turn's path puts a mover at `progress`, split by run length (the
+// minotaur's `mino` split, for the extras).
+function alongPath(g: ChaseGraph, from: number, path: readonly TurnStep[], progress: number): Spot {
+  if (path.length === 0) return spotAtVertex(from);
+  let total = 0;
+  for (const [e] of path) total += g.len[e];
+  let left = progress * total;
+  let a = from;
+  for (let i = 0; i < path.length; i++) {
+    const [e, b] = path[i];
+    const len = g.len[e];
+    if (left <= len || i === path.length - 1) {
+      const s = Math.min(len, Math.max(0, left));
+      return g.ea[e] === a ? { edge: e, pos: s, dir: 1, vertex: a } : { edge: e, pos: len - s, dir: -1, vertex: a };
+    }
+    left -= len;
+    a = b;
+  }
+  return spotAtVertex(path[path.length - 1][1]);
+}
+
 // K137 s3c: a game rebuilt from its inputs and skips (a sprint's first moves,
-// TurnMinotaur.skips): the same taps give the same minotaur.
+// TurnMinotaur.skips): the same taps give the same minotaur. K137 s3d:
+// `monsters`, the extras and the design seed their streams draw from.
 export function replayTurnMinotaur(
   walk: WalkGraph | TurnGraph,
   cfg: TurnConfig,
   seed: number,
   inputs: readonly number[],
-  skips: readonly number[] = []
+  skips: readonly number[] = [],
+  monsters: { specs: readonly MonsterSpec[]; seed: number } | null = null
 ): TurnMinotaur {
   const tm = new TurnMinotaur(walk, cfg, seed);
+  if (monsters) tm.setMonsters(monsters.specs, monsters.seed);
   const skip = new Set(skips);
   for (let i = 0; i < inputs.length; i++) {
     tm.turn(inputs[i], skip.has(i) ? { sprint: "skip" } : undefined);
