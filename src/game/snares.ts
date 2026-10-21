@@ -3,7 +3,8 @@
 // by a level restart (main.ts keeps the count). The snare button (or its
 // key) arms the next tap, which lays a snare on a run touching the head's
 // junction, the run behind you included (snareRuns). Free in time: no turn
-// passes. A knot glyph sits on the run.
+// passes. A gold ring marks the run's middle (filled while it holds;
+// fabric_maze_renderer.ts syncSnares, a stand-in for a glyph).
 //
 // THE HOLD (TurnMinotaur): the first monster whose turn would step onto a
 // snared run stops at the run's near end (its path is cut there, snareCut)

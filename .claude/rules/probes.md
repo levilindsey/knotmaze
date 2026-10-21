@@ -611,6 +611,34 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   (the harsh follower, call 3), so a driver that wants to see it awake
   walks away from home first.
 
+- K137 stage 4 (2026-10-21), lures and snares:
+  `.claude/probes/K137/s4/tools_page.mjs <base> [desktop|phone] [outDir]
+  [seed=7]` (on `?<seed>&am=instant&mt=hunter&lur=3&snr=2&snd=none`, turn
+  clock; real clicks on the tool buttons and on the runs). It checks the
+  link, the buttons (badges 3 and 2, inside the viewport, no other control
+  over them) and the HUD rows; walks to a junction 3-6 runs from the
+  minotaur; a click arms the lure, and a lure on a run at your junction is
+  heard (stock, toast, `tapEdge`, the minotaur's target your junction with
+  its hunt forgotten, no move made); with the minotaur one run off, a
+  click arms the snare and a snare on its next run is laid (no move, no
+  turn, badge and HUD 1); N arms it again, a second snare on that run is
+  refused and stays armed, Esc puts it down; a wait springs it (held,
+  "Snared!", no catch, it stands); a lure out of range (nobody heard,
+  still spent); at 0 the lure button is disabled and L arms nothing; no
+  page errors. It ends in a CHECK summary; stills and JSON in `out/` (extra phone runs in
+  `out_rep*`), the contact sheet `contact_sheet.png` from `sheet_rows.json`
+  through a copy of K525's `mksheet.mjs`, which needs ABSOLUTE paths
+  (relative ones fail with ERR_FILE_NOT_FOUND). Hooks:
+  `__knotTurnMino().tools`, `__knotTool(k)` (a press) and
+  `__knotFabric().cutPick(x, y, maxD)` (the run a tap at a page point
+  picks, through the cut's own pick). GOTCHA: `runPoint(edge, 0.5)` is on
+  the physics curve, so a run's middle can sit on a crossing or beside a
+  neighbour, and a tap there picks the other run (3 of 5 phone runs lured
+  a neighbour before the fix; the layout varies per load). The driver's
+  `pickPt(edge)` tries fractions 0.5, 0.42, 0.58, 0.34, 0.66, ... inside
+  the view and taps the first that `cutPick` confirms, and checks
+  `tools.tapEdge` after the tap ("the tap picked the run aimed at").
+
 - K698 + K713 (2026-10-21), the toasts, the walker's glow and the pad:
   `.claude/probes/K698/k698.mjs <cut|aids|lives|walker|sword|glow|pad>
   <phone|land|desk> [seed]` (real taps, touch on phone and land; `run.ps1

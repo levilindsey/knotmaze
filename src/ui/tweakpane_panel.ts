@@ -2073,7 +2073,7 @@ export function buildPanel(
   const snaresRow = row(
     fMino, p, "snares",
     { min: 0, max: SNARES_MAX, step: 1, format: (v: number) => (v === 0 ? "off" : String(v)), label: "Snares" },
-    "Turn clock, by runs: arm the knot button (or N), then tap a run touching your junction. The first monster to step onto it stops at the near end and stands there three turns; it still catches you if you walk onto it. One snare a run. Restarts the solve.",
+    "Turn clock, by runs: arm the loop button (or N), then tap a run touching your junction. The first monster to step onto it stops at the near end and stands there three turns; it still catches you if you walk onto it. One snare a run. Restarts the solve.",
     D.snares, () => callbacks.onClockChange()
   );
   // K80 turns stage 2 (K273): what a catch resets, on both clocks. While

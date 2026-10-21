@@ -11,6 +11,11 @@ paths:
   - "src/ui/sprint_button.ts"
   - "src/game/monsters.ts"
   - "test/game/monsters.test.ts"
+  - "src/game/lures.ts"
+  - "test/game/lures.test.ts"
+  - "src/game/snares.ts"
+  - "test/game/snares.test.ts"
+  - "src/ui/tool_buttons.ts"
 ---
 
 # Gameplay lore: the real-time minotaur
@@ -814,3 +819,94 @@ only with the files it is about; `gameplay.md` lists the area's other files.
     K481's by-length tint ignores them; no off-screen indicator; minoFog
     "hunting" keeps them under the fog; saved attempts do not cover them;
     SLEEPER_GRACE_S waits for the real-time port.
+
+- LURES AND SNARES (K137 stage 4, 4.10 and 4.30, 2026-10-21; brief and
+  Handoff `docs/design/K137_s4.md`). Two TOOLS on the TURN CLOCK, each a
+  stock per attempt that a level restart refills (main.ts `luresLeft`,
+  `snaresLeft`): `lures` (`lur`, 0..LURES_MAX 5) and `snares` (`snr`,
+  0..SNARES_MAX 3). game/lures.ts and game/snares.ts (pure) state the rules
+  in their headers; `TurnMinotaur.lure(edge)` and `setSnare(edge)` play
+  them. Both are FREE IN TIME (no turn passes; s3b call 5's rec) and
+  re-commit the next move, so the telegraph shows the result at once.
+  Real time takes neither yet, and the panel hides both rows there.
+  - A LURE plucks the tapped run (sound and overlay, `cutPluck` at 0.8)
+    and uses one lure, heard or not. The minotaur (not fleeing the sword,
+    not slain) and every SLEEPER within LURE_RANGE 6 runs of walk distance
+    (the hop matrix, so a broken run's cut stops the sound) head for the
+    run's end nearer to them by runs (`lureTarget`: ties to the lower
+    vertex index, never the start or the exit). `decide()` and
+    `decideLengthHop()` step toward it before the model's rules; at it, or
+    cut off from it, the lure is spent and the model decides again. The
+    minotaur forgets its hunt and roam (`mode` 0, `dest` -1), so a hunter
+    lured away has to see you again. An asleep sleeper wakes (`woken++`)
+    and comes. A FOLLOWER ignores lures (s3b's rec). A minotaur asleep in
+    its lair (minoSleep) takes the lure as its destination but moves only
+    once awake. `lure()` returns how many heard it (0: nobody, -1:
+    refused), and main.ts toasts "Nothing heard the lure.", "Something
+    heard the lure." or "N heard the lure.".
+  - A SNARE goes on a run with an end at the head's junction, the run
+    behind you included (`snareRuns`, `canSnare`), one snare a run for the
+    attempt (a spent one included). By runs only: `setSnare` refuses by
+    length, and the button hides there. The first monster whose turn would
+    step onto a set snare's run stops at its near end (`snareCut`,
+    minotaur_turns.ts `cutAtSnare`: the committed path is cut there, and the
+    snare springs when that move plays) and is HELD: it stands for its
+    next SNARE_HOLD 3 turns, then the snare is spent. The telegraph
+    previews the cut and shows an empty move while it holds. ANY monster
+    springs it (the minotaur, a sleeper, a follower). A sprint's skipped
+    move does not count toward the hold. A held monster still catches by
+    contact (you walking onto it). A catch releases every holder: each goes
+    home and its snare is spent (`releaseSnares`), as a banish does for
+    its holder.
+  - INPUT (ui/tool_buttons.ts, `km-control`): a lure button (a note) and a
+    snare button (a loop with crossed tails) with their stocks, shown
+    while each tool is on. A press, or L / N (by `key`), ARMS the tool, and
+    the next tap on a run uses it (main.ts `toolTap`, the cut's pick
+    `cutAt` with the touch radius); a second press, Esc or a tap off the
+    runs puts it down. Arming a tool disarms the scissors (one armed thing
+    at a time). A tool applies at once, even mid move (the turn already
+    happened at the move's tap), and is refused while the maze is solved,
+    a win or a catch waits, or that stock is spent. A refused snare toasts
+    "A snare goes on a run at your junction, one to a run." and stays
+    armed. A snare sprung since the last frame toasts "Snared! It stands
+    three turns.". THE LOOK: a gold ring at the snared run's middle
+    (fabric_maze_renderer.ts `syncSnares`, explicit polygons redrawn each
+    frame while one is laid; heavier and filled while it holds, gone once
+    spent; hidden where the reveal has not shown its point), a stand-in
+    for a glyph that stays out of K138's glyph table.
+  - ROWS: "lures" and "snares" in the HUD and the win banner (maze_stats
+    STATS: left of the stock, "2/3"), shown while that tool is on, and the
+    share title's " · 🎵 N lures" and " · 🪢 N snares" once used (share_text
+    `luresUsed`, `snaresUsed`). Hooks: `__knotTurnMino().tools` (the two
+    rows, `armed`, `shown`, the `laid` snares, `lured`, `heardBy`, and
+    `tapEdge`: the run the last armed tap picked, -1 none),
+    `__knotTool("lure" | "snare")` (a press, the button's and L / N's path),
+    and
+    `__knotFabric().cutPick(x, y, maxD)`, the run a tap at a screen point
+    would pick (probes.md, K137 stage 4).
+  - REPLAY: `tools` records each use before input `at` (inputs.length
+    then), so a replay rebuilds the lures and snares between the taps.
+  - OFF (lures 0 and snares 0, so every daily): `tools` and `snares` stay
+    empty, no field is added (a monster's `lure` is absent until a lure is
+    heard) and nothing draws, so K80_DIGESTS, MODEL_DIGESTS, TURN_GAMES,
+    LENGTH_GAMES, K87, the golden dailies and byte identity held. Tests:
+    `test/game/lures.test.ts` (targets, range, the cut stopping the sound,
+    the hunt forgotten, sleepers woken, the follower and a fleeing or
+    slain minotaur deaf, the telegraph, replays, the pins with no lure)
+    and `test/game/snares.test.ts` (where a snare may go, the cut, the
+    hold and its count, any monster, the sprint skip, a catch releasing
+    holders, by length refused, replays), plus maze_hud.test.ts's rows.
+    PAGE CHECK: `.claude/probes/K137/s4/tools_page.mjs` (probes.md, K137
+    stage 4), hunter seed 7, lures 3, snares 2: desktop and 411x753 dsf
+    2, every check passed with real clicks (the phone 3 of 3 runs once the
+    probe aimed at a point `cutPick` confirms).
+  - RESIDUALS (the Handoff): the "Snared!" toast fires as your move is
+    accepted, before the monster visibly reaches the snare; the hover glow
+    under an armed tool is the cut's pick, which can light a neighbour run;
+    a live switch to by length keeps the laid snares, which then never
+    spring; a follower's first appearance step is not snare-checked; by
+    length clears a lure one hop later than by runs; the snares row shows
+    by length while the button hides; L and N may clash with K138's keys;
+    the ring is a stand-in (no glyph); real-time lures, snares and extras
+    wait for `MinotaurChase`; no s3b sims for the tools; saved attempts do
+    not cover them.

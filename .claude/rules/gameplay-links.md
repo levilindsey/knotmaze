@@ -593,3 +593,18 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   (share 0 draws nothing). Probe link: `?<seed>&am=instant&snd=none&ow=0.4`.
   The rules: gameplay-mechanisms.md's One-way runs; the row:
   gameplay-panel.md's ONE-WAY RUNS ROW.
+- LURES AND SNARES PARAMS (K137 stage 4, 2026-10-21; brief
+  `docs/design/K137_s4.md`): `lures` (`lur`, a number, PARAM_RANGES [0, 5]
+  = LURES_MAX, default 0 = off) and `snares` (`snr`, [0, 3] = SNARES_MAX,
+  default 0) are APPENDED at 209-210, after the sleepers (207-208);
+  CODEC_VERSION stays 8. Whoever merges second of K137 stage 4 and K138
+  stage 3 (which appends too) renumbers and re-freezes the table pin.
+  Neither daily-exempt nor a MAZE key (free play only: a daily keeps 0).
+  Both under onClockChange in undo_stack.ts's LIVE_EFFECTS (a change
+  restarts the solve, which refills both stocks). Pins that moved: the
+  table pin, url_codec.test.ts's defaults table and OVERRIDE_KEYS (`lur`,
+  `snr`). The golden snapshot, the golden dailies, K87 and the minotaur
+  digests did not move: off is bit-identical. Probe link:
+  `?7&am=instant&mt=hunter&lur=3&snr=2&snd=none` (turn clock; snares by
+  runs only). The rules: gameplay-minotaur.md's LURES AND SNARES; the
+  rows: gameplay-panel.md's LURES AND SNARES ROWS.
