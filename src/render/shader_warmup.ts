@@ -420,6 +420,8 @@ export interface WarmParams {
   mazeFabric: boolean;
   exploration: string;
   gameMode: string;
+  // K137: fragile runs (off | crack | snap); absent reads as off.
+  fragile?: string;
   pluckRipple: string;
   backgroundIntensity: number;
   backgroundSpeed: number;
@@ -442,8 +444,13 @@ export function warmContextFor(
     fog: params.mazeFabric && params.exploration === "fog",
     // Broader than url_state's fireSettingsOf on purpose (no clock or
     // minotaur test): warming a program the page never draws costs
-    // compile time, missing one freezes the first burn.
-    burn: params.mazeFabric && params.gameMode === "burn",
+    // compile time, missing one freezes the first burn. K137: fragile
+    // runs too, whose first snap switches every ribbon, strip and fan onto
+    // the explore programs as the first burn does (broken runs vanish
+    // through the burn's machinery).
+    burn:
+      params.mazeFabric &&
+      (params.gameMode === "burn" || (params.fragile ?? "off") !== "off"),
     reduced,
     ripple: params.pluckRipple !== "off" && !reduced,
     // Mirrors main.ts syncBackground's setShape + configure.

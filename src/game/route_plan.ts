@@ -46,13 +46,15 @@ export interface TappedRun {
 
 // Dijkstra from `source` over the walk multigraph, with edge `banned`
 // never traversed (the tapped run: the approach must not cross it, or the
-// route would finish it and then finish it again). Same deterministic
-// scan and tie-breaking as walk_graph's walkDistances; `prev` records
-// the run each vertex was first reached by, for reconstruction.
+// route would finish it and then finish it again), nor any run `blocked`
+// names (K137: a broken run). Same deterministic scan and tie-breaking as
+// walk_graph's walkDistances; `prev` records the run each vertex was
+// first reached by, for reconstruction.
 function dijkstraAvoid(
   walk: WalkGraph,
   source: string,
-  banned: number
+  banned: number,
+  blocked?: (eid: number) => boolean
 ): { dist: Map<string, number>; prev: Map<string, { from: string; eid: number }> } {
   const dist = new Map<string, number>();
   const prev = new Map<string, { from: string; eid: number }>();
@@ -72,7 +74,7 @@ function dijkstraAvoid(
     if (cur === null) break;
     done.add(cur);
     for (const eid of walk.vertices.get(cur)!.edges) {
-      if (eid === banned) continue;
+      if (eid === banned || (blocked && blocked(eid))) continue;
       const e = walk.edges[eid];
       const other = e.va === cur ? e.vb : e.va;
       const nd = curD + e.length;
@@ -91,18 +93,23 @@ function dijkstraAvoid(
 // the arrival run included, and a self-loop at the head - is the whole
 // route whatever the reach (a tap well along it is a backtrack, as
 // before). The approach never crosses the tapped run: entering it from
-// whichever end reaches the tapped point sooner finishes it once.
+// whichever end reaches the tapped point sooner finishes it once. K137:
+// `blocked` names runs the route may not walk (broken runs): a blocked
+// target is refused and the approach goes around blocked runs; without
+// it the planner is exactly as before.
 export function planRoute(
   walk: WalkGraph,
   head: string,
   target: TappedRun,
-  reach: number
+  reach: number,
+  blocked?: (eid: number) => boolean
 ): number[] | null {
   const e = walk.edges[target.edge];
   if (!e || !walk.vertices.has(head)) return null;
+  if (blocked && blocked(e.id)) return null;
   if (e.va === head || e.vb === head) return [e.id];
   const at = Math.min(e.length, Math.max(0, target.at));
-  const { dist, prev } = dijkstraAvoid(walk, head, e.id);
+  const { dist, prev } = dijkstraAvoid(walk, head, e.id, blocked);
   const viaA = (dist.get(e.va) ?? Infinity) + at;
   const viaB = (dist.get(e.vb) ?? Infinity) + (e.length - at);
   const entry = viaB < viaA - 1e-12 ? e.vb : e.va;
@@ -140,12 +147,15 @@ export interface LitArm {
 // order); a self-loop appears twice, once per end. `gate(eid, atA)` may
 // veto a BEYOND-head arm (hidden or burnt thread is not lit, decision
 // 3); a vetoed arm neither lights nor carries light through. Head arms
-// are never gated (they are today's choices, lit as before).
+// are never gated (they are today's choices, lit as before). K137:
+// `blocked` names runs that are gone (broken), at the head too: a
+// blocked run neither lights nor carries light through.
 export function litArms(
   walk: WalkGraph,
   head: string,
   reach: number,
-  gate?: (eid: number, atA: boolean) => boolean
+  gate?: (eid: number, atA: boolean) => boolean,
+  blocked?: (eid: number) => boolean
 ): LitArm[] {
   const arms: LitArm[] = [];
   if (!walk.vertices.has(head)) return arms;
@@ -169,6 +179,10 @@ export function litArms(
     if (cur !== head && !(curD < reach)) continue;
     for (const eid of walk.vertices.get(cur)!.edges) {
       if (emitted.has(eid)) continue;
+      if (blocked && blocked(eid)) {
+        emitted.add(eid);
+        continue;
+      }
       const e = walk.edges[eid];
       const atA = e.va === cur;
       if (e.va === e.vb) {
