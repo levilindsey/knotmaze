@@ -556,10 +556,13 @@ gameplay-panel.md's TURNSTILES AND HIDDEN RUNS ROWS. The headers of
   the next phase during a move's animation; a band's contrast depends on
   the section colors; after a backtrack the arrival run is the path's
   previous run, so re-entering the run just retraced can be refused; the
-  HUD reads "0 / 0 found" when nothing was placed; outside the thread
-  reveal a press on a hidden run grabs its particles and tugs the unseen
-  thread instead of panning (by reading: `grabAt` and `onThread` take
-  `ps.nearest`, which knows no gone span; not run in the page).
+  HUD reads "0 / 0 found" when nothing was placed. NOT A RESIDUAL (K764,
+  checked by K138 stage 3 on the page): a press on an unrevealed hidden
+  run with no shown thread in reach pans, on both hosts. Every unseen span
+  reaches the ribbons as explore pieces (`syncBroken`, then
+  `syncExplore`), so `exploreOn` is true and `onThread` and `grabAt` take
+  `pickThread`, which skips unshown samples; `ps.nearest` runs only while
+  nothing is gone.
 
 ## One-way runs (K138 stage 3)
 
