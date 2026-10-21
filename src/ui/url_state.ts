@@ -1898,7 +1898,7 @@ function readLegacy(
     colorRule: readChoice(query, "cru", COLOR_RULE_MODES, D.colorRule),
     // K137 stage 3c's sprint (`&spr=on`).
     sprint: readChoice(query, "spr", SPRINT_MODES, D.sprint),
-    // K114's beat rider (`&clk=beat&btp=100&btl=4&btc=4`; PARAM_RANGES
+    // K114's beat rider (`&clk=beat&btp=100&btl=2&btc=4`; PARAM_RANGES
     // clamps the three).
     beatTempo: readNumber(query, "btp", D.beatTempo),
     beatLength: readNumber(query, "btl", D.beatLength),
