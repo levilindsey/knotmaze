@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K724.
+Next free ID: K726.
 
 ## Waiting on Levi
 
@@ -192,6 +192,10 @@ Next free ID: K724.
   telegraph, the glow alone). `K137_s3b.md` Handoff, The calls
 - **K722** · The sword glyph is a placeholder (`marker_glyphs.ts` sword, K137 s3b) until Levi
   designs it
+- **K724** · K138 plan questions 1-6, all rec yes: rules start in classic play (minotaur and fire in
+  s6); an ice backtrack undoes the whole slide; color rule alternate first, then cycle; par rates
+  the best legal route; only 4.31 changes generation; turnstiles and tides step on the move clock.
+  `K138_plan.md` Questions
 
 ## In progress
 
@@ -1579,6 +1583,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   (`carryStep` in main.ts)
 - **K716** · Smarter walker and cutter strategies for the K114 balance probe
   (.claude/probes/K114/walker/balance.ts)
+- **K725** · K138 flourishes: a note per color for the color rule (`src/audio/`, after K720),
+  glitter on ice runs, turnstiles and tides timed to the beat (`K138_plan.md` Handoff)
 
 ## Done
 
