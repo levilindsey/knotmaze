@@ -508,3 +508,17 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   links: `?<seed>&am=instant&mt=hunter&swd=oneuse&swm=20` (add
   `&clk=realtime` for real time). The rules: gameplay-minotaur.md's THE
   SWORD; the rows: gameplay-panel.md's SWORD ROWS.
+
+- AIDS PARAMS (K137 stage 2, 2026-10-21; brief `docs/design/K137_s2.md`):
+  `spool` (`sp2`, a flag), `spoolSlack` (`sps`, a number, PARAM_RANGES
+  [0.1, 1], default 0.3), `hints` (`hn`, PARAM_RANGES [0, 5], default 0)
+  and `compass` (`cmp`, a flag) are APPENDED at 195-198, after the sword's;
+  CODEC_VERSION stays 8. None daily-exempt, none a MAZE key. LIVE_EFFECTS:
+  spool, spoolSlack and hints under onClockChange (a change restarts the
+  solve), compass under onAidsChange (writeParams and a render). The chalk
+  is a viewer pref (`knotmaze.chalk`), never a link. Pins that moved: the
+  table pin, url_codec.test.ts's defaults table and OVERRIDE_KEYS. The
+  golden snapshot, the golden dailies and K87 did not move: off is
+  bit-identical. Probe links: `?<seed>&am=instant&sp2=1&sps=0.3&hn=3&cmp=1`.
+  The rules: gameplay-mechanisms.md's The aids; the rows:
+  gameplay-panel.md's AIDS ROWS.
