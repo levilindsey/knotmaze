@@ -87,8 +87,15 @@ export function followDelay(seed: number, i: number): number {
   return u < 0.5 ? FOLLOW_DELAY_MIN : FOLLOW_DELAY_MAX;
 }
 
-// Where the sleepers lie, in draw order (index i = monster i).
-export function sleeperSpots(g: ChaseGraph, seed: number, count: number, avoid: SwordAvoid = {}): number[] {
+// Where the sleepers lie, in draw order (index i = monster i). `skip`:
+// vertices taken already (the sword's spot).
+export function sleeperSpots(
+  g: ChaseGraph,
+  seed: number,
+  count: number,
+  avoid: SwordAvoid = {},
+  skip: readonly number[] = []
+): number[] {
   const n = sleepersOf(count);
   if (n === 0) return [];
   const route = optimalRouteVertices(g);
@@ -108,6 +115,7 @@ export function sleeperSpots(g: ChaseGraph, seed: number, count: number, avoid: 
     if (nearStart && nearStart[v] >= 0 && nearStart[v] <= 1) continue;
     if (near && near[v] >= 0 && near[v] <= (avoid.hops as number)) continue;
     if (dEx && dEx[v] <= (avoid.dist as number)) continue;
+    if (skip.includes(v)) continue;
     c.push(v);
   }
   const s = Math.floor(Math.abs(seed)) % 4294967296;
@@ -140,9 +148,10 @@ export function monsterSpecs(
   seed: number,
   count: number,
   mode: SleepKind,
-  avoid: SwordAvoid = {}
+  avoid: SwordAvoid = {},
+  skip: readonly number[] = []
 ): MonsterSpec[] {
-  const spots = sleeperSpots(g, seed, count, avoid);
+  const spots = sleeperSpots(g, seed, count, avoid, skip);
   const kinds = monsterKinds(seed, spots.length, mode);
   return spots.map((home, i) => ({ kind: kinds[i], home }));
 }

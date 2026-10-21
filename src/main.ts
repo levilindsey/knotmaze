@@ -74,6 +74,7 @@ import { HINT_SECONDS } from "./game/hints";
 import { revealedBy, runAtCtrl } from "./game/hidden_runs";
 import { catchHeart, heartsToast, livesOf, type HeartLoss } from "./game/lives";
 import { newSword, swordSpot, type SwordAvoid, type SwordPhase } from "./game/sword";
+import { monsterSpecs, sleepersOf } from "./game/monsters";
 import { sprintAfterMove, sprintToggle, sprintValue, type SprintState } from "./game/sprint";
 import type { SwordShown } from "./ui/maze_hud";
 import { rateCuts, rateRun, ratingForResult, walkedOf } from "./game/star_rating";
@@ -1825,6 +1826,7 @@ async function main(): Promise<void> {
     scene.chase?.setBreakLimits(limits);
     scene.turnMino?.setBreakLimits(limits);
     laySword();
+    layMonsters();
     turnWait = 0;
     scene.fabric?.syncMinotaur(liveMino(), params.minoFog, scene.turnMino?.telegraph() ?? null);
   };
@@ -1853,6 +1855,16 @@ async function main(): Promise<void> {
     swordSeen = s.phase;
   };
 
+  // K137 stage 3d (4.9, game/monsters.ts): the extra monsters, turn clock
+  // only, 1-3 runs off the shortest way on their own stream, clear of the
+  // lair as the sword is and off the sword's spot.
+  const layMonsters = (): void => {
+    const tm = scene.turnMino;
+    if (!tm || sleepersOf(params.sleepers) === 0) return;
+    const avoid: SwordAvoid = params.minotaur !== "guard" ? { hops: 1 } : { hops: params.minoTerritory };
+    const skip = tm.sword ? [tm.sword.spot] : [];
+    tm.setMonsters(monsterSpecs(tm.g, params.seed, params.sleepers, params.sleepKind, avoid, skip), params.seed);
+  };
   // The sword's news since the last look, on either clock: a toast for each
   // change of phase or touch (taken, banished, slain, spent).
   const swordNews = (touch: "banish" | "slay" | null): void => {
