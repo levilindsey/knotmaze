@@ -62,6 +62,9 @@ export interface SceneParams {
   exitAnchor: AnchorId;
   // K558: text crossings put the EARLIER stroke over (pen order reversed).
   penReverse: boolean;
+  // K115 stage 9: the #glyphs2 probe switch ("" off; "1" on; "forks" and
+  // "xh2" are probe options). Read from the hash, never from a link.
+  glyphs2?: string;
 }
 
 export interface SceneGraph {
@@ -75,7 +78,7 @@ export interface SceneGraph {
 
 export function buildSceneGraph(params: SceneParams): SceneGraph {
   if (params.text !== "") {
-    const graph = buildTextGraph(params.text, { penReverse: params.penReverse });
+    const graph = buildTextGraph(params.text, { penReverse: params.penReverse, glyphs2: params.glyphs2 });
     if (!checkStructure(graph) || !checkAlternation(graph)) {
       console.warn("Knot invariants violated; generation bug.");
     }
@@ -181,7 +184,7 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
       const walk0 = buildWalkGraph(graph);
       if (walk0) {
         const strandsBefore = graph.strands.length;
-        const seam = attachTitle(graph, params.title, params.penReverse);
+        const seam = attachTitle(graph, params.title, params.penReverse, params.glyphs2 ?? "");
         if (seam !== null) {
           if (hueGroup) {
             for (let i = strandsBefore; i < graph.strands.length; i++) {

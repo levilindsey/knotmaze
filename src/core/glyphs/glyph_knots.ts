@@ -6,14 +6,14 @@
 // of the same primitive vector) unless the knot names a second, outgoing
 // direction: a CORNER, allowed only at a spur's junction.
 
-import type { CubicPath, Pt } from "./glyph_types";
+import type { Pt } from "./glyph_types";
 
 /** [x, y, dx, dy, hin, hout] or, at a corner, [..., dx2, dy2]. */
 export type Knot =
   | readonly [number, number, number, number, number, number]
   | readonly [number, number, number, number, number, number, number, number];
 
-export function knotsToPath(knots: readonly Knot[]): CubicPath {
+export function knotsToPath(knots: readonly Knot[]): Pt[] {
   const out: Pt[] = [];
   for (let i = 0; i < knots.length; i++) {
     const k = knots[i];

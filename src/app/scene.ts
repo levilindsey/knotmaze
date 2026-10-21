@@ -1,5 +1,6 @@
 import type { Application, Container } from "pixi.js";
 import { buildSceneGraph } from "../core/scene_graph";
+import { GLYPHS2 } from "./glyph_switch";
 import { buildSectionRuns, setGamutConfig } from "../core/section_colors";
 import { buildWalkGraph } from "../core/walk_graph";
 import type { WalkGraph } from "../core/walk_graph";
@@ -232,7 +233,7 @@ export function createScene(deps: SceneDeps): Scene {
 
     // The lattice, and in fabric mode the maze plan's graph surgery
     // (core/scene_graph.ts; K7 stage 1 moved it there unchanged).
-    const sceneParams = { ...params, title: deps.dailyTitle() };
+    const sceneParams = { ...params, title: deps.dailyTitle(), glyphs2: GLYPHS2 };
     const { graph, hueGroup, walk: builtWalk } = buildSceneGraph(sceneParams);
 
     // K7: the host owns the system; `ps` is main's read-only view of it.

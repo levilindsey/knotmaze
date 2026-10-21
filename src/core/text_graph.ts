@@ -26,6 +26,7 @@ import { hypot2 } from "../util/det_math";
 import { buildWalkGraph } from "./walk_graph";
 import { buildCellMask } from "./shapes";
 import type { ShapeId } from "./shapes";
+import { buildGlyphGraph, glyphSetCovers } from "./glyphs/glyph_graph";
 
 type Pt = [number, number];
 
@@ -830,9 +831,33 @@ function greekGlyphFor(code: number): HersheyGlyph | undefined {
 export interface TextGraphOpts {
   xHeight?: number;
   penReverse?: boolean;
+  // K115 stage 9: the #glyphs2 switch (glyphs/glyph_graph.ts). "" or
+  // undefined builds from Hershey exactly as before.
+  glyphs2?: string;
 }
 
+// K115 stage 9: text the glyph set could not cover fell back to Hershey
+// (counted, so a probe can tell; reset by nothing).
+export const glyphStats = { built: 0, fallbacks: 0 };
+
 export function buildTextGraph(text: string, opts?: TextGraphOpts): TangleGraph {
+  const g2 = opts?.glyphs2 ?? "";
+  if (g2 !== "") {
+    const flags = g2.split(",");
+    const xh =
+      opts && opts.xHeight !== undefined && opts.xHeight > 0
+        ? opts.xHeight
+        : flags.includes("xh2")
+          ? MIN_XHEIGHT
+          : 3;
+    const built = buildGlyphGraph(text, { xHeight: xh, forks: flags.includes("forks") });
+    if (built) {
+      glyphStats.built++;
+      assignPenOrder(built.graph, built.edgePen, opts?.penReverse === true);
+      return built.graph;
+    }
+    glyphStats.fallbacks++;
+  }
   const xHeight =
     opts && opts.xHeight !== undefined && opts.xHeight > 0 ? opts.xHeight : 3;
   const scale = xHeight / X_HEIGHT_HU;
@@ -1748,7 +1773,12 @@ function properIntersect(a: Pt, b: Pt, c: Pt, d: Pt): boolean {
   );
 }
 
-export function attachTitle(graph: TangleGraph, title: string, penReverse = false): string | null {
+export function attachTitle(
+  graph: TangleGraph,
+  title: string,
+  penReverse = false,
+  glyphs2 = ""
+): string | null {
   let hasGlyph = false;
   for (const ch of title.normalize("NFD")) {
     const code = ch.codePointAt(0) ?? -1;
@@ -1793,7 +1823,11 @@ export function attachTitle(graph: TangleGraph, title: string, penReverse = fals
   }
   if (!neighbourPos) return null;
 
-  let word = buildTextGraph(title, { xHeight: 3, penReverse });
+  // K115 stage 9: under the switch the glyph set builds the word (Hershey
+  // when a character is outside it) and never shrinks below MIN_XHEIGHT.
+  const glyphOn = glyphs2 !== "" && glyphSetCovers(title);
+  const g2 = glyphOn ? glyphs2 : "";
+  let word = buildTextGraph(title, { xHeight: 3, penReverse, glyphs2: g2 });
   const wordBounds = (): [number, number, number, number] => {
     let x0 = Infinity;
     let y0 = Infinity;
@@ -1810,7 +1844,12 @@ export function attachTitle(graph: TangleGraph, title: string, penReverse = fals
   let wb = wordBounds();
   const wordWidth = wb[2] - wb[0];
   if (wordWidth > mazeWidth && wordWidth > 0) {
-    word = buildTextGraph(title, { xHeight: (3 * mazeWidth) / wordWidth, penReverse });
+    const fit = (3 * mazeWidth) / wordWidth;
+    word = buildTextGraph(title, {
+      xHeight: glyphOn ? Math.max(MIN_XHEIGHT, fit) : fit,
+      penReverse,
+      glyphs2: g2,
+    });
     wb = wordBounds();
   }
   const dx = (mazeMinX + mazeMaxX) / 2 - (wb[0] + wb[2]) / 2;

@@ -39,6 +39,10 @@ export interface Edge {
   nodeA: string;  // Node ID.
   nodeB: string;  // Node ID.
   latticePoints: Array<[number, number]>;  // Path through lattice.
+  // K115 stage 9: the authored curve's mid-arc point between the two nodes
+  // (glyph text edges only; the chain slot uses it in place of the chord
+  // midpoint). Knot and maze edges never carry it.
+  mid?: [number, number];
 }
 
 // A strand is a sequence of edges between junctions/ends.
