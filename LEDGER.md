@@ -29,9 +29,6 @@ Next free ID: K607.
 - **K585** · Mark picks in the open-work report (https://claude.ai/artifact/63Q6FoNk7Bux3BhYQBt5g2):
   Sooner marks, answers and notes save to its db (`picks/<id>`, `notes/general`). Read them with
   ArtifactData, then reorder the ledger.
-- **K580** · The a's J join, Levi's call (2026-10-20): tangent, its shared stretch a TAPERED spur that
-  leaves the junction as wide as both merging strokes and narrows to normal where they turn collinear.
-  Open calls: K606. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
 - **K261** · K74 stage 2's two calls, built as rec. (Levi may change either): the H-cut share is 1;
   a partial share cuts an even stride. `greedyTrap` is off, so dailies 1-240 sit at 20.0% within
   1.5x (bar 15%). `docs/design/K74.md` ("Calls for Levi").
@@ -279,6 +276,14 @@ Next free ID: K607.
   - evidence: `.claude/probes/K578/`
   - next: baseline the fall (phone fps, desktop frame cost), then design and build the cache in the frame loop draw step
   - brief: `docs/design/K578.md`
+- **K580** · The a's J join, Levi's call (2026-10-20): tangent, its shared stretch a TAPERED spur that
+  leaves the junction as wide as both merging strokes and narrows to normal where they turn collinear.
+  Open calls: K606. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
+  - owner: agent `ae18d8a4a4f0949e9` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 15:18, 2 h cap ~17:18)
+  - branch: `worktree-agent-ae18d8a4a4f0949e9`, worktree `.claude/worktrees/agent-ae18d8a4a4f0949e9`; last commit: `c78a364`
+  - evidence: `.claude/probes/K580/`
+  - next: the taper geometry on the authored cubics (where the strokes part, root width, profile), stills at xh 2 and 3; then the width consumers, the lint, contact sheets
+  - brief: `docs/design/K580.md`
 
 ## Next, in order
 
