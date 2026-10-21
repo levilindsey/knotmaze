@@ -175,8 +175,9 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   reads 47,691 and 64,106 (47,606 and 64,021 + 85), and its budgets rose
   to 47,750 and 64,150. Each changed text compiles cold once. SwiftShader
   compiled all 8 dumped variants standalone and linked 12/12 programs
-  plain and 12/12 under `xp=threads`, on the pre-K620 text
-  (`.claude/probes/K324/swiftshader/`). No new program site or variant.
+  plain and 12/12 under `xp=threads` on the pre-K620 text, and linked
+  12/12 and 12/12 again on top of K620 (runtime texts 47,725 and 64,148;
+  `.claude/probes/K324/swiftshader/`). No new program site or variant.
 - **The stub's free end changed pluck-blur** (K459, 2026-10-15;
   render-pluck.md, K459): PLUCK_VERT passes `vCap` (the cap coordinate,
   aUV.y) and PLUCK_FRAG narrows the thread over the stub's cap, so
