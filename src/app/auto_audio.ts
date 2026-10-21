@@ -1,11 +1,17 @@
 import type { KnotSynth } from "../audio/knot_synth";
 import type { PitchAssignment } from "../audio/pitch_space";
-import { noteToFreq, segmentsNear } from "../audio/pitch_space";
+import { noteToFreq } from "../audio/pitch_space";
 import type { SongScheduler } from "../audio/song_scheduler";
 import { SCARBOROUGH_FAIR } from "../audio/songs";
 import type { PhysicsHost } from "../physics/physics_host";
 import type { PanelSettings } from "../ui/tweakpane_panel";
 import type { UrlParams } from "../ui/url_state";
+import {
+  findValidCtrl,
+  nearestValidCtrl,
+  pickMusicSegment,
+  pickRandomSegment,
+} from "./auto_pick";
 import type { SceneRef } from "./scene_ref";
 
 // K5 M6 (docs/design/K5_K6_split.md, 2.2): the auto audio, moved out of
@@ -24,8 +30,20 @@ const MUSIC_LOOKAHEAD = 0.3;
 // The audio map as createAutoAudio reads it (src/app/audio_map.ts).
 export interface AutoAudioMap {
   readonly audioAssign: PitchAssignment | null;
-  readonly audioSegSite: Array<{ chain: number; ctrl: number }>;
+  readonly audioSegSite: Array<{
+    chain: number;
+    ctrl: number;
+    c0?: number;
+    c1?: number;
+  }>;
   nextRandomPluck: number;
+}
+
+// Where an auto pluck lands: a chain and a ctrl on it (K244: one that would
+// draw, so the note and the vibration go together).
+interface AutoSite {
+  chain: number;
+  ctrl: number;
 }
 
 // What the auto audio reads from main(): values and functions, each
@@ -74,26 +92,62 @@ export function createAutoAudio(deps: AutoAudioDeps, scene: SceneRef) {
   // sound-only). The visual waits out the audio output latency so sight
   // lands on the sound. `when` (audio clock) and `lead` (seconds from now)
   // place a note scheduled ahead (K101): its visual waits for it too.
+  // K244: where a segment's auto pluck lands, as a finder for ONE decision
+  // (one random tick, one music note): its answers are memoized, so the pick
+  // and the pluck that follows share one site, and the overlay's tester keeps
+  // the chains' samples for the decision. A site is a place whose pluck would
+  // draw (not a junction core: render/pluck_model.ts wouldPluck), else the
+  // segment has none (null) and plays nothing. A fabric segment tries its
+  // run's midpoint, where its auto plucks have always landed, then outward
+  // along the run; a knot strand tries random ctrls (the old random place
+  // along it: the fixed mid-strand site rang one spot forever), then sweeps.
+  const siteResolver = (): ((seg: number) => AutoSite | null) | null => {
+    const ps = scene.ps;
+    const renderer = scene.renderer;
+    if (!ps || !renderer) return null;
+    const test = renderer.plucks.siteTester();
+    const memo = new Map<number, AutoSite | null>();
+    return (seg: number): AutoSite | null => {
+      const known = memo.get(seg);
+      if (known !== undefined) return known;
+      let out: AutoSite | null = null;
+      const site = audioMap.audioSegSite[seg];
+      const chainArr = site ? ps.chains[site.chain] : undefined;
+      if (site && chainArr && chainArr.length > 0) {
+        const ok = (ctrl: number): boolean => test(site.chain, ctrl);
+        const ctrl = scene.walkGraph
+          ? nearestValidCtrl(site.c0 ?? site.ctrl, site.c1 ?? site.ctrl, site.ctrl, ok)
+          : findValidCtrl(chainArr.length, ok, Math.random);
+        if (ctrl !== null && ctrl >= 0) out = { chain: site.chain, ctrl };
+      }
+      memo.set(seg, out);
+      return out;
+    };
+  };
+
+  // `at`: the site the caller's pick already resolved (the tick), or
+  // undefined to resolve it here; null plays nothing.
   const triggerAutoPluck = (
     seg: number,
     freq: number,
     amp: number,
     when?: number,
-    lead = 0
+    lead = 0,
+    at?: AutoSite | null
   ): void => {
     if (!scene.ps || !scene.renderer || !Number.isFinite(freq)) return;
+    // K244: the site comes BEFORE the note. A segment with no place that
+    // would draw plays nothing, so a note never sounds with nothing on screen
+    // (it did in a junction core, K235's "OTHER SOUND PATHS").
+    const site = at === undefined ? siteResolver()?.(seg) ?? null : at;
+    if (!site) return;
+    const chainArr = scene.ps.chains[site.chain];
+    if (!chainArr || chainArr.length === 0) return;
     if (!settings.muted && params.soundMode !== "none") {
       // K279: on the synth's auto bus (autoPluckGain).
       synth.pluck(freq, amp, when, true);
     }
-    const site = audioMap.audioSegSite[seg];
-    if (!site) return;
-    const chainArr = scene.ps.chains[site.chain];
-    if (!chainArr || chainArr.length === 0) return;
-    const len = chainArr.length;
-    // Knot mode: the audio segment is the whole strand - excite a random
-    // place along it (the fixed mid-strand site rang one spot forever).
-    const ctrl = scene.walkGraph ? site.ctrl : Math.random() * len;
+    const ctrl = site.ctrl;
     const unit = pluckUnit(site.chain, ctrl);
     // A unit the user is holding stays sound-only.
     const g = scene.ps.grabbedParticle;
@@ -149,13 +203,21 @@ export function createAutoAudio(deps: AutoAudioDeps, scene: SceneRef) {
         audioMap.nextRandomPluck =
           nowS + (0.45 + Math.random() * 1.75) / Math.max(0.1, params.soundSpeed);
         const n = audioMap.audioSegSite.length;
-        if (n > 0) {
-          const seg = Math.floor(Math.random() * n);
-          triggerAutoPluck(
-            seg,
-            audioMap.audioAssign.segFreq[seg] ?? 220,
-            0.4 + Math.random() * 0.35
-          );
+        const resolve = n > 0 ? siteResolver() : null;
+        if (resolve) {
+          // K244: a random segment among those whose pluck would draw; with
+          // none, this tick plays nothing.
+          const seg = pickRandomSegment(n, (s) => resolve(s) !== null, Math.random);
+          if (seg >= 0) {
+            triggerAutoPluck(
+              seg,
+              audioMap.audioAssign.segFreq[seg] ?? 220,
+              0.4 + Math.random() * 0.35,
+              undefined,
+              0,
+              resolve(seg)
+            );
+          }
         }
       }
     } else if (params.soundMode === "music") {
@@ -178,15 +240,27 @@ export function createAutoAudio(deps: AutoAudioDeps, scene: SceneRef) {
         if (songLog.length > 64) songLog.shift();
         if (!row.note) continue;
         const f = noteToFreq(row.note);
-        const segs = segmentsNear(audioMap.audioAssign, f);
-        if (segs.length > 0 && Number.isFinite(f)) {
+        if (!Number.isFinite(f)) continue;
+        const resolve = siteResolver();
+        if (!resolve) continue;
+        // K244: a random one of the segments nearest the note's pitch whose
+        // pluck would draw (a note whose own pitch has none falls back to the
+        // nearest pitch that does); with none anywhere the note is skipped.
+        const seg = pickMusicSegment(
+          audioMap.audioAssign,
+          f,
+          (s) => resolve(s) !== null,
+          Math.random
+        );
+        if (seg >= 0) {
           // The song's true pitch plays; the matching segment moves.
           triggerAutoPluck(
-            segs[Math.floor(Math.random() * segs.length)],
+            seg,
             f,
             0.62,
             audioNow === null ? undefined : at,
-            at - now
+            at - now,
+            resolve(seg)
           );
         }
       }

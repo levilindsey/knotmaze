@@ -62,6 +62,44 @@ describe("pitch spaces", () => {
       a.byFreq[a.byFreq.length - 1].segs
     );
   });
+
+  it("with a filter, answers with the valid segments of the nearest pitch that has any (K244)", () => {
+    const a = assignPitches("chromatic", 2, 5, Array.from({ length: 48 }, (_, i) => 50 - i));
+    const rows = a.byFreq;
+    const f = rows[10].freq;
+    const all = () => true;
+    // Everything valid: the unfiltered answer, exactly.
+    expect(segmentsNear(a, f, all)).toEqual(segmentsNear(a, f));
+    // Part of the class valid: just those segments, same class.
+    const half = new Set(rows[10].segs.filter((_, i) => i % 2 === 0));
+    expect(half.size).toBeGreaterThan(0);
+    expect(segmentsNear(a, f, (s) => half.has(s))).toEqual([...half]);
+    // The class has none: the nearest class that does (here one step up when
+    // the note sits a hair sharp of its own pitch, one down when flat).
+    const none10 = new Set(rows[10].segs);
+    const notIn10 = (s: number) => !none10.has(s);
+    expect(segmentsNear(a, f * 1.01, notIn10)).toEqual(rows[11].segs);
+    expect(segmentsNear(a, f * 0.99, notIn10)).toEqual(rows[9].segs);
+    // Nothing valid anywhere: empty, never a segment the filter refused.
+    expect(segmentsNear(a, f, () => false)).toEqual([]);
+    // Only one segment on the whole map is valid: it, however far.
+    const lone = rows[0].segs[0];
+    expect(segmentsNear(a, rows[rows.length - 1].freq, (s) => s === lone)).toEqual([lone]);
+    // A request that is not a pitch has no nearest class, filtered or not.
+    expect(segmentsNear(a, NaN, all)).toEqual([]);
+    expect(segmentsNear(a, NaN)).toEqual([]);
+  });
+
+  it("asks the filter nearest class first and stops at the first class that has a valid segment (K244)", () => {
+    const a = assignPitches("chromatic", 2, 5, Array.from({ length: 48 }, (_, i) => 50 - i));
+    const asked: number[] = [];
+    segmentsNear(a, a.byFreq[10].freq, (s) => {
+      asked.push(s);
+      return true;
+    });
+    // Only the nearest class's segments were tested.
+    expect(new Set(asked)).toEqual(new Set(a.byFreq[10].segs));
+  });
 });
 
 describe("tonal weighting", () => {

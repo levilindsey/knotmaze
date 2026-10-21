@@ -182,18 +182,37 @@ export function assignPitchesFromList(
 // Segments whose assigned pitch is nearest the requested frequency (for
 // song playback). Always returns the nearest pitch class's segments, so
 // any melody degrades gracefully onto any space.
+//
+// K244: with `valid`, only the segments it accepts count. The nearest pitch
+// class that has at least one valid segment answers, with just its valid
+// segments, so a note whose own pitch class has no usable thread falls back
+// to the nearest pitch that does (none valid anywhere: an empty list). Ties
+// in distance go to the lower class, as before. `valid` is asked lazily,
+// nearest class first, so a mostly valid map tests only one class.
 export function segmentsNear(
   assign: PitchAssignment,
-  freq: number
+  freq: number,
+  valid?: (seg: number) => boolean
 ): number[] {
-  let best: { freq: number; segs: number[] } | null = null;
-  let bestD = Infinity;
-  for (const row of assign.byFreq) {
-    const d = Math.abs(Math.log2(row.freq / freq));
-    if (d < bestD) {
-      bestD = d;
-      best = row;
+  if (!valid) {
+    let best: { freq: number; segs: number[] } | null = null;
+    let bestD = Infinity;
+    for (const row of assign.byFreq) {
+      const d = Math.abs(Math.log2(row.freq / freq));
+      if (d < bestD) {
+        bestD = d;
+        best = row;
+      }
     }
+    return best ? best.segs : [];
   }
-  return best ? best.segs : [];
+  const order = assign.byFreq
+    .map((row, i) => ({ row, i, d: Math.abs(Math.log2(row.freq / freq)) }))
+    .filter((r) => Number.isFinite(r.d)) // the unfiltered scan never picks one
+    .sort((a, b) => a.d - b.d || a.i - b.i);
+  for (const { row } of order) {
+    const ok = row.segs.filter(valid);
+    if (ok.length > 0) return ok;
+  }
+  return [];
 }
