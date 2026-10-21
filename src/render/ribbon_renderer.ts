@@ -1062,7 +1062,9 @@ export class RibbonRenderer {
             atEnd: false,
             ...hostOf(chain[0], ci, 0),
           });
-        } else if (!ps.isAnchored(chain[0])) {
+        } else if (!ps.isAnchored(chain[0]) && !style.taper?.[ci]) {
+          // K580: a tapered root's start R is no dead end (its two strokes
+          // carry on past it), so it gets no cap disc.
           this.freeTips.push({ chain: ci, atEnd: false });
         }
         if (fusedSet.has(chain[chain.length - 1])) {

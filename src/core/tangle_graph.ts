@@ -101,7 +101,8 @@ export function checkStructure(graph: TangleGraph): boolean {
   for (const [nodeId, node] of graph.nodes) {
     const degree = graph.adjacency.get(nodeId)?.length ?? 0;
     if (node.type === NODE_TYPE.CROSSING && degree !== 4) return false;
-    if (node.type === NODE_TYPE.TURN && degree !== 2) return false;
+    // K580: a tapered root's start is a TURN with one arm.
+    if (node.type === NODE_TYPE.TURN && degree !== 2 && !(degree === 1 && node.rootStart === true)) return false;
     if (node.type === NODE_TYPE.END && degree !== 1) return false;
     // K115 stage 3a: the title seam `tseam` is a degree-2 JUNCTION (a
     // walk vertex, never a branch), so a junction needs only 2 arms.
