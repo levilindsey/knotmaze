@@ -324,3 +324,244 @@ coordinator). Started 2026-10-20 22:23 PT; the 2 h cap is 00:23.
   the cut count up to the candidate's size minus one. It is exact (a
   repeated state is a loop whatever is decided later) within a step
   budget; past the budget the candidate is reported as an upper bound.
+
+## Handoff
+
+Stopped 2026-10-21 at about 00:01 PT, inside the cap. All four items are
+built and verified, and so are Lead's stars (call 4). The branch is
+rebased onto origin/master (13 new commits, no conflicts; K137 s3a had
+not landed, so its HUD, stats, share and star rows, `star_rating.ts`
+included, are still to meet these at its merge or this one). `npm test`: 1813 passed, 1 skipped. `npm run
+build` passes. The codec pin moves by `cut`'s two new options only; no
+other pin moved.
+
+### What landed
+
+- `19c63c6` The pure walker and Lead's par (`src/game/walker.ts`, 17 tests
+  in `test/game/walker.test.ts`). It has the WalkerMap (headings and
+  strand continuations per run end), `leadRoute`, `delayNext` and
+  `leadPar`. `leadPar` runs R.3.9's model, checked by simulation, then
+  the exact search (`PAR_STEP_BUDGET` 400000, `PAR_MAX_CUTS` 12). Past the
+  budget it gives an upper bound (`exact: false`).
+- `532d2d6` `cut` gains `lead` and `delay`, appended. There is no codec
+  bump and the default stays off. Walker modes keep stage 1's scope.
+- `631f523` The route thread: the telegraph rims draw the route, the next
+  run full and the rest faint. The walker buttons are
+  `src/ui/walker_buttons.ts`: Go / "Let it walk", Undo, Reset.
+- `82f2a47` Lead and Delay on the page:
+  - the walker's frame, one run per the head dot's normal move time;
+  - tap-to-cut through the pointer's cut pick, with keys G (go) and U
+    (undo);
+  - the HUD rows: `cuts 1 · par 1` and `cuts 2 walker 3 · shortest 14`;
+  - the banner rows, and the share: `✂️ 1, par 1` and
+    `🐢 18 runs (it wanted 14)`;
+  - the toasts: "It's going in circles.", "The walker has no way to
+    go.", "The walker can't go on.", and stage 1's refusal ("That cut
+    would leave the walker no way to the exit."), checked against the
+    walker.
+- `d394126` The probe hook `__knotFabric().walker` (mode, state, idx,
+  par, parCuts, cuts, route, end, walk, shortest, shown). The lore:
+  Walker in `gameplay-mechanisms.md`, the options in `gameplay-links.md`,
+  the rows in `gameplay-panel.md`.
+- `2f2b4ea` Reset after a finish. Once the banner closes, the buttons
+  come back with only Reset live, and it starts a fresh solve. Before
+  this, the buttons stayed hidden and Reset could not be reached.
+- `8dc55c8` Lead's stars (call 4): `rateCuts` and `cutRules` in
+  `star_rating.ts`, Lead's branch of `starExplanation`, and main.ts's
+  rating line in `showFabricWin`. 3 tests in `star_rating.test.ts`; the
+  lore in `gameplay-mechanisms.md` and `gameplay-stars.md`.
+
+### Calls for Levi
+
+1. **The strand end.** Built: the walker keeps to its own strand. Where
+   the strand ends, or its continuation is cut, it takes the first live
+   arm clockwise from straight on (it keeps right). It turns back only
+   when nothing else is live, and an END always turns it back.
+   Alternatives: counter-clockwise (keep left), or the straightest arm.
+2. **Puzzle or action.** Built: the puzzle. You cut while the walker
+   plans, and Go starts the walk and locks the cuts (a tap does nothing
+   while it walks). A walk that ends short says why and goes back to
+   the plan with the cuts kept. Reset does the same mid-plan or mid-walk,
+   and gives a fresh solve after a finish. Alternative: cutting while it
+   walks (Lead's action variant, out of scope here).
+3. **The route.** Built: all of it, to the exit or to its first repeat,
+   redrawn after every cut. The next run is full and the rest faint.
+   Alternative: the next few runs only, which is harder to read and
+   harder to solve.
+4. **Lead's stars.** Built as recommended: the cuts against par, 3 at
+   par or under, 2 at par + 1, 1 beyond (`rateCuts` in
+   `star_rating.ts`). The popover gives Lead's rules, then "You led the
+   walker out with N cuts; par is P.", and the share's title wears the
+   stars. Delay has no stars, because the walk rating measures your walk
+   and the walker walked. Alternatives: no stars in walker modes, or
+   stars for Delay from its walk against the shortest.
+5. **Delay's turns.** Built: each action is a turn, a cut or a pass
+   ("Let it walk", or G), and the walker takes one run after each. Undo
+   takes back the last turn: the cut and the run after it, or a pass's
+   run. Alternative: the walker walks on a clock and you cut at will.
+6. **Par 0 or past 8.** The census found one par 0 (daily 18, whose
+   uncut walker reaches the exit in 61 runs) and none past 4.
+   - Built: nothing special. A par-0 maze reads `par 0`, and Go wins
+     with no cuts.
+   - An upper-bound par shows as a plain par; no daily hit one.
+   - Options: skip or reroll par-0 seeds for Lead, say "no cuts needed",
+     or mark an upper bound ("par ≤ n").
+
+**Question for Levi (R.6.2):** can a first-time phone player predict the
+walker's next run? Only a phone can answer it. The route shows the next
+run full, so the test is whether a new player reads it before tapping.
+
+### Par census, dailies 1-30
+
+Source: `.claude/probes/K114/walker/par_census.md` (`par_census.ts`). The
+whole census took 1.1 s of wall time; the largest search was 74055 steps
+(daily 23).
+- Every par is exact, and the model's count equals par on all 30.
+- Every par cut set walks to the exit.
+- Histogram: par 0: 1, par 1: 7, par 2: 12, par 3: 9, par 4: 1.
+
+In the table, "uncut" is where Lead's walker goes with no cuts. The
+"with par's cuts" column gives Lead's walk in runs and as a multiple of
+the optimal walk. "Delay" is the replanning walker's uncut route, in runs.
+
+| daily | uncut | par | steps | with par's cuts | delay |
+|---|---|---|---|---|---|
+| 1 | loop 76 | 2 | 2098 | 80, 4.35x | 22 |
+| 2 | loop 29 | 1 | 29 | 15, 1.78x | 11 |
+| 3 | loop 33 | 2 | 693 | 28, 1.57x | 14 |
+| 4 | loop 10 | 1 | 10 | 22, 1.22x | 17 |
+| 5 | loop 11 | 3 | 6391 | 24, 1.53x | 18 |
+| 6 | loop 30 | 3 | 1787 | 24, 1.35x | 14 |
+| 7 | loop 8 | 2 | 149 | 55, 3.16x | 19 |
+| 8 | loop 55 | 1 | 55 | 35, 2.23x | 18 |
+| 9 | loop 64 | 1 | 64 | 34, 2.33x | 14 |
+| 10 | loop 51 | 2 | 1035 | 26, 1.94x | 14 |
+| 11 | loop 8 | 2 | 134 | 17, 1.75x | 16 |
+| 12 | loop 43 | 3 | 26361 | 34, 2.21x | 21 |
+| 13 | loop 32 | 2 | 752 | 34, 2.34x | 16 |
+| 14 | loop 179 | 1 | 179 | 45, 3.46x | 16 |
+| 15 | loop 44 | 2 | 727 | 29, 2.35x | 12 |
+| 16 | loop 18 | 2 | 160 | 24, 1.76x | 16 |
+| 17 | loop 23 | 3 | 7512 | 34, 2.13x | 14 |
+| 18 | exit 61 | 0 | 0 | 61, 2.99x | 22 |
+| 19 | loop 35 | 2 | 550 | 33, 1.93x | 17 |
+| 20 | loop 43 | 1 | 43 | 34, 2.76x | 19 |
+| 21 | loop 17 | 2 | 362 | 22, 1.95x | 18 |
+| 22 | loop 18 | 3 | 3012 | 37, 2.87x | 22 |
+| 23 | loop 6 | 4 | 74055 | 29, 2.33x | 17 |
+| 24 | loop 37 | 3 | 15745 | 18, 1.50x | 20 |
+| 25 | loop 8 | 2 | 99 | 32, 2.21x | 13 |
+| 26 | loop 56 | 2 | 1926 | 12, 1.24x | 11 |
+| 27 | loop 11 | 1 | 11 | 28, 1.52x | 26 |
+| 28 | loop 8 | 3 | 626 | 24, 2.06x | 17 |
+| 29 | loop 25 | 3 | 17132 | 21, 2.88x | 17 |
+| 30 | loop 12 | 3 | 5179 | 44, 2.93x | 21 |
+
+### Keep it in balance probe
+
+Source: `.claude/probes/K114/walker/balance.md` (`balance.ts`, run by a
+sonnet helper). Naive fencing against the replanning walker on dailies
+1-30, moat radius r, the exit tail protected. Each turn the cutter cuts
+one run (or passes), then the walker takes k runs. The uncut route is 17
+runs (median). "Fence" is the median fence size. "Walk to ball" is the
+runs the walker takes, with no cuts, before it first stands within r
+hops of the exit junction.
+
+| k | r | cutter wins | turns, median [min-max] | fence | walk to ball, median [min-max] |
+|---|---|---|---|---|---|
+| 1 | 0 | 30/30 | 2 [2-3] | 2 | 16 [10-25] |
+| 1 | 1 | 30/30 | 4 [1-4] | 4 | 15 [9-24] |
+| 1 | 2 | 30/30 | 6.5 [1-8] | 7 | 14 [8-23] |
+| 1 | 3 | 30/30 | 10 [2-16] | 11 | 13 [7-22] |
+| 2 | 0 | 30/30 | 2 [2-3] | 2 | 16 [10-25] |
+| 2 | 1 | 30/30 | 4 [1-4] | 4 | 15 [9-24] |
+| 2 | 2 | 29/30 | 6.5 [1-8] | 7 | 14 [8-23] |
+| 2 | 3 | 27/30 | 10 [2-16] | 11 | 13 [7-22] |
+
+- The walker's wins: daily 11 at r = 2, and dailies 9, 17 and 27 at
+  r = 3.
+- Extra radii 4 to 7: at k = 1 the cutter wins 30, 30, 29 and 28. At
+  k = 2 it wins 26, 18, 14 and 12.
+- R.3.9's "moat 3 tips it to the walker" does not reproduce. The doc's
+  moat 2 and 3 match r = 3 and 4 by counts, so the moat's definition is
+  open.
+- At r = 1, dailies 1, 12, 23, 28 and 29 have a one-run fence: a bridge.
+
+### Page results
+
+Driver: `.claude/probes/K114/walker/page/walker_page.mjs <desktop|phone>
+<lead|delay> [seed]`. It uses real taps (mouse on desktop 1400x900;
+touch at 411x753, dsf 2.625) on `?7&am=instant&ct=lead|delay`. All four
+runs pass on the rebased build, with 0 page errors: Lead 20/20 on
+desktop and on phone (with the stars), Delay 12/12 on both. JSON is in
+`page/out/`, and the pre-rebase runs, which also passed, are in
+`page/out/pre_rebase/`.
+
+**Lead (seed 7)**
+- Par is 1, cutting run 196.
+- Uncut, the route loops (33 states). Go walks it to the repeat, and
+  "It's going in circles." puts the walker back at the start with the
+  cuts kept.
+- A tap cuts 196, and the route then runs 22 runs to the exit. The HUD
+  reads `cuts 1 · par 1`.
+- Undo and the cut again both work. Go walks the 22 runs to `mexit_b`.
+- The banner shows ★★★ and its rows end `cuts 1 · par 1`. The stars'
+  popover gives Lead's rules, then "You led the walker out with 1 cut;
+  par is 1." The share reads `Knotmaze 🧶 ★★★ · ✂️ 1, par 1`.
+- The buttons hide under the banner and come back after ×. Reset then
+  gives a fresh solve (no cuts, head `mentr_b`).
+
+**Delay (seed 7)**
+- The HUD starts at `cuts 0 walker 0 · shortest 14`.
+- The turns:
+  - turn 1 cuts 220, then the walker takes a run;
+  - turn 2 is a pass;
+  - turn 3 cuts 211.
+- The HUD then reads `cuts 2 walker 3 · shortest 14`.
+- Cutting run 223 is refused with the toast, and nothing changes.
+- Undo takes back the last cut and its run.
+- Passes finish at 18 runs. The banner shows `walker 18 · shortest 14`,
+  and the share reads `🐢 18 runs (it wanted 14)`.
+
+Stills are in `.claude/probes/K114/walker/shots/`, named
+`walker_<desktop|phone>_lead_<start|walking|planned|win>.png` and
+`walker_<desktop|phone>_delay_<start|turns|refused|win>.png`.
+
+### Residuals
+
+- The walker's own glow on its dot is not built; only the route rims
+  show.
+- The move pad shows in walker modes, but moves are refused there.
+- An upper-bound par shows as a plain par (call 6).
+- No real phone pass was run; that was out of scope.
+- Cuts with the minotaur or the fire are K688.
+- From the balance probe:
+  - its cutter keeps cutting after the walker is inside the fence;
+  - bridge dailies (a one-run fence at r = 1) make Keep it in trivial
+    there.
+- Probe note: three cold pages at once overran the K307 shader warm-up.
+  The driver waits 45 s for the controller, and its runs start 20 s
+  apart.
+
+### Handle
+
+- owner: nobody since 2026-10-21 00:01 (agent `a0437651435d16c14` of
+  claude session 91b19e11-7759-4638-ba60-4705b011b94f, stage done).
+- branch: `worktree-agent-a0437651435d16c14`, worktree
+  `.claude/worktrees/agent-a0437651435d16c14`. Last commit: this
+  Handoff, on top of `8dc55c8` (unpushed).
+- evidence: `.claude/probes/K114/walker/` in the worktree (untracked):
+  - `par_census.md`, `balance.md`;
+  - `page/walker_page.mjs`, `page/out/`, `page/logs/`;
+  - `shots/`.
+- next:
+  - Levi's calls 1-6 and the phone question;
+  - the walker's dot glow;
+  - a phone pass;
+  - merge, resolving K137 s3a's rows.
+- brief: `docs/design/K114_walker.md`.
+- env: serve the worktree with `node node_modules\vite\bin\vite.js
+  --config .claude\probes\K114\walker\page\vite.private-cache.config.ts
+  --port 5124 --strictPort --host 127.0.0.1`. Then run `node
+  .claude\probes\K114\walker\page\walker_page.mjs <desktop|phone>
+  <lead|delay> 7`.
