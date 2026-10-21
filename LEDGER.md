@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K785.
+Next free ID: K786.
 
 ## Waiting on Levi
 
@@ -502,6 +502,11 @@ merged):
 13. K326 A.
 14. K318, K336, K337.
 
+- **K785** · Lore attach cost: reading `src/app/frame_loop.ts` attaches 11 rules files (about 28k
+  tokens), and the K774 reading set (main.ts, frame_loop, minotaur_turns, input_keys,
+  fabric_maze_renderer) about 60k. K774 and K138 s4 compacted 7 and 9 times in their first 30 min
+  with no commit (2026-10-21, agent_watch). Narrow each rule to the files it documents rather than
+  every caller (`docs/lore_index.md`, K173, K437); re-measure with a fresh agent
 - **K784** · Phone sitting 6 on real touches: one-way runs (K138 s3, ow), lures and snares (K137 s4,
   lur and snr; emulated only so far), the K775 overflow, and a touch press on an unrevealed hidden
   run (the K764 case)
