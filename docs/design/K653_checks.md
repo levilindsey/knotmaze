@@ -165,10 +165,16 @@ two checks not run (below). All probes and results are untracked under
   494, streamers 124` (exactly the cannons' 2 x 247 and 2 x 62); `&cfc=0`,
   `spray 320, cannon 0, streamers 0`; 0 page errors both
   (`out/spray_*.json`).
-- NOT DONE: the streamer curl strip (2x crops of cannon streamers, 1.0-2.0 s,
-  headed real GPU), and (b) K140's frame A/B at amounts 1 and 3, cannons on
-  and off, under the perf lock (free at 20:33, but a run of 4+ cases at 1x
-  and 4x throttle did not fit in the time left). Copy `k140_ab.mjs` and
+- The streamer curl strip (`curl_strip.mjs`, `out/curl_strip_desk.png`): 2x
+  crops of the left cannon's cloud from the sheet run's own branch frames
+  (not a frozen re-shot), at 0.6, 1.0, 1.5, 2.0 and 2.5 s. Observed: straight
+  fans at 0.6 s, long strips streaming up and in at 1.0 s, curved ribbons
+  arching over at 1.5 s, and by 2.0-2.5 s a dense cloud of twisting ribbons
+  (the white and grey segments are the foil and the shine) over the left half
+  of the maze. They read as curling ribbons, as designed. No phone strip.
+- NOT DONE: (b) K140's frame A/B at amounts 1 and 3, cannons on and off,
+  under the perf lock (free at 20:33, but a run of 4+ cases at 1x and 4x
+  throttle did not fit in the time left). Copy `k140_ab.mjs` and
   `run_ab.ps1` from the main checkout's `.claude/probes/K140/` and run
   `-Runs desk:1,desk:4`.
 
@@ -181,8 +187,8 @@ two checks not run (below). All probes and results are untracked under
   Handoff commit is the branch tip; nothing pushed
 - evidence: `.claude/probes/K653/` (untracked; `layer_probe.mjs`,
   `verify_fix.ps1`, `swiftshader_link.mjs`, `variants/`, `sheet_k336.mjs`,
-  `finish_spray_check.mjs`; results in `out/`)
+  `finish_spray_check.mjs`, `curl_strip.mjs`; results in `out/`)
 - next: merge `38b25fa` (one condition in `syncMinotaur`); run K650 (a) and
-  K645 (b) and the curl strip; a visible still pair of the bleed needs a
-  probe that shows the glow (headed, real-GPU, a real chase)
+  K645 (b); a visible still pair of the bleed needs a probe that shows the
+  glow (headed, real-GPU, a real chase)
 - brief: this file
