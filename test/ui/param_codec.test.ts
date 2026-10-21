@@ -119,7 +119,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["backgroundAccent3", "color"],
   ["settleBudget", "number"],
   ["loadSettle", "number"],
-  ["clock", "enum", ["turn", "realtime"]],
+  ["clock", "enum", ["turn", "realtime", "beat"]],
   ["playerPace", "number"], // 85
   ["minoWanderPace", "number"],
   ["minoHuntPace", "number"],
@@ -242,6 +242,9 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["ice", "number"], // K138 stage 1
   ["colorRule", "enum", ["off", "alternate", "cycle"]],
   ["sprint", "enum", ["off", "on"]], // K137 stage 3c
+  ["beatTempo", "number"], // K114 beat rider
+  ["beatLength", "number"],
+  ["beatCap", "number"],
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

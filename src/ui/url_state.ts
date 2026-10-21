@@ -113,9 +113,12 @@ export type GreedyTrap = "off" | "on";
 export const GREEDY_TRAPS: GreedyTrap[] = ["off", "on"];
 
 // The maze clock (K80; game/minotaur.ts ClockMode): turn = the turn-based
-// maze, realtime = the real-time minotaur mode. K114's beat clock would
-// append an option.
-export const CLOCK_MODES: ClockMode[] = ["turn", "realtime"];
+// maze, realtime = the real-time minotaur mode, beat = K114's beat rider
+// (game/beat_clock.ts, game/beat_rider.ts), appended: the dot rides on a
+// beat in every game mode, and the enemies and the fire step once per
+// committed move, as on the turn clock.
+export type MazeClock = ClockMode | "beat";
+export const CLOCK_MODES: MazeClock[] = ["turn", "realtime", "beat"];
 
 // K323 Stage A: the game mode (the Game folder's first row). classic =
 // the plain maze; minotaur = the minotaur (its clock is `clock`);
@@ -134,9 +137,38 @@ export const MINOTAUR_MODELS: MinotaurModel[] = ["hunter", "guard", "stalker"];
 export type TelegraphLook = "rims" | "line" | "both";
 export const TELEGRAPH_LOOKS: TelegraphLook[] = ["rims", "line", "both"];
 
-// The clock a design plays on: only the minotaur reads `clock`.
-export function clockOf(p: Pick<UrlParams, "gameMode" | "clock">): ClockMode {
+// The clock a design plays on: beat in every game mode (K114), realtime
+// only under the minotaur (classic and the burn race play a stored
+// realtime on the turn clock).
+export function clockOf(p: Pick<UrlParams, "gameMode" | "clock">): MazeClock {
+  if (p.clock === "beat") return "beat";
   return p.gameMode === "minotaur" ? p.clock : "turn";
+}
+
+// The minotaur's own clock (game/minotaur.ts ClockMode): the beat rider's
+// enemies step on the turn clock, once per committed move (K114 call 6).
+export function minoClockOf(p: Pick<UrlParams, "gameMode" | "clock">): ClockMode {
+  const c = clockOf(p);
+  return c === "beat" ? "turn" : c;
+}
+
+// The beat rider's settings (K114), or null when the clock is not beat.
+// Tempo in whole beats per minute; unit = the run length (world units)
+// one beat covers; cap = the most beats a run may take.
+export interface BeatSettings {
+  tempo: number;
+  unit: number;
+  cap: number;
+}
+export function beatSettingsOf(
+  p: Pick<UrlParams, "gameMode" | "clock" | "beatTempo" | "beatLength" | "beatCap">
+): BeatSettings | null {
+  if (clockOf(p) !== "beat") return null;
+  const fin = (v: number, d: number): number => (Number.isFinite(v) ? v : d);
+  const tempo = Math.round(clampParamValue("beatTempo", fin(p.beatTempo, PARAM_DEFAULTS.beatTempo)));
+  const unit = clampParamValue("beatLength", fin(p.beatLength, PARAM_DEFAULTS.beatLength));
+  const cap = Math.round(clampParamValue("beatCap", fin(p.beatCap, PARAM_DEFAULTS.beatCap)));
+  return { tempo, unit, cap };
 }
 
 // K114's burn race is gameMode "burn" since K323 Stage A (the fire
@@ -531,7 +563,9 @@ export interface UrlParams {
   // the threads, hunts the player from within minoDetect (arc length along
   // the threads) until they are beyond minoLose, and a catch (within
   // minoCatch) sends the player back to the entrance. Restarts the solve.
-  clock: ClockMode;
+  // beat (K114, appended) = the beat rider in every game mode: the dot
+  // rides on a beat (game/beat_clock.ts, game/beat_rider.ts).
+  clock: MazeClock;
   // The chase's tuning (chaseParamsOf; lattice units, u/s, seconds). Each
   // applies live. The minotaur's paces are fractions of playerPace (K174:
   // 0.7 = 0.7 x the player's pace).
@@ -769,6 +803,12 @@ export interface UrlParams {
   // once an attempt: the next two moves cost the minotaur one turn (real
   // time: the next two runs at twice playerPace). Free play only.
   sprint: SprintMode;
+  // K114's beat rider (clock=beat): the tempo in beats a minute, the
+  // lattice length a beat covers (a run takes max(1, round(length / L))
+  // beats) and the most beats a run takes. beatSettingsOf reads them.
+  beatTempo: number;
+  beatLength: number;
+  beatCap: number;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1075,6 +1115,10 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   colorRule: "off",
   // K137 stage 3c: no sprint.
   sprint: "off",
+  // K114's beat rider: 100 bpm (call 2), L (call 3), at most 4 beats a run.
+  beatTempo: 100,
+  beatLength: 4,
+  beatCap: 4,
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1089,7 +1133,9 @@ export function fireSettingsOf(
   if (p.gameMode !== "burn") {
     return null;
   }
-  if (p.fireClock === "realtime") {
+  // K114 call 6: under the beat the fire steps once per committed move, on
+  // the turn pair, whatever fireClock says.
+  if (p.fireClock === "realtime" && p.clock !== "beat") {
     return {
       speed: clampFireSpeed(p.fireSpeedRt, PARAM_DEFAULTS.fireSpeedRt),
       delay: clampTo(p.fireDelayRt, FIRE_DELAY_MAX),
@@ -1121,6 +1167,7 @@ export function fabricRulesOf(
     | "hints"
     | "ice"
     | "colorRule"
+    | "clock"
   >
 ): FabricRules {
   return {
@@ -1128,7 +1175,8 @@ export function fabricRulesOf(
     parMode: p.parMode,
     parSlack: p.parSlack,
     collapse: p.collapse,
-    cut: p.gameMode === "classic" ? p.cut : "off",
+    // K114 call 7: the beat rider drops the cut and the walker (cut modes).
+    cut: p.gameMode === "classic" && p.clock !== "beat" ? p.cut : "off",
     // K137 stage 2: the spool's slack (null = off) and the hints a solve.
     spool: p.spool ? p.spoolSlack : null,
     hints: p.hints,
@@ -1850,6 +1898,11 @@ function readLegacy(
     colorRule: readChoice(query, "cru", COLOR_RULE_MODES, D.colorRule),
     // K137 stage 3c's sprint (`&spr=on`).
     sprint: readChoice(query, "spr", SPRINT_MODES, D.sprint),
+    // K114's beat rider (`&clk=beat&btp=100&btl=4&btc=4`; PARAM_RANGES
+    // clamps the three).
+    beatTempo: readNumber(query, "btp", D.beatTempo),
+    beatLength: readNumber(query, "btl", D.beatLength),
+    beatCap: readNumber(query, "btc", D.beatCap),
   };
 }
 

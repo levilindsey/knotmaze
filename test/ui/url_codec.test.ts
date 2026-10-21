@@ -7,9 +7,12 @@ import {
   REVEAL_END_CROSSES,
   REVEAL_END_GLOWS,
   applyAppearMode,
+  beatSettingsOf,
   chaseParamsOf,
   encodeParams,
+  fabricRulesOf,
   fireSettingsOf,
+  minoClockOf,
   parseParams,
   writeParams,
 } from "../../src/ui/url_state";
@@ -139,6 +142,7 @@ describe("links", () => {
       spool: false, spoolSlack: 0.3, hints: 0, compass: false, // K137 stage 2
       ice: 0, colorRule: "off", // K138 stage 1
       sprint: "off", // K137 stage 3c
+      beatTempo: 100, beatLength: 4, beatCap: 4, // K114 beat rider
     });
   });
 
@@ -592,8 +596,30 @@ describe("links", () => {
     expect(p.minoPull).toBe(0);
     expect(p.minoRefog).toBe(false);
     // An unknown clock reads as the default; the token round-trips the mode.
-    expect(parseParams("?7&clk=beat").clock).toBe("turn");
+    expect(parseParams("?7&clk=tempo").clock).toBe("turn");
     expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+  });
+
+  it("reads K114's beat clock in every game mode", () => {
+    for (const mode of ["", "&mt=hunter", "&fi=fuse"]) {
+      const p = parseParams(`?7&clk=beat${mode}`);
+      expect(p.clock).toBe("beat");
+      expect(clockOf(p)).toBe("beat");
+      expect(minoClockOf(p)).toBe("turn");
+      expect(beatSettingsOf(p)).toEqual({ tempo: 100, unit: 4, cap: 4 });
+      expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+    }
+    // realtime stays the minotaur's alone.
+    expect(clockOf(parseParams("?7&clk=realtime"))).toBe("realtime");
+    expect(clockOf(parseParams("?7&clk=realtime&fi=fuse&mt=off"))).toBe("turn");
+    // The beat params clamp; off the beat clock there are no settings.
+    const q = parseParams("?7&clk=beat&btp=999&btl=0.01&btc=0");
+    expect(beatSettingsOf(q)).toEqual({ tempo: 180, unit: 0.5, cap: 1 });
+    expect(beatSettingsOf(parseParams("?7&btp=90"))).toBeNull();
+    // Under beat the cut (and so the walker) is off, the fire on turn.
+    const r = parseParams("?7&clk=beat&ct=lead&fi=fuse&fck=realtime");
+    expect(fabricRulesOf(r).cut).toBe("off");
+    expect(fireSettingsOf(r)?.clock).toBe("turn");
   });
 
   // K324: the link keeps both stop lengths as written; the chase reads the
@@ -918,6 +944,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   spool: "sp2", spoolSlack: "sps", hints: "hn", compass: "cmp", // K137 stage 2
   ice: "ice", colorRule: "cru", // K138 stage 1
   sprint: "spr", // K137 stage 3c
+  beatTempo: "btp", beatLength: "btl", beatCap: "btc", // K114 beat rider
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
