@@ -282,7 +282,13 @@ function armDir(arm: Arm): [number, number] {
   return [(q[0] - p[0]) / l, (q[1] - p[1]) / l];
 }
 
-export function lintGlyph(g: Glyph, xh: number): LintReport {
+/**
+ * Lints glyph `g` at x-height `xh` (LU). `partLU` is the taper's part point
+ * (LU), as the builder's `taperPart` (`tp60` builds 0.6); `bulgeLU` is the
+ * probe-only bump of the builder's `taperBulge` (K643), so the lint
+ * measures the outline the flag draws.
+ */
+export function lintGlyph(g: Glyph, xh: number, partLU: number = TAPER_PART_LU, bulgeLU = 0): LintReport {
   const k = GU_PER_XH / xh; // GU per LU
   const CLEAR = LINT.clearLU * k;
   const TIP = LINT.tipLU * k;
@@ -442,7 +448,7 @@ export function lintGlyph(g: Glyph, xh: number): LintReport {
   g.spurs.forEach((s) => {
     if (!s.tangent) return;
     const at: [number, number] = [g.body[s.at][0], g.body[s.at][1]];
-    const root = tangentRoot(g.body, s.at, TAPER_PART_LU * k, LINT.threadLU * k);
+    const root = tangentRoot(g.body, s.at, partLU * k, LINT.threadLU * k, bulgeLU * k);
     if (!root) {
       errors.push({ rule: "taper", msg: `junction ${s.at}: the tangent strokes never part to the thread width`, at });
       return;

@@ -62,6 +62,18 @@ export interface GlyphBuildOpts {
    * strokes' inner edges meet).
    */
   taperPart?: number;
+  /**
+   * K643, probe only (`#glyphs2=bulge<b>`): a bump of this many LU added
+   * to each side of every tapered root's width (tangentRoot's `bulgeGu`),
+   * to calibrate the lint's bulge bound on stills. Absent: no change.
+   */
+  taperBulge?: number;
+  /**
+   * K643, probe only (`#glyphs2=crotch<L>`): replaces each glyph before it
+   * is placed (text_graph passes glyph_inject's widenCrotch). Absent: no
+   * change.
+   */
+  glyphFor?: (g: Glyph) => Glyph;
 }
 
 /** K580: the default part point (LU): the default thread width (0.52). */
@@ -147,13 +159,15 @@ export interface TangentRoot {
  * ribbon (more than h from the stroke; stepped out from the medial radius,
  * then bisected) on that stroke's side; the ribbon takes the smaller
  * (TangentRoot's comment). `threadGu` is the thread width the edges are
- * fitted to.
+ * fitted to. `bulgeGu` (K643, probe only) adds a bump of that many GU to
+ * each side of the width, centred halfway along the root.
  */
 export function tangentRoot(
   body: readonly Pt[],
   at: number,
   partGu: number,
-  threadGu: number = partGu
+  threadGu: number = partGu,
+  bulgeGu = 0
 ): TangentRoot | null {
   const bp = body as Pt[];
   const tab = arcTable(bp);
@@ -414,6 +428,14 @@ export function tangentRoot(
   // the taper's monotone rise.
   const hw = sd.wC.map((w, i) => (i === 0 ? h : Math.min(w, sd.wO[i])));
   const ts = hw.map((w) => 2 * (w - h));
+  // K643, probe only: the injected bump, (1 - x^2)^2 over the middle half
+  // of the root (x from -1 to 1), b GU a side at its peak.
+  if (bulgeGu > 0) {
+    for (let i = 1; i < N; i++) {
+      const x = (4 * i) / N - 2;
+      if (x > -1 && x < 1) ts[i] += 2 * bulgeGu * (1 - x * x) * (1 - x * x);
+    }
+  }
   // The stroke points under each edge (arcs from J), for paint.
   const fc: number[] = [];
   const fo: number[] = [];
@@ -649,6 +671,7 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
       g = glyphI(f ?? 30);
       iCount++;
     }
+    if (opts.glyphFor) g = opts.glyphFor(g);
     let dx: number;
     let dy: number;
     if (!prevExit) {
@@ -695,7 +718,7 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
     const partGu = (opts.taperPart ?? TAPER_PART_LU) * guPerLu;
     for (const r of spurs) {
       if (!r.tangent) continue;
-      const root = tangentRoot(body, r.junction, partGu, TAPER_THREAD_LU * guPerLu);
+      const root = tangentRoot(body, r.junction, partGu, TAPER_THREAD_LU * guPerLu, (opts.taperBulge ?? 0) * guPerLu);
       if (!root) continue;
       const path = root.path.slice();
       appendPath(path, r.path);
