@@ -613,7 +613,8 @@ export function installProbeHooks(ctx: ProbeCtx): void {
             (wg.vertices.get(far)?.isEnd ?? false) &&
             far !== wg.start &&
             far !== wg.exit,
-          cost: e.length + (wg.distToExit.get(far) ?? Infinity),
+          // K114: the live distances (the walk graph's own while nothing is cut).
+          cost: e.length + (c.distToExit.get(far) ?? Infinity),
           screen: toScreen(out[0], out[1]),
         };
       }),

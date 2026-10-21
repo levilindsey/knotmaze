@@ -1,7 +1,8 @@
 // K114 CUT: the SCISSORS and UNDO buttons (brief docs/design/K114_cut.md;
 // main.ts wires them). Two round buttons, bottom left, styled like the move
-// pad (K120, bottom right), shown only while the cut is on and the keys are
-// live (the frame loop's cutTick). The scissors arm the next tap on the maze
+// pad (K120, bottom right), shown only while the cut is on, the keys are
+// live and no open panel covers them (main.ts cutTick: a phone's settings
+// sheet does, a desktop's side panel does not). The scissors arm the next tap on the maze
 // (it cuts the run under it instead of moving); a second press disarms, and
 // the button stays lit while armed. Undo pops one action, a move (with the
 // runs it carried on along) or a cut. The keys are cutKeyOf's: X arms or
@@ -49,7 +50,8 @@ function injectStyle(): void {
   st.textContent =
     // Above the build stamp (bottom left, 10 px text) and clear of the move
     // pad, which keeps to the bottom right.
-    ".km-cut{position:fixed;z-index:18;display:none;gap:10px;" +
+    // Hidden by visibility, not display, so that covered() can measure them.
+    ".km-cut{position:fixed;z-index:18;display:flex;visibility:hidden;gap:10px;" +
     "left:max(16px,env(safe-area-inset-left));" +
     "bottom:max(24px,calc(env(safe-area-inset-bottom) + 12px))}" +
     ".km-cut button{width:48px;height:48px;padding:0;border:0;border-radius:50%;" +
@@ -57,6 +59,7 @@ function injectStyle(): void {
     "display:flex;align-items:center;justify-content:center;cursor:pointer;" +
     "-webkit-tap-highlight-color:transparent;touch-action:manipulation;" +
     "transition:opacity .15s,color .12s,background .12s,box-shadow .12s}" +
+    ".km-cut.km-on{visibility:visible}" +
     ".km-cut svg{width:22px;height:22px;display:block}" +
     ".km-cut button:hover:not(:disabled){background:#2a3247d0;color:#e4ecf8}" +
     ".km-cut button.km-armed{background:#e8c45a38;color:#ffe9a8;" +
@@ -105,6 +108,7 @@ export class CutButtons {
       ARROW,
       hooks.undo
     );
+    this.undoBtn.disabled = true;
     document.body.appendChild(el);
     this.el = el;
   }
@@ -112,7 +116,13 @@ export class CutButtons {
   setShown(on: boolean): void {
     if (on === this.shown) return;
     this.shown = on;
-    this.el.style.display = on ? "flex" : "none";
+    this.el.classList.toggle("km-on", on);
+  }
+
+  // Does a rect (an open panel's) cover the buttons, shown or not?
+  covered(r: { left: number; top: number; right: number; bottom: number }): boolean {
+    const b = this.el.getBoundingClientRect();
+    return r.left < b.right && r.right > b.left && r.top < b.bottom && r.bottom > b.top;
   }
 
   get isShown(): boolean {
