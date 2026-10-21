@@ -354,6 +354,14 @@ Next free ID: K679.
   - evidence: .claude/probes/K662/ (results.md, builds/, sheets), .claude/probes/K631/out/phone/
   - next: parts 1-4 per the brief; on report file the results into K631, K646, K587, K651, K644
   - brief: `docs/design/K662_phone.md`
+- **K620** · K580's root paint (Levi 2026-10-20: "K580 rec sgtm"): each side of the root takes its
+  stroke's paint and blends into the spur's at J. `paint_math.ts` work, after K525 and K580 s3;
+  inputs in `docs/design/K580_s2.md` "For K620"; `.claude/probes/K580/sheets/a_join_zoom.png`.
+  - owner: agent `a0856de69ce5faec3` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 20:18, 2 h cap ~22:18)
+  - branch: `worktree-agent-a0856de69ce5faec3`, worktree `.claude/worktrees/agent-a0856de69ce5faec3`; last commit: `c6a65e3`
+  - evidence: `.claude/probes/K620/`
+  - next: option A root paint: the mirror math, the data path, the GLSL, census, A/B and stills (brief)
+  - brief: `docs/design/K620.md`
 
 ## Next, in order
 
@@ -412,9 +420,6 @@ merged):
 - **K579** · GPU confetti: upload each launch once, move the pieces in a vertex shader, no per-frame
   CPU sim or upload. Pays if K318 raises the counts (Levi asked 10-20); needs K307's warm-up;
   streamers need a CPU sim. The phone's fall isn't CPU-bound (K578). K628.
-- **K620** · K580's root paint (Levi 2026-10-20: "K580 rec sgtm"): each side of the root takes its
-  stroke's paint and blends into the spur's at J. `paint_math.ts` work, after K525 and K580 s3;
-  inputs in `docs/design/K580_s2.md` "For K620"; `.claude/probes/K580/sheets/a_join_zoom.png`.
 - **K409** · Levi's burn calls 1-3 merged (6b9eb8f..3231d59). Left: step 4, the ember over the smoke
   (NOT BUILT in `render-explore.md`), after K525 (paint files) and K623/K624. The phone sheet passed
   (K631 part 1, 10-20). `docs/design/K409.md`.
