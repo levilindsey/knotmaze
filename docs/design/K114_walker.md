@@ -268,3 +268,25 @@ When you stop:
 - report.
 
 End your report with the item's handle fields and a `Ledger items` list.
+
+## Working notes
+
+Agent K114 walker (claude 91b19e11-7759-4638-ba60-4705b011b94f,
+coordinator). Started 2026-10-20 22:23 PT; the 2 h cap is 00:23.
+
+- Branch `worktree-agent-a0437651435d16c14`, worktree
+  `.claude/worktrees/agent-a0437651435d16c14` (node_modules is a junction
+  to the main checkout: `(Get-Item node_modules).Delete()` before any
+  recursive delete). Ports 5124-5127, private Vite cacheDir.
+- Probes: `.claude/probes/K114/walker/` (untracked), copied from the
+  main checkout's `K114/cut/` (page driver, k137_lib) and `K80/sim.ts`.
+- Where things are: `src/game/cut.ts` (cuttable, carryChain,
+  distancesToExit; never mutate `walk.distToExit`), the controller's
+  `cut`/`replayActions`/`tapEdge`/`logMove` (logMove sets `carry` when
+  cuts exist: walker modes must not, so the walker taps one run at a
+  time), `src/core/walk_graph.ts` (runs: chain + ctrl span, node i at
+  ctrl 2i, a closed strand's wrap run ends at 2*(stops[0]+nodeCount)),
+  `src/core/greedy_search.ts` `runPoly`/`headingVectors` (3 u look,
+  hypot2; its `${v}|${eid}` key collides on self-loops, so the walker
+  keeps per-run-end headings), `src/app/scene.ts` (graph + walk graph
+  + controller built together).
