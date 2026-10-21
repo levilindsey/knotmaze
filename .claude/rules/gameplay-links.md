@@ -547,3 +547,16 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `?<seed>&am=instant&mt=hunter&spr=on&snd=none` (add `&clk=realtime` for
   real time). The rules: gameplay-minotaur.md's SPRINT; the row:
   gameplay-panel.md's SPRINT ROW.
+- TURNSTILES AND HIDDEN RUNS PARAMS (K138 stage 2, 2026-10-21; brief
+  `docs/design/K138_s2.md`): `turnstiles` (`tst`, a number, PARAM_RANGES
+  [0, 8] = TURNSTILES_MAX, default 0 = off) and `hiddenRuns` (`hid`, [0, 4]
+  = HIDDEN_MAX, default 0 = off) are APPENDED at 202-203, after the sprint;
+  CODEC_VERSION stays 8. Neither daily-exempt nor a MAZE key. LIVE_EFFECTS:
+  both under onClockChange (a change restarts the solve and places them
+  anew). `fabricRulesOf` passes them in the classic game only. Pins that
+  moved: the table pin, url_codec.test.ts's defaults table, OVERRIDE_KEYS
+  and its off-default values (4 and 2). The golden snapshot, the golden
+  dailies and K87 did not move: off is bit-identical. Probe links:
+  `?<seed>&am=instant&tst=4`, `?<seed>&am=instant&hid=4`. The rules:
+  gameplay-mechanisms.md's Turnstiles and hidden runs; the rows:
+  gameplay-panel.md's TURNSTILES AND HIDDEN RUNS ROWS.

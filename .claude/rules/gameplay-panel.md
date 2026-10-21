@@ -243,6 +243,25 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   so, what each rule does, and that the fewest moves and par follow it.
   Params: gameplay-links.md's ICE AND COLOR RULE PARAMS; the rules:
   gameplay-mechanisms.md's Ice and the color rule.
+- TURNSTILES AND HIDDEN RUNS ROWS (K138 stage 2, 2026-10-21): "Turnstiles"
+  (`turnstiles`, a 0..8 slider, step 1) and "Hidden runs" (`hiddenRuns`,
+  0..4, step 1) sit after "Color rule" in the Game folder, with the same
+  scope and visibility as the ice row (fabric mode and the classic game
+  only). Both restart the solve (onClockChange). Tooltips: "Turnstile
+  junctions (0: none). At a turnstile only two of its three runs connect,
+  and the open pair turns one step with every move you make, backtracks
+  included; a band through the junction shows the open pair. Going back the
+  way you came is always allowed. The fewest moves and par read the
+  turnstiles. Classic game only; off while Fragile runs, Collapse, Cut or
+  the spool is on. Restarts the solve." and "Hidden shortcut runs (0: none).
+  A hidden run draws nothing and cannot be tapped until you pluck a thread
+  of the same note within three runs of it; then it shows for the rest of
+  the solve (Undo past the pluck hides it again). Par and the stars rate
+  the maze without them; the HUD shows the shorter par with them too.
+  Classic game only; off while Fragile runs, Collapse, Cut or the spool is
+  on. Restarts the solve." Params: gameplay-links.md's TURNSTILES AND
+  HIDDEN RUNS PARAMS; the rules: gameplay-mechanisms.md's Turnstiles and
+  hidden runs.
 
 - FIRE CLOCK ROW (K114 stage 2, 2026-10-15): "clock" (turn / realtime,
   `fireClock`) in the Burn race folder, hidden while the fire is off; it
