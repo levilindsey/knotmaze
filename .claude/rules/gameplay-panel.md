@@ -160,6 +160,17 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   fireSpeed and fireDelay; it runs onTrailChange (live, no restart). Params:
   gameplay-links.md; the look: gameplay-fire.md's BURNT THREAD.
 
+- FRAGILE AND PAR ROWS (K137 stage 1, 2026-10-20): in the Game folder,
+  fabric mode only, in every game mode: "Fragile runs" (off / crack /
+  snap), "Par" (off / strict / strokes) and "Par slack (x fewest)" ([0,
+  1], PAR_SLACK_MIN / MAX; hidden while par is off; no step, K130, and an
+  edit keeps the 0.05 grid; two decimals shown). All three restart the
+  solve (onClockChange; undo_stack.ts lists them there). The tooltips say
+  what each mode does, that a dead-end tail, the entrance's and the
+  exit's never break, that a strand is undone or restarted, and that
+  strokes reads golf style (+2, E, -1). Params: gameplay-links.md's
+  FRAGILE AND PAR PARAMS; the rules: gameplay-mechanisms.md.
+
 - FIRE CLOCK ROW (K114 stage 2, 2026-10-15): "clock" (turn / realtime,
   `fireClock`) in the Burn race folder, hidden while the fire is off; it
   runs onClockChange (a change restarts the solve; undo_stack.ts lists it
