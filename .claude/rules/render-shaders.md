@@ -149,7 +149,9 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   unchanged byte for byte (K320: they never call it). K320's budgets in
   `k320_slim.test.ts` rose to 46,900 and 63,300 (its own measure read
   46,844 and 63,259). Each changed text compiles cold once; it compiled
-  on D3D11 (the GPU probe drew it), SwiftShader not run. No new program
+  on D3D11 (the GPU probe drew it); K653 (2026-10-20) compiled all 8
+  dumped variants standalone and linked 13/13 programs in a headless
+  SwiftShader telegraph scene (plain and `xp=threads`). No new program
   site or variant.
 - **The stub's free end changed pluck-blur** (K459, 2026-10-15;
   render-pluck.md, K459): PLUCK_VERT passes `vCap` (the cap coordinate,

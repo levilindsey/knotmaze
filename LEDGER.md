@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K679.
+Next free ID: K681.
 
 ## Waiting on Levi
 
@@ -150,6 +150,9 @@ Next free ID: K679.
   a90a739a aa8bfad6 ab57cd38 ab96ea9e ac1c3e02 ac645b91 ac64a844 adaaf5d4 adfeea92 ae12adbf
   ae18c5a4) with `.claude/probes/K161/cleanup.ps1` (DryRun first; copies probes, keeps branches).
   Rec: yes.
+- **K680** · Streamer coverage: on desk the K336 streamers cover a fair part of the knot at 2-3 s
+  (K653 sheets, `.claude/probes/K653/out/`). Keep, or thin them? Rec: decide after the phone look
+  (K646).
 
 ## In progress
 
@@ -547,17 +550,17 @@ Every other item below waits on the trigger it names.
 - **K644** · Phone pass for K580's glyph look (s2's medial root, s3's round outer side): "a", "ai",
   "ia" and "aa" on the Pixel at xh 2 and 3, after K580 s3 merges, with the next phone agent (K631's
   kit; s2 shot only desktop Chrome at phone scale).
-- **K645** · K336's unrun checks: the master-vs-branch sheets and streamer curl strip
-  (`.claude/probes/K336/sheet.mjs`, never run; does the finish spray throw no streamers?), then
-  K140's GPU frame A/B at amounts 1 and 3, cannons on/off. `docs/design/K336_cannons.md` Handoff.
+- **K645** · K336's last unrun check: K140's GPU frame A/B at amounts 1 and 3, cannons on/off, under
+  the perf lock (recipe in `docs/design/K653_checks.md` Handoff). The sheets, curl strip and spray
+  count are done (K653): the finish spray throws no streamers.
 - **K646** · Phone pass for K336 + K186: the cannons' and streamers' look and frame time at cannon
   amounts 1 and 3, K186's banner paths, and a `banners/banners.mjs` rerun on the final build. With
   the next phone agent (K644).
 - **K649** · K525's tuning: rim strengths 0.6/0.8/1 and fades 0.2/0.3; junction-end gaps (runs under
   1.95 world get no rims; try gap 0 at interior junctions); the ticks' touch alphas vs the line's
   0.7; the sheet extras. `docs/design/K525_telegraph.md` Handoff.
-- **K650** · K525's unrun checks: the GPU-vs-mirror census for the TELE paint item (adapt
-  `census_rim.mjs`) and the SwiftShader compile of the two longer shader texts (only D3D11 ran).
+- **K650** · K525's unrun check: the GPU-vs-mirror census for the TELE paint item (adapt
+  `census_rim.mjs`; K324 s2 runs it with the moving end). SwiftShader is done (K653: 8/8 compile, 13/13 link).
 - **K651** · Pixel sheet for K525's rims: roam, hunt, a catch and the fog glow, beside K524's. With
   the next phone agent (K644).
 - **K654** · K324 s2 input (K525): a moving end can ride a uniform like the hover point
@@ -1255,6 +1258,9 @@ Every other item below waits on the trigger it names.
 - **K678** · A K81 cover strip with fewer than 9 pairs of room drops a round join arc (falls back to
   the sample pair); no A/B scene reaches it (`RibbonMesh.coverPairs`, the joinery.ts cover loop;
   K580 s3).
+- **K679** · K653 fix (987d98f) has no still pair, pixel A/B or test: nothing in test/ reaches
+  syncMinotaur and the frozen-scene probe never shows the glow; a headed real-GPU real-chase probe
+  at mfg=never would (`docs/design/K653_checks.md` Handoff).
 
 ## Approved, to schedule (2026-10-11)
 
