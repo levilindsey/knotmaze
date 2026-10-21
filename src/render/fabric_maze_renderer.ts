@@ -50,6 +50,7 @@ import { trailFade, trailSpans } from "./trail_paint";
 import type { MinoFog, PathViz } from "../ui/url_state";
 import { spotCtrl } from "../game/minotaur";
 import type { ChaseGraph, MinotaurMode, Spot } from "../game/minotaur";
+import type { SwordState } from "../game/sword";
 import type { TurnTelegraph } from "../game/minotaur_turns";
 import { firePassed, runBurnAt, type Fire } from "../game/fire";
 import { finishHold, finishLifted } from "../game/explore_finish";
@@ -73,6 +74,12 @@ export interface MinotaurView {
   readonly g: ChaseGraph;
   readonly mino: Spot;
   readonly mode: MinotaurMode;
+  // K137 stage 3b: the sword (null or absent: none laid), and whether the
+  // minotaur flees it (a pale blue glow and telegraph) or was slain by it
+  // (hidden).
+  readonly sword?: SwordState | null;
+  readonly fleeing?: boolean;
+  readonly slain?: boolean;
 }
 import { FogBackdrop } from "./background";
 import { fogArcStations, moveEnds, travelOrder } from "./fog_arc";
@@ -253,6 +260,7 @@ function markerMeshes(): Record<MeshRole, MarkerMesh> {
       head: new MarkerMesh(),
       exit: new MarkerMesh(),
       minotaur: new MarkerMesh(),
+      sword: new MarkerMesh(),
     };
   }
   return MARKER_MESHES;
@@ -378,6 +386,27 @@ function minoGlowTexture(): Texture {
   ctx.fillRect(0, 0, N, N);
   MINO_GLOW_TEX = Texture.from(canvas);
   return MINO_GLOW_TEX;
+}
+
+// K137 stage 3b: the same highlight in pale blue while it flees the sword
+// (FLEE_BLUE also inks its telegraph).
+const FLEE_BLUE = 0x8fd0ff;
+let MINO_FLEE_GLOW_TEX: Texture | null = null;
+function minoFleeGlowTexture(): Texture {
+  if (MINO_FLEE_GLOW_TEX) return MINO_FLEE_GLOW_TEX;
+  const N = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = N;
+  canvas.height = N;
+  const ctx = canvas.getContext("2d")!;
+  const grad = ctx.createRadialGradient(N / 2, N / 2, 0, N / 2, N / 2, N / 2);
+  grad.addColorStop(0, "rgba(160,215,255,0.95)");
+  grad.addColorStop(0.45, "rgba(120,190,255,0.55)");
+  grad.addColorStop(1, "rgba(90,160,255,0)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, N, N);
+  MINO_FLEE_GLOW_TEX = Texture.from(canvas);
+  return MINO_FLEE_GLOW_TEX;
 }
 
 let FOG_DISP_TEX: Texture | null = null;
@@ -613,6 +642,8 @@ export class FabricMazeRenderer {
   // one layer above the other markers, moved above or below the fog.
   private minoLayer: Container;
   private minoGlow: Sprite;
+  // K137 stage 3b: the telegraph's ink, FLEE_BLUE while the minotaur flees.
+  private teleInk = TELEGRAPH_COLOR;
   // K80 turns: the telegraph (its committed next move), under the glow.
   private teleGfx: Graphics;
   // K481 stage 3: the by-length telegraph's lit tick (a choice edge, -1
@@ -698,6 +729,8 @@ export class FabricMazeRenderer {
       this.markers.start.mesh,
       this.markers.head.mesh,
       this.markers.exit.mesh,
+      // K137 stage 3b: the sword, under the fog like the exit.
+      this.markers.sword.mesh,
       this.gfx
     );
     // K80: the minotaur above them all (on the player's dot, a catch shows
@@ -1525,11 +1558,19 @@ export class FabricMazeRenderer {
     telegraph: TurnTelegraph | PlanRoute | null = null
   ): void {
     this.minoShown = false;
-    if (!chase) {
+    this.syncSword(chase);
+    // K137 stage 3b: a minotaur slain by the sword is gone for the solve.
+    if (!chase || chase.slain) {
       this.minoLayer.visible = false;
       this.ribbons.setTelegraph(null);
       return;
     }
+    // K137 stage 3b: pale blue while it flees (the walker never shares a
+    // game with the minotaur, so the rims' colour is free; red otherwise).
+    const flee = chase.fleeing === true;
+    this.minoGlow.texture = flee ? minoFleeGlowTexture() : minoGlowTexture();
+    this.teleInk = flee ? FLEE_BLUE : TELEGRAPH_COLOR;
+    this.ribbons.teleColor = flee ? FLEE_BLUE : TELE_RED;
     const at = spotCtrl(this.walk, chase.g, chase.mino);
     const ctrl = this.ctrlMod(at.chain, at.ctrl);
     if (this.revealQuery && this.revealQuery(at.chain, ctrl) < 0.98) {
@@ -1603,6 +1644,31 @@ export class FabricMazeRenderer {
     } else this.drawTelegraph(chase.g, telegraph, r, chase.mode === "hunt");
   }
 
+  // K137 stage 3b: the sword's marker at its spot while it is ready (laid,
+  // not yet taken), on either clock. Like the exit marker it waits for the
+  // intro to draw its thread and hides where the thread reveal has not
+  // shown its point; under the fog of war it sits beneath the fog sprite.
+  private syncSword(chase: MinotaurView | null): void {
+    const mk = this.markers.sword;
+    const s = chase?.sword ?? null;
+    if (!chase || !s || s.phase !== "ready" || s.spot < 0) {
+      mk.hide();
+      return;
+    }
+    const at = spotCtrl(this.walk, chase.g, { edge: -1, pos: 0, dir: 1, vertex: s.spot });
+    const ctrl = this.ctrlMod(at.chain, at.ctrl);
+    if (
+      (this.revealQuery && this.revealQuery(at.chain, ctrl) < 0.98) ||
+      (this.explore.on && this.ribbons.exploreVisAt(at.chain, ctrl) < 0.98)
+    ) {
+      mk.hide();
+      return;
+    }
+    this.pointFlowed(at.chain, ctrl, this.scratch, 0);
+    mk.setGlyph(markerGlyph(this.markerGlyphIds.sword, "sword"));
+    mk.place(this.scratch[0], this.scratch[1], this.markerRadius());
+  }
+
   // K80 turns, the telegraph's first look: a red line along each committed
   // run, oriented from the junction it leaves, and a red ring where the
   // minotaur will end its turn (around itself when it stays). Redrawn every
@@ -1652,7 +1718,7 @@ export class FabricMazeRenderer {
       if (pts.length >= 4) {
         gfx.moveTo(pts[0], pts[1]);
         for (let i = 2; i < pts.length; i += 2) gfx.lineTo(pts[i], pts[i + 1]);
-        gfx.stroke({ color: TELEGRAPH_COLOR, width, alpha, cap: "round", join: "round" });
+        gfx.stroke({ color: this.teleInk, width, alpha, cap: "round", join: "round" });
       }
       pts = [];
     };
@@ -1730,7 +1796,7 @@ export class FabricMazeRenderer {
           if (!this.teleShown(pv.chain, pc)) continue;
           this.pointFlowed(pv.chain, pc, this.scratch, 0);
           this.polyCircle(gfx, this.scratch[0], this.scratch[1], r * TELEGRAPH_RING_R, 40);
-          gfx.stroke({ color: TELEGRAPH_COLOR, width: w * TELEGRAPH_RING_W, alpha: 0.85 });
+          gfx.stroke({ color: this.teleInk, width: w * TELEGRAPH_RING_W, alpha: 0.85 });
           continue;
         }
         const we = this.walk.edges[stop.edge];
@@ -1760,14 +1826,14 @@ export class FabricMazeRenderer {
       const y = this.scratch[1];
       this.polyCircle(gfx, x, y, r * TELEGRAPH_RING_R * look.scale, 32);
       gfx.stroke({
-        color: TELEGRAPH_COLOR,
+        color: this.teleInk,
         width: w * TELEGRAPH_RING_W * (look.ring ? 1.5 : 1),
         alpha: look.alpha,
       });
       if (look.ring) {
         this.polyCircle(gfx, x, y, r * TELEGRAPH_RING_R, 48);
         gfx.stroke({
-          color: TELEGRAPH_COLOR,
+          color: this.teleInk,
           width: w * TELEGRAPH_RING_W,
           alpha: look.alpha,
         });
@@ -1852,7 +1918,7 @@ export class FabricMazeRenderer {
       this.pointFlowed(dv.chain, dc, this.scratch, 0);
       this.polyCircle(gfx, this.scratch[0], this.scratch[1], r * TELEGRAPH_RING_R, 48);
       gfx.stroke({
-        color: TELEGRAPH_COLOR,
+        color: this.teleInk,
         width: w * TELEGRAPH_RING_W,
         alpha: alphas[0] ?? TELEGRAPH_ALPHA,
       });
@@ -1897,7 +1963,7 @@ export class FabricMazeRenderer {
     const r = this.markerRadius();
     this.polyCircle(gfx, this.catchX, this.catchY, r * f.radius, 40);
     gfx.stroke({
-      color: TELEGRAPH_COLOR,
+      color: this.teleInk,
       width: this.threadWidth * TELEGRAPH_RING_W,
       alpha: f.alpha,
     });

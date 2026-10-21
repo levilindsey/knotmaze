@@ -20,7 +20,8 @@
 
 // "minotaur": K80's real-time chaser (drawn only in that mode). "spider":
 // K114's spider (K98 landed the glyph and the role; nothing draws it yet).
-export type MarkerRole = "start" | "exit" | "head" | "minotaur" | "spider";
+// "sword": K137 stage 3b's sword, at its spot until the player takes it.
+export type MarkerRole = "start" | "exit" | "head" | "minotaur" | "spider" | "sword";
 
 // Stroke width and rim margin, in disc radii. The margin equals the stroke
 // (the brief); the outer ink therefore reaches radius 1 - MARKER_MARGIN.
@@ -441,6 +442,26 @@ const DESIGNS: GlyphDesign[] = [
       [12, 14.6, 3.4],
     ],
   },
+  // THE SWORD (K137 stage 3b): a placeholder like the rest.
+  {
+    // Point up: a blade tapering to its tip, a crossguard, the grip and a
+    // pommel dot, on the frame's center line.
+    id: "sword",
+    role: "sword",
+    label: "sword",
+    lines: pen()
+      .M(10.6, 14.6)
+      .L(10.6, 5.2)
+      .L(12, 2.6)
+      .L(13.4, 5.2)
+      .L(13.4, 14.6)
+      .M(7.4, 14.8)
+      .L(16.6, 14.8)
+      .M(12, 15)
+      .L(12, 19.4)
+      .lines(),
+    dots: [[12, 20.6, 1.4]],
+  },
 ];
 
 // Legs given for the left side (hip, knee, foot), mirrored to the right
@@ -554,6 +575,7 @@ export const DEFAULT_GLYPHS: Readonly<Record<MarkerRole, string>> = {
   head: DESIGNS.find((d) => d.role === "head")!.id,
   minotaur: DESIGNS.find((d) => d.role === "minotaur")!.id,
   spider: DESIGNS.find((d) => d.role === "spider")!.id,
+  sword: DESIGNS.find((d) => d.role === "sword")!.id,
 };
 
 // Every glyph id of a role, the default first.
