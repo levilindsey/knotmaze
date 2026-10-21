@@ -35,12 +35,6 @@ Next free ID: K610.
 - **K260** · The burn race's calls 2-4 (K114), built as rec.: Reset keeps the fire (fuse relit); the
   fire and the turn minotaur are exclusive (structural since K534's `gameMode`); fog stays its own
   param. `docs/design/K114_burn.md` ("Calls for Levi").
-- **K280** · The burn race's heat (K114): built `fireSpeed` 0.75, `fireDelay` 0 is hot for careless
-  players; rec. r 0.6, h 0 for the turn clock (real time reads K440's `fsr`/`fdr`). `K114_burn.md`
-  ("R.6.1"); numbers `.claude/probes/K114/burn/results_tuning_rebased.md`.
-- **K282** · The HUD's stats have no explanation during play (only the
-  end banners explain them). Add an info button or a long press, or
-  leave it (rec.)? `docs/design/K274_K277.md`.
 - **K251** · A displaced edge indicator crosses the open phone panel in a 0.25 s slide (K198): keep
   it, or fade the disc out and back in? `docs/design/K198.md` ("Stage 2 handoff"); sheet
   `.claude/probes/K198/stage2/out/contact_sheet.png`. The phone half is moot since K468's
@@ -48,9 +42,6 @@ Next free ID: K610.
 - **K245** · How hard should the minotaur roam toward the player (K174)?
   K534's `minoPull` slider defaults to 0.5 (63% of games meet it); only
   that default needs confirming. `docs/design/K174.md`.
-- **K244** · Auto plucks (random, music) that land on a junction core still sound with
-  nothing drawn, and so does a drag's release there; K235 silenced core taps. Silence
-  these too? `render-pluck.md` (K235).
 - **K241** · Should a reset's gold webs fade out too (K191's call 1)?
   Only a backtrack fades; a fade needs a second shader base.
   `docs/design/K154_K169.md` ("Stage 2 handoff").
@@ -61,15 +52,12 @@ Next free ID: K610.
   phones, was 50). Accept it, or move the badge elsewhere while the
   panel is open? `.claude/probes/K92/out/phone_open.png`. The phone side is moot since
   K468's full-screen sheet: only the desktop and tablet side panel loses the row.
-- **K225** · The markers' default size (K98): `markerSize` 1.08 is about
-  5 CSS px on the phone and barely reads. Keep it, raise it, or add a
-  minimum on-screen size? `.claude/probes/K98/sheet_k98.png`.
 
 
 
-- **K194** · K180's calls: defaults (crossings `through`, glow `off` or `fallback`); (2) moot
-  (K235). If `fallback` ships, time `peakEstimate` on the Pixel. `docs/design/K180.md` ("Stage 1
-  handoff"); play https://levi.dev/knotmaze/?7&pw=1&pcx=ride&pgl=fallback
+- **K194** · The defaults batch (Levi 2026-10-20; K225, K280 and K421 ride it): the pluck glow's
+  default goes `off` -> `fallback` (crossings stay `through`); then time `peakEstimate` on the
+  desktop and the Pixel and dedupe its times. `docs/design/K194_defaults.md`.
 - **K162** · K147's calls: the slow-motion first settle, the defaults (`settleBudget` 12 ms,
   `loadSettle` 0.45 s), daily-exempt, a drag budget. Levi plays first. Since K7 the budget runs
   only in-thread (`phw=0` or a failed worker): calls 1-3 cover that fallback. `docs/design/K147.md`.
@@ -97,15 +85,15 @@ Next free ID: K610.
 - **K406** · K395's CAP_ROUND: 1.5 (as built, = COLLAPSE_ROUND) or 3 (tip inner edge turns +19° to
   +42° not +31° to +56°, flat arch, 0.02-0.03 world less inner swing; 6 looks like 3). Live as
   `PluckOverlay.capRound`; sheets `.claude/probes/K395/out/`. Stays 1.5; decide with K405 (same tip).
-- **K421** · The stalker's accuracy default (K294: 0.45) overshoots section 0 on the dailies at 80%
-  and fog-4 (27.9 and 28.5% caught against 20 and 12; fog-4's 12% is out of reach): rec. 0.3 (the
-  dailies-only criterion allows 0.25-0.3). Keep 0.45? `docs/design/K80_turns_stage3.md` (3a handoff).
 
 - **K515** · K480 stage 2's look, built as recommended (Levi may change): a hovered tap's whole route at the hover breath, its tapped run keeping the rim glow, non-route branched arms keeping their trains; plus page-probing the hover route with a real pointer (desktop, and in K500's phone pass). `docs/design/K480.md` ("Stage 2 handoff"). The page probe is partly done: desktop by K500, the touch half in K529.
 
-- **K525** · Levi's look call on K80 turns 3b, built as recommended: telegraph roam 0.45 / hunt 0.95 with the second run at half, the 0.45 s catch ring burst, and the fog bleed at 0.16. `.claude/probes/K80/stage3b/contact_sheet.png`. The real-phone sheet is now `.claude/probes/K80/stage3b/contact_sheet_real.png` (K524): hunt 0.95 reads clearly at fit zoom, roam 0.45 is effectively invisible at fit zoom, the catch ring had mostly faded by the shot, and fog bleed 0.16 is unexercised (fog off in this design). The same answer settles K546's q8.
 - **K545** · K481 stage 3's look for Levi (built as recommended in 31b2238): lit tick + moved ring on hover/press, phone bigger ticks with the caught-choice tint at the head (desktop ticks alone); the real-phone sheet is in (round 2026-10-20, `.claude/probes/rounds/2026-10-20-d0406df/k545/sheet_k545.png`: a press lights choice 0, the lit tick subtle on a still) and Levi's call whether the tint should show on desktop too. `docs/design/K481.md` (Stage 3 handoff); `.claude/probes/K481/stage3/`.
-- **K571** · The title toggle leaves the daily: either form can earn the daily's credit, and a flip switches to custom and resets progress (Levi 2026-10-20). Asked whether the remembered title pref then reopens the daily in the new form, from scratch, and counts; then build it. `docs/ledger_notes.md` (K571).
+- **K571** · The title is part of the maze (Levi 2026-10-20: "a fundamental maze-model-altering
+  setting"): `dtt` leaves the daily-exempt set and the saved prefs, turning it on makes an ordinary
+  design (fresh progress, no daily credit), and the daily is the plain form. Asked: what a titled
+  custom design's thread says (rec. "Knotmaze"). The build revisits K565, K566 and K552's C1-C3
+  (K581). `docs/ledger_notes.md` (K571).
 - **K581** · K558's C1 (lifted-pen strokes after the whole text's body, left to right) and C2 (pnr
   exempt from the daily, a look preference) stand as built unless vetoed (`docs/design/K558.md`,
   Calls). K552's C1-C3 are revisited by K571's build.
@@ -463,7 +451,7 @@ Every other item below waits on the trigger it names.
 - **K486** · Touch help for the panel's buttons: Reset path, Replay settle, Reset to defaults, the
   seed row, the dice, Daily, stats (K467 covered the 161 rows only)
 - **K543** · K74 stage 4's before/after sheet of three finishes (searched vs shipped, dailies 1-3) was not made in the build stage; make it from `.claude/probes/K74/stage4/build_measure.ts` output or a diag_screenshot pair when Levi wants the look check. Sheet: `.claude/probes/K74/stage4/sheet/contact_sheet.png` (`notes.md` beside it).
-- **K546** · Loss effects (Levi, 2026-10-16): a catch ends early today - animate the player and the minotaur/fire all the way to their meeting point first (contact t is computed in by-length mode; turn and realtime catches leave a visual gap), then a gratuitous contact effect at the meeting point plus a whole-screen loss effect akin to the win confetti. Levi's seeds: an explosion; a flare-up and burn-away; the player indicator ripped in half and falling over. Base to build on: K80 3b's catch feedback (dcdfaf4) and K270's fix; the fire side is K114. Design: `docs/design/K546_loss_effects.md`.
+- **K546** · Loss effects (Levi, 2026-10-16): a catch ends early today - animate the player and the minotaur/fire all the way to their meeting point first (contact t is computed in by-length mode; turn and realtime catches leave a visual gap), then a gratuitous contact effect at the meeting point plus a whole-screen loss effect akin to the win confetti. Levi's seeds: an explosion; a flare-up and burn-away; the player indicator ripped in half and falling over. Base to build on: K80 3b's catch feedback (dcdfaf4) and K270's fix; the fire side is K114. Design: `docs/design/K546_loss_effects.md`. Its q8 is answered (K525).
 
 - **K548** · Overnight runner has no usage gate: the 92% weekly pause (Next binding rule) is checked by hand only; 2026-10-15/16 runs 1-6 launched at 88% (under the line, audit 2026-10-18) but nothing stops a launch over it. Add a /usage check to the runner before each batch, or a ledger-stamped usage line per run close.
 - **K549** · Text scene fit ignores the open panel: a wide word's exit side sits under the panel (stage 2 probe stalled at tn97 by mouse; programmatic walk solved). Fit text scenes against the panel-cleared range like mazes (K198 view clamp), or close the panel for text scenes.
@@ -483,6 +471,22 @@ Every other item below waits on the trigger it names.
 - **K409** · Build Levi's burn calls (2026-10-20, every rec.): ember and band widths in world units
   (today's medians); under Gone the whole ember on the unburnt side; the band kept; the ember over
   the smoke. K290's last stage, with K410 and K599. `K114_burn.md` 3c handoff item 4.
+- **K225** · Levi 2026-10-20: the markers' default size (`markerSize`) goes 1.08 -> 2 (1.08 is
+  about 5 CSS px on the phone). Rides K194's defaults batch. `.claude/probes/K98/sheet_k98.png`.
+- **K280** · Levi 2026-10-20: the turn clock's burn race cools, `fireSpeed` 0.75 -> 0.6 with
+  `fireDelay` 0 (real time keeps `fsr`/`fdr`). Rides K194's defaults batch. `K114_burn.md`
+  ("R.6.1"); numbers `.claude/probes/K114/burn/results_tuning_rebased.md`.
+- **K421** · Levi 2026-10-20: the stalker's accuracy default (`minoStalkerAccuracy`) goes 0.45 ->
+  0.3 (0.45 caught 27.9% at 80% against a 20% target). Rides K194's defaults batch.
+  `docs/design/K80_turns_stage3.md` (3a handoff).
+- **K244** · Levi 2026-10-20: nothing plucks a junction core. Auto plucks (random, music) choose
+  only valid segments up front, and a drag released in a core plucks nothing (K235 silenced core
+  taps). After K370 merges (the input path). `render-pluck.md` (K235).
+- **K525** · The minotaur's telegraph (Levi 2026-10-20): a treatment dropdown (a param appended to
+  the codec) whose new default lights the run's rims the way the hover highlight does, with today's
+  line kept as an option; roam must read on the phone at fit zoom (the line: about 0.7 on touch,
+  0.45 on desktop, hunt 0.95); K546's first phone sheet shows roam, a catch and the fog glow
+  together. Today: `.claude/probes/K80/stage3b/contact_sheet_real.png` (K524).
 
 ## Residuals (known, not fixed)
 
@@ -1329,6 +1333,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K282** · The HUD's stats have no explanation during play (only the end banners explain them). Dropped: Levi 2026-10-20: leave it; the end banners explain the stats (2026-10-20).
 - **K213** · Before K90's bend bound ships: the min regression (hard clamp worsens 24 of 585 scans, soft 4; `k90_minrows.mjs`), `controlArcLengths`, tests and a CPU mirror, hit tests on moved samples, the phone's rebuild cost (`docs/design/K90.md`, Stage 1b handoff). Dropped: K90 stopped (Levi 2026-10-20), so the bend bound never ships (2026-10-20).
 - **K90** · Min bend radius (1a-1b merged 6f97b92..feb12a0): ship, tune or stop (rec. stop; the design doc says tune, then ship)? Dropped: Levi 2026-10-20 (report card): stop. The bound stays parked, off and console-only; G3-2 builds on today's points (2026-10-20).
 - **K591** · The gap search dropped a gap run's tail past 65 SAMP points: fixed by K573 step 2. Done in 0753b3c (2026-10-20).
