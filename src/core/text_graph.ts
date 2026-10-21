@@ -27,6 +27,7 @@ import { buildWalkGraph } from "./walk_graph";
 import { buildCellMask } from "./shapes";
 import type { ShapeId } from "./shapes";
 import { buildGlyphGraph, glyphSetCovers } from "./glyphs/glyph_graph";
+import { widenCrotch } from "./glyphs/glyph_inject";
 
 type Pt = [number, number];
 
@@ -851,6 +852,14 @@ export function buildTextGraph(text: string, opts?: TextGraphOpts): TangleGraph 
           ? MIN_XHEIGHT
           : 3;
     const fk = flags.find((f) => /^f\d+$/.test(f));
+    // K643, probe only (calibrating the glyph lint on stills): `bulge<b>`
+    // adds a b-LU bulge to every taper outline; `crotch<L>` widens each
+    // tangent join's crotch, holding the arriving stroke along the
+    // departing one for L LU (glyphs/glyph_inject.ts). Absent, both
+    // options stay undefined and the build is unchanged.
+    const bf = flags.find((f) => /^bulge\d*\.?\d+$/.test(f));
+    const cf = flags.find((f) => /^crotch\d*\.?\d+$/.test(f));
+    const part = flags.includes("tp60") ? 0.6 : undefined;
     const built = buildGlyphGraph(text, {
       xHeight: xh,
       forks: flags.includes("forks"),
@@ -859,7 +868,9 @@ export function buildTextGraph(text: string, opts?: TextGraphOpts): TangleGraph 
       // K580: `notaper` builds stage 9's tangent joins (no root); `tp60`
       // parts the root where the strokes' centerlines are 0.6 LU apart.
       taper: !flags.includes("notaper"),
-      taperPart: flags.includes("tp60") ? 0.6 : undefined,
+      taperPart: part,
+      taperBulge: bf ? Number(bf.slice(5)) : undefined,
+      glyphFor: cf ? (g) => widenCrotch(g, xh, Number(cf.slice(6)), part) : undefined,
     });
     if (built) {
       glyphStats.built++;
