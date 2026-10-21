@@ -784,3 +784,44 @@ only with the files it is about; `render.md` lists the area's other files.
   pitch_space.test.ts's two `segmentsNear` filter tests. The release gate
   has no headless test (input_pointer.ts needs the pixi app and a canvas):
   the probe covers it.
+- MEASURED (`.claude/probes/K244/`, untracked: `k244_probe.mjs`,
+  `run_k244.mjs`, `summarize.mjs`, results in `out/`; 24 one-Chrome runs
+  on 2026-10-20, base 6e3e913 against K244's 7308442, each a `vite
+  preview` of its own build; K235's three links with `&am=instant&fw=0&
+  pgh=0` and `snd=manual` (taps, drags) or `snd=random|music&ss=2`;
+  1400x900 at DSF 2, and 411x753 at 2.625 with touch emulated in desktop
+  Chrome, not the phone; sound = the synth's own `__knotSynth().plucks`,
+  drawn = a spy on `renderer.pluck`). AUTO PLUCKS, notes that sounded with
+  nothing drawn (every one a core skip) out of notes sounded, base ->
+  K244: random 50 s (40 s on the phone) fabric 3/76 -> 0/74, dense 0/78
+  -> 0/75, phone 5/60 -> 0/59, knot 0/79 -> 0/72; music 45 s (40 s on the
+  phone) fabric 4/144 -> 0/145, dense 4/145 -> 0/144, phone 4/127 ->
+  0/131, knot 0/144 -> 0/144. K244 skipped nothing as hot, held or other
+  either, and every note drew (sounds = overlay calls = plucks drawn).
+  The counts of notes move with the random ticks, not with K244. RELEASES
+  (a real press, four moves, a release: a mouse on the desktop, touch on
+  the phone viewport; 12 core sites of the tap pass plus 8 drawn ones),
+  core-verdict releases that sounded, base -> K244: string, fabric 4/4 ->
+  0/4, phone with touch 4/4 -> 0/4, dense 2/2 -> 0/2; soft, fabric (no
+  overlay on base, so classified by sound there): all 19 grabbed releases
+  sounded -> 0/4 core-verdict ones. The 15 drawn-verdict releases each
+  sounded exactly once, before and after, in every run. 8 of the 12 core
+  sites in each run grabbed a particle OUTSIDE the core, so that release
+  plucked a drawn neighbor (sound and overlay), on both builds.
+  RIPPLES (string style only: a soft release starts none), a ripple alive
+  within 0.3 s of the release, on drawn-verdict and core-verdict releases,
+  base -> K244: desktop fabric 15/15 and 4/4 -> 15/15 and 0/4, phone with
+  touch 15/15 and 4/4 -> 15/15 and 0/4 (a second run of the same sites
+  that polled `__knotRipple().count`: `dragS_*R_*` in `out/`).
+  TAPS, unchanged, drawn / core / maze move, base vs K244: fabric
+  desktop (every span) 975/12/3 vs 976/12/2, phone (every 3rd) 858/12/18
+  both, dense (every 3rd) 1861/11/2 both, knot (every span) 832/0/0 both;
+  a drawn tap sounded once and a core tap never, on both builds. The
+  one-tap difference is a press near the head that moved the maze on one
+  load and plucked on the other (inferred: K550's worker host does not
+  repeat a state).
+- PROBE LIMITS: the tester's own asks are not decisions (the outward
+  search over a run asks at every step), so their counts mean nothing;
+  the soft style has no overlay, so its base verdict is the sound alone;
+  the reveal residual is not exercised (`am=instant`); no run took the
+  real phone (Levi was on it), and no probe times anything.
