@@ -2009,6 +2009,14 @@ export function buildPanel(
     "How long the minotaur flees once you take the sword: moves on the turn clock (a wait counts), runs walked in real time. Restarts the solve.",
     D.swordMoves, () => callbacks.onClockChange()
   );
+  // K137 stage 3c (4.29, game/sprint.ts): sprint, on both clocks. Like the
+  // sword it restarts the solve (onClockChange), which gives sprint back.
+  const sprintRow = row(
+    fMino, p, "sprint",
+    { options: { off: "off", on: "on" }, label: "Sprint" },
+    "Once a game, the lightning button (or F) spends a sprint: on the turn clock your next two moves cost the minotaur one turn; in real time you run your next two runs at twice your pace. A catch spends it; starting over gives it back. Restarts the solve.",
+    D.sprint, () => callbacks.onClockChange()
+  );
   // K80 turns stage 2 (K273): what a catch resets, on both clocks. While
   // the level row is on a catch resets everything, so the other two hide.
   const minoRestartRow = chaseRow(
@@ -2916,6 +2924,7 @@ export function buildPanel(
     livesRow.hidden = !minoOn;
     swordRow.hidden = !minoOn; // K137 stage 3b
     swordMovesRow.hidden = !minoOn || params.sword === "off";
+    sprintRow.hidden = !minoOn; // K137 stage 3c
     minoRestartRow.hidden = !minoOn || livesOn;
     minoLairRow.hidden = !minoOn || restartOn;
     minoRefogRow.hidden = !minoOn || !(fog || threads) || restartOn;

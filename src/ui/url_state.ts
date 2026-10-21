@@ -27,6 +27,8 @@ import type { ColorRuleMode } from "../game/color_rule";
 import { COLOR_RULE_MODES } from "../game/color_rule";
 import type { SwordMode } from "../game/sword";
 import { SWORD_MODES, SWORD_MOVES_DEFAULT } from "../game/sword";
+import { SPRINT_MODES } from "../game/sprint";
+import type { SprintMode } from "../game/sprint";
 import type { ParMode } from "../game/par";
 import { PAR_MODES, PAR_SLACK_DEFAULT } from "../game/par";
 import {
@@ -763,6 +765,10 @@ export interface UrlParams {
   // drops both under collapse, fragile, the cut, the fire and the spool.
   ice: number;
   colorRule: ColorRuleMode;
+  // K137 stage 3c, 4.29 (game/sprint.ts): SPRINT, off | on, under a chase,
+  // once an attempt: the next two moves cost the minotaur one turn (real
+  // time: the next two runs at twice playerPace). Free play only.
+  sprint: SprintMode;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1067,6 +1073,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K138 stage 1: no ice, no color rule.
   ice: 0,
   colorRule: "off",
+  // K137 stage 3c: no sprint.
+  sprint: "off",
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1324,6 +1332,7 @@ export const ENUM_OPTIONS: {
   cut: CUT_MODES,
   sword: SWORD_MODES, // K137 stage 3b
   colorRule: COLOR_RULE_MODES, // K138 stage 1
+  sprint: SPRINT_MODES, // K137 stage 3c
 };
 
 // K398: every numeric param held to the panel's range (param_codec's
@@ -1839,6 +1848,8 @@ function readLegacy(
     // PARAM_RANGES clamps the share to 0..0.5).
     ice: readNumber(query, "ice", D.ice),
     colorRule: readChoice(query, "cru", COLOR_RULE_MODES, D.colorRule),
+    // K137 stage 3c's sprint (`&spr=on`).
+    sprint: readChoice(query, "spr", SPRINT_MODES, D.sprint),
   };
 }
 

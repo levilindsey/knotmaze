@@ -360,6 +360,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // and the color rule (COLOR_RULE_MODES order, game/color_rule.ts).
   num("ice"),
   choice("colorRule", ["off", "alternate", "cycle"]),
+  // 201, K137 stage 3c (4.29): sprint (SPRINT_MODES order, game/sprint.ts).
+  choice("sprint", ["off", "on"]),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
