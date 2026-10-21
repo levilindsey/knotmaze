@@ -10,14 +10,17 @@
 // the second run draws dimmer (half the first run's alpha).
 export const TELEGRAPH_ALPHA_ROAM = 0.45;
 export const TELEGRAPH_ALPHA_HUNT = 0.95;
+// K525: the roam alpha on a coarse pointer (the phone, at fit zoom, where
+// K524's sheet lost 0.45). Hunt is the same on every pointer.
+export const TELEGRAPH_ALPHA_ROAM_COARSE = 0.7;
 // Every run after the first draws at this share of the first's alpha (the
 // line's) or strength (K525's rims: render/telegraph_route.ts).
 export const TELEGRAPH_LATER_SHARE = 0.5;
 
 // The alpha of each telegraphed run, in order: the first at the look's
 // alpha, every later run at half of it.
-export function telegraphAlphas(hunting: boolean, runs: number): number[] {
-  const base = hunting ? TELEGRAPH_ALPHA_HUNT : TELEGRAPH_ALPHA_ROAM;
+export function telegraphAlphas(hunting: boolean, runs: number, coarse = false): number[] {
+  const base = hunting ? TELEGRAPH_ALPHA_HUNT : coarse ? TELEGRAPH_ALPHA_ROAM_COARSE : TELEGRAPH_ALPHA_ROAM;
   const out: number[] = [];
   for (let i = 0; i < runs; i++) out.push(i === 0 ? base : base * TELEGRAPH_LATER_SHARE);
   return out;
@@ -25,12 +28,15 @@ export function telegraphAlphas(hunting: boolean, runs: number): number[] {
 
 // K525: the telegraph rims' strength (uKTele.w: how far the rim mixes
 // toward the telegraph's red at full alpha), by the same hunt/roam split as
-// the line's alpha. The rims are thinner than the line, so they need more.
+// the line's alpha, and like it stronger roaming on a coarse pointer. The
+// rims are thinner than the line, so they need more. First values; the
+// sheets tune them (docs/design/K525_telegraph.md, Handoff).
 export const TELEGRAPH_RIM_ROAM = 0.6;
+export const TELEGRAPH_RIM_ROAM_COARSE = 0.8;
 export const TELEGRAPH_RIM_HUNT = 1;
 
-export function telegraphRimStrength(hunting: boolean): number {
-  return hunting ? TELEGRAPH_RIM_HUNT : TELEGRAPH_RIM_ROAM;
+export function telegraphRimStrength(hunting: boolean, coarse = false): number {
+  return hunting ? TELEGRAPH_RIM_HUNT : coarse ? TELEGRAPH_RIM_ROAM_COARSE : TELEGRAPH_RIM_ROAM;
 }
 
 // K481 stage 3 (decision 7): the by-length telegraph's ticks. One tick
