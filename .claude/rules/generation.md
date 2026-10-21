@@ -46,6 +46,19 @@ CLAUDE.md: the threads ARE the maze paths.
   Not held to the rule: Layer 2 and physics (they never change which
   maze is built) and the codec's integer `2 **` powers.
 
+- *K580 s5 (2026-10-21), the glyph flag:* `Strand.glyph`
+  (`src/core/types.ts`) is true on every strand that
+  `src/core/glyphs/glyph_graph.ts` builds (the stroke font, `#glyphs2`),
+  in tapered and notaper mode alike; `Strand.taper` exists only when
+  tapered. The Hershey text path and mazes set none, except a maze title
+  drawn under `#glyphs2`: `attachTitle` (`text_graph.ts`) builds it from
+  the glyph graph when the set covers the title and pushes its strands,
+  flag and all, into the maze graph. `src/app/scene.ts`
+  passes it to the renderer as `RibbonStyle.glyph` (per chain, undefined
+  when no strand has it), and only glyph-gated render code reads it: the
+  stadium cap cover (render-ribbon.md, K580 s5). Pinned by
+  `test/core/glyph_flag.test.ts`.
+
 ## Where the rest of the generation lore lives
 
 K173 (2026-10-14) moved each topic to a file that attaches only with the
