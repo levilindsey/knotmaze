@@ -194,5 +194,17 @@ confetti; a `-Moves 0,7,11` pass has no fabric@11 floor until the next A/A.
 GOTCHA (K662, 2026-10-20): heat and media playback confound phone frame
 times. Record `dumpsys thermalservice`'s status and the media session's
 state (`dumpsys media_session`) beside every frame number. A confetti batch
-ran at thermal status 1-2 (skin 40-43 C, SoC 50-53 C); the playing-vs-paused
-A/B is still owed (K687).
+ran at thermal status 1-2 (skin 40-43 C, SoC 50-53 C). K717 re-took the
+default cell cold (status 0) with the audiobook paused: 31% of frames over
+25 ms, against 23% hot and playing, so neither explains the confetti's
+missed vsyncs (n=1 each).
+GOTCHA (K704, 2026-10-21): the game plays music by default (soundMode
+music, volume 0.33), and a real CDP touch unlocks audio, so a phone probe
+can play into Levi's audiobook. Every link a probe loads carries
+`&snd=none`, and the kit checks that the page reports soundMode none at
+each load. Never reload a daily: `?daily&snd=none` loads silent but
+rewrites the address bar to the bare URL, so a reload plays music. Load
+the full link again instead. Even under none, the first touch opens an
+AudioContext (K720), so judge silence by the sound mode, not by counting
+contexts after a touch. Read the media session's real state before a
+sitting; a brief's numbers go stale.
