@@ -321,7 +321,10 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   `asleep` in both stands: a slept knot takes `restFrame` and an awake
   one the full tick (`frame_loop.ts` ~770), which alone made a +10 ms
   (1x) gap in K441's first stands. Stage 2's "0.5 ms unattributed" may
-  be the same confound.
+  be the same confound. GOTCHA (K580 stage 3, 2026-10-20): headless
+  SwiftShader pages never slept (`asleep=false` in every scene of
+  `.claude/probes/K580/count_base.txt`), so anything that waits for
+  `asleep` needs headed real-GPU Chrome (`scripts/diag_screenshot.mjs`).
 - K111 stage 4 (2026-10-14), hover probes: a TOUCH press on a choice
   lights nothing (main.ts only sets pendingTap), so a phone-size hovered
   choice needs a MOUSE at the phone viewport (`phonemouse`: 411x753 dsf
