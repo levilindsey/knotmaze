@@ -41,7 +41,15 @@ export function createAudioMap(deps: AudioMapDeps, scene: SceneRef) {
     number,
     Array<{ c0: number; c1: number; seg: number }>
   > | null = null;
-  let audioSegSite: Array<{ chain: number; ctrl: number }> = [];
+  // `c0`/`c1`: the fabric run's ctrl range (K244: an auto pluck whose
+  // midpoint sits in a junction core looks along the run for a place that
+  // draws); absent in knot mode, where the whole strand is the segment.
+  let audioSegSite: Array<{
+    chain: number;
+    ctrl: number;
+    c0?: number;
+    c1?: number;
+  }> = [];
   let nextRandomPluck = 0;
 
   // Re-derive the per-segment pitch assignment (cheap; no scene rebuild).
@@ -80,6 +88,8 @@ export function createAudioMap(deps: AudioMapDeps, scene: SceneRef) {
       audioSegSite = scene.walkGraph.edges.map((e) => ({
         chain: e.chain,
         ctrl: (e.ctrlA + e.ctrlB) / 2,
+        c0: e.ctrlA,
+        c1: e.ctrlB,
       }));
       for (const e of scene.walkGraph.edges) {
         let list = audioRuns.get(e.chain);
