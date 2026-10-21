@@ -239,6 +239,7 @@ const SCENE_FIELDS: Record<keyof SceneParams, "number" | "boolean" | "string"> =
   startAnchor: "string",
   exitAnchor: "string",
   penReverse: "boolean",
+  glyphs2: "string",
 };
 const SCENE_KEYS = Object.keys(SCENE_FIELDS) as (keyof SceneParams)[];
 const TUNING_KEYS = Object.keys(DEFAULT_TUNING) as (keyof PhysicsTuning)[];
