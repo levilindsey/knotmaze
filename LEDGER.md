@@ -224,8 +224,8 @@ Next free ID: K738.
   - owner: nobody since 2026-10-21 00:20 (merged; agent `a0437651435d16c14` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
   - branch: mainline; last commit: `c2c67ca`
   - evidence: `.claude/probes/K114/walker/`
-  - next: Levi calls K706 and K707; the walker dot glow (K713); a phone pass (K717 part 2); then K688 healing cuts
-  - brief: `docs/design/K114_walker.md`
+  - next: launch the beat rider (docs/design/K114_beat.md) when a code slot opens; Levi calls K706 and K707; a phone pass (K717 part 2); then K688 healing cuts
+  - brief: `docs/design/K114_beat.md`
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
   capitals e64f4d6, accents fa1b1ae, Greek 54612f2 (suite 1521 green). Levi (2026-10-19, Daily #8): redesign first.
