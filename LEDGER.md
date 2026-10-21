@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K645.
+Next free ID: K662.
 
 ## Waiting on Levi
 
@@ -131,6 +131,15 @@ Next free ID: K645.
 - **K636** · K324 s1's two calls (`docs/design/K324_s1.md`, Handoff): (a) hunt pace 0.9 of yours
   restores the greedy player's catches, the fleers within 4-5 points; rec keep (revert: `git revert
   fd230f1`); (b) five panel labels cut to 23 characters; rec keep.
+- **K647** · Path 8 (K336): Reset path during the winning move throws the confetti and records the
+  result, but shows no banner. Rec: show the banner, since the result counts.
+  `docs/design/K336_cannons.md` Handoff.
+- **K655** · K137's slack default: shipped 1 in [0, 1] (greedy makes strict par 30%, careful 89%);
+  the brief's half-of-greedy target needs 3 in [0, 4] (48% / 100%). Rec: 3 in [0, 4].
+  `docs/design/K137_s1.md` Handoff.
+- **K656** · K137's snap strands 40 of 50 greedy and explorer games (crack: none; the design
+  expected about 2 in 3): healing runs, a hard label, or a way out under the chase or fire (no Undo
+  there). Rec: the hard label.
 
 ## In progress
 
@@ -319,6 +328,14 @@ Next free ID: K645.
   - evidence: .claude/probes/K631/, .claude/probes/K409/phone/out/sheet/
   - next: Part 1 (K409's sheet), then Part 2 (K244's counts on the phone)
   - brief: `docs/design/K631_phone.md`
+- **K637** · The minotaur sim's baseline rose from 1.66 catches a game (K278 (c), 10-14) to 2.50 at
+  bcd907c, cause unknown: bisect with K324's harness (`.claude/probes/K324/rt/`) across 9ccf360 (K74
+  s3) and 35f3ec2 (K534's minoPull); sonnet.
+  - owner: agent `a11c3b4a1d90a3e01` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 18:58, 1 h cap ~19:58)
+  - branch: `worktree-agent-a11c3b4a1d90a3e01`, worktree `.claude/worktrees/agent-a11c3b4a1d90a3e01`; last commit: `62a70c1`
+  - evidence: `.claude/probes/K637/`
+  - next: Protocol diff and harness check, then the endpoints 02194b4 and bcd907c, then 9ccf360 and 35f3ec2 first
+  - brief: `docs/design/K637.md`
 
 ## Next, in order
 
@@ -515,18 +532,37 @@ Every other item below waits on the trigger it names.
 - **K611** · Main's drag frame is 19-26 ms (a drag runs at 30 fps); `RibbonRenderer.update` is 63%
   (gap slots 28%, splines 22%, tickPaint 17%). K370's 50 ms needs it under 12 ms. Overlaps K5
   R3/R4 and G3-2. `docs/design/K370.md` ("The gap to 50 ms", 2).
-- **K186** · K140's confetti calls, answered (Levi, 2026-10-20): no confetti under reduced motion;
-  confetti on every win banner, not only a live finish; colors and amount by the sliders. Rides
-  K336's agent (launched 2026-10-20). `docs/design/K140.md` ("Stage 1 handoff").
-- **K637** · The minotaur sim's baseline rose from 1.66 catches a game (K278 (c), 10-14) to 2.50 at
-  bcd907c, cause unknown: bisect with K324's harness (`.claude/probes/K324/rt/`) across 9ccf360 (K74
-  s3) and 35f3ec2 (K534's minoPull); sonnet.
 - **K643** · K580's glyph-lint upkeep: lintGlyph takes the taper part as an argument (it hardcodes
   TAPER_PART_LU, so tp60 lints only through a probe copy); calibrate taperBulgeLU (0.01) and the
   crotch bound (1.2 LU) with bulges injected through a probe flag (`docs/design/K580_s2.md` step 5).
 - **K644** · Phone pass for K580's glyph look (s2's medial root, s3's round outer side): "a", "ai",
   "ia" and "aa" on the Pixel at xh 2 and 3, after K580 s3 merges, with the next phone agent (K631's
   kit; s2 shot only desktop Chrome at phone scale).
+- **K645** · K336's unrun checks: the master-vs-branch sheets and streamer curl strip
+  (`.claude/probes/K336/sheet.mjs`, never run; does the finish spray throw no streamers?), then
+  K140's GPU frame A/B at amounts 1 and 3, cannons on/off. `docs/design/K336_cannons.md` Handoff.
+- **K646** · Phone pass for K336 + K186: the cannons' and streamers' look and frame time at cannon
+  amounts 1 and 3, K186's banner paths, and a `banners/banners.mjs` rerun on the final build. With
+  the next phone agent (K644).
+- **K649** · K525's tuning: rim strengths 0.6/0.8/1 and fades 0.2/0.3; junction-end gaps (runs under
+  1.95 world get no rims; try gap 0 at interior junctions); the ticks' touch alphas vs the line's
+  0.7; the sheet extras. `docs/design/K525_telegraph.md` Handoff.
+- **K650** · K525's unrun checks: the GPU-vs-mirror census for the TELE paint item (adapt
+  `census_rim.mjs`) and the SwiftShader compile of the two longer shader texts (only D3D11 ran).
+- **K651** · Pixel sheet for K525's rims: roam, hunt, a catch and the fog glow, beside K524's. With
+  the next phone agent (K644).
+- **K653** · Possible master bug, read but not measured (K525): syncMinotaur's layer reorder in
+  `fabric_maze_renderer.ts` (~1495-1499) may undo itself every other sync while the fog bleeds.
+  Probe it.
+- **K654** · K324 s2 input (K525): a moving end can ride a uniform like the hover point
+  (`uKReach.w`), so a moving minotaur rewrites no texel; today a changed lead rewrites the paint
+  texture.
+- **K657** · K137 follow-ups: the win banner's strokes/par and snapped rows (showFabricWin is free
+  since K336 merged); keep copy from promising par = perfect play (par counts runs, stars length; a
+  100%-efficient walk lost strict par, seed 7, slack 0).
+- **K658** · K137's page gaps: real clicks and touch taps, a click while stranded, sound, the
+  real-time clocks with fragile or par, the panel rows, chase + fragile edge cases.
+  `.claude/probes/K137/page/`.
 
 ## Residuals (known, not fixed)
 
@@ -1173,6 +1209,15 @@ Every other item below waits on the trigger it names.
 - **K642** · K580 s2 leftovers (`docs/design/K580_s2.md` Handoff, "Left"): tp60 draws a dark bite at
   the top of J at xh 2 (tp60 not used); the root's inner edge hooks at R at xh 2 (edge cos -0.883,
   hidden in the bowl); the taper reads TAPER_THREAD_LU 0.52, not the live tw.
+- **K648** · K336 leftovers: the streamers' sag only roughly holds across frame rates (the follow
+  runs once a frame); on the phone the closest cannon arc tops out 0.081 w from its edge (median
+  0.26 w).
+- **K652** · The telegraph line draws over unrevealed threads under the thread reveal (K525 report;
+  the line is master's).
+- **K659** · K155's star thresholds look stale (K137's sim): the greedy median is 4.98 against
+  K155's 2.57, and the star split moved from 28/52/19 to 56/32/12.
+- **K660** · K155's sim kit (`.claude/probes/K155/rt/`) is stale: `rt_lib.buildMaze` lacks K74
+  s2-4's params, and its codecDefaults call broke with K132 (K137 report).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1413,9 +1458,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K635** · Phone kit: a read-only idle gate before a pass (awake, unlocked, no touch for 30 s),
   `.claude/probes/K578/phone/wait_idle.ps1`. A 31 s gate still lost 6 cells to a touch 3.5 min in
   (K578's phone check).
+- **K661** · A HUD popover for K137's rows (strokes, par, snapped).
 
 ## Done
 
+- **K186** · K140's confetti calls: none under reduced motion, every win banner throws. Done in e7affd6 (2026-10-20).
 - **K336** · Side cannons and streamers (codec 178-180), with K186 (none under reduced motion, every banner throws). Done in e7affd6 (2026-10-20).
 - **K244** · No junction-core plucks: auto plucks pick only drawn sites and a release in a core is silent (0 of 844 notes undrawn). Done in ff67e4d (2026-10-20).
 - **K578** · While confetti falls, every frame redraws the whole maze (phone 60 -> 45 fps, K572, before K573). Dropped: the phone's fall is ~50 fps and not CPU-bound (a tenfold CPU cut gave +0.5 fps), and the cache never engages in the maze (PAINT_AMBIENT every frame). Branch kept; K634 (2026-10-20).
