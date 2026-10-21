@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K727.
+Next free ID: K730.
 
 ## Waiting on Levi
 
@@ -196,6 +196,10 @@ Next free ID: K727.
   s6); an ice backtrack undoes the whole slide; color rule alternate first, then cycle; par rates
   the best legal route; only 4.31 changes generation; turnstiles and tides step on the move clock.
   `K138_plan.md` Questions
+- **K727** · K708 defaults call: lives 3 (rec keep: about a third of blind real-time games reach 3
+  catches; the turn clock bites only at 2) and swordMoves 8 (a turn-clock breather: a seeker touches
+  the minotaur in 0.5%, 19.3% at 20; if it should slay, change the flee rule or its pace)
+  (docs/design/K708.md)
 
 ## In progress
 
@@ -602,6 +606,9 @@ Every other item below waits on the trigger it names.
 - **K726** · Phone sitting 3 (sonnet, after K720 merges): the K718 glyph cases at the Pixel real
   size, the sword on real touches, K720 (no AudioContext under snd=none).
   `docs/design/K726_phone.md`
+- **K728** · Real-time seeker for the K708 sim (a sword-seeking player on MinotaurChase): the
+  real-time sword best case is unmeasured and informs K727 (.claude/probes/K708/rt/, a sweep takes
+  about 35 s)
 
 ## Residuals (known, not fixed)
 
@@ -1325,6 +1332,9 @@ Every other item below waits on the trigger it names.
 - **K723** · K137 s3a page checks unrun: a broken run turning the minotaur plan and the fire, and
   the finish banner hearts row (`K137_s3a.md` Handoff); the sword has had no real-phone pass (phone
   sitting 3)
+- **K729** · K708 sim gaps: lives modelled off (run-outs and restarts unsimulated), the turn clock
+  has hunter rows only, and the seeker is a greedy chaser, not a flee-tree predictor
+  (docs/design/K708.md, Left over)
 
 ## Approved, to schedule (2026-10-11)
 
