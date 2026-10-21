@@ -56,7 +56,8 @@ export type StatId =
   | "walked"
   | "snapped"
   | "par"
-  | "strokes";
+  | "strokes"
+  | "collapsed";
 
 export const STATS: Record<StatId, { label: string; line: string }> = {
   // TIME above (SolveClock). The Burnt banner shows it too, for a run the
@@ -208,6 +209,17 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "fewest runs from the entrance to the exit, plus some slack). Every " +
       "run walked is a move, backing up included; going over par still " +
       "finishes, and the share says by how much.",
+  },
+  // K139: FabricMazeController.collapsePercent (game/collapse.ts
+  // sharePercent of the collapsed units) against collapsePar (the longest
+  // trail the step-budgeted search found; parText, ">=" once it gave up).
+  collapsed: {
+    label: "collapsed",
+    line:
+      "How much of the maze's thread has collapsed behind you, by length, " +
+      "rounded down, then par: the most one walk can collapse (reaching the " +
+      "finish, unless the game is free). A ≥ means the search for par " +
+      "stopped early, so the true best may be higher.",
   },
 };
 

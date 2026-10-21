@@ -527,6 +527,21 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       par: c.par,
       strokesLeft: c.strokesLeft,
       parLost: c.parLost,
+      // K139: the collapse game (null: collapse off). `units` / `total`:
+      // collapsed and all maze-run units; `pct`: the score; `par`: its
+      // search (units, tripped, steps; the first read runs it).
+      collapse: c.collapseOn
+        ? (() => {
+            const p = c.collapsePar!;
+            return {
+              mode: c.collapse,
+              units: c.collapsedUnits,
+              total: c.collapseTotal,
+              pct: c.collapsePercent,
+              par: { units: p.units, total: p.total, tripped: p.tripped, steps: p.steps },
+            };
+          })()
+        : null,
       // K114: the burn race (null: no fire). `smoldering`: the head's arms
       // whose tap the fire refuses; `banner`: the Burnt banner shows.
       fire: c.fire

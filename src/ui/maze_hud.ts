@@ -50,6 +50,9 @@ export interface HudSnapshot {
   snapped?: number | null;
   parLeft?: { par: number; left: number } | null;
   parStrokes?: { par: number; strokes: number } | null;
+  // K139 (absent elsewhere): collapse's score, a whole percent, and its par
+  // as text (game/collapse.ts parText: "≥N%" when the search gave up).
+  collapse?: { pct: number; par: string } | null;
 }
 
 // Distances read x10 as whole numbers, as the HUD always has.
@@ -62,7 +65,7 @@ type StatFields = Pick<
   HudSnapshot,
   | "timeMs" | "path" | "optimal" | "efficiency" | "backtrack" | "junctions" | "deadEnds"
   | "catches" | "chasedMs" | "fireLead" | "closestCall" | "closeCalls" | "seen"
-  | "restarts" | "snapped" | "parLeft" | "parStrokes"
+  | "restarts" | "snapped" | "parLeft" | "parStrokes" | "collapse"
 >;
 
 // A row (K274): its id names its line in STATS (game/maze_stats.ts), which
@@ -80,7 +83,7 @@ const entry = (id: StatId, value: string): StatEntry => ({ id, label: STATS[id].
 // fire): the HUD shows them with the stat rows off too.
 type GameFields = Pick<
   HudSnapshot,
-  "catches" | "fireLead" | "closestCall" | "snapped" | "parLeft" | "parStrokes"
+  "catches" | "fireLead" | "closestCall" | "snapped" | "parLeft" | "parStrokes" | "collapse"
 >;
 export function gameEntries(s: GameFields): StatEntry[] {
   const rows: StatEntry[] = [];
@@ -426,6 +429,8 @@ export interface WinInfo {
   closestCall?: number | null;
   // K155: the run's stars (null or absent: no rating, no stars).
   rating?: StarRating | null;
+  // K139: a collapse game's score against par (absent elsewhere).
+  collapse?: { pct: number; par: string } | null;
   // Show the daily stats button.
   stats: boolean;
 }
@@ -523,8 +528,9 @@ export function lossEntries(l: LossInfo): StatEntry[] {
   ];
 }
 
-// K137's rule fields (the HUD's, the rule banners' and the share's).
-export type RuleFields = Pick<HudSnapshot, "snapped" | "parLeft" | "parStrokes">;
+// K137's rule fields (the HUD's, the rule banners' and the share's), and
+// K139's collapse.
+export type RuleFields = Pick<HudSnapshot, "snapped" | "parLeft" | "parStrokes" | "collapse">;
 
 // A par or a count of moves; an infinite par (no way to the exit) reads as
 // a dash.
@@ -544,6 +550,8 @@ export function ruleEntries(s: RuleFields): StatEntry[] {
   if (s.parStrokes) {
     rows.push(entry("strokes", `${s.parStrokes.strokes} / par ${fmtPar(s.parStrokes.par)}`));
   }
+  // K139: "collapsed N% · par M%" (par "≥M%" once its search gave up).
+  if (s.collapse) rows.push(entry("collapsed", `${s.collapse.pct}% · par ${s.collapse.par}`));
   return rows;
 }
 
