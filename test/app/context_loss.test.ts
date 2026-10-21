@@ -3,6 +3,8 @@ import {
   ContextLossModel,
   MESSAGE_DELAY_MS,
   LOSS_POLL_MS,
+  LOSS_COVER_ID,
+  createLossCover,
   installContextLoss,
   type LossCover,
 } from "../../src/app/context_loss";
@@ -201,5 +203,92 @@ describe("context loss (K456): the installer", () => {
     h.lose();
     h.restore();
     expect(h.log).toEqual([]);
+  });
+});
+
+// A just-enough Document for the cover: elements with children, text,
+// style, attributes and click listeners.
+interface FakeEl {
+  tag: string;
+  id: string;
+  textContent: string;
+  style: { cssText: string; background: string };
+  children: FakeEl[];
+  parent: FakeEl | null;
+  listeners: Record<string, () => void>;
+  setAttribute(k: string, v: string): void;
+  append(...c: FakeEl[]): void;
+  appendChild(c: FakeEl): void;
+  addEventListener(t: string, f: () => void): void;
+  remove(): void;
+}
+function fakeDoc(): { body: FakeEl; doc: Document } {
+  const mk = (tag: string): FakeEl => {
+    const el: FakeEl = {
+      tag,
+      id: "",
+      textContent: "",
+      style: { cssText: "", background: "" },
+      children: [],
+      parent: null,
+      listeners: {},
+      setAttribute() {},
+      append(...c) {
+        for (const x of c) el.appendChild(x);
+      },
+      appendChild(c) {
+        el.children.push(c);
+        c.parent = el;
+      },
+      addEventListener(t, f) {
+        el.listeners[t] = f;
+      },
+      remove() {
+        if (el.parent) el.parent.children = el.parent.children.filter((x) => x !== el);
+        el.parent = null;
+      },
+    };
+    return el;
+  };
+  const body = mk("body");
+  return { body, doc: { body, createElement: mk } as unknown as Document };
+}
+
+describe("context loss (K456): the cover", () => {
+  it("says what a reload keeps, read when the message shows, and claims nothing otherwise", () => {
+    const { body, doc } = fakeDoc();
+    let note = "";
+    let reloads = 0;
+    const cover = createLossCover(doc, () => "#123456", () => reloads++, () => note);
+    cover.show();
+    expect(body.children.length).toBe(1);
+    expect(body.children[0].id).toBe(LOSS_COVER_ID);
+    expect(body.children[0].style.background).toBe("#123456");
+    expect(body.children[0].children.length).toBe(0); // no message yet
+    note = "Your progress is saved.";
+    cover.message();
+    const [head, text, button] = body.children[0].children[0].children;
+    expect(head.textContent).toBe("Graphics paused");
+    expect(text.textContent).toBe(
+      "The browser lost the graphics context. Your progress is saved."
+    );
+    button.listeners.click();
+    expect(reloads).toBe(1);
+    cover.hide();
+    expect(body.children.length).toBe(0);
+    // Free play's note, then none (knot mode, a finished daily).
+    note = "Reloading starts this maze over.";
+    cover.show();
+    cover.message();
+    expect(body.children[0].children[0].children[1].textContent).toBe(
+      "The browser lost the graphics context. Reloading starts this maze over."
+    );
+    cover.hide();
+    note = "";
+    cover.show();
+    cover.message();
+    expect(body.children[0].children[0].children[1].textContent).toBe(
+      "The browser lost the graphics context."
+    );
   });
 });

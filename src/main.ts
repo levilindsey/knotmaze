@@ -2574,7 +2574,15 @@ async function main(): Promise<void> {
     cover: createLossCover(
       document,
       () => app.canvas.style.background,
-      () => location.reload()
+      () => location.reload(),
+      // Only a daily's attempt in progress survives a reload (K47); free
+      // play starts its maze over. Knot mode and a finished daily: nothing.
+      () =>
+        dailyAttemptLive()
+          ? "Your progress is saved."
+          : dailyN === null && scene.fabricController
+            ? "Reloading starts this maze over."
+            : ""
     ),
     onLost: () => {
       glContextLost = true;
