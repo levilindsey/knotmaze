@@ -39,6 +39,9 @@
 // made, then advancing elsewhere) is the controller's (ruleLeftFrom). The
 // fewest taps run on a bucket queue (edges of 1, 2 and 4 taps), and the
 // route lists every tap (a bounce's backtrack is the move's last run).
+// A bounce retraces its moves, so neither kind takes a move the rule says
+// cannot be backtracked (K138 stage 3, `blocksBack`: one that took a
+// one-way run); a node whose every legal move is such has no bounce.
 //
 // COMPOSITION (composeRules): at most one rule EXPANDS a tap into several
 // runs (ice: `expands`); it proposes the move, and every other rule judges
@@ -79,6 +82,9 @@ export interface WalkRule {
   readonly expands?: boolean; // a tap may walk several runs (ice)
   // Stage 2: the clock's period in moves (default 1: no clock).
   readonly period?: number;
+  // K138 stage 3: may a move over these runs NOT be backtracked (a one-way
+  // run)? A clocked search's bounces skip such a move (default: none).
+  readonly blocksBack?: (runs: readonly number[]) => boolean;
   // The move a tap on `run` from `from` makes in `state`, the head having
   // arrived by `last` (-1: none), after `phase` moves (mod the period, or
   // more: a rule reduces it mod its own); null: refused.
@@ -144,6 +150,7 @@ export function composeRules(...rules: WalkRule[]): WalkRule {
     states *= r.states;
     period = lcm(period, r.period ?? 1);
   }
+  const blockers = parts.filter((r) => r.blocksBack);
   const encode = (s: number[]): number => {
     let out = 0;
     for (let i = parts.length - 1; i >= 0; i--) out = out * parts[i].states + s[i];
@@ -162,6 +169,7 @@ export function composeRules(...rules: WalkRule[]): WalkRule {
     start: encode(parts.map((r) => r.start)),
     expands: base.expands,
     period,
+    blocksBack: blockers.length > 0 ? (runs) => blockers.some((r) => r.blocksBack!(runs)) : undefined,
     step(from, run, state, last = -1, phase = 0) {
       const s = decode(state);
       const m = base.step(from, run, s[0], last, phase);
@@ -452,6 +460,8 @@ function clockSearch(walk: RuleWalk, rule: WalkRule, k: NodeKit): RuleSearch {
     }
     return out;
   };
+  // May a move be retraced (a bounce's way back; K138 stage 3)?
+  const backable = (m: RuleMove): boolean => !rule.blocksBack || !rule.blocksBack(m.runs);
   // Fewest taps: a bucket queue over taps (edges of 1, 2 and 4).
   const dist = new Int32Array(N).fill(-1);
   const parent = new Int32Array(N).fill(-1);
@@ -489,9 +499,11 @@ function clockSearch(walk: RuleWalk, rule: WalkRule, k: NodeKit): RuleSearch {
         }
       }
       if (outs.length === 0) continue;
-      relax(turned(n, 2), d + 2, n, BOUNCE, outs[0].run, -1);
+      const bounce = outs.find(({ m }) => backable(m));
+      if (bounce) relax(turned(n, 2), d + 2, n, BOUNCE, bounce.run, -1);
       for (const { run, m } of outs) {
-        const m2 = after(m, ph)[0];
+        if (!backable(m)) continue;
+        const m2 = after(m, ph).find(backable);
         if (!m2) continue;
         relax(turned(n, 4), d + 4, n, DEEP, run, m2.runs[0]);
         break;
@@ -557,8 +569,10 @@ function clockSearch(walk: RuleWalk, rule: WalkRule, k: NodeKit): RuleSearch {
     let two = Infinity;
     for (const { m } of outs) {
       push(k.nodeOf(m, ph), d + m.length);
+      if (!backable(m)) continue;
       if (m.length < one) one = m.length;
       for (const m2 of after(m, ph)) {
+        if (!backable(m2)) continue;
         if (m.length + m2.length < two) two = m.length + m2.length;
       }
     }

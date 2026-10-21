@@ -217,6 +217,8 @@ export const LIVE_EFFECTS = {
     "beatTempo", "beatLength", "beatCap",
     // K138 stage 2: turnstiles and hidden runs (a restart places them anew).
     "turnstiles", "hiddenRuns",
+    // K138 stage 3: one-way runs (a restart places them anew).
+    "oneWay",
   ],
 } as const satisfies Record<string, readonly string[]>;
 

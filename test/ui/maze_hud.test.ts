@@ -99,6 +99,7 @@ describe("what each figure means (K274)", () => {
     rules: "ice 25% \u00B7 cycle",
     turnstiles: 4,
     hidden: { found: 1, of: 2, fewest: 16, withAll: 14 },
+    oneWay: 12, // K138 stage 3
   };
   const shown = (): StatEntry[] => [
     ...statEntries(FULL),
@@ -394,16 +395,18 @@ describe("K138 rule rows", () => {
       rules: "ice 25% \u00B7 cycle",
       turnstiles: 4,
       hidden: { found: 1, of: 2, fewest: 16, withAll: 14 },
+      oneWay: 12,
     });
     expect(rows.map((r) => [r.id, r.label, r.value])).toEqual([
       ["rules", "rules", "ice 25% \u00B7 cycle"],
       ["turnstiles", "turnstiles", "4"],
       ["hidden", "hidden", "1 / 2 found \u00B7 fewest 16, 14 with them"],
+      ["oneWay", "one-way", "12"], // K138 stage 3
     ]);
   });
 
   it("leaves them out while off, and dashes a fewest with no way", () => {
-    expect(ruleEntries({ rules: null, turnstiles: null, hidden: null })).toEqual([]);
+    expect(ruleEntries({ rules: null, turnstiles: null, hidden: null, oneWay: null })).toEqual([]);
     expect(
       ruleEntries({ hidden: { found: 0, of: 0, fewest: 9, withAll: Infinity } })[0].value
     ).toBe("0 / 0 found \u00B7 fewest 9, \u2014 with them");

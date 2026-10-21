@@ -282,7 +282,7 @@ const START_HIDDEN: ReadonlySet<number> = new Set();
 // The marker meshes live for the page (each scene's overlay borrows them;
 // destroy() hands them back undestroyed - the PALETTE_CACHE lore). The
 // spider glyph has no mesh yet (K114 decides what it marks).
-type MeshRole = Exclude<MarkerRole, "spider" | "tick">;
+type MeshRole = Exclude<MarkerRole, "spider" | "tick" | "chevron">;
 let MARKER_MESHES: Record<MeshRole, MarkerMesh> | null = null;
 function markerMeshes(): Record<MeshRole, MarkerMesh> {
   if (!MARKER_MESHES) {
@@ -299,6 +299,15 @@ function markerMeshes(): Record<MeshRole, MarkerMesh> {
 // K137 stage 2: the chalk ticks' meshes, grown on demand and page-lifetime
 // like the markers (each scene borrows the first N; destroy() hands them back).
 const TICK_POOL: MarkerMesh[] = [];
+// K138 stage 3: the one-way chevrons' meshes, page-lifetime like the ticks.
+// A chevron's radius is CHEVRON_SCALE marker radii; a run longer than
+// CHEVRON_LONG ctrl wears two (at 0.3 and 0.7 of it), any other one at its
+// middle, turned along the run by the tangent over CHEVRON_TANGENT ctrl
+// either side.
+const CHEVRON_POOL: MarkerMesh[] = [];
+const CHEVRON_SCALE = 0.55;
+const CHEVRON_LONG = 16;
+const CHEVRON_TANGENT = 0.4;
 // A tick sits up and right of its junction (in marker radii), so the head's
 // disc never covers the tick on the junction it stands on, at this share of
 // the marker radius.
@@ -3652,6 +3661,7 @@ export class FabricMazeRenderer {
     m.head.place(this.headX, this.headY, r);
     this.placeWalkerGlow(controller, r); // K713
     this.drawAids(controller, dotChain >= 0, r); // K137 stage 2
+    this.drawOneWay(controller, r); // K138 stage 3
 
     // Start/exit discs sit at the renderer's OWN sample of their ctrl
     // (markerWorld), concentric with the gap slots the renderer cuts for
@@ -3759,6 +3769,57 @@ export class FabricMazeRenderer {
     g.poly([cx + dx * s, cy + dy * s, bx - dy * w, by + dx * w, bx + dy * w, by - dx * w]);
     g.fill({ color: HINT_COLOR, alpha: 0.95 });
     g.stroke({ color: 0x0b0f18, width: r * 0.12, alpha: 0.9 });
+  }
+  // K138 stage 3: the ONE-WAY CHEVRONS, marker glyphs along each one-way run
+  // pointing the way it may be walked (from its entry), the mesh turned
+  // along the run. None on a hidden run, nor on thread a reveal has not
+  // shown yet (the minotaur's test).
+  private chevrons: MarkerMesh[] = [];
+  private drawOneWay(controller: FabricMazeController, r: number): void {
+    let n = 0;
+    const ow = controller.ruleLook?.oneWay ?? null;
+    if (ow && ow.size > 0) {
+      const glyph = markerGlyph(this.markerGlyphIds.chevron, "chevron");
+      for (const [eid, entry] of ow) {
+        const e = this.walk.edges[eid];
+        if (!e || controller.isHidden(eid)) continue;
+        const dir = entry === e.va ? 1 : -1;
+        const span = e.ctrlB - e.ctrlA;
+        for (const t of span > CHEVRON_LONG ? [0.3, 0.7] : [0.5]) {
+          const c = e.ctrlA + span * t;
+          const cm = this.ctrlMod(e.chain, c);
+          if (this.revealQuery && this.revealQuery(e.chain, cm) < 0.98) continue;
+          if (this.explore.on && this.ribbons.exploreVisAt(e.chain, cm) < 0.98) continue;
+          this.pointFlowed(e.chain, this.ctrlMod(e.chain, c - CHEVRON_TANGENT * dir), this.scratch, 0);
+          const x0 = this.scratch[0];
+          const y0 = this.scratch[1];
+          this.pointFlowed(e.chain, this.ctrlMod(e.chain, c + CHEVRON_TANGENT * dir), this.scratch, 0);
+          const x1 = this.scratch[0];
+          const y1 = this.scratch[1];
+          this.pointFlowed(e.chain, cm, this.scratch, 0);
+          const mk = this.chevronMesh(n++);
+          mk.setGlyph(glyph);
+          mk.mesh.rotation = Math.atan2(y1 - y0, x1 - x0);
+          mk.place(this.scratch[0], this.scratch[1], r * CHEVRON_SCALE);
+        }
+      }
+    }
+    for (let i = n; i < this.chevrons.length; i++) this.chevrons[i].hide();
+  }
+  // The chevrons shown now (the probes' count).
+  get chevronCount(): number {
+    let k = 0;
+    for (const mk of this.chevrons) if (mk.mesh.visible) k++;
+    return k;
+  }
+  private chevronMesh(i: number): MarkerMesh {
+    while (this.chevrons.length <= i) {
+      const j = this.chevrons.length;
+      const mk = CHEVRON_POOL[j] ?? (CHEVRON_POOL[j] = new MarkerMesh());
+      this.overContainer.addChildAt(mk.mesh, this.overContainer.getChildIndex(this.markers.head.mesh));
+      this.chevrons.push(mk);
+    }
+    return this.chevrons[i];
   }
   private tickMesh(i: number): MarkerMesh {
     while (this.ticks.length <= i) {
@@ -4145,7 +4206,7 @@ export class FabricMazeRenderer {
   destroy(): void {
     // The marker meshes outlive the scene (markerMeshes): hand them back
     // before the containers go (the minotaur's sits in minoLayer).
-    for (const mk of [...Object.values(this.markers), ...this.ticks, ...this.extraMeshes]) {
+    for (const mk of [...Object.values(this.markers), ...this.ticks, ...this.extraMeshes, ...this.chevrons]) {
       mk.mesh.removeFromParent();
       mk.hide();
     }

@@ -72,7 +72,9 @@ export type StatId =
   // the hidden runs (stage 2).
   | "rules"
   | "turnstiles"
-  | "hidden";
+  | "hidden"
+  // K138 stage 3: the one-way runs.
+  | "oneWay";
 
 export const STATS: Record<StatId, { label: string; line: string }> = {
   // TIME above (SolveClock). The Burnt banner shows it too, for a run the
@@ -349,6 +351,14 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "until you pluck a thread of the same note within three runs of it. " +
       "Fewest: the fewest moves to the exit without the hidden runs (what " +
       "the stars rate against), then with them.",
+  },
+  // K138 stage 3: the one-way runs laid.
+  oneWay: {
+    label: "one-way",
+    line:
+      "One-way runs. Chevrons along a one-way run point the way; a tap " +
+      "against them is refused, and so is a backtrack over one (Undo always " +
+      "works). The way out never closes.",
   },
 };
 

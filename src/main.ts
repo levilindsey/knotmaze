@@ -2892,8 +2892,19 @@ async function main(): Promise<void> {
     ruleToastAt = t;
     const fc = scene.fabricController;
     const mode = fc?.ruleLook?.mode;
+    const why = fc?.refusalOf(eid);
+    // K138 s3: a one-way run, against its arrow or backtracked.
+    if (why === "oneWay") {
+      showToast(
+        eid === fc!.arrivalEdge
+          ? "No going back over a one-way run. Undo still works."
+          : "That run is one-way: follow the arrows.",
+        2500
+      );
+      return;
+    }
     // K138 s2: a closed turnstile says so (the toast's pluck is the same).
-    if (fc?.refusalOf(eid) === "turnstile") {
+    if (why === "turnstile") {
       showToast("That turnstile is closed this way. It turns one step with every move.", 2500);
       return;
     }

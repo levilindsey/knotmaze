@@ -249,6 +249,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["hiddenRuns", "number"],
   ["sleepers", "number"], // K137 stage 3d
   ["sleepKind", "enum", ["wake", "follow", "both"]],
+  ["oneWay", "number"], // K138 stage 3
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
