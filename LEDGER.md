@@ -334,10 +334,10 @@ Next free ID: K672.
 - **K441** · The real-time fire's frame cost (K114 s2 item 6): 0.6-1.2 ms more a frame than turn
   (drawFire's re-declare 0.6, HUD writes 0.1, 0.5 unattributed). Profile, then fix inside drawFire or
   main's fire frame; elsewhere is s2, after K137 s1 and K525. `docs/design/K441_fire_frame.md` (queued).
-  - owner: agent `a14002cf1416cdbd8` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 19:07, 1 h cap ~20:07)
-  - branch: `worktree-agent-a14002cf1416cdbd8`, worktree `.claude/worktrees/agent-a14002cf1416cdbd8`; last commit: `da03e7d`
+  - owner: nobody since 2026-10-20 20:09 (merged; agent `a14002cf1416cdbd8` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `9850741`
   - evidence: `.claude/probes/K441/`
-  - next: Profile the real-time fire vs turn on post-K409 code (desktop and 4x throttle, perf lock), then fix inside drawFire or main's fire frame
+  - next: the same-state rerun under the perf lock, realtime stand after the first sleep (recipe: K441_fire_frame.md Handoff, Owed), then close K441 or open s2
   - brief: `docs/design/K441_fire_frame.md`
 - **K139** · Collapse mode (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`): no backtracking,
   each run collapses behind you. `collapse` (off | finish | free); rides 4.3's snap (`fragile`,
