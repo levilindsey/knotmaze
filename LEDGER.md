@@ -249,14 +249,6 @@ Next free ID: K576.
   - evidence: `.claude/probes/K459/`
   - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii) (`docs/design/K459.md`, Handoff); the free cap's checks are K477
   - brief: `docs/design/K459.md`
-- **K550** · Kill K320's gap split (Levi 2026-10-20: "Go with your kill rec."; `docs/design/K550_stage3.md`): revert its six
-  code commits (`ffd3864`..`a688909`), keep Stage 1 (`6c592e6`), prove 0 px (`docs/design/K550_kill.md`). Stage 3's branch
-  `worktree-agent-a6e7569fb69c908c3` (`d27b35c`) stays for K567; its worktree goes once the kill merges.
-  - owner: agent `aabae6dc5db6e48b5` of claude session 91b19e11 (sonnet, started 2026-10-20 11:15, 1 h cap ~12:15)
-  - branch: `worktree-agent-aabae6dc5db6e48b5`, worktree `.claude/worktrees/agent-aabae6dc5db6e48b5`; last commit: `9c17bde`
-  - evidence: .claude/probes/K550/kill/ (its worktree)
-  - next: the cleanup commit, then Verify: suite, shader-source diff, 0 px same-state A/B
-  - brief: `docs/design/K550_kill.md`
 
 ## Next, in order
 
@@ -1259,6 +1251,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K550** · K320's gap split killed: its six code commits reverted, Stage 1 kept (6c592e6); 0 px in 8 A/B cells, 27 of 29 programs byte-identical (two vertex shaders lose a dead vChain). Done in d732a47 (2026-10-20).
 - **K572** · The phone's render regression is G3-1's gap search (`3465090`): 57 ms a frame on the phone where the old search cost 10; K320 stage 1 adds about 4 ms; K568's own confetti costs about 2 fps. Done in f1f2b01 (2026-10-20).
 - **K447** · The real-time fire on the phone (round 2026-10-20): escaped, 3 stars, 47.6 fps in the race vs 49.5 at rest; the burn costs about 2 fps (0.23 ms a frame). Done in 071aa32 (2026-10-20).
 - **K539** · G3-1's phone half (round 2026-10-20): pruned = brute at 0 px, GL clean, no context loss; the head's 1.5-3.7x render cost went to K572. Done in 071aa32 (2026-10-20).
