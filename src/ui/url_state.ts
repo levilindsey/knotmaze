@@ -19,6 +19,8 @@ import type { FireClock } from "../game/fire";
 import type { FabricRules } from "../game/fabric_controller";
 import type { FragileMode } from "../game/fragile";
 import { FRAGILE_MODES } from "../game/fragile";
+import type { CollapseMode } from "../game/collapse";
+import { COLLAPSE_MODES } from "../game/collapse";
 import type { ParMode } from "../game/par";
 import { PAR_MODES, PAR_SLACK_DEFAULT } from "../game/par";
 import {
@@ -714,6 +716,12 @@ export interface UrlParams {
   fragile: FragileMode;
   parMode: ParMode;
   parSlack: number;
+  // K139 (brief docs/design/K139.md): COLLAPSE, off | finish | free
+  // (game/collapse.ts: every run you walk collapses behind you; the score
+  // is the share of the maze collapsed, on the way to the exit or wherever
+  // you end). Overrides fragile and par. Every change restarts the solve.
+  // Not daily-exempt.
+  collapse: CollapseMode;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1001,6 +1009,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   fragile: "off",
   parMode: "off",
   parSlack: PAR_SLACK_DEFAULT,
+  // K139: no collapse.
+  collapse: "off",
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1029,12 +1039,18 @@ export function fireSettingsOf(
   };
 }
 
-// K137: the solve's rules beyond the clock (fragile runs and par), as
-// the controller takes them (FabricMazeController's FabricRules).
+// K137: the solve's rules beyond the clock (fragile runs and par, and
+// K139's collapse), as the controller takes them (FabricMazeController's
+// FabricRules).
 export function fabricRulesOf(
-  p: Pick<UrlParams, "fragile" | "parMode" | "parSlack">
+  p: Pick<UrlParams, "fragile" | "parMode" | "parSlack" | "collapse">
 ): FabricRules {
-  return { fragile: p.fragile, parMode: p.parMode, parSlack: p.parSlack };
+  return {
+    fragile: p.fragile,
+    parMode: p.parMode,
+    parSlack: p.parSlack,
+    collapse: p.collapse,
+  };
 }
 
 // [HOVER_GLOW_WIDTH_MIN, HOVER_GLOW_WIDTH_MAX]; garbage reads as the default.
@@ -1221,6 +1237,7 @@ export const ENUM_OPTIONS: {
   cartoucheShape: EMBLEM_CHOICES,
   fragile: FRAGILE_MODES,
   parMode: PAR_MODES,
+  collapse: COLLAPSE_MODES,
 };
 
 // K398: every numeric param held to the panel's range (param_codec's
@@ -1717,6 +1734,8 @@ function readLegacy(
     fragile: readChoice(query, "fg", FRAGILE_MODES, D.fragile),
     parMode: readChoice(query, "pa", PAR_MODES, D.parMode),
     parSlack: readNumber(query, "par", D.parSlack),
+    // K139's collapse (`&cl=finish`, `&cl=free`).
+    collapse: readChoice(query, "cl", COLLAPSE_MODES, D.collapse),
   };
 }
 

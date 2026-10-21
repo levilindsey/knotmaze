@@ -340,6 +340,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("minoGuardLose"),
   num("minoGuardAccuracyRt"),
   num("minoStalkerAccuracyRt"),
+  // 190, K139: collapse (COLLAPSE_MODES order, game/collapse.ts).
+  choice("collapse", ["off", "finish", "free"]),
 ]);
 
 // The format version a blob names first. Bump it for anything but an

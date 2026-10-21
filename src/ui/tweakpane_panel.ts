@@ -1607,6 +1607,14 @@ export function buildPanel(
       callbacks.onClockChange();
     }
   );
+  // K139: collapse (game/collapse.ts). It overrides the three rows above,
+  // which stay visible (call 4 of docs/design/K139.md). Restarts the solve.
+  const collapseRow = row(
+    fGame, p, "collapse",
+    { options: { off: "off", finish: "finish", free: "free" }, label: "Collapse" },
+    "Runs collapse behind you: a run you have walked cannot be walked again. Collapse as much of the maze as you can. finish: and still reach the exit; with no way left to it you are stranded (undo the last move or restart). free: the exit is just another run end; the game ends when no unbroken run is left to walk, and scores the share collapsed. Overrides Fragile runs and Par. Restarts the solve.",
+    D.collapse, () => callbacks.onClockChange()
+  );
 
   // K80: the real-time chase's tuning (game/minotaur.ts ChaseParams; the
   // defaults were picked by a headless simulation). All live. Since K80
@@ -2786,6 +2794,7 @@ export function buildPanel(
     fragileRow.hidden = !fab;
     parModeRow.hidden = !fab;
     parSlackRow.hidden = !fab || params.parMode === "off";
+    collapseRow.hidden = !fab; // K139, every game mode too
     // Under the thread reveal too (K76 stage 2c: the same two settings).
     minoFogRow.hidden = !minoOn || !(fog || threads);
     minoRestartRow.hidden = !minoOn;

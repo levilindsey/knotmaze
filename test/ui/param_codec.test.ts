@@ -230,6 +230,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["minoGuardLose", "number"],
   ["minoGuardAccuracyRt", "number"],
   ["minoStalkerAccuracyRt", "number"],
+  ["collapse", "enum", ["off", "finish", "free"]], // K139
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

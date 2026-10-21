@@ -198,6 +198,7 @@ export const LIVE_EFFECTS = {
   onClockChange: [
     "gameMode", "clock", "minotaur", "fireSpeed", "fireDelay", "fireClock",
     "fireSpeedRt", "fireDelayRt", "fragile", "parMode", "parSlack",
+    "collapse", // K139
   ],
 } as const satisfies Record<string, readonly string[]>;
 
