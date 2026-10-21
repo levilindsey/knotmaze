@@ -303,8 +303,8 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       if (background.needsFrame(dt)) polls |= Flag.BACKGROUND;
     }
     const closedNeed = flags.endFrame(polls, { active, stepUnflagged });
-    return { need: closedNeed, polls };
     stepUnflagged = false;
+    return { need: closedNeed, polls };
   };
 
   // K6-3 (= K24): the draw/ticker half of the frame's decision (design
