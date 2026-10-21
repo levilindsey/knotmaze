@@ -315,14 +315,6 @@ Next free ID: K664.
   - evidence: `.claude/probes/K137/`
   - next: stage 1: fragile (fg off|crack|snap) pure + controller tests, then par (pa off|strict|strokes), then the params and the page
   - brief: `docs/design/K137_s1.md`
-- **K525** · The minotaur's telegraph (Levi 2026-10-20): a treatment dropdown whose new default
-  lights the run's rims like the hover highlight, today's line kept as an option; roam must read on
-  the phone at fit zoom. Full text: `docs/ledger_notes.md` (K525).
-  - owner: agent `ae18c5a4888bb8280` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 17:26, 2 h cap ~19:26)
-  - branch: `worktree-agent-ae18c5a4888bb8280`, worktree `.claude/worktrees/agent-ae18c5a4888bb8280`; last commit: `8b7411e`
-  - evidence: `.claude/probes/K525/`
-  - next: baseline sheet against K524's, then append mtl (rims|line|both, default rims) and build the TELE paint item; the phone step after 18:25 (Levi's)
-  - brief: `docs/design/K525_telegraph.md`
 - **K631** · Phone passes owed: K244's on the phone (core releases silent, auto plucks draw,
   dense_phone). K409's sheet is done (18:37, 3231d59: fine at phone scale). Part 2 waits on the
   phone (K662).
@@ -1469,6 +1461,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K525** · The telegraph lights the route's rims by default (mtl at codec 181; the line stays an option); follow-ups K649-K654. Done in 5e88352 (2026-10-20).
 - **K186** · K140's confetti calls: none under reduced motion, every win banner throws. Done in e7affd6 (2026-10-20).
 - **K336** · Side cannons and streamers (codec 178-180), with K186 (none under reduced motion, every banner throws). Done in e7affd6 (2026-10-20).
 - **K244** · No junction-core plucks: auto plucks pick only drawn sites and a release in a core is silent (0 of 844 notes undrawn). Done in ff67e4d (2026-10-20).
