@@ -596,9 +596,10 @@ only with the files it is about; `gameplay.md` lists the area's other files.
 - LURES AND SNARES PARAMS (K137 stage 4, 2026-10-21; brief
   `docs/design/K137_s4.md`): `lures` (`lur`, a number, PARAM_RANGES [0, 5]
   = LURES_MAX, default 0 = off) and `snares` (`snr`, [0, 3] = SNARES_MAX,
-  default 0) are APPENDED at 209-210, after the sleepers (207-208);
-  CODEC_VERSION stays 8. Whoever merges second of K137 stage 4 and K138
-  stage 3 (which appends too) renumbers and re-freezes the table pin.
+  default 0) are APPENDED at 210-211, after K138 stage 3's `oneWay` (209);
+  CODEC_VERSION stays 8. They were 209-210 on their branch until the
+  rebase onto 04c4d9e1 (K138 stage 3, whose `oneWay` took 209), which
+  renumbered them and re-froze the table pin.
   Neither daily-exempt nor a MAZE key (free play only: a daily keeps 0).
   Both under onClockChange in undo_stack.ts's LIVE_EFFECTS (a change
   restarts the solve, which refills both stocks). Pins that moved: the
