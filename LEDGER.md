@@ -140,9 +140,6 @@ Next free ID: K671.
 - **K656** · K137's snap strands 40 of 50 greedy and explorer games (crack: none; the design
   expected about 2 in 3): healing runs, a hard label, or a way out under the chase or fire (no Undo
   there). Rec: the hard label.
-- **K662** · The phone for one sitting of about 1 h: plugged in, unlocked, on the home screen, left
-  alone. It runs K631 part 2 (K244's counts, ~25 min), then K646, K651 and K644 from the same setup
-  (a closed tab drops the wake lock).
 - **K664** · K74 s3's trap-zone finish (9ccf360, K637) lengthens greedy games: 3+ catches 23% to
   33%, solve p90 181 to 310 s, 6% of no-minotaur greedy walks unfinished at 900 s; the dailies ship
   it. Wanted? Rec: keep (it is the trap).
@@ -354,6 +351,13 @@ Next free ID: K671.
   - evidence: `.claude/probes/K653/`
   - next: probe the layer reorder, then K650's census and SwiftShader compile, then K645's sheets and A/B
   - brief: `docs/design/K653_checks.md`
+- **K662** · The phone sitting (Levi plugged it in at 20:00, on AC with stay-awake): K631 part 2
+  (K244's counts), K646 + K587 (confetti), K651 (telegraph rims), K644 if K580 s3 has merged.
+  - owner: agent `aadd6b0b7905a1619` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 20:06, 1 h cap ~21:06)
+  - branch: mainline; last commit: `1b96ae6`
+  - evidence: .claude/probes/K662/ (results.md, builds/, sheets), .claude/probes/K631/out/phone/
+  - next: parts 1-4 per the brief; on report file the results into K631, K646, K587, K651, K644
+  - brief: `docs/design/K662_phone.md`
 
 ## Next, in order
 
