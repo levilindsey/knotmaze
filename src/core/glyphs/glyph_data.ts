@@ -103,6 +103,8 @@ const A_GLYPH: Glyph = {
         [46, 72, 1, 0, 0, 18],
         [100, 70, 1, 0, 18, 0],
       ]),
+      // K580: the connector and the oval meet tangentially at J.
+      tangent: true,
     },
     {
       at: 15,
@@ -126,6 +128,8 @@ const A_GLYPH: Glyph = {
  */
 export const A_LANDED: Glyph = {
   ...A_GLYPH,
+  // The landed J is a 27.7 degree fork, not a tangent join (K580).
+  spurs: A_GLYPH.spurs.map((s) => ({ at: s.at, path: s.path })),
   body: knotsToPath([
     [0, 32, LOW[0], LOW[1], 0, 2],
     [22, 77, 3, 1, 8, 3],

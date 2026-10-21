@@ -50,6 +50,113 @@ export interface GlyphBuildOpts {
   fork?: number;
   /** Stage 9 kill criterion: every a takes the landed J (A_LANDED). */
   aLanded?: boolean;
+  /**
+   * K580: build a tangent spur's tapered root (default true; `notaper`
+   * turns it off, giving stage 9's form).
+   */
+  taper?: boolean;
+  /**
+   * K580: where the root parts into the two strokes, as their centerline
+   * separation in LU (default TAPER_PART_LU: the thread width, where the
+   * strokes' inner edges meet).
+   */
+  taperPart?: number;
+}
+
+/** K580: the default part point (LU): the default thread width (0.52). */
+export const TAPER_PART_LU = 0.52;
+/** K580: Hermite segments in a root. */
+const ROOT_SEGS = 4;
+
+/** K580: a tangent spur's tapered root (GU, y up). */
+export interface TangentRoot {
+  /** The root's cubic path, from the part point R to the junction J. */
+  path: Pt[];
+  /** Equal-arc distance from J at R (GU). */
+  aR: number;
+  /** Centerline separation of the two strokes at the root's arc a (GU). */
+  sepAt: (a: number) => number;
+  /** Cosine of the angle between the strokes' directions away from J at R. */
+  cosR: number;
+}
+
+/**
+ * K580: the root of a tangent spur at body point `at` (a multiple of 3).
+ * The body arrives at J (body[at]) and leaves it back along the same
+ * tangent line (a cusp). Pair the arrival stroke C and the departure
+ * stroke O by equal arc a from J; the root's centerline is their midline
+ * M(a) = (C(a) + O(a)) / 2 from the part point (|C - O| = partGu) to J,
+ * fit as ROOT_SEGS Hermite cubics in a (G1 with the spur's tangent at J,
+ * which is the arrival tangent). The ribbon's half-width there is
+ * h + |C - O| / 2: the strokes' outer edges.
+ */
+export function tangentRoot(body: readonly Pt[], at: number, partGu: number): TangentRoot | null {
+  const tab = arcTable(body as Pt[]);
+  const total = tab.cum[tab.cum.length - 1];
+  const arcJ = arcAtP(tab, at / 3);
+  const posAtArc = (L: number): [number, number] => posAtP(body as Pt[], pAtArc(tab, L));
+  const C = (a: number): [number, number] => posAtArc(arcJ - a);
+  const O = (a: number): [number, number] => posAtArc(arcJ + a);
+  const sepAt = (a: number): number => {
+    const c = C(a);
+    const o = O(a);
+    const dx = c[0] - o[0];
+    const dy = c[1] - o[1];
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+  const aMax = Math.min(arcJ, total - arcJ);
+  if (!(aMax > 0) || sepAt(aMax) < partGu) return null;
+  let lo = 0;
+  let hi = aMax;
+  for (let it = 0; it < 60; it++) {
+    const mid = (lo + hi) / 2;
+    if (sepAt(mid) < partGu) lo = mid;
+    else hi = mid;
+  }
+  const aR = (lo + hi) / 2;
+  const eps = 0.01;
+  const M = (a: number): [number, number] => {
+    const c = C(a);
+    const o = O(a);
+    return [(c[0] + o[0]) / 2, (c[1] + o[1]) / 2];
+  };
+  // dM/d(-a): the root runs R -> J, toward smaller a.
+  const D = (a: number): [number, number] => {
+    const a0 = Math.max(0, a - eps);
+    const a1 = a + eps;
+    const m0 = M(a0);
+    const m1 = M(a1);
+    return [(m0[0] - m1[0]) / (a1 - a0), (m0[1] - m1[1]) / (a1 - a0)];
+  };
+  const unit = (a: number): [number, number] => {
+    const q0 = posAtArc(a - eps);
+    const q1 = posAtArc(a + eps);
+    const dx = q1[0] - q0[0];
+    const dy = q1[1] - q0[1];
+    const l = Math.sqrt(dx * dx + dy * dy) || 1;
+    return [dx / l, dy / l];
+  };
+  // At J the midline's derivative is exactly the arrival tangent.
+  const tJ = unit(arcJ - eps * 2);
+  const path: Pt[] = [];
+  const da = aR / ROOT_SEGS;
+  for (let k = 0; k < ROOT_SEGS; k++) {
+    const a0 = aR - k * da;
+    const a1 = aR - (k + 1) * da;
+    const p0 = k === 0 ? M(a0) : (path[path.length - 1] as [number, number]);
+    const p1 = k + 1 === ROOT_SEGS ? (body[at] as [number, number]) : M(a1);
+    const d0 = D(a0);
+    const d1 = k + 1 === ROOT_SEGS ? tJ : D(a1);
+    if (k === 0) path.push([p0[0], p0[1]]);
+    path.push([p0[0] + (d0[0] * da) / 3, p0[1] + (d0[1] * da) / 3]);
+    path.push([p1[0] - (d1[0] * da) / 3, p1[1] - (d1[1] * da) / 3]);
+    path.push([p1[0], p1[1]]);
+  }
+  const tc = unit(arcJ - aR);
+  const to = unit(arcJ + aR);
+  // C's direction away from J is -tc; O's is to. (No trig in core/: K108.)
+  const cosR = -tc[0] * to[0] - tc[1] * to[1];
+  return { path, aR, sepAt, cosR };
 }
 
 export interface GlyphBuildStats {
@@ -87,12 +194,17 @@ interface PathRec {
   /** Spur: the body point index of its junction. */
   junction: number;
   glyph: number;
+  /** K580: the spur's authored def says its junction is a tangent join. */
+  tangent?: boolean;
+  /** K580: the tapered root this spur's path starts with (its first
+   *  `segs` segments, R to J). */
+  root?: { segs: number; aR: number; sepAt: (a: number) => number };
 }
 
 // A point on a path the node chain must pass through.
 interface Forced {
   p: number; // seg + t
-  kind: "start" | "end" | "junction" | "waypoint" | "crossing" | "kmax";
+  kind: "start" | "end" | "junction" | "waypoint" | "crossing" | "kmax" | "root";
   id?: string; // shared node id (crossings, junctions)
 }
 
@@ -265,7 +377,13 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
     entryIdx.push(start);
     appendPath(body, place(g.body, dx, dy));
     for (const s of g.spurs) {
-      spurs.push({ kind: "spur", path: place(s.path, dx, dy), junction: start + s.at, glyph: glyphNo });
+      spurs.push({
+        kind: "spur",
+        path: place(s.path, dx, dy),
+        junction: start + s.at,
+        glyph: glyphNo,
+        ...(s.tangent ? { tangent: true } : {}),
+      });
     }
     for (const f of g.floats) {
       floats.push({ kind: "float", path: place(f, dx, dy), junction: -1, glyph: glyphNo });
@@ -278,6 +396,20 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
   }
   if (!prevExit) return null;
   appendPath(body, tail(prevExit.at, prevExit.dir, LEAD_STEPS, false));
+
+  // K580: a tangent spur starts with its tapered root (R to J).
+  if (opts.taper !== false) {
+    const partGu = (opts.taperPart ?? TAPER_PART_LU) * guPerLu;
+    for (const r of spurs) {
+      if (!r.tangent) continue;
+      const root = tangentRoot(body, r.junction, partGu);
+      if (!root) continue;
+      const path = root.path.slice();
+      appendPath(path, r.path);
+      r.path = path;
+      r.root = { segs: segCount(root.path), aR: root.aR, sepAt: root.sepAt };
+    }
+  }
 
   const paths: PathRec[] = [
     { kind: "body", path: body, junction: -1, glyph: -1 },
@@ -300,9 +432,12 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
       [b, a],
     ]) {
       const r = paths[x.path];
-      if (r.kind === "spur" && x.seg === 0 && y.path === 0) {
+      if (r.kind === "spur" && y.path === 0) {
         const js = r.junction / 3;
-        if (y.seg === js || y.seg === js - 1) return true;
+        // K580: a root and the spur's first segment touch the body only
+        // at J, where all three run tangent.
+        const first = r.root ? r.root.segs : 0;
+        if (x.seg <= first && (y.seg === js || y.seg === js - 1)) return true;
       }
     }
     return false;
@@ -333,7 +468,14 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
   spurs.forEach((s, si) => {
     const id = `tj${si}`;
     forced[0].push({ p: s.junction / 3, kind: "junction", id });
-    forced[1 + si][0] = { p: 0, kind: "junction", id };
+    if (s.root) {
+      // K580: the root's start R is a TURN (the walk never stops there);
+      // J sits mid-strand.
+      forced[1 + si][0] = { p: 0, kind: "root" };
+      forced[1 + si].push({ p: s.root.segs, kind: "junction", id });
+    } else {
+      forced[1 + si][0] = { p: 0, kind: "junction", id };
+    }
   });
   hits.forEach((h, hi) => {
     const id = `tx${hi}`;
@@ -462,9 +604,13 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
   chains.forEach((chain, pi) => {
     const r = paths[pi];
     const tab = tabs[pi];
+    // K580: a rooted spur's arcs count from J (the root's are negative;
+    // it carries no crossing, so they order nothing).
+    const jIdx = r.root ? chain.findIndex((c) => nodeType.get(c.id) === NODE_TYPE.JUNCTION) : 0;
+    const arcJ = chain[jIdx].arc;
     const penOf = (arc: number): number => {
       if (r.kind === "body") return arc;
-      if (r.kind === "spur") return (junctionPen.get(chain[0].id) ?? 0) + PEN_EPS * arc;
+      if (r.kind === "spur") return (junctionPen.get(chain[jIdx].id) ?? 0) + PEN_EPS * (arc - arcJ);
       return floatBase + arc;
     };
     const edgeIds: string[] = [];
@@ -486,12 +632,23 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
       edgeIds.push(id);
     }
     if (r.kind === "float") floatBase += tab.cum[tab.cum.length - 1] + FLOAT_GAP;
+    let taper: Strand["taper"];
+    if (r.root) {
+      const root = r.root;
+      const sep = chain.map((c, i) => {
+        if (i >= jIdx) return 0;
+        const p = pAtArc(tab, c.arc);
+        return p >= root.segs ? 0 : root.sepAt(root.aR * (1 - p / root.segs)) * sc;
+      });
+      taper = { sep, joint: jIdx };
+    }
     strands.push({
       edgeIds,
       isClosed: false,
       nodes: chain.map((c) => c.id),
       pinned: true,
       ...(r.kind === "float" ? { decorative: true } : {}),
+      ...(taper ? { taper } : {}),
     });
   });
 
