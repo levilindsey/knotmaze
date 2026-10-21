@@ -347,13 +347,15 @@ export interface Placement<T> {
 
 // Draw (from the caller's stream), search and redraw up to PLACE_DRAWS
 // times: the first draw that is solvable and bites, else the last solvable
-// draw, else none.
+// draw, else none. A draw bites when its search differs from `base`'s (the
+// plain rule by default; the color rule under ice passes the ice rule).
 export function placeRule<T>(
   walk: RuleWalk,
   draw: () => T,
-  ruleOf: (layout: T) => WalkRule
+  ruleOf: (layout: T) => WalkRule,
+  base: WalkRule | null = null
 ): Placement<T> {
-  const plain = ruleSearch(walk, plainRule(walk));
+  const plain = ruleSearch(walk, base ?? plainRule(walk));
   let last: T | null = null;
   for (let i = 1; i <= PLACE_DRAWS; i++) {
     const layout = draw();

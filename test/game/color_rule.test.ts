@@ -121,6 +121,44 @@ describe("color rule: placement", () => {
     expect(placeColors(walk, "off", 41)).toEqual({ layout: null, bites: false, draws: 0 });
   });
 
+  it("under ice plants over the slides: every maze places, biting on top of the ice", () => {
+    let biting = 0;
+    const N = 16;
+    for (let seed = 1; seed <= N; seed++) {
+      const { walk, cont } = ruleMaze(seed);
+      const icy = placeIce(walk, cont, 0.25, seed).layout!;
+      const p = placeColors(walk, "alternate", seed, { cont, icy });
+      expect(p.layout).not.toBeNull();
+      const slides = iceRule(walk, cont, icy);
+      const a = ruleSearch(walk, slides);
+      const b = ruleSearch(walk, composeRules(slides, colorRule(walk, "alternate", p.layout!)));
+      expect(b.solvable).toBe(true);
+      const differs =
+        a.fewest !== b.fewest || a.shortest !== b.shortest || a.routeRuns.join() !== b.routeRuns.join();
+      expect(differs).toBe(p.bites);
+      // A biting layout is found within a few draws; a maze whose best icy
+      // route crosses one colored run at most cannot bite and spends all 32.
+      if (p.bites) {
+        biting++;
+        expect(p.draws).toBeLessThanOrEqual(4);
+      }
+      // The planted route over the ice taps is legal on most draws.
+      const rng = ruleRng(seed, "plant-test");
+      let legal = 0;
+      for (let t = 0; t < 8; t++) {
+        const colors = new Int8Array(walk.edges.length).fill(-1);
+        for (let r = 0; r < walk.edges.length; r++) {
+          if (!exemptRun(walk, r) && icy[r] === 0) colors[r] = rng.nextInt(2);
+        }
+        const route = plantRoute(walk, rng, (from, run) => slides.step(from, run, 0), a.routeRuns)!;
+        obeyAlong("alternate", colors, route);
+        if (ruleSearch(walk, composeRules(slides, colorRule(walk, "alternate", colors))).solvable) legal++;
+      }
+      expect(legal).toBeGreaterThanOrEqual(7);
+    }
+    expect(biting).toBeGreaterThanOrEqual(N - 3);
+  });
+
   it("skips icy runs and composes with ice", () => {
     for (let seed = 1; seed <= 6; seed++) {
       const { walk, cont } = ruleMaze(seed);
