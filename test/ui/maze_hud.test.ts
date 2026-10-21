@@ -86,6 +86,8 @@ describe("what each figure means (K274)", () => {
     hearts: { left: 2, of: 3 },
     walker: { mode: "delay" as const, walk: 5, shortest: 3 },
     sword: { phase: "fleeing" as const, left: 3, slainAt: -1 },
+    // K137 stage 3c: sprint's row.
+    sprint: "armed",
     // K137 stage 2: the aids' rows.
     spool: { used: 3, cap: 12 },
     hints: { left: 1, of: 3 },
@@ -322,6 +324,24 @@ describe("K137 stage 3b sword row", () => {
     const ids = win.map((r) => r.id);
     expect(ids.indexOf("sword")).toBe(ids.indexOf("caught") + 1);
     expect(win.find((r) => r.id === "sword")?.value).toBe("slain on move 7");
+  });
+});
+
+describe("K137 stage 3c sprint row", () => {
+  it("shows its state after the sword, in the HUD and on the win banner, only while on", () => {
+    const hud = gameEntries({ catches: 0, sword: { phase: "ready", left: 0, slainAt: -1 }, sprint: "1 more move" });
+    expect(hud.map((r) => [r.id, r.label, r.value]).slice(1)).toEqual([
+      ["sword", "sword", "ready"],
+      ["sprint", "sprint", "1 more move"],
+    ]);
+    expect(gameEntries({ catches: 0, sprint: null }).map((r) => r.id)).toEqual(["caught"]);
+    const win = statEntries({
+      timeMs: 61_000, path: 12, optimal: 9, efficiency: null, backtrack: null,
+      junctions: 3, deadEnds: null, catches: 0, sprint: "used",
+    });
+    const ids = win.map((r) => r.id);
+    expect(ids.indexOf("sprint")).toBe(ids.indexOf("caught") + 1);
+    expect(win.find((r) => r.id === "sprint")?.value).toBe("used");
   });
 });
 

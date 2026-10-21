@@ -62,6 +62,7 @@ export type StatId =
   | "hearts"
   | "walker"
   | "sword"
+  | "sprint"
   | "spool"
   | "spoolUsed"
   | "hints"
@@ -267,6 +268,15 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "still flees you (runs walked in real time). Touch it while it flees: " +
       "timed sends it back to its lair, one use slays it for good. Used once " +
       "the flight is over.",
+  },
+  // K137 stage 3c: game/sprint.ts SprintState, while sprint is on under a
+  // chase (main.ts sprintState; the turn clock's skips, real time's pace).
+  sprint: {
+    label: "sprint",
+    line:
+      "Sprint, once a game: your next two moves cost the minotaur one turn " +
+      "(in real time you run your next two runs at twice your pace). A catch " +
+      "spends it; starting over gives it back.",
   },
   // K137 stage 2: game/spool.ts spoolGauge of the controller's spoolUsed
   // (pathEdges.length) against spoolCap (parFor(fewestRuns, spoolSlack)).

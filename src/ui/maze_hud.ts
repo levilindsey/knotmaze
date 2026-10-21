@@ -66,6 +66,9 @@ export interface HudSnapshot {
   walker?: WalkerScore | null;
   // K137 stage 3b (absent elsewhere): the sword, while it is on and laid.
   sword?: SwordShown | null;
+  // K137 stage 3c (absent elsewhere): sprint's row value (game/sprint.ts
+  // sprintValue), while sprint is on under a chase.
+  sprint?: string | null;
   // K137 stage 2 (absent elsewhere): the spool while it is on (runs paid
   // out of its capacity) and the hints left while hints are on; the win
   // banner's share of the spool used (a whole percent) and hints used.
@@ -101,6 +104,7 @@ type StatFields = Pick<
   | "catches" | "chasedMs" | "fireLead" | "closestCall" | "closeCalls" | "seen"
   | "restarts" | "snapped" | "parLeft" | "parStrokes" | "collapse" | "cuts"
   | "hearts" | "walker" | "sword" | "spool" | "hints" | "spoolUsed" | "hintsUsed"
+  | "sprint"
 >;
 
 // A row (K274): its id names its line in STATS (game/maze_stats.ts), which
@@ -120,6 +124,7 @@ type GameFields = Pick<
   HudSnapshot,
   | "catches" | "fireLead" | "closestCall" | "snapped" | "parLeft" | "parStrokes" | "collapse"
   | "cuts" | "hearts" | "walker" | "sword" | "spool" | "hints" | "spoolUsed" | "hintsUsed"
+  | "sprint"
 >;
 // K137 stage 3a: "hearts 2 / 3" while lives are on.
 const heartsValue = (h: { left: number; of: number }): string => `${h.left} / ${h.of}`;
@@ -128,6 +133,7 @@ export function gameEntries(s: GameFields): StatEntry[] {
   if (s.catches != null) rows.push(entry("caught", String(s.catches)));
   if (s.hearts) rows.push(entry("hearts", heartsValue(s.hearts)));
   if (s.sword) rows.push(entry("sword", swordValue(s.sword))); // K137 s3b
+  if (s.sprint) rows.push(entry("sprint", s.sprint)); // K137 s3c
   if (s.fireLead != null) rows.push(entry("fireLead", fmtDist(s.fireLead)));
   if (s.closestCall != null) rows.push(entry("closestCall", fmtDist(s.closestCall)));
   rows.push(...ruleEntries(s)); // K137
@@ -147,6 +153,7 @@ export function statEntries(s: StatFields): StatEntry[] {
   if (s.catches != null) rows.push(entry("caught", String(s.catches)));
   if (s.hearts) rows.push(entry("hearts", heartsValue(s.hearts)));
   if (s.sword) rows.push(entry("sword", swordValue(s.sword))); // K137 s3b
+  if (s.sprint) rows.push(entry("sprint", s.sprint)); // K137 s3c
   if (s.closeCalls != null) rows.push(entry("closeCalls", String(s.closeCalls)));
   if (s.seen != null) rows.push(entry("seen", String(s.seen)));
   if (s.chasedMs != null) rows.push(entry("chased", formatDuration(s.chasedMs)));
@@ -499,6 +506,8 @@ export interface WinInfo {
   walker?: WalkerScore | null;
   // K137 stage 3b: the sword (absent or null: off, or none laid).
   sword?: SwordShown | null;
+  // K137 stage 3c: sprint's row value (absent or null: sprint off).
+  sprint?: string | null;
   // K137 stage 2: the share of the spool used, a whole percent, and the
   // hints used (absent or null: that aid off).
   spoolUsed?: number | null;
