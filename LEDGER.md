@@ -169,10 +169,10 @@ Next free ID: K694.
   1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that
   swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
   K280, residuals K281).
-  - owner: agent `a1cdbc33c6dba02ff` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 21:09, 2 h cap ~23:09)
-  - branch: `worktree-agent-a1cdbc33c6dba02ff`, worktree `.claude/worktrees/agent-a1cdbc33c6dba02ff`; last commit: `33438ef`
+  - owner: nobody since 2026-10-20 22:19 (merged; agent `a1cdbc33c6dba02ff` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `5bb8b6f`
   - evidence: `.claude/probes/K114/cut/`
-  - next: the cut verb (stage 1, until about 23:10); then the walker stage (Lead the walker, R.4.3 + R.3.9), the spider (K627), the beat rider and the Pluck Hero MVP
+  - next: stage 2, the walker: Lead the walker, Delay it, the Keep it in probe (docs/design/K114_walker.md)
   - brief: `docs/design/K114_cut.md`
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
