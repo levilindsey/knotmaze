@@ -36,6 +36,7 @@ import {
   seedText,
 } from "./url_state";
 import { gridAlignSlider, gridAlignStrength } from "./grid_align_curve";
+import { PAR_SLACK_MAX, PAR_SLACK_MIN } from "../game/par";
 import {
   BACKGROUND_ACCENTS_USED,
   BACKGROUND_ANGLE_AUTO,
@@ -1582,6 +1583,31 @@ export function buildPanel(
     D.burnt, () => callbacks.onTrailChange()
   );
 
+  // K137 stage 1: fragile runs and par (game/fragile.ts, game/par.ts), in
+  // every game mode. Every row restarts the solve. The slack slider takes
+  // no step (K130) and an edit keeps it on the 0.05 grid.
+  const fragileRow = row(
+    fGame, p, "fragile",
+    { options: { off: "off", crack: "crack", snap: "snap" }, label: "Fragile runs" },
+    "Runs break behind you. snap: a run breaks once you have crossed it. crack: it cracks the first time and breaks the second. A dead-end tail, the entrance's and the exit's never break. With no unbroken way to the exit left you are stranded: undo the last move or restart. Restarts the solve.",
+    D.fragile, () => callbacks.onClockChange()
+  );
+  const parModeRow = row(
+    fGame, p, "parMode",
+    { options: { off: "off", strict: "strict", strokes: "strokes" }, label: "Par" },
+    "A par of moves (runs walked, back and forth): the fewest runs from the entrance to the exit, plus the slack below. strict: you lose the moment the exit is out of reach within par. strokes: never lost; the finish reads against par, golf style (+2, E, -1). Restarts the solve.",
+    D.parMode, () => callbacks.onClockChange()
+  );
+  const parSlackRow = row(
+    fGame, p, "parSlack",
+    { min: PAR_SLACK_MIN, max: PAR_SLACK_MAX, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label: "Par slack (x fewest)" },
+    "Moves allowed past the fewest, as a fraction of the fewest: at 0.25 a maze whose shortest route takes 12 runs has a par of 15. Restarts the solve.",
+    D.parSlack, () => {
+      params.parSlack = Math.round(params.parSlack * 20) / 20;
+      callbacks.onClockChange();
+    }
+  );
+
   // K80: the real-time chase's tuning (game/minotaur.ts ChaseParams; the
   // defaults were picked by a headless simulation). All live. Since K80
   // turns the folder also holds the turn-aligned minotaur's rows, first;
@@ -2695,6 +2721,10 @@ export function buildPanel(
     fireSpeedRtRow.hidden = !fireOn || !fireRt;
     fireDelayRtRow.hidden = !fireOn || !fireRt;
     burntRow.hidden = !fireOn;
+    // K137: fragile runs and par play in every game mode, fabric only.
+    fragileRow.hidden = !fab;
+    parModeRow.hidden = !fab;
+    parSlackRow.hidden = !fab || params.parMode === "off";
     // Under the thread reveal too (K76 stage 2c: the same two settings).
     minoFogRow.hidden = !minoOn || !(fog || threads);
     minoRestartRow.hidden = !minoOn;

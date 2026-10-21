@@ -32,6 +32,7 @@ import { BackgroundLayer } from "./render/background";
 import {
   chaseParamsOf,
   clockOf,
+  fabricRulesOf,
   fireSettingsOf,
   turnMinoParamsOf,
   writeParams as writeTokenParams,
@@ -1595,6 +1596,9 @@ async function main(): Promise<void> {
     // K114: the fuse relit under the params on screen (a clock change may
     // have turned the fire on or off, or moved its speed or delay).
     if (scene.fabricController) scene.fabricController.fire = fireOf(scene.fabricController.walk);
+    // K137: fragile runs and par as the params on screen say (a rules row
+    // restarts the solve through here).
+    scene.fabricController?.setRules(fabricRulesOf(params));
     scene.fabricController?.reset();
     routeRuns = [];
     routeFc = null;
