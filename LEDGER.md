@@ -272,13 +272,6 @@ Next free ID: K601.
   - evidence: `.claude/probes/K459/`
   - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii) (`docs/design/K459.md`, Handoff); the free cap's checks are K477
   - brief: `docs/design/K459.md`
-- **K456** · No webglcontextlost / webglcontextrestored handler anywhere in `src/` (K6-1's brief
-  research); what a lost context does to the page is untested.
-  - owner: agent ab96ea9e54f382fb5 of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 13:23, 2 h cap ~15:23)
-  - branch: `worktree-agent-ab96ea9e54f382fb5`, worktree `.claude/worktrees/agent-ab96ea9e54f382fb5`; last commit: `11e6ba1`
-  - evidence: `.claude/probes/K456/` (results.md, the forced-loss probe)
-  - next: measure today's loss behaviour per case, pick the handling, build it with the probe
-  - brief: `docs/design/K456.md`
 - **K370** · Worker input latency, p50 (target 50 ms): desktop 105 on the daily,
   70 on the knot (in-thread 285; K7 s4); phone 231, first motion 173 (in-thread
   872; K7 s5). Measure each stage first (`k7_latency.mjs`); levers: newest snapshot while grabbed, more drag substeps.
@@ -1315,6 +1308,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K456** · A lost WebGL context: the loop suspends, a cover (message + Reload after 3 s) blocks input, the restore redraws exactly. Done in f01ac12 (2026-10-20).
 - **K372** · Fabric ?b's after-drag non-sleep is a same-chain collision limit cycle (fix K595, residual K596). Done in 86c472b (2026-10-20).
 - **K470** · No app-level WebGL context-loss handling: only `probe_hooks.ts` listens for `webglcontextlost`, to count losses. Dropped: duplicate of K456 (2026-10-20).
 - **K337** · Confetti shine: one light from the upper left; foil pieces flash, paper ones sheen (`cfh` strength 1, `cff` foil share 0.3); strength call K586. Done in 9538392 (2026-10-20).
