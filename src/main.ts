@@ -2881,7 +2881,9 @@ async function main(): Promise<void> {
     if (hidden.length === 0) return;
     const walk = fc.walk;
     const run = runAtCtrl(walk, chain, ctrl, scene.ps.chains[chain]?.length ?? Infinity);
-    if (run < 0) return;
+    // A pluck on a hidden run itself does nothing (call 3): the pick skips
+    // hidden thread, but a ctrl on a run's boundary can map onto one.
+    if (run < 0 || fc.isHidden(run)) return;
     const noteOf = (eid: number): number | null => {
       const e = walk.edges[eid];
       return e ? freqForCtrl(e.chain, (e.ctrlA + e.ctrlB) / 2) : null;

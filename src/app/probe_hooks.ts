@@ -667,6 +667,11 @@ export function installProbeHooks(ctx: ProbeCtx): void {
             unrevealed: c.hiddenRuns(),
             fewest: c.fewestRuns,
             fewestWithHidden: c.fewestWithHidden,
+            // Each run's note (the pitch a pluck at its middle plays; a
+            // reveal matches it), only while hidden runs are laid.
+            notes: c.ruleLook?.hidden
+              ? c.walk.edges.map((e) => ctx.freqForCtrl(e.chain, (e.ctrlA + e.ctrlB) / 2))
+              : null,
           }
         : null,
       // K114: the burn race (null: no fire). `smoldering`: the head's arms
