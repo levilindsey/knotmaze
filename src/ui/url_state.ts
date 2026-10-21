@@ -1117,7 +1117,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   sprint: "off",
   // K114's beat rider: 100 bpm (call 2), L (call 3), at most 4 beats a run.
   beatTempo: 100,
-  beatLength: 4,
+  beatLength: 2, // K114 call 3: the median run (4.2 lattice units) takes 2 beats
   beatCap: 4,
 };
 

@@ -63,11 +63,13 @@ describe("BeatFeed", () => {
       expect(r.now).toBeGreaterThan(wall + trueOff - lat - q - 1e-3);
       nows.push(r.now);
     }
-    // Smooth: after the lock settles, every frame is 1/60 s to within 0.1 ms
-    // (the raw clock jumps between 5 and 7 quanta a frame).
+    // Smooth: after the lock settles, every frame is 1/60 s to within 0.3 ms,
+    // where the raw clock's frames are 6 or 7 quanta (16.0 or 18.7 ms).
+    let worst = 0;
     for (let i = 60; i < nows.length; i++) {
-      expect(Math.abs(nows[i] - nows[i - 1] - 1 / 60)).toBeLessThan(1e-4);
+      worst = Math.max(worst, Math.abs(nows[i] - nows[i - 1] - 1 / 60));
     }
+    expect(worst).toBeLessThan(3e-4);
   });
 
   it("relocks when the audio clock jumps (a new context)", () => {

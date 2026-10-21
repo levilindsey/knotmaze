@@ -163,7 +163,8 @@ export function walkerMapOf(graph: TangleGraph, walk: WalkerWalk): WalkerMap {
 }
 
 // The run ends at a vertex as departures (2 run + end), a self-loop twice.
-function departures(m: WalkerMap, v: string): number[] {
+// Exported for K114's beat rider.
+export function departures(m: WalkerMap, v: string): number[] {
   const out: number[] = [];
   const vert = m.walk.vertices.get(v);
   if (!vert) return out;

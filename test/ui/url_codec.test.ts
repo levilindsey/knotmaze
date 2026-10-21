@@ -142,7 +142,7 @@ describe("links", () => {
       spool: false, spoolSlack: 0.3, hints: 0, compass: false, // K137 stage 2
       ice: 0, colorRule: "off", // K138 stage 1
       sprint: "off", // K137 stage 3c
-      beatTempo: 100, beatLength: 4, beatCap: 4, // K114 beat rider
+      beatTempo: 100, beatLength: 2, beatCap: 4, // K114 beat rider
     });
   });
 
@@ -606,7 +606,7 @@ describe("links", () => {
       expect(p.clock).toBe("beat");
       expect(clockOf(p)).toBe("beat");
       expect(minoClockOf(p)).toBe("turn");
-      expect(beatSettingsOf(p)).toEqual({ tempo: 100, unit: 4, cap: 4 });
+      expect(beatSettingsOf(p)).toEqual({ tempo: 100, unit: 2, cap: 4 });
       expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
     }
     // realtime stays the minotaur's alone.
