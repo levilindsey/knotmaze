@@ -310,3 +310,161 @@ Your final report covers:
 
 It ends with a `Ledger items` list and the K115 handle fields (branch,
 last commit, evidence, next).
+
+## Handoff (stage 9 agent, 2026-10-20, 11:14-12:50; the cap was 13:14)
+
+Branch `worktree-agent-adaaf5d46393d3aeb` (worktree
+`.claude/worktrees/agent-adaaf5d46393d3aeb`), five WIP commits on
+`c6a0d7e` plus this handoff, unpushed. Items 1-4 are done in part; 5-7
+are not begun. I stopped 24 minutes short of the cap: what remains does
+not fit in it.
+
+### Done
+
+- **Item 1, the spur forms only.** The record types, the exact evaluator
+  (integer-weight Bezier, chord + Newton crossings) and the knot
+  authoring form (`glyph_knots.ts`: corners only at spur junctions) are
+  in `src/core/glyphs/` (d2a82a9). Only the **i** and the **a** are
+  authored. Every other character of "Daily #8", "intone 6" and "ς" is
+  not, so every real title still falls back to Hershey.
+- **The fork rule, measured** (Picked decisions, Spurs). Stills of the
+  i's fork at 0, 15, 30, 45, 60 and 90 degrees, at seeds 7 and 9, xh 2
+  (`shots1/`, `shots2/`; `#glyphs2=xh2,forks` or `f<angle>`):
+  - 0 degrees draws an overlap streak; 15-60 draw cleanly; 90 forces
+    tight radii at J (a clearance failure).
+  - The distance to full clearance is about 1 LU at every angle, so the
+    angle is what separates a clean fork from a broken one.
+  - Bounds: open by at least 15 degrees (`LINT.forkMinCos`) and reach
+    full clearance within 1.2 LU (`LINT.forkMaxLU`). 1.2 is the
+    round-bottom i at xh 3, whose crotch shows a hairline seam; its 1.08
+    at xh 2 is clean.
+- **Item 2, per glyph.** `glyph_lint.ts` checks one glyph at one xh on
+  the authored cubics:
+  - declared crossings (converged, two passes, consecutive gaps) and
+    crossing sin >= 0.55;
+  - G1 (corners only at spur junctions);
+  - the fork rule at every spur junction;
+  - clearance >= 0.60 LU beyond the fork and crossing spans and the
+    U-turn window;
+  - END tips >= 0.56 LU, and a spur's run-on past a crossing;
+  - R >= 11 GU as an error, and a G2 warning under 0.6 LU.
+
+  The body runs on into straight lead tails, so an arm that leaves the
+  glyph keeps its fork measured. `test/core/glyph_lint.test.ts` has 13
+  tests. NOT done: the class-pair lint (every join the set uses).
+- **Item 3.** The builder behind `#glyphs2` (0221966) handles the
+  bodies, the spurs and floats as their own strands from their
+  junctions, `edge.mid` and `assignPenOrder`. A title outside the set
+  falls back to Hershey and is counted (`fallback.ts`). "Daily #8" with
+  the switch on gives +1 fallback and the same 253 nodes / 262 edges as
+  off; "ai" builds from the glyphs.
+- **Item 4.** A glyph edge's slot particle sits on `edge.mid`, the
+  curve's mid-arc point (eadd3aa). Edges without a mid take the old
+  path, and the knot golden is byte-identical.
+- **Fix: SceneParams.glyphs2 is required** (30f3cfb). As an optional
+  field, the K7 stage 7 name build dropped it, `readWorkerName` refused
+  the name, and every load lost the lever.
+- **The suite at 87f3c33:** 113 files and 1567 tests pass, 1 of each is
+  skipped, and the knot golden is among them (`suite_final.log`).
+
+### Forms the lint forced
+
+- **The i's bottom:** R 1.9 GU (the thorn on `shots1/`) became a round
+  bottom of R 14 GU. Advance 40 -> 58 GU.
+- **The a's tail:** R 5.5 GU became a round bottom at (88, 4), with J2
+  leaving (1, -2). Advance 104 -> 120 GU.
+- **The a's J2** moved low on the stem, so its run-on crosses the J-S
+  spur once, at sin 0.982. The first form had two crossings, and the
+  stem ran 10 GU from the bowl.
+- The a's bowl and connector radii were softened.
+
+### Kill criterion: Levi's o-kind join (tripped, with a passing neighbour)
+
+- **His form fails the lint.** The connector arrives tangent at J, so
+  the fork at J opens 1.0 degree: the thorn on `shots3/a_xh2.png` and
+  `shots4/a_tan_xh2.png`.
+  - xh 2: `fork-angle`, plus `clearance` 0.558 LU at (19.0, 51.6), where
+    the arch passes the oval's shoulder.
+  - xh 3: `fork-angle` only.
+- **The closest passing form lands on J from above.** It is `A_LANDED`,
+  rendered by `#glyphs2=aland`.
+  - It arrives heading (2, -1): the fork opens 27.7 degrees and reaches
+    full clearance at 0.67 / 0.70 LU (xh 2 / 3).
+  - Min R 12.6 GU (set by the rest of the glyph); the same 120 GU
+    advance.
+  - Every rule passes at xh 2 and 3.
+  - `shots4/a_land_xh2.png`: the thorn is gone.
+- **The narrowest passing fork found was 18.5-20.1 degrees** (for
+  example knot [18,78,4,1,7,4], J arriving (3,-1) with hin 3: R 11.2).
+  The search is `a_search.ts` (25000 samples; `a_search1.txt`), and
+  forms pass with the oval shifted 0 to 8 GU.
+- **Levi picks:**
+  - his tangent form, which fails the fork rule;
+  - the landed form, which passes at the same width;
+  - or the wider spacing (call 6).
+
+  The tangent form stays the default and is a listed known failure in
+  the lint test until he picks.
+
+### Numbers against stage 8
+
+"Daily #8" falls back to Hershey under the switch, so its gates are
+stage 8's, unchanged:
+- over-tight 99/3196;
+- ripple p95 2.95, max 34.5;
+- clearance min 0.066 LU;
+- crossing sins 0.88 / 0.66 / 0.35 / 0.86.
+
+The authored glyphs, from the lint on the authored cubics (the Layer 2
+gates were not run):
+
+| Glyph | Clearance (LU, xh 2 / 3) | Tips (LU) | Crossing sin | Forks | Min R (GU) |
+|---|---|---|---|---|---|
+| i (f30) | 0.611 / 0.612 | 0.669 / 0.956 | none | 30.9 deg at 1.08 / 1.20 LU | 14.3 |
+| a, tangent | 0.558 (fails) / 0.602 | 0.606 / 0.896 | 0.982 | J 1.0 deg (fails); J2 40.8 deg at 0.60 / 0.69 LU | 12.6 |
+| a, landed | 0.606 / 0.602 | 0.606 / 0.896 | 0.982 | J 27.7 deg; J2 40.8 deg | 12.6 |
+
+### Not done
+
+- Item 1: the rest of the set.
+- Item 2: the class-pair lint.
+- Items 5 (floats under the reveal), 6 (the section 9 gates and
+  Hausdorff as tests) and 7 (the contact sheets; only quick stills
+  exist).
+- From the Tests list, not written: `glyph_eval` (integer bounds, G1
+  per joint, crossing convergence), topology, pen order, walk, reveal
+  and smoothness.
+
+### Residuals
+
+- The xh 3 crotch hairline in the round-bottom i (fork at 1.20 LU).
+- `shots4/ai_land_xh2.png` shows a small notch under the a's J spur and
+  at the i's fork. It is not attributed: inferred to be the junction
+  render's inner corner.
+- PixiJS warns on every glyph still that "Attribute aEnv / aCol / aClipA
+  / aClipB / aClipF is not present in the shader". Not checked against
+  master.
+- The i's dot renders as a rotated square.
+- An optional SceneParams field silently breaks the worker name. Only
+  `worker_host.test.ts` catches it, and tsc does not type-check the
+  tests.
+
+### Evidence
+
+`.claude/probes/K115/stage9/` (untracked). Run the `.ts` probes from the
+worktree root with vite-node and `vite.node.config.mjs`.
+- Scripts: `forks.ts`, `i_forms.ts` (+ `cands1.json`), `a_forms.ts`,
+  `a_search.ts`, `fallback.ts`, `minr.ts`, `shots.mjs`, `shot.mjs`,
+  `locked_shots.ps1` (perf lock).
+- Outputs: `a_cands1-5.txt`, `a_search1.txt`, `fallback.txt`,
+  `minr.txt`, `suite_final.log`.
+- Stills: `shots1/` (the first forms), `shots2/` (the fork variants),
+  `shots3/` (the forced forms), `shots4/` (the tangent against the
+  landed a, and "ai").
+
+### Next
+
+1. Levi's call on the a's J.
+2. Author the rest of the set at xh 2 under the lint.
+3. Add the class-pair lint.
+4. Items 5-7.
