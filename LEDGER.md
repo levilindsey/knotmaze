@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K689.
+Next free ID: K694.
 
 ## Waiting on Levi
 
@@ -157,6 +157,9 @@ Next free ID: K689.
   Design): score by length collapsed; free ends only when stranded; a finish strand = Stranded +
   Undo; overrides fragile and par; chase and fire allowed (Restart only); snap look + sound (plays
   every move).
+- **K693** · K620: per-side stroke effects on the glyph root, not only the colours? 3fa7aab had
+  them, but its shader compiled slowly (loads 45-54 s against 27-33 s). Rec: no, keep the colour
+  blend (`docs/design/K620.md`)
 
 ## In progress
 
@@ -302,10 +305,10 @@ Next free ID: K689.
 - **K580** · The a's J join, Levi's call (2026-10-20): tangent, its shared stretch a TAPERED spur that
   leaves the junction as wide as both merging strokes and narrows to normal where they turn collinear.
   Open calls: K606; the paint stage is K620. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
-  - owner: nobody since 2026-10-20 20:11 (merged; agent `ac987d906d2085fb9` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `883b00a`
+  - owner: agent `a0dcb13da4f154ba7` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 22:03, 2 h cap ~00:03)
+  - branch: `worktree-agent-a0dcb13da4f154ba7`, worktree `.claude/worktrees/agent-a0dcb13da4f154ba7`; last commit: `330980d`
   - evidence: `.claude/probes/K580/`
-  - next: launch stage 4 (the i joint notch, K675, K676) from its brief once K620 merges
+  - next: stage 4: the i joint notch, K675 partial blends, K676 crescents (brief steps 1-7)
   - brief: `docs/design/K580_s4.md`
 - **K324** · Real-time minotaur, more alive and tunable (`docs/design/K324_realtime_minotaur.md`,
   091e4dc; Levi took section 7's recs): s1 (sim); s2 (render) once K525 owns the look: its route
@@ -543,6 +546,9 @@ Every other item below waits on the trigger it names.
 - **K688** · Healing cuts against monsters (Levi took R.3.5, decision 6): a cut closes again after a
   few moves; cut with the minotaur or the fire. After the K114 walker stage
   (`docs/design/K80_gameplay_additions.md` R.3.5).
+- **K690** · K620 checks not run: the root-pixel census (GPU against the CPU mirror), CPU-mirror
+  tests on the real a (xh 2 and 3, tp52 and tp60), a cold-compile time with `trace_intro.mjs`
+  (`docs/design/K620.md`)
 
 ## Residuals (known, not fixed)
 
@@ -1240,6 +1246,14 @@ Every other item below waits on the trigger it names.
   hide it (K139).
 - **K685** · K137: with collapse off, a respawn into stranded (fragile) or out of strokes (strict
   par) shows no banner until the next tap (found by K139).
+- **K689** · Since K620, the root vertex block moves maze and burn 3-5 px of one level (no root
+  pixels; guess: compiler rounding). Test a constants-only block, or accept (`docs/design/K620.md`
+  Handoff)
+- **K691** · K620 root looks: (a) the seam scallops along the strip triangles (fix idea: an exact
+  sideways distance via the unread E1 texels), (c) a pink tab at R at xh 2, (d) a light streak along
+  the seam at R with strand colours, seed 9 (`docs/design/K620.md`)
+- **K692** · A light band across the glyph root at J, on master before K620 too (K620 residual b;
+  `.claude/probes/K620/sheets/k620_zoom.png`)
 
 ## Approved, to schedule (2026-10-11)
 
