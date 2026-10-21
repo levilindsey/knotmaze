@@ -277,14 +277,6 @@ Next free ID: K617.
   - evidence: `.claude/probes/K409/`
   - next: baseline sheets, then the world-unit widths
   - brief: `docs/design/K409.md`
-- **K194** · The defaults batch (Levi 2026-10-20; K225, K280 and K421 ride it): the pluck glow's
-  default goes `off` -> `fallback` (crossings stay `through`); then time `peakEstimate` on the
-  desktop and the Pixel and dedupe its times. `docs/design/K194_defaults.md`.
-  - owner: agent `a035f2e7898cd9be7` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 15:59, 1 h cap ~16:59)
-  - branch: `worktree-agent-a035f2e7898cd9be7`, worktree `.claude/worktrees/agent-a035f2e7898cd9be7`; last commit: `3a3d937`
-  - evidence: `.claude/probes/K194/`
-  - next: change the four defaults and re-pin, then time peakEstimate
-  - brief: `docs/design/K194_defaults.md`
 
 ## Next, in order
 
@@ -1364,6 +1356,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K194** · four defaults (pluck glow fallback, marker size 2, fire speed 0.6, stalker accuracy 0.3) and peakEstimate deduped (0.11-0.16 ms a tap). Done in ab73daa (2026-10-20).
 - **K282** · The HUD's stats have no explanation during play (only the end banners explain them). Dropped: Levi 2026-10-20: leave it; the end banners explain the stats (2026-10-20).
 - **K213** · Before K90's bend bound ships: the min regression (hard clamp worsens 24 of 585 scans, soft 4; `k90_minrows.mjs`), `controlArcLengths`, tests and a CPU mirror, hit tests on moved samples, the phone's rebuild cost (`docs/design/K90.md`, Stage 1b handoff). Dropped: K90 stopped (Levi 2026-10-20), so the bend bound never ships (2026-10-20).
 - **K90** · Min bend radius (1a-1b merged 6f97b92..feb12a0): ship, tune or stop (rec. stop; the design doc says tune, then ship)? Dropped: Levi 2026-10-20 (report card): stop. The bound stays parked, off and console-only; G3-2 builds on today's points (2026-10-20).
