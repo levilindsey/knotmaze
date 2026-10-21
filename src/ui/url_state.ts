@@ -21,6 +21,8 @@ import type { FragileMode } from "../game/fragile";
 import { FRAGILE_MODES } from "../game/fragile";
 import type { CollapseMode } from "../game/collapse";
 import { COLLAPSE_MODES } from "../game/collapse";
+import type { CutMode } from "../game/cut";
+import { CUT_MODES } from "../game/cut";
 import type { ParMode } from "../game/par";
 import { PAR_MODES, PAR_SLACK_DEFAULT } from "../game/par";
 import {
@@ -722,6 +724,12 @@ export interface UrlParams {
   // you end). Overrides fragile and par. Every change restarts the solve.
   // Not daily-exempt.
   collapse: CollapseMode;
+  // K114 (brief docs/design/K114_cut.md): CUT, off | on (game/cut.ts: the
+  // scissors delete whole runs; a junction left with two runs is no longer
+  // a decision). The classic game only, with fragile, par and collapse off
+  // (FabricMazeController.setRules). Every change restarts the solve. Not
+  // daily-exempt.
+  cut: CutMode;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1011,6 +1019,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   parSlack: PAR_SLACK_DEFAULT,
   // K139: no collapse.
   collapse: "off",
+  // K114: no scissors.
+  cut: "off",
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1040,16 +1050,18 @@ export function fireSettingsOf(
 }
 
 // K137: the solve's rules beyond the clock (fragile runs and par, and
-// K139's collapse), as the controller takes them (FabricMazeController's
-// FabricRules).
+// K139's collapse, K114's cut), as the controller takes them
+// (FabricMazeController's FabricRules). Cutting is the classic game's only:
+// never with a minotaur or the burn race.
 export function fabricRulesOf(
-  p: Pick<UrlParams, "fragile" | "parMode" | "parSlack" | "collapse">
+  p: Pick<UrlParams, "fragile" | "parMode" | "parSlack" | "collapse" | "cut" | "gameMode">
 ): FabricRules {
   return {
     fragile: p.fragile,
     parMode: p.parMode,
     parSlack: p.parSlack,
     collapse: p.collapse,
+    cut: p.gameMode === "classic" ? p.cut : "off",
   };
 }
 
@@ -1238,6 +1250,7 @@ export const ENUM_OPTIONS: {
   fragile: FRAGILE_MODES,
   parMode: PAR_MODES,
   collapse: COLLAPSE_MODES,
+  cut: CUT_MODES,
 };
 
 // K398: every numeric param held to the panel's range (param_codec's
@@ -1736,6 +1749,8 @@ function readLegacy(
     parSlack: readNumber(query, "par", D.parSlack),
     // K139's collapse (`&cl=finish`, `&cl=free`).
     collapse: readChoice(query, "cl", COLLAPSE_MODES, D.collapse),
+    // K114's cut (`&ct=on`).
+    cut: readChoice(query, "ct", CUT_MODES, D.cut),
   };
 }
 

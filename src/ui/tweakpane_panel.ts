@@ -1615,6 +1615,15 @@ export function buildPanel(
     "Runs collapse behind you: a run you have walked cannot be walked again. Collapse as much of the maze as you can. finish: and still reach the exit; with no way left to it you are stranded (undo the last move or restart). free: the exit is just another run end; the game ends when no unbroken run is left to walk, and scores the share collapsed. Overrides Fragile runs and Par. Restarts the solve.",
     D.collapse, () => callbacks.onClockChange()
   );
+  // K114: cut (game/cut.ts), the classic game only; off while any row above
+  // is on (FabricMazeController.setRules), which stay visible as K139's do.
+  // Restarts the solve.
+  const cutRow = row(
+    fGame, p, "cut",
+    { options: { off: "off", on: "on" }, label: "Cut" },
+    "Scissors: delete whole runs. Press the scissors button (or X), then tap a run to cut it; Esc or a second press puts them away. A junction left with two runs is no longer a decision: a move through it carries on. A cut that would leave no way to the exit is refused, and the entrance's and the exit's runs cannot be cut. Undo (the button or U) takes back one move or one cut. Classic game only; off while Fragile runs, Par or Collapse is on. Restarts the solve.",
+    D.cut, () => callbacks.onClockChange()
+  );
 
   // K80: the real-time chase's tuning (game/minotaur.ts ChaseParams; the
   // defaults were picked by a headless simulation). All live. Since K80
@@ -2795,6 +2804,7 @@ export function buildPanel(
     parModeRow.hidden = !fab;
     parSlackRow.hidden = !fab || params.parMode === "off";
     collapseRow.hidden = !fab; // K139, every game mode too
+    cutRow.hidden = !fab || params.gameMode !== "classic"; // K114
     // Under the thread reveal too (K76 stage 2c: the same two settings).
     minoFogRow.hidden = !minoOn || !(fog || threads);
     minoRestartRow.hidden = !minoOn;

@@ -199,6 +199,7 @@ export const LIVE_EFFECTS = {
     "gameMode", "clock", "minotaur", "fireSpeed", "fireDelay", "fireClock",
     "fireSpeedRt", "fireDelayRt", "fragile", "parMode", "parSlack",
     "collapse", // K139
+    "cut", // K114
   ],
 } as const satisfies Record<string, readonly string[]>;
 
