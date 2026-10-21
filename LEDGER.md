@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K642.
+Next free ID: K644.
 
 ## Waiting on Levi
 
@@ -391,9 +391,9 @@ merged):
 - **K579** · GPU confetti: upload each launch once, move the pieces in a vertex shader, no per-frame
   CPU sim or upload. Pays if K318 raises the counts (Levi asked 10-20); needs K307's warm-up;
   streamers need a CPU sim. The phone's fall isn't CPU-bound (K578). K628.
-- **K620** · K580 stage 3, the tapered root's paint (Levi 2026-10-20: "K580 rec sgtm"): each side of
-  the root takes its own stroke's paint and blends into the spur's at J. Renderer paint work, after
-  K409 merges (`paint_math.ts`). `.claude/probes/K580/sheets/a_join_zoom.png`.
+- **K620** · K580's root paint (Levi 2026-10-20: "K580 rec sgtm"): each side of the root takes its
+  stroke's paint and blends into the spur's at J. `paint_math.ts` work, after K525 and K580 s3;
+  inputs in `docs/design/K580_s2.md` "For K620"; `.claude/probes/K580/sheets/a_join_zoom.png`.
 - **K409** · Levi's burn calls 1-3 merged (6b9eb8f..3231d59): world-unit widths, the Gone ember ahead
   of the cut, the band kept. Left: step 4, the ember over the smoke (NOT BUILT in `render-explore.md`),
   after K525 (paint files) and K623/K624; the phone pass is K631. `docs/design/K409.md`.
@@ -529,6 +529,9 @@ Every other item below waits on the trigger it names.
 - **K637** · The minotaur sim's baseline rose from 1.66 catches a game (K278 (c), 10-14) to 2.50 at
   bcd907c, cause unknown: bisect with K324's harness (`.claude/probes/K324/rt/`) across 9ccf360 (K74
   s3) and 35f3ec2 (K534's minoPull); sonnet.
+- **K643** · K580's glyph-lint upkeep: lintGlyph takes the taper part as an argument (it hardcodes
+  TAPER_PART_LU, so tp60 lints only through a probe copy); calibrate taperBulgeLU (0.01) and the
+  crotch bound (1.2 LU) with bulges injected through a probe flag (`docs/design/K580_s2.md` step 5).
 
 ## Residuals (known, not fixed)
 
@@ -1172,6 +1175,9 @@ Every other item below waits on the trigger it names.
 - **K641** · Older catch quirks K546 s1 found: an empty by-length route shows the minotaur at its
   lair during the travel; `turnCaught`'s pluck takes the entrance's pitch; `minoRestart` shows no
   burst (`docs/design/K546_s1.md`).
+- **K642** · K580 s2 leftovers (`docs/design/K580_s2.md` Handoff, "Left"): tp60 draws a dark bite at
+  the top of J at xh 2 (tp60 not used); the root's inner edge hooks at R at xh 2 (edge cos -0.883,
+  hidden in the bowl); the taper reads TAPER_THREAD_LU 0.52, not the live tw.
 
 ## Approved, to schedule (2026-10-11)
 
