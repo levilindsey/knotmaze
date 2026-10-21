@@ -222,3 +222,39 @@ End your report with the item's handle fields and a `Ledger items` list.
   main.ts `undoMove` (replays `taps.slice(0, -1)`; only the Stranded
   banner calls it today), `handleFabricTap`, `moveAlong`, the K480 route
   (`routeStep` on each arrival, from keyStep); `input_keys.ts` keydown.
+
+## Design
+
+- **Cut set and actions.** The controller holds `cuts` (run ids) and
+  `actions` (`{kind: "move", run}` per player move, its first run;
+  `{kind: "cut", run}` per cut). `taps` and the move log stay one entry
+  per run walked. With cut off every tapEdge logs one move action, so
+  actions and taps are one to one.
+- **Gone runs.** `broken(eid)` is fragile-broken or cut, so choices,
+  tapEdge's reject, the pick and planRoute skip cut runs with no new
+  branch. `brokenRuns()` stays fragile-only (the snapped count);
+  `cutRuns()` lists the cuts, and syncBroken draws both.
+- **Contraction, lazily.** tapEdge(r) still applies one run. In a cut
+  game a move's first run sets `carry`, the rest of
+  `carryChain(walk, cuts, from, r)` (`game/cut.ts`); each later tapEdge
+  must take `carry[0]` (any other run is a reject) and consumes it with
+  no new action. main drives the carry on each dot arrival, ahead of the
+  K480 route and the keys, one run per moveAlong, so the renderer's
+  per-run animation is unchanged. `replayActions(actions)`: reset, then
+  each cut is cut() and each move is tapEdge(run) plus its carry; any
+  failure resets and returns false. Undo replays the actions minus the
+  last, then runs undoMove's restore sequence.
+- **Distances.** `distToExit` becomes a controller field:
+  `walk.distToExit` with no cuts, else `distancesToExit(walk, cuts)`,
+  recomputed on every cut and on reset. onShortestRoute reads it. Stars
+  keep `walk.optimalLength`.
+- **Scope.** fabricRulesOf passes `cut` for the classic game mode only;
+  setRules keeps it only with fragile, par and collapse off and no fire.
+- **Calls** (Handoff has the alternatives):
+  1. The scissors: a round button, with X as its key (Esc or a second
+     press disarms), plus an Undo button and Z while cut is on (Undo
+     exists only in the Stranded banner today). Placement: see Handoff.
+  2. A cut tapped mid-move (the dot travelling, a carry included) waits
+     until the move ends: one pending slot, the latest tap wins. The
+     controller refuses cut() while a carry is pending.
+  3. Cuts count toward nothing but the cuts row.
