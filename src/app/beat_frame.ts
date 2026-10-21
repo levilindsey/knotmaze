@@ -136,6 +136,8 @@ export function createBeat(deps: BeatDeps): BeatFrame {
     needsFrame: () =>
       rider !== null && clock.running && (rider.riding || rider.startBeat >= 0),
     queue: (run) => {
+      // Paused, nothing queues (keys and the pad; the hidden canvas takes no taps).
+      if (clock.isHeld) return false;
       const r = ensure();
       return r ? r.queue(run, clock.ticks) : false;
     },

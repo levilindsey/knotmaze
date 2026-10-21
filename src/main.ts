@@ -138,6 +138,7 @@ import {
 } from "./ui/accessibility";
 import { KnotSynth } from "./audio/knot_synth";
 import { createBeat, type BeatFrame } from "./app/beat_frame";
+import { createBeatPause } from "./ui/beat_pause";
 import { SnoreSfx, fetchSnore } from "./audio/snore_sfx";
 import { attachSnoreLink } from "./ui/snore_link";
 import { SongScheduler } from "./audio/song_scheduler";
@@ -495,6 +496,8 @@ async function main(): Promise<void> {
   let beatDriving = false;
   let beatTook = false;
   const beatOn = (): boolean => clockOf(params) === "beat" && scene.fabricController !== null;
+  // The pause control (item 5): holds the beat and hides the maze.
+  const beatPause = createBeatPause((held) => beat?.setHeld(held));
   let walkerScoreFn: () => WalkerScore | null = () => null;
   // The physics host (`host`) is made before app.init (K7 stage 5's start
   // gate, above).
@@ -1954,6 +1957,7 @@ async function main(): Promise<void> {
     ruleLoss.reset(); // K137
     fireClock.reset(); // K114 stage 2: idle until the next first move.
     beat?.reset(); // K114 beat rider: Restart restarts the beat.
+    beatPause.setHeld(false);
     restartChase(carry);
     hideWin();
     if (scene.fabric && scene.fabricController) scene.fabric.update(scene.fabricController);
@@ -3113,6 +3117,18 @@ async function main(): Promise<void> {
     sprintButton.setShown(on);
     sprintButton.setLook(sprintState === "used" ? "used" : sprintState === "ready" ? "ready" : "armed");
   };
+  // K114 beat rider: the pause shows while the beat plays (the keys live);
+  // an open panel over it hides it but keeps a pause, and an ended game or
+  // the beat going off lets the pause go.
+  const beatPauseTick = (): void => {
+    const live = beatOn() && keysLive();
+    if (!live && beatPause.isHeld) {
+      beatPause.setHeld(false);
+      beat?.setHeld(false);
+    }
+    const r = live && panel.isOpen() ? camera.panelWrap?.getBoundingClientRect() : null;
+    beatPause.setShown(live && !(r && r.width > 0 && beatPause.covered(r)));
+  };
   const cutTick = (): void => {
     aidTick();
     sprintTick();
@@ -3121,6 +3137,7 @@ async function main(): Promise<void> {
     // K114 walker: the walker modes have their own buttons, no scissors.
     const on = !!fc && fc.cutOn && !walker && keysLive() && !panelCoversCut();
     cutButtons.setShown(on);
+    beatPauseTick();
     walkerTick(fc, walker);
     if (!on) {
       if (cutArmed) setCutArmed(false);
