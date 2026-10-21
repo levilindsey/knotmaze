@@ -1499,7 +1499,7 @@ async function main(): Promise<void> {
   // K140: a finish's confetti, with its banner (every finish: dailies, free
   // play, replays, real time) - the rain over the screen and the spray
   // around the exit marker, in units of the marker's radius with a CSS px
-  // floor (sprayUnit). Reduced motion keeps only a small, slow spray.
+  // floor (sprayUnit). Reduced motion throws none (K186: the plan is empty).
   const throwConfetti = (): void => {
     const plan = confettiPlan(
       params.confettiAmount,
