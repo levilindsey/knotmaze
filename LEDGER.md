@@ -339,14 +339,6 @@ Next free ID: K679.
   - evidence: `.claude/probes/K139/`
   - next: build collapse mode per the brief (pure module, search timing, wiring, param 190, page driver)
   - brief: `docs/design/K139.md`
-- **K653** · Possible master bug, read but not measured (K525): syncMinotaur's layer reorder in
-  `fabric_maze_renderer.ts` (~1495-1499) may undo itself every other sync while the fog bleeds.
-  Probe it.
-  - owner: agent `af0bb199d326234d3` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 19:42, 1 h cap ~20:42)
-  - branch: `worktree-agent-af0bb199d326234d3`, worktree `.claude/worktrees/agent-af0bb199d326234d3`; last commit: `f6ad8cf`
-  - evidence: `.claude/probes/K653/`
-  - next: probe the layer reorder, then K650's census and SwiftShader compile, then K645's sheets and A/B
-  - brief: `docs/design/K653_checks.md`
 - **K662** · The phone sitting (Levi plugged it in at 20:00, on AC with stay-awake): K631 part 2
   (K244's counts), K646 + K587 (confetti), K651 (telegraph rims), K644 if K580 s3 has merged.
   - owner: agent `aadd6b0b7905a1619` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 20:06, 1 h cap ~21:06)
@@ -1514,6 +1506,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K653** · syncMinotaur fog-bleed layer flip fixed (no lift-back while it bleeds): 0 moves in 208 syncs, was 209 of 209; K650 b and K645 a done (K653_checks.md Handoff). Done in 4ae42ee (2026-10-20).
 - **K637** · The minotaur sim's 1.66 to 2.50 greedy catches is 9ccf360 (K74 s3's trap-zone finish), intended; harness ruled out; 2.50 is the baseline (`.claude/probes/K637/`). Done in 41fa173 (2026-10-20).
 - **K525** · The telegraph lights the route's rims by default (mtl at codec 181; the line stays an option); follow-ups K649-K654. Done in 5e88352 (2026-10-20).
 - **K186** · K140's confetti calls: none under reduced motion, every win banner throws. Done in e7affd6 (2026-10-20).
