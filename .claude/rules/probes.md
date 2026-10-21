@@ -325,6 +325,9 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   SwiftShader pages never slept (`asleep=false` in every scene of
   `.claude/probes/K580/count_base.txt`), so anything that waits for
   `asleep` needs headed real-GPU Chrome (`scripts/diag_screenshot.mjs`).
+  GOTCHA (K653, 2026-10-20): `drawImage(webglCanvas)` reads back blank in
+  this app, so crop-readback probes carry no pixels; use
+  `page.screenshot({ clip })`.
 - K111 stage 4 (2026-10-14), hover probes: a TOUCH press on a choice
   lights nothing (main.ts only sets pendingTap), so a phone-size hovered
   choice needs a MOUSE at the phone viewport (`phonemouse`: 411x753 dsf
