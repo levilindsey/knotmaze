@@ -5,9 +5,12 @@ paths:
   - "test/ui/offscreen_indicators.test.ts"
   - "test/ui/head_indicator.test.ts"
   - "src/app/frame_loop.ts"
+  - "src/ui/share.ts"
+  - "src/ui/toast_place.ts"
+  - "test/ui/toast_place.test.ts"
 ---
 
-# Gameplay lore: off-screen indicators
+# Gameplay lore: off-screen indicators and the toasts
 
 Moved verbatim from `gameplay.md` by K173 (2026-10-14), so that it attaches
 only with the files it is about; `gameplay.md` lists the area's other files.
@@ -119,3 +122,28 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   left for Levi). Probes: `.claude/probes/K198/stage2/` (rows.mjs: the
   rows, the size at 0.6/1/1.5/1.8, a hidden indicator and its taps;
   strip.mjs, blips.mjs + run_blips.ps1, prompt_check.mjs, pan.mjs).
+
+- THE TOASTS CLEAR THE CONTROLS (K698, 2026-10-21; brief
+  `docs/design/K698_polish.md`; `src/ui/toast_place.ts` is the rule,
+  pure; `src/ui/share.ts` placeToast measures). `.km-toast` stays
+  centred, its CSS bottom (18 px, or the safe-area inset) the floor. At
+  show time, and on a resize while it shows, it rises to TOAST_GAP 10 px
+  above the highest top among the visible BOTTOM-ANCHORED controls
+  (nearer the bottom edge than the top) whose box reaches its column
+  (within TOAST_SIDE_MARGIN 8 px), never off the top. The controls: any
+  element with the class `km-control` (TOAST_AVOID_CLASS; a new bottom
+  control carries it, as K137 s3c's sprint button was told to), plus
+  `.km-cut`, `.km-walk`, `.km-aid`, `.km-pad`, `.km-banner`, `.km-ind` and
+  the indicators' avoid list (`setToastAvoid(() => indicators.chrome())`).
+  Visible: a non-empty rect, visibility visible, opacity above 0 and
+  pointer events on (the inert edge indicators excepted). A control beside
+  the column leaves the toast at the floor (the desktop's pad, far right).
+  The toast takes no touch (pointer-events none). Before K698 every toast
+  sat at the floor and met the scissors' row and the walker's buttons on
+  the phone, the aids group, and the move pad (K726, build 65ee13a6: the
+  sword's three toasts by 13-38 px). NOT re-placed: a control that appears
+  while a toast shows. Not avoided: the open panel and the phone sheet.
+  Probe: `.claude/probes/K698/k698.mjs
+  <cut|aids|lives|walker|sword|glow|pad> <phone|land|desk>` (`run.ps1`
+  runs a batch in parallel; every toast is rect-checked in the page 400 ms
+  after it shows).
