@@ -79,6 +79,18 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   folder, after deadEndLength, fabric mode only. A link that lists
   `hcs` keeps its share when the default changes.
 
+- CONFETTI CANNON PARAMS (K336, 2026-10-20): `confettiCannons` (`cfc`,
+  default on), `cannonAmount` (`cfn`, [0, 3], default 1) and
+  `streamerShare` (`cfs`, [0, 1], default 0.2) are APPENDED at indices
+  171-173, after K337's `confettiShine` and `foilShare` (169-170);
+  CODEC_VERSION stays 8. All three are DAILY_EXEMPT_KEYS (viewer
+  preferences, like `cf` and `cfa`), so the golden dailies do not move.
+  url_state.ts clamps the two numbers; override keys `cfc` / `cfn` /
+  `cfs`. K324 stage 1 appends seven minotaur params beside them
+  (`mhn` ... `mtn`): whichever lands second renumbers its rows and
+  re-freezes param_codec.test.ts's key-order pin and url_codec.test.ts's
+  defaults table. The render side is render-confetti.md's K336 section.
+
 - BURN RACE PARAMS (K114 stage 1, 2026-10-14): `fire` (`fi`, off | fuse),
   `fireSpeed` (`fsp`, 0.6 since K280, 0.75 before) and `fireDelay` (`fdl`,
   0) are APPENDED to
