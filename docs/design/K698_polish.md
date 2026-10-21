@@ -65,7 +65,16 @@ hour. Probes only beyond the files under "Yours".
 
   | Agent | Files |
   |---|---|
-  | (the coordinator fills this at launch) | |
+  | K137 s2, the player's aids (until about 03:20) | new spool, hint, compass and chalk modules and their tests; its rows in `fabric_controller.ts`, `maze_hud.ts`, `maze_stats.ts` and `share_text.ts`; the yarn's reel-in in `fabric_maze_renderer.ts`; the chalk tick in `marker_glyphs.ts` and `marker_mesh.ts`; its buttons, keys, params, panel rows and lore |
+  | K137 s3c, after s2 (sprint, more than one monster, sleepers, the follower) | `minotaur.ts`, `minotaur_turns.ts`, `mino_feedback.ts`; new sprint, monster-list, sleeper and follower modules; `syncMinotaur` and the monster markers; main.ts's catch code, the minotaur frame and sprint's state; sprint's button and key; its rows in the shared files above |
+  | K138 s1, the rule kit, ice runs and the color rule (until about 04:16) | `rule_search.ts`, `ice.ts`, `color_rule.ts` and their tests; its rows in `fabric_controller.ts`, `maze_hud.ts`, `maze_stats.ts`, `share_text.ts` and `src/app/rule_loss.ts`; the run-table override in `src/app/scene.ts` and `section_colors.ts`; cycle's glyphs in `marker_glyphs.ts` and `marker_mesh.ts`; `carryStep`'s gate and its refusal toast in `src/main.ts`; its params, panel rows, probe hooks and lore |
+  | K726, phone sitting (probes only, main checkout, until about 03:16) | `.claude/probes/K726/`; the phone |
+
+  Your par rows share `maze_hud.ts` and `share_text.ts` with K137 and
+  K138; add your own rows rather than reshaping theirs, and keep both
+  sides when you rebase. The walker's glow reuses the minotaur's
+  highlight path, which K137 s3c owns: call it or add beside it, and
+  don't change what it draws for the minotaur.
 
 - **Yours:** `showToast` and the `.km-toast` CSS; the pad's visibility
   rule (`src/ui/move_pad.ts` and its call site); the walker's glow (its

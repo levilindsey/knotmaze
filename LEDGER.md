@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K734.
+Next free ID: K736.
 
 ## Waiting on Levi
 
@@ -183,7 +183,8 @@ Next free ID: K734.
 - **K718** · K580 s5 calls (`docs/design/K580_s5.md` Handoff): the tapered a J bite (0.031-0.059
   LU): accept the square-offset root outline, or lean it (a taper change)? Waist spikes vs T
   (0.012-0.023): accept U as the target? The notaper J seam colour: glyph-only fix (joinery.ts) or
-  leave to G4?
+  leave to G4? K643 measured against the bounds (K643.md Handoff): the J bite is 3.1-5.9x the 0.01
+  bound but broad, and smooth in stills; the waist spikes are 1.2-2.3x vs T, 0.001-0.003 vs U.
 - **K715** · adb deaths: a Muse hopnbop session ran headless Godot 4.7.2 (--import, GUT); an editor
   exit runs adb kill-server (shutdown_adb_on_exit, default true; editor settings written at death 2,
   23:50:21; a Godot crash 23:31:56 before death 1). Set it false (claude-config Setup-GodotAndroid.ps1)?
@@ -1335,6 +1336,8 @@ Every other item below waits on the trigger it names.
   the first snore hover after sound turns on creates the context but plays nothing (decode the snore
   on an OfflineAudioContext); the snore and fabric mode under snd=none unchecked in a browser
   (docs/design/K720.md Handoff)
+- **K734** · K643: a hairline seam inside the i fork junction at xh 3, in the build at 6278cf8b,
+  cause unknown (docs/design/K643.md Handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1593,6 +1596,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K733** · Sound off, further (K720): count volume 0 as sound off (the first input still creates a
   context today), and suspend the context when sound turns off after one exists (a running context
   costs battery and audio focus like the original bug) (docs/design/K720.md Handoff)
+- **K735** · K643 leftovers: a crotch injection that keeps the minimum radius, to prove forkMaxLU
+  1.2 past 0.79 LU; test/render/ribbon_round.test.ts hard-codes TOL 0.01 instead of importing
+  LINT.taperBulgeLU
 
 ## Done
 
