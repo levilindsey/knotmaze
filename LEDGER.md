@@ -385,14 +385,6 @@ Next free ID: K727.
   - evidence: `docs/design/K138_plan.md`
   - next: launch s1 (the rule kit, ice runs, the color rule) from docs/design/K138_s1.md on ports 5390-5393; s2-s8 per the K138_plan.md stage order
   - brief: `docs/design/K138_plan.md`
-- **K708** · K137 sims for lives and the sword (s3a step 7, unrun): teach the K80 turn sim
-  (.claude/probes/K80/turns2/) to respawn and count catches, then run its six cells
-  (docs/design/K137_s3a.md, The sim table)
-  - owner: agent `ace2e470ae344d299` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-21 01:20, 1 h cap ~02:20)
-  - branch: `worktree-agent-ace2e470ae344d299`, worktree `.claude/worktrees/agent-ace2e470ae344d299`; last commit: `9784f35`
-  - evidence: `.claude/probes/K708/`
-  - next: respawn and the sword in both sims, then the tables
-  - brief: `docs/design/K708.md`
 
 ## Next, in order
 
@@ -1591,6 +1583,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K708** · lives and sword sims: 3 hearts bite only blind real-time play; at swordMoves 8 the sword is a breather (slays in 0.5% even for a seeker); K708.md Handoff. Done in 7d1b41ce (2026-10-21).
 - **K687** · Quiet confetti cell (K717, build ea22989, thermal 0, audiobook paused): 97 of 308 frames over 25 ms (31%, none over 34) vs 23% hot and playing (K662), so neither explains the misses; the cost is K645. Done in cdaaff1 (2026-10-21).
 - **K177** · Minotaur indicator on the Pixel (K717): shown at the edge; a real tap frames the minotaur (scale 31.6 to 7.5 in 0.9 s), holds past 3 s, and the follow camera eases back by 5 s. Done in cdaaff1 (2026-10-21).
 - **K704** · Phone kit links all carry snd=none (K578 kit, phone_conf, k578_confetti, lib717; K717) plus the GOTCHA in probes-phone.md; the app side is K720. Done in 47fe24d (2026-10-21).
