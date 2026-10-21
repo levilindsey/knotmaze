@@ -157,7 +157,7 @@ All six realtime runs stood on a knot that had not slept (`asleep: false`, sim 2
 | `syncExplore` own, `syncFireLights` | 0.007 | 0.003 | +0.004 | 0.034 | 0.022 | +0.01 |
 | HUD `setFireLead`, main.ts `fireSet` / `tickFire` (profile) | 0.018, 0.027, 0.009 | - | about +0.04 | 0.156, 0.156 | - | about +0.16 |
 
-That is 1.2% (x1) and 1.7% (x4) of the awake tick (19.3 / 111 ms); the brief's "0.6-1.2 ms more a frame" does not reproduce on K409's code. In the profile `applyExploreGaps` (the per-mesh shader loop inside `ExploreGaps.setExplore`) is 0.247 ms incl (0.139 self) at x1 and 1.503 (0.793) at x4: 95% / 84% of the call. Frame time (dt p50 / p90 / mean): realtime x1 16.70 / 33.40 / 21.88, turn x1 16.70 / 16.80 / 16.67; realtime x4 133.5 / 183.3 / 144.5 (6 frames; the 21-frame pool 116.7 / 133.5 / 121.4), turn x4 33.4 / 83.5 / 51.45 (confounded as above).
+That is 1.2% (x1) and 1.7% (x4) of the awake tick (19.3 / 111 ms); against the brief's "0.6-1.2 ms more a frame" that is lower at x1 (0.27 ms with the HUD and main.ts lines) and higher at x4 (2.0 ms); the two are not comparable (K114 stage 2's stands were not at one share and may carry the same physics-state confound, so its "0.5 ms unattributed" may have been the path too). In the profile `applyExploreGaps` (the per-mesh shader loop inside `ExploreGaps.setExplore`) is 0.247 ms incl (0.139 self) at x1 and 1.503 (0.793) at x4: 95% / 84% of the call. Frame time (dt p50 / p90 / mean): realtime x1 16.70 / 33.40 / 21.88, turn x1 16.70 / 16.80 / 16.67; realtime x4 133.5 / 183.3 / 144.5 (6 frames; the 21-frame pool 116.7 / 133.5 / 121.4), turn x4 33.4 / 83.5 / 51.45 (confounded as above).
 
 ### What was fixed
 
@@ -190,7 +190,7 @@ A same-physics-state rerun: the realtime stand AFTER the first sleep (the perf l
 
 ### Verify
 
-No `src/` change (docs only), so nothing moves: no pin, no codec param. `npm run build` not run (nothing to build). `npm test`: see the report (the lock was another agent's while I wrote this up).
+No `src/` change (docs only), so nothing moves: no pin, no codec param. `npm run build` not run (nothing to build). `npm test` was NOT run: the perf lock was K580's from 19:55:07 and then K139's from 20:03:00 (a CPU timing run), and a suite run is CPU-heavy. The branch is master 4529246 plus this docs file, so its result is master's; the merge round runs it.
 
 ### The item's handle
 
