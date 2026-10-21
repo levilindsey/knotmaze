@@ -23,6 +23,8 @@ import type { CollapseMode } from "../game/collapse";
 import { COLLAPSE_MODES } from "../game/collapse";
 import type { CutMode } from "../game/cut";
 import { CUT_MODES } from "../game/cut";
+import type { ColorRuleMode } from "../game/color_rule";
+import { COLOR_RULE_MODES } from "../game/color_rule";
 import type { SwordMode } from "../game/sword";
 import { SWORD_MODES, SWORD_MOVES_DEFAULT } from "../game/sword";
 import type { ParMode } from "../game/par";
@@ -753,6 +755,14 @@ export interface UrlParams {
   // the next good arm for 2 s. compass: an arrow at the head along it.
   hints: number;
   compass: boolean;
+  // K138 stage 1 (design 4.18, 4.19; game/ice.ts, game/color_rule.ts): ice,
+  // the share of core runs that are icy (0 off, at most ICE_SHARE_MAX 0.5;
+  // a tap slides on along icy runs to the next junction where one can stop)
+  // and the color rule (off | alternate: never one shade twice in a row |
+  // cycle: three colors in order). The classic game only; the controller
+  // drops both under collapse, fragile, the cut, the fire and the spool.
+  ice: number;
+  colorRule: ColorRuleMode;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1054,6 +1064,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   spoolSlack: 0.3,
   hints: 0,
   compass: false,
+  // K138 stage 1: no ice, no color rule.
+  ice: 0,
+  colorRule: "off",
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1089,7 +1102,17 @@ export function fireSettingsOf(
 export function fabricRulesOf(
   p: Pick<
     UrlParams,
-    "fragile" | "parMode" | "parSlack" | "collapse" | "cut" | "gameMode" | "spool" | "spoolSlack" | "hints"
+    | "fragile"
+    | "parMode"
+    | "parSlack"
+    | "collapse"
+    | "cut"
+    | "gameMode"
+    | "spool"
+    | "spoolSlack"
+    | "hints"
+    | "ice"
+    | "colorRule"
   >
 ): FabricRules {
   return {
@@ -1101,6 +1124,9 @@ export function fabricRulesOf(
     // K137 stage 2: the spool's slack (null = off) and the hints a solve.
     spool: p.spool ? p.spoolSlack : null,
     hints: p.hints,
+    // K138: ice and the color rule, the classic game's only.
+    ice: p.gameMode === "classic" ? p.ice : 0,
+    colorRule: p.gameMode === "classic" ? p.colorRule : "off",
   };
 }
 
@@ -1297,6 +1323,7 @@ export const ENUM_OPTIONS: {
   collapse: COLLAPSE_MODES,
   cut: CUT_MODES,
   sword: SWORD_MODES, // K137 stage 3b
+  colorRule: COLOR_RULE_MODES, // K138 stage 1
 };
 
 // K398: every numeric param held to the panel's range (param_codec's
@@ -1808,6 +1835,10 @@ function readLegacy(
     spoolSlack: readNumber(query, "sps", D.spoolSlack),
     hints: readNumber(query, "hn", D.hints),
     compass: readBool(query, "cmp", D.compass),
+    // K138 stage 1's ice and color rule (`&ice=.25&cru=alternate`;
+    // PARAM_RANGES clamps the share to 0..0.5).
+    ice: readNumber(query, "ice", D.ice),
+    colorRule: readChoice(query, "cru", COLOR_RULE_MODES, D.colorRule),
   };
 }
 
