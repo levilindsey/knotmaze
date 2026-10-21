@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K717.
+Next free ID: K718.
 
 ## Waiting on Levi
 
@@ -567,6 +567,9 @@ Every other item below waits on the trigger it names.
 - **K709** · Phone kit hardening (K703): phone_setup, wait_idle and run_parts should reconnect after
   an adb restart and re-add the reverse and the 9222 forward; lib703 END should take a date-time or
   a minutes cap, since HH:mm cannot cross midnight
+- **K717** · Overnight phone sitting 2: K704 kit silence and K709 adb reconnect, then K137 s3a
+  lives, the K114 walker (an R.6.2 strip for Levi), K177 and the K687 frame cells
+  (docs/design/K717_phone.md)
 
 ## Residuals (known, not fixed)
 
