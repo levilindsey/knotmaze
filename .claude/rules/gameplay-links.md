@@ -477,7 +477,10 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   defaults table and OVERRIDE_KEYS (`ct`). The golden snapshot, the golden
   dailies and K87 did not move. Probe links: `?<seed>&am=instant&ct=on`.
   The rules: gameplay-mechanisms.md's The cut; the row: gameplay-panel.md's
-  CUT ROW.
+  CUT ROW. K114's walker stage (2026-10-20) APPENDED the options `lead` and
+  `delay` (`ct=lead`, `ct=delay`; gameplay-mechanisms.md's The walker):
+  an enum option appended, so CODEC_VERSION stays and only the table pin's
+  option list moved.
 
 - LIVES PARAM (K137 stage 3a, 2026-10-20; brief `docs/design/K137_s3a.md`):
   `lives` (`mlv`: a number, 0 off or 1..5 hearts, PARAM_RANGES [0, 5],
