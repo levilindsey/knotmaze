@@ -66,6 +66,7 @@ import {
 import { SolveClock, efficiencyOf } from "./game/maze_stats";
 import { shareText } from "./game/share_text";
 import { parScore } from "./game/par";
+import { catchHeart, heartsToast, livesOf, type HeartLoss } from "./game/lives";
 import { rateRun, ratingForResult, walkedOf } from "./game/star_rating";
 import { LossBanner, MazeHud, WinBanner } from "./ui/maze_hud";
 import type { HudSnapshot } from "./ui/maze_hud";
@@ -412,6 +413,35 @@ async function main(): Promise<void> {
   let routeFc: FabricMazeController | null = null;
   let chaseRoute: number[] = [];
   let moveHuntWas = false;
+  // K137 stage 3a, LIVES (game/lives.ts): the hearts left this attempt and
+  // the lives setting they were filled for (0: lives off). restartChase
+  // refills them (a new maze, Reset path, the out-of-hearts restart), and
+  // so does a change of the Lives row (syncHearts, read at each catch and
+  // each HUD snapshot).
+  let heartsLeft = 0;
+  let heartsOf = 0;
+  const refillHearts = (): void => {
+    heartsOf = livesOf(params.lives);
+    heartsLeft = heartsOf;
+  };
+  const syncHearts = (): void => {
+    if (heartsOf !== livesOf(params.lives)) refillHearts();
+  };
+  // A catch takes its heart here (catchHeart); the caller restarts the
+  // level on "restart" (or on "off" under minoRestart) and respawns
+  // otherwise.
+  const takeHeart = (): HeartLoss => {
+    syncHearts();
+    const r = catchHeart(heartsOf, heartsLeft);
+    heartsLeft = r.hearts;
+    return r.loss;
+  };
+  // The hearts the HUD, the banner and the hooks show (null: lives off, or
+  // no minotaur running).
+  const heartsShown = (): { left: number; of: number } | null => {
+    syncHearts();
+    return liveMino() && heartsOf > 0 ? { left: heartsLeft, of: heartsOf } : null;
+  };
   // K114 CUT: the scissors are armed (the next tap cuts), and a cut tapped
   // while the dot travels, waiting for the move to end (-1: none; the
   // latest wins). The machinery is below, by handleFabricTap.
@@ -1221,6 +1251,8 @@ async function main(): Promise<void> {
       closestCall: c.fire && (c.solved || c.fireLost) ? c.fireClosest : null,
       // K137: snapped, par and strokes (null while their rule is off).
       ...ruleFields(c),
+      // K137 stage 3a: the hearts left (null: lives off or no minotaur).
+      hearts: heartsShown(),
     };
   };
   // The HUD and the mode badge (it re-fits around the HUD's new size).
@@ -1525,6 +1557,7 @@ async function main(): Promise<void> {
         parScore: c.parMode !== "off" ? parScore(c.strokes, c.par) : null,
         collapse: collapse ? { mode: collapseMode, ...collapse } : null,
         cuts: c.cutOn ? c.cutCount : null, // K114
+        hearts: heartsShown()?.left ?? null, // K137 stage 3a
       }),
       url: daily !== null ? dailyUrl(daily) : location.href,
     };
@@ -1563,6 +1596,7 @@ async function main(): Promise<void> {
       rating,
       collapse,
       cuts: c.cutOn ? c.cutCount : null, // K114
+      hearts: heartsShown(), // K137 stage 3a
     });
     updateHud();
     throwConfetti();
@@ -1639,6 +1673,7 @@ async function main(): Promise<void> {
   // or a Reset path under it) hands its tallies to the new one, so the
   // catch count survives the restart.
   const restartChase = (carry = false): void => {
+    refillHearts(); // K137 stage 3a: every heart back.
     const prevChase = carry ? scene.chase : null;
     const prevTurn = carry ? scene.turnMino : null;
     scene.chase =
@@ -1674,7 +1709,12 @@ async function main(): Promise<void> {
   };
 
   // A catch's toast (K80, both clocks; K273: or the level restarts).
-  const showCaughtToast = (n: number, restart = false): void => {
+  const showCaughtToast = (n: number, restart = false, heart: HeartLoss = "off"): void => {
+    // K137 stage 3a: under lives the toast counts hearts, not catches.
+    if (heart !== "off") {
+      showToast(heartsToast(heartsLeft, heart === "restart"), 2500);
+      return;
+    }
     const then = restart ? "Starting over." : "Back to the entrance.";
     showToast(n === 1 ? `Caught! ${then}` : `Caught ${n} times. ${then}`, 2500);
   };
@@ -1840,11 +1880,14 @@ async function main(): Promise<void> {
         } else if (ev.kind === "caught") {
           // K273: a catch that resets the level is the level restart, the
           // tallies carried to the new chase (the rest of this advance's
-          // events belong to the old one).
-          if (params.minoRestart) {
+          // events belong to the old one). K137 stage 3a: under lives the
+          // catch costs a heart, and only the last one restarts the level
+          // (minoRestart is ignored while lives are on).
+          const heart = takeHeart();
+          if (heart === "restart" || (heart === "off" && params.minoRestart)) {
             restartSolve(true);
             updateHud();
-            showCaughtToast(liveMino()?.catches ?? 1, true);
+            showCaughtToast(liveMino()?.catches ?? 1, true, heart);
             break;
           }
           chaseRoute = [];
@@ -1859,7 +1902,7 @@ async function main(): Promise<void> {
           else if (fc.collapseOn && ruleLoss.over()) pendingLoss = true;
           scene.fabric.update(fc);
           updateHud();
-          showCaughtToast(scene.chase.catches);
+          showCaughtToast(scene.chase.catches, false, heart);
         }
       }
     }
@@ -1954,10 +1997,12 @@ async function main(): Promise<void> {
       const vid = scene.turnMino.tg.chase.ids[site.player];
       if (vid) { scene.fabric.vertexWorld(vid, sitePt, 0); hasSite = true; }
     }
-    if (params.minoRestart) {
+    // K137 stage 3a: a heart under lives (see tickChase's catch).
+    const heart = takeHeart();
+    if (heart === "restart" || (heart === "off" && params.minoRestart)) {
       restartSolve(true);
       updateHud();
-      showCaughtToast(liveMino()?.catches ?? 1, true);
+      showCaughtToast(liveMino()?.catches ?? 1, true, heart);
       return;
     }
     fc.markCaught(wait);
@@ -1989,7 +2034,7 @@ async function main(): Promise<void> {
       }
     }
     updateHud();
-    showCaughtToast(scene.turnMino.catches);
+    showCaughtToast(scene.turnMino.catches, false, heart);
   };
   let turnWarned = false;
   const stepPanScratch = new Float32Array(2);
@@ -3046,6 +3091,9 @@ async function main(): Promise<void> {
     },
     get cutArmed() {
       return cutArmed;
+    },
+    get hearts() {
+      return heartsShown(); // K137 stage 3a
     },
     get pendingCut() {
       return pendingCut;

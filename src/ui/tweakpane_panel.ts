@@ -37,6 +37,7 @@ import {
 } from "./url_state";
 import { gridAlignSlider, gridAlignStrength } from "./grid_align_curve";
 import { PAR_SLACK_MAX, PAR_SLACK_MIN } from "../game/par";
+import { LIVES_MAX, LIVES_RECOMMENDED, livesOf } from "../game/lives";
 import {
   BACKGROUND_ACCENTS_USED,
   BACKGROUND_ANGLE_AUTO,
@@ -1918,6 +1919,14 @@ export function buildPanel(
     "With fog of war or the thread reveal: show the minotaur always, only while it hunts you, or never (only where the fog has lifted, or on thread you can see). Applies live.",
     true
   );
+  // K137 stage 3a (4.32, game/lives.ts): hearts, on both clocks. While on,
+  // they replace "Catch restarts level" (hidden): the last heart restarts.
+  const livesRow = chaseRow(
+    "lives",
+    { min: 0, max: LIVES_MAX, step: 1, format: (v: number) => (v === 0 ? "off" : String(v)), label: "Lives" },
+    `Hearts: each catch costs one and sends you back to the entrance as usual; losing the last restarts the level (your catches still count) with every heart back. ${LIVES_RECOMMENDED} is a good start. Off: catches cost nothing (Catch restarts level decides). Applies live.`,
+    true
+  );
   // K80 turns stage 2 (K273): what a catch resets, on both clocks. While
   // the level row is on a catch resets everything, so the other two hide.
   const minoRestartRow = chaseRow(
@@ -2812,9 +2821,13 @@ export function buildPanel(
     cutRow.hidden = !fab || params.gameMode !== "classic"; // K114
     // Under the thread reveal too (K76 stage 2c: the same two settings).
     minoFogRow.hidden = !minoOn || !(fog || threads);
-    minoRestartRow.hidden = !minoOn;
-    minoLairRow.hidden = !minoOn || params.minoRestart;
-    minoRefogRow.hidden = !minoOn || !(fog || threads) || params.minoRestart;
+    // K137 stage 3a: lives replace the level row while on (game/lives.ts).
+    const livesOn = livesOf(params.lives) > 0;
+    const restartOn = params.minoRestart && !livesOn;
+    livesRow.hidden = !minoOn;
+    minoRestartRow.hidden = !minoOn || livesOn;
+    minoLairRow.hidden = !minoOn || restartOn;
+    minoRefogRow.hidden = !minoOn || !(fog || threads) || restartOn;
     moveSpeedRow.hidden = !fab || realtime;
     mazeStatsRow.hidden = !fab;
     finishIndicatorRow.hidden = !fab;

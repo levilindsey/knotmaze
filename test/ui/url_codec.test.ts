@@ -134,6 +134,7 @@ describe("links", () => {
       minoGuardAccuracyRt: 0.4, minoStalkerAccuracyRt: 0.45,
       collapse: "off",
       cut: "off", // K114
+      lives: 0, // K137 stage 3a
     });
   });
 
@@ -908,6 +909,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoGuardAccuracyRt: "mgx", minoStalkerAccuracyRt: "msx",
   collapse: "cl",
   cut: "ct", // K114
+  lives: "mlv", // K137 stage 3a
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
@@ -944,6 +946,7 @@ if (name === "cartouche") return "knot";
   if (name === "minoStopMin") return 0.3;
   if (name === "minoStopMax") return 0.9;
   if (name === "minoTelegraphRuns") return 2;
+  if (name === "lives") return 3; // K137 stage 3a: its default is 0 (off)
   return (d as number) * 0.5;
 }
 // As a link writes it: booleans 0/1, colors without the "#".

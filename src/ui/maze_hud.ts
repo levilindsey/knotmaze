@@ -55,6 +55,9 @@ export interface HudSnapshot {
   collapse?: { pct: number; par: string } | null;
   // K114 (absent elsewhere): the runs cut so far, while the cut is on.
   cuts?: number | null;
+  // K137 stage 3a (absent elsewhere): the hearts left of the lives setting,
+  // while lives are on under a minotaur.
+  hearts?: { left: number; of: number } | null;
 }
 
 // Distances read x10 as whole numbers, as the HUD always has.
@@ -68,6 +71,7 @@ type StatFields = Pick<
   | "timeMs" | "path" | "optimal" | "efficiency" | "backtrack" | "junctions" | "deadEnds"
   | "catches" | "chasedMs" | "fireLead" | "closestCall" | "closeCalls" | "seen"
   | "restarts" | "snapped" | "parLeft" | "parStrokes" | "collapse" | "cuts"
+  | "hearts"
 >;
 
 // A row (K274): its id names its line in STATS (game/maze_stats.ts), which
@@ -86,11 +90,14 @@ const entry = (id: StatId, value: string): StatEntry => ({ id, label: STATS[id].
 type GameFields = Pick<
   HudSnapshot,
   | "catches" | "fireLead" | "closestCall" | "snapped" | "parLeft" | "parStrokes" | "collapse"
-  | "cuts"
+  | "cuts" | "hearts"
 >;
+// K137 stage 3a: "hearts 2 / 3" while lives are on.
+const heartsValue = (h: { left: number; of: number }): string => `${h.left} / ${h.of}`;
 export function gameEntries(s: GameFields): StatEntry[] {
   const rows: StatEntry[] = [];
   if (s.catches != null) rows.push(entry("caught", String(s.catches)));
+  if (s.hearts) rows.push(entry("hearts", heartsValue(s.hearts)));
   if (s.fireLead != null) rows.push(entry("fireLead", fmtDist(s.fireLead)));
   if (s.closestCall != null) rows.push(entry("closestCall", fmtDist(s.closestCall)));
   rows.push(...ruleEntries(s)); // K137
@@ -108,6 +115,7 @@ export function statEntries(s: StatFields): StatEntry[] {
   rows.push(entry("junctions", String(s.junctions)));
   if (s.deadEnds !== null) rows.push(entry("deadEnds", String(s.deadEnds)));
   if (s.catches != null) rows.push(entry("caught", String(s.catches)));
+  if (s.hearts) rows.push(entry("hearts", heartsValue(s.hearts)));
   if (s.closeCalls != null) rows.push(entry("closeCalls", String(s.closeCalls)));
   if (s.seen != null) rows.push(entry("seen", String(s.seen)));
   if (s.chasedMs != null) rows.push(entry("chased", formatDuration(s.chasedMs)));
@@ -436,6 +444,8 @@ export interface WinInfo {
   collapse?: { pct: number; par: string } | null;
   // K114: the runs cut (absent or null: the cut off).
   cuts?: number | null;
+  // K137 stage 3a: the hearts left (absent or null: lives off).
+  hearts?: { left: number; of: number } | null;
   // Show the daily stats button.
   stats: boolean;
 }
