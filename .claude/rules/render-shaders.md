@@ -153,6 +153,7 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   dumped variants standalone and linked 13/13 programs in a headless
   SwiftShader telegraph scene (plain and `xp=threads`). No new program
   site or variant.
+<<<<<<< HEAD
 - **The root's paint grew the section's two** (K620, 2026-10-20;
   render-paint.md, THE ROOT'S PAINT): section-rgb 46811 -> 47573
   characters and its explore variant 63226 -> 63988 (inferred from
@@ -165,6 +166,18 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   loads timed out wave 1 (15 s, 10-13 programs still compiling); the
   section-only blend (8ac37a0) adds no kFxColor call (its numbers: the
   K620 handoff). No new program site or variant.
+- **The riding lead grew the section's two again** (K654, K324 stage 2,
+  2026-10-20; render-paint.md, TELEGRAPH RIMS' RIDING): +85 characters
+  each (`uniform vec4 uKTeleAt;`, two end picks and two abs() in the TELE
+  branch). Before K620 that was section-rgb 46811 -> 46896 and its
+  explore variant 63226 -> 63311; arm-strip 31049 / 37050,
+  junction-field 26239 / 35809 and pluck-still 19664 / 28826 (master /
+  explore) unchanged byte for byte. On top of K620, K320's own measure
+  reads 47,691 and 64,106 (47,606 and 64,021 + 85), and its budgets rose
+  to 47,750 and 64,150. Each changed text compiles cold once. SwiftShader
+  compiled all 8 dumped variants standalone and linked 12/12 programs
+  plain and 12/12 under `xp=threads`, on the pre-K620 text
+  (`.claude/probes/K324/swiftshader/`). No new program site or variant.
 - **The stub's free end changed pluck-blur** (K459, 2026-10-15;
   render-pluck.md, K459): PLUCK_VERT passes `vCap` (the cap coordinate,
   aUV.y) and PLUCK_FRAG narrows the thread over the stub's cap, so
