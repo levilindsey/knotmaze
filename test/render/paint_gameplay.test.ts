@@ -6,10 +6,11 @@
 // band family per pulse arm, which drew gold crests over a fading trail).
 
 import { describe, expect, it } from "vitest";
-import { ITEM_FLAG, PAINT_CONST, PAINT_ITEM } from "../../src/render/paint_const";
+import { ITEM_FLAG, PAINT_CONST, PAINT_ITEM, PAINT_ITEM_TELE } from "../../src/render/paint_const";
 import {
   MAX_KNOTS,
   kArcOfCtrl,
+  kArcU,
   kChain,
   kComposePaint,
   kPaintAt,
@@ -18,6 +19,8 @@ import {
   kRimAcross,
   kRimOver,
   kRimScale,
+  kShadeAll,
+  kTeleOver,
   writeChainHeader,
   writeGeomTable,
   type KData,
@@ -42,6 +45,10 @@ function rng(seed: number): () => number {
 }
 
 const GOLD = 0xffd24a;
+
+// K525: one telegraph piece as the renderer packs it: an unwrapped ctrl
+// span, the piece's alpha, and each end's gap and fade.
+type Tele = { c0: number; c1: number; alpha: number; g0: number; g1: number; f0: number; f1: number };
 
 function uniforms(k: OldClock): KUniforms {
   const K = new Float32Array(MAX_KNOTS * 4);
@@ -82,7 +89,10 @@ function scene(
   pulses: OldPulse[],
   U: KUniforms,
   // K145: hover-glow runs (RIM items: unwrapped ctrl span and end gap).
-  rims: { c0: number; c1: number; gap: number }[] = []
+  rims: { c0: number; c1: number; gap: number }[] = [],
+  // K525: telegraph pieces (TELE items), written before the RIM items as
+  // the renderer writes them.
+  teles: Tele[] = []
 ): KData {
   const n = cal.length;
   const idxBase = 2;
@@ -99,6 +109,7 @@ function scene(
     const f = (p.inward ? ITEM_FLAG.INWARD : 0) | (p.hovered ? ITEM_FLAG.HOVER : 0);
     items.push(PAINT_ITEM.PULSE, p.cJunction, p.cFar, 0, 0, f, 0, 0);
   }
+  for (const t of teles) items.push(PAINT_ITEM_TELE, t.c0, t.c1, t.alpha, t.g0, t.g1, t.f0, t.f1);
   for (const m of rims) items.push(PAINT_ITEM.RIM, m.c0, m.c1, m.gap, 0, 0, 0, 0);
   const nItems = items.length / 8;
   const refBase = idxBase + n;
@@ -905,6 +916,273 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
       }
       expect(gapLit).toBe(0);
       expect(maxStep).toBeLessThan(0.02);
+    }
+  });
+
+  // K525: the minotaur's telegraph route as TELE items. A piece lights its
+  // whole span (no hover-point falloff) at its alpha, between its end gaps
+  // (a junction end skips the web's reach, rimGap 0.975 at the defaults; a
+  // mid-run end, the minotaur's spot or a by-length stop, none) and fades
+  // (each clamped to RIM_END_SHARE of half the piece less its gap, as the
+  // hover glow's is). kTele is the max over the pieces, and no other paint
+  // moves.
+  const TJ = { g: 0.975, f: 0.2 }; // A junction end (TELE_JUNCTION_FADE).
+  const TM = { g: 0, f: 0.3 }; // A mid-run end (TELE_MID_FADE).
+  const tele = (c0: number, c1: number, alpha: number, e0: typeof TJ, e1: typeof TJ): Tele => ({
+    c0,
+    c1,
+    alpha,
+    g0: e0.g,
+    g1: e1.g,
+    f0: e0.f,
+    f1: e1.f,
+  });
+  // A piece's expected strength at an unwrapped arc, from the f32 values
+  // the item holds.
+  const teleWant = (u: number, u0: number, u1: number, t: Tele): number => {
+    if (u < u0 || u > u1) return 0;
+    const hl = 0.5 * (u1 - u0);
+    const g0 = Math.fround(t.g0);
+    const g1 = Math.fround(t.g1);
+    const f0 = Math.min(Math.max(PAINT_CONST.RIM_END_SHARE * (hl - g0), 1e-4), Math.max(Math.fround(t.f0), 1e-4));
+    const f1 = Math.min(Math.max(PAINT_CONST.RIM_END_SHARE * (hl - g1), 1e-4), Math.max(Math.fround(t.f1), 1e-4));
+    return Math.fround(t.alpha) * Math.min(smoothstep((u - u0 - g0) / f0), smoothstep((u1 - u - g1) / f1));
+  };
+
+  it("K525: a telegraph piece lights its span between its end gaps and fades, at its alpha", () => {
+    const r = rng(525);
+    const ch = randomChain(r, 90, false);
+    const n = ch.controlArcLengths.length;
+    const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
+    const PX = 0.02;
+    const pulses: OldPulse[] = [{ cJunction: 10, cFar: 30, inward: false, onPath: false, hovered: false }];
+    const spans: OldSpan[] = [{ c0: 40, c1: 70 }];
+    const rims = [{ c0: 10, c1: 80, gap: 0.45 }];
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
+    const st0: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
+    const U0 = uniforms(k);
+    const D0 = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, spans, [], pulses, U0, rims);
+    U0.uKReach[2] = 0.4;
+    U0.uKReach[3] = 45;
+    const c00 = kChain(D0, 0);
+    const samples: [number, number][] = [];
+    for (let a = 0; a <= ch.totalLength; a += 0.002) samples.push([a, ctrlAt(D0, a, n - 1)]);
+    // A piece 1.5 world long from ctrl 40: under two junction gaps (1.95).
+    const cShort = ctrlAt(D0, kArcOfCtrl(D0, c00, 40) + 1.5, n - 1);
+    const cases: [string, Tele[]][] = [
+      ["a whole run", [tele(10, 80, 1, TJ, TJ)]],
+      ["a lead partial (from the minotaur's spot)", [tele(33.5, 80, 1, TM, TJ)]],
+      ["a tail partial (to a by-length stop)", [tele(10, 51.25, 0.5, TJ, TM)]],
+      ["both ends mid-run", [tele(22.5, 61.75, 1, TM, TM)]],
+      ["two pieces on one run", [tele(10, 30, 1, TJ, TM), tele(25, 80, 0.5, TM, TJ)]],
+      ["a run under two gaps", [tele(40, cShort, 1, TJ, TJ)]],
+      ["a short mid-run piece", [tele(40, cShort, 0.95, TM, TM)]],
+    ];
+    for (const [name, pieces] of cases) {
+      const U = uniforms(k);
+      const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, spans, [], pulses, U, rims, pieces);
+      U.uKReach[2] = 0.4;
+      U.uKReach[3] = 45;
+      const c = kChain(D, 0);
+      const ends = pieces.map((t) => [kArcU(D, c, Math.fround(t.c0)), kArcU(D, c, Math.fround(t.c1))]);
+      const amax = Math.max(...pieces.map((t) => Math.fround(t.alpha)));
+      // Violations, counted: the rest of the paint moved, the strength left
+      // [0, max alpha], is lit off every piece or inside an end gap, or is
+      // not the max of the pieces' shapes.
+      let otherPaint = 0;
+      let range = 0;
+      let darkLit = 0;
+      let shape = 0;
+      let lit = 0;
+      let prev = 0;
+      let maxStep = 0;
+      for (const [a, ctrl] of samples) {
+        const g = kPaintAt(D, U, c, ctrl, a, PX, st).tele;
+        const s0 = kPaintAt(D0, U0, c00, ctrl, a, PX, st0);
+        if (st.p !== s0.p || st.band !== s0.band || st.v !== s0.v || st.rim !== s0.rim || s0.tele !== 0) otherPaint++;
+        if (!(g >= 0 && g <= amax)) range++;
+        let inside = false;
+        let want = 0;
+        pieces.forEach((t, i) => {
+          const [u0, u1] = ends[i];
+          if (a - u0 > Math.fround(t.g0) && u1 - a > Math.fround(t.g1)) inside = true;
+          want = Math.max(want, teleWant(a, u0, u1, t));
+        });
+        if (!inside && g !== 0) darkLit++;
+        if (Math.abs(g - want) > 1e-9) shape++;
+        if (g > 0.01) lit++;
+        maxStep = Math.max(maxStep, Math.abs(g - prev));
+        prev = g;
+      }
+      expect([name, otherPaint, range, darkLit, shape]).toEqual([name, 0, 0, 0, 0]);
+      // Full alpha mid-piece once the piece clears both gaps; half alpha
+      // halfway through a full-length fade (a smoothstep).
+      pieces.forEach((t, i) => {
+        const [u0, u1] = ends[i];
+        const len = u1 - u0;
+        const um = (u0 + u1) / 2;
+        const gm = kPaintAt(D, U, c, ctrlAt(D, um, n - 1), um, PX, st).tele;
+        if (len > Math.fround(t.g0) + Math.fround(t.g1) + 1e-3) expect(gm).toBeGreaterThanOrEqual(Math.fround(t.alpha) - 1e-6);
+        else if (pieces.length === 1) expect(gm).toBe(0); // The webs cover a run under two gaps.
+        if (pieces.length === 1 && len > 2 * (Math.fround(t.g0) + Math.fround(t.f0) + 0.5)) {
+          const uh = u0 + Math.fround(t.g0) + Math.fround(t.f0) / 2;
+          const gh = kPaintAt(D, U, c, ctrlAt(D, uh, n - 1), uh, PX, st).tele;
+          expect(gh).toBeCloseTo(Math.fround(t.alpha) / 2, 3);
+        }
+      });
+      if (name !== "a run under two gaps") expect(lit).toBeGreaterThan(0);
+      // Smooth: no step between samples 0.002 apart beyond the steepest fade
+      // (a smoothstep's 1.5 alpha / fade; the shortest clamped fade is about
+      // 0.45 on the short mid-run piece).
+      expect(maxStep).toBeLessThan(0.002 * 1.5 * (1 / 0.2) * 1.1);
+    }
+  });
+
+  it("K525: the telegraph mixes toward its colour across both rims, under the hover glow's whitening", () => {
+    const r = rng(5252);
+    const ch = randomChain(r, 90, false);
+    const n = ch.controlArcLengths.length;
+    const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
+    const PX = 0.02;
+    const RED = [1, 0x24 / 255, 0x18 / 255];
+    const pulses: OldPulse[] = [{ cJunction: 10, cFar: 30, inward: false, onPath: false, hovered: false }];
+    const spans: OldSpan[] = [{ c0: 40, c1: 70 }];
+    const rims = [{ c0: 10, c1: 80, gap: 0.45 }];
+    const pieces = [tele(10, 80, 1, TJ, TJ), tele(80, 88, 0.5, TJ, TM)];
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
+    const sides = [0, 0.04, 0.1, 0.2, 0.35, 0.5, 0.65, 0.8, 0.9, 0.96, 1];
+    const mk = (withTele: boolean, withRim: boolean, width: number, strength: number) => {
+      const U = uniforms(k);
+      const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, spans, [], pulses, U, withRim ? rims : [], withTele ? pieces : []);
+      U.uKGold[3] = kRimScale(width);
+      U.uKReach[2] = 0.4;
+      U.uKReach[3] = 45;
+      U.uKSect[2] = 3;
+      U.uKSect[3] = 0.2;
+      U.uKTele = new Float32Array([RED[0], RED[1], RED[2], strength]);
+      return { U, D, c: kChain(D, 0) };
+    };
+    const base = (a: number): number[] => [0.2 + 0.5 * Math.sin(a) ** 2, 0.35, 0.6 - 0.3 * Math.cos(a) ** 2];
+    for (const width of [0.3, 0.85, 1]) {
+      for (const strength of [0.45, 0.95]) {
+        const T = mk(true, false, width, strength);
+        const N = mk(false, false, width, strength);
+        const B = mk(true, true, width, strength);
+        const H = mk(false, true, width, strength);
+        let mixBad = 0;
+        let orderBad = 0;
+        let edgeMax = 0;
+        let centerMax = 0;
+        for (let a = 0; a <= ch.totalLength; a += 0.05) {
+          const ctrl = ctrlAt(T.D, a, n - 1);
+          const t = kPaintAt(T.D, T.U, T.c, ctrl, a, PX, st).tele;
+          for (const side of sides) {
+            // Telegraph only: the tele-less color mixed toward the red by
+            // t x across x strength.
+            const S = base(a);
+            kShadeAll(T.D, T.U, T.c, ctrl, a, side, PX, S);
+            const S0 = base(a);
+            kShadeAll(N.D, N.U, N.c, ctrl, a, side, PX, S0);
+            const w = Math.min(1, t * kRimAcross(side, T.U.uKGold[3]) * Math.fround(strength));
+            for (let i = 0; i < 3; i++) if (Math.abs(S[i] - (S0[i] + (RED[i] - S0[i]) * w)) > 1e-6) mixBad++;
+            const lift = Math.hypot(S[0] - S0[0], S[1] - S0[1], S[2] - S0[2]);
+            if (side === 0 || side === 1) edgeMax = Math.max(edgeMax, w);
+            if (side === 0.5) centerMax = Math.max(centerMax, lift);
+            // A hovered run on the route: the red first, then the glow's
+            // whitening over it.
+            const SB = base(a);
+            kShadeAll(B.D, B.U, B.c, ctrl, a, side, PX, SB);
+            const rim = kPaintAt(B.D, B.U, B.c, ctrl, a, PX, st).rim;
+            const SR = base(a);
+            kShadeAll(T.D, T.U, T.c, ctrl, a, side, PX, SR);
+            if (rim > 0) kRimOver(SR, rim * kRimAcross(side, B.U.uKGold[3]));
+            for (let i = 0; i < 3; i++) if (Math.abs(SB[i] - SR[i]) > 1e-6) orderBad++;
+          }
+        }
+        expect([width, strength, mixBad, orderBad]).toEqual([width, strength, 0, 0]);
+        // Full strength on both edges mid-run, nothing at the center line.
+        expect(edgeMax).toBeCloseTo(Math.fround(strength), 5);
+        expect(centerMax).toBe(0);
+        // No telegraph colour, or strength 0: exactly the tele-less paint.
+        for (const strip of [0, -1]) {
+          const Z = mk(true, true, width, strip === 0 ? 0 : strength);
+          if (strip === -1) delete Z.U.uKTele;
+          for (let a = 0; a <= ch.totalLength; a += 0.25) {
+            const ctrl = ctrlAt(Z.D, a, n - 1);
+            for (const side of [0, 0.2, 0.5, 1]) {
+              const S = base(a);
+              kShadeAll(Z.D, Z.U, Z.c, ctrl, a, side, PX, S);
+              const S0 = base(a);
+              kShadeAll(H.D, H.U, H.c, ctrl, a, side, PX, S0);
+              expect(S).toEqual(S0);
+            }
+          }
+        }
+      }
+    }
+    // kTeleOver clamps its weight to [0, 1] and reads no colour it lacks.
+    const U = uniforms(k);
+    const S = [0.2, 0.4, 0.6];
+    kTeleOver(U, S, 0.7);
+    expect(S).toEqual([0.2, 0.4, 0.6]);
+    U.uKTele = new Float32Array([1, 0, 0, 1]);
+    kTeleOver(U, S, 3);
+    expect(S[0]).toBeCloseTo(1, 12);
+    expect(S[1]).toBeCloseTo(0, 12);
+    expect(S[2]).toBeCloseTo(0, 12);
+  });
+
+  it("K525: a telegraph piece wraps across a closed chain's seam, and a seam run (ctrlB = n) ends at it", () => {
+    const r = rng(5253);
+    const ch = randomChain(r, 70, true);
+    const n = ch.controlArcLengths.length;
+    const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
+    const PX = 0.02;
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
+    const total = ch.totalLength;
+    for (const [name, t] of [
+      ["across the seam", tele(n - 12, n + 12, 0.95, TJ, TJ)],
+      ["a seam run, ctrlB = n", tele(n - 20, n, 1, TJ, TJ)],
+      ["the next run, from the seam", tele(n, n + 15, 0.45, TJ, TM)],
+    ] as [string, Tele][]) {
+      const U = uniforms(k);
+      const D = scene(ch.controlArcLengths, total, ch.count, true, [], [], [], U, [], [t]);
+      const c = kChain(D, 0);
+      const u0 = kArcU(D, c, Math.fround(t.c0));
+      const u1 = kArcU(D, c, Math.fround(t.c1));
+      let shape = 0;
+      let prev = -1;
+      let maxStep = 0;
+      let peak = 0;
+      // Walk the ring once from the middle of the far side, across the seam;
+      // each arc is the piece's unwrapped arc in [u0, u0 + total).
+      for (let i = 0; i <= 20000; i++) {
+        const a = (total / 2 + (total * i) / 20000) % total;
+        const ctrl = ctrlAt(D, a, n - 1e-9);
+        const g = kPaintAt(D, U, c, ctrl, a, PX, st).tele;
+        let u = a;
+        while (u < u0) u += total;
+        while (u >= u0 + total) u -= total;
+        if (Math.abs(g - teleWant(u, u0, u1, t)) > 1e-9) shape++;
+        peak = Math.max(peak, g);
+        if (prev >= 0) maxStep = Math.max(maxStep, Math.abs(g - prev));
+        prev = g;
+      }
+      expect([name, shape]).toEqual([name, 0]);
+      expect(peak).toBeCloseTo(Math.fround(t.alpha), 5);
+      // No step beyond the junction fade's steepest slope over one sample.
+      expect(maxStep).toBeLessThan((total / 20000) * 1.5 * (1 / 0.2) * 1.1);
+      const before = kPaintAt(D, U, c, ctrlAt(D, total - 0.05, n - 1e-9), total - 0.05, PX, st).tele;
+      const after = kPaintAt(D, U, c, ctrlAt(D, 0.05, n - 1e-9), 0.05, PX, st).tele;
+      if (name === "across the seam") {
+        // Lit on both sides of the seam.
+        expect(before).toBeCloseTo(Math.fround(t.alpha), 5);
+        expect(after).toBeCloseTo(Math.fround(t.alpha), 5);
+      } else {
+        // The seam is the junction end: its gap leaves both sides dark.
+        expect(before).toBe(0);
+        expect(after).toBe(0);
+      }
     }
   });
 });
