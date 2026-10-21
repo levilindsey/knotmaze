@@ -5,7 +5,10 @@ import { describe, expect, it } from "vitest";
 import { lintGlyph, LINT } from "../../src/core/glyphs/glyph_lint";
 import { A_LANDED, FORK_VARIANTS, GLYPHS, glyphI } from "../../src/core/glyphs/glyph_data";
 import { knotsToPath, type Knot } from "../../src/core/glyphs/glyph_knots";
+import { TAPER_PART_LU } from "../../src/core/glyphs/glyph_graph";
+import { widenCrotch } from "../../src/core/glyphs/glyph_inject";
 import type { Glyph } from "../../src/core/glyphs/glyph_types";
+import { buildTextGraph } from "../../src/core/text_graph";
 
 /**
  * Known failures: glyph -> the rules it is allowed to break (and only
@@ -101,6 +104,63 @@ describe("glyph lint: the authored set", () => {
       // inside O's ribbon: 0.053 LU at xh 2, 0.049 at xh 3.
       expect(t.insetLU, `xh ${xh}`).toBeGreaterThan(0);
       expect(t.insetLU, `xh ${xh}`).toBeLessThanOrEqual(0.1);
+    }
+  });
+
+  it("K643: the lint judges the taper at the part it is given", () => {
+    const a = GLYPHS.get("a")!;
+    for (const xh of [2, 3]) {
+      expect(lintGlyph(a, xh, TAPER_PART_LU), `xh ${xh}`).toEqual(lintGlyph(a, xh));
+      const t52 = lintGlyph(a, xh, 0.52).tapers[0];
+      const r60 = lintGlyph(a, xh, 0.6);
+      const t60 = r60.tapers[0];
+      expect(r60.errors, `xh ${xh}`).toEqual([]);
+      // Parting at 0.6 LU (the K580 `tp60` build) moves R out along the
+      // strokes and leaves less crotch: 0.64 -> 0.04 LU at xh 2, 0.27 -> 0.17 at xh 3.
+      expect(t60.aRLU, `xh ${xh}`).toBeGreaterThan(t52.aRLU);
+      expect(t60.crotchLU, `xh ${xh}`).toBeLessThan(t52.crotchLU);
+    }
+  });
+
+  it("K643: an injected bulge past taperBulgeLU fails taper-g1", () => {
+    const a = GLYPHS.get("a")!;
+    for (const xh of [2, 3]) {
+      const under = lintGlyph(a, xh, TAPER_PART_LU, 0.9 * LINT.taperBulgeLU);
+      expect(under.errors, `xh ${xh}`).toEqual([]);
+      // The lint reads the bump a little under its height (0.95-0.97 of it).
+      expect(under.tapers[0].bulgeLU).toBeGreaterThan(0.8 * LINT.taperBulgeLU);
+      const over = lintGlyph(a, xh, TAPER_PART_LU, 1.5 * LINT.taperBulgeLU);
+      expect(over.errors.map((e) => e.rule), `xh ${xh}`).toContain("taper-g1");
+    }
+  });
+
+  it("K643: widenCrotch lengthens the a's crotch and keeps it lint-clean", () => {
+    const a = GLYPHS.get("a")!;
+    // The smooth range (K643 Handoff): 0.64 -> 0.67 LU at xh 2, 0.27 -> 0.79 at xh 3.
+    const cases: Array<[number, number, number]> = [
+      [2, 0.4, 0.66],
+      [3, 1.2, 0.78],
+    ];
+    for (const [xh, hold, min] of cases) {
+      const r = lintGlyph(widenCrotch(a, xh, hold), xh);
+      expect(r.errors, `xh ${xh}`).toEqual([]);
+      expect(r.tapers.length).toBe(1);
+      expect(r.tapers[0].crotchLU, `xh ${xh}`).toBeGreaterThan(min);
+      expect(r.tapers[0].crotchLU).toBeGreaterThan(lintGlyph(a, xh).tapers[0].crotchLU);
+    }
+    // Past it the release down C bends tighter than the radius rule allows.
+    expect(rulesOf(widenCrotch(a, 3, 1.6), 3)).toContain("radius");
+  });
+
+  it("K643: the probe flags build changed glyphs, and nothing when absent", () => {
+    const key = (text: string, g2: string) => {
+      const g = buildTextGraph(text, { glyphs2: g2 });
+      return JSON.stringify([[...g.nodes.values()], g.strands]);
+    };
+    for (const text of ["a", "ai"]) {
+      expect(key(text, "1,bulge0,crotch0x")).toBe(key(text, "1"));
+      expect(key(text, "1,bulge0.02")).not.toBe(key(text, "1"));
+      expect(key(text, "1,crotch1.2")).not.toBe(key(text, "1"));
     }
   });
 
