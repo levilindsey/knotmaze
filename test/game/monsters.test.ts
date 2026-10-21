@@ -25,7 +25,7 @@ import {
   sleepersOf,
 } from "../../src/game/monsters";
 import type { MonsterSpec } from "../../src/game/monsters";
-import { optimalRouteVertices, runHops, tailJunction } from "../../src/game/sword";
+import { newSword, optimalRouteVertices, runHops, tailJunction } from "../../src/game/sword";
 
 // K137 stage 3d (design 4.9 and Levi's follower; brief docs/design/K137_s3d.md):
 // more than one monster on the turn clock, sleepers and the follower.
@@ -201,6 +201,22 @@ describe("K137 s3d: sleepers on the turn clock", () => {
     expect(t.extras[0].state.v).toBe(t.g.index.get("B"));
     expect(t.state.left).toBe(false); // The minotaur is back in its lair.
     expect(t.woken).toBe(1); // A catch keeps the tally.
+  });
+
+  it("plays on while the minotaur flees the sword, and after the sword slays it", () => {
+    for (const phase of ["fleeing", "slain"] as const) {
+      const t = new TurnMinotaur(line(), turnConfig(QUIET), turnSeed(3));
+      t.setMonsters(B(t), 3);
+      const s = newSword(t.g.index.get("D")!, "oneuse", 20);
+      s.phase = phase;
+      s.left = phase === "fleeing" ? 20 : 0;
+      t.setSword(s);
+      expect(walkTo(t, ["A", "B", "B"])).toEqual(["moved", "moved", "caught"]);
+      expect(t.lastCatcher).toBe(0);
+      expect(t.player).toBe(t.g.start);
+      expect(t.extras[0].phase).toBe("asleep");
+      expect(t.slain).toBe(phase === "slain"); // A slay lasts the attempt.
+    }
   });
 
   it("hunts you once awake: one run behind, it catches a backtrack", () => {
