@@ -26,6 +26,9 @@
 // miter, and its radius inherits the clamp; this module does not. The two
 // differ only where one sample turns more than 120 degrees, a fold of
 // about 0.12 half-widths at the default width, over-tight either way.
+// Past 110 degrees the renderer's OUTER side is a round join (K580 s3,
+// ribbon_mesh.ts ROUND JOINS); the inner clamp and every radius here are
+// unchanged by it.
 
 // A sample is OVER-TIGHT (the strip self-overlaps; the renderer's
 // fold fallback - the concave clamp today, K8's pinch next - has to
