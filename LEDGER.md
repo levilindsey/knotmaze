@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K687.
+Next free ID: K688.
 
 ## Waiting on Levi
 
@@ -151,8 +151,8 @@ Next free ID: K687.
   ae18c5a4) with `.claude/probes/K161/cleanup.ps1` (DryRun first; copies probes, keeps branches).
   Rec: yes.
 - **K680** · Streamer coverage: on desk the K336 streamers cover a fair part of the knot at 2-3 s
-  (K653 sheets, `.claude/probes/K653/out/`). Keep, or thin them? Rec: decide after the phone look
-  (K646).
+  (K653 sheets; the Pixel's at 0.35 and 0.85 s: `.claude/probes/K662/out/sheet_conf.png`). Keep, or
+  thin them? Rec: keep; on the Pixel the cost is flat in the amount, so thinning buys no frames.
 - **K681** · K139 collapse mode, six calls, each built as recommended (`docs/design/K139.md`,
   Design): score by length collapsed; free ends only when stranded; a finish strand = Stranded +
   Undo; overrides fragile and par; chase and fire allowed (Restart only); snap look + sound (plays
@@ -554,7 +554,7 @@ Every other item below waits on the trigger it names.
   the next phone agent (K644).
 - **K649** · K525's tuning: rim strengths 0.6/0.8/1 and fades 0.2/0.3; junction-end gaps (runs under
   1.95 world get no rims; try gap 0 at interior junctions); the ticks' touch alphas vs the line's
-  0.7; the sheet extras. `docs/design/K525_telegraph.md` Handoff.
+  0.7; the fog glow (a dim dot on the Pixel, K662); the sheet extras. `docs/design/K525_telegraph.md` Handoff.
 - **K650** · K525's unrun check: the GPU-vs-mirror census for the TELE paint item (adapt
   `census_rim.mjs`; K324 s2 runs it with the moving end). SwiftShader is done (K653: 8/8 compile, 13/13 link).
 - **K651** · Pixel sheet for K525's rims: roam, hunt, a catch and the fog glow, beside K524's. With
@@ -571,6 +571,9 @@ Every other item below waits on the trigger it names.
 - **K441** · The real-time fire's frame cost, profiled (9850741): about 1% of a frame (+0.23 ms at 1x,
   +1.85 at 4x CPU, nearly all `ExploreGaps.setExplore`); no fix built. Owed: a same-state rerun under
   the perf lock, realtime stand after the first sleep (`docs/design/K441_fire_frame.md` Handoff, Owed).
+- **K687** · Phone rerun (K662 leftovers): the daily paths 2b (reload after the official finish) and
+  3 (replay), and default confetti frame times with the audiobook paused at thermal status 0
+  (`.claude/probes/K662/run_daily2.ps1`).
 
 ## Residuals (known, not fixed)
 
@@ -1246,8 +1249,8 @@ Every other item below waits on the trigger it names.
   h to 1.389 h), the i joint sample at xh 3 (110.8 deg) barely. A lower ROUND_DOT_START rounds both;
   re-run the count first (`docs/design/K580_s3.md` Residuals).
 - **K676** · Open-end crescents beside spur tips (the a stem bite, the notaper J bites, about 0.1
-  LU) in the K580 s3 fills-only raster: not yet checked against the real end caps
-  (`docs/design/K580_s3.md` Residuals).
+  LU) in the K580 s3 fills-only raster; the Pixel shows the a stem notch by its foot disc too (K662).
+  Not yet checked against the real end caps (`docs/design/K580_s3.md` Residuals).
 - **K677** · aland only: a square step on the lower edge of the a J at xh 3 (both builds); the
   second bite of a at xh 2 grew 0.080 to 0.090 LU under K580 s3. Neither investigated
   (`docs/design/K580_s3.md`).

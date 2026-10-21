@@ -191,3 +191,8 @@ confetti; a `-Moves 0,7,11` pass has no fabric@11 floor until the next A/A.
   this); the phone's cost per substep drifted 16-37 ms from load to load
   (soc 44-50 C), so compare hosts alternating within one batch; and at 60
   Hz an intro p95 of 33.4 ms is one dropped frame.
+GOTCHA (K662, 2026-10-20): heat and media playback confound phone frame
+times. Record `dumpsys thermalservice`'s status and the media session's
+state (`dumpsys media_session`) beside every frame number. A confetti batch
+ran at thermal status 1-2 (skin 40-43 C, SoC 50-53 C); the playing-vs-paused
+A/B is still owed (K687).
