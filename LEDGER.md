@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K606.
+Next free ID: K607.
 
 ## Waiting on Levi
 
@@ -29,9 +29,9 @@ Next free ID: K606.
 - **K585** · Mark picks in the open-work report (https://claude.ai/artifact/63Q6FoNk7Bux3BhYQBt5g2):
   Sooner marks, answers and notes save to its db (`picks/<id>`, `notes/general`). Read them with
   ArtifactData, then reorder the ledger.
-- **K580** · K115 stage 9's calls: the a's J join (tangent fails the lint with a thorn; landed
-  passes at the same width; or wider spacing; rec landed), the fork rule (≥15°, clear within 1.2
-  LU), wider i and a (GU 40→58, 104→120). Handoff: `docs/design/K115_stage9.md`
+- **K580** · The a's J join, Levi's call (2026-10-20): tangent, its shared stretch a TAPERED spur that
+  leaves the junction as wide as both merging strokes and narrows to normal where they turn collinear.
+  Open calls: K606. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
 - **K261** · K74 stage 2's two calls, built as rec. (Levi may change either): the H-cut share is 1;
   a partial share cuts an even stride. `greedyTrap` is off, so dailies 1-240 sit at 20.0% within
   1.5x (bar 15%). `docs/design/K74.md` ("Calls for Levi").
@@ -67,9 +67,6 @@ Next free ID: K606.
 - **K225** · The markers' default size (K98): `markerSize` 1.08 is about
   5 CSS px on the phone and barely reads. Keep it, raise it, or add a
   minimum on-screen size? `.claude/probes/K98/sheet_k98.png`.
-- **K90** · Min bend radius (1a-1b merged 6f97b92..feb12a0): ship, tune or stop (rec. stop; the
-  design doc says tune, then ship)? Test `__knotSplineBend(true)`. `docs/design/K90_bend_radius.md`,
-  `K90.md`, `.claude/probes/K90/out_1b/`. K213 first, never with K8; G3-2 waits (K361 q13; Levi unsure).
 
 
 
@@ -103,9 +100,6 @@ Next free ID: K606.
 - **K406** · K395's CAP_ROUND: 1.5 (as built, = COLLAPSE_ROUND) or 3 (tip inner edge turns +19° to
   +42° not +31° to +56°, flat arch, 0.02-0.03 world less inner swing; 6 looks like 3). Live as
   `PluckOverlay.capRound`; sheets `.claude/probes/K395/out/`. Stays 1.5; decide with K405 (same tip).
-- **K409** · The fire's widths are in ctrl (band 0.7, ember 0.25/0.55), a 2.6x spread; on the phone
-  the gone ember is a ~1.7 px rim. Options: world units; ember onto the unburnt side under gone; no
-  band under gone; ember over smoke (rec.: all but the third). `K114_burn.md` 3c handoff item 4.
 - **K421** · The stalker's accuracy default (K294: 0.45) overshoots section 0 on the dailies at 80%
   and fog-4 (27.9 and 28.5% caught against 20 and 12; fog-4's 12% is out of reach): rec. 0.3 (the
   dailies-only criterion allows 0.25-0.3). Keep 0.45? `docs/design/K80_turns_stage3.md` (3a handoff).
@@ -124,6 +118,9 @@ Next free ID: K606.
 - **K601** · K456's three cover calls, built as rec. (Levi may change any): the ink cover hides the
   HUD and panel for the whole loss; its message and Reload wait 3 s of visible loss; no automatic
   reload, so a failing GPU cannot loop the page. `docs/design/K456.md` (Handoff).
+- **K606** · K580's rest: Q3, the wider i and a (i 40 -> 58 GU, a 104 -> 120; built so, reversible);
+  and my reading of Q2: the fork rule (15 deg, 1.2 LU) stays for ordinary forks, waived for tangent
+  joins. `docs/design/K115_stage9.md` (Handoff).
 
 ## In progress
 
@@ -231,7 +228,7 @@ Next free ID: K606.
   - owner: nobody since 2026-10-15 14:18 (the phone agent `a2c95d8bde8feeea8` of claude session 05e60da0 finished its bench; G3-0's `af653fa7f942f2f1e` (session d8031183) finished, its worktree left, locked by the live Claude process (K161))
   - branch: mainline; last commit: `3465090` (G3-1; G3-0 f6d10e3)
   - evidence: `.claude/probes/K8/G3-1/` (the brief's texture sizes); `.claude/probes/K8/stage2/` (`notes.md`, `g3_probe.mjs`, `batch3.ps1`-`batch6.ps1`, `phone6.ps1`, results); stage 1's `.claude/probes/K8/stage1/notes.md`
-  - next: G3-1 done in 3465090 and browser-verified in K536 (brute vs pruned 0 px, GAP GL readback bit-exact; phone half K539, cold first-visible gap K540). Lane next: R3, R4, G3-2, R5; never beside an R stage, K268 item 4, K90 or another GPU measurement; it may run beside K7. G3-2 needs K90's bend decided
+  - next: G3-1 done in 3465090 and browser-verified in K536 (brute vs pruned 0 px, GAP GL readback bit-exact; phone half K539, cold first-visible gap K540). Lane next: R3, R4, G3-2, R5; never beside an R stage, K268 item 4 or another GPU measurement; it may run beside K7. G3-2 is free to start: K90 stopped (Levi 2026-10-20)
   - brief: `docs/design/K8_G3-1.md`; G3-0's handoff: `docs/design/K8_stage1.md` ("Stage 2 handoff")
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
@@ -478,6 +475,9 @@ Every other item below waits on the trigger it names.
 - **K595** · Police same-chain collision by rest material, not a fixed 2-slot skip
   (`src/physics/forces.ts` ~272): fixes K596. Census the kink loops and eyes first; regression
   `?b&am=instant` + 5 s drag sleeps within +5 s. `docs/ledger_notes.md` (K595), `docs/design/K372.md`.
+- **K409** · Build Levi's burn calls (2026-10-20, every rec.): ember and band widths in world units
+  (today's medians); under Gone the whole ember on the unburnt side; the band kept; the ember over
+  the smoke. K290's last stage, with K410 and K599. `K114_burn.md` 3c handoff item 4.
 
 ## Residuals (known, not fixed)
 
@@ -576,9 +576,6 @@ Every other item below waits on the trigger it names.
 - **K214** · `particle_system.ts` and `forces.ts` still attach 30.8 KB of
   lore after the split: all the physics lore is about them, so only
   trimming the text would cut it (`docs/design/K173.md`).
-- **K213** · Before K90's bend bound ships: the min regression (hard clamp worsens 24 of 585 scans,
-  soft 4; `k90_minrows.mjs`), `controlArcLengths`, tests and a CPU mirror, hit tests on moved
-  samples, the phone's rebuild cost (`docs/design/K90.md`, Stage 1b handoff).
 - **K212** · PixiJS warns "Attribute aGap/aGapId/aUV is not present in the shader" on every
   load (K132's probes; Levi's console 2026-10-14, K311). Find which mesh binds attributes its
   program does not declare (`docs/design/K299_choice_pulse_bug.md`).
@@ -1055,9 +1052,6 @@ Every other item below waits on the trigger it names.
   worker's fast start; only `worker_host.test.ts` catches it, since tsc skips tests (K393).
 - **K588** · The confetti palette's warm white (0xfff4e0) reads as a foil flash in still frames;
   dropping or tinting it would make the flashes stand out (K337 handoff).
-- **K591** · Master's gap search drops a gap run's tail past 65 SAMP points (its point count floors
-  where it should ceil). K573 step 2 (`7db3fd9`) fixes it; if step 2 is rejected it needs its own
-  exact fix. `docs/design/K573.md` (step 2).
 - **K592** · The gap search rounds indices with `int(x + 0.5)`, which truncates toward zero, so a
   negative kStart rounds the wrong way (`src/render/gap_mask.ts`, `int(t4.z + 0.5)` and the range's
   start). Check whether kStart can go negative. From K573's agent report.
@@ -1318,6 +1312,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K213** · Before K90's bend bound ships: the min regression (hard clamp worsens 24 of 585 scans, soft 4; `k90_minrows.mjs`), `controlArcLengths`, tests and a CPU mirror, hit tests on moved samples, the phone's rebuild cost (`docs/design/K90.md`, Stage 1b handoff). Dropped: K90 stopped (Levi 2026-10-20), so the bend bound never ships (2026-10-20).
+- **K90** · Min bend radius (1a-1b merged 6f97b92..feb12a0): ship, tune or stop (rec. stop; the design doc says tune, then ship)? Dropped: Levi 2026-10-20 (report card): stop. The bound stays parked, off and console-only; G3-2 builds on today's points (2026-10-20).
+- **K591** · The gap search dropped a gap run's tail past 65 SAMP points: fixed by K573 step 2. Done in 0753b3c (2026-10-20).
 - **K573** · G3-1's phone gap search: step 1 (3e2b6cf) plus step 2, a per-slot curvature stride (knot gs24 search 60.7 -> 19.3 ms on the phone; fixes K591). Done in 0753b3c (2026-10-20).
 - **K456** · A lost WebGL context: the loop suspends, a cover (message + Reload after 3 s) blocks input, the restore redraws exactly. Done in f01ac12 (2026-10-20).
 - **K372** · Fabric ?b's after-drag non-sleep is a same-chain collision limit cycle (fix K595, residual K596). Done in 86c472b (2026-10-20).
