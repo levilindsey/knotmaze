@@ -50,12 +50,13 @@ describe("K320 stage 1: char budgets", () => {
     // both (46,047 -> 46,844 and 62,462 -> 63,259 here), one cold compile
     // of section-rgb and its explore variant per player. The strip, the
     // junction field and the plucks keep their text byte for byte.
-    // K620 (2026-10-20) raised them again: the glyph root's paint
+    // K620 (2026-10-20) raised them again: the glyph root's section blend
     // (paint_glsl.ts ROOT_FRAG_GLSL, the vKR* varyings and one SECTION_FRAG
-    // line, ribbon-only) adds 1,545 characters to both (46,844 -> 48,389
-    // and 63,259 -> 64,804 here); one more cold compile of each per player.
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(48_450);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(64_850);
+    // line, ribbon-only, no extra kFxColor call) adds 762 characters to both
+    // (46,844 -> 47,606 and 63,259 -> 64,021 here); one more cold compile of
+    // each per player.
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(47_650);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(64_050);
     expect(STRIP_FRAG.length).toBeLessThanOrEqual(31_400);
     expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(26_600);
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_300);

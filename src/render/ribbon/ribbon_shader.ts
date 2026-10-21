@@ -144,6 +144,8 @@ void main(void) {
     return;
   }
   vec3 base = vSection;
+  // K620: a tapered root wears its strokes' sections, blending into its own at J.
+  if (vKR0.x > 0.5 && kpt.x < vKR0.z) base = kRootSection(kpt.x, pxW);
   highp float pRain = 0.0;
   highp float aM = 1.0;
   // The exact ctrl, when the FX (kFxColor's own early outs hoisted: no
@@ -153,8 +155,6 @@ void main(void) {
   highp float kctrl = fxHere || paintHere ? kCtrlNear(kc, kpt.x, kpt.y) : 0.0;
   if (fxHere) base = kFxColor(kc, kctrl, kpt.x / kc.arcPer, base, pRain, aM);
   if (pRain > 0.0) base = kRainbowBlend(base, pRain, vUV.y);
-  // K620: a tapered root wears its strokes' paint.
-  if (vKR0.x > 0.5 && kpt.x < vKR0.z) base = kRootPaint(kc, kpt.x, pxW, aM);
   // Gameplay paint + the reveal glow, composed over the section (G2.3).
   highp vec4 kst = paintHere ? kPaintAt(kc, kctrl, kpt.x, pxArc) : vec4(0.0);
   highp float kgl = paintHere ? kGlow(kc, kctrl) : 0.0;
