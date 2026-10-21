@@ -110,6 +110,36 @@ export function walkDistances(
   return dist;
 }
 
+// K137: the fewest RUNS from every vertex to the exit (Infinity where none
+// reaches it), a breadth-first search over the walk multigraph from the
+// exit. `blocked` runs are skipped: fragile's broken runs (game/fragile.ts,
+// the strand search) and par's strict test with them (game/par.ts). Par's
+// fewest-runs route F is runsToExit(walk).get(walk.start).
+export function runsToExit(
+  walk: Pick<WalkGraph, "vertices" | "edges" | "exit">,
+  blocked?: (eid: number) => boolean
+): Map<string, number> {
+  const runs = new Map<string, number>();
+  for (const id of walk.vertices.keys()) runs.set(id, Infinity);
+  if (!walk.vertices.has(walk.exit)) return runs;
+  runs.set(walk.exit, 0);
+  const queue = [walk.exit];
+  for (let qi = 0; qi < queue.length; qi++) {
+    const v = queue[qi];
+    const d = runs.get(v)! + 1;
+    for (const eid of walk.vertices.get(v)!.edges) {
+      if (blocked?.(eid)) continue;
+      const e = walk.edges[eid];
+      const other = e.va === v ? e.vb : e.va;
+      if (runs.get(other)! > d) {
+        runs.set(other, d);
+        queue.push(other);
+      }
+    }
+  }
+  return runs;
+}
+
 // Build the walk graph and pick the start/exit tails. Returns null when the
 // graph carries no cut ends (not an applied maze fabric).
 export interface WalkForce {

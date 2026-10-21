@@ -67,17 +67,56 @@
 // except the first departure from the start; a loss makes it 0. replay()
 // leaves every tap the moment the last one arrives (no thinking time), so
 // its L is walkedDist; a replay never loses by standing.
+//
+// K137 FRAGILE RUNS (game/fragile.ts; brief docs/design/K137_s1.md): with
+// `fragile` on, every accepted tap is one crossing of its run (`crossings`,
+// advances and backtracks alike) and a run whose crossings reach its limit
+// (`breakLimits`, from the mode at reset(); Infinity for END and title
+// runs) is BROKEN: choices() leaves it out and a tap on it is a "reject".
+// After each move, no route over unbroken runs from the head to the exit
+// sets `stranded`: every tap is then a "noop" and choices() is empty
+// (main.ts sings the strand and offers Undo, replay(taps minus the last),
+// and Restart). The breaks derive from the taps, so replay() rebuilds them;
+// reset() clears them and a K80 respawn() keeps them. `justBroke` is the run
+// the last tap broke (-1: none), for the snap's sound.
+//
+// K137 PAR (game/par.ts): `par` = P, fixed at reset() from `fewestRuns` (F,
+// the BFS from the start) and `parSlack`. Under parMode strict, a move
+// after which the fewest unbroken runs from the head to the exit exceed
+// the strokes left (P - taps) sets `parLost`: every tap is a "noop" and
+// choices() is empty, as after a burn loss, until reset(). Under strokes
+// nothing is ever lost; the finish reads strokes against par.
 
 import type { WalkGraph } from "../core/walk_graph";
+import { runsToExit } from "../core/walk_graph";
 import type { MoveKind } from "./maze_stats";
 import type { Fire } from "./fire";
 import { armSafe, fireLead, fireTime, fireTrapped, runBurnAt } from "./fire";
+import type { FragileMode } from "./fragile";
+import {
+  anyBreakable,
+  brokenRuns as brokenRunsOf,
+  crackedRuns as crackedRunsOf,
+  fragileLimits,
+  isBroken,
+  isCracked,
+} from "./fragile";
+import type { ParMode } from "./par";
+import { PAR_SLACK_DEFAULT, parFor, strictLost } from "./par";
+
+// K137: the solve's rules beyond the clock: fragile runs and par. Change
+// them only with a reset() after (main.ts restarts the solve).
+export interface FabricRules {
+  fragile?: FragileMode;
+  parMode?: ParMode;
+  parSlack?: number;
+}
 
 export type FabricTapResult =
   | "advance" // stepped across a run to its far vertex
   | "backtrack" // retracted the last run
-  | "reject" // the run is not incident to the current head
-  | "noop" // after solving (or after a K114 burn-race loss)
+  | "reject" // the run is not incident to the current head (or K137: broken)
+  | "noop" // after solving (or a K114 burn-race loss, K137 stranded or out of strokes)
   | "win" // advanced onto the exit tail
   | "smolder"; // K114: refused, the fire reaches the arm's far end first
 
@@ -127,14 +166,55 @@ export class FabricMazeController {
   fireDepartL = 0;
   fireArriveL = 0;
 
-  constructor(walk: WalkGraph, trailMode = false, fire: Fire | null = null) {
+  // K137 fragile runs: the mode (change it only with a reset() after).
+  fragile: FragileMode = "off";
+  // Per run, the crossings it takes before it breaks (Infinity: never);
+  // reset() derives them from `fragile`.
+  breakLimits: Float64Array = new Float64Array(0);
+  // Per run, the accepted taps along it since the last reset().
+  crossings: Uint32Array = new Uint32Array(0);
+  // No route over unbroken runs from the head to the exit.
+  stranded = false;
+  // The run the last accepted tap broke, or -1.
+  justBroke = -1;
+  // Does any run break (fragile on and a run not exempt)?
+  private breakable = false;
+
+  // K137 par: the mode and the slack (change them only with a reset()
+  // after), F and P (fixed at reset()), and the strict loss.
+  parMode: ParMode = "off";
+  parSlack = PAR_SLACK_DEFAULT;
+  fewestRuns = Infinity;
+  par = Infinity;
+  parLost = false;
+  // runsToExit with nothing blocked (the walk never changes).
+  private openRuns: Map<string, number> | null = null;
+
+  constructor(
+    walk: WalkGraph,
+    trailMode = false,
+    fire: Fire | null = null,
+    rules: FabricRules = {}
+  ) {
     this.walk = walk;
     this.trailMode = trailMode;
     this.fire = fire;
+    this.fragile = rules.fragile ?? "off";
+    this.parMode = rules.parMode ?? "off";
+    this.parSlack = rules.parSlack ?? PAR_SLACK_DEFAULT;
     this.reset();
   }
 
   reset(): void {
+    this.breakLimits = fragileLimits(this.walk, this.fragile);
+    this.breakable = anyBreakable(this.breakLimits);
+    this.crossings = new Uint32Array(this.walk.edges.length);
+    this.stranded = false;
+    this.justBroke = -1;
+    this.openRuns ??= runsToExit(this.walk);
+    this.fewestRuns = this.openRuns.get(this.walk.start) ?? Infinity;
+    this.par = parFor(this.fewestRuns, this.parSlack);
+    this.parLost = false;
     this.fireLost = false;
     this.fireClosest = Infinity;
     this.fireNow = 0;
@@ -160,6 +240,9 @@ export class FabricMazeController {
   replay(taps: readonly number[]): boolean {
     this.reset();
     for (const eid of taps) {
+      // K137: a tap after the solve was stranded or out of strokes is a
+      // "noop", so no saved list holds one; a replay of a stranded game's
+      // taps ends stranded.
       const r = Number.isInteger(eid) ? this.tapEdge(eid) : "reject";
       if (r === "reject" || r === "noop" || r === "smolder") {
         this.reset();
@@ -197,6 +280,10 @@ export class FabricMazeController {
     this.pathVertices = [this.walk.start];
     this.pathEdges = [];
     this.solved = false;
+    // K137: the breaks stay; the strand and the par are judged anew from
+    // the start.
+    this.justBroke = -1;
+    this.judge();
   }
 
   // K80 turns stage 2: the move log's "x", the move a minotaur caught you
@@ -248,8 +335,10 @@ export class FabricMazeController {
   // loss, and never a burnt run (smoldering arms stay: their tap is
   // refused with "smolder", so the caller can say why).
   choices(): number[] {
-    if (this.solved || this.fireLost) return [];
-    const edges = this.walk.vertices.get(this.head)!.edges;
+    if (this.solved || this.fireLost || this.stranded || this.parLost) return [];
+    let edges = this.walk.vertices.get(this.head)!.edges;
+    // K137: never a broken run.
+    if (this.breakable) edges = edges.filter((eid) => !this.broken(eid));
     const fire = this.fire;
     if (!fire) return edges;
     const L = this.fireL;
@@ -303,11 +392,54 @@ export class FabricMazeController {
     return !armSafe(this.walk, fire, this.fireL, this.head, edgeId);
   }
 
+  // K137: is this run broken (fragile on, its crossings at its limit)?
+  broken(eid: number): boolean {
+    return this.breakable && isBroken(this.breakLimits, this.crossings, eid);
+  }
+
+  // K137: is this run cracked (crossed, not yet broken)?
+  cracked(eid: number): boolean {
+    return this.breakable && isCracked(this.breakLimits, this.crossings, eid);
+  }
+
+  // K137: the broken runs, in id order.
+  brokenRuns(): number[] {
+    return this.breakable ? brokenRunsOf(this.breakLimits, this.crossings) : [];
+  }
+
+  // K137: the cracked runs, in id order.
+  crackedRuns(): number[] {
+    return this.breakable ? crackedRunsOf(this.breakLimits, this.crossings) : [];
+  }
+
+  // K137: does any run break in this solve?
+  get fragileOn(): boolean {
+    return this.breakable;
+  }
+
+  // K137: the fewest unbroken runs from the head to the exit (Infinity:
+  // stranded).
+  get runsLeft(): number {
+    if (!this.breakable) return this.openRuns!.get(this.head) ?? Infinity;
+    return runsToExit(this.walk, (eid) => this.broken(eid)).get(this.head) ?? Infinity;
+  }
+
+  // K137 par: the strokes so far (moves) and the strokes left before par.
+  get strokes(): number {
+    return this.taps.length;
+  }
+
+  get strokesLeft(): number {
+    return this.par - this.taps.length;
+  }
+
   tapEdge(edgeId: number): FabricTapResult {
-    if (this.solved || this.fireLost) return "noop";
+    if (this.solved || this.fireLost || this.stranded || this.parLost) return "noop";
     const e = this.walk.edges[edgeId];
     const head = this.head;
     if (!e || (e.va !== head && e.vb !== head)) return "reject";
+    // K137: a broken run is gone.
+    if (this.broken(edgeId)) return "reject";
     // K114: a smoldering arm refuses the tap before anything changes.
     if (this.smoldering(edgeId)) return "smolder";
     // K114 stage 2: the real-time fire's departure clock.
@@ -326,7 +458,9 @@ export class FabricMazeController {
         this.moveLog.push("b");
       }
       this.taps.push(edgeId);
+      this.cross(edgeId);
       this.fireArrive(head, depart, e.length, this.head);
+      this.judge();
       return "backtrack";
     }
 
@@ -336,6 +470,7 @@ export class FabricMazeController {
       this.moveLog.push(this.onShortestRoute(head, e.length, far) ? "g" : "d");
     }
     this.taps.push(edgeId);
+    this.cross(edgeId);
     if (!this.isTitleEdge(edgeId)) this.walkedDist += e.length;
     this.pathEdges.push(edgeId);
     this.pathVertices.push(far);
@@ -345,7 +480,26 @@ export class FabricMazeController {
       this.solved = true;
       return "win";
     }
+    this.judge();
     return "advance";
+  }
+
+  // K137: one crossing of the run; `justBroke` names it when this one
+  // broke it.
+  private cross(eid: number): void {
+    const n = ++this.crossings[eid];
+    this.justBroke = this.breakable && n === this.breakLimits[eid] ? eid : -1;
+  }
+
+  // K137: after a move (or a respawn), from the head: stranded (fragile
+  // on) and the strict par loss (which stays lost until reset()).
+  private judge(): void {
+    if (this.solved) return;
+    const strict = this.parMode === "strict";
+    if (!this.breakable && !strict) return;
+    const left = this.runsLeft;
+    if (this.breakable) this.stranded = !Number.isFinite(left);
+    if (strict && strictLost(left, this.par, this.taps.length)) this.parLost = true;
   }
 
   // K114: an arrival's margin lowers the closest call; no safe arm left
