@@ -153,7 +153,6 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   dumped variants standalone and linked 13/13 programs in a headless
   SwiftShader telegraph scene (plain and `xp=threads`). No new program
   site or variant.
-<<<<<<< HEAD
 - **The root's paint grew the section's two** (K620, 2026-10-20;
   render-paint.md, THE ROOT'S PAINT): section-rgb 46811 -> 47573
   characters and its explore variant 63226 -> 63988 (inferred from
