@@ -341,8 +341,7 @@ describe("K137 s3d: the monster list keeps the minotaur's game", () => {
         const withX = play(realMaze(s), p, s, (t) => monsterSpecs(t.g, s, 3, "both", { hops: 1 }));
         let n = 0;
         for (; n < withX.trace.length; n++) {
-          if (withX.results[n] === "caught" && withX.t.lastCatcher >= 0 && withX.trace[n].endsWith(`|${withX.t.lastCatcher}`)) break;
-          if (withX.trace[n].split("|")[6] !== "-1") break;
+          if (withX.trace[n].split("|")[6] !== "-1") break; // An extra caught.
           expect(withX.trace[n]).toBe(base.trace[n]);
         }
         wakes += withX.t.woken;

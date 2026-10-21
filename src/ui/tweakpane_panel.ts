@@ -45,6 +45,7 @@ import { TURNSTILES_MAX } from "../game/turnstiles";
 import { HIDDEN_MAX } from "../game/hidden_runs";
 import { LIVES_MAX, LIVES_RECOMMENDED, livesOf } from "../game/lives";
 import { SWORD_MOVES_MAX, SWORD_MOVES_MIN } from "../game/sword";
+import { SLEEPERS_MAX } from "../game/monsters";
 import {
   BACKGROUND_ACCENTS_USED,
   BACKGROUND_ANGLE_AUTO,
@@ -2033,6 +2034,21 @@ export function buildPanel(
     "Once a game, the lightning button (or F) spends a sprint: on the turn clock your next two moves cost the minotaur one turn; in real time you run your next two runs at twice your pace. A catch spends it; starting over gives it back. Restarts the solve.",
     D.sprint, () => callbacks.onClockChange()
   );
+  // K137 stage 3d (4.9, game/monsters.ts): the extra monsters, turn clock
+  // only. Like the sword they restart the solve (onClockChange): a new
+  // chase lays them at their homes.
+  const sleepersRow = row(
+    fMino, p, "sleepers",
+    { min: 0, max: SLEEPERS_MAX, step: 1, format: (v: number) => (v === 0 ? "off" : String(v)), label: "Sleepers" },
+    "Turn clock: more monsters asleep in the maze, a few runs off the shortest way. Walk a run next to one and it wakes and hunts you as the minotaur does; any catch sends you back to the entrance and every monster back to sleep. Restarts the solve.",
+    D.sleepers, () => callbacks.onClockChange()
+  );
+  const sleepKindRow = row(
+    fMino, p, "sleepKind",
+    { options: { wakes: "wake", follows: "follow", both: "both" }, label: "Sleeper kind" },
+    "Turn clock: wakes hunts you once woken; follows trails your path a run or two behind, so stopping or turning back lets it catch you (the entrance puts it back to sleep); both mixes the two. Restarts the solve.",
+    D.sleepKind, () => callbacks.onClockChange()
+  );
   // K80 turns stage 2 (K273): what a catch resets, on both clocks. While
   // the level row is on a catch resets everything, so the other two hide.
   const minoRestartRow = chaseRow(
@@ -2943,6 +2959,9 @@ export function buildPanel(
     swordRow.hidden = !minoOn; // K137 stage 3b
     swordMovesRow.hidden = !minoOn || params.sword === "off";
     sprintRow.hidden = !minoOn; // K137 stage 3c
+    // K137 stage 3d: the extra monsters play on the turn clock only.
+    sleepersRow.hidden = !minoOn || realtime;
+    sleepKindRow.hidden = !minoOn || realtime || params.sleepers <= 0;
     minoRestartRow.hidden = !minoOn || livesOn;
     minoLairRow.hidden = !minoOn || restartOn;
     minoRefogRow.hidden = !minoOn || !(fog || threads) || restartOn;

@@ -370,6 +370,10 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // and hidden runs (0 off, 1..4; game/hidden_runs.ts).
   num("turnstiles"),
   num("hiddenRuns"),
+  // 207-208, K137 stage 3d (4.9): the extra monsters' count (0 off, 1..3)
+  // and their kind (SLEEP_KINDS order, game/monsters.ts).
+  num("sleepers"),
+  choice("sleepKind", ["wake", "follow", "both"]),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -534,6 +538,7 @@ export const PARAM_RANGES: Readonly<
   beatCap: [1, 8], // K114 beat rider: the most beats a run takes
   turnstiles: [0, 8], // K138 stage 2 (TURNSTILES_MAX)
   hiddenRuns: [0, 4], // K138 stage 2 (HIDDEN_MAX)
+  sleepers: [0, 3], // K137 stage 3d (SLEEPERS_MAX)
 });
 
 // A link value held to its panel range (K398); a param with no range,
