@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K703.
+Next free ID: K704.
 
 ## Waiting on Levi
 
@@ -550,6 +550,9 @@ Every other item below waits on the trigger it names.
 - **K690** · K620 checks not run: the root-pixel census (GPU against the CPU mirror), CPU-mirror
   tests on the real a (xh 2 and 3, tp52 and tp60), a cold-compile time with `trace_intro.mjs`
   (`docs/design/K620.md`)
+- **K703** · Overnight phone sitting 1 (Levi left the phone unlocked on its charger, 2026-10-20
+  23:05): K114 cut and K324 s2 telegraph on the phone (feeds K694, K695, K698), then K687 and K177.
+  docs/design/K703_phone.md
 
 ## Residuals (known, not fixed)
 
