@@ -29,6 +29,8 @@ import type { SwordMode } from "../game/sword";
 import { SWORD_MODES, SWORD_MOVES_DEFAULT } from "../game/sword";
 import { SPRINT_MODES } from "../game/sprint";
 import type { SprintMode } from "../game/sprint";
+import { SLEEP_KINDS } from "../game/monsters";
+import type { SleepKind } from "../game/monsters";
 import type { ParMode } from "../game/par";
 import { PAR_MODES, PAR_SLACK_DEFAULT } from "../game/par";
 import {
@@ -816,6 +818,13 @@ export interface UrlParams {
   // them. The classic game only, dropped with ice and the color rule.
   turnstiles: number;
   hiddenRuns: number;
+  // K137 stage 3d, 4.9 (game/monsters.ts): MORE THAN ONE MONSTER, under a
+  // turn-clock chase. sleepers: 0 off or 1..3 extras asleep on junctions
+  // 1-3 runs off the route; sleepKind: wake (each wakes when you step onto
+  // it, then hunts) | follow (each sets off after you leave it and walks
+  // your trail) | both (alternating). Free play only.
+  sleepers: number;
+  sleepKind: SleepKind;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1129,6 +1138,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K138 stage 2: no turnstiles, no hidden runs.
   turnstiles: 0,
   hiddenRuns: 0,
+  // K137 stage 3d: no extra monsters (sleepKind waits for a count).
+  sleepers: 0,
+  sleepKind: "wake",
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1396,6 +1408,7 @@ export const ENUM_OPTIONS: {
   sword: SWORD_MODES, // K137 stage 3b
   colorRule: COLOR_RULE_MODES, // K138 stage 1
   sprint: SPRINT_MODES, // K137 stage 3c
+  sleepKind: SLEEP_KINDS, // K137 stage 3d
 };
 
 // K398: every numeric param held to the panel's range (param_codec's
@@ -1922,6 +1935,10 @@ function readLegacy(
     // PARAM_RANGES clamps them to 0..8 and 0..4).
     turnstiles: readNumber(query, "tst", D.turnstiles),
     hiddenRuns: readNumber(query, "hid", D.hiddenRuns),
+    // K137 stage 3d's extra monsters (`&slp=2&slk=both`; PARAM_RANGES
+    // clamps the count to 0..3).
+    sleepers: readNumber(query, "slp", D.sleepers),
+    sleepKind: readChoice(query, "slk", SLEEP_KINDS, D.sleepKind),
   };
 }
 
