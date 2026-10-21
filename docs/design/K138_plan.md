@@ -5,7 +5,9 @@ Ledger: K138. One stage, opus, 1.5 h cap. Docs only: no code.
 The sooner plan (`docs/design/sooner_20261020.md`, the K138 row and
 queue item 8) calls for "a planner pass [that] picks its first two
 non-generation mechanisms once K137 s2 lands. Then one stage per
-mechanism." K137 s1, s2 and s3a have merged; s3b is building now.
+mechanism." K137 s1 and s3a have merged and s3b is building now. K137
+s2 (the aids: 4.15, 4.16, 4.28) has not been built; it stays in K137's
+queue, so plan around it rather than waiting.
 
 ## The set
 
@@ -25,7 +27,8 @@ this plan.
 - Levi's calls: `docs/design/levi_notes_2026-10-13.md` (and
   `levi_notes_2026-10-14.md` if it touches the set). His direction:
   prototype each mechanism in free play behind its own toggle.
-- What K137 built, from the Handoffs of `K137_s1.md` and `K137_s3a.md`,
+- What K137 built, from the Handoffs of `K137_s1.md` and `K137_s3a.md`
+  (and K139's collapse mode, commit 961cd53),
   and what s3b is building: `git show
   worktree-agent-af34a0e5755494326:docs/design/K137_s3b.md` (its
   Design section; the branch moves while it runs). s3b adds more than
