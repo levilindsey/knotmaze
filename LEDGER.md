@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K644.
+Next free ID: K645.
 
 ## Waiting on Levi
 
@@ -532,6 +532,9 @@ Every other item below waits on the trigger it names.
 - **K643** · K580's glyph-lint upkeep: lintGlyph takes the taper part as an argument (it hardcodes
   TAPER_PART_LU, so tp60 lints only through a probe copy); calibrate taperBulgeLU (0.01) and the
   crotch bound (1.2 LU) with bulges injected through a probe flag (`docs/design/K580_s2.md` step 5).
+- **K644** · Phone pass for K580's glyph look (s2's medial root, s3's round outer side): "a", "ai",
+  "ia" and "aa" on the Pixel at xh 2 and 3, after K580 s3 merges, with the next phone agent (K631's
+  kit; s2 shot only desktop Chrome at phone scale).
 
 ## Residuals (known, not fixed)
 
