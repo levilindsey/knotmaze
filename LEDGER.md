@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K718.
+Next free ID: K720.
 
 ## Waiting on Levi
 
@@ -180,6 +180,10 @@ Next free ID: K718.
 - **K707** · Keep it in balance (K114 walker probe): R.3.9 says moat 3 tips it to the walker, but
   the cutter wins 30 of 30 at radius 0-3 at one run a turn, 27-29 of 30 at two; pick the knob and
   define moat (.claude/probes/K114/walker/balance.md)
+- **K718** · K580 s5 calls (`docs/design/K580_s5.md` Handoff): the tapered a J bite (0.031-0.059
+  LU): accept the square-offset root outline, or lean it (a taper change)? Waist spikes vs T
+  (0.012-0.023): accept U as the target? The notaper J seam colour: glyph-only fix (joinery.ts) or
+  leave to G4?
 
 ## In progress
 
@@ -1303,6 +1307,10 @@ Every other item below waits on the trigger it names.
 - **K715** · The adb server died twice in K703 (2026-10-20 23:33 and 23:50:21) and restarted without
   the TCP device; killer unknown. Checked: no WER crash, no scheduled task in either window, no
   other adb client or live local session; DCOM 10010 at 23:50:16 (.claude/probes/K703/notes.md)
+- **K719** · K580 s5 leftovers: an unidentified gap-mask slot bites the a bowl in ai at xh 2 (0.059
+  vs 0.031); the 0.15 arm-drop rule leaves every glyph junction recordless at xh 2; the stadium is
+  unmeasured on a glyphs2 maze title; U spikes over 0.01 in ai (0.014, 0.017).
+  `docs/design/K580_s5.md`.
 
 ## Approved, to schedule (2026-10-11)
 
