@@ -68,6 +68,30 @@
 // - CATCH: contact within catchDist (thread distance, off the tails)
 //   sends the player back to the entrance and the minotaur back to its
 //   lair, and counts it; the solve continues (main.ts keeps the clock).
+//
+// THE MODELS (K324 stage 3, `model`; Levi took K323's question 6: Hunter,
+// Guard and Stalker play in real time too). Everything above is the
+// HUNTER, which aims every step (byte-identical to stage 1: K80_DIGESTS).
+// - THE GUARD roams only within its TERRITORY: the vertices within
+//   `territory` u (thread distance) of its home, the exit tail's junction,
+//   and the runs wholly within that (the turn guard's territory in hops,
+//   in world units). Destinations are territory vertices (tips with chance
+//   deadEndBias, roamPull as the hunter's), routed through the territory
+//   while it stands inside it. It spots you within guardDetect and loses
+//   you beyond guardLose (its own sight), wherever you are; hunting, each
+//   junction takes the best run with chance guardAccuracy, else a random
+//   one (the turn clock's accuracy). Losing you, it checks where it last
+//   saw you, then walks home to roam its territory again.
+// - THE STALKER has no destinations: whenever it sees you (you are off the
+//   tails) each junction takes the best run toward you with chance
+//   stalkerAccuracy, else a random one, at the wander pace; unseen, it
+//   walks on at random without turning back. Within the shared sight
+//   (detectStart .. detectEnd, the hunter's) it CHARGES: mode hunt, at
+//   approachPace, its steps still at chance accuracy. No long stops; the
+//   junction stops apply.
+// - Their choices draw from a second counter stream (seed, `decisions`),
+//   never the sequential rng, so plan() reads the same choices ahead, and
+//   a hunt turns back mid-run only after an aimed choice (`aimed`).
 
 import type { WalkGraph } from "../core/walk_graph";
 import { SeededRNG } from "../util/random";
@@ -90,6 +114,9 @@ const PLAN_REACH_MAX = 8;
 // The maze clock (the `clock` param): turn = the turn-based maze, realtime =
 // this mode. K114's beat clock would append a third option.
 export type ClockMode = "turn" | "realtime";
+
+// K324 stage 3: which minotaur plays (the Behavior row, `minotaur`).
+export type ChaseModel = "hunter" | "guard" | "stalker";
 
 // (K263, closed in K323 Stage A: the old undoAllowed export had no
 // caller in src and no move undo exists; K92's design undo is separate.)
@@ -128,6 +155,37 @@ export interface ChaseParams {
   // 1/4).
   tipReach: number;
   roamNear: number;
+  // K324 stage 3: the model (the header's THE MODELS); hunter = all of the
+  // above, K80's chase.
+  model: ChaseModel;
+  // The guard: its territory's radius around the exit tail's junction (u
+  // along the threads), its sight (spots you within guardDetect, loses you
+  // beyond guardLose, kept >= guardDetect) and its hunting accuracy
+  // ([0, 1]: chance a junction takes the best run).
+  territory: number;
+  guardDetect: number;
+  guardLose: number;
+  guardAccuracy: number;
+  // The stalker's accuracy ([0, 1]), stalking or charging.
+  stalkerAccuracy: number;
+}
+
+// K324 stage 3: one choice of the guard's hunt or the stalker (decideFrom).
+export interface ChaseDecision {
+  choice: [number, 1 | -1] | null; // [edge, dir]; null = stay.
+  aimed: boolean; // The best run toward the player.
+  pace: number; // The stalker's leg pace (u/s); -1 = none drawn.
+  drew: boolean; // It used a decision (the exit tail draws none).
+}
+
+// K324 stage 3: the guard's territory (MinotaurChase.territory()).
+export interface ChaseTerritory {
+  readonly asked: number; // params.territory it was built for.
+  readonly home: number; // The exit tail's junction.
+  readonly radius: number; // u: territory, or home's shortest run out if longer.
+  readonly vin: Uint8Array; // 1 = vertex within radius of home.
+  readonly ein: Uint8Array; // 1 = run wholly within radius of home.
+  readonly routes: Map<number, Float64Array>; // Distances within, by destination.
 }
 
 // K324 2.2: what the minotaur will do next, for the telegraph (plan()).
@@ -163,6 +221,18 @@ const PLAYER_PACE = 10;
 // from 0.7 to 0.9 of yours to keep today's catch rates (question 3; the
 // table is gameplay-minotaur.md's K324 entry). A player who keeps moving
 // away still outruns a hunt between its stops.
+// K324 stage 3: the guard's and the stalker's real-time knobs, a table
+// beside minotaur_turns.ts's TURN_MODEL_DEFAULTS (K294's shape) because the
+// units differ: u along the threads, not runs, and the real-time hunter
+// aims every step, so the turn table's accuracies do not carry over. The
+// territory converts the turn guard's 6 runs (docs/design/K324_s3.md's
+// Handoff says how); the sight doubles the hunter's, as the turn guard's 4
+// runs double the hunter's 2. Tuned on stage 1's sim (the Handoff's table).
+export const CHASE_MODEL_DEFAULTS = Object.freeze({
+  guard: Object.freeze({ territory: 30, detect: 30, lose: 40, accuracy: 0.7 }),
+  stalker: Object.freeze({ accuracy: 0.7 }),
+});
+
 // url_state.ts PARAM_DEFAULTS reads these, so a retune edits only them (and
 // moves every link that leaves them out).
 export const DEFAULT_CHASE_PARAMS: Readonly<ChaseParams> = Object.freeze({
@@ -187,6 +257,12 @@ export const DEFAULT_CHASE_PARAMS: Readonly<ChaseParams> = Object.freeze({
   turnBack: 1.5,
   tipReach: 2,
   roamNear: 0.25,
+  model: "hunter",
+  territory: CHASE_MODEL_DEFAULTS.guard.territory,
+  guardDetect: CHASE_MODEL_DEFAULTS.guard.detect,
+  guardLose: CHASE_MODEL_DEFAULTS.guard.lose,
+  guardAccuracy: CHASE_MODEL_DEFAULTS.guard.accuracy,
+  stalkerAccuracy: CHASE_MODEL_DEFAULTS.stalker.accuracy,
 });
 
 // Where an entity stands: at a vertex (edge < 0), or on a run `pos` units
@@ -340,6 +416,31 @@ export class ChaseGraph {
     return dist;
   }
 
+  // K324 stage 3: shortest distances from `src` over only the runs `ok`
+  // marks (the guard's territory, which caches them).
+  fromOver(src: number, ok: Uint8Array): Float64Array {
+    const dist = new Float64Array(this.ids.length).fill(Infinity);
+    const done = new Uint8Array(this.ids.length);
+    const heap = new MinHeap();
+    dist[src] = 0;
+    heap.push(0, src);
+    while (heap.size > 0) {
+      const [d, u] = heap.pop();
+      if (done[u]) continue;
+      done[u] = 1;
+      for (const eid of this.adj[u]) {
+        if (!ok[eid]) continue;
+        const w = this.ea[eid] === u ? this.eb[eid] : this.ea[eid];
+        const nd = d + this.len[eid];
+        if (nd < dist[w]) {
+          dist[w] = nd;
+          heap.push(nd, w);
+        }
+      }
+    }
+    return dist;
+  }
+
   // Distance from a spot to vertex x.
   spotToVertex(s: Spot, x: number, restricted: boolean): number {
     if (s.edge < 0) return this.from(s.vertex, restricted)[x];
@@ -415,6 +516,10 @@ export class MinotaurChase {
   // K324: junction arrivals since the chase began, the stop stream's
   // counter (read-only outside).
   arrivals = 0;
+  // K324 stage 3: the guard's hunting and the stalker's choices so far,
+  // the decision stream's counter (read-only outside; the hunter draws
+  // none, so it stays 0).
+  decisions = 0;
   private queued = -1;
   private timer = 0; // Ticks left in the lair or a pause.
   private dest = -1; // Roam destination (vertex index), -1 = pick one.
@@ -422,6 +527,12 @@ export class MinotaurChase {
   private acc = 0; // advance()'s wall-time accumulator.
   private rng: SeededRNG;
   private stopRng: TurnRng;
+  private aimRng: TurnRng; // K324 stage 3: the decision stream.
+  // K324 stage 3: the current run was an aimed choice (a hunt turns back
+  // mid-run only then; always true for the hunter and for roaming legs).
+  private aimed = true;
+  private lastEdge = -1; // The run it last arrived along (-1 = none).
+  private terr: ChaseTerritory | null = null;
 
   constructor(walk: WalkGraph, params: ChaseParams, seed: number) {
     this.g = new ChaseGraph(walk);
@@ -429,6 +540,7 @@ export class MinotaurChase {
     this.setParams(params);
     this.rng = new SeededRNG(seedMix(seed));
     this.stopRng = new TurnRng(seedMix(seed));
+    this.aimRng = new TurnRng((seedMix(seed) ^ 0x5354414c) >>> 0);
     this.player = { edge: -1, pos: 0, dir: 1, vertex: this.g.start };
     this.mino = { edge: -1, pos: 0, dir: 1, vertex: this.g.exit };
     this.timer = ticksOf(this.params.wake);
@@ -447,6 +559,9 @@ export class MinotaurChase {
     }
     if (!(this.params.stopMax >= this.params.stopMin)) {
       this.params.stopMax = this.params.stopMin;
+    }
+    if (!(this.params.guardLose >= this.params.guardDetect)) {
+      this.params.guardLose = this.params.guardDetect;
     }
   }
 
@@ -568,6 +683,8 @@ export class MinotaurChase {
       this.timer = ticksOf(timer);
       this.dest = -1;
       this.hold = 0;
+      this.aimed = true;
+      this.lastEdge = -1;
     }
   }
 
@@ -592,6 +709,8 @@ export class MinotaurChase {
     this.timer = ticksOf(this.params.wake);
     this.dest = -1;
     this.hold = 0;
+    this.aimed = true;
+    this.lastEdge = -1;
   }
 
   private movePlayer(out: ChaseEvent[]): void {
@@ -649,8 +768,11 @@ export class MinotaurChase {
       }
       this.mode = "wander";
       // A destination rest picked its next leg on arrival (K324 2.3); the
-      // lair, a catch's pause and a pick that found nothing pick here.
-      if (this.dest < 0 || this.dest === m.vertex) this.pickDest();
+      // lair, a catch's pause and a pick that found nothing pick here. The
+      // stalker has no destinations.
+      if (P.model !== "stalker" && (this.dest < 0 || this.dest === m.vertex)) {
+        this.pickDest();
+      }
     }
     if (this.hold > 0) {
       this.hold--;
@@ -659,14 +781,13 @@ export class MinotaurChase {
     let rem = (this.mode === "hunt" ? P.approachPace : this.legPace) * DT;
     for (let guard = 0; guard < 64 && rem > 0; guard++) {
       if (m.edge < 0) {
-        const choice =
-          this.mode === "hunt" ? this.huntEdgeFrom(m.vertex) : this.roamEdge();
+        const choice = this.chooseRun();
         if (!choice) return;
         const [eid, dir] = choice;
         m.edge = eid;
         m.dir = dir;
         m.pos = dir > 0 ? 0 : g.len[eid];
-      } else if (this.mode === "hunt" && this.shouldReverse(m)) {
+      } else if (this.mode === "hunt" && this.aimed && this.shouldReverse(m)) {
         m.dir = m.dir > 0 ? -1 : 1;
       }
       const L = g.len[m.edge];
@@ -677,13 +798,15 @@ export class MinotaurChase {
       }
       rem -= toEnd;
       m.vertex = m.dir > 0 ? g.eb[m.edge] : g.ea[m.edge];
+      this.lastEdge = m.edge;
       m.edge = -1;
       m.pos = 0;
       // K324: every junction arrival draws its stop first, so the stream's
       // index never depends on what happens next; a long stop replaces it,
-      // and a stop that rounds to 0 ticks keeps the tick's movement.
+      // and a stop that rounds to 0 ticks keeps the tick's movement. The
+      // stalker takes no long stops.
       const stop = g.isEnd[m.vertex] ? 0 : this.junctionStop();
-      if (this.mode === "wander" && this.roamArrival()) return;
+      if (this.mode === "wander" && P.model !== "stalker" && this.roamArrival()) return;
       if (stop > 0) {
         this.hold = stop;
         return;
@@ -898,11 +1021,18 @@ export class MinotaurChase {
   //   `reach` runs toward the player's spot now (live: it follows them).
   // - In its lair: nothing, except the exit tail's run during the last
   //   LAIR_TELL s of its wait.
+  // - K324 stage 3: the guard's hunt and the stalker read their next
+  //   decisions ahead (decideFrom at decisions, decisions + 1, ...), from
+  //   the player's spot now: up to `reach` runs, stopping where they meet
+  //   the player while they track them (hunting, or a stalker that sees
+  //   them); the guard roams as above, within its territory.
   // reach 0 = the lead only.
   plan(reach: number): ChasePlan {
     const g = this.g;
     const m = this.mino;
+    const P = this.params;
     const hunting = this.mode === "hunt";
+    const deciding = P.model === "stalker" || (P.model === "guard" && hunting);
     const out: ChasePlan = { lead: null, steps: [], dest: -1, hunting };
     const n = Math.min(PLAN_REACH_MAX, Math.max(0, Math.floor(reach) || 0));
     if (this.mode === "lair") {
@@ -912,34 +1042,47 @@ export class MinotaurChase {
       return out;
     }
     let v: number;
+    let back = this.lastEdge;
     if (m.edge >= 0) {
-      const dir = hunting && this.shouldReverse(m) ? (m.dir > 0 ? -1 : 1) : m.dir;
+      const turns = hunting && this.aimed && this.shouldReverse(m);
+      const dir = turns ? (m.dir > 0 ? -1 : 1) : m.dir;
       out.lead = { edge: m.edge, pos: m.pos, dir };
       v = dir > 0 ? g.eb[m.edge] : g.ea[m.edge];
+      back = m.edge;
     } else {
       v = m.vertex;
     }
     const p = this.player;
     const dest = this.dest;
-    if (!hunting) {
+    const tracking = hunting || (P.model === "stalker" && !this.invisible());
+    if (!hunting && !deciding) {
       if (dest >= 0 && v === dest && out.lead) {
         out.dest = dest;
         return out;
       }
       if (v !== g.exit && (dest < 0 || dest === v)) return out;
-    } else if (out.lead && (p.edge === out.lead.edge || (p.edge < 0 && p.vertex === v))) {
+    } else if (tracking && out.lead && (p.edge === out.lead.edge || (p.edge < 0 && p.vertex === v))) {
       return out; // It meets the player on this run.
     }
+    let k = this.decisions;
     for (let i = 0; i < n; i++) {
-      const choice = hunting ? this.huntEdgeFrom(v) : this.roamEdgeFrom(v, dest);
+      let choice: [number, 1 | -1] | null;
+      if (deciding) {
+        const d = this.decideFrom(v, k, back);
+        if (d.drew) k++;
+        choice = d.choice;
+      } else {
+        choice = hunting ? this.huntEdgeFrom(v) : this.roamEdgeFrom(v, dest);
+      }
       if (!choice) break;
       const [eid, dir] = choice;
       const far = dir > 0 ? g.eb[eid] : g.ea[eid];
       out.steps.push([eid, far]);
       v = far;
-      if (hunting) {
+      back = eid;
+      if (tracking) {
         if (p.edge === eid || (p.edge < 0 && p.vertex === far)) break;
-      } else if (far === dest) {
+      } else if (!deciding && far === dest) {
         out.dest = dest;
         break;
       }
@@ -947,17 +1090,22 @@ export class MinotaurChase {
     return out;
   }
 
+  // Spotting and losing the player: the hunter's and the stalker's charge
+  // read the shared sight (detectStart / detectEnd), the guard its own
+  // (guardDetect / guardLose). Lost, the hunter and the guard check where
+  // they last saw you; the stalker stalks on.
   private detect(out: ChaseEvent[]): void {
     const P = this.params;
     const d = this.huntDistance();
+    const guard = P.model === "guard";
     if (this.mode === "hunt") {
-      if (d > P.detectEnd) {
+      if (d > (guard ? P.guardLose : P.detectEnd)) {
         this.mode = "wander";
-        this.dest = this.lastSeen();
+        this.dest = P.model === "stalker" ? -1 : this.lastSeen();
         this.legPace = P.wanderPace;
         out.push({ kind: "lost" });
       }
-    } else if (this.mode !== "lair" && d <= P.detectStart) {
+    } else if (this.mode !== "lair" && d <= (guard ? P.guardDetect : P.detectStart)) {
       this.mode = "hunt";
       this.timer = 0;
       out.push({ kind: "spotted" });
