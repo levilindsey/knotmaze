@@ -295,10 +295,10 @@ Next free ID: K675.
 - **K580** · The a's J join, Levi's call (2026-10-20): tangent, its shared stretch a TAPERED spur that
   leaves the junction as wide as both merging strokes and narrows to normal where they turn collinear.
   Open calls: K606; the paint stage is K620. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
-  - owner: agent `ac987d906d2085fb9` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 18:41, 2 h cap ~20:41)
-  - branch: `worktree-agent-ac987d906d2085fb9`, worktree `.claude/worktrees/agent-ac987d906d2085fb9`; last commit: `4acbe0f`
+  - owner: nobody since 2026-10-20 20:11 (merged; agent `ac987d906d2085fb9` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `883b00a`
   - evidence: `.claude/probes/K580/`
-  - next: Stage 3: the round outer side past a 120 deg turn in ribbon_mesh.ts; A/B 0 px elsewhere; the K580 sheets before/after
+  - next: stage 4, the i joint notch (0.107 LU at xh 2, 0.227 at xh 3): move the junction round piece centre (joinery.ts ~1017-1060) or fix the glyph junction slots (src/core/glyphs/); needs a brief (K580_s3.md Handoff)
   - brief: `docs/design/K580_s3.md`
 - **K324** · Real-time minotaur, more alive and tunable (`docs/design/K324_realtime_minotaur.md`,
   091e4dc; Levi took section 7's recs): s1 (sim); s2 (render) once K525 owns the look: its route
