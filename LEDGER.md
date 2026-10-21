@@ -550,9 +550,6 @@ Every other item below waits on the trigger it names.
 - **K690** · K620 checks not run: the root-pixel census (GPU against the CPU mirror), CPU-mirror
   tests on the real a (xh 2 and 3, tp52 and tp60), a cold-compile time with `trace_intro.mjs`
   (`docs/design/K620.md`)
-- **K697** · maze_plan_identity and the physics_host lockstep test run near the 30 s timeout under
-  parallel agent load (45 and 60 s a file loaded, 11 and 24 s clean): raise their timeouts before
-  they flake an agent merge or CI (K324 s2 report)
 
 ## Residuals (known, not fixed)
 
@@ -1521,6 +1518,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K697** · maze_plan_identity and the physics_host lockstep test run near the 30 s timeout under parallel agent load (45 and 60 s a file loaded, 11 and 24 s clean): raise their timeouts before they flake an agent merge or CI (K324 s2 report). Done in 9992d71 (2026-10-20).
 - **K324** · the real-time telegraph: lead, whole runs, ring on the real-time clock; uKTeleAt (K654); no line look over hidden thread (K652, K271); panel rows on both clocks. Done in 031e09a (2026-10-20).
 - **K620** · the glyph root paints as a blend of the stroke section colours from R to the spur at J (CPU mirror, KGEOM and KSTATIC data, GLSL); maze and burn moved 3-5 px of one level (the vertex block). Done in d54c09b (2026-10-20).
 - **K662** · The phone sitting (2026-10-20, 20:06-20:50): parts 1-4 ran (K631, K646, K587, K651, K644 closed); Levi took the phone back before the daily paths (K687). Done in 9cca8b5 (2026-10-20).
