@@ -562,3 +562,20 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `?<seed>&am=instant&tst=4`, `?<seed>&am=instant&hid=4`. The rules:
   gameplay-mechanisms.md's Turnstiles and hidden runs; the rows:
   gameplay-panel.md's TURNSTILES AND HIDDEN RUNS ROWS.
+- SLEEPERS PARAMS (K137 stage 3d, 2026-10-21; brief
+  `docs/design/K137_s3d.md`): `sleepers` (`slp`, a number, PARAM_RANGES
+  [0, 3] = SLEEPERS_MAX, default 0 = off) and `sleepKind` (`slk`: wake |
+  follow | both, SLEEP_KINDS in game/monsters.ts, default wake) are
+  APPENDED at 207-208, after K138 stage 2's turnstiles and hidden runs
+  (205-206); CODEC_VERSION stays 8. They were 202-203 on their branch,
+  205-206 after the rebase onto db557c31 (K114's beat rider, 202-204) and
+  207-208 after the one onto 40dafa2a (K138 stage 2); each renumber
+  re-froze the table pin. Neither daily-exempt nor a MAZE key. Both under
+  onClockChange in undo_stack.ts's LIVE_EFFECTS (a change restarts the
+  solve, which lays the monsters anew). Pins that moved: the table pin, url_codec.test.ts's defaults
+  table and OVERRIDE_KEYS (`slp`, `slk`). The golden snapshot, the golden
+  dailies, K87 and the minotaur digests did not move: off is
+  bit-identical. Probe links:
+  `?<seed>&am=instant&mt=hunter&slp=2&slk=both&snd=none` (turn clock
+  only). The rules: gameplay-minotaur.md's SLEEPERS AND THE FOLLOWER; the
+  rows: gameplay-panel.md's SLEEPERS ROWS.

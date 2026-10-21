@@ -1888,15 +1888,28 @@ async function main(): Promise<void> {
     swordSeen = s.phase;
   };
 
-  // A catch's toast (K80, both clocks; K273: or the level restarts).
-  const showCaughtToast = (n: number, restart = false, heart: HeartLoss = "off"): void => {
+  // K137 stage 3d: who made the turn clock's last catch, for its toast
+  // (null: the minotaur, or no extras).
+  const catcherOf = (): string | null => {
+    const tm = scene.turnMino;
+    const x = tm && tm.lastCatcher >= 0 ? tm.extras[tm.lastCatcher] : undefined;
+    return x ? (x.kind === "sleeper" ? "a sleeper" : "a follower") : null;
+  };
+
+  // A catch's toast (K80, both clocks; K273: or the level restarts). `by`
+  // (K137 stage 3d): an extra monster that made the catch.
+  const showCaughtToast = (n: number, restart = false, heart: HeartLoss = "off", by: string | null = null): void => {
     // K137 stage 3a: under lives the toast counts hearts, not catches.
     if (heart !== "off") {
-      showToast(heartsToast(heartsLeft, heart === "restart"), 2500);
+      const t = heartsToast(heartsLeft, heart === "restart");
+      showToast(by && t.startsWith("Caught!") ? `Caught by ${by}!${t.slice(7)}` : t, 2500);
       return;
     }
     const then = restart ? "Starting over." : "Back to the entrance.";
-    showToast(n === 1 ? `Caught! ${then}` : `Caught ${n} times. ${then}`, 2500);
+    const what = by
+      ? (n === 1 ? `Caught by ${by}!` : `Caught by ${by}: ${n} times now.`)
+      : (n === 1 ? "Caught!" : `Caught ${n} times.`);
+    showToast(`${what} ${then}`, 2500);
   };
 
   // K137 stage 2: THE HINT (game/hints.ts). Hint (H) spends one of the
@@ -2260,10 +2273,12 @@ async function main(): Promise<void> {
     }
     // K137 stage 3a: a heart under lives (see tickChase's catch).
     const heart = takeHeart();
+    // K137 stage 3d: the catcher, named before a restart lays a new chase.
+    const by = catcherOf();
     if (heart === "restart" || (heart === "off" && params.minoRestart)) {
       restartSolve(true);
       updateHud();
-      showCaughtToast(liveMino()?.catches ?? 1, true, heart);
+      showCaughtToast(liveMino()?.catches ?? 1, true, heart, by);
       return;
     }
     fc.markCaught(wait);
@@ -2295,7 +2310,7 @@ async function main(): Promise<void> {
       }
     }
     updateHud();
-    showCaughtToast(scene.turnMino.catches, false, heart);
+    showCaughtToast(scene.turnMino.catches, false, heart, by);
   };
   let turnWarned = false;
   const stepPanScratch = new Float32Array(2);

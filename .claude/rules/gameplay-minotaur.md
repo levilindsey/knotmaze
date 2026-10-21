@@ -741,3 +741,74 @@ only with the files it is about; `gameplay.md` lists the area's other files.
     and the real F key, the gold armed look, the turn clock's standing
     minotaur then one turn, real time's doubled pace for two runs, the HUD
     rows, used after, no page errors).
+
+- SLEEPERS AND THE FOLLOWER (K137 stage 3d, 4.9 and Levi's follower,
+  2026-10-21; brief and Handoff `docs/design/K137_s3d.md`, design
+  `docs/design/K137_s3b.md`'s "Decided" 1-3). MORE THAN ONE MONSTER, on the
+  TURN CLOCK only: `sleepers` (`slp`: 0 off, or 1..SLEEPERS_MAX 3) and
+  `sleepKind` (`slk`: wake | follow | both). game/monsters.ts (pure) lays
+  them and states the rules in its header; `TurnMinotaur.extras`
+  (minotaur_turns.ts `extrasTurn`, `extraCatch`, `extrasOnCatch`) plays
+  them. Real time has no extras yet, and the panel hides both rows there.
+  - WHERE (`sleeperSpots`, `monsterSpecs`): distinct junctions 1-3 runs
+    (SLEEPER_RING_MIN..MAX) off one shortest start-exit route (sword.ts's
+    BFS). Never the start, the exit or either tail's junction, never within
+    one run of the entrance's junction, clear of the lair as the sword is
+    (`avoid`: one hop, a guard's territory) and off the sword's spot. They
+    are drawn without replacement from their own counter stream (TurnRng on
+    the seed xor "SLPR"), so no other draw shifts; with fewer candidates
+    than asked, fewer monsters. KINDS (`monsterKinds`): wake (all
+    sleepers), follow (all followers), both (alternating, the first drawn
+    on that stream). Each monster draws from its own stream (`monsterRng`:
+    the seed xor "MNST" xor a per-index hash) at the game's turn. main.ts
+    `layMonsters()` runs in every restartChase, after the sword is laid.
+  - A SLEEPER wakes when you walk a run that touches its junction (onto it
+    or off it; `woken++`). It neither moves nor catches on that move. Awake,
+    it hunts as the minotaur does: `decide()` with `extraConfig` (the
+    hunter's policy, prox, at the minotaur's pace, sight and accuracy; no
+    telegraph, sleep, territory or pull), deciding from where you stood, as
+    the telegraph has the minotaur do.
+  - A FOLLOWER does not wake when you pass. Leaving its junction sets it
+    off ("waiting"): FOLLOW_DELAY 1 or 2 moves later (drawn per follower)
+    it appears there and walks your trail, a run a turn (`followStep`). At
+    each junction there is a FOLLOW_SHORTCUT 0.25 chance that it steps
+    along its shortest route to you instead; it rejoins your trail where it
+    lands on it. While waiting it cannot catch. You at the entrance: it
+    loses you, walks home and sleeps again. THE HARSH FOLLOWER (call 3): a
+    wait or a backtrack while it is a run behind is a catch, and so is
+    walking back onto its junction on the move its wait ends.
+  - ORDER AND CONTACT: each extra plays after the minotaur's part of every
+    accepted move, by the minotaur's contact rule (`contact`). A sprint's
+    skipped move stands them all (`extrasTurn(..., stand)`). By length
+    they still step a run a turn. They ignore the sword: they neither flee
+    nor die.
+  - A CATCH by any monster is the minotaur's catch (s3b call 1, rec):
+    `catches++` and `lastCatcher` (-1 for the minotaur, else the extra's
+    index); you go to the entrance, the minotaur to its lair (or stays
+    where it stands, lair off), and every extra home, asleep
+    (`sleepExtra`). The turn returns `caught`, so main.ts's catch path
+    (hearts, minoRestart) runs unchanged, and the toast names an extra
+    catcher (`catcherOf`): "Caught by a sleeper! Back to the entrance.",
+    "Caught by a follower: 2 times now. ...", and with hearts on "Caught
+    by a follower! N hearts left." (the minotaur's toasts are unchanged).
+    No telegraph for the extras (s3b call 2, rec).
+  - ROWS: "woken" in the HUD and the win banner (maze_stats STATS: the
+    sleepers woken this attempt; a follower setting off does not count),
+    and the share title's " · 😴 N woken" (share_text `woken`), both only
+    while a sleeper-kind monster is on (main.ts `wokenShown`). Hooks:
+    `__knotTurnMino()` adds `monsters` ([{kind, phase, spot, at, home,
+    trail}]), `woken` and `lastCatcher`.
+  - OFF (sleepers 0, so every daily): no extras, so K80_DIGESTS,
+    MODEL_DIGESTS, TURN_GAMES, LENGTH_GAMES, K87, the golden dailies and
+    byte identity held. Tests: `test/game/monsters.test.ts` (placement,
+    kinds and delays; sleepers and the follower on hand-built graphs; an
+    empty list plays every model as before; the minotaur's turns do not
+    change with extras until one catches; replays from the taps) and the
+    stats, HUD and share tests. PAGE CHECK:
+    `.claude/probes/K137/s3d/monsters_page.mjs` (probes.md, K137 stage
+    3d): desktop both/2 seed 7, wake/3 seed 11 and follow/2 seed 5, and
+    411x753 both/2 seed 7 and follow/1 seed 3, all passed with real clicks.
+  - RESIDUALS (the Handoff): the extras snap home asleep after any catch;
+    K481's by-length tint ignores them; no off-screen indicator; minoFog
+    "hunting" keeps them under the fog; saved attempts do not cover them;
+    SLEEPER_GRACE_S waits for the real-time port.
