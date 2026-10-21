@@ -98,6 +98,21 @@
 // never `stranded`), once no unbroken maze run is reachable from the head
 // (`freeStranded`), after a move or a respawn. `collapsePar` (the
 // step-budgeted search) runs once per walk and mode, on first read.
+//
+// K114 CUT (brief docs/design/K114_cut.md; game/cut.ts is the rule): the
+// player deletes whole runs. Only in the classic game with fragile, par,
+// collapse and the fire all off (setRules decides; `cutOn`). A cut is an
+// ACTION, not a move: `actions` lists one entry per player action, a move
+// (its first run) or a cut, and replayActions(actions) rebuilds the state,
+// so Undo pops one action (a whole contracted move, or one cut). `taps` and
+// the move log stay one entry per run walked; with cut off every tap is one
+// move action. A cut run is gone as a broken run is (`broken`, choices, the
+// pick). CONTRACTION: a move arriving at a junction left with two live runs
+// carries on (cut.ts carryChain); tapEdge applies one run at a time, so the
+// rest of the chain waits in `carry` and the next tapEdge must take
+// `carry[0]` (main.ts drives it on each arrival). `distToExit` (the move
+// log's g/d, the hints) is recomputed over the live runs on every cut; the
+// stars keep the walk's uncut optimal.
 
 import type { WalkGraph } from "../core/walk_graph";
 import { runsToExit } from "../core/walk_graph";
@@ -124,21 +139,24 @@ import {
   sharePercent,
   totalUnits,
 } from "./collapse";
+import type { CutMode, CutResult, FabricAction } from "./cut";
+import { carryChain, cutVerdict, distancesToExit } from "./cut";
 
 // K137: the solve's rules beyond the clock: fragile runs and par (K139:
-// and collapse). Change them only with a reset() after (main.ts restarts
-// the solve).
+// and collapse; K114: cut). Change them only with a reset() after (main.ts
+// restarts the solve).
 export interface FabricRules {
   fragile?: FragileMode;
   parMode?: ParMode;
   parSlack?: number;
   collapse?: CollapseMode;
+  cut?: CutMode;
 }
 
 export type FabricTapResult =
   | "advance" // stepped across a run to its far vertex
   | "backtrack" // retracted the last run
-  | "reject" // the run is not incident to the current head (or K137: broken)
+  | "reject" // the run is not incident to the current head (or K137: broken; K114: cut, or not the run a contracted move carries on along)
   | "noop" // after solving (or a K114 burn-race loss, K137 stranded or out of strokes)
   | "win" // advanced onto the exit tail (K139 free collapse: the move that ended the game)
   | "smolder"; // K114: refused, the fire reaches the arm's far end first
@@ -220,6 +238,16 @@ export class FabricMazeController {
   private collapseTotalUnits = -1;
   private collapseParOf: Partial<Record<CollapseMode, CollapsePar>> = {};
 
+  // K114 cut: the mode (setRules decides; change it only with a reset()
+  // after), the cut runs, the player's actions since the last reset(), the
+  // runs the move under way still carries on along, and the walk distances
+  // to the exit over the live runs (the walk's own field with no cuts).
+  cutMode: CutMode = "off";
+  cuts = new Set<number>();
+  actions: FabricAction[] = [];
+  carry: number[] = [];
+  distToExit: Map<string, number>;
+
   constructor(
     walk: WalkGraph,
     trailMode = false,
@@ -229,6 +257,7 @@ export class FabricMazeController {
     this.walk = walk;
     this.trailMode = trailMode;
     this.fire = fire;
+    this.distToExit = walk.distToExit;
     this.setRules(rules);
     this.reset();
   }
@@ -241,6 +270,10 @@ export class FabricMazeController {
     this.fragile = collapsing ? "off" : rules.fragile ?? "off";
     this.parMode = collapsing ? "off" : rules.parMode ?? "off";
     this.parSlack = rules.parSlack ?? PAR_SLACK_DEFAULT;
+    // K114: cutting only with every rule above off and no fire (main.ts
+    // passes `cut` for the classic game only, so never with a minotaur).
+    const plain = !collapsing && this.fragile === "off" && this.parMode === "off" && !this.fire;
+    this.cutMode = plain ? rules.cut ?? "off" : "off";
   }
 
   reset(): void {
@@ -269,6 +302,10 @@ export class FabricMazeController {
     this.deadEndTips = new Set();
     this.moveLog = [];
     this.taps = [];
+    this.cuts = new Set();
+    this.actions = [];
+    this.carry = [];
+    this.distToExit = this.walk.distToExit;
     this.respawns = 0;
     this.restarts++;
   }
@@ -290,6 +327,60 @@ export class FabricMazeController {
       }
     }
     return true;
+  }
+
+  // K114 cut: rebuild the solve state from an action list (Undo replays the
+  // actions but the last): reset, then every cut and every move with the
+  // runs it carries on along. False - and a reset controller - when an
+  // action is not legal where the previous ones led.
+  replayActions(actions: readonly FabricAction[]): boolean {
+    this.reset();
+    const fail = (): boolean => {
+      this.reset();
+      return false;
+    };
+    const step = (eid: number): boolean => {
+      const r = Number.isInteger(eid) ? this.tapEdge(eid) : "reject";
+      return r !== "reject" && r !== "noop" && r !== "smolder";
+    };
+    for (const a of actions) {
+      if (a.kind === "cut") {
+        if (this.cut(a.run) !== "cut") return fail();
+        continue;
+      }
+      if (!step(a.run)) return fail();
+      while (this.carry.length > 0) if (!step(this.carry[0])) return fail();
+    }
+    return true;
+  }
+
+  // K114 cut: cut a run, a player action. "refused" when no route from the
+  // head to the exit would be left; "invalid" with cut off, the solve over,
+  // a contracted move still carrying on, or a run that cannot be cut or is
+  // cut already. Only "cut" changes anything.
+  cut(eid: number): CutResult {
+    if (this.cutMode === "off" || this.solved || this.carry.length > 0) return "invalid";
+    const verdict = cutVerdict(this.walk, this.head, this.cuts, eid);
+    if (verdict !== "cut") return verdict;
+    this.cuts.add(eid);
+    this.actions.push({ kind: "cut", run: eid });
+    this.distToExit = distancesToExit(this.walk, this.cuts);
+    return "cut";
+  }
+
+  // K114 cut: is cutting on in this solve?
+  get cutOn(): boolean {
+    return this.cutMode !== "off";
+  }
+
+  // K114 cut: the cut runs, in id order.
+  cutRuns(): number[] {
+    return [...this.cuts].sort((a, b) => a - b);
+  }
+
+  // K114 cut: the cuts made so far (the HUD's and the share's count).
+  get cutCount(): number {
+    return this.cuts.size;
   }
 
   // Back to the entrance by backtracking every run of the path, newest
@@ -377,8 +468,8 @@ export class FabricMazeController {
   choices(): number[] {
     if (this.solved || this.fireLost || this.stranded || this.parLost) return [];
     let edges = this.walk.vertices.get(this.head)!.edges;
-    // K137: never a broken run.
-    if (this.breakable) edges = edges.filter((eid) => !this.broken(eid));
+    // K137: never a broken run (K114: nor a cut one).
+    if (this.breakable || this.cuts.size > 0) edges = edges.filter((eid) => !this.broken(eid));
     const fire = this.fire;
     if (!fire) return edges;
     const L = this.fireL;
@@ -432,8 +523,10 @@ export class FabricMazeController {
     return !armSafe(this.walk, fire, this.fireL, this.head, edgeId);
   }
 
-  // K137: is this run broken (fragile on, its crossings at its limit)?
+  // K137: is this run broken (fragile on, its crossings at its limit)? K114:
+  // or cut - gone either way (cutRuns lists the cuts, brokenRuns the breaks).
   broken(eid: number): boolean {
+    if (this.cuts.size > 0 && this.cuts.has(eid)) return true;
     return this.breakable && isBroken(this.breakLimits, this.crossings, eid);
   }
 
@@ -460,7 +553,7 @@ export class FabricMazeController {
   // K137: the fewest unbroken runs from the head to the exit (Infinity:
   // stranded).
   get runsLeft(): number {
-    if (!this.breakable) return this.openRuns!.get(this.head) ?? Infinity;
+    if (!this.breakable && this.cuts.size === 0) return this.openRuns!.get(this.head) ?? Infinity;
     return runsToExit(this.walk, (eid) => this.broken(eid)).get(this.head) ?? Infinity;
   }
 
@@ -475,6 +568,9 @@ export class FabricMazeController {
 
   tapEdge(edgeId: number): FabricTapResult {
     if (this.solved || this.fireLost || this.stranded || this.parLost) return "noop";
+    // K114 cut: while a contracted move carries on, only its next run.
+    const carrying = this.carry.length > 0;
+    if (carrying && edgeId !== this.carry[0]) return "reject";
     const e = this.walk.edges[edgeId];
     const head = this.head;
     if (!e || (e.va !== head && e.vb !== head)) return "reject";
@@ -498,6 +594,7 @@ export class FabricMazeController {
         this.moveLog.push("b");
       }
       this.taps.push(edgeId);
+      this.logMove(head, edgeId, carrying);
       this.cross(edgeId);
       this.fireArrive(head, depart, e.length, this.head);
       this.judge();
@@ -510,6 +607,7 @@ export class FabricMazeController {
       this.moveLog.push(this.onShortestRoute(head, e.length, far) ? "g" : "d");
     }
     this.taps.push(edgeId);
+    this.logMove(head, edgeId, carrying);
     this.cross(edgeId);
     if (!this.isTitleEdge(edgeId)) this.walkedDist += e.length;
     this.pathEdges.push(edgeId);
@@ -519,10 +617,23 @@ export class FabricMazeController {
     // K139: in a free collapse game the exit is only a dead end.
     if (far === this.walk.exit && this.collapse !== "free") {
       this.solved = true;
+      this.carry = [];
       return "win";
     }
     this.judge();
     return this.solved ? "win" : "advance"; // K139: a free collapse game's end
+  }
+
+  // K114 cut: a move's first run is a player action, and with runs cut it
+  // may carry on (the rest of its chain waits in `carry`); a carried-on run
+  // only uses up the carry.
+  private logMove(from: string, eid: number, carrying: boolean): void {
+    if (carrying) {
+      this.carry.shift();
+      return;
+    }
+    this.actions.push({ kind: "move", run: eid });
+    if (this.cuts.size > 0) this.carry = carryChain(this.walk, this.cuts, from, eid).slice(1);
   }
 
   // K137: one crossing of the run; `justBroke` names it when this one
@@ -602,10 +713,10 @@ export class FabricMazeController {
   }
 
   // Does stepping from `from` across a run of `len` to `to` stay on a
-  // shortest route to the exit?
+  // shortest route to the exit? K114: over the live runs (`distToExit`).
   private onShortestRoute(from: string, len: number, to: string): boolean {
-    const d0 = this.walk.distToExit.get(from) ?? Infinity;
-    const d1 = this.walk.distToExit.get(to) ?? Infinity;
+    const d0 = this.distToExit.get(from) ?? Infinity;
+    const d1 = this.distToExit.get(to) ?? Infinity;
     if (!Number.isFinite(d0) || !Number.isFinite(d1)) return false;
     return len + d1 <= d0 + 1e-9 * Math.max(1, d0);
   }
