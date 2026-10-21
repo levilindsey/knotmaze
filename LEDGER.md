@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K694.
+Next free ID: K703.
 
 ## Waiting on Levi
 
@@ -80,7 +80,7 @@ Next free ID: K694.
   realtime dot at constant pace, moveSpeed unused (rec. (a)); one fireSpeed/fireDelay (K440 split it:
   `fsr`/`fdr`); lose when the fire reaches you; realtime queues taps; `fireClock` a Burn race row (K323).
 - **K401** · K80 turns s3 (`docs/design/K80_turns_stage3.md` "Questions"), all six built as rec.;
-  only the chevrons wait (on K324 s2): 3a, 3b after K290 3b; guard/stalker rows per model (rec. (c));
+  only the chevrons wait (on K696): 3a, 3b after K290 3b; guard/stalker rows per model (rec. (c));
   wait keys `.`, Space; pad center waits; turn pull own param (0); K293 (d), (f) stay lore.
 - **K406** · K395's CAP_ROUND: 1.5 (as built, = COLLAPSE_ROUND) or 3 (tip inner edge turns +19° to
   +42° not +31° to +56°, flat arch, 0.02-0.03 world less inner swing; 6 looks like 3). Live as
@@ -160,6 +160,15 @@ Next free ID: K694.
 - **K693** · K620: per-side stroke effects on the glyph root, not only the colours? 3fa7aab had
   them, but its shader compiled slowly (loads 45-54 s against 27-33 s). Rec: no, keep the colour
   blend (`docs/design/K620.md`)
+- **K694** · K114 cut calls, built as rec (`docs/design/K114_cut.md` Handoff): 1 scissors and Undo
+  bottom left, U undoes (Z also moves on AZERTY); 2 a cut tapped mid-move waits for the move; 3 a
+  cut counts only toward the cuts row and the share tag
+- **K695** · K324 s2 is live: real-time games show the minotaur next move by default (mtg=0 off).
+  Brightness: built B, the lead and the first whole run full, later runs half; A counts the lead as
+  run 1. Rec B (`docs/design/K324_s2.md` Handoff)
+- **K696** · K324 question 9 (`docs/design/K324_realtime_minotaur.md` section 7): K80 2.7 flowing
+  chevrons for both telegraphs, now that stage 2 is live? The last open look piece of K80. Rec:
+  decide after seeing stage 2 on the phone
 
 ## In progress
 
@@ -215,8 +224,8 @@ Next free ID: K694.
     `turns/`, `rt/`) and `.claude/probes/K174/rt/`; the research's branch
     `worktree-agent-a25726c24f262b138` (5 commits not on master; worktree swept 2026-10-15)
   - next: turns 3b done in dcdfaf4 (per-run telegraph alphas, catch feedback with K270 diagnosed and fixed, section 2.10's sounds and fog bleed; the contact sheet `.claude/probes/K80/stage3b/contact_sheet.png` is emulated - the real-phone sheet is K524, Levi's look call K525).
-    Next: the chevrons after K324 stage 2. Check its main.ts overlap with K114 stage 2 and K5 M3
-    before running them together.
+    Next: the chevrons, once Levi answers K696 (K324 stage 2 merged in 031e09a). Check their main.ts
+    overlap with the K114 walker before running them together.
     Before a daily pins a minotaur, waits enter `fc.taps` and K47's fingerprint covers its
     params; real time's phone check is K177
   - brief: `docs/design/K80_turns_stage3.md` (3b: sections 2.7, 2.8, 2.10; "Stage 3a handoff");
@@ -541,6 +550,9 @@ Every other item below waits on the trigger it names.
 - **K690** · K620 checks not run: the root-pixel census (GPU against the CPU mirror), CPU-mirror
   tests on the real a (xh 2 and 3, tp52 and tp60), a cold-compile time with `trace_intro.mjs`
   (`docs/design/K620.md`)
+- **K697** · maze_plan_identity and the physics_host lockstep test run near the 30 s timeout under
+  parallel agent load (45 and 60 s a file loaded, 11 and 24 s clean): raise their timeouts before
+  they flake an agent merge or CI (K324 s2 report)
 
 ## Residuals (known, not fixed)
 
@@ -1246,6 +1258,15 @@ Every other item below waits on the trigger it names.
   the seam at R with strand colours, seed 9 (`docs/design/K620.md`)
 - **K692** · A light band across the glyph root at J, on master before K620 too (K620 residual b;
   `.claude/probes/K620/sheets/k620_zoom.png`)
+- **K698** · K114 cut: on a phone the refusal toast overlaps the Undo button for its 2.5 s (taps
+  pass through; `src/ui/cut_buttons.ts`)
+- **K699** · Two visibility rules side by side: the K120 move pad hides while the panel is open, the
+  K114 scissors show beside the desktop side panel (`src/ui/move_pad.ts`, `src/ui/cut_buttons.ts`)
+- **K700** · K324 s2 GPU census skips the non-riding lead and the hunt strength (the CPU parity test
+  covers both); a ride filter in tapAndFind would add them
+  (`.claude/probes/K324/census/census_tele.mjs`)
+- **K701** · Section shader lengths rose again, limits now 47,750 / 64,150 characters (K324 s2: +85
+  each; `test/render/k320_slim.test.ts`)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1495,6 +1516,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K674** · Profile `tickPlucks` while plucks decay after a move: K441 inferred about 15 ms a frame
   at 4x CPU, against 1.6 asleep (untested). With K189.
 - **K686** · Star thresholds for collapse games (K139 shows a percentage against par, no stars).
+- **K702** · K114 cut: a long carried chain of collapsed runs animates run by run; make it one glide
+  (`carryStep` in main.ts)
 
 ## Done
 

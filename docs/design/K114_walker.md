@@ -38,7 +38,8 @@ remainder.
 - **One module**, `src/game/walker.ts`: a policy plus a step, pure. From
   (walk graph, cut runs, the walker's state) it gives the next run.
   - Its taps derive from (walk graph, seed, params, your actions), so
-    stage 1's `replay(actions)` rebuilds everything.
+    stage 1's `FabricMazeController.replayActions(actions)` rebuilds
+    everything (`replay(taps)` is still K47's tap replay).
 - **It drives its own `FabricMazeController`:** the walker is the head.
   In a walker mode you do not walk; your actions are cuts.
   - `taps`, the move log, the trail and the fog follow the walker.
@@ -54,6 +55,9 @@ remainder.
 
   Reuse the minotaur's telegraph item (`setTelegraph`, K324) in the
   walker's colour. Make it dotted only if the item supports that cheaply.
+  K324 stage 2 merged (031e09a): the real-time lead, whole runs and ring,
+  and the `uKTeleAt` uniform. Read REAL-TIME TELEGRAPH in
+  `.claude/rules/gameplay-minotaur.md` before you reuse the item.
 
 ### Lead the walker (R.3.9 "Guide it")
 
@@ -219,7 +223,9 @@ walker's next run? R.6.2 asks it, and only a phone can answer it.
   - `cut.ts`, `walk_graph.ts`, and the controller's walker and action-log
     code;
   - the walker's use of the telegraph;
-  - main.ts's tap routing in walker modes and the walker's frame;
+  - the tap routing in walker modes (main.ts's `cutTap`,
+    `src/app/input_pointer.ts`) and the walker's frame
+    (`src/app/frame_loop.ts`, beside `cutTick`);
   - a `src/ui/` file for Go and Reset, if you want one;
   - your rows in `maze_hud.ts`, `maze_stats.ts` and `share_text.ts`;
   - the param options, the panel rows and the lore.
