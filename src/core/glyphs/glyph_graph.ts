@@ -79,31 +79,48 @@ const ROOT_SEGS = 4;
 const ROOT_TABLE_N = 64;
 
 /**
- * K580: a tangent spur's tapered root (GU, y up). Its centerline is the
- * MEDIAL AXIS of the two strokes that meet at J (stage 2): the arriving
- * stroke C (the body walked back from J) and the departing stroke O (the
- * body walked on from J). A medial point M sits r from both strokes,
- * touching C at its foot C(a) and O at O(b), a and b being arcs from J;
- * the root is parameterized by a, C's foot arc. R is the medial point
- * where 2r = the part distance: at the default part, where the strokes'
- * inner edges meet, so the two ribbons never overlap past R.
+ * K580: a tangent spur's tapered root (GU, y up), between the two strokes
+ * that meet at J: the arriving stroke C (the body walked back from J) and
+ * the departing stroke O (the body walked on from J). Stage 2 pairs them
+ * by the MEDIAL AXIS: a medial point M sits r from both strokes, touching
+ * C at C(a) and O at O(b), a and b being arcs from J. The root is
+ * parameterized by a, C's medial foot arc. R is the medial point where
+ * 2r = the part distance: at the default part, where the strokes' inner
+ * edges meet, so the two ribbons never overlap past R.
+ *
+ * The centerline is the medial axis. The ribbon is symmetric about it, but
+ * the strokes curve differently (at the a's J, O turns down hard while C
+ * runs straight), so along the centerline's normal the two strokes' outer
+ * edges are not equally far. The half-width is the NEARER one: that side's
+ * edge lies on its stroke's outer edge, and the other side sinks into its
+ * stroke's ribbon by the difference (the lint's inset, 0.05 LU at most on
+ * the a), so the outline never leaves the strokes. A width that reached
+ * both edges bulged 0.03 LU out of one stroke; moving the centerline to the
+ * edges' midline diverged at R, where the edges' feet jump.
  */
 export interface TangentRoot {
   /** The root's cubic path, from the part point R to the junction J. */
   path: Pt[];
-  /** C's foot arc at R (GU): the root runs from a = aR (R) to a = 0 (J). */
+  /** C's medial foot arc at R (GU): the root runs from a = aR (R) to a = 0 (J). */
   aR: number;
-  /** O's foot arc at R (GU). */
+  /** O's medial foot arc at R (GU). */
   bR: number;
   /**
-   * The root's width beyond normal at C's foot arc a (GU): the ribbon's
-   * half-width there is h + sepAt(a) / 2, which lands on both strokes'
-   * outer edges along the root's normal. 0 at J.
+   * The root's width beyond normal at parameter a (GU): the ribbon's
+   * half-width there is h + sepAt(a) / 2, the distance along the root's
+   * normal to the nearer stroke's outer edge (the other side lies inside
+   * its stroke's ribbon). 0 at J.
    */
   sepAt: (a: number) => number;
-  /** The medial radius at C's foot arc a (GU): the strokes' gap is 2r. */
+  /** The medial radius at parameter a (GU): the strokes' gap is 2r. */
   rAt: (a: number) => number;
-  /** O's foot arc (GU) of the medial point with C's foot arc a. */
+  /**
+   * Where the root's edges lie at parameter a: the arc from J (GU) along C
+   * (footC) and along O (footO) of each stroke's nearest point to the
+   * drawn edge on its side. 0 at J. The side facing C (sideC) lies along
+   * C, the other along O.
+   */
+  footC: (a: number) => number;
   footO: (a: number) => number;
   /**
    * The side of the root that faces C: +1 when C lies LEFT of the root's
@@ -123,12 +140,14 @@ export interface TangentRoot {
  * strokes and the ribbons overlapped past R). For each foot arc a on C,
  * the medial point is M = C(a) + r n (n: C's normal toward O) with r =
  * the distance from M to O (Newton inside a bracket; O's nearest point by
- * a dense scan and a ternary refinement). Where the strokes diverge at a
- * half-angle phi (cos phi from the two foot normals), their outer edges
- * cross the root's normal (r + h) / cos phi from M (exact for straight
- * strokes): the half-width the ribbon draws. The centerline is fit as
- * ROOT_SEGS Hermite cubics in a, G1 at J with the arrival tangent (the
- * spur's). `threadGu` is the thread width the edges are fitted to.
+ * a dense scan and a ternary refinement). The centerline is fit through
+ * the medial points as ROOT_SEGS Hermite cubics in a, G1 at J with the
+ * arrival tangent (the spur's). Then, at each table sample, along the
+ * fitted path's normal, the half-width where the line leaves each stroke's
+ * ribbon (more than h from the stroke; stepped out from the medial radius,
+ * then bisected) on that stroke's side; the ribbon takes the smaller
+ * (TangentRoot's comment). `threadGu` is the thread width the edges are
+ * fitted to.
  */
 export function tangentRoot(
   body: readonly Pt[],
@@ -166,21 +185,31 @@ export function tangentRoot(
     fy: number;
     p: number;
   }
-  /** The nearest point of O to (x, y). */
-  const nearO = (x: number, y: number): Near => {
+  // C's dense samples, from the window's start to J.
+  let iC = iJ;
+  while (iC > 0 && cum[iC] > arcJ - aMax) iC--;
+  const cxs: number[] = [];
+  const cys: number[] = [];
+  for (let i = iC; i <= iJ; i++) {
+    const q = posAtP(bp, i / K_STEPS);
+    cxs.push(q[0]);
+    cys.push(q[1]);
+  }
+  /** The nearest point to (x, y) of a stroke's dense samples (body step i0 + i). */
+  const nearIn = (xs: number[], ys: number[], i0: number, x: number, y: number): Near => {
     let best = Infinity;
     let bi = 0;
-    for (let i = 0; i < ox.length; i++) {
-      const dx = ox[i] - x;
-      const dy = oy[i] - y;
+    for (let i = 0; i < xs.length; i++) {
+      const dx = xs[i] - x;
+      const dy = ys[i] - y;
       const d2 = dx * dx + dy * dy;
       if (d2 < best) {
         best = d2;
         bi = i;
       }
     }
-    let lo = (iJ + Math.max(0, bi - 1)) / K_STEPS;
-    let hi = (iJ + Math.min(ox.length - 1, bi + 1)) / K_STEPS;
+    let lo = (i0 + Math.max(0, bi - 1)) / K_STEPS;
+    let hi = (i0 + Math.min(xs.length - 1, bi + 1)) / K_STEPS;
     for (let it = 0; it < 48; it++) {
       const m1 = lo + (hi - lo) / 3;
       const m2 = hi - (hi - lo) / 3;
@@ -197,6 +226,8 @@ export function tangentRoot(
     const dy = f[1] - y;
     return { d: Math.sqrt(dx * dx + dy * dy), fx: f[0], fy: f[1], p };
   };
+  const nearO = (x: number, y: number): Near => nearIn(ox, oy, iJ, x, y);
+  const nearC = (x: number, y: number): Near => nearIn(cxs, cys, iC, x, y);
   /** C at foot arc a > 0: the point and the body's forward derivative. */
   const cAt = (a: number): { c: [number, number]; d: [number, number] } => {
     const [seg, t] = splitP(bp, pAtArc(tab, arcJ - a));
@@ -214,11 +245,9 @@ export function tangentRoot(
     r: number;
     /** O's foot arc. */
     b: number;
-    /** The half-width that reaches both outer edges. */
-    w: number;
   }
   const medial = (a: number): Medial => {
-    if (!(a > 0)) return { x: J[0], y: J[1], r: 0, b: 0, w: h };
+    if (!(a > 0)) return { x: J[0], y: J[1], r: 0, b: 0 };
     const { c, d } = cAt(a);
     const l = Math.sqrt(d[0] * d[0] + d[1] * d[1]);
     const nx = (-d[1] / l) * sgn;
@@ -248,10 +277,7 @@ export function tangentRoot(
     const x = c[0] + r * nx;
     const y = c[1] + r * ny;
     const q = nearO(x, y);
-    // cos phi = sqrt((1 - n . uO) / 2), uO the unit vector from O's foot to M.
-    const uo = q.d > 0 ? ((x - q.fx) * nx + (y - q.fy) * ny) / q.d : -1;
-    const cphi = Math.sqrt(Math.max(0.25, (1 - uo) / 2));
-    return { x, y, r, b: arcAtP(tab, q.p) - arcJ, w: (r + h) / cphi };
+    return { x, y, r, b: arcAtP(tab, q.p) - arcJ };
   };
   // R: the medial radius reaches partGu / 2. Step out from J to a bracket,
   // then bisect (r grows away from J).
@@ -268,77 +294,160 @@ export function tangentRoot(
     else hi = mid;
   }
   const aR = (lo + hi) / 2;
-  // The width table, J (i = 0) to R (i = N).
+  // The table, J (i = 0) to R (i = N) at a_i = aR i / N: the medial radius
+  // and the medial points (the edge midline's first guess).
   const N = ROOT_TABLE_N;
+  const da = aR / N;
   const tr: number[] = [];
   const tb: number[] = [];
-  const ts: number[] = [];
+  const qx: number[] = [];
+  const qy: number[] = [];
   for (let i = 0; i <= N; i++) {
-    const m = medial((aR * i) / N);
+    const m = medial(da * i);
     tr.push(m.r);
     tb.push(m.b);
-    ts.push(2 * (m.w - h));
+    qx.push(m.x);
+    qy.push(m.y);
+  }
+  // At J the root runs along the arrival tangent (the spur's).
+  const ed = bezDeriv(segOf(bp, at / 3 - 1), 1);
+  const el = Math.sqrt(ed[0] * ed[0] + ed[1] * ed[1]);
+  const tJ: [number, number] = [ed[0] / el, ed[1] / el];
+  // O's foot at R and its direction there (for cosR).
+  const oq = nearO(qx[N], qy[N]);
+  const [os, ot] = splitP(bp, oq.p);
+  const od = bezDeriv(segOf(bp, os), ot);
+  /** dQ/d(-a) at sample i of (px, py) (second order; along tJ at J). */
+  const D = (px: number[], py: number[], i: number): [number, number] => {
+    if (i === N) return [(-3 * px[N] + 4 * px[N - 1] - px[N - 2]) / (2 * da), (-3 * py[N] + 4 * py[N - 1] - py[N - 2]) / (2 * da)];
+    if (i > 0) return [(px[i - 1] - px[i + 1]) / (2 * da), (py[i - 1] - py[i + 1]) / (2 * da)];
+    const x = (3 * px[0] - 4 * px[1] + px[2]) / (2 * da);
+    const y = (3 * py[0] - 4 * py[1] + py[2]) / (2 * da);
+    const sp = Math.sqrt(x * x + y * y);
+    return [tJ[0] * sp, tJ[1] * sp];
+  };
+  const step = N / ROOT_SEGS;
+  const dk = aR / ROOT_SEGS;
+  /** The centerline through samples (px, py): ROOT_SEGS Hermite cubics, R to J. */
+  const build = (px: number[], py: number[]): Pt[] => {
+    const path: Pt[] = [[px[N], py[N]]];
+    for (let k = 0; k < ROOT_SEGS; k++) {
+      const i0 = N - k * step;
+      const i1 = i0 - step;
+      const d0 = D(px, py, i0);
+      const d1 = D(px, py, i1);
+      const p1: [number, number] = i1 === 0 ? [J[0], J[1]] : [px[i1], py[i1]];
+      path.push([px[i0] + (d0[0] * dk) / 3, py[i0] + (d0[1] * dk) / 3]);
+      path.push([p1[0] - (d1[0] * dk) / 3, p1[1] - (d1[1] * dk) / 3]);
+      path.push(p1);
+    }
+    return path;
+  };
+  const cR = cAt(aR);
+  /** +1 when C lies left of the root's direction at R (toward J). */
+  const sideOf = (px: number[], py: number[]): 1 | -1 => {
+    const dR = D(px, py, N);
+    return -dR[1] * (cR.c[0] - px[N]) + dR[0] * (cR.c[1] - py[N]) > 0 ? 1 : -1;
+  };
+  interface Sides {
+    /** The drawn point and left normal at each table sample. */
+    px: number[];
+    py: number[];
+    nx: number[];
+    ny: number[];
+    /** Half-widths where the normal line leaves C's ribbon (its side) and O's. */
+    wC: number[];
+    wO: number[];
+  }
+  /**
+   * Along the drawn normal at each table sample (the path at p = (N - i) /
+   * step, where the renderer's arc steps and the lint read sepAt), the
+   * half-width at which the line leaves each stroke's ribbon: C's on C's
+   * side, O's on the other. From the medial radius (inside that ribbon)
+   * outward in steps to the first point more than h from the stroke, then
+   * bisection.
+   */
+  const sides = (path: Pt[], sC: number): Sides => {
+    const s: Sides = { px: [], py: [], nx: [], ny: [], wC: [], wO: [] };
+    const exit = (near: (x: number, y: number) => Near, x: number, y: number, ux: number, uy: number, w0: number): number => {
+      const out = (w: number): boolean => near(x + ux * w, y + uy * w).d > h;
+      let lo = w0;
+      let hi = w0 + h / 8;
+      while (!out(hi)) {
+        lo = hi;
+        hi += h / 8;
+        if (hi > w0 + 4 * h) return hi;
+      }
+      for (let it = 0; it < 40; it++) {
+        const m = (lo + hi) / 2;
+        if (out(m)) hi = m;
+        else lo = m;
+      }
+      return (lo + hi) / 2;
+    };
+    for (let i = 0; i <= N; i++) {
+      const p = (N - i) / step;
+      const k = Math.min(ROOT_SEGS - 1, Math.floor(p));
+      const sg = segOf(path, k);
+      const q = bezAt(sg, p - k);
+      const d = bezDeriv(sg, p - k);
+      const l = Math.sqrt(d[0] * d[0] + d[1] * d[1]);
+      const ux = -d[1] / l;
+      const uy = d[0] / l;
+      s.px.push(q[0]);
+      s.py.push(q[1]);
+      s.nx.push(ux);
+      s.ny.push(uy);
+      s.wC.push(i === 0 ? h : exit(nearC, q[0], q[1], ux * sC, uy * sC, tr[i]));
+      s.wO.push(i === 0 ? h : exit(nearO, q[0], q[1], -ux * sC, -uy * sC, tr[i]));
+    }
+    return s;
+  };
+  const path = build(qx, qy);
+  const sC = sideOf(qx, qy);
+  const sd = sides(path, sC);
+  // The ribbon takes the narrower side: its outline never leaves the
+  // strokes' ribbons; the other side sinks into its stroke by the
+  // difference (the lint reports it as the inset). Shifting the samples
+  // toward the edges' midline and refitting was tried (one pass, damped
+  // passes): at xh 2, where O's turn radius is about twice h, it broke
+  // the taper's monotone rise.
+  const hw = sd.wC.map((w, i) => (i === 0 ? h : Math.min(w, sd.wO[i])));
+  const ts = hw.map((w) => 2 * (w - h));
+  // The stroke points under each edge (arcs from J), for paint.
+  const fc: number[] = [];
+  const fo: number[] = [];
+  for (let i = 0; i <= N; i++) {
+    if (i === 0) {
+      fc.push(0);
+      fo.push(0);
+      continue;
+    }
+    const ex = sd.px[i] + sd.nx[i] * sC * hw[i];
+    const ey = sd.py[i] + sd.ny[i] * sC * hw[i];
+    fc.push(arcJ - arcAtP(tab, nearC(ex, ey).p));
+    const ox2 = sd.px[i] - sd.nx[i] * sC * hw[i];
+    const oy2 = sd.py[i] - sd.ny[i] * sC * hw[i];
+    fo.push(arcAtP(tab, nearO(ox2, oy2).p) - arcJ);
   }
   const lerp = (v: number[], a: number): number => {
     const x = Math.max(0, Math.min(N, (a / aR) * N));
     const i = Math.min(N - 1, Math.floor(x));
     return v[i] + (v[i + 1] - v[i]) * (x - i);
   };
-  // dM/d(-a): the root runs R -> J, toward smaller a.
-  const eps = 0.01;
-  const D = (a: number): [number, number] => {
-    const a0 = Math.max(0, a - eps);
-    const a1 = a + eps;
-    const m0 = medial(a0);
-    const m1 = medial(a1);
-    return [(m0.x - m1.x) / (a1 - a0), (m0.y - m1.y) / (a1 - a0)];
-  };
-  // At J the axis runs along the arrival tangent (unit speed in a).
-  const ed = bezDeriv(segOf(bp, at / 3 - 1), 1);
-  const el = Math.sqrt(ed[0] * ed[0] + ed[1] * ed[1]);
-  const tJ: [number, number] = [ed[0] / el, ed[1] / el];
-  const path: Pt[] = [];
-  const da = aR / ROOT_SEGS;
-  let dR: [number, number] = tJ;
-  for (let k = 0; k < ROOT_SEGS; k++) {
-    const a0 = aR - k * da;
-    const a1 = aR - (k + 1) * da;
-    let p0: [number, number];
-    if (k === 0) {
-      const m = medial(a0);
-      p0 = [m.x, m.y];
-      path.push(p0);
-    } else p0 = path[path.length - 1] as [number, number];
-    let p1: [number, number] = [J[0], J[1]];
-    if (k + 1 < ROOT_SEGS) {
-      const m = medial(a1);
-      p1 = [m.x, m.y];
-    }
-    const d0 = D(a0);
-    if (k === 0) dR = d0;
-    const d1 = k + 1 === ROOT_SEGS ? tJ : D(a1);
-    path.push([p0[0] + (d0[0] * da) / 3, p0[1] + (d0[1] * da) / 3]);
-    path.push([p1[0] - (d1[0] * da) / 3, p1[1] - (d1[1] * da) / 3]);
-    path.push(p1);
-  }
-  // The strokes' directions away from J at R's feet, and C's side.
-  const cR = cAt(aR);
+  // The strokes' directions away from J at R's medial feet.
   const cl = Math.sqrt(cR.d[0] * cR.d[0] + cR.d[1] * cR.d[1]);
-  const mR = medial(aR);
-  const oq = nearO(mR.x, mR.y);
-  const [os, ot] = splitP(bp, oq.p);
-  const od = bezDeriv(segOf(bp, os), ot);
   const ol = Math.sqrt(od[0] * od[0] + od[1] * od[1]);
   const cosR = (-cR.d[0] * od[0] - cR.d[1] * od[1]) / (cl * ol);
-  const sideC: 1 | -1 = -dR[1] * (cR.c[0] - mR.x) + dR[0] * (cR.c[1] - mR.y) > 0 ? 1 : -1;
   return {
     path,
     aR,
-    bR: mR.b,
+    bR: tb[N],
     sepAt: (a) => lerp(ts, a),
     rAt: (a) => lerp(tr, a),
-    footO: (a) => lerp(tb, a),
-    sideC,
+    footC: (a) => lerp(fc, a),
+    footO: (a) => lerp(fo, a),
+    sideC: sC,
     cosR,
   };
 }
