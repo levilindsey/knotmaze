@@ -454,10 +454,9 @@ Every other item below waits on the trigger it names.
 - **K569** · After K115 stage 9 (Levi, 2026-10-20): some lifted-pen strokes (dots, bars, accents)
   become maze threads, each a separate thread through the point, forced crossings at both ends with
   it underneath so it ends where the glyph wants. `docs/design/K115_glyphs.md` section 11, call 2.
-- **K578** · While confetti falls, every frame redraws the whole maze, gap search included: the
-  phone fell from 60 to 45 fps over K568's fall, of which the confetti's own cost is about 2 fps
-  (K572). Cache the still maze in a texture and draw the confetti over it. `docs/design/K572.md`
-  (Handoff).
+- **K578** · While confetti falls, every frame redraws the whole maze, gap search and all: the phone
+  drops from 60 to 45 fps, the confetti's own share about 2 fps (K572). Cache the still maze in a
+  texture under the confetti. `docs/design/K572.md` (Handoff).
 
 ## Residuals (known, not fixed)
 
@@ -1260,10 +1259,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K577** · Worker-host A/Bs: try `__knotStepUntil(5)` after the freeze to make them reproducible,
   and promote the K550 kill's `ab_probe.mjs` to a tracked `scripts/` probe if more A/Bs follow
   (`docs/design/K550_kill.md`, Handoff).
-- **K579** · GPU confetti: upload each piece's launch once and move it in a vertex shader (its
-  gravity, drag, flutter and spin are closed-form), dropping the per-frame CPU sim and upload. Pays
-  if K318's themes raise the counts; needs K307's warm-up (Levi asked 10-20; confetti's own phone
-  cost ~2 fps, K572).
+- **K579** · GPU confetti: upload each launch once and move the pieces in a vertex shader (the
+  motion is closed-form), dropping the per-frame CPU sim and upload. Pays if K318 raises the counts;
+  needs K307's warm-up (Levi asked 10-20; K572: ~2 fps on the phone).
 
 ## Done
 
