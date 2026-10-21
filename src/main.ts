@@ -2893,12 +2893,12 @@ async function main(): Promise<void> {
     const fc = scene.fabricController;
     const mode = fc?.ruleLook?.mode;
     const why = fc?.refusalOf(eid);
-    // K138 s3: a one-way run, against its arrow or backtracked.
+    // K138 s3: a one-way run, against its arrow or backtracked. (The rules
+    // run with the cut off, so no Undo button shows beside them; the Stranded
+    // banner's Undo replays the taps and is never refused.)
     if (why === "oneWay") {
       showToast(
-        eid === fc!.arrivalEdge
-          ? "No going back over a one-way run. Undo still works."
-          : "That run is one-way: follow the arrows.",
+        eid === fc!.arrivalEdge ? "No going back over a one-way run." : "That run is one-way: follow the arrows.",
         2500
       );
       return;

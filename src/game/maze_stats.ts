@@ -357,8 +357,8 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
     label: "one-way",
     line:
       "One-way runs. Chevrons along a one-way run point the way; a tap " +
-      "against them is refused, and so is a backtrack over one (Undo always " +
-      "works). The way out never closes.",
+      "against them is refused, and so is a backtrack over one. The way out " +
+      "never closes.",
   },
 };
 
