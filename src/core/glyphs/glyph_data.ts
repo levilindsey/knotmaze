@@ -116,6 +116,28 @@ const A_GLYPH: Glyph = {
   crossings: 1,
 };
 
+/**
+ * The a with its connector LANDING on J from above: the stage 9 kill
+ * criterion's closest passing form (a_search.ts in the stage 9 probes). The
+ * connector climbs steeply, turns over near (22, 77) and lands on the
+ * oval's top heading (2, -1), so its arm opens 27.7 degrees off the oval's
+ * (the tangent arrival opens 1: the thorn). Every rule passes at xh 2 and 3,
+ * at the same advance. Probe switch `#glyphs2=aland`; Levi's call.
+ */
+export const A_LANDED: Glyph = {
+  ...A_GLYPH,
+  body: knotsToPath([
+    [0, 32, LOW[0], LOW[1], 0, 2],
+    [22, 77, 3, 1, 8, 3],
+    [46, 72, 2, -1, 3, 14, -1, 0],
+    [28, 36, 0, -1, 20, 20],
+    [46, 0, 1, 0, 13, 13],
+    [66, 24, 1, 4, 3, 6, 1, -2],
+    [88, 4, 1, 0, 10, 14],
+    [120, 32, LOW[0], LOW[1], 2, 0],
+  ]),
+};
+
 /** Lead tails: a straight run along the entry or exit tangent. */
 export const LEAD_STEPS = 4;
 

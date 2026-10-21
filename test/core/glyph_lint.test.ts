@@ -3,7 +3,7 @@
 // below; synthetic glyphs pin each rule.
 import { describe, expect, it } from "vitest";
 import { lintGlyph, LINT } from "../../src/core/glyphs/glyph_lint";
-import { FORK_VARIANTS, GLYPHS, glyphI } from "../../src/core/glyphs/glyph_data";
+import { A_LANDED, FORK_VARIANTS, GLYPHS, glyphI } from "../../src/core/glyphs/glyph_data";
 import { knotsToPath, type Knot } from "../../src/core/glyphs/glyph_knots";
 import type { Glyph } from "../../src/core/glyphs/glyph_types";
 
@@ -54,6 +54,17 @@ describe("glyph lint: the authored set", () => {
       const rules = rulesOf(glyphI(f), 2);
       expect(rules.includes("fork-angle"), `f${f}`).toBe(f < 15);
       if (f >= 15 && f <= 45) expect(rules, `f${f}`).toEqual([]);
+    }
+  });
+
+  it("the a's landed J (the kill criterion's closest form) passes every rule", () => {
+    for (const xh of [2, 3]) {
+      const r = lintGlyph(A_LANDED, xh);
+      expect(r.errors, JSON.stringify(r.errors)).toEqual([]);
+      expect(r.crossings.length).toBe(A_LANDED.crossings);
+      const j = r.forks.find((f) => f.junction === 6 && f.cos > 0)!;
+      expect(j.cos).toBeLessThan(LINT.forkMinCos);
+      expect(j.dClearLU).toBeLessThanOrEqual(LINT.forkMaxLU);
     }
   });
 

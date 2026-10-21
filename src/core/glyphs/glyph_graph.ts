@@ -33,7 +33,7 @@ import {
   type CrossingHit,
   type SegRef,
 } from "./glyph_eval";
-import { FORK_VARIANTS, GLYPHS, LEAD_STEPS, glyphI } from "./glyph_data";
+import { A_LANDED, FORK_VARIANTS, GLYPHS, LEAD_STEPS, glyphI } from "./glyph_data";
 import { knotsToPath } from "./glyph_knots";
 
 export const GU_PER_XH = 72;
@@ -48,6 +48,8 @@ export interface GlyphBuildOpts {
   forks?: boolean;
   /** Fork measurement: every i takes this FORK_VARIANTS angle. */
   fork?: number;
+  /** Stage 9 kill criterion: every a takes the landed J (A_LANDED). */
+  aLanded?: boolean;
 }
 
 export interface GlyphBuildStats {
@@ -236,6 +238,7 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
       continue;
     }
     let g: Glyph = GLYPHS.get(ch)!;
+    if (ch === "a" && opts.aLanded) g = A_LANDED;
     if (ch === "i" && (opts.forks || opts.fork !== undefined)) {
       const f = opts.fork !== undefined ? FORK_VARIANTS.find((v) => v === opts.fork) : FORK_VARIANTS[iCount % FORK_VARIANTS.length];
       g = glyphI(f ?? 30);

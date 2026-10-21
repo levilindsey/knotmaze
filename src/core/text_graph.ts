@@ -851,7 +851,12 @@ export function buildTextGraph(text: string, opts?: TextGraphOpts): TangleGraph 
           ? MIN_XHEIGHT
           : 3;
     const fk = flags.find((f) => /^f\d+$/.test(f));
-    const built = buildGlyphGraph(text, { xHeight: xh, forks: flags.includes("forks"), fork: fk ? Number(fk.slice(1)) : undefined });
+    const built = buildGlyphGraph(text, {
+      xHeight: xh,
+      forks: flags.includes("forks"),
+      fork: fk ? Number(fk.slice(1)) : undefined,
+      aLanded: flags.includes("aland"),
+    });
     if (built) {
       glyphStats.built++;
       assignPenOrder(built.graph, built.edgePen, opts?.penReverse === true);
