@@ -189,10 +189,10 @@ Next free ID: K718.
   1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that
   swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
   K280, residuals K281).
-  - owner: agent `a0437651435d16c14` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 22:23, 2 h cap ~00:23)
-  - branch: `worktree-agent-a0437651435d16c14`, worktree `.claude/worktrees/agent-a0437651435d16c14`; last commit: `489ac5b`
+  - owner: nobody since 2026-10-21 00:20 (merged; agent `a0437651435d16c14` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `c2c67ca`
   - evidence: `.claude/probes/K114/walker/`
-  - next: the walker and par solver (pure) with the par census, then Lead the walker on the page, Delay it, the Keep it in probe
+  - next: Levi calls K706 and K707; the walker dot glow (K713); a phone pass (K717 part 2); then K688 healing cuts
   - brief: `docs/design/K114_walker.md`
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
