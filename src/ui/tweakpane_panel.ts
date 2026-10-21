@@ -2990,9 +2990,10 @@ export function buildPanel(
     // K137 stage 3d: the extra monsters play on the turn clock only.
     sleepersRow.hidden = !minoOn || realtime;
     sleepKindRow.hidden = !minoOn || realtime || params.sleepers <= 0;
-    // K137 stage 4: the lures and snares play on the turn clock only.
+    // K137 stage 4: the lures and snares play on the turn clock only, and
+    // snares by runs only (TurnMinotaur.setSnare refuses by length).
     luresRow.hidden = !minoOn || realtime;
-    snaresRow.hidden = !minoOn || realtime;
+    snaresRow.hidden = !minoOn || realtime || params.minoByLength === true;
     minoRestartRow.hidden = !minoOn || livesOn;
     minoLairRow.hidden = !minoOn || restartOn;
     minoRefogRow.hidden = !minoOn || !(fog || threads) || restartOn;

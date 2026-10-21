@@ -638,6 +638,9 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   `pickPt(edge)` tries fractions 0.5, 0.42, 0.58, 0.34, 0.66, ... inside
   the view and taps the first that `cutPick` confirms, and checks
   `tools.tapEdge` after the tap ("the tap picked the run aimed at").
+  `panel_rows.mjs <base>` reads the Lures and Snares rows' visibility from
+  the panel's DOM (`tp-v-hidden` on the row or a parent): both show by
+  runs, and Snares hides with `&mbl=1` (3 checks).
 
 - K698 + K713 (2026-10-21), the toasts, the walker's glow and the pad:
   `.claude/probes/K698/k698.mjs <cut|aids|lives|walker|sword|glow|pad>
