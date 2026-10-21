@@ -351,6 +351,31 @@ Next free ID: K721.
   - evidence: `.claude/probes/K137/s3b/`
   - next: stage 3b: the sword and sprint, then the monster list, sleepers, follower, lures, snares, mud
   - brief: `docs/design/K137_s3b.md`
+- **K643** · K580's glyph-lint upkeep: lintGlyph takes the taper part as an argument (it hardcodes
+  TAPER_PART_LU, so tp60 lints only through a probe copy); calibrate taperBulgeLU (0.01) and the
+  crotch bound (1.2 LU) with bulges injected through a probe flag (`docs/design/K580_s2.md` step 5).
+  - owner: agent `aac9189f4fdd58179` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 01:09, 2 h cap ~03:09)
+  - branch: `worktree-agent-aac9189f4fdd58179`, worktree `.claude/worktrees/agent-aac9189f4fdd58179`; last commit: `6c2068d`
+  - evidence: `.claude/probes/K643/`
+  - next: the part argument, injected bulge and crotch cases, calibration sheets, tests
+  - brief: `docs/design/K643.md`
+- **K720** · Sound off still opens audio: under snd=none or mute the first touch creates and resumes
+  the AudioContext (knot_synth ensure, via the autoplay gate) and plucks reach resume(). Every play
+  path is gated, so nothing should sound; create it only once sound is on. A daily drops snd from
+  the address bar, so a reload plays music (K717)
+  - owner: agent `a1426841a5a579075` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 01:09, 2 h cap ~03:09)
+  - branch: `worktree-agent-a1426841a5a579075`, worktree `.claude/worktrees/agent-a1426841a5a579075`; last commit: `6c2068d`
+  - evidence: `.claude/probes/K720/`
+  - next: no AudioContext until a sound plays; Node tests; browser counts
+  - brief: `docs/design/K720.md`
+- **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
+  after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
+  4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
+  - owner: agent `a8880b1b86770b4ed` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 01:09, 1.5 h cap ~02:39)
+  - branch: `worktree-agent-a8880b1b86770b4ed`, worktree `.claude/worktrees/agent-a8880b1b86770b4ed`; last commit: `6c2068d`
+  - evidence: `docs/design/K138_plan.md`
+  - next: the planner pass: the plan, the K138 s1 brief, questions for Levi
+  - brief: `docs/design/K138_plan.md`
 
 ## Next, in order
 
@@ -412,9 +437,6 @@ merged):
 - **K409** · Levi's burn calls 1-3 merged (6b9eb8f..3231d59). Left: step 4, the ember over the smoke
   (NOT BUILT in `render-explore.md`), after K525 (paint files) and K623/K624. The phone sheet passed
   (K631 part 1, 10-20). `docs/design/K409.md`.
-- **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
-  after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
-  4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
 - **K412** · K7's worker-chunk modulepreload on a real network (measured only on localhost): a
   fresh-profile load of https://levi.dev/knotmaze/ through `stage7/k7_frames.mjs`; its `wk` column
   reads `c` when the worker's fetch came from the cache through the proxy. Rides K7's phone pass.
@@ -536,9 +558,6 @@ Every other item below waits on the trigger it names.
 - **K611** · Main's drag frame is 19-26 ms (a drag runs at 30 fps); `RibbonRenderer.update` is 63%
   (gap slots 28%, splines 22%, tickPaint 17%). K370's 50 ms needs it under 12 ms. Overlaps K5
   R3/R4 and G3-2. `docs/design/K370.md` ("The gap to 50 ms", 2).
-- **K643** · K580's glyph-lint upkeep: lintGlyph takes the taper part as an argument (it hardcodes
-  TAPER_PART_LU, so tp60 lints only through a probe copy); calibrate taperBulgeLU (0.01) and the
-  crotch bound (1.2 LU) with bulges injected through a probe flag (`docs/design/K580_s2.md` step 5).
 - **K645** · K336's last unrun check: K140's GPU frame A/B at amounts 1 and 3, cannons on/off, under
   the perf lock (recipe in `docs/design/K653_checks.md` Handoff). The sheets, curl strip and spray
   count are done (K653): the finish spray throws no streamers.
@@ -571,10 +590,6 @@ Every other item below waits on the trigger it names.
 - **K709** · Phone kit hardening: the adb reconnect is built (K717, `.claude/probes/K578/phone/`
   adb_reconnect*.ps1 and watchdog_reconnect.ps1, on by default) but only its healthy-link no-op is
   tested; lib703 END cannot cross midnight; run_k717 skips a late probe; walker_phone takes 1 candidate
-- **K720** · Sound off still opens audio: under snd=none or mute the first touch creates and resumes
-  the AudioContext (knot_synth ensure, via the autoplay gate) and plucks reach resume(). Every play
-  path is gated, so nothing should sound; create it only once sound is on. A daily drops snd from
-  the address bar, so a reload plays music (K717)
 - **K698** · Phone toasts cover the bottom controls (Pixel 411x753): the cut refusal over Undo (K703,
   gone by 1.7 s; a touch still reaches Undo), the lives toasts over the move pad, the walker toasts over
   .km-walk and the pad (K717 `out/lives`, `out/walker`). Place toasts clear of the controls.
