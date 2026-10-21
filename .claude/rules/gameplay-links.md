@@ -374,9 +374,10 @@ only with the files it is about; `gameplay.md` lists the area's other files.
 
 - TELEGRAPH LOOK PARAM (K525, 2026-10-20; brief
   `docs/design/K525_telegraph.md`): `minoTelegraphLook` (`mtl`: rims |
-  line | both, default rims) is APPENDED at 178, after K324's 171-177;
-  CODEC_VERSION stays 8. It was 158 on its branch until the rebase onto
-  b1ec927 (K324 stage 1) renumbered it and re-froze the table pin.
+  line | both, default rims) is APPENDED at 181, after K324's 171-177
+  and K336's 178-180; CODEC_VERSION stays 8. It was 158 on its branch,
+  178 after the rebase onto b1ec927 (K324 stage 1) and 181 after the one
+  onto 62a70c1 (K336); each renumber re-froze the table pin.
   url_state reads it with readChoice (`TELEGRAPH_LOOKS`); an unknown
   option reads the default. Neither daily-exempt nor a MAZE key (a daily
   plays without the minotaur). A LIVE_EFFECT under onTurnMinoChange
