@@ -55,8 +55,12 @@ describe("K320 stage 1: char budgets", () => {
     // line, ribbon-only, no extra kFxColor call) adds 762 characters to both
     // (46,844 -> 47,606 and 63,259 -> 64,021 here); one more cold compile of
     // each per player.
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(47_650);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(64_050);
+    // K324 stage 2 (K654, 2026-10-20) raised them again: the riding lead
+    // (`uniform vec4 uKTeleAt;`, the two `T1.z < 0.0 ? uKTeleAt.x :` end
+    // picks and two abs() on the fades) adds 85 to both (47,606 -> 47,691
+    // and 64,021 -> 64,106 here); the rest stay byte for byte.
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(47_750);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(64_150);
     expect(STRIP_FRAG.length).toBeLessThanOrEqual(31_400);
     expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(26_600);
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_300);

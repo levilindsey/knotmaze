@@ -310,6 +310,9 @@ export interface KUniforms {
   // K525 telegraph rims (rgb, strength): read only by the ribbon programs
   // (paint_glsl PAINT_ACROSS_GLSL); absent = no telegraph.
   uKTele?: Float32Array;
+  // K654 the riding end's ctrl (x): read only by the ribbon programs'
+  // TELE item (paint_glsl TELE_DECL_GLSL); absent = 0.
+  uKTeleAt?: Float32Array;
 }
 
 export const MAX_KNOTS = 8;
@@ -1628,15 +1631,18 @@ export function kPaintAt(
       // end has its own gap (the web's reach at a junction end, 0 mid-run)
       // and fade, the fade clamped as the hover rim's is, so a short piece
       // still glows in full mid-piece. No hover-point falloff: the whole
-      // piece lights.
-      const u0 = kArcU(D, c, cA);
-      const u1 = kArcU(D, c, cB);
+      // piece lights. K654: a negative fade marks the end that rides
+      // uKTeleAt.x (the walking minotaur's spot), the fade being its
+      // magnitude.
+      const at = U.uKTeleAt ? U.uKTeleAt[0] : 0;
+      const u0 = kArcU(D, c, P[o + 6] < 0 ? at : cA);
+      const u1 = kArcU(D, c, P[o + 7] < 0 ? at : cB);
       let u = arc;
       if (c.closed) u = u0 + kWrap(arc - u0, total);
       if (u < u0 || u > u1) continue;
       const hl = 0.5 * (u1 - u0);
-      const f0 = Math.min(Math.max(PAINT_CONST.RIM_END_SHARE * (hl - P[o + 4]), 1e-4), Math.max(P[o + 6], 1e-4));
-      const f1 = Math.min(Math.max(PAINT_CONST.RIM_END_SHARE * (hl - P[o + 5]), 1e-4), Math.max(P[o + 7], 1e-4));
+      const f0 = Math.min(Math.max(PAINT_CONST.RIM_END_SHARE * (hl - P[o + 4]), 1e-4), Math.max(Math.abs(P[o + 6]), 1e-4));
+      const f1 = Math.min(Math.max(PAINT_CONST.RIM_END_SHARE * (hl - P[o + 5]), 1e-4), Math.max(Math.abs(P[o + 7]), 1e-4));
       const g = P[o + 3] * Math.min(smooth01((u - u0 - P[o + 4]) / f0), smooth01((u1 - u - P[o + 5]) / f1));
       if (g > out.tele) out.tele = g;
     }

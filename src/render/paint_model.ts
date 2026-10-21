@@ -77,6 +77,9 @@ export function knotUniforms(): UniformGroup {
       // K525 telegraph rims (rgb, strength): declared only by the ribbon
       // programs (paint_glsl PAINT_ACROSS_GLSL); programs without it skip it.
       uKTele: v4(),
+      // K654 the telegraph's riding end (x: its ctrl): declared only by the
+      // ribbon programs (paint_glsl TELE_DECL_GLSL).
+      uKTeleAt: v4(),
       uKKnots: {
         value: new Float32Array(MAX_KNOTS * 4),
         type: "vec4<f32>",

@@ -1025,15 +1025,21 @@ vec3 kComposePaintFlat(vec3 S, highp vec4 st, highp float glow) {
 // both. The arm strips (webs, fans) draw no rim, as for the hover glow, so
 // their form leaves both chunks out and keeps its text byte for byte (K320:
 // a program never carries what it never calls). Mirror: paint_math.ts.
-const TELE_DECL_GLSL = "highp float kTele = 0.0;";
+// RIDING (K654, K324 stage 2): a NEGATIVE fade marks the end that rides
+// uKTeleAt.x, the walking minotaur's spot as an unwrapped ctrl on the
+// piece's run (telegraph_route.ts `ride`): the piece holds its whole run,
+// so the KPAINT index lists every sample the spot can reach, and that end's
+// ctrl is replaced by the uniform; the fade's size is its magnitude. A
+// walking minotaur thus rewrites no texel until it changes runs.
+const TELE_DECL_GLSL = "highp float kTele = 0.0;\nuniform vec4 uKTeleAt;";
 const TELE_ITEM_GLSL = /* glsl */ ` else if (type == ${PAINT_ITEM_TELE}) {
-      highp float u0 = kArcU(c, T0.y);
-      highp float u1 = kArcU(c, T0.z);
+      highp float u0 = kArcU(c, T1.z < 0.0 ? uKTeleAt.x : T0.y);
+      highp float u1 = kArcU(c, T1.w < 0.0 ? uKTeleAt.x : T0.z);
       highp float u = c.closed ? u0 + kWrap(arc - u0, total) : arc;
       if (u < u0 || u > u1) continue;
       highp float hl = 0.5 * (u1 - u0);
-      highp float f0 = clamp(RIM_END_SHARE * (hl - T1.x), 1e-4, max(T1.z, 1e-4));
-      highp float f1 = clamp(RIM_END_SHARE * (hl - T1.y), 1e-4, max(T1.w, 1e-4));
+      highp float f0 = clamp(RIM_END_SHARE * (hl - T1.x), 1e-4, max(abs(T1.z), 1e-4));
+      highp float f1 = clamp(RIM_END_SHARE * (hl - T1.y), 1e-4, max(abs(T1.w), 1e-4));
       kTele = max(kTele, T0.w * min(kSmooth((u - u0 - T1.x) / f0), kSmooth((u1 - u - T1.y) / f1)));
     }`;
 const paintCore = (tele: boolean): string =>
