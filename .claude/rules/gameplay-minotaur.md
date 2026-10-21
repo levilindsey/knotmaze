@@ -9,6 +9,8 @@ paths:
   - "src/game/sprint.ts"
   - "test/game/sprint.test.ts"
   - "src/ui/sprint_button.ts"
+  - "src/game/monsters.ts"
+  - "test/game/monsters.test.ts"
 ---
 
 # Gameplay lore: the real-time minotaur
