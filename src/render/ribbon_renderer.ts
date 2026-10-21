@@ -266,8 +266,17 @@ export interface RibbonStyle {
   pathColor?: number;
   // K580 (#glyphs2): per chain, a tangent spur's tapered root (core
   // Strand.taper; null or absent = none). update() widens the root's ribbon
-  // and rebuildFillets skips the junction the root ends at.
-  taper?: ({ sep: number[]; joint: number } | null)[];
+  // and rebuildFillets skips the junction the root ends at. K620: `body` =
+  // the chain carrying both strokes, `footC` / `footO` each side's foot as
+  // a body ctrl at the same steps as `sep` (the root's paint table).
+  taper?: ({
+    sep: number[];
+    joint: number;
+    body?: number;
+    footC?: number[];
+    footO?: number[];
+    sideC?: number;
+  } | null)[];
 }
 
 // PAINT: gameplay recoloring, declared by the fabric overlay and rendered by
@@ -993,7 +1002,12 @@ export class RibbonRenderer {
         closed: ps.chainBreakAfter[i] < 0,
         count: this.fills[i].sampleCount,
         paintBase: 0,
-      }))
+      })),
+      // K620: a root paint table per chain with a tapered root.
+      ps.chains.map((_, i) => {
+        const tp = style.taper?.[i];
+        return tp && tp.body !== undefined && tp.footC && tp.footO ? tp.footC.length : 0;
+      })
     );
     const U = knotUniformValues();
     U.uKBase[3] = style.paletteMode ? 1 : 0;
@@ -2362,6 +2376,7 @@ export class RibbonRenderer {
     if (this.explorePieces) this.applyExploreGaps();
     this.exploreUpdatePending = false;
     this.gaps.upload();
+    this.writeRootTables();
     this.paintScene.flushGeom();
     if (this.g3Data) g3Flush();
     this.drawRevealTips();
@@ -3207,6 +3222,82 @@ export class RibbonRenderer {
       buf[k] = (base ? base[k] : 1) * m;
     }
     return buf;
+  }
+
+  // K620: each tapered root's paint table (PaintScene.setRootTable; layout
+  // in paint_math, THE GLYPH ROOT'S PAINT), from this frame's samples. Per
+  // step of the root's arc (R -> J, the steps of `sep`): the body's arcs of
+  // both feet, the root's half-width, and each stroke's across coordinate
+  // (its ribbon's uv.y = 0.5 - dot(P - c, n) / 2h, n = (-ty, tx)) under the
+  // root's centerline and under the root's edge on that stroke's side.
+  private rootE0 = new Float32Array(0);
+  private rootE1 = new Float32Array(0);
+  private rootPt = new Float32Array(12);
+  private writeRootTables(): void {
+    const taper = this.style.taper;
+    if (!taper) return;
+    const h = this.style.threadWidth / 2;
+    const P = this.rootPt;
+    const uvOf = (o: number, x: number, y: number): number => {
+      const d = (x - P[o]) * -P[o + 3] + (y - P[o + 1]) * P[o + 2];
+      return Math.min(Math.max(0.5 - d / (2 * h), 0), 1);
+    };
+    for (let c = 0; c < taper.length; c++) {
+      const tp = taper[c];
+      if (!tp || tp.body === undefined || !tp.footC || !tp.footO) continue;
+      const rs = this.chainSamples[c];
+      const bs = this.chainSamples[tp.body];
+      if (!rs || !bs) continue;
+      const nr = tp.footC.length;
+      if (nr < 2 || tp.footO.length !== nr || tp.sep.length !== nr) continue;
+      if (this.rootE0.length < nr * 4) {
+        this.rootE0 = new Float32Array(nr * 4);
+        this.rootE1 = new Float32Array(nr * 4);
+      }
+      const e0 = this.rootE0;
+      const e1 = this.rootE1;
+      const arcJ = kCA(this.kd, this.kcv[c], 2 * tp.joint);
+      const bClosed = this.ps.chainBreakAfter[tp.body] < 0;
+      // Which side of the root's ribbon C is on: the summed signed offset
+      // of C's foot from the centerline over the interior steps (+1 = the
+      // uv.y > 0.5 side, the right vertex c - n w).
+      let sum = 0;
+      for (let k = 0; k < nr; k++) {
+        const arcC = sampling.paintArcAt(bs, tp.footC[k], bClosed);
+        const arcO = sampling.paintArcAt(bs, tp.footO[k], bClosed);
+        e0[k * 4] = arcC;
+        e0[k * 4 + 1] = arcO;
+        e0[k * 4 + 2] = h + tp.sep[k] / 2;
+        e0[k * 4 + 3] = 0;
+        if (k === 0 || k === nr - 1) continue;
+        sampling.sampleAt(rs, (arcJ * k) / (nr - 1), P, 0);
+        sampling.sampleAt(bs, arcC, P, 4);
+        sum += (P[4] - P[0]) * -P[3] + (P[5] - P[1]) * P[2];
+      }
+      const side = sum < 0 ? 1 : -1;
+      for (let k = 0; k < nr; k++) {
+        sampling.sampleAt(rs, (arcJ * k) / (nr - 1), P, 0);
+        sampling.sampleAt(bs, e0[k * 4], P, 4);
+        sampling.sampleAt(bs, e0[k * 4 + 1], P, 8);
+        const hw = e0[k * 4 + 2];
+        const nx = -P[3];
+        const ny = P[2];
+        // C's edge: c - side n hw; O's: c + side n hw.
+        e1[k * 4] = uvOf(4, P[0], P[1]);
+        e1[k * 4 + 1] = uvOf(4, P[0] - side * nx * hw, P[1] - side * ny * hw);
+        e1[k * 4 + 2] = uvOf(8, P[0], P[1]);
+        e1[k * 4 + 3] = uvOf(8, P[0] + side * nx * hw, P[1] + side * ny * hw);
+      }
+      this.paintScene.setRootTable(
+        c,
+        tp.body,
+        side,
+        arcJ,
+        2 * tp.joint,
+        e0.subarray(0, nr * 4),
+        e1.subarray(0, nr * 4)
+      );
+    }
   }
 
   // Compose a chain's pluck collapse into the width multiplier update()

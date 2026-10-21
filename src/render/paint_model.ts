@@ -16,10 +16,13 @@ import { PAINT_CONST } from "./paint_const";
 import type { KData, KPiece, KUniforms } from "./paint_math";
 import {
   MAX_KNOTS,
+  ROOT_ENTRY,
+  ROOT_HEAD,
   layoutSources,
   sourceHints,
   writeChainHeader,
   writeGeomTable,
+  writeRootTable,
   writeRunTexels,
 } from "./paint_math";
 
@@ -129,8 +132,16 @@ export class PaintScene {
   private span: Float64Array;
   // Per chain: carries gameplay paint (KGEOM G0.w).
   private paintOn: Uint8Array;
+  // K620: per chain the KGEOM texel of its tapered root's paint table (-1 =
+  // none), after geomEnd; KSTATIC C1.w carries 1 + it (paint_math
+  // writeRootTable). Only chains with a root get one, so a scene without
+  // roots writes exactly what it did before.
+  private rootBase: Int32Array;
+  readonly rootEnd: number;
+  private rootScratch = new Float32Array(0);
 
-  constructor(chains: PaintChainInfo[]) {
+  // `roots[c]` = chain c's root table entries (0 or absent = no root).
+  constructor(chains: PaintChainInfo[], roots: ArrayLike<number> = []) {
     this.chains = chains;
     const n = chains.length;
     const rowUp = (t: number): number => Math.ceil(t / ROW_W) * ROW_W;
@@ -149,6 +160,14 @@ export class PaintScene {
       g += 1 + Math.ceil(chains[c].nCtrl / 4);
     }
     this.geomEnd = g;
+    this.rootBase = new Int32Array(n).fill(-1);
+    for (let c = 0; c < n; c++) {
+      const nr = roots[c] ?? 0;
+      if (nr < 2) continue;
+      this.rootBase[c] = g;
+      g += ROOT_HEAD + ROOT_ENTRY * nr;
+    }
+    this.rootEnd = g;
     this.srcFirst = new Int32Array(n);
     this.srcCount = new Int32Array(n);
     this.span = new Float64Array(2 * n);
@@ -167,9 +186,9 @@ export class PaintScene {
     st.flush();
 
     const ge = kGeom();
-    ge.ensure(this.geomEnd);
-    ge.data.fill(0, 0, this.geomEnd * 4);
-    ge.markDirty(0, this.geomEnd);
+    ge.ensure(this.rootEnd);
+    ge.data.fill(0, 0, this.rootEnd * 4);
+    ge.markDirty(0, this.rootEnd);
     ge.flush();
   }
 
@@ -183,8 +202,40 @@ export class PaintScene {
       geomBase: this.geomBase[c],
       srcFirst: this.srcFirst[c],
       srcCount: this.srcCount[c],
-      paintBase: ch.paintBase,
+      paintBase: this.rootBase[c] >= 0 ? this.rootBase[c] + 1 : ch.paintBase,
     });
+  }
+
+  // K620: chain `chain`'s root table for this frame (update(), after every
+  // chain's writeGeom): marks only the texels that changed.
+  setRootTable(
+    chain: number,
+    body: number,
+    sideSign: number,
+    arcJ: number,
+    ctrlJ: number,
+    e0: ArrayLike<number>,
+    e1: ArrayLike<number>
+  ): void {
+    const base = this.rootBase[chain];
+    if (base < 0) return;
+    const len = (ROOT_HEAD + ROOT_ENTRY * Math.floor(e0.length / 4)) * 4;
+    if (base * 4 + len > this.rootEnd * 4) return;
+    if (this.rootScratch.length < len) this.rootScratch = new Float32Array(len);
+    const s = this.rootScratch;
+    writeRootTable(s, 0, body, sideSign, arcJ, ctrlJ, e0, e1);
+    const ge = kGeom();
+    const g = ge.data;
+    const o = base * 4;
+    let lo = -1;
+    let hi = -1;
+    for (let j = 0; j < len; j++) {
+      if (g[o + j] === s[j]) continue;
+      g[o + j] = s[j];
+      if (lo < 0) lo = j;
+      hi = j;
+    }
+    if (lo >= 0) ge.markDirty(base + (lo >> 2), base + (hi >> 2) + 1);
   }
 
   // One chain's arc table for this frame (update(), right after sampling),

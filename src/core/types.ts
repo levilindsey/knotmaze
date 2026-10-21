@@ -71,7 +71,11 @@ export interface Strand {
   // steps of the root's arc from its start (R) to the joint (0 there); the
   // renderer widens the ribbon to 1 + sep / threadWidth, so the root's
   // edges are the strokes' outer edges.
-  taper?: { sep: number[]; joint: number };
+  // K620 (the root's paint): `footC` / `footO` = each side's foot at the
+  // same steps as `sep`, as a ctrl (node i = ctrl 2i) of the BODY strand,
+  // the other strand through the joint node, which carries both strokes (C
+  // into the joint, O out of it); `sideC` = TangentRoot's.
+  taper?: { sep: number[]; joint: number; footC?: number[]; footO?: number[]; sideC?: 1 | -1 };
 }
 
 // Main combinatorial graph. (The legacy single-strand MazeGraph - the old
