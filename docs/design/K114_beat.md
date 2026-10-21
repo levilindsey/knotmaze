@@ -164,3 +164,154 @@ When you stop:
 - append a "Handoff" section to this brief: what landed, the calls, the
   page results, the residuals, the remainder and the handle fields;
 - report, ending with the K114 handle fields and a `Ledger items` list.
+
+## Handoff (2026-10-21, agent a178a00897a4044dc, stopped at the 2 h cap)
+
+Items 1-5 and 7 are built and checked on the page; items 6 (the pulse)
+and 8 (the HUD row, the share tag, the panel rows) are not built. The
+beat is reachable by links only (`&clk=beat`).
+
+**What landed** (WIP commits on the branch, rebased onto master):
+- `src/game/beat_clock.ts`: the beat clock on the fixed 120 Hz step
+  (CHASE_HZ). Beat k falls on tick ceil(7200 k / tempo), so 100 bpm is
+  72 ticks (600 ms) a beat; `running` is false while the page is hidden
+  or the pause holds it, and `reset()` releases a hold. `BeatFeed` locks
+  `performance.now()` to the AudioContext's clock, so once audio runs
+  the beats follow it.
+- `src/game/beat_rider.ts`: the rider. A run takes max(1, round(length /
+  L)) beats, at most the cap. The queue keeps the last tap. With no tap
+  at a junction the dot takes the run straight on, else keeps right; an
+  END turns it back.
+- `src/app/beat_frame.ts` (`createBeat`): the frame side. Each departure
+  commits through `moveAlong`, so the turn minotaur and the fire step
+  once per committed move with no change in their files. A commit that
+  would end the game is refused at the next junction and the dot rests.
+  Each departure plucks its run's note (music mode's pitch map, strength
+  0.8) at the beat's audio time. `needsFrame` is false once the dot
+  rests (so the clock stops after a loss). The probe hook
+  `__knotBeat()`: on, ticks, running, held, the run and the junction
+  ahead, the queued arm, the start beat, t0/t1, tempo, phase and the
+  departure order ahead. `on` is false until the first tap.
+- `src/ui/beat_pause.ts`: the pause (`km-control km-beat-pause`, 48 px,
+  bottom left where the cut's button sits, shown while the beat plays).
+  Pressed, it holds the beat, hides the canvas
+  (`:root[data-beat-paused='1'] canvas`) and shows a centred "Paused"
+  pill; taps and moves do not queue while held. An open panel over it
+  hides the button but keeps the pause; an ended game or the beat going
+  off releases it.
+- `src/ui/url_state.ts`: `CLOCK_MODES` gains `beat`, read in every game
+  mode (`clockOf`); `minoClockOf` plays the minotaur on the turn clock
+  under the beat; `fabricRulesOf` drops the cut (and so the walker) under
+  the beat; `fireSettingsOf` plays the turn fire (fireClock ignored).
+  Three numbers appended to the codec: `beatTempo` (`btp`, 100,
+  [40, 180], rounded), `beatLength` (`btl`, L, 2, [0.5, 8]) and
+  `beatCap` (`btc`, 4, [1, 8], rounded); `beatSettingsOf` clamps them in
+  every reader. Under onClockChange in undo_stack.ts's LIVE_EFFECTS. Not
+  daily-exempt, not MAZE keys.
+- `src/main.ts` call sites: `createBeat`, the pause, Restart resets the
+  beat and releases the pause, Undo off under the beat (`canUndo`),
+  `moveAlong` queues taps and key moves while the beat drives, and the
+  frame loop's `tickBeat` (`src/app/frame_loop.ts`). `src/game/walker.ts`
+  exports what the rider shares; the walker is unchanged.
+- `src/app/auto_audio.ts`: under the beat the auto tick plays no song and
+  no random plucks and cancels no scheduled note (residual 1).
+- Tests: `test/game/beat_clock.test.ts` and `test/game/beat_rider.test.ts`
+  (22 tests: the beat grid at several tempos, holds and resets, the
+  audio lock, the rider's routes, queues, END turn-backs and caps, whole
+  games with the turn minotaur and with the fire), url_codec.test.ts
+  (the defaults table, OVERRIDE_KEYS, the beat readers), and the table
+  pin re-frozen. With `clock=turn` every other pin and digest held.
+
+**The calls** (each built as the rec):
+1. `beat` is a `clock` option read in every game mode. Alternatives: a
+   param of its own; minotaur-only, like realtime.
+2. Tempo 100 bpm. Seed 7 solved in 0:32-0:34 on the desktop (the hunter
+   run 0:34) and 0:31 at the phone viewport, every run steered by the
+   probe. Not yet felt by a person: Levi to try 80, 100 and 132.
+3. L = 2, cap 4, so a typical run takes about two beats. Over 2117 runs
+   (median length 4.24 ctrl), the share taking 1/2/3/4 beats:
+
+   | L | 1 beat | 2 beats | 3 beats | 4 beats | mean |
+   |---|---|---|---|---|---|
+   | 2 | 34.3% | 22.7% | 16.3% | 26.7% | 2.35 |
+   | 3 | 52.8% | 24.2% | 11.1% | 11.9% | 1.82 |
+   | 4 | 66.7% | 19.7% | 6.9% | 6.7% | 1.54 |
+
+   At L 2 a quarter of the runs hit the cap (long runs crawl); L 3 is the
+   alternative if the feel says runs drag.
+4. Each departure plays its run's own note (music mode's pitch map), no
+   song. Alternative: the song's next note per departure. See residual 1.
+5. The first tap starts the dot on the next beat. Tap to departure:
+   676 ms desktop, 802 ms phone viewport, 664-719 ms in the hunter and
+   fire runs. Alternative: a count-in after the intro.
+6. One turn step per committed move; `fireClock` is ignored under the
+   beat. Alternative: a step per beat.
+7. The cut, the walker and Undo are off under the beat. Alternative: keep
+   each.
+8. A late tap gets no grace: it queues for the next junction.
+   Alternative: a short grace that re-routes the departure.
+9. The share tag (a note glyph plus the tempo): not built.
+10. The pause, as described above (brief item 5's placement was mine).
+    Alternative: a key (none yet) or pausing on blur only.
+
+**Page results** (`.claude/probes/K114/beat/beat_page.mjs`: real clicks
+in headed Chrome off-screen, a fresh profile per run, links
+`?7&am=instant&snd=none&clk=beat[&extra]`; outputs and stills in
+`out/`):
+- desktop 1400x900: 12/12; phone viewport 411x753 with touch: 12/12;
+  `mt=hunter`: 12/12, solved 0:34, never caught. Checked in each: the dot
+  rests until the first tap, leaves on the next beat on the tapped arm,
+  rides on with no tap (three runs in 5 s), a queued turn takes the
+  tapped arm over the default, an END turns the dot back, the pause holds
+  the ticks and the moves and hides the board, resume runs again, and the
+  steered walk ends in the Solved banner.
+- `fi=fuse` (the turn fire at its default 0.6 / 0): burnt at 0:14 after
+  the beat's forced moves ("The fire reaches the end of every way on
+  before you."), a legitimate standing loss; the pause hid with the
+  ended game, so three checks failed and one did not run.
+  `fi=fuse&fsp=0.1&fdl=40`: 12/12, solved 0:34 with the fire burning, the
+  pause holds under the fire.
+- Sound on (Chrome with `--mute-audio`, `snd=manual`): 13/13, 23 plucks
+  for a 21-run path, context running.
+- The ride's notes on the speakers (Chrome with `--mute-audio`, which
+  leaves the analysers working; the master peak polled at each ride
+  step): `snd=manual` before the auto tick's gate, 14/14, peak 0.144, 27
+  of 63 polls over 0.01; `snd=music` after it (0773c56e), 14/14, peak
+  0.094, 15 of 62 polls over 0.01, and 23 plucks for the 21-run path, as
+  under manual: no song note played under the beat.
+
+**Residuals:**
+1. The auto tick's gate (`src/app/auto_audio.ts`, 0773c56e): under the
+   beat, autoAudioTick returns before the random and music branches (no
+   song, no random plucks) and before manual mode's per-frame
+   `cancelScheduled()`. INFERRED from the code, not observed: without it
+   the song played under the beat in music mode, and manual mode's cancel
+   could drop a note scheduled ahead of the audio clock. The manual run
+   before the gate still heard the ride (peak 0.144), so the cancel did
+   not silence it; how many notes it dropped, if any, was not measured.
+   Random mode was not run.
+2. A note can land up to the output latency plus a frame late: its time
+   is max(audio now, the beat's audio time).
+3. No wait under the beat; the pause is the only stop, and it has no key.
+4. Under the beat every forced move steps the fire, so the default turn
+   fire (0.6 / 0) burns a hesitant player fast (the probe's walk at
+   0:14). A beat-specific fire pace may be wanted.
+5. The clock stops once the game ends or the dot rests (by design).
+6. The pause sits where the cut's button is (both cannot show: the cut
+   is off under the beat); K137's sprint button placement was checked at
+   the rebase (see the handle).
+
+**Remainder** (the next stage):
+- Item 6: the head ring pulses on quarter notes; reduced motion gives
+  brightness only.
+- Item 8: the HUD tempo row, the share tag (note glyph plus tempo), the
+  panel rows (clock option, tempo, L, cap).
+- Keys and the move pad on the page (the moveAlong guard queues them;
+  only unit-tested).
+- Lore: "The beat rider (K114)" in `gameplay-mechanisms.md`, the BEAT
+  RIDER PARAMS entry in `gameplay-links.md`, a `probes.md` entry for
+  `beat_page.mjs` and `__knotBeat` (gotcha: `on` is false before the
+  first tap; read the clock with `__knotParams().clock`).
+- A real phone pass, and Levi's feel of the tempo and L.
+
+**Handle fields:** HANDLE_FIELDS
