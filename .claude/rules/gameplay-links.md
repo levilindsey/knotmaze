@@ -478,3 +478,17 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   dailies and K87 did not move. Probe links: `?<seed>&am=instant&ct=on`.
   The rules: gameplay-mechanisms.md's The cut; the row: gameplay-panel.md's
   CUT ROW.
+
+- LIVES PARAM (K137 stage 3a, 2026-10-20; brief `docs/design/K137_s3a.md`):
+  `lives` (`mlv`: a number, 0 off or 1..5 hearts, PARAM_RANGES [0, 5],
+  default 0; game/lives.ts `livesOf` rounds and clamps) is APPENDED at
+  192, after `cut`; CODEC_VERSION stays 8. Neither daily-exempt nor a
+  MAZE key: a daily plays with it off, and turning it on leaves the daily.
+  Under onChaseChange in undo_stack.ts's LIVE_EFFECTS (main.ts refills
+  the hearts when the setting changes). Pins that moved: the table pin,
+  url_codec.test.ts's defaults table and OVERRIDE_KEYS (`mlv`, otherValue
+  3, since half of a 0 default is 0). The golden snapshot, the golden
+  dailies, K87 and the minotaur digests did not move: off is
+  bit-identical. Probe links: `?<seed>&am=instant&mt=hunter&mlv=3`. The
+  rules: gameplay-minotaur.md's LIVES; the row: gameplay-panel.md's LIVES
+  ROW.

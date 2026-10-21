@@ -245,3 +245,16 @@ files.
   (Levi accepted). The lit fuse's ember first sat under the start disc
   (a world length used as a lattice distance); `runOut` places it in
   world terms (render-explore.md, THE EMBER DRAWS).
+
+- BROKEN RUNS STOP THE FIRE (K137-b, stage 3a, 2026-10-20; brief
+  `docs/design/K137_s3a.md`, Design). After a move that breaks a run,
+  `refire(walk, fire, L, broken)` (fire.ts) keeps every arrival time at
+  or before L (the move's END clock: walkedDist on the turn clock,
+  departure + length in real time) and recomputes the rest from those
+  vertices over unbroken runs. The controller holds the refired fire
+  (`fireLive`; `reset()` restores the built one, `fireBuilt`) and
+  `replay(taps)` rebuilds it. Hook: `__knotFabric().fire.blocked` (the
+  broken runs). Off (nothing breakable) the fire is untouched. Residuals
+  (the handoff): runBurnAt on a broken run may show a burnt run as
+  burning (display only); safeArms / fireTrapped count broken arms as
+  safe (as before); refire is O(V²) per breaking move.
