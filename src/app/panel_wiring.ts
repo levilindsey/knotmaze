@@ -368,6 +368,8 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
     // next move is committed again under the new settings).
     onTurnMinoChange: () => {
       scene.turnMino?.setConfig(turnConfig(turnMinoParamsOf(params)));
+      // K525: the telegraph's look applies live (render-only).
+      if (scene.fabric) scene.fabric.telegraphLook = params.minoTelegraphLook;
       deps.writeParams(params);
     },
     // K140: the finish confetti (render-only, live; off drops the pieces

@@ -305,6 +305,7 @@ export function createScene(deps: SceneDeps): Scene {
       );
       fabric.telegraphCoarse =
         window.matchMedia("(pointer: coarse)").matches || window.innerWidth <= 700;
+      fabric.telegraphLook = params.minoTelegraphLook; // K525
       fabric.trailMode = params.pathViz === "trail";
       fabric.pathViz = params.pathViz;
       fabric.tension = params.tension;
