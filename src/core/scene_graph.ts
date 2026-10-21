@@ -63,8 +63,9 @@ export interface SceneParams {
   // K558: text crossings put the EARLIER stroke over (pen order reversed).
   penReverse: boolean;
   // K115 stage 9: the #glyphs2 probe switch ("" off; "1" on; "forks" and
-  // "xh2" are probe options). Read from the hash, never from a link.
-  glyphs2?: string;
+  // "xh2" are probe options). Read from the hash, never from a link; every
+  // scene build passes it (main.ts's prebuild too: the worker name needs it).
+  glyphs2: string;
 }
 
 export interface SceneGraph {

@@ -118,6 +118,7 @@ import { attachSnoreLink } from "./ui/snore_link";
 import { SongScheduler } from "./audio/song_scheduler";
 import { createLoader } from "./ui/loader";
 import { createStamp } from "./app/stamp";
+import { GLYPHS2 } from "./app/glyph_switch";
 import { installProbeHooks } from "./app/probe_hooks";
 import { createFrameLoop } from "./app/frame_loop";
 import { createLoopFlags, Flag } from "./app/loop_flags";
@@ -209,7 +210,8 @@ async function main(): Promise<void> {
     ? new WorkerHost(() => rebuild(), {
         // K552: the same title gate as every createScene below, so a daily's
         // prebuild (untitled by default, titled with the pref) is adopted.
-        prebuild: { ...params, title: sceneTitle(launch.daily, params) },
+        // K115 stage 9: and the #glyphs2 switch, as scene.ts builds it.
+        prebuild: { ...params, title: sceneTitle(launch.daily, params), glyphs2: GLYPHS2 },
       })
     : new InThreadHost();
 
