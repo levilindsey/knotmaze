@@ -765,6 +765,27 @@ gone (K599); the ember draws over the smoke (not built, below).
   program text past the mode branch, so one cold compile. Residuals to
   check: the AA edge fringe where the two passes meet, and fans near
   junctions (the overlay covers ribbons only).
+- MEASURED (desktop RX 6800 XT, D3D11, under the perf lock; 3a3d937
+  against fded8c6 as `vite preview` builds; `.claude/probes/K409/`, the
+  handoff has every number). The width probe (`run_width.ps1`: daily #12
+  at the fit and zoomed, and the lit fuse, desk 1400x900 and the phone's
+  411x753 at 2.625; FX stopped for the widths, as played for the smoke):
+  under gone the ember now shows ahead of the cut (#12 at the fit, ember
+  px median 14 -> 42 phone, 24 -> 68 desk) and leaves most of the smoke
+  behind (the share the smoke hides, median 67% -> 10% phone, 43% -> 7%
+  desk); under char and on the fuse it is still 60-97% hidden (the smoke
+  is random per run, so +-10% is noise there). Fire off (K550's
+  `ab_probe.mjs`, `&phy=0`, dsf 1): knot, maze and the reveal 0 px, A/A
+  controls 0, sensitivity > 0. A burnt frame on today's master (K5 R1's
+  ribbon split under a burn) looked right: char, crossings, webs, ember.
+- THE GLOW OVER THE BAND, A CALL FOR LEVI. Under gone the ember (0.439
+  world) now covers the band's whole length (0.384), and its 0.95 mix
+  replaces the band's dark: the band reads only as the glow's browner
+  tail and the ash core (GPU zooms `out/sheets/zoom/`). Options as a CPU
+  mock with the shader's formulas (`options.mjs`,
+  `out/options/K409_glow_band_options.png`): A as built; B the glow down
+  the middle only, the band at the edges; C the ember's alpha by e^2; D
+  the band 1.0 ctrl. The branch ships A.
 
 ## THE DOTS (K397 stage 2, 2026-10-15)
 
