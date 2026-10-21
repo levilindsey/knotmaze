@@ -1,7 +1,8 @@
 // K137 stage 3d (design 4.9 and Levi's follower; brief docs/design/K137_s3d.md,
 // design docs/design/K137_s3b.md "Decided" 1-3): MORE THAN ONE MONSTER. The
 // minotaur stays the chase's first monster; these are the extras that step
-// with it on either clock (TurnMinotaur.extras, MinotaurChase.extras).
+// with it on the TURN CLOCK (TurnMinotaur.extras). Real time has no extras in
+// this stage (the stage's remainder): the panel hides the rows there.
 //
 // WHERE THEY SLEEP (sleeperSpots): junctions SLEEPER_RING_MIN..MAX (1-3) runs
 // off one shortest start-exit route (sword.ts's BFS), never the start, the
@@ -16,23 +17,24 @@
 // stream). Each monster draws from its own stream (monsterRng: the seed xor
 // "MNST" xor a per-index hash).
 //
-// THE RULES (both clocks hold the mechanics):
+// THE RULES (minotaur_turns.ts extrasTurn holds the mechanics; each extra
+// plays after the minotaur on every accepted move, a sprint's skipped move
+// excepted, and draws from its own stream at the game's turn):
 // - A SLEEPER wakes when you move along a run that touches its junction (in
-//   practice: you step onto it). It catches nobody while it sleeps or on the
-//   move that wakes it; awake, it is a hunter with the minotaur's pace and
-//   catch rules (turn clock: decide() with a prox config at the minotaur's
-//   speed, sight and accuracy; real time: the hunter's pursuit at
-//   approachPace within the hunter's sight, a random walk at wanderPace
-//   otherwise). Turn clock: standing on your junction when its turn comes,
-//   it holds (you walked onto it: leave, or be caught); real time: it gets
-//   up SLEEPER_GRACE_S after it wakes.
-// - A FOLLOWER does not wake when you pass. Leaving its junction starts it:
-//   it appears there FOLLOW_DELAY 1 or 2 of your moves later (drawn per
-//   follower) and walks your trail behind you, a run a turn (real time: at
-//   approachPace). Walking back into it is a catch. At each junction there
-//   is a FOLLOW_SHORTCUT chance (its stream) that it steps along its
-//   shortest route to you instead, and it rejoins your trail where it
-//   lands on it.
+//   practice: you step onto it or leave it). It neither moves nor catches on
+//   the move that wakes it; awake, it is a hunter with the minotaur's pace,
+//   sight, accuracy and contact rules (decide() with extraConfig: prox, no
+//   telegraph, sleep, territory or pull), deciding from where you stood as
+//   the telegraph decides the minotaur. SLEEPER_GRACE_S is for a real-time
+//   port (unused).
+// - A FOLLOWER does not wake when you pass. Leaving its junction starts it
+//   ("waiting"): it appears there FOLLOW_DELAY 1 or 2 of your moves later
+//   (drawn per follower) and walks your trail behind you, a run a turn.
+//   Walking back into it, or waiting while it is one run behind, is a
+//   catch. At each junction there is a FOLLOW_SHORTCUT chance (its stream)
+//   that it steps along its shortest route to you instead, and it rejoins
+//   your trail where it lands on it. You at the entrance: it loses you and
+//   walks home, where it sleeps again.
 // - A CATCH by any monster is the minotaur's catch (s3b call 1, rec): you go
 //   back to the entrance, the minotaur to its lair (or where it stands, lair
 //   off), and every extra back to its junction, asleep.

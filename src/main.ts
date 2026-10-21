@@ -480,6 +480,12 @@ async function main(): Promise<void> {
   // The HUD and the banner's row (null: off, or no minotaur running).
   const sprintShown = (): string | null =>
     sprintOn() ? sprintValue(sprintState, scene.chase !== null) : null;
+  // K137 stage 3d: the HUD, banner and share's "woken" (the sleepers woken
+  // this attempt; null: no sleeper-kind monster on the turn clock's chase).
+  const wokenShown = (): number | null => {
+    const tm = scene.turnMino;
+    return tm && tm.extras.some((x) => x.kind === "sleeper") ? tm.woken : null;
+  };
   // K114 CUT: the scissors are armed (the next tap cuts), and a cut tapped
   // while the dot travels, waiting for the move to end (-1: none; the
   // latest wins). The machinery is below, by handleFabricTap.
@@ -1341,6 +1347,7 @@ async function main(): Promise<void> {
       walker: walkerScoreFn(),
       sword: swordShown(), // K137 stage 3b
       sprint: sprintShown(), // K137 stage 3c
+      woken: wokenShown(), // K137 stage 3d
     };
   };
   // The HUD and the mode badge (it re-fits around the HUD's new size).
@@ -1664,6 +1671,7 @@ async function main(): Promise<void> {
         })(),
         // K137 stage 3c: sprint was spent (null: off).
         sprintUsed: sprintOn() ? sprintState === "first" || sprintState === "used" : null,
+        woken: wokenShown(), // K137 stage 3d
         // K137 stage 2: the spool's share used and the hints used.
         spool: c.spoolOn ? { used: c.spoolUsed, cap: c.spoolCap } : null,
         hintsUsed: c.hintsMax > 0 ? c.hintsUsed : null,
@@ -1710,6 +1718,7 @@ async function main(): Promise<void> {
       walker: walkerScore, // K114 walker
       sword: swordShown(), // K137 stage 3b
       sprint: sprintShown(), // K137 stage 3c
+      woken: wokenShown(), // K137 stage 3d
       // K137 stage 2: the share of the spool paid out, and the hints used.
       spoolUsed: c.spoolOn ? spoolPercentUsed(c.spoolUsed, c.spoolCap) : null,
       hintsUsed: c.hintsMax > 0 ? c.hintsUsed : null,
