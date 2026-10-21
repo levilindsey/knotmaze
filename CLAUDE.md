@@ -82,8 +82,8 @@ src/
     fabric_sdf.ts         # K8 G3-1: sampAt + fabricUniforms, the gap search's shared SDF helpers
     reveal.ts             # Appearance reveal: per-sample width masks
     appear_fx.ts          # Reveal-front particles (rainbow, comet, dust, burn, roots)
-    confetti.ts           # K140: finish confetti view (two ParticleContainers)
-    confetti_model.ts     # K140 pure: rain + spray counts, spawn and motion
+    confetti.ts           # K140: finish confetti view (four ParticleContainers)
+    confetti_model.ts     # K140 pure: rain, spray, K336 cannons + streamers
     hash2d.ts             # K154: the backgrounds' own integer hash (GLSL + JS mirror)
     web_fade.ts           # K169 pure: the gold web's 0.25 s fade-in clock
     explore_glsl.ts       # K76: the thread reveal's shader variant (VIS items, six looks)
@@ -168,7 +168,7 @@ test/
     marker_glyphs.test.ts  # K83 glyph fit (margin = stroke), shader capacity, SVG
     fog_arc.test.ts  # K99 the same stations whatever the frame split
     junction_routes.test.ts  # K81 which arms a route joins, the band's corner and fit
-    confetti_model.test.ts  # K140 counts, screen scale, reduced motion, falls out
+    confetti_model.test.ts  # K140 counts, screen scale, none reduced, falls out; K336
     hash2d.test.ts  # K154 avalanche, uniformity, correlation, bijection, shader text
     web_fade.test.ts  # K169 the fade's levels at 0 / 0.12 / 0.25 s, retarget rules
     trail_paint.test.ts  # K93 the split at several trail lengths, the ideal fade, the eps skip

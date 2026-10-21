@@ -384,3 +384,10 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   the Design folder, so a row's code may live anywhere; the three nested
   folders are created just before their first row so they sit after
   their parent's own rows.
+
+- *K336 (2026-10-20):* Path & view's confetti rows gain "Side cannons"
+  (`confettiCannons`), "Cannon amount" (`cannonAmount`, 0-3) and
+  "Streamers" (`streamerShare`, 0-1) after "Foil confetti". All three
+  hide in knot mode and at confetti amount 0; Cannon amount also hides
+  while the cannons are off, and Streamers while they are off or at 0
+  (render-confetti.md, K336).

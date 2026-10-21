@@ -45,22 +45,31 @@ only with the files it is about; `render.md` lists the area's other files.
   allocated once, with page-lifetime
   particles and paper texture. The spray's unit is the marker radius
   floored at 16 CSS px (sprayUnit): at the phone's default zoom the
-  marker radius is ~7 px, and unit-sized pieces were specks.
+  marker radius is ~7 px, and unit-sized pieces were specks. The side
+  cannons and their streamers (K336 below) come on top, on their own
+  amount (`cfn`).
 - COLORS: a fixed festive set, the path's gold (0xffd23f) first, then
   saturated hues and a warm white. Not the design's palette: a design's
   gamut is a narrow hue arc that melts into its own threads.
-- REDUCED MOTION (`motion.reduced`): no rain (a full-screen fall is the
-  large-area motion WCAG 2.3.3 asks to avoid), and 5% of the spray (16
-  pieces at amount 1, as K140 had; 10% before K568 doubled the spray) at
-  half speed with no spin or flutter. A proposal for Levi
-  (`.claude/probes/K140/results/reduced_phone_1b_spray.png`).
+- REDUCED MOTION (`motion.reduced`; K186, 2026-10-20, Levi: "None on
+  reduced motion."): NO confetti. confettiPlan's reduced plan is empty at
+  every amount and screen (no rain, spray, cannons or streamers), so
+  throwConfetti returns early, and turning reduced motion on mid-fall
+  clears the layer (panel_wiring.ts: a Motion subscriber registered
+  before applyAccessibility, whose forced pass draws the pieces gone).
+  K140 to K570 threw no rain but 5-10% of the spray at half pace with no
+  spin or flutter (REDUCED_SPRAY_SHARE, the plan's `slow` flag): gone,
+  and the full-motion spray takes the same draws, so its pieces did not
+  move.
 - ANIMATING. Render-only: nothing touches the physics. `confetti.active`
   is the frame loop's OVERLAY poll (`render-loop.md`; a term of main.ts's
   sceneAnimating() before K6-1) and goes false when the last piece dies
   (6.2-7.7 s after a finish since K568, medians 6.7-7.1; 5.6-6.8 s from
-  K335, 5.4-5.9 s before it; 1.9-2.7 s reduced). confetti.tick runs in
+  K335, 5.4-5.9 s before it; nothing under reduced motion since K186;
+  K336's cannons and streamers run out first, so they add no time).
+  confetti.tick runs in
   the app.ticker callback after tick(), in every branch (asleep, paused,
-  loading), and is one early return once both pools drain (the
+  loading), and is one early return once all four pools drain (the
   containers hide). Before K6-1 a fabric's sceneAnimating() was true at
   rest whatever it showed, so the term bit only in knot mode. Since
   K6-1's sceneActive an unsolved fabric is still active at rest (its
@@ -72,10 +81,17 @@ only with the files it is about; `render.md` lists the area's other files.
   banner: dailies, free play, replays, the real-time mode, a reload
   that restores a solved attempt (pendingWin), and Reset path pressed
   while the winning move is in flight. A rebuild clears the pieces, and
-  so does turning `cf` off; restartSolve (Play again) does not, so
-  pieces in the air finish their fall.
-- INPUT. Both containers sit above the world root (the rain topmost)
-  with eventMode none; the banner and HUD are DOM over the canvas. The
+  so does turning `cf` off or reduced motion on (K186); restartSolve
+  (Play again) does not, so pieces in the air finish their fall. K186
+  (2026-10-20) walked every path in the page
+  (`.claude/probes/K336/banners/`, results.md): each banner throws one
+  burst; a plain reload after an official finish shows no banner and
+  throws nothing, by design; Reset path pressed during the winning move
+  throws and records the result, but the restarted maze shows no banner
+  and the pieces fall over it (101-139 still alive 5 s on: a call for
+  Levi).
+- INPUT. All four containers sit above the world root (the rain topmost;
+  K336's streamers and cannons just below it) with eventMode none; the banner and HUD are DOM over the canvas. The
   page probe checks a banner hit-test over the confetti and a ctrl+wheel
   zoom mid-rain.
 - COST (2026-10-14, K140's counts, desktop at 1400x900 dpr 1, K104 and K155 agents
@@ -155,7 +171,8 @@ only with the files it is about; `render.md` lists the area's other files.
 - DEFERRED (Levi, 2026-10-14): K336 (side cannons and streamers) and
   K337 (shine) wait until after the other tasks. Their model-only draft
   is `.claude/probes/K335/deferred/k336_k337.patch`, which applies on
-  top of K335.
+  top of K335. Both landed on 2026-10-20 (the K337 and K336 sections
+  below).
 
 ## Longer rain, finer spray (K568)
 
@@ -189,8 +206,9 @@ only with the files it is about; `render.md` lists the area's other files.
   max 11.18 units (before 2.54, 3.16, 4.34, 5.55, 6.94; all before K570's
   gravity, below). Lifetimes are
   unchanged, so the spray still runs out 2.37-2.40 s after a finish.
-  REDUCED_SPRAY_SHARE 0.1 -> 0.05 keeps reduced motion at 16 pieces at
-  amount 1 (48 at 3), at half pace (1.5-15 units/s).
+  REDUCED_SPRAY_SHARE 0.1 -> 0.05 kept reduced motion at 16 pieces at
+  amount 1 (48 at 3), at half pace (1.5-15 units/s), until K186 removed
+  it: reduced motion throws nothing now.
 - COST (bench_sim.mjs, node, 1400x900, two interleaved runs under the
   perf lock). Amount 1 (865+320 pieces): 43.6-43.7 us a frame, p95 83 us,
   420 frames a burst, 18.3 ms of sim work per burst (master, 576+160:
@@ -215,7 +233,8 @@ only with the files it is about; `render.md` lists the area's other files.
   CSS px/s at the 16 px unit floor; the rain falls at 180-286 px/s on the
   phone), so each path bends over into a fall: a piece launched straight
   up at 30 units/s rises ~6 units and turns over at ~0.57 s. Reduced
-  motion halves it with the pace (8.5, a 2.5 units/s fall). Lifetimes are
+  motion halved it with the pace (8.5, a 2.5 units/s fall) until K186,
+  which throws nothing under reduced motion. Lifetimes are
   unchanged, so the spray still runs out 2.37-2.40 s after a finish, and
   so is the cost (the same per-piece operations).
 - CENSUS (`.claude/probes/K570/gravity.mjs`, the pure model; unit 1, 60
@@ -273,9 +292,10 @@ only with the files it is about; `render.md` lists the area's other files.
   0), appended to the codec table (no version bump), daily-exempt
   viewer preferences with `cf` and `cfa`, and in the undo stack's
   confetti group. Lives and the frame loop's OVERLAY poll are unchanged.
-- STRENGTH 0 IS REDUCED MOTION'S LOOK: ambient + diffuse, no specular on
-  either material (pinned). Reduced motion's plan carries shine 0, and
-  its few spray pieces have no flutter, so each shows its exact color.
+- STRENGTH 0: ambient + diffuse, no specular on either material
+  (pinned). It was reduced motion's look until K186 (that plan carried
+  shine 0 and its few spray pieces no flutter); reduced motion throws
+  nothing now.
 - READ (`.claude/probes/K337/census.mjs`, the pure model, amount 1,
   share 0.3, six seeds, the rain on screen and the spray, first 4 s; a
   flash is a foil specular above 0.5, near white above 0.8, a paper
@@ -325,3 +345,100 @@ only with the files it is about; `render.md` lists the area's other files.
   editing src. A fresh desktop profile opens the side panel over the
   finish spray: set localStorage `knotmaze.panelOpen` to "0" before
   load.
+
+## Side cannons and streamers (K336)
+
+- SIDE CANNONS (K336, 2026-10-20; worktree agent; brief
+  `docs/design/K336_cannons.md`). Levi (2026-10-14): "blasts of confetti
+  and streamers from specific points just outside the left and rigth
+  sides of the screen, angled in and up, and then apply gravity to make
+  these fall in an arc". Two cannons just off the left and right edges
+  at 0.8 of the height (CANNON_Y), SCREEN space like the rain. aimCannon
+  solves each launch so its arc tops out CANNON_APEX_X 0.3 of the width
+  in from its own side and CANNON_APEX_Y 0.32 of the height down; each
+  piece flies at 0.75-1.1x that speed with +-0.12 rad of spread, in a
+  0.22 s front-loaded volley (CANNON_VOLLEY), the right cannon 0.08 s
+  after the left (CANNON_STAGGER). The motion is closed form: linear
+  drag 1.2/s (CANNON_DRAG) toward a terminal fall of 0.3 screen
+  heights/s (CANNON_TERM), plus half the rain's sway. stepCannon
+  integrates it exactly, so a path is the same at any frame rate (a
+  piece released mid-frame moves only for its share of the frame). A
+  piece dies below the bottom edge; 7 s is the backstop. Cannon pieces
+  use today's pool layout (F 18, MAT), so they take K337's shine and foil.
+- COUNTS. CANNON_PER_AMOUNT 150 a cannon at amount 1 on the phone, times
+  rainScreenScale (1400x900 309, 1920x1080 381, 3840x2160 450);
+  CANNON_CAP 2700. They spawn after the rain and the spray, so with the
+  cannons off (`cfc=0` or `cfn=0`) a burst throws master's exact pieces.
+  Confetti amount 0, `cf` off and reduced motion still throw nothing at
+  all: the cannons need the main amount above 0.
+- STREAMERS. `streamerShare` of each cannon's pieces fly as 14-segment
+  paper strips (STREAMER_SEGS; at most STREAMER_CAP / 2 = 100 a cannon).
+  The rest stay paper, so a cannon's total is the same at any share: at
+  0.2, 62 streamers and 247 paper a cannon at 1400x900, 30 and 120 on the
+  phone. The head flies exactly as cannon paper (stepCannon's drag and
+  sway, a mid-frame release included). The body follows the leader,
+  each point pulled to within one segment of the point before, and sags
+  0.06 screen heights/s (STREAMER_SAG). The twist travels down the strip.
+  Each segment is one particle (streamerSegLook): long = segment + 0.6
+  width, short = width x (0.15 + 0.85 |cos twist|), tinted by K337's
+  light on the twisted normal (sf sin a, -sf cos a, cf). A streamer dies
+  once its whole body is below the bottom edge while it falls, or at the
+  8 s backstop (STREAMER_LIFE_MAX, the last 0.5 s fading). The finish
+  spray throws none (the draft's call, kept).
+- VIEW. Two more ParticleContainers inside ConfettiLayer: pixi's particle
+  program, so no new GL program and nothing for K307's warm-up. They are
+  screen space and join the rain's parent just below the rain (the rain's
+  "added" event). Above the world root the order is spray, streamers,
+  cannons, rain, so a layer that K578's cache puts under the confetti
+  stays under it. Streamer i's segment j is slot i x SEGS + j. Only
+  Flag.OVERLAY is raised: `confetti.active` covers all four pools.
+- SETTINGS. "Side cannons" (`confettiCannons`, `cfc`, on), "Cannon
+  amount" (`cannonAmount`, `cfn`, 0-3, default 1) and "Streamers"
+  (`streamerShare`, `cfs`, 0-1, default 0.2): codec indices 171-173
+  (gameplay-links.md), daily-exempt, in the undo stack's confetti group.
+  The rows hide in knot mode and at confetti amount 0; Cannon amount
+  also hides while the cannons are off, and Streamers while the cannons
+  are off or at 0.
+- CENSUS (pure model, 8 seeds; `cannon_census.mjs`,
+  `streamer_census.mjs`). Paper arcs top out 0.18-0.53 of the height
+  down (median 0.37) and 0.08-0.51 of the width in from their own side
+  (median 0.26-0.27; the 0.08 is the phone's). Every piece leaves by the
+  bottom edge, never by the backstop: flights median 4.1-4.2 s, max
+  5.0 s; the last piece 5.0-5.3 s after the burst. Streamers at 0.2:
+  heads top 0.24-0.49 of the height down on the phone and at least 0.05
+  of the width in from their side (0.15 on the desktop). They leave
+  3.9-5.8 s after release, none by the backstop, and the last 5.2-5.9 s
+  after the burst. Bodies are fully extended by 0.5 s. Both run out
+  before the rain (6.2-7.7 s), so the loop stops when it did.
+- ANIMATING (page check on a8a2985, `flag_check.mjs`, perf lock): one
+  burst on `?7&am=instant&mf=0&fw=0&snd=none`, sampled every 50 ms for
+  11 s. Desktop 1600x900 (rain 988, 282 paper + 71 streamers a cannon):
+  the last cannon paper died 5.07 s after the burst, the last streamer
+  5.46 s, the last rain 6.81 s; `active` went false at 6.87 s and the
+  loop stopped at 6.92 s. Phone 411x753 (120 + 30 a cannon): 4.91, 5.21
+  and 6.40 s, inactive and stopped at 6.46 s. No sample had a piece
+  alive with the layer inactive or the loop stopped, and no frame was
+  drawn after the stop. The defaults never let the cannons outlive the
+  rain, so the unit tests cover that case: `active` holds on cannon
+  paper alone and on streamers alone, then drops (`confetti_model.test.ts`).
+- COST (CPU, `bench_sim.mjs`: the sim's step plus every piece's look per
+  frame, the view's per-frame work without the upload or the GPU;
+  1400x900, shine 1, foil 0.3, 20 bursts a case, two rounds, perf lock).
+  Per frame, mean / p95 in ms, amount 1 then amount 3: cannons off
+  0.065 / 0.12 and 0.19 / 0.37; cannons without streamers 0.11 / 0.20
+  and 0.24 / 0.45; the defaults (cfn 1, cfs 0.2) 0.22 / 0.37 and
+  0.34 / 0.61; the max (cfn 3, cfs 1: 826 paper + 100 streamers a
+  cannon) 0.39 / 0.65 and 0.51 / 0.89. A streamer costs about 13 paper
+  pieces (a look per segment plus the follow), so at the defaults the
+  124 streamers cost twice the cannons' 494 paper. A whole burst (about
+  412 frames) is 26 ms of CPU with the cannons off and 92 ms at the
+  defaults. The GPU side (K140's frame A/B) was not measured.
+- PROBES (`.claude/probes/K336/`): `cannon_census.mjs [model] [spread|-]
+  [swayScale] [seeds]` (the paper's apex, flight and run-out by screen;
+  the model is a path, never `-`), `streamer_census.mjs [model|-] [share]
+  [seeds]` (heads, extension, deaths), `flag_check.mjs desk|phone` (env
+  BASE, BUILD), `bench_sim.mjs <model.ts> <label> [reps] [cannonAmount]
+  [streamerShare]`, `bench_locked.ps1` (the last two under the perf
+  lock) and `banners/` (K186's banner paths: `banners.mjs`, `lib.mjs`,
+  `results.md`). `__knotConfetti()` reports `cannon` and `streamers`
+  beside the rain and the spray.
