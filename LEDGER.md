@@ -307,6 +307,14 @@ Next free ID: K625.
   - evidence: `.claude/probes/K137/`
   - next: stage 1: fragile (fg off|crack|snap) pure + controller tests, then par (pa off|strict|strokes), then the params and the page
   - brief: `docs/design/K137_s1.md`
+- **K525** · The minotaur's telegraph (Levi 2026-10-20): a treatment dropdown whose new default
+  lights the run's rims like the hover highlight, today's line kept as an option; roam must read on
+  the phone at fit zoom. Full text: `docs/ledger_notes.md` (K525).
+  - owner: agent `ae18c5a4888bb8280` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 17:26, 2 h cap ~19:26)
+  - branch: `worktree-agent-ae18c5a4888bb8280`, worktree `.claude/worktrees/agent-ae18c5a4888bb8280`; last commit: `8b7411e`
+  - evidence: `.claude/probes/K525/`
+  - next: baseline sheet against K524's, then append mtl (rims|line|both, default rims) and build the TELE paint item; the phone step after 18:25 (Levi's)
+  - brief: `docs/design/K525_telegraph.md`
 
 ## Next, in order
 
@@ -491,9 +499,6 @@ Every other item below waits on the trigger it names.
 - **K595** · Police same-chain collision by rest material, not a fixed 2-slot skip
   (`src/physics/forces.ts` ~272): fixes K596. Census the kink loops and eyes first; regression
   `?b&am=instant` + 5 s drag sleeps within +5 s. `docs/ledger_notes.md` (K595), `docs/design/K372.md`.
-- **K525** · The minotaur's telegraph (Levi 2026-10-20): a treatment dropdown whose new default
-  lights the run's rims like the hover highlight, today's line kept as an option; roam must read on
-  the phone at fit zoom. Full text: `docs/ledger_notes.md` (K525).
 - **K611** · Main's drag frame is 19-26 ms (a drag runs at 30 fps); `RibbonRenderer.update` is 63%
   (gap slots 28%, splines 22%, tickPaint 17%). K370's 50 ms needs it under 12 ms. Overlaps K5
   R3/R4 and G3-2. `docs/design/K370.md` ("The gap to 50 ms", 2).
