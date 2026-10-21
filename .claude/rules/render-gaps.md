@@ -202,6 +202,19 @@ attribution, same-state proofs) is in `probes-census.md` and
   search or its SAMP reads on the phone (`.claude/probes/K572/
   k572_gapoff.mjs`: gap on vs off in one page, ABBA), never on a desktop
   timing. The fix is K573.
+- **K573 step 1 (2026-10-20, `3e2b6cf`).** One `sampAt` per segment (the
+  previous end point carried), the SAMP index walked without int `%` or
+  float-int conversions, and one range walk (`gapRange`, `gapAt`,
+  `gapNext`) shared by the over and protect loops, which is what keeps
+  1a+1b inside K320's budgets. 0 px in all 8 same-state cells; phone
+  search knot gs24 60.7 -> 27.7 ms (pre-G3-1 9.7), dense 36.0 -> 31.3
+  (16.7). Step 2, a per-slot curvature stride (`7db3fd9`), waits on
+  Levi (K573). Probe gotchas: Pixi v8's `shader.resources` accessors
+  are not enumerable, so a `for...in` uniform readback reads nothing
+  (hook `gl.uniform4f` on the uniform's location instead,
+  `.claude/probes/K573/stride_census2.mjs`); and a gap census waits 15 s
+  on knot and 30 s on dense before the crossings' slots fill (dense
+  read 0 live slots at 15 s).
 
 ## RENDER LORE (per-pixel gaps)
 
