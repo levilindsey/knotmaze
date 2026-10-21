@@ -279,14 +279,6 @@ Next free ID: K599.
   - evidence: `.claude/probes/K456/` (results.md, the forced-loss probe)
   - next: measure today's loss behaviour per case, pick the handling, build it with the probe
   - brief: `docs/design/K456.md`
-- **K372** · Fabric `?b` doesn't sleep again within 30 s after a drag, on any
-  host, master included (K7 s4). Rec: a short sonnet probe of whether and when
-  it sleeps.
-  - owner: agent a6dc49adc6ee83c05 of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, started 2026-10-20 13:23, 1 h cap ~14:23)
-  - branch: `worktree-agent-a6dc49adc6ee83c05`, worktree `.claude/worktrees/agent-a6dc49adc6ee83c05`; last commit: `11e6ba1`
-  - evidence: `.claude/probes/K372/results.md`
-  - next: time the re-sleep after drags on ?b and two seeds; name the blocker of any run awake at 180 s
-  - brief: `docs/design/K372.md`
 
 ## Next, in order
 
@@ -1321,6 +1313,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K372** · Fabric ?b's after-drag non-sleep is a same-chain collision limit cycle (fix K595, residual K596). Done in 86c472b (2026-10-20).
 - **K470** · No app-level WebGL context-loss handling: only `probe_hooks.ts` listens for `webglcontextlost`, to count losses. Dropped: duplicate of K456 (2026-10-20).
 - **K337** · Confetti shine: one light from the upper left; foil pieces flash, paper ones sheen (`cfh` strength 1, `cff` foil share 0.3); strength call K586. Done in 9538392 (2026-10-20).
 - **K291** · CI's actions moved to their Node 24 releases (checkout v7, setup-node v7, wrangler-action v4); the deploy passed on `ubuntu-latest` with no Node 20 warning, so no runner pin. Done in f2303c0 (2026-10-20).
