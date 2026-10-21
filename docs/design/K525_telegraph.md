@@ -315,3 +315,149 @@ one, re-read this brief and `git log` before going on. Any helper runs on
 sonnet with a 1 h cap under this same rule.
 
 End your report with the item's handle fields and a `Ledger items` list.
+
+## Handoff (2026-10-20, 18:54, inside the 2 h cap)
+
+Steps 1-5 and 8 are done, step 6 is partial, and step 7 was skipped:
+K409/K631 held the phone lock from 18:25, so the coordinator's rule (skip
+it if the phone is not free with 20 min left) applied.
+
+**What landed** on branch `worktree-agent-ae18c5a4888bb8280`, rebased onto
+master 635ae58 (after K324 stage 1, K546 stage 1 and K580's glyphs) and
+never pushed:
+- `c828d66`, the param: `minoTelegraphLook` (`mtl`: rims | line | both,
+  default rims), appended at codec index 178 after K324's 171-177.
+  CODEC_VERSION stays 8. Its message body still says 158 and v6, from
+  before the rebases.
+- `f14dae9` and `0127e10`, the paint:
+  - PAINT_ITEM_TELE 9 lives in kPaintAt's item loop, so it is in every
+    SECTION_FRAG variant. There is no new program and nothing new to
+    warm.
+  - Also `kTeleOver`, `uKTele` (rgb, w = strength) and
+    `ribbons.setTelegraph(pieces | null)` beside setRim. KPAINT is
+    rewritten only on a `teleItemKey` change.
+  - The mirror is in paint_math.ts. Parity tests in
+    paint_gameplay.test.ts cover a whole run, lead and tail partials,
+    both on one run, widths 0.3/0.85/1, alphas 0.45/0.95 and a seam run.
+- `7df56f3`, the route: `src/render/telegraph_route.ts`
+  `telegraphPieces(g, runs, t, lead)` covers by runs, by length, and a
+  `lead` in the ChasePlan shape (tested on a synthetic route). Also the
+  look switch in drawTelegraph and drawTelegraphLength, and the clears in
+  the bleed branch and syncMinotaur's three hides.
+- `1d3773b`, the alphas: the line roams at 0.7 on a coarse pointer, and
+  `telegraphRimStrength`.
+- `1b7bd12`, the lore: TELEGRAPH RIMS in render-paint.md, the K525 bullet
+  in render-shaders.md, gameplay-minotaur.md, gameplay-panel.md and
+  gameplay-links.md. Its message cites the pre-rebase SHAs 4f02843 and
+  757b378.
+- The commit that adds this handoff also puts the A/B results in the
+  lore.
+
+**Strengths and ends** (first values, untuned):
+- **Rims:** roam 0.6, roam on a coarse pointer 0.8, hunt 1. Each piece's
+  alpha is 1 for the first run (or the lead) and 0.5
+  (TELEGRAPH_LATER_SHARE) for later runs.
+- **Ends:**
+  - A junction end skips rimGap and fades in over 0.2 world.
+  - A mid-run end (the minotaur's spot, a by-length stop) has no gap and
+    fades over 0.3.
+  - Both are clamped as the hover glow's are.
+  - A run shorter than two gaps (1.95 world) shows no rims, only the
+    ring.
+- **The line look:** desktop alphas are unchanged (roam 0.45, hunt 0.95).
+  On a coarse pointer it roams at 0.7, and so does 3b's destination ring,
+  which takes the first run's alpha. The by-length ticks keep K481's
+  alphas.
+
+**Numbers:**
+- **Tests:** `npm test` after the second rebase passed 117 files and
+  1657 tests (`.claude/probes/K525/vitest_rebased2.log`).
+- **Build:** `tsc`, `tsc -p notices` and `vite build` pass on 1b7bd12
+  (`build_final.log`).
+- **Pins moved:**
+  - `param_codec.test.ts`'s key-order pin, and `url_codec.test.ts`'s
+    defaults table and OVERRIDE_KEYS, by `mtl` only.
+  - `k320_slim.test.ts`'s budgets, now 46,900 and 63,300 (it measures
+    46,844 and 63,259).
+  - The knot-mode golden snapshot, the golden dailies and K87 did not
+    move.
+- **Section texts:**
+  - section-rgb grew from 46014 to 46811 characters, and its explore
+    variant from 62429 to 63226.
+  - Arm-strip, junction-field and the plucks are unchanged byte for
+    byte.
+  - Compiled on D3D11. SwiftShader was not run.
+- **GPU** (`gpu_k525.mjs`, perf lock, RX 6800 XT, 3200x1800, the hunter
+  after 3 moves, phw=0; `s6/gpu_r{1,2}_{base,branch}.log`). The
+  differences are noise.
+
+  | ms per frame, rounds 1 / 2 | master | branch |
+  |---|---|---|
+  | ribbon program | 2.818 / 2.852 | 2.813 / 2.799 |
+  | fans | 0.601 / 0.627 | 0.619 / 0.607 |
+  | frame | 3.85 / 3.91 | 3.92 / 3.85 |
+
+- **Same-state A/Bs against master** (`hm_probe.mjs ab`, 1400x900, phy=0,
+  clocks pinned; four phases plus a hovered choice and a hovered rim):
+  - No minotaur: 24 of 24 at 0 px (`s6/hm_desktop.log`).
+  - `&mt=hunter&mtl=line`: 24 of 24 at 0 px (`s6/hm_line.log`). The
+    minotaur did draw: 3735 px against the run without it.
+  - `&mt=hunter&mtg=0` (the brief's "mtg off"), final code 1b7bd12
+    against master 635ae58: 24 of 24 at 0 px (`s6/hm_mtg0.log`,
+    `s6_mtg_ab.ps1`). The minotaur drew: 880 px against the no-minotaur
+    run, and 2895 px against the line run, whose telegraph it lacks.
+  - The first two pairs are master 8b7411e against the branch's
+    pre-rebase 4efb91b, which holds the same K525 code.
+- **Census:** not run (`census_rim.mjs` is not adapted for TELE).
+
+**Sheets** (separate runs, not same-state):
+- `.claude/probes/K525/s6/K525_sheet_desktop.png`: 1400x900, with roam,
+  hunt, by length and the fog bleed, for master and the three looks.
+- `s6/K525_zoom_desktop.png`: roam and hunt at 1.5x (`crop_zoom.ps1`).
+- `s6/K525_sheet_phone.png`: an EMULATED 411x753 dsf 2 coarse pointer,
+  not the Pixel; master, rims and line.
+- `baseline/`: master 8b7411e's shots.
+- **Findings:**
+  - Roaming at desktop zoom, the rims read on both edges of the route.
+  - On the hunt shot's short route, the rims show only a short mid-run
+    piece: the junction gaps and fades eat the short runs. The line draws
+    the whole route.
+  - On the emulated phone at fit zoom, the rims are faint at roam (0.8)
+    and short at hunt, and the line reads more clearly.
+  - Tuning (step 6's last bullet) is not done.
+
+**What's left:**
+- **Step 7:** the Pixel sheet (roam, hunt, a catch and the fog glow),
+  beside K524's.
+- **Step 6's extras:**
+  - a red-section run on the route;
+  - the gold trail under it;
+  - a hovered run on the route (the red-then-white order is unchecked on
+    screen);
+  - High contrast;
+  - white rims.
+- The GPU vs mirror census for TELE.
+- **Tuning:** the strengths and fades, and the junction-end call.
+  Consider gap 0 at the route's interior junctions, so that the short
+  hunt runs light.
+- **A moving end** (K324 stage 2) could ride a uniform, as the hover point
+  does (`uKReach.w`, an unwrapped ctrl the RIM item reads through kArcU).
+  A moving minotaur would then rewrite no texel: KPAINT keeps the route's
+  fixed pieces, and the TELE branch clamps the lead piece's moving end to
+  the uniform. Today a changed `lead` changes `teleItemKey` and rewrites
+  KPAINT.
+- **Report only** (the brief): the line draws over unrevealed threads
+  under the thread reveal.
+
+**Handle fields:**
+- owner: nobody since 18:54 2026-10-20 (claude agent ae18c5a4888bb8280
+  of claude session 91b19e11, stopped at its stage end)
+- branch: `worktree-agent-ae18c5a4888bb8280`, worktree
+  `.claude/worktrees/agent-ae18c5a4888bb8280`; last commit: this
+  handoff's commit, on 1b7bd12 (unpushed)
+- evidence: `.claude/probes/K525/` (baseline/, s6/, s6_batch.ps1,
+  s6_line_ab.ps1, s6_mtg_ab.ps1, crop_zoom.ps1, gpu_k525.mjs,
+  tele_states.mjs, hm_probe.mjs, mksheet.mjs, pxdiff.mjs)
+- next: the coordinator merges. Then the Pixel sheet, the census, the
+  extras and the tuning.
+- brief: `docs/design/K525_telegraph.md`
