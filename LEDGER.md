@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K601.
+Next free ID: K606.
 
 ## Waiting on Levi
 
@@ -130,6 +130,9 @@ Next free ID: K601.
   - evidence: `.claude/probes/K573/`
   - next: Levi's call on step 2 (7db3fd9, branch worktree-agent-a58a59169309e0bd8): keep it (knot's phone gap search 27.7 -> 19.3 ms; casing-edge pixels move 1-3 levels on at most 0.1% of a frame) or stop at step 1; then rebase, test and merge (docs/design/K573.md, the Coordinator note)
   - brief: `docs/design/K573.md`
+- **K601** · K456's three cover calls, built as rec. (Levi may change any): the ink cover hides the
+  HUD and panel for the whole loss; its message and Reload wait 3 s of visible loss; no automatic
+  reload, so a failing GPU cannot loop the page. `docs/design/K456.md` (Handoff).
 
 ## In progress
 
@@ -1073,6 +1076,17 @@ Every other item below waits on the trigger it names.
 - **K599** · `.claude/rules/render-explore.md` THE BURN (and a test comment) says the dark band draws
   under Char only; it draws under Gone too (K409's card). Fix with K409's answer.
 - **K600** · `.claude/rules/gameplay-links.md` lacks the `gm` key (`gameMode`) and a K534 entry.
+- **K602** · K456 loose ends (untested): `KHR_parallel_shader_compile` stays off after a restore; a
+  failed WebGL start after Reload is unhandled; scheduled notes ring out after a loss; a focused
+  panel field still takes keys; no phone pickup watch. `docs/design/K456.md` (Handoff).
+- **K603** · `src/app/frame_loop.ts` (about line 307): `stepUnflagged = false;` sits after a
+  `return`, so K6-1's observer flag never resets once set (predates K456).
+- **K604** · Reloading an `mf=0` link comes back in maze mode: `mf` left the link codec in K323
+  Stage A. Probes that reload knot mode pass `mf=0` again; moot once K326 drops knot mode (K456
+  handoff).
+- **K605** · K456 step 1 flake: master's never-returns run died once with Execution context was
+  destroyed, 19 s after load and before any loss; nothing in `src/` navigates; not seen again.
+  `.claude/probes/K456/results.md` (One flake).
 
 ## Approved, to schedule (2026-10-11)
 
