@@ -5,6 +5,7 @@
 // frame loop shows the loss once the dot arrives (main.ts's showLoss ->
 // show()). A snap's pluck waits for the arrival too: step() runs in the
 // frame loop's keyStep slot, after the move's tick.
+import { parText } from "../game/collapse";
 import type { FabricMazeController } from "../game/fabric_controller";
 import { ruleLossEntries } from "../ui/maze_hud";
 import type { LossBanner, RuleFields } from "../ui/maze_hud";
@@ -40,12 +41,15 @@ export function glissando(f0: number): GlissNote[] {
   return out;
 }
 
-// The HUD's, the banners' and the share's K137 fields (null: rule off).
+// The HUD's, the banners' and the share's K137 fields (null: rule off), and
+// K139's collapse score (its snaps are the score, so no snapped row).
 export function ruleFields(fc: FabricMazeController): RuleFields {
+  const par = fc.collapseOn ? fc.collapsePar : null;
   return {
-    snapped: fc.fragileOn ? fc.brokenRuns().length : null,
+    snapped: fc.fragileOn && !fc.collapseOn ? fc.brokenRuns().length : null,
     parLeft: fc.parMode === "strict" ? { par: fc.par, left: fc.strokesLeft } : null,
     parStrokes: fc.parMode === "strokes" ? { par: fc.par, strokes: fc.strokes } : null,
+    collapse: par ? { pct: fc.collapsePercent, par: parText(par) } : null,
   };
 }
 
@@ -143,7 +147,9 @@ export function createRuleLoss(deps: RuleLossDeps): RuleLoss {
       const restart = { label: "Restart", onClick: deps.restart };
       deps.banner.showRule({
         title: "Stranded",
-        sub: "Every way to the exit has broken behind you.",
+        sub: fc.collapseOn
+          ? "Every way to the exit has collapsed behind you."
+          : "Every way to the exit has broken behind you.",
         entries,
         primary: undo ? { label: "Undo", onClick: deps.undo } : restart,
         secondary: undo ? restart : undefined,

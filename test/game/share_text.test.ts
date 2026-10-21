@@ -27,3 +27,23 @@ describe("K137 share tags", () => {
     }
   });
 });
+
+describe("K139 collapse line", () => {
+  it("puts the mode, the score and par on a line under the time, before the grid", () => {
+    const fin = shareText({ ...BASE, efficiency: null, collapse: { mode: "finish", pct: 58, par: "≥62%" } });
+    expect(fin.split("\n")).toEqual([
+      "Knotmaze \u{1F9F6}",
+      "⏱️ 1:01",
+      "\u{1F9F1} Collapse to the finish: 58% · par ≥62%",
+      expect.any(String),
+    ]);
+    const free = shareText({ ...BASE, collapse: { mode: "free", pct: 75, par: "75%" } });
+    expect(free.split("\n")[2]).toBe("\u{1F9F1} Free collapse: 75% · par 75%");
+  });
+
+  it("leaves the line out when collapse is off", () => {
+    for (const info of [BASE, { ...BASE, collapse: null }]) {
+      expect(shareText(info)).not.toContain("collapse");
+    }
+  });
+});

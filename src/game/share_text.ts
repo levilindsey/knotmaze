@@ -26,6 +26,16 @@ export interface ShareInfo {
   // "\u2212N"; null or "" for none).
   snapped?: number | null;
   parScore?: string | null;
+  // K139: a collapse game's mode, score (a whole percent) and par as text
+  // (game/collapse.ts parText; null or absent: collapse off).
+  collapse?: { mode: "finish" | "free"; pct: number; par: string } | null;
+}
+
+// K139: the collapse line under the time, "🧱 Collapse to the finish: 58% ·
+// par ≥62%" or "🧱 Free collapse: ...".
+export function collapseLine(c: { mode: "finish" | "free"; pct: number; par: string }): string {
+  const name = c.mode === "free" ? "Free collapse" : "Collapse to the finish";
+  return `\u{1F9F1} ${name}: ${c.pct}% · par ${c.par}`;
 }
 
 // The title line's minotaur tag: "🐂 2" when it caught you, "🐂 0 · 5 close
@@ -53,6 +63,7 @@ export function shareText(info: ShareInfo): string {
     `${title} \u{1F9F6}${stars}${mino}${snap}${par}`,
     `⏱️ ${formatDuration(info.timeMs)}${eff}`,
   ];
+  if (info.collapse) lines.push(collapseLine(info.collapse));
   const grid = moveGrid(info.moves);
   if (grid !== "") lines.push(grid);
   return lines.join("\n");

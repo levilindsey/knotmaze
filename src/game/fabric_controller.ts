@@ -93,10 +93,11 @@
 // never), overriding `fragile` and `parMode` (setRules). A walk is a
 // trail: the run behind you is broken, so there is no backtrack.
 // `collapsedUnits` sums each broken run's units (the score). finish: the
-// exit wins and the strand is K137's. free: the exit is a dead end, never
-// a win, and the game ends stranded when no unbroken maze run is reachable
-// from the head (`freeStranded`). `collapsePar` (the step-budgeted search)
-// runs once per walk and mode, on first read.
+// exit wins and the strand is K137's. free: the exit is a dead end, and the
+// game ENDS, as a finish with the score (`solved`, the move returns "win";
+// never `stranded`), once no unbroken maze run is reachable from the head
+// (`freeStranded`), after a move or a respawn. `collapsePar` (the
+// step-budgeted search) runs once per walk and mode, on first read.
 
 import type { WalkGraph } from "../core/walk_graph";
 import { runsToExit } from "../core/walk_graph";
@@ -139,7 +140,7 @@ export type FabricTapResult =
   | "backtrack" // retracted the last run
   | "reject" // the run is not incident to the current head (or K137: broken)
   | "noop" // after solving (or a K114 burn-race loss, K137 stranded or out of strokes)
-  | "win" // advanced onto the exit tail
+  | "win" // advanced onto the exit tail (K139 free collapse: the move that ended the game)
   | "smolder"; // K114: refused, the fire reaches the arm's far end first
 
 export class FabricMazeController {
@@ -500,7 +501,7 @@ export class FabricMazeController {
       this.cross(edgeId);
       this.fireArrive(head, depart, e.length, this.head);
       this.judge();
-      return "backtrack";
+      return this.solved ? "win" : "backtrack"; // K139: a free collapse game's end
     }
 
     // A self-loop run returns to the same vertex; everything else crosses.
@@ -521,7 +522,7 @@ export class FabricMazeController {
       return "win";
     }
     this.judge();
-    return "advance";
+    return this.solved ? "win" : "advance"; // K139: a free collapse game's end
   }
 
   // K137: one crossing of the run; `justBroke` names it when this one
@@ -564,8 +565,9 @@ export class FabricMazeController {
   private judge(): void {
     if (this.solved) return;
     if (this.collapse === "free") {
-      // K139: the game ends when no unbroken maze run is reachable.
-      this.stranded = freeStranded(this.walk, this.head, (eid) => this.broken(eid));
+      // K139: the game ends, a finish with the score, when no unbroken maze
+      // run is reachable.
+      if (freeStranded(this.walk, this.head, (eid) => this.broken(eid))) this.solved = true;
       return;
     }
     const strict = this.parMode === "strict";

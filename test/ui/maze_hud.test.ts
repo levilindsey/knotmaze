@@ -74,7 +74,13 @@ describe("what each figure means (K274)", () => {
   const LOSS = { timeMs: 61_000, walked: 20, closest: 0.44 };
 
   // K137's rule rows (kept out of FULL, whose exact rows are pinned).
-  const RULES = { snapped: 3, parLeft: { par: 12, left: 4 }, parStrokes: { par: 12, strokes: 9 } };
+  // K139's collapse row too.
+  const RULES = {
+    snapped: 3,
+    parLeft: { par: 12, left: 4 },
+    parStrokes: { par: 12, strokes: 9 },
+    collapse: { pct: 58, par: "\u226562%" },
+  };
   const shown = (): StatEntry[] => [
     ...statEntries(FULL),
     ...gameEntries(FULL),
@@ -187,5 +193,25 @@ describe("K137 rule rows", () => {
   it("puts the rule rows under time and walked on the rule banners", () => {
     const ids = ruleLossEntries({ timeMs: 61000, walked: 12.5, snapped: 2 }).map((r) => r.id);
     expect(ids).toEqual(["time", "walked", "snapped"]);
+  });
+});
+
+describe("K139 collapse row", () => {
+  it("reads the score against par, and par as found when the search gave up", () => {
+    const rows = ruleEntries({ collapse: { pct: 58, par: "\u226562%" } });
+    expect(rows.map((r) => [r.id, r.label, r.value])).toEqual([
+      ["collapsed", "collapsed", "58% \u00B7 par \u226562%"],
+    ]);
+    expect(ruleEntries({ collapse: null })).toEqual([]);
+  });
+
+  it("shows on the win banner's rows and the Stranded banner's", () => {
+    const win = statEntries({
+      timeMs: 61_000, path: 12, optimal: 9, efficiency: null, backtrack: null,
+      junctions: 3, deadEnds: null, collapse: { pct: 75, par: "75%" },
+    });
+    expect(win.at(-1)?.value).toBe("75% \u00B7 par 75%");
+    const loss = ruleLossEntries({ timeMs: 61000, walked: 12.5, collapse: { pct: 40, par: "\u226562%" } });
+    expect(loss.map((r) => r.id)).toEqual(["time", "walked", "collapsed"]);
   });
 });

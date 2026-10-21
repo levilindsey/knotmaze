@@ -1172,9 +1172,10 @@ async function main(): Promise<void> {
       timeMs: clock.elapsed(performance.now()),
       path: c.pathLength,
       optimal: c.walk.optimalLength,
-      // A finished route's metric: shown from the arrival on.
+      // A finished route's metric: shown from the arrival on (K139: never
+      // in a collapse game, where a long trail is the goal).
       efficiency:
-        c.solved && clock.state === "stopped"
+        c.solved && clock.state === "stopped" && !c.collapseOn
           ? efficiencyOf(c.walk.optimalLength, c.pathLength)
           : null,
       // Memory-trail mode has no backtracking, so no backtrack meter.
@@ -1432,7 +1433,12 @@ async function main(): Promise<void> {
     const c = scene.fabricController;
     clock.stop(performance.now());
     const timeMs = clock.elapsed(performance.now());
-    const efficiency = efficiencyOf(c.walk.optimalLength, c.pathLength);
+    // K139: a collapse game shows no efficiency and no stars (a long trail
+    // is its goal), so it records no daily result either; it is never a
+    // daily anyway (collapse is no exempt key).
+    const efficiency = c.collapseOn
+      ? null
+      : efficiencyOf(c.walk.optimalLength, c.pathLength);
     const backtrack = params.pathViz === "trail" ? null : c.backtrackDist;
     const deadEnds = params.deadEndDensity > 0 ? c.deadEndTips.size : null;
     const moves = c.moveLog.join("");
@@ -1466,10 +1472,15 @@ async function main(): Promise<void> {
     // meter starts over with the level and the catches carry, so the
     // popover says which catches' walks it holds (`respawns`, K293 (a)).
     const mino = liveMino();
-    const rating = mino
-      ? rateRun(c.walkedDist, c.walk.optimalLength, mino.catches, c.respawns)
-      : rateRun(walkedOf(c.pathLength, c.backtrackDist), c.walk.optimalLength);
+    const rating = c.collapseOn
+      ? null
+      : mino
+        ? rateRun(c.walkedDist, c.walk.optimalLength, mino.catches, c.respawns)
+        : rateRun(walkedOf(c.pathLength, c.backtrackDist), c.walk.optimalLength);
     const stars = rating?.stars ?? null;
+    // K139: the collapse score against par (null: collapse off).
+    const collapse = ruleFields(c).collapse ?? null;
+    const collapseMode = c.collapse === "free" ? "free" : "finish";
     lastWin = {
       text: shareText({
         daily,
@@ -1482,15 +1493,21 @@ async function main(): Promise<void> {
         // K80 turns stage 2: the title's minotaur tag (🐂).
         catches: mino ? mino.catches : null,
         closeCalls: scene.turnMino ? scene.turnMino.closeCalls : null,
-        // K137: the fragile and par tags.
-        snapped: c.fragileOn ? c.brokenRuns().length : null,
+        // K137: the fragile and par tags (K139: collapse's snaps are its
+        // score, on a line of its own).
+        snapped: c.fragileOn && !c.collapseOn ? c.brokenRuns().length : null,
         parScore: c.parMode !== "off" ? parScore(c.strokes, c.par) : null,
+        collapse: collapse ? { mode: collapseMode, ...collapse } : null,
       }),
       url: daily !== null ? dailyUrl(daily) : location.href,
     };
     banner.show({
-      heading:
-        daily === null
+      // K139: a free collapse game ends where you stand, with its score.
+      heading: collapse
+        ? collapseMode === "free"
+          ? `${collapse.pct}% collapsed`
+          : `Solved! ${collapse.pct}% collapsed`
+        : daily === null
           ? "Solved!"
           : replay
             ? `Daily #${daily} replay solved`
@@ -1517,6 +1534,7 @@ async function main(): Promise<void> {
       // K114: a burn race's closest call (null: no fire).
       closestCall: c.fire ? c.fireClosest : null,
       rating,
+      collapse,
     });
     updateHud();
     throwConfetti();
@@ -1737,7 +1755,11 @@ async function main(): Promise<void> {
   const tickChase = (dt: number): void => {
     if (!scene.chase || !scene.fabric || !scene.fabricController) return;
     const fc = scene.fabricController;
-    if (chaseRunning && !scene.chase.finished && !document.hidden) {
+    // K139: a free collapse game that has ended (anywhere: the controller's
+    // solved) holds the chase once the dot is in, so nothing catches you
+    // after the end.
+    const freeEnded = fc.solved && fc.collapse === "free" && !scene.chase.playerMoving;
+    if (chaseRunning && !scene.chase.finished && !document.hidden && !freeEnded) {
       chaseEvents.length = 0;
       scene.chase.advance(dt, chaseEvents);
       for (const ev of chaseEvents) {
@@ -1785,6 +1807,10 @@ async function main(): Promise<void> {
           scene.fabric.stopMove();
           scene.fabric.clearYarn();
           pendingWin = false;
+          // K139: the respawn can end the game (a free collapse game ends
+          // with its score; a collapsed start tail strands a finish one).
+          if (fc.solved) pendingWin = true;
+          else if (fc.collapseOn && ruleLoss.over()) pendingLoss = true;
           scene.fabric.update(fc);
           updateHud();
           showCaughtToast(scene.chase.catches);
@@ -1891,6 +1917,9 @@ async function main(): Promise<void> {
     fc.respawn(params.minoRefog);
     scene.fabric.clearYarn();
     pendingWin = false;
+    // K139: the respawn can end the game (see tickChase's catch).
+    if (fc.solved) pendingWin = true;
+    else if (fc.collapseOn && ruleLoss.over()) pendingLoss = true;
     turnWait = 0;
     scene.fabric.update(fc);
     // K270: re-sync the minotaur NOW (see above), then the feedback.

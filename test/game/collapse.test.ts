@@ -274,21 +274,35 @@ describe("collapse in the controller", () => {
     expect(c.stranded).toBe(true);
   });
 
-  it("free: the exit is a dead end, not a win; the game ends stranded", () => {
+  it("free: the exit is only a dead end; the game ends, as a finish, once nothing is left to walk", () => {
     const c = make("free");
     expect(c.tapEdge(0)).toBe("advance");
     expect(c.tapEdge(1)).toBe("advance");
-    expect(c.stranded).toBe(false);
-    expect(c.tapEdge(2)).toBe("advance"); // onto the exit: no win
     expect(c.solved).toBe(false);
-    expect(c.stranded).toBe(true);
+    // Onto the exit: it ends the game only because nothing is left from it.
+    expect(c.tapEdge(2)).toBe("win");
+    expect(c.solved).toBe(true);
+    expect(c.stranded).toBe(false);
     expect(c.collapsePercent).toBe(58); // 7 of 12
     const d = make("free");
-    for (const eid of [0, 3, 4, 1]) expect(d.tapEdge(eid)).toBe("advance");
+    for (const eid of [0, 3, 4]) expect(d.tapEdge(eid)).toBe("advance");
+    expect(d.tapEdge(1)).toBe("win"); // back at a, whose three runs are gone
     expect(d.head).toBe("a");
-    expect(d.stranded).toBe(true); // a's three runs are gone
+    expect(d.solved).toBe(true);
+    expect(d.tapEdge(2)).toBe("noop");
     expect(d.collapsePercent).toBe(75); // par's 9 of 12
     expect(d.collapsePar!.units).toBe(9 * U);
+    // A free game's taps replay to the same end.
+    expect(d.replay([0, 3, 4, 1])).toBe(true);
+    expect(d.solved).toBe(true);
+    expect(d.collapsedUnits).toBe(9 * U);
+    // A catch's respawn at the collapsed start ends a free game too.
+    const e = make("free");
+    e.tapEdge(0);
+    expect(e.solved).toBe(false);
+    e.respawn();
+    expect(e.solved).toBe(true);
+    expect(e.stranded).toBe(false);
   });
 
   it("collapse overrides fragile and par; off leaves the controller as it was", () => {
