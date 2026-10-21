@@ -512,6 +512,17 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       optimal: wg.optimalLength,
       backtrack: c.backtrackDist,
       walked: c.walkedDist, // K155
+      // K137: fragile runs and par. `broken` / `cracked`: run ids (empty
+      // with fragile off); `stranded`: no unbroken way to the exit; `par`:
+      // P, computed in every par mode (Infinity: no route); `strokesLeft`:
+      // P minus the moves made; `parLost`: strict par lost.
+      broken: c.brokenRuns(),
+      cracked: c.crackedRuns(),
+      stranded: c.stranded,
+      parMode: c.parMode,
+      par: c.par,
+      strokesLeft: c.strokesLeft,
+      parLost: c.parLost,
       // K114: the burn race (null: no fire). `smoldering`: the head's arms
       // whose tap the fire refuses; `banner`: the Burnt banner shows.
       fire: c.fire
