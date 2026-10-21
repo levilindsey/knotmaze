@@ -299,10 +299,10 @@ Next free ID: K667.
 - **K324** · Real-time minotaur, more alive and tunable (`docs/design/K324_realtime_minotaur.md`,
   091e4dc; Levi took section 7's recs): s1 (sim); s2 (render) once K525 owns the look: its route
   pieces, a moving lead, the chevrons, perf; s3 (guard, stalker) after s1. Rel. K245 K247 K271 K293 K294 K296.
-  - owner: agent `a5b99d861b40e9b3d` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 18:26, 2 h cap ~20:26)
-  - branch: `worktree-agent-a5b99d861b40e9b3d`, worktree `.claude/worktrees/agent-a5b99d861b40e9b3d`; last commit: `d6bd828`
+  - owner: nobody since 2026-10-20 19:40 (merged; agent `a5b99d861b40e9b3d` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `1a3f70b`
   - evidence: `.claude/probes/K324/`
-  - next: stage 3: the guard and the stalker on the real-time clock, per-model defaults, the Behavior row, a sim re-measure; then s2 (render) once K525 lands
+  - next: stage 2, the render (input K654); Levi's calls on the real-time defaults
   - brief: `docs/design/K324_s3.md`
 - **K546** · Loss effects (Levi, 2026-10-16): a catch ends early today - animate the player and the minotaur/fire all the way to their meeting point first (contact t is computed in by-length mode; turn and realtime catches leave a visual gap), then a gratuitous contact effect at the meeting point plus a whole-screen loss effect akin to the win confetti. Levi's seeds: an explosion; a flare-up and burn-away; the player indicator ripped in half and falling over. Base to build on: K80 3b's catch feedback (dcdfaf4) and K270's fix; the fire side is K114. Design: `docs/design/K546_loss_effects.md`. Its q8 is answered (K525).
   - owner: nobody since 2026-10-20 18:25 (merged; agent `a57e1aa8c7ba233b0` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
