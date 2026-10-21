@@ -168,11 +168,22 @@ only with the files it is about; `render.md` lists the area's other files.
   same times from the same frozen layout): 100% agreement on every
   design, option and viewport, error 0.000, the cue lit exactly where the
   estimate says. Exact by construction: it validates the mirror, and
-  K104's pixel calibration of the criterion ties it to what shows. COST:
-  0.79-1.17 ms per fallback tap on the desktop, 1.75 ms with the phone's
-  viewport emulated (unlocked, other agents probing: indicative). Lobes
-  with the same |k| share an onset, so a Set of times would halve it
-  exactly.
+  K104's pixel calibration of the criterion ties it to what shows.
+  DEDUPED (K194, 2026-10-20): lobes with the same |k| share an onset, so
+  `peakTimes` keeps ONE time per distinct onset + SHOW_DT (a Set) and the
+  pure `peakEstimateOf` maxes over those: the same value bit for bit (a
+  max cannot see a repeated time; 0 mismatches over 380 taps). COST per
+  fallback tap, before -> after, under the perf lock, steady = the mean
+  of repeated calls on one tap (`performance.now` is quantized to 0.1 ms,
+  so one call reads in tenths), median / p95 / max: desktop fabric 0.175
+  / 1.05 / 2.05 -> 0.113 / 0.42 / 0.47 ms, desktop knot 0.33 / 0.46 /
+  0.56 -> 0.14 / 0.22 / 0.24; Pixel fabric 0.24 / 1.41 / 1.57 -> 0.11 /
+  0.41 / 0.46, Pixel knot 0.31 / 0.43 / 0.55 -> 0.16 / 0.25 / 0.30; a
+  music run's auto plucks 0.1 ms median either way, p95 0.6-0.7 ->
+  0.2-0.3, max 1.4 -> 0.5 (`.claude/probes/K194/`, the handoff in
+  `docs/design/K194_defaults.md`). K180's 0.79-1.17 ms and 1.75 ms were
+  taken unlocked beside other probes. What is left is `Math.exp` per
+  station per time, hoistable per lobe per time if it ever matters.
 - SOUND-ONLY TAPS (skipCore: the tapped span minus hide zones is under
   LOBE_MIN_LEN, i.e. inside junction cores) made no pluck, so fallback
   gave them no cue, though K104's criterion counts them as can't tell
