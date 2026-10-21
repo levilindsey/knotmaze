@@ -1671,12 +1671,14 @@ export function buildPanel(
     fMino, "minoByLength", { label: "Travel by length" },
     "Travel by thread length: each turn it moves its speed times your move's length (times the tuned travel scale), stopping mid-run and turning back on a run; a wait moves it the maze's median run length. Contact is by thread distance through the move. Off: it takes whole runs. Applies live."
   );
+  // K324 stage 2: shown on both clocks (the real-time chase draws its
+  // plan); its look applies to both.
   const minoTelegraphRow = turnRow(
     fMino, "minoTelegraph", { label: "Show its next move" },
-    "Show its next move in red: the run it will take and where it will stand, decided when your move ends (forced on at charge and two). Applies live."
+    "Show its next move in red. Turn clock: the run it will take and where it will stand, decided when your move ends (forced on at charge and two). Real time: the rest of the run it is on and the runs it plans next (Telegraph reach), with a ring where it is headed once the route reaches it; faint while it roams, bright while it hunts. Applies live."
   );
   // K525: how the telegraph draws. Hidden while no telegraph shows (the
-  // row above off at half or one; charge and two force it on).
+  // row above off; on the turn clock charge and two force it on).
   const minoTelegraphLookRow = turnRow(
     fMino, "minoTelegraphLook",
     { options: { Rims: "rims", Line: "line", Both: "both" }, label: "Telegraph look" },
@@ -1906,7 +1908,7 @@ export function buildPanel(
   rtRows.push(
     row(
       fMinoBehavior, p, "minoTelegraphRuns", { min: 0, max: 3, step: 1, label: "Telegraph reach (runs)" },
-      "Real time: how many runs of its next move show, past the run it is on. Not drawn yet: the real-time telegraph comes in a later build. Applies live.",
+      "Real time: how many runs of its next move show (with Show its next move), past the run it is on. Applies live.",
       D.minoTelegraphRuns, () => callbacks.onChaseChange()
     )
   );
@@ -2763,10 +2765,13 @@ export function buildPanel(
     minoRoamNearRow.hidden = !rtHunter;
     minotaurRow.hidden = !gameMino;
     minoSpeedRow.hidden = !turnMinoOn;
-    minoTelegraphRow.hidden = !turnMinoOn;
+    // K324 stage 2: the telegraph rows show on both clocks.
+    minoTelegraphRow.hidden = !gameMino;
     minoTelegraphLookRow.hidden =
-      !turnMinoOn ||
-      !telegraphOn({ telegraph: params.minoTelegraph, speed: params.minoSpeed });
+      !gameMino ||
+      (realtime
+        ? !params.minoTelegraph
+        : !telegraphOn({ telegraph: params.minoTelegraph, speed: params.minoSpeed }));
     minoByLengthRow.hidden = !turnMinoOn;
     // K324: the tuning subfolder shows under both clocks; each clock's rows
     // in it hide under the other (real time's K324 rows are in rtRows).

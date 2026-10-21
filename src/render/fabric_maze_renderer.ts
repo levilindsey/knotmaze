@@ -62,7 +62,8 @@ import {
   telegraphRimStrength,
   telegraphTickLook,
 } from "../game/mino_feedback";
-import { telegraphPieces } from "./telegraph_route";
+import { chaseRoute, telegraphPieces } from "./telegraph_route";
+import type { ChaseRoute, PlanRoute } from "./telegraph_route";
 
 // What syncMinotaur draws: the real-time chase (MinotaurChase) or the
 // turn-aligned minotaur (K80 turns, TurnMinotaur) - where it stands on the
@@ -168,6 +169,11 @@ const TELEGRAPH_ALPHA = 0.95;
 const TELEGRAPH_RING_R = 1.45;
 const TELEGRAPH_RING_W = 0.32;
 const TELEGRAPH_STEP = 0.5;
+// K652/K271: under K76's thread reveal the line, the ring and the ticks
+// draw only where the thread shows at least this much (the reveal's CPU
+// twin, ribbons.exploreVisAt; the rims get it from the explore program).
+const TELE_VIS_MIN = 0.5;
+const TELE_VIS_BISECT = 6; // halvings of a sample step at a shown edge
 
 // K114 burn race, the look (K290 stage 3b, brief docs/design/K114_burn.md).
 // The burnt thread, the char band and ember at each front, the lit fuse and
@@ -1463,11 +1469,12 @@ export class FabricMazeRenderer {
   // "hunting" (only while it hunts) or "never" (only where the fog has
   // lifted). Like the exit marker, it waits for the intro to draw its
   // thread. The telegraph rides the minotaur's layer, so the same fog rule
-  // covers it.
+  // covers it. K324 stage 2: the real-time chase passes its plan
+  // (MinotaurChase.plan, the ChasePlan shape) as `telegraph`.
   syncMinotaur(
     chase: MinotaurView | null,
     fog: MinoFog,
-    telegraph: TurnTelegraph | null = null
+    telegraph: TurnTelegraph | PlanRoute | null = null
   ): void {
     this.minoShown = false;
     if (!chase) {
@@ -1542,7 +1549,10 @@ export class FabricMazeRenderer {
     this.minoX = x;
     this.minoY = y;
     this.minoR = r;
-    if (!bleed) this.drawTelegraph(chase.g, telegraph, r, chase.mode === "hunt");
+    if (bleed) return;
+    if (telegraph && "lead" in telegraph) {
+      this.drawTelegraph(chase.g, chaseRoute(chase.g, telegraph), r, telegraph.hunting);
+    } else this.drawTelegraph(chase.g, telegraph, r, chase.mode === "hunt");
   }
 
   // K80 turns, the telegraph's first look: a red line along each committed
@@ -1566,6 +1576,77 @@ export class FabricMazeRenderer {
   // pointer. The phone also gets the tint fallback: a choice that would
   // get you caught tints red at the head (the wait: a ring there), since
   // at fit zoom the ticks alone read badly (the stage 3 probe).
+  // K652/K271: whether a telegraph mark may draw at a chain point (always
+  // with the thread reveal off).
+  private teleShown(chain: number, ctrl: number): boolean {
+    return !this.explore.on || this.ribbons.exploreVisAt(chain, ctrl) >= TELE_VIS_MIN;
+  }
+
+  // One telegraph line along `chain` through the ctrls ctrlOf(i), i from
+  // i0 to n, after `prev` (the stroke before's last point, which it joins;
+  // null for none). Under the thread reveal it breaks where the thread is
+  // hidden, each break bisected to the shown edge (K652/K271). With the
+  // reveal off it is the plain stroke, point for point. Returns its last
+  // point when that is shown (the next run's join), else null.
+  private teleStroke(
+    gfx: Graphics,
+    chain: number,
+    i0: number,
+    n: number,
+    ctrlOf: (i: number) => number,
+    prev: number[] | null,
+    width: number,
+    alpha: number
+  ): number[] | null {
+    const clip = this.explore.on;
+    let pts: number[] = prev ? [prev[0], prev[1]] : [];
+    const flush = (): void => {
+      if (pts.length >= 4) {
+        gfx.moveTo(pts[0], pts[1]);
+        for (let i = 2; i < pts.length; i += 2) gfx.lineTo(pts[i], pts[i + 1]);
+        gfx.stroke({ color: TELEGRAPH_COLOR, width, alpha, cap: "round", join: "round" });
+      }
+      pts = [];
+    };
+    const shownAt = (c: number): boolean =>
+      this.ribbons.exploreVisAt(chain, this.ctrlMod(chain, c)) >= TELE_VIS_MIN;
+    // The shown ctrl nearest the edge between a shown ctrl and a hidden one.
+    const edge = (shown: number, hidden: number): number => {
+      for (let k = 0; k < TELE_VIS_BISECT; k++) {
+        const m = 0.5 * (shown + hidden);
+        if (shownAt(m)) shown = m;
+        else hidden = m;
+      }
+      return shown;
+    };
+    const push = (c: number): void => {
+      this.pointFlowed(chain, this.ctrlMod(chain, c), this.scratch, 0);
+      pts.push(this.scratch[0], this.scratch[1]);
+    };
+    let lastC = i0 > 0 ? ctrlOf(i0 - 1) : ctrlOf(i0);
+    let lastShown = prev !== null;
+    for (let i = i0; i <= n; i++) {
+      const c = ctrlOf(i);
+      if (clip) {
+        const shown = shownAt(c);
+        if (!shown) {
+          if (lastShown && i > 0) push(edge(lastC, c));
+          flush();
+          lastShown = false;
+          lastC = c;
+          continue;
+        }
+        if (!lastShown && i > 0) push(edge(c, lastC));
+      }
+      push(c);
+      lastShown = true;
+      lastC = c;
+    }
+    const end = lastShown && pts.length >= 2 ? [pts[pts.length - 2], pts[pts.length - 1]] : null;
+    flush();
+    return end;
+  }
+
   private drawTelegraphLength(g: ChaseGraph, t: TurnTelegraph, r: number, hunting: boolean): void {
     const gfx = this.teleGfx;
     gfx.clear();
@@ -1582,24 +1663,11 @@ export class FabricMazeRenderer {
       const dir = b === g.eb[e] ? 1 : -1;
       const seg = t.segLens?.[s] ?? len;
       const n = Math.max(1, Math.ceil(seg / TELEGRAPH_STEP));
-      const pts: number[] = [];
-      for (let k = 0; k <= n; k++) {
+      const ctrlOf = (k: number): number => {
         const pos = entry + (dir * seg * k) / n;
-        const c = we.ctrlA + ((we.ctrlB - we.ctrlA) * pos) / (len || 1);
-        this.pointFlowed(we.chain, this.ctrlMod(we.chain, c), this.scratch, 0);
-        pts.push(this.scratch[0], this.scratch[1]);
-      }
-      if (pts.length >= 4) {
-        gfx.moveTo(pts[0], pts[1]);
-        for (let i = 2; i < pts.length; i += 2) gfx.lineTo(pts[i], pts[i + 1]);
-        gfx.stroke({
-          color: TELEGRAPH_COLOR,
-          width: w * TELEGRAPH_WIDTH,
-          alpha: alphas[s] ?? TELEGRAPH_ALPHA,
-          cap: "round",
-          join: "round",
-        });
-      }
+        return we.ctrlA + ((we.ctrlB - we.ctrlA) * pos) / (len || 1);
+      };
+      this.teleStroke(gfx, we.chain, 0, n, ctrlOf, null, w * TELEGRAPH_WIDTH, alphas[s] ?? TELEGRAPH_ALPHA);
       spot = { edge: -1, pos: 0, dir: 1, vertex: b };
     }
     // K481 stage 3, the tint fallback on a coarse pointer: a choice
@@ -1610,7 +1678,9 @@ export class FabricMazeRenderer {
         if (stop.edge < 0) {
           const pv = t.player !== undefined ? this.walk.vertices.get(g.ids[t.player]) : undefined;
           if (!pv) continue;
-          this.pointFlowed(pv.chain, this.ctrlMod(pv.chain, pv.ctrl), this.scratch, 0);
+          const pc = this.ctrlMod(pv.chain, pv.ctrl);
+          if (!this.teleShown(pv.chain, pc)) continue;
+          this.pointFlowed(pv.chain, pc, this.scratch, 0);
           this.polyCircle(gfx, this.scratch[0], this.scratch[1], r * TELEGRAPH_RING_R, 40);
           gfx.stroke({ color: TELEGRAPH_COLOR, width: w * TELEGRAPH_RING_W, alpha: 0.85 });
           continue;
@@ -1618,23 +1688,8 @@ export class FabricMazeRenderer {
         const we = this.walk.edges[stop.edge];
         if (!we) continue;
         const n = Math.max(1, Math.ceil(Math.abs(we.ctrlB - we.ctrlA) / TELEGRAPH_STEP));
-        const pts: number[] = [];
-        for (let k = 0; k <= n; k++) {
-          const c = we.ctrlA + ((we.ctrlB - we.ctrlA) * k) / n;
-          this.pointFlowed(we.chain, this.ctrlMod(we.chain, c), this.scratch, 0);
-          pts.push(this.scratch[0], this.scratch[1]);
-        }
-        if (pts.length >= 4) {
-          gfx.moveTo(pts[0], pts[1]);
-          for (let i = 2; i < pts.length; i += 2) gfx.lineTo(pts[i], pts[i + 1]);
-          gfx.stroke({
-            color: TELEGRAPH_COLOR,
-            width: w * TELEGRAPH_WIDTH * 2,
-            alpha: 0.4,
-            cap: "round",
-            join: "round",
-          });
-        }
+        const tint = (k: number): number => we.ctrlA + ((we.ctrlB - we.ctrlA) * k) / n;
+        this.teleStroke(gfx, we.chain, 0, n, tint, null, w * TELEGRAPH_WIDTH * 2, 0.4);
       }
     }
     const litEdge =
@@ -1650,7 +1705,9 @@ export class FabricMazeRenderer {
         this.telegraphCoarse
       );
       const at = spotCtrl(this.walk, g, stop.spot);
-      this.pointFlowed(at.chain, this.ctrlMod(at.chain, at.ctrl), this.scratch, 0);
+      const atC = this.ctrlMod(at.chain, at.ctrl);
+      if (!this.teleShown(at.chain, atC)) continue;
+      this.pointFlowed(at.chain, atC, this.scratch, 0);
       const x = this.scratch[0];
       const y = this.scratch[1];
       this.polyCircle(gfx, x, y, r * TELEGRAPH_RING_R * look.scale, 32);
@@ -1673,7 +1730,7 @@ export class FabricMazeRenderer {
 
   private drawTelegraph(
     g: ChaseGraph,
-    t: TurnTelegraph | null,
+    t: TurnTelegraph | ChaseRoute | null,
     r: number,
     hunting = false
   ): void {
@@ -1684,31 +1741,49 @@ export class FabricMazeRenderer {
       this.ribbons.setTelegraph(null);
       return;
     }
+    // K324 stage 2: the real-time route (chaseRoute) leads with the partial
+    // run the minotaur is on; the turn minotaur's TurnTelegraph has none.
+    const live = "lead" in t;
+    const lead = live ? t.lead : null;
     // K525: the rims (the ribbons' TELE paint item) for every look but the
     // line. Roam vs hunt rides the strength (uKTele.w), so a mode switch
     // rewrites no texel; setTelegraph rewrites KPAINT only when the pieces
-    // change.
+    // change, and the lead's moving end rides uKTeleAt (K654), so a
+    // walking minotaur rewrites none until it changes runs.
     if (this.telegraphLook !== "line") {
       this.ribbons.teleStrength = telegraphRimStrength(hunting, this.telegraphCoarse);
-      this.ribbons.setTelegraph(telegraphPieces(g, this.walk.edges, t));
+      this.ribbons.setTelegraph(telegraphPieces(g, this.walk.edges, t, lead, true));
     } else this.ribbons.setTelegraph(null);
     // K481 stage 2: by length, the route starts where it stands and its
     // stops carry the ticks.
-    if (t.fromSpot && t.segLens && t.stops) {
+    if (!live && t.fromSpot && t.segLens && t.stops) {
       this.drawTelegraphLength(g, t, r, hunting);
       return;
     }
-    // K80 turns 3b (section 2.7): the route-shaped telegraph K324 stage 2
-    // reuses — one stroke per run so each run carries its own alpha
-    // (mino_feedback.telegraphAlphas: faint roaming, bright hunting, the
-    // second run at half; K525: roam 0.7 on a coarse pointer). The
-    // chevrons wait for K324 stage 2.
-    const alphas = telegraphAlphas(hunting, t.steps.length, this.telegraphCoarse);
+    // K80 turns 3b (section 2.7): the route-shaped telegraph — one stroke
+    // per run so each run carries its own alpha (mino_feedback.
+    // telegraphAlphas: faint roaming, bright hunting, the second run at
+    // half; K525: roam 0.7 on a coarse pointer). K324 stage 2: the lead
+    // shares the first run's alpha. K652/K271: under the thread reveal
+    // the strokes break where the thread is hidden (teleStroke).
+    const alphas = telegraphAlphas(hunting, Math.max(1, t.steps.length), this.telegraphCoarse);
     const w = this.threadWidth;
     let a = t.from;
     let prev: number[] | null = null;
+    const lineOn = this.telegraphLook !== "rims";
+    if (lineOn && lead) {
+      const we = this.walk.edges[lead.edge];
+      if (we) {
+        const len = g.len[lead.edge];
+        const c0 = we.ctrlA + ((we.ctrlB - we.ctrlA) * lead.pos) / (len || 1);
+        const c1 = lead.dir > 0 ? we.ctrlB : we.ctrlA;
+        const n = Math.max(1, Math.ceil(Math.abs(c1 - c0) / TELEGRAPH_STEP));
+        const at = (i: number): number => c0 + ((c1 - c0) * i) / n;
+        prev = this.teleStroke(gfx, we.chain, 0, n, at, null, w * TELEGRAPH_WIDTH, alphas[0]);
+      }
+    }
     // K525: the line draws for the line and both looks only.
-    for (let s = 0; this.telegraphLook !== "rims" && s < t.steps.length; s++) {
+    for (let s = 0; lineOn && s < t.steps.length; s++) {
       const [e, b] = t.steps[s];
       const we = this.walk.edges[e];
       if (!we) break;
@@ -1716,31 +1791,17 @@ export class FabricMazeRenderer {
       const c0 = fwd ? we.ctrlA : we.ctrlB;
       const c1 = fwd ? we.ctrlB : we.ctrlA;
       const n = Math.max(1, Math.ceil(Math.abs(c1 - c0) / TELEGRAPH_STEP));
-      const pts: number[] = prev ? [prev[0], prev[1]] : [];
-      for (let i = pts.length === 0 ? 0 : 1; i <= n; i++) {
-        const c = c0 + ((c1 - c0) * i) / n;
-        this.pointFlowed(we.chain, this.ctrlMod(we.chain, c), this.scratch, 0);
-        pts.push(this.scratch[0], this.scratch[1]);
-      }
-      if (pts.length >= 4) {
-        gfx.moveTo(pts[0], pts[1]);
-        for (let i = 2; i < pts.length; i += 2) gfx.lineTo(pts[i], pts[i + 1]);
-        gfx.stroke({
-          color: TELEGRAPH_COLOR,
-          width: w * TELEGRAPH_WIDTH,
-          alpha: alphas[s],
-          cap: "round",
-          join: "round",
-        });
-      }
-      prev = [pts[pts.length - 2], pts[pts.length - 1]];
+      const at = (i: number): number => c0 + ((c1 - c0) * i) / n;
+      prev = this.teleStroke(gfx, we.chain, prev ? 1 : 0, n, at, prev, w * TELEGRAPH_WIDTH, alphas[s]);
       a = b;
     }
     // The ring: at the destination's live position (the exit's lair spot
-    // never comes up: it never returns there).
-    const dv = this.walk.vertices.get(g.ids[t.dest]);
-    if (dv) {
-      this.pointFlowed(dv.chain, this.ctrlMod(dv.chain, dv.ctrl), this.scratch, 0);
+    // never comes up: it never returns there), when the route reaches one
+    // (a real-time plan short of its destination has dest -1).
+    const dv = t.dest >= 0 ? this.walk.vertices.get(g.ids[t.dest]) : undefined;
+    const dc = dv ? this.ctrlMod(dv.chain, dv.ctrl) : 0;
+    if (dv && this.teleShown(dv.chain, dc)) {
+      this.pointFlowed(dv.chain, dc, this.scratch, 0);
       this.polyCircle(gfx, this.scratch[0], this.scratch[1], r * TELEGRAPH_RING_R, 48);
       gfx.stroke({
         color: TELEGRAPH_COLOR,
