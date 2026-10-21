@@ -168,11 +168,14 @@ const SANS = "system-ui,-apple-system,'Segoe UI',Roboto,sans-serif";
 
 // The cover: created at the first loss, removed at the restore. Above all
 // the chrome (the toast is z-index 60), and it takes every pointer, so the
-// blind game gets no taps and the move pad (under it) no fingers.
+// blind game gets no taps and the move pad (under it) no fingers. `note`
+// is read when the message shows: what a reload keeps ("" for nothing to
+// say), since only a daily's attempt in progress is saved (K47).
 export function createLossCover(
   doc: Document,
   ink: () => string,
-  reload: () => void
+  reload: () => void,
+  note: () => string = () => ""
 ): LossCover {
   let el: HTMLDivElement | null = null;
   let box: HTMLDivElement | null = null;
@@ -201,8 +204,9 @@ export function createLossCover(
       head.textContent = "Graphics paused";
       head.style.cssText = "font-weight:600;font-size:16px;color:#e4ecf8;";
       const text = doc.createElement("div");
+      const extra = note();
       text.textContent =
-        "The browser lost the graphics context. Your progress is saved.";
+        "The browser lost the graphics context." + (extra ? ` ${extra}` : "");
       text.style.cssText = "margin-top:6px;color:#8ea0c0;";
       const button = doc.createElement("button");
       button.type = "button";
