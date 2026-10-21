@@ -21,15 +21,19 @@ o, t, n, 6 and ς.
   If K558 is not on origin/master, stop and report.
 - **K552 is merged** (the title flag, default off). Titled sheets turn
   it on in their links.
-- **Levi's calls** (glyphs doc section 11; answered 2026-10-20 except
-  call 3). Build what he picked:
+- **Levi's calls** (glyphs doc section 11, all answered 2026-10-20).
+  Build what he picked:
   - a pill dot (call 1);
   - floating strokes not walkable, for now (call 2; K569 is the
     follow-up that makes some of them threads, out of scope here);
-  - a looped hand (call 3, still open: build the recommendation and say
-    so in the report);
+  - a looped hand with no spread turns (call 3): where a spread turn
+    would go, a junction and a dead-end spur (glyphs doc section 5,
+    rule 2 as amended);
   - floor 2.0 LU, with call 4's fit below it;
-  - Hershey kept as the fallback (call 5).
+  - Hershey kept as the fallback (call 5);
+  - the o-kind join in Levi's form (call 6): the connector runs along
+    the oval's first stretch, drawn once as a spur (glyphs doc
+    section 4, "Levi's o-kind join").
 
 ## Picked decisions
 
@@ -49,9 +53,29 @@ o, t, n, 6 and ς.
   body and floats, plus a declared crossing count. **Joins** (section 4)
   use the B/H/D exit classes, b/o/m entry kinds, one cubic connector
   per join and a ligature table keyed by (previous, next).
-- **Crossings only** (section 5, rules 1-6). The set's targets are the
-  table in section 5: "Daily #8" has 10 ENDs, 0 JUNCTIONs and the
-  declared crossings.
+- **Crossings only, plus spurs** (section 5, rules 1-6, with rules 2
+  and 6 as amended by calls 3 and 6). Section 5's table is the base:
+  "Daily #8" has 10 ENDs, 0 JUNCTIONs and the declared crossings, plus
+  one JUNCTION and one END per spur (at least the i's stem and the a's
+  join). Each glyph record declares its spurs, and the counts follow.
+- **Spurs** (calls 3 and 6). Where two strokes would overlap, they meet
+  at a JUNCTION at the start of the overlap, and the overlap is one
+  dead-end edge.
+  - At the junction, the two strokes that leave along the overlap's
+    direction fork like a railroad switch. If they leave tangent, their
+    ribbons overlap near the junction, so the lint needs a fork rule:
+    the smallest arm angle and the distance to full clearance that the
+    junction field draws cleanly (`render-ribbon.md`'s junction entry,
+    `render-routes.md`'s `MAX_ARMS`). Measure it on a still before
+    authoring around it.
+  - A spur's tip meets no thread except through a declared crossing.
+    The o-kind closure crosses its spur short of the tip (glyphs doc
+    section 4), and the a's stem is likely a second spur whose tip must
+    clear or cross the first.
+  - The forced title walk (the shortest walk from the start to
+    `mazeStart`, `daily_attempt.ts:122`) passes every spur. A player
+    may walk up a spur and back: those are title taps, stripped from
+    the record as today.
 - **Floating strokes** (section 6) are class −4 decorative strands, so
   they are not walkable. **Pen keys** (section 7) run along the body in
   writing order, then over the floats glyph by glyph.
@@ -72,6 +96,8 @@ o, t, n, 6 and ς.
   (crossings are not walk vertices); the glyph waypoints must not land
   on a crossing (`text_graph.ts` `nearestNode` did, which made today's
   self-loops and parallel runs, `.claude/probes/K552/title_tree.ts`).
+  A spur keeps the tree: it adds one vertex and one edge, so E − V does
+  not change, as long as its tip joins nothing.
 
 ## The work, in order
 
@@ -81,16 +107,22 @@ o, t, n, 6 and ς.
      crossings between two paths;
    - the set's data.
    Author at xh 2.0 first, where every rule is tightest.
-   **Start with the o-kind join** (the a of "Daily", and o). Stage 8
-   found that section 4's generic connector cuts the oval (glyphs doc
-   section 4, "The o-kind join is still open"). Settle it, in the order
-   that section gives, before authoring the other glyphs. Commit.
+   **Start with the spur forms:** the o-kind join in Levi's form (the a
+   of "Daily", and o; glyphs doc section 4, "Levi's o-kind join"), the
+   a's stem, and the i's stem (section 5, rule 2 as amended). Measure
+   the fork rule first (Picked decisions, Spurs), then build these
+   forms and take a quick xh 2.0 still of them before authoring the
+   other glyphs. Commit.
 2. **The lint** (`src/core/glyphs/glyph_lint.ts`):
    - It applies rules 1-6 at xh 2.0 and 3.0, over every glyph and every
      class pair the set uses.
-   - It checks the declared ENDs and crossings, and enforces two passes
-     per crossing (`assignCrossings` throws otherwise,
-     `particle_system.ts:1277-1280`).
+   - It checks the declared ENDs, JUNCTIONs, spurs and crossings, and
+     enforces two passes per crossing (`assignCrossings` throws
+     otherwise, `particle_system.ts:1277-1280`).
+   - The fork rule at every spur's junction; rule 5's clearance applies
+     beyond the fork's distance.
+   - A spur's tip keeps 0.56 LU from other threads, or crosses one at a
+     declared crossing.
    - It warns on G2 at a joint where R < 0.6 LU.
    - A failing pair gets a ligature or an alternate form, never a
      relaxed rule.
@@ -98,6 +130,7 @@ o, t, n, 6 and ς.
 3. **The builder path.** Behind the switch, `buildTextGraph` assembles
    the words from the new data:
    - the bodies, connectors and floats;
+   - the spurs, as walk edges from their junctions;
    - `SegIn` with K558's pen keys;
    - nodes and `edge.mid` per the Layer 2 spec;
    - floats as decorative marks.
@@ -119,9 +152,10 @@ o, t, n, 6 and ς.
      decorative strand are unchanged.
    Commit.
 6. **The smoothness metrics as tests.** Port the gates of section 9 from
-   `.claude/probes/K115/stage8/metrics.ts` (the coordinator copies it
-   into the repo at the stage 8 merge; until then, read it from the
-   stage 8 branch):
+   `.claude/probes/K115/stage8/metrics.ts`. It is untracked, so read it
+   from the main checkout
+   (`C:\Users\lsl\Repositories\knotmaze\.claude\probes\K115\stage8\`)
+   and port what you need into the tests:
    - ripple max ≤ 2.3 and p95 ≤ 1.9;
    - max |dκ/ds| ≤ 15.4, except at named G1 curvature steps;
    - bend ≥ 1.15 h where the authored R ≥ 0.30;
@@ -157,14 +191,15 @@ o, t, n, 6 and ς.
 - **`glyph_lint`:** zero violations for the set at xh 2.0 and 3.0, and
   every declared count matches.
 - **Topology:**
-  - "Daily #8": 0 JUNCTIONs, 10 ENDs and the declared crossings;
+  - "Daily #8": 10 ENDs and 0 JUNCTIONs plus one of each per declared
+    spur, and the declared crossings;
   - the same for "intone 6" and "ς";
   - every crossing has exactly two passes.
 - **Pen order:** every text crossing has its later key over, flipped
   with K558's param.
 - **Walk:**
   - floats are decorative and not walkable;
-  - the forced title walk is unchanged;
+  - spurs are walkable dead ends, and the forced title walk enters none;
   - stats, stars and the trail do not change for a titled daily;
   - no title loops: with the switch on, the titled walk graph's cycle
     rank (E − V + C) equals the untitled one's for "Daily #8" and the
@@ -179,12 +214,15 @@ o, t, n, 6 and ς.
 
 ## Kill criteria
 
-- **The o-kind join cannot pass the lint** without a crossing through
-  the oval. Report:
-  - the closest forms, with their spacing;
-  - each form's crossings.
+- **Levi's o-kind join cannot pass the lint:** the fork at J, or the
+  closure's crossing of the spur, breaks a rule. Report:
+  - the closest forms, with their numbers;
+  - the rule each breaks.
 
-  Levi then makes the glyphs doc's Call 6.
+  Levi then picks between his form and the wider spacing he first
+  accepted (call 6).
+- **The junction field cannot draw a fork** that the glyphs can fit at
+  xh 2.0. Report the smallest clean fork and what it costs the letters.
 - **A glyph in the set cannot pass the lint at xh 2.0** without breaking
   the crossings-only rule. Report:
   - which glyph, and which rule;
@@ -204,9 +242,8 @@ o, t, n, 6 and ς.
 - **The look:** go or no-go for mass authoring, from the sheets.
 - **The dot's length and slant,** and the loop sizes, if the sheets
   question them.
-- **The looped hand** (Call 3), if Levi has not answered by the sheets.
-- **The o-kind join:** Call 6 is answered (wider spacing); report the
-  spacing it needed if its kill criterion trips.
+- **The spur forms** (calls 3 and 6): whether the forks, the spurs and
+  the closure's crossing read right on the sheets.
 
 ## Out of scope
 
@@ -227,8 +264,8 @@ o, t, n, 6 and ς.
 - **Shell:** PowerShell.
 - **`node_modules`:** a junction to the main checkout's. Before removing
   anything that contains it, run `(Get-Item node_modules).Delete()`.
-- **Servers:** the coordinator's port range, each vite server with a
-  private cacheDir (`.claude/rules/probes.md`; K80's wrapper loads the
+- **Servers:** ports 5260-5269 are yours (check that a port is free
+  before binding), each vite server with a private cacheDir (`.claude/rules/probes.md`; K80's wrapper loads the
   config through `loadConfigFromFile`). Leave port 5173 alone: it is
   Levi's.
 - **Chrome:** headed, never `--virtual-time-budget`.

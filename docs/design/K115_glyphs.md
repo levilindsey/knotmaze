@@ -38,9 +38,12 @@ wait on Levi. Next: `docs/design/K115_stage9.md`.
 - **What fits:** "Daily #8" fits `2 * gridSize` at gs 12 and 18 but not
   at gs 6. That trips the first kill criterion. The smallest gs that
   fits is about 8; today's Hershey needs gs 14 at the same floor.
-- **Still open:** the join into an oval letter (a c d g o q). The generic
-  connector cuts the oval (section 4), so stage 9 settles this join
-  first.
+- **The join into an oval letter** (a c d g o q): the generic connector
+  cuts the oval (section 4). Levi's answer (2026-10-20, section 11,
+  call 6): the connector runs along the oval's own first stretch, drawn
+  once as a spur from a junction. Stage 9 builds it first.
+- **No spread turns** (Levi, call 3): where one would go, a junction and
+  a dead-end spur (section 5, rule 2 as amended).
 
 ## 1. Defect attribution
 
@@ -378,7 +381,18 @@ The connector is G1 at both ends by construction. The next glyph's
 origin is placed so the connector's chord matches the pair's spacing: a
 default per class pair, or the ligature table's.
 
-**The o-kind join is still open.** This was found at the end of stage 8
+**Levi's o-kind join (2026-10-20, section 11, call 6).** It replaces the
+forms below, which stay as the record of why the join was open.
+- The connector arrives tangent to the oval at a point J on its top and
+  follows the oval's own curve to the turnaround S at 2 o'clock.
+- The oval's first stretch, S back to J, is the same path, so it is
+  drawn once: a JUNCTION at J and a dead-end spur J–S (section 5, rule 2
+  as amended).
+- From J the oval runs on counter-clockwise. Its closure crosses the
+  spur short of the tip and never joins it: a join would close a cycle
+  inside the letter, and titles are trees (K563's (d)).
+
+**The o-kind join was open at the end of stage 8**
 (`.claude/probes/K115/stage8/o_entry_check.mjs` and its `.txt`).
 - **The generic cubic cannot reach an o-kind entry.** It was tested from
   a B exit (50°, y 32) into 2 o'clock on a 50 × 72 GU oval, heading 112°,
@@ -453,6 +467,12 @@ The numbers come from section 8.
      one crossing at its neck;
    - **a spread turn**: R ≥ 0.30 LU, with the legs ≥ 0.60 LU apart until
      they diverge, and no crossing.
+   - **Amended by Levi (2026-10-20, call 3): no spread turns.** Where one
+     would go (n's first leg, i's stem, wherever a loop would crowd), the
+     two strokes meet at a JUNCTION where they would start to overlap,
+     and the overlap is drawn once as a dead-end spur: one JUNCTION and
+     one END. The walker goes up the spur or takes the other fork. The
+     o-kind join takes the same form (section 4).
 3. **A T-meet becomes a crossing that runs on, or the strokes
    separate.**
    - **Runs on:** the arriving stroke crosses and continues
@@ -474,6 +494,7 @@ The numbers come from section 8.
    - Each floating stroke has two.
    - A glyph contributes 2 × (its floating strokes) and nothing else: no
      spur, no stub, no cut piece.
+   - **Amended (call 3):** plus one END per spur, each with its JUNCTION.
 
 ### ENDs and crossings for the stage 9 set
 
@@ -499,6 +520,11 @@ declared count.
 
 "Daily #8" then has 10 ENDs (2 lead tails, 2 for the dot, 6 for '#') and
 zero JUNCTIONs. Today it has 17 and 16.
+
+**Amended (calls 3 and 6, 2026-10-20):** every spread form in this table
+becomes a spur, and each joined o-kind entry adds one. Stage 9
+recomputes the counts; "Daily #8" gains at least the i's spur and the
+a's join spur.
 
 ## 6. Floating strokes as separate strands
 
@@ -825,8 +851,8 @@ class, and rules 1 and 4 still apply.
 
 ## 11. Calls for Levi
 
-**Levi's answers (2026-10-20).** Calls 1, 2, 4, 5 and 6 are decided as
-recommended; call 3 is open.
+**Levi's answers (2026-10-20).** Calls 1, 2, 4 and 5 are decided as
+recommended. Calls 3 and 6 take Levi's own forms.
 
 - **1. Dots:** the pill ("Yes").
 - **2. Lifted-pen strokes:** not walkable, "for now". He wants a
@@ -834,14 +860,31 @@ recommended; call 3 is open.
   separate thread that weaves through the point, with crossings forced
   at both ends of the stroke and the stroke's thread underneath, so it
   ends where the glyph wants it (ledger K569).
-- **3. Looped or unlooped:** asked again with a plainer explanation. Until
-  he answers, stage 9 builds the looped hand.
+- **3. Looped or unlooped:** looped, with no spread turns: "Go with your
+  rec. EXCEPT, I don't actually want to show separate up and down
+  "hairpins". In the places where you're describing a hairpin would go,
+  we should instead have a junction at the start of where the up and
+  down thread segments would start overlapping; we then have the
+  overlapped portion be a single dead-end thread segment. The player
+  then can bypass the overlapped segment, and take the other fork from
+  the junction." (Section 5, rule 2 as amended.)
 - **4. Small mazes:** (a) overhang down to gs 6, then (b) "#8" at gs 4-5
   ("sgtm").
 - **5. Hershey:** replace it whole, kept as the fallback ("Probably
-  fine").
-- **6. The o-kind join:** wider spacing, if stage 9 cannot solve the
-  join ("Probably fine").
+  fine", then "yes").
+- **6. The o-kind join:** Levi's own form, replacing the wider spacing he
+  had first accepted ("Probably fine"): "Curving over the shoulder seems
+  _partly_ right. In general, I think with these o-kind joins, the goal
+  is for the in-coming stroke to match the exact curve of the first
+  section of the loop, so the first part of the loop over-strokes along
+  the exact same path as part of the entry stroke; for this, it seems
+  like we should use the same approach that we use for non-looped
+  sections of letters as with decision c above."
+  - So the connector runs along the oval's first stretch, and that
+    shared stretch is a spur from a junction (section 4).
+  - The oval's closure crosses the spur short of the tip rather than
+    joining it, which keeps the title a tree (K563's (d)). Levi was told
+    this on 2026-10-20.
 - **K563** (the title loop, K552's C4): (a) as built now, and (d) the
   title as a tree with this redesign (stage 9's brief, "No title
   loops").
