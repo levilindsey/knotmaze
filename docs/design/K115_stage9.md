@@ -21,14 +21,15 @@ o, t, n, 6 and ς.
   If K558 is not on origin/master, stop and report.
 - **K552 is merged** (the title flag, default off). Titled sheets turn
   it on in their links.
-- **Levi's calls** (glyphs doc section 11). Build what he picked. Where
-  he has not answered, build the recommendation and say so in the
-  report:
-  - a pill dot;
-  - floating strokes not walkable;
-  - a looped hand;
-  - floor 2.0 LU;
-  - Hershey kept as the fallback.
+- **Levi's calls** (glyphs doc section 11; answered 2026-10-20 except
+  call 3). Build what he picked:
+  - a pill dot (call 1);
+  - floating strokes not walkable, for now (call 2; K569 is the
+    follow-up that makes some of them threads, out of scope here);
+  - a looped hand (call 3, still open: build the recommendation and say
+    so in the report);
+  - floor 2.0 LU, with call 4's fit below it;
+  - Hershey kept as the fallback (call 5).
 
 ## Picked decisions
 
@@ -62,8 +63,15 @@ o, t, n, 6 and ς.
     when present.
   - Knot and maze edges never carry it.
 - **Scale:** titles shrink to fit as today, but never below xh 2.0. Below
-  that, follow Levi's Call 4, or the recommendation (overhang up to
-  1.5×, then "#8").
+  that, Levi's Call 4 (2026-10-20): overhang the maze width up to 1.5×,
+  down to gs 6, then the short form "#8" at gs 4-5.
+- **No title loops** (K563's (d), Levi 2026-10-20). The title's runs form
+  a tree on the walk graph, so every titled walk has a maze form and
+  K552's raw-record fallback (`mazeFormExact`, `rawFingerprint`) never
+  fires on the new glyphs. Crossings-only gives this by construction
+  (crossings are not walk vertices); the glyph waypoints must not land
+  on a crossing (`text_graph.ts` `nearestNode` did, which made today's
+  self-loops and parallel runs, `.claude/probes/K552/title_tree.ts`).
 
 ## The work, in order
 
@@ -157,7 +165,11 @@ o, t, n, 6 and ς.
 - **Walk:**
   - floats are decorative and not walkable;
   - the forced title walk is unchanged;
-  - stats, stars and the trail do not change for a titled daily.
+  - stats, stars and the trail do not change for a titled daily;
+  - no title loops: with the switch on, the titled walk graph's cycle
+    rank (E − V + C) equals the untitled one's for "Daily #8" and the
+    dailies the sheets use, and K552's tree-title test restores every
+    walk.
 - **Reveal:** a float shows once a crossed run is revealed
   (`explore_view.test.ts`).
 - **Smoothness:** the section 9 gates, Hausdorff included.
@@ -192,8 +204,9 @@ o, t, n, 6 and ς.
 - **The look:** go or no-go for mass authoring, from the sheets.
 - **The dot's length and slant,** and the loop sizes, if the sheets
   question them.
-- **The title fit below gs 8,** if Call 4 is still open.
-- **The o-kind join** (Call 6), if its kill criterion trips.
+- **The looped hand** (Call 3), if Levi has not answered by the sheets.
+- **The o-kind join:** Call 6 is answered (wider spacing); report the
+  spacing it needed if its kill criterion trips.
 
 ## Out of scope
 
