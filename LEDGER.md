@@ -388,14 +388,6 @@ Next free ID: K739.
   - evidence: `.claude/probes/K138/s1/`
   - next: stage 1: the rule kit, ice runs, the color rule; then s2-s8 per the K138_plan.md stage order
   - brief: `docs/design/K138_s1.md`
-- **K698** · Phone toasts cover the bottom controls (Pixel 411x753): the cut refusal over Undo (K703,
-  gone by 1.7 s; a touch still reaches Undo), the lives toasts over the move pad, the walker toasts over
-  .km-walk and the pad (K717 `out/lives`, `out/walker`). Place toasts clear of the controls.
-  - owner: agent `aef1574433a327ce7` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 02:31, 2 h cap ~04:31)
-  - branch: `worktree-agent-aef1574433a327ce7`, worktree `.claude/worktrees/agent-aef1574433a327ce7`; last commit: `bc75c91a`
-  - evidence: `.claude/probes/K698/`
-  - next: toasts above the bottom controls, the walker dot glow, no pad in walker modes, par <= n when inexact (with K713)
-  - brief: `docs/design/K698_polish.md`
 
 ## Next, in order
 
@@ -1615,6 +1607,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K698** · Toasts clear the bottom controls (src/ui/toast_place.ts: 10 px above the highest control in their column, re-placed on resize; controls found by class km-control and the known control classes); with K713: the walker glow, no move pad in Lead or Delay, par at most P for an upper-bound Lead par. Done in e558c7ef (2026-10-21).
 - **K726** · Phone sitting 3 (02:16-03:02, tested build 65ee13a6): the K718 glyph pages and sheets, the sword on real touches on both clocks (0 failures), K720 silence verified (0 AudioContexts); sword toasts over the pad went to K698; `.claude/probes/K726/out/`. Done in 65ee13a6 (2026-10-21).
 - **K643** · lintGlyph takes the taper part; bulge and crotch probe flags; both bounds kept (taperBulgeLU 0.01; forkMaxLU 1.2, crotches proven to 0.79 LU). Done in 6278cf8b (2026-10-21).
 - **K720** · sound off opens no audio: no AudioContext until sound is on and something plays (plucks, song, snore; the minotaur sounds now obey Muted and none too); switching sound on works without a reload; K720.md Handoff. Done in 72270da2 (2026-10-21).
