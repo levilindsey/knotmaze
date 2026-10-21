@@ -27,6 +27,7 @@ import {
   bezAt,
   bezAtK,
   bezCurvature,
+  bezDeriv,
   findCrossings,
   segCount,
   segOf,
@@ -65,100 +66,281 @@ export interface GlyphBuildOpts {
 
 /** K580: the default part point (LU): the default thread width (0.52). */
 export const TAPER_PART_LU = 0.52;
+/**
+ * K580 stage 2: the thread width (LU) a root's edges are fitted to (the
+ * default thread width; the builder does not see the `tw` param).
+ */
+export const TAPER_THREAD_LU = 0.52;
 /** K580: steps of the root's taper profile (Strand.taper.sep). */
 export const TAPER_PROFILE_N = 16;
 /** K580: Hermite segments in a root. */
 const ROOT_SEGS = 4;
+/** K580 stage 2: medial samples a root's width is tabulated at. */
+const ROOT_TABLE_N = 64;
 
-/** K580: a tangent spur's tapered root (GU, y up). */
+/**
+ * K580: a tangent spur's tapered root (GU, y up). Its centerline is the
+ * MEDIAL AXIS of the two strokes that meet at J (stage 2): the arriving
+ * stroke C (the body walked back from J) and the departing stroke O (the
+ * body walked on from J). A medial point M sits r from both strokes,
+ * touching C at its foot C(a) and O at O(b), a and b being arcs from J;
+ * the root is parameterized by a, C's foot arc. R is the medial point
+ * where 2r = the part distance: at the default part, where the strokes'
+ * inner edges meet, so the two ribbons never overlap past R.
+ */
 export interface TangentRoot {
   /** The root's cubic path, from the part point R to the junction J. */
   path: Pt[];
-  /** Equal-arc distance from J at R (GU). */
+  /** C's foot arc at R (GU): the root runs from a = aR (R) to a = 0 (J). */
   aR: number;
-  /** Centerline separation of the two strokes at the root's arc a (GU). */
+  /** O's foot arc at R (GU). */
+  bR: number;
+  /**
+   * The root's width beyond normal at C's foot arc a (GU): the ribbon's
+   * half-width there is h + sepAt(a) / 2, which lands on both strokes'
+   * outer edges along the root's normal. 0 at J.
+   */
   sepAt: (a: number) => number;
-  /** Cosine of the angle between the strokes' directions away from J at R. */
+  /** The medial radius at C's foot arc a (GU): the strokes' gap is 2r. */
+  rAt: (a: number) => number;
+  /** O's foot arc (GU) of the medial point with C's foot arc a. */
+  footO: (a: number) => number;
+  /**
+   * The side of the root that faces C: +1 when C lies LEFT of the root's
+   * direction R -> J in GU (y up), -1 right; O faces the other side. The
+   * graph flips y, so in graph units (y down) the sides swap.
+   */
+  sideC: 1 | -1;
+  /** Cosine of the angle between the strokes' directions away from J at R's feet. */
   cosR: number;
 }
 
 /**
  * K580: the root of a tangent spur at body point `at` (a multiple of 3).
  * The body arrives at J (body[at]) and leaves it back along the same
- * tangent line (a cusp). Pair the arrival stroke C and the departure
- * stroke O by equal arc a from J; the root's centerline is their midline
- * M(a) = (C(a) + O(a)) / 2 from the part point (|C - O| = partGu) to J,
- * fit as ROOT_SEGS Hermite cubics in a (G1 with the spur's tangent at J,
- * which is the arrival tangent). The ribbon's half-width there is
- * h + |C - O| / 2: the strokes' outer edges.
+ * tangent line (a cusp). Stage 2 pairs the strokes by the medial axis (the
+ * equal-arc pairing of stage 1 skewed the chord: the outline left the
+ * strokes and the ribbons overlapped past R). For each foot arc a on C,
+ * the medial point is M = C(a) + r n (n: C's normal toward O) with r =
+ * the distance from M to O (Newton inside a bracket; O's nearest point by
+ * a dense scan and a ternary refinement). Where the strokes diverge at a
+ * half-angle phi (cos phi from the two foot normals), their outer edges
+ * cross the root's normal (r + h) / cos phi from M (exact for straight
+ * strokes): the half-width the ribbon draws. The centerline is fit as
+ * ROOT_SEGS Hermite cubics in a, G1 at J with the arrival tangent (the
+ * spur's). `threadGu` is the thread width the edges are fitted to.
  */
-export function tangentRoot(body: readonly Pt[], at: number, partGu: number): TangentRoot | null {
-  const tab = arcTable(body as Pt[]);
-  const total = tab.cum[tab.cum.length - 1];
-  const arcJ = arcAtP(tab, at / 3);
-  const posAtArc = (L: number): [number, number] => posAtP(body as Pt[], pAtArc(tab, L));
-  const C = (a: number): [number, number] => posAtArc(arcJ - a);
-  const O = (a: number): [number, number] => posAtArc(arcJ + a);
-  const sepAt = (a: number): number => {
-    const c = C(a);
-    const o = O(a);
-    const dx = c[0] - o[0];
-    const dy = c[1] - o[1];
-    return Math.sqrt(dx * dx + dy * dy);
+export function tangentRoot(
+  body: readonly Pt[],
+  at: number,
+  partGu: number,
+  threadGu: number = partGu
+): TangentRoot | null {
+  const bp = body as Pt[];
+  const tab = arcTable(bp);
+  const cum = tab.cum;
+  const total = cum[cum.length - 1];
+  const iJ = (at / 3) * K_STEPS;
+  if (!(iJ > 0 && iJ < cum.length - 1)) return null;
+  const arcJ = cum[iJ];
+  const h = threadGu / 2;
+  const rPart = partGu / 2;
+  // Only the crotch's neighbourhood: never a far stroke or the next glyph.
+  const win = 8 * Math.max(partGu, threadGu);
+  const aMax = Math.min(arcJ, win);
+  const bMax = Math.min(total - arcJ, win);
+  if (!(aMax > 0) || !(bMax > 0)) return null;
+  // O's dense samples, from J to the window's end.
+  let iW = iJ;
+  while (iW + 1 < cum.length && cum[iW] < arcJ + bMax) iW++;
+  const ox: number[] = [];
+  const oy: number[] = [];
+  for (let i = iJ; i <= iW; i++) {
+    const q = posAtP(bp, i / K_STEPS);
+    ox.push(q[0]);
+    oy.push(q[1]);
+  }
+  interface Near {
+    d: number;
+    fx: number;
+    fy: number;
+    p: number;
+  }
+  /** The nearest point of O to (x, y). */
+  const nearO = (x: number, y: number): Near => {
+    let best = Infinity;
+    let bi = 0;
+    for (let i = 0; i < ox.length; i++) {
+      const dx = ox[i] - x;
+      const dy = oy[i] - y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < best) {
+        best = d2;
+        bi = i;
+      }
+    }
+    let lo = (iJ + Math.max(0, bi - 1)) / K_STEPS;
+    let hi = (iJ + Math.min(ox.length - 1, bi + 1)) / K_STEPS;
+    for (let it = 0; it < 48; it++) {
+      const m1 = lo + (hi - lo) / 3;
+      const m2 = hi - (hi - lo) / 3;
+      const q1 = posAtP(bp, m1);
+      const q2 = posAtP(bp, m2);
+      const d1 = (q1[0] - x) * (q1[0] - x) + (q1[1] - y) * (q1[1] - y);
+      const d2 = (q2[0] - x) * (q2[0] - x) + (q2[1] - y) * (q2[1] - y);
+      if (d1 <= d2) hi = m2;
+      else lo = m1;
+    }
+    const p = (lo + hi) / 2;
+    const f = posAtP(bp, p);
+    const dx = f[0] - x;
+    const dy = f[1] - y;
+    return { d: Math.sqrt(dx * dx + dy * dy), fx: f[0], fy: f[1], p };
   };
-  const aMax = Math.min(arcJ, total - arcJ);
-  if (!(aMax > 0) || sepAt(aMax) < partGu) return null;
+  /** C at foot arc a > 0: the point and the body's forward derivative. */
+  const cAt = (a: number): { c: [number, number]; d: [number, number] } => {
+    const [seg, t] = splitP(bp, pAtArc(tab, arcJ - a));
+    const sg = segOf(bp, seg);
+    return { c: bezAt(sg, t), d: bezDeriv(sg, t) };
+  };
+  // Which side of C the other stroke lies on (constant: they meet only at J).
+  const ref = cAt(Math.min(aMax, partGu));
+  const qr = nearO(ref.c[0], ref.c[1]);
+  const sgn = ref.d[0] * (qr.fy - ref.c[1]) - ref.d[1] * (qr.fx - ref.c[0]) > 0 ? 1 : -1;
+  const J = bp[at];
+  interface Medial {
+    x: number;
+    y: number;
+    r: number;
+    /** O's foot arc. */
+    b: number;
+    /** The half-width that reaches both outer edges. */
+    w: number;
+  }
+  const medial = (a: number): Medial => {
+    if (!(a > 0)) return { x: J[0], y: J[1], r: 0, b: 0, w: h };
+    const { c, d } = cAt(a);
+    const l = Math.sqrt(d[0] * d[0] + d[1] * d[1]);
+    const nx = (-d[1] / l) * sgn;
+    const ny = (d[0] / l) * sgn;
+    // f(r) = |c + r n, O| - r: positive at r = 0, falls through 0 at M,
+    // and f(2 d0) <= 0 while n is within 75 degrees of the direction to
+    // O's nearest point (d0 away).
+    const q0 = nearO(c[0], c[1]);
+    let lo = 0;
+    let hi = 2 * q0.d;
+    let r = q0.d / 2;
+    for (let it = 0; it < 60; it++) {
+      const px = c[0] + r * nx;
+      const py = c[1] + r * ny;
+      const q = nearO(px, py);
+      const f = q.d - r;
+      if (f > 0) lo = r;
+      else hi = r;
+      // d|P, O|/dr = n . (P - F) / |P - F|.
+      const g = q.d > 0 ? ((px - q.fx) * nx + (py - q.fy) * ny) / q.d - 1 : -1;
+      let rn = g < 0 ? r - f / g : (lo + hi) / 2;
+      if (!(rn > lo && rn < hi)) rn = (lo + hi) / 2;
+      const done = Math.abs(rn - r) <= 1e-10 * (1 + r);
+      r = rn;
+      if (done) break;
+    }
+    const x = c[0] + r * nx;
+    const y = c[1] + r * ny;
+    const q = nearO(x, y);
+    // cos phi = sqrt((1 - n . uO) / 2), uO the unit vector from O's foot to M.
+    const uo = q.d > 0 ? ((x - q.fx) * nx + (y - q.fy) * ny) / q.d : -1;
+    const cphi = Math.sqrt(Math.max(0.25, (1 - uo) / 2));
+    return { x, y, r, b: arcAtP(tab, q.p) - arcJ, w: (r + h) / cphi };
+  };
+  // R: the medial radius reaches partGu / 2. Step out from J to a bracket,
+  // then bisect (r grows away from J).
   let lo = 0;
-  let hi = aMax;
-  for (let it = 0; it < 60; it++) {
+  let hi = Math.min(aMax, partGu / 2);
+  while (medial(hi).r < rPart) {
+    if (hi >= aMax) return null;
+    lo = hi;
+    hi = Math.min(aMax, hi * 1.5);
+  }
+  for (let it = 0; it < 50; it++) {
     const mid = (lo + hi) / 2;
-    if (sepAt(mid) < partGu) lo = mid;
+    if (medial(mid).r < rPart) lo = mid;
     else hi = mid;
   }
   const aR = (lo + hi) / 2;
-  const eps = 0.01;
-  const M = (a: number): [number, number] => {
-    const c = C(a);
-    const o = O(a);
-    return [(c[0] + o[0]) / 2, (c[1] + o[1]) / 2];
+  // The width table, J (i = 0) to R (i = N).
+  const N = ROOT_TABLE_N;
+  const tr: number[] = [];
+  const tb: number[] = [];
+  const ts: number[] = [];
+  for (let i = 0; i <= N; i++) {
+    const m = medial((aR * i) / N);
+    tr.push(m.r);
+    tb.push(m.b);
+    ts.push(2 * (m.w - h));
+  }
+  const lerp = (v: number[], a: number): number => {
+    const x = Math.max(0, Math.min(N, (a / aR) * N));
+    const i = Math.min(N - 1, Math.floor(x));
+    return v[i] + (v[i + 1] - v[i]) * (x - i);
   };
   // dM/d(-a): the root runs R -> J, toward smaller a.
+  const eps = 0.01;
   const D = (a: number): [number, number] => {
     const a0 = Math.max(0, a - eps);
     const a1 = a + eps;
-    const m0 = M(a0);
-    const m1 = M(a1);
-    return [(m0[0] - m1[0]) / (a1 - a0), (m0[1] - m1[1]) / (a1 - a0)];
+    const m0 = medial(a0);
+    const m1 = medial(a1);
+    return [(m0.x - m1.x) / (a1 - a0), (m0.y - m1.y) / (a1 - a0)];
   };
-  const unit = (a: number): [number, number] => {
-    const q0 = posAtArc(a - eps);
-    const q1 = posAtArc(a + eps);
-    const dx = q1[0] - q0[0];
-    const dy = q1[1] - q0[1];
-    const l = Math.sqrt(dx * dx + dy * dy) || 1;
-    return [dx / l, dy / l];
-  };
-  // At J the midline's derivative is exactly the arrival tangent.
-  const tJ = unit(arcJ - eps * 2);
+  // At J the axis runs along the arrival tangent (unit speed in a).
+  const ed = bezDeriv(segOf(bp, at / 3 - 1), 1);
+  const el = Math.sqrt(ed[0] * ed[0] + ed[1] * ed[1]);
+  const tJ: [number, number] = [ed[0] / el, ed[1] / el];
   const path: Pt[] = [];
   const da = aR / ROOT_SEGS;
+  let dR: [number, number] = tJ;
   for (let k = 0; k < ROOT_SEGS; k++) {
     const a0 = aR - k * da;
     const a1 = aR - (k + 1) * da;
-    const p0 = k === 0 ? M(a0) : (path[path.length - 1] as [number, number]);
-    const p1 = k + 1 === ROOT_SEGS ? (body[at] as [number, number]) : M(a1);
+    let p0: [number, number];
+    if (k === 0) {
+      const m = medial(a0);
+      p0 = [m.x, m.y];
+      path.push(p0);
+    } else p0 = path[path.length - 1] as [number, number];
+    let p1: [number, number] = [J[0], J[1]];
+    if (k + 1 < ROOT_SEGS) {
+      const m = medial(a1);
+      p1 = [m.x, m.y];
+    }
     const d0 = D(a0);
+    if (k === 0) dR = d0;
     const d1 = k + 1 === ROOT_SEGS ? tJ : D(a1);
-    if (k === 0) path.push([p0[0], p0[1]]);
     path.push([p0[0] + (d0[0] * da) / 3, p0[1] + (d0[1] * da) / 3]);
     path.push([p1[0] - (d1[0] * da) / 3, p1[1] - (d1[1] * da) / 3]);
-    path.push([p1[0], p1[1]]);
+    path.push(p1);
   }
-  const tc = unit(arcJ - aR);
-  const to = unit(arcJ + aR);
-  // C's direction away from J is -tc; O's is to. (No trig in core/: K108.)
-  const cosR = -tc[0] * to[0] - tc[1] * to[1];
-  return { path, aR, sepAt, cosR };
+  // The strokes' directions away from J at R's feet, and C's side.
+  const cR = cAt(aR);
+  const cl = Math.sqrt(cR.d[0] * cR.d[0] + cR.d[1] * cR.d[1]);
+  const mR = medial(aR);
+  const oq = nearO(mR.x, mR.y);
+  const [os, ot] = splitP(bp, oq.p);
+  const od = bezDeriv(segOf(bp, os), ot);
+  const ol = Math.sqrt(od[0] * od[0] + od[1] * od[1]);
+  const cosR = (-cR.d[0] * od[0] - cR.d[1] * od[1]) / (cl * ol);
+  const sideC: 1 | -1 = -dR[1] * (cR.c[0] - mR.x) + dR[0] * (cR.c[1] - mR.y) > 0 ? 1 : -1;
+  return {
+    path,
+    aR,
+    bR: mR.b,
+    sepAt: (a) => lerp(ts, a),
+    rAt: (a) => lerp(tr, a),
+    footO: (a) => lerp(tb, a),
+    sideC,
+    cosR,
+  };
 }
 
 export interface GlyphBuildStats {
@@ -200,7 +382,7 @@ interface PathRec {
   tangent?: boolean;
   /** K580: the tapered root this spur's path starts with (its first
    *  `segs` segments, R to J). */
-  root?: { segs: number; aR: number; sepAt: (a: number) => number };
+  root?: TangentRoot & { segs: number };
 }
 
 // A point on a path the node chain must pass through.
@@ -404,12 +586,12 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
     const partGu = (opts.taperPart ?? TAPER_PART_LU) * guPerLu;
     for (const r of spurs) {
       if (!r.tangent) continue;
-      const root = tangentRoot(body, r.junction, partGu);
+      const root = tangentRoot(body, r.junction, partGu, TAPER_THREAD_LU * guPerLu);
       if (!root) continue;
       const path = root.path.slice();
       appendPath(path, r.path);
       r.path = path;
-      r.root = { segs: segCount(root.path), aR: root.aR, sepAt: root.sepAt };
+      r.root = { ...root, segs: segCount(root.path) };
     }
   }
 

@@ -25,7 +25,7 @@ export interface SpurDef {
   /**
    * K580: the body's two strokes meet TANGENTIALLY at the junction (a cusp
    * the spur continues). Under #glyphs2 the spur then starts with a
-   * tapered root on the strokes' midline (glyph_graph.ts, tangentRoot).
+   * tapered root on the strokes' medial axis (glyph_graph.ts, tangentRoot).
    */
   tangent?: true;
 }
