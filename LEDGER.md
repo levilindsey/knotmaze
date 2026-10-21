@@ -295,14 +295,6 @@ Next free ID: K645.
   - evidence: `.claude/probes/K546/`
   - next: Levi looks at the stills (`.claude/probes/K546/out/runs/`); stages 2-4 wait on K629
   - brief: `docs/design/K546_s1.md`
-- **K336** · Side cannons (Levi 10-14): finish confetti and streamers blast in from both edges. With
-  K335, K337 (`docs/design/K335_confetti.md`); deferred. Draft `docs/design/K336_K337_draft.patch`
-  (on K335's merge); codec `cfc`/`cfn`/`cfs`/`cfh`/`cff`; phone fps rides K156's next pass.
-  - owner: agent `ac1c3e02f6979bc7f` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 17:05, 2 h cap ~19:05)
-  - branch: `worktree-agent-ac1c3e02f6979bc7f`, worktree `.claude/worktrees/agent-ac1c3e02f6979bc7f`; last commit: `b81a735`
-  - evidence: `.claude/probes/K336/`
-  - next: K186 (no confetti under reduced motion, every banner throws), then the cannons, then the streamers, a commit at each
-  - brief: `docs/design/K336_cannons.md`
 - **K137** · K80 section 4's cheap (S, S-M) mechanisms, each toggled (Levi 10-13), after the
   minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus
   Levi's sleeper variant. `K80_gameplay_additions.md`, stages in `sooner_20261020.md`; M: K138, M-L/L: K141.
@@ -1424,6 +1416,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K336** · Side cannons and streamers (codec 178-180), with K186 (none under reduced motion, every banner throws). Done in e7affd6 (2026-10-20).
 - **K244** · No junction-core plucks: auto plucks pick only drawn sites and a release in a core is silent (0 of 844 notes undrawn). Done in ff67e4d (2026-10-20).
 - **K578** · While confetti falls, every frame redraws the whole maze (phone 60 -> 45 fps, K572, before K573). Dropped: the phone's fall is ~50 fps and not CPU-bound (a tenfold CPU cut gave +0.5 fps), and the cache never engages in the maze (PAINT_AMBIENT every frame). Branch kept; K634 (2026-10-20).
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or char (CHAR items in the explore programs). Done in 3231d59 (2026-10-20).
