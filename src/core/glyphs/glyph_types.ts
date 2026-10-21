@@ -22,6 +22,12 @@ export interface SpurDef {
   at: number;
   /** The spur, from the junction (equal to body[at]) to its tip. */
   path: CubicPath;
+  /**
+   * K580: the body's two strokes meet TANGENTIALLY at the junction (a cusp
+   * the spur continues). Under #glyphs2 the spur then starts with a
+   * tapered root on the strokes' midline (glyph_graph.ts, tangentRoot).
+   */
+  tangent?: true;
 }
 
 export interface Glyph {

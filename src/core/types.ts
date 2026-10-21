@@ -59,6 +59,13 @@ export interface Strand {
   // walk vertices or dead ends. Only the text builder's mark emitter sets
   // it; letter-body spurs stay travelable.
   decorative?: boolean;
+  // K580 (#glyphs2 only): a TAPERED ROOT. The strand starts on the midline
+  // of two body strokes that meet tangentially at a junction and runs to
+  // that junction (node index `joint`) before its own path. `sep` holds,
+  // per node, the centerline separation (LU) of the two strokes the root
+  // covers there (0 from the joint on); the renderer widens the ribbon to
+  // 1 + sep / threadWidth, so the root's edges are the strokes' outer edges.
+  taper?: { sep: number[]; joint: number };
 }
 
 // Main combinatorial graph. (The legacy single-strand MazeGraph - the old
