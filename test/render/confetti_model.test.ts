@@ -8,11 +8,14 @@ import {
   CANNON_DELAY_MAX,
   CANNON_LIFE_MAX,
   CANNON_PER_AMOUNT,
+  CANNON_SPEED_MIN,
+  CANNON_SPEED_SPAN,
   CANNON_SPREAD,
   CANNON_STAGGER,
   CANNON_TERM,
   CANNON_Y,
   CONFETTI_AMOUNT_MAX,
+  CONFETTI_COLORS,
   CONFETTI_MAX_DT,
   CONFETTI_SHINE_MAX,
   COLOR,
@@ -50,9 +53,30 @@ import {
   SPRAY_LIFT,
   SPRAY_MIN_PX,
   SPRAY_PER_AMOUNT,
+  STREAMER_CAP,
+  STREAMER_FADE,
+  STREAMER_LIFE_MAX,
+  STREAMER_SEGS,
+  STREAMER_STRIDE,
   SWAY,
   SWAY_AMP,
   SWAY_RATE,
+  S_AGE,
+  S_COLOR,
+  S_LIFE,
+  S_MAT,
+  S_PTS,
+  S_SEG,
+  S_SWAY,
+  S_SWAY_AMP,
+  S_SWAY_RATE,
+  S_TERM,
+  S_TWIST,
+  S_TWIST_RATE,
+  S_TWIST_STEP,
+  S_VX,
+  S_VY,
+  S_WIDTH,
   TERM,
   VX,
   VY,
@@ -73,14 +97,18 @@ import {
   spawnCannon,
   spawnRain,
   spawnSpray,
+  spawnStreamers,
   specular,
   sprayUnit,
   stepCannon,
   stepRain,
   stepSpray,
+  stepStreamers,
+  streamerSegLook,
   type CannonSpec,
   type ConfettiSettings,
   type PieceLook,
+  type SegLook,
 } from "../../src/render/confetti_model";
 
 // A seeded uniform [0, 1) source (mulberry32), so every run is the same.
@@ -113,6 +141,7 @@ describe("confettiPlan: how many pieces a finish throws", () => {
       rain: RAIN_PER_AMOUNT,
       spray: SPRAY_PER_AMOUNT,
       cannon: 0,
+      streamers: 0,
       foil: 0,
       shine: 0,
     });
@@ -120,6 +149,7 @@ describe("confettiPlan: how many pieces a finish throws", () => {
       rain: 210,
       spray: 160,
       cannon: 0,
+      streamers: 0,
       foil: 0,
       shine: 0,
     });
@@ -127,6 +157,7 @@ describe("confettiPlan: how many pieces a finish throws", () => {
       rain: RAIN_PER_AMOUNT * CONFETTI_AMOUNT_MAX,
       spray: SPRAY_CAP,
       cannon: 0,
+      streamers: 0,
       foil: 0,
       shine: 0,
     });
@@ -145,6 +176,7 @@ describe("confettiPlan: how many pieces a finish throws", () => {
       rain: 865,
       spray: SPRAY_PER_AMOUNT,
       cannon: 0,
+      streamers: 0,
       foil: 0,
       shine: 0,
     });
@@ -499,16 +531,19 @@ describe("the side cannons (screen space, K336)", () => {
       foilShare: 0.3,
       confettiCannons: true,
       cannonAmount: 1,
+      streamerShare: 0.2,
     };
     const on = confettiPlanFor(s, false, 1400, 900);
-    expect(on).toEqual(confettiPlan(1, false, 1400, 900, 1, 0.3, 1));
+    expect(on).toEqual(confettiPlan(1, false, 1400, 900, 1, 0.3, 1, 0.2));
+    expect([on.cannon, on.streamers]).toEqual([247, 62]);
     for (const cannonAmount of [1, 3]) {
       expect(
         confettiPlanFor({ ...s, confettiCannons: false, cannonAmount }, false, 1400, 900)
-      ).toEqual({ ...on, cannon: 0 });
+      ).toEqual({ ...on, cannon: 0, streamers: 0 });
     }
     expect(planThrows(on)).toBe(true);
-    expect(planThrows({ rain: 0, spray: 0, cannon: 1, foil: 0, shine: 0 })).toBe(true);
+    expect(planThrows({ rain: 0, spray: 0, cannon: 1, streamers: 0, foil: 0, shine: 0 })).toBe(true);
+    expect(planThrows({ rain: 0, spray: 0, cannon: 0, streamers: 1, foil: 0, shine: 0 })).toBe(true);
     expect(planThrows(confettiPlanFor(s, true, 1400, 900))).toBe(false);
     expect(planThrows(confettiPlanFor({ ...s, confettiAmount: 0 }, false, 1400, 900))).toBe(false);
   });
@@ -709,7 +744,7 @@ describe("the side cannons (screen space, K336)", () => {
     expect(b.active).toBe(false);
     // Cannons alone hold the sim active until their last piece falls out.
     const c = new ConfettiSim();
-    const only = { rain: 0, spray: 0, cannon: 100, foil: 0, shine: 1 };
+    const only = { rain: 0, spray: 0, cannon: 100, streamers: 0, foil: 0, shine: 1 };
     expect(c.burst(only, w, h, 0, 0, 1, seeded(22))).toBe(true);
     expect(c.active).toBe(true);
     const t = runOut(c, h);
@@ -718,6 +753,344 @@ describe("the side cannons (screen space, K336)", () => {
     expect(t).toBeLessThan(CANNON_DELAY_MAX + CANNON_LIFE_MAX);
     // No screen, no cannons.
     expect(new ConfettiSim().burst(only, 0, 0, 0, 0, 1)).toBe(false);
+  });
+});
+
+describe("the streamers (K336)", () => {
+  it("takes a share of each cannon's pieces (confettiPlan)", () => {
+    const phone = (share: number): number[] => {
+      const p = confettiPlan(1, false, RAIN_REF_W, RAIN_REF_H, 0, 0, 1, share);
+      return [p.cannon, p.streamers];
+    };
+    expect(phone(0)).toEqual([150, 0]);
+    expect(phone(0.2)).toEqual([120, 30]);
+    expect(phone(0.5)).toEqual([75, 75]);
+    // At most STREAMER_CAP / FINISH_CANNONS a cannon; the rest stay paper.
+    expect(phone(1)).toEqual([50, 100]);
+    // Garbage reads as none, too much as all.
+    for (const share of [NaN, -1]) expect([share, ...phone(share)]).toEqual([share, 150, 0]);
+    expect(phone(7)).toEqual(phone(1));
+    // A big screen at the top amounts fills the pool exactly.
+    const big = confettiPlan(CONFETTI_AMOUNT_MAX, false, 3840, 2160, 0, 0, CANNON_AMOUNT_MAX, 1);
+    expect(big.streamers * FINISH_CANNONS).toBe(STREAMER_CAP);
+    // A cannon fires the same count of pieces whatever the share.
+    const per = confettiPlan(1, false, 1400, 900, 0, 0, 1).cannon;
+    expect(per).toBe(309);
+    for (const share of [0, 0.1, 0.33, 0.8]) {
+      const p = confettiPlan(1, false, 1400, 900, 0, 0, 1, share);
+      expect([share, p.cannon + p.streamers]).toEqual([share, per]);
+    }
+    // No cannons, no streamers: the cannons at 0, no confetti, reduced motion.
+    expect(confettiPlan(1, false, 1400, 900, 0, 0, 0, 1).streamers).toBe(0);
+    expect(confettiPlan(0, false, 1400, 900, 0, 0, 1, 1).streamers).toBe(0);
+    expect(confettiPlan(1, true, 1400, 900, 0, 0, 1, 1).streamers).toBe(0);
+  });
+
+  it("spawns after both cannons' paper, so every other piece is unchanged", () => {
+    const [w, h] = [1400, 900];
+    const base = { rain: 300, spray: 100, cannon: 80, streamers: 0, foil: 0.3, shine: 1 };
+    const a = new ConfettiSim();
+    const b = new ConfettiSim();
+    a.burst(base, w, h, 3, 4, 1, seeded(31));
+    expect(b.burst({ ...base, streamers: 25 }, w, h, 3, 4, 1, seeded(31))).toBe(true);
+    const live = (p: ConfettiPool) => Array.from(p.data.subarray(0, p.alive * p.stride));
+    expect(live(b.rain)).toEqual(live(a.rain));
+    expect(live(b.spray)).toEqual(live(a.spray));
+    expect(live(b.cannon)).toEqual(live(a.cannon));
+    expect([a.streamers.alive, b.streamers.alive]).toEqual([0, FINISH_CANNONS * 25]);
+    b.clear();
+    expect(b.active).toBe(false);
+    // Streamers alone throw, and hold the sim active until the last falls out.
+    const c = new ConfettiSim();
+    const only = { rain: 0, spray: 0, cannon: 0, streamers: 30, foil: 0, shine: 1 };
+    expect(planThrows(only)).toBe(true);
+    expect(c.burst(only, w, h, 0, 0, 1, seeded(32))).toBe(true);
+    expect(c.active).toBe(true);
+    const t = runOut(c, h);
+    expect(c.active).toBe(false);
+    expect(t).toBeGreaterThan(3);
+    // Every one fell out before its fade could start (no backstop).
+    expect(t).toBeLessThan(STREAMER_LIFE_MAX - STREAMER_FADE);
+    expect(new ConfettiSim().burst(only, 0, 0, 0, 0, 1)).toBe(false);
+  });
+
+  it("queues each streamer gathered at its cannon, timed and aimed as its paper", () => {
+    const [w, h] = [411, 753];
+    const scale = rainPieceScale(w, h);
+    const cannons = finishCannons(w, h, 0, STREAMER_CAP / FINISH_CANNONS);
+    const pool = new ConfettiPool(STREAMER_CAP, STREAMER_STRIDE);
+    const rand = seeded(41);
+    for (const c of cannons) spawnStreamers(pool, c, h, scale, 0.5, rand);
+    expect(pool.alive).toBe(STREAMER_CAP);
+    const d = pool.data;
+    let foil = 0;
+    for (let i = 0; i < pool.alive; i++) {
+      const o = i * STREAMER_STRIDE;
+      const c = d[o + S_PTS] < w / 2 ? cannons[0] : cannons[1];
+      // The body starts gathered on the head, at the muzzle.
+      for (let j = 1; j <= STREAMER_SEGS; j++) {
+        expect(d[o + S_PTS + 2 * j]).toBe(d[o + S_PTS]);
+        expect(d[o + S_PTS + 2 * j + 1]).toBe(d[o + S_PTS + 1]);
+      }
+      expect(Math.abs(d[o + S_PTS] - c.x)).toBeLessThanOrEqual(4 * scale + 1e-3);
+      expect(Math.abs(d[o + S_PTS + 1] - c.y)).toBeLessThanOrEqual(4 * scale + 1e-3);
+      // Released delay to delay + volley s after the burst.
+      const wait = -d[o + S_AGE];
+      expect(wait).toBeGreaterThanOrEqual(c.delay - 1e-6);
+      expect(wait).toBeLessThanOrEqual(c.delay + c.volley + 1e-6);
+      // Aimed within the spread, at the paper's speeds.
+      const a = Math.atan2(d[o + S_VY], d[o + S_VX]);
+      expect(Math.abs(Math.atan2(Math.sin(a - c.angle), Math.cos(a - c.angle)))).toBeLessThanOrEqual(
+        c.spread + 1e-5
+      );
+      const sp = Math.hypot(d[o + S_VX], d[o + S_VY]) / c.speed;
+      expect(sp).toBeGreaterThanOrEqual(CANNON_SPEED_MIN - 1e-5);
+      expect(sp).toBeLessThanOrEqual(CANNON_SPEED_MIN + CANNON_SPEED_SPAN + 1e-5);
+      expect(d[o + S_TERM]).toBeCloseTo(CANNON_TERM * h, 3);
+      expect(d[o + S_LIFE]).toBe(STREAMER_LIFE_MAX);
+      const length = d[o + S_SEG] * STREAMER_SEGS;
+      expect(length).toBeGreaterThanOrEqual(80 * scale - 1e-3);
+      expect(length).toBeLessThanOrEqual(140 * scale + 1e-3);
+      expect(d[o + S_WIDTH]).toBeGreaterThanOrEqual(5 * scale - 1e-4);
+      expect(d[o + S_WIDTH]).toBeLessThanOrEqual(7.5 * scale + 1e-4);
+      expect(CONFETTI_COLORS).toContain(d[o + S_COLOR]);
+      foil += d[o + S_MAT];
+    }
+    // Half of them foil at share 0.5; none at 0.
+    expect(foil / pool.alive).toBeGreaterThan(0.35);
+    expect(foil / pool.alive).toBeLessThan(0.65);
+    const none = new ConfettiPool(STREAMER_CAP, STREAMER_STRIDE);
+    for (const c of cannons) spawnStreamers(none, c, h, scale, 0, seeded(42));
+    for (let i = 0; i < none.alive; i++) expect(none.data[i * STREAMER_STRIDE + S_MAT]).toBe(0);
+  });
+
+  it("flies the head as cannon paper, at any frame rate, a mid-frame release included", () => {
+    const h = 900;
+    const head = (fps: number, t: number): number[] => {
+      const pool = new ConfettiPool(1, STREAMER_STRIDE);
+      const o = pool.alloc() * STREAMER_STRIDE;
+      const d = pool.data;
+      for (let j = 0; j <= STREAMER_SEGS; j++) {
+        d[o + S_PTS + 2 * j] = -30;
+        d[o + S_PTS + 2 * j + 1] = 720;
+      }
+      d[o + S_VX] = 500;
+      d[o + S_VY] = -900;
+      d[o + S_AGE] = -0.0123;
+      d[o + S_LIFE] = STREAMER_LIFE_MAX;
+      d[o + S_TERM] = CANNON_TERM * h;
+      d[o + S_SEG] = 8;
+      d[o + S_WIDTH] = 6;
+      d[o + S_SWAY] = 0.7;
+      d[o + S_SWAY_RATE] = 2.1;
+      d[o + S_SWAY_AMP] = 14;
+      d[o + S_TWIST_RATE] = 9;
+      const n = Math.round(t * fps);
+      for (let k = 0; k < n; k++) stepStreamers(pool, 1 / fps, h);
+      return [S_PTS, S_PTS + 1, S_VX, S_VY, S_TWIST].map((f) => d[o + f]);
+    };
+    const paper = (fps: number, t: number): number[] => {
+      const pool = new ConfettiPool(1);
+      const o = pool.alloc() * F;
+      const d = pool.data;
+      d[o + X] = -30;
+      d[o + Y] = 720;
+      d[o + VX] = 500;
+      d[o + VY] = -900;
+      d[o + AGE] = -0.0123;
+      d[o + LIFE] = CANNON_LIFE_MAX;
+      d[o + TERM] = CANNON_TERM * h;
+      d[o + LEN] = 12;
+      d[o + SWAY] = 0.7;
+      d[o + SWAY_RATE] = 2.1;
+      d[o + SWAY_AMP] = 14;
+      d[o + FLIP_RATE] = 9;
+      const n = Math.round(t * fps);
+      for (let k = 0; k < n; k++) stepCannon(pool, 1 / fps, h);
+      return [X, Y, VX, VY, FLIP].map((f) => d[o + f]);
+    };
+    for (const t of [1 / 6, 0.5, 1.5]) {
+      const ref = head(240, t);
+      for (const fps of [30, 60, 144]) {
+        const got = head(fps, t);
+        const pap = paper(fps, t);
+        for (let f = 0; f < ref.length; f++) {
+          expect([t, fps, f, Math.abs(got[f] - ref[f]) < 0.05]).toEqual([t, fps, f, true]);
+          expect([t, fps, f, Math.abs(got[f] - pap[f]) < 0.05]).toEqual([t, fps, f, true]);
+        }
+      }
+    }
+    // Before its release a streamer holds still.
+    const held = head(100, 0.01);
+    expect([held[0], held[1]]).toEqual([-30, 720]);
+  });
+
+  it("keeps every segment within its length while the body trails the head", () => {
+    const [w, h] = [1400, 900];
+    const sim = new ConfettiSim();
+    const plan = { rain: 0, spray: 0, cannon: 0, streamers: 40, foil: 0, shine: 1 };
+    sim.burst(plan, w, h, 0, 0, 1, seeded(51));
+    const pool = sim.streamers;
+    let worst = 0;
+    for (let k = 0; k < 600 && sim.active; k++) {
+      sim.step(DT, h);
+      const d = pool.data;
+      for (let i = 0; i < pool.alive; i++) {
+        const o = i * STREAMER_STRIDE;
+        for (let j = 0; j < STREAMER_SEGS; j++) {
+          const q = o + S_PTS + 2 * j;
+          const len = Math.hypot(d[q + 2] - d[q], d[q + 3] - d[q + 1]);
+          worst = Math.max(worst, len / d[o + S_SEG]);
+        }
+      }
+    }
+    // Pulled taut, never stretched.
+    expect(worst).toBeGreaterThan(0.99);
+    expect(worst).toBeLessThan(1 + 1e-3);
+  });
+
+  it("arcs every head up over the screen, its top well inside, and out by the bottom", () => {
+    for (const [w, h] of [
+      [411, 753],
+      [753, 411],
+      [1400, 900],
+    ]) {
+      const pool = new ConfettiPool(STREAMER_CAP, STREAMER_STRIDE);
+      const rand = seeded(w + 2);
+      for (const c of finishCannons(w, h, 0, STREAMER_CAP / FINISH_CANNONS)) {
+        spawnStreamers(pool, c, h, rainPieceScale(w, h), 0.3, rand);
+      }
+      const worst = { top: Infinity, edge: Infinity, age: 0 };
+      for (let i = 0; i < pool.alive; i++) {
+        // Each streamer flown alone, so its row never moves.
+        const one = new ConfettiPool(1, STREAMER_STRIDE);
+        one.alloc();
+        one.data.set(pool.data.subarray(i * STREAMER_STRIDE, (i + 1) * STREAMER_STRIDE));
+        const d = one.data;
+        let topX = 0;
+        let topY = Infinity;
+        let age = 0;
+        while (one.alive > 0) {
+          stepStreamers(one, DT, h);
+          if (one.alive === 0 || d[S_AGE] <= 0) continue;
+          age = d[S_AGE];
+          if (d[S_PTS + 1] < topY) {
+            topY = d[S_PTS + 1];
+            topX = d[S_PTS];
+          }
+        }
+        expect(topY).toBeLessThan(CANNON_Y * h);
+        worst.top = Math.min(worst.top, topY / h);
+        worst.edge = Math.min(worst.edge, topX / w, 1 - topX / w);
+        worst.age = Math.max(worst.age, age);
+      }
+      // Census (`.claude/probes/K336/streamer_census.mjs`, share 0.2, 8 seeds):
+      // phone tops 0.24-0.49 h down, at least 0.052 w in from their own side
+      // (0.15 on the wider screens); every streamer out by the bottom 3.9-5.8 s
+      // after its release.
+      expect([w, worst.top > 0.12]).toEqual([w, true]);
+      expect([w, worst.edge > 0.03]).toEqual([w, true]);
+      expect(worst.age).toBeLessThan(STREAMER_LIFE_MAX - STREAMER_FADE);
+    }
+  });
+
+  it("bounds every life: none outlives CANNON_DELAY_MAX + STREAMER_LIFE_MAX", () => {
+    const pool = new ConfettiPool(STREAMER_CAP, STREAMER_STRIDE);
+    const [left, right] = finishCannons(1400, 900, 0, 50);
+    // A spec past the bounds is clamped into them.
+    const wild: CannonSpec = { ...right, delay: 50, volley: NaN };
+    const rand = seeded(61);
+    for (const c of [left, wild]) spawnStreamers(pool, c, 900, 1, 0, rand);
+    for (let i = 0; i < pool.alive; i++) {
+      const wait = -pool.data[i * STREAMER_STRIDE + S_AGE];
+      expect(wait >= 0 && wait <= CANNON_DELAY_MAX).toBe(true);
+    }
+    // A screen too tall to fall out of: only the backstop ends them.
+    let t = 0;
+    while (pool.alive > 0 && t < 30) {
+      stepStreamers(pool, DT, 1e9);
+      t += DT;
+    }
+    expect(pool.alive).toBe(0);
+    expect(t).toBeGreaterThan(STREAMER_LIFE_MAX);
+    expect(t).toBeLessThanOrEqual(CANNON_DELAY_MAX + STREAMER_LIFE_MAX + DT);
+  });
+
+  it("draws each segment as a lit paper piece (streamerSegLook)", () => {
+    const pool = new ConfettiPool(1, STREAMER_STRIDE);
+    const o = pool.alloc() * STREAMER_STRIDE;
+    const d = pool.data;
+    const look: SegLook = { x: 0, y: 0, alpha: 0, long: 0, short: 0, rotation: 0, tint: 0 };
+    d[o + S_AGE] = -0.1;
+    d[o + S_LIFE] = STREAMER_LIFE_MAX;
+    d[o + S_WIDTH] = 6;
+    d[o + S_COLOR] = 0x4cc9f0;
+    // A zigzag body: point j at (100 + 8 j, 200 + 5 (j mod 2)).
+    for (let j = 0; j <= STREAMER_SEGS; j++) {
+      d[o + S_PTS + 2 * j] = 100 + 8 * j;
+      d[o + S_PTS + 2 * j + 1] = 200 + 5 * (j % 2);
+    }
+    // Before its release: nothing.
+    expect(streamerSegLook(d, 0, 3, look, 1).alpha).toBe(0);
+    d[o + S_AGE] = 1;
+    streamerSegLook(d, 0, 3, look, 1);
+    expect(look.alpha).toBe(1);
+    // Segment 3 runs from (124, 205) to (132, 200): drawn at its middle,
+    // along it, 0.6 widths longer; face-on (twist 0) it shows its width.
+    expect([look.x, look.y]).toEqual([128, 202.5]);
+    expect(look.long).toBeCloseTo(Math.hypot(8, 5) + 0.6 * 6, 4);
+    expect(look.rotation).toBeCloseTo(Math.atan2(-5, 8), 6);
+    expect(look.short).toBeCloseTo(6, 6);
+    // Edge-on, a sliver.
+    d[o + S_TWIST] = Math.PI / 2;
+    expect(streamerSegLook(d, 0, 3, look, 1).short).toBeCloseTo(0.15 * 6, 4);
+    // A segment still gathered at the muzzle draws nothing.
+    d[o + S_PTS + 2 * 6] = d[o + S_PTS + 2 * 5];
+    d[o + S_PTS + 2 * 6 + 1] = d[o + S_PTS + 2 * 5 + 1];
+    expect(streamerSegLook(d, 0, 5, look, 1).alpha).toBe(0);
+    // Half way through its last STREAMER_FADE s, half faded.
+    d[o + S_AGE] = STREAMER_LIFE_MAX - STREAMER_FADE / 2;
+    expect(streamerSegLook(d, 0, 3, look, 1).alpha).toBeCloseTo(0.5, 5);
+    // The tint: the paper's light (shadeNormal) on the normal the twist
+    // turns about the segment, (sf sin a, -sf cos a, cf), both faces alike.
+    d[o + S_AGE] = 1;
+    const rand = seeded(71);
+    let exact = 0;
+    const n = 600;
+    for (let k = 0; k < n; k++) {
+      const ang = rand() * Math.PI * 2;
+      const foil = rand() < 0.5;
+      const shine = rand() * CONFETTI_SHINE_MAX;
+      const j = Math.floor(rand() * STREAMER_SEGS);
+      d[o + S_TWIST] = rand() * Math.PI * 2;
+      d[o + S_TWIST_STEP] = rand() * 0.7;
+      d[o + S_MAT] = foil ? 1 : 0;
+      d[o + S_COLOR] = CONFETTI_COLORS[k % CONFETTI_COLORS.length];
+      const q = o + S_PTS + 2 * j;
+      d[q] = 300;
+      d[q + 1] = 300;
+      d[q + 2] = 300 + 10 * Math.cos(ang);
+      d[q + 3] = 300 + 10 * Math.sin(ang);
+      const got = streamerSegLook(d, 0, j, look, shine).tint;
+      const dx = d[q + 2] - d[q];
+      const dy = d[q + 3] - d[q + 1];
+      const len = Math.hypot(dx, dy);
+      const tw = d[o + S_TWIST] + j * d[o + S_TWIST_STEP];
+      const sf = Math.sin(tw);
+      const want = shadeNormal(
+        d[o + S_COLOR],
+        (sf * dy) / len,
+        (-sf * dx) / len,
+        Math.cos(tw),
+        foil,
+        shine
+      );
+      const g = channels(got);
+      const e = channels(want);
+      for (let c = 0; c < 3; c++) expect(Math.abs(g[c] - e[c])).toBeLessThanOrEqual(1);
+      if (got === want) exact++;
+    }
+    expect(exact / n).toBeGreaterThan(0.95);
   });
 });
 

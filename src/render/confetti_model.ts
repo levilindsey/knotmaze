@@ -155,6 +155,22 @@ export const CANNON_SPREAD = 0.12;
 export const CANNON_Y = 0.8;
 export const CANNON_APEX_X = 0.3;
 export const CANNON_APEX_Y = 0.32;
+// K336 STREAMERS: paper ribbons the cannons fire with their paper,
+// `streamerShare` of each cannon's pieces (at most STREAMER_CAP /
+// FINISH_CANNONS a cannon; the rest stay paper). A streamer's head flies
+// as cannon paper does (the same closed-form arc, with a wider sway); its
+// body is STREAMER_SEGS segments that follow the head's path at their
+// length (follow-the-leader, so the ribbon trails the head and curls where
+// it turns) and sag STREAMER_SAG screen heights/s. Each segment draws as
+// one particle, so the streamers reuse the paper's program (K307: no new
+// shader). A streamer dies once its whole body is below the bottom edge;
+// STREAMER_LIFE_MAX s after its release is the backstop, its last
+// STREAMER_FADE s a fade.
+export const STREAMER_SEGS = 14;
+export const STREAMER_CAP = 200;
+export const STREAMER_LIFE_MAX = 8;
+export const STREAMER_FADE = 0.5;
+export const STREAMER_SAG = 0.06;
 
 // K337 SHINE: the specular strength's top (the slider and the link clamp).
 export const CONFETTI_SHINE_MAX = 2;
@@ -188,13 +204,36 @@ export const COLOR = 15; // 0xrrggbb (exact in f32).
 export const TERM = 16;
 export const MAT = 17; // K337: the material, 0 paper or 1 foil.
 
+// Streamer row layout (STREAMER_STRIDE floats, K336): the fields, then the
+// body's STREAMER_SEGS + 1 points (x, y pairs from S_PTS, CSS px; point 0
+// is the head).
+export const S_VX = 0; // The head's velocity, px/s.
+export const S_VY = 1;
+export const S_AGE = 2; // Seconds since release (negative until then).
+export const S_LIFE = 3;
+export const S_SEG = 4; // Segment length, px.
+export const S_WIDTH = 5; // Strip width, px.
+export const S_COLOR = 6;
+export const S_TWIST = 7; // The twist's phase at the head, radians.
+export const S_TWIST_RATE = 8; // Radians/s.
+export const S_TWIST_STEP = 9; // Radians a segment along the body.
+export const S_SWAY = 10; // The head's sway: phase, rate, amplitude (px/s).
+export const S_SWAY_RATE = 11;
+export const S_SWAY_AMP = 12;
+export const S_TERM = 13; // Terminal fall, px/s (the cannons' TERM).
+export const S_MAT = 14; // 0 paper, 1 foil.
+export const S_PTS = 15;
+export const STREAMER_STRIDE = S_PTS + 2 * (STREAMER_SEGS + 1);
+
 export class ConfettiPool {
   readonly capacity: number;
+  readonly stride: number; // Floats a row: F (streamers: STREAMER_STRIDE).
   readonly data: Float32Array;
   alive = 0;
-  constructor(capacity: number) {
+  constructor(capacity: number, stride = F) {
     this.capacity = capacity;
-    this.data = new Float32Array(capacity * F);
+    this.stride = stride;
+    this.data = new Float32Array(capacity * stride);
   }
   clear(): void {
     this.alive = 0;
@@ -207,7 +246,8 @@ export class ConfettiPool {
   kill(i: number): void {
     const last = --this.alive;
     if (i !== last) {
-      this.data.copyWithin(i * F, last * F, last * F + F);
+      const s = this.stride;
+      this.data.copyWithin(i * s, last * s, last * s + s);
     }
   }
 }
@@ -215,8 +255,9 @@ export class ConfettiPool {
 export interface ConfettiPlan {
   rain: number;
   spray: number;
-  // K336: paper pieces per side cannon (0 = no cannons).
+  // K336: paper pieces and streamers per side cannon (both 0 = no cannons).
   cannon: number;
+  streamers: number;
   // K337: the share of pieces cut from foil, and the specular's strength
   // (0 = the diffuse light only).
   foil: number;
@@ -230,6 +271,7 @@ export interface ConfettiSettings {
   foilShare: number;
   confettiCannons: boolean;
   cannonAmount: number;
+  streamerShare: number;
 }
 
 // [0, max], garbage 0.
@@ -245,7 +287,9 @@ function clampNum(v: number, max: number): number {
 // nothing (K186). K337: `shine` is the specular's strength ([0,
 // CONFETTI_SHINE_MAX]) and `foilShare` the share of pieces cut from foil
 // ([0, 1]); none = no foil, no specular. K336: `cannonAmount` scales the
-// side cannons on its own ([0, CANNON_AMOUNT_MAX]; 0 = none).
+// side cannons on its own ([0, CANNON_AMOUNT_MAX]; 0 = none), and
+// `streamerShare` ([0, 1]) of each cannon's pieces fly as streamers (at
+// most STREAMER_CAP / FINISH_CANNONS a cannon; the rest stay paper).
 export function confettiPlan(
   amount: number,
   reduced: boolean,
@@ -253,18 +297,25 @@ export function confettiPlan(
   height = 0,
   shine = 0,
   foilShare = 0,
-  cannonAmount = 0
+  cannonAmount = 0,
+  streamerShare = 0
 ): ConfettiPlan {
   const a = reduced ? 0 : clampNum(amount, CONFETTI_AMOUNT_MAX);
   const screen = rainScreenScale(width, height);
   const ca = a > 0 ? clampNum(cannonAmount, CANNON_AMOUNT_MAX) : 0;
+  const per = Math.min(
+    CANNON_CAP / FINISH_CANNONS,
+    Math.round(CANNON_PER_AMOUNT * ca * screen)
+  );
+  const strips = Math.min(
+    STREAMER_CAP / FINISH_CANNONS,
+    Math.round(per * clampNum(streamerShare, 1))
+  );
   return {
     rain: Math.min(RAIN_CAP, Math.round(RAIN_PER_AMOUNT * a * screen)),
     spray: Math.min(SPRAY_CAP, Math.round(SPRAY_PER_AMOUNT * a)),
-    cannon: Math.min(
-      CANNON_CAP / FINISH_CANNONS,
-      Math.round(CANNON_PER_AMOUNT * ca * screen)
-    ),
+    cannon: per - strips,
+    streamers: strips,
     foil: clampNum(foilShare, 1),
     shine: clampNum(shine, CONFETTI_SHINE_MAX),
   };
@@ -284,13 +335,14 @@ export function confettiPlanFor(
     height,
     s.confettiShine,
     s.foilShare,
-    s.confettiCannons ? s.cannonAmount : 0
+    s.confettiCannons ? s.cannonAmount : 0,
+    s.streamerShare
   );
 }
 
 // Whether a plan throws anything.
 export function planThrows(p: ConfettiPlan): boolean {
-  return p.rain + p.spray + p.cannon > 0;
+  return p.rain + p.spray + p.cannon + p.streamers > 0;
 }
 
 // A rain piece's size factor: it follows the screen a little (phones get
@@ -486,9 +538,10 @@ export function stepSpray(pool: ConfettiPool, dt: number): void {
 // K336 A CANNON, a reusable emitter (K318's themes may aim others): a launch
 // point (CSS px), a direction (radians in the screen's axes, +y down, so up
 // is negative), a cone (+-spread rad about it), a speed (px/s; each piece
-// takes CANNON_SPEED_MIN to CANNON_SPEED_MIN + CANNON_SPEED_SPAN of it), a
-// count of paper pieces, and a timing: the first piece leaves `delay` s
-// after the burst, the rest over `volley` s, front-loaded. The finish's two
+// takes CANNON_SPEED_MIN to CANNON_SPEED_MIN + CANNON_SPEED_SPAN of it),
+// counts of paper pieces and streamers, and a timing: the first piece
+// leaves `delay` s after the burst, the rest over `volley` s, front-loaded.
+// The finish's two
 // are finishCannons.
 export interface CannonSpec {
   x: number;
@@ -497,6 +550,7 @@ export interface CannonSpec {
   speed: number;
   spread: number;
   paper: number;
+  streamers: number;
   delay: number;
   volley: number;
 }
@@ -542,11 +596,13 @@ export function aimCannon(
 // left and right edges (clear of the largest piece) at CANNON_Y of the
 // height, aimed in and up so the arcs top out CANNON_APEX_X of the width in
 // from their own side and CANNON_APEX_Y of the height down; `paper` pieces
-// each, the right cannon CANNON_STAGGER s after the left.
+// and `streamers` streamers each, the right cannon CANNON_STAGGER s after
+// the left.
 export function finishCannons(
   width: number,
   height: number,
-  paper: number
+  paper: number,
+  streamers = 0
 ): CannonSpec[] {
   const off = 0.02 * width + 16 * rainPieceScale(width, height);
   const y0 = CANNON_Y * height;
@@ -562,6 +618,7 @@ export function finishCannons(
     speed: aim.speed,
     spread: CANNON_SPREAD,
     paper,
+    streamers,
     volley: CANNON_VOLLEY,
   };
   return [
@@ -608,6 +665,57 @@ export function spawnCannon(
     // Half the rain's sway: a fuller one carried a phone arc's top off the
     // edge (`.claude/probes/K336/cannon_census.mjs`).
     d[o + SWAY_AMP] = (5 + rand() * 12) * scale;
+  }
+}
+
+// Queue a cannon's streamers (c.streamers; screen space, CSS px, a screen
+// `height` px tall), timed and aimed as its paper (spawnCannon); `scale`
+// and `foil` as there. The body starts gathered at the muzzle, and the head
+// pulls it out.
+export function spawnStreamers(
+  pool: ConfettiPool,
+  c: CannonSpec,
+  height: number,
+  scale: number,
+  foil: number,
+  rand: () => number
+): void {
+  const d = pool.data;
+  const st = pool.stride;
+  const vt = CANNON_TERM * height;
+  const volley = clampNum(c.volley, CANNON_DELAY_MAX);
+  const delay = clampNum(c.delay, CANNON_DELAY_MAX - volley);
+  for (let k = 0; k < c.streamers; k++) {
+    const i = pool.alloc();
+    if (i < 0) return;
+    const o = i * st;
+    const a = c.angle + c.spread * (2 * rand() - 1);
+    const sp = c.speed * (CANNON_SPEED_MIN + CANNON_SPEED_SPAN * rand());
+    d[o + S_VX] = Math.cos(a) * sp;
+    d[o + S_VY] = Math.sin(a) * sp;
+    const u = rand();
+    d[o + S_AGE] = -(delay + volley * u * u);
+    d[o + S_LIFE] = STREAMER_LIFE_MAX;
+    d[o + S_SEG] = ((80 + rand() * 60) * scale) / STREAMER_SEGS;
+    d[o + S_WIDTH] = (5 + rand() * 2.5) * scale;
+    d[o + S_COLOR] =
+      CONFETTI_COLORS[Math.floor(rand() * CONFETTI_COLORS.length)];
+    d[o + S_TWIST] = rand() * Math.PI * 2;
+    d[o + S_TWIST_RATE] = (rand() < 0.5 ? -1 : 1) * (4 + rand() * 5);
+    d[o + S_TWIST_STEP] = 0.3 + rand() * 0.35;
+    d[o + S_SWAY] = rand() * Math.PI * 2;
+    d[o + S_SWAY_RATE] = 1.6 + rand() * 1.8;
+    // A wider sway than the cannon paper's, so the ribbon curls; (40..90) px/s
+    // carried phone heads past the edge (`.claude/probes/K336/streamer_census.mjs`).
+    d[o + S_SWAY_AMP] = (20 + rand() * 25) * scale;
+    d[o + S_TERM] = vt;
+    d[o + S_MAT] = foil > 0 && rand() < foil ? 1 : 0;
+    const hx = c.x + (rand() - 0.5) * 8 * scale;
+    const hy = c.y + (rand() - 0.5) * 8 * scale;
+    for (let j = 0; j <= STREAMER_SEGS; j++) {
+      d[o + S_PTS + 2 * j] = hx;
+      d[o + S_PTS + 2 * j + 1] = hy;
+    }
   }
 }
 
@@ -660,6 +768,88 @@ export function stepCannon(
         : d[o + SWAY_AMP] * Math.cos(ph) * t;
     d[o + ROT] += d[o + SPIN] * t;
     d[o + FLIP] += d[o + FLIP_RATE] * t;
+    i++;
+  }
+}
+
+// Advance the streamers by dt seconds over a screen `height` CSS px tall.
+// The head moves exactly as stepCannon moves paper (drag toward the
+// terminal fall, plus its sway) and the twist travels; then each body point
+// sags STREAMER_SAG screen heights/s and is pulled back to within a segment
+// of the point before it (follow-the-leader: the body trails the head's
+// path and folds where it turns). A streamer dies once its whole body is
+// below the bottom edge, or at S_LIFE.
+export function stepStreamers(
+  pool: ConfettiPool,
+  dt: number,
+  height: number
+): void {
+  const d = pool.data;
+  const st = pool.stride;
+  const dampDt = Math.exp(-CANNON_DRAG * dt);
+  let i = 0;
+  while (i < pool.alive) {
+    const o = i * st;
+    const age = d[o + S_AGE] + dt;
+    d[o + S_AGE] = age;
+    if (age <= 0) {
+      i++;
+      continue;
+    }
+    if (age >= d[o + S_LIFE]) {
+      pool.kill(i);
+      continue;
+    }
+    const t = age < dt ? age : dt;
+    const damp = t === dt ? dampDt : Math.exp(-CANNON_DRAG * t);
+    const gain = (1 - damp) / CANNON_DRAG;
+    const vt = d[o + S_TERM];
+    const vy = d[o + S_VY];
+    const p = o + S_PTS;
+    let hx = d[p] + d[o + S_VX] * gain;
+    const hy = d[p + 1] + vt * t + (vy - vt) * gain;
+    d[o + S_VX] *= damp;
+    const vy1 = vt + (vy - vt) * damp;
+    d[o + S_VY] = vy1;
+    const w = d[o + S_SWAY_RATE];
+    const ph = d[o + S_SWAY];
+    const ph1 = ph + w * t;
+    d[o + S_SWAY] = ph1;
+    hx +=
+      w > 0
+        ? (d[o + S_SWAY_AMP] / w) * (Math.sin(ph1) - Math.sin(ph))
+        : d[o + S_SWAY_AMP] * Math.cos(ph) * t;
+    d[o + S_TWIST] += d[o + S_TWIST_RATE] * t;
+    d[p] = hx;
+    d[p + 1] = hy;
+    const seg = d[o + S_SEG];
+    const seg2 = seg * seg;
+    const sag = STREAMER_SAG * height * t;
+    let px = hx;
+    let py = hy;
+    let minY = hy;
+    for (let j = 1; j <= STREAMER_SEGS; j++) {
+      const q = p + 2 * j;
+      let x = d[q];
+      let y = d[q + 1] + sag;
+      const dx = x - px;
+      const dy = y - py;
+      const len2 = dx * dx + dy * dy;
+      if (len2 > seg2) {
+        const k = seg / Math.sqrt(len2);
+        x = px + dx * k;
+        y = py + dy * k;
+      }
+      d[q] = x;
+      d[q + 1] = y;
+      if (y < minY) minY = y;
+      px = x;
+      py = y;
+    }
+    if (vy1 > 0 && minY - d[o + S_WIDTH] > height) {
+      pool.kill(i);
+      continue;
+    }
     i++;
   }
 }
@@ -829,6 +1019,67 @@ export function pieceLook(
   return out;
 }
 
+// What the view draws for segment j (0 to STREAMER_SEGS - 1) of streamer
+// row i: the segment's middle (x, y), and the look of a piece whose long
+// axis is the segment, drawn 0.6 widths longer (so a bend shows no notch),
+// and whose flip is the twist there (its width narrows as the strip turns
+// edge-on), lit as pieceLook lights paper. Before its release, and while a
+// segment is still gathered at the muzzle, it draws nothing.
+export interface SegLook extends PieceLook {
+  x: number;
+  y: number;
+}
+
+export function streamerSegLook(
+  d: Float32Array,
+  i: number,
+  j: number,
+  out: SegLook,
+  shine = 0
+): SegLook {
+  const o = i * STREAMER_STRIDE;
+  const age = d[o + S_AGE];
+  const q = o + S_PTS + 2 * j;
+  const x0 = d[q];
+  const y0 = d[q + 1];
+  const dx = d[q + 2] - x0;
+  const dy = d[q + 3] - y0;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  out.x = x0 + 0.5 * dx;
+  out.y = y0 + 0.5 * dy;
+  if (age < 0 || len < 1e-3) {
+    out.alpha = 0;
+    out.long = 0;
+    out.short = 0;
+    return out;
+  }
+  out.alpha = Math.max(0, Math.min(1, (d[o + S_LIFE] - age) / STREAMER_FADE));
+  const ca = dx / len;
+  const sa = dy / len;
+  const tw = d[o + S_TWIST] + j * d[o + S_TWIST_STEP];
+  const cf = Math.cos(tw);
+  const sf = Math.sin(tw);
+  const width = d[o + S_WIDTH];
+  out.long = len + 0.6 * width;
+  out.short = width * (0.15 + 0.85 * Math.abs(cf));
+  out.rotation = Math.atan2(dy, dx);
+  // pieceLook's normal with the segment's angle for rot (sin rot = sa, cos
+  // rot = ca): (sf sa, -sf ca, cf), the back face flipped.
+  let t = sf * (LIGHT[0] * sa - LIGHT[1] * ca);
+  let z = cf;
+  if (z < 0) {
+    t = -t;
+    z = -z;
+  }
+  const ndl = t + LIGHT[2] * z;
+  out.tint = litHex(
+    d[o + S_COLOR],
+    SHINE_AMBIENT + SHINE_DIFFUSE * (ndl > 0 ? ndl : 0),
+    specularAt(t / H_N + HALF[2] * z, d[o + S_MAT] === 1, shine)
+  );
+  return out;
+}
+
 // The longest step the pieces take in one frame: after a stall (a hidden
 // tab's first frame back) they resume instead of jumping.
 export const CONFETTI_MAX_DT = 0.1;
@@ -840,19 +1091,27 @@ export class ConfettiSim {
   readonly rain = new ConfettiPool(RAIN_CAP);
   readonly spray = new ConfettiPool(SPRAY_CAP);
   readonly cannon = new ConfettiPool(CANNON_CAP); // K336: screen space
+  readonly streamers = new ConfettiPool(STREAMER_CAP, STREAMER_STRIDE);
   // K337: the last burst's specular strength (pieceLook's `shine`); pieces
   // still in the air from an earlier burst take it too.
   shine = 0;
 
   get active(): boolean {
-    return this.rain.alive > 0 || this.spray.alive > 0 || this.cannon.alive > 0;
+    return (
+      this.rain.alive > 0 ||
+      this.spray.alive > 0 ||
+      this.cannon.alive > 0 ||
+      this.streamers.alive > 0
+    );
   }
 
   // Throw a finish's confetti: plan.rain over a width x height CSS px
   // screen, plan.spray around the world point (cx, cy) in `unit`s
-  // (sprayUnit), and plan.cannon pieces from each of the finish's cannons
-  // (finishCannons; spawned last, so a plan without cannons throws the same
-  // rain and spray for the same draws). Returns whether anything was thrown.
+  // (sprayUnit), and plan.cannon pieces and plan.streamers streamers from
+  // each of the finish's cannons (finishCannons; spawned last, so a plan
+  // without cannons throws the same rain and spray for the same draws, and
+  // the streamers after both cannons' paper, so a plan without streamers
+  // throws the same paper). Returns whether anything was thrown.
   burst(
     plan: ConfettiPlan,
     width: number,
@@ -871,10 +1130,19 @@ export class ConfettiSim {
       spawnSpray(this.spray, plan.spray, cx, cy, unit, rand, plan.foil);
       thrown = true;
     }
-    if (plan.cannon > 0 && width > 0 && height > 0) {
+    if (plan.cannon + plan.streamers > 0 && width > 0 && height > 0) {
       const scale = rainPieceScale(width, height);
-      for (const c of finishCannons(width, height, plan.cannon)) {
+      const cannons = finishCannons(
+        width,
+        height,
+        plan.cannon,
+        plan.streamers
+      );
+      for (const c of cannons) {
         spawnCannon(this.cannon, c, height, scale, plan.foil, rand);
+      }
+      for (const c of cannons) {
+        spawnStreamers(this.streamers, c, height, scale, plan.foil, rand);
       }
       thrown = true;
     }
@@ -889,11 +1157,13 @@ export class ConfettiSim {
     if (this.rain.alive > 0) stepRain(this.rain, s, height);
     if (this.spray.alive > 0) stepSpray(this.spray, s);
     if (this.cannon.alive > 0) stepCannon(this.cannon, s, height);
+    if (this.streamers.alive > 0) stepStreamers(this.streamers, s, height);
   }
 
   clear(): void {
     this.rain.clear();
     this.spray.clear();
     this.cannon.clear();
+    this.streamers.clear();
   }
 }

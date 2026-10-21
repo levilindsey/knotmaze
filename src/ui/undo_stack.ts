@@ -179,7 +179,7 @@ export const LIVE_EFFECTS = {
   ],
   onConfettiChange: [
     "confettiAmount", "confettiShine", "foilShare", "confettiCannons",
-    "cannonAmount",
+    "cannonAmount", "streamerShare",
   ],
   onAudioChange: [
     "soundMode", "pitchSpace", "octaves", "rootNote", "tonicEmphasis",
