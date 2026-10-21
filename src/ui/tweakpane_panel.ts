@@ -1457,6 +1457,22 @@ export function buildPanel(
       callbacks.onConfettiChange();
     }
   );
+  const streamerShareRow = row(
+    fPath, p, "streamerShare",
+    {
+      label: "Streamers",
+      min: 0,
+      max: 1,
+      keyScale: 0.05,
+      pointerScale: 0.01,
+      format: (v: number) => v.toFixed(2),
+    },
+    "The share of the side cannons' confetti fired as long, curling paper streamers: 0 = none, 1 = all.",
+    D.streamerShare, () => {
+      params.streamerShare = Math.round(params.streamerShare * 100) / 100;
+      callbacks.onConfettiChange();
+    }
+  );
   // K98: the markers' diameter in thread widths. Daily-exempt (only the
   // look). No step, like the confetti amount: an edit keeps 2 decimals.
   const markerSizeRow = row(
@@ -2687,6 +2703,8 @@ export function buildPanel(
     confettiCannonsRow.hidden = !fab || params.confettiAmount <= 0;
     cannonAmountRow.hidden =
       confettiCannonsRow.hidden || !params.confettiCannons;
+    streamerShareRow.hidden =
+      cannonAmountRow.hidden || params.cannonAmount <= 0;
     markerSizeRow.hidden = !fab;
     resetPathBtn.hidden = !fab;
     pulseSpacingRow.hidden = !fab;

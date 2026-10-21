@@ -210,9 +210,11 @@ export const DAILY_EXEMPT_KEYS = [
   // K337's confetti shine and foil share: the same celebration's look.
   "confettiShine",
   "foilShare",
-  // K336's side cannons and their amount: the same celebration.
+  // K336's side cannons, their amount and their streamers: the same
+  // celebration.
   "confettiCannons",
   "cannonAmount",
+  "streamerShare",
   // K98's marker size: only the look of the markers. Proposed for Levi's
   // review with K98 (K57).
   "markerSize",

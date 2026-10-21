@@ -99,7 +99,7 @@ describe("links", () => {
       minoDeadEnds: 0.4, minoRoam: 30, minoWake: 2, minoFog: "always",
       minoPull: 0.5, minoRefog: true,
       confettiAmount: 1, confettiShine: 1, foilShare: 0.3,
-      confettiCannons: true, cannonAmount: 1,
+      confettiCannons: true, cannonAmount: 1, streamerShare: 0.2,
       pluckWhole: 0.75, pluckCrossings: "through", pluckGlow: "fallback",
       pluckRipple: "glint", rippleStrength: 1, rippleAuto: 0.35,
       pluckSheen: 0.5, pluckTug: 0, tugAuto: false, autoPluckGain: 0.5,
@@ -463,6 +463,11 @@ describe("links", () => {
     expect(parseParams("?7&cfn=x").cannonAmount).toBe(PARAM_DEFAULTS.cannonAmount);
     const big = withSeed(7, { cannonAmount: 7 });
     expect(parseParams(`?${encodeParams(big)}`).cannonAmount).toBe(3);
+    const q = parseParams("?7&cfs=0.45");
+    expect(q.streamerShare).toBe(0.45);
+    expect(parseParams(`?${encodeParams(q)}`)).toEqual(q);
+    expect(parseParams("?7&cfs=4").streamerShare).toBe(1);
+    expect(parseParams("?7&cfs=-1").streamerShare).toBe(0);
   });
 
   // K180: the pluck params' override keys, the whole amount's clamp, the
@@ -840,7 +845,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoRoam: "mrm", minoWake: "mwk", minoFog: "mfg", minoPull: "mpl",
   minoRefog: "mrf", gameMode: "gm",
   confettiAmount: "cfa", confettiShine: "cfh", foilShare: "cff",
-  confettiCannons: "cfc", cannonAmount: "cfn",
+  confettiCannons: "cfc", cannonAmount: "cfn", streamerShare: "cfs",
   pluckWhole: "pw", pluckCrossings: "pcx",
   pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg", hoverGlowWidth: "hgw",
   revealDistance: "rvd", revealFade: "rvf", revealLook: "rvl",

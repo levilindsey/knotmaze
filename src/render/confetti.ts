@@ -1,21 +1,23 @@
 // K140 FINISH CONFETTI, the view: ParticleContainers (one draw call each)
-// over the scene - the RAIN and the side CANNONS (K336) in screen space and
-// the SPRAY in world space (it copies the world root's transform every frame
-// it draws, so the burst stays on the finish as the camera moves). The
-// motion and the counts are render/confetti_model.ts (ConfettiSim); this
-// file only mirrors pool rows into pixi Particles, appear_fx.ts's pattern:
-// slot i renders pool row i, dead slots collapse to scale 0, and once every
-// pool drains the containers hide and tick() is a single early return - no
-// per-frame work, and `active` (the frame loop's OVERLAY poll, K6-1) is
-// false again.
+// over the scene - the RAIN and K336's side CANNONS and STREAMERS in screen
+// space and the SPRAY in world space (it copies the world root's transform
+// every frame it draws, so the burst stays on the finish as the camera
+// moves). The motion and the counts are render/confetti_model.ts
+// (ConfettiSim); this file only mirrors pool rows into pixi Particles,
+// appear_fx.ts's pattern: slot i renders pool row i (a streamer row takes
+// STREAMER_SEGS slots, one a body segment), dead slots collapse to scale 0,
+// and once every pool drains the containers hide and tick() is a single
+// early return - no per-frame work, and `active` (the frame loop's OVERLAY
+// poll, K6-1) is false again. Every container draws the same paper texture
+// with pixi's particle program, so the streamers add no shader (K307).
 //
 // Every container sits ABOVE the world root on the stage, in the order
-// spray, cannons, rain (topmost), and takes no pointer events; the win
-// banner and the HUD are DOM over the canvas, so the pieces never block
-// input or hide them. main.ts adds the spray and the rain; the cannons'
-// container follows the rain onto its parent, just below it (the rain's
-// "added" event), so a layer K578's still-maze cache puts under the
-// confetti stays under all of it.
+// spray, streamers, cannons, rain (topmost), and takes no pointer events;
+// the win banner and the HUD are DOM over the canvas, so the pieces never
+// block input or hide them. main.ts adds the spray and the rain; the
+// streamers' and the cannons' containers follow the rain onto its parent,
+// just below it (the rain's "added" event), so a layer K578's still-maze
+// cache puts under the confetti stays under all of it.
 //
 // The paper texture is built once and kept for the page's lifetime (the
 // PALETTE_CACHE lore: never destroy a texture retained render state may
@@ -25,12 +27,15 @@ import { Particle, ParticleContainer, Texture, type Container } from "pixi.js";
 import {
   ConfettiSim,
   F,
+  STREAMER_SEGS,
   X,
   Y,
   pieceLook,
+  streamerSegLook,
   type ConfettiPlan,
   type ConfettiPool,
   type PieceLook,
+  type SegLook,
 } from "./confetti_model";
 
 const TEX_W = 32;
@@ -56,42 +61,65 @@ function paperTexture(): Texture {
   return PAPER;
 }
 
+// A container of paper pieces: one draw call, no pointer events, hidden
+// until a burst.
+function pieceContainer(): ParticleContainer {
+  const c = new ParticleContainer({
+    texture: paperTexture(),
+    dynamicProperties: {
+      vertex: true,
+      position: true,
+      rotation: true,
+      color: true,
+    },
+  });
+  c.eventMode = "none";
+  c.visible = false;
+  return c;
+}
+
+// `n` collapsed particle slots.
+function pieceSlots(n: number): Particle[] {
+  const tex = paperTexture();
+  const slots: Particle[] = [];
+  for (let i = 0; i < n; i++) {
+    slots.push(
+      new Particle({
+        texture: tex,
+        anchorX: 0.5,
+        anchorY: 0.5,
+        alpha: 0,
+        scaleX: 0,
+        scaleY: 0,
+      })
+    );
+  }
+  return slots;
+}
+
+// Show a container while it has pieces; hidden, it detaches them all.
+function showPieces(c: ParticleContainer, show: boolean): void {
+  if (c.visible === show) return;
+  c.visible = show;
+  if (!show) {
+    c.particleChildren.length = 0;
+    c.update();
+  }
+}
+
 // One pool's particles: slot i draws pool row i.
 class PieceLayer {
-  readonly container: ParticleContainer;
+  readonly container = pieceContainer();
   private readonly pool: ConfettiPool;
   private readonly spray: boolean;
-  private slots: Particle[] = [];
+  private readonly slots: Particle[];
   private shown = 0;
   private look: PieceLook = { alpha: 0, long: 0, short: 0, rotation: 0, tint: 0 };
 
   constructor(pool: ConfettiPool, spray: boolean) {
     this.pool = pool;
     this.spray = spray;
-    const tex = paperTexture();
-    this.container = new ParticleContainer({
-      texture: tex,
-      dynamicProperties: {
-        vertex: true,
-        position: true,
-        rotation: true,
-        color: true,
-      },
-    });
-    this.container.eventMode = "none";
-    this.container.visible = false;
-    for (let i = 0; i < pool.capacity; i++) {
-      this.slots.push(
-        new Particle({
-          texture: tex,
-          anchorX: 0.5,
-          anchorY: 0.5,
-          alpha: 0,
-          scaleX: 0,
-          scaleY: 0,
-        })
-      );
-    }
+    this.slots = pieceSlots(pool.capacity);
   }
 
   // After a spawn: the container draws exactly the live rows' slots.
@@ -127,14 +155,69 @@ class PieceLayer {
       p.scaleY = 0;
     }
     this.shown = n;
-    const show = n > 0;
-    if (this.container.visible !== show) {
-      this.container.visible = show;
-      if (!show) {
-        this.container.particleChildren.length = 0;
-        this.container.update();
+    showPieces(this.container, n > 0);
+  }
+}
+
+// K336: the streamers' particles. Slot i * STREAMER_SEGS + j draws body
+// segment j of streamer row i (streamerSegLook).
+class StreamerLayer {
+  readonly container = pieceContainer();
+  private readonly pool: ConfettiPool;
+  private readonly slots: Particle[];
+  private shown = 0; // Slots written last frame.
+  private look: SegLook = {
+    x: 0,
+    y: 0,
+    alpha: 0,
+    long: 0,
+    short: 0,
+    rotation: 0,
+    tint: 0,
+  };
+
+  constructor(pool: ConfettiPool) {
+    this.pool = pool;
+    this.slots = pieceSlots(pool.capacity * STREAMER_SEGS);
+  }
+
+  // After a spawn: the container draws exactly the live rows' slots.
+  attach(shine: number): void {
+    const kids = this.container.particleChildren;
+    kids.length = 0;
+    const n = this.pool.alive * STREAMER_SEGS;
+    for (let k = 0; k < n; k++) kids.push(this.slots[k]);
+    this.container.update();
+    this.sync(shine);
+  }
+
+  // Mirror the pool into the slots; hide (and detach) once it is empty.
+  sync(shine: number): void {
+    const d = this.pool.data;
+    const rows = this.pool.alive;
+    const look = this.look;
+    let k = 0;
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < STREAMER_SEGS; j++, k++) {
+        const p = this.slots[k];
+        streamerSegLook(d, i, j, look, shine);
+        p.x = look.x;
+        p.y = look.y;
+        p.alpha = look.alpha;
+        p.scaleX = look.long / TEX_W;
+        p.scaleY = look.short / TEX_H;
+        p.rotation = look.rotation;
+        p.tint = look.tint;
       }
     }
+    for (let m = k; m < this.shown; m++) {
+      const p = this.slots[m];
+      p.alpha = 0;
+      p.scaleX = 0;
+      p.scaleY = 0;
+    }
+    this.shown = k;
+    showPieces(this.container, rows > 0);
   }
 }
 
@@ -142,23 +225,24 @@ export class ConfettiLayer {
   readonly sim = new ConfettiSim();
   private readonly rain = new PieceLayer(this.sim.rain, false);
   private readonly spray = new PieceLayer(this.sim.spray, true);
-  // K336: the side cannons, screen space like the rain.
+  // K336: the side cannons and their streamers, screen space like the rain.
   private readonly cannon = new PieceLayer(this.sim.cannon, false);
+  private readonly streamers = new StreamerLayer(this.sim.streamers);
   // Probe counters: bursts thrown, and frames stepped with pieces alive.
   readonly stats = { bursts: 0, frames: 0 };
 
   constructor() {
-    // Pixi emits "added" on a child after it joins its parent's children.
+    // Pixi emits "added" on a child after it joins its parent's children:
+    // the streamers, then the cannons, join just below the rain.
     this.rain.container.on("added", (parent: Container) => {
-      parent.addChildAt(
-        this.cannon.container,
-        parent.getChildIndex(this.rain.container)
-      );
+      const at = parent.getChildIndex(this.rain.container);
+      parent.addChildAt(this.streamers.container, at);
+      parent.addChildAt(this.cannon.container, at + 1);
     });
   }
 
   // Add these to the stage above the world root, in this order (the
-  // cannons' container then joins just below the rain).
+  // streamers' and the cannons' containers then join just below the rain).
   get sprayContainer(): ParticleContainer {
     return this.spray.container;
   }
@@ -189,6 +273,7 @@ export class ConfettiLayer {
     this.rain.attach(this.sim.shine);
     this.spray.attach(this.sim.shine);
     this.cannon.attach(this.sim.shine);
+    this.streamers.attach(this.sim.shine);
     this.follow(world);
   }
 
@@ -198,6 +283,7 @@ export class ConfettiLayer {
     this.rain.sync(0);
     this.spray.sync(0);
     this.cannon.sync(0);
+    this.streamers.sync(0);
   }
 
   // One frame: step and mirror the live pieces. A single early return when
@@ -209,6 +295,7 @@ export class ConfettiLayer {
     this.rain.sync(this.sim.shine);
     this.spray.sync(this.sim.shine);
     this.cannon.sync(this.sim.shine);
+    this.streamers.sync(this.sim.shine);
     this.follow(world);
   }
 

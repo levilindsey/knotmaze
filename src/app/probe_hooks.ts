@@ -921,6 +921,7 @@ export function installProbeHooks(ctx: ProbeCtx): void {
     rain: ctx.confetti.sim.rain.alive,
     spray: ctx.confetti.sim.spray.alive,
     cannon: ctx.confetti.sim.cannon.alive, // K336
+    streamers: ctx.confetti.sim.streamers.alive, // K336
     stats: { ...ctx.confetti.stats },
     plan: confettiPlanFor(
       ctx.params,
