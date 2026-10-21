@@ -397,6 +397,78 @@ export function drawnSwing(
   return Math.max(hi, -lo);
 }
 
+// The lobe fields and per-station arrays K180's fallback estimate reads
+// (the overlay's Lobe and PluckBlurMesh satisfy them as they are).
+export interface PeakLobe {
+  onset: number;
+  A0: number;
+  beta: number;
+  attack: boolean;
+  dead: boolean;
+}
+
+export interface PeakStations {
+  used: number;
+  visOf: ArrayLike<number>;
+  lobeOf: ArrayLike<number>;
+  xOf: ArrayLike<number>;
+  fOf: ArrayLike<number>;
+  wOf: ArrayLike<number>;
+  capLOf: ArrayLike<number>;
+  capROf: ArrayLike<number>;
+}
+
+// The times the estimate looks at: every lobe's onset plus every SHOW_DT,
+// each distinct time once (K194). Lobes of the same |k| share an onset
+// exactly (it is |k| x ONSET_STAGGER), so the Set drops about half of the
+// times, and a max over times cannot tell one evaluated twice from once.
+export function peakTimes(lobes: readonly PeakLobe[]): number[] {
+  const times = new Set<number>();
+  for (const l of lobes) for (const dt of SHOW_DT) times.add(l.onset + dt);
+  return [...times];
+}
+
+// K180's fallback estimate: a pluck's largest DRAWN swing (world units) as
+// K104's census measures it - drawnSwing (writeFrame's envelope) at each of
+// peakTimes over the stations at least half visible (visOf). Pure: the
+// overlay runs it once per pluck, after layout(), and it reads nothing
+// writeFrame writes. W0, tau, tauR and side are the pluck's.
+export function peakEstimateOf(
+  lobes: readonly PeakLobe[],
+  m: PeakStations,
+  W0: number,
+  tau: number,
+  tauR: number,
+  side: number,
+  env: { [i: number]: number }
+): number {
+  let peak = 0;
+  for (const T of peakTimes(lobes)) {
+    const aW = W0 > 0 ? W0 * Math.exp(-T / tau) : 0;
+    for (let i = 0; i < m.used; i++) {
+      if (m.visOf[i] < 0.5) continue;
+      const l = lobes[m.lobeOf[i]];
+      const tl = T - l.onset;
+      if (l.dead) continue;
+      const a = tl < 0 ? 0 : l.A0 * Math.exp(-tl / tau);
+      const q = tl >= 0 && l.attack ? Math.exp(-tl / tauR) : 0;
+      const v = drawnSwing(
+        l.beta,
+        m.xOf[i],
+        q,
+        a * m.fOf[i],
+        aW * m.wOf[i],
+        side,
+        m.capLOf[i],
+        m.capROf[i],
+        env
+      );
+      if (v > peak) peak = v;
+    }
+  }
+  return peak;
+}
+
 // Whether a pluck carries the cue under a glow option, given whether its
 // swing shows (only "fallback" asks).
 export function glowCue(glow: PluckGlow, shows: boolean): boolean {

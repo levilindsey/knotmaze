@@ -77,18 +77,17 @@ import {
   WHOLE_AMP,
   WHOLE_NODE_ZONE,
   clampBeta,
-  drawnSwing,
   envelope,
   freeEndX,
   gapTurn,
   ghostShape,
   glowCue,
   nodeCap,
+  peakEstimateOf,
   peakShape,
   pinchCap,
   pinFreeEnds,
   pluckShows,
-  SHOW_DT,
   rescaleSympathetic,
   roomAt,
   roundCap,
@@ -2323,41 +2322,12 @@ export class PluckOverlay {
   }
 
   // K180's fallback estimate: the pluck's largest DRAWN swing (world units)
-  // as K104's census measures it - writeFrame's envelope (drawnSwing) at
-  // each lobe onset plus SHOW_DT, over the stations at least half visible.
-  // Run once at pluck time, after layout(); reads nothing writeFrame
-  // writes, so the pluck's own frames are untouched.
+  // as K104's census measures it (pluck_model's peakEstimateOf: writeFrame's
+  // envelope at each distinct lobe onset plus SHOW_DT, over the stations at
+  // least half visible). Run once at pluck time, after layout(); reads
+  // nothing writeFrame writes, so the pluck's own frames are untouched.
   private peakEstimate(p: ActivePluck): number {
-    const m = p.mesh;
-    const lobes = p.lobes;
-    const env = this.env2;
-    const times: number[] = [];
-    for (const l of lobes) for (const dt of SHOW_DT) times.push(l.onset + dt);
-    let peak = 0;
-    for (const T of times) {
-      const aW = p.W0 > 0 ? p.W0 * Math.exp(-T / p.tau) : 0;
-      for (let i = 0; i < m.used; i++) {
-        if (m.visOf[i] < 0.5) continue;
-        const l = lobes[m.lobeOf[i]];
-        const tl = T - l.onset;
-        if (l.dead) continue;
-        const a = tl < 0 ? 0 : l.A0 * Math.exp(-tl / p.tau);
-        const q = tl >= 0 && l.attack ? Math.exp(-tl / p.tauR) : 0;
-        const v = drawnSwing(
-          l.beta,
-          m.xOf[i],
-          q,
-          a * m.fOf[i],
-          aW * m.wOf[i],
-          p.side,
-          m.capLOf[i],
-          m.capROf[i],
-          env
-        );
-        if (v > peak) peak = v;
-      }
-    }
-    return peak;
+    return peakEstimateOf(p.lobes, p.mesh, p.W0, p.tau, p.tauR, p.side, this.env2);
   }
 
   // A still pluck's frame (reduced motion): no envelope, no ghost, no
