@@ -1925,8 +1925,11 @@ export class FabricMazeRenderer {
       const y = this.scratch[1];
       // Explicit polygons: a Graphics circle tessellates from its raw,
       // sub-unit world radius.
-      g.poly(ringPoints(x, y, r), true).stroke({ width: r * 0.3, color: SNARE_GOLD, alpha: 0.95 });
-      if (s.phase === "holding") g.poly(ringPoints(x, y, r * 0.55), true).fill({ color: SNARE_GOLD, alpha: 0.6 });
+      // Holding: a heavier ring, filled nearly solid (the page check's first
+      // look, a 0.55 r fill at 0.6, barely told the two apart at fit zoom).
+      const holding = s.phase === "holding";
+      g.poly(ringPoints(x, y, r), true).stroke({ width: r * (holding ? 0.42 : 0.3), color: SNARE_GOLD, alpha: 0.95 });
+      if (holding) g.poly(ringPoints(x, y, r * 0.8), true).fill({ color: SNARE_GOLD, alpha: 0.9 });
     }
   }
   // The extras' meshes for this scene, borrowed from EXTRA_POOL.
