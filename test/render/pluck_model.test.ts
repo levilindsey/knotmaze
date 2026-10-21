@@ -24,7 +24,10 @@ import {
   HIDE_RAMP,
   LOBE_MIN_LEN,
   nodeCap,
+  ONSET_STAGGER,
+  peakEstimateOf,
   peakShape,
+  peakTimes,
   pinchCap,
   PLUCK_CROSSINGS,
   PLUCK_GLOWS,
@@ -61,6 +64,7 @@ import {
   wholeShape,
   yInst,
 } from "../../src/render/pluck_model";
+import type { PeakLobe, PeakStations } from "../../src/render/pluck_model";
 
 // The ideal plucked string as a modal sum (Russell): unit height at beta,
 // released from rest; phase phi in radians of the fundamental.
@@ -985,6 +989,165 @@ describe("pluck params (K180)", () => {
     }
     expect(glowCue("fallback", true)).toBe(false);
     expect(glowCue("fallback", false)).toBe(true);
+  });
+});
+
+// K194: the fallback estimate looks at each distinct time once. `oldPeak` is
+// K180's loop as it was, one time per lobe per SHOW_DT, equal onsets (the two
+// lobes of one |k|) evaluated twice; peakEstimateOf must return its bits.
+describe("fallback peak estimate (K194)", () => {
+  const rng = (seed: number): (() => number) => {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+
+  // A layout-shaped fixture: lobes in arc order, k = -left..right from the
+  // tapped one (onset |k| x ONSET_STAGGER, so +-k share an onset while the
+  // longer side's extra lobes do not), some dead, stations per lobe in the
+  // mesh's typed arrays, some under the half-visible line, caps free or tight.
+  const fixture = (seed: number) => {
+    const r = rng(seed);
+    const left = Math.floor(r() * 5);
+    const right = Math.floor(r() * 5);
+    const lobes: PeakLobe[] = [];
+    const counts: number[] = [];
+    let used = 0;
+    for (let k = -left; k <= right; k++) {
+      lobes.push({
+        onset: Math.abs(k) * ONSET_STAGGER,
+        A0: k === 0 ? 0.25 + 0.5 * r() : 0.2 * r(),
+        beta: k === 0 ? 0.15 + 0.7 * r() : 0.5,
+        attack: k === 0,
+        dead: k !== 0 && r() < 0.12,
+      });
+      counts.push(10 + Math.floor(r() * 10));
+      used += counts[counts.length - 1];
+    }
+    const m = {
+      used,
+      visOf: new Float32Array(used),
+      lobeOf: new Int16Array(used),
+      xOf: new Float32Array(used),
+      fOf: new Float32Array(used),
+      wOf: new Float32Array(used),
+      capLOf: new Float32Array(used),
+      capROf: new Float32Array(used),
+    } satisfies PeakStations;
+    let i = 0;
+    counts.forEach((cnt, li) => {
+      for (let j = 0; j < cnt; j++, i++) {
+        const x = (j + 0.5) / cnt;
+        m.lobeOf[i] = li;
+        m.xOf[i] = x;
+        m.visOf[i] = r() < 0.2 ? 0.3 * r() : 0.5 + 0.5 * r();
+        m.fOf[i] = 0.3 + 0.7 * r();
+        m.wOf[i] = Math.sin(Math.PI * x) * (0.5 + 0.5 * r());
+        m.capLOf[i] = r() < 0.5 ? Infinity : 0.05 + 0.5 * r();
+        m.capROf[i] = r() < 0.5 ? Infinity : 0.05 + 0.5 * r();
+      }
+    });
+    const tau = visualTau(110 + 330 * r(), 0.5);
+    return {
+      lobes,
+      m,
+      W0: seed % 2 === 0 ? 0 : 0.12,
+      tau,
+      tauR: roundTau(tau),
+      side: seed % 3 === 0 ? -1 : 1,
+    };
+  };
+
+  // K180's loop, verbatim: a time per lobe per SHOW_DT, nothing dropped.
+  const oldPeak = (
+    lobes: readonly PeakLobe[],
+    m: PeakStations,
+    W0: number,
+    tau: number,
+    tauR: number,
+    side: number
+  ): number => {
+    const env = [0, 0];
+    const times: number[] = [];
+    for (const l of lobes) for (const dt of SHOW_DT) times.push(l.onset + dt);
+    let peak = 0;
+    for (const T of times) {
+      const aW = W0 > 0 ? W0 * Math.exp(-T / tau) : 0;
+      for (let i = 0; i < m.used; i++) {
+        if (m.visOf[i] < 0.5) continue;
+        const l = lobes[m.lobeOf[i]];
+        const tl = T - l.onset;
+        if (l.dead) continue;
+        const a = tl < 0 ? 0 : l.A0 * Math.exp(-tl / tau);
+        const q = tl >= 0 && l.attack ? Math.exp(-tl / tauR) : 0;
+        const v = drawnSwing(
+          l.beta,
+          m.xOf[i],
+          q,
+          a * m.fOf[i],
+          aW * m.wOf[i],
+          side,
+          m.capLOf[i],
+          m.capROf[i],
+          env
+        );
+        if (v > peak) peak = v;
+      }
+    }
+    return peak;
+  };
+
+  it("returns the old loop's value bit for bit on fixed inputs", () => {
+    const env = [0, 0];
+    let nonzero = 0;
+    for (let seed = 1; seed <= 60; seed++) {
+      const f = fixture(seed);
+      const want = oldPeak(f.lobes, f.m, f.W0, f.tau, f.tauR, f.side);
+      const got = peakEstimateOf(f.lobes, f.m, f.W0, f.tau, f.tauR, f.side, env);
+      expect(got).toBe(want);
+      if (want > 0) nonzero++;
+    }
+    // Not a comparison of zeros: every fixture's tapped lobe swings.
+    expect(nonzero).toBe(60);
+  });
+
+  it("looks at each distinct time once, the same times as before", () => {
+    for (let seed = 1; seed <= 12; seed++) {
+      const { lobes } = fixture(seed);
+      const old: number[] = [];
+      for (const l of lobes) for (const dt of SHOW_DT) old.push(l.onset + dt);
+      const times = peakTimes(lobes);
+      expect(new Set(times).size).toBe(times.length);
+      expect(new Set(times)).toEqual(new Set(old));
+      const onsets = new Set(lobes.map((l) => l.onset));
+      expect(times.length).toBeLessThanOrEqual(onsets.size * SHOW_DT.length);
+    }
+    // Three lobes either side of the tapped one: 7 lobes, 4 onsets.
+    const lobe = (k: number): PeakLobe => ({
+      onset: Math.abs(k) * ONSET_STAGGER,
+      A0: 0,
+      beta: 0.5,
+      attack: false,
+      dead: false,
+    });
+    const seven = peakTimes([-3, -2, -1, 0, 1, 2, 3].map(lobe));
+    expect(seven.length).toBeLessThanOrEqual(4 * SHOW_DT.length);
+    expect(seven.length).toBeLessThan(7 * SHOW_DT.length);
+  });
+
+  it("is 0 with nothing to see", () => {
+    const f = fixture(7);
+    const env = [0, 0];
+    expect(peakTimes([])).toEqual([]);
+    expect(peakEstimateOf([], { ...f.m, used: 0 }, f.W0, f.tau, f.tauR, f.side, env)).toBe(0);
+    // Every station under the half-visible line.
+    const dark = { ...f.m, visOf: new Float32Array(f.m.used).fill(0.49) };
+    expect(peakEstimateOf(f.lobes, dark, f.W0, f.tau, f.tauR, f.side, env)).toBe(0);
   });
 });
 
