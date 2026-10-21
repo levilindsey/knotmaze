@@ -310,14 +310,6 @@ Next free ID: K694.
   - evidence: `.claude/probes/K580/`
   - next: stage 4: the i joint notch, K675 partial blends, K676 crescents (brief steps 1-7)
   - brief: `docs/design/K580_s4.md`
-- **K324** · Real-time minotaur, more alive and tunable (`docs/design/K324_realtime_minotaur.md`,
-  091e4dc; Levi took section 7's recs): s1 (sim); s2 (render) once K525 owns the look: its route
-  pieces, a moving lead, the chevrons, perf; s3 (guard, stalker) after s1. Rel. K245 K247 K271 K293 K294 K296.
-  - owner: agent `aadbc8a81ca50b767` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 20:41, 2 h cap ~22:41)
-  - branch: `worktree-agent-aadbc8a81ca50b767`, worktree `.claude/worktrees/agent-aadbc8a81ca50b767`; last commit: `803d9cc`
-  - evidence: `.claude/probes/K324/`
-  - next: stage 2: plan plumbing, the moving end on a uniform (K654), the hidden-thread clip (K652, K271), the flicker count; page probe, perfq, census (brief)
-  - brief: `docs/design/K324_s2.md`
 - **K546** · Loss effects (Levi, 2026-10-16): a catch ends early today - animate the player and the minotaur/fire all the way to their meeting point first (contact t is computed in by-length mode; turn and realtime catches leave a visual gap), then a gratuitous contact effect at the meeting point plus a whole-screen loss effect akin to the win confetti. Levi's seeds: an explosion; a flare-up and burn-away; the player indicator ripped in half and falling over. Base to build on: K80 3b's catch feedback (dcdfaf4) and K270's fix; the fire side is K114. Design: `docs/design/K546_loss_effects.md`. Its q8 is answered (K525).
   - owner: nobody since 2026-10-20 18:25 (merged; agent `a57e1aa8c7ba233b0` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
   - branch: mainline; last commit: `5a8fa18`
@@ -1506,6 +1498,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K324** · the real-time telegraph: lead, whole runs, ring on the real-time clock; uKTeleAt (K654); no line look over hidden thread (K652, K271); panel rows on both clocks. Done in 031e09a (2026-10-20).
 - **K620** · the glyph root paints as a blend of the stroke section colours from R to the spur at J (CPU mirror, KGEOM and KSTATIC data, GLSL); maze and burn moved 3-5 px of one level (the vertex block). Done in d54c09b (2026-10-20).
 - **K662** · The phone sitting (2026-10-20, 20:06-20:50): parts 1-4 ran (K631, K646, K587, K651, K644 closed); Levi took the phone back before the daily paths (K687). Done in 9cca8b5 (2026-10-20).
 - **K631** · K244 on the phone (round 2026-10-20): auto plucks with nothing drawn 0 of 372 on the K244 builds (base 8 of 186); drawn releases 47 of 47; taps alike on both builds. Done in 9cca8b5 (2026-10-20).
