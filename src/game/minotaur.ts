@@ -360,6 +360,11 @@ export class ChaseGraph {
   readonly eb: Int32Array;
   readonly len: Float64Array;
   readonly barred: Uint8Array; // 1 = the entrance or exit tail.
+  // K137-b: 1 = a run that broke behind the player (fragile, collapse):
+  // gone for the minotaur's pathing (the restricted distances), as the
+  // tails are; contact still measures the whole graph. block() sets it.
+  readonly blocked: Uint8Array;
+  blockedCount = 0;
   readonly start: number;
   readonly exit: number;
   private cache = [new Map<number, Float64Array>(), new Map<number, Float64Array>()];
@@ -377,6 +382,7 @@ export class ChaseGraph {
     this.eb = new Int32Array(n);
     this.len = new Float64Array(n);
     this.barred = new Uint8Array(n);
+    this.blocked = new Uint8Array(n);
     this.start = this.index.get(walk.start)!;
     this.exit = this.index.get(walk.exit)!;
     for (const e of walk.edges) {
@@ -408,7 +414,7 @@ export class ChaseGraph {
       if (done[u]) continue;
       done[u] = 1;
       for (const eid of this.adj[u]) {
-        if (restricted && this.barred[eid]) continue;
+        if (restricted && (this.barred[eid] || this.blocked[eid])) continue;
         const w = this.ea[eid] === u ? this.eb[eid] : this.ea[eid];
         const nd = d + this.len[eid];
         if (nd < dist[w]) {
@@ -419,6 +425,15 @@ export class ChaseGraph {
     }
     c.set(src, dist);
     return dist;
+  }
+
+  // K137-b: run `eid` broke; true when it was not blocked before.
+  block(eid: number): boolean {
+    if (!(eid >= 0 && eid < this.blocked.length) || this.blocked[eid]) return false;
+    this.blocked[eid] = 1;
+    this.blockedCount++;
+    this.cache[1].clear();
+    return true;
   }
 
   // K324 stage 3: shortest distances from `src` over only the runs `ok`
@@ -446,9 +461,15 @@ export class ChaseGraph {
     return dist;
   }
 
-  // Distance from a spot to vertex x.
+  // Distance from a spot to vertex x. K137-b: on a run that broke, only
+  // the end the spot heads to leads on (restricted).
   spotToVertex(s: Spot, x: number, restricted: boolean): number {
     if (s.edge < 0) return this.from(s.vertex, restricted)[x];
+    if (restricted && this.blocked[s.edge]) {
+      return s.dir > 0
+        ? this.len[s.edge] - s.pos + this.from(this.eb[s.edge], true)[x]
+        : s.pos + this.from(this.ea[s.edge], true)[x];
+    }
     const a = this.from(this.ea[s.edge], restricted)[x];
     const b = this.from(this.eb[s.edge], restricted)[x];
     return Math.min(s.pos + a, this.len[s.edge] - s.pos + b);
@@ -457,10 +478,15 @@ export class ChaseGraph {
   // Distance between two spots along the threads.
   spotToSpot(m: Spot, p: Spot, restricted: boolean): number {
     if (m.edge < 0) return this.spotToVertex(p, m.vertex, restricted);
-    let d = Math.min(
-      m.pos + this.spotToVertex(p, this.ea[m.edge], restricted),
-      this.len[m.edge] - m.pos + this.spotToVertex(p, this.eb[m.edge], restricted)
-    );
+    let d =
+      restricted && this.blocked[m.edge]
+        ? m.dir > 0
+          ? this.len[m.edge] - m.pos + this.spotToVertex(p, this.eb[m.edge], true)
+          : m.pos + this.spotToVertex(p, this.ea[m.edge], true)
+        : Math.min(
+            m.pos + this.spotToVertex(p, this.ea[m.edge], restricted),
+            this.len[m.edge] - m.pos + this.spotToVertex(p, this.eb[m.edge], restricted)
+          );
     if (p.edge === m.edge) d = Math.min(d, Math.abs(p.pos - m.pos));
     return d;
   }
@@ -538,6 +564,10 @@ export class MinotaurChase {
   private aimed = true;
   private lastEdge = -1; // The run it last arrived along (-1 = none).
   private terr: ChaseTerritory | null = null;
+  // K137-b: the controller's break limits and the player's crossings so
+  // far (null: nothing breaks).
+  private limits: ArrayLike<number> | null = null;
+  private crossings: Uint32Array | null = null;
 
   constructor(walk: WalkGraph, params: ChaseParams, seed: number) {
     this.g = new ChaseGraph(walk);
@@ -575,6 +605,47 @@ export class MinotaurChase {
     this.catches = prev.catches;
     this.huntTicks = prev.huntTicks;
     this.restarts = prev.restarts;
+  }
+
+  // K137-b: the controller's break limits (fragile, collapse; Infinity =
+  // never breaks). The chase counts the player's departures itself, one
+  // crossing each as the controller counts its taps, and blocks a run in
+  // its own ChaseGraph the moment it breaks. Call before the first tick
+  // (main.ts restartChase, replayChase); a catch keeps the breaks.
+  setBreakLimits(limits: ArrayLike<number> | null): void {
+    let any = false;
+    if (limits) {
+      for (let i = 0; i < limits.length; i++) {
+        if (Number.isFinite(limits[i])) {
+          any = true;
+          break;
+        }
+      }
+    }
+    this.limits = any ? limits : null;
+    this.crossings = any ? new Uint32Array(this.g.len.length) : null;
+  }
+
+  // K137-b: the runs broken so far, in id order (probes, tests).
+  get blockedRuns(): number[] {
+    const out: number[] = [];
+    for (let i = 0; i < this.g.blocked.length; i++) if (this.g.blocked[i]) out.push(i);
+    return out;
+  }
+
+  private crossRun(eid: number): void {
+    const lim = this.limits;
+    const c = this.crossings;
+    if (lim === null || c === null || !(eid >= 0 && eid < c.length)) return;
+    if (++c[eid] >= lim[eid] && this.g.block(eid)) this.terr = null;
+  }
+
+  // K137-b: the player is on a run that broke, heading to vertex v (the
+  // only way they can come out).
+  private awaits(v: number): boolean {
+    const p = this.player;
+    const g = this.g;
+    return p.edge >= 0 && g.blocked[p.edge] === 1 && g.ahead(p) === v;
   }
 
   get seconds(): number {
@@ -740,6 +811,7 @@ export class MinotaurChase {
           return;
         }
         out.push({ kind: "depart", edge: eid });
+        this.crossRun(eid);
       }
       const L = g.len[p.edge];
       const toEnd = p.dir > 0 ? L - p.pos : p.pos;
@@ -865,11 +937,18 @@ export class MinotaurChase {
     const seen = !this.invisible();
     const q = P.model === "guard" ? P.guardAccuracy : P.stalkerAccuracy;
     if (seen && u1 < q) {
+      // K137-b: you are coming out of a broken run at v: an aimed choice
+      // waits there (drawing nothing, so the same decision is read again).
+      if (g.blockedCount > 0 && this.awaits(v)) {
+        return { choice: null, aimed: true, pace: -1, drew: false };
+      }
       const best = this.huntEdgeFrom(v);
       if (best) return { choice: best, aimed: true, pace, drew: true };
     }
     let runs: number[] = [];
-    for (const eid of g.adj[v]) if (!g.barred[eid] && runs.indexOf(eid) < 0) runs.push(eid);
+    for (const eid of g.adj[v]) {
+      if (!g.barred[eid] && !g.blocked[eid] && runs.indexOf(eid) < 0) runs.push(eid);
+    }
     if (!seen && P.model === "stalker" && runs.length > 1 && back >= 0) {
       const ahead = runs.filter((eid) => eid !== back);
       if (ahead.length > 0) runs = ahead;
@@ -895,7 +974,7 @@ export class MinotaurChase {
       tail === undefined ? g.exit : g.ea[tail] === g.exit ? g.eb[tail] : g.ea[tail];
     let shortest = Infinity;
     for (const eid of g.adj[home]) {
-      if (g.barred[eid] || g.ea[eid] === g.eb[eid]) continue;
+      if (g.barred[eid] || g.blocked[eid] || g.ea[eid] === g.eb[eid]) continue;
       if (g.len[eid] < shortest) shortest = g.len[eid];
     }
     const asked = P.territory;
@@ -905,7 +984,7 @@ export class MinotaurChase {
     for (let i = 0; i < vin.length; i++) if (d[i] <= radius) vin[i] = 1;
     const ein = new Uint8Array(g.len.length);
     for (let e = 0; e < ein.length; e++) {
-      if (g.barred[e]) continue;
+      if (g.barred[e] || g.blocked[e]) continue;
       if (d[g.ea[e]] + d[g.eb[e]] + g.len[e] <= 2 * radius) ein[e] = 1;
     }
     this.terr = { asked, home, radius, vin, ein, routes: new Map() };
@@ -1052,6 +1131,11 @@ export class MinotaurChase {
   private roamEdge(): [number, 1 | -1] | null {
     const v = this.mino.vertex;
     if (v !== this.g.exit && (this.dest < 0 || this.dest === v)) this.pickDest();
+    const r = this.roamEdgeFrom(v, this.dest);
+    if (r !== null || this.g.blockedCount === 0 || v === this.g.exit) return r;
+    // K137-b: a break cut its destination off; pick again (a pick draws
+    // only destinations it can reach).
+    this.pickDest();
     return this.roamEdgeFrom(v, this.dest);
   }
 
@@ -1077,7 +1161,7 @@ export class MinotaurChase {
     let best: [number, 1 | -1] | null = null;
     let bestCost = Infinity;
     for (const eid of g.adj[v]) {
-      if (g.barred[eid]) continue;
+      if (g.barred[eid] || g.blocked[eid]) continue;
       if (ok && !ok[eid]) continue;
       const far = g.ea[eid] === v ? g.eb[eid] : g.ea[eid];
       const cost = g.len[eid] + toDest[far];
@@ -1095,10 +1179,12 @@ export class MinotaurChase {
   huntEdgeFrom(v: number): [number, 1 | -1] | null {
     const g = this.g;
     const p = this.player;
+    // K137-b: you are coming out of a broken run at v: it waits for you.
+    if (g.blockedCount > 0 && this.awaits(v)) return null;
     let best: [number, 1 | -1] | null = null;
     let bestCost = Infinity;
     for (const eid of g.adj[v]) {
-      if (g.barred[eid]) continue;
+      if (g.barred[eid] || g.blocked[eid]) continue;
       const L = g.len[eid];
       const fromA = g.ea[eid] === v;
       let cost: number;
@@ -1127,7 +1213,8 @@ export class MinotaurChase {
   shouldReverse(m: Spot = this.mino): boolean {
     const g = this.g;
     const p = this.player;
-    if (m.edge < 0) return false;
+    // K137-b: on a run that broke it finishes the run.
+    if (m.edge < 0 || g.blocked[m.edge]) return false;
     const L = g.len[m.edge];
     const toEnd = m.dir > 0 ? L - m.pos : m.pos;
     const ahead = m.dir > 0 ? g.eb[m.edge] : g.ea[m.edge];
@@ -1269,9 +1356,11 @@ export function replayChase(
   params: ChaseParams,
   seed: number,
   inputs: readonly ChaseInput[],
-  ticks: number
+  ticks: number,
+  limits: ArrayLike<number> | null = null
 ): MinotaurChase {
   const sim = new MinotaurChase(walk, params, seed);
+  if (limits) sim.setBreakLimits(limits);
   let k = 0;
   while (sim.tick < ticks) {
     while (k < inputs.length && inputs[k].tick === sim.tick) {

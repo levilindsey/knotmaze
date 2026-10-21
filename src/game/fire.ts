@@ -157,3 +157,52 @@ export function runBurnAt(walk: WalkGraph, fire: Fire, eid: number, L: number): 
 export function fireLead(fire: Fire, v: string, L: number): number {
   return fireTime(fire, v) - L;
 }
+
+// K137-b: the fire after runs broke (fragile, collapse) at clock L, the
+// breaking move's END clock (the controller: walkedDist on the turn
+// clock, departure + length in real time). Every vertex the fire reached
+// by L (T(v) <= L) keeps its d; the rest burn on from those vertices over
+// the runs still standing (`broken` runs conduct nothing), so a time only
+// grows (d = max(old, new)). The start is always a source at 0: the fuse
+// is lit there even before the delay runs out. Unreached vertices are
+// Infinity. Exact arithmetic (K108); the selection breaks ties by vertex
+// id as walkDistances does, O(V^2) like it.
+export function refire(
+  walk: WalkGraph,
+  fire: Fire,
+  L: number,
+  broken: (eid: number) => boolean
+): Fire {
+  const dist = new Map<string, number>();
+  const done = new Set<string>();
+  for (const id of walk.vertices.keys()) {
+    const t = fireTime(fire, id);
+    dist.set(id, t <= L ? fire.dist.get(id)! : Infinity);
+  }
+  if (walk.vertices.has(walk.start)) dist.set(walk.start, 0);
+  for (;;) {
+    let cur: string | null = null;
+    let curD = Infinity;
+    for (const [id, d] of dist) {
+      if (done.has(id) || d === Infinity) continue;
+      if (d < curD || (d === curD && cur !== null && id < cur)) {
+        curD = d;
+        cur = id;
+      }
+    }
+    if (cur === null) break;
+    done.add(cur);
+    for (const eid of walk.vertices.get(cur)!.edges) {
+      if (broken(eid)) continue;
+      const e = walk.edges[eid];
+      const other = e.va === cur ? e.vb : e.va;
+      const nd = curD + e.length;
+      if (nd < dist.get(other)!) dist.set(other, nd);
+    }
+  }
+  for (const [id, d] of dist) {
+    const old = fire.dist.get(id) ?? Infinity;
+    if (old > d) dist.set(id, old);
+  }
+  return { speed: fire.speed, delay: fire.delay, clock: fire.clock, dist };
+}

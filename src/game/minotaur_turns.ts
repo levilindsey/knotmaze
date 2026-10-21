@@ -240,6 +240,12 @@ export class TurnRng {
   }
 }
 
+// K137-b: the run count between two vertices a broken run has cut apart.
+// Larger than any real count, so every "within sight" or "nearer" test
+// reads it as far, and the deciders below treat it as unreachable. It
+// appears only in a graph with blocked runs.
+export const UNREACH = 32767;
+
 // The walk graph for turns: real time's index arrays (the renderer reads
 // them) plus all-pairs run counts and the exit tail's junction.
 export class TurnGraph {
@@ -250,9 +256,13 @@ export class TurnGraph {
   // K481: the median run (thread) length; a wait travels this times the
   // speed factor in the by-length mode.
   readonly medianLength: number;
+  // K137-b: the broken runs (1 = blocked), or null while none is. The hop
+  // matrix is then over the unbroken runs, UNREACH across a cut.
+  readonly blocked: Uint8Array | null;
 
-  constructor(walk: WalkGraph) {
-    const g = (this.chase = new ChaseGraph(walk));
+  constructor(walk: WalkGraph | ChaseGraph, blocked: Uint8Array | null = null) {
+    const g = (this.chase = walk instanceof ChaseGraph ? walk : new ChaseGraph(walk));
+    this.blocked = blocked;
     const n = (this.n = g.ids.length);
     this.hop = new Int16Array(n * n).fill(-1);
     const queue = new Int32Array(n);
@@ -266,12 +276,16 @@ export class TurnGraph {
         const v = queue[qh++];
         const d = this.hop[row + v];
         for (const e of g.adj[v]) {
+          if (blocked !== null && blocked[e] === 1) continue;
           const w = this.other(e, v);
           if (this.hop[row + w] >= 0) continue;
           this.hop[row + w] = d + 1;
           queue[qt++] = w;
         }
       }
+    }
+    if (blocked !== null) {
+      for (let i = 0; i < this.hop.length; i++) if (this.hop[i] < 0) this.hop[i] = UNREACH;
     }
     this.exitJ = this.other(g.adj[g.exit][0], g.exit);
     const lens = Array.from(g.len).sort((a, b) => a - b);
@@ -291,6 +305,15 @@ export class TurnGraph {
   }
   other(e: number, v: number): number {
     return this.chase.ea[e] === v ? this.chase.eb[e] : this.chase.ea[e];
+  }
+  // K137-b: is run e broken?
+  isBlocked(e: number): boolean {
+    return this.blocked !== null && this.blocked[e] === 1;
+  }
+  // K137-b: the same graph with these runs blocked (a fresh hop matrix;
+  // the ChaseGraph and its index arrays are shared).
+  withBlocked(blocked: Uint8Array): TurnGraph {
+    return new TurnGraph(this.chase, blocked);
   }
 }
 
@@ -331,11 +354,20 @@ function allowed(g: TurnGraph, w: number): boolean {
 function moves(g: TurnGraph, v: number): TurnStep[] {
   const out: TurnStep[] = [];
   for (const e of g.chase.adj[v]) {
+    if (g.isBlocked(e)) continue;
     const w = g.other(e, v);
     if (w === v || !allowed(g, w)) continue;
     out.push([e, w]);
   }
   return out;
+}
+
+// K137-b: the ends a mid-run spot may head for: both, or only the one
+// ahead on a broken run (it finishes the run it was on, call 1).
+function spotEnds(g: TurnGraph, s: Spot): number[] {
+  const ahead = spotAhead(g, s);
+  const behind = spotBehind(g, s);
+  return ahead === behind || g.isBlocked(s.edge) ? [ahead] : [ahead, behind];
 }
 
 function pick<T>(arr: T[], rng: TurnRng): T {
@@ -344,7 +376,7 @@ function pick<T>(arr: T[], rng: TurnRng): T {
 
 function stepToward(g: TurnGraph, v: number, target: number, rng: TurnRng): TurnStep | null {
   const d = g.hopd(v, target);
-  if (d <= 0) return null;
+  if (d <= 0 || d >= UNREACH) return null;
   const c = moves(g, v).filter(([, w]) => g.hopd(w, target) === d - 1);
   if (c.length === 0) return null;
   c.sort((a, b) => a[0] - b[0]);
@@ -378,27 +410,23 @@ function spotCoord(g: TurnGraph, s: Spot, e: number): number {
 
 function stepTowardSpot(g: TurnGraph, m: MinoState, target: number, rng: TurnRng): TurnStep | null {
   const s = m.spot;
-  const ahead = spotAhead(g, s);
-  const behind = spotBehind(g, s);
   const cands: TurnStep[] = [];
-  for (const w of ahead === behind ? [ahead] : [ahead, behind]) {
+  for (const w of spotEnds(g, s)) {
     if (!allowed(g, w)) continue;
     cands.push([s.edge, w]);
   }
   if (cands.length === 0) return null;
   let best = Infinity;
   for (const [, w] of cands) best = Math.min(best, g.hopd(w, target));
-  if (!Number.isFinite(best) || best < 0) return null;
+  if (!Number.isFinite(best) || best < 0 || best >= UNREACH) return null;
   const c = cands.filter(([, w]) => g.hopd(w, target) === best);
   return pick(c, rng);
 }
 
 function stepRandomSpot(g: TurnGraph, m: MinoState, noReverse: boolean, rng: TurnRng): TurnStep | null {
   const s = m.spot;
-  const ahead = spotAhead(g, s);
-  const behind = spotBehind(g, s);
   let c: TurnStep[] = [];
-  for (const w of ahead === behind ? [ahead] : [ahead, behind]) {
+  for (const w of spotEnds(g, s)) {
     if (!allowed(g, w)) continue;
     c.push([s.edge, w]);
   }
@@ -500,8 +528,9 @@ export function decide(
     }
   }
   if (cfg.stall && rng.next() < cfg.stall) return out;
-  // The player in the sanctuary is out of reach: hunters lose track.
-  const visibleP = p === g.start ? -1 : p;
+  // The player in the sanctuary is out of reach: hunters lose track. So is
+  // one a broken run has cut off from it (K137-b).
+  const visibleP = p === g.start || cutOff(g, m.v, p) ? -1 : p;
   const apply = (mv: TurnStep | null): void => {
     if (!mv) return;
     out.push(mv);
@@ -527,7 +556,7 @@ export function decide(
             ? stepToward(g, m.v, visibleP, rng)
             : stepRandom(g, m, false, rng);
       } else if (m.mode === 2) {
-        if (m.lastSeen < 0 || m.v === m.lastSeen) {
+        if (m.lastSeen < 0 || m.v === m.lastSeen || cutOff(g, m.v, m.lastSeen)) {
           m.mode = 0;
           m.dest = -1;
         } else {
@@ -535,10 +564,13 @@ export function decide(
         }
       }
       if (m.mode === 0 && !mv) {
-        if (m.dest < 0 || m.dest === m.v) {
+        if (m.dest < 0 || m.dest === m.v || cutOff(g, m.v, m.dest)) {
           m.dest = wanderDest(g, cfg, cfg.home ? g.exitJ : m.v, rng, m.v, visibleP);
         }
-        mv = m.dest >= 0 ? stepToward(g, m.v, m.dest, rng) : stepRandom(g, m, true, rng);
+        mv =
+          m.dest >= 0 && !cutOff(g, m.v, m.dest)
+            ? stepToward(g, m.v, m.dest, rng)
+            : stepRandom(g, m, true, rng);
       }
     }
     apply(mv);
@@ -575,7 +607,7 @@ function decideLengthHop(
         ? stepTowardAny(g, m, visibleP, rng)
         : stepRandomAny(g, m, false, rng);
   } else if (m.mode === 2) {
-    if (atVertex && (m.lastSeen < 0 || m.v === m.lastSeen)) {
+    if ((atVertex && (m.lastSeen < 0 || m.v === m.lastSeen)) || cutOff(g, m.v, m.lastSeen)) {
       m.mode = 0;
       m.dest = -1;
     } else if (m.lastSeen >= 0) {
@@ -586,12 +618,22 @@ function decideLengthHop(
     }
   }
   if (m.mode === 0 && !mv) {
-    if (m.dest < 0 || (atVertex && m.dest === m.v)) {
+    if (m.dest < 0 || (atVertex && m.dest === m.v) || cutOff(g, m.v, m.dest)) {
       m.dest = wanderDest(g, cfg, cfg.home ? g.exitJ : m.v, rng, m.v, visibleP);
     }
-    mv = m.dest >= 0 ? stepTowardAny(g, m, m.dest, rng) : stepRandomAny(g, m, true, rng);
+    mv =
+      m.dest >= 0 && !cutOff(g, m.v, m.dest)
+        ? stepTowardAny(g, m, m.dest, rng)
+        : stepRandomAny(g, m, true, rng);
   }
   return mv;
+}
+
+// K137-b: has a broken run cut vertex b off from vertex a? Always false in
+// a graph without blocked runs (and for b < 0), so the deciders' unblocked
+// paths are unchanged.
+function cutOff(g: TurnGraph, a: number, b: number): boolean {
+  return g.blocked !== null && b >= 0 && g.hopd(a, b) >= UNREACH;
 }
 
 function lengthSegment(g: TurnGraph, m: MinoState, mv: TurnStep): number {
@@ -655,7 +697,7 @@ export function planLengthRoute(
   if (turn <= (cfg.sleep ?? 0)) return empty();
   if (cfg.stall && rng.next() < cfg.stall) return empty();
   const m = cloneMino(fromState);
-  const visibleP = player === g.start ? -1 : player;
+  const visibleP = player === g.start || cutOff(g, m.v, player) ? -1 : player;
   const steps: TurnStep[] = [];
   const segLens: number[] = [];
   const cumLens: number[] = [];
@@ -925,8 +967,15 @@ export interface TurnTelegraph {
 }
 
 export class TurnMinotaur {
-  readonly tg: TurnGraph;
+  // K137-b: replaced (withBlocked) when a run breaks; never mutated.
+  tg: TurnGraph;
   cfg: TurnConfig;
+  // K137-b: the controller's break limits (null: no run breaks) and this
+  // minotaur's own count of the player's crossings, one per accepted run
+  // (the controller's rule, fragile.ts), so the blocked set replays from
+  // the inputs alone.
+  private limits: ArrayLike<number> | null = null;
+  private crossings: Uint32Array | null = null;
   private readonly rng: TurnRng;
   // The attempt's tallies (K80 turns stage 2, section 2.9). A level restart
   // makes a new minotaur and carries them over (carry), so a restart never
@@ -1003,6 +1052,49 @@ export class TurnMinotaur {
     this.restarts = prev.restarts;
   }
 
+  // K137-b: the runs that break and after how many crossings (the
+  // controller's breakLimits; Infinity = never). Called before the first
+  // turn; it clears any count and block, so a fresh solve starts whole.
+  setBreakLimits(limits: ArrayLike<number> | null): void {
+    let any = false;
+    if (limits) {
+      for (let i = 0; i < limits.length; i++) {
+        if (Number.isFinite(limits[i])) {
+          any = true;
+          break;
+        }
+      }
+    }
+    this.limits = any ? limits : null;
+    this.crossings = any ? new Uint32Array(this.tg.chase.ea.length) : null;
+    if (this.tg.blocked !== null) {
+      this.tg = new TurnGraph(this.tg.chase);
+      this.commit();
+    }
+  }
+
+  // K137-b: the broken runs it routes around, in id order.
+  get blockedRuns(): number[] {
+    const b = this.tg.blocked;
+    const out: number[] = [];
+    if (b) for (let i = 0; i < b.length; i++) if (b[i] === 1) out.push(i);
+    return out;
+  }
+
+  // K137-b: one accepted crossing of run `edge`; at its limit the run is
+  // gone for every later decision (this turn was decided already, so a
+  // minotaur on the run finishes it).
+  private crossRun(edge: number): void {
+    const lim = this.limits;
+    const c = this.crossings;
+    if (lim === null || c === null || edge < 0 || edge >= c.length) return;
+    const n = ++c[edge];
+    if (n !== lim[edge]) return;
+    const b = this.tg.blocked ? this.tg.blocked.slice() : new Uint8Array(c.length);
+    b[edge] = 1;
+    this.tg = this.tg.withBlocked(b);
+  }
+
   // One turn: the player runs `edge` from their vertex (-1 = waits there).
   turn(edge: number): TurnResult {
     if (this.cfg.byLength) return this.turnByLength(edge);
@@ -1048,6 +1140,7 @@ export class TurnMinotaur {
     ) {
       this.seen++;
     }
+    this.crossRun(edge);
     if (p2 === g.exit) {
       this.player = p2;
       this.finished = true;
@@ -1074,8 +1167,8 @@ export class TurnMinotaur {
       return "caught";
     }
     // A close call: the move ends one run from it (out of its lair; the
-    // start is a sanctuary).
-    if (this.state.left && p2 !== g.start && g.hopd(p2, this.state.v) === 1) {
+    // start is a sanctuary). K137-b: one unbroken run (this.tg).
+    if (this.state.left && p2 !== g.start && this.tg.hopd(p2, this.state.v) === 1) {
       this.closeCalls++;
     }
     this.player = p2;
@@ -1087,7 +1180,9 @@ export class TurnMinotaur {
   // ticks and the sim: each incident run, plus the wait (the median).
   lengthChoices(): { edge: number; length: number }[] {
     const g = this.tg;
-    const out = g.chase.adj[this.player].map((e) => ({ edge: e, length: g.chase.len[e] }));
+    // K137-b: a broken run is no choice.
+    const runs = g.blocked === null ? g.chase.adj[this.player] : g.chase.adj[this.player].filter((e) => !g.isBlocked(e));
+    const out = runs.map((e) => ({ edge: e, length: g.chase.len[e] }));
     out.push({ edge: -1, length: g.medianLength });
     return out;
   }
@@ -1161,6 +1256,7 @@ export class TurnMinotaur {
         ? seenAt !== g.start
         : realized.hunted || this.state.mode !== 0;
     if (this.state.left && hunted) this.seen++;
+    this.crossRun(edge);
     if (p2 === g.exit) {
       this.player = p2;
       this.finished = true;
