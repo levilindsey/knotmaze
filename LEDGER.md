@@ -1093,8 +1093,6 @@ Every other item below waits on the trigger it names.
 - **K602** · K456 loose ends (untested): `KHR_parallel_shader_compile` stays off after a restore; a
   failed WebGL start after Reload is unhandled; scheduled notes ring out after a loss; a focused
   panel field still takes keys; no phone pickup watch. `docs/design/K456.md` (Handoff).
-- **K603** · `src/app/frame_loop.ts` (about line 307): `stepUnflagged = false;` sits after a
-  `return`, so K6-1's observer flag never resets once set (predates K456).
 - **K604** · Reloading an `mf=0` link comes back in maze mode: `mf` left the link codec in K323
   Stage A. Probes that reload knot mode pass `mf=0` again; moot once K326 drops knot mode (K456
   handoff).
@@ -1372,6 +1370,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K603** · `src/app/frame_loop.ts` (about line 307): `stepUnflagged = false;` sits after a `return`, so K6-1's observer flag never resets once set (predates K456). Done in 3b8b845 (2026-10-20).
 - **K421** · Levi 2026-10-20: the stalker's accuracy default (`minoStalkerAccuracy`) goes 0.45 -> 0.3 (0.45 caught 27.9% at 80% against a 20% target). Done in ab73daa (2026-10-20).
 - **K280** · Levi 2026-10-20: the turn clock's burn race cools, `fireSpeed` 0.75 -> 0.6 with `fireDelay` 0 (real time keeps `fsr`/`fdr`). Done in ab73daa (2026-10-20).
 - **K225** · Levi 2026-10-20: the markers' default size (`markerSize`) goes 1.08 -> 2 (1.08 is about 5 CSS px on the phone). Done in ab73daa (2026-10-20).
