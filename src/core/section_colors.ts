@@ -477,6 +477,103 @@ export function buildSectionRuns(
   return { runs, slotRun, noise: false };
 }
 
+// ---- K138 STAGE 1: THE MOVEMENT RULES' LOOK -----------------------------
+
+// What the rules paint (FabricMazeController.ruleLook): per walk run, icy
+// (1) or not, and the color rule's color (-1 = exempt or icy).
+export interface RuleRunLook {
+  icy: Uint8Array | null;
+  colors: Int8Array | null;
+  mode: string; // "off" | "alternate" | "cycle" (game/color_rule.ts)
+}
+
+// A pale frost (icy runs) and the neutral grey of a run the color rule
+// leaves free. Plain RGB, the same under every hue.
+export const FROST_RGB: RGB = [0.86, 0.95, 1.0];
+export const RULE_FREE_RGB: RGB = [0.56, 0.56, 0.58];
+
+// Rec. 709 luma of an RGB triple (encoded values; a separation measure).
+function luma(c: RGB): number {
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+
+// The HSL lightness at hue h, saturation s whose color has luma `target`
+// (luma rises with lightness, so a bisection finds it).
+function rgbAtLuma(h: number, s: number, target: number): RGB {
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 30; i++) {
+    const mid = (lo + hi) / 2;
+    if (luma(hslToRgb(h, s, mid)) < target) lo = mid;
+    else hi = mid;
+  }
+  return hslToRgb(h, s, (lo + hi) / 2);
+}
+
+// The rule's colors. alternate: a light and a dark shade of the maze's hue
+// (lightness alone). cycle: three hues 120 degrees apart whose lumas sit
+// far apart too (light, middle, dark), so they part in grayscale.
+export const ALTERNATE_LUMAS = [0.8, 0.3];
+export const CYCLE_LUMAS = [0.8, 0.5, 0.22];
+export function ruleColorRgb(mode: string, color: number, baseHue: number): RGB {
+  const h0 = ((baseHue % 360) + 360) % 360;
+  if (mode === "cycle") {
+    const h = (h0 + 120 * color) % 360;
+    return rgbAtLuma(h, 0.7, CYCLE_LUMAS[color] ?? 0.5);
+  }
+  return rgbAtLuma(h0, 0.55, ALTERNATE_LUMAS[color] ?? 0.5);
+}
+
+// The base table with the rules' looks over it: each icy walk run, and
+// each run under the color rule, becomes one FLAT record (one color end
+// to end, no ramps): frost, its rule color, or the free grey. Every other
+// slot keeps the base scheme's record, the noise scheme's included.
+export function ruleRunTable(
+  base: SectionRuns,
+  walk: WalkGraph,
+  chains: RunChain[],
+  look: RuleRunLook,
+  baseHue: number
+): SectionRuns {
+  const runs = base.runs.slice();
+  const slotRun = base.slotRun.map((a) => a.slice());
+  const colorOn = look.colors !== null && look.mode !== "off";
+  for (const e of walk.edges) {
+    let col: RGB | null = null;
+    if (look.icy && look.icy[e.id]) col = FROST_RGB;
+    else if (colorOn) {
+      const k = look.colors![e.id];
+      col = k < 0 ? RULE_FREE_RGB : ruleColorRgb(look.mode, k, baseHue);
+    }
+    if (col === null) continue;
+    const c = e.chain;
+    const n = chains[c].len;
+    const idx = runs.length;
+    runs.push({
+      chain: c,
+      ctrlA: e.ctrlA,
+      ctrlB: e.ctrlB,
+      r0A: 0,
+      r0B: 0,
+      perLattice: 0,
+      flags: 0,
+      colA: col,
+      colMid: col,
+      colB: col,
+    });
+    // The slots buildSectionRuns gives this run (its half-open span, and an
+    // open chain's last slot when the run ends there).
+    for (let s = Math.ceil(e.ctrlA - 1e-9); s < e.ctrlB - 1e-9; s++) {
+      const k = chains[c].closed ? ((s % n) + n) % n : s;
+      if (k >= 0 && k < n) slotRun[c][k] = idx;
+    }
+    if (!chains[c].closed && n > 0 && Math.abs(e.ctrlB - (n - 1)) < 1e-9) {
+      slotRun[c][n - 1] = idx;
+    }
+  }
+  return { runs, slotRun, noise: base.noise };
+}
+
 // One constant RGB run per chain (knot mode: each strand's tint).
 export function constantSectionRuns(
   chains: RunChain[],
