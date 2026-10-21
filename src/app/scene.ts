@@ -272,8 +272,16 @@ export function createScene(deps: SceneDeps): Scene {
       paletteMode: params.mazeFabric,
       flowSeed: params.seed,
       // K580 (#glyphs2): tangent spurs' tapered roots (core Strand.taper).
+      // K620: plus the BODY strand (the other strand through the joint
+      // node; resolved by id, since text_graph's merge shifts indices).
       taper: graph.strands.some((s) => s.taper)
-        ? graph.strands.map((s) => s.taper ?? null)
+        ? graph.strands.map((s) => {
+            const t = s.taper;
+            if (!t) return null;
+            const jn = s.nodes[t.joint];
+            const body = graph.strands.findIndex((o) => o !== s && o.nodes.includes(jn));
+            return body >= 0 && t.footC ? { ...t, body } : t;
+          })
         : undefined,
     });
     renderer.setSectionRuns(

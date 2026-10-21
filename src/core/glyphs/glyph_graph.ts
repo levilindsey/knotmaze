@@ -937,11 +937,28 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
       const arcR = chain[0].arc;
       const span = chain[jIdx].arc - arcR;
       const sep: number[] = [];
+      // K620: each side's foot as a body ctrl (the paint samples the
+      // strokes there), at the same steps.
+      const body = chains[0];
+      const bodyJ = junctionPen.get(chain[jIdx].id) ?? 0;
+      const ctrlOfBodyArc = (A: number): number => {
+        let i = 0;
+        while (i + 2 < body.length && body[i + 1].arc <= A) i++;
+        const a0 = body[i].arc;
+        const a1 = body[i + 1].arc;
+        return 2 * i + 2 * (a1 > a0 ? Math.min(Math.max((A - a0) / (a1 - a0), 0), 1) : 0);
+      };
+      const footC: number[] = [];
+      const footO: number[] = [];
       for (let k = 0; k <= TAPER_PROFILE_N; k++) {
         const p = pAtArc(tab, arcR + (span * k) / TAPER_PROFILE_N);
-        sep.push(k === TAPER_PROFILE_N || p >= root.segs ? 0 : root.sepAt(root.aR * (1 - p / root.segs)) * sc);
+        const atJ = k === TAPER_PROFILE_N || p >= root.segs;
+        sep.push(atJ ? 0 : root.sepAt(root.aR * (1 - p / root.segs)) * sc);
+        const a = atJ ? 0 : root.aR * (1 - p / root.segs);
+        footC.push(ctrlOfBodyArc(bodyJ - (atJ ? 0 : root.footC(a))));
+        footO.push(ctrlOfBodyArc(bodyJ + (atJ ? 0 : root.footO(a))));
       }
-      taper = { sep, joint: jIdx };
+      taper = { sep, joint: jIdx, footC, footO, sideC: root.sideC };
     }
     strands.push({
       edgeIds,
