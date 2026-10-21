@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K749.
+Next free ID: K750.
 
 ## Waiting on Levi
 
@@ -400,6 +400,14 @@ Next free ID: K749.
   - evidence: `.claude/probes/K138/s2/`
   - next: stage 2 (cap ~05:45): the s1 remainder (HUD rows, share title tag), turnstiles, hidden runs; then s3-s8 per docs/design/K138_plan.md (s6 and s7 first once K137 s3c merges)
   - brief: `docs/design/K138_s2.md`
+- **K749** · Phone sitting 4 (sonnet, 2026-10-21 early): the K698 toasts, K138 s1 ice and the color
+  rule, K137 s3c sprint, on real touches; the K739 glow stills if time allows.
+  `docs/design/K749_phone.md`
+  - owner: claude 91b19e11-7759-4638-ba60-4705b011b94f (sonnet agent, launching 04:10)
+  - branch: mainline (probes only, in the main checkout); last commit: n/a (probes only; builds origin/master into .claude/probes/K749/builds/)
+  - evidence: .claude/probes/K749/ (notes.md, out/)
+  - next: parts 1-3 of the brief on the real Pixel; then the coordinator files the results
+  - brief: `docs/design/K749_phone.md`
 
 ## Next, in order
 
