@@ -253,9 +253,9 @@ Next free ID: K573.
   code commits (`ffd3864`..`a688909`), keep Stage 1 (`6c592e6`), prove 0 px (`docs/design/K550_kill.md`). Stage 3's branch
   `worktree-agent-a6e7569fb69c908c3` (`d27b35c`) stays for K567; its worktree goes once the kill merges.
   - owner: agent `aabae6dc5db6e48b5` of claude session 91b19e11 (sonnet, started 2026-10-20 11:15, 1 h cap ~12:15)
-  - branch: `worktree-agent-aabae6dc5db6e48b5`, worktree `.claude/worktrees/agent-aabae6dc5db6e48b5`; last commit: `c6a0d7e`
+  - branch: `worktree-agent-aabae6dc5db6e48b5`, worktree `.claude/worktrees/agent-aabae6dc5db6e48b5`; last commit: `9c17bde`
   - evidence: .claude/probes/K550/kill/ (its worktree)
-  - next: the revert, the cleanup, then Verify: suite, shader-source diff, 0 px same-state A/B
+  - next: the cleanup commit, then Verify: suite, shader-source diff, 0 px same-state A/B
   - brief: `docs/design/K550_kill.md`
 - **K572** · The phone renders 1.5-3.7x slower at d0406df than at 65a7787 (round 2026-10-20: render
   sync knot gs24 74.3 vs 20.2 ms; load 40.7 vs 48.3 fps; K568's confetti 44.9 vs 60 fps, maybe the
