@@ -233,4 +233,16 @@ describe("Lead the walker's stars (K114 walker)", () => {
       "You led the walker out with 1 cut; par is 1."
     );
   });
+
+  it("K713: an upper-bound par keeps the stars and says par is at most P", () => {
+    const r = rateCuts(3, 2, true)!;
+    expect(r.stars).toBe(rateCuts(3, 2)!.stars);
+    expect(rateCuts(1, 2, true)?.stars).toBe(3);
+    expect(r.cuts).toEqual({ cuts: 3, par: 2, upper: true });
+    expect(starExplanation(r)[3]).toBe("You led the walker out with 3 cuts; par is at most 2.");
+    expect(rateCuts(3, 2, false)!.cuts).toEqual({ cuts: 3, par: 2 });
+    expect(starExplanation(rateCuts(0, 0, false)!)[3]).toBe(
+      "You led the walker out with 0 cuts; par is 0."
+    );
+  });
 });

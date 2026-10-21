@@ -50,13 +50,16 @@ export interface StarRating {
   // K114 walker: Lead the walker's cuts against its par (absent: a walk
   // rating). The walker walked, not you, so a Lead rating holds no walk:
   // ratio is NaN and walked / optimal 0, and the explanation reads this.
-  cuts?: { cuts: number; par: number };
+  // K713: `upper` true when par is an upper bound (its search ran past the
+  // budget); the explanation then says "par is at most P".
+  cuts?: { cuts: number; par: number; upper?: true };
 }
 
 // K114 walker, Lead the walker (the brief's call 4): three stars at par or
 // under (an upper-bound par can be beaten), two one cut over, one beyond.
-// No rating for a count that is not a whole number >= 0.
-export function rateCuts(cuts: number, par: number): StarRating | null {
+// No rating for a count that is not a whole number >= 0. `upper` (K713)
+// marks an upper-bound par; it changes the explanation, not the stars.
+export function rateCuts(cuts: number, par: number, upper = false): StarRating | null {
   if (!Number.isInteger(cuts) || cuts < 0) return null;
   if (!Number.isInteger(par) || par < 0) return null;
   const stars: StarCount = cuts <= par ? 3 : cuts === par + 1 ? 2 : 1;
@@ -67,7 +70,7 @@ export function rateCuts(cuts: number, par: number): StarRating | null {
     optimal: 0,
     catches: null,
     walkedCatches: null,
-    cuts: { cuts, par },
+    cuts: upper ? { cuts, par, upper: true } : { cuts, par },
   };
 }
 
@@ -159,10 +162,11 @@ const times = (n: number): string =>
 // The tap explanation: the rules, then where this run landed.
 export function starExplanation(r: StarRating): string[] {
   if (r.cuts) {
-    const { cuts, par } = r.cuts;
+    const { cuts, par, upper } = r.cuts;
     return [
       ...cutRules(),
-      `You led the walker out with ${cuts === 1 ? "1 cut" : `${cuts} cuts`}; par is ${par}.`,
+      `You led the walker out with ${cuts === 1 ? "1 cut" : `${cuts} cuts`}; ` +
+        `par is ${upper ? `at most ${par}` : par}.`,
     ];
   }
   let landed =

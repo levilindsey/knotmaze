@@ -1591,7 +1591,7 @@ async function main(): Promise<void> {
       ? null
       : c.walkerMode
         ? walkerScore?.mode === "lead" && walkerScore.par !== null
-          ? rateCuts(c.cutCount, walkerScore.par)
+          ? rateCuts(c.cutCount, walkerScore.par, walkerScore.upper)
           : null
         : mino
           ? rateRun(c.walkedDist, c.walk.optimalLength, mino.catches, c.respawns)
@@ -3192,7 +3192,9 @@ async function main(): Promise<void> {
     if (!fc || !m) return null;
     if (fc.walkerMode === "lead") {
       if (!m.par) m.par = leadPar(m.map);
-      return { mode: "lead", par: Number.isFinite(m.par.par) ? m.par.par : null };
+      const par = Number.isFinite(m.par.par) ? m.par.par : null;
+      // K713: past the search's budget the par is an upper bound ("par ≤ P").
+      return { mode: "lead", par, upper: par !== null && !m.par.exact };
     }
     return { mode: "delay", walk: fc.taps.length, shortest: m.shortest };
   };

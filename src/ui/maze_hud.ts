@@ -632,9 +632,11 @@ export function ruleEntries(s: RuleFields): StatEntry[] {
   // K114: "cuts N" while the cut is on (zero included); Lead's walker adds
   // its par, "cuts N · par P" (a dash while there is none). Delay's walker:
   // "walker W · shortest S", the runs it has walked and its uncut route.
+  // K713: an upper-bound par (WalkerScore.upper) reads "par ≤ P".
   if (s.cuts != null) {
     const w = s.walker;
-    const par = w && w.mode === "lead" ? ` · par ${fmtPar(w.par ?? Infinity)}` : "";
+    const le = w && w.mode === "lead" && w.upper && w.par != null ? "≤ " : "";
+    const par = w && w.mode === "lead" ? ` · par ${le}${fmtPar(w.par ?? Infinity)}` : "";
     rows.push(entry("cuts", `${s.cuts}${par}`));
   }
   if (s.walker && s.walker.mode === "delay") {
