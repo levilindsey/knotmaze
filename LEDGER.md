@@ -276,10 +276,10 @@ Next free ID: K642.
 - **K580** · The a's J join, Levi's call (2026-10-20): tangent, its shared stretch a TAPERED spur that
   leaves the junction as wide as both merging strokes and narrows to normal where they turn collinear.
   Open calls: K606; the paint stage is K620. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
-  - owner: agent `ab7690d7d949d34d6` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-20 16:48, 2 h cap ~18:48)
-  - branch: `worktree-agent-ab7690d7d949d34d6`, worktree `.claude/worktrees/agent-ab7690d7d949d34d6`; last commit: `6e3e913`
+  - owner: nobody since 2026-10-20 18:34 (merged; agent `ab7690d7d949d34d6` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `acbbbb9`
   - evidence: `.claude/probes/K580/`
-  - next: stage 2: the medial-axis root (nearest-point pairing), the tp52/tp60 sheet, the thorn at J, the ai notch
+  - next: Stage 3: fix the sharp turn behind the a's thorn and the ai notch in ribbon_mesh.ts (no miter past ~120 deg), brief docs/design/K580_s3.md; then K620 paints the root after K525. tp52 kept (s2 handoff table).
   - brief: `docs/design/K580_s2.md`
 - **K324** · Real-time minotaur, more alive and tunable (`docs/design/K324_realtime_minotaur.md`,
   091e4dc; Levi took section 7's recs): s1 (sim); s2 (render) once K525 owns the look: its route
