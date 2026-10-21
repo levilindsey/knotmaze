@@ -318,6 +318,26 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   corridor 24 / away / 0 / 0, so links without them build the trap-zone
   finish. CODEC_VERSION stays 6 (append only).
 
+- FRAGILE AND PAR PARAMS (K137 stage 1, 2026-10-20; brief
+  `docs/design/K137_s1.md`): `fragile` (`fg`: off | crack | snap, default
+  off), `parMode` (`pa`: off | strict | strokes, default off) and
+  `parSlack` (`par`, a number, default 1 since step 5 (0.25 before),
+  clamped to [0, 1]: PAR_SLACK_MIN / MAX in game/par.ts; the codec's
+  clamp table and the panel row read the same range) are APPENDED after
+  K337's `foilShare` (170), at 171-173 on their branch; whoever merges
+  second re-appends after the others (K324's 171-177, the confetti lane,
+  K525) and renumbers (the brief's param hotspot). CODEC_VERSION does not
+  move (append only). The option lists follow FRAGILE_MODES and
+  PAR_MODES. Neither daily-exempt nor MAZE keys: a daily plays with both
+  off, and turning one on leaves the daily. All three are under
+  onClockChange in undo_stack.ts's LIVE_EFFECTS (a change restarts the
+  solve: FabricMazeController.setRules, then reset());
+  `fabricRulesOf` (url_state.ts) carries them into the controller. Pins
+  that moved: the table pin (`test/ui/param_codec.test.ts`),
+  url_codec.test.ts's defaults table and OVERRIDE_KEYS (`fg`, `pa`,
+  `par`). Probe links: `?<seed>&am=instant&fg=snap&pa=strict&par=0`. The
+  rules: gameplay-mechanisms.md; the rows: gameplay-panel.md.
+
 - FOUR DEFAULTS RETUNED (K194, K225, K280, K421, 2026-10-20; brief
   `docs/design/K194_defaults.md`; Levi's report-card calls): `pluckGlow`
   (`pgl`) off -> fallback, `markerSize` (`mks`) 1.08 -> 2 (the slider keeps
