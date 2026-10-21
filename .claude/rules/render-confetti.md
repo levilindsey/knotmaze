@@ -235,3 +235,93 @@ only with the files it is about; `render.md` lists the area's other files.
   0.15, 0.4, 0.8, 1.2, 1.6 and 2.0 s, 12 px a unit, one seed for every
   row; candidates.png holds 3.4, 13.6, 17 and 20.4). Run with plain
   `node`.
+
+## The shine (K337)
+
+- THE SHINE (K337, 2026-10-20; worktree agent; brief
+  `docs/design/K337.md`). Levi (2026-10-14): "a shimmer/shine reflection
+  effect to them, so some flash as they rotate the right way ... vaguely
+  realistic directional light physics without too much effort or perf
+  cost". ONE directional light, computed on the CPU per piece and frame
+  into the tint the view already sets (no shader program: a new one
+  compiles cold at the finish and freezes the win, K307). The normal is
+  +z turned about the long axis (cos rot, sin rot, 0) by the flip:
+  n = (sf sin rot, -sf cos rot, cf), flipped when cf < 0, so both faces
+  light alike. LIGHT = normalize(-0.5, -0.62, 0.6) (upper left, toward
+  the viewer, 53 degrees off the screen's normal), V = (0, 0, 1), and
+  H = normalize(L + V) (26.5 degrees off it). The tint is
+  `litHex(color, k, s)`: k = SHINE_AMBIENT 0.5 + (0.5 / Lz) max(0, n.L),
+  so a face-on piece shows exactly its color, one turned from the light
+  half of it and one facing it up to 1.33x (channels saturate); then a
+  mix toward white by s = strength x peak x (n.H)^p, at most 1. PAPER:
+  peak 0.3, p 8, a soft sheen. FOIL: peak 1, p 64, a short flash to white.
+  p is a power of two (3 and 6 squarings). K140's `0.55 + 0.45 |cos flip|`
+  is gone. `specular` and `shadeNormal` are the reference; pieceLook takes
+  a faster path to the same tint (two trig calls a piece, master one):
+  L's and H's screen-plane parts are parallel, so both dot products come
+  from sf L_XY sin(rot - L_ANG), and sin flip is sqrt(1 - cf^2) with the
+  phase's sign. A test holds the two within 1 a channel (99.9% exact).
+- MATERIAL AND SETTINGS. Each piece draws its material at spawn (pool
+  field MAT 17, stride F 18) from the foil share. At share 0 it takes no
+  draw, so `cff=0` throws exactly master's pieces (on both burst sheets
+  the middle row shows master's pieces in master's places, lit
+  differently). A burst captures
+  the strength (`ConfettiSim.shine`); pieces still in the air from an
+  earlier burst take the newest. Panel rows "Confetti shine"
+  (`confettiShine`, `cfh`, 0-2, default 1) and "Foil confetti"
+  (`foilShare`, `cff`, 0-1, default 0.3, hidden while the strength is
+  0), appended to the codec table (no version bump), daily-exempt
+  viewer preferences with `cf` and `cfa`, and in the undo stack's
+  confetti group. Lives and the frame loop's OVERLAY poll are unchanged.
+- STRENGTH 0 IS REDUCED MOTION'S LOOK: ambient + diffuse, no specular on
+  either material (pinned). Reduced motion's plan carries shine 0, and
+  its few spray pieces have no flutter, so each shows its exact color.
+- READ (`.claude/probes/K337/census.mjs`, the pure model, amount 1,
+  share 0.3, six seeds, the rain on screen and the spray, first 4 s; a
+  flash is a foil specular above 0.5, near white above 0.8, a paper
+  sheen above 0.15). Phone 411x753: foil flashes 1.55% of its time
+  (near white 0.49%); a frame shows a median of 2 flashing pieces, p90
+  4, max 9; a flash lasts a median of 2 frames, at most 4; 81% of foil
+  pieces flash at least once; paper is in sheen 13.8% of its time.
+  Desktop 1400x900: median 2 a frame, p90 6, max 13. Candidates: foil
+  p 32 doubles the flashing time (3.1%), p 128 halves it (0.77%);
+  strength 0.5 never passes 0.5 (no flash reads white), 1.5 flashes
+  2.5% of the time, 2 3.1%. The suite pins the default's bounds (median
+  frame at most 4, 0.5-3% of foil time, some near white).
+- COST (bench_sim.mjs, node, 1400x900, three interleaved rounds under
+  the perf lock; `bench_results_3_final.txt`). Amount 1 (865+320
+  pieces): 65.6-66.6 us a frame, p95 123-126 us, 27.0-27.4 ms of sim
+  work a burst (master 44.9-45.4 us, p95 85-87 us, 18.9-19.0 ms); at
+  strength 0, 62.1-63.7 us. Amount 3 (2594+960): 190-194 us, p95 372-379
+  us, 81-82 ms a burst (master 131-133 us, 56-57 ms). The four-trig
+  first cut read 74-78 and 218-232 us. No frame A/B (K140's could not
+  resolve tens of us); the phone's frame rate rides K156's next pass.
+- SHEETS (`.claude/probes/K337/sheet/`, 1400x900 and 411x753):
+  strip_<view> (eight consecutive frames from 1.0 s at the defaults,
+  cropped where the default flashes most, with counts),
+  burst_<view> (0.3, 1.0 and 2.0 s and a crop of the rain at 1.0 s:
+  master, the branch at `cff=0`, the branch) and strengths_<view> (cfh
+  0, 0.5, 1, 1.5 and 2 on one seed and the same frames, a full frame plus
+  six crops a row, each labelled with its counts). Still frames show the
+  strengths apart mostly in those counts (desktop crop, frames 60-65:
+  paper in sheen 0, 0, 7-9, 10-19 and 11-20 pieces; foil flashing 0-2
+  from strength 1 up); a flash is a few frames, so the difference is a
+  motion one. The look call between strengths is Levi's.
+- PROBES (`.claude/probes/K337/`, untracked): census.mjs (the read
+  above; variants by exponent, peak and strength), bench_sim.mjs
+  `<model.ts> <label> [reps] [shine] [foil]` and bench_ab.mjs `[rounds]`
+  (master against the branch and the branch at strength 0, under the
+  perf lock), page_sheet.mjs `[burst|strengths|all] [outDir]` (dev
+  servers: branch 5860, master 5861 serving `master_a6387e8/`, a git
+  archive with a node_modules junction; knot link
+  `?7&am=instant&fw=0&snd=none`). Its method: the page imports
+  `/src/render/confetti.ts`, wraps `ConfettiLayer.prototype.tick` to
+  catch the layer and pass dt 0, bursts under a seeded Math.random, then
+  steps `layer.sim.step(1 / 60, h)` by hand and shoots after three rAFs,
+  so every run shows the same pieces at the same frames. GOTCHAS: after
+  a src edit, vite serves the app's changed modules with `?t=`, so a
+  page's `import("/src/render/confetti.ts")` gets a SECOND instance and
+  the wrapped prototype never ticks: restart the dev server after
+  editing src. A fresh desktop profile opens the side panel over the
+  finish spray: set localStorage `knotmaze.panelOpen` to "0" before
+  load.
