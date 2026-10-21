@@ -169,6 +169,9 @@ export interface ProbeCtx {
   // and whether the scissors and Undo buttons show.
   readonly cutArmed: boolean;
   readonly pendingCut: number;
+  // K137 stage 3a: the hearts left of the lives setting (null: lives off or
+  // no minotaur), in __knotChase() and __knotTurnMino().
+  readonly hearts: { left: number; of: number } | null;
   readonly cutShown: boolean;
   // main()'s `let`s the hooks also write: get/set pairs (written by several
   // regions, so main.ts keeps them until their owners move).
@@ -383,6 +386,7 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       seconds: ch.seconds,
       catches: ch.catches,
       restarts: ch.restarts,
+      hearts: ctx.hearts, // K137 stage 3a
       moves: ctx.scene.fabricController ? ctx.scene.fabricController.moveLog.join("") : "",
       huntSeconds: ch.huntSeconds,
       finished: ch.finished,
@@ -448,6 +452,7 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       closeCalls: tm.closeCalls,
       seen: tm.seen,
       restarts: tm.restarts,
+      hearts: ctx.hearts, // K137 stage 3a
       moves: ctx.scene.fabricController ? ctx.scene.fabricController.moveLog.join("") : "",
       turns: tm.turns,
       lifeTurn: tm.lifeTurn,

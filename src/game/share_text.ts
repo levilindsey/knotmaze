@@ -31,6 +31,8 @@ export interface ShareInfo {
   collapse?: { mode: "finish" | "free"; pct: number; par: string } | null;
   // K114: the runs cut (null, absent or 0: no tag).
   cuts?: number | null;
+  // K137 stage 3a: the hearts left at the finish (null or absent: lives off).
+  hearts?: number | null;
 }
 
 // K139: the collapse line under the time, "🧱 Collapse to the finish: 58% ·
@@ -59,12 +61,14 @@ export function shareText(info: ShareInfo): string {
   const par = info.parScore ? ` · \u26F3 ${info.parScore}` : "";
   // K114: " · ✂️ N" once a run was cut.
   const cut = info.cuts ? ` · \u2702\uFE0F ${info.cuts}` : "";
+  // K137 stage 3a: " · ❤️ N left" while lives are on.
+  const hearts = info.hearts != null ? ` · \u2764\uFE0F ${info.hearts} left` : "";
   const eff =
     info.efficiency === null
       ? ""
       : ` · \u{1F3AF} ${efficiencyPercent(info.efficiency)}%`;
   const lines = [
-    `${title} \u{1F9F6}${stars}${mino}${snap}${par}${cut}`,
+    `${title} \u{1F9F6}${stars}${mino}${hearts}${snap}${par}${cut}`,
     `⏱️ ${formatDuration(info.timeMs)}${eff}`,
   ];
   if (info.collapse) lines.push(collapseLine(info.collapse));

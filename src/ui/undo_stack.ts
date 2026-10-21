@@ -172,6 +172,8 @@ export const LIVE_EFFECTS = {
     // K324 stage 3: the real-time guard's and stalker's knobs.
     "minoGuardRoam", "minoGuardDetect", "minoGuardLose",
     "minoGuardAccuracyRt", "minoStalkerAccuracyRt",
+    // K137 stage 3a: lives (main.ts refills the hearts when it changes).
+    "lives",
   ],
   // K80 turns: the turn-aligned minotaur's tuning.
   onTurnMinoChange: [

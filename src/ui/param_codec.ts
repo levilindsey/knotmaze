@@ -344,6 +344,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   choice("collapse", ["off", "finish", "free"]),
   // 191, K114: cut (CUT_MODES order, game/cut.ts).
   choice("cut", ["off", "on"]),
+  // 192, K137 stage 3a: lives (0 off, 1..5 hearts; game/lives.ts).
+  num("lives"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -496,6 +498,7 @@ export const PARAM_RANGES: Readonly<
   pluckSheen: [0, 1],
   pluckTug: [0, 1],
   autoPluckGain: [0, 1],
+  lives: [0, 5], // K137 stage 3a (LIVES_MAX)
 });
 
 // A link value held to its panel range (K398); a param with no range,

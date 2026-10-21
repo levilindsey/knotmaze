@@ -38,6 +38,16 @@ describe("K114 cut tag", () => {
   });
 });
 
+describe("K137 stage 3a hearts tag", () => {
+  it("puts the hearts left after the minotaur's tag, only while lives are on", () => {
+    const t = title({ ...BASE, stars: 2, catches: 1, hearts: 2, snapped: 0 });
+    expect(t.endsWith(" · \u{1F402} 1 · ❤️ 2 left · snapped 0")).toBe(true);
+    for (const none of [title({ ...BASE, catches: 1, hearts: null }), title({ ...BASE, catches: 1 })]) {
+      expect(none).not.toContain("❤");
+    }
+  });
+});
+
 describe("K139 collapse line", () => {
   it("puts the mode, the score and par on a line under the time, before the grid", () => {
     const fin = shareText({ ...BASE, efficiency: null, collapse: { mode: "finish", pct: 58, par: "≥62%" } });

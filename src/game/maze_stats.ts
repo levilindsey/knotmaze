@@ -58,7 +58,8 @@ export type StatId =
   | "par"
   | "strokes"
   | "collapsed"
-  | "cuts";
+  | "cuts"
+  | "hearts";
 
 export const STATS: Record<StatId, { label: string; line: string }> = {
   // TIME above (SolveClock). The Burnt banner shows it too, for a run the
@@ -230,6 +231,15 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "rest of the attempt; a junction left with two runs is no choice any " +
       "more, so a move through it carries on. A cut that would leave no way " +
       "to the exit is refused.",
+  },
+  // K137 stage 3a: main.ts's heartsLeft of livesOf(lives) (game/lives.ts),
+  // while lives are on under a minotaur.
+  hearts: {
+    label: "hearts",
+    line:
+      "Hearts left, of the lives you started with. Each catch costs one " +
+      "and sends you back to the entrance; losing the last starts the level " +
+      "over with every heart back, and your catches still count.",
   },
 };
 

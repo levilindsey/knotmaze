@@ -730,6 +730,10 @@ export interface UrlParams {
   // (FabricMazeController.setRules). Every change restarts the solve. Not
   // daily-exempt.
   cut: CutMode;
+  // K137 stage 3a, 4.32 (game/lives.ts): a chase's hearts, 0 off or 1..5.
+  // A catch costs one; the last restarts the level. While on, minoRestart
+  // is ignored. Either clock, free play only (not daily-exempt).
+  lives: number;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1021,6 +1025,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   collapse: "off",
   // K114: no scissors.
   cut: "off",
+  // K137 stage 3a: no hearts (today's catches).
+  lives: 0,
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1751,6 +1757,8 @@ function readLegacy(
     collapse: readChoice(query, "cl", COLLAPSE_MODES, D.collapse),
     // K114's cut (`&ct=on`).
     cut: readChoice(query, "ct", CUT_MODES, D.cut),
+    // K137 stage 3a's lives (`&mlv=3`; PARAM_RANGES clamps to 0..5).
+    lives: readNumber(query, "mlv", D.lives),
   };
 }
 

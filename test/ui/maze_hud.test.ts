@@ -74,13 +74,14 @@ describe("what each figure means (K274)", () => {
   const LOSS = { timeMs: 61_000, walked: 20, closest: 0.44 };
 
   // K137's rule rows (kept out of FULL, whose exact rows are pinned).
-  // K139's collapse row too, and K114's cuts.
+  // K139's collapse row too, K114's cuts and K137 stage 3a's hearts.
   const RULES = {
     snapped: 3,
     parLeft: { par: 12, left: 4 },
     parStrokes: { par: 12, strokes: 9 },
     collapse: { pct: 58, par: "\u226562%" },
     cuts: 2,
+    hearts: { left: 2, of: 3 },
   };
   const shown = (): StatEntry[] => [
     ...statEntries(FULL),
@@ -234,5 +235,27 @@ describe("K114 cuts row", () => {
     });
     expect(win.at(-1)?.id).toBe("cuts");
     expect(win.at(-1)?.value).toBe("1");
+  });
+});
+
+describe("K137 stage 3a hearts row", () => {
+  it("follows the catches as left / of, only while lives are on", () => {
+    const rows = gameEntries({ catches: 1, hearts: { left: 2, of: 3 } });
+    expect(rows.map((r) => [r.id, r.label, r.value])).toEqual([
+      ["caught", "caught", "1"],
+      ["hearts", "hearts", "2 / 3"],
+    ]);
+    expect(gameEntries({ catches: 1, hearts: null }).map((r) => r.id)).toEqual(["caught"]);
+    expect(gameEntries({ catches: 1 }).map((r) => r.id)).toEqual(["caught"]);
+  });
+
+  it("shows on the win banner's rows after the catches", () => {
+    const win = statEntries({
+      timeMs: 61_000, path: 12, optimal: 9, efficiency: null, backtrack: null,
+      junctions: 3, deadEnds: null, catches: 2, hearts: { left: 1, of: 3 },
+    });
+    const ids = win.map((r) => r.id);
+    expect(ids.indexOf("hearts")).toBe(ids.indexOf("caught") + 1);
+    expect(win.find((r) => r.id === "hearts")?.value).toBe("1 / 3");
   });
 });
