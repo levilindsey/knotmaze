@@ -64,6 +64,8 @@ export type StatId =
   | "sword"
   | "sprint"
   | "woken"
+  | "lures" // K137 stage 4
+  | "snares"
   | "spool"
   | "spoolUsed"
   | "hints"
@@ -295,6 +297,23 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "Sleepers you woke: each lies on a junction off the shortest way and " +
       "wakes when you walk onto it, then hunts you as the minotaur does. A " +
       "catch puts every monster back to sleep.",
+  },
+  // K137 stage 4 (4.10, 4.30): main.ts's luresLeft and snaresLeft of the
+  // stocks (game/lures.ts luresOf, game/snares.ts snaresOf), while that tool
+  // is on under the turn clock's chase.
+  lures: {
+    label: "lures",
+    line:
+      "Lures left, of the stock you started with. Arm the note and tap a " +
+      "run: the minotaur and any sleeper within six runs of it head for its " +
+      "nearer end, at no cost in moves. Starting over refills them.",
+  },
+  snares: {
+    label: "snares",
+    line:
+      "Snares left, of the stock you started with. Arm the loop and tap a " +
+      "run at your junction: the first monster to step onto it stands three " +
+      "turns at its near end. Starting over refills them.",
   },
   // K137 stage 2: game/spool.ts spoolGauge of the controller's spoolUsed
   // (pathEdges.length) against spoolCap (parFor(fewestRuns, spoolSlack)).

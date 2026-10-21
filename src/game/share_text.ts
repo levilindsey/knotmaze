@@ -47,6 +47,10 @@ export interface ShareInfo {
   // K137 stage 3d: the sleepers woken (null or absent: sleepers off; 0
   // shows, as the minotaur's 0 does).
   woken?: number | null;
+  // K137 stage 4: the lures and snares used (null, absent or 0: no tag;
+  // that tool off or never used).
+  luresUsed?: number | null;
+  snaresUsed?: number | null;
   // K137 stage 2: the spool's yarn used and capacity at the finish (null or
   // absent: the spool off), and the hints used (null, absent or 0: no tag).
   spool?: { used: number; cap: number } | null;
@@ -111,6 +115,11 @@ export function shareText(info: ShareInfo): string {
   const sprint = info.sprintUsed ? " · ⚡ used" : "";
   // K137 stage 3d: " · 😴 N woken" while sleepers are on.
   const woken = info.woken != null ? ` · \u{1F634} ${info.woken} woken` : "";
+  // K137 stage 4: " · 🎵 N lure(s)" and " · 🪢 N snare(s)" once used.
+  const plural = (n: number, one: string): string => `${n} ${one}${n === 1 ? "" : "s"}`;
+  const tools =
+    (info.luresUsed ? ` · \u{1F3B5} ${plural(info.luresUsed, "lure")}` : "") +
+    (info.snaresUsed ? ` · \u{1FAA2} ${plural(info.snaresUsed, "snare")}` : "");
   // K137 stage 2: " · 🧶 82% of the spool" and " · 💡1".
   const spoolT = info.spool ? spoolTag(info.spool.used, info.spool.cap) : null;
   const hintT = info.hintsUsed != null ? hintsTag(info.hintsUsed) : null;
@@ -129,7 +138,7 @@ export function shareText(info: ShareInfo): string {
       ? ""
       : ` · \u{1F3AF} ${efficiencyPercent(info.efficiency)}%`;
   const lines = [
-    `${title} \u{1F9F6}${stars}${mino}${hearts}${sword}${sprint}${woken}${snap}${par}${cut}${aids}${rules}`,
+    `${title} \u{1F9F6}${stars}${mino}${hearts}${sword}${sprint}${woken}${tools}${snap}${par}${cut}${aids}${rules}`,
     `⏱️ ${formatDuration(info.timeMs)}${eff}`,
   ];
   if (info.collapse) lines.push(collapseLine(info.collapse));

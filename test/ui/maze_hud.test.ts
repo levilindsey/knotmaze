@@ -90,6 +90,9 @@ describe("what each figure means (K274)", () => {
     sprint: "armed",
     // K137 stage 3d: the sleepers woken.
     woken: 1,
+    // K137 stage 4: the lures and snares left.
+    lures: { left: 2, of: 3 },
+    snares: { left: 1, of: 2 },
     // K137 stage 2: the aids' rows.
     spool: { used: 3, cap: 12 },
     hints: { left: 1, of: 3 },
@@ -367,6 +370,30 @@ describe("K137 stage 3d woken row", () => {
     const ids = win.map((r) => r.id);
     expect(ids.indexOf("woken")).toBe(ids.indexOf("caught") + 1);
     expect(win.find((r) => r.id === "woken")?.value).toBe("2");
+  });
+});
+
+describe("K137 stage 4 lures and snares rows", () => {
+  it("shows the stocks left after woken, in the HUD and on the win banner, only while each tool is on", () => {
+    const hud = gameEntries({
+      catches: 0, woken: 1, lures: { left: 2, of: 3 }, snares: { left: 0, of: 1 },
+    });
+    expect(hud.map((r) => [r.id, r.label, r.value]).slice(1)).toEqual([
+      ["woken", "woken", "1"],
+      ["lures", "lures", "2 / 3"],
+      ["snares", "snares", "0 / 1"],
+    ]);
+    expect(gameEntries({ catches: 0, lures: null, snares: null }).map((r) => r.id)).toEqual([
+      "caught",
+    ]);
+    const win = statEntries({
+      timeMs: 61_000, path: 12, optimal: 9, efficiency: null, backtrack: null,
+      junctions: 3, deadEnds: null, catches: 1, lures: { left: 1, of: 2 },
+    });
+    const ids = win.map((r) => r.id);
+    expect(ids.indexOf("lures")).toBe(ids.indexOf("caught") + 1);
+    expect(ids).not.toContain("snares");
+    expect(win.find((r) => r.id === "lures")?.value).toBe("1 / 2");
   });
 });
 
