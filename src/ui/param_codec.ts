@@ -399,7 +399,10 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // 220, K137 s5 (4.33): muddy runs (0 off, 1..6; game/mud.ts).
   num("mud"),
   // 221, K797b: the thread look (fill | border | both).
-  choice("threadLook", ["fill", "border", "both"]),
+  choice("threadLook", ["fill", "border", "both"]), // 221 K797b
+  // 222-223, K799: the traveled path's width and fill texture.
+  num("goldWidth"),
+  choice("goldTexture", ["solid", "pencil", "crayon", "highlighter"]),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -575,6 +578,7 @@ export const PARAM_RANGES: Readonly<
   hiddenReveal: [1, 8], // K795 (REVEAL_RUNS_MIN..MAX)
   beatPerRun: [1, 4], // K795 (BEAT_PER_RUN_MIN..MAX)
   mud: [0, 6], // K137 s5 (MUD_MAX)
+  goldWidth: [0, 1], // K799
 });
 
 // A link value held to its panel range (K398); a param with no range,

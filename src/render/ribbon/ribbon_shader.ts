@@ -158,6 +158,29 @@ void main(void) {
   // Gameplay paint + the reveal glow, composed over the section (G2.3).
   highp vec4 kst = paintHere ? kPaintAt(kc, kctrl, kpt.x, pxArc) : vec4(0.0);
   highp float kgl = paintHere ? kGlow(kc, kctrl) : 0.0;
+  // K799: the traveled path's look (uKPath.x = width 0..1, .y = texture
+  // 0 solid, 1 pencil, 2 crayon, 3 highlighter): narrow the gold toward
+  // the centerline and grain it, ribbon-only (fans and strips keep the
+  // full fill). A width of 0 hides the gold entirely.
+  if (paintHere && kst.x > 0.0 && (uKPath.x < 1.0 || uKPath.y > 0.5)) {
+    highp float ge = abs(2.0 * vUV.y - 1.0);
+    highp float fwG = max(fwidth(vUV.y) * 3.0, 0.02);
+    highp float gw2 = uKPath.y > 2.5 ? min(uKPath.x * 1.15, 1.0) : uKPath.x;
+    highp float gm = clamp((gw2 - ge) / fwG + 0.5, 0.0, 1.0)
+      * step(0.001, uKPath.x);
+    if (uKPath.y > 0.5 && uKPath.y < 1.5) {
+      gm *= 0.7 + 0.3 * fract(sin(dot(
+        floor(vec2(vUV.x * 260.0, ge * 7.0)),
+        vec2(12.9898, 78.233))) * 43758.5453);
+    } else if (uKPath.y > 1.5 && uKPath.y < 2.5) {
+      gm *= 0.45 + 0.55 * fract(sin(dot(
+        floor(vec2(vUV.x * 90.0, ge * 4.0)),
+        vec2(26.651, 41.313))) * 28001.8384);
+    } else if (uKPath.y > 2.5) {
+      gm *= 0.55;
+    }
+    kst.x *= gm;
+  }
   // The hover glow (K145): kst.w is its strength along the thread, shaped
   // across the ribbon here (only the ribbons have an across coordinate).
   highp float krim = kst.w > 0.0 ? kst.w * kRimAcross(vUV.y) : 0.0;

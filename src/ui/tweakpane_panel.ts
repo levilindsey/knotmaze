@@ -1308,6 +1308,17 @@ export function buildPanel(
     "How your route is shown: fullPath = your whole traveled route stays recolored; recentPath = memory mode: only the last stretch of your route stays lit (trailLength sets how much) and there is no backtracking; string = unroll a thin white yarn behind you - it U-turns at junctions when you backtrack and is never picked up. Applies live.",
     D.pathViz, () => callbacks.onTrailChange()
   );
+  row(
+    fPath, p, "goldWidth", { min: 0, max: 1, step: 0.01, label: "Traveled path width" },
+    "How much of the thread width the traveled route recolors: 1 = the full thread (the usual look), 0 = hidden. Applies live (K799).",
+    D.goldWidth, () => callbacks.onTrailChange()
+  );
+  row(
+    fPath, p, "goldTexture",
+    { options: { solid: "solid", pencil: "pencil", crayon: "crayon", highlighter: "highlighter" }, label: "Traveled path fill" },
+    "The traveled route's fill: solid color, grained pencil, coarse crayon, or translucent highlighter (K799). Applies live.",
+    D.goldTexture, () => callbacks.onTrailChange()
+  );
   const cameraRow = row(
     fPath, p, "cameraMode",
     { options: { fit: "fit", follow: "follow" }, label: "Camera" },

@@ -693,6 +693,10 @@ export class RibbonRenderer {
   // K797b: the thread look (0 fill, 1 border, 2 both; panel_wiring syncs
   // it from the threadLook param): the section shader strokes the edges.
   threadLook = 0;
+  // K799: the traveled path's width (0..1) and fill texture (0-3);
+  // panel_wiring syncs both from the goldWidth/goldTexture params.
+  goldWidth = 1;
+  goldTexture = 0;
   // K525: the telegraph rims' strength and colour (0xRRGGBB), sent as
   // uKTele (w = the strength while a route is set). The fabric sets them
   // with the route; a piece's alpha multiplies the strength. teleColor is
@@ -2802,6 +2806,8 @@ export class RibbonRenderer {
     const rm = this.revealAnim?.mode;
     knotUniformValues().uKLook![1] = rm === "edges" ? 1 : rm === "edgesAll" ? 2 : 0;
     knotUniformValues().uKLook![2] = this.revealAnim && !this.revealAnim.done ? 1 : 0;
+    knotUniformValues().uKPath![0] = this.goldWidth; // K799
+    knotUniformValues().uKPath![1] = this.goldTexture;
     this.tickPaintPalette(dt);
     this.tickAppearFx(dt);
     // Flow clock, advanced AFTER the palette/fillet pass so everything

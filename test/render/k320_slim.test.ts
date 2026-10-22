@@ -64,13 +64,18 @@ describe("K320 stage 1: char budgets", () => {
     // and 64,106 -> 64,885 here); one more cold compile of each per player.
     // K798 (2026-10-21): the border-at-a-time intro gate in SECTION_FRAG
     // adds 481 to both (48,470 -> 48,951 and 64,885 -> 65,366 here).
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(49_010);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(65_430);
+    // K799 (2026-10-21): the traveled-path look (uKPath and the gold
+    // width/texture mask, ribbon-only) adds 1,071 to both (48,951 ->
+    // 50,022 and 65,366 -> 66,437 here).
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(50_080);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(66_500);
     expect(STRIP_FRAG.length).toBeLessThanOrEqual(31_400);
     // K797b/K798 fillets (2026-10-21): the fan look gate and stroke
     // (junction_field.ts) add 755 (26,600 -> 27,355 here).
     expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(27_420);
-    expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_300);
+    // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
+    // includes (+18 here).
+    expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_380);
   });
 });
 
