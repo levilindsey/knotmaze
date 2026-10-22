@@ -80,7 +80,7 @@ describe("appearance modes", () => {
       seqs.add(p.appearSequence);
       fxs.add(p.appearFx);
     }
-    expect(seqs.size).toBe(4);
+    expect(seqs.size).toBe(6); // + edges / edgesAll (K798)
     expect(fxs.size).toBe(5);
   });
 });
