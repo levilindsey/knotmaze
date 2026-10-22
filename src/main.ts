@@ -82,6 +82,7 @@ import { sprintAfterMove, sprintToggle, sprintValue, type SprintState } from "./
 import { luresOf } from "./game/lures"; // K137 stage 4
 import { snareHoldOf, snaresOf } from "./game/snares";
 import { pingsLeft, sonarRuns } from "./game/sonar"; // K137 sonar (4.26)
+import { KEY_COLOR_NAMES, KEY_COLORS, lockGateColor } from "./game/locks"; // K138 slice 4
 import { lureRangeOf } from "./game/lures"; // K795: the tooltips' range
 import type { SwordShown } from "./ui/maze_hud";
 import { rateCuts, rateRun, ratingForResult, walkedOf } from "./game/star_rating";
@@ -1441,6 +1442,15 @@ async function main(): Promise<void> {
   const updateHud = (): void => {
     hud.render(hudSnapshot());
     syncModeBadge();
+    // K138 slice 4: under the colors form the yarn's dye follows the
+    // latest key taken (the player's own path color until then).
+    const fc = scene.fabricController;
+    if (fc && fc.ruleLook?.locks?.mode === "colors" && scene.renderer) {
+      const latest = fc.keysLatestColor;
+      scene.renderer.setPathColor(
+        latest >= 0 ? KEY_COLORS[latest] : parseInt(params.pathColor.replace("#", ""), 16) || 0xffd24a
+      );
+    }
   };
 
   // A fresh attempt (rebuild, Reset path): clock idle, nothing recorded.
@@ -3033,7 +3043,17 @@ async function main(): Promise<void> {
     }
     // K138 s4: a lock, while the walk lacks a key.
     if (why === "lock") {
-      showToast(`Locked: find the keys first (${fc!.keysHeld} of ${fc!.keysTotal}).`, 2500);
+      // K138 slice 4: a colored gate names the yarn it wants.
+      const lk = fc!.ruleLook?.locks;
+      if (lk?.mode === "colors") {
+        const want = lockGateColor(lk, eid);
+        showToast(
+          `Locked: this gate wants ${KEY_COLOR_NAMES[want]} yarn. Take a ${KEY_COLOR_NAMES[want]} key last.`,
+          2500
+        );
+      } else {
+        showToast(`Locked: find the keys first (${fc!.keysHeld} of ${fc!.keysTotal}).`, 2500);
+      }
       return;
     }
     // K138 s2: a closed turnstile says so (the toast's pluck is the same).

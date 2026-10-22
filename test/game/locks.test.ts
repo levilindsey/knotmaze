@@ -8,6 +8,8 @@ import {
   lockCandidates,
   lockModeOf,
   lockOpens,
+  lockGateColor,
+  lockGateOpen,
   lockRule,
   placeLocks,
   shortcutCandidates,
@@ -445,5 +447,55 @@ describe("locks and keys: the shortcut form (K138 slice 3)", () => {
     expect(lockModeOf("bogus")).toBe("exit");
     const placed = placeLocks(w, 1, "exit", 3);
     if (placed.layout) expect(placed.layout.mode).toBe("exit");
+  });
+});
+
+describe("locks and keys: the colors form (K138 slice 4)", () => {
+  // tri(): S-0-A, A-1-B, B-2-C, C-3-A, C-4-X, B-5-D. The key at B is
+  // red (color 0); the gate is run 4 (C-X), wanting red yarn.
+  const RED_GATE: LockLayout = {
+    mode: "colors",
+    keys: ["B"],
+    locks: new Map([[4, 1]]),
+    keyColors: [0],
+  };
+  it("a gate refuses undyed yarn and opens for its color", () => {
+    const w = tri();
+    const r = lockRule(w, RED_GATE);
+    expect(lockGateColor(RED_GATE, 4)).toBe(0);
+    expect(lockGateColor(RED_GATE, 3)).toBe(-1);
+    expect(lockGateOpen(RED_GATE, 4, -1)).toBe(false);
+    expect(lockGateOpen(RED_GATE, 4, 0)).toBe(true);
+    expect(lockGateOpen(RED_GATE, 4, 1)).toBe(false);
+    // Undyed to C by run 3: the gate refuses.
+    const atA = r.step("S", 0, r.start)!;
+    const atC = r.step("A", 3, atA.state)!;
+    expect(atC.to).toBe("C");
+    expect(r.step("C", 4, atC.state)).toBeNull();
+    // Back, take the red key at B, return: the gate opens.
+    const backA = r.step("C", 3, atC.state)!;
+    const took = r.step("A", 1, backA.state)!;
+    expect(took.to).toBe("B");
+    const atC2 = r.step("B", 2, took.state)!;
+    const through = r.step("C", 4, atC2.state);
+    expect(through).not.toBeNull();
+    expect(through!.to).toBe("X");
+    expect(ruleSearch(w, r).solvable).toBe(true);
+  });
+  it("placement colors the gates from the keys laid", () => {
+    const w = tri();
+    let placed = null;
+    for (const seed of SEEDS) {
+      const p = placeLocks(w, 2, "colors", seed);
+      if (p.layout) { placed = p.layout; break; }
+    }
+    if (!placed) throw new Error("no seed placed colored gates");
+    expect(placed.mode).toBe("colors");
+    expect(placed.keyColors).toHaveLength(placed.keys.length);
+    const present = new Set(placed.keyColors);
+    for (const want of placed.locks.values()) {
+      expect(present.has(want - 1)).toBe(true);
+    }
+    expect(ruleSearch(w, lockRule(w, placed)).solvable).toBe(true);
   });
 });

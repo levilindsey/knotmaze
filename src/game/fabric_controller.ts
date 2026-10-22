@@ -156,7 +156,7 @@ import { hiddenOver, placeHidden, HIDDEN_MAX } from "./hidden_runs";
 import type { OneWayLayout } from "./one_way";
 import { oneWayBlocksBack, oneWayRule, placeOneWay, ONE_WAY_MAX } from "./one_way";
 import type { LockLayout, LockMode } from "./locks";
-import { keysIn, lockModeOf, lockOpens, lockRule, placeLocks, KEYS_MAX } from "./locks";
+import { keysIn, lockGateOpen, lockModeOf, lockOpens, lockRule, placeLocks, KEY_COLOR_COUNT, KEYS_MAX } from "./locks";
 
 // K137: the solve's rules beyond the clock: fragile runs and par (K139:
 // and collapse; K114: cut; K138: ice runs and the color rule). Change them
@@ -654,10 +654,23 @@ export class FabricMazeController {
   }
 
   // K138 s4: the keys held, as bits (key i: 1 << i), and how many.
+  // K138 slice 4: the yarn's color now (the colors form's latest key
+  // taken; -1: none yet, or the form is not colors).
+  get keysLatestColor(): number {
+    const p = this.placement;
+    if (!p?.locks || p.locks.mode !== "colors") return -1;
+    return (Math.floor(this.ruleState / p.lockDiv) % (KEY_COLOR_COUNT + 1)) - 1;
+  }
+
   get keysHeldMask(): number {
     const p = this.placement;
     if (!p?.locks || !this.rule) return 0;
-    return Math.floor(this.ruleState / p.lockDiv) % (1 << p.locks.keys.length);
+    const s = Math.floor(this.ruleState / p.lockDiv);
+    // The colors form packs the latest color under the mask.
+    if (p.locks.mode === "colors") {
+      return Math.floor(s / (KEY_COLOR_COUNT + 1)) % (1 << p.locks.keys.length);
+    }
+    return s % (1 << p.locks.keys.length);
   }
   get keysHeld(): number {
     return keysIn(this.keysHeldMask);
@@ -847,9 +860,18 @@ export class FabricMazeController {
     }
     const ow = this.placement?.oneWay;
     if (ow && ow.has(eid) && ow.get(eid) !== this.head && !this.ruleAllows(eid)) return "oneWay";
-    // K138 s4: a lock whose keys are not all held.
+    // K138 s4: a lock whose keys are not all held (the colors form
+    // reads the yarn's color instead, K138 slice 4).
     const lk = this.placement?.locks;
-    if (lk && lk.locks.has(eid) && !lockOpens(lk, eid, this.keysHeldMask) && !this.ruleAllows(eid)) return "lock";
+    if (
+      lk &&
+      lk.locks.has(eid) &&
+      !(lk.mode === "colors"
+        ? lockGateOpen(lk, eid, this.keysLatestColor)
+        : lockOpens(lk, eid, this.keysHeldMask)) &&
+      !this.ruleAllows(eid)
+    )
+      return "lock";
     const p = this.placement;
     if (!p || !this.rule || this.ruleAllows(eid)) return null;
     if (!p.turnstiles) return "rule";

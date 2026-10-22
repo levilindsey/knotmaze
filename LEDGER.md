@@ -452,7 +452,7 @@ Next free ID: K812.
   - owner: nobody since 2026-10-21 10:36 (agent ac3462d3821227d69 of claude session 91b19e11-7759-4638-ba60-4705b011b94f; paused at the end of slice 2 per Levi)
   - branch: mainline; last commit: `13758f2b`
   - evidence: `.claude/probes/K138/s4/` (census/, page/ with locks_page.mjs and out/, the test and build logs)
-  - next: slice 4 (the colors form), then locks vs the minotaur/fire once rules leave classic (slice 3 shortcut done 2026-10-21, Handoff in docs/design/K138_s4.md)
+  - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
 

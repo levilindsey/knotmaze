@@ -41,6 +41,7 @@ import type { WalkGraph, WalkEdge } from "../core/walk_graph";
 import { walkDistances } from "../core/walk_graph";
 import { litArms, planRoute } from "../game/route_plan";
 import { darknessAlpha, pruneDarkStamps } from "../game/darkness";
+import { KEY_COLOR_RGB, lockGateColor, lockGateOpen } from "../game/locks"; // K138 slice 4
 import { SONAR_SECONDS } from "../game/sonar";
 import type { FabricMazeController } from "../game/fabric_controller";
 import type {
@@ -4241,13 +4242,16 @@ export class FabricMazeRenderer {
         if (this.explore.on && this.ribbons.exploreVisAt(v.chain, cm) < 0.98) continue;
         const mk = this.lockMesh(n++);
         mk.setGlyph(keyGlyph);
-        mk.setRingColor(KEY_GOLD);
+        // K138 slice 4: a colored key rings in its own color.
+        mk.setRingColor(lk.mode === "colors" ? KEY_COLOR_RGB[lk.keyColors?.[i] ?? 0] : KEY_GOLD);
         this.vertexWorld(lk.keys[i], this.scratch, 0);
         mk.place(this.scratch[0], this.scratch[1], r * KEY_SCALE, r * KEY_SCALE * KEY_DOT);
       }
       const lockGlyph = markerGlyph(this.markerGlyphIds.lock, "lock");
+      // K138 slice 4: the colors form reads the yarn, not the mask.
+      const latest = controller.keysLatestColor;
       for (const eid of lk.locks.keys()) {
-        if (lockOpens(lk, eid, held)) continue;
+        if (lk.mode === "colors" ? lockGateOpen(lk, eid, latest) : lockOpens(lk, eid, held)) continue;
         const e = this.walk.edges[eid];
         if (!e || controller.isHidden(eid)) continue;
         const cm = this.ctrlMod(e.chain, (e.ctrlA + e.ctrlB) / 2);
@@ -4256,7 +4260,9 @@ export class FabricMazeRenderer {
         this.pointFlowed(e.chain, cm, this.scratch, 0);
         const mk = this.lockMesh(n++);
         mk.setGlyph(lockGlyph);
-        mk.clearRing();
+        // K138 slice 4: a gate rings in the color it wants.
+        if (lk.mode === "colors") mk.setRingColor(KEY_COLOR_RGB[lockGateColor(lk, eid)]);
+        else mk.clearRing();
         mk.place(this.scratch[0], this.scratch[1], r * LOCK_SCALE);
       }
     }

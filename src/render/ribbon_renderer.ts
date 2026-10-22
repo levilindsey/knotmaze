@@ -3752,6 +3752,16 @@ export class RibbonRenderer {
   // range, caps over their arc radius at the chain's tightest slot (doubled:
   // the knot keeps moving under a static declaration), every range widened
   // by a slot for the edge coverage ramp. Only changed texels upload.
+  // K138 slice 4: the yarn's dye (the colors form's latest key), set
+  // per move by main; the panel's recolor owns the color otherwise.
+  setPathColor(hex: number): void {
+    if (!this.style.paletteMode) return;
+    if (this.style.pathColor !== hex) {
+      this.style.pathColor = hex;
+      this.syncGold();
+    }
+  }
+
   /** @internal ribbon */ writePaintItems(): void {
     const items: number[] = [];
     const n = this.ps.chains.length;
