@@ -529,7 +529,6 @@ merged):
   a white paper background (from `vellum`); a thread look of fill, border or both (an edge stroke on each side; over,
   under and joins read from the strokes); the Crossing gap row down to 0 (its floor is 0.04; the codec takes 0); solid
   or textured fills and borders (pencil), if fast enough.
-- **K798** · Done in 3da2cf59 (2026-10-21): an intro that draws one border at a time, as two dropdown orders (edges, edgesAll). Was: try a couple of orders, then offer the good ones in a dropdown
   param (Levi 2026-10-21; sooner list). After K797's border look.
 - **K799** · The traveled path's look (Levi 2026-10-21; sooner list): a width ratio param (0 hidden, 1 today's full
   fill) and a fill texture dropdown, for colored pencil, crayon or highlighter, if fast enough. After K794.
@@ -1820,6 +1819,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K798** · Border-at-a-time intros (edges / edgesAll sequences). Done in 3da2cf59 (2026-10-21).
 - **K796** · String burns away with its thread in the burn race (burntAt in explore_view.ts; drawYarn hides burnt stations). Done in 5f9f3a45 (2026-10-21).
 - **K794** · Walked gold stays gold (the gold derives from the taps). Done in fb110a3e (2026-10-21).
 - **K795** · Panel rows for every param, the beat timing toggle and four tunables. Done in a1b1bdde (2026-10-21).
