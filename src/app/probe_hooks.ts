@@ -5,6 +5,7 @@ import { mazeTaps, walkFingerprint } from "../game/daily_attempt";
 import { todayNumber } from "../game/daily_calendar";
 import { dailyHistory } from "../game/daily_store";
 import { CHASE_HZ } from "../game/minotaur";
+import { runsToExit } from "../core/walk_graph"; // K137 s5 probe: fewest-moves choices
 import type { DailyStore, SolveRecord } from "../game/daily_store";
 import type { SolveClock } from "../game/maze_stats";
 import type { PhysicsTuning } from "../physics/particle_system";
@@ -449,6 +450,7 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       sword: ch.sword ? { ...ch.sword, at: ch.g.ids[ch.sword.spot] } : null,
       fleeing: ch.fleeing,
       slain: ch.slain,
+      muddy: [...ch.mud].sort((a, b) => a - b), // K137 s5
       walked: ch.walked,
       moves: ctx.scene.fabricController ? ctx.scene.fabricController.moveLog.join("") : "",
       huntSeconds: ch.huntSeconds,
@@ -526,6 +528,8 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       sword: tm.sword ? { ...tm.sword, at: ids[tm.sword.spot] } : null,
       fleeing: tm.fleeing,
       slain: tm.slain,
+      muddy: [...tm.mud].sort((a, b) => a - b), // K137 s5
+      mudWait: tm.state.mudWait ?? false,
       // K137 stage 3d: the extra monsters (sleepers, the follower): kind,
       // phase (asleep / waiting / awake), where each stands (its spot, and
       // the vertex id while it is on one), and home's id; the sleepers
@@ -634,6 +638,18 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       par: c.par,
       strokesLeft: c.strokesLeft,
       parLost: c.parLost,
+      // K137 s5: the muddy runs laid, the strokes and fewest moves.
+      muddy: [...c.mudRuns].sort((a, b) => a - b),
+      // K137 s5: each choice with the plain fewest moves from its far end
+      // (the route mud is laid on), for probes walking that route.
+      choiceMoves: c.choices().map((eid) => {
+        const e = wg.edges[eid];
+        const far = e.va === c.head ? e.vb : e.va;
+        return { edge: eid, moves: runsToExit(wg).get(far) ?? Infinity };
+      }),
+      strokes: c.strokes,
+      fewest: c.fewestRuns,
+      taps: c.taps.length,
       // K139: the collapse game (null: collapse off). `units` / `total`:
       // collapsed and all maze-run units; `pct`: the score; `par`: its
       // search (units, tripped, steps; the first read runs it).

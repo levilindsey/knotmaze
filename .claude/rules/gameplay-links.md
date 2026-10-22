@@ -673,3 +673,4 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `hns`, `hrv`). Nothing golden moved. Tests:
   `test/game/k795_tunables.test.ts`. Probe link:
   `?7&am=instant&mt=hunter&lur=3&snr=2&snh=5&lrg=9&snd=none`.
+- MUDDY RUNS PARAM (K137 s5, 2026-10-21; brief `docs/design/K137_s5.md`): `mud` (`mud`, [0, 6] = MUD_MAX, default 0 off, game/mud.ts), APPENDED at 220 after K795's beatPerRun (219); CODEC_VERSION stays 8. A `*Of` reader (mudOf) clamps and floors it. It runs onClockChange (a restart lays the mud anew), is not daily-exempt and not a MAZE key. Pins that moved: the table pin, url_codec.test.ts's defaults and OVERRIDE_KEYS (`mud`). Tests: `test/game/mud.test.ts`.

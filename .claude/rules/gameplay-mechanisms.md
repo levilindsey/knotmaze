@@ -748,3 +748,18 @@ header of `locks.ts` is the spec.
   off the core (BACKTRACKS); unchecked on a page: the markers and the dim
   under the fog and the thread reveal (drawLocks skips thread a reveal has
   not shown).
+## Muddy runs (K137 stage 5)
+
+Muddy runs (4.33; `game/mud.ts`, decided in K137_s3b.md): up to `mud`
+(0-6) runs of the fewest-moves route (own stream, never the start or
+exit tail) take two moves to cross, for everyone: your tap crosses at
+half speed and counts two strokes (par's F is the fewest MOVES -
+`runsToExit` with the mud cost), the turn minotaur's hop into one ends
+its turn and the next turn is spent in the mud (`MinoState.mudWait`,
+by runs and by length, extras too), and the real-time chase crosses at
+half speed (you too, sprint in mud nets plain pace). Stars keep the
+length metric. Off while a K138 rule layout or collapse is in play.
+Unwalked muddy runs wear dull bronze spans (a stand-in; the fuzzy
+thread is Levi's call, K137_s5.md). The HUD's "muddy N" row, the
+`__knotChase()`/`__knotTurnMino()` hooks' `muddy` lists. Tests:
+`test/game/mud.test.ts`.
