@@ -14,6 +14,11 @@
 // Hovering a choosable run lights it steadily out to the same reach,
 // fading over its end like the trains (K93).
 //
+// GOLD MODE (K794): the gold covers every run walked since it last
+// cleared (render/walked_gold.ts, from the controller's taps), so a
+// backtrack or a re-walk never erases it; only a first-time advance
+// sweeps. Trail and string below are unchanged.
+//
 // MEMORY-TRAIL MODE (Stage 23, `trailMode`): instead of the full traveled
 // path, only the trailing SUFFIX of the path stays gold - walked backward
 // from the visual head accumulating each run's deterministic lattice
@@ -45,6 +50,7 @@ import type {
   PaintTele,
 } from "./ribbon_renderer";
 import { legRoutes, pairRoutes, pathLegs, traveledRoutes } from "./junction_routes";
+import { walkedGold, type WalkedGold } from "./walked_gold";
 import { openPair } from "../game/turnstiles";
 import type { PaintRoute } from "./junction_routes";
 import { trailFade, trailSpans } from "./trail_paint";
@@ -722,6 +728,10 @@ export class FabricMazeRenderer {
   // counts up from 0 once the hold releases) and its distances (from the
   // seen set, for that many seen vertices).
   private seenRefogs = -1;
+  // K794: the gold epoch counters (walked_gold.ts goldPaint).
+  private goldFrom = 0;
+  private goldRestarts = -1;
+  private goldRefogs = -1;
   private seenPartial: { edge: number; from: number; cur: number }[] = [];
   private exploreHoldT = -1;
   private holdDist: Map<string, number> | null = null;
@@ -3421,24 +3431,47 @@ export class FabricMazeRenderer {
     );
   }
 
-  // K81: the route bands of the whole path (fullPath mode), the move in
-  // flight folded in (junction_routes.ts pathLegs), and K127's traveled
-  // passes (the same, less the far end of the move in flight).
-  private pathRoutes(
-    controller: FabricMazeController,
-    anim: MoveAnim | null
-  ): { routes: PaintRoute[]; traveled: PaintRoute[] } {
-    const legs = pathLegs(
-      this.walk.edges,
-      controller.pathVertices,
-      controller.pathEdges,
-      anim
-    );
-    return {
-      routes: legRoutes(legs),
-      traveled: traveledRoutes(legs, anim !== null),
-    };
+  // K794: refresh the gold epoch from the controller's counters, as
+  // exploreEpoch does for the fog: a restart restarts the gold; a
+  // refogging catch clears it from here on. With refog off neither
+  // counter moves, so the gold stays, agreeing with the fog's
+  // explored runs (both derive from the taps).
+  private goldEpoch(c: FabricMazeController): void {
+    if (this.goldRestarts !== c.restarts) {
+      this.goldRestarts = c.restarts;
+      this.goldRefogs = c.refogs;
+      this.goldFrom = 0;
+    } else if (this.goldRefogs !== c.refogs) {
+      this.goldRefogs = c.refogs;
+      this.goldFrom = c.taps.length;
+    }
   }
+
+  // K794: the walked gold for one declaration (walked_gold.ts).
+  private goldPaint(
+    c: FabricMazeController,
+    anim: MoveAnim | null
+  ): WalkedGold {
+    this.goldEpoch(c);
+    return walkedGold(
+      this.walk.edges,
+      this.walk.start,
+      c.taps,
+      this.goldFrom,
+      c.pathEdges,
+      anim
+        ? {
+            e: anim.e,
+            eid: anim.e.id,
+            from: anim.from,
+            to: anim.to,
+            cur: anim.cur,
+            kind: anim.kind,
+          }
+        : null
+    );
+  }
+
 
   // Paint + markers for one animation frame: the stack minus the in-flight
   // run, plus the swept part of it (growing behind the dot on an advance,
@@ -3474,22 +3507,15 @@ export class FabricMazeRenderer {
       this.renderFog();
       return;
     }
-    const spans: PaintSpan[] = [];
-    for (const eid of controller.pathEdges) {
-      if (a.kind === "advance" && eid === a.e.id) continue;
-      const e = this.walk.edges[eid];
-      spans.push({ chain: e.chain, c0: e.ctrlA, c1: e.ctrlB });
-    }
-    const lo = Math.min(a.cur, a.kind === "advance" ? a.from : a.to);
-    const hi = Math.max(a.cur, a.kind === "advance" ? a.from : a.to);
-    if (hi - lo > 1e-6) {
-      spans.push({ chain: a.e.chain, c0: lo, c1: hi });
-    }
-    const passes = this.pathRoutes(controller, a);
+    // K794: the gold is every run walked since it last cleared
+    // (walked_gold.ts), not the path stack, so a backtrack or a
+    // re-walk leaves it full; a first-time advance sweeps as before.
+    const gold = this.goldPaint(controller, a);
+    const passes = { routes: gold.routes, traveled: gold.traveled };
     this.ribbons.setPaint(
-      spans,
+      gold.spans,
       [],
-      this.buildCaps(controller),
+      this.buildCaps(controller, gold),
       [...this.turnstileBands(controller), ...passes.routes],
       passes.traveled
     );
@@ -3520,25 +3546,27 @@ export class FabricMazeRenderer {
     const stringViz = this.pathViz === "string";
     const trail =
       !stringViz && this.trailMode ? this.buildTrail(controller, null) : null;
-    const spans: PaintSpan[] = trail ? trail.spans : [];
-    if (!trail && !stringViz) {
-      for (const eid of controller.pathEdges) {
-        const e = this.walk.edges[eid];
-        spans.push({ chain: e.chain, c0: e.ctrlA, c1: e.ctrlB });
-      }
-    }
+    // K794: gold mode paints every run walked since it last cleared
+    // (walked_gold.ts), not just the path stack.
+    const gold =
+      !trail && !stringViz ? this.goldPaint(controller, null) : null;
+    const spans: PaintSpan[] = trail
+      ? trail.spans
+      : gold
+        ? gold.spans
+        : [];
 
     const caps = stringViz
       ? []
       : trail
         ? trail.caps
-        : this.buildCaps(controller);
+        : this.buildCaps(controller, gold!);
     // K81 route bands: none in string mode (no gold to carry).
     const passes = stringViz
       ? { routes: [], traveled: [] }
       : trail
         ? trail
-        : this.pathRoutes(controller, null);
+        : { routes: gold!.routes, traveled: gold!.traveled };
 
     const pulses: PulseArm[] = [];
     if (!controller.solved) {
@@ -3637,7 +3665,10 @@ export class FabricMazeRenderer {
   // hides the overlap footprint in both directions. The head vertex keeps
   // its pulse affordance instead (and wears the head marker), except once
   // solved.
-  private buildCaps(controller: FabricMazeController): PaintCap[] {
+  private buildCaps(
+    controller: FabricMazeController,
+    gold: WalkedGold
+  ): PaintCap[] {
     const caps: PaintCap[] = [];
     // Just enough to cover the overlap footprint at the junction center
     // (~half a thread width): the tuck + fillets own the joint geometry
@@ -3648,13 +3679,18 @@ export class FabricMazeRenderer {
     // painted gold ticks on the unchosen side arms (the "little stubs
     // around intersections" report). The fillet joinery owns the joint
     // overlap footprint now; untraveled arms need no gold cover.
-    const traveled = new Set(controller.pathEdges);
-    const nVisited =
-      controller.pathVertices.length - (controller.solved ? 0 : 1);
-    for (let i = 0; i < nVisited; i++) {
-      const v = this.walk.vertices.get(controller.pathVertices[i])!;
+    // K794: only arms the WALK traveled (the walked set), at every
+    // vertex the walk visited; the head keeps its pulse affordance
+    // unless solved, as before.
+    const seenV = new Set<string>();
+    for (const vid of gold.visited) {
+      if (seenV.has(vid)) continue;
+      seenV.add(vid);
+      if (vid === controller.head && !controller.solved) continue;
+      const v = this.walk.vertices.get(vid);
+      if (!v) continue;
       for (const eid of v.edges) {
-        if (!traveled.has(eid)) continue;
+        if (!gold.walked.has(eid)) continue;
         const e = this.walk.edges[eid];
         const atA = e.va === v.id;
         const ctrl = atA ? e.ctrlA : e.ctrlB;

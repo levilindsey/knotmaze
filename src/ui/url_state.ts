@@ -456,7 +456,8 @@ export interface UrlParams {
   // Dead ends are deadEndDensity 0 (a pure braided maze) since K323
   // Stage A merged the deadEnds switch into the density.
   // Traversal-path visualization (fabric gameplay). gold = the classic
-  // full recolor. trail = memory mode: no backtracking concept, only a
+  // full recolor of every run walked since it last cleared (K794:
+  // re-walking one never erases it). trail = memory mode: no backtracking concept, only a
   // short gold trail of recent path behind the head. string = Ariadne's
   // thread: a thin wavy white yarn unspools along everywhere you walk,
   // U-turning at junctions on backtracks, never erased. Gameplay

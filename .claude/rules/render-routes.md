@@ -59,6 +59,15 @@ only with the files it is about; `render.md` lists the area's other files.
   is keyed by the routes' JSON (routeKey): a probe that edits routes goes
   through setPaint or calls `rebuildFillets(true)`. Paint debug views 3
   and 4 bypass the band (they show the base field).
+- K794 (2026-10-21): walked gold stays gold. The gold, its route bands
+  and its caps derive from the controller's `taps` via the pure
+  `src/render/walked_gold.ts` (first-walk-order spans, walk legs,
+  walked/visited sets), not the path stack: a backtrack or re-walk
+  leaves a run full, a first-time advance sweeps as before, and the
+  gold clears on a restart or a refogging catch (the renderer's gold
+  epoch), agreeing with the fog's explored runs. The win shows the
+  walk. Tests: `test/render/walked_gold.test.ts`; probe:
+  `.claude/probes/K794/erasures.mjs`.
 - DECISIONS. (1) Backtracks: the band follows the path STACK like the
   gold; a popped pass's band goes. A joint truly passed twice holds two
   bands, newest drawn last. (2) The head: a one-arm band (arrival arm to
