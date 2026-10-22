@@ -60,6 +60,7 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   exitClearance: ["xcl", "finish clearance", "easy finish", "junction free", "single path", "endgame", "no choices", "finish area"],
   // Path & view
   pathViz: ["pv", "route", "breadcrumbs", "yarn", "memory mode", "highlight", "ariadne", "history", "visited"],
+  threadLook: ["tlk", "thread look", "border", "outline", "stroke", "fill", "paper look", "edges"], // K797b
   cameraMode: ["cam", "view", "zoom", "pan", "follow player", "whole maze", "scroll", "pinch", "reset view"],
   trailLength: ["trl", "memory mode", "route length", "breadcrumbs", "how far back", "history", "trail", "lit stretch"],
   tension: ["tn", "yarn", "loose", "taut", "wavy", "ariadne", "cotton", "tightness", "white thread"],

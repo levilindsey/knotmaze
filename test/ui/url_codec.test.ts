@@ -151,6 +151,7 @@ describe("links", () => {
       snareHold: 3, lureRange: 6, hintSeconds: 2, hiddenReveal: 3, // K795
       beatTiming: "even", beatPerRun: 1, // K795 beat timing
       mud: 0, // K137 s5
+      threadLook: "fill", // K797b
     });
   });
 
@@ -903,7 +904,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   gamutArc: "arc", palette: "pal", pathColor: "pc", branchDensity: "brd",
   fourWayFraction: "fwf", deadEndDensity: "ded", pluckStyle: "pk",
   pluckSize: "psz", pluckGhost: "pgh", pluckReach: "prc", physics: "phy",
-  mazeFabric: "mf", pathViz: "pv", cameraMode: "cam",
+  mazeFabric: "mf", pathViz: "pv", threadLook: "tlk", cameraMode: "cam",
   trailLength: "trl", tension: "tn", exploration: "xp", fowRadius: "fr",
   fowIntro: "fwi", colorScheme: "cs", junctionBlend: "jbl", appearMode: "am",
   appearSequence: "ap", appearSpeed: "as", appearFx: "afx",

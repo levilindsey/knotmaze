@@ -313,6 +313,9 @@ export interface KUniforms {
   // K654 the riding end's ctrl (x): read only by the ribbon programs'
   // TELE item (paint_glsl TELE_DECL_GLSL); absent = 0.
   uKTeleAt?: Float32Array;
+  // K797b thread look (mode 0 fill / 1 border / 2 both): read only by the
+  // ribbon programs; absent = fill.
+  uKLook?: Float32Array;
 }
 
 export const MAX_KNOTS = 8;

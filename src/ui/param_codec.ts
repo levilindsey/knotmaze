@@ -398,6 +398,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("beatPerRun"),
   // 220, K137 s5 (4.33): muddy runs (0 off, 1..6; game/mud.ts).
   num("mud"),
+  // 221, K797b: the thread look (fill | border | both).
+  choice("threadLook", ["fill", "border", "both"]),
 ]);
 
 // The format version a blob names first. Bump it for anything but an

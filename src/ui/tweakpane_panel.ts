@@ -2330,6 +2330,15 @@ export function buildPanel(
       callbacks.onBackgroundChange();
     }
   );
+  row(
+    fLook, p, "threadLook",
+    {
+      label: "Thread look",
+      options: { fill: "fill", border: "border", both: "both" },
+    },
+    "How threads draw: fill = solid color (the usual look); border = only a dark edge stroke along each side, no fill (over, under and joins read from the strokes; junction fans still fill); both = fill plus the edge strokes (K797b prototype). Applies live.",
+    D.threadLook, () => callbacks.onBackgroundChange()
+  );
   const backgroundIntensityRow = row(
     fLook, p, "backgroundIntensity", { min: 0, max: 1, step: 0.05, label: "Backdrop intensity" },
     "Backdrop contrast: 0 = the plain page color, 1 = the strongest look. Applies live.",

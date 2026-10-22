@@ -72,6 +72,7 @@ uniform vec4 uKPaint;
 uniform vec4 uKPulse;
 uniform vec4 uKReach;
 uniform vec4 uKGold;
+uniform vec4 uKLook;
 `;
 
 // The shared numeric constants (paint_const.ts). Every assembly includes it
