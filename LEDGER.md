@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K792.
+Next free ID: K793.
 
 ## Waiting on Levi
 
@@ -33,8 +33,10 @@ Next free ID: K792.
   contrast no longer enlarges the markers. Rec: raise it to about 2.75 (the old 1.4x ratio).
   `src/ui/accessibility.ts`; `docs/design/K194_defaults.md` (Handoff).
 - **K585** · Mark picks in the open-work report (https://claude.ai/artifact/63Q6FoNk7Bux3BhYQBt5g2):
-  Sooner marks, answers and notes save to its db (`picks/<id>`, `notes/general`). Read them with
-  ArtifactData, then reorder the ledger.
+  Sooner marks, answers, test results and notes save to its db (`picks/<id>`, `tests/<id>`,
+  `notes/general`). Read them with ArtifactData, then reorder the ledger. Refresh it from the
+  `docs/design/K777.md` Handoff: next when K138 s4 slice 2 merges (the K789 try link) or after
+  the next marks from Levi.
 - **K261** · K74 stage 2's two calls, built as rec. (Levi may change either): the H-cut share is 1;
   a partial share cuts an even stride. `greedyTrap` is off, so dailies 1-240 sit at 20.0% within
   1.5x (bar 15%). `docs/design/K74.md` ("Calls for Levi").
@@ -440,14 +442,6 @@ Next free ID: K792.
   - next: slice 2: rebase it (ky and lkm sit at codec indices 212-213; check that nothing merged since took them), write and run its page check (page/plan.ts plans the seed-7 route; page/locks_page.mjs shows a lock refusing, a key taken and the lock passing, on desktop and at 411x753), then its lore; then slice 3 (the shortcut form) and slice 4 (colors)
   - brief: docs/design/K138_s4.md (its Handoff, Slice 2: locks and keys)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
-- **K777** · Refresh the open-work report (K585): a card for every Waiting on Levi item, a Test now
-  list and what changed (Levi 2026-10-21: "make sure all other things I should test now are listed
-  there")
-  - owner: agent `a29ee601a618f6405` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, launched 2026-10-21 08:35; 1 h cap ~09:35)
-  - branch: mainline, no worktree: it writes only the untracked `.claude/probes/report_20261021/`; last commit: `a1e164c0`
-  - evidence: `.claude/probes/report_20261021/`
-  - next: first draft published by ~08:55, then fill the new cards from their pointers, then the final publish and report
-  - brief: `docs/design/K777.md`
 
 ## Next, in order
 
@@ -682,6 +676,9 @@ Every other item below waits on the trigger it names.
   crosses a one-way run and its backtrack is refused (seeds 3 and 4 traced). Nothing rejects the
   layout, and no Undo control rescues the player (K778). Keep the maze solvable under the rules, as
   the keys do (K138 s4 census, `.claude/probes/K138/s4/census/results.md`)
+- **K792** · A try key for the K610 grab chase rate (0.6 per constraint iteration today): its feel
+  A/B needs 0.8 and 1.0 from a link, none sets the rate, so its report card has no try link (K777;
+  `docs/design/K370.md`)
 
 ## Residuals (known, not fixed)
 
@@ -1775,6 +1772,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K777** · Refreshed the open-work report (K585) to v7: 68 decision cards (41 confirm, 25 open), 18 tests to mark and a What changed block, built from the ledger at 37382172; pipeline and gaps in the `docs/design/K777.md` Handoff. Done in 1396ea06 (2026-10-21).
 - **K774** · Beat rider catches land exactly once (moveAlong lands a pending catch before the next departure; test/app/beat_catch.test.ts). Done in 8a9fe90c (2026-10-21).
 - **K764** · A press on a hidden, burnt or cut run grabs and tugs the unseen thread instead of panning, which gives its position away (from the code: `grabAt`/`onThread` in `src/app/input_pointer.ts` skip none of them; fix: skip them there). Dropped: not reproduced (K138 s3, desktop, both hosts): a press on an unrevealed hidden run pans, since every unseen span reaches the ribbons as explore pieces (exploreOn true) and the pickers skip it; cut, broken and burnt runs share that code; touch goes to K784 (2026-10-21).
 - **K767** · Phone sitting 5 on real touches (turnstiles, hidden runs, the beat rider): all three play; found the beat-plus-hunter catch bug (K774) and the hidden runs HUD overflow (K775); K764 unsettled; sheets in .claude/probes/K767/out/. Done in caa4f8ea (2026-10-21).
