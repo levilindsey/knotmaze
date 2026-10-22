@@ -310,7 +310,10 @@ export type ChaseEvent =
   | { kind: "arrive"; vertex: string } // The player reached a vertex.
   | { kind: "spotted" } // It started hunting the player.
   | { kind: "lost" } // It lost the player.
-  | { kind: "caught" } // Player at the entrance, minotaur in its lair.
+  // Player at the entrance, minotaur in its lair. The spots are the
+  // pre-respawn ones (K546 stage 2: the ghost rendezvous draws them;
+  // digests hash spots per tick, never events, so this is additive).
+  | { kind: "caught"; player: Spot; mino: Spot }
   // K137 s3b: the sword taken, a touch while it fled, the flee run out.
   | { kind: "sword"; what: "taken" | "banish" | "slay" | "spent" };
 
@@ -1054,7 +1057,7 @@ export class MinotaurChase {
       this.contactDistance() <= this.params.catchDist
     ) {
       this.catches++;
-      out.push({ kind: "caught" });
+      out.push({ kind: "caught", player: { ...this.player }, mino: { ...this.mino } });
       this.respawn();
       this.resetExtras();
     } else if (!this.finished) {
@@ -1072,7 +1075,7 @@ export class MinotaurChase {
           this.g.spotToSpot(x.spot, this.player, false) <= this.params.catchDist
         ) {
           this.catches++;
-          out.push({ kind: "caught" });
+          out.push({ kind: "caught", player: { ...this.player }, mino: { ...x.spot } });
           this.respawn();
           this.resetExtras();
           caught = true;

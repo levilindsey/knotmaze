@@ -436,7 +436,7 @@ Next free ID: K812.
   - owner: nobody since 2026-10-20 18:25 (merged; agent `a57e1aa8c7ba233b0` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
   - branch: mainline; last commit: `5a8fa18`
   - evidence: `.claude/probes/K546/`
-  - next: Levi looks at the stills (`.claude/probes/K546/out/runs/`); stages 2-4 wait on K629
+  - next: stage 2 landed 2026-10-21 (ghost rendezvous + fire burn-in + shared beat; Handoff in the design doc); next is stage 3 (contact burst + screen fall, `lossAmount` param) per K629, then stage 4 gated on Levi's Q1
   - brief: `docs/design/K546_s1.md`
 - **K137** · K80 section 4's cheap (S, S-M) mechanisms, each toggled (Levi 10-13), after the
   minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus

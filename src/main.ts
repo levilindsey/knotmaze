@@ -18,7 +18,7 @@ import type { Fire } from "./game/fire";
 import { tapWhileMoving } from "./ui/key_moves";
 import { MOVE_PAD_KEY, movePadPref } from "./ui/move_pad";
 
-import { MinotaurChase } from "./game/minotaur";
+import { MinotaurChase, spotCtrl } from "./game/minotaur";
 import type { ChaseEvent } from "./game/minotaur";
 import { TurnMinotaur, turnConfig, turnSeed } from "./game/minotaur_turns";
 import {
@@ -414,6 +414,19 @@ async function main(): Promise<void> {
   // for its contact moment in the move (or wait) animation; turnCaught runs
   // when progress reaches it. The game state caught it at the tap.
   let pendingCatch: { tm: TurnMinotaur; t: number; wait: boolean } | null = null;
+  // K546 stage 2: the real-time catch's ghost rendezvous: the two pre-
+  // respawn spots and the deferred ending, over the shared beat. The
+  // model has already respawned; only the visible ending waits.
+  let pendingGhost: {
+    from: number;
+    a: { chain: number; ctrl: number };
+    b: { chain: number; ctrl: number };
+    end: () => void;
+  } | null = null;
+  const GHOST_MS = 300;
+  // K546 stage 2: the fire loss's burn-in beat (both clocks): incident
+  // fronts creep to the head, then the Burnt banner lands.
+  let fireBeatFrom = -1;
   let turnWaitDur = 0;
   // K80 turns 3a: the head's WAIT CUE (setWaitCue) - while the pointer is
   // in the wait zone the head wears the "hourglass" glyph; this is the glyph
@@ -2188,6 +2201,7 @@ async function main(): Promise<void> {
   // off along it on its next tick. Returns true when the tap was taken.
   const handleChaseTap = (x: number, y: number, pt: string): boolean => {
     if (!scene.chase || !scene.fabric || !scene.fabricController) return false;
+    if (pendingGhost) return false; // K546 stage 2: the rendezvous gates input.
     const eid = scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius(pt, true));
     if (eid >= 0) return chaseAlong(eid);
     // K480 (decision 6): a tap past the choices queues its whole route
@@ -2217,6 +2231,7 @@ async function main(): Promise<void> {
   // Queue run `eid` as a tap on it would (K120's keys share it).
   const chaseAlong = (eid: number): boolean => {
     if (!scene.chase || !scene.fabric || !scene.fabricController) return false;
+    if (pendingGhost) return false; // K546 stage 2.
     chaseRoute = []; // A fresh tap or key replaces a queued route (K480).
     // K137: a broken run is gone.
     if (eid < 0 || scene.fabricController.broken(eid)) return false;
@@ -2236,6 +2251,23 @@ async function main(): Promise<void> {
   let chaseWarned = false;
   const tickChase = (dt: number): void => {
     if (!scene.chase || !scene.fabric || !scene.fabricController) return;
+    // K546 stage 2: sweep the rendezvous; at the contact moment the
+    // deferred ending lands (burst at the meeting point, then it).
+    if (pendingGhost) {
+      const g = pendingGhost;
+      const t01 = motion.reduced ? 1 : Math.min(1, (performance.now() - g.from) / GHOST_MS);
+      scene.fabric.setCatchGhost(g.a, g.b, t01);
+      if (t01 >= 1) {
+        pendingGhost = null;
+        scene.fabric.clearCatchGhost();
+        const meet = scene.fabric.catchGhostMeet();
+        if (meet) scene.fabric.showCatchBurst(meet[0], meet[1], motion.reduced);
+        if (!motion.reduced && typeof navigator !== "undefined" && navigator.vibrate) {
+          navigator.vibrate(60);
+        }
+        g.end();
+      }
+    }
     const fc = scene.fabricController;
     // K139: a free collapse game that has ended (anywhere: the controller's
     // solved) holds the chase once the dot is in, so nothing catches you
@@ -2284,26 +2316,46 @@ async function main(): Promise<void> {
           // events belong to the old one). K137 stage 3a: under lives the
           // catch costs a heart, and only the last one restarts the level
           // (minoRestart is ignored while lives are on).
-          const heart = takeHeart();
-          if (heart === "restart" || (heart === "off" && params.minoRestart)) {
-            restartSolve(true);
+          // K546 stage 2: the ending waits out the ghost rendezvous (the
+          // event carries the pre-respawn spots); game state is unchanged.
+          const fabric = scene.fabric;
+          const endCaught = (): void => {
+            const heart = takeHeart();
+            if (heart === "restart" || (heart === "off" && params.minoRestart)) {
+              restartSolve(true);
+              updateHud();
+              showCaughtToast(liveMino()?.catches ?? 1, true, heart);
+              return;
+            }
+            chaseRoute = [];
+            fc.markCaught();
+            fc.respawn(params.minoRefog);
+            fabric.stopMove();
+            fabric.clearYarn();
+            pendingWin = false;
+            // K139: the respawn can end the game (a free collapse game
+            // ends with its score; a collapsed start tail strands a
+            // finish one).
+            if (fc.solved) pendingWin = true;
+            else if (fc.collapseOn && ruleLoss.over()) pendingLoss = true;
+            fabric.update(fc);
             updateHud();
-            showCaughtToast(liveMino()?.catches ?? 1, true, heart);
-            break;
+            showCaughtToast(scene.chase?.catches ?? 1, false, heart);
+          };
+          if (motion.reduced || !scene.chase || !scene.walkGraph) {
+            endCaught();
+          } else {
+            const g = scene.chase.g;
+            const pa = spotCtrl(scene.walkGraph, g, ev.player);
+            const pb = spotCtrl(scene.walkGraph, g, ev.mino);
+            pendingGhost = {
+              from: performance.now(),
+              a: { chain: pb.chain, ctrl: pb.ctrl },
+              b: { chain: pa.chain, ctrl: pa.ctrl },
+              end: endCaught,
+            };
           }
-          chaseRoute = [];
-          fc.markCaught();
-          fc.respawn(params.minoRefog);
-          scene.fabric.stopMove();
-          scene.fabric.clearYarn();
-          pendingWin = false;
-          // K139: the respawn can end the game (a free collapse game ends
-          // with its score; a collapsed start tail strands a finish one).
-          if (fc.solved) pendingWin = true;
-          else if (fc.collapseOn && ruleLoss.over()) pendingLoss = true;
-          scene.fabric.update(fc);
-          updateHud();
-          showCaughtToast(scene.chase.catches, false, heart);
+          break;
         } else if (ev.kind === "sword") {
           // K137 stage 3b: taken, banished, slain or spent.
           swordNews(ev.what === "banish" || ev.what === "slay" ? ev.what : null);
@@ -2330,6 +2382,31 @@ async function main(): Promise<void> {
   // has carried past its run's end lands at the arrival first, so a
   // waiting tap (keyStep) leaves at the arrival; fireSet, after keyStep,
   // hands the clock to the controller and the dot.
+  // K546 stage 2: creep the incident fronts; at ignition the banner.
+  // Runs every frame from the keyStep slot (tickFire is real-time only).
+  const fireBeatStep = (): void => {
+    const c = scene.fabricController;
+    if (fireBeatFrom < 0 || !c || !scene.fabric || !c.fireLost) return;
+    const t01 = Math.min(1, (performance.now() - fireBeatFrom) / GHOST_MS);
+    scene.fabric.fireBurnCreep = t01;
+    if (t01 >= 1) {
+      fireBeatFrom = -1;
+      scene.fabric.fireBurnCreep = 0;
+      if (!motion.reduced && typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(60);
+      }
+      pendingLoss = true;
+    }
+  };
+  // K546 stage 2: start the fire-loss burn-in (idempotent per loss).
+  const beginFireBeat = (): void => {
+    if (fireBeatFrom >= 0 || pendingLoss) return;
+    fireBeatFrom = performance.now();
+    if (motion.reduced) {
+      fireBeatFrom = -1;
+      pendingLoss = true;
+    }
+  };
   const tickFire = (dt: number): void => {
     const c = scene.fabricController;
     if (!c || !scene.fabric) return;
@@ -2347,7 +2424,7 @@ async function main(): Promise<void> {
     if (!c || !scene.fabric) return;
     const L = fireClock.L;
     if (c.setFireNow(L)) {
-      pendingLoss = true;
+      beginFireBeat(); // K546 stage 2: burn-in, then the banner.
       scene.fabric.update(c);
     }
     if (scene.fabric.animating) {
@@ -3163,7 +3240,7 @@ async function main(): Promise<void> {
       if (result === "win") pendingWin = true;
       // K114: no safe arm at the new junction loses the race; the Burnt
       // banner waits for the dot, as the win's does.
-      else if (scene.fabricController.fireLost) pendingLoss = true;
+      else if (scene.fabricController.fireLost) beginFireBeat(); // K546 stage 2
     } else {
       scene.fabric.update(scene.fabricController);
       // K114: the fire reaches that arm's far end first. Say why nothing
@@ -3941,6 +4018,7 @@ async function main(): Promise<void> {
       keyStep: () => {
         keyStep();
         ruleLoss.step(); // K137: a snap sounds as the dot arrives.
+        fireBeatStep(); // K546 stage 2: the burn-in creep.
       },
       autoAudioTick,
       freeze,
@@ -3952,6 +4030,8 @@ async function main(): Promise<void> {
       gameNeedsFrame: () =>
         (scene.chase !== null && chaseRunning && !scene.chase.finished) ||
         (scene.turnMino !== null && turnWait > 0) ||
+        (pendingGhost !== null) || // K546 stage 2: the rendezvous runs.
+        (fireBeatFrom >= 0) || // K546 stage 2: the burn-in runs.
         (pendingCatch !== null && pendingCatch.tm === scene.turnMino) ||
         keyInput.keyHold ||
         moveWait.waiting !== null ||
