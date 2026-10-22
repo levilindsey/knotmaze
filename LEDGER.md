@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K807.
+Next free ID: K812.
 
 ## Waiting on Levi
 
@@ -274,8 +274,14 @@ Next free ID: K807.
   are placeholders.
 - **K806** · K795 beat timing default: one beat per run as built (your first ask: every run takes
   the same time, so the dot speed varies with the run), or whole beats by run length (an even speed;
-  junctions still land on beats)? Both stay, as a panel toggle. Rec: one per run
-  (`docs/design/K795.md`)
+  junctions still land on beats)? Both stay, as a panel toggle; its options read "same per run" and
+  "by run length" (Beats per run goes 1-4), a one-line rename. Rec: one per run (`docs/design/K795.md`)
+- **K808** · K795's audit: which constants become params? The beat note's loudness (0.8; rec: a
+  param), FIRE_V_REF (12), the sprint's count and factor (2, 2), BY_LENGTH_TRAVEL_SCALE (0.65),
+  LAIR_TELL (0.5; rec: no param) (the audit table in `docs/design/K795.md`, on K795's branch)
+- **K809** · Panel search on your phone (K793): typing in the box must not jump or zoom the maze, the
+  keyboard must not cover the box, results scroll under the sticky bar, and Enter closes the keyboard
+  and outlines the best row (an inferred risk, not seen; `docs/design/K793.md`)
 
 ## In progress
 
@@ -451,12 +457,12 @@ Next free ID: K807.
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
 - **K793** · Settings panel search: fuzzy matching over row names, tags (src/ui/param_tags.ts),
   folder titles and option labels, plus collapse-all and expand-all buttons (Levi 2026-10-21)
-  - owner: agent `a6c979bb8c0c8944a` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, launched 2026-10-21 10:03, 2 h cap 12:03)
-  - branch: `worktree-agent-a6c979bb8c0c8944a`, worktree `.claude/worktrees/agent-a6c979bb8c0c8944a`; last commit: `d8fa88d1` (WIP, unpushed)
-  - evidence: `.claude/probes/K793/` in the worktree
-  - next: finish per the brief (collapse and expand all, the tags test, the page check), then merge with agent_merge; see `docs/design/handoff_2026-10-21.md` section 2. Whichever of K793 and K795 merges second tags the other rows
-  - brief: `docs/design/K793.md`
-  - env: vite from a copy of `.claude/probes/K138/s4/vite.private-cache.config.ts`, ports 5410-5413
+  - owner: nobody since 2026-10-21 11:07 (agent `a6c979bb8c0c8944a` of claude session 91b19e11-7759-4638-ba60-4705b011b94f, stopped at Levi's wrap-up; finished, page-checked before its rebase)
+  - branch: `worktree-agent-a6c979bb8c0c8944a`, worktree `.claude/worktrees/agent-a6c979bb8c0c8944a`; last commit: `d55105e6` (WIP, unpushed, on `1fd34464`; npm test and build green after the rebase)
+  - evidence: `.claude/probes/K793/` in the main checkout (`search_probe.mjs`, `lib.mjs`, `out/` with `desk_report.json` 30/30 and `phone_report.json` 33/33 from before the rebase)
+  - next: re-run `search_probe.mjs` against the worktree's vite (expect 30 + 33), then merge with agent_merge; if K795 merged first, rebase and tag its rows. Filed from its report: K809, K810, K811
+  - brief: `docs/design/K793.md` (the Handoff at its end, on the branch)
+  - env: from the worktree, `npx vite --config C:\Users\lsl\Repositories\knotmaze\.claude\probes\K793\vite.private-cache.config.ts --port 5410 --strictPort --host 127.0.0.1`
 - **K794** · Gold path mode: a run walked again stays gold; a backtrack no longer erases it (Levi
   2026-10-21)
   - owner: nobody since 2026-10-21 10:36 (agent af1981ccbc976565e of claude session 91b19e11-7759-4638-ba60-4705b011b94f failed: autocompact thrash on the 4,000-line render files; Claude Code then deleted its commit-less worktree; held at the week at 96%)
@@ -469,12 +475,12 @@ Next free ID: K807.
   PARAM_DEFAULTS key has a row or a stated reason, and an audit of recent features for tunables that
   deserve params (Levi 2026-10-21); plus run timing as a toggle (Levi 2026-10-21): even, every run N beats
   (default 1; the dot's speed varies with the run), or today's whole beats by run length (default: K806)
-  - owner: agent `a78c285925ac13b8c` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, launched 2026-10-21 10:03, 2 h cap 12:03)
-  - branch: `worktree-agent-a78c285925ac13b8c`, worktree `.claude/worktrees/agent-a78c285925ac13b8c`; last commit: `c92ed532` (WIP, unpushed)
-  - evidence: `.claude/probes/K795/` in the worktree
-  - next: finish per the brief (the audit table, a rebase on master with the codec renumbered from 214, the page check), then merge with agent_merge; see `docs/design/handoff_2026-10-21.md` section 2
-  - brief: `docs/design/K795.md`
-  - env: vite from a copy of `.claude/probes/K138/s4/vite.private-cache.config.ts`, ports 5420-5423
+  - owner: nobody since 2026-10-21 11:07 (agent `a78c285925ac13b8c` of claude session 91b19e11-7759-4638-ba60-4705b011b94f, stopped at Levi's wrap-up; built and unit-tested, never checked on the page)
+  - branch: `worktree-agent-a78c285925ac13b8c`, worktree `.claude/worktrees/agent-a78c285925ac13b8c`; last commit: `20744723` (WIP, unpushed; npm test and build green at `c92ed532`, only lore and the Handoff since)
+  - evidence: `.claude/probes/K795/` in the main checkout (`beat_page.mjs`, never run; `out/npm_test.log`, `out/npm_build.log`)
+  - next: rebase on origin/master; its six codec entries are 214-219 unless something took them first (then move them and update the table pin, the defaults key order, url_codec's defaults table and OVERRIDE_KEYS, and `gameplay-links.md`'s numbers); if K793 has merged, tag the new rows (`test/ui/param_tags.test.ts` lists them); npm test and build; run `beat_page.mjs` on desktop and phone and time seed 7 at one beat per run against 0:32-0:34; fix text still quoting the old constants (`maze_stats.ts` "within three runs", the snares' stat text, a HINT_SECONDS comment near `fabric_maze_renderer.ts:1436`); a probes.md entry for the probe; then merge with agent_merge
+  - brief: `docs/design/K795.md` (the Handoff at its end, on the branch)
+  - env: from the worktree, `npx vite --config C:\Users\lsl\Repositories\knotmaze\.claude\probes\K795\vite.private-cache.config.ts --port 5420 --strictPort --host 127.0.0.1` (ports 5420-5423)
 
 ## Next, in order
 
@@ -1572,6 +1578,12 @@ Every other item below waits on the trigger it names.
   enemies score); enemies enter at a third marker (its own icon and placement param, its last run
   closed to you); turns or real time. Builds on K804 dots, K80, K114, K83, K138 one-way runs
   (`docs/design/levi_notes_2026-10-21.md`)
+- **K807** · Param rows, the next batch from K795's audit: the follower's delay and shortcut chance,
+  the sword's and sleepers' distance off the shortest way, NEAR_HOPS (turnstiles), ROUTE_WEIGHT
+  (one-way runs) (after K795; its audit table in `docs/design/K795.md`)
+- **K810** · Panel search: run Fuse.js, uFuzzy and fuzzysort on the 44 queries in
+  `test/ui/panel_search_fixture.ts` and record the pass counts in K793's Handoff (the hand-rolled
+  matcher was chosen from their docs; `docs/design/K793.md`)
 
 ## Ideas (not scheduled)
 
@@ -1832,6 +1844,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   headers as the `app/` line already does? Untouched until then
 - **K776** · K767 look notes: the turnstile refusal and hidden reveal toasts sit 9.9 px above the
   move pad; the beat pause screen is near-white and full screen (a dark one?)
+- **K811** · Panel search: when the mode hides matches (e.g. "minotaur" in classic shows only Game
+  mode), say so in the status, like "3 more in other modes" (K793)
 
 ## Done
 
