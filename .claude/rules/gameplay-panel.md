@@ -4,6 +4,7 @@ paths:
   - "src/app/panel_wiring.ts"
   - "src/ui/grid_align_curve.ts"
   - "test/ui/grid_align_curve.test.ts"
+  - "test/ui/panel_rows.test.ts"
 ---
 
 # Gameplay lore: the panel
@@ -323,6 +324,54 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   solve." The shortcut and colors forms add options to "Lock" when they
   land. Params: gameplay-links.md's KEYS AND LOCK MODE PARAMS; the rules:
   gameplay-mechanisms.md's Locks and keys.
+
+- CLOCK AND BEAT ROWS (K795 item 1, 2026-10-21; brief
+  `docs/design/K795.md`; Levi: "There should be a param set in the panel
+  for the beat rider mode. Where is it?"): K323's "Real time" checkbox
+  became a "Clock" list once K114's beat landed. Two rows over `clock`,
+  since a row's options are fixed, both binding a view (`clockView`, the
+  gridAlign pattern; `clockViewOf` derives both keys from `clock` alone):
+  the minotaur's (Turns / Beat / Real time, shown while the game is the
+  minotaur) and the other games' (Turns / Beat: classic and the burn race,
+  fabric mode; a stored realtime shows as Turns there, as clockOf plays
+  it). Each writes `clock`, refreshes the other under the `syncing` guard
+  and restarts the solve (onClockChange). Under clk=beat (fabric mode),
+  right after the Clock rows: "Beat tempo (bpm)" ([40, 180], step 1),
+  "Beat timing" (same per run / by run length = even / length), then
+  "Beats per run" ([1, 4], step 1) under even only, or "Beat length
+  (units)" ([0.5, 8], no step, K130, an edit keeps the 0.05 grid) and "Max
+  beats per run" ([1, 8], step 1) under length only (refreshCond's
+  `byLength`). All restart the solve (onClockChange). Every tooltip starts
+  "Beat:" (or "Beat, same per run:" / "Beat, by run length:"); the tempo's
+  quotes 100 bpm as 0.6 s a beat. THE LABELS: Levi framed the choice as
+  "one per run / by run length"; the row reads "same per run" because
+  Beats per run can be 2 to 4 (a one-word change if he prefers his).
+  Params: gameplay-links.md's BEAT RIDER PARAMS; the rider:
+  gameplay-beat.md.
+- K795 TUNABLE ROWS (K795 item 3, 2026-10-21): "Hint lasts (s)"
+  (`hintSeconds`, [0.5, 10], no step, an edit keeps one decimal) right
+  after "Hints", hidden unless fabric mode and hints above 0, live
+  (onAidsChange; the tooltip says "Applies from the next hint"); "Reveal
+  within (runs)" (`hiddenReveal`, [1, 8], step 1) right after "Hidden
+  runs", hidden with it or at hidden runs 0; "Lure range (runs)"
+  (`lureRange`, [1, 12]) right after "Lures" and "Snare holds (turns)"
+  (`snareHold`, [1, 8]) right after "Snares", each hidden with its parent
+  row or while its count is 0. All but the hint restart the solve
+  (onClockChange). The parents' tooltips now name them: "a few runs from it
+  (Reveal within)", "any sleeper in range (Lure range)", "a few turns
+  (Snare holds)". Params: gameplay-links.md's K795 TUNABLE PARAMS.
+- EVERY PARAM HAS A ROW OR A REASON (K795 item 2, 2026-10-21;
+  `test/ui/panel_rows.test.ts`): a SOURCE SCAN of tweakpane_panel.ts finds
+  each param's row: `row(<parent>, p, "<key>", ...)`, a row helper (`const
+  <name>Row = (key...` or `(parent: Parent, key...` whose body calls row()
+  with `key`) called with the key, a view row (VIEW_ROWS: clockView's mino
+  and plain, gaView, bgView's speed and angle) or the custom color loop
+  (`customKeys`). A param with none needs an EXEMPT entry with its reason
+  (today physicsWorker, read once at load, and mazeFabric, a link-only flag
+  since K323). It fails on a new param without a row, a stale exemption or
+  a row bound to a key that is not a param, and it guards its own scan
+  with keys of every shape. A new row shape (a helper or a view) means
+  teaching the scan, not exempting the param.
 
 - FIRE CLOCK ROW (K114 stage 2, 2026-10-15): "clock" (turn / realtime,
   `fireClock`) in the Burn race folder, hidden while the fire is off; it
