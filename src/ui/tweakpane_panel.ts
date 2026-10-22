@@ -2293,8 +2293,8 @@ export function buildPanel(
     D.threadWidth, () => callbacks.onStyleChange()
   );
   row(
-    fLook, p, "gap", { min: 0.04, max: 0.5, step: 0.01, label: "Crossing gap" },
-    "Visible break in the under thread at each crossing - the classic over/under gap.",
+    fLook, p, "gap", { min: 0, max: 0.5, step: 0.01, label: "Crossing gap" },
+    "Visible break in the under thread at each crossing - the classic over/under gap. 0 = no break (the border look reads crossings from its edge strokes; High contrast still enforces its wider gap).",
     D.gap, () => callbacks.onStyleChange()
   );
   row(
