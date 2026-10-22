@@ -15,6 +15,7 @@ import { walkerMapOf } from "../game/walker";
 import { closedArmEnds } from "../game/turnstiles";
 import { lockOpens } from "../game/locks";
 import { buildWalkGraph } from "../core/walk_graph";
+import { withTunnels } from "../game/tunnels"; // K137 tunnels (4.13)
 import type { WalkGraph } from "../core/walk_graph";
 import type { TangleGraph } from "../core/types";
 import type { ParticleSystem } from "../physics/particle_system";
@@ -401,6 +402,12 @@ export function createScene(deps: SceneDeps): Scene {
       effHue // The gamut anchor; matches style.baseHue.
     );
     renderer.setSectionRuns(baseRuns, params.colorScheme, params.seed, params.junctionBlend);
+    // K137 tunnels (4.13): the walk gains its links here - after the
+    // section runs (they index runs by chain), before the controller,
+    // the chase and the renderer take the graph.
+    if (walkGraph && params.tunnels > 0) {
+      walkGraph = withTunnels(walkGraph, params.tunnels);
+    }
 
     // Branching gameplay over the fabric: branch-point-only solve state +
     // the thread-true paint overlay (the walk graph was built above).

@@ -40,6 +40,7 @@ export function breakAfter(mode: FragileMode): number {
 export function exemptRun(walk: WalkGraph, eid: number): boolean {
   const e = walk.edges[eid];
   if (!e) return true;
+  if (e.chain < 0) return true; // K137 tunnels (4.13): no thread.
   if (walk.titleEdges?.has(eid)) return true;
   return (walk.vertices.get(e.va)?.isEnd ?? false) || (walk.vertices.get(e.vb)?.isEnd ?? false);
 }

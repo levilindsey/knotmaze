@@ -162,6 +162,7 @@ export function walkedGold(
   const spans: GoldSpan[] = [];
   for (const eid of spanOrder) {
     const e = edges[eid];
+    if (e.chain < 0) continue; // K137 tunnels (4.13): no thread to gild.
     if (partial && eid === partial.eid) {
       if (partial.c1 - partial.c0 > 1e-6) {
         spans.push({ chain: e.chain, c0: partial.c0, c1: partial.c1 });
@@ -184,12 +185,20 @@ export function walkedGold(
         : 0;
   }
   const routes: PaintRoute[] = [];
-  const starts = [...segStarts].sort((a, b) => a - b);
-  for (let s = 0; s < starts.length; s++) {
-    const a = starts[s];
-    const b = s + 1 < starts.length ? starts[s + 1] : routeLegs.length;
-    if (b > a) routes.push(...legRoutes(routeLegs.slice(a, b)));
+  // Segments split at the recorded breaks, and at tunnel legs (K137
+  // 4.13): no route band joins across a link.
+  let seg: RouteLeg[] = [];
+  const flushSeg = (): void => {
+    if (seg.length > 0) routes.push(...legRoutes(seg));
+    seg = [];
+  };
+  for (let k = 0; k < routeLegs.length; k++) {
+    const l = routeLegs[k];
+    if (l.e.chain < 0 || (k > 0 && segStarts.has(k))) flushSeg();
+    if (l.e.chain < 0) continue;
+    seg.push(l);
   }
+  flushSeg();
   // K127's traveled passes: every walk route except the far end of the
   // move in flight (traveledRoutes' rule, over the concatenated list).
   const traveledAll =

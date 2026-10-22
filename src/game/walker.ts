@@ -131,6 +131,7 @@ export function buildWalkerMap(
     return p > 0 ? c % p : c;
   };
   for (const e of walk.edges) {
+    if (e.chain < 0) continue; // K137 tunnels (4.13): no thread to ride.
     const pts = polyOf(e.id);
     const h0 = lookHeading(pts);
     const h1 = lookHeading([...pts].reverse());
@@ -142,6 +143,7 @@ export function buildWalkerMap(
     endAt.set(`${e.chain}:${wrap(e.chain, e.ctrlB)}`, e.id);
   }
   for (const e of walk.edges) {
+    if (e.chain < 0) continue; // K137 tunnels (4.13)
     const on = startAt.get(`${e.chain}:${wrap(e.chain, e.ctrlB)}`);
     if (on !== undefined && walk.edges[on].va === e.vb) cont[2 * e.id + 1] = 2 * on;
     const back = endAt.get(`${e.chain}:${wrap(e.chain, e.ctrlA)}`);

@@ -68,7 +68,8 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   darkMoves: ["dkm", "darkness", "closing fog", "fog closes", "dark moves"], // K137 (4.17)
   lantern: ["lan", "lantern", "lantern radius", "light radius"], // K137 (4.17)
   sonar: ["son", "sonar", "ping", "ring runs"], // K137 sonar (4.26)
-  sonarPings: ["spg", "ping limit", "pings", "sonar limit"], // K137 sonar (4.26) // K137 scent (4.34)
+  sonarPings: ["spg", "ping limit", "pings", "sonar limit"], // K137 sonar (4.26)
+  tunnels: ["tun", "tunnels", "portals", "linked junctions", "shortcuts"], // K137 (4.13) // K137 scent (4.34)
   cameraMode: ["cam", "view", "zoom", "pan", "follow player", "whole maze", "scroll", "pinch", "reset view"],
   trailLength: ["trl", "memory mode", "route length", "breadcrumbs", "how far back", "history", "trail", "lit stretch"],
   tension: ["tn", "yarn", "loose", "taut", "wavy", "ariadne", "cotton", "tightness", "white thread"],

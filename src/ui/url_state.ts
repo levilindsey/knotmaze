@@ -872,6 +872,8 @@ export interface UrlParams {
   // and the per-solve ping limit (0 = unlimited).
   sonar: boolean;
   sonarPings: number;
+  // K137 tunnels (4.13): linked junction pairs (0 = none).
+  tunnels: number;
   sleepKind: SleepKind;
   // K138 stage 3: one-way runs, 0 off or the share of the maze's core runs
   // (0..ONE_WAY_MAX 0.6) walked one way only. The classic game only.
@@ -1229,6 +1231,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   lantern: 1, // K137 darkness (4.17)
   sonar: false, // K137 sonar (4.26)
   sonarPings: 0, // K137 sonar (4.26)
+  tunnels: 0, // K137 tunnels (4.13)
   sleepKind: "wake",
   // K138 stage 3: no one-way runs.
   oneWay: 0,
@@ -2079,6 +2082,7 @@ function readLegacy(
     lantern: readNumber(query, "lan", D.lantern), // K137 darkness (4.17)
     sonar: readBool(query, "son", D.sonar), // K137 sonar (4.26)
     sonarPings: readNumber(query, "spg", D.sonarPings), // K137 sonar (4.26)
+    tunnels: readNumber(query, "tun", D.tunnels), // K137 tunnels (4.13)
     sleepKind: readChoice(query, "slk", SLEEP_KINDS, D.sleepKind),
     // K138 stage 3's one-way share (`&ow=0.4`; PARAM_RANGES clamps 0..0.6).
     oneWay: readNumber(query, "ow", D.oneWay),
