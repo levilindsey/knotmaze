@@ -525,11 +525,11 @@ merged):
 - **K579** · GPU confetti: upload each launch once, move the pieces in a vertex shader, no per-frame
   CPU sim or upload. Pays if K318 raises the counts (Levi asked 10-20); needs K307's warm-up;
   streamers need a CPU sim. The phone's fall isn't CPU-bound (K578). K628.
-- **K797** · Paper look, one param per stage (Levi 2026-10-21, `docs/design/levi_notes_2026-10-21.md`; sooner list; sequence `docs/design/pickup_sequence_2026-10-21.md`): stage a (paper backdrop) done in b8473f19, b (fill/border/both prototype) in 8d021628; c (gap 0) done in b6585962; next d (textures, perf-gated), then K798:
+- **K797** · Paper look, one param per stage (Levi 2026-10-21, `docs/design/levi_notes_2026-10-21.md`; sooner list; sequence `docs/design/pickup_sequence_2026-10-21.md`): stage a (paper backdrop) done in b8473f19, b (fill/border/both prototype) in 8d021628; c (gap 0) done in b6585962, fans/plucks follow the look in e75e7e0d; next d (textures, perf-gated):
   a white paper background (from `vellum`); a thread look of fill, border or both (an edge stroke on each side; over,
   under and joins read from the strokes); the Crossing gap row down to 0 (its floor is 0.04; the codec takes 0); solid
   or textured fills and borders (pencil), if fast enough.
-- **K798** · An intro that draws one border at a time: try a couple of orders, then offer the good ones in a dropdown
+- **K798** · Done in 3da2cf59 (2026-10-21): an intro that draws one border at a time, as two dropdown orders (edges, edgesAll). Was: try a couple of orders, then offer the good ones in a dropdown
   param (Levi 2026-10-21; sooner list). After K797's border look.
 - **K799** · The traveled path's look (Levi 2026-10-21; sooner list): a width ratio param (0 hidden, 1 today's full
   fill) and a fill texture dropdown, for colored pencil, crayon or highlighter, if fast enough. After K794.
