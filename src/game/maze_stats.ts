@@ -76,7 +76,9 @@ export type StatId =
   | "turnstiles"
   | "hidden"
   // K138 stage 3: the one-way runs.
-  | "oneWay";
+  | "oneWay"
+  // K138 stage 4: the keys.
+  | "keys";
 
 export const STATS: Record<StatId, { label: string; line: string }> = {
   // TIME above (SolveClock). The Burnt banner shows it too, for a run the
@@ -378,6 +380,14 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "One-way runs. Chevrons along a one-way run point the way; a tap " +
       "against them is refused, and so is a backtrack over one. The way out " +
       "never closes.",
+  },
+  // K138 stage 4: the keys held of those laid.
+  keys: {
+    label: "keys",
+    line:
+      "Keys held of those laid. Walk onto a key to take it; the runs into " +
+      "the exit stay locked until you hold every key. Going back over the " +
+      "move that took a key drops it.",
   },
 };
 

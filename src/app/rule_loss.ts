@@ -70,6 +70,8 @@ export function ruleFields(fc: FabricMazeController): RuleFields {
         : null,
     // K138 stage 3: the one-way runs laid (0: the share found no layout).
     oneWay: fc.oneWayShare > 0 ? (fc.ruleLook?.oneWay?.size ?? 0) : null,
+    // K138 stage 4: the keys held of those laid (0 of 0: no layout).
+    keys: fc.keyCount > 0 ? { held: fc.keysHeld, of: fc.keysTotal } : null,
   };
 }
 
@@ -91,7 +93,7 @@ export function rulesValue(fc: FabricMazeController): string | null {
 // K138: the share title's rule tags (null: that rule off, or not laid).
 export function ruleShareTags(
   fc: FabricMazeController
-): Pick<ShareInfo, "ice" | "colorRule" | "turnstiles" | "hidden" | "oneWay"> {
+): Pick<ShareInfo, "ice" | "colorRule" | "turnstiles" | "hidden" | "oneWay" | "keys"> {
   const look = fc.ruleLook;
   return {
     ice: fc.iceShare > 0 && look?.icy ? Math.round(fc.iceShare * 100) : null,
@@ -100,6 +102,7 @@ export function ruleShareTags(
     hidden:
       fc.hiddenCount > 0 && look?.hidden ? { found: fc.revealed.size, of: look.hidden.length } : null,
     oneWay: fc.oneWayShare > 0 && look?.oneWay ? look.oneWay.size : null, // K138 stage 3
+    keys: fc.keyCount > 0 && look?.locks ? { held: fc.keysHeld, of: fc.keysTotal } : null, // K138 stage 4
   };
 }
 

@@ -1779,6 +1779,9 @@ async function main(): Promise<void> {
       rules: ruleRows.rules,
       turnstiles: ruleRows.turnstiles,
       hidden: ruleRows.hidden,
+      // K138 stages 3 and 4: the one-way runs laid, the keys held.
+      oneWay: ruleRows.oneWay,
+      keys: ruleRows.keys,
     });
     updateHud();
     throwConfetti();
@@ -2965,6 +2968,11 @@ async function main(): Promise<void> {
         eid === fc!.arrivalEdge ? "No going back over a one-way run." : "That run is one-way: follow the arrows.",
         2500
       );
+      return;
+    }
+    // K138 s4: a lock, while the walk lacks a key.
+    if (why === "lock") {
+      showToast(`Locked: find the keys first (${fc!.keysHeld} of ${fc!.keysTotal}).`, 2500);
       return;
     }
     // K138 s2: a closed turnstile says so (the toast's pluck is the same).
