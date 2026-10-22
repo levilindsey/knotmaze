@@ -221,6 +221,8 @@ export const LIVE_EFFECTS = {
     "turnstiles", "hiddenRuns",
     // K138 stage 3: one-way runs (a restart places them anew).
     "oneWay",
+    // K138 stage 4: keys and the lock (a restart places them anew).
+    "keys", "lockMode",
   ],
 } as const satisfies Record<string, readonly string[]>;
 

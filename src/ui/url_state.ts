@@ -31,6 +31,8 @@ import { SPRINT_MODES } from "../game/sprint";
 import type { SprintMode } from "../game/sprint";
 import { SLEEP_KINDS } from "../game/monsters";
 import type { SleepKind } from "../game/monsters";
+import { LOCK_MODES } from "../game/locks";
+import type { LockMode } from "../game/locks";
 import type { ParMode } from "../game/par";
 import { PAR_MODES, PAR_SLACK_DEFAULT } from "../game/par";
 import {
@@ -834,6 +836,11 @@ export interface UrlParams {
   // play only.
   lures: number;
   snares: number;
+  // K138 stage 4 (game/locks.ts): keys, 0 off or 1..KEYS_MAX 3 beads on
+  // junctions, and the lock they open (lockMode: exit, the runs into the
+  // exit). The classic game only.
+  keys: number;
+  lockMode: LockMode;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1155,6 +1162,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K137 stage 4: no lures, no snares.
   lures: 0,
   snares: 0,
+  // K138 stage 4: no keys (the lock's form waits for a count).
+  keys: 0,
+  lockMode: "exit",
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1207,6 +1217,8 @@ export function fabricRulesOf(
     | "turnstiles"
     | "hiddenRuns"
     | "oneWay"
+    | "keys"
+    | "lockMode"
   >
 ): FabricRules {
   return {
@@ -1227,6 +1239,9 @@ export function fabricRulesOf(
     hiddenRuns: p.gameMode === "classic" ? p.hiddenRuns : 0,
     // K138 stage 3: one-way runs, likewise.
     oneWay: p.gameMode === "classic" ? p.oneWay : 0,
+    // K138 stage 4: keys and the lock, likewise.
+    keys: p.gameMode === "classic" ? p.keys : 0,
+    lockMode: p.lockMode,
   };
 }
 
@@ -1426,6 +1441,7 @@ export const ENUM_OPTIONS: {
   colorRule: COLOR_RULE_MODES, // K138 stage 1
   sprint: SPRINT_MODES, // K137 stage 3c
   sleepKind: SLEEP_KINDS, // K137 stage 3d
+  lockMode: LOCK_MODES, // K138 stage 4
 };
 
 // K398: every numeric param held to the panel's range (param_codec's
@@ -1962,6 +1978,10 @@ function readLegacy(
     // them to 0..5 and 0..3).
     lures: readNumber(query, "lur", D.lures),
     snares: readNumber(query, "snr", D.snares),
+    // K138 stage 4's keys and lock (`&ky=2&lkm=exit`; PARAM_RANGES clamps
+    // the count to 0..3).
+    keys: readNumber(query, "ky", D.keys),
+    lockMode: readChoice(query, "lkm", LOCK_MODES, D.lockMode),
   };
 }
 

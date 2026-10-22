@@ -381,6 +381,10 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // 1..5; game/lures.ts) and the snares' (0 off, 1..3; game/snares.ts).
   num("lures"),
   num("snares"),
+  // 212-213, K138 stage 4 (4.1): keys (0 off, 1..3; game/locks.ts) and the
+  // lock's form (LOCK_MODES order; options append without a bump).
+  num("keys"),
+  choice("lockMode", ["exit"]),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -549,6 +553,7 @@ export const PARAM_RANGES: Readonly<
   oneWay: [0, 0.6], // K138 stage 3 (ONE_WAY_MAX)
   lures: [0, 5], // K137 stage 4 (LURES_MAX)
   snares: [0, 3], // K137 stage 4 (SNARES_MAX)
+  keys: [0, 3], // K138 stage 4 (KEYS_MAX)
 });
 
 // A link value held to its panel range (K398); a param with no range,
