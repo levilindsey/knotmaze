@@ -389,7 +389,7 @@ Next free ID: K812.
   - owner: nobody since 2026-10-15 14:18 (the phone agent `a2c95d8bde8feeea8` of claude session 05e60da0 finished its bench; G3-0's `af653fa7f942f2f1e` (session d8031183) finished, its worktree left, locked by the live Claude process (K161))
   - branch: mainline; last commit: `3465090` (G3-1; G3-0 f6d10e3)
   - evidence: `.claude/probes/K8/G3-1/` (the brief's texture sizes); `.claude/probes/K8/stage2/` (`notes.md`, `g3_probe.mjs`, `batch3.ps1`-`batch6.ps1`, `phone6.ps1`, results); stage 1's `.claude/probes/K8/stage1/notes.md`
-  - next: G3-1 done in 3465090 and browser-verified in K536 (brute vs pruned 0 px, GAP GL readback bit-exact; phone half K539, cold first-visible gap K540). Lane next: R3, R4, G3-2, R5; never beside an R stage, K268 item 4 or another GPU measurement; it may run beside K7. G3-2 is free to start: K90 stopped (Levi 2026-10-20)
+  - next: G3-2 briefed (`docs/design/K8_G3-2.md`) and its ThreadPass seam landed 2026-10-21 (957ba833: thread_pass.ts, `?rp=sdf` at construction, rpFallback flag); remaining: ribbon_sdf.ts + the attributed-diff A/B (the brief's steps 2-3), then G3-3 after Levi's phone check. Lane: R5 after G4-1; never beside an R stage, K268 item 4 or another GPU measurement; it may run beside K7. K90 stopped (Levi 2026-10-20)
   - brief: `docs/design/K8_G3-1.md`; G3-0's handoff: `docs/design/K8_stage1.md` ("Stage 2 handoff")
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
