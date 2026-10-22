@@ -26,6 +26,7 @@ import {
 } from "../../src/game/monsters";
 import type { MonsterSpec } from "../../src/game/monsters";
 import { newSword, optimalRouteVertices, runHops, tailJunction } from "../../src/game/sword";
+import { ChaseGraph } from "../../src/game/minotaur";
 
 // K137 stage 3d (design 4.9 and Levi's follower; brief docs/design/K137_s3d.md):
 // more than one monster on the turn clock, sleepers and the follower.
@@ -396,6 +397,26 @@ describe("K137 s3d: the monster list keeps the minotaur's game", () => {
         expect(re.state.v).toBe(t.state.v);
         expect(re.extras.map((x) => [x.phase, x.state.v])).toEqual(t.extras.map((x) => [x.phase, x.state.v]));
       }
+    }
+  });
+});
+describe("K137 stage 6: real-time extras spots", () => {
+  it("lie on junctions off the route, never by the entrance or the lair", () => {
+    const walk = realMaze(42);
+    const g = new ChaseGraph(walk);
+    const spots = sleeperSpots(g, 42, 3, { hops: 1 });
+    expect(spots.length).toBeGreaterThan(0);
+    expect(new Set(spots).size).toBe(spots.length);
+    const route = optimalRouteVertices(g);
+    const hop = runHops(g, route);
+    const startJ = tailJunction(g, g.start);
+    for (const v of spots) {
+      expect(g.isEnd[v]).toBe(false);
+      expect(v).not.toBe(g.start);
+      expect(v).not.toBe(g.exit);
+      expect(hop[v]).toBeGreaterThanOrEqual(1);
+      expect(hop[v]).toBeLessThanOrEqual(3);
+      if (startJ >= 0) expect(v).not.toBe(startJ);
     }
   });
 });

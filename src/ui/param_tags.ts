@@ -63,6 +63,7 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   threadLook: ["tlk", "thread look", "border", "outline", "stroke", "fill", "paper look", "edges"], // K797b
   goldWidth: ["gw", "traveled path width", "route width", "gold width", "path width"], // K799
   goldTexture: ["gtx", "traveled path fill", "pencil", "crayon", "highlighter", "route texture"], // K799
+  minoExtras: ["mex", "real-time extras", "more monsters", "extra hunters", "second minotaur"], // K137 stage 6
   cameraMode: ["cam", "view", "zoom", "pan", "follow player", "whole maze", "scroll", "pinch", "reset view"],
   trailLength: ["trl", "memory mode", "route length", "breadcrumbs", "how far back", "history", "trail", "lit stretch"],
   tension: ["tn", "yarn", "loose", "taut", "wavy", "ariadne", "cotton", "tightness", "white thread"],

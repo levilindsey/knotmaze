@@ -2201,6 +2201,13 @@ export function buildPanel(
     "Turn clock: wakes hunts you once woken; follows trails your path a run or two behind, so stopping or turning back lets it catch you (the entrance puts it back to sleep); both mixes the two. Restarts the solve.",
     D.sleepKind, () => callbacks.onClockChange()
   );
+  // K137 stage 6: the real-time clock's own extras.
+  const minoExtrasRow = row(
+    fMino, p, "minoExtras",
+    { min: 0, max: SLEEPERS_MAX, step: 1, format: (v: number) => (v === 0 ? "off" : String(v)), label: "Real-time extras" },
+    "Real-time clock: more hunters awake in the maze, a few runs off the shortest way. Each hunts as the minotaur does; a catch by any of them sends you back to the entrance and every monster back to its spot. Restarts the solve.",
+    D.minoExtras, () => callbacks.onClockChange()
+  );
   // K137 stage 4 (4.10, 4.30; game/lures.ts, game/snares.ts): the lures
   // and snares, turn clock only. A restart refills both (onClockChange).
   const luresRow = row(
@@ -3175,6 +3182,7 @@ export function buildPanel(
     // K137 stage 3d: the extra monsters play on the turn clock only.
     sleepersRow.hidden = !minoOn || realtime;
     sleepKindRow.hidden = !minoOn || realtime || params.sleepers <= 0;
+    minoExtrasRow.hidden = !minoOn || !realtime; // K137 stage 6
     // K137 stage 4: the lures and snares play on the turn clock only, and
     // snares by runs only (TurnMinotaur.setSnare refuses by length).
     luresRow.hidden = !minoOn || realtime;

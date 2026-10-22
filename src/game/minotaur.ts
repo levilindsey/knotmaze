@@ -98,7 +98,7 @@ import { SeededRNG } from "../util/random";
 // The counter-based stream (K324 3.2). The modules import each other, but
 // each uses the other's bindings only inside functions, so either may load
 // first.
-import { TurnRng, type TurnStep } from "./minotaur_turns";
+import { TurnRng, mix32, type TurnStep } from "./minotaur_turns";
 import { newSword, swordSpend, swordTake, swordTouch, type SwordState } from "./sword";
 
 export const CHASE_HZ = 120;
@@ -281,6 +281,27 @@ export interface Spot {
 }
 
 export type MinotaurMode = "lair" | "wander" | "pause" | "hunt";
+
+// K137 stage 6: one real-time extra monster (MinotaurChase.extras). It
+// hunts as the hunter model does on its own streams; `home` is the
+// vertex a catch by any monster sends it back to.
+export interface ChaseMonster {
+  readonly home: number;
+  spot: Spot;
+  mode: MinotaurMode;
+  timer: number;
+  dest: number;
+  hold: number;
+  legPace: number;
+  aimed: boolean;
+  lastEdge: number;
+  arrivals: number;
+}
+
+interface RtMonster extends ChaseMonster {
+  rng: SeededRNG;
+  stopRng: TurnRng;
+}
 
 export type ChaseEvent =
   | { kind: "depart"; edge: number } // The player left along `edge`.
@@ -583,10 +604,15 @@ export class MinotaurChase {
   // tap count), so replayChase rebuilds it. Never armed: nothing below
   // reads them and every digest holds.
   readonly sprints: number[] = [];
+  // K137 stage 6: the real-time extras (empty, the default: nothing
+  // below reads or draws the list and every digest holds).
+  extras: RtMonster[] = [];
+  private seedNum = 0;
   sprintLeft = 0;
   private sprinting = false;
 
   constructor(walk: WalkGraph, params: ChaseParams, seed: number) {
+    this.seedNum = seed;
     this.g = new ChaseGraph(walk);
     this.params = { ...params };
     this.setParams(params);
@@ -651,6 +677,79 @@ export class MinotaurChase {
   // tick (main.ts restartChase, replayChase).
   setSword(s: SwordState | null): void {
     this.sword = s;
+  }
+
+  // K137 stage 6: lay the real-time extras at these vertices (main.ts
+  // picks them with monsters.ts's sleeperSpots). Each hunts on its own
+  // streams (the chase seed xor the monsters' salt and index hash, as
+  // the turn extras draw). Call before the first tick.
+  setExtras(spots: readonly number[]): void {
+    this.extras = spots.map((home, i) => {
+      const s = (seedMix((this.seedNum ^ 0x4d4e5354 ^ mix32(i + 1)) >>> 0) >>> 0);
+      return {
+        home,
+        spot: { edge: -1, pos: 0, dir: 1, vertex: home },
+        mode: "wander",
+        timer: 0,
+        dest: -1,
+        hold: 0,
+        legPace: this.params.wanderPace,
+        aimed: true,
+        lastEdge: -1,
+        arrivals: 0,
+        rng: new SeededRNG(s),
+        stopRng: new TurnRng(s),
+      };
+    });
+  }
+
+  // What the renderer draws for the extras (always awake hunters).
+  get extraViews(): { spot: Spot; phase: "awake"; kind: "sleeper" }[] {
+    return this.extras.map((x) => ({ spot: x.spot, phase: "awake", kind: "sleeper" }));
+  }
+
+  // Run `fn` with extra x standing in the minotaur's fields (its own
+  // streams, the hunter model, no sword), then put the primary back.
+  // With no extras laid nothing ever calls this.
+  private withExtra(x: RtMonster, fn: () => void): void {
+    const saved = {
+      mino: this.mino, mode: this.mode, timer: this.timer, dest: this.dest,
+      hold: this.hold, aimed: this.aimed, lastEdge: this.lastEdge,
+      legPace: this.legPace, arrivals: this.arrivals,
+      rng: this.rng, stopRng: this.stopRng,
+      sword: this.sword, model: this.params.model,
+    };
+    this.mino = x.spot; this.mode = x.mode; this.timer = x.timer;
+    this.dest = x.dest; this.hold = x.hold; this.aimed = x.aimed;
+    this.lastEdge = x.lastEdge; this.legPace = x.legPace;
+    this.arrivals = x.arrivals; this.rng = x.rng; this.stopRng = x.stopRng;
+    this.sword = null; this.params.model = "hunter";
+    try {
+      fn();
+    } finally {
+      x.spot = this.mino; x.mode = this.mode; x.timer = this.timer;
+      x.dest = this.dest; x.hold = this.hold; x.aimed = this.aimed;
+      x.lastEdge = this.lastEdge; x.legPace = this.legPace;
+      x.arrivals = this.arrivals;
+      this.mino = saved.mino; this.mode = saved.mode; this.timer = saved.timer;
+      this.dest = saved.dest; this.hold = saved.hold; this.aimed = saved.aimed;
+      this.lastEdge = saved.lastEdge; this.legPace = saved.legPace;
+      this.arrivals = saved.arrivals; this.rng = saved.rng;
+      this.stopRng = saved.stopRng; this.sword = saved.sword;
+      this.params.model = saved.model;
+    }
+  }
+
+  private resetExtras(): void {
+    for (const x of this.extras) {
+      x.spot = { edge: -1, pos: 0, dir: 1, vertex: x.home };
+      x.mode = "wander";
+      x.timer = 0;
+      x.dest = -1;
+      x.hold = 0;
+      x.aimed = true;
+      x.lastEdge = -1;
+    }
   }
 
   // K137 s3b: it flees the sword / the one-use sword slew it.
@@ -875,6 +974,9 @@ export class MinotaurChase {
   step(out: ChaseEvent[] = []): ChaseEvent[] {
     this.movePlayer(out);
     this.moveMinotaur();
+    // K137 stage 6: the extras step after the minotaur, each standing
+    // in its fields (hunter model, own streams, no sword).
+    for (const x of this.extras) this.withExtra(x, () => this.moveMinotaur());
     // K137 s3b: slain, it is gone (no contact, no sight); fleeing, a touch
     // banishes or slays it instead of catching you and it spots no one.
     const sword = this.sword !== null && (this.sword.phase === "fleeing" || this.sword.phase === "slain");
@@ -895,8 +997,32 @@ export class MinotaurChase {
       this.catches++;
       out.push({ kind: "caught" });
       this.respawn();
+      this.resetExtras();
     } else if (!this.finished) {
       this.detect(out);
+    }
+    // K137 stage 6: a catch by any extra is the minotaur's catch (s3b
+    // call 1): you back to the entrance, every monster to its spot, one
+    // tally. Their spotting draws no event (no telegraph, call 2).
+    if (this.extras.length > 0 && !this.finished) {
+      const scratch: ChaseEvent[] = [];
+      let caught = false;
+      for (const x of this.extras) {
+        if (
+          !this.invisible() &&
+          this.g.spotToSpot(x.spot, this.player, false) <= this.params.catchDist
+        ) {
+          this.catches++;
+          out.push({ kind: "caught" });
+          this.respawn();
+          this.resetExtras();
+          caught = true;
+          break;
+        }
+      }
+      if (!caught) {
+        for (const x of this.extras) this.withExtra(x, () => this.detect(scratch));
+      }
     }
     if (this.mode === "hunt") this.huntTicks++;
     this.tick++;
@@ -1595,9 +1721,11 @@ export function replayChase(
   ticks: number,
   limits: ArrayLike<number> | null = null,
   sword: { spot: number; mode: "timed" | "oneuse"; moves: number } | null = null,
-  sprints: readonly number[] = []
+  sprints: readonly number[] = [],
+  extras: readonly number[] = []
 ): MinotaurChase {
   const sim = new MinotaurChase(walk, params, seed);
+  if (extras.length > 0) sim.setExtras(extras);
   if (limits) sim.setBreakLimits(limits);
   if (sword) sim.setSword(newSword(sword.spot, sword.mode, sword.moves));
   let k = 0;
