@@ -22,8 +22,9 @@
 //   included: both ends of an advancing or retracting run carry the band,
 //   so the gold slides into and out of a junction along the band instead
 //   of fanning into its wedges for the frames before the dot arrives.
-// - BACKTRACK: the band follows the path STACK, like the gold. A popped
-//   pass's route is gone; a junction the path truly passes twice holds two
+// - BACKTRACK: the band follows the WALK, like the gold (K794: the
+//   walked set, from the taps). A backtracked pass's band stays; a
+//   junction the walk truly passes twice holds two
 //   bands, the newer drawn last. A record keeps the newest MAX_ROUTES.
 // - HEAD: one-arm band (the arrival arm in to the joint center, round
 //   end), under the head marker. The start, the exit and dead ends are
@@ -36,7 +37,8 @@
 //   ALL traveled draws, outside its bands, what it drew before K81: the
 //   angular blend of the arms' COMPOSED paint, with the junction caps kept
 //   (the bands still draw over it). An arm is TRAVELED when a pass of the
-//   path STACK (traveledRoutes) arrives or leaves by it, whatever the trail
+//   WALK in gold mode (the stack in trail mode; traveledRoutes over the
+//   legs fed) arrives or leaves by it, whatever the trail
 //   still paints: an arm that has faded out of the trail counts, and its
 //   composed paint is then its untraveled material, which is what the web
 //   showed there before K81 (a fade-driven rule would flip the other arms'
