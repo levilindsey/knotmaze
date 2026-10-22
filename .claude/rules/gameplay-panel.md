@@ -295,6 +295,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   on. Restarts the solve." Params: gameplay-links.md's TURNSTILES AND
   HIDDEN RUNS PARAMS; the rules: gameplay-mechanisms.md's Turnstiles and
   hidden runs.
+- MUDDY RUNS ROW (K137 s5, 2026-10-21): `Muddy runs` (`mud`, a 0..6 slider, step 1, 0 reads `off`) sits after `Reveal within (runs)` in the Game folder, shown in every fabric mode (hidden only with the fabric off - it works with or without a chase). Its help names the two-move cost for both sides and the rule exclusion. It runs onClockChange; its link and codec record: gameplay-links.md's MUDDY RUNS PARAM; the rules: gameplay-mechanisms.md's Muddy runs.
 - ONE-WAY RUNS ROW (K138 stage 3, 2026-10-21): "One-way runs" (`oneWay`,
   [0, 0.6] = ONE_WAY_MAX, no step (K130), an edit keeps the 0.05 grid; 0
   reads "off") sits after "Hidden runs" in the Game folder, with the same
