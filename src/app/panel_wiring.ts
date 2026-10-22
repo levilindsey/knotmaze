@@ -85,6 +85,8 @@ export interface PanelWiringDeps {
   fitToScreen: () => void;
   updateHud: () => void;
   showFabricWin: () => void;
+  previewWin: () => void;
+  previewLoss: () => void;
   restartSolve: (carry?: boolean) => void;
   playDaily: (n: number, floating?: boolean) => void;
   showDailyStats: () => void;
@@ -391,6 +393,8 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
     },
     // K140: the finish confetti (render-only, live; off drops the pieces
     // still in the air).
+    onPreviewWin: () => deps.previewWin(),
+    onPreviewLoss: () => deps.previewLoss(),
     onConfettiChange: () => {
       if (params.confettiAmount <= 0) deps.confetti.clear();
       deps.writeParams(params);

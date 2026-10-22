@@ -207,6 +207,11 @@ export interface PanelCallbacks {
   onTurnMinoChange: () => void;
   // K140: the finish confetti (on/off, amount): render-only, applied live.
   onConfettiChange: () => void;
+  // Preview the win / loss effects (banner + particles) without playing
+  // the game out: no result is recorded, no catch or heart is counted,
+  // and the solve, clock and attempt stay exactly as they were.
+  onPreviewWin: () => void;
+  onPreviewLoss: () => void;
   // K98: the markers' size (the player's dot, the start, the finish, the
   // minotaur): render-only, applied live.
   onMarkerSizeChange: () => void;
@@ -1309,12 +1314,12 @@ export function buildPanel(
     "How your route is shown: fullPath = your whole traveled route stays recolored; recentPath = memory mode: only the last stretch of your route stays lit (trailLength sets how much) and there is no backtracking; string = unroll a thin white yarn behind you - it U-turns at junctions when you backtrack and is never picked up. Applies live.",
     D.pathViz, () => callbacks.onTrailChange()
   );
-  row(
+  const goldWidthRow = row(
     fPath, p, "goldWidth", { min: 0, max: 1, step: 0.01, label: "Traveled path width" },
     "How much of the thread width the traveled route recolors: 1 = the full thread (the usual look), 0 = hidden. Applies live (K799).",
     D.goldWidth, () => callbacks.onTrailChange()
   );
-  row(
+  const goldTextureRow = row(
     fPath, p, "goldTexture",
     { options: { solid: "solid", pencil: "pencil", crayon: "crayon", highlighter: "highlighter" }, label: "Traveled path fill" },
     "The traveled route's fill: solid color, grained pencil, coarse crayon, or translucent highlighter (K799). Applies live.",
@@ -1568,6 +1573,23 @@ export function buildPanel(
       callbacks.onConfettiChange();
     }
   );
+  // Preview the two end-of-game effects without playing the game out.
+  // main.ts fires only the visuals (banner, confetti / burst + ash +
+  // vignette, sounds) from the state on screen and restores it after:
+  // nothing is recorded, no catch or heart counts, and the solve, the
+  // clock and a daily attempt stay exactly as they were.
+  const previewWinBtn = button(
+    fPath,
+    "Preview win effect",
+    "Throw the finish celebration (the Solved banner and its confetti) from where you stand, as a preview. Nothing is recorded: your path, the clock and a daily attempt stay exactly as they were, and closing the banner returns the screen to how it was."
+  ) as ButtonApi & { hidden: boolean };
+  previewWinBtn.on("click", callbacks.onPreviewWin);
+  const previewLossBtn = button(
+    fPath,
+    "Preview loss effect",
+    "Throw the loss effects (the contact burst and ash fall, the vignette and the Burnt banner) at your position, as a preview. No catch or heart counts: your path, the clock and a daily attempt stay exactly as they were, and closing the banner returns the screen to how it was."
+  ) as ButtonApi & { hidden: boolean };
+  previewLossBtn.on("click", callbacks.onPreviewLoss);
   // K337: the confetti's shine (its specular strength) and the share of
   // foil pieces, which shows only while the shine is on. Daily-exempt,
   // like the amount; both apply at the next finish.
@@ -2314,7 +2336,7 @@ export function buildPanel(
   );
 
   // --- Look ---------------------------------------------------------------
-  row(
+  const colorSchemeRow = row(
     fLook, p, "colorScheme",
     {
       label: "Color scheme",
@@ -2334,17 +2356,17 @@ export function buildPanel(
     "How far (in lattice units) each intersection's blended color bleeds into the sections meeting there, beyond the short built-in blend. 0 = the blend stays inside the intersection; a section shorter than twice this becomes one continuous gradient between its two intersections. Segments and strands schemes. Applies live.",
     D.junctionBlend, () => callbacks.onRecolor()
   );
-  row(
+  const hueShiftRow = row(
     fLook, p, "hueShift", { min: 0, max: 359, step: 1, label: "Hue shift" },
     "Rotates the whole color gamut around the hue wheel (added to the seed's base hue). Applies live.",
     D.hueShift, () => callbacks.onRecolor()
   );
-  row(
+  const gamutArcRow = row(
     fLook, p, "gamutArc", { min: 40, max: 360, step: 5, label: "Gamut arc" },
     "Width of the hue arc colors are drawn from: narrow = one tight family, 360 = the full rainbow. Applies live.",
     D.gamutArc, () => callbacks.onRecolor()
   );
-  row(
+  const paletteRow = row(
     fLook, p, "palette",
     {
       label: "Palette",
@@ -2413,7 +2435,7 @@ export function buildPanel(
       label: "Thread look",
       options: { fill: "fill", border: "border", both: "both" },
     },
-    "How threads draw: fill = solid color (the usual look); border = only a dark edge stroke along each side, no fill (over, under and joins read from the strokes; junction fans still fill); both = fill plus the edge strokes (K797b prototype). Applies live.",
+    "How threads draw: fill = solid color (the usual look); border = only a dark edge stroke along each side, no fill (over, under and joins read from the strokes); both = fill plus the edge strokes (K797b prototype). While border is picked, the rows that only color or fill the thread interior hide (their values are kept). Applies live.",
     D.threadLook, () => callbacks.onBackgroundChange()
   );
   const backgroundIntensityRow = row(
@@ -3269,6 +3291,8 @@ export function buildPanel(
     chalkRow.hidden = !fab;
     confettiAmountRow.hidden = !fab;
     lossAmountRow.hidden = !fab;
+    previewWinBtn.hidden = !fab;
+    previewLossBtn.hidden = !fab;
     confettiShineRow.hidden = !fab || params.confettiAmount <= 0;
     foilShareRow.hidden = confettiShineRow.hidden || params.confettiShine <= 0;
     confettiCannonsRow.hidden = !fab || params.confettiAmount <= 0;
@@ -3325,9 +3349,24 @@ export function buildPanel(
     appearSpeedRow.hidden = params.appearSequence === "instant";
     appearFxRow.hidden = params.appearSequence === "instant";
     flowSpeedRow.hidden = params.flowStrength <= 0;
+    // K797b: in the border look there is no thread fill, so the rows that
+    // only color the thread's own interior hide (their values are kept
+    // and return with fill / both): the section colors and their blend
+    // through junctions. The highlight rows stay in every look: the
+    // pulse, hover, traveled path, telegraph and danger indications
+    // draw inside the border outline too, as do width, gap, fade and
+    // corner rows.
+    const borderLook = params.threadLook === "border";
+    colorSchemeRow.hidden = borderLook;
+    hueShiftRow.hidden = borderLook;
+    gamutArcRow.hidden = borderLook;
+    paletteRow.hidden = borderLook;
+    goldWidthRow.hidden = false;
+    goldTextureRow.hidden = false;
     // Only the segments and strands schemes have junction ramps (depth and
     // noise are continuous; knot mode has no junctions).
     junctionBlendRow.hidden =
+      borderLook ||
       !fab ||
       (params.colorScheme !== "segments" && params.colorScheme !== "strands");
     const bg = params.background;
