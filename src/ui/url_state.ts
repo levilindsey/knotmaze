@@ -855,6 +855,10 @@ export interface UrlParams {
   // play only.
   lures: number;
   snares: number;
+  // K137 s5 (4.33; game/mud.ts): muddy runs, 0 off or 1..MUD_MAX 6 runs
+  // on the fewest-moves route that take two moves to cross, for you
+  // and the minotaur alike. Every game mode; off under a K138 rule.
+  mud: number;
   // K138 stage 4 (game/locks.ts): keys, 0 off or 1..KEYS_MAX 3 beads on
   // junctions, and the lock they open (lockMode: exit, the runs into the
   // exit). The classic game only.
@@ -1212,6 +1216,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // beatTiming length).
   beatTiming: "even",
   beatPerRun: BEAT_PER_RUN,
+  // K137 s5: no muddy runs.
+  mud: 0,
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1266,6 +1272,7 @@ export function fabricRulesOf(
     | "oneWay"
     | "keys"
     | "lockMode"
+    | "mud"
   >
 ): FabricRules {
   return {
@@ -1289,6 +1296,8 @@ export function fabricRulesOf(
     // K138 stage 4: keys and the lock, likewise.
     keys: p.gameMode === "classic" ? p.keys : 0,
     lockMode: p.lockMode,
+    // K137 s5: muddy runs in every game mode (with or without a chase).
+    mud: p.mud,
   };
 }
 
@@ -2043,6 +2052,7 @@ function readLegacy(
     // beats to 1..4).
     beatTiming: readChoice(query, "btm", BEAT_TIMINGS, D.beatTiming),
     beatPerRun: readNumber(query, "btr", D.beatPerRun),
+    mud: readNumber(query, "mud", D.mud),
   };
 }
 

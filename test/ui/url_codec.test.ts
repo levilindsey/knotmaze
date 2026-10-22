@@ -150,6 +150,7 @@ describe("links", () => {
       keys: 0, lockMode: "exit", // K138 stage 4
       snareHold: 3, lureRange: 6, hintSeconds: 2, hiddenReveal: 3, // K795
       beatTiming: "even", beatPerRun: 1, // K795 beat timing
+      mud: 0, // K137 s5
     });
   });
 
@@ -967,6 +968,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   keys: "ky", lockMode: "lkm", // K138 stage 4
   snareHold: "snh", lureRange: "lrg", hintSeconds: "hns", hiddenReveal: "hrv", // K795
   beatTiming: "btm", beatPerRun: "btr", // K795 beat timing
+  mud: "mud", // K137 s5
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
@@ -1008,6 +1010,7 @@ if (name === "cartouche") return "knot";
   if (name === "ice") return 0.25; // K138 stage 1: its default is 0 (off)
   if (name === "turnstiles") return 4; // K138 stage 2: its default is 0 (off)
   if (name === "hiddenRuns") return 2; // K138 stage 2: its default is 0 (off)
+  if (name === "mud") return 3; // K137 s5: its default is 0 (off)
   if (name === "sleepers") return 2; // K137 stage 3d: its default is 0 (off)
   if (name === "oneWay") return 0.4; // K138 stage 3: its default is 0 (off)
   if (name === "lures") return 3; // K137 stage 4: both default to 0 (off)

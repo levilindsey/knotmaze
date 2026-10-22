@@ -123,6 +123,7 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   hiddenRuns: ["hid", "secret", "secret paths", "shortcuts", "invisible", "unlock", "pluck to reveal", "same note", "music puzzle"],
   hiddenReveal: ["hrv", "hidden runs", "reveal", "secret", "pluck", "same note", "runs", "nearby"],
   oneWay: ["ow", "arrows", "chevrons", "direction", "one direction", "forced direction", "no backtrack", "loop runs"],
+  mud: ["mud", "muddy", "slow runs", "two moves", "thick", "sticky", "crossing cost", "minotaur"],
   keys: ["ky", "locks", "padlock", "locked exit", "key beads", "collect", "pick up", "unlock", "doors"],
   lockMode: ["lkm", "lock", "padlock", "locked exit", "which runs", "unlock", "keys open", "doors"],
   // Minotaur
