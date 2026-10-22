@@ -780,6 +780,47 @@ export class FabricMazeRenderer {
   private snareGfx: Graphics;
   // K137 scent (4.34): the fading red trail (syncScent).
   private scentGfx: Graphics;
+  // K546 stage 2: the catch ghost rendezvous. Main sets the two pre-
+  // respawn spots (ctrl points) and sweeps t 0..1 over the shared beat;
+  // both markers slide to their meeting point while it runs. Null off.
+  private ghost: { aChain: number; aCtrl: number; bChain: number; bCtrl: number; t: number } | null =
+    null;
+  private ghostAx = 0;
+  private ghostAy = 0;
+  private ghostBx = 0;
+  private ghostBy = 0;
+  private ghostMx = 0;
+  private ghostMy = 0;
+  setCatchGhost(
+    a: { chain: number; ctrl: number },
+    b: { chain: number; ctrl: number },
+    t: number,
+  ): void {
+    this.ghost = { aChain: a.chain, aCtrl: a.ctrl, bChain: b.chain, bCtrl: b.ctrl, t };
+  }
+  clearCatchGhost(): void {
+    this.ghost = null;
+  }
+  // The rendezvous' meeting point (world), while the ghost runs.
+  catchGhostMeet(): [number, number] | null {
+    return this.ghost ? [this.ghostMx, this.ghostMy] : null;
+  }
+  private refreshGhost(): boolean {
+    const gh = this.ghost;
+    if (!gh) return false;
+    this.pointFlowed(gh.aChain, this.ctrlMod(gh.aChain, gh.aCtrl), this.scratch, 0);
+    this.ghostAx = this.scratch[0];
+    this.ghostAy = this.scratch[1];
+    this.pointFlowed(gh.bChain, this.ctrlMod(gh.bChain, gh.bCtrl), this.scratch, 0);
+    this.ghostBx = this.scratch[0];
+    this.ghostBy = this.scratch[1];
+    this.ghostMx = (this.ghostAx + this.ghostBx) / 2;
+    this.ghostMy = (this.ghostAy + this.ghostBy) / 2;
+    return true;
+  }
+  // K546 stage 2: fire burn-in creep (0..1): the head's incident fronts
+  // slide along their runs toward the head, reaching it at ignition.
+  fireBurnCreep = 0;
   // K137 tunnels (4.13): the sinking threads and mouth rings.
   private tunnelGfx: Graphics;
   private tunnelEdges: WalkEdge[] = [];
@@ -1861,8 +1902,15 @@ export class FabricMazeRenderer {
     } else {
       this.pointFlowed(at.chain, ctrl, this.scratch, 0);
     }
-    const x = this.scratch[0];
-    const y = this.scratch[1];
+    let x = this.scratch[0];
+    let y = this.scratch[1];
+    // K546 stage 2: mid-rendezvous the minotaur's marker slides to the
+    // meeting point instead of sitting at its post-respawn home.
+    if (this.refreshGhost() && this.ghost) {
+      const gt = this.ghost.t;
+      x = this.ghostAx + (this.ghostMx - this.ghostAx) * gt;
+      y = this.ghostAy + (this.ghostMy - this.ghostAy) * gt;
+    }
     const r = this.markerRadius();
     const d =
       r * (chase.mode === "hunt" ? MINO_GLOW_DIAM_HUNT : MINO_GLOW_DIAM);
@@ -2403,7 +2451,13 @@ export class FabricMazeRenderer {
     const key =
       `${L}|${controller.head}|${controller.solved}|${controller.fireLost}|` +
       `${a ? 1 : 0}|${this.threadWidth}|${this.fogOfWar}|${this.markerRadius()}`;
-    if (this.fireDrawn && !this.fireDirty && key === this.fireKey && fire === this.fireLast) {
+    if (
+      this.fireBurnCreep <= 0 &&
+      this.fireDrawn &&
+      !this.fireDirty &&
+      key === this.fireKey &&
+      fire === this.fireLast
+    ) {
       if (this.burnLookDeclared !== this.burntLook) {
         this.setBurn(this.burnSpans, this.burnFronts, this.burnSmolder, true);
       }
@@ -2417,6 +2471,30 @@ export class FabricMazeRenderer {
     const spans: BurntSpan[] = [];
     const fronts: BurnFront[] = [];
     this.fireEmit.length = 0;
+    // K546 stage 2: during the fire-loss burn-in, the head's incident
+    // fronts creep along their runs toward the head, reaching it exactly
+    // at ignition; the settled char draws when the beat ends.
+    if (this.fireBurnCreep > 0) {
+      const creep = Math.min(1, this.fireBurnCreep);
+      const hv = this.walk.vertices.get(controller.head);
+      if (hv) {
+        for (const eid of hv.edges) {
+          const e = this.walk.edges[eid];
+          if (e.chain < 0 || !(e.length > 0)) continue;
+          const sk = e.ctrlB >= e.ctrlA ? 1 : -1;
+          if (e.va === controller.head && e.vb === controller.head) continue;
+          if (e.va === controller.head) {
+            this.pushFront(fronts, e, e.length * (1 - creep), -sk, 0);
+          } else {
+            this.pushFront(fronts, e, e.length * creep, sk, 0);
+          }
+        }
+      }
+      this.setBurn(null, fronts.length > 0 ? fronts : null, null);
+      this.syncFireLights();
+      this.tickFireFx(dt);
+      return;
+    }
     const lit = L <= fire.delay;
     for (let eid = 0; eid < this.walk.edges.length; eid++) {
       const e = this.walk.edges[eid];
@@ -4036,6 +4114,15 @@ export class FabricMazeRenderer {
       this.pointFlowed(dotChain, this.ctrlMod(dotChain, dotCtrl), this.scratch, 0);
     } else {
       this.vertexWorld(controller.head, this.scratch, 0);
+    }
+    // K546 stage 2: mid-rendezvous the head marker slides to the meeting
+    // point and its ring fades as the two markers close.
+    if (this.refreshGhost() && this.ghost) {
+      const gt = this.ghost.t;
+      this.scratch[0] = this.ghostBx + (this.ghostMx - this.ghostBx) * gt;
+      this.scratch[1] = this.ghostBy + (this.ghostMy - this.ghostBy) * gt;
+      g.circle(this.scratch[0], this.scratch[1], dotR * (1.6 - 0.6 * gt));
+      g.stroke({ color: 0xffffff, width: 2, alpha: 0.55 * (1 - gt) });
     }
     this.headX = this.scratch[0];
     this.headY = this.scratch[1];

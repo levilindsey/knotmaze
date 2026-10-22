@@ -182,7 +182,23 @@ describe("MinotaurChase: detection", () => {
     expect(sim.mode).toBe("pause");
     expect(sim.catches).toBe(0);
     sim.place("player", "A"); // Off the tail: caught.
-    expect(run(sim, 1)).toEqual([{ kind: "caught" }]);
+    const evs = run(sim, 1);
+    expect(evs.length).toBe(1);
+    expect(evs[0].kind).toBe("caught");
+  });
+
+  it("K546 stage 2: a caught event carries the pre-respawn spots", () => {
+    const sim = new MinotaurChase(G1, still, 1);
+    sim.place("minotaur", "A", "pause", 100);
+    sim.place("player", "A"); // On top of it, off the tail.
+    const evs = run(sim, 1);
+    const caught = evs.find((e) => e.kind === "caught");
+    if (!caught || caught.kind !== "caught") throw new Error("no caught event");
+    // The event spots are where the catch happened (both at A)...
+    expect(caught.player).toEqual(caught.mino);
+    // ...while the chase itself has already respawned the player.
+    expect(sim.player.vertex).not.toBe("A");
+    expect(sim.catches).toBe(1);
   });
 });
 

@@ -423,6 +423,33 @@ slider, and an appended row costs one pin update.
   are not). Tests: the event payload and its non-effect on
   `K80_DIGESTS`; the standing loss's beat; the turn-fire creep reaching
   the head exactly at ignition.
+  Stage 2 Handoff (2026-10-21): DONE. `minotaur.ts`: the `"caught"`
+  event carries the pre-respawn `player`/`mino` spots at both push sites
+  (the catching extra's spot for an extra's catch); digests hash spots
+  per tick, never events, so `K80_DIGESTS` is bit-identical (the suite
+  proves it) and replays are untouched. `fabric_maze_renderer.ts`:
+  `setCatchGhost(a, b, t)` — both markers slide to their meeting point,
+  the head's ring fading as they close (`refreshGhost` in `drawMarkers`
+  + `syncMinotaur`), and `fireBurnCreep` — during the burn-in,
+  `syncFire` draws the head's incident fronts creeping along their runs
+  (`pushFront` at the crept fraction), reaching the head exactly at
+  ignition; the settled char draws when the beat ends. `main.ts`:
+  `pendingGhost` defers the whole real-time ending (hearts/restart,
+  respawn, toast) behind the 300 ms sweep — burst at the meeting point
+  (`catchGhostMeet`) + `vibrate(60)` at contact, matching the turn
+  clock's parity; input gated in `handleChaseTap`/`chaseAlong`; reduced
+  motion ends the catch at once. Fire: `beginFireBeat` (both clocks —
+  the turn site in `moveAlong`, the real-time site in `fireSet`) holds
+  `pendingLoss` back while `fireBeatStep` (keyStep slot; `tickFire` is
+  real-time only) creeps `fireBurnCreep`, then vibrates and releases
+  the banner; `gameNeedsFrame` keeps the loop awake for both beats.
+  Tests: the event-payload test (spots pre-respawn, player already back
+  at the entrance) + the updated exact-shape catch expectation; the
+  standing-loss beat and creep-at-ignition are page-proven
+  (`.claude/probes/K546/s2_probe.mjs`: ghost 11–13 frames to t≈0.9,
+  creep 12 frames to ≈0.96, banner after; shots in `s2/`). Full suite
+  2240 green. Residual: the ghost draws the minotaur's marker only —
+  extras keep standing at their spots during the rendezvous.
 - **Stage 3 — contact burst + screen fall (M).** `mino_feedback.ts`:
   the evolved ring clock. New `render/loss_fx_model.ts` +
   `render/loss_fx.ts` (burst pool in world space at the meeting point;
