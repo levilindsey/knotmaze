@@ -25,7 +25,10 @@
 // within KEY_RADIUS runs of the base route (the rules beneath's, else the
 // plain one), whose DETOUR is 1 to KEY_DETOUR_MAX runs: the runs from the
 // start to the junction and on to the lock's near end, less the runs from
-// the start straight there (both over the walk without the locks). A draw
+// the start straight there (both over the walk without the locks), and whose
+// key alone leaves the maze solvable under the rules beneath (the distances
+// ignore them, and the color rule bars many (junction, color) states, so
+// under it keys may not place at all, as one-way runs may not). A draw
 // samples `keys` of them (fewer when fewer qualify) without replacement from
 // the "locks" stream, a candidate's tickets its detour, and the kit's
 // placeRule keeps the first solvable draw that bites (else the last
