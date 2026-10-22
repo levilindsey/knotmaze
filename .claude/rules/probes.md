@@ -711,6 +711,8 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   Env `TAG_QUERY` / `TAG_ROW` pick the tag-hint case. Its dev server is
   `vite.private-cache.config.ts` (s3c's wrapper) on 5410-5413.
 
+- K795 (2026-10-21), the beat rows and tunables: `.claude/probes/K795/beat_page.mjs <desktop|phone> <rows|ride> [extra] [label]` (serve the worktree with `.claude/probes/K795/vite.private-cache.config.ts` on 5420; `BASE` overrides; `?7&am=instant&snd=none`, fresh profile deleted after, no `--virtual-time-budget`). `rows` checks the Clock rows, the five beat rows' show/hide, tempo/beats reaching `__knotBeat()`, and the tunables' rows writing their params with the link returning at defaults. `ride` rides seed 7 straight on for 8 s (even: every run `beatPerRun` beats, `7200/tempo * beatPerRun` ticks apart) then steers to the exit and reports its time against K114's 0:32-0:34 under `btm=length`.
+
 ## Census and diagnosis rules
 
 - *From P3.38 (the pull-outward merge), lesson:* LESSON: the

@@ -307,15 +307,15 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
     label: "lures",
     line:
       "Lures left, of the stock you started with. Arm the note and tap a " +
-      "run: the minotaur and any sleeper within six runs of it head for its " +
+      "run: the minotaur and any sleeper within range of it head for its " +
       "nearer end, at no cost in moves. Starting over refills them.",
   },
   snares: {
     label: "snares",
     line:
       "Snares left, of the stock you started with. Arm the loop and tap a " +
-      "run at your junction: the first monster to step onto it stands three " +
-      "turns at its near end. Starting over refills them.",
+      "run at your junction: the first monster to step onto it stands at " +
+      "its near end for a few turns. Starting over refills them.",
   },
   // K137 stage 2: game/spool.ts spoolGauge of the controller's spoolUsed
   // (pathEdges.length) against spoolCap (parFor(fewestRuns, spoolSlack)).
@@ -339,7 +339,7 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
     label: "hints",
     line:
       "Hints left this solve. A hint lights the next run of the shortest way " +
-      "to the exit for two seconds; a restart gives them all back.",
+      "to the exit for a few seconds; a restart gives them all back.",
   },
   // K137 stage 2: the controller's hintsUsed at the finish.
   hintsUsed: {
@@ -369,7 +369,7 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
     label: "hidden",
     line:
       "Hidden runs found of those in the maze. A hidden run draws nothing " +
-      "until you pluck a thread of the same note within three runs of it. " +
+      "until you pluck a thread of the same note within a few runs of it. " +
       "Fewest: the fewest moves to the exit without the hidden runs (what " +
       "the stars rate against), then with them.",
   },
