@@ -655,6 +655,44 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   main.ts uses (same URL). `walker_page/` holds K114's walker page driver
   patched for port 5698 and its private-cache dev server config.
 
+- K138 stage 4 (2026-10-21), locks and keys: `.claude/probes/K138/s4/`.
+  `census/census.ts <out.md> [first] [last]` (keys and locks over 50
+  seeds through the shipped controller, plus the TRAP CHECK: a forward
+  BFS over legal taps, and a trap is a reachable node that cannot reach
+  the exit and cannot undo out because a move on its path blocks its
+  backtrack; results.md) and `census/trap_detail.ts <seed> '<rules
+  json>'` (one trap's blocking moves) run with `node
+  node_modules\vite-node\vite-node.mjs --config <that
+  folder>\vite.node.config.mjs <script> ...` from the checkout.
+  `page/plan.ts [seed=7] [keys=2]` (same runner, `page/`'s config) writes
+  `plan.json`: Route A from the start to the far end of a lock run L,
+  holding no key, then Route B through every key to the exit.
+  `page/locks_page.mjs <base> [desktop|phone]` (run from the checkout; on
+  `?<seed>&am=instant&snd=none&ky=<keys>`, headed and off-screen, a fresh
+  profile deleted after) walks Route A with real clicks (desktop) or
+  touch taps (phone: 411x753, dsf 2), each at a point the renderer's
+  `edgeAt` confirms, falling back to `__knotTurnMove` only when a press
+  did not move (counted). It presses L (at `runPoint` fractions until
+  `cutPick` confirms L): refused (head, path and keys unchanged), the
+  toast, the thunk in `__knotCutPlucks()`. It then walks Route B (each
+  key's marker goes and the count rises, the padlock goes before the last
+  run, the last run wins) and ends in a CHECK summary (21 checks; stills
+  and JSON in `page/out/`). `dim_page.mjs <base> [desktop|phone] [seed]`
+  (env EXTRA) crops a turnstile's third-arm dim at three clocks;
+  `zoom.mjs` and `png.mjs` are its helpers. The dev server is
+  `vite.private-cache.config.ts` on 5402 (s3c's wrapper). Hooks:
+  `__knotFabric().rules.locks` (mode, keys, locks, held, heldMask,
+  total), `__knotFabricRenderer().lockMarkers` and `__knotCutPlucks()`
+  (main.ts's last 32 cutPluck calls: eid, the run, then octave, strength
+  and sounded).
+  GOTCHAS: at 1400x900 the open desktop panel covers the exit's lock run
+  on seed 7, so the driver closes it with a real click on `.kp-menu` (the
+  state persists in localStorage `knotmaze.panelOpen`; the root has
+  `kp-open` while it is open). The HUD's stat rows are `#maze-hud`'s own
+  `.k` / `.v` span pairs (`.km-rows` belongs to the banners). A refused
+  run is not in `__knotFabric().choices`, so aim at it through
+  `runPoint` and `cutPick`.
+
 ## Census and diagnosis rules
 
 - *From P3.38 (the pull-outward merge), lesson:* LESSON: the
