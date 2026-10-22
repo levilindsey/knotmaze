@@ -422,7 +422,7 @@ Next free ID: K812.
   - owner: nobody since 2026-10-20 15:55 (merged; agent `aa8bfad6d1cc3d6bf` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
   - branch: mainline; last commit: `8feca6b`
   - evidence: `.claude/probes/K370/`
-  - next: next stage: the phone worker's 2.1-2.9x substep cost (read cpu6's clock during a drag; time a worker drag with main's rendering paused), after re-measuring the phone on the merged build; brief to write
+  - next: stage 2 briefed (`docs/design/K370_s2.md`); desktop half done 2026-10-21: the worker substep premium does not reproduce (daily +4%, knot +4% per substep; no lever built; Handoff in the brief). Left: the phone half in the Wave 5 window (re-measure post-`0753b3c`, cpu6 clock, paused-render drag)
   - brief: `docs/design/K370.md`
 - **K580** · The a's J join, Levi's call (2026-10-20): tangent, its shared stretch a TAPERED spur that
   leaves the junction as wide as both merging strokes and narrows to normal where they turn collinear.
