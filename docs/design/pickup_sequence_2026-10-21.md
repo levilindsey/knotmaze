@@ -58,7 +58,7 @@ branch.
 
 ### Wave 3 — gameplay (controller/minotaur lanes, serial per lane)
 
-10. **K137 s5 remainder**: real-time extras, then look pieces
+10. **K137 remainder**: muddy runs done (s5); real-time extras briefed as stage 6 in `docs/design/K137_s6.md`, then real-time lures/snares, then look pieces
     (scent 4.34, fray, darkness/lantern 4.17, sonar 4.26,
     tunnels 4.13). Brief: `K137_s4.md` handoff.
 11. **K138 slices 3-4** from the Remainder in `K138_s4.md`
