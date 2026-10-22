@@ -212,6 +212,7 @@ describe("animation speed (K79)", () => {
     silk: 0.8,
     aurora: 1,
     contours: 0.3,
+    paper: 0,
   };
 
   it("reproduces the pre-K79 drift exactly at auto (the default, -1)", () => {
@@ -318,8 +319,8 @@ describe("shape params (K79 stage B)", () => {
     expect(shaped({ detail: 0 })).toEqual(["mist", "wash", "silk", "contours"]);
     expect(shaped({ detail: 2 })).toEqual(["mist", "wash", "silk", "contours"]);
     expect(BACKGROUNDS.filter(readsDetail)).toEqual(["mist", "wash", "silk", "contours"]);
-    expect(shaped({ fibers: 0 })).toEqual(["vellum"]);
-    expect(shaped({ grain: 3 })).toEqual(["vellum"]);
+    expect(shaped({ fibers: 0 })).toEqual(["vellum", "paper"]);
+    expect(shaped({ grain: 3 })).toEqual(["vellum", "paper"]);
     expect(shaped({ angle: 0 })).toEqual(["silk"]);
     expect(shaped({ angle: 270 })).toEqual(["silk"]);
   });
