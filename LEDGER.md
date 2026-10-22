@@ -455,14 +455,6 @@ Next free ID: K812.
   - next: slice 3 (the shortcut form) and slice 4 (colors) wait for Levi; restart from the Remainder in docs/design/K138_s4.md
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
-- **K793** · Settings panel search: fuzzy matching over row names, tags (src/ui/param_tags.ts),
-  folder titles and option labels, plus collapse-all and expand-all buttons (Levi 2026-10-21)
-  - owner: nobody since 2026-10-21 11:07 (agent `a6c979bb8c0c8944a` of claude session 91b19e11-7759-4638-ba60-4705b011b94f, stopped at Levi's wrap-up; finished, page-checked before its rebase)
-  - branch: `worktree-agent-a6c979bb8c0c8944a`, worktree `.claude/worktrees/agent-a6c979bb8c0c8944a`; last commit: `d55105e6` (WIP, unpushed, on `1fd34464`; npm test and build green after the rebase)
-  - evidence: `.claude/probes/K793/` in the main checkout (`search_probe.mjs`, `lib.mjs`, `out/` with `desk_report.json` 30/30 and `phone_report.json` 33/33 from before the rebase)
-  - next: re-run `search_probe.mjs` against the worktree's vite (expect 30 + 33), then merge with agent_merge; if K795 merged first, rebase and tag its rows. Filed from its report: K809, K810, K811
-  - brief: `docs/design/K793.md` (the Handoff at its end, on the branch)
-  - env: from the worktree, `npx vite --config C:\Users\lsl\Repositories\knotmaze\.claude\probes\K793\vite.private-cache.config.ts --port 5410 --strictPort --host 127.0.0.1`
 - **K794** · Gold path mode: a run walked again stays gold; a backtrack no longer erases it (Levi
   2026-10-21)
   - owner: nobody since 2026-10-21 10:36 (agent af1981ccbc976565e of claude session 91b19e11-7759-4638-ba60-4705b011b94f failed: autocompact thrash on the 4,000-line render files; Claude Code then deleted its commit-less worktree; held at the week at 96%)
@@ -1849,6 +1841,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K793** · Settings panel search (fuzzy over row names, tags, folders and options) with collapse and expand all. Done in a60a2cc7 (2026-10-21).
 - **K777** · Refreshed the open-work report (K585) to v7: 68 decision cards (41 confirm, 25 open), 18 tests to mark and a What changed block, built from the ledger at 37382172; pipeline and gaps in the `docs/design/K777.md` Handoff. Done in 1396ea06 (2026-10-21).
 - **K774** · Beat rider catches land exactly once (moveAlong lands a pending catch before the next departure; test/app/beat_catch.test.ts). Done in 8a9fe90c (2026-10-21).
 - **K764** · A press on a hidden, burnt or cut run grabs and tugs the unseen thread instead of panning, which gives its position away (from the code: `grabAt`/`onThread` in `src/app/input_pointer.ts` skip none of them; fix: skip them there). Dropped: not reproduced (K138 s3, desktop, both hosts): a press on an unrevealed hidden run pans, since every unseen span reaches the ribbons as explore pieces (exploreOn true) and the pickers skip it; cut, broken and burnt runs share that code; touch goes to K784 (2026-10-21).
