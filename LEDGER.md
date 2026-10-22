@@ -291,10 +291,10 @@ Next free ID: K812.
   1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that
   swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
   K280, residuals K281).
-  - owner: nobody since 2026-10-21 05:15 (merged; agent `a178a00897a4044dc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `e1fe321b`
+  - owner: nobody since 2026-10-21 13:04 (merged; agent `a178a00897a4044dc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `cf41f919`
   - evidence: `.claude/probes/K114/beat/`
-  - next: the beat remainder (Handoff of docs/design/K114_beat.md): item 8 the HUD tempo row and share tag (its panel rows moved to K795, item 6 the pulse to K804), the lore, keys and the move pad checked on the page; then Levi calls K706, K707 and the beat calls, a phone pass, then the spider and K688 healing cuts after K137 s3d, then Pluck Hero
+  - next: a real phone pass and Levi feel of tempo/L and the pulse; the spoken-finish-time quirk (switching FROM beat) still to locate; solver/While riding page order per the K114 line
   - brief: `docs/design/K114_beat.md`
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
