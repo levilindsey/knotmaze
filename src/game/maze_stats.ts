@@ -66,6 +66,7 @@ export type StatId =
   | "woken"
   | "lures" // K137 stage 4
   | "snares"
+  | "pings" // K137 sonar (4.26)
   | "spool"
   | "spoolUsed"
   | "hints"
@@ -320,6 +321,13 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "Snares left, of the stock you started with. Arm the loop and tap a " +
       "run at your junction: the first monster to step onto it stands at " +
       "its near end for a few turns. Starting over refills them.",
+  },
+  pings: {
+    label: "pings",
+    line:
+      "Sonar pings left, of the limit you set. Pluck a thread in fog: " +
+      "the runs of its note nearby ring and show briefly. Starting " +
+      "over refills them.",
   },
   // K137 stage 2: game/spool.ts spoolGauge of the controller's spoolUsed
   // (pathEdges.length) against spoolCap (parFor(fewestRuns, spoolSlack)).

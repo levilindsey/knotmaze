@@ -93,6 +93,7 @@ describe("what each figure means (K274)", () => {
     // K137 stage 4: the lures and snares left.
     lures: { left: 2, of: 3 },
     snares: { left: 1, of: 2 },
+    pings: { left: 2, of: 5 }, // K137 sonar (4.26)
     // K137 stage 2: the aids' rows.
     spool: { used: 3, cap: 12 },
     hints: { left: 1, of: 3 },

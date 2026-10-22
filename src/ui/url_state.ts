@@ -868,6 +868,10 @@ export interface UrlParams {
   // K137 darkness (4.17): the lantern's lit radius around the head,
   // as a multiple of the fog radius (1 = no lantern).
   lantern: number;
+  // K137 sonar (4.26): plucks ring same-note runs through the fog,
+  // and the per-solve ping limit (0 = unlimited).
+  sonar: boolean;
+  sonarPings: number;
   sleepKind: SleepKind;
   // K138 stage 3: one-way runs, 0 off or the share of the maze's core runs
   // (0..ONE_WAY_MAX 0.6) walked one way only. The classic game only.
@@ -1223,6 +1227,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minoScent: 0,
   darkMoves: 0, // K137 darkness (4.17)
   lantern: 1, // K137 darkness (4.17)
+  sonar: false, // K137 sonar (4.26)
+  sonarPings: 0, // K137 sonar (4.26)
   sleepKind: "wake",
   // K138 stage 3: no one-way runs.
   oneWay: 0,
@@ -2071,6 +2077,8 @@ function readLegacy(
     minoScent: readNumber(query, "msc", D.minoScent), // K137 scent (4.34)
     darkMoves: readNumber(query, "dkm", D.darkMoves), // K137 darkness (4.17)
     lantern: readNumber(query, "lan", D.lantern), // K137 darkness (4.17)
+    sonar: readBool(query, "son", D.sonar), // K137 sonar (4.26)
+    sonarPings: readNumber(query, "spg", D.sonarPings), // K137 sonar (4.26)
     sleepKind: readChoice(query, "slk", SLEEP_KINDS, D.sleepKind),
     // K138 stage 3's one-way share (`&ow=0.4`; PARAM_RANGES clamps 0..0.6).
     oneWay: readNumber(query, "ow", D.oneWay),
