@@ -212,7 +212,14 @@ describe("hidden runs: the controller", () => {
     const off = make(3, {});
     const g = ruleFields(off);
     expect([g.rules, g.turnstiles, g.hidden]).toEqual([null, null, null]);
-    expect(ruleShareTags(off)).toEqual({ ice: null, colorRule: null, turnstiles: null, hidden: null, oneWay: null });
+    expect(ruleShareTags(off)).toEqual({
+      ice: null,
+      colorRule: null,
+      turnstiles: null,
+      hidden: null,
+      oneWay: null,
+      keys: null,
+    });
     expect(rulesValue(make(3, { colorRule: "alternate" }))).toBe("alternate");
   });
 
