@@ -44,6 +44,7 @@ import { ICE_SHARE_MAX, ICE_SHARE_ON } from "../game/ice";
 import { TURNSTILES_MAX } from "../game/turnstiles";
 import { HIDDEN_MAX } from "../game/hidden_runs";
 import { ONE_WAY_MAX } from "../game/one_way";
+import { KEYS_MAX } from "../game/locks";
 import { LIVES_MAX, LIVES_RECOMMENDED, livesOf } from "../game/lives";
 import { SWORD_MOVES_MAX, SWORD_MOVES_MIN } from "../game/sword";
 import { SLEEPERS_MAX } from "../game/monsters";
@@ -1722,6 +1723,20 @@ export function buildPanel(
       callbacks.onClockChange();
     }
   );
+  // K138 stage 4 (game/locks.ts): keys and the lock, the same scope and
+  // restart.
+  const keysRow = row(
+    fGame, p, "keys",
+    { min: 0, max: KEYS_MAX, step: 1, format: (v: number) => (v === 0 ? "off" : String(v)), label: "Keys" },
+    "Keys (0: none). Key beads lie on junctions a few runs off the way out; walk onto one to take it. The runs into the exit stay locked until you hold every key, and a tap on a lock is refused. Going back over the move that took a key drops it again. The fewest moves and par count the keys. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
+    D.keys, () => callbacks.onClockChange()
+  );
+  const lockModeRow = row(
+    fGame, p, "lockMode",
+    { options: { "the exit": "exit" }, label: "Lock" },
+    "Which runs the keys open: the exit, the runs into the way out (they need every key). Restarts the solve.",
+    D.lockMode, () => callbacks.onClockChange()
+  );
 
   // K80: the real-time chase's tuning (game/minotaur.ts ChaseParams; the
   // defaults were picked by a headless simulation). All live. Since K80
@@ -2978,6 +2993,8 @@ export function buildPanel(
     turnstilesRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 2
     hiddenRunsRow.hidden = !fab || params.gameMode !== "classic";
     oneWayRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 3
+    keysRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 4
+    lockModeRow.hidden = keysRow.hidden || params.keys <= 0;
     // Under the thread reveal too (K76 stage 2c: the same two settings).
     minoFogRow.hidden = !minoOn || !(fog || threads);
     // K137 stage 3a: lives replace the level row while on (game/lives.ts).
