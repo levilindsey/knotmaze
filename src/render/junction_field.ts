@@ -366,10 +366,12 @@ precision highp float;
 
 in vec2 aPosition;
 in float aRec;
+in float aLook;
 in vec4 aMaskId;
 
 out vec2 vPos;
 flat out float vRec;
+out float vLook;
 flat out vec4 vMaskId;
 out vec4 vColor;
 ${MESH_UNIFORMS}
@@ -378,6 +380,7 @@ void main(void) {
   gl_Position = vec4((mvp * vec3(aPosition, 1.0)).xy, 0.0, 1.0);
   vPos = aPosition;
   vRec = aRec;
+  vLook = aLook;
   vMaskId = aMaskId;
   vColor = uColor * uWorldColorAlpha;
 }
@@ -391,6 +394,7 @@ export const JUNCTION_FRAG = /* glsl */ `#version 300 es
 ${FIELD_GLSL}
 in vec2 vPos;
 flat in float vRec;
+in float vLook;
 flat in vec4 vMaskId;
 in vec4 vColor;
 
@@ -404,15 +408,37 @@ void main(void) {
   bool strip = fract(vRec) > ${(STRIP_REC_TAG / 2).toFixed(3)};
   vec4 j1 = jAt(rec + 1);
   float aM = knotFanAlpha(j1);
+  // K797b/K798 THREAD LOOK for fillets: aLook is the across coordinate
+  // on cover strips (0..1) and the apex-to-rim fraction on fans (0..1),
+  // so one edge band follows ribbon edges, fan rims, wedge flanks and
+  // free-end caps. During a border-at-a-time intro a junction keeps its
+  // fill back until its own gate has settled (edges), or until the
+  // whole intro ends (edgesAll, uKLook.z = 0).
+  float lookCoord = strip ? abs(2.0 * vLook - 1.0) : vLook;
+  float lookFw = min(max(fwidth(vLook) * 3.0, 0.02), 0.38);
+  float lookEdge = smoothstep(0.62, 0.62 + lookFw, lookCoord);
+  bool lookIntro = uKLook.y > 0.5 && uKLook.z > 0.5;
+  float lookA = 1.0;
+  if (uKLook.x > 0.5 && uKLook.x < 1.5) lookA = lookEdge;
+  else if (lookIntro) {
+    float fillOn = uKLook.y < 1.5 ? (aM >= 0.999 ? 1.0 : 0.0) : 0.0;
+    lookA = mix(fillOn, 1.0, lookEdge);
+  }
   if (aM <= 0.002) discard;
   vec3 rgb = junctionField(rec, vPos, pxW, j1, strip);
+  if (uKLook.x > 0.5 || lookIntro) {
+    vec3 stroke = mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5);
+    rgb = uKLook.x > 0.5 && uKLook.x < 1.5
+      ? stroke
+      : mix(rgb, stroke, lookEdge * 0.9);
+  }
   float gk = gapKeepAt(pxW, vPos, -1.0, vec2(0.0), vMaskId);
   if (gk < 1.0 && gapProbe()) {
     rgb = mix(rgb, vec3(1.0, 0.0, 0.85), (1.0 - gk) * 0.75);
     gk = 1.0;
   }
-  if (gk <= 0.002) discard;
-  finalColor = vec4(rgb, 1.0) * vColor * (aM * gk);
+  if (gk * lookA <= 0.002) discard;
+  finalColor = vec4(rgb, 1.0) * vColor * (aM * gk * lookA);
 }
 `;
 
@@ -463,12 +489,16 @@ export const FIELD_EXPLORE_EDITS: ReadonlyArray<readonly [string, string]> = [
     "  vec4 exC = junctionField(rec, vPos, pxW, j1, strip);",
   ],
   [
+    "  if (uKLook.x > 0.5 || lookIntro) {\n    vec3 stroke = mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5);\n    rgb = uKLook.x > 0.5 && uKLook.x < 1.5\n      ? stroke\n      : mix(rgb, stroke, lookEdge * 0.9);\n  }",
+    "  if (uKLook.x > 0.5 || lookIntro) {\n    vec3 base = exC.a > 0.0001 ? exC.rgb / exC.a : vec3(0.0);\n    vec3 stroke = mix(base * 0.30, vec3(0.09, 0.085, 0.08), 0.5);\n    base = uKLook.x > 0.5 && uKLook.x < 1.5\n      ? stroke\n      : mix(base, stroke, lookEdge * 0.9);\n    exC.rgb = base * exC.a;\n  }",
+  ],
+  [
     "    rgb = mix(rgb, vec3(1.0, 0.0, 0.85), (1.0 - gk) * 0.75);",
     "    exC.rgb = mix(exC.rgb, vec3(1.0, 0.0, 0.85) * exC.a, (1.0 - gk) * 0.75);",
   ],
   [
-    "  finalColor = vec4(rgb, 1.0) * vColor * (aM * gk);",
-    "  if (exC.a <= 0.002) discard;\n  finalColor = exC * vColor * (aM * gk);",
+    "  finalColor = vec4(rgb, 1.0) * vColor * (aM * gk * lookA);",
+    "  if (exC.a * lookA <= 0.002) discard;\n  finalColor = exC * vColor * (aM * gk * lookA);",
   ],
   ...exploreGapEdits(true, "uniform vec4 uKExplore;\n"),
 ];
