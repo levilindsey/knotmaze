@@ -703,9 +703,6 @@ Every other item below waits on the trigger it names.
 - **K792** · A try key for the K610 grab chase rate (0.6 per constraint iteration today): its feel
   A/B needs 0.8 and 1.0 from a link, none sets the rate, so its report card has no try link (K777;
   `docs/design/K370.md`)
-- **K796** · Done in 5f9f3a45 (2026-10-21): string mode in the burn race: the yarn burns away with the thread under it (Levi
-  2026-10-21; pv=string with the burn race; the yarn and the fire paint in fabric_maze_renderer.ts,
-  gameplay-fire.md)
 
 ## Residuals (known, not fixed)
 
@@ -1823,6 +1820,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K796** · String burns away with its thread in the burn race (burntAt in explore_view.ts; drawYarn hides burnt stations). Done in 5f9f3a45 (2026-10-21).
 - **K794** · Walked gold stays gold (the gold derives from the taps). Done in fb110a3e (2026-10-21).
 - **K795** · Panel rows for every param, the beat timing toggle and four tunables. Done in a1b1bdde (2026-10-21).
 - **K793** · Settings panel search (fuzzy over row names, tags, folders and options) with collapse and expand all. Done in a60a2cc7 (2026-10-21).
