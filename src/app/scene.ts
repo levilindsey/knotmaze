@@ -13,6 +13,7 @@ import {
 } from "../core/section_colors";
 import { walkerMapOf } from "../game/walker";
 import { closedArmEnds } from "../game/turnstiles";
+import { lockOpens } from "../game/locks";
 import { buildWalkGraph } from "../core/walk_graph";
 import type { WalkGraph } from "../core/walk_graph";
 import type { TangleGraph } from "../core/types";
@@ -214,11 +215,20 @@ export function createScene(deps: SceneDeps): Scene {
   // installRuns uploads only the changed texels; no uniform, no shader text.
   let runBase: { runs: SectionRuns; chains: RunChain[]; effHue: number } | null = null;
   let dimKey = "";
+  // K138 s4: a LOCK run dims at both ends while the walk lacks a key it
+  // needs, and comes back to its own color once the keys are held.
   function ruleDims(): RunDim[] {
     const fc = fabricController;
-    const ts = fc?.ruleLook?.turnstiles;
-    if (!fc || !ts || fc.solved || !walkGraph) return []; // As the bands.
-    return closedArmEnds(walkGraph, ts, fc.rulePhase);
+    const look = fc?.ruleLook;
+    if (!fc || !look || fc.solved || !walkGraph) return []; // As the bands.
+    const dims = look.turnstiles ? closedArmEnds(walkGraph, look.turnstiles, fc.rulePhase) : [];
+    const lk = look.locks;
+    if (lk) {
+      for (const eid of lk.locks.keys()) {
+        if (!lockOpens(lk, eid, fc.keysHeldMask)) dims.push({ run: eid, end: 0 }, { run: eid, end: 1 });
+      }
+    }
+    return dims;
   }
   const dimKeyOf = (d: RunDim[]): string => d.map((x) => `${x.run}.${x.end}`).join(",");
   function inkRgb(): RGB {
@@ -245,20 +255,30 @@ export function createScene(deps: SceneDeps): Scene {
     );
   }
   // syncRuleDim runs every frame: it compares what ruleDims reads (the
-  // controller, its layout, the clock, solved) and allocates nothing while
-  // those hold.
+  // controller, its layout, the clock, solved, the keys held) and allocates
+  // nothing while those hold.
   let dimFc: FabricMazeController | null = null;
   let dimLook: unknown = null;
   let dimPhase = -1;
   let dimSolved = false;
+  let dimHeld = -1;
   function syncRuleDim(): void {
     const fc = fabricController;
-    if (!renderer || !runBase || !fc?.ruleLook?.turnstiles) return;
-    if (fc === dimFc && fc.ruleLook === dimLook && fc.rulePhase === dimPhase && fc.solved === dimSolved) return;
+    const look = fc?.ruleLook;
+    if (!renderer || !runBase || !fc || !look || !(look.turnstiles || look.locks)) return;
+    if (
+      fc === dimFc &&
+      look === dimLook &&
+      fc.rulePhase === dimPhase &&
+      fc.solved === dimSolved &&
+      fc.keysHeldMask === dimHeld
+    )
+      return;
     dimFc = fc;
-    dimLook = fc.ruleLook;
+    dimLook = look;
     dimPhase = fc.rulePhase;
     dimSolved = fc.solved;
+    dimHeld = fc.keysHeldMask;
     if (dimKeyOf(ruleDims()) === dimKey) return;
     renderer.setSectionRuns(
       withRuleLooks(runBase.runs, runBase.chains, runBase.effHue),
