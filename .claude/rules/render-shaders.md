@@ -15,7 +15,6 @@ paths:
   - "src/render/program_registry.ts"
   - "test/render/program_registry.test.ts"
   - "test/render/shader_warmup.test.ts"
-  - "src/app/frame_loop.ts"
   - "src/app/lifecycle.ts"
 ---
 

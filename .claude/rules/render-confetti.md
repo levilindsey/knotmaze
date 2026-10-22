@@ -3,7 +3,6 @@ paths:
   - "src/render/confetti.ts"
   - "src/render/confetti_model.ts"
   - "test/render/confetti_model.test.ts"
-  - "src/app/frame_loop.ts"
 ---
 
 # Render lore: finish confetti (K140)

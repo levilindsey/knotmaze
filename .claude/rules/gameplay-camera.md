@@ -4,7 +4,6 @@ paths:
   - "src/app/camera.ts"
   - "src/ui/view_clamp.ts"
   - "test/ui/view_clamp.test.ts"
-  - "src/app/frame_loop.ts"
   - "src/game/tap_pick.ts"
   - "test/game/tap_pick.test.ts"
 ---

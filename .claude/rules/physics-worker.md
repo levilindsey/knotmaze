@@ -12,7 +12,6 @@ paths:
   - "test/physics/worker_host.test.ts"
   - "test/physics/host_seam.test.ts"
   - "test/physics/snapshot.test.ts"
-  - "src/app/frame_loop.ts"
   - "src/app/lifecycle.ts"
   - "src/app/scene.ts"
 ---

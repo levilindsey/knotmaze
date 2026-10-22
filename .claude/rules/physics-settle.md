@@ -3,7 +3,6 @@ paths:
   - "src/physics/settle_budget.ts"
   - "test/physics/settle_budget.test.ts"
   - "src/physics/physics_host.ts"
-  - "src/app/frame_loop.ts"
   - "src/app/lifecycle.ts"
 ---
 
