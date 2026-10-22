@@ -436,11 +436,11 @@ Next free ID: K793.
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
-  - owner: nobody since 2026-10-21 09:18 (agent `a12fb9991e1142249` of claude session 91b19e11-7759-4638-ba60-4705b011b94f, paused at the 92% weekly usage line)
-  - branch: `worktree-agent-ac022c74b0ce97669`, worktree `.claude/worktrees/agent-ac022c74b0ce97669` (slice 2, locks and keys: suite and build green, no page check, not rebased; slice 1 merged at 3dad5914); last commit: `b04859e4` (WIP, unpushed)
+  - owner: agent `ac3462d3821227d69` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, launched 2026-10-21 09:52, 2 h cap 11:52): slice 2 finish
+  - branch: `worktree-agent-ac3462d3821227d69`, worktree `.claude/worktrees/agent-ac3462d3821227d69` (reset to 071b2ea3, then rebased onto master; the paused worktree `.claude/worktrees/agent-ac022c74b0ce97669` stays as a backup); last commit: `071b2ea3`
   - evidence: `.claude/probes/K138/s4/` (census/results.md and the trap logs, dim_page.mjs, zoom.mjs, png.mjs)
-  - next: slice 2: rebase it (ky and lkm sit at codec indices 212-213; check that nothing merged since took them), write and run its page check (page/plan.ts plans the seed-7 route; page/locks_page.mjs shows a lock refusing, a key taken and the lock passing, on desktop and at 411x753), then its lore; then slice 3 (the shortcut form) and slice 4 (colors)
-  - brief: docs/design/K138_s4.md (its Handoff, Slice 2: locks and keys)
+  - next: slice 2 finish per Relaunch 3 (rebase, the thunk, locks block the minotaur and the fire, missing tests, page check on desktop and at 411x753, lore); merge; then slice 3 (shortcut) and slice 4 (colors), one run each. Levi 2026-10-21: finish locks and keys regardless of usage limits
+  - brief: `docs/design/K138_s4.md` on the branch (Relaunch 3)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
 
 ## Next, in order
