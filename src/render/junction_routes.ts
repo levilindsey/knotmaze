@@ -119,7 +119,7 @@ export function pairRoutes(
   for (const p of pairs) {
     const ea = edges[p.a];
     const eb = edges[p.b];
-    if (!ea || !eb || p.a === p.b) continue;
+    if (!ea || !eb || ea.chain < 0 || eb.chain < 0 || p.a === p.b) continue; // chain < 0: a tunnel arm (K137 4.13)
     const a = edgeArm(ea, ea.va === p.vertex);
     const b = edgeArm(eb, eb.va === p.vertex);
     out.push({ chain: a.chain, ctrl: a.ctrl, dir: a.dir, outChain: b.chain, outCtrl: b.ctrl, outDir: b.dir });

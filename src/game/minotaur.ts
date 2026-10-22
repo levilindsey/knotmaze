@@ -420,7 +420,9 @@ export class ChaseGraph {
         this.eb[e.id] === this.start ||
         this.ea[e.id] === this.exit ||
         this.eb[e.id] === this.exit;
-      this.barred[e.id] = tail ? 1 : 0;
+      // K137 tunnels (4.13): barred like a tail - it has no thread
+      // for the chase's contact geometry to stand on.
+      this.barred[e.id] = tail || e.chain < 0 ? 1 : 0;
     }
   }
 

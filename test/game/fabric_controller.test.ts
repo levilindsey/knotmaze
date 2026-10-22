@@ -6,6 +6,7 @@ import { buildWalkGraph } from "../../src/core/walk_graph";
 import type { WalkGraph } from "../../src/core/walk_graph";
 import { FabricMazeController } from "../../src/game/fabric_controller";
 import { buildSceneGraph } from "../../src/core/scene_graph";
+import { tunnelPairs, withTunnels } from "../../src/game/tunnels";
 import { dailyParams, dailyTitle } from "../../src/ui/daily_link";
 
 // P4 Stage 8a: branch-point-only solve state over the walk graph.
@@ -699,5 +700,44 @@ describe("restarts (K100): what the fog of war starts over on", () => {
     expect(c.respawns).toBe(1);
     expect(c.replay([...c.taps])).toBe(true); // a replay restarts too
     expect(c.respawns).toBe(0);
+  });
+});
+
+describe("K137 tunnels (4.13): the linked junctions", () => {
+  it("one tap crosses the link, and the way back is the same tap", () => {
+    let walk: WalkGraph | null = null;
+    let pair: [string, string] | null = null;
+    for (let seed = 1; seed <= 60 && !pair; seed++) {
+      const w = walkFor(seed);
+      const pairs = tunnelPairs(w, 1);
+      if (pairs.length > 0) {
+        walk = withTunnels(w, 1);
+        pair = pairs[0];
+      }
+    }
+    if (!walk || !pair) throw new Error("no seed grew a tunnel");
+    const [mouthA, mouthB] = pair;
+    const tunnelId = walk.edges.length - 1;
+    expect(walk.edges[tunnelId].chain).toBe(-1);
+    const c = new FabricMazeController(walk);
+    // Walk by thread to mouth A; the link is a choice only there.
+    expect(c.choices()).not.toContain(tunnelId);
+    for (const eid of routeTo(walk, walk.start, mouthA)) {
+      expect(c.tapEdge(eid)).toMatch(/advance|win/);
+    }
+    expect(c.head).toBe(mouthA);
+    expect(c.choices()).toContain(tunnelId);
+    const strokesBefore = c.strokes;
+    expect(c.tapEdge(tunnelId)).toMatch(/advance|win/);
+    expect(c.head).toBe(mouthB);
+    expect(c.strokes).toBe(strokesBefore + 1); // One move, as drawn.
+    expect(c.pathEdges[c.pathEdges.length - 1]).toBe(tunnelId);
+    // And straight back.
+    expect(c.tapEdge(tunnelId)).toBe("backtrack");
+    expect(c.head).toBe(mouthA);
+    // A replay over the same taps (the save/restore path) agrees.
+    const c2 = new FabricMazeController(walk);
+    expect(c2.replay([...c.taps])).toBe(true);
+    expect(c2.head).toBe(c.head);
   });
 });

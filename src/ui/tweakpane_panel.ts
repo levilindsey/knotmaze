@@ -1854,6 +1854,13 @@ export function buildPanel(
     "How near a pluck must be to show a hidden run: plucking a thread of the same note within this many runs of it shows it. Classic game only. Restarts the solve.",
     D.hiddenReveal, () => callbacks.onClockChange()
   );
+  // K137 tunnels (4.13): linked junction pairs, in every game mode.
+  const tunnelsRow = row(
+    fGame, p, "tunnels",
+    { min: 0, max: 2, step: 1, format: (v: number) => (v === 0 ? "off" : String(v)), label: "Tunnels" },
+    "Pairs of far-apart junctions linked as one move: a thread that sinks into the backdrop and re-emerges, ringed at both mouths. Tap a mouth at your junction to take it. Par counts the link; the minotaur never uses one. Restarts the solve.",
+    D.tunnels, () => callbacks.onClockChange()
+  );
   // K137 s5 (game/mud.ts): muddy runs take two moves to cross, for you
   // and the minotaur alike. Every game mode; off under a K138 rule.
   const mudRow = row(
@@ -3201,6 +3208,7 @@ export function buildPanel(
     colorRuleRow.hidden = !fab || params.gameMode !== "classic";
     turnstilesRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 2
     hiddenRunsRow.hidden = !fab || params.gameMode !== "classic";
+    tunnelsRow.hidden = !fab; // K137 tunnels (4.13): every game mode
     mudRow.hidden = !fab; // K137 s5: every game mode
     hiddenRevealRow.hidden = hiddenRunsRow.hidden || params.hiddenRuns <= 0; // K795
     oneWayRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 3

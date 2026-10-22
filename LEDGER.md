@@ -444,7 +444,7 @@ Next free ID: K812.
   - owner: nobody since 2026-10-21 12:49 (merged; agent `ab3d78ded2f219f62` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
   - branch: mainline; last commit: `20b01d7e`
   - evidence: `.claude/probes/K137/s4/`
-  - next: tunnels 4.13 (scent 4.34, the fray, darkness/lantern 4.17, sonar 4.26 done 2026-10-21, Handoffs in docs/design/K137_s6.md); muddy runs done in this merge
+  - next: the s3b sims and the K784 phone batch (all look pieces done 2026-10-21: scent 4.34, the fray, darkness/lantern 4.17, sonar 4.26, tunnels 4.13; Handoffs in docs/design/K137_s6.md); muddy runs done in this merge
   - brief: `docs/design/K137_s4.md`
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,

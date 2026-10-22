@@ -792,12 +792,16 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       choices: c.choices().map((eid) => {
         const e = wg.edges[eid];
         const far = e.va === c.head ? e.vb : e.va;
-        const f =
-          e.va === c.head
-            ? Math.min(e.ctrlA + 1.5, (e.ctrlA + e.ctrlB) / 2)
-            : Math.max(e.ctrlB - 1.5, (e.ctrlA + e.ctrlB) / 2);
-        const len = sys.chains[e.chain].length;
-        sys.pointOnChain(e.chain, ((f % len) + len) % len, out, 0);
+        // K137 tunnels (4.13): no thread - the far mouth's point.
+        if (e.chain < 0) fb.vertexWorld(far, out, 0);
+        else {
+          const f =
+            e.va === c.head
+              ? Math.min(e.ctrlA + 1.5, (e.ctrlA + e.ctrlB) / 2)
+              : Math.max(e.ctrlB - 1.5, (e.ctrlA + e.ctrlB) / 2);
+          const len = sys.chains[e.chain].length;
+          sys.pointOnChain(e.chain, ((f % len) + len) % len, out, 0);
+        }
         return {
           edge: eid,
           far,
@@ -821,6 +825,15 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       runPoint: (eid: number, frac = 0.5) => {
         const e = wg.edges[eid];
         if (!e) return null;
+        if (e.chain < 0) {
+          // K137 tunnels (4.13): between the mouths.
+          const a = new Float32Array(2);
+          fb.vertexWorld(e.va, a, 0);
+          fb.vertexWorld(e.vb, out, 0);
+          out[0] = a[0] + (out[0] - a[0]) * frac;
+          out[1] = a[1] + (out[1] - a[1]) * frac;
+          return { ...toScreen(out[0], out[1]), wx: out[0], wy: out[1] };
+        }
         const len = sys.chains[e.chain].length;
         const f = e.ctrlA + frac * (e.ctrlB - e.ctrlA);
         sys.pointOnChain(e.chain, ((f % len) + len) % len, out, 0);
@@ -892,6 +905,18 @@ export function installProbeHooks(ctx: ProbeCtx): void {
         }
         const edges: Array<Record<string, unknown>> = [];
         for (const e of wg.edges) {
+          if (e.chain < 0) {
+            // K137 tunnels (4.13): the nearer mouth.
+            let bd = Infinity;
+            for (const v of [e.va, e.vb]) {
+              fb.vertexWorld(v, out, 0);
+              bd = Math.min(bd, Math.hypot(out[0] - x, out[1] - y));
+            }
+            if (bd <= r) {
+              edges.push({ edge: e.id, d: +bd.toFixed(3), va: e.va, vb: e.vb, chain: e.chain, ctrlA: e.ctrlA, ctrlB: e.ctrlB, onPath: c.pathEdges.includes(e.id) });
+            }
+            continue;
+          }
           const len = sys.chains[e.chain].length;
           let bd = Infinity;
           for (let f = e.ctrlA; f <= e.ctrlB; f += 0.5) {

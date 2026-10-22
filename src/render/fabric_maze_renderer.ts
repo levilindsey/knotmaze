@@ -779,6 +779,9 @@ export class FabricMazeRenderer {
   private snareGfx: Graphics;
   // K137 scent (4.34): the fading red trail (syncScent).
   private scentGfx: Graphics;
+  // K137 tunnels (4.13): the sinking threads and mouth rings.
+  private tunnelGfx: Graphics;
+  private tunnelEdges: WalkEdge[] = [];
   private minoGlow: Sprite;
   // K137 stage 3b: the telegraph's ink, FLEE_BLUE while the minotaur flees.
   private teleInk = TELEGRAPH_COLOR;
@@ -851,6 +854,8 @@ export class FabricMazeRenderer {
   ) {
     this.ps = ps;
     this.walk = walk;
+    // K137 tunnels (4.13): the link runs (chain -1), drawn by hand.
+    this.tunnelEdges = walk.edges.filter((e) => e.chain < 0);
     this.ribbons = ribbons;
     this.threadWidth = threadWidth;
     this.overContainer = new Container();
@@ -889,7 +894,9 @@ export class FabricMazeRenderer {
     this.snareGfx.visible = false;
     this.scentGfx = new Graphics();
     this.scentGfx.visible = false;
-    this.overContainer.addChild(this.snareGfx, this.scentGfx, this.extraLayer, this.minoLayer);
+    this.tunnelGfx = new Graphics();
+    this.tunnelGfx.visible = false;
+    this.overContainer.addChild(this.tunnelGfx, this.snareGfx, this.scentGfx, this.extraLayer, this.minoLayer);
     for (const m of Object.values(this.markers)) m.hide();
     // K408: the meshes outlive the scene; a new one starts with the start
     // marker shown (the fade's first retarget only learns the set).
@@ -1221,6 +1228,15 @@ export class FabricMazeRenderer {
     const max2 = maxD * maxD;
     for (const eid of controller.choices()) {
       const e = this.walk.edges[eid];
+      if (e.chain < 0) {
+        // K137 tunnels (4.13): a tap on the head's own mouth picks it.
+        this.vertexWorld(controller.head, this.scratch, 0);
+        const dx = this.scratch[0] - x;
+        const dy = this.scratch[1] - y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < max2) reach.push({ eid, d: Math.sqrt(d2) });
+        continue;
+      }
       const exA = e.va === controller.head;
       const exB = e.vb === controller.head;
       const dot = eid === arrival ? flying : null;
@@ -1272,6 +1288,7 @@ export class FabricMazeRenderer {
     maxD: number,
     ends: "head" | "both"
   ): { d: number; at: number } | null {
+    if (e.chain < 0) return null; // K137 tunnels (4.13)
     const span = e.ctrlB - e.ctrlA;
     const exA = e.va === controller.head;
     const exB = e.vb === controller.head;
@@ -1542,6 +1559,13 @@ export class FabricMazeRenderer {
     let bestD = Infinity;
     for (const eid of controller.choices()) {
       const e = this.walk.edges[eid];
+      if (e.chain < 0) {
+        // K137 tunnels (4.13): the mouth at the head's anchor.
+        this.vertexWorld(controller.head, this.scratch, 0);
+        const d = Math.hypot(this.scratch[0] - x, this.scratch[1] - y);
+        if (d < bestD) bestD = d;
+        continue;
+      }
       const exA = e.va === controller.head;
       const exB = e.vb === controller.head;
       for (let f = e.ctrlA; ; f += SAMPLE_STEP) {
@@ -1639,6 +1663,15 @@ export class FabricMazeRenderer {
     this.endReel();
     this.clearHint(); // K137 stage 2: a move ends a hint early
     const e = this.walk.edges[edgeId];
+    if (e.chain < 0) {
+      // K137 tunnels (4.13): the dot sinks at one mouth and emerges at
+      // the other; the controller's head is already there. The reveal
+      // counts the link walked, as a restore's replay does.
+      this.seenRuns.add(e.id);
+      this.anim = null;
+      this.update(controller);
+      return;
+    }
     // A self-loop run's direction is unknowable: it sweeps A -> B (moveEnds,
     // shared with the fog's restore, K100).
     const { from, to } = moveEnds(e, controller.head);
@@ -2430,6 +2463,7 @@ export class FabricMazeRenderer {
       for (const eid of controller.choices()) {
         if (!controller.smoldering(eid)) continue;
         const e = this.walk.edges[eid];
+        if (e.chain < 0) continue; // K137 tunnels (4.13)
         const b = runBurnAt(this.walk, fire, eid, L);
         const fromA = e.va === controller.head;
         let x0 = 0;
@@ -2845,6 +2879,7 @@ export class FabricMazeRenderer {
     if (!this.fogOfWar) return;
     for (const { run, from, to } of travelOrder(this.walk.edges, runs, start)) {
       const chain = this.walk.edges[run].chain;
+      if (chain < 0) continue; // K137 tunnels (4.13)
       for (const f of [from, ...fogArcStations(from, to, from, to)]) {
         this.pointFlowed(chain, this.ctrlMod(chain, f), this.scratch, 0);
         this.maybeStampFog(this.scratch[0], this.scratch[1]);
@@ -3504,7 +3539,9 @@ export class FabricMazeRenderer {
     const L = Math.max(1e-6, this.trailLength);
     const pAt = trailFade(L);
     const spans: PaintSpan[] = trailSpans(
-      segs.map((s) => ({ chain: s.e.chain, from: s.from, to: s.to, len: s.len })),
+      segs
+        .filter((s) => s.e.chain >= 0) // K137 tunnels (4.13)
+        .map((s) => ({ chain: s.e.chain, from: s.from, to: s.to, len: s.len })),
       L
     );
 
@@ -3520,6 +3557,7 @@ export class FabricMazeRenderer {
       const v = this.walk.vertices.get(vid)!;
       for (const eid of v.edges) {
         const e = this.walk.edges[eid];
+        if (e.chain < 0) continue; // K137 tunnels (4.13)
         const atA = e.va === v.id;
         const ctrl = atA ? e.ctrlA : e.ctrlB;
         const key = `${e.chain}:${ctrl}`;
@@ -3739,6 +3777,7 @@ export class FabricMazeRenderer {
           : -1;
       for (const eid of controller.choices()) {
         const e = this.walk.edges[eid];
+        if (e.chain < 0) continue; // K137 tunnels (4.13)
         const hovered =
           eid === this.hoverEdge || (this.hoverRoute?.includes(eid) ?? false);
         const inward = eid === last;
@@ -3783,6 +3822,7 @@ export class FabricMazeRenderer {
       for (const lit of litArms(this.walk, controller.head, this.ribbons.pulseReach, gate, blocked)) {
         if (lit.dist0 === 0) continue; // The choices above already lit these.
         const e = this.walk.edges[lit.edge];
+        if (e.chain < 0) continue; // K137 tunnels (4.13)
         pulses.push({
           chain: e.chain,
           cJunction: lit.atA ? e.ctrlA : e.ctrlB,
@@ -3872,6 +3912,7 @@ export class FabricMazeRenderer {
       for (const eid of v.edges) {
         if (!gold.walked.has(eid)) continue;
         const e = this.walk.edges[eid];
+        if (e.chain < 0) continue; // K137 tunnels (4.13): no cap on a link.
         const atA = e.va === v.id;
         const ctrl = atA ? e.ctrlA : e.ctrlB;
         const key = `${e.chain}:${ctrl}`;
@@ -3915,6 +3956,70 @@ export class FabricMazeRenderer {
   // under-weave halo follows it), and the win ring. All three are black
   // discs with a white glyph, one radius; K98: the start and the finish sit
   // on a dot of their thread's own color (radius dotR, the gap slots' too).
+  // K137 tunnels (4.13): each link as a thread that sinks into the
+  // backdrop between its mouths (alpha dipping mid-span) and
+  // re-emerges; a ring at each mouth. Gold once the walk has used it.
+  private drawTunnels(controller: FabricMazeController): void {
+    const gfx = this.tunnelGfx;
+    gfx.clear();
+    if (this.tunnelEdges.length === 0) {
+      gfx.visible = false;
+      return;
+    }
+    gfx.visible = true;
+    const a = new Float32Array(2);
+    const b = new Float32Array(2);
+    const used = new Set(controller.pathEdges);
+    const w = this.threadWidth;
+    for (const e of this.tunnelEdges) {
+      this.vertexWorld(e.va, a, 0);
+      this.vertexWorld(e.vb, b, 0);
+      // The sink: a shallow arc bowing away from the straight line,
+      // drawn in segments whose alpha dips at the middle.
+      const mx = (a[0] + b[0]) / 2;
+      const my = (a[1] + b[1]) / 2;
+      const dx = b[0] - a[0];
+      const dy = b[1] - a[1];
+      const len = Math.hypot(dx, dy) || 1;
+      const cx = mx - (dy / len) * len * 0.08;
+      const cy = my + (dx / len) * len * 0.08;
+      const N = 16;
+      const pts: number[] = [a[0], a[1]];
+      let px = a[0];
+      let py = a[1];
+      for (let i = 1; i <= N; i++) {
+        const t = i / N;
+        const u = 1 - t;
+        const x = u * u * a[0] + 2 * u * t * cx + t * t * b[0];
+        const y = u * u * a[1] + 2 * u * t * cy + t * t * b[1];
+        const dip = 0.25 + 0.75 * Math.abs(2 * t - 1);
+        gfx.moveTo(px, py);
+        gfx.lineTo(x, y);
+        gfx.stroke({ color: 0x0d1020, width: w * 0.95, alpha: 0.85 * dip });
+        gfx.moveTo(px, py);
+        gfx.lineTo(x, y);
+        gfx.stroke({ color: 0x9aa7c4, width: w * 0.38, alpha: 0.55 * dip });
+        pts.push(x, y);
+        px = x;
+        py = y;
+      }
+      if (used.has(e.id)) {
+        for (let i = 2; i < pts.length; i += 2) {
+          gfx.moveTo(pts[i - 2], pts[i - 1]);
+          gfx.lineTo(pts[i], pts[i + 1]);
+        }
+        gfx.stroke({ color: 0xd9a441, width: w * 0.3, alpha: 0.5 });
+      }
+      // The mouths: a pale ring at each end.
+      for (const p of [a, b]) {
+        gfx.circle(p[0], p[1], w * 0.62);
+        gfx.stroke({ color: 0xe8e4da, width: Math.max(0.09, w * 0.14), alpha: 0.9 });
+        gfx.circle(p[0], p[1], w * 0.3);
+        gfx.fill({ color: 0x0d1020, alpha: 0.85 });
+      }
+    }
+  }
+
   private drawMarkers(
     controller: FabricMazeController,
     dotChain: number,
@@ -3946,6 +4051,7 @@ export class FabricMazeRenderer {
     m.head.place(this.headX, this.headY, this.pulsedHeadR());
     this.pulseGlow();
     this.placeWalkerGlow(controller, r); // K713
+    this.drawTunnels(controller); // K137 tunnels (4.13)
     this.drawAids(controller, dotChain >= 0, r); // K137 stage 2
     this.drawOneWay(controller, r); // K138 stage 3
     this.drawLocks(controller, r); // K138 stage 4
@@ -4089,7 +4195,7 @@ export class FabricMazeRenderer {
       const glyph = markerGlyph(this.markerGlyphIds.chevron, "chevron");
       for (const [eid, entry] of ow) {
         const e = this.walk.edges[eid];
-        if (!e || controller.isHidden(eid)) continue;
+        if (!e || e.chain < 0 || controller.isHidden(eid)) continue;
         const dir = entry === e.va ? 1 : -1;
         const span = e.ctrlB - e.ctrlA;
         for (const t of span > CHEVRON_LONG ? [0.3, 0.7] : [0.5]) {
