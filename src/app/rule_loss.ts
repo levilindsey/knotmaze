@@ -72,6 +72,8 @@ export function ruleFields(fc: FabricMazeController): RuleFields {
     oneWay: fc.oneWayShare > 0 ? (fc.ruleLook?.oneWay?.size ?? 0) : null,
     // K138 stage 4: the keys held of those laid (0 of 0: no layout).
     keys: fc.keyCount > 0 ? { held: fc.keysHeld, of: fc.keysTotal } : null,
+    // K137 s5: the muddy runs laid (null: mud off).
+    muddy: fc.mudCount > 0 ? fc.mudRuns.size : null,
   };
 }
 

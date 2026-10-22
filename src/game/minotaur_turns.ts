@@ -43,6 +43,7 @@ import type { WalkGraph } from "../core/walk_graph";
 import { ChaseGraph, type MinotaurMode, type Spot } from "./minotaur";
 import { swordFleeing, swordSpend, swordTake, swordTouch, type SwordState } from "./sword";
 import { LURE_RANGE, lureTarget } from "./lures";
+import { mudStep } from "./mud"; // K137 s5
 import {
   canSnare,
   heldIndex,
@@ -364,6 +365,9 @@ export interface MinoState {
   // for before its model's rules, -1 or absent = none. Absent until a lure
   // is heard, so a game without lures carries no such field.
   lure?: number;
+  // K137 s5: it crossed into mud last turn and spends this one in it.
+  // Absent until it first crosses mud, so mud-free games carry none.
+  mudWait?: boolean;
 }
 
 // One step of a turn: [run, the vertex it ends on].
@@ -763,6 +767,20 @@ function cutAtSnare(snares: readonly Snare[], path: TurnStep[], before: MinoStat
   }
   m.spot = spotAtVertex(m.v);
   return cut.snare;
+}
+
+// K137 s5: cut a monster's path at its first step onto a muddy run: it
+// CROSSES that run (the step stays) and its turn ends at the far end;
+// it spends its next turn in the mud (mudWait). True when it crossed.
+function cutAtMud(mud: ReadonlySet<number>, path: TurnStep[], before: MinoState, m: MinoState): boolean {
+  const i = mudStep(mud, path);
+  if (i < 0) return false;
+  path.length = i + 1;
+  m.v = path[i][1];
+  m.prev = i > 0 ? path[i - 1][1] : before.v;
+  m.spot = spotAtVertex(m.v);
+  m.mudWait = true;
+  return true;
 }
 
 // K137-b: has a broken run cut vertex b off from vertex a? Always false in
@@ -1252,6 +1270,17 @@ export class TurnMinotaur {
   readonly tools: TurnTool[] = [];
   readonly snares: Snare[] = [];
   private commitSnare = -1;
+  // K137 s5: the muddy runs (walk edge ids; main sets them from the
+  // controller at restart). Empty: no mud runs below. Assigning
+  // re-commits, so the telegraph's first move honors them too.
+  private _mud: ReadonlySet<number> = new Set();
+  get mud(): ReadonlySet<number> {
+    return this._mud;
+  }
+  set mud(m: ReadonlySet<number>) {
+    this._mud = m;
+    this.commit();
+  }
   lured = 0;
   heardBy = 0;
 
@@ -1375,15 +1404,19 @@ export class TurnMinotaur {
       let live = false;
       if (x.kind === "follower" && x.phase !== "asleep" && !x.homing && edge >= 0) x.trail.push([edge, p2]);
       if (x.phase === "awake") {
-        if (!stand && this.snares.length > 0 && holdTurn(this.snares, i)) {
+        if (!stand && x.state.mudWait) {
+          // K137 s5: this turn is spent in the mud.
+          x.state.mudWait = false;
+        } else if (!stand && this.snares.length > 0 && holdTurn(this.snares, i)) {
           // K137 s4 (4.30): a snare holds it; it stands.
         } else if (!stand) {
-          const before = this.snares.length > 0 ? cloneMino(x.state) : null;
+          const before = this.snares.length > 0 || this.mud.size > 0 ? cloneMino(x.state) : null;
           const at0 = x.at;
           const rng = x.rng.at(this.turns);
           path = x.kind === "sleeper" ? decide(g, cfg, x.state, p, ++x.life, rng) : followStep(g, x, p, rng);
           if (before !== null && x.phase === "awake") {
             const k = cutAtSnare(this.snares, path, before, x.state);
+            if (k < 0 && this.mud.size > 0) cutAtMud(this.mud, path, before, x.state);
             if (k >= 0) {
               if (x.kind === "follower") x.at = at0;
               springSnare(this.snares[k], i, this.cfg.snareHold);
@@ -1626,7 +1659,12 @@ export class TurnMinotaur {
     // stops at the run's near end and springs it (the committed move was
     // cut already, commitSnare). No snares: none of this runs.
     let sprung = -1;
-    if (this.snares.length > 0 && holdTurn(this.snares, -1)) {
+    if (this.state.mudWait) {
+      // K137 s5: this turn is spent in the mud.
+      this.state.mudWait = false;
+      path = [];
+      if (this.cfg.telegraph && this.commitState) seenAt = p;
+    } else if (this.snares.length > 0 && holdTurn(this.snares, -1)) {
       path = [];
       if (this.cfg.telegraph && this.commitState) seenAt = p;
     } else if (flee) {
@@ -1635,9 +1673,12 @@ export class TurnMinotaur {
         this.state = this.commitState;
         sprung = this.commitSnare;
       } else {
-        const before = this.snares.length > 0 ? cloneMino(this.state) : null;
+        const before = this.snares.length > 0 || this.mud.size > 0 ? cloneMino(this.state) : null;
         path = fleeTurn(g, this.cfg, this.state, p2, this.lifeTurn);
-        if (before !== null) sprung = cutAtSnare(this.snares, path, before, this.state);
+        if (before !== null) {
+          sprung = cutAtSnare(this.snares, path, before, this.state);
+          if (sprung < 0 && this.mud.size > 0) cutAtMud(this.mud, path, before, this.state);
+        }
       }
     } else if (this.cfg.telegraph && this.commitState) {
       path = this.committed;
@@ -1645,9 +1686,12 @@ export class TurnMinotaur {
       seenAt = p;
       sprung = this.commitSnare;
     } else {
-      const before = this.snares.length > 0 ? cloneMino(this.state) : null;
+      const before = this.snares.length > 0 || this.mud.size > 0 ? cloneMino(this.state) : null;
       path = decide(g, this.cfg, this.state, p2, this.lifeTurn, this.rng.at(this.turns));
-      if (before !== null) sprung = cutAtSnare(this.snares, path, before, this.state);
+      if (before !== null) {
+        sprung = cutAtSnare(this.snares, path, before, this.state);
+        if (sprung < 0 && this.mud.size > 0) cutAtMud(this.mud, path, before, this.state);
+      }
     }
     if (sprung >= 0) springSnare(this.snares[sprung], -1, this.cfg.snareHold);
     this.commitSnare = -1;
@@ -1872,7 +1916,12 @@ export class TurnMinotaur {
     const flee = this.fleeing;
     let plan: TurnLengthPlan;
     let seenAt = p2;
-    if (flee) {
+    // K137 s5: a turn spent in the mud travels nothing.
+    const mudStand = this.state.mudWait === true;
+    if (mudStand) this.state.mudWait = false;
+    if (mudStand) {
+      plan = planLengthRoute(g, this.cfg, this.state, p2, this.rng.at(this.turns), this.lifeTurn, 0);
+    } else if (flee) {
       plan =
         this.cfg.telegraph && this.committedPlan && this.commitFlee
           ? this.committedPlan
@@ -1904,6 +1953,18 @@ export class TurnMinotaur {
         lengthFactor(g, this.cfg, this.state, p2) * playerLen
       );
     }
+    // K137 s5: the travel stops after the first muddy run it crosses.
+    let mudIdx = -1;
+    if (!mudStand && this.mud.size > 0) {
+      mudIdx = mudStep(this.mud, plan.steps);
+      if (mudIdx >= 0) {
+        plan.steps.length = mudIdx + 1;
+        plan.segLens.length = mudIdx + 1;
+        plan.cumLens = [0];
+        for (const s of plan.segLens) plan.cumLens.push(plan.cumLens[plan.cumLens.length - 1] + s);
+        plan.totalLength = plan.cumLens[plan.cumLens.length - 1];
+      }
+    }
     this.committed = [];
     this.committedPlan = null;
     this.commitState = null;
@@ -1918,6 +1979,13 @@ export class TurnMinotaur {
     this.lastFactor = plan.factor;
     this.progress = 0;
     this.state = realized.state;
+    // K137 s5: it crossed the muddy run whole: next turn is spent in it.
+    if (
+      mudIdx >= 0 &&
+      realized.steps.length > mudIdx &&
+      this.state.spot.edge !== plan.steps[mudIdx][0]
+    )
+      this.state.mudWait = true;
     // Seen (decision 9): a turn counts when any hop it actually started
     // was decided hunting or checking (prox), or the chase could see the
     // player where the turn was decided.
@@ -2032,12 +2100,39 @@ export class TurnMinotaur {
     return { state, steps, segLens, travel, hunted };
   }
 
+  // K137 s5: a by-length plan stops after its first muddy run (it
+  // crosses, then spends its next turn in the mud), as cutAtMud does
+  // for run-counted turns.
+  private cutPlanMud(): void {
+    const plan = this.committedPlan;
+    if (!plan || this.mud.size === 0) return;
+    const i = mudStep(this.mud, plan.steps);
+    if (i < 0) return;
+    plan.steps.length = i + 1;
+    plan.segLens.length = i + 1;
+    plan.cumLens = [0];
+    for (const s of plan.segLens) plan.cumLens.push(plan.cumLens[plan.cumLens.length - 1] + s);
+    plan.totalLength = plan.cumLens[plan.cumLens.length - 1];
+    const after = cloneMino(plan.stepStates[i]);
+    after.mudWait = true;
+    plan.stateAfter = after;
+    this.committed = plan.steps.slice();
+    this.commitState = cloneMino(after);
+  }
+
   private commitLength(): void {
     this.commitFlee = false;
     if (!this.cfg.telegraph || this.finished || this.slain) {
       this.committed = [];
       this.committedPlan = null;
       this.commitState = null;
+      return;
+    }
+    if (this.state.mudWait) {
+      // K137 s5: in the mud this turn; it stands.
+      this.committed = [];
+      this.committedPlan = null;
+      this.commitState = cloneMino(this.state);
       return;
     }
     if (this.fleeing) {
@@ -2056,6 +2151,7 @@ export class TurnMinotaur {
       this.committed = fp.steps.slice();
       this.commitState = cloneMino(fp.stateAfter);
       this.commitFlee = true;
+      this.cutPlanMud();
       return;
     }
     const factor = lengthFactor(this.tg, this.cfg, this.state, this.player);
@@ -2073,6 +2169,7 @@ export class TurnMinotaur {
     this.committedPlan = plan;
     this.committed = plan.steps.slice();
     this.commitState = cloneMino(plan.stateAfter);
+    this.cutPlanMud();
   }
 
   // The telegraph: decide the next turn now, from where the player stands.
@@ -2092,6 +2189,13 @@ export class TurnMinotaur {
       this.commitFlee = this.fleeing;
       return;
     }
+    if (this.state.mudWait) {
+      // K137 s5: in the mud this turn; it stands.
+      this.committed = [];
+      this.commitState = cloneMino(this.state);
+      this.commitFlee = this.fleeing;
+      return;
+    }
     if (this.fleeing) {
       // K137 s3b: the flee, from where the player stands (no draw).
       const f = cloneMino(this.state);
@@ -2099,6 +2203,7 @@ export class TurnMinotaur {
       this.commitState = f;
       this.commitFlee = true;
       if (this.snares.length > 0) this.commitSnare = cutAtSnare(this.snares, this.committed, this.state, f);
+      if (this.mud.size > 0) cutAtMud(this.mud, this.committed, this.state, f);
       return;
     }
     const c = { ...this.state };
@@ -2112,6 +2217,7 @@ export class TurnMinotaur {
     );
     this.commitState = c;
     if (this.snares.length > 0) this.commitSnare = cutAtSnare(this.snares, this.committed, this.state, c);
+    if (this.mud.size > 0) cutAtMud(this.mud, this.committed, this.state, c);
   }
 
   private telegraphLength(): TurnTelegraph | null {
@@ -2393,10 +2499,12 @@ export function replayTurnMinotaur(
   inputs: readonly number[],
   skips: readonly number[] = [],
   monsters: { specs: readonly MonsterSpec[]; seed: number } | null = null,
-  tools: readonly TurnTool[] = []
+  tools: readonly TurnTool[] = [],
+  mud: ReadonlySet<number> = new Set()
 ): TurnMinotaur {
   const tm = new TurnMinotaur(walk, cfg, seed);
   if (monsters) tm.setMonsters(monsters.specs, monsters.seed);
+  tm.mud = mud;
   const skip = new Set(skips);
   let k = 0;
   const useTools = (at: number): void => {

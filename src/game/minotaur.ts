@@ -629,6 +629,10 @@ export class MinotaurChase {
   // crossing each as the controller counts its taps, and blocks a run in
   // its own ChaseGraph the moment it breaks. Call before the first tick
   // (main.ts restartChase, replayChase); a catch keeps the breaks.
+  // K137 s5: the muddy runs (walk edge ids; main sets them from the
+  // controller at restart). Crossing one takes twice as long.
+  mud: ReadonlySet<number> = new Set();
+
   setBreakLimits(limits: ArrayLike<number> | null): void {
     let any = false;
     if (limits) {
@@ -742,11 +746,13 @@ export class MinotaurChase {
       }
       const L = g.len[m.edge];
       const toEnd = m.dir > 0 ? L - m.pos : m.pos;
-      if (rem < toEnd) {
-        m.pos += m.dir * rem;
+      // K137 s5: a muddy run takes twice as long to cross.
+      const cost = this.mud.has(m.edge) ? toEnd * 2 : toEnd;
+      if (rem < cost) {
+        m.pos += m.dir * (this.mud.has(m.edge) ? rem / 2 : rem);
         return;
       }
-      rem -= toEnd;
+      rem -= cost;
       m.vertex = m.dir > 0 ? g.eb[m.edge] : g.ea[m.edge];
       this.lastEdge = m.edge;
       m.edge = -1;
@@ -982,7 +988,23 @@ export class MinotaurChase {
       }
       const L = g.len[p.edge];
       const toEnd = p.dir > 0 ? L - p.pos : p.pos;
-      if (this.sprinting) {
+      // K137 s5: you cross a muddy run at half speed too (a sprint in
+      // mud nets your plain pace).
+      const muddy = this.mud.has(p.edge);
+      if (muddy && !this.sprinting) {
+        if (rem / 2 < toEnd) {
+          p.pos += p.dir * (rem / 2);
+          return;
+        }
+        rem -= toEnd * 2;
+      } else if (muddy && this.sprinting) {
+        if (rem < toEnd) {
+          p.pos += p.dir * rem;
+          return;
+        }
+        rem -= toEnd;
+        this.sprinting = false;
+      } else if (this.sprinting) {
         if (rem * 2 < toEnd) {
           p.pos += p.dir * (rem * 2);
           return;
@@ -1053,11 +1075,14 @@ export class MinotaurChase {
       }
       const L = g.len[m.edge];
       const toEnd = m.dir > 0 ? L - m.pos : m.pos;
-      if (rem < toEnd) {
-        m.pos += m.dir * rem;
+      // K137 s5: a muddy run takes twice as long to cross.
+      const inMud = this.mud.has(m.edge);
+      const cost = inMud ? toEnd * 2 : toEnd;
+      if (rem < cost) {
+        m.pos += m.dir * (inMud ? rem / 2 : rem);
         return;
       }
-      rem -= toEnd;
+      rem -= cost;
       m.vertex = m.dir > 0 ? g.eb[m.edge] : g.ea[m.edge];
       this.lastEdge = m.edge;
       m.edge = -1;

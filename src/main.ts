@@ -1783,6 +1783,7 @@ async function main(): Promise<void> {
       // K138 stages 3 and 4: the one-way runs laid, the keys held.
       oneWay: ruleRows.oneWay,
       keys: ruleRows.keys,
+      muddy: ruleRows.muddy, // K137 s5
     });
     updateHud();
     throwConfetti();
@@ -1895,6 +1896,9 @@ async function main(): Promise<void> {
     const limits = fcb && fcb.fragileOn ? fcb.breakLimits : null;
     scene.chase?.setBreakLimits(limits);
     scene.turnMino?.setBreakLimits(limits);
+    // K137 s5: the muddy runs slow both chases (the controller laid them).
+    if (scene.chase) scene.chase.mud = fcb?.mudRuns ?? new Set();
+    if (scene.turnMino) scene.turnMino.mud = fcb?.mudRuns ?? new Set();
     laySword();
     layMonsters();
     turnWait = 0;

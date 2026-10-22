@@ -88,3 +88,16 @@ export function placeMud(
   const chosen = new Set(shuffled.slice(0, n));
   return route.filter((eid) => chosen.has(eid));
 }
+// The first step of a monster's path onto a muddy run (its index), or
+// -1. The turn minotaur's cut (minotaur_turns.ts) keeps that step - it
+// crosses - and ends its turn there.
+export function mudStep(
+  mud: ReadonlySet<number>,
+  path: readonly (readonly [number, number])[]
+): number {
+  if (mud.size === 0) return -1;
+  for (let i = 0; i < path.length; i++) {
+    if (mud.has(path[i][0])) return i;
+  }
+  return -1;
+}
