@@ -1,6 +1,7 @@
 // K114's beat rider (src/game/beat_rider.ts): beats per run, the default
 // choice, the queue, the start on the next beat, and whole games driven by
-// beats on real mazes, with the turn minotaur and with the fire.
+// beats on real mazes, with the turn minotaur and with the fire. K795: the
+// run timing (even: the same beats every run; length: K114's beatsForRun).
 import { describe, expect, it } from "vitest";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEAD_END_DENSITY_ON, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
@@ -8,8 +9,8 @@ import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
 import { buildWalkGraph, walkDistances } from "../../src/core/walk_graph";
 import type { WalkEdge, WalkGraph, WalkVertex } from "../../src/core/walk_graph";
 import { beatAt, beatTick } from "../../src/game/beat_clock";
-import { BeatRider, beatsForRun } from "../../src/game/beat_rider";
-import type { BeatDeparture } from "../../src/game/beat_rider";
+import { BEAT_PER_RUN, BeatRider, beatsForRun, runBeats } from "../../src/game/beat_rider";
+import type { BeatDeparture, BeatTiming } from "../../src/game/beat_rider";
 import { FabricMazeController } from "../../src/game/fabric_controller";
 import { buildFire } from "../../src/game/fire";
 import { DEFAULT_TURN_MINO, turnConfig, TurnMinotaur, turnSeed } from "../../src/game/minotaur_turns";
@@ -84,6 +85,12 @@ const TEE: Spec = {
   exit: "W",
 };
 
+// PLUS's runs at four lengths: S-J 2, J-N 30, W-J 10, J-E 7, E-F 20 (K795).
+const VARIED: Spec = {
+  ...PLUS,
+  pos: { S: [0, 2], J: [0, 0], N: [0, -30], W: [-10, 0], E: [7, 0], F: [27, 0] },
+};
+
 const ALL = (): boolean => true;
 const runsOf = (deps: BeatDeparture[]): number[] => deps.map((x) => x.run);
 
@@ -98,6 +105,63 @@ describe("beatsForRun", () => {
     expect(beatsForRun(0, 2, 4)).toBe(1);
     expect(beatsForRun(3, 0, 4)).toBe(1);
     expect(beatsForRun(3, 1, Number.NaN)).toBe(1);
+  });
+});
+
+describe("runBeats (K795)", () => {
+  it("even: the same whole beats every run, at least one; length: beatsForRun", () => {
+    expect(BEAT_PER_RUN).toBe(1); // one beat per run by default (Levi, 2026-10-21)
+    expect(runBeats(60, "even", 1, 2, 4)).toBe(1);
+    expect(runBeats(0.1, "even", 3, 2, 4)).toBe(3);
+    expect(runBeats(60, "even", 2.7, 2, 4)).toBe(2); // whole beats
+    expect(runBeats(5, "even", 0, 2, 4)).toBe(1);
+    expect(runBeats(5, "even", Number.NaN, 2, 4)).toBe(1);
+    expect(runBeats(4.24, "length", 3, 2, 4)).toBe(beatsForRun(4.24, 2, 4));
+    expect(runBeats(60, "length", 1, 2, 4)).toBe(4);
+  });
+});
+
+describe("BeatRider's run timing (K795)", () => {
+  // The dot rides VARIED with no taps: straight on and back at the ENDs,
+  // through every run length.
+  const rideVaried = (timing: BeatTiming, perRun: number): BeatDeparture[] => {
+    const { map } = build(VARIED);
+    const r = new BeatRider(map, 100, 2, 4, "S", timing, perRun);
+    expect([r.timing, r.perRun]).toEqual([timing, perRun]);
+    r.queue(0, 0);
+    const deps: BeatDeparture[] = [];
+    for (let t = 0; t <= 8000; t += 2) deps.push(...r.advance(t, ALL));
+    return deps;
+  };
+
+  it("even: every run takes perRun beats, so the junctions come at a steady interval", () => {
+    for (const perRun of [1, 2, 4]) {
+      const deps = rideVaried("even", perRun);
+      expect(deps.length).toBeGreaterThan(8);
+      for (let i = 0; i < deps.length; i++) {
+        expect(deps[i].beats).toBe(perRun);
+        expect(deps[i].tick).toBe(beatTick(deps[i].beat, 100));
+        if (i > 0) {
+          expect(deps[i].beat).toBe(deps[i - 1].beat + perRun);
+          expect(deps[i].tick - deps[i - 1].tick).toBe(72 * perRun); // 0.6 s a beat
+        }
+      }
+    }
+  });
+
+  it("length: K114's beats by run length, so the interval varies with the run", () => {
+    const deps = rideVaried("length", 1);
+    for (const d of deps) {
+      const length = build(VARIED).walk.edges[d.run].length;
+      expect(d.beats).toBe(beatsForRun(length, 2, 4));
+    }
+    expect(new Set(deps.map((d) => d.beats)).size).toBeGreaterThan(1);
+  });
+
+  it("defaults to K114's length rule when built without a timing", () => {
+    const { map } = build(VARIED);
+    const r = new BeatRider(map, 100, 2, 4, "S");
+    expect(r.timing).toBe("length");
   });
 });
 
@@ -207,10 +271,12 @@ function ride(
   c: FabricMazeController,
   seed: number,
   onMove: (run: number) => void,
-  over: () => boolean
+  over: () => boolean,
+  timing: BeatTiming = "length",
+  perRun = 1
 ): { deps: BeatDeparture[]; ticks: number } {
   const rng = new SeededRNG(seed);
-  const r = new BeatRider(map, 100, 2, 4, walk.start);
+  const r = new BeatRider(map, 100, 2, 4, walk.start, timing, perRun);
   const deps: BeatDeparture[] = [];
   let t = 0;
   r.queue(walk.vertices.get(walk.start)!.edges[0], 0);
@@ -234,7 +300,10 @@ function ride(
   return { deps, ticks: t };
 }
 
-describe("whole games on the beat", () => {
+// Both run timings (K795): K114's by length, and the default, one beat a run.
+const TIMINGS: Array<[BeatTiming, number]> = [["length", 1], ["even", 1]];
+
+describe.each(TIMINGS)("whole games on the beat (%s, %i)", (timing, perRun) => {
   it("plays the turn minotaur one turn per committed move", () => {
     let ended = 0;
     for (const seed of [3, 11, 42]) {
@@ -252,7 +321,9 @@ describe("whole games on the beat", () => {
           t.setProgress(1);
           turns++;
         },
-        () => c.solved || t.finished
+        () => c.solved || t.finished,
+        timing,
+        perRun
       );
       expect(turns).toBe(deps.length);
       expect(c.taps.length).toBe(deps.length);
@@ -266,7 +337,7 @@ describe("whole games on the beat", () => {
     for (const seed of [3, 11, 42]) {
       const { walk, map } = realMaze(seed);
       const c = new FabricMazeController(walk, false, buildFire(walk, 0.6, 0));
-      const { deps } = ride(walk, map, c, seed, () => {}, () => c.solved || c.fireLost);
+      const { deps } = ride(walk, map, c, seed, () => {}, () => c.solved || c.fireLost, timing, perRun);
       expect(c.taps.length).toBe(deps.length);
       // Replaying the taps on the turn clock reaches the same end.
       const again = new FabricMazeController(walk, false, buildFire(walk, 0.6, 0));

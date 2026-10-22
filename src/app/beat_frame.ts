@@ -75,12 +75,14 @@ export function createBeat(deps: BeatDeps): BeatFrame {
       k !== key ||
       rider.tempo !== s.tempo ||
       rider.unit !== s.unit ||
-      rider.cap !== s.cap
+      rider.cap !== s.cap ||
+      rider.timing !== s.timing ||
+      rider.perRun !== s.perRun
     ) {
       const map = deps.buildMap();
       const head = deps.head();
       if (!map || head === null) return null;
-      rider = new BeatRider(map, s.tempo, s.unit, s.cap, head);
+      rider = new BeatRider(map, s.tempo, s.unit, s.cap, head, s.timing, s.perRun);
       key = k;
       clock.reset();
     }
@@ -127,6 +129,10 @@ export function createBeat(deps: BeatDeps): BeatFrame {
       t0: rider ? rider.t0 : 0,
       t1: rider ? rider.t1 : 0,
       tempo: rider ? rider.tempo : 0,
+      // K795: the run timing (even | length) and the beats every run takes
+      // under even.
+      timing: rider ? rider.timing : null,
+      perRun: rider ? rider.perRun : 0,
       phase: rider ? beatPhase(clock.ticks, rider.tempo) : -1,
       // The runs the rider would try at the junction ahead, in order.
       order: rider ? rider.order(rider.ahead, rider.d).map((x) => x >> 1) : [],

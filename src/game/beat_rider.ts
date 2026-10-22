@@ -1,6 +1,10 @@
 // K114's beat rider: THE RIDER (pure; brief docs/design/K114_beat.md, item
-// 3). Under clock=beat the dot never stops: each run takes
-// beatsForRun(length) beats and the dot reaches each junction on a beat.
+// 3). Under clock=beat the dot never stops: each run takes a whole number
+// of beats and the dot reaches each junction on a beat. The timing (K795,
+// Levi 2026-10-21) says how many: even (the default) gives every run the
+// same beats (one by default), so the dot's speed varies with the run's
+// length and the junctions come on a steady pulse; length gives
+// beatsForRun(length), K114's multi-beat runs.
 // A tap (or a key, or the move pad) on an arm of the junction ahead QUEUES
 // that arm; the last one before the junction wins, and the queue clears on
 // arrival. With nothing queued (or the queued arm refused) the dot goes
@@ -25,12 +29,40 @@ import { beatAt, beatTick } from "./beat_clock";
 import { arrivalOf, departureOf, departures, leadEntries } from "./walker";
 import type { WalkerMap } from "./walker";
 
-// Beats a run takes: max(1, round(length / unit)), at most `cap` (a whole
-// number, at least 1). A non-positive length or unit takes one beat.
+// Beats a run takes under the length timing: max(1, round(length / unit)),
+// at most `cap` (a whole number, at least 1). A non-positive length or unit
+// takes one beat.
 export function beatsForRun(length: number, unit: number, cap: number): number {
   const c = Number.isFinite(cap) ? Math.max(1, Math.floor(cap)) : 1;
   if (!(length > 0) || !(unit > 0)) return 1;
   return Math.min(c, Math.max(1, Math.round(length / unit)));
+}
+
+// K795: how a run's beats are counted (Levi, 2026-10-21: "each segment is
+// traveled in the same amount of time", then a toggle between the
+// multi-beat runs and one beat per run). even: every run takes the
+// beatPerRun param's beats (one by default), so the dot rides a long run
+// fast and a short one slow and lands on a junction every that many beats;
+// length: K114's beatsForRun (beatLength, beatCap), so the dot keeps one
+// pace and a long run takes more beats.
+export type BeatTiming = "even" | "length";
+export const BEAT_TIMINGS: BeatTiming[] = ["even", "length"];
+// Beats every run takes under even (the beatPerRun param's range and default).
+export const BEAT_PER_RUN = 1;
+export const BEAT_PER_RUN_MIN = 1;
+export const BEAT_PER_RUN_MAX = 4;
+
+// Beats a run of `length` takes: under even `perRun` (a whole number, at
+// least 1), under length beatsForRun(length, unit, cap).
+export function runBeats(
+  length: number,
+  timing: BeatTiming,
+  perRun: number,
+  unit: number,
+  cap: number
+): number {
+  if (timing === "length") return beatsForRun(length, unit, cap);
+  return Number.isFinite(perRun) ? Math.max(1, Math.floor(perRun)) : 1;
 }
 
 // One departure the rider made: the run (and its direction, 2 run + end),
@@ -60,17 +92,33 @@ export class BeatRider {
   private rests = 0;
 
   readonly map: WalkerMap;
-  // Beats a minute, lattice units a beat covers, the most beats a run takes.
+  // Beats a minute, lattice units a beat covers, the most beats a run takes
+  // (unit and cap count under the length timing), the timing and the beats
+  // every run takes under even (K795).
   tempo: number;
   unit: number;
   cap: number;
+  timing: BeatTiming;
+  perRun: number;
 
-  constructor(map: WalkerMap, tempo: number, unit: number, cap: number, at: string) {
+  // The timing defaults to length, K114's rule, which reads the unit and cap
+  // given here; the game passes its own (beatSettingsOf: even since K795).
+  constructor(
+    map: WalkerMap,
+    tempo: number,
+    unit: number,
+    cap: number,
+    at: string,
+    timing: BeatTiming = "length",
+    perRun = BEAT_PER_RUN
+  ) {
     this.map = map;
     this.tempo = tempo;
     this.unit = unit;
     this.cap = cap;
     this.at = at;
+    this.timing = timing;
+    this.perRun = perRun;
   }
 
   get riding(): boolean {
@@ -150,7 +198,8 @@ export class BeatRider {
         this.restAt(v);
         break;
       }
-      const beats = beatsForRun(this.map.walk.edges[next >> 1].length, this.unit, this.cap);
+      const length = this.map.walk.edges[next >> 1].length;
+      const beats = runBeats(length, this.timing, this.perRun, this.unit, this.cap);
       this.d = next;
       this.startBeat = -1;
       this.t0 = beatTick(beat, this.tempo);
