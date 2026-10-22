@@ -40,6 +40,7 @@ import {
   turnMinoParamsOf,
   writeParams as writeTokenParams,
   pathVizOf,
+  PARAM_DEFAULTS,
 } from "./ui/url_state";
 import type { UrlParams } from "./ui/url_state";
 import {
@@ -48,6 +49,8 @@ import {
   dailyParams,
   dailyQuery,
   isDailyDesign,
+  LOOK_KEYS,
+  linkLookActive,
   mergeDailyPrefs,
   parseLaunch,
   sceneTitle,
@@ -84,6 +87,7 @@ import { rateCuts, rateRun, ratingForResult, walkedOf } from "./game/star_rating
 import { LossBanner, MazeHud, WinBanner } from "./ui/maze_hud";
 import type { HudSnapshot } from "./ui/maze_hud";
 import { ModeBadge, modeBadgeFor } from "./ui/mode_badge";
+import { LookChip } from "./ui/look_chip";
 import {
   HEAD_SHOW_DELAY_S,
   headIndicatorWhy,
@@ -930,6 +934,20 @@ async function main(): Promise<void> {
     daily: () => showDailyStats(),
     explain: (tip) => showToast(tip, 4500),
   });
+  // K800: turn the link's look off for this maze (the look params back
+  // to today's defaults; not remembered - a reload reads the link).
+  const lookChip = new LookChip({
+    clear: () => {
+      const d = PARAM_DEFAULTS as unknown as Record<string, unknown>;
+      const p = params as unknown as Record<string, unknown>;
+      for (const k of LOOK_KEYS) p[k] = d[k];
+      panel.syncFromParams();
+      panel.callbacks.onBackgroundChange();
+      writeParams(params);
+      lookChip.set(linkLookActive(params));
+      wake();
+    },
+  });
   // K468: on the open settings sheet the badge sits in the top bar, over the
   // HUD and the banners (the sheet covers them), so it avoids none.
   const sheetMQ = window.matchMedia(SHEET_QUERY);
@@ -1027,6 +1045,7 @@ async function main(): Promise<void> {
     }
   }
   const syncModeBadge = (): void => {
+    lookChip.set(linkLookActive(params)); // K800
     modeBadge.set(
       modeBadgeFor({
         daily: dailyN,

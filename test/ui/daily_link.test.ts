@@ -10,6 +10,8 @@ import {
   dailySeed,
   dailyTitle,
   isDailyDesign,
+  LOOK_KEYS,
+  linkLookActive,
   matchesDesign,
   mazeKey,
   mergeDailyPrefs,
@@ -406,6 +408,19 @@ describe("the daily design and its exempt preferences (K56)", () => {
       "penReverse",
       // K552 (Levi: the title thread "a flag ... default to off").
       "dailyTitleThread",
+      // K800: the link's look (LOOK_KEYS).
+      "background",
+      "backgroundIntensity",
+      "backgroundSpeed",
+      "backgroundScale",
+      "backgroundDetail",
+      "backgroundFibers",
+      "backgroundGrain",
+      "backgroundAngle",
+      "threadLook",
+      "gap",
+      "goldWidth",
+      "goldTexture",
     ]);
     for (const k of DAILY_EXEMPT_KEYS) {
       expect(Object.keys(PARAM_DEFAULTS)).toContain(k);
@@ -483,5 +498,23 @@ describe("the daily design and its exempt preferences (K56)", () => {
     expect(mergeDailyPrefs({}, base, { ...base, hueShift: 5 }, n)).toEqual({});
     // Slider float noise is stored at link precision.
     expect(mergeDailyPrefs({}, base, { ...base, volume: 0.1 + 2e-17 + 0.00000000001 }, n)).toEqual({ volume: 0.1 });
+  });
+});
+describe("link looks (K800)", () => {
+  it("a daily carrying only looks is still the daily", () => {
+    const p = dailyParams(3);
+    p.background = "paper";
+    p.threadLook = "border";
+    p.goldTexture = "pencil";
+    expect(isDailyDesign(p, 3)).toBe(true);
+    expect(linkLookActive(p)).toBe(true);
+    expect(linkLookActive(dailyParams(3))).toBe(false);
+  });
+
+  it("names only look params, never maze params", () => {
+    for (const k of LOOK_KEYS) {
+      expect(MAZE_PARAM_KEYS as readonly string[]).not.toContain(k);
+      expect(DAILY_EXEMPT_KEYS as readonly string[]).toContain(k);
+    }
   });
 });

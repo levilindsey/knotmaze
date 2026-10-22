@@ -141,6 +141,33 @@ export function sameMaze(a: UrlParams, b: UrlParams): boolean {
   return mazeKey(a) === mazeKey(b);
 }
 
+// K800: the look params - they change how the maze looks, never the
+// maze or its walk (no MAZE_PARAM_KEYS member; the exempt pin checks
+// that for the whole set). A link may carry them over a daily; the
+// top-right chip (ui/look_chip.ts) clears them for this maze.
+export const LOOK_KEYS = [
+  "background",
+  "backgroundIntensity",
+  "backgroundSpeed",
+  "backgroundScale",
+  "backgroundDetail",
+  "backgroundFibers",
+  "backgroundGrain",
+  "backgroundAngle",
+  "threadLook",
+  "gap",
+  "goldWidth",
+  "goldTexture",
+] as const satisfies readonly (keyof UrlParams)[];
+
+// True when `p` carries a look away from today's defaults (the chip
+// shows; numbers compare at link precision).
+export function linkLookActive(p: UrlParams): boolean {
+  const a = p as unknown as Record<string, unknown>;
+  const d = PARAM_DEFAULTS as unknown as Record<string, unknown>;
+  return LOOK_KEYS.some((k) => !sameValue(a[k], d[k]));
+}
+
 // K56 EXEMPT PARAMS: the player's playback preferences. Changing one keeps
 // the daily (the daily is the same maze, looking the same, played the same
 // way); changing any other param leaves it. Levi named volume, sound mode
@@ -225,6 +252,12 @@ export const DAILY_EXEMPT_KEYS = [
   // maze is the same with or without it (test/core/title_topology.test.ts)
   // and an attempt survives the toggle (daily_attempt.ts, maze form).
   "dailyTitleThread",
+  // K800: the look a link may set (LOOK_KEYS below): the backdrop, the
+  // thread look and the traveled path's look. A link carrying only
+  // looks still opens the daily, the link's values win over the stored
+  // prefs (they are applied last on the daily route, as &k=v overrides
+  // already were), and the top-right chip turns them off for this maze.
+  ...LOOK_KEYS,
 ] as const satisfies readonly (keyof UrlParams)[];
 
 const EXEMPT: ReadonlySet<string> = new Set(DAILY_EXEMPT_KEYS);
