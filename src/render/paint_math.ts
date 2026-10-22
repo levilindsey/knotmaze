@@ -316,6 +316,7 @@ export interface KUniforms {
   // K797b thread look (mode 0 fill / 1 border / 2 both): read only by the
   // ribbon programs; absent = fill.
   uKLook?: Float32Array;
+  uKPath?: Float32Array; // K799 (width, texture, -, -)
 }
 
 export const MAX_KNOTS = 8;

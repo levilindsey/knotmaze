@@ -114,6 +114,9 @@ export const PATH_VIZ_MODES: PathViz[] = ["gold", "trail", "string"];
 // K797b: how a thread draws (fill, edge strokes only, or both).
 export type ThreadLook = "fill" | "border" | "both";
 export const THREAD_LOOKS: ThreadLook[] = ["fill", "border", "both"];
+// K799: the traveled path's fill texture.
+export type GoldTexture = "solid" | "pencil" | "crayon" | "highlighter";
+export const GOLD_TEXTURES: GoldTexture[] = ["solid", "pencil", "crayon", "highlighter"];
 
 // Camera: fit = frame the whole knot (or, under fog, what you can see);
 // follow = chase the player's head (maze mode).
@@ -468,6 +471,9 @@ export interface UrlParams {
   pathViz: PathViz;
   // K797b: the thread look (fill | border | both).
   threadLook: ThreadLook;
+  // K799: the traveled path's width (0 hidden, 1 full) and fill texture.
+  goldWidth: number;
+  goldTexture: GoldTexture;
   // Camera framing (see CAMERA_MODES). Pinch/wheel/drag still zoom and
   // pan in both; in follow mode a delayed, eased spring pulls back.
   cameraMode: CameraMode;
@@ -1225,6 +1231,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   mud: 0,
   // K797b: threads draw filled (today's look).
   threadLook: "fill",
+  goldWidth: 1,
+  goldTexture: "solid",
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1474,6 +1482,7 @@ export const ENUM_OPTIONS: {
   pluckReach: PLUCK_REACHES,
   pathViz: PATH_VIZ_MODES,
   threadLook: THREAD_LOOKS, // K797b
+  goldTexture: GOLD_TEXTURES, // K799
   cameraMode: CAMERA_MODES,
   exitFlank: EXIT_FLANKS,
   greedyTrap: GREEDY_TRAPS,
@@ -1779,6 +1788,8 @@ function readLegacy(
     mazeFabric: readBool(query, "mf", D.mazeFabric),
     pathViz: readChoice(query, "pv", PATH_VIZ_MODES, D.pathViz),
     threadLook: readChoice(query, "tlk", THREAD_LOOKS, D.threadLook), // K797b
+    goldWidth: readNumber(query, "gw", D.goldWidth), // K799
+    goldTexture: readChoice(query, "gtx", GOLD_TEXTURES, D.goldTexture),
     cameraMode: readChoice(query, "cam", CAMERA_MODES, D.cameraMode),
     trailLength: readNumber(query, "trl", D.trailLength),
     tension: readNumber(query, "tn", D.tension),

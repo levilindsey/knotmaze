@@ -82,6 +82,8 @@ export function knotUniforms(): UniformGroup {
       uKTeleAt: v4(),
       // K797b: the thread look (0 fill, 1 border, 2 both).
       uKLook: v4(),
+      // K799: the traveled path look (width, texture mode, -, -).
+      uKPath: v4(1, 0, 0, 0),
       uKKnots: {
         value: new Float32Array(MAX_KNOTS * 4),
         type: "vec4<f32>",
