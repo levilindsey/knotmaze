@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K786.
+Next free ID: K787.
 
 ## Waiting on Levi
 
@@ -430,10 +430,10 @@ Next free ID: K786.
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
-  - owner: agent `ac022c74b0ce97669` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 07:21, 2 h cap ~09:21)
-  - branch: `worktree-agent-ac022c74b0ce97669`, worktree `.claude/worktrees/agent-ac022c74b0ce97669`; last commit: `3abeabb6`
+  - owner: agent `a12fb9991e1142249` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, relaunched 2026-10-21 08:11 after Claude Code stopped the first builder for compaction thrash; 2 h cap ~10:11)
+  - branch: `worktree-agent-ac022c74b0ce97669`, worktree `.claude/worktrees/agent-ac022c74b0ce97669`; last commit: `4208766f`
   - evidence: `.claude/probes/K138/s4/`
-  - next: stage 4: the turnstile third-arm dim, then locks and keys whole (docs/design/K138_s4.md)
+  - next: stage 4 in slices: the dim page check, then locks and keys with the exit form end to end, then shortcut, then colors (docs/design/K138_s4.md, its Handoff)
   - brief: `docs/design/K138_s4.md`
 - **K774** · K114 beat rider with the hunter: a catch never lands (K767, real phone and desk:
   `.claude/probes/K767/out/catch_desk_sprint`, `notes.md`). The model counts it and respawns both,
@@ -443,7 +443,7 @@ Next free ID: K786.
   when its animation is snapped or the rider departs; check the walker too; make `beat_phone.mjs`
   check B need the heart or toast
   - owner: agent `a472d1436c1b03aba` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 07:21, 2 h cap ~09:21)
-  - branch: `worktree-agent-a472d1436c1b03aba`, worktree `.claude/worktrees/agent-a472d1436c1b03aba`; last commit: `3abeabb6`
+  - branch: `worktree-agent-a472d1436c1b03aba`, worktree `.claude/worktrees/agent-a472d1436c1b03aba`; last commit: `9fbcef97`
   - evidence: `.claude/probes/K774/`
   - next: verify the snapped-animation cause, land the catch exactly once, regression tests, the desk page check, the fixed phone probe (docs/design/K774.md)
   - brief: `docs/design/K774.md`
@@ -502,7 +502,7 @@ merged):
 13. K326 A.
 14. K318, K336, K337.
 
-- **K785** · Lore attach cost: reading `src/app/frame_loop.ts` attaches 11 rules files (about 28k
+- **K785** · Lore attach cost (frame_loop.ts narrowed in 2dc2af1d, 12 rules files to 2; the other hubs open): reading `src/app/frame_loop.ts` attaches 11 rules files (about 28k
   tokens), and the K774 reading set (main.ts, frame_loop, minotaur_turns, input_keys,
   fabric_maze_renderer) about 60k. K774 and K138 s4 compacted 7 and 9 times in their first 30 min
   with no commit (2026-10-21, agent_watch). Narrow each rule to the files it documents rather than
@@ -671,6 +671,9 @@ Every other item below waits on the trigger it names.
 - **K728** · Real-time seeker for the K708 sim (a sword-seeking player on MinotaurChase): the
   real-time sword best case is unmeasured and informs K727 (.claude/probes/K708/rt/, a sweep takes
   about 35 s)
+- **K786** · When K138 makes monsters obey one-way runs (its stage 6), the lure hop matrix and the
+  snare runs (K137 s4, af04d8c7) need the directed graph; today one-way binds only the player
+  (inferred by the K137 s4 rebase)
 
 ## Residuals (known, not fixed)
 
