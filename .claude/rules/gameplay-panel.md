@@ -306,6 +306,23 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts
   the solve." Param: gameplay-links.md's ONE-WAY RUNS PARAM; the rules:
   gameplay-mechanisms.md's One-way runs.
+- KEYS ROWS (K138 stage 4, 2026-10-21): "Keys" (`keys`, a 0..3 slider =
+  KEYS_MAX, step 1, 0 reads "off") and "Lock" (`lockMode`, one option
+  today, "the exit") sit after "One-way runs" in the Game folder
+  (tweakpane_panel.ts ~1726-1739). "Keys" has the ice row's scope (fabric
+  mode and the classic game only: `keysRow.hidden = !fab ||
+  params.gameMode !== "classic"`); "Lock" also hides at keys 0. Both
+  restart the solve (onClockChange), which places the keys anew.
+  Tooltips: "Keys (0: none). Key beads lie on junctions a few runs off the
+  way out; walk onto one to take it. The runs into the exit stay locked
+  until you hold every key, and a tap on a lock is refused. Going back
+  over the move that took a key drops it again. The fewest moves and par
+  count the keys. Classic game only; off while Fragile runs, Collapse, Cut
+  or the spool is on. Restarts the solve." and "Which runs the keys open:
+  the exit, the runs into the way out (they need every key). Restarts the
+  solve." The shortcut and colors forms add options to "Lock" when they
+  land. Params: gameplay-links.md's KEYS AND LOCK MODE PARAMS; the rules:
+  gameplay-mechanisms.md's Locks and keys.
 
 - FIRE CLOCK ROW (K114 stage 2, 2026-10-15): "clock" (turn / realtime,
   `fireClock`) in the Burn race folder, hidden while the fire is off; it

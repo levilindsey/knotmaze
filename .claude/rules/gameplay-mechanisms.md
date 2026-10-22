@@ -32,9 +32,11 @@ paths:
   - "test/game/hidden_runs.test.ts"
   - "src/game/one_way.ts"
   - "test/game/one_way.test.ts"
+  - "src/game/locks.ts"
+  - "test/game/locks.test.ts"
 ---
 
-# Gameplay lore: fragile runs, par (K137), collapse (K139), the cut (K114), the aids (K137 stage 2), ice and the color rule (K138 stage 1), turnstiles and hidden runs (K138 stage 2), one-way runs (K138 stage 3)
+# Gameplay lore: fragile runs, par (K137), collapse (K139), the cut (K114), the aids (K137 stage 2), ice and the color rule (K138 stage 1), turnstiles and hidden runs (K138 stage 2), one-way runs (K138 stage 3), locks and keys (K138 stage 4)
 
 Written by K137 stage 1 (2026-10-20; brief `docs/design/K137_s1.md`,
 design `docs/design/K80_gameplay_additions.md` section 4.3); `gameplay.md`
@@ -642,8 +644,107 @@ RUNS ROW. The header of `one_way.ts` is the spec.
   at 411x753 with touch taps. GOTCHA: `&ct=on` turns every rule off, so a
   one-way probe never reaches the cut's Undo button.
 - RESIDUALS (inferred from the rules, none seen in the page): with ice a
-  move can be a slide, so the NO TRAPS argument fails and nothing checks
-  for a trap; at a turnstile whose open pair leaves out the arrival run, a
+  move can be a slide, so the NO TRAPS argument fails and nothing in the
+  game checks for a trap (MEASURED since by K138 stage 4's census: ow 0.4 +
+  ice 0.25 traps on 42 of 50 seeds; Locks and keys, below); at a turnstile
+  whose open pair leaves out the arrival run, a
   one-way arrival leaves the player no move; and no control rescues either
   (UNDO above). Unchecked: the chevrons under the fog and the thread
   reveal. The chevron's look is a placeholder.
+
+## Locks and keys (K138 stage 4)
+
+Written by K138 stage 4, slice 2 (2026-10-21; brief `docs/design/K138_s4.md`,
+whose Handoffs hold the calls, the census, the page results and the
+Remainder; plan `docs/design/K138_plan.md` 4.1; design
+`docs/design/K80_gameplay_additions.md` 4.1). Only the EXIT form is built;
+Levi paused the work at the end of slice 2, so the shortcut and colors
+forms (slices 3 and 4) are the brief's Remainder. The classic game only,
+off under the same switches as ice; not daily-exempt. Params:
+gameplay-links.md's KEYS AND LOCK MODE PARAMS; rows: gameplay-panel.md's
+KEYS ROWS; markers: render-markers.md's THE KEY AND LOCK MARKERS. The
+header of `locks.ts` is the spec.
+
+- THE RULE (`lockRule`): a LOCK is a run refused until the keys it needs
+  are held; a KEY is a bead at a junction, taken when the head arrives
+  there (a slide over the ice takes every key it passes) and never used up.
+  The exit form (`lockMode` "exit", LOCK_MODES' only entry; a form appends
+  without a codec bump): every run into the exit is a lock that needs every
+  key. The state is a bit per key, 1 << keys states, so the kit's search
+  runs over (vertex, keys held) and par, strict, the stars and the fewest
+  moves count the keys (call 5). In the composed state the keys held are
+  the digit above the rules beneath (`placement.lockDiv`, the product of
+  their states) and below the hidden runs' single state (the controller's
+  `keysHeldMask`, `keysHeld`, `keysTotal`).
+- BACKTRACKS (call 4): a backtrack retraces a whole move and gives back
+  the state from before it (the controller's stateStack), so it drops a key
+  that move took; Undo and a replay restore the keys held. The search never
+  backtracks, so a key that can only be left the way it was entered would
+  be no use: keys lie only at core junctions (a call for Levi).
+- PLACEMENT (`placeLocks`, `lockCandidates`): after the one-way runs and
+  before the hidden runs, against the rules beneath composed. A candidate
+  is a junction (3+ runs) of the one-way core (`oneWayCore`,
+  2-edge-connected, so another run leaves it), never the start, the exit or
+  the maze's start, within KEY_RADIUS 4 runs of the base route, with a
+  DETOUR of 1 to KEY_DETOUR_MAX 11 runs (start to the junction to the
+  lock's near end, less start straight there, over the walk without the
+  locks), whose key alone keeps the maze solvable under the rules beneath
+  (the color rule bars many (junction, color) states, so under it a seed
+  might place no keys, as with one-way runs; all 50 census seeds did). A
+  draw takes `keys` of them (fewer when fewer qualify) without replacement
+  from the "locks" stream, a candidate's tickets its detour; the kit's
+  placeRule keeps the first solvable draw that bites, else the last
+  solvable. Keys 0, or no candidate, places nothing and draws nothing, so
+  off is bit-identical.
+- REFUSALS: `refusalOf(eid)` returns "lock" for a lock run whose keys are
+  not all held (after the hidden and one-way checks, and only when the
+  whole rule refuses the tap). main.ts `ruleRefused` plays the rules'
+  refusal pluck, the THUNK (`cutPluck(eid, REFUSE_OCTAVE 0.5,
+  REFUSE_STRENGTH 0.35)`, silent under Muted, `snd=none` or volume 0), and
+  toasts "Locked: find the keys first (<held> of <total>)." for 2.5 s (one
+  rule toast per 1.5 s at most). A refused run is not among
+  `__knotFabric().choices`.
+- THE LOOK: a lock run DIMS at both ends while the walk lacks a key it
+  needs and takes its own color back once the keys are held (scene.ts
+  `ruleDims`, slice 1's run-table dim for the turnstiles' closed arms: a
+  data change, no shader text). The markers: render-markers.md.
+- HUD AND SHARE: the row "keys <held> / <of>" (`maze_stats.ts`,
+  `rule_loss.ts` `ruleFields`, maze_hud.ts) and the share tag
+  ` · 🔑 <held>/<of>` (`ruleShareTags`).
+- WITH A CHASE: none. Keys are the classic game's, like every K138 rule
+  (`fabricRulesOf` passes them only when `gameMode` is classic), so locks
+  never meet the minotaur or the fire: in those modes the Keys row hides
+  and a link's `ky` plays with no keys or locks. The brief's "locks block
+  the minotaur and the fire, as broken runs do" waits for stage 6, which
+  must first let the rules out of the classic game (a ledger item).
+- MEASURED (a Node census, seeds 1-50 at today's defaults,
+  `.claude/probes/K138/s4/census/results.md`): every config placed on 50 of
+  50, laid all its keys and laid the same layout twice; lock runs median 1;
+  bites 50 of 50, except ky 2 + alternate at 41 of 50 (up to 32 draws).
+  Legal against plain (14 taps, length 93.007), medians of fewest taps and
+  shortest length: ky 1 1.308 and 1.226, ky 2 1.679 and 1.442, ky 3 1.920
+  and 1.630; ky 2 with ice 0.25 1.555 and 1.620, with alternate 1.800 and
+  1.691, with ow 0.4 2.177 and 2.094, with ow 0.4 + ice 0.25 2.312 and
+  2.286, with tst 4 1.667 and 1.440.
+- TRAPS (the census's check: every reachable (arrival, state) node; a TRAP
+  is a move that blocks its own backtrack and lands where no forward way
+  reaches the exit; clocked configs skipped): keys add none at ky 1-3, nor
+  with ice, alternate or ow 0.4 (0 of 50 seeds each). ow 0.4 + ice 0.25
+  traps on 42 of 50 seeds without keys and 44 of 50 with ky 2 (the keys'
+  own at seeds 9 and 49). The mechanism (`census/trap_detail.ts <seed>`): a
+  slide crosses a one-way run, so its backtrack is refused, and it ends
+  where no tap is legal or in a dead end (seed 3: icy 79, then icy one-way
+  78, into mnode_83, both icy arms refused; seed 4: icy one-way 2, then icy
+  1, into mdead0_b). That is stage 3's inferred residual, measured; nothing
+  rescues the player (no Undo control, K778).
+- PROBES: `__knotFabric().rules.locks` ({mode, keys: junctions, locks:
+  runs, held, heldMask, total}), `__knotFabricRenderer().lockMarkers` and
+  `__knotCutPlucks()` (probes.md's K138 stage 4 entry). The page check,
+  `.claude/probes/K138/s4/page/locks_page.mjs` on seed 7 at ky 2: a lock
+  refused (nothing changes, the toast, the thunk logged and silent at
+  `snd=none`), both keys taken, the lock passed and the exit reached; 21 of
+  21 on desktop and at 411x753 with touch taps.
+- RESIDUALS: the key and padlock glyphs are placeholders; keys never lie
+  off the core (BACKTRACKS); unchecked on a page: the markers and the dim
+  under the fog and the thread reveal (drawLocks skips thread a reveal has
+  not shown).

@@ -148,3 +148,21 @@ only with the files it is about; `render.md` lists the area's other files.
   COMPASS_SIZE 0.75 r long. Main toggles both with `invalidate()` (a
   one-shot render), never a wake. marker_glyphs.test.ts checks the tick's
   fit like every glyph's. The rules: gameplay-mechanisms.md's The aids.
+- THE KEY AND LOCK MARKERS (K138 stage 4, 2026-10-21): roles "key" and
+  "lock", one placeholder design each ("key": a key lying flat, the bow
+  left, two teeth; "padlock": a shackle over a body with a keyhole), for
+  Levi to replace; DEFAULT_GLYPHS maps key to "key" and lock to "padlock".
+  FabricMazeRenderer `drawLocks` (in update() after drawOneWay, so it
+  redraws with the markers) places pooled meshes (`KEY_POOL`,
+  page-lifetime, under the head marker): a key at each key junction whose
+  key the walk does not hold, at KEY_SCALE 0.85 marker radii on a gold dot
+  (KEY_GOLD, KEY_DOT 1.3 of its radius); a padlock at the middle of each
+  lock run while a key it needs is missing, at LOCK_SCALE 0.75 with no
+  ring. Neither shows on thread a reveal has not shown (revealQuery or
+  exploreVisAt under 0.98), nor a padlock on a hidden run. `lockMarkers`
+  (x, y, r, kind) are LAYER-LOCAL: page points come from
+  `mesh.getGlobalPosition()` plus the canvas rect (probes.md's K137 stage
+  3d GOTCHA). marker_glyphs.test.ts checks both glyphs' fit and
+  DEFAULT_GLYPHS. A closed lock run also dims at both ends (scene.ts
+  `ruleDims`, slice 1's run-table dim). The rules: gameplay-mechanisms.md's
+  Locks and keys.

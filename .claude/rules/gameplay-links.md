@@ -609,3 +609,21 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `?7&am=instant&mt=hunter&lur=3&snr=2&snd=none` (turn clock; snares by
   runs only). The rules: gameplay-minotaur.md's LURES AND SNARES; the
   rows: gameplay-panel.md's LURES AND SNARES ROWS.
+- KEYS AND LOCK MODE PARAMS (K138 stage 4, 2026-10-21; brief
+  `docs/design/K138_s4.md`): `keys` (`ky`, a number, PARAM_RANGES [0, 3] =
+  KEYS_MAX, default 0 = off) and `lockMode` (`lkm`: exit, LOCK_MODES in
+  game/locks.ts, default exit) are APPENDED at 212-213, after K137 stage
+  4's lures and snares (210-211); CODEC_VERSION stays 8. The shortcut and
+  colors forms will APPEND options to `lockMode` (no bump; only the table
+  pin's option list moves). Neither daily-exempt nor a MAZE key. Both
+  under onClockChange in undo_stack.ts's LIVE_EFFECTS (a change restarts
+  the solve and places the keys anew). `fabricRulesOf` passes them in the
+  classic game only. Pins that moved: the table pin, url_codec.test.ts's
+  defaults table, OVERRIDE_KEYS (`ky`, `lkm`) and its off-default value
+  for keys (2); with one form, `lockMode` has no other value, so its
+  override case reads `?7.EQ&lkm=exit&ky=2` as keys 2. The golden
+  snapshot, the golden dailies and K87 did not move: off is bit-identical
+  (keys 0 draws nothing). Probe link: `?7&am=instant&snd=none&ky=2`. The
+  rules: gameplay-mechanisms.md's Locks and keys; the rows:
+  gameplay-panel.md's KEYS ROWS. A branch that also appends codec params
+  (K793-K795 were running at the pause) renumbers when it merges second.

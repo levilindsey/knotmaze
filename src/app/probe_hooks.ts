@@ -322,8 +322,8 @@ export function installProbeHooks(ctx: ProbeCtx): void {
     audioTime: ctx.synth.audioTime(),
     wallTime: performance.now() / 1000,
   });
-  // K138 s4: the snap, lure and refusal plucks asked for lately (run,
-  // octave, strength, sounded): a refused lock's thunk is octave 0.5,
+  // K138 s4: the snap, lure and refusal plucks asked for lately (eid = the
+  // run, octave, strength, sounded): a refused lock's thunk is octave 0.5,
   // strength 0.35, and `sounded` is false under Muted, snd=none or volume 0.
   (window as unknown as Record<string, unknown>).__knotCutPlucks = () => ctx.cutPluckLog.map((p) => ({ ...p }));
   (window as unknown as Record<string, unknown>).__knotInspect = (
