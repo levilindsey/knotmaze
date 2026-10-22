@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K804.
+Next free ID: K807.
 
 ## Waiting on Levi
 
@@ -272,6 +272,10 @@ Next free ID: K804.
 - **K801** · K138 s4 slice 2 calls (`docs/design/K138_s4.md`, Handoff): keys are placed only at core
   junctions, since walking back out of an off-core key would drop it; and the key and padlock icons
   are placeholders.
+- **K806** · K795 beat timing default: one beat per run as built (your first ask: every run takes
+  the same time, so the dot speed varies with the run), or whole beats by run length (an even speed;
+  junctions still land on beats)? Both stay, as a panel toggle. Rec: one per run
+  (`docs/design/K795.md`)
 
 ## In progress
 
@@ -284,7 +288,7 @@ Next free ID: K804.
   - owner: nobody since 2026-10-21 05:15 (merged; agent `a178a00897a4044dc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
   - branch: mainline; last commit: `e1fe321b`
   - evidence: `.claude/probes/K114/beat/`
-  - next: the beat remainder (Handoff of docs/design/K114_beat.md): item 6 the pulse, item 8 the HUD tempo row and share tag (its panel rows moved to K795), the lore, keys and the move pad checked on the page; then Levi calls K706, K707 and the beat calls, a phone pass, then the spider and K688 healing cuts after K137 s3d, then Pluck Hero
+  - next: the beat remainder (Handoff of docs/design/K114_beat.md): item 8 the HUD tempo row and share tag (its panel rows moved to K795, item 6 the pulse to K804), the lore, keys and the move pad checked on the page; then Levi calls K706, K707 and the beat calls, a phone pass, then the spider and K688 healing cuts after K137 s3d, then Pluck Hero
   - brief: `docs/design/K114_beat.md`
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
@@ -448,9 +452,9 @@ Next free ID: K804.
 - **K793** · Settings panel search: fuzzy matching over row names, tags (src/ui/param_tags.ts),
   folder titles and option labels, plus collapse-all and expand-all buttons (Levi 2026-10-21)
   - owner: agent `a6c979bb8c0c8944a` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, launched 2026-10-21 10:03, 2 h cap 12:03)
-  - branch: `worktree-agent-a6c979bb8c0c8944a`, worktree `.claude/worktrees/agent-a6c979bb8c0c8944a`; last commit: `ca6d468c` (the brief, on master)
+  - branch: `worktree-agent-a6c979bb8c0c8944a`, worktree `.claude/worktrees/agent-a6c979bb8c0c8944a`; last commit: `d8fa88d1` (WIP, unpushed)
   - evidence: `.claude/probes/K793/` in the worktree
-  - next: build per the brief (search, the tags table and its test, collapse and expand all, page check); merge. Whichever of K793 and K795 merges second tags the other rows
+  - next: finish per the brief (collapse and expand all, the tags test, the page check), then merge with agent_merge; see `docs/design/handoff_2026-10-21.md` section 2. Whichever of K793 and K795 merges second tags the other rows
   - brief: `docs/design/K793.md`
   - env: vite from a copy of `.claude/probes/K138/s4/vite.private-cache.config.ts`, ports 5410-5413
 - **K794** · Gold path mode: a run walked again stays gold; a backtrack no longer erases it (Levi
@@ -463,12 +467,12 @@ Next free ID: K804.
   - env: vite from a copy of `.claude/probes/K138/s4/vite.private-cache.config.ts`, ports 5414-5417
 - **K795** · Panel rows for every param: the beat rider (clk, tempo, length, cap), a test that every
   PARAM_DEFAULTS key has a row or a stated reason, and an audit of recent features for tunables that
-  deserve params (Levi 2026-10-21); plus even run timing (Levi 2026-10-21: every run takes the same number
-  of beats, so the dot's speed varies with the run; the old rule stays as an option)
+  deserve params (Levi 2026-10-21); plus run timing as a toggle (Levi 2026-10-21): even, every run N beats
+  (default 1; the dot's speed varies with the run), or today's whole beats by run length (default: K806)
   - owner: agent `a78c285925ac13b8c` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, launched 2026-10-21 10:03, 2 h cap 12:03)
-  - branch: `worktree-agent-a78c285925ac13b8c`, worktree `.claude/worktrees/agent-a78c285925ac13b8c`; last commit: `ca6d468c` (the brief, on master)
+  - branch: `worktree-agent-a78c285925ac13b8c`, worktree `.claude/worktrees/agent-a78c285925ac13b8c`; last commit: `c92ed532` (WIP, unpushed)
   - evidence: `.claude/probes/K795/` in the worktree
-  - next: the beat rows, the row-or-reason test, the audit table and the top params; rebase after K138 slice 2 and renumber the codec; merge
+  - next: finish per the brief (the audit table, a rebase on master with the codec renumbered from 214, the page check), then merge with agent_merge; see `docs/design/handoff_2026-10-21.md` section 2
   - brief: `docs/design/K795.md`
   - env: vite from a copy of `.claude/probes/K138/s4/vite.private-cache.config.ts`, ports 5420-5423
 
@@ -1558,6 +1562,16 @@ Every other item below waits on the trigger it names.
 - **K322** · Art, sound and music by people (Levi, 2026-10-14 21:47): commission or license better
   icon art, sound effects and music before launch; credit each artist on the credits page (K321)
   with their terms (`notices/credits.ts`).
+- **K804** · Beat indicators (Levi 2026-10-21, once there is budget): a dropdown param for showing
+  when and where beats fall, inside multi-beat runs too: a pulse or a pluck at the dot, a crisp ring
+  from its marker on each beat, or dots at the beat points along threads and junctions that pop with
+  a ring when eaten. Takes over K114 beat item 6, the pulse (`docs/design/levi_notes_2026-10-21.md`)
+- **K805** · Dot-eater mode (Levi 2026-10-21; after the paper look K797-K800, once there is budget):
+  eat dots for points; wandering enemies (not ghosts: a shape of our own) send you to the start (the
+  hit recorded, dots stay eaten, the trail erased); big dots flip who eats whom (you speed up,
+  enemies score); enemies enter at a third marker (its own icon and placement param, its last run
+  closed to you); turns or real time. Builds on K804 dots, K80, K114, K83, K138 one-way runs
+  (`docs/design/levi_notes_2026-10-21.md`)
 
 ## Ideas (not scheduled)
 
