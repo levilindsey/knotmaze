@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K801.
+Next free ID: K804.
 
 ## Waiting on Levi
 
@@ -269,6 +269,9 @@ Next free ID: K801.
 - **K790** · Turnstile dim call (K138 s4 slice 1, live at 3dad5914): arriving at a turnstile by its
   closed arm leaves the dimmed arm as the only legal move, and the yarn covers the dim. Keep it that
   way? (`docs/design/K138_s4.md`, its Handoff)
+- **K801** · K138 s4 slice 2 calls (`docs/design/K138_s4.md`, Handoff): keys are placed only at core
+  junctions, since walking back out of an off-core key would drop it; and the key and padlock icons
+  are placeholders.
 
 ## In progress
 
@@ -436,11 +439,11 @@ Next free ID: K801.
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
-  - owner: nobody since 2026-10-21 10:38 (merged; agent `ac3462d3821227d69` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - owner: nobody since 2026-10-21 10:36 (agent ac3462d3821227d69 of claude session 91b19e11-7759-4638-ba60-4705b011b94f; paused at the end of slice 2 per Levi)
   - branch: mainline; last commit: `13758f2b`
-  - evidence: `.claude/probes/K138/s4/` (census/results.md and the trap logs, dim_page.mjs, zoom.mjs, png.mjs)
+  - evidence: `.claude/probes/K138/s4/` (census/, page/ with locks_page.mjs and out/, the test and build logs)
   - next: slice 3 (the shortcut form) and slice 4 (colors) wait for Levi; restart from the Remainder in docs/design/K138_s4.md
-  - brief: `docs/design/K138_s4.md` on the branch (Relaunch 3)
+  - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
 - **K793** · Settings panel search: fuzzy matching over row names, tags (src/ui/param_tags.ts),
   folder titles and option labels, plus collapse-all and expand-all buttons (Levi 2026-10-21)
@@ -452,10 +455,10 @@ Next free ID: K801.
   - env: vite from a copy of `.claude/probes/K138/s4/vite.private-cache.config.ts`, ports 5410-5413
 - **K794** · Gold path mode: a run walked again stays gold; a backtrack no longer erases it (Levi
   2026-10-21)
-  - owner: agent `af1981ccbc976565e` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, launched 2026-10-21 10:03, 2 h cap 12:03)
-  - branch: `worktree-agent-af1981ccbc976565e`, worktree `.claude/worktrees/agent-af1981ccbc976565e`; last commit: `ca6d468c` (the brief, on master)
-  - evidence: `.claude/probes/K794/` in the worktree
-  - next: confirm on the page which erasures happen, then the fix per the brief (gold from the taps), tests, the same-state A/B and the page check; merge
+  - owner: nobody since 2026-10-21 10:36 (agent af1981ccbc976565e of claude session 91b19e11-7759-4638-ba60-4705b011b94f failed: autocompact thrash on the 4,000-line render files; Claude Code then deleted its commit-less worktree; held at the week at 96%)
+  - branch: none (`worktree-agent-af1981ccbc976565e` holds no commits); last commit: `ca6d468c` (the brief, on master)
+  - evidence: `.claude/probes/K794/` in the main checkout: prior_run.md (the failed run, its last summary with code facts and line numbers, and the pre-fix erasure result), k794lib.mjs and erasures.mjs restored from its transcript
+  - next: restart from the brief plus prior_run.md: Grep, then Read at most 150-line ranges of fabric_maze_renderer.ts and ribbon_renderer.ts; probes in the main checkout; a first WIP commit (the diagnosis in the brief) within 20 minutes
   - brief: `docs/design/K794.md`
   - env: vite from a copy of `.claude/probes/K138/s4/vite.private-cache.config.ts`, ports 5414-5417
 - **K795** · Panel rows for every param: the beat rider (clk, tempo, length, cap), a test that every
@@ -1523,7 +1526,8 @@ Every other item below waits on the trigger it names.
 - **K780** · K138 s3 one-way traps, inferred from the rules, not seen: a slide over ice crosses
   several runs, and nothing checks that every vertex still reaches the exit under ice plus one-way
   (the census checks the start only); at a turnstile whose open pair leaves out a one-way arrival,
-  the refused backtrack can leave no move (docs/design/K138_s3.md, Residuals)
+  the refused backtrack can leave no move (docs/design/K138_s3.md, Residuals). K138 s4 census: one-way plus
+  ice traps the player on 42 of 50 seeds without keys, 44 of 50 with 2 keys (K778: no Undo to get out).
 - **K781** · K138 s3 one-way chevrons: a placeholder design, each its own mesh and draw call (116 at
   seed 7, ow 0.4; not timed), unchecked under the fog and the thread reveal. With the color rule
   leaving no solvable draw (seed 1, alternate, 0.4) nothing is one-way and the HUD row reads 0
@@ -1539,6 +1543,11 @@ Every other item below waits on the trigger it names.
   only 41 of 50 seeds, taking up to 32 draws; the lock dim covers only a stretch at each end of a
   lock run, not the whole run; the census trap check skips clocked configs (turnstiles)
   (`docs/design/K138_s4.md`, its Handoff)
+- **K802** · K138 s4: locks and keys work only in the classic game; under the Minotaur or Burn game their rows
+  hide and a keys link plays without them (from the code, untested). Needs stage 6, then a closed lock handled
+  like a broken run (K137-b) (`docs/design/K138_s4.md`, Handoff)
+- **K803** · K138 s4: the key and padlock markers and the closed-lock dim are not checked on a page
+  with the fog or the thread reveal on.
 
 ## Approved, to schedule (2026-10-11)
 
