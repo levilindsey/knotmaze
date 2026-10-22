@@ -1397,6 +1397,10 @@ async function main(): Promise<void> {
       woken: wokenShown(), // K137 stage 3d
       lures: luresShown(), // K137 stage 4
       snares: snaresShown(),
+      // K114 remainder: the beat tempo while the beat is the clock.
+      tempo: beatOn()
+        ? `${params.beatTempo} bpm${params.beatTiming === "length" ? " · by length" : ` · ${params.beatPerRun} a run`}`
+        : null,
     };
   };
   // The HUD and the mode badge (it re-fits around the HUD's new size).
@@ -2065,6 +2069,7 @@ async function main(): Promise<void> {
     ruleLoss.reset(); // K137
     fireClock.reset(); // K114 stage 2: idle until the next first move.
     beat?.reset(); // K114 beat rider: Restart restarts the beat.
+    if (scene.fabric) scene.fabric.beatPulse = -1; // K114 item 6: no pulse at rest
     beatPause.setHeld(false);
     restartChase(carry);
     hideWin();
@@ -3860,7 +3865,17 @@ async function main(): Promise<void> {
         keyInput.keyHold ||
         moveWait.waiting !== null ||
         (beat !== null && beat.needsFrame()),
-      tickBeat: (dt: number) => beat?.tick(dt) ?? false,
+      tickBeat: (dt: number) => {
+        const moved = beat?.tick(dt) ?? false;
+        // K114 item 6: the head ring pulses on the beat (brightness
+        // only under reduced motion).
+        if (scene.fabric && beat) {
+          scene.fabric.beatPulse = beat.phase();
+          scene.fabric.beatPulseReduced = motion.reduced;
+          scene.fabric.pulseHead();
+        }
+        return moved;
+      },
       // The auto sound's clock (random plucks, the music's grid).
       audioNeedsFrame: () =>
         audioMap.audioAssign !== null &&

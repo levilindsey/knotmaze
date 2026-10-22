@@ -80,7 +80,9 @@ export type StatId =
   // K138 stage 4: the keys.
   | "keys"
   // K137 s5: the muddy runs laid.
-  | "muddy";
+  | "muddy"
+  // K114 remainder: the beat tempo (HUD only).
+  | "tempo";
 
 export const STATS: Record<StatId, { label: string; line: string }> = {
   // TIME above (SolveClock). The Burnt banner shows it too, for a run the
@@ -328,6 +330,13 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "Muddy runs laid on the shortest route. Crossing one takes two " +
       "moves, for you and the minotaur alike, so the fewest-moves way " +
       "and the shortest way part.",
+  },
+  // K114 remainder: the beat rider's tempo while the beat is the clock.
+  tempo: {
+    label: "tempo",
+    line:
+      "The beat's tempo: the dot rides one run per beat (or by run " +
+      "length), stepping on each beat at this pace.",
   },
   spool: {
     label: "spool",

@@ -95,6 +95,9 @@ export interface HudSnapshot {
   keys?: { held: number; of: number } | null;
   // K137 s5: the muddy runs laid (absent or null: mud off).
   muddy?: number | null;
+  // K114 remainder: the beat tempo while the beat is the clock (never
+  // on a banner: the win snapshot has no such field).
+  tempo?: string | null;
 }
 
 // K138 stage 2: what the hidden row reads.
@@ -156,7 +159,7 @@ type GameFields = Pick<
   HudSnapshot,
   | "catches" | "fireLead" | "closestCall" | "snapped" | "parLeft" | "parStrokes" | "collapse"
   | "cuts" | "hearts" | "walker" | "sword" | "spool" | "hints" | "spoolUsed" | "hintsUsed"
-  | "sprint" | "woken" | "lures" | "snares"
+  | "sprint" | "woken" | "lures" | "snares" | "tempo"
 >;
 // K137 stage 3a: "hearts 2 / 3" while lives are on.
 const heartsValue = (h: { left: number; of: number }): string => `${h.left} / ${h.of}`;
@@ -169,6 +172,7 @@ export function gameEntries(s: GameFields): StatEntry[] {
   if (s.woken != null) rows.push(entry("woken", String(s.woken))); // K137 s3d
   if (s.lures) rows.push(entry("lures", heartsValue(s.lures))); // K137 s4
   if (s.snares) rows.push(entry("snares", heartsValue(s.snares)));
+  if (s.tempo) rows.push(entry("tempo", s.tempo)); // K114 remainder (HUD only)
   if (s.fireLead != null) rows.push(entry("fireLead", fmtDist(s.fireLead)));
   if (s.closestCall != null) rows.push(entry("closestCall", fmtDist(s.closestCall)));
   rows.push(...ruleEntries(s)); // K137
