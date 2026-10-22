@@ -1105,9 +1105,6 @@ export function buildPanel(
   );
   void gameModeRow;
 
-  // --- Maze ---------------------------------------------------------------
-  // (The mazeFabric switch left the panel in K323 Stage A: the codec
-  // entry is gone and the field stays on until K326 deletes knot mode.)
   // K795: the Clock rows over `clock` (clockView above): the minotaur's
   // offers real time too; classic's and the burn race's turns and beat.
   // Each writes `clock`, re-shows the other row under the `syncing` guard
@@ -1166,6 +1163,10 @@ export function buildPanel(
     "Your speed in real time, along the threads, in lattice units per second. Applies live.",
     D.playerPace, () => callbacks.onChaseChange()
   );
+
+  // --- Maze ---------------------------------------------------------------
+  // (The mazeFabric switch left the panel in K323 Stage A: the codec
+  // entry is gone and the field stays on until K326 deletes knot mode.)
   const deadEndDensityRow = row(
     fMaze, p, "deadEndDensity", { min: 0, max: 1, step: 0.05, label: "Dead-end density" },
     "Fraction of eligible loops cut into dead-end threads (long threads that end in a loose tip). 0 = a pure braided maze where every wrong turn loops back; 1 = maximally tree-like. Regenerates the maze.",
