@@ -177,13 +177,25 @@ void main(void) {
   // clears the interior, so over/under and joins read from the strokes
   // and the backdrop shows between them. Junction fans still fill.
   highp float lookA = 1.0;
-  if (uKLook.x > 0.5) {
+  // K798: a border-at-a-time intro (uKLook.y: 1 = fill follows each
+  // strand, 2 = all fills last; uKLook.z: the intro is running) makes
+  // even the fill look draw its borders first while it runs.
+  bool edgesIntro = uKLook.y > 0.5 && uKLook.z > 0.5;
+  if (uKLook.x > 0.5 || edgesIntro) {
     highp float eAcross = abs(2.0 * vUV.y - 1.0);
     highp float fwA = max(fwidth(vUV.y) * 3.0, 0.02);
     highp float edge = smoothstep(0.62, 0.62 + fwA, eAcross);
     vec3 stroke = mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5);
-    if (uKLook.x < 1.5) { rgb = stroke; lookA = edge; }
-    else rgb = mix(rgb, stroke, edge * 0.9);
+    if (uKLook.x > 0.5 && uKLook.x < 1.5) { rgb = stroke; lookA = edge; }
+    else {
+      rgb = mix(rgb, stroke, edge * 0.9);
+      if (edgesIntro) {
+        highp float fillOn = uKLook.y < 1.5
+          ? (uKFx.z >= kc.fxDone ? 1.0 : 0.0)
+          : 0.0;
+        lookA = mix(fillOn, 1.0, edge);
+      }
+    }
   }
   float gk = gapKeep(pxW, gTurn);
   if (uKBase.z > 4.5) {

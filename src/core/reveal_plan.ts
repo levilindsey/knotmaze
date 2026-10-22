@@ -35,6 +35,11 @@ export const APPEAR_SEQUENCES = [
   "bloom",
   "draw",
   "ink",
+  // K798: border-at-a-time intros (draw scheduling; the fill is held
+  // back render-side in the section shader): edges = each strand's
+  // fill follows its own borders, edgesAll = all fills after all borders.
+  "edges",
+  "edgesAll",
 ] as const;
 export type AppearSequence = (typeof APPEAR_SEQUENCES)[number];
 
@@ -158,7 +163,7 @@ export function buildRevealPlan(
 
   const sources: RevealSource[][] = chains.map(() => []);
 
-  if (effective === "draw") {
+  if (effective === "draw" || effective === "edges" || effective === "edgesAll") {
     // Deterministic strand order, staggered starts. Short CONNECTORS keep
     // their shuffled order but sit out the long-strand pass and draw as its
     // closing cascade (CONNECT_TAIL); without a walk graph (knot mode) there

@@ -2798,6 +2798,10 @@ export class RibbonRenderer {
   tickPaint(dt: number): void {
     knotUniformValues().uKBase[2] = this.paintDebug;
     knotUniformValues().uKLook![0] = this.threadLook; // K797b
+    // K798: the border-at-a-time intros (mode, running) for the shader.
+    const rm = this.revealAnim?.mode;
+    knotUniformValues().uKLook![1] = rm === "edges" ? 1 : rm === "edgesAll" ? 2 : 0;
+    knotUniformValues().uKLook![2] = this.revealAnim && !this.revealAnim.done ? 1 : 0;
     this.tickPaintPalette(dt);
     this.tickAppearFx(dt);
     // Flow clock, advanced AFTER the palette/fillet pass so everything

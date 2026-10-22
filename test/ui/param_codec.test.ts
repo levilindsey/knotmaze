@@ -89,7 +89,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
     ["instant", "ink-dust", "trace-burn", "trace-rainbow", "trace-roots",
       "bloom-comet", "random", "custom"],
   ],
-  ["appearSequence", "enum", ["instant", "trace", "bloom", "draw", "ink"]],
+  ["appearSequence", "enum", ["instant", "trace", "bloom", "draw", "ink", "edges", "edgesAll"]],
   ["appearSpeed", "number"],
   ["appearFx", "enum", ["none", "rainbow", "comet", "dust", "burn", "roots"]],
   ["pluckSize", "number"], // 60

@@ -2614,6 +2614,8 @@ export function buildPanel(
         bloom: "bloom",
         draw: "draw",
         ink: "ink",
+        edges: "edges",
+        edgesAll: "edges all",
       },
     },
     "How the design animates in: instant = appear fully drawn; trace = grow outward from the maze entrance, splitting at every junction; bloom = the same flood from several random spots at once; draw = pen-draw each strand end to end; ink = a dye wave spreading from the entrance. Rebuilds the scene.",

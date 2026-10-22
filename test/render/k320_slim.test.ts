@@ -62,10 +62,14 @@ describe("K320 stage 1: char budgets", () => {
     // K797b (2026-10-21): the thread look (uKLook + the edge-stroke block
     // in SECTION_FRAG, ribbon-only) adds 779 to both (47,691 -> 48,470
     // and 64,106 -> 64,885 here); one more cold compile of each per player.
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(48_530);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(64_950);
+    // K798 (2026-10-21): the border-at-a-time intro gate in SECTION_FRAG
+    // adds 481 to both (48,470 -> 48,951 and 64,885 -> 65,366 here).
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(49_010);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(65_430);
     expect(STRIP_FRAG.length).toBeLessThanOrEqual(31_400);
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(26_600);
+    // K797b/K798 fillets (2026-10-21): the fan look gate and stroke
+    // (junction_field.ts) add 755 (26,600 -> 27,355 here).
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(27_420);
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_300);
   });
 });

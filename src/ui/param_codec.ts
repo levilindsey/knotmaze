@@ -155,7 +155,7 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
     "random",
     "custom",
   ]),
-  choice("appearSequence", ["instant", "trace", "bloom", "draw", "ink"]),
+  choice("appearSequence", ["instant", "trace", "bloom", "draw", "ink", "edges", "edgesAll"]), // edges*: K798
   num("appearSpeed"),
   choice("appearFx", ["none", "rainbow", "comet", "dust", "burn", "roots"]),
   // Render-only plucks + the physics checkbox (2026-10-11).
