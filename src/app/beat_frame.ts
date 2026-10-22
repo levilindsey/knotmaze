@@ -8,10 +8,13 @@
 //
 // Each departure commits through `commit` (main.ts: moveAlong, the normal
 // move path), so the controller, the turn minotaur and the fire step
-// exactly as on the turn clock, once per committed move. A commit that
-// ends the game (a win, a burn, a catch) is refused on the next junction
-// and the rider comes to rest; a head that moved under it (a catch's
-// respawn, a restart) puts it at rest there.
+// exactly as on the turn clock, once per committed move. After a commit
+// that ends the game (a win, a burn) the next junction's commits are
+// refused and the rider comes to rest. A catch lands at its contact moment
+// (main.ts: tickTurnMino, or moveAlong before the next departure when the
+// arrival and that departure share one advance, K774), and its respawn
+// rests the rider at the entrance, ending the advance; a head that moved
+// under it (a restart) puts it at rest there too.
 import { BeatClock, BeatFeed, beatPhase } from "../game/beat_clock";
 import { CHASE_HZ } from "../game/minotaur";
 import { BeatRider } from "../game/beat_rider";
