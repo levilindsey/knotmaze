@@ -12,6 +12,7 @@ import {
   END_MOVE_STEPS,
   endPullBack,
   endPushPast,
+  burntAt,
   exploreView,
   pieceVis,
 } from "../../src/game/explore_view";
@@ -512,5 +513,27 @@ describe("explore view (K466): the ends kept out from under crossings", () => {
       expect(exploreView(input(walk, { ...base, keepOut: ko({}, "past") }))).toEqual(none);
       expect(exploreView(input(walk, { ...base, keepOut: ko({}, "back") }))).toEqual(none);
     }
+  });
+});
+
+describe("burntAt (K796: the string burns with its thread)", () => {
+  const ring = (c: number): number => (c === 0 ? 20 : 0);
+  const spans = [{ chain: 0, b0: 18, b1: 23 }]; // wraps the ring seam (n=20)
+  it("hits inside, misses outside, on either unwrapped copy", () => {
+    expect(burntAt(spans, 0, 19, ring)).toBe(true);
+    expect(burntAt(spans, 0, 21, ring)).toBe(true);
+    expect(burntAt(spans, 0, 1, ring)).toBe(true); // 21 - 20
+    expect(burntAt(spans, 0, 10, ring)).toBe(false);
+    expect(burntAt(spans, 0, 17.9, ring)).toBe(false);
+  });
+  it("is half-open at the front and quiet with no fire", () => {
+    expect(burntAt(spans, 0, 23, ring)).toBe(false);
+    expect(burntAt(null, 0, 19, ring)).toBe(false);
+    expect(burntAt([], 0, 19, ring)).toBe(false);
+  });
+  it("reads open chains (ringN 0) directly", () => {
+    expect(burntAt([{ chain: 1, b0: 3, b1: 5 }], 1, 4, ring)).toBe(true);
+    expect(burntAt([{ chain: 1, b0: 3, b1: 5 }], 1, 5, ring)).toBe(false);
+    expect(burntAt([{ chain: 1, b0: 3, b1: 5 }], 0, 4, ring)).toBe(false);
   });
 });

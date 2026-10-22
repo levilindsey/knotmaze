@@ -482,6 +482,32 @@ function cutPiece(p: ExplorePiece, b0: number, b1: number, out: ExplorePiece[]):
   }
 }
 
+// K796: whether chain point `ctrl` (any unwrapped copy) lies in a burnt
+// span — the yarn's per-station burn test (the string burns away with the
+// thread under it). Ring copies -2n..+2n, as subtractBurnt cuts.
+export function burntAt(
+  spans: readonly BurntSpan[] | null,
+  chain: number,
+  ctrl: number,
+  ringN: (chain: number) => number
+): boolean {
+  if (!spans) return false;
+  const n = ringN(chain);
+  for (const s of spans) {
+    if (s.chain !== chain || !(s.b1 > s.b0)) continue;
+    if (n <= 0) {
+      if (ctrl >= s.b0 && ctrl < s.b1) return true;
+      continue;
+    }
+    const m = ((ctrl % n) + n) % n;
+    for (let k = -2; k <= 2; k++) {
+      if (m + k * n >= s.b0 && m + k * n < s.b1) return true;
+      if (ctrl + k * n >= s.b0 && ctrl + k * n < s.b1) return true;
+    }
+  }
+  return false;
+}
+
 // K290: the pieces with every burnt span cut out (burnt thread is not
 // drawn: the `burnt` param's "gone"). `ringN(chain)` = the chain's ctrl
 // count for a ring, 0 for an open chain; a ring's span is cut at each
