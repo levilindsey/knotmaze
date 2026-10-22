@@ -764,10 +764,10 @@ export class CrossingGaps {
     this.r.slotCutPos[slot] = cutPos;
     if (index >= 0) {
       // A gated crossing not yet shown has no footprint to pluck around.
-      this.r.overHalfNeg[index] = shown ? coverNeg : 0;
-      this.r.overHalfPos[index] = shown ? coverPos : 0;
-      this.r.eraseExtentNeg[index] = shown ? allNeg : 0;
-      this.r.eraseExtentPos[index] = shown ? allPos : 0;
+      this.r.pluckHost.overHalfNeg[index] = shown ? coverNeg : 0;
+      this.r.pluckHost.overHalfPos[index] = shown ? coverPos : 0;
+      this.r.pluckHost.eraseExtentNeg[index] = shown ? allNeg : 0;
+      this.r.pluckHost.eraseExtentPos[index] = shown ? allPos : 0;
     }
     // G3-1: the shader reads the over chain's own SAMP samples (the CPU
     // no longer builds a fine polyline; the march reaches above are the

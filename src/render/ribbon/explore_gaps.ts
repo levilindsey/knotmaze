@@ -363,10 +363,10 @@ export class ExploreGaps {
         // and the under chain's windows (rebuilt below, once per chain).
         this.r.slotExploreHid[s] = hid;
         if (s < this.r.ps.crossings.length) {
-          this.r.overHalfNeg[s] = hid ? 0 : this.r.slotCoverNeg[s];
-          this.r.overHalfPos[s] = hid ? 0 : this.r.slotCoverPos[s];
-          this.r.eraseExtentNeg[s] = hid ? 0 : this.r.slotAllNeg[s];
-          this.r.eraseExtentPos[s] = hid ? 0 : this.r.slotAllPos[s];
+          this.r.pluckHost.overHalfNeg[s] = hid ? 0 : this.r.slotCoverNeg[s];
+          this.r.pluckHost.overHalfPos[s] = hid ? 0 : this.r.slotCoverPos[s];
+          this.r.pluckHost.eraseExtentNeg[s] = hid ? 0 : this.r.slotAllNeg[s];
+          this.r.pluckHost.eraseExtentPos[s] = hid ? 0 : this.r.slotAllPos[s];
         }
         const uc = this.r.slotUnderChain[s];
         if (uc >= 0) dirtyUnder.add(uc);
