@@ -531,9 +531,6 @@ merged):
   or textured fills and borders (pencil), if fast enough.
   param (Levi 2026-10-21; sooner list). After K797's border look.
   fill) and a fill texture dropdown, for colored pencil, crayon or highlighter, if fast enough. After K794.
-- **K800** · Looks set by the link (Levi 2026-10-21; sooner list): look params (nothing that changes the maze) in the
-  URL override the player's saved preferences, and a top-right button turns the overrides off for that maze. For
-  dailies with their own look, with K46's themes and K531's per-day overrides.
 - **K409** · Levi's burn calls 1-3 merged (6b9eb8f..3231d59). Left: step 4, the ember over the smoke
   (NOT BUILT in `render-explore.md`), after K525 (paint files) and K623/K624. The phone sheet passed
   (K631 part 1, 10-20). `docs/design/K409.md`.
@@ -1818,6 +1815,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K800** · Looks set by the link (LOOK_KEYS exempt; Link look chip). Done in 879d190e (2026-10-21).
 - **K799** · The traveled path's look (goldWidth + goldTexture). Done in bea90d9b (2026-10-21).
 - **K798** · Border-at-a-time intros (edges / edgesAll sequences). Done in 3da2cf59 (2026-10-21).
 - **K796** · String burns away with its thread in the burn race (burntAt in explore_view.ts; drawYarn hides burnt stations). Done in 5f9f3a45 (2026-10-21).
