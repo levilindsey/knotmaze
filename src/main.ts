@@ -805,6 +805,8 @@ async function main(): Promise<void> {
       fitToScreen,
       updateHud: () => updateHud(),
       showFabricWin: () => showFabricWin(),
+      previewWin: () => previewWinEffect(),
+      previewLoss: () => previewLossEffect(),
       restartSolve: (carry) => restartSolve(carry),
       playDaily: (n, floating) => playDaily(n, floating),
       showDailyStats: () => showDailyStats(),
@@ -1942,6 +1944,80 @@ async function main(): Promise<void> {
       sprayUnit(radius, root.scale.x),
       root
     );
+  };
+
+  // The panel's Preview buttons (Path & view): fire the win / loss
+  // effects' VISUALS ONLY, from the state on screen. Neither calls the
+  // game-out functions (showFabricWin / showFireLoss / showLoss): no
+  // daily result is recorded, the solve clock keeps its state, no catch
+  // or heart counts, the controller, the chases and the attempt are
+  // never touched - so there is nothing to roll back afterwards. The
+  // one visible change besides the effects themselves is the banner a
+  // real finish would show, in its preview form (its only button
+  // closes it); if a real banner is already up, the preview fires the
+  // particles only and leaves that banner - and the state behind it -
+  // exactly as it was. Closing a preview banner re-fits the mode badge
+  // (the banners' onHide), as a real banner's close does.
+  const previewWinEffect = (): void => {
+    throwConfetti();
+    const c = scene.fabricController;
+    if (!c || banner.shown || lossBanner.shown) return;
+    const s = hudSnapshot();
+    banner.show({
+      heading: "Solved! (preview)",
+      timeMs: s?.timeMs ?? clock.elapsed(performance.now()),
+      efficiency: s?.efficiency ?? null,
+      path: c.pathLength,
+      optimal: c.optimal,
+      backtrack: s?.backtrack ?? null,
+      junctions: c.visitedJunctions.size,
+      deadEnds: s?.deadEnds ?? null,
+      catches: s?.catches ?? null,
+      chasedMs: s?.chasedMs ?? null,
+      closeCalls: s?.closeCalls ?? null,
+      seen: s?.seen ?? null,
+      restarts: s?.restarts ?? null,
+      closestCall: s?.closestCall ?? null,
+      hearts: s?.hearts ?? null,
+      spoolUsed: s?.spoolUsed ?? null,
+      hintsUsed: s?.hintsUsed ?? null,
+      rules: s?.rules ?? null,
+      turnstiles: s?.turnstiles ?? null,
+      hidden: s?.hidden ?? null,
+      oneWay: s?.oneWay ?? null,
+      keys: s?.keys ?? null,
+      muddy: s?.muddy ?? null,
+      stats: false,
+      preview: true,
+    });
+    updateHud();
+  };
+
+  const previewLossEffect = (): void => {
+    const c = scene.fabricController;
+    if (!c || !scene.fabric) return;
+    flags.push(Flag.OVERLAY); // Wake a stopped loop for the fall.
+    const out = new Float32Array(2);
+    scene.fabric.vertexWorld(c.head, out, 0);
+    igniteLoss(out[0], out[1], scene.fabric.markerRadius(), c.fire ? "fire" : "mino");
+    // The first-show sound of a real fire loss (showFireLoss), at the head.
+    const v = scene.walkGraph?.vertices.get(c.head);
+    const [lo, nb] = catchNotes(v ? freqForCtrl(v.chain, v.ctrl) : 220);
+    synth.pluck(lo, 0.5);
+    synth.pluck(nb, 0.3);
+    synth.pluck(Math.max(30, lo / 2), 0.5);
+    synth.pluck(Math.max(30, nb / 2), 0.35);
+    if (banner.shown || lossBanner.shown) return;
+    lossBanner.show(
+      {
+        timeMs: clock.elapsed(performance.now()),
+        walked: c.walkedDist,
+        closest: c.fire ? c.fireClosest : Infinity,
+        reached: !!c.fire,
+      },
+      true
+    );
+    updateHud();
   };
 
   // K80 REAL-TIME MODE (params.clock "realtime", game/minotaur.ts). The

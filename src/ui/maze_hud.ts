@@ -573,6 +573,9 @@ export interface WinInfo {
   muddy?: number | null; // K137 s5: the muddy runs laid
   // Show the daily stats button.
   stats: boolean;
+  // A panel preview of the win effect: the banner's only button closes
+  // it (no Share, no Stats), and no result stands behind it.
+  preview?: boolean;
 }
 
 export class WinBanner {
@@ -612,6 +615,24 @@ export class WinBanner {
     const rows = rowsEl(entries);
     const btns = document.createElement("div");
     btns.className = "km-btns";
+    if (w.preview) {
+      const close = document.createElement("button");
+      close.type = "button";
+      close.className = "km-btn km-primary";
+      close.textContent = "Close";
+      close.addEventListener("click", () => this.hide());
+      btns.appendChild(close);
+      const x = document.createElement("button");
+      x.type = "button";
+      x.className = "km-x";
+      x.textContent = "×";
+      x.title = "Close";
+      x.setAttribute("aria-label", "Close");
+      x.addEventListener("click", () => this.hide());
+      el.append(rows, btns, x);
+      el.hidden = false;
+      return;
+    }
     const share = document.createElement("button");
     share.type = "button";
     share.className = "km-btn km-primary";
@@ -770,18 +791,23 @@ export class LossBanner {
     document.body.appendChild(this.el);
   }
 
-  show(l: LossInfo): void {
+  // `preview`: a panel preview of the loss effect. Its only button
+  // closes it (Try again would restart the solve), and its sentence
+  // says nothing was lost.
+  show(l: LossInfo, preview = false): void {
     const el = this.el;
     el.className = "km-banner km-burnt"; // K137: showRule may have changed it.
     el.textContent = "";
     const head = document.createElement("div");
     head.className = "km-head";
-    head.textContent = "Burnt \u{1F525}";
+    head.textContent = preview ? "Burnt (preview) \u{1F525}" : "Burnt \u{1F525}";
     const sub = document.createElement("div");
     sub.className = "km-sub";
-    sub.textContent = l.reached
-      ? "The fire reaches you where you stand."
-      : "The fire reaches the end of every way on before you.";
+    sub.textContent = preview
+      ? "Preview only: nothing was caught, burnt or lost."
+      : l.reached
+        ? "The fire reaches you where you stand."
+        : "The fire reaches the end of every way on before you.";
     const entries = lossEntries(l);
     const rows = rowsEl(entries);
     const btns = document.createElement("div");
@@ -789,10 +815,10 @@ export class LossBanner {
     const retry = document.createElement("button");
     retry.type = "button";
     retry.className = "km-btn km-primary";
-    retry.textContent = "Try again";
+    retry.textContent = preview ? "Close" : "Try again";
     retry.addEventListener("click", () => {
       this.hide();
-      this.onRetry();
+      if (!preview) this.onRetry();
     });
     btns.appendChild(retry);
     const x = document.createElement("button");
