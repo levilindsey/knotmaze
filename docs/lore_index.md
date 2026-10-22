@@ -14,7 +14,7 @@ rules file or its `paths:` change. Not auto-loaded.
 - `gameplay-badge.md`: MODE BADGE (K73, K151)
   paths: `src/ui/mode_badge.ts`, `test/ui/mode_badge.test.ts`
 - `gameplay-indicators.md`: OFF-SCREEN INDICATORS (K73), THE HEAD (K148) and THE TOASTS CLEAR THE CONTROLS (K698)
-  paths: `src/ui/offscreen_indicators.ts`, `src/ui/head_indicator.ts`, `test/ui/offscreen_indicators.test.ts`, `test/ui/head_indicator.test.ts`, `src/app/frame_loop.ts`, `src/ui/share.ts`, `src/ui/toast_place.ts`, `test/ui/toast_place.test.ts`
+  paths: `src/ui/offscreen_indicators.ts`, `src/ui/head_indicator.ts`, `test/ui/offscreen_indicators.test.ts`, `test/ui/head_indicator.test.ts`, `src/ui/share.ts`, `src/ui/toast_place.ts`, `test/ui/toast_place.test.ts`
 - `gameplay-minotaur.md`: REAL-TIME MINOTAUR (K80), THE MINOTAUR'S CONTROLS (K174), TURN-ALIGNED MINOTAUR (K80 turns), THE SWORD (K137 stage 3b), SPRINT (K137 stage 3c), SLEEPERS AND THE FOLLOWER (K137 stage 3d), LURES AND SNARES (K137 stage 4)
   paths: `src/game/minotaur.ts`, `test/game/minotaur.test.ts`, `src/game/minotaur_turns.ts`, `test/game/minotaur_turns.test.ts`, `src/game/sword.ts`, `test/game/sword.test.ts`, `src/game/sprint.ts`, `test/game/sprint.test.ts`, `src/ui/sprint_button.ts`, `src/game/monsters.ts`, `test/game/monsters.test.ts`, `src/game/lures.ts`, `test/game/lures.test.ts`, `src/game/snares.ts`, `test/game/snares.test.ts`, `src/ui/tool_buttons.ts`
 - `gameplay-fire.md`: BURN RACE (K114)
@@ -43,9 +43,9 @@ rules file or its `paths:` change. Not auto-loaded.
 - `gameplay-panel.md`: pathViz labels, live recolor, panel rules, gridAlign, the background rows (K79), the Accessibility folder (K111)
   paths: `src/ui/tweakpane_panel.ts`, `src/ui/grid_align_curve.ts`, `test/ui/grid_align_curve.test.ts`, `src/app/panel_wiring.ts`
 - `gameplay-motion.md`: THE MOTION SETTING (K53, K79), THE ACCESSIBILITY GROUP (K111: Reduced motion, High contrast)
-  paths: `src/ui/motion.ts`, `test/ui/motion.test.ts`, `src/ui/accessibility.ts`, `test/ui/accessibility.test.ts`, `src/app/frame_loop.ts`, `src/app/lifecycle.ts`
+  paths: `src/ui/motion.ts`, `test/ui/motion.test.ts`, `src/ui/accessibility.ts`, `test/ui/accessibility.test.ts`, `src/app/lifecycle.ts`
 - `gameplay-camera.md`: the camera round, FIT CAMERA PAN RANGE (K198), taps and drags (the tap tug, K279), TAP PREFERENCE (K479: outgoing runs over the arrival run)
-  paths: `src/main.ts`, `src/app/camera.ts`, `src/ui/view_clamp.ts`, `test/ui/view_clamp.test.ts`, `src/app/frame_loop.ts`, `src/game/tap_pick.ts`, `test/game/tap_pick.test.ts`
+  paths: `src/main.ts`, `src/app/camera.ts`, `src/ui/view_clamp.ts`, `test/ui/view_clamp.test.ts`, `src/game/tap_pick.ts`, `test/game/tap_pick.test.ts`
 - `gameplay-moves.md`: MOVES BY DIRECTION (K120): keys, the picker, the move pad; MULTI-RUN TAPS (K480 stage 1); GAMEPAD (K499)
   paths: `src/ui/key_moves.ts`, `src/ui/move_pad.ts`, `test/ui/key_moves.test.ts`, `test/ui/move_pad.test.ts`, `src/ui/gamepad.ts`, `test/ui/gamepad.test.ts`, `src/app/input_keys.ts`, `src/game/route_plan.ts`, `test/game/route_plan.test.ts`
 - `gameplay-audio.md`: the audio autoplay gate, AUTO PLUCKS' VOLUME (K279), THE SNORING CAT LINK (K325)
@@ -61,11 +61,11 @@ rules file or its `paths:` change. Not auto-loaded.
 - `physics.md`: physics: the intro, the sweep test, the physics worker's pointer and the solver rules
   paths: `src/physics/**`, `test/physics/**`, `test/*.regression.test.ts`, `test/sweep.manual.test.ts`
 - `physics-worker.md`: THE PHYSICS WORKER (K7): the two hosts, the mirror, transport, the allowance clock, interpolation, the start gate, the fallback, invariants, the measured numbers
-  paths: `src/physics/physics_host.ts`, `src/physics/worker_host.ts`, `src/physics/physics_worker.ts`, `src/physics/physics_worker_core.ts`, `src/physics/mirror_system.ts`, `src/physics/snapshot.ts`, `src/physics/probe_dump.ts`, `src/core/scene_graph.ts`, `test/physics/physics_host.test.ts`, `test/physics/worker_host.test.ts`, `test/physics/host_seam.test.ts`, `test/physics/snapshot.test.ts`, `src/app/frame_loop.ts`, `src/app/lifecycle.ts`, `src/app/scene.ts`
+  paths: `src/physics/physics_host.ts`, `src/physics/worker_host.ts`, `src/physics/physics_worker.ts`, `src/physics/physics_worker_core.ts`, `src/physics/mirror_system.ts`, `src/physics/snapshot.ts`, `src/physics/probe_dump.ts`, `src/core/scene_graph.ts`, `test/physics/physics_host.test.ts`, `test/physics/worker_host.test.ts`, `test/physics/host_seam.test.ts`, `test/physics/snapshot.test.ts`, `src/app/lifecycle.ts`, `src/app/scene.ts`
 - `physics-sleep.md`: the sleep gate counts sim time (K63)
-  paths: `src/physics/sleep_gate.ts`, `test/physics/sleep_gate.test.ts`, `test/physics/sleep.regression.test.ts`, `test/quiescence.regression.test.ts`, `src/physics/physics_host.ts`, `src/app/frame_loop.ts`
+  paths: `src/physics/sleep_gate.ts`, `test/physics/sleep_gate.test.ts`, `test/physics/sleep.regression.test.ts`, `test/quiescence.regression.test.ts`, `src/physics/physics_host.ts`
 - `physics-settle.md`: a new knot's first settle is paced (K147); its code lives in the physics host (K7)
-  paths: `src/physics/settle_budget.ts`, `test/physics/settle_budget.test.ts`, `src/physics/physics_host.ts`, `src/app/frame_loop.ts`, `src/app/lifecycle.ts`
+  paths: `src/physics/settle_budget.ts`, `test/physics/settle_budget.test.ts`, `src/physics/physics_host.ts`, `src/app/lifecycle.ts`
 - `physics-kinks.md`: KINK EYES (with K41): the eye ratchet, across-eye pressure, the fairing exemption
   paths: `src/physics/particle_system.ts`, `src/physics/forces.ts`, `test/physics/sleep.regression.test.ts`
 - `physics-fabric.md`: the junction cover, junction spacing, open-chain terminals
@@ -83,7 +83,7 @@ rules file or its `paths:` change. Not auto-loaded.
 - `render.md`: render: the intro, custom shaders and mesh.texture, palette textures, the P3.40 lessons
   paths: `src/render/**`, `test/render/**`
 - `render-backgrounds.md`: SHADER BACKGROUNDS (K21), SHAPE PARAMS + CUSTOM COLORS (K79)
-  paths: `src/render/background.ts`, `src/render/background_model.ts`, `src/render/background_shaders.ts`, `test/render/background_model.test.ts`, `test/render/background_shaders.test.ts`, `src/app/frame_loop.ts`, `src/app/scene.ts`
+  paths: `src/render/background.ts`, `src/render/background_model.ts`, `src/render/background_shaders.ts`, `test/render/background_model.test.ts`, `test/render/background_shaders.test.ts`, `src/app/scene.ts`
 - `render-hash.md`: THE BACKGROUNDS' HASH IS OUR OWN (K154)
   paths: `src/render/hash2d.ts`, `src/render/background_shaders.ts`, `test/render/hash2d.test.ts`
 - `render-paint.md`: SHADER PAINT (G2), PULSES and PULSE REACH (K75; the trail split and the hover's reach, K93), RING LAPS (K299, integer-corrected lap math), THE ROOT'S PAINT (K620), palette strip order, gamut locality
@@ -97,9 +97,9 @@ rules file or its `paths:` change. Not auto-loaded.
 - `render-routes.md`: ROUTE BANDS (K81)
   paths: `src/render/junction_routes.ts`, `src/render/junction_field.ts`, `test/render/junction_routes.test.ts`
 - `render-web-fade.md`: THE FULLY TRAVELED WEB FADES IN (K169)
-  paths: `src/render/web_fade.ts`, `test/render/web_fade.test.ts`, `src/app/frame_loop.ts`
+  paths: `src/render/web_fade.ts`, `test/render/web_fade.test.ts`
 - `render-confetti.md`: FINISH CONFETTI (K140)
-  paths: `src/render/confetti.ts`, `src/render/confetti_model.ts`, `test/render/confetti_model.test.ts`, `src/app/frame_loop.ts`
+  paths: `src/render/confetti.ts`, `src/render/confetti_model.ts`, `test/render/confetti_model.test.ts`
 - `render-loop.md`: THE FLAG LEDGER (K6-1): the 14 bits and their masks, pushes and polls and the frame boundary, polls never mutate, sceneActive replaces sceneAnimating() for the background, `halted` never clears, `__knotLoop()`
   paths: `src/app/frame_loop.ts`, `src/app/loop_flags.ts`, `test/app/loop_flags.test.ts`
 - `render-explore.md`: THE THREAD REVEAL (K76 stages 2a and 2b): the visibility model, VIS items and the whole-chain flag, the explore program and its looks, mode off = master's frame, the probe hook; the gates (crossing gaps, markers, junction joints), when the fans rebuild, the concurrent-GPU-probe lesson; the shaped cut (K268 stage 1): profile texels, gate bit, classifier, row-partial upload
@@ -107,6 +107,6 @@ rules file or its `paths:` change. Not auto-loaded.
 - `render-gaps.md`: PER-PIXEL CROSSING GAPS (G1) and its render lore, marker gaps, the thread reveal's gap gate (K76 2b), the shaped cut's profile texels and row-partial upload (K268)
   paths: `src/render/gap_mask.ts`, `src/render/fabric_sdf.ts`, `src/render/ribbon_renderer.ts`, `src/render/ribbon/**`, `src/render/ribbon_mesh.ts`
 - `render-shaders.md`: SHADER COMPILES FREEZE THE SCREEN (K307): each program's cold cost (FXC on D3D11), where the intro's freezes are, the GPU program cache, why presents stop, parallel vs blocking warm-ups, building warm-up programs from the sites' own GlPrograms; THE WARM-UP (K307 stage 2): what main.ts gates, why it links blocking (parallel links miss the disk cache), wave 2 off, the registry rule, setProgramName twins, the burn rule
-  paths: `src/render/ribbon_renderer.ts`, `src/render/ribbon/**`, `src/render/paint_glsl.ts`, `src/render/explore_glsl.ts`, `src/render/arm_strip.ts`, `src/render/junction_field.ts`, `src/render/background.ts`, `src/render/background_shaders.ts`, `src/render/marker_mesh.ts`, `src/render/pluck_overlay.ts`, `src/render/pluck_ripple.ts`, `src/render/shader_warmup.ts`, `src/render/program_registry.ts`, `test/render/program_registry.test.ts`, `test/render/shader_warmup.test.ts`, `src/app/frame_loop.ts`, `src/app/lifecycle.ts`
+  paths: `src/render/ribbon_renderer.ts`, `src/render/ribbon/**`, `src/render/paint_glsl.ts`, `src/render/explore_glsl.ts`, `src/render/arm_strip.ts`, `src/render/junction_field.ts`, `src/render/background.ts`, `src/render/background_shaders.ts`, `src/render/marker_mesh.ts`, `src/render/pluck_overlay.ts`, `src/render/pluck_ripple.ts`, `src/render/shader_warmup.ts`, `src/render/program_registry.ts`, `test/render/program_registry.test.ts`, `test/render/shader_warmup.test.ts`, `src/app/lifecycle.ts`
 - `notices.md`: the credits and licenses page (K122)
   paths: `notices/**`, `test/notices/**`, `vite.config.ts`

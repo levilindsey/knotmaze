@@ -2,7 +2,6 @@
 paths:
   - "src/render/web_fade.ts"
   - "test/render/web_fade.test.ts"
-  - "src/app/frame_loop.ts"
 ---
 
 # Render lore: the gold web's fade (K169)

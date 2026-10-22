@@ -11,6 +11,22 @@ Written by K6-1 (2026-10-15). The brief, every flag's sources and the
 measurements are in `docs/design/K6_1.md` ("The flags" and the Stage K6-1
 handoff); `render.md` lists the area's other files.
 
+`frame_loop.ts` also calls the per-frame hooks of ten other subsystems.
+Their lore no longer attaches here (K785, 2026-10-21): together it put
+about 60k tokens into every agent that read this file, again after every
+compaction, and two builders died of compaction thrash. When you edit one
+of those hooks, open its rules file:
+- the camera: `gameplay-camera.md`;
+- edge indicators: `gameplay-indicators.md`;
+- Motion: `gameplay-motion.md`;
+- the settle: `physics-settle.md`;
+- sleep: `physics-sleep.md`;
+- the physics worker: `physics-worker.md`;
+- backgrounds: `render-backgrounds.md`;
+- confetti: `render-confetti.md`;
+- shaders: `render-shaders.md`;
+- the web fade: `render-web-fade.md`.
+
 ## The flag ledger (K6-1)
 
 - **What it is.** `src/app/loop_flags.ts` (pure: no Pixi, no DOM; tested

@@ -4,7 +4,6 @@ paths:
   - "src/ui/head_indicator.ts"
   - "test/ui/offscreen_indicators.test.ts"
   - "test/ui/head_indicator.test.ts"
-  - "src/app/frame_loop.ts"
   - "src/ui/share.ts"
   - "src/ui/toast_place.ts"
   - "test/ui/toast_place.test.ts"
