@@ -414,7 +414,7 @@ Next free ID: K812.
   - owner: nobody since 2026-10-15 16:30 (merged; agent `a21ef2f5cb56d9def` of claude session 05e60da0)
   - branch: mainline; last commit: `3c92598`
   - evidence: `.claude/probes/K459/`
-  - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii) (`docs/design/K459.md`, Handoff); the free cap's checks are K477
+  - next: item 1 CLOSED 2026-10-21 (hypothesis (iii) rejected, 0-px slot-reject diff; no truncation reproduced at 20 moves - see the Handoff's Open list) and item 3's silence landed in cb4f9199. Left: the free cap's checks (K477: base collapse, tip AA, pinned cap) and the phone free-end look, both Wave 5/eye work
   - brief: `docs/design/K459.md`
 - **K370** · Worker input latency, p50 (target 50 ms). Stage 1 merged (8feca6b): raw pointer
   input on; desktop means daily 118 -> 110 ms, knot 93; phone about 185 (before 0753b3c). 50 ms
