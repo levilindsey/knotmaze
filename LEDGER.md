@@ -530,7 +530,6 @@ merged):
   under and joins read from the strokes); the Crossing gap row down to 0 (its floor is 0.04; the codec takes 0); solid
   or textured fills and borders (pencil), if fast enough.
   param (Levi 2026-10-21; sooner list). After K797's border look.
-- **K799** · The traveled path's look (Levi 2026-10-21; sooner list): a width ratio param (0 hidden, 1 today's full
   fill) and a fill texture dropdown, for colored pencil, crayon or highlighter, if fast enough. After K794.
 - **K800** · Looks set by the link (Levi 2026-10-21; sooner list): look params (nothing that changes the maze) in the
   URL override the player's saved preferences, and a top-right button turns the overrides off for that maze. For
@@ -1819,6 +1818,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K799** · The traveled path's look (goldWidth + goldTexture). Done in bea90d9b (2026-10-21).
 - **K798** · Border-at-a-time intros (edges / edgesAll sequences). Done in 3da2cf59 (2026-10-21).
 - **K796** · String burns away with its thread in the burn race (burntAt in explore_view.ts; drawYarn hides burnt stations). Done in 5f9f3a45 (2026-10-21).
 - **K794** · Walked gold stays gold (the gold derives from the taps). Done in fb110a3e (2026-10-21).
