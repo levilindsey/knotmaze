@@ -455,14 +455,6 @@ Next free ID: K812.
   - next: slice 3 (the shortcut form) and slice 4 (colors) wait for Levi; restart from the Remainder in docs/design/K138_s4.md
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
-- **K794** · Gold path mode: a run walked again stays gold; a backtrack no longer erases it (Levi
-  2026-10-21)
-  - owner: nobody since 2026-10-21 10:36 (agent af1981ccbc976565e of claude session 91b19e11-7759-4638-ba60-4705b011b94f failed: autocompact thrash on the 4,000-line render files; Claude Code then deleted its commit-less worktree; held at the week at 96%)
-  - branch: none (`worktree-agent-af1981ccbc976565e` holds no commits); last commit: `ca6d468c` (the brief, on master)
-  - evidence: `.claude/probes/K794/` in the main checkout: prior_run.md (the failed run, its last summary with code facts and line numbers, and the pre-fix erasure result), k794lib.mjs and erasures.mjs restored from its transcript
-  - next: restart from the brief plus prior_run.md: Grep, then Read at most 150-line ranges of fabric_maze_renderer.ts and ribbon_renderer.ts; probes in the main checkout; a first WIP commit (the diagnosis in the brief) within 20 minutes
-  - brief: `docs/design/K794.md`
-  - env: vite from a copy of `.claude/probes/K138/s4/vite.private-cache.config.ts`, ports 5414-5417
 
 ## Next, in order
 
@@ -1831,6 +1823,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K794** · Walked gold stays gold (the gold derives from the taps). Done in fb110a3e (2026-10-21).
 - **K795** · Panel rows for every param, the beat timing toggle and four tunables. Done in a1b1bdde (2026-10-21).
 - **K793** · Settings panel search (fuzzy over row names, tags, folders and options) with collapse and expand all. Done in a60a2cc7 (2026-10-21).
 - **K777** · Refreshed the open-work report (K585) to v7: 68 decision cards (41 confirm, 25 open), 18 tests to mark and a What changed block, built from the ledger at 37382172; pipeline and gaps in the `docs/design/K777.md` Handoff. Done in 1396ea06 (2026-10-21).
