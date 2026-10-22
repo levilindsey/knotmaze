@@ -3126,10 +3126,16 @@ async function main(): Promise<void> {
   const CUT_TOAST_MS = 2500;
   const REFUSE_OCTAVE = 0.5;
   const REFUSE_STRENGTH = 0.35;
+  // K138 s4: the last 32 of these plucks asked for, sounded or kept silent
+  // (Muted, snd=none, volume 0), for probes (`__knotCutPlucks`): a refused
+  // lock's thunk is the refusal octave, and a probe never has to hear it.
+  const cutPluckLog: { eid: number; octave: number; strength: number; sounded: boolean }[] = [];
   const cutPluck = (eid: number, octave: number, strength: number): void => {
-    if (settings.muted || params.soundMode === "none" || !(params.volume > 0)) return;
     const e = scene.walkGraph?.edges[eid];
-    if (e) synth.pluck(freqForCtrl(e.chain, (e.ctrlA + e.ctrlB) / 2) * octave, strength);
+    const sounded = !!e && !(settings.muted || params.soundMode === "none" || !(params.volume > 0));
+    cutPluckLog.push({ eid, octave, strength, sounded });
+    if (cutPluckLog.length > 32) cutPluckLog.shift();
+    if (sounded) synth.pluck(freqForCtrl(e.chain, (e.ctrlA + e.ctrlB) / 2) * octave, strength);
   };
   const applyCut = (eid: number): void => {
     const fc = scene.fabricController;
@@ -3940,6 +3946,7 @@ async function main(): Promise<void> {
     clock,
     confetti,
     contrast,
+    cutPluckLog,
     dailyStore,
     fitCur,
     frameCost,
