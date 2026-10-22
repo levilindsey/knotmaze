@@ -385,7 +385,7 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // 212-213, K138 stage 4 (4.1): keys (0 off, 1..3; game/locks.ts) and the
   // lock's form (LOCK_MODES order; options append without a bump).
   num("keys"),
-  choice("lockMode", ["exit"]),
+  choice("lockMode", ["exit", "shortcut"]),
   // 214-217, K795: the snare's hold (turns), the lure's range (runs), the
   // hint's seconds and the hidden runs' reveal distance (runs from a pluck).
   num("snareHold"),

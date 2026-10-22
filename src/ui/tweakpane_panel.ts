@@ -1889,8 +1889,8 @@ export function buildPanel(
   );
   const lockModeRow = row(
     fGame, p, "lockMode",
-    { options: { "the exit": "exit" }, label: "Lock" },
-    "Which runs the keys open: the exit, the runs into the way out (they need every key). Restarts the solve.",
+    { options: { "the exit": "exit", shortcuts: "shortcut" }, label: "Lock" },
+    "Which runs the keys open: the exit (the runs into it, needing every key), or shortcuts: a run on the way out, each with its own key nearby, where fetching the key competes with the long way round. Restarts the solve.",
     D.lockMode, () => callbacks.onClockChange()
   );
 
