@@ -70,14 +70,15 @@ import { SolveClock, efficiencyOf } from "./game/maze_stats";
 import { shareText } from "./game/share_text";
 import { parScore } from "./game/par";
 import { spoolPercentUsed } from "./game/spool";
-import { HINT_SECONDS } from "./game/hints";
-import { revealedBy, runAtCtrl } from "./game/hidden_runs";
+import { hintSecondsOf } from "./game/hints";
+import { revealedBy, revealRunsOf, runAtCtrl } from "./game/hidden_runs";
 import { catchHeart, heartsToast, livesOf, type HeartLoss } from "./game/lives";
 import { newSword, swordSpot, type SwordAvoid, type SwordPhase } from "./game/sword";
 import { monsterSpecs, sleepersOf } from "./game/monsters";
 import { sprintAfterMove, sprintToggle, sprintValue, type SprintState } from "./game/sprint";
 import { luresOf } from "./game/lures"; // K137 stage 4
-import { snaresOf } from "./game/snares";
+import { snareHoldOf, snaresOf } from "./game/snares";
+import { lureRangeOf } from "./game/lures"; // K795: the tooltips' range
 import type { SwordShown } from "./ui/maze_hud";
 import { rateCuts, rateRun, ratingForResult, walkedOf } from "./game/star_rating";
 import { LossBanner, MazeHud, WinBanner } from "./ui/maze_hud";
@@ -126,7 +127,7 @@ import {
 import { UndoButtons } from "./ui/undo_buttons";
 import { CutButtons } from "./ui/cut_buttons";
 import { SprintButton } from "./ui/sprint_button";
-import { ToolButtons, type ToolKind } from "./ui/tool_buttons"; // K137 stage 4
+import { ToolButtons, countWords, type ToolKind } from "./ui/tool_buttons"; // K137 stage 4
 import { WalkerButtons } from "./ui/walker_buttons";
 import { AidButtons, CHALK_KEY, chalkPref, type AidKey } from "./ui/aid_buttons";
 import type { WalkerKey } from "./ui/walker_buttons";
@@ -1975,7 +1976,8 @@ async function main(): Promise<void> {
   // K137 stage 2: THE HINT (game/hints.ts). Hint (H) spends one of the
   // `hints` param's hints and lights the next good arm (controller.goodArm:
   // the head's run that starts the shortest live way to the exit) in the
-  // telegraph's rim look for HINT_SECONDS; a move puts it out at once
+  // telegraph's rim look for the `hintSeconds` param's seconds (K795;
+  // HINT_SECONDS, 2, by default, read at each hint); a move puts it out at once
   // (the renderer's beginMove), the timer otherwise. A restart gives the
   // hints back (clearAids). Each change asks one render pass (invalidate),
   // never the physics.
@@ -2001,7 +2003,7 @@ async function main(): Promise<void> {
       hintTimer = null;
       scene.fabric?.clearHint();
       invalidate();
-    }, HINT_SECONDS * 1000);
+    }, hintSecondsOf(params.hintSeconds) * 1000);
     invalidate();
     updateHud();
   };
@@ -2990,7 +2992,8 @@ async function main(): Promise<void> {
     );
   };
   // K138 s2: a pluck on a thread (a tap's, or a drag's release) shows the
-  // hidden runs of its note within REVEAL_RUNS runs of the plucked run, for
+  // hidden runs of its note within the `hiddenReveal` param's runs (K795;
+  // REVEAL_RUNS, 3, by default) of the plucked run, for
   // the rest of the solve (call 3; hidden_runs.ts revealedBy). A reveal is
   // an action, not a move: the strokes, the clock and the turnstiles stay.
   const revealByPluck = (chain: number, ctrl: number): void => {
@@ -3008,7 +3011,8 @@ async function main(): Promise<void> {
       return e ? freqForCtrl(e.chain, (e.ctrlA + e.ctrlB) / 2) : null;
     };
     let shown = 0;
-    for (const h of revealedBy(walk, hidden, new Set(), run, noteOf)) {
+    const near = revealRunsOf(params.hiddenReveal);
+    for (const h of revealedBy(walk, hidden, new Set(), run, noteOf, near)) {
       if (fc.reveal(h)) shown++;
     }
     if (shown === 0) return;
@@ -3375,6 +3379,8 @@ async function main(): Promise<void> {
     const snare = snaresOn();
     toolButtons.setTools(lure, snare);
     toolButtons.setCounts(luresLeft, snaresLeft);
+    // K795: the tooltips quote the lure's range and the snare's hold.
+    toolButtons.setTips(lureRangeOf(params.lureRange), snareHoldOf(params.snareHold));
     toolButtons.setShift(sprintButton.isShown);
     const r = panel.isOpen() ? camera.panelWrap?.getBoundingClientRect() : null;
     const on = (lure || snare) && keysLive() && !(r && r.width > 0 && toolButtons.covered(r));
@@ -3386,7 +3392,9 @@ async function main(): Promise<void> {
     const tm = scene.turnMino;
     let sprung = 0;
     if (tm) for (const s of tm.snares) if (s.phase !== "set") sprung++;
-    if (sprung > snaresSprung) showToast("Snared! It stands three turns.", CUT_TOAST_MS);
+    if (sprung > snaresSprung) {
+      showToast(`Snared! It stands ${countWords(snareHoldOf(params.snareHold), "turn")}.`, CUT_TOAST_MS);
+    }
     snaresSprung = sprung;
   };
   // K114 beat rider: the pause shows while the beat plays (the keys live);

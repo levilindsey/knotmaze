@@ -29,7 +29,18 @@ import type { RuleWalk, WalkRule, Placement } from "./rule_search";
 import { composeRules, exemptRun, meterLength, placeRule, ruleRng, ruleSearch } from "./rule_search";
 
 export const HIDDEN_MAX = 4;
+// How near a pluck reveals, in runs: the `hiddenReveal` param (K795), an
+// integer in REVEAL_RUNS_MIN..REVEAL_RUNS_MAX; REVEAL_RUNS is its default.
 export const REVEAL_RUNS = 3;
+export const REVEAL_RUNS_MIN = 1;
+export const REVEAL_RUNS_MAX = 8;
+
+// The param's distance: an integer in REVEAL_RUNS_MIN..REVEAL_RUNS_MAX
+// (garbage: REVEAL_RUNS).
+export function revealRunsOf(n: unknown): number {
+  if (typeof n !== "number" || !Number.isFinite(n)) return REVEAL_RUNS;
+  return Math.max(REVEAL_RUNS_MIN, Math.min(REVEAL_RUNS_MAX, Math.round(n)));
+}
 
 export type HiddenLayout = readonly number[];
 
@@ -88,19 +99,21 @@ export function runsNear(walk: RuleWalk, run: number, max = REVEAL_RUNS): Map<nu
 }
 
 // The hidden runs a pluck on run `plucked` reveals: unrevealed, of the same
-// note, within REVEAL_RUNS runs of it. `noteOf` is the run's note (the
-// audio map's frequency); null: no note known (nothing is revealed).
+// note, within `max` runs of it (REVEAL_RUNS, or the hiddenReveal param).
+// `noteOf` is the run's note (the audio map's frequency); null: no note
+// known (nothing is revealed).
 export function revealedBy(
   walk: RuleWalk,
   hidden: readonly number[],
   revealed: ReadonlySet<number>,
   plucked: number,
-  noteOf: (run: number) => number | null
+  noteOf: (run: number) => number | null,
+  max = REVEAL_RUNS
 ): number[] {
   if (plucked < 0 || !walk.edges[plucked]) return [];
   const note = noteOf(plucked);
   if (note === null) return [];
-  const near = runsNear(walk, plucked);
+  const near = runsNear(walk, plucked, max);
   const out: number[] = [];
   for (const h of hidden) {
     if (revealed.has(h) || h === plucked) continue;

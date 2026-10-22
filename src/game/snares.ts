@@ -20,7 +20,11 @@
 // Pure: the snare records and the cut; TurnMinotaur holds them.
 
 export const SNARES_MAX = 3;
+// The turns a snared monster stands: the `snareHold` param (K795), an
+// integer in SNARE_HOLD_MIN..SNARE_HOLD_MAX; SNARE_HOLD is its default.
 export const SNARE_HOLD = 3;
+export const SNARE_HOLD_MIN = 1;
+export const SNARE_HOLD_MAX = 8;
 
 export type SnarePhase = "set" | "holding" | "spent";
 
@@ -73,11 +77,18 @@ export function snareCut(
   return null;
 }
 
-// Spring snare `s` on monster `who`.
-export function springSnare(s: Snare, who: number): void {
+// The param's hold: an integer in SNARE_HOLD_MIN..SNARE_HOLD_MAX (garbage:
+// SNARE_HOLD).
+export function snareHoldOf(n: unknown): number {
+  if (typeof n !== "number" || !Number.isFinite(n)) return SNARE_HOLD;
+  return Math.max(SNARE_HOLD_MIN, Math.min(SNARE_HOLD_MAX, Math.round(n)));
+}
+
+// Spring snare `s` on monster `who`, to hold it `hold` turns.
+export function springSnare(s: Snare, who: number, hold = SNARE_HOLD): void {
   s.phase = "holding";
   s.holder = who;
-  s.left = SNARE_HOLD;
+  s.left = hold;
 }
 
 // Is monster `who` held now (without spending a turn)?

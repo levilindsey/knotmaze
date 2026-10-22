@@ -8,8 +8,19 @@ import type { WalkGraph } from "../core/walk_graph";
 import { walkDistances } from "../core/walk_graph";
 
 export const HINTS_MAX = 5;
-// How long a hint lights its arm (seconds of wall time; a move ends it).
+// How long a hint lights its arm (seconds of wall time; a move ends it): the
+// `hintSeconds` param (K795), in HINT_SECONDS_MIN..HINT_SECONDS_MAX;
+// HINT_SECONDS is its default.
 export const HINT_SECONDS = 2;
+export const HINT_SECONDS_MIN = 0.5;
+export const HINT_SECONDS_MAX = 10;
+
+// The param's seconds, in HINT_SECONDS_MIN..HINT_SECONDS_MAX (garbage:
+// HINT_SECONDS).
+export function hintSecondsOf(n: unknown): number {
+  if (typeof n !== "number" || !Number.isFinite(n)) return HINT_SECONDS;
+  return Math.max(HINT_SECONDS_MIN, Math.min(HINT_SECONDS_MAX, n));
+}
 
 // Hints a solve, an integer in [0, HINTS_MAX]; garbage reads 0.
 export function hintsOf(n: number): number {

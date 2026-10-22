@@ -148,6 +148,7 @@ describe("links", () => {
       oneWay: 0, // K138 stage 3
       lures: 0, snares: 0, // K137 stage 4
       keys: 0, lockMode: "exit", // K138 stage 4
+      snareHold: 3, lureRange: 6, hintSeconds: 2, hiddenReveal: 3, // K795
     });
   });
 
@@ -955,6 +956,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   oneWay: "ow", // K138 stage 3
   lures: "lur", snares: "snr", // K137 stage 4
   keys: "ky", lockMode: "lkm", // K138 stage 4
+  snareHold: "snh", lureRange: "lrg", hintSeconds: "hns", hiddenReveal: "hrv", // K795
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

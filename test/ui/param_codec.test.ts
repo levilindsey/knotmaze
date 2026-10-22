@@ -254,6 +254,10 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["snares", "number"],
   ["keys", "number"], // K138 stage 4
   ["lockMode", "enum", ["exit"]],
+  ["snareHold", "number"], // K795
+  ["lureRange", "number"],
+  ["hintSeconds", "number"],
+  ["hiddenReveal", "number"],
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

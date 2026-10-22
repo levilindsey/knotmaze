@@ -152,7 +152,8 @@ export const LIVE_EFFECTS = {
     "revealEndCross", "revealEndGlow",
   ],
   // K137 stage 2: the compass row's effect (main.ts reads it every frame).
-  onAidsChange: ["compass"],
+  // K795: the hint's seconds (main.ts reads it at each hint).
+  onAidsChange: ["compass", "hintSeconds"],
   onRecolor: [
     "colorScheme", "junctionBlend", "hueShift", "gamutArc", "palette",
     "pathColor",
@@ -211,6 +212,9 @@ export const LIVE_EFFECTS = {
     "sleepers", "sleepKind",
     // K137 stage 4: the lures and snares (a restart refills both).
     "lures", "snares",
+    // K795: the snare's hold, the lure's range (a new chase reads them) and
+    // the hidden runs' reveal distance (the hidden runs' restart).
+    "snareHold", "lureRange", "hiddenReveal",
     // K137 stage 2: the spool and the hints (a restart refills both).
     "spool", "spoolSlack", "hints",
     // K138 stage 1: ice and the color rule (a restart places them anew).
