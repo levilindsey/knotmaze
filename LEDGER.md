@@ -436,10 +436,10 @@ Next free ID: K801.
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
-  - owner: agent `ac3462d3821227d69` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, launched 2026-10-21 09:52, 2 h cap 11:52): slice 2 finish
-  - branch: `worktree-agent-ac3462d3821227d69`, worktree `.claude/worktrees/agent-ac3462d3821227d69` (reset to 071b2ea3, then rebased onto master; the paused worktree `.claude/worktrees/agent-ac022c74b0ce97669` stays as a backup); last commit: `071b2ea3`
+  - owner: nobody since 2026-10-21 10:38 (merged; agent `ac3462d3821227d69` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `13758f2b`
   - evidence: `.claude/probes/K138/s4/` (census/results.md and the trap logs, dim_page.mjs, zoom.mjs, png.mjs)
-  - next: slice 2 finish, then pause. Levi 2026-10-21 paused locks and keys at a reasonable stopping point, so the agent stops after slice 2 (page check on desktop and at 411x753, tests, lore, rebase, a Handoff Remainder); merge it. Slices 3 (shortcut) and 4 (colors) wait until Levi resumes them, restarting from that Remainder
+  - next: slice 3 (the shortcut form) and slice 4 (colors) wait for Levi; restart from the Remainder in docs/design/K138_s4.md
   - brief: `docs/design/K138_s4.md` on the branch (Relaunch 3)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
 - **K793** · Settings panel search: fuzzy matching over row names, tags (src/ui/param_tags.ts),
