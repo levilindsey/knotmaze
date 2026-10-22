@@ -14,7 +14,10 @@
 // controller, the minotaur's turn and the fire's step run exactly as on
 // the turn clock, once per committed move), which may refuse it (a broken
 // or burning run): the rider then tries the next in order, and when every
-// one is refused it comes to rest there until the next tap.
+// one is refused it comes to rest there until the next tap. A commit that
+// rests the rider itself (restAt: main.ts lands a pending catch before the
+// next move, K774, and the respawn rests it at the entrance) ends the
+// advance where it rested.
 //
 // Ticks are BeatClock's (beat_clock.ts): integers, so a run's arrival tick
 // is exact and the same on every device.
@@ -52,6 +55,9 @@ export class BeatRider {
   queued = -1;
   // The beat the first run leaves on, once a tap asked for it (-1: none).
   startBeat = -1;
+  // K774: bumped by restAt, so a commit that rests the rider (a catch's
+  // respawn or a restart, landed from inside it) ends the advance there.
+  private rests = 0;
 
   readonly map: WalkerMap;
   // Beats a minute, lattice units a beat covers, the most beats a run takes.
@@ -83,6 +89,7 @@ export class BeatRider {
     this.at = v;
     this.queued = -1;
     this.startBeat = -1;
+    this.rests++;
   }
 
   // A tap on `run` at `tick`: queued when it is an arm of the junction
@@ -126,8 +133,14 @@ export class BeatRider {
         arrived = this.d;
       }
       let next = -1;
+      const rests = this.rests;
       for (const x of this.order(v, arrived)) {
-        if (commit(x >> 1, x)) {
+        const took = commit(x >> 1, x);
+        // K774: the commit rested the rider (main.ts lands a pending catch
+        // there: the respawn rests it at the entrance). That rest stands:
+        // the other arms of v belong to the game before it.
+        if (this.rests !== rests) return out;
+        if (took) {
           next = x;
           break;
         }

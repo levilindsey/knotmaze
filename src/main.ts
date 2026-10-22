@@ -2345,6 +2345,11 @@ async function main(): Promise<void> {
     if (atContact) scene.fabric.stopMove();
     else scene.fabric.cancelMove();
     fc.respawn(params.minoRefog);
+    // K774: the beat rider rests at the entrance (the next tap starts it on
+    // the next beat), now: a catch landed from inside a departure's commit
+    // (moveAlong) ends the rider's advance there. A restart above rests it
+    // through restartSolve's beat.reset().
+    beat?.rider()?.restAt(fc.head);
     scene.fabric.clearYarn();
     pendingWin = false;
     // K139: the respawn can end the game (see tickChase's catch).
@@ -3013,6 +3018,20 @@ async function main(): Promise<void> {
     // K114 beat rider: under the beat a key, the pad or a route queues the
     // arm for the junction ahead; only the beat commits moves.
     if (beatOn() && !beatDriving) return beat?.queue(eid) ?? false;
+    // K774: a catch still travelling to its contact lands before any next
+    // move, with the dot set at the contact first. The beat rider departs
+    // in the same advance that reaches the junction, so beginMove would
+    // snap the catching move before tickTurnMino saw it reach t: the catch
+    // was counted and never shown, and the controller (not yet respawned)
+    // walked on while the minotaur refused every turn. The move is refused;
+    // turnCaught's respawn rests the rider at the entrance.
+    if (pendingCatch && pendingCatch.tm === scene.turnMino) {
+      const { t, wait } = pendingCatch;
+      pendingCatch = null;
+      scene.fabric.setMoveProgress(t, scene.fabricController);
+      turnCaught(wait, true);
+      return false;
+    }
     const hunt0 = scene.turnMino?.hunting ?? false;
     const result = scene.fabricController.tapEdge(eid);
     beatTook = result === "advance" || result === "backtrack" || result === "win";
