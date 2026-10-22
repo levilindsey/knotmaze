@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K793.
+Next free ID: K797.
 
 ## Waiting on Levi
 
@@ -281,7 +281,7 @@ Next free ID: K793.
   - owner: nobody since 2026-10-21 05:15 (merged; agent `a178a00897a4044dc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
   - branch: mainline; last commit: `e1fe321b`
   - evidence: `.claude/probes/K114/beat/`
-  - next: the beat remainder (Handoff of docs/design/K114_beat.md): item 6 the pulse, item 8 the HUD tempo row, share tag and panel rows, the lore, keys and the move pad checked on the page; then Levi calls K706, K707 and the beat calls, a phone pass, then the spider and K688 healing cuts after K137 s3d, then Pluck Hero
+  - next: the beat remainder (Handoff of docs/design/K114_beat.md): item 6 the pulse, item 8 the HUD tempo row and share tag (its panel rows moved to K795), the lore, keys and the move pad checked on the page; then Levi calls K706, K707 and the beat calls, a phone pass, then the spider and K688 healing cuts after K137 s3d, then Pluck Hero
   - brief: `docs/design/K114_beat.md`
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
   2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
@@ -439,9 +439,34 @@ Next free ID: K793.
   - owner: agent `ac3462d3821227d69` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, launched 2026-10-21 09:52, 2 h cap 11:52): slice 2 finish
   - branch: `worktree-agent-ac3462d3821227d69`, worktree `.claude/worktrees/agent-ac3462d3821227d69` (reset to 071b2ea3, then rebased onto master; the paused worktree `.claude/worktrees/agent-ac022c74b0ce97669` stays as a backup); last commit: `071b2ea3`
   - evidence: `.claude/probes/K138/s4/` (census/results.md and the trap logs, dim_page.mjs, zoom.mjs, png.mjs)
-  - next: slice 2 finish per Relaunch 3 (rebase, the thunk, locks block the minotaur and the fire, missing tests, page check on desktop and at 411x753, lore); merge; then slice 3 (shortcut) and slice 4 (colors), one run each. Levi 2026-10-21: finish locks and keys regardless of usage limits
+  - next: slice 2 finish, then pause. Levi 2026-10-21 paused locks and keys at a reasonable stopping point, so the agent stops after slice 2 (page check on desktop and at 411x753, tests, lore, rebase, a Handoff Remainder); merge it. Slices 3 (shortcut) and 4 (colors) wait until Levi resumes them, restarting from that Remainder
   - brief: `docs/design/K138_s4.md` on the branch (Relaunch 3)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
+- **K793** · Settings panel search: fuzzy matching over row names, tags (src/ui/param_tags.ts),
+  folder titles and option labels, plus collapse-all and expand-all buttons (Levi 2026-10-21)
+  - owner: agent `a6c979bb8c0c8944a` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, launched 2026-10-21 10:03, 2 h cap 12:03)
+  - branch: `worktree-agent-a6c979bb8c0c8944a`, worktree `.claude/worktrees/agent-a6c979bb8c0c8944a`; last commit: `ca6d468c` (the brief, on master)
+  - evidence: `.claude/probes/K793/` in the worktree
+  - next: build per the brief (search, the tags table and its test, collapse and expand all, page check); merge. Whichever of K793 and K795 merges second tags the other rows
+  - brief: `docs/design/K793.md`
+  - env: vite from a copy of `.claude/probes/K138/s4/vite.private-cache.config.ts`, ports 5410-5413
+- **K794** · Gold path mode: a run walked again stays gold; a backtrack no longer erases it (Levi
+  2026-10-21)
+  - owner: agent `af1981ccbc976565e` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, launched 2026-10-21 10:03, 2 h cap 12:03)
+  - branch: `worktree-agent-af1981ccbc976565e`, worktree `.claude/worktrees/agent-af1981ccbc976565e`; last commit: `ca6d468c` (the brief, on master)
+  - evidence: `.claude/probes/K794/` in the worktree
+  - next: confirm on the page which erasures happen, then the fix per the brief (gold from the taps), tests, the same-state A/B and the page check; merge
+  - brief: `docs/design/K794.md`
+  - env: vite from a copy of `.claude/probes/K138/s4/vite.private-cache.config.ts`, ports 5414-5417
+- **K795** · Panel rows for every param: the beat rider (clk, tempo, length, cap), a test that every
+  PARAM_DEFAULTS key has a row or a stated reason, and an audit of recent features for tunables that
+  deserve params (Levi 2026-10-21)
+  - owner: agent `a78c285925ac13b8c` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, launched 2026-10-21 10:03, 2 h cap 12:03)
+  - branch: `worktree-agent-a78c285925ac13b8c`, worktree `.claude/worktrees/agent-a78c285925ac13b8c`; last commit: `ca6d468c` (the brief, on master)
+  - evidence: `.claude/probes/K795/` in the worktree
+  - next: the beat rows, the row-or-reason test, the audit table and the top params; rebase after K138 slice 2 and renumber the codec; merge
+  - brief: `docs/design/K795.md`
+  - env: vite from a copy of `.claude/probes/K138/s4/vite.private-cache.config.ts`, ports 5420-5423
 
 ## Next, in order
 
@@ -679,6 +704,9 @@ Every other item below waits on the trigger it names.
 - **K792** · A try key for the K610 grab chase rate (0.6 per constraint iteration today): its feel
   A/B needs 0.8 and 1.0 from a link, none sets the rate, so its report card has no try link (K777;
   `docs/design/K370.md`)
+- **K796** · String mode in the burn race: the yarn should burn away with the thread under it (Levi
+  2026-10-21; pv=string with the burn race; the yarn and the fire paint in fabric_maze_renderer.ts,
+  gameplay-fire.md)
 
 ## Residuals (known, not fixed)
 
