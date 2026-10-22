@@ -763,3 +763,22 @@ Unwalked muddy runs wear dull bronze spans (a stand-in; the fuzzy
 thread is Levi's call, K137_s5.md). The HUD's "muddy N" row, the
 `__knotChase()`/`__knotTurnMino()` hooks' `muddy` lists. Tests:
 `test/game/mud.test.ts`.
+## The beat rider (K114)
+
+The beat (clock `beat`; `game/beat_clock.ts`, `game/beat_rider.ts`,
+`app/beat_frame.ts`): the dot rides the maze on a metronome (tempo,
+`game/beat*`). A tap on an arm of the junction ahead queues it - mid-run
+taps rank behind - and the rider covers the queue in order, never
+diverging; a late tap at the just-arrived junction goes back the way it
+came (the rider's only backwards travel). The note is the run's own;
+the pause (beat button, no key, spotter-safe) freezes clock and rider.
+Enemies and the fire step once per committed move; strict par's clock
+holds below the beat phase. Calls: the first tap starts the dot on
+the next beat; the rider comes on with the panel's Clock rows too (its
+frame's `needsFrame` asks for a frame while unbuilt or stale). The
+panel rows and their semantics: gameplay-panel.md's CLOCK AND BEAT
+ROWS; the link record: gameplay-links.md's BEAT RIDER PARAMS. The HUD's
+"tempo" row shows while the beat is the clock (never a banner). The
+head ring pulses on each beat; under reduced motion only its halo
+brightens. Probes: `.claude/probes/K114/beat/` and K795's `beat_page`;
+`__knotBeat()` reads the rider (on once built, before the first tap).
