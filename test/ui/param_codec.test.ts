@@ -101,7 +101,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["junctionSpacing", "number"],
   [
     "background", "enum",
-    ["none", "vellum", "mist", "wash", "silk", "aurora", "contours"],
+    ["none", "vellum", "mist", "wash", "silk", "aurora", "contours", "paper"],
   ],
   ["backgroundIntensity", "number"],
   ["pulseReach", "number"],

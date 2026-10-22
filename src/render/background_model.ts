@@ -25,7 +25,8 @@ export type BackgroundId =
   | "wash"
   | "silk"
   | "aurora"
-  | "contours";
+  | "contours"
+  | "paper";
 export const BACKGROUNDS: readonly BackgroundId[] = [
   "none",
   "vellum",
@@ -34,6 +35,7 @@ export const BACKGROUNDS: readonly BackgroundId[] = [
   "silk",
   "aurora",
   "contours",
+  "paper",
 ];
 
 export interface BackgroundProfile {
@@ -78,6 +80,10 @@ export const BACKGROUND_PROFILES: Record<
   // them) - and lines that visibly creep are the one motion the eye
   // follows, so they move about 1 CSS px a second.
   contours: { scale: 0.75, phoneScale: 0.75, drift: 0.3, autoSpeed: 1, fps: 10, phoneFps: 6 },
+  // PAPER (K797a): white paper — vellum's fiber/grain surface on a light
+  // base. Static at auto like vellum; its shader ignores drift time
+  // (paper does not move), so a set speed re-renders the same sheet.
+  paper: { scale: 1, phoneScale: 1, drift: 1, autoSpeed: 0, fps: 10, phoneFps: 6 },
 };
 
 // THE ANIMATION SPEED (backgroundSpeed, K79): one param for every effect.
@@ -217,7 +223,7 @@ export function needsShapeProgram(id: BackgroundId, shape: BackgroundShape): boo
   if (id === "none") return false;
   if (shape.scale !== 1) return true;
   if (shape.detail !== 1 && readsDetail(id)) return true;
-  if (id === "vellum") return shape.fibers !== 1 || shape.grain !== 1;
+  if (id === "vellum" || id === "paper") return shape.fibers !== 1 || shape.grain !== 1;
   if (id === "silk") return !isAutoAngle(shape.angle);
   return false;
 }
@@ -284,6 +290,7 @@ export const BACKGROUND_COLOR_MODES: readonly BackgroundColorMode[] = ["gamut", 
 export const BACKGROUND_ACCENTS_USED: Record<BackgroundId, readonly number[]> = {
   none: [],
   vellum: [1],
+  paper: [1],
   mist: [1, 2, 3],
   wash: [1, 2, 3],
   silk: [2, 3],

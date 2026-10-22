@@ -2319,9 +2319,10 @@ export function buildPanel(
         silk: "silk",
         aurora: "aurora",
         contours: "contours",
+        paper: "paper",
       },
     },
-    "Backdrop behind the knot, in the design's own colors (it shows through the crossing gaps too): none = the plain page; vellum = dark parchment grain (still unless given a speed); mist = slow marbled smoke; wash = drifting watercolor blooms; silk = long flowing streaks; aurora = soft curtains of light; contours = the contour lines of a slowly shifting map. Everything but vellum drifts very slowly (backgroundSpeed sets how fast; reduced motion keeps every backdrop still). Applies live.",
+    "Backdrop behind the knot, in the design's own colors (it shows through the crossing gaps too): none = the plain page; vellum = dark parchment grain (still unless given a speed); mist = slow marbled smoke; wash = drifting watercolor blooms; silk = long flowing streaks; aurora = soft curtains of light; contours = the contour lines of a slowly shifting map; paper = white paper (still; the Paper fibers and grain rows shape it). Everything but vellum drifts very slowly (backgroundSpeed sets how fast; reduced motion keeps every backdrop still). Applies live.",
     D.background, () => {
       // The speed row shows the new effect's pace while it is on auto.
       bgView.backgroundSpeed = shownSpeed();
@@ -3238,8 +3239,8 @@ export function buildPanel(
     backgroundSpeedRow.hidden = bg === "none";
     backgroundScaleRow.hidden = bg === "none";
     backgroundDetailRow.hidden = bg === "none" || !readsDetail(bg);
-    backgroundFibersRow.hidden = bg !== "vellum";
-    backgroundGrainRow.hidden = bg !== "vellum";
+    backgroundFibersRow.hidden = bg !== "vellum" && bg !== "paper";
+    backgroundGrainRow.hidden = bg !== "vellum" && bg !== "paper";
     backgroundAngleRow.hidden = bg !== "silk";
     // Custom colors: the base always (it is the page), each accent only
     // where the effect uses it.

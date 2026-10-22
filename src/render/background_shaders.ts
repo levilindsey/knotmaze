@@ -159,6 +159,63 @@ vec3 effect(vec2 p, float t, float I) {
 }
 `;
 
+// PAPER (K797a) - white paper: vellum's mottling, fibers and grain on a
+// light sheet. The texture only darkens the sheet (graphite-ward), with a
+// whisper of the design's main accent; intensity scales the texture, and
+// at 0 the sheet is flat white. Drift time is ignored: paper does not
+// move, so one program serves every speed.
+const PAPER = /* glsl */ `
+vec3 effect(vec2 p, float t, float I) {
+  vec2 s = p + uParams.xy;
+  float m1 = fbm(s * 2.1, 5);
+  float m2 = fbm(s * 7.5 + 11.3, 4);
+  float fib = 0.0;
+  for (int k = 0; k < 5; k++) {
+    float a = 0.4 + 1.2566 * float(k) + uParams.y;
+    vec2 dir = vec2(cos(a), sin(a));
+    vec2 q = vec2(dot(s, dir), dot(s, vec2(-dir.y, dir.x)));
+    float n = gnoise(q * vec2(28.0, 520.0) + float(k) * 17.0);
+    float dens = 0.55 + 0.45 * gnoise(q * 6.0 + float(k) * 5.3);
+    fib += pow(max(0.0, 1.0 - abs(n) * 4.0), 4.0) * dens;
+  }
+  float grain = tpdf(gl_FragCoord.xy + 31.0);
+  float tex = 0.55 * m1 + 0.28 * m2 + 0.2 * (fib - 0.12) + 0.08 * grain;
+  vec3 c = vec3(0.965, 0.945, 0.906) * (1.0 - 0.16 * I * clamp(tex, -1.0, 1.0));
+  c = mix(c, uA2.rgb, 0.05 * I);
+  float vig = smoothstep(0.35, 1.3, length(p));
+  return c * (1.0 - 0.10 * I * vig);
+}
+`;
+
+// PAPER, SHAPED (K797a with K79 stage B): PAPER with fiber and grain
+// strengths, the fibers unscaled like vellum's (see VELLUM_SHAPED).
+const PAPER_SHAPED = /* glsl */ `
+vec3 effect(vec2 p, float t, float I) {
+  vec2 s = p + uParams.xy;
+  float m1 = fbm(s * 2.1, 5);
+  float m2 = fbm(s * 7.5 + 11.3, 4);
+  float fib = 0.0;
+  if (uShape.z > 0.0) {
+    vec2 sf = gScreen * min(uShape.x, 1.0) + uParams.xy;
+    for (int k = 0; k < 5; k++) {
+      float a = 0.4 + 1.2566 * float(k) + uParams.y;
+      vec2 dir = vec2(cos(a), sin(a));
+      vec2 q = vec2(dot(sf, dir), dot(sf, vec2(-dir.y, dir.x)));
+      float n = gnoise(q * vec2(28.0, 520.0) + float(k) * 17.0);
+      float dens = 0.55 + 0.45 * gnoise(q * 6.0 + float(k) * 5.3);
+      fib += pow(max(0.0, 1.0 - abs(n) * 4.0), 4.0) * dens;
+    }
+  }
+  float grain = tpdf(gl_FragCoord.xy + 31.0);
+  float tex = 0.55 * m1 + 0.28 * m2 + 0.2 * uShape.z * (fib - 0.12)
+    + 0.08 * uShape.w * grain;
+  vec3 c = vec3(0.965, 0.945, 0.906) * (1.0 - 0.16 * I * clamp(tex, -1.0, 1.0));
+  c = mix(c, uA2.rgb, 0.05 * I);
+  float vig = smoothstep(0.35, 1.3, length(gScreen));
+  return c * (1.0 - 0.10 * I * vig);
+}
+`;
+
 // MIST - domain-warped fbm (a warp of a warp, after Inigo Quilez): slow
 // marbled smoke in the design's accents.
 const MIST = /* glsl */ `
@@ -269,6 +326,7 @@ vec3 effect(vec2 p, float t, float I) {
 // Keyed by PROGRAM id: an effect id, or "vellum-drift".
 const BODIES: Record<string, string> = {
   vellum: VELLUM,
+  paper: PAPER,
   "vellum-drift": VELLUM_DRIFT,
   mist: MIST,
   wash: WASH,
@@ -396,6 +454,7 @@ const SILK_SHAPED = replaceOnce(
 // Keyed by EFFECT id (the program id without "-x").
 const SHAPED_BODIES: Record<string, string> = {
   vellum: VELLUM_SHAPED,
+  paper: PAPER_SHAPED,
   mist: MIST,
   wash: WASH,
   silk: SILK_SHAPED,

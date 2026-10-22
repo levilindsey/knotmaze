@@ -176,6 +176,7 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
     "silk",
     "aurora",
     "contours",
+    "paper",
   ]), // 67
   num("backgroundIntensity"),
   num("pulseReach"), // 69 (K75)
