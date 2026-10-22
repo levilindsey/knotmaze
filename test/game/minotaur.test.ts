@@ -1093,6 +1093,33 @@ describe("K137 stage 6: real-time extras", () => {
     expect(sim.mode).toBe("lair");
   });
 
+  it("a lure sends a wandering monster to the run's nearer end", () => {
+    const sim = new MinotaurChase(G1, hunt, 1);
+    sim.place("minotaur", "A", "wander");
+    sim.place("player", "D");
+    // Run 4 is B-D; from A the nearer end is B (1 run).
+    expect(sim.lure(4, 6)).toBe(1);
+    runUntil(sim, "caught", 10 * CHASE_HZ);
+    expect(sim.catches).toBeGreaterThanOrEqual(1);
+    expect(sim.lure(99, 6)).toBe(-1);
+  });
+
+  it("a snare springs on the monster that steps onto its run, then frees it", () => {
+    const sim = new MinotaurChase(G1, hunt, 1);
+    sim.snareHoldS = 0.05;
+    sim.place("player", "B");
+    expect(sim.setSnare(1)).toBe(true); // run 1 (A-B) touches B
+    expect(sim.setSnare(1)).toBe(false); // one to a run
+    sim.place("player", "D");
+    sim.setExtras([sim.g.index.get("A")!]);
+    run(sim, 2);
+    expect(sim.snares[0].phase).toBe("holding");
+    expect(sim.extras[0].spot.vertex).toBe(sim.g.index.get("A"));
+    run(sim, 30); // the hold runs out (0.05 s), the snare is spent
+    expect(sim.snares[0].phase).toBe("spent");
+    run(sim, 30); // moving again, onto the run it was held off
+    expect(sim.extras[0].spot.edge).toBe(1);
+  });
   it("draws views for the renderer and steps only when laid", () => {
     const plain = new MinotaurChase(G1, hunt, 1);
     expect(plain.extras).toEqual([]);

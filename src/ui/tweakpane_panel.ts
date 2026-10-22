@@ -3185,8 +3185,8 @@ export function buildPanel(
     minoExtrasRow.hidden = !minoOn || !realtime; // K137 stage 6
     // K137 stage 4: the lures and snares play on the turn clock only, and
     // snares by runs only (TurnMinotaur.setSnare refuses by length).
-    luresRow.hidden = !minoOn || realtime;
-    snaresRow.hidden = !minoOn || realtime || params.minoByLength === true;
+    luresRow.hidden = !minoOn; // K137 stage 7: real time too
+    snaresRow.hidden = !minoOn || (!realtime && params.minoByLength === true); // K137 stage 7
     // K795: each tool's tuning row shows while that tool is on.
     lureRangeRow.hidden = luresRow.hidden || params.lures <= 0;
     snareHoldRow.hidden = snaresRow.hidden || params.snares <= 0;

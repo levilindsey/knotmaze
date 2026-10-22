@@ -503,9 +503,12 @@ async function main(): Promise<void> {
   let luresLeft = 0;
   let snaresLeft = 0;
   let toolArmed: ToolKind | null = null;
-  const luresOn = (): boolean => luresOf(params.lures) > 0 && scene.turnMino !== null;
+  // K137 stage 7: real time has both tools too (chase.lure/setSnare).
+  const luresOn = (): boolean =>
+    luresOf(params.lures) > 0 && (scene.turnMino !== null || scene.chase !== null);
   const snaresOn = (): boolean =>
-    snaresOf(params.snares) > 0 && scene.turnMino !== null && !scene.turnMino.cfg.byLength;
+    snaresOf(params.snares) > 0 &&
+    (scene.chase !== null || (scene.turnMino !== null && !scene.turnMino.cfg.byLength));
   // The HUD and the banner rows (null: that tool off).
   const luresShown = (): { left: number; of: number } | null =>
     luresOn() ? { left: luresLeft, of: luresOf(params.lures) } : null;
@@ -1886,6 +1889,7 @@ async function main(): Promise<void> {
     refillHearts(); // K137 stage 3a: every heart back.
     sprintState = "ready"; // K137 stage 3c: sprint back.
     // K137 stage 4: the lures and snares back, the tool put down.
+    if (scene.chase) scene.chase.snareHoldS = snareHoldOf(params.snareHold); // K137 stage 7
     luresLeft = luresOf(params.lures);
     snaresLeft = snaresOf(params.snares);
     toolArmed = null;
@@ -3365,9 +3369,10 @@ async function main(): Promise<void> {
   const LURE_STRENGTH = 0.8;
   const useTool = (kind: ToolKind, eid: number): void => {
     const tm = scene.turnMino;
-    if (!tm || pendingCatch) return;
+    const ch = scene.chase;
+    if ((!tm && !ch) || pendingCatch) return;
     if (kind === "lure") {
-      const heard = tm.lure(eid);
+      const heard = tm ? tm.lure(eid) : ch!.lure(eid, lureRangeOf(params.lureRange));
       setToolArmed(null);
       if (heard < 0) return;
       luresLeft = Math.max(0, luresLeft - 1);
@@ -3381,7 +3386,7 @@ async function main(): Promise<void> {
         CUT_TOAST_MS
       );
     } else {
-      if (!tm.setSnare(eid)) {
+      if (!(tm ? tm.setSnare(eid) : ch!.setSnare(eid))) {
         // The snare stays armed: tap a run at your junction.
         showToast("A snare goes on a run at your junction, one to a run.", CUT_TOAST_MS);
         cutPluck(eid, REFUSE_OCTAVE, REFUSE_STRENGTH);
@@ -3429,8 +3434,10 @@ async function main(): Promise<void> {
     const tm = scene.turnMino;
     let sprung = 0;
     if (tm) for (const s of tm.snares) if (s.phase !== "set") sprung++;
+    const cm = scene.chase; // K137 stage 7
+    if (cm) for (const s of cm.snares) if (s.phase !== "set") sprung++;
     if (sprung > snaresSprung) {
-      showToast(`Snared! It stands ${countWords(snareHoldOf(params.snareHold), "turn")}.`, CUT_TOAST_MS);
+      showToast(`Snared! It stands ${countWords(snareHoldOf(params.snareHold), tm ? "turn" : "second")}.`, CUT_TOAST_MS);
     }
     snaresSprung = sprung;
   };
