@@ -24,7 +24,7 @@
 //   KGEOM at geomBase:          G0 = (total, arcPer, fxDone, -), then the
 //                               control arcs packed 4 per texel (slot order)
 
-import { PAINT_CONST, PAINT_ITEM_TELE, glslConstBlock } from "./paint_const";
+import { PAINT_CONST, PAINT_ITEM_FRAY, PAINT_ITEM_TELE, glslConstBlock } from "./paint_const";
 
 const W1 = (1 << PAINT_CONST.K_ROW_SHIFT) - 1;
 const S = PAINT_CONST.K_ROW_SHIFT;
@@ -763,6 +763,10 @@ int kHcLook() {
 // size at this pixel, for the chevrons (kPaintAt sets them with st.z).
 highp float kHcD;
 highp float kHcPx;
+// K137 fray (4.3's look, prototype; mirror/parity wait for Levi's pick):
+// the strongest FRAY item's coverage at this pixel. SECTION_FRAG (the
+// ribbons) narrows and desaturates on it; other programs ignore it.
+highp float kFrayHere = 0.0;
 @TELE_DECL@
 highp float kPulseV(highp float d, highp float span, bool inward, bool hovered, highp float dist0, bool cont) {
   if (d < 0.0 || d > span) return 0.0;
@@ -808,6 +812,7 @@ highp float kRimAcross(highp float side) {
 // and the hover glow along the thread (K145; kRimAcross shapes it across).
 highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px) {
   highp vec4 st = vec4(0.0);
+  kFrayHere = 0.0;
   if (uKPaint.x < 0.5) return st;
   int n = c.nCtrl;
   int sl = clamp(int(floor(ctrl)), 0, n - 1);
@@ -894,6 +899,14 @@ highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px)
       highp float g = uKReach.z * (1.0 - kSmooth(d / max(uKSect.z, 1e-4))) *
         kSmooth((dEnd - T0.w) / fade);
       st.w = max(st.w, g);
+    } else if (type == ${PAINT_ITEM_FRAY}) {
+      highp float fa0 = kArcOfCtrl(c, T0.y);
+      highp float fa1 = kArcOfCtrl(c, T0.z);
+      bool fWraps = c.closed && fa1 <= fa0 && T0.z > T0.y;
+      bool fInside = fWraps ? (arc >= fa0 || arc <= fa1) : (arc >= fa0 && arc <= fa1);
+      highp float fEdge = min(kRingDist(arc, fa0, total, c.closed), kRingDist(arc, fa1, total, c.closed));
+      highp float fCov = kCov(fInside ? fEdge : -fEdge, px);
+      if (fCov > 0.0) kFrayHere = max(kFrayHere, fCov * T0.w);
     }@TELE_ITEM@
   }
   return st;

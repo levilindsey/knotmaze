@@ -194,6 +194,18 @@ void main(void) {
   // band hid it under the breath). Off a band and the reveal glow this is
   // the old max(kgl, krim) whitening exactly.
   if (krim > 0.0) rgb = kRimOver(rgb, krim);
+  // K137 fray (4.3's look, prototype): a cracked run goes pale (mix
+  // toward its luminance) and thin (frayA below keeps only the middle
+  // of the ribbon). Ribbon-only: the fans keep the full fill, as with
+  // K799's traveled look.
+  highp float frayA = 1.0;
+  if (paintHere && kFrayHere > 0.0) {
+    highp float lumF = dot(rgb, vec3(0.299, 0.587, 0.114));
+    rgb = mix(rgb, vec3(lumF) * 0.85, 0.75 * kFrayHere);
+    highp float eF = abs(2.0 * vUV.y - 1.0);
+    highp float fwF = max(fwidth(vUV.y) * 3.0, 0.02);
+    frayA = mix(1.0, clamp((0.45 - eF) / fwF + 0.5, 0.0, 1.0), kFrayHere);
+  }
   // K797b THREAD LOOK (prototype; the CPU mirror and parity tests wait
   // for Levi's pick, per the ledger's render-prototype rule): an edge
   // stroke in darkened section color along each side. Border-only also
@@ -236,8 +248,8 @@ void main(void) {
     rgb = mix(rgb, vec3(1.0, 0.0, 0.85), (1.0 - gk) * 0.75);
     gk = 1.0;
   }
-  if (gk * lookA <= 0.002) discard;
-  finalColor = vec4(rgb, 1.0) * vColor * (aM * gk * lookA);
+  if (gk * lookA * frayA <= 0.002) discard;
+  finalColor = vec4(rgb, 1.0) * vColor * (aM * gk * lookA * frayA);
 }
 `;
 

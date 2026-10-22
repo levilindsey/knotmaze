@@ -67,9 +67,14 @@ describe("K320 stage 1: char budgets", () => {
     // K799 (2026-10-21): the traveled-path look (uKPath and the gold
     // width/texture mask, ribbon-only) adds 1,071 to both (48,951 ->
     // 50,022 and 65,366 -> 66,437 here).
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(50_080);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(66_500);
-    expect(STRIP_FRAG.length).toBeLessThanOrEqual(31_400);
+    // K137 fray (2026-10-21): the FRAY paint item (kPaintAt branch +
+    // kFrayHere) and the ribbon's pale/thin compose add 1,314 to both
+    // (50,080 -> 51,394 measured here); budgets follow the measurement.
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(51_450);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(67_850);
+    // K137 fray: the arm strips share kPaintAt, so the FRAY branch adds
+    // 449 there too (31,400 -> 31,849 measured).
+    expect(STRIP_FRAG.length).toBeLessThanOrEqual(31_900);
     // K797b/K798 fillets (2026-10-21): the fan look gate and stroke
     // (junction_field.ts) add 755 (26,600 -> 27,355 here).
     expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(27_420);

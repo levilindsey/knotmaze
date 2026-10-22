@@ -2589,6 +2589,17 @@ export class FabricMazeRenderer {
       (spans ??= []).push(this.burnSpan(e, 0, e.length));
     }
     this.brokenSpans = spans;
+    // K137 fray (4.3's look, prototype): the cracked runs (crossed
+    // once, not yet broken) draw thinner and desaturated until they
+    // snap; the gone look above stays as it is.
+    const frays: PaintSpan[] = [];
+    if (controller.fragileOn) {
+      for (const eid of controller.crackedRuns()) {
+        const e = this.walk.edges[eid];
+        frays.push({ chain: e.chain, c0: e.ctrlA, c1: e.ctrlB });
+      }
+    }
+    this.ribbons.setFray(frays);
   }
 
   // K290: run `e` from lattice distance x0 to x1 as a burnt span of its
