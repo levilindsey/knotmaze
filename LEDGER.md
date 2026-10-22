@@ -537,6 +537,17 @@ merged):
 - **K579** · GPU confetti: upload each launch once, move the pieces in a vertex shader, no per-frame
   CPU sim or upload. Pays if K318 raises the counts (Levi asked 10-20); needs K307's warm-up;
   streamers need a CPU sim. The phone's fall isn't CPU-bound (K578). K628.
+- **K797** · Paper look, one param per stage (Levi 2026-10-21, `docs/design/levi_notes_2026-10-21.md`; sooner list):
+  a white paper background (from `vellum`); a thread look of fill, border or both (an edge stroke on each side; over,
+  under and joins read from the strokes); the Crossing gap row down to 0 (its floor is 0.04; the codec takes 0); solid
+  or textured fills and borders (pencil), if fast enough.
+- **K798** · An intro that draws one border at a time: try a couple of orders, then offer the good ones in a dropdown
+  param (Levi 2026-10-21; sooner list). After K797's border look.
+- **K799** · The traveled path's look (Levi 2026-10-21; sooner list): a width ratio param (0 hidden, 1 today's full
+  fill) and a fill texture dropdown, for colored pencil, crayon or highlighter, if fast enough. After K794.
+- **K800** · Looks set by the link (Levi 2026-10-21; sooner list): look params (nothing that changes the maze) in the
+  URL override the player's saved preferences, and a top-right button turns the overrides off for that maze. For
+  dailies with their own look, with K46's themes and K531's per-day overrides.
 - **K409** · Levi's burn calls 1-3 merged (6b9eb8f..3231d59). Left: step 4, the ember over the smoke
   (NOT BUILT in `render-explore.md`), after K525 (paint files) and K623/K624. The phone sheet passed
   (K631 part 1, 10-20). `docs/design/K409.md`.
