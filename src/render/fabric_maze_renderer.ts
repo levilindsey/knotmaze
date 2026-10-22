@@ -676,6 +676,13 @@ export class FabricMazeRenderer {
   // Where the head dot was last drawn (world; mid-move included) - the
   // follow camera's target (main.ts).
   private headX = 0;
+  // K114 remainder (item 6): the head ring's beat pulse (phase 0..1 in
+  // the beat, set by main each frame while the beat is the clock; the
+  // ring swells just after each beat, or only brightens its halo under
+  // reduced motion).
+  beatPulse = -1;
+  beatPulseReduced = false;
+  private headR = 0;
   private headY = 0;
   private headValid = false;
   // REVEAL (Stage 22): while the appearance animation runs, main.ts wires
@@ -3780,7 +3787,9 @@ export class FabricMazeRenderer {
     this.glowSprite.visible = true;
     this.glowSprite.position.set(this.headX, this.headY);
     m.head.setGlyph(markerGlyph(this.markerGlyphIds.head, "head"));
-    m.head.place(this.headX, this.headY, r);
+    this.headR = r;
+    m.head.place(this.headX, this.headY, this.pulsedHeadR());
+    this.pulseGlow();
     this.placeWalkerGlow(controller, r); // K713
     this.drawAids(controller, dotChain >= 0, r); // K137 stage 2
     this.drawOneWay(controller, r); // K138 stage 3
@@ -3847,6 +3856,26 @@ export class FabricMazeRenderer {
   get compassRun(): number {
     return this.compassOn ? this.compassArm : -1;
   }
+  // K114 item 6: the pulse envelope (sharp on the beat, decaying) and
+  // its application: the ring's radius, or the halo's brightness under
+  // reduced motion (no swelling). Main calls pulseHead each frame.
+  private pulseEnv(): number {
+    if (this.beatPulse < 0) return 0;
+    const f = Math.min(1, Math.max(0, this.beatPulse));
+    return (1 - f) * (1 - f);
+  }
+  private pulsedHeadR(): number {
+    return this.beatPulseReduced ? this.headR : this.headR * (1 + 0.16 * this.pulseEnv());
+  }
+  private pulseGlow(): void {
+    this.glowSprite.alpha = HEAD_GLOW_ALPHA + (this.beatPulseReduced ? 0.25 * this.pulseEnv() : 0);
+  }
+  pulseHead(): void {
+    if (!this.headValid || this.headR <= 0) return;
+    this.markers.head.place(this.headX, this.headY, this.pulsedHeadR());
+    this.pulseGlow();
+  }
+
   private drawAids(controller: FabricMazeController, moving: boolean, r: number): void {
     let n = 0;
     if (this.chalkOn && controller.chalk.size > 0) {

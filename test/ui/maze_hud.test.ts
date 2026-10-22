@@ -105,6 +105,7 @@ describe("what each figure means (K274)", () => {
     oneWay: 12, // K138 stage 3
     keys: { held: 1, of: 3 }, // K138 stage 4
     muddy: 3, // K137 s5
+    tempo: "100 bpm · 1 a run", // K114 remainder
   };
   const shown = (): StatEntry[] => [
     ...statEntries(FULL),
