@@ -1072,3 +1072,49 @@ describe("K324 stage 3: the guard and the stalker", () => {
     expect(checked).toBeGreaterThan(10);
   });
 });
+describe("K137 stage 6: real-time extras", () => {
+  const hunt = P({ playerPace: 0, approachPace: 10, detectStart: 100, detectEnd: 200, catchDist: 0.5, wake: 600, stopMin: 0, stopMax: 0 });
+
+  it("an extra hunts and catches; the catch resets every monster", () => {
+    const sim = new MinotaurChase(G1, hunt, 1);
+    const a = sim.g.index.get("A")!;
+    sim.setExtras([a]);
+    sim.place("player", "D");
+    const out = runUntil(sim, "caught", 10 * CHASE_HZ);
+    expect(out.filter((e) => e.kind === "caught")).toHaveLength(1);
+    expect(sim.catches).toBe(1);
+    // The player is back at the entrance, the extra back at its home,
+    // and the minotaur never left its lair.
+    expect(sim.g.ids[sim.player.vertex]).toBe("S");
+    expect(sim.extras[0].spot.edge).toBe(-1);
+    expect(sim.extras[0].spot.vertex).toBe(a);
+    expect(sim.extras[0].mode).toBe("wander");
+    expect(sim.g.ids[sim.mino.vertex]).toBe("X");
+    expect(sim.mode).toBe("lair");
+  });
+
+  it("draws views for the renderer and steps only when laid", () => {
+    const plain = new MinotaurChase(G1, hunt, 1);
+    expect(plain.extras).toEqual([]);
+    expect(plain.extraViews).toEqual([]);
+    const sim = new MinotaurChase(G1, hunt, 1);
+    sim.setExtras([sim.g.index.get("B")!]);
+    expect(sim.extraViews).toHaveLength(1);
+    expect(sim.extraViews[0].phase).toBe("awake");
+    run(sim, CHASE_HZ);
+    expect(sim.extras[0].spot.vertex).not.toBe(sim.g.index.get("X"));
+  });
+
+  it("replay with extras rebuilds the same chase", () => {
+    const params = P({ playerPace: 60, stopMin: 0, stopMax: 0 });
+    const spots = [new MinotaurChase(G1, params, 7).g.index.get("B")!];
+    const live = new MinotaurChase(G1, params, 7);
+    live.setExtras(spots);
+    live.tap(0);
+    run(live, 90);
+    const replay = replayChase(G1, params, 7, live.inputs, 90, null, null, [], spots);
+    expect(replay.catches).toBe(live.catches);
+    expect(replay.extras[0].spot).toEqual(live.extras[0].spot);
+    expect(replay.extras[0].mode).toBe(live.extras[0].mode);
+  });
+});

@@ -451,6 +451,13 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       fleeing: ch.fleeing,
       slain: ch.slain,
       muddy: [...ch.mud].sort((a, b) => a - b), // K137 s5
+      // K137 stage 6: the real-time extras (home vertex id, spot, mode).
+      extras: ch.extras.map((x) => ({
+        home: ch.g.ids[x.home],
+        spot: { ...x.spot },
+        at: at(x.spot),
+        mode: x.mode,
+      })),
       walked: ch.walked,
       moves: ctx.scene.fabricController ? ctx.scene.fabricController.moveLog.join("") : "",
       huntSeconds: ch.huntSeconds,

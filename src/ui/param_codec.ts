@@ -403,6 +403,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // 222-223, K799: the traveled path's width and fill texture.
   num("goldWidth"),
   choice("goldTexture", ["solid", "pencil", "crayon", "highlighter"]),
+  // 224, K137 stage 6: real-time extras (0 off, 1..3 hunters).
+  num("minoExtras"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -568,6 +570,7 @@ export const PARAM_RANGES: Readonly<
   turnstiles: [0, 8], // K138 stage 2 (TURNSTILES_MAX)
   hiddenRuns: [0, 4], // K138 stage 2 (HIDDEN_MAX)
   sleepers: [0, 3], // K137 stage 3d (SLEEPERS_MAX)
+  minoExtras: [0, 3], // K137 stage 6
   oneWay: [0, 0.6], // K138 stage 3 (ONE_WAY_MAX)
   lures: [0, 5], // K137 stage 4 (LURES_MAX)
   snares: [0, 3], // K137 stage 4 (SNARES_MAX)

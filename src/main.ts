@@ -77,7 +77,7 @@ import { hintSecondsOf } from "./game/hints";
 import { revealedBy, revealRunsOf, runAtCtrl } from "./game/hidden_runs";
 import { catchHeart, heartsToast, livesOf, type HeartLoss } from "./game/lives";
 import { newSword, swordSpot, type SwordAvoid, type SwordPhase } from "./game/sword";
-import { monsterSpecs, sleepersOf } from "./game/monsters";
+import { monsterSpecs, sleeperSpots, sleepersOf } from "./game/monsters";
 import { sprintAfterMove, sprintToggle, sprintValue, type SprintState } from "./game/sprint";
 import { luresOf } from "./game/lures"; // K137 stage 4
 import { snareHoldOf, snaresOf } from "./game/snares";
@@ -1957,10 +1957,19 @@ async function main(): Promise<void> {
   // lair as the sword is and off the sword's spot.
   const layMonsters = (): void => {
     const tm = scene.turnMino;
-    if (!tm || sleepersOf(params.sleepers) === 0) return;
-    const avoid: SwordAvoid = params.minotaur !== "guard" ? { hops: 1 } : { hops: params.minoTerritory };
-    const skip = tm.sword ? [tm.sword.spot] : [];
-    tm.setMonsters(monsterSpecs(tm.g, params.seed, params.sleepers, params.sleepKind, avoid, skip), params.seed);
+    if (tm && sleepersOf(params.sleepers) > 0) {
+      const avoid: SwordAvoid = params.minotaur !== "guard" ? { hops: 1 } : { hops: params.minoTerritory };
+      const skip = tm.sword ? [tm.sword.spot] : [];
+      tm.setMonsters(monsterSpecs(tm.g, params.seed, params.sleepers, params.sleepKind, avoid, skip), params.seed);
+    }
+    // K137 stage 6: the real-time clock's extras - awake hunters on
+    // the sleepers' junctions (their own spots, off the sword's).
+    const ch = scene.chase;
+    if (ch && sleepersOf(params.minoExtras) > 0) {
+      const avoid: SwordAvoid = params.minotaur !== "guard" ? { hops: 1 } : { hops: params.minoTerritory };
+      const skip = ch.sword ? [ch.sword.spot] : [];
+      ch.setExtras(sleeperSpots(ch.g, params.seed, params.minoExtras, avoid, skip));
+    }
   };
   // The sword's news since the last look, on either clock: a toast for each
   // change of phase or touch (taken, banished, slain, spent).
