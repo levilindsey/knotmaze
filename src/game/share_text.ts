@@ -64,6 +64,8 @@ export interface ShareInfo {
   hidden?: { found: number; of: number } | null;
   // K138 stage 3: the one-way runs laid.
   oneWay?: number | null;
+  // K138 stage 4: the keys held of those laid.
+  keys?: { held: number; of: number } | null;
 }
 
 // K114 walker: the title line's tag. Lead: "✂️ 4, par 3" (no par part when
@@ -132,7 +134,9 @@ export function shareText(info: ShareInfo): string {
     (info.turnstiles != null ? ` · \u{1F504} ${info.turnstiles}` : "") +
     (info.hidden ? ` · \u{1F47B} ${info.hidden.found}/${info.hidden.of}` : "") +
     // K138 stage 3: " · ⏩ 12" (one-way runs laid).
-    (info.oneWay != null ? ` · \u23E9 ${info.oneWay}` : "");
+    (info.oneWay != null ? ` · \u23E9 ${info.oneWay}` : "") +
+    // K138 stage 4: " · 🔑 2/3" (the keys held of those laid).
+    (info.keys ? ` · \u{1F511} ${info.keys.held}/${info.keys.of}` : "");
   const eff =
     info.efficiency === null
       ? ""

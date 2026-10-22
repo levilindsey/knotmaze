@@ -160,6 +160,13 @@ describe("K138 rule tags", () => {
     expect(title({ ...BASE, oneWay: null })).toBe("Knotmaze \u{1F9F6}");
   });
 
+  it("ends with the keys held of those laid (K138 stage 4)", () => {
+    expect(title({ ...BASE, oneWay: 12, keys: { held: 2, of: 3 } })).toBe(
+      "Knotmaze \u{1F9F6} · \u23E9 12 · \u{1F511} 2/3"
+    );
+    expect(title({ ...BASE, keys: null })).toBe("Knotmaze \u{1F9F6}");
+  });
+
   it("leaves each out while its rule is off", () => {
     for (const info of [
       BASE,
