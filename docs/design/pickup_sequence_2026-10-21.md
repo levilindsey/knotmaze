@@ -102,6 +102,20 @@ budget (Levi's words), so they close this sequence, not this round.
 
 ## Status
 
+- 2026-10-21 evening: items 12-18 done or closed as far as desktop
+  work reaches. Landed since: K114 desktop remainder (`9aa6fe45`),
+  K546 stages 2-3 (`3659d965`, `4c860ce9`), K5 R3 (`6ce5ced8`,
+  `5de8328d`) and R4 (`98d96fa5`, `0ee562bc`), K8 G3-2's brief + seam
+  (`a8ea5b4e`, `957ba833`; the SDF pass itself is the brief's steps
+  2-3, still to build), K370 stage 2's desktop half (`3d0102f3`: the
+  worker substep premium does not reproduce), K459 item 1 closed
+  (`a6450bc3`), K268 items 5/6 closed (`07100291`). Suite 2249
+  passed at `07100291`.
+- Still gated exactly as listed under Gates, plus Wave 5 (item 19,
+  one phone window: K370's phone half, K477/K397 free-cap checks,
+  K268's phone proof, K114/K137/K138 feel items) and K546 stage 4
+  behind Levi's Q1 on the stage-3 sheet
+  (`.claude/probes/K546/s3/`).
 - Wave 1.1 (K797a) in progress on master; each stage commits and
   pushes on green (deploy = `npm test` + Pages).
 - This doc is the plan of record; the ledger's In progress handles
