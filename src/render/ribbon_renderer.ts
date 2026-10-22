@@ -25,7 +25,6 @@
 import {
   Container,
   ExtensionType,
-  Graphics,
   extensions,
 } from "pixi.js";
 import type { Renderer } from "pixi.js";
@@ -40,7 +39,6 @@ import {
 } from "../core/section_colors";
 import type { AppearFxMode } from "../core/reveal_plan";
 import type { RevealAnimator } from "./reveal";
-import { AppearFxSystem } from "./appear_fx";
 import { SeededRNG } from "../util/random";
 import type { SplineSamples } from "../geometry/spline_generator";
 import {
@@ -55,23 +53,16 @@ import {
   knotUniformValues,
 } from "./paint_model";
 import {
-  MAX_KNOTS,
   kCA,
   kChain,
   kCtrlNear,
   kCtrlOfArc,
   kFxAge,
 
-  kFxDoneWall,
-  kFxSettleWall,
   kIgnition,
-  kRevealMaskAt,
-  kRevealTime,
   kSampleArc,
 
   kShadeFx,
-  kSwell,
-  kWall,
   kComposePaint,
   kGlow,
 
@@ -82,8 +73,6 @@ import {
   kTeleOver,
 
   knotSection,
-  smoothInv,
-  sourcePieces,
   type KChain,
   type KData,
 
@@ -153,6 +142,7 @@ import {
   MARKER_SLOTS,
 } from "./ribbon/crossing_gaps";
 import { ExploreGaps } from "./ribbon/explore_gaps";
+import { FX_TAIL, RevealFx } from "./ribbon/reveal_fx";
 import { FILLET_REACH_PER_HALF, Joinery } from "./ribbon/joinery";
 import { tipStrokeWrite } from "./ribbon/tip_stadium";
 
@@ -411,27 +401,11 @@ const FLOW_AMP = 0.38; // Displacement in world units at flowStrength 1.
 // are at REVEAL_CROSSING_MIN of full width locally (a gap for a not-yet-
 // visible over thread would cut a naked hole in the revealed under thread)
 // and, for materializing / swelling FX, once both have settled.
-const {
-  REVEAL_TAPER_ARC,
-  REVEAL_GLOW_ARC,
-  RAINBOW_GLOW_ARC,
-  RAINBOW_GLOW_HOLD,
-} = PAINT_CONST;
-// Comet streak tail polyline: points sampled along the host thread
-// behind each reveal tip (spawnTipFrontier -> AppearFxSystem).
-const FX_PATH_PTS = 8;
-const FX_PATH_STEP = 0.5;
-// Every appearance FX settles within this many wall seconds of its last
-// ignition (burn's recovery, the longest, plus a margin): fxOn drops after.
-const FX_TAIL = PAINT_CONST.BURN_RECOVER_END + 0.15;
+// The reveal's module constants (REVEAL_TAPER_ARC and kin, FX_PATH_PTS,
+// FX_TAIL, RAINBOW_SWELL_END) live in ribbon/reveal_fx.ts since K5 R3.
 // Pass ctrl drift (ctrl units) under which a pending gate's show-time solve
 // is reused (ribbon_renderer gateCache).
 const GATE_CTRL_EPS = 0.1;
-// Wall seconds after ignition the rainbow width swell lasts (progress down
-// to RAINBOW_SWELL_MIN_P: the swell factor is exactly 1 below it).
-const RAINBOW_SWELL_END =
-  PAINT_CONST.RAINBOW_HOLD +
-  PAINT_CONST.RAINBOW_FADE * smoothInv(1 - PAINT_CONST.RAINBOW_SWELL_MIN_P);
 
 // Dense enough that tight bends near crossings (low slack) stay resolved.
 const SAMPLE_SPACING = 0.09;
@@ -499,6 +473,61 @@ export class RibbonRenderer {
   // gap toggles live in ribbon/crossing_gaps.ts; update() and the
   // delegations call it.
   private readonly crossing = new CrossingGaps(this);
+  // K5 R3: the appearance reveal and its FX (ribbon/reveal_fx.ts).
+  readonly revealFx = new RevealFx(this);
+
+  // --- REVEAL façade (K5 R3): the names other code calls, delegated ---
+  beginReveal(anim: RevealAnimator | null): void {
+    this.revealFx.beginReveal(anim);
+  }
+  revealMulAtCtrl(chain: number, ctrl: number): number {
+    return this.revealFx.revealMulAtCtrl(chain, ctrl);
+  }
+  appearFxAlive(): number {
+    return this.revealFx.appearFxAlive();
+  }
+  revealPin(t: number): boolean {
+    return this.revealFx.revealPin(t);
+  }
+  /** @internal ribbon */ gateStrength(tShow: number, fxNow: number): number {
+    return this.revealFx.gateStrength(tShow, fxNow);
+  }
+  /** @internal ribbon */ jointGate(
+    key: string,
+    points: Array<[number, number]>
+  ): [number, number] {
+    return this.revealFx.jointGate(key, points);
+  }
+  /** @internal ribbon */ crossingShowTime(crossing: {
+    over: CrossingPass;
+    under: CrossingPass;
+  }): number {
+    return this.revealFx.crossingShowTime(crossing);
+  }
+  get revealOn(): boolean {
+    return this.revealFx.revealOn;
+  }
+  set revealOn(v: boolean) {
+    this.revealFx.revealOn = v;
+  }
+  get fxLive(): boolean {
+    return this.revealFx.fxLive;
+  }
+  set fxLive(v: boolean) {
+    this.revealFx.fxLive = v;
+  }
+  get appearFx(): AppearFxMode {
+    return this.revealFx.appearFx;
+  }
+  set appearFx(v: AppearFxMode) {
+    this.revealFx.appearFx = v;
+  }
+  get gateOpenAt(): number {
+    return this.revealFx.gateOpenAt;
+  }
+  set gateOpenAt(v: number) {
+    this.revealFx.gateOpenAt = v;
+  }
   // The module names crossing_gaps reads, as getters (nothing imports a
   // value from this file).
   /** @internal ribbon */ get G3(): G3Tables | null {
@@ -777,51 +806,14 @@ export class RibbonRenderer {
     radius: number;
     exit?: true;
   }> = [];
-  // Crossing VISIBILITY GATES (G2.1): a gated crossing's gap slot carries
-  // its SHOW TIME (reveal-relative wall seconds, encoded in the slot's
-  // strength) and the GPU ramps it in from the clock - no per-crossing
-  // fade state on the CPU. `gateOpenAt` = the latest show time written this
-  // frame (update() keeps running until it has passed, so the CPU-side
-  // bookkeeping that follows a gate - underWindows, pluck footprints -
-  // catches up).
-  /** @internal ribbon */ gateOpenAt = -Infinity;
-  // LATCHED show times (registered crossings by index; joints / lone caps
-  // by key): once a gate has opened it keeps the time it opened at. The
-  // estimate is re-solved every frame from the live arc tables, which keep
-  // moving while the knot settles under the reveal - an open gap or fan
-  // must never fade back out (master latched its fade start the same way).
-  private gateLatch = new Float64Array(0);
-  private jointLatch = new Map<string, [number, number]>();
-  // Show-time CACHE for gates not yet open: an exact solve is reused while
-  // its inputs are unchanged (gateRev: the speed knots, the FX style, the
-  // reveal taper shape) and every point's ctrl stays
-  // within GATE_CTRL_EPS of the solved one (a show time moves by about
-  // 1/rate per ctrl - milliseconds per GATE_CTRL_EPS - while the solve was
-  // update()'s largest new cost: every pending crossing, every frame).
-  // Registered crossings: [tShow, overCtrl, underCtrl, gateRev] by index.
-  private gateRev = 0;
-  private gateCache = new Float64Array(0);
-  private jointCache = new Map<
-    string,
-    { rev: number; ctrls: Float64Array; out: [number, number] }
-  >();
   // Per-frame mirror views (no allocation in the hot loops): the data
   // texture mirrors and one KChain per chain, refreshed by update() (the
   // chain's arc table changes every update).
-  private kd: KData = kData();
-  private kcv: KChain[] = [];
-  private ignTmp: KIgn = { hit: false, tA: 0, cFrom: 0, dir: 1, t0: 0, rate: 1, tEnd: 0, span: 0 };
-  // REVEAL CLOCKS (G2.1; advanceClocks): the paint clock at reveal start
-  // (fxNow = paintClock - revealWall0), the speed knot count, and the wall
-  // time after which every appearance FX has settled (fxOn drops).
-  private revealWall0 = 0;
-  private knotCount = 1;
-  private fxEnd = -Infinity;
-  // Whether the live reveal (or its FX tail) is attached to the shaders.
-  /** @internal ribbon */ fxLive = false;
+  /** @internal ribbon */ kd: KData = kData();
+  /** @internal ribbon */ kcv: KChain[] = [];
+  /** @internal ribbon */ ignTmp: KIgn = { hit: false, tA: 0, cFrom: 0, dir: 1, t0: 0, rate: 1, tEnd: 0, span: 0 };
   // Per-chain width multiplier (reveal mask x rainbow swell), pooled, and
   // the one update() last used per chain (the pluck light path reuses it).
-  private widthScratch = new Map<number, Float32Array>();
   private widthLast: (Float32Array | null)[] = [];
   // K580: per-chain scratch for withTaper's composed multiplier.
   private taperScratch = new Map<number, Float32Array>();
@@ -902,29 +894,6 @@ export class RibbonRenderer {
   }
   // Default section color (the gamut midpoint = the seed-hue base color).
   private baseRgb = new Float32Array(3);
-  // REVEAL state (Stage 22): the animator, the per-chain width masks
-  // (null = fully revealed - the zero-cost resting state), the frontier
-  // tips cached once per paint tick for the glow, and the knot-mode tip
-  // glow overlay. `revealOn` is refreshed at the top of update() and read
-  // by the paint/fillet/emergent passes in the same frame.
-  private revealAnim: RevealAnimator | null = null;
-  /** @internal ribbon */ revealOn = false;
-  private revealWas = false;
-  private revealMask: (Float32Array | null)[] = [];
-  private revealMaskPool = new Map<number, Float32Array>();
-  private revealTipGfx: Graphics | null = null;
-  // APPEARANCE FX (Stage 26): frontier particles while revealing. The
-  // style is synced from params every tick (live dropdown switches, no
-  // rebuild); the pooled system + its ParticleContainer are created
-  // lazily on the first revealing frame with a non-none style and then
-  // live for the renderer's lifetime (the shared texture is page-lifetime
-  // - see appear_fx.ts).
-  appearFx: AppearFxMode = "none";
-  private appearFxSys: AppearFxSystem | null = null;
-  private fxScanStart = 0;
-  // Reusable tail polyline handed to comet streak emission (consumed
-  // synchronously per frontier).
-  private fxPathScratch = new Float32Array(FX_PATH_PTS * 2);
 
   constructor(ps: ParticleSystem, style: RibbonStyle) {
     this.ps = ps;
@@ -1020,7 +989,7 @@ export class RibbonRenderer {
       }
       this.initialControls.push(ic);
     });
-    this.revealMask = ps.chains.map(() => null);
+    this.revealFx.revealMask = ps.chains.map(() => null);
     // G2 SHADER PAINT: the per-scene data-texture layout (paint_model.ts).
     // Open chains are always break-after-last (arc grows with the slot).
     // (C1.w, the retired PAINT texture's base, stays 0.)
@@ -1397,7 +1366,7 @@ export class RibbonRenderer {
   }
 
   // Lives in ribbon/sampling.ts (K5 R1); the class and the probes call it here.
-  private sampleAt(
+  /** @internal ribbon */ sampleAt(
     samples: SplineSamples,
     arc: number,
     out: Float32Array,
@@ -1412,7 +1381,7 @@ export class RibbonRenderer {
   }
 
   // Lives in ribbon/sampling.ts (K5 R1); the class and the probes call it here.
-  private renderCtrl(pass: CrossingPass): number {
+  /** @internal ribbon */ renderCtrl(pass: CrossingPass): number {
     return sampling.renderCtrl(pass);
   }
 
@@ -1518,458 +1487,6 @@ export class RibbonRenderer {
       }
     }
     return vis;
-  }
-
-  // --- REVEAL (Stage 22 appearance animation; G2.1 per-pixel FX) ---
-
-  // Attach a running appearance animator; masks start collapsed and grow
-  // as the animator's clock advances. Passing null (or the animator
-  // finishing) restores the exact non-reveal render. G2.1: the plan's
-  // sources (or ink's per-control ignition times) go to the GPU once, here;
-  // every pixel then finds its own ignition time, so the FX need no
-  // per-frame CPU state - a Replay simply starts a fresh clock.
-  beginReveal(anim: RevealAnimator | null): void {
-    this.revealAnim = anim;
-    this.revealMask = this.ps.chains.map(() => null);
-    // Fresh reveal, fresh particle field: a Replay-settle resets particle
-    // positions, and motes from the previous run would float over the
-    // re-angular knot.
-    this.appearFxSys?.clear();
-    const U = knotUniformValues();
-    if (!anim) {
-      this.paintScene.setReveal(null, null);
-      this.fxLive = false;
-      this.fxEnd = -Infinity;
-      this.gateOpenAt = -Infinity;
-      U.uKFx[3] = 0;
-      U.uKFx2[2] = 0;
-      U.uKInk[1] = 0;
-      return;
-    }
-    const plan = anim.planData;
-    const nCh = this.ps.chains.length;
-    if (anim.mode === "ink") {
-      // INK IS STATELESS (G2.1): every control's ignition time from its
-      // REVEAL-START position (physics + flow, the dye origin likewise) -
-      // the dye no longer re-reads settling positions, its edge wobble is
-      // the same seeded noise, and the duration is exact.
-      const o = plan.origin;
-      const olen = this.ps.chains[o.chain].length;
-      this.ps.pointOnChain(
-        o.chain,
-        ((o.ctrl % olen) + olen) % olen,
-        this.sampleScratch,
-        0
-      );
-      this.flowOffset(this.sampleScratch[0], this.sampleScratch[1], this.flowScratch);
-      const ox = this.sampleScratch[0] + this.flowScratch[0];
-      const oy = this.sampleScratch[1] + this.flowScratch[1];
-      const pos = this.ps.positions;
-      let maxT = 0;
-      const tig = this.ps.chains.map((chain) => {
-        const out = new Float32Array(chain.length);
-        for (let k = 0; k < chain.length; k++) {
-          let x = pos[chain[k] * 2];
-          let y = pos[chain[k] * 2 + 1];
-          this.flowOffset(x, y, this.flowScratch);
-          x += this.flowScratch[0];
-          y += this.flowScratch[1];
-          const d = Math.max(0, Math.hypot(x - ox, y - oy) + anim.inkPerturb(x, y));
-          out[k] = d / plan.inkSpeed;
-          if (out[k] > maxT) maxT = out[k];
-        }
-        return out;
-      });
-      anim.setDuration(maxT + PAINT_CONST.INK_TAPER_WORLD / plan.inkSpeed);
-      this.paintScene.setReveal(null, tig, plan.inkSpeed);
-    } else {
-      const pieces = [];
-      for (let c = 0; c < nCh; c++) {
-        pieces.push(
-          sourcePieces(
-            plan.sources[c],
-            this.ps.chains[c].length,
-            this.ps.chainBreakAfter[c] < 0
-          )
-        );
-      }
-      this.paintScene.setReveal(pieces, null, plan.inkSpeed);
-      if (this.paintScene.hintOverflow > 0) {
-        console.warn(
-          `G2 reveal: ${this.paintScene.hintOverflow} control slots are ` +
-            "touched by more sources than the shader scans"
-        );
-      }
-    }
-    // Clocks: fxNow counts wall seconds from now; one speed knot.
-    this.revealWall0 = this.paintClock;
-    const K = U.uKKnots;
-    K.fill(0);
-    K[0] = 0;
-    K[1] = 0;
-    K[2] = 1 / Math.max(1e-6, anim.speed);
-    K[3] = 1;
-    this.knotCount = 1;
-    this.fxLive = true;
-    this.fxEnd = Infinity;
-    this.gateOpenAt = Infinity;
-    if (this.gateLatch.length !== this.ps.crossings.length) {
-      this.gateLatch = new Float64Array(this.ps.crossings.length);
-    }
-    this.gateLatch.fill(Number.NaN);
-    this.jointLatch.clear();
-    this.gateRev++;
-    if (this.gateCache.length !== 4 * this.ps.crossings.length) {
-      this.gateCache = new Float64Array(4 * this.ps.crossings.length);
-    }
-    this.gateCache.fill(Number.NaN);
-    this.jointCache.clear();
-    U.uKInk[0] = plan.inkSpeed;
-    U.uKInk[1] = anim.mode === "ink" ? 1 : 0;
-    U.uKFx[1] = 0;
-    U.uKFx[2] = 0;
-    U.uKFx[3] = 1;
-    U.uKFx2[2] = 1;
-    this.syncFxStyle();
-  }
-
-  // The FX style and frontier shape uniforms from the live dropdown. Knot
-  // mode never wears appearance colors (as before G2); ink never burns
-  // (it has no fronts - unchanged behavior, K4).
-  private syncFxStyle(): void {
-    const U = knotUniformValues();
-    const ink = this.revealAnim?.mode === "ink" || U.uKInk[1] > 0.5;
-    let st: number = FX_STYLE[this.appearFx];
-    if (!this.style.paletteMode) st = FX_STYLE.none;
-    if (ink && (st === FX_STYLE.burn || st === FX_STYLE.roots)) st = FX_STYLE.none;
-    const was0 = U.uKFx[0];
-    const was1 = U.uKShape[0];
-    const was2 = U.uKShape[1];
-    U.uKFx[0] = st;
-    const [taperMul, tipFloor] = this.revealShape();
-    U.uKShape[0] = REVEAL_TAPER_ARC * taperMul;
-    U.uKShape[1] = tipFloor;
-    // Show-time inputs changed: cached gate solves lapse.
-    if (U.uKFx[0] !== was0 || U.uKShape[0] !== was1 || U.uKShape[1] !== was2) {
-      this.gateRev++;
-    }
-    const rainbow = this.appearFx === "rainbow";
-    U.uKShape[2] = rainbow ? RAINBOW_GLOW_ARC : REVEAL_GLOW_ARC;
-    U.uKShape[3] = rainbow ? RAINBOW_GLOW_ARC * RAINBOW_GLOW_HOLD : 0;
-  }
-
-  // Append a speed knot (anim time, reveal wall time, 1 / speed). A knot
-  // within one frame of the last one REPLACES its speed (slider drags);
-  // a full table folds history that is long since cooled (every FX settles
-  // within FX_TAIL of ignition) into the FLOOR knot (wall -1e4, inv 0).
-  private addKnot(animT: number, wallT: number, inv: number): void {
-    this.gateRev++; // Every path below edits the table (gate caches lapse).
-    const K = knotUniformValues().uKKnots;
-    const last = (this.knotCount - 1) * 4;
-    if (wallT - K[last + 1] < 1 / 30) {
-      // Re-anchor the last knot so the curve stays continuous at animT.
-      const w = K[last + 1] + (animT - K[last]) * K[last + 2];
-      K[last] = animT;
-      K[last + 1] = w;
-      K[last + 2] = inv;
-      return;
-    }
-    if (this.knotCount >= MAX_KNOTS) {
-      // Drop knots whose successor started before (now - FX_TAIL): their
-      // material is fully cooled whatever wall time it maps to.
-      let keep = 1;
-      while (keep < this.knotCount - 1 && K[(keep + 1) * 4 + 1] < wallT - FX_TAIL) {
-        keep++;
-      }
-      if (keep > 1) {
-        const tail = K.slice(keep * 4, this.knotCount * 4);
-        K.fill(0, 4);
-        K[0] = 0;
-        K[1] = -1e4;
-        K[2] = 0;
-        K[3] = 1;
-        K.set(tail, 4);
-        this.knotCount = 1 + tail.length / 4;
-      }
-      if (this.knotCount >= MAX_KNOTS) {
-        const l = (this.knotCount - 1) * 4;
-        const w = K[l + 1] + (animT - K[l]) * K[l + 2];
-        K[l] = animT;
-        K[l + 1] = w;
-        K[l + 2] = inv;
-        return;
-      }
-    }
-    const o = this.knotCount * 4;
-    K[o] = animT;
-    K[o + 1] = wallT;
-    K[o + 2] = inv;
-    K[o + 3] = 1;
-    this.knotCount++;
-  }
-
-  // Reveal multiplier at a chain ctrl (1 once fully revealed / inactive).
-  // Public: the fabric overlay gates its exit marker on this, and main.ts
-  // wires it through to probes.
-  revealMulAtCtrl(chain: number, ctrl: number): number {
-    const mask = this.revealMask[chain];
-    if (!mask) return 1;
-    const samples = this.chainSamples[chain];
-    if (!samples || samples.totalLength <= 0) return 0;
-    const closed = this.ps.chainBreakAfter[chain] < 0;
-    const arc = this.paintArcAt(samples, ctrl, closed);
-    const count = mask.length;
-    const k = closed
-      ? Math.round((arc / samples.totalLength) * count) % count
-      : Math.max(
-          0,
-          Math.min(
-            count - 1,
-            Math.round((arc / samples.totalLength) * (count - 1))
-          )
-        );
-    return mask[k];
-  }
-
-  // Per-style frontier shaping, [taper multiplier, tip width floor] (the
-  // uKShape uniforms; the mask and the per-pixel ages read them).
-  private revealShape(): [number, number] {
-    switch (this.appearFx) {
-      case "comet":
-        return [8, 0.5];
-      case "rainbow":
-        // A short rounded head that blooms straight into the width swell
-        // - the old long needle taper hid the swell.
-        return [1.6, 0.55];
-      case "roots":
-        return [16, 0];
-      default:
-        return [1, 0];
-    }
-  }
-
-  // The wall time (reveal-relative) from which chain `chain`'s appearance
-  // FX are all the identity (KGEOM G0.z; paint_math kFxDoneWall): the
-  // shaders skip the FX evaluation there. 1e9 = never skip.
-  private chainFxDone(chain: number): number {
-    if (!this.fxLive) return 1e9;
-    return kFxDoneWall(knotUniformValues(), this.paintScene.revealSpan(chain)[1]);
-  }
-
-  // The wall time (reveal-relative) a crossing pass may show its gap: its
-  // reveal mask has reached REVEAL_CROSSING_MIN and its appearance FX have
-  // settled (rainbow past its swell, dust/comet opaque). The GPU ramps the
-  // gap in from it (paint_math kRevealTime / kFxSettleWall).
-  private passShowTime(chain: number, ctrl: number): number {
-    const D = this.kd;
-    const U = knotUniformValues();
-    const c = this.kcv[chain] ?? kChain(D, chain);
-    const n = c.nCtrl;
-    const x = c.closed ? ctrl - n * Math.floor(ctrl / n) : Math.max(0, Math.min(n - 1, ctrl));
-    const g = kIgnition(D, U, c, x, this.ignTmp);
-    const fallback = this.revealAnim ? this.revealAnim.planDuration : 0;
-    const tRev = kRevealTime(D, U, c, g, x, fallback);
-    return Math.max(kWall(U, tRev), kFxSettleWall(U, g));
-  }
-
-  // A joint's (or a lone cap's) gate texel J1 = (tOn, tLast), wall times:
-  // shown once every given point is revealed, fading in as the latest-
-  // ignited one's appearance FX settles (paint_glsl knotFanAlpha).
-  // Ungated (no reveal, FX settled): far past.
-  /** @internal ribbon */ jointGate(
-    key: string,
-    points: Array<[number, number]>
-  ): [number, number] {
-    if (!this.fxLive) return [-1e9, -1e9];
-    const D = this.kd;
-    const U = knotUniformValues();
-    const fallback = this.revealAnim ? this.revealAnim.planDuration : 0;
-    let tOn = -1e9;
-    let tLast = -1e9;
-    // Open joints keep their times (latched; nothing left to solve).
-    const L = this.jointLatch.get(key);
-    if (L !== undefined) return L;
-    // A pending joint reuses its last solve while its points hold still
-    // (see gateCache).
-    const C = this.jointCache.get(key);
-    let fresh = C !== undefined && C.rev === this.gateRev && C.ctrls.length === points.length;
-    for (let i = 0; fresh && i < points.length; i++) {
-      if (Math.abs(points[i][1] - C!.ctrls[i]) >= GATE_CTRL_EPS) fresh = false;
-    }
-    let out: [number, number];
-    if (fresh) {
-      out = C!.out;
-    } else {
-      for (const [chain, ctrl] of points) {
-        const c = this.kcv[chain] ?? kChain(D, chain);
-        const n = c.nCtrl;
-        const x = c.closed
-          ? ctrl - n * Math.floor(ctrl / n)
-          : Math.max(0, Math.min(n - 1, ctrl));
-        const g = kIgnition(D, U, c, x, this.ignTmp);
-        tOn = Math.max(tOn, kWall(U, kRevealTime(D, U, c, g, x, fallback)));
-        if (g.hit) tLast = Math.max(tLast, kWall(U, g.tA));
-      }
-      out = [tOn, tLast];
-      const ctrls = C && C.ctrls.length === points.length ? C.ctrls : new Float64Array(points.length);
-      for (let i = 0; i < points.length; i++) ctrls[i] = points[i][1];
-      this.jointCache.set(key, { rev: this.gateRev, ctrls, out });
-    }
-    if (U.uKFx[2] >= out[0]) {
-      this.jointLatch.set(key, out);
-      this.jointCache.delete(key);
-    }
-    return out;
-  }
-
-  // A crossing's show time (-Infinity when no reveal / FX gates it).
-  /** @internal ribbon */ crossingShowTime(crossing: {
-    over: CrossingPass;
-    under: CrossingPass;
-  }): number {
-    if (!this.fxLive) return -Infinity;
-    return Math.max(
-      this.passShowTime(crossing.over.chain, this.renderCtrl(crossing.over)),
-      this.passShowTime(crossing.under.chain, this.renderCtrl(crossing.under))
-    );
-  }
-
-  // The gap slot strength for a show time: 1 (ungated or long open), or the
-  // GATED encoding -(1 + tShow) the gap shader ramps from the clock
-  // (gap_mask.ts). Tracks the latest pending show time (gateOpenAt).
-  /** @internal ribbon */ gateStrength(tShow: number, fxNow: number): number {
-    if (!(tShow > -1e8) || fxNow >= tShow + PAINT_CONST.CROSSING_FADE_IN) {
-      return 1;
-    }
-    if (tShow > this.gateOpenAt) this.gateOpenAt = tShow;
-    return -(1 + Math.max(0, tShow));
-  }
-
-  // One chain's ribbon WIDTH multiplier for this frame (CPU mirror of the
-  // reveal mask, times the rainbow swell), or null when every sample is at
-  // full width - the fills then take their untouched fast path, so the
-  // finished state is bit-identical to a non-reveal render. Also records
-  // the pure mask in revealMask[chain] (null = fully revealed).
-  private widthMulFor(chain: number, samples: SplineSamples): Float32Array | null {
-    this.revealMask[chain] = null;
-    if (!this.fxLive) return null;
-    const U = knotUniformValues();
-    const reveal = this.revealOn;
-    const swell = U.uKFx[0] === FX_STYLE.rainbow && U.uKFx[3] > 0.5;
-    if (!reveal && !swell) return null;
-    const D = this.kd;
-    const c = this.kcv[chain];
-    const count = samples.count;
-    let mask = this.revealMaskPool.get(chain);
-    if (!mask || mask.length !== count) {
-      mask = new Float32Array(count);
-      this.revealMaskPool.set(chain, mask);
-    }
-    let width = this.widthScratch.get(chain);
-    if (!width || width.length !== count) {
-      width = new Float32Array(count);
-      this.widthScratch.set(chain, width);
-    }
-    const n = c.nCtrl;
-    const t = U.uKFx[1];
-    // FAST PATHS from the chain's reveal window (anim seconds, from the
-    // plan): wholly revealed (and past its swell) -> null; not started ->
-    // all zero.
-    const [tStart, tDone] = this.paintScene.revealSpan(chain);
-    const swellHere =
-      swell && t >= tStart && U.uKFx[2] < kWall(U, tDone) + RAINBOW_SWELL_END;
-    const maskDone = !reveal || t >= tDone;
-    if (maskDone && !swellHere) return null;
-    if (reveal && t < tStart) {
-      mask.fill(0);
-      this.revealMask[chain] = mask;
-      return mask;
-    }
-    let minM = 1;
-    let anyW = false;
-    let slot = 0;
-    for (let k = 0; k < count; k++) {
-      // The sample's ctrl: the bake's monotone walk over this frame's arc
-      // table (paint_math kCtrlOfArc, incrementally).
-      const a = kSampleArc(c, k);
-      while (slot < n - 1 && kCA(D, c, slot + 1) <= a) slot++;
-      const a0 = kCA(D, c, slot);
-      const a1 = slot < n - 1 ? kCA(D, c, slot + 1) : c.total;
-      const ctrl = slot + (a1 > a0 ? Math.min(1, (a - a0) / (a1 - a0)) : 0);
-      const m = maskDone ? 1 : kRevealMaskAt(D, U, c, ctrl);
-      mask[k] = m;
-      if (m < minM) minM = m;
-      let w = m;
-      if (swellHere && m > 0) {
-        const g = kIgnition(D, U, c, ctrl, this.ignTmp);
-        if (g.hit && t >= g.tA) w *= kSwell(kFxAge(U, g));
-      }
-      width[k] = w;
-      if (w !== 1) anyW = true;
-    }
-    if (reveal && minM < 1) this.revealMask[chain] = mask;
-    return anyW ? width : null;
-  }
-
-  // One-shot restore when the animator completes (or is detached): masks
-  // dropped, tip glow cleared (every crossing's gap slot is rewritten by
-  // this same update). The next paint tick clears any frontier glow (its
-  // chain set goes empty). The FX tail (fxEnd) is armed by advanceClocks.
-  private finishReveal(): void {
-    this.revealAnim = null;
-    this.revealMask = this.ps.chains.map(() => null);
-    this.revealTipGfx?.clear();
-  }
-
-  // Knot-mode frontier glow: small additive discs at the advancing tips
-  // (fabric mode rides the palette instead - flat overlays cannot
-  // represent the blended field there).
-  private drawRevealTips(): void {
-    if (this.style.paletteMode) return;
-    const anim = this.revealAnim;
-    const active = this.revealOn && anim !== null && anim.mode !== "ink";
-    if (!active) {
-      this.revealTipGfx?.clear();
-      return;
-    }
-    if (!this.revealTipGfx) {
-      // NORMAL blending, deliberately: the canvas is TRANSPARENT (Stage
-      // 18 - gaps clip the thread layer), so an additive halo over empty
-      // canvas adds into nothing and composites as a muddy grey disc on
-      // the page backdrop. Bright warm fills under normal blending read
-      // as a glow over both the backdrop and the threads.
-      this.revealTipGfx = new Graphics();
-      this.root.addChild(this.revealTipGfx);
-    }
-    const g = this.revealTipGfx;
-    g.clear();
-    const tw = this.style.threadWidth;
-    for (const tip of anim!.tips()) {
-      const len = this.ps.chains[tip.chain].length;
-      const closed = this.ps.chainBreakAfter[tip.chain] < 0;
-      const f = closed
-        ? ((tip.ctrl % len) + len) % len
-        : Math.max(0, Math.min(len - 1, tip.ctrl));
-      this.ps.pointOnChain(tip.chain, f, this.sampleScratch, 0);
-      this.flowOffset(
-        this.sampleScratch[0],
-        this.sampleScratch[1],
-        this.flowScratch
-      );
-      const x = this.sampleScratch[0] + this.flowScratch[0];
-      const y = this.sampleScratch[1] + this.flowScratch[1];
-      g.circle(x, y, tw * 1.35);
-      g.fill({ color: 0xffedb8, alpha: 0.26 });
-      g.circle(x, y, tw * 0.75);
-      g.fill({ color: 0xfff6d8, alpha: 0.6 });
-      g.circle(x, y, tw * 0.4);
-      g.fill({ color: 0xffffff, alpha: 0.95 });
-    }
-  }
-
-  // Live particle count (diagnostics / probes).
-  appearFxAlive(): number {
-    return this.appearFxSys?.aliveCount ?? 0;
   }
 
   // ---- G2 PROBE HOOKS (diagnostics only) --------------------------------
@@ -2096,154 +1613,6 @@ export class RibbonRenderer {
     };
   }
 
-  // PROBE: pin the running reveal at anim time `t` (and the FX clock at its
-  // wall time through the speed knots), then stop both clocks - the next
-  // update() evaluates masks and gates there, and the shaders render that
-  // instant. Returns false when no reveal is attached.
-  revealPin(t: number): boolean {
-    const anim = this.revealAnim;
-    if (!anim) return false;
-    const a = anim as unknown as { t: number; done: boolean; tick: () => void };
-    a.t = t;
-    a.done = t >= anim.planDuration;
-    a.tick = () => {};
-    this.paintClock = this.revealWall0 + kWall(knotUniformValues(), t);
-    if (!anim.done) this.fxEnd = Infinity;
-    Object.getPrototypeOf(this).advanceClocks.call(this, 0);
-    this.advanceClocks = () => {};
-    return true;
-  }
-
-  // APPEARANCE FX: spawn at every advancing frontier, then advance the
-  // pool. Runs with tickPaint in every ticker branch (awake, asleep,
-  // paused) so the particles keep flying while the physics sleeps. With no
-  // system and no reveal this is a two-compare early-return, and once the
-  // reveal ends the pool drains and tick() degenerates to one compare -
-  // zero per-frame work after the field empties. Spawning skips while the
-  // tab is hidden (a resumed tab would burst the whole backlog at once).
-  private tickAppearFx(dt: number): void {
-    const anim = this.revealAnim;
-    const emitting =
-      this.revealOn && anim !== null && this.appearFx !== "none";
-    if (!this.appearFxSys) {
-      if (!emitting) return;
-      this.appearFxSys = new AppearFxSystem((this.style.flowSeed ?? 1) >>> 0);
-      // Topmost thread-layer child: above every ribbon/fill (and the
-      // knot-mode tip glow, created by this frame's earlier update()).
-      this.root.addChild(this.appearFxSys.container);
-    }
-    const fx = this.appearFxSys;
-    if (emitting && !document.hidden) {
-      fx.style = this.appearFx as Exclude<AppearFxMode, "none">;
-      fx.unit = this.style.threadWidth;
-      if (anim!.mode === "ink") this.spawnInkFrontier(fx, anim!, dt);
-      else this.spawnTipFrontier(fx, anim!, dt);
-    }
-    fx.tick(dt);
-  }
-
-  // Interval modes (trace/bloom/draw): one emitter per advancing reveal
-  // tip. Position and tangent come from the live chain samples through the
-  // clamping paint-arc path (the arc-wrap family bites open-chain
-  // terminals otherwise), so emitters ride flow displacement and tip tucks
-  // exactly like the ribbons. The travel direction is the sample tangent
-  // signed by the plan's ctrl-axis dir; speed converts ctrl/s to world
-  // units through the chain's arc-per-ctrl.
-  private spawnTipFrontier(
-    fx: AppearFxSystem,
-    anim: RevealAnimator,
-    dt: number
-  ): void {
-    const tips = anim.tips();
-    if (tips.length === 0) return;
-    // Rotate which tip gets first claim on the pool budget.
-    const offset = this.fxScanStart++ % tips.length;
-    for (let k = 0; k < tips.length; k++) {
-      const tip = tips[(k + offset) % tips.length];
-      const samples = this.chainSamples[tip.chain];
-      if (!samples || samples.totalLength <= 0) continue;
-      const closed = this.ps.chainBreakAfter[tip.chain] < 0;
-      const arc = this.paintArcAt(samples, tip.ctrl, closed);
-      const perCtrl =
-        samples.totalLength / Math.max(1, this.ps.chains[tip.chain].length);
-      // Comet streaks lie along the HOST THREAD: hand the emitter a short
-      // polyline over the revealed side (tip backward), so its strokes
-      // orient to the thread's local tangents instead of the head chord.
-      // Built BEFORE the tip sample below - both share sampleScratch.
-      let path: Float32Array | null = null;
-      let pathPts = 0;
-      if (this.appearFx === "comet") {
-        path = this.fxPathScratch;
-        pathPts = FX_PATH_PTS;
-        for (let j = 0; j < FX_PATH_PTS; j++) {
-          const aj = arc - tip.dir * j * FX_PATH_STEP;
-          this.sampleAt(samples, aj, this.sampleScratch, 0);
-          path[j * 2] = this.sampleScratch[0];
-          path[j * 2 + 1] = this.sampleScratch[1];
-        }
-      }
-      this.sampleAt(samples, arc, this.sampleScratch, 0);
-      fx.spawnFrontier(
-        this.sampleScratch[0],
-        this.sampleScratch[1],
-        this.sampleScratch[2] * tip.dir,
-        this.sampleScratch[3] * tip.dir,
-        tip.rate * anim.speed * perCtrl,
-        dt,
-        path,
-        pathPts
-      );
-    }
-  }
-
-  // Ink mode has no plan tips (the dye front is a world-distance field);
-  // the frontier is wherever a chain's mask crosses half-reveal. Scan the
-  // live masks for 0.5-crossings between adjacent samples and emit there,
-  // travel direction toward the unrevealed side, speed = the dye's radial
-  // rate. Budgeted + chain-rotated so dye rings that slice many threads
-  // neither explode the spawn count nor starve high-numbered chains.
-  private spawnInkFrontier(
-    fx: AppearFxSystem,
-    anim: RevealAnimator,
-    dt: number
-  ): void {
-    const chains = this.ps.chains.length;
-    if (chains === 0) return;
-    const speed = anim.inkRate;
-    const start = this.fxScanStart++ % chains;
-    let budget = 48;
-    for (let ci = 0; ci < chains && budget > 0; ci++) {
-      const chain = (ci + start) % chains;
-      const mask = this.revealMask[chain];
-      if (!mask) continue;
-      const samples = this.chainSamples[chain];
-      if (!samples || samples.totalLength <= 0) continue;
-      const count = mask.length;
-      const closed = this.ps.chainBreakAfter[chain] < 0;
-      const arcPer = closed
-        ? samples.totalLength / count
-        : samples.totalLength / (count - 1);
-      const lim = closed ? count : count - 1;
-      for (let k = 0; k < lim && budget > 0; k++) {
-        const m0 = mask[k];
-        const m1 = mask[(k + 1) % count];
-        if (m0 === m1 || (m0 - 0.5) * (m1 - 0.5) > 0) continue;
-        const f = (0.5 - m0) / (m1 - m0);
-        this.sampleAt(samples, (k + f) * arcPer, this.sampleScratch, 0);
-        const dir = m0 > m1 ? 1 : -1; // Toward the unrevealed side.
-        fx.spawnFrontier(
-          this.sampleScratch[0],
-          this.sampleScratch[1],
-          this.sampleScratch[2] * dir,
-          this.sampleScratch[3] * dir,
-          speed,
-          dt
-        );
-        budget--;
-      }
-    }
-  }
-
   update(): void {
     const { positions } = this.ps;
     this.updateCount++;
@@ -2255,12 +1624,9 @@ export class RibbonRenderer {
     // crossing solves (renderCrossing appends).
     this.underWindows.clear();
 
-    // Reveal lifecycle: refresh the active flag, and on the completion
-    // frame restore the full render exactly once.
-    const ra = this.revealAnim;
-    this.revealOn = ra !== null && !ra.done;
-    if (!this.revealOn && this.revealWas) this.finishReveal();
-    this.revealWas = this.revealOn;
+    // Reveal lifecycle (ribbon/reveal_fx.ts): refresh the active flag,
+    // and on the completion frame restore the full render exactly once.
+    this.revealFx.lifecycle();
 
     // K90's bend bound (off unless the debug hook turns it on) holds the
     // centerline's turn radius against this ribbon's half-width.
@@ -2304,10 +1670,10 @@ export class RibbonRenderer {
         samples.count,
         samples.closed,
         samples.controlArcLengths,
-        this.chainFxDone(i)
+        this.revealFx.chainFxDone(i)
       );
       this.kcv[i] = kChain(this.kd, i, this.kcv[i]);
-      const width = this.withTaper(i, samples, this.widthMulFor(i, samples));
+      const width = this.withTaper(i, samples, this.revealFx.widthMulFor(i, samples));
       this.widthLast[i] = width;
       const mul = this.withPluckCollapse(i, samples.count, width);
       this.fills[i].update(
@@ -2341,34 +1707,34 @@ export class RibbonRenderer {
     this.ps.crossings.forEach((crossing, c) => {
       let tShow = -Infinity;
       if (this.fxLive) {
-        const L = this.gateLatch.length > c ? this.gateLatch[c] : Number.NaN;
+        const L = this.revealFx.gateLatch.length > c ? this.revealFx.gateLatch[c] : Number.NaN;
         if (!Number.isNaN(L)) {
           tShow = L;
         } else {
           const co = this.renderCtrl(crossing.over);
           const cu = this.renderCtrl(crossing.under);
-          const G = this.gateCache;
+          const G = this.revealFx.gateCache;
           const o = 4 * c;
           if (
             o + 3 < G.length &&
-            G[o + 3] === this.gateRev &&
+            G[o + 3] === this.revealFx.gateRev &&
             Math.abs(co - G[o + 1]) < GATE_CTRL_EPS &&
             Math.abs(cu - G[o + 2]) < GATE_CTRL_EPS
           ) {
             tShow = G[o];
           } else {
             tShow = Math.max(
-              this.passShowTime(crossing.over.chain, co),
-              this.passShowTime(crossing.under.chain, cu)
+              this.revealFx.passShowTime(crossing.over.chain, co),
+              this.revealFx.passShowTime(crossing.under.chain, cu)
             );
             if (o + 3 < G.length) {
               G[o] = tShow;
               G[o + 1] = co;
               G[o + 2] = cu;
-              G[o + 3] = this.gateRev;
+              G[o + 3] = this.revealFx.gateRev;
             }
           }
-          if (fxNow >= tShow) this.gateLatch[c] = tShow;
+          if (fxNow >= tShow) this.revealFx.gateLatch[c] = tShow;
         }
         // A gate opening well in the future skips its slot solve this frame
         // (as master skipped hidden crossings): update() keeps running while
@@ -2407,7 +1773,7 @@ export class RibbonRenderer {
     this.writeRootTables();
     this.paintScene.flushGeom();
     if (this.g3Data) g3Flush();
-    this.drawRevealTips();
+    this.revealFx.drawRevealTips();
   }
 
   // Lives in ribbon/crossing_gaps.ts (K5 R2). update(), renderEmergent and
@@ -2819,13 +2185,13 @@ export class RibbonRenderer {
     knotUniformValues().uKBase[2] = this.paintDebug;
     knotUniformValues().uKLook![0] = this.threadLook; // K797b
     // K798: the border-at-a-time intros (mode, running) for the shader.
-    const rm = this.revealAnim?.mode;
+    const rm = this.revealFx.revealAnim?.mode;
     knotUniformValues().uKLook![1] = rm === "edges" ? 1 : rm === "edgesAll" ? 2 : 0;
-    knotUniformValues().uKLook![2] = this.revealAnim && !this.revealAnim.done ? 1 : 0;
+    knotUniformValues().uKLook![2] = this.revealFx.revealAnim && !this.revealFx.revealAnim.done ? 1 : 0;
     knotUniformValues().uKPath![0] = this.goldWidth; // K799
     knotUniformValues().uKPath![1] = this.goldTexture;
     this.tickPaintPalette(dt);
-    this.tickAppearFx(dt);
+    this.revealFx.tickAppearFx(dt);
     // Flow clock, advanced AFTER the palette/fillet pass so everything
     // rendered this frame (update()'s chain samples, the fillet
     // centroids) read ONE field time. Scaling the ACCUMULATOR by the live
@@ -3229,7 +2595,7 @@ export class RibbonRenderer {
       // Mid-reveal chains, and every chain while appearance FX still
       // animate (they settle within FX_TAIL of the reveal's end).
       hot: (c) =>
-        (this.revealOn && this.revealMask[c] !== null) ||
+        (this.revealOn && this.revealFx.revealMask[c] !== null) ||
         (this.fxLive && knotUniformValues().uKFx[0] !== FX_STYLE.none),
       setCollapse: (c, mul) => {
         if (mul) this.pluckCollapse.set(c, mul);
@@ -3619,23 +2985,23 @@ export class RibbonRenderer {
     // the anim clock, speed knots (the animator advanced by dt * speed
     // just before this call), and the burn flicker's phases mod 2 pi.
     const U = knotUniformValues();
-    const anim = this.revealAnim;
-    const fxNow = this.paintClock - this.revealWall0;
+    const anim = this.revealFx.revealAnim;
+    const fxNow = this.paintClock - this.revealFx.revealWall0;
     if (anim) {
       const inv = 1 / Math.max(1e-6, anim.speed);
-      const last = (this.knotCount - 1) * 4;
+      const last = (this.revealFx.knotCount - 1) * 4;
       // (The knot table is f32: compare at f32 resolution.)
       if (!anim.done && Math.abs(U.uKKnots[last + 2] - inv) > 1e-6 * inv) {
-        this.addKnot(anim.clock - dt * anim.speed, fxNow - dt, inv);
+        this.revealFx.addKnot(anim.clock - dt * anim.speed, fxNow - dt, inv);
       }
       U.uKFx[1] = anim.clock;
       // The FX tail starts once the last front has finished.
-      if (anim.done && this.fxEnd === Infinity) this.fxEnd = fxNow + FX_TAIL;
+      if (anim.done && this.revealFx.fxEnd === Infinity) this.revealFx.fxEnd = fxNow + FX_TAIL;
     }
     U.uKFx[2] = fxNow;
     const revealOn = anim !== null && !anim.done;
     U.uKFx2[2] = revealOn ? 1 : 0;
-    const fxOn = revealOn || fxNow < this.fxEnd;
+    const fxOn = revealOn || fxNow < this.revealFx.fxEnd;
     U.uKFx[3] = fxOn ? 1 : 0;
     // The burn flicker runs on the REVEAL clock (fxNow), not the absolute
     // paint clock: an instant of the reveal then renders the same whatever
@@ -3645,7 +3011,7 @@ export class RibbonRenderer {
     U.uKFx2[0] = (13 * c) % TAU;
     U.uKFx2[1] = (29 * c) % TAU;
     U.uKFx2[3] = 0.3 * Math.sin(13 * c) + 0.2 * Math.sin(29 * c);
-    this.syncFxStyle();
+    this.revealFx.syncFxStyle();
     if (!fxOn) {
       this.fxLive = false;
       this.gateOpenAt = -Infinity;
@@ -4186,19 +3552,19 @@ export class RibbonRenderer {
     const U = knotUniformValues() as unknown as Record<string, Float32Array>;
     const uniforms: Record<string, string> = {};
     for (const k of Object.keys(U)) uniforms[k] = typedToB64(U[k]);
-    const ra = this.revealAnim as unknown as RevealClock | null;
+    const ra = this.revealFx.revealAnim as unknown as RevealClock | null;
     const scalars = new Float64Array([
       this.flowTime,
       this.paintClock,
       this.pulseBorn,
-      this.gateRev,
+      this.revealFx.gateRev,
       this.fxLive ? 1 : 0,
       this.gateOpenAt,
       this.revealOn ? 1 : 0,
-      this.revealWas ? 1 : 0,
+      this.revealFx.revealWas ? 1 : 0,
       this.exploreUpdatePending ? 1 : 0,
-      this.revealWall0,
-      this.fxEnd,
+      this.revealFx.revealWall0,
+      this.revealFx.fxEnd,
       this.rimAt,
       ra ? 1 : 0,
       ra ? ra.t : 0,
@@ -4213,8 +3579,8 @@ export class RibbonRenderer {
       passes: typedToB64(passes),
       emergent: typedToB64(em.slice(0, emN * EMERGENT_ROW)),
       scalars: typedToB64(scalars),
-      gateLatch: typedToB64(this.gateLatch),
-      gateCache: typedToB64(this.gateCache),
+      gateLatch: typedToB64(this.revealFx.gateLatch),
+      gateCache: typedToB64(this.revealFx.gateCache),
       uniforms,
       explore: this.explorePieces
         ? (JSON.parse(JSON.stringify(this.explorePieces)) as ExplorePiece[])
@@ -4270,23 +3636,23 @@ export class RibbonRenderer {
     this.flowTime = S[0];
     this.paintClock = S[1];
     this.pulseBorn = S[2];
-    this.gateRev = S[3];
+    this.revealFx.gateRev = S[3];
     this.fxLive = S[4] !== 0;
     this.gateOpenAt = S[5];
     this.revealOn = S[6] !== 0;
-    this.revealWas = S[7] !== 0;
+    this.revealFx.revealWas = S[7] !== 0;
     this.exploreUpdatePending = S[8] !== 0;
-    this.revealWall0 = S[9];
-    this.fxEnd = S[10];
+    this.revealFx.revealWall0 = S[9];
+    this.revealFx.fxEnd = S[10];
     this.rimAt = S[11];
-    const ra = this.revealAnim as unknown as RevealClock | null;
+    const ra = this.revealFx.revealAnim as unknown as RevealClock | null;
     if (ra && S[12] !== 0) {
       ra.t = S[13];
       ra.done = S[14] !== 0;
       ra.speed = S[15];
     }
-    this.gateLatch = b64ToF64(s.gateLatch).slice();
-    this.gateCache = b64ToF64(s.gateCache).slice();
+    this.revealFx.gateLatch = b64ToF64(s.gateLatch).slice();
+    this.revealFx.gateCache = b64ToF64(s.gateCache).slice();
     const U = knotUniformValues() as unknown as Record<string, Float32Array>;
     const E = b64ToF32(s.uniforms.uKExplore ?? "");
     this.setExplore(s.explore, E.length > 2 ? E[1] : 0, E.length > 2 ? E[2] : 1);
