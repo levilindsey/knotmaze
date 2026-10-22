@@ -154,6 +154,8 @@ import type { HiddenLayout } from "./hidden_runs";
 import { hiddenOver, placeHidden, HIDDEN_MAX } from "./hidden_runs";
 import type { OneWayLayout } from "./one_way";
 import { oneWayBlocksBack, oneWayRule, placeOneWay, ONE_WAY_MAX } from "./one_way";
+import type { LockLayout, LockMode } from "./locks";
+import { keysIn, lockModeOf, lockOpens, lockRule, placeLocks, KEYS_MAX } from "./locks";
 
 // K137: the solve's rules beyond the clock: fragile runs and par (K139:
 // and collapse; K114: cut; K138: ice runs and the color rule). Change them
@@ -176,6 +178,9 @@ export interface FabricRules {
   hiddenRuns?: number;
   // K138 s3: the share of core runs that are one-way (0: off).
   oneWay?: number;
+  // K138 s4: keys (0: off) and the locks' form.
+  keys?: number;
+  lockMode?: LockMode;
 }
 
 // K138: what the rules' placement reads beyond the walk: the design's seed
@@ -198,6 +203,10 @@ export interface RuleLook {
   hidden: HiddenLayout | null;
   // K138 s3: the one-way runs (null: none placed).
   oneWay: OneWayLayout | null;
+  // K138 s4: the keys and the locks (null: none placed), and the composed
+  // state's divisor for the keys held (the states of the rules beneath).
+  locks: LockLayout | null;
+  lockDiv: number;
   placed: boolean;
   bites: boolean;
   draws: number;
@@ -234,7 +243,8 @@ export type FabricTapResult =
 // K138 s2: why a tap is refused (FabricMazeController.refusalOf), for the
 // toast: a hidden run, a closed turnstile, or ice / the color rule.
 // K138 s3: or a one-way run, against its arrow (a tap, or a backtrack).
-export type RuleRefusal = "hidden" | "turnstile" | "rule" | "oneWay";
+// K138 s4: or a lock whose keys are not all held.
+export type RuleRefusal = "hidden" | "turnstile" | "rule" | "oneWay" | "lock";
 
 export class FabricMazeController {
   readonly walk: WalkGraph;
@@ -359,6 +369,9 @@ export class FabricMazeController {
   hiddenCount = 0;
   // K138 s3: the share of core runs that are one-way (0: off).
   oneWayShare = 0;
+  // K138 s4: keys (0: off) and the locks' form.
+  keyCount = 0;
+  lockMode: LockMode = "exit";
   revealed = new Set<number>();
   private revealKey = "";
   private ruleSource: RuleSource | null;
@@ -433,6 +446,8 @@ export class FabricMazeController {
     this.hiddenCount = clampCount(rules.hiddenRuns, HIDDEN_MAX);
     const ow = rules.oneWay ?? 0;
     this.oneWayShare = ruled && ow > 0 ? Math.min(ONE_WAY_MAX, ow) : 0;
+    this.keyCount = clampCount(rules.keys, KEYS_MAX);
+    this.lockMode = lockModeOf(rules.lockMode);
   }
 
   // K137 s2: a real restart (not Undo's replay) clears the hints used and
@@ -510,11 +525,14 @@ export class FabricMazeController {
         this.colorMode === "off" &&
         this.turnstileCount === 0 &&
         this.hiddenCount === 0 &&
-        this.oneWayShare === 0)
+        this.oneWayShare === 0 &&
+        this.keyCount === 0)
     ) {
       return null;
     }
-    const key = `${this.iceShare}|${this.colorMode}|${this.turnstileCount}|${this.hiddenCount}|${this.oneWayShare}`;
+    const key =
+      `${this.iceShare}|${this.colorMode}|${this.turnstileCount}|${this.hiddenCount}|${this.oneWayShare}` +
+      (this.keyCount > 0 ? `|k${this.keyCount}${this.lockMode}` : "");
     const made = this.placements.get(key);
     if (made) return made;
     const cont = this.iceShare > 0 ? src.cont() : null;
@@ -539,6 +557,13 @@ export class FabricMazeController {
     const ow = placeOneWay(this.walk, this.oneWayShare, src.seed, composed());
     const oneWay = ow.layout && ow.layout.size > 0 ? ow.layout : null;
     if (oneWay) rules.push(oneWayRule(this.walk, oneWay));
+    // K138 s4: the keys and the locks bite against (and compose with) the
+    // rules above; the hidden runs against them all. The keys held are the
+    // composed state's top digit (below the hidden runs' single state).
+    const lockDiv = rules.reduce((a, r) => a * r.states, 1);
+    const lk = placeLocks(this.walk, this.keyCount, this.lockMode, src.seed, composed());
+    const locks = lk.layout && lk.layout.keys.length > 0 ? lk.layout : null;
+    if (locks) rules.push(lockRule(this.walk, locks));
     const base = composed();
     // A hidden run is never icy, nor a run a slide carries on along (a slide
     // would stop short of it, refused whole).
@@ -557,6 +582,7 @@ export class FabricMazeController {
       col,
       this.turnstileCount > 0 ? ts : null,
       this.oneWayShare > 0 ? ow : null,
+      this.keyCount > 0 ? lk : null,
       this.hiddenCount > 0 ? hid : null,
     ];
     const last = [...parts].reverse().find((x) => x !== null) ?? null;
@@ -568,6 +594,8 @@ export class FabricMazeController {
       turnstiles: ts.layout && ts.layout.length > 0 ? ts.layout : null,
       hidden,
       oneWay,
+      locks,
+      lockDiv,
       placed: parts.every((x) => !x || x.layout !== null),
       bites: last?.bites ?? false,
       draws: Math.max(...parts.map((x) => x?.draws ?? 0)),
@@ -600,9 +628,24 @@ export class FabricMazeController {
   }
 
   // K138: the color rule's state, the last color walked + 1 (0: none yet).
-  // The ice rule has one state, so the composed state is the color's.
+  // The ice rule has one state, so the composed state's low digit is the
+  // color's (K138 s4: the keys held sit above it).
   get colorState(): number {
-    return this.placement?.colors ? this.ruleState : 0;
+    const p = this.placement;
+    return p?.colors ? this.ruleState % p.lockDiv : 0;
+  }
+
+  // K138 s4: the keys held, as bits (key i: 1 << i), and how many.
+  get keysHeldMask(): number {
+    const p = this.placement;
+    if (!p?.locks || !this.rule) return 0;
+    return Math.floor(this.ruleState / p.lockDiv) % (1 << p.locks.keys.length);
+  }
+  get keysHeld(): number {
+    return keysIn(this.keysHeldMask);
+  }
+  get keysTotal(): number {
+    return this.placement?.locks?.keys.length ?? 0;
   }
 
   // K138: Undo replays the actions (replayActions) with the cut or a rule
@@ -786,6 +829,9 @@ export class FabricMazeController {
     }
     const ow = this.placement?.oneWay;
     if (ow && ow.has(eid) && ow.get(eid) !== this.head && !this.ruleAllows(eid)) return "oneWay";
+    // K138 s4: a lock whose keys are not all held.
+    const lk = this.placement?.locks;
+    if (lk && lk.locks.has(eid) && !lockOpens(lk, eid, this.keysHeldMask) && !this.ruleAllows(eid)) return "lock";
     const p = this.placement;
     if (!p || !this.rule || this.ruleAllows(eid)) return null;
     if (!p.turnstiles) return "rule";
