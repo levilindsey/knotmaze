@@ -606,3 +606,78 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   hide in knot mode and at confetti amount 0; Cannon amount also hides
   while the cannons are off, and Streamers while they are off or at 0
   (render-confetti.md, K336).
+
+## Panel search (K793)
+
+- PANEL SEARCH (K793, 2026-10-21; brief `docs/design/K793.md`; Levi: "a
+  search bar in the settings panel. It should use fuzzy search... encode
+  tags for other words relating to the param"). The bar (`div.kp-sx`,
+  placed after the panel head) is sticky at the top of the scroll wrapper
+  `.tp-dfwv`, on the side panel and the sheet alike: `input.kp-sx-in`
+  (type=search, aria-label and placeholder "Search settings",
+  autocomplete off), the x (`kp-sx-x`, "Clear search"), the two fold
+  buttons (`kp-sx-fold`, "Collapse all groups" / "Expand all groups",
+  title = aria-label) and `kp-sx-status` (role=status, aria-live=polite:
+  "No settings match", "1 setting", "N settings").
+  - MATCHING is pure, in `src/ui/panel_search.ts`
+    (`test/ui/panel_search.test.ts`, its fixture holds the query list).
+    The words of a query are an AND. Each word takes its best source:
+    the label (weight 1), a tag or the link key (0.6), an option label
+    (0.3), a folder title (0.25). A word prefix ranks above a substring.
+    A typo (one edit or swap) counts only for a query word of 4+ letters
+    that has no strict match anywhere. Ties go by panel order. Hand-rolled
+    after a library comparison (the brief's Handoff).
+  - THE DOM SIDE is `src/ui/panel_search_ui.ts` (`createPanelSearch`).
+    The index is built by walking the pane's blades once the panel
+    exists (`reindex()`), so a row needs no search code of its own. A
+    row's id is its binding key, or `btn:<title>` for a button. The Daily
+    button is renamed "Daily #N" at runtime, so it carries
+    `data-kp-id="btn:Daily"`, and `setDailyLabel` calls `relabel()`.
+  - HIDING uses the class `kp-sx-out` (display:none), never the blades'
+    `hidden`: refreshCond owns `hidden` (a mode's rows) and rewrites it
+    after every change. A row under `.tp-v-hidden` never shows, whatever
+    it matches, and refreshCond calls `searchUi.refresh()` so a mode
+    change during a search re-filters. A folder with no shown row is
+    hidden too.
+  - MARKS AND HINTS: the label's leading text node becomes a span with
+    `mark.kp-sx-m` around the matched letters (the (i) and the reset
+    glyph are untouched; a button's are in `.tp-btnv_t`). A row shown
+    only by a tag, its key or an option gets `data-kp-hint` (the matched
+    word, drawn by `::after`).
+  - FOLDERS: when a search starts, each folder's state and the scroll are
+    noted. Folders with a match open deepest first, with the fold handler
+    muted (`muteFolds`), so the search's opening is never saved to
+    `knotmaze.panelFolds`. Clearing puts back each noted state, except
+    the folders the player folded during the search (`chosen`: a header
+    click, or collapse or expand all), which keep the player's choice.
+    Collapse and expand all act on every folder, nested ones included,
+    or during a search on the folders it shows, and are saved like a
+    header click.
+  - KEYS: Escape clears the box, a second Escape leaves it. Enter goes to
+    the best match. On desktop it focuses the row's control and scrolls
+    it into view. On a coarse pointer it lets the box go instead (a
+    focused text field would keep the soft keyboard up) and outlines the
+    row for 1.2 s (`kp-sx-hit`). Game keys typed in the box never reach
+    the game: `keyBelongsElsewhere` (`src/app/input_keys.ts`) already
+    skips inputs and the panel.
+  - SAFETY: the search writes no param, link, undo entry or daily state,
+    and it is not a panel edit. The query lives only in the input: it
+    survives a panel close and is gone after a reload.
+- THE TAGS RULE (K793): every panel row has 3-10 lowercase tags in
+  `src/ui/param_tags.ts`, keyed by row id: synonyms, what the row changes
+  as a player sees it, and its link key when it has one. Write them from
+  the row's tooltip and code, not from its label alone.
+  `test/ui/param_tags.test.ts` scans `tweakpane_panel.ts` for the rows
+  (`row()`, the key-first wrappers, `turnRow`, `addBinding`,
+  `customKeys`, `button()`, `addButton`). It FAILS when:
+  - a row has no tags, or tags are left for a row that is gone;
+  - a row has fewer than 3 or more than 10 tags, or a tag is not
+    lowercase;
+  - a row's link key is missing from its tags;
+  - the count of `row()` calls with a computed key changes (8 today).
+    Teach the scan the new form, then update the count.
+
+  So a new row ships with its tags.
+- PROBE: `.claude/probes/K793/search_probe.mjs <base> desktop|phone|both`
+  (lib.mjs from K467; desktop 30 checks, phone 33); the hook is
+  `__knotPanelSearch()` (probes.md).
