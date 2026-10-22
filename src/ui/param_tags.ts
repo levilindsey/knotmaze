@@ -2,8 +2,8 @@
 // matches them). Keyed by the row id: the param key, or `btn:<title>` for a
 // button. 3-10 lowercase tags a row: synonyms, what the row changes as a
 // player sees it, and the row's link key. test/ui/param_tags.test.ts fails
-// when a panel row has none (claude-config's rule, named in
-// .claude/rules/gameplay-panel.md's PANEL SEARCH section).
+// when a panel row has none, so a new row needs its tags here (the rule is
+// named in .claude/rules/gameplay-panel.md's PANEL SEARCH entry).
 
 export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   // Accessibility
@@ -115,6 +115,8 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   turnstiles: ["tst", "revolving doors", "rotating junctions", "gates", "spinning", "changing paths", "puzzle", "rotate"],
   hiddenRuns: ["hid", "secret", "secret paths", "shortcuts", "invisible", "unlock", "pluck to reveal", "same note", "music puzzle"],
   oneWay: ["ow", "arrows", "chevrons", "direction", "one direction", "forced direction", "no backtrack", "loop runs"],
+  keys: ["ky", "locks", "padlock", "locked exit", "key beads", "collect", "pick up", "unlock", "doors"],
+  lockMode: ["lkm", "lock", "padlock", "locked exit", "which runs", "unlock", "keys open", "doors"],
   // Minotaur
   minotaur: ["mt", "minotaur", "monster", "bull", "chaser", "enemy", "ai", "personality", "chase style", "lair"],
   minoSpeed: ["msp", "minotaur", "monster", "bull", "chaser", "enemy", "speed", "moves per turn", "turn clock"],

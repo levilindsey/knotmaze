@@ -693,6 +693,24 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   run is not in `__knotFabric().choices`, so aim at it through
   `runPoint` and `cutPick`.
 
+- K793 (2026-10-21), the panel search: `window.__knotPanelSearch()`
+  returns the search's state (`PanelSearchState` in
+  `src/ui/panel_search_ui.ts`): `query`, `active`, `rows` (rows indexed,
+  228 on 2026-10-21), `count` and `shown` (rows the search shows, mode
+  hiding applied, in panel order), `best` (what Enter goes to),
+  `folders` (title -> expanded, shown), `hints` and `marks` (by row id,
+  what is on screen) and `status` (the live region's text).
+  `.claude/probes/K793/search_probe.mjs <base> desktop|phone|both` (run
+  from the checkout, on `?k111&am=instant&snd=none`; headed and
+  off-screen, a fresh profile deleted after; stills and
+  `desk_report.json` / `phone_report.json` in `out/`) types real keys
+  into the box: matches and marks, a tag hint, mode-hidden rows never
+  shown, folders opened and restored, collapse and expand all, Escape
+  twice, Enter, the x, a panel close and reopen, no param or link
+  change, game keys not reaching the game (30 checks desktop, 33 phone).
+  Env `TAG_QUERY` / `TAG_ROW` pick the tag-hint case. Its dev server is
+  `vite.private-cache.config.ts` (s3c's wrapper) on 5410-5413.
+
 ## Census and diagnosis rules
 
 - *From P3.38 (the pull-outward merge), lesson:* LESSON: the
