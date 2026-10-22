@@ -51,6 +51,8 @@ export interface ShareInfo {
   // that tool off or never used).
   luresUsed?: number | null;
   snaresUsed?: number | null;
+  // K137 sonar (4.26): pings spent (null, absent or 0: no tag).
+  pingsUsed?: number | null;
   // K137 stage 2: the spool's yarn used and capacity at the finish (null or
   // absent: the spool off), and the hints used (null, absent or 0: no tag).
   spool?: { used: number; cap: number } | null;
@@ -121,7 +123,8 @@ export function shareText(info: ShareInfo): string {
   const plural = (n: number, one: string): string => `${n} ${one}${n === 1 ? "" : "s"}`;
   const tools =
     (info.luresUsed ? ` · \u{1F3B5} ${plural(info.luresUsed, "lure")}` : "") +
-    (info.snaresUsed ? ` · \u{1FAA2} ${plural(info.snaresUsed, "snare")}` : "");
+    (info.snaresUsed ? ` · \u{1FAA2} ${plural(info.snaresUsed, "snare")}` : "") +
+    (info.pingsUsed ? ` · \u{1F4E1} ${plural(info.pingsUsed, "ping")}` : "");
   // K137 stage 2: " · 🧶 82% of the spool" and " · 💡1".
   const spoolT = info.spool ? spoolTag(info.spool.used, info.spool.cap) : null;
   const hintT = info.hintsUsed != null ? hintsTag(info.hintsUsed) : null;

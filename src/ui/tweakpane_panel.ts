@@ -1357,6 +1357,18 @@ export function buildPanel(
     "Fog of war: a lit radius around you, this many times the fog radius. With darkness closing, it is the light you navigate by.",
     D.lantern, () => callbacks.onTrailChange()
   );
+  // K137 sonar (4.26): the ring and its optional limit.
+  const sonarRow = row(
+    fGame, p, "sonar", { label: "Sonar" },
+    "Fog of war: pluck a thread (a tap that does not move you) and the nearby runs of its note ring and show briefly through the fog. Applies as you play.",
+    D.sonar, () => callbacks.onTrailChange()
+  );
+  const sonarPingsRow = row(
+    fGame, p, "sonarPings",
+    { min: 0, max: 20, step: 1, format: (v: number) => (v === 0 ? "unlimited" : String(v)), label: "Ping limit" },
+    "Sonar: pings per solve (a ping counts only when something rings). Restarting refills them. The count rides the HUD while a limit is set.",
+    D.sonarPings, () => callbacks.onTrailChange()
+  );
   const fowRadiusRow = row(
     fGame, p, "fowRadius", { min: 1.5, max: 10, step: 0.25, label: "Fog radius" },
     "How far around your explored path the fog lifts, in lattice units. Applies live and reshapes everything already explored.",
@@ -3079,6 +3091,8 @@ export function buildPanel(
     fowRadiusRow.hidden = !fog;
     darkMovesRow.hidden = !fog; // K137 darkness (4.17)
     lanternRow.hidden = !fog; // K137 darkness (4.17)
+    sonarRow.hidden = !fog; // K137 sonar (4.26)
+    sonarPingsRow.hidden = !fog || params.sonar !== true; // K137 sonar (4.26)
     fowIntroRow.hidden =
       !(fog || threads) || params.appearSequence === "instant";
     revealDistanceRow.hidden = !threads;

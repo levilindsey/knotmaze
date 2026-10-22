@@ -410,6 +410,9 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // 226-227, K137 darkness (4.17): closing span in moves, lantern x.
   num("darkMoves"),
   num("lantern"),
+  // 228-229, K137 sonar (4.26): the ring, and its ping limit.
+  flag("sonar"),
+  num("sonarPings"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -579,6 +582,7 @@ export const PARAM_RANGES: Readonly<
   minoScent: [0, 30], // K137 scent (4.34)
   darkMoves: [0, 40], // K137 darkness (4.17)
   lantern: [1, 4], // K137 darkness (4.17)
+  sonarPings: [0, 20], // K137 sonar (4.26)
   oneWay: [0, 0.6], // K138 stage 3 (ONE_WAY_MAX)
   lures: [0, 5], // K137 stage 4 (LURES_MAX)
   snares: [0, 3], // K137 stage 4 (SNARES_MAX)

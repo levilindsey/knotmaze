@@ -268,6 +268,8 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["minoScent", "number"], // K137 scent (4.34)
   ["darkMoves", "number"], // K137 darkness (4.17)
   ["lantern", "number"], // K137 darkness (4.17)
+  ["sonar", "boolean"], // K137 sonar (4.26)
+  ["sonarPings", "number"], // K137 sonar (4.26)
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

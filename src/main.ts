@@ -81,6 +81,7 @@ import { monsterSpecs, sleeperSpots, sleepersOf } from "./game/monsters";
 import { sprintAfterMove, sprintToggle, sprintValue, type SprintState } from "./game/sprint";
 import { luresOf } from "./game/lures"; // K137 stage 4
 import { snareHoldOf, snaresOf } from "./game/snares";
+import { pingsLeft, sonarRuns } from "./game/sonar"; // K137 sonar (4.26)
 import { lureRangeOf } from "./game/lures"; // K795: the tooltips' range
 import type { SwordShown } from "./ui/maze_hud";
 import { rateCuts, rateRun, ratingForResult, walkedOf } from "./game/star_rating";
@@ -514,6 +515,14 @@ async function main(): Promise<void> {
     luresOn() ? { left: luresLeft, of: luresOf(params.lures) } : null;
   const snaresShown = (): { left: number; of: number } | null =>
     snaresOn() ? { left: snaresLeft, of: snaresOf(params.snares) } : null;
+  // K137 sonar (4.26): pings spent this solve (refilled with the tools).
+  let pingsUsed = 0;
+  const sonarOn = (): boolean =>
+    params.sonar && params.exploration === "fog" && scene.fabricController !== null;
+  const pingsShown = (): { left: number; of: number } | null =>
+    sonarOn() && params.sonarPings > 0
+      ? { left: Math.max(0, params.sonarPings - pingsUsed), of: params.sonarPings }
+      : null;
   // K114 CUT: the scissors are armed (the next tap cuts), and a cut tapped
   // while the dot travels, waiting for the move to end (-1: none; the
   // latest wins). The machinery is below, by handleFabricTap.
@@ -1419,7 +1428,8 @@ async function main(): Promise<void> {
       sword: swordShown(), // K137 stage 3b
       sprint: sprintShown(), // K137 stage 3c
       woken: wokenShown(), // K137 stage 3d
-      lures: luresShown(), // K137 stage 4
+      lures: luresShown(),
+      pings: pingsShown(), // K137 sonar (4.26) // K137 stage 4
       snares: snaresShown(),
       // K114 remainder: the beat tempo while the beat is the clock.
       tempo: beatOn()
@@ -1752,6 +1762,7 @@ async function main(): Promise<void> {
         // K137 stage 4: the lures and snares used (null: that tool off).
         luresUsed: luresOn() ? luresOf(params.lures) - luresLeft : null,
         snaresUsed: snaresOn() ? snaresOf(params.snares) - snaresLeft : null,
+        pingsUsed: params.sonar ? pingsUsed : null, // K137 sonar (4.26)
         // K137 stage 2: the spool's share used and the hints used.
         spool: c.spoolOn ? { used: c.spoolUsed, cap: c.spoolCap } : null,
         hintsUsed: c.hintsMax > 0 ? c.hintsUsed : null,
@@ -1799,7 +1810,7 @@ async function main(): Promise<void> {
       sword: swordShown(), // K137 stage 3b
       sprint: sprintShown(), // K137 stage 3c
       woken: wokenShown(), // K137 stage 3d
-      lures: luresShown(), // K137 stage 4
+      lures: luresShown(),
       snares: snaresShown(),
       // K137 stage 2: the share of the spool paid out, and the hints used.
       spoolUsed: c.spoolOn ? spoolPercentUsed(c.spoolUsed, c.spoolCap) : null,
@@ -1893,6 +1904,7 @@ async function main(): Promise<void> {
     // K137 stage 4: the lures and snares back, the tool put down.
     luresLeft = luresOf(params.lures);
     snaresLeft = snaresOf(params.snares);
+    pingsUsed = 0; // K137 sonar (4.26)
     toolArmed = null;
     const prevChase = carry ? scene.chase : null;
     const prevTurn = carry ? scene.turnMino : null;
@@ -3046,17 +3058,35 @@ async function main(): Promise<void> {
   const revealByPluck = (chain: number, ctrl: number): void => {
     const fc = scene.fabricController;
     if (!fc || !scene.fabric || !scene.ps) return;
-    const hidden = fc.hiddenRuns();
-    if (hidden.length === 0) return;
     const walk = fc.walk;
     const run = runAtCtrl(walk, chain, ctrl, scene.ps.chains[chain]?.length ?? Infinity);
-    // A pluck on a hidden run itself does nothing (call 3): the pick skips
-    // hidden thread, but a ctrl on a run's boundary can map onto one.
-    if (run < 0 || fc.isHidden(run)) return;
+    if (run < 0) return;
     const noteOf = (eid: number): number | null => {
       const e = walk.edges[eid];
       return e ? freqForCtrl(e.chain, (e.ctrlA + e.ctrlB) / 2) : null;
     };
+    // K137 sonar (4.26): in fog, the pluck rings the nearby runs of
+    // its note and opens a brief hole over each. A ping is spent only
+    // when something rings; without budget the pluck just says so.
+    if (sonarOn() && !fc.isHidden(run)) {
+      if (pingsLeft(params.sonarPings, pingsUsed) > 0) {
+        const rings = sonarRuns(walk, run, noteOf);
+        if (rings.length > 0) {
+          pingsUsed++;
+          scene.fabric.sonarPing([run, ...rings]);
+          const f = noteOf(run);
+          if (f !== null) synth.pluck(f, 0.3);
+          updateHud();
+        }
+      } else {
+        showToast("Out of pings.", 1500);
+      }
+    }
+    const hidden = fc.hiddenRuns();
+    if (hidden.length === 0) return;
+    // A pluck on a hidden run itself does nothing (call 3): the pick skips
+    // hidden thread, but a ctrl on a run's boundary can map onto one.
+    if (fc.isHidden(run)) return;
     let shown = 0;
     const near = revealRunsOf(params.hiddenReveal);
     for (const h of revealedBy(walk, hidden, new Set(), run, noteOf, near)) {
@@ -4165,6 +4195,7 @@ async function main(): Promise<void> {
       const tm = scene.turnMino;
       return {
         lures: luresShown(),
+      pings: pingsShown(), // K137 sonar (4.26)
         snares: snaresShown(),
         armed: toolArmed,
         shown: toolButtons.isShown,

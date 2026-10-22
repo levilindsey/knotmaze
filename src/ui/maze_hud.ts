@@ -76,6 +76,8 @@ export interface HudSnapshot {
   // stocks, while that tool is on under the turn clock's chase.
   lures?: { left: number; of: number } | null;
   snares?: { left: number; of: number } | null;
+  // K137 sonar (4.26): pings left of the limit, while sonar is on in fog.
+  pings?: { left: number; of: number } | null;
   // K137 stage 2 (absent elsewhere): the spool while it is on (runs paid
   // out of its capacity) and the hints left while hints are on; the win
   // banner's share of the spool used (a whole percent) and hints used.
@@ -139,7 +141,7 @@ type StatFields = Pick<
   | "catches" | "chasedMs" | "fireLead" | "closestCall" | "closeCalls" | "seen"
   | "restarts" | "snapped" | "parLeft" | "parStrokes" | "collapse" | "cuts"
   | "hearts" | "walker" | "sword" | "spool" | "hints" | "spoolUsed" | "hintsUsed"
-  | "sprint" | "woken" | "lures" | "snares"
+  | "sprint" | "woken" | "lures" | "snares" | "pings"
 >;
 
 // A row (K274): its id names its line in STATS (game/maze_stats.ts), which
@@ -159,7 +161,7 @@ type GameFields = Pick<
   HudSnapshot,
   | "catches" | "fireLead" | "closestCall" | "snapped" | "parLeft" | "parStrokes" | "collapse"
   | "cuts" | "hearts" | "walker" | "sword" | "spool" | "hints" | "spoolUsed" | "hintsUsed"
-  | "sprint" | "woken" | "lures" | "snares" | "tempo"
+  | "sprint" | "woken" | "lures" | "snares" | "pings" | "tempo"
 >;
 // K137 stage 3a: "hearts 2 / 3" while lives are on.
 const heartsValue = (h: { left: number; of: number }): string => `${h.left} / ${h.of}`;
@@ -172,6 +174,7 @@ export function gameEntries(s: GameFields): StatEntry[] {
   if (s.woken != null) rows.push(entry("woken", String(s.woken))); // K137 s3d
   if (s.lures) rows.push(entry("lures", heartsValue(s.lures))); // K137 s4
   if (s.snares) rows.push(entry("snares", heartsValue(s.snares)));
+  if (s.pings) rows.push(entry("pings", heartsValue(s.pings))); // K137 sonar (4.26)
   if (s.tempo) rows.push(entry("tempo", s.tempo)); // K114 remainder (HUD only)
   if (s.fireLead != null) rows.push(entry("fireLead", fmtDist(s.fireLead)));
   if (s.closestCall != null) rows.push(entry("closestCall", fmtDist(s.closestCall)));
@@ -196,6 +199,7 @@ export function statEntries(s: StatFields): StatEntry[] {
   if (s.woken != null) rows.push(entry("woken", String(s.woken))); // K137 s3d
   if (s.lures) rows.push(entry("lures", heartsValue(s.lures))); // K137 s4
   if (s.snares) rows.push(entry("snares", heartsValue(s.snares)));
+  if (s.pings) rows.push(entry("pings", heartsValue(s.pings))); // K137 sonar (4.26)
   if (s.closeCalls != null) rows.push(entry("closeCalls", String(s.closeCalls)));
   if (s.seen != null) rows.push(entry("seen", String(s.seen)));
   if (s.chasedMs != null) rows.push(entry("chased", formatDuration(s.chasedMs)));

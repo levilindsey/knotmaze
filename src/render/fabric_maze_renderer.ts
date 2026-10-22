@@ -41,6 +41,7 @@ import type { WalkGraph, WalkEdge } from "../core/walk_graph";
 import { walkDistances } from "../core/walk_graph";
 import { litArms, planRoute } from "../game/route_plan";
 import { darknessAlpha, pruneDarkStamps } from "../game/darkness";
+import { SONAR_SECONDS } from "../game/sonar";
 import type { FabricMazeController } from "../game/fabric_controller";
 import type {
   RibbonRenderer,
@@ -671,6 +672,10 @@ export class FabricMazeRenderer {
   private fogLastMove = -1;
   private fogLanternX = NaN;
   private fogLanternY = NaN;
+  // K137 sonar (4.26): the live ping's hole points (flat world x, y)
+  // and when they close (performance seconds).
+  private sonarPts: number[] = [];
+  private sonarUntil = 0;
   // The controller's `restarts` (K100) and `refogs` (K174) the stamps
   // belong to.
   private fogRestarts = -1;
@@ -3167,6 +3172,28 @@ export class FabricMazeRenderer {
     );
   }
 
+  // K137 sonar (4.26): open brief holes along these runs (the caller
+  // plucked one of their note nearby). Points ride the threads now.
+  sonarPing(edges: Iterable<number>): void {
+    if (!this.fogOfWar) return;
+    const pt = new Float32Array(2);
+    const pts: number[] = [];
+    for (const eid of edges) {
+      const e = this.walk.edges[eid];
+      if (!e) continue;
+      const n = Math.max(2, Math.ceil(Math.abs(e.ctrlB - e.ctrlA) / 0.75));
+      for (let i = 0; i <= n; i++) {
+        const c = e.ctrlA + ((e.ctrlB - e.ctrlA) * i) / n;
+        this.pointFlowed(e.chain, this.ctrlMod(e.chain, c), pt, 0);
+        pts.push(pt[0], pt[1]);
+      }
+    }
+    if (pts.length === 0) return;
+    this.sonarPts = pts;
+    this.sonarUntil = performance.now() / 1000 + SONAR_SECONDS;
+    this.fogDirty = true;
+  }
+
   private maybeStampFog(x: number, y: number): void {
     if (!this.fogOfWar) return;
     const n = this.fogStamps.length;
@@ -3342,6 +3369,29 @@ export class FabricMazeRenderer {
     // K137 darkness (4.17): closed stamps drop out; the rest fade.
     if (this.darkMoves > 0) {
       pruneDarkStamps(this.fogStamps, this.fogStampMoves, this.fogMoveNow, this.darkMoves);
+    }
+    // K137 sonar (4.26): a ping's holes, fading out over its span.
+    if (this.sonarPts.length > 0) {
+      const left = this.sonarUntil - performance.now() / 1000;
+      if (left <= 0) {
+        this.sonarPts = [];
+      } else {
+        const sa = Math.min(1, left / SONAR_SECONDS);
+        const sr = r * 0.8;
+        ctx.globalAlpha = sa;
+        for (let i = 0; i < this.sonarPts.length; i += 2) {
+          const px = (this.sonarPts[i] - this.fogRect.x0) * k;
+          const py = (this.sonarPts[i + 1] - this.fogRect.y0) * k;
+          const grad = ctx.createRadialGradient(px, py, sr * 0.45, px, py, sr);
+          grad.addColorStop(0, "rgba(0,0,0,1)");
+          grad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(px, py, sr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
     }
     const dark = this.darkMoves > 0;
     for (let i = 0; i < this.fogStamps.length; i += 2) {
@@ -3764,6 +3814,10 @@ export class FabricMazeRenderer {
     // K137 darkness (4.17): the move clock the stamps age by; a new
     // move (or a moving lantern) re-renders the fog so holes close.
     this.fogMoveNow = controller.taps.length;
+    // K137 sonar (4.26): a live ping keeps the fog redrawing as it fades.
+    if (this.sonarPts.length > 0 && performance.now() / 1000 < this.sonarUntil) {
+      this.fogDirty = true;
+    }
     if (
       this.darkMoves > 0 &&
       this.fogOfWar &&
