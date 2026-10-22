@@ -101,6 +101,7 @@ import {
   chainVis,
   exploreDistances,
   exploreView,
+  burntAt,
   subtractBurnt,
   wholePieces,
 } from "../game/explore_view";
@@ -2892,7 +2893,13 @@ export class FabricMazeRenderer {
         xs.push(cxs[k] - ty * off);
         ys.push(cys[k] + tx * off);
         const ctrlK = y.ctrls[Math.min(k, y.ctrls.length - 1)];
-        const vis = this.ribbons.underGapVisibility(
+        // K796: the string burns away with the thread under it — a
+        // station whose host thread has burnt (burnSpans, either burnt
+        // look) draws nothing. At most one frame behind drawFire.
+        const burnt = burntAt(this.burnSpans, y.chain, ctrlK, this.ringN);
+        const vis = burnt
+          ? 0
+          : this.ribbons.underGapVisibility(
           y.chain,
           this.ribbons.arcForCtrl(y.chain, this.ctrlMod(y.chain, ctrlK))
         );
