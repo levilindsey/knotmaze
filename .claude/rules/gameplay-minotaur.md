@@ -595,8 +595,11 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   hides). Rows: the HUD and the win banner show "hearts L / N" after
   "caught" (maze_stats STATS line); the share title adds "❤️ L left"
   after the minotaur's tag. Hook: `hearts` ({left, of} or null) in
-  `__knotChase()` and `__knotTurnMino()`. Not checked on a page yet (the
-  handoff). Call 2 (Levi's): a catch under lives returns you to the
+  `__knotChase()` and `__knotTurnMino()`. Checked on a desktop page on the
+  beat clock by K774 (2026-10-21, `mlv=3`: "Caught! 2 hearts left.", then
+  the restart; `.claude/probes/K774/k774_page.mjs`). On seed 7 a
+  cheapest-arm ride escapes the hunter, so a catch probe steers toward the
+  minotaur (that probe's `pickArm`). Call 2 (Levi's): a catch under lives returns you to the
   entrance; the alternatives are the last junction or a checkpoint.
 
 - BROKEN RUNS BLOCK IT (K137-b, stage 3a, 2026-10-20; the brief's Design

@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K787.
+Next free ID: K788.
 
 ## Waiting on Levi
 
@@ -251,9 +251,6 @@ Next free ID: K787.
   greedy sim player goes from 2.22 to 9.40 catches a game, 15% unfinished at 600 moves); the
   follower looks like a sleeper asleep, amber waiting, red awake; the share tag shows N woken
   whenever a sleeper plays, 0 included
-- **K777** · Refresh the open-work report (K585, `.claude/probes/report_20261020/`) with the 30-odd
-  Waiting on Levi items filed since 2026-10-20, so they can be marked on the phone? A sonnet agent,
-  about 0.5% of the week (offered 2026-10-21 morning)
 - **K778** · K138 s3: no Undo control shows while the rules are on (Undo works only inside the
   controller; the Stranded banner needs fragile runs or collapse, which turn the rules off), so a
   regretted one-way move leaves only Restart. An Undo control beside the rules, or a Stranded-style
@@ -435,6 +432,14 @@ Next free ID: K787.
   - evidence: `.claude/probes/K138/s4/`
   - next: stage 4 in slices: the dim page check, then locks and keys with the exit form end to end, then shortcut, then colors (docs/design/K138_s4.md, its Handoff)
   - brief: `docs/design/K138_s4.md`
+- **K777** · Refresh the open-work report (K585): a card for every Waiting on Levi item, a Test now
+  list and what changed (Levi 2026-10-21: "make sure all other things I should test now are listed
+  there")
+  - owner: agent `a29ee601a618f6405` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (sonnet, launched 2026-10-21 08:35; 1 h cap ~09:35)
+  - branch: mainline, no worktree: it writes only the untracked `.claude/probes/report_20261021/`; last commit: `a1e164c0`
+  - evidence: `.claude/probes/report_20261021/`
+  - next: first draft published by ~08:55, then fill the new cards from their pointers, then the final publish and report
+  - brief: `docs/design/K777.md`
 
 ## Next, in order
 
@@ -497,7 +502,8 @@ merged):
   every caller (`docs/lore_index.md`, K173, K437); re-measure with a fresh agent
 - **K784** · Phone sitting 6 on real touches: one-way runs (K138 s3, ow), lures and snares (K137 s4,
   lur and snr; emulated only so far), the K775 overflow, and a touch press on an unrevealed hidden
-  run (the K764 case)
+  run (the K764 case); plus the beat rider's catch (K774: `.claude/probes/K774/beat_phone.mjs`
+  check B, unrun on the phone)
 - **K783** · Simulated games for lures and snares (the K708 harness: catches per game at stocks 0-3)
   to set their stocks; saved attempts do not record the tools yet (K137 s4 Handoff)
 - **K579** · GPU confetti: upload each launch once, move the pieces in a vertex shader, no per-frame
@@ -1475,6 +1481,9 @@ Every other item below waits on the trigger it names.
   to travel by length keeps snares that never spring, rings drawn; the follower first step skips the
   snare check; under length a lure clears one hop late (read, untested); untested under clk=beat;
   the ring is a stand-in for a glyph
+- **K787** · `test/game/beat_rider.test.ts` (the turn minotaur, one turn per committed move) ignores
+  what `t.turn(run)` returns: after a catch every later turn rejects and the test still counts it,
+  which is why it missed the K774 bug. Assert the result (K774 Handoff, `docs/design/K774.md`)
 
 ## Approved, to schedule (2026-10-11)
 
