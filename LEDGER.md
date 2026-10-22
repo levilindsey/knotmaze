@@ -703,7 +703,7 @@ Every other item below waits on the trigger it names.
 - **K792** · A try key for the K610 grab chase rate (0.6 per constraint iteration today): its feel
   A/B needs 0.8 and 1.0 from a link, none sets the rate, so its report card has no try link (K777;
   `docs/design/K370.md`)
-- **K796** · String mode in the burn race: the yarn should burn away with the thread under it (Levi
+- **K796** · Done in 5f9f3a45 (2026-10-21): string mode in the burn race: the yarn burns away with the thread under it (Levi
   2026-10-21; pv=string with the burn race; the yarn and the fire paint in fabric_maze_renderer.ts,
   gameplay-fire.md)
 
