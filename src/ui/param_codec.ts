@@ -395,6 +395,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // game/beat_rider.ts) and the beats every run takes under even (1..4).
   choice("beatTiming", ["even", "length"]),
   num("beatPerRun"),
+  // 220, K137 s5 (4.33): muddy runs (0 off, 1..6; game/mud.ts).
+  num("mud"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -569,6 +571,7 @@ export const PARAM_RANGES: Readonly<
   hintSeconds: [0.5, 10], // K795 (HINT_SECONDS_MIN..MAX)
   hiddenReveal: [1, 8], // K795 (REVEAL_RUNS_MIN..MAX)
   beatPerRun: [1, 4], // K795 (BEAT_PER_RUN_MIN..MAX)
+  mud: [0, 6], // K137 s5 (MUD_MAX)
 });
 
 // A link value held to its panel range (K398); a param with no range,

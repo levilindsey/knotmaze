@@ -46,6 +46,7 @@ import { HINTS_MAX, HINT_SECONDS_MAX, HINT_SECONDS_MIN } from "../game/hints";
 import { ICE_SHARE_MAX, ICE_SHARE_ON } from "../game/ice";
 import { TURNSTILES_MAX } from "../game/turnstiles";
 import { HIDDEN_MAX, REVEAL_RUNS_MAX, REVEAL_RUNS_MIN } from "../game/hidden_runs";
+import { MUD_MAX } from "../game/mud"; // K137 s5
 import { ONE_WAY_MAX } from "../game/one_way";
 import { KEYS_MAX } from "../game/locks";
 import { LIVES_MAX, LIVES_RECOMMENDED, livesOf } from "../game/lives";
@@ -1817,6 +1818,14 @@ export function buildPanel(
     "How near a pluck must be to show a hidden run: plucking a thread of the same note within this many runs of it shows it. Classic game only. Restarts the solve.",
     D.hiddenReveal, () => callbacks.onClockChange()
   );
+  // K137 s5 (game/mud.ts): muddy runs take two moves to cross, for you
+  // and the minotaur alike. Every game mode; off under a K138 rule.
+  const mudRow = row(
+    fGame, p, "mud",
+    { min: 0, max: MUD_MAX, step: 1, format: (v: number) => (v === 0 ? "off" : String(v)), label: "Muddy runs" },
+    "Muddy runs (0: none), laid on the shortest route: crossing one takes two moves, for you and the minotaur alike (your dot crosses at half speed; strokes and par count it twice), so the fewest-moves way and the shortest way part. Off while a maze rule (ice, colors, turnstiles, hidden, one-way, locks) is on. Restarts the solve.",
+    D.mud, () => callbacks.onClockChange()
+  );
   // K138 stage 3 (game/one_way.ts): one-way runs, the same scope and restart.
   const oneWayRow = row(
     fGame, p, "oneWay",
@@ -3126,6 +3135,7 @@ export function buildPanel(
     colorRuleRow.hidden = !fab || params.gameMode !== "classic";
     turnstilesRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 2
     hiddenRunsRow.hidden = !fab || params.gameMode !== "classic";
+    mudRow.hidden = !fab; // K137 s5: every game mode
     hiddenRevealRow.hidden = hiddenRunsRow.hidden || params.hiddenRuns <= 0; // K795
     oneWayRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 3
     keysRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 4

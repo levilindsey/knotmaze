@@ -228,6 +228,8 @@ export const LIVE_EFFECTS = {
     "oneWay",
     // K138 stage 4: keys and the lock (a restart places them anew).
     "keys", "lockMode",
+    // K137 s5: muddy runs (a restart lays them anew).
+    "mud",
   ],
 } as const satisfies Record<string, readonly string[]>;
 

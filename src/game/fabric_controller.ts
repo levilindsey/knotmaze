@@ -151,6 +151,7 @@ import { composeRules, ruleSearch } from "./rule_search";
 import type { TurnstileLayout } from "./turnstiles";
 import { placeTurnstiles, turnstileRule, TURNSTILES_MAX } from "./turnstiles";
 import type { HiddenLayout } from "./hidden_runs";
+import { mudCost, mudOf, placeMud } from "./mud";
 import { hiddenOver, placeHidden, HIDDEN_MAX } from "./hidden_runs";
 import type { OneWayLayout } from "./one_way";
 import { oneWayBlocksBack, oneWayRule, placeOneWay, ONE_WAY_MAX } from "./one_way";
@@ -181,6 +182,8 @@ export interface FabricRules {
   // K138 s4: keys (0: off) and the locks' form.
   keys?: number;
   lockMode?: LockMode;
+  // K137 s5: muddy runs laid (0: off; game/mud.ts).
+  mud?: number;
 }
 
 // K138: what the rules' placement reads beyond the walk: the design's seed
@@ -372,6 +375,10 @@ export class FabricMazeController {
   // K138 s4: keys (0: off) and the locks' form.
   keyCount = 0;
   lockMode: LockMode = "exit";
+  // K137 s5: muddy runs asked for, laid at reset, and their fewest-moves map.
+  mudCount = 0;
+  mudRuns: ReadonlySet<number> = new Set();
+  private mudMap: Map<string, number> | null = null;
   revealed = new Set<number>();
   private revealKey = "";
   private ruleSource: RuleSource | null;
@@ -448,6 +455,17 @@ export class FabricMazeController {
     this.oneWayShare = ruled && ow > 0 ? Math.min(ONE_WAY_MAX, ow) : 0;
     this.keyCount = clampCount(rules.keys, KEYS_MAX);
     this.lockMode = lockModeOf(rules.lockMode);
+    // K137 s5: muddy runs work with or without a chase, but not under a
+    // K138 rule layout or collapse (the kit rates par in taps; a call
+    // in K137_s5.md).
+    const ruledOn =
+      this.iceShare > 0 ||
+      this.colorMode !== "off" ||
+      this.turnstileCount > 0 ||
+      this.hiddenCount > 0 ||
+      this.oneWayShare > 0 ||
+      this.keyCount > 0;
+    this.mudCount = collapsing || ruledOn ? 0 : mudOf(rules.mud ?? 0);
   }
 
   // K137 s2: a real restart (not Undo's replay) clears the hints used and
@@ -888,11 +906,23 @@ export class FabricMazeController {
     // keeps).
     this.revealed = new Set();
     this.revealKey = "";
+    // K137 s5: lay the muddy runs (deterministic per seed and count).
+    this.mudRuns = new Set(
+      this.mudCount > 0 && this.ruleSource
+        ? placeMud(this.walk, this.mudCount, this.ruleSource.seed)
+        : []
+    );
+    this.mudMap =
+      this.mudRuns.size > 0
+        ? runsToExit(this.walk, undefined, mudCost(this.mudRuns))
+        : null;
     this.openRuns ??= runsToExit(this.walk);
     // K138: under a rule, par's F is the kit's fewest legal taps.
     this.fewestRuns = this.rule
       ? this.ruleStart().fewest
-      : this.openRuns.get(this.walk.start) ?? Infinity;
+      : this.mudMap
+        ? this.mudMap.get(this.walk.start) ?? Infinity
+        : this.openRuns.get(this.walk.start) ?? Infinity;
     this.par = parFor(this.fewestRuns, this.parSlack);
     // K137 s2: the spool holds par's measure times (1 + slack).
     this.spoolCap =
@@ -1191,8 +1221,13 @@ export class FabricMazeController {
   // counts one tap and undoes a whole move).
   get runsLeft(): number {
     if (this.rule) return this.ruleRunsLeft();
-    if (!this.breakable && this.cuts.size === 0) return this.openRuns!.get(this.head) ?? Infinity;
-    return runsToExit(this.walk, (eid) => this.broken(eid)).get(this.head) ?? Infinity;
+    if (!this.breakable && this.cuts.size === 0)
+      return (this.mudMap ?? this.openRuns)!.get(this.head) ?? Infinity;
+    return runsToExit(
+      this.walk,
+      (eid) => this.broken(eid),
+      this.mudRuns.size > 0 ? mudCost(this.mudRuns) : undefined
+    ).get(this.head) ?? Infinity;
   }
 
   // K137 par: the strokes so far (moves) and the strokes left before par.
@@ -1200,7 +1235,13 @@ export class FabricMazeController {
   get strokes(): number {
     // K138 s2: a reveal is an action but not a stroke (a pluck is not a
     // move); each reveal action reveals a distinct run.
-    return this.rule ? this.actions.length - this.revealed.size : this.taps.length;
+    if (this.rule) return this.actions.length - this.revealed.size;
+    // K137 s5: a muddy crossing counts two moves (one tap, two strokes).
+    let s = this.taps.length;
+    if (this.mudRuns.size > 0) {
+      for (const tap of this.taps) if (this.mudRuns.has(tap)) s++;
+    }
+    return s;
   }
 
   get strokesLeft(): number {

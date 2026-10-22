@@ -120,12 +120,38 @@ export function walkDistances(
 // fewest-runs route F is runsToExit(walk).get(walk.start).
 export function runsToExit(
   walk: Pick<WalkGraph, "vertices" | "edges" | "exit">,
-  blocked?: (eid: number) => boolean
+  blocked?: (eid: number) => boolean,
+  // K137 s5: a run's move cost (muddy runs cost 2; game/mud.ts). With a
+  // cost the fewest MOVES need Dijkstra, not the BFS below.
+  cost?: (eid: number) => number
 ): Map<string, number> {
   const runs = new Map<string, number>();
   for (const id of walk.vertices.keys()) runs.set(id, Infinity);
   if (!walk.vertices.has(walk.exit)) return runs;
   runs.set(walk.exit, 0);
+  if (cost) {
+    const done = new Set<string>();
+    for (;;) {
+      let cur: string | null = null;
+      let curD = Infinity;
+      for (const [id, d] of runs) {
+        if (!done.has(id) && d < curD) {
+          cur = id;
+          curD = d;
+        }
+      }
+      if (cur === null) break;
+      done.add(cur);
+      for (const eid of walk.vertices.get(cur)!.edges) {
+        if (blocked?.(eid)) continue;
+        const e = walk.edges[eid];
+        const other = e.va === cur ? e.vb : e.va;
+        const nd = curD + cost(eid);
+        if (nd < runs.get(other)!) runs.set(other, nd);
+      }
+    }
+    return runs;
+  }
   const queue = [walk.exit];
   for (let qi = 0; qi < queue.length; qi++) {
     const v = queue[qi];
