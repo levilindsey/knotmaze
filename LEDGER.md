@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K788.
+Next free ID: K792.
 
 ## Waiting on Levi
 
@@ -260,6 +260,13 @@ Next free ID: K788.
   a cut or broken run blocks it; a lured minotaur drops its hunt; a snare goes only on a run at your
   junction and holds 3 turns; a held monster can still catch you; stocks refill only on a level
   restart
+- **K789** · Locks and keys calls (K138 s4 slice 2: built, not page-checked or merged yet): a
+  backtrack drops a key its move took, so keys sit only at core junctions; an open lock is hidden
+  rather than drawn open; the key and padlock glyphs are placeholders for you to replace
+  (`docs/design/K138_s4.md`, its Handoff)
+- **K790** · Turnstile dim call (K138 s4 slice 1, live at 3dad5914): arriving at a turnstile by its
+  closed arm leaves the dimmed arm as the only legal move, and the yarn covers the dim. Keep it that
+  way? (`docs/design/K138_s4.md`, its Handoff)
 
 ## In progress
 
@@ -427,11 +434,12 @@ Next free ID: K788.
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
-  - owner: nobody since 2026-10-21 09:22 (merged; agent `a12fb9991e1142249` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `3dad5914`
-  - evidence: `.claude/probes/K138/s4/`
-  - next: slice 1 (the turnstile dim) is merged; next: slice 2 page check (plan the seed-7 route in page/plan.ts, run page/locks_page.mjs on desktop and 411x753), its lore, then slices 3 and 4 (docs/design/K138_s4.md, its Handoff)
-  - brief: `docs/design/K138_s4.md`
+  - owner: nobody since 2026-10-21 09:18 (agent `a12fb9991e1142249` of claude session 91b19e11-7759-4638-ba60-4705b011b94f, paused at the 92% weekly usage line)
+  - branch: `worktree-agent-ac022c74b0ce97669`, worktree `.claude/worktrees/agent-ac022c74b0ce97669` (slice 2, locks and keys: suite and build green, no page check, not rebased; slice 1 merged at 3dad5914); last commit: `b04859e4` (WIP, unpushed)
+  - evidence: `.claude/probes/K138/s4/` (census/results.md and the trap logs, dim_page.mjs, zoom.mjs, png.mjs)
+  - next: slice 2: rebase it (ky and lkm sit at codec indices 212-213; check that nothing merged since took them), write and run its page check (page/plan.ts plans the seed-7 route; page/locks_page.mjs shows a lock refusing, a key taken and the lock passing, on desktop and at 411x753), then its lore; then slice 3 (the shortcut form) and slice 4 (colors)
+  - brief: docs/design/K138_s4.md (its Handoff, Slice 2: locks and keys)
+  - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
 - **K777** · Refresh the open-work report (K585): a card for every Waiting on Levi item, a Test now
   list and what changed (Levi 2026-10-21: "make sure all other things I should test now are listed
   there")
@@ -503,7 +511,8 @@ merged):
 - **K784** · Phone sitting 6 on real touches: one-way runs (K138 s3, ow), lures and snares (K137 s4,
   lur and snr; emulated only so far), the K775 overflow, and a touch press on an unrevealed hidden
   run (the K764 case); plus the beat rider's catch (K774: `.claude/probes/K774/beat_phone.mjs`
-  check B, unrun on the phone)
+  check B, unrun on the phone); and the turnstile dim on a real phone (K138 s4 slice 1, 3dad5914;
+  K760)
 - **K783** · Simulated games for lures and snares (the K708 harness: catches per game at stocks 0-3)
   to set their stocks; saved attempts do not record the tools yet (K137 s4 Handoff)
 - **K579** · GPU confetti: upload each launch once, move the pieces in a vertex shader, no per-frame
@@ -668,6 +677,11 @@ Every other item below waits on the trigger it names.
 - **K786** · When K138 makes monsters obey one-way runs (its stage 6), the lure hop matrix and the
   snare runs (K137 s4, af04d8c7) need the directed graph; today one-way binds only the player
   (inferred by the K137 s4 rebase)
+- **K788** · One-way runs plus ice trap the player: one-way 0.4 with ice 0.25 ends with no legal tap
+  or in a dead end on 42 of 50 seeds (44 with ky 2; seeds 9 and 49 trap only with the keys). A slide
+  crosses a one-way run and its backtrack is refused (seeds 3 and 4 traced). Nothing rejects the
+  layout, and no Undo control rescues the player (K778). Keep the maze solvable under the rules, as
+  the keys do (K138 s4 census, `.claude/probes/K138/s4/census/results.md`)
 
 ## Residuals (known, not fixed)
 
@@ -1484,6 +1498,10 @@ Every other item below waits on the trigger it names.
 - **K787** · `test/game/beat_rider.test.ts` (the turn minotaur, one turn per committed move) ignores
   what `t.turn(run)` returns: after a catch every later turn rejects and the test still counts it,
   which is why it missed the K774 bug. Assert the result (K774 Handoff, `docs/design/K774.md`)
+- **K791** · Locks and keys (K138 s4 slice 2, unmerged): ky 2 with the alternate color rule bites on
+  only 41 of 50 seeds, taking up to 32 draws; the lock dim covers only a stretch at each end of a
+  lock run, not the whole run; the census trap check skips clocked configs (turnstiles)
+  (`docs/design/K138_s4.md`, its Handoff)
 
 ## Approved, to schedule (2026-10-11)
 
