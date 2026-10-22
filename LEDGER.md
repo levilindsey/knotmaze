@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K797.
+Next free ID: K801.
 
 ## Waiting on Levi
 
@@ -460,7 +460,8 @@ Next free ID: K797.
   - env: vite from a copy of `.claude/probes/K138/s4/vite.private-cache.config.ts`, ports 5414-5417
 - **K795** · Panel rows for every param: the beat rider (clk, tempo, length, cap), a test that every
   PARAM_DEFAULTS key has a row or a stated reason, and an audit of recent features for tunables that
-  deserve params (Levi 2026-10-21)
+  deserve params (Levi 2026-10-21); plus even run timing (Levi 2026-10-21: every run takes the same number
+  of beats, so the dot's speed varies with the run; the old rule stays as an option)
   - owner: agent `a78c285925ac13b8c` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, launched 2026-10-21 10:03, 2 h cap 12:03)
   - branch: `worktree-agent-a78c285925ac13b8c`, worktree `.claude/worktrees/agent-a78c285925ac13b8c`; last commit: `ca6d468c` (the brief, on master)
   - evidence: `.claude/probes/K795/` in the worktree
