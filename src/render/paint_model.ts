@@ -80,6 +80,8 @@ export function knotUniforms(): UniformGroup {
       // K654 the telegraph's riding end (x: its ctrl): declared only by the
       // ribbon programs (paint_glsl TELE_DECL_GLSL).
       uKTeleAt: v4(),
+      // K797b: the thread look (0 fill, 1 border, 2 both).
+      uKLook: v4(),
       uKKnots: {
         value: new Float32Array(MAX_KNOTS * 4),
         type: "vec4<f32>",

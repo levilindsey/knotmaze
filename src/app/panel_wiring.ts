@@ -509,7 +509,7 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
       clampHoverGlowLength(params.hoverGlowLength),
       clampHoverGlowFade(params.hoverGlowFade),
       a11y.highContrast ? deps.hcLookChoice : 0,
-      params.appearFx,
+      params.appearFx, params.threadLook,
     ];
     if (lookCache !== null && lookCache.r === scene.renderer) {
       let same = true;
@@ -531,6 +531,7 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
     scene.renderer.hoverGlowFade = clampHoverGlowFade(params.hoverGlowFade);
     scene.renderer.hcLook = a11y.highContrast ? deps.hcLookChoice : 0;
     scene.renderer.appearFx = params.appearFx;
+    scene.renderer.threadLook = params.threadLook === "border" ? 1 : params.threadLook === "both" ? 2 : 0; // K797b
     deps.flags.push(Flag.GEOM); // K6-2: a look change asks for a geometry pass
   }
   // K186: no confetti under reduced motion. A finish throws none

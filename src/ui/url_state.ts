@@ -111,6 +111,9 @@ export const PLUCK_REACHES: PluckReach[] = ["run", "lobe"];
 // an unspooled Ariadne string laid along everywhere you have walked.
 export type PathViz = "gold" | "trail" | "string";
 export const PATH_VIZ_MODES: PathViz[] = ["gold", "trail", "string"];
+// K797b: how a thread draws (fill, edge strokes only, or both).
+export type ThreadLook = "fill" | "border" | "both";
+export const THREAD_LOOKS: ThreadLook[] = ["fill", "border", "both"];
 
 // Camera: fit = frame the whole knot (or, under fog, what you can see);
 // follow = chase the player's head (maze mode).
@@ -463,6 +466,8 @@ export interface UrlParams {
   // U-turning at junctions on backtracks, never erased. Gameplay
   // interpretation + paint only; applies live (no rebuild).
   pathViz: PathViz;
+  // K797b: the thread look (fill | border | both).
+  threadLook: ThreadLook;
   // Camera framing (see CAMERA_MODES). Pinch/wheel/drag still zoom and
   // pan in both; in follow mode a delayed, eased spring pulls back.
   cameraMode: CameraMode;
@@ -1218,6 +1223,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   beatPerRun: BEAT_PER_RUN,
   // K137 s5: no muddy runs.
   mud: 0,
+  // K797b: threads draw filled (today's look).
+  threadLook: "fill",
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1466,6 +1473,7 @@ export const ENUM_OPTIONS: {
   pluckStyle: PLUCK_STYLES,
   pluckReach: PLUCK_REACHES,
   pathViz: PATH_VIZ_MODES,
+  threadLook: THREAD_LOOKS, // K797b
   cameraMode: CAMERA_MODES,
   exitFlank: EXIT_FLANKS,
   greedyTrap: GREEDY_TRAPS,
@@ -1770,6 +1778,7 @@ function readLegacy(
     physics: readBool(query, "phy", D.physics),
     mazeFabric: readBool(query, "mf", D.mazeFabric),
     pathViz: readChoice(query, "pv", PATH_VIZ_MODES, D.pathViz),
+    threadLook: readChoice(query, "tlk", THREAD_LOOKS, D.threadLook), // K797b
     cameraMode: readChoice(query, "cam", CAMERA_MODES, D.cameraMode),
     trailLength: readNumber(query, "trl", D.trailLength),
     tension: readNumber(query, "tn", D.tension),

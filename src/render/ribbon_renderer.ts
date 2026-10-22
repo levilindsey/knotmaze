@@ -690,6 +690,9 @@ export class RibbonRenderer {
   // 0.75 before). main.ts syncs both every tick.
   hoverGlowLength = 3;
   hoverGlowFade = 0.2;
+  // K797b: the thread look (0 fill, 1 border, 2 both; panel_wiring syncs
+  // it from the threadLook param): the section shader strokes the edges.
+  threadLook = 0;
   // K525: the telegraph rims' strength and colour (0xRRGGBB), sent as
   // uKTele (w = the strength while a route is set). The fabric sets them
   // with the route; a piece's alpha multiplies the strength. teleColor is
@@ -2794,6 +2797,7 @@ export class RibbonRenderer {
   // (it receives real dt every frame in all ticker branches, both modes).
   tickPaint(dt: number): void {
     knotUniformValues().uKBase[2] = this.paintDebug;
+    knotUniformValues().uKLook![0] = this.threadLook; // K797b
     this.tickPaintPalette(dt);
     this.tickAppearFx(dt);
     // Flow clock, advanced AFTER the palette/fillet pass so everything

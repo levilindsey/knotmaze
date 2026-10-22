@@ -171,6 +171,20 @@ void main(void) {
   // band hid it under the breath). Off a band and the reveal glow this is
   // the old max(kgl, krim) whitening exactly.
   if (krim > 0.0) rgb = kRimOver(rgb, krim);
+  // K797b THREAD LOOK (prototype; the CPU mirror and parity tests wait
+  // for Levi's pick, per the ledger's render-prototype rule): an edge
+  // stroke in darkened section color along each side. Border-only also
+  // clears the interior, so over/under and joins read from the strokes
+  // and the backdrop shows between them. Junction fans still fill.
+  highp float lookA = 1.0;
+  if (uKLook.x > 0.5) {
+    highp float eAcross = abs(2.0 * vUV.y - 1.0);
+    highp float fwA = max(fwidth(vUV.y) * 3.0, 0.02);
+    highp float edge = smoothstep(0.62, 0.62 + fwA, eAcross);
+    vec3 stroke = mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5);
+    if (uKLook.x < 1.5) { rgb = stroke; lookA = edge; }
+    else rgb = mix(rgb, stroke, edge * 0.9);
+  }
   float gk = gapKeep(pxW, gTurn);
   if (uKBase.z > 4.5) {
     // DEBUG VIEW 5 (probes): the paint terms of the VISIBLE thread (gaps
@@ -187,8 +201,8 @@ void main(void) {
     rgb = mix(rgb, vec3(1.0, 0.0, 0.85), (1.0 - gk) * 0.75);
     gk = 1.0;
   }
-  if (gk <= 0.002) discard;
-  finalColor = vec4(rgb, 1.0) * vColor * (aM * gk);
+  if (gk * lookA <= 0.002) discard;
+  finalColor = vec4(rgb, 1.0) * vColor * (aM * gk * lookA);
 }
 `;
 

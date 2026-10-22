@@ -59,8 +59,11 @@ describe("K320 stage 1: char budgets", () => {
     // (`uniform vec4 uKTeleAt;`, the two `T1.z < 0.0 ? uKTeleAt.x :` end
     // picks and two abs() on the fades) adds 85 to both (47,606 -> 47,691
     // and 64,021 -> 64,106 here); the rest stay byte for byte.
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(47_750);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(64_150);
+    // K797b (2026-10-21): the thread look (uKLook + the edge-stroke block
+    // in SECTION_FRAG, ribbon-only) adds 779 to both (47,691 -> 48,470
+    // and 64,106 -> 64,885 here); one more cold compile of each per player.
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(48_530);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(64_950);
     expect(STRIP_FRAG.length).toBeLessThanOrEqual(31_400);
     expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(26_600);
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_300);
