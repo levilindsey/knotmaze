@@ -37,6 +37,8 @@ import {
   pathVizOf,
 } from "./url_state";
 import { gridAlignSlider, gridAlignStrength } from "./grid_align_curve";
+import { createPanelSearch, type PanelSearchUi } from "./panel_search_ui";
+import { PARAM_TAGS } from "./param_tags";
 import { PAR_SLACK_MAX, PAR_SLACK_MIN } from "../game/par";
 import { SPOOL_SLACK_MAX, SPOOL_SLACK_MIN } from "../game/spool";
 import { HINTS_MAX } from "../game/hints";
@@ -589,6 +591,10 @@ export function buildPanel(
   // K92: set while a row's effects run for a change before its release
   // (`last === false`: a slider or a color picker mid-drag).
   let dragging = false;
+  // K793: the search box (built once every row exists), and the flag that
+  // keeps its own folder opening and closing out of the saved folds.
+  let searchUi: PanelSearchUi | null = null;
+  let searchMutesFolds = false;
 
   // K468: whether the layout is the phone's full-screen sheet right now.
   const sheetMQ = window.matchMedia(SHEET_QUERY);
@@ -636,7 +642,8 @@ export function buildPanel(
   const closeHelpIfHidden = (): void => {
     const h = helpOpen;
     if (!h) return;
-    let gone = h.row.closest(".tp-v-hidden") !== null;
+    // K793: a row the search hides counts as hidden.
+    let gone = h.row.closest(".tp-v-hidden, .kp-sx-out") !== null;
     for (
       let f = h.row.parentElement?.closest(".tp-fldv") ?? null;
       !gone && f;
@@ -860,6 +867,13 @@ export function buildPanel(
   } catch {
     folds = {};
   }
+  const saveFolds = (): void => {
+    try {
+      localStorage.setItem(FOLD_KEY, JSON.stringify(folds));
+    } catch {
+      // Storage unavailable: folds just don't persist.
+    }
+  };
   // `inside`: a subfolder of that folder (titles stay unique: they key the
   // persisted folds).
   const folder = (
@@ -877,11 +891,13 @@ export function buildPanel(
       on: (ev: "fold", cb: (e: { expanded: boolean }) => void) => unknown;
     };
     f.on("fold", (e) => {
-      folds[title] = e.expanded;
-      try {
-        localStorage.setItem(FOLD_KEY, JSON.stringify(folds));
-      } catch {
-        // Storage unavailable: folds just don't persist.
+      // K793: the search opens and closes folders for its results without
+      // saving them; a fold the player makes during a search is kept when
+      // it clears.
+      if (!searchMutesFolds) {
+        folds[title] = e.expanded;
+        saveFolds();
+        searchUi?.playerFold(title);
       }
       // K467: a help block goes with its folder (read after the class flips).
       queueMicrotask(closeHelpIfHidden);
@@ -1056,6 +1072,8 @@ export function buildPanel(
     label: "daily",
   }) as ButtonApi & { title: string };
   dailyApi.element.classList.add("kp-row", "kp-daily");
+  // K793: its search id, kept while main.ts adds the day to the title.
+  dailyApi.element.dataset.kpId = "btn:Daily";
   dailyApi.on("click", callbacks.onPlayDaily);
   const dailyStats = document.createElement("button");
   dailyStats.type = "button";
@@ -3101,10 +3119,34 @@ export function buildPanel(
         !custom ||
         (i > 0 && !BACKGROUND_ACCENTS_USED[bg].includes(i));
     });
+    // K793: a search's folders and count follow the rows a mode shows.
+    searchUi?.refresh();
     // K467: an open help block goes with its row.
     closeHelpIfHidden();
   };
   refreshCond();
+
+  // K793 THE SEARCH BOX, with collapse all and expand all, above the rows
+  // (under the header) once every row exists: panel_search_ui.ts. It never
+  // writes a param, the link or a saved fold of its own.
+  const search = createPanelSearch({
+    pane: pane as unknown as { readonly children: readonly unknown[] },
+    scroller: wrap,
+    muteFolds: (on) => {
+      searchMutesFolds = on;
+    },
+    saveFold: (title, expanded) => {
+      folds[title] = expanded;
+      saveFolds();
+    },
+    tags: PARAM_TAGS,
+    onFilter: closeHelpIfHidden,
+  });
+  head.after(search.bar);
+  search.reindex();
+  searchUi = search;
+  (window as unknown as Record<string, unknown>).__knotPanelSearch = () =>
+    search.state();
 
   // HAMBURGER: shows/hides the whole panel. Open by default on roomy,
   // pointer-precise screens; closed on phones (it would cover the maze).
@@ -3258,7 +3300,10 @@ export function buildPanel(
       syncHelpText();
     },
     setDailyLabel: (text, tip) => {
-      if (dailyApi.title !== text) dailyApi.title = text;
+      if (dailyApi.title !== text) {
+        dailyApi.title = text;
+        searchUi?.relabel();
+      }
       dailyApi.element.title = tip;
     },
     setOnDaily: (on) => {
