@@ -107,6 +107,7 @@ import { RevealFx } from "./ribbon/reveal_fx";
 import { PaintState } from "./ribbon/paint_state";
 import { PluckHostPart } from "./ribbon/pluck_host";
 import { StripPass } from "./ribbon/strip_pass";
+import type { ThreadPass } from "./ribbon/thread_pass";
 import { FILLET_REACH_PER_HALF, Joinery } from "./ribbon/joinery";
 
 // K8 G3-0: the probe capture (captureScene / restoreScene): plain JSON, typed
@@ -231,6 +232,10 @@ export interface RibbonStyle {
     footO?: number[];
     sideC?: number;
   } | null)[];
+  // K8 G3-2: the thread pass, chosen once at construction ("strip"
+  // today; "sdf" when ribbon_sdf.ts lands). Not a codec param: read
+  // from the link by scene.ts.
+  rp?: "strip" | "sdf";
   // K580 s5 (#glyphs2): per chain, a glyph strand (core Strand.glyph;
   // absent = none). A glyph chain's fused spur tip keeps its untucked
   // stroke from J to the tuck point (tuckFusedTips), and rebuildFillets
@@ -439,8 +444,8 @@ export class RibbonRenderer {
   // K5 R4: the render-only plucks' host (ribbon/pluck_host.ts).
   readonly pluckHost = new PluckHostPart(this);
   // K5 R4: the strip pass (ribbon/strip_pass.ts), G3-2's seam.
-  readonly stripPass = new StripPass(this);
-  get fills(): RibbonMesh[] {
+  readonly stripPass: ThreadPass;
+  get fills(): readonly RibbonMesh[] {
     return this.stripPass.fills;
   }
   /** @internal ribbon */ reextrude(chain: number): void {
@@ -962,7 +967,15 @@ export class RibbonRenderer {
   // Default section color (the gamut midpoint = the seed-hue base color).
   /** @internal ribbon */ baseRgb = new Float32Array(3);
 
+  // K8 G3-2: the pass this scene renders with, and whether rp=sdf fell
+  // back to the strip (ribbon_sdf.ts not built yet). Probe-visible.
+  /** @internal ribbon */ rpFallback = false;
   constructor(ps: ParticleSystem, style: RibbonStyle) {
+    // G3-2's seam: pick the thread pass once. Until ribbon_sdf.ts
+    // lands, rp=sdf renders with the strip and says so (rpFallback) -
+    // the A/B can never mistake the two.
+    this.stripPass = new StripPass(this);
+    if (style.rp === "sdf") this.rpFallback = true;
     this.ps = ps;
     this.style = style;
     // K90 stage 1b, a debug hook only (no link, no panel row): turn the
@@ -1043,7 +1056,7 @@ export class RibbonRenderer {
       const closed = ps.chainBreakAfter[i] < 0;
       const fill = this.stripPass.build(i, count, closed);
       this.knotRgb.push(this.knotChainRgb(i));
-      baseLayer.addChild(fill.mesh);
+      if (fill) baseLayer.addChild(fill.mesh);
       // The material's control positions at construction (the renderer is
       // built before the first physics step: these are ps.initial).
       const ic = new Float32Array(chain.length * 2);

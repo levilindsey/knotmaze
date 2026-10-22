@@ -361,6 +361,12 @@ export function createScene(deps: SceneDeps): Scene {
     tangle = params.mazeFabric ? graph : null;
 
     renderer = new RibbonRenderer(ps, {
+      // K8 G3-2: the thread pass off the link (not a codec param).
+      rp:
+        typeof location !== "undefined" &&
+        new URLSearchParams(location.search).get("rp") === "sdf"
+          ? "sdf"
+          : "strip",
       threadWidth: params.threadWidth,
       casingWidth: params.threadWidth + look("gap") * 2,
       baseHue: effHue,

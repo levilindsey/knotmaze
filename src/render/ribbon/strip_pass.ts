@@ -13,10 +13,11 @@ import type { SplineSamples } from "../../geometry/spline_generator";
 import type { RibbonRenderer } from "../ribbon_renderer";
 import { RibbonMesh } from "../ribbon_mesh";
 import { sectionShader } from "./ribbon_shader";
+import type { ThreadPass } from "./thread_pass";
 import * as sampling from "./sampling";
 import { tipStrokeWrite } from "./tip_stadium";
 
-export class StripPass {
+export class StripPass implements ThreadPass {
   readonly r: RibbonRenderer;
   constructor(r: RibbonRenderer) {
     this.r = r;
