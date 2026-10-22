@@ -35,9 +35,25 @@
       canvas {
         display: block;
       }
+      /* K546 stage 3: the loss vignette — a plain CSS overlay the beat
+         drives (opacity only), zero pixi cost. */
+      #loss-vignette {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(
+          ellipse at center,
+          transparent 52%,
+          rgba(4, 2, 6, 0.92) 100%
+        );
+        opacity: 0;
+        transition: opacity 0.45s ease;
+        z-index: 5;
+      }
     </style>
   </head>
   <body>
+    <div id="loss-vignette"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

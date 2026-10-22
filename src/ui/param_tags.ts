@@ -100,6 +100,7 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   movePad: ["d pad", "dpad", "touch controls", "on screen buttons", "arrow keys", "mobile", "phone", "directional"],
   chalk: ["tick", "bookmark", "remember", "visited", "waypoint", "junction marks", "annotate", "breadcrumbs"],
   confettiAmount: ["cfa", "celebration", "party", "victory", "finish effect", "particles", "turn off", "win animation"],
+  lossAmount: ["lam", "loss", "caught", "burnt", "explosion", "ash", "defeat effect", "particles", "turn off"], // K546 stage 3
   confettiShine: ["cfh", "celebration", "party", "sparkle", "glitter", "flash", "shiny", "glint"],
   foilShare: ["cff", "celebration", "party", "metallic", "shiny", "paper", "sparkle", "glitter"],
   confettiCannons: ["cfc", "celebration", "party", "confetti", "party popper", "launchers", "left and right", "finish effect", "burst"],

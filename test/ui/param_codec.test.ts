@@ -271,6 +271,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["sonar", "boolean"], // K137 sonar (4.26)
   ["sonarPings", "number"], // K137 sonar (4.26)
   ["tunnels", "number"], // K137 tunnels (4.13)
+  ["lossAmount", "number"], // K546 stage 3
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

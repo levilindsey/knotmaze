@@ -113,8 +113,27 @@ describe("catchBurstAt (2.8)", () => {
       radius: CATCH_BURST_R1,
       alpha: 0,
       done: true,
+      widthMul: 1,
+      inner: null,
     });
     expect(catchBurstAt(-1, false).alpha).toBe(0);
+  });
+
+  it("K546 stage 3: the first ring holds thick, a second ring follows", () => {
+    const hold = catchBurstAt(0.1, false);
+    expect(hold.alpha).toBeCloseTo(0.95);
+    expect(hold.widthMul).toBeGreaterThan(1.5);
+    // Still holding at the end of the hold window (K525's complaint).
+    expect(catchBurstAt(0.19, false).alpha).toBeCloseTo(0.95);
+    // No inner ring before +0.12 s; one after, thinner and dimmer.
+    expect(catchBurstAt(0.1, false).inner).toBeNull();
+    const mid = catchBurstAt(0.3, false);
+    expect(mid.inner).not.toBeNull();
+    expect(mid.inner!.alpha).toBeLessThan(hold.alpha);
+    expect(mid.inner!.radius).toBeLessThan(CATCH_BURST_R1);
+    // Reduced motion never grows the second ring.
+    expect(catchBurstAt(0.3, true).inner).toBeNull();
+    expect(catchBurstAt(0.3, true).widthMul).toBe(1);
   });
 
   it("is a static fading ring under reduced motion", () => {

@@ -2405,9 +2405,18 @@ export class FabricMazeRenderer {
     this.polyCircle(gfx, this.catchX, this.catchY, r * f.radius, 40);
     gfx.stroke({
       color: this.teleInk,
-      width: this.threadWidth * TELEGRAPH_RING_W,
+      width: this.threadWidth * TELEGRAPH_RING_W * f.widthMul,
       alpha: f.alpha,
     });
+    // K546 stage 3: the second inner ring.
+    if (f.inner && f.inner.alpha > 0) {
+      this.polyCircle(gfx, this.catchX, this.catchY, r * f.inner.radius, 40);
+      gfx.stroke({
+        color: this.teleInk,
+        width: this.threadWidth * TELEGRAPH_RING_W * 0.8,
+        alpha: f.inner.alpha,
+      });
+    }
     gfx.visible = true;
   }
   // K114 burn race; its look since K290 stage 3b. The fire's clock rides

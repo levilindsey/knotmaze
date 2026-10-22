@@ -61,6 +61,7 @@ import {
   CONFETTI_AMOUNT_MAX,
   CONFETTI_SHINE_MAX,
 } from "../render/confetti_model";
+import { LOSS_AMOUNT_MAX } from "../render/loss_fx_model";
 import type {
   PluckCrossings,
   PluckGlow,
@@ -649,6 +650,7 @@ export interface UrlParams {
   // designed burst; 0 = none since K323 merged the on/off switch in).
   // A viewer preference.
   confettiAmount: number;
+  lossAmount: number; // K546 stage 3
   // K337: the confetti's shine - its specular strength in
   // [0, CONFETTI_SHINE_MAX] (0 = lit by the light, no flashes) and the
   // share of foil pieces in [0, 1]. Viewer preferences, read at the burst.
@@ -1109,6 +1111,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minoGuardAccuracyRt: CHASE_MODEL_DEFAULTS.guard.accuracy,
   minoStalkerAccuracyRt: CHASE_MODEL_DEFAULTS.stalker.accuracy,
   confettiAmount: 1,
+  lossAmount: 1, // K546 stage 3
   confettiShine: 1, // K337
   foilShare: 0.3, // K337
   confettiCannons: true, // K336
@@ -1591,6 +1594,7 @@ function fromCodecValues(
   p.settleBudget = clampTo(p.settleBudget, SETTLE_BUDGET_MAX);
   p.loadSettle = clampTo(p.loadSettle, LOAD_SETTLE_MAX);
   p.confettiAmount = clampTo(p.confettiAmount, CONFETTI_AMOUNT_MAX);
+  p.lossAmount = clampTo(p.lossAmount, LOSS_AMOUNT_MAX);
   p.confettiShine = clampTo(p.confettiShine, CONFETTI_SHINE_MAX);
   p.foilShare = clampTo(p.foilShare, 1);
   p.cannonAmount = clampTo(p.cannonAmount, CANNON_AMOUNT_MAX);
@@ -1935,6 +1939,8 @@ function readLegacy(
     minoStalkerAccuracyRt: readNumber(query, "msx", D.minoStalkerAccuracyRt),
     // K140's finish confetti amount (`&cfa=2`; `&cf=` is ignored since
     // K323 merged the switch into the amount).
+    // K546 stage 3: the loss effects amount (`&lam=2`).
+    lossAmount: clampTo(readNumber(query, "lam", D.lossAmount), LOSS_AMOUNT_MAX),
     confettiAmount: clampTo(
       readNumber(query, "cfa", D.confettiAmount),
       CONFETTI_AMOUNT_MAX

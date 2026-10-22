@@ -110,6 +110,7 @@ import {
   markerRadiusFor,
 } from "./render/marker_glyphs";
 import { ConfettiLayer } from "./render/confetti";
+import { LossFxLayer } from "./render/loss_fx";
 import {
   confettiPlanFor,
   planThrows,
@@ -400,6 +401,28 @@ async function main(): Promise<void> {
   // pointer events, and the win banner and HUD are DOM above the canvas.
   const confetti = new ConfettiLayer();
   app.stage.addChild(confetti.sprayContainer, confetti.rainContainer);
+  // K546 stage 3: the loss effects (burst at the meeting point, ash over
+  // the screen), above the confetti.
+  const lossFx = new LossFxLayer();
+  app.stage.addChild(lossFx.worldContainer, lossFx.screenContainer);
+  // K546 stage 3: the loss vignette (index.html's #loss-vignette), driven
+  // by opacity on the beat: swells at the contact, released after.
+  const lossVignetteEl = document.getElementById("loss-vignette");
+  let vignetteTimer = 0;
+  const pulseLossVignette = (): void => {
+    if (!lossVignetteEl) return;
+    lossVignetteEl.style.opacity = motion.reduced ? "0.25" : "0.65";
+    window.clearTimeout(vignetteTimer);
+    vignetteTimer = window.setTimeout(() => {
+      lossVignetteEl.style.opacity = "0";
+    }, 1600);
+  };
+  // K546 stage 3: one loss's effects at its contact point (world): the
+  // burst + scheduled ash in the catcher's colours, and the vignette.
+  const igniteLoss = (x: number, y: number, unit: number, kind: "mino" | "fire"): void => {
+    lossFx.ignite(x, y, unit, kind, params.lossAmount, motion.reduced, app.screen.width, app.screen.height);
+    pulseLossVignette();
+  };
 
   // K80's real-time mode (params.clock "realtime"): the chase over the walk
   // graph (game/minotaur.ts), built with the fabric. Its clock starts at the
@@ -1859,6 +1882,20 @@ async function main(): Promise<void> {
   const showFireLoss = (): void => {
     if (!scene.fabricController) return;
     const c = scene.fabricController;
+    // K546 stage 3: on the first show, the fire's contact burst + ash at
+    // the head and its first sound (the catch's pair, from the head's
+    // run) — a re-shown banner (a tap after closing it) throws nothing.
+    if (!lossBanner.shown && scene.fabric) {
+      const out = new Float32Array(2);
+      scene.fabric.vertexWorld(c.head, out, 0);
+      igniteLoss(out[0], out[1], scene.fabric.markerRadius(), "fire");
+      const v = scene.walkGraph?.vertices.get(c.head);
+      const [lo, nb] = catchNotes(v ? freqForCtrl(v.chain, v.ctrl) : 220);
+      synth.pluck(lo, 0.5);
+      synth.pluck(nb, 0.3);
+      synth.pluck(Math.max(30, lo / 2), 0.5);
+      synth.pluck(Math.max(30, nb / 2), 0.35);
+    }
     if (clock.state === "running") clock.stop(performance.now());
     lossBanner.show({
       timeMs: clock.elapsed(performance.now()),
@@ -2259,9 +2296,20 @@ async function main(): Promise<void> {
       scene.fabric.setCatchGhost(g.a, g.b, t01);
       if (t01 >= 1) {
         pendingGhost = null;
-        scene.fabric.clearCatchGhost();
         const meet = scene.fabric.catchGhostMeet();
+        scene.fabric.clearCatchGhost();
         if (meet) scene.fabric.showCatchBurst(meet[0], meet[1], motion.reduced);
+        // K546 stage 3: the burst + ash at the meeting point and the
+        // catch's dull pluck + thump (parity with the turn clock).
+        if (meet) igniteLoss(meet[0], meet[1], scene.fabric.markerRadius(), "mino");
+        {
+          const hv = scene.walkGraph?.vertices.get(scene.fabricController.head);
+          const [lo, nb] = catchNotes(hv ? freqForCtrl(hv.chain, hv.ctrl) : 220);
+          synth.pluck(lo, 0.5);
+          synth.pluck(nb, 0.3);
+          synth.pluck(Math.max(30, lo / 2), 0.5);
+          synth.pluck(Math.max(30, nb / 2), 0.35);
+        }
         if (!motion.reduced && typeof navigator !== "undefined" && navigator.vibrate) {
           navigator.vibrate(60);
         }
@@ -2518,6 +2566,12 @@ async function main(): Promise<void> {
       const [lo, nb] = catchNotes(v ? freqForCtrl(v.chain, v.ctrl) : 220);
       synth.pluck(lo, 0.5);
       synth.pluck(nb, 0.3);
+      // K546 stage 3: the low thump under the dull pluck (two more
+      // plucks a further octave down), the contact burst + ash in the
+      // minotaur's colours, and the vignette.
+      synth.pluck(Math.max(30, lo / 2), 0.5);
+      synth.pluck(Math.max(30, nb / 2), 0.35);
+      igniteLoss(sitePt[0], sitePt[1], scene.fabric.markerRadius(), "mino");
       if (!motion.reduced && typeof navigator !== "undefined" && navigator.vibrate) {
         navigator.vibrate(60);
       }
@@ -3989,6 +4043,7 @@ async function main(): Promise<void> {
       ripples,
       warmup,
       confetti,
+      lossFx,
       panel,
       indicators,
       movePad,
@@ -4143,6 +4198,7 @@ async function main(): Promise<void> {
     background,
     clock,
     confetti,
+    lossFx,
     contrast,
     cutPluckLog,
     dailyStore,

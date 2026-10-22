@@ -160,6 +160,7 @@ describe("links", () => {
       sonar: false, // K137 sonar (4.26)
       sonarPings: 0, // K137 sonar (4.26)
       tunnels: 0, // K137 tunnels (4.13)
+      lossAmount: 1, // K546 stage 3
     });
   });
 
@@ -912,7 +913,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   gamutArc: "arc", palette: "pal", pathColor: "pc", branchDensity: "brd",
   fourWayFraction: "fwf", deadEndDensity: "ded", pluckStyle: "pk",
   pluckSize: "psz", pluckGhost: "pgh", pluckReach: "prc", physics: "phy",
-  mazeFabric: "mf", pathViz: "pv", threadLook: "tlk", goldWidth: "gw", goldTexture: "gtx", minoExtras: "mex", minoScent: "msc", darkMoves: "dkm", lantern: "lan", sonar: "son", sonarPings: "spg", tunnels: "tun", cameraMode: "cam",
+  mazeFabric: "mf", pathViz: "pv", threadLook: "tlk", goldWidth: "gw", goldTexture: "gtx", minoExtras: "mex", minoScent: "msc", darkMoves: "dkm", lantern: "lan", sonar: "son", sonarPings: "spg", tunnels: "tun", lossAmount: "lam", cameraMode: "cam",
   trailLength: "trl", tension: "tn", exploration: "xp", fowRadius: "fr",
   fowIntro: "fwi", colorScheme: "cs", junctionBlend: "jbl", appearMode: "am",
   appearSequence: "ap", appearSpeed: "as", appearFx: "afx",

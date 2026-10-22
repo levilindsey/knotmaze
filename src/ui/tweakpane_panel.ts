@@ -75,6 +75,7 @@ import {
   CONFETTI_AMOUNT_MAX,
   CONFETTI_SHINE_MAX,
 } from "../render/confetti_model";
+import { LOSS_AMOUNT_MAX } from "../render/loss_fx_model";
 import { MARKER_SIZE_MAX, MARKER_SIZE_MIN } from "../render/marker_glyphs";
 import {
   INDICATOR_SCALE_MAX,
@@ -1545,6 +1546,25 @@ export function buildPanel(
     "How much confetti a finish throws: 1 = the default, 0 = none, up to 3x. Reduced motion throws none.",
     D.confettiAmount, () => {
       params.confettiAmount = Math.round(params.confettiAmount * 100) / 100;
+      callbacks.onConfettiChange();
+    }
+  );
+  // K546 stage 3: the loss effects amount, the confetti amount's mirror.
+  // Daily-exempt (how a loss mourns, not what was played). Live: it
+  // applies at the next loss.
+  const lossAmountRow = row(
+    fPath, p, "lossAmount",
+    {
+      label: "Loss amount",
+      min: 0,
+      max: LOSS_AMOUNT_MAX,
+      keyScale: 0.05,
+      pointerScale: 0.01,
+      format: (v: number) => v.toFixed(2),
+    },
+    "How much burst and ash fall a loss throws: 1 = the default, 0 = the ring only, up to 3x. Reduced motion throws no fall.",
+    D.lossAmount, () => {
+      params.lossAmount = Math.round(params.lossAmount * 100) / 100;
       callbacks.onConfettiChange();
     }
   );
@@ -3248,6 +3268,7 @@ export function buildPanel(
     movePadRow.hidden = !fab;
     chalkRow.hidden = !fab;
     confettiAmountRow.hidden = !fab;
+    lossAmountRow.hidden = !fab;
     confettiShineRow.hidden = !fab || params.confettiAmount <= 0;
     foilShareRow.hidden = confettiShineRow.hidden || params.confettiShine <= 0;
     confettiCannonsRow.hidden = !fab || params.confettiAmount <= 0;
