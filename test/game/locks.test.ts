@@ -10,6 +10,7 @@ import {
   lockOpens,
   lockRule,
   placeLocks,
+  shortcutCandidates,
   type LockLayout,
 } from "../../src/game/locks";
 import { oneWayCore } from "../../src/game/one_way";
@@ -46,7 +47,51 @@ function tri(): RuleWalk {
   };
 }
 
+
 const KEY_B: LockLayout = { mode: "exit", keys: ["B"], locks: new Map([[4, 1]]) };
+
+// The shortcut form's stage: route S-0-A-1-B-2-C-3-X; the long way
+// round run 2 is B-4-D-5-E-6-C (2 runs more); K (runs 7, 8, 10) is a
+// core junction 2 runs of fetching off B.
+function shortcutWalk(): RuleWalk {
+  const v = (id: string, isEnd: boolean, edges: number[]) => ({ id, isEnd, chain: 0, ctrl: 0, edges });
+  const e = (id: number, va: string, vb: string, length: number) => ({
+    id,
+    va,
+    vb,
+    chain: id,
+    ctrlA: 0,
+    ctrlB: 2,
+    length,
+  });
+  return {
+    vertices: new Map([
+      ["S", v("S", true, [0])],
+      ["A", v("A", false, [0, 1])],
+      ["B", v("B", false, [1, 2, 4, 8])],
+      ["C", v("C", false, [2, 3, 6])],
+      ["X", v("X", true, [3])],
+      ["D", v("D", false, [4, 5, 7])],
+      ["E", v("E", false, [5, 6, 9])],
+      ["K", v("K", false, [7, 8, 10])],
+    ]),
+    edges: [
+      e(0, "S", "A", 1),
+      e(1, "A", "B", 1),
+      e(2, "B", "C", 1),
+      e(3, "C", "X", 1),
+      e(4, "B", "D", 1),
+      e(5, "D", "E", 1),
+      e(6, "E", "C", 1),
+      e(7, "D", "K", 1),
+      e(8, "K", "B", 1),
+      e(9, "K", "E", 1),
+    ],
+    start: "S",
+    exit: "X",
+  };
+}
+
 const SEEDS = [1, 2, 3, 5, 7, 8, 13, 21];
 
 describe("locks and keys: the rule", () => {
@@ -361,5 +406,44 @@ describe("locks and keys: the controller", () => {
       expect(k).toBeGreaterThanOrEqual(n.includes("colorRule") ? 2 : 4);
     }
     expect(placedOf.size).toBe(5);
+  });
+});
+
+describe("locks and keys: the shortcut form (K138 slice 3)", () => {
+  it("candidates sit on the plain route with a competing key", () => {
+    const w = shortcutWalk();
+    const found = shortcutCandidates(w);
+    expect(found.map((c) => c.run)).toEqual([2]);
+    expect(found[0].bypass).toBe(2);
+    const at = found[0].keysAt.map((k) => k.vertex).sort();
+    expect(at).toContain("K");
+    for (const k of found[0].keysAt) {
+      expect(k.detour).toBeGreaterThanOrEqual(1);
+      expect(k.detour).toBeLessThanOrEqual(found[0].bypass + 2); // slice 3: census-widened
+    }
+  });
+  it("places one key for the route's lock, and the rule reads it", () => {
+    const w = shortcutWalk();
+    for (const seed of SEEDS) {
+      const placed = placeLocks(w, 1, "shortcut", seed);
+      if (!placed.layout) continue;
+      expect(placed.layout.mode).toBe("shortcut");
+      expect(placed.layout.locks.size).toBe(1);
+      expect(placed.layout.locks.get(2)).toBe(1);
+      expect(placed.layout.keys).toHaveLength(1);
+      const r = lockRule(w, placed.layout);
+      expect(r.step("B", 2, 0)).toBeNull();
+      expect(r.step("B", 2, 1)!.to).toBe("C");
+      expect(ruleSearch(w, r).solvable).toBe(true);
+      return;
+    }
+    throw new Error("no seed placed a shortcut lock");
+  });
+  it("the exit form is untouched by the new mode", () => {
+    const w = shortcutWalk();
+    expect(lockModeOf("shortcut")).toBe("shortcut");
+    expect(lockModeOf("bogus")).toBe("exit");
+    const placed = placeLocks(w, 1, "exit", 3);
+    if (placed.layout) expect(placed.layout.mode).toBe("exit");
   });
 });

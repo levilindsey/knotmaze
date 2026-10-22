@@ -253,7 +253,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["lures", "number"], // K137 stage 4
   ["snares", "number"],
   ["keys", "number"], // K138 stage 4
-  ["lockMode", "enum", ["exit"]],
+  ["lockMode", "enum", ["exit", "shortcut"]], // K138 slice 3
   ["snareHold", "number"], // K795
   ["lureRange", "number"],
   ["hintSeconds", "number"],

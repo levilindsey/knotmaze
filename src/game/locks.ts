@@ -16,8 +16,10 @@
 // the junctions that hang off the core.
 //
 // THE FORMS (lockMode; LOCK_MODES grows by appending, which needs no codec
-// bump): exit, the runs into the exit are the lock and need every key.
-// Shortcut and colors come later.
+// bump): exit, the runs into the exit are the lock and need every key;
+// shortcut, locks on the plain route itself, one key each, placed so
+// fetching the key competes with the long way round its lock. Colors
+// comes later.
 //
 // PLACEMENT (placeLocks): the candidates are junctions (three runs or more)
 // of the one-way core (`oneWayCore`: 2-edge-connected, so a key there can be
@@ -36,11 +38,11 @@
 // off is bit-identical.
 
 import type { RuleWalk, WalkRule, Placement } from "./rule_search";
-import { composeRules, meterLength, placeRule, plainRule, ruleRng, ruleSearch } from "./rule_search";
+import { composeRules, exemptRun, meterLength, placeRule, plainRule, ruleRng, ruleSearch } from "./rule_search";
 import { oneWayCore } from "./one_way";
 
-export type LockMode = "exit";
-export const LOCK_MODES: readonly LockMode[] = ["exit"];
+export type LockMode = "exit" | "shortcut";
+export const LOCK_MODES: readonly LockMode[] = ["exit", "shortcut"];
 export const KEYS_MAX = 3;
 // Keys lie within this many runs of the base route...
 export const KEY_RADIUS = 4;
@@ -172,6 +174,74 @@ export function lockCandidates(
   return { locks, candidates };
 }
 
+// The long way round a shortcut lock may cost at most this many runs
+// more than the plain route, so the lock matters but never walls off.
+export const SHORTCUT_BYPASS_MAX = 12;
+
+export interface ShortcutLock {
+  run: number;
+  // Runs the best route avoiding the lock costs beyond the plain route.
+  bypass: number;
+  // Key junctions for this lock (the lockCandidates detour rule, the
+  // gate the lock's near end): fetching one costs `detour` runs, and
+  // the detour is never worse than the long way round by more than
+  // two runs (census-widened, K138 slice 3: 49/50 placed, 0 traps),
+  // so the two ways genuinely compete.
+  keysAt: KeyCandidate[];
+}
+
+// The shortcut form's candidate locks: runs of the plain route (the
+// rules beneath's, else the plain one) with a way round them, each
+// with its key junctions. In route order.
+export function shortcutCandidates(
+  walk: RuleWalk,
+  base: WalkRule | null = null
+): ShortcutLock[] {
+  const plain = ruleSearch(walk, base ?? plainRule(walk));
+  const route = plain.routeRuns;
+  if (route.length === 0) return [];
+  const routeVerts = routeVertices(walk, route);
+  const core = oneWayCore(walk, route);
+  const inCore = new Set<string>();
+  for (const r of core.runs) {
+    inCore.add(walk.edges[r].va);
+    inCore.add(walk.edges[r].vb);
+  }
+  const near = runDistances(walk, routeVerts, new Set());
+  const dS = runDistances(walk, [walk.start], new Set());
+  const barred = new Set([walk.start, walk.exit, walk.mazeStart ?? walk.start]);
+  const out: ShortcutLock[] = [];
+  for (let i = 0; i < route.length; i++) {
+    const run = route[i];
+    const e = walk.edges[run];
+    if (!e || e.va === e.vb || exemptRun(walk, run)) continue;
+    // The long way round: fewest runs without this run.
+    const around = runDistances(walk, [walk.start], new Set([run])).get(walk.exit);
+    if (around === undefined) continue;
+    const bypass = around - route.length;
+    if (bypass < 1 || bypass > SHORTCUT_BYPASS_MAX) continue;
+    const gate = routeVerts[i];
+    const dGate = dS.get(gate);
+    if (dGate === undefined) continue;
+    const fromGate = runDistances(walk, [gate], new Set());
+    const keysAt: KeyCandidate[] = [];
+    for (const [v, info] of walk.vertices) {
+      if (barred.has(v) || !inCore.has(v) || info.edges.length < 3) continue;
+      const r = near.get(v);
+      if (r === undefined || r > KEY_RADIUS) continue;
+      const a = dS.get(v);
+      const b = fromGate.get(v);
+      if (a === undefined || b === undefined) continue;
+      const detour = a + b - dGate;
+      if (detour >= 1 && detour <= KEY_DETOUR_MAX && detour <= bypass + 2) {
+        keysAt.push({ vertex: v, detour });
+      }
+    }
+    if (keysAt.length > 0) out.push({ run, bypass, keysAt });
+  }
+  return out;
+}
+
 // Place the keys and the lock (see the header). `base` is the rules beneath
 // (ice, the color rule, turnstiles, one-way runs); the layout's rule is
 // composed onto it.
@@ -184,6 +254,7 @@ export function placeLocks(
 ): Placement<LockLayout> {
   const k0 = Math.max(0, Math.min(KEYS_MAX, Math.floor(keys)));
   if (!(k0 > 0)) return { layout: null, bites: false, draws: 0 };
+  if (mode === "shortcut") return placeShortcut(walk, k0, seed, base);
   const { locks, candidates: found } = lockCandidates(walk, base);
   if (locks.length === 0) return { layout: null, bites: false, draws: 0 };
   const ruleOf = (layout: LockLayout): WalkRule =>
@@ -217,6 +288,62 @@ export function placeLocks(
       pool.splice(j, 1);
     }
     return { mode, keys: picked, locks: lockMap };
+  };
+  return placeRule(walk, draw, ruleOf, base);
+}
+
+// The shortcut form's placement: candidate locks on the route, each
+// with its own key; a draw picks locks weighted by their bypass and
+// keys weighted by their detour, and placeRule keeps the first
+// solvable draw that bites, as the exit form's does.
+function placeShortcut(
+  walk: RuleWalk,
+  k0: number,
+  seed: number,
+  base: WalkRule | null
+): Placement<LockLayout> {
+  const found = shortcutCandidates(walk, base);
+  if (found.length === 0) return { layout: null, bites: false, draws: 0 };
+  const ruleOf = (layout: LockLayout): WalkRule =>
+    base ? composeRules(base, lockRule(walk, layout)) : lockRule(walk, layout);
+  // A lock whose only key still leaves the maze solvable (as the exit
+  // form checks one key at a time).
+  const locks = found.filter((c) =>
+    c.keysAt.some((k) =>
+      ruleSearch(
+        walk,
+        ruleOf({ mode: "shortcut", keys: [k.vertex], locks: new Map([[c.run, 1]]) })
+      ).solvable
+    )
+  );
+  const count = Math.min(k0, locks.length);
+  if (count === 0) return { layout: null, bites: false, draws: 0 };
+  const rng = ruleRng(seed, "locks");
+  const pickWeighted = <T,>(pool: T[], weight: (t: T) => number): T => {
+    let total = 0;
+    for (const t of pool) total += weight(t);
+    let x = rng.nextInt(total);
+    let j = 0;
+    while (x >= weight(pool[j])) {
+      x -= weight(pool[j]);
+      j++;
+    }
+    return pool[j];
+  };
+  const draw = (): LockLayout => {
+    const pool = locks.slice();
+    const keys: string[] = [];
+    const map = new Map<number, number>();
+    for (let k = 0; k < count && pool.length > 0; k++) {
+      const lock = pickWeighted(pool, (c) => c.bypass);
+      pool.splice(pool.indexOf(lock), 1);
+      const free = lock.keysAt.filter((c) => !keys.includes(c.vertex));
+      if (free.length === 0) continue;
+      const key = pickWeighted(free, (c) => c.detour);
+      map.set(lock.run, 1 << keys.length);
+      keys.push(key.vertex);
+    }
+    return { mode: "shortcut", keys, locks: map };
   };
   return placeRule(walk, draw, ruleOf, base);
 }
