@@ -450,6 +450,43 @@ slider, and an appended row costs one pin update.
   creep 12 frames to ≈0.96, banner after; shots in `s2/`). Full suite
   2240 green. Residual: the ghost draws the minotaur's marker only —
   extras keep standing at their spots during the rendezvous.
+  Stage 3 Handoff (2026-10-21): DONE, as recommended (B on A's clock,
+  A over C). `mino_feedback.ts`: the ring evolved — `CATCH_BURST_S`
+  0.45→0.6 s, the first ring thicker (`widthMul` 1.9) and holding
+  ~0.2 s at alpha 0.95 (`CATCH_HOLD_S`), a second inner ring from
+  +0.12 s (`CATCH_INNER_AT`); reduced motion keeps the one static ring.
+  New pure `render/loss_fx_model.ts` (`lossPlan`, `BurstPool`,
+  `AshPool`, `flashAlpha`, the catchers' palettes; caps hard) and view
+  `render/loss_fx.ts` (`LossFxLayer`: a world-space Graphics for the
+  burst + 0.12 s flash following the root, a screen-space Graphics for
+  the ash, scheduled +0.35 s; `active` polled beside confetti's and
+  ticked beside `confetti.tick` in `frame_loop.ts`). Ignited from the
+  three endings at their contact moments: `turnCaught`'s site, the
+  ghost's meeting point, and `showFireLoss`'s head (first show only —
+  a re-shown banner throws nothing). Sound: the low thump (two plucks
+  a further octave down) joins the catch pair on the turn and
+  real-time clocks, and the fire gains the pair + thump pitched from
+  the head's run (its first sound). The vignette is `#loss-vignette`
+  in `index.html` (z 5, under the HUD), opacity driven from main:
+  0.65 at the contact, released at +1.6 s; reduced motion fades it to
+  a static 0.25 and drops the fall (small slow burst only).
+  `lossAmount` landed as recommended: codec 231 (`lam`), [0, 3],
+  default 1, daily-exempt beside `confettiAmount`, panel row "Loss
+  amount" beside Confetti amount, `param_tags` entry; pins moved:
+  param_codec table, url_codec defaults + OVERRIDE_KEYS, daily exempt
+  set. Tests: `test/render/loss_fx_model.test.ts` (plan at 0/reduced/
+  caps, bounded pool lifetimes, look bounds, the fall's taper) + the
+  ring's hold/inner tests. Contact sheet
+  `.claude/probes/K546/s3_probe.mjs` (`s3/desk_burst.png`,
+  `desk_fall.png`, `phone_burst.png`, `phone_fall.png`): the burst
+  reads unmistakably at 411x753 fit zoom — the kill criterion's phone
+  test passes at amount 1, so stage 4 stays optional behind Q1.
+  Also fixed from stage 2: the ghost's meeting point is now read
+  before `clearCatchGhost()` (it was always null, so the ring/burst
+  at the meeting point never fired). Full suite 2249 passed (1 skipped).
+  Residuals: the vignette's release is a fixed 1.6 s timer, not tied
+  to the ash draining; smoke pieces wear the palette's last colour by
+  construction (index `colorCount - 1`).
 - **Stage 3 — contact burst + screen fall (M).** `mino_feedback.ts`:
   the evolved ring clock. New `render/loss_fx_model.ts` +
   `render/loss_fx.ts` (burst pool in world space at the meeting point;

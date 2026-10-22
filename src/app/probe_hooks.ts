@@ -13,6 +13,7 @@ import type { PhysicsHost } from "../physics/physics_host";
 import { hashDump } from "../physics/probe_dump";
 import type { BackgroundLayer } from "../render/background";
 import type { ConfettiLayer } from "../render/confetti";
+import type { LossFxLayer } from "../render/loss_fx";
 import { confettiPlanFor } from "../render/confetti_model";
 import { EXPLORE_LOOKS } from "../render/explore_glsl";
 import type { FabricMazeRenderer } from "../render/fabric_maze_renderer";
@@ -81,6 +82,7 @@ export interface ProbeCtx {
   background: BackgroundLayer;
   clock: SolveClock;
   confetti: ConfettiLayer;
+  lossFx: LossFxLayer; // K546 stage 3
   contrast: ContrastSetting;
   dailyStore: DailyStore;
   fitCur: { scale: number; x: number; y: number };
@@ -1227,6 +1229,11 @@ export function installProbeHooks(ctx: ProbeCtx): void {
     sceneAnimating: ctx.sceneWasAnimating,
     rainVisible: ctx.confetti.rainContainer.visible,
     sprayVisible: ctx.confetti.sprayContainer.visible,
+  });
+  // K546 stage 3 probes: the loss effects state.
+  (window as unknown as Record<string, unknown>).__knotLossFx = () => ({
+    active: ctx.lossFx.active,
+    stats: { ...ctx.lossFx.stats },
   });
   (window as unknown as Record<string, unknown>).__knotConfettiBurst = () => {
     ctx.throwConfetti();

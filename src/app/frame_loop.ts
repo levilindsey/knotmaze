@@ -4,6 +4,7 @@ import type { PhysicsTuning } from "../physics/particle_system";
 import type { PhysicsHost } from "../physics/physics_host";
 import type { BackgroundLayer } from "../render/background";
 import type { ConfettiLayer } from "../render/confetti";
+import type { LossFxLayer } from "../render/loss_fx";
 import type { FabricMazeRenderer } from "../render/fabric_maze_renderer";
 import { PLUCK_WHOLE_MAX } from "../render/pluck_model";
 import type { PluckRipples } from "../render/pluck_ripple";
@@ -75,6 +76,7 @@ export interface FrameLoopDeps {
   ripples: PluckRipples;
   warmup: ShaderWarmup;
   confetti: ConfettiLayer;
+  lossFx: LossFxLayer; // K546 stage 3
   panel: PanelApi;
   indicators: OffscreenIndicators;
   movePad: MovePad;
@@ -148,6 +150,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     ripples,
     warmup,
     confetti,
+    lossFx,
     panel,
     indicators,
     movePad,
@@ -279,7 +282,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       p |= Flag.GAME;
     }
     if (cameraNeedsFrame()) p |= Flag.CAMERA;
-    if (ripples.activeCount > 0 || confetti.active) p |= Flag.OVERLAY;
+    if (ripples.activeCount > 0 || confetti.active || lossFx.active) p |= Flag.OVERLAY;
     // BACKGROUND is not read here: backgroundTick reads it after the
     // background's own tick (see there).
     if (audioNeedsFrame()) p |= Flag.AUDIO;
@@ -428,6 +431,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     // K140: the confetti steps in every branch (asleep, paused, loading);
     // a single early return once nothing is in the air.
     confetti.tick(eff.deltaMS / 1000, app.screen.height, root);
+    lossFx.tick(eff.deltaMS / 1000, app.screen.width, app.screen.height, root); // K546 stage 3
     // After the scene's frame (the background's render-texture pass, when
     // due, precedes the stage render either way).
     const closed = backgroundTick(eff.deltaMS / 1000);

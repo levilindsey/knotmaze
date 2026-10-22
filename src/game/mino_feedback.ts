@@ -102,31 +102,69 @@ export const MINO_FOG_BLEED_ALPHA = 0.16;
 // Section 2.8, the catch burst: a red ring bursts from the head dot over
 // CATCH_BURST_S seconds (radius and alpha ease out); under reduced motion
 // it is one static ring (CATCH_BURST_STATIC_ALPHA) that simply fades.
-export const CATCH_BURST_S = 0.45;
+// K546 stage 3 (option A evolved): 0.6 s; the first ring is thicker and
+// HOLDS for CATCH_HOLD_S before easing out (K525's "mostly faded" fix),
+// and a second inner ring expands from the contact at +CATCH_INNER_AT.
+export const CATCH_BURST_S = 0.6;
 export const CATCH_BURST_R0 = 1; // in head radii
 export const CATCH_BURST_R1 = 3.2;
 export const CATCH_BURST_STATIC_ALPHA = 0.8;
+export const CATCH_HOLD_S = 0.2;
+export const CATCH_INNER_AT = 0.12;
 
 export interface CatchBurstFrame {
   radius: number; // head radii
   alpha: number;
   done: boolean;
+  // K546 stage 3: the stroke's width multiplier (the holding ring is
+  // thicker) and the second inner ring (null before +CATCH_INNER_AT and
+  // under reduced motion, whose form stays the one static ring).
+  widthMul: number;
+  inner: { radius: number; alpha: number } | null;
 }
 
 // The burst's look `age` seconds after the catch (age < 0: not started).
 export function catchBurstAt(age: number, reduced: boolean): CatchBurstFrame {
-  if (age < 0) return { radius: CATCH_BURST_R0, alpha: 0, done: false };
-  if (age >= CATCH_BURST_S) return { radius: CATCH_BURST_R1, alpha: 0, done: true };
+  if (age < 0) return { radius: CATCH_BURST_R0, alpha: 0, done: false, widthMul: 1, inner: null };
+  if (age >= CATCH_BURST_S) {
+    return { radius: CATCH_BURST_R1, alpha: 0, done: true, widthMul: 1, inner: null };
+  }
   const t = age / CATCH_BURST_S;
   if (reduced) {
-    return { radius: CATCH_BURST_R0 * 1.6, alpha: CATCH_BURST_STATIC_ALPHA * (1 - t), done: false };
+    return {
+      radius: CATCH_BURST_R0 * 1.6,
+      alpha: CATCH_BURST_STATIC_ALPHA * (1 - t),
+      done: false,
+      widthMul: 1,
+      inner: null,
+    };
   }
-  const ease = 1 - (1 - t) * (1 - t);
-  return {
-    radius: CATCH_BURST_R0 + (CATCH_BURST_R1 - CATCH_BURST_R0) * ease,
-    alpha: 0.9 * (1 - t),
-    done: false,
-  };
+  let radius: number;
+  let alpha: number;
+  let widthMul: number;
+  if (age < CATCH_HOLD_S) {
+    // The hold: a thick ring swells a little and stays readable.
+    const h = age / CATCH_HOLD_S;
+    radius = CATCH_BURST_R0 + 0.35 * (1 - (1 - h) * (1 - h));
+    alpha = 0.95;
+    widthMul = 1.9;
+  } else {
+    const u = (age - CATCH_HOLD_S) / (CATCH_BURST_S - CATCH_HOLD_S);
+    const ease = 1 - (1 - u) * (1 - u);
+    radius = CATCH_BURST_R0 + 0.35 + (CATCH_BURST_R1 - CATCH_BURST_R0 - 0.35) * ease;
+    alpha = 0.95 * (1 - u);
+    widthMul = 1.9 - 0.9 * u;
+  }
+  let inner: { radius: number; alpha: number } | null = null;
+  if (age >= CATCH_INNER_AT) {
+    const v = (age - CATCH_INNER_AT) / (CATCH_BURST_S - CATCH_INNER_AT);
+    const ease = 1 - (1 - v) * (1 - v);
+    inner = {
+      radius: CATCH_BURST_R0 * 0.5 + (CATCH_BURST_R1 * 0.85 - CATCH_BURST_R0 * 0.5) * ease,
+      alpha: 0.75 * (1 - v),
+    };
+  }
+  return { radius, alpha, done: false, widthMul, inner };
 }
 
 // Section 2.10's sound cues, decided per turn from the display mode

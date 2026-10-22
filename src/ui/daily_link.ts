@@ -234,6 +234,8 @@ export const DAILY_EXEMPT_KEYS = [
   // K140's finish confetti: how a finish celebrates, not what was played.
   // Proposed for Levi's review with K140.
   "confettiAmount",
+  // K546 stage 3: how a loss mourns, not what was played.
+  "lossAmount",
   // K337's confetti shine and foil share: the same celebration's look.
   "confettiShine",
   "foilShare",
