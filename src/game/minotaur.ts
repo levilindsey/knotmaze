@@ -99,7 +99,9 @@ import { SeededRNG } from "../util/random";
 // each uses the other's bindings only inside functions, so either may load
 // first.
 import { TurnRng, mix32, type TurnStep } from "./minotaur_turns";
-import { newSword, swordSpend, swordTake, swordTouch, type SwordState } from "./sword";
+import { newSword, runHops, swordSpend, swordTake, swordTouch, type SwordState } from "./sword";
+import { lureTarget } from "./lures";
+import { canSnare, releaseSnares, springSnare, type Snare } from "./snares";
 
 export const CHASE_HZ = 120;
 const DT = 1 / CHASE_HZ;
@@ -607,6 +609,12 @@ export class MinotaurChase {
   // K137 stage 6: the real-time extras (empty, the default: nothing
   // below reads or draws the list and every digest holds).
   extras: RtMonster[] = [];
+  // K137 stage 7: the real-time snares (empty, the default: nothing
+  // below reads them and every digest holds) and the acting monster's
+  // id while it stands in (-1 the minotaur, i extra i).
+  snares: Snare[] = [];
+  snareHoldS = 3;
+  private actingId = -1;
   private seedNum = 0;
   sprintLeft = 0;
   private sprinting = false;
@@ -703,6 +711,45 @@ export class MinotaurChase {
     });
   }
 
+  // K137 stage 7: lay a snare on a run at the player's junction (the
+  // turn clock's canSnare). False: not at their junction, or taken.
+  setSnare(edge: number): boolean {
+    const head = this.g.ahead(this.player);
+    if (!canSnare(this.snares, this.g.ea, this.g.eb, head, edge)) return false;
+    this.snares.push({ edge, phase: "set", holder: null, left: 0 });
+    return true;
+  }
+
+  // K137 stage 7: pluck a lure on run `edge`. Every monster in range
+  // (the minotaur unless it flees or is slain, and each extra) makes
+  // the run's nearer end its roam destination and forgets its hunt,
+  // as the turn clock's lure does. Returns how many heard, or -1 for
+  // a run that is not a run (the caller spends nothing then).
+  lure(edge: number, range: number): number {
+    if (!Number.isInteger(edge) || edge < 0 || edge >= this.g.len.length) return -1;
+    const g = {
+      hopd: (a: number, b: number): number => runHops(this.g, [a])[b],
+      start: this.g.start,
+      exit: this.g.exit,
+      chase: { ea: this.g.ea, eb: this.g.eb },
+    };
+    let heard = 0;
+    const hear = (): void => {
+      const v = this.mino.edge < 0 ? this.mino.vertex : this.g.ahead(this.mino);
+      const target = lureTarget(g, v, edge, range);
+      if (target < 0) return;
+      this.dest = target;
+      if (this.mode === "hunt") this.mode = "wander";
+      heard++;
+    };
+    if (!this.fleeing && !this.slain) hear();
+    this.extras.forEach((x, i) => {
+      this.actingId = i;
+      this.withExtra(x, hear);
+    });
+    this.actingId = -1;
+    return heard;
+  }
   // What the renderer draws for the extras (always awake hunters).
   get extraViews(): { spot: Spot; phase: "awake"; kind: "sleeper" }[] {
     return this.extras.map((x) => ({ spot: x.spot, phase: "awake", kind: "sleeper" }));
@@ -719,6 +766,7 @@ export class MinotaurChase {
       rng: this.rng, stopRng: this.stopRng,
       sword: this.sword, model: this.params.model,
     };
+    this.actingId = this.extras.indexOf(x);
     this.mino = x.spot; this.mode = x.mode; this.timer = x.timer;
     this.dest = x.dest; this.hold = x.hold; this.aimed = x.aimed;
     this.lastEdge = x.lastEdge; this.legPace = x.legPace;
@@ -736,6 +784,7 @@ export class MinotaurChase {
       this.lastEdge = saved.lastEdge; this.legPace = saved.legPace;
       this.arrivals = saved.arrivals; this.rng = saved.rng;
       this.stopRng = saved.stopRng; this.sword = saved.sword;
+      this.actingId = -1;
       this.params.model = saved.model;
     }
   }
@@ -795,6 +844,7 @@ export class MinotaurChase {
     this.aimed = true;
     this.lastEdge = -1;
     if (kind === "banish") {
+      releaseSnares(this.snares, -1); // K137 stage 7: it went home.
       this.mino = { edge: -1, pos: 0, dir: 1, vertex: this.g.exit };
       this.mode = "lair";
       this.timer = ticksOf(this.params.wake);
@@ -1065,6 +1115,7 @@ export class MinotaurChase {
   // (lair off, K273) where it stands, even mid-run, pausing `wake` s
   // before it roams again from there.
   private respawn(): void {
+    releaseSnares(this.snares); // K137 stage 7: every holder went home.
     this.player = { edge: -1, pos: 0, dir: 1, vertex: this.g.start };
     this.queued = -1;
     // K137 s3c: a catch ends a sprint (it is spent, s3b call 1).
@@ -1166,6 +1217,19 @@ export class MinotaurChase {
     const g = this.g;
     const m = this.mino;
     const P = this.params;
+    // K137 stage 7: a snare holds this monster (left counts ticks); a
+    // held monster stands, and still catches by contact (step()).
+    const heldSnare = this.snares.find(
+      (s) => s.phase === "holding" && s.holder === this.actingId
+    );
+    if (heldSnare) {
+      if (heldSnare.left > 0) {
+        heldSnare.left--;
+        if (heldSnare.left <= 0) heldSnare.phase = "spent";
+        return;
+      }
+      heldSnare.phase = "spent";
+    }
     if (this.sword !== null && this.sword.phase !== "ready" && this.sword.phase !== "used") {
       if (this.sword.phase === "fleeing") this.moveFleeing();
       return;
@@ -1193,6 +1257,12 @@ export class MinotaurChase {
         const choice = this.chooseRun();
         if (!choice) return;
         const [eid, dir] = choice;
+        // K137 stage 7: stepping onto a set snare springs it instead.
+        const sn = this.snares.find((s) => s.phase === "set" && s.edge === eid);
+        if (sn) {
+          springSnare(sn, this.actingId, Math.max(1, ticksOf(this.snareHoldS)));
+          return;
+        }
         m.edge = eid;
         m.dir = dir;
         m.pos = dir > 0 ? 0 : g.len[eid];
