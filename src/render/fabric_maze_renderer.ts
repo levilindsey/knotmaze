@@ -40,6 +40,7 @@ import type { ParticleSystem } from "../physics/particle_system";
 import type { WalkGraph, WalkEdge } from "../core/walk_graph";
 import { walkDistances } from "../core/walk_graph";
 import { litArms, planRoute } from "../game/route_plan";
+import { darknessAlpha, pruneDarkStamps } from "../game/darkness";
 import type { FabricMazeController } from "../game/fabric_controller";
 import type {
   RibbonRenderer,
@@ -653,12 +654,23 @@ export class FabricMazeRenderer {
   // Fog of war (main.ts syncs the first two every tick; see FOG block).
   fogOfWar = false;
   fowRadius = 4;
+  // K137 darkness (4.17): moves until explored fog closes (0 = never),
+  // and the lantern's radius multiple around the head (1 = none).
+  darkMoves = 0;
+  lantern = 1;
   fogColor = 0x151b28;
   private fogSprite: Sprite | null = null;
   private fogCanvas: HTMLCanvasElement | null = null;
   private fogTexture: Texture | null = null;
   private fogRect = { x0: 0, y0: 0, span: 1 };
   private fogStamps: number[] = []; // Flat explored world [x, y, ...].
+  // K137 darkness (4.17): the move each stamp landed in, and the
+  // controller's move count as of the last update.
+  private fogStampMoves: number[] = [];
+  private fogMoveNow = 0;
+  private fogLastMove = -1;
+  private fogLanternX = NaN;
+  private fogLanternY = NaN;
   // The controller's `restarts` (K100) and `refogs` (K174) the stamps
   // belong to.
   private fogRestarts = -1;
@@ -3166,6 +3178,7 @@ export class FabricMazeRenderer {
       }
     }
     this.fogStamps.push(x, y);
+    this.fogStampMoves.push(this.fogMoveNow); // K137 darkness (4.17)
     this.fogDirty = true;
   }
 
@@ -3326,17 +3339,43 @@ export class FabricMazeRenderer {
     ctx.fillRect(0, 0, FOG_CANVAS, FOG_CANVAS);
     ctx.globalCompositeOperation = "destination-out";
     const r = Math.max(2, this.fowRadius * this.fogRadiusMul() * k);
+    // K137 darkness (4.17): closed stamps drop out; the rest fade.
+    if (this.darkMoves > 0) {
+      pruneDarkStamps(this.fogStamps, this.fogStampMoves, this.fogMoveNow, this.darkMoves);
+    }
+    const dark = this.darkMoves > 0;
     for (let i = 0; i < this.fogStamps.length; i += 2) {
+      const a = dark
+        ? darknessAlpha(this.fogMoveNow - (this.fogStampMoves[i / 2] ?? 0), this.darkMoves)
+        : 1;
+      if (a <= 0) continue;
       const px = (this.fogStamps[i] - this.fogRect.x0) * k;
       const py = (this.fogStamps[i + 1] - this.fogRect.y0) * k;
       const grad = ctx.createRadialGradient(px, py, r * 0.45, px, py, r);
-      grad.addColorStop(0, "rgba(0,0,0,1)");
+      grad.addColorStop(0, `rgba(0,0,0,${a})`);
       grad.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.arc(px, py, r, 0, Math.PI * 2);
       ctx.fill();
     }
+    // K137 darkness (4.17): the lantern, a fuller hole at the head,
+    // wider than the fog radius by the lantern multiple.
+    if (this.lantern > 1 && this.headValid) {
+      const px = (this.headX - this.fogRect.x0) * k;
+      const py = (this.headY - this.fogRect.y0) * k;
+      const rl2 = r * this.lantern;
+      const grad = ctx.createRadialGradient(px, py, rl2 * 0.45, px, py, rl2);
+      grad.addColorStop(0, "rgba(0,0,0,1)");
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(px, py, rl2, 0, Math.PI * 2);
+      ctx.fill();
+      this.fogLanternX = this.headX;
+      this.fogLanternY = this.headY;
+    }
+    this.fogLastMove = this.fogMoveNow;
     // K290 stage 3b: the fire's light, a softer hole at each burning front
     // (syncFireLights), so the fire shows the branches it reached and the
     // player has not.
@@ -3722,10 +3761,23 @@ export class FabricMazeRenderer {
     // by taps before this runs (replay) still reads as a restart. K174: a
     // catch under minoRefog (the controller's `refogs` moved) starts it
     // over too.
+    // K137 darkness (4.17): the move clock the stamps age by; a new
+    // move (or a moving lantern) re-renders the fog so holes close.
+    this.fogMoveNow = controller.taps.length;
+    if (
+      this.darkMoves > 0 &&
+      this.fogOfWar &&
+      (this.fogMoveNow !== this.fogLastMove ||
+        (this.lantern > 1 &&
+          (this.headX !== this.fogLanternX || this.headY !== this.fogLanternY)))
+    ) {
+      this.fogDirty = true;
+    }
     if (controller.restarts !== this.fogRestarts || controller.refogs !== this.fogRefogs) {
       this.fogRestarts = controller.restarts;
       this.fogRefogs = controller.refogs;
       this.fogStamps.length = 0;
+      this.fogStampMoves.length = 0; // K137 darkness (4.17)
       this.fogDirty = true;
     }
     this.drawMarkers(controller, -1, 0, controller.solved);

@@ -1344,6 +1344,19 @@ export function buildPanel(
     "How much of the maze you see. off: all of it. fog of war: the maze hides until you have explored close by; explored areas stay visible. thread reveal: only the threads you have walked show, and the arms of the junctions you have reached, fading out a little way along. Applies live.",
     D.exploration, () => callbacks.onTrailChange()
   );
+  // K137 darkness (4.17): the closing span and the lantern.
+  const darkMovesRow = row(
+    fGame, p, "darkMoves",
+    { min: 0, max: 40, step: 1, format: (v: number) => (v === 0 ? "never" : `${v} moves`), label: "Darkness closes" },
+    "Fog of war: explored places fade back to dark this many moves after you last lit them. The lantern below is the light you carry. Applies as you play; no restart.",
+    D.darkMoves, () => callbacks.onTrailChange()
+  );
+  const lanternRow = row(
+    fGame, p, "lantern",
+    { min: 1, max: 4, step: 0.25, format: (v: number) => (v <= 1 ? "off" : `${v}x`), label: "Lantern" },
+    "Fog of war: a lit radius around you, this many times the fog radius. With darkness closing, it is the light you navigate by.",
+    D.lantern, () => callbacks.onTrailChange()
+  );
   const fowRadiusRow = row(
     fGame, p, "fowRadius", { min: 1.5, max: 10, step: 0.25, label: "Fog radius" },
     "How far around your explored path the fog lifts, in lattice units. Applies live and reshapes everything already explored.",
@@ -3064,6 +3077,8 @@ export function buildPanel(
     const fog = fab && params.exploration === "fog";
     const threads = fab && params.exploration === "threads";
     fowRadiusRow.hidden = !fog;
+    darkMovesRow.hidden = !fog; // K137 darkness (4.17)
+    lanternRow.hidden = !fog; // K137 darkness (4.17)
     fowIntroRow.hidden =
       !(fog || threads) || params.appearSequence === "instant";
     revealDistanceRow.hidden = !threads;

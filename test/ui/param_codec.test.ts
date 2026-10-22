@@ -266,6 +266,8 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["goldTexture", "enum", ["solid", "pencil", "crayon", "highlighter"]],
   ["minoExtras", "number"], // K137 stage 6
   ["minoScent", "number"], // K137 scent (4.34)
+  ["darkMoves", "number"], // K137 darkness (4.17)
+  ["lantern", "number"], // K137 darkness (4.17)
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
