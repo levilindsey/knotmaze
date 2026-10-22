@@ -32,6 +32,7 @@ import {
   SETTLE_BUDGET_MAX,
   appearModeFor,
   applyAppearMode,
+  clockOf,
   seedFromText,
   seedText,
   pathVizOf,
@@ -848,12 +849,18 @@ export function buildPanel(
     backgroundSpeed: shownSpeed(),
     backgroundAngle: shownAngle(),
   };
-  // K323: the "Real time" checkbox's view (the gridAlign pattern): it
-  // shows clock === "realtime" and writes `clock`; only the minotaur
-  // reads the clock (clockOf), classic and burn ignore a stored realtime.
-  const rtView: Record<string, unknown> = {
-    realTime: params.clock === "realtime",
-  };
+  // K795: the Clock rows' view (the gridAlign pattern; K323 question 2:
+  // the "Real time" checkbox became a Clock list once K114's beat landed).
+  // Two rows, since a row's options are fixed: the minotaur reads all
+  // three clocks, classic and the burn race turns and beat only (clockOf
+  // plays a stored realtime there on turns). Both show `clock` and write
+  // it; `clockViewOf` derives both keys from it alone, so a game mode
+  // change needs no resync.
+  const clockViewOf = (): { mino: string; plain: string } => ({
+    mino: params.clock,
+    plain: params.clock === "beat" ? "beat" : "turn",
+  });
+  const clockView: Record<string, unknown> = { ...clockViewOf() };
 
   // Folder open/closed state persists across sessions (localStorage),
   // keyed by folder title.
@@ -1093,7 +1100,7 @@ export function buildPanel(
   const gameModeRow = row(
     fGame, p, "gameMode",
     { options: { Classic: "classic", Minotaur: "minotaur", "Burn race": "burn" }, label: "Game mode" },
-    "Game mode: Classic = the plain maze. Minotaur = a minotaur hunts you (turns, or real time with the box below). Burn race = a fuse burns the maze behind you. Restarts the solve.",
+    "Game mode: Classic = the plain maze. Minotaur = a minotaur hunts you (on turns, a beat or real time: the Clock row below). Burn race = a fuse burns the maze behind you. Restarts the solve.",
     D.gameMode, () => callbacks.onClockChange()
   );
   void gameModeRow;
@@ -1101,15 +1108,58 @@ export function buildPanel(
   // --- Maze ---------------------------------------------------------------
   // (The mazeFabric switch left the panel in K323 Stage A: the codec
   // entry is gone and the field stays on until K326 deletes knot mode.)
-  // K323: "Real time" is a checkbox over `clock`, shown only under the
-  // minotaur; classic and the burn race ignore a stored realtime value.
-  const rtRow = row(
-    fGame, rtView, "realTime", { label: "Real time" },
-    "Real time: you run the threads at your own pace while the minotaur roams them from the finish; it hunts you once you come close, and a catch sends you back to the entrance (counted in the stats). No undo. Off: the maze waits for each move. Restarts the solve.",
-    false, () => {
-      params.clock = rtView.realTime === true ? "realtime" : "turn";
+  // K795: the Clock rows over `clock` (clockView above): the minotaur's
+  // offers real time too; classic's and the burn race's turns and beat.
+  // Each writes `clock`, re-shows the other row under the `syncing` guard
+  // (a refresh fires change handlers) and restarts the solve.
+  const BEAT_CLOCK_TIP =
+    "Beat: you ride a beat. The dot never stops: it reaches each junction on a beat and takes the run you tapped last (no tap: straight on; a dead end turns it back). The pause button hides the maze. No undo.";
+  const setClock = (clock: string, other: () => RowApi): void => {
+    params.clock = clock as UrlParams["clock"];
+    Object.assign(clockView, clockViewOf());
+    syncing = true;
+    try {
+      other().refresh?.();
+    } finally {
+      syncing = false;
+    }
+    callbacks.onClockChange();
+  };
+  const clockMinoRow: RowApi = row(
+    fGame, clockView, "mino",
+    { options: { Turns: "turn", Beat: "beat", "Real time": "realtime" }, label: "Clock" },
+    `Turns: the maze waits for each move, and the minotaur moves after yours. ${BEAT_CLOCK_TIP} The minotaur moves once per run you ride. Real time: you run the threads at your own pace while the minotaur roams them from the finish; it hunts you once you come close, and a catch sends you back to the entrance (counted in the stats). No undo. Restarts the solve.`,
+    "turn", () => setClock(String(clockView.mino), () => clockPlainRow)
+  );
+  const clockPlainRow: RowApi = row(
+    fGame, clockView, "plain",
+    { options: { Turns: "turn", Beat: "beat" }, label: "Clock" },
+    `Turns: the maze waits for each move. ${BEAT_CLOCK_TIP} No cut either, and in the burn race the fire burns once per run you ride, at its turn speed. Restarts the solve.`,
+    "turn", () => setClock(String(clockView.plain), () => clockMinoRow)
+  );
+  // K795: the beat rider's tuning (K114; BeatSettings), shown only while
+  // the design plays the beat. Each restarts the solve, as the fire
+  // clock's rows do (undo_stack.ts lists them under onClockChange). Tempo
+  // and cap are whole numbers (beatSettingsOf rounds them); the length
+  // takes no step (K130) and an edit keeps the 0.05 grid.
+  const beatTempoRow = row(
+    fGame, p, "beatTempo", { min: 40, max: 180, step: 1, label: "Beat tempo (bpm)" },
+    "Beat: beats a minute. The dot reaches a junction on every beat and plucks its next run's note as it leaves, so a faster tempo leaves less time to tap your next run (100 is 0.6 s a beat). Restarts the solve.",
+    D.beatTempo, () => callbacks.onClockChange()
+  );
+  const beatLengthRow = row(
+    fGame, p, "beatLength",
+    { min: 0.5, max: 8, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label: "Beat length (units)" },
+    "Beat: how much thread the dot rides in one beat, in lattice units (a run is about 4). A run takes its length divided by this in beats, rounded: at least one and at most Max beats per run. Smaller rides long runs in more beats, larger in fewer. Restarts the solve.",
+    D.beatLength, () => {
+      params.beatLength = Math.round(params.beatLength * 20) / 20;
       callbacks.onClockChange();
     }
+  );
+  const beatCapRow = row(
+    fGame, p, "beatCap", { min: 1, max: 8, step: 1, label: "Max beats per run" },
+    "Beat: the most beats one run takes, however long it is, so a long run never crawls past this. 1 rides every run in one beat. Restarts the solve.",
+    D.beatCap, () => callbacks.onClockChange()
   );
   const playerPaceRow = row(
     fGame, p, "playerPace", { min: 2, max: 30, step: 0.5, label: "Your speed (units/s)" },
@@ -2868,6 +2918,7 @@ export function buildPanel(
   ).on("click", () => {
     Object.assign(params, PARAM_DEFAULTS);
     settings.temperature = SETTINGS_DEFAULTS.temperature;
+    Object.assign(clockView, clockViewOf()); // K795: the Clock rows too
     gaView.gridAlign = gridAlignSlider(params.gridAlign);
     bgView.backgroundSpeed = shownSpeed();
     bgView.backgroundAngle = shownAngle();
@@ -2925,11 +2976,19 @@ export function buildPanel(
     revealEndCrossRow.hidden = !threads;
     revealEndGlowRow.hidden = !threads;
     revealFinishRow.hidden = !threads;
-    // K323: only the minotaur reads `clock` (clockOf); classic and the
-    // burn race play on the turn clock whatever a link stored.
+    // K323: only the minotaur reads a realtime `clock` (clockOf); classic
+    // and the burn race play it on the turn clock. K795: every game mode
+    // reads the beat (K114), so a Clock row shows in each, and the beat's
+    // rows only while the design plays it. Under the beat the minotaur
+    // plays the turn clock (minoClockOf), so its turn rows show.
     const gameMino = fab && params.gameMode === "minotaur";
     const realtime = gameMino && params.clock === "realtime";
-    rtRow.hidden = !gameMino;
+    const beat = fab && clockOf(params) === "beat";
+    clockMinoRow.hidden = !gameMino;
+    clockPlainRow.hidden = !fab || gameMino;
+    beatTempoRow.hidden = !beat;
+    beatLengthRow.hidden = !beat;
+    beatCapRow.hidden = !beat;
     playerPaceRow.hidden = !realtime;
     const turnMinoOn = gameMino && !realtime;
     const minoOn = gameMino;
@@ -2986,10 +3045,12 @@ export function buildPanel(
     minoStalkerAccuracyRow.hidden = !stalker;
     // K323/K114: the burn race is gameMode "burn" (its own clock,
     // fireClock); its rows show only in that mode. K440: the speed and
-    // delay rows are the fire clock's own pair.
+    // delay rows are the fire clock's own pair. K795: under the beat the
+    // fire plays the turn pair whatever fireClock says (fireSettingsOf), so
+    // the fire clock's row hides and the turn pair shows.
     const fireOn = fab && params.gameMode === "burn";
-    const fireRt = params.fireClock === "realtime";
-    fireClockRow.hidden = !fireOn;
+    const fireRt = params.fireClock === "realtime" && !beat;
+    fireClockRow.hidden = !fireOn || beat;
     fireSpeedRow.hidden = !fireOn || fireRt;
     fireDelayRow.hidden = !fireOn || fireRt;
     fireSpeedRtRow.hidden = !fireOn || !fireRt;
@@ -3000,7 +3061,8 @@ export function buildPanel(
     parModeRow.hidden = !fab;
     parSlackRow.hidden = !fab || params.parMode === "off";
     collapseRow.hidden = !fab; // K139, every game mode too
-    cutRow.hidden = !fab || params.gameMode !== "classic"; // K114
+    // K114; the beat drops the cut too (fabricRulesOf, K114 call 7).
+    cutRow.hidden = !fab || params.gameMode !== "classic" || beat;
     spoolRow.hidden = !fab; // K137 stage 2
     spoolSlackRow.hidden = !fab || !params.spool;
     hintsRow.hidden = !fab;
@@ -3252,7 +3314,7 @@ export function buildPanel(
     syncFromParams: () => {
       syncing = true;
       try {
-        rtView.realTime = params.clock === "realtime";
+        Object.assign(clockView, clockViewOf());
         gaView.gridAlign = gridAlignSlider(params.gridAlign);
         bgView.backgroundSpeed = shownSpeed();
         bgView.backgroundAngle = shownAngle();
