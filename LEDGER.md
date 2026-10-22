@@ -427,10 +427,10 @@ Next free ID: K788.
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
-  - owner: agent `a12fb9991e1142249` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, relaunched 2026-10-21 08:11 after Claude Code stopped the first builder for compaction thrash; 2 h cap ~10:11)
-  - branch: `worktree-agent-ac022c74b0ce97669`, worktree `.claude/worktrees/agent-ac022c74b0ce97669`; last commit: `4208766f`
+  - owner: nobody since 2026-10-21 09:22 (merged; agent `a12fb9991e1142249` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `3dad5914`
   - evidence: `.claude/probes/K138/s4/`
-  - next: stage 4 in slices: the dim page check, then locks and keys with the exit form end to end, then shortcut, then colors (docs/design/K138_s4.md, its Handoff)
+  - next: slice 1 (the turnstile dim) is merged; next: slice 2 page check (plan the seed-7 route in page/plan.ts, run page/locks_page.mjs on desktop and 411x753), its lore, then slices 3 and 4 (docs/design/K138_s4.md, its Handoff)
   - brief: `docs/design/K138_s4.md`
 - **K777** · Refresh the open-work report (K585): a card for every Waiting on Levi item, a Test now
   list and what changed (Levi 2026-10-21: "make sure all other things I should test now are listed
