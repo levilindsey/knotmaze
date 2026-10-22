@@ -367,3 +367,21 @@ call 9 landed as nothing to build) and the panel rows were K795's.
   spoken finish time (named in the ledger's K114 line; not located
   in this pass - no speech/announcer code matched in src).
 - Suite 2203 green, build green. Golden daily/byte pins untouched.
+## K114 desktop remainder (2026-10-21, session 01a16017)
+
+The spoken-finish-time quirk, located: there is no speech or
+announcer code anywhere in src (the handoff's own search holds),
+and nothing beat-specific is lost on switching. What a clock
+switch FROM the beat loses is exactly what a switch from any
+clock loses: the in-progress attempt. panel onClockChange runs
+restartSolve for turns, beat and real time alike, and
+`.claude/probes/K114/beat/switch_probe.mjs` shows the symmetric
+result (two taps in, switch, taps back to 0 and the head to the
+entrance, both directions). If Levi meant an actual spoken
+announcement of the finish time, that is a new feature to ask
+for, not a quirk in the tree.
+
+The While-riding page order ran clean: beat_page.mjs desktop
+seed 7 against the current build, 12 checks, 0 FAIL (`out/
+beat_desktop_7.json`; the finish banner reads "time 0:20" under
+the beat, HUD "tempo 100 bpm x 1 a run").
