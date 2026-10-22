@@ -862,6 +862,12 @@ export interface UrlParams {
   // K137 scent (4.34): seconds the minotaur's walked runs stay red
   // (0 off).
   minoScent: number;
+  // K137 darkness (4.17): moves until explored fog closes again
+  // (0 = fog never closes, the plain fog of war).
+  darkMoves: number;
+  // K137 darkness (4.17): the lantern's lit radius around the head,
+  // as a multiple of the fog radius (1 = no lantern).
+  lantern: number;
   sleepKind: SleepKind;
   // K138 stage 3: one-way runs, 0 off or the share of the maze's core runs
   // (0..ONE_WAY_MAX 0.6) walked one way only. The classic game only.
@@ -1215,6 +1221,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   sleepers: 0,
   minoExtras: 0,
   minoScent: 0,
+  darkMoves: 0, // K137 darkness (4.17)
+  lantern: 1, // K137 darkness (4.17)
   sleepKind: "wake",
   // K138 stage 3: no one-way runs.
   oneWay: 0,
@@ -2061,6 +2069,8 @@ function readLegacy(
     sleepers: readNumber(query, "slp", D.sleepers),
     minoExtras: readNumber(query, "mex", D.minoExtras), // K137 stage 6
     minoScent: readNumber(query, "msc", D.minoScent), // K137 scent (4.34)
+    darkMoves: readNumber(query, "dkm", D.darkMoves), // K137 darkness (4.17)
+    lantern: readNumber(query, "lan", D.lantern), // K137 darkness (4.17)
     sleepKind: readChoice(query, "slk", SLEEP_KINDS, D.sleepKind),
     // K138 stage 3's one-way share (`&ow=0.4`; PARAM_RANGES clamps 0..0.6).
     oneWay: readNumber(query, "ow", D.oneWay),

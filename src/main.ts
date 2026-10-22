@@ -656,6 +656,8 @@ async function main(): Promise<void> {
   function syncExploration(f: FabricMazeRenderer): void {
     f.fogOfWar = params.exploration === "fog";
     f.fowRadius = params.fowRadius;
+    f.darkMoves = params.darkMoves; // K137 darkness (4.17)
+    f.lantern = params.lantern; // K137 darkness (4.17)
     const ex = f.explore;
     ex.on = params.exploration === "threads";
     ex.reach = params.revealDistance;

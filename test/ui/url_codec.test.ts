@@ -155,6 +155,8 @@ describe("links", () => {
       goldWidth: 1, goldTexture: "solid", // K799
       minoExtras: 0, // K137 stage 6
       minoScent: 0, // K137 scent (4.34)
+      darkMoves: 0, // K137 darkness (4.17)
+      lantern: 1, // K137 darkness (4.17)
     });
   });
 
@@ -907,7 +909,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   gamutArc: "arc", palette: "pal", pathColor: "pc", branchDensity: "brd",
   fourWayFraction: "fwf", deadEndDensity: "ded", pluckStyle: "pk",
   pluckSize: "psz", pluckGhost: "pgh", pluckReach: "prc", physics: "phy",
-  mazeFabric: "mf", pathViz: "pv", threadLook: "tlk", goldWidth: "gw", goldTexture: "gtx", minoExtras: "mex", minoScent: "msc", cameraMode: "cam",
+  mazeFabric: "mf", pathViz: "pv", threadLook: "tlk", goldWidth: "gw", goldTexture: "gtx", minoExtras: "mex", minoScent: "msc", darkMoves: "dkm", lantern: "lan", cameraMode: "cam",
   trailLength: "trl", tension: "tn", exploration: "xp", fowRadius: "fr",
   fowIntro: "fwi", colorScheme: "cs", junctionBlend: "jbl", appearMode: "am",
   appearSequence: "ap", appearSpeed: "as", appearFx: "afx",
@@ -1018,6 +1020,8 @@ if (name === "cartouche") return "knot";
   if (name === "sleepers") return 2; // K137 stage 3d: its default is 0 (off)
   if (name === "minoExtras") return 2; // K137 stage 6: its default is 0 (off)
   if (name === "minoScent") return 12; // 4.34: its default is 0 (off)
+  if (name === "darkMoves") return 12; // 4.17: its default is 0 (never)
+  if (name === "lantern") return 2.5; // 4.17: its default is 1 (off)
   if (name === "oneWay") return 0.4; // K138 stage 3: its default is 0 (off)
   if (name === "lures") return 3; // K137 stage 4: both default to 0 (off)
   if (name === "snares") return 2;
