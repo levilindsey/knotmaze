@@ -22,7 +22,19 @@
 // K114's spider (K98 landed the glyph and the role); K137 stage 3d's
 // follower wears it while it walks (fabric_maze_renderer.ts syncExtras).
 // "sword": K137 stage 3b's sword, at its spot until the player takes it.
-export type MarkerRole = "start" | "exit" | "head" | "minotaur" | "spider" | "sword" | "tick" | "chevron";
+// "key" and "lock": K138 stage 4's keys (at their junctions until taken)
+// and locks (on the runs into the exit while a key is missing).
+export type MarkerRole =
+  | "start"
+  | "exit"
+  | "head"
+  | "minotaur"
+  | "spider"
+  | "sword"
+  | "tick"
+  | "chevron"
+  | "key"
+  | "lock";
 
 // Stroke width and rim margin, in disc radii. The margin equals the stroke
 // (the brief); the outer ink therefore reaches radius 1 - MARKER_MARGIN.
@@ -479,6 +491,39 @@ const DESIGNS: GlyphDesign[] = [
     label: "one-way chevron",
     lines: pen().M(8.4, 5.4).L(15.6, 12).L(8.4, 18.6).lines(),
   },
+  {
+    // K138 stage 4: a KEY lying flat, its bow on the left and two teeth
+    // under the shaft's far end; a placeholder for Levi to replace.
+    id: "key",
+    role: "key",
+    label: "key",
+    lines: pen().M(10.6, 12).L(19.4, 12).M(15.6, 12).L(15.6, 15.2).M(19.4, 12).L(19.4, 15.8).lines(),
+    rings: [[7, 12, 3.6]],
+  },
+  {
+    // K138 stage 4: a PADLOCK, a shackle over the body and a keyhole dot;
+    // a placeholder for Levi to replace.
+    id: "padlock",
+    role: "lock",
+    label: "padlock",
+    lines: pen()
+      .M(8.6, 11)
+      .L(8.6, 8)
+      .L(9.06, 6.3)
+      .L(10.3, 5.06)
+      .L(12, 4.6)
+      .L(13.7, 5.06)
+      .L(14.94, 6.3)
+      .L(15.4, 8)
+      .L(15.4, 11)
+      .M(6.4, 11)
+      .L(17.6, 11)
+      .L(17.6, 19.6)
+      .L(6.4, 19.6)
+      .L(6.4, 11)
+      .lines(),
+    dots: [[12, 15.2, 1.5]],
+  },
 ];
 
 // Legs given for the left side (hip, knee, foot), mirrored to the right
@@ -595,6 +640,8 @@ export const DEFAULT_GLYPHS: Readonly<Record<MarkerRole, string>> = {
   sword: DESIGNS.find((d) => d.role === "sword")!.id,
   tick: DESIGNS.find((d) => d.role === "tick")!.id,
   chevron: DESIGNS.find((d) => d.role === "chevron")!.id,
+  key: DESIGNS.find((d) => d.role === "key")!.id,
+  lock: DESIGNS.find((d) => d.role === "lock")!.id,
 };
 
 // Every glyph id of a role, the default first.

@@ -52,6 +52,7 @@ import type { MinoFog, PathViz } from "../ui/url_state";
 import { spotCtrl } from "../game/minotaur";
 import type { ChaseGraph, MinotaurMode, Spot } from "../game/minotaur";
 import type { SwordState } from "../game/sword";
+import { lockOpens } from "../game/locks";
 import type { ExtraView, TurnTelegraph } from "../game/minotaur_turns";
 import { firePassed, runBurnAt, type Fire } from "../game/fire";
 import { finishHold, finishLifted } from "../game/explore_finish";
@@ -285,7 +286,7 @@ const START_HIDDEN: ReadonlySet<number> = new Set();
 // The marker meshes live for the page (each scene's overlay borrows them;
 // destroy() hands them back undestroyed - the PALETTE_CACHE lore). The
 // spider glyph has no mesh yet (K114 decides what it marks).
-type MeshRole = Exclude<MarkerRole, "spider" | "tick" | "chevron">;
+type MeshRole = Exclude<MarkerRole, "spider" | "tick" | "chevron" | "key" | "lock">;
 let MARKER_MESHES: Record<MeshRole, MarkerMesh> | null = null;
 function markerMeshes(): Record<MeshRole, MarkerMesh> {
   if (!MARKER_MESHES) {
@@ -311,6 +312,14 @@ const CHEVRON_POOL: MarkerMesh[] = [];
 const CHEVRON_SCALE = 0.55;
 const CHEVRON_LONG = 16;
 const CHEVRON_TANGENT = 0.4;
+// K138 stage 4: the keys' and the locks' meshes, page-lifetime like the
+// ticks. A key sits on its junction at KEY_SCALE marker radii, on a gold
+// dot KEY_DOT of its radii; a lock at its run's middle at LOCK_SCALE.
+const KEY_POOL: MarkerMesh[] = [];
+const KEY_SCALE = 0.85;
+const KEY_DOT = 1.3;
+const KEY_GOLD: readonly number[] = [0.98, 0.78, 0.24];
+const LOCK_SCALE = 0.75;
 // A tick sits up and right of its junction (in marker radii), so the head's
 // disc never covers the tick on the junction it stands on, at this share of
 // the marker radius.
@@ -3721,6 +3730,7 @@ export class FabricMazeRenderer {
     this.placeWalkerGlow(controller, r); // K713
     this.drawAids(controller, dotChain >= 0, r); // K137 stage 2
     this.drawOneWay(controller, r); // K138 stage 3
+    this.drawLocks(controller, r); // K138 stage 4
 
     // Start/exit discs sit at the renderer's OWN sample of their ctrl
     // (markerWorld), concentric with the gap slots the renderer cuts for
@@ -3864,6 +3874,70 @@ export class FabricMazeRenderer {
       }
     }
     for (let i = n; i < this.chevrons.length; i++) this.chevrons[i].hide();
+  }
+  // K138 stage 4: the KEYS, a key marker on a gold dot at each key junction
+  // the walk does not hold (a key taken goes; a backtrack over the move that
+  // took it puts it back), and the LOCKS, a padlock at the middle of each
+  // lock run while the walk lacks a key it needs. None on thread a reveal
+  // has not shown yet (the minotaur's test). Keys first in the pool, then
+  // locks.
+  private lockMeshes: MarkerMesh[] = [];
+  private drawLocks(controller: FabricMazeController, r: number): void {
+    let n = 0;
+    const lk = controller.ruleLook?.locks ?? null;
+    if (lk && lk.keys.length > 0) {
+      const held = controller.keysHeldMask;
+      const keyGlyph = markerGlyph(this.markerGlyphIds.key, "key");
+      for (let i = 0; i < lk.keys.length; i++) {
+        if (held & (1 << i)) continue;
+        const v = this.walk.vertices.get(lk.keys[i]);
+        if (!v) continue;
+        const cm = this.ctrlMod(v.chain, v.ctrl);
+        if (this.revealQuery && this.revealQuery(v.chain, cm) < 0.98) continue;
+        if (this.explore.on && this.ribbons.exploreVisAt(v.chain, cm) < 0.98) continue;
+        const mk = this.lockMesh(n++);
+        mk.setGlyph(keyGlyph);
+        mk.setRingColor(KEY_GOLD);
+        this.vertexWorld(lk.keys[i], this.scratch, 0);
+        mk.place(this.scratch[0], this.scratch[1], r * KEY_SCALE, r * KEY_SCALE * KEY_DOT);
+      }
+      const lockGlyph = markerGlyph(this.markerGlyphIds.lock, "lock");
+      for (const eid of lk.locks.keys()) {
+        if (lockOpens(lk, eid, held)) continue;
+        const e = this.walk.edges[eid];
+        if (!e || controller.isHidden(eid)) continue;
+        const cm = this.ctrlMod(e.chain, (e.ctrlA + e.ctrlB) / 2);
+        if (this.revealQuery && this.revealQuery(e.chain, cm) < 0.98) continue;
+        if (this.explore.on && this.ribbons.exploreVisAt(e.chain, cm) < 0.98) continue;
+        this.pointFlowed(e.chain, cm, this.scratch, 0);
+        const mk = this.lockMesh(n++);
+        mk.setGlyph(lockGlyph);
+        mk.clearRing();
+        mk.place(this.scratch[0], this.scratch[1], r * LOCK_SCALE);
+      }
+    }
+    for (let i = n; i < this.lockMeshes.length; i++) this.lockMeshes[i].hide();
+  }
+  // The keys and locks shown now, for the probes: layer-local x, y and
+  // radius, and which glyph.
+  get lockMarkers(): { x: number; y: number; r: number; kind: string }[] {
+    return this.lockMeshes
+      .filter((mk) => mk.mesh.visible)
+      .map((mk) => ({
+        x: mk.mesh.position.x,
+        y: mk.mesh.position.y,
+        r: mk.mesh.scale.x,
+        kind: mk.glyph === this.markerGlyphIds.key ? "key" : "lock",
+      }));
+  }
+  private lockMesh(i: number): MarkerMesh {
+    while (this.lockMeshes.length <= i) {
+      const j = this.lockMeshes.length;
+      const mk = KEY_POOL[j] ?? (KEY_POOL[j] = new MarkerMesh());
+      this.overContainer.addChildAt(mk.mesh, this.overContainer.getChildIndex(this.markers.head.mesh));
+      this.lockMeshes.push(mk);
+    }
+    return this.lockMeshes[i];
   }
   // The chevrons shown now (the probes' count).
   get chevronCount(): number {
