@@ -1697,7 +1697,9 @@ export class FabricMazeRenderer {
     );
 
     const prev = a.cur;
-    a.cur += dir * MOVE_CTRL_PER_S * this.moveSpeed * factor * dt;
+    // K137 s5: your dot crosses a muddy run at half speed.
+    const mudF = controller.mudRuns.has(a.e.id) ? 0.5 : 1;
+    a.cur += dir * MOVE_CTRL_PER_S * this.moveSpeed * factor * mudF * dt;
     const arrived = (dir > 0 && a.cur >= a.to) || (dir < 0 && a.cur <= a.to);
     // The fog lifts at every station the dot passed this frame, not only
     // where the frame left it (K99).
@@ -3472,6 +3474,22 @@ export class FabricMazeRenderer {
     );
   }
 
+  // K137 s5: the muddy runs not yet walked, as dull bronze spans (the
+  // stand-in look; the fuzzy thread is Levi's call in K137_s5.md). A
+  // walked muddy run wears its full gold instead.
+  private mudSpans(
+    controller: FabricMazeController,
+    walked: ReadonlySet<number>
+  ): PaintSpan[] {
+    if (controller.mudRuns.size === 0) return [];
+    const out: PaintSpan[] = [];
+    for (const eid of controller.mudRuns) {
+      if (walked.has(eid)) continue;
+      const e = this.walk.edges[eid];
+      out.push({ chain: e.chain, c0: e.ctrlA, c1: e.ctrlB, p0: 0.5, p1: 0.5 });
+    }
+    return out;
+  }
 
   // Paint + markers for one animation frame: the stack minus the in-flight
   // run, plus the swept part of it (growing behind the dot on an advance,
@@ -3513,7 +3531,7 @@ export class FabricMazeRenderer {
     const gold = this.goldPaint(controller, a);
     const passes = { routes: gold.routes, traveled: gold.traveled };
     this.ribbons.setPaint(
-      gold.spans,
+      [...gold.spans, ...this.mudSpans(controller, gold.walked)],
       [],
       this.buildCaps(controller, gold),
       [...this.turnstileBands(controller), ...passes.routes],
@@ -3551,9 +3569,9 @@ export class FabricMazeRenderer {
     const gold =
       !trail && !stringViz ? this.goldPaint(controller, null) : null;
     const spans: PaintSpan[] = trail
-      ? trail.spans
+      ? [...trail.spans, ...this.mudSpans(controller, new Set(controller.pathEdges))]
       : gold
-        ? gold.spans
+        ? [...gold.spans, ...this.mudSpans(controller, gold.walked)]
         : [];
 
     const caps = stringViz

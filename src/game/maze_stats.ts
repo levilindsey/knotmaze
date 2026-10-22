@@ -78,7 +78,9 @@ export type StatId =
   // K138 stage 3: the one-way runs.
   | "oneWay"
   // K138 stage 4: the keys.
-  | "keys";
+  | "keys"
+  // K137 s5: the muddy runs laid.
+  | "muddy";
 
 export const STATS: Record<StatId, { label: string; line: string }> = {
   // TIME above (SolveClock). The Burnt banner shows it too, for a run the
@@ -319,6 +321,14 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
   },
   // K137 stage 2: game/spool.ts spoolGauge of the controller's spoolUsed
   // (pathEdges.length) against spoolCap (parFor(fewestRuns, spoolSlack)).
+  // K137 s5 (4.33): the muddy runs laid this maze (game/mud.ts).
+  muddy: {
+    label: "muddy",
+    line:
+      "Muddy runs laid on the shortest route. Crossing one takes two " +
+      "moves, for you and the minotaur alike, so the fewest-moves way " +
+      "and the shortest way part.",
+  },
   spool: {
     label: "spool",
     line:

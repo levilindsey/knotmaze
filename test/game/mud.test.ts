@@ -98,3 +98,76 @@ describe("K137 s5 muddy runs", () => {
     expect(c.mudRuns.size).toBe(0);
   });
 });
+describe("K137 s5 muddy monsters", () => {
+  it("mudStep finds the first muddy step", async () => {
+    const { mudStep } = await import("../../src/game/mud");
+    expect(mudStep(new Set([2]), [[0, 1], [2, 3], [1, 2]])).toBe(1);
+    expect(mudStep(new Set([9]), [[0, 1]])).toBe(-1);
+    expect(mudStep(new Set(), [[0, 1]])).toBe(-1);
+  });
+
+  it("the turn minotaur spends the turn after a muddy crossing standing", async () => {
+    const { TurnMinotaur, turnConfig, DEFAULT_TURN_MINO, turnSeed } =
+      await import("../../src/game/minotaur_turns");
+    const { SeededRNG } = await import("../../src/util/random");
+    const w = walkFor(11);
+    const t = new TurnMinotaur(
+      w,
+      turnConfig({ ...DEFAULT_TURN_MINO, model: "hunter", speed: "two", telegraph: true }),
+      turnSeed(11)
+    );
+    // Every run muddy: any crossing costs the next turn.
+    t.mud = new Set(w.edges.map((e) => e.id));
+    const rng = new SeededRNG(99);
+    let crossed = 0;
+    let stood = 0;
+    let prevCrossed = false;
+    for (let i = 0; i < 160; i++) {
+      const beforeV = t.state.v;
+      const runs = t.g.adj[t.player];
+      const e = rng.next() < 0.15 ? -1 : runs[rng.nextInt(runs.length)];
+      const r = t.turn(e);
+      if (prevCrossed && r !== "caught" && r !== "win") {
+        expect(t.state.v).toBe(beforeV);
+        stood++;
+      }
+      prevCrossed = r !== "caught" && t.lastPath.length > 0;
+      if (prevCrossed) crossed++;
+      if (r === "win") break;
+    }
+    expect(crossed).toBeGreaterThan(0);
+    expect(stood).toBeGreaterThan(0);
+  });
+
+  it("the real-time chase crosses a muddy run at half speed", async () => {
+    const { MinotaurChase, DEFAULT_CHASE_PARAMS, CHASE_HZ } =
+      await import("../../src/game/minotaur");
+    const w = walkFor(7);
+    const mk = (muddy: boolean) => {
+      const sim = new MinotaurChase(
+        w,
+        { ...DEFAULT_CHASE_PARAMS, wake: 1, paceJitter: 0, pauseChance: 0 },
+        7
+      );
+      if (muddy) sim.mud = new Set(w.edges.map((e) => e.id));
+      return sim;
+    };
+    const plain = mk(false);
+    const mud = mk(true);
+    // Step until the plain chase is on its first leg, then a few ticks
+    // more: both are on that same leg, the muddy one behind.
+    for (let i = 0; i < CHASE_HZ * 5 && plain.mino.edge < 0; i++) {
+      plain.advance(1 / CHASE_HZ);
+      mud.advance(1 / CHASE_HZ);
+    }
+    expect(plain.mino.edge).toBeGreaterThanOrEqual(0);
+    for (let i = 0; i < 10; i++) {
+      plain.advance(1 / CHASE_HZ);
+      mud.advance(1 / CHASE_HZ);
+    }
+    expect(mud.mino.edge).toBe(plain.mino.edge);
+    expect(mud.mino.dir).toBe(plain.mino.dir);
+    if (plain.mino.dir > 0) expect(mud.mino.pos).toBeLessThan(plain.mino.pos);
+    else expect(mud.mino.pos).toBeGreaterThan(plain.mino.pos);
+  });
+});

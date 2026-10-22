@@ -93,6 +93,8 @@ export interface HudSnapshot {
   oneWay?: number | null;
   // K138 stage 4: the keys held of those laid.
   keys?: { held: number; of: number } | null;
+  // K137 s5: the muddy runs laid (absent or null: mud off).
+  muddy?: number | null;
 }
 
 // K138 stage 2: what the hidden row reads.
@@ -560,6 +562,7 @@ export interface WinInfo {
   hidden?: HiddenShown | null;
   oneWay?: number | null; // K138 stage 3
   keys?: { held: number; of: number } | null; // K138 stage 4
+  muddy?: number | null; // K137 s5: the muddy runs laid
   // Show the daily stats button.
   stats: boolean;
 }
@@ -664,7 +667,7 @@ export type RuleFields = Pick<
   HudSnapshot,
   | "snapped" | "parLeft" | "parStrokes" | "collapse" | "cuts" | "walker"
   | "spool" | "hints" | "spoolUsed" | "hintsUsed"
-  | "rules" | "turnstiles" | "hidden" | "oneWay" | "keys"
+  | "rules" | "turnstiles" | "hidden" | "oneWay" | "keys" | "muddy"
 >;
 
 // A par or a count of moves; an infinite par (no way to the exit) reads as
@@ -713,6 +716,8 @@ export function ruleEntries(s: RuleFields): StatEntry[] {
   if (s.oneWay != null) rows.push(entry("oneWay", String(s.oneWay)));
   // K138 stage 4: "keys 1 / 3" (held of those laid).
   if (s.keys) rows.push(entry("keys", `${s.keys.held} / ${s.keys.of}`));
+  // K137 s5: "muddy 3" (the runs laid).
+  if (s.muddy != null) rows.push(entry("muddy", String(s.muddy)));
   if (s.spoolUsed != null) rows.push(entry("spoolUsed", `${s.spoolUsed}%`));
   if (s.hintsUsed != null) rows.push(entry("hintsUsed", String(s.hintsUsed)));
   return rows;
