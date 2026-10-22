@@ -435,18 +435,6 @@ Next free ID: K787.
   - evidence: `.claude/probes/K138/s4/`
   - next: stage 4 in slices: the dim page check, then locks and keys with the exit form end to end, then shortcut, then colors (docs/design/K138_s4.md, its Handoff)
   - brief: `docs/design/K138_s4.md`
-- **K774** · K114 beat rider with the hunter: a catch never lands (K767, real phone and desk:
-  `.claude/probes/K767/out/catch_desk_sprint`, `notes.md`). The model counts it and respawns both,
-  but no HUD count, toast, heart or banner follows: the rider departs the next run in the same
-  `advance` as the arrival and `beginMove` snaps the animation, so `moveProgress` never reaches 1
-  and the deferred catch (`pendingCatch.t = 1`) never lands (inferred). Fix: land a pending catch
-  when its animation is snapped or the rider departs; check the walker too; make `beat_phone.mjs`
-  check B need the heart or toast
-  - owner: agent `a472d1436c1b03aba` of claude session 91b19e11-7759-4638-ba60-4705b011b94f (opus, started 2026-10-21 07:21, 2 h cap ~09:21)
-  - branch: `worktree-agent-a472d1436c1b03aba`, worktree `.claude/worktrees/agent-a472d1436c1b03aba`; last commit: `9fbcef97`
-  - evidence: `.claude/probes/K774/`
-  - next: verify the snapped-animation cause, land the catch exactly once, regression tests, the desk page check, the fixed phone probe (docs/design/K774.md)
-  - brief: `docs/design/K774.md`
 
 ## Next, in order
 
@@ -1760,6 +1748,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K774** · Beat rider catches land exactly once (moveAlong lands a pending catch before the next departure; test/app/beat_catch.test.ts). Done in 8a9fe90c (2026-10-21).
 - **K764** · A press on a hidden, burnt or cut run grabs and tugs the unseen thread instead of panning, which gives its position away (from the code: `grabAt`/`onThread` in `src/app/input_pointer.ts` skip none of them; fix: skip them there). Dropped: not reproduced (K138 s3, desktop, both hosts): a press on an unrevealed hidden run pans, since every unseen span reaches the ribbons as explore pieces (exploreOn true) and the pickers skip it; cut, broken and burnt runs share that code; touch goes to K784 (2026-10-21).
 - **K767** · Phone sitting 5 on real touches (turnstiles, hidden runs, the beat rider): all three play; found the beat-plus-hunter catch bug (K774) and the hidden runs HUD overflow (K775); K764 unsettled; sheets in .claude/probes/K767/out/. Done in caa4f8ea (2026-10-21).
 - **K749** · Phone sitting 4 (04:23-04:41, tested build 4a1dd4d5): K698 toasts clear every control on real touches (settled gap 9.9 css px, none cut off); ice slides and both color rules pass with backtracks; sprint passes on both clocks; K738 confirmed as a real overlap and K744 blips seen at real size; `.claude/probes/K749/out/`. Done in 4a1dd4d5 (2026-10-21).
