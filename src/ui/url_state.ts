@@ -859,6 +859,9 @@ export interface UrlParams {
   // K137 stage 6: real-time extras - awake hunters on junctions 1-3
   // runs off the route (0 off, 1..3). Free play only.
   minoExtras: number;
+  // K137 scent (4.34): seconds the minotaur's walked runs stay red
+  // (0 off).
+  minoScent: number;
   sleepKind: SleepKind;
   // K138 stage 3: one-way runs, 0 off or the share of the maze's core runs
   // (0..ONE_WAY_MAX 0.6) walked one way only. The classic game only.
@@ -1211,6 +1214,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K137 stage 3d: no extra monsters (sleepKind waits for a count).
   sleepers: 0,
   minoExtras: 0,
+  minoScent: 0,
   sleepKind: "wake",
   // K138 stage 3: no one-way runs.
   oneWay: 0,
@@ -2056,6 +2060,7 @@ function readLegacy(
     // clamps the count to 0..3).
     sleepers: readNumber(query, "slp", D.sleepers),
     minoExtras: readNumber(query, "mex", D.minoExtras), // K137 stage 6
+    minoScent: readNumber(query, "msc", D.minoScent), // K137 scent (4.34)
     sleepKind: readChoice(query, "slk", SLEEP_KINDS, D.sleepKind),
     // K138 stage 3's one-way share (`&ow=0.4`; PARAM_RANGES clamps 0..0.6).
     oneWay: readNumber(query, "ow", D.oneWay),

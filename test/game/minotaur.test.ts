@@ -1072,6 +1072,32 @@ describe("K324 stage 3: the guard and the stalker", () => {
     expect(checked).toBeGreaterThan(10);
   });
 });
+describe("K137 scent (4.34): the fading trail", () => {
+  it("records walked runs and fades them out over the span", () => {
+    const params = P({ wake: 0, wanderPace: 6, paceJitter: 0, pauseChance: 0 });
+    const sim = new MinotaurChase(G1, params, 7);
+    sim.scentFadeS = 10;
+    run(sim, 2 * CHASE_HZ);
+    // Walking out of the lair it has scented the exit tail, fresh.
+    expect(sim.scent.length).toBeGreaterThan(0);
+    const tail = sim.scent.find((s) => s.edge === 3);
+    expect(tail).toBeDefined();
+    expect(tail!.a).toBeGreaterThan(0.5);
+    // The spans reader agrees, and every strength is in (0, 1].
+    for (const s of sim.scentSpans(10)) {
+      expect(s.a).toBeGreaterThan(0);
+      expect(s.a).toBeLessThanOrEqual(1);
+    }
+  });
+  it("leaves the list empty with the fade off (default byte-neutral)", () => {
+    const params = P({ wake: 0, wanderPace: 6, paceJitter: 0, pauseChance: 0 });
+    const sim = new MinotaurChase(G1, params, 7);
+    run(sim, 2 * CHASE_HZ);
+    expect(sim.scent).toEqual([]);
+    expect(sim.scentSpans(0)).toEqual([]);
+  });
+});
+
 describe("K137 stage 6: real-time extras", () => {
   const hunt = P({ playerPace: 0, approachPace: 10, detectStart: 100, detectEnd: 200, catchDist: 0.5, wake: 600, stopMin: 0, stopMax: 0 });
 

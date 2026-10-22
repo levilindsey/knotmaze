@@ -2208,6 +2208,13 @@ export function buildPanel(
     "Real-time clock: more hunters awake in the maze, a few runs off the shortest way. Each hunts as the minotaur does; a catch by any of them sends you back to the entrance and every monster back to its spot. Restarts the solve.",
     D.minoExtras, () => callbacks.onClockChange()
   );
+  // K137 (4.34): the real-time scent trail's fade span.
+  const minoScentRow = row(
+    fMino, p, "minoScent",
+    { min: 0, max: 30, step: 1, format: (v: number) => (v === 0 ? "off" : `${v}s`), label: "Scent fade" },
+    "Real-time clock: the minotaur leaves a fading trail of scent on every run it walks, readable even under fog. A longer span keeps more of its path visible. Applies on the next restart.",
+    D.minoScent, () => callbacks.onClockChange()
+  );
   // K137 stage 4 (4.10, 4.30; game/lures.ts, game/snares.ts): the lures
   // and snares, turn clock only. A restart refills both (onClockChange).
   const luresRow = row(
@@ -3183,6 +3190,7 @@ export function buildPanel(
     sleepersRow.hidden = !minoOn || realtime;
     sleepKindRow.hidden = !minoOn || realtime || params.sleepers <= 0;
     minoExtrasRow.hidden = !minoOn || !realtime; // K137 stage 6
+    minoScentRow.hidden = !minoOn || !realtime; // 4.34 scent needs the real-time clock
     // K137 stage 4: the lures and snares play on the turn clock only, and
     // snares by runs only (TurnMinotaur.setSnare refuses by length).
     luresRow.hidden = !minoOn; // K137 stage 7: real time too

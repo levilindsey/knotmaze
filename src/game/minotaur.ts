@@ -613,7 +613,14 @@ export class MinotaurChase {
   // below reads them and every digest holds) and the acting monster's
   // id while it stands in (-1 the minotaur, i extra i).
   snares: Snare[] = [];
+  // K137 scent (4.34): the tick each run was last walked (any monster),
+  // for the fading red trail. Recording only; no digest reads it.
+  private scentTrail = new Map<number, number>();
   snareHoldS = 3;
+  // K137 scent (4.34): the trail's fade in seconds (main sets it from
+  // the minoScent param) and the current spans for the renderer.
+  scentFadeS = 0;
+  scent: { edge: number; a: number }[] = [];
   private actingId = -1;
   private seedNum = 0;
   sprintLeft = 0;
@@ -1076,6 +1083,9 @@ export class MinotaurChase {
     }
     if (this.mode === "hunt") this.huntTicks++;
     this.tick++;
+    // Scent (4.34): keep the view-side list fresh each tick.
+    if (this.scentFadeS > 0) this.scent = this.scentSpans(this.scentFadeS);
+    else if (this.scent.length) this.scent = [];
     return out;
   }
 
@@ -1213,10 +1223,24 @@ export class MinotaurChase {
     }
   }
 
+  // The scent trail (4.34): each walked run with its strength 0..1
+  // after `fadeS` seconds. Prunes as it reads.
+  scentSpans(fadeS: number): { edge: number; a: number }[] {
+    const out: { edge: number; a: number }[] = [];
+    if (!(fadeS > 0)) return out;
+    for (const [edge, t] of this.scentTrail) {
+      const a = 1 - (this.tick - t) / (fadeS * CHASE_HZ);
+      if (a <= 0.01) this.scentTrail.delete(edge);
+      else out.push({ edge, a });
+    }
+    return out;
+  }
+
   private moveMinotaur(): void {
     const g = this.g;
     const m = this.mino;
     const P = this.params;
+    if (m.edge >= 0) this.scentTrail.set(m.edge, this.tick); // 4.34
     // K137 stage 7: a snare holds this monster (left counts ticks); a
     // held monster stands, and still catches by contact (step()).
     const heldSnare = this.snares.find(

@@ -405,6 +405,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   choice("goldTexture", ["solid", "pencil", "crayon", "highlighter"]),
   // 224, K137 stage 6: real-time extras (0 off, 1..3 hunters).
   num("minoExtras"),
+  // 225, K137 scent (4.34): the scent trail's seconds (0 off).
+  num("minoScent"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -571,6 +573,7 @@ export const PARAM_RANGES: Readonly<
   hiddenRuns: [0, 4], // K138 stage 2 (HIDDEN_MAX)
   sleepers: [0, 3], // K137 stage 3d (SLEEPERS_MAX)
   minoExtras: [0, 3], // K137 stage 6
+  minoScent: [0, 30], // K137 scent (4.34)
   oneWay: [0, 0.6], // K138 stage 3 (ONE_WAY_MAX)
   lures: [0, 5], // K137 stage 4 (LURES_MAX)
   snares: [0, 3], // K137 stage 4 (SNARES_MAX)
