@@ -41,8 +41,22 @@ import type { RuleWalk, WalkRule, Placement } from "./rule_search";
 import { composeRules, exemptRun, meterLength, placeRule, plainRule, ruleRng, ruleSearch } from "./rule_search";
 import { oneWayCore } from "./one_way";
 
-export type LockMode = "exit" | "shortcut";
-export const LOCK_MODES: readonly LockMode[] = ["exit", "shortcut"];
+export type LockMode = "exit" | "shortcut" | "colors";
+export const LOCK_MODES: readonly LockMode[] = ["exit", "shortcut", "colors"];
+
+// The colors form's palette (slice 4): keys are colored, the latest
+// key taken dyes the yarn, and a gate opens only for yarn of its
+// color. Three colors keep the (mask, latest) state small and the
+// beads legible at phone size.
+export const KEY_COLOR_COUNT = 3;
+export const KEY_COLORS: readonly number[] = [0xd84a3a, 0x3a7bd8, 0x43a95c];
+export const KEY_COLOR_NAMES: readonly string[] = ["red", "blue", "green"];
+// The same colors as 0..1 RGB (the marker rings' form).
+export const KEY_COLOR_RGB: readonly (readonly number[])[] = KEY_COLORS.map((h) => [
+  ((h >> 16) & 255) / 255,
+  ((h >> 8) & 255) / 255,
+  (h & 255) / 255,
+]);
 export const KEYS_MAX = 3;
 // Keys lie within this many runs of the base route...
 export const KEY_RADIUS = 4;
@@ -52,7 +66,11 @@ export const KEY_DETOUR_MAX = 11;
 export interface LockLayout {
   mode: LockMode;
   keys: readonly string[]; // key i's junction (bit 1 << i)
-  locks: ReadonlyMap<number, number>; // lock run -> the key bits it needs
+  // Lock run -> the key bits it needs. The colors form instead stores
+  // the yarn color it wants (KEY_COLORS index), +1.
+  locks: ReadonlyMap<number, number>;
+  // The colors form: key order -> color index (KEY_COLORS).
+  keyColors?: readonly number[];
 }
 
 export function lockModeOf(v: unknown): LockMode {
@@ -72,6 +90,19 @@ export function lockOpens(layout: LockLayout, run: number, held: number): boolea
   return (held & need) === need;
 }
 
+// The colors form: the yarn color a lock run wants (-1: not a gate),
+// and whether yarn of `latest` color opens it (-1: no key taken yet).
+export function lockGateColor(layout: LockLayout, run: number): number {
+  if (layout.mode !== "colors") return -1;
+  const need = layout.locks.get(run);
+  return need === undefined ? -1 : need - 1;
+}
+
+export function lockGateOpen(layout: LockLayout, run: number, latest: number): boolean {
+  const want = lockGateColor(layout, run);
+  return want >= 0 && latest === want;
+}
+
 // The number of keys in a held mask.
 export function keysIn(held: number): number {
   let n = 0;
@@ -81,6 +112,29 @@ export function keysIn(held: number): number {
 
 export function lockRule(walk: RuleWalk, layout: LockLayout): WalkRule {
   const at = keyMasks(layout);
+  if (layout.mode === "colors") {
+    // State: held mask x (latest color + 1). A gate opens only for
+    // yarn of its color; standing on a key (held or not) re-dyes.
+    const per = KEY_COLOR_COUNT + 1;
+    const colorAt = new Map<string, number>();
+    layout.keys.forEach((v, i) => colorAt.set(v, layout.keyColors?.[i] ?? 0));
+    return {
+      states: (1 << layout.keys.length) * per,
+      start: 0,
+      step(from, run, state) {
+        const e = walk.edges[run];
+        if (!e || (e.va !== from && e.vb !== from)) return null;
+        const latest = (state % per) - 1;
+        const want = lockGateColor(layout, run);
+        if (want >= 0 && latest !== want) return null;
+        const to = e.va === from ? e.vb : e.va;
+        const mask = Math.floor(state / per) | (at.get(to) ?? 0);
+        const dye = colorAt.get(to);
+        const next = mask * per + (dye === undefined ? latest : dye) + 1;
+        return { runs: [run], to, state: next, length: meterLength(walk, run) };
+      },
+    };
+  }
   return {
     states: 1 << layout.keys.length,
     start: at.get(walk.start) ?? 0,
@@ -255,6 +309,7 @@ export function placeLocks(
   const k0 = Math.max(0, Math.min(KEYS_MAX, Math.floor(keys)));
   if (!(k0 > 0)) return { layout: null, bites: false, draws: 0 };
   if (mode === "shortcut") return placeShortcut(walk, k0, seed, base);
+  if (mode === "colors") return placeColorGates(walk, k0, seed, base);
   const { locks, candidates: found } = lockCandidates(walk, base);
   if (locks.length === 0) return { layout: null, bites: false, draws: 0 };
   const ruleOf = (layout: LockLayout): WalkRule =>
@@ -344,6 +399,56 @@ function placeShortcut(
       keys.push(key.vertex);
     }
     return { mode: "shortcut", keys, locks: map };
+  };
+  return placeRule(walk, draw, ruleOf, base);
+}
+
+// The colors form's placement: the exit form's gates (the runs into
+// the exit) and key candidates, with colors laid over them. Key i's
+// color cycles the palette from a seeded rotation, so any key count
+// spreads the colors; each gate wants the color of one of the keys
+// laid (drawn per gate), and placeRule keeps the first solvable
+// coloring that bites.
+function placeColorGates(
+  walk: RuleWalk,
+  k0: number,
+  seed: number,
+  base: WalkRule | null
+): Placement<LockLayout> {
+  const { locks, candidates: found } = lockCandidates(walk, base);
+  if (locks.length === 0 || found.length === 0) return { layout: null, bites: false, draws: 0 };
+  const ruleOf = (layout: LockLayout): WalkRule =>
+    base ? composeRules(base, lockRule(walk, layout)) : lockRule(walk, layout);
+  const usable = found.filter((c) =>
+    ruleSearch(
+      walk,
+      ruleOf({ mode: "colors", keys: [c.vertex], locks: new Map(locks.map((r) => [r, 1])), keyColors: [0] })
+    ).solvable
+  );
+  const count = Math.min(k0, usable.length);
+  if (count === 0) return { layout: null, bites: false, draws: 0 };
+  const rng = ruleRng(seed, "locks");
+  const draw = (): LockLayout => {
+    const pool = usable.slice();
+    const chosen: KeyCandidate[] = [];
+    while (chosen.length < count && pool.length > 0) {
+      let total = 0;
+      for (const c of pool) total += c.detour;
+      let x = rng.nextInt(total);
+      let j = 0;
+      while (x >= pool[j].detour) {
+        x -= pool[j].detour;
+        j++;
+      }
+      chosen.push(pool.splice(j, 1)[0]);
+    }
+    const rot = rng.nextInt(KEY_COLOR_COUNT);
+    const keyColors = chosen.map((_, i) => (i + rot) % KEY_COLOR_COUNT);
+    const gates = new Map<number, number>();
+    for (const r of locks) {
+      gates.set(r, keyColors[rng.nextInt(keyColors.length)] + 1);
+    }
+    return { mode: "colors", keys: chosen.map((c) => c.vertex), locks: gates, keyColors };
   };
   return placeRule(walk, draw, ruleOf, base);
 }

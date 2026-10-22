@@ -744,6 +744,11 @@ export function installProbeHooks(ctx: ProbeCtx): void {
                   held: c.keysHeld,
                   heldMask: c.keysHeldMask,
                   total: c.keysTotal,
+                  // K138 slice 4: the colors form's key colors and the
+                  // gates' wants (run -> color + 1), and the yarn now.
+                  keyColors: c.ruleLook.locks.keyColors ? [...c.ruleLook.locks.keyColors] : null,
+                  gates: [...c.ruleLook.locks.locks.entries()],
+                  latest: c.keysLatestColor,
                 }
               : null,
             // Each run's note (the pitch a pluck at its middle plays; a
