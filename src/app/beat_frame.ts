@@ -142,8 +142,23 @@ export function createBeat(deps: BeatDeps): BeatFrame {
   return {
     clock,
     rider: () => rider,
-    needsFrame: () =>
-      rider !== null && clock.running && (rider.riding || rider.startBeat >= 0),
+    // A frame is needed to build the rider after a panel switch to the
+    // beat (or a tempo/timing edit) while it rests: without this the GAME
+    // poll never fires, tick never runs, and __knotBeat() stays off.
+    needsFrame: () => {
+      const s = deps.settings();
+      if (!s) return false;
+      if (rider === null) return true;
+      if (
+        rider.tempo !== s.tempo ||
+        rider.unit !== s.unit ||
+        rider.cap !== s.cap ||
+        rider.timing !== s.timing ||
+        rider.perRun !== s.perRun
+      )
+        return true;
+      return clock.running && (rider.riding || rider.startBeat >= 0);
+    },
     queue: (run) => {
       // Paused, nothing queues (keys and the pad; the hidden canvas takes no taps).
       if (clock.isHeld) return false;
