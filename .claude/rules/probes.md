@@ -713,6 +713,8 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
 
 - K795 (2026-10-21), the beat rows and tunables: `.claude/probes/K795/beat_page.mjs <desktop|phone> <rows|ride> [extra] [label]` (serve the worktree with `.claude/probes/K795/vite.private-cache.config.ts` on 5420; `BASE` overrides; `?7&am=instant&snd=none`, fresh profile deleted after, no `--virtual-time-budget`). `rows` checks the Clock rows, the five beat rows' show/hide, tempo/beats reaching `__knotBeat()`, and the tunables' rows writing their params with the link returning at defaults. `ride` rides seed 7 straight on for 8 s (even: every run `beatPerRun` beats, `7200/tempo * beatPerRun` ticks apart) then steers to the exit and reports its time against K114's 0:32-0:34 under `btm=length`.
 
+- K137 s5 (2026-10-21), muddy runs: `.claude/probes/K137/s5/mud_page.mjs <desktop|phone>` (serve the worktree with `.claude/probes/K137/s5/vite.private-cache.config.ts` on 5424; `?7&am=instant&snd=none`, no `--virtual-time-budget`). Checks the laid mud (`__knotFabric().muddy`), the panel row, a muddy tap counting two strokes while walking the fewest-moves route (`choiceMoves`), and the turn hook's muddy list with a turn spent in mud; stills via the K794 lib's out dir.
+
 ## Census and diagnosis rules
 
 - *From P3.38 (the pull-outward merge), lesson:* LESSON: the
