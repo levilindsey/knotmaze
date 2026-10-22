@@ -64,6 +64,7 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   goldWidth: ["gw", "traveled path width", "route width", "gold width", "path width"], // K799
   goldTexture: ["gtx", "traveled path fill", "pencil", "crayon", "highlighter", "route texture"], // K799
   minoExtras: ["mex", "real-time extras", "more monsters", "extra hunters", "second minotaur"], // K137 stage 6
+  minoScent: ["msc", "minotaur scent", "scent trail", "red trail", "where it has been"], // K137 scent (4.34)
   cameraMode: ["cam", "view", "zoom", "pan", "follow player", "whole maze", "scroll", "pinch", "reset view"],
   trailLength: ["trl", "memory mode", "route length", "breadcrumbs", "how far back", "history", "trail", "lit stretch"],
   tension: ["tn", "yarn", "loose", "taut", "wavy", "ariadne", "cotton", "tightness", "white thread"],

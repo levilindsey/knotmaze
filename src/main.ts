@@ -1889,7 +1889,6 @@ async function main(): Promise<void> {
     refillHearts(); // K137 stage 3a: every heart back.
     sprintState = "ready"; // K137 stage 3c: sprint back.
     // K137 stage 4: the lures and snares back, the tool put down.
-    if (scene.chase) scene.chase.snareHoldS = snareHoldOf(params.snareHold); // K137 stage 7
     luresLeft = luresOf(params.lures);
     snaresLeft = snaresOf(params.snares);
     toolArmed = null;
@@ -1900,6 +1899,11 @@ async function main(): Promise<void> {
         ? new MinotaurChase(scene.walkGraph, chaseParamsOf(params), params.seed)
         : null;
     if (scene.chase && prevChase) scene.chase.carry(prevChase);
+    // Set on the NEW chase (the old one is discarded above): K137 stage 7 + scent (4.34).
+    if (scene.chase) {
+      scene.chase.snareHoldS = snareHoldOf(params.snareHold);
+      scene.chase.scentFadeS = params.minoScent;
+    }
     chaseRunning = false;
     // K80 turns: the turn clock's minotaur, when one is chosen. Its stream
     // is the seed's own (turnSeed), so the same taps meet the same minotaur.

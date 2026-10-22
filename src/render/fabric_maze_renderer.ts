@@ -93,6 +93,8 @@ export interface MinotaurView {
   readonly extraViews?: readonly ExtraView[];
   // K137 stage 4 (4.30): the snares laid (TurnMinotaur.snares; absent: none).
   readonly snares?: readonly Snare[];
+  // K137 scent (4.34): walked runs with their strength 0..1 (real time).
+  scent?: readonly { edge: number; a: number }[];
 }
 import { FogBackdrop } from "./background";
 import { fogArcStations, moveEnds, travelOrder } from "./fog_arc";
@@ -758,6 +760,8 @@ export class FabricMazeRenderer {
   // K137 stage 4 (4.30): the snares' stand-in rings (syncSnares), under the
   // monsters.
   private snareGfx: Graphics;
+  // K137 scent (4.34): the fading red trail (syncScent).
+  private scentGfx: Graphics;
   private minoGlow: Sprite;
   // K137 stage 3b: the telegraph's ink, FLEE_BLUE while the minotaur flees.
   private teleInk = TELEGRAPH_COLOR;
@@ -866,7 +870,9 @@ export class FabricMazeRenderer {
     this.extraLayer = new Container();
     this.snareGfx = new Graphics();
     this.snareGfx.visible = false;
-    this.overContainer.addChild(this.snareGfx, this.extraLayer, this.minoLayer);
+    this.scentGfx = new Graphics();
+    this.scentGfx.visible = false;
+    this.overContainer.addChild(this.snareGfx, this.scentGfx, this.extraLayer, this.minoLayer);
     for (const m of Object.values(this.markers)) m.hide();
     // K408: the meshes outlive the scene; a new one starts with the start
     // marker shown (the fade's first retarget only learns the set).
@@ -1768,6 +1774,7 @@ export class FabricMazeRenderer {
     this.syncSword(chase);
     this.syncExtras(chase, fog);
     this.syncSnares(chase); // K137 stage 4
+    this.syncScent(chase); // K137 scent (4.34)
     // K137 stage 3b: a minotaur slain by the sword is gone for the solve.
     if (!chase || chase.slain) {
       this.minoLayer.visible = false;
@@ -1853,6 +1860,30 @@ export class FabricMazeRenderer {
     } else this.drawTelegraph(chase.g, telegraph, r, chase.mode === "hunt");
   }
 
+  // K137 scent (4.34): the fading red trail on the runs the monsters
+  // walked, drawn along each run's centerline under the monsters.
+  private syncScent(chase: MinotaurView | null): void {
+    const gfx = this.scentGfx;
+    gfx.clear();
+    const spans = chase?.scent;
+    if (!chase || !spans || spans.length === 0) {
+      gfx.visible = false;
+      return;
+    }
+    const pt = new Float32Array(2);
+    for (const s of spans) {
+      const e = this.walk.edges[s.edge];
+      const n = Math.max(2, Math.ceil(Math.abs(e.ctrlB - e.ctrlA) / 0.75));
+      for (let k = 0; k <= n; k++) {
+        const c = e.ctrlA + ((e.ctrlB - e.ctrlA) * k) / n;
+        this.pointFlowed(e.chain, this.ctrlMod(e.chain, c), pt, 0);
+        if (k === 0) gfx.moveTo(pt[0], pt[1]);
+        else gfx.lineTo(pt[0], pt[1]);
+      }
+      gfx.stroke({ color: 0xc23b2e, width: 0.3, alpha: s.a * 0.55 });
+    }
+    gfx.visible = true;
+  }
   // K137 stage 3b: the sword's marker at its spot while it is ready (laid,
   // not yet taken), on either clock. Like the exit marker it waits for the
   // intro to draw its thread and hides where the thread reveal has not
