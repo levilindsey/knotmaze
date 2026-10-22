@@ -10,6 +10,9 @@
 // The group carries K698's `km-control` class, so the bottom toasts keep
 // clear of it.
 
+import { LURE_RANGE } from "../game/lures";
+import { SNARE_HOLD } from "../game/snares";
+
 export type ToolKind = "lure" | "snare";
 
 export interface ToolButtonsHooks {
@@ -23,6 +26,24 @@ export function toolKeyOf(e: { key: string }): ToolKind | null {
   if (e.key === "l" || e.key === "L") return "lure";
   if (e.key === "n" || e.key === "N") return "snare";
   return null;
+}
+
+// "six runs", "one turn": a count in words (one to twelve) with its unit,
+// plural past one; digits past twelve. The lure's and the snare's tooltips
+// and the "Snared!" toast quote K795's lureRange and snareHold with it.
+const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven",
+  "eight", "nine", "ten", "eleven", "twelve"];
+export function countWords(n: number, unit: string): string {
+  const w = Number.isInteger(n) && n >= 0 && n < WORDS.length ? WORDS[n] : String(n);
+  return `${w} ${unit}${n === 1 ? "" : "s"}`;
+}
+
+export function lureTip(range: number): string {
+  return `Lure (L): arm it, then tap a run to pluck it. The minotaur and any sleeper within ${countWords(range, "run")} head for the run's nearer end. Costs no move.`;
+}
+
+export function snareTip(hold: number): string {
+  return `Snare (N): arm it, then tap a run at your junction. The first monster to step onto it stands ${countWords(hold, "turn")}.`;
 }
 
 // A note (the lure is a pluck).
@@ -84,6 +105,7 @@ export class ToolButtons {
   private shown = false;
   private shifted = false;
   private armed: ToolKind | null = null;
+  private tips = "";
 
   constructor(hooks: ToolButtonsHooks) {
     injectStyle();
@@ -107,18 +129,8 @@ export class ToolButtons {
       el.appendChild(b);
       return { btn: b, badge, on: false, count: -1 };
     };
-    this.lure = make(
-      "lure",
-      NOTE,
-      "Lure",
-      "Lure (L): arm it, then tap a run to pluck it. The minotaur and any sleeper within six runs head for the run's nearer end. Costs no move."
-    );
-    this.snare = make(
-      "snare",
-      LOOP,
-      "Snare",
-      "Snare (N): arm it, then tap a run at your junction. The first monster to step onto it stands three turns."
-    );
+    this.lure = make("lure", NOTE, "Lure", lureTip(LURE_RANGE));
+    this.snare = make("snare", LOOP, "Snare", snareTip(SNARE_HOLD));
     document.body.appendChild(el);
     this.el = el;
   }
@@ -156,6 +168,16 @@ export class ToolButtons {
       t.badge.textContent = String(n);
       t.btn.disabled = n <= 0;
     }
+  }
+
+  // The tooltips' numbers: the lure's range in runs and the snare's hold in
+  // turns (K795's lureRange and snareHold).
+  setTips(range: number, hold: number): void {
+    const key = `${range}/${hold}`;
+    if (key === this.tips) return;
+    this.tips = key;
+    this.lure.btn.title = lureTip(range);
+    this.snare.btn.title = snareTip(hold);
   }
 
   // The armed tool, lit (null: none).

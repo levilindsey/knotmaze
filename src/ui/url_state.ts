@@ -35,6 +35,10 @@ import { LOCK_MODES } from "../game/locks";
 import type { LockMode } from "../game/locks";
 import type { ParMode } from "../game/par";
 import { PAR_MODES, PAR_SLACK_DEFAULT } from "../game/par";
+import { LURE_RANGE, lureRangeOf } from "../game/lures";
+import { SNARE_HOLD, snareHoldOf } from "../game/snares";
+import { HINT_SECONDS } from "../game/hints";
+import { REVEAL_RUNS } from "../game/hidden_runs";
 import {
   CHASE_MODEL_DEFAULTS,
   DEFAULT_CHASE_PARAMS,
@@ -841,6 +845,17 @@ export interface UrlParams {
   // exit). The classic game only.
   keys: number;
   lockMode: LockMode;
+  // K795: tunables that were constants, each defaulting to its constant so
+  // no design moves: the turns a sprung snare holds a monster (snareHold,
+  // 1..8, SNARE_HOLD 3), the runs within which a lure is heard (lureRange,
+  // 1..12, LURE_RANGE 6), the seconds a hint lights its arm (hintSeconds,
+  // 0.5..10, HINT_SECONDS 2) and the runs from a pluck within which a hidden
+  // run of its note shows (hiddenReveal, 1..8, REVEAL_RUNS 3). Free play
+  // only (none daily-exempt).
+  snareHold: number;
+  lureRange: number;
+  hintSeconds: number;
+  hiddenReveal: number;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1165,6 +1180,11 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K138 stage 4: no keys (the lock's form waits for a count).
   keys: 0,
   lockMode: "exit",
+  // K795: the constants these params replace.
+  snareHold: SNARE_HOLD,
+  lureRange: LURE_RANGE,
+  hintSeconds: HINT_SECONDS,
+  hiddenReveal: REVEAL_RUNS,
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1321,6 +1341,9 @@ export function turnMinoParamsOf(p: Omit<UrlParams, "seed">): TurnMinoParams {
     pull: clampTo(p.minoTurnPull, 1),
     byLength: p.minoByLength,
     lair: p.minoLair,
+    // K795: the snare's hold and the lure's range (whole turns and runs).
+    snareHold: snareHoldOf(p.snareHold),
+    lureRange: lureRangeOf(p.lureRange),
   };
 }
 
@@ -1982,6 +2005,12 @@ function readLegacy(
     // the count to 0..3).
     keys: readNumber(query, "ky", D.keys),
     lockMode: readChoice(query, "lkm", LOCK_MODES, D.lockMode),
+    // K795's tunables (`&snh=5&lrg=9&hns=4&hrv=5`; PARAM_RANGES clamps them
+    // to 1..8, 1..12, 0.5..10 and 1..8).
+    snareHold: readNumber(query, "snh", D.snareHold),
+    lureRange: readNumber(query, "lrg", D.lureRange),
+    hintSeconds: readNumber(query, "hns", D.hintSeconds),
+    hiddenReveal: readNumber(query, "hrv", D.hiddenReveal),
   };
 }
 

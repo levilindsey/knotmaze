@@ -385,6 +385,12 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // lock's form (LOCK_MODES order; options append without a bump).
   num("keys"),
   choice("lockMode", ["exit"]),
+  // 214-217, K795: the snare's hold (turns), the lure's range (runs), the
+  // hint's seconds and the hidden runs' reveal distance (runs from a pluck).
+  num("snareHold"),
+  num("lureRange"),
+  num("hintSeconds"),
+  num("hiddenReveal"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -554,6 +560,10 @@ export const PARAM_RANGES: Readonly<
   lures: [0, 5], // K137 stage 4 (LURES_MAX)
   snares: [0, 3], // K137 stage 4 (SNARES_MAX)
   keys: [0, 3], // K138 stage 4 (KEYS_MAX)
+  snareHold: [1, 8], // K795 (SNARE_HOLD_MIN..MAX)
+  lureRange: [1, 12], // K795 (LURE_RANGE_MIN..MAX)
+  hintSeconds: [0.5, 10], // K795 (HINT_SECONDS_MIN..MAX)
+  hiddenReveal: [1, 8], // K795 (REVEAL_RUNS_MIN..MAX)
 });
 
 // A link value held to its panel range (K398); a param with no range,

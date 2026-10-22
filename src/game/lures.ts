@@ -23,7 +23,11 @@
 // that minotaur_turns.ts can import this module).
 
 export const LURES_MAX = 5;
+// How far a lure is heard, in runs: the `lureRange` param (K795), an integer
+// in LURE_RANGE_MIN..LURE_RANGE_MAX; LURE_RANGE is its default.
 export const LURE_RANGE = 6;
+export const LURE_RANGE_MIN = 1;
+export const LURE_RANGE_MAX = 12;
 
 export interface LureGraph {
   hopd(a: number, b: number): number;
@@ -36,6 +40,13 @@ export interface LureGraph {
 export function luresOf(n: unknown): number {
   if (typeof n !== "number" || !Number.isFinite(n)) return 0;
   return Math.max(0, Math.min(LURES_MAX, Math.round(n)));
+}
+
+// The param's range: an integer in LURE_RANGE_MIN..LURE_RANGE_MAX (garbage:
+// LURE_RANGE).
+export function lureRangeOf(n: unknown): number {
+  if (typeof n !== "number" || !Number.isFinite(n)) return LURE_RANGE;
+  return Math.max(LURE_RANGE_MIN, Math.min(LURE_RANGE_MAX, Math.round(n)));
 }
 
 // Where a monster standing at `v` goes for a lure on run `edge`: the run's

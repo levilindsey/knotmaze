@@ -42,17 +42,17 @@ import { createPanelSearch, type PanelSearchUi } from "./panel_search_ui";
 import { PARAM_TAGS } from "./param_tags";
 import { PAR_SLACK_MAX, PAR_SLACK_MIN } from "../game/par";
 import { SPOOL_SLACK_MAX, SPOOL_SLACK_MIN } from "../game/spool";
-import { HINTS_MAX } from "../game/hints";
+import { HINTS_MAX, HINT_SECONDS_MAX, HINT_SECONDS_MIN } from "../game/hints";
 import { ICE_SHARE_MAX, ICE_SHARE_ON } from "../game/ice";
 import { TURNSTILES_MAX } from "../game/turnstiles";
-import { HIDDEN_MAX } from "../game/hidden_runs";
+import { HIDDEN_MAX, REVEAL_RUNS_MAX, REVEAL_RUNS_MIN } from "../game/hidden_runs";
 import { ONE_WAY_MAX } from "../game/one_way";
 import { KEYS_MAX } from "../game/locks";
 import { LIVES_MAX, LIVES_RECOMMENDED, livesOf } from "../game/lives";
 import { SWORD_MOVES_MAX, SWORD_MOVES_MIN } from "../game/sword";
 import { SLEEPERS_MAX } from "../game/monsters";
-import { LURES_MAX } from "../game/lures"; // K137 stage 4
-import { SNARES_MAX } from "../game/snares";
+import { LURES_MAX, LURE_RANGE_MAX, LURE_RANGE_MIN } from "../game/lures"; // K137 stage 4
+import { SNARES_MAX, SNARE_HOLD_MAX, SNARE_HOLD_MIN } from "../game/snares";
 import {
   BACKGROUND_ACCENTS_USED,
   BACKGROUND_ANGLE_AUTO,
@@ -1740,8 +1740,20 @@ export function buildPanel(
   const hintsRow = row(
     fGame, p, "hints",
     { min: 0, max: HINTS_MAX, step: 1, label: "Hints" },
-    "Hints per solve (0: none). The Hint button (or H) lights the run that starts the shortest way to the exit for two seconds. A restart gives them back. Restarts the solve.",
+    "Hints per solve (0: none). The Hint button (or H) lights the run that starts the shortest way to the exit for a few seconds (Hint lasts). A restart gives them back. Restarts the solve.",
     D.hints, () => callbacks.onClockChange()
+  );
+  // K795: how long a hint stays lit (game/hints.ts HINT_SECONDS by
+  // default). No step (K130); an edit keeps one decimal. Live: main.ts
+  // reads it at each hint.
+  const hintSecondsRow = row(
+    fGame, p, "hintSeconds",
+    { min: HINT_SECONDS_MIN, max: HINT_SECONDS_MAX, pointerScale: 0.05, format: (v: number) => v.toFixed(1), label: "Hint lasts (s)" },
+    "How long a hint lights its run, in seconds; your next move puts it out sooner. Applies from the next hint.",
+    D.hintSeconds, () => {
+      params.hintSeconds = Math.round(params.hintSeconds * 10) / 10;
+      callbacks.onAidsChange();
+    }
   );
   const compassRow = row(
     fGame, p, "compass", { label: "Compass" },
@@ -1779,8 +1791,16 @@ export function buildPanel(
   const hiddenRunsRow = row(
     fGame, p, "hiddenRuns",
     { min: 0, max: HIDDEN_MAX, step: 1, label: "Hidden runs" },
-    "Hidden shortcut runs (0: none). A hidden run draws nothing and cannot be tapped until you pluck a thread of the same note within three runs of it; then it shows for the rest of the solve (Undo past the pluck hides it again). Par and the stars rate the maze without them; the HUD shows the shorter par with them too. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
+    "Hidden shortcut runs (0: none). A hidden run draws nothing and cannot be tapped until you pluck a thread of the same note a few runs from it (Reveal within); then it shows for the rest of the solve (Undo past the pluck hides it again). Par and the stars rate the maze without them; the HUD shows the shorter par with them too. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
     D.hiddenRuns, () => callbacks.onClockChange()
+  );
+  // K795: how near a pluck shows a hidden run (game/hidden_runs.ts
+  // REVEAL_RUNS by default). It restarts the solve, as the hidden runs do.
+  const hiddenRevealRow = row(
+    fGame, p, "hiddenReveal",
+    { min: REVEAL_RUNS_MIN, max: REVEAL_RUNS_MAX, step: 1, label: "Reveal within (runs)" },
+    "How near a pluck must be to show a hidden run: plucking a thread of the same note within this many runs of it shows it. Classic game only. Restarts the solve.",
+    D.hiddenReveal, () => callbacks.onClockChange()
   );
   // K138 stage 3 (game/one_way.ts): one-way runs, the same scope and restart.
   const oneWayRow = row(
@@ -2151,14 +2171,28 @@ export function buildPanel(
   const luresRow = row(
     fMino, p, "lures",
     { min: 0, max: LURES_MAX, step: 1, format: (v: number) => (v === 0 ? "off" : String(v)), label: "Lures" },
-    "Turn clock: arm the note button (or L), then tap a run to pluck it. The minotaur, and any sleeper in range, hears it and heads for the run's nearer end; it costs no move. Out of range nothing hears it, and the lure is spent anyway. Restarts the solve.",
+    "Turn clock: arm the note button (or L), then tap a run to pluck it. The minotaur, and any sleeper in range (Lure range), hears it and heads for the run's nearer end; it costs no move. Out of range nothing hears it, and the lure is spent anyway. Restarts the solve.",
     D.lures, () => callbacks.onClockChange()
+  );
+  // K795: how far a lure carries (game/lures.ts LURE_RANGE by default).
+  const lureRangeRow = row(
+    fMino, p, "lureRange",
+    { min: LURE_RANGE_MIN, max: LURE_RANGE_MAX, step: 1, label: "Lure range (runs)" },
+    "Turn clock: how far a lure carries, in runs from the plucked run along the maze. The minotaur and any sleeper within it come; a broken run stops the sound. Restarts the solve.",
+    D.lureRange, () => callbacks.onClockChange()
   );
   const snaresRow = row(
     fMino, p, "snares",
     { min: 0, max: SNARES_MAX, step: 1, format: (v: number) => (v === 0 ? "off" : String(v)), label: "Snares" },
-    "Turn clock, by runs: arm the loop button (or N), then tap a run touching your junction. The first monster to step onto it stops at the near end and stands there three turns; it still catches you if you walk onto it. One snare a run. Restarts the solve.",
+    "Turn clock, by runs: arm the loop button (or N), then tap a run touching your junction. The first monster to step onto it stops at the near end and stands there a few turns (Snare holds); it still catches you if you walk onto it. One snare a run. Restarts the solve.",
     D.snares, () => callbacks.onClockChange()
+  );
+  // K795: how long a snare holds (game/snares.ts SNARE_HOLD by default).
+  const snareHoldRow = row(
+    fMino, p, "snareHold",
+    { min: SNARE_HOLD_MIN, max: SNARE_HOLD_MAX, step: 1, label: "Snare holds (turns)" },
+    "Turn clock, by runs: how many turns a snared monster stands before the snare is spent. A sprint's skipped move does not count. Restarts the solve.",
+    D.snareHold, () => callbacks.onClockChange()
   );
   // K80 turns stage 2 (K273): what a catch resets, on both clocks. While
   // the level row is on a catch resets everything, so the other two hide.
@@ -3067,12 +3101,14 @@ export function buildPanel(
     spoolRow.hidden = !fab; // K137 stage 2
     spoolSlackRow.hidden = !fab || !params.spool;
     hintsRow.hidden = !fab;
+    hintSecondsRow.hidden = !fab || params.hints <= 0; // K795
     compassRow.hidden = !fab;
     // K138 stage 1: the classic game only, as the cut's row.
     iceRow.hidden = !fab || params.gameMode !== "classic";
     colorRuleRow.hidden = !fab || params.gameMode !== "classic";
     turnstilesRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 2
     hiddenRunsRow.hidden = !fab || params.gameMode !== "classic";
+    hiddenRevealRow.hidden = hiddenRunsRow.hidden || params.hiddenRuns <= 0; // K795
     oneWayRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 3
     keysRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 4
     lockModeRow.hidden = keysRow.hidden || params.keys <= 0;
@@ -3092,6 +3128,9 @@ export function buildPanel(
     // snares by runs only (TurnMinotaur.setSnare refuses by length).
     luresRow.hidden = !minoOn || realtime;
     snaresRow.hidden = !minoOn || realtime || params.minoByLength === true;
+    // K795: each tool's tuning row shows while that tool is on.
+    lureRangeRow.hidden = luresRow.hidden || params.lures <= 0;
+    snareHoldRow.hidden = snaresRow.hidden || params.snares <= 0;
     minoRestartRow.hidden = !minoOn || livesOn;
     minoLairRow.hidden = !minoOn || restartOn;
     minoRefogRow.hidden = !minoOn || !(fog || threads) || restartOn;

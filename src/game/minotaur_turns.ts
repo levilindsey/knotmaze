@@ -42,12 +42,13 @@
 import type { WalkGraph } from "../core/walk_graph";
 import { ChaseGraph, type MinotaurMode, type Spot } from "./minotaur";
 import { swordFleeing, swordSpend, swordTake, swordTouch, type SwordState } from "./sword";
-import { lureTarget } from "./lures";
+import { LURE_RANGE, lureTarget } from "./lures";
 import {
   canSnare,
   heldIndex,
   holdTurn,
   releaseSnares,
+  SNARE_HOLD,
   snareCut,
   springSnare,
   type Snare,
@@ -100,6 +101,10 @@ export interface TurnMinoParams {
   lair: boolean;
   // K481 stage 2: travel by thread length (the `minoByLength` param).
   byLength: boolean;
+  // K795: the turns a snare holds (`snareHold`; SNARE_HOLD when absent) and
+  // the runs a lure is heard within (`lureRange`; LURE_RANGE when absent).
+  snareHold?: number;
+  lureRange?: number;
 }
 
 // The defaults: the research's hunter (section 0: prox, stall 0.1, roam 3-8
@@ -202,6 +207,11 @@ export interface TurnConfig {
   // K481: thread distance at which a by-length contact catches (lattice
   // units; default BY_LENGTH_CATCH_DIST).
   catchDist?: number;
+  // K795: turns a sprung snare holds (default SNARE_HOLD) and runs a lure is
+  // heard within (default LURE_RANGE). turnConfig sets each only off its
+  // default, so a default design's config is what it was.
+  snareHold?: number;
+  lureRange?: number;
 }
 
 // Two runs a move, or a charge, forces the telegraph on (section 2.6).
@@ -227,6 +237,8 @@ export function turnConfig(p: TurnMinoParams): TurnConfig {
     base.travelScale = BY_LENGTH_TRAVEL_SCALE;
   }
   if (p.speed === "charge") base.chaseSpeed = 2;
+  if (p.snareHold !== undefined && p.snareHold !== SNARE_HOLD) base.snareHold = p.snareHold;
+  if (p.lureRange !== undefined && p.lureRange !== LURE_RANGE) base.lureRange = p.lureRange;
   if (p.model === "stalker") return { ...base, policy: "chase" };
   if (p.pull > 0) base.pull = p.pull;
   if (p.model === "guard") return { ...base, home: true, rMin: 1, rMax: p.territory };
@@ -1281,7 +1293,8 @@ export class TurnMinotaur {
 
   // K137 s4 (4.10): a LURE plucked on run `edge`, free in time (no turn
   // passes; lures.ts states the rules). The minotaur (not fleeing, not
-  // slain) and every sleeper within LURE_RANGE runs head for the run's
+  // slain) and every sleeper within cfg.lureRange runs (LURE_RANGE, 6, by
+  // default; the lureRange param) head for the run's
   // nearer end, the minotaur forgetting its hunt and roam; an asleep sleeper
   // wakes (woken++); a follower ignores it. The next move is re-committed,
   // so the telegraph shows the lured route. Returns how many heard it (0:
@@ -1293,7 +1306,7 @@ export class TurnMinotaur {
     this.lured++;
     let heard = 0;
     if (!this.slain && !this.fleeing) {
-      const t = lureTarget(g, this.state.v, edge);
+      const t = lureTarget(g, this.state.v, edge, this.cfg.lureRange);
       if (t >= 0) {
         this.state.lure = t;
         this.state.mode = 0;
@@ -1303,7 +1316,7 @@ export class TurnMinotaur {
     }
     for (const x of this.extras) {
       if (x.kind !== "sleeper") continue;
-      const t = lureTarget(g, x.state.v, edge);
+      const t = lureTarget(g, x.state.v, edge, this.cfg.lureRange);
       if (t < 0) continue;
       if (x.phase === "asleep") {
         x.phase = "awake";
@@ -1373,7 +1386,7 @@ export class TurnMinotaur {
             const k = cutAtSnare(this.snares, path, before, x.state);
             if (k >= 0) {
               if (x.kind === "follower") x.at = at0;
-              springSnare(this.snares[k], i);
+              springSnare(this.snares[k], i, this.cfg.snareHold);
             }
           }
         }
@@ -1636,7 +1649,7 @@ export class TurnMinotaur {
       path = decide(g, this.cfg, this.state, p2, this.lifeTurn, this.rng.at(this.turns));
       if (before !== null) sprung = cutAtSnare(this.snares, path, before, this.state);
     }
-    if (sprung >= 0) springSnare(this.snares[sprung], -1);
+    if (sprung >= 0) springSnare(this.snares[sprung], -1, this.cfg.snareHold);
     this.commitSnare = -1;
     this.committed = [];
     this.commitState = null;
