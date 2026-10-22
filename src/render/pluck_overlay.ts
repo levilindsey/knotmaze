@@ -353,7 +353,7 @@ void main(void) {
 // mix m, ghost offset, ghost alpha, visibility); aCol = the thread color.
 // Output is premultiplied (pixi's normal blend). At zero amplitude the
 // coverage is exactly an anti-aliased band - the plain thread.
-const PLUCK_FRAG = /* glsl */ `#version 300 es
+export const PLUCK_FRAG = /* glsl */ `#version 300 es
 precision highp float;
 
 in float vLat;
@@ -370,6 +370,7 @@ in vec4 vColor;
 out vec4 finalColor;
 
 // (half-width h, partner casing band, ghost tint, sheen (K279))
+${KNOT_UNIFORMS_GLSL}
 uniform vec4 uPluck;
 
 const float PI = 3.141592653589793;
@@ -397,6 +398,29 @@ float cover(float u, float h, float lo, float hi, float p) {
 
 float band(float v, float h, float p) {
   return clamp((h - abs(v)) / p + 0.5, 0.0, 1.0);
+}
+
+// K797b THREAD LOOK for a moving pluck: the solid thread becomes two
+// edge bands, each offset 0.81h from the displaced centre and 0.19h in
+// half-width (the ribbon stroke occupies e in [0.62, 1]). The attack
+// snapshots and the strobe ghost take the same two-band form.
+float strokeSpan(float u, float halfW, float lo, float hi, float m, float p) {
+  float bh = max(halfW * 0.19, p * 0.5);
+  float d = halfW * 0.81;
+  float c = (1.0 - m) * (
+    cover(u, bh, lo - d, hi - d, p) +
+    cover(u, bh, lo + d, hi + d, p));
+  c += 0.5 * m * (
+    band(u - (hi - d), bh, p) + band(u - (lo - d), bh, p) +
+    band(u - (hi + d), bh, p) + band(u - (lo + d), bh, p));
+  return clamp(c, 0.0, 1.0);
+}
+float strokeGhost(float u, float center, float halfW, float p) {
+  float bh = max(halfW * 0.19, p * 0.5);
+  float d = halfW * 0.81;
+  return clamp(
+    band(u - (center - d), bh, p) + band(u - (center + d), bh, p),
+    0.0, 1.0);
 }
 
 // Rule 4: inside the partner's casing band near an UNDER node -> hidden.
@@ -428,11 +452,22 @@ void main(void) {
   float lo = vEnv.x;
   float hi = vEnv.y;
   float m = vAux.x;
-  float c = (1.0 - m) * cover(vLat, h, lo, hi, p)
-          + 0.5 * m * (band(vLat - hi, h, p) + band(vLat - lo, h, p));
-  float g = vAux.z * band(vLat - vAux.y, h, p);
+  bool lookBorder = uKLook.x > 0.5 && uKLook.x < 1.5;
+  bool lookBoth = uKLook.x > 1.5;
+  bool lookIntro = uKLook.y > 0.5 && uKLook.z > 0.5;
+  bool edgeOnly = lookBorder || lookIntro;
+  float cSolid = (1.0 - m) * cover(vLat, h, lo, hi, p)
+    + 0.5 * m * (band(vLat - hi, h, p) + band(vLat - lo, h, p));
+  float gSolid = vAux.z * band(vLat - vAux.y, h, p);
+  float cEdge = edgeOnly || lookBoth
+    ? strokeSpan(vLat, h, lo, hi, m, p) : 0.0;
+  float gEdge = edgeOnly || lookBoth
+    ? vAux.z * strokeGhost(vLat, vAux.y, h, p) : 0.0;
+  float c = edgeOnly ? cEdge : cSolid;
+  float g = edgeOnly ? gEdge : gSolid;
   vec3 gc = mix(vCol, vec3(1.0), uPluck.z);
-  vec3 rgb = gc * g + vCol * c * (1.0 - g);
+  vec3 stroke = mix(vCol * 0.30, vec3(0.09, 0.085, 0.08), 0.5);
+  vec3 rgb = gc * g + (edgeOnly ? stroke : vCol) * c * (1.0 - g);
   float a = g + c * (1.0 - g);
   // K279 SHEEN: the swing's turning points (where a vibrating string dwells
   // longest) catch the light - a thin band at each edge of the swept
@@ -440,12 +475,18 @@ void main(void) {
   // pluck at rest draws the plain thread. 0 = the pre-K279 shader's output.
   if (uPluck.w > 0.0) {
     float sw = smoothstep(0.3 * h, 1.5 * h, hi - lo);
-    float e = max(band(vLat - hi, 0.55 * h, p), band(vLat - lo, 0.55 * h, p));
+    float e = edgeOnly
+      ? max(strokeGhost(vLat, hi, h, p), strokeGhost(vLat, lo, h, p))
+      : max(band(vLat - hi, 0.55 * h, p), band(vLat - lo, 0.55 * h, p));
     rgb = mix(rgb, vec3(a), clamp(uPluck.w * sw * e * SHEEN_WHITE, 0.0, 1.0));
   }
   float px = max(length(dFdx(vPos)), 1e-4);
   float k = clipW(vClipA, vClipF.x, vClipF.z, vPos, px)
           * clipW(vClipB, vClipF.y, vClipF.w, vPos, px);
+  if (lookBoth && !lookIntro) {
+    float edgeMix = clamp(max(cEdge * (1.0 - g), gEdge), 0.0, 1.0) * 0.9;
+    rgb = mix(rgb, stroke, edgeMix);
+  }
   finalColor = vec4(rgb, a) * (vAux.w * k) * vColor;
 }
 `;
@@ -478,7 +519,7 @@ function pluckShader(): PluckShader {
   if (!PLUCK_SHADER) {
     const sh = new Shader({
       glProgram: pluckBlurProgram(),
-      resources: { pluckUniforms: pluckUniforms() },
+      resources: { knotUniforms: knotUniforms(), pluckUniforms: pluckUniforms() },
     }) as PluckShader;
     sh.texture = Texture.WHITE;
     PLUCK_SHADER = sh;
@@ -558,8 +599,21 @@ void main(void) {
   float pxW = max(max(gfw.x, gfw.y), 1e-5);
   float p = max(length(vec2(dFdx(vLat), dFdy(vLat))), 1e-4);
   float c = bandCover(vLat, uPluck.x, p) * vA;
+  // K797b/K798 THREAD LOOK for a still pluck: in border mode (and while
+  // a border-at-a-time intro is running) the white cue follows only the
+  // two edge strokes; in both mode it leaves the dark strokes standing.
+  bool lookBorder = uKLook.x > 0.5 && uKLook.x < 1.5;
+  bool lookIntro = uKLook.y > 0.5 && uKLook.z > 0.5;
+  float lookEdge = smoothstep(
+    0.62,
+    0.62 + min(max(p / max(uPluck.x, 1e-4), 0.02), 0.38),
+    abs(vLat) / max(uPluck.x, 1e-4));
+  if (lookBorder || lookIntro) c *= lookEdge;
   if (c <= 0.002) discard;
   vec3 rgb = vec3(1.0);
+  if (uKLook.x > 1.5 && !lookIntro) {
+    rgb = mix(rgb, vec3(0.09, 0.085, 0.08), lookEdge * 0.9);
+  }
   float gk = gapKeepAt(pxW, vPos, vTurn, vTan, vMaskId);
   if (gk < 1.0 && gapProbe()) {
     rgb = mix(rgb, vec3(1.0, 0.0, 0.85), (1.0 - gk) * 0.75);

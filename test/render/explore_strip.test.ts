@@ -101,7 +101,7 @@ describe("K268 stage 2: the fan variant", () => {
     expect(count(ex, "vec3 armPaint(")).toBe(0);
     expect(count(ex, "vec3 junctionBase(")).toBe(0);
     expect(count(ex, "vec3 junctionField(")).toBe(0);
-    expect(count(ex, "finalColor = exC * vColor * (aM * gk);")).toBe(1);
+    expect(count(ex, "finalColor = exC * vColor * (aM * gk * lookA);")).toBe(1);
   });
 
   it("reads every strip premultiplied", () => {

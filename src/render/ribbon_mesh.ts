@@ -722,6 +722,7 @@ export class TriFanMesh {
 
   private vertexData: Float32Array;
   private recData: Float32Array;
+  private lookData: Float32Array;
   private indexData: Uint32Array;
   private vUsed = 0;
   private iUsed = 0;
@@ -737,6 +738,7 @@ export class TriFanMesh {
   constructor(vertexCapacity: number, indexCapacity: number) {
     this.vertexData = new Float32Array(vertexCapacity * 2);
     this.recData = new Float32Array(vertexCapacity);
+    this.lookData = new Float32Array(vertexCapacity);
     this.indexData = new Uint32Array(indexCapacity);
     this.maskData = new Float32Array(vertexCapacity * GAP_SLOTS).fill(-1);
     const geometry = new MeshGeometry({
@@ -750,6 +752,7 @@ export class TriFanMesh {
     delete geometry.attributes.aUV;
     geometry.buffers.splice(geometry.buffers.indexOf(uvBuffer), 1);
     addFloatAttribute(geometry, "aRec", this.recData, 1);
+    addFloatAttribute(geometry, "aLook", this.lookData, 1);
     addFloatAttribute(geometry, "aMaskId", this.maskData, 4);
     this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
   }
@@ -782,6 +785,8 @@ export class TriFanMesh {
       vd[(apex + 1 + i) * 2 + 1] = rim[i * 2 + 1];
     }
     this.recData.fill(rec, apex, apex + rimCount + 1);
+    this.lookData[apex] = 0;
+    this.lookData.fill(1, apex + 1, apex + rimCount + 1);
     for (let v = apex; v <= apex + rimCount; v++) {
       this.maskData.set(this.maskIds, v * GAP_SLOTS);
     }
@@ -814,6 +819,10 @@ export class TriFanMesh {
     const v0 = this.vUsed;
     this.vertexData.set(pts, v0 * 2);
     this.recData.fill(rec + STRIP_REC_TAG, v0, v0 + verts);
+    for (let v = v0; v < v0 + verts; v += 2) {
+      this.lookData[v] = 0;
+      this.lookData[v + 1] = 1;
+    }
     for (let v = v0; v < v0 + verts; v++) {
       this.maskData.set(this.maskIds, v * GAP_SLOTS);
     }
@@ -850,6 +859,7 @@ export class TriFanMesh {
     const v = this.vUsed;
     this.mesh.geometry.getBuffer("aPosition").update(v * 2 * 4);
     this.mesh.geometry.getBuffer("aRec").update(v * 4);
+    this.mesh.geometry.getBuffer("aLook").update(v * 4);
     this.mesh.geometry.getBuffer("aMaskId").update(v * GAP_SLOTS * 4);
     if (this.iUsed > this.iHigh) this.iHigh = this.iUsed;
     this.mesh.geometry.getIndex().update(this.iHigh * 4);
