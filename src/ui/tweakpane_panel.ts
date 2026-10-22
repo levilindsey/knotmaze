@@ -53,6 +53,7 @@ import { SWORD_MOVES_MAX, SWORD_MOVES_MIN } from "../game/sword";
 import { SLEEPERS_MAX } from "../game/monsters";
 import { LURES_MAX, LURE_RANGE_MAX, LURE_RANGE_MIN } from "../game/lures"; // K137 stage 4
 import { SNARES_MAX, SNARE_HOLD_MAX, SNARE_HOLD_MIN } from "../game/snares";
+import { BEAT_PER_RUN_MAX, BEAT_PER_RUN_MIN } from "../game/beat_rider"; // K795
 import {
   BACKGROUND_ACCENTS_USED,
   BACKGROUND_ANGLE_AUTO,
@@ -1110,7 +1111,7 @@ export function buildPanel(
   // Each writes `clock`, re-shows the other row under the `syncing` guard
   // (a refresh fires change handlers) and restarts the solve.
   const BEAT_CLOCK_TIP =
-    "Beat: you ride a beat. The dot never stops: it reaches each junction on a beat and takes the run you tapped last (no tap: straight on; a dead end turns it back). The pause button hides the maze. No undo.";
+    "Beat: you ride a beat. The dot never stops: it reaches each junction on a beat (Beat timing says which) and takes the run you tapped last (no tap: straight on; a dead end turns it back). The pause button hides the maze. No undo.";
   const setClock = (clock: string, other: () => RowApi): void => {
     params.clock = clock as UrlParams["clock"];
     Object.assign(clockView, clockViewOf());
@@ -1136,18 +1137,32 @@ export function buildPanel(
   );
   // K795: the beat rider's tuning (K114; BeatSettings), shown only while
   // the design plays the beat. Each restarts the solve, as the fire
-  // clock's rows do (undo_stack.ts lists them under onClockChange). Tempo
-  // and cap are whole numbers (beatSettingsOf rounds them); the length
-  // takes no step (K130) and an edit keeps the 0.05 grid.
+  // clock's rows do (undo_stack.ts lists them under onClockChange). Tempo,
+  // beats per run and cap are whole numbers (beatSettingsOf rounds them);
+  // the length takes no step (K130) and an edit keeps the 0.05 grid. Beat
+  // timing (Levi, 2026-10-21) picks between the same beats every run
+  // (Beats per run, one by default) and K114's beats by run length (Beat
+  // length, Max beats per run); refreshCond shows each choice's rows.
   const beatTempoRow = row(
     fGame, p, "beatTempo", { min: 40, max: 180, step: 1, label: "Beat tempo (bpm)" },
-    "Beat: beats a minute. The dot reaches a junction on every beat and plucks its next run's note as it leaves, so a faster tempo leaves less time to tap your next run (100 is 0.6 s a beat). Restarts the solve.",
+    "Beat: beats a minute. The dot reaches each junction on a beat and plucks its next run's note as it leaves, so a faster tempo leaves less time to tap your next run (100 is 0.6 s a beat). Restarts the solve.",
     D.beatTempo, () => callbacks.onClockChange()
+  );
+  const beatTimingRow = row(
+    fGame, p, "beatTiming",
+    { options: { "same per run": "even", "by run length": "length" }, label: "Beat timing" },
+    "Beat: same per run rides every run in the same number of beats (Beats per run; 1 by default, one beat per run), so the junctions come on a steady pulse and the dot runs a long run fast and a short one slow. By run length gives a run beats by its length (Beat length, Max beats per run), so the dot keeps one speed and a long run takes more beats. Restarts the solve.",
+    D.beatTiming, () => callbacks.onClockChange()
+  );
+  const beatPerRunRow = row(
+    fGame, p, "beatPerRun", { min: BEAT_PER_RUN_MIN, max: BEAT_PER_RUN_MAX, step: 1, label: "Beats per run" },
+    "Beat, same per run: the beats every run takes, however long it is. 1 reaches a junction on every beat (0.6 s at 100 bpm), 2 on every other beat. Restarts the solve.",
+    D.beatPerRun, () => callbacks.onClockChange()
   );
   const beatLengthRow = row(
     fGame, p, "beatLength",
     { min: 0.5, max: 8, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label: "Beat length (units)" },
-    "Beat: how much thread the dot rides in one beat, in lattice units (a run is about 4). A run takes its length divided by this in beats, rounded: at least one and at most Max beats per run. Smaller rides long runs in more beats, larger in fewer. Restarts the solve.",
+    "Beat, by run length: how much thread the dot rides in one beat, in lattice units (a run is about 4). A run takes its length divided by this in beats, rounded: at least one and at most Max beats per run. Smaller rides long runs in more beats, larger in fewer. Restarts the solve.",
     D.beatLength, () => {
       params.beatLength = Math.round(params.beatLength * 20) / 20;
       callbacks.onClockChange();
@@ -1155,7 +1170,7 @@ export function buildPanel(
   );
   const beatCapRow = row(
     fGame, p, "beatCap", { min: 1, max: 8, step: 1, label: "Max beats per run" },
-    "Beat: the most beats one run takes, however long it is, so a long run never crawls past this. 1 rides every run in one beat. Restarts the solve.",
+    "Beat, by run length: the most beats one run takes, however long it is, so a long run never crawls past this. 1 rides every run in one beat. Restarts the solve.",
     D.beatCap, () => callbacks.onClockChange()
   );
   const playerPaceRow = row(
@@ -3021,9 +3036,12 @@ export function buildPanel(
     const beat = fab && clockOf(params) === "beat";
     clockMinoRow.hidden = !gameMino;
     clockPlainRow.hidden = !fab || gameMino;
+    const byLength = params.beatTiming === "length"; // K795
     beatTempoRow.hidden = !beat;
-    beatLengthRow.hidden = !beat;
-    beatCapRow.hidden = !beat;
+    beatTimingRow.hidden = !beat;
+    beatPerRunRow.hidden = !beat || byLength;
+    beatLengthRow.hidden = !beat || !byLength;
+    beatCapRow.hidden = !beat || !byLength;
     playerPaceRow.hidden = !realtime;
     const turnMinoOn = gameMino && !realtime;
     const minoOn = gameMino;

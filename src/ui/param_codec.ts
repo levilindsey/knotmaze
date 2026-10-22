@@ -391,6 +391,10 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("lureRange"),
   num("hintSeconds"),
   num("hiddenReveal"),
+  // 218-219, K795: the beat's run timing (BEAT_TIMINGS order,
+  // game/beat_rider.ts) and the beats every run takes under even (1..4).
+  choice("beatTiming", ["even", "length"]),
+  num("beatPerRun"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -564,6 +568,7 @@ export const PARAM_RANGES: Readonly<
   lureRange: [1, 12], // K795 (LURE_RANGE_MIN..MAX)
   hintSeconds: [0.5, 10], // K795 (HINT_SECONDS_MIN..MAX)
   hiddenReveal: [1, 8], // K795 (REVEAL_RUNS_MIN..MAX)
+  beatPerRun: [1, 4], // K795 (BEAT_PER_RUN_MIN..MAX)
 });
 
 // A link value held to its panel range (K398); a param with no range,

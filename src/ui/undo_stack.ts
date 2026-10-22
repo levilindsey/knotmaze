@@ -219,8 +219,9 @@ export const LIVE_EFFECTS = {
     "spool", "spoolSlack", "hints",
     // K138 stage 1: ice and the color rule (a restart places them anew).
     "ice", "colorRule",
-    // K114's beat rider: a new tempo, beat length or cap restarts the ride.
-    "beatTempo", "beatLength", "beatCap",
+    // K114's beat rider: a new tempo, beat length or cap restarts the ride,
+    // and so do K795's run timing and beats per run.
+    "beatTempo", "beatLength", "beatCap", "beatTiming", "beatPerRun",
     // K138 stage 2: turnstiles and hidden runs (a restart places them anew).
     "turnstiles", "hiddenRuns",
     // K138 stage 3: one-way runs (a restart places them anew).

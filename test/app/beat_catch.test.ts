@@ -32,6 +32,7 @@ import { buildWalkGraph } from "../../src/core/walk_graph";
 import type { WalkGraph } from "../../src/core/walk_graph";
 import { beatTick } from "../../src/game/beat_clock";
 import { BeatRider } from "../../src/game/beat_rider";
+import type { BeatTiming } from "../../src/game/beat_rider";
 import { FabricMazeController } from "../../src/game/fabric_controller";
 import { DEFAULT_TURN_MINO, turnConfig, TurnMinotaur, turnSeed } from "../../src/game/minotaur_turns";
 import { walkerMapOf } from "../../src/game/walker";
@@ -90,7 +91,9 @@ interface Game {
   done(): boolean;
 }
 
-function makeGame(seed: number, flow: Flow): Game {
+// K795: timing "length" is K114's multi-beat runs (the rule K774 was found
+// on); "even" with one beat per run is the beat's default since K795.
+function makeGame(seed: number, flow: Flow, timing: BeatTiming = "length"): Game {
   const { walk, map } = realMaze(seed);
   const c = new FabricMazeController(walk, false);
   const tm = new TurnMinotaur(walk, turnConfig({ ...DEFAULT_TURN_MINO, model: "hunter" }), turnSeed(seed));
@@ -154,7 +157,7 @@ function makeGame(seed: number, flow: Flow): Game {
   };
 
   const beat = createBeat({
-    settings: () => ({ tempo: 100, unit: 2, cap: 4 }),
+    settings: () => ({ tempo: 100, unit: 2, cap: 4, timing, perRun: 1 }),
     walkKey: () => walk,
     buildMap: () => map,
     head: () => c.head,
@@ -239,11 +242,11 @@ describe("K774: a catch on the beat", () => {
     expect(cases).toBeGreaterThan(0);
   });
 
-  it("lands every catch exactly once on the fixed flow, and the rider rests at the start", () => {
+  it.each(["length", "even"] as BeatTiming[])("lands every catch exactly once on the fixed flow, and the rider rests at the start (%s)", (timing) => {
     let catches = 0;
     let inCommit = 0;
     for (let seed = 1; seed <= 24; seed++) {
-      const g = makeGame(seed, "fixed");
+      const g = makeGame(seed, "fixed", timing);
       g.frame();
       for (let f = 0; f < 30000 && !g.done(); f++) {
         const landed = g.s.landed;

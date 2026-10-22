@@ -39,6 +39,8 @@ import { LURE_RANGE, lureRangeOf } from "../game/lures";
 import { SNARE_HOLD, snareHoldOf } from "../game/snares";
 import { HINT_SECONDS } from "../game/hints";
 import { REVEAL_RUNS } from "../game/hidden_runs";
+import { BEAT_PER_RUN, BEAT_TIMINGS } from "../game/beat_rider";
+import type { BeatTiming } from "../game/beat_rider";
 import {
   CHASE_MODEL_DEFAULTS,
   DEFAULT_CHASE_PARAMS,
@@ -162,21 +164,32 @@ export function minoClockOf(p: Pick<UrlParams, "gameMode" | "clock">): ClockMode
 
 // The beat rider's settings (K114), or null when the clock is not beat.
 // Tempo in whole beats per minute; unit = the run length (world units)
-// one beat covers; cap = the most beats a run may take.
+// one beat covers; cap = the most beats a run may take (unit and cap count
+// under the length timing); timing = even | length (K795); perRun = the
+// beats every run takes under even, a whole number.
 export interface BeatSettings {
   tempo: number;
   unit: number;
   cap: number;
+  timing: BeatTiming;
+  perRun: number;
 }
 export function beatSettingsOf(
-  p: Pick<UrlParams, "gameMode" | "clock" | "beatTempo" | "beatLength" | "beatCap">
+  p: Pick<
+    UrlParams,
+    "gameMode" | "clock" | "beatTempo" | "beatLength" | "beatCap" | "beatTiming" | "beatPerRun"
+  >
 ): BeatSettings | null {
   if (clockOf(p) !== "beat") return null;
   const fin = (v: number, d: number): number => (Number.isFinite(v) ? v : d);
   const tempo = Math.round(clampParamValue("beatTempo", fin(p.beatTempo, PARAM_DEFAULTS.beatTempo)));
   const unit = clampParamValue("beatLength", fin(p.beatLength, PARAM_DEFAULTS.beatLength));
   const cap = Math.round(clampParamValue("beatCap", fin(p.beatCap, PARAM_DEFAULTS.beatCap)));
-  return { tempo, unit, cap };
+  const timing = BEAT_TIMINGS.includes(p.beatTiming) ? p.beatTiming : PARAM_DEFAULTS.beatTiming;
+  const perRun = Math.round(
+    clampParamValue("beatPerRun", fin(p.beatPerRun, PARAM_DEFAULTS.beatPerRun))
+  );
+  return { tempo, unit, cap, timing, perRun };
 }
 
 // K114's burn race is gameMode "burn" since K323 Stage A (the fire
@@ -813,7 +826,8 @@ export interface UrlParams {
   sprint: SprintMode;
   // K114's beat rider (clock=beat): the tempo in beats a minute, the
   // lattice length a beat covers (a run takes max(1, round(length / L))
-  // beats) and the most beats a run takes. beatSettingsOf reads them.
+  // beats) and the most beats a run takes; the last two count under
+  // beatTiming length (K795, below). beatSettingsOf reads them.
   beatTempo: number;
   beatLength: number;
   beatCap: number;
@@ -856,6 +870,12 @@ export interface UrlParams {
   lureRange: number;
   hintSeconds: number;
   hiddenReveal: number;
+  // K795 (Levi, 2026-10-21): the beat's run timing, even (every run takes
+  // beatPerRun beats, 1..4, default 1, so the dot's speed varies with the
+  // run's length) or length (K114's multi-beat runs: beatLength and
+  // beatCap). Free play only.
+  beatTiming: BeatTiming;
+  beatPerRun: number;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1185,6 +1205,12 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   lureRange: LURE_RANGE,
   hintSeconds: HINT_SECONDS,
   hiddenReveal: REVEAL_RUNS,
+  // K795: the beat rides every run in one beat (Levi, 2026-10-21: "each
+  // segment is traveled in the same amount of time", one beat per run); the
+  // one default this stage changes on purpose (K114's multi-beat runs are
+  // beatTiming length).
+  beatTiming: "even",
+  beatPerRun: BEAT_PER_RUN,
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1465,6 +1491,7 @@ export const ENUM_OPTIONS: {
   sprint: SPRINT_MODES, // K137 stage 3c
   sleepKind: SLEEP_KINDS, // K137 stage 3d
   lockMode: LOCK_MODES, // K138 stage 4
+  beatTiming: BEAT_TIMINGS, // K795
 };
 
 // K398: every numeric param held to the panel's range (param_codec's
@@ -2011,6 +2038,10 @@ function readLegacy(
     lureRange: readNumber(query, "lrg", D.lureRange),
     hintSeconds: readNumber(query, "hns", D.hintSeconds),
     hiddenReveal: readNumber(query, "hrv", D.hiddenReveal),
+    // K795's beat timing (`&btm=length`, `&btr=1`; PARAM_RANGES clamps the
+    // beats to 1..4).
+    beatTiming: readChoice(query, "btm", BEAT_TIMINGS, D.beatTiming),
+    beatPerRun: readNumber(query, "btr", D.beatPerRun),
   };
 }
 

@@ -149,6 +149,7 @@ describe("links", () => {
       lures: 0, snares: 0, // K137 stage 4
       keys: 0, lockMode: "exit", // K138 stage 4
       snareHold: 3, lureRange: 6, hintSeconds: 2, hiddenReveal: 3, // K795
+      beatTiming: "even", beatPerRun: 1, // K795 beat timing
     });
   });
 
@@ -612,15 +613,23 @@ describe("links", () => {
       expect(p.clock).toBe("beat");
       expect(clockOf(p)).toBe("beat");
       expect(minoClockOf(p)).toBe("turn");
-      expect(beatSettingsOf(p)).toEqual({ tempo: 100, unit: 2, cap: 4 });
+      expect(beatSettingsOf(p)).toEqual({ tempo: 100, unit: 2, cap: 4, timing: "even", perRun: 1 });
       expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
     }
     // realtime stays the minotaur's alone.
     expect(clockOf(parseParams("?7&clk=realtime"))).toBe("realtime");
     expect(clockOf(parseParams("?7&clk=realtime&fi=fuse&mt=off"))).toBe("turn");
     // The beat params clamp; off the beat clock there are no settings.
-    const q = parseParams("?7&clk=beat&btp=999&btl=0.01&btc=0");
-    expect(beatSettingsOf(q)).toEqual({ tempo: 180, unit: 0.5, cap: 1 });
+    const q = parseParams("?7&clk=beat&btp=999&btl=0.01&btc=0&btr=9");
+    expect(beatSettingsOf(q)).toEqual({ tempo: 180, unit: 0.5, cap: 1, timing: "even", perRun: 4 });
+    // K795: the length timing (K114's rule) by link; the beats round and
+    // clamp to 1..4; an unknown timing reads as even.
+    const l = parseParams("?7&clk=beat&btm=length&btr=0");
+    expect(beatSettingsOf(l)).toEqual({ tempo: 100, unit: 2, cap: 4, timing: "length", perRun: 1 });
+    expect(l.beatPerRun).toBe(1); // clamped to the floor, the default
+    expect(beatSettingsOf(parseParams("?7&clk=beat&btr=2.6"))?.perRun).toBe(3);
+    expect(parseParams("?7&clk=beat&btm=swing").beatTiming).toBe("even");
+    expect(parseParams(`?${encodeParams(l)}`)).toEqual(l);
     expect(beatSettingsOf(parseParams("?7&btp=90"))).toBeNull();
     // Under beat the cut (and so the walker) is off, the fire on turn.
     const r = parseParams("?7&clk=beat&ct=lead&fi=fuse&fck=realtime");
@@ -957,6 +966,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   lures: "lur", snares: "snr", // K137 stage 4
   keys: "ky", lockMode: "lkm", // K138 stage 4
   snareHold: "snh", lureRange: "lrg", hintSeconds: "hns", hiddenReveal: "hrv", // K795
+  beatTiming: "btm", beatPerRun: "btr", // K795 beat timing
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
@@ -1002,6 +1012,7 @@ if (name === "cartouche") return "knot";
   if (name === "oneWay") return 0.4; // K138 stage 3: its default is 0 (off)
   if (name === "lures") return 3; // K137 stage 4: both default to 0 (off)
   if (name === "snares") return 2;
+  if (name === "beatPerRun") return 2; // K795: half of 1 is under its floor 1
   if (name === "keys") return 2; // K138 stage 4: its default is 0 (off)
   return (d as number) * 0.5;
 }
