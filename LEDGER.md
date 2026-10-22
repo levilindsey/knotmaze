@@ -441,10 +441,10 @@ Next free ID: K812.
 - **K137** · K80 section 4's cheap (S, S-M) mechanisms, each toggled (Levi 10-13), after the
   minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus
   Levi's sleeper variant. `K80_gameplay_additions.md`, stages in `sooner_20261020.md`; M: K138, M-L/L: K141.
-  - owner: nobody since 2026-10-21 07:21 (merged; agent `ab3d78ded2f219f62` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `af04d8c7`
+  - owner: nobody since 2026-10-21 12:49 (merged; agent `ab3d78ded2f219f62` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
+  - branch: mainline; last commit: `20b01d7e`
   - evidence: `.claude/probes/K137/s4/`
-  - next: stage 5: muddy runs (4.33, docs/design/K137_s3d.md), the real-time extras, then the look pieces (scent 4.34, the fray, darkness and a lantern 4.17, sonar 4.26, tunnels 4.13); the docs/design/K137_s4.md Handoff lists the code to start from
+  - next: stage 5 remainder: the real-time extras, then the look pieces (scent 4.34, the fray, darkness/lantern 4.17, sonar 4.26, tunnels 4.13); muddy runs done in this merge
   - brief: `docs/design/K137_s4.md`
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`),
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
