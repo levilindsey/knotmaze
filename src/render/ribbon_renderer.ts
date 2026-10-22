@@ -90,7 +90,7 @@ import {
   type KPaintState,
   type KIgn,
 } from "./paint_math";
-import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM, PAINT_ITEM_TELE } from "./paint_const";
+import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM, PAINT_ITEM_FRAY, PAINT_ITEM_TELE } from "./paint_const";
 import { PluckOverlay } from "./pluck_overlay";
 import type { PluckHost, PluckNode } from "./pluck_overlay";
 import { MAX_ROUTES, recordData } from "./junction_field";
@@ -630,6 +630,9 @@ export class RibbonRenderer {
   // K525: the telegraph's route pieces (setTelegraph) and the key of the
   // KPAINT items they last wrote; the colour and strength ride uKTele.
   private paintTele: PaintTele[] | null = null;
+  // K137 fray (4.3's look): the cracked fragile runs' spans (setFray).
+  private fraySpans: PaintSpan[] = [];
+  private frayKey = "";
   private teleKey = "";
   // K654: the riding end's ctrl (uKTeleAt.x; 0 with no riding piece).
   private teleAt = 0;
@@ -2694,6 +2697,19 @@ export class RibbonRenderer {
     if (this.teleItemKey() !== this.teleKey) this.writePaintItems();
   }
 
+  // K137 fray (4.3's look): declare the cracked fragile runs (empty =
+  // none). Like the telegraph, KPAINT is rewritten only when the set
+  // changes (a run cracks or snaps).
+  setFray(spans: PaintSpan[]): void {
+    this.fraySpans = spans;
+    if (!this.style.paletteMode) return;
+    const k = spans.map((s) => `${s.chain},${s.c0},${s.c1}`).join("|");
+    if (k !== this.frayKey) {
+      this.frayKey = k;
+      this.writePaintItems();
+    }
+  }
+
   // K81: a walk ctrl's particle slot on its chain (walk ctrls are particle
   // slots; a closed chain's may be unwrapped past its length), -1 for a
   // chain that does not exist.
@@ -3796,6 +3812,12 @@ export class RibbonRenderer {
     for (const s of this.paintSpans) {
       const i = items.length / 8;
       items.push(PAINT_ITEM.SPAN, s.c0, s.c1, s.p0 ?? 1, s.p1 ?? 1, 0, 0, 0);
+      touch(s.chain, Math.min(s.c0, s.c1), Math.max(s.c0, s.c1), i);
+    }
+    // K137 fray (4.3's look): cracked runs, strength in T0.w (p0).
+    for (const s of this.fraySpans) {
+      const i = items.length / 8;
+      items.push(PAINT_ITEM_FRAY, s.c0, s.c1, s.p0 ?? 1, 0, 0, 0, 0);
       touch(s.chain, Math.min(s.c0, s.c1), Math.max(s.c0, s.c1), i);
     }
     // K169: the caps of a web that is fading wear its level (K191: out as

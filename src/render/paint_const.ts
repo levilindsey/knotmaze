@@ -135,6 +135,10 @@ export const PAINT_ITEM = { SPAN: 1, CAP: 2, PULSE: 3, RIM: 4 } as const;
 // change their program text (a cold compile each, K307) for an item only the
 // ribbons draw. kPaintAt's own chunk declares PI_TELE (paint_glsl.ts).
 export const PAINT_ITEM_TELE = 9;
+// FRAY (K137, 4.3's look): a cracked fragile run, thinner and
+// desaturated until it snaps. Ribbon-only like TELE: declared here,
+// not in PAINT_ITEM, so the junction and pluck programs keep their text.
+export const PAINT_ITEM_FRAY = 10;
 export const ITEM_FLAG = { INWARD: 1, HOVER: 4 } as const;
 
 // RUNS flags (R1.w).
