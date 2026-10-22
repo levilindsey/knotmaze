@@ -43,8 +43,8 @@ function linkKeys(): Record<string, string> {
   const keys: Record<string, string> = {};
   for (const m of urlState.matchAll(/(\w+):[^:;{}]*?read\w+\(\s*query,\s*"(\w+)"/g)) keys[m[1]] ??= m[2];
   Object.assign(keys, { exploration: "xp", minotaur: "mt", gameMode: "gm", appearMode: "am" });
-  // The "Real time" row binds a view of `clock`.
-  if (keys.clock) keys.realTime = keys.clock;
+  // The Clock rows bind views of `clock` (K795: clockView.mino / plain).
+  if (keys.clock) { keys.mino = keys.clock; keys.plain = keys.clock; }
   return keys;
 }
 
@@ -52,9 +52,9 @@ describe("param_tags (K793)", () => {
   const ids = panelRowIds();
 
   it("the scan finds the panel's rows", () => {
-    // 228 rows on 2026-10-21 (the page's __knotPanelSearch().rows agreed).
+    // 239 rows after K795 (228 on 2026-10-21 plus K795's Clock/beat/tunable rows).
     expect(ids.length).toBeGreaterThan(200);
-    for (const id of ["threadWidth", "seed", "realTime", "backgroundAccent3", "minoStopMin", "minoSpeed", "btn:Daily", "btn:Reset to defaults"]) {
+    for (const id of ["threadWidth", "seed", "mino", "plain", "beatTempo", "backgroundAccent3", "minoStopMin", "minoSpeed", "btn:Daily", "btn:Reset to defaults"]) {
       expect(ids).toContain(id);
     }
   });
