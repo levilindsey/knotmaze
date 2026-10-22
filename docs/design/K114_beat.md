@@ -334,3 +334,36 @@ in headed Chrome off-screen, a fresh profile per run, links
   tag, the panel rows), the lore entries, keys and the pad on the page
 - brief: `docs/design/K114_beat.md`
 - env: `npx vite --config .claude/probes/K114/beat/vite.private-cache.config.ts --port 5730 --strictPort --host 127.0.0.1`
+
+## Handoff (2026-10-21 remainder, coordinator session)
+
+Items 6 and 8 built; the share carries no tempo tag (Levi's call, so
+call 9 landed as nothing to build) and the panel rows were K795's.
+
+- Item 8: the HUD "tempo" row (`100 bpm · 1 a run`, `· by length`
+  under that timing) in `gameEntries` (the HUD only - the win
+  snapshot has no such field, so no banner shows it), its STATS line,
+  `hudSnapshot.tempo` from the live params while the beat is the
+  clock.
+- Item 6: the head ring pulses on the beat: `beatPulse` phase from
+  main's beat tick into the fabric renderer; the ring swells just
+  after each beat (envelope (1-f)^2, +16% radius), and under reduced
+  motion only the head halo brightens (+0.25 alpha). A restart clears
+  it. Still to feel on a real phone (Levi, with the tempo and L).
+- Keys and the pad on the page: `.claude/probes/K114/beat/beat_remainder.mjs`
+  (desktop and phone ALL PASS on seed 7 clk=beat): the tempo row
+  reads, held arrows/WASD ride the beat deep into the maze (head
+  mentr_b -> node_65, ticks 0 -> ~1100), and the move pad shows with
+  its pref on and the panel closed (K224). A synthetic pad-arm press
+  at the entrance did not leave it on this seed (the up arm's pick);
+  the pad shares the keys' picker and hold path, unit-tested in
+  key_moves/move_pad.
+- Lore: "The beat rider (K114)" in gameplay-mechanisms.md; the panel
+  semantics stand at gameplay-panel.md's CLOCK AND BEAT ROWS (K795);
+  the probes.md K795 entry already records `__knotBeat` (its text now
+  notes it comes on once built, before the first tap - the K795 fix).
+  No CHANGELOG file exists in this repo; nothing written there.
+- Residual filed, not fixed: switching FROM the beat loses the
+  spoken finish time (named in the ledger's K114 line; not located
+  in this pass - no speech/announcer code matched in src).
+- Suite 2203 green, build green. Golden daily/byte pins untouched.
