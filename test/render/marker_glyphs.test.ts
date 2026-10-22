@@ -84,7 +84,7 @@ describe("marker glyphs (K83)", () => {
     }
   });
 
-  it("the shipped set: play, flag, ring and dot, horns, spider, sword, tick", () => {
+  it("the shipped set: play, flag, ring and dot, horns, spider, sword, tick, key, padlock", () => {
     expect(DEFAULT_GLYPHS).toEqual({
       start: "play",
       exit: "flag",
@@ -94,6 +94,8 @@ describe("marker glyphs (K83)", () => {
       sword: "sword",
       tick: "tick",
       chevron: "oneway",
+      key: "key", // K138 stage 4
+      lock: "padlock",
     });
     for (const role of ROLES) {
       const ids = glyphsForRole(role);
@@ -239,7 +241,8 @@ describe("marker glyphs (K83)", () => {
   });
 
   it("fits a glyph's outer ink to any radius (the off-screen indicator's box)", () => {
-    for (const role of [...ROLES, "minotaur" as const, "spider" as const, "sword" as const, "tick" as const, "chevron" as const]) {
+    const more: MarkerRole[] = ["minotaur", "spider", "sword", "tick", "chevron", "key", "lock"];
+    for (const role of [...ROLES, ...more]) {
       const id = DEFAULT_GLYPHS[role];
       const svg = markerGlyphSvgFit(id, role, 10.75);
       const k = Number(svg.match(/^<g transform="scale\(([\d.]+)\)">/)![1]);
