@@ -627,3 +627,49 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   rules: gameplay-mechanisms.md's Locks and keys; the rows:
   gameplay-panel.md's KEYS ROWS. A branch that also appends codec params
   (K793-K795 were running at the pause) renumbers when it merges second.
+- BEAT RIDER PARAMS (K114 beat, 2026-10-20; K795, 2026-10-21; briefs
+  `docs/design/K114_beat.md`, `docs/design/K795.md`): `clock` gained
+  `beat` (84, an appended option). K114's three, at 202-204: `beatTempo`
+  (`btp`, [40, 180] bpm, default 100), `beatLength` (`btl`, [0.5, 8]
+  lattice units a beat covers, default 2) and `beatCap` (`btc`, [1, 8], the
+  most beats a run takes, default 4). K795's two, APPENDED at 218-219 after
+  its tunables: `beatTiming` (`btm`: even | length, BEAT_TIMINGS in
+  game/beat_rider.ts, default even) and `beatPerRun` (`btr`, [1, 4] =
+  BEAT_PER_RUN_MIN..MAX, default 1, rounded); CODEC_VERSION stays 8. even
+  rides every run in beatPerRun beats; length is K114's rule (btl, btc),
+  the only one before K795. K795 CHANGED A DEFAULT ON PURPOSE (Levi,
+  relayed by the coordinator, 2026-10-21): a clk=beat design rides one beat
+  per run where it rode beatsForRun's beats, and a link that wants the old
+  timing says `btm=length`. None daily-exempt, none a MAZE key; all five
+  run onClockChange (undo_stack.ts's LIVE_EFFECTS: a change restarts the
+  solve). `beatSettingsOf(params)` (url_state.ts) reads them together,
+  clamped (tempo and perRun rounded; an unknown timing reads even). Pins
+  that moved with K795: the table pin, url_codec.test.ts's defaults table,
+  OVERRIDE_KEYS (`btm`, `btr`), its off-default value for beatPerRun (2)
+  and its beatSettingsOf cases. The golden snapshot, the golden dailies,
+  K87, the minotaur digests and the clk=turn pins did not move: only
+  clk=beat reads the timing. Probe links: `?7&am=instant&clk=beat&snd=none`
+  (one beat per run), plus `&btr=2` (every other beat) or `&btm=length`
+  (K114's runs). The rider: gameplay-beat.md; the rows: gameplay-panel.md's
+  CLOCK AND BEAT ROWS.
+- K795 TUNABLE PARAMS (K795 item 3, 2026-10-21; brief `docs/design/K795.md`,
+  whose Handoff holds the audit of the constants left): four constants
+  became params, each defaulting to its constant, so a default design is
+  bit-identical. `snareHold` (`snh`, [1, 8] = SNARE_HOLD_MIN..MAX, default
+  SNARE_HOLD 3 turns, game/snares.ts), `lureRange` (`lrg`, [1, 12], default
+  LURE_RANGE 6 runs, game/lures.ts), `hintSeconds` (`hns`, [0.5, 10],
+  default HINT_SECONDS 2 s, game/hints.ts) and `hiddenReveal` (`hrv`, [1,
+  8], default REVEAL_RUNS 3 runs, game/hidden_runs.ts), APPENDED at 214-217
+  after K138 stage 4's keys and lockMode (212-213; the rebase onto
+  2409e961 renumbered them); CODEC_VERSION stays 8. Each module exports its
+  MIN/MAX and an `*Of` reader that clamps and rounds to a whole number
+  (the hint keeps its fraction). The hold and the range reach the turn
+  minotaur through `turnConfig`, which sets them only off their defaults,
+  so a default config and the digests are what they were. snareHold,
+  lureRange and hiddenReveal run onClockChange (a change restarts the
+  solve); hintSeconds runs onAidsChange (live, from the next hint). None
+  daily-exempt, none a MAZE key. Pins that moved: the table pin,
+  url_codec.test.ts's defaults table and OVERRIDE_KEYS (`snh`, `lrg`,
+  `hns`, `hrv`). Nothing golden moved. Tests:
+  `test/game/k795_tunables.test.ts`. Probe link:
+  `?7&am=instant&mt=hunter&lur=3&snr=2&snh=5&lrg=9&snd=none`.

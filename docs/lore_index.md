@@ -20,6 +20,9 @@ rules file or its `paths:` change. Not auto-loaded.
 - `gameplay-fire.md`: BURN RACE (K114)
   paths: `src/game/fire.ts`, `src/game/fire_clock.ts`,
   `test/game/fire.test.ts`, `test/game/fire_clock.test.ts`
+- `gameplay-beat.md`: THE BEAT RIDER (K114 beat): RUN TIMING (K795)
+  paths: `src/game/beat_rider.ts`, `src/game/beat_clock.ts`, `src/app/beat_frame.ts`,
+  `test/game/beat_rider.test.ts`, `test/game/beat_clock.test.ts`, `test/app/beat_catch.test.ts`
 - `gameplay-mechanisms.md`: FRAGILE RUNS AND PAR (K137), COLLAPSE (K139),
   THE CUT (K114), THE AIDS (K137 stage 2), ICE AND THE COLOR RULE (K138 stage 1),
   TURNSTILES AND HIDDEN RUNS (K138 stage 2), ONE-WAY RUNS (K138 stage 3),
@@ -40,10 +43,10 @@ rules file or its `paths:` change. Not auto-loaded.
   `test/game/locks.test.ts`
 - `gameplay-fog.md`: THE FOG RESETS ON A RESTART ONLY (K100), a catch's re-fog (K174)
   paths: `src/game/fabric_controller.ts`, `src/game/daily_attempt.ts`, `src/render/fabric_maze_renderer.ts`, `src/render/fog_arc.ts`, `test/render/fog_arc.test.ts`, `test/game/fabric_controller.test.ts`, `test/game/daily_attempt.test.ts`
-- `gameplay-links.md`: link decoder details, codec v4, LOAD SETTLE PARAMS (K147), MARKER SIZE PARAM (K98), BURN RACE PARAMS (K114), PLUCK EMPHASIS PARAMS (K279)
+- `gameplay-links.md`: link decoder details, codec v4, LOAD SETTLE PARAMS (K147), MARKER SIZE PARAM (K98), BURN RACE PARAMS (K114), PLUCK EMPHASIS PARAMS (K279), BEAT RIDER PARAMS (K114, K795), K795 TUNABLE PARAMS
   paths: `src/ui/param_codec.ts`, `src/ui/url_state.ts`, `src/ui/daily_link.ts`, `test/ui/param_codec.test.ts`, `test/ui/url_codec.test.ts`, `test/ui/seed_text.test.ts`, `test/ui/appear_mode.test.ts`
-- `gameplay-panel.md`: pathViz labels, live recolor, panel rules, gridAlign, the background rows (K79), the Accessibility folder (K111)
-  paths: `src/ui/tweakpane_panel.ts`, `src/ui/grid_align_curve.ts`, `test/ui/grid_align_curve.test.ts`, `src/app/panel_wiring.ts`
+- `gameplay-panel.md`: pathViz labels, live recolor, panel rules, gridAlign, the background rows (K79), the Accessibility folder (K111), CLOCK AND BEAT ROWS and K795 TUNABLE ROWS (K795), EVERY PARAM HAS A ROW OR A REASON (K795)
+  paths: `src/ui/tweakpane_panel.ts`, `src/ui/grid_align_curve.ts`, `test/ui/grid_align_curve.test.ts`, `test/ui/panel_rows.test.ts`, `src/app/panel_wiring.ts`
 - `gameplay-motion.md`: THE MOTION SETTING (K53, K79), THE ACCESSIBILITY GROUP (K111: Reduced motion, High contrast)
   paths: `src/ui/motion.ts`, `test/ui/motion.test.ts`, `src/ui/accessibility.ts`, `test/ui/accessibility.test.ts`, `src/app/lifecycle.ts`
 - `gameplay-camera.md`: the camera round, FIT CAMERA PAN RANGE (K198), taps and drags (the tap tug, K279), TAP PREFERENCE (K479: outgoing runs over the arrival run)
