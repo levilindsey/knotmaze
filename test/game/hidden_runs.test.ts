@@ -203,6 +203,7 @@ describe("hidden runs: the controller", () => {
       turnstiles: look.turnstiles!.length,
       hidden: { found: 0, of: look.hidden!.length },
       oneWay: null, // K138 stage 3
+      keys: null, // K138 stage 4
     });
     expect(c.reveal(look.hidden![0])).toBe(true);
     expect(ruleFields(c).hidden!.found).toBe(1);
