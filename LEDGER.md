@@ -463,16 +463,6 @@ Next free ID: K812.
   - next: restart from the brief plus prior_run.md: Grep, then Read at most 150-line ranges of fabric_maze_renderer.ts and ribbon_renderer.ts; probes in the main checkout; a first WIP commit (the diagnosis in the brief) within 20 minutes
   - brief: `docs/design/K794.md`
   - env: vite from a copy of `.claude/probes/K138/s4/vite.private-cache.config.ts`, ports 5414-5417
-- **K795** · Panel rows for every param: the beat rider (clk, tempo, length, cap), a test that every
-  PARAM_DEFAULTS key has a row or a stated reason, and an audit of recent features for tunables that
-  deserve params (Levi 2026-10-21); plus run timing as a toggle (Levi 2026-10-21): even, every run N beats
-  (default 1; the dot's speed varies with the run), or today's whole beats by run length (default: K806)
-  - owner: nobody since 2026-10-21 11:07 (agent `a78c285925ac13b8c` of claude session 91b19e11-7759-4638-ba60-4705b011b94f, stopped at Levi's wrap-up; built and unit-tested, never checked on the page)
-  - branch: `worktree-agent-a78c285925ac13b8c`, worktree `.claude/worktrees/agent-a78c285925ac13b8c`; last commit: `20744723` (WIP, unpushed; npm test and build green at `c92ed532`, only lore and the Handoff since)
-  - evidence: `.claude/probes/K795/` in the main checkout (`beat_page.mjs`, never run; `out/npm_test.log`, `out/npm_build.log`)
-  - next: rebase on origin/master; its six codec entries are 214-219 unless something took them first (then move them and update the table pin, the defaults key order, url_codec's defaults table and OVERRIDE_KEYS, and `gameplay-links.md`'s numbers); K793 merged (`a60a2cc7`), so tag the new rows (`test/ui/param_tags.test.ts` lists them); npm test and build; run `beat_page.mjs` on desktop and phone and time seed 7 at one beat per run against 0:32-0:34; fix text still quoting the old constants (`maze_stats.ts` "within three runs", the snares' stat text, a HINT_SECONDS comment near `fabric_maze_renderer.ts:1436`); a probes.md entry for the probe; then merge with agent_merge
-  - brief: `docs/design/K795.md` (the Handoff at its end, on the branch)
-  - env: from the worktree, `npx vite --config C:\Users\lsl\Repositories\knotmaze\.claude\probes\K795\vite.private-cache.config.ts --port 5420 --strictPort --host 127.0.0.1` (ports 5420-5423)
 
 ## Next, in order
 
@@ -1841,6 +1831,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K795** · Panel rows for every param, the beat timing toggle and four tunables. Done in a1b1bdde (2026-10-21).
 - **K793** · Settings panel search (fuzzy over row names, tags, folders and options) with collapse and expand all. Done in a60a2cc7 (2026-10-21).
 - **K777** · Refreshed the open-work report (K585) to v7: 68 decision cards (41 confirm, 25 open), 18 tests to mark and a What changed block, built from the ledger at 37382172; pipeline and gaps in the `docs/design/K777.md` Handoff. Done in 1396ea06 (2026-10-21).
 - **K774** · Beat rider catches land exactly once (moveAlong lands a pending catch before the next departure; test/app/beat_catch.test.ts). Done in 8a9fe90c (2026-10-21).
