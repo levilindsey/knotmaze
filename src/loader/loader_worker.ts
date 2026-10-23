@@ -61,6 +61,45 @@ function strokeSpan(c: OffscreenCanvasRenderingContext2D, from: number, to: numb
   c.stroke();
 }
 
+// K842: a span with the under crossings' gap windows cut out of it, so
+// the trail (and the traveled stroke) dives with the strand instead of
+// painting across the thread it passes under. The windows are the
+// shape's own gaps (cfg.gapSamples of arc either side of an under
+// crossing), placed on the span's lap.
+function strokeSpanClipped(c: OffscreenCanvasRenderingContext2D, from: number, to: number): void {
+  const n = shape.points.length;
+  let spans: Array<[number, number]> = [[from, to]];
+  for (const u of shape.under) {
+    const i = Math.floor(u) % n;
+    const f = u - Math.floor(u);
+    const base = shape.cum[i] + (shape.cum[i + 1] - shape.cum[i]) * f;
+    let g0 = base - cfg.gapSamples;
+    let g1 = base + cfg.gapSamples;
+    while (g1 < from) {
+      g0 += shape.total;
+      g1 += shape.total;
+    }
+    while (g0 > to) {
+      g0 -= shape.total;
+      g1 -= shape.total;
+    }
+    const next: Array<[number, number]> = [];
+    for (const [a, b] of spans) {
+      if (g1 <= a || g0 >= b) {
+        next.push([a, b]);
+        continue;
+      }
+      if (g0 > a) next.push([a, g0]);
+      if (g1 < b) next.push([g1, b]);
+    }
+    spans = next;
+    if (spans.length === 0) break;
+  }
+  for (const [a, b] of spans) {
+    if (b - a > 1e-6) strokeSpan(c, a, b);
+  }
+}
+
 // The head glyph (the game's start marker: a dark disc, a white ring, a
 // white core) at (x, y) in the current transform.
 function headGlyph(c: OffscreenCanvasRenderingContext2D, x: number, y: number, r: number): void {
@@ -123,7 +162,7 @@ function drawMazeMode(c: OffscreenCanvasRenderingContext2D): void {
     const a0 = sPos - (TRAIL_LEN * (k + 1)) / SEGMENTS;
     const a1 = sPos - (TRAIL_LEN * k) / SEGMENTS;
     c.globalAlpha = 0.25 + 0.75 * (1 - k / SEGMENTS);
-    strokeSpan(c, a0, a1);
+    strokeSpanClipped(c, a0, a1);
   }
   c.globalAlpha = 1;
   c.restore();
@@ -160,7 +199,7 @@ function drawHeadMode(c: OffscreenCanvasRenderingContext2D): void {
   c.lineWidth = cfg.threadW;
   c.strokeStyle = cfg.thread;
   strokePieces(c, 0.38);
-  strokeSpan(c, 0, sPos);
+  strokeSpanClipped(c, 0, sPos);
   // The fading trail at the head, as in maze mode.
   const SEGMENTS = 10;
   c.strokeStyle = tint(cfg.thread, 0.45);
@@ -168,7 +207,7 @@ function drawHeadMode(c: OffscreenCanvasRenderingContext2D): void {
     const a0 = sPos - (TRAIL_LEN * (k + 1)) / SEGMENTS;
     const a1 = sPos - (TRAIL_LEN * k) / SEGMENTS;
     c.globalAlpha = 0.25 + 0.75 * (1 - k / SEGMENTS);
-    strokeSpan(c, a0, a1);
+    strokeSpanClipped(c, a0, a1);
   }
   c.globalAlpha = 1;
   headGlyph(c, head.p[0], head.p[1], (Math.min(w, h) * 0.045) / scale);

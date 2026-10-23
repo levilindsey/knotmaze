@@ -1947,6 +1947,12 @@ export class FabricMazeRenderer {
     const mk = this.markers.minotaur;
     mk.setGlyph(markerGlyph(this.markerGlyphIds.minotaur, "minotaur"));
     mk.place(x, y, r);
+    // K842: the minotaur dips where its thread passes under a crossing,
+    // like the head (the rendezvous slide keeps the post's dip).
+    mk.mesh.alpha = this.ribbons.underGapVisibility(
+      at.chain,
+      this.ribbons.arcForCtrl(at.chain, ctrl)
+    );
     this.minoLayer.visible = true;
     const bleed = this.fogOfWar && !over;
     // Over the fog, or right under it (the fog sprite and its twins are
@@ -2165,10 +2171,10 @@ export class FabricMazeRenderer {
 
   // One telegraph line along `chain` through the ctrls ctrlOf(i), i from
   // i0 to n, after `prev` (the stroke before's last point, which it joins;
-  // null for none). Under the thread reveal it breaks where the thread is
-  // hidden, each break bisected to the shown edge (K652/K271). With the
-  // reveal off it is the plain stroke, point for point. Returns its last
-  // point when that is shown (the next run's join), else null.
+  // null for none). It breaks where the thread is hidden - by the thread
+  // reveal, or (K842) where the run dives under a crossing - each break
+  // bisected to the shown edge (K652/K271). Returns its last point when
+  // that is shown (the next run's join), else null.
   private teleStroke(
     gfx: Graphics,
     chain: number,
@@ -2179,7 +2185,7 @@ export class FabricMazeRenderer {
     width: number,
     alpha: number
   ): number[] | null {
-    const clip = this.explore.on;
+    const clip = true; // K842: under-crossing breaks apply with the reveal off too
     let pts: number[] = prev ? [prev[0], prev[1]] : [];
     const flush = (): void => {
       if (pts.length >= 4) {
@@ -2189,8 +2195,16 @@ export class FabricMazeRenderer {
       }
       pts = [];
     };
-    const shownAt = (c: number): boolean =>
-      this.ribbons.exploreVisAt(chain, this.ctrlMod(chain, c)) >= TELE_VIS_MIN;
+    // K842: a stroke also breaks where its run dives under a crossing
+    // (the under-gap windows, thresholded at the visibility ramp's
+    // middle - the casing's edge), not only where the reveal hides it.
+    const shownAt = (c: number): boolean => {
+      const cc = this.ctrlMod(chain, c);
+      return (
+        this.ribbons.exploreVisAt(chain, cc) >= TELE_VIS_MIN &&
+        this.ribbons.underGapVisibility(chain, this.ribbons.arcForCtrl(chain, cc)) >= 0.5
+      );
+    };
     // The shown ctrl nearest the edge between a shown ctrl and a hidden one.
     const edge = (shown: number, hidden: number): number => {
       for (let k = 0; k < TELE_VIS_BISECT; k++) {
@@ -2707,8 +2721,17 @@ export class FabricMazeRenderer {
       const start = this.fireFxTurn++ % count;
       for (let j = 0; j < count; j++) {
         const o = ((start + j) % count) * FIRE_EMIT_STRIDE;
+        const chain = emit[o + 4];
+        // K842: no burn sparks while the front dives under a crossing.
+        if (
+          this.ribbons.underGapVisibility(
+            chain,
+            this.ribbons.arcForCtrl(chain, this.ctrlMod(chain, emit[o + 5]))
+          ) < 0.5
+        ) {
+          continue;
+        }
         if (pieces) {
-          const chain = emit[o + 4];
           const n = this.ps.chains[chain].length;
           const closed = this.ps.chainBreakAfter[chain] < 0;
           if (chainVis(pieces, chain, emit[o + 5], n, closed) < 0.5) continue;
@@ -4180,6 +4203,16 @@ export class FabricMazeRenderer {
     this.headX = this.scratch[0];
     this.headY = this.scratch[1];
     this.headValid = true;
+    // K842: the head marker dips where its run passes under a crossing,
+    // with the same visibility (and gap margin) as its host thread -
+    // the Ariadne yarn's rule. At rest it sits at a junction: no dip.
+    m.head.mesh.alpha =
+      dotChain >= 0
+        ? this.ribbons.underGapVisibility(
+            dotChain,
+            this.ribbons.arcForCtrl(dotChain, this.ctrlMod(dotChain, dotCtrl))
+          )
+        : 1;
     // Fog explores wherever the head rests; mid-move, the run's stations
     // stamp it (tickAnim, K99) - the dot's per-frame position would make
     // what a move uncovers depend on frame timing.

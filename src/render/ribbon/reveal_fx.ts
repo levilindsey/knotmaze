@@ -687,6 +687,8 @@ export class RevealFx {
       if (!samples || samples.totalLength <= 0) continue;
       const closed = this.ps.chainBreakAfter[tip.chain] < 0;
       const arc = this.paintArcAt(samples, tip.ctrl, closed);
+      // K842: no frontier sparks while the front dives under a crossing.
+      if (this.r.underGapVisibility(tip.chain, arc) < 0.5) continue;
       const perCtrl =
         samples.totalLength / Math.max(1, this.ps.chains[tip.chain].length);
       // Comet streaks lie along the HOST THREAD: hand the emitter a short
@@ -752,6 +754,8 @@ export class RevealFx {
         const m1 = mask[(k + 1) % count];
         if (m0 === m1 || (m0 - 0.5) * (m1 - 0.5) > 0) continue;
         const f = (0.5 - m0) / (m1 - m0);
+        // K842: no frontier sparks while the front dives under a crossing.
+        if (this.r.underGapVisibility(chain, (k + f) * arcPer) < 0.5) continue;
         this.sampleAt(samples, (k + f) * arcPer, this.sampleScratch, 0);
         const dir = m0 > m1 ? 1 : -1; // Toward the unrevealed side.
         fx.spawnFrontier(
