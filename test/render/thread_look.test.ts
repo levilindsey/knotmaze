@@ -19,8 +19,25 @@ describe("thread look beyond the ribbons", () => {
     expect(Array.from(look.slice(4, 8))).toEqual([0, 1, 0, 1]);
   });
 
+  it("stamps aFlank: wedge flanks, rim-only fans, seal discs", () => {
+    const m = new TriFanMesh(24, 48);
+    m.begin();
+    // A wedge: apex 0, rim carries the given flank coordinate.
+    m.pushFan(0, 0, [1, 0, 0, 1, -1, 0], 3, [1, 0, -1]);
+    // A disc/cap: rim only (2). A seal disc: suppressed (3).
+    m.pushFan(0, 0, [1, 0, 0, 1], 3);
+    m.pushFan(0, 0, [1, 0, 0, 1], 3, null, true);
+    const flank = m.mesh.geometry.getBuffer("aFlank").data as Float32Array;
+    expect(Array.from(flank.slice(0, 4))).toEqual([0, 1, 0, -1]);
+    expect(Array.from(flank.slice(4, 7))).toEqual([2, 2, 2]);
+    expect(Array.from(flank.slice(7, 10))).toEqual([3, 3, 3]);
+  });
+
   it("gates fillet fill by the look in both fan programs", () => {
     expect(JUNCTION_FRAG).toContain("float lookCoord = strip ? abs(2.0 * vLook - 1.0) : vLook;");
+    // K815: a fan's border outline is rim + flanks; a seal disc draws none.
+    expect(JUNCTION_FRAG).toContain("float fanEdge = strip ? lookEdge : max(lookEdge, flankEdge);");
+    expect(JUNCTION_FRAG).toContain("if (!strip && vFlank > 2.5) fanEdge = 0.0;");
     expect(JUNCTION_FRAG).toContain("if (gk * lookA <= 0.002) discard;");
     const ex = withExploreField(JUNCTION_FRAG);
     expect(ex).toContain("exC.rgb = base * exC.a;");
