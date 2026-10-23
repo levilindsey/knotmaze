@@ -237,6 +237,9 @@ export interface RibbonStyle {
   // today; "sdf" when ribbon_sdf.ts lands). Not a codec param: read
   // from the link by scene.ts.
   rp?: "strip" | "sdf";
+  // K829: tapered glyph roots lean onto their swept-disc envelope
+  // (default on; scene.ts maps the probe override gln=0 to false).
+  taperLean?: boolean;
   // K580 s5 (#glyphs2): per chain, a glyph strand (core Strand.glyph;
   // absent = none). A glyph chain's fused spur tip keeps its untucked
   // stroke from J to the tuck point (tuckFusedTips), and rebuildFillets
@@ -921,6 +924,9 @@ export class RibbonRenderer {
   /** @internal ribbon */ widthLast: (Float32Array | null)[] = [];
   // K580: per-chain scratch for withTaper's composed multiplier.
   private taperScratch = new Map<number, Float32Array>();
+  // K829: per-chain scratches for taperLeanFor (lean + radius profile).
+  private leanScratch = new Map<number, Float32Array>();
+  private leanRScratch = new Map<number, Float32Array>();
   // update() calls so far (probes: a render-only pluck must add none).
   updateCount = 0;
   // G3-0 DATA PLANE (module G3 above): this scene's layout in the tables,
@@ -1669,7 +1675,7 @@ export class RibbonRenderer {
       this.kcv[i] = kChain(this.kd, i, this.kcv[i]);
       const width = this.withTaper(i, samples, this.revealFx.widthMulFor(i, samples));
       this.widthLast[i] = width;
-      const mul = this.stripPass.extrude(i, samples, width);
+      const mul = this.stripPass.extrude(i, samples, width, this.taperLeanFor(i, samples));
       if (this.g3Data) this.g3WriteChain(i, samples, mul);
     });
     const fillHalf = this.style.threadWidth / 2;
@@ -1999,6 +2005,56 @@ export class RibbonRenderer {
       buf[k] = (base ? base[k] : 1) * m;
     }
     return buf;
+  }
+
+  // K829: per-sample envelope lean for one chain (null: no tapered root
+  // here, or the lean is off). k = -dr/ds of the root's half-width over
+  // its arc (the same sep profile withTaper composes), clamped so the
+  // tilt stays sane; 0 from the joint on. The strip tilts its offset
+  // axis by asin(k) (ribbon_mesh extrudeRibbon), which draws the swept
+  // discs' true envelope instead of the square offset - the K718 a's-J
+  // bite was the difference. Rebuilt per call from this frame's arc
+  // table, like withTaper.
+  /** @internal ribbon */ taperLeanFor(
+    chain: number,
+    samples: SplineSamples
+  ): Float32Array | null {
+    const tp = this.style.taper?.[chain];
+    if (!tp || this.style.taperLean === false) return null;
+    const count = samples.count;
+    let lean = this.leanScratch.get(chain);
+    if (!lean || lean.length !== count) {
+      lean = new Float32Array(count);
+      this.leanScratch.set(chain, lean);
+    }
+    let rad = this.leanRScratch.get(chain);
+    if (!rad || rad.length !== count) {
+      rad = new Float32Array(count);
+      this.leanRScratch.set(chain, rad);
+    }
+    const c = this.kcv[chain];
+    const arcJ = kCA(this.kd, c, 2 * tp.joint);
+    const n = tp.sep.length - 1;
+    const tw = this.style.threadWidth;
+    const h = tw / 2;
+    for (let k = 0; k < count; k++) {
+      const a = kSampleArc(c, k);
+      let r = h;
+      if (arcJ > 0 && a < arcJ) {
+        const f = (a / arcJ) * n;
+        const i0 = Math.min(n - 1, Math.floor(f));
+        r = h * (1 + (tp.sep[i0] + (tp.sep[i0 + 1] - tp.sep[i0]) * (f - i0)) / tw);
+      }
+      rad[k] = r;
+    }
+    for (let k = 0; k < count; k++) {
+      const i0 = Math.max(0, k - 1);
+      const i1 = Math.min(count - 1, k + 1);
+      const ds = kSampleArc(c, i1) - kSampleArc(c, i0);
+      const slope = ds > 1e-6 ? -(rad[i1] - rad[i0]) / ds : 0;
+      lean[k] = Math.min(0.85, Math.max(-0.85, slope));
+    }
+    return lean;
   }
 
   // K620: each tapered root's paint table (PaintScene.setRootTable; layout

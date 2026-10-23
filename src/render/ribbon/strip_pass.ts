@@ -49,14 +49,20 @@ export class StripPass implements ThreadPass {
   // update() composed (reveal x taper); the pluck collapse composes
   // inside. Returns the multiplier handed to the mesh (update()'s G3
   // chain write reads the same one).
-  extrude(chain: number, samples: SplineSamples, width: Float32Array | null): Float32Array | null {
+  extrude(
+    chain: number,
+    samples: SplineSamples,
+    width: Float32Array | null,
+    lean?: Float32Array | null
+  ): Float32Array | null {
     const mul = this.r.pluckHost.withPluckCollapse(chain, samples.count, width);
     this.fills[chain].update(
       samples.positions,
       samples.tangents,
       this.style.threadWidth / 2,
       0,
-      mul
+      mul,
+      lean ?? null
     );
     return mul;
   }
@@ -78,7 +84,8 @@ export class StripPass implements ThreadPass {
       samples.tangents,
       this.style.threadWidth / 2,
       0,
-      mul
+      mul,
+      this.r.taperLeanFor(chain, samples)
     );
     // G3-0: the collapse is part of the chain's radii.
     if (this.r.g3Data && this.r.g3Active()) {

@@ -19,7 +19,14 @@ export interface ThreadPass {
   build(chain: number, count: number, closed: boolean): RibbonMesh | null;
   // Extrude one chain from this frame's samples and update()'s
   // composed width; returns the multiplier the G3 chain write reads.
-  extrude(chain: number, samples: SplineSamples, width: Float32Array | null): Float32Array | null;
+  // `lean` (K829): per-sample envelope lean of a tapered glyph root
+  // (strip only - the SDF cones already draw the true envelope).
+  extrude(
+    chain: number,
+    samples: SplineSamples,
+    width: Float32Array | null,
+    lean?: Float32Array | null
+  ): Float32Array | null;
   // The pluck light path: re-extrude one chain under an installed
   // collapse (an SDF pass writes RADII instead).
   collapse(chain: number): void;

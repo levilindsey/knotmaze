@@ -139,7 +139,8 @@ export function extrudeRibbon(
   closed: boolean,
   halfWidth: number,
   offset = 0,
-  widthMul: Float32Array | null = null
+  widthMul: Float32Array | null = null,
+  leanK: Float32Array | null = null
 ): void {
   joins.count = 0;
   for (let i = 0; i < n; i++) {
@@ -238,10 +239,26 @@ export function extrudeRibbon(
 
     const nx = -tangents[s + 1];
     const ny = tangents[s];
-    let lx = cx + nx * wLeft;
-    let ly = cy + ny * wLeft;
-    let rx = cx - nx * wRight;
-    let ry = cy - ny * wRight;
+    // K829 TAPER LEAN: where a tapered glyph root's width changes along
+    // the strand, the true outline is the swept discs' envelope, which
+    // leans forward of the perpendicular by asin(k) (leanK = -dw/ds per
+    // sample, built by the renderer for tapered roots only). Tilting
+    // the offset axis draws that envelope; k = 0 is today's square
+    // offset, bit-identical. (Round joins below keep their own arc.)
+    let ox = nx;
+    let oy = ny;
+    if (leanK) {
+      const k = leanK[i];
+      if (k > 0.001 || k < -0.001) {
+        const c = Math.sqrt(Math.max(0, 1 - k * k));
+        ox = nx * c + tangents[s] * k;
+        oy = ny * c + tangents[s + 1] * k;
+      }
+    }
+    let lx = cx + ox * wLeft;
+    let ly = cy + oy * wLeft;
+    let rx = cx - ox * wRight;
+    let ry = cy - oy * wRight;
 
     if (dot < ROUND_DOT_START) {
       // ROUND JOIN (see ROUND_ARC_SEGMENTS). t: 0 = master's miter, 1 = round.
@@ -504,7 +521,8 @@ export class RibbonMesh {
     tangents: Float32Array,
     halfWidth: number,
     offset = 0,
-    widthMul: Float32Array | null = null
+    widthMul: Float32Array | null = null,
+    leanK: Float32Array | null = null
   ): void {
     const n = this.sampleCount;
     const joins = this.joins;
@@ -517,7 +535,8 @@ export class RibbonMesh {
       this.closed,
       halfWidth,
       offset,
-      widthMul
+      widthMul,
+      leanK
     );
     if (joins.count > 0 || this.slotUsed > 0) this.syncJoins();
     uploadAll(this.mesh.geometry, "aPosition");

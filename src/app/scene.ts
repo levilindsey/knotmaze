@@ -367,6 +367,12 @@ export function createScene(deps: SceneDeps): Scene {
         new URLSearchParams(location.search).get("rp") === "sdf"
           ? "sdf"
           : "strip",
+      // K829: tapered glyph roots lean onto their disc envelope;
+      // gln=0 keeps the old square offset (A/B probes).
+      taperLean: !(
+        typeof location !== "undefined" &&
+        new URLSearchParams(location.search).get("gln") === "0"
+      ),
       threadWidth: params.threadWidth,
       casingWidth: params.threadWidth + look("gap") * 2,
       baseHue: effHue,
