@@ -70,8 +70,10 @@ export function glyphI(fork: ForkAngle = 0): Glyph {
       },
     ],
     floats: [],
-    // The tittle: a closed square loop (dotLoop), not a segment.
-    dots: [dotLoop([39, 108], [4, 3], [-3, 4])],
+    // The tittle: a closed ellipse loop (dotLoop), not a segment.
+    // Half-axes (2, 6) along the stem's (1, 3) slant and (5, -2)
+    // across it: a slightly skewed ellipse leaning with the stem.
+    dots: [dotLoop([39, 108], [2, 6], [5, -2])],
     crossings: 0,
   };
 }
