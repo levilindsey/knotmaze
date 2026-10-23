@@ -83,6 +83,10 @@ export interface PhysicsTuning {
   // off; 1 = the original full-strength checkbox).
   gridAlign: number;
   threadWidth: number; // Render width; the hard collision floor honors it.
+  // K792: the grabbed slide chase's rate cap override (MAX_SLIDE_GRABBED
+  // when absent). Set only by the `gcr` try key (main.ts), never a
+  // codec param: K610's feel A/B reads it from a link.
+  grabChase?: number;
 }
 
 export const DEFAULT_TUNING: PhysicsTuning = {
@@ -181,7 +185,7 @@ const SLIDE_WINDOW = 3; // Segments each side searched by the projection.
 // parasitic pull on the other thread - the coupling pulls the lagging
 // binding's thread toward the leading one every substep, which integrates
 // into bodily drag during sweeps and grabs at intersections.
-const MAX_SLIDE_GRABBED = 0.6;
+const MAX_SLIDE_GRABBED = 0.8; // K827: raised from 0.6 (K610, measured: drag frame p50 -24% on the daily, 1.0 no better)
 const SLIDE_EASE_GRABBED = 1.0;
 const MAX_SLIDE_REST = 0.12;
 const SLIDE_EASE_REST = 0.5;
@@ -532,6 +536,9 @@ export class ParticleSystem {
   private substepCount = 0;
   private frameMaxMoveSq = 0;
   private grabbed = -1;
+  // K792: the grabbed chase's current rate cap (tuning.grabChase, else
+  // MAX_SLIDE_GRABBED). Public for the physics tests.
+  grabChaseRate = MAX_SLIDE_GRABBED;
   private grabX = 0;
   private grabY = 0;
   private particleChain: Int32Array;
@@ -1984,7 +1991,7 @@ export class ParticleSystem {
   ): void {
     const len = this.chains[self.chain].length;
     const maxSlide =
-      (this.grabbed >= 0 ? MAX_SLIDE_GRABBED : MAX_SLIDE_REST) * mobility;
+      (this.grabbed >= 0 ? this.grabChaseRate : MAX_SLIDE_REST) * mobility;
     const ease =
       (this.grabbed >= 0 ? SLIDE_EASE_GRABBED : SLIDE_EASE_REST) * mobility;
     const delta = bestF - self.ctrl;
@@ -2267,6 +2274,7 @@ export class ParticleSystem {
   }
 
   private substep(tuning: PhysicsTuning): void {
+    this.grabChaseRate = Math.min(Math.max(tuning.grabChase ?? MAX_SLIDE_GRABBED, 0.05), 2);
     this.time += SUBSTEP;
     this.substepCount++;
     if (this.probeSnap) this.probeSnap.set(this.positions);

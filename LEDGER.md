@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K827. (K812 preview effect buttons; K813 border-look highlights; K814 shape-injection param collection; K815 junction border fans; K816 SDF ribbons; K817 gap kStart rounding (K592); K818 shape-injection collection (K814 stages 1-3); K819 cannonSpread param + LOOK_KEYS backdrop/path colors; K820 borderWidth/borderColor/goldTextureStrength params (uKBorder, uKLook.w, uKHlPulse.w); K821-K822 panel restructure (Maze before Game; End effects, Text & emblem, Exit traps, Exploration, Burn race, Classic rules subfolders; Thread look above its rows; Path color beside the gold rows).)
+Next free ID: K828. (K812 preview effect buttons; K813 border-look highlights; K814 shape-injection param collection; K815 junction border fans; K816 SDF ribbons; K817 gap kStart rounding (K592); K818 shape-injection collection (K814 stages 1-3); K819 cannonSpread param + LOOK_KEYS backdrop/path colors; K820 borderWidth/borderColor/goldTextureStrength params (uKBorder, uKLook.w, uKHlPulse.w); K821-K822 panel restructure (Maze before Game; End effects, Text & emblem, Exit traps, Exploration, Burn race, Classic rules subfolders; Thread look above its rows; Path color beside the gold rows).)
 
 ## Waiting on Levi
 
@@ -108,7 +108,7 @@ Next free ID: K827. (K812 preview effect buttons; K813 border-look highlights; K
 - **K606** · K580's rest: Q3, the wider i and a (i 40 -> 58 GU, a 104 -> 120; built so, reversible);
   and my reading of Q2: the fork rule (15 deg, 1.2 LU) stays for ordinary forks, waived for tangent
   joins. `docs/design/K115_stage9.md` (Handoff).
-- **K610** · Grab chase rate, a feel A/B (0.6 per constraint iteration; try 0.8 and 1.0): 4 substeps
+- **K610** Raised in K827: the \gcr\ try key (K792) rides PhysicsTuning.grabChase into both hosts; MAX_SLIDE_GRABBED 0.6 -> 0.8 on measures (desktop daily drag probe .claude/probes/K823/gcr_measure.mjs: frame p50 72.3 ms at 0.6, 55.1 at 0.8, 55.1 at 1.0, 0.8 repeated 55.2). The feel call on the drag itself stays Levi's; \&gcr=1.0\ tries the higher cap. (Was: · Grab chase rate, a feel A/B (0.6 per constraint iteration; try 0.8 and 1.0): 4 substeps
   reach 90% of a drag step today; at 2 the daily's physics work drops from 53 to about 26 ms.
   A feel call (K370's 50 ms needs it or 2.5x cheaper substeps). Levi (2026-10-22): the recs stand - raise the chase rate and measure. `docs/design/K370.md`.
 - **K624** · The lit fuse keeps the ember on both sides and no band under both looks (K409; Levi's
@@ -696,7 +696,7 @@ Every other item below waits on the trigger it names.
   crosses a one-way run and its backtrack is refused (seeds 3 and 4 traced). Nothing rejects the
   layout, and no Undo control rescues the player (K778). Keep the maze solvable under the rules, as
   the keys do (K138 s4 census, `.claude/probes/K138/s4/census/results.md`)
-- **K792** · A try key for the K610 grab chase rate (0.6 per constraint iteration today): its feel
+- **K792** Done in K827: \?gcr=\ (0, 2] sets PhysicsTuning.grabChase; default stays in MAX_SLIDE_GRABBED. (Was: · A try key for the K610 grab chase rate (0.6 per constraint iteration today): its feel
   A/B needs 0.8 and 1.0 from a link, none sets the rate, so its report card has no try link (K777;
   `docs/design/K370.md`)
 
