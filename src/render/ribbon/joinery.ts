@@ -840,16 +840,36 @@ export class Joinery {
       arc0: number,
       ax: number,
       ay: number,
-      gateCtrl: number
+      gateCtrl: number,
+      flankFill?: number,
+      half?: [number, number]
     ): [number, number] | null => {
       // A lone cap disc (free tip / host fallback) reads its own thread -
       // and gates on it (shown once revealed there, fading with its FX; a
       // gate still far off skips the cap this rebuild). Returns the gate
       // (null when skipped), so a glyph's stadium can share it.
+      // `half` (K833): in the border look a free-end cap is a semicircle
+      // - the full disc's rim drew a whole circle at the dead end, its
+      // back half a circular stroke inside the thread. (ox, oy) is the
+      // outward direction at the tip.
       const j1 = this.r.jointGate("c" + chain + ":" + gateCtrl, [[chain, gateCtrl]]);
       if (j1[0] > fxNowJ + GATE_LEAD) return null;
       const rb = writeAxis(cx, cy, j1, chain, arc0, ax, ay, gateCtrl, r);
-      fm.pushFan(cx, cy, discRim(cx, cy, r), rb);
+      if (half) {
+        const rim: number[] = [];
+        const px = -half[1];
+        const py = half[0];
+        for (let i = 0; i <= DISC_SEGS / 2; i++) {
+          const a = -Math.PI / 2 + (i / (DISC_SEGS / 2)) * Math.PI;
+          rim.push(
+            cx + (Math.cos(a) * half[0] + Math.sin(a) * px) * r,
+            cy + (Math.cos(a) * half[1] + Math.sin(a) * py) * r
+          );
+        }
+        fm.pushFan(cx, cy, rim, rb, null, false, flankFill);
+      } else {
+        fm.pushFan(cx, cy, discRim(cx, cy, r), rb, null, false, flankFill);
+      }
       return j1;
     };
     // Local thread direction at an arc (two nearby probes), into
@@ -1415,7 +1435,8 @@ export class Joinery {
       cy: number,
       rim: number[],
       flank?: Float32Array | number[] | null,
-      seal?: boolean
+      seal?: boolean,
+      flankFill?: number
     ): void => {
       // A triangle's farthest point from the joint is one of its vertices.
       let r2 = (cx - rec.jx) * (cx - rec.jx) + (cy - rec.jy) * (cy - rec.jy);
@@ -1427,7 +1448,7 @@ export class Joinery {
       }
       const r = Math.sqrt(r2);
       if (r > rec.rMax) rec.rMax = r;
-      fm.pushFan(cx, cy, rim, rec.rb, flank, seal);
+      fm.pushFan(cx, cy, rim, rec.rb, flank, seal, flankFill);
     };
     const pushDiscField = (
       rec: JRec,
@@ -1487,7 +1508,14 @@ export class Joinery {
         tipArc,
         tx / tl,
         ty / tl,
-        tip.atEnd ? this.r.ps.chains[tip.chain].length - 1 : 0
+        tip.atEnd ? this.r.ps.chains[tip.chain].length - 1 : 0,
+        undefined,
+        // K833: border look - the cap is the semicircle closing the
+        // thread's two edge strokes, not a full circle (its back half
+        // drew a circular stroke inside the thread).
+        this.r.threadLook === 1
+          ? [tip.atEnd ? tx / tl : -tx / tl, tip.atEnd ? ty / tl : -ty / tl]
+          : undefined
       );
       setFanMask(null);
     }
@@ -1548,7 +1576,7 @@ export class Joinery {
           rim[i] = cx + ux * s - uy * l;
           rim[i + 1] = cy + uy * s + ux * l;
         }
-        emitFan(rec, cx, cy, rim);
+        emitFan(rec, cx, cy, rim, null, false, 4);
         // K580 s5, THE STADIUM (tip_stadium.ts): a glyph spur's cover also
         // runs back along its untucked stroke to J, at +-TIP_DISC_SIDE
         // half-widths with a round end around J, filling the waist between
@@ -1557,7 +1585,7 @@ export class Joinery {
         if (this.r.style.glyph && this.r.style.glyph[tip.chain]) {
           const st = this.r.glyphTipStroke[tip.chain * 2 + (tip.atEnd ? 1 : 0)];
           const band = st ? stadiumRim(st, side, this.stadiumApex) : null;
-          if (band) emitFan(rec, this.stadiumApex[0], this.stadiumApex[1], band);
+          if (band) emitFan(rec, this.stadiumApex[0], this.stadiumApex[1], band, null, false, 4);
         }
         setFanMask(null);
         fm = fmBottom;
@@ -1589,7 +1617,8 @@ export class Joinery {
         arcH,
         this.axisScratch[0],
         this.axisScratch[1],
-        tip.hostCtrl
+        tip.hostCtrl,
+        4
       );
       // K580 s5: a glyph junction can reach here. At xh 2 its arms' probes
       // 0.8 ctrl out all fall within 0.15 of J (the arm-drop rule in the
@@ -1617,7 +1646,7 @@ export class Joinery {
             tip.hostCtrl,
             reach
           );
-          fm.pushFan(this.stadiumApex[0], this.stadiumApex[1], band, rb);
+          fm.pushFan(this.stadiumApex[0], this.stadiumApex[1], band, rb, null, false, 4);
         }
       }
     }

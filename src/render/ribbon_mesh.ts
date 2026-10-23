@@ -796,14 +796,18 @@ export class TriFanMesh {
   // `flank` (K815): the rim's flank coordinate per rim vertex (+1 on
   // one flank, -1 on the other, 0 on the arc; the wedge's perimeter),
   // or null for rim-only fans (discs, caps). `seal` marks a junction
-  // seal disc (no border-look drawing at all).
+  // seal disc (no border-look drawing at all). `flankFill` (K833)
+  // replaces the rim-only 2 for junction-area discs and covers: 4 is
+  // suppressed in the border look like a seal (nothing may draw inside
+  // a junction there), while free-end caps keep 2.
   pushFan(
     apexX: number,
     apexY: number,
     rim: number[],
     rec: number,
     flank?: Float32Array | number[] | null,
-    seal?: boolean
+    seal?: boolean,
+    flankFill?: number
   ): void {
     const rimCount = rim.length / 2;
     if (
@@ -826,6 +830,8 @@ export class TriFanMesh {
     this.lookData.fill(1, apex + 1, apex + rimCount + 1);
     if (seal) {
       this.flankData.fill(3, apex, apex + rimCount + 1);
+    } else if (flankFill !== undefined) {
+      this.flankData.fill(flankFill, apex, apex + rimCount + 1);
     } else if (flank) {
       this.flankData[apex] = 0;
       for (let i = 0; i < rimCount; i++) this.flankData[apex + 1 + i] = flank[i] ?? 0;
