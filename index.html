@@ -53,6 +53,24 @@
         transition: opacity 0.45s ease;
         z-index: 5;
       }
+      /* K834: while the intro loading animation runs its course (the
+         viewer's "keep loading animation" switch OFF), no chrome shows:
+         the settings panel and every other UI overlay wait for the
+         intro to finish. With the switch ON the class is never added and
+         the panel stays available over the permanent animation. main.ts
+         owns the class. */
+      html.km-intro .kp-menu,
+      html.km-intro .kp-bar,
+      html.km-intro .tp-dfwv,
+      html.km-intro .km-hud,
+      html.km-intro .km-banner,
+      html.km-intro .km-mode,
+      html.km-intro .km-undo,
+      html.km-intro .km-pad,
+      html.km-intro .km-control,
+      html.km-intro .km-beat-paused-label {
+        display: none !important;
+      }
     </style>
   </head>
   <body>

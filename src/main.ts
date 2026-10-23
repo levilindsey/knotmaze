@@ -694,10 +694,19 @@ async function main(): Promise<void> {
     show: (): void => rawLoader.show(),
     hide: (): void => {
       if (!settings.loaderStays) rawLoader.hide();
+      // K834: a real hide ends the intro - the chrome may show. (With
+      // the keep-animation switch on, this hide was vetoed above and
+      // the class was never added, so the panel stayed available.)
+      document.documentElement.classList.remove("km-intro");
     },
     el: rawLoader.el,
   };
   pushLoaderCfg();
+  // K834: chrome gating (index.html's html.km-intro rules): with the
+  // keep-loading-animation switch OFF, the settings panel and every
+  // other UI overlay stay hidden until the intro animation finishes;
+  // with it ON, the panel must always be available, so no gate.
+  if (!settings.loaderStays) document.documentElement.classList.add("km-intro");
 
   // K101: music mode's notes, on the audio clock once it runs.
   const songSched = new SongScheduler();
@@ -848,6 +857,10 @@ async function main(): Promise<void> {
         } catch {
           // Storage unavailable: the choice just doesn't persist.
         }
+        // K834: either way the intro gate lifts - ON means the panel
+        // must always be available over the permanent animation; OFF
+        // is chosen from the (already available) panel.
+        document.documentElement.classList.remove("km-intro");
         if (on) rawLoader.show();
         else rawLoader.hide();
       },
