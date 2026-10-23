@@ -110,6 +110,13 @@ import { SdfPass } from "./ribbon/ribbon_sdf";
 import { StripPass } from "./ribbon/strip_pass";
 import type { ThreadPass } from "./ribbon/thread_pass";
 import { FILLET_REACH_PER_HALF, Joinery } from "./ribbon/joinery";
+import {
+  cornerWedgeKey,
+  roundedCornerKeys,
+  type CornerArmRef,
+  type CornerCandidate,
+} from "./ribbon/corner_share";
+import type { CornerPin } from "../core/types";
 
 // K8 G3-0: the probe capture (captureScene / restoreScene): plain JSON, typed
 // arrays as base64.
@@ -787,6 +794,30 @@ export class RibbonRenderer {
   // Live junction-rounding radius multiplier (the cuspRadius slider;
   // main.ts keeps it synced every tick).
   cuspRadius = 1;
+  // K830: the share of junction wedges drawn rounded. Candidates and
+  // their pointiness ranking are frozen from construction geometry;
+  // changing only this share reuses that ranking.
+  private cornerRoundShareValue = 1;
+  private cornerCandidates: CornerCandidate[] = [];
+  private cornerRounded: ReadonlySet<string> = new Set();
+  private junctionCornerPins: Array<CornerPin | undefined> = [];
+  get cornerRoundShare(): number {
+    return this.cornerRoundShareValue;
+  }
+  set cornerRoundShare(v: number) {
+    const share = Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 1;
+    if (share === this.cornerRoundShareValue) return;
+    this.cornerRoundShareValue = share;
+    this.cornerRounded = roundedCornerKeys(this.cornerCandidates, share);
+  }
+  /** @internal ribbon */ cornerWedgeRounded(
+    jn: number,
+    a: CornerArmRef,
+    b: CornerArmRef
+  ): boolean {
+    if (this.cornerCandidates.length === 0) return true;
+    return this.cornerRounded.has(cornerWedgeKey(jn, a, b));
+  }
   // Live under-gap fade length (the fadeLength slider; main.ts keeps it
   // synced every tick): arc length past each gap edge over which the under
   // thread fades back in. 0 = sharp (one-pixel antialiased) edges.
@@ -1230,7 +1261,9 @@ export class RibbonRenderer {
           this.freeTips.push({ chain: ci, atEnd: true });
         }
       });
+      let fusedIndex = -1;
       for (const grp of ps.fusedJunctions) {
+        fusedIndex++;
         const arms: Array<{ chain: number; slot: number; dir: 1 | -1 }> = [];
         for (const p of grp) {
           const occ = slotOf.get(p);
@@ -1245,6 +1278,7 @@ export class RibbonRenderer {
           }
         }
         if (arms.length >= 2) {
+          this.junctionCornerPins.push(ps.fusedJunctionPins[fusedIndex]);
           this.junctionArms.push({ particles: [...grp], arms });
           // JUNCTION CLEARANCE lookup: ctrl positions of every joint per
           // chain (ctrls are static; arcs are re-derived live each
@@ -1262,6 +1296,40 @@ export class RibbonRenderer {
           }
         }
       }
+      // K830: freeze every wedge's directed arm pair and gap from the
+      // construction positions. Physics settling can move the arms, but
+      // this ranking (and therefore each corner's round/sharp choice)
+      // cannot flip afterward.
+      this.junctionArms.forEach((jn, jnIdx) => {
+        const entries = jn.arms
+          .map((a) => {
+            const chain = ps.chains[a.chain];
+            const p = chain[a.slot];
+            const q = chain[(a.slot + a.dir + chain.length) % chain.length];
+            return {
+              a,
+              ang: Math.atan2(
+                ps.positions[q * 2 + 1] - ps.positions[p * 2 + 1],
+                ps.positions[q * 2] - ps.positions[p * 2]
+              ),
+            };
+          })
+          .sort((x, y) => x.ang - y.ang);
+        entries.forEach((entry, k) => {
+          const next = entries[(k + 1) % entries.length];
+          let gap = next.ang - entry.ang;
+          if (k === entries.length - 1) gap += Math.PI * 2;
+          this.cornerCandidates.push({
+            key: cornerWedgeKey(jnIdx, entry.a, next.a),
+            gap,
+            pin: this.junctionCornerPins[jnIdx],
+          });
+        });
+      });
+      this.cornerRounded = roundedCornerKeys(
+        this.cornerCandidates,
+        this.cornerRoundShareValue
+      );
     }
 
     // K580: the junctions a tapered root ends at (J, where the root meets

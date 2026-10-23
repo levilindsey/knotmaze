@@ -661,6 +661,8 @@ export class Joinery {
       "|" +
       this.r.cuspRadius +
       "|" +
+      this.r.cornerRoundShare +
+      "|" +
       this.r.style.threadWidth +
       "|" +
       this.r.style.casingWidth +
@@ -2089,15 +2091,23 @@ export class Joinery {
         const pay = edgeA[(nA - 1) * 2 + 1];
         const pbx = edgeB[(nB - 1) * 2];
         const pby = edgeB[(nB - 1) * 2 + 1];
-        for (let i = 1; i < n; i++) {
-          const q = i / n;
-          const m0 = (1 - q) * (1 - q);
-          const m1 = 2 * (1 - q) * q;
-          const m2 = q * q;
-          pushPt(
-            m0 * pax + m1 * cx + m2 * pbx,
-            m0 * pay + m1 * cy + m2 * pby
-          );
+        // K830: a sharp wedge's flanks meet at the same clamped corner
+        // the rounded wedge uses as its bezier control; a rounded wedge
+        // keeps the historic quadratic rim byte-for-byte.
+        const roundedWedge = this.r.cornerWedgeRounded(rec.jn, A, B);
+        if (roundedWedge) {
+          for (let i = 1; i < n; i++) {
+            const q = i / n;
+            const m0 = (1 - q) * (1 - q);
+            const m1 = 2 * (1 - q) * q;
+            const m2 = q * q;
+            pushPt(
+              m0 * pax + m1 * cx + m2 * pbx,
+              m0 * pay + m1 * cy + m2 * pby
+            );
+          }
+        } else {
+          pushPt(cx, cy);
         }
         for (let e = nB - 1; e >= 0; e--) {
           pushPt(edgeB[e * 2], edgeB[e * 2 + 1]);
@@ -2106,7 +2116,11 @@ export class Joinery {
         // A's flank, across the bezier arc to -1 down B's flank.
         const flankArr: number[] = [];
         for (let e = 0; e < nA; e++) flankArr.push(1);
-        for (let i = 1; i < n; i++) flankArr.push(1 - 2 * (i / n));
+        if (roundedWedge) {
+          for (let i = 1; i < n; i++) flankArr.push(1 - 2 * (i / n));
+        } else {
+          flankArr.push(0);
+        }
         for (let e = 0; e < nB; e++) flankArr.push(-1);
         // Fan from the JUNCTION CENTER, not the edge-intersection corner:
         // the corner comes from a straight-line edge model and lands
@@ -2114,7 +2128,10 @@ export class Joinery {
         // it poked jagged stick-outs past the edges (user report). The
         // center is always inside the joint; the corner survives only as
         // the outer rim's bezier control.
-        if (rims) rims[k] = rim.slice((nA - 1) * 2, (nA + n) * 2);
+        if (rims)
+          rims[k] = roundedWedge
+            ? rim.slice((nA - 1) * 2, (nA + n) * 2)
+            : [pax, pay, cx, cy, pbx, pby];
         emitFan(rec, jx, jy, rim, flankArr);
       }
     }

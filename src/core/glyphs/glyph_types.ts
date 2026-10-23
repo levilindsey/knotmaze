@@ -4,6 +4,8 @@
 // three points per cubic segment; joints are G1 exact (the in and out
 // handles are positive multiples of one primitive integer vector).
 
+import type { CornerPin } from "../types";
+
 export type Pt = readonly [number, number];
 
 /** P0, then (P1, P2, P3) per cubic segment. Integers, GU, y up. */
@@ -36,6 +38,10 @@ export interface SpurDef {
    * like a junction instead of holding the tip 0.56 LU clear.
    */
   land?: true;
+  /** K830: force the root junction's wedges round or sharp. */
+  cornerPin?: CornerPin;
+  /** K830: force a landing spur's far junction's wedges round or sharp. */
+  landCornerPin?: CornerPin;
 }
 
 export interface Glyph {

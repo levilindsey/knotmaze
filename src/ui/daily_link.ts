@@ -174,6 +174,7 @@ export const LOOK_KEYS = [
   // loader it dresses never touches the maze or its walk).
   "loaderSpeed",
   "loaderMove",
+  "cornerRoundShare",
 ] as const satisfies readonly (keyof UrlParams)[];
 
 // True when `p` carries a look away from today's defaults (the chip

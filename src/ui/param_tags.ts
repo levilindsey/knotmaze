@@ -237,6 +237,7 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   flowSpeed: ["fv", "sway", "drifting", "underwater", "waving", "faster", "slower", "idle movement"],
   loaderSpeed: ["ldsp", "loading", "spinner", "trefoil", "faster", "slower", "startup", "boot"],
   loaderMove: ["ldmv", "loading", "spinner", "trefoil", "player travels", "maze slides", "camera", "startup"],
+  cornerRoundShare: ["crs", "corners", "rounded corners", "sharp corners", "cusp", "junction corners", "miter"],
   loaderStays: ["loading", "spinner", "trefoil", "keep showing", "stay", "preview", "startup", "boot"],
   appearMode: ["am", "intro", "opening animation", "startup", "draw in", "grow", "load animation", "skip intro"],
   appearSequence: ["ap", "intro", "opening animation", "startup", "draw in", "grow", "skip intro", "spreading", "load animation"],

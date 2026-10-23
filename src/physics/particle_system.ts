@@ -9,7 +9,7 @@
 // along a thread, preserving the diagram's topology while the overall shape
 // relaxes into an organic, force-directed equilibrium.
 
-import type { TangleGraph } from "../core/types";
+import type { CornerPin, TangleGraph } from "../core/types";
 import { NODE_TYPE } from "../core/types";
 import type {
   DistanceConstraint,
@@ -509,6 +509,8 @@ export class ParticleSystem {
   // particles of one JUNCTION node (host pass-throughs + bridge/stub
   // terminals, or a merged crossing's two passes).
   fusedJunctions: number[][] = [];
+  /** K830: graph corner pin per fusedJunctions entry (undefined = global share). */
+  readonly fusedJunctionPins: Array<CornerPin | undefined> = [];
   private junctionIdCounter = 0;
   // Particle -> index into fusedJunctions (-1 = not a fused member).
   // Empty in knot mode (no fusions).
@@ -717,8 +719,8 @@ export class ParticleSystem {
     // occurrences (host pass-through + bridge/stub terminals, or a merged
     // crossing's two passes) and pin anchored END nodes. Knot mode records
     // neither, so both loops are no-ops there.
-    for (const occ of junctionOcc.values()) {
-      if (occ.length >= 2) this.fuseJunction(occ);
+    for (const [nodeId, occ] of junctionOcc) {
+      if (occ.length >= 2) this.fuseJunction(occ, graph.nodes.get(nodeId)?.cornerPin);
     }
     for (const { anchor, chain, slot } of endOcc) {
       if (!anchor) continue; // Free tip (dead-end stub).
@@ -748,7 +750,10 @@ export class ParticleSystem {
   // junctions' neighborhoods touch (a short bridge's midpoint), the later
   // mark wins - the overwritten pair sits ~half a bridge away, outside the
   // floor, so nothing fights.
-  private fuseJunction(occ: Array<{ chain: number; slot: number }>): void {
+  private fuseJunction(
+    occ: Array<{ chain: number; slot: number }>,
+    cornerPin?: CornerPin
+  ): void {
     const jid = this.junctionIdCounter++;
     if (this.jnCoverId.length === 0) {
       this.jnCoverId = new Int32Array(this.particleCount * 2).fill(-1);
@@ -813,6 +818,7 @@ export class ParticleSystem {
     }
     for (const m of group) this.fusedGroupOf[m] = this.fusedJunctions.length;
     this.fusedJunctions.push(group);
+    this.fusedJunctionPins.push(cornerPin);
   }
 
   // Find the FIRST crossing pass outward of a fused-junction occurrence

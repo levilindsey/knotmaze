@@ -487,6 +487,8 @@ export interface UrlParams extends ShapeInjectionParams {
   // maps these plus gap/threadWidth/pathColor/backgroundBase onto it).
   loaderSpeed: number;
   loaderMove: LoaderMove;
+  // K830: share of junction wedges drawn rounded (0 all sharp, 1 all rounded).
+  cornerRoundShare: number;
   // Camera framing (see CAMERA_MODES). Pinch/wheel/drag still zoom and
   // pan in both; in follow mode a delayed, eased spring pulls back.
   cameraMode: CameraMode;
@@ -1293,6 +1295,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   goldTextureStrength: 1, // K820 (today's grain)
   loaderSpeed: 1, // K828 (today's 14 s lap)
   loaderMove: "maze", // K828 (today's sliding maze, centered player)
+  cornerRoundShare: 1, // K830 (today's rounded junction wedges)
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1860,6 +1863,7 @@ function readLegacy(
     goldTextureStrength: readNumber(query, "gts", D.goldTextureStrength), // K820
     loaderSpeed: readNumber(query, "ldsp", D.loaderSpeed), // K828 (lds is loadSettle's)
     loaderMove: readChoice(query, "ldmv", LOADER_MOVES, D.loaderMove), // K828
+    cornerRoundShare: readNumber(query, "crs", D.cornerRoundShare), // K830
     cameraMode: readChoice(query, "cam", CAMERA_MODES, D.cameraMode),
     trailLength: readNumber(query, "trl", D.trailLength),
     tension: readNumber(query, "tn", D.tension),
