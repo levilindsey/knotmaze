@@ -1411,7 +1411,9 @@ export class Joinery {
       rec: JRec,
       cx: number,
       cy: number,
-      rim: number[]
+      rim: number[],
+      flank?: Float32Array | number[] | null,
+      seal?: boolean
     ): void => {
       // A triangle's farthest point from the joint is one of its vertices.
       let r2 = (cx - rec.jx) * (cx - rec.jx) + (cy - rec.jy) * (cy - rec.jy);
@@ -1423,7 +1425,7 @@ export class Joinery {
       }
       const r = Math.sqrt(r2);
       if (r > rec.rMax) rec.rMax = r;
-      fm.pushFan(cx, cy, rim, rec.rb);
+      fm.pushFan(cx, cy, rim, rec.rb, flank, seal);
     };
     const pushDiscField = (
       rec: JRec,
@@ -1431,7 +1433,9 @@ export class Joinery {
       cy: number,
       r: number
     ): void => {
-      emitFan(rec, cx, cy, discRim(cx, cy, r));
+      // K815: a seal disc - in the border look the wedges carry the
+      // junction's outline, so the seal draws nothing there.
+      emitFan(rec, cx, cy, discRim(cx, cy, r), null, true);
     };
 
     // Tip positions read the ENDPOINT SAMPLE directly: sampleAt wraps its
@@ -2098,6 +2102,12 @@ export class Joinery {
         for (let e = nB - 1; e >= 0; e--) {
           pushPt(edgeB[e * 2], edgeB[e * 2 + 1]);
         }
+        // K815: the wedge's flank coordinate along its rim: +1 down
+        // A's flank, across the bezier arc to -1 down B's flank.
+        const flankArr: number[] = [];
+        for (let e = 0; e < nA; e++) flankArr.push(1);
+        for (let i = 1; i < n; i++) flankArr.push(1 - 2 * (i / n));
+        for (let e = 0; e < nB; e++) flankArr.push(-1);
         // Fan from the JUNCTION CENTER, not the edge-intersection corner:
         // the corner comes from a straight-line edge model and lands
         // OUTSIDE the true silhouette on curved hosts - fan triangles to
@@ -2105,7 +2115,7 @@ export class Joinery {
         // center is always inside the joint; the corner survives only as
         // the outer rim's bezier control.
         if (rims) rims[k] = rim.slice((nA - 1) * 2, (nA + n) * 2);
-        emitFan(rec, jx, jy, rim);
+        emitFan(rec, jx, jy, rim, flankArr);
       }
     }
 

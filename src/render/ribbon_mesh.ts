@@ -723,6 +723,11 @@ export class TriFanMesh {
   private vertexData: Float32Array;
   private recData: Float32Array;
   private lookData: Float32Array;
+  // K815: a fan rim vertex's flank side (+1 one flank, -1 the other, 0
+  // on the arc between; 2 = no flanks - discs and caps draw their rim
+  // only; 3 = a junction seal disc, which draws nothing in the border
+  // look: the wedges around it carry the outline).
+  private flankData: Float32Array;
   private indexData: Uint32Array;
   private vUsed = 0;
   private iUsed = 0;
@@ -739,6 +744,7 @@ export class TriFanMesh {
     this.vertexData = new Float32Array(vertexCapacity * 2);
     this.recData = new Float32Array(vertexCapacity);
     this.lookData = new Float32Array(vertexCapacity);
+    this.flankData = new Float32Array(vertexCapacity).fill(2);
     this.indexData = new Uint32Array(indexCapacity);
     this.maskData = new Float32Array(vertexCapacity * GAP_SLOTS).fill(-1);
     const geometry = new MeshGeometry({
@@ -753,6 +759,7 @@ export class TriFanMesh {
     geometry.buffers.splice(geometry.buffers.indexOf(uvBuffer), 1);
     addFloatAttribute(geometry, "aRec", this.recData, 1);
     addFloatAttribute(geometry, "aLook", this.lookData, 1);
+    addFloatAttribute(geometry, "aFlank", this.flankData, 1);
     addFloatAttribute(geometry, "aMaskId", this.maskData, 4);
     this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
   }
@@ -767,7 +774,18 @@ export class TriFanMesh {
   // winding order; triangles are (apex, rim[i], rim[i+1]). Every vertex
   // carries `rec`, the record texel index of the fan's junction field,
   // and the current maskIds.
-  pushFan(apexX: number, apexY: number, rim: number[], rec: number): void {
+  // `flank` (K815): the rim's flank coordinate per rim vertex (+1 on
+  // one flank, -1 on the other, 0 on the arc; the wedge's perimeter),
+  // or null for rim-only fans (discs, caps). `seal` marks a junction
+  // seal disc (no border-look drawing at all).
+  pushFan(
+    apexX: number,
+    apexY: number,
+    rim: number[],
+    rec: number,
+    flank?: Float32Array | number[] | null,
+    seal?: boolean
+  ): void {
     const rimCount = rim.length / 2;
     if (
       rimCount < 2 ||
@@ -787,6 +805,14 @@ export class TriFanMesh {
     this.recData.fill(rec, apex, apex + rimCount + 1);
     this.lookData[apex] = 0;
     this.lookData.fill(1, apex + 1, apex + rimCount + 1);
+    if (seal) {
+      this.flankData.fill(3, apex, apex + rimCount + 1);
+    } else if (flank) {
+      this.flankData[apex] = 0;
+      for (let i = 0; i < rimCount; i++) this.flankData[apex + 1 + i] = flank[i] ?? 0;
+    } else {
+      this.flankData.fill(2, apex, apex + rimCount + 1);
+    }
     for (let v = apex; v <= apex + rimCount; v++) {
       this.maskData.set(this.maskIds, v * GAP_SLOTS);
     }
@@ -860,6 +886,7 @@ export class TriFanMesh {
     this.mesh.geometry.getBuffer("aPosition").update(v * 2 * 4);
     this.mesh.geometry.getBuffer("aRec").update(v * 4);
     this.mesh.geometry.getBuffer("aLook").update(v * 4);
+    this.mesh.geometry.getBuffer("aFlank").update(v * 4);
     this.mesh.geometry.getBuffer("aMaskId").update(v * GAP_SLOTS * 4);
     if (this.iUsed > this.iHigh) this.iHigh = this.iUsed;
     this.mesh.geometry.getIndex().update(this.iHigh * 4);

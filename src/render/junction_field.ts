@@ -367,11 +367,13 @@ precision highp float;
 in vec2 aPosition;
 in float aRec;
 in float aLook;
+in float aFlank;
 in vec4 aMaskId;
 
 out vec2 vPos;
 flat out float vRec;
 out float vLook;
+out float vFlank;
 flat out vec4 vMaskId;
 out vec4 vColor;
 ${MESH_UNIFORMS}
@@ -381,6 +383,7 @@ void main(void) {
   vPos = aPosition;
   vRec = aRec;
   vLook = aLook;
+  vFlank = aFlank;
   vMaskId = aMaskId;
   vColor = uColor * uWorldColorAlpha;
 }
@@ -395,6 +398,7 @@ ${FIELD_GLSL}
 in vec2 vPos;
 flat in float vRec;
 in float vLook;
+in float vFlank;
 flat in vec4 vMaskId;
 in vec4 vColor;
 
@@ -417,12 +421,26 @@ void main(void) {
   float lookCoord = strip ? abs(2.0 * vLook - 1.0) : vLook;
   float lookFw = min(max(fwidth(vLook) * 3.0, 0.02), 0.38);
   float lookEdge = smoothstep(0.62, 0.62 + lookFw, lookCoord);
+  // K815: a wedge fan's outline is its perimeter - the rim arc AND the
+  // two flanks (aFlank +1/-1 on the flanks, 0 on the arc): the border
+  // look draws max(rim band, flank band), so a junction reads as
+  // thread edge -> fillet corner -> thread edge with a hollow middle.
+  // Discs and caps (aFlank 2) keep the rim band only; a seal disc
+  // (aFlank 3) draws nothing: the wedges around it carry the outline,
+  // and its ring only stacked a second arc inside theirs.
+  float flankEdge = 0.0;
+  if (!strip && vFlank < 1.5) {
+    float flankFw = min(max(fwidth(vFlank) * 3.0, 0.02), 0.38);
+    flankEdge = smoothstep(0.62, 0.62 + flankFw, abs(vFlank));
+  }
+  float fanEdge = strip ? lookEdge : max(lookEdge, flankEdge);
+  if (!strip && vFlank > 2.5) fanEdge = 0.0;
   bool lookIntro = uKLook.y > 0.5 && uKLook.z > 0.5;
   float lookA = 1.0;
-  if (uKLook.x > 0.5 && uKLook.x < 1.5) lookA = lookEdge;
+  if (uKLook.x > 0.5 && uKLook.x < 1.5) lookA = fanEdge;
   else if (lookIntro) {
     float fillOn = uKLook.y < 1.5 ? (aM >= 0.999 ? 1.0 : 0.0) : 0.0;
-    lookA = mix(fillOn, 1.0, lookEdge);
+    lookA = mix(fillOn, 1.0, fanEdge);
   }
   if (aM <= 0.002) discard;
   vec3 rgb = junctionField(rec, vPos, pxW, j1, strip);
