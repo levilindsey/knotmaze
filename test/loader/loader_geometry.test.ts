@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import {
   arcSpan,
+  headingDelta,
   pointAtArc,
   trefoilShape,
   trefoilSvgPaths,
@@ -47,6 +48,28 @@ describe("K313 loader geometry", () => {
       prev = h;
     }
     expect(Math.abs(wind)).toBeCloseTo(Math.PI * 4, 0);
+  });
+
+  it("K841: the followed rotation never jumps or reverses", () => {
+    // The worker's camera follows half the (continuous) heading. Walk
+    // two laps the way it does: the followed angle must turn smoothly
+    // one way, one full turn per lap, with no frame's step reversing.
+    const STEPS = 1440;
+    let prev = pointAtArc(shape, 0).heading;
+    let cont = prev;
+    let lastTarget = -cont / 2;
+    let maxStep = 0;
+    for (let k = 1; k <= STEPS; k++) {
+      const h = pointAtArc(shape, (shape.total * k) / STEPS).heading;
+      cont += headingDelta(prev, h);
+      prev = h;
+      const target = -cont / 2;
+      const step = target - lastTarget;
+      maxStep = Math.max(maxStep, Math.abs(step));
+      lastTarget = target;
+    }
+    expect(maxStep).toBeLessThan(0.05);
+    expect(Math.abs(lastTarget - -pointAtArc(shape, 0).heading / 2)).toBeCloseTo(Math.PI * 4, 0);
   });
 
   it("a trail span has the asked length at a fixed step", () => {

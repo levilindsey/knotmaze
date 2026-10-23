@@ -85,6 +85,18 @@ export function trefoilShape(n = TREFOIL_N, gapSamples = GAP_SAMPLES): TrefoilSh
   return { points: P, pieces, under, cum, total };
 }
 
+// K841: one frame's turn of a raw atan2 heading, unwrapped: the
+// shortest signed step from `prev` to `raw` (in [-pi, pi]). The
+// trefoil's heading winds twice per lap, so it crosses the atan2
+// branch twice a lap; a follower must accumulate these steps (a
+// continuous heading), never re-derive its angle from the raw value.
+export function headingDelta(prev: number, raw: number): number {
+  let d = raw - prev;
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  return d;
+}
+
 // Point and heading at arc distance s (wraps; the curve is closed).
 export function pointAtArc(shape: TrefoilShape, s: number): { p: Pt; heading: number } {
   const { points, cum, total } = shape;
