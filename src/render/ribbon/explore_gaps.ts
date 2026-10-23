@@ -268,6 +268,8 @@ export class ExploreGaps {
       for (const f of fronts) if (f.chain < n) charred[f.chain] = 1;
       for (const s of smolder) if (s.chain < n && s.b1 > s.b0) charred[s.chain] = 1;
     }
+    // K825: a meshless pass (the SDF quads) swaps its one mesh too.
+    this.r.stripPass.setExplore?.(!!pieces);
     const sh = pieces ? sectionShaderExplore() : sectionShader();
     for (let c = 0; c < this.r.fills.length; c++) {
       const m = this.r.fills[c].mesh;

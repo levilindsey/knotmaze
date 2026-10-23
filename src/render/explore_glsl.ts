@@ -960,3 +960,43 @@ export function withExplore(frag: string): string {
   s = s.slice(0, i) + EXPLORE_MAIN_GLSL + s.slice(i);
   return s;
 }
+// K825: the explore variant of the SDF ribbon fragment (ribbon_sdf.ts).
+// The same edits as withExplore, at the SDF text's own anchors: its
+// paint block computes kctrl from kFragPoint (not the strip's pxArc
+// line), its across coordinate rides vUV.y all the same, and its gap
+// call is gapKeepAt over the RANGES windows. EXPLORE_MAIN_GLSL applies
+// unchanged: the SDF main carries rgb, aM, pxW, kc and kctrl under the
+// same names, and its final alpha multiplies aM.
+const ANCHOR_SDF_PXARC = "  float pxArc = pxW * (abs(vDir.x) + abs(vDir.y));";
+const ANCHOR_SDF_KCTRL =
+  "  float kctrl = fxHere || paintHere ? kCtrlNear(kc, kpt.x, kpt.y) : 0.0;";
+const ANCHOR_SDF_GAP = "  float gk = gapKeepAt(pxW, vPos, arc, vDir, vIds);";
+export function withExploreSdf(frag: string): string {
+  let s = frag;
+  let i = once(s, ANCHOR_DECL);
+  s = s.slice(0, i) + EXPLORE_DECL_GLSL + s.slice(i);
+  i = once(s, ANCHOR_SURE) + ANCHOR_SURE.length;
+  s = s.slice(0, i) + EXPLORE_GAP_SURE_GLSL + s.slice(i);
+  i = once(s, ANCHOR_BK) + ANCHOR_BK.length;
+  s = s.slice(0, i) + EXPLORE_GAP_CUT_GLSL + s.slice(i);
+  i = once(s, EXPLORE_PROT_ANCHOR_GLSL);
+  s = s.slice(0, i) + EXPLORE_PROT_GLSL + s.slice(i + EXPLORE_PROT_ANCHOR_GLSL.length);
+  i = once(s, EXPLORE_FAR_ANCHOR_GLSL);
+  s = s.slice(0, i) + EXPLORE_FAR_GLSL + s.slice(i + EXPLORE_FAR_ANCHOR_GLSL.length);
+  i = once(s, EXPLORE_KEEP_ANCHOR_GLSL);
+  s = s.slice(0, i) + EXPLORE_KEEP_GLSL + s.slice(i + EXPLORE_KEEP_ANCHOR_GLSL.length);
+  i = once(s, ANCHOR_CASING);
+  s = s.slice(0, i) + EXPLORE_GAP_SHAPE_GLSL + s.slice(i);
+  i = once(s, ANCHOR_SDF_PXARC) + ANCHOR_SDF_PXARC.length;
+  s = s.slice(0, i) + "  highp float kSideFw = fwidth(vUV.y);\n" + s.slice(i);
+  i = once(s, ANCHOR_SDF_KCTRL);
+  s =
+    s.slice(0, i) +
+    "bool exHere = uKExplore.x > 0.5;\n  " +
+    "highp float kctrl = fxHere || paintHere || exHere ? kCtrlNear(kc, kpt.x, kpt.y) : 0.0;" +
+    s.slice(i + ANCHOR_SDF_KCTRL.length);
+  i = once(s, ANCHOR_SDF_GAP);
+  s = s.slice(0, i) + EXPLORE_MAIN_GLSL + s.slice(i);
+  return s;
+}
+
