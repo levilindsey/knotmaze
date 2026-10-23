@@ -30,21 +30,36 @@ export function knotsToPath(knots: readonly Knot[]): Pt[] {
 }
 
 /**
- * K831 follow-up: a dot (the i's tittle) as a closed square loop from
- * its centre and two half-diagonals - the dedicated dot-drawing
- * function, so a dot is never authored as a pretend segment. Sharp
- * corners: at dot size the stroke fills the loop solid.
+ * K831 follow-up: a dot (the i's tittle) as a closed ellipse loop from
+ * its centre and two half-axis vectors - the dedicated dot-drawing
+ * function, so a dot is never authored as a pretend segment. Twelve
+ * points around the ellipse: the first form's four-corner square put
+ * so few nodes on the loop that the renderer's spline through them,
+ * under a stroke wider than the loop, drew lobes at the corners (an
+ * irregular nobbly blob, not a dot). At dot size the stroke fills the
+ * loop solid, so the loop's own figure is the dot's figure.
  */
-export function dotLoop(c: Pt, d1: Pt, d2: Pt): Pt[] {
-  const cs: Pt[] = [
-    [c[0] + d1[0] + d2[0], c[1] + d1[1] + d2[1]],
-    [c[0] + d1[0] - d2[0], c[1] + d1[1] - d2[1]],
-    [c[0] - d1[0] - d2[0], c[1] - d1[1] - d2[1]],
-    [c[0] - d1[0] + d2[0], c[1] - d1[1] + d2[1]],
+export function dotLoop(c: Pt, a: Pt, b: Pt): Pt[] {
+  // The twelve unit-circle directions as literals: src/core stays free
+  // of implementation-approximated math (K108), and the dot's figure is
+  // identical on every engine.
+  const H = 0.8660254037844386; // sqrt(3)/2
+  const RING: readonly Pt[] = [
+    [1, 0], [H, 0.5], [0.5, H], [0, 1], [-0.5, H], [-H, 0.5],
+    [-1, 0], [-H, -0.5], [-0.5, -H], [0, -1], [0.5, -H], [H, -0.5],
   ];
+  const N = RING.length;
+  const cs: Pt[] = [];
+  for (let i = 0; i < N; i++) {
+    const [co, si] = RING[i];
+    cs.push([
+      c[0] + a[0] * co + b[0] * si,
+      c[1] + a[1] * co + b[1] * si,
+    ]);
+  }
   const out: Pt[] = [];
-  for (let i = 0; i < 4; i++) {
-    const seg = line(cs[i], cs[(i + 1) % 4]);
+  for (let i = 0; i < N; i++) {
+    const seg = line(cs[i], cs[(i + 1) % N]);
     for (let j = i === 0 ? 0 : 1; j < seg.length; j++) out.push(seg[j]);
   }
   return out;
