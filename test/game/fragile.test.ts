@@ -51,7 +51,7 @@ function graph(runs: Array<[string, string, number]>, start: string, exit: strin
 }
 
 // S-a (tail), a-b, b-X (tail), a-c, c-b, c-D (a dead-end stub).
-// Breakable: 1, 3, 4. Exempt (an END at one end): 0, 2, 5.
+// K840: every run breaks, the tails and the stub included.
 const RUNS: Array<[string, string, number]> = [
   ["S", "a", 2], // 0
   ["a", "b", 3], // 1
@@ -127,14 +127,15 @@ describe("fragile runs: the rule (K137)", () => {
     expect(isCracked(off, twice, 1)).toBe(false);
   });
 
-  it("never breaks a run with an END vertex, nor a title run", () => {
+  it("breaks END runs like any other, and never a title run (K840)", () => {
     const w = graph(RUNS, "S", "X");
     expect([0, 1, 2, 3, 4, 5].map((e) => exemptRun(w, e))).toEqual([
-      true, false, true, false, false, true,
+      false, false, false, false, false, false,
     ]);
-    expect([...fragileLimits(w, "snap")]).toEqual([Infinity, 1, Infinity, 1, 1, Infinity]);
+    expect([...fragileLimits(w, "snap")]).toEqual([1, 1, 1, 1, 1, 1]);
     const titled = { ...w, titleEdges: new Set([3]) };
     expect(exemptRun(titled, 3)).toBe(true);
+    expect([...fragileLimits(titled, "snap")]).toEqual([1, 1, 1, Infinity, 1, 1]);
     // K139's collapse: a limit of 1 on the same machinery.
     expect([...breakLimits(w, 1)]).toEqual([...fragileLimits(w, "snap")]);
   });
@@ -157,11 +158,11 @@ describe("fragile runs: the controller (K137)", () => {
     const w = graph(RUNS, "S", "X");
     const c = new FabricMazeController(w, false, null, { fragile: "snap" });
     expect(c.fragileOn).toBe(true);
-    expect(c.tapEdge(0)).toBe("advance"); // S -> a (a tail: never breaks)
-    expect(c.brokenRuns()).toEqual([]);
-    expect(c.justBroke).toBe(-1);
+    expect(c.tapEdge(0)).toBe("advance"); // S -> a (K840: the tail breaks too)
+    expect(c.brokenRuns()).toEqual([0]);
+    expect(c.justBroke).toBe(0);
     expect(c.tapEdge(3)).toBe("advance"); // a -> c
-    expect(c.brokenRuns()).toEqual([3]);
+    expect(c.brokenRuns()).toEqual([0, 3]);
     expect(c.justBroke).toBe(3);
     expect(c.choices().sort()).toEqual([4, 5]);
     // The run just crossed is gone: no backtrack along it.
@@ -172,47 +173,52 @@ describe("fragile runs: the controller (K137)", () => {
   it("crack: the first crossing cracks, the second (a backtrack) breaks", () => {
     const w = graph(RUNS, "S", "X");
     const c = new FabricMazeController(w, false, null, { fragile: "crack" });
-    c.tapEdge(0);
+    c.tapEdge(0); // the entrance tail cracks too (K840)
     expect(c.tapEdge(1)).toBe("advance"); // a -> b
-    expect(c.crackedRuns()).toEqual([1]);
+    expect(c.crackedRuns()).toEqual([0, 1]);
     expect(c.brokenRuns()).toEqual([]);
     expect(c.justBroke).toBe(-1);
     expect(c.tapEdge(1)).toBe("backtrack"); // b -> a: the second crossing
     expect(c.brokenRuns()).toEqual([1]);
-    expect(c.crackedRuns()).toEqual([]);
+    expect(c.crackedRuns()).toEqual([0]);
     expect(c.justBroke).toBe(1);
     expect(c.choices().sort()).toEqual([0, 3]);
     expect(c.tapEdge(1)).toBe("reject");
   });
 
-  it("never breaks an END run however often it is crossed", () => {
+  it("breaks the entrance tail on snap, and strands a dead-end tip (K840)", () => {
     const w = graph(RUNS, "S", "X");
     const c = new FabricMazeController(w, false, null, { fragile: "snap" });
-    for (let i = 0; i < 5; i++) c.tapEdge(0); // S <-> a, back and forth
-    expect(c.crossings[0]).toBe(5);
-    expect(c.brokenRuns()).toEqual([]);
-    expect(c.choices().length).toBeGreaterThan(0);
+    expect(c.tapEdge(0)).toBe("advance"); // S -> a; the tail snaps behind
+    expect(c.brokenRuns()).toEqual([0]);
+    expect(c.tapEdge(0)).toBe("reject"); // no way back to S along it
+    expect(c.tapEdge(3)).toBe("advance"); // a -> c
+    expect(c.tapEdge(5)).toBe("advance"); // c -> D, the dead-end stub
+    expect(c.head).toBe("D");
+    expect(c.brokenRuns()).toEqual([0, 3, 5]);
+    expect(c.choices()).toEqual([]); // the stub broke behind: stranded at the tip
+    expect(c.stranded).toBe(true);
   });
 
   it("strands: no route left, every tap a noop, choices empty", () => {
     const w = graph(RUNS, "S", "X");
     const c = new FabricMazeController(w, false, null, { fragile: "snap" });
-    // S -> a -> c -> D -> c -> b -> a: 3, 4 and 1 snap; the stub's run stays.
-    for (const eid of [0, 3, 5, 5, 4]) expect(c.tapEdge(eid)).not.toBe("reject");
+    // S -> a -> c -> b: 0, 3 and 4 snap; b still has 1 and the exit tail.
+    for (const eid of [0, 3, 4]) expect(c.tapEdge(eid)).not.toBe("reject");
     expect(c.stranded).toBe(false);
-    expect(c.tapEdge(1)).toBe("advance");
+    expect(c.tapEdge(1)).toBe("advance"); // b -> a: now a is cut off
     expect(c.head).toBe("a");
     expect(c.stranded).toBe(true);
     expect(c.runsLeft).toBe(Infinity);
     expect(c.choices()).toEqual([]);
     expect(c.tapEdge(0)).toBe("noop");
-    expect(c.taps.length).toBe(6);
+    expect(c.taps.length).toBe(4);
   });
 
   it("replays the breaks, and a replay of a stranded game is stranded", () => {
     const w = graph(RUNS, "S", "X");
     const c = new FabricMazeController(w, false, null, { fragile: "snap" });
-    for (const eid of [0, 3, 5, 5, 4, 1]) c.tapEdge(eid);
+    for (const eid of [0, 3, 4, 1]) c.tapEdge(eid);
     const live = state(c);
     const r = new FabricMazeController(w, false, null, { fragile: "snap" });
     expect(r.replay(c.taps)).toBe(true);
@@ -243,7 +249,7 @@ describe("fragile runs: the controller (K137)", () => {
   it("Undo's replay restores the move before", () => {
     const w = graph(RUNS, "S", "X");
     const c = new FabricMazeController(w, false, null, { fragile: "snap" });
-    const taps = [0, 3, 5, 5, 4];
+    const taps = [0, 3, 4];
     for (const eid of taps) c.tapEdge(eid);
     const before = state(c);
     c.tapEdge(1);
@@ -261,14 +267,15 @@ describe("fragile runs: the controller (K137)", () => {
     const w = graph(RUNS, "S", "X");
     const c = new FabricMazeController(w, false, null, { fragile: "snap" });
     for (const eid of [0, 3, 4]) c.tapEdge(eid);
-    expect(c.brokenRuns()).toEqual([3, 4]);
+    expect(c.brokenRuns()).toEqual([0, 3, 4]);
     c.respawn();
     expect(c.head).toBe("S");
-    expect(c.brokenRuns()).toEqual([3, 4]);
+    expect(c.brokenRuns()).toEqual([0, 3, 4]);
     expect(c.taps).toEqual([0, 3, 4]);
-    // From the start a -> b -> X is still whole.
-    expect(c.stranded).toBe(false);
-    expect(c.runsLeft).toBe(3);
+    // K840: the entrance tail broke on the first move, so a respawn at
+    // the start is cut off from the maze.
+    expect(c.stranded).toBe(true);
+    expect(c.runsLeft).toBe(Infinity);
     c.reset();
     expect(c.brokenRuns()).toEqual([]);
     expect(c.crackedRuns()).toEqual([]);

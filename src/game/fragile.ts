@@ -14,11 +14,15 @@
 // limit of 1 (breakLimits(walk, 1), or a table of its own).
 //
 // EXEMPT RUNS (limit Infinity):
-//  - a run with an END vertex at either end: it can only be walked in and
-//    back out, so breaking it would strand the player at once without a
-//    choice. The start's and the exit's tails are such runs (a K80 catch
-//    respawns at the start), and so is every dead-end stub's;
+//  - a K137 tunnel (chain < 0: it has no thread);
 //  - a K115 title run: walked, but outside every maze meter.
+//
+// K840 (Levi): runs into an END vertex are NOT exempt - the start's and
+// the exit's tails and every dead-end stub break like any other run.
+// (Until K840 they were exempt: breaking one strands the player at its
+// tip without a choice. That is the mode's teeth, as K139's collapse
+// already had it; crack still lets you walk a stub in and back out,
+// breaking it behind you on the way out.)
 //
 // STRANDED: no route over unbroken runs from the head to the exit
 // (runsToExit with the broken runs blocked). A breadth-first route never
@@ -42,7 +46,7 @@ export function exemptRun(walk: WalkGraph, eid: number): boolean {
   if (!e) return true;
   if (e.chain < 0) return true; // K137 tunnels (4.13): no thread.
   if (walk.titleEdges?.has(eid)) return true;
-  return (walk.vertices.get(e.va)?.isEnd ?? false) || (walk.vertices.get(e.vb)?.isEnd ?? false);
+  return false; // K840: END-vertex runs (tails and stubs) break too.
 }
 
 // Per run, the crossings it takes before it breaks: `crossings` for every

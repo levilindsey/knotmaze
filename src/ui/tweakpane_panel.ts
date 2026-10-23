@@ -1862,7 +1862,7 @@ export function buildPanel(
   const fragileRow = row(
     fRules, p, "fragile",
     { options: { off: "off", crack: "crack", snap: "snap" }, label: "Fragile runs" },
-    "Runs break behind you. snap: a run breaks once you have crossed it. crack: it cracks the first time and breaks the second. A dead-end tail, the entrance's and the exit's never break. With no unbroken way to the exit left you are stranded: undo the last move or restart. Restarts the solve.",
+    "Runs break behind you. snap: a run breaks once you have crossed it. crack: it cracks the first time and breaks the second. Every run breaks - the entrance's, the exit's and dead-end tails included, so on snap a dead end strands you at its tip. With no unbroken way to the exit left you are stranded: undo the last move or restart. Restarts the solve.",
     D.fragile, () => callbacks.onClockChange()
   );
   // K813: a cracked run's look (the fray): its tint and how much of its
