@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K823. (K812 preview effect buttons; K813 border-look highlights; K814 shape-injection param collection; K815 junction border fans; K816 SDF ribbons; K817 gap kStart rounding (K592); K818 shape-injection collection (K814 stages 1-3); K819 cannonSpread param + LOOK_KEYS backdrop/path colors; K820 borderWidth/borderColor/goldTextureStrength params (uKBorder, uKLook.w, uKHlPulse.w); K821-K822 panel restructure (Maze before Game; End effects, Text & emblem, Exit traps, Exploration, Burn race, Classic rules subfolders; Thread look above its rows; Path color beside the gold rows).)
+Next free ID: K824. (K812 preview effect buttons; K813 border-look highlights; K814 shape-injection param collection; K815 junction border fans; K816 SDF ribbons; K817 gap kStart rounding (K592); K818 shape-injection collection (K814 stages 1-3); K819 cannonSpread param + LOOK_KEYS backdrop/path colors; K820 borderWidth/borderColor/goldTextureStrength params (uKBorder, uKLook.w, uKHlPulse.w); K821-K822 panel restructure (Maze before Game; End effects, Text & emblem, Exit traps, Exploration, Burn race, Classic rules subfolders; Thread look above its rows; Path color beside the gold rows).)
 
 ## Waiting on Levi
 
@@ -1586,7 +1586,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   the daily's result share shipped with K20.
 - **K34** · The settings panel as a bottom sheet in portrait on phones.
 - **K35** · A short vibration on pluck (Android only; `navigator.vibrate`).
-- **K36** · Add to home screen: a web app manifest and icons, blocked on icon art (which also fixes
+- **K36** DONE in K823: bespoke icon set from the loader's trefoil geometry (.claude/probes/K823/gen_icons.mjs); favicon.svg replaced, icon-192/512 + apple-touch-icon + manifest.webmanifest wired; template leftovers deleted. (Was: · Add to home screen: a web app manifest and icons, blocked on icon art (which also fixes
   the `/favicon.ico` 404). K122 found unreferenced template leftovers (`public/favicon.svg`,
   `public/icons.svg`, `src/assets/hero.png`): delete them or wire up the favicon.
 - **K37** · Fog-of-war edge wobble: stronger, or a slider (Stage 25b wobbles
