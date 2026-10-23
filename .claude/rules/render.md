@@ -59,3 +59,4 @@ files it is about; `docs/lore_index.md` lists every rules file and its paths.
 - `render-loop.md`: the frame loop's flags (K6-1; with `src/app/frame_loop.ts`)
 - `render-explore.md`: the thread reveal (K76): visibility pieces, the explore program, its looks, the stub's two dots (K397)
 - `render-shaders.md`: shader compiles and what they freeze, the warm-up (K307)
+- `render-loader.md`: the inline loader (K313): geometry, worker, boot, sizing traps

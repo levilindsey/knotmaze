@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import type { Plugin } from "vite";
 import { notices, noticesWorker } from "./notices/vite_plugin";
+import { loaderInline } from "./src/loader/vite_plugin";
 
 // BUILD IDENTITY for the version readouts (src/build_info.ts): the
 // package.json version, the git short SHA ("+" = built with uncommitted
@@ -79,7 +80,7 @@ export default defineConfig({
   // K122: emits licenses.html (third-party notices) from the bundled modules.
   // K7 stage 7: workerPreload() starts the physics worker's fetch beside
   // the main chunk's.
-  plugins: [notices(), workerPreload()],
+  plugins: [notices(), workerPreload(), loaderInline()],
   // K7 stage 3: the physics worker (src/physics/physics_worker.ts, the
   // default host; `phw=0` opts out) is an ES module worker, bundled on its
   // own; noticesWorker() hands its modules to the notices page.
