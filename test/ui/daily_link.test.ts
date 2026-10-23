@@ -409,6 +409,7 @@ describe("the daily design and its exempt preferences (K56)", () => {
       // K336: the side cannons, their amount and streamers, with the rest.
       "confettiCannons",
       "cannonAmount",
+      "cannonSpread",
       "streamerShare",
       // K98, proposed with it.
       "markerSize",
@@ -425,10 +426,16 @@ describe("the daily design and its exempt preferences (K56)", () => {
       "backgroundFibers",
       "backgroundGrain",
       "backgroundAngle",
+      "backgroundColorMode",
+      "backgroundBase",
+      "backgroundAccent1",
+      "backgroundAccent2",
+      "backgroundAccent3",
       "threadLook",
       "gap",
       "goldWidth",
       "goldTexture",
+      "pathColor",
     ]);
     for (const k of DAILY_EXEMPT_KEYS) {
       expect(Object.keys(PARAM_DEFAULTS)).toContain(k);

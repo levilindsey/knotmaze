@@ -149,6 +149,7 @@ export const CANNON_STAGGER = 0.08;
 export const CANNON_SPEED_MIN = 0.75;
 export const CANNON_SPEED_SPAN = 0.35;
 export const CANNON_SPREAD = 0.12;
+export const CANNON_SPREAD_MAX = 0.5; // K819: the cannonSpread param's cap.
 // Where, in shares of the screen: both cannons at CANNON_Y of the height,
 // just off their edges, aimed so the arcs' tops land CANNON_APEX_X of the
 // width in from their own side and CANNON_APEX_Y of the height down.
@@ -262,6 +263,8 @@ export interface ConfettiPlan {
   // (0 = the diffuse light only).
   foil: number;
   shine: number;
+  // K819: the cannons' angular spread in rad (CANNON_SPREAD by default).
+  spread: number;
 }
 
 // The app's confetti params, as UrlParams names them (confettiPlanFor).
@@ -272,6 +275,7 @@ export interface ConfettiSettings {
   confettiCannons: boolean;
   cannonAmount: number;
   streamerShare: number;
+  cannonSpread: number;
 }
 
 // [0, max], garbage 0.
@@ -298,7 +302,8 @@ export function confettiPlan(
   shine = 0,
   foilShare = 0,
   cannonAmount = 0,
-  streamerShare = 0
+  streamerShare = 0,
+  cannonSpread = CANNON_SPREAD
 ): ConfettiPlan {
   const a = reduced ? 0 : clampNum(amount, CONFETTI_AMOUNT_MAX);
   const screen = rainScreenScale(width, height);
@@ -318,6 +323,7 @@ export function confettiPlan(
     streamers: strips,
     foil: clampNum(foilShare, 1),
     shine: clampNum(shine, CONFETTI_SHINE_MAX),
+    spread: clampNum(cannonSpread, CANNON_SPREAD_MAX),
   };
 }
 
@@ -336,7 +342,8 @@ export function confettiPlanFor(
     s.confettiShine,
     s.foilShare,
     s.confettiCannons ? s.cannonAmount : 0,
-    s.streamerShare
+    s.streamerShare,
+    s.cannonSpread
   );
 }
 
@@ -602,7 +609,8 @@ export function finishCannons(
   width: number,
   height: number,
   paper: number,
-  streamers = 0
+  streamers = 0,
+  spread = CANNON_SPREAD
 ): CannonSpec[] {
   const off = 0.02 * width + 16 * rainPieceScale(width, height);
   const y0 = CANNON_Y * height;
@@ -616,7 +624,7 @@ export function finishCannons(
   const base = {
     y: y0,
     speed: aim.speed,
-    spread: CANNON_SPREAD,
+    spread: clampNum(spread, CANNON_SPREAD_MAX),
     paper,
     streamers,
     volley: CANNON_VOLLEY,
@@ -1136,7 +1144,8 @@ export class ConfettiSim {
         width,
         height,
         plan.cannon,
-        plan.streamers
+        plan.streamers,
+        plan.spread
       );
       for (const c of cannons) {
         spawnCannon(this.cannon, c, height, scale, plan.foil, rand);

@@ -57,6 +57,7 @@ import {
 } from "../game/minotaur_turns";
 import {
   CANNON_AMOUNT_MAX,
+  CANNON_SPREAD_MAX,
   CONFETTI_AMOUNT_MAX,
   CONFETTI_SHINE_MAX,
 } from "../render/confetti_model";
@@ -658,6 +659,9 @@ export interface UrlParams extends ShapeInjectionParams {
   // read at the burst; a confetti amount of 0 still throws nothing.
   confettiCannons: boolean;
   cannonAmount: number;
+  // K819: the side cannons' angular spread in rad, [0, CANNON_SPREAD_MAX]
+  // (CANNON_SPREAD = the designed fan; wider at Levi's ask, 2026-10-22).
+  cannonSpread: number;
   // K336: the share of each cannon's pieces that fly as streamers, [0, 1].
   streamerShare: number;
   // K180's pluck params (render/pluck_model.ts PLUCK PARAMS): W's amount in
@@ -1119,6 +1123,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   foilShare: 0.3, // K337
   confettiCannons: true, // K336
   cannonAmount: 1, // K336
+  cannonSpread: 0.12, // K819 (CANNON_SPREAD)
   streamerShare: 0.2, // K336
   pluckWhole: 0.75, // K279 (was 0.5, K104's WHOLE_AMP).
   pluckCrossings: "through",
@@ -1606,6 +1611,7 @@ function fromCodecValues(
   p.confettiShine = clampTo(p.confettiShine, CONFETTI_SHINE_MAX);
   p.foilShare = clampTo(p.foilShare, 1);
   p.cannonAmount = clampTo(p.cannonAmount, CANNON_AMOUNT_MAX);
+  p.cannonSpread = clampTo(p.cannonSpread, CANNON_SPREAD_MAX);
   p.streamerShare = clampTo(p.streamerShare, 1);
   p.pluckWhole = clampTo(p.pluckWhole, PLUCK_WHOLE_MAX);
   p.markerSize = sanitizeMarkerSize(p.markerSize);
@@ -1968,6 +1974,11 @@ function readLegacy(
       CANNON_AMOUNT_MAX
     ),
     streamerShare: clampTo(readNumber(query, "cfs", D.streamerShare), 1),
+    // K819's cannon spread (`&cfw=0.3`).
+    cannonSpread: clampTo(
+      readNumber(query, "cfw", D.cannonSpread),
+      CANNON_SPREAD_MAX
+    ),
     // K180's pluck params (`&pw=1&pcx=ride&pgl=fallback`).
     pluckWhole: clampTo(readNumber(query, "pw", D.pluckWhole), PLUCK_WHOLE_MAX),
     pluckCrossings: readChoice(query, "pcx", PLUCK_CROSSINGS, D.pluckCrossings),

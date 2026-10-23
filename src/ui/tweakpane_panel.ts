@@ -72,6 +72,7 @@ import {
 } from "../render/background_model";
 import {
   CANNON_AMOUNT_MAX,
+  CANNON_SPREAD_MAX,
   CONFETTI_AMOUNT_MAX,
   CONFETTI_SHINE_MAX,
 } from "../render/confetti_model";
@@ -1665,6 +1666,22 @@ export function buildPanel(
     "How much confetti the side cannons fire: 1 = the default, 0 = none, up to 3x.",
     D.cannonAmount, () => {
       params.cannonAmount = Math.round(params.cannonAmount * 100) / 100;
+      callbacks.onConfettiChange();
+    }
+  );
+  const cannonSpreadRow = row(
+    fPath, p, "cannonSpread",
+    {
+      label: "Cannon spread",
+      min: 0,
+      max: CANNON_SPREAD_MAX,
+      keyScale: 0.05,
+      pointerScale: 0.01,
+      format: (v: number) => v.toFixed(2),
+    },
+    "How wide the side cannons fan their confetti, in radians around their aim: 0.12 = the designed fan, up to 0.5 for a broad spray.",
+    D.cannonSpread, () => {
+      params.cannonSpread = Math.round(params.cannonSpread * 100) / 100;
       callbacks.onConfettiChange();
     }
   );
@@ -3345,6 +3362,8 @@ export function buildPanel(
     confettiCannonsRow.hidden = !fab || params.confettiAmount <= 0;
     cannonAmountRow.hidden =
       confettiCannonsRow.hidden || !params.confettiCannons;
+    cannonSpreadRow.hidden =
+      cannonAmountRow.hidden || params.cannonAmount <= 0;
     streamerShareRow.hidden =
       cannonAmountRow.hidden || params.cannonAmount <= 0;
     markerSizeRow.hidden = !fab;

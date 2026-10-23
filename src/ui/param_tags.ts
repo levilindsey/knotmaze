@@ -112,6 +112,7 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   foilShare: ["cff", "celebration", "party", "metallic", "shiny", "paper", "sparkle", "glitter"],
   confettiCannons: ["cfc", "celebration", "party", "confetti", "party popper", "launchers", "left and right", "finish effect", "burst"],
   cannonAmount: ["cfn", "celebration", "party", "confetti", "more confetti", "burst size", "finish effect", "particles"],
+  cannonSpread: ["cfw", "celebration", "cannons", "spread", "fan", "wide", "finish effect"],
   streamerShare: ["cfs", "celebration", "party", "confetti", "ribbons", "curly paper", "party streamers", "finish effect"],
   markerSize: ["mks", "dot size", "player dot", "icon size", "bigger marker", "start and finish", "your position", "token size"],
   dailyTitleThread: ["dtt", "daily title", "daily maze", "name", "lettering", "cursive", "entrance sign", "daily only"],

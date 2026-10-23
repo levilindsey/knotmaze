@@ -279,6 +279,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["telegraphWidth", "number"], // K813
   ["frayColor", "color"], // K813
   ["frayWidth", "number"], // K813
+  ["cannonSpread", "number"], // K819
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
