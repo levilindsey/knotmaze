@@ -2225,8 +2225,8 @@ async function main(): Promise<void> {
   };
 
   // K137 stage 2: THE HINT (game/hints.ts). Hint (H) spends one of the
-  // `hints` param's hints and lights the next good arm (controller.goodArm:
-  // the head's run that starts the shortest live way to the exit) in the
+  // `hints` param's hints and lights a set distance along the shortest
+  // live way to the exit (controller.hintRoute, K845) in the
   // telegraph's rim look until the player's next move puts it out (K838:
   // no timer; the renderer's beginMove clears it), and no second hint can
   // be spent until that move (the controller refuses and nothing is
@@ -2247,10 +2247,10 @@ async function main(): Promise<void> {
       showToast("No hints left. A restart gives them back.", 2200);
       return;
     }
-    const arm = fc.goodArm();
-    if (arm < 0 || !fc.useHint()) return;
+    const spans = fc.hintRoute();
+    if (spans.length === 0 || !fc.useHint()) return;
     hintOff();
-    fabric.showHint(arm);
+    fabric.showHint(spans);
     invalidate();
     updateHud();
   };
