@@ -5,7 +5,8 @@ import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
 import { buildWalkGraph } from "../../src/core/walk_graph";
 import type { WalkGraph } from "../../src/core/walk_graph";
 import { FabricMazeController } from "../../src/game/fabric_controller";
-import { HINTS_MAX, hintsOf, hintsTag, liveDistances, nextGoodArm } from "../../src/game/hints";
+import { HINTS_MAX, HINT_DISTANCE, hintSpans, hintsOf, hintsTag, liveDistances, nextGoodArm } from "../../src/game/hints";
+import type { HintSpan } from "../../src/game/hints";
 
 // K137 stage 2: hints and the compass point along the next good arm, the
 // first run of the shortest route from the head to the exit over the runs
@@ -125,6 +126,74 @@ describe("hints (K137 stage 2, pure)", () => {
     const w = walkFor(5);
     expect(liveDistances(w)).toBe(w.distToExit);
     expect(liveDistances(w, () => true)).toBe(w.distToExit);
+  });
+});
+
+describe("hint distance (K845)", () => {
+  // A hand-built walk: a (2) -> b (10) -> c (3) -> d, plus a tunnel.
+  const fakeWalk = (): WalkGraph =>
+    ({
+      edges: [
+        { id: 0, va: "a", vb: "b", chain: 0, ctrlA: 0, ctrlB: 4, length: 2 },
+        { id: 1, va: "b", vb: "c", chain: 0, ctrlA: 4, ctrlB: 14, length: 10 },
+        { id: 2, va: "c", vb: "d", chain: 1, ctrlA: 0, ctrlB: 6, length: 3 },
+        { id: 3, va: "d", vb: "a", chain: -1, ctrlA: 0, ctrlB: 0, length: 1 },
+      ],
+    }) as unknown as WalkGraph;
+
+  it("spills past a short run into the next segment", () => {
+    const spans = hintSpans(fakeWalk(), "a", [0, 1]);
+    expect(spans).toEqual([
+      { eid: 0, c0: 0, c1: 4, j0: true, j1: true },
+      { eid: 1, c0: 4, c1: 8, j0: true, j1: false },
+    ]);
+    // Drawn arc: the short run's 2 plus 4 of the next = HINT_DISTANCE.
+    expect(HINT_DISTANCE).toBe(6);
+  });
+
+  it("lights only the set distance of a long run", () => {
+    expect(hintSpans(fakeWalk(), "b", [1, 2])).toEqual([
+      { eid: 1, c0: 4, c1: 10, j0: true, j1: false },
+    ]);
+  });
+
+  it("draws from the head's end when travelling a run backwards", () => {
+    expect(hintSpans(fakeWalk(), "c", [1, 0])).toEqual([
+      { eid: 1, c0: 8, c1: 14, j0: false, j1: true },
+    ]);
+  });
+
+  it("stops at a junction the distance exactly reaches, and at the route's end", () => {
+    expect(hintSpans(fakeWalk(), "a", [0, 1], 2)).toEqual([
+      { eid: 0, c0: 0, c1: 4, j0: true, j1: true },
+    ]);
+    const all = hintSpans(fakeWalk(), "a", [0, 1, 2], 99);
+    expect(all.map((s: HintSpan) => s.eid)).toEqual([0, 1, 2]);
+    expect(all[2]).toEqual({ eid: 2, c0: 0, c1: 6, j0: true, j1: true });
+    expect(hintSpans(fakeWalk(), "d", [])).toEqual([]);
+  });
+
+  it("passes through a tunnel undrawn, spending its length", () => {
+    expect(hintSpans(fakeWalk(), "d", [3, 0, 1])).toEqual([
+      { eid: 0, c0: 0, c1: 4, j0: true, j1: true },
+      { eid: 1, c0: 4, c1: 7, j0: true, j1: false },
+    ]);
+  });
+
+  it("the controller's hint covers the set distance from the head", () => {
+    const w = walkFor(42);
+    const c = new FabricMazeController(w);
+    const spans = c.hintRoute();
+    expect(spans.length).toBeGreaterThan(0);
+    expect(spans[0].eid).toBe(c.goodArm());
+    let drawn = 0;
+    for (const s of spans) {
+      const e = w.edges[s.eid];
+      drawn += ((s.c1 - s.c0) / (e.ctrlB - e.ctrlA)) * e.length;
+    }
+    expect(drawn).toBeCloseTo(Math.min(HINT_DISTANCE, w.distToExit.get(w.start)!), 6);
+    c.tapEdge(spans[0].eid);
+    expect(c.hintRoute()[0].eid).toBe(c.goodArm());
   });
 });
 

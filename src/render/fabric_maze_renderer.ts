@@ -83,6 +83,7 @@ import {
   telegraphTickLook,
 } from "../game/mino_feedback";
 import { chaseRoute, telegraphPieces } from "./telegraph_route";
+import type { HintSpan } from "../game/hints"; // K845
 import type { Snare } from "../game/snares"; // K137 stage 4
 import type { ChaseRoute, PlanRoute } from "./telegraph_route";
 
@@ -1558,7 +1559,7 @@ export class FabricMazeRenderer {
     g.visible = true;
   }
 
-  // K137 stage 2: a HINT lights one run in the telegraph's rim look (K525's
+  // K137 stage 2: a HINT lights a set distance along the route (K845) in the telegraph's rim look (K525's
   // TELE paint item) in HINT_COLOR, until a move (beginMove) clears it
   // (K838: no timer - the hint lasts until the player moves). While it is lit it holds the one telegraph
   // slot: every other writer goes through setTele / setTeleColor /
@@ -1592,11 +1593,19 @@ export class FabricMazeRenderer {
     this.teleBaseStrength = s;
     if (!this.hintPieces) this.ribbons.teleStrength = s;
   }
-  showHint(eid: number): boolean {
-    const e = this.walk.edges[eid];
-    if (!e) return false;
-    this.hintRun = eid;
-    this.hintPieces = [{ chain: e.chain, c0: e.ctrlA, c1: e.ctrlB, alpha: 1, j0: true, j1: true }];
+  // K845: a hint is a set distance of arc along the route (game/hints
+  // hintSpans), not one whole run: it may cover part of one run, or a
+  // short run plus the start of the next.
+  showHint(spans: readonly HintSpan[]): boolean {
+    const pieces: PaintTele[] = [];
+    for (const s of spans) {
+      const e = this.walk.edges[s.eid];
+      if (!e || e.chain < 0) continue;
+      pieces.push({ chain: e.chain, c0: s.c0, c1: s.c1, alpha: 1, j0: s.j0, j1: s.j1 });
+    }
+    if (pieces.length === 0) return false;
+    this.hintRun = spans[0].eid;
+    this.hintPieces = pieces;
     this.ribbons.teleColor = HINT_COLOR;
     this.ribbons.teleStrength = HINT_STRENGTH;
     this.ribbons.setTelegraph(this.hintPieces);

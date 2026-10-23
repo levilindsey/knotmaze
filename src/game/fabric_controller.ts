@@ -141,7 +141,8 @@ import {
 } from "./collapse";
 import type { CutMode, CutResult, FabricAction } from "./cut";
 import { carryChain, cutVerdict, distancesToExit } from "./cut";
-import { hintsOf, liveDistances, nextGoodArm } from "./hints";
+import { hintSpans, hintsOf, liveDistances, nextGoodArm } from "./hints";
+import type { HintSpan } from "./hints";
 import { spoolCapacity, spoolRefuses, spoolShareUsed } from "./spool";
 import type { ColorRuleMode } from "./color_rule";
 import { colorRule, placeColors } from "./color_rule";
@@ -587,6 +588,14 @@ export class FabricMazeController {
       seen.add(v);
     }
     return v === this.walk.exit ? route : [];
+  }
+
+  // K845: the hint's drawn pieces: a set distance of arc along the
+  // shortest route from the head (shortestRoute, so rules, fire and
+  // fragile live-runs are honoured), spilling past a short run into
+  // the next. Empty when there is no route or nothing drawable.
+  hintRoute(): HintSpan[] {
+    return hintSpans(this.walk, this.head, this.shortestRoute());
   }
 
   // K137 s2: chalk a tick on a junction (the head's by default), or rub it

@@ -62,6 +62,60 @@ export function nextGoodArm(
 }
 
 // The share text's tag: "💡1" (hints used), null when none was used.
+// K845: a hint draws HINT_DISTANCE of lattice arc along the route,
+// not one whole run: a long run is lit only that far, and a short
+// run's remainder spills into the next run (and the next), so the
+// segment after a short segment is indicated too.
+export const HINT_DISTANCE = 6;
+
+// One drawn piece of a hint: run `eid`'s ctrl span [c0, c1] (chain
+// order, c1 >= c0), j0/j1 saying whether that end is a junction
+// (true) or a by-distance stop mid-run (false), as PaintTele reads it.
+export interface HintSpan {
+  eid: number;
+  c0: number;
+  c1: number;
+  j0: boolean;
+  j1: boolean;
+}
+
+// The hint's drawn pieces: walk `route` (walk runs in travel order
+// from `head`, e.g. FabricMazeController.shortestRoute) for
+// `distance` of lattice arc. Tunnels (chain < 0) draw nothing but
+// still consume their length and pass the walk to their far end.
+export function hintSpans(
+  walk: WalkGraph,
+  head: string,
+  route: readonly number[],
+  distance: number = HINT_DISTANCE
+): HintSpan[] {
+  const spans: HintSpan[] = [];
+  let v = head;
+  let left = distance;
+  for (const eid of route) {
+    if (!(left > 0)) break;
+    const e = walk.edges[eid];
+    if (!e) break;
+    const fromA = e.va === v;
+    const far = fromA ? e.vb : e.va;
+    if (far === v) break; // A self-loop goes nowhere (routes carry none).
+    const take = Math.min(Math.max(e.length, 0), left);
+    if (e.chain >= 0 && take > 0) {
+      const frac = e.length > 0 ? take / e.length : 1;
+      const span = e.ctrlB - e.ctrlA;
+      const full = frac >= 1;
+      if (fromA) {
+        spans.push({ eid, c0: e.ctrlA, c1: e.ctrlA + span * frac, j0: true, j1: full });
+      } else {
+        spans.push({ eid, c0: e.ctrlB - span * frac, c1: e.ctrlB, j0: full, j1: true });
+      }
+    }
+    left -= take;
+    v = far;
+  }
+  return spans;
+}
+
 export function hintsTag(used: number): string | null {
   return used > 0 ? `💡${used}` : null;
 }
