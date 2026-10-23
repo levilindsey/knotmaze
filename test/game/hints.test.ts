@@ -128,6 +128,29 @@ describe("hints (K137 stage 2, pure)", () => {
   });
 });
 
+describe("shortest route display (K839)", () => {
+  it("walks the optimal route from the head and shortens as you follow it", () => {
+    const w = walkFor(42);
+    const c = new FabricMazeController(w);
+    const route = c.shortestRoute();
+    expect(route.length).toBeGreaterThan(0);
+    expect(route[0]).toBe(c.goodArm());
+    let v = w.start;
+    let len = 0;
+    for (const eid of route) {
+      const e = w.edges[eid];
+      len += e.length;
+      v = e.va === v ? e.vb : e.va;
+    }
+    expect(v).toBe(w.exit);
+    expect(len).toBeCloseTo(w.optimalLength, 6);
+    c.tapEdge(route[0]);
+    expect(c.shortestRoute()).toEqual(route.slice(1));
+    while (!c.solved) c.tapEdge(c.goodArm());
+    expect(c.shortestRoute()).toEqual([]);
+  });
+});
+
 describe("hints in the controller (K137 stage 2)", () => {
   it("counts the hints a solve, and a restart keeps them until clearAids", () => {
     const c = new FabricMazeController(walkFor(42));

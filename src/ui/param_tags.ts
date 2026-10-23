@@ -118,6 +118,7 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   goldTextureStrength: ["gts", "traveled path", "gold", "grain", "texture", "pencil", "crayon", "strength"],
   pathIrregularity: ["pir", "traveled path", "string", "yarn", "hand-drawn", "wobble", "loose", "irregular"],
   pathExcursion: ["pex", "traveled path", "string", "yarn", "outside", "bounds", "drift", "excursion"],
+  showShortestPath: ["ssp", "shortest path", "route", "solution", "show the way", "always", "guide"],
   streamerShare: ["cfs", "celebration", "party", "confetti", "ribbons", "curly paper", "party streamers", "finish effect"],
   markerSize: ["mks", "dot size", "player dot", "icon size", "bigger marker", "start and finish", "your position", "token size"],
   dailyTitleThread: ["dtt", "daily title", "daily maze", "name", "lettering", "cursive", "entrance sign", "daily only"],

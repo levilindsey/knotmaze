@@ -162,6 +162,11 @@ function walkerGlowTexture(): Texture {
 // share a game) and the minotaur's red.
 const HINT_COLOR = 0x7dffc4;
 const HINT_STRENGTH = 1;
+// K839: the always-on shortest route's line (a soft gold, thinner and
+// fainter than the Ariadne yarn so the two read apart).
+const ROUTE_INK = 0xffc94d;
+const ROUTE_WIDTH = 0.3;
+const ROUTE_ALPHA = 0.55;
 
 // K76 THREAD REVEAL (stage 2a; docs/design/K76.md): a newly visited
 // vertex's arms grow out over this many seconds (eased), and the halo
@@ -4189,6 +4194,7 @@ export class FabricMazeRenderer {
     this.placeWalkerGlow(controller, r); // K713
     this.drawTunnels(controller); // K137 tunnels (4.13)
     this.drawAids(controller, dotChain >= 0, r); // K137 stage 2
+    this.drawShortestRoute(controller); // K839
     this.drawOneWay(controller, r); // K138 stage 3
     this.drawLocks(controller, r); // K138 stage 4
 
@@ -4246,6 +4252,62 @@ export class FabricMazeRenderer {
   // and in the walker's modes. Never aimed at the exit itself.
   compassOn = false;
   chalkOn = false;
+  // K839: draw the whole shortest route from the head to the exit
+  // (the `showShortestPath` param; aidTick wires it, off in the
+  // walker's modes). ROUTE_INK below; the route recomputes only when
+  // the walk state moves (routeCacheKey), the line itself follows the
+  // threads every frame.
+  shortestPathOn = false;
+  private routeGfx: Graphics | null = null;
+  private routeCacheKey = "";
+  private routeCache: number[] = [];
+
+  // K839: the always-on shortest route: one soft gold line through the
+  // route's runs, in tap order from the head. Runs with no thread
+  // (tunnels) break the line, as the telegraph's does.
+  private drawShortestRoute(controller: FabricMazeController): void {
+    if (!this.routeGfx) {
+      this.routeGfx = new Graphics();
+      const yi = this.overContainer.getChildIndex(this.yarnGfx);
+      this.overContainer.addChildAt(this.routeGfx, yi + 1);
+    }
+    const g = this.routeGfx;
+    g.clear();
+    if (!this.shortestPathOn || controller.solved || controller.walkerMode) return;
+    let cross = 0;
+    for (let i = 0; i < controller.crossings.length; i++) cross += controller.crossings[i];
+    const key =
+      `${controller.head}|${controller.taps.length}|${controller.cuts.size}|` +
+      `${controller.actions.length}|${cross}|${controller.restarts}`;
+    if (key !== this.routeCacheKey) {
+      this.routeCacheKey = key;
+      this.routeCache = controller.shortestRoute();
+    }
+    if (this.routeCache.length === 0) return;
+    const ink = this.teleInk;
+    this.teleInk = ROUTE_INK;
+    let v = controller.head;
+    let prev: number[] | null = null;
+    for (const eid of this.routeCache) {
+      const we = this.walk.edges[eid];
+      if (!we) break;
+      if (we.chain < 0) {
+        prev = null;
+        v = we.va === v ? we.vb : we.va;
+        continue;
+      }
+      const fromA = we.va === v;
+      const n = Math.max(1, Math.ceil(Math.abs(we.ctrlB - we.ctrlA) / TELEGRAPH_STEP));
+      const ctrlOf = (k: number): number => {
+        const a = fromA ? we.ctrlA : we.ctrlB;
+        const b = fromA ? we.ctrlB : we.ctrlA;
+        return a + ((b - a) * k) / n;
+      };
+      prev = this.teleStroke(g, we.chain, 0, n, ctrlOf, prev, this.threadWidth * ROUTE_WIDTH, ROUTE_ALPHA);
+      v = fromA ? we.vb : we.va;
+    }
+    this.teleInk = ink;
+  }
   private compassKey = "";
   private compassArm = -1;
   private ticks: MarkerMesh[] = [];

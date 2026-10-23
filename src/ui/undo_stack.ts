@@ -152,7 +152,7 @@ export const LIVE_EFFECTS = {
     "revealEndCross", "revealEndGlow",
   ],
   // K137 stage 2: the compass row's effect (main.ts reads it every frame).
-  onAidsChange: ["compass"],
+  onAidsChange: ["compass", "showShortestPath"], // K839
   onRecolor: [
     "colorScheme", "junctionBlend", "hueShift", "gamutArc", "palette",
     "pathColor",

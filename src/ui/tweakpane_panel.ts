@@ -1937,6 +1937,11 @@ export function buildPanel(
     "A small arrow beside you points along the run that starts the shortest way to the exit (not straight at the exit), updated after every move.",
     D.compass, () => callbacks.onAidsChange()
   );
+  const showShortestPathRow = row(
+    fRules, p, "showShortestPath", { label: "Show shortest path" },
+    "Draws the whole shortest route from where you are to the exit, following every move (under the movement rules too). It is an aid, like the compass; it does not spend hints.",
+    D.showShortestPath, () => callbacks.onAidsChange()
+  );
   // K138 stage 1 (game/ice.ts, game/color_rule.ts): the movement rules, the
   // classic game only; off while collapse, fragile runs, the cut, the fire
   // or the spool is on (FabricMazeController.setRules), their rows kept
@@ -3442,6 +3447,7 @@ export function buildPanel(
     spoolSlackRow.hidden = !fab || !params.spool;
     hintsRow.hidden = !fab;
     compassRow.hidden = !fab;
+    showShortestPathRow.hidden = !fab; // K839
     // K138 stage 1: the classic game only, as the cut's row.
     iceRow.hidden = !fab || params.gameMode !== "classic";
     colorRuleRow.hidden = !fab || params.gameMode !== "classic";

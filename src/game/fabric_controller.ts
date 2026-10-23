@@ -532,6 +532,63 @@ export class FabricMazeController {
     return nextGoodArm(this.walk, liveDistances(this.walk, live), this.head, live);
   }
 
+  // K839: the whole shortest route from the head to the exit (walk runs
+  // in tap order), for the always-on path display. Under a rule it is
+  // the kit's best route from here - with the last move's runs reversed
+  // in front when undoing that move is the best play; otherwise it
+  // follows nextGoodArm over the live distances to the exit. Empty when
+  // there is no route (or the solve is over / won).
+  shortestRoute(): number[] {
+    if (this.solved || this.head === this.walk.exit) return [];
+    if (this.rule) {
+      const back = !this.trailMode;
+      if (
+        back &&
+        this.moveStarts.length > 0 &&
+        !this.backRefused() &&
+        this.ruleGoodArm() === this.arrivalEdge
+      ) {
+        const start = this.moveStarts[this.moveStarts.length - 1];
+        const prefix = this.pathEdges.slice(start).reverse();
+        const rest = ruleSearch(this.walk, this.rule!, {
+          vertex: this.pathVertices[start],
+          state: this.stateStack[this.stateStack.length - 1],
+          last: start > 0 ? this.pathEdges[start - 1] : -1,
+          phase: this.strokes + 1,
+        }, back);
+        return Number.isFinite(rest.fewest) ? [...prefix, ...rest.route] : prefix;
+      }
+      return ruleSearch(this.walk, this.rule!, {
+        vertex: this.head,
+        state: this.ruleState,
+        last: this.arrivalEdge,
+        phase: this.strokes,
+      }, back).route;
+    }
+    const fire = this.fire;
+    const L = fire ? this.fireL : 0;
+    const gone = this.breakable || this.cuts.size > 0;
+    const live =
+      gone || fire
+        ? (eid: number): boolean =>
+            !this.broken(eid) && !(fire && runBurnAt(this.walk, fire, eid, L).state === "burnt")
+        : undefined;
+    const dist = liveDistances(this.walk, live);
+    const route: number[] = [];
+    const seen = new Set<string>([this.head]);
+    let v = this.head;
+    while (v !== this.walk.exit && route.length <= this.walk.edges.length) {
+      const arm = nextGoodArm(this.walk, dist, v, live);
+      if (arm < 0) break;
+      route.push(arm);
+      const e = this.walk.edges[arm];
+      v = e.va === v ? e.vb : e.va;
+      if (v !== this.walk.exit && seen.has(v)) break; // a shortest walk never revisits
+      seen.add(v);
+    }
+    return v === this.walk.exit ? route : [];
+  }
+
   // K137 s2: chalk a tick on a junction (the head's by default), or rub it
   // out. True when the junction is marked afterwards.
   toggleChalk(at: string = this.head): boolean {
