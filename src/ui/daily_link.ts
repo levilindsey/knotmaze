@@ -154,10 +154,18 @@ export const LOOK_KEYS = [
   "backgroundFibers",
   "backgroundGrain",
   "backgroundAngle",
+  // K819: the backdrop's colors and the traveled path's color are looks
+  // too (a link may set them over a daily; the chip clears them).
+  "backgroundColorMode",
+  "backgroundBase",
+  "backgroundAccent1",
+  "backgroundAccent2",
+  "backgroundAccent3",
   "threadLook",
   "gap",
   "goldWidth",
   "goldTexture",
+  "pathColor",
 ] as const satisfies readonly (keyof UrlParams)[];
 
 // True when `p` carries a look away from today's defaults (the chip
@@ -253,6 +261,7 @@ export const DAILY_EXEMPT_KEYS = [
   // celebration.
   "confettiCannons",
   "cannonAmount",
+  "cannonSpread",
   "streamerShare",
   // K98's marker size: only the look of the markers. Proposed for Levi's
   // review with K98 (K57).

@@ -144,6 +144,7 @@ describe("confettiPlan: how many pieces a finish throws", () => {
       streamers: 0,
       foil: 0,
       shine: 0,
+      spread: CANNON_SPREAD,
     });
     expect(confettiPlan(0.5, false)).toEqual({
       rain: 210,
@@ -152,6 +153,7 @@ describe("confettiPlan: how many pieces a finish throws", () => {
       streamers: 0,
       foil: 0,
       shine: 0,
+      spread: CANNON_SPREAD,
     });
     expect(confettiPlan(CONFETTI_AMOUNT_MAX, false)).toEqual({
       rain: RAIN_PER_AMOUNT * CONFETTI_AMOUNT_MAX,
@@ -160,6 +162,7 @@ describe("confettiPlan: how many pieces a finish throws", () => {
       streamers: 0,
       foil: 0,
       shine: 0,
+      spread: CANNON_SPREAD,
     });
   });
 
@@ -179,6 +182,7 @@ describe("confettiPlan: how many pieces a finish throws", () => {
       streamers: 0,
       foil: 0,
       shine: 0,
+      spread: CANNON_SPREAD,
     });
     // A huge screen at the top amount fills the pool exactly.
     expect(rainScreenScale(3840, 2160)).toBe(RAIN_SCREEN_MAX);
@@ -546,6 +550,15 @@ describe("the side cannons (screen space, K336)", () => {
     expect(planThrows({ rain: 0, spray: 0, cannon: 0, streamers: 1, foil: 0, shine: 0 })).toBe(true);
     expect(planThrows(confettiPlanFor(s, true, 1400, 900))).toBe(false);
     expect(planThrows(confettiPlanFor({ ...s, confettiAmount: 0 }, false, 1400, 900))).toBe(false);
+  });
+
+  it("carries the cannon spread, clamped, into the cannons (K819)", () => {
+    expect(confettiPlan(1, false, 1400, 900).spread).toBe(CANNON_SPREAD);
+    expect(confettiPlan(1, false, 1400, 900, 1, 0.3, 1, 0.2, 0.3).spread).toBe(0.3);
+    expect(confettiPlan(1, false, 1400, 900, 1, 0.3, 1, 0.2, 9).spread).toBe(0.5);
+    expect(confettiPlanFor({ confettiAmount: 1, confettiShine: 1, foilShare: 0.3, confettiCannons: true, cannonAmount: 1, streamerShare: 0.2, cannonSpread: 0.4 }, false, 1400, 900).spread).toBe(0.4);
+    for (const c of finishCannons(1400, 900, 10, 0, 0.44)) expect(c.spread).toBe(0.44);
+    for (const c of finishCannons(1400, 900, 10)) expect(c.spread).toBe(CANNON_SPREAD);
   });
 
   it("aims a piece so its arc tops out at the aimed point (aimCannon)", () => {
