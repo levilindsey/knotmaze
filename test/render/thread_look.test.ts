@@ -33,6 +33,18 @@ describe("thread look beyond the ribbons", () => {
     expect(Array.from(flank.slice(7, 10))).toEqual([3, 3, 3]);
   });
 
+  it("stamps flankFill 4 on junction discs (border-suppressed like seals)", () => {
+    // K833: fused-tip discs, host-axis fallback discs and stadium bands
+    // sit INSIDE a junction; with the rim-only code 2 their full closed
+    // rim drew a circle inside the junction (and at dead ends). Code 4
+    // shares the seal's vFlank > 2.5 suppression in both fan programs.
+    const m = new TriFanMesh(24, 48);
+    m.begin();
+    m.pushFan(0, 0, [1, 0, 0, 1], 3, null, false, 4);
+    const flank = m.mesh.geometry.getBuffer("aFlank").data as Float32Array;
+    expect(Array.from(flank.slice(0, 3))).toEqual([4, 4, 4]);
+  });
+
   it("gates fillet fill by the look in both fan programs", () => {
     expect(JUNCTION_FRAG).toContain("float lookCoord = strip ? abs(2.0 * vLook - 1.0) : vLook;");
     // K815: a fan's border outline is rim + flanks; a seal disc draws none.
