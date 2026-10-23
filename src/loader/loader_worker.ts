@@ -7,7 +7,7 @@
 // still while the head travels the strand (move "head"); speed, gap,
 // thread width and the thread/background colors ride along.
 
-import { arcSpan, pointAtArc, trefoilShape, type TrefoilShape } from "./loader_geometry";
+import { arcSpan, headingDelta, pointAtArc, trefoilShape, type TrefoilShape } from "./loader_geometry";
 import { LOADER_CFG_DEFAULTS, type LoaderWireCfg } from "../ui/loader_config";
 
 const CASING = "#070a10";
@@ -26,6 +26,10 @@ let running = false;
 let sPos = 0; // the head's arc position (world units along the strand)
 let lastNow = -1;
 let smoothRot = 0;
+// K841: the followed heading, accumulated continuously (the raw atan2
+// heading wraps twice a lap; see loader_geometry's headingDelta).
+let lastHeading: number | null = null;
+let headingCont = 0;
 
 // The trail's lighter tint of the thread color (today: #e7c56f ->
 // #ffe9a8's family; here the configured gold mixed toward white).
@@ -75,11 +79,29 @@ function headGlyph(c: OffscreenCanvasRenderingContext2D, x: number, y: number, r
 
 function drawMazeMode(c: OffscreenCanvasRenderingContext2D): void {
   const head = pointAtArc(shape, sPos);
-  // Smooth the followed rotation (unwrap against the last frame).
-  let target = -head.heading * FOLLOW;
-  while (target - smoothRot > Math.PI) target -= Math.PI * 2;
-  while (target - smoothRot < -Math.PI) target += Math.PI * 2;
+  // K841: follow a CONTINUOUS heading. The old code unwrapped the
+  // halved heading by whole turns, but the halved value's period is
+  // half a turn (the heading wraps twice a lap), so at each wrap the
+  // follower could take the long way and the knot visibly rotated
+  // back the wrong way. Accumulate the heading's own steps instead.
+  if (lastHeading === null) {
+    lastHeading = head.heading;
+    headingCont = head.heading;
+  } else {
+    headingCont += headingDelta(lastHeading, head.heading);
+    lastHeading = head.heading;
+  }
+  const target = -headingCont * FOLLOW;
   smoothRot += (target - smoothRot) * 0.08;
+  // Keep both angles near zero (a 2-pi shift of each, which leaves
+  // the drawn rotation unchanged: the target is the halved heading).
+  if (smoothRot > Math.PI * 2) {
+    smoothRot -= Math.PI * 2;
+    headingCont += Math.PI * 4;
+  } else if (smoothRot < -Math.PI * 2) {
+    smoothRot += Math.PI * 2;
+    headingCont -= Math.PI * 4;
+  }
 
   const scale = Math.min(w, h) / 11;
   c.save();
@@ -204,6 +226,9 @@ self.onmessage = (e: MessageEvent) => {
     running = true;
     sPos = 0;
     lastNow = -1;
+    smoothRot = 0;
+    lastHeading = null;
+    headingCont = 0;
     frame(performance.now());
     (self as unknown as { postMessage: (m: unknown) => void }).postMessage({ type: "frame1" });
   } else if (d.type === "config" && d.cfg) {
