@@ -221,6 +221,12 @@ async function main(): Promise<void> {
   const hclAsked = Number(new URLSearchParams(window.location.search).get("hcl"));
   let hcLookChoice = hclAsked === 1 || hclAsked === 2 || hclAsked === 3 ? hclAsked : 0;
 
+  // K792: the grab chase rate's try key (`?<token>&gcr=0.8`), K610's
+  // feel A/B (0.6 today; try 0.8 and 1.0). Read once like `hcl`; not a
+  // codec param. It rides PhysicsTuning into both physics hosts.
+  const gcrAsked = Number(new URLSearchParams(window.location.search).get("gcr"));
+  const grabChaseChoice = gcrAsked > 0 && gcrAsked <= 2 ? gcrAsked : 0;
+
   // K20/K56: the bare page is today's daily and `?daily...` a daily link
   // (ui/daily_link.ts), opening with the player's stored daily prefs;
   // anything else reads as an ordinary design link.
@@ -663,6 +669,7 @@ async function main(): Promise<void> {
     stiffness: params.stiffness,
     gridAlign: params.gridAlign,
     threadWidth: params.threadWidth,
+    ...(grabChaseChoice > 0 ? { grabChase: grabChaseChoice } : {}),
   });
   // K313: adopt the inline boot loader (on screen since the first
   // paint) when it ran; otherwise today's loader, as before.

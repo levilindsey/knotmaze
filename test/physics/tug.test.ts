@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
-import { ParticleSystem } from "../../src/physics/particle_system";
+import { DEFAULT_TUNING, ParticleSystem } from "../../src/physics/particle_system";
 
 // K279 TUG: a tap-pluck's small physical kick (ParticleSystem.tug). The
 // chain's slots strictly between c0 and c1 move by a sine bump along the
@@ -101,5 +101,38 @@ describe("ParticleSystem.tug (K279)", () => {
     }
     expect(moved(ps.positions, pos0, arr[3])).toBe(0);
     expect(moved(ps.positions, pos0, arr[len - 3])).toBe(0);
+  });
+});
+describe("grab chase rate (K610/K792)", () => {
+  function dragApplied(grabChase?: number): { applied: number; rate: number } {
+    const ps = build();
+    const chain = longestChain(ps);
+    const arr = ps.chains[chain];
+    const p = arr[Math.floor(arr.length / 2)];
+    const x = ps.positions[p * 2];
+    const y = ps.positions[p * 2 + 1];
+    ps.grabAt(p, x, y);
+    ps.dragTo(x + 3, y + 2);
+    const tuning = grabChase ? { ...DEFAULT_TUNING, grabChase } : DEFAULT_TUNING;
+    let applied = 0;
+    for (let i = 0; i < 30; i++) {
+      ps.step(1 / 60, tuning);
+      applied += ps.readSlideStats().applied;
+    }
+    const rate = ps.grabChaseRate;
+    ps.release();
+    return { applied, rate };
+  }
+
+  it("defaults to 0.6 and follows tuning.grabChase", () => {
+    expect(dragApplied().rate).toBe(0.8);
+    expect(dragApplied(1.0).rate).toBe(1.0);
+  });
+
+  it("a higher cap slides crossings further over the same drag", () => {
+    const slow = dragApplied(0.6).applied; // the pre-K827 cap, via the try key
+    const fast = dragApplied(1.0).applied;
+    expect(slow).toBeGreaterThan(0);
+    expect(fast).toBeGreaterThan(slow);
   });
 });
