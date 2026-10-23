@@ -1326,6 +1326,11 @@ export function buildPanel(
     "The traveled route's fill: solid color, grained pencil, coarse crayon, or translucent highlighter (K799). Applies live.",
     D.goldTexture, () => callbacks.onTrailChange()
   );
+  const goldTextureStrengthRow = row(
+    fPath, p, "goldTextureStrength", { min: 0, max: 1, step: 0.01, label: "Traveled fill strength" },
+    "Traveled fill strength: how strong the pencil, crayon or highlighter grain is on the traveled path (1 = today's grain, 0 = a solid fill). Applies live.",
+    D.goldTextureStrength, () => callbacks.onTrailChange()
+  );
   const cameraRow = row(
     fPath, p, "cameraMode",
     { options: { fit: "fit", follow: "follow" }, label: "Camera" },
@@ -2496,6 +2501,16 @@ export function buildPanel(
     "How threads draw: fill = solid color (the usual look); border = only a dark edge stroke along each side, no fill (over, under and joins read from the strokes); both = fill plus the edge strokes (K797b prototype). While border is picked, the rows that only color or fill the thread interior hide (their values are kept). Applies live.",
     D.threadLook, () => callbacks.onBackgroundChange()
   );
+  const borderWidthRow = row(
+    fLook, p, "borderWidth", { min: 0, max: 1, step: 0.01, label: "Border width" },
+    "Border width: how much of the thread's half-width the edge strokes take in the border and both looks (0.38 = today's stroke, 0 = hairline, 1 = the whole thread). Applies live.",
+    D.borderWidth, () => callbacks.onBackgroundChange()
+  );
+  const borderColorRow = row(
+    fLook, p, "borderColor", { view: "color", label: "Border color" },
+    "Border color: the edge strokes' color in the border and both looks. Black = automatic (each thread's color darkened toward ink). Applies live.",
+    D.borderColor, () => callbacks.onBackgroundChange()
+  );
   const backgroundIntensityRow = row(
     fLook, p, "backgroundIntensity", { min: 0, max: 1, step: 0.05, label: "Backdrop intensity" },
     "Backdrop contrast: 0 = the plain page color, 1 = the strongest look. Applies live.",
@@ -3429,6 +3444,11 @@ export function buildPanel(
     paletteRow.hidden = borderLook;
     goldWidthRow.hidden = false;
     goldTextureRow.hidden = false;
+    // K820: the border rows matter only where strokes draw (border and
+    // both); the grain strength only under a grained fill.
+    borderWidthRow.hidden = params.threadLook === "fill";
+    borderColorRow.hidden = params.threadLook === "fill";
+    goldTextureStrengthRow.hidden = params.goldTexture === "solid";
     // Only the segments and strands schemes have junction ramps (depth and
     // noise are continuous; knot mode has no junctions).
     junctionBlendRow.hidden =

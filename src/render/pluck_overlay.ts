@@ -466,7 +466,7 @@ void main(void) {
   float c = edgeOnly ? cEdge : cSolid;
   float g = edgeOnly ? gEdge : gSolid;
   vec3 gc = mix(vCol, vec3(1.0), uPluck.z);
-  vec3 stroke = mix(vCol * 0.30, vec3(0.09, 0.085, 0.08), 0.5);
+  vec3 stroke = mix(mix(vCol * 0.30, vec3(0.09, 0.085, 0.08), 0.5), uKBorder.rgb, uKBorder.w);
   vec3 rgb = gc * g + (edgeOnly ? stroke : vCol) * c * (1.0 - g);
   float a = g + c * (1.0 - g);
   // K279 SHEEN: the swing's turning points (where a vibrating string dwells
@@ -605,14 +605,14 @@ void main(void) {
   bool lookBorder = uKLook.x > 0.5 && uKLook.x < 1.5;
   bool lookIntro = uKLook.y > 0.5 && uKLook.z > 0.5;
   float lookEdge = smoothstep(
-    0.62,
-    0.62 + min(max(p / max(uPluck.x, 1e-4), 0.02), 0.38),
+    1.0 - uKLook.w,
+    1.0 - uKLook.w + min(max(p / max(uPluck.x, 1e-4), 0.02), 0.38),
     abs(vLat) / max(uPluck.x, 1e-4));
   if (lookBorder || lookIntro) c *= lookEdge;
   if (c <= 0.002) discard;
   vec3 rgb = vec3(1.0);
   if (uKLook.x > 1.5 && !lookIntro) {
-    rgb = mix(rgb, vec3(0.09, 0.085, 0.08), lookEdge * 0.9);
+    rgb = mix(rgb, mix(vec3(0.09, 0.085, 0.08), uKBorder.rgb, uKBorder.w), lookEdge * 0.9);
   }
   float gk = gapKeepAt(pxW, vPos, vTurn, vTan, vMaskId);
   if (gk < 1.0 && gapProbe()) {

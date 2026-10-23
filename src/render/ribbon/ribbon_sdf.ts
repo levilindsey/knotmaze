@@ -220,15 +220,15 @@ void main(void) {
     float gm = clamp((gw2 - ge) / fwG + 0.5, 0.0, 1.0)
       * step(0.001, uKPath.x);
     if (uKPath.y > 0.5 && uKPath.y < 1.5) {
-      gm *= 0.7 + 0.3 * fract(sin(dot(
+      gm *= mix(1.0, 0.7 + 0.3 * fract(sin(dot(
         floor(vec2(vUVx * 260.0, ge * 7.0)),
-        vec2(12.9898, 78.233))) * 43758.5453);
+        vec2(12.9898, 78.233))) * 43758.5453), uKHlPulse.w);
     } else if (uKPath.y > 1.5 && uKPath.y < 2.5) {
-      gm *= 0.45 + 0.55 * fract(sin(dot(
+      gm *= mix(1.0, 0.45 + 0.55 * fract(sin(dot(
         floor(vec2(vUVx * 90.0, ge * 4.0)),
-        vec2(26.651, 41.313))) * 28001.8384);
+        vec2(26.651, 41.313))) * 28001.8384), uKHlPulse.w);
     } else if (uKPath.y > 2.5) {
-      gm *= 0.55;
+      gm *= mix(1.0, 0.55, uKHlPulse.w);
     }
     kst.x *= gm;
   }
@@ -274,8 +274,8 @@ void main(void) {
   if (uKLook.x > 0.5 || edgesIntro) {
     float eAcross = abs(2.0 * side01 - 1.0);
     float fwA = max(fwidth(side01) * 3.0, 0.02);
-    float edge = smoothstep(0.62, 0.62 + fwA, eAcross);
-    vec3 stroke = mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5);
+    float edge = smoothstep(1.0 - uKLook.w, 1.0 - uKLook.w + fwA, eAcross);
+    vec3 stroke = mix(mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5), uKBorder.rgb, uKBorder.w);
     if (uKLook.x > 0.5 && uKLook.x < 1.5) {
       rgb = mix(hiRgb, stroke, edge);
       lookA = max(edge, hiA * (1.0 - edge));

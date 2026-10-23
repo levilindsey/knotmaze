@@ -77,6 +77,7 @@ uniform vec4 uKPath;
 uniform vec4 uKHlPulse;
 uniform vec4 uKHlHover;
 uniform vec4 uKHlFray;
+uniform vec4 uKBorder;
 `;
 
 // The shared numeric constants (paint_const.ts). Every assembly includes it

@@ -77,17 +77,22 @@ describe("K320 stage 1: char budgets", () => {
     // 67,794 -> 70,403 measured here), 640 to the strips (31,849 ->
     // 32,489; the shared paint core), 92 to the junction field and 9 to
     // the still pluck (the shared uniform block).
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(54_050);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(70_460);
+    // K820 (2026-10-22): the border stroke's width and color and the
+    // gold grain's strength (uKBorder, uKLook.w, uKHlPulse.w and the
+    // stroke/grain expressions in the ribbon, fan and pluck texts) add
+    // 352 to the section pair (54,020 -> 54,372 and 70,435 -> 70,787
+    // measured here), 44 to the junction field and 35 to the still pluck.
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(54_430);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(70_850);
     expect(STRIP_FRAG.length).toBeLessThanOrEqual(32_550);
     // K797b/K798 fillets (2026-10-21): the fan look gate and stroke
     // (junction_field.ts) add 755 (26,600 -> 27,355 here).
     // K815: the fans' flank coordinate (aFlank + the fanEdge block) adds
     // 788 to the junction field (27,447 -> 28,235 measured).
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(28_300);
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(28_410);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
-    expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_450);
+    expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);
   });
 });
 
