@@ -69,19 +69,19 @@ describe("gapSampRange: rounded outward", () => {
 });
 
 // K573: the search walks the SAMP index instead of calling gapOverPt per
-// point. gapRange decodes the range once (GLSL int() truncates toward
-// zero, as Math.trunc), gapAt reads a chunk's first point by master's
+// point. gapRange decodes the range once (K592: floor(x + 0.5) rounds
+// as Math.floor(x + 0.5) here), gapAt reads a chunk's first point by master's
 // gapOverPt formula, and gapNext then wraps a ring's index with ONE compare
 // per step, which is exact only while stride <= count on a ring. These pin
 // that invariant and the walk's equality with the formula, chunk by chunk
 // (the search) and in one run (the protect loop), on the ranges
 // gapSampRange makes.
 describe("K573: the search's SAMP index walk", () => {
-  const trunc = (x: number) => Math.trunc(x);
+  const round = (x: number) => Math.floor(x + 0.5);
   const clampI = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, x));
   // Master's gapOverPt index (JS % truncates like the GPU's int %).
   const formula = (kStart: number, stride: number, count: number, closed: boolean, j: number) => {
-    const raw = trunc(kStart + 0.5) + j * stride;
+    const raw = round(kStart) + j * stride;
     return closed ? ((raw % count) + count) % count : clampI(raw, 0, count - 1);
   };
   // gapAt and gapNext, as the shader writes them.
@@ -107,13 +107,13 @@ describe("K573: the search's SAMP index walk", () => {
     for (let c = 0; c < GAP_MAX_CHUNKS && c < nCh; c++) {
       const k0 = c * GAP_CHUNK;
       const segs = Math.min(GAP_CHUNK, nSeg - k0);
-      out.push({ k0, idx: run(trunc(kStart + 0.5) + k0 * stride, stride, count, closed, segs) });
+      out.push({ k0, idx: run(round(kStart) + k0 * stride, stride, count, closed, segs) });
     }
     return out;
   };
   // gapProtCover's walk: one run of nPts points from kStart.
   const walkProt = (kStart: number, stride: number, count: number, closed: boolean, nPts: number) =>
-    run(trunc(kStart + 0.5), stride, count, closed, Math.min(64, nPts - 1));
+    run(round(kStart), stride, count, closed, Math.min(64, nPts - 1));
   // Ranges as gapSampRange makes them: small and large rings, open runs at
   // both ends, seam crossings (negative kStart), strides 1 to 3, a reach
   // wider than the ring.
@@ -156,7 +156,7 @@ describe("K573: the search's SAMP index walk", () => {
     let negative = 0;
     let strided = 0;
     for (const { ref } of cases) {
-      // The row stores kStart as a float32; the shader truncates kStart + 0.5.
+      // The row stores kStart as a float32; the shader rounds it half up (K592).
       const k = Math.fround(ref.kStart);
       if (k < 0) negative++;
       if (ref.stride > 1) strided++;

@@ -411,9 +411,13 @@ export const GAP_VERT_MAIN = /* glsl */ `
 // float-to-int conversion: a ring's index wraps with one compare (a ring's
 // stride never exceeds its count: gapSampRange, pinned by
 // gap_mask.test.ts). The same points as master's gapOverPt, so 0 px.
+// K592: the three kStart decodes below use floor(x + 0.5) instead of
+// int(x + 0.5): GLSL int() truncates toward zero, so a negative kStart
+// (a ring range crossing its seam) rounded one sample late.
 export const GAP_FRAG_LIB = /* glsl */ `
 uniform highp sampler2D uGapData;
 ${FABRIC_GLSL}
+
 
 void gapSeg(highp vec2 p, highp vec2 a, highp vec2 b, int k,
     inout highp float best, inout int bk) {
@@ -458,7 +462,7 @@ void gapSegFull(highp vec2 p, highp vec2 a, highp vec2 b, int k,
 
 ivec4 gapRange(vec4 t4, vec4 t9) {
   return ivec4(int(t4.y + 0.5), max(int(t9.x + 0.5), 1),
-    max(int(t9.y + 0.5), 1), int(t4.z + 0.5));
+    max(int(t9.y + 0.5), 1), int(floor(t4.z + 0.5)));
 }
 highp vec2 gapAt(int r, out int i, ivec4 g, bool ring) {
   i = ring ? ((r % g.z) + g.z) % g.z : clamp(r, 0, g.z - 1);
@@ -586,7 +590,7 @@ highp float gapProtCover(int row, int base, highp vec2 p,
   highp float rr = bc.z + reach;
   highp vec2 dc = p - bc.xy;
   if (dot(dc, dc) > rr * rr) return 0.0;
-  int r = int(rg.y + 0.5), i;
+  int r = int(floor(rg.y + 0.5)), i;
   ivec4 g = ivec4(int(rg.x + 0.5), max(int(rg.w + 0.5), 1),
     max(int(abs(bc.w) + 0.5), 1), 0);
   bool ring = bc.w < -0.5;
@@ -668,7 +672,7 @@ highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,
     highp float per = 0.0;
     if ((fl & 2) != 0 && !fan) {
       ex = t4.x;
-      s0 = float(int(t4.z + 0.5)) * t4.w;
+      s0 = float(int(floor(t4.z + 0.5))) * t4.w;
       st = float(max(int(t9.x + 0.5), 1)) * t4.w;
       per = t1.z;
     }

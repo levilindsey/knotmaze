@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K817. (K812 preview effect buttons; K813 border-look highlights; K814 shape-injection param collection; K815 junction border fans; K816 SDF ribbons.)
+Next free ID: K818. (K812 preview effect buttons; K813 border-look highlights; K814 shape-injection param collection; K815 junction border fans; K816 SDF ribbons.)
 
 ## Waiting on Levi
 
@@ -1273,7 +1273,7 @@ Every other item below waits on the trigger it names.
   dropping or tinting it would make the flashes stand out (K337 handoff).
 - **K592** · The gap search rounds indices with `int(x + 0.5)`, which truncates toward zero, so a
   negative kStart rounds the wrong way (`src/render/gap_mask.ts`, `int(t4.z + 0.5)` and the range's
-  start). Check whether kStart can go negative. From K573's agent report.
+  start). Check whether kStart can go negative. From K573's agent report. Done in K817: kStart can go negative (ring seam crossings, pinned in gap_mask.test.ts); the three kStart decodes (gapRange, gapProtCover's start, the self-exclusion s0) now use floor(x + 0.5); the test mirror rounds the same way; K320 char budget held by inlining instead of a helper.
 - **K593** · `scripts/preview.ps1` fails in an agent worktree that has no `node_modules` junction
   (K573's run). Make it find or make the junction, or fail with that message.
 - **K594** · Phone kit flakes in K573's run: adb died 3x (unexplained), a foreground kit start hangs
