@@ -106,6 +106,7 @@ import { ExploreGaps } from "./ribbon/explore_gaps";
 import { RevealFx } from "./ribbon/reveal_fx";
 import { PaintState } from "./ribbon/paint_state";
 import { PluckHostPart } from "./ribbon/pluck_host";
+import { SdfPass } from "./ribbon/ribbon_sdf";
 import { StripPass } from "./ribbon/strip_pass";
 import type { ThreadPass } from "./ribbon/thread_pass";
 import { FILLET_REACH_PER_HALF, Joinery } from "./ribbon/joinery";
@@ -980,12 +981,18 @@ export class RibbonRenderer {
   // K8 G3-2: the pass this scene renders with, and whether rp=sdf fell
   // back to the strip (ribbon_sdf.ts not built yet). Probe-visible.
   /** @internal ribbon */ rpFallback = false;
+  // The sample count each chain was built with (the strip's fills carry
+  // the same number; a meshless pass's chains have no fill to ask).
+  /** @internal ribbon */ passCounts: number[] = [];
+  // The G3 tables' GPU sources for the SDF pass's shader (the façade
+  // owns the tables; the pass binds them at mesh build).
+  g3SdfSources(): { radii: unknown; chain: unknown; ranges: unknown } {
+    const T = g3Tables();
+    return { radii: T.radii.source, chain: T.chain.source, ranges: T.ranges.source };
+  }
   constructor(ps: ParticleSystem, style: RibbonStyle) {
-    // G3-2's seam: pick the thread pass once. Until ribbon_sdf.ts
-    // lands, rp=sdf renders with the strip and says so (rpFallback) -
-    // the A/B can never mistake the two.
-    this.stripPass = new StripPass(this);
-    if (style.rp === "sdf") this.rpFallback = true;
+    // G3-2's seam: pick the thread pass once, at construction.
+    this.stripPass = style.rp === "sdf" ? new SdfPass(this) : new StripPass(this);
     this.ps = ps;
     this.style = style;
     // K90 stage 1b, a debug hook only (no link, no panel row): turn the
@@ -1060,6 +1067,7 @@ export class RibbonRenderer {
         );
       }
       const count = Math.max(MIN_SAMPLES, Math.round(arc / SAMPLE_SPACING));
+      this.passCounts[i] = count;
 
       // An already-carved chain (maze mode) renders as an OPEN ribbon: no
       // closing quad across the removed seam.
@@ -1084,7 +1092,7 @@ export class RibbonRenderer {
       ps.chains.map((chain, i) => ({
         nCtrl: chain.length,
         closed: ps.chainBreakAfter[i] < 0,
-        count: this.fills[i].sampleCount,
+        count: this.passCounts[i],
         paintBase: 0,
       })),
       // K620: a root paint table per chain with a tapered root.
@@ -1265,10 +1273,7 @@ export class RibbonRenderer {
     // G3-0: the scene's table layout and its static per-chain records.
     const n = ps.chains.length;
     const closedOf = ps.chains.map((_, i) => ps.chainBreakAfter[i] < 0);
-    this.g3 = g3Layout(
-      this.fills.map((f) => f.sampleCount),
-      closedOf
-    );
+    this.g3 = g3Layout(this.passCounts, closedOf);
     this.g3Caps = new Int32Array(n * 2);
     this.g3Rad = new Int32Array(n).fill(-1);
     this.g3WinBase = new Int32Array(n);
@@ -1295,6 +1300,10 @@ export class RibbonRenderer {
     // G3-1: point every gap reader at this scene's SAMP table.
     setSampSource(g3Tables().samp.source as never);
     bindGap(this.gaps.tex);
+    // K8 G3-2: a meshless pass's one scene mesh (the SDF quads) joins
+    // the base layer; the strip pass has none.
+    const passMesh = this.stripPass.rootMesh?.();
+    if (passMesh) baseLayer.addChild(passMesh);
   }
 
   // Size the G3 tables for this scene and clear its regions (a previous
@@ -1630,8 +1639,8 @@ export class RibbonRenderer {
       const brk = this.ps.chainBreakAfter[i];
       const samples =
         brk < 0
-          ? sampleClosedSpline(controls, this.fills[i].sampleCount)
-          : sampleOpenSpline(controls, this.fills[i].sampleCount, brk);
+          ? sampleClosedSpline(controls, this.passCounts[i])
+          : sampleOpenSpline(controls, this.passCounts[i], brk);
       // Fused arm tips tuck back by the host's half-width: the terminal
       // particle sits ON the host centerline, so an untucked ribbon
       // overhangs the host and reads as a floating scrap / gapless fake
