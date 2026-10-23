@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { lintGlyph, LINT } from "../../src/core/glyphs/glyph_lint";
 import { A_LANDED, A_TANGENT, FORK_VARIANTS, GLYPHS, glyphI } from "../../src/core/glyphs/glyph_data";
 import { knotsToPath, type Knot } from "../../src/core/glyphs/glyph_knots";
-import { TAPER_PART_LU } from "../../src/core/glyphs/glyph_graph";
+import { buildGlyphGraph, TAPER_PART_LU } from "../../src/core/glyphs/glyph_graph";
 import { widenCrotch } from "../../src/core/glyphs/glyph_inject";
 import type { Glyph } from "../../src/core/glyphs/glyph_types";
 import { buildTextGraph } from "../../src/core/text_graph";
@@ -53,11 +53,14 @@ describe("glyph lint: the authored set", () => {
     }
   }
 
-  it("the i's fork variants: under 15 degrees fails the fork rule; 15 to 45 pass", () => {
+  it("the i's fork variants: 0 is the exact tangent join; 15 to 45 pass as forks", () => {
+    // K831 follow-up: fork 0 is no longer a failed fork - it is the
+    // shipped tangent join (Levi: entry, exit and stem collinear at J),
+    // judged by the taper rules instead, and clean at xh 2.
     for (const f of FORK_VARIANTS) {
       const rules = rulesOf(glyphI(f), 2);
-      expect(rules.includes("fork-angle"), `f${f}`).toBe(f < 15);
-      if (f >= 15 && f <= 45) expect(rules, `f${f}`).toEqual([]);
+      expect(rules.includes("fork-angle"), `f${f}`).toBe(false);
+      if (f === 0 || (f >= 15 && f <= 45)) expect(rules, `f${f}`).toEqual([]);
     }
   });
 
@@ -164,15 +167,34 @@ describe("glyph lint: the authored set", () => {
       expect(key(text, "1,atangent,bulge0,crotch0x")).toBe(key(text, "1,atangent"));
       expect(key(text, "1,atangent,bulge0.02")).not.toBe(key(text, "1,atangent"));
       expect(key(text, "1,atangent,crotch1.2")).not.toBe(key(text, "1,atangent"));
-      expect(key(text, "1,bulge0.02")).toBe(key(text, "1"));
     }
+    // K831 follow-up: the shipped i now carries a tangent join of its
+    // own, so on "ai" the bulge flag acts (through the i's root), while
+    // on "a" alone - no tangent join - it still changes nothing.
+    expect(key("a", "1,bulge0.02")).toBe(key("a", "1"));
+    expect(key("ai", "1,bulge0.02")).not.toBe(key("ai", "1"));
+  });
+
+  it("K831 follow-up: the i's dot builds as one closed decorative strand with no ENDs", () => {
+    const b = buildGlyphGraph("ai", { xHeight: 2 })!;
+    const closed = b.graph.strands.filter((s) => s.isClosed);
+    expect(closed.length).toBe(1);
+    const dot = closed[0];
+    expect(dot.decorative).toBe(true);
+    expect(dot.edgeIds.length).toBe(dot.nodes.length);
+    // The dot adds no END nodes: lead in/out plus the i's spur tip
+    // (the a's spur lands on the body - no free tip).
+    expect(b.stats.ends).toBe(3);
+    expect(b.stats.floats).toBe(0);
   });
 
   it("the i's fork reaches full clearance within the measured distance", () => {
     for (const xh of [2, 3]) {
       const f = lintGlyph(glyphI(30), xh).forks.find((x) => x.arms[0] === "in" && x.arms[1] === "out")!;
       expect(f.dClearLU).toBeLessThanOrEqual(LINT.forkMaxLU);
-      expect(f.dClearLU).toBeGreaterThan(0.9);
+      // K831 follow-up: J moved up to (22, 50); the 30-degree fork now
+      // measures 0.854 LU - still well inside forkMaxLU (1.2).
+      expect(f.dClearLU).toBeGreaterThan(0.8);
     }
   });
 });

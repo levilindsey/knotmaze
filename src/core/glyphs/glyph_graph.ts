@@ -506,7 +506,7 @@ export function glyphSetCovers(text: string): boolean {
 
 // A placed path: GU, y up.
 interface PathRec {
-  kind: "body" | "spur" | "float";
+  kind: "body" | "spur" | "float" | "dot";
   path: Pt[];
   /** Spur: the body point index of its junction. */
   junction: number;
@@ -526,7 +526,7 @@ interface PathRec {
 // A point on a path the node chain must pass through.
 interface Forced {
   p: number; // seg + t
-  kind: "start" | "end" | "junction" | "waypoint" | "crossing" | "kmax" | "root";
+  kind: "start" | "end" | "junction" | "waypoint" | "crossing" | "kmax" | "root" | "joint";
   id?: string; // shared node id (crossings, junctions)
 }
 
@@ -661,6 +661,7 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
   const body: Pt[] = [];
   const spurs: PathRec[] = [];
   const floats: PathRec[] = [];
+  const dots: PathRec[] = [];
   const entryIdx: number[] = []; // body point index of each glyph's entry
   let prevExit: { at: Pt; dir: Pt } | null = null;
   let pendingSpace = false;
@@ -715,6 +716,9 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
     for (const f of g.floats) {
       floats.push({ kind: "float", path: place(f, dx, dy), junction: -1, glyph: glyphNo });
     }
+    for (const d of g.dots ?? []) {
+      dots.push({ kind: "dot", path: place(d, dx, dy), junction: -1, glyph: glyphNo });
+    }
     prevExit = {
       at: [g.exit.at[0] + dx, g.exit.at[1] + dy],
       dir: g.exit.dir,
@@ -742,6 +746,7 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
     { kind: "body", path: body, junction: -1, glyph: -1 },
     ...spurs,
     ...floats,
+    ...dots,
   ];
 
   // --- Crossings. ---
@@ -752,7 +757,15 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
     }
   });
   const skip = (a: SegRef, b: SegRef): boolean => {
-    if (a.path === b.path) return Math.abs(a.seg - b.seg) <= 1;
+    if (a.path === b.path) {
+      if (Math.abs(a.seg - b.seg) <= 1) return true;
+      // A dot loop's first and last segments meet at its closing joint.
+      if (paths[a.path].kind === "dot") {
+        const n = segCount(paths[a.path].path);
+        if (Math.min(a.seg, b.seg) === 0 && Math.max(a.seg, b.seg) === n - 1) return true;
+      }
+      return false;
+    }
     // A spur's first segment against the body segments at its junction.
     for (const [x, y] of [
       [a, b],
@@ -785,10 +798,15 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
   for (const h of hits) if (!h.converged) unconverged++;
 
   // --- Forced points per path. ---
-  const forced: Forced[][] = paths.map((r) => [
-    { p: 0, kind: "start" as const },
-    { p: segCount(r.path), kind: "end" as const },
-  ]);
+  const forced: Forced[][] = paths.map((r) =>
+    r.kind === "dot"
+      ? // A closed loop: a node at every joint, no ENDs.
+        Array.from({ length: segCount(r.path) }, (_, s) => ({ p: s, kind: "joint" as const }))
+      : [
+          { p: 0, kind: "start" as const },
+          { p: segCount(r.path), kind: "end" as const },
+        ]
+  );
   for (let gi = 1; gi < entryIdx.length; gi++) {
     forced[0].push({ p: entryIdx[gi] / 3, kind: "waypoint" });
   }
@@ -806,6 +824,9 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
         const lid = `tl${si}`;
         if (s.landCornerPin) nodePins.set(lid, s.landCornerPin);
         forced[0].push({ p: bp / 3, kind: "junction", id: lid });
+        // The tip is the junction, not an END: replace the end forced
+        // point (a second node at the tip would strand a degree-2 END).
+        forced[1 + si] = forced[1 + si].filter((f) => f.kind !== "end");
         forced[1 + si].push({ p: segCount(s.path), kind: "junction", id: lid });
       }
     }
@@ -977,7 +998,27 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
       edgePen.set(id, [penOf(a.arc), penOf(b.arc)]);
       edgeIds.push(id);
     }
-    if (r.kind === "float") floatBase += tab.cum[tab.cum.length - 1] + FLOAT_GAP;
+    if (r.kind === "dot" && chain.length > 1) {
+      // Close the loop: last node back to first, pen running to the
+      // loop's full arc so the wrap edge does not run backwards.
+      const a = chain[chain.length - 1];
+      const b = chain[0];
+      const total = tab.cum[tab.cum.length - 1];
+      const id = `te${nextEdge++}`;
+      const mid = norm(posAtP(r.path, pAtArc(tab, (a.arc + total) / 2)));
+      edges.set(id, {
+        id,
+        nodeA: a.id,
+        nodeB: b.id,
+        latticePoints: [nodes.get(a.id)!.latticePos.slice() as [number, number], nodes.get(b.id)!.latticePos.slice() as [number, number]],
+        mid,
+      });
+      adjacency.get(a.id)!.push(id);
+      adjacency.get(b.id)!.push(id);
+      edgePen.set(id, [penOf(a.arc), penOf(total)]);
+      edgeIds.push(id);
+    }
+    if (r.kind === "float" || r.kind === "dot") floatBase += tab.cum[tab.cum.length - 1] + FLOAT_GAP;
     let taper: Strand["taper"];
     if (r.root) {
       // The profile at TAPER_PROFILE_N + 1 even steps of the root's arc,
@@ -1011,10 +1052,10 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
     }
     strands.push({
       edgeIds,
-      isClosed: false,
+      isClosed: r.kind === "dot",
       nodes: chain.map((c) => c.id),
       pinned: true,
-      ...(r.kind === "float" ? { decorative: true } : {}),
+      ...(r.kind === "float" || r.kind === "dot" ? { decorative: true } : {}),
       ...(taper ? { taper } : {}),
       // K580 s5: every glyph strand, in tapered and notaper mode alike
       // (core Strand.glyph; the renderer's stadium cap cover reads it).

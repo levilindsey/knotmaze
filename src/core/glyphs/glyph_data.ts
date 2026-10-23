@@ -11,7 +11,7 @@
 // second direction).
 
 import type { Glyph } from "./glyph_types";
-import { knotsToPath, type Knot } from "./glyph_knots";
+import { dotLoop, knotsToPath, type Knot } from "./glyph_knots";
 
 const LOW: readonly [number, number] = [5, 6];
 
@@ -20,11 +20,13 @@ export const FORK_VARIANTS = [0, 15, 30, 45, 60, 90] as const;
 export type ForkAngle = (typeof FORK_VARIANTS)[number];
 
 // The upstroke's arrival direction into the i's junction for each fork
-// angle: the stem runs along (1, 4); the arrival turns from it by the
-// angle (the arms below the junction then open by that angle).
+// angle: the stem runs along (1, 3); the arrival turns from it by the
+// angle (the arms below the junction then open by that angle). The 0
+// form is exact: its incoming arm, outgoing arm and stem spur all lie
+// on the (1, 3) line, so glyphI builds it as a tangent join, not a fork.
 const I_ARRIVAL: Record<ForkAngle, readonly [number, number, number]> = {
-  0: [1, 4, 2],
-  15: [5, 9, 1],
+  0: [1, 3, 4],
+  15: [3, 4, 2],
   30: [1, 1, 5],
   45: [5, 3, 2],
   60: [7, 2, 1],
@@ -32,20 +34,24 @@ const I_ARRIVAL: Record<ForkAngle, readonly [number, number, number]> = {
 };
 
 /** The i in Levi's spur form (call 3), with the fork opened by `fork`°. */
-/** K831: J sits lower (44) and the default fork is 15 - the most
- * tangent of the clean stage 9 forms (Levi: the entry must meet the
- * stem's slant, not arrive across it). The stem leaves J along
- * (-1,-5) so the opened fork keeps clear of the 15 degree floor. */
-export function glyphI(fork: ForkAngle = 15): Glyph {
+/** K831 follow-up (Levi, 2026-10-23): the default form is the exact
+ * tangent join. At J the arriving body arm, the departing body arm
+ * and the stem spur are collinear on (1, 3); opened variants remain
+ * available for the stage 9 fork measurement. */
+export function glyphI(fork: ForkAngle = 0): Glyph {
   const a = I_ARRIVAL[fork];
   const body: Knot[] = [
-    [0, 32, LOW[0], LOW[1], 0, 1],
+    [0, 32, LOW[0], LOW[1], 0, 1.5],
     // The junction J: arrives along the upstroke, leaves down the stem.
-    [16, 44, a[0], a[1], a[2], 3, -1, -5],
+    // K831 follow-up: J sits at (22, 50), four GU higher than the first
+    // form - at (20, 46) the folded arms could not part to the thread
+    // width inside the entry's arc (tangentRoot returned null) and the
+    // entry's S into J bottomed at R 5.8 GU.
+    [22, 50, a[0], a[1], a[2], 3, -1, -3],
     // The round bottom the lint forced (R >= 11 GU, legs >= 0.60 LU apart
     // at xh 2): the first form turned at (18, 2) with R 1.9 GU, the thorn.
-    [10, 22, -1, -4, 2, 3],
-    [26, 2, 1, 0, 10, 14],
+    [18, 30, -1, -3, 2, 3],
+    [32, 4, 1, 0, 12, 14],
     [58, 32, LOW[0], LOW[1], 2, 0],
   ];
   return {
@@ -56,67 +62,67 @@ export function glyphI(fork: ForkAngle = 15): Glyph {
     spurs: [
       {
         at: 3,
+        ...(fork === 0 ? { tangent: true } : {}),
         path: knotsToPath([
-          [16, 44, 1, 5, 0, 2],
-          [23, 78, 1, 5, 2, 0],
+          [22, 50, 1, 3, 0, 2],
+          [32, 79, 1, 3, 2, 0],
         ]),
       },
     ],
-    floats: [
-      knotsToPath([
-        [25, 102, 4, 3, 0, 1],
-        [37, 111, 4, 3, 1, 0],
-      ]),
-    ],
+    floats: [],
+    // The tittle: a closed square loop (dotLoop), not a segment.
+    dots: [dotLoop([39, 108], [4, 3], [-3, 4])],
     crossings: 0,
   };
 }
 
-// The a in Levi's K831 form (docs/design/K831.md): one strand enters
-// low and joins the bottom arc tangentially at the oval's bottom-left
-// (BL), forks up the left side, turns the declared top-right corner
-// down the stem, and leaves tangentially at BR, where the bottom arc
-// lands. The pre-K831 form (connector arching over the shoulder onto
-// J at the top, top and stem as crossing spurs) is below as A_LANDED.
+// The a in Levi's K831 form (docs/design/K831.md): the entry itself
+// sits low, south-west of the oval's bottom-left (BL), so the
+// approaching strand (the lead or connector, then the first body
+// segment) rises north-east into BL and continues tangentially up
+// the left side. The bottom arc forks from BL to BR. The pre-K831
+// form (connector arching over the shoulder onto J at the top, top
+// and stem as crossing spurs) is below as A_LANDED.
 const A_GLYPH: Glyph = {
   ch: "a",
-  entry: { at: [0, 32], dir: LOW, kind: "o" },
+  entry: { at: [14, 8], dir: [1, 1], kind: "o" },
   exit: { at: [120, 32], dir: LOW, cls: "B" },
   body: knotsToPath([
-    [0, 32, LOW[0], LOW[1], 0, 0.5],
-    [16, 38, 4, -1, 2, 2.5],
-    // BL: the connector arrives along the bottom arc's own line (the
-    // low tangential join); the body forks up the left side, and the
-    // bottom arc is the spur out of BL, landing at BR.
-    [32, 20, 1, -1, 6, 2, -1, 4],
-    [25, 40, 0, 1, 10, 8],
-    [36, 63, 1, 2, 5, 4],
-    [58, 72, 1, 0, 9, 9],
-    // The top-right CORNER (declared in `corners`): the top turns down
-    // the stem in one strand - no crossing, both cusps sharp.
-    [84, 70, 1, 0, 7, 7, 0, -1],
-    [83, 44, 0, -1, 6, 10],
-    // BR: the bottom spur lands here; the tail leaves down the stem's
-    // own line before sweeping to the exit (tangential, not a fork).
-    [79, 20, 0, -1, 10, 9],
-    [95, 4, 1, 0, 9, 18],
-    [120, 32, LOW[0], LOW[1], 1.5, 0],
+    [14, 8, 1, 1, 0, 5],
+    // BL: the entry rises north-east into J and the body continues on
+    // that same tangent up the left side. The bottom arc forks from
+    // here to BR; it is not the entry's continuation.
+    [34, 24, 1, 1, 5, 6],
+    [38, 44, 0, 1, 8, 6],
+    [44, 64, 1, 1, 5, 6],
+    [64, 72, 1, 0, 8, 9],
+    // The top-right CORNER (declared in `corners`): the level top
+    // turns down the straight stem in one strand - no crossing, both
+    // cusps sharp.
+    [86, 72, 1, 0, 9, 7, 0, -1],
+    [86, 46, 0, -1, 7, 8],
+    // BR: the bottom spur lands here (declared corner, point 21):
+    // the tail leaves south-east in one segment to the exit - a
+    // two-segment tail bottomed at R 10.8 GU however the handles were
+    // split (the climb to the exit is too steep to share).
+    [86, 20, 0, -1, 9, 9, 1, -1],
+    [120, 32, LOW[0], LOW[1], 2, 0],
   ]),
   spurs: [
     {
       // The oval's bottom arc: the spur out of the BL fork, landing
       // on the stem at BR.
-      at: 6,
+      at: 3,
       land: true,
       path: knotsToPath([
-        [32, 20, 1, -1, 0, 5],
-        [50, 6, 1, 0, 11, 7],
-        [64, 7, 1, 0, 7, 10],
-        [79, 20, 1, 2, 2, 0],
+        [34, 24, 1, -1, 0, 5],
+        [52, 8, 1, 0, 11, 7],
+        [66, 9, 1, 0, 7, 10],
+        [86, 20, 1, 2, 4, 0],
       ]),
     },
   ],
-  corners: [18],
+  corners: [15, 21],
   floats: [],
   crossings: 0,
 };

@@ -29,6 +29,27 @@ export function knotsToPath(knots: readonly Knot[]): Pt[] {
   return out;
 }
 
+/**
+ * K831 follow-up: a dot (the i's tittle) as a closed square loop from
+ * its centre and two half-diagonals - the dedicated dot-drawing
+ * function, so a dot is never authored as a pretend segment. Sharp
+ * corners: at dot size the stroke fills the loop solid.
+ */
+export function dotLoop(c: Pt, d1: Pt, d2: Pt): Pt[] {
+  const cs: Pt[] = [
+    [c[0] + d1[0] + d2[0], c[1] + d1[1] + d2[1]],
+    [c[0] + d1[0] - d2[0], c[1] + d1[1] - d2[1]],
+    [c[0] - d1[0] - d2[0], c[1] - d1[1] - d2[1]],
+    [c[0] - d1[0] + d2[0], c[1] - d1[1] + d2[1]],
+  ];
+  const out: Pt[] = [];
+  for (let i = 0; i < 4; i++) {
+    const seg = line(cs[i], cs[(i + 1) % 4]);
+    for (let j = i === 0 ? 0 : 1; j < seg.length; j++) out.push(seg[j]);
+  }
+  return out;
+}
+
 /** A straight segment as a cubic (thirds), integer when the run divides. */
 export function line(a: Pt, b: Pt): Pt[] {
   const dx = b[0] - a[0];

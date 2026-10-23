@@ -201,7 +201,7 @@ type ArmName = "in" | "out" | "spur";
 
 interface PathRec {
   id: number;
-  kind: "body" | "spur" | "float";
+  kind: "body" | "spur" | "float" | "dot";
   /** Dense samples: positions (GU) and cumulative arc (GU). */
   xs: number[];
   ys: number[];
@@ -334,8 +334,10 @@ export function lintGlyph(g: Glyph, xh: number, partLU: number = TAPER_PART_LU, 
   g.spurs.forEach((s, i) => recs.push(sampleRec(1 + i, "spur", s.path, null)));
   const floatBase = 1 + g.spurs.length;
   g.floats.forEach((f, i) => recs.push(sampleRec(floatBase + i, "float", f, null)));
+  const dotBase = floatBase + g.floats.length;
+  (g.dots ?? []).forEach((d, i) => recs.push(sampleRec(dotBase + i, "dot", d, null)));
   const pathOf = (id: number): CubicPath =>
-    id === 0 ? g.body : id < floatBase ? g.spurs[id - 1].path : g.floats[id - floatBase];
+    id === 0 ? g.body : id < floatBase ? g.spurs[id - 1].path : id < dotBase ? g.floats[id - floatBase] : (g.dots ?? [])[id - dotBase];
 
   // --- G1 and radii. ---
   const spurJoints = new Set(g.spurs.map((s) => s.at));
@@ -357,9 +359,17 @@ export function lintGlyph(g: Glyph, xh: number, partLU: number = TAPER_PART_LU, 
   g.floats.forEach((f, i) => {
     for (const j of g1Failures(f)) errors.push({ rule: "g1", msg: `float ${i} corner at joint ${j}` });
   });
+  (g.dots ?? []).forEach((d, i) => {
+    // A dot is a closed loop (dotLoop): no ENDs, no G1 or radius rules;
+    // it answers only to closure here and to clearance below.
+    if (d.length < 4 || d[0][0] !== d[d.length - 1][0] || d[0][1] !== d[d.length - 1][1]) {
+      errors.push({ rule: "dot", msg: `dot ${i} is not a closed loop`, at: [d[0]?.[0] ?? 0, d[0]?.[1] ?? 0] });
+    }
+  });
   let minR = Infinity;
   const g2R = LINT.g2WarnRLU * k;
   for (let id = 0; id < recs.length; id++) {
+    if (id >= dotBase) continue; // dots: sharp corners by design
     // Every run of samples under the warning radius reports its tightest.
     const ds = densePath(pathOf(id));
     let worst = Infinity;
@@ -390,6 +400,10 @@ export function lintGlyph(g: Glyph, xh: number, partLU: number = TAPER_PART_LU, 
   }
   const skip = (a: SegRef, b: SegRef): boolean => {
     if (a.path === b.path && Math.abs(a.seg - b.seg) <= 1) return true;
+    if (a.path === b.path && a.path >= dotBase) {
+      const n = segCount(pathOf(a.path));
+      if (Math.min(a.seg, b.seg) === 0 && Math.max(a.seg, b.seg) === n - 1) return true;
+    }
     const sp = a.path > 0 && a.path < floatBase ? a : b.path > 0 && b.path < floatBase ? b : null;
     const other = sp === a ? b : a;
     if (sp && sp.seg === 0 && other.path === 0) {
@@ -739,7 +753,12 @@ export function lintGlyph(g: Glyph, xh: number, partLU: number = TAPER_PART_LU, 
       for (let i = 0; i < rp.xs.length; i++) {
         const j0 = P === Q ? i + 1 : 0;
         for (let j = j0; j < rq.xs.length; j++) {
-          if (P === Q && Math.abs(rp.arc[i] - rq.arc[j]) < WINDOW) continue;
+          if (P === Q) {
+            let da = Math.abs(rp.arc[i] - rq.arc[j]);
+            // A dot loop's arc wraps: measure sample distance cyclically.
+            if (P >= dotBase) da = Math.min(da, rp.arc[rp.arc.length - 1] - da);
+            if (da < WINDOW) continue;
+          }
           const d = dist(rp.xs[i], rp.ys[i], rq.xs[j], rq.ys[j]);
           if (d >= CLEAR && d >= minClear) continue;
           if (crossExempt(P, rp.arc[i], Q, rq.arc[j])) continue;
