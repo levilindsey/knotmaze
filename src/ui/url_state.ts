@@ -36,7 +36,6 @@ import type { ParMode } from "../game/par";
 import { PAR_MODES, PAR_SLACK_DEFAULT } from "../game/par";
 import { LURE_RANGE, lureRangeOf } from "../game/lures";
 import { SNARE_HOLD, snareHoldOf } from "../game/snares";
-import { HINT_SECONDS } from "../game/hints";
 import { REVEAL_RUNS } from "../game/hidden_runs";
 import { BEAT_PER_RUN, BEAT_TIMINGS } from "../game/beat_rider";
 import type { BeatTiming } from "../game/beat_rider";
@@ -922,13 +921,12 @@ export interface UrlParams extends ShapeInjectionParams {
   // K795: tunables that were constants, each defaulting to its constant so
   // no design moves: the turns a sprung snare holds a monster (snareHold,
   // 1..8, SNARE_HOLD 3), the runs within which a lure is heard (lureRange,
-  // 1..12, LURE_RANGE 6), the seconds a hint lights its arm (hintSeconds,
-  // 0.5..10, HINT_SECONDS 2) and the runs from a pluck within which a hidden
-  // run of its note shows (hiddenReveal, 1..8, REVEAL_RUNS 3). Free play
+  // 1..12, LURE_RANGE 6) and the runs from a pluck within which a hidden
+  // run of its note shows (hiddenReveal, 1..8, REVEAL_RUNS 3). (The hint's
+  // seconds left with K838: a hint lasts until the next move.) Free play
   // only (none daily-exempt).
   snareHold: number;
   lureRange: number;
-  hintSeconds: number;
   hiddenReveal: number;
   // K795 (Levi, 2026-10-21): the beat's run timing, even (every run takes
   // beatPerRun beats, 1..4, default 1, so the dot's speed varies with the
@@ -1281,7 +1279,6 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K795: the constants these params replace.
   snareHold: SNARE_HOLD,
   lureRange: LURE_RANGE,
-  hintSeconds: HINT_SECONDS,
   hiddenReveal: REVEAL_RUNS,
   // K795: the beat rides every run in one beat (Levi, 2026-10-21: "each
   // segment is traveled in the same amount of time", one beat per run); the
@@ -2164,11 +2161,10 @@ function readLegacy(
     // the count to 0..3).
     keys: readNumber(query, "ky", D.keys),
     lockMode: readChoice(query, "lkm", LOCK_MODES, D.lockMode),
-    // K795's tunables (`&snh=5&lrg=9&hns=4&hrv=5`; PARAM_RANGES clamps them
-    // to 1..8, 1..12, 0.5..10 and 1..8).
+    // K795's tunables (`&snh=5&lrg=9&hrv=5`; PARAM_RANGES clamps them
+    // to 1..8, 1..12 and 1..8; the hint's `hns` left with K838).
     snareHold: readNumber(query, "snh", D.snareHold),
     lureRange: readNumber(query, "lrg", D.lureRange),
-    hintSeconds: readNumber(query, "hns", D.hintSeconds),
     hiddenReveal: readNumber(query, "hrv", D.hiddenReveal),
     // K795's beat timing (`&btm=length`, `&btr=1`; PARAM_RANGES clamps the
     // beats to 1..4).

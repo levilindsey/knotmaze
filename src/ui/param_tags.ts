@@ -141,7 +141,6 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   spool: ["sp2", "yarn", "limited yarn", "thread limit", "reel", "ball of thread", "move limit", "limited moves"],
   spoolSlack: ["sps", "yarn", "extra yarn", "yarn length", "extra moves", "leeway", "allowance", "easier"],
   hints: ["hn", "help", "hint button", "clue", "stuck", "show the way", "assist", "next step"],
-  hintSeconds: ["hns", "hint", "help", "clue", "how long", "seconds", "assist", "duration"],
   compass: ["cmp", "arrow", "direction", "guide", "help", "which way", "shortest way", "assist"],
   ice: ["ice", "slippery", "sliding", "frozen", "frost", "skating", "icy runs", "glide"],
   colorRule: ["cru", "alternate colors", "light and dark", "pattern", "sequence", "color order", "restriction", "puzzle"],

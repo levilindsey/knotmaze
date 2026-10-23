@@ -73,7 +73,7 @@ import { SolveClock, efficiencyOf } from "./game/maze_stats";
 import { shareText } from "./game/share_text";
 import { parScore } from "./game/par";
 import { spoolPercentUsed } from "./game/spool";
-import { hintSecondsOf } from "./game/hints";
+
 import { revealedBy, revealRunsOf, runAtCtrl } from "./game/hidden_runs";
 import { catchHeart, heartsToast, livesOf, type HeartLoss } from "./game/lives";
 import { newSword, swordSpot, type SwordAvoid, type SwordPhase } from "./game/sword";
@@ -2227,21 +2227,22 @@ async function main(): Promise<void> {
   // K137 stage 2: THE HINT (game/hints.ts). Hint (H) spends one of the
   // `hints` param's hints and lights the next good arm (controller.goodArm:
   // the head's run that starts the shortest live way to the exit) in the
-  // telegraph's rim look for the `hintSeconds` param's seconds (K795;
-  // HINT_SECONDS, 2, by default, read at each hint); a move puts it out at once
-  // (the renderer's beginMove), the timer otherwise. A restart gives the
-  // hints back (clearAids). Each change asks one render pass (invalidate),
-  // never the physics.
-  let hintTimer: ReturnType<typeof setTimeout> | null = null;
+  // telegraph's rim look until the player's next move puts it out (K838:
+  // no timer; the renderer's beginMove clears it), and no second hint can
+  // be spent until that move (the controller refuses and nothing is
+  // spent). A restart gives the hints back (clearAids). Each change asks
+  // one render pass (invalidate), never the physics.
   const hintOff = (): void => {
-    if (hintTimer !== null) clearTimeout(hintTimer);
-    hintTimer = null;
     scene.fabric?.clearHint();
   };
   const useHint = (): void => {
     const fc = scene.fabricController;
     const fabric = scene.fabric;
     if (!fc || !fabric || fc.hintsMax <= 0 || fc.solved) return;
+    if (fc.hintAwaitingMove) {
+      showToast("Move once before using another hint.", 2200);
+      return;
+    }
     if (fc.hintsLeft <= 0) {
       showToast("No hints left. A restart gives them back.", 2200);
       return;
@@ -2250,11 +2251,6 @@ async function main(): Promise<void> {
     if (arm < 0 || !fc.useHint()) return;
     hintOff();
     fabric.showHint(arm);
-    hintTimer = setTimeout(() => {
-      hintTimer = null;
-      scene.fabric?.clearHint();
-      invalidate();
-    }, hintSecondsOf(params.hintSeconds) * 1000);
     invalidate();
     updateHud();
   };

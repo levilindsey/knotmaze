@@ -152,8 +152,7 @@ export const LIVE_EFFECTS = {
     "revealEndCross", "revealEndGlow",
   ],
   // K137 stage 2: the compass row's effect (main.ts reads it every frame).
-  // K795: the hint's seconds (main.ts reads it at each hint).
-  onAidsChange: ["compass", "hintSeconds"],
+  onAidsChange: ["compass"],
   onRecolor: [
     "colorScheme", "junctionBlend", "hueShift", "gamutArc", "palette",
     "pathColor",

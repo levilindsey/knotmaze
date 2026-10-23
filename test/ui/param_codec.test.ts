@@ -20,7 +20,7 @@ const D = PARAM_DEFAULTS as unknown as Record<string, ParamValue>;
 // APPEND a new param or enum option, to the table and here. Anything else (a
 // reorder, a removal, a type, an option renamed or moved) bumps
 // CODEC_VERSION: update PIN_VERSION and this list together.
-const PIN_VERSION = 8;
+const PIN_VERSION = 9;
 const ANCHORS = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 const PIN: ReadonlyArray<readonly unknown[]> = [
   ["gridSize", "number"], // 0
@@ -256,7 +256,6 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["lockMode", "enum", ["exit", "shortcut", "colors"]], // K138 slices 3-4
   ["snareHold", "number"], // K795
   ["lureRange", "number"],
-  ["hintSeconds", "number"],
   ["hiddenReveal", "number"],
   ["beatTiming", "enum", ["even", "length"]], // K795 beat timing
   ["beatPerRun", "number"],
@@ -393,17 +392,17 @@ describe("token format", () => {
     expect(encodeToken(0, {}, D)).toBe("0");
     expect(encodeToken(4294967295, {}, D)).toBe("1z141z3");
     expect(decodeToken("1471kin", D)).toEqual({ seed: 2430477599, values: D, error: null });
-    // An all-default blob ("EQ" = version 8, no entries; earlier builds
+    // An all-default blob ("Ew" = version 9, no entries; earlier builds
     // wrote v6's "N", v5's "L" and v4's "J") still reads as today's defaults.
-    expect(bitsToBlob(`${V} 1`)).toBe("EQ");
-    expect(decodeToken("1471kin.EQ", D)).toEqual({ seed: 2430477599, values: D, error: null });
+    expect(bitsToBlob(`${V} 1`)).toBe("Ew");
+    expect(decodeToken("1471kin.Ew", D)).toEqual({ seed: 2430477599, values: D, error: null });
   });
 
   // Defaults come from the caller: a link reads whatever defaults it is
   // given, and a listed boolean is the given default flipped.
   it("reads a link against the defaults it is given", () => {
     const moved = { ...D, gridSize: 20, physics: false };
-    const d = decodeToken("7.EMfTJ4Lg", moved);
+    const d = decodeToken("7.EsfTJ4Lg", moved);
     expect(d.error).toBeNull();
     expect(d.values.gridSize).toBe(20); // not listed: the given default
     expect(d.values.physics).toBe(true); // listed: the given default flipped
@@ -475,7 +474,7 @@ describe("token format", () => {
       physics: false,
     };
     const bits = [
-      V, // version 8 = gamma(8) = "0001000"
+      V, // version 9 = gamma(9) = "0001001"
       "00101", // 4 entries = gamma(4 + 1)
       "0001111", // index 14 threadWidth: gamma(14 - -1 = 15)
       "1010 0110 0100 1111", // ".64", then the terminator 15
@@ -486,8 +485,8 @@ describe("token format", () => {
       "000010101", // index 60 physics: gamma(60 - 39 = 21); a boolean has no value bits
     ].join(" ");
     expect(encodeToken(7, values, D)).toBe(`7.${bitsToBlob(bits)}`);
-    expect(encodeToken(7, values, D)).toBe("7.EFH0yeGCWxkTAq");
-    const back = decodeToken("7.EFH0yeGCWxkTAq", D);
+    expect(encodeToken(7, values, D)).toBe("7.ElH0yeGCWxkTAq");
+    const back = decodeToken("7.ElH0yeGCWxkTAq", D);
     expect(back.error).toBeNull();
     expect(back.values).toEqual(values);
   });
@@ -523,7 +522,7 @@ describe("token format", () => {
 
   it("reads `<seed>.` (a trailing sentence period) as the bare seed", () => {
     expect(decodeToken("1471kin.", D)).toEqual(decodeToken("1471kin", D));
-    expect(decodeToken("7.EFH0yeGCWxkTAq.", D)).toEqual(decodeToken("7.EFH0yeGCWxkTAq", D));
+    expect(decodeToken("7.ElH0yeGCWxkTAq.", D)).toEqual(decodeToken("7.ElH0yeGCWxkTAq", D));
     expect(decodeToken("1471kin", D).error).toBeNull();
   });
 });
@@ -546,8 +545,8 @@ describe("string param (K115 text)", () => {
     expect(token).toBe(encodeToken(7, { ...D, text: "café" }, D));
   });
 
-  it("round-trips the nine accented letters (K115 stage 6b), version stays 8", () => {
-    expect(CODEC_VERSION).toBe(8);
+  it("round-trips the nine accented letters (K115 stage 6b), version stays 9", () => {
+    expect(CODEC_VERSION).toBe(9);
     for (const text of ["é", "è", "ê", "à", "á", "ü", "ö", "ñ", "ç", "café", "garçon", "crème"]) {
       const token = encodeToken(7, { ...D, text }, D);
       const d = decodeToken(token, D);
@@ -564,8 +563,8 @@ describe("string param (K115 text)", () => {
     );
   });
 
-  it("round-trips Greek text (K115 stage 6c), version stays 8", () => {
-    expect(CODEC_VERSION).toBe(8);
+  it("round-trips Greek text (K115 stage 6c), version stays 9", () => {
+    expect(CODEC_VERSION).toBe(9);
     for (const text of ["αβγ", "Αθηνα", "αθηνα", "Welcome αβγ", "café αβγ"]) {
       const token = encodeToken(7, { ...D, text }, D);
       const d = decodeToken(token, D);
@@ -582,8 +581,8 @@ describe("string param (K115 text)", () => {
 });
 
 describe("string param (K115 stage 4a cartouche)", () => {
-  it("round-trips the cartouche word (space + capital), version stays 8", () => {
-    expect(CODEC_VERSION).toBe(8);
+  it("round-trips the cartouche word (space + capital), version stays 9", () => {
+    expect(CODEC_VERSION).toBe(9);
     for (const cartouche of ["Knot Maze", "knot", "Daily Word", "café"]) {
       const token = encodeToken(7, { ...D, cartouche }, D);
       const d = decodeToken(token, D);
@@ -604,8 +603,8 @@ describe("string param (K115 stage 4a cartouche)", () => {
 });
 
 describe("enum param (K115 stage 5a emblem)", () => {
-  it("round-trips every emblem option, version stays 8", () => {
-    expect(CODEC_VERSION).toBe(8);
+  it("round-trips every emblem option, version stays 9", () => {
+    expect(CODEC_VERSION).toBe(9);
     for (const emblem of ["", "star", "trefoil", "triquetra", "solomon", "wreath"]) {
       const token = encodeToken(7, { ...D, emblem }, D);
       const d = decodeToken(token, D);
@@ -616,8 +615,8 @@ describe("enum param (K115 stage 5a emblem)", () => {
     expect(encodeToken(7, { ...D, emblem: "" }, D)).toBe("7");
   });
 
-  it("round-trips every cartoucheShape option, version stays 8 (K115 5b)", () => {
-    expect(CODEC_VERSION).toBe(8);
+  it("round-trips every cartoucheShape option, version stays 9 (K115 5b)", () => {
+    expect(CODEC_VERSION).toBe(9);
     for (const cartoucheShape of ["", "star", "trefoil", "triquetra", "solomon", "wreath"]) {
       const token = encodeToken(7, { ...D, cartoucheShape }, D);
       const d = decodeToken(token, D);
@@ -630,7 +629,7 @@ describe("enum param (K115 stage 5a emblem)", () => {
 });
 
 describe("token robustness", () => {
-  const good = "7.EFH0yeGCWxkTAq";
+  const good = "7.ElH0yeGCWxkTAq";
 
   it("rejects every truncation, keeping the seed", () => {
     const blob = good.slice(2);

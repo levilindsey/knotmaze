@@ -42,7 +42,7 @@ import { createPanelSearch, type PanelSearchUi } from "./panel_search_ui";
 import { PARAM_TAGS } from "./param_tags";
 import { PAR_SLACK_MAX, PAR_SLACK_MIN } from "../game/par";
 import { SPOOL_SLACK_MAX, SPOOL_SLACK_MIN } from "../game/spool";
-import { HINTS_MAX, HINT_SECONDS_MAX, HINT_SECONDS_MIN } from "../game/hints";
+import { HINTS_MAX } from "../game/hints";
 import { ICE_SHARE_MAX, ICE_SHARE_ON } from "../game/ice";
 import { TURNSTILES_MAX } from "../game/turnstiles";
 import { HIDDEN_MAX, REVEAL_RUNS_MAX, REVEAL_RUNS_MIN } from "../game/hidden_runs";
@@ -1929,20 +1929,8 @@ export function buildPanel(
   const hintsRow = row(
     fRules, p, "hints",
     { min: 0, max: HINTS_MAX, step: 1, label: "Hints" },
-    "Hints per solve (0: none). The Hint button (or H) lights the run that starts the shortest way to the exit for a few seconds (Hint lasts). A restart gives them back. Restarts the solve.",
+    "Hints per solve (0: none). The Hint button (or H) lights the run that starts the shortest way to the exit until your next move; one hint at a time - move once before another. A restart gives them back. Restarts the solve.",
     D.hints, () => callbacks.onClockChange()
-  );
-  // K795: how long a hint stays lit (game/hints.ts HINT_SECONDS by
-  // default). No step (K130); an edit keeps one decimal. Live: main.ts
-  // reads it at each hint.
-  const hintSecondsRow = row(
-    fRules, p, "hintSeconds",
-    { min: HINT_SECONDS_MIN, max: HINT_SECONDS_MAX, pointerScale: 0.05, format: (v: number) => v.toFixed(1), label: "Hint lasts (s)" },
-    "How long a hint lights its run, in seconds; your next move puts it out sooner. Applies from the next hint.",
-    D.hintSeconds, () => {
-      params.hintSeconds = Math.round(params.hintSeconds * 10) / 10;
-      callbacks.onAidsChange();
-    }
   );
   const compassRow = row(
     fRules, p, "compass", { label: "Compass" },
@@ -3453,7 +3441,6 @@ export function buildPanel(
     spoolRow.hidden = !fab; // K137 stage 2
     spoolSlackRow.hidden = !fab || !params.spool;
     hintsRow.hidden = !fab;
-    hintSecondsRow.hidden = !fab || params.hints <= 0; // K795
     compassRow.hidden = !fab;
     // K138 stage 1: the classic game only, as the cut's row.
     iceRow.hidden = !fab || params.gameMode !== "classic";
