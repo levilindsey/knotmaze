@@ -5,8 +5,8 @@ import type { EmblemId } from "./emblem_graph";
 import { buildWalkGraph } from "./walk_graph";
 import type { WalkGraph } from "./walk_graph";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "./maze_plan";
+import type { ShapeInjectionParams } from "./shape_injection";
 import { planAnchors } from "./shapes";
-import type { AnchorId, ShapeId } from "./shapes";
 import { applyMazePlan, applyMazeCuts } from "./maze_apply";
 import { searchGreedyTrapPlan, trapOptionsOf } from "./greedy_search";
 import { checkStructure, checkAlternation, checkStrandPartition } from "./tangle_graph";
@@ -19,22 +19,25 @@ import type { GenerationParams, TangleGraph } from "./types";
 
 // The params a scene graph is built from: a structural subset of the
 // link's params (ui/url_state.ts UrlParams), so core imports nothing from ui.
-export interface SceneParams {
-  text: string;
+// K814: the shape-injection subset is picked from core/shape_injection.ts.
+export interface SceneParams
+  extends Pick<
+    ShapeInjectionParams,
+    | "text"
+    | "cartouche"
+    | "emblem"
+    | "cartoucheShape"
+    | "shape"
+    | "startAnchor"
+    | "exitAnchor"
+    | "penReverse"
+  > {
   // K115 stage 3a: the maze's title thread ("" = none; dailies derive it).
   title: string;
-  // K115 stage 4a: the in-maze cartouche word ("" = none).
-  cartouche: string;
-  // K115 stage 5a: standalone emblem scene ("" = none; an EmblemId).
-  emblem: string;
-  // K115 stage 5b: the cartouche hole's emblem tenant ("" = none; an
-  // EmblemId). Wins the hole over `cartouche` when both are named.
-  cartoucheShape: string;
   gridSize: number;
   weaveDensity: number;
   turnBias: number;
   seed: number;
-  shape: ShapeId;
   mazeFabric: boolean;
   branchDensity: number;
   fourWayFraction: number;
@@ -58,10 +61,6 @@ export interface SceneParams {
   entranceClearance: number;
   exitClearance: number;
   junctionSpacing: number;
-  startAnchor: AnchorId;
-  exitAnchor: AnchorId;
-  // K558: text crossings put the EARLIER stroke over (pen order reversed).
-  penReverse: boolean;
   // K115 stage 9: the #glyphs2 probe switch ("" off; "1" on; "forks",
   // "f<angle>", "aland" and "xh2" are probe options). Read from the hash, never from a link; every
   // scene build passes it (main.ts's prebuild too: the worker name needs it).
