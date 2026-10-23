@@ -115,6 +115,10 @@ export const PATH_VIZ_MODES: PathViz[] = ["gold", "trail", "string"];
 // K797b: how a thread draws (fill, edge strokes only, or both).
 export type ThreadLook = "fill" | "border" | "both";
 export const THREAD_LOOKS: ThreadLook[] = ["fill", "border", "both"];
+// K828: the loading trefoil's motion (ui/loader_config.ts): the maze
+// slides under a centered player, or the player travels a still maze.
+export type LoaderMove = "maze" | "head";
+export const LOADER_MOVES: LoaderMove[] = ["maze", "head"];
 // K799: the traveled path's fill texture.
 export type GoldTexture = "solid" | "pencil" | "crayon" | "highlighter";
 export const GOLD_TEXTURES: GoldTexture[] = ["solid", "pencil", "crayon", "highlighter"];
@@ -479,6 +483,10 @@ export interface UrlParams extends ShapeInjectionParams {
   borderWidth: number;
   borderColor: string;
   goldTextureStrength: number;
+  // K828: the loading trefoil's lap speed and motion (ui/loader_config.ts
+  // maps these plus gap/threadWidth/pathColor/backgroundBase onto it).
+  loaderSpeed: number;
+  loaderMove: LoaderMove;
   // Camera framing (see CAMERA_MODES). Pinch/wheel/drag still zoom and
   // pan in both; in follow mode a delayed, eased spring pulls back.
   cameraMode: CameraMode;
@@ -1283,6 +1291,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   borderWidth: 0.38, // K820 (= 1 - 0.62, the stroke as it drew before)
   borderColor: "#000000", // K820: auto (the darkened-section stroke)
   goldTextureStrength: 1, // K820 (today's grain)
+  loaderSpeed: 1, // K828 (today's 14 s lap)
+  loaderMove: "maze", // K828 (today's sliding maze, centered player)
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1532,6 +1542,7 @@ export const ENUM_OPTIONS: {
   pluckReach: PLUCK_REACHES,
   pathViz: PATH_VIZ_MODES,
   threadLook: THREAD_LOOKS, // K797b
+  loaderMove: LOADER_MOVES, // K828
   goldTexture: GOLD_TEXTURES, // K799
   cameraMode: CAMERA_MODES,
   exitFlank: EXIT_FLANKS,
@@ -1847,6 +1858,8 @@ function readLegacy(
     borderWidth: readNumber(query, "bdw", D.borderWidth), // K820
     borderColor: readHexColor(query, "bdc", D.borderColor), // K820
     goldTextureStrength: readNumber(query, "gts", D.goldTextureStrength), // K820
+    loaderSpeed: readNumber(query, "ldsp", D.loaderSpeed), // K828 (lds is loadSettle's)
+    loaderMove: readChoice(query, "ldmv", LOADER_MOVES, D.loaderMove), // K828
     cameraMode: readChoice(query, "cam", CAMERA_MODES, D.cameraMode),
     trailLength: readNumber(query, "trl", D.trailLength),
     tension: readNumber(query, "tn", D.tension),

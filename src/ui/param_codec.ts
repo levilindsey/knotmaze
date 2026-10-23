@@ -431,6 +431,9 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("borderWidth"),
   color("borderColor"),
   num("goldTextureStrength"),
+  // 243-244, K828: the loading trefoil's speed and motion.
+  num("loaderSpeed"),
+  choice("loaderMove", ["maze", "head"]),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -553,6 +556,7 @@ export const PARAM_RANGES: Readonly<
   cannonSpread: [0, 0.5], // K819 (CANNON_SPREAD_MAX)
   borderWidth: [0, 1], // K820
   goldTextureStrength: [0, 1], // K820
+  loaderSpeed: [0.25, 3], // K828
   streamerShare: [0, 1], // K336
   pluckWhole: [0, 1.5],
   markerSize: [0.25, 3],

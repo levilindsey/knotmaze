@@ -439,6 +439,8 @@ describe("the daily design and its exempt preferences (K56)", () => {
       "borderWidth",
       "borderColor",
       "goldTextureStrength",
+      "loaderSpeed",
+      "loaderMove",
     ]);
     for (const k of DAILY_EXEMPT_KEYS) {
       expect(Object.keys(PARAM_DEFAULTS)).toContain(k);

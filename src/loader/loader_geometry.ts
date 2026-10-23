@@ -32,9 +32,9 @@ export interface TrefoilShape {
   total: number;
 }
 
-const GAP_SAMPLES = 0.6; // world units of curve each side of an under crossing
+export const GAP_SAMPLES = 0.6; // world units of curve each side of an under crossing
 
-export function trefoilShape(n = TREFOIL_N): TrefoilShape {
+export function trefoilShape(n = TREFOIL_N, gapSamples = GAP_SAMPLES): TrefoilShape {
   const P = trefoilPoints(n);
   const events: Array<{ s: number; id: number }> = [];
   let id = 0;
@@ -62,7 +62,7 @@ export function trefoilShape(n = TREFOIL_N): TrefoilShape {
     cum.push(cum[i] + Math.hypot(bx - ax, by - ay));
   }
   const total = cum[n];
-  const gap = GAP_SAMPLES / (total / n);
+  const gap = gapSamples / (total / n);
   const under = events.filter((_, k) => k % 2 === 1).map((e) => e.s);
   const inGap = (s: number): boolean =>
     under.some((g) => {

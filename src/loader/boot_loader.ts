@@ -4,11 +4,19 @@
 // on the loader that has been on screen since the first paint. Null
 // means the boot loader could not run (no workers / OffscreenCanvas),
 // and main falls back to ui/loader.ts's createLoader.
+//
+// K828: the handle also takes live loader configuration
+// (ui/loader_config.ts — the panel's loading rows) and can re-show
+// after a hide (the "keep loading animation" preview): show() revives
+// the overlay and its worker; hide() is the full teardown.
+
+import type { LoaderWireCfg } from "../ui/loader_config";
 
 export interface BootLoader {
   show: () => void;
   hide: () => void;
   el: HTMLElement;
+  setConfig: (cfg: LoaderWireCfg) => void;
 }
 
 export function adoptBootLoader(): BootLoader | null {

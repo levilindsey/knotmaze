@@ -87,6 +87,10 @@ export interface PanelWiringDeps {
   showFabricWin: () => void;
   previewWin: () => void;
   previewLoss: () => void;
+  // K828: push the design's look onto the loading trefoil (mirror +
+  // live worker), and the Keep loading animation switch's effect.
+  pushLoaderCfg: () => void;
+  setLoaderStays: (on: boolean) => void;
   restartSolve: (carry?: boolean) => void;
   playDaily: (n: number, floating?: boolean) => void;
   showDailyStats: () => void;
@@ -206,6 +210,14 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
         // Storage unavailable: the choice just doesn't persist.
       }
     },
+    // K828: the loading trefoil's own rows (and, via the panel's row
+    // hook, the gap/width/color rows it wears): update the link, then
+    // retune the loader.
+    onLoaderCfg: () => {
+      deps.writeParams(params);
+      deps.pushLoaderCfg();
+    },
+    onLoaderStaysToggle: (on) => deps.setLoaderStays(on),
     // K137 stage 2: stored here; one render pass shows or hides the Chalk
     // button and the ticks (main.ts aidTick).
     onChalkToggle: (on) => {
