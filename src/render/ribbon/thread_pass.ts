@@ -28,4 +28,7 @@ export interface ThreadPass {
   // A meshless pass's one scene mesh (the SDF quads), built once the
   // façade knows every chain; the strip never has one.
   rootMesh?(): Mesh | null;
+  // K825: the thread reveal turned on or off (the strip swaps its fill
+  // meshes' shaders itself; a meshless pass swaps its one mesh's).
+  setExplore?(on: boolean): void;
 }

@@ -36,7 +36,7 @@ export const PROGRAM_SITES: Readonly<Record<string, number>> = {
   "src/render/pluck_overlay.ts": 3, // pluck-blur, pluck-still, pluck-still-explore
   "src/render/pluck_ripple.ts": 2, // pluck-ripple: its program and its Filter
   "src/render/ribbon/ribbon_shader.ts": 2, // section-rgb, section-rgb-explore
-  "src/render/ribbon/ribbon_sdf.ts": 1, // ribbon-sdf (K8 G3-2)
+  "src/render/ribbon/ribbon_sdf.ts": 2, // ribbon-sdf, ribbon-sdf-explore (K8 G3-2, K825)
 };
 
 // What the current page draws, as the warm-up needs to know it.
@@ -154,6 +154,14 @@ export function programRegistry(): readonly ProgramEntry[] {
       files: [SDF],
       wave1: (c) => c.sdf,
       build: () => sdfProgram(),
+    },
+    {
+      // K825: the SDF ribbons under the thread reveal (an rp=sdf page
+      // that explores warms it in wave 1 like the strip's variant).
+      name: "ribbon-sdf-explore",
+      files: [SDF],
+      wave1: (c) => c.sdf && (c.explore || c.burn),
+      build: () => sdfProgram(true),
     },
     {
       name: "section-rgb-explore",

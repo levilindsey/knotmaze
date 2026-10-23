@@ -19,6 +19,7 @@
 import { GlProgram, Mesh, MeshGeometry, Shader, Texture, UniformGroup } from "pixi.js";
 import type { SplineSamples } from "../../geometry/spline_generator";
 import { FABRIC_GLSL, SDF_CONE_GLSL, SDF_TEX_GLSL, fabricUniforms, sampSource } from "../fabric_sdf";
+import { withExploreSdf } from "../explore_glsl";
 import { GAP_FRAG_LIB, defaultGapTexture } from "../gap_mask";
 import { addFloatAttribute } from "../junction_field";
 import {
@@ -148,7 +149,7 @@ ${PAINT_VERT_MAIN}
 }
 `;
 
-const SDF_FRAG = /* glsl */ `#version 300 es
+export const SDF_FRAG = /* glsl */ `#version 300 es
 precision highp float;
 precision highp int;
 
@@ -306,9 +307,14 @@ void main(void) {
 `;
 
 let SDF_PROGRAM: GlProgram | null = null;
-export function sdfProgram(): GlProgram {
-  SDF_PROGRAM ??= GlProgram.from({ vertex: SDF_VERT, fragment: SDF_FRAG, name: "ribbon-sdf" });
-  return SDF_PROGRAM;
+let SDF_EXPLORE_FRAG: string | null = null;
+export function sdfProgram(explore = false): GlProgram {
+  if (!explore) {
+    SDF_PROGRAM ??= GlProgram.from({ vertex: SDF_VERT, fragment: SDF_FRAG, name: "ribbon-sdf" });
+    return SDF_PROGRAM;
+  }
+  SDF_EXPLORE_FRAG ??= withExploreSdf(SDF_FRAG);
+  return GlProgram.from({ vertex: SDF_VERT, fragment: SDF_EXPLORE_FRAG, name: "ribbon-sdf-explore" });
 }
 
 type SdfShader = Shader & { texture: Texture };
@@ -341,6 +347,36 @@ export function sdfShader(g3?: { radii: unknown; chain: unknown; ranges: unknown
   return SDF_SHADER;
 }
 
+// K825: the explore variant's shader (the same resources; built the
+// first time the thread reveal turns on under rp=sdf, so a master page
+// never pays for it).
+let SDF_EXPLORE_SHADER: SdfShader | null = null;
+export function sdfShaderExplore(g3?: { radii: unknown; chain: unknown; ranges: unknown }): SdfShader {
+  if (!SDF_EXPLORE_SHADER) {
+    const master = sdfShader(g3);
+    const sh = new Shader({
+      glProgram: sdfProgram(true),
+      resources: {
+        uGapData: master.resources.uGapData,
+        uSamp: sampSource(),
+        uRadii: master.resources.uRadii,
+        uG3Chain: master.resources.uG3Chain,
+        uRanges: master.resources.uRanges,
+        fabricUniforms: fabricUniforms(),
+        uKStatic: kStatic().source,
+        uKGeom: kGeom().source,
+        uKReveal: kReveal().source,
+        uKPaintData: kPaint().source,
+        knotUniforms: knotUniforms(),
+        sdfUniforms: new UniformGroup({ uSdfPad: { value: 0.03, type: "f32" } }),
+      },
+    }) as SdfShader;
+    sh.texture = Texture.WHITE;
+    SDF_EXPLORE_SHADER = sh;
+  }
+  return SDF_EXPLORE_SHADER;
+}
+
 // The pass itself: no per-chain meshes. build() only records the
 // chain's shape; rootMesh() (the façade calls it once the G3 layout
 // exists) builds one instanced-by-attribute quad per segment.
@@ -350,6 +386,8 @@ export class SdfPass implements ThreadPass {
   private counts: number[] = [];
   private closedArr: boolean[] = [];
   private meshBuilt: Mesh | null = null;
+  private g3src: { radii: unknown; chain: unknown; ranges: unknown } | null = null;
+  private exploreOn = false;
   readonly fills: readonly RibbonMesh[] = [];
 
   constructor(r: RibbonRenderer) {
@@ -411,9 +449,20 @@ export class SdfPass implements ThreadPass {
     addFloatAttribute(geometry, "aKey", keys, 2);
     addFloatAttribute(geometry, "aSeg", segs, 4);
     const mesh = new Mesh({ geometry, texture: Texture.WHITE });
-    mesh.shader = sdfShader(this.r.g3SdfSources());
+    this.g3src = this.r.g3SdfSources();
+    mesh.shader = this.exploreOn ? sdfShaderExplore(this.g3src) : sdfShader(this.g3src);
     this.meshBuilt = mesh;
     return mesh;
+  }
+
+  // K825: the thread reveal swaps the one mesh onto the explore
+  // program (explore_gaps.setExplore calls this through ThreadPass).
+  setExplore(on: boolean): void {
+    this.exploreOn = on;
+    if (this.meshBuilt && this.g3src) {
+      const sh = on ? sdfShaderExplore(this.g3src) : sdfShader(this.g3src);
+      if (this.meshBuilt.shader !== sh) this.meshBuilt.shader = sh;
+    }
   }
 
   private unitMul: Float32Array[] = [];
