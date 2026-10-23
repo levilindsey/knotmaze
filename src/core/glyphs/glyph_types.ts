@@ -38,6 +38,14 @@ export interface SpurDef {
    * like a junction instead of holding the tip 0.56 LU clear.
    */
   land?: true;
+  /**
+   * K836: the landing joins the body TANGENTIALLY (the spur's tip
+   * arrives along the body's own curve there - a stroke landing on a
+   * stroke, the acute wedge under the junction is the letterform).
+   * The lint waives the fork rules for the spur arm's pairs at the
+   * landing, as it does for a tangent root's arms.
+   */
+  landTangent?: true;
   /** K830: force the root junction's wedges round or sharp. */
   cornerPin?: CornerPin;
   /** K830: force a landing spur's far junction's wedges round or sharp. */
