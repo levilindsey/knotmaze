@@ -157,6 +157,7 @@ import { attachSnoreLink } from "./ui/snore_link";
 import { SongScheduler } from "./audio/song_scheduler";
 import { createLoader } from "./ui/loader";
 import { adoptBootLoader } from "./loader/boot_loader";
+import { loaderCfgFromParams, writeLoaderMirror } from "./ui/loader_config";
 import { createStamp } from "./app/stamp";
 import { GLYPHS2 } from "./app/glyph_switch";
 import { installProbeHooks } from "./app/probe_hooks";
@@ -184,6 +185,8 @@ const MAZE_STATS_KEY = "knotmaze.showMazeStats";
 // K84 sorts every param into preference vs design later).
 const FINISH_INDICATOR_KEY = "knotmaze.finishIndicator";
 const TAP_TO_PAN_KEY = "knotmaze.tapToPan";
+// K828: keep the loading trefoil on screen (viewer preference).
+const LOADER_STAYS_KEY = "knotmaze.loaderStays";
 
 
 const app = new Application();
@@ -329,6 +332,7 @@ async function main(): Promise<void> {
   const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
   let movePadOn = movePadPref(null, coarsePointer);
   let chalkOn = false; // K137 stage 2: the chalk viewer preference.
+  let loaderStaysOn = false; // K828: keep the loading trefoil up.
   try {
     movePadOn = movePadPref(localStorage.getItem(MOVE_PAD_KEY), coarsePointer);
     chalkOn = chalkPref(localStorage.getItem(CHALK_KEY));
@@ -337,6 +341,7 @@ async function main(): Promise<void> {
     mazeStatsShown = localStorage.getItem(MAZE_STATS_KEY) === "1";
     finishIndicatorShown = localStorage.getItem(FINISH_INDICATOR_KEY) !== "0";
     tapToPan = localStorage.getItem(TAP_TO_PAN_KEY) !== "0";
+    loaderStaysOn = localStorage.getItem(LOADER_STAYS_KEY) === "1";
     indPrefs = indicatorPrefs((k) => localStorage.getItem(k));
   } catch {
     // Storage unavailable: the defaults (both stats readouts hidden, the
@@ -358,6 +363,7 @@ async function main(): Promise<void> {
     motion: motion.pref,
     reducedMotion: motion.reduced,
     highContrast: contrast.high,
+    loaderStays: loaderStaysOn,
   };
   const synth = new KnotSynth();
   // K325: the snoring cat's snore, played by the panel's "Made by Snoring
@@ -673,7 +679,25 @@ async function main(): Promise<void> {
   });
   // K313: adopt the inline boot loader (on screen since the first
   // paint) when it ran; otherwise today's loader, as before.
-  const loader = adoptBootLoader() ?? createLoader();
+  const bootLoader = adoptBootLoader();
+  const rawLoader = bootLoader ?? createLoader();
+  // K828: the loader wears the design's look (ui/loader_config.ts). The
+  // mirror feeds the next load's first paint; setConfig retunes the
+  // live worker. The lifecycle sees a hide() the viewer's Keep loading
+  // animation switch can veto.
+  const pushLoaderCfg = (): void => {
+    const cfg = loaderCfgFromParams(params);
+    writeLoaderMirror(cfg);
+    bootLoader?.setConfig(cfg);
+  };
+  const loader = {
+    show: (): void => rawLoader.show(),
+    hide: (): void => {
+      if (!settings.loaderStays) rawLoader.hide();
+    },
+    el: rawLoader.el,
+  };
+  pushLoaderCfg();
 
   // K101: music mode's notes, on the audio clock once it runs.
   const songSched = new SongScheduler();
@@ -817,6 +841,16 @@ async function main(): Promise<void> {
       showFabricWin: () => showFabricWin(),
       previewWin: () => previewWinEffect(),
       previewLoss: () => previewLossEffect(),
+      pushLoaderCfg,
+      setLoaderStays: (on: boolean) => {
+        try {
+          localStorage.setItem(LOADER_STAYS_KEY, on ? "1" : "0");
+        } catch {
+          // Storage unavailable: the choice just doesn't persist.
+        }
+        if (on) rawLoader.show();
+        else rawLoader.hide();
+      },
       restartSolve: (carry) => restartSolve(carry),
       playDaily: (n, floating) => playDaily(n, floating),
       showDailyStats: () => showDailyStats(),

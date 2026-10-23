@@ -59,6 +59,18 @@ describe("K313 loader geometry", () => {
     expect(len).toBeLessThan(2.7);
   });
 
+  it("K828: the gap is a parameter; the default is today's shape", () => {
+    const drawn = (s: ReturnType<typeof trefoilShape>): number =>
+      s.pieces.reduce((n, piece) => n + piece.length, 0);
+    // The default call and the explicit default agree point for point.
+    expect(trefoilShape(240, 0.6).pieces).toEqual(shape.pieces);
+    // A wider gap cuts more strand away; no gap keeps every sample.
+    expect(drawn(trefoilShape(240, 1.8))).toBeLessThan(drawn(shape));
+    expect(drawn(trefoilShape(240, 0))).toBe(241);
+    // The crossings do not move with the gap.
+    expect(trefoilShape(240, 1.8).under).toEqual(shape.under);
+  });
+
   it("the boot script's storage key is motion.ts's", () => {
     // loader_boot.ts reads the viewer's Motion preference before the
     // bundle exists; it must read the same key (K313 open point 5).

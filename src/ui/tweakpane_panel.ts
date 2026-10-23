@@ -128,6 +128,9 @@ export interface PanelSettings {
   // preference and follows the OS until chosen. Neither is a design param.
   reducedMotion: boolean;
   highContrast: boolean;
+  // K828 viewer preference (persisted per browser): keep the loading
+  // trefoil on screen after load (a live preview for the loader rows).
+  loaderStays: boolean;
 }
 
 // K111: prefixes the tooltip of a row an Accessibility switch overrides.
@@ -153,6 +156,7 @@ const SETTINGS_DEFAULTS: PanelSettings = {
   motion: "system",
   reducedMotion: false,
   highContrast: false,
+  loaderStays: false,
 };
 
 export interface PanelCallbacks {
@@ -178,6 +182,11 @@ export interface PanelCallbacks {
   onChalkToggle: (on: boolean) => void;
   onAidsChange: () => void;
   onMotionChange: (pref: MotionPref) => void;
+  // K828: a loading-trefoil design row changed (speed/motion; the gap,
+  // width and color rows push through their own callbacks too).
+  onLoaderCfg: () => void;
+  // K828: the keep-loading-animation viewer switch flipped.
+  onLoaderStaysToggle: (on: boolean) => void;
   // K111: the Accessibility group's switches (viewer preferences).
   onReducedMotionToggle: (on: boolean) => void;
   onHighContrastToggle: (on: boolean) => void;
@@ -759,6 +768,15 @@ export function buildPanel(
   // One adjustable row: tooltip + reset glyph + modified tint. `after`
   // runs on every change AND after a glyph reset (the forwarded ev lets
   // regenerate rows keep their drag-end suppression).
+  // K828: design params the loading trefoil also wears (ui/loader_config).
+  const LOADER_DRIVING_KEYS = new Set([
+    "gap",
+    "threadWidth",
+    "pathColor",
+    "backgroundBase",
+    "loaderSpeed",
+    "loaderMove",
+  ]);
   const row = (
     parent: Parent,
     obj: Record<string, unknown>,
@@ -803,6 +821,7 @@ export function buildPanel(
         if (fired) return;
         markRow(t);
         after();
+        if (LOADER_DRIVING_KEYS.has(key)) callbacks.onLoaderCfg();
         refreshCond();
       });
       label.appendChild(btn);
@@ -826,6 +845,9 @@ export function buildPanel(
       } finally {
         dragging = false;
       }
+      // K828: the rows that dress the loading trefoil push the new
+      // loader config as they change (its own rows do it directly).
+      if (LOADER_DRIVING_KEYS.has(key)) callbacks.onLoaderCfg();
       refreshCond();
     });
     tracked.push(t);
@@ -2739,6 +2761,28 @@ export function buildPanel(
     fMotion, p, "flowSpeed", { min: 0, max: 3, step: 0.05, label: "Flow speed" },
     "How fast the flow undulation drifts. Applies live.",
     D.flowSpeed, () => callbacks.onSlackChange()
+  );
+  // K828: the loading trefoil (the knot drawn while the page loads). It
+  // wears the design's gap, thread width, traveled-path color and
+  // background color; these rows are its own. Tick Keep loading
+  // animation to hold it on screen while you tune them.
+  const fLoading = folder("Loading", false, fMotion);
+  row(
+    fLoading, p, "loaderSpeed", { min: 0.25, max: 3, step: 0.05, label: "Loading speed" },
+    "How fast the loading trefoil's player laps the knot (1 = today's 14 second lap). Applies live while the loader is on screen; remembered in the link like any look.",
+    D.loaderSpeed, () => callbacks.onLoaderCfg()
+  );
+  row(
+    fLoading, p, "loaderMove",
+    { options: { "maze slides by": "maze", "player travels": "head" }, label: "Loading motion" },
+    "What moves in the loading animation: the maze slides and turns under the player marker held at the center (today's), or the maze holds still and the player marker travels the strand. Applies live while the loader is on screen.",
+    D.loaderMove, () => callbacks.onLoaderCfg()
+  );
+  row(
+    fLoading, s, "loaderStays", { label: "Keep loading animation" },
+    "Keep the loading trefoil on screen after the maze has loaded, as a live preview while you tune the rows above (and the gap, thread width, path color and background color it wears). It covers the maze while it is up; untick to put it away. Remembered per browser, never in a link.",
+    SETTINGS_DEFAULTS.loaderStays,
+    () => callbacks.onLoaderStaysToggle(settings.loaderStays === true)
   );
   // APPEARANCE: the mode row sets the three rows below it together, and
   // editing any of those re-derives the mode. Each side refreshes the other

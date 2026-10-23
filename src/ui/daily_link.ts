@@ -170,6 +170,10 @@ export const LOOK_KEYS = [
   "borderWidth",
   "borderColor",
   "goldTextureStrength",
+  // K828: the loading trefoil's speed and motion are looks too (the
+  // loader it dresses never touches the maze or its walk).
+  "loaderSpeed",
+  "loaderMove",
 ] as const satisfies readonly (keyof UrlParams)[];
 
 // True when `p` carries a look away from today's defaults (the chip

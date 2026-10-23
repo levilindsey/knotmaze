@@ -1,94 +1,172 @@
 // K313: the loader's draw worker (docs/design/K313_loader.md). Bundled
 // by src/loader/vite_plugin.ts and inlined into index.html, so it runs
 // before the app bundle exists. It draws the trefoil maze on an
-// OffscreenCanvas: the head stays at the center of the screen while the
-// maze slides and turns beneath it (the camera follows half the head's
-// heading, smoothed), with a fixed-length trail behind the head.
+// OffscreenCanvas. K828: the drawing is configured (ui/loader_config.ts):
+// the maze slides and turns under a centered head (move "maze", the
+// camera follows half the head's heading, smoothed), or the maze holds
+// still while the head travels the strand (move "head"); speed, gap,
+// thread width and the thread/background colors ride along.
 
-import { arcSpan, pointAtArc, trefoilShape } from "./loader_geometry";
+import { arcSpan, pointAtArc, trefoilShape, type TrefoilShape } from "./loader_geometry";
+import { LOADER_CFG_DEFAULTS, type LoaderWireCfg } from "../ui/loader_config";
 
-const BG = "#151b28";
 const CASING = "#070a10";
-const THREAD = "#e7c56f";
-const TRAIL = "#ffe9a8";
 const LAP_MS = 14000;
 const TRAIL_LEN = 2.6; // world units of fixed-length trail behind the head
 const FOLLOW = 0.5; // share of the heading the camera follows
 
-const shape = trefoilShape();
+let cfg: LoaderWireCfg = { ...LOADER_CFG_DEFAULTS };
+let shape: TrefoilShape = trefoilShape(240, cfg.gapSamples);
 
 let canvas: OffscreenCanvas | null = null;
 let ctx: OffscreenCanvasRenderingContext2D | null = null;
 let w = 0;
 let h = 0;
 let running = false;
-let startAt = 0;
+let sPos = 0; // the head's arc position (world units along the strand)
+let lastNow = -1;
 let smoothRot = 0;
-let lastHeading = 0;
 
-function draw(now: number): void {
-  if (!ctx || !canvas) return;
-  const c = ctx;
-  const t = ((now - startAt) % LAP_MS) / LAP_MS;
-  const headArc = t * shape.total;
-  const head = pointAtArc(shape, headArc);
-  // Smooth the followed rotation (unwrap against the last frame).
-  let target = -head.heading * FOLLOW;
-  while (target - smoothRot > Math.PI) target -= Math.PI * 2;
-  while (target - smoothRot < -Math.PI) target += Math.PI * 2;
-  smoothRot += (target - smoothRot) * 0.08;
-  lastHeading = head.heading;
+// The trail's lighter tint of the thread color (today: #e7c56f ->
+// #ffe9a8's family; here the configured gold mixed toward white).
+function tint(hex: string, share: number): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return hex;
+  const n = Number.parseInt(m[1], 16);
+  const mix = (c: number): number => Math.round(c + (255 - c) * share);
+  const r = mix((n >> 16) & 255);
+  const g = mix((n >> 8) & 255);
+  const b = mix(n & 255);
+  return `rgb(${r},${g},${b})`;
+}
 
-  const scale = Math.min(w, h) / 11;
-  c.fillStyle = BG;
-  c.fillRect(0, 0, w, h);
-  c.save();
-  c.translate(w / 2, h / 2);
-  c.scale(scale, scale);
-  c.rotate(smoothRot);
-  c.translate(-head.p[0], -head.p[1]);
-  c.lineCap = "round";
-  c.lineJoin = "round";
-  // Casings, then the thread, then the trail, then the head glyph.
-  for (const pass of [0, 1]) {
-    c.strokeStyle = pass === 0 ? CASING : THREAD;
-    c.lineWidth = pass === 0 ? 0.6 : 0.42;
-    for (const piece of shape.pieces) {
-      c.beginPath();
-      piece.forEach(([x, y], i) => (i === 0 ? c.moveTo(x, y) : c.lineTo(x, y)));
-      c.stroke();
-    }
-  }
-  // The fixed-length trail: ten spans fading toward the tail.
-  const SEGMENTS = 10;
-  for (let k = 0; k < SEGMENTS; k++) {
-    const a0 = headArc - (TRAIL_LEN * (k + 1)) / SEGMENTS;
-    const a1 = headArc - (TRAIL_LEN * k) / SEGMENTS;
-    const pts = arcSpan(shape, a0, a1, 0.08);
-    c.strokeStyle = TRAIL;
-    c.globalAlpha = 0.25 + 0.75 * (1 - k / SEGMENTS);
-    c.lineWidth = 0.42;
+function strokePieces(c: OffscreenCanvasRenderingContext2D, alpha: number): void {
+  c.globalAlpha = alpha;
+  for (const piece of shape.pieces) {
     c.beginPath();
-    pts.forEach(([x, y], i) => (i === 0 ? c.moveTo(x, y) : c.lineTo(x, y)));
+    piece.forEach(([x, y], i) => (i === 0 ? c.moveTo(x, y) : c.lineTo(x, y)));
     c.stroke();
   }
   c.globalAlpha = 1;
-  c.restore();
-  // The head glyph, fixed at the center (the game's start marker: a
-  // dark disc, a white ring, a white core).
-  const r = Math.min(w, h) * 0.045;
+}
+
+function strokeSpan(c: OffscreenCanvasRenderingContext2D, from: number, to: number): void {
+  const pts = arcSpan(shape, from, to, 0.08);
   c.beginPath();
-  c.arc(w / 2, h / 2, r, 0, Math.PI * 2);
-  c.fillStyle = BG;
+  pts.forEach(([x, y], i) => (i === 0 ? c.moveTo(x, y) : c.lineTo(x, y)));
+  c.stroke();
+}
+
+// The head glyph (the game's start marker: a dark disc, a white ring, a
+// white core) at (x, y) in the current transform.
+function headGlyph(c: OffscreenCanvasRenderingContext2D, x: number, y: number, r: number): void {
+  c.beginPath();
+  c.arc(x, y, r, 0, Math.PI * 2);
+  c.fillStyle = cfg.bg;
   c.fill();
   c.lineWidth = r * 0.32;
   c.strokeStyle = "#f4f6fb";
   c.stroke();
   c.beginPath();
-  c.arc(w / 2, h / 2, r * 0.38, 0, Math.PI * 2);
+  c.arc(x, y, r * 0.38, 0, Math.PI * 2);
   c.fillStyle = "#f4f6fb";
   c.fill();
-  void lastHeading;
+}
+
+function drawMazeMode(c: OffscreenCanvasRenderingContext2D): void {
+  const head = pointAtArc(shape, sPos);
+  // Smooth the followed rotation (unwrap against the last frame).
+  let target = -head.heading * FOLLOW;
+  while (target - smoothRot > Math.PI) target -= Math.PI * 2;
+  while (target - smoothRot < -Math.PI) target += Math.PI * 2;
+  smoothRot += (target - smoothRot) * 0.08;
+
+  const scale = Math.min(w, h) / 11;
+  c.save();
+  c.translate(w / 2, h / 2);
+  c.scale(scale, scale);
+  c.rotate(smoothRot);
+  c.translate(-head.p[0], -head.p[1]);
+  c.lineWidth = cfg.casingW;
+  c.strokeStyle = CASING;
+  strokePieces(c, 1);
+  c.lineWidth = cfg.threadW;
+  c.strokeStyle = cfg.thread;
+  strokePieces(c, 1);
+  // The fixed-length trail: ten spans fading toward the tail.
+  const SEGMENTS = 10;
+  c.strokeStyle = tint(cfg.thread, 0.45);
+  c.lineWidth = cfg.threadW;
+  for (let k = 0; k < SEGMENTS; k++) {
+    const a0 = sPos - (TRAIL_LEN * (k + 1)) / SEGMENTS;
+    const a1 = sPos - (TRAIL_LEN * k) / SEGMENTS;
+    c.globalAlpha = 0.25 + 0.75 * (1 - k / SEGMENTS);
+    strokeSpan(c, a0, a1);
+  }
+  c.globalAlpha = 1;
+  c.restore();
+  headGlyph(c, w / 2, h / 2, Math.min(w, h) * 0.045);
+}
+
+function drawHeadMode(c: OffscreenCanvasRenderingContext2D): void {
+  // Fit the whole knot: it holds still while the head travels.
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const [x, y] of shape.points) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  }
+  const pad = cfg.casingW + 0.4;
+  const bw = maxX - minX + pad * 2;
+  const bh = maxY - minY + pad * 2;
+  const scale = Math.min(w / bw, h / bh);
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const head = pointAtArc(shape, sPos);
+  c.save();
+  c.translate(w / 2, h / 2);
+  c.scale(scale, scale);
+  c.translate(-cx, -cy);
+  c.lineWidth = cfg.casingW;
+  c.strokeStyle = CASING;
+  strokePieces(c, 1);
+  // The untraveled knot dim, then the traveled strand at full color.
+  c.lineWidth = cfg.threadW;
+  c.strokeStyle = cfg.thread;
+  strokePieces(c, 0.38);
+  strokeSpan(c, 0, sPos);
+  // The fading trail at the head, as in maze mode.
+  const SEGMENTS = 10;
+  c.strokeStyle = tint(cfg.thread, 0.45);
+  for (let k = 0; k < SEGMENTS; k++) {
+    const a0 = sPos - (TRAIL_LEN * (k + 1)) / SEGMENTS;
+    const a1 = sPos - (TRAIL_LEN * k) / SEGMENTS;
+    c.globalAlpha = 0.25 + 0.75 * (1 - k / SEGMENTS);
+    strokeSpan(c, a0, a1);
+  }
+  c.globalAlpha = 1;
+  headGlyph(c, head.p[0], head.p[1], (Math.min(w, h) * 0.045) / scale);
+  c.restore();
+}
+
+function draw(now: number): void {
+  if (!ctx || !canvas) return;
+  const c = ctx;
+  if (lastNow >= 0) {
+    const dt = Math.min(100, Math.max(0, now - lastNow));
+    sPos = (sPos + (dt * cfg.speed * shape.total) / LAP_MS) % shape.total;
+  }
+  lastNow = now;
+  c.fillStyle = cfg.bg;
+  c.fillRect(0, 0, w, h);
+  c.lineCap = "round";
+  c.lineJoin = "round";
+  if (cfg.move === "head") drawHeadMode(c);
+  else drawMazeMode(c);
 }
 
 function frame(now: number): void {
@@ -99,9 +177,22 @@ function frame(now: number): void {
   else setTimeout(() => frame(performance.now()), 16);
 }
 
+function applyCfg(next: LoaderWireCfg): void {
+  const gapChanged = next.gapSamples !== cfg.gapSamples;
+  cfg = { ...next };
+  if (gapChanged) shape = trefoilShape(240, cfg.gapSamples);
+}
+
 self.onmessage = (e: MessageEvent) => {
-  const d = e.data as { type: string; canvas?: OffscreenCanvas; w?: number; h?: number };
+  const d = e.data as {
+    type: string;
+    canvas?: OffscreenCanvas;
+    w?: number;
+    h?: number;
+    cfg?: LoaderWireCfg;
+  };
   if (d.type === "start" && d.canvas) {
+    if (d.cfg) applyCfg(d.cfg);
     canvas = d.canvas;
     if (d.w && d.h) {
       w = d.w;
@@ -111,9 +202,12 @@ self.onmessage = (e: MessageEvent) => {
     }
     ctx = canvas.getContext("2d");
     running = true;
-    startAt = performance.now();
-    frame(startAt);
+    sPos = 0;
+    lastNow = -1;
+    frame(performance.now());
     (self as unknown as { postMessage: (m: unknown) => void }).postMessage({ type: "frame1" });
+  } else if (d.type === "config" && d.cfg) {
+    applyCfg(d.cfg);
   } else if (d.type === "resize" && canvas && d.w && d.h) {
     w = d.w;
     h = d.h;
