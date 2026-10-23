@@ -521,6 +521,10 @@ interface PathRec {
   /** K580: the tapered root this spur's path starts with (its first
    *  `segs` segments, R to J). */
   root?: TangentRoot & { segs: number };
+  /** K843: the spur's authored flare (GU), at its root junction. */
+  flare?: { peak: number; len: number };
+  /** K843: the body strand's flares (junction = body point index). */
+  bodyFlares?: { junction: number; side: "before" | "after"; peak: number; len: number }[];
 }
 
 // A point on a path the node chain must pass through.
@@ -659,6 +663,7 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
 
   // --- Layout (GU, y up). ---
   const body: Pt[] = [];
+  const bodyFlares: { junction: number; side: "before" | "after"; peak: number; len: number }[] = [];
   const spurs: PathRec[] = [];
   const floats: PathRec[] = [];
   const dots: PathRec[] = [];
@@ -701,6 +706,9 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
     const start = body.length - 1;
     entryIdx.push(start);
     appendPath(body, place(g.body, dx, dy));
+    for (const bf of g.bodyFlares ?? []) {
+      bodyFlares.push({ junction: start + bf.at, side: bf.side, peak: bf.peak, len: bf.len });
+    }
     for (const s of g.spurs) {
       spurs.push({
         kind: "spur",
@@ -711,6 +719,7 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
         ...(s.land ? { land: true } : {}),
         ...(s.cornerPin ? { cornerPin: s.cornerPin } : {}),
         ...(s.landCornerPin ? { landCornerPin: s.landCornerPin } : {}),
+        ...(s.flare ? { flare: s.flare } : {}),
       });
     }
     for (const f of g.floats) {
@@ -743,7 +752,7 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
   }
 
   const paths: PathRec[] = [
-    { kind: "body", path: body, junction: -1, glyph: -1 },
+    { kind: "body", path: body, junction: -1, glyph: -1, ...(bodyFlares.length ? { bodyFlares } : {}) },
     ...spurs,
     ...floats,
     ...dots,
@@ -1050,6 +1059,25 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
       }
       taper = { sep, joint: jIdx, footC, footO, sideC: root.sideC };
     }
+    // K843: junction flares (peak/len from GU to LU by sc, as the taper).
+    let flare: Strand["flare"];
+    if (r.kind === "spur" && r.flare) {
+      flare = [{ joint: jIdx, dir: 1, len: r.flare.len * sc, peak: r.flare.peak * sc }];
+    } else if (r.kind === "body" && r.bodyFlares) {
+      const list: NonNullable<Strand["flare"]> = [];
+      for (const bf of r.bodyFlares) {
+        const target = arcAtP(tab, bf.junction / 3);
+        const ji = chain.findIndex((c) => Math.abs(c.arc - target) < 1e-6);
+        if (ji < 0) continue; // no node there (not a junction): nothing to flare
+        list.push({
+          joint: ji,
+          dir: bf.side === "after" ? 1 : -1,
+          len: bf.len * sc,
+          peak: bf.peak * sc,
+        });
+      }
+      if (list.length) flare = list;
+    }
     strands.push({
       edgeIds,
       isClosed: r.kind === "dot",
@@ -1057,6 +1085,7 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
       pinned: true,
       ...(r.kind === "float" || r.kind === "dot" ? { decorative: true } : {}),
       ...(taper ? { taper } : {}),
+      ...(flare ? { flare } : {}),
       // K580 s5: every glyph strand, in tapered and notaper mode alike
       // (core Strand.glyph; the renderer's stadium cap cover reads it).
       glyph: true,

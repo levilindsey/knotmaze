@@ -241,6 +241,10 @@ export interface RibbonStyle {
     footO?: number[];
     sideC?: number;
   } | null)[];
+  // K843: per chain, glyph junction flares (core Strand.flare): extra
+  // width (LU) at a joint, falling linearly to 0 over `len` of arc in
+  // the `dir` direction; applied in withTaper beside the taper.
+  flare?: ({ joint: number; dir: 1 | -1; len: number; peak: number }[] | null)[];
   // K8 G3-2: the thread pass, chosen once at construction ("strip"
   // today; "sdf" when ribbon_sdf.ts lands). Not a codec param: read
   // from the link by scene.ts.
@@ -2062,7 +2066,8 @@ export class RibbonRenderer {
     base: Float32Array | null
   ): Float32Array | null {
     const tp = this.style.taper?.[chain];
-    if (!tp) return base;
+    const fl = this.style.flare?.[chain];
+    if (!tp && !fl) return base;
     const count = samples.count;
     let buf = this.taperScratch.get(chain);
     if (!buf || buf.length !== count) {
@@ -2070,16 +2075,26 @@ export class RibbonRenderer {
       this.taperScratch.set(chain, buf);
     }
     const c = this.kcv[chain];
-    const arcJ = kCA(this.kd, c, 2 * tp.joint);
-    const n = tp.sep.length - 1;
+    const arcJ = tp ? kCA(this.kd, c, 2 * tp.joint) : 0;
+    const n = tp ? tp.sep.length - 1 : 0;
+    const flareArcs = fl ? fl.map((f) => kCA(this.kd, c, 2 * f.joint)) : null;
     const tw = this.style.threadWidth;
     for (let k = 0; k < count; k++) {
       const a = kSampleArc(c, k);
       let m = 1;
-      if (arcJ > 0 && a < arcJ) {
+      if (tp && arcJ > 0 && a < arcJ) {
         const f = (a / arcJ) * n;
         const i0 = Math.min(n - 1, Math.floor(f));
         m = 1 + (tp.sep[i0] + (tp.sep[i0 + 1] - tp.sep[i0]) * (f - i0)) / tw;
+      }
+      // K843: junction flares (fatter at the joint, tapering away).
+      if (fl && flareArcs) {
+        for (let fi = 0; fi < fl.length; fi++) {
+          const f = fl[fi];
+          if (!(f.len > 0)) continue;
+          const t = (a - flareArcs[fi]) * f.dir;
+          if (t >= 0 && t <= f.len) m *= 1 + (f.peak * (1 - t / f.len)) / tw;
+        }
       }
       buf[k] = (base ? base[k] : 1) * m;
     }

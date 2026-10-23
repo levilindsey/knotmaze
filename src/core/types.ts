@@ -81,6 +81,12 @@ export interface Strand {
   // the other strand through the joint node, which carries both strokes (C
   // into the joint, O out of it); `sideC` = TangentRoot's.
   taper?: { sep: number[]; joint: number; footC?: number[]; footO?: number[]; sideC?: 1 | -1 };
+  // K843: junction flares (glyphs): extra ribbon width (LU, as taper's
+  // sep) at a joint of this strand, falling linearly to nothing `len`
+  // of arc away in the `dir` direction along the strand (+1 toward the
+  // strand's end). joint = the node index within this strand (as
+  // taper's joint). Rendered by the same widening as the taper.
+  flare?: { joint: number; dir: 1 | -1; len: number; peak: number }[];
   // K580 s5 (#glyphs2 only): a GLYPH strand. The glyph graph sets it on
   // every strand it builds (tapered and notaper, floats included), and the
   // renderer reads it per chain: a glyph's fused spur tip gets the stadium

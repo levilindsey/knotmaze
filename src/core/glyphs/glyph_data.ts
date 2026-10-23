@@ -63,6 +63,9 @@ export function glyphI(fork: ForkAngle = 0): Glyph {
       {
         at: 3,
         ...(fork === 0 ? { tangent: true } : {}),
+        // K843: the stem leaves J fatter than normal, tapering to its
+        // plain width at the dead-end tip.
+        flare: { peak: 6, len: 34 },
         path: knotsToPath([
           [22, 50, 1, 3, 0, 2],
           [32, 79, 1, 3, 2, 0],
@@ -127,6 +130,14 @@ const A_GLYPH: Glyph = {
         [30, 44, 1, 4, 4, 0],
       ]),
     },
+  ],
+  // K843: the stroke leaves both tangent attachments fatter than
+  // normal above the junction, tapering to the plain width: upward
+  // from L (toward the top) and upward from R (toward the top again -
+  // "before" the body's travel down the right side).
+  bodyFlares: [
+    { at: 3, side: "after", peak: 6, len: 30 },
+    { at: 15, side: "before", peak: 6, len: 30 },
   ],
   floats: [],
   crossings: 0,

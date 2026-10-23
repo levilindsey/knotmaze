@@ -46,10 +46,32 @@ export interface SpurDef {
    * landing, as it does for a tangent root's arms.
    */
   landTangent?: true;
+  /**
+   * K843: fatten the spur at its root junction, the extra width (GU)
+   * falling to nothing over `len` GU along the spur - a stroke that
+   * leaves the junction fat and tapers to its normal width (the i's
+   * stem). Rendered through Strand.flare.
+   */
+  flare?: { peak: number; len: number };
   /** K830: force the root junction's wedges round or sharp. */
   cornerPin?: CornerPin;
   /** K830: force a landing spur's far junction's wedges round or sharp. */
   landCornerPin?: CornerPin;
+}
+
+/**
+ * K843: a flare on one of the body's own arms at a junction: the
+ * stroke leaves the junction (body point index `at`) fatter than
+ * normal on the `side` arm ("after" = toward the exit, "before" =
+ * toward the entry), the extra width (GU) falling to nothing over
+ * `len` GU. For junctions whose upper arm is the body itself (the
+ * a's two tangent attachments).
+ */
+export interface BodyFlare {
+  at: number;
+  side: "before" | "after";
+  peak: number;
+  len: number;
 }
 
 export interface Glyph {
@@ -60,6 +82,8 @@ export interface Glyph {
   exit: { at: Pt; dir: Pt; cls: ExitClass };
   body: CubicPath;
   spurs: readonly SpurDef[];
+  /** K843: flares on the body's arms at junctions (see BodyFlare). */
+  bodyFlares?: readonly BodyFlare[];
   /**
    * K831: body joints (point indices, multiples of 3) where the body may
    * turn a CORNER with no spur there - Levi's exception for a letter's
