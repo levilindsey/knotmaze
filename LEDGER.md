@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K828. (K812 preview effect buttons; K813 border-look highlights; K814 shape-injection param collection; K815 junction border fans; K816 SDF ribbons; K817 gap kStart rounding (K592); K818 shape-injection collection (K814 stages 1-3); K819 cannonSpread param + LOOK_KEYS backdrop/path colors; K820 borderWidth/borderColor/goldTextureStrength params (uKBorder, uKLook.w, uKHlPulse.w); K821-K822 panel restructure (Maze before Game; End effects, Text & emblem, Exit traps, Exploration, Burn race, Classic rules subfolders; Thread look above its rows; Path color beside the gold rows).)
+Next free ID: K833. (K828 loader params + keep-loading preview; K829 taper lean (K718 call 1); K830 corner share slider; K831 a/i letterform redesign; K832 SDF/junction residuals.) (K812 preview effect buttons; K813 border-look highlights; K814 shape-injection param collection; K815 junction border fans; K816 SDF ribbons; K817 gap kStart rounding (K592); K818 shape-injection collection (K814 stages 1-3); K819 cannonSpread param + LOOK_KEYS backdrop/path colors; K820 borderWidth/borderColor/goldTextureStrength params (uKBorder, uKLook.w, uKHlPulse.w); K821-K822 panel restructure (Maze before Game; End effects, Text & emblem, Exit traps, Exploration, Burn race, Classic rules subfolders; Thread look above its rows; Path color beside the gold rows).)
 
 ## Waiting on Levi
 
@@ -701,6 +701,8 @@ Every other item below waits on the trigger it names.
   `docs/design/K370.md`)
 
 ## Residuals (known, not fixed)
+
+- **K832** SDF + border residuals (Levi, 2026-10-22; diagnosed, not fixed): (a) SDF ribbons show no crossing gaps - `bindGap` never re-points the SDF shaders at the scene's gap table (they keep the default empty one). (b) Border look: strokes still show inside junctions (strip + SDF) - ribbon ends and cover strips draw under the hollow fans (K815 fixed the fans only). (c) SDF borders read darker and alias more than strip (double-drawn capsule overlaps + fwidth(side01) crease). Evidence: this session's shots; fixes designed in-session (bind SDF in bindGap; clip ribbons/cover strips at fillet reach in border; SDF stroke parity).
 
 - **K413** · The phone lock (`.claude/probes/agents/phone_lock_take.ps1`) is one line, owner | time |
   what, with no waiter field, so the briefs' "release it between items when K290 or K395 waits"
@@ -1528,6 +1530,8 @@ Every other item below waits on the trigger it names.
 
 ## Approved, to schedule (2026-10-11)
 
+- **K830** Junction corner style (Levi, 2026-10-22): ONE slider, rounded share 0-100% (0 = all sharp, 1 = all rounded like today; appended codec param, LOOK_KEYS). In between, corners rank by pointiness: the sharpest points (star tips, letter apexes) keep their cusps, valleys/bends round first; decided from build-time geometry so settling never flips a corner. Sharp wedge geometry = flanks meeting at the (clamped) miter point. Glyph/shape builders may pin a junction's corners round or sharp where they can name them (mask shapes follow the global rule). Feeds K831's corner. Design in this session's report.
+- **K831** Cursive a/i redesign (Levi, 2026-10-22, on `.claude/probes/K580/s5/shots_s5/desk_branch/ai_x2_t.png`): (1) a's entry joins LOW at the oval's bottom-left, tangentially (new tangent merge + tapered root there; today it arches over the shoulder to J at top). (2) i's entry joins a bit lower and much more tangent to the stem's slant. (3) a's exit leaves J2 tangentially (today a 41-degree fork). (4) a's top-right: the top spur and stem spur JOIN at a corner (an exception to crossings-not-junctions) with BOTH cusps sharp (inner concave + outer convex; consumes K830 pins) and the walk runs up the left side, around the corner, down the stem through it. General rule for the remaining letters: skeleton corners join as cusp corners, stroke overlaps stay crossings, stroke landings stay tangent merges. Follows K829; precedes authoring the rest of the alphabet (K718 calls 2/3 still open for the lint).
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
   allows; down when struggling). Part of K6, refined after G3.
 - **K23** · GPU particles (G2.4), GPU fog-of-war accumulation, the yarn as
@@ -1815,6 +1819,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   mode), say so in the status, like "3 more in other modes" (K793)
 
 ## Done
+
+- **K829** The tapered glyph root leans onto its swept-disc envelope (K718 call 1: the a's-J 0.031-0.059 LU scoop; `gln=0` keeps the square offset for A/B). Done in 2fbaf8a3 (2026-10-22).
+- **K828** Loader params: loaderSpeed/loaderMove (codec 243-244, LOOK_KEYS), gap/threadWidth/pathColor/backgroundBase drive the loading trefoil, keep-loading-animation preview switch. Done in 9bd67c8e (2026-10-22).
 
 - **K800** · Looks set by the link (LOOK_KEYS exempt; Link look chip). Done in 879d190e (2026-10-21).
 - **K799** · The traveled path's look (goldWidth + goldTexture). Done in bea90d9b (2026-10-21).
