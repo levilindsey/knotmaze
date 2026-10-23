@@ -60,7 +60,7 @@ describe("K313 loader geometry", () => {
     let lastTarget = -cont / 2;
     let maxStep = 0;
     for (let k = 1; k <= STEPS; k++) {
-      const h = pointAtArc(shape, (shape.total * k) / STEPS).heading;
+      const h = pointAtArc(shape, (2 * shape.total * k) / STEPS).heading;
       cont += headingDelta(prev, h);
       prev = h;
       const target = -cont / 2;
