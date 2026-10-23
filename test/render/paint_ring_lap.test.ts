@@ -333,6 +333,11 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   // fifth contour line can take the 0.55 weight instead of 1.0. The
   // background programs are sha256-pinned; fixing it needs a same-state A/B.
   "background_shaders.ts: mod(floor(v + 0.5), 5.0)": [1, "the contours' every-fifth line (residual)"],
+  // K832: the flat-cap bit of the SDF vertex's cap code (cap + fused<<2,
+  // a small integer 0-7, exact in fp32): mod by 2.0 is exact here, no
+  // rounded quotient is involved.
+  "ribbon/ribbon_sdf.ts: mod(vSegInfo.z, 2.0)": [1, "the flat-cap bit of an exact small-integer cap code (K832)"],
+  "ribbon/ribbon_sdf.ts: mod(vSegInfo.w, 2.0)": [1, "the flat-cap bit of an exact small-integer cap code (K832)"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];

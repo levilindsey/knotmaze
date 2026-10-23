@@ -22,6 +22,7 @@
 // paint_explore.test.ts and the probes' dump_variants.ts copies.
 
 import { GlProgram, Shader, Texture } from "pixi.js";
+import type { BufferImageSource } from "pixi.js";
 import { withExplore } from "../explore_glsl";
 import { GAP_FRAG, GAP_VERT_DECL, GAP_VERT_MAIN, defaultGapTexture } from "../gap_mask";
 import { bindFieldGap } from "../junction_field";
@@ -41,7 +42,7 @@ import {
 } from "../paint_glsl";
 import { kGeom, kPaint, kReveal, kStatic, knotUniforms } from "../paint_model";
 import { bindPluckGap } from "../pluck_overlay";
-import { fabricUniforms, sampSource } from "../fabric_sdf";
+import { G3_CHAIN_GLSL, JUNCTION_CUT_GLSL, fabricUniforms, g3ChainSource, sampSource, setGapSource } from "../fabric_sdf";
 
 // Mesh.shader wants a TextureShader (a Shader carrying its texture).
 type SectionShader = Shader & { texture: Texture };
@@ -124,7 +125,9 @@ ${PAINT_FX_GLSL}
 ${PAINT_PAINT_RIBBON_GLSL}
 ${PAINT_FRAG_LIB}
 ${ROOT_FRAG_GLSL}
+${G3_CHAIN_GLSL}
 ${GAP_FRAG}
+${JUNCTION_CUT_GLSL}
 void main(void) {
   highp vec2 gfw = fwidth(vPos);
   highp float pxW = max(max(gfw.x, gfw.y), 1e-5);
@@ -277,6 +280,12 @@ void main(void) {
       }
     }
   }
+  // K832: within a fused junction's fan reach the fan's wedge rim is
+  // the border outline, so the ribbon's material hands over to it
+  // (border look only; fabric_sdf kJunctionCut).
+  if (uKLook.x > 0.5 && uKLook.x < 1.5) {
+    lookA *= 1.0 - kJunctionCut(kc.closed, kc.total, kpt.x, g3ChainAt(kc.ch, 0), pxW);
+  }
   float gk = gapKeep(pxW, gTurn);
   if (uKBase.z > 4.5) {
     // DEBUG VIEW 5 (probes): the paint terms of the VISIBLE thread (gaps
@@ -327,6 +336,8 @@ export function sectionShader(): SectionShader {
         uGapData: defaultGapTexture().source,
         // G3-1: the shared SAMP table and the gap globals (fabric_sdf.ts).
         uSamp: sampSource(),
+        // K832: the G3 CHAIN table (the junction cut's caps).
+        uG3Chain: g3ChainSource(),
         fabricUniforms: fabricUniforms(),
         // G2 shader paint (paint_model.ts): page-lifetime data textures +
         // the shared uniform group.
@@ -355,6 +366,7 @@ export function sectionShaderExplore(): SectionShader {
       resources: {
         uGapData: sectionShader().resources.uGapData,
         uSamp: sampSource(),
+        uG3Chain: g3ChainSource(),
         fabricUniforms: fabricUniforms(),
         uKStatic: kStatic().source,
         uKGeom: kGeom().source,
@@ -376,11 +388,18 @@ export function sectionShaderExplore(): SectionShader {
 export function bindGap(tex: Texture): void {
   bindFieldGap(tex);
   bindPluckGap(tex);
+  // K832: the SDF pass's shaders read the same table through gapSource
+  // (fabric_sdf.ts; they are built once per page, so bindGap cannot
+  // poke them from here without an import cycle).
+  setGapSource(tex.source as unknown as BufferImageSource);
   const samp = sampSource();
+  const g3c = g3ChainSource();
   const sh = sectionShader();
   if (sh.resources.uGapData !== tex.source) sh.resources.uGapData = tex.source;
   if (sh.resources.uSamp !== samp) sh.resources.uSamp = samp;
+  if (sh.resources.uG3Chain !== g3c) sh.resources.uG3Chain = g3c;
   const ex = SECTION_EXPLORE_SHADER;
   if (ex && ex.resources.uGapData !== tex.source) ex.resources.uGapData = tex.source;
   if (ex && ex.resources.uSamp !== samp) ex.resources.uSamp = samp;
+  if (ex && ex.resources.uG3Chain !== g3c) ex.resources.uG3Chain = g3c;
 }

@@ -36,7 +36,10 @@ describe("thread look beyond the ribbons", () => {
   it("gates fillet fill by the look in both fan programs", () => {
     expect(JUNCTION_FRAG).toContain("float lookCoord = strip ? abs(2.0 * vLook - 1.0) : vLook;");
     // K815: a fan's border outline is rim + flanks; a seal disc draws none.
-    expect(JUNCTION_FRAG).toContain("float fanEdge = strip ? lookEdge : max(lookEdge, flankEdge);");
+    // K832: in the border look the rim is the whole outline (the flank
+    // spokes and the cover strips' bands are interior strokes).
+    expect(JUNCTION_FRAG).toContain("max(lookEdge, borderLook ? 0.0 : flankEdge)");
+    expect(JUNCTION_FRAG).toContain("borderLook ? 0.0 : lookEdge");
     expect(JUNCTION_FRAG).toContain("if (!strip && vFlank > 2.5) fanEdge = 0.0;");
     expect(JUNCTION_FRAG).toContain("if (gk * lookA <= 0.002) discard;");
     const ex = withExploreField(JUNCTION_FRAG);

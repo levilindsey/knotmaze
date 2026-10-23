@@ -20,6 +20,7 @@ import {
   PAINT_GATE_THREAD_GLSL,
 } from "../../src/render/paint_glsl";
 import { PLUCK_STILL_FRAG, withExploreStill } from "../../src/render/pluck_overlay";
+import { G3_CHAIN_GLSL, JUNCTION_CUT_GLSL } from "../../src/render/fabric_sdf";
 
 // The section fragment as ribbon/ribbon_shader.ts writes it (the same
 // slice paint_explore.test.ts and the K320 probe use), interpolated with
@@ -33,6 +34,8 @@ const SECTION_FRAG = src
   .slice(start, src.indexOf("`;", start))
   .replace(/\$\{(\w+)\}/g, (_, k: string) => {
     if (k === "GAP_FRAG") return GAP_FRAG;
+    if (k === "G3_CHAIN_GLSL") return G3_CHAIN_GLSL;
+    if (k === "JUNCTION_CUT_GLSL") return JUNCTION_CUT_GLSL;
     const v = (G as unknown as Record<string, string>)[k];
     if (typeof v !== "string") throw new Error(`unknown interpolation ${k}`);
     return v;
@@ -82,14 +85,21 @@ describe("K320 stage 1: char budgets", () => {
     // stroke/grain expressions in the ribbon, fan and pluck texts) add
     // 352 to the section pair (54,020 -> 54,372 and 70,435 -> 70,787
     // measured here), 44 to the junction field and 35 to the still pluck.
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(54_430);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(70_850);
+    // K832 (2026-10-23): the junction cut (fabric_sdf JUNCTION_CUT_GLSL
+    // + the caps fetch G3_CHAIN_GLSL, ribbon fragments only) adds 833
+    // to the section pair (54,372 -> 55,205 and 70,787 -> 71,620
+    // measured here); the fans' rim-only border outline adds 609 to
+    // the junction field (28,235 -> 28,844 measured). The arm strips
+    // and the still pluck keep their bytes (the cut chunk is not in
+    // the shared fabric text).
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(55_270);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(71_685);
     expect(STRIP_FRAG.length).toBeLessThanOrEqual(32_550);
     // K797b/K798 fillets (2026-10-21): the fan look gate and stroke
     // (junction_field.ts) add 755 (26,600 -> 27,355 here).
     // K815: the fans' flank coordinate (aFlank + the fanEdge block) adds
     // 788 to the junction field (27,447 -> 28,235 measured).
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(28_410);
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(28_910);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

@@ -1258,9 +1258,13 @@ export class CrossingGaps {
   assignGapIds(): void {
     const g3 = this.r.g3Data && this.r.G3 !== null;
     let entries = 0;
-    for (let c = 0; c < this.r.fills.length; c++) {
+    // K832: iterate chains, not fills - the SDF pass has no strip fills,
+    // but its fragment reads the same RANGES (windows come from
+    // chainWins, solved pass-independently in update()). Without this
+    // the SDF ribbons had no crossing gaps at all.
+    for (let c = 0; c < this.r.chainSamples.length; c++) {
       const fill = this.r.fills[c];
-      const count = fill.sampleCount;
+      const count = fill ? fill.sampleCount : (this.r.chainSamples[c]?.count ?? 0);
       let ids = this.r.idScratch.get(c);
       if (!ids) {
         ids = new Float32Array(count * GAP_SLOTS);
@@ -1299,7 +1303,7 @@ export class CrossingGaps {
         this.r.g3NWin[c] = n;
         entries += n;
       }
-      fill.setMaskIds(ids);
+      if (fill) fill.setMaskIds(ids);
     }
     if (g3) this.r.g3WriteRanges(entries);
   }

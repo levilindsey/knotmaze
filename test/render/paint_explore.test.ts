@@ -20,6 +20,7 @@ import {
   type KUniforms,
 } from "../../src/render/paint_math";
 import { GAP_FRAG, GAP_FRAG_LIB } from "../../src/render/gap_mask";
+import { G3_CHAIN_GLSL, JUNCTION_CUT_GLSL } from "../../src/render/fabric_sdf";
 import {
   EXPLORE_DECL_GLSL,
   EXPLORE_GAP_CUT_GLSL,
@@ -315,7 +316,11 @@ describe("K76 the explore program variant (withExplore)", () => {
   );
   const start = src.indexOf("const SECTION_FRAG = /* glsl */ `");
   const end = src.indexOf("`;", start);
-  const sectionText = src.slice(start, end).replace("${GAP_FRAG}", GAP_FRAG);
+  const sectionText = src
+    .slice(start, end)
+    .replace("${GAP_FRAG}", GAP_FRAG)
+    .replace("${G3_CHAIN_GLSL}", G3_CHAIN_GLSL)
+    .replace("${JUNCTION_CUT_GLSL}", JUNCTION_CUT_GLSL);
   const KEEP_AT = "highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,";
   const SURE = "    highp float sure2 = sure > 0.0 ? sure * sure : 0.0;\n";
   const BK = "    if (bk < 0) continue; // Nothing of this slot within reach.\n";

@@ -10,6 +10,13 @@
 // segment's RANGES windows. Chosen at construction by rp=sdf; the
 // strip stays the default (G3-3 flips it after Levi's phone check).
 //
+// K832: the pass binds the scene's gap-slot table through fabric_sdf's
+// gapSource (bindGap's binding list), so the casings actually cut; the
+// across coordinate reads the winning cone, so cone joints no longer
+// crease the border into per-segment sawteeth; and the border look
+// cuts cone material inside a fused junction's fan reach, handing the
+// outline to the fan's rim exactly as the strip does.
+//
 // Deviations from the design, recorded in the K8_G3-2 brief: capsule
 // boxes on every segment (no bisector trapezoids yet); no fold pinch
 // or joint-cluster discard (G4); the paint varyings ride the strip's
@@ -18,7 +25,7 @@
 
 import { GlProgram, Mesh, MeshGeometry, Shader, Texture, UniformGroup } from "pixi.js";
 import type { SplineSamples } from "../../geometry/spline_generator";
-import { FABRIC_GLSL, SDF_CONE_GLSL, SDF_TEX_GLSL, fabricUniforms, sampSource } from "../fabric_sdf";
+import { FABRIC_GLSL, JUNCTION_CUT_GLSL, SDF_CONE_GLSL, SDF_TEX_GLSL, fabricUniforms, gapSource, sampSource } from "../fabric_sdf";
 import { withExploreSdf } from "../explore_glsl";
 import { GAP_FRAG_LIB, defaultGapTexture } from "../gap_mask";
 import { addFloatAttribute } from "../junction_field";
@@ -123,8 +130,15 @@ void main(void) {
   vColor = uColor * uWorldColorAlpha;
   vSegInfo = vec4(float(chain), float(segK), 0.0, 0.0);
   // Flat caps only at an open chain's own ends (CHAIN caps 2 = flat).
-  if (!kc.closed && segK == 0 && ch0.z > 1.5) vSegInfo.z = 1.0;
-  if (!kc.closed && segK == kc.count - 2 && ch0.w > 1.5) vSegInfo.w = 1.0;
+  // K832: the caps carry +4 at a FUSED end (samp_table capWithFused);
+  // vSegInfo.z/w pack the flat flag (bit 0) with the fused flag (bit 1)
+  // for the fragment's junction cut.
+  float capS = ch0.z >= 4.0 ? ch0.z - 4.0 : ch0.z;
+  float capE = ch0.w >= 4.0 ? ch0.w - 4.0 : ch0.w;
+  if (ch0.z >= 4.0) vSegInfo.z = 2.0;
+  if (ch0.w >= 4.0) vSegInfo.w = 2.0;
+  if (!kc.closed && segK == 0 && capS > 1.5) vSegInfo.z += 1.0;
+  if (!kc.closed && segK == kc.count - 2 && capE > 1.5) vSegInfo.w += 1.0;
   vRadii = vec4(r0, r1, r2, r3);
   vP01 = vec4(P0, P1);
   vP23 = vec4(P2, P3);
@@ -177,6 +191,7 @@ ${PAINT_FRAG_LIB}
 ${ROOT_FRAG_GLSL}
 ${GAP_FRAG_LIB}
 ${SDF_CONE_GLSL}
+${JUNCTION_CUT_GLSL}
 void main(void) {
   vec2 gfw = fwidth(vPos);
   float pxW = max(max(gfw.x, gfw.y), 1e-5);
@@ -186,18 +201,28 @@ void main(void) {
   float a1 = sdCone(vPos, vP01.zw, vP23.xy, vRadii.y, vRadii.z, t1, l1);
   float a0 = vRadii.x < -0.5 ? 1e9 : sdCone(vPos, vP01.xy, vP01.zw, vRadii.x, vRadii.y, t0, l0);
   float a2 = vRadii.w < -0.5 ? 1e9 : sdCone(vPos, vP23.xy, vP23.zw, vRadii.z, vRadii.w, t2, l2);
-  if (vSegInfo.z > 0.5) a1 = max(a1, dot(vP01.zw - vPos, vDir));
-  if (vSegInfo.w > 0.5) a1 = max(a1, dot(vPos - vP23.xy, vDir));
-  float a = min(a1, min(a0, a2));
+  if (mod(vSegInfo.z, 2.0) > 0.5) a1 = max(a1, dot(vP01.zw - vPos, vDir));
+  if (mod(vSegInfo.w, 2.0) > 0.5) a1 = max(a1, dot(vPos - vP23.xy, vDir));
+  float a = a1;
+  // K832: the across coordinate (the border stroke, the rim, the grain)
+  // reads the WINNING cone's lateral, not always the own cone's: the
+  // own cone's lateral creases at every joint, which drew the border
+  // stroke as a dark sawtooth seam per segment (the reported SDF
+  // aliasing) and doubled it where cones overlap. Paint attribution
+  // (arc, the gap windows) stays with the own cone below.
+  float lW = l1;
+  float rW = mix(vRadii.y, vRadii.z, t1);
+  if (a0 < a) { a = a0; lW = l0; rW = mix(vRadii.x, vRadii.y, t0); }
+  if (a2 < a) { a = a2; lW = l2; rW = mix(vRadii.z, vRadii.w, t2); }
   // K826: the strip's mitered silhouette at the joints (coverage only;
   // paint attribution stays with the own cone's t/l above).
   a = min(a, sdMiterQuad(vPos, vP01.xy, vP01.zw, vP23.xy, vP23.zw, vRadii.y, vRadii.z));
   if (a > 0.5 * pxW) discard;
-  float r = mix(vRadii.y, vRadii.z, t1);
+  float r = rW;
   float cov = aaCov(a, pxW) * clamp(2.0 * r / pxW, 0.0, 1.0);
   if (cov <= 0.002) discard;
   float arc = (float(segK) + t1) * kc.arcPer;
-  float side01 = 0.5 - 0.5 * clamp(l1 / max(r, 1e-6), -1.0, 1.0);
+  float side01 = 0.5 - 0.5 * clamp(lW / max(r, 1e-6), -1.0, 1.0);
   float vUVx = arc * 0.02;
   float pxArc = pxW * (abs(vDir.x) + abs(vDir.y));
   vec2 kpt = kFragPoint(kc);
@@ -294,6 +319,12 @@ void main(void) {
       }
     }
   }
+  // K832: the junction cut, as the strip's (fabric_sdf kJunctionCut);
+  // the caps' fused bits ride vSegInfo.z/w (bit 1, from the vertex).
+  if (uKLook.x > 0.5 && uKLook.x < 1.5) {
+    vec4 jcaps = vec4(0.0, 0.0, vSegInfo.z >= 1.5 ? 4.0 : 0.0, vSegInfo.w >= 1.5 ? 4.0 : 0.0);
+    lookA *= 1.0 - kJunctionCut(kc.closed, kc.total, arc, jcaps, pxW);
+  }
   float gk = gapKeepAt(pxW, vPos, arc, vDir, vIds);
   if (uKBase.z > 4.5) {
     if (gk <= 0.002) discard;
@@ -330,7 +361,9 @@ export function sdfShader(g3?: { radii: unknown; chain: unknown; ranges: unknown
     const sh = new Shader({
       glProgram: sdfProgram(),
       resources: {
-        uGapData: defaultGapTexture().source,
+        // K832: the scene's gap-slot table (bindGap points gapSource at
+        // it); the empty default only until the first scene binds.
+        uGapData: gapSource() ?? defaultGapTexture().source,
         uSamp: sampSource(),
         uRadii: g3.radii as never,
         uG3Chain: g3.chain as never,
@@ -347,6 +380,10 @@ export function sdfShader(g3?: { radii: unknown; chain: unknown; ranges: unknown
     sh.texture = Texture.WHITE;
     SDF_SHADER = sh;
   }
+  // K832: a later scene's gap table re-points the live shader too
+  // (rootMesh / setExplore call this per scene, after bindGap).
+  const gs = gapSource();
+  if (gs && SDF_SHADER.resources.uGapData !== gs) SDF_SHADER.resources.uGapData = gs;
   return SDF_SHADER;
 }
 
@@ -377,6 +414,9 @@ export function sdfShaderExplore(g3?: { radii: unknown; chain: unknown; ranges: 
     sh.texture = Texture.WHITE;
     SDF_EXPLORE_SHADER = sh;
   }
+  // K832: as sdfShader - follow the scene's gap table.
+  const gs = gapSource();
+  if (gs && SDF_EXPLORE_SHADER.resources.uGapData !== gs) SDF_EXPLORE_SHADER.resources.uGapData = gs;
   return SDF_EXPLORE_SHADER;
 }
 

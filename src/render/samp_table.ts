@@ -205,6 +205,16 @@ export function chainCaps(
   return [cap(startFused, startAnchored), cap(endFused, endAnchored)];
 }
 
+// K832: a cap as written to the G3 CHAIN texel - the cap value plus 4
+// at a FUSED end, so the ribbon shaders can tell a fused junction end
+// (whose wedge fan owns the border outline nearby; fabric_sdf
+// kJunctionCut) from a free round tip wearing the same cap. Shaders
+// decode cap = v >= 4 ? v - 4 : v, fused = v >= 4. The renderer adds
+// it to open ends only (a closed chain's caps stay CAP_NONE).
+export function capWithFused(cap: number, fused: boolean): number {
+  return fused ? cap + 4 : cap;
+}
+
 // SEGMENTS. Segment k joins samples k and k+1: a closed ring has `count`
 // (the last joins count-1 -> 0), an open run count - 1 (never a
 // last-to-first chord, invariant 6).
