@@ -32,15 +32,19 @@ const I_ARRIVAL: Record<ForkAngle, readonly [number, number, number]> = {
 };
 
 /** The i in Levi's spur form (call 3), with the fork opened by `fork`°. */
-export function glyphI(fork: ForkAngle = 30): Glyph {
+/** K831: J sits lower (44) and the default fork is 15 - the most
+ * tangent of the clean stage 9 forms (Levi: the entry must meet the
+ * stem's slant, not arrive across it). The stem leaves J along
+ * (-1,-5) so the opened fork keeps clear of the 15 degree floor. */
+export function glyphI(fork: ForkAngle = 15): Glyph {
   const a = I_ARRIVAL[fork];
   const body: Knot[] = [
     [0, 32, LOW[0], LOW[1], 0, 1],
     // The junction J: arrives along the upstroke, leaves down the stem.
-    [16, 50, a[0], a[1], a[2], 6, -1, -4],
+    [16, 44, a[0], a[1], a[2], 3, -1, -5],
     // The round bottom the lint forced (R >= 11 GU, legs >= 0.60 LU apart
     // at xh 2): the first form turned at (18, 2) with R 1.9 GU, the thorn.
-    [10, 22, -1, -4, 3, 3],
+    [10, 22, -1, -4, 2, 3],
     [26, 2, 1, 0, 10, 14],
     [58, 32, LOW[0], LOW[1], 2, 0],
   ];
@@ -53,8 +57,8 @@ export function glyphI(fork: ForkAngle = 30): Glyph {
       {
         at: 3,
         path: knotsToPath([
-          [16, 50, 1, 4, 0, 2],
-          [23, 78, 1, 4, 2, 0],
+          [16, 44, 1, 5, 0, 2],
+          [23, 78, 1, 5, 2, 0],
         ]),
       },
     ],
@@ -68,17 +72,109 @@ export function glyphI(fork: ForkAngle = 30): Glyph {
   };
 }
 
-// The a in Levi's o-kind form (call 6): the entry connector arches over
-// the oval's left shoulder onto J at the top and runs on along the top as
-// the spur J-S; the oval leaves J counter-clockwise. Its right side is the
-// stem: the closure rises to J2 low on the right, where the tail leaves
-// down to the exit, and runs on up the stem's slant as a second spur
-// (J2-T) that crosses the first steeply (one crossing). The first form
-// (d2a82a9) put J2 above the run-on, so the closure AND the stem crossed
-// it (two crossings, and the stem 10 GU from the bowl).
-// At xh 2 the rules set the lengths: the crossing sits >= 0.60 LU from J,
-// and both tips run on >= 0.56 / sin(theta) LU past it (section 5 rule 3).
+// The a in Levi's K831 form (docs/design/K831.md): one strand enters
+// low and joins the bottom arc tangentially at the oval's bottom-left
+// (BL), forks up the left side, turns the declared top-right corner
+// down the stem, and leaves tangentially at BR, where the bottom arc
+// lands. The pre-K831 form (connector arching over the shoulder onto
+// J at the top, top and stem as crossing spurs) is below as A_LANDED.
 const A_GLYPH: Glyph = {
+  ch: "a",
+  entry: { at: [0, 32], dir: LOW, kind: "o" },
+  exit: { at: [120, 32], dir: LOW, cls: "B" },
+  body: knotsToPath([
+    [0, 32, LOW[0], LOW[1], 0, 0.5],
+    [16, 38, 4, -1, 2, 2.5],
+    // BL: the connector arrives along the bottom arc's own line (the
+    // low tangential join); the body forks up the left side, and the
+    // bottom arc is the spur out of BL, landing at BR.
+    [32, 20, 1, -1, 6, 2, -1, 4],
+    [25, 40, 0, 1, 10, 8],
+    [36, 63, 1, 2, 5, 4],
+    [58, 72, 1, 0, 9, 9],
+    // The top-right CORNER (declared in `corners`): the top turns down
+    // the stem in one strand - no crossing, both cusps sharp.
+    [84, 70, 1, 0, 7, 7, 0, -1],
+    [83, 44, 0, -1, 6, 10],
+    // BR: the bottom spur lands here; the tail leaves down the stem's
+    // own line before sweeping to the exit (tangential, not a fork).
+    [79, 20, 0, -1, 10, 9],
+    [95, 4, 1, 0, 9, 18],
+    [120, 32, LOW[0], LOW[1], 1.5, 0],
+  ]),
+  spurs: [
+    {
+      // The oval's bottom arc: the spur out of the BL fork, landing
+      // on the stem at BR.
+      at: 6,
+      land: true,
+      path: knotsToPath([
+        [32, 20, 1, -1, 0, 5],
+        [50, 6, 1, 0, 11, 7],
+        [64, 7, 1, 0, 7, 10],
+        [79, 20, 1, 2, 2, 0],
+      ]),
+    },
+  ],
+  corners: [18],
+  floats: [],
+  crossings: 0,
+};
+
+/**
+ * The a with its connector LANDING on J from above: the stage 9 kill
+ * criterion's closest passing form (a_search.ts in the stage 9 probes). The
+ * connector climbs steeply, turns over near (22, 77) and lands on the
+ * oval's top heading (2, -1), so its arm opens 27.7 degrees off the oval's
+ * (the tangent arrival opens 1: the thorn). Every rule passes at xh 2 and 3,
+ * at the same advance. Probe switch `#glyphs2=aland`; Levi's call.
+ */
+export const A_LANDED: Glyph = {
+  // K831: preserved as the pre-K831 form (the connector landing on J
+  // from above, the top and stem as crossing spurs) for probe
+  // comparison; the new A_GLYPH has no tangent join for it to strip.
+  ch: "a",
+  entry: { at: [0, 32], dir: LOW, kind: "o" },
+  exit: { at: [120, 32], dir: LOW, cls: "B" },
+  body: knotsToPath([
+    [0, 32, LOW[0], LOW[1], 0, 2],
+    [22, 77, 3, 1, 8, 3],
+    [46, 72, 2, -1, 3, 14, -1, 0],
+    [28, 36, 0, -1, 20, 20],
+    [46, 0, 1, 0, 13, 13],
+    [66, 24, 1, 4, 3, 6, 1, -2],
+    [88, 4, 1, 0, 10, 14],
+    [120, 32, LOW[0], LOW[1], 2, 0],
+  ]),
+  spurs: [
+    {
+      at: 6,
+      path: knotsToPath([
+        [46, 72, 1, 0, 0, 18],
+        [100, 70, 1, 0, 18, 0],
+      ]),
+    },
+    {
+      at: 15,
+      path: knotsToPath([
+        [66, 24, 1, 4, 0, 3],
+        [83, 92, 1, 4, 3, 0],
+      ]),
+    },
+  ],
+  floats: [],
+  crossings: 1,
+};
+
+/**
+ * K831: the pre-K831 a, preserved as the tangent-join exemplar: the
+ * connector and the oval meet tangentially at J (body index 6) and draw
+ * as one tapered root (K580). The K831 a joins at a fork instead, so
+ * this form is no longer the authored a; it stays as the fixture the
+ * K580/K643 taper tests and calibrations run on, and probe switch
+ * `#glyphs2=atangent` builds it.
+ */
+export const A_TANGENT: Glyph = {
   ch: "a",
   entry: { at: [0, 32], dir: LOW, kind: "o" },
   exit: { at: [120, 32], dir: LOW, cls: "B" },
@@ -116,30 +212,6 @@ const A_GLYPH: Glyph = {
   ],
   floats: [],
   crossings: 1,
-};
-
-/**
- * The a with its connector LANDING on J from above: the stage 9 kill
- * criterion's closest passing form (a_search.ts in the stage 9 probes). The
- * connector climbs steeply, turns over near (22, 77) and lands on the
- * oval's top heading (2, -1), so its arm opens 27.7 degrees off the oval's
- * (the tangent arrival opens 1: the thorn). Every rule passes at xh 2 and 3,
- * at the same advance. Probe switch `#glyphs2=aland`; Levi's call.
- */
-export const A_LANDED: Glyph = {
-  ...A_GLYPH,
-  // The landed J is a 27.7 degree fork, not a tangent join (K580).
-  spurs: A_GLYPH.spurs.map((s) => ({ at: s.at, path: s.path })),
-  body: knotsToPath([
-    [0, 32, LOW[0], LOW[1], 0, 2],
-    [22, 77, 3, 1, 8, 3],
-    [46, 72, 2, -1, 3, 14, -1, 0],
-    [28, 36, 0, -1, 20, 20],
-    [46, 0, 1, 0, 13, 13],
-    [66, 24, 1, 4, 3, 6, 1, -2],
-    [88, 4, 1, 0, 10, 14],
-    [120, 32, LOW[0], LOW[1], 2, 0],
-  ]),
 };
 
 /** Lead tails: a straight run along the entry or exit tangent. */

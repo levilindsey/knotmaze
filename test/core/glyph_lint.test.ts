@@ -3,7 +3,7 @@
 // below; synthetic glyphs pin each rule.
 import { describe, expect, it } from "vitest";
 import { lintGlyph, LINT } from "../../src/core/glyphs/glyph_lint";
-import { A_LANDED, FORK_VARIANTS, GLYPHS, glyphI } from "../../src/core/glyphs/glyph_data";
+import { A_LANDED, A_TANGENT, FORK_VARIANTS, GLYPHS, glyphI } from "../../src/core/glyphs/glyph_data";
 import { knotsToPath, type Knot } from "../../src/core/glyphs/glyph_knots";
 import { TAPER_PART_LU } from "../../src/core/glyphs/glyph_graph";
 import { widenCrotch } from "../../src/core/glyphs/glyph_inject";
@@ -12,12 +12,13 @@ import { buildTextGraph } from "../../src/core/text_graph";
 
 /**
  * Known failures: glyph -> the rules it is allowed to break (and only
- * those). None today. K580: the a's o-kind J is a TANGENT join (its
- * connector-in and oval-out arms leave J together and draw as one tapered
- * root), so the fork and crotch-clearance rules give way to the taper
- * checks. Stage 1's equal-arc root failed taper-g1 at xh 2 (0.022 LU out
- * of the strokes at R); stage 2's medial root stays inside at both sizes
- * (docs/design/K580_s2.md).
+ * those). None today. K580: the preserved A_TANGENT exemplar's o-kind J
+ * is a TANGENT join (its connector-in and oval-out arms leave J together
+ * and draw as one tapered root), so the fork and crotch-clearance rules
+ * give way to the taper checks. Stage 1's equal-arc root failed taper-g1
+ * at xh 2 (0.022 LU out of the strokes at R); stage 2's medial root stays
+ * inside at both sizes (docs/design/K580_s2.md). The K831 a joins at a
+ * fork instead; A_TANGENT keeps the tangent machinery calibrated.
  */
 const KNOWN: Record<string, Record<number, string[]>> = {};
 
@@ -73,9 +74,9 @@ describe("glyph lint: the authored set", () => {
     }
   });
 
-  it("K580: the tangent a's root parts, tapers monotonically from double width and closes its crotch in time", () => {
+  it("K580: the tangent exemplar's root parts, tapers monotonically from double width and closes its crotch in time", () => {
     for (const xh of [2, 3]) {
-      const r = lintGlyph(GLYPHS.get("a")!, xh);
+      const r = lintGlyph(A_TANGENT, xh);
       expect(r.tapers.map((t) => t.junction), `xh ${xh}`).toEqual([6]);
       const t = r.tapers[0];
       expect(t.monotone).toBe(true);
@@ -98,7 +99,7 @@ describe("glyph lint: the authored set", () => {
 
   it("K580: the medial root's outline stays inside the strokes; its far side sinks in a little", () => {
     for (const xh of [2, 3]) {
-      const t = lintGlyph(GLYPHS.get("a")!, xh).tapers[0];
+      const t = lintGlyph(A_TANGENT, xh).tapers[0];
       expect(t.bulgeLU, `xh ${xh}`).toBeLessThanOrEqual(LINT.taperBulgeLU);
       // The nearer outer edge bounds the width, so the other side lies
       // inside O's ribbon: 0.053 LU at xh 2, 0.049 at xh 3.
@@ -108,7 +109,7 @@ describe("glyph lint: the authored set", () => {
   });
 
   it("K643: the lint judges the taper at the part it is given", () => {
-    const a = GLYPHS.get("a")!;
+    const a = A_TANGENT;
     for (const xh of [2, 3]) {
       expect(lintGlyph(a, xh, TAPER_PART_LU), `xh ${xh}`).toEqual(lintGlyph(a, xh));
       const t52 = lintGlyph(a, xh, 0.52).tapers[0];
@@ -123,7 +124,7 @@ describe("glyph lint: the authored set", () => {
   });
 
   it("K643: an injected bulge past taperBulgeLU fails taper-g1", () => {
-    const a = GLYPHS.get("a")!;
+    const a = A_TANGENT;
     for (const xh of [2, 3]) {
       const under = lintGlyph(a, xh, TAPER_PART_LU, 0.9 * LINT.taperBulgeLU);
       expect(under.errors, `xh ${xh}`).toEqual([]);
@@ -134,8 +135,8 @@ describe("glyph lint: the authored set", () => {
     }
   });
 
-  it("K643: widenCrotch lengthens the a's crotch and keeps it lint-clean", () => {
-    const a = GLYPHS.get("a")!;
+  it("K643: widenCrotch lengthens the tangent exemplar's crotch and keeps it lint-clean", () => {
+    const a = A_TANGENT;
     // The smooth range (K643 Handoff): 0.64 -> 0.67 LU at xh 2, 0.27 -> 0.79 at xh 3.
     const cases: Array<[number, number, number]> = [
       [2, 0.4, 0.66],
@@ -158,9 +159,12 @@ describe("glyph lint: the authored set", () => {
       return JSON.stringify([[...g.nodes.values()], g.strands]);
     };
     for (const text of ["a", "ai"]) {
-      expect(key(text, "1,bulge0,crotch0x")).toBe(key(text, "1"));
-      expect(key(text, "1,bulge0.02")).not.toBe(key(text, "1"));
-      expect(key(text, "1,crotch1.2")).not.toBe(key(text, "1"));
+      // The flags act on tangent joins; the K831 a has none, so they are
+      // exercised on the preserved tangent exemplar (`atangent`).
+      expect(key(text, "1,atangent,bulge0,crotch0x")).toBe(key(text, "1,atangent"));
+      expect(key(text, "1,atangent,bulge0.02")).not.toBe(key(text, "1,atangent"));
+      expect(key(text, "1,atangent,crotch1.2")).not.toBe(key(text, "1,atangent"));
+      expect(key(text, "1,bulge0.02")).toBe(key(text, "1"));
     }
   });
 

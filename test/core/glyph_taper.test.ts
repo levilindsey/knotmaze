@@ -1,20 +1,20 @@
 // K580: the tangent join's tapered root, as the glyph builder emits it. The
-// a's spur at J (body index 6) is `tangent`: its strand starts at the part
+// A_TANGENT exemplar's spur at J (body index 6) is `tangent`: its strand starts at the part
 // point R (a degree-1 TURN marked rootStart), runs the root to J and goes on
 // as the spur, and carries the root's width profile in Strand.taper.
 import { describe, expect, it } from "vitest";
 import { buildGlyphGraph, tangentRoot, TAPER_PART_LU, TAPER_PROFILE_N, GU_PER_XH } from "../../src/core/glyphs/glyph_graph";
-import { GLYPHS } from "../../src/core/glyphs/glyph_data";
+import { A_TANGENT } from "../../src/core/glyphs/glyph_data";
 import { checkStructure } from "../../src/core/tangle_graph";
 import { NODE_TYPE } from "../../src/core/types";
 
 const tapered = (xh: number, opts: { taper?: boolean; aLanded?: boolean } = {}) =>
-  buildGlyphGraph("a", { xHeight: xh, ...opts })!.graph.strands.filter((s) => s.taper);
+  buildGlyphGraph("a", { xHeight: xh, aTangent: true, ...opts })!.graph.strands.filter((s) => s.taper);
 
 describe("K580: the tangent a's tapered root", () => {
   for (const xh of [2, 3]) {
     it(`the profile at xh ${xh}: double width at R, falling monotonically to normal at J`, () => {
-      const b = buildGlyphGraph("a", { xHeight: xh })!;
+      const b = buildGlyphGraph("a", { xHeight: xh, aTangent: true })!;
       expect(checkStructure(b.graph)).toBe(true);
       const roots = b.graph.strands.filter((s) => s.taper);
       expect(roots.length).toBe(1);
@@ -42,7 +42,7 @@ describe("K580: the tangent a's tapered root", () => {
   it("the part point: where the strokes' medial gap reaches one thread width", () => {
     for (const xh of [2, 3]) {
       const k = GU_PER_XH / xh;
-      const root = tangentRoot(GLYPHS.get("a")!.body, 6, TAPER_PART_LU * k)!;
+      const root = tangentRoot(A_TANGENT.body, 6, TAPER_PART_LU * k)!;
       expect(root).not.toBeNull();
       // R is on the medial axis, r from both strokes, with 2r the part.
       expect((2 * root.rAt(root.aR)) / k).toBeCloseTo(TAPER_PART_LU, 6);
@@ -62,6 +62,8 @@ describe("K580: the tangent a's tapered root", () => {
     for (const xh of [2, 3]) {
       expect(tapered(xh, { taper: false })).toEqual([]);
       expect(tapered(xh, { aLanded: true })).toEqual([]);
+      // The K831 a joins at a fork: no tangent spur, no root.
+      expect(buildGlyphGraph("a", { xHeight: xh })!.graph.strands.filter((s) => s.taper)).toEqual([]);
     }
   });
 });

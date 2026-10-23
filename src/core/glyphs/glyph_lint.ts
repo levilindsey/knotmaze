@@ -2,11 +2,13 @@
 // glyphs doc section 5). One glyph at one x-height, on the authored
 // cubics, in GU (thresholds are LU, converted by 72 / xh). It checks:
 // - the declared structure: crossings found = `crossings`, each converged
-//   and two-pass (no triple point), spurs (one JUNCTION and one END each)
+//   and two-pass (no triple point), spurs (one JUNCTION and one END each;
+//   a K831 landing spur has two JUNCTIONs and no END)
 //   and floats (two ENDs each);
 // - every crossing's sin >= 0.55, and consecutive crossings along one pass
 //   >= 0.30/sin1 + 0.30/sin2 LU apart;
-// - G1: a body corner only at a spur's junction; spurs and floats smooth;
+// - G1: a body corner only at a spur's junction or a declared corner
+//   (Glyph.corners, K831); spurs and floats smooth;
 // - the FORK rule at every spur junction: the two arms that leave along
 //   the overlap's direction open by >= 15 degrees (LINT.forkMinCos) and
 //   reach full clearance within LINT.forkMaxLU (measured on the stage 9 fork
@@ -337,8 +339,12 @@ export function lintGlyph(g: Glyph, xh: number, partLU: number = TAPER_PART_LU, 
 
   // --- G1 and radii. ---
   const spurJoints = new Set(g.spurs.map((s) => s.at));
+  const cornerJoints = new Set(g.corners ?? []);
   for (const j of g1Failures(g.body)) {
-    if (!spurJoints.has(j)) errors.push({ rule: "g1", msg: `body corner at joint ${j} (no spur there)`, at: [g.body[j][0], g.body[j][1]] });
+    if (!spurJoints.has(j) && !cornerJoints.has(j)) errors.push({ rule: "g1", msg: `body corner at joint ${j} (no spur or declared corner there)`, at: [g.body[j][0], g.body[j][1]] });
+  }
+  for (const j of cornerJoints) {
+    if (!g1Failures(g.body).includes(j)) errors.push({ rule: "corner", msg: `declared corner at joint ${j} is not a corner`, at: [g.body[j]?.[0] ?? 0, g.body[j]?.[1] ?? 0] });
   }
   g.spurs.forEach((s, i) => {
     for (const j of g1Failures(s.path)) errors.push({ rule: "g1", msg: `spur ${i} corner at joint ${j}` });
@@ -422,7 +428,7 @@ export function lintGlyph(g: Glyph, xh: number, partLU: number = TAPER_PART_LU, 
   }
 
   // --- Junctions: arms and the fork rule. ---
-  interface Junction { joint: number; spur: number; arms: Arm[]; d0: Map<string, number> }
+  interface Junction { joint: number; spur: number; arms: Arm[]; d0: Map<string, number>; spurLen?: number }
   const junctions: Junction[] = [];
   const forks: ForkReport[] = [];
   g.spurs.forEach((s, i) => {
@@ -463,6 +469,50 @@ export function lintGlyph(g: Glyph, xh: number, partLU: number = TAPER_PART_LU, 
       }
     }
     junctions.push({ joint: s.at, spur: 1 + i, arms, d0 });
+  });
+
+  // --- K831: landing junctions (a land spur's tip on the body). The
+  // landing is judged like a junction: the fork rule binds its arm
+  // pairs, and the fork zone exempts the threads that meet there.
+  g.spurs.forEach((s, i) => {
+    if (!s.land) return;
+    const sp = recs[1 + i];
+    const tip = s.path[s.path.length - 1];
+    const jTip = g.body.findIndex((p) => p[0] === tip[0] && p[1] === tip[1]);
+    if (jTip <= 0 || jTip % 3 !== 0) {
+      errors.push({ rule: "land", msg: `spur ${i} lands at [${tip[0]},${tip[1]}], not a body joint`, at: [tip[0], tip[1]] });
+      return;
+    }
+    const sT = body.arc0 + densePath(g.body)[(jTip / 3) * K_STEPS].s;
+    const arms: Arm[] = [
+      { name: "in", rec: body, a0: sT, sign: -1, len: sT },
+      { name: "out", rec: body, a0: sT, sign: 1, len: body.len - sT },
+      { name: "spur", rec: sp, a0: sp.len, sign: -1, len: sp.len },
+    ];
+    const d0 = new Map<string, number>();
+    for (let a = 0; a < arms.length; a++) {
+      for (let b = a + 1; b < arms.length; b++) {
+        const A = arms[a];
+        const B = arms[b];
+        const dmax = Math.min(A.len, B.len);
+        let dc = Infinity;
+        for (let d = 0; d <= dmax; d += 0.25) {
+          const p = armPos(A, d);
+          const q = armPos(B, d);
+          if (dist(p[0], p[1], q[0], q[1]) >= CLEAR) { dc = d; break; }
+        }
+        const ua = armDir(A);
+        const ub = armDir(B);
+        const cos = ua[0] * ub[0] + ua[1] * ub[1];
+        d0.set(`${A.name}-${B.name}`, dc);
+        forks.push({ junction: jTip, arms: [A.name, B.name], cos, dClearLU: dc / k });
+        if (cos > 0) {
+          if (cos > LINT.forkMinCos) errors.push({ rule: "fork-angle", msg: `landing ${jTip} ${A.name}/${B.name}: arms open by less than 15 degrees (cos ${cos.toFixed(4)})`, at: [tip[0], tip[1]] });
+          if (!(dc / k <= LINT.forkMaxLU)) errors.push({ rule: "fork-distance", msg: `landing ${jTip} ${A.name}/${B.name}: full clearance at ${(dc / k).toFixed(2)} LU > ${LINT.forkMaxLU}`, at: [tip[0], tip[1]] });
+        }
+      }
+    }
+    junctions.push({ joint: jTip, spur: 1 + i, arms, d0, spurLen: sp.len });
   });
 
   // --- K580: tangent joins. ---
@@ -652,7 +702,8 @@ export function lintGlyph(g: Glyph, xh: number, partLU: number = TAPER_PART_LU, 
       const sJ = J.arms[0].a0;
       return a < sJ ? { name: "in", d: sJ - a } : { name: "out", d: a - sJ };
     }
-    if (id === J.spur) return { name: "spur", d: a };
+    // A landing junction's spur arm is walked back from the spur's tip.
+    if (id === J.spur) return { name: "spur", d: J.spurLen !== undefined ? J.spurLen - a : a };
     return null;
   };
   const forkExempt = (P: number, ap: number, Q: number, aq: number): boolean => {
@@ -738,7 +789,9 @@ export function lintGlyph(g: Glyph, xh: number, partLU: number = TAPER_PART_LU, 
       }
     }
   };
-  g.spurs.forEach((_s, i) => tipCheck(1 + i, 1));
+  g.spurs.forEach((s, i) => {
+    if (!s.land) tipCheck(1 + i, 1);
+  });
   g.floats.forEach((_f, i) => {
     tipCheck(floatBase + i, 0);
     tipCheck(floatBase + i, 1);
@@ -752,8 +805,8 @@ export function lintGlyph(g: Glyph, xh: number, partLU: number = TAPER_PART_LU, 
     forks,
     tapers,
     crossings,
-    ends: g.spurs.length + 2 * g.floats.length,
-    junctions: g.spurs.length,
+    ends: g.spurs.filter((s) => !s.land).length + 2 * g.floats.length,
+    junctions: junctions.length,
     minClearLU: minClear / k,
     minTipLU: minTip / k,
     minRGU: minR,

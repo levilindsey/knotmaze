@@ -865,6 +865,7 @@ export function buildTextGraph(text: string, opts?: TextGraphOpts): TangleGraph 
       forks: flags.includes("forks"),
       fork: fk ? Number(fk.slice(1)) : undefined,
       aLanded: flags.includes("aland"),
+      aTangent: flags.includes("atangent"),
       // K580: `notaper` builds stage 9's tangent joins (no root); `tp60`
       // parts the root where the strokes' centerlines are 0.6 LU apart.
       taper: !flags.includes("notaper"),
