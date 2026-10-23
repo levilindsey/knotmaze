@@ -410,6 +410,18 @@ export function lintGlyph(g: Glyph, xh: number, partLU: number = TAPER_PART_LU, 
       const js = g.spurs[sp.path - 1].at / 3;
       if (other.seg === js || other.seg === js - 1) return true;
     }
+    // K836: a landing spur's LAST segment meets the body at its tip
+    // joint the same way its first segment meets it at the root: the
+    // segments adjacent to the tip joint are the junction, not a
+    // crossing (a tangent landing touches there by construction).
+    if (sp && other.path === 0 && g.spurs[sp.path - 1].land) {
+      const path = pathOf(sp.path);
+      if (sp.seg === segCount(path) - 1) {
+        const tip = g.spurs[sp.path - 1].path[path.length - 1];
+        const jTip = g.body.findIndex((p) => p[0] === tip[0] && p[1] === tip[1]);
+        if (jTip > 0 && (other.seg === jTip / 3 || other.seg === jTip / 3 - 1)) return true;
+      }
+    }
     return false;
   };
   const hits = findCrossings(segs, skip);
@@ -520,7 +532,11 @@ export function lintGlyph(g: Glyph, xh: number, partLU: number = TAPER_PART_LU, 
         const cos = ua[0] * ub[0] + ua[1] * ub[1];
         d0.set(`${A.name}-${B.name}`, dc);
         forks.push({ junction: jTip, arms: [A.name, B.name], cos, dClearLU: dc / k });
-        if (cos > 0) {
+        // K836: a tangent landing (the spur declared `landTangent`) joins
+        // the body along its own curve - the acute wedge under the
+        // junction is the letterform, not a fork defect, so the pairs
+        // the spur arm makes are waived like a tangent root's.
+        if (cos > 0 && !(s.landTangent && (A.name === "spur" || B.name === "spur"))) {
           if (cos > LINT.forkMinCos) errors.push({ rule: "fork-angle", msg: `landing ${jTip} ${A.name}/${B.name}: arms open by less than 15 degrees (cos ${cos.toFixed(4)})`, at: [tip[0], tip[1]] });
           if (!(dc / k <= LINT.forkMaxLU)) errors.push({ rule: "fork-distance", msg: `landing ${jTip} ${A.name}/${B.name}: full clearance at ${(dc / k).toFixed(2)} LU > ${LINT.forkMaxLU}`, at: [tip[0], tip[1]] });
         }

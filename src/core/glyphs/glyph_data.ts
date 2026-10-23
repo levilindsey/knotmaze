@@ -78,53 +78,56 @@ export function glyphI(fork: ForkAngle = 0): Glyph {
   };
 }
 
-// The a in Levi's K831 form (docs/design/K831.md): the entry itself
-// sits low, south-west of the oval's bottom-left (BL), so the
-// approaching strand (the lead or connector, then the first body
-// segment) rises north-east into BL and continues tangentially up
-// the left side. The bottom arc forks from BL to BR. The pre-K831
-// form (connector arching over the shoulder onto J at the top, top
-// and stem as crossing spurs) is below as A_LANDED.
+// The a in Levi's K836 form: tangent attachments to an otherwise
+// undisturbed oval (the pre-K831 silhouette, as in A_TANGENT). The
+// body enters from the south-west and touches the oval halfway up
+// its left side at L, arriving along the oval's own tangent there;
+// it then traces the oval over the top and down the right side to R
+// and leaves for the exit. The oval's bottom arc is one landing spur
+// out of R: down the right side (the body's arrival and the spur
+// are one smooth curve through R), around the bottom and up the
+// left side to land at L, so the oval's inside curve is undisturbed
+// at both junctions and a thin acute wedge sits under each. No
+// declared corners: every turn is the oval's own curve. The K831
+// form (low BL fork, cornered stem) is retired; A_TANGENT stays as
+// the probe fixture.
 const A_GLYPH: Glyph = {
   ch: "a",
-  entry: { at: [14, 8], dir: [1, 1], kind: "o" },
+  entry: { at: [12, 10], dir: [1, 1], kind: "o" },
   exit: { at: [120, 32], dir: LOW, cls: "B" },
   body: knotsToPath([
-    [14, 8, 1, 1, 0, 5],
-    // BL: the entry rises north-east into J and the body continues on
-    // that same tangent up the left side. The bottom arc forks from
-    // here to BR; it is not the entry's continuation.
-    [34, 24, 1, 1, 5, 6],
-    [38, 44, 0, 1, 8, 6],
-    [44, 64, 1, 1, 5, 6],
-    [64, 72, 1, 0, 8, 9],
-    // The top-right CORNER (declared in `corners`): the level top
-    // turns down the straight stem in one strand - no crossing, both
-    // cusps sharp.
-    [86, 72, 1, 0, 9, 7, 0, -1],
-    [86, 46, 0, -1, 7, 8],
-    // BR: the bottom spur lands here (declared corner, point 21):
-    // the tail leaves south-east in one segment to the exit - a
-    // two-segment tail bottomed at R 10.8 GU however the handles were
-    // split (the climb to the exit is too steep to share).
-    [86, 20, 0, -1, 9, 9, 1, -1],
-    [120, 32, LOW[0], LOW[1], 2, 0],
+    [12, 10, 1, 1, 0, 6],
+    // L: halfway up the left side. The body arrives along the oval's
+    // tangent (1, 4) and leaves up that same line - the entry is a
+    // tangent attachment, not a reroute.
+    [30, 44, 1, 4, 7, 4],
+    [42, 68, 1, 1, 5, 5],
+    [60, 73, 1, 0, 9, 10],
+    [84, 52, 0, -1, 11, 9],
+    // R: further up the right side. A corner at the spur's junction:
+    // the exit leaves down-right (the acute wedge under it), the
+    // bottom spur leaves down the oval's own curve.
+    [80, 34, 0, -1, 7, 3, 3, -4],
+    [104, 24, 1, 0, 9, 5],
+    [120, 32, LOW[0], LOW[1], 1, 0],
   ]),
   spurs: [
     {
-      // The oval's bottom arc: the spur out of the BL fork, landing
-      // on the stem at BR.
-      at: 3,
+      // The oval's bottom arc: out of R, around the bottom, up the
+      // left side to land at L along its tangent.
+      at: 15,
       land: true,
+      landTangent: true,
       path: knotsToPath([
-        [34, 24, 1, -1, 0, 5],
-        [52, 8, 1, 0, 11, 7],
-        [66, 9, 1, 0, 7, 10],
-        [86, 20, 1, 2, 4, 0],
+        [80, 34, 0, -1, 0, 7],
+        [85, 18, 0, -1, 7, 10],
+        [66, 3, -1, 0, 12, 12],
+        [44, 1, -1, 0, 11, 6],
+        [28, 14, -1, 2, 5, 5],
+        [30, 44, 1, 4, 4, 0],
       ]),
     },
   ],
-  corners: [15, 21],
   floats: [],
   crossings: 0,
 };

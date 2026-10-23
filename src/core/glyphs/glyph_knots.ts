@@ -32,8 +32,8 @@ export function knotsToPath(knots: readonly Knot[]): Pt[] {
 /**
  * K831 follow-up: a dot (the i's tittle) as a closed ellipse loop from
  * its centre and two half-axis vectors - the dedicated dot-drawing
- * function, so a dot is never authored as a pretend segment. Twelve
- * points around the ellipse: the first form's four-corner square put
+ * function, so a dot is never authored as a pretend segment. A ring
+ * of points around the ellipse: the first form's four-corner square put
  * so few nodes on the loop that the renderer's spline through them,
  * under a stroke wider than the loop, drew lobes at the corners (an
  * irregular nobbly blob, not a dot). At dot size the stroke fills the
@@ -44,9 +44,14 @@ export function dotLoop(c: Pt, a: Pt, b: Pt): Pt[] {
   // of implementation-approximated math (K108), and the dot's figure is
   // identical on every engine.
   const H = 0.8660254037844386; // sqrt(3)/2
+  const Q = 0.9659258262890683; // cos(15 deg)
+  const S = 0.25881904510252074; // sin(15 deg)
+  const D = 0.7071067811865476; // sqrt(2)/2
   const RING: readonly Pt[] = [
-    [1, 0], [H, 0.5], [0.5, H], [0, 1], [-0.5, H], [-H, 0.5],
-    [-1, 0], [-H, -0.5], [-0.5, -H], [0, -1], [0.5, -H], [H, -0.5],
+    [1, 0], [Q, S], [H, 0.5], [D, D], [0.5, H], [S, Q],
+    [0, 1], [-S, Q], [-0.5, H], [-D, D], [-H, 0.5], [-Q, S],
+    [-1, 0], [-Q, -S], [-H, -0.5], [-D, -D], [-0.5, -H], [-S, -Q],
+    [0, -1], [S, -Q], [0.5, -H], [D, -D], [H, -0.5], [Q, -S],
   ];
   const N = RING.length;
   const cs: Pt[] = [];
