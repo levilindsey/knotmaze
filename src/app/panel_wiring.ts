@@ -534,6 +534,7 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
       // K813: the highlights' colors and widths.
       params.pulseColor, params.pulseWidth, params.hoverColor,
       params.telegraphWidth, params.frayColor, params.frayWidth,
+      params.cornerRoundShare, // K830
     ];
     if (lookCache !== null && lookCache.r === scene.renderer) {
       let same = true;
@@ -545,6 +546,7 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
     scene.renderer.flowStrength = flowStrength;
     scene.renderer.flowSpeed = flowSpeed;
     scene.renderer.cuspRadius = params.cuspRadius;
+    scene.renderer.cornerRoundShare = params.cornerRoundShare; // K830
     scene.renderer.pulseSpacing = params.pulseSpacing;
     // K76 stage 2c (question 5): under the thread reveal the pulses never
     // reach past the reveal distance.

@@ -20,7 +20,7 @@
 // leaves its junction (PEN_EPS per GU); floats after the body, glyph by
 // glyph, FLOAT_GAP apart. The caller runs assignPenOrder.
 
-import { NODE_TYPE, type Edge, type Node, type Strand, type TangleGraph } from "../types";
+import { NODE_TYPE, type CornerPin, type Edge, type Node, type Strand, type TangleGraph } from "../types";
 import type { CubicPath, Glyph, Pt } from "./glyph_types";
 import {
   K_STEPS,
@@ -515,6 +515,9 @@ interface PathRec {
   tangent?: boolean;
   /** K831: the spur's tip lands on the body (a second junction). */
   land?: boolean;
+  /** K830: corner pins copied from the authored spur def. */
+  cornerPin?: CornerPin;
+  landCornerPin?: CornerPin;
   /** K580: the tapered root this spur's path starts with (its first
    *  `segs` segments, R to J). */
   root?: TangentRoot & { segs: number };
@@ -705,6 +708,8 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
         glyph: glyphNo,
         ...(s.tangent ? { tangent: true } : {}),
         ...(s.land ? { land: true } : {}),
+        ...(s.cornerPin ? { cornerPin: s.cornerPin } : {}),
+        ...(s.landCornerPin ? { landCornerPin: s.landCornerPin } : {}),
       });
     }
     for (const f of g.floats) {
@@ -787,8 +792,10 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
   for (let gi = 1; gi < entryIdx.length; gi++) {
     forced[0].push({ p: entryIdx[gi] / 3, kind: "waypoint" });
   }
+  const nodePins = new Map<string, CornerPin>();
   spurs.forEach((s, si) => {
     const id = `tj${si}`;
+    if (s.cornerPin) nodePins.set(id, s.cornerPin);
     forced[0].push({ p: s.junction / 3, kind: "junction", id });
     // K831: a landing spur's tip is a second junction on the body (the
     // authored tip is a body joint; the shared id merges the nodes).
@@ -797,6 +804,7 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
       const bp = paths[0].path.findIndex((q) => q[0] === tip[0] && q[1] === tip[1]);
       if (bp > 0) {
         const lid = `tl${si}`;
+        if (s.landCornerPin) nodePins.set(lid, s.landCornerPin);
         forced[0].push({ p: bp / 3, kind: "junction", id: lid });
         forced[1 + si].push({ p: segCount(s.path), kind: "junction", id: lid });
       }
@@ -925,6 +933,7 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
       latticePos: norm(q),
       ...(waypoints.has(id) ? { waypoint: true } : {}),
       ...(rootStarts.has(id) ? { rootStart: true as const } : {}),
+      ...(nodePins.has(id) ? { cornerPin: nodePins.get(id)! } : {}),
     });
   }
   const edges = new Map<string, Edge>();

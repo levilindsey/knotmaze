@@ -2517,6 +2517,11 @@ export function buildPanel(
     D.cuspRadius, () => callbacks.onSlackChange()
   );
   row(
+    fLook, p, "cornerRoundShare", { min: 0, max: 1, step: 0.01, format: (v: number) => `${Math.round(v * 100)}%`, label: "Rounded corners" },
+    "Share of junction corners drawn rounded: 0% makes every wedge meet at a sharp miter, 100% is today's rounded fillets. In between, broad bends round first and narrow points keep their cusps (chosen from the built maze, so settling cannot flip a corner). Applies live; Corner reach sets how far each corner runs along its threads.",
+    D.cornerRoundShare, () => callbacks.onStyleChange()
+  );
+  row(
     fLook, p, "background",
     {
       label: "Backdrop",

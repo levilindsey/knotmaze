@@ -285,6 +285,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["goldTextureStrength", "number"], // K820
   ["loaderSpeed", "number"], // K828
   ["loaderMove", "enum", ["maze", "head"]], // K828
+  ["cornerRoundShare", "number"], // K830
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

@@ -11,10 +11,15 @@ export const NODE_TYPE = {
 
 export type NodeType = (typeof NODE_TYPE)[keyof typeof NODE_TYPE];
 
+/** K830: a builder's explicit junction-corner style, where it can name one. */
+export type CornerPin = "round" | "sharp";
+
 export interface Node {
   id: string;
   type: NodeType;
   latticePos: [number, number];  // Doubled-lattice position (turns may be fractional).
+  /** K830: force every joinery wedge at this JUNCTION node round or sharp, overriding cornerRoundShare. Emergent mask junctions omit it. */
+  cornerPin?: CornerPin;
   isOver?: boolean;              // For crossings: true if the "/" (NE-SW) pass goes over.
   // K115 free-form crossings: when set, the first pass in strand order is
   // the over pass when true. Physics and checkAlternation prefer this over
