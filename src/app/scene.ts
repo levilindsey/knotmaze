@@ -457,6 +457,8 @@ export function createScene(deps: SceneDeps): Scene {
       fabric.telegraphWidth = params.telegraphWidth; // K813
       fabric.trailMode = pathVizOf(params) === "trail";
       fabric.pathViz = pathVizOf(params);
+      fabric.pathIrregularity = params.pathIrregularity; // K835
+      fabric.pathExcursion = params.pathExcursion; // K835
       fabric.tension = params.tension;
       fabric.trailLength = params.trailLength;
       syncExploration(fabric);

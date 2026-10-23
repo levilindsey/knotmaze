@@ -167,6 +167,8 @@ void main(void) {
   // full fill). A width of 0 hides the gold entirely.
   if (paintHere && kst.x > 0.0 && (uKPath.x < 1.0 || uKPath.y > 0.5)) {
     highp float ge = abs(2.0 * vUV.y - 1.0);
+    // K835: fill wobble (uKPathB.x) + smooth excursion swell (uKPathB.y).
+    if (uKPath.y > 0.5 && (uKPathB.x > 0.0 || uKPathB.y > 0.0)) ge += sin(vUV.x * 43.0 + sin(vUV.x * 17.0) * 1.7) * 0.22 * uKPathB.x + sin(vUV.x * 9.0 + sin(vUV.x * 23.0) * 0.7) * 0.45 * uKPathB.y;
     highp float fwG = max(fwidth(vUV.y) * 3.0, 0.02);
     highp float gw2 = uKPath.y > 2.5 ? min(uKPath.x * 1.15, 1.0) : uKPath.x;
     highp float gm = clamp((gw2 - ge) / fwG + 0.5, 0.0, 1.0)

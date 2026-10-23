@@ -86,6 +86,8 @@ export function knotUniforms(): UniformGroup {
       // K799: the traveled path look (width, texture mode); K813:
       // (pulse width, fray kept width).
       uKPath: v4(1, 0, 1, 0.45),
+      // K835: the traveled fill's hand-drawn wobble (x; 0 = ribbon-exact).
+      uKPathB: v4(),
       // K813: the highlights' colors (pulse rgb, -; hover rgb, the
       // telegraph rims' across scale 1 / telegraphWidth).
       uKHlPulse: v4(1, 1, 1, 1),

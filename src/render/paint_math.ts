@@ -317,6 +317,7 @@ export interface KUniforms {
   // ribbon programs; absent = fill.
   uKLook?: Float32Array;
   uKPath?: Float32Array; // K799 (width, texture), K813 (pulse width, fray width)
+  uKPathB?: Float32Array; // K835 (the traveled fill's edge wobble x; absent = 0)
   // K813: the highlights' colors; absent = white (today's whitening).
   uKHlPulse?: Float32Array; // (pulse rgb, -)
   uKHlHover?: Float32Array; // (hover rgb, telegraph rim scale)

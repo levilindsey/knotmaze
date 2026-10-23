@@ -436,6 +436,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   choice("loaderMove", ["maze", "head"]),
   // 245, K830: the rounded share of junction wedges.
   num("cornerRoundShare"),
+  num("pathIrregularity"), // K835
+  num("pathExcursion"), // K835
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -560,6 +562,8 @@ export const PARAM_RANGES: Readonly<
   goldTextureStrength: [0, 1], // K820
   loaderSpeed: [0.25, 3], // K828
   cornerRoundShare: [0, 1], // K830
+  pathIrregularity: [0, 1], // K835
+  pathExcursion: [0, 1], // K835
   streamerShare: [0, 1], // K336
   pluckWhole: [0, 1.5],
   markerSize: [0.25, 3],

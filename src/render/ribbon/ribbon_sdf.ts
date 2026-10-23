@@ -244,6 +244,8 @@ void main(void) {
   float kgl = paintHere ? kGlow(kc, kctrl) : 0.0;
   if (paintHere && kst.x > 0.0 && (uKPath.x < 1.0 || uKPath.y > 0.5)) {
     float ge = abs(2.0 * side01 - 1.0);
+    // K835: fill wobble (uKPathB.x) + smooth excursion swell (uKPathB.y).
+    if (uKPath.y > 0.5 && (uKPathB.x > 0.0 || uKPathB.y > 0.0)) ge += sin(vUVx * 43.0 + sin(vUVx * 17.0) * 1.7) * 0.22 * uKPathB.x + sin(vUVx * 9.0 + sin(vUVx * 23.0) * 0.7) * 0.45 * uKPathB.y;
     float fwG = max(fwidth(side01) * 3.0, 0.02);
     float gw2 = uKPath.y > 2.5 ? min(uKPath.x * 1.15, 1.0) : uKPath.x;
     float gm = clamp((gw2 - ge) / fwG + 0.5, 0.0, 1.0)

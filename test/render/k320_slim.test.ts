@@ -92,8 +92,13 @@ describe("K320 stage 1: char budgets", () => {
     // the junction field (28,235 -> 28,844 measured). The arm strips
     // and the still pluck keep their bytes (the cut chunk is not in
     // the shared fabric text).
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(55_270);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(71_685);
+    // K835 (2026-10-23): the traveled fill's hand-drawn edge wobble
+    // (uKPathB + the ge wobble/swell in both ribbon mains) adds 295
+    // to the section pair (55,205 -> 55,500 and 71,620 -> 71,915 measured
+    // here); the shared decl adds 22 to the strips, the junction
+    // field and the still pluck, which stay inside their budgets.
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(55_565);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(71_980);
     expect(STRIP_FRAG.length).toBeLessThanOrEqual(32_550);
     // K797b/K798 fillets (2026-10-21): the fan look gate and stroke
     // (junction_field.ts) add 755 (26,600 -> 27,355 here).
