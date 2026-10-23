@@ -398,6 +398,10 @@ export function createScene(deps: SceneDeps): Scene {
             return body >= 0 && t.footC ? { ...t, body } : t;
           })
         : undefined,
+      // K843: glyph junction flares (core Strand.flare), per chain.
+      flare: graph.strands.some((s) => s.flare)
+        ? graph.strands.map((s) => s.flare ?? null)
+        : undefined,
       // K580 s5: per chain, a glyph strand (core Strand.glyph); undefined
       // for a scene without glyphs, so nothing else reads a flag.
       glyph: graph.strands.some((s) => s.glyph)
