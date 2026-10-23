@@ -19,6 +19,7 @@ import { junctionProgram } from "./junction_field";
 import { markerProgram } from "./marker_mesh";
 import { pluckBlurProgram, pluckStillProgram } from "./pluck_overlay";
 import { rippleProgram } from "./pluck_ripple";
+import { sdfProgram } from "./ribbon/ribbon_sdf";
 import { sectionProgram } from "./ribbon/ribbon_shader";
 
 // Program sites per file under src/ (the test's scan, comments stripped):
@@ -35,6 +36,7 @@ export const PROGRAM_SITES: Readonly<Record<string, number>> = {
   "src/render/pluck_overlay.ts": 3, // pluck-blur, pluck-still, pluck-still-explore
   "src/render/pluck_ripple.ts": 2, // pluck-ripple: its program and its Filter
   "src/render/ribbon/ribbon_shader.ts": 2, // section-rgb, section-rgb-explore
+  "src/render/ribbon/ribbon_sdf.ts": 1, // ribbon-sdf (K8 G3-2)
 };
 
 // What the current page draws, as the warm-up needs to know it.
@@ -53,6 +55,8 @@ export interface WarmContext {
   fog: boolean;
   // Reduced motion: still plucks instead of the blur, no ripple.
   reduced: boolean;
+  // The SDF thread pass (?rp=sdf; K8 G3-2): its program draws wave 1.
+  sdf: boolean;
   // Pluck ripples on (pluckRipple not "off", and not reduced motion).
   ripple: boolean;
   // The background's first program ids (background.ts backgroundWarmIds);
@@ -114,6 +118,7 @@ function displacementProgram(): GlProgram {
 }
 
 const RIBBON = "src/render/ribbon/ribbon_shader.ts";
+const SDF = "src/render/ribbon/ribbon_sdf.ts";
 const STRIP = "src/render/arm_strip.ts";
 const FIELD = "src/render/junction_field.ts";
 const BG = "src/render/background.ts";
@@ -142,6 +147,13 @@ export function programRegistry(): readonly ProgramEntry[] {
       files: [RIBBON],
       wave1: (c) => !c.explore,
       build: () => sectionProgram(false),
+    },
+    {
+      // K8 G3-2: the SDF ribbons (only an rp=sdf page draws them).
+      name: "ribbon-sdf",
+      files: [SDF],
+      wave1: (c) => c.sdf,
+      build: () => sdfProgram(),
     },
     {
       name: "section-rgb-explore",

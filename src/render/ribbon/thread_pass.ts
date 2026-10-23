@@ -7,6 +7,7 @@
 // strip) or null (a pass that draws no per-chain mesh); the façade
 // adds a returned mesh to its base layer.
 
+import type { Mesh } from "pixi.js";
 import type { SplineSamples } from "../../geometry/spline_generator";
 import type { RibbonMesh } from "../ribbon_mesh";
 
@@ -24,4 +25,7 @@ export interface ThreadPass {
   collapse(chain: number): void;
   // Clamp a fused terminal's samples onto the tuck point.
   tuck(samples: SplineSamples, atStart: boolean, atEnd: boolean, chain: number): void;
+  // A meshless pass's one scene mesh (the SDF quads), built once the
+  // façade knows every chain; the strip never has one.
+  rootMesh?(): Mesh | null;
 }

@@ -442,7 +442,8 @@ export function warmContextFor(
   params: WarmParams,
   background: string,
   reduced: boolean,
-  maxBatchTextures: number
+  maxBatchTextures: number,
+  rpSdf = false
 ): WarmContext {
   return {
     fabric: params.mazeFabric,
@@ -475,6 +476,7 @@ export function warmContextFor(
       angle: params.backgroundAngle,
     }),
     maxBatchTextures,
+    sdf: rpSdf, // K8 G3-2 (?rp=sdf, read by main from the link)
   };
 }
 

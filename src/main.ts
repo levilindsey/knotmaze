@@ -387,7 +387,7 @@ async function main(): Promise<void> {
   // (pixi would link it cold), and the ripple pools its texture after
   // (K279 stage 2; its program is wave 1's).
   const warmup = startShaderWarmup(app.renderer, (n) =>
-    warmContextFor(params, look("background"), motion.reduced, n)
+    warmContextFor(params, look("background"), motion.reduced, n, new URLSearchParams(location.search).get("rp") === "sdf")
   );
   background.container.renderable = false;
   warmup.afterWave1(() => {

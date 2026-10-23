@@ -30,6 +30,47 @@ vec2 sampAt(int i) {
 }
 `;
 
+// K8 G3-2 (design 3.1): the SDF ribbons' own tables and cone. The
+// vertex stage reads the G3 CHAIN record (samp_table.ts writeChainTexels:
+// (sampBase, radBase, capStart, capEnd), (winBase, nWin, rangeBase,
+// nRange), two texels per chain) plus RADII and RANGES; the fragment
+// stage needs only sdCone/aaCov.
+export const SDF_TEX_GLSL = /* glsl */ `
+uniform highp sampler2D uRadii;
+uniform highp sampler2D uG3Chain;
+uniform highp sampler2D uRanges;
+vec4 g3ChainAt(int chain, int part) {
+  int t = chain * 2 + part;
+  return texelFetch(uG3Chain, ivec2(t & ${ROW_W - 1}, t >> 10), 0);
+}
+float radAt(int radBase, int j) {
+  int f = radBase + j; // RADII packs one float per sample (four per texel).
+  vec4 q = texelFetch(uRadii, ivec2((f >> 2) & ${ROW_W - 1}, (f >> 2) >> 10), 0);
+  return q[f & 3];
+}
+vec4 rangeAt(int i) {
+  return texelFetch(uRanges, ivec2(i & ${ROW_W - 1}, i >> 10), 0);
+}
+`;
+export const SDF_CONE_GLSL = /* glsl */ `
+// Signed distance to the round cone (a,ra)->(b,rb) (iq's uneven
+// capsule); t = projection param, lat = signed lateral (+ = left).
+float sdCone(vec2 p, vec2 a, vec2 b, float ra, float rb, out float t, out float lat) {
+  vec2 ba = b - a, pa = p - a; float l2 = dot(ba, ba);
+  if (l2 < 1e-12) { t = 0.0; lat = 0.0; return length(pa) - max(ra, rb); }
+  float l = sqrt(l2); vec2 u = ba / l;
+  float y = dot(pa, u); lat = u.x * pa.y - u.y * pa.x; float x = abs(lat);
+  t = clamp(y / l, 0.0, 1.0);
+  float s = (ra - rb) / l;
+  if (abs(s) >= 1.0) return min(length(pa) - ra, length(p - b) - rb);
+  float c = sqrt(1.0 - s * s), k = c * y - s * x;
+  if (k < 0.0) return length(pa) - ra;
+  if (k > c * l) return length(p - b) - rb;
+  return c * x + s * y - ra;
+}
+float aaCov(float a, float pxW) { return clamp(0.5 - a / pxW, 0.0, 1.0); }
+`;
+
 // sampAt's CPU mirror over a SAMP mirror (samp_table.ts readSamp's maths,
 // inlined so this module stays the search's one home).
 export function sampAtCpu(data: Float32Array, i: number, out: Float32Array | number[]): void {

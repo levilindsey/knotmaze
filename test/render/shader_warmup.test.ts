@@ -381,6 +381,7 @@ describe("shader warm-up (K307)", () => {
       ripple: true,
       bgIds: ["vellum"],
       maxBatchTextures: 16,
+      sdf: false, // K8 G3-2 (?rp=sdf)
     });
     const c = warmContextFor({ ...daily, exploration: "threads" }, "none", true, 8);
     expect(c).toMatchObject({ explore: true, fog: false, ripple: false, bgIds: [], maxBatchTextures: 8 });
