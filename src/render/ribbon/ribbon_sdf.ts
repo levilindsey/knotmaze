@@ -189,6 +189,9 @@ void main(void) {
   if (vSegInfo.z > 0.5) a1 = max(a1, dot(vP01.zw - vPos, vDir));
   if (vSegInfo.w > 0.5) a1 = max(a1, dot(vPos - vP23.xy, vDir));
   float a = min(a1, min(a0, a2));
+  // K826: the strip's mitered silhouette at the joints (coverage only;
+  // paint attribution stays with the own cone's t/l above).
+  a = min(a, sdMiterQuad(vPos, vP01.xy, vP01.zw, vP23.xy, vP23.zw, vRadii.y, vRadii.z));
   if (a > 0.5 * pxW) discard;
   float r = mix(vRadii.y, vRadii.z, t1);
   float cov = aaCov(a, pxW) * clamp(2.0 * r / pxW, 0.0, 1.0);

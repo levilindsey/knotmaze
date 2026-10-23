@@ -69,6 +69,45 @@ float sdCone(vec2 p, vec2 a, vec2 b, float ra, float rb, out float t, out float 
   return c * x + s * y - ra;
 }
 float aaCov(float a, float pxW) { return clamp(0.5 - a / pxW, 0.0, 1.0); }
+// K826: signed distance to the segment's MITERED quad (the strip's
+// silhouette): corners at the two joints' bisector points, the miter
+// clamped (the fold pinch: past it the capsule union stands). The
+// capsule union alone rounds the outside of every bend, which read
+// thinner than the strip at joins (the G3-2 A/B); the union of the two
+// distances restores the miter without spikes at folds.
+float sdSegDist(vec2 p, vec2 a, vec2 b) {
+  vec2 ba = b - a, pa = p - a;
+  float h = dot(ba, ba) > 1e-12 ? clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0) : 0.0;
+  return length(pa - ba * h);
+}
+float sdMiterQuad(vec2 p, vec2 p0, vec2 p1, vec2 p2, vec2 p3, float r1, float r2) {
+  vec2 d1 = p2 - p1;
+  float l1 = length(d1);
+  if (l1 < 1e-9) return 1e9;
+  d1 /= l1;
+  vec2 dp = p1 - p0;
+  dp = length(dp) > 1e-9 ? normalize(dp) : d1;
+  vec2 dn = p3 - p2;
+  dn = length(dn) > 1e-9 ? normalize(dn) : d1;
+  vec2 np1 = vec2(-d1.y, d1.x);
+  vec2 b1 = vec2(-dp.y, dp.x) + np1;
+  vec2 b2 = vec2(-dn.y, dn.x) + np1;
+  float s1 = 1.0 / max(dot(normalize(b1 + vec2(1e-9)), np1), 0.35);
+  float s2 = 1.0 / max(dot(normalize(b2 + vec2(1e-9)), np1), 0.35);
+  vec2 A = p1 + normalize(b1 + vec2(1e-9)) * (r1 * s1);
+  vec2 B = p2 + normalize(b2 + vec2(1e-9)) * (r2 * s2);
+  vec2 C = p2 - normalize(b2 + vec2(1e-9)) * (r2 * s2);
+  vec2 D = p1 - normalize(b1 + vec2(1e-9)) * (r1 * s1);
+  float d = min(min(sdSegDist(p, A, B), sdSegDist(p, B, C)), min(sdSegDist(p, C, D), sdSegDist(p, D, A)));
+  // Inside test: the quad is convex with a consistent winding.
+  float c1 = (B.x - A.x) * (p.y - A.y) - (B.y - A.y) * (p.x - A.x);
+  float c2 = (C.x - B.x) * (p.y - B.y) - (C.y - B.y) * (p.x - B.x);
+  float c3 = (D.x - C.x) * (p.y - C.y) - (D.y - C.y) * (p.x - C.x);
+  float c4 = (A.x - D.x) * (p.y - D.y) - (A.y - D.y) * (p.x - D.x);
+  bool inside = (c1 >= 0.0 && c2 >= 0.0 && c3 >= 0.0 && c4 >= 0.0)
+    || (c1 <= 0.0 && c2 <= 0.0 && c3 <= 0.0 && c4 <= 0.0);
+  return inside ? -d : d;
+}
 `;
 
 // sampAt's CPU mirror over a SAMP mirror (samp_table.ts readSamp's maths,
