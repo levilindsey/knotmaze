@@ -321,6 +321,7 @@ export interface KUniforms {
   uKHlPulse?: Float32Array; // (pulse rgb, -)
   uKHlHover?: Float32Array; // (hover rgb, telegraph rim scale)
   uKHlFray?: Float32Array; // (fray tint rgb, 1 = picked, 0 = auto pale)
+  uKBorder?: Float32Array; // K820 (border stroke rgb, 1 = picked, 0 = auto)
 }
 
 export const MAX_KNOTS = 8;

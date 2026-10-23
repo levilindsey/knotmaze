@@ -420,7 +420,7 @@ void main(void) {
   // whole intro ends (edgesAll, uKLook.z = 0).
   float lookCoord = strip ? abs(2.0 * vLook - 1.0) : vLook;
   float lookFw = min(max(fwidth(vLook) * 3.0, 0.02), 0.38);
-  float lookEdge = smoothstep(0.62, 0.62 + lookFw, lookCoord);
+  float lookEdge = smoothstep(1.0 - uKLook.w, 1.0 - uKLook.w + lookFw, lookCoord);
   // K815: a wedge fan's outline is its perimeter - the rim arc AND the
   // two flanks (aFlank +1/-1 on the flanks, 0 on the arc): the border
   // look draws max(rim band, flank band), so a junction reads as
@@ -431,7 +431,7 @@ void main(void) {
   float flankEdge = 0.0;
   if (!strip && vFlank < 1.5) {
     float flankFw = min(max(fwidth(vFlank) * 3.0, 0.02), 0.38);
-    flankEdge = smoothstep(0.62, 0.62 + flankFw, abs(vFlank));
+    flankEdge = smoothstep(1.0 - uKLook.w, 1.0 - uKLook.w + flankFw, abs(vFlank));
   }
   float fanEdge = strip ? lookEdge : max(lookEdge, flankEdge);
   if (!strip && vFlank > 2.5) fanEdge = 0.0;
@@ -445,7 +445,7 @@ void main(void) {
   if (aM <= 0.002) discard;
   vec3 rgb = junctionField(rec, vPos, pxW, j1, strip);
   if (uKLook.x > 0.5 || lookIntro) {
-    vec3 stroke = mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5);
+    vec3 stroke = mix(mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5), uKBorder.rgb, uKBorder.w);
     rgb = uKLook.x > 0.5 && uKLook.x < 1.5
       ? stroke
       : mix(rgb, stroke, lookEdge * 0.9);
@@ -507,8 +507,8 @@ export const FIELD_EXPLORE_EDITS: ReadonlyArray<readonly [string, string]> = [
     "  vec4 exC = junctionField(rec, vPos, pxW, j1, strip);",
   ],
   [
-    "  if (uKLook.x > 0.5 || lookIntro) {\n    vec3 stroke = mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5);\n    rgb = uKLook.x > 0.5 && uKLook.x < 1.5\n      ? stroke\n      : mix(rgb, stroke, lookEdge * 0.9);\n  }",
-    "  if (uKLook.x > 0.5 || lookIntro) {\n    vec3 base = exC.a > 0.0001 ? exC.rgb / exC.a : vec3(0.0);\n    vec3 stroke = mix(base * 0.30, vec3(0.09, 0.085, 0.08), 0.5);\n    base = uKLook.x > 0.5 && uKLook.x < 1.5\n      ? stroke\n      : mix(base, stroke, lookEdge * 0.9);\n    exC.rgb = base * exC.a;\n  }",
+    "  if (uKLook.x > 0.5 || lookIntro) {\n    vec3 stroke = mix(mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5), uKBorder.rgb, uKBorder.w);\n    rgb = uKLook.x > 0.5 && uKLook.x < 1.5\n      ? stroke\n      : mix(rgb, stroke, lookEdge * 0.9);\n  }",
+    "  if (uKLook.x > 0.5 || lookIntro) {\n    vec3 base = exC.a > 0.0001 ? exC.rgb / exC.a : vec3(0.0);\n    vec3 stroke = mix(mix(base * 0.30, vec3(0.09, 0.085, 0.08), 0.5), uKBorder.rgb, uKBorder.w);\n    base = uKLook.x > 0.5 && uKLook.x < 1.5\n      ? stroke\n      : mix(base, stroke, lookEdge * 0.9);\n    exC.rgb = base * exC.a;\n  }",
   ],
   [
     "    rgb = mix(rgb, vec3(1.0, 0.0, 0.85), (1.0 - gk) * 0.75);",

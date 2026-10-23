@@ -827,6 +827,12 @@ export class RibbonRenderer {
   telegraphWidth = 1;
   frayColor = 0x000000; // 0 = auto (the thread's pale shade)
   frayWidth = 0.45;
+  // K820: the border stroke's width (share of the half-width) and color
+  // (0 = auto, the darkened-section stroke), and the traveled fill's
+  // grain strength. 0.38 / auto / 1 read exactly as before.
+  borderWidth = 0.38;
+  borderColor = 0x000000;
+  goldTextureStrength = 1;
   // K525: the telegraph rims' strength and colour (0xRRGGBB), sent as
   // uKTele (w = the strength while a route is set). The fabric sets them
   // with the route; a piece's alpha multiplies the strength. teleColor is

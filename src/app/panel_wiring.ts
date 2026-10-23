@@ -551,6 +551,10 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
     scene.renderer.telegraphWidth = params.telegraphWidth;
     scene.renderer.frayColor = Number.parseInt(params.frayColor.slice(1), 16);
     scene.renderer.frayWidth = params.frayWidth;
+    // K820: the border stroke and the gold grain.
+    scene.renderer.borderWidth = params.borderWidth;
+    scene.renderer.borderColor = Number.parseInt(params.borderColor.slice(1), 16);
+    scene.renderer.goldTextureStrength = params.goldTextureStrength;
     scene.renderer.goldWidth = params.goldWidth; // K799
     scene.renderer.goldTexture = params.goldTexture === "pencil" ? 1 : params.goldTexture === "crayon" ? 2 : params.goldTexture === "highlighter" ? 3 : 0;
     deps.flags.push(Flag.GEOM); // K6-2: a look change asks for a geometry pass

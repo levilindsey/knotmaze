@@ -166,6 +166,10 @@ export const LOOK_KEYS = [
   "goldWidth",
   "goldTexture",
   "pathColor",
+  // K820: the border stroke and the gold grain are looks too.
+  "borderWidth",
+  "borderColor",
+  "goldTextureStrength",
 ] as const satisfies readonly (keyof UrlParams)[];
 
 // True when `p` carries a look away from today's defaults (the chip

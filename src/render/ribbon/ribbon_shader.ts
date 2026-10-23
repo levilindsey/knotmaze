@@ -168,16 +168,17 @@ void main(void) {
     highp float gw2 = uKPath.y > 2.5 ? min(uKPath.x * 1.15, 1.0) : uKPath.x;
     highp float gm = clamp((gw2 - ge) / fwG + 0.5, 0.0, 1.0)
       * step(0.001, uKPath.x);
+    // K820: the grain's strength (uKHlPulse.w; 1 = the grain as drawn).
     if (uKPath.y > 0.5 && uKPath.y < 1.5) {
-      gm *= 0.7 + 0.3 * fract(sin(dot(
+      gm *= mix(1.0, 0.7 + 0.3 * fract(sin(dot(
         floor(vec2(vUV.x * 260.0, ge * 7.0)),
-        vec2(12.9898, 78.233))) * 43758.5453);
+        vec2(12.9898, 78.233))) * 43758.5453), uKHlPulse.w);
     } else if (uKPath.y > 1.5 && uKPath.y < 2.5) {
-      gm *= 0.45 + 0.55 * fract(sin(dot(
+      gm *= mix(1.0, 0.45 + 0.55 * fract(sin(dot(
         floor(vec2(vUV.x * 90.0, ge * 4.0)),
-        vec2(26.651, 41.313))) * 28001.8384);
+        vec2(26.651, 41.313))) * 28001.8384), uKHlPulse.w);
     } else if (uKPath.y > 2.5) {
-      gm *= 0.55;
+      gm *= mix(1.0, 0.55, uKHlPulse.w);
     }
     kst.x *= gm;
   }
@@ -257,8 +258,10 @@ void main(void) {
   if (uKLook.x > 0.5 || edgesIntro) {
     highp float eAcross = abs(2.0 * vUV.y - 1.0);
     highp float fwA = max(fwidth(vUV.y) * 3.0, 0.02);
-    highp float edge = smoothstep(0.62, 0.62 + fwA, eAcross);
-    vec3 stroke = mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5);
+    // K820: the stroke's width (uKLook.w; 0.38 = the 0.62 band) and
+    // color (uKBorder; auto = the darkened-section stroke as drawn).
+    highp float edge = smoothstep(1.0 - uKLook.w, 1.0 - uKLook.w + fwA, eAcross);
+    vec3 stroke = mix(mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5), uKBorder.rgb, uKBorder.w);
     if (uKLook.x > 0.5 && uKLook.x < 1.5) {
       // K813: strokes on the edges; inside, only the highlights above.
       rgb = mix(hiRgb, stroke, edge);

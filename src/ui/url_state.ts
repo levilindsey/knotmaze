@@ -473,6 +473,12 @@ export interface UrlParams extends ShapeInjectionParams {
   // K799: the traveled path's width (0 hidden, 1 full) and fill texture.
   goldWidth: number;
   goldTexture: GoldTexture;
+  // K820: the border look's stroke (share of the half-width from the edge,
+  // and its color; "#000000" = the auto darkened-section stroke) and the
+  // traveled fill's grain strength (1 = today's grain, 0 = solid).
+  borderWidth: number;
+  borderColor: string;
+  goldTextureStrength: number;
   // Camera framing (see CAMERA_MODES). Pinch/wheel/drag still zoom and
   // pan in both; in follow mode a delayed, eased spring pulls back.
   cameraMode: CameraMode;
@@ -1274,6 +1280,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   threadLook: "fill",
   goldWidth: 1,
   goldTexture: "solid",
+  borderWidth: 0.38, // K820 (= 1 - 0.62, the stroke as it drew before)
+  borderColor: "#000000", // K820: auto (the darkened-section stroke)
+  goldTextureStrength: 1, // K820 (today's grain)
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1835,6 +1844,9 @@ function readLegacy(
     threadLook: readChoice(query, "tlk", THREAD_LOOKS, D.threadLook), // K797b
     goldWidth: readNumber(query, "gw", D.goldWidth), // K799
     goldTexture: readChoice(query, "gtx", GOLD_TEXTURES, D.goldTexture),
+    borderWidth: readNumber(query, "bdw", D.borderWidth), // K820
+    borderColor: readHexColor(query, "bdc", D.borderColor), // K820
+    goldTextureStrength: readNumber(query, "gts", D.goldTextureStrength), // K820
     cameraMode: readChoice(query, "cam", CAMERA_MODES, D.cameraMode),
     trailLength: readNumber(query, "trl", D.trailLength),
     tension: readNumber(query, "tn", D.tension),

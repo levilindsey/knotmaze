@@ -427,6 +427,10 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("frayWidth"),
   // 239, K819: the side cannons' spread.
   num("cannonSpread"),
+  // 240-242, K820: the border stroke's width and color, the gold grain.
+  num("borderWidth"),
+  color("borderColor"),
+  num("goldTextureStrength"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -547,6 +551,8 @@ export const PARAM_RANGES: Readonly<
   foilShare: [0, 1], // K337
   cannonAmount: [0, 3], // K336 (CANNON_AMOUNT_MAX)
   cannonSpread: [0, 0.5], // K819 (CANNON_SPREAD_MAX)
+  borderWidth: [0, 1], // K820
+  goldTextureStrength: [0, 1], // K820
   streamerShare: [0, 1], // K336
   pluckWhole: [0, 1.5],
   markerSize: [0.25, 3],

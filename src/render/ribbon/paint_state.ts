@@ -114,6 +114,9 @@ export class PaintState {
   private get hoverGlowFade() { return this.r.hoverGlowFade; }
   private get threadLook() { return this.r.threadLook; }
   private get goldWidth() { return this.r.goldWidth; }
+  private get borderWidth() { return this.r.borderWidth; }
+  private get borderColor() { return this.r.borderColor; }
+  private get goldTextureStrength() { return this.r.goldTextureStrength; }
   private get goldTexture() { return this.r.goldTexture; }
   private get pulseColor() { return this.r.pulseColor; }
   private get pulseWidth() { return this.r.pulseWidth; }
@@ -673,6 +676,7 @@ export class PaintState {
     knotUniformValues().uKPath![1] = this.goldTexture;
     knotUniformValues().uKPath![2] = this.pulseWidth; // K813
     knotUniformValues().uKPath![3] = this.frayWidth; // K813
+    knotUniformValues().uKLook![3] = this.borderWidth; // K820
     this.tickPaintPalette(dt);
     this.r.revealFx.tickAppearFx(dt);
     // Flow clock, advanced AFTER the palette/fillet pass so everything
@@ -816,6 +820,14 @@ export class PaintState {
       U.uKHlPulse[0] = ((pc >> 16) & 255) / 255;
       U.uKHlPulse[1] = ((pc >> 8) & 255) / 255;
       U.uKHlPulse[2] = (pc & 255) / 255;
+      U.uKHlPulse[3] = this.goldTextureStrength; // K820: the gold grain
+    }
+    if (U.uKBorder) {
+      const bc = this.borderColor;
+      U.uKBorder[0] = ((bc >> 16) & 255) / 255;
+      U.uKBorder[1] = ((bc >> 8) & 255) / 255;
+      U.uKBorder[2] = (bc & 255) / 255;
+      U.uKBorder[3] = bc === 0 ? 0 : 1; // 0 = auto darkened stroke
     }
     if (U.uKHlHover) {
       const hc = this.hoverColor;

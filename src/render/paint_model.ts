@@ -81,7 +81,8 @@ export function knotUniforms(): UniformGroup {
       // ribbon programs (paint_glsl TELE_DECL_GLSL).
       uKTeleAt: v4(),
       // K797b: the thread look (0 fill, 1 border, 2 both).
-      uKLook: v4(),
+      // K820: w = the border stroke's width (0.38 as it drew before).
+      uKLook: v4(0, 0, 0, 0.38),
       // K799: the traveled path look (width, texture mode); K813:
       // (pulse width, fray kept width).
       uKPath: v4(1, 0, 1, 0.45),
@@ -91,6 +92,8 @@ export function knotUniforms(): UniformGroup {
       uKHlHover: v4(1, 1, 1, 1),
       // K813: the fray's tint (rgb; w = 1 picks it, 0 = auto pale).
       uKHlFray: v4(0, 0, 0, 0),
+      // K820: the border stroke's color (rgb; w = 1 picks it, 0 = auto).
+      uKBorder: v4(0, 0, 0, 0),
       uKKnots: {
         value: new Float32Array(MAX_KNOTS * 4),
         type: "vec4<f32>",

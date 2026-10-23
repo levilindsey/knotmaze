@@ -280,6 +280,9 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["frayColor", "color"], // K813
   ["frayWidth", "number"], // K813
   ["cannonSpread", "number"], // K819
+  ["borderWidth", "number"], // K820
+  ["borderColor", "color"], // K820
+  ["goldTextureStrength", "number"], // K820
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
@@ -366,6 +369,7 @@ describe("codec table", () => {
       "hoverColor", // K813
       "telegraphColor", // K813
       "frayColor", // K813
+      "borderColor", // K820
     ]);
   });
 });
