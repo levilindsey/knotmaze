@@ -34,7 +34,7 @@ import {
   type CrossingHit,
   type SegRef,
 } from "./glyph_eval";
-import { A_LANDED, FORK_VARIANTS, GLYPHS, LEAD_STEPS, glyphI } from "./glyph_data";
+import { A_LANDED, A_TANGENT, FORK_VARIANTS, GLYPHS, LEAD_STEPS, glyphI } from "./glyph_data";
 import { knotsToPath } from "./glyph_knots";
 
 export const GU_PER_XH = 72;
@@ -51,6 +51,8 @@ export interface GlyphBuildOpts {
   fork?: number;
   /** Stage 9 kill criterion: every a takes the landed J (A_LANDED). */
   aLanded?: boolean;
+  /** K831: every a takes the preserved tangent exemplar (A_TANGENT). */
+  aTangent?: boolean;
   /**
    * K580: build a tangent spur's tapered root (default true; `notaper`
    * turns it off, giving stage 9's form).
@@ -511,6 +513,8 @@ interface PathRec {
   glyph: number;
   /** K580: the spur's authored def says its junction is a tangent join. */
   tangent?: boolean;
+  /** K831: the spur's tip lands on the body (a second junction). */
+  land?: boolean;
   /** K580: the tapered root this spur's path starts with (its first
    *  `segs` segments, R to J). */
   root?: TangentRoot & { segs: number };
@@ -666,6 +670,7 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
     }
     let g: Glyph = GLYPHS.get(ch)!;
     if (ch === "a" && opts.aLanded) g = A_LANDED;
+    else if (ch === "a" && opts.aTangent) g = A_TANGENT;
     if (ch === "i" && (opts.forks || opts.fork !== undefined)) {
       const f = opts.fork !== undefined ? FORK_VARIANTS.find((v) => v === opts.fork) : FORK_VARIANTS[iCount % FORK_VARIANTS.length];
       g = glyphI(f ?? 30);
@@ -699,6 +704,7 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
         junction: start + s.at,
         glyph: glyphNo,
         ...(s.tangent ? { tangent: true } : {}),
+        ...(s.land ? { land: true } : {}),
       });
     }
     for (const f of g.floats) {
@@ -784,6 +790,17 @@ export function buildGlyphGraph(text: string, opts: GlyphBuildOpts): GlyphBuild 
   spurs.forEach((s, si) => {
     const id = `tj${si}`;
     forced[0].push({ p: s.junction / 3, kind: "junction", id });
+    // K831: a landing spur's tip is a second junction on the body (the
+    // authored tip is a body joint; the shared id merges the nodes).
+    if (s.land) {
+      const tip = s.path[s.path.length - 1];
+      const bp = paths[0].path.findIndex((q) => q[0] === tip[0] && q[1] === tip[1]);
+      if (bp > 0) {
+        const lid = `tl${si}`;
+        forced[0].push({ p: bp / 3, kind: "junction", id: lid });
+        forced[1 + si].push({ p: segCount(s.path), kind: "junction", id: lid });
+      }
+    }
     if (s.root) {
       // K580: the root's start R is a TURN (the walk never stops there);
       // J sits mid-strand.

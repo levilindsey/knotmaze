@@ -28,6 +28,14 @@ export interface SpurDef {
    * tapered root on the strokes' medial axis (glyph_graph.ts, tangentRoot).
    */
   tangent?: true;
+  /**
+   * K831: the spur's tip LANDS on the body (its last point is a body
+   * joint): the far end is a second junction, not a free END - a stroke
+   * landing on another stroke, as cursive strokes land. The builder
+   * forces a junction node at both ends; the lint checks the landing
+   * like a junction instead of holding the tip 0.56 LU clear.
+   */
+  land?: true;
 }
 
 export interface Glyph {
@@ -38,6 +46,14 @@ export interface Glyph {
   exit: { at: Pt; dir: Pt; cls: ExitClass };
   body: CubicPath;
   spurs: readonly SpurDef[];
+  /**
+   * K831: body joints (point indices, multiples of 3) where the body may
+   * turn a CORNER with no spur there - Levi's exception for a letter's
+   * skeleton corners (the a's top-right): a sharp cusp the strand turns
+   * through, not a filleted junction. The corner still answers to the
+   * radius floor. Everywhere else a body corner needs a spur.
+   */
+  corners?: readonly number[];
   /** Lifted-pen strokes: decorative strands with two free ENDs each. */
   floats: readonly CubicPath[];
   /** Declared proper crossings inside the glyph (body, spurs, floats). */
