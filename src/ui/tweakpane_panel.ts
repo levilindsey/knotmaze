@@ -1002,18 +1002,19 @@ export function buildPanel(
     "How often growing threads turn instead of running straight. Low = long runs, high = curly meanders. Regenerates the design.",
     D.turnBias, regenerateWhenDone
   );
+  const fText = folder("Text & emblem", false, fDesign);
   row(
-    fDesign, p, "text", { label: "Text" },
+    fText, p, "text", { label: "Text" },
     "Cursive text design: type words to build them as pinned knotwork text instead of the lattice maze. Empty = the usual design. Regenerates the design.",
     D.text, regenerateWhenDone
   );
   const cartoucheRow = row(
-    fDesign, p, "cartouche", { label: "Cartouche" },
+    fText, p, "cartouche", { label: "Cartouche" },
     "In-maze cartouche: a word inside the maze, in a stamped hole with a thread frame; walking it counts like any maze run (4-5 letters fit at grid 18). Empty = no cartouche. Regenerates the design.",
     D.cartouche, regenerateWhenDone
   );
   row(
-    fDesign, p, "emblem",
+    fText, p, "emblem",
     {
       label: "Emblem",
       options: { none: "", star: "star", trefoil: "trefoil", triquetra: "triquetra", solomon: "solomon", wreath: "wreath" },
@@ -1022,7 +1023,7 @@ export function buildPanel(
     D.emblem, regenerateWhenDone
   );
   row(
-    fDesign, p, "cartoucheShape",
+    fText, p, "cartoucheShape",
     {
       label: "Cartouche shape",
       options: { none: "", star: "star", trefoil: "trefoil", triquetra: "triquetra", solomon: "solomon", wreath: "wreath" },
@@ -1033,7 +1034,7 @@ export function buildPanel(
   // K558: which stroke of a cursive crossing lies on top (text, title and
   // cartouche words). Off = pen order, the later stroke over.
   row(
-    fDesign, p, "penReverse", { label: "Earlier stroke on top" },
+    fText, p, "penReverse", { label: "Earlier stroke on top" },
     "Cursive text crossings: each stroke passes over the strokes drawn before it, as a pen draws (a t's bar over its stem, an l's downstroke over its upstroke). Check to reverse it, so the earlier stroke lies on top. Applies to the Text, the daily's title and the Cartouche word. Regenerates the design.",
     D.penReverse, regenerateWhenDone
   );
@@ -1227,54 +1228,55 @@ export function buildPanel(
     "How much wider the junction spacing grows at the exit under the taper. 0 = off. Regenerates the maze.",
     D.exitTaperStrength, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
+  const fTrap = folder("Exit traps", false, fMaze);
   const greedyTrapRow = row(
-    fMaze, p, "greedyTrap",
+    fTrap, p, "greedyTrap",
     { options: { off: "off", on: "on" }, label: "Greedy trap" },
     "Greedy-trap search: after the maze is planned, delete choice junctions near the exit that let a player who heads straight for the exit through, until both naive walkers take long enough (the targets beside it). Off = today's maze. Regenerates the maze.",
     D.greedyTrap, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const trapTargetFRow = row(
-    fMaze, p, "trapTargetF", { min: 1, max: 6, step: 0.1, label: "Trap far target" },
+    fTrap, p, "trapTargetF", { min: 1, max: 6, step: 0.1, label: "Trap far target" },
     "How long the far-end greedy walk must get (x the shortest route) before the search stops cutting. Regenerates the maze.",
     D.trapTargetF, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const trapTargetHRow = row(
-    fMaze, p, "trapTargetH", { min: 1, max: 8, step: 0.1, label: "Trap heading target" },
+    fTrap, p, "trapTargetH", { min: 1, max: 8, step: 0.1, label: "Trap heading target" },
     "How long the heading greedy walk must get (x the shortest route) before the search stops cutting. Regenerates the maze.",
     D.trapTargetH, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const trapMaxFRow = row(
-    fMaze, p, "trapMaxF", { min: 2, max: 12, step: 0.5, label: "Trap far cap" },
+    fTrap, p, "trapMaxF", { min: 2, max: 12, step: 0.5, label: "Trap far cap" },
     "No trap may push the far-end greedy walk past this (x the shortest route). Regenerates the maze.",
     D.trapMaxF, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const trapMaxHRow = row(
-    fMaze, p, "trapMaxH", { min: 2, max: 16, step: 0.5, label: "Trap heading cap" },
+    fTrap, p, "trapMaxH", { min: 2, max: 16, step: 0.5, label: "Trap heading cap" },
     "No trap may push the heading greedy walk past this (x the shortest route). Regenerates the maze.",
     D.trapMaxH, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const trapMaxGrowRow = row(
-    fMaze, p, "trapMaxGrow", { min: 1, max: 1.5, step: 0.05, label: "Trap route growth" },
+    fTrap, p, "trapMaxGrow", { min: 1, max: 1.5, step: 0.05, label: "Trap route growth" },
     "How much longer the shortest route may grow while trapping (x its original length). Regenerates the maze.",
     D.trapMaxGrow, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const trapRadiusRow = row(
-    fMaze, p, "trapRadius", { min: 0, max: 40, step: 1, label: "Trap radius" },
+    fTrap, p, "trapRadius", { min: 0, max: 40, step: 1, label: "Trap radius" },
     "Only junctions within this distance of the exit (half lattice cells) may be cut as traps. Regenerates the maze.",
     D.trapRadius, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const trapItersRow = row(
-    fMaze, p, "trapIters", { min: 0, max: 24, step: 1, label: "Trap cuts" },
+    fTrap, p, "trapIters", { min: 0, max: 24, step: 1, label: "Trap cuts" },
     "At most this many junctions the search may delete. Regenerates the maze.",
     D.trapIters, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const trapTriesRow = row(
-    fMaze, p, "trapTries", { min: 1, max: 16, step: 1, label: "Trap tries" },
+    fTrap, p, "trapTries", { min: 1, max: 16, step: 1, label: "Trap tries" },
     "Trial deletions tried per round before the search gives up on that round. Regenerates the maze.",
     D.trapTries, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const trapSurplusRow = row(
-    fMaze, p, "trapSurplus", { min: 1, max: 2, step: 0.05, label: "Trap surplus" },
+    fTrap, p, "trapSurplus", { min: 1, max: 2, step: 0.05, label: "Trap surplus" },
     "Banked difficulty the search may not spend: a walker over its target may not drop below it, nor below this x its target. Regenerates the maze.",
     D.trapSurplus, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
@@ -1355,60 +1357,61 @@ export function buildPanel(
     D.tension, () => callbacks.onTrailChange()
   );
   // K76 stage 2c: the fog of war's checkbox became the exploration mode.
+  const fExpl = folder("Exploration", false, fGame);
   const fowRow = row(
-    fGame, p, "exploration",
+    fExpl, p, "exploration",
     { options: { off: "off", "fog of war": "fog", "thread reveal": "threads" }, label: "Exploration" },
     "How much of the maze you see. off: all of it. fog of war: the maze hides until you have explored close by; explored areas stay visible. thread reveal: only the threads you have walked show, and the arms of the junctions you have reached, fading out a little way along. Applies live.",
     D.exploration, () => callbacks.onTrailChange()
   );
   // K137 darkness (4.17): the closing span and the lantern.
   const darkMovesRow = row(
-    fGame, p, "darkMoves",
+    fExpl, p, "darkMoves",
     { min: 0, max: 40, step: 1, format: (v: number) => (v === 0 ? "never" : `${v} moves`), label: "Darkness closes" },
     "Fog of war: explored places fade back to dark this many moves after you last lit them. The lantern below is the light you carry. Applies as you play; no restart.",
     D.darkMoves, () => callbacks.onTrailChange()
   );
   const lanternRow = row(
-    fGame, p, "lantern",
+    fExpl, p, "lantern",
     { min: 1, max: 4, step: 0.25, format: (v: number) => (v <= 1 ? "off" : `${v}x`), label: "Lantern" },
     "Fog of war: a lit radius around you, this many times the fog radius. With darkness closing, it is the light you navigate by.",
     D.lantern, () => callbacks.onTrailChange()
   );
   // K137 sonar (4.26): the ring and its optional limit.
   const sonarRow = row(
-    fGame, p, "sonar", { label: "Sonar" },
+    fExpl, p, "sonar", { label: "Sonar" },
     "Fog of war: pluck a thread (a tap that does not move you) and the nearby runs of its note ring and show briefly through the fog. Applies as you play.",
     D.sonar, () => callbacks.onTrailChange()
   );
   const sonarPingsRow = row(
-    fGame, p, "sonarPings",
+    fExpl, p, "sonarPings",
     { min: 0, max: 20, step: 1, format: (v: number) => (v === 0 ? "unlimited" : String(v)), label: "Ping limit" },
     "Sonar: pings per solve (a ping counts only when something rings). Restarting refills them. The count rides the HUD while a limit is set.",
     D.sonarPings, () => callbacks.onTrailChange()
   );
   const fowRadiusRow = row(
-    fGame, p, "fowRadius", { min: 1.5, max: 10, step: 0.25, label: "Fog radius" },
+    fExpl, p, "fowRadius", { min: 1.5, max: 10, step: 0.25, label: "Fog radius" },
     "How far around your explored path the fog lifts, in lattice units. Applies live and reshapes everything already explored.",
     D.fowRadius, () => callbacks.onTrailChange()
   );
   const fowIntroRow = row(
-    fGame, p, "fowIntro", { label: "Intro in the open" },
+    fExpl, p, "fowIntro", { label: "Intro in the open" },
     "Play the intro appearance animation in the open, then hide what you have not explored: the fog closes in around you (it fades in while its reveal radius contracts), or the threads you have not seen withdraw toward you. Applies to the next intro.",
     D.fowIntro, () => callbacks.onTrailChange()
   );
   // K76 stage 2c: the thread reveal's reach, its fade and its end look.
   const revealDistanceRow = row(
-    fGame, p, "revealDistance", { min: 1, max: 12, step: 0.25, label: "Reveal distance" },
+    fExpl, p, "revealDistance", { min: 1, max: 12, step: 0.25, label: "Reveal distance" },
     "How far the arms of the junctions you have reached show, in lattice units; the last part fades out. Applies live.",
     D.revealDistance, () => callbacks.onTrailChange()
   );
   const revealFadeRow = row(
-    fGame, p, "revealFade", { min: 0.35, max: 4, step: 0.05, label: "Reveal fade" },
+    fExpl, p, "revealFade", { min: 0.35, max: 4, step: 0.05, label: "Reveal fade" },
     "How long that fade-out is, in lattice units (never longer than the reveal distance). Applies live.",
     D.revealFade, () => callbacks.onTrailChange()
   );
   const revealLookRow = row(
-    fGame, p, "revealLook",
+    fExpl, p, "revealLook",
     {
       options: { fade: "fade", halo: "halo", glow: "glow", dots: "dots", fray: "fray", beacon: "beacon" },
       label: "Reveal end",
@@ -1419,20 +1422,20 @@ export function buildPanel(
   // K466 THE ENDS (Levi, 2026-10-15: "emphasize the unexplored thread ends
   // a bit more, maybe especially for ends that lie under a crossing").
   const revealEndCrossRow = row(
-    fGame, p, "revealEndCross",
+    fExpl, p, "revealEndCross",
     { options: { under: "under", past: "past", back: "back" }, label: "End at crossing" },
     "Where a thread you have not explored ends when its end would lie under a crossing, hidden by the thread on top: under (it stays there), past (it shows a little further, beyond the crossing) or back (it ends before the crossing). Applies live.",
     D.revealEndCross, () => callbacks.onTrailChange()
   );
   const revealEndGlowRow = row(
-    fGame, p, "revealEndGlow",
+    fExpl, p, "revealEndGlow",
     { options: { soft: "soft", bright: "bright" }, label: "End glow" },
     "How strongly the light at the end of a thread you have not explored shows (the halo and beacon ends): soft or bright (larger and brighter). Applies live.",
     D.revealEndGlow, () => callbacks.onTrailChange()
   );
   // K465: the finish shows from the start (Levi, 2026-10-15).
   const revealFinishRow = row(
-    fGame, p, "revealFinish", { label: "Show finish" },
+    fExpl, p, "revealFinish", { label: "Show finish" },
     "Show where the finish is from the start: its marker, the gap around it and the arrow at the screen edge while it is off screen, even over thread you have not explored. Off hides the finish until you have seen it. Applies live.",
     D.revealFinish, () => callbacks.onTrailChange()
   );
@@ -1764,7 +1767,7 @@ export function buildPanel(
   // K323: the burn race is gameMode "burn" (no fire toggle row); a fuse
   // lit at the entrance burns along every thread behind you. The rows
   // below show only in that mode.
-  const fFire = fGame;
+  const fFire = folder("Burn race", false, fGame);
   // K114 stage 2: the fire's clock (game/fire_clock.ts).
   const fireClockRow = row(
     fFire, p, "fireClock",
@@ -1823,8 +1826,9 @@ export function buildPanel(
   // K137 stage 1: fragile runs and par (game/fragile.ts, game/par.ts), in
   // every game mode. Every row restarts the solve. The slack slider takes
   // no step (K130) and an edit keeps it on the 0.05 grid.
+  const fRules = folder("Classic rules", false, fGame);
   const fragileRow = row(
-    fGame, p, "fragile",
+    fRules, p, "fragile",
     { options: { off: "off", crack: "crack", snap: "snap" }, label: "Fragile runs" },
     "Runs break behind you. snap: a run breaks once you have crossed it. crack: it cracks the first time and breaks the second. A dead-end tail, the entrance's and the exit's never break. With no unbroken way to the exit left you are stranded: undo the last move or restart. Restarts the solve.",
     D.fragile, () => callbacks.onClockChange()
@@ -1832,24 +1836,24 @@ export function buildPanel(
   // K813: a cracked run's look (the fray): its tint and how much of its
   // middle it keeps. Live, like the other highlight looks.
   const frayColorRow = row(
-    fGame, p, "frayColor", { view: "color", label: "Cracked run tint" },
+    fRules, p, "frayColor", { view: "color", label: "Cracked run tint" },
     "Cracked run tint: the color a cracked fragile run pales toward. Black keeps the thread's own pale shade, as today. Applies live.",
     D.frayColor, () => callbacks.onTrailChange()
   );
   const frayWidthRow = row(
-    fGame, p, "frayWidth",
+    fRules, p, "frayWidth",
     { min: 0, max: 1, step: 0.01, label: "Cracked run width" },
     "Cracked run width: how much of a cracked run's middle stays drawn, as a share of the half-width (0.45 as today, 1 = full). Applies live.",
     D.frayWidth, () => callbacks.onTrailChange()
   );
   const parModeRow = row(
-    fGame, p, "parMode",
+    fRules, p, "parMode",
     { options: { off: "off", strict: "strict", strokes: "strokes" }, label: "Par" },
     "A par of moves (runs walked, back and forth): the fewest runs from the entrance to the exit, plus the slack below. strict: you lose the moment the exit is out of reach within par. strokes: never lost; the finish reads against par, golf style (+2, E, -1). Restarts the solve.",
     D.parMode, () => callbacks.onClockChange()
   );
   const parSlackRow = row(
-    fGame, p, "parSlack",
+    fRules, p, "parSlack",
     { min: PAR_SLACK_MIN, max: PAR_SLACK_MAX, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label: "Par slack (x fewest)" },
     "Moves allowed past the fewest, as a fraction of the fewest: at 0.25 a maze whose shortest route takes 12 runs has a par of 15. Restarts the solve.",
     D.parSlack, () => {
@@ -1860,7 +1864,7 @@ export function buildPanel(
   // K139: collapse (game/collapse.ts). It overrides the three rows above,
   // which stay visible (call 4 of docs/design/K139.md). Restarts the solve.
   const collapseRow = row(
-    fGame, p, "collapse",
+    fRules, p, "collapse",
     { options: { off: "off", finish: "finish", free: "free" }, label: "Collapse" },
     "Runs collapse behind you: a run you have walked cannot be walked again. Collapse as much of the maze as you can. finish: and still reach the exit; with no way left to it you are stranded (undo the last move or restart). free: the exit is just another run end; the game ends when no unbroken run is left to walk, and scores the share collapsed. Overrides Fragile runs and Par. Restarts the solve.",
     D.collapse, () => callbacks.onClockChange()
@@ -1869,7 +1873,7 @@ export function buildPanel(
   // is on (FabricMazeController.setRules), which stay visible as K139's do.
   // Restarts the solve.
   const cutRow = row(
-    fGame, p, "cut",
+    fRules, p, "cut",
     { options: { off: "off", on: "on", lead: "lead", delay: "delay" }, label: "Cut" },
     "Scissors: delete whole runs. on: press the scissors button (or X), then tap a run to cut it; Esc or a second press puts them away. A junction left with two runs is no longer a decision: a move through it carries on. lead: a walker takes the same turn at every junction (straight on, else the next run clockwise); tap runs to cut them, then Go. Reach the exit in as few cuts as you can (par shown); if it goes in circles you are back to planning, cuts kept. delay: a walker takes the shortest way out; each turn cut a run or pass (Let it walk), then it walks one run. Make its walk as long as you can. A cut that would leave no way to the exit is refused, and the entrance's and the exit's runs cannot be cut. Undo (the button or U) takes back one move or one cut. Classic game only; off while Fragile runs, Par or Collapse is on. Restarts the solve.",
     D.cut, () => callbacks.onClockChange()
@@ -1877,12 +1881,12 @@ export function buildPanel(
   // K137 stage 2 (game/spool.ts, game/hints.ts): the player's aids. The
   // spool, its slack and the hints restart the solve; the compass does not.
   const spoolRow = row(
-    fGame, p, "spool", { label: "Ariadne's spool" },
+    fRules, p, "spool", { label: "Ariadne's spool" },
     "Your yarn pays out behind you as you walk and reels back in when you retrace your last run (or undo). It is only so long: the fewest runs to the exit plus the slack below. A move past its end is refused. Restarts the solve.",
     D.spool, () => callbacks.onClockChange()
   );
   const spoolSlackRow = row(
-    fGame, p, "spoolSlack",
+    fRules, p, "spoolSlack",
     { min: SPOOL_SLACK_MIN, max: SPOOL_SLACK_MAX, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label: "Spool slack (x fewest)" },
     "Yarn past the fewest runs, as a fraction of the fewest: at 0.3 a maze whose shortest route takes 10 runs gives 13 runs of yarn. Restarts the solve.",
     D.spoolSlack, () => {
@@ -1891,7 +1895,7 @@ export function buildPanel(
     }
   );
   const hintsRow = row(
-    fGame, p, "hints",
+    fRules, p, "hints",
     { min: 0, max: HINTS_MAX, step: 1, label: "Hints" },
     "Hints per solve (0: none). The Hint button (or H) lights the run that starts the shortest way to the exit for a few seconds (Hint lasts). A restart gives them back. Restarts the solve.",
     D.hints, () => callbacks.onClockChange()
@@ -1900,7 +1904,7 @@ export function buildPanel(
   // default). No step (K130); an edit keeps one decimal. Live: main.ts
   // reads it at each hint.
   const hintSecondsRow = row(
-    fGame, p, "hintSeconds",
+    fRules, p, "hintSeconds",
     { min: HINT_SECONDS_MIN, max: HINT_SECONDS_MAX, pointerScale: 0.05, format: (v: number) => v.toFixed(1), label: "Hint lasts (s)" },
     "How long a hint lights its run, in seconds; your next move puts it out sooner. Applies from the next hint.",
     D.hintSeconds, () => {
@@ -1909,7 +1913,7 @@ export function buildPanel(
     }
   );
   const compassRow = row(
-    fGame, p, "compass", { label: "Compass" },
+    fRules, p, "compass", { label: "Compass" },
     "A small arrow beside you points along the run that starts the shortest way to the exit (not straight at the exit), updated after every move.",
     D.compass, () => callbacks.onAidsChange()
   );
@@ -1919,7 +1923,7 @@ export function buildPanel(
   // visible as K139's are. The share slider takes no step (K130) and an edit
   // keeps the 0.05 grid. Both restart the solve.
   const iceRow = row(
-    fGame, p, "ice",
+    fRules, p, "ice",
     { min: 0, max: ICE_SHARE_MAX, pointerScale: 0.01, format: (v: number) => (v === 0 ? "off" : v.toFixed(2)), label: "Ice (share of runs)" },
     `Some runs are icy (frosted): a move onto ice slides on, run after run, to the next junction where you can stop, and counts as one move. A backtrack undoes the whole slide. The share of runs that are icy; ${ICE_SHARE_ON} is a good start, 0 is off. The fewest moves and par read the slides. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.`,
     D.ice, () => {
@@ -1928,7 +1932,7 @@ export function buildPanel(
     }
   );
   const colorRuleRow = row(
-    fGame, p, "colorRule",
+    fRules, p, "colorRule",
     { options: { off: "off", alternate: "alternate", cycle: "cycle" }, label: "Color rule" },
     "Each run has a color, and a move must follow the rule. alternate: never the same color twice in a row (light, dark, light...). cycle: three colors in a fixed order, then the first again. A run the rule forbids is refused. Backtracking steps the rule back too. The fewest moves and par follow the rule. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
     D.colorRule, () => callbacks.onClockChange()
@@ -1936,13 +1940,13 @@ export function buildPanel(
   // K138 stage 2 (game/turnstiles.ts, game/hidden_runs.ts): turnstile
   // junctions and hidden runs, the same scope and restart as ice.
   const turnstilesRow = row(
-    fGame, p, "turnstiles",
+    fRules, p, "turnstiles",
     { min: 0, max: TURNSTILES_MAX, step: 1, label: "Turnstiles" },
     "Turnstile junctions (0: none). At a turnstile only two of its three runs connect, and the open pair turns one step with every move you make, backtracks included; a band through the junction shows the open pair. Going back the way you came is always allowed. The fewest moves and par read the turnstiles. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
     D.turnstiles, () => callbacks.onClockChange()
   );
   const hiddenRunsRow = row(
-    fGame, p, "hiddenRuns",
+    fRules, p, "hiddenRuns",
     { min: 0, max: HIDDEN_MAX, step: 1, label: "Hidden runs" },
     "Hidden shortcut runs (0: none). A hidden run draws nothing and cannot be tapped until you pluck a thread of the same note a few runs from it (Reveal within); then it shows for the rest of the solve (Undo past the pluck hides it again). Par and the stars rate the maze without them; the HUD shows the shorter par with them too. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
     D.hiddenRuns, () => callbacks.onClockChange()
@@ -1950,14 +1954,14 @@ export function buildPanel(
   // K795: how near a pluck shows a hidden run (game/hidden_runs.ts
   // REVEAL_RUNS by default). It restarts the solve, as the hidden runs do.
   const hiddenRevealRow = row(
-    fGame, p, "hiddenReveal",
+    fRules, p, "hiddenReveal",
     { min: REVEAL_RUNS_MIN, max: REVEAL_RUNS_MAX, step: 1, label: "Reveal within (runs)" },
     "How near a pluck must be to show a hidden run: plucking a thread of the same note within this many runs of it shows it. Classic game only. Restarts the solve.",
     D.hiddenReveal, () => callbacks.onClockChange()
   );
   // K137 tunnels (4.13): linked junction pairs, in every game mode.
   const tunnelsRow = row(
-    fGame, p, "tunnels",
+    fRules, p, "tunnels",
     { min: 0, max: 2, step: 1, format: (v: number) => (v === 0 ? "off" : String(v)), label: "Tunnels" },
     "Pairs of far-apart junctions linked as one move: a thread that sinks into the backdrop and re-emerges, ringed at both mouths. Tap a mouth at your junction to take it. Par counts the link; the minotaur never uses one. Restarts the solve.",
     D.tunnels, () => callbacks.onClockChange()
@@ -1965,14 +1969,14 @@ export function buildPanel(
   // K137 s5 (game/mud.ts): muddy runs take two moves to cross, for you
   // and the minotaur alike. Every game mode; off under a K138 rule.
   const mudRow = row(
-    fGame, p, "mud",
+    fRules, p, "mud",
     { min: 0, max: MUD_MAX, step: 1, format: (v: number) => (v === 0 ? "off" : String(v)), label: "Muddy runs" },
     "Muddy runs (0: none), laid on the shortest route: crossing one takes two moves, for you and the minotaur alike (your dot crosses at half speed; strokes and par count it twice), so the fewest-moves way and the shortest way part. Off while a maze rule (ice, colors, turnstiles, hidden, one-way, locks) is on. Restarts the solve.",
     D.mud, () => callbacks.onClockChange()
   );
   // K138 stage 3 (game/one_way.ts): one-way runs, the same scope and restart.
   const oneWayRow = row(
-    fGame, p, "oneWay",
+    fRules, p, "oneWay",
     { min: 0, max: ONE_WAY_MAX, pointerScale: 0.01, format: (v: number) => (v === 0 ? "off" : v.toFixed(2)), label: "One-way runs" },
     "Some runs are one-way: chevrons along the run point the way, and a tap against them is refused. A backtrack over a one-way run is refused too. The share of the maze's loop runs that are one-way; 0.3 is a good start, 0 is off. The way out never closes. The fewest moves and par follow the arrows. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
     D.oneWay, () => {
@@ -1983,13 +1987,13 @@ export function buildPanel(
   // K138 stage 4 (game/locks.ts): keys and the lock, the same scope and
   // restart.
   const keysRow = row(
-    fGame, p, "keys",
+    fRules, p, "keys",
     { min: 0, max: KEYS_MAX, step: 1, format: (v: number) => (v === 0 ? "off" : String(v)), label: "Keys" },
     "Keys (0: none). Key beads lie on junctions a few runs off the way out; walk onto one to take it. The runs into the exit stay locked until you hold every key, and a tap on a lock is refused. Going back over the move that took a key drops it again. The fewest moves and par count the keys. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
     D.keys, () => callbacks.onClockChange()
   );
   const lockModeRow = row(
-    fGame, p, "lockMode",
+    fRules, p, "lockMode",
     { options: { "the exit": "exit", shortcuts: "shortcut", colors: "colors" }, label: "Lock" },
     "Which runs the keys open: the exit (the runs into it, needing every key); shortcuts (a run on the way out, each with its own key nearby); or colors: the runs into the exit are gates, each wanting yarn of its color - the latest key you took dyes the yarn. Restarts the solve.",
     D.lockMode, () => callbacks.onClockChange()
