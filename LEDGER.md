@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K824. (K812 preview effect buttons; K813 border-look highlights; K814 shape-injection param collection; K815 junction border fans; K816 SDF ribbons; K817 gap kStart rounding (K592); K818 shape-injection collection (K814 stages 1-3); K819 cannonSpread param + LOOK_KEYS backdrop/path colors; K820 borderWidth/borderColor/goldTextureStrength params (uKBorder, uKLook.w, uKHlPulse.w); K821-K822 panel restructure (Maze before Game; End effects, Text & emblem, Exit traps, Exploration, Burn race, Classic rules subfolders; Thread look above its rows; Path color beside the gold rows).)
+Next free ID: K825. (K812 preview effect buttons; K813 border-look highlights; K814 shape-injection param collection; K815 junction border fans; K816 SDF ribbons; K817 gap kStart rounding (K592); K818 shape-injection collection (K814 stages 1-3); K819 cannonSpread param + LOOK_KEYS backdrop/path colors; K820 borderWidth/borderColor/goldTextureStrength params (uKBorder, uKLook.w, uKHlPulse.w); K821-K822 panel restructure (Maze before Game; End effects, Text & emblem, Exit traps, Exploration, Burn race, Classic rules subfolders; Thread look above its rows; Path color beside the gold rows).)
 
 ## Waiting on Levi
 
@@ -596,7 +596,7 @@ Every other item below waits on the trigger it names.
 - **K312** · Add K299's lesson to claude-config `rules/lessons.md` (WebGL): GPU float division is
   approximate (ANGLE D3D11 `floor(k*n/n)` = k-1 in 3275 of 16384 pairs), so ring and lap math must
   be integer-corrected. Held while Levi is away (config edits wait for approval).
-- **K313** · A loader that looks like the maze (`docs/design/K313_loader.md`; Levi 10-14, approved):
+- **K313** Stage 1 (desktop) done in K824: src/loader/ (geometry + tests, OffscreenCanvas worker, boot, vite plugin inlining into index.html, static SVG first paint measured 90-110 ms); main adopts via window.__knotBootLoader, createLoader stays the fallback. Left: stage 2 phone measures in K156's next pass, then camera/trail tuning with Levi. (Was: · A loader that looks like the maze (`docs/design/K313_loader.md`; Levi 10-14, approved):
   a trefoil maze with over/under gaps, fixed-length trail, drawn by an OffscreenCanvas worker
   inlined in `index.html` (static SVG first). After K307's warm-up; measure the phone's first frame.
 - **K326** · Drop knot mode (`mazeFabric`; `docs/design/K323_game_mode.md` s4-5): A freezes a golden

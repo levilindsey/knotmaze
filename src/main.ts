@@ -156,6 +156,7 @@ import { SnoreSfx, fetchSnore } from "./audio/snore_sfx";
 import { attachSnoreLink } from "./ui/snore_link";
 import { SongScheduler } from "./audio/song_scheduler";
 import { createLoader } from "./ui/loader";
+import { adoptBootLoader } from "./loader/boot_loader";
 import { createStamp } from "./app/stamp";
 import { GLYPHS2 } from "./app/glyph_switch";
 import { installProbeHooks } from "./app/probe_hooks";
@@ -663,7 +664,9 @@ async function main(): Promise<void> {
     gridAlign: params.gridAlign,
     threadWidth: params.threadWidth,
   });
-  const loader = createLoader();
+  // K313: adopt the inline boot loader (on screen since the first
+  // paint) when it ran; otherwise today's loader, as before.
+  const loader = adoptBootLoader() ?? createLoader();
 
   // K101: music mode's notes, on the audio clock once it runs.
   const songSched = new SongScheduler();

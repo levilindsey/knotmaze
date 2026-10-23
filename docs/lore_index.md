@@ -93,6 +93,8 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/render/hash2d.ts`, `src/render/background_shaders.ts`, `test/render/hash2d.test.ts`
 - `render-paint.md`: SHADER PAINT (G2), PULSES and PULSE REACH (K75; the trail split and the hover's reach, K93), RING LAPS (K299, integer-corrected lap math), THE ROOT'S PAINT (K620), palette strip order, gamut locality
   paths: `src/render/paint_glsl.ts`, `src/render/paint_math.ts`, `src/render/paint_model.ts`, `src/render/paint_const.ts`, `src/render/float_rows.ts`, `src/render/trail_paint.ts`, `test/render/trail_paint.test.ts`, `test/render/paint_fx.test.ts`, `test/render/paint_gameplay.test.ts`, `test/render/paint_math.test.ts`, `test/render/paint_section.test.ts`, `test/render/fixtures/pre_g2.ts`, `test/render/fixtures/pre_g23.ts`
+- `render-loader.md`: the inline loader (K313): the trefoil geometry, the OffscreenCanvas worker, the boot script and its two sizing traps
+  paths: `src/loader/**`, `test/loader/**`, `index.html`
 - `render-ribbon.md`: the GPU junction field, overlay width, flat fills, arc-wrap, the arcAt gotcha, wedge flanks, fan indices, blend distance, miter clamp, displayF, the thread reveal's joint gate (K76 2b), the G3-0 data plane and the same-state capture (K8 stage 2), THE PARTS (K5: the rules for `src/render/ribbon/`, where R1 and R2 put things)
   paths: `src/render/ribbon_renderer.ts`, `src/render/ribbon/**`, `src/render/ribbon_mesh.ts`, `src/render/arm_strip.ts`, `src/render/junction_field.ts`, `test/render/fixtures/chains.ts`, `src/render/samp_table.ts`, `test/render/samp_table.test.ts`
 - `render-pluck.md`: the concave-side cap, base collapse (K77), still plucks (K104), pluck params (K180), pluck emphasis (K279), pluck cusp (K344), pluck loop tip (K395)
