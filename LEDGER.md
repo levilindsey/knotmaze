@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K812.
+Next free ID: K815. (K812 preview effect buttons; K813 border-look highlights; K814 shape-injection param collection.)
 
 ## Waiting on Levi
 
@@ -110,7 +110,7 @@ Next free ID: K812.
   joins. `docs/design/K115_stage9.md` (Handoff).
 - **K610** · Grab chase rate, a feel A/B (0.6 per constraint iteration; try 0.8 and 1.0): 4 substeps
   reach 90% of a drag step today; at 2 the daily's physics work drops from 53 to about 26 ms.
-  A feel call (K370's 50 ms needs it or 2.5x cheaper substeps). `docs/design/K370.md`.
+  A feel call (K370's 50 ms needs it or 2.5x cheaper substeps). Levi (2026-10-22): the recs stand - raise the chase rate and measure. `docs/design/K370.md`.
 - **K624** · The lit fuse keeps the ember on both sides and no band under both looks (K409; Levi's
   calls don't cover it). Give it Gone's shape too? Rec: yes, one fire look.
 - **K625** · K137's calls (`sooner_20261020.md`): (a) stages s2 helpers, s3a/s3b minotaur, s4 looks;
@@ -124,7 +124,7 @@ Next free ID: K812.
 - **K628** · Confetti: (C-1) does the finish spray throw streamers? Rec: K336's sheet decides. (C-2)
   when does K579 (GPU confetti) go? The phone check: the fall is ~50 fps, not CPU-bound (a tenfold
   CPU cut gave +0.5 fps). Rec: after K318 s1.
-- **K629** · K546's Q1-Q7 (`K546_loss_effects.md`) set stages 2-4. Rec, the design's: sparks; contact, 0.35 s, ~1 s, no
+- **K629** · K546's Q1-Q7 (`K546_loss_effects.md`) set stages 2-4. Levi (2026-10-22): the recs stand; for the side cannons he wants more spread (K812 follow-up in the param batch). Rec, the design's: sparks; contact, 0.35 s, ~1 s, no
   skip; ash + vignette; a `lossAmount` slider; fire ends Burnt at the beat's end; full beat, then
   restart; dull pluck + thump (fire too).
 - **K630** · K244: should a press in a junction core also silence its release when the grabbed
@@ -490,6 +490,7 @@ The queue (coordinator, overnight 2026-10-15/16):
 8. Batch close (2026-10-16): fixes ea2e468 (K398/K346/K436/K454/K469/K314/K373/K526/K461/K500; residual K529), K481 stage 2 a69b5cb (stage 3 = K530), K307 stage 3 e83f203 (K366 measured/attributed, fix = K535; K386 narrowed), G3-1 3465090 (browser verification = K536), K430 ramp 377bc41 (K268 stays In progress; residuals K537, K538; K431 narrowed). Levi answered K210 (-> K531, folds K82), K527 in full (-> K532) and K339/K323 (-> K534, Stage A unlocked); backend dailies filed as K533. Refreshed queue by value - Levi gates first: K515 (K480's look), K525 (K80 3b's look, real sheet in), then the rest of Waiting on Levi; then ungated, in order: K530 (K481 stage 3), K534 (panel Stage A), K527's build half (after the render lane), K536 (G3-1 browser verification), K268's remaining item-2 parts, then work in their sections.
 9. Batch 2 close (2026-10-16): K481 stage 3 31b2238 (K530/K481 done; look call K545), panel Stage A1 35f3ec2 (K534 done; A2 = K541), K74 stage 4 build 7d794b5 (K527/K532 done; sheet K543, phone timing K544), G3-1 verified (K536 done in c946ae2; residuals K539, K540), K268 PROTECT 1fc9458 (far-branch smooth-min remains). Queue by value - Levi gates first: K515 (K480's look), K525 (K80 3b's look, real sheet in), K545 (K481 stage 3's look), then the rest of Waiting on Levi; K531 (daily determinism) lands at launch prep and K533 (backend dailies) with the backend/accounts work; then ungated: K268's far-branch smooth-min, K543/K544 when wanted / in K156's next phone window, then work in their sections.
 10. New week (2026-10-19): Levi's calls - final ς gets its own glyph; dailies draw no title thread unless a flag asks (K552, maze topology the same either way); the cursive is redesigned before any mass generation (K115: crossings only, later-over-earlier in pen order with a reverse checkbox, smooth paths). K551 done (f18dd07, gaps back live). Next: K552 and K115's redesign stage 1 (agents), claude-config's dedupe fix (CC81); K161 done. Later: K553, then K550.
+11. **K814** · A params collection for cursive and the other pre-defined-shape injections (Levi, 2026-10-22). Today the knobs are scattered single fields in the flat param table (`text`, `cartouche`, `emblem`, `cartoucheShape`, `shape`, the anchors and the K115 look params in `src/ui/url_state.ts`), and the shape definitions live apart (`src/core/shapes.ts` SHAPES/SHAPE_FNS analytic masks; the Hershey glyph data and emblem ids in the text code). Wanted: one collected home - a shape-injection param group (a typed subset the panel, codec and daily rules consume from one place) and a shape registry beside it, so a new pre-defined shape (cursive word, cartouche emblem, silhouette mask, title thread) is added in one spot with its params, choices and tags. Design first; no behavior change, defaults and links bit-identical.
 
 Levi's order of 2026-10-14 23:00-23:55, kept as history (most of it has
 merged):

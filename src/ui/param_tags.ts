@@ -91,6 +91,13 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   hoverGlowLength: ["hgl", "mouse over", "highlight", "cursor", "glow reach", "how far", "run length"],
   hoverGlowFade: ["hgf", "mouse over", "highlight", "cursor", "fade out", "soft ends", "junction ends", "hard edge"],
   hoverGlowWidth: ["hgw", "mouse over", "highlight", "cursor", "glow width", "thick", "thin", "edge glow"],
+  pulseColor: ["plc", "choice highlight", "pulse color", "junction hint", "next moves", "color", "colour"],
+  pulseWidth: ["plw", "choice highlight", "pulse width", "junction hint", "thick", "thin", "stripe"],
+  hoverColor: ["hgc", "mouse over", "highlight", "cursor", "glow color", "color", "colour"],
+  telegraphColor: ["tgc", "minotaur", "enemy", "telegraph", "warning", "highlight color", "color", "colour"],
+  telegraphWidth: ["tgw", "minotaur", "enemy", "telegraph", "warning", "thick", "thin", "line width"],
+  frayColor: ["frc", "fragile", "cracked", "fray", "danger", "tint", "color", "colour"],
+  frayWidth: ["frw", "fragile", "cracked", "fray", "danger", "thick", "thin", "width"],
   showMazeStats: ["timer", "stopwatch", "score", "efficiency", "statistics", "readout", "hud", "solve time", "top left"],
   finishIndicator: ["goal arrow", "exit arrow", "direction", "edge marker", "off screen", "pointer", "find the end", "where to go"],
   headIndicator: ["player arrow", "find me", "where am i", "lost", "edge marker", "off screen", "pointer", "my position"],
@@ -109,6 +116,8 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   markerSize: ["mks", "dot size", "player dot", "icon size", "bigger marker", "start and finish", "your position", "token size"],
   dailyTitleThread: ["dtt", "daily title", "daily maze", "name", "lettering", "cursive", "entrance sign", "daily only"],
   // Game
+  "btn:Preview win effect": ["preview", "win", "victory", "confetti", "celebration", "test effect", "try it", "banner"],
+  "btn:Preview loss effect": ["preview", "loss", "death", "burnt", "catch", "test effect", "try it", "banner"],
   "btn:Reset path": ["restart", "start over", "clear route", "undo all", "try again", "retry", "back to start", "begin again"],
   // Fire / Burn race
   fireClock: ["fck", "burn race", "fuse", "turn based", "live", "timer", "standing still", "waiting"],

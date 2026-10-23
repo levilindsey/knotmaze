@@ -447,6 +447,8 @@ export function createScene(deps: SceneDeps): Scene {
       fabric.telegraphCoarse =
         window.matchMedia("(pointer: coarse)").matches || window.innerWidth <= 700;
       fabric.telegraphLook = params.minoTelegraphLook; // K525
+      fabric.setTelegraphColorParam(Number.parseInt(params.telegraphColor.slice(1), 16)); // K813
+      fabric.telegraphWidth = params.telegraphWidth; // K813
       fabric.trailMode = pathVizOf(params) === "trail";
       fabric.pathViz = pathVizOf(params);
       fabric.tension = params.tension;

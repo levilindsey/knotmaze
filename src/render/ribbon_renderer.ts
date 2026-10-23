@@ -816,6 +816,16 @@ export class RibbonRenderer {
   // panel_wiring syncs both from the goldWidth/goldTexture params.
   goldWidth = 1;
   goldTexture = 0;
+  // K813: the highlights' colors and widths (0xRRGGBB; panel_wiring
+  // syncs them from the pulseColor / pulseWidth / hoverColor /
+  // telegraphWidth / frayColor / frayWidth params). White and 1 read
+  // exactly as the highlights drew before they had these knobs.
+  pulseColor = 0xffffff;
+  pulseWidth = 1;
+  hoverColor = 0xffffff;
+  telegraphWidth = 1;
+  frayColor = 0x000000; // 0 = auto (the thread's pale shade)
+  frayWidth = 0.45;
   // K525: the telegraph rims' strength and colour (0xRRGGBB), sent as
   // uKTele (w = the strength while a route is set). The fabric sets them
   // with the route; a piece's alpha multiplies the strength. teleColor is

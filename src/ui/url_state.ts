@@ -412,6 +412,11 @@ export interface UrlParams {
   // that its traveling pulses reach along each arm before fading out (K75;
   // the trains used to run whole arms). Live.
   pulseReach: number;
+  // K813: the pulse band's color and its width across the thread (a
+  // share of the half-width; 1 = the whole thread, as the pulses drew
+  // before). White at the default, so the bands whiten as they did.
+  pulseColor: string;
+  pulseWidth: number;
   hueShift: number; // [0, 360) rotation added to the seed's base hue.
   gamutArc: number; // [40, 360] hue-arc width of the color gamut.
   palette: GamutPalette; // Saturation/lightness preset for the gamut.
@@ -699,6 +704,8 @@ export interface UrlParams {
   // until K298). Viewer preferences.
   hoverGlowLength: number;
   hoverGlowFade: number;
+  // K813: the hover glow's color (white = the whitening it has today).
+  hoverColor: string;
   // K298, the MOUSE's pick margins (a pen's too; touch keeps today's
   // radii, main.ts pickRadius): how far past a thread's edge a pointer
   // still picks it, in CSS px ([0, PICK_MARGIN_MAX]; hover, click, the
@@ -727,6 +734,15 @@ export interface UrlParams {
   // K525: the telegraph's look (TELEGRAPH_LOOKS). Render-only, live like
   // minoTelegraph; not daily-exempt (a daily plays without a minotaur).
   minoTelegraphLook: TelegraphLook;
+  // K813: the telegraph's color (its red today; a fleeing minotaur and
+  // a hint keep their own colors) and its width: the line's thickness
+  // multiplier and how far the rims reach in from each edge.
+  telegraphColor: string;
+  telegraphWidth: number;
+  // K813: the cracked fragile runs' tint and kept width. "#000000" =
+  // auto: the thread's own pale shade, as the fray draws today.
+  frayColor: string;
+  frayWidth: number;
   minoSight: number;
   minoRoamRuns: number;
   minoTerritory: number;
@@ -1007,6 +1023,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   tonicEmphasis: 0.5,
   pulseSpacing: 2.5,
   pulseReach: 3, // K75.
+  pulseColor: "#ffffff", // K813
+  pulseWidth: 1, // K813
   hueShift: 300,
   gamutArc: 130,
   palette: "pastel",
@@ -1140,6 +1158,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   hoverGlowWidth: PAINT_CONST.RIM_EDGE, // 0.85 (K111 stage 3's width)
   hoverGlowLength: 3, // K298: pulseReach's default, the length it had
   hoverGlowFade: 0.2, // K298: was RIM_END_FADE 0.75 (the fade sheet)
+  hoverColor: "#ffffff", // K813
   // K298: the mouse picked 0.7 world from the centerline (9.6 CSS px past
   // the edge at 1400x900) and a choice 0.9 (14 px, 1.45x as far past the
   // edge); now 4 px, and a choice 1.5x that (6 px).
@@ -1149,6 +1168,10 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minoSpeed: DEFAULT_TURN_MINO.speed,
   minoTelegraph: DEFAULT_TURN_MINO.telegraph,
   minoTelegraphLook: "rims", // K525
+  telegraphColor: "#ff2418", // K813 (TELE_RED)
+  telegraphWidth: 1, // K813
+  frayColor: "#000000", // K813: auto (the thread's pale shade)
+  frayWidth: 0.45, // K813 (the fray's kept middle share today)
   minoSight: DEFAULT_TURN_MINO.sight,
   minoRoamRuns: DEFAULT_TURN_MINO.roam,
   minoTerritory: DEFAULT_TURN_MINO.territory,
@@ -1800,6 +1823,8 @@ function readLegacy(
     rootNote: readChoice(query, "rn", ROOT_NOTES, D.rootNote),
     tonicEmphasis: readNumber(query, "tnc", D.tonicEmphasis),
     pulseSpacing: readNumber(query, "psp", D.pulseSpacing),
+    pulseColor: readHexColor(query, "plc", D.pulseColor), // K813
+    pulseWidth: readNumber(query, "plw", D.pulseWidth), // K813
     hueShift: readNumber(query, "hs", D.hueShift),
     gamutArc: readNumber(query, "arc", D.gamutArc),
     palette: readChoice(query, "pal", GAMUT_PALETTES, D.palette),
@@ -1978,6 +2003,7 @@ function readLegacy(
     markerSize: sanitizeMarkerSize(readNumber(query, "mks", D.markerSize)),
     // K145's hover glow (`&hg=0`), clamped to [0, 1].
     hoverGlow: clampTo(readNumber(query, "hg", D.hoverGlow), 1),
+    hoverColor: readHexColor(query, "hgc", D.hoverColor), // K813
     // K111 stage 4's hover glow width (`&hgw=0.6`), clamped to [0.3, 1].
     hoverGlowWidth: clampHoverGlowWidth(readNumber(query, "hgw", D.hoverGlowWidth)),
     // K298's hover glow length and end fade (`&hgl=5&hgf=0.1`).
@@ -1993,6 +2019,10 @@ function readLegacy(
     minoTelegraph: readBool(query, "mtg", D.minoTelegraph),
     // K525's telegraph look (`&mtl=line` is K80 turns' red line).
     minoTelegraphLook: readChoice(query, "mtl", TELEGRAPH_LOOKS, D.minoTelegraphLook),
+    telegraphColor: readHexColor(query, "tgc", D.telegraphColor), // K813
+    telegraphWidth: readNumber(query, "tgw", D.telegraphWidth), // K813
+    frayColor: readHexColor(query, "frc", D.frayColor), // K813
+    frayWidth: readNumber(query, "frw", D.frayWidth), // K813
     minoSight: clampTo(readNumber(query, "msi", D.minoSight), MINO_SIGHT_MAX),
     minoRoamRuns: clampRuns(
       readNumber(query, "mro", D.minoRoamRuns),

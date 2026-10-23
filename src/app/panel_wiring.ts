@@ -388,7 +388,12 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
     onTurnMinoChange: () => {
       scene.turnMino?.setConfig(turnConfig(turnMinoParamsOf(params)));
       // K525: the telegraph's look applies live (render-only).
-      if (scene.fabric) scene.fabric.telegraphLook = params.minoTelegraphLook;
+      if (scene.fabric) {
+        scene.fabric.telegraphLook = params.minoTelegraphLook;
+        // K813: the telegraph's color and width, live like its look.
+        scene.fabric.setTelegraphColorParam(Number.parseInt(params.telegraphColor.slice(1), 16));
+        scene.fabric.telegraphWidth = params.telegraphWidth;
+      }
       deps.writeParams(params);
     },
     // K140: the finish confetti (render-only, live; off drops the pieces
@@ -514,6 +519,9 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
       clampHoverGlowFade(params.hoverGlowFade),
       a11y.highContrast ? deps.hcLookChoice : 0,
       params.appearFx, params.threadLook, params.goldWidth, params.goldTexture,
+      // K813: the highlights' colors and widths.
+      params.pulseColor, params.pulseWidth, params.hoverColor,
+      params.telegraphWidth, params.frayColor, params.frayWidth,
     ];
     if (lookCache !== null && lookCache.r === scene.renderer) {
       let same = true;
@@ -536,6 +544,13 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
     scene.renderer.hcLook = a11y.highContrast ? deps.hcLookChoice : 0;
     scene.renderer.appearFx = params.appearFx;
     scene.renderer.threadLook = params.threadLook === "border" ? 1 : params.threadLook === "both" ? 2 : 0; // K797b
+    // K813: the highlights' colors and widths (hex params as 0xRRGGBB).
+    scene.renderer.pulseColor = Number.parseInt(params.pulseColor.slice(1), 16);
+    scene.renderer.pulseWidth = params.pulseWidth;
+    scene.renderer.hoverColor = Number.parseInt(params.hoverColor.slice(1), 16);
+    scene.renderer.telegraphWidth = params.telegraphWidth;
+    scene.renderer.frayColor = Number.parseInt(params.frayColor.slice(1), 16);
+    scene.renderer.frayWidth = params.frayWidth;
     scene.renderer.goldWidth = params.goldWidth; // K799
     scene.renderer.goldTexture = params.goldTexture === "pencil" ? 1 : params.goldTexture === "crayon" ? 2 : params.goldTexture === "highlighter" ? 3 : 0;
     deps.flags.push(Flag.GEOM); // K6-2: a look change asks for a geometry pass

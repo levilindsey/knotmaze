@@ -181,14 +181,22 @@ void main(void) {
     }
     kst.x *= gm;
   }
+  // K813: the pulse band's width across the thread (uKPath.z; 1 = the
+  // whole thread, as the bands drew before it had a width).
+  if (paintHere && kst.y > 0.5 && uKPath.z < 1.0) {
+    highp float pe = abs(2.0 * vUV.y - 1.0);
+    highp float pfw = max(fwidth(vUV.y) * 3.0, 0.02);
+    kst.z *= clamp((uKPath.z - pe) / pfw + 0.5, 0.0, 1.0);
+  }
   // The hover glow (K145): kst.w is its strength along the thread, shaped
   // across the ribbon here (only the ribbons have an across coordinate).
   highp float krim = kst.w > 0.0 ? kst.w * kRimAcross(vUV.y) : 0.0;
   // A High contrast prototype shapes a choice across the ribbon (K111
   // stage 4; kComposePaint itself under today's look).
   vec3 rgb = paintHere ? kComposePaintAcross(base, kst, kgl, vUV.y) : base;
-  // K525: the telegraph rims (paint_glsl.ts TELE_ITEM_GLSL).
-  if (kTele > 0.0) rgb = kTeleOver(rgb, kTele * kRimAcross(vUV.y) * uKTele.w);
+  // K525: the telegraph rims (paint_glsl.ts TELE_ITEM_GLSL). K813: the
+  // rims shape across by the telegraph's own width (kTeleAcross).
+  if (kTele > 0.0) rgb = kTeleOver(rgb, kTele * kTeleAcross(vUV.y) * uKTele.w);
   // K298: the hover glow composes OVER the paint, so it shows on a hovered
   // choice at every breath phase of its own hover band (a max with the
   // band hid it under the breath). Off a band and the reveal glow this is
@@ -199,12 +207,42 @@ void main(void) {
   // of the ribbon). Ribbon-only: the fans keep the full fill, as with
   // K799's traveled look.
   highp float frayA = 1.0;
+  vec3 frayTint = vec3(0.0);
   if (paintHere && kFrayHere > 0.0) {
     highp float lumF = dot(rgb, vec3(0.299, 0.587, 0.114));
-    rgb = mix(rgb, vec3(lumF) * 0.85, 0.75 * kFrayHere);
+    // K813: the tint is the thread's pale shade, or frayColor's pick.
+    frayTint = mix(vec3(lumF) * 0.85, uKHlFray.rgb, uKHlFray.w);
+    rgb = mix(rgb, frayTint, 0.75 * kFrayHere);
     highp float eF = abs(2.0 * vUV.y - 1.0);
     highp float fwF = max(fwidth(vUV.y) * 3.0, 0.02);
-    frayA = mix(1.0, clamp((0.45 - eF) / fwF + 0.5, 0.0, 1.0), kFrayHere);
+    // K813: the kept middle share is frayWidth (0.45 as it drew before).
+    frayA = mix(1.0, clamp((uKPath.w - eF) / fwF + 0.5, 0.0, 1.0), kFrayHere);
+  }
+  // K813: in the border look the thread's own fill is gone, but the
+  // indications that draw IN the fill stay: the traveled path, the
+  // pulse bands, the hover glow, the reveal glow, the telegraph, the
+  // fray and the intro FX. Compose them over nothing (an empty base)
+  // and measure how much of each covers this pixel; the border branch
+  // below puts that in the interior and the strokes on the edges.
+  highp float hiA = 0.0;
+  vec3 hiRgb = vec3(0.0);
+  if (uKLook.x > 0.5 && uKLook.x < 1.5) {
+    if (paintHere) {
+      hiRgb = kComposePaintAcross(vec3(0.0), kst, kgl, vUV.y);
+      if (kTele > 0.0) hiRgb = kTeleOver(hiRgb, kTele * uKTele.w);
+    }
+    if (krim > 0.0) hiRgb = kRimOver(hiRgb, krim);
+    if (kFrayHere > 0.0) hiRgb = mix(hiRgb, frayTint, 0.75 * kFrayHere);
+    hiA = clamp(
+      max(max(kst.x, kst.y > 0.5 ? kst.z : 0.0), max(krim, max(kgl, kTele * uKTele.w))),
+      0.0, 1.0);
+    if (kFrayHere > 0.0) hiA = max(hiA, kFrayHere);
+    // The intro: while the FX run, the composed color (FX over the
+    // section, the paint over that) IS the fill, at its solidity.
+    if (fxHere) {
+      hiRgb = rgb;
+      hiA = max(hiA, aM);
+    }
   }
   // K797b THREAD LOOK (prototype; the CPU mirror and parity tests wait
   // for Levi's pick, per the ledger's render-prototype rule): an edge
@@ -221,7 +259,11 @@ void main(void) {
     highp float fwA = max(fwidth(vUV.y) * 3.0, 0.02);
     highp float edge = smoothstep(0.62, 0.62 + fwA, eAcross);
     vec3 stroke = mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5);
-    if (uKLook.x > 0.5 && uKLook.x < 1.5) { rgb = stroke; lookA = edge; }
+    if (uKLook.x > 0.5 && uKLook.x < 1.5) {
+      // K813: strokes on the edges; inside, only the highlights above.
+      rgb = mix(hiRgb, stroke, edge);
+      lookA = max(edge, hiA * (1.0 - edge));
+    }
     else {
       rgb = mix(rgb, stroke, edge * 0.9);
       if (edgesIntro) {

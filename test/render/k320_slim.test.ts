@@ -70,17 +70,24 @@ describe("K320 stage 1: char budgets", () => {
     // K137 fray (2026-10-21): the FRAY paint item (kPaintAt branch +
     // kFrayHere) and the ribbon's pale/thin compose add 1,314 to both
     // (50,080 -> 51,394 measured here); budgets follow the measurement.
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(51_450);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(67_850);
-    // K137 fray: the arm strips share kPaintAt, so the FRAY branch adds
-    // 449 there too (31,400 -> 31,849 measured).
-    expect(STRIP_FRAG.length).toBeLessThanOrEqual(31_900);
+    // K813 (2026-10-22): the highlights' colors and widths and the
+    // border look's interior highlights (the uKHl* uniforms, kTeleAcross,
+    // the pulse/fray widths and the over-nothing compose in
+    // SECTION_FRAG) add 2,594 to the section pair (51,394 -> 53,988 and
+    // 67,794 -> 70,403 measured here), 640 to the strips (31,849 ->
+    // 32,489; the shared paint core), 92 to the junction field and 9 to
+    // the still pluck (the shared uniform block).
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(54_050);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(70_460);
+    expect(STRIP_FRAG.length).toBeLessThanOrEqual(32_550);
     // K797b/K798 fillets (2026-10-21): the fan look gate and stroke
     // (junction_field.ts) add 755 (26,600 -> 27,355 here).
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(27_420);
+    // K815: the fans' flank coordinate (aFlank + the fanEdge block) adds
+    // 788 to the junction field (27,447 -> 28,235 measured).
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(28_300);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
-    expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_380);
+    expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_450);
   });
 });
 
