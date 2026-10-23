@@ -1,13 +1,13 @@
-// K795 (brief docs/design/K795.md, item 3): the four constants that became
+// K795 (brief docs/design/K795.md, item 3): the constants that became
 // params - the snare's hold (snareHold, snh), the lure's range (lureRange,
-// lrg), the hint's seconds (hintSeconds, hns) and the hidden runs' reveal
-// distance (hiddenReveal, hrv). A param only replaces its constant: the
-// default is the constant, the readers clamp to the row's range, and a
-// default design's turn config is what it was.
+// lrg) and the hidden runs' reveal distance (hiddenReveal, hrv). (The
+// hint's seconds, the fourth, left with K838: a hint lasts until the
+// player's next move.) A param only replaces its constant: the default
+// is the constant, the readers clamp to the row's range, and a default
+// design's turn config is what it was.
 import { describe, expect, it } from "vitest";
 import { walkDistances } from "../../src/core/walk_graph";
 import type { WalkEdge, WalkGraph, WalkVertex } from "../../src/core/walk_graph";
-import { HINT_SECONDS, HINT_SECONDS_MAX, HINT_SECONDS_MIN, hintSecondsOf } from "../../src/game/hints";
 import {
   REVEAL_RUNS,
   REVEAL_RUNS_MAX,
@@ -64,31 +64,27 @@ function play(t: TurnMinotaur, edge: number): string {
 
 describe("K795: the tunables' params", () => {
   it("default to their constants and read as the row's range", () => {
-    expect([SNARE_HOLD, LURE_RANGE, HINT_SECONDS, REVEAL_RUNS]).toEqual([3, 6, 2, 3]);
+    expect([SNARE_HOLD, LURE_RANGE, REVEAL_RUNS]).toEqual([3, 6, 3]);
     expect(PARAM_DEFAULTS.snareHold).toBe(SNARE_HOLD);
     expect(PARAM_DEFAULTS.lureRange).toBe(LURE_RANGE);
-    expect(PARAM_DEFAULTS.hintSeconds).toBe(HINT_SECONDS);
     expect(PARAM_DEFAULTS.hiddenReveal).toBe(REVEAL_RUNS);
     expect(PARAM_RANGES.snareHold).toEqual([SNARE_HOLD_MIN, SNARE_HOLD_MAX]);
     expect(PARAM_RANGES.lureRange).toEqual([LURE_RANGE_MIN, LURE_RANGE_MAX]);
-    expect(PARAM_RANGES.hintSeconds).toEqual([HINT_SECONDS_MIN, HINT_SECONDS_MAX]);
     expect(PARAM_RANGES.hiddenReveal).toEqual([REVEAL_RUNS_MIN, REVEAL_RUNS_MAX]);
-    // Whole turns and runs; the hint keeps its fraction of a second.
+    // Whole turns and runs.
     expect([snareHoldOf(4.6), snareHoldOf(0), snareHoldOf(99), snareHoldOf("5"), snareHoldOf(Number.NaN)])
       .toEqual([5, 1, 8, SNARE_HOLD, SNARE_HOLD]);
     expect([lureRangeOf(2.4), lureRangeOf(0), lureRangeOf(99), lureRangeOf(undefined)])
       .toEqual([2, 1, 12, LURE_RANGE]);
-    expect([hintSecondsOf(1.25), hintSecondsOf(0), hintSecondsOf(99), hintSecondsOf(null)])
-      .toEqual([1.25, 0.5, 10, HINT_SECONDS]);
     expect([revealRunsOf(4.5), revealRunsOf(0), revealRunsOf(99), revealRunsOf(Number.POSITIVE_INFINITY)])
       .toEqual([5, 1, 8, REVEAL_RUNS]);
   });
 
   it("clamps a link's values to the rows' ranges", () => {
-    const p = parseParams("?7&snh=99&lrg=0&hns=0.1&hrv=99");
-    expect([p.snareHold, p.lureRange, p.hintSeconds, p.hiddenReveal]).toEqual([8, 1, 0.5, 8]);
+    const p = parseParams("?7&snh=99&lrg=0&hrv=99");
+    expect([p.snareHold, p.lureRange, p.hiddenReveal]).toEqual([8, 1, 8]);
     const d = parseParams("?7");
-    expect([d.snareHold, d.lureRange, d.hintSeconds, d.hiddenReveal]).toEqual([3, 6, 2, 3]);
+    expect([d.snareHold, d.lureRange, d.hiddenReveal]).toEqual([3, 6, 3]);
   });
 
   it("sets the snare's hold and the lure's range in the turn config only off their defaults", () => {

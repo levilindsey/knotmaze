@@ -1554,8 +1554,8 @@ export class FabricMazeRenderer {
   }
 
   // K137 stage 2: a HINT lights one run in the telegraph's rim look (K525's
-  // TELE paint item) in HINT_COLOR, until main's timer (the hintSeconds param; HINT_SECONDS by default) or a
-  // move (beginMove) clears it. While it is lit it holds the one telegraph
+  // TELE paint item) in HINT_COLOR, until a move (beginMove) clears it
+  // (K838: no timer - the hint lasts until the player moves). While it is lit it holds the one telegraph
   // slot: every other writer goes through setTele / setTeleColor /
   // setTeleStrength, which keep the BASE telegraph (the minotaur's or the
   // walker's; hints are off in walker modes) without drawing it, and

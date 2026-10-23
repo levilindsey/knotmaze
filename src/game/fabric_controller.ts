@@ -356,6 +356,9 @@ export class FabricMazeController {
   spoolCap = Infinity;
   hintsMax = 0;
   hintsUsed = 0;
+  // K838: a hint is lit until the player moves; another hint cannot be
+  // spent until then (main.ts holds the matching display state).
+  hintAwaitingMove = false;
   chalk = new Set<string>();
 
   // K138 rules (ice runs and the color rule; rule_search.ts is the kit):
@@ -472,6 +475,7 @@ export class FabricMazeController {
   // the chalk marks.
   clearAids(): void {
     this.hintsUsed = 0;
+    this.hintAwaitingMove = false;
     this.chalk.clear();
   }
 
@@ -500,9 +504,12 @@ export class FabricMazeController {
   get hintsLeft(): number {
     return Math.max(0, this.hintsMax - this.hintsUsed);
   }
+  // K838: one hint at a time - a second is refused (and not spent)
+  // until the player has moved once with the first still lit.
   useHint(): boolean {
-    if (this.hintsLeft <= 0 || this.solved) return false;
+    if (this.hintAwaitingMove || this.hintsLeft <= 0 || this.solved) return false;
     this.hintsUsed++;
+    this.hintAwaitingMove = true;
     return true;
   }
 
@@ -1409,6 +1416,7 @@ export class FabricMazeController {
   // K137: one crossing of the run; `justBroke` names it when this one
   // broke it. K139: a collapse adds the run's units to the score.
   private cross(eid: number): void {
+    this.hintAwaitingMove = false; // K838: the move spends the lit hint
     const n = ++this.crossings[eid];
     this.justBroke = this.breakable && n === this.breakLimits[eid] ? eid : -1;
     if (this.justBroke >= 0 && this.collapse !== "off") {

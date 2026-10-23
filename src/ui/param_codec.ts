@@ -386,36 +386,36 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // lock's form (LOCK_MODES order; options append without a bump).
   num("keys"),
   choice("lockMode", ["exit", "shortcut", "colors"]),
-  // 214-217, K795: the snare's hold (turns), the lure's range (runs), the
-  // hint's seconds and the hidden runs' reveal distance (runs from a pluck).
+  // 214-216, K795: the snare's hold (turns), the lure's range (runs) and
+  // the hidden runs' reveal distance (runs from a pluck). (216 was the
+  // hint's seconds until K838 removed it - codec v9.)
   num("snareHold"),
   num("lureRange"),
-  num("hintSeconds"),
   num("hiddenReveal"),
-  // 218-219, K795: the beat's run timing (BEAT_TIMINGS order,
+  // 217-218, K795: the beat's run timing (BEAT_TIMINGS order,
   // game/beat_rider.ts) and the beats every run takes under even (1..4).
   choice("beatTiming", ["even", "length"]),
   num("beatPerRun"),
-  // 220, K137 s5 (4.33): muddy runs (0 off, 1..6; game/mud.ts).
+  // 219, K137 s5 (4.33): muddy runs (0 off, 1..6; game/mud.ts).
   num("mud"),
-  // 221, K797b: the thread look (fill | border | both).
-  choice("threadLook", ["fill", "border", "both"]), // 221 K797b
-  // 222-223, K799: the traveled path's width and fill texture.
+  // 220, K797b: the thread look (fill | border | both).
+  choice("threadLook", ["fill", "border", "both"]), // 220 K797b
+  // 221-222, K799: the traveled path's width and fill texture.
   num("goldWidth"),
   choice("goldTexture", ["solid", "pencil", "crayon", "highlighter"]),
-  // 224, K137 stage 6: real-time extras (0 off, 1..3 hunters).
+  // 223, K137 stage 6: real-time extras (0 off, 1..3 hunters).
   num("minoExtras"),
-  // 225, K137 scent (4.34): the scent trail's seconds (0 off).
+  // 224, K137 scent (4.34): the scent trail's seconds (0 off).
   num("minoScent"),
-  // 226-227, K137 darkness (4.17): closing span in moves, lantern x.
+  // 225-226, K137 darkness (4.17): closing span in moves, lantern x.
   num("darkMoves"),
   num("lantern"),
-  // 228-229, K137 sonar (4.26): the ring, and its ping limit.
+  // 227-228, K137 sonar (4.26): the ring, and its ping limit.
   flag("sonar"),
   num("sonarPings"),
-  // 230, K137 tunnels (4.13): linked junction pairs.
+  // 229, K137 tunnels (4.13): linked junction pairs.
   num("tunnels"),
-  // 231, K546 stage 3: the loss effects' amount.
+  // 230, K546 stage 3: the loss effects' amount.
   num("lossAmount"),
   // K813: the highlights' colors and widths (border-look stage).
   color("pulseColor"),
@@ -425,16 +425,16 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("telegraphWidth"),
   color("frayColor"),
   num("frayWidth"),
-  // 239, K819: the side cannons' spread.
+  // 238, K819: the side cannons' spread.
   num("cannonSpread"),
-  // 240-242, K820: the border stroke's width and color, the gold grain.
+  // 239-241, K820: the border stroke's width and color, the gold grain.
   num("borderWidth"),
   color("borderColor"),
   num("goldTextureStrength"),
-  // 243-244, K828: the loading trefoil's speed and motion.
+  // 242-243, K828: the loading trefoil's speed and motion.
   num("loaderSpeed"),
   choice("loaderMove", ["maze", "head"]),
-  // 245, K830: the rounded share of junction wedges.
+  // 244, K830: the rounded share of junction wedges.
   num("cornerRoundShare"),
   num("pathIrregularity"), // K835
   num("pathExcursion"), // K835
@@ -626,7 +626,6 @@ export const PARAM_RANGES: Readonly<
   keys: [0, 3], // K138 stage 4 (KEYS_MAX)
   snareHold: [1, 8], // K795 (SNARE_HOLD_MIN..MAX)
   lureRange: [1, 12], // K795 (LURE_RANGE_MIN..MAX)
-  hintSeconds: [0.5, 10], // K795 (HINT_SECONDS_MIN..MAX)
   hiddenReveal: [1, 8], // K795 (REVEAL_RUNS_MIN..MAX)
   beatPerRun: [1, 4], // K795 (BEAT_PER_RUN_MIN..MAX)
   mud: [0, 6], // K137 s5 (MUD_MAX)
@@ -641,7 +640,9 @@ export function clampParamValue(name: string, value: number): number {
   return Math.min(range[1], Math.max(range[0], value));
 }
 
-export const CODEC_VERSION = 8;
+// v9 (K838): the hint's seconds left the table (a hint now lasts until
+// the player's next move); indices after 216 shift down one.
+export const CODEC_VERSION = 9;
 
 // The shortest decimal for a number, after rounding to 6 decimals (slider
 // steps leave float noise behind - 1.4500000000000002, or 1.7e-17 for a

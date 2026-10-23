@@ -137,6 +137,12 @@ describe("hints in the controller (K137 stage 2)", () => {
     c.reset();
     expect(c.hintsLeft).toBe(2);
     expect(c.useHint()).toBe(true);
+    // K838: a second hint is refused - and not spent - until a move.
+    expect(c.hintAwaitingMove).toBe(true);
+    expect(c.useHint()).toBe(false);
+    expect(c.hintsUsed).toBe(1);
+    expect(c.tapEdge(c.goodArm())).not.toBe("reject");
+    expect(c.hintAwaitingMove).toBe(false);
     expect(c.useHint()).toBe(true);
     expect(c.useHint()).toBe(false);
     expect(c.hintsUsed).toBe(2);
