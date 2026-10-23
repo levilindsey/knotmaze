@@ -219,6 +219,16 @@ export const DAILY_EXEMPT_KEYS = [
   // K298: its own length and end fade.
   "hoverGlowLength",
   "hoverGlowFade",
+  // K813: the hover glow's color, with the rest of the glow.
+  "hoverColor",
+  // K813: the pulse, telegraph and cracked-run looks (colors and
+  // widths) are viewer looks like the glow's, not design.
+  "pulseColor",
+  "pulseWidth",
+  "telegraphColor",
+  "telegraphWidth",
+  "frayColor",
+  "frayWidth",
   // K298: how near a thread the mouse picks it (Touch & feel).
   "pickMargin",
   "pickChoiceRatio",

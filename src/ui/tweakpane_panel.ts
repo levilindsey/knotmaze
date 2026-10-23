@@ -1440,6 +1440,18 @@ export function buildPanel(
     "How far the current junction's pulses, and the hover highlight on a choice, reach along each arm, in lattice units, before fading out. Applies live.",
     D.pulseReach, () => callbacks.onTrailChange()
   );
+  // K813: the pulse band's color and its width across the thread (in the
+  // border look these draw inside the outline too).
+  row(
+    fPath, p, "pulseColor", { view: "color", label: "Pulse color" },
+    "Pulse color: what the current junction's pulse bands brighten toward. White is the brightening they have today. Applies live.",
+    D.pulseColor, () => callbacks.onTrailChange()
+  );
+  row(
+    fPath, p, "pulseWidth", { min: 0, max: 1, step: 0.01, label: "Pulse width" },
+    "Pulse width: how much of the thread's width a pulse band covers, as a share of the half-width from the center (1 = the whole thread, as today). Applies live.",
+    D.pulseWidth, () => callbacks.onTrailChange()
+  );
   // K145: the subtle glow on the run under the pointer (a choice too since
   // K298, over its own hover look), with its personal settings under it.
   const fHover = folder("Hover glow", false, fPath);
@@ -1468,6 +1480,12 @@ export function buildPanel(
     { min: HOVER_GLOW_WIDTH_MIN, max: HOVER_GLOW_WIDTH_MAX, step: 0.05, label: "Hover glow thickness" },
     "Hover glow thickness: how far in from each edge of the thread the hover glow reaches, as a share of the half-width (1 = the two edges' glows meet in the middle). Applies live.",
     D.hoverGlowWidth, () => callbacks.onTrailChange()
+  );
+  // K813: the glow's color (its thickness is the row above).
+  row(
+    fHover, p, "hoverColor", { view: "color", label: "Hover glow color" },
+    "Hover glow color: what the hover glow brightens toward. White is the brightening it has today. Applies live.",
+    D.hoverColor, () => callbacks.onTrailChange()
   );
   const mazeStatsRow = row(
     fPath, s, "showMazeStats", { label: "Maze stats" },
@@ -1783,6 +1801,19 @@ export function buildPanel(
     "Runs break behind you. snap: a run breaks once you have crossed it. crack: it cracks the first time and breaks the second. A dead-end tail, the entrance's and the exit's never break. With no unbroken way to the exit left you are stranded: undo the last move or restart. Restarts the solve.",
     D.fragile, () => callbacks.onClockChange()
   );
+  // K813: a cracked run's look (the fray): its tint and how much of its
+  // middle it keeps. Live, like the other highlight looks.
+  const frayColorRow = row(
+    fGame, p, "frayColor", { view: "color", label: "Cracked run tint" },
+    "Cracked run tint: the color a cracked fragile run pales toward. Black keeps the thread's own pale shade, as today. Applies live.",
+    D.frayColor, () => callbacks.onTrailChange()
+  );
+  const frayWidthRow = row(
+    fGame, p, "frayWidth",
+    { min: 0, max: 1, step: 0.01, label: "Cracked run width" },
+    "Cracked run width: how much of a cracked run's middle stays drawn, as a share of the half-width (0.45 as today, 1 = full). Applies live.",
+    D.frayWidth, () => callbacks.onTrailChange()
+  );
   const parModeRow = row(
     fGame, p, "parMode",
     { options: { off: "off", strict: "strict", strokes: "strokes" }, label: "Par" },
@@ -1994,6 +2025,16 @@ export function buildPanel(
     fMino, "minoTelegraphLook",
     { options: { Rims: "rims", Line: "line", Both: "both" }, label: "Telegraph look" },
     "Telegraph look: rims light both edges of the run it will take in red; line draws a red line over it; both draws the two. The ring where it will stand shows in every look. Applies live."
+  );
+  // K813: the telegraph's color and width (a fleeing minotaur, a hint
+  // and the walker keep their own colors).
+  const telegraphColorRow = turnRow(
+    fMino, "telegraphColor", { view: "color", label: "Telegraph color" },
+    "Telegraph color: the color its next move shows in (the rims, the line and the ring). A minotaur fleeing the sword still shows pale blue, and a hint and the walker keep their own colors. Applies live."
+  );
+  const telegraphWidthRow = turnRow(
+    fMino, "telegraphWidth", { min: 0.2, max: 2.5, step: 0.05, label: "Telegraph width" },
+    "Telegraph width: the line's thickness, and how far the rims reach in from each edge, as a multiple of today's (1). Applies live."
   );
   // K324: the tuning subfolder sits after each clock's top rows (the turn
   // clock's above hide in real time) and before the shared rows. It holds
@@ -3199,6 +3240,12 @@ export function buildPanel(
       (realtime
         ? !params.minoTelegraph
         : !telegraphOn({ telegraph: params.minoTelegraph, speed: params.minoSpeed }));
+    // K813: the telegraph's color and width go with its look.
+    telegraphColorRow.hidden = minoTelegraphLookRow.hidden;
+    telegraphWidthRow.hidden = minoTelegraphLookRow.hidden;
+    // K813: the cracked-run look only while fragile runs play.
+    frayColorRow.hidden = params.fragile === "off";
+    frayWidthRow.hidden = params.fragile === "off";
     minoByLengthRow.hidden = !turnMinoOn;
     // K324: the tuning subfolder shows under both clocks; each clock's rows
     // in it hide under the other (real time's K324 rows are in rtRows).

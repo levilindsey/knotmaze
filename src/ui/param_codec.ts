@@ -417,6 +417,14 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("tunnels"),
   // 231, K546 stage 3: the loss effects' amount.
   num("lossAmount"),
+  // K813: the highlights' colors and widths (border-look stage).
+  color("pulseColor"),
+  num("pulseWidth"),
+  color("hoverColor"),
+  color("telegraphColor"),
+  num("telegraphWidth"),
+  color("frayColor"),
+  num("frayWidth"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -589,6 +597,9 @@ export const PARAM_RANGES: Readonly<
   sonarPings: [0, 20], // K137 sonar (4.26)
   tunnels: [0, 2], // K137 tunnels (4.13, TUNNELS_MAX)
   lossAmount: [0, 3], // K546 stage 3 (LOSS_AMOUNT_MAX)
+  pulseWidth: [0, 1], // K813
+  telegraphWidth: [0.2, 2.5], // K813
+  frayWidth: [0, 1], // K813
   oneWay: [0, 0.6], // K138 stage 3 (ONE_WAY_MAX)
   lures: [0, 5], // K137 stage 4 (LURES_MAX)
   snares: [0, 3], // K137 stage 4 (SNARES_MAX)

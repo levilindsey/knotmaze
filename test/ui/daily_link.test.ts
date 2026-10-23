@@ -383,6 +383,13 @@ describe("the daily design and its exempt preferences (K56)", () => {
       // K298 (Levi: its own length and end fade sliders).
       "hoverGlowLength",
       "hoverGlowFade",
+      "hoverColor", // K813
+      "pulseColor", // K813
+      "pulseWidth", // K813
+      "telegraphColor", // K813
+      "telegraphWidth", // K813
+      "frayColor", // K813
+      "frayWidth", // K813
       // K298 (Levi: a slider for the mouse's pick margin, and the choices'
       // ratio to it).
       "pickMargin",

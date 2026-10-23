@@ -272,6 +272,13 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["sonarPings", "number"], // K137 sonar (4.26)
   ["tunnels", "number"], // K137 tunnels (4.13)
   ["lossAmount", "number"], // K546 stage 3
+  ["pulseColor", "color"], // K813
+  ["pulseWidth", "number"], // K813
+  ["hoverColor", "color"], // K813
+  ["telegraphColor", "color"], // K813
+  ["telegraphWidth", "number"], // K813
+  ["frayColor", "color"], // K813
+  ["frayWidth", "number"], // K813
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
@@ -349,11 +356,15 @@ describe("codec table", () => {
     expect(stringParams.filter((k) => !enumNames.includes(k))).toEqual([
       "text",
       "cartouche",
+      "pulseColor", // K813
       "pathColor",
       "backgroundBase",
       "backgroundAccent1",
       "backgroundAccent2",
       "backgroundAccent3",
+      "hoverColor", // K813
+      "telegraphColor", // K813
+      "frayColor", // K813
     ]);
   });
 });

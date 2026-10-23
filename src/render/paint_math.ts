@@ -316,7 +316,11 @@ export interface KUniforms {
   // K797b thread look (mode 0 fill / 1 border / 2 both): read only by the
   // ribbon programs; absent = fill.
   uKLook?: Float32Array;
-  uKPath?: Float32Array; // K799 (width, texture, -, -)
+  uKPath?: Float32Array; // K799 (width, texture), K813 (pulse width, fray width)
+  // K813: the highlights' colors; absent = white (today's whitening).
+  uKHlPulse?: Float32Array; // (pulse rgb, -)
+  uKHlHover?: Float32Array; // (hover rgb, telegraph rim scale)
+  uKHlFray?: Float32Array; // (fray tint rgb, 1 = picked, 0 = auto pale)
 }
 
 export const MAX_KNOTS = 8;
@@ -1999,11 +2003,15 @@ export function kGlow(D: KData, U: KUniforms, c: KChain, ctrl: number): number {
 export function kComposePaint(U: KUniforms, S: Float32Array | number[], st: KPaintState, glow: number): void {
   const G = U.uKGold;
   const p = Math.max(0, Math.min(1, st.p));
-  const v = Math.max(st.band ? st.v : 0, glow);
+  const band = st.band ? st.v : 0;
+  const v = Math.max(band, glow);
   const w = PAINT_CONST.K_BAND * Math.max(0, Math.min(1, v));
+  // K813: toward the pulse color when the band is the stronger (white
+  // by default, as today); the glow keeps white.
+  const T = band >= glow ? U.uKHlPulse : undefined;
   for (let i = 0; i < 3; i++) {
     const under = S[i] + (G[i] - S[i]) * p;
-    S[i] = under + (1 - under) * w;
+    S[i] = under + ((T ? T[i] : 1) - under) * w;
   }
 }
 
@@ -2011,9 +2019,11 @@ export function kComposePaint(U: KUniforms, S: Float32Array | number[], st: KPai
 // place): the band's whitening, applied after the paint, so a hovered
 // choice shows both. Over a color whitened by nothing it is exactly
 // kComposePaint's whitening.
-export function kRimOver(S: Float32Array | number[], rim: number): void {
+export function kRimOver(S: Float32Array | number[], rim: number, U?: KUniforms): void {
   const w = PAINT_CONST.K_BAND * Math.max(0, Math.min(1, rim));
-  for (let i = 0; i < 3; i++) S[i] = S[i] + (1 - S[i]) * w;
+  // K813: toward the hover color (white by default, as today).
+  const T = U?.uKHlHover;
+  for (let i = 0; i < 3; i++) S[i] = S[i] + ((T ? T[i] : 1) - S[i]) * w;
 }
 
 // GLSL twin: kTeleOver - the telegraph's colour over a painted color (K525,
@@ -2051,9 +2061,13 @@ export function kShadeAll(
   const st = kPaintAt(D, U, c, ctrl, arc, px, PAINT_TMP);
   const rim = st.rim > 0 ? st.rim * kRimAcross(side, U.uKGold[3]) : 0;
   // K525: the telegraph rims, shaped across as the hover glow is.
-  const tl = st.tele > 0 && U.uKTele ? st.tele * kRimAcross(side, U.uKGold[3]) * U.uKTele[3] : 0;
+  // K813: the telegraph has its own across scale (1 / telegraphWidth).
+  const tl =
+    st.tele > 0 && U.uKTele
+      ? st.tele * kRimAcross(side, U.uKHlHover ? U.uKHlHover[3] : U.uKGold[3]) * U.uKTele[3]
+      : 0;
   kComposePaint(U, S, st, kGlow(D, U, c, ctrl));
   if (tl > 0) kTeleOver(U, S, tl);
-  if (rim > 0) kRimOver(S, rim);
+  if (rim > 0) kRimOver(S, rim, U);
   return a;
 }

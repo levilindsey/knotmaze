@@ -115,6 +115,12 @@ export class PaintState {
   private get threadLook() { return this.r.threadLook; }
   private get goldWidth() { return this.r.goldWidth; }
   private get goldTexture() { return this.r.goldTexture; }
+  private get pulseColor() { return this.r.pulseColor; }
+  private get pulseWidth() { return this.r.pulseWidth; }
+  private get hoverColor() { return this.r.hoverColor; }
+  private get telegraphWidth() { return this.r.telegraphWidth; }
+  private get frayColor() { return this.r.frayColor; }
+  private get frayWidth() { return this.r.frayWidth; }
   private get flowSpeed() { return this.r.flowSpeed; }
   private get flowTime() { return this.r.flowTime; }
   private set flowTime(v: number) { this.r.flowTime = v; }
@@ -236,10 +242,12 @@ export class PaintState {
         // K525: the telegraph's rims, the same shape across at the strength
         // uKTele.w, mixed toward its colour before the hover's whitening.
         const tl =
-          st.tele > 0 && U.uKTele ? st.tele * kRimAcross(side, U.uKGold[3]) * U.uKTele[3] : 0;
+          st.tele > 0 && U.uKTele
+            ? st.tele * kRimAcross(side, U.uKHlHover ? U.uKHlHover[3] : U.uKGold[3]) * U.uKTele[3]
+            : 0;
         kComposePaint(U, rgb, st, kGlow(data, U, c, ctrl));
         if (tl > 0) kTeleOver(U, rgb, tl);
-        if (rim > 0) kRimOver(rgb, rim);
+        if (rim > 0) kRimOver(rgb, rim, U);
         return [rgb[0], rgb[1], rgb[2], a];
       },
       shadeFx: (ch, arc, side, base) => {
@@ -663,6 +671,8 @@ export class PaintState {
     knotUniformValues().uKLook![2] = this.r.revealFx.revealAnim && !this.r.revealFx.revealAnim.done ? 1 : 0;
     knotUniformValues().uKPath![0] = this.goldWidth; // K799
     knotUniformValues().uKPath![1] = this.goldTexture;
+    knotUniformValues().uKPath![2] = this.pulseWidth; // K813
+    knotUniformValues().uKPath![3] = this.frayWidth; // K813
     this.tickPaintPalette(dt);
     this.r.revealFx.tickAppearFx(dt);
     // Flow clock, advanced AFTER the palette/fillet pass so everything
@@ -799,6 +809,27 @@ export class PaintState {
       T[1] = ((tc >> 8) & 255) / 255;
       T[2] = (tc & 255) / 255;
       T[3] = this.teleKey !== "" ? Math.max(0, this.teleStrength) : 0;
+    }
+    // K813: the highlights' colors; the telegraph rims' across scale.
+    if (U.uKHlPulse) {
+      const pc = this.pulseColor;
+      U.uKHlPulse[0] = ((pc >> 16) & 255) / 255;
+      U.uKHlPulse[1] = ((pc >> 8) & 255) / 255;
+      U.uKHlPulse[2] = (pc & 255) / 255;
+    }
+    if (U.uKHlHover) {
+      const hc = this.hoverColor;
+      U.uKHlHover[0] = ((hc >> 16) & 255) / 255;
+      U.uKHlHover[1] = ((hc >> 8) & 255) / 255;
+      U.uKHlHover[2] = (hc & 255) / 255;
+      U.uKHlHover[3] = 1 / Math.max(0.05, this.telegraphWidth);
+    }
+    if (U.uKHlFray) {
+      const fc = this.frayColor;
+      U.uKHlFray[0] = ((fc >> 16) & 255) / 255;
+      U.uKHlFray[1] = ((fc >> 8) & 255) / 255;
+      U.uKHlFray[2] = (fc & 255) / 255;
+      U.uKHlFray[3] = fc === 0 ? 0 : 1; // 0 = auto pale
     }
     // K654: the riding end (the walking minotaur's spot), every frame.
     if (U.uKTeleAt) U.uKTeleAt[0] = this.teleAt;

@@ -74,6 +74,9 @@ uniform vec4 uKReach;
 uniform vec4 uKGold;
 uniform vec4 uKLook;
 uniform vec4 uKPath;
+uniform vec4 uKHlPulse;
+uniform vec4 uKHlHover;
+uniform vec4 uKHlFray;
 `;
 
 // The shared numeric constants (paint_const.ts). Every assembly includes it
@@ -808,6 +811,13 @@ highp float kRimAcross(highp float side) {
   return 1.0 - kSmooth((1.0 - e) / RIM_EDGE * uKGold.w);
 }
 
+// K813: the telegraph rims' own across shape (uKHlHover.w = 1 /
+// telegraphWidth, so 1 reads exactly as the rims did at the default).
+highp float kTeleAcross(highp float side) {
+  highp float e = abs(2.0 * side - 1.0);
+  return 1.0 - kSmooth((1.0 - e) / RIM_EDGE * uKHlHover.w);
+}
+
 // (p, band, v, rim): the gold ramp amount, a pulse band and its strength,
 // and the hover glow along the thread (K145; kRimAcross shapes it across).
 highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px) {
@@ -958,15 +968,20 @@ highp float kGlow(KChain c, highp float ctrl) {
 // bands.
 vec3 kComposePaint(vec3 S, highp vec4 st, highp float glow) {
   vec3 under = S + (uKGold.rgb - S) * clamp(st.x, 0.0, 1.0);
-  highp float v = max(st.y > 0.5 ? st.z : 0.0, glow);
-  return under + (vec3(1.0) - under) * (K_BAND * clamp(v, 0.0, 1.0));
+  highp float band = st.y > 0.5 ? st.z : 0.0;
+  highp float v = max(band, glow);
+  // K813: the band brightens toward the pulse color (white, as today,
+  // unless pulseColor says otherwise); the reveal glow keeps white.
+  vec3 tgt = band >= glow ? uKHlPulse.rgb : vec3(1.0);
+  return under + (tgt - under) * (K_BAND * clamp(v, 0.0, 1.0));
 }
 
 // The hover glow over a painted color (K298): the same whitening as a
 // band's, applied after the paint, so a hovered choice shows both. Over a
 // color kComposePaint whitened by nothing it is exactly that whitening.
 vec3 kRimOver(vec3 c, highp float rim) {
-  return c + (vec3(1.0) - c) * (K_BAND * clamp(rim, 0.0, 1.0));
+  // K813: toward the hover color (white, as today, by default).
+  return c + (uKHlHover.rgb - c) * (K_BAND * clamp(rim, 0.0, 1.0));
 }
 
 `;

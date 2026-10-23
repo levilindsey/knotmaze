@@ -1490,7 +1490,7 @@ export class FabricMazeRenderer {
       if (this.walkerKey === null) return;
       this.walkerKey = null;
       this.walkerPieces = [];
-      this.setTeleColor(TELE_RED);
+      this.setTeleColor(this.telegraphColorParam); // K813 (TELE_RED until picked)
       this.setTeleStrength(0);
       this.setTele(null);
       return;
@@ -1550,6 +1550,15 @@ export class FabricMazeRenderer {
   // clearHint puts the latest base back.
   private teleBase: PaintTele[] | null = null;
   private teleBaseColor = TELE_RED;
+  // K813: the telegraph color the player picked (telegraphColor param;
+  // TELE_RED until then). The flee blue and the walker's and hint's
+  // colors still take the slot while they own it.
+  telegraphColorParam = TELE_RED;
+  // K813: the telegraph line's width multiplier (telegraphWidth).
+  telegraphWidth = 1;
+  setTelegraphColorParam(c: number): void {
+    this.telegraphColorParam = c;
+  }
   private teleBaseStrength = 0;
   private hintPieces: PaintTele[] | null = null;
   // The run a hint lights (-1: none), for the probes.
@@ -1877,8 +1886,8 @@ export class FabricMazeRenderer {
     // game with the minotaur, so the rims' colour is free; red otherwise).
     const flee = chase.fleeing === true;
     this.minoGlow.texture = flee ? minoFleeGlowTexture() : minoGlowTexture();
-    this.teleInk = flee ? FLEE_BLUE : TELEGRAPH_COLOR;
-    this.setTeleColor(flee ? FLEE_BLUE : TELE_RED);
+    this.teleInk = flee ? FLEE_BLUE : this.telegraphColorParam; // K813
+    this.setTeleColor(flee ? FLEE_BLUE : this.telegraphColorParam);
     const at = spotCtrl(this.walk, chase.g, chase.mino);
     const ctrl = this.ctrlMod(at.chain, at.ctrl);
     if (this.revealQuery && this.revealQuery(at.chain, ctrl) < 0.98) {
@@ -2222,7 +2231,7 @@ export class FabricMazeRenderer {
         const pos = entry + (dir * seg * k) / n;
         return we.ctrlA + ((we.ctrlB - we.ctrlA) * pos) / (len || 1);
       };
-      this.teleStroke(gfx, we.chain, 0, n, ctrlOf, null, w * TELEGRAPH_WIDTH, alphas[s] ?? TELEGRAPH_ALPHA);
+      this.teleStroke(gfx, we.chain, 0, n, ctrlOf, null, w * TELEGRAPH_WIDTH * this.telegraphWidth, alphas[s] ?? TELEGRAPH_ALPHA);
       spot = { edge: -1, pos: 0, dir: 1, vertex: b };
     }
     // K481 stage 3, the tint fallback on a coarse pointer: a choice
@@ -2244,7 +2253,7 @@ export class FabricMazeRenderer {
         if (!we) continue;
         const n = Math.max(1, Math.ceil(Math.abs(we.ctrlB - we.ctrlA) / TELEGRAPH_STEP));
         const tint = (k: number): number => we.ctrlA + ((we.ctrlB - we.ctrlA) * k) / n;
-        this.teleStroke(gfx, we.chain, 0, n, tint, null, w * TELEGRAPH_WIDTH * 2, 0.4);
+        this.teleStroke(gfx, we.chain, 0, n, tint, null, w * TELEGRAPH_WIDTH * this.telegraphWidth * 2, 0.4);
       }
     }
     const litEdge =
@@ -2334,7 +2343,7 @@ export class FabricMazeRenderer {
         const c1 = lead.dir > 0 ? we.ctrlB : we.ctrlA;
         const n = Math.max(1, Math.ceil(Math.abs(c1 - c0) / TELEGRAPH_STEP));
         const at = (i: number): number => c0 + ((c1 - c0) * i) / n;
-        prev = this.teleStroke(gfx, we.chain, 0, n, at, null, w * TELEGRAPH_WIDTH, alphas[0]);
+        prev = this.teleStroke(gfx, we.chain, 0, n, at, null, w * TELEGRAPH_WIDTH * this.telegraphWidth, alphas[0]);
       }
     }
     // K525: the line draws for the line and both looks only.
@@ -2347,7 +2356,7 @@ export class FabricMazeRenderer {
       const c1 = fwd ? we.ctrlB : we.ctrlA;
       const n = Math.max(1, Math.ceil(Math.abs(c1 - c0) / TELEGRAPH_STEP));
       const at = (i: number): number => c0 + ((c1 - c0) * i) / n;
-      prev = this.teleStroke(gfx, we.chain, prev ? 1 : 0, n, at, prev, w * TELEGRAPH_WIDTH, alphas[s]);
+      prev = this.teleStroke(gfx, we.chain, prev ? 1 : 0, n, at, prev, w * TELEGRAPH_WIDTH * this.telegraphWidth, alphas[s]);
       a = b;
     }
     // The ring: at the destination's live position (the exit's lair spot
