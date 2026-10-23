@@ -948,8 +948,8 @@ export function buildPanel(
   const fDesign = folder("Design", true);
   // K541: every top-level folder is created here, in display order, so a
   // row can be created wherever its code lives and still land in its folder.
-  const fGame = folder("Game", true);
   const fMaze = folder("Maze", true);
+  const fGame = folder("Game", true);
   const fPath = folder("Path & view", true);
   const fLook = folder("Look", true);
   const fMotion = folder("Motion & intro", false);
@@ -1315,6 +1315,11 @@ export function buildPanel(
     "How your route is shown: fullPath = your whole traveled route stays recolored; recentPath = memory mode: only the last stretch of your route stays lit (trailLength sets how much) and there is no backtracking; string = unroll a thin white yarn behind you - it U-turns at junctions when you backtrack and is never picked up. Applies live.",
     D.pathViz, () => callbacks.onTrailChange()
   );
+  const pathColorRow = row(
+    fPath, p, "pathColor", { view: "color", label: "Path color" },
+    "Color of the traveled-path highlight (the classic gold). Applies live.",
+    D.pathColor, () => callbacks.onRecolor()
+  );
   const goldWidthRow = row(
     fPath, p, "goldWidth", { min: 0, max: 1, step: 0.01, label: "Traveled path width" },
     "How much of the thread width the traveled route recolors: 1 = the full thread (the usual look), 0 = hidden. Applies live (K799).",
@@ -1562,8 +1567,9 @@ export function buildPanel(
   // K140: the finish confetti amount (0 = none since K323 merged the
   // on/off switch into it). Daily-exempt (how a finish celebrates, not
   // what was played). No step (K130); an edit keeps 2 decimals.
+  const fEndFx = folder("End effects", false, fPath);
   const confettiAmountRow = row(
-    fPath, p, "confettiAmount",
+    fEndFx, p, "confettiAmount",
     {
       label: "Confetti amount",
       min: 0,
@@ -1582,7 +1588,7 @@ export function buildPanel(
   // Daily-exempt (how a loss mourns, not what was played). Live: it
   // applies at the next loss.
   const lossAmountRow = row(
-    fPath, p, "lossAmount",
+    fEndFx, p, "lossAmount",
     {
       label: "Loss amount",
       min: 0,
@@ -1603,13 +1609,13 @@ export function buildPanel(
   // nothing is recorded, no catch or heart counts, and the solve, the
   // clock and a daily attempt stay exactly as they were.
   const previewWinBtn = button(
-    fPath,
+    fEndFx,
     "Preview win effect",
     "Throw the finish celebration (the Solved banner and its confetti) from where you stand, as a preview. Nothing is recorded: your path, the clock and a daily attempt stay exactly as they were, and closing the banner returns the screen to how it was."
   ) as ButtonApi & { hidden: boolean };
   previewWinBtn.on("click", callbacks.onPreviewWin);
   const previewLossBtn = button(
-    fPath,
+    fEndFx,
     "Preview loss effect",
     "Throw the loss effects (the contact burst and ash fall, the vignette and the Burnt banner) at your position, as a preview. No catch or heart counts: your path, the clock and a daily attempt stay exactly as they were, and closing the banner returns the screen to how it was."
   ) as ButtonApi & { hidden: boolean };
@@ -1618,7 +1624,7 @@ export function buildPanel(
   // foil pieces, which shows only while the shine is on. Daily-exempt,
   // like the amount; both apply at the next finish.
   const confettiShineRow = row(
-    fPath, p, "confettiShine",
+    fEndFx, p, "confettiShine",
     {
       label: "Confetti shine",
       min: 0,
@@ -1634,7 +1640,7 @@ export function buildPanel(
     }
   );
   const foilShareRow = row(
-    fPath, p, "foilShare",
+    fEndFx, p, "foilShare",
     {
       label: "Foil confetti",
       min: 0,
@@ -1653,13 +1659,13 @@ export function buildPanel(
   // while they are on. Daily-exempt, like the amount; both apply at the
   // next finish.
   const confettiCannonsRow = row(
-    fPath, p, "confettiCannons", { label: "Side cannons" },
+    fEndFx, p, "confettiCannons", { label: "Side cannons" },
     "Two cannons just past the left and right edges of the screen fire confetti in and up when you finish, and it falls back in an arc.",
     D.confettiCannons,
     () => callbacks.onConfettiChange()
   );
   const cannonAmountRow = row(
-    fPath, p, "cannonAmount",
+    fEndFx, p, "cannonAmount",
     {
       label: "Cannon amount",
       min: 0,
@@ -1675,7 +1681,7 @@ export function buildPanel(
     }
   );
   const cannonSpreadRow = row(
-    fPath, p, "cannonSpread",
+    fEndFx, p, "cannonSpread",
     {
       label: "Cannon spread",
       min: 0,
@@ -1691,7 +1697,7 @@ export function buildPanel(
     }
   );
   const streamerShareRow = row(
-    fPath, p, "streamerShare",
+    fEndFx, p, "streamerShare",
     {
       label: "Streamers",
       min: 0,
@@ -2399,6 +2405,25 @@ export function buildPanel(
   );
 
   // --- Look ---------------------------------------------------------------
+  row(
+    fLook, p, "threadLook",
+    {
+      label: "Thread look",
+      options: { fill: "fill", border: "border", both: "both" },
+    },
+    "How threads draw: fill = solid color (the usual look); border = only a dark edge stroke along each side, no fill (over, under and joins read from the strokes); both = fill plus the edge strokes (K797b prototype). While border is picked, the rows that only color or fill the thread interior hide (their values are kept). Applies live.",
+    D.threadLook, () => callbacks.onBackgroundChange()
+  );
+  const borderWidthRow = row(
+    fLook, p, "borderWidth", { min: 0, max: 1, step: 0.01, label: "Border width" },
+    "Border width: how much of the thread's half-width the edge strokes take in the border and both looks (0.38 = today's stroke, 0 = hairline, 1 = the whole thread). Applies live.",
+    D.borderWidth, () => callbacks.onBackgroundChange()
+  );
+  const borderColorRow = row(
+    fLook, p, "borderColor", { view: "color", label: "Border color" },
+    "Border color: the edge strokes' color in the border and both looks. Black = automatic (each thread's color darkened toward ink). Applies live.",
+    D.borderColor, () => callbacks.onBackgroundChange()
+  );
   const colorSchemeRow = row(
     fLook, p, "colorScheme",
     {
@@ -2444,11 +2469,7 @@ export function buildPanel(
     "Saturation/lightness character of the gamut. Applies live.",
     D.palette, () => callbacks.onRecolor()
   );
-  const pathColorRow = row(
-    fPath, p, "pathColor", { view: "color", label: "Path color" },
-    "Color of the traveled-path highlight (the classic gold). Applies live.",
-    D.pathColor, () => callbacks.onRecolor()
-  );
+
   row(
     fLook, p, "threadWidth", { min: 0.15, max: 0.8, step: 0.01, label: "Thread width" },
     "Ribbon width of every thread, in lattice units.",
@@ -2492,25 +2513,7 @@ export function buildPanel(
       callbacks.onBackgroundChange();
     }
   );
-  row(
-    fLook, p, "threadLook",
-    {
-      label: "Thread look",
-      options: { fill: "fill", border: "border", both: "both" },
-    },
-    "How threads draw: fill = solid color (the usual look); border = only a dark edge stroke along each side, no fill (over, under and joins read from the strokes); both = fill plus the edge strokes (K797b prototype). While border is picked, the rows that only color or fill the thread interior hide (their values are kept). Applies live.",
-    D.threadLook, () => callbacks.onBackgroundChange()
-  );
-  const borderWidthRow = row(
-    fLook, p, "borderWidth", { min: 0, max: 1, step: 0.01, label: "Border width" },
-    "Border width: how much of the thread's half-width the edge strokes take in the border and both looks (0.38 = today's stroke, 0 = hairline, 1 = the whole thread). Applies live.",
-    D.borderWidth, () => callbacks.onBackgroundChange()
-  );
-  const borderColorRow = row(
-    fLook, p, "borderColor", { view: "color", label: "Border color" },
-    "Border color: the edge strokes' color in the border and both looks. Black = automatic (each thread's color darkened toward ink). Applies live.",
-    D.borderColor, () => callbacks.onBackgroundChange()
-  );
+
   const backgroundIntensityRow = row(
     fLook, p, "backgroundIntensity", { min: 0, max: 1, step: 0.05, label: "Backdrop intensity" },
     "Backdrop contrast: 0 = the plain page color, 1 = the strongest look. Applies live.",
