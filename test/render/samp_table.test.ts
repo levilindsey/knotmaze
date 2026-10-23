@@ -16,6 +16,7 @@ import {
   assignWindowLanes,
   b64ToF32,
   b64ToF64,
+  capWithFused,
   chainCaps,
   decodeRanges,
   g3Layout,
@@ -136,6 +137,12 @@ describe("layout and packing", () => {
     // Fused -> round, anchored -> flat, free -> round.
     expect(chainCaps(false, true, true, false, true)).toEqual([CAP_ROUND, CAP_FLAT]);
     expect(chainCaps(false, false, false, false, true)).toEqual([CAP_ROUND, CAP_FLAT]);
+    // K832: the texel form carries +4 at a fused end (the shaders
+    // decode fused = v >= 4, cap = fused ? v - 4 : v).
+    expect(capWithFused(CAP_ROUND, true)).toBe(CAP_ROUND + 4);
+    expect(capWithFused(CAP_FLAT, true)).toBe(CAP_FLAT + 4);
+    expect(capWithFused(CAP_ROUND, false)).toBe(CAP_ROUND);
+    expect(capWithFused(CAP_NONE, false)).toBe(CAP_NONE);
   });
 
   it("row partials: a chain across a row boundary decodes, its span covers both rows", () => {

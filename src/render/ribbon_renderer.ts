@@ -82,6 +82,7 @@ import {
   assignWindowLanes,
   b64ToF32,
   b64ToF64,
+  capWithFused,
   chainCaps,
   g3Layout,
   maxRangeEntries,
@@ -91,7 +92,7 @@ import {
   typedToB64,
   writeChainTexels,
 } from "./samp_table";
-import { setFabricGapBrute, setSampSource } from "./fabric_sdf";
+import { setFabricGapBrute, setG3ChainSource, setSampSource } from "./fabric_sdf";
 import { EMERGENT_MAX, EMERGENT_ROW } from "../physics/particle_system";
 import { bindGap, sectionShader } from "./ribbon/ribbon_shader";
 import * as sampling from "./ribbon/sampling";
@@ -1360,7 +1361,9 @@ export class RibbonRenderer {
     this.g3NWin = new Int32Array(n);
     // Caps from each end's kind, as the joinery classifies them (fused:
     // a tucked round end; else anchored: Stage 7b's square cap; else a
-    // free round tip), whatever the palette mode.
+    // free round tip), whatever the palette mode. K832: a fused end
+    // also carries +4 (capWithFused) - the ribbon shaders' signal that
+    // a wedge fan owns the border outline near that end.
     const fusedP = new Set<number>();
     for (const grp of ps.fusedJunctions) for (const p of grp) fusedP.add(p);
     ps.chains.forEach((chain, i) => {
@@ -1373,12 +1376,15 @@ export class RibbonRenderer {
         fusedP.has(b),
         ps.isAnchored(b)
       );
-      this.g3Caps[i * 2] = cs;
-      this.g3Caps[i * 2 + 1] = ce;
+      this.g3Caps[i * 2] = capWithFused(cs, !closedOf[i] && fusedP.has(a));
+      this.g3Caps[i * 2 + 1] = capWithFused(ce, !closedOf[i] && fusedP.has(b));
     });
     this.initG3Tables();
     // G3-1: point every gap reader at this scene's SAMP table.
     setSampSource(g3Tables().samp.source as never);
+    // K832: and the section shader at this scene's G3 CHAIN table
+    // (bindGap's list re-points both; see ribbon/ribbon_shader.ts).
+    setG3ChainSource(g3Tables().chain.source as never);
     bindGap(this.gaps.tex);
     // K8 G3-2: a meshless pass's one scene mesh (the SDF quads) joins
     // the base layer; the strip pass has none.

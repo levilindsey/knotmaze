@@ -5,10 +5,12 @@
 // and the fabricUniforms group, which carries the gap globals that row 0
 // of the old GAP texture held (G1's "drop the globals fetch" lever).
 //
-// uFabricGap = (gapEnabled, gapProbeTint, bruteForce, -): set by
-// GapMaskTable.setEnabled (enabled / tint) and by probes (bruteForce: the
+// uFabricGap = (gapEnabled, gapProbeTint, bruteForce, junctionCutReach):
+// set by GapMaskTable.setEnabled (enabled / tint) and by probes (bruteForce: the
 // search ignores its chunk bounds and its sure2 early exit, so a
 // brute-force against pruned A/B on one page must read 0 px apart).
+// junctionCutReach (K832) is the border look's junction cut distance
+// (setFabricJunctionCut, from PaintState.tickPaint).
 // Every program that includes GAP_FRAG_LIB (the section program and its
 // explore variant, the junction fans, the still pluck) binds uSamp and
 // fabricUniforms through bindGap's one binding list
@@ -30,19 +32,46 @@ vec2 sampAt(int i) {
 }
 `;
 
+// K832: the border look's junction cut, interpolated ONLY into the two
+// ribbon fragments (the fan and pluck programs never call it, so their
+// texts keep their bytes - the K320 rule). Within the junction fan's
+// reach (uFabricGap.w, world arc along the chain; 0 = no wedge fans to
+// meet) of a FUSED chain end, the ribbon material belongs to the fan:
+// its wedge rim is the outline there, so the ribbon's own edge strokes
+// end at the rim instead of converging on the centre as interior
+// spokes. caps is the G3 CHAIN texel 0 (z/w = capStart/capEnd, +4
+// where that end is fused; samp_table.ts capWithFused). Returns 0
+// outside the cut, 1 at the end, with a one-pixel ramp at the reach.
+export const JUNCTION_CUT_GLSL = /* glsl */ `
+float kJunctionCut(bool closed, float total, float arc, vec4 caps, float pxW) {
+  float reach = uFabricGap.w;
+  if (closed || reach <= 0.0) return 0.0;
+  float d = 1e9;
+  if (caps.z >= 4.0) d = min(d, arc);
+  if (caps.w >= 4.0) d = min(d, total - arc);
+  if (d >= reach) return 0.0;
+  return clamp((reach - d) / max(pxW, 1e-5) + 0.5, 0.0, 1.0);
+}
+`;
+
 // K8 G3-2 (design 3.1): the SDF ribbons' own tables and cone. The
 // vertex stage reads the G3 CHAIN record (samp_table.ts writeChainTexels:
 // (sampBase, radBase, capStart, capEnd), (winBase, nWin, rangeBase,
 // nRange), two texels per chain) plus RADII and RANGES; the fragment
 // stage needs only sdCone/aaCov.
-export const SDF_TEX_GLSL = /* glsl */ `
-uniform highp sampler2D uRadii;
+// The G3 CHAIN fetch on its own (K832: the strip fragment reads a
+// chain's caps for the junction cut; SDF_TEX_GLSL below builds on it).
+export const G3_CHAIN_GLSL = /* glsl */ `
 uniform highp sampler2D uG3Chain;
-uniform highp sampler2D uRanges;
 vec4 g3ChainAt(int chain, int part) {
   int t = chain * 2 + part;
   return texelFetch(uG3Chain, ivec2(t & ${ROW_W - 1}, t >> 10), 0);
 }
+`;
+export const SDF_TEX_GLSL = /* glsl */ `
+uniform highp sampler2D uRadii;
+uniform highp sampler2D uRanges;
+${G3_CHAIN_GLSL}
 float radAt(int radBase, int j) {
   int f = radBase + j; // RADII packs one float per sample (four per texel).
   vec4 q = texelFetch(uRadii, ivec2((f >> 2) & ${ROW_W - 1}, (f >> 2) >> 10), 0);
@@ -151,6 +180,40 @@ export function setFabricGap(enabled: boolean, probe: boolean, brute = false): v
   v[1] = probe ? 1 : 0;
   v[2] = brute ? 1 : 0;
 }
+// K832: the current scene's gap-slot texture source (bindGap's binding
+// list points it), so a shader built before any scene exists (the SDF
+// pass's) binds the scene's table instead of the empty default;
+// ribbon_sdf's sdfShader falls back to defaultGapTexture while unset.
+let GAP_SOURCE: BufferImageSource | null = null;
+export function setGapSource(source: BufferImageSource): void {
+  GAP_SOURCE = source;
+}
+export function gapSource(): BufferImageSource | null {
+  return GAP_SOURCE;
+}
+
+// K832: the current scene's G3 CHAIN source (the renderer's G3 tables),
+// swapped with setSampSource and re-pointed by bindGap's binding list;
+// shaders built before a scene exists bind the placeholder below.
+let G3_CHAIN_SOURCE: BufferImageSource | null = null;
+let G3_CHAIN_PLACEHOLDER: FloatRows | null = null;
+export function setG3ChainSource(source: BufferImageSource): void {
+  G3_CHAIN_SOURCE = source;
+}
+export function g3ChainSource(): BufferImageSource {
+  if (G3_CHAIN_SOURCE) return G3_CHAIN_SOURCE;
+  G3_CHAIN_PLACEHOLDER ??= new FloatRows(ROW_W, 1);
+  return G3_CHAIN_PLACEHOLDER.source as unknown as BufferImageSource;
+}
+
+// K832: the border look's junction cut reach (world arc; 0 = no cut, when
+// the wedge fans are off), written per frame by PaintState.tickPaint 
+// alongside the other look uniforms (it is not a knot uniform: the fan's
+// own shaders share this group and must agree on the reach).
+export function setFabricJunctionCut(reach: number): void {
+  (fabricUniforms().uniforms as unknown as { uFabricGap: Float32Array }).uFabricGap[3] = reach;
+}
+
 export function fabricGapBrute(): boolean {
   return (fabricUniforms().uniforms as unknown as { uFabricGap: Float32Array }).uFabricGap[2] > 0.5;
 }

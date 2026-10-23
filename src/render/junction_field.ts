@@ -433,7 +433,16 @@ void main(void) {
     float flankFw = min(max(fwidth(vFlank) * 3.0, 0.02), 0.38);
     flankEdge = smoothstep(1.0 - uKLook.w, 1.0 - uKLook.w + flankFw, abs(vFlank));
   }
-  float fanEdge = strip ? lookEdge : max(lookEdge, flankEdge);
+  // K832: in the border look a fan's outline is its rim alone. The
+  // flank spokes (centre to rim) and the cover strips' edge bands
+  // drew strokes across the junction's interior; the ribbon edges
+  // they continued now end at the rim (the ribbons' junction cut,
+  // fabric_sdf kJunctionCut), so the rim is the whole outline:
+  // thread edge -> fillet corner -> thread edge, hollow inside.
+  bool borderLook = uKLook.x > 0.5 && uKLook.x < 1.5;
+  float fanEdge = strip
+    ? (borderLook ? 0.0 : lookEdge)
+    : max(lookEdge, borderLook ? 0.0 : flankEdge);
   if (!strip && vFlank > 2.5) fanEdge = 0.0;
   bool lookIntro = uKLook.y > 0.5 && uKLook.z > 0.5;
   float lookA = 1.0;

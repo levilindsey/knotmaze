@@ -32,6 +32,7 @@ import { pickRoutes } from "../junction_routes";
 import { MAX_ROUTES, recordData } from "../junction_field";
 import { WebFade } from "../web_fade";
 import { FILLET_REACH_PER_HALF } from "./joinery";
+import { setFabricJunctionCut } from "../fabric_sdf";
 import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM, PAINT_ITEM_FRAY, PAINT_ITEM_TELE } from "../paint_const";
 import {
   EXPLORE_ITEM_CHAR,
@@ -677,6 +678,15 @@ export class PaintState {
     knotUniformValues().uKPath![2] = this.pulseWidth; // K813
     knotUniformValues().uKPath![3] = this.frayWidth; // K813
     knotUniformValues().uKLook![3] = this.borderWidth; // K820
+    // K832: the border look's junction cut reach - the wedge fans'
+    // reach L (the joinery's drawWedges gate, mirrored), so ribbon
+    // strokes end where the fan rims begin; 0 while the fans are off.
+    {
+      const fh = this.style.threadWidth / 2;
+      const cr = this.cuspRadius;
+      const L = fh * FILLET_REACH_PER_HALF * cr;
+      setFabricJunctionCut(cr > 0.05 && L > fh * 0.97 * 0.3 ? L : 0);
+    }
     this.tickPaintPalette(dt);
     this.r.revealFx.tickAppearFx(dt);
     // Flow clock, advanced AFTER the palette/fillet pass so everything
