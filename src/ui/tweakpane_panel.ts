@@ -3210,11 +3210,7 @@ export function buildPanel(
     SETTINGS_DEFAULTS.showStats,
     () => callbacks.onStatsToggle(settings.showStats === true)
   );
-  button(
-    pane as unknown as Parent,
-    "Reset to defaults",
-    "Restore every parameter to its default value (keeps the current seed) and regenerate."
-  ).on("click", () => {
+  const doReset = (): void => {
     Object.assign(params, PARAM_DEFAULTS);
     settings.temperature = SETTINGS_DEFAULTS.temperature;
     Object.assign(clockView, clockViewOf()); // K795: the Clock rows too
@@ -3225,7 +3221,76 @@ export function buildPanel(
     markAll();
     callbacks.onRegenerate();
     refreshCond();
-  });
+  };
+  // K834: resetting is destructive (every design parameter at once), so
+  // the button asks first. A small modal in the panel's own chrome:
+  // backdrop or Escape cancels, only the explicit button resets.
+  let confirmEl: HTMLDivElement | null = null;
+  const closeConfirm = (): void => {
+    confirmEl?.remove();
+    confirmEl = null;
+    window.removeEventListener("keydown", onConfirmKey, true);
+  };
+  const onConfirmKey = (e: KeyboardEvent): void => {
+    if (e.key === "Escape") closeConfirm();
+  };
+  const openConfirm = (): void => {
+    if (confirmEl) return;
+    const root = document.createElement("div");
+    root.setAttribute("role", "alertdialog");
+    root.setAttribute("aria-modal", "true");
+    root.setAttribute("aria-label", "Reset to defaults?");
+    root.style.cssText =
+      "position:fixed;inset:0;z-index:80;display:flex;align-items:center;" +
+      "justify-content:center;background:rgba(10,12,18,.55);" +
+      "pointer-events:auto";
+    const card = document.createElement("div");
+    card.style.cssText =
+      "background:#28292e;color:#e8e6df;border-radius:10px;padding:20px;" +
+      "max-width:min(420px,calc(100vw - 32px));box-shadow:0 12px 40px rgba(0,0,0,.5);" +
+      "font:14px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+    const msg = document.createElement("p");
+    msg.textContent =
+      "Reset every setting to its default value? The current design " +
+      "will be regenerated with default parameters (the seed is kept).";
+    msg.style.cssText = "margin:0 0 16px";
+    const rowEl = document.createElement("div");
+    rowEl.style.cssText = "display:flex;gap:10px;justify-content:flex-end";
+    const mkBtn = (label: string, primary: boolean): HTMLButtonElement => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = label;
+      b.style.cssText =
+        "border:0;border-radius:6px;padding:8px 14px;cursor:pointer;" +
+        "font:inherit;" +
+        (primary
+          ? "background:#b03a2e;color:#fff"
+          : "background:#3a3b41;color:#e8e6df");
+      return b;
+    };
+    const cancelBtn = mkBtn("Cancel", false);
+    cancelBtn.addEventListener("click", closeConfirm);
+    const resetBtn = mkBtn("Reset to defaults", true);
+    resetBtn.addEventListener("click", () => {
+      closeConfirm();
+      doReset();
+    });
+    root.addEventListener("click", (e) => {
+      if (e.target === root) closeConfirm();
+    });
+    window.addEventListener("keydown", onConfirmKey, true);
+    rowEl.append(cancelBtn, resetBtn);
+    card.append(msg, rowEl);
+    root.appendChild(card);
+    document.body.appendChild(root);
+    confirmEl = root;
+    resetBtn.focus();
+  };
+  button(
+    pane as unknown as Parent,
+    "Reset to defaults",
+    "Restore every parameter to its default value (keeps the current seed) and regenerate."
+  ).on("click", openConfirm);
 
   // The full conditional-visibility map (the 2026-10-10 audit): a row
   // hides whenever the feature it tunes is off or owned by another mode.
