@@ -11,9 +11,8 @@ import type { PitchSpace } from "../audio/pitch_space";
 import { PITCH_SPACES } from "../audio/pitch_space";
 import type { AppearSequence, AppearFxMode } from "../core/reveal_plan";
 import { APPEAR_SEQUENCES, APPEAR_FX_MODES } from "../core/reveal_plan";
-import type { ShapeId, AnchorId } from "../core/shapes";
 import { SHAPES, ANCHORS } from "../core/shapes";
-import { EMBLEM_IDS } from "../core/emblem_data";
+import type { ShapeInjectionParams } from "../core/shape_injection";
 import type { ChaseParams, ClockMode } from "../game/minotaur";
 import type { FireClock } from "../game/fire";
 import type { FabricRules } from "../game/fabric_controller";
@@ -360,19 +359,12 @@ export function applyAppearMode(
   p.appearSpeed = v.speed;
 }
 
-export interface UrlParams {
-  text: string; // K115 cursive text design ("" = lattice/maze design).
-  cartouche: string; // K115 stage 4a in-maze word ("" = no cartouche).
-  emblem: string; // K115 stage 5a standalone emblem ("" = none; an EmblemId).
-  cartoucheShape: string; // K115 stage 5b cartouche emblem ("" = none; an EmblemId).
+// K814: the nine shape-injection knobs (text/cartouche/emblem/shape/
+// anchors/penReverse/dailyTitleThread) are collected in
+// core/shape_injection.ts; UrlParams stays flat, so links are unchanged.
+export interface UrlParams extends ShapeInjectionParams {
   seed: number;
   gridSize: number;
-  // Lattice silhouette: rect (full lattice) or a sculpted mask shape.
-  shape: ShapeId;
-  // Maze entrance/exit anchors: which boundary region of the shape hosts
-  // each cut (compass points; mazeFabric only).
-  startAnchor: AnchorId;
-  exitAnchor: AnchorId;
   weaveDensity: number;
   turnBias: number;
   slack: number; // [0, 1] rest-state looseness (physics, applies live).
@@ -791,15 +783,6 @@ export interface UrlParams {
   // stays where it caught you), the fog under minoRefog (above).
   minoRestart: boolean;
   minoLair: boolean;
-  // K558: text crossings follow pen order, the later stroke over the
-  // earlier (core/text_graph.ts assignPenOrder); on reverses it.
-  penReverse: boolean;
-  // K552: a daily writes its name ("Daily #N") as a title thread at its
-  // entrance (K115 stage 3a), off by default (Levi, 2026-10-19). A playback
-  // preference (DAILY_EXEMPT_KEYS): a daily keeps it and stores it, and the
-  // maze is the same either way. Off a daily it does nothing: daily_link.ts
-  // sceneTitle is the one gate. Not a live effect (it changes the graph).
-  dailyTitleThread: boolean;
   // K137 stage 1 (brief docs/design/K137_s1.md): FRAGILE RUNS, off | crack
   // | snap (game/fragile.ts: a run breaks behind you after 2 or 1
   // crossings; END runs never), and PAR, off | strict | strokes
@@ -979,7 +962,9 @@ export const LOAD_SETTLE_MAX = 5;
 // before launch). A new param must be appended to the codec's
 // CODEC_PARAMS as well (param_codec.ts; a test fails until it is).
 // K115 stage 5a: the emblem choices ("" = none), shared by codec/panel.
-export const EMBLEM_CHOICES: readonly string[] = ["", ...EMBLEM_IDS];
+// K814: defined in core/shape_injection.ts, re-exported for compatibility.
+import { EMBLEM_CHOICES } from "../core/shape_injection";
+export { EMBLEM_CHOICES };
 
 export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   text: "",
