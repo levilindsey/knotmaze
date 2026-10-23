@@ -62,6 +62,12 @@ export interface Glyph {
   corners?: readonly number[];
   /** Lifted-pen strokes: decorative strands with two free ENDs each. */
   floats: readonly CubicPath[];
+  /**
+   * K831 follow-up: dots (the i's tittle), drawn by dotLoop as CLOSED
+   * decorative loops - no ENDs, no tip or radius rules; the builder
+   * emits them as closed strands. Each path's last point is its first.
+   */
+  dots?: readonly CubicPath[];
   /** Declared proper crossings inside the glyph (body, spurs, floats). */
   crossings: number;
 }
