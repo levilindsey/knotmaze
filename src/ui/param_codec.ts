@@ -438,6 +438,7 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("cornerRoundShare"),
   num("pathIrregularity"), // K835
   num("pathExcursion"), // K835
+  flag("showShortestPath"), // K839
 ]);
 
 // The format version a blob names first. Bump it for anything but an

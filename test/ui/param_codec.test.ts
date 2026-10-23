@@ -287,6 +287,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["cornerRoundShare", "number"], // K830
   ["pathIrregularity", "number"], // K835
   ["pathExcursion", "number"], // K835
+  ["showShortestPath", "boolean"], // K839
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

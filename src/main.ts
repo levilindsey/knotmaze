@@ -3622,10 +3622,12 @@ async function main(): Promise<void> {
     const fabric = scene.fabric;
     if (!fabric || !fc) return;
     const compass = params.compass && !fc.walkerMode;
+    const route = params.showShortestPath && !fc.walkerMode; // K839
     const marks = settings.chalk === true;
-    if (fabric.compassOn !== compass || fabric.chalkOn !== marks) {
+    if (fabric.compassOn !== compass || fabric.chalkOn !== marks || fabric.shortestPathOn !== route) {
       fabric.compassOn = compass;
       fabric.chalkOn = marks;
+      fabric.shortestPathOn = route;
       fabric.update(fc);
       invalidate();
     }

@@ -493,6 +493,8 @@ export interface UrlParams extends ShapeInjectionParams {
   pathIrregularity: number;
   // K835: how far outside the thread bounds the drawn route may drift.
   pathExcursion: number;
+  // K839: draw the whole shortest route from the head to the exit.
+  showShortestPath: boolean;
   // Camera framing (see CAMERA_MODES). Pinch/wheel/drag still zoom and
   // pan in both; in follow mode a delayed, eased spring pulls back.
   cameraMode: CameraMode;
@@ -1300,6 +1302,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   cornerRoundShare: 1, // K830 (today's rounded junction wedges)
   pathIrregularity: 0.4, // K835 (today's string; the fills as drawn)
   pathExcursion: 0, // K835 (the route stays within the thread)
+  showShortestPath: false, // K839
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1870,6 +1873,7 @@ function readLegacy(
     cornerRoundShare: readNumber(query, "crs", D.cornerRoundShare), // K830
     pathIrregularity: readNumber(query, "pir", D.pathIrregularity), // K835
     pathExcursion: readNumber(query, "pex", D.pathExcursion), // K835
+    showShortestPath: readBool(query, "ssp", D.showShortestPath), // K839
     cameraMode: readChoice(query, "cam", CAMERA_MODES, D.cameraMode),
     trailLength: readNumber(query, "trl", D.trailLength),
     tension: readNumber(query, "tn", D.tension),
