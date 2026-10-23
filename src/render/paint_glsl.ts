@@ -74,6 +74,7 @@ uniform vec4 uKReach;
 uniform vec4 uKGold;
 uniform vec4 uKLook;
 uniform vec4 uKPath;
+uniform vec4 uKPathB;
 uniform vec4 uKHlPulse;
 uniform vec4 uKHlHover;
 uniform vec4 uKHlFray;

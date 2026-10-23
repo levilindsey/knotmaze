@@ -576,6 +576,8 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
           scene.fabric.moveSpeed = params.moveSpeed;
           scene.fabric.trailMode = pathVizOf(params) === "trail";
           scene.fabric.pathViz = pathVizOf(params);
+          scene.fabric.pathIrregularity = params.pathIrregularity; // K835
+          scene.fabric.pathExcursion = params.pathExcursion; // K835
           scene.fabric.tension = params.tension;
           scene.fabric.trailLength = params.trailLength;
           syncExploration(scene.fabric);

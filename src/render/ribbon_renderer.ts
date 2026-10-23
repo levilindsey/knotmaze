@@ -852,6 +852,11 @@ export class RibbonRenderer {
   // panel_wiring syncs both from the goldWidth/goldTexture params.
   goldWidth = 1;
   goldTexture = 0;
+  // K835: the traveled fill's edge-wobble excess (0 = today's fill);
+  // panel_wiring syncs it from the pathIrregularity param.
+  pathIrregularityExcess = 0;
+  // K835: the traveled fill's smooth excursion swell (0 = on-thread).
+  pathExcursionFill = 0;
   // K813: the highlights' colors and widths (0xRRGGBB; panel_wiring
   // syncs them from the pulseColor / pulseWidth / hoverColor /
   // telegraphWidth / frayColor / frayWidth params). White and 1 read

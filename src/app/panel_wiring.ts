@@ -7,6 +7,10 @@ import { turnConfig } from "../game/minotaur_turns";
 import type { KnotSynth } from "../audio/knot_synth";
 import type { BackgroundLayer } from "../render/background";
 import { accentHexes, backgroundColors } from "../render/background_model";
+import {
+  fillExcursion,
+  fillIrregularityExcess,
+} from "../render/path_irregularity"; // K835
 import type { ConfettiLayer } from "../render/confetti";
 import type { FabricMazeRenderer } from "../render/fabric_maze_renderer";
 import {
@@ -272,6 +276,8 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
       if (scene.fabric && scene.fabricController) {
         scene.fabric.trailMode = pathVizOf(params) === "trail";
         scene.fabric.pathViz = pathVizOf(params);
+        scene.fabric.pathIrregularity = params.pathIrregularity; // K835
+        scene.fabric.pathExcursion = params.pathExcursion; // K835
         scene.fabric.tension = params.tension;
         scene.fabric.trailLength = params.trailLength;
         deps.syncExploration(scene.fabric);
@@ -571,6 +577,8 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
     scene.renderer.goldTextureStrength = params.goldTextureStrength;
     scene.renderer.goldWidth = params.goldWidth; // K799
     scene.renderer.goldTexture = params.goldTexture === "pencil" ? 1 : params.goldTexture === "crayon" ? 2 : params.goldTexture === "highlighter" ? 3 : 0;
+    scene.renderer.pathIrregularityExcess = fillIrregularityExcess(params.pathIrregularity); // K835
+    scene.renderer.pathExcursionFill = fillExcursion(params.pathExcursion, params.pathIrregularity); // K835
     deps.flags.push(Flag.GEOM); // K6-2: a look change asks for a geometry pass
   }
   // K186: no confetti under reduced motion. A finish throws none

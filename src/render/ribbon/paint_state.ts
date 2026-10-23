@@ -119,6 +119,8 @@ export class PaintState {
   private get borderColor() { return this.r.borderColor; }
   private get goldTextureStrength() { return this.r.goldTextureStrength; }
   private get goldTexture() { return this.r.goldTexture; }
+  private get pathIrrExcess() { return this.r.pathIrregularityExcess; } // K835
+  private get pathExcFill() { return this.r.pathExcursionFill; } // K835
   private get pulseColor() { return this.r.pulseColor; }
   private get pulseWidth() { return this.r.pulseWidth; }
   private get hoverColor() { return this.r.hoverColor; }
@@ -677,6 +679,8 @@ export class PaintState {
     knotUniformValues().uKPath![1] = this.goldTexture;
     knotUniformValues().uKPath![2] = this.pulseWidth; // K813
     knotUniformValues().uKPath![3] = this.frayWidth; // K813
+    knotUniformValues().uKPathB![0] = this.pathIrrExcess; // K835
+    knotUniformValues().uKPathB![1] = this.pathExcFill; // K835
     knotUniformValues().uKLook![3] = this.borderWidth; // K820
     // K832: the border look's junction cut reach - the wedge fans'
     // reach L (the joinery's drawWedges gate, mirrored), so ribbon

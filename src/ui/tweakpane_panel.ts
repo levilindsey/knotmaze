@@ -1360,6 +1360,16 @@ export function buildPanel(
     "Traveled fill strength: how strong the pencil, crayon or highlighter grain is on the traveled path (1 = today's grain, 0 = a solid fill). Applies live.",
     D.goldTextureStrength, () => callbacks.onTrailChange()
   );
+  const pathIrregularityRow = row(
+    fPath, p, "pathIrregularity", { min: 0, max: 1, step: 0.01, label: "Path irregularity" },
+    "How loosely the drawn route follows the thread: 0 = exactly on the thread's curve; the default reproduces today's string; higher sags the string further off the thread and wobbles the pencil, crayon or highlighter fill edges so they read hand-drawn. Applies live.",
+    D.pathIrregularity, () => callbacks.onTrailChange()
+  );
+  const pathExcursionRow = row(
+    fPath, p, "pathExcursion", { min: 0, max: 1, step: 0.01, label: "Path excursion" },
+    "How far outside the thread's bounds the drawn route may drift: 0 = it stays on the thread; high values let a smooth string leave the thread for long stretches, or a grained fill slosh across its full width. Does nothing at exactly zero path irregularity. Applies live.",
+    D.pathExcursion, () => callbacks.onTrailChange()
+  );
   const cameraRow = row(
     fPath, p, "cameraMode",
     { options: { fit: "fit", follow: "follow" }, label: "Camera" },
@@ -3570,6 +3580,10 @@ export function buildPanel(
     borderWidthRow.hidden = params.threadLook === "fill";
     borderColorRow.hidden = params.threadLook === "fill";
     goldTextureStrengthRow.hidden = params.goldTexture === "solid";
+    // K835: the irregularity matters only for the string or a grained fill.
+    pathIrregularityRow.hidden =
+      params.pathViz !== "string" && params.goldTexture === "solid";
+    pathExcursionRow.hidden = pathIrregularityRow.hidden;
     // Only the segments and strands schemes have junction ramps (depth and
     // noise are continuous; knot mode has no junctions).
     junctionBlendRow.hidden =

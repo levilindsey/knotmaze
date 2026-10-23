@@ -489,6 +489,11 @@ export interface UrlParams extends ShapeInjectionParams {
   loaderMove: LoaderMove;
   // K830: share of junction wedges drawn rounded (0 all sharp, 1 all rounded).
   cornerRoundShare: number;
+  // K835: how loosely the drawn route follows the thread (0 = exactly on
+  // the centerline; render/path_irregularity.ts has the scale).
+  pathIrregularity: number;
+  // K835: how far outside the thread bounds the drawn route may drift.
+  pathExcursion: number;
   // Camera framing (see CAMERA_MODES). Pinch/wheel/drag still zoom and
   // pan in both; in follow mode a delayed, eased spring pulls back.
   cameraMode: CameraMode;
@@ -1296,6 +1301,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   loaderSpeed: 1, // K828 (today's 14 s lap)
   loaderMove: "maze", // K828 (today's sliding maze, centered player)
   cornerRoundShare: 1, // K830 (today's rounded junction wedges)
+  pathIrregularity: 0.4, // K835 (today's string; the fills as drawn)
+  pathExcursion: 0, // K835 (the route stays within the thread)
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1864,6 +1871,8 @@ function readLegacy(
     loaderSpeed: readNumber(query, "ldsp", D.loaderSpeed), // K828 (lds is loadSettle's)
     loaderMove: readChoice(query, "ldmv", LOADER_MOVES, D.loaderMove), // K828
     cornerRoundShare: readNumber(query, "crs", D.cornerRoundShare), // K830
+    pathIrregularity: readNumber(query, "pir", D.pathIrregularity), // K835
+    pathExcursion: readNumber(query, "pex", D.pathExcursion), // K835
     cameraMode: readChoice(query, "cam", CAMERA_MODES, D.cameraMode),
     trailLength: readNumber(query, "trl", D.trailLength),
     tension: readNumber(query, "tn", D.tension),

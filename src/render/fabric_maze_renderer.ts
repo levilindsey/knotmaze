@@ -41,6 +41,13 @@ import type { WalkGraph, WalkEdge } from "../core/walk_graph";
 import { walkDistances } from "../core/walk_graph";
 import { litArms, planRoute } from "../game/route_plan";
 import { darknessAlpha, pruneDarkStamps } from "../game/darkness";
+import {
+  PATH_IRREGULARITY_DEFAULT,
+  excursionCap,
+  excursionSwell,
+  softKnee,
+  yarnIrregularityMult,
+} from "./path_irregularity"; // K835
 import { KEY_COLOR_RGB, lockGateColor, lockGateOpen } from "../game/locks"; // K138 slice 4
 import { SONAR_SECONDS } from "../game/sonar";
 import type { FabricMazeController } from "../game/fabric_controller";
@@ -403,6 +410,7 @@ interface YarnEvent {
   c1: number;
   ctrls: Float64Array;
   wave: Float64Array; // Unit-amplitude slack-cotton wander per station.
+  swell: Float64Array; // K835: the wave's low-frequency component alone.
   lane: number; // Per-pass lane bias in [-1, 1].
 }
 
@@ -646,6 +654,10 @@ export class FabricMazeRenderer {
   // Path-visualization mode + Ariadne string tension (main.ts syncs
   // every tick; see the YARN block above).
   pathViz: PathViz = "gold";
+  // K835: the irregularity slider (0..1); drawYarn scales its sag by it.
+  pathIrregularity = PATH_IRREGULARITY_DEFAULT;
+  // K835: how far outside the thread the yarn may drift (0..1).
+  pathExcursion = 0;
   tension = 0.45;
   private yarnGfx: Graphics;
   private yarnEvents: YarnEvent[] = [];
@@ -2827,6 +2839,7 @@ export class FabricMazeRenderer {
     );
     const ctrls = new Float64Array(n);
     const wave = new Float64Array(n);
+    const swell = new Float64Array(n); // K835
     const sd = ++this.yarnSeed;
     const h = (k: number): number => {
       let x = (Math.imul(sd, 374761393) + Math.imul(k, 668265263)) >>> 0;
@@ -2852,11 +2865,14 @@ export class FabricMazeRenderer {
       const s = u * Lw;
       const ew = Math.min(1, Math.min(u, 1 - u) / YARN_END_WIN);
       const win = ew * ew * (3 - 2 * ew);
+      const swellWave =
+        0.6 * Math.sin(2 * Math.PI * (f1 * s + p1)) * win;
+      swell[k] = swellWave;
       wave[k] =
-        (0.6 * Math.sin(2 * Math.PI * (f1 * s + p1)) +
-          0.32 * Math.sin(2 * Math.PI * (f2 * s + p2)) +
+        swellWave +
+        (0.32 * Math.sin(2 * Math.PI * (f2 * s + p2)) +
           0.06 * Math.sin(2 * Math.PI * (f3 * s + p3))) *
-        win;
+          win;
     }
     this.yarnEvents.push({
       chain: e.chain,
@@ -2864,6 +2880,7 @@ export class FabricMazeRenderer {
       c1: to,
       ctrls,
       wave,
+      swell,
       lane: (h(6) - 0.5) * 2,
     });
   }
@@ -2990,8 +3007,17 @@ export class FabricMazeRenderer {
     g.clear();
     if (this.pathViz !== "string" || this.yarnEvents.length === 0) return;
     const slack = 1 - this.tension;
-    const amp = this.threadWidth * (0.05 + 0.5 * slack);
-    const laneAmp = this.threadWidth * 0.3 * slack;
+    // K835: the irregularity slider scales the sag off the centerline
+    // (0 = the yarn lies exactly on the thread; default = as drawn).
+    const irrM = yarnIrregularityMult(this.pathIrregularity);
+    const ampBase = this.threadWidth * (0.05 + 0.5 * slack);
+    const amp = ampBase * irrM;
+    const laneAmp = this.threadWidth * 0.3 * slack * irrM;
+    // K835: the excursion slider adds the baked low-frequency swell
+    // (gated shut at zero irregularity) and raises the offset cap.
+    const swellAmp =
+      ampBase * excursionSwell(this.pathExcursion, this.pathIrregularity);
+    const cap = this.threadWidth * excursionCap(this.pathExcursion);
 
     // Resolve every station to world (centerline, then offset along the
     // local normal), concatenating events with a rounded overshoot past
@@ -3080,7 +3106,11 @@ export class FabricMazeRenderer {
         tx /= tl;
         ty /= tl;
         const kk = Math.min(k, y.wave.length - 1);
-        const off = y.wave[kk] * amp + y.lane * laneAmp;
+        const rawOff =
+          y.wave[kk] * amp +
+          y.lane * laneAmp +
+          (y.swell[kk] / 0.6) * swellAmp;
+        const off = softKnee(rawOff, cap);
         xs.push(cxs[k] - ty * off);
         ys.push(cys[k] + tx * off);
         const ctrlK = y.ctrls[Math.min(k, y.ctrls.length - 1)];
