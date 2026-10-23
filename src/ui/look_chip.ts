@@ -4,11 +4,11 @@
 // look params go back to today's defaults. The choice is not remembered
 // (a reload reads the link again).
 //
-// K837: the badge drops to this chip's row when the panel is open
-// (.kp-open) or in its low fit on narrow screens (.km-fit-low) - both
-// put it at the chip's top/right - so the chip steps one more row
-// down there. On the settings sheet the badge keeps the top row and
-// the chip stays put.
+// K844 (was K837): the badge drops to this chip's row when the panel
+// is open (.kp-open) or in its low fit on narrow screens (.km-fit-low).
+// They stay on that one row: the badge keeps the right end, the chip
+// takes the left end. On the settings sheet the badge keeps the top
+// row, so the chip stays at the right under the sheet's top bar.
 
 import { SHEET_QUERY } from "./panel_sheet";
 
@@ -30,9 +30,9 @@ function injectStyle(): void {
     "-webkit-tap-highlight-color:transparent;touch-action:manipulation}" +
     ".km-look.on{display:block}" +
     "body:has(.km-mode.km-fit-low) .km-look,.kp-open .km-look{" +
-    "top:calc(max(10px,env(safe-area-inset-top)) + 96px)}" +
+    "left:max(10px,env(safe-area-inset-left));right:auto}" +
     "@media " + SHEET_QUERY + "{.kp-open .km-look{" +
-    "top:calc(max(10px,env(safe-area-inset-top)) + 52px)}}" +
+    "left:auto;right:max(10px,env(safe-area-inset-right))}}" +
     ".km-look:hover{background:rgba(58,60,68,.95);color:#e4ecf8}" +
     ".km-look:focus-visible{outline:2px solid #8ea0c0;outline-offset:2px}";
   document.head.appendChild(st);
