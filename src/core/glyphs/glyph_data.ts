@@ -25,7 +25,7 @@ export type ForkAngle = (typeof FORK_VARIANTS)[number];
 // form is exact: its incoming arm, outgoing arm and stem spur all lie
 // on the (1, 3) line, so glyphI builds it as a tangent join, not a fork.
 const I_ARRIVAL: Record<ForkAngle, readonly [number, number, number]> = {
-  0: [1, 3, 4],
+  0: [1, 3, 3],
   15: [3, 4, 2],
   30: [1, 1, 5],
   45: [5, 3, 2],
@@ -41,7 +41,7 @@ const I_ARRIVAL: Record<ForkAngle, readonly [number, number, number]> = {
 export function glyphI(fork: ForkAngle = 0): Glyph {
   const a = I_ARRIVAL[fork];
   const body: Knot[] = [
-    [0, 32, LOW[0], LOW[1], 0, 1.5],
+    [0, 32, LOW[0], LOW[1], 0, 1.6],
     // The junction J: arrives along the upstroke, leaves down the stem.
     // K831 follow-up: J sits at (22, 50), four GU higher than the first
     // form - at (20, 46) the folded arms could not part to the thread
@@ -65,7 +65,7 @@ export function glyphI(fork: ForkAngle = 0): Glyph {
         ...(fork === 0 ? { tangent: true } : {}),
         // K843: the stem leaves J fatter than normal, tapering to its
         // plain width at the dead-end tip.
-        flare: { peak: 6, len: 34 },
+        flare: { peak: 6, len: 50 },
         path: knotsToPath([
           [22, 50, 1, 3, 0, 2],
           [32, 79, 1, 3, 2, 0],
@@ -81,63 +81,73 @@ export function glyphI(fork: ForkAngle = 0): Glyph {
   };
 }
 
-// The a in Levi's K836 form: tangent attachments to an otherwise
-// undisturbed oval (the pre-K831 silhouette, as in A_TANGENT). The
-// body enters from the south-west and touches the oval halfway up
-// its left side at L, arriving along the oval's own tangent there;
-// it then traces the oval over the top and down the right side to R
-// and leaves for the exit. The oval's bottom arc is one landing spur
-// out of R: down the right side (the body's arrival and the spur
-// are one smooth curve through R), around the bottom and up the
-// left side to land at L, so the oval's inside curve is undisturbed
-// at both junctions and a thin acute wedge sits under each. No
-// declared corners: every turn is the oval's own curve. The K831
+// The a in Levi's K836 arrangement - tangent attachments to an
+// otherwise undisturbed letter shape - re-silhouetted in K847 as a
+// single-story cursive a (domed top, apex at the top-right, right
+// side descending from it; the K836 oval read as a lumpy
+// rounded rectangle). The body enters from the south-west and
+// touches the bowl halfway up its left side at L, arriving along
+// the bowl's own tangent there; it then traces the bowl over the
+// top and down the right side to R and leaves for the exit. The
+// bottom arc is one landing spur out of R: down the right side
+// (the body's arrival and the spur are one smooth curve through
+// R), around the bottom and up the left side to land at L, so the
+// inside curve is undisturbed at both junctions and a thin acute
+// wedge sits under each. No declared corners. The K831
 // form (low BL fork, cornered stem) is retired; A_TANGENT stays as
 // the probe fixture.
 const A_GLYPH: Glyph = {
   ch: "a",
   entry: { at: [12, 10], dir: [1, 1], kind: "o" },
   exit: { at: [120, 32], dir: LOW, cls: "B" },
+  // K847 (the cursive rethink): the silhouette is a single-story
+  // cursive a - domed top rising to an apex at the top-right, the
+  // right side descending from it - not a plain oval. Every knot's
+  // tangent is the curve's own direction there and handles stay
+  // near a third of their segment (the K836 form's long handles
+  // and flattened top made the lumpy rounded-rectangle Levi
+  // rejected). Junction tangents stay as K836 set them: entry
+  // tangent at L (0.4, 1), the body and the landing spur one smooth
+  // curve through R (0.35, -1).
   body: knotsToPath([
-    [12, 10, 1, 1, 0, 6],
-    // L: halfway up the left side. The body arrives along the oval's
-    // tangent (1, 4) and leaves up that same line - the entry is a
-    // tangent attachment, not a reroute.
-    [30, 44, 1, 4, 7, 4],
-    [42, 68, 1, 1, 5, 5],
-    [60, 73, 1, 0, 9, 10],
-    [84, 52, 0, -1, 11, 9],
-    // R: further up the right side. A corner at the spur's junction:
-    // the exit leaves down-right (the acute wedge under it), the
-    // bottom spur leaves down the oval's own curve.
-    [80, 34, 0, -1, 7, 3, 3, -4],
-    [104, 24, 1, 0, 9, 5],
+    [12, 10, 1, 2, 4, 4],
+    [20, 27, 1, 2, 4, 4],
+    // L: halfway up the left side, on the bowl's left curve.
+    [30, 44, 1, 3, 3, 3],
+    [38, 64, 1, 1, 5, 5],
+    [58, 74, 1, 0, 9, 9],
+    [80, 54, 0, -1, 10, 7],
+    // R: down the right side; the exit leaves down-right (the acute
+    // wedge under it), the bottom spur continues down the same line.
+    [79, 40, 0, -1, 6, 2, 3, -2],
+    [99, 30, 2, -1, 4, 4],
     [120, 32, LOW[0], LOW[1], 1, 0],
   ]),
   spurs: [
     {
       // The oval's bottom arc: out of R, around the bottom, up the
       // left side to land at L along its tangent.
-      at: 15,
+      at: 18,
       land: true,
       landTangent: true,
       path: knotsToPath([
-        [80, 34, 0, -1, 0, 7],
-        [85, 18, 0, -1, 7, 10],
-        [66, 3, -1, 0, 12, 12],
-        [44, 1, -1, 0, 11, 6],
-        [28, 14, -1, 2, 5, 5],
-        [30, 44, 1, 4, 4, 0],
+        [79, 40, 0, -1, 0, 6],
+        [82, 24, 0, -1, 6, 10],
+        [66, 6, -1, 0, 10, 5],
+        [48, 3, -1, 0, 10, 10],
+        [28, 13, -1, 2, 5, 5],
+        [30, 44, 1, 3, 3, 0],
       ]),
     },
   ],
   // K843: the stroke leaves both tangent attachments fatter than
   // normal above the junction, tapering to the plain width: upward
   // from L (toward the top) and upward from R (toward the top again -
-  // "before" the body's travel down the right side).
+  // "before" the body's travel down the right side). K847: longer,
+  // with the renderer's smooth falloff (they ended way too early).
   bodyFlares: [
-    { at: 3, side: "after", peak: 6, len: 30 },
-    { at: 15, side: "before", peak: 6, len: 30 },
+    { at: 6, side: "after", peak: 6, len: 46 },
+    { at: 18, side: "before", peak: 6, len: 46 },
   ],
   floats: [],
   crossings: 0,
