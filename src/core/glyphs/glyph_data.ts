@@ -25,7 +25,7 @@ export type ForkAngle = (typeof FORK_VARIANTS)[number];
 // form is exact: its incoming arm, outgoing arm and stem spur all lie
 // on the (1, 3) line, so glyphI builds it as a tangent join, not a fork.
 const I_ARRIVAL: Record<ForkAngle, readonly [number, number, number]> = {
-  0: [1, 3, 3],
+  0: [1, 3, 3.25],
   15: [3, 4, 2],
   30: [1, 1, 5],
   45: [5, 3, 2],
@@ -53,10 +53,10 @@ export function glyphI(fork: ForkAngle = 0): Glyph {
     // form - at (20, 46) the folded arms could not part to the thread
     // width inside the entry's arc (tangentRoot returned null) and the
     // entry's S into J bottomed at R 5.8 GU.
-    [22, 50, a[0], a[1], a[2], 3, -1, -3],
-    [18, 29, -1, -3, 2, 3],
-    [34, 6, 1, 0, 12, 12],
-    [58, 32, LOW[0], LOW[1], 2, 0],
+    [22, 50, a[0], a[1], a[2], 2.75, -1, -3],
+    [18, 29, -1, -3, 2, 4],
+    [34, 6, 1, 0, 11, 12.5],
+    [58, 32, LOW[0], LOW[1], 1.75, 0],
   ];
   return {
     ch: "i",
@@ -123,19 +123,30 @@ const A_GLYPH: Glyph = {
   // right third (heading crosses level between the (54, 72) and
   // (71, 67) knots, R ~ 14 GU), then descends the right side to R.
   // Handles sit near a third of their segment throughout.
+  // K861 (fairness-driven re-fit, .claude/probes/K861/fit2.mts
+  // against the K860 metrics): the (1, 3) tangent at L stood
+  // steeper than both neighbouring chords and forced an S-wiggle
+  // on the rise; L and the spur landing now share (1, 2), and
+  // handles/positions were rebalanced by measured descent. K860
+  // fairness after: body flips 3 (was 5), pieces 6 (was 10),
+  // excess 0.0074 (was 0.034); spur flips 2, pieces 4; i body
+  // flips 4, pieces 4, excess 0.0033. The pre-registered flip
+  // targets (2/1/2) were NOT met - the residual flips are
+  // intrinsic to this knot placement (see LEDGER K861). Candidate
+  // awaiting Levi's visual verdict, like K850 before it.
   body: knotsToPath([
     [12, 10, 1, 2, 0, 3],
     [21, 28, 1, 2, 3, 3],
     // L: halfway up the left side, on the bowl's left curve.
-    [31, 45, 1, 3, 2, 2],
+    [31, 45, 1, 2, 2, 2],
     [41, 62, 1, 1, 4, 4],
-    [52, 71, 1, 1, 3.5, 3.5],
-    [66, 75, 3, -1, 2, 3],
-    [80, 52, 0, -1, 9, 6],
+    [51, 72, 1, 1, 3.5, 3.75],
+    [66, 76, 3, -1, 2, 3],
+    [80, 52, 0, -1, 10.75, 6],
     // R: down the right side; the exit leaves down-right (the acute
     // wedge under it), the bottom spur continues down the same line.
     [80, 38, 0, -1, 4, 3, 2, -1],
-    [98, 28, 2, -1, 3, 3],
+    [100, 28, 2, -1, 3, 3.5],
     [120, 32, LOW[0], LOW[1], 1, 0],
   ]),
   spurs: [
@@ -151,12 +162,12 @@ const A_GLYPH: Glyph = {
       // exactly along the body's tangent there.
       path: knotsToPath([
         [80, 38, 0, -1, 0, 6],
-        [81, 20, 0, -1, 6, 9],
+        [80, 20, 0, -1, 6, 9],
         [64, 5, -1, 0, 9, 5],
-        [45, 3, -1, 0, 9, 9],
-        [28, 12, -1, 2, 3, 2],
-        [26, 26, 0, 1, 6, 6],
-        [31, 45, 1, 3, 2, 0],
+        [45, 3, -1, 0, 8.5, 8],
+        [29, 12, -1, 2, 3, 2],
+        [26, 26, 0, 1, 5, 8.5],
+        [31, 45, 1, 2, 2, 0],
       ]),
     },
   ],
