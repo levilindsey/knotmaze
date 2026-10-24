@@ -342,6 +342,16 @@ async function main(): Promise<void> {
     finishIndicatorShown = localStorage.getItem(FINISH_INDICATOR_KEY) !== "0";
     tapToPan = localStorage.getItem(TAP_TO_PAN_KEY) !== "0";
     loaderStaysOn = localStorage.getItem(LOADER_STAYS_KEY) === "1";
+    // K851: a refreshed page is the way out of a permanently-kept
+    // loading animation. The page cannot tell a soft refresh from a
+    // hard one (both report navigation type "reload"), so any
+    // refresh forgets the keep switch and the intro runs its course.
+    const navEntry = performance.getEntriesByType("navigation")[0] as
+      PerformanceNavigationTiming | undefined;
+    if (navEntry?.type === "reload" && loaderStaysOn) {
+      loaderStaysOn = false;
+      localStorage.removeItem(LOADER_STAYS_KEY);
+    }
     indPrefs = indicatorPrefs((k) => localStorage.getItem(k));
   } catch {
     // Storage unavailable: the defaults (both stats readouts hidden, the

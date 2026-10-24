@@ -388,7 +388,12 @@ export function buildPanel(
   style.textContent =
     // K541 (K339 Q4): the desktop panel widens 256 -> 320 px so the
     // word labels fit uncut; the phone sheet overrides this below.
-    ".tp-dfwv{width:320px}" +
+    // K851: a z-index of its own in EVERY layout (the sheet's 28 used
+    // to be the only one): Tweakpane leaves the desktop wrapper at
+    // z-index auto, so the loader overlay (fixed, z 15, opaque) painted
+    // over the open panel in the keep-loading-animation state and the
+    // panel was open but invisible.
+    ".tp-dfwv{width:320px;z-index:28}" +
     ".tp-dfwv::-webkit-scrollbar{width:6px}" +
     ".tp-dfwv::-webkit-scrollbar-thumb{background:#3a4254;border-radius:3px}" +
     ".tp-dfwv::-webkit-scrollbar-track{background:transparent}" +
@@ -2788,7 +2793,7 @@ export function buildPanel(
   );
   row(
     fLoading, s, "loaderStays", { label: "Keep loading animation" },
-    "Keep the loading trefoil on screen after the maze has loaded, as a live preview while you tune the rows above (and the gap, thread width, path color and background color it wears). It covers the maze while it is up; untick to put it away. Remembered per browser, never in a link.",
+    "Keep the loading trefoil on screen after the maze has loaded, as a live preview while you tune the rows above (and the gap, thread width, path color and background color it wears). It covers the maze while it is up; the settings panel stays available over it, and a page refresh puts it away and forgets the switch - the way out if it ever traps you. Remembered per browser until a refresh, never in a link.",
     SETTINGS_DEFAULTS.loaderStays,
     () => callbacks.onLoaderStaysToggle(settings.loaderStays === true)
   );
