@@ -80,6 +80,7 @@ import {
 import { routeCorner, routeCubic } from "../junction_routes";
 import { STRIP_W, setStripRows, stripTable } from "../arm_strip";
 import { GAP_SLOTS } from "../gap_mask";
+import { rimCurvePoints } from "./rim_curve";
 import { CUT_BIAS, GATE_LEAD, JOINT_CLEAR_REACH_SCALE } from "./crossing_gaps";
 import { EXPLORE_JOINT_MIN } from "./explore_gaps";
 import * as sampling from "./sampling";
@@ -2170,45 +2171,17 @@ export class Joinery {
         // keeps the historic quadratic rim byte-for-byte.
         const roundedWedge = this.r.cornerWedgeRounded(rec.jn, A, B);
         if (roundedWedge) {
-          // K846: a cubic whose end controls lie along each flank
-          // tip's OWN tangent (the quadratic's control was the
-          // straight-line corner, so its end tangents pointed at the
-          // corner, not along the arm's curved edge - a visible kink
-          // where rim met thread). The corner still sets each
-          // control's length, by its projection on the tip tangent;
-          // a corner behind a tip falls back to the quadratic.
-          const projA = (cx - pax) * tanA[0] + (cy - pay) * tanA[1];
-          const projB = (cx - pbx) * tanB[0] + (cy - pby) * tanB[1];
-          const dA = projA > 0 ? projA * 0.62 : 0;
-          const dB = projB > 0 ? projB * 0.62 : 0;
-          if (dA > 1e-6 && dB > 1e-6) {
-            const c1x = pax + tanA[0] * dA;
-            const c1y = pay + tanA[1] * dA;
-            const c2x = pbx + tanB[0] * dB;
-            const c2y = pby + tanB[1] * dB;
-            for (let i = 1; i < n; i++) {
-              const q = i / n;
-              const u = 1 - q;
-              const m0 = u * u * u;
-              const m1 = 3 * u * u * q;
-              const m2 = 3 * u * q * q;
-              const m3 = q * q * q;
-              pushPt(
-                m0 * pax + m1 * c1x + m2 * c2x + m3 * pbx,
-                m0 * pay + m1 * c1y + m2 * c2y + m3 * pby
-              );
-            }
-          } else {
-            for (let i = 1; i < n; i++) {
-              const q = i / n;
-              const m0 = (1 - q) * (1 - q);
-              const m1 = 2 * (1 - q) * q;
-              const m2 = q * q;
-              pushPt(
-                m0 * pax + m1 * cx + m2 * pbx,
-                m0 * pay + m1 * cy + m2 * pby
-              );
-            }
+          // K846/K859: the rim curve (ribbon/rim_curve.ts, which
+          // documents both branches and the measured finding that
+          // the quadratic-through-corner is the de-facto rim: the
+          // corner-projection cubic fires only at narrow wedges).
+          const rc = rimCurvePoints(
+            pax, pay, tanA[0], tanA[1],
+            pbx, pby, tanB[0], tanB[1],
+            cx, cy, n
+          );
+          for (let i = 0; i < rc.pts.length; i += 2) {
+            pushPt(rc.pts[i], rc.pts[i + 1]);
           }
         } else {
           pushPt(cx, cy);
