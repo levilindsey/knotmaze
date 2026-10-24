@@ -150,6 +150,36 @@ export function pointAtArc(shape: TrefoilShape, s: number): { p: Pt; heading: nu
   };
 }
 
+// K852: the strand's centroid, arc-length weighted (each segment's
+// midpoint weighted by its length) - the balance point the "above"
+// loading motion keeps directly over the marker.
+export function shapeCentroid(shape: TrefoilShape): Pt {
+  const { points, cum, total } = shape;
+  const n = points.length;
+  let sx = 0;
+  let sy = 0;
+  for (let i = 0; i < n; i++) {
+    const [ax, ay] = points[i];
+    const [bx, by] = points[(i + 1) % n];
+    const len = cum[i + 1] - cum[i];
+    sx += ((ax + bx) / 2) * len;
+    sy += ((ay + by) / 2) * len;
+  }
+  return [sx / total, sy / total];
+}
+
+// K852: the rotation (radians, canvas rotate()) that puts the shape's
+// centroid directly above `head` - directly = same x, smaller y (screen
+// up). Returns null when the head sits on the centroid (no direction).
+export function rotationForCentroidAbove(shape: TrefoilShape, head: Pt): number | null {
+  const [cx, cy] = shapeCentroid(shape);
+  const vx = cx - head[0];
+  const vy = cy - head[1];
+  if (Math.hypot(vx, vy) < 1e-9) return null;
+  const raw = -Math.PI / 2 - Math.atan2(vy, vx);
+  return headingDelta(0, raw);
+}
+
 // The polyline of the arc span [from, to] (either may wrap), sampled at
 // most step world units apart. The trail is drawn from this.
 export function arcSpan(shape: TrefoilShape, from: number, to: number, step = 0.06): Pt[] {

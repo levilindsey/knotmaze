@@ -5,6 +5,8 @@ import {
   GAP_SAMPLES,
   headingDelta,
   pointAtArc,
+  rotationForCentroidAbove,
+  shapeCentroid,
   trefoilShape,
   trefoilSvgPaths,
   underGapAt,
@@ -115,6 +117,33 @@ describe("K313 loader geometry", () => {
     // The window wraps the lap seam like the strand does.
     expect(underGapAt(shape, base + shape.total, 0)).toBe(true);
     expect(underGapAt(shape, base - shape.total, 0)).toBe(true);
+  });
+
+  it("K852: the centroid is the strand's balance point", () => {
+    const [cx, cy] = shapeCentroid(shape);
+    // The trefoil is 3-fold symmetric about the origin, so its
+    // centroid sits at the origin (up to sampling).
+    expect(Math.abs(cx)).toBeLessThan(0.05);
+    expect(Math.abs(cy)).toBeLessThan(0.05);
+  });
+
+  it("K852: the above rotation puts the centroid directly over the head", () => {
+    const [cx, cy] = shapeCentroid(shape);
+    for (const s of [0, shape.total / 7, shape.total / 3, shape.total * 0.9]) {
+      const head = pointAtArc(shape, s).p;
+      const rot = rotationForCentroidAbove(shape, head);
+      expect(rot).not.toBeNull();
+      // Apply the canvas rotation to (centroid - head): x ~ 0, y < 0.
+      const vx = cx - head[0];
+      const vy = cy - head[1];
+      const rx = vx * Math.cos(rot!) - vy * Math.sin(rot!);
+      const ry = vx * Math.sin(rot!) + vy * Math.cos(rot!);
+      expect(Math.abs(rx)).toBeLessThan(1e-9);
+      expect(ry).toBeLessThan(0);
+      // The rotation is continuous frame to frame (no wrong-way spin):
+      const next = rotationForCentroidAbove(shape, pointAtArc(shape, s + 0.05).p)!;
+      expect(Math.abs(headingDelta(rot!, next))).toBeLessThan(0.2);
+    }
   });
 
   it("the boot script's storage key is motion.ts's", () => {

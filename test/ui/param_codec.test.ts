@@ -283,11 +283,18 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["borderColor", "color"], // K820
   ["goldTextureStrength", "number"], // K820
   ["loaderSpeed", "number"], // K828
-  ["loaderMove", "enum", ["maze", "head"]], // K828
+  ["loaderMove", "enum", ["maze", "head", "above"]], // K828; "above" appended K852
   ["cornerRoundShare", "number"], // K830
   ["pathIrregularity", "number"], // K835
   ["pathExcursion", "number"], // K835
   ["showShortestPath", "boolean"], // K839
+  ["loaderGap", "number"], // K852
+  ["loaderThreadWidth", "number"], // K852
+  ["loaderThreadColor", "color"], // K852
+  ["loaderBgColor", "color"], // K852
+  ["loaderIndicatorSize", "number"], // K852
+  ["loaderFill", "enum", ["solid", "outline", "flat"]], // K852
+  ["loaderTrail", "number"], // K852
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
@@ -375,6 +382,8 @@ describe("codec table", () => {
       "telegraphColor", // K813
       "frayColor", // K813
       "borderColor", // K820
+      "loaderThreadColor", // K852
+      "loaderBgColor", // K852
     ]);
   });
 });

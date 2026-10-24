@@ -1,12 +1,14 @@
 // K828: what the loading trefoil wears, as one small record the boot
-// script can read before the app bundle exists. The design's own look
-// params drive it (gap, threadWidth, pathColor, backgroundBase) plus the
-// two loader-only params (loaderSpeed, loaderMove); the app rewrites the
-// localStorage mirror on every param application, and the boot script
-// reads it at first paint (and takes live updates over the adopted
-// handle's setConfig). Pure: the boot bundle and the tests share it.
+// script can read before the app bundle exists. K852: the loader's look
+// is its OWN param set (loaderGap, loaderThreadWidth, loaderThreadColor,
+// loaderBgColor, loaderIndicatorSize, loaderFill, loaderTrail) plus
+// loaderSpeed/loaderMove - no longer borrowed from the maze's look. The
+// app rewrites the localStorage mirror on every param application, and
+// the boot script reads it at first paint (and takes live updates over
+// the adopted handle's setConfig). Pure: the boot bundle and the tests
+// share it.
 
-import type { LoaderMove } from "./url_state";
+import type { LoaderFill, LoaderMove } from "./url_state";
 
 export type { LoaderMove };
 
@@ -22,6 +24,12 @@ export interface LoaderWireCfg {
   casingW: number;
   thread: string;
   bg: string;
+  // K852: indicator scale (1 = today's 0.045-screensize head).
+  marker: number;
+  // K852: how the strand draws.
+  fill: LoaderFill;
+  // K852: trailing glow length in world units.
+  trail: number;
 }
 
 export const LOADER_MIRROR_KEY = "knotmaze.loader";
@@ -37,29 +45,38 @@ export const LOADER_CFG_DEFAULTS: LoaderWireCfg = {
   casingW: 0.6,
   thread: "#eccc41",
   bg: "#151b28",
+  marker: 1,
+  fill: "solid",
+  trail: 2.6,
 };
 
-const GAP_DEFAULT = 0.04;
-const THREAD_WIDTH_DEFAULT = 0.52;
-
+// K852: the loader's look comes from its OWN params (loaderGap,
+// loaderThreadWidth, loaderThreadColor, loaderBgColor,
+// loaderIndicatorSize, loaderFill, loaderTrail), no longer borrowed
+// from the maze's gap/threadWidth/pathColor/backgroundBase. The
+// defaults reproduce the pre-K852 drawing exactly.
 export function loaderCfgFromParams(p: {
-  gap: number;
-  threadWidth: number;
-  pathColor: string;
-  backgroundBase: string;
   loaderSpeed: number;
   loaderMove: LoaderMove;
+  loaderGap: number;
+  loaderThreadWidth: number;
+  loaderThreadColor: string;
+  loaderBgColor: string;
+  loaderIndicatorSize: number;
+  loaderFill: LoaderFill;
+  loaderTrail: number;
 }): LoaderWireCfg {
-  const gapScale = Math.min(4, Math.max(0, p.gap / GAP_DEFAULT));
-  const threadW = 0.42 * (p.threadWidth / THREAD_WIDTH_DEFAULT);
   return {
     speed: p.loaderSpeed,
     move: p.loaderMove,
-    gapSamples: 0.6 * gapScale,
-    threadW,
-    casingW: threadW * (0.6 / 0.42),
-    thread: p.pathColor,
-    bg: p.backgroundBase,
+    gapSamples: p.loaderGap,
+    threadW: p.loaderThreadWidth,
+    casingW: p.loaderThreadWidth * (0.6 / 0.42),
+    thread: p.loaderThreadColor,
+    bg: p.loaderBgColor,
+    marker: p.loaderIndicatorSize,
+    fill: p.loaderFill,
+    trail: p.loaderTrail,
   };
 }
 
@@ -72,13 +89,16 @@ export function readLoaderMirror(raw: string | null): LoaderWireCfg {
     const d = LOADER_CFG_DEFAULTS;
     return {
       speed: typeof o.speed === "number" && o.speed > 0 ? o.speed : d.speed,
-      move: o.move === "head" ? "head" : "maze",
+      move: o.move === "head" || o.move === "above" ? o.move : "maze",
       gapSamples:
         typeof o.gapSamples === "number" && o.gapSamples >= 0 ? o.gapSamples : d.gapSamples,
       threadW: typeof o.threadW === "number" && o.threadW > 0 ? o.threadW : d.threadW,
       casingW: typeof o.casingW === "number" && o.casingW > 0 ? o.casingW : d.casingW,
       thread: typeof o.thread === "string" ? o.thread : d.thread,
       bg: typeof o.bg === "string" ? o.bg : d.bg,
+      marker: typeof o.marker === "number" && o.marker > 0 ? o.marker : d.marker,
+      fill: o.fill === "outline" || o.fill === "flat" ? o.fill : d.fill,
+      trail: typeof o.trail === "number" && o.trail >= 0 ? o.trail : d.trail,
     };
   } catch {
     return { ...LOADER_CFG_DEFAULTS };
