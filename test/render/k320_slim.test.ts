@@ -112,7 +112,11 @@ describe("K320 stage 1: char budgets", () => {
     // 788 to the junction field (27,447 -> 28,235 measured).
     // K849: the fans' rim band (metric block, then the baked-ring
     // form) adds 1,021 (28,844 -> 29,865).
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(29_940);
+    // K854 (2026-10-26): the fans' solid straddling rim band (the
+    // outer-ring discard + the two-AA fanEdge + the pixel-wide tip
+    // switch in the border-look block) adds 649 (29,940 -> 30,589
+    // measured here).
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(30_650);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

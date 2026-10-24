@@ -689,11 +689,13 @@ export class Joinery {
       // vertices each, two triangles per segment).
       // K849: fans carry an inner rim ring (pushFan's band), so a
       // fan costs apex + 2 rim rings of vertices and ~3x indices.
+      // K854: wedge fans carry a third (outer) rim ring for the
+      // straddling border band: apex + 3 rings, 15 indices a segment.
       const verts =
-        armTotal * (1 + 2 * wedgeRim + 2 * COVER_STRIP_PTS) +
+        armTotal * (1 + 3 * wedgeRim + 2 * COVER_STRIP_PTS) +
         nDiscs * (4 + 2 * (DISC_SEGS + 8));
       const idx =
-        (armTotal * ((wedgeRim - 1) * 3 + 2 * (COVER_STRIP_PTS - 1)) +
+        (armTotal * ((wedgeRim - 1) * 5 + 2 * (COVER_STRIP_PTS - 1)) +
           nDiscs * DISC_SEGS * 3) *
         3;
       this.r.filletMesh = new TriFanMesh(verts, idx);
@@ -870,9 +872,9 @@ export class Joinery {
             cy + (Math.cos(a) * half[1] + Math.sin(a) * py) * r
           );
         }
-        fm.pushFan(cx, cy, rim, rb, null, false, flankFill, this.r.borderWidth * fillHalf);
+        fm.pushFan(cx, cy, rim, rb, null, false, flankFill, this.r.borderWidth * (this.r.style.casingWidth / 2));
       } else {
-        fm.pushFan(cx, cy, discRim(cx, cy, r), rb, null, false, flankFill, this.r.borderWidth * fillHalf);
+        fm.pushFan(cx, cy, discRim(cx, cy, r), rb, null, false, flankFill, this.r.borderWidth * (this.r.style.casingWidth / 2));
       }
       return j1;
     };
@@ -1463,7 +1465,17 @@ export class Joinery {
       }
       const r = Math.sqrt(r2);
       if (r > rec.rMax) rec.rMax = r;
-      fm.pushFan(cx, cy, rim, rec.rb, flank, seal, flankFill, this.r.borderWidth * fillHalf);
+      // K854: the fan's border band is as wide as the ribbon's own
+      // (borderWidth of the casing half the strip spans), so rim and
+      // thread strokes meet at one weight.
+      // K854: the band straddles the rim: inward to the border
+      // band's inner edge (rim line at 0.97 fillHalf vs the band's
+      // [casing*(1-bw), casing] span), outward the rest. Wedge fans
+      // only; discs and caps keep the inner band.
+      const bandSpan = this.r.borderWidth * (this.r.style.casingWidth / 2);
+      const rimOff = fillHalf * 0.97;
+      const bandOut = Math.max(0, this.r.style.casingWidth / 2 - rimOff);
+      fm.pushFan(cx, cy, rim, rec.rb, flank, seal, flankFill, bandSpan - bandOut, bandOut);
     };
     const pushDiscField = (
       rec: JRec,
@@ -1661,7 +1673,7 @@ export class Joinery {
             tip.hostCtrl,
             reach
           );
-          fm.pushFan(this.stadiumApex[0], this.stadiumApex[1], band, rb, null, false, 4, this.r.borderWidth * fillHalf);
+          fm.pushFan(this.stadiumApex[0], this.stadiumApex[1], band, rb, null, false, 4, this.r.borderWidth * (this.r.style.casingWidth / 2));
         }
       }
     }
@@ -2209,6 +2221,13 @@ export class Joinery {
           flankArr.push(0);
         }
         for (let e = 0; e < nB; e++) flankArr.push(-1);
+        // K854: the two tip vertices carry the rim arc's own end
+        // values, not the flank's +-1: the border look's flank fade
+        // (junction_field) keys on |vFlank| = 1 for "along the arm
+        // edge", and at +-1 it pinched the band to nothing exactly
+        // at the tip, so the arc stopped short of the thread border.
+        flankArr[nA - 1] = 1 - 2 / n;
+        flankArr[nA + (roundedWedge ? n - 1 : 1)] = -(1 - 2 / n);
         // Fan from the JUNCTION CENTER, not the edge-intersection corner:
         // the corner comes from a straight-line edge model and lands
         // OUTSIDE the true silhouette on curved hosts - fan triangles to
@@ -2222,8 +2241,22 @@ export class Joinery {
         armCutL[k] = true; // K846
         armCutR[(k + 1) % arms.length] = true; // K846
         const extW = fillHalf / Math.max(Math.sin(gap), 0.05) + fillHalf * 0.5; // K849
-        armWinL[k] = Math.max(armWinL[k], extW);
-        armWinR[(k + 1) % arms.length] = Math.max(armWinR[(k + 1) % arms.length], extW);
+        // K854: the window must ALSO reach the flank tip (armReach):
+        // the rim arc owns the outline from the tip inward, so the
+        // ribbon border stays cut all the way to the tip. K849's
+        // capsule-exit alone (0.39 world at a 90-degree wedge vs the
+        // 0.97 tip at cr 3) left the border redrawing beside the arc -
+        // the double strokes and interior spokes of the K854 crops;
+        // where the capsule exit runs farther (shallow wedges) it
+        // still rules, as K849 found.
+        // (The reach term stops 0.05 short: the border then resumes
+        // a hair BEFORE the tip, overlapping the rim's tangent
+        // departure - the two solid strokes merge there, and the
+        // pale wedge the border band's outer shoulder (casing half
+        // vs the rim's thread-edge line) otherwise leaves at the
+        // contact is covered.)
+        armWinL[k] = Math.max(armWinL[k], extW, armReach(A) - 0.05);
+        armWinR[(k + 1) % arms.length] = Math.max(armWinR[(k + 1) % arms.length], extW, armReach(B) - 0.05);
         emitFan(rec, jx, jy, rim, flankArr);
       }
       // K846: this junction's side-cut entries, over each marked arm's
@@ -2234,10 +2267,12 @@ export class Joinery {
       for (let ai = 0; ai < arms.length; ai++) {
         if (!armCutL[ai] && !armCutR[ai]) continue;
         const arm = arms[ai];
-        // The cut covers exactly the interior section (the neighbour
-        // capsule's exit along this arm), NOT the whole flank reach:
-        // past it the arm's own edge is the silhouette the fan's rim
-        // arc hands back to (junction_field strokes the arc alone).
+        // The cut covers the interior section along this arm: from
+        // the centre to the FARTHER of the neighbour capsule's exit
+        // (K849, shallow mouths) and the flank tip (K854: the rim
+        // arc owns the outline from its tip inward, so the border
+        // must stay cut all the way there). Past the window the
+        // arm's own edge is the silhouette again.
         const win = Math.min(
           arm.domain,
           Math.max(armCutL[ai] ? armWinL[ai] : 0, armCutR[ai] ? armWinR[ai] : 0)

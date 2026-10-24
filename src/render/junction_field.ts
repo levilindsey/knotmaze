@@ -440,6 +440,8 @@ void main(void) {
   // fabric_sdf kJunctionCut), so the rim is the whole outline:
   // thread edge -> fillet corner -> thread edge, hollow inside.
   bool borderLook = uKLook.x > 0.5 && uKLook.x < 1.5;
+  // K854: the fans' outer rim ring (vLook 2) is border look only.
+  if (!borderLook && !strip && vLook > 1.001) discard;
   float fanEdge = strip
     ? (borderLook ? 0.0 : lookEdge)
     : max(lookEdge, borderLook ? 0.0 : flankEdge);
@@ -450,15 +452,26 @@ void main(void) {
   // the wedge (the fan share of the interior strokes).
   if (borderLook && !strip) {
     // K849: the band is baked into the fan's geometry (pushFan's
-    // inner rim ring, inset by the border width): vLook is 0 at the
-    // inner ring and 1 at the rim, so the stroke is metric by
-    // construction on wedges and discs alike.
-    fanEdge = smoothstep(0.05, 0.95, vLook);
+    // rim rings): vLook is 0 at the inner ring and 1 at the rim.
+    // K854: SOLID, straddling the rim (outer ring vLook 2) like
+    // the ribbons' own band straddles their edge, AA at both
+    // ends; K849's full-band smoothstep read as a gradient
+    // crescent beside the ribbons' solid strokes.
+    float bandAa = max(fwidth(vLook) * 0.75, 0.01);
+    fanEdge = smoothstep(0.0, bandAa, vLook) * (1.0 - smoothstep(2.0 - bandAa, 2.0, vLook));
     // Wedge fans (aFlank +-1 on the flanks, sweeping across the rim
     // arc): the arc alone strokes - along the flanks the arm's own
-    // ribbon edge is the outline (the side cut stops at the capsule
-    // exit, short of the flank tips). Discs (aFlank 2) keep their rim.
-    if (vFlank < 1.5) fanEdge *= smoothstep(1.0, 0.8, abs(vFlank));
+    // ribbon edge is the outline (the side cut stops at the flank
+    // tip, K854: max of capsule exit and flank reach). Discs (aFlank
+    // 2) keep their rim.
+    // K854: the tip switch is a pixel wide (0.79, just over the
+    // tips' own 0.75): |vFlank| runs 1 to 0.75 over the last
+    // flank segment, and a wider window greys the approach and
+    // draws a tongue where the rim doubles back along the edge.
+    if (vFlank < 1.5) {
+      float flankAa = max(fwidth(vFlank) * 0.75, 0.004);
+      fanEdge *= 1.0 - smoothstep(0.79 - flankAa, 0.79 + flankAa, abs(vFlank));
+    }
   }
   if (!strip && vFlank > 2.5) fanEdge = 0.0;
   bool lookIntro = uKLook.y > 0.5 && uKLook.z > 0.5;
