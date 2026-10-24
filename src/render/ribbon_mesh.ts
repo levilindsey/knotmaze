@@ -807,13 +807,17 @@ export class TriFanMesh {
     rec: number,
     flank?: Float32Array | number[] | null,
     seal?: boolean,
-    flankFill?: number
+    flankFill?: number,
+    bandIn = 0
   ): void {
     const rimCount = rim.length / 2;
+    const banded = bandIn > 0 && rimCount > 2;
+    const vCount = 1 + (banded ? 2 * rimCount : rimCount);
+    const iCount = (rimCount - 1) * (banded ? 9 : 3);
     if (
       rimCount < 2 ||
-      this.vUsed + rimCount + 1 > this.recData.length ||
-      this.iUsed + (rimCount - 1) * 3 > this.indexData.length
+      this.vUsed + vCount > this.recData.length ||
+      this.iUsed + iCount > this.indexData.length
     ) {
       return; // Capacity is sized for the worst case; never grows.
     }
@@ -825,31 +829,66 @@ export class TriFanMesh {
       vd[(apex + 1 + i) * 2] = rim[i * 2];
       vd[(apex + 1 + i) * 2 + 1] = rim[i * 2 + 1];
     }
-    this.recData.fill(rec, apex, apex + rimCount + 1);
+    if (banded) {
+      // K849: an inner rim ring inset toward the apex by bandIn (the
+      // border look's stroke width): the outer ring carries look 1,
+      // the inner ring and apex look 0, so the fan's border band is a
+      // metric strip inside the rim by construction, not a fraction
+      // of the apex-to-rim coordinate (which ran ~4x too wide on
+      // wedge spokes and stroked the wedge interior).
+      for (let i = 0; i < rimCount; i++) {
+        const dx = rim[i * 2] - apexX;
+        const dy = rim[i * 2 + 1] - apexY;
+        const len = Math.hypot(dx, dy);
+        const inset = len > 1e-9 ? Math.min(bandIn, len * 0.85) / len : 0;
+        vd[(apex + 1 + rimCount + i) * 2] = rim[i * 2] - dx * inset;
+        vd[(apex + 1 + rimCount + i) * 2 + 1] = rim[i * 2 + 1] - dy * inset;
+      }
+    }
+    this.recData.fill(rec, apex, apex + vCount);
     this.lookData[apex] = 0;
-    this.lookData.fill(1, apex + 1, apex + rimCount + 1);
+    this.lookData.fill(1, apex + 1, apex + 1 + rimCount);
+    if (banded) this.lookData.fill(0, apex + 1 + rimCount, apex + vCount);
     if (seal) {
-      this.flankData.fill(3, apex, apex + rimCount + 1);
+      this.flankData.fill(3, apex, apex + vCount);
     } else if (flankFill !== undefined) {
-      this.flankData.fill(flankFill, apex, apex + rimCount + 1);
+      this.flankData.fill(flankFill, apex, apex + vCount);
     } else if (flank) {
       this.flankData[apex] = 0;
       for (let i = 0; i < rimCount; i++) this.flankData[apex + 1 + i] = flank[i] ?? 0;
+      if (banded) {
+        for (let i = 0; i < rimCount; i++) this.flankData[apex + 1 + rimCount + i] = flank[i] ?? 0;
+      }
     } else {
-      this.flankData.fill(2, apex, apex + rimCount + 1);
+      this.flankData.fill(2, apex, apex + vCount);
     }
-    for (let v = apex; v <= apex + rimCount; v++) {
+    for (let v = apex; v < apex + vCount; v++) {
       this.maskData.set(this.maskIds, v * GAP_SLOTS);
     }
     const ix = this.indexData;
     let n = this.iUsed;
-    for (let i = 0; i < rimCount - 1; i++) {
-      ix[n++] = apex;
-      ix[n++] = apex + 1 + i;
-      ix[n++] = apex + 2 + i;
+    if (banded) {
+      const inner = apex + 1 + rimCount;
+      for (let i = 0; i < rimCount - 1; i++) {
+        ix[n++] = apex;
+        ix[n++] = inner + i;
+        ix[n++] = inner + i + 1;
+        ix[n++] = inner + i;
+        ix[n++] = apex + 1 + i;
+        ix[n++] = apex + 2 + i;
+        ix[n++] = inner + i;
+        ix[n++] = apex + 2 + i;
+        ix[n++] = inner + i + 1;
+      }
+    } else {
+      for (let i = 0; i < rimCount - 1; i++) {
+        ix[n++] = apex;
+        ix[n++] = apex + 1 + i;
+        ix[n++] = apex + 2 + i;
+      }
     }
     this.iUsed = n;
-    this.vUsed = apex + rimCount + 1;
+    this.vUsed = apex + vCount;
   }
 
   // Emit one quad strip (K81 route cover strips): `pts` is flat

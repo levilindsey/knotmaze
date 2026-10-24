@@ -62,10 +62,13 @@ vec4 jRangeAt(int i) {
 // crossing a spur's mouth; an arm's edge under its fillet flank), so
 // only the wedge rim draws there. The chain's junction entries ride
 // its RANGES segment space (samp_table RANGE_JUNCTION):
-// (junction sample, window, side flags in chain terms). side is
+// (junction arc, signed arc window from it, side flags in chain
+// terms) - WORLD arc throughout (K849: K846 packed spline-sample
+// units, which the strip shader reads in ctrl units, so the cut
+// almost never fired there). side is
 // -1 on the chain's left edge, +1 on its right. An edge facing a
 // skipped wedge (a near-straight pass) has no entry and keeps drawing.
-float kJunctionSideCut(int chain, float samp, float arc, float total, float arcPer, bool closed, float side, float pxW) {
+float kJunctionSideCut(int chain, float arc, float total, bool closed, float side, float pxW) {
   float reach = uFabricGap.w;
   if (reach <= 0.0) return 0.0;
   vec4 ch1 = g3ChainAt(chain, 1);
@@ -76,13 +79,15 @@ float kJunctionSideCut(int chain, float samp, float arc, float total, float arcP
   for (int i = 0; i < 32; i++) {
     if (i >= n) break;
     vec4 e = jRangeAt(base + i);
-    if (samp < e.y || samp > e.z) continue;
     if (mod(e.w, 16.0) < 8.0) continue;
     bool cutSide = side < 0.0 ? mod(e.w, 32.0) >= 16.0 : e.w >= 32.0;
     if (!cutSide) continue;
-    float d = abs(arc - e.x * arcPer);
-    if (closed) d = min(d, total - d);
-    cut = max(cut, clamp((reach - d) / max(pxW, 1e-5) + 0.5, 0.0, 1.0));
+    float rel = arc - e.x;
+    if (closed) rel -= total * floor(rel / total + 0.5);
+    if (rel < e.y || rel > e.z) continue;
+    float d = abs(rel);
+    float ext = max(abs(e.y), abs(e.z));
+    cut = max(cut, clamp((ext - d) / max(pxW, 1e-5) + 0.5, 0.0, 1.0));
   }
   return cut;
 }

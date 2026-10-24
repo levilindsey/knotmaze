@@ -42,11 +42,12 @@ export const CAP_FLAT = 2;
 export const RANGE_LANE_MASK = 3;
 export const RANGE_SPLIT = 4;
 // K846: a junction-cut entry in a chain's segment ranges (CHAIN texel
-// (rangeBase, nRange), after its gap windows): (junction sample, kLo,
-// kHi, flags) - within the window the ribbon's border hands over to
-// the junction fans on the flagged side(s), in CHAIN terms (left =
-// the (-ty, tx) edge, as the strip's aUV.y = 0 side). The shader's
-// distance test is in arc (sample * arcPer), not samples.
+// (rangeBase, nRange), after its gap windows): (junction arc, signed
+// arc window from it, flags) - within the window the ribbon's border
+// hands over to the junction fans on the flagged side(s), in CHAIN
+// terms (left = the (-ty, tx) edge, as the strip's aUV.y = 0 side).
+// WORLD arc throughout (K849; K846's spline-sample units never
+// matched the strip shader's ctrl units).
 export const RANGE_JUNCTION = 8;
 export const RANGE_CUT_LEFT = 16;
 export const RANGE_CUT_RIGHT = 32;
@@ -375,9 +376,9 @@ export function packRanges(
 }
 
 // K846: write one junction-cut entry (see RANGE_JUNCTION) at entry
-// index `at` of `out`; returns the next entry index. A closed chain's
-// window past the seam is the caller's second entry with the same
-// centre (the shader's arc distance wraps).
+// index `at` of `out`; returns the next entry index. lo/hi are the
+// signed world-arc window from the junction (K849); the shader wraps
+// closed chains itself, so one entry always suffices.
 export function putJunctionRange(
   out: Float32Array,
   at: number,

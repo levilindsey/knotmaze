@@ -342,6 +342,7 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   // in fp32): mod by 16/32 is exact, no rounded quotient.
   "fabric_sdf.ts: mod(e.w, 16.0)": [1, "the junction side cut's junction flag bit, exact small integers (K846)"],
   "fabric_sdf.ts: mod(e.w, 32.0)": [1, "the junction side cut's left flag bit, exact small integers (K846)"],
+  "fabric_sdf.ts: floor(rel / total + 0.5)": [1, "the side cut's nearest-lap wrap (K849): ambiguous only at the antipode, a full lap from the junction"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];
