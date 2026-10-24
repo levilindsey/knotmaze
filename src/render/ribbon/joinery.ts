@@ -93,8 +93,8 @@ import type { RibbonRenderer, RouteJArm } from "../ribbon_renderer";
 // between adjacent arms then gets a rounded FILLET: a concave patch from
 // one arm's edge to the next, split at its midpoint so each half wears its
 // own arm's live paint color. Reach and curvature are in thread-width
-// units; wedges flatter than FILLET_MAX_WEDGE (a near-straight pass-through
-// side) get no fillet.
+// units; wedges flatter than FILLET_MAX_WEDGE between one chain's own
+// two arms (a near-straight pass-through side) get no fillet.
 // Fillets hug the junction tightly: the arm edges are straight-line
 // approximations from the junction point, and a host that curves away from
 // them leaves any far-reaching patch floating in the background. The
@@ -2015,8 +2015,13 @@ export class Joinery {
         let gap = B.ang - A.ang;
         if (k === arms.length - 1) gap += Math.PI * 2;
         // Only the near-straight pass-through side gets no fillet (a patch
-        // across ~180 degrees would bulge off the host's far edge).
-        if (gap > FILLET_MAX_WEDGE) continue;
+        // across ~180 degrees would bulge off the host's far edge) - and
+        // that side is the one between a single chain's own two arms,
+        // whose ribbon already draws both edges straight through. A wide
+        // wedge between DIFFERENT chains is a real corner of the outline:
+        // skipping it left both facing edges uncut, so the through
+        // thread's border ran across the joining arm's mouth (K857).
+        if (gap > FILLET_MAX_WEDGE && A.chain === B.chain) continue;
 
         // PER-WEDGE layer: this wedge rides above the erase stack iff a
         // nearby foreign thread dives under ANY arm of this joint and
