@@ -25,7 +25,7 @@
 
 import { GlProgram, Mesh, MeshGeometry, Shader, Texture, UniformGroup } from "pixi.js";
 import type { SplineSamples } from "../../geometry/spline_generator";
-import { FABRIC_GLSL, JUNCTION_CUT_GLSL, SDF_CONE_GLSL, SDF_TEX_GLSL, fabricUniforms, gapSource, sampSource } from "../fabric_sdf";
+import { FABRIC_GLSL, G3_CHAIN_GLSL, JUNCTION_CUT_GLSL, SDF_CONE_GLSL, SDF_TEX_GLSL, fabricUniforms, gapSource, sampSource } from "../fabric_sdf";
 import { withExploreSdf } from "../explore_glsl";
 import { GAP_FRAG_LIB, defaultGapTexture } from "../gap_mask";
 import { addFloatAttribute } from "../junction_field";
@@ -191,6 +191,7 @@ ${PAINT_FRAG_LIB}
 ${ROOT_FRAG_GLSL}
 ${GAP_FRAG_LIB}
 ${SDF_CONE_GLSL}
+${G3_CHAIN_GLSL}
 ${JUNCTION_CUT_GLSL}
 void main(void) {
   vec2 gfw = fwidth(vPos);
@@ -326,6 +327,9 @@ void main(void) {
   if (uKLook.x > 0.5 && uKLook.x < 1.5) {
     vec4 jcaps = vec4(0.0, 0.0, vSegInfo.z >= 1.5 ? 4.0 : 0.0, vSegInfo.w >= 1.5 ? 4.0 : 0.0);
     lookA *= 1.0 - kJunctionCut(kc.closed, kc.total, arc, jcaps, pxW);
+    // K846: and at every junction arm, on the sides a wedge faces
+    // (lW > 0 is the chain's left, as the strip's aUV.y = 0 side).
+    lookA *= 1.0 - kJunctionSideCut(kc.ch, arc / kc.arcPer, arc, kc.total, kc.arcPer, kc.closed, lW > 0.0 ? -1.0 : 1.0, pxW);
   }
   float gk = gapKeepAt(pxW, vPos, arc, vDir, vIds);
   if (uKBase.z > 4.5) {

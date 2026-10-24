@@ -1045,6 +1045,17 @@ export class Joinery {
     };
 
     const recs: JRec[] = [];
+    // K846: the junction side-cut entries (samp_table's RANGE_JUNCTION)
+    // for the wedges this rebuild draws, published by finish() for
+    // CrossingGaps.assignGapIds to pack behind the gap windows.
+    const juncEntries: Array<{
+      chain: number;
+      center: number;
+      lo: number;
+      hi: number;
+      left: boolean;
+      right: boolean;
+    }> = [];
     for (const jn of this.r.junctionArms) {
       // APEX FROM THE ARMS' OWN SAMPLES: the physics centroid +
       // flowOffset(point) rides a DIFFERENT displacement model than the
@@ -1769,6 +1780,7 @@ export class Joinery {
         D[rec.rb * 4 + 3] = routeBase;
         D[rec.rb * 4 + 7] = nr;
       }
+      this.r.junctionCutEntries = juncEntries; // K846
       const tb = stripTable();
       tb.markDirty(0, this.stripRowsUsed * 2);
       tb.flush();
@@ -1971,6 +1983,9 @@ export class Joinery {
       pushDiscField(rec, jx, jy, fillHalf * 0.92);
 
       if (!drawWedges) continue;
+      // K846: the arm sides the drawn wedges face (A's left, B's right).
+      const armCutL = new Array<boolean>(arms.length).fill(false);
+      const armCutR = new Array<boolean>(arms.length).fill(false);
 
       for (let k = 0; k < arms.length; k++) {
         const A = arms[k];
@@ -2032,7 +2047,7 @@ export class Joinery {
           arm: JArm,
           left: boolean,
           out: number[]
-        ): void => {
+        ): [number, number] => {
           // The centerline points + outward tangents are shared by the
           // arm's two wedges (only the offset side differs).
           let fp = arm.flankPts;
@@ -2096,11 +2111,14 @@ export class Joinery {
             const py = fp[e * 4 + 1];
             out.push(px - fp[e * 4 + 3] * sgn, py + fp[e * 4 + 2] * sgn);
           }
+          // K846: the tip's outward tangent (the rim's end tangent).
+          const le = fp.length / 4 - 1;
+          return [fp[le * 4 + 2], fp[le * 4 + 3]];
         };
         const edgeA: number[] = [];
         const edgeB: number[] = [];
-        flank(A, true, edgeA);
-        flank(B, false, edgeB);
+        const tanA = flank(A, true, edgeA);
+        const tanB = flank(B, false, edgeB);
 
         // Perimeter: A's flank inner->outer, bezier rim to B's outer tip
         // (control = corner), B's flank outer->inner. Every pixel
@@ -2125,15 +2143,45 @@ export class Joinery {
         // keeps the historic quadratic rim byte-for-byte.
         const roundedWedge = this.r.cornerWedgeRounded(rec.jn, A, B);
         if (roundedWedge) {
-          for (let i = 1; i < n; i++) {
-            const q = i / n;
-            const m0 = (1 - q) * (1 - q);
-            const m1 = 2 * (1 - q) * q;
-            const m2 = q * q;
-            pushPt(
-              m0 * pax + m1 * cx + m2 * pbx,
-              m0 * pay + m1 * cy + m2 * pby
-            );
+          // K846: a cubic whose end controls lie along each flank
+          // tip's OWN tangent (the quadratic's control was the
+          // straight-line corner, so its end tangents pointed at the
+          // corner, not along the arm's curved edge - a visible kink
+          // where rim met thread). The corner still sets each
+          // control's length, by its projection on the tip tangent;
+          // a corner behind a tip falls back to the quadratic.
+          const projA = (cx - pax) * tanA[0] + (cy - pay) * tanA[1];
+          const projB = (cx - pbx) * tanB[0] + (cy - pby) * tanB[1];
+          const dA = projA > 0 ? projA * 0.62 : 0;
+          const dB = projB > 0 ? projB * 0.62 : 0;
+          if (dA > 1e-6 && dB > 1e-6) {
+            const c1x = pax + tanA[0] * dA;
+            const c1y = pay + tanA[1] * dA;
+            const c2x = pbx + tanB[0] * dB;
+            const c2y = pby + tanB[1] * dB;
+            for (let i = 1; i < n; i++) {
+              const q = i / n;
+              const u = 1 - q;
+              const m0 = u * u * u;
+              const m1 = 3 * u * u * q;
+              const m2 = 3 * u * q * q;
+              const m3 = q * q * q;
+              pushPt(
+                m0 * pax + m1 * c1x + m2 * c2x + m3 * pbx,
+                m0 * pay + m1 * c1y + m2 * c2y + m3 * pby
+              );
+            }
+          } else {
+            for (let i = 1; i < n; i++) {
+              const q = i / n;
+              const m0 = (1 - q) * (1 - q);
+              const m1 = 2 * (1 - q) * q;
+              const m2 = q * q;
+              pushPt(
+                m0 * pax + m1 * cx + m2 * pbx,
+                m0 * pay + m1 * cy + m2 * pby
+              );
+            }
           }
         } else {
           pushPt(cx, cy);
@@ -2161,7 +2209,49 @@ export class Joinery {
           rims[k] = roundedWedge
             ? rim.slice((nA - 1) * 2, (nA + n) * 2)
             : [pax, pay, cx, cy, pbx, pby];
+        armCutL[k] = true; // K846
+        armCutR[(k + 1) % arms.length] = true; // K846
         emitFan(rec, jx, jy, rim, flankArr);
+      }
+      // K846: this junction's side-cut entries, over each marked arm's
+      // own flank reach (armReach), in sample coordinates.
+      for (let ai = 0; ai < arms.length; ai++) {
+        if (!armCutL[ai] && !armCutR[ai]) continue;
+        const arm = arms[ai];
+        const samples = this.r.chainSamples[arm.chain];
+        if (!samples || samples.count < 2) continue;
+        const arcPer = arm.total / (arm.closed ? samples.count : samples.count - 1);
+        if (!(arcPer > 0)) continue;
+        const center = arm.arc0 / arcPer;
+        const reachS = armReach(arm) / arcPer;
+        const cutLeft = arm.dir > 0 ? armCutL[ai] : armCutR[ai];
+        const cutRight = arm.dir > 0 ? armCutR[ai] : armCutL[ai];
+        const lo0 = arm.dir > 0 ? center : center - reachS;
+        const hi0 = arm.dir > 0 ? center + reachS : center;
+        if (arm.closed) {
+          if (lo0 < 0) {
+            juncEntries.push(
+              { chain: arm.chain, center, lo: lo0 + samples.count, hi: samples.count - 1, left: cutLeft, right: cutRight },
+              { chain: arm.chain, center, lo: 0, hi: hi0, left: cutLeft, right: cutRight }
+            );
+          } else if (hi0 > samples.count - 1) {
+            juncEntries.push(
+              { chain: arm.chain, center, lo: lo0, hi: samples.count - 1, left: cutLeft, right: cutRight },
+              { chain: arm.chain, center, lo: 0, hi: hi0 - samples.count, left: cutLeft, right: cutRight }
+            );
+          } else {
+            juncEntries.push({ chain: arm.chain, center, lo: lo0, hi: hi0, left: cutLeft, right: cutRight });
+          }
+        } else {
+          juncEntries.push({
+            chain: arm.chain,
+            center,
+            lo: Math.max(0, lo0),
+            hi: Math.min(samples.count - 1, hi0),
+            left: cutLeft,
+            right: cutRight,
+          });
+        }
       }
     }
 

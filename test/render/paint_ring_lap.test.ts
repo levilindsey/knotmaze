@@ -338,6 +338,10 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   // rounded quotient is involved.
   "ribbon/ribbon_sdf.ts: mod(vSegInfo.z, 2.0)": [1, "the flat-cap bit of an exact small-integer cap code (K832)"],
   "ribbon/ribbon_sdf.ts: mod(vSegInfo.w, 2.0)": [1, "the flat-cap bit of an exact small-integer cap code (K832)"],
+  // K846: the junction side cut's flag decode (small integers, exact
+  // in fp32): mod by 16/32 is exact, no rounded quotient.
+  "fabric_sdf.ts: mod(e.w, 16.0)": [1, "the junction side cut's junction flag bit, exact small integers (K846)"],
+  "fabric_sdf.ts: mod(e.w, 32.0)": [1, "the junction side cut's left flag bit, exact small integers (K846)"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];

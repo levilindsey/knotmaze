@@ -52,6 +52,40 @@ float kJunctionCut(bool closed, float total, float arc, vec4 caps, float pxW) {
   if (d >= reach) return 0.0;
   return clamp((reach - d) / max(pxW, 1e-5) + 0.5, 0.0, 1.0);
 }
+uniform highp sampler2D uRanges;
+vec4 jRangeAt(int i) {
+  return texelFetch(uRanges, ivec2(i & ${ROW_W - 1}, i >> 10), 0);
+}
+// K846: the same handover at EVERY junction arm, not only fused ends:
+// within the fan reach of a junction, the ribbon's edge on a side a
+// drawn wedge faces is interior (the through thread's far border
+// crossing a spur's mouth; an arm's edge under its fillet flank), so
+// only the wedge rim draws there. The chain's junction entries ride
+// its RANGES segment space (samp_table RANGE_JUNCTION):
+// (junction sample, window, side flags in chain terms). side is
+// -1 on the chain's left edge, +1 on its right. An edge facing a
+// skipped wedge (a near-straight pass) has no entry and keeps drawing.
+float kJunctionSideCut(int chain, float samp, float arc, float total, float arcPer, bool closed, float side, float pxW) {
+  float reach = uFabricGap.w;
+  if (reach <= 0.0) return 0.0;
+  vec4 ch1 = g3ChainAt(chain, 1);
+  int n = int(ch1.w + 0.5);
+  if (n <= 0) return 0.0;
+  int base = int(ch1.z + 0.5);
+  float cut = 0.0;
+  for (int i = 0; i < 32; i++) {
+    if (i >= n) break;
+    vec4 e = jRangeAt(base + i);
+    if (samp < e.y || samp > e.z) continue;
+    if (mod(e.w, 16.0) < 8.0) continue;
+    bool cutSide = side < 0.0 ? mod(e.w, 32.0) >= 16.0 : e.w >= 32.0;
+    if (!cutSide) continue;
+    float d = abs(arc - e.x * arcPer);
+    if (closed) d = min(d, total - d);
+    cut = max(cut, clamp((reach - d) / max(pxW, 1e-5) + 0.5, 0.0, 1.0));
+  }
+  return cut;
+}
 `;
 
 // K8 G3-2 (design 3.1): the SDF ribbons' own tables and cone. The
@@ -204,6 +238,19 @@ export function g3ChainSource(): BufferImageSource {
   if (G3_CHAIN_SOURCE) return G3_CHAIN_SOURCE;
   G3_CHAIN_PLACEHOLDER ??= new FloatRows(ROW_W, 1);
   return G3_CHAIN_PLACEHOLDER.source as unknown as BufferImageSource;
+}
+
+// K846: the current scene's RANGES source, swapped with setSampSource
+// and re-pointed by bindGap's binding list, like the G3 CHAIN source.
+let RANGES_SOURCE: BufferImageSource | null = null;
+let RANGES_PLACEHOLDER: FloatRows | null = null;
+export function setRangesSource(source: BufferImageSource): void {
+  RANGES_SOURCE = source;
+}
+export function rangesSource(): BufferImageSource {
+  if (RANGES_SOURCE) return RANGES_SOURCE;
+  RANGES_PLACEHOLDER ??= new FloatRows(ROW_W, 1);
+  return RANGES_PLACEHOLDER.source as unknown as BufferImageSource;
 }
 
 // K832: the border look's junction cut reach (world arc; 0 = no cut, when

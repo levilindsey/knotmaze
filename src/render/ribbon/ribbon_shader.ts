@@ -42,7 +42,7 @@ import {
 } from "../paint_glsl";
 import { kGeom, kPaint, kReveal, kStatic, knotUniforms } from "../paint_model";
 import { bindPluckGap } from "../pluck_overlay";
-import { G3_CHAIN_GLSL, JUNCTION_CUT_GLSL, fabricUniforms, g3ChainSource, sampSource, setGapSource } from "../fabric_sdf";
+import { G3_CHAIN_GLSL, JUNCTION_CUT_GLSL, fabricUniforms, g3ChainSource, rangesSource, sampSource, setGapSource } from "../fabric_sdf";
 
 // Mesh.shader wants a TextureShader (a Shader carrying its texture).
 type SectionShader = Shader & { texture: Texture };
@@ -287,6 +287,8 @@ void main(void) {
   // (border look only; fabric_sdf kJunctionCut).
   if (uKLook.x > 0.5 && uKLook.x < 1.5) {
     lookA *= 1.0 - kJunctionCut(kc.closed, kc.total, kpt.x, g3ChainAt(kc.ch, 0), pxW);
+    // K846: and at every junction arm, on the sides a wedge faces.
+    lookA *= 1.0 - kJunctionSideCut(kc.ch, kpt.x / kc.arcPer, kpt.x, kc.total, kc.arcPer, kc.closed, vUV.y < 0.5 ? -1.0 : 1.0, pxW);
   }
   float gk = gapKeep(pxW, gTurn);
   if (uKBase.z > 4.5) {
@@ -340,6 +342,8 @@ export function sectionShader(): SectionShader {
         uSamp: sampSource(),
         // K832: the G3 CHAIN table (the junction cut's caps).
         uG3Chain: g3ChainSource(),
+        // K846: the RANGES table (the junction side cut's entries).
+        uRanges: rangesSource(),
         fabricUniforms: fabricUniforms(),
         // G2 shader paint (paint_model.ts): page-lifetime data textures +
         // the shared uniform group.
@@ -369,6 +373,7 @@ export function sectionShaderExplore(): SectionShader {
         uGapData: sectionShader().resources.uGapData,
         uSamp: sampSource(),
         uG3Chain: g3ChainSource(),
+        uRanges: rangesSource(),
         fabricUniforms: fabricUniforms(),
         uKStatic: kStatic().source,
         uKGeom: kGeom().source,
@@ -396,12 +401,15 @@ export function bindGap(tex: Texture): void {
   setGapSource(tex.source as unknown as BufferImageSource);
   const samp = sampSource();
   const g3c = g3ChainSource();
+  const rng = rangesSource();
   const sh = sectionShader();
   if (sh.resources.uGapData !== tex.source) sh.resources.uGapData = tex.source;
   if (sh.resources.uSamp !== samp) sh.resources.uSamp = samp;
   if (sh.resources.uG3Chain !== g3c) sh.resources.uG3Chain = g3c;
+  if (sh.resources.uRanges !== rng) sh.resources.uRanges = rng;
   const ex = SECTION_EXPLORE_SHADER;
   if (ex && ex.resources.uGapData !== tex.source) ex.resources.uGapData = tex.source;
   if (ex && ex.resources.uSamp !== samp) ex.resources.uSamp = samp;
   if (ex && ex.resources.uG3Chain !== g3c) ex.resources.uG3Chain = g3c;
+  if (ex && ex.resources.uRanges !== rng) ex.resources.uRanges = rng;
 }
