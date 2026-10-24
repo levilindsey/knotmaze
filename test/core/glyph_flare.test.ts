@@ -19,7 +19,7 @@ describe("K843: junction flares", () => {
     expect(fr.dir).toBe(-1);
     for (const f of body!.flare!) {
       expect(f.peak).toBeCloseTo(6 / 36, 6);
-      expect(f.len).toBeCloseTo(30 / 36, 6);
+      expect(f.len).toBeCloseTo(46 / 36, 6);
       // The flare sits at a junction node of the strand.
       expect(b.graph.nodes.get(body!.nodes[f.joint])!.type).toBe(NODE_TYPE.JUNCTION);
     }
@@ -33,7 +33,7 @@ describe("K843: junction flares", () => {
     const f = spur!.flare![0];
     expect(f.dir).toBe(1);
     expect(f.peak).toBeCloseTo(6 / 36, 6);
-    expect(f.len).toBeCloseTo(34 / 36, 6);
+    expect(f.len).toBeCloseTo(50 / 36, 6);
     expect(b.graph.nodes.get(spur!.nodes[f.joint])!.type).toBe(NODE_TYPE.JUNCTION);
   });
 });

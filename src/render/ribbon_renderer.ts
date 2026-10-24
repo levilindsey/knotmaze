@@ -2103,12 +2103,17 @@ export class RibbonRenderer {
         m = 1 + (tp.sep[i0] + (tp.sep[i0 + 1] - tp.sep[i0]) * (f - i0)) / tw;
       }
       // K843: junction flares (fatter at the joint, tapering away).
+      // K847: a cosine falloff - full at the joint, and reaching the
+      // plain width with a level tangent at the end too, so the
+      // outline has no corner where the flare gives out (the linear
+      // ramp's end read as a step, and a short one ended too early).
       if (fl && flareArcs) {
         for (let fi = 0; fi < fl.length; fi++) {
           const f = fl[fi];
           if (!(f.len > 0)) continue;
           const t = (a - flareArcs[fi]) * f.dir;
-          if (t >= 0 && t <= f.len) m *= 1 + (f.peak * (1 - t / f.len)) / tw;
+          if (t >= 0 && t <= f.len)
+            m *= 1 + (f.peak * 0.5 * (1 + Math.cos(Math.PI * (t / f.len)))) / tw;
         }
       }
       buf[k] = (base ? base[k] : 1) * m;
