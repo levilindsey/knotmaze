@@ -2785,17 +2785,22 @@ export function buildPanel(
   // loading animation to hold it on screen while you tune them.
   const fLoading = folder("Loading", false, fMotion);
   row(
-    fLoading, p, "loaderSpeed", { min: 0.25, max: 3, step: 0.05, label: "Loading speed" },
+    fLoading, p, "loaderSpeed", { min: 0.25, max: 9, step: 0.05, label: "Loading speed" },
     "How fast the loading trefoil's player laps the knot (1 = today's 14 second lap). Applies live while the loader is on screen; remembered in the link like any look.",
     D.loaderSpeed, () => callbacks.onLoaderCfg()
   );
   row(
     fLoading, p, "loaderMove",
     {
-      options: { "maze slides by": "maze", "player travels": "head", "centroid stays above": "above" },
+      options: {
+        "maze slides by": "maze",
+        "player travels": "head",
+        "centroid stays above": "above",
+        "spin around centroid": "spin",
+      },
       label: "Loading motion",
     },
-    "What moves in the loading animation: the maze slides and turns under the player marker held at the center (today's); the maze holds still and the player marker travels the strand; or (centroid) the maze slides and turns so the knot's center always stays directly above the player marker. Applies live while the loader is on screen.",
+    "What moves in the loading animation: the maze slides and turns under the player marker held at the center (today's); the maze holds still and the player marker travels the strand; the maze slides and turns so the knot's center always stays directly above the player marker; or the knot's center stays fixed and the knot spins around it, the player marker always directly below the center. Applies live while the loader is on screen.",
     D.loaderMove, () => callbacks.onLoaderCfg()
   );
   row(

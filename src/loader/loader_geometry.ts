@@ -180,6 +180,20 @@ export function rotationForCentroidAbove(shape: TrefoilShape, head: Pt): number 
   return headingDelta(0, raw);
 }
 
+// K853: the dual - the rotation about the centroid that puts `head`
+// directly BELOW it (same x, larger y on screen), for the spin motion
+// where the centroid stays fixed and the knot turns around it. The
+// head's screen position is then the centroid plus (0, |head-centroid|)
+// in the rotated frame. Returns null when the head sits on the centroid.
+export function rotationForHeadBelowCentroid(shape: TrefoilShape, head: Pt): number | null {
+  const [cx, cy] = shapeCentroid(shape);
+  const vx = head[0] - cx;
+  const vy = head[1] - cy;
+  if (Math.hypot(vx, vy) < 1e-9) return null;
+  const raw = Math.PI / 2 - Math.atan2(vy, vx);
+  return headingDelta(0, raw);
+}
+
 // The polyline of the arc span [from, to] (either may wrap), sampled at
 // most step world units apart. The trail is drawn from this.
 export function arcSpan(shape: TrefoilShape, from: number, to: number, step = 0.06): Pt[] {

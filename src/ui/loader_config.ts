@@ -89,7 +89,7 @@ export function readLoaderMirror(raw: string | null): LoaderWireCfg {
     const d = LOADER_CFG_DEFAULTS;
     return {
       speed: typeof o.speed === "number" && o.speed > 0 ? o.speed : d.speed,
-      move: o.move === "head" || o.move === "above" ? o.move : "maze",
+      move: o.move === "head" || o.move === "above" || o.move === "spin" ? o.move : "maze",
       gapSamples:
         typeof o.gapSamples === "number" && o.gapSamples >= 0 ? o.gapSamples : d.gapSamples,
       threadW: typeof o.threadW === "number" && o.threadW > 0 ? o.threadW : d.threadW,

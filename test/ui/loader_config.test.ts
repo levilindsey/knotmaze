@@ -60,13 +60,17 @@ describe("K828/K852 loader config", () => {
     expect(own.trail).toBe(0);
   });
 
-  it("speed and motion pass through, including the centroid mode", () => {
+  it("speed and motion pass through, including the centroid modes", () => {
     const cfg = loaderCfgFromParams({
       ...PARAM_DEFAULTS,
       loaderSpeed: 2,
       loaderMove: "above",
     });
     expect(cfg).toMatchObject({ speed: 2, move: "above" });
+    expect(
+      loaderCfgFromParams({ ...PARAM_DEFAULTS, loaderMove: "spin" }).move
+    ).toBe("spin");
+    expect(readLoaderMirror('{"move":"spin"}').move).toBe("spin");
   });
 
   it("the mirror round-trips and falls back field by field", () => {

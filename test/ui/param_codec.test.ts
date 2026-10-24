@@ -283,7 +283,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["borderColor", "color"], // K820
   ["goldTextureStrength", "number"], // K820
   ["loaderSpeed", "number"], // K828
-  ["loaderMove", "enum", ["maze", "head", "above"]], // K828; "above" appended K852
+  ["loaderMove", "enum", ["maze", "head", "above", "spin"]], // K828; "above" K852, "spin" K853
   ["cornerRoundShare", "number"], // K830
   ["pathIrregularity", "number"], // K835
   ["pathExcursion", "number"], // K835
