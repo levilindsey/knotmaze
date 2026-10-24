@@ -27,6 +27,8 @@ import {
   glyphSegmentCount,
 } from "./marker_glyphs";
 import type { MarkerGlyph } from "./marker_glyphs";
+import { clipBandUniforms } from "./clip_band";
+import type { ClipBand } from "./clip_band";
 
 // Quad half-size in disc radii: room for the rim's antialiasing ramp down
 // to discs a few pixels across.
@@ -67,10 +69,22 @@ uniform vec4 uDisc;
 // x = disc units per quad unit, y = the dot's radius in disc radii.
 uniform vec4 uRing;
 uniform vec4 uFrame;
+// K856: the under-crossing clip band in disc units: uClipA =
+// (centre, direction), uClipB = (half width, half length, on, -).
+// Only the part of the marker overlapping the over thread (+ its
+// gap) is cut.
+uniform vec4 uClipA;
+uniform vec4 uClipB;
 void main(void) {
   vec2 p = vP * uFrame.x;
   // Disc units per pixel - derivatives first, in uniform control flow.
   float px = max(length(dFdx(p)), 1e-6);
+  if (uClipB.z > 0.5) {
+    vec2 rel = p - uClipA.xy;
+    float along = dot(rel, uClipA.zw);
+    float across = dot(rel, vec2(-uClipA.w, uClipA.z));
+    if (abs(across) < uClipB.x && abs(along) < uClipB.y) discard;
+  }
   float r = length(p);
   float disc = clamp((1.0 - r) / px + 0.5, 0.0, 1.0);
   float ring = uRing.a * clamp((uFrame.y - r) / px + 0.5, 0.0, 1.0);
@@ -109,6 +123,8 @@ interface MarkerUniformValues {
   uDisc: Float32Array;
   uRing: Float32Array;
   uFrame: Float32Array;
+  uClipA: Float32Array;
+  uClipB: Float32Array;
 }
 
 // K307 WARM-UP: the marker program, for the warm-up registry
@@ -143,6 +159,8 @@ export class MarkerMesh {
       uDisc: { value: new Float32Array([0, 0, 0, 1]), type: "vec4<f32>" },
       uRing: { value: new Float32Array([0, 0, 0, 0]), type: "vec4<f32>" },
       uFrame: { value: new Float32Array([1, 1, 0, 0]), type: "vec4<f32>" },
+      uClipA: { value: new Float32Array([0, 0, 1, 0]), type: "vec4<f32>" },
+      uClipB: { value: new Float32Array([0, 0, 0, 0]), type: "vec4<f32>" },
     });
     this.values = uniforms.uniforms as unknown as MarkerUniformValues;
     const shader = new Shader({
@@ -218,5 +236,21 @@ export class MarkerMesh {
 
   hide(): void {
     this.mesh.visible = false;
+  }
+
+  // K856: clip the marker by the band at an under crossing it
+  // passes under - only the overlap is cut, the rest keeps
+  // rendering (the loader's K855 rule). `band` is
+  // RibbonRenderer.underClipBand's world-space strip; (x, y) is
+  // the marker's world centre and `radius` its placed world
+  // radius: the strip is converted into the disc frame.
+  setClipBand(band: ClipBand, x: number, y: number, radius: number): void {
+    const { a, b } = clipBandUniforms(band, x, y, radius);
+    this.values.uClipA.set(a);
+    this.values.uClipB.set(b);
+  }
+
+  clearClipBand(): void {
+    this.values.uClipB[2] = 0;
   }
 }

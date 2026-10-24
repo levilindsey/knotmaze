@@ -1956,12 +1956,18 @@ export class FabricMazeRenderer {
     const mk = this.markers.minotaur;
     mk.setGlyph(markerGlyph(this.markerGlyphIds.minotaur, "minotaur"));
     mk.place(x, y, r);
-    // K842: the minotaur dips where its thread passes under a crossing,
-    // like the head (the rendezvous slide keeps the post's dip).
-    mk.mesh.alpha = this.ribbons.underGapVisibility(
+    // K842/K856: where the minotaur's thread passes under a crossing,
+    // only the overlapping part of the marker is clipped, like the
+    // head (the rendezvous slide keeps the post's clip); the
+    // whole-marker dip is retired.
+    const minoBand = this.ribbons.underClipBand(
       at.chain,
-      this.ribbons.arcForCtrl(at.chain, ctrl)
+      this.ribbons.arcForCtrl(at.chain, ctrl),
+      r
     );
+    mk.mesh.alpha = 1;
+    if (minoBand) mk.setClipBand(minoBand, x, y, r);
+    else mk.clearClipBand();
     this.minoLayer.visible = true;
     const bleed = this.fogOfWar && !over;
     // Over the fog, or right under it (the fog sprite and its twins are
@@ -4212,16 +4218,21 @@ export class FabricMazeRenderer {
     this.headX = this.scratch[0];
     this.headY = this.scratch[1];
     this.headValid = true;
-    // K842: the head marker dips where its run passes under a crossing,
-    // with the same visibility (and gap margin) as its host thread -
-    // the Ariadne yarn's rule. At rest it sits at a junction: no dip.
-    m.head.mesh.alpha =
+    // K842/K856: where the head's run passes under a crossing, only
+    // the part of the marker overlapping the over thread (+ its gap)
+    // is clipped - the rest keeps rendering (the loader's K855 rule);
+    // the whole-marker dip K842 shipped is retired. At rest the head
+    // sits at a junction: no band.
+    const headBand =
       dotChain >= 0
-        ? this.ribbons.underGapVisibility(
+        ? this.ribbons.underClipBand(
             dotChain,
-            this.ribbons.arcForCtrl(dotChain, this.ctrlMod(dotChain, dotCtrl))
+            this.ribbons.arcForCtrl(dotChain, this.ctrlMod(dotChain, dotCtrl)),
+            this.pulsedHeadR()
           )
-        : 1;
+        : null;
+    if (headBand) m.head.setClipBand(headBand, this.headX, this.headY, this.pulsedHeadR());
+    else m.head.clearClipBand();
     // Fog explores wherever the head rests; mid-move, the run's stations
     // stamp it (tickAnim, K99) - the dot's per-frame position would make
     // what a move uncovers depend on frame timing.

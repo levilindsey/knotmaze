@@ -61,6 +61,7 @@ import {
 import { PAINT_CONST } from "./paint_const";
 import { PluckOverlay } from "./pluck_overlay";
 import { WebFade } from "./web_fade";
+import type { ClipBand } from "./clip_band";
 import type { ExploreCut } from "./explore_glsl";
 import { pieceVis } from "../game/explore_view";
 import type { ExploreBurn, ExplorePiece } from "../game/explore_view";
@@ -1661,6 +1662,90 @@ export class RibbonRenderer {
       ctrl,
       this.ps.chainBreakAfter[chain] < 0
     );
+  }
+
+  private clipScratchA = new Float32Array(2);
+  private clipScratchB = new Float32Array(2);
+  private clipScratchC = new Float32Array(2);
+
+  // K856: the clip band at the under crossing nearest `arc` on
+  // `chain`, for overlay markers (MarkerMesh.setClipBand): the strip
+  // along the OVER pass through the crossing point, in world units.
+  // The marker is clipped only where it overlaps the over thread
+  // plus its gap (the in-game form of the loader's K855 band) -
+  // where K842's whole-marker alpha dip used to fade it. Null when
+  // no under crossing is within reach of a marker of radius rWorld.
+  underClipBand(chain: number, arc: number, rWorld: number): ClipBand | null {
+    const samples = this.chainSamples[chain];
+    if (!samples) return null;
+    const total = samples.totalLength;
+    const closed = this.ps.chainBreakAfter[chain] < 0;
+    const wrapDist = (d: number): number => {
+      if (closed && total > 0) {
+        d = ((d % total) + total) % total;
+        if (d > total / 2) d -= total;
+      }
+      return d;
+    };
+    let best: (typeof this.ps.crossings)[number] | null = null;
+    let bestAbs = Infinity;
+    let bestArc = 0;
+    for (const c of this.ps.crossings) {
+      if (c.under.chain !== chain) continue;
+      const cArc = this.arcForCtrl(chain, c.under.ctrl);
+      const ad = Math.abs(wrapDist(arc - cArc));
+      if (ad < bestAbs) {
+        bestAbs = ad;
+        best = c;
+        bestArc = cArc;
+      }
+    }
+    if (!best) return null;
+    // The crossing's gap extent along this chain (its under window).
+    let ext = 0.3;
+    const win = this.underWindows.get(chain);
+    if (win) {
+      let bd = Infinity;
+      for (let i = 0; i < win.length; i += 3) {
+        const ad = Math.abs(wrapDist(win[i] - bestArc));
+        if (ad < bd) {
+          bd = ad;
+          ext = (win[i + 1] + win[i + 2]) / 2;
+        }
+      }
+    }
+    if (bestAbs > rWorld + this.style.casingWidth / 2 + ext) return null;
+    const a = this.clipScratchA;
+    const b = this.clipScratchB;
+    const cc = this.clipScratchC;
+    this.ps.pointOnChain(best.over.chain, best.over.ctrl, a, 0);
+    this.ps.pointOnChain(best.over.chain, best.over.ctrl + 0.5, b, 0);
+    this.ps.pointOnChain(best.over.chain, best.over.ctrl - 0.5, cc, 0);
+    let dx = b[0] - cc[0];
+    let dy = b[1] - cc[1];
+    const dl = Math.hypot(dx, dy);
+    if (dl < 1e-9) return null;
+    dx /= dl;
+    dy /= dl;
+    this.ps.pointOnChain(chain, best.under.ctrl + 0.5, b, 0);
+    this.ps.pointOnChain(chain, best.under.ctrl - 0.5, cc, 0);
+    let ux = b[0] - cc[0];
+    let uy = b[1] - cc[1];
+    const ul = Math.hypot(ux, uy);
+    if (ul < 1e-9) return null;
+    ux /= ul;
+    uy /= ul;
+    const sinPhi = Math.abs(dx * uy - dy * ux);
+    // The loader's K855 form: cover the over casing, then the gap
+    // projected onto the strip's width (gapWorld * sin(crossing)).
+    const gap = (this.style.casingWidth - this.style.threadWidth) / 2;
+    return {
+      x: a[0],
+      y: a[1],
+      dx,
+      dy,
+      halfW: this.style.casingWidth / 2 + gap * sinPhi,
+    };
   }
 
   // Visibility of overlay material riding a chain at `arc`: 0 inside any
