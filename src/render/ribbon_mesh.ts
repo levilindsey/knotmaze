@@ -808,12 +808,18 @@ export class TriFanMesh {
     flank?: Float32Array | number[] | null,
     seal?: boolean,
     flankFill?: number,
-    bandIn = 0
+    bandIn = 0,
+    bandOut = 0
   ): void {
     const rimCount = rim.length / 2;
     const banded = bandIn > 0 && rimCount > 2;
-    const vCount = 1 + (banded ? 2 * rimCount : rimCount);
-    const iCount = (rimCount - 1) * (banded ? 9 : 3);
+    // K854: an outer rim ring (bandOut past the rim) lets the border
+    // band straddle the rim line like the ribbons' own band straddles
+    // their edge; the junction shader draws it only in the border
+    // look (vLook 2 marks it) and discards it elsewhere.
+    const outer = banded && bandOut > 0;
+    const vCount = 1 + (banded ? (outer ? 3 : 2) * rimCount : rimCount);
+    const iCount = (rimCount - 1) * (banded ? (outer ? 15 : 9) : 3);
     if (
       rimCount < 2 ||
       this.vUsed + vCount > this.recData.length ||
@@ -830,25 +836,43 @@ export class TriFanMesh {
       vd[(apex + 1 + i) * 2 + 1] = rim[i * 2 + 1];
     }
     if (banded) {
-      // K849: an inner rim ring inset toward the apex by bandIn (the
-      // border look's stroke width): the outer ring carries look 1,
-      // the inner ring and apex look 0, so the fan's border band is a
-      // metric strip inside the rim by construction, not a fraction
-      // of the apex-to-rim coordinate (which ran ~4x too wide on
-      // wedge spokes and stroked the wedge interior).
+      // K849: an inner rim ring inset by bandIn (the border look's
+      // stroke width): the outer ring carries look 1, the inner ring
+      // and apex look 0, so the fan's border band is a metric strip
+      // inside the rim by construction, not a fraction of the
+      // apex-to-rim coordinate (which ran ~4x too wide on wedge
+      // spokes and stroked the wedge interior).
+      // K854: inset PERPENDICULAR to the rim (toward the apex side),
+      // not toward the apex point: at the rim's tips the apex
+      // direction runs along the rim, so the old inset collapsed
+      // the band to a point there and the stroke stopped short of
+      // the thread border it had to meet.
       for (let i = 0; i < rimCount; i++) {
-        const dx = rim[i * 2] - apexX;
-        const dy = rim[i * 2 + 1] - apexY;
-        const len = Math.hypot(dx, dy);
-        const inset = len > 1e-9 ? Math.min(bandIn, len * 0.85) / len : 0;
-        vd[(apex + 1 + rimCount + i) * 2] = rim[i * 2] - dx * inset;
-        vd[(apex + 1 + rimCount + i) * 2 + 1] = rim[i * 2 + 1] - dy * inset;
+        const px = rim[i * 2];
+        const py = rim[i * 2 + 1];
+        const i0 = Math.max(i - 1, 0);
+        const i1 = Math.min(i + 1, rimCount - 1);
+        let tx = rim[i1 * 2] - rim[i0 * 2];
+        let ty = rim[i1 * 2 + 1] - rim[i0 * 2 + 1];
+        const tl = Math.hypot(tx, ty);
+        if (tl > 1e-9) { tx /= tl; ty /= tl; } else { tx = 1; ty = 0; }
+        // Perpendicular, signed toward the apex.
+        let nx = -ty;
+        let ny = tx;
+        if (nx * (apexX - px) + ny * (apexY - py) < 0) { nx = -nx; ny = -ny; }
+        vd[(apex + 1 + rimCount + i) * 2] = px + nx * bandIn;
+        vd[(apex + 1 + rimCount + i) * 2 + 1] = py + ny * bandIn;
+        if (outer) {
+          vd[(apex + 1 + 2 * rimCount + i) * 2] = px - nx * bandOut;
+          vd[(apex + 1 + 2 * rimCount + i) * 2 + 1] = py - ny * bandOut;
+        }
       }
     }
     this.recData.fill(rec, apex, apex + vCount);
     this.lookData[apex] = 0;
     this.lookData.fill(1, apex + 1, apex + 1 + rimCount);
-    if (banded) this.lookData.fill(0, apex + 1 + rimCount, apex + vCount);
+    if (banded) this.lookData.fill(0, apex + 1 + rimCount, apex + 1 + 2 * rimCount);
+    if (outer) this.lookData.fill(2, apex + 1 + 2 * rimCount, apex + vCount);
     if (seal) {
       this.flankData.fill(3, apex, apex + vCount);
     } else if (flankFill !== undefined) {
@@ -858,6 +882,9 @@ export class TriFanMesh {
       for (let i = 0; i < rimCount; i++) this.flankData[apex + 1 + i] = flank[i] ?? 0;
       if (banded) {
         for (let i = 0; i < rimCount; i++) this.flankData[apex + 1 + rimCount + i] = flank[i] ?? 0;
+      }
+      if (outer) {
+        for (let i = 0; i < rimCount; i++) this.flankData[apex + 1 + 2 * rimCount + i] = flank[i] ?? 0;
       }
     } else {
       this.flankData.fill(2, apex, apex + vCount);
@@ -869,6 +896,7 @@ export class TriFanMesh {
     let n = this.iUsed;
     if (banded) {
       const inner = apex + 1 + rimCount;
+      const outerB = apex + 1 + 2 * rimCount;
       for (let i = 0; i < rimCount - 1; i++) {
         ix[n++] = apex;
         ix[n++] = inner + i;
@@ -879,6 +907,14 @@ export class TriFanMesh {
         ix[n++] = inner + i;
         ix[n++] = apex + 2 + i;
         ix[n++] = inner + i + 1;
+        if (outer) {
+          ix[n++] = apex + 1 + i;
+          ix[n++] = outerB + i;
+          ix[n++] = outerB + i + 1;
+          ix[n++] = apex + 1 + i;
+          ix[n++] = outerB + i + 1;
+          ix[n++] = apex + 2 + i;
+        }
       }
     } else {
       for (let i = 0; i < rimCount - 1; i++) {
