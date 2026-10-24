@@ -30,6 +30,21 @@ export interface TrefoilShape {
   // Cumulative arc length at each sample, plus the total (closed).
   cum: number[];
   total: number;
+  // K855: the under crossings with their geometry (arc position,
+  // point, both passes' headings) - the marker's partial clip needs
+  // the OVER pass's line, not just the under pass's arc window.
+  crossings: UnderCrossing[];
+}
+
+export interface UnderCrossing {
+  /** Arc position (world units) of the under pass. */
+  s: number;
+  /** The crossing point on the strand. */
+  point: Pt;
+  /** Heading (radians) of the pass that goes OVER here. */
+  overHeading: number;
+  /** Heading (radians) of the pass that dives under here. */
+  underHeading: number;
 }
 
 export const GAP_SAMPLES = 0.6; // world units of curve each side of an under crossing
@@ -82,15 +97,70 @@ export function trefoilShape(n = TREFOIL_N, gapSamples = GAP_SAMPLES): TrefoilSh
     cur.push(P[s]);
   }
   if (cur.length > 1) pieces.push(cur);
-  return { points: P, pieces, under, cum, total };
+  // K855: pair each under event with its over twin (same crossing id).
+  const pointAtParam = (u: number): Pt => {
+    const i = Math.floor(u) % n;
+    const f = u - Math.floor(u);
+    const a = P[i];
+    const b = P[(i + 1) % n];
+    return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+  };
+  const headingAtParam = (u: number): number => {
+    const i = Math.floor(u) % n;
+    const a = P[i];
+    const b = P[(i + 1) % n];
+    return Math.atan2(b[1] - a[1], b[0] - a[0]);
+  };
+  const arcAtParam = (u: number): number => {
+    const i = Math.floor(u) % n;
+    const f = u - Math.floor(u);
+    return cum[i] + (cum[i + 1] - cum[i]) * f;
+  };
+  const crossings: UnderCrossing[] = [];
+  events.forEach((e, k) => {
+    if (k % 2 !== 1) return;
+    const pair = events.find((o) => o.id === e.id && o !== e);
+    if (!pair) return;
+    crossings.push({
+      s: arcAtParam(e.s),
+      point: pointAtParam(e.s),
+      overHeading: headingAtParam(pair.s),
+      underHeading: headingAtParam(e.s),
+    });
+  });
+  return { points: P, pieces, under, cum, total, crossings };
+}
+
+// K855: the under crossing nearest arc position `s` (world units),
+// with the signed wrap-aware distance to it (negative = behind).
+export function nearestUnderCrossing(
+  shape: TrefoilShape,
+  s: number
+): { crossing: UnderCrossing; dist: number } | null {
+  if (shape.crossings.length === 0 || shape.total <= 0) return null;
+  let x = s % shape.total;
+  if (x < 0) x += shape.total;
+  let best: UnderCrossing | null = null;
+  let bestDist = 0;
+  for (const c of shape.crossings) {
+    let d = (x - c.s) % shape.total;
+    if (d > shape.total / 2) d -= shape.total;
+    if (d < -shape.total / 2) d += shape.total;
+    if (best === null || Math.abs(d) < Math.abs(bestDist)) {
+      best = c;
+      bestDist = d;
+    }
+  }
+  return best ? { crossing: best, dist: bestDist } : null;
 }
 
 // K851: is arc position `s` (world units along the strand) inside an
 // under crossing's gap window, extended by `margin` (the head
 // glyph's world radius, so the indicator dives BEFORE its edge
 // reaches the thread it passes under - the same margin the strand's
-// own gap gives it)? The worker hides the head glyph while this
-// holds, in both loading-motion modes.
+// own gap gives it)? The worker's K851/K852 dive hid the head glyph
+// while this held; K855 supersedes it with the partial band clip
+// (nearestUnderCrossing), and this stays as the pure window test.
 export function underGapAt(
   shape: TrefoilShape,
   s: number,

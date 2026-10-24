@@ -7,7 +7,7 @@
 // still while the head travels the strand (move "head"); speed, gap,
 // thread width and the thread/background colors ride along.
 
-import { arcSpan, headingDelta, pointAtArc, rotationForCentroidAbove, rotationForHeadBelowCentroid, shapeCentroid, trefoilShape, underGapAt, type TrefoilShape } from "./loader_geometry";
+import { arcSpan, headingDelta, nearestUnderCrossing, pointAtArc, rotationForCentroidAbove, rotationForHeadBelowCentroid, shapeCentroid, trefoilShape, type TrefoilShape } from "./loader_geometry";
 import { LOADER_CFG_DEFAULTS, type LoaderWireCfg } from "../ui/loader_config";
 
 const CASING = "#070a10";
@@ -124,6 +124,74 @@ function strokeSpanClipped(c: OffscreenCanvasRenderingContext2D, from: number, t
   for (const [a, b] of spans) {
     if (b - a > 1e-6) strokeSpan(c, a, b);
   }
+}
+
+// K855: the clip band at an under crossing, in the current
+// transform's units: the strip along the OVER pass's line through the
+// crossing point, wide as the over thread's casing plus the gap's
+// reach (gapSamples projected on the crossing angle: the under
+// strand's gap ends, projected perpendicular to the over pass). The
+// marker is clipped ONLY where it overlaps this band (Levi: the rest
+// keeps rendering) - K851's whole-glyph dive became this.
+interface ClipBand {
+  cx: number;
+  cy: number;
+  dx: number;
+  dy: number;
+  halfW: number;
+  len: number;
+}
+
+function clipBandFor(
+  point: readonly [number, number],
+  overHeading: number,
+  underHeading: number
+): ClipBand {
+  const sinPhi = Math.abs(Math.sin(overHeading - underHeading));
+  const halfW = cfg.casingW / 2 + cfg.gapSamples * sinPhi;
+  return {
+    cx: point[0],
+    cy: point[1],
+    dx: Math.cos(overHeading),
+    dy: Math.sin(overHeading),
+    halfW,
+    len: 0, // set by the caller (marker size dependent)
+  };
+}
+
+// Draw the head glyph with `band` (if any) cut out of it: an even-odd
+// clip of everything minus the band polygon, in current units.
+function headGlyphClipped(
+  c: OffscreenCanvasRenderingContext2D,
+  x: number,
+  y: number,
+  r: number,
+  band: ClipBand | null
+): void {
+  if (!band) {
+    headGlyph(c, x, y, r);
+    return;
+  }
+  const px = -band.dy;
+  const py = band.dx;
+  const { cx, cy, dx, dy, halfW, len } = band;
+  c.save();
+  c.beginPath();
+  c.rect(-10000, -10000, 20000, 20000);
+  c.moveTo(cx - dx * len - px * halfW, cy - dy * len - py * halfW);
+  c.lineTo(cx + dx * len - px * halfW, cy + dy * len - py * halfW);
+  c.lineTo(cx + dx * len + px * halfW, cy + dy * len + py * halfW);
+  c.lineTo(cx - dx * len + px * halfW, cy - dy * len + py * halfW);
+  c.closePath();
+  c.clip("evenodd");
+  headGlyph(c, x, y, r);
+  c.restore();
+}
+
+// How close (along the strand) a crossing's band can touch the
+// marker: the gap window plus the marker's diameter plus the casing.
+function bandReach(rWorld: number): number {
+  return cfg.gapSamples + rWorld * 2 + cfg.casingW;
 }
 
 // The head glyph (the game's start marker: a dark disc, a white ring, a
@@ -245,21 +313,36 @@ function drawMovingMode(c: OffscreenCanvasRenderingContext2D, mode: "maze" | "ab
   }
   c.globalAlpha = 1;
   c.restore();
-  // K851: the head dives at under crossings (hidden while inside the
-  // gap window extended by its own world radius: 0.045 of the view /
-  // (min/11 px per world), plus the ring's outer stroke). K852: the
-  // radius scales with the marker param.
+  // K851->K855: the marker passes under crossings. K852: its radius
+  // scales with the marker param. K853: in spin mode the marker is
+  // not at the center - it sits on the vertical line below the
+  // anchored centroid, at the head's distance from the centroid.
   const headR = Math.min(w, h) * 0.045 * cfg.marker;
-  // K853: in spin mode the marker is not at the center - it sits on
-  // the vertical line below the anchored centroid, at the head's
-  // distance from the centroid.
   const glyphY =
     mode === "spin"
       ? h / 2 + Math.hypot(head.p[0] - anchor[0], head.p[1] - anchor[1]) * scale
       : h / 2;
-  if (!underGapAt(shape, sPos, (headR / scale) * 1.16, cfg.gapSamples)) {
-    headGlyph(c, w / 2, glyphY, headR);
+  // K855: only the part of the marker overlapping the over thread
+  // (+ its gap) is clipped; the band is placed in device pixels from
+  // the crossing point's offset from the head, rotated with the knot.
+  let band: ClipBand | null = null;
+  const near = nearestUnderCrossing(shape, sPos);
+  if (near && Math.abs(near.dist) <= bandReach(headR / scale)) {
+    const b = clipBandFor(near.crossing.point, near.crossing.overHeading, near.crossing.underHeading);
+    const vx = b.cx - head.p[0];
+    const vy = b.cy - head.p[1];
+    const cr = Math.cos(rotation);
+    const sr = Math.sin(rotation);
+    band = {
+      cx: w / 2 + (vx * cr - vy * sr) * scale,
+      cy: glyphY + (vx * sr + vy * cr) * scale,
+      dx: b.dx * cr - b.dy * sr,
+      dy: b.dx * sr + b.dy * cr,
+      halfW: b.halfW * scale,
+      len: headR * 2 + b.halfW * scale,
+    };
   }
+  headGlyphClipped(c, w / 2, glyphY, headR, band);
 }
 
 function drawHeadMode(c: OffscreenCanvasRenderingContext2D): void {
@@ -301,12 +384,18 @@ function drawHeadMode(c: OffscreenCanvasRenderingContext2D): void {
     strokeSpanClipped(c, a0, a1);
   }
   c.globalAlpha = 1;
-  // K851: as in the moving modes, the travelling head dives at under
-  // crossings. K852: the radius scales with the marker param.
+  // K855: as in the moving modes, only the overlap with the over
+  // thread (+ gap) is clipped - here in world units (the glyph is
+  // drawn inside the knot's transform). K852: the radius scales
+  // with the marker param.
   const headR = (Math.min(w, h) * 0.045 * cfg.marker) / scale;
-  if (!underGapAt(shape, sPos, headR * 1.16, cfg.gapSamples)) {
-    headGlyph(c, head.p[0], head.p[1], headR);
+  let band: ClipBand | null = null;
+  const near = nearestUnderCrossing(shape, sPos);
+  if (near && Math.abs(near.dist) <= bandReach(headR)) {
+    band = clipBandFor(near.crossing.point, near.crossing.overHeading, near.crossing.underHeading);
+    band.len = headR * 2 + band.halfW;
   }
+  headGlyphClipped(c, head.p[0], head.p[1], headR, band);
   c.restore();
 }
 
