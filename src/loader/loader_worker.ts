@@ -7,7 +7,7 @@
 // still while the head travels the strand (move "head"); speed, gap,
 // thread width and the thread/background colors ride along.
 
-import { arcSpan, headingDelta, pointAtArc, trefoilShape, type TrefoilShape } from "./loader_geometry";
+import { arcSpan, headingDelta, pointAtArc, trefoilShape, underGapAt, type TrefoilShape } from "./loader_geometry";
 import { LOADER_CFG_DEFAULTS, type LoaderWireCfg } from "../ui/loader_config";
 
 const CASING = "#070a10";
@@ -166,7 +166,12 @@ function drawMazeMode(c: OffscreenCanvasRenderingContext2D): void {
   }
   c.globalAlpha = 1;
   c.restore();
-  headGlyph(c, w / 2, h / 2, Math.min(w, h) * 0.045);
+  // K851: the head dives at under crossings (hidden while inside the
+  // gap window extended by its own world radius: 0.045 of the view /
+  // (min/11 px per world), plus the ring's outer stroke).
+  if (!underGapAt(shape, sPos, 0.045 * 11 * 1.16, cfg.gapSamples)) {
+    headGlyph(c, w / 2, h / 2, Math.min(w, h) * 0.045);
+  }
 }
 
 function drawHeadMode(c: OffscreenCanvasRenderingContext2D): void {
@@ -210,7 +215,11 @@ function drawHeadMode(c: OffscreenCanvasRenderingContext2D): void {
     strokeSpanClipped(c, a0, a1);
   }
   c.globalAlpha = 1;
-  headGlyph(c, head.p[0], head.p[1], (Math.min(w, h) * 0.045) / scale);
+  // K851: as in maze mode, the travelling head dives at under crossings.
+  const headR = (Math.min(w, h) * 0.045) / scale;
+  if (!underGapAt(shape, sPos, headR * 1.16, cfg.gapSamples)) {
+    headGlyph(c, head.p[0], head.p[1], headR);
+  }
   c.restore();
 }
 

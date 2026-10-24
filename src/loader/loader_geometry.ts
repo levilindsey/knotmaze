@@ -85,6 +85,33 @@ export function trefoilShape(n = TREFOIL_N, gapSamples = GAP_SAMPLES): TrefoilSh
   return { points: P, pieces, under, cum, total };
 }
 
+// K851: is arc position `s` (world units along the strand) inside an
+// under crossing's gap window, extended by `margin` (the head
+// glyph's world radius, so the indicator dives BEFORE its edge
+// reaches the thread it passes under - the same margin the strand's
+// own gap gives it)? The worker hides the head glyph while this
+// holds, in both loading-motion modes.
+export function underGapAt(
+  shape: TrefoilShape,
+  s: number,
+  margin: number,
+  gapSamples: number = GAP_SAMPLES
+): boolean {
+  const n = shape.points.length;
+  if (n === 0 || shape.total <= 0) return false;
+  let x = s % shape.total;
+  if (x < 0) x += shape.total;
+  for (const u of shape.under) {
+    const i = Math.floor(u) % n;
+    const f = u - Math.floor(u);
+    const base = shape.cum[i] + (shape.cum[i + 1] - shape.cum[i]) * f;
+    let d = Math.abs(x - base) % shape.total;
+    if (d > shape.total / 2) d = shape.total - d;
+    if (d < gapSamples + margin) return true;
+  }
+  return false;
+}
+
 // K841: one frame's turn of a raw atan2 heading, unwrapped: the
 // shortest signed step from `prev` to `raw` (in [-pi, pi]). The
 // trefoil's heading winds twice per lap, so it crosses the atan2

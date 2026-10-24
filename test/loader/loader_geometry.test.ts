@@ -2,10 +2,12 @@
 import { describe, expect, it } from "vitest";
 import {
   arcSpan,
+  GAP_SAMPLES,
   headingDelta,
   pointAtArc,
   trefoilShape,
   trefoilSvgPaths,
+  underGapAt,
 } from "../../src/loader/loader_geometry";
 import { MOTION_KEY } from "../../src/ui/motion";
 
@@ -92,6 +94,27 @@ describe("K313 loader geometry", () => {
     expect(drawn(trefoilShape(240, 0))).toBe(241);
     // The crossings do not move with the gap.
     expect(trefoilShape(240, 1.8).under).toEqual(shape.under);
+  });
+
+  it("K851: the head's dive window is the strand's gap, widened by its radius", () => {
+    // Arc position of the first under crossing.
+    const u = shape.under[0];
+    const i = Math.floor(u);
+    const base = shape.cum[i] + (shape.cum[i + 1] - shape.cum[i]) * (u - i);
+    // At the crossing and anywhere inside the strand's own gap: hidden.
+    expect(underGapAt(shape, base, 0)).toBe(true);
+    expect(underGapAt(shape, base - GAP_SAMPLES / 2, 0)).toBe(true);
+    // Just past the gap: visible again with no margin...
+    expect(underGapAt(shape, base + GAP_SAMPLES + 0.1, 0)).toBe(false);
+    // ...but the glyph's radius pulls the dive earlier (it clips
+    // before its edge reaches the over thread).
+    expect(underGapAt(shape, base + GAP_SAMPLES + 0.1, 0.5)).toBe(true);
+    // Halfway between crossings the head rides on top.
+    const mid = base + shape.total / 6;
+    expect(underGapAt(shape, mid, 0.5)).toBe(false);
+    // The window wraps the lap seam like the strand does.
+    expect(underGapAt(shape, base + shape.total, 0)).toBe(true);
+    expect(underGapAt(shape, base - shape.total, 0)).toBe(true);
   });
 
   it("the boot script's storage key is motion.ts's", () => {
