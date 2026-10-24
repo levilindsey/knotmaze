@@ -7,12 +7,11 @@
 // still while the head travels the strand (move "head"); speed, gap,
 // thread width and the thread/background colors ride along.
 
-import { arcSpan, headingDelta, pointAtArc, trefoilShape, underGapAt, type TrefoilShape } from "./loader_geometry";
+import { arcSpan, headingDelta, pointAtArc, rotationForCentroidAbove, trefoilShape, underGapAt, type TrefoilShape } from "./loader_geometry";
 import { LOADER_CFG_DEFAULTS, type LoaderWireCfg } from "../ui/loader_config";
 
 const CASING = "#070a10";
 const LAP_MS = 14000;
-const TRAIL_LEN = 2.6; // world units of fixed-length trail behind the head
 const FOLLOW = 0.5; // share of the heading the camera follows
 
 let cfg: LoaderWireCfg = { ...LOADER_CFG_DEFAULTS };
@@ -30,6 +29,10 @@ let smoothRot = 0;
 // heading wraps twice a lap; see loader_geometry's headingDelta).
 let lastHeading: number | null = null;
 let headingCont = 0;
+// K852 ("above" motion): the centroid-above rotation, accumulated
+// continuously the same way (the raw target wraps as the head laps).
+let lastAboveRaw: number | null = null;
+let aboveCont = 0;
 
 // The trail's lighter tint of the thread color (today: #e7c56f ->
 // #ffe9a8's family; here the configured gold mixed toward white).
@@ -52,6 +55,26 @@ function strokePieces(c: OffscreenCanvasRenderingContext2D, alpha: number): void
     c.stroke();
   }
   c.globalAlpha = 1;
+}
+
+// K852: the strand in the configured fill mode. "solid" is today's
+// drawing (dark casing, then the thread); "outline" hollows the thread
+// (casing, then background at half width - a rim only); "flat" is the
+// bare thread with no casing.
+function strandPieces(c: OffscreenCanvasRenderingContext2D, alpha: number): void {
+  if (cfg.fill !== "flat") {
+    c.lineWidth = cfg.casingW;
+    c.strokeStyle = CASING;
+    strokePieces(c, alpha);
+  }
+  if (cfg.fill === "outline") {
+    c.lineWidth = Math.max(0.05, cfg.threadW * 0.55);
+    c.strokeStyle = cfg.bg;
+  } else {
+    c.lineWidth = cfg.threadW;
+    c.strokeStyle = cfg.thread;
+  }
+  strokePieces(c, alpha);
 }
 
 function strokeSpan(c: OffscreenCanvasRenderingContext2D, from: number, to: number): void {
@@ -116,51 +139,76 @@ function headGlyph(c: OffscreenCanvasRenderingContext2D, x: number, y: number, r
   c.fill();
 }
 
-function drawMazeMode(c: OffscreenCanvasRenderingContext2D): void {
+// The two moving-thread motions share everything but the rotation:
+// "maze" (K828) follows half the head's heading; "above" (K852) turns
+// the knot so its centroid stays directly above the centered marker.
+function drawMovingMode(c: OffscreenCanvasRenderingContext2D, above: boolean): void {
   const head = pointAtArc(shape, sPos);
-  // K841: follow a CONTINUOUS heading. The old code unwrapped the
-  // halved heading by whole turns, but the halved value's period is
-  // half a turn (the heading wraps twice a lap), so at each wrap the
-  // follower could take the long way and the knot visibly rotated
-  // back the wrong way. Accumulate the heading's own steps instead.
-  if (lastHeading === null) {
-    lastHeading = head.heading;
-    headingCont = head.heading;
+  let rotation: number;
+  if (above) {
+    // K852: the exact centroid-above angle each frame (no following
+    // lag - "always above" is the mode's contract), accumulated
+    // continuously so the wrap never spins the knot backwards.
+    const raw = rotationForCentroidAbove(shape, head.p);
+    if (raw !== null) {
+      if (lastAboveRaw === null) {
+        aboveCont = raw;
+      } else {
+        aboveCont += headingDelta(lastAboveRaw, raw);
+      }
+      lastAboveRaw = raw;
+    }
+    rotation = aboveCont;
+    // Keep the angle near zero (a 2-pi shift leaves it unchanged).
+    while (rotation > Math.PI * 2) {
+      aboveCont -= Math.PI * 2;
+      rotation -= Math.PI * 2;
+    }
+    while (rotation < -Math.PI * 2) {
+      aboveCont += Math.PI * 2;
+      rotation += Math.PI * 2;
+    }
   } else {
-    headingCont += headingDelta(lastHeading, head.heading);
-    lastHeading = head.heading;
-  }
-  const target = -headingCont * FOLLOW;
-  smoothRot += (target - smoothRot) * 0.08;
-  // Keep both angles near zero (a 2-pi shift of each, which leaves
-  // the drawn rotation unchanged: the target is the halved heading).
-  if (smoothRot > Math.PI * 2) {
-    smoothRot -= Math.PI * 2;
-    headingCont += Math.PI * 4;
-  } else if (smoothRot < -Math.PI * 2) {
-    smoothRot += Math.PI * 2;
-    headingCont -= Math.PI * 4;
+    // K841: follow a CONTINUOUS heading. The old code unwrapped the
+    // halved heading by whole turns, but the halved value's period is
+    // half a turn (the heading wraps twice a lap), so at each wrap the
+    // follower could take the long way and the knot visibly rotated
+    // back the wrong way. Accumulate the heading's own steps instead.
+    if (lastHeading === null) {
+      lastHeading = head.heading;
+      headingCont = head.heading;
+    } else {
+      headingCont += headingDelta(lastHeading, head.heading);
+      lastHeading = head.heading;
+    }
+    const target = -headingCont * FOLLOW;
+    smoothRot += (target - smoothRot) * 0.08;
+    // Keep both angles near zero (a 2-pi shift of each, which leaves
+    // the drawn rotation unchanged: the target is the halved heading).
+    if (smoothRot > Math.PI * 2) {
+      smoothRot -= Math.PI * 2;
+      headingCont += Math.PI * 4;
+    } else if (smoothRot < -Math.PI * 2) {
+      smoothRot += Math.PI * 2;
+      headingCont -= Math.PI * 4;
+    }
+    rotation = smoothRot;
   }
 
   const scale = Math.min(w, h) / 11;
   c.save();
   c.translate(w / 2, h / 2);
   c.scale(scale, scale);
-  c.rotate(smoothRot);
+  c.rotate(rotation);
   c.translate(-head.p[0], -head.p[1]);
-  c.lineWidth = cfg.casingW;
-  c.strokeStyle = CASING;
-  strokePieces(c, 1);
-  c.lineWidth = cfg.threadW;
-  c.strokeStyle = cfg.thread;
-  strokePieces(c, 1);
+  strandPieces(c, 1);
   // The fixed-length trail: ten spans fading toward the tail.
   const SEGMENTS = 10;
   c.strokeStyle = tint(cfg.thread, 0.45);
   c.lineWidth = cfg.threadW;
   for (let k = 0; k < SEGMENTS; k++) {
-    const a0 = sPos - (TRAIL_LEN * (k + 1)) / SEGMENTS;
-    const a1 = sPos - (TRAIL_LEN * k) / SEGMENTS;
+    const a0 = sPos - (cfg.trail * (k + 1)) / SEGMENTS;
+    const a1 = sPos - (cfg.trail * k) / SEGMENTS;
     c.globalAlpha = 0.25 + 0.75 * (1 - k / SEGMENTS);
     strokeSpanClipped(c, a0, a1);
   }
@@ -168,9 +216,11 @@ function drawMazeMode(c: OffscreenCanvasRenderingContext2D): void {
   c.restore();
   // K851: the head dives at under crossings (hidden while inside the
   // gap window extended by its own world radius: 0.045 of the view /
-  // (min/11 px per world), plus the ring's outer stroke).
-  if (!underGapAt(shape, sPos, 0.045 * 11 * 1.16, cfg.gapSamples)) {
-    headGlyph(c, w / 2, h / 2, Math.min(w, h) * 0.045);
+  // (min/11 px per world), plus the ring's outer stroke). K852: the
+  // radius scales with the marker param.
+  const headR = Math.min(w, h) * 0.045 * cfg.marker;
+  if (!underGapAt(shape, sPos, (headR / scale) * 1.16, cfg.gapSamples)) {
+    headGlyph(c, w / 2, h / 2, headR);
   }
 }
 
@@ -197,26 +247,25 @@ function drawHeadMode(c: OffscreenCanvasRenderingContext2D): void {
   c.translate(w / 2, h / 2);
   c.scale(scale, scale);
   c.translate(-cx, -cy);
-  c.lineWidth = cfg.casingW;
-  c.strokeStyle = CASING;
-  strokePieces(c, 1);
-  // The untraveled knot dim, then the traveled strand at full color.
+  // The untraveled knot dim (K852: in the configured fill mode), then
+  // the traveled strand at full color.
+  strandPieces(c, 0.38);
   c.lineWidth = cfg.threadW;
   c.strokeStyle = cfg.thread;
-  strokePieces(c, 0.38);
   strokeSpanClipped(c, 0, sPos);
-  // The fading trail at the head, as in maze mode.
+  // The fading trail at the head, as in the moving modes.
   const SEGMENTS = 10;
   c.strokeStyle = tint(cfg.thread, 0.45);
   for (let k = 0; k < SEGMENTS; k++) {
-    const a0 = sPos - (TRAIL_LEN * (k + 1)) / SEGMENTS;
-    const a1 = sPos - (TRAIL_LEN * k) / SEGMENTS;
+    const a0 = sPos - (cfg.trail * (k + 1)) / SEGMENTS;
+    const a1 = sPos - (cfg.trail * k) / SEGMENTS;
     c.globalAlpha = 0.25 + 0.75 * (1 - k / SEGMENTS);
     strokeSpanClipped(c, a0, a1);
   }
   c.globalAlpha = 1;
-  // K851: as in maze mode, the travelling head dives at under crossings.
-  const headR = (Math.min(w, h) * 0.045) / scale;
+  // K851: as in the moving modes, the travelling head dives at under
+  // crossings. K852: the radius scales with the marker param.
+  const headR = (Math.min(w, h) * 0.045 * cfg.marker) / scale;
   if (!underGapAt(shape, sPos, headR * 1.16, cfg.gapSamples)) {
     headGlyph(c, head.p[0], head.p[1], headR);
   }
@@ -236,7 +285,7 @@ function draw(now: number): void {
   c.lineCap = "round";
   c.lineJoin = "round";
   if (cfg.move === "head") drawHeadMode(c);
-  else drawMazeMode(c);
+  else drawMovingMode(c, cfg.move === "above");
 }
 
 function frame(now: number): void {
@@ -277,6 +326,8 @@ self.onmessage = (e: MessageEvent) => {
     smoothRot = 0;
     lastHeading = null;
     headingCont = 0;
+    lastAboveRaw = null;
+    aboveCont = 0;
     frame(performance.now());
     (self as unknown as { postMessage: (m: unknown) => void }).postMessage({ type: "frame1" });
   } else if (d.type === "config" && d.cfg) {

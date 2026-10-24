@@ -433,12 +433,20 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("goldTextureStrength"),
   // 242-243, K828: the loading trefoil's speed and motion.
   num("loaderSpeed"),
-  choice("loaderMove", ["maze", "head"]),
+  choice("loaderMove", ["maze", "head", "above"]), // K852
   // 244, K830: the rounded share of junction wedges.
   num("cornerRoundShare"),
   num("pathIrregularity"), // K835
   num("pathExcursion"), // K835
   flag("showShortestPath"), // K839
+  // K852: the loader's own look (own params; defaults mirror today).
+  num("loaderGap"),
+  num("loaderThreadWidth"),
+  color("loaderThreadColor"),
+  color("loaderBgColor"),
+  num("loaderIndicatorSize"),
+  choice("loaderFill", ["solid", "outline", "flat"]),
+  num("loaderTrail"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -562,6 +570,10 @@ export const PARAM_RANGES: Readonly<
   borderWidth: [0, 1], // K820
   goldTextureStrength: [0, 1], // K820
   loaderSpeed: [0.25, 3], // K828
+  loaderGap: [0, 1.5], // K852
+  loaderThreadWidth: [0.1, 0.8], // K852
+  loaderIndicatorSize: [0.3, 3], // K852
+  loaderTrail: [0, 6], // K852
   cornerRoundShare: [0, 1], // K830
   pathIrregularity: [0, 1], // K835
   pathExcursion: [0, 1], // K835

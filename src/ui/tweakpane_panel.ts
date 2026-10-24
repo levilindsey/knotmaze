@@ -773,14 +773,18 @@ export function buildPanel(
   // One adjustable row: tooltip + reset glyph + modified tint. `after`
   // runs on every change AND after a glyph reset (the forwarded ev lets
   // regenerate rows keep their drag-end suppression).
-  // K828: design params the loading trefoil also wears (ui/loader_config).
+  // K828/K852: the loader's own params (ui/loader_config) - since K852
+  // they are separate from the maze's gap/threadWidth/colors.
   const LOADER_DRIVING_KEYS = new Set([
-    "gap",
-    "threadWidth",
-    "pathColor",
-    "backgroundBase",
     "loaderSpeed",
     "loaderMove",
+    "loaderGap",
+    "loaderThreadWidth",
+    "loaderThreadColor",
+    "loaderBgColor",
+    "loaderIndicatorSize",
+    "loaderFill",
+    "loaderTrail",
   ]);
   const row = (
     parent: Parent,
@@ -2775,10 +2779,10 @@ export function buildPanel(
     "How fast the flow undulation drifts. Applies live.",
     D.flowSpeed, () => callbacks.onSlackChange()
   );
-  // K828: the loading trefoil (the knot drawn while the page loads). It
-  // wears the design's gap, thread width, traveled-path color and
-  // background color; these rows are its own. Tick Keep loading
-  // animation to hold it on screen while you tune them.
+  // K828: the loading trefoil (the knot drawn while the page loads).
+  // K852: every row here is the loader's own - gap, thread size, colors,
+  // marker and trail no longer borrow the maze's look params. Tick Keep
+  // loading animation to hold it on screen while you tune them.
   const fLoading = folder("Loading", false, fMotion);
   row(
     fLoading, p, "loaderSpeed", { min: 0.25, max: 3, step: 0.05, label: "Loading speed" },
@@ -2787,13 +2791,52 @@ export function buildPanel(
   );
   row(
     fLoading, p, "loaderMove",
-    { options: { "maze slides by": "maze", "player travels": "head" }, label: "Loading motion" },
-    "What moves in the loading animation: the maze slides and turns under the player marker held at the center (today's), or the maze holds still and the player marker travels the strand. Applies live while the loader is on screen.",
+    {
+      options: { "maze slides by": "maze", "player travels": "head", "centroid stays above": "above" },
+      label: "Loading motion",
+    },
+    "What moves in the loading animation: the maze slides and turns under the player marker held at the center (today's); the maze holds still and the player marker travels the strand; or (centroid) the maze slides and turns so the knot's center always stays directly above the player marker. Applies live while the loader is on screen.",
     D.loaderMove, () => callbacks.onLoaderCfg()
   );
   row(
+    fLoading, p, "loaderGap", { min: 0, max: 1.5, step: 0.05, label: "Loading gap" },
+    "How much curve is cut from the loading knot either side of a crossing it passes under (the gap the marker also dives into). 0 = no gaps. The loader's own - the maze's gap row does not touch it. Applies live.",
+    D.loaderGap, () => callbacks.onLoaderCfg()
+  );
+  row(
+    fLoading, p, "loaderThreadWidth", { min: 0.1, max: 0.8, step: 0.01, label: "Loading thread size" },
+    "The loading knot's stroke width. The loader's own - the maze's thread width row does not touch it. Applies live.",
+    D.loaderThreadWidth, () => callbacks.onLoaderCfg()
+  );
+  row(
+    fLoading, p, "loaderThreadColor", { view: "color", label: "Loading thread color" },
+    "The loading knot's thread color (and its trailing glow, which is a lighter tint of it). Applies live.",
+    D.loaderThreadColor, () => callbacks.onLoaderCfg()
+  );
+  row(
+    fLoading, p, "loaderBgColor", { view: "color", label: "Loading background" },
+    "The color behind the loading knot. Applies live.",
+    D.loaderBgColor, () => callbacks.onLoaderCfg()
+  );
+  row(
+    fLoading, p, "loaderIndicatorSize", { min: 0.3, max: 3, step: 0.05, label: "Loading marker size" },
+    "The player marker's size on the loading knot (1 = today). It dives under crossings earlier as it grows: the dive honors the gap by the marker's own radius. Applies live.",
+    D.loaderIndicatorSize, () => callbacks.onLoaderCfg()
+  );
+  row(
+    fLoading, p, "loaderFill",
+    { options: { solid: "solid", outline: "outline", flat: "flat" }, label: "Loading fill" },
+    "How the loading knot is drawn: solid = dark casing with the thread over it (today's); outline = just the thread's rim; flat = the bare thread, no casing. Applies live.",
+    D.loaderFill, () => callbacks.onLoaderCfg()
+  );
+  row(
+    fLoading, p, "loaderTrail", { min: 0, max: 6, step: 0.1, label: "Loading trail" },
+    "How much glowing trail follows the marker along the loading knot (0 = none). Applies live.",
+    D.loaderTrail, () => callbacks.onLoaderCfg()
+  );
+  row(
     fLoading, s, "loaderStays", { label: "Keep loading animation" },
-    "Keep the loading trefoil on screen after the maze has loaded, as a live preview while you tune the rows above (and the gap, thread width, path color and background color it wears). It covers the maze while it is up; the settings panel stays available over it, and a page refresh puts it away and forgets the switch - the way out if it ever traps you. Remembered per browser until a refresh, never in a link.",
+    "Keep the loading trefoil on screen after the maze has loaded, as a live preview while you tune the rows above. It covers the maze while it is up; the settings panel stays available over it, and a page refresh puts it away and forgets the switch - the way out if it ever traps you. Remembered per browser until a refresh, never in a link.",
     SETTINGS_DEFAULTS.loaderStays,
     () => callbacks.onLoaderStaysToggle(settings.loaderStays === true)
   );

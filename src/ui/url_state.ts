@@ -116,8 +116,13 @@ export type ThreadLook = "fill" | "border" | "both";
 export const THREAD_LOOKS: ThreadLook[] = ["fill", "border", "both"];
 // K828: the loading trefoil's motion (ui/loader_config.ts): the maze
 // slides under a centered player, or the player travels a still maze.
-export type LoaderMove = "maze" | "head";
-export const LOADER_MOVES: LoaderMove[] = ["maze", "head"];
+// K852: "above" joins the two: the threads still move around the
+// marker, but the knot turns so its centroid stays directly above it.
+export type LoaderMove = "maze" | "head" | "above";
+export const LOADER_MOVES: LoaderMove[] = ["maze", "head", "above"];
+// K852: how the loader's strand is drawn (src/loader/loader_worker.ts).
+export type LoaderFill = "solid" | "outline" | "flat";
+export const LOADER_FILLS: LoaderFill[] = ["solid", "outline", "flat"];
 // K799: the traveled path's fill texture.
 export type GoldTexture = "solid" | "pencil" | "crayon" | "highlighter";
 export const GOLD_TEXTURES: GoldTexture[] = ["solid", "pencil", "crayon", "highlighter"];
@@ -486,6 +491,14 @@ export interface UrlParams extends ShapeInjectionParams {
   // maps these plus gap/threadWidth/pathColor/backgroundBase onto it).
   loaderSpeed: number;
   loaderMove: LoaderMove;
+  // K852: the loader's own look, separate from the maze's params.
+  loaderGap: number;
+  loaderThreadWidth: number;
+  loaderThreadColor: string;
+  loaderBgColor: string;
+  loaderIndicatorSize: number;
+  loaderFill: LoaderFill;
+  loaderTrail: number;
   // K830: share of junction wedges drawn rounded (0 all sharp, 1 all rounded).
   cornerRoundShare: number;
   // K835: how loosely the drawn route follows the thread (0 = exactly on
@@ -1303,6 +1316,13 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   pathIrregularity: 0.4, // K835 (today's string; the fills as drawn)
   pathExcursion: 0, // K835 (the route stays within the thread)
   showShortestPath: false, // K839
+  loaderGap: 0.6, // K852 (today's loader gap, world units)
+  loaderThreadWidth: 0.42, // K852 (today's loader stroke)
+  loaderThreadColor: "#eccc41", // K852
+  loaderBgColor: "#151b28", // K852
+  loaderIndicatorSize: 1, // K852
+  loaderFill: "solid", // K852
+  loaderTrail: 2.6, // K852 (today's trail, world units)
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1553,6 +1573,7 @@ export const ENUM_OPTIONS: {
   pathViz: PATH_VIZ_MODES,
   threadLook: THREAD_LOOKS, // K797b
   loaderMove: LOADER_MOVES, // K828
+  loaderFill: LOADER_FILLS, // K852
   goldTexture: GOLD_TEXTURES, // K799
   cameraMode: CAMERA_MODES,
   exitFlank: EXIT_FLANKS,
@@ -1874,6 +1895,13 @@ function readLegacy(
     pathIrregularity: readNumber(query, "pir", D.pathIrregularity), // K835
     pathExcursion: readNumber(query, "pex", D.pathExcursion), // K835
     showShortestPath: readBool(query, "ssp", D.showShortestPath), // K839
+    loaderGap: readNumber(query, "lgp", D.loaderGap), // K852
+    loaderThreadWidth: readNumber(query, "ltw", D.loaderThreadWidth),
+    loaderThreadColor: readHexColor(query, "ltc", D.loaderThreadColor),
+    loaderBgColor: readHexColor(query, "lbg", D.loaderBgColor),
+    loaderIndicatorSize: readNumber(query, "lis", D.loaderIndicatorSize),
+    loaderFill: readChoice(query, "lfl", LOADER_FILLS, D.loaderFill),
+    loaderTrail: readNumber(query, "ltr", D.loaderTrail),
     cameraMode: readChoice(query, "cam", CAMERA_MODES, D.cameraMode),
     trailLength: readNumber(query, "trl", D.trailLength),
     tension: readNumber(query, "tn", D.tension),
