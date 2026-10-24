@@ -4,6 +4,7 @@ import {
   arcSpan,
   GAP_SAMPLES,
   headingDelta,
+  nearestUnderCrossing,
   pointAtArc,
   rotationForCentroidAbove,
   rotationForHeadBelowCentroid,
@@ -171,6 +172,41 @@ describe("K313 loader geometry", () => {
     const a = rotationForCentroidAbove(shape, head)!;
     const b = rotationForHeadBelowCentroid(shape, head)!;
     expect(Math.abs(headingDelta(a, b))).toBeLessThan(1e-9);
+  });
+
+  it("K855: crossings carry the over pass's line for the partial clip", () => {
+    expect(shape.crossings).toHaveLength(3);
+    for (const cr of shape.crossings) {
+      // The crossing point is the strand point at its arc position.
+      const onStrand = pointAtArc(shape, cr.s).p;
+      expect(Math.abs(onStrand[0] - cr.point[0])).toBeLessThan(1e-9);
+      expect(Math.abs(onStrand[1] - cr.point[1])).toBeLessThan(1e-9);
+      // The two passes really cross (not parallel): the clip band is
+      // meaningless otherwise.
+      expect(Math.abs(Math.sin(cr.overHeading - cr.underHeading))).toBeGreaterThan(0.3);
+      // Inside the strand's own gap window at the crossing itself.
+      expect(underGapAt(shape, cr.s, 0)).toBe(true);
+    }
+    // Crossing arc positions increase along the strand.
+    const ss = shape.crossings.map((cr) => cr.s);
+    expect([...ss].sort((x, y) => x - y)).toEqual(ss);
+  });
+
+  it("K855: nearestUnderCrossing measures signed wrap-aware distance", () => {
+    const c0 = shape.crossings[0];
+    const at = nearestUnderCrossing(shape, c0.s)!;
+    expect(at.crossing).toBe(c0);
+    expect(Math.abs(at.dist)).toBeLessThan(1e-9);
+    expect(nearestUnderCrossing(shape, c0.s + 0.3)!.dist).toBeCloseTo(0.3, 9);
+    expect(nearestUnderCrossing(shape, c0.s - 0.3)!.dist).toBeCloseTo(-0.3, 9);
+    // Across the lap seam the distance still measures the short way.
+    expect(Math.abs(nearestUnderCrossing(shape, c0.s + shape.total)!.dist)).toBeLessThan(1e-9);
+    expect(Math.abs(nearestUnderCrossing(shape, c0.s - shape.total)!.dist)).toBeLessThan(1e-9);
+    // Halfway to the next crossing it is the nearer of the two.
+    const c1 = shape.crossings[1];
+    const mid = (c0.s + c1.s) / 2;
+    const nm = nearestUnderCrossing(shape, mid)!;
+    expect(Math.abs(nm.dist)).toBeCloseTo((c1.s - c0.s) / 2, 6);
   });
 
   it("the boot script's storage key is motion.ts's", () => {
