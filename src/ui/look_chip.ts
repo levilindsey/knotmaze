@@ -6,9 +6,12 @@
 //
 // K844 (was K837): the badge drops to this chip's row when the panel
 // is open (.kp-open) or in its low fit on narrow screens (.km-fit-low).
-// They stay on that one row: the badge keeps the right end, the chip
-// takes the left end. On the settings sheet the badge keeps the top
-// row, so the chip stays at the right under the sheet's top bar.
+// They stay on that one row. K848: on that row the chip BUTTS against
+// the badge's left edge (layout(), main.ts re-runs it whenever the
+// badge re-fits: open/close, resize, label change), so it tracks the
+// badge wherever it lands - never stranded at the screen's left edge.
+// On the settings sheet the badge keeps the top row, so the chip stays
+// at the right under the sheet's top bar.
 
 import { SHEET_QUERY } from "./panel_sheet";
 
@@ -55,5 +58,48 @@ export class LookChip {
 
   set(on: boolean): void {
     this.el.classList.toggle("on", on);
+  }
+
+  // K848: on the shared (dropped-badge) row, dock the chip's right edge
+  // against the badge's left edge with an 8 px gap and center it on
+  // the badge's height. Any other state clears the inline position and
+  // the stylesheet rules own the placement. If the chip cannot fit
+  // left of the badge it stays at the screen's left inset (the row is
+  // then too narrow for the pairing anyway).
+  layout(badge: HTMLElement | null): void {
+    const el = this.el;
+    const clear = (): void => {
+      el.style.left = "";
+      el.style.right = "";
+      el.style.top = "";
+    };
+    if (!el.classList.contains("on") || badge === null || badge.hidden) {
+      clear();
+      return;
+    }
+    if (
+      document.documentElement.classList.contains("kp-open") &&
+      window.matchMedia(SHEET_QUERY).matches
+    ) {
+      clear();
+      return;
+    }
+    const sharedRow =
+      document.documentElement.classList.contains("kp-open") ||
+      badge.classList.contains("km-fit-low");
+    if (!sharedRow) {
+      clear();
+      return;
+    }
+    const b = badge.getBoundingClientRect();
+    if (b.width <= 0 || b.height <= 0) {
+      clear();
+      return;
+    }
+    const chip = el.getBoundingClientRect();
+    const gap = 8;
+    el.style.right = "auto";
+    el.style.left = `${Math.max(10, b.left - gap - chip.width)}px`;
+    el.style.top = `${b.top + (b.height - chip.height) / 2}px`;
   }
 }

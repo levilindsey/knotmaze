@@ -1061,11 +1061,20 @@ async function main(): Promise<void> {
   // K468: on the open settings sheet the badge sits in the top bar, over the
   // HUD and the banners (the sheet covers them), so it avoids none.
   const sheetMQ = window.matchMedia(SHEET_QUERY);
-  const fitModeBadge = (): void =>
+  // K848: after the badge re-fits, dock the link-look chip against
+  // it on the shared row (ui/look_chip.ts layout).
+  const fitModeBadge = (): void => {
     modeBadge.fit(
       panel.isOpen() && sheetMQ.matches ? [] : [hud.el, banner.el, lossBanner.el]
     );
+    lookChip.layout(modeBadge.el);
+  };
   window.addEventListener("resize", fitModeBadge);
+  // K848: the panel can start open (kp-open lands before the first
+  // badge fit runs), leaving the chip undocked at the screen edge:
+  // re-fit once the first frames have settled.
+  requestAnimationFrame(() => fitModeBadge());
+  window.setTimeout(() => fitModeBadge(), 350);
   // K92 UNDO AND REDO (ui/undo_buttons.ts): beside the hamburger while the
   // panel is open, the badge on the row below them then (so it re-fits).
   const undoButtons = new UndoButtons({
