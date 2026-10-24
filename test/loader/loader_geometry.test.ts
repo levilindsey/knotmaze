@@ -6,6 +6,7 @@ import {
   headingDelta,
   pointAtArc,
   rotationForCentroidAbove,
+  rotationForHeadBelowCentroid,
   shapeCentroid,
   trefoilShape,
   trefoilSvgPaths,
@@ -144,6 +145,32 @@ describe("K313 loader geometry", () => {
       const next = rotationForCentroidAbove(shape, pointAtArc(shape, s + 0.05).p)!;
       expect(Math.abs(headingDelta(rot!, next))).toBeLessThan(0.2);
     }
+  });
+
+  it("K853: the spin rotation puts the head directly below the centroid", () => {
+    const centroid = shapeCentroid(shape);
+    for (const s of [0, shape.total / 7, shape.total / 3, shape.total * 0.9]) {
+      const head = pointAtArc(shape, s).p;
+      const rot = rotationForHeadBelowCentroid(shape, head);
+      expect(rot).not.toBeNull();
+      // Apply the canvas rotation to (head - centroid): x ~ 0, y > 0.
+      const vx = head[0] - centroid[0];
+      const vy = head[1] - centroid[1];
+      const rx = vx * Math.cos(rot!) - vy * Math.sin(rot!);
+      const ry = vx * Math.sin(rot!) + vy * Math.cos(rot!);
+      expect(Math.abs(rx)).toBeLessThan(1e-9);
+      expect(ry).toBeGreaterThan(0);
+      // One lap of the head winds the spin exactly once (no backspin):
+      const next = rotationForHeadBelowCentroid(shape, pointAtArc(shape, s + 0.05).p)!;
+      expect(Math.abs(headingDelta(rot!, next))).toBeLessThan(0.2);
+    }
+    // The two centroid rotations solve the same equation (centroid
+    // over head <=> head under centroid): identical angles, the modes
+    // differ only in which point is pinned to the screen.
+    const head = pointAtArc(shape, shape.total / 5).p;
+    const a = rotationForCentroidAbove(shape, head)!;
+    const b = rotationForHeadBelowCentroid(shape, head)!;
+    expect(Math.abs(headingDelta(a, b))).toBeLessThan(1e-9);
   });
 
   it("the boot script's storage key is motion.ts's", () => {

@@ -7,7 +7,7 @@
 // still while the head travels the strand (move "head"); speed, gap,
 // thread width and the thread/background colors ride along.
 
-import { arcSpan, headingDelta, pointAtArc, rotationForCentroidAbove, trefoilShape, underGapAt, type TrefoilShape } from "./loader_geometry";
+import { arcSpan, headingDelta, pointAtArc, rotationForCentroidAbove, rotationForHeadBelowCentroid, shapeCentroid, trefoilShape, underGapAt, type TrefoilShape } from "./loader_geometry";
 import { LOADER_CFG_DEFAULTS, type LoaderWireCfg } from "../ui/loader_config";
 
 const CASING = "#070a10";
@@ -33,6 +33,9 @@ let headingCont = 0;
 // continuously the same way (the raw target wraps as the head laps).
 let lastAboveRaw: number | null = null;
 let aboveCont = 0;
+// K853 ("spin" motion): the head-below-centroid rotation, likewise.
+let lastSpinRaw: number | null = null;
+let spinCont = 0;
 
 // The trail's lighter tint of the thread color (today: #e7c56f ->
 // #ffe9a8's family; here the configured gold mixed toward white).
@@ -139,13 +142,41 @@ function headGlyph(c: OffscreenCanvasRenderingContext2D, x: number, y: number, r
   c.fill();
 }
 
-// The two moving-thread motions share everything but the rotation:
-// "maze" (K828) follows half the head's heading; "above" (K852) turns
-// the knot so its centroid stays directly above the centered marker.
-function drawMovingMode(c: OffscreenCanvasRenderingContext2D, above: boolean): void {
+// The three moving-thread motions share everything but the anchor and
+// the rotation: "maze" (K828) anchors the head at the center and
+// follows half its heading; "above" (K852) anchors the head and turns
+// the knot so its centroid stays directly above the centered marker;
+// "spin" (K853) anchors the CENTROID at the center and turns the knot
+// around it so the marker stays directly below the centroid - the
+// knot spins in place while the marker rides the vertical line.
+function drawMovingMode(c: OffscreenCanvasRenderingContext2D, mode: "maze" | "above" | "spin"): void {
   const head = pointAtArc(shape, sPos);
   let rotation: number;
-  if (above) {
+  // The shape point pinned to the screen center.
+  let anchor = head.p;
+  if (mode === "spin") {
+    const centroid = shapeCentroid(shape);
+    anchor = centroid;
+    const raw = rotationForHeadBelowCentroid(shape, head.p);
+    if (raw !== null) {
+      if (lastSpinRaw === null) {
+        spinCont = raw;
+      } else {
+        spinCont += headingDelta(lastSpinRaw, raw);
+      }
+      lastSpinRaw = raw;
+    }
+    rotation = spinCont;
+    // Keep the angle near zero (a 2-pi shift leaves it unchanged).
+    while (rotation > Math.PI * 2) {
+      spinCont -= Math.PI * 2;
+      rotation -= Math.PI * 2;
+    }
+    while (rotation < -Math.PI * 2) {
+      spinCont += Math.PI * 2;
+      rotation += Math.PI * 2;
+    }
+  } else if (mode === "above") {
     // K852: the exact centroid-above angle each frame (no following
     // lag - "always above" is the mode's contract), accumulated
     // continuously so the wrap never spins the knot backwards.
@@ -200,7 +231,7 @@ function drawMovingMode(c: OffscreenCanvasRenderingContext2D, above: boolean): v
   c.translate(w / 2, h / 2);
   c.scale(scale, scale);
   c.rotate(rotation);
-  c.translate(-head.p[0], -head.p[1]);
+  c.translate(-anchor[0], -anchor[1]);
   strandPieces(c, 1);
   // The fixed-length trail: ten spans fading toward the tail.
   const SEGMENTS = 10;
@@ -219,8 +250,15 @@ function drawMovingMode(c: OffscreenCanvasRenderingContext2D, above: boolean): v
   // (min/11 px per world), plus the ring's outer stroke). K852: the
   // radius scales with the marker param.
   const headR = Math.min(w, h) * 0.045 * cfg.marker;
+  // K853: in spin mode the marker is not at the center - it sits on
+  // the vertical line below the anchored centroid, at the head's
+  // distance from the centroid.
+  const glyphY =
+    mode === "spin"
+      ? h / 2 + Math.hypot(head.p[0] - anchor[0], head.p[1] - anchor[1]) * scale
+      : h / 2;
   if (!underGapAt(shape, sPos, (headR / scale) * 1.16, cfg.gapSamples)) {
-    headGlyph(c, w / 2, h / 2, headR);
+    headGlyph(c, w / 2, glyphY, headR);
   }
 }
 
@@ -285,7 +323,7 @@ function draw(now: number): void {
   c.lineCap = "round";
   c.lineJoin = "round";
   if (cfg.move === "head") drawHeadMode(c);
-  else drawMovingMode(c, cfg.move === "above");
+  else drawMovingMode(c, cfg.move);
 }
 
 function frame(now: number): void {
@@ -328,6 +366,8 @@ self.onmessage = (e: MessageEvent) => {
     headingCont = 0;
     lastAboveRaw = null;
     aboveCont = 0;
+    lastSpinRaw = null;
+    spinCont = 0;
     frame(performance.now());
     (self as unknown as { postMessage: (m: unknown) => void }).postMessage({ type: "frame1" });
   } else if (d.type === "config" && d.cfg) {

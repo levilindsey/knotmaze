@@ -118,8 +118,8 @@ export const THREAD_LOOKS: ThreadLook[] = ["fill", "border", "both"];
 // slides under a centered player, or the player travels a still maze.
 // K852: "above" joins the two: the threads still move around the
 // marker, but the knot turns so its centroid stays directly above it.
-export type LoaderMove = "maze" | "head" | "above";
-export const LOADER_MOVES: LoaderMove[] = ["maze", "head", "above"];
+export type LoaderMove = "maze" | "head" | "above" | "spin";
+export const LOADER_MOVES: LoaderMove[] = ["maze", "head", "above", "spin"];
 // K852: how the loader's strand is drawn (src/loader/loader_worker.ts).
 export type LoaderFill = "solid" | "outline" | "flat";
 export const LOADER_FILLS: LoaderFill[] = ["solid", "outline", "flat"];

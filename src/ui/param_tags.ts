@@ -238,7 +238,7 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   flowStrength: ["fw", "sway", "drifting", "underwater", "waving", "wobble", "idle movement", "flowing", "undulation"],
   flowSpeed: ["fv", "sway", "drifting", "underwater", "waving", "faster", "slower", "idle movement"],
   loaderSpeed: ["ldsp", "loading", "spinner", "trefoil", "faster", "slower", "startup", "boot"],
-  loaderMove: ["ldmv", "loading", "spinner", "trefoil", "player travels", "maze slides", "centroid above", "camera", "startup"],
+  loaderMove: ["ldmv", "loading", "spinner", "trefoil", "player travels", "maze slides", "centroid above", "spin", "marker below", "startup"],
   loaderGap: ["lgp", "loading", "spinner", "trefoil", "gap", "crossing dive", "startup"],
   loaderThreadWidth: ["ltw", "loading", "spinner", "trefoil", "thread size", "stroke width", "startup"],
   loaderThreadColor: ["ltc", "loading", "spinner", "trefoil", "thread color", "gold", "startup"],
