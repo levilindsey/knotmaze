@@ -59,6 +59,7 @@ import {
   assignWindowLanes,
   maxRangeEntries,
   packRanges,
+  putJunctionRange,
 } from "../samp_table";
 import * as sampling from "./sampling";
 import type { PassNeighbors } from "./sampling";
@@ -1258,6 +1259,18 @@ export class CrossingGaps {
   assignGapIds(): void {
     const g3 = this.r.g3Data && this.r.G3 !== null;
     let entries = 0;
+    // K846: the joinery's junction side-cut entries for the
+    // wedges it last drew (ribbon/joinery.ts rebuildFillets), grouped by
+    // chain for the packing below: they ride the RANGES segment space
+    // behind each chain's gap windows.
+    const juncByChain = new Map<number, Array<{ center: number; lo: number; hi: number; left: boolean; right: boolean }>>();
+    if (g3) {
+      for (const e of this.r.junctionCutEntries) {
+        let list = juncByChain.get(e.chain);
+        if (!list) { list = []; juncByChain.set(e.chain, list); }
+        list.push(e);
+      }
+    }
     // K832: iterate chains, not fills - the SDF pass has no strip fills,
     // but its fragment reads the same RANGES (windows come from
     // chainWins, solved pass-independently in update()). Without this
@@ -1302,6 +1315,33 @@ export class CrossingGaps {
         this.r.g3WinBase[c] = entries;
         this.r.g3NWin[c] = n;
         entries += n;
+        // K846: this chain's junction side-cut entries follow its
+        // windows (CHAIN (rangeBase, nRange) points at them).
+        const jlist = juncByChain.get(c);
+        let nj = 0;
+        if (jlist) {
+          const needJ = (entries + jlist.length) * RANGE_FLOATS;
+          if (needJ > this.r.g3RangeScratch.length) {
+            const next = new Float32Array(
+              Math.max(needJ, this.r.g3RangeScratch.length * 2)
+            );
+            next.set(this.r.g3RangeScratch);
+            this.r.g3RangeScratch = next;
+          }
+          for (const e of jlist) {
+            entries = putJunctionRange(
+              this.r.g3RangeScratch,
+              entries,
+              e.center,
+              e.lo,
+              e.hi,
+              e.left,
+              e.right
+            );
+            nj++;
+          }
+        }
+        this.r.g3NJunc[c] = nj;
       }
       if (fill) fill.setMaskIds(ids);
     }

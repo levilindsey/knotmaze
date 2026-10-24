@@ -64,6 +64,9 @@ describe("K832 SDF gaps, border and junction cut", () => {
         { count: 40, closed: false, totalLength: 20 },
       ],
       chainWins: new Map([[0, [0, 10, 3, 3]]]),
+      // K846: the junction side cut reads these (no junctions here).
+      junctionCutEntries: [] as never[],
+      g3NJunc: new Int32Array(2),
       idScratch: new Map(),
       g3RangeScratch: new Float32Array(4096),
       g3WinBase: new Int32Array(2),

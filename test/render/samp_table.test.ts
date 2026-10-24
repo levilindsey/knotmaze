@@ -10,7 +10,10 @@ import {
   CAP_NONE,
   CAP_ROUND,
   CHAIN_FLOATS,
+  RANGE_CUT_LEFT,
+  RANGE_CUT_RIGHT,
   RANGE_FLOATS,
+  RANGE_JUNCTION,
   RANGE_LANE_MASK,
   RANGE_SPLIT,
   assignWindowLanes,
@@ -24,6 +27,7 @@ import {
   packRadii,
   packRanges,
   packSamp,
+  putJunctionRange,
   radTexelSpan,
   readSamp,
   rowSpan,
@@ -254,6 +258,21 @@ describe("slot windows and RANGES", () => {
     const dec = new Float32Array(count * LANES);
     decodeRanges(out, 0, n, count, LANES, dec);
     expect(dec).toEqual(ids);
+  });
+
+  it("K846: junction-cut entries pack centre, window and chain-side flags", () => {
+    const out = new Float32Array(3 * RANGE_FLOATS);
+    let at = putJunctionRange(out, 0, 12.5, 10, 15, true, false);
+    at = putJunctionRange(out, at, 3, 0, 6, false, true);
+    expect(at).toBe(2);
+    const e = (i: number): number[] => Array.from(out.subarray(i * 4, i * 4 + 4));
+    expect(e(0)).toEqual([12.5, 10, 15, RANGE_JUNCTION | RANGE_CUT_LEFT]);
+    expect(e(1)).toEqual([3, 0, 6, RANGE_JUNCTION | RANGE_CUT_RIGHT]);
+    // The flags the shader decodes: junction bit under mod 16, the
+    // left bit under mod 32, the right bit above.
+    expect(e(0)[3] % 16).toBeGreaterThanOrEqual(8);
+    expect(e(0)[3] % 32).toBeGreaterThanOrEqual(16);
+    expect(e(1)[3]).toBeGreaterThanOrEqual(32);
   });
 
   it("open chains clamp; a full-lap window covers the ring once", () => {

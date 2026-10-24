@@ -41,6 +41,15 @@ export const CAP_FLAT = 2;
 // RANGES flags.
 export const RANGE_LANE_MASK = 3;
 export const RANGE_SPLIT = 4;
+// K846: a junction-cut entry in a chain's segment ranges (CHAIN texel
+// (rangeBase, nRange), after its gap windows): (junction sample, kLo,
+// kHi, flags) - within the window the ribbon's border hands over to
+// the junction fans on the flagged side(s), in CHAIN terms (left =
+// the (-ty, tx) edge, as the strip's aUV.y = 0 side). The shader's
+// distance test is in arc (sample * arcPer), not samples.
+export const RANGE_JUNCTION = 8;
+export const RANGE_CUT_LEFT = 16;
+export const RANGE_CUT_RIGHT = 32;
 // Floats per RANGES entry and per G3 CHAIN record.
 export const RANGE_FLOATS = 4;
 export const CHAIN_FLOATS = 8;
@@ -363,6 +372,28 @@ export function packRanges(
     put(slot, k0, k1, lane);
   }
   return n;
+}
+
+// K846: write one junction-cut entry (see RANGE_JUNCTION) at entry
+// index `at` of `out`; returns the next entry index. A closed chain's
+// window past the seam is the caller's second entry with the same
+// centre (the shader's arc distance wraps).
+export function putJunctionRange(
+  out: Float32Array,
+  at: number,
+  center: number,
+  lo: number,
+  hi: number,
+  cutLeft: boolean,
+  cutRight: boolean
+): number {
+  const o = at * RANGE_FLOATS;
+  out[o] = center;
+  out[o + 1] = lo;
+  out[o + 2] = hi;
+  out[o + 3] =
+    RANGE_JUNCTION | (cutLeft ? RANGE_CUT_LEFT : 0) | (cutRight ? RANGE_CUT_RIGHT : 0);
+  return at + 1;
 }
 
 // The decoder: rebuild the per-sample slot ids (count x lanes, -1 = none)

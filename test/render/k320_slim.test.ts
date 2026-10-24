@@ -97,8 +97,11 @@ describe("K320 stage 1: char budgets", () => {
     // to the section pair (55,205 -> 55,500 and 71,620 -> 71,915 measured
     // here); the shared decl adds 22 to the strips, the junction
     // field and the still pluck, which stay inside their budgets.
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(55_565);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(71_980);
+    // K846 (2026-10-23): the junction side cut (kJunctionSideCut in
+    // the same chunk, both ribbon mains) adds 1,687 to the pair
+    // (55,500 -> 57,187 and 71,915 -> 73,602 measured here).
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(57_250);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(73_665);
     expect(STRIP_FRAG.length).toBeLessThanOrEqual(32_550);
     // K797b/K798 fillets (2026-10-21): the fan look gate and stroke
     // (junction_field.ts) add 755 (26,600 -> 27,355 here).
