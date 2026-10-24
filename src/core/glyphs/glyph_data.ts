@@ -40,18 +40,22 @@ const I_ARRIVAL: Record<ForkAngle, readonly [number, number, number]> = {
  * available for the stage 9 fork measurement. */
 export function glyphI(fork: ForkAngle = 0): Glyph {
   const a = I_ARRIVAL[fork];
+  // K850 (measured rework): the K847 entry flattened then steepened
+  // into J (headings 50 -> 25 -> 71.6 deg: the bump Levi flagged),
+  // and the bottom turned at R ~ 5 GU. Now the entry rotates one
+  // way from the join line (5, 6) into J along (1, 3) - colinear
+  // with the stem spur and with the body's own exit from J along
+  // (-1, -3) - and the bottom sweeps at R ~ 19 GU.
   const body: Knot[] = [
-    [0, 32, LOW[0], LOW[1], 0, 1.6],
+    [0, 32, LOW[0], LOW[1], 0, 1.2],
     // The junction J: arrives along the upstroke, leaves down the stem.
     // K831 follow-up: J sits at (22, 50), four GU higher than the first
     // form - at (20, 46) the folded arms could not part to the thread
     // width inside the entry's arc (tangentRoot returned null) and the
     // entry's S into J bottomed at R 5.8 GU.
     [22, 50, a[0], a[1], a[2], 3, -1, -3],
-    // The round bottom the lint forced (R >= 11 GU, legs >= 0.60 LU apart
-    // at xh 2): the first form turned at (18, 2) with R 1.9 GU, the thorn.
-    [18, 30, -1, -3, 2, 3],
-    [32, 4, 1, 0, 12, 14],
+    [18, 29, -1, -3, 2, 3],
+    [34, 6, 1, 0, 12, 12],
     [58, 32, LOW[0], LOW[1], 2, 0],
   ];
   return {
@@ -65,7 +69,9 @@ export function glyphI(fork: ForkAngle = 0): Glyph {
         ...(fork === 0 ? { tangent: true } : {}),
         // K843: the stem leaves J fatter than normal, tapering to its
         // plain width at the dead-end tip.
-        flare: { peak: 6, len: 50 },
+        // K850: the stem is ~31 GU; K847's 50-long flare was still
+        // fat at the tip. 36 reaches plain width just at the tip.
+        flare: { peak: 6, len: 36 },
         path: knotsToPath([
           [22, 50, 1, 3, 0, 2],
           [32, 79, 1, 3, 2, 0],
@@ -109,34 +115,48 @@ const A_GLYPH: Glyph = {
   // rejected). Junction tangents stay as K836 set them: entry
   // tangent at L (0.4, 1), the body and the landing spur one smooth
   // curve through R (0.35, -1).
+  // K850 (measured rework, .claude/probes/K850/measure.mts): the
+  // K847 form measured a flat top (topmost x=49 of a 28..80 bowl),
+  // a vertical right wall, curvature sign flips across the top and
+  // a hooked spur approach at L. Here the heading turns one way
+  // from L (71.6 deg) through the shoulder to a soft apex in the
+  // right third (heading crosses level between the (54, 72) and
+  // (71, 67) knots, R ~ 14 GU), then descends the right side to R.
+  // Handles sit near a third of their segment throughout.
   body: knotsToPath([
-    [12, 10, 1, 2, 4, 4],
-    [20, 27, 1, 2, 4, 4],
+    [12, 10, 1, 2, 0, 3],
+    [21, 28, 1, 2, 3, 3],
     // L: halfway up the left side, on the bowl's left curve.
-    [30, 44, 1, 3, 3, 3],
-    [38, 64, 1, 1, 5, 5],
-    [58, 74, 1, 0, 9, 9],
-    [80, 54, 0, -1, 10, 7],
+    [31, 45, 1, 3, 2, 2],
+    [41, 62, 1, 1, 4, 4],
+    [52, 71, 1, 1, 3.5, 3.5],
+    [66, 75, 3, -1, 2, 3],
+    [80, 52, 0, -1, 9, 6],
     // R: down the right side; the exit leaves down-right (the acute
     // wedge under it), the bottom spur continues down the same line.
-    [79, 40, 0, -1, 6, 2, 3, -2],
-    [99, 30, 2, -1, 4, 4],
+    [80, 38, 0, -1, 4, 3, 2, -1],
+    [98, 28, 2, -1, 3, 3],
     [120, 32, LOW[0], LOW[1], 1, 0],
   ]),
   spurs: [
     {
       // The oval's bottom arc: out of R, around the bottom, up the
       // left side to land at L along its tangent.
-      at: 18,
+      at: 21,
       land: true,
       landTangent: true,
+      // K850: out of R colinear with the body's descent, around a
+      // wide bottom (R ~ 20 GU) and up the inside left wall with
+      // monotone heading (180 -> 71.6 deg, no hook) to land at L
+      // exactly along the body's tangent there.
       path: knotsToPath([
-        [79, 40, 0, -1, 0, 6],
-        [82, 24, 0, -1, 6, 10],
-        [66, 6, -1, 0, 10, 5],
-        [48, 3, -1, 0, 10, 10],
-        [28, 13, -1, 2, 5, 5],
-        [30, 44, 1, 3, 3, 0],
+        [80, 38, 0, -1, 0, 6],
+        [81, 20, 0, -1, 6, 9],
+        [64, 5, -1, 0, 9, 5],
+        [45, 3, -1, 0, 9, 9],
+        [28, 12, -1, 2, 3, 2],
+        [26, 26, 0, 1, 6, 6],
+        [31, 45, 1, 3, 2, 0],
       ]),
     },
   ],
@@ -145,9 +165,11 @@ const A_GLYPH: Glyph = {
   // from L (toward the top) and upward from R (toward the top again -
   // "before" the body's travel down the right side). K847: longer,
   // with the renderer's smooth falloff (they ended way too early).
+  // K850: flare lengths match the arcs they dress (L->apex ~ 37 GU,
+  // R->apex ~ 32 GU); K847's 46 overshot the apex on both.
   bodyFlares: [
-    { at: 6, side: "after", peak: 6, len: 46 },
-    { at: 18, side: "before", peak: 6, len: 46 },
+    { at: 6, side: "after", peak: 6, len: 40 },
+    { at: 21, side: "before", peak: 6, len: 34 },
   ],
   floats: [],
   crossings: 0,
