@@ -17,9 +17,11 @@ describe("K843: junction flares", () => {
     expect(fl.dir).toBe(1);
     // R: upward from the junction (back toward the top, before travel).
     expect(fr.dir).toBe(-1);
+    // K850: lengths match the arcs they dress (L 40, R 34 GU).
+    expect(fl.len).toBeCloseTo(40 / 36, 6);
+    expect(fr.len).toBeCloseTo(34 / 36, 6);
     for (const f of body!.flare!) {
       expect(f.peak).toBeCloseTo(6 / 36, 6);
-      expect(f.len).toBeCloseTo(46 / 36, 6);
       // The flare sits at a junction node of the strand.
       expect(b.graph.nodes.get(body!.nodes[f.joint])!.type).toBe(NODE_TYPE.JUNCTION);
     }
@@ -33,7 +35,7 @@ describe("K843: junction flares", () => {
     const f = spur!.flare![0];
     expect(f.dir).toBe(1);
     expect(f.peak).toBeCloseTo(6 / 36, 6);
-    expect(f.len).toBeCloseTo(50 / 36, 6);
+    expect(f.len).toBeCloseTo(36 / 36, 6); // K850: the stem is ~31 GU
     expect(b.graph.nodes.get(spur!.nodes[f.joint])!.type).toBe(NODE_TYPE.JUNCTION);
   });
 });
