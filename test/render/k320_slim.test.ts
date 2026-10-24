@@ -100,14 +100,19 @@ describe("K320 stage 1: char budgets", () => {
     // K846 (2026-10-23): the junction side cut (kJunctionSideCut in
     // the same chunk, both ribbon mains) adds 1,687 to the pair
     // (55,500 -> 57,187 and 71,915 -> 73,602 measured here).
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(57_250);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(73_665);
+    // K849 (2026-10-23): the side cut's world-arc form adds 180 to
+    // the pair (57,187 -> 57,367 measured here); the fans' metric
+    // rim band adds ~340 to the junction field (under its budget).
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(57_430);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(73_850);
     expect(STRIP_FRAG.length).toBeLessThanOrEqual(32_550);
     // K797b/K798 fillets (2026-10-21): the fan look gate and stroke
     // (junction_field.ts) add 755 (26,600 -> 27,355 here).
     // K815: the fans' flank coordinate (aFlank + the fanEdge block) adds
     // 788 to the junction field (27,447 -> 28,235 measured).
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(28_910);
+    // K849: the fans' rim band (metric block, then the baked-ring
+    // form) adds 1,021 (28,844 -> 29,865).
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(29_940);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

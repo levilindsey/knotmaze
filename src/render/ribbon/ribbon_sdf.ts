@@ -329,7 +329,7 @@ void main(void) {
     lookA *= 1.0 - kJunctionCut(kc.closed, kc.total, arc, jcaps, pxW);
     // K846: and at every junction arm, on the sides a wedge faces
     // (lW > 0 is the chain's left, as the strip's aUV.y = 0 side).
-    lookA *= 1.0 - kJunctionSideCut(kc.ch, arc / kc.arcPer, arc, kc.total, kc.arcPer, kc.closed, lW > 0.0 ? -1.0 : 1.0, pxW);
+    lookA *= 1.0 - kJunctionSideCut(kc.ch, arc, kc.total, kc.closed, lW > 0.0 ? -1.0 : 1.0, pxW);
   }
   float gk = gapKeepAt(pxW, vPos, arc, vDir, vIds);
   if (uKBase.z > 4.5) {

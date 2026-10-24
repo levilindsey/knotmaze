@@ -288,7 +288,7 @@ void main(void) {
   if (uKLook.x > 0.5 && uKLook.x < 1.5) {
     lookA *= 1.0 - kJunctionCut(kc.closed, kc.total, kpt.x, g3ChainAt(kc.ch, 0), pxW);
     // K846: and at every junction arm, on the sides a wedge faces.
-    lookA *= 1.0 - kJunctionSideCut(kc.ch, kpt.x / kc.arcPer, kpt.x, kc.total, kc.arcPer, kc.closed, vUV.y < 0.5 ? -1.0 : 1.0, pxW);
+    lookA *= 1.0 - kJunctionSideCut(kc.ch, kpt.x, kc.total, kc.closed, vUV.y < 0.5 ? -1.0 : 1.0, pxW);
   }
   float gk = gapKeep(pxW, gTurn);
   if (uKBase.z > 4.5) {

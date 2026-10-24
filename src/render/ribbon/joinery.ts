@@ -670,6 +670,8 @@ export class Joinery {
       this.r.fadeLength +
       "|" +
       this.r.routeKey +
+      "|bw" +
+      this.r.borderWidth +
       this.r.explore.exploreJointsKey() +
       "|uw" +
       this.r.uwRev;
@@ -685,12 +687,14 @@ export class Joinery {
       const wedgeRim = 2 * FILLET_EDGE_PTS_MAX + FILLET_BEZIER_STEPS + 1;
       // + one K81 cover strip per arm (COVER_STRIP_PTS samples, two
       // vertices each, two triangles per segment).
+      // K849: fans carry an inner rim ring (pushFan's band), so a
+      // fan costs apex + 2 rim rings of vertices and ~3x indices.
       const verts =
-        armTotal * (1 + wedgeRim + 2 * COVER_STRIP_PTS) +
-        nDiscs * (2 + DISC_SEGS);
+        armTotal * (1 + 2 * wedgeRim + 2 * COVER_STRIP_PTS) +
+        nDiscs * (4 + 2 * (DISC_SEGS + 8));
       const idx =
-        (armTotal * (wedgeRim - 1 + 2 * (COVER_STRIP_PTS - 1)) +
-          nDiscs * DISC_SEGS) *
+        (armTotal * ((wedgeRim - 1) * 3 + 2 * (COVER_STRIP_PTS - 1)) +
+          nDiscs * DISC_SEGS * 3) *
         3;
       this.r.filletMesh = new TriFanMesh(verts, idx);
       this.r.filletMesh.mesh.shader = this.r.explorePieces ? junctionShaderExplore() : junctionShader();
@@ -866,9 +870,9 @@ export class Joinery {
             cy + (Math.cos(a) * half[1] + Math.sin(a) * py) * r
           );
         }
-        fm.pushFan(cx, cy, rim, rb, null, false, flankFill);
+        fm.pushFan(cx, cy, rim, rb, null, false, flankFill, this.r.borderWidth * fillHalf);
       } else {
-        fm.pushFan(cx, cy, discRim(cx, cy, r), rb, null, false, flankFill);
+        fm.pushFan(cx, cy, discRim(cx, cy, r), rb, null, false, flankFill, this.r.borderWidth * fillHalf);
       }
       return j1;
     };
@@ -1459,7 +1463,7 @@ export class Joinery {
       }
       const r = Math.sqrt(r2);
       if (r > rec.rMax) rec.rMax = r;
-      fm.pushFan(cx, cy, rim, rec.rb, flank, seal, flankFill);
+      fm.pushFan(cx, cy, rim, rec.rb, flank, seal, flankFill, this.r.borderWidth * fillHalf);
     };
     const pushDiscField = (
       rec: JRec,
@@ -1657,7 +1661,7 @@ export class Joinery {
             tip.hostCtrl,
             reach
           );
-          fm.pushFan(this.stadiumApex[0], this.stadiumApex[1], band, rb, null, false, 4);
+          fm.pushFan(this.stadiumApex[0], this.stadiumApex[1], band, rb, null, false, 4, this.r.borderWidth * fillHalf);
         }
       }
     }
@@ -1986,6 +1990,12 @@ export class Joinery {
       // K846: the arm sides the drawn wedges face (A's left, B's right).
       const armCutL = new Array<boolean>(arms.length).fill(false);
       const armCutR = new Array<boolean>(arms.length).fill(false);
+      // K849: how far along each side the arm's edge stays inside the
+      // neighbour's capsule (fillHalf / sin of the wedge gap), so the
+      // side cut's window covers the whole interior section, not only
+      // the fillet's flank reach (a shallow spur's mouth runs farther).
+      const armWinL = new Array<number>(arms.length).fill(0);
+      const armWinR = new Array<number>(arms.length).fill(0);
 
       for (let k = 0; k < arms.length; k++) {
         const A = arms[k];
@@ -2211,47 +2221,38 @@ export class Joinery {
             : [pax, pay, cx, cy, pbx, pby];
         armCutL[k] = true; // K846
         armCutR[(k + 1) % arms.length] = true; // K846
+        const extW = fillHalf / Math.max(Math.sin(gap), 0.05) + fillHalf * 0.5; // K849
+        armWinL[k] = Math.max(armWinL[k], extW);
+        armWinR[(k + 1) % arms.length] = Math.max(armWinR[(k + 1) % arms.length], extW);
         emitFan(rec, jx, jy, rim, flankArr);
       }
       // K846: this junction's side-cut entries, over each marked arm's
-      // own flank reach (armReach), in sample coordinates.
+      // interior section. K849: WORLD arc - the junction's arc and the
+      // signed window from it along the arm (the shader wraps closed
+      // chains itself; K846's spline-sample units never matched the
+      // strip shader's ctrl units, so the cut rarely fired there).
       for (let ai = 0; ai < arms.length; ai++) {
         if (!armCutL[ai] && !armCutR[ai]) continue;
         const arm = arms[ai];
-        const samples = this.r.chainSamples[arm.chain];
-        if (!samples || samples.count < 2) continue;
-        const arcPer = arm.total / (arm.closed ? samples.count : samples.count - 1);
-        if (!(arcPer > 0)) continue;
-        const center = arm.arc0 / arcPer;
-        const reachS = armReach(arm) / arcPer;
+        // The cut covers exactly the interior section (the neighbour
+        // capsule's exit along this arm), NOT the whole flank reach:
+        // past it the arm's own edge is the silhouette the fan's rim
+        // arc hands back to (junction_field strokes the arc alone).
+        const win = Math.min(
+          arm.domain,
+          Math.max(armCutL[ai] ? armWinL[ai] : 0, armCutR[ai] ? armWinR[ai] : 0)
+        );
+        if (!(win > 0)) continue;
         const cutLeft = arm.dir > 0 ? armCutL[ai] : armCutR[ai];
         const cutRight = arm.dir > 0 ? armCutR[ai] : armCutL[ai];
-        const lo0 = arm.dir > 0 ? center : center - reachS;
-        const hi0 = arm.dir > 0 ? center + reachS : center;
-        if (arm.closed) {
-          if (lo0 < 0) {
-            juncEntries.push(
-              { chain: arm.chain, center, lo: lo0 + samples.count, hi: samples.count - 1, left: cutLeft, right: cutRight },
-              { chain: arm.chain, center, lo: 0, hi: hi0, left: cutLeft, right: cutRight }
-            );
-          } else if (hi0 > samples.count - 1) {
-            juncEntries.push(
-              { chain: arm.chain, center, lo: lo0, hi: samples.count - 1, left: cutLeft, right: cutRight },
-              { chain: arm.chain, center, lo: 0, hi: hi0 - samples.count, left: cutLeft, right: cutRight }
-            );
-          } else {
-            juncEntries.push({ chain: arm.chain, center, lo: lo0, hi: hi0, left: cutLeft, right: cutRight });
-          }
-        } else {
-          juncEntries.push({
-            chain: arm.chain,
-            center,
-            lo: Math.max(0, lo0),
-            hi: Math.min(samples.count - 1, hi0),
-            left: cutLeft,
-            right: cutRight,
-          });
-        }
+        juncEntries.push({
+          chain: arm.chain,
+          center: arm.arc0,
+          lo: arm.dir > 0 ? 0 : -win,
+          hi: arm.dir > 0 ? win : 0,
+          left: cutLeft,
+          right: cutRight,
+        });
       }
     }
 

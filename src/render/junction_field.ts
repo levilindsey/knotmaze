@@ -443,6 +443,23 @@ void main(void) {
   float fanEdge = strip
     ? (borderLook ? 0.0 : lookEdge)
     : max(lookEdge, borderLook ? 0.0 : flankEdge);
+  // K849: in the border look the fan's stroke is a METRIC band inside
+  // its rim (the ribbons' own band width), not a fixed fraction of
+  // the apex-to-rim coordinate: the fractional band ran ~4x wider
+  // than the ribbon's near the flank tips and stroked deep inside
+  // the wedge (the fan share of the interior strokes).
+  if (borderLook && !strip) {
+    // K849: the band is baked into the fan's geometry (pushFan's
+    // inner rim ring, inset by the border width): vLook is 0 at the
+    // inner ring and 1 at the rim, so the stroke is metric by
+    // construction on wedges and discs alike.
+    fanEdge = smoothstep(0.05, 0.95, vLook);
+    // Wedge fans (aFlank +-1 on the flanks, sweeping across the rim
+    // arc): the arc alone strokes - along the flanks the arm's own
+    // ribbon edge is the outline (the side cut stops at the capsule
+    // exit, short of the flank tips). Discs (aFlank 2) keep their rim.
+    if (vFlank < 1.5) fanEdge *= smoothstep(1.0, 0.8, abs(vFlank));
+  }
   if (!strip && vFlank > 2.5) fanEdge = 0.0;
   bool lookIntro = uKLook.y > 0.5 && uKLook.z > 0.5;
   float lookA = 1.0;
