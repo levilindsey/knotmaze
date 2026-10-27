@@ -201,9 +201,12 @@ milestone. Code: `src/render/field/geom.ts`, `src/render/field/oracle.ts`.)
     within ±4h of the through's arm, and its cap is buried there. S1a's
     0.76h tuck therefore becomes a 0.76h segment inside the through tube
     (0.76h < h). Not compared with master.
-  - Ink: sheet D's probe takes `look.ink` as given; where "#000000"
-    means the automatic ink (S1a's notes), its coverage scale is off by
-    that ink's luminance. Not checked against the notes.
+  - Ink: sheet D's probe takes `look.ink` as given. All eight scenes
+    export "#000000", which S1a's notes (line 98) say is the auto ink
+    (`r.borderColor === 0`, the darkened section colour). In seven of
+    them master's outlines look near-black; in fat.lightpaper they are
+    pink and the probe reads no ink at all (finding 6). Not fixed: the
+    probe takes one ink colour per scene.
   - Emergent crossings (`emergent?`) are read like any other crossing.
 
 ### Findings
@@ -235,14 +238,21 @@ milestone. Code: `src/render/field/geom.ts`, `src/render/field/oracle.ts`.)
 3. **muse_hash: 59 of 342 corner solves fail** ("q solve residual") with
    the capped mapped r. Not analysed; the diagnostics are in
    `oracle/muse_hash/b.json` and the first five are on sheet B.
-4. **Master on muse_hash (sheet B)**: master's full frame leaves out
-   whole stretches of outline that the oracle draws. The tip crop
-   registers with the oracle (#4 0.39 px, #8 passes, #1 983 px deep ink).
-   The junction crops do not: j123 has 21119 px of master's ink deeper
-   than W + 1 px inside the oracle's regions, and #6 finds 18 of 18 band
-   ends off (max 96.7 px); j49 is similar
-   (`oracle/checks_muse_hash_master.md`). The overlay tiles show which
-   ink each side draws.
+4. **Master on muse_hash (sheet B)**. Observed: the geometry registers
+   and the outlines differ at junctions. Registration (sheet B's overlay
+   captions; share of one side's ink within 1 px at 1x of the other's,
+   master then oracle): tip 98.9% / 97.9%, j49 79.9% / 78.5%, j123
+   59.4% / 58.0%. At the tip the image checks agree (#4 0.39 px, #8
+   passes; #3's cap Hausdorff is 14.75 px at 6x). At the junctions
+   master leaves out stretches of outline the oracle draws (light red in
+   the overlay) and draws strokes the oracle does not (black): j123 has
+   21119 px of master's ink deeper than W + 1 px inside the oracle's
+   regions, and #6 finds 18 of 18 band ends off (max 96.7 px at 6x); j49
+   19 of 19 (`oracle/checks_muse_hash_master.md`). Inferred, not tested:
+   master's crossing gaps cut the under outline farther out than the
+   over's outline, or a reveal or fog state hides some outline. A
+   same-state look at master's gap slots (render-gaps.md) would decide
+   it.
 5. **§3.8, what master draws for cr** (sheet C's last rows; the numbers
    are a helper's reading of `joinery.ts` and `rim_curve.ts`, drawn over
    the oracle, not screenshots). Master's corner radius is effectively
@@ -258,21 +268,55 @@ milestone. Code: `src/render/field/geom.ts`, `src/render/field/oracle.ts`.)
 
    Proposed mapping: that r, capped at 2h. Uncapped, r grows without
    bound as θ → 180° while the fill there is almost nothing.
+6. **S1a's light-paper scenes (sheet D,
+   `oracle/checks_scenes_master.md`)**. Every image check fails on all
+   eight scenes, so the table does not rank them. Observed:
+   - fat.lightpaper measures nothing. Master draws pink ribbons with no
+     dark outline; its ink "#000000" is the auto ink (S1a notes line 98:
+     `r.borderColor === 0`, the darkened section colour), the probe
+     looked for black and found no ink (every count is 0 of n or n of n,
+     longest run 0.000 px). Any auto-ink scene needs the section's
+     darkened colour as the probe's ink first.
+   - Every screenshot carries the start and finish markers (ink-coloured
+     glyphs), and user_tw42.lightpaper has black arrowheads along its
+     threads. The checks count them as ink; inferred, not tested, that
+     they cause some of the large maxima (user_tw42's #9 18.5 px).
+   - #6 puts every band end off in every scene (max 7.6-27.2 px), and #7
+     finds over band lines broken: the same pattern as finding 4.
+   - def.lightpaper at dsf 1 against dsf 3: #7 586 of 586 broken against
+     109 of 586, #6 445 against 1115 band ends found. At W = 2.2 CSS px a
+     dsf 1 shot is too coarse for #7's run test (inferred); use the dsf 3
+     shots for image checks.
+   - g41_ring_tw42.lightpaper is the only scene where #3 passes (0.32 px).
 
-### Status (21:00, 2026-10-26)
+### Status (21:06, 2026-10-26)
 
-Done: steps 1-4. The three sheets are in the main checkout's
-`.claude/probes/K868/sheets/` and render with
-`K868=A|B|C npx vitest run test/render/field/oracle.manual.test.ts
---testTimeout 3600000` from the worktree. B's environment:
-`K868_REAL` (muse_hash), `K868_ZOOMS` (j123,j49,tip), `K868_SS_FULL` (1),
-`K868_SS_ZOOM` (2), `K868_PANEL_X` (900). After B's long synchronous
-renders vitest reports an RPC timeout ("Timeout calling onTaskUpdate")
-and exits 1 although the test passed; the outputs are complete.
+Done: steps 1-4, and sheet D on S1a's light-paper scenes. The four
+sheets are in the main checkout's `.claude/probes/K868/sheets/` and the
+check reports in `.claude/probes/K868/oracle/` (both untracked). They
+render with `K868=A|B|C|D npx vitest run
+test/render/field/oracle.manual.test.ts --testTimeout 3600000` from the
+worktree. B's environment: `K868_REAL` (muse_hash), `K868_ZOOMS`
+(j123,j49,tip), `K868_SS_FULL` (1), `K868_SS_ZOOM` (2), `K868_PANEL_X`
+(900); D's: `K868_SCENES` (a comma list of S1a scene names; the default
+is the eight light-paper ones). After B's long synchronous renders
+vitest reports an RPC timeout ("Timeout calling onTaskUpdate") and exits
+1 although the test passed; the outputs are complete. The full suite
+passes on the branch as it stands, before the rebase onto S1a's merge
+(173 files, 2335 tests, 104 s; the K868 sheets skip without `K868`).
 
 Not done:
-- image checks on S1a's other exported scenes (only muse_hash ran, for
-  time; `K868_REAL=<name>` runs one);
+- image checks on S1a's dark-paper scenes and the master-only cr/fl
+  variants (dark paper #151b28 with the auto ink; the cr variants could
+  test §3.8 against screenshots);
+- the auto ink in the image probe: fat.lightpaper measures nothing until
+  the probe's ink is the darkened section colour (finding 6);
+- masks for the markers and arrowheads in the image checks (finding 6);
+- exact-field checks (#1, #2, #11) on S1a's scenes: sheet D builds their
+  models but runs only the image path;
+- the END tuck: the oracle extends ENDs per §3.6 and buries the cap; not
+  compared with master's fused tip;
+- the cause of master's outline differences at junctions (finding 4);
 - the root cause of the 59 failed corner solves;
 - the depth rule for k42 (a decision);
 - a bounded reach, so that large r costs no time (for example, per
@@ -281,8 +325,11 @@ Not done:
 
 ### Next step
 
-Levi reads sheets A-C. Decide finding 1 (the depth rule) and the §3.8
-mapping and its cap, and correct §3.8 with finding 5. Then the next
-stage's renderer can be measured against this oracle: render its
-screenshot, then run `runChecks(model, imageProbe(...))`, and use sheet
-B's layout for master against new.
+Levi reads sheets A-D. Decide finding 1 (the depth rule) and the §3.8
+mapping and its cap, and correct §3.8 with finding 5. Before the image
+checks can grade a renderer on S1a's scenes, give the probe the auto ink
+and marker masks, rerun D on the dsf 3 shots, and settle finding 4
+(master's gaps or the oracle). Then the next stage's renderer can be
+measured against this oracle: render its screenshot, run
+`runChecks(model, imageProbe(...))`, and use sheet B's layout for master
+against new.
