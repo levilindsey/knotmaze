@@ -95,13 +95,25 @@ shows paper (the background colour at p), inside threads and out. So:
 
 ### 3.3 Depth
 
-z(chain, s) is the tent depth physics uses (over passes +amp, under passes
-−amp over DEPTH_WINDOW, contributions summed), carried per sample and
-linear between samples. A group's depth at p is the z of its member nearest
-p. Ties (|Δz| < ε) go to the higher chain id. A K42 cyclic triple (three
-passes overlapping at one pixel) can contradict one crossing's over/under;
-that is inherent to any per-pixel depth and stays a residual
-(`docs/design/K9-K42.md`).
+Depth comes from the diagram, not from physics (decided 2026-10-26, after
+S1b's finding 1). Each crossing in the scene's table pins its two passes
+at the crossing's arc length on each chain: z = +amp on the over pass,
+−amp on the under. Along a chain, z blends between its pinned crossings
+and is continuous; an isolated crossing (no other crossing on that chain
+within 2·DEPTH_WINDOW) keeps the physics tent, falling to 0 at
+DEPTH_WINDOW. S2 chooses the blend and records it here. A group's depth at
+p is the z of its member nearest p. Ties (|Δz| < ε) go to the higher chain
+id.
+
+Why: the summed tent physics uses (and the zPos S1a exports) inverted
+k42's crossing 0 at the crossing itself. k42 is a cyclic triple about 1.5h
+apart: chain 0 over 1, 1 over 2, 2 over 0. Pinning keeps every crossing's
+recorded over/under at its centre. The area all three tubes share (a
+triangle of side 1.5h has inradius 0.43h < h) cannot honour all three
+pairwise orders under any per-pixel depth; there the blend decides, and the
+sheets show it (`docs/design/K9-K42.md`). Pinned depth is a pure function
+of the crossing table and the geometry, so the renderer computes it on main
+(§9).
 
 ### 3.4 Candidates and groups
 
@@ -194,6 +206,14 @@ minus h. S1b documents what master actually draws for each knob and
 proposes a mapping from cr to r; sheet C sweeps r over {0, 0.25h, 0.5h, h,
 2h}. If no mapping is clean, Levi picks.
 
+S1b (finding 5): master draws r(θ) = h·max(0, 1.25·cr·tan(θ/2) − 0.97),
+that is k_max = 1.25·cr − 0.97·cot(θ/2) (the G3G4 reading above omits the
+angle), as a quadratic Bézier rim, and it rejects corners at θ ≲ 49°.
+Proposed, waiting on Levi (ledger K874): that r, capped at 2h (uncapped it
+grows without bound as θ → 180° where the fill is almost nothing), plus
+§3.7's web cap ℓ ≤ 1.5h, so acute corners get a small round instead of
+staying sharp. Until Levi answers, the oracle's sheets use this rule.
+
 ## 4. Scenes
 
 The format is `src/render/field/scene.ts` (version 1): per chain, the
@@ -279,8 +299,8 @@ the gate.
 |---|---|---|
 | S1a | Scene exporter: hook, driver, master screenshots, camera, overlay proof (`K868_s1a_scene_export.md`) | Opus, 2 h |
 | S1b | Geometry core, synthetic scenes, oracle, checks, sheets A-C (`K868_s1b_oracle.md`) | Opus, 2 h |
-| S2 | G2 variants and curvature combs | after S1b |
-| S3 | WebGL2 prototype (reusing `rp=sdf`'s tables where they fit), GPU vs oracle, Pixel fps | after S1b, beside S2 |
+| S2 | Depth from the diagram (§3.3), the corner solve's failures, G2 variants and curvature combs, sheet E (`K868_s2_g2.md`) | Opus, 2 h |
+| S3 | WebGL2 prototype (reusing `rp=sdf`'s tables where they fit), GPU vs oracle, Pixel fps; settles the END tuck and the band W against master (S1a notes) | after Levi's answer on sheet B (K874), beside S2 |
 
 Then Levi's gate on the sheets, then integration behind a flag.
 
@@ -289,8 +309,8 @@ Then Levi's gate on the sheets, then integration behind a flag.
 - A new param appended to `CODEC_PARAMS`, default off until Levi switches
   it on.
 - z on main: the worker's snapshot carries no zPos (hence `phw=0` in the
-  probes). Either compute the tent render-side from the crossing table
-  (pure) or add z to the snapshot; decide then.
+  probes). Decided by §3.3: depth is computed render-side from the
+  crossing table, so the snapshot needs no z.
 - After the switch-over: delete the border look's joinery paths, then K9
   (the fill look on the same field: the interior takes the thread colour
   and the band becomes the casing) and K345 (the hover rim follows the

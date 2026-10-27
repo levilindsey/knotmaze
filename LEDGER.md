@@ -291,11 +291,11 @@ Next free ID: K878.
 - **K868** · Border look, junctions done right: one field renderer (union within a surface, occlusion
   by depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
-  - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator)
-  - branch: mainline; last commit: `2b798a93` (S1b, K870, merged)
-  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets; sheets and check reports also on Drive `K868/`); `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`
-  - next: Levi judges sheets B and C (K874). Meanwhile write the S2 brief (G2 variants, curvature combs; depth pinned at each crossing from the diagram, so k42 keeps its over/under) and the S3 brief (WebGL2 prototype, Pixel fps); they also settle the END 0.76h offset and the fan band W (S1a notes)
-  - brief: `docs/design/K868_field_border.md`
+  - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator); S2: agent `k868-s2` of that session (started 2026-10-26)
+  - branch: S2 on `k868-s2`, worktree `.claude/worktrees/k868-s2`, from master at the S2 brief's commit; last commit: none on `k868-s2` yet (S1b `2b798a93` merged)
+  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets; sheets, check reports and a README also on Drive `K868/`); `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`
+  - next: S2 delivers sheet E (G2 corners vs G1 with combs, k42 under depth from the diagram); Levi judges sheets B and C (K874); after his sheet B answer, write the S3 brief (WebGL2 prototype, Pixel fps; it settles the END tuck and the band W against master, S1a notes)
+  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
