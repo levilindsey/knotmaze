@@ -100,6 +100,10 @@ export interface SceneCrossing {
   a: ScenePass;
   b: ScenePass;
   over: "a" | "b";
+  /** S1a: true for an emergent crossing (physics found the threads
+   * crossing where the diagram has none; master gives it a gap slot, as
+   * renderEmergent does). Absent on registered crossings. */
+  emergent?: boolean;
 }
 
 export interface SceneArm {
