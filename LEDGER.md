@@ -19,10 +19,13 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K878.
+Next free ID: K881.
 
 ## Waiting on Levi
 
+- **K878** · Cursive trace v1 (Drive `K863/`): p's descender, the font's loop or the chart's stem?
+  Exits rising to the next letter's x-height: keep, or short like the chart? Ascenders and m overflow
+  the template: rescale or accept? His answers plus K879 make v2, the base he edits.
 - **K874** · K868 S1b sheets (Drive `K868/sheets/`): is the oracle's look right (B), and which corner
   rule (C): master's r(θ) = h·max(0, 1.25·cr·tan(θ/2) − 0.97) capped at 2h, plus a web cap ℓ ≤ 1.5h
   that rounds the acute corners master leaves sharp (θ ≲ 49°)? `docs/design/K868_s1b_oracle.md`.
@@ -299,10 +302,10 @@ Next free ID: K878.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
-  - owner: agent `k863-trace` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (started 2026-10-26)
+  - owner: nobody since 2026-10-26 22:35 (agent `k863-trace` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 finished the trace stage; waits on Levi, K878)
   - branch: mainline, no code (outputs untracked); last commit: n/a
-  - evidence: `.claude/probes/K863/trace/` (font, tracer, outputs, `ref/chart.jpg`); Drive `K863/`
-  - next: the agent delivers `cursive_traced_v1.svg` and its review sheet; then Levi edits the letters in Inkscape
+  - evidence: `.claude/probes/K863/trace/` (tracer `tools/trace_tool_v2.py`, `NOTES.md`, checks `work4/trace_checks.txt`, `out/`); Drive `K863/` (`cursive_traced_v1.svg`, `cursive_traced_v1_review.png`)
+  - next: Levi answers K878; rerun the tracer with his answers and the K879 crossing fix for v2; Levi edits v2 in Inkscape; then map the letters onto threads
   - brief: `docs/design/K863_trace.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
@@ -724,6 +727,9 @@ Every other item below waits on the trigger it names.
   `docs/design/K370.md`)
 - **K873** · K868 integration needs flow (`fw`) as its own scene input: fw moves the drawn samples,
   so every K868 scene so far is `fw=0`. `docs/design/K868_s1a_notes.md`.
+- **K879** · K863 tracer: where a letter crosses itself (f, k, q, `and`) the trace runs one shared
+  stretch, not an X (coverage off by up to 4.15 u, limit 1). Fix for v2; mapping letters onto
+  threads needs true X crossings (`.claude/probes/K863/trace/NOTES.md`).
 
 ## Residuals (known, not fixed)
 
@@ -1854,6 +1860,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   move pad; the beat pause screen is near-white and full screen (a dark one?)
 - **K811** · Panel search: when the mode hides matches (e.g. "minotaur" in classic shows only Game
   mode), say so in the status, like "3 more in other modes" (K793)
+- **K880** · K863 tracer: also trace Playwrite US Trad's other forms (contextual alternates,
+  stylistic sets ss01-07, ss19, ss20) as alternatives beside v2
+  (`.claude/probes/K863/trace/NOTES.md`).
 
 ## Done
 
