@@ -483,7 +483,7 @@ Next free ID: K886.
 - **K879** · K863 tracer: where a letter crosses itself (f, k, q, `and`) the trace runs one shared
   stretch, not an X (coverage off by up to 4.15 u, limit 1). Fix for v2; mapping letters onto
   threads needs true X crossings (`.claude/probes/K863/trace/NOTES.md`).
-  - owner: nobody since 2026-10-27 00:02 (agent `k879-trace-v2` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 finished: 12 of 13 crossings true X, k residual K885; waits on Levi, K878)
+  - owner: nobody since 2026-10-27 00:02 (agent `k879-trace-v2` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 finished: all 13 crossings true X, k's forced to 61° (K885); waits on Levi, K878)
   - branch: mainline, no code (outputs untracked); last commit: n/a
   - evidence: `.claude/probes/K863/trace/` (`tools/trace_k879.py`, `tools/review_k879.py`; `out5/`, `work5/` and the other 7 combinations in `out5_x*/`, `work5_x*/`; `NOTES.md` "## v2", with the rerun commands)
   - next: after K878, take the matching `out5_<tag>/cursive_traced_v2.svg` (or rerun its NOTES line), upload only the SVG to Drive `K863/` (the review sheets hold chart crops), then close K879
