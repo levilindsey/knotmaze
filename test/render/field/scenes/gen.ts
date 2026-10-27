@@ -478,6 +478,32 @@ export function syntheticScenes(): FieldScene[] {
       }),
     );
   }
+
+  // K868 S2: a corner whose two arms are both curved (centreline radius
+  // 6h), each bending away from the other, for the G2 corners' curvature
+  // match at the joins (sheet E).
+  {
+    const R = 6 * H;
+    const phi = (8 * H) / R;
+    const phiDeg = phi / D2R;
+    const t = new PathB(-R * Math.sin(phi), -R + R * Math.cos(phi), phiDeg).arc(R, -phiDeg).mark("j").arc(R, -phiDeg);
+    const [ex, ey] = dir(80);
+    const e = new PathB(ex * 0.1 * H, ey * 0.1 * H, 80).arc(R, 60).line(8 * H);
+    out.push(
+      build({
+        name: "curved",
+        paths: [t, e],
+        junctions: [
+          { id: "j0", c: O, arms: [...through(0, t.marks.j, "L", "R"), endArm(1, 0, 1, "U")], styles: { "U|L": "sharp" } },
+        ],
+        crossings: [],
+        tips: [],
+        view: { c: [1.5, 1.5], r: 9 },
+        pois: [{ name: "corner", at: [1.2, 1.4], radius: 3.5 }],
+        params: { armRadius: R, theta: 80 },
+      }),
+    );
+  }
   return out;
 }
 
