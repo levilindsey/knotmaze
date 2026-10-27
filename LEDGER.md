@@ -19,10 +19,13 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K881.
+Next free ID: K885.
 
 ## Waiting on Levi
 
+- **K881** · K868 sheet E (Drive `K868/sheets/E_g2_synth.png`, README): at app scale, do
+  curvature-matched (G2) corners look better than G1's rolling-ball arcs? No: G1 stays (exact,
+  cheapest). Yes: a sizing sheet (§3.7: G1's roundness or its footprint), then K882.
 - **K878** · Cursive trace v1 (Drive `K863/`): p's descender, the font's loop or the chart's stem?
   Exits rising to the next letter's x-height: keep, or short like the chart? Ascenders and m overflow
   the template: rescale or accept? His answers plus K879 make v2, the base he edits.
@@ -294,10 +297,10 @@ Next free ID: K881.
 - **K868** · Border look, junctions done right: one field renderer (union within a surface, occlusion
   by depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
-  - owner: nobody since 2026-10-26 23:28 (merged)
+  - owner: nobody since 2026-10-26 23:28 (S2 merged; waits on Levi, K874 and K881)
   - branch: mainline; last commit: `79d27975`
-  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets; sheets, check reports and a README also on Drive `K868/`); `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`
-  - next: Levi judges sheet E (K881: G2 or G1, then sizing) beside sheets B and C (K874); find the cause of the muse_hash G2 failures (K882) before any G2 goes to S3; after his sheet B answer, write the S3 brief (WebGL2 prototype, Pixel fps; it settles the END tuck and the band W against master, S1a notes)
+  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes); sheets A-E, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
+  - next: Levi judges sheets B and C (K874) and E (K881); fix §3 (K883); after his sheet B answer, write the S3 brief (WebGL2 prototype, Pixel fps; it settles the END tuck and the band W against master, S1a notes), with G1 corners unless K881 picks G2 (then K882 first)
   - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -735,12 +738,18 @@ Every other item below waits on the trigger it names.
   `docs/design/K370.md`)
 - **K873** · K868 integration needs flow (`fw`) as its own scene input: fw moves the drawn samples,
   so every K868 scene so far is `fw=0`. `docs/design/K868_s1a_notes.md`.
+- **K882** · K868 S2b, only if K881 picks G2: why both G2 curves cross a side by about h at ~10% of
+  muse_hash's corners (start j74/1, j7/1; hump j33/0; `.claude/probes/K868/s2/count.ts`), then a λ
+  table and short-arm limits. `docs/design/K868_s2_g2.md` Handoff.
+- **K883** · K868 §3 fixes from S2, before the S3 brief (`docs/design/K868_s2_g2.md`, "What §3 gets
+  wrong"): §3.3's tent-inversion claim is false; rules for a crossing inside one junction cluster's
+  span (§3.4, 29 of 350 on muse_hash), a short arm (§3.8) and a corner with no V (j58/1).
 
 ## Residuals (known, not fixed)
 
-- **K877** · K868 oracle residuals: 59 of 342 corner solves fail on muse_hash ("q solve residual",
-  `.claude/probes/K868/oracle/muse_hash/b.json`); #2 fails acute r=0 corners by ε·cot θ (0.017 and
-  0.027 px); kink's 1x image #5/#9; a long render's vitest RPC timeout exits 1 on a passing test.
+- **K877** · K868 oracle residuals: 1 of muse_hash's 342 corner solves fails (j58/1, no V: K883); #2
+  fails acute r=0 corners by ε·cot θ (0.017, 0.027 px); 0.0038h of a −0.0061h clearance unattributed;
+  inset match ±0.022h on polyline arms; kink's 1x #5/#9; long renders' vitest RPC timeout exits 1.
 - **K836 follow-ups** (Levi look needed, 2026-10-23): (a) the i stem still shows a step/flap at J and the K843 flare magnitudes (peak 6 GU, len 30/34 GU) are first guesses - tune by eye at xh2/xh3, incl. the flat dead-end cap. (b) In border mode the i tittle draws as a serrated ring with center speckles (aib still); the fill look is a clean disc. (c) Pale seam discs sit inside the a at L and R in the fill look - judge whether they read as junction pads or artifacts. Stills `.claude/probes/K836/`, `.claude/probes/K843/`.
 - **K834 follow-up**: the stuck-on-loader report - the keep-loading flag is localStorage (`knotmaze.loaderStays`), so Chrome's clear-cache alone does not revert it (clear site data does); the K834 gating should keep the panel reachable under the permanent loader, but the real-phone panel-not-shown case (short landscape sheet) was never reproduced - retest on the phone.
 
@@ -1575,6 +1584,9 @@ Every other item below waits on the trigger it names.
 - **K872** · K868 S1a alignment check gaps: `def` reads 0.509 px at dsf 1 (limit 0.5; 0.172 at dsf
   3), unattributed; dark paper gives no rays (needs an inner-edge measure); rays near junctions are
   not cut at each arm's fillet reach. `docs/design/K868_s1a_notes.md`.
+- **K884** · K868 S1a exporter: muse_hash's crossing 15 disagrees with its geometry (#14's one
+  failure outside a cluster), and `look.ctrlArc` is not exported (the oracle's depth window then
+  assumes 1). `docs/design/K868_s2_g2.md` Check numbers.
 
 ## Approved, to schedule (2026-10-11)
 
