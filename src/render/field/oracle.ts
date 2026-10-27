@@ -805,11 +805,13 @@ export class FieldModel {
       }
       const u = (lo + hi) / 2;
       if (ex[i]) {
-        out.push(start, u);
+        // A zero-length interval is a single point (e.g. a sharp V, which
+        // the other arm's side already carries): drop it.
+        if ((u - start) * L > 1e-9) out.push(start, u);
         start = -1;
       } else start = u;
     }
-    if (start >= 0) out.push(start, 1);
+    if (start >= 0 && (1 - start) * L > 1e-9) out.push(start, 1);
     pr.exp = out;
   }
 

@@ -25,6 +25,8 @@ export interface Row {
   tiles: Tile[];
   /** Caption lines (check results); a line starting "FAIL" is shown in red. */
   lines: string[];
+  /** Wrap the tiles at this width (CSS px); default: one line. */
+  wrapAt?: number;
 }
 
 export function sheetHtml(title: string, intro: string[], rows: Row[]): string {
@@ -56,7 +58,8 @@ export function sheetHtml(title: string, intro: string[], rows: Row[]): string {
           return `<div class="${cls}">${esc(l)}</div>`;
         })
         .join("");
-      return `<div class="row"><div class="tiles">${tiles}</div><div class="cap"><h2>${esc(r.title)}</h2>${lines}</div></div>`;
+      const wrap = r.wrapAt ? ` style="flex-wrap:wrap;max-width:${r.wrapAt}px"` : "";
+      return `<div class="row"><div class="tiles"${wrap}>${tiles}</div><div class="cap"><h2>${esc(r.title)}</h2>${lines}</div></div>`;
     })
     .join("\n");
   return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${css}</style></head><body><h1>${esc(
