@@ -296,13 +296,6 @@ Next free ID: K874.
   - evidence: `.claude/probes/K868/` (scenes, oracle, sheets); `docs/design/K868_s1a_notes.md`
   - next: K870 (S1b) runs on the S1a scenes until ~21:29: merge it, review sheets A-C, upload them to Drive, Levi judges the look and the r mapping; then the S2 and S3 briefs, which settle the depth source (physics z is not the tent), the END 0.76h offset and the fan band W (S1a notes)
   - brief: `docs/design/K868_field_border.md`
-- **K870** · K868 S1b: the CPU oracle, checks 1-9 and 11, contact sheets A-C, and a proposed cr-to-r
-  mapping.
-  - owner: agent `a21329f961a4b1641` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-26 19:29, 2 h cap ~21:29)
-  - branch: `k868-s1b`, worktree `.claude/worktrees/k868-s1b`; last commit: `e3190f77`
-  - evidence: .claude/probes/K868/oracle/ and .claude/probes/K868/sheets/
-  - next: steps 1-4 of the brief on the real scenes in `.claude/probes/K868/scenes/` (ready since 20:55)
-  - brief: `docs/design/K868_s1b_oracle.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -1847,6 +1840,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K870** · K868 S1b: the CPU oracle (`src/render/field/geom.ts`, `oracle.ts`, `checks.ts`), checks 1-9 and 11, 12 synthetic scenes, contact sheets A-D. Done in 2b798a93 (2026-10-26).
 - **K869** · K868 S1a: the scene exporter (`__knotSceneExport`, `scripts/export_scene.mjs`) and 21 real scenes (65 variants) for S1b. Done in a3e915cb (2026-10-26).
 - **K858** · Research adoption round: curves 3.2 became K859, cursive K860/K861; curves 3.3 (one field-shaded border) is now K868. Done in ec3a8b30 (K859) and f86068be (K860) (2026-10-26).
 - **K861** · Fair re-authoring of a/i against K860's targets. Dropped: rejected by Levi ('they are bad'), superseded by K863's clean slate; its re-fit (b2c53c30) stays the live a/i data until K863 lands (2026-10-26).
