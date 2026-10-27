@@ -19,16 +19,16 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K885.
+Next free ID: K886.
 
 ## Waiting on Levi
 
 - **K881** · K868 sheet E (Drive `K868/sheets/E_g2_synth.png`, README): at app scale, do
   curvature-matched (G2) corners look better than G1's rolling-ball arcs? No: G1 stays (exact,
   cheapest). Yes: a sizing sheet (§3.7: G1's roundness or its footprint), then K882.
-- **K878** · Cursive trace v1 (Drive `K863/`): p's descender, the font's loop or the chart's stem?
-  Exits rising to the next letter's x-height: keep, or short like the chart? Ascenders and m overflow
-  the template: rescale or accept? His answers plus K879 make v2, the base he edits.
+- **K878** · Cursive trace v2 (all 8 answer combinations built, `.claude/probes/K863/trace/out5*`):
+  p as the font's loop or ss01's retraced stem? Exits full or short (cut at half the x-height)?
+  x-height 120 (ascenders 240 vs the 220 guide; full-exit m 376 vs a 340 cell) or 108 (fits)?
 - **K874** · K868 S1b sheets (Drive `K868/sheets/`): is the oracle's look right (B), and which corner
   rule (C): master's r(θ) = h·max(0, 1.25·cr·tan(θ/2) − 0.97) capped at 2h, plus a web cap ℓ ≤ 1.5h
   that rounds the acute corners master leaves sharp (θ ≲ 49°)? `docs/design/K868_s1b_oracle.md`.
@@ -307,8 +307,8 @@ Next free ID: K885.
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
   - owner: nobody since 2026-10-26 22:35 (agent `k863-trace` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 finished the trace stage; waits on Levi, K878)
   - branch: mainline, no code (outputs untracked); last commit: n/a
-  - evidence: `.claude/probes/K863/trace/` (tracer `tools/trace_tool_v2.py`, `NOTES.md`, checks `work4/trace_checks.txt`, `out/`); Drive `K863/` (`cursive_traced_v1.svg`, `cursive_traced_v1_review.png`)
-  - next: Levi answers K878; rerun the tracer with his answers and the K879 crossing fix for v2; Levi edits v2 in Inkscape; then map the letters onto threads
+  - evidence: `.claude/probes/K863/trace/` (v1: `tools/trace_tool_v2.py`, `work4/`, `out/`; v2: `tools/trace_k879.py`, `out5*/`; `NOTES.md`); Drive `K863/` (`cursive_traced_v1.svg`, `cursive_traced_v1_review.png`)
+  - next: Levi answers K878; upload that v2 variant (K879); Levi edits v2 in Inkscape; then map the letters onto threads
   - brief: `docs/design/K863_trace.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
@@ -483,10 +483,10 @@ Next free ID: K885.
 - **K879** · K863 tracer: where a letter crosses itself (f, k, q, `and`) the trace runs one shared
   stretch, not an X (coverage off by up to 4.15 u, limit 1). Fix for v2; mapping letters onto
   threads needs true X crossings (`.claude/probes/K863/trace/NOTES.md`).
-  - owner: agent `k879-trace-v2` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (started 2026-10-26 22:50, cap 2 h)
+  - owner: nobody since 2026-10-27 00:02 (agent `k879-trace-v2` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 finished: 12 of 13 crossings true X, k residual K885; waits on Levi, K878)
   - branch: mainline, no code (outputs untracked); last commit: n/a
-  - evidence: `.claude/probes/K863/trace/` (`NOTES.md` under `## v2`, `work5/`, `out5/`)
-  - next: the agent delivers v2 at the defaults and the rerun commands; after Levi answers K878, rerun with his options, upload v2 to Drive `K863/` and close K879
+  - evidence: `.claude/probes/K863/trace/` (`tools/trace_k879.py`, `tools/review_k879.py`; `out5/`, `work5/` and the other 7 combinations in `out5_x*/`, `work5_x*/`; `NOTES.md` "## v2", with the rerun commands)
+  - next: after K878, take the matching `out5_<tag>/cursive_traced_v2.svg` (or rerun its NOTES line), upload only the SVG to Drive `K863/` (the review sheets hold chart crops), then close K879
   - brief: `docs/design/K879_trace_v2.md`
 
 ## Next, in order
@@ -1587,6 +1587,9 @@ Every other item below waits on the trigger it names.
 - **K884** · K868 S1a exporter: muse_hash's crossing 15 disagrees with its geometry (#14's one
   failure outside a cluster), and `look.ctrlArc` is not exported (the oracle's depth window then
   assumes 1). `docs/design/K868_s2_g2.md` Check numbers.
+- **K885** · K863 trace v2 residuals (`.claude/probes/K863/trace/NOTES.md` v2): k's buckle traced as
+  a 61° X where the font's passes run ~3° apart; coverage up to 4.3 u where a stroke touches back
+  (f, q) and 1-3 u at retrace forks; stem p kinks at (166,244); repair windows in template units.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1877,9 +1880,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   move pad; the beat pause screen is near-white and full screen (a dark one?)
 - **K811** · Panel search: when the mode hides matches (e.g. "minotaur" in classic shows only Game
   mode), say so in the status, like "3 more in other modes" (K793)
-- **K880** · K863 tracer: also trace Playwrite US Trad's other forms (contextual alternates,
-  stylistic sets ss01-07, ss19, ss20) as alternatives beside v2
-  (`.claude/probes/K863/trace/NOTES.md`).
+- **K880** · K863 tracer: trace Playwrite US Trad's stylistic sets as alternatives beside v2 (ss01-07
+  change 4-19 lowercase each, ss19/20 none; survey `.claude/probes/K863/trace/work5/ss_table.txt`,
+  `ss_sheet.png`; ss01's p is wired up as `--p stem`).
 
 ## Done
 
