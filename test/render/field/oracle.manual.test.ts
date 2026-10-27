@@ -656,9 +656,12 @@ describe("K868 oracle (manual)", () => {
         rows.push({ title: `${spec.name}: G1, then the clothoid pair, the quintic Bézier and the three-arc spline (inset-sized), each at 1x and 6x with its comb`, tiles, lines, wrapAt: 2300 });
       }
 
-      // muse_hash: G1 against the quintic (inset-sized) at §3.8's r.
+      // muse_hash: G1 against the quintic (inset-sized) at §3.8's r. Each
+      // quintic crop takes about 17 min (the CPU oracle's polyline corners),
+      // so K868_E_ROWS=synth skips them and writes E_g2_synth instead.
+      const synthOnly = process.env.K868_E_ROWS === "synth";
       const sceneDir = join(root, "scenes");
-      for (const jn of ["j123", "j49"]) {
+      for (const jn of synthOnly ? [] : ["j123", "j49"]) {
         const s = JSON.parse(readFileSync(join(sceneDir, `muse_hash.${jn}.json`), "utf8")) as FieldScene;
         const h = s.look.halfWidth;
         const J = Number(jn.slice(1));
@@ -735,7 +738,7 @@ describe("K868 oracle (manual)", () => {
         ],
         rows,
       );
-      const png = await renderSheet(sheets, "E_g2", html, 2500);
+      const png = await renderSheet(sheets, synthOnly ? "E_g2_synth" : "E_g2", html, 2500);
       console.log("sheet E:", png);
     },
     3600000,
