@@ -477,6 +477,14 @@ Next free ID: K881.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
+- **K879** · K863 tracer: where a letter crosses itself (f, k, q, `and`) the trace runs one shared
+  stretch, not an X (coverage off by up to 4.15 u, limit 1). Fix for v2; mapping letters onto
+  threads needs true X crossings (`.claude/probes/K863/trace/NOTES.md`).
+  - owner: agent `k879-trace-v2` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (started 2026-10-26 22:50, cap 2 h)
+  - branch: mainline, no code (outputs untracked); last commit: n/a
+  - evidence: `.claude/probes/K863/trace/` (`NOTES.md` under `## v2`, `work5/`, `out5/`)
+  - next: the agent delivers v2 at the defaults and the rerun commands; after Levi answers K878, rerun with his options, upload v2 to Drive `K863/` and close K879
+  - brief: `docs/design/K879_trace_v2.md`
 
 ## Next, in order
 
@@ -727,9 +735,6 @@ Every other item below waits on the trigger it names.
   `docs/design/K370.md`)
 - **K873** · K868 integration needs flow (`fw`) as its own scene input: fw moves the drawn samples,
   so every K868 scene so far is `fw=0`. `docs/design/K868_s1a_notes.md`.
-- **K879** · K863 tracer: where a letter crosses itself (f, k, q, `and`) the trace runs one shared
-  stretch, not an X (coverage off by up to 4.15 u, limit 1). Fix for v2; mapping letters onto
-  threads needs true X crossings (`.claude/probes/K863/trace/NOTES.md`).
 
 ## Residuals (known, not fixed)
 
