@@ -108,3 +108,28 @@ Line numbers are at e3190f77.
 - Screenshots: `page.screenshot({clip})` (drawImage of the WebGL canvas
   reads blank). Wheel zoom: WheelEvent deltaY +-120 at the target until
   |s - target| / target < 0.005 (`.claude/probes/K862/fbd_shot.mjs`).
+
+## D2 mechanics (scripts/export_scene.mjs)
+
+- Wheel (`input_pointer.ts` ~482, on app.canvas): unit 16 (deltaMode 1),
+  screen height (2), else 1. mouseWheel = deltaMode != 0 || (deltaX == 0
+  && integer deltaY && |deltaY| >= 40). ctrlKey or mouseWheel:
+  zoomAt(clientX, clientY, exp(-deltaY * unit * (ctrl ? 0.01 : 0.0015)));
+  else panBy(-deltaX * unit, -deltaY * unit). So ONE ctrl event with
+  deltaY = -100 ln(f) zooms by exactly f at the pointer, and a non-ctrl
+  event with deltaX != 0 pans exactly. The export zooms that way, then
+  pans the POI to the centre; physics stays frozen (hash re-checked).
+- camera.ts: MAX_ZOOM 8; placeWorldAt clamps the scale (camFollow: hi =
+  followScale * 4, lo = min(fit, follow) * 0.85; else lo = fit, hi =
+  fit * 8); clampView unless free. Check the view holds still after.
+- Renderer resolution = min(devicePixelRatio, 2) with autoDensity
+  (main.ts 275): at dsf 3 the canvas renders at 2x and is upscaled. The
+  export's camera.dpr is the SCREENSHOT's dpr; the diag keeps the
+  renderer's (`rendererResolution`).
+- Dev server base is "/" (http://127.0.0.1:5341/?...).
+- Fillet reach: joinery.ts FILLET_REACH_PER_HALF 1.25, reach = 1.25 * h *
+  cuspRadius along each arm; no wedges at cr <= 0.05. The alignment
+  excludes max(1.25 cr h, 2h) + 2h around junction centres.
+- No cr/crs setter hook (the cr slider calls onSlackChange, crs
+  onStyleChange): cr variants are reloads with --expect-hash, and a
+  matching hash proves the param is render-only.
