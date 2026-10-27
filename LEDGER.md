@@ -19,13 +19,16 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K862. (K859 = tangency-solved G1 arc rims, from the curves research; K860 = cursive fairness gates/measurement before any re-authoring.) (K857 = borders still crossing junctions, across the joining thread's end - Levi 2026-10-26, after K854; in In progress.) (K854 border-mode junction outline, measured: side-cut window now reaches the flank tips, rims solid and straddling; interior strokes at the three probed 4-arm junctions -36/-32/-46%, SDF path also improved - see Done. Residuals there.) (K853 loader spin mode + speed cap: codec-appended loaderMove "spin" (centroid pinned at screen centre, knot turns around it, marker directly below it); loading-speed max 3 -> 9 (Levi: x3) - see Done.) (K852 loader motion + loader-only params: codec-appended loaderMove "above" + loaderGap/loaderThreadWidth/loaderThreadColor/loaderBgColor/loaderIndicatorSize/loaderFill/loaderTrail; the loader's look no longer borrows the maze's gap/threadWidth/pathColor/backgroundBase; defaults reproduce the pre-K852 drawing bit-for-bit - see Done.) (2026-10-23: K847 cursive rethink: a re-silhouetted as a single-story cursive a (apex top-right, proven shipped segment proportions, integer tangents, lint-clean), i entry one sweep (arrival hin 4->3, entry hout 1.5->1.6 of LOW), flares longer (a 30->46, i 34->50 GU) with cosine falloff; stills .claude/probes/K847/after. K846 border junctions: junction side cut (ribbon edges hand over to wedge rims at every junction arm, both ribbon programs; entries from the joinery's drawn wedges via RANGES segment space) + tangent-continuous cubic fillet rims; glyph junctions keep one joinery arm each so they are unchanged there (taper/cap machinery, K847+). K844 look-chip same row as dropped badge, left vs right (76832a4f, revises K837); K845 hint draws a set distance (HINT_DISTANCE 6) along the route, spilling past short runs.) (2026-10-23 night batch: K836 cursive-a tangent attachments + landTangent (761003ab); K837 look-chip offset (e3792ec8); K838 hint lasts until the move + one at a time, codec v9 (39fe558c); K839 Show-shortest-path checkbox (d7028231); K840 fragile ends break (4507a632); K841 loader follow unwraps continuously (897a9d11, 5f4297ba); K842 overlays dive under crossings (fc6d1a9e); K843 junction flares (df80e1f6). (K828 loader params + keep-loading preview; K829 taper lean (K718 call 1); K830 corner share slider; K831 a/i letterform redesign; K832 SDF/junction residuals; K833 border junction disc rims + semicircle dead-end caps (7e98a5bc); K834 intro chrome gating on loader persistence + reset confirmation (4aa7fc37); K835 path irregularity + excursion sliders (a437893f); K831 dot ellipse (061b7af1).) (K812 preview effect buttons; K813 border-look highlights; K814 shape-injection param collection; K815 junction border fans; K816 SDF ribbons; K817 gap kStart rounding (K592); K818 shape-injection collection (K814 stages 1-3); K819 cannonSpread param + LOOK_KEYS backdrop/path colors; K820 borderWidth/borderColor/goldTextureStrength params (uKBorder, uKLook.w, uKHlPulse.w); K821-K822 panel restructure (Maze before Game; End effects, Text & emblem, Exit traps, Exploration, Burn race, Classic rules subfolders; Thread look above its rows; Path color beside the gold rows).)
+Next free ID: K869.
 
 ## Waiting on Levi
 
-
-
-
+- **K863** · Cursive clean slate, waiting on Levi's own letterforms (Inkscape, `cursive_template.svg`
+  in Drive: centreline strokes, pen order = path order, enter left on the baseline, exit right). No
+  model alphabet meanwhile. Muse's prototype + design doc parked at 6639009c (`park/muse-2026-10-26`).
+- **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
+  tune. Muse's in-tune two-oscillator voice (within 1 cent, tested) is parked at 69e079eb: Levi judges
+  its timbre on the desktop's 5319 test server (Muse's build), then cherry-pick to master or drop.
 - **K623** · K409's glow covers the dark band under Gone (only a browner tail shows): A as merged, B
   the glow down the middle only, C a faster glow fade, D a longer band (1.0 ctrl) with a dark rim
   past the glow. Rec: D. Sheet: `.claude/probes/K409/out/options/K409_glow_band_options.png`.
@@ -285,23 +288,14 @@ Next free ID: K862. (K859 = tangency-solved G1 arc rims, from the curves researc
 
 ## In progress
 
-- **K857** · Borders still run all the way across junctions, across the end of the joining thread, sometimes (Levi 2026-10-26, with screenshot, after K854 shipped). RESOLVED same day - see Done.
-  - owner: agent (2026-10-26)
-  - branch: mainline
-  - evidence: `.claude/probes/K857/` (audit, classifier, diffs), Levi's screenshot (this session). Re-verified 2026-10-27 on the post-K859/K861 build: classifier (`.claude/probes/K861/cls_verify/`) matches the K857-after baseline - j110 interior 808 -> 810, j164 interior 557 -> 557, deep across-junction ribbon strokes 0 at every audited junction. Curves SS3.3 field-shaded border band stays deferred insurance; no residue justifies it.
-- **K858** · Research adoption round (Levi 2026-10-26: research the general problems in parallel, then implement good leads). Two subagent reports: `.claude/probes/K857/research_curves.md` (junction curve-matching survey) and `.claude/probes/K858/research_cursive.md` (cursive struggles + related work). Adoption calls: curves §3.1 (rim-derived cut windows) is ALREADY the shipped K854/K857 semantics (window = max(capsule-exit, armReach-0.05) with tips from the same armReach) - no stage; curves §3.3 (border band shaded once in the junction field) deferred as insurance, only if classifier residue remains after K859; curves §3.2 (tangency-solved G1 arc rims) = K859. Cursive: measurement-first - K860 builds the Farin fairness gates + skeleton measurement before any re-authoring (K850 still awaits Levi's look verdict; no new shapes until the gates show a measurable deficiency).
-- **K859** · Tangency-solved G1 arc rims (curves research §3.2). RESOLVED as extraction + measurement, no behaviour change - see Done.
-  - owner: agent (2026-10-26)
-  - branch: mainline
-  - evidence: `.claude/probes/K857/research_curves.md` §3.2, `.claude/probes/K859/`
-- **K860** · Cursive fairness gates (cursive research shortlist 1, measurement half). RESOLVED: deficiency measured - see Done. Follow-up is K861.
-  - owner: agent (2026-10-26)
-  - branch: mainline
-  - evidence: `.claude/probes/K858/research_cursive.md` §3-4, `.claude/probes/K860/measure.mts`
-- **K861** · Fair re-authoring of a/i (cursive research shortlist 1, data half). CANDIDATE SHIPPED, awaiting Levi's visual verdict (supersedes K850 as the candidate; acceptance NOT claimed). Measured descent (`.claude/probes/K861/fit2.mts`) over handles/positions/tangent dirs with lint in the loop; key structural find: the (1, 3) tangent at L stood steeper than both neighbouring chords and forced an S-wiggle on the a's rise - L and the spur landing now share (1, 2). K860 fairness before -> after: a body flips 5 -> 3, pieces 10 -> 6, excess 0.0339 -> 0.0074, minR 11.2 -> 13.0 GU; a spur flips 2 -> 2, pieces 8 -> 4, excess -> 0.0022; i body flips 4 -> 4, pieces 6 -> 4, excess 0.0085 -> 0.0033, minR 12.1 GU. PRE-REGISTERED FLIP TARGETS (2/1/2) NOT MET: knot-local search cannot remove the remaining flips - the a-rise wiggle straddles L and the i's entry-blend/fold/exit flips are intrinsic to this knot placement; reaching them needs a re-placed-knot redesign, Levi's call whether to pursue. Gates: lint 0 errors xh 2/3, full suite green, stills `.claude/probes/K861/ai2.png` + `ai3.png` (settled, asleep) for the verdict.
-  - owner: agent (2026-10-26)
-  - branch: mainline
-  - evidence: `.claude/probes/K860/measure.mts`, `.claude/probes/K858/research_cursive.md` §4.1
+- **K868** · Border look, junctions done right: one field renderer (union within a surface, occlusion
+  by tent depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
+  CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
+  - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator)
+  - branch: mainline; last commit: `fa46068b`
+  - evidence: `.claude/probes/K868/`
+  - next: commit the design + stage briefs, then launch S1a (scene exporter) and S1b (CPU oracle, checks, Drive contact sheets) in parallel
+  - brief: `docs/design/K868_field_border.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -406,7 +400,7 @@ Next free ID: K862. (K859 = tangency-solved G1 arc rims, from the curves researc
   - owner: nobody since 2026-10-15 14:18 (the phone agent `a2c95d8bde8feeea8` of claude session 05e60da0 finished its bench; G3-0's `af653fa7f942f2f1e` (session d8031183) finished, its worktree left, locked by the live Claude process (K161))
   - branch: mainline; last commit: `3465090` (G3-1; G3-0 f6d10e3)
   - evidence: `.claude/probes/K8/G3-1/` (the brief's texture sizes); `.claude/probes/K8/stage2/` (`notes.md`, `g3_probe.mjs`, `batch3.ps1`-`batch6.ps1`, `phone6.ps1`, results); stage 1's `.claude/probes/K8/stage1/notes.md`
-  - next: G3-2 briefed (`docs/design/K8_G3-2.md`) and its ThreadPass seam landed 2026-10-21 (957ba833: thread_pass.ts, `?rp=sdf` at construction, rpFallback flag); remaining: ribbon_sdf.ts + the attributed-diff A/B (the brief's steps 2-3), then G3-3 after Levi's phone check. G3-2 steps 2-3 landed in K816 (855bea23); K825 added the explore variant (withExploreSdf) and K826 the mitered silhouette (sdMiterQuad; A/B knot mean 21.5 -> 20.9, gt32 17.4 -> 17.0: the residual diff is uniform across the knot, not bend-local, and needs the same-state capture to attribute). Desktop bench 2026-10-22 (seed 7, asleep, bench_frame.mjs ABBA): SDF frame p50 0.3 ms / 10 draws vs strip 1.1 ms / 102 draws; update 12.8 vs 18.8 ms per call. G3-3 (default flip + strip deletion) still waits on Levi's phone look. Lane: R5 after G4-1; never beside an R stage, K268 item 4 or another GPU measurement; it may run beside K7. K90 stopped (Levi 2026-10-20)
+  - next: G3-2 briefed (`docs/design/K8_G3-2.md`) and its ThreadPass seam landed 2026-10-21 (957ba833: thread_pass.ts, `?rp=sdf` at construction, rpFallback flag); remaining: ribbon_sdf.ts + the attributed-diff A/B (the brief's steps 2-3), then G3-3 after Levi's phone check. G3-2 steps 2-3 landed in K816 (855bea23); K825 added the explore variant (withExploreSdf) and K826 the mitered silhouette (sdMiterQuad; A/B knot mean 21.5 -> 20.9, gt32 17.4 -> 17.0: the residual diff is uniform across the knot, not bend-local, and needs the same-state capture to attribute). Desktop bench 2026-10-22 (seed 7, asleep, bench_frame.mjs ABBA): SDF frame p50 0.3 ms / 10 draws vs strip 1.1 ms / 102 draws; update 12.8 vs 18.8 ms per call. G3-3 (default flip + strip deletion) still waits on Levi's phone look. Lane (pre-K868): R5 after G4-1, and G4-1 is now replaced for the border look by K868; never beside an R stage, K268 item 4 or another GPU measurement; it may run beside K7. K90 stopped (Levi 2026-10-20)
   - brief: `docs/design/K8_G3-1.md`; G3-0's handoff: `docs/design/K8_stage1.md` ("Stage 2 handoff")
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
@@ -547,8 +541,6 @@ merged):
   a white paper background (from `vellum`); a thread look of fill, border or both (an edge stroke on each side; over,
   under and joins read from the strokes); the Crossing gap row down to 0 (its floor is 0.04; the codec takes 0); solid
   or textured fills and borders (pencil), if fast enough.
-  param (Levi 2026-10-21; sooner list). After K797's border look.
-  fill) and a fill texture dropdown, for colored pencil, crayon or highlighter, if fast enough. After K794.
 - **K409** · Levi's burn calls 1-3 merged (6b9eb8f..3231d59). Left: step 4, the ember over the smoke
   (NOT BUILT in `render-explore.md`), after K525 (paint files) and K623/K624. The phone sheet passed
   (K631 part 1, 10-20). `docs/design/K409.md`.
@@ -567,9 +559,9 @@ Every other item below waits on the trigger it names.
 
 - **K531** · Daily determinism at launch (K210 answered by Levi, 2026-10-16): past dailies must be deterministically reconstructible as (app version -> that version's frozen PARAM_DEFAULTS) merged with (daily-specific params/custom overrides for that day); post-launch changes must not significantly alter previous dailies. Implementation: frozen per-version defaults table + per-day override table, published days immutable; folds K82 in; lands at launch prep.
 - **K533** · Backend daily precomputation (Levi, 2026-10-16, future): regularly precompute and cache daily designs on the backend and serve current + previous dailies, moving daily-calculation logic server-side so future dailies cannot be anticipated client-side. Explore/design/implement later alongside accounts/logins/data persistence (K144). Depends on K531's determinism design.
-- **K345** · The hover rim stops `rimGap` (0.975 world) short of junctions;
-  Levi (2026-10-14) wants it to follow the fillets. Goes in K9's G4-1 (K8
-  s1: piece SDFs give webs an across coordinate; fan work now is wasted).
+- **K345** · The hover rim stops `rimGap` (0.975 world) short of junctions; Levi (2026-10-14) wants it
+  to follow the fillets. Rides K868/K9's field (it gives junctions an across coordinate); fan work
+  now is wasted.
 - **K240** · High contrast for the DOM chrome (K111 follow-up): a CSS layer on
   `:root[data-contrast="high"]` (already set) for the panel, HUD and badge (TS-injected styles).
   Small; after K238's review.
@@ -589,9 +581,9 @@ Every other item below waits on the trigger it names.
 - **K341** · The second panel audit after the design iteration (Levi 10-14): rerun K339's inventory
   (`scripts/panel_inventory.ts`, `docs/design/K339_inventory.md`) and checklist, feed K297's
   pared-down set (`docs/design/K339_panel_audit.md` item 8).
-- **K9** · G4: smooth-union SDF junction webs (cuspRadius = blend radius); A/B crops at cr 1, 3, 6
-  before the fans are deleted. Also closes G1's x160 leftover (`.claude/rules/render-gaps.md`); webs
-  carry the traveled route as the smooth union of the traveled pieces only (K81).
+- **K9** · G4: junctions from one field, not fans and joinery. The border look goes first (K868); K9
+  follows its integration: the fill look on the same field, the traveled route as the union of the
+  traveled pieces (K81), G1's x160 leftover (`.claude/rules/render-gaps.md`), then the fan deletion.
 - **K116** · Pluck instruments, accompaniment, lowest priority (`docs/design/K116_instruments.md`,
   2e60b00, `docs/design/levi_notes_2026-10-13.md`): skeleton (drone, bass, `pluckVoice` presets),
   then marimba, bells; `pvc`, `acc`, `acl` daily-exempt; Pixel audio probe first; loop K125.
@@ -1840,6 +1832,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K858** · Research adoption round: curves 3.2 became K859, cursive K860/K861; curves 3.3 (one field-shaded border) is now K868. Done in ec3a8b30 (K859) and f86068be (K860) (2026-10-26).
+- **K861** · Fair re-authoring of a/i against K860's targets. Dropped: rejected by Levi ('they are bad'), superseded by K863's clean slate; its re-fit (b2c53c30) stays the live a/i data until K863 lands (2026-10-26).
+- **K866** · Global union-field border, ?fbd=1. Dropped: superseded by K868 (its global union fused crossings too, then un-fused them with gates); never committed, code parked at 6e12716e (branch park/muse-2026-10-26) (2026-10-26).
+- **K865** · SDF union-field junction border, ?sfb=1. Dropped: superseded by K868; never committed, code parked at 6e12716e (branch park/muse-2026-10-26) (2026-10-26).
+- **K864** · K862 follow-up: cosine-warped rim samples, per-side side-cut windows. Dropped: never committed; parked at 6e12716e (`park/muse-2026-10-26`), superseded by K868 (2026-10-26).
+- **K862** · G1 fillet rims (two Hermite halves through the old rim's midpoint). Dropped: never committed; parked at 6e12716e (`park/muse-2026-10-26`), superseded by K868 (2026-10-26).
 - **K860** · Cursive fairness measurement (cursive research shortlist 1, measurement half): new pure `src/core/glyphs/glyph_fairness.ts` (K108-exact: densePath's signed curvature only) reports per path: min radius, curvature sign flips (deadbanded), monotone-κ pieces (swing-split), total κ variation, excess variation (ripple the piece skeleton cannot explain), max |dκ/ds|; `FAIR` targets (0 flips / ≤3 pieces / ≤0.004 excess) as a report, not a lint gate; synthetic tests (straight/arc/S/wiggle/jittered arc) in `test/core/glyph_fairness.test.ts`. Measured on the shipped K850 data (`.claude/probes/K860/measure.mts`): lint-clean (0 errors xh 2/3) but measurably unfair - a body: 5 sign flips, 10 pieces, excess 0.0339, minR 11.2 GU; a spur: 4 flips, 8 pieces; i body: 4 flips, 6 pieces, excess 0.0085; i stem spur clean (1 deadband flip). Intrinsic flips (entry blend, exit/bottom sweeps) account for ~2 of the body's - the rest is the lumpiness Levi rejected, now a number. Re-authoring registered as K861 with per-path targets pre-registered from this measurement.
 - **K859** · Rim curve extracted and measured; the research's premise corrected (curves research §3.2): the wedge rim's math moved verbatim into pure `src/render/ribbon/rim_curve.ts` (pinned by `test/render/rim_curve.test.ts`, frozen-maze diff vs the pre-extraction build = 0 px). Measurement overturned the plan: the corner-projection cubic (K846, "tangent rims") fires only when the edge-line corner lies beyond BOTH flank tips along their tangents - at cuspRadius 3 that needs wedges under ~29°, and on the frozen seed-3 maze the projection is negative on at least one side at 392/392 wedges (`.claude/probes/K859/fallback_count.mjs`, spot-checked ji0: tips ~0.59 out, corner ~0.25). The de-facto rim is the quadratic through the corner (union-outline-exact; G0 joins softened by K854's straddling band). A tangent-Hermite replacement (arc-fit lengths, G1 by construction) was implemented, unit-tested, and measured WORSE - outward bulge overshooting into neighbouring threads at tight junctions, 163k px churn on the frozen maze (`.claude/probes/K857/out/old_site1.png` vs `k859_site1.png`) - so it stays out and `rim_curve.ts` documents why. `rimCurvePoints` is the seam for the next candidate (a biarc through the corner region). Curves §3.1 was already shipped semantics (K854/K857); §3.3 (field-shaded border band) remains deferred insurance. Full suite 2320 passed.
 - **K857** · Borders running across junctions (across the joining thread's end), fixed (Levi 2026-10-26, after K854): ROOT CAUSE - joinery skipped every wedge flatter than FILLET_MAX_WEDGE (2.6 rad ≈ 149°): no rim AND no side-cut. That skip is only correct between one chain's own two arms (the near-straight pass-through side, whose ribbon already draws both edges through). A wide wedge between DIFFERENT chains is a real outline corner: skipping it left both facing ribbon edges uncut, so the through thread's border ran straight across the joining arm's mouth. Audit (`.claude/probes/K857/audit.mjs`, frozen seed 3): 5 such junctions of 166 (gaps 150-163°). Fix: the skip now requires `A.chain === B.chain`; wide different-chain wedges get flanks, rim and cuts like any other wedge (one line in `src/render/ribbon/joinery.ts` + comments). Verified: cut entries at j164 flip to left/right true on the previously uncut flanks; the before/after pixel diff at j164 (792 px) is exactly the removed cross-mouth stroke with the rim completing the outline (`.claude/probes/K857/out/j164_diff_crop.png`); same class fixed at a neighbour junction in j110's frame. Classifier (K854 oracle upgraded to mirror the new skip rule, baseline rebuilt via stash): j164 boundary 1048 -> 1250 (outline completed), interior 598 -> 557; j110 interior unchanged (its deep pixels are the crossing-window class). No regression at the K854 trio: interior 620/566/359, identical to K854. Full suite 2316 passed; fill look at j164 shows no fan bulge. The K854 residuals stand (crossing-gap-window strokes near junctions; SDF path still denser, gated).
