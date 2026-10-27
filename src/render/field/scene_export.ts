@@ -45,6 +45,7 @@ import type {
   Vec2,
 } from "./scene";
 import { SCENE_VERSION } from "./scene";
+import { cornerWedgeKey } from "../ribbon/corner_share";
 
 /** One chain as the renderer holds it this frame. */
 export interface ExportChain {
@@ -102,11 +103,15 @@ export interface SceneExportInput {
   crossings: ExportCrossing[];
   /** ps.emergentCrossings the renderer draws (joint pairs already removed). */
   emergent: ExportCrossing[];
+  /** Drop an emergent crossing within 0.8 of an accepted one's drawn point
+   * (default true). The page hook passes false: it repeats master's own
+   * dedupe (physics binding points against diagData) and passes the rest. */
+  dedupeEmergent?: boolean;
   /** renderer.junctionArms, by junction index. */
   junctions: ExportJunction[];
   /** The K830 corner state: every candidate wedge and the rounded keys. */
   corners: {
-    candidates: ReadonlyArray<{ key: string; pin?: string }>;
+    candidates: ReadonlyArray<{ key: string; pin?: unknown }>;
     rounded: ReadonlySet<string>;
   };
   /** renderer.freeTips (dead ends with a cap). */
@@ -166,10 +171,9 @@ const ARM_MIN_LEN = 0.15; // joinery: an arm probe this close is dropped
 const EMERGENT_DUP = 0.8; // crossing_gaps renderEmergent's dedup radius
 const POI_RADIUS_H = 5; // a POI crop's half side, in half-widths
 
-/** ribbon/corner_share.ts cornerWedgeKey, verbatim. */
-export function wedgeKey(jn: number, a: ExportArmRef, b: ExportArmRef): string {
-  return `${jn}:${a.chain}:${a.slot}:${a.dir}>${b.chain}:${b.slot}:${b.dir}`;
-}
+/** Master's key for the directed corner a -> b (ribbon/corner_share.ts). */
+export const wedgeKey: (jn: number, a: ExportArmRef, b: ExportArmRef) => string =
+  cornerWedgeKey;
 
 interface ChainMap {
   ch: ExportChain;
@@ -351,7 +355,7 @@ export function depthTent(
   crossings: ReadonlyArray<ExportCrossing>,
   particleCount: number,
   amp: number,
-  window: number
+  win: number
 ): Float64Array {
   const tent = new Float64Array(particleCount);
   const add = (pass: ExportPass, a: number): void => {
@@ -360,8 +364,8 @@ export function depthTent(
     const len = part.length;
     const c = pass.ctrl;
     if (ch.closed) {
-      for (let k = Math.ceil(c - window); k <= Math.floor(c + window); k++) {
-        const w = 1 - Math.abs(k - c) / window;
+      for (let k = Math.ceil(c - win); k <= Math.floor(c + win); k++) {
+        const w = 1 - Math.abs(k - c) / win;
         tent[part[((k % len) + len) % len]] += a * w;
       }
       return;
@@ -369,10 +373,10 @@ export function depthTent(
     // Open: chainBreakAfter = len - 1, so the seam offset is len and the
     // seam-relative ctrl is the ctrl itself.
     const rc = ((c % len) + len) % len;
-    const rLo = Math.max(0, Math.ceil(rc - window));
-    const rHi = Math.min(len - 1, Math.floor(rc + window));
+    const rLo = Math.max(0, Math.ceil(rc - win));
+    const rHi = Math.min(len - 1, Math.floor(rc + win));
     for (let r = rLo; r <= rHi; r++) {
-      const w = 1 - Math.abs(r - rc) / window;
+      const w = 1 - Math.abs(r - rc) / win;
       tent[part[r % len]] += a * w;
     }
   };
@@ -493,7 +497,9 @@ export function buildFieldScene(input: SceneExportInput): {
   let emergentDup = 0;
   for (const x of input.emergent) {
     const p = passPt(x.over);
-    if (centres.some((q) => Math.hypot(q[0] - p[0], q[1] - p[1]) < EMERGENT_DUP)) {
+    if (
+      input.dedupeEmergent !== false &&
+      centres.some((q) => Math.hypot(q[0] - p[0], q[1] - p[1]) < EMERGENT_DUP)) {
       emergentDup++;
       continue;
     }
@@ -508,7 +514,7 @@ export function buildFieldScene(input: SceneExportInput): {
   }
 
   // Junctions.
-  const candidates = new Map<string, { key: string; pin?: string }>();
+  const candidates = new Map<string, { key: string; pin?: unknown }>();
   for (const cand of input.corners.candidates) candidates.set(cand.key, cand);
   const junctions: SceneJunction[] = [];
   const pois: ScenePoi[] = [];
@@ -552,7 +558,7 @@ export function buildFieldScene(input: SceneExportInput): {
       return { ref: a, arm, ang: Math.atan2(dy, dx), len: Math.hypot(dx, dy) };
     });
     arms.sort((p, q) => p.ang - q.ang);
-    const corners: SceneCorner[] = arms.map((x, i) => {
+    const corners: SceneCorner[] = arms.map((x, i): SceneCorner => {
       const y = arms[(i + 1) % arms.length];
       const key = wedgeKey(ji, x.ref, y.ref);
       const cand = candidates.get(key);
