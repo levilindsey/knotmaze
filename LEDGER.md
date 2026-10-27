@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K869.
+Next free ID: K871.
 
 ## Waiting on Levi
 
@@ -292,10 +292,24 @@ Next free ID: K869.
   by tent depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator)
-  - branch: mainline; last commit: `fa46068b`
+  - branch: mainline; last commit: `e3190f77`
   - evidence: `.claude/probes/K868/`
-  - next: commit the design + stage briefs, then launch S1a (scene exporter) and S1b (CPU oracle, checks, Drive contact sheets) in parallel
+  - next: K869 (S1a) and K870 (S1b) running: merge K869, tell S1b the scenes are ready, review sheets A-C, upload them to Drive, then Levi judges the look and the r mapping
   - brief: `docs/design/K868_field_border.md`
+- **K869** · K868 S1a: the scene exporter (`window.__knotSceneExport`, `scripts/export_scene.mjs`)
+  and the real scenes S1b reads.
+  - owner: agent `ae315ac4539f95616` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-26 19:29, 2 h cap ~21:29)
+  - branch: `k868-s1a`, worktree `.claude/worktrees/k868-s1a`; last commit: `e3190f77`
+  - evidence: `.claude/probes/K868/scenes/`
+  - next: deliverables 1-5 of the brief, muse_hash and its zooms first
+  - brief: `docs/design/K868_s1a_scene_export.md`
+- **K870** · K868 S1b: the CPU oracle, checks 1-9 and 11, contact sheets A-C, and a proposed cr-to-r
+  mapping.
+  - owner: agent `a21329f961a4b1641` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-26 19:29, 2 h cap ~21:29)
+  - branch: `k868-s1b`, worktree `.claude/worktrees/k868-s1b`; last commit: `e3190f77`
+  - evidence: .claude/probes/K868/oracle/ and .claude/probes/K868/sheets/
+  - next: steps 1-4 of the brief; the real scenes once K869 exports them
+  - brief: `docs/design/K868_s1b_oracle.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
