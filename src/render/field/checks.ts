@@ -134,6 +134,12 @@ export interface CheckContext {
   /** World point inside the scene's viewport, with a margin in CSS px. */
   inView(x: number, y: number, marginPx: number): boolean;
   crossingPts: [number, number][];
+  /**
+   * Per crossing, how far from its centre the over's outline runs inside the
+   * under's tube: h / sin(θ/2) for crossing angle θ (the parallelogram's far
+   * vertex), at least 2h.
+   */
+  crossingR: number[];
   junctionPts: [number, number][];
 }
 
@@ -146,6 +152,14 @@ export function checkContext(model: FieldModel): CheckContext {
     const at = pointAt(p, normS(p, x.a.s));
     return [at.x, at.y];
   });
+  const crossingR = scene.crossings.map((x) => {
+    const pa = model.polys[model.idxOf.get(x.a.chain)!];
+    const pb = model.polys[model.idxOf.get(x.b.chain)!];
+    const ta = pointAt(pa, normS(pa, x.a.s));
+    const tb = pointAt(pb, normS(pb, x.b.s));
+    const half = 0.5 * Math.acos(Math.min(1, Math.abs(ta.tx * tb.tx + ta.ty * tb.ty)));
+    return Math.max(2 * model.h, model.h / Math.max(0.1, Math.sin(half)));
+  });
   return {
     model,
     scene,
@@ -156,6 +170,7 @@ export function checkContext(model: FieldModel): CheckContext {
       return u >= m && v >= m && u <= vw - m && v <= vh - m;
     },
     crossingPts,
+    crossingR,
     junctionPts: scene.junctions.map((j) => [j.c[0], j.c[1]]),
   };
 }
@@ -165,6 +180,11 @@ const fmt = (v: number, k = 3) => (Number.isFinite(v) ? v.toFixed(k) : String(v)
 function near(pts: [number, number][], x: number, y: number, R: number): boolean {
   for (const [px, py] of pts) if ((px - x) ** 2 + (py - y) ** 2 < R * R) return true;
   return false;
+}
+
+/** Within crossingR + extra of any crossing (the over's outline inside the under). */
+function nearCrossing(ctx: CheckContext, x: number, y: number, extra: number): boolean {
+  return ctx.crossingPts.some(([px, py], i) => (px - x) ** 2 + (py - y) ** 2 < (ctx.crossingR[i] + extra) ** 2);
 }
 
 // ---------------------------------------------------------------------------
@@ -195,7 +215,10 @@ export function check1(
   for (let j = 0; j < h; j++)
     for (let i = 0; i < w; i++) {
       const o = j * w + i;
-      if (cov[o] >= 0.5 && F[o] > lim) {
+      // Strict majority: with point-symmetric subsamples, a pixel whose centre
+      // lies across a jump of F (the over's outline over the under's interior)
+      // can be exactly half ink; that is the band's edge pixel, not interior ink.
+      if (cov[o] > 0.5 && F[o] > lim) {
         bad++;
         const p = world(i, j);
         if (near(ctx.junctionPts, p[0], p[1], mouthR)) mouth++;
@@ -492,7 +515,7 @@ export function check5(ctx: CheckContext, probe: InkProbe): CheckResult[] {
   let maxRun = 0;
   let bDev = 0;
   let bWorst: [number, number] | undefined;
-  const skipped: Record<string, number> = { view: 0, neighbour: 0, group: 0 };
+  const skipped: Record<string, number> = { view: 0, neighbour: 0, outside: 0, group: 0 };
   for (const pr of model.prims) {
     const L = model.primLength(pr);
     for (let i = 0; i < pr.exp.length; i += 2) {
@@ -514,6 +537,17 @@ export function check5(ctx: CheckContext, probe: InkProbe): CheckResult[] {
           skipped.neighbour++;
           continue;
         }
+        // The walk starts on paper: where its outward start is inside some
+        // region, another outline runs within W/2 outside this one (the other
+        // arm of a sharp V, a junction wedge, an over crossing this outline),
+        // and the first run is that outline's own band (x4_ends' sharp 60°
+        // corner, 0.08 from V: the other arm's band at t = -0.19..-0.14).
+        const tOut = model.evalPoint(x + 0.5 * W * nx, y + 0.5 * W * ny, false).top;
+        if (tOut >= 0) {
+          skipped.outside++;
+          continue;
+        }
+        // The walk must stay in one group through the band to its deep end.
         const t0 = model.evalPoint(x - 0.5 * W * nx, y - 0.5 * W * ny, false).top;
         if (t0 !== model.evalPoint(dx, dy, false).top) {
           skipped.group++;
@@ -575,6 +609,8 @@ export function checksCrossings(ctx: CheckContext, probe: InkProbe | null): Chec
   let w6: [number, number] | undefined;
   let n7 = 0;
   let breaks = 0;
+  let thirdOnly = 0;
+  const d7: string[] = [];
   let w7: [number, number] | undefined;
   let n11 = 0;
   let wrong = 0;
@@ -645,8 +681,12 @@ export function checksCrossings(ctx: CheckContext, probe: InkProbe | null): Chec
         }
         if (dv > 0.5) {
           gaps++;
+          // Which groups meet where the ink ends (model tops either side).
+          const tops = Number.isNaN(first)
+            ? "no ink run from the start"
+            : `top chain ${model.evalPoint(...P(first + 0.005 * h), false).topChain} → ${model.evalPoint(...P(first - 0.005 * h), false).topChain} there, over ${ov.chain}, under ${un.chain}`;
           d6.push(
-            `crossing ${ci} side ${side} dir ${dir}: ink ends ${fmt((first - tModel) * ppu, 3)} px ${first > tModel ? "before (gap)" : "past (overlap)"} the over's inner band edge`,
+            `crossing ${ci} side ${side} dir ${dir}: ink ends ${fmt((first - tModel) * ppu, 3)} px ${first > tModel ? "before (gap)" : "past (overlap)"} the over's inner band edge (${tops})`,
           );
         }
       }
@@ -659,10 +699,32 @@ export function checksCrossings(ctx: CheckContext, probe: InkProbe | null): Chec
       };
       n7++;
       const runs = runsOn(probe, P, -2 * h, 2 * h, 0.1 / ppu);
-      if (runs.length !== 1 || runs[0][0] > -2 * h + 1e-9 || runs[0][1] < 2 * h - 1e-9) {
+      // Paper stretches along the line; one under a third chain is that
+      // chain's business (tight triples), one under the over or the under is
+      // a break.
+      const gapsAt: [number, number][] = [];
+      let prev = -2 * h;
+      for (const [r0, r1] of runs) {
+        if (r0 > prev + 1e-9) gapsAt.push([prev, r0]);
+        prev = r1;
+      }
+      if (prev < 2 * h - 1e-9) gapsAt.push([prev, 2 * h]);
+      let own = 0;
+      let third = 0;
+      for (const [g0, g1] of gapsAt) {
+        const e = model.evalPoint(...P(0.5 * (g0 + g1)), false);
+        if (e.inside && e.topChain !== ov.chain && e.topChain !== un.chain) third++;
+        else {
+          own++;
+          d7.push(
+            `crossing ${ci} side ${side}: paper over t ∈ [${fmt(g0 / h, 2)}h, ${fmt(g1 / h, 2)}h] from the crossing along the over, top chain ${e.topChain} (over ${ov.chain}, under ${un.chain})`,
+          );
+        }
+      }
+      if (own > 0) {
         breaks++;
         w7 = P(0);
-      }
+      } else if (third > 0) thirdOnly++;
     }
   });
   const out: CheckResult[] = [];
@@ -682,10 +744,11 @@ export function checksCrossings(ctx: CheckContext, probe: InkProbe | null): Chec
         id: 7,
         name: "over edges continuous",
         status: n7 === 0 ? "n/a" : breaks === 0 ? "pass" : "fail",
-        value: `${breaks} of ${n7} over band lines broken within ±2h`,
+        value: `${breaks} of ${n7} over band lines broken within ±2h${thirdOnly ? ` (${thirdOnly} more interrupted only by a third chain on top, not counted)` : ""}`,
         threshold: "no break",
         n: n7,
         worst: w7,
+        details: d7,
       },
     );
   }
@@ -828,7 +891,7 @@ export function edtCheck(
       const Fo = F[j * w + i];
       if (!(Fo > 0 && Fo <= 2 * model.W * ppuRender)) continue;
       const [x, y] = world(i, j);
-      if (near(ctx.crossingPts, x, y, excl)) continue;
+      if (nearCrossing(ctx, x, y, excl - 2 * h)) continue;
       const u = (x - x0) / g;
       const v = (y - y0) / g;
       const iu = Math.floor(u);
