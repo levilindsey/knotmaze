@@ -36,6 +36,10 @@ import {
 } from "./geom";
 import { type DepthChain, diagramDepth } from "./depth";
 
+/** S2 (§3.7): the corner curve between the tangent points. "g1": the
+ * rolling-ball arc; the others are G2 candidates (g2.ts). */
+export type CornerCurveKind = "g1" | "clothoid" | "bezier5" | "arcs3";
+
 export interface OracleParams {
   /** Rolling-ball radius of round corners, world units (sharp corners: 0). */
   rRound: number;
@@ -58,6 +62,17 @@ export interface OracleParams {
   /** The diagram depth's tent window in arc length. Default
    * look.depthWindow × (look.ctrlArc ?? 1). */
   depthWindow?: number;
+  /** S2: how far behind the root an arm's foot window reaches (default h/4). */
+  cornerBack?: number;
+  /** S2: S1b's two-sided foot windows and single Newton start, for comparison. */
+  cornerTwoSided?: boolean;
+  /** S2 (§3.7): the corner curve. "g1" (default): the rolling-ball arc. The
+   * G2 candidates replace it with an exact curve, sampled densely (g2.ts). */
+  cornerCurve?: CornerCurveKind;
+  /** S2: how a G2 candidate is sized against the G1 arc of the same r:
+   * "inset" (default), the same distance from V along the bisector; or
+   * "tangent", the same tangent points t_A and t_B. */
+  cornerSize?: "inset" | "tangent";
 }
 
 export interface Corner {
@@ -139,6 +154,10 @@ export interface PointEval {
 }
 
 const TAU = Math.PI * 2;
+
+function fmtH(x: number, h: number): string {
+  return `${(x / h).toFixed(2)}h`;
+}
 
 function cross(ax: number, ay: number, bx: number, by: number): number {
   return ax * by - ay * bx;
@@ -460,20 +479,77 @@ export class FieldModel {
     const half = theta / 2;
     const reachQ = (h + r) / Math.max(Math.sin(half), 1e-3);
     const Lw = Math.min(4 * h + 2 * reachQ, 1e6);
-    const winA: [number, number] = [A.s - Lw, A.s + Lw];
-    const winB: [number, number] = [B.s - Lw, B.s + Lw];
+    // S2: each window covers its own arm only, from just behind the root
+    // outward. A two-sided window let the feet jump to the chain's other
+    // arm, or to another pass of the chain looping back near the corner
+    // (S1b's failed q solves on muse_hash).
+    const back = this.params.cornerBack ?? 0.25 * h;
+    const side = (arm: SceneArm): [number, number] => (arm.dir > 0 ? [arm.s - back, arm.s + Lw] : [arm.s - Lw, arm.s + back]);
+    const winA: [number, number] = this.params.cornerTwoSided ? [A.s - Lw, A.s + Lw] : side(A);
+    const winB: [number, number] = this.params.cornerTwoSided ? [B.s - Lw, B.s + Lw] : side(B);
     const ua = this.armDir(pa, A, this.params.openingChord ?? 2 * h);
     const root = pointAt(pa, A.s);
     const ca = Math.cos(half);
     const sa = Math.sin(half);
     const bis: [number, number] = [ua[0] * ca - ua[1] * sa, ua[0] * sa + ua[1] * ca];
-    const solve = (delta: number): { x: number; y: number; res: number; fa: number; fb: number; sA: number; sB: number; ok: boolean } => {
-      let x = root.x + bis[0] * (delta / Math.max(sa, 1e-3));
-      let y = root.y + bis[1] * (delta / Math.max(sa, 1e-3));
+    type Sol = { x: number; y: number; res: number; fa: number; fb: number; sA: number; sB: number; ok: boolean };
+    // S2: Newton from the bisector guess first, then from guesses nearer and
+    // farther along the bisector (a stall between two segments' feet or on
+    // the medial axis does not survive a different start).
+    const solve = (delta: number): Sol => {
+      let best: Sol | undefined;
+      const take = (s: Sol): boolean => {
+        if (!best || s.res < best.res) best = s;
+        return s.ok;
+      };
+      for (const k of this.params.cornerTwoSided ? [1] : [1, 0.7, 1.4, 0.5, 2, 0.35, 3]) {
+        const d = (k * delta) / Math.max(sa, 1e-3);
+        if (take(newton(delta, root.x + bis[0] * d, root.y + bis[1] * d))) return best!;
+      }
+      if (this.params.cornerTwoSided) return best!;
+      // Last resort: march out along arm A's wedge-side offset at δ and
+      // bracket a sign change of d_B − δ, then polish with Newton.
+      const n = Math.ceil(Math.min(Lw, 64 * h) / (0.05 * h));
+      let prev = NaN;
+      let prevU = 0;
+      for (let i = 0; i <= n; i++) {
+        const u = (i / n) * Math.min(Lw, 64 * h);
+        const at = (uu: number): [number, number, number] => {
+          const pt = pointAt(pa, A.s + A.dir * uu);
+          const nx = -pt.ty * A.dir;
+          const ny = pt.tx * A.dir;
+          const px = pt.x + nx * delta;
+          const py = pt.y + ny * delta;
+          return [px, py, footInWindow(pb, px, py, winB[0], winB[1]).d - delta];
+        };
+        const [, , g] = at(u);
+        if (i > 0 && Number.isFinite(prev) && Math.sign(g) !== Math.sign(prev)) {
+          let lo = prevU;
+          let hi = u;
+          let glo = prev;
+          for (let it = 0; it < 50; it++) {
+            const mid = (lo + hi) / 2;
+            const gm = at(mid)[2];
+            if (Math.sign(gm) === Math.sign(glo)) {
+              lo = mid;
+              glo = gm;
+            } else hi = mid;
+          }
+          const [px, py] = at((lo + hi) / 2);
+          if (take(newton(delta, px, py))) return best!;
+        }
+        prev = g;
+        prevU = u;
+      }
+      return best!;
+    };
+    const newton = (delta: number, x0: number, y0: number): Sol => {
+      let x = x0;
+      let y = y0;
       let ok = false;
       let fA = footInWindow(pa, x, y, winA[0], winA[1]);
       let fB = footInWindow(pb, x, y, winB[0], winB[1]);
-      for (let it = 0; it < 80; it++) {
+      for (let it = 0; it < 200; it++) {
         const ra = fA.d - delta;
         const rb = fB.d - delta;
         if (Math.abs(ra) < 1e-12 * Math.max(1, delta) && Math.abs(rb) < 1e-12 * Math.max(1, delta)) {
@@ -532,12 +608,38 @@ export class FieldModel {
       resV: v.res,
       resQ: 0,
     };
-    if (!v.ok) this.diagnostics.push(`corner j${ji}/${index}: V solve residual ${v.res.toExponential(2)}`);
+    if (!v.ok) {
+      // S2: no V when the two centrelines stay closer than 2h all along
+      // arm A: the tubes overlap there and the outlines never meet on the
+      // wedge side (the wedge is ink; the corner draws nothing).
+      const roomA = pa.closed ? Lw : Math.min(Lw, A.dir > 0 ? pa.s0 + pa.len - A.s : A.s - pa.s0);
+      let maxGap = 0;
+      for (let u = 0; u <= roomA; u += 0.05 * h) {
+        const pt = pointAt(pa, A.s + A.dir * u);
+        maxGap = Math.max(maxGap, footInWindow(pb, pt.x, pt.y, winB[0], winB[1]).d);
+      }
+      this.diagnostics.push(
+        `corner j${ji}/${index}: V solve residual ${v.res.toExponential(2)}` +
+          (maxGap < 2 * h ? ` (no V: the arms stay closer than 2h along arm A's ${fmtH(roomA, h)}, max gap ${fmtH(maxGap, h)})` : ""),
+      );
+    }
     if (r > 0) {
       const qq = solve(h + r);
       c.ok = c.ok && qq.ok;
       c.resQ = qq.res;
-      if (!qq.ok) this.diagnostics.push(`corner j${ji}/${index}: q solve residual ${qq.res.toExponential(2)}`);
+      if (!qq.ok) {
+        // S2: name the corners that have no ball. The ball of radius r
+        // touches straight arms ℓ = r·cot(θ/2) out from the root; an open
+        // arm shorter than that (its chain ends first) cannot hold it.
+        const room = (p: Poly, arm: SceneArm) => (p.closed ? Infinity : arm.dir > 0 ? p.s0 + p.len - arm.s : arm.s - p.s0);
+        const need = r / Math.tan(half);
+        const short = [room(pa, A), room(pb, B)].map((x, i) => (x < need ? `arm ${"AB"[i]} ends ${fmtH(x, h)} from the root` : ""));
+        const why = short.filter(Boolean).join(", ");
+        this.diagnostics.push(
+          `corner j${ji}/${index}: q solve residual ${qq.res.toExponential(2)}` +
+            (why ? ` (no ball: ${why}, the ball needs ${fmtH(need, h)})` : ""),
+        );
+      }
       c.q = [qq.x, qq.y];
       const fA = footInWindow(pa, qq.x, qq.y, winA[0], winA[1]);
       const fB = footInWindow(pb, qq.x, qq.y, winB[0], winB[1]);
