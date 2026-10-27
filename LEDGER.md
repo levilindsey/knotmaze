@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K871.
+Next free ID: K874.
 
 ## Waiting on Levi
 
@@ -292,16 +292,16 @@ Next free ID: K871.
   by tent depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator)
-  - branch: mainline; last commit: `e3190f77`
-  - evidence: `.claude/probes/K868/`
-  - next: K869 (S1a) and K870 (S1b) running: merge K869, tell S1b the scenes are ready, review sheets A-C, upload them to Drive, then Levi judges the look and the r mapping
+  - branch: mainline; last commit: `e4577ded`
+  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets); `docs/design/K868_s1a_notes.md`
+  - next: K870 (S1b) runs on the S1a scenes until ~21:29: merge it, review sheets A-C, upload them to Drive, Levi judges the look and the r mapping; then the S2 and S3 briefs, which settle the depth source (physics z is not the tent), the END 0.76h offset and the fan band W (S1a notes)
   - brief: `docs/design/K868_field_border.md`
 - **K870** · K868 S1b: the CPU oracle, checks 1-9 and 11, contact sheets A-C, and a proposed cr-to-r
   mapping.
   - owner: agent `a21329f961a4b1641` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-26 19:29, 2 h cap ~21:29)
   - branch: `k868-s1b`, worktree `.claude/worktrees/k868-s1b`; last commit: `e3190f77`
   - evidence: .claude/probes/K868/oracle/ and .claude/probes/K868/sheets/
-  - next: steps 1-4 of the brief; the real scenes once K869 exports them
+  - next: steps 1-4 of the brief on the real scenes in `.claude/probes/K868/scenes/` (ready since 20:55)
   - brief: `docs/design/K868_s1b_oracle.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
@@ -715,6 +715,8 @@ Every other item below waits on the trigger it names.
 - **K792** Done in K827: \?gcr=\ (0, 2] sets PhysicsTuning.grabChase; default stays in MAX_SLIDE_GRABBED. (Was: · A try key for the K610 grab chase rate (0.6 per constraint iteration today): its feel
   A/B needs 0.8 and 1.0 from a link, none sets the rate, so its report card has no try link (K777;
   `docs/design/K370.md`)
+- **K873** · K868 integration needs flow (`fw`) as its own scene input: fw moves the drawn samples,
+  so every K868 scene so far is `fw=0`. `docs/design/K868_s1a_notes.md`.
 
 ## Residuals (known, not fixed)
 
@@ -1546,6 +1548,12 @@ Every other item below waits on the trigger it names.
   like a broken run (K137-b) (`docs/design/K138_s4.md`, Handoff)
 - **K803** · K138 s4: the key and padlock markers and the closed-lock dim are not checked on a page
   with the fog or the thread reveal on.
+- **K871** · K868 S1a exporter residuals: captures landed a step apart between loads (sim 40.00833
+  vs 40.01667, `phw=0&stb=0`); near-duplicate samples ~1e-4 apart; automatic ink written as
+  "#000000"; export servers share the `.vite` cache (`docs/design/K868_s1a_notes.md`).
+- **K872** · K868 S1a alignment check gaps: `def` reads 0.509 px at dsf 1 (limit 0.5; 0.172 at dsf
+  3), unattributed; dark paper gives no rays (needs an inner-edge measure); rays near junctions are
+  not cut at each arm's fillet reach. `docs/design/K868_s1a_notes.md`.
 
 ## Approved, to schedule (2026-10-11)
 
