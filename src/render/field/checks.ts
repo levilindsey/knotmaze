@@ -187,6 +187,21 @@ function nearCrossing(ctx: CheckContext, x: number, y: number, extra: number): b
   return ctx.crossingPts.some(([px, py], i) => (px - x) ** 2 + (py - y) ** 2 < (ctx.crossingR[i] + extra) ** 2);
 }
 
+const sharedCands: Cand[] = [];
+
+/**
+ * S2: how many distinct chains' tubes contain (x, y) (centreline within h).
+ * Three or more is an area no per-pixel depth can order consistently when
+ * their crossings form a cyclic triple (§3.3, k42): #6 and #7 skip sites
+ * there and count them.
+ */
+export function tubesAt(model: FieldModel, x: number, y: number): number {
+  candidates(model.grid, x, y, model.h, sharedCands);
+  const seen = new Set<number>();
+  for (const c of sharedCands) if (c.d < model.h) seen.add(c.chain);
+  return seen.size;
+}
+
 // ---------------------------------------------------------------------------
 // Check 1: interior ink, from a render's coverage and the oracle's F.
 
@@ -616,6 +631,9 @@ export function checksCrossings(ctx: CheckContext, probe: InkProbe | null): Chec
   let wrong = 0;
   const d11: string[] = [];
   const d6: string[] = [];
+  // S2: sites inside an area three or more tubes share (tubesAt).
+  let shared6 = 0;
+  let shared7 = 0;
   scene.crossings.forEach((cx, ci) => {
     const ov = cx.over === "a" ? cx.a : cx.b;
     const un = cx.over === "a" ? cx.b : cx.a;
@@ -675,6 +693,15 @@ export function checksCrossings(ctx: CheckContext, probe: InkProbe | null): Chec
         n6++;
         const first = runs.length && runs[0][0] === 0 ? tFar - runs[0][1] : NaN;
         const dv = Number.isNaN(first) ? Infinity : Math.abs(first - tModel) * ppu;
+        const shared =
+          dv > 0.5 && (tubesAt(model, ...P(tModel)) >= 3 || (!Number.isNaN(first) && tubesAt(model, ...P(first)) >= 3));
+        if (shared) {
+          shared6++;
+          d6.push(
+            `crossing ${ci} side ${side} dir ${dir}: ink ends ${fmt((first - tModel) * ppu, 3)} px off, inside an area three tubes share (skipped)`,
+          );
+          continue;
+        }
         if (dv > dev6) {
           dev6 = dv;
           w6 = P(tModel);
@@ -714,7 +741,12 @@ export function checksCrossings(ctx: CheckContext, probe: InkProbe | null): Chec
       for (const [g0, g1] of gapsAt) {
         const e = model.evalPoint(...P(0.5 * (g0 + g1)), false);
         if (e.inside && e.topChain !== ov.chain && e.topChain !== un.chain) third++;
-        else {
+        else if (tubesAt(model, ...P(0.5 * (g0 + g1))) >= 3) {
+          shared7++;
+          d7.push(
+            `crossing ${ci} side ${side}: paper over t ∈ [${fmt(g0 / h, 2)}h, ${fmt(g1 / h, 2)}h], top chain ${e.topChain}, inside an area three tubes share (skipped)`,
+          );
+        } else {
           own++;
           d7.push(
             `crossing ${ci} side ${side}: paper over t ∈ [${fmt(g0 / h, 2)}h, ${fmt(g1 / h, 2)}h] from the crossing along the over, top chain ${e.topChain} (over ${ov.chain}, under ${un.chain})`,
@@ -733,10 +765,11 @@ export function checksCrossings(ctx: CheckContext, probe: InkProbe | null): Chec
       {
         id: 6,
         name: "under bands end on the over's outline",
-        status: n6 === 0 ? "n/a" : gaps === 0 ? "pass" : "fail",
-        value: `max end error ${fmt(dev6, 3)} px; ${gaps} of ${n6} band ends off by more than 0.5 px`,
+        status: n6 - shared6 === 0 ? "n/a" : gaps === 0 ? "pass" : "fail",
+        value: `max end error ${fmt(dev6, 3)} px; ${gaps} of ${n6 - shared6} band ends off by more than 0.5 px`,
         threshold: "within 0.5 px, no gap, no overlap",
-        n: n6,
+        n: n6 - shared6,
+        skipped: shared6 ? `${shared6} off inside an area three tubes share` : undefined,
         worst: w6,
         details: d6,
       },
@@ -747,6 +780,7 @@ export function checksCrossings(ctx: CheckContext, probe: InkProbe | null): Chec
         value: `${breaks} of ${n7} over band lines broken within ±2h${thirdOnly ? ` (${thirdOnly} more interrupted only by a third chain on top, not counted)` : ""}`,
         threshold: "no break",
         n: n7,
+        skipped: shared7 ? `${shared7} paper stretches inside an area three tubes share` : undefined,
         worst: w7,
         details: d7,
       },
@@ -764,7 +798,79 @@ export function checksCrossings(ctx: CheckContext, probe: InkProbe | null): Chec
   return out;
 }
 
-/** Every check that needs no render (2, 3-4-5-6-7-8-9 via the probe, 11). */
+/**
+ * 14 (S2): every crossing keeps its recorded over/under at its centre:
+ * z(over pass) > z(under pass) under the model's depth rule, and the group
+ * on top at the centre is not the under's (a third chain on top is counted
+ * apart). Every crossing in the table, in view or not.
+ */
+export function check14(ctx: CheckContext): CheckResult {
+  const { model, scene } = ctx;
+  const amp = scene.look.depthAmp || 1;
+  let n = 0;
+  let bad = 0;
+  let third = 0;
+  let minGap = Infinity;
+  // Failure causes: both passes inside one junction cluster's span (§3.4
+  // joins them into one group, so the crossing has no over/under), and
+  // table passes that do not meet in the exported geometry.
+  let inCluster = 0;
+  let apart = 0;
+  const det: string[] = [];
+  let worst: [number, number] | undefined;
+  scene.crossings.forEach((cx, ci) => {
+    const ov = cx.over === "a" ? cx.a : cx.b;
+    const un = cx.over === "a" ? cx.b : cx.a;
+    const io = model.idxOf.get(ov.chain);
+    const iu = model.idxOf.get(un.chain);
+    if (io === undefined || iu === undefined) return;
+    n++;
+    const po = model.polys[io];
+    const pu = model.polys[iu];
+    const gap = (model.depthAt(io, ov.s) - model.depthAt(iu, un.s)) / amp;
+    const at = pointAt(pu, normS(pu, un.s));
+    const ao = pointAt(po, normS(po, ov.s));
+    const sep = Math.hypot(at.x - ao.x, at.y - ao.y);
+    const clO = model.clusterAt(io, ov.s);
+    const clU = model.clusterAt(iu, un.s);
+    const e = model.evalPoint(at.x, at.y, false);
+    const nearer = (s: number) => Math.abs(dS(po, e.topS, ov.s)) < Math.abs(dS(po, e.topS, s));
+    const topOver = e.topChain === ov.chain && (ov.chain !== un.chain || nearer(un.s));
+    const topUnder = e.topChain === un.chain && !topOver;
+    if (gap < minGap) {
+      minGap = gap;
+      if (!(gap > 0)) worst = [at.x, at.y];
+    }
+    if (!(gap > 0) || topUnder || !e.inside) {
+      bad++;
+      worst = [at.x, at.y];
+      let cause = !(gap > 0) ? "z inverted" : "the under on top";
+      if (sep > model.h) {
+        apart++;
+        cause = `the table's passes are ${fmt(sep / model.h, 2)}h apart in the geometry`;
+      } else if (clO >= 0 && clO === clU) {
+        inCluster++;
+        cause = `both passes inside junction cluster ${clO}'s span: one group (§3.4)`;
+      }
+      det.push(
+        `crossing ${ci} (over ${ov.chain} s ${fmt(ov.s, 2)}, under ${un.chain} s ${fmt(un.s, 2)}): z_over − z_under = ${fmt(gap, 3)}·amp, top chain ${e.topChain}; ${cause}`,
+      );
+    } else if (!topOver) third++;
+  });
+  const causes = [inCluster ? `${inCluster} inside one junction cluster's span` : "", apart ? `${apart} with table passes apart` : ""].filter(Boolean);
+  return {
+    id: 14,
+    name: "pinned depth keeps each crossing's over/under",
+    status: n === 0 ? "n/a" : bad === 0 ? "pass" : "fail",
+    value: `${n - bad} of ${n} crossings; min z_over − z_under ${fmt(minGap, 3)}·amp${third ? `; ${third} topped by a third chain at the centre` : ""}${causes.length ? ` (failures: ${causes.join(", ")})` : ""}`,
+    threshold: "z_over > z_under and the under never on top, at every crossing",
+    n,
+    worst,
+    details: det,
+  };
+}
+
+/** Every check that needs no render (2, 3-4-5-6-7-8-9 via the probe, 11, 14). */
 export function runChecks(model: FieldModel, probe: InkProbe): CheckResult[] {
   const ctx = checkContext(model);
   const all = [
@@ -773,6 +879,7 @@ export function runChecks(model: FieldModel, probe: InkProbe): CheckResult[] {
     ...checks489(ctx, probe),
     ...check5(ctx, probe),
     ...checksCrossings(ctx, probe),
+    check14(ctx),
   ];
   return all.sort((a, b) => a.id - b.id);
 }

@@ -5,7 +5,9 @@
 // into groups by union-find (same chain within σ; arms of one junction
 // cluster inside its spans); the top group containing p (depth = z of its
 // nearest member, ties to the higher chain id) owns p; ink iff the exact
-// distance from p to that group's EXPOSED outline is ≤ W.
+// distance from p to that group's EXPOSED outline is ≤ W. Depth comes from
+// the crossing table (S2, depth.ts) unless `depth: "scene"` asks for the
+// scene's z samples (physics zPos, S1b's rule).
 //
 // The exposed outline is assembled from primitives (offset segments, join
 // and cap arcs, corner arcs), each with the parameter intervals on which a
@@ -32,6 +34,7 @@ import {
   segB,
   zAt,
 } from "./geom";
+import { type DepthChain, diagramDepth } from "./depth";
 
 export interface OracleParams {
   /** Rolling-ball radius of round corners, world units (sharp corners: 0). */
@@ -48,6 +51,13 @@ export interface OracleParams {
   openingChord?: number;
   /** Override per corner: (junctionIndex, cornerIndex, theta, style) → r. */
   rOf?: (j: number, i: number, theta: number, style: "round" | "sharp") => number;
+  /** S2 (§3.3): "diagram" (default) pins ±depthAmp at each crossing's passes
+   * and blends between them (depth.ts); "scene" uses the scene's z samples
+   * (physics zPos), S1b's rule, kept for comparison. */
+  depth?: "diagram" | "scene";
+  /** The diagram depth's tent window in arc length. Default
+   * look.depthWindow × (look.ctrlArc ?? 1). */
+  depthWindow?: number;
 }
 
 export interface Corner {
@@ -162,6 +172,9 @@ export class FieldModel {
   readonly diagnostics: string[] = [];
   readonly scene: FieldScene;
   readonly params: OracleParams;
+  /** Diagram depth (§3.3): per poly, its crossing pins; the window in arc length. */
+  readonly depthChains: DepthChain[];
+  readonly depthWin: number;
 
   constructor(scene: FieldScene, params: OracleParams) {
     this.scene = scene;
@@ -250,6 +263,29 @@ export class FieldModel {
         if (Math.abs(arm.s - 0) < Math.abs(arm.s - (p.s0 + p.len))) this.capStart[pi] = true;
         else this.capEnd[pi] = true;
       }
+
+    // Diagram depth (§3.3): pin ±amp at each crossing's two passes.
+    const amp = scene.look.depthAmp;
+    this.depthWin = params.depthWindow ?? scene.look.depthWindow * (scene.look.ctrlArc ?? 1);
+    this.depthChains = this.polys.map((p) => ({ closed: p.closed, s0: p.s0, len: p.len, pins: [] }));
+    for (const x of scene.crossings) {
+      const ov = x.over === "a" ? x.a : x.b;
+      const un = x.over === "a" ? x.b : x.a;
+      for (const [ps, z] of [
+        [ov, amp],
+        [un, -amp],
+      ] as const) {
+        const pi = this.idxOf.get(ps.chain);
+        if (pi === undefined) continue;
+        this.depthChains[pi].pins.push({ s: normS(this.polys[pi], ps.s), z });
+      }
+    }
+    for (const d of this.depthChains) {
+      d.pins.sort((u, v) => u.s - v.s);
+      for (let i = 1; i < d.pins.length; i++)
+        if (d.pins[i].s - d.pins[i - 1].s < 1e-6 * h && d.pins[i].z !== d.pins[i - 1].z)
+          this.diagnostics.push(`depth: chain ${this.idOf[this.depthChains.indexOf(d)]} has an over and an under pass at one s ${d.pins[i].s}`);
+    }
 
     // 2. Corners (§3.7).
     let rMax = 0;
@@ -961,6 +997,12 @@ export class FieldModel {
     return best;
   }
 
+  /** Depth z at arc length s on poly pi, by the selected rule (§3.3). */
+  depthAt(pi: number, s: number): number {
+    if (this.params.depth === "scene") return zAt(this.polys[pi], s);
+    return diagramDepth(this.depthChains[pi], this.depthWin, s);
+  }
+
   /** Cluster containing (chain, s) in its span, or −1. */
   clusterAt(pi: number, s: number): number {
     const p = this.polys[pi];
@@ -1030,7 +1072,7 @@ export class FieldModel {
       if (!inside) continue;
       insideGroups.push(g);
       const c = cs[near];
-      const z = zAt(this.polys[c.chain], c.s);
+      const z = this.depthAt(c.chain, c.s);
       let better = false;
       if (topG === null || z > topZ + 1e-6) better = true;
       else if (Math.abs(z - topZ) <= 1e-6) {

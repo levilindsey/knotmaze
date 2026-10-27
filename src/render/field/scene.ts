@@ -78,6 +78,13 @@ export interface SceneLook {
   /** Paper (background) and ink colours, CSS hex. */
   paper: string;
   ink: string;
+  /** K868 S2: arc length of one ctrl in world units, so the diagram depth
+   * (§3.3) can turn depthWindow into arc length. Absent: 1 (the synthetic
+   * scenes give depthWindow in arc length). S1a's scenes predate it; their
+   * ctrl is about 0.47 (the lattice's diagonal √2 over 3 ctrl; the physics
+   * z's slope breakpoints, which sit on ctrl slots, have a median spacing
+   * of 0.48 on muse_hash). */
+  ctrlArc?: number;
 }
 
 export interface SceneChain {
