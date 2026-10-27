@@ -105,6 +105,24 @@ DEPTH_WINDOW. S2 chooses the blend and records it here. A group's depth at
 p is the z of its member nearest p. Ties (|Δz| < ε) go to the higher chain
 id.
 
+The blend (S2, `src/render/field/depth.ts`): every pin carries a hat, amp
+at the pin and falling linearly to 0 over a window that is, on each side,
+min(DEPTH_WINDOW, the gap to the neighbouring pin on that side); z is the
+sum of the signed hats. So z is exact at every pin (a neighbour's hat is 0
+there); two pins closer than the window are joined by a straight line (no
+dip toward 0 between two overs, a straight ramp from an over to an under);
+a pin whose neighbours are at least one window away keeps the physics tent,
+and between one and two windows the two tents overlap and sum, as physics
+sums them, with both pins still exact. z is continuous along the chain and
+in the pins' positions (a window shrinks continuously as a neighbour comes
+within it), so a crossing sliding along a chain never pops. Only the two
+pins bracketing s matter, so it is O(log n) per lookup. DEPTH_WINDOW is in
+ctrl units; the scene's optional `look.ctrlArc` (arc length of one ctrl)
+converts it, and S1a's scenes, which predate it, use 0.47 (muse_hash's
+physics z changes slope on ctrl slots with a median spacing of 0.48). The
+oracle keeps the old rule (`depth: "scene"`, the exported z) for
+comparison.
+
 Why: the summed tent physics uses (and the zPos S1a exports) inverted
 k42's crossing 0 at the crossing itself. k42 is a cyclic triple about 1.5h
 apart: chain 0 over 1, 1 over 2, 2 over 0. Pinning keeps every crossing's
@@ -114,6 +132,19 @@ pairwise orders under any per-pixel depth; there the blend decides, and the
 sheets show it (`docs/design/K9-K42.md`). Pinned depth is a pure function
 of the crossing table and the geometry, so the renderer computes it on main
 (§9).
+
+S2 measured (check 14): the inversion claim above does not hold. The
+summed tent keeps all three k42 centres (min z_over − z_under 0.93·amp,
+against 2·amp pinned), and on muse_hash the exported z keeps all 350
+(min 1.35·amp). S1b's k42 failures (#6, #7) all lie inside the area the
+three tubes share (1.67h², sampled at 0.01h), where each chain tops about a
+third (0.333, 0.331, 0.336) under both rules; outside it #6 and #7 pass
+under both. Pinning still earns its place: it doubles the worst margin and
+does not depend on physics. Check 14 fails 30 muse_hash crossings under
+either rule, for two reasons that are not depth: 29 lie with both passes
+inside one junction cluster's span, where §3.4 joins them into one group
+(the crossing then has no over/under; see §3.4), and 1 (crossing 15) has
+an over pass at chain 2's open terminal, 4.9h from its under pass.
 
 ### 3.4 Candidates and groups
 
@@ -127,6 +158,14 @@ generous). Candidates join into groups by union-find:
   the root out to that arm's corner tangent points plus W plus a margin.
   Junctions whose spans overlap merge.
 - Everything else: separate groups, ordered by depth.
+
+Open (S2): a crossing whose two passes both lie inside one junction
+cluster's span. The rule above joins the passes into one group, so the
+crossing draws as a merge. Real scenes have them: 29 of muse_hash's 350
+crossings, 2-8h from a junction root, often inside an acute corner's long
+V-to-tangent stretch. A fix must keep the passes apart (for example, clip
+each arm's span before the arm's first crossing pass, or split a group at
+a recorded crossing); neither is built.
 
 The span's margin keeps the rule continuous: just outside it an arm alone
 draws exactly what the junction group draws there.
@@ -280,6 +319,7 @@ too.
 | 11 | Depth order: the top group at each crossing centre is the scene's `over` | all | S1b |
 | 12 | GPU vs oracle: ΔF within 2W of outlines; top ids; colour elsewhere | ≤ 1/32 px; equal except within 1 px of outlines; ≤ 2/255 | S3 |
 | 13 | Pixel 11 GPU time at dpr 2, cr 3, under the perf lock | ≤ 4 ms, 60 fps | S3 |
+| 14 | Pinned depth: z_over > z_under at each crossing, and the under never on top at its centre (every crossing, in view or not) | all | S2 |
 
 ## 7. Contact sheets
 
