@@ -1912,3 +1912,35 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K541 (Done 2026-10-16)
 
 - **K541** · Panel Stage A2: remaining moves, word labels (at most 23 chars) on every row, desktop width 320 px, inventory rerun. Done in 2c351ae (2026-10-16).
+
+## K369 (Done 2026-10-18)
+
+- **K369** · Favicon linked relatively (./favicon.svg) in index.html. Done in 0f8e277 (2026-10-18).
+
+## K489 (Done 2026-10-18)
+
+- **K489** · Dead finishIndicator.gate() hook removed (visible() composes the hold; never wired). Done in 0f8e277 (2026-10-18).
+
+## K243 (Done 2026-10-18)
+
+- **K243** · Paused instant intro draws no threads: beginSettle instant branch now draws its first frame. Done in 0f8e277 (2026-10-18).
+
+## K161 (Done 2026-10-19)
+
+- **K161** · Disk cleanup: profiles and 78 worktrees swept 2026-10-15; the last three worktrees, the empty folder and two dead branches went 2026-10-19 (`.claude/probes/K161/cleanup.log`). Profiles return until K150 lands. Done in this commit (2026-10-19).
+
+## K551 (Done 2026-10-19)
+
+- **K551** · Crossing gaps gone on every half-float GPU since 2026-10-18 (K320's split turned on by capability and drew no gaps on D3D11): the split stays dark, the warm-up follows the draw flag. Done in f18dd07 (2026-10-19).
+
+## K553 (Done 2026-10-19)
+
+- **K553** · K320's split drew no gaps off dsf 1: the gap mask was sized in CSS px but read by gl_FragCoord in device px; gap_prepass sizes it in device px (fitGapTarget), guarded by gap_split.test.ts and k553_probe.mjs splitAssert. Done in 60511ed (2026-10-19).
+
+## K558 (Done 2026-10-19)
+
+- **K558** · Text crossings follow pen order (the later stroke over; penReverse, pnr=1, reverses it); maze and emblem crossings keep alternation. Done in 0b4c5db (2026-10-19).
+
+## K552 (Done 2026-10-19)
+
+- **K552** · Dailies draw no title thread by default; dailyTitleThread (dtt=1) draws it over the same maze (maze-form attempts, title moves off the share grid, the row disabled off a daily). Done in 06ed74d (2026-10-19).
