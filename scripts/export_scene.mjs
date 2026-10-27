@@ -40,7 +40,7 @@
 // export only, and report the physics hash and a hash of the exported
 // samples (geomHash); no files. variants: render-only params set LIVE
 // through the panel's text inputs after the base shot (cr = "Corner reach",
-// fl = "Crossing fade"), one master each at the base camera, then restored.
+// fl = "Crossing fade", gap = "Crossing gap"), one master each at the base camera, then restored.
 // zooms: after the variants. --parallel N runs N browsers. Results go to
 // stdout (OK/FAIL lines) and <jobs>.results.json. Every probe link carries
 // snd=none and phw=0 (added when missing, refused when different). Pixel
@@ -600,7 +600,11 @@ function parseTarget(t, base) {
   return m ? base * Number(m[1]) : Number(t);
 }
 
-const ROWS = { cr: ["Corner reach", "cuspRadius"], fl: ["Crossing fade", "fadeLength"] };
+const ROWS = {
+  cr: ["Corner reach", "cuspRadius"],
+  fl: ["Crossing fade", "fadeLength"],
+  gap: ["Crossing gap", "gap"],
+};
 const LOOK_KEYS = [
   "threadWidth", "gap", "fadeLength", "cuspRadius", "cornerRoundShare", "flowStrength",
   "threadLook", "borderWidth", "borderColor", "backgroundBase", "mazeFabric",
@@ -754,8 +758,17 @@ export async function runJob(browser, job) {
     }
     await page.evaluate(pageLib); // listeners on canvases made since
     if (job.census) {
-      await sleep(job.censusWaitMs ?? 1500); // a few frames: the renderer's samples catch up
-      const ex = await exportScene(page, name);
+      // A short simT can end while the page is still loading (warm-up,
+      // cold shader compiles): the renderer has no samples yet. Wait.
+      let ex = null;
+      for (let i = 0; !ex; i++) {
+        await sleep(i ? 500 : (job.censusWaitMs ?? 1500));
+        try {
+          ex = await exportScene(page, name);
+        } catch (e) {
+          if (i >= 120 || !/without samples/.test(e.message)) throw e;
+        }
+      }
       const ex2 = await exportScene(page, name);
       return [{
         out: job.out, kind: "census", url, hash: step.hash, simTime: step.simTime,
