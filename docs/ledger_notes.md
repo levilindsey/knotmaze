@@ -4494,6 +4494,7 @@ The history that had accumulated after the ID on the ledger's Next free ID line,
   - owner: agent (2026-10-26)
   - status 2026-10-26 (later): (b) DONE (Levi picked b). pluckLegacy is now an in-tune oscillator course: two PeriodicWave oscillators (Jaffe-Smith pick-position comb spectrum) detuned by the shimmer amount, sweeping lowpass, the harp T60 curve, same buses/pan/future teardown. Verified: unit pin (oscillators created at the exact pluck freq, +-1.2 cents course; test/audio/knot_synth.test.ts, 17 green) and offline-render measurement in Chrome (.claude/probes/K862/legacy_pitch.mjs + probe_legacy.html): fundamentals within +-1 cent at 110/164.81/220/261.63/440/659.25/880 Hz (the KS loop measured up to ~-1600). Notices research mark kept (the comb is still Jaffe-Smith). Full suite green after the mark fix. NOT committed.
   - next: Levi pick: (a) accept (test with localhost links / phone tunnel); (b) harden pluckLegacy into an in-tune oscillator voice so insecure contexts degrade in timbre, not pitch (verify via the offline render harness, knot_synth.ts diag). NOT committed.
+  - status 2026-10-26 (Claude coordinator): parked as 69e079eb on the desktop-only branch `park/muse-2026-10-26`. The 5319 server that served Muse's build stopped with all of Muse's processes (Levi's request). To judge the timbre, run `pwsh scripts/preview.ps1 -Port <p> -Ref 69e079eb` and open it from the laptop or phone over plain HTTP (a Tailscale or LAN address, not localhost), so the fallback voice plays.
 
 ## K866 (2026-10-26, shortened)
 
