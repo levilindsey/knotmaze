@@ -11,6 +11,7 @@ import type { SolveClock } from "../game/maze_stats";
 import type { PhysicsTuning } from "../physics/particle_system";
 import type { PhysicsHost } from "../physics/physics_host";
 import { hashDump } from "../physics/probe_dump";
+import { installSceneExport } from "../render/field/scene_export_hook";
 import type { BackgroundLayer } from "../render/background";
 import type { ConfettiLayer } from "../render/confetti";
 import type { LossFxLayer } from "../render/loss_fx";
@@ -233,6 +234,8 @@ export interface ProbeCtx {
 }
 
 export function installProbeHooks(ctx: ProbeCtx): void {
+  // K868 S1a: window.__knotSceneExport (render/field/scene_export_hook.ts).
+  installSceneExport(ctx);
   // The live design params (a copy). The address bar holds one compact
   // token (ui/param_codec.ts), so probes read settings here, not the URL.
   (window as unknown as Record<string, unknown>).__knotParams = () => ({

@@ -84,7 +84,27 @@ Line numbers are at e3190f77.
   `__knotPhysDump({arrays})` {gen, simTime, n, c, kind, hashes, ...},
   `__knotRenderer()`, `__knotPS()`, `__knotParams()`,
   `__knotLoop({continuous: true})`.
-- New: `__knotSceneExport({withDiag})` -> FieldScene (or {scene, diag}).
+- New (D1, `src/render/field/scene_export_hook.ts`, registered first in
+  installProbeHooks): `await __knotSceneExport({name})` -> {scene, diag}.
+  Pure part `scene_export.ts` (buildFieldScene), tested in
+  `test/render/field/scene_export.test.ts`.
+  - Field sources: chains = r.chainSamples (positions, controlArcLengths,
+    totalLength, closed) + private chainTipFused; z = dump.zPos lerped by
+    ctrl arc; registered crossings = ps.crossings at displayF ?? ctrl;
+    emergent = master's own slot list (below); junctions = r.junctionArms;
+    corners = private cornerCandidates + cornerRounded; camera = root
+    position/scale, app.renderer.resolution, app.screen; look h =
+    style.threadWidth/2, band = borderWidth*h, paper = params
+    .backgroundBase, ink = params.borderColor ("#000000" = auto ink:
+    r.borderColor === 0, the darkened section colour).
+  - Emergent slots as renderEmergent (crossing_gaps 1077-1140): skip
+    isJointPair when r.skipJointPairs; ps.bindingPoint(em.over) deduped
+    within 0.8 of r.diagData (stride 5) and of points already taken; at
+    most EMERGENT_POOL (64). The reveal gate is ignored (exports run at
+    rest). The hook passes dedupeEmergent:false to the pure part.
+  - Open ends: tucked (fused), free (r.freeTips, capped), a junction END
+    arm, else anchored (deadEnds offscreen: true, no cap).
+  - Hash: hashDump(await host.dump()).all, as the K862 probes read.
 - Screenshots: `page.screenshot({clip})` (drawImage of the WebGL canvas
   reads blank). Wheel zoom: WheelEvent deltaY +-120 at the target until
   |s - target| / target < 0.005 (`.claude/probes/K862/fbd_shot.mjs`).
