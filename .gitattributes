@@ -2,3 +2,8 @@
 # tree too, so a test run on Windows (core.autocrlf) doesn't show them as
 # modified (LEDGER K18).
 *.snap text eol=lf
+
+# The ledger is a bullet list edited from both machines; union merge
+# keeps both sides instead of conflicting (claude-config
+# rules/ledger.md, "Merge conflicts").
+LEDGER.md merge=union
