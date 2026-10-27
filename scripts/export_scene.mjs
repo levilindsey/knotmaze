@@ -5,40 +5,56 @@
 //   node scripts/export_scene.mjs <url> <outBase> [--simT 40] [--dsf 1]
 //     [--size 1240x900] [--zoom <poi> <pxPerUnit | Nx>] [--expect-hash <h>]
 //     [--master-only]
-//   node scripts/export_scene.mjs --batch <jobs.json>
+//   node scripts/export_scene.mjs --batch <jobs.json> [--parallel N]
 //
 // It loads <url> in a headed, hardware-GPU Chrome (off-screen, a fresh temp
 // profile deleted afterwards; never --virtual-time-budget), waits for the
 // probe hooks, steps the sim to simT with __knotStepUntil, reads the physics
 // hash from __knotPhysDump (and refuses a mismatch with --expect-hash),
-// freezes physics, hides the DOM chrome (canvases stay) and optionally zooms
-// at a POI of the export (ctrl+wheel: one exact zoomAt, then a wheel pan
-// that centres the POI; physics stays frozen, and the hash is re-checked).
-// Then it writes, each under a temporary name renamed into place:
-//   <outBase>.json         the FieldScene (window.__knotSceneExport)
-//   <outBase>.diag.json    the export's diagnostics, the run, the alignment
-//   <outBase>.master.png   the page at the scene's camera
-//   <outBase>.overlay.png  master + centrelines, the +-h outlines, junction
-//                          centres, crossing marks and dead ends, drawn
-//                          through the scene's camera on an in-page canvas
-// --master-only writes only the master and the diag: a render-only variant
-// (cr, crs, ...) of a geometry exported elsewhere; pass --expect-hash.
+// freezes physics, hides the DOM chrome (only the app's canvas stays) and
+// waits for a bit-exact camera. Then, per shot, it writes (each file under
+// a temporary name, renamed into place):
+//   <out>.json         the FieldScene (window.__knotSceneExport)
+//   <out>.diag.json    the export's diagnostics, the run, the alignment
+//   <out>.master.png   the page at the scene's camera
+//   <out>.overlay.png  master + centrelines (cyan), the +-h outlines
+//                      (magenta), junction centres and arm stubs (green),
+//                      crossings (an X on pass a, red = registered, orange =
+//                      emergent; a ring on pass b) and dead ends (yellow;
+//                      hollow = off-screen), drawn through the scene's camera
+//                      on an in-page canvas
+// --master-only writes only the master and the diag.
+// --zoom: one ctrl+wheel event zooms by exactly the needed factor at the
+// POI (input_pointer.ts: zoomAt by exp(-deltaY * 0.01)), then wheel pans
+// centre it; "6x" = 6 x the full frame's pxPerUnit. Physics stays frozen,
+// and every shot re-checks the hash and the samples (geomHash).
 // The alignment: along each sample's normal, both sides, master's outer
-// edge (the ink-to-paper 50% crossing) against h; away from junctions
-// (joinery's fillet reach + 2h), crossings (4h), open ends (3h arc), tight
-// curvature (radius < 2h) and any other thread within 1.5 px.
+// edge (the 50% crossing from the band's darkest ink to the paper) against
+// h; away from junction centres (joinery's fillet reach 1.25 cr h, at least
+// 2h, + 2h), crossings (4h), open ends (3h of arc), tight curvature
+// (radius < 2h) and any other thread within h + 1.5 px.
 //
-// A batch file is a JSON array of {url, out, simT?, dsf?, size?: [w, h],
-// zoom?: [poi, target], expectHash?, masterOnly?}; one browser runs them
-// all. Every probe link carries snd=none and phw=0 (added when missing).
+// A batch file is a JSON array of jobs: {url, out, simT?, dsf?, size?: [w, h],
+// zoom?: [poi, target], expectHash?, masterOnly?, census?, variants?: [{out,
+// set: {cr?, fl?}}], zooms?: [{out, poi, target}]}. census: step, freeze and
+// export only, and report the physics hash and a hash of the exported
+// samples (geomHash); no files. variants: render-only params set LIVE
+// through the panel's text inputs after the base shot (cr = "Corner reach",
+// fl = "Crossing fade"), one master each at the base camera, then restored.
+// zooms: after the variants. --parallel N runs N browsers. Results go to
+// stdout (OK/FAIL lines) and <jobs>.results.json. Every probe link carries
+// snd=none and phw=0 (added when missing, refused when different). Pixel
+// runs hold the machine-wide perf lock ($env:TEMP\claude-perf.lock).
 
 import puppeteer from "puppeteer-core";
-import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const sha = (b) => createHash("sha1").update(b).digest("hex").slice(0, 12);
 
 export function probeUrl(u) {
   const q = u.indexOf("?");
@@ -69,17 +85,58 @@ async function writeAtomic(path, data) {
   }
 }
 
+export function geomHash(scene) {
+  return sha(JSON.stringify(scene.chains.map((c) => [c.closed, c.pts])));
+}
+
+// The machine-wide perf lock (claude-config rules/sessions.md): one line,
+// owner + start + what; stale after 30 min.
+const LOCK = join(process.env.TEMP ?? tmpdir(), "claude-perf.lock");
+async function takeLock(what, maxWaitMs = 15 * 60000) {
+  const owner = `K868-S1a export_scene pid ${process.pid}`;
+  const t0 = Date.now();
+  for (;;) {
+    let free = !existsSync(LOCK);
+    if (!free) {
+      const age = Date.now() - statSync(LOCK).mtimeMs;
+      if (age > 30 * 60000) free = true;
+    }
+    if (free) {
+      writeFileSync(LOCK, `${owner} | ${new Date().toISOString()} | ${what}\n`);
+      return () => {
+        try {
+          if (readFileSync(LOCK, "utf8").startsWith(owner)) rmSync(LOCK, { force: true });
+        } catch {
+          // already gone
+        }
+      };
+    }
+    if (Date.now() - t0 > maxWaitMs) {
+      throw new Error(`perf lock held for ${maxWaitMs / 60000} min: ${readFileSync(LOCK, "utf8").trim()}`);
+    }
+    await sleep(5000);
+  }
+}
+
 // ---- In-page library (serialized into the page by page.evaluate). ----
 function pageLib() {
   const L = (window.__k868 = window.__k868 || {});
   L.sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  L.lost = L.lost ?? 0;
+  for (const c of document.querySelectorAll("canvas")) {
+    if (c.__k868lost) continue;
+    c.__k868lost = true;
+    c.addEventListener("webglcontextlost", () => L.lost++);
+  }
+  // The app's own canvas: the largest one that is not the loader's or ours
+  // (the loader's canvas is the same size; ties go to the later one).
   L.mainCanvas = () => {
     let best = null;
     let area = -1;
     for (const c of document.querySelectorAll("canvas")) {
-      if (c.id === "k868-overlay") continue;
+      if (c.id === "k868-overlay" || c.id === "knot-loading-canvas") continue;
       const r = c.getBoundingClientRect();
-      if (r.width * r.height > area) {
+      if (r.width * r.height >= area) {
         area = r.width * r.height;
         best = c;
       }
@@ -87,24 +144,42 @@ function pageLib() {
     return best;
   };
   L.hideChrome = () => {
+    const c = L.mainCanvas();
+    c.setAttribute("data-k868-main", "1");
     if (!document.getElementById("k868-style")) {
       const st = document.createElement("style");
       st.id = "k868-style";
       st.textContent =
-        "body * { visibility: hidden !important; } canvas { visibility: visible !important; }";
+        "body * { visibility: hidden !important; } " +
+        "canvas[data-k868-main], #k868-overlay { visibility: visible !important; }";
       document.head.appendChild(st);
     }
-    const c = L.mainCanvas();
     const r = c.getBoundingClientRect();
     return {
       canvases: [...document.querySelectorAll("canvas")].map((k) => {
         const b = k.getBoundingClientRect();
-        return [k.id || k.className || "canvas", b.left, b.top, b.width, b.height];
+        return [k.id || k.className || "canvas", b.left, b.top, b.width, b.height, getComputedStyle(k).visibility];
       }),
       main: { left: r.left, top: r.top, width: r.width, height: r.height },
       dpr: window.devicePixelRatio,
       inner: [window.innerWidth, window.innerHeight],
     };
+  };
+  // Set a render-only param live through its panel row's text input (the
+  // panel's own path: the binding writes the param, the frame loop's
+  // handRendererLook hands it to the renderer before the next update()).
+  L.setRow = (label, value) => {
+    // The label's own text: the panel appends a reset glyph (.kp-reset).
+    const text = (l) =>
+      l ? [...l.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim() : "";
+    const rows = [...document.querySelectorAll(".tp-lblv")];
+    const row = rows.find((r) => text(r.querySelector(".tp-lblv_l")) === label);
+    if (!row) throw new Error(`no panel row "${label}"`);
+    const inp = row.querySelector("input.tp-txtv_i") ?? row.querySelector("input");
+    if (!inp) throw new Error(`no input in the panel row "${label}"`);
+    inp.value = String(value);
+    inp.dispatchEvent(new Event("change", { bubbles: true }));
+    return inp.value;
   };
   L.arcs = (ch) => {
     const n = ch.pts.length / 2;
@@ -155,19 +230,26 @@ function pageLib() {
     return [-ty / l, tx / l];
   };
   L.view = () => window.__knotView();
-  L.settleView = async () => {
+  // Wait for a BIT-EXACT view: `need` identical full-precision reads 100 ms
+  // apart, frames running (the loop is continuous), at most 20 s. The fit
+  // and the panel ease for a while after load, and a three-decimal check
+  // passes on a creeping spring tail (probes.md, K431).
+  L.settleView = async (need = 8) => {
+    const t0 = performance.now();
     let last = "";
-    for (let i = 0; i < 40; i++) {
-      await L.sleep(120);
+    let same = 0;
+    for (let i = 0; i < 200; i++) {
+      await L.sleep(100);
       const v = L.view();
-      const k = [v.s, v.x, v.y].map((u) => u.toFixed(5)).join();
-      if (k === last) return v;
+      const k = `${v.s},${v.x},${v.y}`;
+      same = k === last ? same + 1 : 0;
       last = k;
+      if (same >= need) return v;
     }
-    return L.view();
+    throw new Error(`the view never held still (${Math.round(performance.now() - t0)} ms): ${last}`);
   };
   // Zoom to `target` CSS px per world unit at world point `at`, then pan it
-  // to the viewport centre (input_pointer.ts: ctrl+wheel = zoomAt by
+  // to the canvas centre (input_pointer.ts: ctrl+wheel = zoomAt by
   // exp(-deltaY * 0.01); a wheel with deltaX != 0 = panBy(-deltaX, -deltaY)).
   L.zoomTo = async (at, target) => {
     const cv = L.mainCanvas();
@@ -176,10 +258,12 @@ function pageLib() {
     const wheel = (o) =>
       cv.dispatchEvent(new WheelEvent("wheel", { deltaMode: 0, bubbles: true, cancelable: true, ...o }));
     let v = L.view();
+    const wheels = [];
     for (let i = 0; i < 6 && Math.abs(v.s - target) / target > 1e-4; i++) {
       const [px, py] = scr(v);
       wheel({ deltaX: 0, deltaY: -Math.log(target / v.s) / 0.01, ctrlKey: true, clientX: px, clientY: py });
       v = await L.settleView();
+      wheels.push(["zoom", v.s]);
     }
     for (let i = 0; i < 6; i++) {
       const [px, py] = scr(v);
@@ -194,8 +278,10 @@ function pageLib() {
         clientY: r.top + r.height / 2,
       });
       v = await L.settleView();
+      wheels.push(["pan", dx, dy]);
     }
-    return { s: v.s, x: v.x, y: v.y, poiCss: scr(v) };
+    const p = scr(v);
+    return { s: v.s, x: v.x, y: v.y, poiCss: p, offCentreCss: [p[0] - r.left - r.width / 2, p[1] - r.top - r.height / 2], wheels };
   };
   L.removeOverlay = () => document.getElementById("k868-overlay")?.remove();
   L.drawOverlay = () => {
@@ -329,7 +415,7 @@ function pageLib() {
     const band = sc.look.band;
     const cr = sc.look.cuspRadius;
     const pxW = 1 / ppw; // one image px, in world units
-    const Rj = (o.rj ?? Math.max(1.25 * cr * h, 2 * h) + 2 * h);
+    const Rj = o.rj ?? Math.max(1.25 * cr * h, 2 * h) + 2 * h;
     const Rx = o.rx ?? 4 * h;
     const Re = o.re ?? 3 * h;
     const arcs = sc.chains.map((ch) => L.arcs(ch));
@@ -481,8 +567,8 @@ function pageLib() {
   };
 }
 
-export async function launchBrowser() {
-  const profileDir = join(tmpdir(), `knotmaze-k868-export-${process.pid}`);
+export async function launchBrowser(tag = "0") {
+  const profileDir = join(tmpdir(), `knotmaze-k868-export-${process.pid}-${tag}`);
   const browser = await puppeteer.launch({
     executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
     headless: false,
@@ -512,6 +598,121 @@ export async function launchBrowser() {
 function parseTarget(t, base) {
   const m = /^([\d.]+)x$/.exec(String(t));
   return m ? base * Number(m[1]) : Number(t);
+}
+
+const ROWS = { cr: ["Corner reach", "cuspRadius"], fl: ["Crossing fade", "fadeLength"] };
+const LOOK_KEYS = [
+  "threadWidth", "gap", "fadeLength", "cuspRadius", "cornerRoundShare", "flowStrength",
+  "threadLook", "borderWidth", "borderColor", "backgroundBase", "mazeFabric",
+];
+
+async function exportScene(page, name) {
+  return page.evaluate(async (n) => {
+    const r = await window.__knotSceneExport({ name: n });
+    window.__k868.scene = r.scene;
+    return r;
+  }, name);
+}
+
+async function readParams(page) {
+  return page.evaluate((keys) => {
+    const p = window.__knotParams();
+    return Object.fromEntries(keys.map((k) => [k, p[k]]));
+  }, LOOK_KEYS);
+}
+
+// One shot at the page's current camera: master, alignment, overlay, files.
+async function shoot(page, ctx, shot) {
+  const { scene, diag } = shot.ex;
+  if (scene.source.physHash !== ctx.hash) {
+    throw new Error(`${shot.out}: the physics moved: ${ctx.hash} -> ${scene.source.physHash}`);
+  }
+  const gh = geomHash(scene);
+  // The camera maps world to the SCREENSHOT's CSS px: fold in the canvas
+  // offset, and dpr is the screenshot's (the app caps its own at 2).
+  const rendererResolution = scene.camera.dpr;
+  scene.camera.worldToCss[4] += ctx.chrome.main.left;
+  scene.camera.worldToCss[5] += ctx.chrome.main.top;
+  scene.camera.dpr = Math.round(ctx.chrome.dpr * 1e6) / 1e6;
+  scene.camera.viewport = ctx.chrome.inner;
+  await page.evaluate((cam) => {
+    window.__k868.scene.camera = cam;
+  }, scene.camera);
+  const master = Buffer.from(await page.screenshot({ type: "png", captureBeyondViewport: false }));
+  const viewAfter = await page.evaluate(() => window.__knotView());
+  const camMoved =
+    Math.abs(viewAfter.s - scene.camera.pxPerUnit) > 1e-9 ||
+    Math.abs(viewAfter.x + ctx.chrome.main.left - scene.camera.worldToCss[4]) > 1e-6 ||
+    Math.abs(viewAfter.y + ctx.chrome.main.top - scene.camera.worldToCss[5]) > 1e-6;
+  if (camMoved) {
+    throw new Error(
+      `${shot.out}: the camera moved during the shot: view ${JSON.stringify([viewAfter.s, viewAfter.x, viewAfter.y])}, ` +
+        `scene ${JSON.stringify(scene.camera.worldToCss)}`
+    );
+  }
+  const align = await page.evaluate((b64, o) => window.__k868.align(b64, o), master.toString("base64"), shot.align ?? {});
+  let overlay = null;
+  if (!shot.masterOnly) {
+    await page.evaluate(() => window.__k868.drawOverlay());
+    overlay = Buffer.from(await page.screenshot({ type: "png", captureBeyondViewport: false }));
+    await page.evaluate(() => window.__k868.removeOverlay());
+  }
+  // The state after the shots: same physics, same samples, no lost context.
+  const after = await exportScene(page, scene.name);
+  if (after.scene.source.physHash !== ctx.hash) throw new Error(`${shot.out}: the physics moved during the shot`);
+  const ghAfter = geomHash(after.scene);
+  if (ghAfter !== gh) throw new Error(`${shot.out}: the samples moved during the shot (${gh} -> ${ghAfter})`);
+  const lost = await page.evaluate(() => window.__k868.lost);
+  if (lost) throw new Error(`${shot.out}: webglcontextlost x${lost}`);
+  const params = await readParams(page);
+  const info = {
+    job: ctx.job,
+    shot: { out: shot.out, kind: shot.kind, zoom: shot.zoom ?? null, set: shot.set ?? null },
+    pageUrl: scene.source.url,
+    step: ctx.step,
+    viewStill: ctx.viewStill,
+    chrome: ctx.chrome,
+    rendererResolution,
+    params,
+    geomHash: gh,
+    masterSha: sha(master),
+    camera: scene.camera,
+    exportDiag: diag,
+    align,
+    pageErrors: ctx.errors,
+  };
+  if (!shot.masterOnly) await writeAtomic(`${shot.out}.json`, JSON.stringify(scene));
+  await writeAtomic(`${shot.out}.master.png`, master);
+  if (overlay) await writeAtomic(`${shot.out}.overlay.png`, overlay);
+  await writeAtomic(`${shot.out}.diag.json`, JSON.stringify(info, null, 1));
+  return {
+    out: shot.out,
+    kind: shot.kind,
+    hash: ctx.hash,
+    geomHash: gh,
+    masterSha: sha(master),
+    build: scene.source.build,
+    simTime: scene.source.simTime,
+    pxPerUnit: scene.camera.pxPerUnit,
+    worldToCss: scene.camera.worldToCss,
+    dpr: scene.camera.dpr,
+    rendererResolution,
+    params,
+    chains: scene.chains.length,
+    crossings: scene.crossings.length,
+    junctions: scene.junctions.length,
+    deadEnds: scene.deadEnds.length,
+    maxEndTucked: diag.maxEndTucked ?? null,
+    alignMaxCssPx: align.absMaxCssPx,
+    alignMaxImgPx: align.absMaxImgPx,
+    alignP99ImgPx: align.absP99ImgPx,
+    alignMeanImgPx: align.meanSignedImgPx,
+    alignMeasured: align.measured,
+    alignRays: align.rays,
+    zoom: shot.zoom ? { poi: shot.zoom.poi, s: shot.zoom.s, offCentreCss: shot.zoom.offCentreCss } : null,
+    set: shot.set ?? null,
+    pageErrors: ctx.errors.length,
+  };
 }
 
 export async function runJob(browser, job) {
@@ -544,102 +745,80 @@ export async function runJob(browser, job) {
       window.__knotLoop?.({ continuous: true });
       return { t1, simTime: d1.simTime, hash: d1.hashes.all, frozenHash: d2.hashes.all, frozenSim: d2.simTime, freeze: fr };
     }, simT);
-    const tStep = Date.now();
+    step.ms = Date.now() - t0;
     if (job.expectHash && step.hash !== job.expectHash) {
       throw new Error(`hash ${step.hash} != expected ${job.expectHash} (simTime ${step.simTime})`);
     }
     if (step.frozenHash !== step.hash) {
       throw new Error(`the sim moved between the step and the freeze: ${step.hash} -> ${step.frozenHash}`);
     }
+    await page.evaluate(pageLib); // listeners on canvases made since
+    if (job.census) {
+      await sleep(job.censusWaitMs ?? 1500); // a few frames: the renderer's samples catch up
+      const ex = await exportScene(page, name);
+      const ex2 = await exportScene(page, name);
+      return [{
+        out: job.out, kind: "census", url, hash: step.hash, simTime: step.simTime,
+        geomHash: geomHash(ex.scene), geomStable: geomHash(ex2.scene) === geomHash(ex.scene),
+        params: await readParams(page), chains: ex.scene.chains.length,
+        crossings: ex.scene.crossings.length, junctions: ex.scene.junctions.length,
+        pageErrors: errors.length, wallMs: Date.now() - t0,
+      }];
+    }
     const chrome = await page.evaluate(() => window.__k868.hideChrome());
-    await sleep(900); // frames of the frozen state (continuous loop)
-    let ex = await page.evaluate(async (n) => {
-      const r = await window.__knotSceneExport({ name: n });
-      window.__k868.scene = r.scene;
-      return r;
-    }, name);
-    let zoom = null;
-    if (job.zoom) {
-      const [poiName, tgt] = job.zoom;
-      const poi = ex.scene.pois.find((p) => p.name === poiName);
-      if (!poi) throw new Error(`no POI ${poiName} (have ${ex.scene.pois.map((p) => p.name).join(",")})`);
-      const base = ex.scene.camera.pxPerUnit;
-      const target = parseTarget(tgt, base);
-      zoom = await page.evaluate((at, t) => window.__k868.zoomTo(at, t), poi.at, target);
-      zoom = { poi: poiName, at: poi.at, basePxPerUnit: base, target, ...zoom };
-      await sleep(600);
-      ex = await page.evaluate(async (n) => {
-        const r = await window.__knotSceneExport({ name: n });
-        window.__k868.scene = r.scene;
-        return r;
-      }, name);
-      if (ex.scene.source.physHash !== step.hash) {
-        throw new Error(`the zoom moved the physics: ${step.hash} -> ${ex.scene.source.physHash}`);
+    const tStill = Date.now();
+    const viewStill = await page.evaluate(() => window.__k868.settleView());
+    viewStill.ms = Date.now() - tStill;
+    const ctx = { job: { ...job, url }, hash: step.hash, step, viewStill, chrome, errors };
+    const results = [];
+    let ex = await exportScene(page, name);
+    const basePx = ex.scene.camera.pxPerUnit;
+    const pois = ex.scene.pois;
+    const zoomTo = async (poiName, tgt) => {
+      const poi = pois.find((p) => p.name === poiName);
+      if (!poi) throw new Error(`no POI ${poiName} (have ${pois.map((p) => p.name).join(",")})`);
+      const target = parseTarget(tgt, basePx);
+      const z = await page.evaluate((at, t) => window.__k868.zoomTo(at, t), poi.at, target);
+      if (Math.abs(z.s - target) / target > 1e-3) {
+        throw new Error(`zoom to ${poiName}: reached ${z.s}, wanted ${target} (${JSON.stringify(z.wheels)})`);
       }
-    }
-    const { scene, diag } = ex;
-    // The camera maps world to the SCREENSHOT's CSS px: fold in the canvas
-    // offset, and dpr is the screenshot's (the app caps its own at 2).
-    const rendererResolution = scene.camera.dpr;
-    scene.camera.worldToCss[4] += chrome.main.left;
-    scene.camera.worldToCss[5] += chrome.main.top;
-    scene.camera.dpr = chrome.dpr;
-    scene.camera.viewport = chrome.inner;
-    await page.evaluate((cam) => {
-      window.__k868.scene.camera = cam;
-    }, scene.camera);
-    const master = Buffer.from(await page.screenshot({ type: "png", captureBeyondViewport: false }));
-    const viewAfter = await page.evaluate(() => window.__knotView());
-    const camMoved =
-      Math.abs(viewAfter.s - scene.camera.pxPerUnit) > 1e-9 ||
-      Math.abs(viewAfter.x + chrome.main.left - scene.camera.worldToCss[4]) > 1e-6 ||
-      Math.abs(viewAfter.y + chrome.main.top - scene.camera.worldToCss[5]) > 1e-6;
-    if (camMoved) throw new Error(`the camera moved during the shot: ${JSON.stringify(viewAfter)}`);
-    const align = await page.evaluate((b64, o) => window.__k868.align(b64, o), master.toString("base64"), job.align ?? {});
-    let overlay = null;
-    if (!job.masterOnly) {
-      await page.evaluate(() => window.__k868.drawOverlay());
-      overlay = Buffer.from(await page.screenshot({ type: "png", captureBeyondViewport: false }));
-      await page.evaluate(() => window.__k868.removeOverlay());
-    }
-    const finalHash = await page.evaluate(async () => (await window.__knotPhysDump()).hashes.all);
-    if (finalHash !== step.hash) throw new Error(`the physics moved during the export: ${finalHash}`);
-    const info = {
-      job: { ...job, url },
-      pageUrl: scene.source.url,
-      step: { ...step, ms: tStep - t0 },
-      chrome,
-      rendererResolution,
-      zoom,
-      camera: scene.camera,
-      exportDiag: diag,
-      align,
-      pageErrors: errors,
-      wallMs: Date.now() - t0,
+      return { poi: poiName, at: poi.at, basePxPerUnit: basePx, target, ...z };
     };
-    if (!job.masterOnly) await writeAtomic(`${out}.json`, JSON.stringify(scene));
-    await writeAtomic(`${out}.master.png`, master);
-    if (overlay) await writeAtomic(`${out}.overlay.png`, overlay);
-    await writeAtomic(`${out}.diag.json`, JSON.stringify(info, null, 1));
-    return {
-      out,
-      hash: step.hash,
-      simTime: step.simTime,
-      build: scene.source.build,
-      pxPerUnit: scene.camera.pxPerUnit,
-      dpr: scene.camera.dpr,
-      chains: scene.chains.length,
-      crossings: scene.crossings.length,
-      junctions: scene.junctions.length,
-      deadEnds: scene.deadEnds.length,
-      alignMaxCssPx: align.absMaxCssPx,
-      alignP99ImgPx: align.absP99ImgPx,
-      alignMeanImgPx: align.meanSignedImgPx,
-      alignMeasured: align.measured,
-      zoom: zoom && { poi: zoom.poi, s: zoom.s, poiCss: zoom.poiCss },
-      pageErrors: errors.length,
-      wallMs: Date.now() - t0,
-    };
+    if (job.zoom) {
+      const zoom = await zoomTo(job.zoom[0], job.zoom[1]);
+      ex = await exportScene(page, name);
+      results.push(await shoot(page, ctx, { out, kind: "zoom", ex, zoom, masterOnly: job.masterOnly }));
+    } else {
+      results.push(await shoot(page, ctx, { out, kind: "base", ex, masterOnly: job.masterOnly }));
+    }
+    if (job.variants?.length) {
+      const orig = await page.evaluate(() => window.__knotParams());
+      for (const v of job.variants) {
+        for (const [k, val] of Object.entries(v.set)) {
+          const [label, key] = ROWS[k] ?? [];
+          if (!label) throw new Error(`no live row for ${k}`);
+          await page.evaluate((l, x) => window.__k868.setRow(l, x), label, val);
+          const now = await page.evaluate((kk) => window.__knotParams()[kk], key);
+          if (Math.abs(now - val) > 1e-9) throw new Error(`${k}=${val} did not apply (reads ${now})`);
+        }
+        await sleep(600);
+        await page.evaluate(() => window.__k868.settleView(4));
+        const exv = await exportScene(page, name);
+        results.push(await shoot(page, ctx, { out: resolve(v.out), kind: "variant", ex: exv, set: v.set, masterOnly: v.masterOnly ?? true }));
+      }
+      for (const k of new Set(job.variants.flatMap((v) => Object.keys(v.set)))) {
+        const [label, key] = ROWS[k];
+        await page.evaluate((l, x) => window.__k868.setRow(l, x), label, orig[key]);
+      }
+      await sleep(600);
+    }
+    for (const z of job.zooms ?? []) {
+      const zoom = await zoomTo(z.poi, z.target);
+      const exz = await exportScene(page, name);
+      results.push(await shoot(page, ctx, { out: resolve(z.out), kind: "zoom", ex: exz, zoom, masterOnly: z.masterOnly }));
+    }
+    for (const r of results) r.wallMs = Date.now() - t0;
+    return results;
   } finally {
     await page.close();
   }
@@ -648,8 +827,13 @@ export async function runJob(browser, job) {
 async function main() {
   const argv = process.argv.slice(2);
   let jobs;
+  let parallel = 1;
+  let resultsPath = null;
   if (argv[0] === "--batch") {
     jobs = JSON.parse(readFileSync(argv[1], "utf8"));
+    resultsPath = `${argv[1].replace(/\.json$/, "")}.results.json`;
+    const pi = argv.indexOf("--parallel");
+    if (pi > 0) parallel = Number(argv[pi + 1]);
   } else {
     const [url, out, ...rest] = argv;
     if (!url || !out) {
@@ -669,21 +853,37 @@ async function main() {
     }
     jobs = [job];
   }
-  const { browser, close } = await launchBrowser();
+  const pixels = jobs.some((j) => !j.census);
+  const release = pixels ? await takeLock(`scene exports (${jobs.length} jobs)`) : () => {};
+  const queue = [...jobs];
+  const all = [];
   let failed = 0;
-  try {
-    for (const job of jobs) {
-      try {
-        const r = await runJob(browser, job);
-        console.log(`OK ${JSON.stringify(r)}`);
-      } catch (e) {
-        failed++;
-        console.log(`FAIL ${job.out}: ${e.message}`);
+  const worker = async (i) => {
+    const { browser, close } = await launchBrowser(String(i));
+    try {
+      for (let job = queue.shift(); job; job = queue.shift()) {
+        try {
+          const rs = await runJob(browser, job);
+          for (const r of rs) {
+            all.push(r);
+            console.log(`OK ${JSON.stringify(r)}`);
+          }
+        } catch (e) {
+          failed++;
+          all.push({ out: job.out, fail: e.message });
+          console.log(`FAIL ${job.out}: ${e.message}`);
+        }
       }
+    } finally {
+      await close();
     }
+  };
+  try {
+    await Promise.all(Array.from({ length: Math.min(parallel, jobs.length) }, (_, i) => worker(i)));
   } finally {
-    await close();
+    release();
   }
+  if (resultsPath) await writeAtomic(resultsPath, JSON.stringify(all, null, 1));
   process.exit(failed ? 1 : 0);
 }
 
