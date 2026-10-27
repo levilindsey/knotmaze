@@ -35,10 +35,53 @@ import {
   zAt,
 } from "./geom";
 import { type DepthChain, diagramDepth } from "./depth";
+import { type CornerEnd, type CurveSamples, type G2Kind, buildG2, humpFall, rayHit } from "./g2";
 
 /** S2 (§3.7): the corner curve between the tangent points. "g1": the
  * rolling-ball arc; the others are G2 candidates (g2.ts). */
 export type CornerCurveKind = "g1" | "clothoid" | "bezier5" | "arcs3";
+
+/** S2 (§3.7): a corner's G2 curve and its measures (lengths in world units,
+ * curvatures signed in the travel orientation: in along A, out along B). */
+export interface G2Corner {
+  kind: G2Kind;
+  size: "inset" | "tangent";
+  /** False when the candidate could not be built; the corner keeps its arc. */
+  ok: boolean;
+  curve: CurveSamples;
+  /** Centreline arc length of the curve's feet on arms A and B. */
+  sA: number;
+  sB: number;
+  /** The outward shift of both feet from G1's (inset sizing), arc length. */
+  sigma: number;
+  /** The joins: the side outlines' curvature there (3-point fit on the
+   * centreline over ±kWin, offset by h). */
+  endA: CornerEnd;
+  endB: CornerEnd;
+  kWin: number;
+  /** |Δκ| at the joins: the curve's, and G1's arc against its own joins. */
+  jumpA: number;
+  jumpB: number;
+  jumpG1A: number;
+  jumpG1B: number;
+  /** Peak |κ| on the curve; G1's is 1/r. */
+  peak: number;
+  /** Apex inset from V along V→q: the curve's and the G1 arc's. */
+  inset: number;
+  insetG1: number;
+  /** Web length |V − p| to each end (G1's is r·cot(θ/2) on straight arms). */
+  webA: number;
+  webB: number;
+  /** Least (distance to each centreline − h) over the curve: < 0 crosses. */
+  clearA: number;
+  clearB: number;
+  /** Worst fall of |κ| on the way from a join to the peak (0: one hump). */
+  humpFall: number;
+  /** Fill polygon: V, A's outline, the curve, B's outline (x, y pairs). */
+  poly: number[];
+  box: [number, number, number, number];
+  note: string;
+}
 
 export interface OracleParams {
   /** Rolling-ball radius of round corners, world units (sharp corners: 0). */
@@ -105,6 +148,8 @@ export interface Corner {
   /** Solver residuals |d − δ| at V and q. */
   resV: number;
   resQ: number;
+  /** S2: the G2 curve that replaces the arc (params.cornerCurve). */
+  g2?: G2Corner;
 }
 
 export interface Cluster {
@@ -327,6 +372,12 @@ export class FieldModel {
         let r = params.rOf ? params.rOf(ji, i, theta, style) : style === "round" ? params.rRound : 0;
         if (params.webCap && params.webCap > 0) r = Math.min(r, params.webCap * Math.tan(theta / 2));
         const c = this.solveCorner(ji, i, A, a, B, b, theta, style, r);
+        const kind = params.cornerCurve ?? "g1";
+        if (kind !== "g1" && c.ok && c.r > 0) {
+          c.g2 = this.buildCornerG2(c, kind, params.cornerSize ?? "inset");
+          if (!c.g2.ok) this.diagnostics.push(`corner j${ji}/${i}: ${kind} not built (${c.g2.note}); the arc stays`);
+          else rMax = Math.max(rMax, c.g2.webA, c.g2.webB);
+        }
         this.corners.push(c);
         rMax = Math.max(rMax, c.r);
       }
@@ -339,8 +390,9 @@ export class FieldModel {
     for (const c of this.corners) {
       const pa = this.polys[c.a];
       const pb = this.polys[c.b];
-      const fa = c.r > 0 ? c.sTA : c.sVA;
-      const fb = c.r > 0 ? c.sTB : c.sVB;
+      const g = c.g2?.ok ? c.g2 : null;
+      const fa = g ? g.sA : c.r > 0 ? c.sTA : c.sVA;
+      const fb = g ? g.sB : c.r > 0 ? c.sTB : c.sVB;
       const ea = Math.abs(dS(pa, c.armA.s, fa));
       const eb = Math.abs(dS(pb, c.armB.s, fb));
       const ka = key(c.junction, c.armA);
@@ -654,10 +706,191 @@ export class FieldModel {
     return c;
   }
 
+  /**
+   * S2 (§3.7): a G2 candidate for a solved round corner. The joins sit on
+   * the side outlines at centreline arc lengths sA = sTA + dirA·σ and
+   * sB = sTB + dirB·σ (the same σ on both arms). "tangent": σ = 0, G1's own
+   * tangent points. "inset": σ by bisection so the curve crosses the ray
+   * V→q at G1's apex inset vq − r. Side curvature: the circle through the
+   * centreline at s − kWin, s, s + kWin (kWin = h), offset by h.
+   */
+  private buildCornerG2(c: Corner, kind: G2Kind, size: "inset" | "tangent", forceSigma?: number): G2Corner {
+    const h = this.h;
+    const pa = this.polys[c.a];
+    const pb = this.polys[c.b];
+    const A = c.armA;
+    const B = c.armB;
+    const kWin = h;
+    const kc = (p: Poly, s: number): number => {
+      const P0 = pointAt(p, normS(p, s - kWin));
+      const P1 = pointAt(p, normS(p, s));
+      const P2 = pointAt(p, normS(p, s + kWin));
+      const ax = P1.x - P0.x;
+      const ay = P1.y - P0.y;
+      const bx = P2.x - P1.x;
+      const by = P2.y - P1.y;
+      const den = Math.hypot(ax, ay) * Math.hypot(bx, by) * Math.hypot(P2.x - P0.x, P2.y - P0.y);
+      return den > 1e-300 ? (2 * cross(ax, ay, bx, by)) / den : 0;
+    };
+    const endA = (s: number): CornerEnd => {
+      const at = pointAt(pa, normS(pa, s));
+      const d = A.dir;
+      const ko = d * kc(pa, s);
+      // The outline is the centreline offset h to the left of the outgoing
+      // direction; travel runs the other way.
+      return { p: [at.x - h * d * at.ty, at.y + h * d * at.tx], t: [-d * at.tx, -d * at.ty], k: -ko / (1 - h * ko) };
+    };
+    const endB = (s: number): CornerEnd => {
+      const at = pointAt(pb, normS(pb, s));
+      const d = B.dir;
+      const ko = d * kc(pb, s);
+      return { p: [at.x + h * d * at.ty, at.y - h * d * at.tx], t: [d * at.tx, d * at.ty], k: ko / (1 + h * ko) };
+    };
+    const ux = (c.q[0] - c.V[0]) / c.vq;
+    const uy = (c.q[1] - c.V[1]) / c.vq;
+    const insetG1 = c.vq - c.r;
+    const make = (sig: number) => {
+      const sA = c.sTA + A.dir * sig;
+      const sB = c.sTB + B.dir * sig;
+      const ea = endA(sA);
+      const eb = endB(sB);
+      return { sig, sA, sB, ea, eb, curve: buildG2(kind, ea, eb) };
+    };
+    const insetOf = (m: ReturnType<typeof make>) => (m.curve.x.length > 1 ? rayHit(m.curve, c.V[0], c.V[1], ux, uy) : NaN);
+    let m = make(forceSigma ?? 0);
+    let note = "";
+    if (size === "inset" && m.curve.ok && forceSigma === undefined) {
+      const room = (p: Poly, arm: SceneArm, s: number) => (p.closed ? Infinity : arm.dir > 0 ? p.s0 + p.len - s : s - p.s0);
+      const web = Math.hypot(c.tA[0] - c.V[0], c.tA[1] - c.V[1]);
+      const sMax = Math.min(room(pa, A, c.sTA), room(pb, B, c.sTB), 4 * web + 2 * h);
+      const i0 = insetOf(m);
+      if (!(i0 < insetG1)) note = `inset ${fmtH(i0, h)} ≥ G1's already at G1's tangent points`;
+      else {
+        // March σ out in h/8 steps to the first built curve whose inset
+        // reaches G1's, then bisect that step. (A single bracket over the
+        // whole arm room fails on curved arms: far out the arms turn away
+        // and the curve no longer builds.)
+        const step = h / 8;
+        let lo = 0;
+        let hi = NaN;
+        for (let sg = step; sg <= sMax + 1e-12; sg += step) {
+          const mm = make(sg);
+          if (!mm.curve.ok) break;
+          if (insetOf(mm) >= insetG1) {
+            hi = sg;
+            break;
+          }
+          lo = sg;
+        }
+        if (!Number.isFinite(hi)) {
+          m = make(lo);
+          note = `inset not reached: ${fmtH(insetOf(m), h)} < ${fmtH(insetG1, h)} at σ ${fmtH(lo, h)} (arm room ${fmtH(sMax, h)})`;
+        } else {
+          for (let it = 0; it < 40; it++) {
+            const mid = (lo + hi) / 2;
+            const mm = make(mid);
+            if (mm.curve.ok && insetOf(mm) < insetG1) lo = mid;
+            else hi = mid;
+          }
+          // On a polyline side the end tangent steps at each vertex (by
+          // ds/R), so inset(σ) can jump there: take the closer bracket end.
+          const mLo = make(lo);
+          const mHi = make(hi);
+          const eLo = mLo.curve.ok ? Math.abs(insetOf(mLo) - insetG1) : Infinity;
+          const eHi = Math.abs(insetOf(mHi) - insetG1);
+          m = eLo < eHi ? mLo : mHi;
+          const miss = Math.min(eLo, eHi);
+          if (miss > 1e-6 * h) note = `inset matched within ${fmtH(miss, h)} (the side polyline's tangent steps at a vertex)`;
+        }
+      }
+    }
+    const cv = m.curve;
+    const ok = cv.ok && cv.x.length > 1;
+    const n = cv.x.length;
+    // Clearance against each centreline over the curve's interior.
+    const ext = (w: [number, number], dir: number, sig: number): [number, number] =>
+      dir > 0 ? [w[0], w[1] + sig + h] : [w[0] - sig - h, w[1]];
+    const wa = ext(c.winA, A.dir, m.sig);
+    const wb = ext(c.winB, B.dir, m.sig);
+    let clearA = Infinity;
+    let clearB = Infinity;
+    for (let i = 1; i + 1 < n; i++) {
+      clearA = Math.min(clearA, footInWindow(pa, cv.x[i], cv.y[i], wa[0], wa[1]).d - h);
+      clearB = Math.min(clearB, footInWindow(pb, cv.x[i], cv.y[i], wb[0], wb[1]).d - h);
+    }
+    let peak = 0;
+    for (const k of cv.k) peak = Math.max(peak, Math.abs(k));
+    // G1's joins: the arc (curvature −1/r in travel) against the sides at
+    // G1's own tangent points.
+    const g1a = endA(c.sTA);
+    const g1b = endB(c.sTB);
+    // The fill polygon.
+    const poly: number[] = [c.V[0], c.V[1]];
+    const NS = 24;
+    const dA = dS(pa, c.sVA, m.sA);
+    for (let i = 1; i <= NS; i++) {
+      const e = endA(c.sVA + (dA * i) / NS);
+      poly.push(e.p[0], e.p[1]);
+    }
+    for (let i = 1; i < n; i++) poly.push(cv.x[i], cv.y[i]);
+    const dB = dS(pb, m.sB, c.sVB);
+    for (let i = 1; i < NS; i++) {
+      const e = endB(m.sB + (dB * i) / NS);
+      poly.push(e.p[0], e.p[1]);
+    }
+    const box: [number, number, number, number] = [Infinity, Infinity, -Infinity, -Infinity];
+    for (let i = 0; i < poly.length; i += 2) {
+      box[0] = Math.min(box[0], poly[i]);
+      box[1] = Math.min(box[1], poly[i + 1]);
+      box[2] = Math.max(box[2], poly[i]);
+      box[3] = Math.max(box[3], poly[i + 1]);
+    }
+    return {
+      kind,
+      size,
+      ok,
+      curve: cv,
+      sA: m.sA,
+      sB: m.sB,
+      sigma: m.sig,
+      endA: m.ea,
+      endB: m.eb,
+      kWin,
+      jumpA: ok ? Math.abs(cv.k[0] - m.ea.k) : NaN,
+      jumpB: ok ? Math.abs(cv.k[n - 1] - m.eb.k) : NaN,
+      jumpG1A: Math.abs(-1 / c.r - g1a.k),
+      jumpG1B: Math.abs(-1 / c.r - g1b.k),
+      peak,
+      inset: ok ? insetOf(m) : NaN,
+      insetG1,
+      webA: Math.hypot(m.ea.p[0] - c.V[0], m.ea.p[1] - c.V[1]),
+      webB: Math.hypot(m.eb.p[0] - c.V[0], m.eb.p[1] - c.V[1]),
+      clearA,
+      clearB,
+      humpFall: ok ? humpFall(cv, -1) : NaN,
+      poly,
+      box,
+      note: [note, cv.note ?? ""].filter(Boolean).join("; "),
+    };
+  }
+
   /** Is (x, y) inside corner c's fill: the curvilinear triangle V, t_A, t_B? */
   inFill(ci: number, x: number, y: number): boolean {
     const c = this.corners[ci];
     if (c.r <= 0 || !c.ok) return false;
+    const g = c.g2;
+    if (g?.ok) {
+      // S2: the G2 fill, V to the curve between the two outlines (even-odd).
+      if (x < g.box[0] || y < g.box[1] || x > g.box[2] || y > g.box[3]) return false;
+      const P = g.poly;
+      let inside = false;
+      for (let i = 0, j = P.length - 2; i < P.length; j = i, i += 2) {
+        const yi = P[i + 1];
+        const yj = P[j + 1];
+        if (yi > y !== yj > y && x < ((P[j] - P[i]) * (y - yi)) / (yj - yi) + P[i]) inside = !inside;
+      }
+      return inside;
+    }
     const vx = x - c.q[0];
     const vy = y - c.q[1];
     const dq = Math.hypot(vx, vy);
@@ -878,6 +1111,34 @@ export class FieldModel {
     // Corner arcs.
     this.corners.forEach((c, ci) => {
       if (c.r <= 0 || !c.ok) return;
+      const g = c.g2;
+      if (g?.ok) {
+        // S2: the G2 curve as a chain of segments, in travel order; each
+        // normal points to the hole (right of travel).
+        const cv = g.curve;
+        for (let i = 0; i + 1 < cv.x.length; i++) {
+          const dx = cv.x[i + 1] - cv.x[i];
+          const dy = cv.y[i + 1] - cv.y[i];
+          const l = Math.hypot(dx, dy);
+          if (l < 1e-12) continue;
+          this.prims.push(
+            this.newPrim({
+              kind: 0,
+              chain: -1,
+              corner: ci,
+              cluster: c.cluster,
+              role: "corner",
+              ax: cv.x[i],
+              ay: cv.y[i],
+              bx: cv.x[i + 1],
+              by: cv.y[i + 1],
+              nx: dy / l,
+              ny: -dx / l,
+            }),
+          );
+        }
+        return;
+      }
       const a0 = Math.atan2(c.tA[1] - c.q[1], c.tA[0] - c.q[0]);
       const a1 = Math.atan2(c.tB[1] - c.q[1], c.tB[0] - c.q[0]);
       let sw = a1 - a0;

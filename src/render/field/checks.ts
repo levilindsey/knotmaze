@@ -302,12 +302,14 @@ export function check2(ctx: CheckContext): CheckResult {
     if (!ctx.inView(c.V[0], c.V[1], 0)) return;
     n++;
     if (c.r > 0) {
-      const pc = model.prims.find((p) => p.role === "corner" && p.corner === ci)!;
-      const ends: [number, number, number][] = [
-        [...model.primPoint(pc, 0).slice(0, 2), c.a] as [number, number, number],
-        [...model.primPoint(pc, 1).slice(0, 2), c.b] as [number, number, number],
+      // S2: a G2 corner is a chain of segment prims; its ends are the first
+      // prim's start and the last prim's end.
+      const pcs = model.prims.filter((p) => p.role === "corner" && p.corner === ci);
+      const ends: [number, number, number, Prim][] = [
+        [...model.primPoint(pcs[0], 0).slice(0, 2), c.a, pcs[0]] as [number, number, number, Prim],
+        [...model.primPoint(pcs[pcs.length - 1], 1).slice(0, 2), c.b, pcs[pcs.length - 1]] as [number, number, number, Prim],
       ];
-      for (const [x, y, chain] of ends) {
+      for (const [x, y, chain, pc] of ends) {
         const { d, pr } = near2(x, y, pc, [chain]);
         const ang = pr ? lineAngleDeg(tangentOf(pc, x, y), tangentOf(pr, x, y)) : 90;
         if (d * ppu > maxGap) {
