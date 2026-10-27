@@ -714,6 +714,33 @@ export class FieldModel {
    * V→q at G1's apex inset vq − r. Side curvature: the circle through the
    * centreline at s − kWin, s, s + kWin (kWin = h), offset by h.
    */
+  /**
+   * A corner's side outline at centreline arc length s of arm A or B: the
+   * point, the travel tangent (in along A, out along B, the hole on the
+   * right) and the signed curvature (+ left), from the circle through the
+   * centreline at s − h, s, s + h, offset by h. Sheet E's combs read it too.
+   */
+  outlineEnd(c: Corner, side: "A" | "B", s: number): CornerEnd {
+    const h = this.h;
+    const kWin = h;
+    const p = side === "A" ? this.polys[c.a] : this.polys[c.b];
+    const d = side === "A" ? c.armA.dir : c.armB.dir;
+    const P0 = pointAt(p, normS(p, s - kWin));
+    const P1 = pointAt(p, normS(p, s));
+    const P2 = pointAt(p, normS(p, s + kWin));
+    const ax = P1.x - P0.x;
+    const ay = P1.y - P0.y;
+    const bx = P2.x - P1.x;
+    const by = P2.y - P1.y;
+    const den = Math.hypot(ax, ay) * Math.hypot(bx, by) * Math.hypot(P2.x - P0.x, P2.y - P0.y);
+    const ko = d * (den > 1e-300 ? (2 * cross(ax, ay, bx, by)) / den : 0);
+    const at = P1;
+    // The outline is the centreline offset h to the left of A's outgoing
+    // direction (travel runs the other way), and to the right of B's.
+    if (side === "A") return { p: [at.x - h * d * at.ty, at.y + h * d * at.tx], t: [-d * at.tx, -d * at.ty], k: -ko / (1 - h * ko) };
+    return { p: [at.x + h * d * at.ty, at.y - h * d * at.tx], t: [d * at.tx, d * at.ty], k: ko / (1 + h * ko) };
+  }
+
   private buildCornerG2(c: Corner, kind: G2Kind, size: "inset" | "tangent", forceSigma?: number): G2Corner {
     const h = this.h;
     const pa = this.polys[c.a];
@@ -721,31 +748,8 @@ export class FieldModel {
     const A = c.armA;
     const B = c.armB;
     const kWin = h;
-    const kc = (p: Poly, s: number): number => {
-      const P0 = pointAt(p, normS(p, s - kWin));
-      const P1 = pointAt(p, normS(p, s));
-      const P2 = pointAt(p, normS(p, s + kWin));
-      const ax = P1.x - P0.x;
-      const ay = P1.y - P0.y;
-      const bx = P2.x - P1.x;
-      const by = P2.y - P1.y;
-      const den = Math.hypot(ax, ay) * Math.hypot(bx, by) * Math.hypot(P2.x - P0.x, P2.y - P0.y);
-      return den > 1e-300 ? (2 * cross(ax, ay, bx, by)) / den : 0;
-    };
-    const endA = (s: number): CornerEnd => {
-      const at = pointAt(pa, normS(pa, s));
-      const d = A.dir;
-      const ko = d * kc(pa, s);
-      // The outline is the centreline offset h to the left of the outgoing
-      // direction; travel runs the other way.
-      return { p: [at.x - h * d * at.ty, at.y + h * d * at.tx], t: [-d * at.tx, -d * at.ty], k: -ko / (1 - h * ko) };
-    };
-    const endB = (s: number): CornerEnd => {
-      const at = pointAt(pb, normS(pb, s));
-      const d = B.dir;
-      const ko = d * kc(pb, s);
-      return { p: [at.x + h * d * at.ty, at.y - h * d * at.tx], t: [d * at.tx, d * at.ty], k: ko / (1 + h * ko) };
-    };
+    const endA = (s: number): CornerEnd => this.outlineEnd(c, "A", s);
+    const endB = (s: number): CornerEnd => this.outlineEnd(c, "B", s);
     const ux = (c.q[0] - c.V[0]) / c.vq;
     const uy = (c.q[1] - c.V[1]) / c.vq;
     const insetG1 = c.vq - c.r;

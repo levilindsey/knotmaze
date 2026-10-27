@@ -16,7 +16,7 @@ import {
   oracleProbe,
   runChecks,
 } from "../../../src/render/field/checks";
-import { FieldModel, type OracleRender, hexRgb, invertCamera, renderOracle } from "../../../src/render/field/oracle";
+import { type Corner, FieldModel, type OracleParams, type OracleRender, hexRgb, invertCamera, renderOracle } from "../../../src/render/field/oracle";
 import { normS, pointAt } from "../../../src/render/field/geom";
 import type { FieldScene, SceneArm } from "../../../src/render/field/scene";
 import { ensureDir, fullView, loadSynthetic, outRoot, type View, writeRender, zoomView } from "./lib";
@@ -92,6 +92,7 @@ const runA = want("A") ? it : it.skip;
 const runB = want("B") ? it : it.skip;
 const runC = want("C") ? it : it.skip;
 const runD = want("D") ? it : it.skip;
+const runE = want("E") ? it : it.skip;
 
 const deg = (a: number) => ((a * 180) / Math.PI).toFixed(1);
 
@@ -163,8 +164,9 @@ function cropTile(
   radius: number,
   meta: object,
   draw?: (r: OracleRender, v: View) => void,
+  zoom = 6,
 ) {
-  const zv = zoomView(s, base, at, radius, 6);
+  const zv = zoomView(s, base, at, radius, zoom);
   const z = renderOracle(model, zv.cam, zv.rect, 4);
   const c1 = tileCheck1(model, zv, z);
   draw?.(z, zv);
@@ -578,4 +580,295 @@ describe("K868 oracle (manual)", () => {
     },
     3600000,
   );
+
+  // Sheet E (S2): G1 against the G2 corner candidates (§3.7) with curvature
+  // combs; muse_hash's j123 and j49, G1 against the quintic; k42's depth.
+  runE(
+    "sheet E: G2 corners, curvature combs, k42 depth",
+    async () => {
+      const root = outRoot();
+      const sheets = ensureDir(join(root, "sheets"));
+      const rel = (p: string) => relative(sheets, p).replace(/\\/g, "/");
+      const rows: Row[] = [];
+      const byName = new Map(loadSynthetic().map((s) => [s.name, s]));
+      const kinds = ["clothoid", "bezier5", "arcs3"] as const;
+      const ruleOf =
+        (h: number, cr: number): OracleParams["rOf"] =>
+        (_j, _i, theta, style) =>
+          style === "round" ? Math.min(2 * h, h * Math.max(0, 1.25 * cr * Math.tan(theta / 2) - 0.97)) : 0;
+      const tile1x = (model: FieldModel, s: FieldScene, dir: string, base: string, at: [number, number], radius: number, show: number) => {
+        const v = zoomView(s, base, at, radius, 1);
+        const z = renderOracle(model, v.cam, v.rect, 4);
+        writeRender(dir, base, z, { view: v.label });
+        return { src: rel(join(dir, `${base}.png`)), width: show, label: `1x (${v.rect.w} px square, shown ${(show / v.rect.w).toFixed(1)}x)` };
+      };
+      const checksText = (m: FieldModel) => {
+        const rs = runChecks(m, oracleProbe(m));
+        const bad = rs.filter((r) => r.status === "fail");
+        return bad.length ? `FAIL ${bad.map((r) => `#${r.id} ${r.value}`).join("; ")}` : `checks: ${rs.filter((r) => r.status === "pass").length} pass, none fail`;
+      };
+      const specs: { name: string; how: string; params: (h: number, cr: number) => OracleParams }[] = [
+        { name: "t90", how: "§3.8 r, web cap 1.5h", params: (h, cr) => ({ rRound: 0, rOf: ruleOf(h, cr), webCap: 1.5 * h }) },
+        { name: "y120", how: "§3.8 r, web cap 1.5h", params: (h, cr) => ({ rRound: 0, rOf: ruleOf(h, cr), webCap: 1.5 * h }) },
+        { name: "acute30", how: "r = h under the web cap 1.5h (the cap bites: r = 1.5h·tan(θ/2)); §3.8's r here is 0.035h", params: (h) => ({ rRound: h, webCap: 1.5 * h }) },
+        { name: "acute20", how: "r = h under the web cap 1.5h (the cap bites); §3.8's r here is 0 (a sharp V)", params: (h) => ({ rRound: h, webCap: 1.5 * h }) },
+        { name: "curved", how: "§3.8 r, web cap 1.5h; curved arms", params: (h, cr) => ({ rRound: 0, rOf: ruleOf(h, cr), webCap: 1.5 * h }) },
+      ];
+      for (const spec of specs) {
+        const s = byName.get(spec.name);
+        if (!s) continue;
+        const h = s.look.halfWidth;
+        const base = spec.params(h, s.look.cuspRadius);
+        const dir = join(root, "oracle", "E", spec.name);
+        const g1 = new FieldModel(s, base);
+        const pick = g1.corners.filter((c) => c.r > 0 && c.ok).sort((p, q) => p.theta - q.theta)[0];
+        if (!pick) continue;
+        const cornerOf = (m: FieldModel) => m.corners.find((c) => c.junction === pick.junction && c.index === pick.index)!;
+        const inset = kinds.map((kind) => new FieldModel(s, { ...base, cornerCurve: kind, cornerSize: "inset" }));
+        const tangent = kinds.map((kind) => new FieldModel(s, { ...base, cornerCurve: kind, cornerSize: "tangent" }));
+        const models = [g1, ...inset];
+        const names = ["G1", ...kinds];
+        const stretch = 1.5 * h;
+        const combs = models.map((m) => combPoints(m, cornerOf(m), stretch));
+        const peak = Math.max(...combs.flatMap((cb) => cb.pts.map((p) => Math.abs(p.k))));
+        const S = h / peak;
+        const at: [number, number] = [(pick.V[0] + pick.tA[0] + pick.tB[0]) / 3, (pick.V[1] + pick.tA[1] + pick.tB[1]) / 3];
+        const web = Math.hypot(pick.tA[0] - pick.V[0], pick.tA[1] - pick.V[1]);
+        const radius = Math.min(4.5 * h, Math.max(2.5 * h, web + 2 * h));
+        const tiles = [];
+        const lines: string[] = [
+          `Corner j${pick.junction}/${pick.index}: θ ${deg(pick.theta)}°, r ${(pick.r / h).toFixed(3)}h (${spec.how}), G1 web r·cot(θ/2) = ${(pick.r / Math.tan(pick.theta / 2) / h).toFixed(3)}h. Comb scale: the row's peak |κ| = ${(peak * h).toFixed(3)}/h drawn ${1}h tall.`,
+        ];
+        for (let i = 0; i < models.length; i++) {
+          const m = models[i];
+          tiles.push(tile1x(m, s, dir, `${names[i]}_1x`, at, radius, 3 * Math.round(2 * radius * s.camera.pxPerUnit)));
+          const t = cropTile(m, s, dir, sheets, `${names[i]}_6x`, at, radius, { kind: names[i], size: "inset" }, (r, v) => drawComb(r, v, combs[i], S));
+          t.tile.label = `${spec.name} ${names[i]}${i ? ", inset-sized" : ""}: ${cornerSummary(m, cornerOf(m), combs[i])}`;
+          tiles.push(t.tile);
+          console.log(spec.name, names[i], t.ms, "ms");
+          await new Promise((r) => setTimeout(r, 0));
+        }
+        lines.push(`G1: ${cornerSummary(g1, cornerOf(g1), combs[0])}; ${checksText(g1)}`);
+        for (let i = 0; i < kinds.length; i++) {
+          lines.push(`${kinds[i]} inset-sized: ${cornerSummary(inset[i], cornerOf(inset[i]))}; ${checksText(inset[i])}`);
+          lines.push(`${kinds[i]} tangent-sized: ${cornerSummary(tangent[i], cornerOf(tangent[i]))}; ${checksText(tangent[i])}`);
+        }
+        rows.push({ title: `${spec.name}: G1, then the clothoid pair, the quintic Bézier and the three-arc spline (inset-sized), each at 1x and 6x with its comb`, tiles, lines, wrapAt: 2300 });
+      }
+
+      // muse_hash: G1 against the quintic (inset-sized) at §3.8's r.
+      const sceneDir = join(root, "scenes");
+      for (const jn of ["j123", "j49"]) {
+        const s = JSON.parse(readFileSync(join(sceneDir, `muse_hash.${jn}.json`), "utf8")) as FieldScene;
+        const h = s.look.halfWidth;
+        const J = Number(jn.slice(1));
+        const base: OracleParams = { rRound: 0, rOf: ruleOf(h, s.look.cuspRadius ?? 0), webCap: 1.5 * h };
+        const dir = join(root, "oracle", "E", `muse_hash_${jn}`);
+        let t0 = Date.now();
+        const g1 = new FieldModel(s, base);
+        const msG1 = Date.now() - t0;
+        t0 = Date.now();
+        const bz = new FieldModel(s, { ...base, cornerCurve: "bezier5", cornerSize: "inset" });
+        const msBz = Date.now() - t0;
+        const extra: string[] = [];
+        if (jn === "j123") {
+          t0 = Date.now();
+          const cl = new FieldModel(s, { ...base, cornerCurve: "clothoid", cornerSize: "inset" });
+          const msCl = Date.now() - t0;
+          extra.push(`clothoid (inset) over the scene: ${sceneStats(cl)}; model ${msCl} ms`);
+        }
+        const round = g1.corners.filter((c) => c.r > 0 && c.ok).length;
+        const here = (m: FieldModel) => m.corners.filter((c) => c.junction === J && c.r > 0 && c.ok);
+        const cbs = [g1, bz].map((m) => here(m).map((c) => combPoints(m, c, 1.5 * h)));
+        const peak = Math.max(1e-9, ...cbs.flat().flatMap((cb) => cb.pts.map((p) => Math.abs(p.k))));
+        const S = (0.8 * h) / peak;
+        const at = s.pois!.find((p) => p.name === jn)!.at;
+        const tiles = [];
+        const lines: string[] = [
+          `${round} round corners with r > 0 in the scene; G1 model ${msG1} ms, quintic (inset) model ${msBz} ms: ${((msBz - msG1) / Math.max(1, round)).toFixed(1)} ms more per round corner.`,
+          `quintic (inset) over the scene: ${sceneStats(bz)}`,
+          ...extra,
+        ];
+        for (const [i, m] of [g1, bz].entries()) {
+          const nm = i ? "bezier5" : "G1";
+          const t = cropTile(m, s, dir, sheets, `${nm}`, at, 5 * h, { kind: nm }, (r, v) => {
+            for (const cb of cbs[i]) drawComb(r, v, cb, S);
+          }, 1);
+          // At the scene's own camera (k = 1): muse_hash's h is already 51 px.
+          t.tile.width = 2 * t.tile.width;
+          t.tile.label = `muse_hash ${jn} ${nm}${i ? " (inset-sized)" : ""}: ${t.zv.label}`;
+          tiles.push(t.tile);
+          for (const c of here(m)) lines.push(`${nm} j${c.junction}/${c.index}: θ ${deg(c.theta)}°, r ${(c.r / h).toFixed(3)}h; ${cornerSummary(m, c)}`);
+          console.log(jn, nm, t.ms, "ms");
+          await new Promise((r) => setTimeout(r, 0));
+        }
+        rows.push({ title: `muse_hash ${jn}: G1 against the quintic Bézier at the same r (§3.8, web cap 1.5h)`, tiles, lines, wrapAt: 2300 });
+      }
+
+      // k42: the scene's depth samples against the diagram's (§3.3).
+      const k42 = byName.get("k42");
+      if (k42) {
+        const h = k42.look.halfWidth;
+        const dir = join(root, "oracle", "E", "k42");
+        const tiles = [];
+        const lines: string[] = [];
+        for (const depth of ["scene", "diagram"] as const) {
+          const m = new FieldModel(k42, { rRound: 0.5 * h, depth });
+          const rs = runChecks(m, oracleProbe(m));
+          const poi = k42.pois![0];
+          const t = cropTile(m, k42, dir, sheets, `depth_${depth}`, poi.at, Math.min(poi.radius, 3 * h), { depth });
+          t.tile.label = `k42, depth "${depth}": ${t.zv.label}`;
+          tiles.push(t.tile);
+          lines.push(`depth "${depth}": ${short(rs, [14, 2, 5, 9])}`);
+        }
+        rows.push({ title: `k42: the old depth rule (the scene's z samples) against the new one (the crossing diagram, §3.3)`, tiles, lines, wrapAt: 2300 });
+      }
+
+      const html = sheetHtml(
+        "K868 sheet E: G2 corners and curvature combs",
+        [
+          "CPU oracle, supersampling 4x4. Synthetic rows: G1 (the rolling-ball arc), then the clothoid pair, the quintic Bézier (handle λ picked per corner: the lowest peak among one-hump λ) and the three-arc spline, each sized to G1's apex inset (the curve crosses V→q at vq − r) by moving both feet out along the arms by one centreline arc length σ. Each at 1x (the scene camera, h = 10 px, upscaled) and 6x with its comb.",
+          "Comb: blue teeth from the curve to its curvature drawn on the convex side (one scale per row, the row's peak |κ| = h tall), magenta envelope, red the corner curve, green the joins; it runs 1.5h of centreline along each arm. A step in the envelope at a join is a curvature jump; G1's is 1/r minus the side's curvature.",
+          "Captions: peak κ·h (G1: h/r), the joins' |Δκ|·h (G2 target ≤ 0.01; the arc spline's own steps), the apex inset from V (G1's), σ, the webs |V − join| (the cap is 1.5h), the least clearance to either side's centreline minus h (negative: inside the side, the polyline's chord sag), the hump fall (0: one hump), the checks of section 6 on that model. Tangent-sized lines keep G1's tangent points (σ = 0).",
+          "muse_hash rows (S1a's export of the live app, h = 51 px): the scene's own camera, 5h around the junction, shown 2x; a comb on every round corner of the junction (one scale per row); scene-wide counts of built candidates and the model build times.",
+          "k42 row: check #14 (depth) and the shared-area checks under each depth rule.",
+        ],
+        rows,
+      );
+      const png = await renderSheet(sheets, "E_g2", html, 2500);
+      console.log("sheet E:", png);
+    },
+    3600000,
+  );
 });
+
+type CombPt = { x: number; y: number; k: number };
+interface Comb {
+  pts: CombPt[];
+  /** Index of A's outline point at the join, and of B's. */
+  joinA: number;
+  joinB: number;
+  /** G1's arc curvature (signed) when the comb is G1's. */
+  kArc?: number;
+}
+
+/** A stretch of A's outline, the corner curve (G2 if built, else G1's arc), a stretch of B's, in travel order. */
+function combPoints(model: FieldModel, c: Corner, stretch: number): Comb {
+  const g = c.g2 && c.g2.ok ? c.g2 : undefined;
+  const sA = g ? g.sA : c.sTA;
+  const sB = g ? g.sB : c.sTB;
+  const n = 30;
+  const pts: CombPt[] = [];
+  for (let i = n; i >= 0; i--) {
+    const e = model.outlineEnd(c, "A", sA + (c.armA.dir * stretch * i) / n);
+    pts.push({ x: e.p[0], y: e.p[1], k: e.k });
+  }
+  const joinA = pts.length - 1;
+  let kArc: number | undefined;
+  if (g) for (let i = 0; i < g.curve.x.length; i++) pts.push({ x: g.curve.x[i], y: g.curve.y[i], k: g.curve.k[i] });
+  else {
+    const u0x = c.tA[0] - c.q[0];
+    const u0y = c.tA[1] - c.q[1];
+    const u1x = c.tB[0] - c.q[0];
+    const u1y = c.tB[1] - c.q[1];
+    const a0 = Math.atan2(u0y, u0x);
+    const d = Math.atan2(u0x * u1y - u0y * u1x, u0x * u1x + u0y * u1y);
+    kArc = Math.sign(d) / c.r;
+    for (let i = 0; i <= 120; i++) {
+      const a = a0 + (d * i) / 120;
+      pts.push({ x: c.q[0] + c.r * Math.cos(a), y: c.q[1] + c.r * Math.sin(a), k: kArc });
+    }
+  }
+  const joinB = pts.length;
+  for (let i = 0; i <= n; i++) {
+    const e = model.outlineEnd(c, "B", sB + (c.armB.dir * stretch * i) / n);
+    pts.push({ x: e.p[0], y: e.p[1], k: e.k });
+  }
+  return { pts, joinA, joinB, kArc };
+}
+
+/** Draws a comb into a render: teeth on the convex side, the envelope, the corner curve, the joins. */
+function drawComb(r: OracleRender, v: View, cb: Comb, S: number): void {
+  const [a, b, cc, dd, e, f] = v.cam.worldToCss;
+  const px = (x: number, y: number): [number, number] => [(a * x + cc * y + e) * v.cam.dpr - v.rect.x0, (b * x + dd * y + f) * v.cam.dpr - v.rect.y0];
+  const put = (x: number, y: number, col: readonly number[]) => {
+    const i = Math.floor(x);
+    const j = Math.floor(y);
+    if (i < 0 || j < 0 || i >= r.w || j >= r.h) return;
+    const o = (j * r.w + i) * 4;
+    r.rgba[o] = col[0];
+    r.rgba[o + 1] = col[1];
+    r.rgba[o + 2] = col[2];
+    r.rgba[o + 3] = 255;
+  };
+  const line = (p: [number, number], q: [number, number], col: readonly number[]) => {
+    const n = Math.ceil(2 * Math.hypot(q[0] - p[0], q[1] - p[1])) + 1;
+    for (let i = 0; i <= n; i++) put(p[0] + ((q[0] - p[0]) * i) / n, p[1] + ((q[1] - p[1]) * i) / n, col);
+  };
+  const P = cb.pts;
+  const base: [number, number][] = [];
+  const tip: [number, number][] = [];
+  for (let i = 0; i < P.length; i++) {
+    const p0 = P[Math.max(0, i - 1)];
+    const p1 = P[Math.min(P.length - 1, i + 1)];
+    let tx = p1.x - p0.x;
+    let ty = p1.y - p0.y;
+    const tl = Math.hypot(tx, ty) || 1;
+    tx /= tl;
+    ty /= tl;
+    base.push(px(P[i].x, P[i].y));
+    // Convex side: −κ·S along the left normal (−ty, tx).
+    tip.push(px(P[i].x + P[i].k * S * ty, P[i].y - P[i].k * S * tx));
+  }
+  const TEETH: readonly number[] = [40, 130, 255];
+  const ENV: readonly number[] = [235, 0, 190];
+  const CURVE: readonly number[] = [220, 30, 30];
+  const JOIN: readonly number[] = [0, 170, 0];
+  let run = Infinity;
+  for (let i = 0; i < P.length; i++) {
+    if (i) run += Math.hypot(base[i][0] - base[i - 1][0], base[i][1] - base[i - 1][1]);
+    if (run >= 5 || i === cb.joinA || i === cb.joinB || i === cb.joinA + 1 || i === cb.joinB - 1) {
+      line(base[i], tip[i], TEETH);
+      run = 0;
+    }
+  }
+  for (let i = cb.joinA + 1; i < cb.joinB; i++) line(base[i - 1], base[i], CURVE);
+  for (let i = 1; i < P.length; i++) line(tip[i - 1], tip[i], ENV);
+  for (const j of [cb.joinA, cb.joinB]) for (let dx = -2; dx <= 2; dx++) for (let dy = -2; dy <= 2; dy++) put(base[j][0] + dx, base[j][1] + dy, JOIN);
+}
+
+/** One corner's numbers for a caption (G1 from its comb, a G2 candidate from its record). */
+function cornerSummary(model: FieldModel, c: Corner, cb?: Comb): string {
+  const h = model.h;
+  const g = c.g2;
+  const f3 = (x: number) => (Number.isFinite(x) ? x.toFixed(3) : String(x));
+  if (!g) {
+    const kA = model.outlineEnd(c, "A", c.sTA).k;
+    const kB = model.outlineEnd(c, "B", c.sTB).k;
+    const kArc = cb?.kArc ?? -1 / c.r;
+    return `G1 arc: peak κ·h ${f3(h / c.r)}, joins |Δκ|·h ${f3(Math.abs(kArc - kA) * h)} / ${f3(Math.abs(kArc - kB) * h)}, inset ${f3((c.vq - c.r) / h)}h, web ${f3(c.r / Math.tan(c.theta / 2) / h)}h`;
+  }
+  if (!g.ok) return `not built (${g.note || "no curve"}); the corner keeps G1's arc`;
+  const steps = g.curve.steps.length ? `, curvature steps ${g.curve.steps.map((x) => f3(x * h)).join(", ")}/h` : "";
+  return (
+    `peak κ·h ${f3(g.peak * h)} (G1 ${f3(h / c.r)}), joins |Δκ|·h ${f3(g.jumpA * h)} / ${f3(g.jumpB * h)}${steps}, inset ${f3(g.inset / h)}h (G1 ${f3(g.insetG1 / h)}h), σ ${f3(g.sigma / h)}h, ` +
+    `webs ${f3(g.webA / h)}h / ${f3(g.webB / h)}h, clearance ${(Math.min(g.clearA, g.clearB) / h).toFixed(4)}h, hump fall ${(g.humpFall * h).toExponential(1)}${g.note ? `; ${g.note}` : ""}`
+  );
+}
+
+/** Scene-wide counts for a G2 model: built, failed, notes, worst numbers. */
+function sceneStats(m: FieldModel): string {
+  const h = m.h;
+  const gs = m.corners.filter((c) => c.r > 0 && c.ok && c.g2).map((c) => c.g2!);
+  const ok = gs.filter((g) => g.ok);
+  const notes = new Map<string, number>();
+  for (const g of gs) if (g.note) notes.set(g.note.split(/[:(\d]/)[0].trim(), (notes.get(g.note.split(/[:(\d]/)[0].trim()) ?? 0) + 1);
+  const mx = (xs: number[]) => (xs.length ? Math.max(...xs) : NaN);
+  const mn = (xs: number[]) => (xs.length ? Math.min(...xs) : NaN);
+  const overCap = ok.filter((g) => Math.max(g.webA, g.webB) > 1.5 * h + 1e-9).length;
+  return (
+    `${ok.length} of ${gs.length} built; worst join |Δκ|·h ${mx(ok.map((g) => Math.max(g.jumpA, g.jumpB) * h)).toFixed(4)}, least clearance ${(mn(ok.map((g) => Math.min(g.clearA, g.clearB))) / h).toFixed(4)}h, ` +
+    `worst hump fall ${(mx(ok.map((g) => g.humpFall)) * h).toExponential(1)}, worst inset miss ${(mx(ok.map((g) => Math.abs(g.inset - g.insetG1))) / h).toFixed(4)}h, webs over 1.5h: ${overCap}` +
+    (notes.size ? `; notes: ${[...notes].map(([k, v]) => `${v}x "${k}"`).join(", ")}` : "")
+  );
+}
