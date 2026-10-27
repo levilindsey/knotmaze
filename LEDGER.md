@@ -27,10 +27,8 @@ Next free ID: K871.
   in Drive: centreline strokes, pen order = path order, enter left on the baseline, exit right). No
   model alphabet meanwhile. Muse's prototype + design doc parked at 6639009c (`park/muse-2026-10-26`).
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
-  tune. Muse's in-tune two-oscillator voice (within 1 cent, tested) is parked at 69e079eb: Levi judges
-  its timbre, then cherry-pick to master or drop. The 5319 server that served it stopped with Muse's
-  processes (2026-10-26); `scripts/preview.ps1 -Port <p> -Ref 69e079eb` serves it again (plain HTTP
-  over Tailscale, so the fallback synth plays).
+  tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
+  drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
 - **K623** · K409's glow covers the dark band under Gone (only a browner tail shows): A as merged, B
   the glow down the middle only, C a faster glow fade, D a longer band (1.0 ctrl) with a dark rim
   past the glow. Rec: D. Sheet: `.claude/probes/K409/out/options/K409_glow_band_options.png`.
