@@ -1944,3 +1944,109 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K552 (Done 2026-10-19)
 
 - **K552** · Dailies draw no title thread by default; dailyTitleThread (dtt=1) draws it over the same maze (maze-form attempts, title moves off the share grid, the row disabled off a daily). Done in 06ed74d (2026-10-19).
+
+<!-- K812, K813, K815-K827, K833-K843: recovered 2026-10-27 from their commits; no ledger line ever parsed for them (LEDGERS.md inbox, 2026-10-23). -->
+
+## K812 (Done 2026-10-22)
+
+- **K812** · Preview win/loss effect buttons in the panel; threadLook hides fill-only Look rows. Done in 721116d2 (2026-10-22).
+
+## K813 (Done 2026-10-22)
+
+- **K813** · Border look keeps fill-area highlights; highlight colors/widths as params. Done in 7aa778fb (2026-10-22).
+
+## K815 (Done 2026-10-22)
+
+- **K815** · Junction fans draw outline only in border look (rim + flanks, seal silent). Done in 01f4efad (2026-10-22).
+
+## K816 (Done 2026-10-22)
+
+- **K816** · SDF ribbons behind rp=sdf (G3-2 steps 2-3). Done in 855bea23 (2026-10-22).
+
+## K817 (Done 2026-10-22)
+
+- **K817** · Gap search rounds negative kStart half up (K592). Done in 52aa617a (2026-10-22).
+
+## K818 (Done 2026-10-22)
+
+- **K818** · Shape-injection param collection (K814 stages 1-3). Done in ffc3d4d7 (2026-10-22).
+
+## K819 (Done 2026-10-22)
+
+- **K819** · CannonSpread param (wider side-cannon fan) + backdrop/path colors join LOOK_KEYS. Done in e7a6bb5c (2026-10-22).
+
+## K820 (Done 2026-10-22)
+
+- **K820** · BorderWidth/borderColor/goldTextureStrength params. Done in 88cdd06c (2026-10-22).
+
+## K821 (Done 2026-10-22)
+
+- **K821** · Panel order Maze before Game; End effects subfolder; Thread look above its rows; Path color beside the gold rows. Done in b224bb21 (2026-10-22).
+
+## K822 (Done 2026-10-22)
+
+- **K822** · Panel subfolders Text & emblem, Exit traps, Exploration, Burn race, Classic rules. Done in 837b16af (2026-10-22).
+
+## K823 (Done 2026-10-22)
+
+- **K823** · Bespoke trefoil favicon/icon set + web app manifest (K36). Done in c46d3cc9 (2026-10-22).
+
+## K824 (Done 2026-10-22)
+
+- **K824** · Bespoke inline trefoil loader (K313 stage 1). Done in 4a072983 (2026-10-22).
+
+## K825 (Done 2026-10-22)
+
+- **K825** · SDF ribbons get the thread-reveal explore variant. Done in 9a0cca7b (2026-10-22).
+
+## K826 (Done 2026-10-22)
+
+- **K826** · SDF mitered silhouette at joints (sdMiterQuad). Done in 1868d7e0 (2026-10-22).
+
+## K827 (Done 2026-10-22)
+
+- **K827** · Grab chase rate try key (gcr, K792) and the cap raised 0.6 -> 0.8 (K610). Done in da1d64cc (2026-10-22).
+
+## K833 (Done 2026-10-22)
+
+- **K833** · No disc rims inside border junctions; semicircle dead-end caps. Done in 7e98a5bc (2026-10-22).
+
+## K834 (Done 2026-10-22)
+
+- **K834** · Intro chrome gating on loader persistence + reset confirmation. Done in 4aa7fc37 (2026-10-22).
+
+## K835 (Done 2026-10-22)
+
+- **K835** · Path irregularity + excursion sliders (string sag, hand-drawn fills). Done in a437893f (2026-10-22).
+
+## K836 (Done 2026-10-22)
+
+- **K836** · The cursive a as tangent attachments on the undisturbed oval. Done in 761003ab (2026-10-22).
+
+## K837 (Done 2026-10-22)
+
+- **K837** · Offset link-look chip below dropped mode badge. Done in e3792ec8 (2026-10-22).
+
+## K838 (Done 2026-10-22)
+
+- **K838** · A hint lasts until the next move; one hint at a time. Done in 39fe558c (2026-10-22).
+
+## K839 (Done 2026-10-22)
+
+- **K839** · 'Show shortest path' checkbox draws the whole route. Done in d7028231 (2026-10-22).
+
+## K840 (Done 2026-10-22)
+
+- **K840** · Fragile runs break at the ends too. Done in 4507a632 (2026-10-22).
+
+## K841 (Done 2026-10-22)
+
+- **K841** · The loader's followed rotation turns one way only. Done in 897a9d11, 5f4297ba (2026-10-22).
+
+## K842 (Done 2026-10-22)
+
+- **K842** · Overlays dive where their thread passes under. Done in fc6d1a9e (2026-10-22).
+
+## K843 (Done 2026-10-22)
+
+- **K843** · Junction flares - fat at the junction, tapering away. Done in df80e1f6 (2026-10-22).
