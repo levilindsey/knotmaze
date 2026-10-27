@@ -19,13 +19,13 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K874.
+Next free ID: K878.
 
 ## Waiting on Levi
 
-- **K863** · Cursive clean slate, waiting on Levi's own letterforms (Inkscape, `cursive_template.svg`
-  in Drive: centreline strokes, pen order = path order, enter left on the baseline, exit right). No
-  model alphabet meanwhile. Muse's prototype + design doc parked at 6639009c (`park/muse-2026-10-26`).
+- **K874** · K868 S1b sheets (Drive `K868/sheets/`): is the oracle's look right (B), and which corner
+  rule (C): master's r(θ) = h·max(0, 1.25·cr·tan(θ/2) − 0.97) capped at 2h, plus a web cap ℓ ≤ 1.5h
+  that rounds the acute corners master leaves sharp (θ ≲ 49°)? `docs/design/K868_s1b_oracle.md`.
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -289,13 +289,21 @@ Next free ID: K874.
 ## In progress
 
 - **K868** · Border look, junctions done right: one field renderer (union within a surface, occlusion
-  by tent depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
+  by depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator)
-  - branch: mainline; last commit: `e4577ded`
-  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets); `docs/design/K868_s1a_notes.md`
-  - next: K870 (S1b) runs on the S1a scenes until ~21:29: merge it, review sheets A-C, upload them to Drive, Levi judges the look and the r mapping; then the S2 and S3 briefs, which settle the depth source (physics z is not the tent), the END 0.76h offset and the fan band W (S1a notes)
+  - branch: mainline; last commit: `2b798a93` (S1b, K870, merged)
+  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets; sheets and check reports also on Drive `K868/`); `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`
+  - next: Levi judges sheets B and C (K874). Meanwhile write the S2 brief (G2 variants, curvature combs; depth pinned at each crossing from the diagram, so k42 keeps its over/under) and the S3 brief (WebGL2 prototype, Pixel fps); they also settle the END 0.76h offset and the fan band W (S1a notes)
   - brief: `docs/design/K868_field_border.md`
+- **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
+  credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
+  Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
+  - owner: agent `k863-trace` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (started 2026-10-26)
+  - branch: mainline, no code (outputs untracked); last commit: n/a
+  - evidence: `.claude/probes/K863/trace/` (font, tracer, outputs, `ref/chart.jpg`); Drive `K863/`
+  - next: the agent delivers `cursive_traced_v1.svg` and its review sheet; then Levi edits the letters in Inkscape
+  - brief: `docs/design/K863_trace.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -522,6 +530,12 @@ merged):
 13. K326 A.
 14. K318, K336, K337.
 
+- **K875** · K868 S1b, master's side: on Muse's link master registers only 58-80% with the oracle at
+  j49/j123 and #6 finds every band end off (18/18, 19/19; cause untested: gaps or a reveal/fog state);
+  its sdf and strip silhouettes differ in width; joinery.ts:1469-1471's comment is stale. s1b_oracle.md.
+- **K876** · K868 oracle image probe: auto ink (pink on light paper) and markers/arrowheads count as ink,
+  so sheet D fails every image check. Rerun D on the dsf 3 shots, dark paper and cr/fl variants, add
+  exact-field checks on S1a's scenes and a bounded reach; compare the END tuck with §3.6.
 - **K785** · Lore attach cost (frame_loop.ts narrowed in 2dc2af1d, 12 rules files to 2; the other hubs open): reading `src/app/frame_loop.ts` attaches 11 rules files (about 28k
   tokens), and the K774 reading set (main.ts, frame_loop, minotaur_turns, input_keys,
   fabric_maze_renderer) about 60k. K774 and K138 s4 compacted 7 and 9 times in their first 30 min
@@ -713,6 +727,9 @@ Every other item below waits on the trigger it names.
 
 ## Residuals (known, not fixed)
 
+- **K877** · K868 oracle residuals: 59 of 342 corner solves fail on muse_hash ("q solve residual",
+  `.claude/probes/K868/oracle/muse_hash/b.json`); #2 fails acute r=0 corners by ε·cot θ (0.017 and
+  0.027 px); kink's 1x image #5/#9; a long render's vitest RPC timeout exits 1 on a passing test.
 - **K836 follow-ups** (Levi look needed, 2026-10-23): (a) the i stem still shows a step/flap at J and the K843 flare magnitudes (peak 6 GU, len 30/34 GU) are first guesses - tune by eye at xh2/xh3, incl. the flat dead-end cap. (b) In border mode the i tittle draws as a serrated ring with center speckles (aib still); the fill look is a clean disc. (c) Pale seam discs sit inside the a at L and R in the fill look - judge whether they read as junction pads or artifacts. Stills `.claude/probes/K836/`, `.claude/probes/K843/`.
 - **K834 follow-up**: the stuck-on-loader report - the keep-loading flag is localStorage (`knotmaze.loaderStays`), so Chrome's clear-cache alone does not revert it (clear site data does); the K834 gating should keep the panel reachable under the permanent loader, but the real-phone panel-not-shown case (short landscape sheet) was never reproduced - retest on the phone.
 
