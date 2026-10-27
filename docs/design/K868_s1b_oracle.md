@@ -91,3 +91,51 @@ Trailer:
 
     Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
     Claude-Session: https://claude.ai/code/session_01TnQvxftruF6gxzRe3bigQ6
+
+## Handoff
+
+(Written as decisions are made; the status lines are updated at each
+milestone. Code: `src/render/field/geom.ts`, `src/render/field/oracle.ts`.)
+
+### Decisions (with reasons)
+
+- **σ = π·h** (same-chain merge distance, §3.4). A tube of half-width h
+  overlaps itself only where the centreline comes back within 2h of
+  itself, which needs at least a half turn of radius h, i.e. π·h of arc.
+  Two candidates on one chain closer than that in s are the same piece of
+  thread; farther apart they are separate passes (a kink loop's two
+  passes, a hairpin's legs). The plain-member outline window is Λ = σ/2
+  either side of the candidate's s.
+- **Span margin = h** beyond the farthest corner foot (tangent point, or V
+  when r = 0) + W. With no corner on an arm (an obtuse side, θ ≥ 180°):
+  h + W + margin from the root.
+- **ε = 1e-3·h** for the exposure probe (a point ε outward of an outline
+  point must lie outside every other member). Inside tests are strict
+  (d < h), so a point exactly on another tube's outline counts as outside.
+- **Supersampling 4×4** per device pixel for ink coverage; the float32
+  distance field F and the top-id field are taken at pixel centres. F is
+  clamped to ±1.5h and stored in CSS px.
+- **Opening θ on curved arms**: the angle between chords from the arm's
+  root point to the point at arc length 2h along each arm (2h ≈ where the
+  outline of a straight arm leaves the junction's disc). Tangents at the
+  root are noisy on real sampled polylines; chords at 2h are not.
+- **Reach** for candidates: 2h + W + 2·r_max (a fill point can be up to
+  that far from the nearest arm centreline of its group).
+- **Depth ties** (|Δz| ≤ 1e-6): higher chain id, then larger s.
+- **END extension (§3.6)**: c′ = the nearest point to the END's terminal on
+  the junction's through chains, searched within ±4h of the through arm's
+  s; the junction centre if the junction has no through. z is held
+  constant along the extension. The extended end gets a cap; it is always
+  buried by the through (checked by check 3/6 numbers).
+- **Corner solve**: V (δ = h) and q (δ = h + r) by damped 2-D Newton on
+  dist(q, arm A) = dist(q, arm B) = δ, with feet found exactly on the
+  polylines within ±(4h + 2·(h + r)/sin(θ/2)) of each arm root. t_A, t_B =
+  q's feet moved h toward q. The fill is the curvilinear triangle V, t_A,
+  t_B: r ≤ |x − q| ≤ |V − q| + h, inside the sector q→t_A..q→t_B, and on
+  the wedge side of both arms.
+- **Exposure is canonical per primitive**: a primitive (offset segment,
+  vertex join arc, cap, corner arc) inside a junction cluster's span is
+  tested against that cluster's region (arm tubes over their spans + the
+  corner fills); any other primitive against its own chain within σ of it
+  (self-burial at hairpins). Found by sampling every 0.02h along the
+  primitive plus 40-step bisection at each transition.
