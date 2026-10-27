@@ -133,3 +133,38 @@ Line numbers are at e3190f77.
 - No cr/crs setter hook (the cr slider calls onSlackChange, crs
   onStyleChange): cr variants are reloads with --expect-hash, and a
   matching hash proves the param is render-only.
+- Live variants instead (0ed51f8a): the script types the value into the
+  row's `input.tp-txtv_i` and fires "change", then checks
+  `__knotParams()`. A row's label text includes the reset glyph (`.kp-reset`
+  sits inside `.tp-lblv_l`), so rows are matched on the label's text nodes
+  only. Physics stays frozen through it (hash and samples re-checked).
+
+## Findings (2026-10-26, D3-D4)
+
+- Stepping in-thread to simT 40 takes about 97 s (muse). Pass `stb=0`:
+  without it K147's settle budget changes the stepping phase, and two loads
+  of one link ended at sim 5.000 and 5.008 with different hashes.
+- Which params move what (census at simT 5 and 12 on the user link,
+  physics hash plus geomHash = sha1 of every chain's closed flag and
+  points): cr, fl, gap, crs and tlk change neither (render-only). tw is
+  geometry (physics: depth amplitude, collision margin). fw (flow) leaves
+  the physics hash alone (equal at fw 0 and .25) but displaces the drawn
+  samples every frame: geomHash differs per load and between two exports
+  of one frozen page (K75: main.ts re-syncs flowStrength each tick). So
+  every export runs at fw=0 (ring, def and fat at their links' fw failed
+  the "samples moved during the shot" check); a flowing scene would need
+  the flow displacement as an input of its own.
+- Live cr 0 against a cr=0 reload (hash 733ee14a both): alignment 201
+  rays, max 0.294 vs 0.296 px, mean +0.006. The two masters differ in sha
+  because the paint, pulse and background clocks were not pinned (not a
+  pixel A/B).
+- Alignment maxima so far: muse_hash 0.227 px (54 rays), the tip zoom
+  0.250 px (34), cr 0 0.294 px (201). Coverage is low because the
+  junction disc (max(1.25 cr h, 2h) + 2h) covers most rays at cr 6; per-arm
+  fillet reach would let more in.
+- Zooms: one ctrl+wheel event with deltaY = -100 ln(f), then a pan, puts
+  the POI at the centre at exactly 6x (s 127.78104927447433 for muse).
+- muse_hash: hash 733ee14a at sim 40.01666666666504 (Muse's), geomHash
+  12836a3333fb; tw=1.1 clamps to the slider's 0.8, so h 0.4, W 0.152.
+- Before the renderer's first update (a short simT right after load) the
+  export throws "chains without samples"; the script retries (f82db817).
