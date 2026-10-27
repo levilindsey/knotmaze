@@ -4,7 +4,7 @@
 // Outputs go to the main checkout's .claude/probes/K868/{oracle,sheets}/.
 
 import { describe, it } from "vitest";
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import {
   type CheckResult,
@@ -21,6 +21,7 @@ import { normS, pointAt } from "../../../src/render/field/geom";
 import type { FieldScene, SceneArm } from "../../../src/render/field/scene";
 import { ensureDir, fullView, loadSynthetic, outRoot, type View, writeRender, zoomView } from "./lib";
 import { type Row, renderSheet, sheetHtml } from "./sheet";
+import { cropScale, decodePng, encodePng } from "./png";
 
 const want = (k: string) => process.env.K868 === "1" || process.env.K868 === k;
 
@@ -53,8 +54,44 @@ function reportMd(title: string, per: { scene: string; results: CheckResult[] }[
 function tileCheck1(model: FieldModel, v: View, r: OracleRender): CheckResult {
   return check1(checkContext(model), r.w, r.h, r.cov, r.F, v.ppu, worldOf(v));
 }
+/**
+ * Sheet B's registration measure on an S x S crop: the share of master's ink
+ * (luminance < 128) with the oracle's ink (cov > 0.5) within d px, and the
+ * share of the oracle's ink with master's within d px.
+ */
+function registration(rgba: ArrayLike<number>, cov: ArrayLike<number>, S: number, d: number): [number, number] {
+  const m = new Uint8Array(S * S);
+  const o = new Uint8Array(S * S);
+  for (let p = 0; p < S * S; p++) {
+    m[p] = 0.299 * rgba[4 * p] + 0.587 * rgba[4 * p + 1] + 0.114 * rgba[4 * p + 2] < 128 ? 1 : 0;
+    o[p] = cov[p] > 0.5 ? 1 : 0;
+  }
+  const near = (a: Uint8Array, b: Uint8Array): number => {
+    let n = 0;
+    let hit = 0;
+    for (let y = 0; y < S; y++)
+      for (let x = 0; x < S; x++) {
+        if (!a[y * S + x]) continue;
+        n++;
+        search: for (let dy = -d; dy <= d; dy++)
+          for (let dx = -d; dx <= d; dx++) {
+            const X = x + dx;
+            const Y = y + dy;
+            if (dx * dx + dy * dy <= d * d && X >= 0 && Y >= 0 && X < S && Y < S && b[Y * S + X]) {
+              hit++;
+              break search;
+            }
+          }
+      }
+    return n ? hit / n : 1;
+  };
+  return [near(m, o), near(o, m)];
+}
+
 const runA = want("A") ? it : it.skip;
+const runB = want("B") ? it : it.skip;
 const runC = want("C") ? it : it.skip;
+const runD = want("D") ? it : it.skip;
 
 const deg = (a: number) => ((a * 180) / Math.PI).toFixed(1);
 
@@ -245,6 +282,141 @@ describe("K868 oracle (manual)", () => {
     1800000,
   );
 
+  runB(
+    "sheet B: a real scene, master next to the oracle",
+    async () => {
+      const root = outRoot();
+      const sheets = ensureDir(join(root, "sheets"));
+      const sceneDir = join(root, "scenes");
+      const name = process.env.K868_REAL ?? "muse_hash";
+      const zooms = (process.env.K868_ZOOMS ?? "j123,j49,tip").split(",").filter(Boolean);
+      // Samples per pixel per axis. The oracle costs ~0.1-0.2 ms a sample on
+      // an 86-chain scene, so the full frame defaults to 1 and the crops to 2.
+      const ssFull = Number(process.env.K868_SS_FULL ?? 1);
+      const ssZoom = Number(process.env.K868_SS_ZOOM ?? 2);
+      // The export's panel covers x ≥ 910 CSS px (its diag); image checks stop at 900.
+      const panelX = Number(process.env.K868_PANEL_X ?? 900);
+      const load = (n: string) => JSON.parse(readFileSync(join(sceneDir, `${n}.json`), "utf8")) as FieldScene;
+      const s = load(name);
+      const h = s.look.halfWidth;
+      const cr = s.look.cuspRadius ?? 0;
+      // §3.8's mapping of master's cr to the ball radius, capped at 2h (the
+      // sweep's top: uncapped, r grows as tan(θ/2) toward θ = 180°, and the
+      // candidate reach, 2h + W + 2·r_max, became scene-sized: 1.5 ms a
+      // sample) and by the web cap ℓ_max = 1.5h.
+      const rOf = (_j: number, _i: number, theta: number, style: "round" | "sharp") =>
+        style === "round" ? Math.min(2 * h, h * Math.max(0, 1.25 * cr * Math.tan(theta / 2) - 0.97)) : 0;
+      const params = { rRound: 0, rOf, webCap: 1.5 * h };
+      const rText = `round corners r = min(2h, h·max(0, 1.25·cr·tan(θ/2) − 0.97)), cr ${cr}, web cap ℓ ≤ 1.5h`;
+      const paper = hexRgb(s.look.paper);
+      const ink = hexRgb(s.look.ink);
+      const dir = ensureDir(join(root, "oracle", name));
+      const rel = (p: string) => relative(sheets, p).replace(/\\/g, "/");
+      const rows: Row[] = [];
+      const perImg: { scene: string; results: CheckResult[] }[] = [];
+      let t = Date.now();
+      const model = new FieldModel(s, params);
+      const msModel = Date.now() - t;
+      const failed = model.corners.filter((c) => !c.ok).length;
+      const fv = fullView(s);
+      const full = renderOracle(model, fv.cam, fv.rect, ssFull);
+      writeRender(dir, "full", full, { view: fv.label, r: rText, ss: ssFull });
+      console.log(name, "model", msModel, "ms; full", full.ms, "ms");
+      const c1f = check1(checkContext(model), full.w, full.h, full.cov, full.F, fv.ppu, worldOf(fv));
+      rows.push({
+        title: `${name}: full frame at the scene camera (master left, oracle right)`,
+        tiles: [
+          { src: rel(join(sceneDir, `${name}.master.png`)), width: fv.rect.w, label: `master: ${name}.master.png, ${fv.label}` },
+          {
+            src: rel(join(dir, "full.png")),
+            width: full.w,
+            label: `oracle, ${ssFull}x${ssFull} samples a pixel; ${rText}. Oracle #1: ${captionLines([c1f])[0]}`,
+          },
+        ],
+        lines: [
+          `oracle model ${msModel} ms: ${model.corners.length} corners, ${failed} rolling-ball solves failed (diagnostics below); render ${full.ms} ms`,
+          ...model.diagnostics.slice(0, 5).map((d) => `FAIL diag: ${d}`),
+          ...(model.diagnostics.length > 5 ? [`FAIL diag: ... and ${model.diagnostics.length - 5} more (oracle/${name}/b.json)`] : []),
+        ],
+        wrapAt: 2540,
+      });
+      await new Promise((r) => setTimeout(r, 0));
+      for (const z of zooms) {
+        const zs = load(`${name}.${z}`);
+        const cam = { worldToCss: zs.camera.worldToCss, dpr: zs.camera.dpr };
+        const [vw, vh] = zs.camera.viewport;
+        const S = 512;
+        const v: View = {
+          name: z,
+          cam,
+          rect: { x0: Math.round((vw / 2) * cam.dpr) - S / 2, y0: Math.round((vh / 2) * cam.dpr) - S / 2, w: S, h: S },
+          ppu: zs.camera.pxPerUnit,
+          label: `${name}.${z}: S1a's 6x camera (${zs.camera.pxPerUnit.toFixed(1)} px/unit, h = ${(h * zs.camera.pxPerUnit).toFixed(1)} px), the centre ${S} px square of its ${vw}x${vh} frame`,
+        };
+        // Checks see only the frame left of the panel.
+        const zm = new FieldModel({ ...zs, camera: { ...zs.camera, viewport: [Math.min(vw, panelX), vh] } }, params);
+        const zr = renderOracle(zm, cam, v.rect, ssZoom);
+        writeRender(dir, `${z}_6x`, zr, { view: v.label, r: rText, ss: ssZoom });
+        const mImg = decodePng(readFileSync(join(sceneDir, `${name}.${z}.master.png`)));
+        const mc = cropScale(mImg, v.rect.x0, v.rect.y0, S, S, 1);
+        writeFileSync(join(dir, `${z}_6x_master.png`), encodePng(mc.w, mc.h, mc.rgba));
+        // Registration aid: master's crop with the oracle's ink over it in red
+        // (dark red: both; light red: the oracle only; black: master only).
+        const ov = new Uint8Array(mc.rgba);
+        for (let p = 0; p < S * S; p++) {
+          const a = 0.6 * Math.min(1, Math.max(0, zr.cov[p]));
+          ov[4 * p] = Math.round(ov[4 * p] * (1 - a) + 230 * a);
+          ov[4 * p + 1] = Math.round(ov[4 * p + 1] * (1 - a) + 20 * a);
+          ov[4 * p + 2] = Math.round(ov[4 * p + 2] * (1 - a) + 40 * a);
+          ov[4 * p + 3] = 255;
+        }
+        writeFileSync(join(dir, `${z}_6x_overlay.png`), encodePng(S, S, ov));
+        // One 1x pixel is 6 px in these crops.
+        const reg = registration(mc.rgba, zr.cov, S, 6);
+        const ctxZ = checkContext(zm);
+        // #1 on master's pixels: its ink deeper than W + 1 px inside the oracle's regions.
+        const mp = imageProbe(mc, cam, v.rect.x0, v.rect.y0, paper, ink, `master ${z} crop`);
+        const m1 = check1(ctxZ, S, S, mp.covAt, zr.F, v.ppu, worldOf(v));
+        const o1 = check1(ctxZ, S, S, zr.cov, zr.F, v.ppu, worldOf(v));
+        t = Date.now();
+        const rs = runChecks(zm, imageProbe(mImg, cam, 0, 0, paper, ink, `master ${z} 6x`)).filter((r) => r.id !== 2 && r.id !== 11);
+        const msChecks = Date.now() - t;
+        perImg.push({ scene: `${name}.${z} (master 6x)`, results: [m1, ...rs] });
+        rows.push({
+          title: `${name}.${z}: 6x crop (master left, oracle right)`,
+          tiles: [
+            { src: rel(join(dir, `${z}_6x_master.png`)), width: S, label: `master: ${v.label}. Master's #1: ${captionLines([m1])[0]}` },
+            { src: rel(join(dir, `${z}_6x.png`)), width: S, label: `oracle at the same camera, ${ssZoom}x${ssZoom} samples a pixel. Oracle #1: ${captionLines([o1])[0]}` },
+            { src: rel(join(dir, `${z}_6x_overlay.png`)), width: S, label: `overlay: master's crop with the oracle's ink in red (dark red: both draw ink; light red: only the oracle; black: only master). Registration: ${(100 * reg[0]).toFixed(1)}% of master's ink lies within 1 px (at 1x) of the oracle's ink, ${(100 * reg[1]).toFixed(1)}% of the oracle's within 1 px of master's` },
+          ],
+          lines: [
+            `Checks on master's whole 6x screenshot left of x = ${panelX} CSS px (the panel), measured from the image against the exact-field thresholds; ${msChecks} ms. Oracle render ${zr.ms} ms.`,
+            ...imageLines(rs),
+          ],
+        });
+        console.log(name, z, "render", zr.ms, "ms; checks", msChecks, "ms");
+        await new Promise((r) => setTimeout(r, 0));
+      }
+      writeFileSync(
+        join(dir, "b.json"),
+        JSON.stringify({ scene: name, r: rText, msModel, failedCorners: failed, diagnostics: model.diagnostics, oracleFull1: c1f, master: perImg }, null, 1),
+      );
+      writeFileSync(join(root, "oracle", `checks_${name}_master.md`), reportMd(`K868 checks: ${name}, master's 6x screenshots (image path)`, perImg));
+      const html = sheetHtml(
+        `K868 sheet B: ${name}, master next to the oracle`,
+        [
+          `Scene ${name} exported by S1a (master ${s.source?.build ?? ""}); h = ${h} world units = ${(h * s.camera.pxPerUnit).toFixed(1)} CSS px at the scene camera, W = ${s.look.band} world units = ${(s.look.band / h).toFixed(2)}h; cr = ${cr}.`,
+          `Oracle: ${rText}. Rows: the full frame, then 6x crops at S1a's zoom cameras (512 px squares at the frame centre, the POI).`,
+          "Captions: #k check: PASS/FAIL, measured value [threshold; n sites; skipped sites by reason]. #1 counts ink pixels deeper than W + 1 px inside the oracle's regions: on master's pixels it finds double strokes and fills. The image checks measure master's screenshot with the oracle's geometry; their thresholds are the exact field's, so read them as measurements.",
+        ],
+        rows,
+      );
+      const png = await renderSheet(sheets, `B_${name}`, html, 2600);
+      console.log("sheet B:", png);
+    },
+    3600000,
+  );
+
   runC(
     "sheet C: r sweep, web cap, cr mapping",
     async () => {
@@ -332,6 +504,77 @@ describe("K868 oracle (manual)", () => {
       );
       const png = await renderSheet(sheets, "C_radius", html, 2300);
       console.log("sheet C:", png);
+    },
+    3600000,
+  );
+
+  // Sheet D: S1a's full scenes, the image checks on master's 1x screenshots
+  // (no oracle render; sheet B has the crops). K868_SCENES picks the scenes.
+  runD(
+    "sheet D: S1a's scenes, image checks on master's screenshots",
+    async () => {
+      const root = outRoot();
+      const sheets = ensureDir(join(root, "sheets"));
+      const sceneDir = join(root, "scenes");
+      const names = (
+        process.env.K868_SCENES ??
+        "def.lightpaper,fat.lightpaper,ring.lightpaper,muse_default_tw,muse_hash,def.lightpaper.dsf3,g41_ring_tw42.lightpaper,user_tw42.lightpaper"
+      )
+        .split(",")
+        .filter(Boolean);
+      const panelX = Number(process.env.K868_PANEL_X ?? 900);
+      const rel = (p: string) => relative(sheets, p).replace(/\\/g, "/");
+      const rows: Row[] = [];
+      const per: { scene: string; results: CheckResult[] }[] = [];
+      for (const name of names) {
+        const s = JSON.parse(readFileSync(join(sceneDir, `${name}.json`), "utf8")) as FieldScene;
+        const h = s.look.halfWidth;
+        const cr = s.look.cuspRadius ?? 0;
+        const rOf = (_j: number, _i: number, theta: number, style: "round" | "sharp") =>
+          style === "round" ? Math.min(2 * h, h * Math.max(0, 1.25 * cr * Math.tan(theta / 2) - 0.97)) : 0;
+        const [vw, vh] = s.camera.viewport;
+        let t = Date.now();
+        const model = new FieldModel({ ...s, camera: { ...s.camera, viewport: [Math.min(vw, panelX), vh] } }, { rRound: 0, rOf, webCap: 1.5 * h });
+        const msModel = Date.now() - t;
+        const failed = model.corners.filter((c) => !c.ok).length;
+        const mPath = join(sceneDir, `${name}.master.png`);
+        const mImg = decodePng(readFileSync(mPath));
+        const cam = { worldToCss: s.camera.worldToCss, dpr: s.camera.dpr };
+        t = Date.now();
+        const rs = runChecks(model, imageProbe(mImg, cam, 0, 0, hexRgb(s.look.paper), hexRgb(s.look.ink), `master ${name}`)).filter(
+          (r) => r.id !== 2 && r.id !== 11,
+        );
+        const msChecks = Date.now() - t;
+        per.push({ scene: `${name} (master, dpr ${s.camera.dpr})`, results: rs });
+        const ppu = s.camera.pxPerUnit;
+        rows.push({
+          title: `${name}: master's screenshot, image checks`,
+          tiles: [
+            {
+              src: rel(mPath),
+              width: 1240,
+              label: `master: ${name}.master.png at its scene camera, ${ppu.toFixed(2)} px/unit, dpr ${s.camera.dpr}, ${vw}x${vh} CSS px; h = ${(h * ppu).toFixed(1)} px, W = ${(s.look.band * ppu).toFixed(1)} px, cr ${cr}`,
+            },
+          ],
+          lines: [
+            `Checks on master's screenshot left of x = ${panelX} CSS px, with the oracle's geometry (r = min(2h, h·max(0, 1.25·cr·tan(θ/2) − 0.97)), web cap 1.5h). Model ${msModel} ms: ${s.chains.length} chains, ${model.corners.length} corners, ${failed} corner solves failed. Checks ${msChecks} ms.`,
+            ...imageLines(rs),
+          ],
+        });
+        console.log(name, "model", msModel, "ms; checks", msChecks, "ms");
+        await new Promise((r) => setTimeout(r, 0));
+      }
+      writeFileSync(join(root, "oracle", "checks_scenes_master.md"), reportMd("K868 checks: S1a's scenes, master's screenshots (image path)", per));
+      const html = sheetHtml(
+        "K868 sheet D: S1a's scenes, image checks on master's screenshots",
+        [
+          "One row per S1a scene: master's screenshot (light paper; the dsf 3 scenes draw at resolution 2 and the page upscales them) and the image checks of section 6 measured on it with the oracle's geometry. No oracle render here: sheet B shows master and the oracle side by side, with 6x crops.",
+          "Captions: #k check: PASS/FAIL, measured value [threshold; n sites; skipped sites by reason]. The thresholds are the exact field's, so read the image results as measurements.",
+        ],
+        rows,
+      );
+      const png = await renderSheet(sheets, "D_scenes", html, 2600);
+      console.log("sheet D:", png);
     },
     3600000,
   );
