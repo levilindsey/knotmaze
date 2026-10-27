@@ -296,13 +296,6 @@ Next free ID: K871.
   - evidence: `.claude/probes/K868/`
   - next: K869 (S1a) and K870 (S1b) running: merge K869, tell S1b the scenes are ready, review sheets A-C, upload them to Drive, then Levi judges the look and the r mapping
   - brief: `docs/design/K868_field_border.md`
-- **K869** · K868 S1a: the scene exporter (`window.__knotSceneExport`, `scripts/export_scene.mjs`)
-  and the real scenes S1b reads.
-  - owner: agent `ae315ac4539f95616` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-26 19:29, 2 h cap ~21:29)
-  - branch: `k868-s1a`, worktree `.claude/worktrees/k868-s1a`; last commit: `e3190f77`
-  - evidence: `.claude/probes/K868/scenes/`
-  - next: deliverables 1-5 of the brief, muse_hash and its zooms first
-  - brief: `docs/design/K868_s1a_scene_export.md`
 - **K870** · K868 S1b: the CPU oracle, checks 1-9 and 11, contact sheets A-C, and a proposed cr-to-r
   mapping.
   - owner: agent `a21329f961a4b1641` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-26 19:29, 2 h cap ~21:29)
@@ -1846,6 +1839,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K869** · K868 S1a: the scene exporter (`__knotSceneExport`, `scripts/export_scene.mjs`) and 21 real scenes (65 variants) for S1b. Done in a3e915cb (2026-10-26).
 - **K858** · Research adoption round: curves 3.2 became K859, cursive K860/K861; curves 3.3 (one field-shaded border) is now K868. Done in ec3a8b30 (K859) and f86068be (K860) (2026-10-26).
 - **K861** · Fair re-authoring of a/i against K860's targets. Dropped: rejected by Levi ('they are bad'), superseded by K863's clean slate; its re-fit (b2c53c30) stays the live a/i data until K863 lands (2026-10-26).
 - **K866** · Global union-field border, ?fbd=1. Dropped: superseded by K868 (its global union fused crossings too, then un-fused them with gates); never committed, code parked at 6e12716e (branch park/muse-2026-10-26) (2026-10-26).
