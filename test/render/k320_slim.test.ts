@@ -21,6 +21,8 @@ import {
 } from "../../src/render/paint_glsl";
 import { PLUCK_STILL_FRAG, withExploreStill } from "../../src/render/pluck_overlay";
 import { G3_CHAIN_GLSL, JUNCTION_CUT_GLSL } from "../../src/render/fabric_sdf";
+import { labelSources } from "../../src/render/label/label_glsl";
+import { DATA_W } from "../../src/render/label/label_pieces";
 
 // The section fragment as ribbon/ribbon_shader.ts writes it (the same
 // slice paint_explore.test.ts and the K320 probe use), interpolated with
@@ -120,6 +122,34 @@ describe("K320 stage 1: char budgets", () => {
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);
+  });
+
+  it("keeps the label and band programs under budget (K868 R10)", () => {
+    // K868 S3a4 (2026-10-28): the lbi label's two programs (label_glsl.ts,
+    // packed, as LabelPass compiles them) and the band pass's two
+    // (label_band.ts, its module-private texts sliced like SECTION_FRAG),
+    // both stages, at today's lengths rounded up to the next 50: the
+    // headroom the entries above carry (0 to 61 characters). Measured:
+    // tube 846 + 1,574, fill 645 + 3,962, band 988 + 2,338, band
+    // composite 231 + 345. They compile only with the flag on.
+    const lab = labelSources(true, DATA_W);
+    expect(lab.tubeVs.length).toBeLessThanOrEqual(850);
+    expect(lab.tubeFs.length).toBeLessThanOrEqual(1_600);
+    expect(lab.fillVs.length).toBeLessThanOrEqual(650);
+    expect(lab.fillFs.length).toBeLessThanOrEqual(4_000);
+    const band = readFileSync(new URL("../../src/render/label/label_band.ts", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+    const h0 = band.indexOf("const HEAD = `");
+    const HEAD = band.slice(h0 + "const HEAD = `".length, band.indexOf("`;", h0));
+    const text = (name: string): string => {
+      const i = band.indexOf(`const ${name} = \``);
+      expect(i, name).toBeGreaterThan(0);
+      return band.slice(i + `const ${name} = \``.length, band.indexOf("`;", i)).replace("${HEAD}", HEAD);
+    };
+    expect(HEAD).toContain("#version 300 es");
+    expect(text("BAND_VS").length).toBeLessThanOrEqual(1_000);
+    expect(text("BAND_FS").length).toBeLessThanOrEqual(2_350);
+    expect(text("COMP_VS").length).toBeLessThanOrEqual(250);
+    expect(text("COMP_FS").length).toBeLessThanOrEqual(350);
   });
 });
 
