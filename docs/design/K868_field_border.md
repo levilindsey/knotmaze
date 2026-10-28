@@ -204,6 +204,51 @@ both stay (`k883.test.ts`).
 The span's margin keeps the rule continuous: just outside it an arm alone
 draws exactly what the junction group draws there.
 
+Groups from geometry (K909, `OracleParams.groups: "geo"`; the default
+stays "k883"). The group is the connected overlap of the junction's arm
+tubes that holds the node, cut at the caps above. `GeoGroups`
+(`geo_group.ts`) walks each side of each arm out from the root in steps
+of h/8. A side stays in the group while its outside point (h + 0.6W out)
+lies in another arm's tube between that arm's root and cap or in a
+corner fill, or its band point (h − W/2 out) lies within h − W of
+another arm. The two halves of a through count as one body, a gap of up
+to h at the root is bridged, and the walk stops at the cap, at 12h or at
+half a loop. An arm's extent is the larger of its walk (either side) and
+the corner extent above, and the span adds W and the margin as before.
+The caps, the cluster-wide crossing cut and the same-chain refusal are
+unchanged. The corners are fitted first (§3.8), then the walk runs again
+at the final caps and corners (`FieldModel.geoGroups`), and truth "geo"
+in `borderCensus` reads that same walk, asking the crossing table before
+a junction's overlap (K900 item 6). Under "k883" truth "geo" builds its
+own walk, with a per-junction crossing cut, so its counts differ between
+the two modes.
+
+Two parts of that rule were measured, not chosen. The floor: the walk's
+outside point leaves a round fillet before the tangent point, so a
+walk-only extent stops short of the corner (free ends 228 → 238). The
+cluster-wide cut: a crossing cut made per junction before the spans
+judges a crossing inside one junction while the farther pass is often
+held by a neighbouring junction's arm, so it cut other arms than the cut
+above (free ends 235, census missing 163). `geoCut: true` keeps it for
+A/Bs.
+
+Per-arm data for S3: `GeoGroups.sides[j][a]` holds how far each side of
+each arm stays in the group from the root. Where the overlap leaves a
+side and comes back farther out, that data misses the far piece: on the
+12 real scenes (3622 arms), 350 such pieces on 319 arms, 421.5h in all,
+the largest 5.13h (g41_user_tw64); muse_hash has 57 on 51 arms (median
+0.75h, largest 4.87h), and the synthetic scenes have none.
+
+Result (12 real scenes against `263bc134`): free ends 228 → 227, census
+missing 148 → 152, extra ink 71 → 71, #15 12 of 12 in both, muse_hash's
+#16 38 → 39 samples, corner solves unchanged, synthetic free ends 4 → 4.
+The geo spans equal K883's on 3589 of 3622 arms (11 longer by more than
+W; 22 shorter, where a longer extent made the arm hold a pass and the
+cut then stopped it short), and muse_hash's drawn outline moves by less
+than W everywhere (sheet B4). The free ends that remain (span fill 71,
+group on top 50, junction core 48, union 24) do not come from span
+length, so "geo" stays behind the switch.
+
 ### 3.5 The exposed outline
 
 The distance in the ink rule is to the group's EXPOSED outline, the
@@ -290,7 +335,10 @@ tangent point's foot stays at most cap − W from the root, so
 r ≤ room·tan(θ/2), room = min over the two arms of
 (cap − W − |V's foot|), then smaller until the solve fits (a few
 re-solves). With no room past V the corner is sharp. The oracle records
-the fit and its reason (`Corner.fit`).
+the fit and its reason (`Corner.fit`). The cap bounds the round, not the
+span, under either `groups` (§3.4): with groups "geo" the corners are
+fitted first and the group is walked after, on the fitted corners, so
+the span is never an input to the fit (K909).
 
 The corner with no V: the two centrelines stay closer than 2h all along
 the shorter arm, so the outlines never meet on the wedge side (muse_hash
