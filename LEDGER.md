@@ -302,14 +302,6 @@ Next free ID: K940.
   - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`); sheets A-I, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
   - next: Levi's K934 on sheet I (recs: depth yes; try the walk that stops at crossing cuts; fix the check's exit count and report both counts; the hook is moot under label); K924 (running) traces the label ink's artifacts, sheet I's d1-d4 among them, to their rules; a stage then builds the rule changes it ranks; K935; then the S3 brief: K915's two passes with K923's screen-space LOD and packed 32-bit label (together they fit the Pixel's 4 ms at every zoom; the coordinator's rec, Levi may object; open inputs K933), G1 corners and cr 0-6 (sheet F approved), and G3-1 ported back or replaced (K892)
   - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`
-- **K924** · K868's stage: trace each artifact the label ink adds to the rule that makes it, before S3
-  copies that rule (sheet I's d1-d4, j149's spur and speck, the hidden-class extra ink, muse_hash #5, #6,
-  #7 and #9.1, #16, sheet F at cr 4.5 and 6); count each mechanism and name its rule change.
-  - owner: agent `a4a3a477963af7824` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 17:02, 2 h cap ~19:02)
-  - branch: `k924-label-artifacts`, worktree `.claude/worktrees/k924-label-artifacts`; last commit: `bec83b02` (made from master; no work yet)
-  - evidence: `.claude/probes/K924/` in the worktree (copies of K922's probes, repointed at its source)
-  - next: (agent) the brief's steps 1-4: attribute, count, flip suspect rules behind new switches, rank the rule changes; then the coordinator merges with every switch off and briefs the fixes
-  - brief: `docs/design/K924_label_artifacts.md`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
@@ -1964,6 +1956,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K924** · Label ink artifacts traced to their rules (M1 cap cut, M2 fill over a foreign tube, M6 fill z, M3 tie; S, a crossing inside a cluster, is a K868 design call); five diagnostic flips in OracleParams, off by default; rule changes ranked. `K924_label_artifacts.md` ## Results, ## Handoff. Done in 1a75731f (2026-10-27).
 - **K925** · Cursive v5.2: the a/c/d/g/q dip fixed (eye check a 9.27 to 1.91, q 8.09 to 1.92), one eye scale, o's junction at 86 u (its joins stay inside the font's fill). `K925_cursive_v52.md` ## Handoff. Done in bec83b02 (2026-10-27).
 - **K922** · K868 stage: depth over the whole overlap, endSnap (a float bug; real free ends 105 to 83) and extent part, behind switches that default off; sheet I. Brief ## Results, ## Handoff. Done in 4e8b1c7c (2026-10-27).
 - **K923** · S3's Pixel bench (K868): as specified 4.8-5.5 ms at fit and 2x, over the 4 ms budget; with a screen-space LOD and a packed 32-bit label 1.6-2.7 ms at every zoom (p95 at most 3.43); a disc search 4.5-6.75 ms against G3-1's 24.5-48. `K923_s3_bench.md` ## Handoff. Done in b5fff04b (2026-10-27).
