@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K971.
+Next free ID: K975.
 
 ## Waiting on Levi
 
@@ -293,9 +293,10 @@ Next free ID: K971.
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
   - owner: nobody since 2026-10-28 03:04 (merged; agent `a3cf36fa1d981e5a9` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
   - branch: mainline; last commit: `bbe112df`
-  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`), `.claude/probes/K924/` (`run.ps1`, `tally.mjs`, `at.ts`, `tdiff.mjs`), `.claude/probes/K940/` (sheet J, `jcrops/`, `S/`, per-scene `ydiff/`, `cls/`, `indep/`), `.claude/probes/K934/` (sheet K `K_recount.png`, `sheetk/`, `dropped/`, `ext3/`, `indep/`, census logs), S3a's in the `k868-s3a` worktree's `.claude/probes/S3a/` (`label_check_v3..v6.ts`, `patch_v5.mjs`, `patch_v6.mjs`, `label_run{,4,5,6}.mjs`, results `label/{tubes,two,five,six}`, `dbg_hole.ts`, `ab/`, `ab_shot.mjs`; S3a2's `label7/a/` (the 12 scenes), `live7/`, `ab/s3a2_off/`, `gp7/`, `dbg_lower7_*.log`, `dbg_fill7*_muse_hash.log`; copy them to the main checkout before removing the worktree); sheets A-K, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
-  - next: S3a4: R7 first (a frame that rebuilds the label costs about 2 s in fabric mode; cache the switch search), then the ink's shape residuals by the free-end count; then the LOD (K923), sheet S3a, the label's bits for K943, and S3b (the Pixel bench, the phone look)
-  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`; K934: `docs/design/K934_recount.md`; S3a: `docs/design/K868_s3a_app.md`; S3a2: `docs/design/K868_s3a2_label.md`; S3a3: `docs/design/K868_s3a3_ink.md`
+  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`), `.claude/probes/K924/` (`run.ps1`, `tally.mjs`, `at.ts`, `tdiff.mjs`), `.claude/probes/K940/` (sheet J, `jcrops/`, `S/`, per-scene `ydiff/`, `cls/`, `indep/`), `.claude/probes/K934/` (sheet K `K_recount.png`, `sheetk/`, `dropped/`, `ext3/`, `indep/`, census logs), S3a's, S3a2's and S3a3's in the `k868-s3a` worktree's `.claude/probes/S3a/` (each stage brief's `## Handoff` lists its files and rerun commands; S3a3's: `gpu10/cmp10_all.log`, `ksites10/` (sheet K sites), `drag11/`, `gp11/`, `settle11/`, `ab/s3a3_off/`; copy them to the main checkout before removing the worktree); sheets A-K, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
+  - next: S3a4 (`docs/design/K868_s3a4_rebuild.md`): the label rebuild's cost (K971) and K320 budgets for the label and band programs (K974); then S3a5, the band ink's shape residuals by the free-end count (K972, K973); then the LOD (K923), sheet S3a, the label's bits for K943, and S3b (the Pixel bench, the phone look)
+  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`; K934: `docs/design/K934_recount.md`; S3a: `docs/design/K868_s3a_app.md`; S3a2: `docs/design/K868_s3a2_label.md`; S3a3: `docs/design/K868_s3a3_ink.md`; S3a4: `docs/design/K868_s3a4_rebuild.md`
+  - env: from the `k868-s3a` worktree, `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5381 --strictPort --host 127.0.0.1` (the config is untracked; S3a3's handoff, How to rerun)
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
@@ -807,11 +808,22 @@ Every other item below waits on the trigger it names.
 - **K964** · K868's label residue after S3a2 (`K868_s3a2_label.md` ## Handoff): class A, edge ties 0.003 px from
   a tube's edge (inferred: float32 interpolation); class B, one chain covering a pixel twice on a steep z flank (GPU
   keeps the larger z, the oracle the nearest point's); open ends 1-2 cells on 4 scenes; def's fill at (658, 548).
-- **K966** · K868 with `labelInk` on: the label ignores the thread reveal, fog, the appearance reveal and plucks; the
-  trail is cut at under-crossings and lighter where the ink overlapped it. Fix before the flag becomes the default.
-  S3a2's handoff and `gp7/` crops on `k868-s3a`.
+- **K966** · K868 with `labelInk` on: the ink ignores the thread reveal, fog, the appearance reveal and plucks, is one
+  low-contrast colour over every layer (S3a3), and cuts or crosses the trail. Fix before the flag becomes the default.
+  S3a2's and S3a3's handoffs; `gp7/`, `gp11/` crops on `k868-s3a`.
 - **K967** · K868's label app fixes ctrlArc at 0.47 and the corner radius at 3, and its camera assumes no rotation
   or pivot; the panel's labelInk checkbox does not refresh after the 255 fallback. S3a2's handoff on `k868-s3a`.
+- **K971** · K868's label rebuild costs about 2 s a frame in fabric mode with `lbi` (app counter p95: in-thread 2161 ms,
+  so the knot never sleeps; worker host with flow 1788 ms; flag off 1.5 ms); flow at rest rebuilds every frame (the
+  rule). Suspect, untested: the uncached switch search. Stage S3a4, `K868_s3a4_rebuild.md`; S3a3's handoff R7, R8.
+- **K972** · K868's band ink against the oracle (S3a3 R1-R3): tube-against-tube switches are not found (twist eyes;
+  g41_user_tw64's V diagonal), small closed islands are missing (sheet K a1), and loop tips draw an open hook where
+  the oracle closes a teardrop (d1; K910's free-end rule makes the teardrop right). `K868_s3a3_ink.md` ## Handoff.
+- **K973** · K868's band ink against the oracle (S3a3 R4-R6): a line along a tube is missing inside a loop (def at
+  26.225, 1.436); junction ticks are missing (sheet K c1, c3) and junctions get extra segments (64 cells on the tw42
+  user scenes); more free ends than the oracle on 11 of 12 scenes (def 27/1, muse_hash 75/10). S3a3's handoff.
+- **K974** · K868 probes: K320 has no budget for the label and band programs (S3a4 adds them); S3a2's `label7` has no
+  def row; the dev server's build stamp shows the SHA at the server's start, not the current one (S3a3 R10, R11).
 - **K963** · Cursive's small residuals: f's hook peaks 5.21 in v5.7 (v5.6 9.90, v5.4 4.29), 2.64 u off the axis, an S
   wound up before it (to try: a clothoid exit reference); fewnode's G2 tally counts g's and q's V corners as joints;
   a stale `--end-budget` header in `bodies_k959.py` and `bodies_k965.py`. Stage v5.8, `K969_cursive_v58.md`.
