@@ -20,6 +20,16 @@
 # Run `all` in the background (about 10-15 min with the default 3 reps); it
 # logs to <Out>\logs\run.log and ends with the exit code below.
 #
+# A piped or captured `-Phase start` caller HANGS: the vite preview servers and
+# the watchdog that `start` leaves running inherit the pipe's write end, so
+# the caller never sees the output end. Never run `start` alone through a
+# pipe, `Tee-Object`, `$x = & ...` or a tool call that captures output. Start it
+# with Start-Process (or spawnSync) with stdout and stderr redirected to files,
+# without waiting for it, and poll <Out>\logs\run.log for "phone pass (start)
+# exit 0" (scripts/phone_pass/run_pass.ps1 and bisect2.mjs do). The other
+# phases, `check` and `cleanup` included, leave no child behind and may be
+# captured.
+#
 # Phases (-Phase, default all):
 #   all      start, frames, looks, then cleanup and summary EVEN AFTER a trip or
 #            a failed start
