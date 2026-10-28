@@ -113,3 +113,51 @@ Update `K868_field_border.md` wherever the rule changes.
   what is left, a `Ledger items` list (follow-ups, residuals, decisions
   for Levi), and K900's handle fields (branch, last commit, evidence,
   next).
+
+## Handoff (2026-10-27, at the 2 h cap)
+
+Steps 1-2 and the 10:28 redirect (independent check, sheet B3) are done,
+step 3 is grouped by mechanism but not fixed, and steps 4-5 are handed
+off. Branch `k900-oracle`, 2208d844..7c972033.
+
+Built:
+- Step 1: census positions (2208d844).
+- Step 2, crossing 292: σ joins into a group holding the crossing's other
+  pass are refused (`passJoins` "k900"), and the crossing cut and its
+  clash test moved from L + h/2 to L + h (`passMargin` 1, 6f1efba0). Why
+  both: K868 §3.4. `j_hook_cross` (gen.ts `hookScene`) fails under either
+  change alone and passes under both; `k883.test.ts` pins it (7c972033).
+- Redirect: `borderCensus` truth "geo" (a side is hidden only under an
+  over pass by the crossing table, or inside the connected overlap of a
+  junction's arm tubes that contains the node; 3ad3187c) and free border
+  ends in 4x oracle renders (`.claude/probes/K900/indep.ts`). Sheet B3
+  (`.claude/probes/K868/sheets/B3_muse_hash.png`) marks census, geo and
+  free ends each in its own style.
+
+Numbers, 12 real scenes (5048670e -> 7c972033):
+- Census missing 208 in 93 stretches -> 148 in 66; extra ink 54 -> 71.
+- Geo missing 8519 in 4377 -> 8283 in 4312; free ends 281 -> 228 (seen
+  by the census 85 -> 54, by geo 257 -> 210, by neither 24 -> 18).
+- #15 11/12 -> 12/12 (muse_hash 349 -> 350 of 350); #16 3/12 -> 9/12
+  (still failing: muse_hash 38 samples, g41_def_tw64 28, g41_ring_tw64
+  2). muse_hash #2, #11, #14 unchanged (fail); corners 341/342 both.
+- Synthetic #2-#16 over 15 scenes: 114/117 -> 116/117 (left: j_pair_cross
+  #2, unchanged).
+
+Mechanisms of the free ends (refuse + m 0.5, before the cut moved):
+muse_hash: span fill 37, junction core 23, a group on top 21, union 11,
+buried 6, neither 6; g41_def_tw64: fill 27, group on top 21, neither 7;
+g41_user_tw64: fill 12, core 8, neither 6. The largest classes come from
+the oracle's span, fill and core heuristics. Judgment: defining the
+junction group geometrically (the arm-tube overlap that contains the
+node, as truth "geo" does) would remove those classes instead of
+patching each heuristic.
+
+Next:
+1. Replace the span/fill/core grouping with the geometric group; re-run
+   `indep.ts` and `census.ts` on the 12 scenes.
+2. Step 4: extra ink (54 -> 71, mostly junction-core seams: muse_hash
+   core/own 13 in 32, g41_user_tw64 5 in 8).
+3. Step 5: sheet F's artifacts (range approved), then F2.
+4. #16 on muse_hash, g41_def_tw64 and g41_ring_tw64.
+5. Sheet A's curved EDT FAIL (6.751 px): check whether it predates K900.
