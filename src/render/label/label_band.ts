@@ -33,6 +33,7 @@ import type { FieldModel } from "../field/oracle";
 import type { LabelCamera } from "./label_pass";
 import { compile, type Prog } from "./label_pass";
 import { TUBE_FLOATS, type LabelPieces } from "./label_pieces";
+import { findSwitchLines } from "./label_switch";
 
 /** Floats per strip instance: aQ (outline points), aN (outward normals),
  * aM (chain + 1, cluster + 1, flags, 0), aS (sa, sb, chain s0, chain len),
@@ -41,13 +42,15 @@ export const BAND_FLOATS = 18;
 const F_FILL = 1;
 const F_CAP = 2;
 const F_CLOSED = 4;
+/** A switch line (label_switch.ts): a strip centred on it, aM.w = the fill's cluster + 1. */
+const F_SWITCH = 8;
 
 export interface BandStrips {
   strips: Float32Array;
   n: number;
   /** The ink's width in world units (the oracle's W). */
   W: number;
-  stats: { edges: number; caps: number; arcs: number };
+  stats: { edges: number; caps: number; arcs: number; switches: number };
 }
 
 export function buildBandStrips(m: FieldModel, lp: LabelPieces): BandStrips {
@@ -233,8 +236,17 @@ export function buildBandStrips(m: FieldModel, lp: LabelPieces): BandStrips {
       }
     }
   }
+  // The switch lines: strips centred on a line across the tube where a
+  // cluster's fill and the tube swap which is on top (K940's yield order).
+  let switches = 0;
+  for (const L of findSwitchLines(m)) {
+    const p = polys[L.chain];
+    push(L.ax, L.ay, L.bx, L.by, L.nx, L.ny, L.nx, L.ny, L.chain + 1, L.cluster + 1, F_SWITCH | (p.closed ? F_CLOSED : 0), L.s, L.s, p.s0, p.len, 0, 0);
+    out[out.length - 7] = L.J + 1;
+    switches++;
+  }
   const n = out.length / BAND_FLOATS;
-  return { strips: new Float32Array(out), n, W: m.W, stats: { edges, caps, arcs } };
+  return { strips: new Float32Array(out), n, W: m.W, stats: { edges, caps, arcs, switches } };
 }
 
 const HEAD = `#version 300 es
@@ -247,7 +259,7 @@ precision highp usampler2D;
 const BAND_VS = `${HEAD}
 in vec4 aQ; in vec4 aN; in vec4 aM; in vec4 aS; in vec2 aD;
 uniform mat3 uM; uniform vec2 uSize; uniform float uW;
-out float vD; out float vSv; out float vDep; out vec2 vN; flat out vec4 vM; flat out vec4 vC;
+out float vD; out float vSv; out float vDep; out vec2 vN; flat out vec4 vM; flat out vec4 vC; out vec2 vQ;
 void main() {
   int id = gl_VertexID;
   bool atB = id == 1 || id == 3;
@@ -258,7 +270,10 @@ void main() {
   vec2 dn = (uM * vec3(n, 0.0)).xy;
   float ln = length(dn);
   dn = ln > 1e-12 ? dn / ln : vec2(0.0);
-  vD = -0.5 + t * (uW + 1.0);
+  // An outline strip runs inward from its edge; a switch strip is centred.
+  bool sw = (int(aM.z + 0.5) & 8) == 8;
+  vD = sw ? (t - 0.5) * (uW + 1.0) : -0.5 + t * (uW + 1.0);
+  vQ = dq;
   vN = dn;
   vSv = atB ? aS.y : aS.x;
   vDep = atB ? aD.y : aD.x;
@@ -270,7 +285,7 @@ void main() {
 const BAND_FS = `${HEAD}
 uniform usampler2D uL; uniform sampler2D uD2;
 uniform float uW; uniform float uSigma; uniform float uLr; uniform int uDepth;
-in float vD; in float vSv; in float vDep; in vec2 vN; flat in vec4 vM; flat in vec4 vC;
+in float vD; in float vSv; in float vDep; in vec2 vN; flat in vec4 vM; flat in vec4 vC; in vec2 vQ;
 out vec4 o;
 uint lab(vec2 p, ivec2 sz) {
   ivec2 i = ivec2(floor(p));
@@ -291,9 +306,27 @@ bool sim(uint w) {
   if ((mf & 4u) == 4u) ds = min(ds, abs(vC.w - ds));
   return ds <= uSigma;
 }
+// A switch strip's other surface: the fill's cluster (aM.w = J + 1).
+bool simJ(uint w) {
+  uint cl = (w >> 19) & 255u;
+  return cl != 0u && cl == uint(vM.w + 0.5);
+}
 void main() {
   ivec2 sz = textureSize(uL, 0);
   vec2 fc = gl_FragCoord.xy;
+  if ((uint(vM.z + 0.5) & 8u) == 8u) {
+    // A switch: ink W wide centred on the line, where the label just past
+    // one side is the tube and just past the other the fill.
+    float l0 = length(vN);
+    vec2 n0 = l0 > 1e-6 ? vN / l0 : vec2(0.0);
+    float r = uW * 0.5 + uLr;
+    uint la = lab(vQ + n0 * r, sz);
+    uint lb = lab(vQ - n0 * r, sz);
+    if (!((sim(la) && simJ(lb)) || (simJ(la) && sim(lb)))) discard;
+    float hw = uW * 0.5;
+    o = vec4(clamp(vD + hw + 0.5, 0.0, 1.0) * clamp(hw + 0.5 - vD, 0.0, 1.0), 0.0, 0.0, 1.0);
+    return;
+  }
   if (!sim(lab(fc, sz))) discard;
   float ln = length(vN);
   vec2 nn = ln > 1e-6 ? vN / ln : vec2(0.0);
