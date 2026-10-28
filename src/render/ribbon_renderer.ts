@@ -858,6 +858,9 @@ export class RibbonRenderer {
   // K797b: the thread look (0 fill, 1 border, 2 both; panel_wiring syncs
   // it from the threadLook param): the section shader strokes the edges.
   threadLook = 0;
+  // K868 S3a: the border look's ink from the label passes (the labelInk
+  // param; panel_wiring syncs it). Read by paint_state (uKLook.x 1.25).
+  labelInk = false;
   // K799: the traveled path's width (0..1) and fill texture (0-3);
   // panel_wiring syncs both from the goldWidth/goldTexture params.
   goldWidth = 1;

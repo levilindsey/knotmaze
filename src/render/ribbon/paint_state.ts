@@ -670,7 +670,12 @@ export class PaintState {
   // (it receives real dt every frame in all ticker branches, both modes).
   tickPaint(dt: number): void {
     knotUniformValues().uKBase[2] = this.paintDebug;
-    knotUniformValues().uKLook![0] = this.threadLook; // K797b
+    // K797b. K868 S3a: under label ink the border look's strokes draw in
+    // their own passes (field/label_ink): x 1.25 turns the fans' rims off
+    // (junction_field) and a zero stroke width (w below) the ribbons' and
+    // the plucks', with no change to their shader text (K320's budgets).
+    const labelInk = this.threadLook === 1 && this.r.labelInk;
+    knotUniformValues().uKLook![0] = labelInk ? 1.25 : this.threadLook;
     // K798: the border-at-a-time intros (mode, running) for the shader.
     const rm = this.r.revealFx.revealAnim?.mode;
     knotUniformValues().uKLook![1] = rm === "edges" ? 1 : rm === "edgesAll" ? 2 : 0;
@@ -681,7 +686,7 @@ export class PaintState {
     knotUniformValues().uKPath![3] = this.frayWidth; // K813
     knotUniformValues().uKPathB![0] = this.pathIrrExcess; // K835
     knotUniformValues().uKPathB![1] = this.pathExcFill; // K835
-    knotUniformValues().uKLook![3] = this.borderWidth; // K820
+    knotUniformValues().uKLook![3] = labelInk ? 0 : this.borderWidth; // K820
     // K832: the border look's junction cut reach - the wedge fans'
     // reach L (the joinery's drawWedges gate, mirrored), so ribbon
     // strokes end where the fan rims begin; 0 while the fans are off.

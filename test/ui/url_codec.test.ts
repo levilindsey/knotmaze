@@ -110,6 +110,7 @@ describe("links", () => {
       showShortestPath: false, // K839
       loaderGap: 0.6, loaderThreadWidth: 0.42, loaderThreadColor: "#eccc41", // K852
       loaderBgColor: "#151b28", loaderIndicatorSize: 1, loaderFill: "solid", loaderTrail: 2.6, // K852
+      labelInk: false, // K868 S3a
       pluckWhole: 0.75, pluckCrossings: "through", pluckGlow: "fallback",
       pluckRipple: "glint", rippleStrength: 1, rippleAuto: 0.35,
       pluckSheen: 0.5, pluckTug: 0, tugAuto: false, autoPluckGain: 0.5,
@@ -941,7 +942,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoRoam: "mrm", minoWake: "mwk", minoFog: "mfg", minoPull: "mpl",
   minoRefog: "mrf", gameMode: "gm",
   confettiAmount: "cfa", confettiShine: "cfh", foilShare: "cff",
-  confettiCannons: "cfc", cannonAmount: "cfn", streamerShare: "cfs", cannonSpread: "cfw", borderWidth: "bdw", borderColor: "bdc", goldTextureStrength: "gts", loaderSpeed: "ldsp", loaderMove: "ldmv", cornerRoundShare: "crs", pathIrregularity: "pir", pathExcursion: "pex", showShortestPath: "ssp", loaderGap: "lgp", loaderThreadWidth: "ltw", loaderThreadColor: "ltc", loaderBgColor: "lbg", loaderIndicatorSize: "lis", loaderFill: "lfl", loaderTrail: "ltr",
+  confettiCannons: "cfc", cannonAmount: "cfn", streamerShare: "cfs", cannonSpread: "cfw", borderWidth: "bdw", borderColor: "bdc", goldTextureStrength: "gts", loaderSpeed: "ldsp", loaderMove: "ldmv", cornerRoundShare: "crs", pathIrregularity: "pir", pathExcursion: "pex", showShortestPath: "ssp", loaderGap: "lgp", loaderThreadWidth: "ltw", loaderThreadColor: "ltc", loaderBgColor: "lbg", loaderIndicatorSize: "lis", loaderFill: "lfl", loaderTrail: "ltr", labelInk: "lbi",
   pluckWhole: "pw", pluckCrossings: "pcx",
   pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg", hoverGlowWidth: "hgw",
   revealDistance: "rvd", revealFade: "rvf", revealLook: "rvl",

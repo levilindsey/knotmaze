@@ -295,6 +295,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["loaderIndicatorSize", "number"], // K852
   ["loaderFill", "enum", ["solid", "outline", "flat"]], // K852
   ["loaderTrail", "number"], // K852
+  ["labelInk", "boolean"], // K868 S3a
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
