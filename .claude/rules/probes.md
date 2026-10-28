@@ -87,7 +87,10 @@ mode-off-again check failed on 77% of the frame. Alone, the same build
 passed both. Inferred, not caught: a WebGL context loss under the load.
 After one, a RenderTexture comes back empty, and a probe that pins the
 background never renders it again. Record `webglcontextlost` and fail
-on it (`render-explore.md`, the probe lesson).
+on it (`render-explore.md`, the probe lesson). Hook only the app's
+canvas: Pixi's `isWebGLSupported` test canvas loses its context on
+purpose, so a hook on every canvas sees one loss per load, flag off
+included (K868 S3a2, inferred from Pixi's source).
 
 PROBE LORE, same round: the renderer resets every fill/erase mesh's
 `visible` each frame (hide with `renderable = false`, or per layer);

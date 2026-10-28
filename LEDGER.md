@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K966.
+Next free ID: K968.
 
 ## Waiting on Levi
 
@@ -291,11 +291,11 @@ Next free ID: K966.
 - **K868** · Border look, junctions done right: one field renderer (union within a surface, occlusion
   by depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
-  - owner: agent `a0d2e9db1440dfc41` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, stage S3a2, started 2026-10-28 00:02, 2 h cap ~02:02)
-  - branch: `k868-s3a`, worktree `.claude/worktrees/k868-s3a`; last commit: `69730032` (S3a's handoff, rebased onto `d4aa241e`; the agent's WIP commits follow, unpushed), unmerged on purpose: with the flag on the threads have no outline until S3a3's band pass. Keep the worktrees `.claude/worktrees/k922-junction-extent`, `k924-label-artifacts`, `k940-label-fixes`, `k934-recount` and `k868-s3a`: their probes import their source
-  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`), `.claude/probes/K924/` (`run.ps1`, `tally.mjs`, `at.ts`, `tdiff.mjs`), `.claude/probes/K940/` (sheet J, `jcrops/`, `S/`, per-scene `ydiff/`, `cls/`, `indep/`), `.claude/probes/K934/` (sheet K `K_recount.png`, `sheetk/`, `dropped/`, `ext3/`, `indep/`, census logs), S3a's in the `k868-s3a` worktree's `.claude/probes/S3a/` (`label_check_v3..v6.ts`, `patch_v5.mjs`, `patch_v6.mjs`, `label_run{,4,5,6}.mjs`, results `label/{tubes,two,five,six}`, `dbg_hole.ts`, `ab/`, `ab_shot.mjs`; copy them to the main checkout before removing the worktree); sheets A-K, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
-  - next: S3a2 (`docs/design/K868_s3a2_label.md`): the label pass in `src/` (v6's tubes, the fill pass on the GPU, the packed label, caps), checked against the oracle on the 12 scenes; then S3a3: the band pass, K923's LOD and sheet S3a (S3a's steps 3-5), after which the branch merges; then S3b: the Pixel bench and Levi's look on the phone, with the END tuck and band W against master (§8); then G1 corners and cr 0-6 (sheet F approved); K892: G3-1 goes when the flag becomes the default, or port the revert sooner; after S3a3, the oracle follow-ups, fixed in the oracle and the passes: K955 and K956 (they show at play size), K943, K953, K952, K935, K941
-  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`; K934: `docs/design/K934_recount.md`; S3a: `docs/design/K868_s3a_app.md`; S3a2: `docs/design/K868_s3a2_label.md`
+  - owner: nobody since 2026-10-28 01:20 (stage S3a2 done, `44fe43ba`); S3a3 launches next
+  - branch: `k868-s3a`, worktree `.claude/worktrees/k868-s3a`; last commit: `44fe43ba` (S3a2's handoff; WIP commits unpushed), unmerged until S3a3 draws the ink: with the flag on the threads have no outline yet. Keep the worktrees `.claude/worktrees/k922-junction-extent`, `k924-label-artifacts`, `k940-label-fixes`, `k934-recount` and `k868-s3a`: their probes import their source
+  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`), `.claude/probes/K924/` (`run.ps1`, `tally.mjs`, `at.ts`, `tdiff.mjs`), `.claude/probes/K940/` (sheet J, `jcrops/`, `S/`, per-scene `ydiff/`, `cls/`, `indep/`), `.claude/probes/K934/` (sheet K `K_recount.png`, `sheetk/`, `dropped/`, `ext3/`, `indep/`, census logs), S3a's in the `k868-s3a` worktree's `.claude/probes/S3a/` (`label_check_v3..v6.ts`, `patch_v5.mjs`, `patch_v6.mjs`, `label_run{,4,5,6}.mjs`, results `label/{tubes,two,five,six}`, `dbg_hole.ts`, `ab/`, `ab_shot.mjs`; S3a2's `label7/a/` (the 12 scenes), `live7/`, `ab/s3a2_off/`, `gp7/`, `dbg_lower7_*.log`, `dbg_fill7*_muse_hash.log`; copy them to the main checkout before removing the worktree); sheets A-K, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
+  - next: S3a3 (`docs/design/K868_s3a3_ink.md`): exact s for the fill pass, the oracle's fill order (K964 class C), the band pass (the ink), the label following the threads; the branch merges after it if flag off equals master; then S3a4: K923's LOD and its facet check, sheet S3a at play size and 4x, K943's bits; then S3b: the Pixel bench (both passes, the label's rebuild per moving frame and flow at rest) and Levi's look on the phone, with the END tuck and band W against master (§8); K966 and K967 before the flag becomes the default; then G1 corners and cr 0-6 (sheet F approved); K892: G3-1 goes when the flag becomes the default, or port the revert sooner; the oracle follow-ups, fixed in the oracle and the passes: K955 and K956 (they show at play size), K943, K953, K952, K935, K941
+  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`; K934: `docs/design/K934_recount.md`; S3a: `docs/design/K868_s3a_app.md`; S3a2: `docs/design/K868_s3a2_label.md`; S3a3: `docs/design/K868_s3a3_ink.md`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
@@ -802,9 +802,14 @@ Every other item below waits on the trigger it names.
 - **K958** · K868 extent part's residuals (K934 step 3, `ext3/`): a crescent sliver at muse_hash (20.30, 1.40);
   an island under K955's free end (m4); a lens wedge with a free end at g41_def_tw64 (0.90, 14.40); a notch (r1);
   spur ends (u3); a 1 px hairline island at g41_user_tw64 (9.79, 12.93).
-- **K964** · K868 S3a's label residue after v6: 0-16 sampled px per scene differ from the oracle's V (open-end
-  tube extra/missing: round caps against endSnap; a few wrong tubes, mostly GPU-lower after the clip). S3a2
-  diagnoses where cheap. `K868_s3a_app.md` ## Handoff on branch `k868-s3a`.
+- **K964** · K868's label residue after S3a2 (`K868_s3a2_label.md` ## Handoff): class A, edge ties 0.003 px from
+  a tube's edge (inferred: float32 interpolation); class B, one chain covering a pixel twice on a steep z flank (GPU
+  keeps the larger z, the oracle the nearest point's); open ends 1-2 cells on 4 scenes; def's fill at (658, 548).
+- **K966** · K868 with `labelInk` on: the label ignores the thread reveal, fog, the appearance reveal and plucks; the
+  trail is cut at under-crossings and lighter where the ink overlapped it. Fix before the flag becomes the default.
+  S3a2's handoff and `gp7/` crops on `k868-s3a`.
+- **K967** · K868's label app fixes ctrlArc at 0.47 and the corner radius at 3, and its camera assumes no rotation
+  or pivot; the panel's labelInk checkbox does not refresh after the 255 fallback. S3a2's handoff on `k868-s3a`.
 - **K963** · Cursive's small residuals: f's hairpin 1.48 u off the axis, three nodes in its last 23 u, peak 9.90
   (stage v5.7); fewnode's G2 tally counts g's and q's V corners as joints; a small flag at m's first foot; a
   stale `--end-budget` header in `bodies_k959.py`. `NOTES.md` ## v5.6 in K863's probes.
