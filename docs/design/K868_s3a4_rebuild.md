@@ -169,3 +169,62 @@ Not this stage:
   - a `Ledger items` list (follow-ups and residuals; a question for Levi
     only about what shows on screen, in plain words);
   - K868's current handle fields (branch, last commit, evidence, next).
+
+## Handoff (draft, S3a4 in progress)
+
+Started 2026-10-28 03:12 (stop 05:12). Probes and results:
+`.claude/probes/S3a/` (untracked): `prof12.mjs` + `prof12_locked.ps1`
+(pages settle | flow | knot | drag | dragw, flag on and off back to back,
+perf lock), `prof12_table.mjs` (the tables below), `prof12_node.ts` (the
+parts in Node on the scene fixtures) + `prof12_cpu.mjs` (folds a
+`--cpu-prof` profile by function). Results: `prof12/` (step 1).
+
+### Step 1: the breakdown (before), desktop, under the perf lock
+
+The label's own CPU timers (`__knotLabel.timers(n, which, raw)`, commit
+`acdeea14`): per rendered frame, diff (the moved() test and the snapshot),
+gather (gatherSceneInput), scene (buildFieldScene), model (new
+FieldModel), pieces (buildLabelPieces), switch (findSwitchLines), strips
+(buildBandStrips), upload (setPieces + setStrips), label and band (the two
+passes' render), composite (after()), frame (all of it). ms, p50 / p95 /
+max over the window's rebuild frames:
+
+| page | rebuild frames | gather | scene | model | pieces | switch | strips | upload | label | band | frame |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| settle11, in-thread fabric, 60 s | 26 | 0.5 / 1.2 / 1.8 | 16 / 32 / 33 | 2089 / 2519 / 2561 | 55 / 92 / 102 | 19 / 26 / 27 | 17 / 29 / 37 | 0.8 / 2.5 / 2.6 | 0.1 / 0.2 / 83 | 0.0 / 0.1 / 59 | 2244 / 2649 / 2656 |
+| flow_watch, worker host, 3 s at rest | 2 | 0.5 | 19 | 1606 | 79 | 18 | 40 | 1.8 | 0.1 | 0.0 | 1759 |
+| knot mode (mf=0), in-thread, 60 s | 416 | 0.1 / 0.3 / 0.8 | 5.2 / 7.9 / 15 | 71 / 102 / 139 | 12 / 19 / 46 | 0.0 / 0.1 / 0.6 | 5.9 / 9.1 / 22 | 0.4 / 0.6 / 1.9 | 0.1 / 0.1 / 80 | 0.0 / 0.1 / 82 | 95 / 136 / 384 |
+
+(The label and band maxima are each page's first frame: the programs'
+compile.) The app counter (`__knotPerf`), flag on against flag off:
+
+| page | flag | p50 / p95 / max ms | asleep at the end |
+|---|---|---|---|
+| settle11, 60 s from load | on | 2.0 / 2218 / 2699 (309 frames) | no |
+| | off | 1.3 / 1.9 / 2.6 (1514 frames) | yes (by 40 s) |
+| flow_watch, 3 s at rest | on | 1786 (2 frames; never slept in 60 s) | no |
+| | off | 31 / 42 / 45 (52 frames; slept at 15 s) | yes |
+| knot mode, 60 s from load | on | 118 / 164 / 421 (697 frames) | no |
+| | off | 29 / 34 / 60 (863 frames) | yes |
+
+**The suspect was wrong.** The switch search is 1% of a rebuild (19 ms
+of 2244). The FieldModel's constructor is 93% (2089 ms), and in Node on
+the def fixture (`prof12_node.ts`, median of 3: model 1695, pieces 112,
+switch 33, strips 33 ms; muse_hash: model 2662) a CPU profile puts 78%
+of the whole rebuild in one function: `footInWindow` (geom.ts), called by
+the corner solver's Newton steps (`solveCorner` -> `solve` -> `newton`,
+from the constructor's corner loop and again from `buildSpans`' K883
+trims). It scans EVERY segment of the chain for each call, whatever the
+window, so each Newton iterate costs a whole chain. The rest of the
+model: `partExtents` -> `hits` -> `footNear` (K922's part walk, ~9%),
+`passReach` (~4%), `SegGrid` candidates (~4%).
+**The order this stage follows** (the call is "Measure, then fix", so the
+measurement reorders the work): first `footInWindow`, made to visit only
+the segments the window touches (bit-identical: same float tests, same
+visit order, same ties), because it is the one part that dominates; then
+the brief's step 2 cache (the switch lines by topology), which is small
+here but the call stands; then the remaining parts over budget, largest
+first. The FieldModel is rebuilt from scratch every frame, so 1 ms per
+rebuild is out of reach without caching the model itself by topology
+(corners, spans, clusters) or moving the build off the main thread; the
+report gives each part's cost after the fixes.
