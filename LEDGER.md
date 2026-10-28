@@ -480,6 +480,14 @@ Next free ID: K904.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
+- **K893** · Phone bisect of `d0406df..01df23a5` on K539's frozen cells (dense +16 ms, max-fabric
+  +30, knot gs24 -35; `0753b3c8`, K573 step 2, is the knot candidate), and G3-1 reverted at head for
+  K892. `docs/design/K156.md`, round 2026-10-27b.
+  - owner: agent `a11726d3815bf8425` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (sonnet, started 2026-10-27 09:44, 1 h cap ~10:44)
+  - branch: `worktree-agent-a11726d3815bf8425`, worktree `.claude/worktrees/agent-a11726d3815bf8425`; last commit: `727f8593`
+  - evidence: `.claude/probes/rounds/2026-10-27b/` (main checkout, untracked); the revert on branch `k893-g31-revert`
+  - next: idle wait and check; G3-1 reverted at head, measured ABBA; scan and bisect d0406df..01df23a5; cleanup, handoff
+  - brief: `docs/design/K156.md`, round 2026-10-27b
 
 ## Next, in order
 
@@ -740,9 +748,6 @@ Every other item below waits on the trigger it names.
   don't re-run patch_items.mjs (`docs/design/K777.md` Handoff).
 - **K890** · Move the K863 tracer into tracked `scripts/` (trace_k879.py, review_k879.py, K886's
   join_k886.py, the venv's requirements), without the chart or its crops, once K886 lands.
-- **K893** · Phone bisect of `d0406df..01df23a5` on K539's frozen cells (dense +16 ms, max-fabric
-  +30, knot gs24 -35; `0753b3c8`, K573 step 2, is the knot candidate), and G3-1 reverted at head for
-  K892. `docs/design/K156.md`, round 2026-10-27b.
 - **K895** · phone_pass kit: `-Phase start` hangs a piped caller; `summary.mjs` takes the lower of
   two reps at n=2 (use the mean); fabric m11 needs an A/A floor and a fresh `noise.json`; move the
   round probes (`p_common.mjs`, `k539_*.mjs`, `report.mjs`, ...) into `scripts/phone_pass/`.
