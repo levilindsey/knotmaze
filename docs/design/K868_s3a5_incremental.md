@@ -443,10 +443,40 @@ and the pin table.
 - In the same run, today's `buildLabelPieces` took 69-92 ms at p50 and
   73-110 ms at p95.
 
-**Not prototyped:** the strips, the windows and the fills. The strips'
-vertices are the same kind of evaluation (a segment's two points, plus
-their neighbours for the normals, from SAMP). So their float32 error is
-estimated at the same 1.5e-5.
+**The strips from s** (`seq13_strips.ts`, results in `seq13/strips.txt`;
+every frame of the four sequences, no timing). Each of today's tube-edge
+strips (`buildBandStrips`; about 50k a frame) was evaluated from (chain,
+k, s, side) as a vertex shader would, in float32, from the chain's float32
+points: segment k's two points, and its neighbours for the vertex
+normals. The rule is today's: a vertex at a segment end takes the vertex
+normal (the two segments' normals averaged, then normalized), and a
+vertex at a cut (a span bound inside the segment) takes the segment's own
+normal. Against today's strip vertices:
+- **(T) Today's rule from s: at most 1.1e-5 to 1.5e-5 world** on the four
+  sequences, the same one ulp of s as the pieces. It holds the tolerance.
+  The vertex must know whether it is at a segment end or a cut, so the
+  instance carries that, with the cut's s.
+- **(L) One quad per segment with no cuts** (the cut's vertex on the
+  straight edge between the segment's two end offsets) differs from
+  today's by up to 0.033-0.034 world on def (0.73-0.77 px at zoom 1) and
+  0.082-0.099 world on muse (1.8-2.2 px). At 5-19% of the cut vertices it
+  differs by more than 0.01. That is a rule difference, not precision:
+  today's outline has a kink at every cut, because the cut's vertex sits
+  on the segment's true offset line, while an uncut segment's edge runs
+  between the two vertex-normal offsets.
+
+So the strips either keep their cuts or change the rule:
+- **Keep the cuts:** one instance per (segment, piece, side), carrying
+  the piece's s bounds. A chain's instances change when its span list or
+  a span bound crosses a segment. That is 0-17 chains a frame (section 5),
+  and the CPU rewrites only those chains' instances.
+- **Change the rule (S3a6):** an uncut segment's edge everywhere. That is a
+  visible change of up to 2 px at the cluster boundaries. It belongs with
+  K972/K973's shape residuals, so it is the coordinator's call.
+
+**Not prototyped:** the windows and the fills. Their vertices come from
+the corner table (V, q, r and the feet), so their precision is the
+corner's, in float32.
 
 ### 5. How often the structure changes
 
@@ -489,11 +519,11 @@ a prototype under the lock; everything else is estimated.
 | spans: caps, armExtents, rawSpans, geoExtents | 4-5 ms, plus the rows above | rebuilt per frame from the corner and extent tables | 0.3-1 ms (estimated) |
 | clusters | inside buildSpans | the union of overlapping spans, per frame (~800 spans: a sort and a sweep) | < 0.1 ms (estimated) |
 | buildPassTags | 8 / 4 ms | per frame, only for the clusters that changed | 0.1-0.5 ms (estimated) |
-| SegGrids | 4.5 / 3.7 ms | warm feet do not use them; only cold fallbacks do | 0 on most frames (estimated) |
+| SegGrids | 4.5 / 3.7 ms | warm feet do not use them, but the cold fallbacks and the CPU walks (partExtents, passReach) query them: re-bin only the segments that left their cell, or walk locally from the last hit | 0.5-2 ms with CPU walks (estimated); 0 with the walks on the GPU |
 | pieces (tubes) | 74 / 53 ms | one instance per segment, evaluated on the GPU | inside the tables (measured) |
 | windows, fills, crossing rows | inside the pieces | per-corner records from the corner table | < 0.1 ms (estimated) |
 | switch lines | 12 / 8 ms (about 6 ms with S3a4's cache) | the topology cached as S3a4 does, re-keyed by cluster key; positions from s on the GPU | 0.2-1 ms (estimated) |
-| strips (band) | 32 / 32 ms | one instance per segment and side, from the same tables | 0 beyond the tables (estimated) |
+| strips (band) | 32 / 32 ms | one instance per (segment, piece, side), evaluated from s on the GPU (measured: 1.5e-5 world); the CPU rewrites the instances of the chains whose spans changed | 0.05-0.2 ms (estimated; 0 beyond the tables if the rule drops the cuts) |
 
 ### 7. The structure: layout and events
 
