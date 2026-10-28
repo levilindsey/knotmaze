@@ -890,7 +890,7 @@ export function check14(ctx: CheckContext): CheckResult {
 //   - else higher under the model's depth rule.
 // The ink is read at c(s) ± (h − W/2)·n.
 
-export type BorderClass = "a" | "b" | "c" | "d" | "e" | "f";
+export type BorderClass = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
 
 export const BORDER_CLASSES: Record<BorderClass, string> = {
   a: "a crossing inside one junction's span (§3.4)",
@@ -899,6 +899,8 @@ export const BORDER_CLASSES: Record<BorderClass, string> = {
   d: "a short arm",
   e: "the corner with no V",
   f: "other",
+  g: "K900 geometric truth: hidden only by the model's truth (spans, cores, depth)",
+  h: "K900 geometric truth: inked only by another group's border",
 };
 
 export interface MissingStretch {
@@ -1176,6 +1178,100 @@ function hiderAt(T: Truth, i: number, s: number, x: number, y: number, dLim: num
   return null;
 }
 
+/**
+ * K900: per poly, the [lo, hi, side, junction] arc ranges where a side lies
+ * inside the overlap of one junction's arm bodies that holds the node: from
+ * each arm's root, along each side, the first stretch where the side (its
+ * outside point, or its band point within h − W) is inside another arm's
+ * tube (the arm's chain from its root outward, 12h) or one of the
+ * junction's corner fills. Spans, groups and depth play no part; the two
+ * halves of a through pass are one body.
+ */
+export function nodeOverlaps(model: FieldModel): [number, number, 1 | -1, number][][] {
+  const h = model.h;
+  const W = model.W;
+  const out = model.polys.map(() => [] as [number, number, 1 | -1, number][]);
+  const cornersOf: number[][] = model.scene.junctions.map(() => []);
+  model.corners.forEach((c, k) => cornersOf[c.junction].push(k));
+  const step = h / 8;
+  const ext = 12 * h;
+  model.scene.junctions.forEach((J, ji) => {
+    const arms = J.arms.map((a) => ({ pi: model.idxOf.get(a.chain), s: a.s, dir: a.dir }));
+    arms.forEach((A, ai) => {
+      if (A.pi === undefined) return;
+      const p = model.polys[A.pi];
+      const room = p.closed ? p.len / 2 : A.dir > 0 ? p.s0 + p.len - A.s : A.s - p.s0;
+      const tMax = Math.min(ext, room);
+      for (const side of [1, -1] as const) {
+        let t = 0;
+        for (; t <= tMax; t += step) {
+          const at = pointAt(p, normS(p, A.s + A.dir * t));
+          const nx = -at.ty * side;
+          const ny = at.tx * side;
+          const ox = at.x + nx * (h + 0.6 * W);
+          const oy = at.y + ny * (h + 0.6 * W);
+          const bx = at.x + nx * (h - W / 2);
+          const by = at.y + ny * (h - W / 2);
+          let inside = false;
+          for (let bi = 0; bi < arms.length && !inside; bi++) {
+            const B = arms[bi];
+            if (bi === ai || B.pi === undefined) continue;
+            if (B.pi === A.pi && Math.abs(B.s - A.s) < 1e-6) continue;
+            const lo = B.dir > 0 ? B.s : B.s - ext;
+            const hi = B.dir > 0 ? B.s + ext : B.s;
+            if (model.distWindow(B.pi, lo, hi, ox, oy, h) < h || model.distWindow(B.pi, lo, hi, bx, by, h) < h - W) inside = true;
+          }
+          if (!inside)
+            for (const k of cornersOf[ji])
+              if (model.inFill(k, ox, oy)) {
+                inside = true;
+                break;
+              }
+          if (!inside) break;
+        }
+        if (t > 0) {
+          const s1 = A.s + A.dir * Math.min(t, tMax);
+          out[A.pi].push([Math.min(A.s, s1), Math.max(A.s, s1), side, ji]);
+        }
+      }
+    });
+  });
+  return out;
+}
+
+/** K900: the geometric truth's hider (see borderCensus), or null. */
+function geoHider(
+  T: Truth,
+  geo: [number, number, 1 | -1, number][][],
+  pi: number,
+  s: number,
+  side: 1 | -1,
+  ox: number,
+  oy: number,
+  bx: number,
+  by: number,
+): string | null {
+  const { model } = T;
+  const p = model.polys[pi];
+  for (const [lo, hi, sd, ji] of geo[pi]) {
+    if (sd !== side) continue;
+    for (const sh of p.closed ? [-p.len, 0, p.len] : [0]) if (s + sh >= lo && s + sh <= hi) return `in j${ji}'s node overlap`;
+  }
+  for (const [x, y, dLim] of [
+    [ox, oy, model.h],
+    [bx, by, model.h - model.W],
+  ] as const) {
+    candidates(model.grid, x, y, model.h, T.sc);
+    for (const c of T.sc) {
+      if (!(c.d < dLim)) continue;
+      if (c.chain === pi && Math.abs(dS(p, s, c.s)) <= model.sigma) return "self";
+      const pr = pairOf(T, pi, s, c.chain, c.s);
+      if (pr && !pr.iOver) return `under at crossing ${pr.pp.x}`;
+    }
+  }
+  return null;
+}
+
 /** K900: an extra-ink sample's class and why (see ExtraStretch). */
 function classifyExtra(T: Truth, i: number, s: number, bx: number, by: number, hid: string): { cls: string; why: string } {
   const { model } = T;
@@ -1324,10 +1420,17 @@ function classify(T: Truth, i: number, s: number, bx: number, by: number, ox: nu
  * the arc-length sample spacing (default h/4); inView limits the samples
  * (default: the scene's viewport); probe reads the ink (default: the
  * oracle's own predicate).
+ *
+ * K900: truth "geo" decides "should show" from the geometry alone: a side
+ * hides only under an over pass by the crossing table, inside its own tube
+ * within σ, or inside the overlap of one junction's arm bodies that holds
+ * the node (nodeOverlaps). A side the model's truth would hide counts as
+ * class g, and with the oracle's ink a sample is inked only when the top
+ * group there holds this piece (else class h, inked by another group).
  */
 export function borderCensus(
   model: FieldModel,
-  opts: { step?: number; inView?: (x: number, y: number) => boolean; probe?: InkProbe; only?: (pi: number, s: number) => boolean } = {},
+  opts: { step?: number; inView?: (x: number, y: number) => boolean; probe?: InkProbe; only?: (pi: number, s: number) => boolean; truth?: "model" | "geo" } = {},
 ): BorderCensus {
   const h = model.h;
   const W = model.W;
@@ -1335,6 +1438,16 @@ export function borderCensus(
   const ctx = opts.inView ? null : checkContext(model);
   const inView = opts.inView ?? ((x: number, y: number) => ctx!.inView(x, y, 1));
   const ink = opts.probe ? (x: number, y: number) => opts.probe!.cov(x, y) > 0.5 : (x: number, y: number) => model.evalPoint(x, y, false).ink;
+  const geo = opts.truth === "geo" ? nodeOverlaps(model) : null;
+  const ownInk = (pi: number, s: number, x: number, y: number): boolean => {
+    if (opts.probe || !geo) return ink(x, y);
+    model.recordGroups = true;
+    const e = model.evalPoint(x, y, false);
+    const le = model.lastEval;
+    model.recordGroups = false;
+    const p = model.polys[pi];
+    return e.ink && !!le?.top && le.top.some((k) => le.cands[k].chain === pi && Math.abs(dS(p, s, le.cands[k].s)) <= model.sigma);
+  };
   const step = opts.step ?? h / 4;
   const out: BorderCensus = {
     samples: 0,
@@ -1342,7 +1455,7 @@ export function borderCensus(
     shifted: 0,
     extra: 0,
     stretches: [],
-    byClass: { a: blank(), b: blank(), c: blank(), d: blank(), e: blank(), f: blank() },
+    byClass: { a: blank(), b: blank(), c: blank(), d: blank(), e: blank(), f: blank(), g: blank(), h: blank() },
     extraStretches: [],
     extraByClass: {},
   };
@@ -1391,10 +1504,12 @@ export function borderCensus(
         }
         const ox = at.x + nx * (h + 0.6 * W);
         const oy = at.y + ny * (h + 0.6 * W);
-        const hid = hiderAt(T, pi, s, ox, oy, h) ?? hiderAt(T, pi, s, bx, by, h - W) ?? fillAt(T, pi, s, ox, oy);
+        const hid = geo
+          ? geoHider(T, geo, pi, s, side, ox, oy, bx, by)
+          : (hiderAt(T, pi, s, ox, oy, h) ?? hiderAt(T, pi, s, bx, by, h - W) ?? fillAt(T, pi, s, ox, oy));
         if (hid) {
           // Extra: drawn though hidden deep inside the hider.
-          const deep = hid !== "self" ? hiderAt(T, pi, s, bx, by, h - 1.5 * W) : null;
+          const deep = hid !== "self" && !geo ? hiderAt(T, pi, s, bx, by, h - 1.5 * W) : null;
           if (deep && ink(bx, by)) {
             out.extra++;
             const { cls, why } = classifyExtra(T, pi, s, bx, by, deep);
@@ -1413,7 +1528,7 @@ export function borderCensus(
         }
         flushX();
         out.samples++;
-        if (ink(bx, by)) {
+        if (ownInk(pi, s, bx, by)) {
           flush();
           continue;
         }
@@ -1425,7 +1540,13 @@ export function borderCensus(
           continue;
         }
         out.missing++;
-        const { cls, why } = classify(T, pi, s, bx, by, ox, oy);
+        let cw: { cls: BorderClass; why: string } | null = null;
+        if (geo) {
+          const mh = hiderAt(T, pi, s, ox, oy, h) ?? hiderAt(T, pi, s, bx, by, h - W) ?? fillAt(T, pi, s, ox, oy);
+          if (mh) cw = { cls: "g", why: `model: ${mh.replace(/\d+/g, "#")}` };
+          else if (ink(bx, by)) cw = { cls: "h", why: "inked by another group" };
+        }
+        const { cls, why } = cw ?? classify(T, pi, s, bx, by, ox, oy);
         if (run && (run as MissingStretch).cls === cls && (run as MissingStretch).why === why) {
           (run as MissingStretch).s1 = s;
           (run as MissingStretch).n++;
