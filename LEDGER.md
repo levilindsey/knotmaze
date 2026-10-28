@@ -474,14 +474,6 @@ Next free ID: K922.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
-- **K915** · K868 borders from the visible surface: ink wherever the topmost surface changes (an NPR
-  partition: no border ends in the open), prototyped behind an oracle `ink` switch and judged by
-  the free-end image check (K910). `docs/design/K915_surface_borders.md`.
-  - owner: agent `a193572f42ad262d7` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 13:31, 2 h cap ~15:31)
-  - branch: `k915-border-model`, worktree `.claude/worktrees/k915-border-model`; last commit: `1d2fada4`
-  - evidence: `.claude/probes/K915/`
-  - next: steps 1-3 (the rule; the prototype behind `ink`; measured against master on the 12 real scenes and the synthetic ones), then sheet H, form B if needed, S3's form and cost, the verdict
-  - brief: `docs/design/K915_surface_borders.md`
 - **K916** · Cursive v5.1: whole-stroke fairing for the crotch elbows Levi still sees in v5
   (`--split fair`), leads into a/c/d/g/o/q from the left, then the join refit (wn, bn, on, of, ol,
   ob, om got worse in v5) and the K917 sheet. `docs/design/K916_cursive_v51.md`.
@@ -1932,6 +1924,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K915** · Borders from the visible surface: oracle `ink` surface and label (free ends 228 to 100 on the real scenes, extra ink 71 to 94; d1-d4 close with angular cuts), `hookLook` seam, form B rejected, S3 as two passes, sheet H; verdict adapt; follow-ups under K868. Done in 69e304ed (2026-10-27).
 - **K901** · Cursive: r after a high exit dips, as the font's does (Levi: "dip"); `docs/design/K863_trace.md` ## Levi's calls. Done in c1f25160 (2026-10-27).
 - **K904** · Cursive v5: a, c, d, g, o and q fused at 60 u, the high entry mode, every split a G2 blend (peak curvature ratio max 120.5 -> 4.8), r after a high exit both ways; steps 4-5 moved to K916. Done in 1f5818eb (2026-10-27).
 - **K906** · Phone round 2026-10-27c: T1 = K525's TELE paint item (`a64390b0`, dense +11.0 ms), T2 = K137's fray (`24ea1b3b`, dense -13.1 ms); `docs/design/K156.md` round 27c. Done in a9c4dfec (2026-10-27).
