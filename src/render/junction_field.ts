@@ -474,8 +474,6 @@ void main(void) {
     }
   }
   if (!strip && vFlank > 2.5) fanEdge = 0.0;
-  // K868 S3a: under label ink (uKLook.x 1.25) the rims draw in its passes.
-  if (uKLook.x > 1.1 && uKLook.x < 1.5) fanEdge = 0.0;
   bool lookIntro = uKLook.y > 0.5 && uKLook.z > 0.5;
   float lookA = 1.0;
   if (uKLook.x > 0.5 && uKLook.x < 1.5) lookA = fanEdge;

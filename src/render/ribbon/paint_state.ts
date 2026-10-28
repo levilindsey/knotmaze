@@ -116,6 +116,8 @@ export class PaintState {
   private get threadLook() { return this.r.threadLook; }
   private get goldWidth() { return this.r.goldWidth; }
   private get borderWidth() { return this.r.borderWidth; }
+  /** K868 S3a: whether tickPaint last hid the fan layers for label ink. */
+  private labelInkOn = false;
   private get borderColor() { return this.r.borderColor; }
   private get goldTextureStrength() { return this.r.goldTextureStrength; }
   private get goldTexture() { return this.r.goldTexture; }
@@ -671,11 +673,19 @@ export class PaintState {
   tickPaint(dt: number): void {
     knotUniformValues().uKBase[2] = this.paintDebug;
     // K797b. K868 S3a: under label ink the border look's strokes draw in
-    // their own passes (field/label_ink): x 1.25 turns the fans' rims off
-    // (junction_field) and a zero stroke width (w below) the ribbons' and
-    // the plucks', with no change to their shader text (K320's budgets).
+    // their own passes: a zero stroke width (w below) turns off the
+    // ribbons' and the plucks' strokes, and hiding the two fan layers
+    // the fans' rims (in the border look a fan draws its rim band and
+    // nothing else), with no change to any shader text (K320's budgets,
+    // K307's cold compiles). Edge-triggered, so flag off never touches
+    // the layers (probes toggle them).
     const labelInk = this.threadLook === 1 && this.r.labelInk;
-    knotUniformValues().uKLook![0] = labelInk ? 1.25 : this.threadLook;
+    if (labelInk !== this.labelInkOn) {
+      this.labelInkOn = labelInk;
+      if (this.r.filletLayer) this.r.filletLayer.visible = !labelInk;
+      if (this.r.filletTopLayer) this.r.filletTopLayer.visible = !labelInk;
+    }
+    knotUniformValues().uKLook![0] = this.threadLook;
     // K798: the border-at-a-time intros (mode, running) for the shader.
     const rm = this.r.revealFx.revealAnim?.mode;
     knotUniformValues().uKLook![1] = rm === "edges" ? 1 : rm === "edgesAll" ? 2 : 0;
