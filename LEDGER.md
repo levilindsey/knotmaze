@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K979.
+Next free ID: K980.
 
 ## Waiting on Levi
 
@@ -298,7 +298,7 @@ Next free ID: K979.
   - branch: mainline; last commit: `0d3a26cb`
   - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`), `.claude/probes/K924/` (`run.ps1`, `tally.mjs`, `at.ts`, `tdiff.mjs`), `.claude/probes/K940/` (sheet J, `jcrops/`, `S/`, per-scene `ydiff/`, `cls/`, `indep/`), `.claude/probes/K934/` (sheet K `K_recount.png`, `sheetk/`, `dropped/`, `ext3/`, `indep/`, census logs), S3a's, S3a2's and S3a3's in the `k868-s3a` worktree's `.claude/probes/S3a/` (each stage brief's `## Handoff` lists its files and rerun commands; S3a3's: `gpu10/cmp10_all.log`, `ksites10/` (sheet K sites), `drag11/`, `gp11/`, `settle11/`, `ab/s3a3_off/`; copy them to the main checkout before removing the worktree); sheets A-K, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
   - next: S3a5 (`docs/design/K868_s3a5_incremental.md`): design the label's per-frame path, the FieldModel's structure cached and updated locally with positions evaluated from the drawn threads (K971); then its implementation; then the band ink's shape residuals (K972, K973); then the LOD (K923), sheet S3a, the label's bits for K943, and S3b (the Pixel bench, the phone look)
-  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`; K934: `docs/design/K934_recount.md`; S3a: `docs/design/K868_s3a_app.md`; S3a2: `docs/design/K868_s3a2_label.md`; S3a3: `docs/design/K868_s3a3_ink.md`; S3a4: `docs/design/K868_s3a4_rebuild.md`
+  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`; K934: `docs/design/K934_recount.md`; S3a: `docs/design/K868_s3a_app.md`; S3a2: `docs/design/K868_s3a2_label.md`; S3a3: `docs/design/K868_s3a3_ink.md`; S3a4: `docs/design/K868_s3a4_rebuild.md`; S3a5: `docs/design/K868_s3a5_incremental.md`
   - env: from the `k868-s3a` worktree, `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5381 --strictPort --host 127.0.0.1` (the config is untracked; S3a3's handoff, How to rerun)
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -810,17 +810,20 @@ Every other item below waits on the trigger it names.
   S3a2's and S3a3's handoffs; `gp7/`, `gp11/` crops on `k868-s3a`.
 - **K967** · K868's label app fixes ctrlArc at 0.47 and the corner radius at 3, and its camera assumes no rotation
   or pivot; the panel's labelInk checkbox does not refresh after the 255 fallback. S3a2's handoff on `k868-s3a`.
-- **K971** · K868's label rebuild costs about 2 s a frame in fabric mode with `lbi` (app counter p95: in-thread 2161 ms,
-  so the knot never sleeps; worker host with flow 1788 ms; flag off 1.5 ms); flow at rest rebuilds every frame (the
-  rule). Suspect, untested: the uncached switch search. Stage S3a4, `K868_s3a4_rebuild.md`; S3a3's handoff R7, R8.
+- **K971** · K868's label rebuild with `lbi`, fabric mode: about 0.44 s a frame after S3a4 (app counter p95 510 ms; was
+  2.2 s; flag off 1.4 ms), so in-thread the knot never sleeps (worker host 28 s, flag off 15 s). The cost is the
+  FieldModel, rebuilt from scratch each frame; S3a5 designs its per-frame path (`K868_s3a5_incremental.md`).
 - **K972** · K868's band ink against the oracle (S3a3 R1-R3): tube-against-tube switches are not found (twist eyes;
   g41_user_tw64's V diagonal), small closed islands are missing (sheet K a1), and loop tips draw an open hook where
   the oracle closes a teardrop (d1; K910's free-end rule makes the teardrop right). `K868_s3a3_ink.md` ## Handoff.
 - **K973** · K868's band ink against the oracle (S3a3 R4-R6): a line along a tube is missing inside a loop (def at
   26.225, 1.436); junction ticks are missing (sheet K c1, c3) and junctions get extra segments (64 cells on the tw42
   user scenes); more free ends than the oracle on 11 of 12 scenes (def 27/1, muse_hash 75/10). S3a3's handoff.
-- **K974** · K868 probes: K320 has no budget for the label and band programs (S3a4 adds them); S3a2's `label7` has no
-  def row; the dev server's build stamp shows the SHA at the server's start, not the current one (S3a3 R10, R11).
+- **K974** · K868 probes: S3a2's `label7` has no def row; the dev server's build stamp shows the SHA at the server's
+  start, not the current one. S3a3's handoff (K320's budgets landed in S3a4).
+- **K979** · K868 S3a4's measurement leftovers: the switch key churns as clusters renumber (about 6 ms of 440); knot
+  mode's model p50 rose 71 -> 80 ms (probably the cursive agent's load; rerun back to back); the drag pages have no
+  step-1 baseline. `K868_s3a4_rebuild.md` ## Handoff.
 - **K977** · Cursive v5.8's leftovers: b's bottom notch (1.77 -> 0.46) and z's descender notch (0.43 -> 0.25) still
   show; b's upstroke has comb steps at two nodes (unmeasured); k's peak rose to its fair's own 2.71; f's hook keeps
   three nodes about 13 u apart (the font's shape). `K969_cursive_v58.md` ## Handoff; `work16/combs/crops/`.
