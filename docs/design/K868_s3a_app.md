@@ -129,3 +129,163 @@ Not this stage:
   - a `Ledger items` list (follow-ups and residuals; a question for Levi
     only about what shows on screen, in plain words);
   - K868's current handle fields (branch, last commit, evidence, next).
+
+## Handoff
+
+Stopped 2026-10-28 about 00:05 (start 2026-10-27 22:22; cap 00:22). Step 1
+is done. Step 2 is partly done: the tube label runs on the GPU in a probe,
+and the fills are only emulated on the CPU. Steps 3-5 are not started.
+
+**Evidence is untracked.** It lives in this worktree's `.claude/probes/S3a/`
+(gitignored). The coordinator must copy it into the main checkout's
+`.claude/probes/S3a/` before removing the worktree; this agent may not
+write there.
+
+### Step 1: the flag (done)
+
+- Commits: 0496cc5a (WIP) and e001cae7.
+- The flag:
+  - `labelInk` (`lbi`), default off, appended to CODEC_PARAMS with the pin
+    updated;
+  - its panel row, "Label ink", shows in the border look only.
+- With `threadLook === 1 && labelInk`:
+  - tickPaint writes `uKLook.w = 0`, which removes the border ink from
+    the ribbon, sdf and pluck strokes;
+  - `filletLayer` and `filletTopLayer` are hidden (edge-triggered,
+    `paint_state.ts`).
+- No shader text changed. A first cut that branched in the junction
+  shader overran K320's JUNCTION_FRAG budget (`test_step1b.log`).
+- Checks:
+  - the suite is green, 179 files and 2376 tests (`test_step1c.log`), and
+    the golden snapshot passes;
+  - flag off against master: 0 px on def and muse_hash
+    (`ab/diff_final_*.png`, `ab_shot.mjs` with the exact-still view
+    wait).
+- **On screen today:** with the flag on, the threads have no outline at
+  all (`ab/b3_lbi/def.png`). The label passes that would draw the ink are
+  not in `src/` yet.
+
+### Step 2: the label pass (probe only, nothing in src/)
+
+**Revisions.** Each is served by the worktree's dev server and run as
+`label_run{,4,5,6}.mjs <base> <outDir> <scenes> 2`. Each scene's JSON
+holds `counts` (tube only), `counts2` (two-pass) and `sites2` (up to 400
+bad sites).
+
+| Revision | Probe | What it adds | Results |
+|---|---|---|---|
+| v3 | `label_check_v3.ts` | the tube label | `label/tubes` |
+| v4 | `label_check_v4.ts` | a CPU emulation of the second (fill) pass | `label/two` |
+| v5 | `label_check_v5.ts` (`patch_v5.mjs`) | the local-minimum clip | `label/five` |
+| v6 | `label_check_v6.ts` (`patch_v6.mjs`) | v5 plus an EPS overlap | `label/six` |
+
+**The tube label's GPU form (v6).**
+- **Pieces.** One instanced capsule quad per piece. A piece is a polyline
+  segment, split:
+  - where `depthAt` bends (ZTOL 1e-4 of the z range, down to 1/64 of a
+    segment);
+  - at a bisected cluster switch.
+- **Per fragment.** The FS finds the foot t on the piece and interpolates
+  s and z from it.
+- **The local-minimum clip.** A fragment is kept only if:
+  - tr lies in [-e, 1+e], where e = EPS / piece length;
+  - or, past the piece's end, it lies in the vertex's outer wedge
+    (dot(P - B, u_next) < EPS) or past an open chain's end;
+  - or, before the piece's start, it lies past an open chain's start;
+  - and in every case dist < h.
+- **Depth.** `gl_FragDepth = 0.5 - 0.45 zn - 2e-4 rank/nKeys - 2e-6
+  s/smax`, depth test LESS, DEPTH_COMPONENT32F.
+- **Output.** RGBA32UI (chain+1, the bits of s, cl+1, the bits of z),
+  tiled up to 4096.
+- **Cost.** 48-97 ms per scene for the whole label grid. That is not a
+  frame timing.
+
+**Why the clip.**
+- Overlapping capsules plus the depth test keep the HIGHEST z of a chain
+  within h. The oracle takes only the chain's local minima of distance.
+  On a depth ramp that changes s and z, and so the crossed yield.
+  - Example, ring at (5.62, 5.107): the nearest vertex is s 119.645, z
+    -0.178; the max-z vertex within h is s 119.829, z 0.198.
+    fillOrder(3, 1, s) flips from true to false between them.
+- v5 removed muse_hash's 223 GPU-higher wrong tubes and every wrong fill.
+- It opened knife-edge holes, 14-117 per scene, where adjacent pieces'
+  clips met. float32 and raster snapping rejected the pixel on both
+  sides, as the CPU replay (`dbg_hole.ts`) showed.
+- v6's EPS = g/20 overlap closes them.
+
+**The second pass, emulated on the CPU.** It reads the tube label T:
+- paper: the fill wins;
+- T.J == J: keep T;
+- T is a tube of another cluster: fillOrder decides;
+- a winning fill reads as fill J, or as the nearest member's tube if
+  d < h.
+
+**v6, both passes, all 12 scenes.** Sampled at stride 2.
+
+| scene | agree | extra | missTube | wrongTube | wrongFill | missFill |
+|---|---|---|---|---|---|---|
+| def | 283828 | 2 | 7 | 5 | 1 | 0 |
+| fat | 253898 | 3 | 1 | 3 | 0 | 0 |
+| g41_def_tw42 | 361005 | 7 | 8 | 1 | 0 | 0 |
+| g41_def_tw64 | 225613 | 5 | 4 | 5 | 0 | 0 |
+| g41_ring_tw42 | 94261 | 3 | 1 | 2 | 0 | 0 |
+| g41_ring_tw64 | 59117 | 2 | 0 | 0 | 0 | 0 |
+| g41_user_tw42 | 151668 | 1 | 3 | 0 | 0 | 0 |
+| g41_user_tw64 | 93631 | 3 | 0 | 0 | 0 | 0 |
+| muse_default_tw | 281169 | 7 | 5 | 1 | 0 | 0 |
+| muse_hash | 173552 | 4 | 1 | 4 | 0 | 0 |
+| ring | 65859 | 0 | 2 | 1 | 0 | 0 |
+| user_tw42.lightpaper | 151666 | 2 | 1 | 1 | 0 | 0 |
+
+- brokenBySecond is 0 in every scene.
+- **The tube label alone (v3)** misses the fills: missFill per scene is
+  def 5443, fat 0, g41_def_tw42 4780, g41_def_tw64 6350, g41_ring_tw42
+  660, g41_ring_tw64 757, g41_user_tw42 2465, g41_user_tw64 1520,
+  muse_default_tw 5124, muse_hash 2650, ring 702,
+  user_tw42.lightpaper 2462. Its wrongFill reaches 1322 (g41_def_tw64).
+- **The residue** (0-16 sampled px per scene) is not diagnosed:
+  - extra and missTube at open ends (the GPU draws round caps; the oracle
+    snaps ends);
+  - a few wrong tubes, mostly GPU-lower after the clip.
+
+### The rule mapping
+
+| Oracle rule | GPU form |
+|---|---|
+| depth "overlap" | a per-fragment foot z with the depth test, restricted to local-minimum feet (the v6 clip) |
+| labTie "surface" | the key rank folded in at 2e-4, then s at 2e-6 |
+| extent "part" | `clusterAt` per piece, with one bisected switch |
+| endSnap | a round cap at open ends (0-8 sampled px per scene differ) |
+| crossed yield (fillOrder) | a second pass that reads T, plus a per-cluster crossing table (emulated on the CPU only) |
+
+**No GPU form built yet:**
+- the fill's coverage (`inFill`'s wedge tests, with `footInWindow` per arm
+  window);
+- the fill's z from the per-pixel nearest member (approximate it from the
+  nearest foot of the corner's two arms);
+- the fillOrder table;
+- pieces with two cluster switches (0-3 per scene; drawn wrong past the
+  first switch).
+
+### Not built
+
+- the packed 32-bit label (the probe uses 128 bits per pixel);
+- caps and fills on the GPU;
+- the label in `src/`;
+- steps 3, 4 and 5.
+
+### Gotchas
+
+- The dev server ignores `.claude/`, so an edited probe module is served
+  stale. Use a new file name per revision.
+- The label probes ran without the perf lock. They are counts, not
+  timings, and a rerun reproduced them exactly.
+
+### Next
+
+1. Port v6's tube pass into `src/` behind the flag.
+2. Build the GPU fill pass: the wedge coverage, the fill's z, the yield
+   reading T, and the fillOrder table.
+3. Pack the label into 32 bits (chain 8, s 11, cluster 8, z 5 + flags) and
+   add the caps.
+4. Then steps 3-5 as briefed.
