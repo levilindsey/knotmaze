@@ -1,7 +1,7 @@
 # K80: the minotaur, music and rhythm, and other gameplay additions
 
 Research and design, 2026-10-13. No code changes. Brief: `docs/design/K80.md`
-(Levi's request, verbatim), plus his 2026-10-13 addition on music and
+(Levi's request, verbatim), plus their 2026-10-13 addition on music and
 rhythm mechanics. Evidence: `.claude/probes/K80/` (simulation harness,
 outputs, `out/summary2.txt`); section 7 says how to rerun it.
 

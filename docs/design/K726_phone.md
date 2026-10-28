@@ -49,8 +49,8 @@ there, do parts 1 and 2, then fetch again and rebuild for part 3.
 ## Part 1: the K718 glyph cases at the phone's size (about 20 min)
 
 Levi has three calls open on the a (K718; `docs/design/K580_s5.md`,
-Handoff, Defects 2 and 3, and Residuals). Give him the evidence at the
-size he plays at.
+Handoff, Defects 2 and 3, and Residuals). Give Levi the evidence at the
+size they play at.
 
 - Links: `http://127.0.0.1:5726/?7&txt=<word>&am=instant&snd=none&fw=0&phw=0#glyphs2[=<options>]`.
   The options are comma-separated after one `=`: `xh2` (xh 2; xh 3 is the
@@ -110,7 +110,7 @@ Never turn sound on during this part.
 - Never use `--virtual-time-budget`. Give any desktop Chrome a fresh temp
   profile. Never clear Levi's Chrome profile, and touch no origin but your
   own localhost ones.
-- Close only your own tab. Levi has his own tabs open.
+- Close only your own tab. Levi has their own tabs open.
 - At the end, stop everything you started: servers, forwards, the reverse
   ports you added, tunnels and the watchdog. Then release the phone lock.
 

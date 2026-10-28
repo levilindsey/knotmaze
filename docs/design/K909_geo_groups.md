@@ -243,7 +243,7 @@ and step 6 is not started.
        the truth wants on each scene's hook side by the crossing:
        j_hook_cross chain 1 at s 6.13, and muse_hash chain 84 at s
        32.36, where #16 loses its 2 samples (s 32.36 to 32.41).
-   - Levi picks the look. For cap he also picks what an over hook arm
+   - Levi picks the look. For cap Levi also picks what an over hook arm
      does (its border over the through, or merged as cap draws it now),
      and what happens where no border is drawn for the hook side to end
      on.
@@ -276,6 +276,6 @@ and step 6 is not started.
 1. Levi chooses the hook look (sheet G, and for cap what an over hook
    arm does), and whether to keep or remove `groups: "geo"`.
 2. Step 5, the core/own seams first. The hook's (j_hook_cross, j140)
-   follow the look he picks.
+   follow the look Levi picks.
 3. Step 7, the "group on top" class.
 4. Step 6.

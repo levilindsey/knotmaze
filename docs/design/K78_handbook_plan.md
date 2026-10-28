@@ -6,7 +6,7 @@ the algorithms, architecture, and design decisions and trade-offs we've
 used in our app--this doc would also need to describe in detail each
 control param and the implications it has on the generated maze. I'd
 love for you to make notes for and plan this doc, but we don't need to
-make it until we're done with all the churn." He also noted that the
+make it until we're done with all the churn." Levi also noted that the
 half-lattice units "would be more clear with a diagram, or annotated
 screenshot".
 

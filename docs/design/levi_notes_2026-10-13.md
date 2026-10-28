@@ -80,7 +80,7 @@ We should definitely add support for a faster smoother input control, like press
 
 ## Decisions (09:35 and 09:55 PDT)
 
-Levi's answers to the items waiting on him, verbatim below. A message
+Levi's answers to the items waiting on Levi, verbatim below. A message
 on the repo's visibility and license is recorded as LEDGER K117 (the
 GitHub link is gone and the code is all rights reserved, a756ca5).
 

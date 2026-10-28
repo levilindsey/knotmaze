@@ -2,7 +2,7 @@
 
 Levi's messages to the knotmaze coordinator session, verbatim. The first
 answers, by number, the coordinator's explainer of the thirteen items
-waiting on him (sent about 00:08): 1 CC23 (claude-config), 2 K161,
+waiting on Levi (sent about 00:08): 1 CC23 (claude-config), 2 K161,
 3 K183, 4 K152 (2) and (3), 5 K171, 6 K174, 7 K162, 8 K180, 9 K169,
 10 K154, 11 K117, 12 K114, 13 K57.
 
@@ -25,7 +25,7 @@ waiting on him (sent about 00:08): 1 CC23 (claude-config), 2 K161,
 Filed (2026-10-14): 1 CC23 applied to the live file (claude-config
 LEDGER); 2 K161 approved, run after K140's timing run; 3 K183, a
 read-only wait starts K156 3c; 4 K152 done; 5 K171 folded into K156 3c;
-6 K174, a reminder on 10-14; 7 K162 answered in session, he tests later;
+6 K174, a reminder on 10-14; 7 K162 answered in session, Levi tests later;
 8 K180, an agent builds the params (`docs/design/K180.md`); 9 K169 and
 10 K154, one agent (`docs/design/K154_K169.md`); 11 K117 parked until
 near launch; 12 K114, the recs taken, the spider explained in session;

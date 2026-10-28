@@ -3,7 +3,7 @@
 Levi asked when the physics moves off the main thread (2026-10-14 about
 18:56) and approved it as the next build at about 19:00, ahead of K76
 stage 2c and K268 stage 2. It is a dedicated Web Worker, not a service
-worker. He then asked (about 19:01): "And with the web worker, the intro
+worker. Levi then asked (about 19:01): "And with the web worker, the intro
 animation will run at normal frame rates?" The design must answer that
 with numbers.
 

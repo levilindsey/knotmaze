@@ -38,7 +38,7 @@ The coordinator's reading, which this stage tests:
 - Keep G3-1 until K868 settles (K892). This stage touches no app code.
 - A new look stays behind a switch, with today's default, until Levi
   accepts it on a sheet. The hook's look (now, cap, carry, seam) stays
-  his call.
+  Levi's call.
 
 ## Setup
 

@@ -118,7 +118,7 @@ Handoff. The desktop driver is `.claude/probes/K137/s3c/sprint_page.mjs`.
 No app code changes. Edit only inside `.claude/probes/`. Never use
 `--virtual-time-budget`. Give any desktop Chrome a fresh temp profile.
 Never clear Levi's Chrome profile, and touch no origin but your own
-localhost ones. Close only your own tab: Levi has his own tabs open. At
+localhost ones. Close only your own tab: Levi has their own tabs open. At
 the end, stop everything you started: servers, forwards, the reverse
 ports you added, tunnels and the watchdog. Then release the phone lock.
 

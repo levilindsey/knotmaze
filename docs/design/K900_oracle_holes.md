@@ -28,7 +28,7 @@ starts. What is left:
   arm is cut short (near j34's top arm).
 
 Levi is reviewing sheets B2 (the borders apart from the blue spots) and F
-(`cr`'s range), ledger K891. Nothing here waits on his answers; the
+(`cr`'s range), ledger K891. Nothing here waits on Levi's answers; the
 coordinator folds them in later.
 
 ## Setup
