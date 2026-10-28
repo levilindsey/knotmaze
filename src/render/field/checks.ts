@@ -1354,7 +1354,10 @@ function blank() {
  * centre and two points along each pass inside the overlap (±L/2, L =
  * h·cot(θ/2)), no group of the field may hold candidates of both passes.
  * A kink whose loop is shorter than σ joins its own passes by the
- * same-chain rule; those are counted apart.
+ * same-chain rule; those are counted apart. On a longer kink a member counts
+ * for the pass it is nearer, within half the loop: at a shallow kink L + h
+ * outreaches half the loop, and the pass alone read as "both" (K883: three
+ * false hits at 2-14°).
  */
 export function check15(ctx: CheckContext): CheckResult {
   const { model } = ctx;
@@ -1372,15 +1375,21 @@ export function check15(ctx: CheckContext): CheckResult {
       continue;
     }
     n++;
+    const kink = pp.io === pp.iu;
+    const half = kink ? 0.5 * Math.abs(dS(po, pp.so, pp.su)) : Infinity;
+    const win = Math.min(pp.L + model.h, half);
     const pts: [number, number][] = [];
     for (const [p, s] of [
       [po, pp.so],
       [pu, pp.su],
     ] as const)
       for (const f of [0, -0.5, 0.5]) {
-        const a = pointAt(p, normS(p, s + f * pp.L));
+        const a = pointAt(p, normS(p, s + f * Math.min(pp.L, half)));
         pts.push([a.x, a.y]);
       }
+    // On a kink a member counts for its nearer pass only.
+    const dO = (c: { chain: number; s: number }) => (c.chain === pp.io ? Math.abs(dS(po, c.s, pp.so)) : Infinity);
+    const dU = (c: { chain: number; s: number }) => (c.chain === pp.iu ? Math.abs(dS(pu, c.s, pp.su)) : Infinity);
     let hit = "";
     model.recordGroups = true;
     for (const [x, y] of pts) {
@@ -1388,8 +1397,8 @@ export function check15(ctx: CheckContext): CheckResult {
       const le = model.lastEval;
       if (!le) continue;
       for (const g of le.groups) {
-        const hasO = g.some((k) => le.cands[k].chain === pp.io && Math.abs(dS(po, le.cands[k].s, pp.so)) <= pp.L + model.h);
-        const hasU = g.some((k) => le.cands[k].chain === pp.iu && Math.abs(dS(pu, le.cands[k].s, pp.su)) <= pp.L + model.h);
+        const hasO = g.some((k) => dO(le.cands[k]) <= win && (!kink || dO(le.cands[k]) <= dU(le.cands[k])));
+        const hasU = g.some((k) => dU(le.cands[k]) <= win && (!kink || dU(le.cands[k]) < dO(le.cands[k])));
         if (hasO && hasU) {
           const cls = new Set(g.map((k) => le.cl[k]).filter((v) => v >= 0));
           hit = cls.size ? `cluster ${[...cls].join("+")} (junctions ${[...cls].map((c) => model.clusters[c].junctions.map((j) => `j${j}`).join(",")).join(" | ")})` : "the same-chain rule";
