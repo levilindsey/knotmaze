@@ -295,11 +295,84 @@ positive.
 
 ### Step 5: sheet J and S's crops
 
-PENDING
+**Sheet J**: `.claude/probes/K940/J_label_fixes.png` (`j.ts`; crops in
+`jcrops/<row>_<column>.png`, `jc.ps1` renders a column). Columns: base,
+1 (crossed), 1+3, 1+2+3 (w 0.4). Rows: d1-d4, then c1-c4, the four
+muse_hash sites that change most against the base apart from d1 and d3
+(`ydiff/muse_hash.base.fyoc.json` and `.base.fyctr04.json`): c1 (16.38,
+11.92), c2 (14.26, 0.87, where change 2 adds most: +56 -8), c3 (8.38,
+16.90) and c4 (29.92, 14.22). muse_hash at 6x, 86 CSS px a tile; magenta
+dots are each column's free ends (`indep/muse_hash.<label>.json`).
+SHEETJ_PENDING
+
+**S's crops**: `.claude/probes/K940/S/`. Six sites from muse_hash's #6
+and #7 lists where a table crossing lies inside a cluster: its two passes
+are members of one cluster, so the label ink sees one surface there and
+the over pass's band line is broken within ±2h. Per site:
+`S<i>_label.png` (label ink, the base), `S<i>_surface.png` (surface ink),
+`S<i>_diff.png` (grey: both inks; red: label only; blue: surface only),
+`S<i>_colour.png` (the visible surface by chain and depth, label
+outline) and `S<i>_row.png` (the four side by side at half scale, 994 px).
+Each crop is 4.04 world (516 px), centred on the point.
+
+| site | point | the over pass | the member it borders | table crossing |
+|---|---|---|---|---|
+| S1 | (24.06, 2.13) | `M6:ch3` z 0.109 | `M6:ch37` z 0 | x9 (ch3 over ch2) |
+| S2 | (25.93, 5.44) | `M0:ch68` z 0.843 | `M0:ch67` z 0 | x11 (ch68 over ch2) |
+| S3 | (28.14, 9.24) | `M75:ch58` z 0.645 | `M75:ch77` z 0 | x23 |
+| S4 | (8.53, 25.21) | `M11:ch5` z 0.828 | `M11:ch70` z 0 | x41 |
+| S5 | (1.42, 11.26) | `M18:ch6` z 0.650 | `M18:ch33` z -0.396 | |
+| S6 | (19.10, 1.45) | `M4:ch68` z 0.787 | `M4:ch68` z -0.702 | ch68's self-crossing |
+
+**No ink draws the over line.** Surface ink draws none at any site, and
+neither does today's group ink (`S<i>_group.png`, the app's defaults;
+`S<i>_diff_group.png`). Label against surface differs by edge pixels
+only (label-only/surface-only px: S1 76/337, S3 77/287, S5 325/368), plus
+label ink's own artifacts beside the sites: S2 4405/253 (the jagged d3
+line at the lower right), S4 1679/356 (a stub at the lower right that
+surface ink caps), S6 4431/361 (d1's jagged line at the right). Group
+and surface crops are byte-identical at S1, S3 and S5.
+
+What drawing it would take (K943's question): inside a crossing's pad,
+two members of one cluster must stop being the same surface. simLab
+would treat the crossing's over pass and its under pass as different
+surfaces within the pad (by the table, or where z_over - z_under exceeds
+the switch dz), so the ink draws the over pass's outline across the
+under member there. The line then needs a rule at its two ends (join the
+cluster's outline, or taper out at the pad's end); without one each end
+is a free end (#6). The table lookup is the one change 1 already needs.
 
 ### Step 6: checks
 
-PENDING
+muse_hash, `checks_ab.ts` (head only, `HEAD_ONLY=1`), the base env plus
+each candidate's flips; logs `checks_<label>.log`:
+
+| candidate | #5 | #6 | #7 | #9.1 | #16 |
+|---|---|---|---|---|---|
+| base | 15 of 10819 (longest 8.519 px) | max 16.601 px; 93 of 1264 | 119 of 700 (+26 third-chain) | 5.2816 px | 23049 of 23060; 6 missing |
+| yield | as base | as base; 94 of 1266 | 115 of 700 (+5) | as base | **pass**: 23060; 0 missing |
+| 1, near | as base | as base; 95 of 1266 | 119 of 700 (+26) | as base | 23049; 6 missing |
+| 1, crossed | as base | as base; 93 of 1264 | 120 of 700 (+26) | as base | 23049; 6 missing |
+| 1+3 | as base | as base; 93 of 1264 | 120 of 700 (+26) | as base | 23049; 6 missing |
+| 1+2+3, w 0.4 | as base | as base; 93 of 1264 | 120 of 700 (+26) | as base | 23046; 7 missing |
+| 1+2+3, w 1.0 | as base | as base; 93 of 1264 | 120 of 700 (+26) | as base | 23046; 7 missing |
+
+- #5 and #9.1 do not move: no change here touches walks or widths.
+- Crossed breaks one more over band line than the base (#7 120 against
+  119; not traced). Yield's 115 (+5) comes from drawing every outline,
+  wrong ones included.
+- **#16: crossed keeps the base's 6 missing stretches, and yield inks
+  them.** Yield changes only the fill-against-foreign-tube branch, so
+  these are cells where crossed's `fillOrder` found a chain of J over the
+  tube and the fill covered, while #16 counts the tube as over there.
+  Inferred, not traced: two crossings within σ, the tube over one chain
+  of J and under another (or one chain twice), and the nearest decides.
+  This is the one place where yield beats crossed by the checks (see
+  Handoff). Change 2 adds a seventh at both widths.
+
+`npm test` in the worktree: 178 files passed, 2 skipped; 2371 tests
+passed, 6 skipped (19:52-19:55, `npm_test.log`). It ran on 665b7c59's
+code; only this brief changed after it.
 
 ### Recommendation for K868
 
