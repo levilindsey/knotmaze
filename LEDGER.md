@@ -27,8 +27,8 @@ Next free ID: K909.
   is not clean (the thread reveal's protect scaling would need porting). Keep it until K868 settles the
   gap search (recommended), or port now? `docs/design/K156.md`, round 2026-10-27b handoff.
 - **K901** · Cursive, still open: r after a high exit, dip or straight in (K902 checks the font's
-  or/br/vr/wr); ascender/descender guides at the ink edge (244.6 / -124.6 u, as built) or the stroke
-  centre (240 / -120), re-asked 2026-10-27. `docs/design/K863_trace.md` ## Levi's calls.
+  or/br/vr/wr). Guides answered 2026-10-27 ("sgtm"): the ink edge, 244.6 / -124.6 u, as built.
+  `docs/design/K863_trace.md` ## Levi's calls.
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
