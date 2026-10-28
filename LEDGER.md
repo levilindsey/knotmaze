@@ -19,13 +19,14 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K934.
+Next free ID: K937.
 
 ## Waiting on Levi
 
 - **K934** · K922's calls on sheet I (Drive `K868/sheets/I_junction_extent.png`): depth "overlap" (missing ink
   116 to 68, free ends +5); extent "part" (less missing and extra ink, free ends 83 to 86) or a walk that stops at
-  crossing cuts; the free-end check counting connected exits (K910); the hook's look. Recs in K868's `next:`.- **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
+  crossing cuts; the free-end check counting connected exits (K910); the hook's look. Recs in K868's `next:`.
+- **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
 - **K623** · K409's glow covers the dark band under Gone (only a browner tail shows): A as merged, B
@@ -774,7 +775,8 @@ Every other item below waits on the trigger it names.
 
 - **K936** · K922's residuals: what holds an arm 7h+ under "part"; d1's crescent stub; #5's band (a spike under
   depth, a notch and an end under the extent); g41_user_tw64's free ends 20 to 23; #14's crossing whose passes
-  never overlap. `K922_junction_extent.md` ## Handoff.- **K933** · S3's open inputs from K923: the uniform LOD's look (facets on kink loops, twist eyes?);
+  never overlap. `K922_junction_extent.md` ## Handoff.
+- **K933** · S3's open inputs from K923: the uniform LOD's look (facets on kink loops, twist eyes?);
   the packed label's budget (255 chains and clusters, 2048 s steps, 32 z; no fill/cap/closed flags);
   stand-in switch strips; no view culling at 6x. For the S3 brief; `K923_s3_bench.md` ## Handoff.
 - **K914** · Root pages (`#glyphs2`, text in the first scene) also link plain `section-rgb` in wave
