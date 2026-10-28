@@ -519,3 +519,85 @@ muse drag 4/23/106/6, muse flow 17/45/84/3 (master: 0/4/13/0, 3/8/10/2,
   drag hook). A re-fit continuous in the geometry needs an over(r) that is
   continuous and monotone, or a re-fit that does not depend on where the
   contact sits along an arm.
+
+## Handoff (07:38; stopped with steps 1-6 done)
+
+**State.** Branch `k868-s3a`, worktree `.claude/worktrees/k868-s3a`,
+never pushed:
+
+- `d02cba76`: the pop census (`scripts/label_pops.ts`, `label_pops.html`,
+  `label_pops_page.ts`) and today's label through it (F1-F3).
+- `1e449a20`, `39a295aa`: calls 1 and 2 in `src/render/field/oracle.ts`
+  (F4).
+- `fb2614b6`: findings F4-F9. `fc29b95f`: F10 (the first exit) and F6's
+  floor check.
+- `cd9a886d`: `oracle.ts` back to master's rules (`c26a9875`). Calls 1-2
+  as built pop 5.2-9.8x master's pop area (F6), and the first exit
+  2.6-4.8x (F10). Call 1 changes the rule only where the data shows a
+  better stated one, so master's stands. The two commits stay in history
+  (`git show 39a295aa:src/render/field/oracle.ts`).
+- Against master, the branch is now the census tool and this brief.
+  `src/` is master's, and `npm test` is green (`pops14/npmtest14b.log`).
+
+**Missing (the next stage's):**
+
+- **Corner rules continuous in the geometry.** First contact flips at
+  every graze (F6). K883's over(r) jumps and is not monotone (F5), so
+  neither a solve on it (F4) nor the first exit (F10) is continuous.
+  Master's rules stand until a stated rule beats them on the census's
+  four sequences.
+- Call 2 alone (master's root + the Illinois solve) was never censused.
+- **Zoom:** the census ran at zoom 1 only, and the zoom's maximum is 8x
+  the fit, about 12.4x in follow mode (F1). `--zoom` is untried.
+- **What the census cannot see:** it does not track the pieces or the
+  switch lines, so def drag's "none" eye flicker (F6) is unexplained. Co-located
+  events take the nearest event's label.
+- The branch rules' 1.76x build cost (F7) was not profiled; it is moot
+  while master's rules stand.
+
+**How to rerun** (from the worktree):
+
+- **Dev server** (K868's `env:`): `npx vite --config
+  .claude/probes/S3a/vite.private-cache.config.ts --port 5381
+  --strictPort --host 127.0.0.1`.
+- **The pop census, under the perf lock:** `pwsh -NoProfile -File
+  .claude\probes\S3a\locked14.ps1 -What "<what>" -Cmd "node
+  node_modules\vite-node\vite-node.mjs scripts\label_pops.ts
+  def_drag,def_flow,muse_drag,muse_flow --tag <tag> [--oracle <path>]
+  2>&1"`.
+  - Results go to `.claude/probes/S3a/pops14/<tag>/summary.md` and
+    `<seq>_crops/`.
+  - It replays S3a5's `seq13/*.jsonl.gz`. The "before" is `--oracle
+    .claude/probes/S3a/oracle_m14.ts`, master's FieldModel; master's
+    `src` is the same again.
+- **Node counts:** `fx14.ts <seq> [out]`, which reports jumps and r steps
+  per model. Also `refit14.ts` (F5), `raster14.ts` (F8) and `cost14.ts`
+  (F7, under the lock). Each runs through `node
+  node_modules\vite-node\vite-node.mjs`, and each header gives its usage.
+  - Their "branch" model imports `src`'s oracle, which is master's
+    again.
+  - To rerun the branch's rules, save `git show
+    39a295aa:src/render/field/oracle.ts` as a probe copy with
+    `src`-relative imports, as `oracle_nx14.ts` was made.
+
+**Evidence:** `.claude/probes/S3a/` (untracked):
+
+- **Results** (in `pops14/`):
+  - `before14/` (master), `after14b/` (calls 1-2), `fxm14/` (the first
+    exit) and `raster14/`. `after14/` is void (F4).
+  - `cmp14_roots_b.md`, `refit14.md`, `cost14.md`, `floor14_*.txt`,
+    `fx14_*.log`, `npmtest14.log` and `npmtest14b.log`.
+- **The probe oracles:**
+  - `oracle_m14.ts`: master at `c26a9875`.
+  - `oracle_f14.ts`: the branch, with a least step of 0.002 h.
+  - `oracle_mx14.ts` and `oracle_nx14.ts`: the first exit on master's
+    root and on the branch's.
+- **The harnesses:** `locked14.ps1`, `fx14.ts`, `fx14_run.ps1`,
+  `refit14.ts`, `cost14.ts`, `raster14.ts`, `cmp14_roots.ts` and
+  `dbg14_*.ts`.
+
+**Next.** Calls 3 and 4 do not depend on the corner rules (F9), so S3a7
+(depth per fragment) and S3a8 (uncut strips) can go ahead on master's
+rules, with `scripts/label_pops.ts` as their "nothing new pops" check.
+Continuous corner rules need a stage of their own, gated by the same
+census. Call 5 (S3a10) should port only rules that pass it.
