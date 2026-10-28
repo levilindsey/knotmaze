@@ -164,8 +164,11 @@ export interface OracleParams {
    * visible surface: the covering member of greatest z (a z-buffer), within
    * W of the exposed outline of the members similar to it (one cluster, or
    * one chain within σ; never chained), plus a centred line W wide along
-   * each depth switch, where another covering member rises above it. */
-  ink?: "group" | "surface";
+   * each depth switch, where another covering member rises above it.
+   * "label" is the same rule in image space, with no outline primitives:
+   * the visible member on a W/4 grid, and ink on the front side of every
+   * change of visible surface within W (a centred line at a switch). */
+  ink?: "group" | "surface" | "label";
 }
 
 /** K909 step 4: a crossing-cut arm whose side lies inside the crossing's
@@ -591,7 +594,7 @@ export class FieldModel {
   readonly hookLook: "now" | "carry" | "cap" | "seam";
   hooks: HookArm[] = [];
   /** K915: the ink rule (OracleParams.ink). */
-  readonly inkMode: "group" | "surface";
+  readonly inkMode: "group" | "surface" | "label";
   /** K915: the last surface evaluation saw two covering members of different
    * surfaces (a switch can ink there, away from every exposed outline). */
   lastOverlap = false;
@@ -2242,6 +2245,187 @@ export class FieldModel {
     return out;
   }
 
+  // K915 ink "label": form A in image space. The visible member (the
+  // z-buffer) on a grid of pitch W/4, cached, and ink on the front side of
+  // every change of visible surface within W, measured to the cell centres
+  // (good to g/2). No outline primitives: a band ends only where the
+  // partition's boundary does.
+  private lab: LabGrid | null = null;
+  private cands2: Cand[] = [];
+
+  /** The visible member at (x, y), as evalSurface picks it; null = paper. Overwrites this.cands. */
+  private visibleAt(x: number, y: number): Vis | null {
+    candidates(this.grid, x, y, this.reach, this.cands);
+    const cs = this.cands;
+    const n = cs.length;
+    if (n === 0) return null;
+    const h = this.h;
+    const cl = new Int32Array(n);
+    for (let i = 0; i < n; i++) cl[i] = this.clusterAt(cs[i].chain, cs[i].s);
+    let S = -1;
+    let zS = -Infinity;
+    let fillS = false;
+    const better = (z: number, i: number): boolean => {
+      if (S < 0 || z > zS + 1e-6) return true;
+      if (Math.abs(z - zS) > 1e-6) return false;
+      const a = this.idOf[cs[i].chain];
+      const b = this.idOf[cs[S].chain];
+      return a > b || (a === b && cs[i].s > cs[S].s);
+    };
+    for (let i = 0; i < n; i++) {
+      if (cs[i].d >= h) continue;
+      const z = this.depthAt(cs[i].chain, cs[i].s);
+      if (better(z, i)) {
+        S = i;
+        zS = z;
+        fillS = false;
+      }
+    }
+    const seen: number[] = [];
+    for (let i = 0; i < n; i++) {
+      const J = cl[i];
+      if (J < 0 || seen.includes(J)) continue;
+      seen.push(J);
+      let inF = false;
+      for (const k of this.clusters[J].corners)
+        if (this.inFill(k, x, y)) {
+          inF = true;
+          break;
+        }
+      if (!inF) continue;
+      let near = -1;
+      for (let k = 0; k < n; k++) if (cl[k] === J && (near < 0 || cs[k].d < cs[near].d)) near = k;
+      const z = this.depthAt(cs[near].chain, cs[near].s);
+      if (near !== S && better(z, near)) {
+        S = near;
+        zS = z;
+        fillS = cs[near].d >= h;
+      }
+    }
+    if (S < 0) return null;
+    return { chain: cs[S].chain, s: cs[S].s, J: cl[S], z: zS, fill: fillS };
+  }
+
+  /** Same surface: one cluster, or one chain within σ (a fill is its cluster alone). */
+  private simLab(A: Vis, B: Vis): boolean {
+    if (A.J >= 0 && A.J === B.J) return true;
+    if (A.fill || B.fill) return false;
+    return A.chain === B.chain && Math.abs(dS(this.polys[A.chain], A.s, B.s)) <= this.sigma;
+  }
+
+  /** Does a member of A's surface cover (x, y), visible or not? */
+  private presentAt(A: Vis, x: number, y: number): boolean {
+    candidates(this.grid, x, y, this.reach, this.cands2);
+    for (const c of this.cands2) {
+      if (c.d >= this.h) continue;
+      if (A.J >= 0 && this.clusterAt(c.chain, c.s) === A.J) return true;
+      if (!A.fill && c.chain === A.chain && Math.abs(dS(this.polys[A.chain], c.s, A.s)) <= this.sigma) return true;
+    }
+    if (A.J >= 0) for (const k of this.clusters[A.J].corners) if (this.inFill(k, x, y)) return true;
+    return false;
+  }
+
+  private ensureLab(): LabGrid {
+    if (this.lab) return this.lab;
+    let x0 = Infinity;
+    let y0 = Infinity;
+    let x1 = -Infinity;
+    let y1 = -Infinity;
+    for (const p of this.polys)
+      for (let k = 0; k < p.x.length; k++) {
+        x0 = Math.min(x0, p.x[k]);
+        y0 = Math.min(y0, p.y[k]);
+        x1 = Math.max(x1, p.x[k]);
+        y1 = Math.max(y1, p.y[k]);
+      }
+    const pad = this.h + 2 * this.W + this.reach;
+    x0 -= pad;
+    y0 -= pad;
+    x1 += pad;
+    y1 += pad;
+    const g = this.W / 4;
+    const nx = Math.ceil((x1 - x0) / g) + 1;
+    const ny = Math.ceil((y1 - y0) / g) + 1;
+    const N = nx * ny;
+    this.lab = { x0, y0, g, nx, ny, st: new Int8Array(N), ch: new Int32Array(N), J: new Int32Array(N), s: new Float32Array(N), z: new Float32Array(N) };
+    return this.lab;
+  }
+
+  private labAt(ix: number, iy: number): Vis | null {
+    const L = this.lab!;
+    if (ix < 0 || iy < 0 || ix >= L.nx || iy >= L.ny) return null;
+    const k = iy * L.nx + ix;
+    const st = L.st[k];
+    if (st === 1) return null;
+    if (st >= 2) return { chain: L.ch[k], s: L.s[k], J: L.J[k], z: L.z[k], fill: st === 3 };
+    const v = this.visibleAt(L.x0 + (ix + 0.5) * L.g, L.y0 + (iy + 0.5) * L.g);
+    if (!v) {
+      L.st[k] = 1;
+      return null;
+    }
+    L.st[k] = v.fill ? 3 : 2;
+    L.ch[k] = v.chain;
+    L.s[k] = v.s;
+    L.J[k] = v.J;
+    L.z[k] = v.z;
+    return v;
+  }
+
+  private evalLabel(x: number, y: number, wantField: boolean, out: PointEval): PointEval {
+    const P = this.visibleAt(x, y);
+    const cs = this.cands;
+    if (!P) {
+      if (this.recordGroups) this.lastEval = { cands: cs.map((c) => ({ ...c })), cl: cs.map((c) => this.clusterAt(c.chain, c.s)), groups: [], inside: [], top: null, topNear: -1 };
+      if (wantField) out.F = -Math.min(this.nearestExposed(x, y, this.dMax), this.dMax);
+      return out;
+    }
+    if (this.recordGroups) {
+      const cl = cs.map((c) => this.clusterAt(c.chain, c.s));
+      const members: number[] = [];
+      let near = -1;
+      cs.forEach((c, i) => {
+        if (this.simLab(P, { chain: c.chain, s: c.s, J: cl[i], z: 0, fill: false })) members.push(i);
+        if (c.chain === P.chain && c.s === P.s) near = i;
+      });
+      this.lastEval = { cands: cs.map((c) => ({ ...c })), cl, groups: [members], inside: [members], top: members, topNear: near };
+    }
+    const L = this.ensureLab();
+    const g = L.g;
+    const W = this.W;
+    const R = Math.ceil(W / g) + 1;
+    const cx = Math.floor((x - L.x0) / g);
+    const cy = Math.floor((y - L.y0) / g);
+    let best = Infinity;
+    for (let dy = -R; dy <= R; dy++)
+      for (let dx = -R; dx <= R; dx++) {
+        const ix = cx + dx;
+        const iy = cy + dy;
+        const qx = L.x0 + (ix + 0.5) * g;
+        const qy = L.y0 + (iy + 0.5) * g;
+        const dist = Math.sqrt((qx - x) * (qx - x) + (qy - y) * (qy - y));
+        if (dist > W + g || dist >= best) continue;
+        const Q = this.labAt(ix, iy);
+        if (Q && this.simLab(P, Q)) continue;
+        let dd = dist;
+        if (Q && this.presentAt(P, qx, qy)) {
+          // P's surface runs on under Q at q: Q's silhouette (Q's side inks),
+          // unless Q's surface also runs under P at p - a depth switch,
+          // drawn as a centred line.
+          if (!this.presentAt(Q, x, y)) continue;
+          dd = 2 * dist;
+        }
+        if (dd < best) best = dd;
+      }
+    const F = best - g / 2;
+    out.inside = true;
+    out.F = Math.min(F, this.dMax);
+    out.ink = F <= W;
+    out.topChain = this.idOf[P.chain];
+    out.topS = P.s;
+    out.top = P.J >= 0 ? 100000 + P.J : this.idOf[P.chain];
+    return out;
+  }
+
   evalPoint(x: number, y: number, wantField = true): PointEval {
     const out: PointEval = { inside: false, ink: false, F: -this.dMax, top: -1, topChain: -1, topS: 0 };
     if (this.recordGroups) this.lastEval = null;
@@ -2251,6 +2435,7 @@ export class FieldModel {
     const n = cs.length;
     if (n === 0) return out;
     if (this.inkMode === "surface") return this.evalSurface(x, y, wantField, out);
+    if (this.inkMode === "label") return this.evalLabel(x, y, wantField, out);
     // Union-find.
     const par = new Int32Array(n);
     for (let i = 0; i < n; i++) par[i] = i;
@@ -2443,7 +2628,7 @@ export function renderOracle(model: FieldModel, cam: Camera, rect: RenderRect, s
       // (K909 hook look "carry" and K915's "seam" draw a border inside a
       // group: no gate. K915 ink "surface" draws switch lines inside
       // overlaps: no gate there.)
-      if (model.hookLook !== "carry" && model.hookLook !== "seam" && !(model.inkMode === "surface" && model.lastOverlap) && model.nearestExposed(wx, wy, model.W + 2 / ppu / cam.dpr) > model.W + 2 / ppu / cam.dpr) {
+      if (model.inkMode !== "label" && model.hookLook !== "carry" && model.hookLook !== "seam" && !(model.inkMode === "surface" && model.lastOverlap) && model.nearestExposed(wx, wy, model.W + 2 / ppu / cam.dpr) > model.W + 2 / ppu / cam.dpr) {
         k = 0;
       } else {
         for (let sj = 0; sj < ss; sj++)
@@ -2463,3 +2648,8 @@ export function renderOracle(model: FieldModel, cam: Camera, rect: RenderRect, s
 }
 
 export { normS };
+
+/** K915 ink "label": a visible member (chain index, s, cluster, z; a fill is its cluster alone). */
+type Vis = { chain: number; s: number; J: number; z: number; fill: boolean };
+/** K915 ink "label": the visible-member cache (st: 0 unknown, 1 paper, 2 a foot, 3 a fill). */
+type LabGrid = { x0: number; y0: number; g: number; nx: number; ny: number; st: Int8Array; ch: Int32Array; J: Int32Array; s: Float32Array; z: Float32Array };
