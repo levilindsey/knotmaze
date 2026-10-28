@@ -294,19 +294,19 @@ Next free ID: K922.
 - **K868** · Border look, junctions done right: one field renderer (union within a surface, occlusion
   by depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
-  - owner: stage K909, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 11:38; handle under K909)
-  - branch: mainline; last commit: `263bc134`
-  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`) and `.claude/probes/K909/`; sheets A-F, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
-  - next: K909 groups junctions by geometry, judged by the free-end image check (Levi, K910), and renders sheet G (the hook's look, for Levi); then the S3 brief (WebGL2 prototype measured on the Pixel from its first build, since per-pixel texture searches cost the phone +25-48 ms in K8 G3-1 (K892); it settles the END tuck and the band W against master, S1a notes), with G1 corners and cr 0-6 (sheet F approved)
-  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`
+  - owner: stage K915, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 13:31; handle under K915)
+  - branch: mainline; last commit: `33d3a12b`
+  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/` and `.claude/probes/K915/`; sheets A-G, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
+  - next: K915 tests borders from the visible surface (ink wherever the top surface changes) against §3.2's rule, judged by the free-end image check (K910); then Levi picks the ink model and the hook's look (sheets G and H); then the S3 brief (WebGL2 prototype measured on the Pixel from its first build, since per-pixel texture searches cost the phone +25-48 ms in K8 G3-1 (K892); it settles the END tuck and the band W against master, S1a notes), with G1 corners and cr 0-6 (sheet F approved). K909's leftovers wait in K918.
+  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
-  - owner: stage K904, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 11:40; handle under K904)
+  - owner: stage K916, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 13:31; handle under K916)
   - branch: mainline, no code (outputs untracked); last commit: n/a
-  - evidence: `.claude/probes/K863/trace/` (v1: `tools/trace_tool_v2.py`, `work4/`, `out/`; v2: `tools/trace_k879.py`, `out5*/`; v3: `tools/*k886*`, `work6/`, `out6/`; v4: `tools/*_k902.py`, `work7/`, `out7/`; `NOTES.md` ## v3 and ## v4 with their rerun commands); Drive `K863/` (`cursive_v4.svg`, `cursive_v3.svg`; v1's SVG and review)
-  - next: K904 builds v5 (all six entries fused, the high entry mode, fixed leads and tails); Levi answers K901 (r after a high exit) and edits v5's template; K912's generator follow-ups; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls)
-  - brief: `docs/design/K863_trace.md` (## Levi's calls); v3: `docs/design/K886_cursive_v3.md`; v4: `docs/design/K902_cursive_frames.md`; v5: `docs/design/K904_cursive_v5.md`
+  - evidence: `.claude/probes/K863/trace/` (v1: `tools/trace_tool_v2.py`, `work4/`, `out/`; v2: `tools/trace_k879.py`, `out5*/`; v3: `tools/*k886*`, `work6/`, `out6/`; v4: `tools/*_k902.py`, `work7/`, `out7/`; v5: `tools/*_k904.py`, `work8/`, `out8/`; `NOTES.md` ## v3, ## v4 and ## v5 with their rerun commands); Drive `K863/` (`cursive_v5.svg`, `cursive_v5_words.svg`, `r_after_high.svg`, `cursive_v4.svg`, `cursive_v3.svg`; v1's SVG and review)
+  - next: K916 builds v5.1 (the join refit, leads and tails, the generated e); Levi answers K901 and K917 and edits v5's template (v5.1's `--from-svg` reads his edits); K912's generator follow-ups; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls)
+  - brief: `docs/design/K863_trace.md` (## Levi's calls); v3: `docs/design/K886_cursive_v3.md`; v4: `docs/design/K902_cursive_frames.md`; v5: `docs/design/K904_cursive_v5.md`; v5.1: `docs/design/K916_cursive_v51.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -480,9 +480,19 @@ Next free ID: K922.
 - **K915** · K868 borders from the visible surface: ink wherever the topmost surface changes (an NPR
   partition: no border ends in the open), prototyped behind an oracle `ink` switch and judged by
   the free-end image check (K910). `docs/design/K915_surface_borders.md`.
+  - owner: agent `a193572f42ad262d7` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 13:31, 2 h cap ~15:31)
+  - branch: `k915-border-model`, worktree `.claude/worktrees/k915-border-model`; last commit: `1d2fada4`
+  - evidence: `.claude/probes/K915/`
+  - next: steps 1-3 (the rule; the prototype behind `ink`; measured against master on the 12 real scenes and the synthetic ones), then sheet H, form B if needed, S3's form and cost, the verdict
+  - brief: `docs/design/K915_surface_borders.md`
 - **K916** · Cursive v5.1: the join refit (wn, bn, on, of, ol, ob and om got worse in v5), fused
   entries measured with their retraced stretch, the five splits still over ratio 3, leads and tails,
   the generated e. `docs/design/K916_cursive_v51.md`.
+  - owner: agent `ac289b7bd1ea7927d` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 13:31, 2 h cap ~15:31)
+  - branch: none: probe-only, no commits (main checkout, untracked `.claude/probes/K863/trace/`); last commit: n/a
+  - evidence: `.claude/probes/K863/trace/` (untracked): `tools/*_k916.py`, `work9/`, `out9/`, NOTES.md ## v5.1
+  - next: steps 1-3 (the join refit, fused entries with their retrace, the splits over ratio 3), then leads and tails, the generated e and the v5.1 rebuild
+  - brief: `docs/design/K916_cursive_v51.md`
 
 ## Next, in order
 
