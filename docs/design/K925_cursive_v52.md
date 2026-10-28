@@ -85,3 +85,14 @@ is no longer data only. Give the build a per-letter junction height
 86 u and none gets worse by more than 0.5 u, build v5.2 with o at 86 u
 and the rest at 60 u. Otherwise keep 60 u and list the pairs that get
 worse. Either way, put the table in `NOTES.md` `## v5.2` and the handoff.
+
+## Redirect 2 (coordinator, 2026-10-27 16:40)
+
+Levi looked at K917's sheet and chose the set with o's junction at 86 u:
+"Seems better than the other two sets". So v5.2 has o at 86 u and a, c,
+d, g and q at 60 u, whatever the 0.5 u gate above says. Keep the table of
+every pair into o at both heights in `NOTES.md` `## v5.2` and the handoff,
+and crop any pair that looks worse at 86 u. That sheet's `--fuse-y 358`
+was global, so video's d sat at 86 u too: d stays at 60 u unless Levi says
+otherwise. The jitter Levi saw in v5.1 belongs to the next stage (K930,
+`docs/design/K930_cursive_smooth.md`): don't start on the writer.

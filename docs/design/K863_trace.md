@@ -127,7 +127,11 @@ Binding on every later cursive stage:
   overstroked (retraced or fused) stretch starts or stops, each pass leaves
   the shared curve tangentially, with continuous curvature: no bump. v4 has
   one at such splits on the right of a, d, g, q, u and y, and in h, m, n, w,
-  p and others (K904's redirect).
+  p and others (K904's redirect). The curves themselves are smooth too
+  (Levi, 2026-10-27, on v5.1: "It does seem like letters are, in general, a
+  bit jittery and unsmooth"): each stroke is a cubic spline with few nodes,
+  placed where a type designer would put them, with continuous curvature
+  except at deliberate cusps (K930).
 - **r dips after a high exit** (Levi, 2026-10-27, K901: "dip"). After o, b,
   v and w, r's entry dips about 50 u below the x-height, as the font's
   does, then runs into the standard r: v5's default (`out8/r_after_high.svg`
@@ -136,5 +140,16 @@ Binding on every later cursive stage:
   of a, c, d, g and q sits at 60 u, not at each letter's own height: 60 u is
   closer to the font on every pair measured (`out9/k917_junctions.svg`). o's
   sits at 86 u, where the font's e-to-o join meets it (eo 5.14 u off the
-  font at 60 u, 1.13 u at 86 u), if the other pairs into o agree (K925
-  measures them).
+  font at 60 u, 1.13 u at 86 u). Levi chose it on K917's sheet (2026-10-27:
+  "Seems better than the other two sets"); K925 lists every pair into o at
+  both heights.
+- **Capitals, later** (K931). Levi, 2026-10-27: "we should also account
+  for capital letters at some point", and "for capital letters, perhaps we
+  should support entering from either an upward or a downward direction,
+  or make the entry direction somewhat flexible with rules/constraints".
+  They are traced from the same font once the lowercase settles. The
+  coordinator recommends one entry mechanism for every letter: a letter
+  declares where an entry may attach and the directions it may arrive
+  from, and the generator fits the connector within those limits. The
+  lowercase's two modes would become two cases of it, and the mapping onto
+  threads could use it as well.
