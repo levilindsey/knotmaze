@@ -9,7 +9,7 @@ Build on master.
   exactly): "Let's also add some blasts of confetti and streamers from
   specific points just outside the left and rigth sides of the screen,
   angled in and up, and then apply gravity to make these fall in an arc".
-  He deferred it that night and has now put it on the sooner list.
+  Levi deferred it that night and has now put it on the sooner list.
 - **K186** (2026-10-20): **"None on reduced motion. Confetti on every win
   banner."** The ledger adds that the colors and the amount stay as the
   sliders set them.
