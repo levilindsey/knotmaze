@@ -6,8 +6,9 @@
 // cluster inside its spans); the top group containing p (depth = z of its
 // nearest member, ties to the higher chain id) owns p; ink iff the exact
 // distance from p to that group's EXPOSED outline is ≤ W. Depth comes from
-// the crossing table (S2, depth.ts) unless `depth: "scene"` asks for the
-// scene's z samples (physics zPos, S1b's rule).
+// the crossing table (S2, depth.ts; its plateau form "overlap" by default
+// since K934) unless `depth: "scene"` asks for the scene's z samples
+// (physics zPos, S1b's rule).
 //
 // The exposed outline is assembled from primitives (offset segments, join
 // and cap arcs, corner arcs), each with the parameter intervals on which a
@@ -99,22 +100,23 @@ export interface OracleParams {
   openingChord?: number;
   /** Override per corner: (junctionIndex, cornerIndex, theta, style) → r. */
   rOf?: (j: number, i: number, theta: number, style: "round" | "sharp") => number;
-  /** S2 (§3.3): "diagram" (default) pins ±depthAmp at each crossing's passes
-   * and blends between them (depth.ts); "scene" uses the scene's z samples
-   * (physics zPos), S1b's rule, kept for comparison. K922: "overlap" is
-   * "diagram" with each pin's value held over its pass's overlap reach
-   * (depth.ts plateauDepth), so a crossing's over pass lies above its
-   * under pass over the whole overlap. */
+  /** S2 (§3.3): "overlap" (default since K934; K922) is "diagram" with each
+   * pin's value held over its pass's overlap reach (depth.ts plateauDepth),
+   * so a crossing's over pass lies above its under pass over the whole
+   * overlap. "diagram" pins ±depthAmp at each crossing's passes and blends
+   * between them (depth.ts), the default before K934; "scene" uses the
+   * scene's z samples (physics zPos), S1b's rule. Both kept for comparison. */
   depth?: "diagram" | "scene" | "overlap";
   /** K922 (§3.4): "span" (default) ends an arm's span at its corners'
    * extent + W + margin; "part" keeps an arm in its cluster past that until
    * its tube has parted from every other member of the cluster (their
    * spans' tubes and the corners' fills), + W. Caps and the crossing cut
-   * stand. */
-  extent?: "span" | "part";
-  /** K922: clamp s into an open chain's [s0, s0 + len] in clusterAt (its
-   * last foot can sit an ulp past the span's end; default off). */
-  endSnap?: boolean;
+   * stand. K934: the walk now reaches the final spans (K922's ran only
+   * inside the crossing cut's loop, so it added cuts and moved no span
+   * end); "partShort" is "part" stopped short of every crossing pass on
+   * the arm's chain: the span ends at most where the crossing cut would
+   * cap it (h·cot(θ/2) + passMargin·h before the pass). */
+  extent?: "span" | "part" | "partShort";
   /** The diagram depth's tent window in arc length. Default
    * look.depthWindow × (look.ctrlArc ?? 1). */
   depthWindow?: number;
@@ -179,43 +181,21 @@ export interface OracleParams {
    * each depth switch, where another covering member rises above it.
    * "label" is the same rule in image space, with no outline primitives:
    * the visible member on a W/4 grid, and ink on the front side of every
-   * change of visible surface within W (a centred line at a switch). */
+   * change of visible surface within W (a centred line at a switch).
+   * A corner fill under "label" (K940's yield order, the only form since
+   * K934) yields to another surface's tube unless the crossing table puts
+   * one of the fill's cluster's chains over the tube's chain there: the
+   * nearest such crossing within σ along the tube decides (fillOrder);
+   * with none, the fill yields. */
   ink?: "group" | "surface" | "label";
   /** K915 ink "label": bisect to the exact change near the band's edge
    * (default true); false keeps the grid's distance, within g/2 = W/8. */
   labExact?: boolean;
-  /** K924 flips (diagnostics, off by default). labFill "arcs": a G1 fill
-   * stops at its arms' outlines (the curvilinear triangle V, t_A, t_B)
-   * instead of reaching their centrelines; "yield": a fill never takes a
-   * point inside another surface's tube (label ink only). K940
-   * "yieldOrder": a fill yields to a foreign tube unless the crossing table
-   * puts its cluster's chain over the tube's chain there (labYieldChain
-   * says which chain); then the fill covers the tube. */
-  labFill?: "arcs" | "yield" | "yieldOrder";
-  /** K940, with labFill "yieldOrder": which chain of the fill's cluster the
-   * table test reads. "near" (default): the fill's nearest foot's chain.
-   * "crossed": any chain of the cluster (fillOrder's search). Either way
-   * the nearest such crossing within σ along the tube decides. */
-  labYieldChain?: "near" | "crossed";
-  /** K924 flip: "order" orders a fill against a foreign member by the
-   * table crossing between that member's chain and one of the fill's
-   * cluster's chains (nearest within σ of the member's foot); with no
-   * such crossing, the depth comparison stands. */
-  labFillDepth?: "order";
-  /** K924 flip: "surface" breaks equal depths by a key that is constant
-   * over a surface (the cluster, else the chain), then s. */
-  labTie?: "surface";
-  /** K924 flip: > 0 makes a chain past its span of cluster J, within
-   * this arc length of the span, the same surface as J's members and
-   * fills (simLab only). */
-  labCap?: number;
-  /** K940 flip: > 0 makes a chain past a REACH-ended arm span of cluster J
-   * (one that stopped at its reach, not at a cap), within this arc length
-   * past it, the same surface as J's members and fills (simLab only). It
-   * never passes the arm's cap (a crossing cut, the next root, the chain's
-   * end), nor comes within a cut's pad of a crossing pass whose other pass
-   * is J's. */
-  labCapReach?: number;
+  /** K924, ink "label": how equal depths are broken. "surface" (default
+   * since K934): by a key that is constant over a surface (the cluster,
+   * else the chain), then s. "chain": by the chain's id, then s (the rule
+   * before K934), which can flip the visible surface inside one cluster. */
+  labTie?: "surface" | "chain";
 }
 
 /** K909 step 4: a crossing-cut arm whose side lies inside the crossing's
@@ -568,7 +548,7 @@ export class FieldModel {
 
     // 3. Spans and clusters (§3.4). K909: the geometric group's walk reads
     // distances before the spans exist, so it gets a grid of its own.
-    if (k883 && (params.groups === "geo" || params.extent === "part")) this.grid = new SegGrid(this.polys, h, 4 * h);
+    if (k883 && (params.groups === "geo" || params.extent === "part" || params.extent === "partShort")) this.grid = new SegGrid(this.polys, h, 4 * h);
     const jSpans = this.buildSpans(scene, k883, g2Of);
     let rMax = 0;
     for (const c of this.corners) {
@@ -632,7 +612,7 @@ export class FieldModel {
     if (k883 && (params.passJoins ?? "k900") !== "k883") this.buildPassTags(scene, jSpans);
 
     this.grid = new SegGrid(this.polys, Math.max(h, this.reach / 2), this.reach + 4 * h);
-    if (params.depth === "overlap")
+    if ((params.depth ?? "overlap") === "overlap")
       for (const q of passPins) {
         q.pin.rL = this.passReach(q.pi, q.pin.s, q.oi, q.os, -1);
         q.pin.rR = this.passReach(q.pi, q.pin.s, q.oi, q.os, 1);
@@ -979,7 +959,10 @@ export class FieldModel {
     };
     // K922 extent "part": walk each uncapped arm on from its span's end while
     // its cross-section still overlaps another member of its cluster.
-    if (this.params.extent === "part") ext = this.partExtents(ext, caps, clusterRoots);
+    // K934 "partShort": the same walk, stopped short of every crossing pass.
+    const partWalk = this.params.extent === "part" || this.params.extent === "partShort";
+    const partStop = this.params.extent === "partShort" ? { passes, pm } : null;
+    if (partWalk) ext = this.partExtents(ext, caps, clusterRoots, partStop);
     const tries = new Map<number, number>();
     let sp = this.rawSpans(ext, caps);
     for (let it = 0; it < 12; it++) {
@@ -1044,6 +1027,9 @@ export class FieldModel {
     }
     for (const c of this.corners) g2Of(c);
     let ext1 = this.armExtents(true);
+    // K934: the part walk again at the final caps and corners, so its
+    // extents reach the final spans (K922's stopped at the cut loop).
+    if (partWalk) ext1 = this.partExtents(ext1, caps, clusterRoots, partStop);
     // K909: the walk again at the final caps and corners (the fills it reads).
     if (geo) {
       this.geoGroups = new GeoGroups(this, this.armCaps);
@@ -1062,14 +1048,32 @@ export class FieldModel {
    * corner fill of the cluster. The extent becomes the last overlapping
    * step's distance − margin, so the span ends W past the parting; caps
    * clamp it (rawSpans). Spans and clusters are rebuilt and the walk rerun
-   * until nothing moves (4 rounds at most).
+   * until nothing moves (4 rounds at most). K934 `stop` ("partShort"): the
+   * new span end stays at or before the crossing cut's distance of every
+   * crossing pass ahead on the arm's chain (h·cot(θ/2) + pm·h before it),
+   * so the walk never carries an arm into a crossing's overlap; an arm
+   * already that close does not walk.
    */
-  private partExtents(ext0: Map<string, number>, caps: number[][], roots: (sp: [number, number, number, number][][]) => number[]): Map<string, number> {
+  private partExtents(
+    ext0: Map<string, number>,
+    caps: number[][],
+    roots: (sp: [number, number, number, number][][]) => number[],
+    stop: { passes: ({ ia: number; ib: number; sa: number; sb: number; th: number } | null)[]; pm: number } | null = null,
+  ): Map<string, number> {
     const h = this.h;
     const scene = this.scene;
     const ext = new Map(ext0);
     const step = h / 8;
     const us = [-0.999, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 0.999].map((u) => u * h);
+    // Per chain, its crossing passes' s and the cut's distance before each.
+    const cutBy: { s: number; near: number }[][] = this.polys.map(() => []);
+    if (stop)
+      for (const ps of stop.passes) {
+        if (!ps) continue;
+        const near = h / Math.tan(Math.max(ps.th, 1e-3) / 2) + stop.pm * h;
+        cutBy[ps.ia].push({ s: ps.sa, near });
+        cutBy[ps.ib].push({ s: ps.sb, near });
+      }
     this.partMoves = [];
     for (let round = 0; round < 4; round++) {
       const sp = this.rawSpans(ext, caps);
@@ -1122,9 +1126,17 @@ export class FieldModel {
               for (const u of us) if (this.inFill(k, a.x - a.ty * u, a.y + a.tx * u)) return true;
             return false;
           };
+          // partShort: the last hit may sit at most a step + W before the
+          // nearest crossing cut ahead (the span ends last + step + W).
+          let lim = Infinity;
+          for (const c of cutBy[pi]) {
+            const d = arm.dir * dS(p, arm.s, c.s);
+            if (d > 1e-6 * h) lim = Math.min(lim, d - c.near - step - this.W);
+          }
+          if (lim < e0) continue;
           if (!hits(e0)) continue;
           let last = e0;
-          for (let t = e0 + step; t <= Math.min(room, e0 + 12 * h) && t - last < h; t += step) if (hits(t)) last = t;
+          for (let t = e0 + step; t <= Math.min(room, e0 + 12 * h, lim) && t - last < h; t += step) if (hits(t)) last = t;
           const part = Math.min(room, last + step);
           const want = part - this.margin;
           const cur = ext.get(key) ?? h;
@@ -1603,9 +1615,6 @@ export class FieldModel {
     const tbx = (pb.x[kbb] - pb.x[kb]) * c.armB.dir;
     const tby = (pb.y[kbb] - pb.y[kb]) * c.armB.dir;
     if (cross(tbx, tby, x - fb.x, y - fb.y) > 0) return false;
-    // K924 flip: outside both arms' tubes, so the fill's edges are the
-    // outlines and the arc, never a straight cut across a tube.
-    if (this.params.labFill === "arcs" && (Math.hypot(x - fa.x, y - fa.y) < this.h || Math.hypot(x - fb.x, y - fb.y) < this.h)) return false;
     return true;
   }
 
@@ -2055,8 +2064,9 @@ export class FieldModel {
 
   /** Depth z at arc length s on poly pi, by the selected rule (§3.3). */
   depthAt(pi: number, s: number): number {
-    if (this.params.depth === "scene") return zAt(this.polys[pi], s);
-    if (this.params.depth === "overlap") return plateauDepth(this.depthChains[pi], this.depthWin, s, this.depthWin);
+    const rule = this.params.depth ?? "overlap";
+    if (rule === "scene") return zAt(this.polys[pi], s);
+    if (rule === "overlap") return plateauDepth(this.depthChains[pi], this.depthWin, s, this.depthWin);
     return diagramDepth(this.depthChains[pi], this.depthWin, s);
   }
 
@@ -2230,10 +2240,13 @@ export class FieldModel {
     }
   }
 
-  /** Cluster containing (chain, s) in its span, or −1. */
+  /** Cluster containing (chain, s) in its span, or −1. On an open chain s
+   * is clamped into [s0, s0 + len] first: a foot at the chain's end can sit
+   * an ulp past a span that ends there (K922's endSnap, unconditional since
+   * K934). */
   clusterAt(pi: number, s: number): number {
     const p = this.polys[pi];
-    if (!p.closed && this.params.endSnap) s = Math.min(Math.max(s, p.s0), p.s0 + p.len);
+    if (!p.closed) s = Math.min(Math.max(s, p.s0), p.s0 + p.len);
     for (const [lo, hi, ci] of this.chainSpans[pi]) {
       if (!p.closed) {
         if (s >= lo && s <= hi) return ci;
@@ -2462,8 +2475,8 @@ export class FieldModel {
     const better = (z: number, i: number): boolean => {
       if (S < 0 || z > zS + 1e-6) return true;
       if (Math.abs(z - zS) > 1e-6) return false;
-      if (this.params.labTie === "surface") {
-        // K924 flip: one key per surface (the cluster, else the chain).
+      if ((this.params.labTie ?? "surface") === "surface") {
+        // K924: one key per surface (the cluster, else the chain).
         const ka = cl[i] >= 0 ? 1e6 + cl[i] : this.idOf[cs[i].chain];
         const kb = cl[S] >= 0 ? 1e6 + cl[S] : this.idOf[cs[S].chain];
         if (ka !== kb) return ka > kb;
@@ -2498,14 +2511,10 @@ export class FieldModel {
       for (let k = 0; k < n; k++) if (cl[k] === J && (near < 0 || cs[k].d < cs[near].d)) near = k;
       const z = this.depthAt(cs[near].chain, cs[near].s);
       let wins = near !== S && better(z, near);
-      if (near !== S && S >= 0 && cl[S] !== J && this.params.labFillDepth === "order") {
-        const o = this.fillOrder(J, cs[S].chain, cs[S].s);
-        if (o !== null) wins = o;
-      }
-      // K924 flip labFill "yield": a fill never covers another surface's tube.
-      if (this.params.labFill === "yield" && S >= 0 && cl[S] !== J && cs[S].d < h) wins = false;
-      // K940 flip labFill "yieldOrder": the same, unless the table puts the cluster's chain over the tube's.
-      if (this.params.labFill === "yieldOrder" && S >= 0 && cl[S] !== J && cs[S].d < h) wins = this.yieldOver(J, cs[near].chain, cs[S].chain, cs[S].s);
+      // K940's yield order (crossed; the only form since K934): a fill
+      // yields to another surface's tube unless the table puts one of the
+      // cluster's chains over the tube's chain there.
+      if (S >= 0 && cl[S] !== J && cs[S].d < h) wins = this.fillOrder(J, cs[S].chain, cs[S].s) === true;
       if (wins) {
         S = near;
         zS = z;
@@ -2516,11 +2525,12 @@ export class FieldModel {
     return { chain: cs[S].chain, s: cs[S].s, J: cl[S], z: zS, fill: fillS };
   }
 
-  /** K924 flip labFillDepth "order": the table crossings of each chain. */
+  /** The table crossings of each chain (fillOrder). */
   private xBy: { s: number; oi: number; over: boolean }[][] | null = null;
 
-  /** K924 flip: is cluster J's fill over chain pi at s? The nearest table
-   * crossing within σ between pi and a chain of J decides; null = none. */
+  /** Is cluster J's fill over chain pi at s? The nearest table crossing
+   * within σ between pi and a chain of J decides; null = none (K924; the
+   * label fill's yield order since K940, its only form since K934). */
   private fillOrder(J: number, pi: number, s: number): boolean | null {
     const xBy = this.ensureXBy();
     const spans = this.clusters[J].spans;
@@ -2552,110 +2562,9 @@ export class FieldModel {
     return this.xBy;
   }
 
-  /** K940 flip labFill "yieldOrder": does the table put cluster J's chain
-   * over chain pi near s? labYieldChain "near": pi's crossings with nc (the
-   * fill's nearest foot's chain); "crossed": with any chain of J. The
-   * nearest such crossing within σ along pi decides; none: false. */
-  private yieldOver(J: number, nc: number, pi: number, s: number): boolean {
-    if ((this.params.labYieldChain ?? "near") === "crossed") return this.fillOrder(J, pi, s) === true;
-    let best = Infinity;
-    let res = false;
-    for (const x of this.ensureXBy()[pi]) {
-      if (x.oi !== nc) continue;
-      const d = Math.abs(dS(this.polys[pi], s, x.s));
-      if (d <= this.sigma && d < best) {
-        best = d;
-        res = !x.over;
-      }
-    }
-    return res;
-  }
-
-  /** K940 flip labCapReach: per cluster, its reach-ended arm spans' far
-   * ends (chain, end s, outward direction, how far past it J reaches). */
-  private reachEnds: { pi: number; s0: number; dir: number; lim: number }[][] | null = null;
-
-  /** K940 flip labCapReach: is s on chain pi just past a reach-ended span of J? */
-  private reachNear(J: number, pi: number, s: number): boolean {
-    if (!this.reachEnds) this.reachEnds = this.buildReachEnds(this.params.labCapReach ?? 0);
-    for (const r of this.reachEnds[J]) {
-      if (r.pi !== pi) continue;
-      const t = r.dir * dS(this.polys[pi], r.s0, s);
-      if (t > 0 && t <= r.lim) return true;
-    }
-    return false;
-  }
-
-  private buildReachEnds(w: number): { pi: number; s0: number; dir: number; lim: number }[][] {
-    const h = this.h;
-    const pm = this.params.passMargin ?? 1;
-    const out = this.clusters.map(() => [] as { pi: number; s0: number; dir: number; lim: number }[]);
-    const xp: { s: number; th: number; oi: number; os: number }[][] = this.polys.map(() => []);
-    for (const X of this.scene.crossings) {
-      const ia = this.idxOf.get(X.a.chain);
-      const ib = this.idxOf.get(X.b.chain);
-      if (ia === undefined || ib === undefined) continue;
-      const sa = normS(this.polys[ia], X.a.s);
-      const sb = normS(this.polys[ib], X.b.s);
-      const ta = pointAt(this.polys[ia], sa);
-      const tb = pointAt(this.polys[ib], sb);
-      const th = Math.asin(Math.min(1, Math.abs(cross(ta.tx, ta.ty, tb.tx, tb.ty))));
-      xp[ia].push({ s: sa, th, oi: ib, os: sb });
-      xp[ib].push({ s: sb, th, oi: ia, os: sa });
-    }
-    this.junctionSpans.forEach((spans, ji) => {
-      const J = this.junctionCluster[ji];
-      if (J === undefined || J < 0 || !out[J]) return;
-      const arms = this.scene.junctions[ji].arms;
-      for (const [pi, lo, hi, ai] of spans) {
-        const arm = arms[ai];
-        const p = this.polys[pi];
-        const far = arm.dir > 0 ? hi : lo;
-        const e = arm.dir * (far - arm.s);
-        const cap = this.armCaps[ji]?.[ai]?.len ?? Infinity;
-        if (!(e < cap - 1e-6 * h)) continue; // capped: the cap separates
-        if (!p.closed && (far <= p.s0 + 1e-9 || far >= p.s0 + p.len - 1e-9)) continue; // the chain's end
-        let lim = Math.min(w, cap - e);
-        for (const x of xp[pi]) {
-          const d = arm.dir * dS(p, far, x.s);
-          const pad = h / Math.tan(Math.max(x.th, 1e-3) / 2) + pm * h;
-          if (d - pad >= lim || d + pad <= 0) continue;
-          if (this.clusterAt(x.oi, x.os) !== J) continue;
-          lim = Math.min(lim, d - pad);
-        }
-        if (lim > 0) out[J].push({ pi, s0: far, dir: arm.dir, lim });
-      }
-    });
-    return out;
-  }
-
-  /** K924 flip labCap: is s on chain pi within w past one of cluster J's spans? */
-  private capNear(J: number, pi: number, s: number, w: number): boolean {
-    const l = this.clusters[J].spans.get(pi);
-    if (!l) return false;
-    const p = this.polys[pi];
-    for (const [lo, hi] of l)
-      for (const sh of p.closed ? [-p.len, 0, p.len] : [0]) {
-        const t = s + sh;
-        if (t >= lo - w && t <= hi + w) return true;
-      }
-    return false;
-  }
-
   /** Same surface: one cluster, or one chain within σ (a fill is its cluster alone). */
   private simLab(A: Vis, B: Vis): boolean {
     if (A.J >= 0 && A.J === B.J) return true;
-    const w = this.params.labCap ?? 0;
-    if (w > 0) {
-      // K924 flip: a chain just past its span of J is still J's surface.
-      if (A.J >= 0 && B.J < 0 && !B.fill && this.capNear(A.J, B.chain, B.s, w)) return true;
-      if (B.J >= 0 && A.J < 0 && !A.fill && this.capNear(B.J, A.chain, A.s, w)) return true;
-    }
-    if ((this.params.labCapReach ?? 0) > 0) {
-      // K940 flip: a chain just past a reach-ended span of J is still J's surface.
-      if (A.J >= 0 && B.J < 0 && !B.fill && this.reachNear(A.J, B.chain, B.s)) return true;
-      if (B.J >= 0 && A.J < 0 && !A.fill && this.reachNear(B.J, A.chain, A.s)) return true;
-    }
     if (A.fill || B.fill) return false;
     return A.chain === B.chain && Math.abs(dS(this.polys[A.chain], A.s, B.s)) <= this.sigma;
   }
