@@ -33,7 +33,7 @@ import type { FieldModel } from "../field/oracle";
 import type { LabelCamera } from "./label_pass";
 import { compile, type Prog } from "./label_pass";
 import { TUBE_FLOATS, type LabelPieces } from "./label_pieces";
-import { findSwitchLines } from "./label_switch";
+import { findSwitchLines, type SwitchLine } from "./label_switch";
 
 /** Floats per strip instance: aQ (outline points), aN (outward normals),
  * aM (chain + 1, cluster + 1, flags, 0), aS (sa, sb, chain s0, chain len),
@@ -53,7 +53,9 @@ export interface BandStrips {
   stats: { edges: number; caps: number; arcs: number; switches: number };
 }
 
-export function buildBandStrips(m: FieldModel, lp: LabelPieces): BandStrips {
+/** lines: the switch lines (label_switch.ts). The app passes its cached ones
+ * (SwitchCache); left out, the uncached search runs (the probes). */
+export function buildBandStrips(m: FieldModel, lp: LabelPieces, lines?: readonly SwitchLine[]): BandStrips {
   const polys = m.polys;
   const h = m.h;
   const out: number[] = [];
@@ -239,7 +241,7 @@ export function buildBandStrips(m: FieldModel, lp: LabelPieces): BandStrips {
   // The switch lines: strips centred on a line across the tube where a
   // cluster's fill and the tube swap which is on top (K940's yield order).
   let switches = 0;
-  for (const L of findSwitchLines(m)) {
+  for (const L of lines ?? findSwitchLines(m)) {
     const p = polys[L.chain];
     push(L.ax, L.ay, L.bx, L.by, L.nx, L.ny, L.nx, L.ny, L.chain + 1, L.cluster + 1, F_SWITCH | (p.closed ? F_CLOSED : 0), L.s, L.s, p.s0, p.len, 0, 0);
     out[out.length - 7] = L.J + 1;
