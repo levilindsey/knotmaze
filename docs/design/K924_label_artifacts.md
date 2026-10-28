@@ -314,14 +314,20 @@ What each flip showed:
   and its #16 is 0. At d1-d4 it removes the wrong ink but draws the
   foreign tube's outline across the fill. At d3 that outline is ch3's,
   which x35 puts over ch68 (inferred, not traced). Its muse_hash checks
-  (`checks_fyield.log`) were still running when this was written.
+  (`checks_fyield.log`, against the base): #16 passes (23060 of 23060;
+  base 6 stretches); #7 115 of 700 broken (119), and the lines broken
+  only by a third chain on top fall from 26 to 5 (the fills it pulls
+  back, inferred); #6 94 of 1266 (93 of 1264); #5 (15 walks, 8.519 px)
+  and #9.1 (5.2816 px) do not change, as M1 and F predict. Every other
+  check is unchanged.
 
 ### Step 4: rule changes, ranked
 
 1. **A fill yields to every foreign tube** (§3.7 with §3.3: a fill's z
    loses to any tube outside its cluster).
    - Removes M2 (24 missing, 10 #16, 2 extra), M1's fill rows (10
-     missing, 3 #16, 1 extra) and most of M6. The yield flip shows it.
+     missing, 3 #16, 1 extra) and most of M6. The yield flip shows it,
+     and muse_hash's #16 passes under it.
    - S3: a depth bias that puts fills under every tube in the label
      pass, or one compare in form B. No pass and no label bits.
    - Risk: a junction whose fill should cover a foreign chain no longer
