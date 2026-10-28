@@ -85,3 +85,38 @@ describe("label ink: labTie at equal depth", () => {
     for (const labTie of ["surface", "chain"] as const) expect(visible(flipped, 3, ...at, { labTie }).v).toEqual({ chain: 0, J: 0, fill: false });
   });
 });
+
+describe("label ink: the visible member does not depend on the visiting order (K964 class C)", () => {
+  // K868 S3a3: the oracle resolves as the GPU does (tubes by depth, each
+  // fill against the tube under it by the yield, fills by depth), so the
+  // order the clusters are met in must not matter.
+  for (const name of ["j_pair_cross", "x4_throughs", "x4_ends", "y120", "j_hook_cross"]) {
+    it(name, () => {
+      const s = JSON.parse(readFileSync(join(__dirname, "scenes", `${name}.json`), "utf8")) as FieldScene;
+      const { m } = visible(s, 6, 0, 0);
+      const { m: r } = visible(s, 6, 0, 0);
+      (r as unknown as { visitReverse: boolean }).visitReverse = true;
+      const at = (mm: FieldModel, x: number, y: number) => (mm as unknown as { visibleAt(x: number, y: number): Vis | null }).visibleAt(x, y);
+      let x0 = Infinity;
+      let y0 = Infinity;
+      let x1 = -Infinity;
+      let y1 = -Infinity;
+      for (const p of m.polys)
+        for (let k = 0; k < p.x.length; k++) {
+          x0 = Math.min(x0, p.x[k]);
+          x1 = Math.max(x1, p.x[k]);
+          y0 = Math.min(y0, p.y[k]);
+          y1 = Math.max(y1, p.y[k]);
+        }
+      const g = m.h / 4;
+      let fills = 0;
+      for (let y = y0 - 2 * m.h; y <= y1 + 2 * m.h; y += g)
+        for (let x = x0 - 2 * m.h; x <= x1 + 2 * m.h; x += g) {
+          const a = at(m, x, y);
+          expect(at(r, x, y)).toEqual(a);
+          if (a?.fill) fills++;
+        }
+      expect(fills).toBeGreaterThan(0);
+    });
+  }
+});
