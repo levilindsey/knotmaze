@@ -91,7 +91,18 @@ on a dense copy written to disk.
      continuous strokes").
 4. **`--from-svg`.** It reads Levi's edited file, so it must take any
    Inkscape path (few or many nodes, lines, arcs) and give the same
-   quality.
+   quality. It must also keep his edits. K925 measured that today's
+   smoothing keeps only 23% of a 3 u node drag (a setting of 15 keeps
+   38%; 8 keeps 70% but fails its check). So:
+   - hold every node and handle Levi moved exactly where he put it, and
+     fit only the rest around it;
+   - find his edits by comparing his file with the one the pipeline
+     wrote. He may also add or delete nodes;
+   - his edit wins over smoothness. If what he moved makes a corner, keep
+     the corner and report it.
+
+   Test it on a copy: drag a few nodes and handles by 1 to 5 u, and show
+   that each stays where it was put and the curve around it stays G2.
 5. **Checks.**
    - Rerun the existing ones: fidelity to the font, `split_check`, and
      the eye check K925 rescaled. Explain any result that changes.
@@ -99,7 +110,8 @@ on a dense copy written to disk.
      count). It must fail v5.1 and pass v5.3.
    - Show combs before and after, at 288 DPI, for m, a, e, p and w and
      for the words "minimum" and "hippo".
-6. **Build v5.3.**
+6. **Build v5.3** the way v5.2 was built (`--split fair`, o's junction
+   at 86 u, the rest at 60 u: `work10/dbg/run_v52_o86.ps1`).
    - `out11/cursive_v53.svg` (the template);
    - `cursive_v53_words.svg`;
    - the review PNG;
