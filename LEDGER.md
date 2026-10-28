@@ -474,14 +474,6 @@ Next free ID: K914.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
-- **K905** · Phone: compile K620's root-paint GLSL out when no root paint is drawn. It costs
-  max-fabric +22.6 ms (`6fd77ab3`, ABBA; `fa0c61de` +6.1 more, one run) with none in use. Untried.
-  `docs/design/K156.md`, round 2026-10-27b handoff.
-  - owner: agent `acf22bad765714e43` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 11:14, 2 h cap ~13:14)
-  - branch: `k905-root-gate`, worktree `.claude/worktrees/k905-root-gate`; last commit: `e4d467f1`
-  - evidence: `.claude/probes/K905/`
-  - next: find where the root GLSL costs a rootless scene; the variant; same pixels on the desktop; phone ABBA if still connected (else K906)
-  - brief: `docs/design/K905_root_glsl_gate.md`
 - **K909** · K868 oracle: junction groups from geometry (the arm tubes' connected overlap that holds
   the node, cut at the caps), shared with truth geo; geo's crossing order; sheet G (the hook's look);
   extra ink, sheet F, #16. `docs/design/K909_geo_groups.md`.
@@ -1932,6 +1924,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K905** · Root paint GLSL compiled out unless a root is drawn (K_ROOT): phone render sync -18.9 dense, -25.7 max-fabric, -12.3 ms knot; pixels unchanged. Done in c8814902 (2026-10-27).
 - **K910** · K900's sheet B3: do the magenta free border ends cover every missing border on muse_hash? Answered by Levi (2026-10-27): "Yes, I think so"; the free-end image check judges K909.
 - **K902** · Cursive v4 (probe-only, untracked `.claude/probes/K863/trace/` `out7/`): join frames by a walk to the font's connector (smooth-end angle mean 22.1 -> 4.7 deg), calibration mean 3.218 -> 2.175 u, test-word pairs over 4 u 22 -> 10, a's fused entry (0.3 u); r after high exits and the variants measured; two-mode design in its brief's ## Results. Done in cece1bb (2026-10-27).
 - **K900** · Oracle holes: crossing 292 fixed (same-chain joins refused, crossing cut at L + h), census positions, two independent checks (geometric truth, image free ends), sheet B3; handoff in its brief. Done in 263bc134 (2026-10-27).
