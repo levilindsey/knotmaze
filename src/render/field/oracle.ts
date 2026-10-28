@@ -2229,7 +2229,15 @@ export class FieldModel {
     for (const [lo, hi, ci] of this.chainSpans[pi]) {
       if (!p.closed) {
         if (s >= lo && s <= hi) return ci;
-      } else for (const sh of [-p.len, 0, p.len]) if (s + sh >= lo && s + sh <= hi) return ci;
+      } else {
+        // The three shifts -len, 0, +len in that order, without an array per span (S3a4).
+        const sm = s + -p.len;
+        if (sm >= lo && sm <= hi) return ci;
+        const s0 = s + 0;
+        if (s0 >= lo && s0 <= hi) return ci;
+        const sp = s + p.len;
+        if (sp >= lo && sp <= hi) return ci;
+      }
     }
     return -1;
   }

@@ -37,7 +37,7 @@ import { gatherSceneInput, type SceneExportCtx } from "../field/scene_export_hoo
 import { buildLabelPieces, labelLimits, type LabelPieces } from "./label_pieces";
 import { BandPass, buildBandStrips, type BandStrips } from "./label_band";
 import { LabelPass, type LabelCamera } from "./label_pass";
-import { findSwitchLines } from "./label_switch";
+import { findSwitchLines, sameSwitchLines, sameKey, switchKey, switchLinesFrom, switchTopo, type SwitchTopo } from "./label_switch";
 
 // The scene export leaves look.ctrlArc unset; S3a's probes use 0.47 (the
 // diagram depth's window is depthWindow x ctrlArc).
@@ -97,7 +97,21 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
   let bandDepth = false;
   // The drawn positions the pieces were built from, one copy per chain.
   let drawn: (Float32Array | null)[] = [];
-  const stats = { rebuilds: 0, kept: 0, renders: 0, fallback: "" as string, chains: 0, clusters: 0 };
+  const stats = {
+    rebuilds: 0,
+    kept: 0,
+    renders: 0,
+    fallback: "" as string,
+    chains: 0,
+    clusters: 0,
+    // S3a4: the switch search's topology cache, and the probes' same-answer check.
+    switchHits: 0,
+    switchMisses: 0,
+    switchChecked: 0,
+    switchDiffs: 0,
+  };
+  let swTopo: SwitchTopo | null = null;
+  let verifySwitch = false;
   // S3a4: the CPU timers, one row per rendered frame, a ring of RING rows.
   // A performance.now() a part; nothing reads them but the probes.
   const row = new Float64Array(NPART);
@@ -186,8 +200,21 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     if (lim) return fallback(lim);
     pieces = buildLabelPieces(m);
     lap(P.pieces);
-    const lines = findSwitchLines(m);
+    // S3a4: the switch search's topology part is kept while its key holds;
+    // the geometry part runs every rebuild (label_switch.ts).
+    const key = switchKey(m);
+    if (swTopo && sameKey(swTopo.key, key)) stats.switchHits++;
+    else {
+      swTopo = switchTopo(m, key);
+      stats.switchMisses++;
+    }
+    const lines = switchLinesFrom(swTopo, m);
     lap(P.switch);
+    if (verifySwitch) {
+      stats.switchChecked++;
+      if (!sameSwitchLines(lines, findSwitchLines(m))) stats.switchDiffs++;
+      tPrev = performance.now();
+    }
     strips = buildBandStrips(m, pieces, lines);
     lap(P.strips);
     stats.rebuilds++;
@@ -369,6 +396,15 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
         };
       });
       return { n: rows.length, frames: ringN, names: LABEL_PARTS, parts, rows: raw ? rows : undefined };
+    },
+    /** S3a4: on, every rebuild also runs the uncached switch search and
+     * counts the rebuilds whose lines differ (stats.switchChecked,
+     * switchDiffs). Timings are void while it is on. */
+    get verifySwitch(): boolean {
+      return verifySwitch;
+    },
+    set verifySwitch(on: boolean) {
+      verifySwitch = on;
     },
     /** The band pass with K923's depth rule (label_band.ts; off by default). */
     setBandDepth(on: boolean): void {
