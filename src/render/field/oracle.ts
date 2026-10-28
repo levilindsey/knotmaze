@@ -122,6 +122,10 @@ export interface OracleParams {
    * "s2" is S2's spans (corner extent + W + margin, uncapped), for the
    * before renders. */
   spans?: "k883" | "s2";
+  /** K883 (§3.8): the slider's top setting. When set, the reach bound uses
+   * the mapping's r_max = (2/3)·crMax·h instead of this scene's largest
+   * radius, so the timing bound does not depend on the corners solved. */
+  crMax?: number;
 }
 
 /** K883 (§3.8): the corner slider's rolling-ball radius at opening θ. */
@@ -444,6 +448,7 @@ export class FieldModel {
       rMax = Math.max(rMax, c.r);
       if (c.g2?.ok) rMax = Math.max(rMax, c.g2.webA, c.g2.webB);
     }
+    if (params.crMax !== undefined) rMax = Math.max(rMax, cornerRadiusMax(params.crMax, h));
     this.reach = 2 * h + this.W + 2 * rMax;
     // Union junctions whose spans overlap on a chain.
     const parent = scene.junctions.map((_, i) => i);
