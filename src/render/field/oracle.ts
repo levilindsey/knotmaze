@@ -186,6 +186,11 @@ export interface OracleParams {
    * else the chain), then s. "chain": by the chain's id, then s (the rule
    * before K934), which can flip the visible surface inside one cluster. */
   labTie?: "surface" | "chain";
+  /** K868 S3a2: build only what the app's label pass reads (the spans,
+   * clusters, corners, depth and crossing table), skipping the primitives,
+   * their grid and the hooks. evalPoint and renderOracle need the full
+   * model; the label's pieces (src/render/label/) do not. */
+  labelOnly?: boolean;
 }
 
 /** K909 step 4: a crossing-cut arm whose side lies inside the crossing's
@@ -610,12 +615,14 @@ export class FieldModel {
       }
 
     // 4. Primitives and their exposure (§3.5).
-    this.buildPrims();
-    this.buildPrimGrid();
+    if (!params.labelOnly) {
+      this.buildPrims();
+      this.buildPrimGrid();
+    }
     this.hookLook = params.hookLook ?? "now";
     this.inkMode = params.ink ?? "group";
     this.labExact = params.labExact ?? true;
-    if (k883) this.hooks = this.findHooks(scene);
+    if (k883 && !params.labelOnly) this.hooks = this.findHooks(scene);
   }
 
   /** K915 ink "label": refine the grid's distance by bisection (OracleParams.labExact). */

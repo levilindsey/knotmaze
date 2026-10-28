@@ -201,6 +201,30 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   // A one-shot render pass requested where nothing else would run
   // update() (a frozen physics-off scene: width / recolor changes).
   let renderDirty = false;
+  // K868 S3a2: the label pass (src/render/label/label_app.ts), loaded on
+  // the first repaint with the border look's label ink on and run before
+  // each app.render(); with the flag off only this check runs.
+  let labelApp: { frame(): void; dispose(): void } | null = null;
+  let labelLoading = false;
+  const labelFrame = (): void => {
+    const r = scene.renderer;
+    if (!r || r.threadLook !== 1 || !r.labelInk) {
+      labelApp?.dispose();
+      labelApp = null;
+      return;
+    }
+    if (labelApp) labelApp.frame();
+    else if (!labelLoading) {
+      labelLoading = true;
+      import("../render/label/label_app")
+        .then((m) => {
+          labelLoading = false;
+          labelApp = m.createLabelApp({ scene, app, root, params, host, physicsTuning }, () => flags.push(Flag.GEOM));
+          flags.push(Flag.GEOM);
+        })
+        .catch((e: unknown) => console.error("K868 label pass: load failed", e));
+    }
+  };
   // K6-2: the change-detected per-frame param syncs (fabricTick): the
   // last values handed to the renderer's plucks and to the fabric, keyed
   // on the objects they were handed to (a rebuild replaces both).
@@ -444,8 +468,13 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       restorePending = false;
       if (warmup.wave1Done) background.renderTexture();
       for (const fn of restoreHooks) fn();
+      // K868 S3a2: the lost context took the label's GL objects with it.
+      labelApp?.dispose();
+      labelApp = null;
+      labelFrame();
       app.render();
     } else if (continuous || (closed.need & VISUAL) !== 0) {
+      labelFrame();
       app.render();
     }
     if (!continuous) {
