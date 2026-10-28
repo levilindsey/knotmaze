@@ -60,13 +60,14 @@ describe("§3.4 on j_pair_cross: two Ts whose ENDs cross 4.9h out", () => {
   const s = scene("j_pair_cross");
   const h = s.look.halfWidth;
 
-  it("stops the arm short of its pass, by the overlap's reach and h/2", () => {
+  it("stops the arm short of its pass, by the overlap's reach and h", () => {
     const m = new FieldModel(s, mapped(h, 3));
     expect(m.diagnostics).toEqual([]);
-    // The ENDs cross at 60°: the overlap reaches h·cot(30°) along each pass.
+    // The ENDs cross at 60°: the overlap reaches h·cot(30°) along each pass,
+    // and K900's margin of h lets the round cap clear the over pass's border.
     const cap = m.armCaps[0][1];
     expect(cap.why).toMatch(/^crossing 0's pass 4\.90h out/);
-    expect(cap.len / h).toBeCloseTo(4.9 - (1 / Math.tan(30 * D2R) + 0.5), 6);
+    expect(cap.len / h).toBeCloseTo(4.9 - (1 / Math.tan(30 * D2R) + 1), 6);
     // One cut is enough: the tie goes to the first pass, and j1's END keeps its span.
     expect(m.armCaps[1][1].why).toBe("the chain's end");
     // The through stops at the next T.

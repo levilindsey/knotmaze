@@ -130,7 +130,12 @@ export interface OracleParams {
    * join that would put both passes of a crossing in one group; "k883" is
    * plain union-find, for the before renders. */
   passJoins?: "k900" | "k883" | "point";
-  /** K900 probe: the crossing cut's margin past the overlap, in h (0.5). */
+  /** K900 (§3.4): the crossing cut's margin past the overlap, in h (1). An
+   * under piece cut at D = h·cot(θ/2) + m·h from the crossing ends in a
+   * round cap of radius h, which clears the over pass's border iff
+   * D·sinθ >= 2h, i.e. cosθ + m·sinθ >= 1: m = 1/2 (K883) fails past
+   * θ = 53.1°, m = 1 holds at every θ <= 90°, and L + h is check 15's
+   * window, so the check certifies the cut the oracle makes. */
   passMargin?: number;
 }
 
@@ -604,7 +609,7 @@ export class FieldModel {
    */
   private buildSpans(scene: FieldScene, k883: boolean, g2Of: (c: Corner) => void): [number, number, number, number][][] {
     const h = this.h;
-    const pm = this.params.passMargin ?? 0.5;
+    const pm = this.params.passMargin ?? 1;
     const ext0 = this.armExtents(k883);
     // The census's union: the rule's corners (no V: the whole overlap), no caps.
     this.naturalSpans = this.rawSpans(this.armExtents(true), null);
@@ -699,7 +704,8 @@ export class FieldModel {
       return sp.map((_, i) => find(i));
     };
     // Stop an arm short of a pass: the overlap of two tubes crossing at θ
-    // reaches h·cot(θ/2) along each pass; then a margin of h/2.
+    // reaches h·cot(θ/2) along each pass; then a margin of h (K900: the
+    // round cap clears the over pass's border at every θ; passMargin).
     const cutAt = (ji: number, ai: number, s: number, th: number, cx: number) => {
       const arm = scene.junctions[ji].arms[ai];
       const p = this.polys[this.idxOf.get(arm.chain)!];
@@ -1674,7 +1680,7 @@ export class FieldModel {
   /**
    * K900 (§3.4): each crossing pass's window on its chain, and the passes
    * each cluster's spans hold, both with the crossing cut's pad
-   * (h·cot(θ/2) + h/2, the overlap's reach along a pass plus a margin; the
+   * (h·cot(θ/2) + h, the overlap's reach along a pass plus a margin; the
    * same tolerance, so an arm the cut stopped does not hold its pass). A
    * kink whose passes lie within σ of each other is one piece by the
    * same-chain rule and gets no tags.
@@ -1709,7 +1715,7 @@ export class FieldModel {
       const ta = pointAt(pa, normS(pa, cx.a.s));
       const tb = pointAt(pb, normS(pb, cx.b.s));
       const th = Math.asin(Math.min(1, Math.abs(cross(ta.tx, ta.ty, tb.tx, tb.ty))));
-      const pad = h / Math.tan(Math.max(th, 1e-3) / 2) + (this.params.passMargin ?? 0.5) * h - 1e-6 * h;
+      const pad = h / Math.tan(Math.max(th, 1e-3) / 2) + (this.params.passMargin ?? 1) * h - 1e-6 * h;
       // "point": a candidate's own pass window reaches L + h (check 15's).
       const own = this.pointJoins ? h / Math.tan(Math.max(th, 1e-3) / 2) + h : pad;
       this.passTags[ia].push({ s: cx.a.s, pad: own, tag: 2 * x, mate: kink ? cx.b.s : Number.NaN });
