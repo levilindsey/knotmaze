@@ -496,7 +496,7 @@ Next free ID: K914.
   - owner: agent `a31f7f6f3061890de` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 11:40, 2 h cap ~13:40)
   - branch: none: probe-only, no commits (main checkout, untracked `.claude/probes/K863/trace/`); last commit: n/a
   - evidence: `.claude/probes/K863/trace/` (untracked): `work8/`, `out8/`, NOTES.md ## v5
-  - next: steps 1-3 first: fuse the six entries; the high entry mode; rebuild as v5 with the r comparison
+  - next: steps 1-2, then the smooth splits (Levi: no bump where an overstroke starts or stops; the brief's ## Redirect), then rebuild as v5 with the r comparison; steps 4-5 as time allows
   - brief: `docs/design/K904_cursive_v5.md`
 
 ## Next, in order

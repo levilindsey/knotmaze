@@ -111,3 +111,28 @@ under "### Rerun commands (K904 v5)" and check them with
 - The final report gives what was built, the check numbers for v4 and v5,
   the pairs still over 4 u with a cause for each, the rerun commands, and
   a `Ledger items` list (follow-ups, residuals, decisions for Levi).
+
+## Redirect (2026-10-27 11:55)
+
+Levi on v4: "a discontinuous bump at the junction point where overstroking
+starts/stops", on the right side of a, d, g, q, u and y and in h, m, n, w,
+p and others; "I'm going to want our eventual letter strokes/threads to
+look smooth and continuous" (binding, `K863_trace.md`). On a it sits about
+62 u up, where the bowl's climb meets the stem; on n about 55 u up, where
+the arch leaves the retraced stem. Coordinator's guess, not verified: the
+traced centreline of the ink union bends into the crotch where the passes
+part. After steps 1-2 and before the v5 rebuild:
+
+1. List every split (where an overstroked, retraced or fused, stretch
+   starts or stops) in all 26 letters, the six new fused junctions
+   included, and diagnose the bump from the data.
+2. The overstroked stretch is one smooth curve, drawn once; each pass
+   leaves it tangentially with continuous curvature (G2), with no detour
+   toward the skeleton's junction point. Fit near a split from each pass's
+   own centreline away from it, inside the font's ink. Exempt split
+   regions from the 1 u centreline check and report the move there.
+3. A check per split: tangent and curvature jumps, and the peak curvature
+   within about 20 u against the letter's curvature away from splits; v4
+   and v5, split by split.
+
+Then step 3. Steps 4-5 only as time allows: v5 must not carry the bumps.

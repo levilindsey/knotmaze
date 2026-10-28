@@ -122,5 +122,11 @@ Binding on every later cursive stage:
 - **Guides stay at the ink edge** (Levi, 2026-10-27: "sgtm"). The
   template's ascender and descender lines sit where the font's ink
   ends, 244.6 and -124.6 u, about 4.6 u past the stroke-centre paths.
+- **Smooth, continuous strokes** (Levi, 2026-10-27: "I'm going to want our
+  eventual letter strokes/threads to look smooth and continuous"). Where an
+  overstroked (retraced or fused) stretch starts or stops, each pass leaves
+  the shared curve tangentially, with continuous curvature: no bump. v4 has
+  one at such splits on the right of a, d, g, q, u and y, and in h, m, n, w,
+  p and others (K904's redirect).
 - **Still open (ledger K901):** whether r's entry dips after a high exit
   or takes it unmodified.
