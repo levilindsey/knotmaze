@@ -180,7 +180,7 @@ Not this stage:
 
 ## Design
 
-Draft, written as the stage goes (agent, 2026-10-28). Timings are Node on
+Written as the stage went (agent, 2026-10-28). Timings are Node on
 this desktop, under the perf lock, but **under load**: the cursive
 agent's Python fits ran through the whole stage. Each compared pair was
 taken back to back.
@@ -378,6 +378,46 @@ frame, as the median of 3 reps per frame:
   scaling the measured cost per solve: about 2.2 and 3.5 ms at p50, and 4
   and 7 ms at p95.
 
+### 3b. passReach, warm
+
+`seq13_reach.ts` (results in `seq13/reach.txt`). Each pin side's walk is
+re-checked only at its boundary, using last frame's result: the model's
+own passReach, started at the last hit step L, tests L, L+1, ... until a
+miss. It assumes that steps 0 to L-1 still hit. It falls back to the full
+walk when step L misses now, or when last frame's result was 0. Each frame
+warms from the reference's last result, and is checked against this
+frame's from-scratch result.
+
+| | def drag | def flow | muse drag | muse flow |
+|---|---|---|---|---|
+| pin sides per frame | 1412 | 1412 | 1400 | 1400 |
+| unchanged / walked further / fell back (sum of 40) | 55924 / 269 / 287 | 53221 / 1643 / 1616 | 54887 / 490 / 463 | 52068 / 1980 / 1792 |
+| walked from the pin (last result 0, sum) | 0 | 0 | 160 | 160 |
+| differs from the reference (pin sides, sum) | 0 | 3 | 9 | 31 |
+| ... largest difference, in h/8 steps | 0 | 5 | 23 | 10 |
+| full walks, ms per frame p50 / p95 | 48.8 / 51.6 | 50.7 / 57.0 | 80.4 / 96.1 | 146.9 / 150.0 |
+| warm, ms per frame p50 / p95 | 24.1 / 27.1 | 25.8 / 29.5 | 36.1 / 38.5 | 68.5 / 70.6 |
+
+These timings were taken under the lock and under load. Each frame's pair
+ran back to back, as 3 reps with the median kept.
+
+- **The boundary check halves the cost, and no more.** Most reaches are a
+  few steps long, so the warm check (two steps) saves little against the
+  full walk (L + 2 steps). The cost is the step itself: 9 cross-section
+  points, each a SegGrid query, about 1 µs a query.
+- **The skipped steps do break.** Up to 31 pin sides over 40 frames
+  differed from the reference (0 on def drag, 3, 9 and 31 on the others),
+  by up to 23 steps (2.9h). A gap opened inside an
+  overlap, which the boundary check cannot see. The same answer needs
+  every step re-tested, which is the full walk.
+- **A CPU form near 1 ms would need a different step test**: the
+  cross-section's distance to the other pass's segments near a warm foot,
+  a few segment tests a step instead of 9 grid queries. Estimated at 1-3 ms
+  for 1400 pin sides, which is still over the target alone. On the GPU,
+  each pin side is one invocation.
+- partExtents is the same kind of walk (h/8 steps, 9 points, up to 12h)
+  and was not prototyped. It is estimated to behave the same way.
+
 ### 4. The pieces, and the GPU evaluation
 
 `seq13_pieces.ts` runs on every frame of the four sequences, against
@@ -459,7 +499,7 @@ normal. Against today's strip vertices:
 - **(L) One quad per segment with no cuts** (the cut's vertex on the
   straight edge between the segment's two end offsets) differs from
   today's by up to 0.033-0.034 world on def (0.73-0.77 px at zoom 1) and
-  0.082-0.099 world on muse (1.8-2.2 px). At 5-19% of the cut vertices it
+  0.082-0.099 world on muse (1.8-2.2 px). At 4.6-19% of the cut vertices it
   differs by more than 0.01. That is a rule difference, not precision:
   today's outline has a kink at every cut, because the cut's vertex sits
   on the segment's true offset line, while an uncut segment's edge runs
@@ -514,8 +554,8 @@ a prototype under the lock; everything else is estimated.
 | opening (theta) | 0.17-0.21 ms | as today, per corner, each frame | 0.17-0.21 ms p50 (measured) |
 | corner solve | 189 / 270 ms, mostly rule-radius and re-fit solves | warm Newton per corner on the CPU, or on the GPU (section 9) | final radius only: 1.8 ms p50, 3.2-3.6 ms p95 (measured). Re-fit replayed: 2.2-3.5 / 4-7 ms (estimated). Plus fallbacks: +4-17 / +9-39 ms (measured) |
 | K883 re-fit | 83 / 107 ms of the above | replayed warm, or a closed rule (S3a6) | in the corner row |
-| partExtents | 51 / 110 ms | on the GPU, one invocation per arm; or on the CPU, re-testing only the steps whose margin is below the motion since their last test | not prototyped. CPU: 3-10 ms together with passReach (estimated: 5-10% of steps re-tested) |
-| passReach | 53 / 81 ms (1400 pins) | as partExtents, per pin side | as above. 6-9% of pins change per frame in flow (section 5) |
+| partExtents | 51 / 110 ms | on the GPU, one invocation per arm; on the CPU, every step re-tested with a cheaper step test (section 3b) | not prototyped; as passReach (estimated) |
+| passReach | 53 / 81 ms (1400 pins) | on the GPU, one invocation per pin side; on the CPU, as above | warm boundary check: 24-69 ms p50, 27-71 ms p95, and not the same answer (measured, section 3b). A cheaper step test: 1-3 ms (estimated) |
 | spans: caps, armExtents, rawSpans, geoExtents | 4-5 ms, plus the rows above | rebuilt per frame from the corner and extent tables | 0.3-1 ms (estimated) |
 | clusters | inside buildSpans | the union of overlapping spans, per frame (~800 spans: a sort and a sweep) | < 0.1 ms (estimated) |
 | buildPassTags | 8 / 4 ms | per frame, only for the clusters that changed | 0.1-0.5 ms (estimated) |
@@ -598,16 +638,28 @@ A fragment's s is s[k] + t·segLen[k] in float32. The measured error is
 | corners, warm, at the final radius | 1.81-1.86 | 3.19-3.62 | measured |
 | ... re-fit replayed | +0.4-1.7 | +0.8-3.4 | estimated |
 | ... cold fallbacks, as prototyped | +4-17 | +9-39 | measured |
-| walks: partExtents + passReach (CPU, margins) | 3-10 | - | estimated |
+| passReach, warm boundary check (today's step test) | 24-69 | 27-71 | measured, not the same answer |
+| walks: partExtents + passReach with a cheaper step test | 2-6 | - | estimated |
+| SegGrid upkeep, for the CPU walks and the fallbacks | 0.5-2 | - | estimated |
 | spans, clusters, pass tags, switch | 0.5-2 | - | estimated |
 
 **1 ms is not reachable with the structure on the CPU.**
 - The warm corner solves alone, with no fallback at all, take 1.8 ms at
   p50 and 3.2-3.6 ms at p95 (measured). That is over the target by 1.8x at
   p50 and 3.6x at p95, before the re-fit, the fallbacks and the walks.
-- A realistic incremental CPU path is about 6-15 ms at p50 (estimated).
-  That is a 25-50x cut from today's 250-525 ms model, and still 6-15x the
-  target.
+- A realistic incremental CPU path adds up to about 6-14 ms at p50
+  without the cold fallbacks (the table's rows, the walks with a cheaper
+  step test; estimated). With the fallbacks as prototyped it is about
+  10-30 ms. Against today's from-scratch model (251-338 ms on def and
+  525-660 ms on muse in Node, sections 1 and 3) that is a cut of one to two orders of
+  magnitude, and still 6-30x the target.
+- The walks are the part that decides it. With today's step test, the
+  warm passReach walks measured 24-69 ms at p50 (section 3b) and are not
+  the same answer. With partExtents costed as passReach (estimated; they
+  cost about the same from scratch, section 1), that puts the CPU path at
+  about 50-150 ms. The 2-6 ms
+  row needs a step test that is cheaper per step and still sees a gap
+  open inside an overlap; it is not prototyped.
 - One lever was not prototyped: a local foot search, which walks from the
   last foot's segment instead of scanning the ±2h window. It would cut the
   corner time 3-6x (estimated), to about 0.4-0.6 ms at p50. The walks
@@ -655,7 +707,9 @@ plus a readback (estimated). That readback is either of:
      tables stay at or under 0.25 ms p95.
 3. **S3a8, the strips, windows, fills and switch lines** on the same
    tables. The same checks; `buildBandStrips`' 32 ms and the switch's
-   ~6 ms leave the frame.
+   ~6 ms leave the frame. The strips keep today's cuts (one instance per
+   segment, piece and side, rewritten for the chains whose spans
+   changed) unless the coordinator drops the kink at a cut (section 4).
 4. **The decision: S3a9 or S3a10.**
    - **S3a9, the incremental FieldModel on the CPU:** section 7's tables,
      warm corners with S3a6's re-fit, the walks with margins, and the
@@ -663,7 +717,9 @@ plus a readback (estimated). That readback is either of:
      - Same-answer check: on every frame of the four sequences and the 12
        scenes, the structure is identical to a from-scratch build and the
        positions are within 1e-4.
-     - Cost check: per frame p50/p95 under the lock; expected 6-15 ms.
+     - Cost check: per frame p50/p95 under the lock; expected 6-14 ms at
+       p50 without cold fallbacks and 10-30 ms with them, if a cheaper
+       walk step test exists, and 50-150 ms with today's (section 9).
    - **S3a10, the corners and walks on the GPU,** with a readback for the
      clusters, if the coordinator accepts the readback or the one-frame
      structure.
@@ -688,12 +744,34 @@ plus a readback (estimated). That readback is either of:
    root pick) differs from the reference near its threshold.
 5. **A same-frame readback's cost** is not measured, on the desktop or the
    phone.
-6. **Knot mode was not recorded.** It has no junctions, so no corners,
-   clusters or extents. Its CPU part is the tables plus passReach (53-81 ms
-   today on fabric scenes), estimated, not measured.
+6. **Knot mode was not recorded.** The label runs there too: the frame
+   loop's gate is the thread look and the label ink, not the mode. Knot
+   mode has no junctions, so no corners, clusters or extents, and its CPU
+   part is the tables plus passReach. passReach took 49-147 ms a frame
+   from scratch on the fabric sequences (section 3b, under load). With a
+   cheaper step test (1-3 ms, estimated) and the SegGrid upkeep, knot
+   mode is still over 1 ms, so it needs the walks on the GPU as well
+   (estimated, not measured).
 7. **All timings were taken under load** (the cursive agent's Python
-   fits). Pairs were taken back to back within each run.
+   fits, until about 07:00). Pairs were taken back to back within each
+   run.
 8. **The prototype keys feet by s.** The design keys them by (k, t), and
    the remap on a count change is not prototyped.
 9. **The 8x maximum zoom is assumed.**
+10. **The settle was not recorded.** The sequences are a drag and a flow
+    on settled scenes. The settle moves more, so it has more events, more
+    cold corner fallbacks and more walks that fall back.
+11. **passReach's warm boundary check is not the same answer** (section
+    3b). A gap opens inside an overlap between two frames, so up to 31
+    walks per sequence end at another step (up to 23 steps). A warm walk that
+    is the same answer re-tests every step.
+12. **The strips' cut rule** (section 4): keep the cuts, or drop the kink
+    at a cut (up to 2.2 px at zoom 1). The coordinator's call.
+13. **Not prototyped:**
+    - partExtents warm;
+    - the K883 re-fit replayed;
+    - the local foot search;
+    - a cheaper walk step test;
+    - the GPU forms of the windows, fills and switch lines;
+    - the readback.
 
