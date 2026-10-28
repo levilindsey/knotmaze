@@ -16,7 +16,16 @@ import {
   oracleProbe,
   runChecks,
 } from "../../../src/render/field/checks";
-import { type Corner, FieldModel, type OracleParams, type OracleRender, hexRgb, invertCamera, renderOracle } from "../../../src/render/field/oracle";
+import {
+  type Corner,
+  FieldModel,
+  type OracleParams,
+  type OracleRender,
+  cornerRadius,
+  hexRgb,
+  invertCamera,
+  renderOracle,
+} from "../../../src/render/field/oracle";
 import { normS, pointAt } from "../../../src/render/field/geom";
 import type { FieldScene, SceneArm } from "../../../src/render/field/scene";
 import { ensureDir, fullView, loadSynthetic, outRoot, type View, writeRender, zoomView } from "./lib";
@@ -301,15 +310,13 @@ describe("K868 oracle (manual)", () => {
       const load = (n: string) => JSON.parse(readFileSync(join(sceneDir, `${n}.json`), "utf8")) as FieldScene;
       const s = load(name);
       const h = s.look.halfWidth;
-      const cr = s.look.cuspRadius ?? 0;
-      // §3.8's mapping of master's cr to the ball radius, capped at 2h (the
-      // sweep's top: uncapped, r grows as tan(θ/2) toward θ = 180°, and the
-      // candidate reach, 2h + W + 2·r_max, became scene-sized: 1.5 ms a
-      // sample) and by the web cap ℓ_max = 1.5h.
-      const rOf = (_j: number, _i: number, theta: number, style: "round" | "sharp") =>
-        style === "round" ? Math.min(2 * h, h * Math.max(0, 1.25 * cr * Math.tan(theta / 2) - 0.97)) : 0;
-      const params = { rRound: 0, rOf, webCap: 1.5 * h };
-      const rText = `round corners r = min(2h, h·max(0, 1.25·cr·tan(θ/2) − 0.97)), cr ${cr}, web cap ℓ ≤ 1.5h`;
+      // K883 (§3.8): the slider scales the approved corner, r(θ) =
+      // (cr/3)·min(2h, 1.5h·tan(θ/2)), then the arm-span fit; no web cap.
+      // The scene's own cr (master's mapping) is not used: K868_CR, default 3.
+      const cr = Number(process.env.K868_CR ?? 3);
+      const rOf = (_j: number, _i: number, theta: number, style: "round" | "sharp") => (style === "round" ? cornerRadius(cr, h, theta) : 0);
+      const params: OracleParams = { rRound: 0, rOf, crMax: cr };
+      const rText = `round corners r = (cr/3)·min(2h, 1.5h·tan(θ/2)) fitted inside the arms' spans, cr ${cr}`;
       const paper = hexRgb(s.look.paper);
       const ink = hexRgb(s.look.ink);
       const dir = ensureDir(join(root, "oracle", name));
@@ -465,13 +472,12 @@ describe("K868 oracle (manual)", () => {
         const dir = join(root, "oracle", "C", `${name}_cr`);
         const tiles = [];
         const lines: string[] = [
-          "Oracle fill at r(θ) = h·max(0, 1.25·cr·tan(θ/2) − 0.97) (= h·(1.25·cr − 0.97) at 90°), per round corner.",
+          "Oracle fill at the K883 mapping r(θ) = (cr/3)·min(2h, 1.5h·tan(θ/2)) (= 0.5·cr·h at 90°), per round corner.",
           "Overlay: master's rim at the same cr (red: the quadratic Bezier rim; orange: its band's edges, 0.254h in and 0.185h out of the rim).",
         ];
         for (const cr of [1, 2, 3, 4]) {
-          const rOf = (_j: number, _i: number, theta: number, style: "round" | "sharp") =>
-            style === "round" ? h * Math.max(0, 1.25 * cr * Math.tan(theta / 2) - 0.97) : 0;
-          const model = new FieldModel(s, { rRound: 0, rOf });
+          const rOf = (_j: number, _i: number, theta: number, style: "round" | "sharp") => (style === "round" ? cornerRadius(cr, h, theta) : 0);
+          const model = new FieldModel(s, { rRound: 0, rOf, crMax: cr });
           const round = model.corners.filter((c) => c.style === "round" && c.theta < Math.PI - 1e-3 && c.ok);
           if (!round.length) continue;
           const c0 = round[0];
@@ -482,7 +488,7 @@ describe("K868 oracle (manual)", () => {
           const span = Math.hypot(c0.tA[0] - c0.tB[0], c0.tA[1] - c0.tB[1]);
           const radius = Math.min(4.5 * h, Math.max(2.5 * h, 0.6 * span + 1.2 * h));
           let dTip = 0;
-          const t = cropTile(model, s, dir, sheets, `cr${cr}_6x`, at, radius / h, { cr, mapping: "h·max(0, 1.25·cr·tan(θ/2) − 0.97)" }, (r, v) => {
+          const t = cropTile(model, s, dir, sheets, `cr${cr}_6x`, at, radius / h, { cr, mapping: "(cr/3)·min(2h, 1.5h·tan(θ/2))" }, (r, v) => {
             dTip = drawMasterRim(r, v, J.c, uA, uB, h, cr);
           });
           const rs = runChecks(model, oracleProbe(model));
@@ -499,7 +505,7 @@ describe("K868 oracle (manual)", () => {
         [
           "Synthetic scenes, CPU oracle, h = 1 world unit = 10 CSS px at the scene camera; every tile is a 6x zoom of the scene camera (h = 60 px), W = 0.38h. Supersampling 4x4.",
           "Sweep rows: the rolling-ball radius r of every round corner (sharp corners stay V), then r = h and 2h under the web-length cap ℓmax = 1.5h (r ≤ ℓmax·tan(θ/2), so the web from V to each tangent point is at most 1.5h). ℓ in captions = r·cot(θ/2), the web length.",
-          "§3.8 rows: the oracle at the proposed mapping r(θ) = h·max(0, 1.25·cr·tan(θ/2) − 0.97), with master's corner rim at the same cr drawn over it (red rim, orange band edges). Master's numbers are the helper's reading of joinery.ts and rim_curve.ts, not a screenshot.",
+          "§3.8 rows: the oracle at the K883 mapping r(θ) = (cr/3)·min(2h, 1.5h·tan(θ/2)), with master's corner rim at the same cr drawn over it (red rim, orange band edges). Master's numbers are the helper's reading of joinery.ts and rim_curve.ts, not a screenshot.",
           "Captions: #k PASS/FAIL value per check of the design's section 6 (#1 for that tile; #2, #5, #9 for the scene's exact field).",
         ],
         rows,
@@ -532,11 +538,11 @@ describe("K868 oracle (manual)", () => {
         const s = JSON.parse(readFileSync(join(sceneDir, `${name}.json`), "utf8")) as FieldScene;
         const h = s.look.halfWidth;
         const cr = s.look.cuspRadius ?? 0;
-        const rOf = (_j: number, _i: number, theta: number, style: "round" | "sharp") =>
-          style === "round" ? Math.min(2 * h, h * Math.max(0, 1.25 * cr * Math.tan(theta / 2) - 0.97)) : 0;
+        const rOf = (_j: number, _i: number, theta: number, style: "round" | "sharp") => (style === "round" ? cornerRadius(3, h, theta) : 0);
+        void cr;
         const [vw, vh] = s.camera.viewport;
         let t = Date.now();
-        const model = new FieldModel({ ...s, camera: { ...s.camera, viewport: [Math.min(vw, panelX), vh] } }, { rRound: 0, rOf, webCap: 1.5 * h });
+        const model = new FieldModel({ ...s, camera: { ...s.camera, viewport: [Math.min(vw, panelX), vh] } }, { rRound: 0, rOf, crMax: 3 });
         const msModel = Date.now() - t;
         const failed = model.corners.filter((c) => !c.ok).length;
         const mPath = join(sceneDir, `${name}.master.png`);
@@ -559,7 +565,7 @@ describe("K868 oracle (manual)", () => {
             },
           ],
           lines: [
-            `Checks on master's screenshot left of x = ${panelX} CSS px, with the oracle's geometry (r = min(2h, h·max(0, 1.25·cr·tan(θ/2) − 0.97)), web cap 1.5h). Model ${msModel} ms: ${s.chains.length} chains, ${model.corners.length} corners, ${failed} corner solves failed. Checks ${msChecks} ms.`,
+            `Checks on master's screenshot left of x = ${panelX} CSS px, with the oracle's geometry (K883: r = (cr/3)·min(2h, 1.5h·tan(θ/2)) at cr 3, fitted inside the arms' spans). Model ${msModel} ms: ${s.chains.length} chains, ${model.corners.length} corners, ${failed} corner solves failed. Checks ${msChecks} ms.`,
             ...imageLines(rs),
           ],
         });
@@ -592,10 +598,11 @@ describe("K868 oracle (manual)", () => {
       const rows: Row[] = [];
       const byName = new Map(loadSynthetic().map((s) => [s.name, s]));
       const kinds = ["clothoid", "bezier5", "arcs3"] as const;
+      // K883: the slider mapping at cr 3 (the scene's cr is master's mapping).
       const ruleOf =
-        (h: number, cr: number): OracleParams["rOf"] =>
+        (h: number, _cr: number): OracleParams["rOf"] =>
         (_j, _i, theta, style) =>
-          style === "round" ? Math.min(2 * h, h * Math.max(0, 1.25 * cr * Math.tan(theta / 2) - 0.97)) : 0;
+          style === "round" ? cornerRadius(3, h, theta) : 0;
       const tile1x = (model: FieldModel, s: FieldScene, dir: string, base: string, at: [number, number], radius: number, show: number) => {
         const v = zoomView(s, base, at, radius, 1);
         const z = renderOracle(model, v.cam, v.rect, 4);
@@ -608,11 +615,11 @@ describe("K868 oracle (manual)", () => {
         return bad.length ? `FAIL ${bad.map((r) => `#${r.id} ${r.value}`).join("; ")}` : `checks: ${rs.filter((r) => r.status === "pass").length} pass, none fail`;
       };
       const specs: { name: string; how: string; params: (h: number, cr: number) => OracleParams }[] = [
-        { name: "t90", how: "§3.8 r, web cap 1.5h", params: (h, cr) => ({ rRound: 0, rOf: ruleOf(h, cr), webCap: 1.5 * h }) },
-        { name: "y120", how: "§3.8 r, web cap 1.5h", params: (h, cr) => ({ rRound: 0, rOf: ruleOf(h, cr), webCap: 1.5 * h }) },
+        { name: "t90", how: "§3.8 r at cr 3", params: (h, cr) => ({ rRound: 0, rOf: ruleOf(h, cr), crMax: 3 }) },
+        { name: "y120", how: "§3.8 r at cr 3", params: (h, cr) => ({ rRound: 0, rOf: ruleOf(h, cr), crMax: 3 }) },
         { name: "acute30", how: "r = h under the web cap 1.5h (the cap bites: r = 1.5h·tan(θ/2)); §3.8's r here is 0.035h", params: (h) => ({ rRound: h, webCap: 1.5 * h }) },
         { name: "acute20", how: "r = h under the web cap 1.5h (the cap bites); §3.8's r here is 0 (a sharp V)", params: (h) => ({ rRound: h, webCap: 1.5 * h }) },
-        { name: "curved", how: "§3.8 r, web cap 1.5h; curved arms", params: (h, cr) => ({ rRound: 0, rOf: ruleOf(h, cr), webCap: 1.5 * h }) },
+        { name: "curved", how: "§3.8 r at cr 3; curved arms", params: (h, cr) => ({ rRound: 0, rOf: ruleOf(h, cr), crMax: 3 }) },
       ];
       for (const spec of specs) {
         const s = byName.get(spec.name);
@@ -665,7 +672,7 @@ describe("K868 oracle (manual)", () => {
         const s = JSON.parse(readFileSync(join(sceneDir, `muse_hash.${jn}.json`), "utf8")) as FieldScene;
         const h = s.look.halfWidth;
         const J = Number(jn.slice(1));
-        const base: OracleParams = { rRound: 0, rOf: ruleOf(h, s.look.cuspRadius ?? 0), webCap: 1.5 * h };
+        const base: OracleParams = { rRound: 0, rOf: ruleOf(h, s.look.cuspRadius ?? 0), crMax: 3 };
         const dir = join(root, "oracle", "E", `muse_hash_${jn}`);
         let t0 = Date.now();
         const g1 = new FieldModel(s, base);
