@@ -872,7 +872,477 @@ export function check14(ctx: CheckContext): CheckResult {
   };
 }
 
-/** Every check that needs no render (2, 3-4-5-6-7-8-9 via the probe, 11, 14). */
+// ---------------------------------------------------------------------------
+// K883: the border census, and checks 15 and 16.
+//
+// A thread side should show unless it is under an over pass or inside its
+// own junction's union. The census samples every side's ink band, decides
+// from the scene whether the side should show there, and asks the ink probe
+// whether it does. Truth, per side sample (chain i at s, side ±): just
+// outside the outline, at O = c(s) ± (h + 0.6W)·n, and deep in the band, at
+// c(s) ± (h − W/2)·n within h − W of a centreline, a piece of another tube
+// hides the side when it is
+//   - its own tube within σ (a tight bend),
+//   - the over at a crossing in the table where this side is the under (an
+//     under never hides its over),
+//   - in the union of one junction with it: both inside that junction's
+//     natural spans (the rule's corners, no caps), or a corner fill there,
+//   - else higher under the model's depth rule.
+// The ink is read at c(s) ± (h − W/2)·n.
+
+export type BorderClass = "a" | "b" | "c" | "d" | "e" | "f";
+
+export const BORDER_CLASSES: Record<BorderClass, string> = {
+  a: "a crossing inside one junction's span (§3.4)",
+  b: "two clusters merged through overlapping spans",
+  c: "a failed corner solve",
+  d: "a short arm",
+  e: "the corner with no V",
+  f: "other",
+};
+
+export interface MissingStretch {
+  /** Scene chain id, side (+1 left of travel), arc range, samples. */
+  chain: number;
+  side: 1 | -1;
+  s0: number;
+  s1: number;
+  n: number;
+  cls: BorderClass;
+  why: string;
+  /** The middle sample's band point, world units. */
+  at: [number, number];
+}
+
+export interface BorderCensus {
+  /** Side samples that should show (in view). */
+  samples: number;
+  missing: number;
+  /** Samples that should be hidden but are drawn deep inside the hider. */
+  extra: number;
+  stretches: MissingStretch[];
+  byClass: Record<BorderClass, { stretches: number; samples: number; ids: string[] }>;
+}
+
+interface PassPair {
+  x: number;
+  io: number;
+  so: number;
+  iu: number;
+  su: number;
+  th: number;
+  /** h·cot(θ/2): how far the two tubes' overlap reaches along each pass. */
+  L: number;
+}
+
+interface Truth {
+  model: FieldModel;
+  pairs: PassPair[];
+  pairsOf: Map<number, PassPair[]>;
+  /** Per poly: [lo, hi, junction, arm] of the natural and the final spans. */
+  nat: [number, number, number, number][][];
+  fin: [number, number, number, number][][];
+  cornersOf: number[][];
+  sc: Cand[];
+}
+
+function passPairs(model: FieldModel): PassPair[] {
+  const out: PassPair[] = [];
+  model.scene.crossings.forEach((cx, x) => {
+    const ov = cx.over === "a" ? cx.a : cx.b;
+    const un = cx.over === "a" ? cx.b : cx.a;
+    const io = model.idxOf.get(ov.chain);
+    const iu = model.idxOf.get(un.chain);
+    if (io === undefined || iu === undefined) return;
+    const to = pointAt(model.polys[io], normS(model.polys[io], ov.s));
+    const tu = pointAt(model.polys[iu], normS(model.polys[iu], un.s));
+    const th = Math.max(1e-3, Math.asin(Math.min(1, Math.abs(to.tx * tu.ty - to.ty * tu.tx))));
+    out.push({ x, io, so: ov.s, iu, su: un.s, th, L: model.h / Math.tan(th / 2) });
+  });
+  return out;
+}
+
+function perPoly(model: FieldModel, spans: [number, number, number, number][][]): [number, number, number, number][][] {
+  const out: [number, number, number, number][][] = model.polys.map(() => []);
+  spans.forEach((l, ji) => {
+    for (const [pi, lo, hi, ai] of l) out[pi].push([lo, hi, ji, ai]);
+  });
+  return out;
+}
+
+function truthOf(model: FieldModel): Truth {
+  const pairs = passPairs(model);
+  const pairsOf = new Map<number, PassPair[]>();
+  for (const pp of pairs)
+    for (const i of pp.io === pp.iu ? [pp.io] : [pp.io, pp.iu]) {
+      const l = pairsOf.get(i) ?? [];
+      l.push(pp);
+      pairsOf.set(i, l);
+    }
+  const cornersOf: number[][] = model.scene.junctions.map(() => []);
+  model.corners.forEach((c, k) => cornersOf[c.junction].push(k));
+  return {
+    model,
+    pairs,
+    pairsOf,
+    nat: perPoly(model, model.naturalSpans),
+    fin: perPoly(model, model.junctionSpans),
+    cornersOf,
+    sc: [],
+  };
+}
+
+/** The [junction, arm] pairs whose span (per-poly list) holds (pi, s). */
+function holders(model: FieldModel, idx: [number, number, number, number][][], pi: number, s: number): [number, number][] {
+  const p = model.polys[pi];
+  const out: [number, number][] = [];
+  for (const [lo, hi, ji, ai] of idx[pi]) {
+    if (!p.closed) {
+      if (s >= lo && s <= hi) out.push([ji, ai]);
+    } else
+      for (const sh of [-p.len, 0, p.len])
+        if (s + sh >= lo && s + sh <= hi) {
+          out.push([ji, ai]);
+          break;
+        }
+  }
+  return out;
+}
+
+/** The crossing (if any) between chain i near s and chain j near sj, and whether i is its over there. */
+function pairOf(T: Truth, i: number, s: number, j: number, sj: number): { pp: PassPair; iOver: boolean } | null {
+  const { model } = T;
+  const pi = model.polys[i];
+  const pj = model.polys[j];
+  let best: { pp: PassPair; iOver: boolean } | null = null;
+  let bestD = Infinity;
+  for (const pp of T.pairsOf.get(i) ?? []) {
+    const tol = pp.L + 2 * model.h;
+    for (const iOver of [true, false]) {
+      const [ii, si, jj, sjj] = iOver ? [pp.io, pp.so, pp.iu, pp.su] : [pp.iu, pp.su, pp.io, pp.so];
+      if (ii !== i || jj !== j) continue;
+      const d1 = Math.abs(dS(pi, s, si));
+      const d2 = Math.abs(dS(pj, sj, sjj));
+      if (d1 <= tol && d2 <= tol && d1 + d2 < bestD) {
+        bestD = d1 + d2;
+        best = { pp, iOver };
+      }
+    }
+  }
+  return best;
+}
+
+/** Why (x, y) hides chain i's side at s: a qualifying piece within dLim of it, or null. */
+function hiderAt(T: Truth, i: number, s: number, x: number, y: number, dLim: number): string | null {
+  const { model } = T;
+  const pi = model.polys[i];
+  candidates(model.grid, x, y, model.h, T.sc);
+  const cs = T.sc.slice();
+  let hi: [number, number][] | null = null;
+  for (const c of cs) {
+    if (!(c.d < dLim)) continue;
+    if (c.chain === i && Math.abs(dS(pi, s, c.s)) <= model.sigma) return "self";
+    const pr = pairOf(T, i, s, c.chain, c.s);
+    if (pr) {
+      if (!pr.iOver) return `under at crossing ${pr.pp.x}`;
+      continue;
+    }
+    hi ??= holders(model, T.nat, i, s);
+    if (hi.length) {
+      const hj = holders(model, T.nat, c.chain, c.s);
+      const J = hi.find(([a]) => hj.some(([b]) => b === a));
+      if (J) return `in j${J[0]}'s union`;
+    }
+    if (model.depthAt(c.chain, c.s) > model.depthAt(i, s) + 1e-9) return `under chain ${model.idOf[c.chain]}`;
+  }
+  return null;
+}
+
+function fillAt(T: Truth, i: number, s: number, x: number, y: number): string | null {
+  const { model } = T;
+  for (const [ji] of holders(model, T.nat, i, s))
+    for (const k of T.cornersOf[ji]) if (model.inFill(k, x, y)) return `fill of j${ji}/${model.corners[k].index}`;
+  return null;
+}
+
+/** The cause behind an arm's span: its extent's corner when that corner has no V, failed, or did not fit. */
+function armCause(T: Truth, ji: number, ai: number): { cls: BorderClass; note: string } | null {
+  const { model } = T;
+  for (const k of T.cornersOf[ji]) {
+    const c = model.corners[k];
+    if (c.armIdxA !== ai && c.armIdxB !== ai) continue;
+    if (c.noV) return { cls: "e", note: `corner j${ji}/${c.index} has no V` };
+  }
+  for (const k of T.cornersOf[ji]) {
+    const c = model.corners[k];
+    if (c.armIdxA !== ai && c.armIdxB !== ai) continue;
+    if (!c.ok) {
+      const arm = ai === c.armIdxA ? c.armA : c.armB;
+      const p = model.polys[ai === c.armIdxA ? c.a : c.b];
+      const room = p.closed ? Infinity : arm.dir > 0 ? p.s0 + p.len - arm.s : arm.s - p.s0;
+      const need = (c.rRule ?? c.r) / Math.tan(c.theta / 2);
+      if (room < need) return { cls: "d", note: `corner j${ji}/${c.index}: arm ends ${fmt(room / model.h, 2)}h out, the ball needs ${fmt(need / model.h, 2)}h` };
+      return { cls: "c", note: `corner j${ji}/${c.index} failed its solve` };
+    }
+  }
+  return null;
+}
+
+function classify(T: Truth, i: number, s: number, bx: number, by: number, ox: number, oy: number): { cls: BorderClass; why: string } {
+  const { model } = T;
+  const h = model.h;
+  const pi = model.polys[i];
+  model.recordGroups = true;
+  model.evalPoint(bx, by, false);
+  const le = model.lastEval;
+  model.recordGroups = false;
+  if (!le || !le.top) return { cls: "f", why: "outside every group" };
+  const own = (c: Cand) => c.chain === i && Math.abs(dS(pi, c.s, s)) <= model.sigma;
+  if (!le.top.some((k) => own(le.cands[k]))) {
+    const c = le.cands[le.topNear];
+    return { cls: "f", why: `chain ${model.idOf[c.chain]}'s group on top` };
+  }
+  const topCl = new Set(le.top.map((k) => le.cl[k]).filter((v) => v >= 0));
+  const members = le.top.map((k) => le.cands[k]);
+  candidates(model.grid, ox, oy, h, T.sc);
+  const cul = T.sc
+    .filter((c) => c.d < h && !own(c))
+    .filter(
+      (c) =>
+        topCl.has(model.clusterAt(c.chain, c.s)) ||
+        members.some((m) => m.chain === c.chain && Math.abs(dS(model.polys[c.chain], m.s, c.s)) <= model.sigma),
+    )
+    .map((c) => ({ c, pr: pairOf(T, i, s, c.chain, c.s) }))
+    .sort((u, v) => (u.pr ? 0 : 1) - (v.pr ? 0 : 1));
+  for (const { c, pr } of cul) {
+    const hi = holders(model, T.fin, i, s);
+    const hj = holders(model, T.fin, c.chain, c.s);
+    const both = hi.filter(([a]) => hj.some(([b]) => b === a));
+    const what = pr ? `crossing ${pr.pp.x}` : `chain ${model.idOf[c.chain]}'s tube`;
+    if (both.length) {
+      const [ji] = both[0];
+      // The arm holding the piece farther from the root drags it in.
+      const ai = hi.find(([a]) => a === ji)![1];
+      const aj = hj.find(([a]) => a === ji)![1];
+      const ri = Math.abs(dS(pi, model.scene.junctions[ji].arms[ai].s, s));
+      const rj = Math.abs(dS(model.polys[c.chain], model.scene.junctions[ji].arms[aj].s, c.s));
+      const cause = armCause(T, ji, ri >= rj ? ai : aj);
+      if (cause) return { cls: cause.cls, why: `${what} in j${ji}'s spans: ${cause.note}` };
+      return { cls: pr ? "a" : "f", why: `${what} in j${ji}'s spans${pr ? "" : " (no crossing)"}` };
+    }
+    if (hi.length && hj.length) {
+      const cause = armCause(T, hj[0][0], hj[0][1]) ?? armCause(T, hi[0][0], hi[0][1]);
+      if (cause) return { cls: cause.cls, why: `${what}: j${hi[0][0]} + j${hj[0][0]} merged; ${cause.note}` };
+      return { cls: "b", why: `${what}: j${hi[0][0]} + j${hj[0][0]} merged (cluster ${model.clusterAt(i, s)})` };
+    }
+    return { cls: "f", why: `${what} in the same group, no junction holds both` };
+  }
+  for (const ci of topCl)
+    for (const k of model.clusters[ci].corners)
+      if (model.inFill(k, ox, oy)) {
+        const c = model.corners[k];
+        return { cls: "f", why: `under the fill of j${c.junction}/${c.index}` };
+      }
+  return { cls: "f", why: "buried, no culprit found" };
+}
+
+/**
+ * K883: every thread side that should show and does not, by cause. step is
+ * the arc-length sample spacing (default h/4); inView limits the samples
+ * (default: the scene's viewport); probe reads the ink (default: the
+ * oracle's own predicate).
+ */
+export function borderCensus(
+  model: FieldModel,
+  opts: { step?: number; inView?: (x: number, y: number) => boolean; probe?: InkProbe; only?: (pi: number, s: number) => boolean } = {},
+): BorderCensus {
+  const h = model.h;
+  const W = model.W;
+  const T = truthOf(model);
+  const ctx = opts.inView ? null : checkContext(model);
+  const inView = opts.inView ?? ((x: number, y: number) => ctx!.inView(x, y, 1));
+  const ink = opts.probe ? (x: number, y: number) => opts.probe!.cov(x, y) > 0.5 : (x: number, y: number) => model.evalPoint(x, y, false).ink;
+  const step = opts.step ?? h / 4;
+  const out: BorderCensus = {
+    samples: 0,
+    missing: 0,
+    extra: 0,
+    stretches: [],
+    byClass: { a: blank(), b: blank(), c: blank(), d: blank(), e: blank(), f: blank() },
+  };
+  model.polys.forEach((p, pi) => {
+    const n = Math.max(1, Math.ceil(p.len / step));
+    for (const side of [1, -1] as const) {
+      let run: MissingStretch | null = null;
+      let mid: [number, number][] = [];
+      const flush = () => {
+        if (run) {
+          run.at = mid[Math.floor(mid.length / 2)];
+          out.stretches.push(run);
+        }
+        run = null;
+        mid = [];
+      };
+      for (let k = 0; k <= (p.closed ? n - 1 : n); k++) {
+        const s = p.s0 + (k / n) * p.len;
+        if (opts.only && !opts.only(pi, s)) {
+          flush();
+          continue;
+        }
+        const at = pointAt(p, normS(p, s));
+        const nx = -at.ty * side;
+        const ny = at.tx * side;
+        const bx = at.x + nx * (h - W / 2);
+        const by = at.y + ny * (h - W / 2);
+        if (!inView(bx, by)) {
+          flush();
+          continue;
+        }
+        const ox = at.x + nx * (h + 0.6 * W);
+        const oy = at.y + ny * (h + 0.6 * W);
+        const hid = hiderAt(T, pi, s, ox, oy, h) ?? hiderAt(T, pi, s, bx, by, h - W) ?? fillAt(T, pi, s, ox, oy);
+        if (hid) {
+          // Extra: drawn though hidden deep inside the hider.
+          if (hiderAt(T, pi, s, bx, by, h - 1.5 * W) && hid !== "self" && ink(bx, by)) out.extra++;
+          flush();
+          continue;
+        }
+        out.samples++;
+        if (ink(bx, by)) {
+          flush();
+          continue;
+        }
+        out.missing++;
+        const { cls, why } = classify(T, pi, s, bx, by, ox, oy);
+        if (run && (run as MissingStretch).cls === cls && (run as MissingStretch).why === why) {
+          (run as MissingStretch).s1 = s;
+          (run as MissingStretch).n++;
+        } else {
+          flush();
+          run = { chain: model.idOf[pi], side, s0: s, s1: s, n: 1, cls, why, at: [bx, by] };
+        }
+        mid.push([bx, by]);
+      }
+      flush();
+    }
+  });
+  for (const st of out.stretches) {
+    const b = out.byClass[st.cls];
+    b.stretches++;
+    b.samples += st.n;
+    if (!b.ids.includes(st.why)) b.ids.push(st.why);
+  }
+  out.stretches.sort((u, v) => v.n - u.n);
+  return out;
+}
+
+function blank() {
+  return { stretches: 0, samples: 0, ids: [] as string[] };
+}
+
+/**
+ * 15 (K883): no group holds both passes of a crossing. At each crossing's
+ * centre and two points along each pass inside the overlap (±L/2, L =
+ * h·cot(θ/2)), no group of the field may hold candidates of both passes.
+ * A kink whose loop is shorter than σ joins its own passes by the
+ * same-chain rule; those are counted apart.
+ */
+export function check15(ctx: CheckContext): CheckResult {
+  const { model } = ctx;
+  const T = truthOf(model);
+  let n = 0;
+  let bad = 0;
+  let sigmaJoined = 0;
+  const det: string[] = [];
+  let worst: [number, number] | undefined;
+  for (const pp of T.pairs) {
+    const po = model.polys[pp.io];
+    const pu = model.polys[pp.iu];
+    if (pp.io === pp.iu && Math.abs(dS(po, pp.so, pp.su)) <= model.sigma) {
+      sigmaJoined++;
+      continue;
+    }
+    n++;
+    const pts: [number, number][] = [];
+    for (const [p, s] of [
+      [po, pp.so],
+      [pu, pp.su],
+    ] as const)
+      for (const f of [0, -0.5, 0.5]) {
+        const a = pointAt(p, normS(p, s + f * pp.L));
+        pts.push([a.x, a.y]);
+      }
+    let hit = "";
+    model.recordGroups = true;
+    for (const [x, y] of pts) {
+      model.evalPoint(x, y, false);
+      const le = model.lastEval;
+      if (!le) continue;
+      for (const g of le.groups) {
+        const hasO = g.some((k) => le.cands[k].chain === pp.io && Math.abs(dS(po, le.cands[k].s, pp.so)) <= pp.L + model.h);
+        const hasU = g.some((k) => le.cands[k].chain === pp.iu && Math.abs(dS(pu, le.cands[k].s, pp.su)) <= pp.L + model.h);
+        if (hasO && hasU) {
+          const cls = new Set(g.map((k) => le.cl[k]).filter((v) => v >= 0));
+          hit = cls.size ? `cluster ${[...cls].join("+")} (junctions ${[...cls].map((c) => model.clusters[c].junctions.map((j) => `j${j}`).join(",")).join(" | ")})` : "the same-chain rule";
+          worst = [x, y];
+          break;
+        }
+      }
+      if (hit) break;
+    }
+    model.recordGroups = false;
+    if (hit) {
+      bad++;
+      det.push(`crossing ${pp.x} (over ${model.idOf[pp.io]} s ${fmt(pp.so, 2)}, under ${model.idOf[pp.iu]} s ${fmt(pp.su, 2)}): one group via ${hit}`);
+    }
+  }
+  return {
+    id: 15,
+    name: "no group holds both passes of a crossing",
+    status: n === 0 ? "n/a" : bad === 0 ? "pass" : "fail",
+    value: `${n - bad} of ${n} crossings${sigmaJoined ? `; ${sigmaJoined} kink(s) inside σ skipped` : ""}`,
+    threshold: "0 crossings with both passes in one group",
+    n,
+    skipped: sigmaJoined ? `${sigmaJoined} kink crossings whose passes are within σ` : undefined,
+    worst,
+    details: det,
+  };
+}
+
+/**
+ * 16 (K883): every crossing's over pass keeps both its borders through the
+ * crossing: its side samples over s_over ± (L + h) that the census's truth
+ * says should show are inked.
+ */
+export function check16(ctx: CheckContext, probe: InkProbe): CheckResult {
+  const { model } = ctx;
+  const T = truthOf(model);
+  const win = new Map<number, [number, number][]>();
+  for (const pp of T.pairs) {
+    const l = win.get(pp.io) ?? [];
+    l.push([pp.so - pp.L - model.h, pp.so + pp.L + model.h]);
+    win.set(pp.io, l);
+  }
+  const only = (pi: number, s: number) => {
+    const p = model.polys[pi];
+    return (win.get(pi) ?? []).some(([lo, hi]) => Math.abs(dS(p, (lo + hi) / 2, s)) <= (hi - lo) / 2);
+  };
+  const c = borderCensus(model, { step: model.h / 8, only, probe, inView: (x, y) => ctx.inView(x, y, 1) });
+  const bad = c.stretches.length;
+  const det = c.stretches.slice(0, 40).map((st) => `chain ${st.chain} side ${st.side > 0 ? "L" : "R"} s ${fmt(st.s0, 2)}..${fmt(st.s1, 2)} (${st.n}): (${st.cls}) ${st.why}`);
+  return {
+    id: 16,
+    name: "every crossing's over keeps both its borders",
+    status: c.samples === 0 ? "n/a" : bad === 0 ? "pass" : "fail",
+    value: `${c.samples - c.missing} of ${c.samples} over-side samples inked; ${bad} missing stretch(es)`,
+    threshold: "0 missing stretches",
+    n: c.samples,
+    worst: c.stretches[0]?.at,
+    details: det,
+  };
+}
+
+/** Every check that needs no render (2, 3-4-5-6-7-8-9 via the probe, 11, 14, 15, 16). */
 export function runChecks(model: FieldModel, probe: InkProbe): CheckResult[] {
   const ctx = checkContext(model);
   const all = [
@@ -882,6 +1352,8 @@ export function runChecks(model: FieldModel, probe: InkProbe): CheckResult[] {
     ...check5(ctx, probe),
     ...checksCrossings(ctx, probe),
     check14(ctx),
+    check15(ctx),
+    check16(ctx, probe),
   ];
   return all.sort((a, b) => a.id - b.id);
 }
