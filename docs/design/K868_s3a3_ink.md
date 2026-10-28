@@ -178,3 +178,306 @@ Not this stage:
   - a `Ledger items` list (follow-ups and residuals; a question for Levi
     only about what shows on screen, in plain words);
   - K868's current handle fields (branch, last commit, evidence, next).
+
+## Handoff
+
+Stopped 2026-10-28 at about 03:00 (start 01:28) with steps 1-5 done.
+Branch `k868-s3a`, worktree `.claude/worktrees/k868-s3a`, not pushed.
+Probes and results: `.claude/probes/S3a/` (untracked). The flag is `lbi`,
+off by default.
+
+### Steps and commits
+
+| Step | State | Commits |
+|---|---|---|
+| 1. Exact s for the fill pass | done | `1d495b6f` |
+| 2. The oracle's fill order (K964 class C) | done | `358f4175`, `0c7c24f2` (the order test) |
+| 3. The band pass | done, with residuals R1-R6 | `3ca20316` (outline strips), `9e9bdb5b` (switch strips) |
+| 4. The label follows the threads | done; see R7 | `3ca20316` |
+| 5. The checks | done | this handoff |
+
+Module notes:
+- `src/render/label/label_band.ts`: the band pass, 18 floats a strip.
+  - Outline strips (each tube edge at ±h, each fill's arcs, each cap)
+    run inward: vD = -0.5 + t(W+1).
+  - Switch strips (F_SWITCH = 8) are centred: vD = (t - 0.5)(W+1). A
+    switch fragment survives only where the label on one side, at
+    r = W/2 + uLr, is the tube and on the other side the fill.
+  - MAX blend into RGBA8; ink where the byte is 127 or more. The frame
+    loop composites it after `app.render()`, so the ink draws over every
+    layer (see Gameplay).
+  - Depth: d0 is kept. d1 (the depth rule) is worse on every scene, e.g.
+    def 466 missing beyond one cell and 49 free ends, muse_hash 199 free
+    ends, fat 58.
+- `src/render/label/label_switch.ts`: `findSwitchLines(m)`, the CPU's
+  switch search.
+  - For each chain's crossings with a cluster J, it looks for a flip of
+    the fill-over order (K940's yield) at x.s ± σ and at the midpoints.
+  - It requires the flip across s ± eps, a corner outside J's cluster
+    and one in J's fill, and returns a line ±(h + W) along the normal.
+  - It finds fill-against-tube switches only. Tube-against-tube swaps
+    (twist eyes, tie-breaks) are not found (R1).
+  - It runs uncached on every rebuild (R7).
+- The label rebuilds whenever the drawn positions change, on both hosts.
+
+### Step 1: exact s
+
+The tube pass writes s as float bits into an R32UI target (S). The fill
+pass reads it through a framebuffer that does not attach it, so there is
+no copy. The band pass keeps reading the packed word.
+
+- Bytes per pixel: packed 16 (S3a2: 12; memoryPacked x4/3, e.g.
+  30756384 -> 41008512), wide 36.
+- P2 = W2 on all 12 scenes, and the sites' P2 equals them too.
+
+| Scene | S3a2 P2 / W2 | S3a3 P2 / W2 | S3a3 P2: missFill / wrongFill / missTube / wrongTube / extra |
+|---|---|---|---|
+| def | (no row in label7) | 16 / 16 | 1 / 1 / 7 / 4 / 3 |
+| fat | 7 / 7 | 7 / 7 | 0 / 0 / 1 / 2 / 4 |
+| g41_def_tw42 | 16 / 16 | 16 / 16 | 0 / 0 / 8 / 1 / 7 |
+| g41_def_tw64 | 58 / 14 | 14 / 14 | 0 / 0 / 4 / 5 / 5 |
+| g41_ring_tw42 | 7 / 7 | 7 / 7 | 0 / 0 / 2 / 2 / 3 |
+| g41_ring_tw64 | 5 / 2 | 2 / 2 | 0 / 0 / 0 / 0 / 2 |
+| g41_user_tw42 | 4 / 4 | 4 / 4 | 0 / 0 / 3 / 0 / 1 |
+| g41_user_tw64 | 8 / 3 | 3 / 3 | 0 / 0 / 0 / 0 / 3 |
+| muse_default_tw | 13 / 13 | 13 / 13 | 0 / 0 / 5 / 1 / 7 |
+| muse_hash | 23 / 11 | 9 / 9 | 0 / 0 / 1 / 4 / 4 |
+| ring | 5 / 4 | 4 / 4 | 0 / 0 / 2 / 1 / 1 |
+| user_tw42.lightpaper | 7 / 7 | 7 / 7 | 0 / 0 / 1 / 2 / 4 |
+
+### Step 2: the oracle's fill order
+
+`visibleAt` now resolves as the GPU does: the tube by depth, each fill
+against it by the yield, the fills by depth.
+- Forward against reverse cluster order: 0 cells differ on all 12 scenes
+  (`0c7c24f2` pins it).
+- V against S3a2: 0 cells changed on 11 scenes. On muse_hash 2 cells
+  changed (class C, at (19.908, 21.895) and (19.832, 21.971)). They are
+  now chain 10's fill of cluster 25, which is what the GPU draws, where
+  they were chain 85's tube of cluster 30.
+- The re-taken reference for step 3 (`ref8/`):
+
+| Scene | Oracle ink cells | Free ends, raster / exact |
+|---|---|---|
+| def | 397167 | 1 / 1 |
+| fat | 382871 | 0 / 0 |
+| g41_def_tw42 | 516066 | 0 / 0 |
+| g41_def_tw64 | 303798 | 6 / 8 |
+| g41_ring_tw42 | 138862 | 0 / 0 |
+| g41_ring_tw64 | 84982 | 0 / 0 |
+| g41_user_tw42 | 213624 | 0 / 0 |
+| g41_user_tw64 | 129147 | 3 / 3 |
+| muse_default_tw | 394960 | 1 / 1 |
+| muse_hash | 237882 | 10 / 12 |
+| ring | 95521 | 0 / 0 |
+| user_tw42.lightpaper | 213648 | 0 / 0 |
+
+### Step 3: the band pass against the oracle
+
+Per cell of the label grid (pitch W/4). Extra means GPU ink only, missing
+means oracle ink only. In brackets: the cells more than one cell from the
+other's ink (edge jitter left out). Free ends: K934's runs count on each
+raster, the judge.
+
+| Scene | GPU ink | Oracle ink | Extra (beyond 1) | Missing (beyond 1) | Free ends GPU / oracle |
+|---|---|---|---|---|---|
+| def | 400788 | 397167 | 4460 (6) | 839 (267) | 27 / 1 |
+| fat | 385542 | 382871 | 2983 (0) | 312 (0) | 0 / 0 |
+| g41_def_tw42 | 520930 | 516066 | 5477 (5) | 613 (82) | 10 / 0 |
+| g41_def_tw64 | 306109 | 303798 | 3905 (137) | 1594 (792) | 63 / 6 |
+| g41_ring_tw42 | 139915 | 138862 | 1464 (0) | 411 (47) | 7 / 0 |
+| g41_ring_tw64 | 85640 | 84982 | 955 (8) | 297 (60) | 5 / 0 |
+| g41_user_tw42 | 215273 | 213624 | 2157 (64) | 508 (166) | 15 / 0 |
+| g41_user_tw64 | 129741 | 129147 | 1589 (88) | 995 (347) | 38 / 3 |
+| muse_default_tw | 398558 | 394960 | 4321 (0) | 723 (159) | 15 / 1 |
+| muse_hash | 239788 | 237882 | 3942 (585) | 2036 (672) | 75 / 10 |
+| ring | 96330 | 95521 | 1070 (0) | 261 (12) | 4 / 0 |
+| user_tw42.lightpaper | 215284 | 213648 | 2154 (64) | 518 (165) | 15 / 0 |
+
+- The switch strips helped. Before them (`gpu9/`), missing beyond one
+  cell / free ends were: def 364 / 31, g41_def_tw64 1688 / 97,
+  g41_ring_tw64 154 / 7, muse_default_tw 213 / 18, muse_hash 1717 / 126,
+  ring 29 / 5. The other scenes did not change.
+- def draws 56587 strips (edges 49898, caps 2184, arcs 4501, switches
+  4), with no GL error.
+- The worst five sites, cropped and looked at (red extra, blue missing):
+  - def (26.225, 1.436): a line along a tube is missing inside a loop,
+    and so is the ink at the loop's tips.
+  - muse_hash (3.321, 28.64) / (2.713, 28.032): an extra diagonal and a
+    missing arc at a loop's end. The switch strip sits off the oracle's
+    switch.
+  - g41_def_tw64: two small closed island rings, a short vertical
+    segment and a small extra.
+  - g41_user_tw64: a missing diagonal that closes a V. It is a
+    tube-against-tube swap, which the search does not find.
+  - g41_user_tw42: an extra short vertical at a junction (an outline
+    strip).
+- The 14 sheet K sites at play size (`ksites10/`, the GPU's ink beside
+  the oracle's and K934's renders of the label look and of master's
+  look; px = pixels that differ, GPU against oracle):
+  - Same shape as the oracle (edge pixels only): a2 22, b1 51, b2 62,
+    c2 60, e1 29, f1 40, g1 57, h1 28 (the #16 fix shows, where master
+    differs), h2 19.
+  - a1 78: the oracle draws a closed almond island; the GPU draws an
+    open arc, as master does.
+  - d1 64: the oracle closes a teardrop; the GPU draws an open hook, as
+    master does, so the free end stays.
+  - c1 29 and c3 55: a small junction tick is missing.
+  - d2 63: specks are missing.
+
+### Step 4: the label follows the threads, and the drag check
+
+- At rest it does not rebuild: fabric mode, worker host, rebuilds
+  stayed at 50 while renders went 52 -> 111 (`drag11/`).
+- A scripted drag (`drag11/`, fabric mode, light wash, worker host):
+  - 25 rebuilds over the drag's 37 renders.
+  - Mid-drag with the flag on, the black outlines are continuous and sit
+    on the threads, with no lag behind them and no ghost of an earlier
+    position. The flag-off frame shows master's border look.
+  - The two frames are not one state (frozen at sim 7.675 against 5.767;
+    K550), so this is a look, not a pixel diff.
+  - The ink is on the threads in every frame drawn, but in fabric mode
+    each of those frames is slow (R7), so a real drag would stutter.
+- Knot mode (`drag10/`): it rebuilds only while the knot moves.
+  - With flow on at rest, every render rebuilt (26 of 26, both hosts).
+    Flow moves the drawn positions, so that is the rule working, at a
+    rebuild per flow frame (R8).
+  - That flow page drew 26 renders in the 3 s flow window (about 9 a
+    second). The same page drew 57 in its 1 s rest window with flow off,
+    where nothing rebuilt. These are frame counts, not timings.
+- Fabric mode with flow on (`gp11/flow_watch`, worker host): 3 rebuilds
+  over 7 renders in 3 s.
+
+### The in-thread host with the flag on (`settle11/`)
+
+Fabric mode, `phw=0&fw=0`, seed b, under the perf lock, read 20, 40 and
+60 s after load. A state readout, not a timing.
+
+- Flag off: asleep by the 40 s read (settle phase off).
+- Flag on: still awake at 60 s.
+  - It drew 6, 18 and 31 frames by the three reads, and every one was a
+    rebuild (the label's counters). It stepped 36 physics substeps in
+    all.
+  - K147's settle stays in its budget phase, with the cost estimate over
+    the 12 ms budget, and its lag grows (0.9, 2.0, 3.2 s).
+  - gp10/on_trail and drag11/on_phw0 waited 180 s for sleep and timed
+    out.
+- Observed: the frames that draw are the slow ones, so the settle barely
+  advances. The app's own frame-cost counter (`__knotPerf()`, read, not
+  a timing of this stage's) over its last 120 frames reads:
+  - flag on: p50 2.7 ms, p95 2161 ms, max 2769 ms (304 frames in all,
+    31 of them drawn);
+  - flag off: p50 0.9 ms, p95 1.5 ms, max 2 ms (1664 frames).
+  - On the worker host, fabric with flow on (`gp11/flow_watch`): p50
+    39 ms, p95 1788 ms, max 2396 ms, and 7 frames drawn in 3 s.
+- Inferred, not tested: the cost is the rebuild's CPU part, most likely
+  the uncached switch search over the fabric's 117-120 clusters.
+  - Knot mode has no clusters, and it settles in-thread with the flag on
+    (drag10/on_phw0: 594 rebuilds, then rest).
+  - On the worker host the settle runs in the worker, so the knot sleeps,
+    but each rebuild frame there is as slow.
+  - Splitting the rebuild's cost needs a timing, which this stage leaves
+    to S3b.
+
+### Step 5: the other checks
+
+- Suite: green at `9e9bdb5b`, 180 files, with the golden snapshot
+  (`byte_identity`) and `k320_slim` (`test_s3a3_switch.log`).
+- Flag off against master (`ab/s3a3_off/`, `ab_shot.mjs`):
+  - 0 px on def and muse_hash against master's shots (`ab/m3`), with the
+    same physics hashes (def 910ff135, muse_hash 733ee14a).
+  - src/ is unchanged from m3's base (`d4aa241e`) through the merge base
+    (`efb3f4d7`) to master (`af356df4`).
+  - The `ab/master` muse_hash shot is stale (64878 px), as S3a2 noted.
+- K320's shader budgets hold for the programs they cover (the ribbon
+  and fan programs). The label and band programs have no budget (R10).
+- The label counts, ink and free ends are in steps 1 and 3.
+
+### Gameplay with the flag on (step 5: listed, not fixed)
+
+Worker host (`gp11/`), because the in-thread host does not settle with
+the flag on. Seed b, 4 moves. Changes since S3a2's list:
+- The threads draw as black band ink, and the over-thread above the
+  trail now has ink.
+- Fog (`xp=fog`): the ink draws over the fog, so the whole maze's
+  outlines show through it. S3a2 showed only the dashed trail.
+- Thread reveal (`xp=threads`): the ink draws every thread whatever the
+  reveal shows. The over-threads' outline bars cross the continuous
+  yellow trail.
+- On a dark background the black ink has little contrast: INK_AUTO is
+  one colour.
+- The markers (start, the head and its glow, the finish flag) look
+  unchanged at 3x.
+- Labelled px: on_trail 345835, on_fog 305209, on_threads 366830 (S3a2:
+  345841, 305211, 366838; not one state). There was one lost context per
+  run, from Pixi's test canvas.
+- Not taken: an on-against-off pixel diff. The worker host is not
+  same-state, and the in-thread host does not settle with the flag on.
+
+### Crops looked at
+
+All under `.claude/probes/S3a/`:
+- `gpu10/crops/def.d0.w0.png`, `muse_hash.d0.w0.png`,
+  `g41_def_tw64.d0.w0.png`, `g41_user_tw64.d0.w0.png`,
+  `g41_user_tw42.d0.w0.png`
+- `ksites10/sheet_s0.png` to `sheet_s3.png`
+- `drag11/on_worker.mid.png`, `drag11/off_worker.mid.png`
+- `gp11/on_trail.png`, `on_trail_head.png`, `off_trail_head.png`,
+  `on_fog.png`, `on_threads.png`, `z_on_head.png`, `z_off_head.png`,
+  `z_on_fog_flag.png`
+
+### Residuals
+
+- R1: tube-against-tube switches (twist eyes, tie-breaks) are not
+  found: g41_user_tw64's missing V diagonal.
+- R2: small closed island outlines are missing (g41_def_tw64's rings,
+  sheet site a1).
+- R3: at loop tips the GPU draws an open hook where the oracle closes a
+  teardrop (sheet d1). At muse_hash's worst site the switch strip also
+  sits off the oracle's.
+- R4: def (26.225, 1.436): a line along a tube is missing inside a loop.
+- R5: junction ticks are missing (sheet c1, c3), and junctions get extra
+  outline segments (g41_user_tw42; 64 extra beyond one cell on both
+  tw42 user scenes).
+- R6: the GPU has more free ends than the oracle on 11 of 12 scenes
+  (step 3's table; fat is level).
+- R7: in fabric mode with the flag on, a frame that rebuilds the label
+  costs about 2 s by the app's own counter, on both hosts. In-thread the
+  knot therefore never sleeps; on the worker host every moving or
+  flowing frame is that slow. The suspect is the switch search, which
+  runs uncached on every rebuild; its crossing list (xBy) can be cached
+  per topology.
+- R8: with flow on at rest, the label rebuilds on every flow frame (the
+  rule working).
+- R9: the ink is one colour and draws over every layer: over the fog,
+  against the thread reveal, with little contrast on dark backgrounds
+  (K966).
+- R10: K320 has no budget for the label and band programs.
+- R11: S3a2's label7 has no def row. The dev server's build stamp shows
+  the SHA at the server's start, not the current one.
+
+### Next
+
+- R7 first, since it leaves the flag unusable in-thread in fabric mode.
+  Cache the switch search per topology. Then S3b times the rebuild (CPU
+  search, strip build, upload, both passes).
+- S3a4 as this brief lists it (K923's LOD, sheet S3a, the label's bits
+  for K943), plus R1-R6, judged by the free-end count.
+- R9 goes to K966.
+
+### How to rerun
+
+Run from the worktree. Each script's header gives its arguments.
+- Dev server: `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5381 --strictPort --host 127.0.0.1`.
+- Oracle reference: `oracle_ref8.ts` -> `ref8/`.
+- GPU rasters: `label_run9.mjs <base> .claude/probes/S3a/gpu10 <scenes>`.
+- Ink against the oracle: `ink_cmp9.ts <scenes> .claude/probes/S3a/gpu10`
+  -> `cmp10_all.log`, `gpu10/crops/`.
+- Label counts: `label8/a/`; the table comes from `label_table10.mjs`.
+- Switch lines at a point: `switch_check10.ts`.
+- Sheet K sites: `ksites10.ts`.
+- Drag: `drag11_locked.ps1` (calls `label_drag10.mjs`).
+- Gameplay: `gp11_locked.ps1` (calls `gameplay7.mjs`).
+- Flag off: `ab7_locked.ps1` (calls `ab_shot.mjs`).
+- In-thread settle: `settle11_locked.ps1` (calls `settle11.mjs`).
+- Locked scripts take the perf lock.
