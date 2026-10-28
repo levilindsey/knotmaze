@@ -19,16 +19,10 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K990.
+Next free ID: K995.
 
 ## Waiting on Levi
 
-- **K950** · Cursive: how long is a word-final e's tail? Long: rises as high as the m/n/y/d tails (51.2 u, up 23.7 u);
-  short: about 30 u, up 10.5 u, barely out of the loop. Drive `K863/e_tails_k950.svg` (five words, side by side;
-  asked 2026-10-28). Recommended: the long one.
-- **K975** · Cursive v5.8, Levi's review (K928's step 2): smooth enough to stop and hand-edit, or another pass?
-  Asked on f's little end curl and the kink where o's right side turns into its exit (K976). Drive
-  `K863/cursive_v58_nodes.svg`, `cursive_v58_words.svg`; `K969_cursive_v58.md` ## Handoff.
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -296,8 +290,8 @@ Next free ID: K990.
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
   - owner: nobody since 2026-10-28 07:46 (merged; agent `a5bbad2aee65ede23` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
   - branch: mainline; last commit: `a320bab7`
-  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`), `.claude/probes/K924/` (`run.ps1`, `tally.mjs`, `at.ts`, `tdiff.mjs`), `.claude/probes/K940/` (sheet J, `jcrops/`, `S/`, per-scene `ydiff/`, `cls/`, `indep/`), `.claude/probes/K934/` (sheet K `K_recount.png`, `sheetk/`, `dropped/`, `ext3/`, `indep/`, census logs), S3a's to S3a5's in the `k868-s3a` worktree's `.claude/probes/S3a/` (each stage brief's `## Handoff` lists its files and rerun commands; S3a5's: `seq13_*.ts` and `seq13/`, the four recorded sequences; S3a3's: `gpu10/cmp10_all.log`, `ksites10/` (sheet K sites), `drag11/`, `gp11/`, `settle11/`, `ab/s3a3_off/`; copy them to the main checkout before removing the worktree); sheets A-K, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
-  - next: S3a7 (pieces on the GPU, depth per fragment) on master's corner rules, gated by `scripts/label_pops.ts` (nothing new pops); alongside it, a corner-rules stage (rules continuous in the geometry that beat master's on the census, at zoom 1 and at the maximum zoom); then S3a8, S3a10 (porting only rules that pass), K972, K973, K923, sheet S3a, K943's bits, S3b
+  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`), `.claude/probes/K924/` (`run.ps1`, `tally.mjs`, `at.ts`, `tdiff.mjs`), `.claude/probes/K940/` (sheet J, `jcrops/`, `S/`, per-scene `ydiff/`, `cls/`, `indep/`), `.claude/probes/K934/` (sheet K `K_recount.png`, `sheetk/`, `dropped/`, `ext3/`, `indep/`, census logs), S3a's to S3a5's in the `k868-s3a` worktree's `.claude/probes/S3a/` (each stage brief's `## Handoff` lists its files and rerun commands; S3a5's: `seq13_*.ts` and `seq13/`, the four recorded sequences; S3a6's: `pops14/` (census results; `before14/` is master), `oracle_m14.ts`, `locked14.ps1`, and the census itself, tracked: `scripts/label_pops.ts`; S3a3's: `gpu10/cmp10_all.log`, `ksites10/` (sheet K sites), `drag11/`, `gp11/`, `settle11/`, `ab/s3a3_off/`; copy them to the main checkout before removing the worktree); sheets A-K, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
+  - next: S3a7 (pieces on the GPU, depth per fragment) on master's corner rules, gated by `scripts/label_pops.ts` at zoom 1 and the maximum zoom (nothing new pops); alongside it, K992 (corner rules continuous in the geometry); then S3a8, S3a10 (porting only rules that pass), K972, K973, K923, sheet S3a, K943's bits, S3b
   - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`; K934: `docs/design/K934_recount.md`; S3a: `docs/design/K868_s3a_app.md`; S3a2: `docs/design/K868_s3a2_label.md`; S3a3: `docs/design/K868_s3a3_ink.md`; S3a4: `docs/design/K868_s3a4_rebuild.md`; S3a5: `docs/design/K868_s3a5_incremental.md`; S3a6: `docs/design/K868_s3a6_motion.md`
   - env: from the `k868-s3a` worktree, `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5381 --strictPort --host 127.0.0.1` (the config is untracked; S3a3's handoff, How to rerun)
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
@@ -306,7 +300,7 @@ Next free ID: K990.
   - owner: agent `a38199ee25cf8b7f4` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, stage J2 = K962, started 2026-10-28 06:54, 2 h cap ~08:54)
   - branch: mainline, no code (outputs untracked); last commit: `37037f72` (J2's brief); J2's brief is `docs/design/K962_cursive_joins.md`, its handoff is appended there at the end
   - evidence: `.claude/probes/K863/trace/` (per stage: `tools/*_k<ID>.py`, `work<n>/`, `out<n>/`; `NOTES.md` has a section per version with its rerun commands); Drive `K863/` (each version's SVGs; v5.1: `cursive_v51.svg`, `cursive_v51_words.svg`, `split_combs.svg`, `k917_junctions.svg`; v5.2: `cursive_v52.svg`, `cursive_v52_words.svg`; v5.3: `cursive_v53.svg`, `cursive_v53_words.svg`, `combs_v53.svg`; v5.4: `cursive_v54_words.svg`, `e_joins_v54.svg`; v5.5: `cursive_v55.svg`, `cursive_v55_words.svg`, `combs_v55.svg`; v5.6: `cursive_v56.svg`, `cursive_v56_nodes.svg`, `cursive_v56_words.svg`, `combs_v56.svg`; v5.7: `cursive_v57.svg`, `cursive_v57_nodes.svg`, `cursive_v57_words.svg`, `combs_v57.svg`; v5.8: `cursive_v58.svg`, `cursive_v58_nodes.svg`, `cursive_v58_words.svg`, `combs_v58.svg`; K944: `e_tails_k950.svg`, `words_edit_test.svg`, `combs_edit_test.svg`; J1 uploaded nothing, no visible change); Levi's file to edit: J1's `out18/cursive_template.svg`, built with `work18/dbg/build_from_svg.ps1`; J1's locality harness: `work18/dbg/sensitivity_k980.py`
-  - next: J2 (`K962_cursive_joins.md`: the e variants with no build-time fit, G2 seams, then K962, K948, K946, K949, K937, K988) while Levi reviews v5.8 (K975; K976 if o's exit flick reads too sharp) and answers K950; Levi edits `out18/cursive_template.svg` once the letters look right (J2 changes no letter body; it proposes body fixes with crops) and `build_from_svg.ps1` builds from it; K927; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls); capitals are K931
+  - next: J2 (`K962_cursive_joins.md`: the e variants with no build-time fit, G2 seams, then K962, K948, K946, K949, K937, K988; its handoff reports on Levi's entry notes, K991); then Levi's v5.8 review (2026-10-28): a body pass (K976 o, K990 a k p) and the entries (K991), and Levi reviews again; Levi edits the newest `cursive_template.svg` once the letters look right (J2 changes no letter body) and `build_from_svg.ps1` builds from it; K927; then map the letters onto threads (the a/c/d/g/o/q junctions and a's top corner, `K863_trace.md` ## Levi's calls); capitals are K931
   - brief: `docs/design/K863_trace.md` (## Levi's calls); stages: v3 `K886_cursive_v3.md`, v4 `K902_cursive_frames.md`, v5 `K904_cursive_v5.md`, v5.1 `K916_cursive_v51.md`, v5.2 `K925_cursive_v52.md`, v5.3 `K930_cursive_smooth.md`, v5.4 `K926_cursive_e.md`, v5.5 `K945_cursive_v55.md`, v5.6 `K959_cursive_v56.md`, v5.7 `K965_cursive_v57.md`, v5.8 `K969_cursive_v58.md`, K944 `K944_cursive_asdrawn.md`, J1 `K980_cursive_local.md`, J2 `K962_cursive_joins.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
@@ -772,8 +766,18 @@ Every other item below waits on the trigger it names.
 - **K962** · Cursive joins: v5.5's seam spikes ("minimum", "hippo": p to o, h's entry) and m's exit hook; v5.7's 17 rows
   worse by over 0.25 u (fo 3.10 -> 4.19 the worst; on moved body ends, kn unexplained); minimum's um tooth and last m
   spike; v5.8's ma +0.36 u, la -0.29 (a's entry moved 0.59 u). Stage J2: `K962_cursive_joins.md`.
-- **K976** · Cursive o's exit flick is v5.8's highest peak |dk/ds| (5.08; v5.4 8.54); the writer's jump weight raises
-  it to 6.77, so it needs a local fix if Levi finds it too sharp (K975). `K969_cursive_v58.md` ## Handoff.
+- **K976** · Cursive o's exit, Levi's call (2026-10-28): an abrupt cusp, then a slight overstroke into the exit segment,
+  replacing the S-bend where o's right side turns into its exit ("a bit of an awkward crotch"). Every o exit, plain and
+  fused; J2 leaves that seam a cusp. With K990, before the hand edits. `K863_trace.md` ## Levi's calls.
+- **K990** · Cursive bodies, Levi's v5.8 review (2026-10-28): a's top turnaround reaches the exact top of its right-side
+  stroke as a corner (a thread later runs around it unbroken); k's leg meets the stem at a sharper angle; p's end into
+  its exit is shorter; f's cusp into its exit is fixed. With K976 (o), before the hand edits. `K863_trace.md` ## Levi's calls.
+- **K991** · Cursive entries, Levi's v5.8 review (2026-10-28): b's entry bends (K946); h's entry misses the curvature at
+  h's start; cusp entries (t, p; also i j r s u w y) meet the stem from one side at its tangent, never crossing it. J2's
+  handoff says which its outputs fix (`K962_cursive_joins.md`). `K863_trace.md` ## Levi's calls.
+- **K992** · K868 corner rules continuous in the geometry: first contact flips at every graze and K883's over(r) jumps,
+  so master's make 65-100% of the pop area. Beat master on `scripts/label_pops.ts` (four sequences, zoom 1 and max);
+  census call 2 alone; V vs round goes to Levi in motion if still a choice. `K868_s3a6_motion.md` ## Handoff.
 - **K943** · K868: draw the over thread's line where two threads of one junction cross (about 110 spots; both inks
   fuse them now; Drive `K868/sheets/K943_crossing_in_junction.png`), behind a flag for Levi to compare. The oracle
   needs simLab to split a crossing's two passes (K940 step 5, `S/`); the app needs 1-2 label bits (S3). Under extent part this is label ink's largest class (#16 50/8, missing 41/16; K934).
@@ -824,9 +828,8 @@ Every other item below waits on the trigger it names.
 - **K979** · K868 S3a4's measurement leftovers: the switch key churns as clusters renumber (about 6 ms of 440); knot
   mode's model p50 rose 71 -> 80 ms (probably the cursive agent's load; rerun back to back); the drag pages have no
   step-1 baseline. `K868_s3a4_rebuild.md` ## Handoff.
-- **K982** · Cursive K944 leftovers: loop crossings are recorded, never read; Inkscape's rewrite loses up to 4.4e-4 u;
-  the short e tail is cut on the font's path, not the drawn one (matters if K950 picks it). J1 fixed "fox" and p's
-  entry turn; the short tail's ~30 u was a measurement (`K980_cursive_local.md` ## Handoff).
+- **K982** · Cursive K944 leftovers: loop crossings are recorded, never read; Inkscape's rewrite loses up to 4.4e-4 u.
+  J1 fixed "fox" and p's entry turn (`K980_cursive_local.md` ## Handoff).
 - **K977** · Cursive v5.8's leftovers: b's bottom notch (1.77 -> 0.46) and z's descender notch (0.43 -> 0.25) still
   show; b's upstroke has comb steps at two nodes (unmeasured); k's peak rose to its fair's own 2.71; f's hook keeps
   three nodes about 13 u apart (the font's shape). `K969_cursive_v58.md` ## Handoff; `work16/combs/crops/`.
@@ -1736,6 +1739,12 @@ Every other item below waits on the trigger it names.
 - **K989** · Cursive: frames with a bk (after_o with s: b f h k l x z; s_fused: a c d g o q) still go through K944's
   node alignment, not a rule on the drawn curve (h's node add moved them 1e-4 u); edits are emulated, never made in
   the GUI. `K980_cursive_local.md` ## Handoff.
+- **K993** · K868 census blind spots: `label_pops.ts` does not track pieces or switch lines (def drag's eye flicker is
+  unexplained), co-located events take the nearest event's label, and muse's frames show stray 1-2 px dark specks.
+  `K868_s3a6_motion.md` F3, F6, ## Handoff.
+- **K994** · npm audit (2026-10-28): 2 critical, 7 high, 2 moderate; production has 1 high (@xmldom/xmldom 0.8.13 via
+  pixi.js 8.19.0), the rest is dev tooling. `npm audit fix` covers all but vitest's two criticals (take the next patched
+  vitest); then turn Dependabot on. claude-config's dependency-vulnerability-roundup, 2026-10-28.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2032,6 +2041,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K975** · Cursive v5.8, Levi's review: another pass before the hand edits: o's exit (K976), the a k p f bodies (K990), the b h t p entries (K991). Answered 2026-10-28.
+- **K950** · Cursive word-final e tail: long (Levi, 2026-10-28: "Long tail on e seems goood"), already the default of J1's `build_from_svg.ps1` (c23c6980). Done (2026-10-28).
 - **K980** · Cursive J1: every derived piece local (v5.8's shared fits frozen in the map), the e variants a continuous fit; K944's nine edits pass with untouched pieces at 0 u (baseline up to 5.12 u). Done in c23c6980 (2026-10-28).
 - **K981** · Cursive retrace rule: a smooth fork's departing handle stays collinear, so n's far fork no longer turns (G1 only: K987; rough still fails n: K986). Done in c23c6980 (2026-10-28).
 - **K983** · The docs name Levi instead of the old pronouns: 211 of 225 hits fixed in 66 files under `docs/` and `.claude/rules/`; the 14 left are quotes, named other people, game characters and one letter pair. Done in d285ce71 (2026-10-28).
