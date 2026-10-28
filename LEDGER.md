@@ -130,7 +130,7 @@ Next free ID: K984.
 - **K628** · Confetti: (C-1) does the finish spray throw streamers? Rec: K336's sheet decides. (C-2)
   when does K579 (GPU confetti) go? The phone check: the fall is ~50 fps, not CPU-bound (a tenfold
   CPU cut gave +0.5 fps). Rec: after K318 s1.
-- **K629** · K546's Q1-Q7 (`K546_loss_effects.md`) set stages 2-4. Levi (2026-10-22): the recs stand; for the side cannons he wants more spread (K812 follow-up in the param batch). Rec, the design's: sparks; contact, 0.35 s, ~1 s, no
+- **K629** · K546's Q1-Q7 (`K546_loss_effects.md`) set stages 2-4. Levi (2026-10-22): the recs stand; for the side cannons Levi wants more spread (K812 follow-up in the param batch). Rec, the design's: sparks; contact, 0.35 s, ~1 s, no
   skip; ash + vignette; a `lossAmount` slider; fire ends Burnt at the beat's end; full beat, then
   restart; dull pluck + thump (fire too).
 - **K630** · K244: should a press in a junction core also silence its release when the grabbed
@@ -344,7 +344,7 @@ Next free ID: K984.
     Dead-end branches as deeper traps are out of scope; K80's brief does not settle them
   - brief: `docs/design/K74_stage3.md`; stage 2's handoff: `docs/design/K74.md`; stage 4's brief: `docs/design/K74_stage4.md`
 - **K80** · The minotaur, decided (Levi, 2026-10-13; design
-  `docs/design/K80_gameplay_additions.md` section 0, his answers in
+  `docs/design/K80_gameplay_additions.md` section 0, Levi's answers in
   `docs/design/levi_notes_2026-10-13.md`): a telegraphed hunter with
   guard and stalker variants, real time as its own mode, turn-aligned as
   a modifier. Real time merged (`5fed5c1`); turns stages 1, 2 and 3a merged (3a: the wait on
@@ -644,7 +644,7 @@ Every other item below waits on the trigger it names.
   the mouse's form, with its own margin row beside `pickMargin` at ~4 px, so zones stop growing
   under a pinch zoom. With K330 after K329 (`docs/design/K298_hover_glow.md`, "Notes").
 - **K321** · The credits page (`docs/design/K321_credits.md`; Levi 10-14, approved): page and panel
-  link become Credits (`credits.html`): his name and copyright line, art, icon and music credits,
+  link become Credits (`credits.html`): Levi's name and copyright line, art, icon and music credits,
   "Built with Claude Code" (not prominent), then techniques, licenses, research. Small sonnet stage.
 - **K318** · Win effects (Levi 10-14): one show, many themes; thirteen themes in a Win effects
   folder (Theme dropdown, Party default), built in twelve stages. Stage 1 after the confetti stage
@@ -1890,7 +1890,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   9.4%): maybe a nudge or a toast.
 - **K209** · Fog of war on dailies? Off today; since K132 a daily is
   today's defaults, so turning it on is a default change or a daily
-  override. A call for Levi whenever he wants it (raised by K100).
+  override. A call for Levi whenever they want it (raised by K100).
 - **K211** · Drop the retired `snappiness` from `CODEC_PARAMS` at the
   next codec version bump; removing it now would bump the version (K132).
 - **K215** · Move the per-feature probe recipes (K73, K79 B, K80, K104,
