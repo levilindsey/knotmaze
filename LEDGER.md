@@ -308,14 +308,6 @@ Next free ID: K952.
   - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`), `.claude/probes/K924/` (`run.ps1`, `tally.mjs`, `at.ts`, `tdiff.mjs`); sheets A-I, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
   - next: Levi's K934 on sheet I (recs: depth yes; try the walk that stops at crossing cuts; fix the check's exit count and report both counts; the hook is moot under label); K940 (running) builds K924's rule changes 1-3 behind switches and makes sheet J and S's crops; Levi judges sheet J and answers K943 and K934; K935, K941; then the S3 brief: K915's two passes with K923's screen-space LOD and packed 32-bit label (together they fit the Pixel's 4 ms at every zoom; the coordinator's rec, Levi may object; open inputs K933), G1 corners and cr 0-6 (sheet F approved), and G3-1 ported back or replaced (K892)
   - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`
-- **K940** · K868's stage: build K924's rule changes 1-3 as candidates behind switches (a fill yields to a
-  foreign tube, refined where its outlines are wrong; a tie key per surface; reach caps only), judge them by
-  image and counts, and make sheet J and S's crops (K943).
-  - owner: agent `acf261b18501a1103` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 18:48, 2 h cap ~20:48)
-  - branch: `k940-label-fixes`, worktree `.claude/worktrees/k940-label-fixes`; last commit: `7657d2f2` (made from master; no work yet)
-  - evidence: `.claude/probes/K940/` in the worktree (copies of K924's probes, repointed at its source)
-  - next: (agent) the brief's steps 1-6; then the coordinator merges with every switch off, uploads sheet J to Drive `K868/sheets/` and asks Levi K943
-  - brief: `docs/design/K940_label_fixes.md`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
@@ -1983,6 +1975,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K940** · Label ink rule fixes behind switches, all off (`labFill: "yieldOrder"` with `labYieldChain`, `labCapReach`): the crossed yield form is right where plain yield was 82% wrong; change 2 hides crossing lines. Sheet J and S's crops. `K940_label_fixes.md` ## Results. Done in 4e0ce01d (2026-10-27).
 - **K926** · Cursive v5.4: e's two high entries from the font (o entry after b o v w, g entry after c g j y z; be 31.17 to 2.89 u off the font's connector, ve 31.17 to 3.46, ze 12.45 to 2.05), en 7.08 to 1.15 u, er 8.35 to 2.36. `K926_cursive_e.md` ## Handoff. Done in a99b2d64 (2026-10-27).
 - **K929** · Cursive: a word-final e draws its exit, cut where it has risen as far as the m/n/y/d tails (51.1 u, ending 1.46 u from the font's exit; the cut rule is K950). Done in a99b2d64 (2026-10-27).
 - **K930** · Cursive v5.3: few-node G2 strokes (m 157 to 26 nodes, a 109 to 19; bodies a median 13 nodes, within 0.94 u of v5.2); the `--from-svg` hold is prototyped, not wired (K944). `K930_cursive_smooth.md` ## Handoff. Done in fa7efad8 (2026-10-27).
