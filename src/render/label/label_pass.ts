@@ -7,10 +7,15 @@
 //   D2  DEPTH_COMPONENT32F texture (4 B/px), sampleable (K915's band pass)
 //   T   a copy of L after the tubes (4 or 16 B/px): the fill pass reads the
 //       tube label there, since WebGL2 cannot sample the target it draws to
-// Packed: 12 B/px in all (T is the 4 B/px the read adds); wide: 36 B/px.
+//   S   packed only (K868 S3a3): the tubes' exact s, float bits in R32UI
+//       (4 B/px), drawn by the tube pass as a second target (fboTube) and
+//       sampled by the fill pass, whose framebuffer (fboL) leaves it out,
+//       so it needs no copy. The fill's yield reads s there; the band pass
+//       keeps reading the packed word.
+// Packed: 16 B/px in all; wide: 36 B/px (its word carries s exactly).
 //
-// Per render: clear L (0 = paper) and D2 (1); draw the tubes (LESS, depth
-// written per fragment); blit L to T; draw the fills into L and D2.
+// Per render: clear L (0 = paper), S and D2 (1); draw the tubes (LESS,
+// depth written per fragment); blit L to T; draw the fills into L and D2.
 import { DATA_W, FILL_FLOATS, TUBE_FLOATS, type LabelPieces } from "./label_pieces";
 import { labelSources } from "./label_glsl";
 
@@ -75,6 +80,8 @@ export class LabelPass {
   private T: WebGLTexture | null = null;
   private fboL: WebGLFramebuffer | null = null;
   private fboT: WebGLFramebuffer | null = null;
+  private S: WebGLTexture | null = null;
+  private fboTube: WebGLFramebuffer | null = null;
   private pieces: LabelPieces | null = null;
   width = 0;
   height = 0;
@@ -144,7 +151,7 @@ export class LabelPass {
 
   /** Bytes the targets hold now. */
   get targetBytes(): number {
-    return this.width * this.height * (this.packed ? 12 : 36);
+    return this.width * this.height * (this.packed ? 16 : 36);
   }
 
   private ensureTargets(w: number, h: number): void {
@@ -177,9 +184,21 @@ export class LabelPass {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.fboT);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.T, 0);
     const okT = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    let okS: number = gl.FRAMEBUFFER_COMPLETE;
+    if (this.packed) {
+      this.S = tex(gl.R32UI, 0, 0);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      this.fboTube = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.fboTube);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.L, 0);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, this.S, 0);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.D2, 0);
+      gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+      okS = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    }
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    if (okL !== gl.FRAMEBUFFER_COMPLETE || okT !== gl.FRAMEBUFFER_COMPLETE)
-      throw new Error(`label targets incomplete (${okL}, ${okT})`);
+    if (okL !== gl.FRAMEBUFFER_COMPLETE || okT !== gl.FRAMEBUFFER_COMPLETE || okS !== gl.FRAMEBUFFER_COMPLETE)
+      throw new Error(`label targets incomplete (${okL}, ${okT}, ${okS})`);
     this.width = w;
     this.height = h;
   }
@@ -191,7 +210,8 @@ export class LabelPass {
     if (!p) return;
     const gl = this.gl;
     this.ensureTargets(w, h);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.fboL);
+    // Packed tubes draw L and S together (fboTube); the fills draw L alone.
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.packed ? this.fboTube : this.fboL);
     gl.viewport(0, 0, w, h);
     gl.disable(gl.SCISSOR_TEST);
     gl.disable(gl.BLEND);
@@ -205,6 +225,7 @@ export class LabelPass {
     gl.depthFunc(gl.LESS);
     gl.depthRange(0, 1);
     gl.clearBufferuiv(gl.COLOR, 0, new Uint32Array([0, 0, 0, 0]));
+    if (this.packed) gl.clearBufferuiv(gl.COLOR, 1, new Uint32Array([0, 0, 0, 0]));
     gl.clearBufferfv(gl.DEPTH, 0, new Float32Array([1]));
     const det = Math.abs(cam.a * cam.d - cam.b * cam.c);
     const pxWorld = det > 0 ? 1 / Math.sqrt(det) : 1;
@@ -238,8 +259,17 @@ export class LabelPass {
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, this.dataTex);
       gl.uniform1i(this.fill.u("uData"), 1);
+      if (this.packed) {
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, this.S);
+        gl.uniform1i(this.fill.u("uS"), 2);
+      }
       gl.bindVertexArray(this.fillVao);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, p.nFills);
+      if (this.packed) {
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.activeTexture(gl.TEXTURE1);
+      }
       gl.bindTexture(gl.TEXTURE_2D, null);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, null);
@@ -271,10 +301,10 @@ export class LabelPass {
 
   private freeTargets(): void {
     const gl = this.gl;
-    for (const t of [this.L, this.T, this.D2]) if (t) gl.deleteTexture(t);
-    for (const f of [this.fboL, this.fboT]) if (f) gl.deleteFramebuffer(f);
-    this.L = this.T = this.D2 = null;
-    this.fboL = this.fboT = null;
+    for (const t of [this.L, this.T, this.D2, this.S]) if (t) gl.deleteTexture(t);
+    for (const f of [this.fboL, this.fboT, this.fboTube]) if (f) gl.deleteFramebuffer(f);
+    this.L = this.T = this.D2 = this.S = null;
+    this.fboL = this.fboT = this.fboTube = null;
     this.width = this.height = 0;
   }
 
