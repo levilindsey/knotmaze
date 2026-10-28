@@ -483,7 +483,7 @@ Next free ID: K891.
   borders"), the `cr` slider scaling the approved corner (sheet C), and §3's fixes from S2 (a crossing
   inside a cluster's span, the short arm, the corner with no V). `docs/design/K883_oracle_borders.md`.
   - owner: agent `k883-borders` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 08:00, 2 h cap ~10:00)
-  - branch: `k883-borders`, worktree `.claude/worktrees/k883-borders`; last commit: `ec442669`
+  - branch: `k883-borders`, worktree `.claude/worktrees/k883-borders`; last commit: 96f7f113 (WIP)
   - evidence: .claude/probes/K883/ (census, probes, logs); .claude/probes/K868/sheets/ (B2_muse_hash.png, F_corner_reach.png)
   - next: census, rule, slider mapping, the K868_field_border.md rewrite, sheets B2 and F; then merge (agent_merge.ps1) and upload B2 and F to Drive K868/sheets/ for Levi
   - brief: `docs/design/K883_oracle_borders.md`
