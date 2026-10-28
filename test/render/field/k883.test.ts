@@ -155,3 +155,65 @@ describe("§3.4 on j_hook_cross: an END that hooks back over its own through (mu
     expect(check16(checkContext(m), oracleProbe(m)).status).toBe("pass");
   });
 });
+
+describe("K909: junction groups from geometry", () => {
+  const geo = (h: number, extra: Partial<OracleParams> = {}): OracleParams => ({ ...mapped(h, 3), groups: "geo", ...extra });
+
+  it("groups geo keeps #15 and #16 on the synthetic crossing scenes", () => {
+    for (const name of ["j_cross", "oblique30", "k42", "j_hook_cross", "j_pair_cross"]) {
+      const s = scene(name);
+      const m = new FieldModel(s, geo(s.look.halfWidth));
+      expect(m.diagnostics, name).toEqual([]);
+      const r = check15(checkContext(m));
+      expect(r.status, `${name}: ${r.value} ${r.details?.join("; ")}`).toBe("pass");
+      expect(check16(checkContext(m), oracleProbe(m)).status, name).toBe("pass");
+    }
+  });
+
+  it("floors each arm's span at the K883 span", () => {
+    for (const name of ["t90", "y120", "acute30", "acute20"]) {
+      const s = scene(name);
+      const h = s.look.halfWidth;
+      const k = new FieldModel(s, mapped(h, 3));
+      const g = new FieldModel(scene(name), geo(h));
+      k.junctionSpans.forEach((l, ji) =>
+        l.forEach(([, lo, hi, ai], n) => {
+          const q = g.junctionSpans[ji][n];
+          expect(q[3]).toBe(ai);
+          expect(q[2] - q[1], `${name} j${ji} arm ${ai}`).toBeGreaterThanOrEqual(hi - lo - 1e-9);
+        }),
+      );
+    }
+  });
+
+  it("walks each side: on t90 the END's two sides and the through's END side are in the group, the through's far side is not", () => {
+    const s = scene("t90");
+    const h = s.look.halfWidth;
+    const g = new FieldModel(s, geo(h));
+    const G = g.geoGroups!;
+    s.junctions[0].arms.forEach((a, ai) => {
+      const [p, q] = G.sides[0][ai];
+      if (a.kind === "end") {
+        expect(Math.min(p, q) / h, `END arm ${ai}`).toBeGreaterThan(0.5);
+      } else {
+        expect(Math.max(p, q) / h, `through arm ${ai}`).toBeGreaterThan(0.5);
+        expect(Math.min(p, q), `through arm ${ai}`).toBe(0);
+      }
+    });
+  });
+
+  it("truth geo asks the crossing first: j_hook_cross's over pass shows within L + h of the crossing", () => {
+    const s = scene("j_hook_cross");
+    const h = s.look.halfWidth;
+    const m = new FieldModel(s, mapped(h, 3));
+    const cx = s.crossings[0];
+    const over = cx[cx.over];
+    const reach = h / Math.tan((47 * D2R) / 2) + h;
+    const none = { cov: () => 0, exact: true, label: "none" } as unknown as Parameters<typeof borderCensus>[1] extends infer O ? O extends { probe?: infer P } ? P : never : never;
+    const shown = borderCensus(m, { truth: "geo", probe: none }).stretches.filter(
+      (q) => q.chain === over.chain && (Math.min(Math.abs(q.s0 - over.s), Math.abs(q.s1 - over.s)) <= reach || (q.s0 - over.s) * (q.s1 - over.s) < 0),
+    );
+    // Both sides of the over pass, up to the crossing: K900's geoHider called them inside j0's node overlap.
+    expect(new Set(shown.map((q) => q.side)).size).toBe(2);
+  });
+});

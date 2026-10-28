@@ -147,6 +147,10 @@ export interface OracleParams {
   /** K909: under groups "geo", floor each arm's extent at its corners'
    * extents (default true; false: the walk alone, the first K909 run). */
   geoFloor?: boolean;
+  /** K909: under groups "geo", cut each junction's arms at its own
+   * crossings first (geoCaps's cut; default false: the spans'
+   * cluster-wide cut alone; true: the second K909 run). */
+  geoCut?: boolean;
 }
 
 /** K883 (§3.8): the corner slider's rolling-ball radius at opening θ. */
@@ -662,12 +666,13 @@ export class FieldModel {
         }
       });
     });
-    // K909: the geometric group's caps (the reach, half a loop, each
-    // junction's own crossing cut), and its extents for the cut below.
+    // K909: the geometric group's caps (the reach, half a loop; the
+    // crossing cut is the cluster-wide one below unless geoCut), and its
+    // extents for the cut below.
     const geo = this.params.groups === "geo";
     let ext = ext0;
     if (geo) {
-      geoCaps(this).forEach((l, ji) => l.forEach((c, ai) => setCap(ji, ai, c.len, c.why)));
+      geoCaps(this, this.params.geoCut === true).forEach((l, ji) => l.forEach((c, ai) => setCap(ji, ai, c.len, c.why)));
       ext = this.geoExtents(new GeoGroups(this, this.armCaps), ext0);
     }
     // Crossing passes per chain, with the acute crossing angle.
