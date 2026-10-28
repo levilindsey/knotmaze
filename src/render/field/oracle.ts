@@ -151,6 +151,33 @@ export interface OracleParams {
    * crossings first (geoCaps's cut; default false: the spans'
    * cluster-wide cut alone; true: the second K909 run). */
   geoCut?: boolean;
+  /** K909 step 4 (sheet G, the hook's look; no default change): where a
+   * crossing-cut arm's side lies inside the crossing's other pass at the
+   * cut (`hooks`), "carry" draws that side's border from the junction to
+   * the cut over the group's body, and "cap" hides it while it lies inside
+   * the other pass's tube, so it starts on that pass's border. Default
+   * "now": the free cap at the cut. */
+  hookLook?: "now" | "carry" | "cap";
+}
+
+/** K909 step 4: a crossing-cut arm whose side lies inside the crossing's
+ * other pass at the cut (the hook of `j_hook_cross`, muse_hash crossing 292). */
+export interface HookArm {
+  junction: number;
+  arm: number;
+  cluster: number;
+  /** Poly index and the arm's root s, direction and cut s. */
+  pi: number;
+  root: number;
+  dir: number;
+  cut: number;
+  /** The crossing, its s on this chain, and the other pass (poly, s). */
+  crossing: number;
+  sOwn: number;
+  po: number;
+  sOther: number;
+  /** +1: the side along (−ty, tx); −1: the other. */
+  side: number;
 }
 
 /** K883 (§3.8): the corner slider's rolling-ball radius at opening θ. */
@@ -547,6 +574,119 @@ export class FieldModel {
     // 4. Primitives and their exposure (§3.5).
     this.buildPrims();
     this.buildPrimGrid();
+    this.hookLook = params.hookLook ?? "now";
+    if (k883) this.hooks = this.findHooks(scene);
+  }
+
+  /** K909 step 4: the hook look's switch, and the arms it applies to. */
+  readonly hookLook: "now" | "carry" | "cap";
+  hooks: HookArm[] = [];
+
+  private findHooks(scene: FieldScene): HookArm[] {
+    const h = this.h;
+    const out: HookArm[] = [];
+    this.armCaps.forEach((caps, ji) =>
+      caps.forEach((cap, ai) => {
+        const m = /^crossing (\d+)'s pass/.exec(cap.why);
+        if (!m || !Number.isFinite(cap.len)) return;
+        const cx = Number(m[1]);
+        const X = scene.crossings[cx];
+        const arm = scene.junctions[ji].arms[ai];
+        const pi = this.idxOf.get(arm.chain);
+        if (!X || pi === undefined) return;
+        const p = this.polys[pi];
+        const cut = normS(p, arm.s + arm.dir * cap.len);
+        // This chain's pass is the one nearer the cut along the arm.
+        const passes = [X.a, X.b].filter((q) => q.chain === arm.chain);
+        if (!passes.length) return;
+        const own = passes.reduce((a, q) => (Math.abs(dS(p, cut, q.s)) < Math.abs(dS(p, cut, a.s)) ? q : a));
+        const other = own === X.a ? X.b : X.a;
+        const po = this.idxOf.get(other.chain);
+        if (po === undefined) return;
+        const pp = this.polys[po];
+        const win = (s: number): [number, number] =>
+          pp.closed ? [s - 8 * h, s + 8 * h] : [Math.max(0, s - 8 * h), Math.min(pp.len, s + 8 * h)];
+        const [lo, hi] = win(other.s);
+        const at = pointAt(p, cut);
+        const inside = [1, -1].filter((sd) => {
+          const qx = at.x - sd * at.ty * h;
+          const qy = at.y + sd * at.tx * h;
+          return footInWindow(pp, qx, qy, lo, hi).d < h - 1e-6 * h;
+        });
+        if (inside.length !== 1) return;
+        out.push({
+          junction: ji,
+          arm: ai,
+          cluster: this.junctionCluster[ji],
+          pi,
+          root: arm.s,
+          dir: arm.dir,
+          cut,
+          crossing: cx,
+          sOwn: own.s,
+          po,
+          sOther: other.s,
+          side: inside[0],
+        });
+      }),
+    );
+    return out;
+  }
+
+  /** K909 step 4: the hook look's change to one point's ink (evalPoint, top group found). */
+  private hookAdjust(x: number, y: number, out: PointEval, cls: Set<number>): void {
+    const h = this.h;
+    const W = this.W;
+    for (const H of this.hooks) {
+      const p = this.polys[H.pi];
+      if (this.hookLook === "carry") {
+        if (!cls.has(H.cluster) || out.ink) continue;
+        // The arm's centreline from the root to the cut; its inner side's border band.
+        const a = H.root;
+        const b = H.root + H.dir * Math.abs(dS(p, H.root, H.cut));
+        const [lo, hi] = a < b ? [a, b] : [b, a];
+        const f = footInWindow(p, x, y, lo, hi);
+        if (!(f.d >= h - W && f.d <= h)) continue;
+        if (Math.abs(dS(p, f.s, H.root)) < 1e-6 * h) continue;
+        const t = pointAt(p, normS(p, f.s));
+        const sd = -t.ty * (x - f.x) + t.tx * (y - f.y);
+        if (Math.sign(sd) !== H.side) continue;
+        out.ink = true;
+        out.F = Math.min(out.F, h - f.d);
+      } else if (this.hookLook === "cap") {
+        if (!out.ink) continue;
+        // Ink inside the crossing's other pass by more than W (within W of
+        // that pass's border, only the cut's own cap, within h of the side's
+        // end point there: the side's exit corner stays)...
+        const pp = this.polys[H.po];
+        const lo2 = pp.closed ? H.sOther - 8 * h : Math.max(0, H.sOther - 8 * h);
+        const hi2 = pp.closed ? H.sOther + 8 * h : Math.min(pp.len, H.sOther + 8 * h);
+        const dOther = footInWindow(pp, x, y, lo2, hi2).d;
+        if (!(dOther < h)) continue;
+        if (!(dOther < h - W)) {
+          const at = pointAt(p, normS(p, H.cut));
+          if (Math.hypot(x - (at.x - H.side * at.ty * h), y - (at.y + H.side * at.tx * h)) > h) continue;
+        }
+        // ...and on the hook's side of the arm's tube, from the root to the
+        // crossing's far side (whichever window is on top: the cut's own cap
+        // included), goes.
+        const reach = Math.abs(dS(p, H.root, H.sOwn)) + 3 * h;
+        const a = H.root;
+        const b = H.root + H.dir * reach;
+        let [lo, hi] = a < b ? [a, b] : [b, a];
+        if (!p.closed) {
+          lo = Math.max(0, lo);
+          hi = Math.min(p.len, hi);
+        }
+        const f = footInWindow(p, x, y, lo, hi);
+        if (!(f.d <= h + 1e-9)) continue;
+        if (Math.abs(dS(p, f.s, H.root)) < 1e-6 * h) continue;
+        const t = pointAt(p, normS(p, f.s));
+        const sd = -t.ty * (x - f.x) + t.tx * (y - f.y);
+        if (Math.sign(sd) !== H.side) continue;
+        out.ink = false;
+      }
+    }
   }
 
   /** Arm key for per-arm maps. */
@@ -1985,6 +2125,7 @@ export class FieldModel {
       out.topChain = this.idOf[c.chain];
       out.topS = c.s;
       out.top = cls.size > 0 ? 100000 + Math.min(...cls) : this.idOf[c.chain];
+      if (this.hookLook !== "now" && this.hooks.length) this.hookAdjust(x, y, out, cls);
       return out;
     }
     if (!wantField) return out;
@@ -2066,7 +2207,8 @@ export function renderOracle(model: FieldModel, cam: Camera, rect: RenderRect, s
       // A subsample is ink only within W of some exposed outline, so a pixel
       // whose centre is farther than W + 2 device px from every exposed
       // primitive has no ink (whichever group owns each subsample).
-      if (model.nearestExposed(wx, wy, model.W + 2 / ppu / cam.dpr) > model.W + 2 / ppu / cam.dpr) {
+      // (K909 hook look "carry" draws a border inside a group: no gate.)
+      if (model.hookLook !== "carry" && model.nearestExposed(wx, wy, model.W + 2 / ppu / cam.dpr) > model.W + 2 / ppu / cam.dpr) {
         k = 0;
       } else {
         for (let sj = 0; sj < ss; sj++)

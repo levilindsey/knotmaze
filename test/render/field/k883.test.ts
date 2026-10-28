@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { borderCensus, check15, check16, checkContext, oracleProbe } from "../../../src/render/field/checks";
-import { dS } from "../../../src/render/field/geom";
+import { dS, normS, pointAt } from "../../../src/render/field/geom";
 import { FieldModel, type OracleParams, cornerRadius, cornerRadiusMax } from "../../../src/render/field/oracle";
 import type { FieldScene } from "../../../src/render/field/scene";
 
@@ -215,5 +215,23 @@ describe("K909: junction groups from geometry", () => {
     );
     // Both sides of the over pass, up to the crossing: K900's geoHider called them inside j0's node overlap.
     expect(new Set(shown.map((q) => q.side)).size).toBe(2);
+  });
+
+  it("hookLook (sheet G): j_hook_cross's END is the one hook arm; cap hides its free cap, carry draws its side back to the root", () => {
+    const s = scene("j_hook_cross");
+    const h = s.look.halfWidth;
+    const look = (hookLook: "now" | "carry" | "cap") => new FieldModel(s, { ...mapped(h, 3), hookLook });
+    const now = look("now");
+    expect(now.hooks.map((k) => [k.junction, k.arm, k.crossing])).toEqual([[0, 1, 0]]);
+    // The free cap at the cut, inside the through.
+    expect(now.evalPoint(0.917, 0.733).ink).toBe(true);
+    expect(look("cap").evalPoint(0.917, 0.733).ink).toBe(false);
+    // The hook side's border band between the root and the cut: inside the group's body now.
+    const H = now.hooks[0];
+    const p = now.polys[H.pi];
+    const at = pointAt(p, normS(p, H.root + H.dir * 0.25 * h));
+    const q = [at.x - H.side * at.ty * 0.8 * h, at.y + H.side * at.tx * 0.8 * h] as const;
+    expect(now.evalPoint(q[0], q[1]).ink).toBe(false);
+    expect(look("carry").evalPoint(q[0], q[1]).ink).toBe(true);
   });
 });
