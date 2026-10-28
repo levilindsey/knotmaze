@@ -22,7 +22,7 @@ o, t, n, 6 and ς.
 - **K552 is merged** (the title flag, default off). Titled sheets turn
   it on in their links.
 - **Levi's calls** (glyphs doc section 11, all answered 2026-10-20).
-  Build what he picked:
+  Build what Levi picked:
   - a pill dot (call 1);
   - floating strokes not walkable, for now (call 2; K569 is the
     follow-up that makes some of them threads, out of scope here);
@@ -219,7 +219,7 @@ o, t, n, 6 and ς.
   - the closest forms, with their numbers;
   - the rule each breaks.
 
-  Levi then picks between his form and the wider spacing he first
+  Levi then picks between their form and the wider spacing they first
   accepted (call 6).
 - **The junction field cannot draw a fork** that the glyphs can fit at
   xh 2.0. Report the smallest clean fork and what it costs the letters.
@@ -380,7 +380,7 @@ not fit in it.
 
 ### Kill criterion: Levi's o-kind join (tripped, with a passing neighbour)
 
-- **His form fails the lint.** The connector arrives tangent at J, so
+- **Levi's form fails the lint.** The connector arrives tangent at J, so
   the fork at J opens 1.0 degree: the thorn on `shots3/a_xh2.png` and
   `shots4/a_tan_xh2.png`.
   - xh 2: `fork-angle`, plus `clearance` 0.558 LU at (19.0, 51.6), where
@@ -399,12 +399,12 @@ not fit in it.
   The search is `a_search.ts` (25000 samples; `a_search1.txt`), and
   forms pass with the oval shifted 0 to 8 GU.
 - **Levi picks:**
-  - his tangent form, which fails the fork rule;
+  - Levi's tangent form, which fails the fork rule;
   - the landed form, which passes at the same width;
   - or the wider spacing (call 6).
 
   The tangent form stays the default and is a listed known failure in
-  the lint test until he picks.
+  the lint test until Levi picks.
 
 ### Numbers against stage 8
 

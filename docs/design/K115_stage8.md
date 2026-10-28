@@ -17,7 +17,7 @@ Ledger item K115. Levi, 2026-10-19, on the Daily #8 title thread:
 > (but, obviously, we'd want to polish and verify everything before
 > doing anything like a massive data generation).
 
-He also picked stage 6's recommendation for the Greek final ς: it gets
+Levi also picked stage 6's recommendation for the Greek final ς: it gets
 its own final-sigma glyph.
 
 **This stage is research and design only.** You change docs and probes,
@@ -212,7 +212,7 @@ cursive still ships in titled dailies, cartouches and the `?txt=` scene.
    - **Gates:** the metrics harness green against the calibrated
      thresholds, and the junction census at zero junctions.
    - **Mass authoring waits on Levi:** the full set (Latin, digits,
-     punctuation, Greek, accents, capitals) comes only after his look
+     punctuation, Greek, accents, capitals) comes only after Levi's look
      call on stage 9. Say so in the brief.
 
 ## The design must cover
@@ -422,7 +422,7 @@ To re-run it from the worktree root:
 ### Next
 
 1. Levi answers the calls in glyphs doc section 11. Call 6, the o-kind
-   join, is his only if stage 9 cannot clear it.
+   join, is Levi's only if stage 9 cannot clear it.
 2. K558 and K552 merge.
 3. Stage 9 runs per `docs/design/K115_stage9.md`, starting with the
    o-kind join.

@@ -25,7 +25,7 @@ this plan.
 
 - Section 4's entries for the set, and section 0's decisions.
 - Levi's calls: `docs/design/levi_notes_2026-10-13.md` (and
-  `levi_notes_2026-10-14.md` if it touches the set). His direction:
+  `levi_notes_2026-10-14.md` if it touches the set). Levi's direction:
   prototype each mechanism in free play behind its own toggle.
 - What K137 built, from the Handoffs of `K137_s1.md` and `K137_s3a.md`
   (and K139's collapse mode, commit 961cd53),

@@ -353,7 +353,7 @@ walk field is added now to serve a deferred scheme.
   the letters the builder already ships: a t's bar is already a
   pinned bar strand crossing its stem (stage 1b, design 3.3's third
   option), and join-bars cover the handwritten case. 4b runs only if
-  a word Levi wants has a bar no builder strand gives, or he asks
+  a word Levi wants has a bar no builder strand gives, or Levi asks
   for a living (unpinned) bar: then the nearest frame turn on the
   stem's line is rerouted through the hole as the bar (two border
   junctions, its frame half-ends rejoined by a border splice or left

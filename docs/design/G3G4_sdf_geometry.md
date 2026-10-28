@@ -781,7 +781,7 @@ G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
   - Pixel: 60 fps held at defaults, dense no worse than master (the frame bench); `MAX_VARYING_VECTORS` covers section 3.2's varyings;
   - cold link: ribbon-sdf compiles in at most section-rgb's 2.8 s + 15% (trace_intro on a fresh profile), and is measured on the Pixel;
   - K307's registry lists ribbon-sdf and ribbon-sdf-explore; `rp=strip` compiles on demand only.
-- **Gate:** Levi checks G3-2 on his phone before G3-3 deletes the strip.
+- **Gate:** Levi checks G3-2 on their phone before G3-3 deletes the strip.
 
 ### 5.4 G3-3: cleanup
 
@@ -862,7 +862,7 @@ This replaces "Ordering with G2": G2 has landed, so there is no `threadColor` ad
 
 Refreshed by K8 s1 for the Pixel 11 on Android Chrome. Each question for Levi carries a recommendation.
 
-**Levi's calls (2026-10-15, K361):** taken as recommended: the smin web shape chosen from G4-1's sheet (3), accept the yarn taper (3), webs yield inset 1 px (6), 2x until K22 (10), and the `rp`/`jp` hatches go after his phone checks (2). Still open: K90's spline bend (13). Levi is not sure yet, and G3-2 needs it decided.
+**Levi's calls (2026-10-15, K361):** taken as recommended: the smin web shape chosen from G4-1's sheet (3), accept the yarn taper (3), webs yield inset 1 px (6), 2x until K22 (10), and the `rp`/`jp` hatches go after Levi's phone checks (2). Still open: K90's spline bend (13). Levi is not sure yet, and G3-2 needs it decided.
 
 1. **The Pixel's GPU cost is estimated, not measured.** Chrome there exposes no GPU timer query (the Pixel's PowerVR CXTP-48), so a `gl.finish()` frame bench is the instrument (`scripts/bench_frame.mjs`, G3-0); alternate builds, because the phone throttles over minutes. The joint pass is the largest single item at cr 3-6 (levers 1, 3 and 9). **Recommendation:** G3-0's phone pass records master's frame-bench numbers, so every later stage has a same-phone baseline.
 2. **Android Chrome on PowerVR (ANGLE over GLES)** replaces the snapshot's WebKit risk. Each needs a device check:

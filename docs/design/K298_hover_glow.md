@@ -12,7 +12,7 @@ Levi, 2026-10-14 about 19:13, verbatim:
 
 "I take it back" most likely reverses K219 ("Hover should honor the
 slider."), which made the glow's length follow `pulseReach`. That is a
-reading, not something he said. His answers to the coordinator's two
+reading, not something Levi said. Levi's answers to the coordinator's two
 questions (about 20:25) are quoted in items 4 and 5.
 
 ## What is there today
@@ -38,7 +38,7 @@ when you read the paint files). In short:
   default 0.85, range [0.3, 1]) rides `uKGold.w` as the scale
   `kRimScale`. Its panel row is "Hover glow width", next to "Hover glow"
   in `tweakpane_panel.ts`. K111 stage 4 added it at 19:11, two minutes
-  before his message, so he had most likely not seen it yet (inferred).
+  before Levi's message, so they had most likely not seen it yet (inferred).
 - **Choices.** A run that is one of the player's choices draws no glow.
   It keeps its pulses and its own, stronger hover look.
 - **Picking: two radii, the same for mouse and touch.**
