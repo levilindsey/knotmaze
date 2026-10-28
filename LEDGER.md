@@ -305,7 +305,7 @@ Next free ID: K914.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
-  - owner: stage K904, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 11:52; handle under K904)
+  - owner: stage K904, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 11:40; handle under K904)
   - branch: mainline, no code (outputs untracked); last commit: n/a
   - evidence: `.claude/probes/K863/trace/` (v1: `tools/trace_tool_v2.py`, `work4/`, `out/`; v2: `tools/trace_k879.py`, `out5*/`; v3: `tools/*k886*`, `work6/`, `out6/`; v4: `tools/*_k902.py`, `work7/`, `out7/`; `NOTES.md` ## v3 and ## v4 with their rerun commands); Drive `K863/` (`cursive_v4.svg`, `cursive_v3.svg`; v1's SVG and review)
   - next: K904 builds v5 (all six entries fused, the high entry mode, fixed leads and tails); Levi answers K901 (r after a high exit) and edits v5's template; K912's generator follow-ups; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls)
@@ -499,7 +499,7 @@ Next free ID: K914.
 - **K904** · Cursive v5: a, c, d, g, o and q fused at a junction about 60 u up; the high entry mode
   (after b, o, v, w); r after a high exit both ways (K901); leads, tails and the generated e.
   `docs/design/K904_cursive_v5.md`.
-  - owner: agent `a31f7f6f3061890de` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 11:52, 2 h cap ~13:52)
+  - owner: agent `a31f7f6f3061890de` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 11:40, 2 h cap ~13:40)
   - branch: none: probe-only, no commits (main checkout, untracked `.claude/probes/K863/trace/`); last commit: n/a
   - evidence: `.claude/probes/K863/trace/` (untracked): `work8/`, `out8/`, NOTES.md ## v5
   - next: steps 1-3 first: fuse the six entries; the high entry mode; rebuild as v5 with the r comparison
