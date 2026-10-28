@@ -637,7 +637,7 @@ A fragment's s is s[k] + t·segLen[k] in float32. The measured error is
 
 | part | ms p50 | ms p95 | |
 |---|---|---|---|
-| tables (s, spans, pins) | 0.15-0.21 | 0.17-0.20 | measured |
+| tables (s, spans, pins) | 0.15-0.21 | 0.17-0.20 (3.5 on def drag: allocation, inferred; section 4) | measured |
 | opening | 0.17-0.21 | - | measured |
 | corners, warm, at the final radius | 1.81-1.86 | 3.19-3.62 | measured |
 | ... re-fit replayed | +0.4-1.7 | +0.8-3.4 | estimated |
