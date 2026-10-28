@@ -303,7 +303,7 @@ scale. No marks drawn; the site is each crop's centre.
 | c1 | under a junction's fill (K943) | g41_ring_tw42 (21.13, 17.87) j24/1 | a corner with a 1 px notch | a 1 px break |
 | c2 | the same | g41_def_tw64 (22.32, 17.33) j177/0 | continuous | a loose dash, about 4 px |
 | c3 | the same | user_tw42.lightpaper (20.82, 4.97) j56/1 | a 1 px step | a small hook |
-| d1 | free end, one exit | muse_hash (3.07, 28.27) | the line stops 2-3 px short of a small closed loop | the same, the loop notched |
+| d1 | free end, one exit | muse_hash (3.07, 28.27): step 3's m4, not its d1 | the line stops 2-3 px short of a small closed loop | the same, the loop notched |
 | d2 | the same | muse_hash (4.78, 33.44) | a solid spur, about 4x8 px, off a line | the same, a little thinner |
 | e1 | extra: in a junction's union, own chain | g41_user_tw64 (3.51, 11.96) j60, n 2 | a clean three-way joint | a 1 px notch |
 | f1 | free end, no exit (an island) | g41_user_tw64 (9.79, 12.93) | a hairline sliver, 1 px wide and about 8 px long, dark on a dark ground | a speck, not visible |
