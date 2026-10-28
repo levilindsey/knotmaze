@@ -167,3 +167,40 @@ Binding on every later cursive stage:
   pipeline reads those curves exactly as drawn: it derives the joins,
   variants and tails from them, reports any kink it finds, and never
   refits them (K944).
+- **The long e tail** (Levi, 2026-10-28, K950: "Long tail on e seems
+  goood"). A word-final e's tail rises as high as the m/n/y/d tails;
+  it is `build_from_svg.ps1`'s default.
+- **o's exit is a cusp** (Levi, 2026-10-28, K976: "o has a bit of an
+  awkward crotch leading into the exit segment. The body stroke should
+  form an abrupt cusp and then slight overstroke as it leads to the
+  exit segment"). The body stops in a sharp turnaround and runs slightly
+  back over itself into the exit, with no S-bend. Every o exit, plain
+  and fused.
+- **v5.8's other notes** (Levi, 2026-10-28; bodies K990, entries K991):
+  - "The entry segment to b has a strange bend."
+  - "The entry segment to h doesn't match the curvature of the start of
+    h well."
+  - "The end of p, leading into the exit segment, seems a bit longer
+    than it probably should be, which makes it match less well the
+    curvature of the exit segment."
+  - "I want the top of the a body, at the point where the stroke
+    abruptly turns around and starts overstroking back, to touch the
+    exact top of the right-side stroke of a. Right now it's a bit
+    downward from that top point. They should form an angle. When we
+    hook this up to threads, I'm going to want to have the thread
+    continue seamlessly around this sharp corner bend."
+  - "I'd like the end leg section of k to form a sharper angle as it
+    bends and touches the tall body of k."
+  - "A few letters, like t and p, should have the entry segment line up
+    better over the vertical segment that it is joining at a sharp
+    angle. They should join at a matching tangent angle. The entry
+    segment should NOT cross over the vertical segment--it should
+    instead just come up to meet it from the one side."
+  - "And yes, the f cusp to the exit segment needs to be fixed" (f's end,
+    today a slight S-bend, then a tight curl over into the exit).
+
+  Read as: a's turnaround and the top of its right-side stroke are one
+  point, a corner with two tangents, and the thread later runs around
+  it without a break. A cusp entry ends with its tangent collinear with
+  the stem's first tangent and stays on one side of the stem until it
+  meets it.
