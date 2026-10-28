@@ -389,6 +389,8 @@ export class FieldModel {
   readonly diagnostics: string[] = [];
   readonly scene: FieldScene;
   readonly params: OracleParams;
+  /** K868 S3a6: each corner's V solve, by `junction/index` (V is r-free). */
+  private readonly vMemo = new Map<string, { x: number; y: number; res: number; fa: number; fb: number; sA: number; sB: number; ok: boolean }>();
   /** Diagram depth (§3.3): per poly, its crossing pins; the window in arc length. */
   readonly depthChains: DepthChain[];
   readonly depthWin: number;
@@ -1009,17 +1011,52 @@ export class FieldModel {
         ? this.armCaps[c.junction][c.armIdxA!].why
         : this.armCaps[c.junction][c.armIdxB!].why;
       const r0 = c.r;
-      let r = Math.min(c.r, Math.max(0, room()) * Math.tan(c.theta / 2));
-      let fit = this.solveCorner(c.junction, c.index, c.armA, c.a, c.armB, c.b, c.theta, c.style, r);
-      for (let it = 0; it < 6 && r > 0; it++) {
-        const o = Math.max(
-          Math.abs(dS(pa, c.armA.s, fit.sTA)) - (capA - this.W),
-          Math.abs(dS(pb, c.armB.s, fit.sTB)) - (capB - this.W),
-        );
-        if (!(o > 1e-6 * h) && fit.ok) break;
-        r = Math.max(0, r - Math.max(o, 0.02 * h) * Math.tan(c.theta / 2));
-        if (r < 1e-3 * h) r = 0;
-        fit = this.solveCorner(c.junction, c.index, c.armA, c.a, c.armB, c.b, c.theta, c.style, r);
+      // K868 S3a6, call 2: THE RE-FIT IS A SOLVE. f(r) is the tangent
+      // points' overshoot past cap − W (+∞ where the corner does not
+      // solve), and r is where f crosses 0: bracketed between f(0) = −room
+      // and f(r0) > 0, narrowed by regula falsi (Illinois, bisecting when
+      // two steps do not halve the bracket) to 1e-6 h, and taken on the
+      // fitting side. Before S3a6 it stepped r down by max(o, 0.02 h)·
+      // tan(θ/2) at most six times and snapped r < 1e-3 h to 0, so r moved
+      // in steps as the geometry moved (S3a6's amplification jumps).
+      const overOf = (f: Corner): number =>
+        f.ok
+          ? Math.max(Math.abs(dS(pa, c.armA.s, f.sTA)) - (capA - this.W), Math.abs(dS(pb, c.armB.s, f.sTB)) - (capB - this.W))
+          : Infinity;
+      const solveAt = (rr: number) => this.solveCorner(c.junction, c.index, c.armA, c.a, c.armB, c.b, c.theta, c.style, rr);
+      let fit = solveAt(0);
+      let lo = 0;
+      let fLo = overOf(fit);
+      if (fLo < 0) {
+        let hi = r0;
+        let fHi = overOf(c);
+        let side = 0;
+        const guess = Math.min(r0, room() * Math.tan(c.theta / 2));
+        const widths: number[] = [];
+        for (let it = 0; it < 200 && hi - lo > 1e-6 * h; it++) {
+          const w = hi - lo;
+          let x: number;
+          if (it === 0) x = guess;
+          else if (widths.length >= 2 && w > 0.5 * widths[widths.length - 2]) x = 0.5 * (lo + hi);
+          else if (Number.isFinite(fHi)) x = hi - (fHi * (hi - lo)) / (fHi - fLo);
+          else x = 0.5 * (lo + hi);
+          if (!(x > lo && x < hi)) x = 0.5 * (lo + hi);
+          widths.push(w);
+          const f = solveAt(x);
+          const fx = overOf(f);
+          if (fx <= 0) {
+            lo = x;
+            fLo = fx;
+            fit = f;
+            if (side === -1) fHi /= 2;
+            side = -1;
+          } else {
+            hi = x;
+            fHi = fx;
+            if (side === 1) fLo /= 2;
+            side = 1;
+          }
+        }
       }
       Object.assign(c, { ...fit, cluster: c.cluster, armIdxA: c.armIdxA, armIdxB: c.armIdxB, rRule: c.rRule });
       c.fit = `r ${(r0 / h).toFixed(3)}h → ${(c.r / h).toFixed(3)}h: ${why}${room() <= 0 ? " (no room past V: sharp)" : ""}`;
@@ -1240,78 +1277,105 @@ export class FieldModel {
     const pa = this.polys[a];
     const pb = this.polys[b];
     const half = theta / 2;
-    const reachQ = (h + r) / Math.max(Math.sin(half), 1e-3);
-    const Lw = Math.min(4 * h + 2 * reachQ, 1e6);
+    // A solve at offset δ searches arm lengths 4h + 2δ/sin(θ/2) out from the
+    // root (the window at r = δ − h). K868 S3a6: V's search (δ = h) has its
+    // own, r-free reach, so V is the same at every radius the re-fit tries.
+    const reach = (delta: number): number => Math.min(4 * h + (2 * delta) / Math.max(Math.sin(half), 1e-3), 1e6);
+    const Lw = reach(h + r);
     // S2: each window covers its own arm only, from just behind the root
     // outward. A two-sided window let the feet jump to the chain's other
     // arm, or to another pass of the chain looping back near the corner
     // (S1b's failed q solves on muse_hash).
     const back = this.params.cornerBack ?? 0.25 * h;
-    const side = (arm: SceneArm): [number, number] => (arm.dir > 0 ? [arm.s - back, arm.s + Lw] : [arm.s - Lw, arm.s + back]);
-    const winA: [number, number] = this.params.cornerTwoSided ? [A.s - Lw, A.s + Lw] : side(A);
-    const winB: [number, number] = this.params.cornerTwoSided ? [B.s - Lw, B.s + Lw] : side(B);
+    const side = (arm: SceneArm, L: number): [number, number] => (arm.dir > 0 ? [arm.s - back, arm.s + L] : [arm.s - L, arm.s + back]);
+    const winA: [number, number] = this.params.cornerTwoSided ? [A.s - Lw, A.s + Lw] : side(A, Lw);
+    const winB: [number, number] = this.params.cornerTwoSided ? [B.s - Lw, B.s + Lw] : side(B, Lw);
+    const winA0: [number, number] = this.params.cornerTwoSided ? winA : side(A, reach(h));
+    const winB0: [number, number] = this.params.cornerTwoSided ? winB : side(B, reach(h));
     const ua = this.armDir(pa, A, this.params.openingChord ?? 2 * h);
     const root = pointAt(pa, A.s);
     const ca = Math.cos(half);
     const sa = Math.sin(half);
     const bis: [number, number] = [ua[0] * ca - ua[1] * sa, ua[0] * sa + ua[1] * ca];
     type Sol = { x: number; y: number; res: number; fa: number; fb: number; sA: number; sB: number; ok: boolean };
-    // S2: Newton from the bisector guess first, then from guesses nearer and
-    // farther along the bisector (a stall between two segments' feet or on
-    // the medial axis does not survive a different start).
-    const solve = (delta: number): Sol => {
-      let best: Sol | undefined;
-      const take = (s: Sol): boolean => {
-        if (!best || s.res < best.res) best = s;
-        return s.ok;
+    // A foot clamped at its window's end is the distance to a cut, not to
+    // the arm: never a contact.
+    const atEnd = (p: Poly, w: [number, number], s: number): boolean =>
+      Math.abs(dS(p, w[0], s)) <= 1e-9 * h || Math.abs(dS(p, w[1], s)) <= 1e-9 * h;
+    // K868 S3a6, call 1: THE CORNER IS THE ROLLING BALL'S FIRST CONTACT WITH
+    // BOTH ARMS AS IT ROLLS IN FROM THE OPEN SIDE. The ball's centre runs
+    // down arm A's wedge-side offset at δ from the far end of the search
+    // inward, and the root is the first place where it comes within δ of
+    // arm B at a true foot (not at a window's end). A root behind it is
+    // unreachable from the open side and never chosen, so the corner is a
+    // function of the frame's geometry, not of a solver's start. (Before
+    // S3a6: Newton from guesses along the bisector, whichever converged
+    // first, and a march out from the root as the last resort; S3a5's
+    // folds and switches.) If the ball never touches, there is no root.
+    const solve = (delta: number, wA: [number, number], wB: [number, number]): Sol => {
+      if (this.params.cornerTwoSided) {
+        const d = delta / Math.max(sa, 1e-3);
+        return newton(delta, root.x + bis[0] * d, root.y + bis[1] * d, wA, wB);
+      }
+      const ownA = pa.closed ? Infinity : A.dir > 0 ? pa.s0 + pa.len - A.s : A.s - pa.s0;
+      const behindA = pa.closed ? Infinity : A.dir > 0 ? A.s - pa.s0 : pa.s0 + pa.len - A.s;
+      const uFar = Math.min(A.dir > 0 ? wA[1] - A.s : A.s - wA[0], ownA);
+      const uNear = -Math.min(A.dir > 0 ? A.s - wA[0] : wA[1] - A.s, behindA);
+      const at = (u: number): { px: number; py: number; g: number; hit: boolean } => {
+        const pt = pointAt(pa, A.s + A.dir * u);
+        const px = pt.x - pt.ty * A.dir * delta;
+        const py = pt.y + pt.tx * A.dir * delta;
+        const f = footInWindow(pb, px, py, wB[0], wB[1]);
+        const g = f.d - delta;
+        return { px, py, g, hit: g <= 0 && !atEnd(pb, wB, f.s) };
       };
-      for (const k of this.params.cornerTwoSided ? [1] : [1, 0.7, 1.4, 0.5, 2, 0.35, 3]) {
-        const d = (k * delta) / Math.max(sa, 1e-3);
-        if (take(newton(delta, root.x + bis[0] * d, root.y + bis[1] * d))) return best!;
-      }
-      if (this.params.cornerTwoSided) return best!;
-      // Last resort: march out along arm A's wedge-side offset at δ and
-      // bracket a sign change of d_B − δ, then polish with Newton.
-      const n = Math.ceil(Math.min(Lw, 64 * h) / (0.05 * h));
-      let prev = NaN;
-      let prevU = 0;
-      for (let i = 0; i <= n; i++) {
-        const u = (i / n) * Math.min(Lw, 64 * h);
-        const at = (uu: number): [number, number, number] => {
-          const pt = pointAt(pa, A.s + A.dir * uu);
-          const nx = -pt.ty * A.dir;
-          const ny = pt.tx * A.dir;
-          const px = pt.x + nx * delta;
-          const py = pt.y + ny * delta;
-          return [px, py, footInWindow(pb, px, py, winB[0], winB[1]).d - delta];
-        };
-        const [, , g] = at(u);
-        if (i > 0 && Number.isFinite(prev) && Math.sign(g) !== Math.sign(prev)) {
-          let lo = prevU;
+      const tol = 1e-9 * Math.max(1, delta);
+      let miss: Sol = { x: root.x, y: root.y, res: Infinity, fa: 0, fb: 0, sA: A.s, sB: B.s, ok: false };
+      let u = uFar;
+      let cur = at(u);
+      for (let guard = 0; guard < 20000 && u > uNear; guard++) {
+        if (!cur.hit && Math.abs(cur.g) < miss.res) miss = { ...miss, x: cur.px, y: cur.py, res: Math.abs(cur.g) };
+        const u1 = Math.max(uNear, u - Math.max(0.05 * h, Math.min(h, Math.abs(cur.g) / 2)));
+        const nx = at(u1);
+        if (!cur.hit && nx.hit) {
+          // The bracket [u1, u]: contact at u1, none at u. Bisect to 1e-3 h,
+          // then polish with Newton; failing that, bisect to the bit.
+          let lo = u1;
           let hi = u;
-          let glo = prev;
-          for (let it = 0; it < 50; it++) {
+          for (let it = 0; it < 80 && hi - lo > 1e-3 * h; it++) {
             const mid = (lo + hi) / 2;
-            const gm = at(mid)[2];
-            if (Math.sign(gm) === Math.sign(glo)) {
-              lo = mid;
-              glo = gm;
-            } else hi = mid;
+            if (at(mid).hit) lo = mid;
+            else hi = mid;
           }
-          const [px, py] = at((lo + hi) / 2);
-          if (take(newton(delta, px, py))) return best!;
+          const m = at((lo + hi) / 2);
+          const nt = newton(delta, m.px, m.py, wA, wB);
+          if (nt.ok && Math.hypot(nt.x - m.px, nt.y - m.py) < 0.25 * h && !atEnd(pa, wA, nt.sA) && !atEnd(pb, wB, nt.sB))
+            return nt;
+          for (let it = 0; it < 80 && hi - lo > 1e-12 * Math.max(1, Math.abs(hi)); it++) {
+            const mid = (lo + hi) / 2;
+            if (at(mid).hit) lo = mid;
+            else hi = mid;
+          }
+          const e = at(lo);
+          const fA = footInWindow(pa, e.px, e.py, wA[0], wA[1]);
+          const fB = footInWindow(pb, e.px, e.py, wB[0], wB[1]);
+          const res = Math.max(Math.abs(fA.d - delta), Math.abs(fB.d - delta));
+          if (res < tol && !atEnd(pa, wA, fA.s) && !atEnd(pb, wB, fB.s))
+            return { x: e.px, y: e.py, res, fa: 0, fb: 0, sA: fA.s, sB: fB.s, ok: true };
+          // Not a contact (the foot jumped between two parts of arm B, or
+          // arm A's own foot is elsewhere): march on.
         }
-        prev = g;
-        prevU = u;
+        u = u1;
+        cur = nx;
       }
-      return best!;
+      return miss;
     };
-    const newton = (delta: number, x0: number, y0: number): Sol => {
+    const newton = (delta: number, x0: number, y0: number, wA: [number, number], wB: [number, number]): Sol => {
       let x = x0;
       let y = y0;
       let ok = false;
-      let fA = footInWindow(pa, x, y, winA[0], winA[1]);
-      let fB = footInWindow(pb, x, y, winB[0], winB[1]);
+      let fA = footInWindow(pa, x, y, wA[0], wA[1]);
+      let fB = footInWindow(pb, x, y, wB[0], wB[1]);
       for (let it = 0; it < 200; it++) {
         const ra = fA.d - delta;
         const rb = fB.d - delta;
@@ -1335,14 +1399,20 @@ export class FieldModel {
         }
         x += dx;
         y += dy;
-        fA = footInWindow(pa, x, y, winA[0], winA[1]);
-        fB = footInWindow(pb, x, y, winB[0], winB[1]);
+        fA = footInWindow(pa, x, y, wA[0], wA[1]);
+        fB = footInWindow(pb, x, y, wB[0], wB[1]);
       }
       const res = Math.max(Math.abs(fA.d - delta), Math.abs(fB.d - delta));
       if (res < 1e-9 * Math.max(1, delta)) ok = true;
       return { x, y, res, fa: 0, fb: 0, sA: fA.s, sB: fB.s, ok };
     };
-    const v = solve(h);
+    // V does not depend on r (its own reach): the re-fit's tries reuse it.
+    const vKey = `/${index}`;
+    let v = this.vMemo.get(vKey);
+    if (!v) {
+      v = solve(h, winA0, winB0);
+      this.vMemo.set(vKey, v);
+    }
     const c: Corner = {
       junction: ji,
       index,
@@ -1397,7 +1467,7 @@ export class FieldModel {
       );
     }
     if (r > 0) {
-      const qq = solve(h + r);
+      const qq = solve(h + r, winA, winB);
       c.ok = c.ok && qq.ok;
       c.resQ = qq.res;
       if (!qq.ok) {
