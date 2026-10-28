@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K914.
+Next free ID: K915.
 
 ## Waiting on Levi
 
@@ -750,8 +750,8 @@ Every other item below waits on the trigger it names.
 - **K896** · K568's confetti recheck on the phone (about 15 fps lost over the 8 s fall, round
   2026-10-20's left over 1): a `-Phase looks` window. `docs/design/K156.md`.
 - **K906** · Next phone window: bisect (29,59] (dense +9.7; `minoHuntPace` 0.7 to 0.9 inside it) and
-  (176,205] (drops); measure the other two links at the three found pairs (about 5 min a pair,
-  ABBA). `docs/design/K156.md`, round 2026-10-27b handoff.
+  (176,205] (drops); the other links at K573's and K854's pairs (ABBA, about 5 min a pair; K905
+  settled K620's). `docs/design/K156.md`, round 2026-10-27b handoff.
 - **K907** · Before the next phone round: move round 2026-10-27b's scan, bisect2, pdiff, report_scan, build_pool,
   run_pass and pixdiff_g31 to tracked `scripts/phone_pass/`; note in `phone_pass.ps1`'s header that
   a piped or captured `-Phase start` caller hangs.
@@ -761,6 +761,9 @@ Every other item below waits on the trigger it names.
 
 ## Residuals (known, not fixed)
 
+- **K914** · Root pages (`#glyphs2`, text in the first scene) also link plain `section-rgb` in wave
+  1, unused: desktop cold first frame +0.1 / +4.8 s, phone none; decide `rootPaint` before wave 1.
+  K620's probe link is now `7&txt=ai#glyphs2`. `docs/design/K905_root_glsl_gate.md`.
 - **K892** · G3-1 costs the Pixel 11 +24.5 to +48 ms of render sync (K156 round 2026-10-27); K893's hand
   revert (`k893-g31-revert` d8caafa3, not clean, never merge) wins 14.5 / 15.9 / 11.2 ms. Kept until K868
   settles the gap search (Levi, 2026-10-27), then port the revert or replace G3-1. `docs/design/K156.md`.
@@ -1625,8 +1628,9 @@ Every other item below waits on the trigger it names.
 - **K903** · Cursive v3: k's X traced at 61.3 deg (the font's passes: 3.2 deg); coverage 4.3 u in f;
   p.jmc's stem kink unmeasured; no join recalibration on edited bodies. v4 (K902) moved the b, e and
   z X's into bodies and rewrote the review notes. `.claude/probes/K863/trace/NOTES.md`.
-- **K908** · Max-fabric's frozen cell draws a different frame run to run (base vs base: 2587 px), so
-  its pixel diffs need another control. `docs/design/K156.md`, round 2026-10-27b handoff.
+- **K908** · Max-fabric's frozen cell draws a different frame run to run (base vs base 2587 px; K905's
+  master vs master: desktop 2080, phone 1093 px), so its pixel diffs need another control.
+  `docs/design/K156.md`, round 2026-10-27b handoff.
 - **K911** · Sheet A's field-vs-EDT check fails on curved (6.751 px) and j_hook_cross (6.805 px)
   since its K900 regeneration (`7c972033`); not run at `5048670e`, so it may predate K900.
   `.claude/probes/K868/oracle/checks_synthetic.md`.
