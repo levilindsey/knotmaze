@@ -132,3 +132,9 @@ Binding on every later cursive stage:
   v and w, r's entry dips about 50 u below the x-height, as the font's
   does, then runs into the standard r: v5's default (`out8/r_after_high.svg`
   shows both).
+- **Junction heights** (Levi, 2026-10-27, K917: "sgtm"). The fused junction
+  of a, c, d, g and q sits at 60 u, not at each letter's own height: 60 u is
+  closer to the font on every pair measured (`out9/k917_junctions.svg`). o's
+  sits at 86 u, where the font's e-to-o join meets it (eo 5.14 u off the
+  font at 60 u, 1.13 u at 86 u), if the other pairs into o agree (K925
+  measures them).
