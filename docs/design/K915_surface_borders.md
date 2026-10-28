@@ -161,3 +161,100 @@ Steps 1-3 come first.
   - the numbers before and after, and what is left;
   - a `Ledger items` list (follow-ups, residuals, decisions for Levi);
   - K915's handle fields (branch, last commit, evidence, next).
+
+## Results
+
+### Step 1: the rule (draft K868 §3.2, form A)
+
+Members, corners, depth and junction groups are today's (§3.3-§3.7,
+k883 spans with the crossing cut and caps; geo as the A/B).
+
+- **Members.** At a point p: every candidate foot (chain, s) with
+  d < h, and every corner fill that holds p. A chain member's label is
+  (chain, s, J), where J is the cluster whose span holds s, or none. A
+  fill's label is J alone. A chain member's depth is z(chain, s) (§3.3);
+  a fill takes the depth of its cluster's nearest foot.
+- **Visible surface.** V(p) is the member of greatest z. Ties go to the
+  higher chain id, then the larger s (today's order). This is the
+  z-buffer: one member per point, not one group.
+- **Same surface.** m ~ m′ iff both lie in one cluster J, or both lie on
+  one chain within σ = π·h of arc length. The relation is not
+  transitive.
+- **Ink.** p is ink iff it has a visible member S and either:
+  - (a) **the outline:** p lies within W of the exposed outline of S's
+    surface. That outline is made of today's primitives and exposure for
+    the feet similar to S: J's spans and corners, plus s ± λ (λ = σ/2)
+    around each similar foot that lies outside a cluster. The whole
+    outline counts, including stretches hidden under another surface,
+    so an under thread's band runs straight into the over thread's edge
+    and is not notched at an acute wedge; or
+  - (b) **a depth switch:** a member T ≁ S also covers p, and within W/2
+    of p lies a point q that S and T both cover (each followed along its
+    chain within λ) where T is on top. The switch line is centred on the
+    switch, W/2 on each side, so it is W wide like every other border.
+
+  (a) is §3.2 with the union-find group replaced by S's own class. (b)
+  is new. The groups' refusals become unnecessary: similarity is tested
+  between pairs and never chained, so two passes of a crossing never
+  share a class through a third member.
+
+**Why a border cannot end freely.** Split the picture into regions in
+which the visible surface stays the same. Each piece of a region's
+boundary is one of two kinds:
+- a silhouette: the front surface ends there, over a back surface or
+  paper. The front surface's outline lies on it, so (a) inks the front
+  side;
+- a switch: two surfaces cross in depth. (b) inks it.
+
+Boundary pieces end only on other boundary pieces or at the picture's
+edge, so their bands do too. A hidden outline (S's edge under T) is not
+a boundary: the points next to it see T, and T's rules draw nothing
+there.
+
+The argument needs ~ to be transitive where a region is built, and it
+is not in two places:
+1. **The hook.** At a crossing cut, the arm's feet are labelled J before
+   the cap and unlabelled after it. Both are similar to each other (same
+   chain within σ), but only the first is similar to J's other member M.
+   If the arm lies over M past the cap, its side becomes a silhouette
+   over M at the cap and not before. That boundary starts in the middle
+   of M's tube: a free end. This is K909's "now" look, and form A
+   reproduces it.
+2. **One chain at Δs ≈ σ.** Two feet of one chain that overlap (a tight
+   loop or hairpin) are one surface while |Δs| ≤ σ and two beyond. Where
+   |Δs| passes σ inside the overlap, a boundary starts in the middle of
+   the overlap.
+
+**How the cases come out:**
+- **Crossing.** The over pass is the visible member over the whole
+  overlap. Its band runs across. The under pass's band follows its full
+  outline into the over pass's edge and stops there, on that band. There
+  is no switch. Same as today.
+- **Junction.** Every foot inside J's spans is similar, so the union
+  (arm tubes over the spans, plus the fills) is one surface. Its outline
+  is today's exposed outline of the cluster.
+- **Cap and crossing cut.** The arm is similar across its cap (same
+  chain), so no border crosses the arm. The arm's sides are exposed
+  beyond the cap as today.
+- **END tuck (§3.6).** The END arm's feet lie in J, and its tucked cap
+  is buried in J's region, as today.
+- **Corner.** The corner arcs belong to J's outline and the fill is a J
+  member. Unchanged.
+- **Depth switch.** New: (b) draws a centred line along the switch. It
+  meets the band of the surface that goes under where the switch reaches
+  that surface's silhouette, and the band of the other surface at the
+  other end.
+- **Cyclic triple (k42).** The z-buffer picks one visible member at each
+  point. Every pair that swaps order inside the triple overlap gets a
+  switch line, and the boundaries close into a partition.
+- **Hook.** Form A's own outcome is "now". Candidates in this model:
+  - **now:** the arm's silhouette over M starts at the cap;
+  - **cap:** the arm past the cut stays similar to J while it lies
+    inside M's tube, so its silhouette starts on M's border (K909's
+    "cap");
+  - **carry:** the arm's side counts as a boundary inside J too, from
+    the junction to the cut (K909's "carry");
+  - **seam:** the cap counts as a boundary where the arm lies over M: a
+    line across the arm at the cut, which closes the side's band.
+
+  This stage does not settle the choice.
