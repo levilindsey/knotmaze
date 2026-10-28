@@ -126,6 +126,10 @@ export interface OracleParams {
    * the mapping's r_max = (2/3)·crMax·h instead of this scene's largest
    * radius, so the timing bound does not depend on the corners solved. */
   crMax?: number;
+  /** K900 (§3.4): "k900" (default with the k883 spans) refuses a same-chain
+   * join that would put both passes of a crossing in one group; "k883" is
+   * plain union-find, for the before renders. */
+  passJoins?: "k900" | "k883";
 }
 
 /** K883 (§3.8): the corner slider's rolling-ball radius at opening θ. */
@@ -271,6 +275,14 @@ export class FieldModel {
   naturalSpans: [number, number, number, number][][] = [];
   /** K883: per junction, per arm, its span cap (Infinity: none). */
   armCaps: ArmCap[][] = [];
+  /** K900 (§3.4): per poly, its crossing passes' windows (s ± pad); tag 2x
+   * for crossing x's pass a, 2x + 1 for b; mate: the other pass's s on a
+   * kink (one chain), else NaN. Empty when passJoins is "k883". */
+  passTags: { s: number; pad: number; tag: number; mate: number }[][] = [];
+  /** K900: per cluster, the passes its spans hold (tags as in passTags). */
+  clusterTags: number[][] = [];
+  /** K900: evalPoint joins groups by joinGroups (passJoins "k900"). */
+  private refuseJoins = false;
   /** K883 census: when set, evalPoint records its candidates and groups in lastEval. */
   recordGroups = false;
   lastEval: {
@@ -499,6 +511,9 @@ export class FieldModel {
     this.clusters.forEach((cl, ci) => {
       for (const [pi, l] of cl.spans) for (const [lo, hi] of l) this.chainSpans[pi].push([lo, hi, ci]);
     });
+    this.passTags = this.polys.map(() => []);
+    this.clusterTags = this.clusters.map(() => []);
+    if (k883 && (params.passJoins ?? "k900") === "k900") this.buildPassTags(scene, jSpans);
 
     this.grid = new SegGrid(this.polys, Math.max(h, this.reach / 2), this.reach + 4 * h);
 
@@ -1651,6 +1666,106 @@ export class FieldModel {
     return diagramDepth(this.depthChains[pi], this.depthWin, s);
   }
 
+  /**
+   * K900 (§3.4): each crossing pass's window on its chain, and the passes
+   * each cluster's spans hold, both with the crossing cut's pad
+   * (h·cot(θ/2) + h/2, the overlap's reach along a pass plus a margin; the
+   * same tolerance, so an arm the cut stopped does not hold its pass). A
+   * kink whose passes lie within σ of each other is one piece by the
+   * same-chain rule and gets no tags.
+   */
+  private buildPassTags(scene: FieldScene, jSpans: [number, number, number, number][][]): void {
+    const h = this.h;
+    this.refuseJoins = true;
+    const held = (pi: number, s: number, pad: number, tag: number) => {
+      const p = this.polys[pi];
+      jSpans.forEach((l, ji) => {
+        for (const [q, lo, hi, ai] of l) {
+          if (q !== pi) continue;
+          const dir = scene.junctions[ji].arms[ai].dir;
+          const a = dir < 0 ? lo - pad : lo;
+          const b = dir > 0 ? hi + pad : hi;
+          let inside = false;
+          if (!p.closed) inside = s >= a && s <= b;
+          else for (const sh of [-p.len, 0, p.len]) if (s + sh >= a && s + sh <= b) inside = true;
+          const t = this.clusterTags[this.junctionCluster[ji]];
+          if (inside && !t.includes(tag)) t.push(tag);
+        }
+      });
+    };
+    scene.crossings.forEach((cx, x) => {
+      const ia = this.idxOf.get(cx.a.chain);
+      const ib = this.idxOf.get(cx.b.chain);
+      if (ia === undefined || ib === undefined) return;
+      const pa = this.polys[ia];
+      const pb = this.polys[ib];
+      const kink = ia === ib;
+      if (kink && Math.abs(dS(pa, cx.a.s, cx.b.s)) <= this.sigma) return;
+      const ta = pointAt(pa, normS(pa, cx.a.s));
+      const tb = pointAt(pb, normS(pb, cx.b.s));
+      const th = Math.asin(Math.min(1, Math.abs(cross(ta.tx, ta.ty, tb.tx, tb.ty))));
+      const pad = h / Math.tan(Math.max(th, 1e-3) / 2) + 0.5 * h - 1e-6 * h;
+      this.passTags[ia].push({ s: cx.a.s, pad, tag: 2 * x, mate: kink ? cx.b.s : Number.NaN });
+      this.passTags[ib].push({ s: cx.b.s, pad, tag: 2 * x + 1, mate: kink ? cx.a.s : Number.NaN });
+      held(ia, cx.a.s, pad, 2 * x);
+      held(ib, cx.b.s, pad, 2 * x + 1);
+    });
+  }
+
+  /** K900: the passes a candidate holds: its cluster's, and each pass whose window holds it (on a kink, the nearer pass only). */
+  private tagsOf(c: Cand, ci: number): number[] {
+    const out = ci >= 0 ? this.clusterTags[ci].slice() : [];
+    const p = this.polys[c.chain];
+    for (const w of this.passTags[c.chain]) {
+      const d = Math.abs(dS(p, c.s, w.s));
+      if (d > w.pad) continue;
+      if (!Number.isNaN(w.mate)) {
+        const dm = Math.abs(dS(p, c.s, w.mate));
+        if (w.tag & 1 ? dm <= d : dm < d) continue;
+      }
+      if (!out.includes(w.tag)) out.push(w.tag);
+    }
+    return out;
+  }
+
+  /**
+   * K900 (§3.4): the groups at a point. Cluster joins first (a junction's
+   * union is one sheet, and the cuts keep both passes of a crossing out of
+   * every cluster), then same-chain joins nearest first (by |Δs|). A
+   * same-chain join is refused when one side's group holds a pass of a
+   * crossing and the other side's group its other pass: a crossing is two
+   * surfaces, however the sheet between its passes is connected.
+   */
+  private joinGroups(cs: Cand[], cl: Int32Array, par: Int32Array, find: (i: number) => number): void {
+    const n = cs.length;
+    for (let i = 0; i < n; i++)
+      for (let k = i + 1; k < n; k++) if (cl[i] >= 0 && cl[i] === cl[k]) par[find(i)] = find(k);
+    const pairs: [number, number, number][] = [];
+    for (let i = 0; i < n; i++)
+      for (let k = i + 1; k < n; k++) {
+        if (cs[i].chain !== cs[k].chain) continue;
+        const d = Math.abs(dS(this.polys[cs[i].chain], cs[i].s, cs[k].s));
+        if (d <= this.sigma && find(i) !== find(k)) pairs.push([d, i, k]);
+      }
+    if (pairs.length === 0) return;
+    pairs.sort((u, v) => u[0] - v[0] || u[1] - v[1] || u[2] - v[2]);
+    const tags: number[][] = Array.from({ length: n }, () => []);
+    for (let i = 0; i < n; i++) {
+      const t = tags[find(i)];
+      for (const g of this.tagsOf(cs[i], cl[i])) if (!t.includes(g)) t.push(g);
+    }
+    for (const [, i, k] of pairs) {
+      const ri = find(i);
+      const rk = find(k);
+      if (ri === rk) continue;
+      const a = tags[ri];
+      const b = tags[rk];
+      if (a.some((g) => b.includes(g ^ 1))) continue;
+      par[ri] = rk;
+      for (const g of a) if (!b.includes(g)) b.push(g);
+    }
+  }
+
   /** Cluster containing (chain, s) in its span, or −1. */
   clusterAt(pi: number, s: number): number {
     const p = this.polys[pi];
@@ -1678,14 +1793,16 @@ export class FieldModel {
     };
     const cl = new Int32Array(n);
     for (let i = 0; i < n; i++) cl[i] = this.clusterAt(cs[i].chain, cs[i].s);
-    for (let i = 0; i < n; i++)
-      for (let k = i + 1; k < n; k++) {
-        let join = false;
-        if (cs[i].chain === cs[k].chain && Math.abs(dS(this.polys[cs[i].chain], cs[i].s, cs[k].s)) <= this.sigma)
-          join = true;
-        else if (cl[i] >= 0 && cl[i] === cl[k]) join = true;
-        if (join) par[find(i)] = find(k);
-      }
+    if (!this.refuseJoins)
+      for (let i = 0; i < n; i++)
+        for (let k = i + 1; k < n; k++) {
+          let join = false;
+          if (cs[i].chain === cs[k].chain && Math.abs(dS(this.polys[cs[i].chain], cs[i].s, cs[k].s)) <= this.sigma)
+            join = true;
+          else if (cl[i] >= 0 && cl[i] === cl[k]) join = true;
+          if (join) par[find(i)] = find(k);
+        }
+    else this.joinGroups(cs, cl, par, find);
     // Groups.
     const groups = new Map<number, number[]>();
     for (let i = 0; i < n; i++) {
