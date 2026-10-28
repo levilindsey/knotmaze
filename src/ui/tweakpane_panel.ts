@@ -2462,6 +2462,12 @@ export function buildPanel(
     "Border color: the edge strokes' color in the border and both looks. Black = automatic (each thread's color darkened toward ink). Applies live.",
     D.borderColor, () => callbacks.onBackgroundChange()
   );
+  // K868 S3a: the border look's ink from the label passes (prototype).
+  const labelInkRow = row(
+    fLook, p, "labelInk", { label: "Label ink" },
+    "Label ink (K868 prototype, border look only): draw the edge strokes from a per-pixel map of which thread is on top, so outlines follow the visible surface through crossings and junctions. Off = the usual strokes. Applies live.",
+    D.labelInk, () => callbacks.onBackgroundChange()
+  );
   const colorSchemeRow = row(
     fLook, p, "colorScheme",
     {
@@ -3625,6 +3631,7 @@ export function buildPanel(
     // both); the grain strength only under a grained fill.
     borderWidthRow.hidden = params.threadLook === "fill";
     borderColorRow.hidden = params.threadLook === "fill";
+    labelInkRow.hidden = !borderLook;
     goldTextureStrengthRow.hidden = params.goldTexture === "solid";
     // K835: the irregularity matters only for the string or a grained fill.
     pathIrregularityRow.hidden =

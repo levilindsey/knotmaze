@@ -447,6 +447,7 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("loaderIndicatorSize"),
   choice("loaderFill", ["solid", "outline", "flat"]),
   num("loaderTrail"),
+  flag("labelInk"), // K868 S3a: the border look's ink from the label passes
 ]);
 
 // The format version a blob names first. Bump it for anything but an

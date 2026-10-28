@@ -246,6 +246,7 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   loaderIndicatorSize: ["lis", "loading", "spinner", "trefoil", "marker size", "indicator", "player dot", "startup"],
   loaderFill: ["lfl", "loading", "spinner", "trefoil", "fill", "outline", "flat", "casing", "startup"],
   loaderTrail: ["ltr", "loading", "spinner", "trefoil", "trail", "glow", "comet", "startup"],
+  labelInk: ["lbi", "border", "outline", "thread look", "label ink", "experimental"], // K868 S3a
   cornerRoundShare: ["crs", "corners", "rounded corners", "sharp corners", "cusp", "junction corners", "miter"],
   loaderStays: ["loading", "spinner", "trefoil", "keep showing", "stay", "preview", "startup", "boot"],
   appearMode: ["am", "intro", "opening animation", "startup", "draw in", "grow", "load animation", "skip intro"],
