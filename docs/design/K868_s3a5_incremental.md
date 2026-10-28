@@ -177,3 +177,104 @@ Not this stage:
   - a `Ledger items` list (follow-ups and residuals; a question for Levi
     only about what shows on screen, in plain words);
   - K868's current handle fields (branch, last commit, evidence, next).
+
+## Design
+
+Draft, written as the stage goes (agent, 2026-10-28). Timings are Node on
+this desktop, under the perf lock, but **under load**: the cursive
+agent's Python fits ran through the whole stage. Each compared pair was
+taken back to back.
+
+### 1. Map: what each part reads and costs
+
+Measured on frame 0 of the recorded drags (section 2), `seq13_map.ts`:
+the label's own params, clean totals (median of 5), then a split with
+each FieldModel method wrapped (inclusive, outermost call; the wrappers
+add about 15%).
+
+| | def | muse_hash |
+|---|---|---|
+| chains / points / junctions / crossings | 92 / 24432 / 185 / 353 | 86 / 23273 / 166 / 350 |
+| corners / clusters | 386 / 120 | 342 / 89 |
+| model, clean | 251 ms | 525 ms |
+| pieces / switch / strips, clean | 74 / 12 / 32 ms | 53 / 8 / 32 ms |
+
+Inside the model (wrapped, ms; calls):
+
+| part | def | muse | calls def / muse |
+|---|---|---|---|
+| solveCorner, all calls | 158 | 217 | 466 / 643 |
+| ... of which K883 re-fits (by calls) | ~27 | ~101 | 80 / 301 |
+| buildSpans (incl. partExtents and the re-fits) | 119 | 260 | 1 |
+| partExtents | 51 | 110 | 2 |
+| passReach | 53 | 81 | 1412 / 1400 |
+| buildPassTags | 8 | 4 | 1 |
+| rawSpans, armExtents, opening | 4 | 5 | |
+| makePoly for every chain | 1.1 | 1.3 | |
+| the two SegGrids | 4.5 | 3.7 | |
+
+Calls into the per-point helpers: the pieces call `depthAt` 368k times
+and `clusterAt` 39k times on def; the strips call them 50k and 25k times;
+buildSpans calls `windowNear` 34k (muse 118k) and `footNear` 19k (39k)
+times.
+
+What each part reads:
+
+| part | reads | kind of output |
+|---|---|---|
+| polys (`makePoly`, END extensions) | this frame's points; the junction arms (an END's extension) | geometry |
+| depth pins | the crossing table: which pass is over (topology), each crossing's s on both chains (moves every frame) | structure + s |
+| `opening` (theta) | this frame's points near the junction | geometry (slow) |
+| corner solve (V, q, feet, tangent points) | this frame's points inside each arm's window | geometry: the only solve |
+| buildSpans: caps, partExtents, crossing cuts, K883 re-fit, g2Of, armExtents, geoExtents, rawSpans | the corners, this frame's points (part walks of `footNear`/`windowNear`), the crossing table | structure: s intervals per chain per junction |
+| clusters | the junctions' spans (overlap on a chain) | structure, geometric: merges and splits |
+| buildPassTags | the spans, the crossing table | structure |
+| SegGrids | this frame's points | an index |
+| passReach (rL, rR per pass pin) | the points near each crossing; quantized to h/8 | slow geometry (piecewise constant) |
+| pieces: tubes | per poly segment: z-split by `depthAt`, cut at chainSpans, `clusterAt`, end kinds, rank | structure (s cuts, cluster, rank) + geometry (endpoints, z) |
+| pieces: windows | `windowOf`: every segment of each arm window, z-split | geometry |
+| pieces: fills, crossing rows | the corners (q, r, vq, uA, uB), the clusters' crossings | geometry (corners) + structure |
+| switch lines | topology cached (S3a4); the crossings' s, the clusters, `inFill` | structure + geometry |
+| strips | per segment normals, chainSpans cuts, `clusterAt`, `depthAt`; caps; corner arcs | geometry, cut by structure |
+| scene (browser only: gather + buildFieldScene) | the renderer's samples, the crossing table | 19-23 ms in the browser (S3a4) |
+
+### 2. Sequences
+
+`.claude/probes/S3a/seq13_record.mjs` records one FieldScene per frame
+(`__knotSceneExport`) on an in-thread page (`phw=0`, `lbi=0`), after the
+knot sleeps. Files: `.claude/probes/S3a/seq13/<scene>_<mode>.jsonl.gz`,
+41 frames each.
+
+- **drag:** grab the thread nearest the centre and drag it along
+  prof12's 60 px arc, 30 moves; after each move one frame runs, then the
+  physics is frozen while the scene exports. Then 10 frames after the
+  release.
+- **flow:** 40 consecutive repaints with flow on (`fw=0.3&fv=0.5`; the
+  fixture links carry `fw=0`, so a flow probe has to set it).
+
+What moves (`seq13_stats.ts`, frame to frame):
+
+| | def drag | muse drag | def flow | muse flow |
+|---|---|---|---|---|
+| points moved | 100% (min 98.9%) | 100% | 100% | 100% |
+| max displacement, p50 / max | 0.033 / 0.67 | 0.058 / 1.08 | 0.030 / 0.050 | 0.032 / 0.064 |
+| median displacement | 0.00025 | 0.00045 | 0.0058 | 0.0056 |
+| frames whose sample count changes | 2 | 8 | 9 | 14 |
+| topology changes | 0 | 0 | 0 | 0 |
+| crossing s drift, p50 / max | 0.022 / 0.38 | 0.033 / 0.55 | 0.040 / 0.060 | 0.043 / 0.079 |
+
+(world units; h = 0.26, 22.34 px per unit at the default zoom.)
+
+So:
+- **Every point moves on every frame**, in a drag and in flow. Skipping
+  what did not move saves nothing; every corner needs a re-solve each
+  frame, warm or on the GPU.
+- **s drifts on every frame** (chord-length s shifts as the points
+  move), so a cut cached as an s value is wrong one frame later. Keys
+  and cuts are held in the renderer's sample space (chain id, sample
+  index k, fraction t), and s is evaluated from it.
+- **A chain's sample count changes** on 5-35% of frames (the renderer
+  resamples by arc length). That is a local event: that chain's sample
+  keys are remapped (by arc fraction), not the whole structure.
+- No crossing or junction appeared or vanished in these sequences.
+
