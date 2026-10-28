@@ -106,6 +106,15 @@ export interface OracleParams {
    * (depth.ts plateauDepth), so a crossing's over pass lies above its
    * under pass over the whole overlap. */
   depth?: "diagram" | "scene" | "overlap";
+  /** K922 (§3.4): "span" (default) ends an arm's span at its corners'
+   * extent + W + margin; "part" keeps an arm in its cluster past that until
+   * its tube has parted from every other member of the cluster (their
+   * spans' tubes and the corners' fills), + W. Caps and the crossing cut
+   * stand. */
+  extent?: "span" | "part";
+  /** K922: clamp s into an open chain's [s0, s0 + len] in clusterAt (its
+   * last foot can sit an ulp past the span's end; default off). */
+  endSnap?: boolean;
   /** The diagram depth's tent window in arc length. Default
    * look.depthWindow × (look.ctrlArc ?? 1). */
   depthWindow?: number;
@@ -527,7 +536,7 @@ export class FieldModel {
 
     // 3. Spans and clusters (§3.4). K909: the geometric group's walk reads
     // distances before the spans exist, so it gets a grid of its own.
-    if (k883 && params.groups === "geo") this.grid = new SegGrid(this.polys, h, 4 * h);
+    if (k883 && (params.groups === "geo" || params.extent === "part")) this.grid = new SegGrid(this.polys, h, 4 * h);
     const jSpans = this.buildSpans(scene, k883, g2Of);
     let rMax = 0;
     for (const c of this.corners) {
@@ -936,6 +945,9 @@ export class FieldModel {
       const near = h / Math.tan(Math.max(th, 1e-3) / 2) + pm * h;
       setCap(ji, ai, Math.max(0, d - near), `crossing ${cx}'s pass ${(d / h).toFixed(2)}h out`);
     };
+    // K922 extent "part": walk each uncapped arm on from its span's end while
+    // its cross-section still overlaps another member of its cluster.
+    if (this.params.extent === "part") ext = this.partExtents(ext, caps, clusterRoots);
     const tries = new Map<number, number>();
     let sp = this.rawSpans(ext, caps);
     for (let it = 0; it < 12; it++) {
@@ -1010,6 +1022,94 @@ export class FieldModel {
     return out;
   }
 
+  /**
+   * K922 extent "part": per arm whose span ends short of its cap, walk on
+   * from the span's end in h/8 steps (up to 12h) while some point of its
+   * cross-section lies inside another member of its cluster: another arm's
+   * span's tube (on the walker's own chain only away from the walker), or a
+   * corner fill of the cluster. The extent becomes the last overlapping
+   * step's distance − margin, so the span ends W past the parting; caps
+   * clamp it (rawSpans). Spans and clusters are rebuilt and the walk rerun
+   * until nothing moves (4 rounds at most).
+   */
+  private partExtents(ext0: Map<string, number>, caps: number[][], roots: (sp: [number, number, number, number][][]) => number[]): Map<string, number> {
+    const h = this.h;
+    const scene = this.scene;
+    const ext = new Map(ext0);
+    const step = h / 8;
+    const us = [-0.999, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 0.999].map((u) => u * h);
+    this.partMoves = [];
+    for (let round = 0; round < 4; round++) {
+      const sp = this.rawSpans(ext, caps);
+      const rt = roots(sp);
+      const wins = new Map<number, [number, number, number, number, number][]>();
+      sp.forEach((l, ji) => {
+        const w = wins.get(rt[ji]) ?? [];
+        for (const [q, lo, hi, ai] of l) w.push([q, lo, hi, ji, ai]);
+        wins.set(rt[ji], w);
+      });
+      const fills = new Map<number, number[]>();
+      this.corners.forEach((c, k) => {
+        if (!(c.r > 0) || !c.ok) return;
+        const f = fills.get(rt[c.junction]) ?? [];
+        f.push(k);
+        fills.set(rt[c.junction], f);
+      });
+      let moved = false;
+      sp.forEach((l, ji) => {
+        for (const [pi, lo, hi, ai] of l) {
+          const arm = scene.junctions[ji].arms[ai];
+          const p = this.polys[pi];
+          const key = this.armKey(ji, arm);
+          const e0 = arm.dir > 0 ? hi - arm.s : arm.s - lo;
+          const cap = caps[ji][ai];
+          if (!(e0 < cap - 1e-6 * h)) continue;
+          const room = p.closed ? Math.min(cap, p.len / 2) : Math.min(cap, arm.dir > 0 ? p.s0 + p.len - arm.s : arm.s - p.s0);
+          const W = wins.get(rt[ji]) ?? [];
+          const F = fills.get(rt[ji]) ?? [];
+          const hits = (t: number): boolean => {
+            const s = normS(p, arm.s + arm.dir * t);
+            const a = pointAt(p, s);
+            for (const [q, qlo, qhi, qj, qa] of W) {
+              if (qj === ji && qa === ai) continue;
+              if (q === pi) {
+                // The walker is still inside this member's span: in J anyway.
+                let inside = false;
+                if (!p.closed) inside = s >= qlo && s <= qhi;
+                else for (const sh of [-p.len, 0, p.len]) if (s + sh >= qlo && s + sh <= qhi) inside = true;
+                if (inside) return true;
+              }
+              for (const u of us) {
+                const x = a.x - a.ty * u;
+                const y = a.y + a.tx * u;
+                const [d, fs] = this.footNear(q, qlo, qhi, x, y, 1.5 * h);
+                if (d < h && (q !== pi || Math.abs(dS(p, fs, s)) > 2 * h)) return true;
+              }
+            }
+            for (const k of F)
+              for (const u of us) if (this.inFill(k, a.x - a.ty * u, a.y + a.tx * u)) return true;
+            return false;
+          };
+          if (!hits(e0)) continue;
+          let last = e0;
+          for (let t = e0 + step; t <= Math.min(room, e0 + 12 * h) && t - last < h; t += step) if (hits(t)) last = t;
+          const part = Math.min(room, last + step);
+          const want = part - this.margin;
+          const cur = ext.get(key) ?? h;
+          if (want > cur + 1e-6 * h) {
+            ext.set(key, want);
+            moved = true;
+            this.partMoves.push({ junction: ji, arm: ai, from: e0, to: Math.min(cap, want + this.W + this.margin), round });
+          }
+        }
+      });
+      if (!moved) break;
+    }
+    return ext;
+  }
+
+  /** K922 extent "part": each arm the walk moved, its span's end before and after (arc length from the root). */
+  partMoves: { junction: number; arm: number; from: number; to: number; round: number }[] = [];
   /**
    * K909: per arm, the farther of its two sides' extents in the geometric
    * group, and at least the corners' extents (`floor`, armExtents): a side
@@ -2098,6 +2198,7 @@ export class FieldModel {
   /** Cluster containing (chain, s) in its span, or −1. */
   clusterAt(pi: number, s: number): number {
     const p = this.polys[pi];
+    if (!p.closed && this.params.endSnap) s = Math.min(Math.max(s, p.s0), p.s0 + p.len);
     for (const [lo, hi, ci] of this.chainSpans[pi]) {
       if (!p.closed) {
         if (s >= lo && s <= hi) return ci;
