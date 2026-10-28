@@ -258,3 +258,177 @@ is not in two places:
     line across the arm at the cut, which closes the side's band.
 
   This stage does not settle the choice.
+
+### Step 2: the prototype
+
+Behind `ink` in `src/render/field/oracle.ts`. The default (`"group"`,
+today's §3.2) is unchanged, and the field tests pass (6 files, 45 tests,
+5 skipped).
+- `"surface"` (720b36a2, d5830291): Step 1's rule over today's
+  primitives: the visible member by z, the outline of the members
+  similar to it, and switch lines. `hookLook` gains `"seam"`.
+- `"label"` (70b5f40c, b17dae26): the same rule in image space, with no
+  outline primitives:
+  - V(q), the visible member, on a cached grid of pitch g = W/4: the
+    candidate foot of greatest z with d < h; ties go to the higher chain
+    id, then the larger s. A fill gives its cluster's label.
+  - p is ink iff a grid point q within W shows a label Q ≁ P = V(p), and
+    either P's surface is absent at q (a silhouette on P's side: distance
+    |p − q|) or both surfaces cover both points (a switch: distance
+    2|p − q|, a centred line W/2 a side). Where P covers q but Q is
+    absent at p, the silhouette is Q's, and Q's side inks it.
+  - The distance is the best one less g/2. Within 1.5g of W it bisects 6
+    steps toward the 4 nearest changes, with exact presence and
+    similarity, so the band's edge is exact.
+  - `labExact: false` ("labc") keeps the grid distance alone.
+- Probes in `.claude/probes/K915/` (untracked). `lib.ts` reads `INK`,
+  `LAB_EXACT`, `HOOK_LOOK` and `GROUPS` from the environment. The others
+  are `indep.ts` (the free-end check), `census.ts`, `checks_ab.ts`,
+  `formb.ts`, `h.ts` (sheet H), `table.py` and `left.py`.
+
+### Step 3: the numbers
+
+The 12 real scenes and the synthetic ones, groups k883, cr 3. "group" is
+master's ink. Counts are samples in stretches.
+
+| | group | surface | labc | label |
+|---|---|---|---|---|
+| Free ends, real | 228 | 227 | 104 | **100** |
+| Free ends, synthetic | 4 | 2 | 1 | **1** (j_hook_cross) |
+| Synthetic checks | 116/117 | 116/117 | 72/117 | **116/117** |
+| Census missing, model truth | 148 in 66 | 151 in 66 | 103 in 44 * | **116 in 53** |
+| Census extra, model truth | 71 in 46 | 71 in 47 | 81 in 52 * | **94 in 60** |
+| Geo truth, class f (real misses) | 144 in 65 | 147 in 65 | 107 in 48 | **113 in 52** |
+| #16, stretches | 31 | 31 | 15 | **14** |
+| Corners, muse_hash | 341/342 | 341/342 | 341/342 | 341/342 |
+
+\* 11 scenes: labc's census did not reach g41_user_tw64.
+
+- The one synthetic failure under group and label is j_pair_cross #2.
+  labc's grid distance also fails #5 and #9 (the band widths) on most
+  synthetic scenes; the bisection fixed that.
+- The label ink's one synthetic free end is the hook (j_hook_cross), as
+  Step 1 predicts for its own look ("now").
+- Free ends by scene, group → label: muse_hash 106 → 40, g41_def_tw64
+  51 → 12, g41_user_tw64 29 → 20, def 16 → 11, muse_default_tw 6 → 2,
+  g41_ring_tw64 6 → 3, g41_def_tw42 5 → 5, ring 3 → 2,
+  user_tw42.lightpaper 2 → 2, g41_ring_tw42 2 → 1, g41_user_tw42
+  2 → 2, fat 0 → 0.
+- By K909's classes, group → label: span fill 74 → 11, group on top
+  52 → 6, junction core 47 → 40, union 24 → 19, neither 18 → 13, inked
+  by another group 10 → 8, under the fill 2 → 2, under chain 1 → 1.
+- muse_hash's checks: #14 fails 349/350 under every ink (it tests the
+  depth at the centres, not the ink). #15 passes on every scene under
+  every ink. #16: muse_hash 19 → 7 stretches (23051 → 23076 of 23089
+  over-side samples inked), g41_def_tw64 11 → 7, g41_ring_tw64 1 → 0.
+
+K909's leftovers:
+- **Span fill and group on top** (126 of the 228 free ends) fall to 17:
+  no piece of the outline comes from a fill or a group any more.
+- **#16's group on top**: 30 → 14 stretches. The buried one is gone.
+- **Extra ink by mechanism** is not removed. The core/own and union/own
+  seams stay (23 and 17 stretches), and the label ink adds 13 stretches
+  in classes the model's truth calls hidden: core/hider 4, core/merged
+  3, union/merged 3, under 2, depth/hider 1. Those are switch and
+  silhouette lines that today's rule does not draw; the census's model
+  truth is that rule, so whether they are right is the image check's
+  call.
+- **Sheet F's spur, hairlines, seam and speck**: not measured. They sit
+  at cr 3, 4.5 and 6 on sheet F's crop, and this stage measured cr 3 on
+  the whole scenes only.
+- **S3's far pieces** (350 on 319 arms): gone by construction. The label
+  ink has no per-side pieces; a band is wherever a label changes within
+  W.
+
+### Step 5: form B
+
+Not adopted. `formb.ts` grids a scene at h/4 and takes the visible
+member at each point as the oracle does. For each change of visible
+member between neighbours, it asks whether a τ_z separates the changes
+form A calls "same" from those it calls "apart".
+- Synthetic: "same" changes always have dz = 0. A τ exists on j_cross
+  (apart min 0.759) and kink (0.606). It does not on j_pair_cross,
+  oblique30, k42 or j_hook_cross, whose apart min is 0. On oblique30, 24
+  of the 38 apart pairs have dz ≤ 0.05.
+- muse_hash: 5034 same pairs (p99 0.465, max 0.927) and 8164 apart (6719
+  at crossings, 1445 on one chain; p5 0.145, min 0). No τ: at 0.05, 1170
+  same pairs are inked and 265 apart pairs are missed; at 0.3, 221 and
+  752.
+
+Why: the depth tent (DEPTH_WINDOW, about 1.2 ctrl) dies out inside a
+shallow crossing's overlap (2h/sin θ, about 1.6 world at 30°), so the two
+passes tie at z = 0 over its outer parts. The same-surface changes with
+large dz are kinks shorter than σ and junction arms at different depths.
+
+The ties matter to form A too. In a shallow overlap its z-buffer falls to
+the tie-break (the higher chain id), which shows the under pass when its
+chain id is higher. Form A, the oracle and S3 need a depth that orders
+the whole overlap: the crossing table's order, or a tent at least
+2h/sin θ wide. The hook's fade candidate (a border that fades in with
+|Δz|) inherits the same problem.
+
+### Step 6: S3's form
+
+Two passes, no search:
+1. **Label pass.** Rasterize the tubes, fills and caps with the depth test
+   into an RGBA16UI target: chain id (16 bits), s (16-bit fixed point
+   over the chain's length), cluster id (16 bits) and flags. The depth
+   buffer holds z ordered over every overlap (Step 5) with the tie-break
+   folded in (z, then chain id, then s), so the GPU picks the oracle's
+   member.
+2. **Band pass.** Draw a strip W wide inside every outline piece (each
+   tube edge at ±h, each fill's arcs, each cap), and a strip W wide
+   centred on each switch curve, which the CPU finds where two surfaces
+   swap in depth inside an overlap. A fragment fetches its own pixel's
+   label (similar to the strip's member, or discard) and the label just
+   across the edge (not similar, and lower or paper, or discard).
+
+That is 2 fetches per band fragment (3 on a switch strip), and no
+search.
+- **Antialiasing.** Coverage comes from the strip's own distance
+  coordinate, so both edges of a band are exact. Where a label change
+  clips a band, the change is another surface's outline, so the clip's
+  jaggies sit against that surface's band, ink on ink.
+- **Precision.** Ids need 16 bits each. s only has to tell |Δs| ≤ σ
+  (σ = π·h, about 1.3 world on muse_hash): 16 bits over a 300-world chain
+  is 0.005. The depth needs only the order.
+- **Cost, unmeasured.** On the phone W is about 3.3 device px (an
+  estimate; about 20 at 6x zoom). A per-pixel search scans a disc of
+  radius W: 45-69 taps at 3.3 px and about 1250 at 6x, or a constant ~69
+  on a W/4 label grid. That is G3-1's class: its search (up to 64 SAMP
+  points a pixel) cost +24.5 to +48 ms of render sync on the Pixel
+  (K892), against a 4 ms GPU budget at dpr 2 (K868 §2 item 8). The two
+  passes cost one fragment per thread pixel (plus overlap overdraw) and
+  2-3 fetches per band fragment, with bands about 2W wide along the
+  outline. S3's first step is a Pixel micro-benchmark of the two passes
+  on muse_hash.
+- **The checks.** The oracle's label ink becomes the reference image: S3
+  compares its ink to it per pixel, as K892 does today. The label target
+  gets its own check, a readback against the oracle's V on the same
+  grid. The free-end image check stays the judge. Checks of the
+  outline's pieces (S3's per-side data, the joins of spans and caps)
+  have nothing left to check.
+
+### Step 7: verdict
+
+**Adapt.** Replace §3.2's group outline with the label rule (Step 1's
+form A, as `ink: "label"` computes it), and keep today's members,
+corners, depth and groups. Against master, on the 12 real scenes: free
+ends 228 → 100 (span fill 74 → 11, group on top 52 → 6); synthetic
+free ends 4 → 1 (the hook); checks 116/117 and corners 341/342
+unchanged; #16 31 → 14 stretches; real misses 144 → 113 samples.
+
+The adaptations:
+1. **Order the depth over the whole overlap** (Step 5) before S3 builds
+   the label pass. Until then, form A's z-buffer reads the tie-break in
+   shallow overlaps.
+2. **The remaining free ends** (100: junction core 40, union 19,
+   neither 13) have no named mechanism yet. See the handoff.
+3. **Extra ink** rises from 71 to 94 samples under the model's truth.
+   That truth is today's rule, so judge these by image (sheet H), not
+   by the census.
+
+For S3's brief: build the two-pass form, starting with the Pixel
+micro-benchmark against the 4 ms budget. Take the depth from the
+crossing table over every overlap, and the oracle's label ink as the
+reference image. Keep the hook's look open (now, cap, carry, seam).
