@@ -19,13 +19,13 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K904.
+Next free ID: K905.
 
 ## Waiting on Levi
 
-- **K901** · Cursive v3 (Drive `K863/cursive_v3.svg`): b/o/v/w exits at the font's junction (as
-  built) or the top cusp? Guides at outline (as built) or centreline heights? Body variants (e after
-  high exits and z, t and m/n/v after o): drawn by Levi, or the generator's job? NOTES.md ## v3.
+- **K901** · Cursive, still open: r after a high exit, dip or straight in (K902 checks the font's
+  or/br/vr/wr); ascender/descender guides at the ink edge (244.6 / -124.6 u, as built) or the stroke
+  centre (240 / -120), re-asked 2026-10-27. `docs/design/K863_trace.md` ## Levi's calls.
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -302,8 +302,8 @@ Next free ID: K904.
   - owner: stage K902, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 09:48; handle under K902)
   - branch: mainline, no code (outputs untracked); last commit: n/a
   - evidence: `.claude/probes/K863/trace/` (v1: `tools/trace_tool_v2.py`, `work4/`, `out/`; v2: `tools/trace_k879.py`, `out5*/`; v3: `tools/*k886*`, `work6/`, `out6/` with the words sheet; `NOTES.md` ## v3 and its rerun commands); Drive `K863/` (`cursive_v3.svg`; v1's SVG and review)
-  - next: K902 builds v4 (frames on the connector side, bodies re-cut); then upload its SVG, Levi answers K901 and edits the template in Inkscape; then map the letters onto threads
-  - brief: `docs/design/K863_trace.md`; v3: `docs/design/K886_cursive_v3.md`
+  - next: K902 finishes v4 (out7; a's entry onto its body); upload `cursive_v4.svg`; Levi edits the template; K904's two entry modes; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls)
+  - brief: `docs/design/K863_trace.md` (## Levi's calls); v3: `docs/design/K886_cursive_v3.md`; v4: `docs/design/K902_cursive_frames.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -479,8 +479,8 @@ Next free ID: K904.
   K892. `docs/design/K156.md`, round 2026-10-27b.
   - owner: agent `a11726d3815bf8425` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (sonnet, started 2026-10-27 09:44; cap extended to 11:05 for step 2)
   - branch: `worktree-agent-a11726d3815bf8425`, worktree `.claude/worktrees/agent-a11726d3815bf8425`; last commit: `727f8593`
-  - evidence: `.claude/probes/rounds/2026-10-27b/` (main checkout, untracked); the revert on branch `k893-g31-revert`
-  - next: scan of 10 points done (s1-s5), bisect pass b1 at 0753b3c8; then step 2, G3-1 reverted at master 36c94491 on `k893-g31-revert`, ABBA (asked 10:19, before more bisect passes); cleanup, handoff
+  - evidence: `.claude/probes/rounds/2026-10-27b/` (main checkout, untracked; step 2 in `g1/g31/`); the revert on branch `k893-g31-revert` (`d8caafa3`, worktree `.claude/worktrees/k893-g31-revert`, never pushed)
+  - next: step 2 done: G3-1 undone at head by hand (approximate: the thread reveal's programs break), render sync -15.0 / -16.0 / -11.1 ms dense / maxfab / knot24, ABBA; bisect S1-S3 to 11:05; then handoff, report
   - brief: `docs/design/K156.md`, round 2026-10-27b
 - **K900** · K868 oracle stage after K883: #15's crossing 292 on muse_hash (pad the cut by sigma, or
   keep same-chain joins out of a cluster holding the other pass), then the 208 'other' missing
@@ -496,7 +496,7 @@ Next free ID: K904.
   - owner: agent `a0834328e757cdbae` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 09:48, 2 h cap ~11:48)
   - branch: none: probe-only, no commits (main checkout, untracked `.claude/probes/K863/trace/`); last commit: n/a
   - evidence: `.claude/probes/K863/trace/` (untracked): `work7/`, `out7/`, NOTES.md ## v4
-  - next: frames on the connector side and re-cut bodies; rebuild as v4 (calibration, template, words, rerun, review); pairs still over 4 u; leads and tails; v4 notes
+  - next: steps 1-2 built (out7, 10:35); folding in Levi's K901 answers (a's entry on its body, the font's r after high exits, a design note for K904); NOTES ## v4; leads and tails
   - brief: `docs/design/K902_cursive_frames.md`
 
 ## Next, in order
@@ -533,6 +533,9 @@ The queue (coordinator, overnight 2026-10-15/16):
 8. Batch close (2026-10-16): fixes ea2e468 (K398/K346/K436/K454/K469/K314/K373/K526/K461/K500; residual K529), K481 stage 2 a69b5cb (stage 3 = K530), K307 stage 3 e83f203 (K366 measured/attributed, fix = K535; K386 narrowed), G3-1 3465090 (browser verification = K536), K430 ramp 377bc41 (K268 stays In progress; residuals K537, K538; K431 narrowed). Levi answered K210 (-> K531, folds K82), K527 in full (-> K532) and K339/K323 (-> K534, Stage A unlocked); backend dailies filed as K533. Refreshed queue by value - Levi gates first: K515 (K480's look), K525 (K80 3b's look, real sheet in), then the rest of Waiting on Levi; then ungated, in order: K530 (K481 stage 3), K534 (panel Stage A), K527's build half (after the render lane), K536 (G3-1 browser verification), K268's remaining item-2 parts, then work in their sections.
 9. Batch 2 close (2026-10-16): K481 stage 3 31b2238 (K530/K481 done; look call K545), panel Stage A1 35f3ec2 (K534 done; A2 = K541), K74 stage 4 build 7d794b5 (K527/K532 done; sheet K543, phone timing K544), G3-1 verified (K536 done in c946ae2; residuals K539, K540), K268 PROTECT 1fc9458 (far-branch smooth-min remains). Queue by value - Levi gates first: K515 (K480's look), K525 (K80 3b's look, real sheet in), K545 (K481 stage 3's look), then the rest of Waiting on Levi; K531 (daily determinism) lands at launch prep and K533 (backend dailies) with the backend/accounts work; then ungated: K268's far-branch smooth-min, K543/K544 when wanted / in K156's next phone window, then work in their sections.
 10. New week (2026-10-19): Levi's calls - final ς gets its own glyph; dailies draw no title thread unless a flag asks (K552, maze topology the same either way); the cursive is redesigned before any mass generation (K115: crossings only, later-over-earlier in pen order with a reverse checkbox, smooth paths). K551 done (f18dd07, gaps back live). Next: K552 and K115's redesign stage 1 (agents), claude-config's dedupe fix (CC81); K161 done. Later: K553, then K550.
+- **K904** · Cursive two entry modes: each letter takes an entry from the baseline and one from high
+  up (after b, o, v, w); G2 may bend the start of the next body; the generator makes every variant
+  (Levi, 2026-10-27). After K902, from its design note. `docs/design/K863_trace.md`.
 - **K892** · Take K8 G3-1 (`34650901`) out of the default path (Pixel 11: +24.5 / +27.8 / +48.0 ms
   render sync, same pixels) if K893's revert at head is clean and wins it back; gate K868 S3 on the
   phone budget from its first build (Levi, 2026-10-27: "sure"). `docs/design/K156.md`.
