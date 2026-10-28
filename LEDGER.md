@@ -19,10 +19,13 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K948.
+Next free ID: K952.
 
 ## Waiting on Levi
 
+- **K950** · Cursive: cut a word-final e's exit by rise (now: 51.1 u, rising as far as the m/n/y/d
+  tails, ending 1.46 u from the font's exit) or by length (34.2 u, which stops barely out of the bowl)?
+  Drive `K863/cursive_v54_words.svg`. Recommended: rise.
 - **K943** · K868: should a table crossing inside one cluster draw its over line? Both inks break it now
   (group ink 106 lines, label ink 119; muse_hash #6, #7). Drawing it splits similarity at table crossings
   (S3: a pass id per member, 1-2 label bits, a CPU split of the spans). K940 makes the crops. Recommended: draw it.
@@ -316,19 +319,11 @@ Next free ID: K948.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
-  - owner: stage K926 (v5.4, the e joins, with K929), agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 18:48; handle under K926)
-  - branch: mainline, no code (outputs untracked); last commit: fa7efad8 (K930's handoff)
-  - evidence: `.claude/probes/K863/trace/` (per stage: `tools/*_k<ID>.py`, `work<n>/`, `out<n>/`; `NOTES.md` has a section per version with its rerun commands); Drive `K863/` (each version's SVGs; v5.1: `cursive_v51.svg`, `cursive_v51_words.svg`, `split_combs.svg`, `k917_junctions.svg`; v5.2: `cursive_v52.svg`, `cursive_v52_words.svg`; v5.3: `cursive_v53.svg`, `cursive_v53_words.svg`, `combs_v53.svg`)
-  - next: K926 and K929 (v5.4, the e joins) run; then K944 (`--from-svg` holds Levi's nodes), K945 (the stem noise at its source), K946 (the generator's hooks); Levi answers K928 and K939, then edits the template once K944 lands; K927, K937; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls); capitals are K931
+  - owner: nobody since 2026-10-27 20:12 (K926 finished v5.4; Levi reviews it and answers K950; K944 is the next stage)
+  - branch: mainline, no code (outputs untracked); last commit: a99b2d64 (K926's handoff)
+  - evidence: `.claude/probes/K863/trace/` (per stage: `tools/*_k<ID>.py`, `work<n>/`, `out<n>/`; `NOTES.md` has a section per version with its rerun commands); Drive `K863/` (each version's SVGs; v5.1: `cursive_v51.svg`, `cursive_v51_words.svg`, `split_combs.svg`, `k917_junctions.svg`; v5.2: `cursive_v52.svg`, `cursive_v52_words.svg`; v5.3: `cursive_v53.svg`, `cursive_v53_words.svg`, `combs_v53.svg`; v5.4: `cursive_v54_words.svg`, `e_joins_v54.svg`)
+  - next: Levi reviews v5.4 (Drive `K863/`) and answers K950; K944 (`--from-svg` holds Levi's nodes), K948 (the o-entry e's elbow), K945 (the stem noise at its source), K946 (the generator's hooks), K949 (joins still off the font); Levi answers K928 and K939, then edits the template once K944 lands; K927, K937; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls); capitals are K931
   - brief: `docs/design/K863_trace.md` (## Levi's calls); stages: v3 `K886_cursive_v3.md`, v4 `K902_cursive_frames.md`, v5 `K904_cursive_v5.md`, v5.1 `K916_cursive_v51.md`, v5.2 `K925_cursive_v52.md`, v5.3 `K930_cursive_smooth.md`, v5.4 `K926_cursive_e.md`
-- **K926** · Cursive v5.4: after a high exit, e's connector dives to the standard eye (ve 31 u off
-  the font, crossing e at 21 deg; ze 66.9 u). Levi, 2026-10-27: "exit segments coming from high
-  exits (like v) curve incorrectly to join with e." Also en, er, bk, br. `docs/design/K926_cursive_e.md`.
-  - owner: agent `a62b721e8acb0bad6` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 18:48, 2 h cap ~20:48)
-  - branch: none: probe-only (main checkout, untracked `.claude/probes/K863/trace/`); last commit: `cd86e3ea` (the brief)
-  - evidence: `.claude/probes/K863/trace/`: `tools/*_k926.py`, `work12/`, `out12/`, `NOTES.md` ## v5.4
-  - next: (agent) the brief's steps 1-4 (e after a high exit, the word-final e with K929, en/er/bk/br, v5.4); then the coordinator commits the handoff and uploads the v5.4 SVGs
-  - brief: `docs/design/K926_cursive_e.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -763,9 +758,6 @@ Every other item below waits on the trigger it names.
 - **K919** · K525's TELE paint item costs the phone +11.0 ms on dense (+2.8 max-fabric, +3.1 knot;
   T1 `a64390b0`, round 2026-10-27c): try a K905-style compile-out (no TELE item on pages that draw
   no telegraph; an analogy, unverified) and measure it. `docs/design/K156.md` round 27c.
-- **K929** · Cursive: a word-final e stops where its eye closes, with no bowl or exit (the generator
-  draws the bowl as part of the next connector). Levi, 2026-10-27: "ending e's should have a bit of
-  the exiting segment drawn." `docs/design/K926_cursive_e.md` step 2, with K926 (running).
 - **K931** · Cursive capitals, once the lowercase settles: traced from the same font, entering from
   above or below, or from a direction kept within rules (Levi, 2026-10-27).
   `K863_trace.md` ## Levi's calls, "Capitals, later".
@@ -788,10 +780,20 @@ Every other item below waits on the trigger it names.
   bends, p's entry wobbles and its bowl waves at the baseline; strokes over 12 nodes; eye-check regressions
   b 17.9, v 12.9, t's cusp 5.6, p@3562 4.5, a@2317 3.16. `K930_cursive_smooth.md` ## Handoff.
 - **K946** · Cursive generator hooks (`gen_k925`): d's entry (curvature 194 1/u), the hippo lead-in
-  (6408 1/u), and the na and nq joins (G1 only). `K930_cursive_smooth.md` ## Handoff.
+  (6408 1/u), b's word-initial lead-in (a small step, in v5.3 too), and the na and nq joins (G1 only).
+  `K930_cursive_smooth.md` ## Handoff.
+- **K948** · Cursive v5.4: the o-entry e (be, we, ve, oe; Drive `K863/e_joins_v54.svg`) turns from its
+  level crossbar up into the eye's back in a short span, an elbow where the font turns smoothly (4x
+  crops). Likely `evar_k926`'s start curve, which meets the body at s 298 of 1052; unchecked. oe is 5.7 u off.
+- **K949** · Cursive joins still off the font after v5.4: fe 18.8 u, bk 7.85 (check the reference cut
+  near k's loop entry), ee 6.9, br 5.5 (the refit sits on its bounds; blend's L=b params give 5.2), y's
+  final tail 3.58. `K926_cursive_e.md` ## Handoff.
 
 ## Residuals (known, not fixed)
 
+- **K951** · Cursive v5.4's residuals: b, f, p, v, o, s and w end without a final tail, as the font's
+  do; the titles still say v5.3; after a template round trip, rerun evar, fitp and tails in that order.
+  `.claude/probes/K863/trace/NOTES.md` ## v5.4.
 - **K942** · K924's diagnostic switches in OracleParams (`labFill` "arcs" and "yield", `labFillDepth`, `labTie`,
   `labCap`), off by default: remove the ones K868 does not adopt. `labCap: 0.4` hides crossing lines (#16 13 to
   40); "arcs" adds edge ink (d1 +148). Probe gotcha: `checks_ab.ts` takes the head's ink from `HEAD_INK`.
@@ -1981,6 +1983,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K926** · Cursive v5.4: e's two high entries from the font (o entry after b o v w, g entry after c g j y z; be 31.17 to 2.89 u off the font's connector, ve 31.17 to 3.46, ze 12.45 to 2.05), en 7.08 to 1.15 u, er 8.35 to 2.36. `K926_cursive_e.md` ## Handoff. Done in a99b2d64 (2026-10-27).
+- **K929** · Cursive: a word-final e draws its exit, cut where it has risen as far as the m/n/y/d tails (51.1 u, ending 1.46 u from the font's exit; the cut rule is K950). Done in a99b2d64 (2026-10-27).
 - **K930** · Cursive v5.3: few-node G2 strokes (m 157 to 26 nodes, a 109 to 19; bodies a median 13 nodes, within 0.94 u of v5.2); the `--from-svg` hold is prototyped, not wired (K944). `K930_cursive_smooth.md` ## Handoff. Done in fa7efad8 (2026-10-27).
 - **K924** · Label ink artifacts traced to their rules (M1 cap cut, M2 fill over a foreign tube, M6 fill z, M3 tie; S, a crossing inside a cluster, is a K868 design call); five diagnostic flips in OracleParams, off by default; rule changes ranked. `K924_label_artifacts.md` ## Results, ## Handoff. Done in 1a75731f (2026-10-27).
 - **K925** · Cursive v5.2: the a/c/d/g/q dip fixed (eye check a 9.27 to 1.91, q 8.09 to 1.92), one eye scale, o's junction at 86 u (its joins stay inside the font's fill). `K925_cursive_v52.md` ## Handoff. Done in bec83b02 (2026-10-27).
