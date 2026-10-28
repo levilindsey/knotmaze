@@ -9,19 +9,19 @@ One build stage, Opus, two-hour cap. Ports 5890-5899; probes in
 with the vibration effect on this loop along the bottom of the loop. Can
 we fix this general problem?"
 
-- His link (he was on the LAN dev server; serve it on your own port):
+- Levi's link (Levi was on the LAN dev server; serve it on your own port):
   `?qoietk.KIiHgRRXwRlRt8fGrST4sf`
-- His crossing inspect, verbatim:
+- Levi's crossing inspect, verbatim:
 
   ```
   CROSSING INSPECT {"crossing":104,"slot":104,"selfCross":true,"over":{"chain":21,"ctrl":102},"under":{"chain":21,"ctrl":110.205},"sign":1,"overCenter":58.891,"underCenter":62.764,"split":[null,1.857],"uCaps":[1.857,0.584],"oCaps":[1.347,1.857],"cut":[0.336,0.323],"win":[0.866,0.584],"reach":[1.19,1.26],"polyPts":34,"strength":1,"mode":"perp"}
   ```
 
-- His screenshot (not available to you; reproduce it): a twisted kink
+- Levi's screenshot (not available to you; reproduce it): a twisted kink
   loop, chain 21 crossing itself, during a pluck's vibration blur, with a
   sharp, discontinuous cusp in the blur along the bottom of the loop.
 
-He asked for the general problem to be fixed, not this loop alone.
+Levi asked for the general problem to be fixed, not this loop alone.
 
 ## What is there
 
@@ -131,7 +131,7 @@ this handoff the commit after it. Evidence: `.claude/probes/K344/`
   and the shader hides blur within a casing of it out to a reach of 1.5.
   On a self-crossing that over pass is the loop's own, where the lobe
   starts, so the clip cut the loop's own blur.
-- **Inferred.** That cut is the cusp Levi saw: his screenshot was not
+- **Inferred.** That cut is the cusp Levi saw: their screenshot was not
   available, and it is the only straight, sharp-cornered edge in the
   loop's blur.
 - **Ruled out by measurement.** Hypothesis 1, a fold past the evolute:
@@ -163,7 +163,7 @@ this handoff the commit after it. Evidence: `.claude/probes/K344/`
   0 px on 15 shots. Changed pixels: Levi's loop 6.0-6.2k at the default zoom,
   65-67k at zoom step 2, 16-20k at step 1 over every knob end and look
   (`psz` 3, `pgh` 0 and 1, `pw` 0 and 15, ride, pinch, wave, glint, ring,
-  off; `psz` 0 turns plucks off); three more kink loops of his design
+  off; `psz` 0 turns plucks off); three more kink loops of Levi's design
   5.7-6.2k; `?7` two of ten loops (ch 57's small kink loop 1955, the same
   straight cut, filled; 414); crossings with other chains, big loops,
   knot mode and the fat-thread loops tried 0 px.
@@ -183,5 +183,5 @@ this handoff the commit after it. Evidence: `.claude/probes/K344/`
   `z2_nc_diff2.png`: noclip | fixed, and their diff). A fix would follow
   the over thread's curve (an arc instead of a line) or draw the over
   passes above the blur.
-- **Next.** The coordinator reviews and merges; Levi looks at his link on
+- **Next.** The coordinator reviews and merges; Levi looks at their link on
   the merged build.

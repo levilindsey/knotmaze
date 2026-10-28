@@ -754,6 +754,6 @@ Nothing under `src/` changed, and nothing was pushed.
   tree's first-load count (43) is counted by hand, for Stage A's rerun
   to confirm.
 - next: Levi's answers to the four questions. Then K340's CSS, alone,
-  once he picks a look; then the Stage A brief (K323 stage 1 plus this
+  once Levi picks a look; then the Stage A brief (K323 stage 1 plus this
   rebuild), after K7 stage 3 and K76 2c merge.
 - brief: this file.

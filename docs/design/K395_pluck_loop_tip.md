@@ -5,7 +5,7 @@ One build stage, Opus, two-hour cap. Ports 5910-5919; probes in
 
 ## Levi's report
 
-2026-10-15 about 07:04, on his phone (Pixel 11, Chrome), on the live site
+2026-10-15 about 07:04, on Levi's phone (Pixel 11, Chrome), on the live site
 in Free play. Verbatim: "Pluck cusps still have a bit of weirdness in
 loops. It seems like there is a bit of discontinuity with the vibration
 effect at times from the middle of the loop tip to an edge, and there is
@@ -14,7 +14,7 @@ this case it seems to not be somewhat heart shaped, with a pointy
 protrusion on the inside of the loop and a dimple on the outside"
 
 - "not" is probably "now" (inferred).
-- His screenshot is in the main checkout, untracked, so it is not in your
+- Levi's screenshot is in the main checkout, untracked, so it is not in your
   worktree: `C:\Users\lsl\Repositories\knotmaze\.claude\probes\K395\levi_phone_2026-10-15_0704.png`
   (open it with the Read tool). The plucked kink loop is at the lower
   left, glowing yellow-white, with a heart-shaped outline. The dark mark
@@ -25,7 +25,7 @@ protrusion on the inside of the loop and a dimple on the outside"
   the loop and a dimple on the outside.
 - The live build at 07:04 was `12709e5` (deployed about 06:23), which
   holds K344's fix (93d0e4d..810b462). The stamp at the bottom left of
-  his screenshot may confirm it.
+  Levi's screenshot may confirm it.
 
 ## What is there
 
@@ -90,7 +90,7 @@ protrusion on the inside of the loop and a dimple on the outside"
 
 If neither viewport reproduces it, try the phone (after 08:30, under the
 lock) before you conclude. If it still does not show, stop and report
-what you tried; the coordinator will ask Levi for his link.
+what you tried; the coordinator will ask Levi for their link.
 
 ## Setup
 
@@ -219,4 +219,4 @@ its test), f8ca9e0 (lore) and this handoff. Evidence: the worktree's
   (an X became a rounded square) and remains. (4) The brief's link
   builds another design now: its chain 21 has no self-crossing.
 - **Next:** the coordinator's review and the merge to master; then
-  Levi's look at a kink loop on his phone, and the CAP_ROUND call.
+  Levi's look at a kink loop on their phone, and the CAP_ROUND call.

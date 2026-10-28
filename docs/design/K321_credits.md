@@ -17,7 +17,7 @@ rights reserved." at the top; the page and the panel's link renamed to
 Credits (`credits.html`); the license texts kept under an "Open-source
 licenses" heading.
 
-His answer, at about 22:40:
+Levi's answer, at about 22:40:
 
 > I set up the LLC. I assign this IP to Snoring Cat.
 >
@@ -73,7 +73,7 @@ stays as it is.
    3. **"Built with Claude Code (Anthropic)"**, with "Claude Code"
       linking to https://claude.com/claude-code the way the other
       credits link. Check that the URL resolves. It stays below the art
-      and music sections once Levi adds his.
+      and music sections once Levi adds theirs.
    4. The rest as today: the techniques and notices, the bundled
       packages under the heading "Open-source licenses", "Research and
       techniques", and the build line.

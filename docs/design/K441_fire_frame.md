@@ -6,7 +6,7 @@ the files named below.
 
 ## The call
 
-K114's handle (Levi took round 2's recs; the burn race is his first
+K114's handle (Levi took round 2's recs; the burn race is Levi's first
 round-2 prototype) says: "next: K441's profile (K461 done: `rt_page.mjs`
 passes `fsr` / `fdr`)". K441 itself, from the ledger: "The real-time
 fire's frame cost (K114 s2 item 6): 0.6-1.2 ms more a frame than turn

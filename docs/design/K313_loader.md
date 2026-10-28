@@ -12,7 +12,7 @@ pre-settle and the trefoil stay, moved into the worker"), verbatim:
 
 > 4. Good. That reminds me, I've been wanting to generate a more interesting trefoil spinner animation that resembles our maze. I'd like it to resemble the player progressing through a trefoil-shaped maze. Additionally, I'd love to make it spin and move around such that the player position actually stays in the same place in the screen, and the trefoil threads-shape moves around in a way that animates the player's position along the threads. I think we won't be able to do this procedurally in a way that is responsive enough  to show immediately at the start when the app opens, right, so we will need to create a more efficient artifact, like a GIF or something--lmk what will look best and be responsive enough.
 
-## The options put to him (about 21:08)
+## The options put to Levi (about 21:08)
 
 > What keeps a loader smooth isn't whether it's procedural or pre-rendered, but which thread draws it. Anything drawn on the page's main thread freezes whenever the app is busy (the settle, the shader compiles). CSS transforms (today's trefoil), a canvas drawn by a worker, video and, I believe, animated images keep moving without it. And "immediately at open" means the loader has to live inside `index.html`, so it shows before the app's 256 KB (gzipped) bundle has downloaded.
 >
@@ -31,7 +31,7 @@ pre-settle and the trefoil stay, moved into the worker"), verbatim:
 > 1. Do you want the worker-drawn loader, or a pre-rendered one?
 > 2. Should the trail grow over a lap and then restart, or be a fixed-length tail behind the player?
 
-## His answers (about 21:20)
+## Levi's answers (about 21:20)
 
 > "Procedural, drawn by a tiny worker (my pick)" Are you sure this will animate early enough? sgtm
 >

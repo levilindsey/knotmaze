@@ -11,30 +11,30 @@ Levi, 2026-10-14 about 19:15, verbatim:
 > - And after travelling down the bottom-left segment, there's a
 >   travelled-path artifact in the top-right segment.
 
-His link: `http://192.168.0.3:5173/?qoietk.KSIeBoGlf4-` (the coordinator's
+Levi's link: `http://192.168.0.3:5173/?qoietk.KSIeBoGlf4-` (the coordinator's
 dev server, which serves the main checkout's working tree). Locally:
 `http://localhost:<port>/?qoietk.KSIeBoGlf4-`.
 
 ## What is known
 
-- **His console:**
+- **Levi's console:**
   - `KnotMaze P4 v0.4.0 0e865bf 2026-10-15 01:43 | dpr 1.5 | gpu WebKit WebGL`
     (desktop Chrome at dpr 1.5);
   - `KnotMaze: seed 1613290376, 299 nodes, 427 edges, 23 strands.`
-- **The code he ran.** The stamp is the dev server's start (18:43). The
-  server serves the working tree, so his page most likely ran `f294247`:
+- **The code Levi ran.** The stamp is the dev server's start (18:43). The
+  server serves the working tree, so Levi's page most likely ran `f294247`:
   K111 stage 4 merged at 19:11 and touched the paint shaders (High
   contrast's looks, the rim width `hgw`). That is not established. If
   the cause isn't obvious, build the commit before K111 stage 4 (`a47642d^`)
   with `scripts/preview.ps1 -Ref` and compare.
-- **Also in his console:**
+- **Also in Levi's console:**
   - PixiJS warnings at load ("Attribute aGap / aGapId / aUV is not
     present in the shader"). Probably unrelated; note whether master
     prints them too.
   - `CROSSING INSPECT {"crossing":34,"slot":34,"selfCross":false,"over":{"chain":2,"ctrl":19.843},"under":{"chain":16,"ctrl":7.425},...}`
     from `ribbon_renderer.ts:3252`. Find what triggers that log; it may
-    mark a spot he clicked.
-- **His two screenshots,** which exist only in the chat, described:
+    mark a spot Levi clicked.
+- **Levi's two screenshots,** which exist only in the chat, described:
   1. **One move in.** The start marker (a play triangle) is up-left. The
      yellow trail runs from it right and then down into the head (the
      target glyph), which sits on the first junction. Of the choices
@@ -61,12 +61,12 @@ dev server, which serves the main checkout's working tree). Locally:
 
 ## Stage 1: diagnose and fix (this stage)
 
-1. **Reproduce his state on master:**
+1. **Reproduce Levi's state on master:**
    - desktop Chrome at `--force-device-scale-factor=1.5`;
-   - his link;
+   - Levi's link;
    - the first move, from the start to that junction;
    - then the move down the down-left run (the K120 key moves or a click;
-     check the head lands where his shot 2 shows).
+     check the head lands where Levi's shot 2 shows).
 
    Shoot each state with the pointer parked off the canvas, then once
    hovering each choice, since a hovered choice changes its look. Shoot
@@ -97,7 +97,7 @@ dev server, which serves the main checkout's working tree). Locally:
    - over the default design and this link's settings;
    - on about 50 seeds each.
 7. **Same-state before/after sheets:**
-   - his link at the junction (pulses at three or four phases) and after
+   - Levi's link at the junction (pulses at three or four phases) and after
      the move;
    - two or three other census hits.
 
@@ -200,9 +200,9 @@ OBSERVED:
   ctrl n exactly (seed 4: 0 px). n % 4 == 0 reads the next chain's header.
 - **Why the tests missed it:** the float64 CPU mirror divides exactly, so
   the G2 parity census could never see it.
-- **His console.** The PixiJS attribute warnings print on master too
+- **Levi's console.** The PixiJS attribute warnings print on master too
   (`out_attr/console.txt`): unrelated. CROSSING INSPECT is the Alt+click
-  diagnostic (`main.ts` `requestInspect`); his crossing 34 sits on chain 16
+  diagnostic (`main.ts` `requestInspect`); Levi's crossing 34 sits on chain 16
   ctrl 7.4, on the arrival run about 2.6 ctrl before node_2. It marks a
   spot, nothing more.
 
@@ -253,8 +253,8 @@ was served by `scripts/preview.ps1 -Ref`.
 
 | case | master | fix |
 |---|---|---|
-| his link, head on node_2 (d5) | 6967 px | 42 px, all at 1/255 |
-| his link, after the move down e18 | 2076 px | 0-2 px |
+| Levi's link, head on node_2 (d5) | 6967 px | 42 px, all at 1/255 |
+| Levi's link, after the move down e18 | 2076 px | 0-2 px |
 | span ending at 28.5 / 28.9 | 2110 / 1334 px | 0 |
 | span starting at 28.25 | 1969 px | 0 |
 | rim, seam run hovered at 25 | 1438 px | 0 |
@@ -271,7 +271,7 @@ phase can hide the pulse case (no crest on the run at t 100): shoot two.
 Master's reproduction with four pulse phases is `out_attr/`.
 
 Sheets, in `.claude/probes/K299/sheet/`:
-- `K299_seam_ab.png`: his link, both states;
+- `K299_seam_ab.png`: Levi's link, both states;
 - `K299_midmove_ab.png`: the in-flight spans;
 - `K299_rim_ab.png`: the hover rim;
 - `K299_hits_ab.png`: seeds 47 and 160.
