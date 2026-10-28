@@ -35,7 +35,7 @@ import {
   segB,
   zAt,
 } from "./geom";
-import { type DepthChain, diagramDepth } from "./depth";
+import { type DepthChain, type DepthPin, diagramDepth, plateauDepth } from "./depth";
 import { type CornerEnd, type CurveSamples, type G2Kind, buildG2, humpFall, rayHit } from "./g2";
 
 /** S2 (§3.7): the corner curve between the tangent points. "g1": the
@@ -101,8 +101,11 @@ export interface OracleParams {
   rOf?: (j: number, i: number, theta: number, style: "round" | "sharp") => number;
   /** S2 (§3.3): "diagram" (default) pins ±depthAmp at each crossing's passes
    * and blends between them (depth.ts); "scene" uses the scene's z samples
-   * (physics zPos), S1b's rule, kept for comparison. */
-  depth?: "diagram" | "scene";
+   * (physics zPos), S1b's rule, kept for comparison. K922: "overlap" is
+   * "diagram" with each pin's value held over its pass's overlap reach
+   * (depth.ts plateauDepth), so a crossing's over pass lies above its
+   * under pass over the whole overlap. */
+  depth?: "diagram" | "scene" | "overlap";
   /** The diagram depth's tent window in arc length. Default
    * look.depthWindow × (look.ctrlArc ?? 1). */
   depthWindow?: number;
@@ -464,16 +467,20 @@ export class FieldModel {
     const amp = scene.look.depthAmp;
     this.depthWin = params.depthWindow ?? scene.look.depthWindow * (scene.look.ctrlArc ?? 1);
     this.depthChains = this.polys.map((p) => ({ closed: p.closed, s0: p.s0, len: p.len, pins: [] }));
+    const passPins: { pi: number; pin: DepthPin; oi: number; os: number }[] = [];
     for (const x of scene.crossings) {
       const ov = x.over === "a" ? x.a : x.b;
       const un = x.over === "a" ? x.b : x.a;
-      for (const [ps, z] of [
-        [ov, amp],
-        [un, -amp],
+      for (const [ps, z, other] of [
+        [ov, amp, un],
+        [un, -amp, ov],
       ] as const) {
         const pi = this.idxOf.get(ps.chain);
         if (pi === undefined) continue;
-        this.depthChains[pi].pins.push({ s: normS(this.polys[pi], ps.s), z });
+        const pin: DepthPin = { s: normS(this.polys[pi], ps.s), z };
+        this.depthChains[pi].pins.push(pin);
+        const oi = this.idxOf.get(other.chain);
+        if (oi !== undefined) passPins.push({ pi, pin, oi, os: normS(this.polys[oi], other.s) });
       }
     }
     for (const d of this.depthChains) {
@@ -584,6 +591,11 @@ export class FieldModel {
     if (k883 && (params.passJoins ?? "k900") !== "k883") this.buildPassTags(scene, jSpans);
 
     this.grid = new SegGrid(this.polys, Math.max(h, this.reach / 2), this.reach + 4 * h);
+    if (params.depth === "overlap")
+      for (const q of passPins) {
+        q.pin.rL = this.passReach(q.pi, q.pin.s, q.oi, q.os, -1);
+        q.pin.rR = this.passReach(q.pi, q.pin.s, q.oi, q.os, 1);
+      }
 
     // 4. Primitives and their exposure (§3.5).
     this.buildPrims();
@@ -1909,7 +1921,46 @@ export class FieldModel {
   /** Depth z at arc length s on poly pi, by the selected rule (§3.3). */
   depthAt(pi: number, s: number): number {
     if (this.params.depth === "scene") return zAt(this.polys[pi], s);
+    if (this.params.depth === "overlap") return plateauDepth(this.depthChains[pi], this.depthWin, s, this.depthWin);
     return diagramDepth(this.depthChains[pi], this.depthWin, s);
+  }
+
+  /**
+   * K922 depth "overlap": how far along poly pa from s, in direction dir,
+   * its tube still overlaps poly pb's tube near the other pass ob (a point
+   * of pa's cross-section, |t| < h, lies within h of pb at a foot within
+   * 10h of ob): walked in h/8 steps up to 10h, plus one step. 0 when the
+   * passes do not meet (a table crossing apart in the geometry).
+   */
+  passReach(pa: number, s: number, pb: number, ob: number, dir: number): number {
+    const h = this.h;
+    const step = h / 8;
+    const maxR = 10 * h;
+    const P = this.polys[pa];
+    const Q = this.polys[pb];
+    const cs: Cand[] = [];
+    let last = -1;
+    for (let d = 0; d <= maxR + 1e-9; d += step) {
+      const raw = s + dir * d;
+      if (!P.closed && (raw < P.s0 || raw > P.s0 + P.len)) break;
+      const u = normS(P, raw);
+      const at = pointAt(P, u);
+      let hit = false;
+      for (let k = -4; k <= 4 && !hit; k++) {
+        const t = (k / 4) * h * 0.999;
+        candidates(this.grid, at.x - at.ty * t, at.y + at.tx * t, h, cs);
+        for (const c of cs) {
+          if (c.chain !== pb || !(c.d < h)) continue;
+          if (Math.abs(dS(Q, c.s, ob)) > maxR + 2 * h) continue;
+          if (pa === pb && Math.abs(dS(P, c.s, u)) <= Math.abs(dS(P, c.s, ob))) continue;
+          hit = true;
+          break;
+        }
+      }
+      if (!hit) break;
+      last = d;
+    }
+    return last < 0 ? 0 : last + step;
   }
 
   /**
