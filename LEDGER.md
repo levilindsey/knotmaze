@@ -23,7 +23,9 @@ Next free ID: K934.
 
 ## Waiting on Levi
 
-- **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
+- **K934** · K922's calls on sheet I (Drive `K868/sheets/I_junction_extent.png`): depth "overlap" (missing ink
+  116 to 68, free ends +5); extent "part" (less missing and extra ink, free ends 83 to 86) or a walk that stops at
+  crossing cuts; the free-end check counting connected exits (K910); the hook's look. Recs in K868's `next:`.- **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
 - **K623** · K409's glow covers the dark band under Gone (only a browner tail shows): A as merged, B
@@ -291,10 +293,10 @@ Next free ID: K934.
 - **K868** · Border look, junctions done right: one field renderer (union within a surface, occlusion
   by depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
-  - owner: stage K922 (oracle), agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (since 2026-10-27 15:20; handle under K922); K923 (Pixel bench) finished 16:41
-  - branch: mainline; last commit: `69e304ed` (K915 merged)
-  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`; sheets A-H, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
-  - next: K922 (depth over the whole overlap, junction caps out to where arms part, sheet I) runs; Levi judges sheet I (the junction extent, the hook's look); K924 attributes the label ink's artifacts; then the S3 brief: K915's two passes with K923's screen-space LOD and packed 32-bit label (together they fit the Pixel's 4 ms at every zoom; the coordinator's rec, Levi may object; open inputs K933), G1 corners and cr 0-6 (sheet F approved), and G3-1 ported back or replaced (K892)
+  - owner: nobody since 2026-10-27 16:45 (K922 merged, K923 finished; waits on Levi's K934 and the K924 brief)
+  - branch: mainline; last commit: `4e8b1c7c` (K922 merged; keep `.claude/worktrees/k922-junction-extent`: K922's probes import its source)
+  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`); sheets A-I, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
+  - next: Levi's K934 on sheet I (recs: depth yes; try the walk that stops at crossing cuts; fix the check's exit count and report both counts; the hook is moot under label); K924 attributes the label ink's artifacts, now including sheet I's d1-d3 shapes, which every label column shows; K935; then the S3 brief: K915's two passes with K923's screen-space LOD and packed 32-bit label (together they fit the Pixel's 4 ms at every zoom; the coordinator's rec, Levi may object; open inputs K933), G1 corners and cr 0-6 (sheet F approved), and G3-1 ported back or replaced (K892)
   - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -764,10 +766,15 @@ Every other item below waits on the trigger it names.
 - **K932** · `scripts/bench_frame.mjs` times only CPU submission: Chrome's WebGL `finish()` doesn't
   wait for the GPU (K923: 0.0-0.1 ms read for 3.8 ms of GPU work). End each frame with a 1-px
   `readPixels`, recheck the GPU times taken with it, fold in K923's runner. `K923_s3_bench.md` ## Handoff.
+- **K935** · K922's follow-ups: endSnap unconditional (a float bug); the 23 crossing-cut free ends; the 9 span-end
+  triples the walk never starts; d2-d4's fill-outline and z-tie cuts; probe fixes (fe_mech R = 2W, K915's `h.ts`
+  FULL_DIR). `K922_junction_extent.md` ## Handoff.
 
 ## Residuals (known, not fixed)
 
-- **K933** · S3's open inputs from K923: the uniform LOD's look (facets on kink loops, twist eyes?);
+- **K936** · K922's residuals: what holds an arm 7h+ under "part"; d1's crescent stub; #5's band (a spike under
+  depth, a notch and an end under the extent); g41_user_tw64's free ends 20 to 23; #14's crossing whose passes
+  never overlap. `K922_junction_extent.md` ## Handoff.- **K933** · S3's open inputs from K923: the uniform LOD's look (facets on kink loops, twist eyes?);
   the packed label's budget (255 chains and clusters, 2048 s steps, 32 z; no fill/cap/closed flags);
   stand-in switch strips; no view culling at 6x. For the S3 brief; `K923_s3_bench.md` ## Handoff.
 - **K914** · Root pages (`#glyphs2`, text in the first scene) also link plain `section-rgb` in wave
