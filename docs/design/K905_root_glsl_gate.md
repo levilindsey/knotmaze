@@ -109,3 +109,46 @@ root code. That frees phone budget for K868's S3, which is gated on it
   suite results, the phone numbers or why there are none, a
   `Ledger items` list (follow-ups, residuals, decisions for Levi), and
   K905's handle fields (branch, last commit, evidence, next).
+
+## Step 1: the cause (agent, 2026-10-27 11:25)
+
+Where the root code enters (K620, `6fd77ab3` then `fa0c61de`), all of it
+in `paint_glsl.ts` pieces that every section program includes:
+
+- **Vertex** (`PAINT_VERT_DECL`, `PAINT_VERT_MAIN`): four more outputs,
+  `vKR0` (flat vec4), `vKRC` and `vKRO` (smooth vec3) and `vKRJ` (flat
+  vec3), 13 components on top of the 35 the section vertex wrote before
+  (gap 10, paint 16, vUV/vSection/vColor 9), so +37% varying storage per
+  vertex. All four are written on every vertex, zeroed when no root. Then
+  a block guarded by `kc1.w > 0.5` (per-chain KSTATIC data, not a uniform,
+  so the compiler must keep it): when taken it fetches the root table
+  (3 KGEOM + 2 KSTATIC + 1 KGEOM texels), builds a second `KChain` and
+  inlines `kSectionAtArc` three times. K620 itself saw the block change
+  `knotSection`'s codegen on no-root frames (3 px, maxDelta 1).
+- **Fragment** (`PAINT_FRAG_DECL`, `ROOT_FRAG_GLSL`, `SECTION_FRAG`): the
+  four inputs, `kRootSection` (3 KGEOM fetches when taken) and
+  `if (vKR0.x > 0.5 && kpt.x < vKR0.z) base = kRootSection(kpt.x, pxW);`,
+  a branch on a flat varying (not provably uniform), early in `main`.
+
+What it costs when no root is drawn: no extra data fetch runs (`kc1` is
+fetched for `vKC1` anyway, and neither branch is taken; the per-frame
+`writeRootTables` loops over no entries). What remains is (a) the 13
+varying components every vertex writes and, on a tile-based GPU like the
+phone's, stores to the parameter buffer and the fragment stage reads and
+interpolates (two smooth vec3s), (b) the never-taken vertex block's code
+and registers (three inlined section evaluations), and (c) the fragment
+branch and its inlined function. `fa0c61de` shrank the fragment side
+(three inlined `kFxColor` calls out) yet measured +6.1 ms more (one run),
+which points away from fragment code size and toward (a) and (b); the
+phone pass of the gate is what tests it.
+
+Programs that carry it: `section-rgb` and `section-rgb-explore`
+(`ribbon_shader.ts`, every ribbon fill: knot, maze and gameplay strips
+through `strip_pass.ts` and `explore_gaps.ts`), and `ribbon-sdf` /
+`ribbon-sdf-explore` (`ribbon_sdf.ts`, only with `?rp=sdf`). Junction
+fans, arm strips, pluck, gap and background programs carry none.
+
+Roots exist only in glyph text: a strand gets `taper` only in
+`glyph_graph.ts`, which runs only with the `#glyphs2` hash switch (and
+not with its `notaper` flag) on a scene with text or a title. So no
+default page can draw a root, and the three K539 cells never do.
