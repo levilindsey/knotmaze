@@ -478,13 +478,6 @@ Next free ID: K984.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
-- **K983** · The repo's docs call Levi "he"/"his"/"him" (234 hits in 74 files under `docs/`, `.claude/rules/`; the
-  cursive briefs were fixed in 3cad6ab8). One docs pass to the name; quotes, named other people, game characters stay.
-  - owner: agent `a0e233cdc5a80e350` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (sonnet, started 2026-10-28 05:00, 1 h cap ~06:00)
-  - branch: the agent's worktree under `.claude/worktrees/` (path in its report); last commit: none yet (from `b36a2293`)
-  - evidence: none needed; `Select-String '\b(he|his|him|himself)\b'` over the scope is the count
-  - next: merge with `agent_merge.ps1 -Id K983 -Done` (docs only), then fix LEDGER.md's own hits by hand
-  - brief: this item (scope: `docs/**/*.md` except `K868_*`/`K980_*`, `.claude/rules/*.md`, CLAUDE.md; not LEDGER.md)
 
 ## Next, in order
 
@@ -2030,6 +2023,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K983** · The docs name Levi instead of the old pronouns: 211 of 225 hits fixed in 66 files under `docs/` and `.claude/rules/`; the 14 left are quotes, named other people, game characters and one letter pair. Done in d285ce71 (2026-10-28).
 - **K944** · Cursive `--from-svg` reads Levi's edits as drawn: an Inkscape save reads back within 6.05e-7 u, the build from it matches v5.8's byte for byte, nine scripted edits read back exactly (`work17/dbg/build_from_svg.ps1`). Done in 3cad6ab8 (2026-10-28).
 - **K970** · Cursive tools: `eye`, `fid_cmp`, `nodes_pairs`, fewnode's G2 tally and the `--end-budget` header, fixed in the `_k969` copies. Done in 4a178950 (2026-10-28).
 - **K969** · Cursive v5.7's small comb bumps: a's, k's crotch ripple, y's exit corner and b's spike gone in v5.8; o's exit is K976, the rest K977. Done in 4a178950 (2026-10-28).
