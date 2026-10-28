@@ -130,3 +130,47 @@ Levi reviews.
   - a `Ledger items` list (follow-ups and residuals; a question for Levi
     only about what shows on screen, in plain words);
   - K945's current handle fields.
+
+## Handoff
+
+Stage agent, 2026-10-27 20:49-22:24 (stopped with steps 1-6 done, before
+the 22:49 cap). The full record and every rerun command are in
+`.claude/probes/K863/trace/NOTES.md` `## v5.5`; nothing is committed.
+
+- **Done.** v5.5 is built (`work13/dbg/run_v55.ps1`, every step exit 0):
+  `out13/cursive_v55.svg`, `cursive_v55_words.svg` + `.png`,
+  `combs_v55.svg`, and `cursive_v55_review.png`, which holds the chart
+  and stays local.
+- **Centreline.** The exact medial axis of the wght-100 outline
+  (`tools/medial_k945.py`), snapped onto the raster trace's routing. The
+  raster trace takes over across Y-junctions. Cusp ends are trimmed and
+  carried straight. a, g and q get a corner at the V.
+  - Rejected: zero-width extrapolation. The sides stay 5-10 fu apart.
+- **Stem tops (K939).**
+  - a, g and q's node sits at the font's V: 0.13, 0.26 and 0.00 u from
+    it, with turns of 91, 86 and 84 deg. v5.4's nearest node was about
+    7 u away, in a U.
+  - d starts at its cusp, 0.00 u from the V.
+  - Crop: `work13/vtops/vtops.png`.
+- **Nodes and smoothness.**
+  - Nodes: median 13 -> 14, max 26 -> 27. The largest deviation is
+    0.95 u.
+  - The roughness check passes. Its ceilings are tightened to v5.5's
+    worst stroke (band 0.72, wobble 0.016, facet 0.0053). Under them,
+    v5.4 fails p, r and t.
+  - Eye check: the median p90 |dk/ds| goes 144 -> 127.
+- **Fidelity.** The mean join distance to the font goes 1.996 -> 1.865 u
+  (28 joins better and 10 worse, by more than 0.25 u).
+- **Open, for the next stage.**
+  - o's last 15 u before its exit lean 3.1 u inside the stroke and end
+    in a short hook. The fair is the cause; raising its evaluation cap
+    is not the fix (tested). Inferred: the held exit frame.
+  - The exit-curl flags on b, v and w grew. They are the same spots as
+    v5.4's.
+  - p@621 is a new flag: p's entry hook.
+  - The comb spikes at the join seams in "minimum" and "hippo".
+  - e's comb has a new tail at its exit end. The last 5 u turn 8 deg,
+    against 1 deg in v5.4 (radius 17 u at the end); the cause is not
+    tested.
+- **Next.** Fix o's exit end in `bodies_k945`, then refit the joins and
+  rerun `run_v55.ps1`. Then look at the b/v/w exit curls and p's entry.
