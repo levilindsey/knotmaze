@@ -288,9 +288,6 @@ Next free ID: K914.
 - **K809** · Panel search on your phone (K793): typing in the box must not jump or zoom the maze, the
   keyboard must not cover the box, results scroll under the sticky bar, and Enter closes the keyboard
   and outlines the best row (an inferred risk, not seen; `docs/design/K793.md`)
-- **K910** · K900's sheet B3 (Drive `K868/`): do the magenta dots (free border ends that an image
-  check finds in 4x renders) cover every missing border you see on muse_hash? If they do, that check
-  decides K909's grouping; if not, mark the rest. `.claude/probes/K868/sheets/README.md`.
 
 ## In progress
 
@@ -300,7 +297,7 @@ Next free ID: K914.
   - owner: stage K909, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 11:38; handle under K909)
   - branch: mainline; last commit: `263bc134`
   - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`) and `.claude/probes/K909/`; sheets A-F, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
-  - next: K909 groups junctions by geometry and renders sheet G (the hook's look, for Levi); Levi checks B3 (K910); then the S3 brief (WebGL2 prototype measured on the Pixel from its first build, since per-pixel texture searches cost the phone +25-48 ms in K8 G3-1 (K892); it settles the END tuck and the band W against master, S1a notes), with G1 corners and cr 0-6 (sheet F approved)
+  - next: K909 groups junctions by geometry, judged by the free-end image check (Levi, K910), and renders sheet G (the hook's look, for Levi); then the S3 brief (WebGL2 prototype measured on the Pixel from its first build, since per-pixel texture searches cost the phone +25-48 ms in K8 G3-1 (K892); it settles the END tuck and the band W against master, S1a notes), with G1 corners and cr 0-6 (sheet F approved)
   - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -1935,6 +1932,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K910** · K900's sheet B3: do the magenta free border ends cover every missing border on muse_hash? Answered by Levi (2026-10-27): "Yes, I think so"; the free-end image check judges K909.
 - **K902** · Cursive v4 (probe-only, untracked `.claude/probes/K863/trace/` `out7/`): join frames by a walk to the font's connector (smooth-end angle mean 22.1 -> 4.7 deg), calibration mean 3.218 -> 2.175 u, test-word pairs over 4 u 22 -> 10, a's fused entry (0.3 u); r after high exits and the variants measured; two-mode design in its brief's ## Results. Done in cece1bb (2026-10-27).
 - **K900** · Oracle holes: crossing 292 fixed (same-chain joins refused, crossing cut at L + h), census positions, two independent checks (geometric truth, image free ends), sheet B3; handoff in its brief. Done in 263bc134 (2026-10-27).
 - **K893** · Phone round 2026-10-27b: G3-1 undone at head by hand wins 14.5 / 15.9 / 11.2 ms (dense / max-fabric / knot) but is not clean; the week's steps are K573 1b (knot -21.4), K620's root GLSL (+22.6 max-fabric) and K854's outline (+15.3). Done in 69ac4e03 (2026-10-27).
