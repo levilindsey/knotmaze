@@ -11,7 +11,12 @@
 #   -Cleanup  a pass folder of this round to clean up first (phone_pass.ps1 -Phase cleanup)
 # The start runs through Start-Process with its output in files (<Round>\<Name>\logs\start.txt, start.err) and this script polls
 # logs\run.log for "phone pass (start) exit 0": a piped or captured `-Phase start` hangs its caller, because the servers and the
-# watchdog it leaves running inherit the pipe. Exit: 0 the scan ran clean, 2 the start failed, else scan.mjs's exit code.
+# watchdog it leaves running inherit the pipe. So does a caller of THIS script (tested 2026-10-27c): a call whose output goes through
+# a pipe or a `*>` redirect returns only when its pass is cleaned up (one returned the second the next call's -Cleanup ran). Make it
+# the last command of a background shell with no redirect (its output lands in that task's own output file) and poll for the
+# "scan <Name> exit" line.
+# Exit: 0 the scan ran clean, 2 the start failed, -1 the phone's watchdog stopped the scan (a trip: <Round>\<Name>\state\watchdog.trip,
+# and that pass's cleanup then exits 2; a trip ends the window), else scan.mjs's exit code.
 # Example, an ABBA on one link:  $env:PLAN='[["base","dense"],["head","dense"],["head","dense"],["base","dense"]]'
 param(
   [Parameter(Mandatory)][string]$Round,
