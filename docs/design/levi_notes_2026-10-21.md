@@ -2,7 +2,7 @@
 
 Levi sent these to the coordinator session on 2026-10-21 as notes to
 follow up on. They are verbatim below. For the paper look and the notes
-after it, he said where they go: "I'd like to add these to the "sooner"
+after it, Levi said where they go: "I'd like to add these to the "sooner"
 list, but after all other current "sooner" items." They are the last rows
 of `docs/design/sooner_20261020.md`.
 
@@ -68,7 +68,7 @@ of `docs/design/sooner_20261020.md`.
 
 ## Beats inside a run, and a dot-eater mode
 
-Levi sent this after hearing how the beat rider times runs. His next
+Levi sent this after hearing how the beat rider times runs. Levi's next
 message deferred it: "...that packman and beat stuff should be tracked
 as follow-up work to do once we have more budget" (its start is not
 kept). The one-beat-per-run toggle was already being built in K795, so

@@ -105,7 +105,7 @@ Stills: the route display (the next run full, the rest faint), the
 walker buttons, a Lead finish with its stars, and a Delay finish.
 
 Levi has one open question, R.6.2: can a first-time phone player
-predict the walker's next run? You can't answer it, so give him the
+predict the walker's next run? You can't answer it, so give Levi the
 evidence. Take a strip of 6 page stills over the walker's first 3 runs in
 Delay, each with the route display visible, and make a contact sheet
 (`.claude/probes/K525/mksheet.mjs`). Use page screenshots only: no
@@ -138,7 +138,7 @@ cells and say so.
 - Never use `--virtual-time-budget`. Give any desktop Chrome a fresh temp
   profile. Never clear Levi's Chrome profile, and touch no origin but your
   own localhost ones.
-- Close only your own tab. Levi has his own tabs open.
+- Close only your own tab. Levi has their own tabs open.
 - At the end, stop everything you started: servers, forwards, the
   reverse ports you added, tunnels and the watchdog. Then release the
   phone lock.
