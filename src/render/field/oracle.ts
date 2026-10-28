@@ -186,8 +186,9 @@ export interface OracleParams {
   labExact?: boolean;
   /** K924 flips (diagnostics, off by default). labFill "arcs": a G1 fill
    * stops at its arms' outlines (the curvilinear triangle V, t_A, t_B)
-   * instead of reaching their centrelines. */
-  labFill?: "arcs";
+   * instead of reaching their centrelines; "yield": a fill never takes a
+   * point inside another surface's tube (label ink only). */
+  labFill?: "arcs" | "yield";
   /** K924 flip: "order" orders a fill against a foreign member by the
    * table crossing between that member's chain and one of the fill's
    * cluster's chains (nearest within σ of the member's foot); with no
@@ -2486,6 +2487,8 @@ export class FieldModel {
         const o = this.fillOrder(J, cs[S].chain, cs[S].s);
         if (o !== null) wins = o;
       }
+      // K924 flip labFill "yield": a fill never covers another surface's tube.
+      if (this.params.labFill === "yield" && S >= 0 && cl[S] !== J && cs[S].d < h) wins = false;
       if (wins) {
         S = near;
         zS = z;
