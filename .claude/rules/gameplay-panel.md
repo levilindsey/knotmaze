@@ -346,7 +346,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   "Beat:" (or "Beat, same per run:" / "Beat, by run length:"); the tempo's
   quotes 100 bpm as 0.6 s a beat. THE LABELS: Levi framed the choice as
   "one per run / by run length"; the row reads "same per run" because
-  Beats per run can be 2 to 4 (a one-word change if he prefers his).
+  Beats per run can be 2 to 4 (a one-word change if they prefer theirs).
   Params: gameplay-links.md's BEAT RIDER PARAMS; the rider:
   gameplay-beat.md.
 - K795 TUNABLE ROWS (K795 item 3, 2026-10-21): "Hint lasts (s)"

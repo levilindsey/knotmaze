@@ -861,8 +861,8 @@ a dot). Diagnosis, brief and handoff: `docs/design/K397.md`.
   about 0.9 world reports its second dot only. A slot rejection holds
   only on an `am=instant` link (probes.md, K397).
 - TRUNCATED DOTS, K459 item 1 (2026-10-15; Levi at 13:39: "I'm still
-  seeing truncated dots ... sometimes"; his call a: "Cap and two dots
-  is good"): NOT REPRODUCED. His link `?2gozcj.MgaM` at the phone's
+  seeing truncated dots ... sometimes"; their call a: "Cap and two dots
+  is good"): NOT REPRODUCED. Levi's link `?2gozcj.MgaM` at the phone's
   411x753 at 2.625 (`&snd=none&fw=0&am=instant`), walks of 0, 1 and 2
   moves: the cap and two whole dots in every crop
   (`.claude/probes/K459/out_levi0|1|2/`, `out_levi_survey.log`). RULED
@@ -872,7 +872,7 @@ a dot). Diagnosis, brief and handoff: `docs/design/K397.md`.
   under about 0.9 world, PROBE NOTES above). LEADING, UNTESTED: (iii) a
   start or exit marker's concentric gap ring (render-gaps.md, marker
   gaps) bites dot 2 when a short stub's dots fall inside it; it fits the
-  green crescent, convex to the lower left, in his screenshot
+  green crescent, convex to the lower left, in Levi's screenshot
   (`.claude/probes/K459/levi_1339.png`; crops `out/levi_lowerleft.png`,
   `out/levi_sliver8.png`). No surveyed state put a dot inside a ring.
   Next: walk to a stub ending near a marker, reject the marker's gap

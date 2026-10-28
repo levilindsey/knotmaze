@@ -15,7 +15,7 @@ only with the files it is about; `render.md` lists the area's other files.
 - MARKER ICONS (K83, 2026-10-13; worktree agent). Levi: "placeholder
   icons for the start, finish, and current positions ... minimal, white
   strokes with clear background. Rendered within a black circle with a
-  bit of margin roughly equal to the stroke width." He will replace the
+  bit of margin roughly equal to the stroke width." Levi will replace the
   glyphs; the contact sheets are in `.claude/probes/K83/`. GLYPHS
   (marker_glyphs.ts, pure): designed in a 24-grid like line-icon sets
   (polylines with round caps and joins, circles, dots), compiled into

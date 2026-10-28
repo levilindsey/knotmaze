@@ -15,7 +15,7 @@ only with the files it is about; `render.md` lists the area's other files.
 - ROUTE BANDS (K81, 2026-10-13; worktree agent, stages 1-3b). Levi
   (2026-10-12, `.claude/probes/K81/levi_junction_nub.png`): the
   traversed highlight showed "a discontinuous flat nub" across a
-  junction; he wanted "a smooth continuous arc from right to left".
+  junction; Levi wanted "a smooth continuous arc from right to left".
   DIAGNOSIS: a web took its color from an angular blend of the
   bracketing arms' strips (the edge-aware field; K4's per-arm strips), so
   between a gold arm and an untraveled one the gold-to-section change ran

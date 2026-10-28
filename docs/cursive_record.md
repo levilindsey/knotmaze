@@ -1,7 +1,7 @@
 # Cursive a/i: the change record
 
 Written 2026-10-26 at Levi's request ("document well all the changes
-you've made around cursive and why"), after he stopped the cursive-fix
+you've made around cursive and why"), after Levi stopped the cursive-fix
 line of work the same day. This is the record of what was tried on the
 cursive `a` and `i`, why each attempt was made, what it actually
 changed, and where things stand. It is a history document, not a
@@ -116,7 +116,7 @@ is one wide arc, the stem flare reaches plain width exactly at the
 tip. Stills: `.claude/probes/K850/after/ai2.png`, `ai3.png`.
 
 Status: pushed, lint-clean, full suite green - and NOT accepted.
-Levi has not given K850 a look verdict, and on 2026-10-26 he closed
+Levi has not given K850 a look verdict, and on 2026-10-26 they closed
 the line: "I need you to just stop trying with the cursive fixes."
 
 Known residuals at K850 (recorded in the ledger when it landed): pale
@@ -148,7 +148,7 @@ in the numbers:
    instruments, not vibes.
 
 The deeper open question, Levi's own framing: whether this should be
-hand-authored skeletons at all, or a separate calligraphy tool (he
+hand-authored skeletons at all, or a separate calligraphy tool (Levi
 expects to extend this into one; see the K726 note in the ledger -
 the tapered-stroke disc-envelope support, K829, was kept desirable
 for exactly that reason).

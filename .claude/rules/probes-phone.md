@@ -187,7 +187,7 @@ confetti; a `-Moves 0,7,11` pass has no fabric@11 floor until the next A/A.
   prints a row a run (the gate columns are ms after the main chunk's
   `responseEnd`) and the latency lines. GOTCHAS: never point
   `phone_lib.mjs` at levi.dev, or any origin Levi plays on, since it wipes
-  his daily records there (stage 5 skipped the levi.dev cold start for
+  their daily records there (stage 5 skipped the levi.dev cold start for
   this); the phone's cost per substep drifted 16-37 ms from load to load
   (soc 44-50 C), so compare hosts alternating within one batch; and at 60
   Hz an intro p95 of 33.4 ms is one dropped frame.

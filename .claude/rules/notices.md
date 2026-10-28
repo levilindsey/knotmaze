@@ -31,7 +31,7 @@ research, the tooling choice and the verification record are in
   (tweakpane and @pixi/colord today) gets a LICENSE_FALLBACKS entry in
   `notices/credits.ts` - the upstream LICENSE at the packaged version,
   verbatim, with its URL; a license outside the list is Levi's call (edit
-  ALLOWED_LICENSES only after he decides). After adding or upgrading a
+  ALLOWED_LICENSES only after Levi decides). After adding or upgrading a
   dependency, build once before pushing.
 - CREDITS. Hand-written entries live in `CREDITS` (credits.ts): courtesy
   credits for techniques the code borrows (Quilez, Jimenez, Perlin, the

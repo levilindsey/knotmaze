@@ -476,7 +476,7 @@ only with the files it is about; `render.md` lists the area's other files.
   what lies within a casing of that line out to its reach (1.5). On a
   self-crossing the partner is the chain's OWN over pass, which is where
   the lobe starts, so the clip cut the loop's own blur in a straight band
-  two casings wide. INFERRED: that cut is the cusp Levi saw (his
+  two casings wide. INFERRED: that cut is the cusp Levi saw (their
   screenshot was not available; it is the only straight, sharp-cornered
   edge in the loop's blur). RULED OUT: a fold past the evolute (measured:
   no tight station in the lobe, and a 0.05 radius was a 3-point curvature
@@ -502,7 +502,7 @@ only with the files it is about; `render.md` lists the area's other files.
   on 15 shots), and the fixed ones differ only where the cut was (in
   the diff panels viewed): Levi's
   loop 6.0-6.2k px at the default zoom, 65-67k at zoom step 2, 16-20k at
-  step 1 over every knob end and look; three more kink loops of his
+  step 1 over every knob end and look; three more kink loops of Levi's
   design 5.7-6.2k; `?7` two of ten loops (1955 and 414 px); crossings
   with other chains, big loops (their weight stays 1), knot mode and
   the fat-thread loops tried 0 px.
@@ -525,7 +525,7 @@ only with the files it is about; `render.md` lists the area's other files.
   the middle of the loop tip to an edge, and there is still a bit of
   jagged pinching at the tip with the vibration effect--in this case it
   seems to not be somewhat heart shaped, with a pointy protrusion on the
-  inside of the loop and a dimple on the outside". His screenshot: a
+  inside of the loop and a dimple on the outside". Levi's screenshot: a
   kink loop's blur shaped like a heart, a V pointing into the eye at the
   middle of the tip. Brief and handoff: `docs/design/K395_pluck_loop_tip.md`.
 - CAUSE, OBSERVED (toggles on one frozen page, `.claude/probes/K395/`):
@@ -589,7 +589,7 @@ only with the files it is about; `render.md` lists the area's other files.
 
 - REPORT (Levi, 2026-10-15, K397 issue 4): "Tapping on the end of an
   unexplored stub starts the vibration effect, which can sometimes cause
-  more of the thread length to render than it should." His call (K423):
+  more of the thread length to render than it should." Levi's call (K423):
   the vibration stops at the stub's solid end. Brief and handoff:
   `docs/design/K397.md`, stage 2.
 - CAUSE (stage 1, observed): K76 2c clips a pluck's unit to the thread
@@ -642,7 +642,7 @@ only with the files it is about; `render.md` lists the area's other files.
 
 - REPORT (Levi, 2026-10-15 13:39, phone, `?2gozcj.MgaM`): "it is a bit
   weird to not see the vibration extend all the way to the end of the
-  solid thread stub (including the rounded cap)." His call b: "If we
+  solid thread stub (including the rounded cap)." Levi's call b: "If we
   make a pluck sound, then we should show the pluck effect". Brief and
   handoff: `docs/design/K459.md`.
 - MODEL (A, a FREE END): a solid end that ends in the dots' rounded cap
