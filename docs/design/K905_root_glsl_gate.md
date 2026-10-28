@@ -152,3 +152,124 @@ Roots exist only in glyph text: a strand gets `taper` only in
 `glyph_graph.ts`, which runs only with the `#glyphs2` hash switch (and
 not with its `notaper` flag) on a scene with text or a title. So no
 default page can draw a root, and the three K539 cells never do.
+
+## Step 2: the gate (agent, `97aa65ba`, pin fix `334e3048`)
+
+- Every root piece of the paint GLSL sits under `#ifdef K_ROOT`: the four
+  `vKR*` varyings (vertex out, fragment in), the vertex root block and its
+  zeroing, `ROOT_FRAG_GLSL` and `SECTION_FRAG`'s root call, and the same in
+  `ribbon_sdf.ts`. `withRoot(src)` (`paint_glsl.ts`) puts `#define K_ROOT`
+  after `#version 300 es`. Without it a program holds none of K620's GLSL
+  (a text scan of the branch finds no `vKR*` / `kRoot*` GLSL outside the
+  gate); with it, it is master's program.
+- Four variants: `section-rgb-root`, `section-rgb-explore-root`,
+  `ribbon-sdf-root`, `ribbon-sdf-explore-root` (`program_registry.ts`;
+  `PROGRAM_SITES` 2 -> 4 for `ribbon_shader.ts` and `ribbon_sdf.ts`).
+- **Where the switch is:** `RibbonRenderer.rootPaint`, fixed at
+  construction by the test PaintScene allocates root tables by (a chain
+  whose taper has a body and >= 2 foot entries). The renderer hands its
+  strip, explore and SDF passes the -root shaders only then. A renderer
+  is built per scene, so the variant changes only at a scene build, never
+  mid-play.
+- **The warm-up** (`WarmContext`): `roots` = a `#glyphs2` page without
+  `notaper` (a root is possible), `root` = its first scene has a word or a
+  title. Without `roots` the -root programs are in neither wave, so every
+  default page compiles exactly what it did, minus the root code. With
+  `root` they join wave 1 beside the plain ones (whether a word's glyphs
+  grow a root is known only after the build); with `roots` alone they go
+  to wave 2, so a later scene's switch finds them linked.
+- **What a switch costs:** one more full section program in wave 1 on a
+  glyph page whose first scene has text (desktop: step 4b; phone: wave 1
+  n 11, 112-133 ms, against master's n 10, 116-156 ms). Nothing on any
+  other page.
+
+## Step 3: same pixels, desktop (agent)
+
+K539's frozen cell on the desktop (private Chrome, 411x753 @ 2.625,
+`.claude/probes/K905/k905_cell.mjs`, runs `desk/desk1`, `desk/desk2`),
+base = master `156c1eef`, head = `97aa65ba`, ABBA:
+
+| Link | base vs head (both pairs) | base vs base | head vs head |
+|---|---|---|---|
+| dense | 0 / 0 px | 0 | 0 |
+| knot gs24 | 0 / 0 px | 0 | 0 |
+| root `7&txt=ai#glyphs2` (desk2; head draws -root) | 0 / 0 px | 0 | 0 |
+| max-fabric | 2177 / 1789 px (maxD 317) | 2080 (maxD 159) | 1011 (maxD 112) |
+
+Max-fabric froze in a different state on every desktop load (K908), so
+its desktop diff only matches the control's size; the phone pass (step 4)
+caught a matching state and read 0 px. K620's own link `7&txt=a#glyphs2`
+paints no root any more (`rootscan.mjs`: no chain with a foot table);
+`7&txt=ai` does (chain 2, a 17-entry table).
+
+Suite (`npx vitest run` in the worktree): one failure first,
+`sdf_gap_bind.test.ts`'s text pin of the gap-table rebind (one shared SDF
+shader became one per variant; fixed in `334e3048`), then 178 files pass
+(2 skipped), 2364 tests (6 skipped), exit 0.
+
+## Step 4: phone (agent, 12:03-12:09)
+
+All conditions held: `adb devices` listed the Pixel 11, the perf lock was
+free, K893's idle wait passed and `phone_pass.ps1 -Phase check` passed.
+Pass `p1` (`.claude/probes/K905/run_k905.ps1`, the round's `run_pass.ps1`
+with K905 paths): K539 frozen render-sync cell, renderLoop(60) medians,
+ABBA, base = master `156c1eef`, head = `97aa65ba`, 411x753 @ 2.625. No
+page or GL errors, no context loss, the watchdog `ok` throughout, the
+cleanup exit 0. Thermal: skin 27.6 -> 36.8 C, soc 31.7 -> 43.0 C.
+
+| Link | base runs | head runs | means base / head | head - base |
+|---|---|---|---|---|
+| dense | 83.3, 82.3 | 64.1, 63.8 | 82.8 / 63.95 | **-18.85 ms** |
+| max-fabric | 130.2, 129.6 | 104.3, 104.2 | 129.9 / 104.25 | **-25.65 ms** |
+| knot gs24 | 40.8, 42.1 | 29.3, 29.1 | 41.45 / 29.2 | **-12.25 ms** |
+| root (head draws -root) | 4.3, 4.0 | 4.2, 4.6 | 4.15 / 4.4 | +0.25 (noise) |
+
+Master reproduces K893's g1 base (82.3 / 127.4 / 41.0). Pixels: 0 px on
+every pair of dense, knot and root. Max-fabric: base vs head 0 px on the
+first pair; the second pair read 1093 px, exactly base vs base (base run
+4 froze differently from base run 1), head vs head 0. Head's `rootPaint`
+was false on the three links and true on the root link. Wave 1 on the
+phone (no KHR_parallel_shader_compile, wave 2 skipped): dense n 10 in
+280-338 ms, max-fabric n 10 in 759-815, knot n 7 in 138-169 on both
+builds; the root link n 10 (master) and n 11 (branch, + `section-rgb-root`).
+
+## Step 4b: programs and cold compiles at scene load, desktop (agent, 12:14-12:19)
+
+`.claude/probes/K905/compile_batch.ps1` under the perf lock: K307's
+`trace_intro.mjs` (copied, plus the warm-up's waves and `rootPaint`),
+headed Chrome, ANGLE d3d11, 1600x900 @ 1.5, a FRESH profile per load (a
+cold GPU program cache), a 14 s window, ABBA per link on the cell links.
+`node cc_sum.mjs` prints it. Wave 1 gates the first frame and is almost
+all `section-rgb`'s cold FXC compile; wave 2 starts after the first sleep
+and was still open at 14 s where it started at all.
+
+| Link | wave 1 n | first frame (s), base | first frame (s), branch | programs at 14 s |
+|---|---|---|---|---|
+| dense | 10 / 10 | 7.42, 9.58 | 6.93, 6.99 | 13 / 13 |
+| max-fabric | 10 / 10 | 9.19, 6.08 | 8.68, 7.26 | 13 / 13 |
+| knot gs24 | 7 / 7 | 6.32, 6.38 | 6.07, 6.17 | 38 / 38 |
+| root `7&txt=ai#glyphs2` | 10 / 11 | 7.57, 6.98 | 7.67, 11.82 | 42 / 46 |
+
+On the three links the branch links the same programs and its first
+frame is no later (cold `section-rgb` 5.7-9.1 s either build, the run
+spread 3 s). The root page links four more (`section-rgb-root` in wave 1,
+the other three in wave 2) and draws only `section-rgb-root`: the plain
+`section-rgb` it also links in wave 1 drew nothing in either run. The two
+cold compiles run side by side, so that page's first frame came 0.1 s and
+4.8 s after master's (two runs): the switch's cost, desktop only (the
+phone's wave 1 took the same time with 11).
+
+## Step 5: does the gate win what K893 measured? (agent)
+
+Yes, within the noise. On max-fabric the gate wins 25.65 ms, more than
+the ABBA-confirmed +22.6 at `6fd77ab3` and about 3 ms short of 22.6 plus
+`fa0c61de`'s +6.1, which was one run (K893's two e2 head runs of one
+build differed by 2.8 ms; `fa0c61de` also made the fragment smaller).
+Dense wins 18.85 against the 59..88 interval's +20.5 and knot 12.25
+against +9.7, and those intervals hold every commit in them, not only
+K620. The places the brief names hold nothing more: the data plumbing
+`566e139a` measured 85.0 against 85.9 before it, and without `K_ROOT` a
+program holds no vertex block, varying or fragment root code (the text
+scan in step 2), so no second program or leftover block carries any. The
+gate removes the varyings, the vertex block and the fragment branch
+together, so this pass does not split the win between them.
