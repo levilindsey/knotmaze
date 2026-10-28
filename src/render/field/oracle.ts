@@ -156,8 +156,9 @@ export interface OracleParams {
    * cut (`hooks`), "carry" draws that side's border from the junction to
    * the cut over the group's body, and "cap" hides it while it lies inside
    * the other pass's tube, so it starts on that pass's border. Default
-   * "now": the free cap at the cut. */
-  hookLook?: "now" | "carry" | "cap";
+   * "now": the free cap at the cut. K915 adds "seam": a line W wide across
+   * the arm at the cut, where the arm lies over the other pass. */
+  hookLook?: "now" | "carry" | "cap" | "seam";
   /** K915 (draft §3.2, form A; no default change): "group" (default) inks
    * within W of the top group's exposed outline. "surface" inks from the
    * visible surface: the covering member of greatest z (a z-buffer), within
@@ -587,7 +588,7 @@ export class FieldModel {
   }
 
   /** K909 step 4: the hook look's switch, and the arms it applies to. */
-  readonly hookLook: "now" | "carry" | "cap";
+  readonly hookLook: "now" | "carry" | "cap" | "seam";
   hooks: HookArm[] = [];
   /** K915: the ink rule (OracleParams.ink). */
   readonly inkMode: "group" | "surface";
@@ -698,6 +699,26 @@ export class FieldModel {
         const sd = -t.ty * (x - f.x) + t.tx * (y - f.y);
         if (Math.sign(sd) !== H.side) continue;
         out.ink = false;
+      } else if (this.hookLook === "seam") {
+        if (out.ink) continue;
+        // K915: a line W wide across the arm at the cut, where the arm lies
+        // over the crossing's other pass: it closes the hook side's band.
+        const pp = this.polys[H.po];
+        const lo2 = pp.closed ? H.sOther - 8 * h : Math.max(0, H.sOther - 8 * h);
+        const hi2 = pp.closed ? H.sOther + 8 * h : Math.min(pp.len, H.sOther + 8 * h);
+        if (!(footInWindow(pp, x, y, lo2, hi2).d < h)) continue;
+        let lo = H.cut - h;
+        let hi = H.cut + h;
+        if (!p.closed) {
+          lo = Math.max(0, lo);
+          hi = Math.min(p.len, hi);
+        }
+        const f = footInWindow(p, x, y, lo, hi);
+        if (!(f.d < h)) continue;
+        const ds = Math.abs(dS(p, f.s, H.cut));
+        if (ds > W / 2) continue;
+        out.ink = true;
+        out.F = Math.min(out.F, W / 2 + ds);
       }
     }
   }
@@ -2217,6 +2238,7 @@ export class FieldModel {
     out.topChain = this.idOf[cs[S].chain];
     out.topS = cs[S].s;
     out.top = cls.size > 0 ? 100000 + Math.min(...cls) : this.idOf[cs[S].chain];
+    if (this.hookLook !== "now" && this.hooks.length) this.hookAdjust(x, y, out, cls);
     return out;
   }
 
@@ -2418,9 +2440,10 @@ export function renderOracle(model: FieldModel, cam: Camera, rect: RenderRect, s
       // A subsample is ink only within W of some exposed outline, so a pixel
       // whose centre is farther than W + 2 device px from every exposed
       // primitive has no ink (whichever group owns each subsample).
-      // (K909 hook look "carry" draws a border inside a group: no gate. K915
-      // ink "surface" draws switch lines inside overlaps: no gate there.)
-      if (model.hookLook !== "carry" && !(model.inkMode === "surface" && model.lastOverlap) && model.nearestExposed(wx, wy, model.W + 2 / ppu / cam.dpr) > model.W + 2 / ppu / cam.dpr) {
+      // (K909 hook look "carry" and K915's "seam" draw a border inside a
+      // group: no gate. K915 ink "surface" draws switch lines inside
+      // overlaps: no gate there.)
+      if (model.hookLook !== "carry" && model.hookLook !== "seam" && !(model.inkMode === "surface" && model.lastOverlap) && model.nearestExposed(wx, wy, model.W + 2 / ppu / cam.dpr) > model.W + 2 / ppu / cam.dpr) {
         k = 0;
       } else {
         for (let sj = 0; sj < ss; sj++)
