@@ -158,6 +158,13 @@ export interface OracleParams {
    * the other pass's tube, so it starts on that pass's border. Default
    * "now": the free cap at the cut. */
   hookLook?: "now" | "carry" | "cap";
+  /** K915 (draft §3.2, form A; no default change): "group" (default) inks
+   * within W of the top group's exposed outline. "surface" inks from the
+   * visible surface: the covering member of greatest z (a z-buffer), within
+   * W of the exposed outline of the members similar to it (one cluster, or
+   * one chain within σ; never chained), plus a centred line W wide along
+   * each depth switch, where another covering member rises above it. */
+  ink?: "group" | "surface";
 }
 
 /** K909 step 4: a crossing-cut arm whose side lies inside the crossing's
@@ -575,12 +582,18 @@ export class FieldModel {
     this.buildPrims();
     this.buildPrimGrid();
     this.hookLook = params.hookLook ?? "now";
+    this.inkMode = params.ink ?? "group";
     if (k883) this.hooks = this.findHooks(scene);
   }
 
   /** K909 step 4: the hook look's switch, and the arms it applies to. */
   readonly hookLook: "now" | "carry" | "cap";
   hooks: HookArm[] = [];
+  /** K915: the ink rule (OracleParams.ink). */
+  readonly inkMode: "group" | "surface";
+  /** K915: the last surface evaluation saw two covering members of different
+   * surfaces (a switch can ink there, away from every exposed outline). */
+  lastOverlap = false;
 
   private findHooks(scene: FieldScene): HookArm[] {
     const h = this.h;
@@ -2011,13 +2024,211 @@ export class FieldModel {
     return -1;
   }
 
+  // -------------------------------------------------------------------------
+  // K915 (form A): ink from the visible surface.
+
+  private fq: number[] = [];
+
+  /** Chain pi's foot nearest (x, y) with s ∈ [lo, hi], searched within R: [d, s] (d = Infinity: none). */
+  private footNear(pi: number, lo: number, hi: number, x: number, y: number, R: number): [number, number] {
+    const p = this.polys[pi];
+    this.grid.query(x, y, R, this.fq);
+    let best = Infinity;
+    let bs = 0;
+    const shifts = p.closed ? [-p.len, 0, p.len] : [0];
+    for (const g of this.fq) {
+      if (this.grid.segChain[g] !== pi) continue;
+      const k = this.grid.segK[g];
+      const sa = p.s[k];
+      const sb = sa + p.segLen[k];
+      for (const sh of shifts) {
+        const a = Math.max(lo, sa + sh);
+        const b = Math.min(hi, sb + sh);
+        if (b < a) continue;
+        const l = p.segLen[k] || 1;
+        const ta = (a - sh - sa) / l;
+        const tb = (b - sh - sa) / l;
+        const kb = segB(p, k);
+        const ex = p.x[kb] - p.x[k];
+        const ey = p.y[kb] - p.y[k];
+        const c = closestOnSeg(x, y, p.x[k] + ex * ta, p.y[k] + ey * ta, p.x[k] + ex * tb, p.y[k] + ey * tb);
+        if (c.d2 < best * best) {
+          best = Math.sqrt(c.d2);
+          bs = sa + (ta + (tb - ta) * c.t) * (sb - sa);
+        }
+      }
+    }
+    return [best, bs];
+  }
+
+  /**
+   * K915 (b): distance from (x, y), where member S (chain cS at sS) is on top
+   * of member T (chain cT at sT), to the nearest point that both still cover
+   * where T is on top, up to R (Infinity: none). Each member is followed
+   * along its chain within λ. The search runs along the gradient of
+   * g = z_T − z_S (exact where g is linear, as the diagram depth's tents
+   * are between kinks), then bisects.
+   */
+  private switchDist(cS: number, sS: number, cT: number, sT: number, x: number, y: number, R: number): number {
+    const h = this.h;
+    const lam = this.lambda;
+    const g = (qx: number, qy: number): number => {
+      const [dS_, s1] = this.footNear(cS, sS - lam, sS + lam, qx, qy, 1.5 * h);
+      if (!(dS_ < h)) return Number.NaN;
+      const [dT_, s2] = this.footNear(cT, sT - lam, sT + lam, qx, qy, 1.5 * h);
+      if (!(dT_ < h)) return Number.NaN;
+      return this.depthAt(cT, s2) - this.depthAt(cS, s1);
+    };
+    const g0 = g(x, y);
+    if (Number.isNaN(g0)) return Infinity;
+    if (g0 > 0) return 0;
+    const dl = 0.02 * h;
+    const gxp = g(x + dl, y);
+    const gxm = g(x - dl, y);
+    const gyp = g(x, y + dl);
+    const gym = g(x, y - dl);
+    const gx = !Number.isNaN(gxp) && !Number.isNaN(gxm) ? (gxp - gxm) / (2 * dl) : !Number.isNaN(gxp) ? (gxp - g0) / dl : (g0 - gxm) / dl;
+    const gy = !Number.isNaN(gyp) && !Number.isNaN(gym) ? (gyp - gym) / (2 * dl) : !Number.isNaN(gyp) ? (gyp - g0) / dl : (g0 - gym) / dl;
+    const gn = Math.hypot(gx, gy);
+    if (!(gn > 1e-12)) return Infinity;
+    if (-g0 / gn > 2 * R) return Infinity;
+    const ux = gx / gn;
+    const uy = gy / gn;
+    let r0 = 0;
+    let r1 = -1;
+    const steps = 6;
+    for (let k = 1; k <= steps; k++) {
+      const r = (k / steps) * R;
+      const v = g(x + ux * r, y + uy * r);
+      if (v > 0) {
+        r1 = r;
+        break;
+      }
+      if (Number.isNaN(v)) return Infinity;
+      r0 = r;
+    }
+    if (r1 < 0) return Infinity;
+    for (let it = 0; it < 14; it++) {
+      const r = (r0 + r1) / 2;
+      if (g(x + ux * r, y + uy * r) > 0) r1 = r;
+      else r0 = r;
+    }
+    return r1;
+  }
+
+  /** K915 (form A): evalPoint under ink "surface" (see OracleParams.ink). */
+  private evalSurface(x: number, y: number, wantField: boolean, out: PointEval): PointEval {
+    const cs = this.cands;
+    const n = cs.length;
+    const h = this.h;
+    const cl = new Int32Array(n);
+    for (let i = 0; i < n; i++) cl[i] = this.clusterAt(cs[i].chain, cs[i].s);
+    // The visible member: the greatest z among the covering feet and fills.
+    let S = -1;
+    let zS = -Infinity;
+    let fillS = false;
+    const better = (z: number, i: number): boolean => {
+      if (S < 0 || z > zS + 1e-6) return true;
+      if (Math.abs(z - zS) > 1e-6) return false;
+      const a = this.idOf[cs[i].chain];
+      const b = this.idOf[cs[S].chain];
+      return a > b || (a === b && cs[i].s > cs[S].s);
+    };
+    for (let i = 0; i < n; i++) {
+      if (cs[i].d >= h) continue;
+      const z = this.depthAt(cs[i].chain, cs[i].s);
+      if (better(z, i)) {
+        S = i;
+        zS = z;
+        fillS = false;
+      }
+    }
+    const seen: number[] = [];
+    for (let i = 0; i < n; i++) {
+      const J = cl[i];
+      if (J < 0 || seen.includes(J)) continue;
+      seen.push(J);
+      let inFill = false;
+      for (const k of this.clusters[J].corners)
+        if (this.inFill(k, x, y)) {
+          inFill = true;
+          break;
+        }
+      if (!inFill) continue;
+      // A fill takes the depth (and the order) of its cluster's nearest foot.
+      let near = -1;
+      for (let k = 0; k < n; k++) if (cl[k] === J && (near < 0 || cs[k].d < cs[near].d)) near = k;
+      const z = this.depthAt(cs[near].chain, cs[near].s);
+      if (near !== S && better(z, near)) {
+        S = near;
+        zS = z;
+        fillS = cs[near].d >= h;
+      }
+    }
+    if (S < 0) {
+      if (this.recordGroups) this.lastEval = { cands: cs.map((c) => ({ ...c })), cl: Array.from(cl), groups: [], inside: [], top: null, topNear: -1 };
+      if (wantField) out.F = -Math.min(this.nearestExposed(x, y, this.dMax), this.dMax);
+      return out;
+    }
+    const JS = cl[S];
+    const pS = this.polys[cs[S].chain];
+    const sim = (i: number): boolean =>
+      (JS >= 0 && cl[i] === JS) || (!fillS && cs[i].chain === cs[S].chain && Math.abs(dS(pS, cs[i].s, cs[S].s)) <= this.sigma);
+    // (a) S's own outline: the exposed outline of the feet similar to S.
+    const wins = new Map<number, [number, number][]>();
+    const cls = new Set<number>();
+    const members: number[] = [];
+    for (let i = 0; i < n; i++) {
+      if (!sim(i)) continue;
+      members.push(i);
+      if (cl[i] >= 0) {
+        if (cls.has(cl[i])) continue;
+        cls.add(cl[i]);
+        for (const [pi, l] of this.clusters[cl[i]].spans) {
+          const w = wins.get(pi) ?? [];
+          for (const iv of l) w.push([iv[0], iv[1]]);
+          wins.set(pi, w);
+        }
+      } else {
+        const w = wins.get(cs[i].chain) ?? [];
+        w.push([cs[i].s - this.lambda, cs[i].s + this.lambda]);
+        wins.set(cs[i].chain, w);
+      }
+    }
+    const d1 = this.groupDist(x, y, wins, cls, this.dMax);
+    // (b) depth switches: a covering member of another surface that rises
+    // above S within W/2 (a centred line, W wide).
+    let d2 = Infinity;
+    let overlap = false;
+    for (let i = 0; i < n; i++) {
+      if (cs[i].d >= h || sim(i)) continue;
+      overlap = true;
+      if (fillS) continue;
+      const d = this.switchDist(cs[S].chain, cs[S].s, cs[i].chain, cs[i].s, x, y, this.W / 2);
+      if (d < d2) d2 = d;
+    }
+    this.lastOverlap = overlap;
+    if (this.recordGroups)
+      this.lastEval = { cands: cs.map((c) => ({ ...c })), cl: Array.from(cl), groups: [members], inside: [members], top: members, topNear: S };
+    const F = Math.min(d1, d2 + this.W / 2);
+    out.inside = true;
+    out.F = Math.min(F, this.dMax);
+    out.ink = F <= this.W;
+    out.topChain = this.idOf[cs[S].chain];
+    out.topS = cs[S].s;
+    out.top = cls.size > 0 ? 100000 + Math.min(...cls) : this.idOf[cs[S].chain];
+    return out;
+  }
+
   evalPoint(x: number, y: number, wantField = true): PointEval {
     const out: PointEval = { inside: false, ink: false, F: -this.dMax, top: -1, topChain: -1, topS: 0 };
     if (this.recordGroups) this.lastEval = null;
+    this.lastOverlap = false;
     candidates(this.grid, x, y, this.reach, this.cands);
     const cs = this.cands;
     const n = cs.length;
     if (n === 0) return out;
+    if (this.inkMode === "surface") return this.evalSurface(x, y, wantField, out);
     // Union-find.
     const par = new Int32Array(n);
     for (let i = 0; i < n; i++) par[i] = i;
@@ -2207,8 +2418,9 @@ export function renderOracle(model: FieldModel, cam: Camera, rect: RenderRect, s
       // A subsample is ink only within W of some exposed outline, so a pixel
       // whose centre is farther than W + 2 device px from every exposed
       // primitive has no ink (whichever group owns each subsample).
-      // (K909 hook look "carry" draws a border inside a group: no gate.)
-      if (model.hookLook !== "carry" && model.nearestExposed(wx, wy, model.W + 2 / ppu / cam.dpr) > model.W + 2 / ppu / cam.dpr) {
+      // (K909 hook look "carry" draws a border inside a group: no gate. K915
+      // ink "surface" draws switch lines inside overlaps: no gate there.)
+      if (model.hookLook !== "carry" && !(model.inkMode === "surface" && model.lastOverlap) && model.nearestExposed(wx, wy, model.W + 2 / ppu / cam.dpr) > model.W + 2 / ppu / cam.dpr) {
         k = 0;
       } else {
         for (let sj = 0; sj < ss; sj++)
