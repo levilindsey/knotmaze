@@ -230,6 +230,46 @@ function endFrom(c: [number, number], deg: number, len = L): PathB {
   return new PathB(c[0] + dx * 0.1 * H, c[1] + dy * 0.1 * H, deg).line(len);
 }
 
+/**
+ * K900 (§3.4): muse_hash's crossing 292 in miniature. Two Ts on one through
+ * (j1 `gap` beyond the crossing, so j0's span on the through reaches past
+ * the under pass to the next junction). j0's END hooks back over the
+ * through: it crosses it at 47° (heading 133°), runs `a` on, turns left
+ * 137° at radius `R` and comes down onto j0. Both of 292's mechanisms show.
+ * With the cut at L + h/2 (5048670e), the END's span ends inside check 15's
+ * window (L + h) of the over pass while j0's span on the through holds the
+ * under pass. With the cut at L + h, the hook's own candidates still σ-join
+ * the cluster unless a join into a group holding the crossing's other pass
+ * is refused. At a 1.5h, R h it fails under either fix alone and passes
+ * under both.
+ */
+export function hookScene(a: number, R: number, gap = 2.5 * H): FieldScene {
+  const hd = 133;
+  const [ux, uy] = dir(hd);
+  // j0 at the origin; the hook's last straight comes down onto x = 0. On a
+  // left turn the point sits at heading − 90° about the centre, so the turn
+  // moves it by R·(cos 180° − cos(hd − 90°), sin 180° − sin(hd − 90°)).
+  const xCross = -(ux * a + R * (Math.cos(Math.PI) - Math.cos((hd - 90) * D2R)));
+  const yTop = uy * a + R * (Math.sin(Math.PI) - Math.sin((hd - 90) * D2R));
+  const t = new PathB(-L, 0, 0).line(L).mark("j0").line(xCross + gap).mark("j1").line(L);
+  const e = new PathB(xCross - ux * 6 * H, -uy * 6 * H, hd).line(6 * H).mark("x").line(a).arc(R, 270 - hd).line(yTop - 0.1 * H);
+  // j1's END leans away up-right, clear of the hook and of the lead-in below.
+  const f = endFrom([xCross + gap, 0], 60);
+  return build({
+    name: "j_hook_cross",
+    paths: [t, e, f],
+    junctions: [
+      { id: "j0", c: [0, 0], arms: [...through(0, t.marks.j0, "L", "R"), endArm(1, e.len, -1, "U")] },
+      { id: "j1", c: [xCross + gap, 0], arms: [...through(0, t.marks.j1, "L", "R"), endArm(2, 0, 1, "U")] },
+    ],
+    crossings: [[1, e.marks.x, 0, sAt(t, xCross, 0)]],
+    tips: [],
+    view: { c: [xCross / 2 + 1, 1], r: 8 },
+    pois: [{ name: "crossing", at: [xCross, 0], radius: 3.5 }],
+    params: { a, R, gap, heading: hd },
+  });
+}
+
 export function syntheticScenes(): FieldScene[] {
   const out: FieldScene[] = [];
   const O: [number, number] = [0, 0];
@@ -530,6 +570,7 @@ export function syntheticScenes(): FieldScene[] {
       }),
     );
   }
+  out.push(hookScene(1.5 * H, 1.0 * H));
   return out;
 }
 
