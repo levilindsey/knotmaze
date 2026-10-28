@@ -369,6 +369,8 @@ export class FieldModel {
   private pointJoins = false;
   /** K883 census: when set, evalPoint records its candidates and groups in lastEval. */
   recordGroups = false;
+  /** K868 S3a3 probe hook: visibleAt weighs the fills in reverse order (it must not matter). */
+  visitReverse = false;
   lastEval: {
     cands: Cand[];
     cl: number[];
@@ -2437,7 +2439,13 @@ export class FieldModel {
   private lab: LabGrid | null = null;
   private cands2: Cand[] = [];
 
-  /** The visible member at (x, y), as evalSurface picks it; null = paper. Overwrites this.cands. */
+  /** The visible member at (x, y), as the label pass draws it; null = paper.
+   * Overwrites this.cands. K868 S3a3 (K964 class C): the GPU's order, so no
+   * visiting order decides. The tube on top is found by depth; each fill
+   * here is weighed against that tube alone (its own cluster's tube keeps
+   * the point; another's yields only where the yield order puts the fill
+   * over it); the fills that pass then compete by depth, as the fill
+   * pass's depth test does (every fill is in front of every tube). */
   private visibleAt(x: number, y: number): Vis | null {
     candidates(this.grid, x, y, this.reach, this.cands);
     const cs = this.cands;
@@ -2472,11 +2480,12 @@ export class FieldModel {
         fillS = false;
       }
     }
-    const seen: number[] = [];
-    for (let i = 0; i < n; i++) {
-      const J = cl[i];
-      if (J < 0 || seen.includes(J)) continue;
-      seen.push(J);
+    const T = S;
+    const order: number[] = [];
+    for (let i = 0; i < n; i++) if (cl[i] >= 0 && !order.includes(cl[i])) order.push(cl[i]);
+    if (this.visitReverse) order.reverse();
+    for (const J of order) {
+      if (T >= 0 && cl[T] === J) continue;
       let inF = false;
       for (const k of this.clusters[J].corners)
         if (this.inFill(k, x, y)) {
@@ -2484,15 +2493,14 @@ export class FieldModel {
           break;
         }
       if (!inF) continue;
-      let near = -1;
-      for (let k = 0; k < n; k++) if (cl[k] === J && (near < 0 || cs[k].d < cs[near].d)) near = k;
-      const z = this.depthAt(cs[near].chain, cs[near].s);
-      let wins = near !== S && better(z, near);
       // K940's yield order (crossed; the only form since K934): a fill
       // yields to another surface's tube unless the table puts one of the
       // cluster's chains over the tube's chain there.
-      if (S >= 0 && cl[S] !== J && cs[S].d < h) wins = this.fillOrder(J, cs[S].chain, cs[S].s) === true;
-      if (wins) {
+      if (T >= 0 && this.fillOrder(J, cs[T].chain, cs[T].s) !== true) continue;
+      let near = -1;
+      for (let k = 0; k < n; k++) if (cl[k] === J && (near < 0 || cs[k].d < cs[near].d)) near = k;
+      const z = this.depthAt(cs[near].chain, cs[near].s);
+      if (S === T || better(z, near)) {
         S = near;
         zS = z;
         fillS = cs[near].d >= h;
