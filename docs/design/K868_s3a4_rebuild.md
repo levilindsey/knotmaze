@@ -376,6 +376,98 @@ What is left in def's build (`prof12/cpu_s3reach`, per build): the
 corner solve ~120 ms (`newton` -> `footInWindow`), passReach ~54
 (`candidates` 45), partExtents ~43; then buildLabelPieces ~73
 (`windowOf` 28), buildBandStrips ~26, the switch search ~13. def's
-whole rebuild in Node is now about 380 ms (was about 2 s in the browser
-at step 1): far over the 1 ms goal, which a from-scratch FieldModel per
-frame cannot reach (see the ledger items).
+whole rebuild in Node is now about 383 ms (model 259, pieces 79, switch 13,
+strips 32; step 1's Node run: about 1873, model 1695): far over the 1 ms
+goal, which a from-scratch FieldModel per frame cannot reach (see the
+ledger items).
+
+### Step 4: measured again (`prof12_after/`, `prof12_after.log`)
+
+Desktop, under the perf lock, flag on and off back to back per page, at
+2a9f56ae (`prof12_locked.ps1 -Out .claude/probes/S3a/prof12_after
+-Pages settle,flow,knot,drag,dragw`; table: `prof12_table.mjs`). Another
+agent of the coordinating session was working on this machine at the
+time (not a timing, so not under the lock): small differences are noise.
+The label's own timers, rebuild frames, ms p50 / p95 / max, step 1's in
+brackets:
+
+| page | rebuild frames | scene | model | pieces | switch | strips | frame |
+|---|---|---|---|---|---|---|---|
+| settle, in-thread fabric, 60 s | 113 (26) | 19 / 23 / 30 (16 / 32 / 33) | 335 / 379 / 423 (2089 / 2519 / 2561) | 65 / 85 / 115 (55 / 92 / 102) | 5.9 / 10.7 / 22 (19 / 26 / 27) | 19 / 33 / 40 (17 / 29 / 37) | 441 / 499 / 760 (2244 / 2649 / 2656) |
+| flow, worker host, 3 s at rest | 8 (2) | 17 / 19 (19) | 301 / 358 (1606) | 59 / 67 (79) | 7.1 / 8.0 (18) | 14 / 20 (40) | 389 / 464 (1759) |
+| knot mode, in-thread, 60 s | 379 (416) | 7.5 / 8.0 / 18 (5.2 / 7.9 / 15) | 80 / 101 / 117 (71 / 102 / 139) | 18 / 20 / 58 (12 / 19 / 46) | 0.0 / 0.1 / 0.8 (0.0 / 0.1 / 0.6) | 8.0 / 11 / 22 (5.9 / 9.1 / 22) | 114 / 138 / 393 (95 / 136 / 384) |
+| drag, in-thread fabric, the drag | 41 | 11 / 14 / 18 | 214 / 241 / 244 | 38 / 59 / 66 | 3.2 / 6.6 / 7.1 | 12 / 15 / 32 | 283 / 310 / 313 |
+| dragw, worker host, the drag | 33 | 18 / 20 / 31 | 263 / 301 / 305 | 39 / 60 / 62 | 3.3 / 5.6 / 9.6 | 12 / 16 / 19 | 338 / 389 / 404 |
+
+Gather stays under 1.5 ms and upload under 3.1; the label and band
+renders 0.1-0.2 ms (their 69-95 ms maxima are the first frame's
+compiles). The drag pages had no step 1 run. Knot mode did not change:
+it has no junctions, so no corners, part walks or switch lines, and its
+model is the crossings' depth pins and spans. Its p50 71 -> 80 is not
+explained: steps 2 and 3 only skip work (Node's `fat`, which has no
+clusters, went 148 -> 134); a back-to-back rerun would tell noise from a
+regression.
+
+The app counter (`__knotPerf`) over each window, p50 / p95 / max ms
+(frames):
+
+| page | flag on | flag off |
+|---|---|---|
+| settle, 60 s from load | 2.9 / 510 / 808 (397); step 1: 2.0 / 2218 / 2699 (309) | 0.8 / 1.4 / 2.2 (1657) |
+| flow, 3 s at rest | 362 / 490 / 490 (15); step 1: 1786 (2) | 34 / 66 / 70 (63) |
+| knot mode, 60 s | 110 / 170 / 433 (690); step 1: 118 / 164 / 421 (697) | 25 / 36 / 69 (908) |
+| drag, in-thread | 425 / 473 / 478 (41) | 156 / 167 / 183 (42) |
+| dragw, worker host | 360 / 419 / 432 (38) | 31 / 50 / 52 (65) |
+
+**Sleep.** The settle page is settle11's link (`?s=b&am=instant&snd=none
+&tlk=border&fw=0&phw=0`), read at 20, 40 and 60 s. Flag off: asleep by
+the 40 s read (K147's budget phase ended by sleep at sim 5.0 s, 26.9 s
+wall). Flag on: not asleep at 60 s, still in the budget phase, 119
+substeps run (the off page had run 300 by its 20 s read) and 10.7 s of
+lag. The label's ~450 ms frames starve the in-thread sim; at that rate
+it would reach sim 5 s at about 150 s wall (inferred). The drag page's
+wait for sleep agrees: in-thread with the flag on, not asleep after 120 s
+(off: 31.7 s). On the
+worker host the physics sleeps with the flag on: the flow page at 29 s
+(off: 15 s; step 1: not in 60 s), the dragw page at 28 s (off: 14.5 s),
+and the flow page then keeps rebuilding the label at rest (R8), so its
+frames stay near 360 ms.
+
+**The drag check** (S3a3's `drag11_locked.ps1` on this stage's code:
+`drag12/`, `drag12.log`; `label_drag10.mjs` waits for sleep, grabs a
+thread, drags it along a 60 px arc in 30 moves, freezes the physics
+mid-drag with the pointer down, and shoots a 240 px crop around the grab
+at dsf 2, 400 ms after the freeze). Flag on, worker host: it slept, and
+during the drag the label rebuilt 24 times (rest 50 -> 74), the switch
+key held for 23 of them, 0 fallbacks; 3 more rebuilds after the freeze.
+Looked at `drag12/on_worker.mid.png` against `off_worker.mid.png` (the
+same frozen pose, flag off): the ink outlines every thread in the crop,
+continuous, on the threads' edges, with no offset outline and no ghost
+of an earlier pose. That holds by construction: a frame that sees moved
+positions rebuilds the label from those positions before it draws
+(`label_app.ts`, `moved()`), so the ink never trails the threads it
+outlines. What a player would feel instead is the frame rate: with the
+flag on a drag frame costs about 340-430 ms (the table above), so the
+knot follows the pointer at about 2-3 fps; the drag's 30 moves took
+about 10 s of wall. Flag on, in-thread (`on_phw0`): not asleep within
+the probe's 180 s wait, so no crop, as in S3a3's `drag11` (the sleep
+item above). Flag off, in-thread (`off_phw0`) slept and dragged; it is
+the control, not looked at closely.
+
+### Step 5: K320 budgets for the label and band programs (`a56b9a57`)
+
+`test/render/k320_slim.test.ts` budgets the lbi label's two programs
+(`labelSources(true, DATA_W)`, packed, as LabelPass compiles them) and
+the band pass's two (`label_band.ts`'s module-private texts, sliced and
+interpolated like SECTION_FRAG), both stages. Today's lengths
+(`k320_len12.ts`), rounded up to the next 50, the headroom K320's other
+entries carry (0 to 61 characters):
+
+| program | vertex | budget | fragment | budget |
+|---|---|---|---|---|
+| label tube | 846 | 850 | 1,574 | 1,600 |
+| label fill | 645 | 650 | 3,962 | 4,000 |
+| band | 988 | 1,000 | 2,338 | 2,350 |
+| band composite | 231 | 250 | 345 | 350 |
+
+They compile only with the flag on.
