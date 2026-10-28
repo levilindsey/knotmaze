@@ -474,14 +474,6 @@ Next free ID: K934.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
-- **K922** · K868 stage: depth ordered over each whole overlap, junction caps moved out to where an
-  arm parts from its neighbours (both behind switches), sheet I; then the second free-end mechanism.
-  `docs/design/K922_junction_extent.md`.
-  - owner: agent `a81eff7ef4f9e6b49` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 15:21, 2 h cap ~17:21)
-  - branch: `k922-junction-extent`, worktree `.claude/worktrees/k922-junction-extent`; last commit: `9c8013d7` (the brief; branch made from it)
-  - evidence: `.claude/probes/K922/` in the worktree (harnesses, logs, crops, sheet I); K915's probes `.claude/probes/K915/` and the scenes `.claude/probes/K868/scenes/` (main checkout, untracked)
-  - next: the brief's Order: depth over the whole overlap, the cap table, the junction extent, sheet I, then the second mechanism
-  - brief: `docs/design/K922_junction_extent.md`
 - **K925** · Cursive v5.2: remove the dip fair puts in the a/g/q bowl top before the stem cusp, fix
   the eye check's scale, fair Levi's edits on `--from-svg`, the b/v/w/p corners and body-end hooks;
   build v5.2. `docs/design/K925_cursive_v52.md`.
@@ -1952,6 +1944,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K922** · K868 stage: depth over the whole overlap, endSnap (a float bug; real free ends 105 to 83) and extent part, behind switches that default off; sheet I. Brief ## Results, ## Handoff. Done in 4e8b1c7c (2026-10-27).
 - **K923** · S3's Pixel bench (K868): as specified 4.8-5.5 ms at fit and 2x, over the 4 ms budget; with a screen-space LOD and a packed 32-bit label 1.6-2.7 ms at every zoom (p95 at most 3.43); a disc search 4.5-6.75 ms against G3-1's 24.5-48. `K923_s3_bench.md` ## Handoff. Done in b5fff04b (2026-10-27).
 - **K917** · Cursive junction heights. Answered by Levi (2026-10-27): "sgtm"; 60 u for a, c, d, g and q; o at 86 u, chosen on the sheet ("Seems better than the other two sets"). `K863_trace.md` ## Levi's calls. Done in 95ef67d6 (2026-10-27).
 - **K916** · Cursive v5.1: whole-stroke fairing (`--split fair`), leads into a/c/d/g/o/q from the left, the join refit, the K917 sheet; leftovers in K925-K928 and K917. Done in e1daa76f (2026-10-27).
