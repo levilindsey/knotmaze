@@ -23,9 +23,6 @@ Next free ID: K914.
 
 ## Waiting on Levi
 
-- **K892** · G3-1 at head: K893's hand revert wins 14.5 / 15.9 / 11.2 ms (dense, max-fabric, knot) but
-  is not clean (the thread reveal's protect scaling would need porting). Keep it until K868 settles the
-  gap search (recommended), or port now? `docs/design/K156.md`, round 2026-10-27b handoff.
 - **K901** · Cursive: r after a high exit, dip (the font: about 50 u below the x-height after o, b,
   v and w, then its standard r; K902) or straight in? K904 renders both (`out8/r_after_high.svg`).
   `docs/design/K863_trace.md` ## Levi's calls.
@@ -373,7 +370,7 @@ Next free ID: K914.
   - owner: nobody since 2026-10-27 09:34 (merged; agent `a3e244ff8f1b79ef4` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
   - branch: mainline; last commit: `c2283119`
   - evidence: .claude/probes/rounds/2026-10-27-01df23a5/ and its -g31 twin (main checkout, untracked)
-  - next: Levi decides G3-1's phone cost (K892); a later phone window runs the d0406df..01df23a5 bisect (K893), K568's confetti recheck (K896) and the kit fixes with an m11 A/A floor (K895)
+  - next: a later phone window runs the d0406df..01df23a5 bisect (K893), K568's confetti recheck (K896) and the kit fixes with an m11 A/A floor (K895)
   - brief: docs/design/K156.md, "Round 2026-10-27"
   - env: none; the pass builds and serves both builds itself (ports
     5480-5489); check nobody is using the phone first (K234)
@@ -411,7 +408,7 @@ Next free ID: K914.
   - owner: nobody since 2026-10-15 14:18 (the phone agent `a2c95d8bde8feeea8` of claude session 05e60da0 finished its bench; G3-0's `af653fa7f942f2f1e` (session d8031183) finished, its worktree left, locked by the live Claude process (K161))
   - branch: mainline; last commit: `3465090` (G3-1; G3-0 f6d10e3)
   - evidence: `.claude/probes/K8/G3-1/` (the brief's texture sizes); `.claude/probes/K8/stage2/` (`notes.md`, `g3_probe.mjs`, `batch3.ps1`-`batch6.ps1`, `phone6.ps1`, results); stage 1's `.claude/probes/K8/stage1/notes.md`
-  - next: First K892: G3-1 (`34650901`) costs the Pixel 11 +24.5 to +48.0 ms of render sync (K156 round 2026-10-27, step 6) and K893 measures its revert at head; Levi decides. G3-2 landed (957ba833 seam, K816 855bea23 ribbon_sdf, K825 explore variant, K826 mitered silhouette; the residual A/B diff is uniform and needs the same-state capture). Desktop bench 2026-10-22: SDF frame p50 0.3 ms / 10 draws vs strip 1.1 ms / 102. G3-3 (default flip + strip deletion) waits on Levi's phone look and on a phone render-sync measurement of `?rp=sdf`. Lane: G4-1 is replaced for the border look by K868; never beside an R stage, K268 item 4 or another GPU measurement; may run beside K7. K90 stopped (Levi 2026-10-20)
+  - next: G3-1 (`34650901`) stays despite +24.5 to +48.0 ms of phone render sync until K868 settles the gap search (Levi, K892). G3-2 landed (957ba833 seam, K816 855bea23 ribbon_sdf, K825 explore variant, K826 mitered silhouette; the residual A/B diff is uniform and needs the same-state capture). Desktop bench 2026-10-22: SDF frame p50 0.3 ms / 10 draws vs strip 1.1 ms / 102. G3-3 (default flip + strip deletion) waits on Levi's phone look and on a phone render-sync measurement of `?rp=sdf`. Lane: G4-1 is replaced for the border look by K868; never beside an R stage, K268 item 4 or another GPU measurement; may run beside K7. K90 stopped (Levi 2026-10-20)
   - brief: `docs/design/K8_G3-1.md`; G3-0's handoff: `docs/design/K8_stage1.md` ("Stage 2 handoff")
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
@@ -772,6 +769,9 @@ Every other item below waits on the trigger it names.
 
 ## Residuals (known, not fixed)
 
+- **K892** · G3-1 costs the Pixel 11 +24.5 to +48 ms of render sync (K156 round 2026-10-27); K893's hand
+  revert (`k893-g31-revert` d8caafa3, not clean, never merge) wins 14.5 / 15.9 / 11.2 ms. Kept until K868
+  settles the gap search (Levi, 2026-10-27), then port the revert or replace G3-1. `docs/design/K156.md`.
 - **K877** · K868 oracle residuals: 1 of muse_hash's 342 corner solves fails (j58/1, no V: K883); #2
   fails acute r=0 corners by ε·cot θ (0.017, 0.027 px); 0.0038h of a −0.0061h clearance unattributed;
   inset match ±0.022h on polyline arms; kink's 1x #5/#9; long renders' vitest RPC timeout exits 1.
