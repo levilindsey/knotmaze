@@ -128,3 +128,154 @@ Steps 1-3 come first.
   before and after, what is left, a `Ledger items` list (follow-ups,
   residuals, decisions for Levi), and K909's handle fields (branch, last
   commit, evidence, next).
+
+## Handoff
+
+2026-10-27, from the stage agent (start 11:35). It stopped at 12:59,
+before its 2 h cap, rather than start a fix it could not finish in the
+time left. Steps 1-4 are done. Steps 5 and 7 are diagnosed, not fixed,
+and step 6 is not started.
+
+- Branch: `k909-geo-groups`, worktree `.claude/worktrees/k909-geo-groups`.
+- Probes, logs and censuses: `.claude/probes/K909/` (untracked).
+- Sheets: `.claude/probes/K868/sheets/B4_muse_hash.png` and
+  `G_hook_look.png`, each with a README line.
+
+1. **Geo's crossing order** (8866cd49). `geoHider` now asks the crossing
+   table first. The node overlap stops at each arm's cap (`geoCaps`). In
+   j_hook_cross, 8 over-pass samples on chain 1 near crossing 0 now show.
+2. **The geometric group** (8866cd49, da1ef576, a1c9b2eb).
+   `src/render/field/geo_group.ts` (`GeoGroups`, `geoCaps`) is the one
+   walk behind both the oracle's `groups: "geo"` and the census's truth
+   "geo".
+   - The rule is in K868 §3.4. Per §3.8, the cap bounds the round, not
+     the span, so nothing replaces the span in the corner fit.
+   - Geo stays behind the switch; the default is still "k883". Free ends
+     fall by only one (228 to 227), and two guards get worse: census
+     missing rises from 148 to 152 (8211 to 8236 under truth geo), and #16
+     on muse_hash gains a sample (38 to 39).
+   - `geoCut`, the per-junction crossing cut, stays off. With it on, free
+     ends rose to 235 and census missing to 163.
+3. **Measured.** Before is groups k883, which is 263bc134's oracle; after
+   is groups geo.
+   - Free ends: 228 to 227.
+
+     | Class | Before | After |
+     |---|---|---|
+     | fill | 74 | 71 |
+     | group on top | 52 | 50 |
+     | core | 47 | 48 |
+     | union | 24 | 24 |
+     | neither | 18 | 20 |
+     | inked by another | 10 | 9 |
+     | under the fill | 2 | 4 |
+     | under chain | 1 | 1 |
+
+   - Census under the model's truth: missing 148 to 152, extra 71 to 71.
+     Under truth geo: missing 8211 to 8236, extra 0 to 0.
+   - muse_hash checks:
+     - #2 fails in both (gap max 26.75 px, one solve failed).
+     - #11 (349/350), #14 (349/350) and #15 (350/350) are unchanged.
+     - #16: 23051 to 23050 of 23089 (19 to 20 stretches).
+   - #15 passes 12/12 in both. #16 fails on muse_hash, g41_def_tw64 (28
+     samples) and g41_ring_tw64 (2), the same in both.
+   - Synthetic: 116/117 in both, free ends 4 to 4. Corner solves are
+     unchanged (muse_hash 341/342).
+   - Suite: 178 files passed, 2 skipped; 2369 tests passed, 6 skipped.
+   - Spans: 3589 of 3622 arms are equal, 11 longer and 22 shorter (the
+     shorter ones come from the cluster-wide cut).
+   - S3's per-side data: 350 far pieces on 319 arms, 421.5h in all.
+     - The largest is 5.13h (g41_user_tw64).
+     - muse_hash has 57 pieces on 51 arms (median 0.75h, max 4.87h).
+     - The synthetic scenes have none.
+   - B4: no outline moved by more than W. 5 px changed in 3 places, all
+     lighter. Free ends are 106 to 106, in the same places. One census
+     stretch appears (a1).
+4. **Sheet G**, from the oracle's `hookLook: "now" | "carry" | "cap"`
+   (default "now", unchanged; 18f1b288, with a k883.test.ts case).
+   - A hook arm is a crossing-cut arm with exactly one side inside the
+     crossing's other pass at the cut. `findHooks` finds 1 in j_hook_cross
+     and 5 in muse_hash, 3 of them at crossing 292 (j139 arm 2, j140 arms
+     1 and 2).
+   - "carry" draws that side's border from the cut back to the root, over
+     the group's body.
+   - "cap" hides that side's ink inside the other pass's tube.
+   - Results (`.claude/probes/K909/g_run3.log`; ink in px, and in
+     brackets the px changed from now):
+
+     | Scene | now | carry | cap |
+     |---|---|---|---|
+     | j_hook_cross | 32600 | 33144 (576) | 29941 (2753) |
+     | muse_hash, crossing 292 | 71954 | 73716 (1865) | 69205 (2863) |
+
+   - j_hook_cross: cap is clean. The through's lower border turns
+     straight into the END arm's inner border, and the free cap is gone.
+     carry adds a short stub from the cap back to the root, inside the
+     through.
+   - muse_hash crossing 292: carry draws a long new line across the
+     group's body. cap turns now's rounded end into two open, jagged
+     border ends, because no other border is drawn there for them to end
+     on. Three hook arms share the crossing, on both of its chains (66
+     and 84).
+   - Census on the 12 scenes (`.claude/probes/K909/census_hook_cap.log`,
+     `census_hook_carry.log`; `HOOK_LOOK` in the probes' `lib.ts`). Its
+     truth draws the hook as now. Only muse_hash, muse_default_tw and
+     g41_user_tw64 move.
+     - carry: extra ink 71 to 88, because the truth has no carried
+       border. Nothing else moves.
+     - cap: extra ink 71 to 66, and missing 148 to 165. #16 newly fails
+       on muse_default_tw (18 samples, chain 28 at crossing 100) and
+       g41_user_tw64 (12: chain 26 at crossing 151, and 2 on chain 22 at
+       crossing 139). On muse_hash it loses 2 samples (23051 to 23049).
+       #15 stays 12/12.
+     - Why cap fails #16: 4 of the 9 hook arms in these four scenes are
+       the crossing's over pass (`hooks_over.ts`). They are j_hook_cross
+       j0, muse_hash j140 arm 1, muse_default_tw j64 arm 2 and
+       g41_user_tw64 j66 arm 0. There, cap hides the over pass's own
+       border inside the through, and #16 flags the last two. The 2
+       samples on chain 22 are the over pass's border next to an under
+       hook (j53 arm 1). The cut-cap rule (dOther < h near the side's end
+       point) hides them.
+     - What cap fixes: j_hook_cross's only extra stretch (core/own, 4
+       samples, at the hook). On muse_hash it removes 5 core/own
+       samples: 4 of j140's 5 (chain 84, crossing 292) and 1 of j81's 3
+       (chain 34, crossing 134, another hook). It also hides one sample
+       the truth wants on each scene's hook side by the crossing:
+       j_hook_cross chain 1 at s 6.13, and muse_hash chain 84 at s
+       32.36, where #16 loses its 2 samples (s 32.36 to 32.41).
+   - Levi picks the look. For cap he also picks what an over hook arm
+     does (its border over the through, or merged as cap draws it now),
+     and what happens where no border is drawn for the hook side to end
+     on.
+5. **Extra ink** (71 stretches, unchanged under geo), by mechanism: not
+   fixed.
+
+   | Mechanism | Stretches | Samples |
+   |---|---|---|
+   | core/own | 23 | 45 |
+   | union/own | 16 | 18 |
+   | union/other | 4 | 4 |
+   | core/other | 3 | 4 |
+
+   The muse_hash sites:
+   - j111 (chain 83, 6 samples);
+   - j123 (chain 66);
+   - j149 (chain 82, near crossing 305; j149 arm 1 is an under hook
+     there, but cap leaves this stretch alone);
+   - j140 (chain 84, near crossing 292). This is the hook's free cap:
+     cap removes 4 of its 5 samples (step 4).
+6. **Sheet F**: not started. Under geo, F's crops are the same as before,
+   because the outline there is identical, so nothing in steps 1-4 shares
+   a mechanism with F's artifacts.
+7. **#16** under k883: not fixed. 30 of the 31 stretches (67 of 68
+   samples) are "chain X's group on top": the over pass's border lies
+   under a group that holds no piece of the sample's own chain. The other
+   one is buried (muse_hash chain 84, s 12.46).
+
+**Next steps**:
+1. Levi chooses the hook look (sheet G, and for cap what an over hook
+   arm does), and whether to keep or remove `groups: "geo"`.
+2. Step 5, the core/own seams first. The hook's (j_hook_cross, j140)
+   follow the look he picks.
+3. Step 7, the "group on top" class.
+4. Step 6.
