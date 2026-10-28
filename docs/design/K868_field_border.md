@@ -76,6 +76,14 @@ side curves at ±h and, at an open end, a semicircular cap of radius h,
 tangent to both side curves by construction. h is the thread's half-width;
 the ink band W is measured inward from the outline.
 
+Side curvature, wherever it is read (curvature combs, a G2 join's end
+match; G1 needs none): the Menger circle through the centreline at s − h,
+s and s + h, offset to the outline: with κ signed (+ turning left) along
+the centreline's direction, the left side's curvature is κ/(1 − hκ) and
+the right side's κ/(1 + hκ), negated for an outline walked the other way.
+One h of window smooths the polyline's vertex steps without blurring the
+arm's own bend (S2, `K868_s2_g2.md`).
+
 ### 3.2 Surfaces: union within, occlusion between
 
 Each group of thread pieces is one sheet of paper cut to the union of its
@@ -123,28 +131,22 @@ physics z changes slope on ctrl slots with a median spacing of 0.48). The
 oracle keeps the old rule (`depth: "scene"`, the exported z) for
 comparison.
 
-Why: the summed tent physics uses (and the zPos S1a exports) inverted
-k42's crossing 0 at the crossing itself. k42 is a cyclic triple about 1.5h
-apart: chain 0 over 1, 1 over 2, 2 over 0. Pinning keeps every crossing's
-recorded over/under at its centre. The area all three tubes share (a
-triangle of side 1.5h has inradius 0.43h < h) cannot honour all three
-pairwise orders under any per-pixel depth; there the blend decides, and the
-sheets show it (`docs/design/K9-K42.md`). Pinned depth is a pure function
-of the crossing table and the geometry, so the renderer computes it on main
-(§9).
+Why: pinning doubles the worst margin z_over − z_under (2·amp, against the
+summed tent's 0.93·amp on k42 and the exported z's 1.35·amp on muse_hash),
+and it does not depend on physics: it is a pure function of the crossing
+table and the geometry, so the renderer computes it on main (§9). The
+summed tent inverts no crossing centre (S2, check 14). In k42's cyclic
+triple (chain 0 over 1, 1 over 2, 2 over 0, about 1.5h apart) the area all
+three tubes share (1.67h²; a triangle of side 1.5h has inradius 0.43h < h)
+cannot honour all three pairwise orders under any per-pixel depth. There
+the blend decides (each chain tops about a third under either rule), and
+S1b's k42 failures of #6 and #7 all lie inside it (`docs/design/K9-K42.md`).
 
-S2 measured (check 14): the inversion claim above does not hold. The
-summed tent keeps all three k42 centres (min z_over − z_under 0.93·amp,
-against 2·amp pinned), and on muse_hash the exported z keeps all 350
-(min 1.35·amp). S1b's k42 failures (#6, #7) all lie inside the area the
-three tubes share (1.67h², sampled at 0.01h), where each chain tops about a
-third (0.333, 0.331, 0.336) under both rules; outside it #6 and #7 pass
-under both. Pinning still earns its place: it doubles the worst margin and
-does not depend on physics. Check 14 fails 30 muse_hash crossings under
-either rule, for two reasons that are not depth: 29 lie with both passes
-inside one junction cluster's span, where §3.4 joins them into one group
-(the crossing then has no over/under; see §3.4), and 1 (crossing 15) has
-an over pass at chain 2's open terminal, 4.9h from its under pass.
+Check 14 on muse_hash at cr 3: 349 of 350. Crossing 15 is left: its over
+pass sits at chain 2's open terminal, 4.9h from its under pass, so the
+table's crossing is not where the geometry crosses (a scene question, not
+depth). The others that failed before K883 had both passes in one group
+(§3.4).
 
 ### 3.4 Candidates and groups
 
@@ -155,17 +157,28 @@ generous). Candidates join into groups by union-find:
   piece. A sharply bent tube yields two minima of one tube.
 - Different chains, or one chain beyond σ: one group only if both are arms
   of the same junction J and both s lie inside J's span: on each arm, from
-  the root out to that arm's corner tangent points plus W plus a margin.
-  Junctions whose spans overlap merge.
+  the root out to that arm's corner reach (the tangent point, or V when
+  sharp; h with no corner) plus W plus a margin, and never past the arm's
+  cap (below). Junctions whose spans overlap merge into a cluster.
 - Everything else: separate groups, ordered by depth.
 
-Open (S2): a crossing whose two passes both lie inside one junction
-cluster's span. The rule above joins the passes into one group, so the
-crossing draws as a merge. Real scenes have them: 29 of muse_hash's 350
-crossings, 2-8h from a junction root, often inside an acute corner's long
-V-to-tangent stretch. A fix must keep the passes apart (for example, clip
-each arm's span before the arm's first crossing pass, or split a group at
-a recorded crossing); neither is built.
+A crossing is two surfaces, so no group may hold both of its passes. An
+arm's cap is the first of:
+- the chain's end;
+- the next junction's root on that chain;
+- a crossing cut. When one cluster's spans hold both passes of a crossing
+  (a pass counts as held up to h·cot(θ/2) + h/2 past an arm's far end: the
+  overlap's reach along a pass, plus a margin; θ is the crossing's acute
+  angle), every arm holding the pass farther from its root stops at
+  d − (h·cot(θ/2) + h/2), d being that pass's distance from the root. A
+  tie cuts pass a. Cuts split clusters, so the test repeats until nothing
+  changes (at most 12 rounds); a crossing found again cuts both passes.
+
+The oracle keeps each cap and its reason (`FieldModel.armCaps`), and the
+round corners are fitted inside the caps (§3.8). Checks 15 and 16 test it.
+Left on muse_hash at cr 3 (#15, 347 of 350): crossings 77 and 346, kink
+loops on one chain that #15 reports as joined by the same-chain rule, and
+292, held through cluster 68 (j123, j139, j140). None is diagnosed yet.
 
 The span's margin keeps the rule continuous: just outside it an arm alone
 draws exactly what the junction group draws there.
@@ -216,12 +229,10 @@ corner curve K joins A's side curve to B's:
   curve). t_A and t_B are q's feet on the side curves, and K is the arc of
   circle(q, r) from t_A to t_B. The corner fill is the curvilinear triangle
   V, t_A, t_B. As r goes to 0, K goes to V.
-- G2 (S2): curvature-continuous joins, judged by curvature combs and the
-  curvature jump at t_A and t_B. Candidates: superelliptic arcs (p > 2;
-  the implicit value is not a distance, so normalise it), clothoid pairs,
-  G2 cubic or quintic Béziers (end curvature
-  κ0 = (2/3)·|(P1 − P0) × (P2 − P1)| / |P1 − P0|³, matched to the side
-  curve's), and arc splines (closed-form distance on the GPU).
+- G1 is the rule: on sheet E (2026-10-27) Levi saw no difference between
+  G1 and S2's curvature-continuous candidates (clothoid pairs, G2 Béziers,
+  superelliptic arcs, arc splines). They are recorded in `K868_s2_g2.md`
+  and not pursued.
 - Master's sharp corner: S1b documents what master draws there
   (`src/render/ribbon/joinery.ts`), so it can be kept if Levi prefers it.
 
@@ -230,28 +241,42 @@ rounds the broadest unpinned wedges first
 (`src/render/ribbon/corner_share.ts`). Scenes carry master's resolved style
 per corner.
 
-Acute corners, a candidate rule for Levi's eye: an arc meets the arms
-r·cot(θ/2) from V, a long web when θ is small (3.7r at 30°, 5.7r at 20°).
-Capping the web at ℓ_max (about 1.5h) means r ≤ ℓ_max·tan(θ/2). Sheet C
-shows the cap beside the uncapped sweep.
+An arc meets the arms ℓ = r·cot(θ/2) from V, a long web when θ is small
+(3.7r at 30°, 5.7r at 20°); §3.8's mapping bounds it.
 
 ### 3.8 r from the existing knobs
 
 `crs` (cornerRoundShare, default 1) is the share of corners drawn round.
-`cr` (cuspRadius, 0 to 6, default 3) sizes master's rounding;
-`docs/design/G3G4_sdf_geometry.md` §3.5 reads it as
-k_max = c_cal·h·max(0, 1.25·cr − 1), the old fillet's along-edge extent
-minus h. S1b documents what master actually draws for each knob and
-proposes a mapping from cr to r; sheet C sweeps r over {0, 0.25h, 0.5h, h,
-2h}. If no mapping is clean, Levi picks.
+`cr` (cuspRadius, "Corner reach", 0 to 6, default 3) sizes the round.
+Master keeps its own mapping (S1b, finding 5): r(θ) = h·max(0,
+1.25·cr·tan(θ/2) − 0.97) as a quadratic Bézier rim, rejecting corners at
+θ ≲ 49° (`docs/design/G3G4_sdf_geometry.md` §3.5's
+k_max = c_cal·h·max(0, 1.25·cr − 1) omits the angle).
 
-S1b (finding 5): master draws r(θ) = h·max(0, 1.25·cr·tan(θ/2) − 0.97),
-that is k_max = 1.25·cr − 0.97·cot(θ/2) (the G3G4 reading above omits the
-angle), as a quadratic Bézier rim, and it rejects corners at θ ≲ 49°.
-Proposed, waiting on Levi (ledger K874): that r, capped at 2h (uncapped it
-grows without bound as θ → 180° where the fill is almost nothing), plus
-§3.7's web cap ℓ ≤ 1.5h, so acute corners get a small round instead of
-staying sharp. Until Levi answers, the oracle's sheets use this rule.
+The field's mapping (2026-10-27: Levi asked for a slider on sheet C; the
+oracle's `cornerRadius` and `cornerRadiusMax`):
+
+r(θ) = (cr/3)·min(2h, 1.5h·tan(θ/2)),
+
+so ℓ ≤ 0.5·cr·h and r ≤ r_max = (2/3)·cr·h, the reach bound used for
+timing. There is no separate web cap; the 2h cap takes over at θ ≈ 106.3°.
+cr 0 is sharp and cr 6 twice as round as cr 3, which is sheet B's approved
+corner, except that sheet B left corners under 14.7° sharp and rounded
+those from 14.7° to 18.4° less.
+
+The short-arm fit: a round lies inside both arms' spans (§3.4). Each
+tangent point's foot stays at most cap − W from the root, so
+r ≤ room·tan(θ/2), room = min over the two arms of
+(cap − W − |V's foot|), then smaller until the solve fits (a few
+re-solves). With no room past V the corner is sharp. The oracle records
+the fit and its reason (`Corner.fit`).
+
+The corner with no V: the two centrelines stay closer than 2h all along
+the shorter arm, so the outlines never meet on the wedge side (muse_hash
+j58/1: 2.93h of arm A, max gap 1.85h). It draws the union of its arms as
+far as they overlap: no fill and no round, and its arms' spans reach arm
+A's far end and that point's foot on arm B. Its V solve still counts as
+failed (muse_hash: 341 of 342 corners solve).
 
 ## 4. Scenes
 
@@ -320,6 +345,8 @@ too.
 | 12 | GPU vs oracle: ΔF within 2W of outlines; top ids; colour elsewhere | ≤ 1/32 px; equal except within 1 px of outlines; ≤ 2/255 | S3 |
 | 13 | Pixel 11 GPU time at dpr 2, cr 3, under the perf lock | ≤ 4 ms, 60 fps | S3 |
 | 14 | Pinned depth: z_over > z_under at each crossing, and the under never on top at its centre (every crossing, in view or not) | all | S2 |
+| 15 | No group holds both passes of a crossing (§3.4; kinks whose passes lie within σ are skipped) | all | K883 |
+| 16 | Each crossing's over pass keeps both borders through the crossing: its side samples that should show are inked | all | K883 |
 
 ## 7. Contact sheets
 
@@ -340,7 +367,8 @@ the gate.
 | S1a | Scene exporter: hook, driver, master screenshots, camera, overlay proof (`K868_s1a_scene_export.md`) | Opus, 2 h |
 | S1b | Geometry core, synthetic scenes, oracle, checks, sheets A-C (`K868_s1b_oracle.md`) | Opus, 2 h |
 | S2 | Depth from the diagram (§3.3), the corner solve's failures, G2 variants and curvature combs, sheet E (`K868_s2_g2.md`) | Opus, 2 h |
-| S3 | WebGL2 prototype (reusing `rp=sdf`'s tables where they fit), GPU vs oracle, Pixel fps; settles the END tuck and the band W against master (S1a notes) | after Levi's answer on sheet B (K874), beside S2 |
+| K883 | Sheet B's missing borders: no group holds both passes (§3.4), the slider mapping, the short-arm fit and the corner with no V (§3.8), checks 15-16, sheets B2 and F (`K883_oracle_borders.md`) | Opus, 2 h |
+| S3 | WebGL2 prototype (reusing `rp=sdf`'s tables where they fit), GPU vs oracle, Pixel fps; settles the END tuck and the band W against master (S1a notes) | after Levi's look at sheets B2 and F |
 
 Then Levi's gate on the sheets, then integration behind a flag.
 
