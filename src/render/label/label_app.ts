@@ -11,6 +11,8 @@
 //   label_glsl.ts    the two programs (tubes, fills), PACKED or WIDE, and
 //                    the label's bit layout
 //   label_pass.ts    the GL targets (L, D2, T) and the two draws
+//   label_band.ts    S3a3: the band pass, the ink drawn from L (and D2):
+//                    its strips (pure CPU) and the composite
 //
 // The pieces come from a FieldModel (../field/oracle.ts, labelOnly) built
 // on the main thread from the renderer's samples (the mirror's, under the
@@ -19,19 +21,21 @@
 // nothing.
 //
 // frame_loop.ts imports this module (dynamically) on the first repaint with
-// the border look's label ink on and calls frame() before each app.render();
-// with the flag off nothing here loads, runs, allocates or compiles. Nothing
-// draws the label yet: S3a3's band pass reads L and D2.
+// the border look's label ink on, calls frame() before each app.render() and
+// after() after it; with the flag off nothing here loads, runs, allocates or
+// compiles. frame() renders the label (L, D2) and the band pass's coverage
+// (C); after() draws C over the canvas in the ink's colour.
 //
-// When it rebuilds: the pieces follow the renderer's geometry (updateCount).
-// A changed geometry rebuilds them once the physics sleeps, once two repaints
-// pass without a geometry change, or when there are none yet; in between the
-// label renders the last pieces with the current camera. S3b times the
-// build and decides whether motion can afford more.
+// When it rebuilds (S3a3 step 4): whenever the drawn positions (the
+// renderer's samples, which the pieces are built from) changed since the
+// last build, so every repaint while the knot moves, with the worker on or
+// off. A geometry update that moved nothing (flow at rest, a paint-only
+// change) keeps the pieces. S3b times the build.
 import { cornerRadius, FieldModel, type OracleParams } from "../field/oracle";
 import { buildFieldScene } from "../field/scene_export";
 import { gatherSceneInput, type SceneExportCtx } from "../field/scene_export_hook";
 import { buildLabelPieces, labelLimits, type LabelPieces } from "./label_pieces";
+import { BandPass, buildBandStrips, type BandStrips } from "./label_band";
 import { LabelPass, type LabelCamera } from "./label_pass";
 
 // The scene export leaves look.ctrlArc unset; S3a's probes use 0.47 (the
@@ -39,10 +43,18 @@ import { LabelPass, type LabelCamera } from "./label_pass";
 const CTRL_ARC = 0.47;
 // The corner radii S3a v6 measured with (the round corners at cr 3).
 const CR = 3;
+// The ink's colour with no border colour picked: the border look's auto
+// stroke, mix(rgb * 0.30, (0.09, 0.085, 0.08), 0.5), at a mid section
+// colour. The look's own stroke follows each section's colour; this one
+// colour is a residual (S3a3's handoff).
+const INK_AUTO: [number, number, number] = [0.12, 0.11, 0.09];
 
 export interface LabelApp {
-  /** Before each app.render(): rebuild if due, then render the label. */
+  /** Before each app.render(): rebuild if due, then render the label and
+   * the band pass's ink coverage. */
   frame(): void;
+  /** After each app.render(): the ink over the canvas. */
+  after(): void;
   dispose(): void;
 }
 
@@ -61,10 +73,35 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
   let off = false;
   let lastR: unknown = null;
   let builtCount = -1;
-  let prevCount = -1;
-  let quiet = 0;
   let cam: LabelCamera | null = null;
-  const stats = { rebuilds: 0, renders: 0, fallback: "" as string, chains: 0, clusters: 0 };
+  let band: BandPass | null = null;
+  let strips: BandStrips | null = null;
+  let bandDepth = false;
+  // The drawn positions the pieces were built from, one copy per chain.
+  let drawn: (Float32Array | null)[] = [];
+  const stats = { rebuilds: 0, kept: 0, renders: 0, fallback: "" as string, chains: 0, clusters: 0 };
+
+  const snapshot = (): void => {
+    const ss = ctx.scene.renderer?.chainSamples ?? [];
+    drawn = ss.map((s) => (s ? s.positions.slice(0, s.count * 2) : null));
+  };
+  const moved = (): boolean => {
+    const ss = ctx.scene.renderer?.chainSamples ?? [];
+    if (ss.length !== drawn.length) return true;
+    for (let c = 0; c < ss.length; c++) {
+      const s = ss[c];
+      const d = drawn[c];
+      if (!s || !d) {
+        if (s !== null || d !== null) return true;
+        continue;
+      }
+      const n = s.count * 2;
+      if (n !== d.length) return true;
+      const p = s.positions;
+      for (let i = 0; i < n; i++) if (p[i] !== d[i]) return true;
+    }
+    return false;
+  };
 
   const gl = (): WebGL2RenderingContext | null => {
     const g = (ctx.app.renderer as unknown as { gl?: unknown }).gl;
@@ -82,7 +119,10 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     if (ctx.scene.renderer) ctx.scene.renderer.labelInk = false;
     pass?.dispose();
     pass = null;
+    band?.dispose();
+    band = null;
     pieces = null;
+    strips = null;
     requestFrame();
   };
 
@@ -112,8 +152,10 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     const lim = labelLimits(m.polys.length, m.clusters.length);
     if (lim) return fallback(lim);
     pieces = buildLabelPieces(m);
+    strips = buildBandStrips(m, pieces);
     stats.rebuilds++;
     if (pass) pass.setPieces(pieces);
+    if (band) band.setStrips(strips);
   };
 
   const render = (): void => {
@@ -135,6 +177,16 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     const t = root.scale.y;
     cam = { a: s * sx, b: 0, c: 0, d: t * sy, tx: root.position.x * sx, ty: root.position.y * sy };
     pass.render(cam, w, hh, true);
+    const { L, D2 } = pass.textures;
+    if (packed && pieces && strips && L && D2) {
+      if (!band) {
+        band = new BandPass(g);
+        band.setStrips(strips);
+      }
+      // The ink's width in device pixels: W world units at the camera's scale.
+      const px = Math.sqrt(Math.abs(cam.a * cam.d - cam.b * cam.c));
+      band.render(L, D2, cam, w, hh, { W: strips.W * px, sigma: pieces.sigma, depth: bandDepth });
+    }
     stats.renders++;
     ctx.app.renderer.resetState();
   };
@@ -148,14 +200,15 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     if (r !== lastR) {
       lastR = r;
       builtCount = -1;
-      prevCount = -1;
+      drawn = [];
     }
-    quiet = count === prevCount ? quiet + 1 : 0;
-    prevCount = count;
     try {
-      if (count !== builtCount && (!pieces || ctx.host.asleep || quiet >= 2)) {
+      if (count !== builtCount) {
         builtCount = count;
-        rebuild();
+        if (!pieces || moved()) {
+          rebuild();
+          snapshot();
+        } else stats.kept++;
       }
       if (off || !pieces) return;
       render();
@@ -166,10 +219,27 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     }
   };
 
+  // After app.render(): the band pass's coverage over the canvas.
+  const after = (): void => {
+    if (off || !band || !packed || !pieces) return;
+    const bc = ctx.scene.renderer?.borderColor ?? 0;
+    const ink: [number, number, number] = bc ? [((bc >> 16) & 255) / 255, ((bc >> 8) & 255) / 255, (bc & 255) / 255] : INK_AUTO;
+    try {
+      band.composite(ink);
+    } catch (e) {
+      fallback(`composite failed (${e instanceof Error ? e.message : String(e)})`);
+    } finally {
+      ctx.app.renderer.resetState();
+    }
+  };
+
   const dispose = (): void => {
     pass?.dispose();
     pass = null;
+    band?.dispose();
+    band = null;
     pieces = null;
+    strips = null;
     off = true;
     const G = globalThis as unknown as Record<string, unknown>;
     if (G.__knotLabel === api) delete G.__knotLabel;
@@ -190,9 +260,10 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     },
     /** Rebuild if the geometry changed, render now (as a repaint would). */
     renderNow(force = false): void {
-      if (force) builtCount = -1;
-      quiet = 2;
-      prevCount = ctx.scene.renderer?.updateCount ?? -1;
+      if (force) {
+        builtCount = -1;
+        drawn = [];
+      }
       frame();
     },
     /** Switch between the packed (default) and the wide label. */
@@ -208,8 +279,22 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
       ctx.app.renderer.resetState();
       return { w: pass.width, h: pass.height, packed, camera: cam, data };
     },
+    get strips() {
+      return strips;
+    },
+    /** The band pass with K923's depth rule (label_band.ts; off by default). */
+    setBandDepth(on: boolean): void {
+      bandDepth = on;
+    },
+    /** The ink's coverage from the last render, 0-255 a pixel, row 0 = the top. */
+    readInk(): { w: number; h: number; data: Uint8Array } | null {
+      if (!band || !band.width) return null;
+      const data = band.read();
+      ctx.app.renderer.resetState();
+      return { w: band.width, h: band.height, data };
+    },
   };
   (globalThis as unknown as Record<string, unknown>).__knotLabel = api;
 
-  return { frame, dispose };
+  return { frame, after, dispose };
 }
