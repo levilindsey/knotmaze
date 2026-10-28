@@ -22,6 +22,7 @@ import {
   type ExportCrossing,
   type ExportPass,
   type ExportTip,
+  type SceneExportInput,
 } from "./scene_export";
 
 export type SceneExportCtx = Pick<
@@ -98,15 +99,19 @@ function slottedEmergent(
   return { list, jointPairs, dups, overPool };
 }
 
-export function installSceneExport(ctx: SceneExportCtx): void {
-  (window as unknown as Record<string, unknown>).__knotSceneExport = async (
-    opts: { name?: string } = {}
-  ) => {
+/** K868 S3a2: one frame's SceneExportInput, gathered synchronously. The
+ * hook below passes the host's dump; the label pass (src/render/label/)
+ * passes the view's positions and no zPos (its depth rule, "overlap",
+ * reads the crossing table, not zPos). */
+export function gatherSceneInput(
+  ctx: SceneExportCtx,
+  phys: { zPos: ArrayLike<number>; positions: ArrayLike<number>; simTime: number },
+  physHash: string,
+  name: string
+): { input: SceneExportInput; em: ReturnType<typeof slottedEmergent> } {
     const r = ctx.scene.renderer;
     const ps = ctx.scene.ps;
     if (!r || !ps) throw new Error("__knotSceneExport: no scene");
-    const dump = await ctx.host.dump();
-    const hashes = hashDump(dump);
     const rp = r as unknown as RendererPrivates;
 
     const chains: ExportChain[] = [];
@@ -173,17 +178,16 @@ export function installSceneExport(ctx: SceneExportCtx): void {
 
     const root = ctx.root;
     const s = root.scale.x;
-    const wt = root.worldTransform;
     const params = ctx.params;
     const h = r.style.threadWidth / 2;
-    const input = {
-      name: opts.name ?? "scene",
+    const input: SceneExportInput = {
+      name,
       source: {
         kind: "app" as const,
         url: location.href,
         build: `v${APP_VERSION} · ${BUILD_SHA}`,
-        simTime: dump.simTime,
-        physHash: hashes.all,
+        simTime: phys.simTime,
+        physHash,
       },
       camera: {
         worldToCss: [s, 0, 0, s, root.position.x, root.position.y] as [
@@ -205,8 +209,8 @@ export function installSceneExport(ctx: SceneExportCtx): void {
       },
       chains,
       // The dump's arrays: exactly what the hash certifies.
-      zPos: Float64Array.from(dump.zPos),
-      physPositions: Float64Array.from(dump.positions),
+      zPos: Float64Array.from(phys.zPos),
+      physPositions: Float64Array.from(phys.positions),
       crossings,
       emergent: em.list,
       dedupeEmergent: false,
@@ -221,6 +225,21 @@ export function installSceneExport(ctx: SceneExportCtx): void {
       freeTips,
       anchoredTips,
     };
+    return { input, em };
+}
+
+export function installSceneExport(ctx: SceneExportCtx): void {
+  (window as unknown as Record<string, unknown>).__knotSceneExport = async (
+    opts: { name?: string } = {}
+  ) => {
+    const r = ctx.scene.renderer;
+    const ps = ctx.scene.ps;
+    if (!r || !ps) throw new Error("__knotSceneExport: no scene");
+    const dump = await ctx.host.dump();
+    const hashes = hashDump(dump);
+    const { input, em } = gatherSceneInput(ctx, dump, hashes.all, opts.name ?? "scene");
+    const wt = ctx.root.worldTransform;
+    const params = ctx.params;
     const { scene, diag } = buildFieldScene(input);
     return {
       scene,
