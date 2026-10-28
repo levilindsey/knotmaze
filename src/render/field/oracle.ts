@@ -107,16 +107,6 @@ export interface OracleParams {
    * between them (depth.ts), the default before K934; "scene" uses the
    * scene's z samples (physics zPos), S1b's rule. Both kept for comparison. */
   depth?: "diagram" | "scene" | "overlap";
-  /** K922 (§3.4): "span" (default) ends an arm's span at its corners'
-   * extent + W + margin; "part" keeps an arm in its cluster past that until
-   * its tube has parted from every other member of the cluster (their
-   * spans' tubes and the corners' fills), + W. Caps and the crossing cut
-   * stand. K934: the walk now reaches the final spans (K922's ran only
-   * inside the crossing cut's loop, so it added cuts and moved no span
-   * end); "partShort" is "part" stopped short of every crossing pass on
-   * the arm's chain: the span ends at most where the crossing cut would
-   * cap it (h·cot(θ/2) + passMargin·h before the pass). */
-  extent?: "span" | "part" | "partShort";
   /** The diagram depth's tent window in arc length. Default
    * look.depthWindow × (look.ctrlArc ?? 1). */
   depthWindow?: number;
@@ -547,8 +537,9 @@ export class FieldModel {
     });
 
     // 3. Spans and clusters (§3.4). K909: the geometric group's walk reads
-    // distances before the spans exist, so it gets a grid of its own.
-    if (k883 && (params.groups === "geo" || params.extent === "part" || params.extent === "partShort")) this.grid = new SegGrid(this.polys, h, 4 * h);
+    // distances before the spans exist, so it gets a grid of its own; so
+    // does K922's part walk (partExtents, every k883 build since K934).
+    if (k883) this.grid = new SegGrid(this.polys, h, 4 * h);
     const jSpans = this.buildSpans(scene, k883, g2Of);
     let rMax = 0;
     for (const c of this.corners) {
@@ -957,12 +948,11 @@ export class FieldModel {
       const near = h / Math.tan(Math.max(th, 1e-3) / 2) + pm * h;
       setCap(ji, ai, Math.max(0, d - near), `crossing ${cx}'s pass ${(d / h).toFixed(2)}h out`);
     };
-    // K922 extent "part": walk each uncapped arm on from its span's end while
-    // its cross-section still overlaps another member of its cluster.
-    // K934 "partShort": the same walk, stopped short of every crossing pass.
-    const partWalk = this.params.extent === "part" || this.params.extent === "partShort";
-    const partStop = this.params.extent === "partShort" ? { passes, pm } : null;
-    if (partWalk) ext = this.partExtents(ext, caps, clusterRoots, partStop);
+    // K922's part walk (the only extent since K934): walk each uncapped arm
+    // on from its span's end while its cross-section still overlaps another
+    // member of its cluster.
+    const partWalk = k883;
+    if (partWalk) ext = this.partExtents(ext, caps, clusterRoots);
     const tries = new Map<number, number>();
     let sp = this.rawSpans(ext, caps);
     for (let it = 0; it < 12; it++) {
@@ -1029,7 +1019,7 @@ export class FieldModel {
     let ext1 = this.armExtents(true);
     // K934: the part walk again at the final caps and corners, so its
     // extents reach the final spans (K922's stopped at the cut loop).
-    if (partWalk) ext1 = this.partExtents(ext1, caps, clusterRoots, partStop);
+    if (partWalk) ext1 = this.partExtents(ext1, caps, clusterRoots);
     // K909: the walk again at the final caps and corners (the fills it reads).
     if (geo) {
       this.geoGroups = new GeoGroups(this, this.armCaps);
@@ -1041,39 +1031,27 @@ export class FieldModel {
   }
 
   /**
-   * K922 extent "part": per arm whose span ends short of its cap, walk on
-   * from the span's end in h/8 steps (up to 12h) while some point of its
-   * cross-section lies inside another member of its cluster: another arm's
-   * span's tube (on the walker's own chain only away from the walker), or a
-   * corner fill of the cluster. The extent becomes the last overlapping
-   * step's distance − margin, so the span ends W past the parting; caps
-   * clamp it (rawSpans). Spans and clusters are rebuilt and the walk rerun
-   * until nothing moves (4 rounds at most). K934 `stop` ("partShort"): the
-   * new span end stays at or before the crossing cut's distance of every
-   * crossing pass ahead on the arm's chain (h·cot(θ/2) + pm·h before it),
-   * so the walk never carries an arm into a crossing's overlap; an arm
-   * already that close does not walk.
+   * K922's part walk, the only extent since K934 (its "span", the corner
+   * extent alone, and "partShort", the walk stopped short of crossing cuts,
+   * were removed: K934_recount.md Results, step 3). Per arm whose span ends
+   * short of its cap, walk on from the span's end in h/8 steps (up to 12h)
+   * while some point of its cross-section lies inside another member of its
+   * cluster: another arm's span's tube (on the walker's own chain only away
+   * from the walker), or a corner fill of the cluster. The extent becomes
+   * the last overlapping step's distance − margin, so the span ends W past
+   * the parting; caps clamp it (rawSpans). Spans and clusters are rebuilt
+   * and the walk rerun until nothing moves (4 rounds at most).
    */
   private partExtents(
     ext0: Map<string, number>,
     caps: number[][],
     roots: (sp: [number, number, number, number][][]) => number[],
-    stop: { passes: ({ ia: number; ib: number; sa: number; sb: number; th: number } | null)[]; pm: number } | null = null,
   ): Map<string, number> {
     const h = this.h;
     const scene = this.scene;
     const ext = new Map(ext0);
     const step = h / 8;
     const us = [-0.999, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 0.999].map((u) => u * h);
-    // Per chain, its crossing passes' s and the cut's distance before each.
-    const cutBy: { s: number; near: number }[][] = this.polys.map(() => []);
-    if (stop)
-      for (const ps of stop.passes) {
-        if (!ps) continue;
-        const near = h / Math.tan(Math.max(ps.th, 1e-3) / 2) + stop.pm * h;
-        cutBy[ps.ia].push({ s: ps.sa, near });
-        cutBy[ps.ib].push({ s: ps.sb, near });
-      }
     this.partMoves = [];
     for (let round = 0; round < 4; round++) {
       const sp = this.rawSpans(ext, caps);
@@ -1126,17 +1104,9 @@ export class FieldModel {
               for (const u of us) if (this.inFill(k, a.x - a.ty * u, a.y + a.tx * u)) return true;
             return false;
           };
-          // partShort: the last hit may sit at most a step + W before the
-          // nearest crossing cut ahead (the span ends last + step + W).
-          let lim = Infinity;
-          for (const c of cutBy[pi]) {
-            const d = arm.dir * dS(p, arm.s, c.s);
-            if (d > 1e-6 * h) lim = Math.min(lim, d - c.near - step - this.W);
-          }
-          if (lim < e0) continue;
           if (!hits(e0)) continue;
           let last = e0;
-          for (let t = e0 + step; t <= Math.min(room, e0 + 12 * h, lim) && t - last < h; t += step) if (hits(t)) last = t;
+          for (let t = e0 + step; t <= Math.min(room, e0 + 12 * h) && t - last < h; t += step) if (hits(t)) last = t;
           const part = Math.min(room, last + step);
           const want = part - this.margin;
           const cur = ext.get(key) ?? h;
