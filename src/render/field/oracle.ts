@@ -129,7 +129,9 @@ export interface OracleParams {
   /** K900 (§3.4): "k900" (default with the k883 spans) refuses a same-chain
    * join that would put both passes of a crossing in one group; "k883" is
    * plain union-find, for the before renders. */
-  passJoins?: "k900" | "k883";
+  passJoins?: "k900" | "k883" | "point";
+  /** K900 probe: the crossing cut's margin past the overlap, in h (0.5). */
+  passMargin?: number;
 }
 
 /** K883 (§3.8): the corner slider's rolling-ball radius at opening θ. */
@@ -283,6 +285,7 @@ export class FieldModel {
   clusterTags: number[][] = [];
   /** K900: evalPoint joins groups by joinGroups (passJoins "k900"). */
   private refuseJoins = false;
+  private pointJoins = false;
   /** K883 census: when set, evalPoint records its candidates and groups in lastEval. */
   recordGroups = false;
   lastEval: {
@@ -513,7 +516,8 @@ export class FieldModel {
     });
     this.passTags = this.polys.map(() => []);
     this.clusterTags = this.clusters.map(() => []);
-    if (k883 && (params.passJoins ?? "k900") === "k900") this.buildPassTags(scene, jSpans);
+    this.pointJoins = params.passJoins === "point";
+    if (k883 && (params.passJoins ?? "k900") !== "k883") this.buildPassTags(scene, jSpans);
 
     this.grid = new SegGrid(this.polys, Math.max(h, this.reach / 2), this.reach + 4 * h);
 
@@ -600,6 +604,7 @@ export class FieldModel {
    */
   private buildSpans(scene: FieldScene, k883: boolean, g2Of: (c: Corner) => void): [number, number, number, number][][] {
     const h = this.h;
+    const pm = this.params.passMargin ?? 0.5;
     const ext0 = this.armExtents(k883);
     // The census's union: the rule's corners (no V: the whole overlap), no caps.
     this.naturalSpans = this.rawSpans(this.armExtents(true), null);
@@ -699,7 +704,7 @@ export class FieldModel {
       const arm = scene.junctions[ji].arms[ai];
       const p = this.polys[this.idxOf.get(arm.chain)!];
       const d = arm.dir * dS(p, arm.s, s);
-      const near = h / Math.tan(Math.max(th, 1e-3) / 2) + 0.5 * h;
+      const near = h / Math.tan(Math.max(th, 1e-3) / 2) + pm * h;
       setCap(ji, ai, Math.max(0, d - near), `crossing ${cx}'s pass ${(d / h).toFixed(2)}h out`);
     };
     const tries = new Map<number, number>();
@@ -709,7 +714,7 @@ export class FieldModel {
       let changed = false;
       passes.forEach((ps, cx) => {
         if (!ps) return;
-        const pad = h / Math.tan(Math.max(ps.th, 1e-3) / 2) + 0.5 * h - 1e-6 * h;
+        const pad = h / Math.tan(Math.max(ps.th, 1e-3) / 2) + pm * h - 1e-6 * h;
         const ha = holders(sp, ps.ia, ps.sa, pad);
         const hb = holders(sp, ps.ib, ps.sb, pad);
         if (!ha.length || !hb.length) return;
@@ -1704,9 +1709,11 @@ export class FieldModel {
       const ta = pointAt(pa, normS(pa, cx.a.s));
       const tb = pointAt(pb, normS(pb, cx.b.s));
       const th = Math.asin(Math.min(1, Math.abs(cross(ta.tx, ta.ty, tb.tx, tb.ty))));
-      const pad = h / Math.tan(Math.max(th, 1e-3) / 2) + 0.5 * h - 1e-6 * h;
-      this.passTags[ia].push({ s: cx.a.s, pad, tag: 2 * x, mate: kink ? cx.b.s : Number.NaN });
-      this.passTags[ib].push({ s: cx.b.s, pad, tag: 2 * x + 1, mate: kink ? cx.a.s : Number.NaN });
+      const pad = h / Math.tan(Math.max(th, 1e-3) / 2) + (this.params.passMargin ?? 0.5) * h - 1e-6 * h;
+      // "point": a candidate's own pass window reaches L + h (check 15's).
+      const own = this.pointJoins ? h / Math.tan(Math.max(th, 1e-3) / 2) + h : pad;
+      this.passTags[ia].push({ s: cx.a.s, pad: own, tag: 2 * x, mate: kink ? cx.b.s : Number.NaN });
+      this.passTags[ib].push({ s: cx.b.s, pad: own, tag: 2 * x + 1, mate: kink ? cx.a.s : Number.NaN });
       held(ia, cx.a.s, pad, 2 * x);
       held(ib, cx.b.s, pad, 2 * x + 1);
     });
@@ -1738,6 +1745,7 @@ export class FieldModel {
    */
   private joinGroups(cs: Cand[], cl: Int32Array, par: Int32Array, find: (i: number) => number): void {
     const n = cs.length;
+    if (this.pointJoins) return this.joinGroupsPoint(cs, cl, par, find);
     for (let i = 0; i < n; i++)
       for (let k = i + 1; k < n; k++) if (cl[i] >= 0 && cl[i] === cl[k]) par[find(i)] = find(k);
     const pairs: [number, number, number][] = [];
@@ -1755,6 +1763,35 @@ export class FieldModel {
       for (const g of this.tagsOf(cs[i], cl[i])) if (!t.includes(g)) t.push(g);
     }
     for (const [, i, k] of pairs) {
+      const ri = find(i);
+      const rk = find(k);
+      if (ri === rk) continue;
+      const a = tags[ri];
+      const b = tags[rk];
+      if (a.some((g) => b.includes(g ^ 1))) continue;
+      par[ri] = rk;
+      for (const g of a) if (!b.includes(g)) b.push(g);
+    }
+  }
+
+  /** K900 probe ("point"): every join refusable, by the members' own pass
+   * windows (L + h); cluster joins first, nearest pair first, then σ joins. */
+  private joinGroupsPoint(cs: Cand[], cl: Int32Array, par: Int32Array, find: (i: number) => number): void {
+    const n = cs.length;
+    const pairs: [number, number, number, number][] = [];
+    for (let i = 0; i < n; i++)
+      for (let k = i + 1; k < n; k++) {
+        if (cl[i] >= 0 && cl[i] === cl[k]) pairs.push([0, Math.max(cs[i].d, cs[k].d), i, k]);
+        else if (cs[i].chain === cs[k].chain) {
+          const d = Math.abs(dS(this.polys[cs[i].chain], cs[i].s, cs[k].s));
+          if (d <= this.sigma) pairs.push([1, d, i, k]);
+        }
+      }
+    if (pairs.length === 0) return;
+    pairs.sort((u, v) => u[0] - v[0] || u[1] - v[1] || u[2] - v[2] || u[3] - v[3]);
+    const tags: number[][] = Array.from({ length: n }, () => []);
+    for (let i = 0; i < n; i++) tags[i] = this.tagsOf(cs[i], -1);
+    for (const [, , i, k] of pairs) {
       const ri = find(i);
       const rk = find(k);
       if (ri === rk) continue;
