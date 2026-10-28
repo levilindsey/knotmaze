@@ -176,9 +176,13 @@ arm's cap is the first of:
 
 The oracle keeps each cap and its reason (`FieldModel.armCaps`), and the
 round corners are fitted inside the caps (§3.8). Checks 15 and 16 test it.
-Left on muse_hash at cr 3 (#15, 347 of 350): crossings 77 and 346, kink
-loops on one chain that #15 reports as joined by the same-chain rule, and
-292, held through cluster 68 (j123, j139, j140). None is diagnosed yet.
+Left on muse_hash at cr 3 (#15, 349 of 350): crossing 292. Its over pass
+(chain 84) lies in no span, but the same-chain rule (σ 3.14h) links it
+through chain 84's own candidates to a cluster-68 arm starting 5h along
+that chain, and cluster 68 (j123, j139, j140) holds the under pass. The
+cut sees a pass only within its pad of an arm's far end (2.8h at 47°),
+short of σ's reach. Open: pad by σ too, or keep σ joins out of a cluster
+that holds a crossing's other pass.
 
 The span's margin keeps the rule continuous: just outside it an arm alone
 draws exactly what the junction group draws there.
