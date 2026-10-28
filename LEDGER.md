@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K932.
+Next free ID: K934.
 
 ## Waiting on Levi
 
@@ -291,10 +291,10 @@ Next free ID: K932.
 - **K868** · Border look, junctions done right: one field renderer (union within a surface, occlusion
   by depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
-  - owner: stages K922 (oracle) and K923 (Pixel bench), agents of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (since 2026-10-27 15:20; handles under K922 and K923)
+  - owner: stage K922 (oracle), agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (since 2026-10-27 15:20; handle under K922); K923 (Pixel bench) finished 16:41
   - branch: mainline; last commit: `69e304ed` (K915 merged)
   - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`; sheets A-H, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
-  - next: K922 (depth over the whole overlap, junction caps out to where arms part, sheet I) and K923 (the two-pass form timed on the Pixel) run; Levi judges sheet I (the junction extent, the hook's look); K924 attributes the label ink's artifacts; then the S3 brief, sized by K923, with G1 corners and cr 0-6 (sheet F approved), and G3-1 ported back or replaced (K892)
+  - next: K922 (depth over the whole overlap, junction caps out to where arms part, sheet I) runs; Levi judges sheet I (the junction extent, the hook's look); K924 attributes the label ink's artifacts; then the S3 brief: K915's two passes with K923's screen-space LOD and packed 32-bit label (together they fit the Pixel's 4 ms at every zoom; the coordinator's rec, Levi may object; open inputs K933), G1 corners and cr 0-6 (sheet F approved), and G3-1 ported back or replaced (K892)
   - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -482,15 +482,6 @@ Next free ID: K932.
   - evidence: `.claude/probes/K922/` in the worktree (harnesses, logs, crops, sheet I); K915's probes `.claude/probes/K915/` and the scenes `.claude/probes/K868/scenes/` (main checkout, untracked)
   - next: the brief's Order: depth over the whole overlap, the cap table, the junction extent, sheet I, then the second mechanism
   - brief: `docs/design/K922_junction_extent.md`
-- **K923** · K868 stage: S3's micro-benchmark. K915's two-pass label border (a z-buffered label
-  pass, then band strips; no search) timed on the Pixel against the 4 ms budget, with a search
-  reference against K892. `docs/design/K923_s3_bench.md`.
-  - owner: agent `a30a5b2d1787f9d9b` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 15:21, 2 h cap ~17:21)
-  - branch: none: probe-only, no commits (main checkout, untracked `.claude/probes/K923/`); last commit: n/a
-  - evidence: `.claude/probes/K923/` (the bench page, `NOTES.md`, results)
-  - next: build the two-pass page, check the phone, time it under the perf lock (brief ## Measure)
-  - brief: `docs/design/K923_s3_bench.md`
-  - env: `scripts/phone.ps1` (the phone tunnel) and the bench page's own server (`.claude/probes/K923/NOTES.md`)
 - **K925** · Cursive v5.2: remove the dip fair puts in the a/g/q bowl top before the stem cusp, fix
   the eye check's scale, fair Levi's edits on `--from-svg`, the b/v/w/p corners and body-end hooks;
   build v5.2. `docs/design/K925_cursive_v52.md`.
@@ -778,9 +769,15 @@ Every other item below waits on the trigger it names.
 - **K931** · Cursive capitals, once the lowercase settles: traced from the same font, entering from
   above or below, or from a direction kept within rules (Levi, 2026-10-27).
   `K863_trace.md` ## Levi's calls, "Capitals, later".
+- **K932** · `scripts/bench_frame.mjs` times only CPU submission: Chrome's WebGL `finish()` doesn't
+  wait for the GPU (K923: 0.0-0.1 ms read for 3.8 ms of GPU work). End each frame with a 1-px
+  `readPixels`, recheck the GPU times taken with it, fold in K923's runner. `K923_s3_bench.md` ## Handoff.
 
 ## Residuals (known, not fixed)
 
+- **K933** · S3's open inputs from K923: the uniform LOD's look (facets on kink loops, twist eyes?);
+  the packed label's budget (255 chains and clusters, 2048 s steps, 32 z; no fill/cap/closed flags);
+  stand-in switch strips; no view culling at 6x. For the S3 brief; `K923_s3_bench.md` ## Handoff.
 - **K914** · Root pages (`#glyphs2`, text in the first scene) also link plain `section-rgb` in wave
   1, unused: desktop cold first frame +0.1 / +4.8 s, phone none; decide `rootPaint` before wave 1.
   K620's probe link is now `7&txt=ai#glyphs2`. `docs/design/K905_root_glsl_gate.md`.
@@ -1955,6 +1952,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K923** · S3's Pixel bench (K868): as specified 4.8-5.5 ms at fit and 2x, over the 4 ms budget; with a screen-space LOD and a packed 32-bit label 1.6-2.7 ms at every zoom (p95 at most 3.43); a disc search 4.5-6.75 ms against G3-1's 24.5-48. `K923_s3_bench.md` ## Handoff. Done in b5fff04b (2026-10-27).
 - **K917** · Cursive junction heights. Answered by Levi (2026-10-27): "sgtm"; 60 u for a, c, d, g and q; o at 86 u, chosen on the sheet ("Seems better than the other two sets"). `K863_trace.md` ## Levi's calls. Done in 95ef67d6 (2026-10-27).
 - **K916** · Cursive v5.1: whole-stroke fairing (`--split fair`), leads into a/c/d/g/o/q from the left, the join refit, the K917 sheet; leftovers in K925-K928 and K917. Done in e1daa76f (2026-10-27).
 - **K918** · K909's oracle leftovers (extra ink, #16's group on top, sheet F's spur, hairlines, seam and speck, S3's far pieces, geo's shorter spans). Dropped: superseded by K924: K915's label ink removes S3's far pieces and most group-on-top ends; the rest moved to K924 (2026-10-27).
