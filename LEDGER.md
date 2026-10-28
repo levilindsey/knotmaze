@@ -477,14 +477,6 @@ Next free ID: K909.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
-- **K900** · K868 oracle stage after K883: #15's crossing 292 on muse_hash (pad the cut by sigma, or
-  keep same-chain joins out of a cluster holding the other pass), then the 208 'other' missing
-  border samples (27 blue stretches on sheet B2). `docs/design/K883_oracle_borders.md` handoff.
-  - owner: agent `a1209629c2d110cd9` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 09:48, 2 h cap ~11:48)
-  - branch: `k900-oracle`, worktree `.claude/worktrees/k900-oracle`; last commit: `2208d844`
-  - evidence: `.claude/probes/K900/` (census JSON, logs, crops); sheets in `.claude/probes/K868/sheets/` (main checkout, untracked)
-  - next: redirected 10:28 (Levi: B2 shows about twice the blue-marked misses): census independent of the groups (image free ends + geometric should-show), sheet B3 marking each source; then mechanisms, extra ink, sheet F artifacts (F lgtm)
-  - brief: `docs/design/K900_oracle_holes.md`
 - **K902** · Cursive v3 stage 2: take each join frame on the connector side of the body/connector
   overlap and re-cut the bodies (exits now 14-61 deg low; likely fixes ma, la, ic, po, pp, ps, og),
   then the worst leads and tails. `.claude/probes/K863/trace/NOTES.md` ## v3.
@@ -1926,6 +1918,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K900** · Oracle holes: crossing 292 fixed (same-chain joins refused, crossing cut at L + h), census positions, two independent checks (geometric truth, image free ends), sheet B3; handoff in its brief. Done in 263bc134 (2026-10-27).
 - **K893** · Phone round 2026-10-27b: G3-1 undone at head by hand wins 14.5 / 15.9 / 11.2 ms (dense / max-fabric / knot) but is not clean; the week's steps are K573 1b (knot -21.4), K620's root GLSL (+22.6 max-fabric) and K854's outline (+15.3). Done in 69ac4e03 (2026-10-27).
 - **K891** · K883's sheets B2 / F / worst12. Answered 2026-10-27: B2 shows about twice the blue-marked misses (census undercounts; K900 redirected), F lgtm (cr 0-6, default 3).
 - **K886** · K863 cursive v3: letter bodies with join frames, G2 connectors per letter pair, template and word sheet. Done 2026-10-27 (no commit; outputs in `.claude/probes/K863/trace/out6/`, template on Drive `K863/`; follow-ups K901-K903).
