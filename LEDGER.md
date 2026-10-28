@@ -474,14 +474,6 @@ Next free ID: K905.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
-- **K893** · Phone bisect of `d0406df..01df23a5` on K539's frozen cells (dense +16 ms, max-fabric
-  +30, knot gs24 -35; `0753b3c8`, K573 step 2, is the knot candidate), and G3-1 reverted at head for
-  K892. `docs/design/K156.md`, round 2026-10-27b.
-  - owner: agent `a11726d3815bf8425` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (sonnet, started 2026-10-27 09:44; cap extended to 11:05 for step 2)
-  - branch: `worktree-agent-a11726d3815bf8425`, worktree `.claude/worktrees/agent-a11726d3815bf8425`; last commit: `727f8593`
-  - evidence: `.claude/probes/rounds/2026-10-27b/` (main checkout, untracked; step 2 in `g1/g31/`); the revert on branch `k893-g31-revert` (`d8caafa3`, worktree `.claude/worktrees/k893-g31-revert`, never pushed)
-  - next: step 2 done: G3-1 undone at head by hand (approximate: the thread reveal's programs break), render sync -15.0 / -16.0 / -11.1 ms dense / maxfab / knot24, ABBA; bisect S1-S3 to 11:05; then handoff, report
-  - brief: `docs/design/K156.md`, round 2026-10-27b
 - **K900** · K868 oracle stage after K883: #15's crossing 292 on muse_hash (pad the cut by sigma, or
   keep same-chain joins out of a cluster holding the other pass), then the 208 'other' missing
   border samples (27 blue stretches on sheet B2). `docs/design/K883_oracle_borders.md` handoff.
@@ -1918,6 +1910,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K893** · Phone round 2026-10-27b: G3-1 undone at head by hand wins 14.5 / 15.9 / 11.2 ms (dense / max-fabric / knot) but is not clean; the week's steps are K573 1b (knot -21.4), K620's root GLSL (+22.6 max-fabric) and K854's outline (+15.3). Done in 69ac4e03 (2026-10-27).
 - **K891** · K883's sheets B2 / F / worst12. Answered 2026-10-27: B2 shows about twice the blue-marked misses (census undercounts; K900 redirected), F lgtm (cr 0-6, default 3).
 - **K886** · K863 cursive v3: letter bodies with join frames, G2 connectors per letter pair, template and word sheet. Done 2026-10-27 (no commit; outputs in `.claude/probes/K863/trace/out6/`, template on Drive `K863/`; follow-ups K901-K903).
 - **K883** · K868 oracle: the K883 span rule (no group holds both passes of a crossing) and the `cr` mapping; missing border samples 1540 to 208; follow-ups K891, K898-K900. Done in 5048670e (2026-10-27).
