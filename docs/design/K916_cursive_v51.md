@@ -198,3 +198,56 @@ them as time allows.
    it). Order step 5 waits.
 
 The stop rule is unchanged: 2 h from your start.
+
+## Handoff (2026-10-27 15:00, the K916 stage agent)
+
+Stopped at the cap with the redirect's items 1-4 built except one piece of
+item 1, and Order step 5 waiting as the redirect says. Nothing is
+committed. Everything is in `.claude/probes/K863/trace/` (untracked):
+tools `tools/*_k916.py`, outputs `work9/` and `out9/`, and the record in
+`NOTES.md` `## v5.1` (`### Status`, `### Results`, `### Rerun commands
+(K916 v5.1)`, which `work9/dbg/rerun_check.ps1` runs line by line).
+
+Done:
+- Item 1: `tools/fair_k916.py` (its header is the spec), behind
+  `bodies_k916 --split blend|fair`, blend the default. v5.1 uses fair
+  (`work9/fair`). Off the trace: max a 5.03 u, q 4.03 u, the rest
+  under 3.5 u; means 0.07-0.47 u.
+- Item 2: `tools/eye_k916.py`: `out9/split_check.txt`,
+  `out9/split_combs.svg`. Passes over ratio 3: v5 17 of 48, fair 7.
+  Retrace-cusp hooks 0.62-12.46 in v5, 0.04-0.32 in fair.
+- Item 3: `gen_k916.virtual_lead` (`words_k916 --fused-lead
+  virtual|none`, virtual the default). A word starting with a, c, d, g,
+  o or q gets the low connector a virtual n would make into the
+  letter's junction. No lead or tail crosses its own letter. Crossings
+  left: ve into e's body at 21 deg (font: no) and ot at 15 deg (font:
+  yes); the tails after s, d and x no longer cross.
+- Item 4: the join refit on the faired bodies, the v5.1 sheets
+  (`out9/cursive_v51.svg`, `_words`, `_review`) and
+  `out9/k917_junctions.svg`.
+
+Open, in order:
+1. `--from-svg` reads Levi's edited curves as drawn. It does not run
+   them through the fairing yet (item 1's last sentence). Next: in
+   words_k916's from-svg path, fit each edited stroke with fair_k916
+   (the same switch), then rerun the from-svg line and compare it with
+   the direct run.
+2. Order step 5, the generated e: the cause of ze 66.9, be, ve and oe
+   (about 31 u), en 7.1 and er 8.4.
+3. Over ratio 3 in fair: the tops of b, v and w (each body ends before
+   its passes part 6 u), and p's entry and loop (p@621 23.6, p@3562
+   pass 2 13.9).
+4. Cusps at a body's end keep some hook (c 3.89, d 5.51, p 3.60).
+5. 16 of 26 letters stop at nfev 600 (status 0); a and q move 5.0 and
+   4.0 u off the trace.
+6. For Levi: the fused junction's height (60 u, or `--fuse-junction
+   font`), and e into o: at 86 u (`--fuse-y 358`) eo reads 1.13-1.18 u,
+   against 5.14 u at 60 u.
+
+Rerun check (14:55-15:11): `work9/dbg/rerun_check.ps1` ran the 18 rerun
+command lines verbatim, every one exit 0, and all 27 watched outputs came
+out byte-identical; the from-svg copy matches the direct run within
+0.010 u (`NOTES.md`, the paragraph after the rerun commands).
+
+Restart: re-read this brief and `NOTES.md` `## v5.1`, then take Open
+item 1.
