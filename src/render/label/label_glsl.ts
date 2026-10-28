@@ -8,6 +8,10 @@
 //   WIDE    x = chain + 1 | fill << 16 | cap << 17 | closed << 18,
 //           y = s (float bits), z = cluster + 1, w = z (float bits)
 //
+// PACKED tubes also write s exactly (float bits) to a second target, S
+// (R32UI, K868 S3a3): the fill pass's yield reads it there, not the 11-bit
+// s of the word.
+//
 // z is not in the packed word: the depth buffer (D2, DEPTH_COMPONENT32F)
 // carries it. Tubes write 0.5 - v and fills 0.09 * (0.5 - v), with
 // v = 0.45 zn + 2e-4 rank / nKeys + 2e-6 s / smax (S3a v6's tube depth),
@@ -46,7 +50,8 @@ export const TUBE_FS = `${HEAD}
 uniform float uH; uniform float uEps; uniform float uZmin; uniform float uZinv; uniform float uRinv; uniform float uSinv;
 in vec2 vP; flat in vec4 vAB; flat in vec4 vS; flat in vec4 vK; flat in vec4 vN; flat in vec2 vC;
 #ifdef PACKED
-out uint o;
+layout(location = 0) out uint o;
+layout(location = 1) out uint oS;
 #else
 out uvec4 o;
 #endif
@@ -67,6 +72,7 @@ void main() {
 #ifdef PACKED
   uint s11 = uint(clamp((s - vC.x) * vC.y, 0.0, 1.0) * 2047.0 + 0.5);
   o = chain | (s11 << 8) | (cl << 19) | (cap << 28) | (closed << 29);
+  oS = floatBitsToUint(s);
 #else
   o = uvec4(chain | (cap << 17) | (closed << 18), floatBitsToUint(s), cl, floatBitsToUint(z));
 #endif
@@ -86,6 +92,9 @@ void main() {
 
 export const FILL_FS = `${HEAD}
 uniform sampler2D uData; uniform usampler2D uT;
+#ifdef PACKED
+uniform usampler2D uS;
+#endif
 uniform float uH; uniform float uSigma; uniform float uZmin; uniform float uZinv; uniform float uRinv; uniform float uSinv;
 in vec2 vP; flat in vec4 vQ; flat in vec4 vU; flat in vec4 vJ; flat in vec4 vO; flat in vec2 vX;
 #ifdef PACKED
@@ -136,8 +145,7 @@ void main() {
   if (tch >= 0) {
     if (tcl == J) discard;
 #ifdef PACKED
-    vec4 ch = tx(tch);
-    float ts = ch.x + float((T.x >> 8) & 2047u) / 2047.0 * ch.y;
+    float ts = uintBitsToFloat(texelFetch(uS, ivec2(gl_FragCoord.xy), 0).x);
 #else
     float ts = uintBitsToFloat(T.y);
 #endif
