@@ -4592,3 +4592,11 @@ Shortened in LEDGER.md 2026-10-27 (malformed: no `·`, code in backslashes or Do
 Shortened in LEDGER.md 2026-10-27 (malformed: no `·`, code in backslashes or Done text left open). Full text:
 
 - **K832** SDF + border residuals (Levi, 2026-10-22). Done in faa56bce (2026-10-23). (a) SDF gaps: bindGap points fabric_sdf's gapSource at the scene's gap table (SDF shaders bind/re-point from it), and `CrossingGaps.assignGapIds` now packs G3 RANGES per chain instead of per strip fill (SdfPass has no fills, so it wrote zero entries; live probe after: 365 windows / 52 chains in rp=sdf, matching strip; regression test in `test/render/sdf_gap_bind.test.ts`). (b) Junction interiors: fans draw rim only in border; ribbons cut within the joinery wedge reach of fused ends (`kJunctionCut`; caps carry +4 at fused ends via `capWithFused`) in both passes; highlights still draw inside. (c) SDF border darkness/aliasing: the across coordinate comes from the winning cone (`side01`). Stills `.claude/probes/K832/`; G3-3 SDF-by-default flip still gated on Levi's phone look.
+
+## K962
+
+Shortened in LEDGER.md 2026-10-28 (v5.8's numbers added).
+
+- **K962** · Cursive joins: v5.5's seam spikes ("minimum", "hippo": p to o, h's entry) and m's exit hook; v5.7's 17
+  rows worse by over 0.25 u (fo 3.10 -> 4.19, ot, br, be, og, ow, op, es, ov, ev, ug, ju, kn, qu, py; each on a moved
+  body end, kn unexplained); minimum's um tooth and last m spike. `work15/dbg/fid_cmp_v57.txt` in K863's probes.
