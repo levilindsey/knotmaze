@@ -4558,3 +4558,37 @@ The history that had accumulated after the ID on the ledger's Next free ID line,
 Shortened in LEDGER.md 2026-10-27 (it was a numbered line no tool parsed). Full text:
 
 - **K814** · A params collection for cursive and the other pre-defined-shape injections (Levi, 2026-10-22). Today the knobs are scattered single fields in the flat param table (`text`, `cartouche`, `emblem`, `cartoucheShape`, `shape`, the anchors and the K115 look params in `src/ui/url_state.ts`), and the shape definitions live apart (`src/core/shapes.ts` SHAPES/SHAPE_FNS analytic masks; the Hershey glyph data and emblem ids in the text code). Wanted: one collected home - a shape-injection param group (a typed subset the panel, codec and daily rules consume from one place) and a shape registry beside it, so a new pre-defined shape (cursive word, cartouche emblem, silhouette mask, title thread) is added in one spot with its params, choices and tags. Design first; no behavior change, defaults and links bit-identical. Stages 1-3 done in K818: src/core/shape_injection.ts (ShapeInjectionParams, SHAPE_INJECTION_PARAMS descriptors, SHAPE_REGISTRY) with test/core/shape_injection.test.ts pinning defaults/codec indices 1,2,3,163-168/daily flags; UrlParams extends the group (flat, EMBLEM_CHOICES re-exported); SceneParams picks the subset. Stage 4 done in K822 as the Text & emblem subfolder (the five rows grouped in Design; building the rows from SHAPE_INJECTION_PARAMS themselves remains a tidy-up); stage 5 (folding SHAPE_FNS into registry entries) stays optional.
+
+## K610
+
+Shortened in LEDGER.md 2026-10-27 (malformed: no `·`, code in backslashes or Done text left open). Full text:
+
+- **K610** Raised in K827: the \gcr\ try key (K792) rides PhysicsTuning.grabChase into both hosts; MAX_SLIDE_GRABBED 0.6 -> 0.8 on measures (desktop daily drag probe .claude/probes/K823/gcr_measure.mjs: frame p50 72.3 ms at 0.6, 55.1 at 0.8, 55.1 at 1.0, 0.8 repeated 55.2). The feel call on the drag itself stays Levi's; \&gcr=1.0\ tries the higher cap. (Was: · Grab chase rate, a feel A/B (0.6 per constraint iteration; try 0.8 and 1.0): 4 substeps
+  reach 90% of a drag step today; at 2 the daily's physics work drops from 53 to about 26 ms.
+  A feel call (K370's 50 ms needs it or 2.5x cheaper substeps). Levi (2026-10-22): the recs stand - raise the chase rate and measure. `docs/design/K370.md`.
+
+## K313
+
+Shortened in LEDGER.md 2026-10-27 (malformed: no `·`, code in backslashes or Done text left open). Full text:
+
+- **K313** Stage 1 (desktop) done in K824: src/loader/ (geometry + tests, OffscreenCanvas worker, boot, vite plugin inlining into index.html, static SVG first paint measured 90-110 ms); main adopts via window.__knotBootLoader, createLoader stays the fallback. Left: stage 2 phone measures in K156's next pass, then camera/trail tuning with Levi. (Was: · A loader that looks like the maze (`docs/design/K313_loader.md`; Levi 10-14, approved):
+  a trefoil maze with over/under gaps, fixed-length trail, drawn by an OffscreenCanvas worker
+  inlined in `index.html` (static SVG first). After K307's warm-up; measure the phone's first frame.
+
+## K830
+
+Shortened in LEDGER.md 2026-10-27 (malformed: no `·`, code in backslashes or Done text left open). Full text:
+
+- **K830** Junction corner style (Levi, 2026-10-22). Done in e5fbdff4 (2026-10-23); stills `.claude/probes/K830/`. One `cornerRoundShare` slider (codec 245, `crs`, LOOK_KEYS; default 1 = today's rounded wedges, 0 = every wedge's flanks meet at the clamped miter). Intermediate shares rank wedges once from construction geometry: broad gaps round first, narrow points stay sharp, addressed by directed arm pair so settling cannot flip a corner. Builders pin where authorable (`Node.cornerPin`; glyph spur root/landing pins) through `ParticleSystem.fusedJunctionPins`; emergent mask junctions follow the global share.
+
+## K831
+
+Shortened in LEDGER.md 2026-10-27 (malformed: no `·`, code in backslashes or Done text left open). Full text:
+
+- **K831** Cursive a/i redesign (Levi, 2026-10-22). Done in 3b5c520f (2026-10-23); design: `docs/design/K831.md`, stills `.claude/probes/K831/`. FOLLOW-UP (Levi rejected the first stills, 2026-10-23): entry moved low to (14, 8) so it rises north-east tangentially into BL; a's top levelled into the corner; tail is one segment from a second declared corner at BR (two-segment tails floor at R 10.8 GU); the i's shipped form is the exact tangent join (fork 0, all three arms collinear on (1, 3), J raised to (22, 50) so the folded arms part); the tittle is a dedicated closed dot loop (`dotLoop`, `Glyph.dots`), not a segment; landing-spur tips no longer strand a degree-2 END node. Stills `.claude/probes/K831/followup2/`; lint pins moved in `test/core/glyph_lint.test.ts`. The a is one strand: entry joins LOW at the oval's bottom-left (BL) collinear with the bottom arc, body forks up the left side, declared corner (`Glyph.corners`) turns down the stem, bottom arc lands on the stem at BR (`SpurDef.land`), exit tangential; zero crossings. i's entry fork is the default 15 degrees at a lower J. Deviation from the brief as first recorded: BL draws as a fork, not a K580 tapered root — the root's width grew 0.022-0.033 LU toward J in every searched variant (bound 0.01, K643-calibrated); the pre-K831 tangent a survives as `A_TANGENT` (`#glyphs2=atangent`) carrying the K580/K643 tests. General letter rule stands: skeleton corners join as cusp corners, stroke overlaps stay crossings, stroke landings stay tangent/fork merges. K718 calls 2/3 still open.
+
+## K832
+
+Shortened in LEDGER.md 2026-10-27 (malformed: no `·`, code in backslashes or Done text left open). Full text:
+
+- **K832** SDF + border residuals (Levi, 2026-10-22). Done in faa56bce (2026-10-23). (a) SDF gaps: bindGap points fabric_sdf's gapSource at the scene's gap table (SDF shaders bind/re-point from it), and `CrossingGaps.assignGapIds` now packs G3 RANGES per chain instead of per strip fill (SdfPass has no fills, so it wrote zero entries; live probe after: 365 windows / 52 chains in rp=sdf, matching strip; regression test in `test/render/sdf_gap_bind.test.ts`). (b) Junction interiors: fans draw rim only in border; ribbons cut within the joinery wedge reach of fused ends (`kJunctionCut`; caps carry +4 at fused ends via `capWithFused`) in both passes; highlights still draw inside. (c) SDF border darkness/aliasing: the across coordinate comes from the winning cone (`side01`). Stills `.claude/probes/K832/`; G3-3 SDF-by-default flip still gated on Levi's phone look.
