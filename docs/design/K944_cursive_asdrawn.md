@@ -160,3 +160,76 @@ stage), the bodies' smoothness, K961's node counts, K927 and capitals
   - a `Ledger items` list (follow-ups and residuals; a question for Levi
     only about what shows on screen, in plain words);
   - K863's current handle fields.
+
+## Handoff
+
+K944 stage agent, 2026-10-28 03:26 to 04:45 (-07:00). Steps 1-5 are
+done, in the main checkout on master, and nothing is committed. All the
+work is in `.claude/probes/K863/trace/` (untracked): tools in
+`tools/*_k944.py`, scripts in `work17/dbg/`, work files in `work17/`,
+outputs in `out17/`. The findings and every rerun command are in
+`NOTES.md` `## K944`.
+
+Done:
+- **Round trip.** A plain Inkscape CLI save keeps every path `d`, every
+  attribute and `sodipodi:nodetypes`. It only adds ids, a `<defs>` and a
+  namedview, and re-indents the file. It reads back within 6.05e-7 u.
+  The whole build from the saved file matches v5.8's direct build:
+  - bodies and join params match value for value;
+  - words.svg, the nodes sheet and the review PNG match byte for byte.
+  An edited path is rewritten as relative commands at 8 significant
+  digits, and a handle can lose up to 4.39e-4 u.
+- **Reader and build script.**
+  - `tools/asdrawn_k944.py` reads the file (`read`, `map`, `refs`,
+    `floor`).
+  - `work17/dbg/build_from_svg.ps1 <template> [-Name] [-Letters]` runs
+    the whole build in v5.8's order.
+  - The map is `work17/template_map_k944.json`.
+- **Scripted edits.** There are nine, in `work17/dbg/edits_k944.py`.
+  - They are node-tool edits emulated in Python, then saved through the
+    Inkscape CLI.
+  - Edited strokes read back 0 u from the file, and untouched ones 0 u.
+  - Derived points follow the edits. There are 12 kink lines, all at an
+    edited node or its neighbour.
+  - The Joins-layer edit is reported, not read.
+- **Build from the edited copy.**
+  - Outputs: `out17/words_edit_test.svg` (+ `.png`),
+    `out17/combs_edit_test.svg`, and the crops
+    `work17/edit/crops/1_d_fused.png` to `8_x_move.png`.
+  - Joins stay G2 to the bodies as drawn.
+  - Rough fails once: n's facet is 0.0056, over the 0.0053 limit (the
+    retrace's far-fork kink).
+- **K950.** The picture is `out17/e_tails_k950.svg`, five words, long
+  tail beside short. Measured from the tail's lowest point:
+  - long: 51.2 u, rising 23.7 u;
+  - short: about 30 u, rising 10.5 u.
+
+Open:
+- **No GUI test.** The edits are emulated, and Inkscape's GUI node tool
+  was never driven. Levi's first real edit is the real test.
+- **Untouched letters' outputs still move.** Their bodies stay put, but
+  three things around them move:
+  - joins: join_k925's class and global refit (minimum's joins move
+    0.22-0.62 u);
+  - e variants: evar_k926's 9-point grid, where Nelder-Mead never
+    improves. A 2.5 u e edit moved variant o's sJ a whole 60 fu step,
+    and the variant e's moved 2.65-4.58 u;
+  - word-final e tails: they follow the reference medians and moved
+    8.2-8.9 u after the n and d edits.
+  This is the next stage's scope (the join fixes).
+- **Retrace edits kink.** When one pass of a retrace is edited, the
+  other pass follows, but the far fork's outer handle does not. n kinks
+  16 deg there.
+- **Sideways letter moves.** "boxes" keeps a sideways move of the whole
+  letter, but "fox" mostly absorbs it: x moved (-0.74, -3) for a
+  (+4, -3) drag. Not traced.
+- **Node deletes.** Deleting a node refits its neighbours (p: up to
+  1.07 u) and changed p's entry frame, so joins into p moved up to
+  0.91 u. Not traced.
+- **K950 tail lengths.** The words draw the short tail about 30 u from
+  its lowest point, but tails_k926 reports 33.9 u for the letter. The
+  final-e shear is not the cause (checked). Not traced further.
+
+Next: Levi edits `out17/cursive_template.svg` in Inkscape, in the
+Letters layer only. Run `build_from_svg.ps1` on Levi's file, then the
+join-fix stage (K962, K948, K946, K949, K937).

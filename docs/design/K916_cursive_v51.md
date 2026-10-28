@@ -10,7 +10,7 @@ v5 removed the bumps where an overstroke starts or stops: the split
 curvature ratio peaked at 120.5 in v4 and 4.8 in v5. It also built the
 fused entries and the high entry mode. But its join refit made some
 pairs worse, and K904's steps 4 and 5 (leads and tails, the generated e)
-never started. Levi edits v5's template next, and his edits come back
+never started. Levi edits v5's template next, and those edits come back
 through `--from-svg`. The generator around the template should be at its
 best by then.
 
@@ -38,7 +38,7 @@ font's does. `--r-straight` can stay as it is, with no further work.
   (copies, so v5 still reruns), and its outputs to `work9/` and `out9/`.
   Leave `work4`-`work8` and `out4`-`out8` as they are.
 - Keep v5's template format. Levi may edit `cursive_v5.svg` while you
-  work, and v5.1's `--from-svg` must read his edits unchanged.
+  work, and v5.1's `--from-svg` must read Levi's edits unchanged.
 - The font, `OFL.txt`, the venv and Inkscape are as in K904. Run Python
   with the venv's interpreter and `-I`, scripts from `tools/`, and data
   paths as arguments.

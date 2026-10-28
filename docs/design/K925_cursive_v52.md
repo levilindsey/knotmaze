@@ -122,7 +122,7 @@ Before -> after:
   over 3: 35 / 12 / 7. Still flagged: the tops of b, v and w, p's entry
   and loop, r@668, and t's cusp.
 - Step 3, Levi's edits: `words_k925.py --from-svg <svg> <map> --split
-  fair` fairs only the strokes he changed. An unedited copy reads back
+  fair` fairs only the strokes Levi changed. An unedited copy reads back
   within 0.010 u on all 68 rows, and the faired edits pass the eye
   check. However, the fairing's length scale (30 fu) also undoes
   deliberate edits: it keeps only 23% of a 3 u node drag.

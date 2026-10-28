@@ -14,7 +14,7 @@ connector:
 
 - 6 need a body variant that the font swaps in: ve 43.1, ze 73.9, ot 22.0,
   er 8.4, en 7.3 and ov 4.4 u. Whether Levi draws those variants or the
-  generator handles them is his decision (ledger K901), not this stage's.
+  generator handles them is Levi's decision (ledger K901), not this stage's.
 - 11 are the generator's: ma 14.3, la 11.1, ic 6.9, fo 6.6, po 6.3, wo 6.2,
   pp 6.1, ps 5.6, hi 5.1, og 4.8 and bo 4.4 u.
 
@@ -32,8 +32,8 @@ overlap, inside the junction blob, so they carry the blob's own turn:
   direction and swing onto the font's within about 40 fu. 7 of the 11
   (ma, la, ic, po, pp, ps, og) touch one of these frames.
 
-Levi edits the template next, and every frame on it is a tick he reads and
-may move, so the frames must be right before he starts. The leads and tails
+Levi edits the template next, and every frame on it is a tick Levi reads and
+may move, so the frames must be right before Levi starts. The leads and tails
 are the other large residuals: leads u 48.5 and z 27.8 u; tails b 24.2,
 c 22.6, p 19.4, l 18.0, t 16.0 and s 14.1 u.
 

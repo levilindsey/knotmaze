@@ -7,8 +7,8 @@ Coordinator, 2026-10-27 11:40. One stage, opus, 2 h cap. Follows K902
 
 v4 (`.claude/probes/K863/trace/out7/`, Drive `K863/cursive_v4.svg`) takes
 every join frame by the walk rule and fuses a's entry onto its body. Levi
-edits the template next, so the template's structure has to follow his
-calls before he starts (`K863_trace.md` ## Levi's calls, binding):
+edits the template next, so the template's structure has to follow Levi's
+calls before Levi starts (`K863_trace.md` ## Levi's calls, binding):
 
 - a, c, d, g, o and q get a junction where the entry meets the body, about
   halfway between the baseline and the x-height (about 60 u). Above it the
