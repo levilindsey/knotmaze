@@ -116,6 +116,22 @@ export interface OracleParams {
    * "inset" (default), the same distance from V along the bisector; or
    * "tangent", the same tangent points t_A and t_B. */
   cornerSize?: "inset" | "tangent";
+  /** K883 (§3.4): "k883" (default) caps each arm's span at its chain's end,
+   * the next junction and short of the first crossing pass that would put
+   * both passes in one group, and fits the round inside the capped spans;
+   * "s2" is S2's spans (corner extent + W + margin, uncapped), for the
+   * before renders. */
+  spans?: "k883" | "s2";
+}
+
+/** K883 (§3.8): the corner slider's rolling-ball radius at opening θ. */
+export function cornerRadius(cr: number, h: number, theta: number): number {
+  return (cr / 3) * Math.min(2 * h, 1.5 * h * Math.tan(theta / 2));
+}
+
+/** K883 (§3.8): the largest radius the slider gives, for reach and timing. */
+export function cornerRadiusMax(cr: number, h: number): number {
+  return (2 / 3) * cr * h;
 }
 
 export interface Corner {
@@ -150,6 +166,24 @@ export interface Corner {
   resQ: number;
   /** S2: the G2 curve that replaces the arc (params.cornerCurve). */
   g2?: G2Corner;
+  /** K883: the corner's arms as indexes into its junction's arms. */
+  armIdxA?: number;
+  armIdxB?: number;
+  /** K883: the radius the rule asked for, before the arm-span fit. */
+  rRule?: number;
+  /** K883: why the fit shrank the round (absent when it did not). */
+  fit?: string;
+  /** K883: no V (the arms stay closer than 2h); noVA/noVB are the arc
+   * lengths to which the two arms then merge. */
+  noV?: boolean;
+  noVA?: number;
+  noVB?: number;
+}
+
+/** K883: an arm's span cap and its cause. */
+export interface ArmCap {
+  len: number;
+  why: string;
 }
 
 export interface Cluster {
@@ -226,6 +260,23 @@ export class FieldModel {
   readonly junctionCluster: number[] = [];
   /** Per poly: [lo, hi, cluster] span intervals. */
   readonly chainSpans: [number, number, number][][];
+  /** K883: per junction, its arms' final spans [poly, lo, hi, arm index]. */
+  junctionSpans: [number, number, number, number][][] = [];
+  /** K883: the spans the rule's corners would give with no caps: the
+   * border census's notion of a junction's union. */
+  naturalSpans: [number, number, number, number][][] = [];
+  /** K883: per junction, per arm, its span cap (Infinity: none). */
+  armCaps: ArmCap[][] = [];
+  /** K883 census: when set, evalPoint records its candidates and groups in lastEval. */
+  recordGroups = false;
+  lastEval: {
+    cands: Cand[];
+    cl: number[];
+    groups: number[][];
+    inside: number[][];
+    top: number[] | null;
+    topNear: number;
+  } | null = null;
   readonly prims: Prim[] = [];
   /** Per poly: cap at the start / end vertex drawn (dead end or END cap). */
   readonly capStart: boolean[];
@@ -352,7 +403,13 @@ export class FieldModel {
     }
 
     // 2. Corners (§3.7).
-    let rMax = 0;
+    const k883 = (params.spans ?? "k883") === "k883";
+    const kind = params.cornerCurve ?? "g1";
+    const g2Of = (c: Corner) => {
+      if (kind === "g1" || !c.ok || !(c.r > 0)) return;
+      c.g2 = this.buildCornerG2(c, kind, params.cornerSize ?? "inset");
+      if (!c.g2.ok) this.diagnostics.push(`corner j${c.junction}/${c.index}: ${kind} not built (${c.g2.note}); the arc stays`);
+    };
     scene.junctions.forEach((j, ji) => {
       const m = j.arms.length;
       if (m < 2) return;
@@ -372,62 +429,22 @@ export class FieldModel {
         let r = params.rOf ? params.rOf(ji, i, theta, style) : style === "round" ? params.rRound : 0;
         if (params.webCap && params.webCap > 0) r = Math.min(r, params.webCap * Math.tan(theta / 2));
         const c = this.solveCorner(ji, i, A, a, B, b, theta, style, r);
-        const kind = params.cornerCurve ?? "g1";
-        if (kind !== "g1" && c.ok && c.r > 0) {
-          c.g2 = this.buildCornerG2(c, kind, params.cornerSize ?? "inset");
-          if (!c.g2.ok) this.diagnostics.push(`corner j${ji}/${i}: ${kind} not built (${c.g2.note}); the arc stays`);
-          else rMax = Math.max(rMax, c.g2.webA, c.g2.webB);
-        }
+        c.armIdxA = i;
+        c.armIdxB = (i + 1) % m;
+        // K883: G2 curves are built after the arm-span fit (step 3).
+        if (!k883) g2Of(c);
         this.corners.push(c);
-        rMax = Math.max(rMax, c.r);
       }
     });
-    this.reach = 2 * h + this.W + 2 * rMax;
 
     // 3. Spans and clusters (§3.4).
-    const armExt = new Map<string, number>();
-    const key = (ji: number, arm: SceneArm) => `${ji}:${arm.chain}:${arm.s}:${arm.dir}`;
+    const jSpans = this.buildSpans(scene, k883, g2Of);
+    let rMax = 0;
     for (const c of this.corners) {
-      const pa = this.polys[c.a];
-      const pb = this.polys[c.b];
-      const g = c.g2?.ok ? c.g2 : null;
-      const fa = g ? g.sA : c.r > 0 ? c.sTA : c.sVA;
-      const fb = g ? g.sB : c.r > 0 ? c.sTB : c.sVB;
-      const ea = Math.abs(dS(pa, c.armA.s, fa));
-      const eb = Math.abs(dS(pb, c.armB.s, fb));
-      const ka = key(c.junction, c.armA);
-      const kb = key(c.junction, c.armB);
-      armExt.set(ka, Math.max(armExt.get(ka) ?? 0, ea));
-      armExt.set(kb, Math.max(armExt.get(kb) ?? 0, eb));
+      rMax = Math.max(rMax, c.r);
+      if (c.g2?.ok) rMax = Math.max(rMax, c.g2.webA, c.g2.webB);
     }
-    const jSpans: [number, number, number][][] = scene.junctions.map(() => []); // [poly, lo, hi]
-    scene.junctions.forEach((j, ji) => {
-      for (const arm of j.arms) {
-        const pi = this.idxOf.get(arm.chain);
-        if (pi === undefined) continue;
-        const p = this.polys[pi];
-        const e = (armExt.get(key(ji, arm)) ?? h) + this.W + this.margin;
-        let lo: number;
-        let hi: number;
-        if (arm.dir > 0) {
-          lo = arm.s;
-          hi = arm.s + e;
-        } else {
-          lo = arm.s - e;
-          hi = arm.s;
-        }
-        if (arm.kind === "end") {
-          // Include the extension to c′.
-          if (arm.dir > 0) lo = Math.min(lo, p.s0);
-          else hi = Math.max(hi, p.s0 + p.len);
-        }
-        if (!p.closed) {
-          lo = Math.max(lo, p.s0);
-          hi = Math.min(hi, p.s0 + p.len);
-        }
-        jSpans[ji].push([pi, lo, hi]);
-      }
-    });
+    this.reach = 2 * h + this.W + 2 * rMax;
     // Union junctions whose spans overlap on a chain.
     const parent = scene.junctions.map((_, i) => i);
     const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])));
@@ -483,6 +500,247 @@ export class FieldModel {
     // 4. Primitives and their exposure (§3.5).
     this.buildPrims();
     this.buildPrimGrid();
+  }
+
+  /** Arm key for per-arm maps. */
+  private armKey(ji: number, arm: SceneArm): string {
+    return `${ji}:${arm.chain}:${arm.s}:${arm.dir}`;
+  }
+
+  /**
+   * Per arm: how far its corners reach from the root (the round's tangent
+   * point, a G2 curve's join, or V when sharp); h when it has no corner.
+   */
+  private armExtents(k883: boolean): Map<string, number> {
+    const armExt = new Map<string, number>();
+    for (const c of this.corners) {
+      const pa = this.polys[c.a];
+      const pb = this.polys[c.b];
+      const g = c.g2?.ok ? c.g2 : null;
+      let fa = g ? g.sA : c.r > 0 ? c.sTA : c.sVA;
+      let fb = g ? g.sB : c.r > 0 ? c.sTB : c.sVB;
+      // K883: a corner with no V merges its arms as far as they stay
+      // within 2h of each other (the shorter arm's whole room).
+      if (k883 && c.noV) {
+        fa = c.noVA ?? fa;
+        fb = c.noVB ?? fb;
+      }
+      const ea = Math.abs(dS(pa, c.armA.s, fa));
+      const eb = Math.abs(dS(pb, c.armB.s, fb));
+      const ka = this.armKey(c.junction, c.armA);
+      const kb = this.armKey(c.junction, c.armB);
+      armExt.set(ka, Math.max(armExt.get(ka) ?? 0, ea));
+      armExt.set(kb, Math.max(armExt.get(kb) ?? 0, eb));
+    }
+    return armExt;
+  }
+
+  /** Per junction, its arms' spans [poly, lo, hi, arm index] for the given extents and caps. */
+  private rawSpans(armExt: Map<string, number>, caps: number[][] | null): [number, number, number, number][][] {
+    const h = this.h;
+    return this.scene.junctions.map((j, ji) => {
+      const out: [number, number, number, number][] = [];
+      j.arms.forEach((arm, ai) => {
+        const pi = this.idxOf.get(arm.chain);
+        if (pi === undefined) return;
+        const p = this.polys[pi];
+        let e = (armExt.get(this.armKey(ji, arm)) ?? h) + this.W + this.margin;
+        if (caps) e = Math.min(e, caps[ji][ai]);
+        let lo: number;
+        let hi: number;
+        if (arm.dir > 0) {
+          lo = arm.s;
+          hi = arm.s + e;
+        } else {
+          lo = arm.s - e;
+          hi = arm.s;
+        }
+        if (arm.kind === "end") {
+          // Include the extension to c′.
+          if (arm.dir > 0) lo = Math.min(lo, p.s0);
+          else hi = Math.max(hi, p.s0 + p.len);
+        }
+        if (!p.closed) {
+          lo = Math.max(lo, p.s0);
+          hi = Math.min(hi, p.s0 + p.len);
+        }
+        out.push([pi, lo, hi, ai]);
+      });
+      return out;
+    });
+  }
+
+  /**
+   * K883 (§3.4): the junctions' spans. S2 ("s2"): each arm reaches its
+   * corners' extent + W + margin. K883 (default): the same, capped at the
+   * chain's end and the next junction on the chain; then, while some
+   * cluster would hold both passes of a crossing, the arm whose root is
+   * farther from its pass stops short of the pass (both arms on a
+   * repeat); then each round corner is refit inside its arms' caps.
+   */
+  private buildSpans(scene: FieldScene, k883: boolean, g2Of: (c: Corner) => void): [number, number, number, number][][] {
+    const h = this.h;
+    const ext0 = this.armExtents(k883);
+    // The census's union: the rule's corners (no V: the whole overlap), no caps.
+    this.naturalSpans = this.rawSpans(this.armExtents(true), null);
+    if (!k883) {
+      this.junctionSpans = this.rawSpans(ext0, null);
+      return this.junctionSpans;
+    }
+    // Caps: the chain's end (rawSpans clamps to it) and the next junction's root.
+    const roots: number[][] = this.polys.map(() => []);
+    scene.junctions.forEach((j) => {
+      for (const arm of j.arms) {
+        const pi = this.idxOf.get(arm.chain);
+        if (pi !== undefined) roots[pi].push(arm.s);
+      }
+    });
+    const caps: number[][] = scene.junctions.map((j) => j.arms.map(() => Infinity));
+    this.armCaps = scene.junctions.map((j) => j.arms.map(() => ({ len: Infinity, why: "" })));
+    const setCap = (ji: number, ai: number, len: number, why: string) => {
+      if (len < caps[ji][ai]) {
+        caps[ji][ai] = len;
+        this.armCaps[ji][ai] = { len, why };
+      }
+    };
+    scene.junctions.forEach((j, ji) => {
+      j.arms.forEach((arm, ai) => {
+        const pi = this.idxOf.get(arm.chain);
+        if (pi === undefined) return;
+        const p = this.polys[pi];
+        if (!p.closed) {
+          const room = arm.dir > 0 ? p.s0 + p.len - arm.s : arm.s - p.s0;
+          setCap(ji, ai, Math.max(0, room), "the chain's end");
+        }
+        for (const s of roots[pi]) {
+          const d = arm.dir * dS(p, arm.s, s);
+          if (d > 1e-6 * h) setCap(ji, ai, d, "the next junction");
+        }
+      });
+    });
+    // Crossing passes per chain, with the acute crossing angle.
+    const passes = scene.crossings.map((cx) => {
+      const ia = this.idxOf.get(cx.a.chain);
+      const ib = this.idxOf.get(cx.b.chain);
+      if (ia === undefined || ib === undefined) return null;
+      const ta = pointAt(this.polys[ia], normS(this.polys[ia], cx.a.s));
+      const tb = pointAt(this.polys[ib], normS(this.polys[ib], cx.b.s));
+      const th = Math.asin(Math.min(1, Math.abs(cross(ta.tx, ta.ty, tb.tx, tb.ty))));
+      return { ia, ib, sa: cx.a.s, sb: cx.b.s, th };
+    });
+    // Which junction arms' spans contain (pi, s).
+    const inSpan = (p: Poly, lo: number, hi: number, s: number): boolean => {
+      if (!p.closed) return s >= lo && s <= hi;
+      for (const sh of [-p.len, 0, p.len]) if (s + sh >= lo && s + sh <= hi) return true;
+      return false;
+    };
+    const holders = (sp: [number, number, number, number][][], pi: number, s: number): [number, number][] => {
+      const out: [number, number][] = [];
+      sp.forEach((l, ji) => {
+        for (const [q, lo, hi, ai] of l) if (q === pi && inSpan(this.polys[pi], lo, hi, s)) out.push([ji, ai]);
+      });
+      return out;
+    };
+    const clusterRoots = (sp: [number, number, number, number][][]): number[] => {
+      const parent = sp.map((_, i) => i);
+      const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+      const byPoly = new Map<number, [number, number, number][]>();
+      sp.forEach((l, ji) => {
+        for (const [pi, lo, hi] of l) {
+          const b = byPoly.get(pi) ?? [];
+          b.push([lo, hi, ji]);
+          byPoly.set(pi, b);
+        }
+      });
+      for (const [pi, l] of byPoly) {
+        const p = this.polys[pi];
+        for (let x = 0; x < l.length; x++)
+          for (let y = x + 1; y < l.length; y++) {
+            const [la, ha, ja] = l[x];
+            const [lb, hb, jb] = l[y];
+            let o = false;
+            if (!p.closed) o = la <= hb && lb <= ha;
+            else for (const sh of [-p.len, 0, p.len]) if (la <= hb + sh && lb + sh <= ha) o = true;
+            if (o) parent[find(ja)] = find(jb);
+          }
+      }
+      return sp.map((_, i) => find(i));
+    };
+    // Stop an arm short of a pass: the overlap of two tubes crossing at θ
+    // reaches h·cot(θ/2) along each pass; then a margin of h/2.
+    const cutAt = (ji: number, ai: number, s: number, th: number, cx: number) => {
+      const arm = scene.junctions[ji].arms[ai];
+      const p = this.polys[this.idxOf.get(arm.chain)!];
+      const d = arm.dir * dS(p, arm.s, s);
+      const near = h / Math.tan(Math.max(th, 1e-3) / 2) + 0.5 * h;
+      setCap(ji, ai, Math.max(0, d - near), `crossing ${cx}'s pass ${(d / h).toFixed(2)}h out`);
+    };
+    const tries = new Map<number, number>();
+    let sp = this.rawSpans(ext0, caps);
+    for (let it = 0; it < 12; it++) {
+      const roots2 = clusterRoots(sp);
+      let changed = false;
+      passes.forEach((ps, cx) => {
+        if (!ps) return;
+        const ha = holders(sp, ps.ia, ps.sa);
+        const hb = holders(sp, ps.ib, ps.sb);
+        if (!ha.length || !hb.length) return;
+        const ca = new Set(ha.map(([ji]) => roots2[ji]));
+        if (!hb.some(([ji]) => ca.has(roots2[ji]))) return;
+        // Both passes in one cluster: stop the arm(s) farther from their root.
+        const far = (hs: [number, number][], pi: number, s: number) =>
+          Math.max(...hs.map(([ji, ai]) => Math.abs(dS(this.polys[pi], scene.junctions[ji].arms[ai].s, s))));
+        const n = (tries.get(cx) ?? 0) + 1;
+        tries.set(cx, n);
+        const fa = far(ha, ps.ia, ps.sa);
+        const fb = far(hb, ps.ib, ps.sb);
+        if (n > 1 || fa >= fb) for (const [ji, ai] of ha) cutAt(ji, ai, ps.sa, ps.th, cx);
+        if (n > 1 || fb > fa) for (const [ji, ai] of hb) cutAt(ji, ai, ps.sb, ps.th, cx);
+        changed = true;
+      });
+      sp = this.rawSpans(ext0, caps);
+      if (!changed) break;
+    }
+    // Fit each round corner inside its arms' caps: the tangent point's foot
+    // at most cap − W from the root, so r ≤ (cap − W − |V's foot|)·tan(θ/2).
+    for (const c of this.corners) {
+      const capA = caps[c.junction][c.armIdxA!];
+      const capB = caps[c.junction][c.armIdxB!];
+      if (!(c.r > 0) || !c.ok) continue;
+      const pa = this.polys[c.a];
+      const pb = this.polys[c.b];
+      const room = () => {
+        const vA = Math.abs(dS(pa, c.armA.s, c.sVA));
+        const vB = Math.abs(dS(pb, c.armB.s, c.sVB));
+        return Math.min(capA - this.W - vA, capB - this.W - vB);
+      };
+      const over = () =>
+        Math.max(Math.abs(dS(pa, c.armA.s, c.sTA)) - (capA - this.W), Math.abs(dS(pb, c.armB.s, c.sTB)) - (capB - this.W));
+      if (!(over() > 1e-9 * h)) continue;
+      const why = capA - Math.abs(dS(pa, c.armA.s, c.sTA)) < capB - Math.abs(dS(pb, c.armB.s, c.sTB))
+        ? this.armCaps[c.junction][c.armIdxA!].why
+        : this.armCaps[c.junction][c.armIdxB!].why;
+      const r0 = c.r;
+      let r = Math.min(c.r, Math.max(0, room()) * Math.tan(c.theta / 2));
+      let fit = this.solveCorner(c.junction, c.index, c.armA, c.a, c.armB, c.b, c.theta, c.style, r);
+      for (let it = 0; it < 6 && r > 0; it++) {
+        const o = Math.max(
+          Math.abs(dS(pa, c.armA.s, fit.sTA)) - (capA - this.W),
+          Math.abs(dS(pb, c.armB.s, fit.sTB)) - (capB - this.W),
+        );
+        if (!(o > 1e-6 * h) && fit.ok) break;
+        r = Math.max(0, r - Math.max(o, 0.02 * h) * Math.tan(c.theta / 2));
+        if (r < 1e-3 * h) r = 0;
+        fit = this.solveCorner(c.junction, c.index, c.armA, c.a, c.armB, c.b, c.theta, c.style, r);
+      }
+      Object.assign(c, { ...fit, cluster: c.cluster, armIdxA: c.armIdxA, armIdxB: c.armIdxB, rRule: c.rRule });
+      c.fit = `r ${(r0 / h).toFixed(3)}h → ${(c.r / h).toFixed(3)}h: ${why}${room() <= 0 ? " (no room past V: sharp)" : ""}`;
+    }
+    for (const c of this.corners) g2Of(c);
+    const ext1 = this.armExtents(true);
+    const out = this.rawSpans(ext1, caps);
+    this.junctionSpans = out;
+    return out;
   }
 
   // -------------------------------------------------------------------------
@@ -659,6 +917,7 @@ export class FieldModel {
       vq: 0,
       resV: v.res,
       resQ: 0,
+      rRule: r,
     };
     if (!v.ok) {
       // S2: no V when the two centrelines stay closer than 2h all along
@@ -669,6 +928,15 @@ export class FieldModel {
       for (let u = 0; u <= roomA; u += 0.05 * h) {
         const pt = pointAt(pa, A.s + A.dir * u);
         maxGap = Math.max(maxGap, footInWindow(pb, pt.x, pt.y, winB[0], winB[1]).d);
+      }
+      if (maxGap < 2 * h) {
+        // K883 (§3.8): the corner with no V draws the union of its two arms
+        // as far as they overlap: no fill, no round, and its arms' spans
+        // reach arm A's far end and that point's foot on arm B.
+        const far = pointAt(pa, A.s + A.dir * roomA);
+        c.noV = true;
+        c.noVA = A.s + A.dir * roomA;
+        c.noVB = footInWindow(pb, far.x, far.y, winB[0], winB[1]).s;
       }
       this.diagnostics.push(
         `corner j${ji}/${index}: V solve residual ${v.res.toExponential(2)}` +
@@ -1383,6 +1651,7 @@ export class FieldModel {
 
   evalPoint(x: number, y: number, wantField = true): PointEval {
     const out: PointEval = { inside: false, ink: false, F: -this.dMax, top: -1, topChain: -1, topS: 0 };
+    if (this.recordGroups) this.lastEval = null;
     candidates(this.grid, x, y, this.reach, this.cands);
     const cs = this.cands;
     const n = cs.length;
@@ -1453,6 +1722,15 @@ export class FieldModel {
         topNear = near;
       }
     }
+    if (this.recordGroups)
+      this.lastEval = {
+        cands: cs.map((c) => ({ ...c })),
+        cl: Array.from(cl),
+        groups: [...groups.values()],
+        inside: insideGroups,
+        top: topG,
+        topNear,
+      };
     const describe = (g: number[]) => {
       const wins = new Map<number, [number, number][]>();
       const cls = new Set<number>();
