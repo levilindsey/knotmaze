@@ -203,8 +203,9 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   let renderDirty = false;
   // K868 S3a2: the label pass (src/render/label/label_app.ts), loaded on
   // the first repaint with the border look's label ink on and run before
-  // each app.render(); with the flag off only this check runs.
-  let labelApp: { frame(): void; dispose(): void } | null = null;
+  // each app.render() (frame) and after it (after, S3a3: the ink over the
+  // canvas); with the flag off only this check runs.
+  let labelApp: { frame(): void; after(): void; dispose(): void } | null = null;
   let labelLoading = false;
   const labelFrame = (): void => {
     const r = scene.renderer;
@@ -225,6 +226,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
         .catch((e: unknown) => console.error("K868 label pass: load failed", e));
     }
   };
+  const labelAfter = (): void => labelApp?.after();
   // K6-2: the change-detected per-frame param syncs (fabricTick): the
   // last values handed to the renderer's plucks and to the fabric, keyed
   // on the objects they were handed to (a rebuild replaces both).
@@ -473,9 +475,11 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       labelApp = null;
       labelFrame();
       app.render();
+      labelAfter();
     } else if (continuous || (closed.need & VISUAL) !== 0) {
       labelFrame();
       app.render();
+      labelAfter();
     }
     if (!continuous) {
       emptyStreak = hasWork(closed.need) || hasWork(closed.polls) ? 0 : emptyStreak + 1;

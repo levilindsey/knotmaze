@@ -29,12 +29,12 @@ export interface LabelCamera {
   ty: number;
 }
 
-interface Prog {
+export interface Prog {
   prog: WebGLProgram;
   u: (n: string) => WebGLUniformLocation | null;
 }
 
-function compile(gl: WebGL2RenderingContext, vs: string, fs: string, name: string): Prog {
+export function compile(gl: WebGL2RenderingContext, vs: string, fs: string, name: string): Prog {
   const sh = (type: number, src: string): WebGLShader => {
     const s = gl.createShader(type)!;
     gl.shaderSource(s, src);
