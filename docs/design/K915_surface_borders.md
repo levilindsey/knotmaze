@@ -340,6 +340,60 @@ K909's leftovers:
   ink has no per-side pieces; a band is wherever a label changes within
   W.
 
+**Where the label ink's free ends come from.** `fe_mech.ts` looks for a
+non-transitive triple (A ~ C ~ B with A ≁ B, Step 1's two places) among
+the labels on a disc around each free end, and, as a control, around the
+ink points 4W from it in 16 directions. `fe_mech2.ts` adds the hidden
+members (every foot that covers a disc point).
+
+| Disc | Free ends with a triple | Control ink points with one |
+|---|---|---|
+| R = W, visible labels | 47 of 100 (cap 46, one chain 1) | 17 of 395 |
+| R = W, hidden members too | 49 of 100 (cap 48, one chain 1) | 27 of 395 |
+| R = 2W, hidden members too | 53 of 100 (cap 53) | 79 of 395 |
+
+Within W, the cap triple (a foot past its span next to J's region) sits
+at half the free ends and at 7% of the nearby ink, so it is one
+mechanism: Step 1's "the hook". The other half (51) have no triple
+even counting hidden members, so a second mechanism exists. It is not
+named yet.
+
+### Step 4: sheet H
+
+`H_surface_model.png` in `.claude/probes/K868/sheets/` (README line
+added; `h.ts`, crops in `.claude/probes/K915/hcrops/`). Groups k883, cr
+3, today's ink ("group") beside the label ink, free ends in magenta:
+1. muse_hash's full frame under both.
+2. The six sites at 6x, today | label: the 4-way (j7), j111, j123, j140,
+   j149, crossing 292.
+3. The four largest changes (`hdiffs_label.json`; all add ink: d1 122
+   px, d2 117, d3 116, d4 61), today | label.
+4. The hook's candidates at 6x, on j_hook_cross and crossing 292: today
+   now; surface now, cap, carry, seam; label now.
+
+What it shows:
+- **Free ends close.** d1-d4: today's free ends (4, 3, 3, 2) close into
+  continuous borders (1, 0, 0, 0 left). The closing lines are the span
+  cuts, straight lines across an arm where its unlabelled part meets J's
+  region. They read as an arm's end drawn over the junction body, but
+  they are angular, with small notches where two cuts meet (d3, d4).
+  At d1 the closure is a sawtooth across a crowded junction.
+- **Sites.** j123 6 → 4 and j140 5 → 4 free ends: an end where a thread
+  meets an over pass closes with a line across (also at crossing 292,
+  5 → 4). The 4-way is unchanged (none), and j111 keeps its one free
+  end, a band that stops in the middle of the junction's union.
+- **New artifact.** j149 has no free ends under either ink, but the
+  label ink adds a thin spur and a speck at the bottom left, where today
+  draws nothing. This is the extra ink the census flags (Step 3), and
+  here it reads as a defect.
+- **The hook.** The label ink draws "now": j_hook_cross keeps its one
+  free end. At crossing 292, j123 and j140 the arm folding back over its
+  own through keeps its three free ends. The candidates are sheet G's
+  (now, cap, carry, under the surface ink) plus "seam". As prototyped
+  over today's primitives, seam draws a thin wedge and a dart at the cut
+  on j_hook_cross, not a clean line across the arm, so it is not a
+  usable candidate yet.
+
 ### Step 5: form B
 
 Not adopted. `formb.ts` grids a scene at h/4 and takes the visible
@@ -423,12 +477,53 @@ The adaptations:
    the label pass. Until then, form A's z-buffer reads the tie-break in
    shallow overlaps.
 2. **The remaining free ends** (100: junction core 40, union 19,
-   neither 13) have no named mechanism yet. See the handoff.
+   neither 13). Half sit at a cap triple (Step 3's mechanism table:
+   Step 1's "the hook", in junctions as well as at hooks); the other
+   half have no named mechanism yet. See the handoff.
 3. **Extra ink** rises from 71 to 94 samples under the model's truth.
    That truth is today's rule, so judge these by image (sheet H), not
-   by the census.
+   by the census. On sheet H the span cuts that close d1-d4 read as
+   borders (angular, with notches), but j149 gains a spur and a speck.
 
 For S3's brief: build the two-pass form, starting with the Pixel
 micro-benchmark against the 4 ms budget. Take the depth from the
 crossing table over every overlap, and the oracle's label ink as the
 reference image. Keep the hook's look open (now, cap, carry, seam).
+
+## Handoff
+
+The stage's seven steps are done (2026-10-27, about 14:50). Nothing is
+merged: the branch `k915-border-model` holds the oracle's two new inks
+(default unchanged) and this brief. The probes, logs and crops are in
+`.claude/probes/K915/` (untracked); sheet H is
+`.claude/probes/K868/sheets/H_surface_model.png`.
+
+Open, in the order I would take it:
+1. **Depth over the whole overlap.** Order each crossing's overlap from
+   the crossing table (or a tent at least 2h/sin θ wide), then rerun
+   Step 3's table under `INK=label` (`indep.ts`, `census.ts`,
+   `checks_ab.ts`; the commands are in each probe's header). Expect
+   #14 (349/350 on muse_hash under every ink) to move, and the d1
+   sawtooth (ties in a crowded junction) with it.
+2. **The second free-end mechanism.** Half the label ink's 100 free
+   ends have no non-transitive triple within 2W, hidden members
+   included (`fe_mech2_r1.log`, `fe_mech2_r2.log`). Trace three by hand
+   (j111's band end is one; the "no triple" lines in `fe_mech_r1.log`
+   give the places): the labels and the presence test on both sides of
+   the band, stepping past its end.
+3. **The cap triple's look.** The span cuts that close free ends are
+   angular and notched (sheet H d3, d4). Decide with Levi whether a cut
+   across an arm is the look, and if so smooth it (a cut along the
+   corner arc, not the span's straight end).
+4. **j149's spur and speck**, and the 13 extra-ink stretches in classes
+   the model calls hidden (Step 3): attribute each to its label pair
+   before choosing a fix.
+5. **Sheet F's cr 4.5 and 6 artifacts** under the label ink: not
+   measured.
+6. **S3**: the Pixel micro-benchmark of the two-pass form (Step 6)
+   before any shader work.
+7. **The hook's look** stays Levi's call: now (what the label ink
+   draws), cap, carry, and seam, which needs a clean prototype first.
+
+Pending when the stage stopped: `checks_ab.ts`'s muse_hash line under
+the label ink (#2 and #11; `checks_lab.log`).
