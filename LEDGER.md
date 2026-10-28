@@ -372,11 +372,11 @@ Next free ID: K891.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c
   merged e6c6034..aa3cdd1).
-  - owner: nobody since 2026-10-20 11:05 (round 2026-10-20 done: agent afcc3ca4881b292aa of claude session 91b19e11)
-  - branch: mainline; last commit: `071aa32`
-  - evidence: .claude/probes/rounds/2026-10-20-d0406df/ (main checkout; probes p_common.mjs, k544/k545/k447/k539_phone.mjs)
-  - next: later windows: the second frames rep with fabric m11's A/A floor (-Moves 0,7,11; K253), K307's phone measures, K98 + K92 (K230), the 14 dropped looks (K233), K232's load cells at 3 reps; kit: myPage falls back to the unique about:blank page, the round's probes move to tracked scripts/phone_pass/ (the round's `p_common.mjs` `KIT` path points at an agent's worktree, K572), looks cope with K301's width flip
-  - brief: docs/design/K156.md (Round 2026-10-20 and its handoff)
+  - owner: agent `a3e244ff8f1b79ef4` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (sonnet, started 2026-10-27 08:49, 1 h cap ~09:49)
+  - branch: `worktree-agent-a3e244ff8f1b79ef4`, worktree `.claude/worktrees/agent-a3e244ff8f1b79ef4`; last commit: `01df23a5`
+  - evidence: .claude/probes/rounds/2026-10-27-01df23a5/ and its -g31 twin (main checkout, untracked)
+  - next: round 2026-10-27: idle wait, check, frames and load in both orders (d0406df vs master), K539 render-sync cells, then the G3-1 attribution if the cap allows; merge the handoff section
+  - brief: docs/design/K156.md, "Round 2026-10-27"
   - env: none; the pass builds and serves both builds itself (ports
     5480-5489); check nobody is using the phone first (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
