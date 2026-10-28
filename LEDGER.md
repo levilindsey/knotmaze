@@ -282,9 +282,9 @@ Next free ID: K922.
 - **K809** · Panel search on your phone (K793): typing in the box must not jump or zoom the maze, the
   keyboard must not cover the box, results scroll under the sticky bar, and Enter closes the keyboard
   and outlines the best row (an inferred risk, not seen; `docs/design/K793.md`)
-- **K917** · Cursive junction heights (K904): one 60 u junction for every entry, or a higher one
-  after e (the font's e-to-o connector merges near 86 u)? c, d and g at 60 u or at their own (c's
-  entry arrives 19 deg / 4.5 u off the font's at 60 u; its own is 58.1 u)? `docs/design/K904_cursive_v5.md`.
+- **K917** · Cursive junction heights (K904): 60 u for every low entry, or higher for the o in eo
+  (the font's e-to-o connector merges near 86 u)? c, d, g at 60 u or their own (58.1, 55.0, 53.7 u)?
+  Recommended: 60 u throughout, judged on K916's `out9/k917_junctions.svg` (`K904_cursive_v5.md`).
 
 ## In progress
 
@@ -302,7 +302,7 @@ Next free ID: K922.
   - owner: stage K916, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 13:31; handle under K916)
   - branch: mainline, no code (outputs untracked); last commit: n/a
   - evidence: `.claude/probes/K863/trace/` (v1: `tools/trace_tool_v2.py`, `work4/`, `out/`; v2: `tools/trace_k879.py`, `out5*/`; v3: `tools/*k886*`, `work6/`, `out6/`; v4: `tools/*_k902.py`, `work7/`, `out7/`; v5: `tools/*_k904.py`, `work8/`, `out8/`; `NOTES.md` ## v3, ## v4 and ## v5 with their rerun commands); Drive `K863/` (`cursive_v5.svg`, `cursive_v5_words.svg`, `r_after_high.svg`, `cursive_v4.svg`, `cursive_v3.svg`; v1's SVG and review)
-  - next: K916 builds v5.1 (the join refit, leads and tails, the generated e); Levi answers K917 and edits v5's template (v5.1's `--from-svg` reads his edits); K912's generator follow-ups; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls)
+  - next: K916 fairs the strokes (`--split fair`), then builds v5.1 and `out9/k917_junctions.svg`; Levi answers K917 on that sheet and edits the faired template rather than v5 (`--from-svg` reads his edits); K912 generator follow-ups; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls)
   - brief: `docs/design/K863_trace.md` (## Levi's calls); v3: `docs/design/K886_cursive_v3.md`; v4: `docs/design/K902_cursive_frames.md`; v5: `docs/design/K904_cursive_v5.md`; v5.1: `docs/design/K916_cursive_v51.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
@@ -482,13 +482,13 @@ Next free ID: K922.
   - evidence: `.claude/probes/K915/`
   - next: steps 1-3 (the rule; the prototype behind `ink`; measured against master on the 12 real scenes and the synthetic ones), then sheet H, form B if needed, S3's form and cost, the verdict
   - brief: `docs/design/K915_surface_borders.md`
-- **K916** · Cursive v5.1: the join refit (wn, bn, on, of, ol, ob and om got worse in v5), fused
-  entries measured with their retraced stretch, the five splits still over ratio 3, leads and tails,
-  the generated e. `docs/design/K916_cursive_v51.md`.
+- **K916** · Cursive v5.1: whole-stroke fairing for the crotch elbows Levi still sees in v5
+  (`--split fair`), leads into a/c/d/g/o/q from the left, then the join refit (wn, bn, on, of, ol,
+  ob, om got worse in v5) and the K917 sheet. `docs/design/K916_cursive_v51.md`.
   - owner: agent `ac289b7bd1ea7927d` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 13:31, 2 h cap ~15:31)
   - branch: none: probe-only, no commits (main checkout, untracked `.claude/probes/K863/trace/`); last commit: n/a
   - evidence: `.claude/probes/K863/trace/` (untracked): `tools/*_k916.py`, `work9/`, `out9/`, NOTES.md ## v5.1
-  - next: steps 1-3 (the join refit, fused entries with their retrace, the splits over ratio 3), then leads and tails, the generated e and the v5.1 rebuild
+  - next: the redirect (brief `## Redirect`, 14:05) first: fair each pen stroke as one curve (`--split fair`), the eye-matching split check and `out9/split_combs.svg`, leads into a c d g o q from the baseline on the left; then the join refit, v5.1 built faired, `out9/k917_junctions.svg`
   - brief: `docs/design/K916_cursive_v51.md`
 
 ## Next, in order

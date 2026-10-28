@@ -126,3 +126,75 @@ under "### Rerun commands (K916 v5.1)". Check them with
   - the pairs still over 4 u, with a cause for each;
   - the rerun commands;
   - a `Ledger items` list (follow-ups, residuals, decisions for Levi).
+
+## Redirect (2026-10-27 14:05)
+
+Levi on v5, two reports. Both come before the join refit.
+
+- "I still see a discontinuous crotch curvature in most of the same
+  letters." The coordinator's crops agree. Each arch of n and m leaves
+  its stem with an elbow. In a, d and q the bowl's closing curve bends
+  hard where it joins the stem. The tops of the retraced stems (a, q, u)
+  show small hooks.
+- "words starting with a, q, and d have initial entry segments coming in
+  from the right to the left to reach the start of the first letter's
+  stroke." In `cursive_v5_words.svg` (and, quick, dog) the lead starts at
+  the letter's own foot and crosses the bowl to the 60 u junction on its
+  left side.
+
+Why the split blend still shows: each window has to make the whole turn
+from the shared stretch's direction to the branch's (the font's crisp
+crotch angle). It does so within about 17 u (`W_SHARED`, 70 fu) and
+inside the font's ink, so the curvature piles up mid-window. That is G2,
+but the eye reads the spike as a corner. The check passed it because it
+compared the window's peak |κ| with the letter's p95 |κ| away from
+splits, and hump tops, bowls and cusps set that p95. An elbow on a
+near-straight stroke scores low.
+
+New order. It replaces Order steps 1-6 until it is done; then return to
+them as time allows.
+
+1. **Fair each pen stroke as a whole.** Replace the per-split blend with
+   one curve per stroke that minimizes the variation of curvature
+   (∫(dκ/ds)² ds or a discrete equivalent; use a better energy if you
+   find one). A soft pull toward the font's centreline replaces the 1 u
+   bound.
+   - Every retraced or fused stretch is shared exactly by its passes, and
+     each pass is G2 through every split.
+   - A split point may slide along its stretch: smooth passes part
+     slowly, so a crotch becomes a long, narrow V. The fused junctions
+     stay at Levi's 60 u.
+   - Per split, report the node and where the passes visibly part (their
+     centrelines 6 u apart, the template's stroke width).
+   - A cusp (a pen reversal) stays a clean point: the passes coincide up
+     to it, with no hook.
+
+   Put it behind a switch, `--split blend|fair`, with `blend` the default
+   until Levi accepts the look; v5.1's sheets use `fair`. `--from-svg`
+   runs Levi's edited curves through the same fairing.
+2. **A check that matches the eye.** Per split and per pass, over the
+   window and 40 u either side:
+   - the curvature profile, and the max |dκ/ds| against the same pass's
+     p90 away from splits and cusps;
+   - any sign change of κ that the pass lacks outside the window.
+
+   Also `out9/split_combs.svg`: every split, and every cusp at the end of
+   a retraced stretch, cropped, v5 against `fair`, with curvature combs.
+   Report how far `fair` moves each letter off the font's centreline (max
+   and mean) and the pair distances, v5 against `fair`.
+3. **Leads into the fused letters.** A lead into a, c, d, g, o or q rises
+   from the baseline on the left into the junction, shaped like a low
+   connector from a virtual exit. No lead or tail may cross its own
+   letter's body. Check that, and list the steep crossings that remain
+   (tails after s, d and x; ot).
+4. Then, in order:
+   - Order step 1, the join refit, on the faired bodies;
+   - Order step 6, v5.1 built with `fair`;
+   - a K917 sheet, `out9/k917_junctions.svg`, all faired: eo with o's
+     junction at 60 u and at the font's 86 u, and c, d and g at 60 u and
+     at their own heights.
+
+   The new check replaces Order step 3 (report the ratio-3 splits under
+   it). Order step 5 waits.
+
+The stop rule is unchanged: 2 h from your start.
