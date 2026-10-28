@@ -8,6 +8,7 @@
 // world units inside and in CSS px at the scene's camera in the results.
 
 import { type Cand, candidates, dS, footInWindow, normS, pointAt } from "./geom";
+import { GeoGroups } from "./geo_group";
 import type { Camera, FieldModel, Prim } from "./oracle";
 import type { FieldScene } from "./scene";
 
@@ -1179,70 +1180,31 @@ function hiderAt(T: Truth, i: number, s: number, x: number, y: number, dLim: num
 }
 
 /**
- * K900: per poly, the [lo, hi, side, junction] arc ranges where a side lies
- * inside the overlap of one junction's arm bodies that holds the node: from
- * each arm's root, along each side, the first stretch where the side (its
- * outside point, or its band point within h − W) is inside another arm's
- * tube (the arm's chain from its root outward, 12h) or one of the
- * junction's corner fills. Spans, groups and depth play no part; the two
- * halves of a through pass are one body.
+ * K900, K909: per poly, the [lo, hi, side, junction, arm] arc ranges where a
+ * side lies inside the overlap of one junction's arm bodies that holds the
+ * node: from each arm's root, along each side, the first stretch where the
+ * side (its outside point, or its band point within h − W) is inside another
+ * arm's tube (root to cap) or one of the junction's corner fills, never past
+ * the arm's own cap (the chain's end, the next junction's root, 12h, the
+ * crossing cut). Spans, groups and depth play no part; the two halves of a
+ * through pass are one body. The walk is geo_group.ts's GeoGroups, which
+ * the oracle's groups "geo" read as well.
  */
-export function nodeOverlaps(model: FieldModel): [number, number, 1 | -1, number][][] {
-  const h = model.h;
-  const W = model.W;
-  const out = model.polys.map(() => [] as [number, number, 1 | -1, number][]);
-  const cornersOf: number[][] = model.scene.junctions.map(() => []);
-  model.corners.forEach((c, k) => cornersOf[c.junction].push(k));
-  const step = h / 8;
-  const ext = 12 * h;
-  model.scene.junctions.forEach((J, ji) => {
-    const arms = J.arms.map((a) => ({ pi: model.idxOf.get(a.chain), s: a.s, dir: a.dir }));
-    arms.forEach((A, ai) => {
-      if (A.pi === undefined) return;
-      const p = model.polys[A.pi];
-      const room = p.closed ? p.len / 2 : A.dir > 0 ? p.s0 + p.len - A.s : A.s - p.s0;
-      const tMax = Math.min(ext, room);
-      for (const side of [1, -1] as const) {
-        let t = 0;
-        for (; t <= tMax; t += step) {
-          const at = pointAt(p, normS(p, A.s + A.dir * t));
-          const nx = -at.ty * side;
-          const ny = at.tx * side;
-          const ox = at.x + nx * (h + 0.6 * W);
-          const oy = at.y + ny * (h + 0.6 * W);
-          const bx = at.x + nx * (h - W / 2);
-          const by = at.y + ny * (h - W / 2);
-          let inside = false;
-          for (let bi = 0; bi < arms.length && !inside; bi++) {
-            const B = arms[bi];
-            if (bi === ai || B.pi === undefined) continue;
-            if (B.pi === A.pi && Math.abs(B.s - A.s) < 1e-6) continue;
-            const lo = B.dir > 0 ? B.s : B.s - ext;
-            const hi = B.dir > 0 ? B.s + ext : B.s;
-            if (model.distWindow(B.pi, lo, hi, ox, oy, h) < h || model.distWindow(B.pi, lo, hi, bx, by, h) < h - W) inside = true;
-          }
-          if (!inside)
-            for (const k of cornersOf[ji])
-              if (model.inFill(k, ox, oy)) {
-                inside = true;
-                break;
-              }
-          if (!inside) break;
-        }
-        if (t > 0) {
-          const s1 = A.s + A.dir * Math.min(t, tMax);
-          out[A.pi].push([Math.min(A.s, s1), Math.max(A.s, s1), side, ji]);
-        }
-      }
-    });
-  });
-  return out;
+export function nodeOverlaps(model: FieldModel, G: GeoGroups = new GeoGroups(model)): [number, number, 1 | -1, number, number][][] {
+  return G.ranges();
 }
 
-/** K900: the geometric truth's hider (see borderCensus), or null. */
+/**
+ * K900, K909: the geometric truth's hider (see borderCensus), or null. The
+ * crossing table decides first (own tube within σ: self; the under pass:
+ * hidden), then the node overlap: a side that is the over pass at a
+ * crossing stays hidden there only if the junction's group holds it
+ * without the arm that carries the under pass.
+ */
 function geoHider(
   T: Truth,
-  geo: [number, number, 1 | -1, number][][],
+  G: GeoGroups,
+  geo: [number, number, 1 | -1, number, number][][],
   pi: number,
   s: number,
   side: 1 | -1,
@@ -1253,10 +1215,7 @@ function geoHider(
 ): string | null {
   const { model } = T;
   const p = model.polys[pi];
-  for (const [lo, hi, sd, ji] of geo[pi]) {
-    if (sd !== side) continue;
-    for (const sh of p.closed ? [-p.len, 0, p.len] : [0]) if (s + sh >= lo && s + sh <= hi) return `in j${ji}'s node overlap`;
-  }
+  const over: [number, number][] = [];
   for (const [x, y, dLim] of [
     [ox, oy, model.h],
     [bx, by, model.h - model.W],
@@ -1266,8 +1225,24 @@ function geoHider(
       if (!(c.d < dLim)) continue;
       if (c.chain === pi && Math.abs(dS(p, s, c.s)) <= model.sigma) return "self";
       const pr = pairOf(T, pi, s, c.chain, c.s);
-      if (pr && !pr.iOver) return `under at crossing ${pr.pp.x}`;
+      if (!pr) continue;
+      if (!pr.iOver) return `under at crossing ${pr.pp.x}`;
+      // The over pass within the crossing's own reach (L + pm·h, the cut's
+      // distance; farther out a junction's group may own the side). The
+      // under pass itself, not c.s: near a junction on the under chain, c.s
+      // can lie on the through's other half, which the node overlap owns.
+      if (Math.abs(dS(p, s, pr.pp.so)) <= pr.pp.L + (model.params.passMargin ?? 1) * model.h) over.push([pr.pp.iu, pr.pp.su]);
     }
+  }
+  for (const [lo, hi, sd, ji, ai] of geo[pi]) {
+    if (sd !== side) continue;
+    let hit = false;
+    for (const sh of p.closed ? [-p.len, 0, p.len] : [0]) if (s + sh >= lo && s + sh <= hi) hit = true;
+    if (!hit) continue;
+    if (!over.length) return `in j${ji}'s node overlap`;
+    const skip = (bi: number) => over.some(([c, cs]) => G.armAt(ji, c, cs) === bi);
+    const at = pointAt(p, normS(p, s));
+    if (G.sideInside(ji, ai, at.x, at.y, -at.ty * side, at.tx * side, skip)) return `in j${ji}'s node overlap`;
   }
   return null;
 }
@@ -1438,7 +1413,8 @@ export function borderCensus(
   const ctx = opts.inView ? null : checkContext(model);
   const inView = opts.inView ?? ((x: number, y: number) => ctx!.inView(x, y, 1));
   const ink = opts.probe ? (x: number, y: number) => opts.probe!.cov(x, y) > 0.5 : (x: number, y: number) => model.evalPoint(x, y, false).ink;
-  const geo = opts.truth === "geo" ? nodeOverlaps(model) : null;
+  const G = opts.truth === "geo" ? (model.geoGroups ?? new GeoGroups(model)) : null;
+  const geo = G ? nodeOverlaps(model, G) : null;
   const ownInk = (pi: number, s: number, x: number, y: number): boolean => {
     if (opts.probe || !geo) return ink(x, y);
     model.recordGroups = true;
@@ -1505,7 +1481,7 @@ export function borderCensus(
         const ox = at.x + nx * (h + 0.6 * W);
         const oy = at.y + ny * (h + 0.6 * W);
         const hid = geo
-          ? geoHider(T, geo, pi, s, side, ox, oy, bx, by)
+          ? geoHider(T, G!, geo, pi, s, side, ox, oy, bx, by)
           : (hiderAt(T, pi, s, ox, oy, h) ?? hiderAt(T, pi, s, bx, by, h - W) ?? fillAt(T, pi, s, ox, oy));
         if (hid) {
           // Extra: drawn though hidden deep inside the hider.

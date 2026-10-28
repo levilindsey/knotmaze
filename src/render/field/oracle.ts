@@ -19,6 +19,7 @@
 // hairpins). Distances to exposed intervals are exact (point to segment,
 // point to arc).
 
+import { GeoGroups, geoCaps } from "./geo_group";
 import type { FieldScene, SceneArm } from "./scene";
 import {
   type Cand,
@@ -137,6 +138,15 @@ export interface OracleParams {
    * θ = 53.1°, m = 1 holds at every θ <= 90°, and L + h is check 15's
    * window, so the check certifies the cut the oracle makes. */
   passMargin?: number;
+  /** K909 (§3.4): "geo" makes each arm's span how far its sides stay
+   * inside the junction's geometric group (geo_group.ts: the overlap of
+   * the arm tubes that holds the node, cut at the caps) + W + margin;
+   * "k883" (default) is the corner extent + W + margin. Both keep the
+   * caps, the crossing cut and the same-chain refusal. */
+  groups?: "geo" | "k883";
+  /** K909: under groups "geo", floor each arm's extent at its corners'
+   * extents (default true; false: the walk alone, the first K909 run). */
+  geoFloor?: boolean;
 }
 
 /** K883 (§3.8): the corner slider's rolling-ball radius at opening θ. */
@@ -282,6 +292,8 @@ export class FieldModel {
   naturalSpans: [number, number, number, number][][] = [];
   /** K883: per junction, per arm, its span cap (Infinity: none). */
   armCaps: ArmCap[][] = [];
+  /** K909: with groups "geo", the junctions' geometric groups at the final caps (the census's truth "geo" reads it). */
+  geoGroups: GeoGroups | null = null;
   /** K900 (§3.4): per poly, its crossing passes' windows (s ± pad); tag 2x
    * for crossing x's pass a, 2x + 1 for b; mate: the other pass's s on a
    * kink (one chain), else NaN. Empty when passJoins is "k883". */
@@ -461,7 +473,9 @@ export class FieldModel {
       }
     });
 
-    // 3. Spans and clusters (§3.4).
+    // 3. Spans and clusters (§3.4). K909: the geometric group's walk reads
+    // distances before the spans exist, so it gets a grid of its own.
+    if (k883 && params.groups === "geo") this.grid = new SegGrid(this.polys, h, 4 * h);
     const jSpans = this.buildSpans(scene, k883, g2Of);
     let rMax = 0;
     for (const c of this.corners) {
@@ -648,6 +662,14 @@ export class FieldModel {
         }
       });
     });
+    // K909: the geometric group's caps (the reach, half a loop, each
+    // junction's own crossing cut), and its extents for the cut below.
+    const geo = this.params.groups === "geo";
+    let ext = ext0;
+    if (geo) {
+      geoCaps(this).forEach((l, ji) => l.forEach((c, ai) => setCap(ji, ai, c.len, c.why)));
+      ext = this.geoExtents(new GeoGroups(this, this.armCaps), ext0);
+    }
     // Crossing passes per chain, with the acute crossing angle.
     const passes = scene.crossings.map((cx) => {
       const ia = this.idxOf.get(cx.a.chain);
@@ -714,7 +736,7 @@ export class FieldModel {
       setCap(ji, ai, Math.max(0, d - near), `crossing ${cx}'s pass ${(d / h).toFixed(2)}h out`);
     };
     const tries = new Map<number, number>();
-    let sp = this.rawSpans(ext0, caps);
+    let sp = this.rawSpans(ext, caps);
     for (let it = 0; it < 12; it++) {
       const roots2 = clusterRoots(sp);
       let changed = false;
@@ -737,7 +759,7 @@ export class FieldModel {
         if (n > 1 || fb > fa) for (const [ji, ai] of hb) cutAt(ji, ai, ps.sb, ps.th, cx);
         changed = true;
       });
-      sp = this.rawSpans(ext0, caps);
+      sp = this.rawSpans(ext, caps);
       if (!changed) break;
     }
     // Fit each round corner inside its arms' caps: the tangent point's foot
@@ -776,10 +798,34 @@ export class FieldModel {
       c.fit = `r ${(r0 / h).toFixed(3)}h → ${(c.r / h).toFixed(3)}h: ${why}${room() <= 0 ? " (no room past V: sharp)" : ""}`;
     }
     for (const c of this.corners) g2Of(c);
-    const ext1 = this.armExtents(true);
+    let ext1 = this.armExtents(true);
+    // K909: the walk again at the final caps and corners (the fills it reads).
+    if (geo) {
+      this.geoGroups = new GeoGroups(this, this.armCaps);
+      ext1 = this.geoExtents(this.geoGroups, ext1);
+    }
     const out = this.rawSpans(ext1, caps);
     this.junctionSpans = out;
     return out;
+  }
+
+  /**
+   * K909: per arm, the farther of its two sides' extents in the geometric
+   * group, and at least the corners' extents (`floor`, armExtents): a side
+   * leaves a corner's fill at the fill's tangent point, which the walk's
+   * outside point (h + 0.6W out) cannot see, since the fill's outline closes
+   * on the side tangentially (it leaves the walk about sqrt(1.2·W·r) early).
+   */
+  private geoExtents(G: GeoGroups, floor?: Map<string, number>): Map<string, number> {
+    const ext = new Map<string, number>(this.params.geoFloor === false ? [] : floor);
+    this.scene.junctions.forEach((j, ji) =>
+      j.arms.forEach((arm, ai) => {
+        const [a, b] = G.sides[ji][ai];
+        const k = this.armKey(ji, arm);
+        ext.set(k, Math.max(ext.get(k) ?? 0, a, b));
+      }),
+    );
+    return ext;
   }
 
   // -------------------------------------------------------------------------
