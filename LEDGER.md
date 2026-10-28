@@ -19,12 +19,12 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K915.
+Next free ID: K922.
 
 ## Waiting on Levi
 
 - **K901** · Cursive: r after a high exit, dip (the font: about 50 u below the x-height after o, b,
-  v and w, then its standard r; K902) or straight in? K904 renders both (`out8/r_after_high.svg`).
+  v and w, then its standard r; K902) or straight in? K904 renders both (`out8/r_after_high.svg`). On Drive: `K863/r_after_high.svg`.
   `docs/design/K863_trace.md` ## Levi's calls.
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
@@ -285,6 +285,9 @@ Next free ID: K915.
 - **K809** · Panel search on your phone (K793): typing in the box must not jump or zoom the maze, the
   keyboard must not cover the box, results scroll under the sticky bar, and Enter closes the keyboard
   and outlines the best row (an inferred risk, not seen; `docs/design/K793.md`)
+- **K917** · Cursive junction heights (K904): one 60 u junction for every entry, or a higher one
+  after e (the font's e-to-o connector merges near 86 u)? c, d and g at 60 u or at their own (c's
+  entry arrives 19 deg / 4.5 u off the font's at 60 u; its own is 58.1 u)? `docs/design/K904_cursive_v5.md`.
 
 ## In progress
 
@@ -367,10 +370,10 @@ Next free ID: K915.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c
   merged e6c6034..aa3cdd1).
-  - owner: nobody since 2026-10-27 09:34 (merged; agent `a3e244ff8f1b79ef4` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
-  - branch: mainline; last commit: `c2283119`
-  - evidence: .claude/probes/rounds/2026-10-27-01df23a5/ and its -g31 twin (main checkout, untracked)
-  - next: a later phone window runs the d0406df..01df23a5 bisect (K893), K568's confetti recheck (K896) and the kit fixes with an m11 A/A floor (K895)
+  - owner: nobody since 2026-10-27 13:23 (round 27c merged in a9c4dfec)
+  - branch: mainline; last commit: `a9c4dfec`
+  - evidence: .claude/probes/rounds/2026-10-27-01df23a5/ and its -g31 twin, .claude/probes/rounds/2026-10-27c/ (main checkout, untracked); the kit is scripts/phone_pass/
+  - next: a later phone window: K568's confetti recheck (K896), the kit fixes with an m11 A/A floor (K895), K919's compile-out if one is built, and `k539_g31.mjs` and `pixdiff_g31.mjs` once (only parse-checked, K907). The d0406df..01df23a5 bisect is done (K893, K906).
   - brief: docs/design/K156.md, "Round 2026-10-27"
   - env: none; the pass builds and serves both builds itself (ports
     5480-5489); check nobody is using the phone first (K234)
@@ -474,23 +477,12 @@ Next free ID: K915.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
-- **K904** · Cursive v5: a, c, d, g, o and q fused at a junction about 60 u up; the high entry mode
-  (after b, o, v, w); r after a high exit both ways (K901); leads, tails and the generated e.
-  `docs/design/K904_cursive_v5.md`.
-  - owner: agent `a31f7f6f3061890de` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 11:40, 2 h cap ~13:40)
-  - branch: none: probe-only, no commits (main checkout, untracked `.claude/probes/K863/trace/`); last commit: n/a
-  - evidence: `.claude/probes/K863/trace/` (untracked): `work8/`, `out8/`, NOTES.md ## v5
-  - next: steps 1-2, then the smooth splits (Levi: no bump where an overstroke starts or stops; the brief's ## Redirect), then rebuild as v5 with the r comparison; steps 4-5 as time allows
-  - brief: `docs/design/K904_cursive_v5.md`
-- **K906** · Next phone window: bisect (29,59] (dense +9.7; `minoHuntPace` 0.7 to 0.9 inside it) and
-  (176,205] (drops); the other links at K573's and K854's pairs (ABBA, about 5 min a pair; K905
-  settled K620's). `docs/design/K156.md`, round 2026-10-27b handoff.
-  - owner: agent `a0fdfc8b36249fba2` of claude session bf876705 (sonnet, started 2026-10-27 12:31, 1 h cap ~13:31)
-  - branch: `k906-phone-c`, worktree `.claude/worktrees/k906-phone-c`; last commit: `cb651dd5`
-  - evidence: `.claude/probes/rounds/2026-10-27c/`
-  - next: brief steps 3-5 on the phone: bisect (29,59] on dense, the other links at K854's and K573's pairs, bisect (176,205]
-  - brief: `docs/design/K156.md`
-  - env: phone on USB; scripts/phone_pass.ps1 runs each pass
+- **K915** · K868 borders from the visible surface: ink wherever the topmost surface changes (an NPR
+  partition: no border ends in the open), prototyped behind an oracle `ink` switch and judged by
+  the free-end image check (K910). `docs/design/K915_surface_borders.md`.
+- **K916** · Cursive v5.1: the join refit (wn, bn, on, of, ol, ob and om got worse in v5), fused
+  entries measured with their retraced stretch, the five splits still over ratio 3, leads and tails,
+  the generated e. `docs/design/K916_cursive_v51.md`.
 
 ## Next, in order
 
@@ -746,13 +738,15 @@ Every other item below waits on the trigger it names.
 - **K890** · Move the K863 tracer into tracked `scripts/` (trace_k879.py, review_k879.py, K886's
   join_k886.py, the venv's requirements), without the chart or its crops, once K886 lands.
 - **K895** · phone_pass kit: `-Phase start` hangs a piped caller; `summary.mjs` takes the lower of
-  two reps at n=2 (use the mean); fabric m11 needs an A/A floor and a fresh `noise.json`; move the
-  round probes (`p_common.mjs`, `k539_*.mjs`, `report.mjs`, ...) into `scripts/phone_pass/`.
+  two reps at n=2 (use the mean); fabric m11 needs an A/A floor and a fresh `noise.json`. (K907 moved the round probes into `scripts/phone_pass/`.)
 - **K896** · K568's confetti recheck on the phone (about 15 fps lost over the 8 s fall, round
   2026-10-20's left over 1): a `-Phase looks` window. `docs/design/K156.md`.
-- **K912** · Cursive generator follow-ups from K902: o and b exits per class (oh/ok 10.9, or 6.5 u)
-  with h's and k's after-o entries; og/oq end at the font's merge; f's exit walk; ng/nq's hook;
-  `--high-exit` by rerun; per-left split overfit. `docs/design/K902_cursive_frames.md` ## Results.
+- **K912** · Cursive generator follow-ups from K902: o and b exits per class (ok 10.9, or 6.5 u);
+  f's exit walk; `--high-exit` by rerun; per-left split overfit. v5 (K904) fixed h's and k's after-o
+  entries, og, oq, ng and nq. `docs/design/K902_cursive_frames.md` ## Results.
+- **K919** · K525's TELE paint item costs the phone +11.0 ms on dense (+2.8 max-fabric, +3.1 knot;
+  T1 `a64390b0`, round 2026-10-27c): try a K905-style compile-out (no TELE item on pages that draw
+  no telegraph; an analogy, unverified) and measure it. `docs/design/K156.md` round 27c.
 
 ## Residuals (known, not fixed)
 
@@ -1632,6 +1626,11 @@ Every other item below waits on the trigger it names.
 - **K913** · Cursive v4: a's fused junction at the font's 47.5 u (frame in the kink, 30.2 vs 52.6
   deg); the a body includes the up pass; d's after-o retrace frame at 36.3 deg; v3's rerun checker
   runs v4's commands; `--guides centreline` unrun. `.claude/probes/K863/trace/NOTES.md` ## v4.
+- **K918** · K909's oracle leftovers, on hold for K915's verdict: extra ink (71 stretches), #16's
+  group on top (3 scenes), sheet F's spur, hairlines, seam and speck, S3's far pieces (350 on 319
+  arms), geo's 22 shorter spans. `docs/design/K909_geo_groups.md` ## Handoff.
+- **K920** · K620's `fa0c61de` costs the phone +5.2 ms on max-fabric (about 2 ms of K905's gap;
+  round 2026-10-27c). `docs/design/K156.md` round 27c.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1920,9 +1919,14 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K880** · K863 tracer: trace Playwrite US Trad's stylistic sets as alternatives beside v2 (ss01-07
   change 4-19 lowercase each, ss19/20 none; survey `.claude/probes/K863/trace/work5/ss_table.txt`,
   `ss_sheet.png`; ss01's p is wired up as `--p stem`).
+- **K921** · Phone A/B of shader variants of one commit: shader text alone moved a cell by about 10
+  ms either way (T1, T2 and S2 in round 2026-10-27c), so a probe that A/Bs variants could find a
+  cheaper program for every link. `docs/design/K156.md` round 27c.
 
 ## Done
 
+- **K904** · Cursive v5: a, c, d, g, o and q fused at 60 u, the high entry mode, every split a G2 blend (peak curvature ratio max 120.5 -> 4.8), r after a high exit both ways; steps 4-5 moved to K916. Done in 1f5818eb (2026-10-27).
+- **K906** · Phone round 2026-10-27c: T1 = K525's TELE paint item (`a64390b0`, dense +11.0 ms), T2 = K137's fray (`24ea1b3b`, dense -13.1 ms); `docs/design/K156.md` round 27c. Done in a9c4dfec (2026-10-27).
 - **K907** · The phone kit tracked: scripts/phone_pass/ (12 files with headers), tested on the phone in round 2026-10-27c; k539_g31.mjs and pixdiff_g31.mjs only parse-checked. Done in a9c4dfec (2026-10-27).
 - **K909** · Geometric junction groups behind groups: "geo" (free ends 228 to 227, so k883 stays the default), truth geo's crossing order, the hookLook switch and sheet G; leftovers in its handoff. Done in 33d3a12b (2026-10-27).
 - **K905** · Root paint GLSL compiled out unless a root is drawn (K_ROOT): phone render sync -18.9 dense, -25.7 max-fabric, -12.3 ms knot; pixels unchanged. Done in c8814902 (2026-10-27).
