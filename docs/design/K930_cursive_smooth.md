@@ -91,14 +91,14 @@ on a dense copy written to disk.
      continuous strokes").
 4. **`--from-svg`.** It reads Levi's edited file, so it must take any
    Inkscape path (few or many nodes, lines, arcs) and give the same
-   quality. It must also keep his edits. K925 measured that today's
+   quality. It must also keep Levi's edits. K925 measured that today's
    smoothing keeps only 23% of a 3 u node drag (a setting of 15 keeps
    38%; 8 keeps 70% but fails its check). So:
-   - hold every node and handle Levi moved exactly where he put it, and
+   - hold every node and handle Levi moved exactly where it was put, and
      fit only the rest around it;
-   - find his edits by comparing his file with the one the pipeline
-     wrote. He may also add or delete nodes;
-   - his edit wins over smoothness. If what he moved makes a corner, keep
+   - find Levi's edits by comparing Levi's file with the one the pipeline
+     wrote. Levi may also add or delete nodes;
+   - Levi's edit wins over smoothness. If what Levi moved makes a corner, keep
      the corner and report it.
 
    Test it on a copy: drag a few nodes and handles by 1 to 5 u, and show
@@ -184,11 +184,11 @@ Done:
   <edited svg> <out svg> <report>` refits a window around each node
   Levi moved: up to 3 unmoved nodes each side, stopping at stroke ends
   and corners.
-  - His nodes and handles are fixed. The unmoved nodes' tangents and
+  - Levi's nodes and handles are fixed. The unmoved nodes' tangents and
     handle lengths are solved for G2 at every node of the window, by
-    least squares toward his drawn curve plus the integral of
+    least squares toward Levi's drawn curve plus the integral of
     (dk/ds)^2.
-  - A handle he turns off the tangent is a corner he made: kept and
+  - A handle Levi turns off the tangent is a corner Levi made: kept and
     reported.
   - `work11/dbg/run_hold_v53.ps1` runs nine scripted edits (drags of
     1-5 u in a, n, o and p, a 4 deg handle turn, a lengthened handle, a
@@ -196,17 +196,17 @@ Done:
     `work11/hold/report_*.txt`.
 
   Results:
-  - In all nine his node and handles stay exactly where he put them.
-    The curvature jump at his node (up to 0.019 1/fu as drawn) falls
+  - In all nine Levi's node and handles stay exactly where Levi put them.
+    The curvature jump at Levi's node (up to 0.019 1/fu as drawn) falls
     below 1e-14.
   - The window's peak |dk/ds| on the eye scale (flag 3) falls from
     2.1-9.9 as drawn to 0.5-2.9.
-  - The window moves 0.19-0.99 u off his drawn curve on the drags, and
+  - The window moves 0.19-0.99 u off Levi's drawn curve on the drags, and
     2.1 u on the handle turn.
   - Read by `words_k930 --from-svg --split blend`
     (`work11/fromsvg/measure.txt`, the hold rows): 18 cubics, the drag
     kept 100%, no curvature jump, eye 0.8-1.0 (as drawn 2.5-9.5).
-  - The comb crops (`work11/hold/crops/`) lose the spike at his node,
+  - The comb crops (`work11/hold/crops/`) lose the spike at Levi's node,
     and the rest of the stroke is unchanged.
 
 Open:
@@ -223,7 +223,7 @@ Open:
    - the deviation on handle turns (2.1 u at 4 deg).
 
    It passes when:
-   - his nodes and handles are within 1e-6 u;
+   - Levi's nodes and handles are within 1e-6 u;
    - every node except a corner has dk at most 1e-9 1/fu;
    - the eye check passes on the edited strokes;
    - the other strokes are unchanged.

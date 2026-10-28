@@ -15,7 +15,7 @@ Levi answered v2's three questions (K878) on 2026-10-27:
    letter (`cnct.mod_n_n`; `work5/ss_survey.txt` line 76, `ss_sheet.png`).
    Use `p.jmc`.
 2. "Do whatever makes sense for correct connections to the next letters.
-   It seems like having the exit segment rise too far isn't helpful?" He is
+   It seems like having the exit segment rise too far isn't helpful?" Levi is
    right, and neither full nor short exits is correct: v1 and v2 trace each
    letter between two n's with both connectors attached (from the previous
    n's foot, and up to the next n's top). Two such units side by side draw
@@ -49,7 +49,7 @@ join frames; connections are generated per pair when a word is assembled.**
   tail, calibrated against the font's word-initial and word-final forms.
 
 Levi then edits 26 bodies, and every pair joins correctly by construction,
-including pairs his edits change. Shapes only, as before: no knot,
+including pairs Levi's edits change. Shapes only, as before: no knot,
 thread-width, cusp or physics constraint in this stage.
 
 ## Setup

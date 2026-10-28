@@ -12,13 +12,13 @@ crosses itself: f, k, q and the word "and" (worst excess 4.147 u, at q;
 junctions joined by a short bridge, so both passes share the bridge and the
 traced path bends there instead of crossing. The letters become knot threads
 after Levi edits them, and a thread crossing must be a true X. Levi edits v2,
-so v2 has to be right before he starts.
+so v2 has to be right before Levi starts.
 
 Levi is also answering three questions (K878): p's descender (the font's loop
 or the chart's retraced stem), the exits (rising to the next letter at the
 x-height as traced, or short like the chart), and the size (ascenders pass
 the template's ascender line; m is wider than its cell). This stage turns each
-answer into a tracer option, so v2 is one rerun once he answers.
+answer into a tracer option, so v2 is one rerun once Levi answers.
 
 ## Setup
 
