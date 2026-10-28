@@ -2142,7 +2142,7 @@ export class FieldModel {
       let hit = false;
       for (let k = -4; k <= 4 && !hit; k++) {
         const t = (k / 4) * h * 0.999;
-        candidates(this.grid, at.x - at.ty * t, at.y + at.tx * t, h, cs);
+        candidates(this.grid, at.x - at.ty * t, at.y + at.tx * t, h, cs, pb);
         for (const c of cs) {
           if (c.chain !== pb || !(c.d < h)) continue;
           if (Math.abs(dS(Q, c.s, ob)) > maxR + 2 * h) continue;
