@@ -773,9 +773,6 @@ Every other item below waits on the trigger it names.
   `work10/dip_tops.png` in `.claude/probes/K863/trace/`.
 - **K928** · Cursive: make `--split fair` the default (Levi, 2026-10-27: "Yes, we need them to be smooth"; every
   build since v5.1 used it). A template Levi has edited is read as drawn instead (K944).
-- **K934** · K922's calls, now the coordinator's (Levi, 2026-10-27: "I don't understand"): adopt depth "overlap";
-  extent "part" or a walk that stops at crossing cuts, by the free-end check; first fix that check's exit count
-  (indep.ts merges two close legs: 52 of label ink's 83 free ends) and report both counts. The hook is moot.
 - **K943** · K868: draw the over thread's line where two threads of one junction cross (about 110 spots; both inks
   fuse them now; Drive `K868/sheets/K943_crossing_in_junction.png`), behind a flag for Levi to compare. The oracle
   needs simLab to split a crossing's two passes (K940 step 5, `S/`); the app needs 1-2 label bits (S3).
@@ -1981,6 +1978,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K934** · K868 re-count: the free-end check counts runs of ink (31 free ends, not 83); the settled rules are the oracle defaults (K942); extent part; sheet K at play size. Done in e2926d0e (2026-10-27).
 - **K940** · Label ink rule fixes behind switches, all off (`labFill: "yieldOrder"` with `labYieldChain`, `labCapReach`): the crossed yield form is right where plain yield was 82% wrong; change 2 hides crossing lines. Sheet J and S's crops. `K940_label_fixes.md` ## Results. Done in 4e0ce01d (2026-10-27).
 - **K926** · Cursive v5.4: e's two high entries from the font (o entry after b o v w, g entry after c g j y z; be 31.17 to 2.89 u off the font's connector, ve 31.17 to 3.46, ze 12.45 to 2.05), en 7.08 to 1.15 u, er 8.35 to 2.36. `K926_cursive_e.md` ## Handoff. Done in a99b2d64 (2026-10-27).
 - **K929** · Cursive: a word-final e draws its exit, cut where it has risen as far as the m/n/y/d tails (51.1 u, ending 1.46 u from the font's exit; the cut rule is K950). Done in a99b2d64 (2026-10-27).
