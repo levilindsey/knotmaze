@@ -367,7 +367,10 @@ Jumps (switch / fold / amp / rekey), before → after: def drag 0/4/13/0 →
   move 0.0 px. q alternates between two contacts 0.64 world apart with V
   and r fixed. With the march's least step at 0.002 h instead of 0.05 h
   (`oracle_f14.ts`, `dbg14_floor.ts`) it flips on every frame from t8 to
-  t13 instead of three times, so it is not the march's resolution.
+  t13 instead of three times. Over the whole drags (t0-t40,
+  `pops14/floor14_*.txt`), V or q jumps more than 0.1 world 37 times at
+  0.002 h, 43 at 0.05 h and 17 under master's rules (muse drag: 194, 207,
+  124): the march's resolution is not the cause.
   Inferred, not checked: the outer contact is a graze (arm A's offset
   touching arm B's), and a first-contact rule jumps whenever a graze
   appears or goes. Master's rule held the inner contact from t8 to t13.
@@ -441,3 +444,78 @@ branch twice): 0 px on every scene; no context lost.
   `scripts/label_pops.ts` as the gate.
 - Calls 3 and 4 (depth per fragment, cut-free strips) do not depend on the
   corner rules; nothing here changes them. K984 (readback) is unaffected.
+
+### F10. The first exit, a stated re-fit rule, tried in probes only (07:31)
+
+The rule: the ball grows from r = 0 in 0.02 h steps until a tangent point
+passes cap − W or the corner stops solving; r is the last fitting radius,
+bisected to 1e-6 h against the first failing one. Two probe copies carry
+it, and nothing in `src/` does: `oracle_mx14.ts` (master's root, the rule
+in place of the six steps) and `oracle_nx14.ts` (the branch's root, the
+rule in place of the solve).
+
+Node counts (`fx14.ts`, `pops14/fx14_<seq>.log`; the page's label params,
+41 frames a sequence; jumps = V or q moving > 0.1 world on a live corner,
+r steps = |dr| > 0.05 h on a corner re-fit in either frame, a wider set
+than F5's), as jumps / r steps:
+
+| sequence | master | branch | master's root + first exit | branch's root + first exit |
+|---|---|---|---|---|
+| def drag | 17 / 0 | 43 / 1 | 20 / 0 | 43 / 7 |
+| def flow | 23 / 62 | 97 / 92 | 16 / 22 | 116 / 178 |
+| muse drag | 124 / 98 | 207 / 212 | 139 / 138 | not run |
+| muse flow | 174 / 399 | 152 / 289 | 149 / 251 | not run |
+
+(The branch-root runs on muse were stopped unfinished, to free the lock.)
+
+The pop census (`pops14/fxm14/`: master's root + the first exit through
+`--oracle`, the same frames as F3 and F6; under the lock, no context
+lost):
+
+| sequence | pops a transition: master / branch / first exit | pop area px: master / branch / first exit |
+|---|---|---|
+| def drag | 0.15 / 2.30 / 0.60 | 359 / 2166 / 1167 |
+| def flow | 0.68 / 11.65 / 1.85 | 1078 / 9141 / 2837 |
+| muse drag | 1.93 / 9.10 / 5.88 | 1273 / 12422 / 6106 |
+| muse flow | 6.65 / 19.32 / 14.07 | 7368 / 38401 / 22746 |
+
+The first exit's pops (px) by cause:
+
+| sequence | switch | fold | amp | refit | status | cluster | spans | reach | count | none |
+|---|---|---|---|---|---|---|---|---|---|---|
+| def drag | 0 | 8 (383) | 4 (165) | 0 | 0 | 2 (212) | 10 (407) | 0 | 0 | 0 |
+| def flow | 9 (519) | 10 (492) | 1 (72) | 2 (51) | 5 (45) | 2 (152) | 12 (487) | 12 (175) | 0 | 21 (844) |
+| muse drag | 4 (313) | 22 (1248) | 17 (399) | 13 (411) | 0 | 2 (20) | 18 (297) | 87 (2084) | 7 (178) | 65 (1156) |
+| muse flow | 51 (2979) | 75 (4333) | 72 (1963) | 58 (2663) | 13 (416) | 1 (48) | 27 (901) | 231 (8585) | 1 (101) | 34 (757) |
+
+Jumps (switch / fold / amp / rekey): def drag 0/5/15/0, def flow 5/5/4/2,
+muse drag 4/23/106/6, muse flow 17/45/84/3 (master: 0/4/13/0, 3/8/10/2,
+1/17/100/6, 5/36/130/3).
+
+- **Better than the branch's rules, worse than master's on every
+  sequence:** the first exit's pop area is 3.3x, 2.6x, 4.8x and 3.1x
+  master's. The root is master's and the frames are the same, so the
+  re-fit alone moves this much. The data shows no stated re-fit rule
+  better than master's iterations, so `src/` goes back to master's rules
+  (call 1: change the rule only where the data shows a better one).
+- **The Node r-step count is not a proxy for pops:** with master's root the
+  first exit cuts the r steps on the flows (def 62 → 22, muse 399 → 251)
+  and still pops more there. With the branch's root it doubles def flow's
+  (92 → 178). The pixel census is the gate.
+- **Crops looked at** (`pops14/fxm14/<seq>_crops/`):
+  - def drag t1 (`pop_cluster_0_t1.png`, j104+j125+j172, 106 px, the
+    threads moving 0.1 px): an open hook closes into an oval loop, then
+    opens again at t2. Master has no pop there.
+  - muse flow t1 (`pop_refit_0_t1.png`, j116/2, r 0 → 0.79 h, 209 px): a
+    sharp spike becomes a blunt round corner while the threads move
+    0.2-0.3 px.
+- The page's build p50 (under the lock while the cursive agents ran; not
+  an A/B): 584 / 649 / 1361 / 1574 ms, against master's 272 / 389 / 653 /
+  675 and the branch's 512 / 683 / 1148 / 976. The march solves the
+  corner every 0.02 h.
+- Inferred, not checked: r still steps where a fail window of over(r)
+  opens or closes below the exit (F5's j118/1 shape), and a corner whose
+  r changes moves its arc into or out of a neighbour's cluster (the def
+  drag hook). A re-fit continuous in the geometry needs an over(r) that is
+  continuous and monotone, or a re-fit that does not depend on where the
+  contact sits along an arm.
