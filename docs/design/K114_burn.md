@@ -17,7 +17,7 @@ becomes a turn, in the same files (see "Shared with K80 turns").
 
 ## What Levi decided
 
-- His note of 2026-10-13 (verbatim in `K80_gameplay_additions.md`,
+- Levi's note of 2026-10-13 (verbatim in `K80_gameplay_additions.md`,
   R.1): "A mode where threads burn away steadily and you have to race to
   the end ahead of them."
 - On 2026-10-14 at about 00:22, answering K114
@@ -1206,7 +1206,7 @@ stamp read `P4 v0.4.0 e6e1734 2026-10-15 17:38`). Master has moved on
 (957f04d, 17 commits ahead at 11:25): see "Master moved" under item 6.
 The phone was Levi's, lent until about 11:10; its locks are released and
 my server is stopped. The width call (K409) waits on Levi: this stage
-gives him the facts and decides nothing. The sheets are in the main
+gives them the facts and decides nothing. The sheets are in the main
 checkout's `.claude/probes/K290/stage3c/out/sheets/` (see Evidence).
 
 ### Done

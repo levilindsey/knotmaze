@@ -855,7 +855,7 @@ class, and rules 1 and 4 still apply.
 recommended. Calls 3 and 6 take Levi's own forms.
 
 - **1. Dots:** the pill ("Yes").
-- **2. Lifted-pen strokes:** not walkable, "for now". He wants a
+- **2. Lifted-pen strokes:** not walkable, "for now". Levi wants a
   follow-up afterwards: some of them become maze threads, each a
   separate thread that weaves through the point, with crossings forced
   at both ends of the stroke and the stroke's thread underneath, so it
@@ -872,7 +872,7 @@ recommended. Calls 3 and 6 take Levi's own forms.
   ("sgtm").
 - **5. Hershey:** replace it whole, kept as the fallback ("Probably
   fine", then "yes").
-- **6. The o-kind join:** Levi's own form, replacing the wider spacing he
+- **6. The o-kind join:** Levi's own form, replacing the wider spacing they
   had first accepted ("Probably fine"): "Curving over the shoulder seems
   _partly_ right. In general, I think with these o-kind joins, the goal
   is for the in-coming stroke to match the exact curve of the first
