@@ -912,6 +912,34 @@ export interface MissingStretch {
   why: string;
   /** The middle sample's band point, world units. */
   at: [number, number];
+  /** K900: the nearest junction (index) and crossing (index) to `at`, and their distances in h. */
+  junction?: number;
+  jDist?: number;
+  crossing?: number;
+  xDist?: number;
+}
+
+/**
+ * K900: extra ink, by what hides the side (the census's truth) and what the
+ * oracle puts on top there: under (an over pass in the table), core (its
+ * junction's core), union (its junction's natural union), depth (a higher
+ * piece, no crossing in the table); then /own (this piece's group on top,
+ * without the hider), /merged (one group holds both), /hider (the hider's
+ * group on top, its own outline inked here), /other.
+ */
+export interface ExtraStretch {
+  chain: number;
+  side: 1 | -1;
+  s0: number;
+  s1: number;
+  n: number;
+  cls: string;
+  why: string;
+  at: [number, number];
+  junction?: number;
+  jDist?: number;
+  crossing?: number;
+  xDist?: number;
 }
 
 export interface BorderCensus {
@@ -924,6 +952,9 @@ export interface BorderCensus {
   extra: number;
   stretches: MissingStretch[];
   byClass: Record<BorderClass, { stretches: number; samples: number; ids: string[] }>;
+  /** K900: the extra-ink samples as stretches, and by class. */
+  extraStretches: ExtraStretch[];
+  extraByClass: Record<string, { stretches: number; samples: number }>;
 }
 
 interface PassPair {
@@ -952,6 +983,36 @@ interface Truth {
   /** Per corner: its fill's bounding box [x0, y0, x1, y1]. */
   fillBox: [number, number, number, number][];
   sc: Cand[];
+  /** K900: the candidate behind hiderAt's last answer. */
+  lastHider: Cand | null;
+}
+
+/** K900: the nearest junction (by its centre) and crossing (by its over pass) to (x, y), distances in h. */
+function nearestIds(model: FieldModel, x: number, y: number): { junction?: number; jDist?: number; crossing?: number; xDist?: number } {
+  const out: { junction?: number; jDist?: number; crossing?: number; xDist?: number } = {};
+  let bj = Infinity;
+  model.scene.junctions.forEach((J, ji) => {
+    const d = Math.hypot(J.c[0] - x, J.c[1] - y);
+    if (d < bj) {
+      bj = d;
+      out.junction = ji;
+    }
+  });
+  let bx = Infinity;
+  model.scene.crossings.forEach((cx, xi) => {
+    const pi = model.idxOf.get(cx.a.chain);
+    if (pi === undefined) return;
+    const p = model.polys[pi];
+    const a = pointAt(p, normS(p, cx.a.s));
+    const d = Math.hypot(a.x - x, a.y - y);
+    if (d < bx) {
+      bx = d;
+      out.crossing = xi;
+    }
+  });
+  if (Number.isFinite(bj)) out.jDist = Math.round((bj / model.h) * 100) / 100;
+  if (Number.isFinite(bx)) out.xDist = Math.round((bx / model.h) * 100) / 100;
+  return out;
 }
 
 function passPairs(model: FieldModel): PassPair[] {
@@ -1020,6 +1081,7 @@ function truthOf(model: FieldModel): Truth {
     core,
     fillBox,
     sc: [],
+    lastHider: null,
   };
 }
 
@@ -1088,8 +1150,10 @@ function hiderAt(T: Truth, i: number, s: number, x: number, y: number, dLim: num
   candidates(model.grid, x, y, model.h, T.sc);
   const cs = T.sc.slice();
   let hi: [number, number][] | null = null;
+  T.lastHider = null;
   for (const c of cs) {
     if (!(c.d < dLim)) continue;
+    T.lastHider = c;
     if (c.chain === i && Math.abs(dS(pi, s, c.s)) <= model.sigma) return "self";
     // Both pieces inside one junction's core (between the root and the V
     // feet, where its arms' tubes overlap anyway): the union's interior.
@@ -1108,7 +1172,44 @@ function hiderAt(T: Truth, i: number, s: number, x: number, y: number, dLim: num
     }
     if (model.depthAt(c.chain, c.s) > model.depthAt(i, s) + 1e-9) return `under chain ${model.idOf[c.chain]}`;
   }
+  T.lastHider = null;
   return null;
+}
+
+/** K900: an extra-ink sample's class and why (see ExtraStretch). */
+function classifyExtra(T: Truth, i: number, s: number, bx: number, by: number, hid: string): { cls: string; why: string } {
+  const { model } = T;
+  const hc = T.lastHider ? { ...T.lastHider } : null;
+  const kind =
+    hid === "self"
+      ? "self"
+      : hid.startsWith("under at")
+        ? "under"
+        : hid.includes("core")
+          ? "core"
+          : hid.includes("union")
+            ? "union"
+            : hid.startsWith("under chain")
+              ? "depth"
+              : "other";
+  model.recordGroups = true;
+  model.evalPoint(bx, by, false);
+  const le = model.lastEval;
+  model.recordGroups = false;
+  const pi = model.polys[i];
+  let top = "other";
+  let desc = "no top";
+  if (le?.top) {
+    const own = le.top.some((k) => le.cands[k].chain === i && Math.abs(dS(pi, le.cands[k].s, s)) <= model.sigma);
+    const hider =
+      !!hc && le.top.some((k) => le.cands[k].chain === hc.chain && Math.abs(dS(model.polys[hc.chain], le.cands[k].s, hc.s)) <= model.sigma);
+    top = own && hider ? "merged" : own ? "own" : hider ? "hider" : "other";
+    const cls = [...new Set(le.top.map((k) => le.cl[k]).filter((v) => v >= 0))];
+    const c = le.cands[le.topNear];
+    desc = `top: ch${model.idOf[c.chain]}@${fmt(c.s, 2)}${cls.length ? ` cl ${cls.join("+")}` : ""}`;
+  }
+  const hs = hc ? ` (hider ch${model.idOf[hc.chain]}@${fmt(hc.s, 2)} cl ${model.clusterAt(hc.chain, hc.s)})` : "";
+  return { cls: `${kind}/${top}`, why: `${hid}${hs}; ${desc}` };
 }
 
 function fillAt(T: Truth, i: number, s: number, x: number, y: number): string | null {
@@ -1242,15 +1343,30 @@ export function borderCensus(
     extra: 0,
     stretches: [],
     byClass: { a: blank(), b: blank(), c: blank(), d: blank(), e: blank(), f: blank() },
+    extraStretches: [],
+    extraByClass: {},
   };
   model.polys.forEach((p, pi) => {
     const n = Math.max(1, Math.ceil(p.len / step));
     for (const side of [1, -1] as const) {
       let run: MissingStretch | null = null;
       let mid: [number, number][] = [];
+      let xrun: (ExtraStretch & { key: string }) | null = null;
+      let xmid: [number, number][] = [];
+      const flushX = () => {
+        if (xrun) {
+          const { key: _k, ...st } = xrun;
+          st.at = xmid[Math.floor(xmid.length / 2)];
+          Object.assign(st, nearestIds(model, st.at[0], st.at[1]));
+          out.extraStretches.push(st);
+        }
+        xrun = null;
+        xmid = [];
+      };
       const flush = () => {
         if (run) {
           run.at = mid[Math.floor(mid.length / 2)];
+          Object.assign(run, nearestIds(model, run.at[0], run.at[1]));
           out.stretches.push(run);
         }
         run = null;
@@ -1260,6 +1376,7 @@ export function borderCensus(
         const s = p.s0 + (k / n) * p.len;
         if (opts.only && !opts.only(pi, s)) {
           flush();
+          flushX();
           continue;
         }
         const at = pointAt(p, normS(p, s));
@@ -1269,6 +1386,7 @@ export function borderCensus(
         const by = at.y + ny * (h - W / 2);
         if (!inView(bx, by)) {
           flush();
+          flushX();
           continue;
         }
         const ox = at.x + nx * (h + 0.6 * W);
@@ -1276,10 +1394,24 @@ export function borderCensus(
         const hid = hiderAt(T, pi, s, ox, oy, h) ?? hiderAt(T, pi, s, bx, by, h - W) ?? fillAt(T, pi, s, ox, oy);
         if (hid) {
           // Extra: drawn though hidden deep inside the hider.
-          if (hiderAt(T, pi, s, bx, by, h - 1.5 * W) && hid !== "self" && ink(bx, by)) out.extra++;
+          const deep = hid !== "self" ? hiderAt(T, pi, s, bx, by, h - 1.5 * W) : null;
+          if (deep && ink(bx, by)) {
+            out.extra++;
+            const { cls, why } = classifyExtra(T, pi, s, bx, by, deep);
+            const key = `${cls}|${deep}`;
+            if (xrun && (xrun as ExtraStretch & { key: string }).key === key) {
+              (xrun as ExtraStretch).s1 = s;
+              (xrun as ExtraStretch).n++;
+            } else {
+              flushX();
+              xrun = { chain: model.idOf[pi], side, s0: s, s1: s, n: 1, cls, why, at: [bx, by], key };
+            }
+            xmid.push([bx, by]);
+          } else flushX();
           flush();
           continue;
         }
+        flushX();
         out.samples++;
         if (ink(bx, by)) {
           flush();
@@ -1304,6 +1436,7 @@ export function borderCensus(
         mid.push([bx, by]);
       }
       flush();
+      flushX();
     }
   });
   for (const st of out.stretches) {
@@ -1312,7 +1445,13 @@ export function borderCensus(
     b.samples += st.n;
     if (!b.ids.includes(st.why)) b.ids.push(st.why);
   }
+  for (const st of out.extraStretches) {
+    const b = (out.extraByClass[st.cls] ??= { stretches: 0, samples: 0 });
+    b.stretches++;
+    b.samples += st.n;
+  }
   out.stretches.sort((u, v) => v.n - u.n);
+  out.extraStretches.sort((u, v) => v.n - u.n);
   return out;
 }
 
