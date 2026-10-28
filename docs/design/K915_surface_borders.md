@@ -321,6 +321,18 @@ master's ink. Counts are samples in stretches.
   depth at the centres, not the ink). #15 passes on every scene under
   every ink. #16: muse_hash 19 → 7 stretches (23051 → 23076 of 23089
   over-side samples inked), g41_def_tw64 11 → 7, g41_ring_tw64 1 → 0.
+- muse_hash's other checks, group → label (`checks_lab.log`): #2 (gap
+  26.7 px, one solve failed), #3, #4 and #11 (349/350 topped by the
+  scene's over) fail the same under both inks, and #8 passes under both:
+  they do not read the ink. The checks that read it get worse:
+  - #5: 9 → 16 walks not one run within 1.1W (longest 4.8 → 8.5 px, W
+    3.24 px);
+  - #6: 92 → 97 band ends off by more than 0.5 px;
+  - #7: 106 → 117 over band lines broken within ±2h (45 → 31 more broken
+    only by a third chain on top);
+  - #9.1: 1.60 → 5.28 px (fails under both); #9: 0.11 → 0.05 px (passes).
+  The wide band (8.5 px) is not attributed; it is likely among the 13
+  added extra-ink stretches below.
 
 K909's leftovers:
 - **Span fill and group on top** (126 of the 228 free ends) fall to 17:
@@ -469,8 +481,10 @@ search.
 form A, as `ink: "label"` computes it), and keep today's members,
 corners, depth and groups. Against master, on the 12 real scenes: free
 ends 228 → 100 (span fill 74 → 11, group on top 52 → 6); synthetic
-free ends 4 → 1 (the hook); checks 116/117 and corners 341/342
-unchanged; #16 31 → 14 stretches; real misses 144 → 113 samples.
+free ends 4 → 1 (the hook); synthetic checks 116/117 and corners
+341/342 unchanged; #16 31 → 14 stretches; real misses 144 → 113
+samples. On muse_hash the checks that read the ink get worse (#5, #6,
+#7, #9.1; Step 3).
 
 The adaptations:
 1. **Order the depth over the whole overlap** (Step 5) before S3 builds
@@ -483,7 +497,9 @@ The adaptations:
 3. **Extra ink** rises from 71 to 94 samples under the model's truth.
    That truth is today's rule, so judge these by image (sheet H), not
    by the census. On sheet H the span cuts that close d1-d4 read as
-   borders (angular, with notches), but j149 gains a spur and a speck.
+   borders (angular, with notches), but j149 gains a spur and a speck,
+   and on muse_hash one band reaches 8.5 px (#5; W is 3.24 px) and #9.1
+   rises from 1.60 to 5.28 px. Attribute these before S3 copies them.
 
 For S3's brief: build the two-pass form, starting with the Pixel
 micro-benchmark against the 4 ms budget. Take the depth from the
@@ -515,15 +531,13 @@ Open, in the order I would take it:
    angular and notched (sheet H d3, d4). Decide with Levi whether a cut
    across an arm is the look, and if so smooth it (a cut along the
    corner arc, not the span's straight end).
-4. **j149's spur and speck**, and the 13 extra-ink stretches in classes
-   the model calls hidden (Step 3): attribute each to its label pair
-   before choosing a fix.
+4. **j149's spur and speck**, the 13 extra-ink stretches in classes
+   the model calls hidden, and muse_hash's worse ink checks (#5's 8.5 px
+   band, #7 106 → 117, #9.1 5.28 px; Step 3): attribute each to its
+   label pair before choosing a fix.
 5. **Sheet F's cr 4.5 and 6 artifacts** under the label ink: not
    measured.
 6. **S3**: the Pixel micro-benchmark of the two-pass form (Step 6)
    before any shader work.
 7. **The hook's look** stays Levi's call: now (what the label ink
    draws), cap, carry, and seam, which needs a clean prototype first.
-
-Pending when the stage stopped: `checks_ab.ts`'s muse_hash line under
-the label ink (#2 and #11; `checks_lab.log`).
