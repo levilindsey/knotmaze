@@ -169,7 +169,7 @@ Next free ID: K440.
     Dead-end branches as deeper traps are out of scope; K80's brief does not settle them
   - brief: `docs/design/K74_stage3.md`; stage 2's handoff: `docs/design/K74.md`
 - **K80** · The minotaur, decided (Levi, 2026-10-13; design
-  `docs/design/K80_gameplay_additions.md` section 0, his answers in
+  `docs/design/K80_gameplay_additions.md` section 0, their answers in
   `docs/design/levi_notes_2026-10-13.md`): a telegraphed hunter with
   guard and stalker variants, real time as its own mode, turn-aligned as
   a modifier. Real time merged (`5fed5c1`); turns stages 1, 2 and 3a merged (3a: the wait on
@@ -484,7 +484,7 @@ Every other item below waits on the trigger it names.
   (WebGL): GPU float division is approximate (ANGLE D3D11 gave
   `floor(k*n/n)` = k-1 in 3275 of 16384 pairs), so ring and lap math
   must be integer-corrected. Held while Levi is away (claude-config
-  edits wait for his approval).
+  edits wait for their approval).
 - **K313** · A loader that looks like the maze (Levi, 2026-10-14,
   approved "sgtm", "Trail should be a fixed length"): a trefoil maze
   with over/under gaps, fixed head and trail, drawn by a tiny
@@ -533,7 +533,7 @@ Every other item below waits on the trigger it names.
 - **K321** · The credits page (Levi, 2026-10-14; "Proceed, with my above
   notes"): the page and the panel's link become Credits
   (`credits.html`): "Created by Levi Lindsey", "(c) 2026 Snoring Cat
-  LLC. All rights reserved.", his art, icon and music credits (to come),
+  LLC. All rights reserved.", Levi's art, icon and music credits (to come),
   then "Built with Claude Code" (not prominent, linked like the others),
   then techniques, licenses, research. A small sonnet stage:
   `docs/design/K321_credits.md`.
@@ -1481,7 +1481,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   churn cost (2026-10-14). Done in a756ca5: the panel's GitHub link is
   gone, `LICENSE` says all rights reserved (Snoring Cat LLC.),
   package.json says UNLICENSED, doc-only pushes skip the deploy. No
-  bundle obfuscation. On his word: `gh repo edit --visibility private
+  bundle obfuscation. On Levi's word: `gh repo edit --visibility private
   --accept-visibility-change-consequences` (reversible; the Pages deploy
   keeps working). K122 is needed either way.
 - **K187** · K155's History rows explain their stars only on hover, which
@@ -1495,7 +1495,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   9.4%): maybe a nudge or a toast.
 - **K209** · Fog of war on dailies? Off today; since K132 a daily is
   today's defaults, so turning it on is a default change or a daily
-  override. A call for Levi whenever he wants it (raised by K100).
+  override. A call for Levi whenever they want it (raised by K100).
 - **K211** · Drop the retired `snappiness` from `CODEC_PARAMS` at the
   next codec version bump; removing it now would bump the version (K132).
 - **K215** · Move the per-feature probe recipes (K73, K79 B, K80, K104,
@@ -1604,9 +1604,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K317** · More confetti by default (the rain per amount 140 -> 280, the finish's spray 40 -> 160; reduced motion keeps its 16 pieces); the phone's frame rate rides K156's next pass. Done in ab8b78f (2026-10-14).
 - **K253** · K193's portrait A/A floor, taken on a quiet phone (`aa4`, 36 of 36 samples at 411x753), installed as `scripts/phone_pass/noise.json` (lore `probes-phone.md`, THE PORTRAIT FLOOR; evidence `.claude/probes/K253/aa4/`). Done in 459cc11 (2026-10-14).
 - **K193** · The phone pass's orientation: it emulates a 411x753 portrait viewport over CDP (`-Viewport portrait|native`, `scripts/phone_pass/emulation.mjs`; stage 1 c36b57c..763067a); K253 took the portrait floor. Left over: K300, K254-K256; `docs/design/K193.md`. Done in 459cc11 (2026-10-14).
-- **K302** · K7's 11 calls (`docs/design/K7_worker.md`, "Levi's calls"): all yes, as recommended; his multithreaded-WASM question went to K316 and call (4) led to K313. Done (2026-10-14).
+- **K302** · K7's 11 calls (`docs/design/K7_worker.md`, "Levi's calls"): all yes, as recommended; Levi's multithreaded-WASM question went to K316 and call (4) led to K313. Done (2026-10-14).
 - **K299** · The choice pulses and the trail misdrawn at one junction: `kArcOfCtrl` wrapped a closed chain's ctrl through a float division the GPU rounds; fixed with integer-corrected laps (`kLapOf`, `kWrap`; lore `render-paint.md`, RING LAPS; `docs/design/K299_choice_pulse_bug.md`). Done in 74ad307..e5acafb (2026-10-14).
-- **K264** · The hover rim's width becomes a slider: `hoverGlowWidth` (`hgw`, codec 130, daily-exempt, default 0.85); his follow-up is K298 (`docs/design/K111.md`, "Stage 4 handoff"). Done in a47642d..f294247 (2026-10-14).
+- **K264** · The hover rim's width becomes a slider: `hoverGlowWidth` (`hgw`, codec 130, daily-exempt, default 0.85); Levi's follow-up is K298 (`docs/design/K111.md`, "Stage 4 handoff"). Done in a47642d..f294247 (2026-10-14).
 - **K273** · What a minotaur catch resets: `minoRestart` (`mrs`, off) restarts the level, `minoLair` (`mlr`, on) off leaves the minotaur where it caught you, `minoRefog` stays the fog's toggle (`docs/design/K80_turns.md`, "Stage 2 handoff"). Done in 86d404e..02194b4 (2026-10-14).
 - **K272** · The turn minotaur's sliders at 0 (roam 0 stood still, territory 0 was a random walk): both now start at 1 (`MINO_RUNS_MIN`); roam 0 as a sentry is K296. Done in 86d404e..02194b4 (2026-10-14).
 - **K283** · The real game's end banners after K274, checked from a live solve (`.claude/probes/K80/turns2/banner/`; the original probe's two stale checks are K295). Done in 86d404e..02194b4 (2026-10-14).

@@ -24,7 +24,7 @@ appends. Usage: don't hold agents back until the week nears 97% (Levi,
 2026-10-13 07:40, raised from 90% at about 23:53 and to 97% on 10-14 at about 10:57; 42% at 07:17, 54% at
 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at
 23:54; on 10-14 69% at 00:25, 72% at 01:49, 76% at 07:38, 78% at 08:05,
-80% at 08:37, 82% at 09:04, 83% at 09:28, 84% at 09:36, 88% at 10:01 (the 09:37 batch was told to wrap up by 10:30 and launches stopped) and 91% at 10:56, when Levi said "Let's ignore the usage limits until 97%. Proceed"; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
+80% at 08:37, 82% at 09:04, 83% at 09:28, 84% at 09:36, 88% at 10:01 (the 09:37 batch was told to wrap up by 10:30 and launches stopped) and 91% at 10:56, when Levi said "Let's ignore the usage limits until 97%. Proceed"; at 13:40 on 10-13 Levi said keep going at full speed, and on 10-14
 at about 07:53 "Keep going at full pace."; 95% at 11:54, and at about
 11:59 Levi reset the week to 0%; 17% at 17:55; it resets Mondays at about 12:00).
 Long work runs in stages from
@@ -39,7 +39,7 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K7's stage 3 from 23:22 (cap 01:22, opus),
+(Levi may reorder). Running: K7's stage 3 from 23:22 (cap 01:22, opus),
 K76's stage 2c from 23:39 (cap 01:39, opus), K344 (the pluck cusp) from
 23:30 (cap 01:30, opus) and K339's panel audit from 22:54 (cap 00:54,
 opus, docs only). K329 (the arrow keys, with K333 and K334) merged at
@@ -263,7 +263,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   `k279_shots2/`): every look holds 60 fps through a tap; glint reads
   best, ring faintly, the wave not at all (its ring is about 41 CSS px
   across, its bend 1.6 px; K289 (d)), vib close to the old look, sheen a
-  paler streak; motion needs his eye on the phone. `ptg=0.3` stutters
+  paler streak; motion needs Levi's eye on the phone. `ptg=0.3` stutters
   3-5 s at 5-12 fps there, so the tug stays off. Levi, 22:32: "What?";
   re-explained at 22:45, recommending glint as the default look, the rest
   as built, and the wave (when picked) still bending the markers, trail
@@ -292,7 +292,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   polyline tolerance, a per-point far-branch gate, and dropping the
   globals fetch. K7's design (2026-10-14): dense (5448 particles) is
   render-bound at about 30 fps (render alone 31-34 ms), so the worker
-  does not fix it. K302 (6) put that to Levi as a priority call; his
+  does not fix it. K302 (6) put that to Levi as a priority call; their
   "Yes." is read as noted, so K8 keeps its place.
 
 ## K8 (2026-10-15, moved to In progress)
@@ -312,7 +312,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   (Levi, 2026-10-14 about 23:04: "There's a sharp discontinuous cusp
   with the vibration effect on this loop along the bottom of the loop.
   Can we fix this general problem?"; on the LAN dev server,
-  `?qoietk.KIiHgRRXwRlRt8fGrST4sf`; his inspect: crossing 104, chain 21
+  `?qoietk.KIiHgRRXwRlRt8fGrST4sf`; their inspect: crossing 104, chain 21
   crossing itself, over at ctrl 102 and under at ctrl 110.205). The fix
   covers the general case, not this loop alone. One opus stage in the
   confetti stage's slot: `docs/design/K344_pluck_cusp.md`.
@@ -341,10 +341,10 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   prototypes each ask behind params (a ripple dropdown with a weaker
   auto-pluck strength, more vibration looks, a physics tug for player
   plucks, a stronger default vibration, an auto-pluck gain) and shows
-  Levi a sheet; stage 2 finishes what he picks. Stage 1 built all six
+  Levi a sheet; stage 2 finishes what Levi picks. Stage 1 built all six
   behind ten daily-exempt params (seven codec appends; the vibration
   defaults rose to `psz` 2, `pgh` .5, `pw` .75) and the sheet, sent to
-  Levi at 17:52 (his picks are K288, the residuals K289). Merged
+  Levi at 17:52 (their picks are K288, the residuals K289). Merged
   2026-10-14 18:20 (50c1aab..ad2618a, 925 tests; codec rows 121-127) with the
   tug off by default (`ptg` 0; `&ptg=0.3` is the built strength): the
   follow-up timed a tap with the tug, a drag and a bare wake at the same
@@ -464,7 +464,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   good."): (1) a loss shows a "Burnt" banner, then restarts with the
   fuse relit; (5) the HUD shows the fire's lead in its own units (x10,
   so 9.2 reads 92; the share line is stage 4's); (6) `sparks` waits for
-  stage 4. His catch-reset toggle for the minotaur is K273. He answered
+  stage 4. Levi's catch-reset toggle for the minotaur is K273. Levi answered
   call 7 on 2026-10-14 at
   about 14:46 (verbatim): "Burn race: we should probably have a fire
   effect show at the start, but only actually start moving it after the
@@ -555,7 +555,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 ## K229 (2026-10-15, shortened by the diet)
 
 - **K229** · K92 put the mode badge on its own row below the undo
-  buttons while the panel is open (his spec), so the open panel now
+  buttons while the panel is open (Levi's spec), so the open panel now
   starts 90 px from the top on the desktop and 100 on phones (was 50):
   about 1.5 fewer visible rows on a phone. Accept it, or put the badge
   somewhere else while the panel is open? Screenshots:
@@ -598,9 +598,9 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - Levi's call (sent 2026-10-14 about 09:05 with the sheet
     `.claude/probes/K90/out_1b/sheet/sheet.png`): ship, tune or stop;
     default on or off; hard or soft clamp. Before it ships: K213.
-  - Levi, 2026-10-14 about 09:20: he can't tell from the sheet and will
+  - Levi, 2026-10-14 about 09:20: they can't tell from the sheet and will
     test it live later (desktop console at levi.dev/knotmaze/:
-    `__knotSplineBend(true)` / `(false)`). Told him no visible bug
+    `__knotSplineBend(true)` / `(false)`). Told Levi no visible bug
     started it: K90 came from G3's filled-lobe-or-pinch question (K8),
     and the old seam (P3.34) stays fixed by the miter clamp. The
     coordinator recommends stopping it.
@@ -645,7 +645,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   (2) the defaults, `settleBudget` 12 ms and `loadSettle` 0.45 s (its max,
   5, settles first); (3) whether both stay daily-exempt; (4) whether drags
   at gs 18 get a budget too (165-170 ms frames, sim/wall 0.6).
-  - 2026-10-14 about 00:22: Levi will test it later (item 7). He asked
+  - 2026-10-14 about 00:22: Levi will test it later (item 7). Levi asked
     whether the web worker changes this; answered in session: K7's worker
     would keep frames smooth whatever the physics costs, and K7 is not
     scheduled.
@@ -774,7 +774,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 
 ## K74 (2026-10-15, shortened by the diet)
 
-- **K74** · Maze design, decided (Levi, 2026-10-13 13:17; his answers
+- **K74** · Maze design, decided (Levi, 2026-10-13 13:17; their answers
   verbatim in `docs/design/levi_notes_2026-10-13.md`): every mechanism
   gets params whose neutral value turns it off, so difficulty and feel
   stay adjustable. Design: `docs/design/K74_maze_design.md` (dad40f8).
@@ -786,7 +786,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     density 0.5 for links and the daily. Greedy median 1.96x -> 3.12x
     optimal; every daily moved (saved attempts refuse cleanly). Results
     and pins: the brief's "Stage 1 handoff"; the delegated pick, for
-    Levi to review if he wants:
+    Levi to review if they want:
     `.claude/probes/K74/out/K74_stage1_before_after.png`;
   - stage 2 MERGED in 4d3efe6..faa9a52 (2026-10-14 16:13; it deploys):
     H1, the fused arm cut (decision 4), on at `hCutShare` 1 (codec index
@@ -1016,7 +1016,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   fray, beacon; default beacon); the doc's other recommendations stand
   (`threadReveal`, `revealDistance` 2.5, `revealFade` 1; dailies via a
   theme, not a toggle; the literal reveal rule; the exit indicator hidden
-  until the exit is seen); and, at his suggestion, fog and the reveal
+  until the exit is seen); and, at Levi's suggestion, fog and the reveal
   are the options of one `exploration` dropdown (off | fog | threads),
   which replaces the fog toggle in place (pre-launch, no back-compat).
   Design: `docs/design/K76_reveal_mode.md` (0474300); contact sheet
@@ -1255,7 +1255,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 - **K46** · Daily variety, revisited after the feature churn (Levi,
   2026-10-12): no weekly or regular arc; THEMES, each a set of parameter
   constraints; manual per-day overrides later (K82). The measured
-  proposal, with his direction at the top, is
+  proposal, with Levi's direction at the top, is
   `docs/design/K46_daily_variety.md` (8b1eb90). Its probes are in
   `.claude/probes/K46/`, and the proposal agent's worktree
   (`.claude/worktrees/agent-a78c73cec4770a14d`) is kept. Pre-launch,
@@ -1269,7 +1269,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 - **K78** · The Knotmaze handbook: algorithms, architecture, decisions
   and trade-offs, and a per-param reference with figures (the
   half-lattice units diagram first). Write it once the churn settles.
-  Levi (2026-10-13): public; Markdown, later also posted on his Blogger
+  Levi (2026-10-13): public; Markdown, later also posted on their Blogger
   devlog (devlog.levi.dev), so figures are standalone images and the text
   needs no repo links or internal IDs. Plan:
   `docs/design/K78_handbook_plan.md`.
@@ -1373,7 +1373,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 ## K116 (2026-10-15, shortened by the diet)
 
 - **K116** · Alternate pluck instruments and accompaniment, lowest
-  priority (Levi, 2026-10-13 13:30; his calls at 14:39 are verbatim in
+  priority (Levi, 2026-10-13 13:30; their calls at 14:39 are verbatim in
   `docs/design/levi_notes_2026-10-13.md`; design
   `docs/design/K116_instruments.md`, 2e60b00). First the band skeleton
   (buses, ducking, a limiter, one clock), a drone and bass, and four
@@ -1490,7 +1490,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   (WebGL): GPU float division is approximate (ANGLE D3D11 gave
   `floor(k*n/n)` = k-1 in 3275 of 16384 pairs), so ring and lap math
   must be integer-corrected, and a float64 CPU mirror will not catch it.
-  Held while Levi is away (claude-config edits wait for his approval).
+  Held while Levi is away (claude-config edits wait for their approval).
 
 ## K313 (2026-10-15, shortened by the diet)
 
@@ -1535,7 +1535,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   The turn rules' LOSE_MARGIN and ROAM_MIN become knobs with K294.
   Levi took section 7's recommendations (2026-10-14 about 23:55): D3
   keeps today's catch rates, so the minotaur speeds up to compensate,
-  and D9 (chevrons) waits until he sees stage 2.
+  and D9 (chevrons) waits until Levi sees stage 2.
 
 ## K326 (2026-10-15, shortened by the diet)
 
@@ -1616,8 +1616,8 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   me in the credits."; at 22:40, "Proceed, with my above notes"). The
   page and the panel's link become Credits (`credits.html`). From the
   top: "Created by Levi Lindsey" and "(c) 2026 Snoring Cat LLC. All
-  rights reserved." (he set up the LLC and assigns this IP to it;
-  LICENSE already names it); then his art, icon and music credits, still
+  rights reserved." (Levi set up the LLC and assigns this IP to it;
+  LICENSE already names it); then Levi's art, icon and music credits, still
   to come; then "Built with Claude Code", linked like the other credits
   ("We don't need to put the "Built with Claude Code" bit that
   prominently at the top"); then the techniques, the open-source
@@ -2602,8 +2602,8 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 ## K117 (2026-10-15, shortened by the diet)
 
 - **K117** · Repo visibility (Levi's notes, 2026-10-13;
-  `docs/design/levi_notes_2026-10-13.md`). Levi: private later, on his
-  word; he won't share it for a while. Done in a756ca5: the panel's
+  `docs/design/levi_notes_2026-10-13.md`). Levi: private later, on their
+  word; they won't share it for a while. Done in a756ca5: the panel's
   GitHub link is gone, `LICENSE` says all rights reserved (Snoring Cat
   LLC. holds them: 7a63ec4, Levi 2026-10-13), package.json
   says UNLICENSED, and a push touching only the ledger, docs, `.claude/`,
@@ -2611,7 +2611,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   plan once private; deploys used about 330 minutes in the last 7 days,
   and the free plan has 2,000 a month). Obfuscating the bundle: not worth
   it (answered 2026-10-13; it is minified and ships no sourcemaps). K122
-  (the bundled packages' license notices) is needed either way. On his
+  (the bundled packages' license notices) is needed either way. On Levi's
   word: `gh repo edit --visibility private
   --accept-visibility-change-consequences` (reversible; hides the code,
   history, docs and this ledger from then on, not copies already made;
@@ -3307,7 +3307,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   (WebGL): GPU float division is approximate (ANGLE D3D11 gave
   `floor(k*n/n)` = k-1 in 3275 of 16384 pairs), so ring and lap math
   must be integer-corrected. Held while Levi is away (claude-config
-  edits wait for his approval).
+  edits wait for their approval).
 
 ## K313 (2026-10-15, shortened by the diet)
 
@@ -3374,7 +3374,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 - **K321** · The credits page (Levi, 2026-10-14; "Proceed, with my above
   notes"): the page and the panel's link become Credits
   (`credits.html`): "Created by Levi Lindsey", "(c) 2026 Snoring Cat
-  LLC. All rights reserved.", his art, icon and music credits (to come),
+  LLC. All rights reserved.", Levi's art, icon and music credits (to come),
   then "Built with Claude Code" (not prominent, linked like the others),
   then techniques, licenses, research. A small sonnet stage:
   `docs/design/K321_credits.md`.
@@ -4390,7 +4390,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   churn cost (2026-10-14). Done in a756ca5: the panel's GitHub link is
   gone, `LICENSE` says all rights reserved (Snoring Cat LLC.),
   package.json says UNLICENSED, doc-only pushes skip the deploy. No
-  bundle obfuscation. On his word: `gh repo edit --visibility private
+  bundle obfuscation. On Levi's word: `gh repo edit --visibility private
   --accept-visibility-change-consequences` (reversible; the Pages deploy
   keeps working). K122 is needed either way.
 
@@ -4508,7 +4508,7 @@ The history that had accumulated after the ID on the ledger's Next free ID line,
   - next: Levi verdict on fbd2_* crops + link; then either (a) interior/paint parity for the field (fill the silhouette with the section colour like ribbons, band on top) to kill the chip read, or (b) accept sfb as the junction answer and retire fbd. NOT committed.
   - status 2026-10-26 (plan steps 1-2, Levi "do it"): step 1 done in corrected form - master's interiors measured hollow (BG-valued), so NO interior fill (would deviate); the chip cause was branch-by-nearest: over-band pixels nearer the under centreline took the under branch and were suppressed. Both fields' bands now evaluate independently, stronger wins. Node discs no longer feed bdR (they drew rings once both bands evaluated); bdN only. Pairing redone GEOMETRICALLY in the renderer (nearest other chain through the window centre; slotOver* tables are overwritten by later solves and mis-tagged arcs by ~5 ctrl - the ring cause: window-end caps of marked stretches at shallow crossings). Paired gate widened by (half+W)*0.9 (ribbon cut is by arc; caps bulge laterally past any centreline gate). Interior-fill parity skipped by measurement. Result: hash-locked crops Drive fbd3_* (123/49/tip vs master): rings gone, dense weave continuous, dead-end junction fused with rounded lobes, arcs smooth. New visible difference: sub-width centreline loops (twist eyes) render as outline donuts where master's self-overlapping ribbon mesh reads filled - geometrically honest, Levi to judge. Step 2 (fan polygons in field + chain-id smin mouth rounding) NOT done: remaining centre debris is now small (tiny flecks at 2-3 spots/crop, small mouth points); smin needs a chain-id texel (layout change) - do only if Levi flags mouths after this round. Suite 2350 green. DIAG hooks still in tree. NOT committed.
   - next: Levi verdict on fbd3_* + link; if mouths flagged: chain-id texel + node-local smin; then fps (phone), DIAG cleanup, default-on decision. NOT committed.
-  - status 2026-10-26 (presentation correction, Levi: "it's worse"): he was right - at full frame the outline presentation (bands at thread silhouette 0.8 wide) reads fat/wormy vs master. Measured master properly this time: border look = SOLID centreline band, total width ~0.17 ctrl = borderWidth*casingHalf (fans' bandSpan), flat-cut at crossings, ABSENT at junctions (every node an empty hole - the original complaint). fbd now renders exactly that band as a union in border look (solid mode: sHalf = borderWidth*casingWidth/4, gate base sHalf+0.1, wide term sHalf): same weight as master (dark frac 0.186 vs 0.130; the delta is the fused junctions + continuous under bands, i.e. the point), fused at nodes, rounded dead-ends. Fill looks keep the casing edge band (white-fringe residual stands). Hash-locked Drive fbd4_* (full frame + 123/49/tip, master vs fbd) + cmp_full.mjs. Tests: fabric_border/k320/thread_look/program_registry 23 green; full suite not re-run this round (last full 2350 green before solid mode). Residuals: 1-2 tiny flecks per crop; donuts gone in border look (solid fills loops like master); fill-look fringe; phone fps; DIAG hooks. NOT committed.
+  - status 2026-10-26 (presentation correction, Levi: "it's worse"): Levi was right - at full frame the outline presentation (bands at thread silhouette 0.8 wide) reads fat/wormy vs master. Measured master properly this time: border look = SOLID centreline band, total width ~0.17 ctrl = borderWidth*casingHalf (fans' bandSpan), flat-cut at crossings, ABSENT at junctions (every node an empty hole - the original complaint). fbd now renders exactly that band as a union in border look (solid mode: sHalf = borderWidth*casingWidth/4, gate base sHalf+0.1, wide term sHalf): same weight as master (dark frac 0.186 vs 0.130; the delta is the fused junctions + continuous under bands, i.e. the point), fused at nodes, rounded dead-ends. Fill looks keep the casing edge band (white-fringe residual stands). Hash-locked Drive fbd4_* (full frame + 123/49/tip, master vs fbd) + cmp_full.mjs. Tests: fabric_border/k320/thread_look/program_registry 23 green; full suite not re-run this round (last full 2350 green before solid mode). Residuals: 1-2 tiny flecks per crop; donuts gone in border look (solid fills loops like master); fill-look fringe; phone fps; DIAG hooks. NOT committed.
   - next: Levi verdict on fbd4_* + link. If accepted in principle: full suite, phone fps, fill-look fringe, DIAG cleanup, default-on decision. NOT committed.
 
 ## K865 (2026-10-26, shortened)
@@ -4517,7 +4517,7 @@ The history that had accumulated after the ID on the ledger's Next free ID line,
   - owner: agent (2026-10-24)
   - branch: mainline
   - evidence: `.claude/probes/K862/research_fusion.md`, `docs/design/K865_sdf_field_border.md`
-  - verdict 2026-10-25: full C built (ribbons evaluate the union field in junction windows, fans the same band) but MEASURED A VISUAL NO-OP: settled/drag/fat(tw1.1)/high-cusp(cr6) zoomed A/B at junctions are pixel-identical (junction 123 zoom diff = 0 px; all 933 changed px in the cr6 crop sit under the start marker; all 784 flank tips covered with sfb off). K864's cosine-warped rims already trace the curve the field computes. Levi confirmed no visible difference on the test link. RECOMMENDATION: do not default-on; keep dormant behind ?sfb=1 or remove. The originally reported fillet gap is NOT reproduced in any state tested on the current build - if it persists for Levi, need the exact design (seed/params) or a screenshot from his device. Suite 2,339 green at build time. NOT committed.
+  - verdict 2026-10-25: full C built (ribbons evaluate the union field in junction windows, fans the same band) but MEASURED A VISUAL NO-OP: settled/drag/fat(tw1.1)/high-cusp(cr6) zoomed A/B at junctions are pixel-identical (junction 123 zoom diff = 0 px; all 933 changed px in the cr6 crop sit under the start marker; all 784 flank tips covered with sfb off). K864's cosine-warped rims already trace the curve the field computes. Levi confirmed no visible difference on the test link. RECOMMENDATION: do not default-on; keep dormant behind ?sfb=1 or remove. The originally reported fillet gap is NOT reproduced in any state tested on the current build - if it persists for Levi, need the exact design (seed/params) or a screenshot from their device. Suite 2,339 green at build time. NOT committed.
   - CORRECTION 2026-10-26: the no-op verdict was an artifact. The JSEG FloatRows were never flushed (g3List omits them; only first-bind data ever reached the GPU), so every A/B compared the rim fallback against itself - and two probe generations compounded it (stale crop filenames, wheel-zoom at unmatched scales). Fixed: g3FlushNow also flushes jsegRows. Post-fix, sim-locked A/B (__knotStepUntil, identical physics hash) at junctions 49/110/123 shows sfb=1 fusing junction outlines into the continuous union contour where sfb=0 ends strands at cut windows (.claude/probes/K862/zoom_servo3.mjs, sv3_* crops). Research math was right; the implementation never delivered the field to the GPU. sfb stays behind ?sfb=1 pending Levi's look + phone fps; cover discs (aFlank 6) replace wedge fans under sfb. Suite 2,339 green. NOT committed.
   - fixes 2026-10-26 (later): Levi: junction branches showed CLOSED ROUNDED ENDS inside adjacent segments, and dead-end tips lost their rounds. (1) Arm polylines now run past the flank reach, beyond the cover-disc rim (sampled along the arm to min(domain, coverR + fillHalf)) - the capsule cap lands outside every region evaluating that record, so branches leave junctions open. (2) The fan field branch only trusts recs inside the JSEG header region (rec < uFieldBorder.w): free-tip cap fans carry record bases past it, where jsegAt reads segment texels as a header and the field ate the cap. Verified: tip crops (border + fill) show the round cap with sfb on; junction 123/110 crops re-shot. Suite 2,344 green. NOT committed.
   - fixes 2026-10-26 (later still): Levi: branch arms read FATTER than adjacent segments, branch-arm border ends misalign with segment border ends, and SHORT-segment branch arms still show round caps. Root causes: (1) the union was a polynomial smooth-min (k=0.12), which dilates every surface by up to k/4 past the ribbon width - the field silhouette is wider than the ribbon it must meet at the window edge, so arms printed fat with a step at the seam; jFieldAt now takes an exact min (sminPoly GLSL + sminPolyCpu removed; field_border.test mirrors the min). (2) The arm polyline extension was capped at the segment domain, so on short arms the capsule cap sat inside the disc and drew mid-arm; cap removed (armAt follows the chain past the next joint; steps retargeted to ~0.15 world spacing, cap 40; JSEG shader loop cap 192 to 256). Re-shot sv3_123/49 + tip crops. NOT committed.
@@ -4535,7 +4535,7 @@ The history that had accumulated after the ID on the ledger's Next free ID line,
   - branch: mainline
   - evidence: `docs/design/K863_cursive_clean_slate.md`, `.claude/probes/K862/` (rim work), K861 stills in `.claude/probes/weekend-review/`
   - status 2026-10-25 (later): SHAPE PASS 2 done. Itinerary knots re-authored (upright domed a, touch (28,44)/R (80,44); straighter i stem J (20,48) -> top (29,75), shipped smooth-U bottom adapted, tittle (35,105)); handles fitted by coordinate descent (.claude/probes/K863/fit_itin.mts). All fused edges minR >= 6.5 GU (thread half), excess <= 0.0073; intrinsic bottom flips remain (a 6, i 3, pinned in tests). CPU union-field oracle still regenerated (Drive k863_field_ai.png: old left, new right). Next: Levi shape verdict, then the in-app GPU field pass.
-  - status 2026-10-26: SHAPE PASS 3 (Hershey-proportioned interiors) had landed unmeasured; tests re-pinned to it. Fitted handles baked (fit_itin.mts, two rounds): i all edges >= 6.48 GU, a bottom 8.42 / exit 10.78 - but the a's top/right fused edges measure minR 5.07 / 5.15 / 3.00, BELOW the 6.25 GU thread-half floor. Handle descent cannot lift them; the knot positions themselves are too tight on the bowl's top-right arc. Per-edge measured radii pinned in test/core/glyph_itinerary.test.ts as report (not blessing). Levi dislikes the current letterforms; reference choice (Hershey plotter forms vs a penmanship model) is his call before knot repositioning. In-app GPU per-glyph field render (decided) still unbuilt; strand-pipeline emission remains provisional.
+  - status 2026-10-26: SHAPE PASS 3 (Hershey-proportioned interiors) had landed unmeasured; tests re-pinned to it. Fitted handles baked (fit_itin.mts, two rounds): i all edges >= 6.48 GU, a bottom 8.42 / exit 10.78 - but the a's top/right fused edges measure minR 5.07 / 5.15 / 3.00, BELOW the 6.25 GU thread-half floor. Handle descent cannot lift them; the knot positions themselves are too tight on the bowl's top-right arc. Per-edge measured radii pinned in test/core/glyph_itinerary.test.ts as report (not blessing). Levi dislikes the current letterforms; reference choice (Hershey plotter forms vs a penmanship model) is their call before knot repositioning. In-app GPU per-glyph field render (decided) still unbuilt; strand-pipeline emission remains provisional.
   - status 2026-10-26 (later still): SHAPE PASS 4 + GPU render. Levi rejected pass-3 shapes; letterforms re-authored from a standalone pen-stroke proof (.claude/probes/K863/cursive_proof.html/png: one continuous stroke, no thread constraints - entry/connector single right-then-up swooshes), then mapped to knots. a exit / i entry meet flat at baseline so the builder joins directly (no connector cubic; the old right-up-right-up staircase is gone). Every fused edge clears the 6.25 GU floor (tightest 6.37); declared pen-turn corners listed in the data test. GPU per-glyph field render BUILT (render/glyph_field.ts, GlyphFieldLayer behind #glyphs2=itin, ?gfield=0 A/B): ?txt=ai renders fused flat ink; stills in Drive (cursive_proof.png, k863_gfield_on/off.png). Residuals: flat colour (no section/reveal paint on the field layer), dot reads large, word fit runs under the panel at this size. Suite 2,344 green. NOT committed.
   - status 2026-10-26 (later): in-app GPU per-glyph union-field render BUILT (render/glyph_field.ts, GlyphFieldLayer): per glyph chain one quad, fragment evaluates min-distance over the chain's sampled centreline segments (FloatRows texture, flushed at build), flat ink where F < 0. Behind #glyphs2=itin (style.glyphField from scene.ts; ?gfield=0 A/B off). Packer + CPU-oracle gates in test/render/glyph_field.test.ts (touch fills as one union, retraced stem one line); program registered for warm-up (program_registry). Verified live: ?txt=ai#glyphs2=itin renders fused flat ink incl. the tittle; gfield on/off A/B in Drive (k863_gfield_on/off.png). Residuals: flat knotChainRgb colour (no section/reveal/paint integration yet), overlay draws over the glyph ribbons (ribbons remain traversal/paint bookkeeping per section 9), border look not honoured by the layer.
   - status 2026-10-26 (proof v3): Levi rejected pass-4 letterforms in the app AND in the standalone proof (a read as o; exits cusped where the near-vertical stem met the connector). Diagnosis: the proof hand-placed a was a closed oval plus a stub stem outside it - structurally an o. Proof rebuilt on the Hershey Script Simplex structure (the repo measured font data; rendered as a reference panel inside the proof): entry lands at the top point, bowl clockwise and closed, short crown retrace, full-height straight stem retraced down, foot tangent horizontal at the baseline into the exit (no cusp). v2 (crown-to-stem left open) read as e; v3 reads ai at text size. Proof: .claude/probes/K863/cursive_proof.html/png (Drive cursive_proof_v3.png). Next: Levi verdict on v3, then port itinerary knots to this structure. NOT committed.

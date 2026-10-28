@@ -26,7 +26,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 - **K329** · The arrow keys at a 4-way junction (Levi, 2026-10-14
   about 22:15). Cause: K120's `keyMap` settled a tied key only by giving
   it a run no clear key had claimed, so at an X whose four arms all sit
-  near diagonals every key tied (1 of 45 junctions in his maze; K7 not
+  near diagonals every key tied (1 of 45 junctions in Levi's maze; K7 not
   involved). Now each run gets at most one key: at an X each key takes
   the diagonal arm clockwise of it, elsewhere the assignment minimizes
   the worst key's error, and differences under KEY_TIE are ignored so it
@@ -145,7 +145,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   too." (K307); yes to (1), (2), (4), (7), (8) and (9) at 20:58-21:05;
   "What?" to (3), (5), (10) and (11), explained at 21:08 with (2), then
   "All these recommendations sound good" at about 21:18. (6)'s "Yes." is
-  read as noted, so K8 keeps its place. His question on multithreaded
+  read as noted, so K8 keeps its place. Levi's question on multithreaded
   WASM was answered at about 21:20 (K316), and (4) led to K313. Closed
   2026-10-14 21:18: all yes.
 
@@ -162,7 +162,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   `ribbon_renderer.ts`, guarded by `test/render/paint_ring_lap.test.ts`
   (a source scan with a `ROUNDED_QUOTIENTS` allowlist). Named change: a
   full-lap run's choice pulse now draws (such runs are in 49 of dailies
-  1-300). His link's A/B went from 6967 px off to 42 (all at 1/255).
+  1-300). Levi's link's A/B went from 6967 px off to 42 (all at 1/255).
   Done in 74ad307..e5acafb (merged 2026-10-14 20:45). Lore:
   `render-paint.md` ("RING LAPS"); sheets `.claude/probes/K299/sheet/`;
   `docs/design/K299_choice_pulse_bug.md` ("Stage 1 handoff").
@@ -288,7 +288,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   just want to be able to pan such that the right edge of the maze is
   shown to the left of the left edge of the panel. Flash: not sure what
   you're describing. Markers should have settings, and I guess we should
-  prevent the excess pan." The coordinator's reading, emailed to him
+  prevent the excess pan." The coordinator's reading, emailed to Levi
   2026-10-14 to correct: (1) the pan clamp (K149, `src/ui/view_clamp.ts`)
   lets the maze's right edge reach the open panel's left edge (on the
   phone the panel covers x 81-401 of 411), in place of 0.3 of the screen
@@ -494,7 +494,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   panel is open, each enabled only when it can act; the mode badge moves
   to a row below them. An undo stack of design changes, including the
   "Free play" badge's tap (today it replaces the link, so an unshared
-  design is lost). His call (2) stands: under fog, a tap on the finish
+  design is lost). Levi's call (2) stands: under fog, a tap on the finish
   indicator only shows a toast. Files: `src/ui/tweakpane_panel.ts`,
   `src/main.ts`, `src/ui/mode_badge.ts`, `src/ui/url_state.ts`;
   `.claude/rules/gameplay-badge.md` (MODE BADGE). Brief
@@ -762,7 +762,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 - **K104** · Plucks you can see at a glance (Levi, 2026-10-13: "Even
   maxing pluckSize to 3, I can't tell when some segments are plucked"):
   a set-amount vibration of the whole plucked segment with today's local
-  lobes on top (he likes the locality); a gentler collapse than
+  lobes on top (Levi likes the locality); a gentler collapse than
   `COLLAPSE_ROUND`'s 1 h ("better, but still a bit too acute"; K77's
   A/B: 0.5 h left shoulders, 2 h erased most of the thinning); its own
   reduced-motion version (K79's Motion setting). K105 folds in (goal 4).
@@ -1535,7 +1535,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K264 (Done 2026-10-14)
 
-- **K264** · The hover rim's width becomes a slider: `hoverGlowWidth` (`hgw`, codec 130, daily-exempt, default 0.85); his follow-up is K298 (`docs/design/K111.md`, "Stage 4 handoff"). Done in a47642d..f294247 (2026-10-14).
+- **K264** · The hover rim's width becomes a slider: `hoverGlowWidth` (`hgw`, codec 130, daily-exempt, default 0.85); Levi's follow-up is K298 (`docs/design/K111.md`, "Stage 4 handoff"). Done in a47642d..f294247 (2026-10-14).
 
 ## K299 (Done 2026-10-14)
 
@@ -1543,7 +1543,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K302 (Done 2026-10-14)
 
-- **K302** · K7's 11 calls (`docs/design/K7_worker.md`, "Levi's calls"): all yes, as recommended; his multithreaded-WASM question went to K316 and call (4) led to K313. Done (2026-10-14).
+- **K302** · K7's 11 calls (`docs/design/K7_worker.md`, "Levi's calls"): all yes, as recommended; Levi's multithreaded-WASM question went to K316 and call (4) led to K313. Done (2026-10-14).
 
 ## K193 (Done 2026-10-14)
 
@@ -1667,7 +1667,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K449 (Done 2026-10-15)
 
-- **K449** · K397 stage 2's looks: Levi keeps the cap and two dots, and the fade tap's pluck ("If we make a pluck sound, then we should show the pluck effect"); his 13:39 report is K397's and K459. Done in 092aca0 (2026-10-15).
+- **K449** · K397 stage 2's looks: Levi keeps the cap and two dots, and the fade tap's pluck ("If we make a pluck sound, then we should show the pluck effect"); their 13:39 report is K397's and K459. Done in 092aca0 (2026-10-15).
 
 ## K395 (Done 2026-10-15)
 
