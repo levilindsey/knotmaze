@@ -372,10 +372,10 @@ Next free ID: K891.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c
   merged e6c6034..aa3cdd1).
-  - owner: agent `a3e244ff8f1b79ef4` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (sonnet, started 2026-10-27 08:49, 1 h cap ~09:49)
-  - branch: `worktree-agent-a3e244ff8f1b79ef4`, worktree `.claude/worktrees/agent-a3e244ff8f1b79ef4`; last commit: `01df23a5`
+  - owner: nobody since 2026-10-27 09:34 (merged; agent `a3e244ff8f1b79ef4` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
+  - branch: mainline; last commit: `c2283119`
   - evidence: .claude/probes/rounds/2026-10-27-01df23a5/ and its -g31 twin (main checkout, untracked)
-  - next: round 2026-10-27: idle wait, check, frames and load in both orders (d0406df vs master), K539 render-sync cells, then the G3-1 attribution if the cap allows; merge the handoff section
+  - next: Levi decides G3-1's phone cost (K892); a later phone window runs the d0406df..01df23a5 bisect (K893), K568's confetti recheck (K896) and the kit fixes with an m11 A/A floor (K895)
   - brief: docs/design/K156.md, "Round 2026-10-27"
   - env: none; the pass builds and serves both builds itself (ports
     5480-5489); check nobody is using the phone first (K234)
