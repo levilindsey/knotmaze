@@ -167,22 +167,39 @@ arm's cap is the first of:
 - the chain's end;
 - the next junction's root on that chain;
 - a crossing cut. When one cluster's spans hold both passes of a crossing
-  (a pass counts as held up to h·cot(θ/2) + h/2 past an arm's far end: the
-  overlap's reach along a pass, plus a margin; θ is the crossing's acute
-  angle), every arm holding the pass farther from its root stops at
-  d − (h·cot(θ/2) + h/2), d being that pass's distance from the root. A
-  tie cuts pass a. Cuts split clusters, so the test repeats until nothing
-  changes (at most 12 rounds); a crossing found again cuts both passes.
+  (a pass counts as held up to L + h past an arm's far end, L =
+  h·cot(θ/2) being the overlap's reach along a pass and θ the crossing's
+  acute angle), every arm holding the pass farther from its root stops at
+  d − (L + h), d being that pass's distance from the root. A tie cuts
+  pass a. Cuts split clusters, so the test repeats until nothing changes
+  (at most 12 rounds); a crossing found again cuts both passes.
+
+Same-chain joins respect the cut (K900): cluster joins go first, then σ
+joins nearest first, and a σ join is refused when one side already holds
+a pass of a crossing (by the cut's own L + h) and the other side holds the
+other pass. Padding the cut by σ instead would stop arms 3h or more short
+of passes they never clash with.
+
+The margin is h, not h/2 as until K900: the round end of a cut arm clears
+the over pass's border iff cos θ + m·sin θ ≥ 1 for a cut at L + m·h, which
+m = 1/2 fails past θ 53.1° and m = 1 meets for every θ. L + h is also
+check 15's window, so the cut and the check see the same holds.
+`OracleParams.passJoins` ("k883") and `passMargin` (0.5) keep 5048670e's
+rule for A/Bs.
 
 The oracle keeps each cap and its reason (`FieldModel.armCaps`), and the
 round corners are fitted inside the caps (§3.8). Checks 15 and 16 test it.
-Left on muse_hash at cr 3 (#15, 349 of 350): crossing 292. Its over pass
-(chain 84) lies in no span, but the same-chain rule (σ 3.14h) links it
-through chain 84's own candidates to a cluster-68 arm starting 5h along
-that chain, and cluster 68 (j123, j139, j140) holds the under pass. The
-cut sees a pass only within its pad of an arm's far end (2.8h at 47°),
-short of σ's reach. Open: pad by σ too, or keep σ joins out of a cluster
-that holds a crossing's other pass.
+Crossing 292 (muse_hash, cr 3; #15 349 of 350 at 5048670e) is j140's END
+(chain 84) hooking back over j140's own through (chain 66) at 47°. Two
+mechanisms put both passes in cluster 68 (j123, j139, j140). The END's
+span ended 2.84h from the over pass, outside the old pad (L + h/2, 2.80h)
+but inside check 15's window (L + h, 3.30h), so no clash was found and the
+throughs' spans stayed whole over the under pass. And the hook's own
+candidates (s 32.55 to 34.76) σ-join the cluster. On muse_hash the cut at
+L + h alone clears it (350 of 350 with either join rule) and the refusal
+alone does not (349). The synthetic `j_hook_cross` (gen.ts `hookScene`,
+a 1.5h, R h) fails under either change alone and passes under both, so
+both stay (`k883.test.ts`).
 
 The span's margin keeps the rule continuous: just outside it an arm alone
 draws exactly what the junction group draws there.

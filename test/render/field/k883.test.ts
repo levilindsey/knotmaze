@@ -116,11 +116,42 @@ describe("§3.4 on j_pair_cross: two Ts whose ENDs cross 4.9h out", () => {
 
 describe("§3.4 on the synthetic crossing scenes", () => {
   it("no group holds both passes of a crossing", () => {
-    for (const name of ["j_cross", "oblique30", "k42"]) {
+    for (const name of ["j_cross", "oblique30", "k42", "j_hook_cross"]) {
       const s = scene(name);
       const m = new FieldModel(s, mapped(s.look.halfWidth, 3));
       const r = check15(checkContext(m));
       expect(r.status, `${name}: ${r.value} ${r.details?.join("; ")}`).toBe("pass");
     }
+  });
+});
+
+describe("§3.4 on j_hook_cross: an END that hooks back over its own through (muse_hash's crossing 292)", () => {
+  const s = scene("j_hook_cross");
+  const h = s.look.halfWidth;
+  const r15 = (p: OracleParams) => check15(checkContext(new FieldModel(s, p)));
+
+  it("needs both K900 rules: the cut at L + h and the refused same-chain joins", () => {
+    const head = r15(mapped(h, 3));
+    expect(head.status, head.details?.join("; ")).toBe("pass");
+    // 5048670e's rule, and each fix alone, leave one group holding both passes.
+    for (const p of [
+      { ...mapped(h, 3), passJoins: "k883" as const, passMargin: 0.5 },
+      { ...mapped(h, 3), passJoins: "k883" as const },
+      { ...mapped(h, 3), passMargin: 0.5 },
+    ]) {
+      const r = r15(p);
+      expect(r.status, `${p.passJoins ?? "k900"} m ${p.passMargin ?? 1}`).toBe("fail");
+      expect(r.details?.[0]).toMatch(/^crossing 0 .*one group via cluster/);
+    }
+  });
+
+  it("cuts the END's span at L + h before the over pass and keeps the over pass's borders", () => {
+    const m = new FieldModel(s, mapped(h, 3));
+    expect(m.diagnostics).toEqual([]);
+    const cx = s.crossings[0];
+    const L = h / Math.tan((47 * D2R) / 2);
+    const span = m.junctionSpans[0].find((q) => q[0] === m.idxOf.get(cx.a.chain))!;
+    expect(span[1] - cx.a.s).toBeCloseTo(L + h, 2);
+    expect(check16(checkContext(m), oracleProbe(m)).status).toBe("pass");
   });
 });
