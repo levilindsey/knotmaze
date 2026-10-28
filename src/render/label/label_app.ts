@@ -171,7 +171,7 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     pass = null;
     pieces = null;
     off = true;
-    const G = window as unknown as Record<string, unknown>;
+    const G = globalThis as unknown as Record<string, unknown>;
     if (G.__knotLabel === api) delete G.__knotLabel;
   };
 
@@ -209,7 +209,7 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
       return { w: pass.width, h: pass.height, packed, camera: cam, data };
     },
   };
-  (window as unknown as Record<string, unknown>).__knotLabel = api;
+  (globalThis as unknown as Record<string, unknown>).__knotLabel = api;
 
   return { frame, dispose };
 }

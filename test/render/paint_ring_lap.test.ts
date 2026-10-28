@@ -343,6 +343,11 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   "fabric_sdf.ts: mod(e.w, 16.0)": [1, "the junction side cut's junction flag bit, exact small integers (K846)"],
   "fabric_sdf.ts: mod(e.w, 32.0)": [1, "the junction side cut's left flag bit, exact small integers (K846)"],
   "fabric_sdf.ts: floor(rel / total + 0.5)": [1, "the side cut's nearest-lap wrap (K849): ambiguous only at the antipode, a full lap from the junction"],
+  // K868 S3a2: the label's fill pass wraps T's s against a crossing's s on
+  // a closed chain before |dS| <= sigma. A quotient one off moves the
+  // result by a whole lap only where it is +-len/2 (the antipode), and
+  // there |dS| is len/2 either way.
+  "label/label_glsl.ts: mod(dd + 0.5 * e.w, e.w)": [1, "fillOrder's closed-chain s wrap (K868 S3a2): ambiguous only at the antipode, where |dS| is the same"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];
