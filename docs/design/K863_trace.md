@@ -119,6 +119,8 @@ Binding on every later cursive stage:
   Above it, the entry and the start of the body are one fused thread, so
   the two strokes follow about the same path from the junction to the
   cusp. v3's a entry runs a bit below its body curve.
+- **Guides stay at the ink edge** (Levi, 2026-10-27: "sgtm"). The
+  template's ascender and descender lines sit where the font's ink
+  ends, 244.6 and -124.6 u, about 4.6 u past the stroke-centre paths.
 - **Still open (ledger K901):** whether r's entry dips after a high exit
-  or takes it unmodified, and whether the template's ascender and
-  descender guides sit at the ink edge or the stroke centre.
+  or takes it unmodified.
