@@ -372,6 +372,32 @@ export function syntheticScenes(): FieldScene[] {
     );
   }
 
+  // K883 (§3.4): two Ts 5h apart on one through, their ENDs leaning in at
+  // 60° and 120° and crossing 5h out (chain 1 over). The Ts' spans overlap
+  // on the through, so one cluster holds both passes unless the rule stops
+  // an arm short of its pass.
+  {
+    const t = new PathB(-L, 0, 0).line(L).mark("j0").line(5 * H).mark("j1").line(L);
+    const a = endFrom(O, 60);
+    const b = endFrom([5 * H, 0], 120);
+    const [cx, cy] = [2.5 * H, 2.5 * H * Math.tan(60 * D2R)];
+    out.push(
+      build({
+        name: "j_pair_cross",
+        paths: [t, a, b],
+        junctions: [
+          { id: "j0", c: O, arms: [...through(0, t.marks.j0, "L", "R"), endArm(1, 0, 1, "U")] },
+          { id: "j1", c: [5 * H, 0], arms: [...through(0, t.marks.j1, "L", "R"), endArm(2, 0, 1, "U")] },
+        ],
+        crossings: [[1, sAt(a, cx, cy), 2, sAt(b, cx, cy)]],
+        tips: [],
+        view: { c: [2.5, 2.5], r: 7 },
+        pois: [{ name: "crossing", at: [cx, cy], radius: 3.5 }],
+        params: { spacing: 5, lean: 60 },
+      }),
+    );
+  }
+
   // Kink loop: a 270° loop of centreline radius 1.6h; the chain crosses
   // itself at 90° at the origin, the second pass over.
   {
