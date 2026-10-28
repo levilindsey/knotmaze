@@ -22,6 +22,10 @@
 export interface DepthPin {
   s: number;
   z: number;
+  /** K922 (plateauDepth): the plateau's length before and after s, the
+   * pass's overlap reach (default 0: today's hat). */
+  rL?: number;
+  rR?: number;
 }
 
 export interface DepthChain {
@@ -69,4 +73,70 @@ export function diagramDepth(c: DepthChain, win: number, s: number): number {
   if (lo + 1 >= n) return hat(P[n - 1].z, u - P[n - 1].s, win);
   const w = Math.min(win, P[lo + 1].s - P[lo].s);
   return hat(P[lo].z, u - P[lo].s, w) + hat(P[lo + 1].z, P[lo + 1].s - u, w);
+}
+
+// K922 depth "overlap": the same blend with each pin's value held over a
+// plateau, its pass's overlap reach (how far along the chain its tube still
+// overlaps the crossing's other pass, OracleParams.depth "overlap"), so a
+// crossing's over pass lies above its under pass over the whole overlap
+// instead of only near the pin (the tent reaches 0 at win, about 1.4h, while
+// a 30° crossing's overlap reaches 3.7h along each pass). The tents fall
+// from the plateau edges, over min(win, the gap left between the two
+// plateaus), so z is still exact on every plateau, continuous, and straight
+// between two plateaus closer than win. Facing plateaus of opposite sign
+// shrink in proportion to leave at least rho between them (a ramp, never a
+// step, so two chains never tie along a stretch); with rho = win a pair of
+// opposite pins closer than win (a twist eye) keeps today's straight ramp.
+// Same-sign plateaus that meet merge. With every reach 0 this is
+// diagramDepth.
+
+function trap(z: number, d: number, r: number, w: number): number {
+  if (d <= r) return z;
+  return hat(z, d - r, w);
+}
+
+function pairDepth(zL: number, sL: number, aL: number, zR: number, sR: number, aR: number, u: number, win: number, rho: number): number {
+  const g = sR - sL;
+  let a = aL;
+  let b = aR;
+  if (zL === zR) {
+    if (a + b >= g) return zL;
+  } else if (a + b > 0) {
+    const k = Math.min(1, Math.max(0, g - rho) / (a + b));
+    a *= k;
+    b *= k;
+  }
+  const w = Math.min(win, g - a - b);
+  return trap(zL, u - sL, a, w) + trap(zR, sR - u, b, w);
+}
+
+/** K922: diagramDepth with plateaus (DepthPin.rL, rR); rho is the least ramp between opposite plateaus. */
+export function plateauDepth(c: DepthChain, win: number, s: number, rho: number): number {
+  const P = c.pins;
+  const n = P.length;
+  if (n === 0) return 0;
+  let u = s;
+  if (c.closed) {
+    u = (s - c.s0) % c.len;
+    if (u < 0) u += c.len;
+    u += c.s0;
+  }
+  let lo = -1;
+  let hi = n;
+  while (hi - lo > 1) {
+    const m = (lo + hi) >> 1;
+    if (P[m].s <= u) lo = m;
+    else hi = m;
+  }
+  if (c.closed) {
+    const iL = lo < 0 ? n - 1 : lo;
+    const sL = lo < 0 ? P[iL].s - c.len : P[iL].s;
+    const iR = lo + 1 >= n ? 0 : lo + 1;
+    const sR = lo + 1 >= n ? P[iR].s + c.len : P[iR].s;
+    if (n === 1) return trap(P[0].z, Math.min(u - sL, sR - u), Math.max(P[0].rL ?? 0, P[0].rR ?? 0), Math.min(win, c.len / 2));
+    return pairDepth(P[iL].z, sL, P[iL].rR ?? 0, P[iR].z, sR, P[iR].rL ?? 0, u, win, rho);
+  }
+  if (lo < 0) return trap(P[0].z, P[0].s - u, P[0].rL ?? 0, win);
+  if (lo + 1 >= n) return trap(P[n - 1].z, u - P[n - 1].s, P[n - 1].rR ?? 0, win);
+  return pairDepth(P[lo].z, P[lo].s, P[lo].rR ?? 0, P[lo + 1].z, P[lo + 1].s, P[lo + 1].rL ?? 0, u, win, rho);
 }
