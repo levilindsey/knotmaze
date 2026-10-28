@@ -19,13 +19,13 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K980.
+Next free ID: K984.
 
 ## Waiting on Levi
 
-- **K950** · Cursive: how long is a word-final e's tail? Now it rises as high as the m/n/y/d tails (51.1 u,
-  ending 1.46 u from the font's exit); the other choice stops at 34.2 u, barely out of the loop. Drive
-  `K863/cursive_v54_words.svg`. Recommended: the longer one.
+- **K950** · Cursive: how long is a word-final e's tail? Long: rises as high as the m/n/y/d tails (51.2 u, up 23.7 u);
+  short: about 30 u, up 10.5 u, barely out of the loop. Drive `K863/e_tails_k950.svg` (five words, side by side;
+  asked 2026-10-28). Recommended: the long one.
 - **K975** · Cursive v5.8, Levi's review (K928's step 2): smooth enough to stop and hand-edit, or another pass?
   Asked on f's little end curl and the kink where o's right side turns into its exit (K976). Drive
   `K863/cursive_v58_nodes.svg`, `cursive_v58_words.svg`; `K969_cursive_v58.md` ## Handoff.
@@ -303,11 +303,11 @@ Next free ID: K980.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
-  - owner: agent `ac999550ed94e601c` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, stage K944, started 2026-10-28 03:26, 2 h cap ~05:26)
-  - branch: mainline, no code (outputs untracked); last commit: `5d990605` (K944's brief; its handoff is appended there at the end)
-  - evidence: `.claude/probes/K863/trace/` (per stage: `tools/*_k<ID>.py`, `work<n>/`, `out<n>/`; `NOTES.md` has a section per version with its rerun commands); Drive `K863/` (each version's SVGs; v5.1: `cursive_v51.svg`, `cursive_v51_words.svg`, `split_combs.svg`, `k917_junctions.svg`; v5.2: `cursive_v52.svg`, `cursive_v52_words.svg`; v5.3: `cursive_v53.svg`, `cursive_v53_words.svg`, `combs_v53.svg`; v5.4: `cursive_v54_words.svg`, `e_joins_v54.svg`; v5.5: `cursive_v55.svg`, `cursive_v55_words.svg`, `combs_v55.svg`; v5.6: `cursive_v56.svg`, `cursive_v56_nodes.svg`, `cursive_v56_words.svg`, `combs_v56.svg`; v5.7: `cursive_v57.svg`, `cursive_v57_nodes.svg`, `cursive_v57_words.svg`, `combs_v57.svg`; v5.8: `cursive_v58.svg`, `cursive_v58_nodes.svg`, `cursive_v58_words.svg`, `combs_v58.svg`)
-  - next: K944's stage (`docs/design/K944_cursive_asdrawn.md`: `--from-svg` reads Levi's curves as drawn, plus K950's side-by-side) while Levi reviews v5.8 (K975; K976 if o's exit flick reads too sharp); then the join stage (K962, K948, K946, K949, K937); Levi answers K950 and hand-edits the template; K927; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls); capitals are K931
-  - brief: `docs/design/K863_trace.md` (## Levi's calls); stages: v3 `K886_cursive_v3.md`, v4 `K902_cursive_frames.md`, v5 `K904_cursive_v5.md`, v5.1 `K916_cursive_v51.md`, v5.2 `K925_cursive_v52.md`, v5.3 `K930_cursive_smooth.md`, v5.4 `K926_cursive_e.md`, v5.5 `K945_cursive_v55.md`, v5.6 `K959_cursive_v56.md`, v5.7 `K965_cursive_v57.md`, v5.8 `K969_cursive_v58.md`, K944 `K944_cursive_asdrawn.md`
+  - owner: agent `adf2a736c831af31b` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, stage J1 = K980, started 2026-10-28 04:56, 2 h cap ~06:56)
+  - branch: mainline, no code (outputs untracked); last commit: `3cad6ab8` (K944's handoff); J1's brief is `docs/design/K980_cursive_local.md`, its handoff is appended there at the end
+  - evidence: `.claude/probes/K863/trace/` (per stage: `tools/*_k<ID>.py`, `work<n>/`, `out<n>/`; `NOTES.md` has a section per version with its rerun commands); Drive `K863/` (each version's SVGs; v5.1: `cursive_v51.svg`, `cursive_v51_words.svg`, `split_combs.svg`, `k917_junctions.svg`; v5.2: `cursive_v52.svg`, `cursive_v52_words.svg`; v5.3: `cursive_v53.svg`, `cursive_v53_words.svg`, `combs_v53.svg`; v5.4: `cursive_v54_words.svg`, `e_joins_v54.svg`; v5.5: `cursive_v55.svg`, `cursive_v55_words.svg`, `combs_v55.svg`; v5.6: `cursive_v56.svg`, `cursive_v56_nodes.svg`, `cursive_v56_words.svg`, `combs_v56.svg`; v5.7: `cursive_v57.svg`, `cursive_v57_nodes.svg`, `cursive_v57_words.svg`, `combs_v57.svg`; v5.8: `cursive_v58.svg`, `cursive_v58_nodes.svg`, `cursive_v58_words.svg`, `combs_v58.svg`; K944: `e_tails_k950.svg`, `words_edit_test.svg`, `combs_edit_test.svg`); K944's file for Levi to edit: `out17/cursive_template.svg`, built with `work17/dbg/build_from_svg.ps1`
+  - next: J1 (`K980_cursive_local.md`: K980, K981, K982's traces) while Levi reviews v5.8 (K975; K976 if o's exit flick reads too sharp) and answers K950; then J2, the join fixes (K962, K948, K946, K949, K937); then Levi edits the template (`out17/cursive_template.svg`, or J1's `out18/` one) and `build_from_svg.ps1` builds from it; K927; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls); capitals are K931
+  - brief: `docs/design/K863_trace.md` (## Levi's calls); stages: v3 `K886_cursive_v3.md`, v4 `K902_cursive_frames.md`, v5 `K904_cursive_v5.md`, v5.1 `K916_cursive_v51.md`, v5.2 `K925_cursive_v52.md`, v5.3 `K930_cursive_smooth.md`, v5.4 `K926_cursive_e.md`, v5.5 `K945_cursive_v55.md`, v5.6 `K959_cursive_v56.md`, v5.7 `K965_cursive_v57.md`, v5.8 `K969_cursive_v58.md`, K944 `K944_cursive_asdrawn.md`, J1 `K980_cursive_local.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -757,9 +757,12 @@ Every other item below waits on the trigger it names.
 - **K941** · K924's follow-ups: trace F, the fill's paper edge at muse_hash #5's 9 sites (corner prims at
   (4.2, 12.1) and (11.9, 15.75)); attribute the 2 unattributed missing stretches; check that group ink's 106
   broken lines are S's; N's 7 extra (open-chain starts) go to the extent walk. `K924_label_artifacts.md` ## Handoff.
-- **K944** · Cursive: `--from-svg` takes Levi's edited curves exactly as drawn (Levi, 2026-10-27: "After I
-  hand-edit them, you should probably not change them") and derives only joins, variants and tails; it reports
-  kinks, never refits (K930's `hold` stays opt-in). Stage `K944_cursive_asdrawn.md` (v5.8's template is at 6 decimals).
+- **K980** · Cursive J1: one letter's edit moves other letters' derived pieces (joins refit globally: minimum's
+  0.22-0.62 u; the e-variant grid jumps 60 fu; word-final tails follow the m/n/y/d medians, 8.2-8.9 u). Make each
+  piece local and continuous, checked by a sensitivity harness on K944's edits. Stage `K980_cursive_local.md`.
+- **K981** · Cursive retrace rule: an edited pass's follower leaves the far fork's departing handle, so n kinks -16
+  deg (rough fails, 0.0056 > 0.0053). Call: at a smooth fork (s/z) that handle rotates collinear, its length kept, as
+  Inkscape treats a smooth node; a corner (c) stays. In J1 (`K980_cursive_local.md`).
 - **K961** · Cursive v5.8: 8 of 30 body strokes have more than 12 nodes (m 21, k 18, h 16, w 16, y 15, p 14, a 13,
   n 13; f is down to 12): k and p are at the fewest any candidate has, fewer-node h and n peak above their caps, m, y
   and w fall outside the 10% peak window, and a's 13th node holds its bowl top. `work16/fewnode/` in K863's probes.
@@ -824,6 +827,12 @@ Every other item below waits on the trigger it names.
 - **K979** · K868 S3a4's measurement leftovers: the switch key churns as clusters renumber (about 6 ms of 440); knot
   mode's model p50 rose 71 -> 80 ms (probably the cursive agent's load; rerun back to back); the drag pages have no
   step-1 baseline. `K868_s3a4_rebuild.md` ## Handoff.
+- **K982** · Cursive K944 leftovers: "fox" absorbs x's whole-letter move ((-0.74, -3) for (+4, -3)); a node delete
+  turned p's entry frame (joins into p up to 0.91 u); the short e tail draws ~30 u vs tails_k926's 33.9; loop
+  crossings are recorded, never read; Inkscape's rewrite loses up to 4.4e-4 u. J1 traces the first three.
+- **K983** · About 40 older design briefs (K7 to K922) call Levi "he"/"his" (the cursive ones were fixed in
+  3cad6ab8). One docs pass to the name; leave the lines about other people (Fisher, Plotkin, Loyd, Abbott, quoted
+  game characters).
 - **K977** · Cursive v5.8's leftovers: b's bottom notch (1.77 -> 0.46) and z's descender notch (0.43 -> 0.25) still
   show; b's upstroke has comb steps at two nodes (unmeasured); k's peak rose to its fair's own 2.71; f's hook keeps
   three nodes about 13 u apart (the font's shape). `K969_cursive_v58.md` ## Handoff; `work16/combs/crops/`.
@@ -2017,6 +2026,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K944** · Cursive `--from-svg` reads Levi's edits as drawn: an Inkscape save reads back within 6.05e-7 u, the build from it matches v5.8's byte for byte, nine scripted edits read back exactly (`work17/dbg/build_from_svg.ps1`). Done in 3cad6ab8 (2026-10-28).
 - **K970** · Cursive tools: `eye`, `fid_cmp`, `nodes_pairs`, fewnode's G2 tally and the `--end-budget` header, fixed in the `_k969` copies. Done in 4a178950 (2026-10-28).
 - **K969** · Cursive v5.7's small comb bumps: a's, k's crotch ripple, y's exit corner and b's spike gone in v5.8; o's exit is K976, the rest K977. Done in 4a178950 (2026-10-28).
 - **K968** · Cursive's checker read one-cubic strokes as 0: `rough_k969` reads x 1.40, x2 0.17, t2 0.26; v5.7's one-curve x kept. Done in 4a178950 (2026-10-28).
