@@ -30,8 +30,12 @@ interface GeoArm {
  * junction's arms (the window plus the pass's overlap reach L + pm·h,
  * L = h·cot(θ/2)), the arm whose pass is farther from its root stops
  * L + pm·h short of it (both on a tie: no, the first, as the K883 spans).
+ * cut false leaves the crossing cut out: the oracle's spans make it
+ * themselves, cluster-wide (an arm of a neighbouring junction can hold
+ * the farther pass), and a per-junction cut made first picked other arms
+ * (K909: muse_hash j132 and j133 at crossing 254, j12 at crossing 37).
  */
-export function geoCaps(model: FieldModel): GeoCap[][] {
+export function geoCaps(model: FieldModel, cut = true): GeoCap[][] {
   const h = model.h;
   const pm = model.params.passMargin ?? 1;
   const { scene } = model;
@@ -58,7 +62,7 @@ export function geoCaps(model: FieldModel): GeoCap[][] {
       }
     }),
   );
-  scene.crossings.forEach((cx, x) => {
+  if (cut) scene.crossings.forEach((cx, x) => {
     const ia = model.idxOf.get(cx.a.chain);
     const ib = model.idxOf.get(cx.b.chain);
     if (ia === undefined || ib === undefined) return;
