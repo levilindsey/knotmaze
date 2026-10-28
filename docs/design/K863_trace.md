@@ -162,8 +162,8 @@ Binding on every later cursive stage:
   currently have them. I can make them smoother with my manual edits.
   After I hand-edit them, you should probably not change them. Which is
   why I want to finish iterating with you BEFORE I start hand-editing").
-  `--split fair` becomes the default, and the stages before his edit make
-  the curves smoother than v5.4. Once he has edited the template, the
-  pipeline reads his curves exactly as drawn: it derives the joins,
+  `--split fair` becomes the default, and the stages before Levi's edit make
+  the curves smoother than v5.4. Once Levi has edited the template, the
+  pipeline reads those curves exactly as drawn: it derives the joins,
   variants and tails from them, reports any kink it finds, and never
   refits them (K944).
