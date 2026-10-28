@@ -262,8 +262,9 @@ Both forms are built. **"crossed" is the right one.**
 ### Step 3: change 3 on top of change 1
 
 `labTie: "surface"` with crossed changes only free ends, 85 to 83 (M1
-member/member 16 to 14). d1-d4 are identical to 1's. Neutral to slightly
-positive.
+member/member 16 to 14). d1-d4 are identical to 1's. On sheet J it
+changes only c2, where it closes a free end with a short cap. Neutral to
+slightly positive.
 
 ### Step 4: change 2, reach caps only
 
@@ -300,10 +301,42 @@ positive.
 1 (crossed), 1+3, 1+2+3 (w 0.4). Rows: d1-d4, then c1-c4, the four
 muse_hash sites that change most against the base apart from d1 and d3
 (`ydiff/muse_hash.base.fyoc.json` and `.base.fyctr04.json`): c1 (16.38,
-11.92), c2 (14.26, 0.87, where change 2 adds most: +56 -8), c3 (8.38,
-16.90) and c4 (29.92, 14.22). muse_hash at 6x, 86 CSS px a tile; magenta
-dots are each column's free ends (`indep/muse_hash.<label>.json`).
-SHEETJ_PENDING
+11.92), c2 (14.26, 0.87: 1+2+3's biggest gain against the base, +56 -8,
+which the sheet shows is change 3's), c3 (8.38, 16.90) and c4 (29.92,
+14.22). muse_hash at 6x, 86 CSS px a tile; magenta dots are each column's
+free ends (`indep/muse_hash.<label>.json`), counted in each tile's
+caption.
+
+Read by crop (`view/J/`: `sheet_a/b/c.png` cut from the sheet at a third,
+`sheet_d1.png` at full scale, and each pair of neighbouring columns
+diffed by `pxdiff.ts` into `x_<row>_<A>_<B>.png`):
+- **d1**: 1 replaces the base's sawtooth under the arch with a clean
+  corner (ch2's outline, x6 over). The zigzag beside it still starts in a
+  free end, about 0.35 world from the corner. 2 free ends in every
+  column. 1+3 equals 1; 1+2+3 trims 768 px off that stub, and the free
+  end stays.
+- **d2**: 1 moves edge pixels only (501 off, 328 on). 0 free ends.
+- **d3**: 1 removes the base's sawtooth where two outlines meet (3405 px
+  off, 1149 on), and the outline runs clean. 0 free ends.
+- **d4**: 1 moves edge pixels (299 off, 123 on); the base's notch at
+  the self-crossing stays. 0 free ends.
+- **c1, c3, c4**: 1 re-angles a cap across a band's end (c1 two caps,
+  1265 off and 1136 on; c3 435/865; c4 259/588). c1 and c3 have 1 free
+  end and c4 none, in every column.
+- **c2**: the base and 1 are identical. **1+3 closes the base's free end
+  with a short cap across the band** (1319 px on, 174 off), and 1+2+3
+  equals 1+3. Free ends 1, 1, 0, 0. The cap is not judged against the
+  table.
+- 1+3 equals 1 at every site but c2, and 1+2+3 equals 1+3 at every site
+  but d1's stub (0 px at the other seven). The sheet shows change 1 at
+  d1, d3 and the caps, change 3 at c2, and change 2 only at d1's stub.
+
+The command, from the worktree with `INK=label DEPTH=overlap ENDSNAP=1`
+set, once `jc.ps1` has rendered each column's crops:
+`npx vite-node .claude\probes\K940\j.ts sheet "base=base=Base"
+"1=fyoc=1 crossed" "13=fyct=1+3" "123=fyctr04=1+2+3 w0.4" -- "d1=d1"
+"d2=d2" "d3=d3" "d4=d4" "c1=c1 (16.38, 11.92)" "c2=c2 (14.26, 0.87)"
+"c3=c3 (8.38, 16.90)" "c4=c4 (29.92, 14.22)"`.
 
 **S's crops**: `.claude/probes/K940/S/`. Six sites from muse_hash's #6
 and #7 lists where a table crossing lies inside a cluster: its two passes
@@ -394,4 +427,58 @@ code; only this brief changed after it.
 
 ## Handoff
 
-PENDING
+Stopped at 20:18 with steps 1-6 done, inside the 2 h cap. Nothing of
+this stage still runs.
+
+**What a merge carries**: `src/render/field/oracle.ts` only (665b7c59):
+`labFill: "yieldOrder"`, `labYieldChain` and `labCapReach`, with their
+`OracleParams` docs. Every switch is off by default and nothing reads
+them unless set; no default changed. No unit test covers them yet.
+
+**Open, in order of use to K868:**
+1. Levi's call: adopt crossed and change 3 (the Recommendation), and
+   S (K943). If crossed is adopted, make it the only form:
+   `labYieldChain` defaults to "near", the wrong form, only because the
+   brief keeps every default.
+2. #16's 6 missing stretches under crossed, which yield inks (Step 6):
+   not traced. `checks_ab.ts` prints no positions; it needs a flag that
+   lists them, then `at.ts` traces.
+3. The 35 missing rows under crossed: inferred to be tubes the table
+   puts under the cluster (the census's expectation, not an ink error),
+   not checked row by row (`cls/<scene>.fyoc.json`, `node tally.mjs base
+   fyoc`).
+4. The 4 wrong cells of base against crossed (`yjudge.mjs`) and
+   crossed's one extra #7 break: not traced.
+5. m8's sliver: ch54 past J57's span, where the nearest crossing switches
+   to x233.
+6. M1 member/member (24 rows in every candidate): a tube past its span,
+   under a member, in a junction core. It needs a junction-core rule, not
+   labCapReach.
+7. `EXTENT=part`: not run.
+8. Probe caveats: `ydiff.ts` lists a self-crossing by its first pass
+   only (`yjudge.mjs` inherits it; d4's x252); `cls.ts` does not model
+   labCapReach and gives its rows the wrong mechanism label.
+
+**Evidence**: `.claude/probes/K940/` in this worktree, untracked. Copy it
+to the main checkout's `.claude/probes/K940/` before the worktree is
+removed, and delete the worktree's `node_modules` junction first
+(`(Get-Item node_modules).Delete()`). Sheet J and its crops (`jcrops/`),
+`S/`, `view/` and `crops/` (steps 1-2), `ydiff/`, `cls/` and `indep/`
+(per-scene JSON), and the logs (`<label>_p<i>.log`, `cls_<label>_p<i>.log`,
+`checks_<label>.log`, `trace_*.log`, `npm_test.log`).
+
+**Rerun**, from the worktree. The base env is `INK=label DEPTH=overlap
+ENDSNAP=1`. Each candidate's flips: yield `LABFILL=yield`; 1 near
+`LABFILL=yieldOrder`; 1 crossed adds `LABYIELD=crossed`; 1+3 adds
+`LABTIE=surface`; 1+2+3 adds `LABCAPREACH=0.4` (or `1.0`).
+- Counts: `pwsh .claude/probes/K940/run.ps1 <label> <base env> <flips>`
+  (free ends, #16 and the checks), `pwsh .claude/probes/K940/cls.ps1
+  <label> <base env> <flips>`, then `node tally.mjs base <label>` in the
+  probes folder.
+- Yields: `npx vite-node <pd>/ydiff.ts <A> <B> <scene,...>` (each side
+  `<label>:K=V;...`), then `node yjudge.mjs <A> <B>` in the probes folder.
+- Traces and crops: `at.ts` (env CFG; `trace:` and `crop:` ops),
+  `visl.ps1`, `tr.ps1` with `tdiff.mjs`.
+- Sheet J: `pwsh .claude/probes/K940/jc.ps1 <column> "<id>:<x>:<y> ..."
+  <flips>` per column, then `j.ts sheet` (Step 5's command).
+- S: `at.ts` crops per ink, `pxdiff.ts <out> <A> <B>`, `pair.ts`.
