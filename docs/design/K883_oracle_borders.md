@@ -175,3 +175,65 @@ crossing. The proposed rule follows; the census may refine it.
   - what is left;
   - a `Ledger items` list (follow-ups, residuals, decisions for Levi);
   - K883's handle fields (branch, last commit, evidence, next).
+
+## Handoff (coordinator, from the agent's report; 2026-10-27 09:26)
+
+(Agent a9e0698a57556c168 of claude session bf876705, opus. Steps 1-5
+were done inside the cap; the full suite passed at `d08820be` (178
+files, 2363 tests). Its branch `k883-borders` merged as `5048670e`.)
+
+**Built.** `borderCensus` (a thread side is missing when it should show
+and is not inked; it should show unless an over pass covers it or its
+own junction's union holds it; each missing stretch is classed (a)-(f),
+and the census also counts shifted outlines and extra ink) and checks
+#15 (no group holds both passes of a crossing) and #16 (an over pass
+keeps both borders through the crossing) in `src/render/field/checks.ts`.
+The rule in `oracle.ts`: `buildSpans` with `spans: "k883"` by default
+(`"s2"` keeps the old one), `armCaps`, the corner fit, the corner with
+no V and the `cr` mapping (`cornerRadius`, `cornerRadiusMax`; `webCap`
+is gone). Six tests in `test/render/field/k883.test.ts`. §3.1, §3.3,
+§3.4, §3.7, §3.8, §6 and §8 of `K868_field_border.md`. Last commit: #15
+read three shallow kink loops (2-14°) as joined, because its window
+(h·cot(θ/2) + h) was longer than half the loop; on a kink a member now
+counts for its nearer pass only.
+
+**Census**, missing border samples over the 12 real scenes, 1540 -> 208.
+By class: (a) a crossing inside a cluster's span 374 -> 0, (b) clusters
+merged 561 -> 0, (c) a failed corner 20 -> 0, (f) other 585 -> 208:
+g41_def_tw64 62, muse_hash 60 (27 stretches), g41_user_tw64 23,
+g41_ring_tw64 22, def 14, ring 13, muse_default_tw 7, the rest 0-3.
+muse_hash: shifted outlines 90 -> 13, extra ink 13 -> 22, clusters 48 ->
+84 (the cuts split them), 151 corners fitted.
+
+**Checks.** Synthetic 76/83 -> 86/86 (acute20 #2, j_pair_cross #7, #15
+and #16 now pass; j_pair_cross #2 fails in both modes). muse_hash keeps
+every status (#2-#7, #9.1, #11, #14, #15, #16 fail; #8, #9 pass): #2
+Infinity / 90° -> 26.75 px / 86.6°, #6 20.96 -> 16.60 px, #7 239 -> 114
+of 700, #9.1 3.04 -> 1.60 px, #11 and #14 310 -> 349 of 350, #15 302 ->
+349 of 350, #16 20321/21208 -> 22927/22992. Elsewhere #14 and #15 pass,
+and #16 fails slightly on 9 scenes (at most 65 samples). Corner solves:
+muse_hash 341 of 342 (j58/1, no V, now the union of its arms); 1-2
+failures a scene elsewhere, unchanged and not the no-V kind.
+
+**Left** (ledger K891 and K898-K900):
+- #15's crossing 292 on muse_hash is a real failure. Its over pass
+  (chain 84) lies in no span; the same-chain rule (σ 3.14h) links it
+  through chain 84's own samples to a cluster-68 arm (j123, j139, j140)
+  5h further on, and cluster 68 holds the under pass. At this 47° angle
+  the cut looks only 2.8h past an arm's end, short of σ's reach. Pad the
+  cut by σ, or keep same-chain joins out of a cluster holding the other
+  pass (`.claude/probes/K883/x15.ts`, `x15_muse_after.log`).
+- The 208 "other" samples have no named cause; the census counts, it
+  does not explain. `diag.ts` traces one sample.
+- Extra ink rose on muse_hash (13 -> 22) and g41_user_tw64 (2 -> 14);
+  the census should record positions. Sheet F (coordinator's look): a
+  spur at cr 3, hairlines and a thick seam at cr 4.5 and a speck at cr 6
+  where an arm is cut short.
+- #14's crossing 15 on muse_hash: the S1a export holds the passes apart.
+- #16 on 9 scenes; the corner solves; j_pair_cross #2 and muse_hash #2.
+
+Evidence: `.claude/probes/K883/` (census/, census.ts, census_all.log,
+checks_ab.ts, diag.ts, x15.ts, jpair.ts, sheets.ts, inspect.ts,
+spots.json, crops/, look/, logs) and
+`.claude/probes/K868/oracle/muse_hash_k883/`. Sheets B2, F and
+K883_worst12 with the README are on Drive `K868/sheets/`.
