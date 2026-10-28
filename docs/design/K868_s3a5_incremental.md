@@ -413,8 +413,12 @@ ran back to back, as 3 reps with the median kept.
 - **A CPU form near 1 ms would need a different step test**: the
   cross-section's distance to the other pass's segments near a warm foot,
   a few segment tests a step instead of 9 grid queries. Estimated at 1-3 ms
-  for 1400 pin sides, which is still over the target alone. On the GPU,
-  each pin side is one invocation.
+  for 1400 pin sides, which is still over the target alone. It is not the
+  same answer by itself: today's test takes every local minimum of the
+  distance to the other pass (`candidates`) within the window, and a
+  search near the warm foot can miss a second one (a kink's loop, a
+  hairpin), so it needs a guard. On the GPU, each pin side is one
+  invocation.
 - partExtents is the same kind of walk (h/8 steps, 9 points, up to 12h)
   and was not prototyped. It is estimated to behave the same way.
 
