@@ -170,7 +170,139 @@ Not this stage:
     only about what shows on screen, in plain words);
   - K868's current handle fields (branch, last commit, evidence, next).
 
-## Handoff (draft, S3a4 in progress)
+## Handoff
+
+S3a4 ran 2026-10-28 03:12 to 04:32 on `k868-s3a` (worktree
+`.claude/worktrees/k868-s3a`), never pushed. The summary comes first,
+then the record step by step. Probes and results are in the worktree's
+`.claude/probes/S3a/` (untracked).
+
+### Summary
+
+**Steps.**
+1. Profile: done (`acdeea14` adds the label's CPU timers; `1ec14386`
+   records the breakdown). The suspect was wrong. The switch search
+   was 1% of a rebuild. The FieldModel's constructor was 93%, most of
+   it in `footInWindow`.
+2. The cache and the same-answer check: done (`2cb21e4d`, plus an exact
+   prefilter for the reach test). It gave 0 differences in 323 checked
+   browser rebuilds, on the 12 scenes and in the unit test.
+3. Other parts over budget: partly done, in three commits:
+   - `efc8ebdc`: `footInWindow` visits only the window's segments;
+   - `477a51fb`: the part walk skips tests it knows are false;
+   - `2a9f56ae`: passReach asks the grid for one chain only.
+   Each is exact: the pipeline's hashes equal the base on the 12 scenes.
+   I stopped there near the 1 h 30 mark. What is left is listed under
+   the CPU goal below.
+4. Measured again: done (`b570ad2d`). The tables, the sleep reads and
+   the drag check are below.
+5. K320 budgets (R10): done (`a56b9a57`).
+6. Checks: done (this commit). The suite is green, flag off equals
+   master, and the 12 scenes' ink rasters are byte-identical to S3a3's.
+
+**Goals.**
+- **CPU, 1 ms p95 per rebuild frame: not met.** A fabric rebuild
+  frame's p95, before and after this stage:
+
+  | page | before | after |
+  |---|---|---|
+  | in-thread settle | 2649 ms | 499 ms |
+  | worker host with flow | about 1760 ms | 464 ms |
+  | drag, in-thread | not measured | 310 ms |
+  | drag, worker host | not measured | 389 ms |
+
+  Knot mode did not change (136 -> 138 ms). The label builds a whole
+  FieldModel from scratch on every rebuild frame. What a def build
+  still costs in Node:
+  - the corner solve, about 120 ms (`newton` -> `footInWindow`, from
+    the corner loop and again from `buildSpans`' K883 re-fits);
+  - passReach, about 54 ms;
+  - partExtents, about 43 ms;
+  - buildLabelPieces, about 73 ms;
+  - buildBandStrips, about 26 ms;
+  - the switch search, about 13 ms.
+
+  In the browser, buildFieldScene adds 17-19 ms. Exact local fixes
+  will not take all of these to 1 ms together. The model has to come
+  off the per-frame path (ledger item 1).
+- **Sleep: not met in-thread.**
+  - With the flag on, the settle page is still in K147's budget phase
+    at 60 s (119 of 300 substeps), and the drag page did not sleep in
+    120 s.
+  - With the flag off, both sleep by 40 s (the drag page at 31.7 s).
+  - On the worker host the flag-on knot sleeps at 28-29 s (off:
+    14.5-15 s).
+- **Flag off equals master: met.** 0 px against master's shots on def
+  and muse_hash, with the same physics hashes.
+- **Suite: met.** 2387 passed, 6 skipped.
+- **K320: met.**
+
+**Merge.** In my view the branch can merge as it stands:
+- with the flag off nothing changes: pixels and hashes equal master's,
+  and the suite is green;
+- with the flag on, the ink is byte-identical and a rebuild costs
+  4-5 times less.
+
+It misses the stage's cost goal, so `lbi` stays unusable in-thread. It
+is off by default.
+
+**Ledger items** (for the coordinator to file):
+1. **1 ms needs the FieldModel off the per-frame path.** There are two
+   ways:
+   - (a) Cache by a topology key what depends only on topology: the
+     corners and their K883 trims, the spans, the clusters and the
+     pass reach. Update only the geometry each frame.
+   - (b) Build the label off the main thread (in the physics worker or
+     its own worker) and draw the last finished one. The ink would
+     then trail the threads by a build, against the drag check's "no
+     lag".
+
+   A design call. The costs are above.
+2. **Residual: with `lbi` on, in-thread fabric does not sleep** in
+   60-120 s, while the worker host sleeps (numbers above).
+3. **Residual: the switch key churns while the knot moves.** Junction
+   clusters are geometric, so they merge, split and renumber. The
+   settle hit 12 of 51 rebuilds; the drag hit 23 of 24. A key that
+   ignores the numbering would hit more, but the switch search is
+   about 6 ms of a 440 ms frame.
+4. **Knot mode's label timers rose between step 1 and step 4** (model
+   p50 71 -> 80 ms). Two parts this stage never touched rose with it
+   (scene 5.2 -> 7.5, pieces 12 -> 18), so the cause is probably the
+   machine's other load. That is inferred; a back-to-back rerun would
+   tell.
+5. **The drag pages (drag, dragw) have no step-1 baseline.**
+6. **Lesson for claude-config `rules/lessons.md`.** PowerShell variable
+   names are case-insensitive: `$S` and `$s` are one variable.
+   `step6_12.ps1`'s raster loop overwrote the probes folder with its
+   scene name and reported every file missing. The rerun with distinct
+   names is in step 6 below.
+7. **Incident, not an item.** Early in the stage I edited the main
+   checkout's `src/render/label/label_band.ts` by mistake and restored
+   it with `git checkout` straight away. The main checkout shows clean.
+
+No question for Levi this stage. With the flag off nothing on screen
+changed. With it on, only the frame rate changed.
+
+**K868's handle.**
+- branch: `k868-s3a`, worktree `.claude/worktrees/k868-s3a`.
+- last commit: the commit that adds this section (unpushed).
+- evidence: `.claude/probes/S3a/` (untracked):
+  - `prof12*` and `prof12_after/` (the step 1 and 4 tables);
+  - `prof12_verify/` and `verify12_locked.ps1` (the cache in the
+    browser);
+  - `pipe12/` and `pipe12_hash.ts` (the pipeline's hashes, the suite
+    logs);
+  - `fiw12_check.ts`, `swcache12_scenes.ts`, `swkey12_diag.ts`;
+  - `drag12/` (the crops);
+  - `ab/s3a4_off/`;
+  - `gpu12/`, `cmp12_all.log`, `step6_12.ps1` and `.log`;
+  - `k320_len12.ts`, `locked12.ps1`.
+- next: the coordinator's call on ledger item 1, then S3a5 (K972,
+  K973).
+- brief: `docs/design/K868_s3a4_rebuild.md`.
+- env: S3a3's dev server command on port 5381 (stopped at 04:31).
+
+### The record, step by step
 
 Started 2026-10-28 03:12 (stop 05:12). Probes and results:
 `.claude/probes/S3a/` (untracked): `prof12.mjs` + `prof12_locked.ps1`
@@ -471,3 +603,23 @@ entries carry (0 to 61 characters):
 | band composite | 231 | 250 | 345 | 350 |
 
 They compile only with the flag on.
+
+### Step 6: checks (`step6_12.ps1`, `step6_12.log`)
+
+- **The suite** at HEAD, whose src/ and test/ equal `2a9f56ae`'s: 2387
+  passed, 6 skipped (`pipe12/suite_final.log`; also
+  `pipe12/suite_step3reach.log` at `2a9f56ae`).
+- **Flag off against master** (`ab7_locked.ps1` -> `ab/s3a4_off/`): 0 px
+  on def and muse_hash against master's shots (`ab/m3`), with the same
+  physics hashes (def 910ff135, muse_hash 733ee14a). The `ab/master`
+  muse_hash shot is the stale one (64878 px), as S3a2 and S3a3 noted.
+  Since m3's base (`d4aa241e`), every commit to src/ and test/ is
+  K868's, and nothing else outside docs/, `.claude/` and the ledger
+  changed.
+- **The 12 scenes' ink against the oracle** (`label_run9.mjs` ->
+  `gpu12/`, `ink_cmp9.ts` -> `cmp12_all.log`): `cmp12_all.log` equals
+  S3a3's `cmp10_all.log` line for line. All 24 ink rasters (d0 and d1)
+  are byte-identical to `gpu10/`, and so is every scene's `cmp.json`.
+  There is no change to explain: the pipeline's hashes said the same in
+  Node. The script's raster loop printed "missing file" (ledger item
+  6). The rerun with distinct variable names: 24 of 24 identical.
