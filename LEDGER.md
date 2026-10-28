@@ -23,9 +23,6 @@ Next free ID: K922.
 
 ## Waiting on Levi
 
-- **K901** · Cursive: r after a high exit, dip (the font: about 50 u below the x-height after o, b,
-  v and w, then its standard r; K902) or straight in? K904 renders both (`out8/r_after_high.svg`). On Drive: `K863/r_after_high.svg`.
-  `docs/design/K863_trace.md` ## Levi's calls.
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -305,7 +302,7 @@ Next free ID: K922.
   - owner: stage K916, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 13:31; handle under K916)
   - branch: mainline, no code (outputs untracked); last commit: n/a
   - evidence: `.claude/probes/K863/trace/` (v1: `tools/trace_tool_v2.py`, `work4/`, `out/`; v2: `tools/trace_k879.py`, `out5*/`; v3: `tools/*k886*`, `work6/`, `out6/`; v4: `tools/*_k902.py`, `work7/`, `out7/`; v5: `tools/*_k904.py`, `work8/`, `out8/`; `NOTES.md` ## v3, ## v4 and ## v5 with their rerun commands); Drive `K863/` (`cursive_v5.svg`, `cursive_v5_words.svg`, `r_after_high.svg`, `cursive_v4.svg`, `cursive_v3.svg`; v1's SVG and review)
-  - next: K916 builds v5.1 (the join refit, leads and tails, the generated e); Levi answers K901 and K917 and edits v5's template (v5.1's `--from-svg` reads his edits); K912's generator follow-ups; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls)
+  - next: K916 builds v5.1 (the join refit, leads and tails, the generated e); Levi answers K917 and edits v5's template (v5.1's `--from-svg` reads his edits); K912's generator follow-ups; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls)
   - brief: `docs/design/K863_trace.md` (## Levi's calls); v3: `docs/design/K886_cursive_v3.md`; v4: `docs/design/K902_cursive_frames.md`; v5: `docs/design/K904_cursive_v5.md`; v5.1: `docs/design/K916_cursive_v51.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
@@ -1935,6 +1932,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K901** · Cursive: r after a high exit dips, as the font's does (Levi: "dip"); `docs/design/K863_trace.md` ## Levi's calls. Done in c1f25160 (2026-10-27).
 - **K904** · Cursive v5: a, c, d, g, o and q fused at 60 u, the high entry mode, every split a G2 blend (peak curvature ratio max 120.5 -> 4.8), r after a high exit both ways; steps 4-5 moved to K916. Done in 1f5818eb (2026-10-27).
 - **K906** · Phone round 2026-10-27c: T1 = K525's TELE paint item (`a64390b0`, dense +11.0 ms), T2 = K137's fray (`24ea1b3b`, dense -13.1 ms); `docs/design/K156.md` round 27c. Done in a9c4dfec (2026-10-27).
 - **K907** · The phone kit tracked: scripts/phone_pass/ (12 files with headers), tested on the phone in round 2026-10-27c; k539_g31.mjs and pixdiff_g31.mjs only parse-checked. Done in a9c4dfec (2026-10-27).
