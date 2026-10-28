@@ -21,10 +21,10 @@ describe("K832 SDF gaps, border and junction cut", () => {
     expect(gapSource()).toBe(fake);
     const sdf = read("../../src/render/ribbon/ribbon_sdf.ts");
     expect(sdf).toContain("uGapData: gapSource() ?? defaultGapTexture().source,");
-    expect(sdf).toContain("if (gs && SDF_SHADER.resources.uGapData !== gs) SDF_SHADER.resources.uGapData = gs;");
-    expect(sdf).toContain(
-      "if (gs && SDF_EXPLORE_SHADER.resources.uGapData !== gs) SDF_EXPLORE_SHADER.resources.uGapData = gs;"
-    );
+    // K905: one shared shader per variant (plain, -root), so sdfShader and
+    // sdfShaderExplore each rebind the one they hand out.
+    const follow = "if (gs && shared.resources.uGapData !== gs) shared.resources.uGapData = gs;";
+    expect(sdf.split(follow).length - 1).toBe(2);
     expect(read("../../src/render/ribbon/ribbon_shader.ts")).toContain(
       "setGapSource(tex.source as unknown as BufferImageSource);"
     );
