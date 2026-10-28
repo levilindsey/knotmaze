@@ -19,15 +19,15 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K909.
+Next free ID: K914.
 
 ## Waiting on Levi
 
 - **K892** · G3-1 at head: K893's hand revert wins 14.5 / 15.9 / 11.2 ms (dense, max-fabric, knot) but
   is not clean (the thread reveal's protect scaling would need porting). Keep it until K868 settles the
   gap search (recommended), or port now? `docs/design/K156.md`, round 2026-10-27b handoff.
-- **K901** · Cursive, still open: r after a high exit, dip or straight in (K902 checks the font's
-  or/br/vr/wr). Guides answered 2026-10-27 ("sgtm"): the ink edge, 244.6 / -124.6 u, as built.
+- **K901** · Cursive: r after a high exit, dip (the font: about 50 u below the x-height after o, b,
+  v and w, then its standard r; K902) or straight in? K904 renders both (`out8/r_after_high.svg`).
   `docs/design/K863_trace.md` ## Levi's calls.
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
@@ -288,25 +288,28 @@ Next free ID: K909.
 - **K809** · Panel search on your phone (K793): typing in the box must not jump or zoom the maze, the
   keyboard must not cover the box, results scroll under the sticky bar, and Enter closes the keyboard
   and outlines the best row (an inferred risk, not seen; `docs/design/K793.md`)
+- **K910** · K900's sheet B3 (Drive `K868/`): do the magenta dots (free border ends that an image
+  check finds in 4x renders) cover every missing border you see on muse_hash? If they do, that check
+  decides K909's grouping; if not, mark the rest. `.claude/probes/K868/sheets/README.md`.
 
 ## In progress
 
 - **K868** · Border look, junctions done right: one field renderer (union within a surface, occlusion
   by depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
-  - owner: stage K900, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 09:48; handle under K900)
-  - branch: mainline; last commit: `5048670e`
-  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes) and `.claude/probes/K883/`; sheets A-F, B2 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
-  - next: K900 makes the missing-border census independent of the oracle's groups (Levi, B2: about twice the marked misses) and fixes them by mechanism; Levi checks B3; then the S3 brief (WebGL2 prototype measured on the Pixel from its first build, since per-pixel texture searches cost the phone +25-48 ms in K8 G3-1 (K892); it settles the END tuck and the band W against master, S1a notes), with G1 corners and cr 0-6 (sheet F approved)
-  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`
+  - owner: stage K909, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 11:38; handle under K909)
+  - branch: mainline; last commit: `263bc134`
+  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`) and `.claude/probes/K909/`; sheets A-F, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
+  - next: K909 groups junctions by geometry and renders sheet G (the hook's look, for Levi); Levi checks B3 (K910); then the S3 brief (WebGL2 prototype measured on the Pixel from its first build, since per-pixel texture searches cost the phone +25-48 ms in K8 G3-1 (K892); it settles the END tuck and the band W against master, S1a notes), with G1 corners and cr 0-6 (sheet F approved)
+  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
-  - owner: stage K902, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 09:48; handle under K902)
+  - owner: stage K904, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 11:52; handle under K904)
   - branch: mainline, no code (outputs untracked); last commit: n/a
-  - evidence: `.claude/probes/K863/trace/` (v1: `tools/trace_tool_v2.py`, `work4/`, `out/`; v2: `tools/trace_k879.py`, `out5*/`; v3: `tools/*k886*`, `work6/`, `out6/` with the words sheet; `NOTES.md` ## v3 and its rerun commands); Drive `K863/` (`cursive_v3.svg`; v1's SVG and review)
-  - next: K902 finishes v4 (out7; a's entry onto its body); upload `cursive_v4.svg`; Levi edits the template; K904's two entry modes; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls)
-  - brief: `docs/design/K863_trace.md` (## Levi's calls); v3: `docs/design/K886_cursive_v3.md`; v4: `docs/design/K902_cursive_frames.md`
+  - evidence: `.claude/probes/K863/trace/` (v1: `tools/trace_tool_v2.py`, `work4/`, `out/`; v2: `tools/trace_k879.py`, `out5*/`; v3: `tools/*k886*`, `work6/`, `out6/`; v4: `tools/*_k902.py`, `work7/`, `out7/`; `NOTES.md` ## v3 and ## v4 with their rerun commands); Drive `K863/` (`cursive_v4.svg`, `cursive_v3.svg`; v1's SVG and review)
+  - next: K904 builds v5 (all six entries fused, the high entry mode, fixed leads and tails); Levi answers K901 (r after a high exit) and edits v5's template; K912's generator follow-ups; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls)
+  - brief: `docs/design/K863_trace.md` (## Levi's calls); v3: `docs/design/K886_cursive_v3.md`; v4: `docs/design/K902_cursive_frames.md`; v5: `docs/design/K904_cursive_v5.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -477,14 +480,6 @@ Next free ID: K909.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
-- **K902** · Cursive v3 stage 2: take each join frame on the connector side of the body/connector
-  overlap and re-cut the bodies (exits now 14-61 deg low; likely fixes ma, la, ic, po, pp, ps, og),
-  then the worst leads and tails. `.claude/probes/K863/trace/NOTES.md` ## v3.
-  - owner: agent `a0834328e757cdbae` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 09:48, 2 h cap ~11:48)
-  - branch: none: probe-only, no commits (main checkout, untracked `.claude/probes/K863/trace/`); last commit: n/a
-  - evidence: `.claude/probes/K863/trace/` (untracked): `work7/`, `out7/`, NOTES.md ## v4
-  - next: steps 1-2 built (out7, 10:35); folding in Levi's K901 answers (a's entry on its body, the font's r after high exits, a design note for K904); NOTES ## v4; leads and tails
-  - brief: `docs/design/K902_cursive_frames.md`
 - **K905** · Phone: compile K620's root-paint GLSL out when no root paint is drawn. It costs
   max-fabric +22.6 ms (`6fd77ab3`, ABBA; `fa0c61de` +6.1 more, one run) with none in use. Untried.
   `docs/design/K156.md`, round 2026-10-27b handoff.
@@ -493,6 +488,22 @@ Next free ID: K909.
   - evidence: `.claude/probes/K905/`
   - next: find where the root GLSL costs a rootless scene; the variant; same pixels on the desktop; phone ABBA if still connected (else K906)
   - brief: `docs/design/K905_root_glsl_gate.md`
+- **K909** · K868 oracle: junction groups from geometry (the arm tubes' connected overlap that holds
+  the node, cut at the caps), shared with truth geo; geo's crossing order; sheet G (the hook's look);
+  extra ink, sheet F, #16. `docs/design/K909_geo_groups.md`.
+  - owner: agent `aa823e8f56a0904ba` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 11:38, 2 h cap ~13:38)
+  - branch: `k909-geo-groups`, worktree `.claude/worktrees/k909-geo-groups`; last commit: `5f2c7db5`
+  - evidence: `.claude/probes/K909/`
+  - next: steps 1-3 first: geo's crossing order; the geometric group behind a switch, with per-arm-side spans; measure against 263bc134 and sheet B4
+  - brief: `docs/design/K909_geo_groups.md`
+- **K904** · Cursive v5: a, c, d, g, o and q fused at a junction about 60 u up; the high entry mode
+  (after b, o, v, w); r after a high exit both ways (K901); leads, tails and the generated e.
+  `docs/design/K904_cursive_v5.md`.
+  - owner: agent `a31f7f6f3061890de` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 11:52, 2 h cap ~13:52)
+  - branch: none: probe-only, no commits (main checkout, untracked `.claude/probes/K863/trace/`); last commit: n/a
+  - evidence: `.claude/probes/K863/trace/` (untracked): `work8/`, `out8/`, NOTES.md ## v5
+  - next: steps 1-3 first: fuse the six entries; the high entry mode; rebuild as v5 with the r comparison
+  - brief: `docs/design/K904_cursive_v5.md`
 
 ## Next, in order
 
@@ -528,9 +539,6 @@ The queue (coordinator, overnight 2026-10-15/16):
 8. Batch close (2026-10-16): fixes ea2e468 (K398/K346/K436/K454/K469/K314/K373/K526/K461/K500; residual K529), K481 stage 2 a69b5cb (stage 3 = K530), K307 stage 3 e83f203 (K366 measured/attributed, fix = K535; K386 narrowed), G3-1 3465090 (browser verification = K536), K430 ramp 377bc41 (K268 stays In progress; residuals K537, K538; K431 narrowed). Levi answered K210 (-> K531, folds K82), K527 in full (-> K532) and K339/K323 (-> K534, Stage A unlocked); backend dailies filed as K533. Refreshed queue by value - Levi gates first: K515 (K480's look), K525 (K80 3b's look, real sheet in), then the rest of Waiting on Levi; then ungated, in order: K530 (K481 stage 3), K534 (panel Stage A), K527's build half (after the render lane), K536 (G3-1 browser verification), K268's remaining item-2 parts, then work in their sections.
 9. Batch 2 close (2026-10-16): K481 stage 3 31b2238 (K530/K481 done; look call K545), panel Stage A1 35f3ec2 (K534 done; A2 = K541), K74 stage 4 build 7d794b5 (K527/K532 done; sheet K543, phone timing K544), G3-1 verified (K536 done in c946ae2; residuals K539, K540), K268 PROTECT 1fc9458 (far-branch smooth-min remains). Queue by value - Levi gates first: K515 (K480's look), K525 (K80 3b's look, real sheet in), K545 (K481 stage 3's look), then the rest of Waiting on Levi; K531 (daily determinism) lands at launch prep and K533 (backend dailies) with the backend/accounts work; then ungated: K268's far-branch smooth-min, K543/K544 when wanted / in K156's next phone window, then work in their sections.
 10. New week (2026-10-19): Levi's calls - final ς gets its own glyph; dailies draw no title thread unless a flag asks (K552, maze topology the same either way); the cursive is redesigned before any mass generation (K115: crossings only, later-over-earlier in pen order with a reverse checkbox, smooth paths). K551 done (f18dd07, gaps back live). Next: K552 and K115's redesign stage 1 (agents), claude-config's dedupe fix (CC81); K161 done. Later: K553, then K550.
-- **K904** · Cursive two entry modes: each letter takes an entry from the baseline and one from high
-  up (after b, o, v, w); G2 may bend the start of the next body; the generator makes every variant
-  (Levi, 2026-10-27). After K902, from its design note. `docs/design/K863_trace.md`.
 - **K814** · Shape-injection params collection (Levi, 2026-10-22): stages 1-3 done in K818, stage 4
   in K822. Left: build the Text & emblem rows from SHAPE_INJECTION_PARAMS, and the optional stage 5
   (SHAPE_FNS into registry entries). Full text: `docs/ledger_notes.md`, K814.
@@ -761,6 +769,9 @@ Every other item below waits on the trigger it names.
 - **K907** · Before the next phone round: move round 2026-10-27b's scan, bisect2, pdiff, report_scan, build_pool,
   run_pass and pixdiff_g31 to tracked `scripts/phone_pass/`; note in `phone_pass.ps1`'s header that
   a piped or captured `-Phase start` caller hangs.
+- **K912** · Cursive generator follow-ups from K902: o and b exits per class (oh/ok 10.9, or 6.5 u)
+  with h's and k's after-o entries; og/oq end at the font's merge; f's exit walk; ng/nq's hook;
+  `--high-exit` by rerun; per-left split overfit. `docs/design/K902_cursive_frames.md` ## Results.
 
 ## Residuals (known, not fixed)
 
@@ -1622,11 +1633,17 @@ Every other item below waits on the trigger it names.
 - **K899** · K883 oracle checks still failing: #14's crossing 15 on muse_hash (the S1a export holds
   the passes apart), #16 on 9 scenes (at most 65 samples), 1-2 failed corner solves a scene,
   j_pair_cross #2 and muse_hash #2 (26.75 px / 86.6 deg). `docs/design/K883_oracle_borders.md`.
-- **K903** · Cursive v3: k's X traced at 61.3 deg (the font's passes: 3.2 deg); b, e and z X's fall
-  at joins; coverage 4.3 u in f; p.jmc's stem kink unmeasured; no join recalibration on edited
-  bodies; the review footer's p line is v2's. `.claude/probes/K863/trace/NOTES.md`.
+- **K903** · Cursive v3: k's X traced at 61.3 deg (the font's passes: 3.2 deg); coverage 4.3 u in f;
+  p.jmc's stem kink unmeasured; no join recalibration on edited bodies. v4 (K902) moved the b, e and
+  z X's into bodies and rewrote the review notes. `.claude/probes/K863/trace/NOTES.md`.
 - **K908** · Max-fabric's frozen cell draws a different frame run to run (base vs base: 2587 px), so
   its pixel diffs need another control. `docs/design/K156.md`, round 2026-10-27b handoff.
+- **K911** · Sheet A's field-vs-EDT check fails on curved (6.751 px) and j_hook_cross (6.805 px)
+  since its K900 regeneration (`7c972033`); not run at `5048670e`, so it may predate K900.
+  `.claude/probes/K868/oracle/checks_synthetic.md`.
+- **K913** · Cursive v4: a's fused junction at the font's 47.5 u (frame in the kink, 30.2 vs 52.6
+  deg); the a body includes the up pass; d's after-o retrace frame at 36.3 deg; v3's rerun checker
+  runs v4's commands; `--guides centreline` unrun. `.claude/probes/K863/trace/NOTES.md` ## v4.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1918,6 +1935,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K902** · Cursive v4 (probe-only, untracked `.claude/probes/K863/trace/` `out7/`): join frames by a walk to the font's connector (smooth-end angle mean 22.1 -> 4.7 deg), calibration mean 3.218 -> 2.175 u, test-word pairs over 4 u 22 -> 10, a's fused entry (0.3 u); r after high exits and the variants measured; two-mode design in its brief's ## Results. Done in cece1bb (2026-10-27).
 - **K900** · Oracle holes: crossing 292 fixed (same-chain joins refused, crossing cut at L + h), census positions, two independent checks (geometric truth, image free ends), sheet B3; handoff in its brief. Done in 263bc134 (2026-10-27).
 - **K893** · Phone round 2026-10-27b: G3-1 undone at head by hand wins 14.5 / 15.9 / 11.2 ms (dense / max-fabric / knot) but is not clean; the week's steps are K573 1b (knot -21.4), K620's root GLSL (+22.6 max-fabric) and K854's outline (+15.3). Done in 69ac4e03 (2026-10-27).
 - **K891** · K883's sheets B2 / F / worst12. Answered 2026-10-27: B2 shows about twice the blue-marked misses (census undercounts; K900 redirected), F lgtm (cr 0-6, default 3).
