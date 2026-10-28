@@ -531,6 +531,7 @@ export function check5(ctx: CheckContext, probe: InkProbe): CheckResult[] {
   let bad = 0;
   let worst: [number, number] | undefined;
   let maxRun = 0;
+  let maxAt: [number, number] | undefined;
   let bDev = 0;
   let bWorst: [number, number] | undefined;
   const skipped: Record<string, number> = { view: 0, neighbour: 0, outside: 0, group: 0 };
@@ -574,7 +575,10 @@ export function check5(ctx: CheckContext, probe: InkProbe): CheckResult[] {
         n++;
         const runs = runsOn(probe, (t) => [x - t * nx, y - t * ny], -0.5 * W, h, 0.1 / ppu);
         const len = runs.length ? runs[0][1] - runs[0][0] : 0;
-        if (len > maxRun) maxRun = len;
+        if (len > maxRun) {
+          maxRun = len;
+          maxAt = [x, y];
+        }
         if (runs.length !== 1 || len > 1.1 * W) {
           bad++;
           worst = [x, y];
@@ -600,6 +604,7 @@ export function check5(ctx: CheckContext, probe: InkProbe): CheckResult[] {
       n,
       skipped: sk,
       worst,
+      details: maxAt ? [`longest at (${fmt(maxAt[0], 3)}, ${fmt(maxAt[1], 3)})`] : undefined,
     },
     {
       id: 9,
