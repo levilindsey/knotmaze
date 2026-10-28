@@ -918,6 +918,8 @@ export interface BorderCensus {
   /** Side samples that should show (in view). */
   samples: number;
   missing: number;
+  /** Samples whose own outline is drawn up to 1.5W further out (not missing). */
+  shifted: number;
   /** Samples that should be hidden but are drawn deep inside the hider. */
   extra: number;
   stretches: MissingStretch[];
@@ -943,6 +945,12 @@ interface Truth {
   nat: [number, number, number, number][][];
   fin: [number, number, number, number][][];
   cornersOf: number[][];
+  /** Per junction, per arm: how far from the root the junction's core
+   * reaches (the farthest V foot of the arm's corners; a no-V corner's
+   * overlap; a failed corner's natural extent). */
+  core: number[][];
+  /** Per corner: its fill's bounding box [x0, y0, x1, y1]. */
+  fillBox: [number, number, number, number][];
   sc: Cand[];
 }
 
@@ -981,6 +989,27 @@ function truthOf(model: FieldModel): Truth {
     }
   const cornersOf: number[][] = model.scene.junctions.map(() => []);
   model.corners.forEach((c, k) => cornersOf[c.junction].push(k));
+  const core: number[][] = model.scene.junctions.map((J) => J.arms.map(() => 0));
+  const fillBox: [number, number, number, number][] = [];
+  for (const c of model.corners) {
+    const pa = model.polys[c.a];
+    const pb = model.polys[c.b];
+    let ea: number;
+    let eb: number;
+    if (c.noV) {
+      ea = Math.abs(dS(pa, c.armA.s, c.noVA!));
+      eb = Math.abs(dS(pb, c.armB.s, c.noVB!));
+    } else if (c.ok) {
+      ea = Math.abs(dS(pa, c.armA.s, c.sVA));
+      eb = Math.abs(dS(pb, c.armB.s, c.sVB));
+    } else ea = eb = model.h / Math.tan(Math.max(c.theta, 1e-3) / 2);
+    const ca = core[c.junction];
+    if (c.armIdxA !== undefined) ca[c.armIdxA] = Math.max(ca[c.armIdxA], ea);
+    if (c.armIdxB !== undefined) ca[c.armIdxB] = Math.max(ca[c.armIdxB], eb);
+    // inFill's region: around q, out to |V − q| + h (or G2's own box).
+    const e = c.vq + model.h;
+    fillBox.push(c.g2?.ok ? [c.g2.box[0], c.g2.box[1], c.g2.box[2], c.g2.box[3]] : [c.q[0] - e, c.q[1] - e, c.q[0] + e, c.q[1] + e]);
+  }
   return {
     model,
     pairs,
@@ -988,8 +1017,28 @@ function truthOf(model: FieldModel): Truth {
     nat: perPoly(model, model.naturalSpans),
     fin: perPoly(model, model.junctionSpans),
     cornersOf,
+    core,
+    fillBox,
     sc: [],
   };
+}
+
+/** The junction whose core holds both (i, s) and (j, sj): both arms' pieces lie within their core extents. */
+function coreOf(T: Truth, i: number, s: number, j: number, sj: number): number | null {
+  const { model } = T;
+  const hi = holders(model, T.nat, i, s);
+  if (!hi.length) return null;
+  const hj = holders(model, T.nat, j, sj);
+  for (const [ji, ai] of hi)
+    for (const [jj, aj] of hj) {
+      if (jj !== ji || (aj === ai && i === j)) continue;
+      const J = model.scene.junctions[ji];
+      const tol = model.h / 4;
+      const di = Math.abs(dS(model.polys[i], J.arms[ai].s, s));
+      const dj = Math.abs(dS(model.polys[j], J.arms[aj].s, sj));
+      if (di <= T.core[ji][ai] + tol && dj <= T.core[ji][aj] + tol) return ji;
+    }
+  return null;
 }
 
 /** The [junction, arm] pairs whose span (per-poly list) holds (pi, s). */
@@ -1042,6 +1091,10 @@ function hiderAt(T: Truth, i: number, s: number, x: number, y: number, dLim: num
   for (const c of cs) {
     if (!(c.d < dLim)) continue;
     if (c.chain === i && Math.abs(dS(pi, s, c.s)) <= model.sigma) return "self";
+    // Both pieces inside one junction's core (between the root and the V
+    // feet, where its arms' tubes overlap anyway): the union's interior.
+    const jc = coreOf(T, i, s, c.chain, c.s);
+    if (jc !== null) return `in j${jc}'s core`;
     const pr = pairOf(T, i, s, c.chain, c.s);
     if (pr) {
       if (!pr.iOver) return `under at crossing ${pr.pp.x}`;
@@ -1060,8 +1113,27 @@ function hiderAt(T: Truth, i: number, s: number, x: number, y: number, dLim: num
 
 function fillAt(T: Truth, i: number, s: number, x: number, y: number): string | null {
   const { model } = T;
-  for (const [ji] of holders(model, T.nat, i, s))
-    for (const k of T.cornersOf[ji]) if (model.inFill(k, x, y)) return `fill of j${ji}/${model.corners[k].index}`;
+  const own = new Set(holders(model, T.nat, i, s).map(([ji]) => ji));
+  const zi = model.depthAt(i, s);
+  let cs: Cand[] | null = null;
+  for (let k = 0; k < model.corners.length; k++) {
+    const b = T.fillBox[k];
+    if (x < b[0] || x > b[2] || y < b[1] || y > b[3]) continue;
+    if (!model.inFill(k, x, y)) continue;
+    const c = model.corners[k];
+    const tag = `fill of j${c.junction}/${c.index}`;
+    if (own.has(c.junction)) return tag;
+    // Another junction's fill: it hides this side only where that
+    // junction lies over the thread (the depth of its nearest arm here).
+    if (!cs) {
+      candidates(model.grid, x, y, model.h + model.W, T.sc);
+      cs = T.sc.slice();
+    }
+    let best: Cand | null = null;
+    for (const q of cs) if ((q.chain === c.a || q.chain === c.b) && (!best || q.d < best.d)) best = q;
+    const zj = best ? model.depthAt(best.chain, best.s) : Math.max(model.depthAt(c.a, c.sTA), model.depthAt(c.b, c.sTB));
+    if (zj > zi + 1e-9) return tag;
+  }
   return null;
 }
 
@@ -1166,6 +1238,7 @@ export function borderCensus(
   const out: BorderCensus = {
     samples: 0,
     missing: 0,
+    shifted: 0,
     extra: 0,
     stretches: [],
     byClass: { a: blank(), b: blank(), c: blank(), d: blank(), e: blank(), f: blank() },
@@ -1212,6 +1285,13 @@ export function borderCensus(
           flush();
           continue;
         }
+        // Shifted, not missing: this piece's own outline drawn a little
+        // further out (on a corner's round, or a merged group's outline).
+        if (shiftedInk(model, opts.probe, pi, s, at, nx, ny)) {
+          out.shifted++;
+          flush();
+          continue;
+        }
         out.missing++;
         const { cls, why } = classify(T, pi, s, bx, by, ox, oy);
         if (run && (run as MissingStretch).cls === cls && (run as MissingStretch).why === why) {
@@ -1234,6 +1314,35 @@ export function borderCensus(
   }
   out.stretches.sort((u, v) => v.n - u.n);
   return out;
+}
+
+/** Ink on the normal from h − W to h + W whose top group holds this piece (the oracle), or any ink there (a probe). */
+function shiftedInk(
+  model: FieldModel,
+  probe: InkProbe | undefined,
+  pi: number,
+  s: number,
+  at: { x: number; y: number },
+  nx: number,
+  ny: number,
+): boolean {
+  const { h, W } = model;
+  for (let o = h - W; o <= h + W + 1e-9; o += W / 4) {
+    const x = at.x + nx * o;
+    const y = at.y + ny * o;
+    if (probe) {
+      if (probe.cov(x, y) > 0.5) return true;
+      continue;
+    }
+    model.recordGroups = true;
+    const e = model.evalPoint(x, y, false);
+    const le = model.lastEval;
+    model.recordGroups = false;
+    if (!e.ink || !le?.top) continue;
+    const p = model.polys[pi];
+    if (le.top.some((k) => le.cands[k].chain === pi && Math.abs(dS(p, s, le.cands[k].s)) <= model.sigma)) return true;
+  }
+  return false;
 }
 
 function blank() {
