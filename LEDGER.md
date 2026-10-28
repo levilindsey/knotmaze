@@ -478,6 +478,13 @@ Next free ID: K984.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
+- **K983** · The repo's docs call Levi "he"/"his"/"him" (234 hits in 74 files under `docs/`, `.claude/rules/`; the
+  cursive briefs were fixed in 3cad6ab8). One docs pass to the name; quotes, named other people, game characters stay.
+  - owner: agent `a0e233cdc5a80e350` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (sonnet, started 2026-10-28 05:00, 1 h cap ~06:00)
+  - branch: the agent's worktree under `.claude/worktrees/` (path in its report); last commit: none yet (from `b36a2293`)
+  - evidence: none needed; `Select-String '\b(he|his|him|himself)\b'` over the scope is the count
+  - next: merge with `agent_merge.ps1 -Id K983 -Done` (docs only), then fix LEDGER.md's own hits by hand
+  - brief: this item (scope: `docs/**/*.md` except `K868_*`/`K980_*`, `.claude/rules/*.md`, CLAUDE.md; not LEDGER.md)
 
 ## Next, in order
 
@@ -830,9 +837,6 @@ Every other item below waits on the trigger it names.
 - **K982** · Cursive K944 leftovers: "fox" absorbs x's whole-letter move ((-0.74, -3) for (+4, -3)); a node delete
   turned p's entry frame (joins into p up to 0.91 u); the short e tail draws ~30 u vs tails_k926's 33.9; loop
   crossings are recorded, never read; Inkscape's rewrite loses up to 4.4e-4 u. J1 traces the first three.
-- **K983** · About 40 older design briefs (K7 to K922) call Levi "he"/"his" (the cursive ones were fixed in
-  3cad6ab8). One docs pass to the name; leave the lines about other people (Fisher, Plotkin, Loyd, Abbott, quoted
-  game characters).
 - **K977** · Cursive v5.8's leftovers: b's bottom notch (1.77 -> 0.46) and z's descender notch (0.43 -> 0.25) still
   show; b's upstroke has comb steps at two nodes (unmeasured); k's peak rose to its fair's own 2.71; f's hook keeps
   three nodes about 13 u apart (the font's shape). `K969_cursive_v58.md` ## Handoff; `work16/combs/crops/`.
