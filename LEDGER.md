@@ -483,10 +483,10 @@ Next free ID: K904.
 - **K893** · Phone bisect of `d0406df..01df23a5` on K539's frozen cells (dense +16 ms, max-fabric
   +30, knot gs24 -35; `0753b3c8`, K573 step 2, is the knot candidate), and G3-1 reverted at head for
   K892. `docs/design/K156.md`, round 2026-10-27b.
-  - owner: agent `a11726d3815bf8425` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (sonnet, started 2026-10-27 09:44, 1 h cap ~10:44)
+  - owner: agent `a11726d3815bf8425` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (sonnet, started 2026-10-27 09:44; cap extended to 11:05 for step 2)
   - branch: `worktree-agent-a11726d3815bf8425`, worktree `.claude/worktrees/agent-a11726d3815bf8425`; last commit: `727f8593`
   - evidence: `.claude/probes/rounds/2026-10-27b/` (main checkout, untracked); the revert on branch `k893-g31-revert`
-  - next: idle wait and check; G3-1 reverted at head, measured ABBA; scan and bisect d0406df..01df23a5; cleanup, handoff
+  - next: scan of 10 points done (s1-s5), bisect pass b1 at 0753b3c8; then step 2, G3-1 reverted at master 36c94491 on `k893-g31-revert`, ABBA (asked 10:19, before more bisect passes); cleanup, handoff
   - brief: `docs/design/K156.md`, round 2026-10-27b
 - **K900** · K868 oracle stage after K883: #15's crossing 292 on muse_hash (pad the cut by sigma, or
   keep same-chain joins out of a cluster holding the other pass), then the 208 'other' missing
