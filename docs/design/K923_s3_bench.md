@@ -50,6 +50,8 @@ Each variant renders continuously and is chosen by a URL parameter, so
 
 - Time with `scripts/bench_frame.mjs` (see its header). It measures first
   draw to `gl.finish()`, the measure K892 and the K156 phone pass use.
+  - Corrected after the stage: K892 and the K156 pass used a render sync,
+    and Chrome's `gl.finish()` does not wait for the GPU. See the Handoff.
   - It reaches the phone's Chrome over CDP: `scripts/phone.ps1` tunnels a
     local port and DevTools (`-Ports <your port>`).
   - Several URLs per run, ABBA rounds, fresh tabs.
@@ -98,3 +100,101 @@ Each variant renders continuously and is chosen by a URL parameter, so
 - Use PowerShell. Read repo code through the shell (`Select-String`,
   `Get-Content | Select-Object`).
 - Helpers only if needed: `model: sonnet`, a 1 h cap and these rules.
+
+## Handoff (coordinator, from the agent's report, 2026-10-27 16:41)
+
+Finished at 16:41, inside the cap. Probe-only: no tracked edits and no
+commits. The coordinator confirmed afterwards that the perf lock, the
+servers and the phone's port forwards are gone.
+
+**Timing method.** `scripts/bench_frame.mjs` times first draw to
+`gl.finish()`, and Chrome's WebGL `finish()` returns without waiting for
+the GPU: it read 0.0-0.1 ms for 3.8 ms of GPU work on the desktop, and
+0.10-0.20 ms on the phone without a sync. So the stage used K892's render
+sync: `sync.mjs` drives `__k923RenderLoop`, N renders each ending in a
+1-px `readPixels`. K892's numbers were taken that way and stand; ## Measure
+was wrong about it (K932).
+
+**As specified** (RGBA16UI label, every chain point). Pixel 11 render sync
+(PowerVR over ANGLE/Vulkan) at 822x1506, the app's own buffer (`src/main.ts`
+caps dpr at 2). ms over the floor (1.0-1.3 ms), as median (p95) [rounds],
+pooled over 13 runs, with no context loss.
+
+| cell | label | band | both | disc search (reference) |
+|---|---|---|---|---|
+| muse_fit (W 3.20 px) | 1.83 | 3.50 | 5.30 (6.29) [14] | 6.75 (7.70), 45 taps |
+| g41_fit (W 2.58 px) | 1.83 | 3.62 | 5.35 (6.31) [14] | 4.50 (5.30), 29 taps |
+| muse_2x | 1.80 | 2.45 | 5.50 (5.96) [5] | |
+| g41_2x | 1.65 | 3.20 | 4.78 (5.56) [5] | |
+| muse_3x | 2.40 | 2.65 | 3.82 (4.22) [5] | |
+| g41_3x | 2.10 | 2.15 | 3.16 (4.24) [5] | |
+| muse_6x | 0.95 | 1.60 | 2.98 (3.43) [11] | 85.0 (88.1), 1209 taps |
+| g41_6x | 1.30 | 1.90 | 3.04 (3.70) [11] | 52.7 (57.0), 793 taps |
+
+- Fit and 2x miss the 4 ms budget, 3x sits at it, and 6x fits.
+- The disc search (K892's method, on the same buffer) costs 4.5-6.75 ms at
+  fit, against G3-1's 24.5-48 ms. That ratio is plausible: one integer
+  fetch per tap here, against up to 64 SAMP points with segment math there
+  (an inference; G3-1's cost was not broken down). The taps grow with zoom,
+  to 53-85 ms at 6x, so a per-pixel search fits at no zoom.
+- Small triangles dominate. Chain points sit about 1.4 px apart at fit, so
+  the band's triangles are about 3 px (97k over 298k px), and the cost
+  follows triangle density times fragment work, not pixels: from fit to 6x
+  the band covers 1.9x the pixels in half the time. The band is 3.5-3.6 of
+  the 5.3 ms, and its fetches and discard are 1.7-2.1 ms of that. The
+  64-bit integer target costs 0.6-1.0 ms more than a packed 32-bit one.
+  Label overdraw is only 1.43x, and a half-resolution label target showed
+  no clear gain.
+
+**What fits** (both passes, muse / g41). LOD step k keeps every k-th chain
+point, for segments of about 5-8 px on screen: step 4 at fit, 2 at 2x and
+3x, 1 at 6x.
+
+| zoom | packed label | LOD | LOD + packed label |
+|---|---|---|---|
+| fit | 4.50 (5.93) / 4.33 (4.72) | 2.85 (3.50) / 2.76 (3.25) | 2.02 (2.79) / 1.60 (2.13) |
+| 2x | 4.10 (5.07) / 4.03 (4.70) | 3.57 (4.42) / 3.11 (3.32) | 2.67 (3.43) / 2.43 (2.61) |
+| 3x | 3.30 (3.83) / 2.60 (3.07) | 3.13 (3.84) / 3.00 (3.47) | 2.34 (2.76) / 1.80 (1.97) |
+| 6x | 2.39 (2.95) / 2.52 (3.18) | step 1, as specified | as packed |
+
+Both together fit at every zoom (worst median 2.67 ms, worst p95 3.43, both
+muse_2x); neither does alone. The packed label holds chain 8, s 11, cluster
+8 and z 5 bits, and matches the full label's ink within 0.2% on the desktop
+(a first version truncated the fields and garbled the band; it was
+replaced).
+
+**Open for the S3 brief (K933).**
+- The uniform LOD's look is unchecked: facets on kink loops and twist
+  eyes? A curvature-aware LOD, keeping points on sharp turns, is untried.
+- The packed label allows 255 chains and clusters, 2048 s steps and 32 z
+  levels, and drops the fill, cap and closed flags. g41's 92 chains and
+  185 junctions fit; the largest designs are unchecked.
+- The switch strips are a stand-in (17-26k px at fit, against about 300k
+  for the band).
+- Nothing culls to the view at 6x; the budget does not need it.
+- Phone rounds vary by about ±1 ms: decide from pooled runs, and margins
+  under 0.5 ms need more rounds.
+
+**bench_frame (K932).** End each timed frame with a 1-px `readPixels`, as
+`bench.js` (`sync=1`) and `walk.mjs`'s `renderLoop` do, then recheck the
+GPU times taken with it: `G3G4_sdf_geometry.md`, `K8_stage1.md` (the
+desktop and phone frame benches), `K8_G3-1.md`, `K8_G3-2.md`, `K5_R1.md`,
+`K5_R2.md`, `K7_worker.md`, `.claude/rules/probes.md`'s K8 stage 2 entry,
+and K634's "Measure with `scripts/bench_frame.mjs --cdp`". K923's runner
+(`sync.mjs`, `pool.mjs`, `batch3.ps1`, `close_tabs.mjs`) could become the
+tracked tool.
+
+**Rerun.** Evidence: `.claude/probes/K923/` (`NOTES.md` has the log, the
+verdict and the `-Runs` string for the final tables).
+- Phone check: `pwsh -NoProfile -File scripts/phone_pass.ps1 -Phase check`.
+- Phone runs: `pwsh -NoProfile -File .claude/probes/K923/batch3.ps1
+  [-LogName x.log] [-Runs "<sync.mjs args>;<sync.mjs args>"]`. It repeats
+  the check and stops unless the phone is ready, sets up the perf lock,
+  server, tunnels and floor tab, and undoes them. The final tables take
+  about 10 minutes.
+- Pool, from `.claude/probes/K923`: `node pool.mjs (Get-ChildItem
+  sync_phone_*.json | ForEach-Object Name)`.
+- Desktop: with `node .claude/probes/K923/serve.mjs 5923` up and the lock
+  held, `node .claude/probes/K923/sync.mjs --target desk`. Fragment counts:
+  `node .claude/probes/K923/count.mjs
+  "http://127.0.0.1:5923/K923/bench.html" "&fmt=32"`.
