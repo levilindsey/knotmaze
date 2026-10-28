@@ -490,6 +490,24 @@ Next free ID: K915.
   - evidence: `.claude/probes/K863/trace/` (untracked): `work8/`, `out8/`, NOTES.md ## v5
   - next: steps 1-2, then the smooth splits (Levi: no bump where an overstroke starts or stops; the brief's ## Redirect), then rebuild as v5 with the r comparison; steps 4-5 as time allows
   - brief: `docs/design/K904_cursive_v5.md`
+- **K907** · Before the next phone round: move round 2026-10-27b's scan, bisect2, pdiff, report_scan, build_pool,
+  run_pass and pixdiff_g31 to tracked `scripts/phone_pass/`; note in `phone_pass.ps1`'s header that
+  a piped or captured `-Phase start` caller hangs.
+  - owner: agent `a0fdfc8b36249fba2` of claude session bf876705 (sonnet, started 2026-10-27 12:31, 1 h cap ~13:31)
+  - branch: `k906-phone-c`, worktree `.claude/worktrees/k906-phone-c`; last commit: `cb651dd5`
+  - evidence: `.claude/probes/rounds/2026-10-27c/`
+  - next: brief step 2: the round 2026-10-27b kit into tracked scripts/phone_pass/ with headers; then K906 runs on it
+  - brief: `docs/design/K156.md`
+  - env: phone on USB; scripts/phone_pass.ps1 runs each pass
+- **K906** · Next phone window: bisect (29,59] (dense +9.7; `minoHuntPace` 0.7 to 0.9 inside it) and
+  (176,205] (drops); the other links at K573's and K854's pairs (ABBA, about 5 min a pair; K905
+  settled K620's). `docs/design/K156.md`, round 2026-10-27b handoff.
+  - owner: agent `a0fdfc8b36249fba2` of claude session bf876705 (sonnet, started 2026-10-27 12:31, 1 h cap ~13:31)
+  - branch: `k906-phone-c`, worktree `.claude/worktrees/k906-phone-c`; last commit: `cb651dd5`
+  - evidence: `.claude/probes/rounds/2026-10-27c/`
+  - next: brief steps 3-5 on the phone: bisect (29,59] on dense, the other links at K854's and K573's pairs, bisect (176,205]
+  - brief: `docs/design/K156.md`
+  - env: phone on USB; scripts/phone_pass.ps1 runs each pass
 
 ## Next, in order
 
@@ -749,12 +767,6 @@ Every other item below waits on the trigger it names.
   round probes (`p_common.mjs`, `k539_*.mjs`, `report.mjs`, ...) into `scripts/phone_pass/`.
 - **K896** · K568's confetti recheck on the phone (about 15 fps lost over the 8 s fall, round
   2026-10-20's left over 1): a `-Phase looks` window. `docs/design/K156.md`.
-- **K906** · Next phone window: bisect (29,59] (dense +9.7; `minoHuntPace` 0.7 to 0.9 inside it) and
-  (176,205] (drops); the other links at K573's and K854's pairs (ABBA, about 5 min a pair; K905
-  settled K620's). `docs/design/K156.md`, round 2026-10-27b handoff.
-- **K907** · Before the next phone round: move round 2026-10-27b's scan, bisect2, pdiff, report_scan, build_pool,
-  run_pass and pixdiff_g31 to tracked `scripts/phone_pass/`; note in `phone_pass.ps1`'s header that
-  a piped or captured `-Phase start` caller hangs.
 - **K912** · Cursive generator follow-ups from K902: o and b exits per class (oh/ok 10.9, or 6.5 u)
   with h's and k's after-o entries; og/oq end at the font's merge; f's exit walk; ng/nq's hook;
   `--high-exit` by rerun; per-left split overfit. `docs/design/K902_cursive_frames.md` ## Results.
