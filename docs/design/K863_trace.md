@@ -102,3 +102,23 @@ the font-vs-chart differences, then a `Ledger items` list (follow-ups,
 residuals, decisions for Levi). Use PowerShell for local commands, never
 Levi's Chrome profile (temp profiles only), and read repo code through the
 shell (`Select-String`, `Get-Content | Select-Object`).
+
+## Levi's calls (2026-10-27, K901)
+
+Binding on every later cursive stage:
+
+- **Variants are the generator's.** e after o, v, w, b and z, t after o,
+  and m, n and v after o: the generator bends the standard letters. Levi
+  draws none.
+- **Two entry modes per letter.** Each letter takes an entry from the
+  baseline and one from higher up (after b, o, v and w). Keeping G2 may
+  bend a bit of the following letter's body, not only the connector, as
+  the font's own variants do (ledger K904).
+- **a, c, d, g, o and q: a junction where the entry meets the body.** It
+  sits about halfway between the baseline and the x-height (about 60 u).
+  Above it, the entry and the start of the body are one fused thread, so
+  the two strokes follow about the same path from the junction to the
+  cusp. v3's a entry runs a bit below its body curve.
+- **Still open (ledger K901):** whether r's entry dips after a high exit
+  or takes it unmodified, and whether the template's ascender and
+  descender guides sit at the ink edge or the stroke centre.
