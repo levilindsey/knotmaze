@@ -639,10 +639,17 @@ export class FieldModel {
       for (const sh of [-p.len, 0, p.len]) if (s + sh >= lo && s + sh <= hi) return true;
       return false;
     };
-    const holders = (sp: [number, number, number, number][][], pi: number, s: number): [number, number][] => {
+    // pad: how far past its far end an arm's span still holds a pass (the
+    // pass's overlap reach + margin: a group ending closer than that still
+    // touches the crossing's overlap).
+    const holders = (sp: [number, number, number, number][][], pi: number, s: number, pad = 0): [number, number][] => {
       const out: [number, number][] = [];
       sp.forEach((l, ji) => {
-        for (const [q, lo, hi, ai] of l) if (q === pi && inSpan(this.polys[pi], lo, hi, s)) out.push([ji, ai]);
+        for (const [q, lo, hi, ai] of l) {
+          if (q !== pi) continue;
+          const dir = scene.junctions[ji].arms[ai].dir;
+          if (inSpan(this.polys[pi], dir < 0 ? lo - pad : lo, dir > 0 ? hi + pad : hi, s)) out.push([ji, ai]);
+        }
       });
       return out;
     };
@@ -687,8 +694,9 @@ export class FieldModel {
       let changed = false;
       passes.forEach((ps, cx) => {
         if (!ps) return;
-        const ha = holders(sp, ps.ia, ps.sa);
-        const hb = holders(sp, ps.ib, ps.sb);
+        const pad = h / Math.tan(Math.max(ps.th, 1e-3) / 2) + 0.5 * h - 1e-6 * h;
+        const ha = holders(sp, ps.ia, ps.sa, pad);
+        const hb = holders(sp, ps.ib, ps.sb, pad);
         if (!ha.length || !hb.length) return;
         const ca = new Set(ha.map(([ji]) => roots2[ji]));
         if (!hb.some(([ji]) => ca.has(roots2[ji]))) return;
