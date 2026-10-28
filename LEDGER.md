@@ -485,15 +485,15 @@ Next free ID: K925.
 - **K922** · K868 stage: depth ordered over each whole overlap, junction caps moved out to where an
   arm parts from its neighbours (both behind switches), sheet I; then the second free-end mechanism.
   `docs/design/K922_junction_extent.md`.
-  - owner: agent launching 2026-10-27 15:20, claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, 2 h cap)
-  - branch: `k922-junction-extent`, worktree `.claude/worktrees/k922-junction-extent`; last commit: the brief's commit on master
+  - owner: agent `a81eff7ef4f9e6b49` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 15:21, 2 h cap ~17:21)
+  - branch: `k922-junction-extent`, worktree `.claude/worktrees/k922-junction-extent`; last commit: `9c8013d7` (the brief; branch made from it)
   - evidence: `.claude/probes/K922/` in the worktree (harnesses, logs, crops, sheet I); K915's probes `.claude/probes/K915/` and the scenes `.claude/probes/K868/scenes/` (main checkout, untracked)
   - next: the brief's Order: depth over the whole overlap, the cap table, the junction extent, sheet I, then the second mechanism
   - brief: `docs/design/K922_junction_extent.md`
 - **K923** · K868 stage: S3's micro-benchmark. K915's two-pass label border (a z-buffered label
   pass, then band strips; no search) timed on the Pixel against the 4 ms budget, with a search
   reference against K892. `docs/design/K923_s3_bench.md`.
-  - owner: agent launching 2026-10-27 15:20, claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, 2 h cap)
+  - owner: agent `a30a5b2d1787f9d9b` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 15:21, 2 h cap ~17:21)
   - branch: none: probe-only, no commits (main checkout, untracked `.claude/probes/K923/`); last commit: n/a
   - evidence: `.claude/probes/K923/` (the bench page, `NOTES.md`, results)
   - next: build the two-pass page, check the phone, time it under the perf lock (brief ## Measure)
@@ -764,9 +764,8 @@ Every other item below waits on the trigger it names.
   T1 `a64390b0`, round 2026-10-27c): try a K905-style compile-out (no TELE item on pages that draw
   no telegraph; an analogy, unverified) and measure it. `docs/design/K156.md` round 27c.
 - **K924** · Attribute the label ink's added artifacts to their label pairs before S3 copies them
-  (K915 Handoff 4): j149's spur and speck, 13 extra-ink stretches in hidden classes, muse_hash #5
-  (an 8.5 px band), #6, #7, #9.1; from K918, #16's 14 stretches and sheet F's cr 4.5 and 6.
-  `docs/design/K915_surface_borders.md`.
+  (K915 Handoff 4): j149's spur and speck, 13 extra-ink stretches in hidden classes, muse_hash #5,
+  #6, #7, #9.1; K918's #16 (14 stretches), sheet F's cr 4.5 and 6. `K915_surface_borders.md`.
 
 ## Residuals (known, not fixed)
 
