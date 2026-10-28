@@ -204,3 +204,125 @@ capitals (K931), and K950's choice itself.
   - a `Ledger items` list (follow-ups and residuals; a question for Levi
     only about what shows on screen, in plain words);
   - K863's current handle fields.
+
+## Handoff
+
+K980 stage agent, 2026-10-28 04:55:59 to 06:40 (-07:00). Steps 1-7
+are done, in the main checkout on master, and nothing is committed. All
+the work is in `.claude/probes/K863/trace/` (untracked): tools in
+`tools/*_k980.py`, scripts in `work18/dbg/`, work files in `work18/`,
+outputs in `out18/`. The findings and every rerun command are in
+`NOTES.md` `## K980`.
+
+Done:
+- **Dependency map** (NOTES step 1, one row per derived piece). Not
+  local today:
+  - the join sets (class and global refits on every build) and the
+    (class|e) sets;
+  - the e tail (cut at the m/n/y/d median);
+  - the other tails' and leads' class means;
+  - the virtual lead (n's exit);
+  - the layout's ini/fin dx (refitted to the drawn letter).
+  Jumps or indices: evar's grid and its 0.5 fu snap, the cusp entry's
+  swap from the fitted arrival to the drawn tangent on any edit, and
+  transport's node alignment.
+- **Freeze.** `work18/dbg/freeze_k980.py` writes
+  `work18/template_map_k980.json`. Its `k980` key holds:
+  - v5.8's final join params whole (every set, tail, lead and ini/fin
+    dx);
+  - n's v5.8 exit for the virtual lead;
+  - both e tails (`tail_e_mode`, default long; or `-Tail`);
+  - the e fit's start and target.
+  Each join is drawn from its own pair's end frames with its frozen set.
+  Nothing is fitted across letters at build time.
+- **Continuous e fit** (`tools/evar_k980.py`). It keeps evar_k926's
+  parts, with J at the exact arc length and a smooth L8 objective. It is
+  solved by Nelder-Mead to convergence from v5.8's point. The target is
+  v5.8's variant curve, not the font's. Against the font, the optimum
+  sits 3.4-3.8 u from v5.8 at the same glyph distance: v5.8's point was
+  a grid point on a flat objective.
+- **Reader** (`tools/asdrawn_k980.py`, K944's plus three changes):
+  - K981: at a smooth far fork (`s`, `z`) the departing handle turns to
+    stay collinear and keeps its length. A corner is left alone. The
+    report lists it as derived.
+  - A cusp entry (i j p r s t u w y) keeps its fitted arrival, and its
+    point follows the drawn start. K944 swapped in the drawn tangent on
+    any edit of the stroke: p turned 20.95 deg, t 37.3, w 29.1.
+  - The cusp letters' after_o and after_b points follow the drawn start.
+- **Build script.** `work18/dbg/build_from_svg.ps1 <template.svg>
+  [-Name <run>] [-Tail long|short] [-Letters <comb letters>]` takes
+  about 2 min. Its unedited bodies and join params equal the harness's
+  byte for byte.
+- **Harness** (`work18/dbg/sensitivity_k980.py`; reports in
+  `work18/base/` and `work18/local/<stage>/`).
+  - Baseline, K944's tools: 7 of 9 edits fail. Untouched pieces moved
+    up to:
+    - 5.12 u (e_end), 3.66 u (r_line), 2.16 u (d_fused);
+    - 1.88 u (w_corner), 1.38 u (x_move), 1.34 u (n_retrace), 1.10 u
+      (p_delete).
+    The e variants jumped with a gain of 7.40.
+  - End: all 9 pass (s5, and s6 rerun from scratch, byte for byte the
+    same). Untouched pieces move 0 u, and no word without the edited
+    letter changes. Touched maxima (gain per scale step):
+    - d 3.659 u (1.48), n 2.268 u (0.92), e 2.530 u (1.06), x 5.000 u
+      (1.00);
+    - h 0.033 u, p 1.080 u, w 4.017 u, r 0.815 u, the Joins layer 0 u.
+    Each is the edited body as drawn, or a join or frame on it.
+- **Unedited build against v5.8** (`work18/cmp_v58.txt`). 32 of 510
+  pieces moved over 1e-6 u, all from the e fit:
+  - the variant frames 0.546 u (after_o, after_b: at most 2.2 deg at J)
+    and 0.057 u (after_g);
+  - the variant curves 0.075 u and 0.195 u, and e in the words 0.02 u;
+  - the joins into e, up to 0.061 u (oe).
+  Everything else is 0. fid_cmp_k969: 88 rows, none moved more than
+  0.05 u.
+- **Traces (K982).**
+  - "fox": the layout's fin dx was refitted to the moved x and pulled it
+    back 4.74 u. Now that it is frozen, x's move shows whole in "fox",
+    as in "boxes".
+  - p's frame: the 20.95 deg turn came from the reader's swap, not from
+    deleting node 7. Fixed in the reader (above).
+  - Short tail: tails_k926 measures 33.9 u on the font's path. The
+    drawn tail's own lowest point sits 4.48 u later on e's flat bottom,
+    and from there the tail is 29.9 u. It is the same curve: the lowest
+    point of a flat bottom is ill-conditioned.
+- **out18/:**
+  - `cursive_template.svg`: out17's, apart from last-digit noise in two
+    reference layers. The Letters and Guides layers are identical
+    (`work18/tpl_diff.txt`).
+  - `words_k980.svg`.
+  - `combs_k980.svg`: minimum, hippo, and "be we shoe maze huge bye" for
+    the joins into e's variants. e is the comb letter, the only letter
+    whose pieces moved.
+  - `sensitivity_k980.txt`.
+  None of them has an `<image>`. Crops looked at:
+  `work18/build_k980/dbg/crops/`.
+
+Open:
+- **The e fit's target is absolute.** It holds e's variants to v5.8's
+  curve, not to the drawing. When e's eye is edited, the fit bends the
+  start curve back toward the old curve (b0 0.46 -> 4.32 at e_end). The
+  other rule: apply v5.8's sJ, prm and kC to the edited body, with no
+  fit. A coordinator's call.
+- **K981 is G1 only.** n's far fork no longer turns, but its curvature
+  jump grows with the drag (dk 2.70e-2 1/fu at s1; K944: 1.50e-2). Node
+  6 gets a small new jump (1.63e-4), and n has 4 kinks (K944: 3). A G2
+  rule at a smooth node would be next, if wanted.
+- **rough still fails n** after K944's n edit (facet 0.0056 > 0.0053,
+  peak 14.67 at 166 u). It fails the same with and without K981, so the
+  fork is not the cause. Not traced.
+- **Short tail.** It is cut on the font's path, but the m/n/y/d medians
+  are measured on their drawn tails. If Levi picks short and it must
+  match them as drawn, cut it on the drawn tail.
+- **Transport.** Frames with a bk (after_o with s: b f h k l x z;
+  s_fused: a c d g o q) still go through K944's node alignment, then
+  locate. The harness's node add on h moved h's frames at most 1e-4 u.
+- **maze's z exit node** is a near-cusp. Its comb is a capped spike in
+  v5.8 and K980, and its teeth fan differently after a 0.016 u join
+  move. For the join fixes.
+- **No GUI test**, as in K944: the edits are emulated.
+
+Next: Levi edits `out18/cursive_template.svg` (the Letters layer only)
+and builds it with `pwsh -File work18\dbg\build_from_svg.ps1 <svg>
+-Name <run>`, from the trace directory. Then J2, the join fixes (K962,
+K948, K946, K949, K937), on this pipeline.
