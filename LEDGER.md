@@ -19,10 +19,13 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K937.
+Next free ID: K940.
 
 ## Waiting on Levi
 
+- **K939** · Cursive v5.2: the dip's fix turns the stem tops of a, d, g and q in a small U about 6 u
+  left of the font's sharp V. Accept the U, or make it a cusp at the V? `work10/dip_tops.png` in
+  `.claude/probes/K863/trace/`; Drive `K863/cursive_v52.svg`. Recommended: accept.
 - **K934** · K922's calls on sheet I (Drive `K868/sheets/I_junction_extent.png`): depth "overlap" (missing ink
   116 to 68, free ends +5); extent "part" (less missing and extra ink, free ends 83 to 86) or a walk that stops at
   crossing cuts; the free-end check counting connected exits (K910); the hook's look. Recs in K868's `next:`.
@@ -285,28 +288,44 @@ Next free ID: K937.
 - **K809** · Panel search on your phone (K793): typing in the box must not jump or zoom the maze, the
   keyboard must not cover the box, results scroll under the sticky bar, and Enter closes the keyboard
   and outlines the best row (an inferred risk, not seen; `docs/design/K793.md`)
-- **K928** · Cursive: make `--split fair` the default (v5.1, Drive `K863/cursive_v51.svg`)? It
-  cleans the crotches and hooks Levi flagged in v5 but dips the a/g/q bowl top (K925 fixes that).
-  Recommended: yes, after K925.
+- **K928** · Cursive: make `--split fair` the default? It cleans the crotches and hooks Levi flagged in
+  v5, and since K925 it no longer dips the a/g/q bowl top; v5.2 (Drive `K863/cursive_v52.svg`) is the
+  fair build. Recommended: yes.
 
 ## In progress
 
 - **K868** · Border look, junctions done right: one field renderer (union within a surface, occlusion
   by depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
-  - owner: nobody since 2026-10-27 16:45 (K922 merged, K923 finished; waits on Levi's K934 and the K924 brief)
+  - owner: stage K924 (the label ink's artifacts), agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (since 2026-10-27 17:02; handle under K924); Levi's K934 open
   - branch: mainline; last commit: `4e8b1c7c` (K922 merged; keep `.claude/worktrees/k922-junction-extent`: K922's probes import its source)
   - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`); sheets A-I, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
-  - next: Levi's K934 on sheet I (recs: depth yes; try the walk that stops at crossing cuts; fix the check's exit count and report both counts; the hook is moot under label); K924 attributes the label ink's artifacts, now including sheet I's d1-d3 shapes, which every label column shows; K935; then the S3 brief: K915's two passes with K923's screen-space LOD and packed 32-bit label (together they fit the Pixel's 4 ms at every zoom; the coordinator's rec, Levi may object; open inputs K933), G1 corners and cr 0-6 (sheet F approved), and G3-1 ported back or replaced (K892)
-  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`
+  - next: Levi's K934 on sheet I (recs: depth yes; try the walk that stops at crossing cuts; fix the check's exit count and report both counts; the hook is moot under label); K924 (running) traces the label ink's artifacts, sheet I's d1-d4 among them, to their rules; a stage then builds the rule changes it ranks; K935; then the S3 brief: K915's two passes with K923's screen-space LOD and packed 32-bit label (together they fit the Pixel's 4 ms at every zoom; the coordinator's rec, Levi may object; open inputs K933), G1 corners and cr 0-6 (sheet F approved), and G3-1 ported back or replaced (K892)
+  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`
+- **K924** · K868's stage: trace each artifact the label ink adds to the rule that makes it, before S3
+  copies that rule (sheet I's d1-d4, j149's spur and speck, the hidden-class extra ink, muse_hash #5, #6,
+  #7 and #9.1, #16, sheet F at cr 4.5 and 6); count each mechanism and name its rule change.
+  - owner: agent `a4a3a477963af7824` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 17:02, 2 h cap ~19:02)
+  - branch: `k924-label-artifacts`, worktree `.claude/worktrees/k924-label-artifacts`; last commit: `bec83b02` (made from master; no work yet)
+  - evidence: `.claude/probes/K924/` in the worktree (copies of K922's probes, repointed at its source)
+  - next: (agent) the brief's steps 1-4: attribute, count, flip suspect rules behind new switches, rank the rule changes; then the coordinator merges with every switch off and briefs the fixes
+  - brief: `docs/design/K924_label_artifacts.md`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
-  - owner: stage K925, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 15:33; handle under K925)
-  - branch: mainline, no code (outputs untracked); last commit: e1daa76f (K916's handoff)
-  - evidence: `.claude/probes/K863/trace/` (per stage: `tools/*_k<ID>.py`, `work<n>/`, `out<n>/`; `NOTES.md` has a section per version with its rerun commands); Drive `K863/` (each version's SVGs; v5.1: `cursive_v51.svg`, `cursive_v51_words.svg`, `split_combs.svg`, `k917_junctions.svg`)
-  - next: K925 builds v5.2 (o's junction at 86 u); then K930 (v5.3, few-node smooth curves), then K926 and K929 (v5.4, the e joins); Levi answers K928, then edits the faired template; K927; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls); capitals are K931
+  - owner: stage K930, agent of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, since 2026-10-27 17:02; handle under K930)
+  - branch: mainline, no code (outputs untracked); last commit: bec83b02 (K925's handoff)
+  - evidence: `.claude/probes/K863/trace/` (per stage: `tools/*_k<ID>.py`, `work<n>/`, `out<n>/`; `NOTES.md` has a section per version with its rerun commands); Drive `K863/` (each version's SVGs; v5.1: `cursive_v51.svg`, `cursive_v51_words.svg`, `split_combs.svg`, `k917_junctions.svg`; v5.2: `cursive_v52.svg`, `cursive_v52_words.svg`)
+  - next: K930 (v5.3: few-node smooth curves; `--from-svg` keeps Levi's edits) runs; then K926 and K929 (v5.4, the e joins); Levi answers K928 and K939, then edits the faired template; K927, K937; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls); capitals are K931
   - brief: `docs/design/K863_trace.md` (## Levi's calls); stages: v3 `K886_cursive_v3.md`, v4 `K902_cursive_frames.md`, v5 `K904_cursive_v5.md`, v5.1 `K916_cursive_v51.md`, v5.2 `K925_cursive_v52.md`, v5.3 `K930_cursive_smooth.md`, v5.4 `K926_cursive_e.md`
+- **K930** · Cursive v5.3, few-node G2 curves: v5.1's strokes are cubics about 5 u long (median 108
+  per letter) with ragged curvature (Levi, 2026-10-27: "a bit jittery and unsmooth"); fix the noise at its
+  source, and make `--from-svg` keep the nodes Levi moves. `docs/design/K930_cursive_smooth.md`.
+  - owner: agent `a51dfafcc0709f787` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 17:02, 2 h cap ~19:02)
+  - branch: none: probe-only (main checkout, untracked `.claude/probes/K863/trace/`); last commit: `e5f75c7a` (the brief's step 4: hold Levi's edits)
+  - evidence: `.claude/probes/K863/trace/`: `tools/*_k930.py`, `work11/`, `out11/`, `NOTES.md` ## v5.3
+  - next: (agent) the brief's steps 1-6 (where the noise enters, the fix at its source, the few-node G2 writer, `--from-svg` holding Levi's edits, the checks, v5.3); then the coordinator commits the handoff, uploads the v5.3 SVGs and launches K926
+  - brief: `docs/design/K930_cursive_smooth.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -477,14 +496,6 @@ Next free ID: K937.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
-- **K925** · Cursive v5.2: remove the dip fair puts in the a/g/q bowl top before the stem cusp, fix
-  the eye check's scale, fair Levi's edits on `--from-svg`, the b/v/w/p corners and body-end hooks;
-  build v5.2. `docs/design/K925_cursive_v52.md`.
-  - owner: agent `ae9f582de3f575534` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 15:33, 2 h cap ~17:33)
-  - branch: none: probe-only (main checkout, untracked `.claude/probes/K863/trace/`); last commit: e1daa76f (K916's handoff)
-  - evidence: `.claude/probes/K863/trace/`: `tools/*_k925.py`, `work10/` (`coordinator_dip_tops.png`), `out10/`, `NOTES.md` ## v5.2
-  - next: (agent) v5.2 built at 16:30 with o at 86 u: crops of the pairs into o, `NOTES.md` ## v5.2, the handoff; then the coordinator commits the handoff, uploads the v5.2 SVGs and launches K930
-  - brief: `docs/design/K925_cursive_v52.md`
 
 ## Next, in order
 
@@ -749,12 +760,6 @@ Every other item below waits on the trigger it names.
 - **K919** · K525's TELE paint item costs the phone +11.0 ms on dense (+2.8 max-fabric, +3.1 knot;
   T1 `a64390b0`, round 2026-10-27c): try a K905-style compile-out (no TELE item on pages that draw
   no telegraph; an analogy, unverified) and measure it. `docs/design/K156.md` round 27c.
-- **K924** · Attribute the label ink's added artifacts to their label pairs before S3 copies them
-  (K915 Handoff 4): j149's spur and speck, 13 extra-ink stretches in hidden classes, muse_hash #5,
-  #6, #7, #9.1; K918's #16 (14 stretches), sheet F's cr 4.5 and 6. `K915_surface_borders.md`.
-- **K930** · Cursive v5.3, few-node G2 curves: v5.1's strokes are cubics about 5 u long (median 108
-  per letter) with ragged curvature (Levi, 2026-10-27: "a bit jittery and unsmooth"); fix the noise
-  at its source. `docs/design/K930_cursive_smooth.md`, after K925.
 - **K926** · Cursive v5.4: after a high exit, e's connector dives to the standard eye (ve 31 u off
   the font, crossing e at 21 deg; ze 66.9 u). Levi, 2026-10-27: "exit segments coming from high
   exits (like v) curve incorrectly to join with e." Also en, er, bk, br. `docs/design/K926_cursive_e.md`.
@@ -770,9 +775,15 @@ Every other item below waits on the trigger it names.
 - **K935** · K922's follow-ups: endSnap unconditional (a float bug); the 23 crossing-cut free ends; the 9 span-end
   triples the walk never starts; d2-d4's fill-outline and z-tie cuts; probe fixes (fe_mech R = 2W, K915's `h.ts`
   FULL_DIR). `K922_junction_extent.md` ## Handoff.
+- **K937** · Cursive: fit the connector into o (`cnct.mod_n_o`) on its own at the 86 u junction. v5.2's
+  shared refit moved ho, to, io, do, mo, nd and ng about 1 u off the font (ho 1.78 to 2.87 u), still
+  inside its fill. Untested. `K925_cursive_v52.md` ## Handoff, `NOTES.md` ## v5.2.
 
 ## Residuals (known, not fixed)
 
+- **K938** · Cursive v5.2's residuals: eye-check flags over 3 on the tops of b, v and w, p's entry and
+  loop, r at 668 and t's cusp; zo reads 142 u at every height (likely the wrong reference connector,
+  unchecked); five new crossings into o (the font crosses there too). `K925_cursive_v52.md` ## Handoff.
 - **K936** · K922's residuals: what holds an arm 7h+ under "part"; d1's crescent stub; #5's band (a spike under
   depth, a notch and an end under the extent); g41_user_tw64's free ends 20 to 23; #14's crossing whose passes
   never overlap. `K922_junction_extent.md` ## Handoff.
@@ -1657,8 +1668,8 @@ Every other item below waits on the trigger it names.
   runs v4's commands; `--guides centreline` unrun. `.claude/probes/K863/trace/NOTES.md` ## v4.
 - **K920** · K620's `fa0c61de` costs the phone +5.2 ms on max-fabric (about 2 ms of K905's gap;
   round 2026-10-27c). `docs/design/K156.md` round 27c.
-- **K927** · Cursive fits stop at nfev 600 for 16 of 26 letters; a and q end 5.0 and 4.0 u off the
-  trace. `K916_cursive_v51.md` Handoff, Open 5.
+- **K927** · Cursive fits stop at nfev 600 for 16 of 26 letters (since v5.2 q does and a no longer
+  does); in v5.1 a and q ended 5.0 and 4.0 u off the trace. `K916_cursive_v51.md` Handoff, Open 5.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1953,6 +1964,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K925** · Cursive v5.2: the a/c/d/g/q dip fixed (eye check a 9.27 to 1.91, q 8.09 to 1.92), one eye scale, o's junction at 86 u (its joins stay inside the font's fill). `K925_cursive_v52.md` ## Handoff. Done in bec83b02 (2026-10-27).
 - **K922** · K868 stage: depth over the whole overlap, endSnap (a float bug; real free ends 105 to 83) and extent part, behind switches that default off; sheet I. Brief ## Results, ## Handoff. Done in 4e8b1c7c (2026-10-27).
 - **K923** · S3's Pixel bench (K868): as specified 4.8-5.5 ms at fit and 2x, over the 4 ms budget; with a screen-space LOD and a packed 32-bit label 1.6-2.7 ms at every zoom (p95 at most 3.43); a disc search 4.5-6.75 ms against G3-1's 24.5-48. `K923_s3_bench.md` ## Handoff. Done in b5fff04b (2026-10-27).
 - **K917** · Cursive junction heights. Answered by Levi (2026-10-27): "sgtm"; 60 u for a, c, d, g and q; o at 86 u, chosen on the sheet ("Seems better than the other two sets"). `K863_trace.md` ## Levi's calls. Done in 95ef67d6 (2026-10-27).
