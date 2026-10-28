@@ -187,8 +187,16 @@ export interface OracleParams {
   /** K924 flips (diagnostics, off by default). labFill "arcs": a G1 fill
    * stops at its arms' outlines (the curvilinear triangle V, t_A, t_B)
    * instead of reaching their centrelines; "yield": a fill never takes a
-   * point inside another surface's tube (label ink only). */
-  labFill?: "arcs" | "yield";
+   * point inside another surface's tube (label ink only). K940
+   * "yieldOrder": a fill yields to a foreign tube unless the crossing table
+   * puts its cluster's chain over the tube's chain there (labYieldChain
+   * says which chain); then the fill covers the tube. */
+  labFill?: "arcs" | "yield" | "yieldOrder";
+  /** K940, with labFill "yieldOrder": which chain of the fill's cluster the
+   * table test reads. "near" (default): the fill's nearest foot's chain.
+   * "crossed": any chain of the cluster (fillOrder's search). Either way
+   * the nearest such crossing within σ along the tube decides. */
+  labYieldChain?: "near" | "crossed";
   /** K924 flip: "order" orders a fill against a foreign member by the
    * table crossing between that member's chain and one of the fill's
    * cluster's chains (nearest within σ of the member's foot); with no
@@ -201,6 +209,13 @@ export interface OracleParams {
    * this arc length of the span, the same surface as J's members and
    * fills (simLab only). */
   labCap?: number;
+  /** K940 flip: > 0 makes a chain past a REACH-ended arm span of cluster J
+   * (one that stopped at its reach, not at a cap), within this arc length
+   * past it, the same surface as J's members and fills (simLab only). It
+   * never passes the arm's cap (a crossing cut, the next root, the chain's
+   * end), nor comes within a cut's pad of a crossing pass whose other pass
+   * is J's. */
+  labCapReach?: number;
 }
 
 /** K909 step 4: a crossing-cut arm whose side lies inside the crossing's
@@ -2489,6 +2504,8 @@ export class FieldModel {
       }
       // K924 flip labFill "yield": a fill never covers another surface's tube.
       if (this.params.labFill === "yield" && S >= 0 && cl[S] !== J && cs[S].d < h) wins = false;
+      // K940 flip labFill "yieldOrder": the same, unless the table puts the cluster's chain over the tube's.
+      if (this.params.labFill === "yieldOrder" && S >= 0 && cl[S] !== J && cs[S].d < h) wins = this.yieldOver(J, cs[near].chain, cs[S].chain, cs[S].s);
       if (wins) {
         S = near;
         zS = z;
@@ -2505,6 +2522,22 @@ export class FieldModel {
   /** K924 flip: is cluster J's fill over chain pi at s? The nearest table
    * crossing within σ between pi and a chain of J decides; null = none. */
   private fillOrder(J: number, pi: number, s: number): boolean | null {
+    const xBy = this.ensureXBy();
+    const spans = this.clusters[J].spans;
+    let best = Infinity;
+    let res: boolean | null = null;
+    for (const x of xBy[pi]) {
+      if (!spans.has(x.oi)) continue;
+      const d = Math.abs(dS(this.polys[pi], s, x.s));
+      if (d <= this.sigma && d < best) {
+        best = d;
+        res = !x.over;
+      }
+    }
+    return res;
+  }
+
+  private ensureXBy(): { s: number; oi: number; over: boolean }[][] {
     if (!this.xBy) {
       const xb: { s: number; oi: number; over: boolean }[][] = this.polys.map(() => []);
       for (const x of this.scene.crossings) {
@@ -2516,11 +2549,19 @@ export class FieldModel {
       }
       this.xBy = xb;
     }
-    const spans = this.clusters[J].spans;
+    return this.xBy;
+  }
+
+  /** K940 flip labFill "yieldOrder": does the table put cluster J's chain
+   * over chain pi near s? labYieldChain "near": pi's crossings with nc (the
+   * fill's nearest foot's chain); "crossed": with any chain of J. The
+   * nearest such crossing within σ along pi decides; none: false. */
+  private yieldOver(J: number, nc: number, pi: number, s: number): boolean {
+    if ((this.params.labYieldChain ?? "near") === "crossed") return this.fillOrder(J, pi, s) === true;
     let best = Infinity;
-    let res: boolean | null = null;
-    for (const x of this.xBy[pi]) {
-      if (!spans.has(x.oi)) continue;
+    let res = false;
+    for (const x of this.ensureXBy()[pi]) {
+      if (x.oi !== nc) continue;
       const d = Math.abs(dS(this.polys[pi], s, x.s));
       if (d <= this.sigma && d < best) {
         best = d;
@@ -2528,6 +2569,64 @@ export class FieldModel {
       }
     }
     return res;
+  }
+
+  /** K940 flip labCapReach: per cluster, its reach-ended arm spans' far
+   * ends (chain, end s, outward direction, how far past it J reaches). */
+  private reachEnds: { pi: number; s0: number; dir: number; lim: number }[][] | null = null;
+
+  /** K940 flip labCapReach: is s on chain pi just past a reach-ended span of J? */
+  private reachNear(J: number, pi: number, s: number): boolean {
+    if (!this.reachEnds) this.reachEnds = this.buildReachEnds(this.params.labCapReach ?? 0);
+    for (const r of this.reachEnds[J]) {
+      if (r.pi !== pi) continue;
+      const t = r.dir * dS(this.polys[pi], r.s0, s);
+      if (t > 0 && t <= r.lim) return true;
+    }
+    return false;
+  }
+
+  private buildReachEnds(w: number): { pi: number; s0: number; dir: number; lim: number }[][] {
+    const h = this.h;
+    const pm = this.params.passMargin ?? 1;
+    const out = this.clusters.map(() => [] as { pi: number; s0: number; dir: number; lim: number }[]);
+    const xp: { s: number; th: number; oi: number; os: number }[][] = this.polys.map(() => []);
+    for (const X of this.scene.crossings) {
+      const ia = this.idxOf.get(X.a.chain);
+      const ib = this.idxOf.get(X.b.chain);
+      if (ia === undefined || ib === undefined) continue;
+      const sa = normS(this.polys[ia], X.a.s);
+      const sb = normS(this.polys[ib], X.b.s);
+      const ta = pointAt(this.polys[ia], sa);
+      const tb = pointAt(this.polys[ib], sb);
+      const th = Math.asin(Math.min(1, Math.abs(cross(ta.tx, ta.ty, tb.tx, tb.ty))));
+      xp[ia].push({ s: sa, th, oi: ib, os: sb });
+      xp[ib].push({ s: sb, th, oi: ia, os: sa });
+    }
+    this.junctionSpans.forEach((spans, ji) => {
+      const J = this.junctionCluster[ji];
+      if (J === undefined || J < 0 || !out[J]) return;
+      const arms = this.scene.junctions[ji].arms;
+      for (const [pi, lo, hi, ai] of spans) {
+        const arm = arms[ai];
+        const p = this.polys[pi];
+        const far = arm.dir > 0 ? hi : lo;
+        const e = arm.dir * (far - arm.s);
+        const cap = this.armCaps[ji]?.[ai]?.len ?? Infinity;
+        if (!(e < cap - 1e-6 * h)) continue; // capped: the cap separates
+        if (!p.closed && (far <= p.s0 + 1e-9 || far >= p.s0 + p.len - 1e-9)) continue; // the chain's end
+        let lim = Math.min(w, cap - e);
+        for (const x of xp[pi]) {
+          const d = arm.dir * dS(p, far, x.s);
+          const pad = h / Math.tan(Math.max(x.th, 1e-3) / 2) + pm * h;
+          if (d - pad >= lim || d + pad <= 0) continue;
+          if (this.clusterAt(x.oi, x.os) !== J) continue;
+          lim = Math.min(lim, d - pad);
+        }
+        if (lim > 0) out[J].push({ pi, s0: far, dir: arm.dir, lim });
+      }
+    });
+    return out;
   }
 
   /** K924 flip labCap: is s on chain pi within w past one of cluster J's spans? */
@@ -2551,6 +2650,11 @@ export class FieldModel {
       // K924 flip: a chain just past its span of J is still J's surface.
       if (A.J >= 0 && B.J < 0 && !B.fill && this.capNear(A.J, B.chain, B.s, w)) return true;
       if (B.J >= 0 && A.J < 0 && !A.fill && this.capNear(B.J, A.chain, A.s, w)) return true;
+    }
+    if ((this.params.labCapReach ?? 0) > 0) {
+      // K940 flip: a chain just past a reach-ended span of J is still J's surface.
+      if (A.J >= 0 && B.J < 0 && !B.fill && this.reachNear(A.J, B.chain, B.s)) return true;
+      if (B.J >= 0 && A.J < 0 && !A.fill && this.reachNear(B.J, A.chain, A.s)) return true;
     }
     if (A.fill || B.fill) return false;
     return A.chain === B.chain && Math.abs(dS(this.polys[A.chain], A.s, B.s)) <= this.sigma;
