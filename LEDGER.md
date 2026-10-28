@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K955.
+Next free ID: K959.
 
 ## Waiting on Levi
 
@@ -795,10 +795,9 @@ Every other item below waits on the trigger it names.
 - **K957** · K868's free-end check (the runs count, K934) misses site I (an overshoot tail shorter than the
   inner ring), a V under 0.45 rad, an L joined by an arc 0.35W inside the ring and an L filled solid past the
   inner ring; spur ends (site F, u3) are invisible to both counts. `K934_recount.md` step 1, `.claude/probes/K934/`.
-- **K958** · K868 extent part's residuals: muse_hash (20.30, 1.40) a thin crescent sliver; m4 (3.10, 27.80) a
-  small closed island under K955's free end; g41_def_tw64 (0.90, 14.40) a lens wedge with a free end;
-  g41_ring_tw42 (21.05, 17.95) a small notch; user_tw42.lightpaper (20.95, 4.75) spur ends; g41_user_tw64
-  (9.79, 12.93) an island, a 1 px hairline. `K934_recount.md` step 3 (`ext3/`).
+- **K958** · K868 extent part's residuals (K934 step 3, `ext3/`): a crescent sliver at muse_hash (20.30, 1.40);
+  an island under K955's free end (m4); a lens wedge with a free end at g41_def_tw64 (0.90, 14.40); a notch (r1);
+  spur ends (u3); a 1 px hairline island at g41_user_tw64 (9.79, 12.93).
 - **K951** · Cursive v5.4's residuals: b, f, p, v, o, s and w end without a final tail, as the font's
   do; the titles still say v5.3; after a template round trip, rerun evar, fitp and tails in that order.
   `.claude/probes/K863/trace/NOTES.md` ## v5.4.
