@@ -1,6 +1,6 @@
 # K904: cursive v5, fused entries and the high entry mode (agent brief)
 
-Coordinator, 2026-10-27 11:50. One stage, opus, 2 h cap. Follows K902
+Coordinator, 2026-10-27 11:40. One stage, opus, 2 h cap. Follows K902
 (`K902_cursive_frames.md`, v4: its `## Handoff` and `## Results`).
 
 ## Why
