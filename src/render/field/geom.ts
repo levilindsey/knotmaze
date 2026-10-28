@@ -179,14 +179,66 @@ export interface Foot {
  * Closest point of the sub-polyline s ∈ [lo, hi] (both inside the chain's
  * domain or, on a closed chain, any window shorter than len) to (px, py).
  * Brute force over the segments the window touches.
+ *
+ * S3a4: only the segments the window touches are visited, found by binary
+ * search on the same float tests the loop applies (sa + sh <= hi and
+ * sb + sh >= lo, both monotonic in k since s is a running sum), and in the
+ * same order (k ascending, then the shifts in order), so the result is the
+ * full scan's to the bit, ties included. The full scan was 78% of a label
+ * rebuild's CPU (the corner solver's Newton steps call it per iterate).
  */
 export function footInWindow(p: Poly, px: number, py: number, lo: number, hi: number): Foot {
   let best: Foot = { d: Infinity, x: 0, y: 0, s: 0, k: -1, t: 0 };
-  const shifts = p.closed ? [-p.len, 0, p.len] : [0];
-  for (let k = 0; k < p.nseg; k++) {
+  if (p.closed) {
+    FIW_SH[0] = -p.len;
+    FIW_SH[1] = 0;
+    FIW_SH[2] = p.len;
+  } else FIW_SH[0] = 0;
+  const ns = p.closed ? 3 : 1;
+  const nseg = p.nseg;
+  // Per shift j, the k range [K0[j], K1[j]) whose segment meets the window.
+  let kMin = nseg;
+  let kMax = 0;
+  for (let j = 0; j < ns; j++) {
+    const sh = FIW_SH[j];
+    let a = 0;
+    let b = nseg;
+    while (a < b) {
+      const m = (a + b) >> 1;
+      if (p.s[m] + p.segLen[m] + sh >= lo) b = m;
+      else a = m + 1;
+    }
+    const k0 = a;
+    b = nseg;
+    while (a < b) {
+      const m = (a + b) >> 1;
+      if (p.s[m] + sh > hi) b = m;
+      else a = m + 1;
+    }
+    FIW_K0[j] = k0;
+    FIW_K1[j] = a;
+    if (a > k0) {
+      if (k0 < kMin) kMin = k0;
+      if (a > kMax) kMax = a;
+    }
+  }
+  for (let k = kMin; k < kMax; k++) {
+    // Skip the gap between two shifts' ranges in one step.
+    let inAny = false;
+    let next = kMax;
+    for (let j = 0; j < ns; j++) {
+      if (k >= FIW_K0[j] && k < FIW_K1[j]) inAny = true;
+      else if (FIW_K0[j] > k && FIW_K0[j] < FIW_K1[j] && FIW_K0[j] < next) next = FIW_K0[j];
+    }
+    if (!inAny) {
+      k = next - 1;
+      continue;
+    }
     const sa = p.s[k];
     const sb = sa + p.segLen[k];
-    for (const sh of shifts) {
+    for (let j = 0; j < ns; j++) {
+      if (k < FIW_K0[j] || k >= FIW_K1[j]) continue;
+      const sh = FIW_SH[j];
       const a = Math.max(lo, sa + sh);
       const b = Math.min(hi, sb + sh);
       if (b < a) continue;
@@ -215,6 +267,9 @@ export function footInWindow(p: Poly, px: number, py: number, lo: number, hi: nu
   }
   return best;
 }
+const FIW_SH = new Float64Array(3);
+const FIW_K0 = new Int32Array(3);
+const FIW_K1 = new Int32Array(3);
 
 // ---------------------------------------------------------------------------
 // Spatial hash over every chain's segments.
