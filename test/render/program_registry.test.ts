@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   PROGRAM_SITES,
+  entryWave,
   programRegistry,
   type WarmContext,
 } from "../../src/render/program_registry";
@@ -123,6 +124,43 @@ describe("program registry (K307)", () => {
     const knot = wave1Names({ ...DAILY, fabric: false, burn: true, bgIds: [] });
     expect(knot).not.toContain("arm-strip-explore");
     expect(knot).not.toContain("junction-field-explore");
+  });
+
+  it("links the K620 root variants only on a page that can draw a root (K905)", () => {
+    const ROOTS = ["ribbon-sdf-explore-root", "ribbon-sdf-root", "section-rgb-explore-root", "section-rgb-root"];
+    const waves = (ctx: WarmContext): Record<string, number> =>
+      Object.fromEntries(
+        programRegistry()
+          .filter((e) => ROOTS.includes(e.name))
+          .map((e) => [e.name, entryWave(e, ctx)])
+      );
+    expect(Object.keys(waves(DAILY)).sort()).toEqual(ROOTS);
+    // No #glyphs2 root on the page: neither wave, whatever else is on.
+    const none = { ...DAILY, sdf: true, explore: true, burn: true, roots: false, root: false };
+    expect(Object.values(waves(none))).toEqual([0, 0, 0, 0]);
+    // A glyph page whose first scene has no word: all wave 2.
+    expect(Object.values(waves({ ...none, roots: true }))).toEqual([2, 2, 2, 2]);
+    // A glyph page with a word: the variants the mode draws join wave 1.
+    const glyph = { ...DAILY, sdf: false, roots: true, root: true };
+    expect(waves(glyph)).toEqual({
+      "section-rgb-root": 1,
+      "section-rgb-explore-root": 2,
+      "ribbon-sdf-root": 2,
+      "ribbon-sdf-explore-root": 2,
+    });
+    expect(waves({ ...glyph, sdf: true, burn: true })).toEqual({
+      "section-rgb-root": 1,
+      "section-rgb-explore-root": 1,
+      "ribbon-sdf-root": 1,
+      "ribbon-sdf-explore-root": 1,
+    });
+    // Every other program keeps its wave: the plain ones still draw every
+    // ribbon that paints no root.
+    for (const ctx of [DAILY, { ...DAILY, explore: true }, { ...DAILY, sdf: true, burn: true }]) {
+      for (const e of programRegistry().filter((p) => !ROOTS.includes(p.name))) {
+        expect(entryWave(e, { ...ctx, roots: true, root: true })).toBe(entryWave(e, { ...ctx, roots: false, root: false }));
+      }
+    }
   });
 
   it("has an entry for every program a background can start with", () => {

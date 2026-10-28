@@ -443,7 +443,11 @@ export function warmContextFor(
   background: string,
   reduced: boolean,
   maxBatchTextures: number,
-  rpSdf = false
+  rpSdf = false,
+  // K905: the page can paint a glyph root (#glyphs2 without notaper), and
+  // its first scene has glyph text or a title (main.ts reads both).
+  roots = false,
+  root = false
 ): WarmContext {
   return {
     fabric: params.mazeFabric,
@@ -477,6 +481,8 @@ export function warmContextFor(
     }),
     maxBatchTextures,
     sdf: rpSdf, // K8 G3-2 (?rp=sdf, read by main from the link)
+    roots,
+    root: roots && root,
   };
 }
 

@@ -270,7 +270,8 @@ export class ExploreGaps {
     }
     // K825: a meshless pass (the SDF quads) swaps its one mesh too.
     this.r.stripPass.setExplore?.(!!pieces);
-    const sh = pieces ? sectionShaderExplore() : sectionShader();
+    const root = this.r.rootPaint;
+    const sh = pieces ? sectionShaderExplore(root) : sectionShader(root);
     for (let c = 0; c < this.r.fills.length; c++) {
       const m = this.r.fills[c].mesh;
       if (m.shader !== sh) m.shader = sh;

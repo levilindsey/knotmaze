@@ -382,7 +382,14 @@ describe("shader warm-up (K307)", () => {
       bgIds: ["vellum"],
       maxBatchTextures: 16,
       sdf: false, // K8 G3-2 (?rp=sdf)
+      roots: false, // K905: no #glyphs2 root on the page
+      root: false,
     });
+    // K905: the -root variants exist only where a root can be drawn, and
+    // join wave 1 only on such a page.
+    expect(warmContextFor(daily, "vellum", false, 16, false, true, true)).toMatchObject({ roots: true, root: true });
+    expect(warmContextFor(daily, "vellum", false, 16, false, true, false)).toMatchObject({ roots: true, root: false });
+    expect(warmContextFor(daily, "vellum", false, 16, false, false, true)).toMatchObject({ roots: false, root: false });
     const c = warmContextFor({ ...daily, exploration: "threads" }, "none", true, 8);
     expect(c).toMatchObject({ explore: true, fog: false, ripple: false, bgIds: [], maxBatchTextures: 8 });
     expect(warmContextFor({ ...daily, exploration: "fog", mazeFabric: false }, "mist", false, 16)).toMatchObject({

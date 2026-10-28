@@ -423,6 +423,11 @@ export class RibbonRenderer {
 
   /** @internal ribbon */ ps: ParticleSystem;
   /** @internal ribbon */ style: RibbonStyle;
+  // K905 THE ROOT GATE: whether this scene paints a K620 root (a chain with
+  // a root paint table, PaintScene's 2+ entries), fixed at construction.
+  // Its ribbons draw the -root programs; every other scene's draw programs
+  // compiled without the root code (paint_glsl withRoot).
+  /** @internal ribbon */ readonly rootPaint: boolean;
   // Knot mode: each chain's constant section color (the old per-strand
   // tint, now an aColor through the section shader).
   /** @internal ribbon */ knotRgb: Float32Array[] = [];
@@ -1061,6 +1066,13 @@ export class RibbonRenderer {
     this.stripPass = style.rp === "sdf" ? new SdfPass(this) : new StripPass(this);
     this.ps = ps;
     this.style = style;
+    // K620: a root paint table per chain with a tapered root (entries; 0 =
+    // none). K905: before any pass builds a mesh, which picks its program.
+    const rootEntries = ps.chains.map((_, i) => {
+      const tp = style.taper?.[i];
+      return tp && tp.body !== undefined && tp.footC && tp.footO ? tp.footC.length : 0;
+    });
+    this.rootPaint = rootEntries.some((nr) => nr >= 2);
     // K90 stage 1b, a debug hook only (no link, no panel row): turn the
     // spline's bend bound on or off, optionally retune it, and re-render.
     // `__knotSplineBend()` with no arguments reports the state.
@@ -1162,10 +1174,7 @@ export class RibbonRenderer {
         paintBase: 0,
       })),
       // K620: a root paint table per chain with a tapered root.
-      ps.chains.map((_, i) => {
-        const tp = style.taper?.[i];
-        return tp && tp.body !== undefined && tp.footC && tp.footO ? tp.footC.length : 0;
-      })
+      rootEntries
     );
     const U = knotUniformValues();
     U.uKBase[3] = style.paletteMode ? 1 : 0;
@@ -1789,7 +1798,7 @@ export class RibbonRenderer {
     if (!this.probeMesh || this.probeMesh.capacity < capacity) {
       if (this.probeMesh) this.probeMesh.mesh.destroy();
       this.probeMesh = new ProbeTriMesh(capacity);
-      this.probeMesh.mesh.shader = sectionShader();
+      this.probeMesh.mesh.shader = sectionShader(this.rootPaint);
       this.root.addChild(this.probeMesh.mesh);
     }
     return this.probeMesh;
