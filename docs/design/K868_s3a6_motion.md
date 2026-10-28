@@ -180,3 +180,107 @@ at.
   - a `Ledger items` list (follow-ups and residuals; a question for Levi
     only about what shows on screen, in plain words);
   - K868's current handle fields (branch, last commit, evidence, next).
+
+## Findings
+
+### F1. The zoom's maximum (06:20)
+
+- **Fit mode (the default): 8x the fit.** `MAX_ZOOM = 8` times the
+  auto-fit scale (`src/app/camera.ts` line 29; the clamp at line 295 is
+  `hi = camFollow ? followScale() * 4 : fitCur.scale * MAX_ZOOM`).
+- **Follow mode: 4x the follow scale,** with `FOLLOW_SPAN` 13, so
+  4 min(w, h) / 13 px a world unit: 277 on the 1240x900 recordings, which
+  is 12.4x def's fit (22.34) and 13.0x muse's (21.30). It depends on the
+  viewport's short side, not on the knot.
+- So S3a5's 8x holds in fit mode only; follow mode reaches about 12x on
+  this viewport.
+
+### F2. The pop census: how it works, and where it departs from the Order
+
+`scripts/label_pops.ts` (the driver, vite-node) with
+`scripts/label_pops.html` and `label_pops_page.ts` (the renderer). The
+driver's header is the method; in short:
+
+- **Replay, not a re-recording.** It renders S3a5's recorded frames
+  (`.claude/probes/S3a/seq13/*.jsonl.gz`) through the app's label path
+  (the app's FieldModel params, pieces, switch lines, strips, the packed
+  LabelPass, the BandPass without depth) at frame 0's camera. The camera
+  is frozen and the geometry is S3a5's by construction, so the events line
+  up, and the before and after run on the very same frames. `--oracle`
+  swaps the FieldModel (the "before" is master's oracle frozen in
+  `.claude/probes/S3a/oracle_m14.ts`).
+- **Explained, both ways, as a range.** A changed pixel (|dcov| > 32/255)
+  is explained when its new value is found in frame i AND its old value
+  in frame i+1, within the local motion + 1 px. "Found" means between the
+  lightest and darkest values there (+-32): a sub-pixel move of an
+  anti-aliased edge takes any value between paper and ink. With exact
+  values the first version flagged 133 pops a transition on def drag, all
+  along edges that had moved half a pixel (a left edge 0|168|255 became
+  0|249|255). One-sided, vanishing ink would always be explained.
+- **The local motion is the shape's, not the material's:** a sample's
+  distance to the other frame's polyline of the same chain, the largest
+  over the samples within h + W + 2 px (12 h where none is that close, for
+  a corner's arc far from both chains).
+- **Pops:** unexplained pixels in 8-connected blobs of at least 4 px.
+- **Attribution:** the nearest event location within 6 h (35 px at def's
+  zoom). Events: corner jumps by class, `status` (a corner appears,
+  vanishes or flips ok / no-V), `refit` (K883's re-fit starts or stops),
+  `cluster` (one appears or goes, at its junctions), `spans` (a chain's
+  cluster spans change, at their ends), `reach` (a depth pin's reach
+  step, at the pin), `count` (a chain's point count, where the points
+  differ), else `none`.
+- **Jump classes** (the brief's three): a jump is V or q moving more than
+  0.1 world between frames, on a corner live (ok, V found) in both. The
+  continued root is S3a5's warm prototype (`seq13_corner.ts`): Newton from
+  frame i's V and q, the feet's windows +-2 h around frame i's feet carried
+  by sample index, refused at a window edge or an arm's end. `fold`: no
+  continued root. `switch`: a continued root that differs from the build's
+  by more than 1e-3 world. `amp`: the build kept it. (`rekey`: an arm's
+  chain changed, not classed.) S3a5's counts (17/42/126/216) included the
+  corners whose status flipped; here those are `status`.
+
+### F3. Today's label (master's rules) through the census
+
+Pops a transition (40 transitions each), then pops by cause (area px):
+
+| sequence | pops a transition | pops (px) | fold | switch | amp | refit | status | cluster | spans | reach | none |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| def drag | 0.15 | 6 (359) | 6 (359) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| def flow | 0.68 | 27 (1078) | 13 (540) | 4 (246) | 0 | 3 (166) | 0 | 0 | 0 | 7 (126) | 0 |
+| muse drag | 1.93 | 77 (1273) | 6 (195) | 1 (29) | 3 (47) | 19 (562) | 0 | 1 (10) | 13 (184) | 21 (163) | 13 (83) |
+| muse flow | 6.65 | 266 (7368) | 36 (1671) | 8 (339) | 61 (1178) | 58 (2920) | 5 (31) | 3 (94) | 29 (607) | 53 (362) | 13 (166) |
+
+Corner jumps by class (switch / fold / amp / rekey): def drag 0 / 4 / 13 /
+0, def flow 3 / 8 / 10 / 2, muse drag 1 / 17 / 100 / 6, muse flow 5 / 36 /
+130 / 3.
+
+- **The corners are most of it:** fold, switch, amp, refit and status make
+  100% of def drag's pop area, 88% of def flow's, 65% of muse drag's and
+  83% of muse flow's.
+- **Amplification is mostly the re-fit's radius stepping:** of the amp
+  jumps, 6/13, 10/10, 55/100 and 128/130 change r by more than 0.05 h in
+  the frame. K883's re-fit iterates with a 0.02 h least step, so its r is
+  not a continuous function of the geometry (call 2).
+- **Crops looked at** (`.claude/probes/S3a/pops14/before14/<seq>_crops/`,
+  frame i | frame i+1 | change, green = the pop, magenta = the event):
+  - fold, muse flow t8 (j34/1): a sharp corner with a straight stroke
+    becomes a round C arc 2 h across, 237 px in one frame. def drag t0
+    and t31 (j175/1, q moves 1.6 world): an outline stroke appears, then
+    goes again.
+  - switch, muse flow t11 (j112/1): a small loop arc appears in the corner,
+    149 px.
+  - refit, muse flow t38 (j157/1, r 0 to 2 h): two strokes vanish as the
+    corner rounds, 214 px.
+  - amp, muse flow t6 (j55/0, 134 deg): the arc shifts 2-3 px where the
+    threads moved 0.2 px.
+  - spans, muse flow t38: the same spot as that refit (co-located events;
+    the nearest location wins, so a span pop can be a corner's).
+  - reach, muse flow t0: an under-pass's cut end steps 2-3 px at a
+    crossing, 25 px.
+  - cluster, muse flow t8 (j126 and j149 merge): a stroke appears at the
+    junction, 42 px.
+  - none, muse flow t4: a line end at a junction changes shape, 47 px, no
+    event within 88 px. The census does not track the switch lines or the
+    pieces, the likely owners.
+  - Not pops, seen in passing: stray 1-2 px dark specks in muse's frames
+    (refit t38's crop), static, so the census does not count them.
