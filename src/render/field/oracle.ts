@@ -996,7 +996,10 @@ export class FieldModel {
     for (const c of this.corners) {
       const capA = caps[c.junction][c.armIdxA!];
       const capB = caps[c.junction][c.armIdxB!];
-      if (!(c.r > 0) || !c.ok) continue;
+      // K868 S3a6: a round whose ball has no contact at the rule's radius
+      // (its arms part before they hold it) is re-fit like one past its caps.
+      const vOk = this.vMemo.get(`${c.junction}/${c.index}`)?.ok ?? c.ok;
+      if (!(c.r > 0) || !vOk) continue;
       const pa = this.polys[c.a];
       const pb = this.polys[c.b];
       const room = () => {
@@ -1006,8 +1009,8 @@ export class FieldModel {
       };
       const over = () =>
         Math.max(Math.abs(dS(pa, c.armA.s, c.sTA)) - (capA - this.W), Math.abs(dS(pb, c.armB.s, c.sTB)) - (capB - this.W));
-      if (!(over() > 1e-9 * h)) continue;
-      const why = capA - Math.abs(dS(pa, c.armA.s, c.sTA)) < capB - Math.abs(dS(pb, c.armB.s, c.sTB))
+      if (c.ok && !(over() > 1e-9 * h)) continue;
+      const why = !c.ok ? "no contact at the rule's radius" : capA - Math.abs(dS(pa, c.armA.s, c.sTA)) < capB - Math.abs(dS(pb, c.armB.s, c.sTB))
         ? this.armCaps[c.junction][c.armIdxA!].why
         : this.armCaps[c.junction][c.armIdxB!].why;
       const r0 = c.r;
@@ -1368,6 +1371,15 @@ export class FieldModel {
         u = u1;
         cur = nx;
       }
+      // The march samples arm A's offset polyline, which has a gap at each
+      // convex vertex (the ball touching the vertex itself): a contact there
+      // falls between samples. When the march finds none, Newton from the
+      // bisector may still find a true contact (feet not at a window's end).
+      for (const k of [1, 0.5, 2, 1.5, 3]) {
+        const d = (k * delta) / Math.max(sa, 1e-3);
+        const nt = newton(delta, root.x + bis[0] * d, root.y + bis[1] * d, wA, wB);
+        if (nt.ok && !atEnd(pa, wA, nt.sA) && !atEnd(pb, wB, nt.sB)) return nt;
+      }
       return miss;
     };
     const newton = (delta: number, x0: number, y0: number, wA: [number, number], wB: [number, number]): Sol => {
@@ -1407,7 +1419,7 @@ export class FieldModel {
       return { x, y, res, fa: 0, fb: 0, sA: fA.s, sB: fB.s, ok };
     };
     // V does not depend on r (its own reach): the re-fit's tries reuse it.
-    const vKey = `/${index}`;
+    const vKey = `${ji}/${index}`;
     let v = this.vMemo.get(vKey);
     if (!v) {
       v = solve(h, winA0, winB0);
