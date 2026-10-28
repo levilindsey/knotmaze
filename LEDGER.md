@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K965.
+Next free ID: K966.
 
 ## Waiting on Levi
 
@@ -299,11 +299,11 @@ Next free ID: K965.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
-  - owner: agent `a43cf84c44c9417cd` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, stage K959 v5.6, started 2026-10-27 22:39, 2 h cap ~00:39)
-  - branch: mainline, no code (outputs untracked); last commit: `27c91ff4` (K959's brief; its handoff is appended there at the end)
-  - evidence: `.claude/probes/K863/trace/` (per stage: `tools/*_k<ID>.py`, `work<n>/`, `out<n>/`; `NOTES.md` has a section per version with its rerun commands); Drive `K863/` (each version's SVGs; v5.1: `cursive_v51.svg`, `cursive_v51_words.svg`, `split_combs.svg`, `k917_junctions.svg`; v5.2: `cursive_v52.svg`, `cursive_v52_words.svg`; v5.3: `cursive_v53.svg`, `cursive_v53_words.svg`, `combs_v53.svg`; v5.4: `cursive_v54_words.svg`, `e_joins_v54.svg`; v5.5: `cursive_v55.svg`, `cursive_v55_words.svg`, `combs_v55.svg`)
-  - next: K959's stage builds v5.6 (`docs/design/K959_cursive_v56.md`: the exit ends, the eye flags, few nodes; K959-K961, K963), the template Levi reviews; then one stage, while Levi reviews, for K944 (`--from-svg` reads Levi's curves as drawn), K962, K948, K946, K949, K937 and K950's side-by-side; Levi answers K950 and hand-edits the template; K927; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls); capitals are K931
-  - brief: `docs/design/K863_trace.md` (## Levi's calls); stages: v3 `K886_cursive_v3.md`, v4 `K902_cursive_frames.md`, v5 `K904_cursive_v5.md`, v5.1 `K916_cursive_v51.md`, v5.2 `K925_cursive_v52.md`, v5.3 `K930_cursive_smooth.md`, v5.4 `K926_cursive_e.md`, v5.5 `K945_cursive_v55.md`, v5.6 `K959_cursive_v56.md`
+  - owner: nobody since 2026-10-28 00:03 (stage K959 done, ef4232ca); stage v5.7 (K965) launches next
+  - branch: mainline, no code (outputs untracked); last commit: `ef4232ca` (K959's handoff)
+  - evidence: `.claude/probes/K863/trace/` (per stage: `tools/*_k<ID>.py`, `work<n>/`, `out<n>/`; `NOTES.md` has a section per version with its rerun commands); Drive `K863/` (each version's SVGs; v5.1: `cursive_v51.svg`, `cursive_v51_words.svg`, `split_combs.svg`, `k917_junctions.svg`; v5.2: `cursive_v52.svg`, `cursive_v52_words.svg`; v5.3: `cursive_v53.svg`, `cursive_v53_words.svg`, `combs_v53.svg`; v5.4: `cursive_v54_words.svg`, `e_joins_v54.svg`; v5.5: `cursive_v55.svg`, `cursive_v55_words.svg`, `combs_v55.svg`; v5.6: `cursive_v56.svg`, `cursive_v56_nodes.svg`, `cursive_v56_words.svg`, `combs_v56.svg`)
+  - next: K965's stage builds v5.7 (`docs/design/K965_cursive_v57.md`: smoother bodies inside a 2.5 u budget, a reference that knows the ink junctions, the peaks and ceilings, f's tie, few nodes; K960, K961, K963, K965), the template Levi reviews; then one stage, while Levi reviews, for K944 (`--from-svg` reads Levi's curves as drawn), K962, K948, K946, K949, K937 and K950's side-by-side; Levi answers K950 and hand-edits the template; K927; then map the letters onto threads (the a/c/d/g/o/q junctions in `K863_trace.md` ## Levi's calls); capitals are K931
+  - brief: `docs/design/K863_trace.md` (## Levi's calls); stages: v3 `K886_cursive_v3.md`, v4 `K902_cursive_frames.md`, v5 `K904_cursive_v5.md`, v5.1 `K916_cursive_v51.md`, v5.2 `K925_cursive_v52.md`, v5.3 `K930_cursive_smooth.md`, v5.4 `K926_cursive_e.md`, v5.5 `K945_cursive_v55.md`, v5.6 `K959_cursive_v56.md`, v5.7 `K965_cursive_v57.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -756,15 +756,15 @@ Every other item below waits on the trigger it names.
 - **K944** · Cursive: `--from-svg` takes Levi's edited curves exactly as drawn (Levi, 2026-10-27: "After I
   hand-edit them, you should probably not change them") and derives only joins, variants and tails; it reports
   kinks, never refits (K930's `hold` stays opt-in). Write the template at 6+ decimals. `K930_cursive_smooth.md` ## Handoff.
-- **K959** · Cursive v5.5's exit ends: o's last 15 u lean 3.1 u inside the stroke and end in a short hook (the
-  fair; not its evaluation cap, tested; inferred: the held exit frame); e's last 5 u turn 8.2 deg (v5.4 1.0).
-  Stage v5.6, `docs/design/K959_cursive_v56.md`. `work13/dbg/o_nfev/`, `work13/dbg/e_end/` in K863's probes.
-- **K960** · Cursive v5.5's eye flags over 3: the exit curls b@3076 26.5, v@1879 17.7 and w@3111 11.5 (grew
-  from v5.4, same spots), p's entry p@621 5.0 (new), p@3562 5.0, t's cusp 4.3. Fix each at its source or show
-  it is the font's shape. Stage v5.6. `out13/split_check.txt` in `.claude/probes/K863/trace/`.
-- **K961** · Cursive v5.5: 17 of 30 body strokes have more than 12 nodes (k 27, m 25, p 22, q 20, a 19, f 18,
-  h 18); the hard nodes at frames, cusps and corners cut each into 3-8 pieces. Test soft frames. Stage v5.6.
-  `.claude/probes/K863/trace/NOTES.md` ## v5.5.
+- **K965** · Cursive v5.6's peaks above v5.4's (f 9.90, k 6.58, q 7.04, r 8.88, y 1.53; i 2.88 -> 4.83), o's tight
+  exit turn, q and r over the roughness ceilings, r's comb spike. The 1 u budget holds them; it widens to 2.5 u
+  (coordinator, 2026-10-28). Stage v5.7, `K965_cursive_v57.md`; `work14/rough/check_v56.txt` in K863's probes.
+- **K960** · Cursive v5.6's eye flags over 3: r@669 9.9, w@618 8.6 (with the band; inferred: the medial axis bends
+  toward the ink junction there), k@2136 4.2 (the few-node fit); v5.5's b, v, p, t flags gone. Stage v5.7.
+  `out14/split_check.txt` in `.claude/probes/K863/trace/`.
+- **K961** · Cursive v5.6: 12 of 30 body strokes have more than 12 nodes (m 28, h 20, k 19, p 19, n 17, w 17,
+  y 17, a 15, d 14, f 14, q 14, u 14; v5.5 had 17); soft frames work (the joins attach along a cubic, G2).
+  Stage v5.7. `work14/build/dbg/nodes.png` in `.claude/probes/K863/trace/`.
 - **K946** · Cursive generator hooks (`gen_k925`): d's entry (curvature 194 1/u), the hippo lead-in
   (6408 1/u), b's word-initial lead-in (a small step, in v5.3 too), and the na and nq joins (G1 only).
   `K930_cursive_smooth.md` ## Handoff.
@@ -774,9 +774,9 @@ Every other item below waits on the trigger it names.
 - **K949** · Cursive joins still off the font after v5.4: fe 18.8 u, bk 7.85 (check the reference cut
   near k's loop entry), ee 6.9, br 5.5 (the refit sits on its bounds; blend's L=b params give 5.2), y's
   final tail 3.58. `K926_cursive_e.md` ## Handoff.
-- **K962** · Cursive v5.5's joins: comb spikes at the seams in "minimum" and "hippo" (p to o, h's entry) and
-  m's exit hook; fidelity regressions ev +1.11, ju +0.95, ur +0.86, si +0.68, ui +0.67 u (one parameter set
-  per join group). `work13/join/calibration.txt`, `work13/combs/crops/` in `.claude/probes/K863/trace/`.
+- **K962** · Cursive joins: v5.5's seam spikes ("minimum", "hippo": p to o, h's entry) and m's exit hook; v5.6's
+  14 rows worse by over 0.25 u (fo +0.62, ck +0.51, pp, qu, mp, es, ip, up, mi, an, bo, by; inferred: the moved
+  end frames). `work14/combs/crops/`, `work13/join/calibration.txt` in K863's probes.
 - **K943** · K868: draw the over thread's line where two threads of one junction cross (about 110 spots; both inks
   fuse them now; Drive `K868/sheets/K943_crossing_in_junction.png`), behind a flag for Levi to compare. The oracle
   needs simLab to split a crossing's two passes (K940 step 5, `S/`); the app needs 1-2 label bits (S3). Under extent part this is label ink's largest class (#16 50/8, missing 41/16; K934).
@@ -802,13 +802,12 @@ Every other item below waits on the trigger it names.
 - **K958** · K868 extent part's residuals (K934 step 3, `ext3/`): a crescent sliver at muse_hash (20.30, 1.40);
   an island under K955's free end (m4); a lens wedge with a free end at g41_def_tw64 (0.90, 14.40); a notch (r1);
   spur ends (u3); a 1 px hairline island at g41_user_tw64 (9.79, 12.93).
-- **K964** · K868 S3a's label residue after v6, undiagnosed: 0-16 sampled px per scene (of 59k-361k) differ
-  from the oracle's V: extra and missing tube at open ends (the probe's round caps against endSnap), and a few
-  wrong tubes, mostly GPU-lower after the local-minimum clip. S3a2 diagnoses where cheap. `K868_s3a_app.md`
-  ## Handoff on branch `k868-s3a`.
-- **K963** · Cursive v5.5's small residuals: f's hairpin sits 1.30 u off the axis with three nodes clustered
-  at its top; a's fair stops at its evaluation cap (effect untested); fewnode's G2 tally counts g's and q's V
-  corners as joints. Stage v5.6 takes the first two. `.claude/probes/K863/trace/NOTES.md` ## v5.5.
+- **K964** · K868 S3a's label residue after v6: 0-16 sampled px per scene differ from the oracle's V (open-end
+  tube extra/missing: round caps against endSnap; a few wrong tubes, mostly GPU-lower after the clip). S3a2
+  diagnoses where cheap. `K868_s3a_app.md` ## Handoff on branch `k868-s3a`.
+- **K963** · Cursive's small residuals: f's hairpin 1.48 u off the axis, three nodes in its last 23 u, peak 9.90
+  (stage v5.7); fewnode's G2 tally counts g's and q's V corners as joints; a small flag at m's first foot; a
+  stale `--end-budget` header in `bodies_k959.py`. `NOTES.md` ## v5.6 in K863's probes.
 - **K951** · Cursive v5.4's residual: b, f, p, v, o, s and w end without a final tail, as the font's do (v5.5
   fixed the titles and the rerun order). `.claude/probes/K863/trace/NOTES.md` ## v5.4.
 - **K947** · Cursive v5.3's residuals: f's frames sharing a node, `bodies.json` at 4.5 MB, the ot crossing
@@ -1997,6 +1996,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K959** · Cursive v5.6's exit ends: each body faired 40 fu past its smooth cuts, its end frames re-taken from the faired centreline; o's hook and e's flick gone. `K959_cursive_v56.md` ## Handoff. Done in ef4232ca (2026-10-28).
 - **K945** · Cursive v5.5: the centreline is the medial axis of the font's thinnest outline (on the font's axis, 0.00-0.57 u in the moved runs; v5.4 0.4-2.8 u), fair is the default, the roughness ceilings tightened; leftovers K959-K963. `K945_cursive_v55.md` ## Handoff. Done in 50183203 (2026-10-27).
 - **K939** · Cursive: the a/g/q stem tops are corners at the font's V (0.13, 0.26 and 0.00 u from it; d starts at its cusp), no U. `work13/vtops/vtops.png`. Done in 50183203 (2026-10-27).
 - **K928** · Cursive: `--split fair` is the default (v5.5); reading Levi's edited template as drawn is K944. Done in 50183203 (2026-10-27).
