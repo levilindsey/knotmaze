@@ -136,3 +136,40 @@ part. After steps 1-2 and before the v5 rebuild:
    and v5, split by split.
 
 Then step 3. Steps 4-5 only as time allows: v5 must not carry the bumps.
+
+## Handoff (K904 stage agent, 2026-10-27 13:10)
+
+Stopped before the 13:40 cap: steps 1-3 and the redirect are done, steps 4 and 5 not started. All of it is in
+the untracked `.claude/probes/K863/trace/`: `NOTES.md` `## v5` (status, `### Results (v5)`, `### Rerun commands
+(K904 v5)`), the tools `tools/*_k904.py` (plus `split_k904.py`, the split smoothing), outputs in `work8/` and
+`out8/`, read-only checks in `work8/dbg/` (`q_splits.py`, `q_cmp45.py`, `q_hs.py`, `q_grpmax.py`, `q_ofset.py`,
+`q_fairref.py`). `work8/dbg/rerun_check.ps1` runs the rerun section verbatim; last run 13:04-13:08: 15 lines,
+every exit 0, all 15 outputs byte-identical.
+
+- Built: `out8/cursive_v5.svg` (the template), `out8/cursive_v5_words.png` and `.svg`,
+  `out8/cursive_v5_review.png`, `out8/r_after_high.svg`.
+- Steps 1-2: a, c, d, g, o, q fused at 60 u (`--fuse-junction font` puts each at the font's own, 47.5-58.1 u);
+  one high entry per letter, or one per class (after o; after b, v, w) where the two differ.
+- Redirect: the bump is the ink union's centreline bending into the crotch at the skeleton's junction node (the
+  guess, confirmed). Every split is now a quintic G2 blend between the passes' own frames, inside the ink. The
+  peak-curvature ratio was median 1.9, max 120.5 in v4 (26 of 52 splits over 2) and is median 0.2, max 4.8 in v5
+  (8 of 51). The blends move the body up to 3.73 u off the trace inside the windows, 0.069 u outside.
+
+Next, in order:
+1. The high-smooth regression, where v5 is worse than v4 (NOTES Results, the last bullet). Multi-start the class
+   fits in `join_k904.py`: of, ol and ob read 3.9 u, and v4's sets give 2.0-2.4 u on the same frames. Fit the
+   variant pairs after a high exit on their own: on 4.2, wn 5.1, om 3.1, bn 4.7 u, per-pair best 0.6-1.5 u. Then
+   rerun from the join down and run `rerun_check.ps1`.
+2. Count the retraced stretch in the pair measure of a fused entry: eo reads 27.6 u, and 5.8 u with the stretch
+   credited (`q_fairref.py`).
+3. Step 4, leads and tails: crossings of 20 deg or more went 14 -> 17 (leads into fused a, d, q cross their
+   bowls; tails after s, d, x; ot at 34 deg).
+4. Step 5, the generated e: ze 66.9, oe 53.7, be 51.5, ve 51.3, er 8.4 and en 7.1 u are the font's body variants
+   of e (after z, o, b, v), which only a generated e can match.
+
+Decisions for Levi:
+- eo: the font's e-to-o connector merges into o's up pass near 86 u, above the 60 u junction (5.8 u apart with
+  the retrace credited). One junction height for every entry, or a higher one after e?
+- c's fused entry arrives 19.0 deg and 4.47 u off the font's up pass at 60 u (d 12.6 deg / 3.20 u, g 9.5 deg /
+  2.90 u); c's own junction would be 58.1 u.
+- r after a high exit (K901): dip (the default, within 5.2-6.5 u of the font's) or straight in (`--r-straight`).
