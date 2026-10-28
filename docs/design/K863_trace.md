@@ -153,3 +153,17 @@ Binding on every later cursive stage:
   from, and the generator fits the connector within those limits. The
   lowercase's two modes would become two cases of it, and the mapping onto
   threads could use it as well.
+- **Stem tops come to a point** (Levi, 2026-10-27, K939: "No. We need to
+  get rid of the U"). The stems of a, d, g and q end in a cusp at the
+  font's sharp V. Since v5.2 the dip's fix rounds each into a small U
+  about 6 u to its left.
+- **Smoother, then Levi's hand edits** (Levi, 2026-10-27, K928: "Yes, we
+  need them to be smooth. I want them to even be smoother than you
+  currently have them. I can make them smoother with my manual edits.
+  After I hand-edit them, you should probably not change them. Which is
+  why I want to finish iterating with you BEFORE I start hand-editing").
+  `--split fair` becomes the default, and the stages before his edit make
+  the curves smoother than v5.4. Once he has edited the template, the
+  pipeline reads his curves exactly as drawn: it derives the joins,
+  variants and tails from them, reports any kink it finds, and never
+  refits them (K944).
