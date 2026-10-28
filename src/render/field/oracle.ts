@@ -184,6 +184,22 @@ export interface OracleParams {
   /** K915 ink "label": bisect to the exact change near the band's edge
    * (default true); false keeps the grid's distance, within g/2 = W/8. */
   labExact?: boolean;
+  /** K924 flips (diagnostics, off by default). labFill "arcs": a G1 fill
+   * stops at its arms' outlines (the curvilinear triangle V, t_A, t_B)
+   * instead of reaching their centrelines. */
+  labFill?: "arcs";
+  /** K924 flip: "order" orders a fill against a foreign member by the
+   * table crossing between that member's chain and one of the fill's
+   * cluster's chains (nearest within σ of the member's foot); with no
+   * such crossing, the depth comparison stands. */
+  labFillDepth?: "order";
+  /** K924 flip: "surface" breaks equal depths by a key that is constant
+   * over a surface (the cluster, else the chain), then s. */
+  labTie?: "surface";
+  /** K924 flip: > 0 makes a chain past its span of cluster J, within
+   * this arc length of the span, the same surface as J's members and
+   * fills (simLab only). */
+  labCap?: number;
 }
 
 /** K909 step 4: a crossing-cut arm whose side lies inside the crossing's
@@ -1571,6 +1587,9 @@ export class FieldModel {
     const tbx = (pb.x[kbb] - pb.x[kb]) * c.armB.dir;
     const tby = (pb.y[kbb] - pb.y[kb]) * c.armB.dir;
     if (cross(tbx, tby, x - fb.x, y - fb.y) > 0) return false;
+    // K924 flip: outside both arms' tubes, so the fill's edges are the
+    // outlines and the arc, never a straight cut across a tube.
+    if (this.params.labFill === "arcs" && (Math.hypot(x - fa.x, y - fa.y) < this.h || Math.hypot(x - fb.x, y - fb.y) < this.h)) return false;
     return true;
   }
 
@@ -2427,6 +2446,13 @@ export class FieldModel {
     const better = (z: number, i: number): boolean => {
       if (S < 0 || z > zS + 1e-6) return true;
       if (Math.abs(z - zS) > 1e-6) return false;
+      if (this.params.labTie === "surface") {
+        // K924 flip: one key per surface (the cluster, else the chain).
+        const ka = cl[i] >= 0 ? 1e6 + cl[i] : this.idOf[cs[i].chain];
+        const kb = cl[S] >= 0 ? 1e6 + cl[S] : this.idOf[cs[S].chain];
+        if (ka !== kb) return ka > kb;
+        return cs[i].s > cs[S].s;
+      }
       const a = this.idOf[cs[i].chain];
       const b = this.idOf[cs[S].chain];
       return a > b || (a === b && cs[i].s > cs[S].s);
@@ -2455,7 +2481,12 @@ export class FieldModel {
       let near = -1;
       for (let k = 0; k < n; k++) if (cl[k] === J && (near < 0 || cs[k].d < cs[near].d)) near = k;
       const z = this.depthAt(cs[near].chain, cs[near].s);
-      if (near !== S && better(z, near)) {
+      let wins = near !== S && better(z, near);
+      if (near !== S && S >= 0 && cl[S] !== J && this.params.labFillDepth === "order") {
+        const o = this.fillOrder(J, cs[S].chain, cs[S].s);
+        if (o !== null) wins = o;
+      }
+      if (wins) {
         S = near;
         zS = z;
         fillS = cs[near].d >= h;
@@ -2465,9 +2496,59 @@ export class FieldModel {
     return { chain: cs[S].chain, s: cs[S].s, J: cl[S], z: zS, fill: fillS };
   }
 
+  /** K924 flip labFillDepth "order": the table crossings of each chain. */
+  private xBy: { s: number; oi: number; over: boolean }[][] | null = null;
+
+  /** K924 flip: is cluster J's fill over chain pi at s? The nearest table
+   * crossing within σ between pi and a chain of J decides; null = none. */
+  private fillOrder(J: number, pi: number, s: number): boolean | null {
+    if (!this.xBy) {
+      const xb: { s: number; oi: number; over: boolean }[][] = this.polys.map(() => []);
+      for (const x of this.scene.crossings) {
+        const ia = this.idxOf.get(x.a.chain);
+        const ib = this.idxOf.get(x.b.chain);
+        if (ia === undefined || ib === undefined) continue;
+        xb[ia].push({ s: normS(this.polys[ia], x.a.s), oi: ib, over: x.over === "a" });
+        xb[ib].push({ s: normS(this.polys[ib], x.b.s), oi: ia, over: x.over === "b" });
+      }
+      this.xBy = xb;
+    }
+    const spans = this.clusters[J].spans;
+    let best = Infinity;
+    let res: boolean | null = null;
+    for (const x of this.xBy[pi]) {
+      if (!spans.has(x.oi)) continue;
+      const d = Math.abs(dS(this.polys[pi], s, x.s));
+      if (d <= this.sigma && d < best) {
+        best = d;
+        res = !x.over;
+      }
+    }
+    return res;
+  }
+
+  /** K924 flip labCap: is s on chain pi within w past one of cluster J's spans? */
+  private capNear(J: number, pi: number, s: number, w: number): boolean {
+    const l = this.clusters[J].spans.get(pi);
+    if (!l) return false;
+    const p = this.polys[pi];
+    for (const [lo, hi] of l)
+      for (const sh of p.closed ? [-p.len, 0, p.len] : [0]) {
+        const t = s + sh;
+        if (t >= lo - w && t <= hi + w) return true;
+      }
+    return false;
+  }
+
   /** Same surface: one cluster, or one chain within σ (a fill is its cluster alone). */
   private simLab(A: Vis, B: Vis): boolean {
     if (A.J >= 0 && A.J === B.J) return true;
+    const w = this.params.labCap ?? 0;
+    if (w > 0) {
+      // K924 flip: a chain just past its span of J is still J's surface.
+      if (A.J >= 0 && B.J < 0 && !B.fill && this.capNear(A.J, B.chain, B.s, w)) return true;
+      if (B.J >= 0 && A.J < 0 && !A.fill && this.capNear(B.J, A.chain, A.s, w)) return true;
+    }
     if (A.fill || B.fill) return false;
     return A.chain === B.chain && Math.abs(dS(this.polys[A.chain], A.s, B.s)) <= this.sigma;
   }
