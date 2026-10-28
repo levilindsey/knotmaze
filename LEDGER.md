@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K984.
+Next free ID: K986.
 
 ## Waiting on Levi
 
@@ -294,11 +294,11 @@ Next free ID: K984.
 - **K868** · Border look, junctions done right: one field renderer (union within a surface, occlusion
   by depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
-  - owner: nobody since 2026-10-28 06:04 (merged; agent `a4e3e9a57ae249877` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
+  - owner: nobody since 2026-10-28 05:58 (S3a5 done and merged; S3a6 launching from claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
   - branch: mainline; last commit: `ba4bdf75`
-  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`), `.claude/probes/K924/` (`run.ps1`, `tally.mjs`, `at.ts`, `tdiff.mjs`), `.claude/probes/K940/` (sheet J, `jcrops/`, `S/`, per-scene `ydiff/`, `cls/`, `indep/`), `.claude/probes/K934/` (sheet K `K_recount.png`, `sheetk/`, `dropped/`, `ext3/`, `indep/`, census logs), S3a's, S3a2's and S3a3's in the `k868-s3a` worktree's `.claude/probes/S3a/` (each stage brief's `## Handoff` lists its files and rerun commands; S3a3's: `gpu10/cmp10_all.log`, `ksites10/` (sheet K sites), `drag11/`, `gp11/`, `settle11/`, `ab/s3a3_off/`; copy them to the main checkout before removing the worktree); sheets A-K, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
+  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`), `.claude/probes/K924/` (`run.ps1`, `tally.mjs`, `at.ts`, `tdiff.mjs`), `.claude/probes/K940/` (sheet J, `jcrops/`, `S/`, per-scene `ydiff/`, `cls/`, `indep/`), `.claude/probes/K934/` (sheet K `K_recount.png`, `sheetk/`, `dropped/`, `ext3/`, `indep/`, census logs), S3a's to S3a5's in the `k868-s3a` worktree's `.claude/probes/S3a/` (each stage brief's `## Handoff` lists its files and rerun commands; S3a5's: `seq13_*.ts` and `seq13/`, the four recorded sequences; S3a3's: `gpu10/cmp10_all.log`, `ksites10/` (sheet K sites), `drag11/`, `gp11/`, `settle11/`, `ab/s3a3_off/`; copy them to the main checkout before removing the worktree); sheets A-K, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
   - next: S3a6 (`docs/design/K868_s3a6_motion.md`): the label in motion (a pop census of the four sequences), then the corner rules (a stated root, K883's re-fit as a solve); then S3a7 (pieces on the GPU, depth per fragment), S3a8 (uncut strips, windows, fills, switch lines on the GPU), S3a10 (corners and walks on the GPU; K984 decides the readback); then K972, K973, K923, sheet S3a, K943's bits, S3b
-  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`; K934: `docs/design/K934_recount.md`; S3a: `docs/design/K868_s3a_app.md`; S3a2: `docs/design/K868_s3a2_label.md`; S3a3: `docs/design/K868_s3a3_ink.md`; S3a4: `docs/design/K868_s3a4_rebuild.md`; S3a5: `docs/design/K868_s3a5_incremental.md`
+  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`; K934: `docs/design/K934_recount.md`; S3a: `docs/design/K868_s3a_app.md`; S3a2: `docs/design/K868_s3a2_label.md`; S3a3: `docs/design/K868_s3a3_ink.md`; S3a4: `docs/design/K868_s3a4_rebuild.md`; S3a5: `docs/design/K868_s3a5_incremental.md`; S3a6: `docs/design/K868_s3a6_motion.md`
   - env: from the `k868-s3a` worktree, `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5381 --strictPort --host 127.0.0.1` (the config is untracked; S3a3's handoff, How to rerun)
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -794,6 +794,9 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
+- **K984** · K868's readback call, before S3a10: time a same-frame readback of a few KB after a GPU pass, on the
+  desktop and the Pixel, and sketch the clusters, pass tags and switch topology on the GPU (no readback at all). One
+  frame late is out (wrong on every flow frame). `K868_s3a5_incremental.md` sections 9-10; `K868_s3a6_motion.md`.
 
 ## Residuals (known, not fixed)
 
@@ -815,7 +818,7 @@ Every other item below waits on the trigger it names.
   or pivot; the panel's labelInk checkbox does not refresh after the 255 fallback. S3a2's handoff on `k868-s3a`.
 - **K971** · K868's label rebuild with `lbi`, fabric mode: about 0.44 s a frame after S3a4 (app counter p95 510 ms; was
   2.2 s; flag off 1.4 ms), so in-thread the knot never sleeps (worker host 28 s, flag off 15 s). The cost is the
-  FieldModel, rebuilt from scratch each frame; S3a5 designs its per-frame path (`K868_s3a5_incremental.md`).
+  FieldModel, rebuilt each frame; S3a5 found 1 ms needs the GPU (S3a7, S3a8, S3a10; `K868_s3a5_incremental.md`).
 - **K972** · K868's band ink against the oracle (S3a3 R1-R3): tube-against-tube switches are not found (twist eyes;
   g41_user_tw64's V diagonal), small closed islands are missing (sheet K a1), and loop tips draw an open hook where
   the oracle closes a teardrop (d1; K910's free-end rule makes the teardrop right). `K868_s3a3_ink.md` ## Handoff.
@@ -1729,6 +1732,9 @@ Every other item below waits on the trigger it names.
   round 2026-10-27c). `docs/design/K156.md` round 27c.
 - **K927** · Cursive fits stop at nfev 600 for 16 of 26 letters (since v5.2 q does and a no longer
   does); in v5.1 a and q ended 5.0 and 4.0 u off the trace. `K916_cursive_v51.md` Handoff, Open 5.
+- **K985** · K868 S3a5's leftovers: a chain's point count changes between recorded frames (cause unverified); knot
+  mode and the settle were never recorded (the GPU stages' checks must cover both); the 8x zoom is assumed (S3a6
+  checks it). `K868_s3a5_incremental.md` 11.6, 11.9, 11.10.
 
 ## Approved, to schedule (2026-10-11)
 
