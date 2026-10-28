@@ -25,8 +25,10 @@ These calls are still open for Levi. Keep both ways of each behind a
 switch, with today's defaults:
 - the fused junction's height: 60 u, or the font's own
   (`--fuse-junction`);
-- the junction after e: the font's e-to-o connector merges near 86 u;
-- r after a high exit: the dip, or straight in (`--r-straight`, K901).
+- the junction after e: the font's e-to-o connector merges near 86 u.
+
+Levi chose the dip for r after a high exit (K901): r dips the way the
+font's does. `--r-straight` can stay as it is, with no further work.
 
 ## Setup
 

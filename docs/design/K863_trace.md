@@ -128,5 +128,7 @@ Binding on every later cursive stage:
   the shared curve tangentially, with continuous curvature: no bump. v4 has
   one at such splits on the right of a, d, g, q, u and y, and in h, m, n, w,
   p and others (K904's redirect).
-- **Still open (ledger K901):** whether r's entry dips after a high exit
-  or takes it unmodified.
+- **r dips after a high exit** (Levi, 2026-10-27, K901: "dip"). After o, b,
+  v and w, r's entry dips about 50 u below the x-height, as the font's
+  does, then runs into the standard r: v5's default (`out8/r_after_high.svg`
+  shows both).
