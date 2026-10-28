@@ -74,3 +74,14 @@ fits stopped at nfev 600 (K927), Levi's calls (K917, K928).
   not a stop: after one, re-read this brief and `NOTES.md` `## v5.2`. On
   stopping, append a `## Handoff` to this brief (the coordinator commits
   it) and report, ending with a `Ledger items` list.
+
+## Redirect (coordinator, 2026-10-27 16:05)
+
+Levi answered K917 ("sgtm"): the fused junction stays at 60 u for a, c, d,
+g and q, and o's moves to 86 u if the other pairs into o agree. So step 5
+is no longer data only. Give the build a per-letter junction height
+(`--fuse-y` is one height for all six), and measure every pair into o at
+60 u and at 86 u. If the pairs into o are closer to the font on average at
+86 u and none gets worse by more than 0.5 u, build v5.2 with o at 86 u
+and the rest at 60 u. Otherwise keep 60 u and list the pairs that get
+worse. Either way, put the table in `NOTES.md` `## v5.2` and the handoff.
