@@ -108,9 +108,9 @@ Next free ID: K891.
 - **K606** · K580's rest: Q3, the wider i and a (i 40 -> 58 GU, a 104 -> 120; built so, reversible);
   and my reading of Q2: the fork rule (15 deg, 1.2 LU) stays for ordinary forks, waived for tangent
   joins. `docs/design/K115_stage9.md` (Handoff).
-- **K610** Raised in K827: the \gcr\ try key (K792) rides PhysicsTuning.grabChase into both hosts; MAX_SLIDE_GRABBED 0.6 -> 0.8 on measures (desktop daily drag probe .claude/probes/K823/gcr_measure.mjs: frame p50 72.3 ms at 0.6, 55.1 at 0.8, 55.1 at 1.0, 0.8 repeated 55.2). The feel call on the drag itself stays Levi's; \&gcr=1.0\ tries the higher cap. (Was: · Grab chase rate, a feel A/B (0.6 per constraint iteration; try 0.8 and 1.0): 4 substeps
-  reach 90% of a drag step today; at 2 the daily's physics work drops from 53 to about 26 ms.
-  A feel call (K370's 50 ms needs it or 2.5x cheaper substeps). Levi (2026-10-22): the recs stand - raise the chase rate and measure. `docs/design/K370.md`.
+- **K610** · Grab chase rate, a feel call: K827 raised the cap 0.6 -> 0.8 on measures (daily drag
+  frame p50 72.3 ms at 0.6, 55.1 at 0.8 and at 1.0). Levi's feel call on the drag stays open;
+  `&gcr=1.0` tries the higher cap. `docs/design/K370.md`; full text: `docs/ledger_notes.md`, K610.
 - **K624** · The lit fuse keeps the ember on both sides and no band under both looks (K409; Levi's
   calls don't cover it). Give it Gone's shape too? Rec: yes, one fire look.
 - **K625** · K137's calls (`sooner_20261020.md`): (a) stages s2 helpers, s3a/s3b minotaur, s4 looks;
@@ -288,6 +288,11 @@ Next free ID: K891.
 - **K886** · K863 cursive v3: the font's letter bodies with join frames, and connectors generated
   per letter pair (G2, calibrated on the font's 313 connectors); a template and a word sheet for
   Levi to edit (K878's answers).
+  - owner: agent `k886-cursive-v3` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 08:00, 2 h cap ~10:00)
+  - branch: mainline, no code (outputs untracked); last commit: n/a
+  - evidence: .claude/probes/K863/trace/ (work6/, out6/, NOTES.md under ## v3)
+  - next: bodies and frames, join generator, template v3, word sheet, rerun command, review sheet; then upload v3's SVG to Drive K863/ for Levi to edit
+  - brief: `docs/design/K886_cursive_v3.md`
 - **K868** · Border look, junctions done right: one field renderer (union within a surface, occlusion
   by depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
@@ -474,6 +479,14 @@ Next free ID: K891.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
+- **K883** · K868 oracle: sheet B's missing borders (Levi 2026-10-27: "planned is missing some
+  borders"), the `cr` slider scaling the approved corner (sheet C), and §3's fixes from S2 (a crossing
+  inside a cluster's span, the short arm, the corner with no V). `docs/design/K883_oracle_borders.md`.
+  - owner: agent `k883-borders` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-27 08:00, 2 h cap ~10:00)
+  - branch: `k883-borders`, worktree `.claude/worktrees/k883-borders`; last commit: `ec442669`
+  - evidence: .claude/probes/K883/ (census, probes, logs); .claude/probes/K868/sheets/ (B2_muse_hash.png, F_corner_reach.png)
+  - next: census, rule, slider mapping, the K868_field_border.md rewrite, sheets B2 and F; then merge (agent_merge.ps1) and upload B2 and F to Drive K868/sheets/ for Levi
+  - brief: `docs/design/K883_oracle_borders.md`
 
 ## Next, in order
 
@@ -621,9 +634,9 @@ Every other item below waits on the trigger it names.
 - **K312** · Add K299's lesson to claude-config `rules/lessons.md` (WebGL): GPU float division is
   approximate (ANGLE D3D11 `floor(k*n/n)` = k-1 in 3275 of 16384 pairs), so ring and lap math must
   be integer-corrected. Held while Levi is away (config edits wait for approval).
-- **K313** Stage 1 (desktop) done in K824: src/loader/ (geometry + tests, OffscreenCanvas worker, boot, vite plugin inlining into index.html, static SVG first paint measured 90-110 ms); main adopts via window.__knotBootLoader, createLoader stays the fallback. Left: stage 2 phone measures in K156's next pass, then camera/trail tuning with Levi. (Was: · A loader that looks like the maze (`docs/design/K313_loader.md`; Levi 10-14, approved):
-  a trefoil maze with over/under gaps, fixed-length trail, drawn by an OffscreenCanvas worker
-  inlined in `index.html` (static SVG first). After K307's warm-up; measure the phone's first frame.
+- **K313** · A loader that looks like the maze (`docs/design/K313_loader.md`): stage 1 (desktop)
+  done in K824. Left: stage 2's phone measures in K156's next pass, then camera and trail tuning
+  with Levi. Full text: `docs/ledger_notes.md`, K313.
 - **K326** · Drop knot mode (`mazeFabric`; `docs/design/K323_game_mode.md` s4-5): A freezes a golden
   (after K7 s2); B deletes (after A, K323 s1, K307 s2, K329), retargets `scripts/fold_census.*`,
   `test/physics/byte_identity.test.ts`; optional C: knot paint (after B, K111 s5).
@@ -723,9 +736,6 @@ Every other item below waits on the trigger it names.
   the keys do (K138 s4 census, `.claude/probes/K138/s4/census/results.md`)
 - **K873** · K868 integration needs flow (`fw`) as its own scene input: fw moves the drawn samples,
   so every K868 scene so far is `fw=0`. `docs/design/K868_s1a_notes.md`.
-- **K883** · K868 oracle: sheet B's missing borders (Levi 2026-10-27: "planned is missing some
-  borders"), the `cr` slider scaling the approved corner (sheet C), and §3's fixes from S2 (a crossing
-  inside a cluster's span, the short arm, the corner with no V). `docs/design/K883_oracle_borders.md`.
 - **K887** · Refresh the open-work report (K585's artifact): v7 (2026-10-22 09:27) predates the K138
   slice 2, K809, K794, K795 and K137 s5 merges. List every test, as Levi asked; re-parse the ledger,
   don't re-run patch_items.mjs (`docs/design/K777.md` Handoff).
@@ -739,8 +749,6 @@ Every other item below waits on the trigger it names.
   inset match ±0.022h on polyline arms; kink's 1x #5/#9; long renders' vitest RPC timeout exits 1.
 - **K836 follow-ups** (Levi look needed, 2026-10-23): (a) the i stem still shows a step/flap at J and the K843 flare magnitudes (peak 6 GU, len 30/34 GU) are first guesses - tune by eye at xh2/xh3, incl. the flat dead-end cap. (b) In border mode the i tittle draws as a serrated ring with center speckles (aib still); the fill look is a clean disc. (c) Pale seam discs sit inside the a at L and R in the fill look - judge whether they read as junction pads or artifacts. Stills `.claude/probes/K836/`, `.claude/probes/K843/`.
 - **K834 follow-up**: the stuck-on-loader report - the keep-loading flag is localStorage (`knotmaze.loaderStays`), so Chrome's clear-cache alone does not revert it (clear site data does); the K834 gating should keep the panel reachable under the permanent loader, but the real-phone panel-not-shown case (short landscape sheet) was never reproduced - retest on the phone.
-
-- **K832** SDF + border residuals (Levi, 2026-10-22). Done in faa56bce (2026-10-23). (a) SDF gaps: bindGap points fabric_sdf's gapSource at the scene's gap table (SDF shaders bind/re-point from it), and `CrossingGaps.assignGapIds` now packs G3 RANGES per chain instead of per strip fill (SdfPass has no fills, so it wrote zero entries; live probe after: 365 windows / 52 chains in rp=sdf, matching strip; regression test in `test/render/sdf_gap_bind.test.ts`). (b) Junction interiors: fans draw rim only in border; ribbons cut within the joinery wedge reach of fused ends (`kJunctionCut`; caps carry +4 at fused ends via `capWithFused`) in both passes; highlights still draw inside. (c) SDF border darkness/aliasing: the across coordinate comes from the winning cone (`side01`). Stills `.claude/probes/K832/`; G3-3 SDF-by-default flip still gated on Levi's phone look.
 
 - **K413** · The phone lock (`.claude/probes/agents/phone_lock_take.ps1`) is one line, owner | time |
   what, with no waiter field, so the briefs' "release it between items when K290 or K395 waits"
@@ -1585,8 +1593,6 @@ Every other item below waits on the trigger it names.
 
 ## Approved, to schedule (2026-10-11)
 
-- **K830** Junction corner style (Levi, 2026-10-22). Done in e5fbdff4 (2026-10-23); stills `.claude/probes/K830/`. One `cornerRoundShare` slider (codec 245, `crs`, LOOK_KEYS; default 1 = today's rounded wedges, 0 = every wedge's flanks meet at the clamped miter). Intermediate shares rank wedges once from construction geometry: broad gaps round first, narrow points stay sharp, addressed by directed arm pair so settling cannot flip a corner. Builders pin where authorable (`Node.cornerPin`; glyph spur root/landing pins) through `ParticleSystem.fusedJunctionPins`; emergent mask junctions follow the global share.
-- **K831** Cursive a/i redesign (Levi, 2026-10-22). Done in 3b5c520f (2026-10-23); design: `docs/design/K831.md`, stills `.claude/probes/K831/`. FOLLOW-UP (Levi rejected the first stills, 2026-10-23): entry moved low to (14, 8) so it rises north-east tangentially into BL; a's top levelled into the corner; tail is one segment from a second declared corner at BR (two-segment tails floor at R 10.8 GU); the i's shipped form is the exact tangent join (fork 0, all three arms collinear on (1, 3), J raised to (22, 50) so the folded arms part); the tittle is a dedicated closed dot loop (`dotLoop`, `Glyph.dots`), not a segment; landing-spur tips no longer strand a degree-2 END node. Stills `.claude/probes/K831/followup2/`; lint pins moved in `test/core/glyph_lint.test.ts`. The a is one strand: entry joins LOW at the oval's bottom-left (BL) collinear with the bottom arc, body forks up the left side, declared corner (`Glyph.corners`) turns down the stem, bottom arc lands on the stem at BR (`SpurDef.land`), exit tangential; zero crossings. i's entry fork is the default 15 degrees at a lower J. Deviation from the brief as first recorded: BL draws as a fork, not a K580 tapered root — the root's width grew 0.022-0.033 LU toward J in every searched variant (bound 0.01, K643-calibrated); the pre-K831 tangent a survives as `A_TANGENT` (`#glyphs2=atangent`) carrying the K580/K643 tests. General letter rule stands: skeleton corners join as cusp corners, stroke overlaps stay crossings, stroke landings stay tangent/fork merges. K718 calls 2/3 still open.
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
   allows; down when struggling). Part of K6, refined after G3.
 - **K23** · GPU particles (G2.4), GPU fog-of-war accumulation, the yarn as
@@ -1875,6 +1881,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K832** · SDF + border residuals (Levi, 2026-10-22): SDF gaps bound to the scene's gap table, junction interiors cut in the border look, SDF border darkness; the G3-3 SDF-by-default flip stays gated on Levi's phone look. Done in faa56bce (2026-10-23).
+- **K831** · Cursive a/i redesign (Levi, 2026-10-22), with its follow-up after Levi rejected the first stills (`docs/design/K831.md`). Done in 3b5c520f (2026-10-23).
+- **K830** · Junction corner style (Levi, 2026-10-22): one `cornerRoundShare` slider (`crs`) that rounds broad gaps first and keeps narrow points sharp; stills `.claude/probes/K830/`. Done in e5fbdff4 (2026-10-23).
 - **K881** · K868 sheet E: G2 corners against G1's rolling-ball arcs. Answered by Levi (2026-10-27): "In sheet E, I don't see any difference with G1 vs the others"; G1 stays, K882 dropped.
 - **K878** · Cursive trace v2's three questions. Answered by Levi (2026-10-27): ss02's `p.jmc` (the retraced stem, with an exit and no pen lift), joins generated per letter pair, the font's proportions at x-height 120; K886 builds v3.
 - **K874** · K868 S1b sheets B and C. Answered by Levi (2026-10-27): B, the oracle's look is right but misses some borders; C, the corner rule is taken and the `cr` slider stays, now scaling the approved corner. Both go to K883.
