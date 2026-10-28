@@ -284,3 +284,160 @@ Corner jumps by class (switch / fold / amp / rekey): def drag 0 / 4 / 13 /
     pieces, the likely owners.
   - Not pops, seen in passing: stray 1-2 px dark specks in muse's frames
     (refit t38's crop), static, so the census does not count them.
+
+### F4. Calls 1 and 2 in the oracle (1e449a20, 39a295aa)
+
+- **The root rule** (the comment above `solve` in `solveCorner` says the
+  same): the corner is the rolling ball's first contact with both arms as
+  it rolls in from the open side, that is, the first point, marching arm
+  A's δ-offset from the far end of the search inward, within δ of arm B
+  at a true foot; a root behind it is unreachable, and a foot at a
+  window's end is not a contact.
+  - The march steps max(0.05 h, min(h, |g|/2)), bisects the first sign
+    change and polishes it with Newton. When it finds none (a contact at a
+    convex vertex of an offset), Newton from bisector guesses k δ/sin(θ/2),
+    k in 1, 0.5, 2, 1.5, 3, still refusing a foot at a window's end.
+  - V is r-free (the reach(h) windows) and memoized per corner.
+- **The re-fit is a solve:** regula falsi (Illinois) on [0, r_rule] of
+  over(r), the tangent point's distance past cap − W (+inf where the rule
+  finds no contact at r), to 1e-6 h, keeping the largest fitting r it
+  visits.
+- Only `oracle.ts` changed; no test or pin moved, and `npm test` is green
+  (`pops14/npmtest14.log`).
+- A bug on the way: the V memo was keyed by the corner's index without its
+  junction, so corners shared V across junctions. The first after-run
+  (`pops14/after14/`, `cmp14_roots.md`) is void; fixed in 39a295aa.
+
+### F5. The re-fit solve against master's iterations (`pops14/refit14.md`)
+
+On the 12 scenes, 543 corners are re-fit by either rule and live in both:
+
+| same r (1e-3 h) | master left the tangent point past the cap | master stepped below the solve (to 0) | the solve lower |
+|---|---|---|---|
+| 75 | 16 | 389 (162) | 63 |
+
+The solve ends at the cap on 170, at a jump of over(r) on 272, at r = 0 on 84.
+
+- **over(r) is not continuous:** it jumps where the ball's contact moves
+  out along an arm. def j13/0: over goes from −0.24 to +0.46 world between
+  r = 1.384 h and 1.51 h. Master's step, max(o, 0.02 h) tan(θ/2) with o the
+  jump, overshoots to r = 0; the solve stops at the jump, 1.468 h.
+- **over(r) is not monotone:** def j118/1 fits, fails and fits again;
+  master stops at 0.878 h, the solve at 0.564 h, both fitting. Regula
+  falsi finds a sign change, not the first, so its guess picks which.
+- Where master's iterations converge (75), the solve gives their answer.
+  Elsewhere master's r is its iteration path's and the solve's is a sign
+  change of a discontinuous function: neither is a continuous function of
+  the geometry. A stated rule that is: the first exit, the radius at which
+  the ball growing from 0 first puts a tangent point past the cap (a march
+  in r from 0, then a bisection). Not built.
+- Master against the branch, every corner (`pops14/cmp14_roots_b.md`): 12
+  scenes, live 2476 → 2486, V moved on 39 corners (up to 1.60 world), r
+  differs on 468. In the sequences, r steps by more than 0.05 h between
+  frames on a re-fit corner 0 → 1 (def drag), 50 → 79 (def flow), 71 → 194
+  (muse drag) and 301 → 219 (muse flow) times.
+
+### F6. After the rules: the pop census and the jump classes (`pops14/after14b/`)
+
+The label in motion is much worse under the new rules:
+
+| sequence | pops a transition, before → after | pop area px, before → after |
+|---|---|---|
+| def drag | 0.15 → 2.30 | 359 → 2166 |
+| def flow | 0.68 → 11.65 | 1078 → 9141 |
+| muse drag | 1.93 → 9.10 | 1273 → 12422 |
+| muse flow | 6.65 → 19.32 | 7368 → 38401 |
+
+After, pops (px) by cause:
+
+| sequence | switch | fold | amp | refit | status | cluster | spans | reach | count | none |
+|---|---|---|---|---|---|---|---|---|---|---|
+| def drag | 59 (1848) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 (318) |
+| def flow | 90 (2214) | 37 (1253) | 35 (922) | 9 (257) | 0 | 3 (107) | 28 (693) | 41 (727) | 0 | 223 (2968) |
+| muse drag | 47 (1836) | 41 (2263) | 57 (1538) | 10 (125) | 0 | 5 (124) | 46 (1506) | 37 (1261) | 0 | 121 (3769) |
+| muse flow | 14 (1038) | 60 (3232) | 72 (1982) | 42 (1726) | 30 (2590) | 17 (965) | 130 (6356) | 349 (18473) | 6 (365) | 53 (1674) |
+
+Jumps (switch / fold / amp / rekey), before → after: def drag 0/4/13/0 →
+27/2/14/0; def flow 3/8/10/2 → 40/19/36/2; muse drag 1/17/100/6 →
+30/21/150/6; muse flow 5/36/130/3 → 12/27/110/3.
+
+- **Switches are the new rule's own:** def drag's switch pops went 0 → 59.
+  The crop `after14b/def_drag_crops/pop_jump-switch_0_t9.png` (j152/1): an
+  arc appears and goes at a junction on alternate frames while the threads
+  move 0.0 px. q alternates between two contacts 0.64 world apart with V
+  and r fixed. With the march's least step at 0.002 h instead of 0.05 h
+  (`oracle_f14.ts`, `dbg14_floor.ts`) it flips on every frame from t8 to
+  t13 instead of three times, so it is not the march's resolution.
+  Inferred, not checked: the outer contact is a graze (arm A's offset
+  touching arm B's), and a first-contact rule jumps whenever a graze
+  appears or goes. Master's rule held the inner contact from t8 to t13.
+- **none, def drag t14** (`pop_none_0_t14.png`, pixel 697, 826): a small
+  eye flips between a circle and a teardrop with a sharp point, in place.
+  No corner of either rule has V, q or a foot within 2.5 world
+  (`dbg14_loc.ts`); not explained. The census does not track pieces or
+  switch lines.
+- Reach events are the same in number (523 / 3142 / 894 / 3639), so the
+  rise in reach pops is likely corner strokes near pins taking the nearest
+  event's label (inferred, not checked), not new reach steps.
+- The page's build (census p50, under the lock, not an A/B): 272 / 389 /
+  653 / 675 ms before, 512 / 683 / 1148 / 976 after.
+
+### F7. The build's cost, master's rules against the branch's (`pops14/cost14.md`)
+
+Node, under the perf lock but taken while the cursive agents ran Python
+fits (under load); 6 rounds of A B B A after 3 warm-ups, p50 a scene. Sum
+over the 12 scenes: the FieldModel 2242 → 4407 ms (1.97x), the whole label
+build 2855 → 5013 ms (1.76x). Per scene the build is 1.03x (fat, no
+corners) to 2.38x (user_tw42.lightpaper). Not profiled; the likely cost is
+the march (every corner, every r the solve visits) and the solve's
+solveCorner calls (up to 200 a corner).
+
+### F8. The 12-scene raster census (`pops14/raster14/`)
+
+The label's coverage through the census page at each scene's own camera,
+master's rules against the branch's; a changed pixel is |dcov| > 32/255,
+each attributed to the nearest changed corner within 6 h (root: V, ok or
+no-V differ, or the feet differ when both rules solve at the rule's
+radius; refit: the same contact there and another fitted r). Controls (the
+branch twice): 0 px on every scene; no context lost.
+
+| scene | corners changed (root / refit) | changed px | root px | refit px | none px |
+|---|---|---|---|---|---|
+| def | 14 / 29 | 2114 | 799 | 1315 | 0 |
+| fat | 0 / 0 | 0 | 0 | 0 | 0 |
+| g41_def_tw42 | 16 / 6 | 8394 | 6148 | 2246 | 0 |
+| g41_def_tw64 | 39 / 75 | 68340 | 40471 | 27869 | 0 |
+| g41_ring_tw42 | 4 / 1 | 7272 | 7013 | 259 | 0 |
+| g41_ring_tw64 | 1 / 10 | 8128 | 3360 | 4768 | 0 |
+| g41_user_tw42 | 18 / 16 | 22299 | 12984 | 9315 | 0 |
+| g41_user_tw64 | 24 / 46 | 73683 | 35900 | 37783 | 0 |
+| muse_default_tw | 15 / 24 | 1951 | 1174 | 774 | 3 |
+| muse_hash | 41 / 108 | 8172 | 3584 | 4588 | 0 |
+| ring | 3 / 4 | 548 | 250 | 298 | 0 |
+| user_tw42.lightpaper | 18 / 16 | 23386 | 14087 | 9298 | 1 |
+| all | 193 / 335 | 224287 | 125770 (56%) | 98513 (44%) | 4 |
+
+- Every changed pixel but 4 (single specks) belongs to a changed corner.
+- Crops looked at (master | branch | change; red = the branch adds ink,
+  blue = it removes ink): `root_0` (g41_user_tw64 j18/1: the branch finds
+  no contact at the rule's radius where master found one, and a large
+  round arc becomes a sharp chevron), `root_1` (j23/0, the branch refuses a
+  contact whose feet are 0.016 world from master's: a sharp V becomes a round arc with long
+  strokes down the arms), `refit_0` (j2/0, r 0.047 h → 1.155 h: a near
+  sharp corner becomes a squared one with a cap). Whole corners change
+  shape, sharp against round, which is what the rules change; the census
+  attributes them, it does not say which is right.
+
+### F9. What this says about calls 3-5
+
+- **Call 5 (corners from scratch on the GPU, S3a10) stands, with a gate.**
+  The pops come from the reference's rules, not from warm state: master's
+  rules pop 0.15-6.65 times a transition and these 2.3-19.3, both from
+  scratch. A GPU port reproduces whatever discontinuity its rule has, so
+  S3a10 should port only rules that have passed this census.
+- **Calls 1 and 2 as built should not ship.** First contact jumps at every
+  graze, and the re-fit's over(r) jumps and is not monotone. The next
+  stage needs rules continuous in the geometry (or keeps master's), with
+  `scripts/label_pops.ts` as the gate.
+- Calls 3 and 4 (depth per fragment, cut-free strips) do not depend on the
+  corner rules; nothing here changes them. K984 (readback) is unaffected.
