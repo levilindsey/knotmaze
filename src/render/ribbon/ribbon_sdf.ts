@@ -42,6 +42,7 @@ import {
   PAINT_VERT_DECL,
   PAINT_VERT_MAIN,
   ROOT_FRAG_GLSL,
+  withRoot,
 } from "../paint_glsl";
 import { kGeom, kPaint, kReveal, kStatic, knotUniforms } from "../paint_model";
 import type { RibbonRenderer } from "../ribbon_renderer";
@@ -233,7 +234,9 @@ void main(void) {
     return;
   }
   vec3 base = vSection;
+#ifdef K_ROOT
   if (vKR0.x > 0.5 && kpt.x < vKR0.z) base = kRootSection(kpt.x, pxW);
+#endif
   float pRain = 0.0;
   float aM = 1.0;
   bool fxHere = uKFx.w > 0.5 && uKFx.x > 0.5 && uKFx.z < kc.fxDone;
@@ -346,9 +349,23 @@ void main(void) {
 }
 `;
 
+// K905: `root` adds K_ROOT to both texts (the -root programs, master's
+// K620 code); without it the root code compiles out (ribbon_shader.ts).
 let SDF_PROGRAM: GlProgram | null = null;
 let SDF_EXPLORE_FRAG: string | null = null;
-export function sdfProgram(explore = false): GlProgram {
+let SDF_ROOT_VERT: string | null = null;
+let SDF_ROOT_FRAG: string | null = null;
+let SDF_ROOT_EXPLORE_FRAG: string | null = null;
+export function sdfProgram(explore = false, root = false): GlProgram {
+  if (root) {
+    SDF_ROOT_VERT ??= withRoot(SDF_VERT);
+    if (!explore) {
+      SDF_ROOT_FRAG ??= withRoot(SDF_FRAG);
+      return GlProgram.from({ vertex: SDF_ROOT_VERT, fragment: SDF_ROOT_FRAG, name: "ribbon-sdf-root" });
+    }
+    SDF_ROOT_EXPLORE_FRAG ??= withRoot(withExploreSdf(SDF_FRAG));
+    return GlProgram.from({ vertex: SDF_ROOT_VERT, fragment: SDF_ROOT_EXPLORE_FRAG, name: "ribbon-sdf-explore-root" });
+  }
   if (!explore) {
     SDF_PROGRAM ??= GlProgram.from({ vertex: SDF_VERT, fragment: SDF_FRAG, name: "ribbon-sdf" });
     return SDF_PROGRAM;
@@ -358,14 +375,18 @@ export function sdfProgram(explore = false): GlProgram {
 }
 
 type SdfShader = Shader & { texture: Texture };
-let SDF_SHADER: SdfShader | null = null;
+type G3Sources = { radii: unknown; chain: unknown; ranges: unknown };
+// K905: one shared shader per root flag, [no root, root].
+const SDF_SHADERS: (SdfShader | null)[] = [null, null];
 // The G3 sources ride creation: a Shader's resources accessor is
 // fixed at construction, so the pass's tables bind here, not after.
-export function sdfShader(g3?: { radii: unknown; chain: unknown; ranges: unknown }): SdfShader {
-  if (!SDF_SHADER) {
+export function sdfShader(g3?: G3Sources, root = false): SdfShader {
+  const k = root ? 1 : 0;
+  let shared = SDF_SHADERS[k];
+  if (!shared) {
     if (!g3) throw new Error("sdfShader: the first build needs the G3 sources");
     const sh = new Shader({
-      glProgram: sdfProgram(),
+      glProgram: sdfProgram(false, root),
       resources: {
         // K832: the scene's gap-slot table (bindGap points gapSource at
         // it); the empty default only until the first scene binds.
@@ -384,24 +405,27 @@ export function sdfShader(g3?: { radii: unknown; chain: unknown; ranges: unknown
       },
     }) as SdfShader;
     sh.texture = Texture.WHITE;
-    SDF_SHADER = sh;
+    SDF_SHADERS[k] = sh;
+    shared = sh;
   }
   // K832: a later scene's gap table re-points the live shader too
   // (rootMesh / setExplore call this per scene, after bindGap).
   const gs = gapSource();
-  if (gs && SDF_SHADER.resources.uGapData !== gs) SDF_SHADER.resources.uGapData = gs;
-  return SDF_SHADER;
+  if (gs && shared.resources.uGapData !== gs) shared.resources.uGapData = gs;
+  return shared;
 }
 
 // K825: the explore variant's shader (the same resources; built the
 // first time the thread reveal turns on under rp=sdf, so a master page
-// never pays for it).
-let SDF_EXPLORE_SHADER: SdfShader | null = null;
-export function sdfShaderExplore(g3?: { radii: unknown; chain: unknown; ranges: unknown }): SdfShader {
-  if (!SDF_EXPLORE_SHADER) {
-    const master = sdfShader(g3);
+// never pays for it). K905: per root flag.
+const SDF_EXPLORE_SHADERS: (SdfShader | null)[] = [null, null];
+export function sdfShaderExplore(g3?: G3Sources, root = false): SdfShader {
+  const k = root ? 1 : 0;
+  let shared = SDF_EXPLORE_SHADERS[k];
+  if (!shared) {
+    const master = sdfShader(g3, root);
     const sh = new Shader({
-      glProgram: sdfProgram(true),
+      glProgram: sdfProgram(true, root),
       resources: {
         uGapData: master.resources.uGapData,
         uSamp: sampSource(),
@@ -418,12 +442,13 @@ export function sdfShaderExplore(g3?: { radii: unknown; chain: unknown; ranges: 
       },
     }) as SdfShader;
     sh.texture = Texture.WHITE;
-    SDF_EXPLORE_SHADER = sh;
+    SDF_EXPLORE_SHADERS[k] = sh;
+    shared = sh;
   }
   // K832: as sdfShader - follow the scene's gap table.
   const gs = gapSource();
-  if (gs && SDF_EXPLORE_SHADER.resources.uGapData !== gs) SDF_EXPLORE_SHADER.resources.uGapData = gs;
-  return SDF_EXPLORE_SHADER;
+  if (gs && shared.resources.uGapData !== gs) shared.resources.uGapData = gs;
+  return shared;
 }
 
 // The pass itself: no per-chain meshes. build() only records the
@@ -499,7 +524,8 @@ export class SdfPass implements ThreadPass {
     addFloatAttribute(geometry, "aSeg", segs, 4);
     const mesh = new Mesh({ geometry, texture: Texture.WHITE });
     this.g3src = this.r.g3SdfSources();
-    mesh.shader = this.exploreOn ? sdfShaderExplore(this.g3src) : sdfShader(this.g3src);
+    const root = this.r.rootPaint;
+    mesh.shader = this.exploreOn ? sdfShaderExplore(this.g3src, root) : sdfShader(this.g3src, root);
     this.meshBuilt = mesh;
     return mesh;
   }
@@ -509,7 +535,8 @@ export class SdfPass implements ThreadPass {
   setExplore(on: boolean): void {
     this.exploreOn = on;
     if (this.meshBuilt && this.g3src) {
-      const sh = on ? sdfShaderExplore(this.g3src) : sdfShader(this.g3src);
+      const root = this.r.rootPaint;
+      const sh = on ? sdfShaderExplore(this.g3src, root) : sdfShader(this.g3src, root);
       if (this.meshBuilt.shader !== sh) this.meshBuilt.shader = sh;
     }
   }

@@ -285,11 +285,14 @@ flat out highp vec4 vKC0;
 flat out highp vec4 vKC1;
 flat out highp vec4 vKG0;
 // K620: a tapered root's (1 + table texel, sideSign, arcJ, ctrlJ), its
-// sides' sections at their feet, and the spur's section at J.
+// sides' sections at their feet, and the spur's section at J. K905: only
+// in a root program (withRoot below).
+#ifdef K_ROOT
 flat out highp vec4 vKR0;
 out vec3 vKRC;
 out vec3 vKRO;
 flat out vec3 vKRJ;
+#endif
 // The vertex's section color (PAINT_VERT_MAIN; needs PAINT_SECTION_GLSL).
 vec3 kVertSection;
 `;
@@ -309,6 +312,7 @@ export const PAINT_VERT_MAIN = /* glsl */ `
     vKC1 = vec4(kc1.xyz, float(kch));
     vKG0 = kg0;
     kVertSection = knotSection(kc, kctrl);
+#ifdef K_ROOT
     // K620: a tapered root (C1.w = 1 + its table's KGEOM texel; paint_math
     // kRootVertSection, kRootSpurSection).
     vKR0 = vec4(0.0);
@@ -332,6 +336,7 @@ export const PAINT_VERT_MAIN = /* glsl */ `
         vKRJ = kSectionAtArc(kc, kh1.x, -1.0);
       }
     }
+#endif
   }
 `;
 
@@ -343,10 +348,12 @@ in highp vec2 vSamp;
 flat in highp vec4 vKC0;
 flat in highp vec4 vKC1;
 flat in highp vec4 vKG0;
+#ifdef K_ROOT
 flat in highp vec4 vKR0;
 in vec3 vKRC;
 in vec3 vKRO;
 flat in vec3 vKRJ;
+#endif
 `;
 // The fragment's wrap-pair picks (uniform control flow), then its arc and
 // approximate ctrl. Needs PAINT_DATA_GLSL.
@@ -378,7 +385,9 @@ KChain kFragChain() {
 // every other chain: a stroke's FX sampled at the foot would cost two more
 // inlined kFxColor calls in FXC's compile of section-rgb, the intro's
 // critical path (K307), so the brief's FX fallback holds for every FX.
+// K905: only a root program compiles it (withRoot below).
 export const ROOT_FRAG_GLSL = /* glsl */ `
+#ifdef K_ROOT
 vec3 kRootSection(highp float a, highp float pxW) {
   int kt = int(vKR0.x + 0.5) - 1;
   highp float u = clamp(a / vKR0.z, 0.0, 1.0);
@@ -391,7 +400,21 @@ vec3 kRootSection(highp float a, highp float pxW) {
   highp float w = u + (u * u * (3.0 - 2.0 * u) - u) * uKSect.y;
   return mix(mix(vKRO, vKRC, covC), vKRJ, w);
 }
+#endif
 `;
+
+// K905 THE ROOT GATE. Every root line above, and the one call in each
+// ribbon fragment, sits under `#ifdef K_ROOT`: a scene that paints no root
+// (no chain has a root table, RibbonRenderer.rootPaint) draws programs
+// compiled without them, so its vertices write none of the 13 vKR*
+// components and neither branch exists. withRoot defines K_ROOT, which
+// gives master's K620 code back token for token; the -root programs.
+export const ROOT_DEFINE = "#define K_ROOT\n";
+export function withRoot(src: string): string {
+  const v = "#version 300 es\n";
+  if (!src.startsWith(v)) throw new Error("withRoot: the source must open with #version 300 es");
+  return v + ROOT_DEFINE + src.slice(v.length);
+}
 
 // The FX timing curves and the JOINT GATE (needs KNOT_UNIFORMS_GLSL +
 // PAINT_CONST_GLSL only - the junction fans include just this, not the

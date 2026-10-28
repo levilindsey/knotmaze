@@ -35,8 +35,10 @@ export const PROGRAM_SITES: Readonly<Record<string, number>> = {
   "src/render/marker_mesh.ts": 1, // knot-marker
   "src/render/pluck_overlay.ts": 3, // pluck-blur, pluck-still, pluck-still-explore
   "src/render/pluck_ripple.ts": 2, // pluck-ripple: its program and its Filter
-  "src/render/ribbon/ribbon_shader.ts": 2, // section-rgb, section-rgb-explore
-  "src/render/ribbon/ribbon_sdf.ts": 2, // ribbon-sdf, ribbon-sdf-explore (K8 G3-2, K825)
+  // section-rgb, section-rgb-explore, and their -root variants (K905)
+  "src/render/ribbon/ribbon_shader.ts": 4,
+  // ribbon-sdf, ribbon-sdf-explore (K8 G3-2, K825), and their -root variants (K905)
+  "src/render/ribbon/ribbon_sdf.ts": 4,
 };
 
 // What the current page draws, as the warm-up needs to know it.
@@ -57,6 +59,15 @@ export interface WarmContext {
   reduced: boolean;
   // The SDF thread pass (?rp=sdf; K8 G3-2): its program draws wave 1.
   sdf: boolean;
+  // K905: the page can paint a K620 glyph root (#glyphs2 without notaper,
+  // read once at load). Only then do the ribbons' -root variants exist: a
+  // scene that paints a root draws them (RibbonRenderer.rootPaint), every
+  // other scene the plain programs, which carry no root code.
+  roots: boolean;
+  // K905: and its first scene has glyph text or a title, so it likely
+  // paints one: the -root variants join wave 1 beside the plain ones (a
+  // word whose glyphs grow no tapered root draws the plain ones).
+  root: boolean;
   // Pluck ripples on (pluckRipple not "off", and not reduced motion).
   ripple: boolean;
   // The background's first program ids (background.ts backgroundWarmIds);
@@ -81,6 +92,9 @@ export interface ProgramEntry {
   files: readonly string[];
   // Whether the current mode's intro draws it.
   wave1(ctx: WarmContext): boolean;
+  // K905: whether the page can draw it at all (absent: always). An entry
+  // this rejects is in neither wave.
+  when?(ctx: WarmContext): boolean;
   // The program (built lazily, memoized by the factories).
   build(ctx: WarmContext): GlProgram;
 }
@@ -168,6 +182,37 @@ export function programRegistry(): readonly ProgramEntry[] {
       files: [RIBBON],
       wave1: (c) => c.explore || c.burn,
       build: () => sectionProgram(true),
+    },
+    // K905: the K620 root variants (paint_glsl withRoot), drawn only by a
+    // scene that paints a glyph root; a page that cannot build one never
+    // compiles them.
+    {
+      name: "section-rgb-root",
+      files: [RIBBON],
+      when: (c) => c.roots,
+      wave1: (c) => c.root && !c.explore,
+      build: () => sectionProgram(false, true),
+    },
+    {
+      name: "section-rgb-explore-root",
+      files: [RIBBON],
+      when: (c) => c.roots,
+      wave1: (c) => c.root && (c.explore || c.burn),
+      build: () => sectionProgram(true, true),
+    },
+    {
+      name: "ribbon-sdf-root",
+      files: [SDF],
+      when: (c) => c.roots,
+      wave1: (c) => c.root && c.sdf,
+      build: () => sdfProgram(false, true),
+    },
+    {
+      name: "ribbon-sdf-explore-root",
+      files: [SDF],
+      when: (c) => c.roots,
+      wave1: (c) => c.root && c.sdf && (c.explore || c.burn),
+      build: () => sdfProgram(true, true),
     },
     {
       name: "arm-strip",
@@ -274,10 +319,17 @@ function longestFirst(a: WarmSource, b: WarmSource): number {
   return b.fragment.length + b.vertex.length - (a.fragment.length + a.vertex.length);
 }
 
+// Which wave links an entry, or 0 for neither (K905: `when` rejects it).
+// Pure: the tests read the waves through it without building a program.
+export function entryWave(e: ProgramEntry, ctx: WarmContext): 0 | 1 | 2 {
+  if (!(e.when?.(ctx) ?? true)) return 0;
+  return e.wave1(ctx) ? 1 : 2;
+}
+
 // What the current mode's intro draws: the gating wave.
 export function wave1Sources(ctx: WarmContext): WarmSource[] {
   return programRegistry()
-    .filter((e) => e.wave1(ctx))
+    .filter((e) => entryWave(e, ctx) === 1)
     .map((e) => source(e, ctx))
     .sort(longestFirst);
 }
@@ -286,7 +338,7 @@ export function wave1Sources(ctx: WarmContext): WarmSource[] {
 // context at the start (the batcher's count; every other variant is listed).
 export function wave2Sources(ctx: WarmContext): WarmSource[] {
   return programRegistry()
-    .filter((e) => !e.wave1(ctx))
+    .filter((e) => entryWave(e, ctx) === 2)
     .map((e) => source(e, ctx))
     .sort(longestFirst);
 }

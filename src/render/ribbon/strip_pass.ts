@@ -40,7 +40,7 @@ export class StripPass implements ThreadPass {
   // section shader; the façade adds it to the base layer.
   build(chain: number, count: number, closed: boolean): RibbonMesh {
     const fill = new RibbonMesh(count, closed, 0xffffff, true, chain);
-    fill.mesh.shader = sectionShader();
+    fill.mesh.shader = sectionShader(this.r.rootPaint);
     this.fills.push(fill);
     return fill;
   }

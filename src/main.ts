@@ -409,8 +409,21 @@ async function main(): Promise<void> {
   // beginSettle's instant hold). Until then the background draws nothing
   // (pixi would link it cold), and the ripple pools its texture after
   // (K279 stage 2; its program is wave 1's).
+  // K905: a glyph root (K620) is drawn only on a #glyphs2 page without
+  // notaper (text_graph.ts reads the same flag); its scene's ribbons then
+  // draw the -root programs, every other page never compiles them.
+  const warmRoots = GLYPHS2 !== "" && !GLYPHS2.split(",").includes("notaper");
+  const warmRoot = warmRoots && (params.text.trim() !== "" || sceneTitle(launch.daily, params) !== "");
   const warmup = startShaderWarmup(app.renderer, (n) =>
-    warmContextFor(params, look("background"), motion.reduced, n, new URLSearchParams(location.search).get("rp") === "sdf")
+    warmContextFor(
+      params,
+      look("background"),
+      motion.reduced,
+      n,
+      new URLSearchParams(location.search).get("rp") === "sdf",
+      warmRoots,
+      warmRoot
+    )
   );
   background.container.renderable = false;
   warmup.afterWave1(() => {

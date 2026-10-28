@@ -9,11 +9,15 @@
 //   SectionShader, SECTION_SHADER  the shared shader's type and instance
 //   SECTION_VERT, SECTION_FRAG     the program's text (master)
 //   SECTION_EXPLORE_FRAG           the explore variant's fragment text
-//   sectionProgram(explore)        the GlProgram (the registry builds it)
-//   sectionShader()                the shared section shader
-//   SECTION_EXPLORE_SHADER,        the K76 explore variant, built the first
-//     sectionShaderExplore()         time the thread reveal turns on
+//   sectionProgram(explore, root)  the GlProgram (the registry builds it)
+//   sectionShader(root)            the shared section shader
+//   SECTION_EXPLORE_SHADERS,       the K76 explore variant, built the first
+//     sectionShaderExplore(root)     time the thread reveal turns on
 //   bindGap(tex)                   every gap reader onto a scene's slot table
+//
+// K905: `root` picks the K620 root variant (paint_glsl withRoot), which a
+// renderer whose scene paints a root draws with (RibbonRenderer.rootPaint);
+// every other scene draws programs compiled without the root code.
 //
 // The text is the intro's cold-compile critical path (section-rgb, 2.8 s
 // of FXC on the desktop, render-shaders.md): any edit to it compiles cold
@@ -39,6 +43,7 @@ import {
   PAINT_VERT_DECL,
   PAINT_VERT_MAIN,
   ROOT_FRAG_GLSL,
+  withRoot,
 } from "../paint_glsl";
 import { kGeom, kPaint, kReveal, kStatic, knotUniforms } from "../paint_model";
 import { bindPluckGap } from "../pluck_overlay";
@@ -46,7 +51,11 @@ import { G3_CHAIN_GLSL, JUNCTION_CUT_GLSL, fabricUniforms, g3ChainSource, ranges
 
 // Mesh.shader wants a TextureShader (a Shader carrying its texture).
 type SectionShader = Shader & { texture: Texture };
-let SECTION_SHADER: SectionShader | null = null;
+// K905: one shared shader per root flag, [no root, root].
+const SECTION_SHADERS: (SectionShader | null)[] = [null, null];
+// The scene's gap table, as bindGap last bound it: a shader built after
+// the bind (a root variant's first scene) starts on it.
+let GAP_BOUND: Texture | null = null;
 
 // The section shader (every ribbon, both modes; the app forces WebGL, so a
 // GL program suffices). Attribute layout: aPosition/aUV as pixi's default
@@ -147,8 +156,10 @@ void main(void) {
     return;
   }
   vec3 base = vSection;
+#ifdef K_ROOT
   // K620: a tapered root wears its strokes' sections, blending into its own at J.
   if (vKR0.x > 0.5 && kpt.x < vKR0.z) base = kRootSection(kpt.x, pxW);
+#endif
   highp float pRain = 0.0;
   highp float aM = 1.0;
   // The exact ctrl, when the FX (kFxColor's own early outs hoisted: no
@@ -313,9 +324,27 @@ void main(void) {
 
 // K307 WARM-UP: the section programs, for the warm-up registry
 // (program_registry.ts). GlProgram.from caches by source, so this is the
-// very program the section shaders draw with.
+// very program the section shaders draw with. K905: `root` adds K_ROOT to
+// both texts (the -root programs, master's K620 code); without it the
+// root code compiles out.
 let SECTION_EXPLORE_FRAG: string | null = null;
-export function sectionProgram(explore = false): GlProgram {
+let SECTION_ROOT_VERT: string | null = null;
+let SECTION_ROOT_FRAG: string | null = null;
+let SECTION_ROOT_EXPLORE_FRAG: string | null = null;
+export function sectionProgram(explore = false, root = false): GlProgram {
+  if (root) {
+    SECTION_ROOT_VERT ??= withRoot(SECTION_VERT);
+    if (!explore) {
+      SECTION_ROOT_FRAG ??= withRoot(SECTION_FRAG);
+      return GlProgram.from({ vertex: SECTION_ROOT_VERT, fragment: SECTION_ROOT_FRAG, name: "section-rgb-root" });
+    }
+    SECTION_ROOT_EXPLORE_FRAG ??= withRoot(withExplore(SECTION_FRAG));
+    return GlProgram.from({
+      vertex: SECTION_ROOT_VERT,
+      fragment: SECTION_ROOT_EXPLORE_FRAG,
+      name: "section-rgb-explore-root",
+    });
+  }
   if (!explore) {
     return GlProgram.from({ vertex: SECTION_VERT, fragment: SECTION_FRAG, name: "section-rgb" });
   }
@@ -327,17 +356,19 @@ export function sectionProgram(explore = false): GlProgram {
   });
 }
 
-// The ONE shared section shader. (The path color reaches it as a uniform,
-// uKGold - since G2.3 nothing samples mesh.texture, which custom shaders
-// ignore anyway: the olive-smudge lore.)
-export function sectionShader(): SectionShader {
-  if (!SECTION_SHADER) {
+// The ONE shared section shader (per root flag, K905). (The path color
+// reaches it as a uniform, uKGold - since G2.3 nothing samples
+// mesh.texture, which custom shaders ignore anyway: the olive-smudge lore.)
+export function sectionShader(root = false): SectionShader {
+  const k = root ? 1 : 0;
+  let shared = SECTION_SHADERS[k];
+  if (!shared) {
     const sh = new Shader({
-      glProgram: sectionProgram(false),
+      glProgram: sectionProgram(false, root),
       resources: {
         // pixi binds every TextureSource resource to the sampler uniform of
         // the same name; bindGap swaps it per scene.
-        uGapData: defaultGapTexture().source,
+        uGapData: (GAP_BOUND ?? defaultGapTexture()).source,
         // G3-1: the shared SAMP table and the gap globals (fabric_sdf.ts).
         uSamp: sampSource(),
         // K832: the G3 CHAIN table (the junction cut's caps).
@@ -355,22 +386,25 @@ export function sectionShader(): SectionShader {
       },
     }) as SectionShader;
     sh.texture = Texture.WHITE;
-    SECTION_SHADER = sh;
+    SECTION_SHADERS[k] = sh;
+    shared = sh;
   }
-  return SECTION_SHADER;
+  return shared;
 }
 
 // K76 THREAD REVEAL: the section program's explore variant (the master
 // fragment text plus explore_glsl.ts's insertions; the same resources).
 // Built the first time the mode turns on: with the mode off no ribbon binds
-// it, so every frame runs master's program exactly.
-let SECTION_EXPLORE_SHADER: SectionShader | null = null;
-export function sectionShaderExplore(): SectionShader {
-  if (!SECTION_EXPLORE_SHADER) {
+// it, so every frame runs master's program exactly. K905: per root flag.
+const SECTION_EXPLORE_SHADERS: (SectionShader | null)[] = [null, null];
+export function sectionShaderExplore(root = false): SectionShader {
+  const k = root ? 1 : 0;
+  let shared = SECTION_EXPLORE_SHADERS[k];
+  if (!shared) {
     const sh = new Shader({
-      glProgram: sectionProgram(true),
+      glProgram: sectionProgram(true, root),
       resources: {
-        uGapData: sectionShader().resources.uGapData,
+        uGapData: sectionShader(root).resources.uGapData,
         uSamp: sampSource(),
         uG3Chain: g3ChainSource(),
         uRanges: rangesSource(),
@@ -383,9 +417,10 @@ export function sectionShaderExplore(): SectionShader {
       },
     }) as SectionShader;
     sh.texture = Texture.WHITE;
-    SECTION_EXPLORE_SHADER = sh;
+    SECTION_EXPLORE_SHADERS[k] = sh;
+    shared = sh;
   }
-  return SECTION_EXPLORE_SHADER;
+  return shared;
 }
 
 // Point every gap reader - the shared section shader (ribbons), the
@@ -402,14 +437,14 @@ export function bindGap(tex: Texture): void {
   const samp = sampSource();
   const g3c = g3ChainSource();
   const rng = rangesSource();
-  const sh = sectionShader();
-  if (sh.resources.uGapData !== tex.source) sh.resources.uGapData = tex.source;
-  if (sh.resources.uSamp !== samp) sh.resources.uSamp = samp;
-  if (sh.resources.uG3Chain !== g3c) sh.resources.uG3Chain = g3c;
-  if (sh.resources.uRanges !== rng) sh.resources.uRanges = rng;
-  const ex = SECTION_EXPLORE_SHADER;
-  if (ex && ex.resources.uGapData !== tex.source) ex.resources.uGapData = tex.source;
-  if (ex && ex.resources.uSamp !== samp) ex.resources.uSamp = samp;
-  if (ex && ex.resources.uG3Chain !== g3c) ex.resources.uG3Chain = g3c;
-  if (ex && ex.resources.uRanges !== rng) ex.resources.uRanges = rng;
+  GAP_BOUND = tex;
+  sectionShader();
+  // K905: every section shader built so far, both root flags.
+  for (const sh of [...SECTION_SHADERS, ...SECTION_EXPLORE_SHADERS]) {
+    if (!sh) continue;
+    if (sh.resources.uGapData !== tex.source) sh.resources.uGapData = tex.source;
+    if (sh.resources.uSamp !== samp) sh.resources.uSamp = samp;
+    if (sh.resources.uG3Chain !== g3c) sh.resources.uG3Chain = g3c;
+    if (sh.resources.uRanges !== rng) sh.resources.uRanges = rng;
+  }
 }
