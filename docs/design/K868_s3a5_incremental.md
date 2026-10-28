@@ -779,3 +779,93 @@ plus a readback (estimated). That readback is either of:
     - the GPU forms of the windows, fills and switch lines;
     - the readback.
 
+## Handoff
+
+Agent, 2026-10-28, from 04:39:47 to about 05:58, inside the 2 h cap. The
+stage is done: the design above is complete, and it marks what is
+estimated.
+
+**Done.** Brief steps 1-5:
+- the map (section 1);
+- four recorded sequences: def and muse, a drag and a flow each
+  (section 2);
+- the prototypes:
+  - the corner solve, warm and with cold fallbacks (section 3);
+  - passReach, warm (3b);
+  - the pieces and the strips evaluated from s in float32 (4);
+- the event counts (5);
+- the design (6-11).
+
+**Measured.** All in Node, under the perf lock and under load (the
+cursive agent's Python fits), with each compared pair taken back to back:
+- **Corners, warm at the final radius:** 1.81-1.86 ms p50 and
+  3.19-3.62 ms p95. The cold fallbacks add 4-17 ms at p50.
+- **Corners, same answer:** the warm solve differs from the reference by
+  whole roots wherever the reference jumps (17-216 jumps per sequence).
+- **Pieces:** their tables cost 0.15-0.21 ms. Positions from s in float32
+  are within 1.53e-5 world for both the pieces and the strips (today's
+  rule).
+- **Strips without cuts:** off by up to 2.2 px at zoom 1. That is a rule
+  change, not precision.
+- **passReach, warm:** 24-69 ms p50, against 49-147 ms from scratch, and
+  not the same answer (up to 31 pin sides per sequence, by up to 23
+  steps).
+- **Events:** the structure changes on every flow frame.
+
+**Estimated, not measured:**
+- the K883 re-fit replayed;
+- partExtents warm;
+- a cheaper walk step test;
+- the SegGrid upkeep;
+- the spans, clusters and tags;
+- knot mode and the settle;
+- the GPU walks, and the readback.
+
+**The verdict.** The label's CPU part cannot reach 1 ms p95 with the
+structure on the CPU: the warm corners alone are 1.8x over at p50 and
+3.6x at p95.
+- A CPU path costs 6-14 ms p50 with a cheaper step test (estimated), and
+  50-150 ms with today's.
+- Reaching 1 ms needs the corners and the walks on the GPU, plus either a
+  same-frame readback (not measured) or the structure one frame late,
+  which is wrong on every flow frame.
+
+**The coordinator's calls:**
+1. The corner's root: a stated rule, or continuation (sections 3 and 11.1).
+2. Depth per fragment (11.2).
+3. The strips' cut rule (section 4, 11.12).
+4. A readback, or one frame late (section 9).
+5. After S3a8, S3a9 or S3a10 (section 10).
+
+**Evidence.** These files are untracked, in this worktree's
+`.claude/probes/S3a/`:
+- the prototypes: `seq13_*.ts`;
+- the recorder: `seq13_record.mjs`;
+- the perf-lock wrapper: `seq13_locked.ps1`.
+
+The results are in `.claude/probes/S3a/seq13/`:
+- the four sequences, `*.jsonl.gz` (about 25 MB each);
+- `corner_timing.txt`, `corner_timing_nw1.txt`, `cornercost.txt`;
+- `pieces_timing.txt`, `strips.txt`, `reach.txt`, `events.txt`.
+
+To run a prototype from the worktree:
+`node node_modules\vite-node\vite-node.mjs .claude\probes\S3a\<file>.ts
+def_drag,def_flow,muse_drag,muse_flow`. Run a timing through
+`pwsh -NoProfile -File .claude\probes\S3a\seq13_locked.ps1 -What "<what>"
+-Cmd "<command>"`. Set any environment variables (`NOTIME`, `NW`) in the
+calling shell, not inside `-Cmd`.
+
+**Next:** the coordinator reviews the design and makes its calls, then
+S3a6 (section 10).
+
+**Leftovers:** everything in 11.6, 11.10 and 11.13. Two more:
+- the fixture links carry `fw=0`, so no fixture shows flow. A flow probe
+  has to set it, as this stage's sequences did (`&fw=0.3&fv=0.5`,
+  section 2);
+- the 8x maximum zoom is unverified.
+
+**Env.** The dev server (port 5381) is stopped, and the perf lock is
+released. Only a new recording needs the server, started from the
+worktree: `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts
+--port 5381 --strictPort --host 127.0.0.1`.
+
