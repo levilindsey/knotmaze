@@ -291,11 +291,11 @@ Next free ID: K955.
 - **K868** · Border look, junctions done right: one field renderer (union within a surface, occlusion
   by depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
   CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
-  - owner: agent `a94a28a19e23b2f96` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, stage K934, started 2026-10-27 20:50, 2 h cap ~22:50)
-  - branch: `k934-recount`, worktree `.claude/worktrees/k934-recount`; last commit: `6d9037c9` (master, the brief; the agent's WIP commits follow, unpushed). Keep the worktrees `.claude/worktrees/k922-junction-extent`, `k924-label-artifacts` and `k940-label-fixes`: their probes import their source
-  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`), `.claude/probes/K924/` (`run.ps1`, `tally.mjs`, `at.ts`, `tdiff.mjs`), `.claude/probes/K940/` (sheet J, `jcrops/`, `S/`, per-scene `ydiff/`, `cls/`, `indep/`), K934's in its worktree's `.claude/probes/K934/` until it merges; sheets A-J, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
-  - next: K934's stage with K942 (`docs/design/K934_recount.md`: fix the free-end check's exit count; depth "overlap", endSnap, crossed and change 3 become the defaults and the losing switches go; pick the extent by the fixed check; re-count; sheet K at play size); then K943's flagged build (the over line inside a junction) and K953 (M1); K952, K935, K941; then the S3 brief: K915's two passes with K923's screen-space LOD and packed 32-bit label (together they fit the Pixel's 4 ms at every zoom; the coordinator's rec, Levi may object; open inputs K933), G1 corners and cr 0-6 (sheet F approved), and G3-1 ported back or replaced (K892)
-  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`; K934: `docs/design/K934_recount.md`
+  - owner: nobody since 2026-10-27 22:10 (stage K934 merged, e2926d0e); S3a launches next
+  - branch: mainline; last commit: `e2926d0e` (K934's merge). Keep the worktrees `.claude/worktrees/k922-junction-extent`, `k924-label-artifacts`, `k940-label-fixes` and `k934-recount`: their probes import their source
+  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`), `.claude/probes/K924/` (`run.ps1`, `tally.mjs`, `at.ts`, `tdiff.mjs`), `.claude/probes/K940/` (sheet J, `jcrops/`, `S/`, per-scene `ydiff/`, `cls/`, `indep/`), `.claude/probes/K934/` (sheet K `K_recount.png`, `sheetk/`, `dropped/`, `ext3/`, `indep/`, census logs); sheets A-K, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
+  - next: S3a (`docs/design/K868_s3a_app.md`): label ink in the app behind a flag, K915's two passes with K923's LOD and packed label, checked against the oracle on the 12 scenes; then S3b: the Pixel bench and Levi's look on the phone, with the END tuck and band W against master (§8); then G1 corners and cr 0-6 (sheet F approved); K892: G3-1 goes when the flag becomes the default, or port the revert sooner; after S3a, the oracle follow-ups, fixed in the oracle and the passes: K955 and K956 (they show at play size), K943, K953, K952, K935, K941
+  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`; K934: `docs/design/K934_recount.md`; S3a: `docs/design/K868_s3a_app.md`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
@@ -744,7 +744,7 @@ Every other item below waits on the trigger it names.
 - **K932** · `scripts/bench_frame.mjs` times only CPU submission: Chrome's WebGL `finish()` doesn't
   wait for the GPU (K923: 0.0-0.1 ms read for 3.8 ms of GPU work). End each frame with a 1-px
   `readPixels`, recheck the GPU times taken with it, fold in K923's runner. `K923_s3_bench.md` ## Handoff.
-- **K935** · K922's follow-ups: endSnap unconditional (a float bug); the 23 crossing-cut free ends; the 9 span-end
+- **K935** · K922's follow-ups (endSnap is unconditional since K934): the 23 crossing-cut free ends; the 9 span-end
   triples the walk never starts; d2-d4's fill-outline and z-tie cuts; probe fixes (fe_mech R = 2W, K915's `h.ts`
   FULL_DIR). `K922_junction_extent.md` ## Handoff.
 - **K937** · Cursive: fit the connector into o (`cnct.mod_n_o`) on its own at the 86 u junction. v5.2's
@@ -775,23 +775,33 @@ Every other item below waits on the trigger it names.
   build since v5.1 used it). A template Levi has edited is read as drawn instead (K944).
 - **K943** · K868: draw the over thread's line where two threads of one junction cross (about 110 spots; both inks
   fuse them now; Drive `K868/sheets/K943_crossing_in_junction.png`), behind a flag for Levi to compare. The oracle
-  needs simLab to split a crossing's two passes (K940 step 5, `S/`); the app needs 1-2 label bits (S3).
+  needs simLab to split a crossing's two passes (K940 step 5, `S/`); the app needs 1-2 label bits (S3). Under extent part this is label ink's largest class (#16 50/8, missing 41/16; K934).
 - **K952** · K940's follow-ups under crossed: trace #16's 6 missing stretches (`checks_ab.ts` needs a flag that
   lists positions); check the 35 missing rows (inferred: tubes the table puts under the cluster); the 4 wrong
   cells, crossed's extra #7 break, m8's sliver (ch54 past J57, x233). `K940_label_fixes.md` ## Handoff.
 - **K953** · K868: a tube past its span, under a member, in a junction core (M1: 24 member/member rows in every
   K940 candidate) needs a junction-core rule; labCapReach was the wrong tool. `K940_label_fixes.md` ## Handoff.
+- **K955** · K868: free ends at tight loops show at play size in both inks: muse_hash (3.07, 28.27), a line
+  stopping 2-3 px short of a small closed loop, and (4.78, 33.44), a 4x8 px spur (sheet K d1/d2, Drive
+  `K868/sheets/K_recount.png`). After S3a, fix in the oracle and the passes. `K934_recount.md` step 5.
+- **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
+  closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
+  16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
 
 ## Residuals (known, not fixed)
 
 - **K954** · K940's probe caveats: `ydiff.ts` lists a self-crossing by its first pass only (`yjudge.mjs`
-  inherits it; d4's x252); `cls.ts` does not model labCapReach and mislabels its rows. `.claude/probes/K940/`.
+  inherits it; d4's x252); the census prints #16 stretches without a point (K934's `at_s.ts` finds it). `.claude/probes/K940/`, `.claude/probes/K934/`.
+- **K957** · K868's free-end check (the runs count, K934) misses site I (an overshoot tail shorter than the
+  inner ring), a V under 0.45 rad, an L joined by an arc 0.35W inside the ring and an L filled solid past the
+  inner ring; spur ends (site F, u3) are invisible to both counts. `K934_recount.md` step 1, `.claude/probes/K934/`.
+- **K958** · K868 extent part's residuals: muse_hash (20.30, 1.40) a thin crescent sliver; m4 (3.10, 27.80) a
+  small closed island under K955's free end; g41_def_tw64 (0.90, 14.40) a lens wedge with a free end;
+  g41_ring_tw42 (21.05, 17.95) a small notch; user_tw42.lightpaper (20.95, 4.75) spur ends; g41_user_tw64
+  (9.79, 12.93) an island, a 1 px hairline. `K934_recount.md` step 3 (`ext3/`).
 - **K951** · Cursive v5.4's residuals: b, f, p, v, o, s and w end without a final tail, as the font's
   do; the titles still say v5.3; after a template round trip, rerun evar, fitp and tails in that order.
   `.claude/probes/K863/trace/NOTES.md` ## v5.4.
-- **K942** · Label ink's switches (K924, K940; OracleParams, all off): adopt `labFill: "yieldOrder"` with
-  `labYieldChain: "crossed"` as the only form (unit-test it) and `labTie: "surface"`; remove "arcs", "yield",
-  `labFillDepth`, `labCap` and `labCapReach`. Probe gotcha: `checks_ab.ts` takes the head's ink from `HEAD_INK`.
 - **K947** · Cursive v5.3's residuals: o's closing hook (a 0.21 u handle at the 86 u junction), f's frames
   sharing a node, `bodies.json` at 4.5 MB, the roughness ceilings, the pp/mp/ot crossings.
   `K930_cursive_smooth.md` ## Handoff.
@@ -1978,6 +1988,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K942** · Label ink's settled rules are the oracle's defaults (the crossed yield order, unit-tested; labTie "surface"); its other switches removed. Done in e2926d0e (2026-10-27).
 - **K934** · K868 re-count: the free-end check counts runs of ink (31 free ends, not 83); the settled rules are the oracle defaults (K942); extent part; sheet K at play size. Done in e2926d0e (2026-10-27).
 - **K940** · Label ink rule fixes behind switches, all off (`labFill: "yieldOrder"` with `labYieldChain`, `labCapReach`): the crossed yield form is right where plain yield was 82% wrong; change 2 hides crossing lines. Sheet J and S's crops. `K940_label_fixes.md` ## Results. Done in 4e0ce01d (2026-10-27).
 - **K926** · Cursive v5.4: e's two high entries from the font (o entry after b o v w, g entry after c g j y z; be 31.17 to 2.89 u off the font's connector, ve 31.17 to 3.46, ze 12.45 to 2.05), en 7.08 to 1.15 u, er 8.35 to 2.36. `K926_cursive_e.md` ## Handoff. Done in a99b2d64 (2026-10-27).
