@@ -145,3 +145,180 @@ Not this stage:
   - the rule set you recommend for K868 and what it costs S3;
   - a `Ledger items` list (follow-ups, residuals, decisions for Levi);
   - K940's current handle fields.
+
+## Results
+
+Stage agent of claude session bf876705, 2026-10-27 18:46-20:46 (the 2 h
+cap). Base: `INK=label DEPTH=overlap ENDSNAP=1`. `EXTENT=part` was not
+run, so there is no second column. The probes are in
+`.claude/probes/K940/` (untracked; K924's and K922's copied and repointed
+to this worktree, plus the new ones named below).
+
+**The new settings** (`src/render/field/oracle.ts`, all off by default;
+their env names are in the probes' `lib.ts`):
+- `labFill: "yieldOrder"` (`LABFILL=yieldOrder`): where a fill of cluster
+  J meets a foreign tube (the nearest foot is not J's, within h), the fill
+  covers the tube only if the table puts J's chain over the tube's chain.
+  Otherwise it yields, as `labFill: "yield"` does.
+- `labYieldChain: "near" | "crossed"` (`LABYIELD`, default "near"): which
+  chain of J the test uses. "near": the nearest foot's chain, by its
+  crossing with the tube's chain within σ. "crossed": `fillOrder`, the
+  nearest table crossing within σ between the tube's chain and any chain
+  of J.
+- `labCapReach: <w>` (`LABCAPREACH`): change 2 for reach caps. A free tube
+  (`C:ch`) just past a span of J that a reach ended (not a cap, not the
+  chain's end) is J's surface for up to min(w, cap - e) past the span. The
+  pad of a crossing whose other pass is in J cuts it short.
+
+**Counts** (12 scenes, `tally.mjs` over `cls/<scene>.<label>.json`; the
+`fy*_p*.log` runs):
+
+| candidate | label | extra | missing | free ends | #16 |
+|---|---|---|---|---|---|
+| base | base | 34 | 36 | 83 | 13 |
+| K924's yield | fyield | 31 | 2 | 81 | 0 |
+| 1, near | fyon | 33 | 30 | 90 | 11 |
+| 1, crossed | fyoc | 31 | 35 | 85 | 11 |
+| 1+3 | fyct | 31 | 35 | 83 | 11 |
+| 1+2+3, w 0.4 | fyctr04 | 31 | 47 | 77 | 19 |
+| 1+2+3, w 1.0 | fyctr10 | 30 | 54 | 79 | 25 |
+
+**d1-d4**: ink cells each candidate gains and loses against the base, in
+the 516 px windows of `view/d<n>_<label>.png` (the base inks 532, 531,
+609 and 375 cells there):
+
+| candidate | d1 | d2 | d3 | d4 |
+|---|---|---|---|---|
+| yield | +127 -161 | +211 -121 | +123 -203 | +153 -59 |
+| 1, near | +5 -15 | 0 | +48 -142 | +105 -34 |
+| 1, crossed | +58 -137 | +15 -17 | +49 -144 | +5 -13 |
+| 1+3 | as 1, crossed | as 1 | as 1 | as 1 |
+| 1+2+3, w 0.4 | +57 -170 | +15 -17 | +49 -144 | +5 -13 |
+| 1+2+3, w 1.0 | +52 -174 | +15 -17 | +49 -144 | +5 -13 |
+
+### Step 1: yield's outlines
+
+Crops: `view/d1-d4_<label>.png`; muse_hash's sites with the most added
+cells, `view/m5-m8_<label>.png` (m5 (14.99, 12.90), m6 (3.50, 22.53), m7
+(17.96, 21.80), m8 (16.68, 11.91)); def's, `view/s1-s6_<label>.png`; the
+pairs in `view/g_*.png` and `view/q_*.png`. Sites by added cells:
+`ydiff/<scene>.ENDSNAP=1.fyield.json` (`ydiff.ts`).
+
+**Most of yield's outlines are wrong.** `yjudge.mjs` (new) judges each
+yielded stretch by the nearest table crossing between the tube's chain
+and a chain of the fill's cluster (within 3h): over: right; under:
+wrong. Over the 12 scenes, 2698 yielded cells are right and 11936 wrong
+(82%). Another 1177 cells have no crossing within 3h, and all of them lie
+under the fill by the overlap depth, so they are wrong too. muse_hash
+alone: 1193 right, 4350 wrong, 83 under by depth.
+
+Judged by crop and table:
+- **d1 (20.30, 1.40), right.** ch2's outline across F4: x6 puts ch2 over
+  (z 0.928 against the fill's -0.928). Part of the rest of d1's change is
+  the cluster's own chains past their spans, which is change 2's domain.
+- **d2 (20.03, 22.16), wrong.** F31 yields to ch38 (x158 puts ch38
+  under) and F26 to ch85 (x157 under). Traced with `at.ts`
+  (`trace_y2_fyield.log`): F26's foot is ch38@7.67 (z +0.807), and it
+  meets J31's member ch85@9.50 (z -0.550). They are not similar (the
+  switch dz is 1.357), so yield draws ch85's outline across F26, although
+  x157 puts ch38, a chain of F26's cluster, over ch85. The fill should
+  cover it.
+- **d3 (26.71, 6.70): ch58 wrong, ch3 right.** x253 puts ch58 under; x35
+  puts ch3 over.
+- **d4 (31.05, 4.50), wrong.** The tube's own self-crossing x252 lies
+  under its cluster pass. `ydiff.ts` lists a self-crossing by its first
+  pass only, so it named x251 (over, 2.6h out) instead, and `yjudge.mjs`
+  carries the same caveat.
+- **m5, wrong**: F60 yields to ch53 (x201 under) and ch54 (x234 under).
+  **m6, wrong**: F16 to ch9 (x72 under). **m7 and m8, wrong** (m8: ch54
+  past J57's span).
+- def's s3 and the sites (9.48, 28.31), (4.09, 12.68) and (5.97, 18.69)
+  are wrong; (9.77, 25.91) is right.
+- Many of the "foreign" tubes are the cluster's own chains past their
+  spans (d1, def s3, m8). A rule by the table cannot help there; change 2
+  aims at them.
+
+### Step 2: change 1 refined
+
+Both forms are built. **"crossed" is the right one.**
+- **"near" is wrong.** It spikes where the nearest foot switches chains
+  (d4 +105, m5, m6): the chain that decides flips across the Voronoi
+  line, and the outline flips with it. Free ends rise 83 to 90.
+- **"crossed"** keeps the right outlines and drops the wrong ones. d1 is
+  cleaner than the base (+58 -137), d3 is clean (+49 -144), and d2, d4
+  and m5-m7 equal the base. m8 has a slightly longer sliver: ch54 past
+  J57's span, where the nearest crossing switches to x233. `yjudge.mjs`
+  on base against crossed (muse_hash): 557 yielded cells right, 4 wrong
+  (not traced). Missing falls only 36 to 35, so crossed keeps nearly all
+  of the "covered: fill on top" rows. Inferred, not checked row by row:
+  those are tubes that the table puts under the cluster, which the fill
+  covers rightly, so the census's "missing" is the census's expectation,
+  not an ink error (see Handoff).
+- `ydiff.ts` base against crossed (muse_hash): 857 cells change over 28
+  sites, +424 -604. The biggest: (20.65, 1.35) +56 -139, (26.49, 6.91)
+  +49 -145, (16.38, 11.92) +38 -33, (8.38, 16.90) +36 -20, (29.92, 14.22)
+  +25 -12.
+
+### Step 3: change 3 on top of change 1
+
+`labTie: "surface"` with crossed changes only free ends, 85 to 83 (M1
+member/member 16 to 14). d1-d4 are identical to 1's. Neutral to slightly
+positive.
+
+### Step 4: change 2, reach caps only
+
+**It fails the brief's test.**
+- It hides crossing lines as `labCap` did, only fewer: against 1+3,
+  missing +12 and #16 +8 at w 0.4, and +19 and +14 at w 1.0 (labCap:
+  +26, +27). The added rows are tubes over J's fill, or over their own
+  member pass, whose outlines it now hides. Examples:
+  - muse_hash (20.53, 1.61): `C:ch2@1.94` (z 0.928) against `F4:ch68@7.33`
+    (z -0.928). It hides d1's ch2 outline (x6 over) again.
+  - g41_def_tw42 (34.70, 14.25): `C:ch61@48.39` (z 0.487) against
+    `M36:ch61@44.87` (z -0.481), across crossing 256.
+- **It does not fix M1.**
+  - M1 member/member extra: 24 at the base and every candidate, 23 at
+    w 1.0.
+  - M1 free ends: base 16, 1 16, 1+3 14, w 0.4 16 (13 by member, 3 by
+    chain), w 1.0 13.
+  - M1's rows are a member against a tube past its span, UNDER it, in a
+    junction core: `M16:ch81` (z 0) against `C:ch45@23.62` (z -0.644) in
+    j104's core (hider ch45@23.53, cl 16); `M48:ch34` (z 0.928) against
+    `C:ch75@47.66` (z -0.928) in j81's core. Those spans are not ended by
+    a reach, so labCapReach never applies.
+- Free ends ending at a fill|member cap: base 12, yield 9, 1 near 9,
+  1 crossed 15, 1+3 15, w 0.4 6, w 1.0 4. It removes those, at the price
+  of the crossing lines.
+- `cls.ts` does not model labCapReach and labels its rows "sim across
+  the outline: one chain within sigma". The rows are right; the
+  mechanism label is not.
+
+### Step 5: sheet J and S's crops
+
+PENDING
+
+### Step 6: checks
+
+PENDING
+
+### Recommendation for K868
+
+- **Adopt change 1 as "crossed"** (`labFill: "yieldOrder"`,
+  `labYieldChain: "crossed"`): a fill covers a foreign tube only where
+  the table puts one of its cluster's chains over the tube's chain within
+  σ, and yields everywhere else. K924's plain yield draws mostly wrong
+  outlines (82% of its cells).
+- **Adopt change 3** (`labTie: "surface"`). It is cheap and slightly
+  positive.
+- **Do not adopt change 2 as built.** M1 needs a rule about a tube under
+  a member in a junction core, not about reach caps.
+- **Cost to S3.** The label ink needs each chain's table crossings
+  (s, the other chain, over or under), sorted by s and kept current as
+  the threads move, plus each cluster's chain set. The fill-against-
+  foreign-tube branch then scans the tube chain's crossings within σ: a
+  few entries, and only in the lab cells where that branch fires.
+  `fillOrder` already does this in the oracle.
+
+## Handoff
+
+PENDING
