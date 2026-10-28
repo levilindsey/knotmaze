@@ -136,35 +136,17 @@ export function switchLinesFrom(T: SwitchTopo, m: FieldModel): SwitchLine[] {
   const out: SwitchLine[] = [];
   const eps = Math.min(1e-4, sigma * 1e-3);
   const ext = h + m.W;
-  // S3a4: each corner's box, outside which m.inFill is false (a G2 fill's
-  // own box test; else its reach from q, vq + h, padded for rounding; a
-  // corner with no fill reaches nowhere), filled as the pairs need them.
-  // The reach test skips the corners whose box misses the cross-section's
-  // nine points: same answer, most candidates rejected without an inFill.
+  // S3a4: each corner's box, outside which m.inFill is false (m.fillBox),
+  // filled as the pairs need them. The reach test skips the corners whose
+  // box misses the cross-section's nine points: same answer, most
+  // candidates rejected without an inFill.
   const KB = new Float64Array(4 * m.corners.length);
   const KBset = new Uint8Array(m.corners.length);
   const boxOf = (k: number): number => {
     const o = 4 * k;
     if (KBset[k]) return o;
     KBset[k] = 1;
-    const c = m.corners[k];
-    if (c.r <= 0 || !c.ok) {
-      KB[o] = Infinity;
-      KB[o + 1] = Infinity;
-      KB[o + 2] = -Infinity;
-      KB[o + 3] = -Infinity;
-    } else if (c.g2?.ok) {
-      KB[o] = c.g2.box[0];
-      KB[o + 1] = c.g2.box[1];
-      KB[o + 2] = c.g2.box[2];
-      KB[o + 3] = c.g2.box[3];
-    } else {
-      const R = (c.vq + h) * (1 + 1e-9) + 1e-9;
-      KB[o] = c.q[0] - R;
-      KB[o + 1] = c.q[1] - R;
-      KB[o + 2] = c.q[0] + R;
-      KB[o + 3] = c.q[1] + R;
-    }
+    m.fillBox(k, KB, o);
     return o;
   };
   for (const P of T.pairs) {

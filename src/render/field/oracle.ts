@@ -1061,6 +1061,8 @@ export class FieldModel {
     const ext = new Map(ext0);
     const step = h / 8;
     const us = [-0.999, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 0.999].map((u) => u * h);
+    const PX = new Float64Array(9);
+    const PY = new Float64Array(9);
     this.partMoves = [];
     for (let round = 0; round < 4; round++) {
       const sp = this.rawSpans(ext, caps);
@@ -1078,6 +1080,16 @@ export class FieldModel {
         f.push(k);
         fills.set(rt[c.junction], f);
       });
+      // Each fill's box (fillBox), filled as the walk needs it.
+      const KB = new Float64Array(4 * this.corners.length);
+      const KBset = new Uint8Array(this.corners.length);
+      const boxOf = (k: number): number => {
+        if (!KBset[k]) {
+          KBset[k] = 1;
+          this.fillBox(k, KB, 4 * k);
+        }
+        return 4 * k;
+      };
       let moved = false;
       sp.forEach((l, ji) => {
         for (const [pi, lo, hi, ai] of l) {
@@ -1090,27 +1102,59 @@ export class FieldModel {
           const room = p.closed ? Math.min(cap, p.len / 2) : Math.min(cap, arm.dir > 0 ? p.s0 + p.len - arm.s : arm.s - p.s0);
           const W = wins.get(rt[ji]) ?? [];
           const F = fills.get(rt[ji]) ?? [];
+          // K868 S3a4: hits() is the OR of pure tests, so a test skipped
+          // where it is known false changes nothing. The cross-section's
+          // nine points are computed once (the same expressions as before).
+          // A member with no window segment within 2h of a is skipped: the
+          // points are within 0.999h of a, so every foot is farther than h.
+          // A fill whose box misses the points' box is skipped: inFill is
+          // false outside it. A NaN point skips nothing.
           const hits = (t: number): boolean => {
             const s = normS(p, arm.s + arm.dir * t);
             const a = pointAt(p, s);
+            let nan = false;
+            let bx0 = Infinity;
+            let by0 = Infinity;
+            let bx1 = -Infinity;
+            let by1 = -Infinity;
+            for (let i = 0; i < 9; i++) {
+              const u = us[i];
+              const x = a.x - a.ty * u;
+              const y = a.y + a.tx * u;
+              PX[i] = x;
+              PY[i] = y;
+              if (!(x === x && y === y)) nan = true;
+              if (x < bx0) bx0 = x;
+              if (x > bx1) bx1 = x;
+              if (y < by0) by0 = y;
+              if (y > by1) by1 = y;
+            }
+            if (!nan) this.grid.query(a.x, a.y, 2 * h, this.fq2);
             for (const [q, qlo, qhi, qj, qa] of W) {
               if (qj === ji && qa === ai) continue;
               if (q === pi) {
                 // The walker is still inside this member's span: in J anyway.
                 let inside = false;
                 if (!p.closed) inside = s >= qlo && s <= qhi;
-                else for (const sh of [-p.len, 0, p.len]) if (s + sh >= qlo && s + sh <= qhi) inside = true;
+                else {
+                  const L = p.len;
+                  inside = (s - L >= qlo && s - L <= qhi) || (s >= qlo && s <= qhi) || (s + L >= qlo && s + L <= qhi);
+                }
                 if (inside) return true;
               }
-              for (const u of us) {
-                const x = a.x - a.ty * u;
-                const y = a.y + a.tx * u;
-                const [d, fs] = this.footNear(q, qlo, qhi, x, y, 1.5 * h);
+              if (!nan && !this.windowNear(q, qlo, qhi, a.x, a.y, 4 * h * h, this.fq2)) continue;
+              for (let i = 0; i < 9; i++) {
+                const [d, fs] = this.footNear(q, qlo, qhi, PX[i], PY[i], 1.5 * h);
                 if (d < h && (q !== pi || Math.abs(dS(p, fs, s)) > 2 * h)) return true;
               }
             }
-            for (const k of F)
-              for (const u of us) if (this.inFill(k, a.x - a.ty * u, a.y + a.tx * u)) return true;
+            for (const k of F) {
+              if (!nan) {
+                const o = boxOf(k);
+                if (bx1 < KB[o] || bx0 > KB[o + 2] || by1 < KB[o + 1] || by0 > KB[o + 3]) continue;
+              }
+              for (let i = 0; i < 9; i++) if (this.inFill(k, PX[i], PY[i])) return true;
+            }
             return false;
           };
           if (!hits(e0)) continue;
@@ -1553,6 +1597,32 @@ export class FieldModel {
       box,
       note: [note, cv.note ?? ""].filter(Boolean).join("; "),
     };
+  }
+
+  /**
+   * K868 S3a4: corner ci's box [x0, y0, x1, y1] into out at o; inFill is
+   * false outside it (a G2 fill's own box test; else the wedge's reach from
+   * q, vq + h, padded for rounding; a corner with no fill: an empty box).
+   */
+  fillBox(ci: number, out: Float64Array, o: number): void {
+    const c = this.corners[ci];
+    if (c.r <= 0 || !c.ok) {
+      out[o] = Infinity;
+      out[o + 1] = Infinity;
+      out[o + 2] = -Infinity;
+      out[o + 3] = -Infinity;
+    } else if (c.g2?.ok) {
+      out[o] = c.g2.box[0];
+      out[o + 1] = c.g2.box[1];
+      out[o + 2] = c.g2.box[2];
+      out[o + 3] = c.g2.box[3];
+    } else {
+      const R = (c.vq + this.h) * (1 + 1e-9) + 1e-9;
+      out[o] = c.q[0] - R;
+      out[o + 1] = c.q[1] - R;
+      out[o + 2] = c.q[0] + R;
+      out[o + 3] = c.q[1] + R;
+    }
   }
 
   /** Is (x, y) inside corner c's fill: the curvilinear triangle V, t_A, t_B? */
@@ -2246,6 +2316,41 @@ export class FieldModel {
   // K915 (form A): ink from the visible surface.
 
   private fq: number[] = [];
+  private fq2: number[] = [];
+
+  /**
+   * K868 S3a4: may a segment of chain pi that footNear would clip to
+   * [lo, hi] lie within sqrt(R2) of (x, y)? cand: a grid query around
+   * (x, y) of half-side at least sqrt(R2). Measured to the whole segment,
+   * so true whenever footNear's clipped piece is that near (and on NaN).
+   */
+  private windowNear(pi: number, lo: number, hi: number, x: number, y: number, R2: number, cand: number[]): boolean {
+    const p = this.polys[pi];
+    const g = this.grid;
+    for (let j = 0; j < cand.length; j++) {
+      const id = cand[j];
+      if (g.segChain[id] !== pi) continue;
+      const k = g.segK[id];
+      const sa = p.s[k];
+      const sb = sa + p.segLen[k];
+      let win = Math.min(hi, sb) >= Math.max(lo, sa);
+      if (!win && p.closed)
+        win = Math.min(hi, sb - p.len) >= Math.max(lo, sa - p.len) || Math.min(hi, sb + p.len) >= Math.max(lo, sa + p.len);
+      if (!win) continue;
+      const kb = segB(p, k);
+      const ax = p.x[k];
+      const ay = p.y[k];
+      const ex = p.x[kb] - ax;
+      const ey = p.y[kb] - ay;
+      const L2 = ex * ex + ey * ey;
+      let t = L2 > 0 ? ((x - ax) * ex + (y - ay) * ey) / L2 : 0;
+      t = t < 0 ? 0 : t > 1 ? 1 : t;
+      const dx = ax + ex * t - x;
+      const dy = ay + ey * t - y;
+      if (!(dx * dx + dy * dy >= R2)) return true;
+    }
+    return false;
+  }
 
   /** Chain pi's foot nearest (x, y) with s ∈ [lo, hi], searched within R: [d, s] (d = Infinity: none). */
   private footNear(pi: number, lo: number, hi: number, x: number, y: number, R: number): [number, number] {
