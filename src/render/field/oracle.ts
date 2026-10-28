@@ -169,6 +169,9 @@ export interface OracleParams {
    * the visible member on a W/4 grid, and ink on the front side of every
    * change of visible surface within W (a centred line at a switch). */
   ink?: "group" | "surface" | "label";
+  /** K915 ink "label": bisect to the exact change near the band's edge
+   * (default true); false keeps the grid's distance, within g/2 = W/8. */
+  labExact?: boolean;
 }
 
 /** K909 step 4: a crossing-cut arm whose side lies inside the crossing's
@@ -587,8 +590,12 @@ export class FieldModel {
     this.buildPrimGrid();
     this.hookLook = params.hookLook ?? "now";
     this.inkMode = params.ink ?? "group";
+    this.labExact = params.labExact ?? true;
     if (k883) this.hooks = this.findHooks(scene);
   }
+
+  /** K915 ink "label": refine the grid's distance by bisection (OracleParams.labExact). */
+  readonly labExact: boolean;
 
   /** K909 step 4: the hook look's switch, and the arms it applies to. */
   readonly hookLook: "now" | "carry" | "cap" | "seam";
@@ -2396,6 +2403,9 @@ export class FieldModel {
     const cx = Math.floor((x - L.x0) / g);
     const cy = Math.floor((y - L.y0) / g);
     let best = Infinity;
+    // Differing cells near the best, flat [dd, qx, qy, switch], for the
+    // exact distance below.
+    const near: number[] = [];
     for (let dy = -R; dy <= R; dy++)
       for (let dx = -R; dx <= R; dx++) {
         const ix = cx + dx;
@@ -2403,20 +2413,56 @@ export class FieldModel {
         const qx = L.x0 + (ix + 0.5) * g;
         const qy = L.y0 + (iy + 0.5) * g;
         const dist = Math.sqrt((qx - x) * (qx - x) + (qy - y) * (qy - y));
-        if (dist > W + g || dist >= best) continue;
+        if (dist > W + g || dist >= best + g) continue;
         const Q = this.labAt(ix, iy);
         if (Q && this.simLab(P, Q)) continue;
         let dd = dist;
+        let sw = 0;
         if (Q && this.presentAt(P, qx, qy)) {
           // P's surface runs on under Q at q: Q's silhouette (Q's side inks),
           // unless Q's surface also runs under P at p - a depth switch,
           // drawn as a centred line.
           if (!this.presentAt(Q, x, y)) continue;
           dd = 2 * dist;
+          sw = 1;
         }
         if (dd < best) best = dd;
+        near.push(dd, qx, qy, sw);
       }
-    const F = best - g / 2;
+    let F = best - g / 2;
+    if (this.labExact && Math.abs(F - W) <= 1.5 * g && near.length) {
+      // Exact distance near the band's edge: bisect toward the nearest few
+      // differing cells. A silhouette is where P's surface stops covering
+      // (its whole outline, hidden or not, as in form A's (a)); a switch is
+      // where the visible member stops being similar to P.
+      const order: number[] = [];
+      for (let i = 0; i < near.length; i += 4) if (near[i] <= best + g) order.push(i);
+      order.sort((a, b) => near[a] - near[b]);
+      let fine = Infinity;
+      for (const i of order.slice(0, 4)) {
+        const qx = near[i + 1];
+        const qy = near[i + 2];
+        const sw = near[i + 3];
+        let lo = 0;
+        let hi = 1;
+        for (let k = 0; k < 6; k++) {
+          const t = (lo + hi) / 2;
+          const sx = x + (qx - x) * t;
+          const sy = y + (qy - y) * t;
+          let same: boolean;
+          if (sw) {
+            const V = this.visibleAt(sx, sy);
+            same = !!V && this.simLab(P, V);
+          } else same = this.presentAt(P, sx, sy);
+          if (same) lo = t;
+          else hi = t;
+        }
+        const len = Math.sqrt((qx - x) * (qx - x) + (qy - y) * (qy - y));
+        const dd = (sw ? 2 : 1) * len * 0.5 * (lo + hi);
+        if (dd < fine) fine = dd;
+      }
+      F = fine;
+    }
     out.inside = true;
     out.F = Math.min(F, this.dMax);
     out.ink = F <= W;
