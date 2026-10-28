@@ -139,3 +139,42 @@ did.
   the check numbers for v3 and v4, the pairs still over 4 u and the fix for
   each, the rerun commands, and a `Ledger items` list (follow-ups,
   residuals, decisions for Levi).
+
+## Handoff
+
+K902 stage agent, 2026-10-27 11:21 (cap 11:48). Uncommitted, for the
+coordinator. Steps 1, 2, 3 and 5 are done. Step 4 is diagnosed but not
+built.
+
+From the coordinator's 10:46 message:
+- Item 3 is built: a's fused entry, `--fuse-entry`.
+- Item 4 is measured: r after a high exit.
+- Items 1 and 2 are a design in the report.
+
+Everything is untracked, under `.claude/probes/K863/trace/`:
+- `NOTES.md`, `## v4`: status entries 10:11 to 11:19.
+- Its "### Rerun commands (K902 v4)": `work7/dbg/rerun_check.ps1` checked
+  them at 11:18. All 12 lines exit 0 and all 11 outputs are byte-identical.
+- `tools/*_k902.py`, `work7/` and `out7/`.
+
+Step 4, still to build:
+- **Leads** (NOTES 11:19). The lead reference in `join_k902.py` takes the
+  .ini glyph's lowest-left free end.
+  - a, c, d, i, p, q, t, u and x have no lead-in stroke. Their reference is
+    therefore the body run backwards (u 52 u; the 88 u word-start leads of
+    a, d and q).
+  - m and n do have a lead-in, from (17, 376), but the `y < 150` filter
+    skips it.
+  - Fix: use a free end left of the entry whose path leaves the body; if
+    there is none, give the letter no lead-in. Then refit.
+- **Tails** (NOTES 10:44). The .fin reference runs back through the body
+  for b, c, d, f, l, p, s and t (b 138 u).
+  - Fix: use the free end whose path leaves along the exit tangent; if
+    there is none, give the letter no tail. Then refit.
+- The word-start and word-end bodies (.ini: e, z; .fin: b, f, l) need a
+  bent body (K901).
+
+Then:
+- per-class o and b exit frames (oh, ok, or, os, br);
+- an angle-aware walk for f (fo);
+- the two entry modes (design in the report).
