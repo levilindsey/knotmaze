@@ -228,3 +228,126 @@ first. The FieldModel is rebuilt from scratch every frame, so 1 ms per
 rebuild is out of reach without caching the model itself by topology
 (corners, spans, clusters) or moving the build off the main thread; the
 report gives each part's cost after the fixes.
+### footInWindow, visited by window (`efc8ebdc`)
+
+`footInWindow` now binary-searches the first segment the window can touch
+(per shift on a closed chain) and stops at the first segment past it: the
+same float tests on the same segments in the same order, so the same
+answer to the bit. Checked by `fiw12_check.ts` (the old full scan copied
+in, against the new one, on every poly of the 12 scenes: random windows,
+short, long, across the seam, empty, inverted, on segment ends; random
+points near and far): 0 mismatches. The pipeline's outputs hashed
+(`pipe12_hash.ts`: pieces, switch lines, strips, FNV-1a over every
+float's bits) equal the base on all 12 scenes (`pipe12/base.json`). Node,
+def, median of 3: model 1695 -> 461 ms; muse_hash 2662 -> 1200.
+
+What the model costs after it (def, Node, per rebuild): FieldModel 462 =
+buildSpans 262 (partExtents 191 -> hits 181 -> footNear ~140 self), the
+corner solver's footInWindow ~123, passReach ~94, SegGrid candidates
+~89; then buildLabelPieces 73, the switch 27, the strips 26.
+
+### Step 2: the switch search, cached by topology (`2cb21e4d`)
+
+**The split.** `switchTopo(m, key)` lists, per (chain, cluster) pair that
+can switch, the table crossings between the chain and a chain the
+cluster spans, in table order, with which side is over. `switchLinesFrom
+(T, m)` is everything that moves with the threads: each crossing's
+current arc length (`normS`), the candidates (each window's two ends and
+the midpoints of overlapping windows), the fill-order flip test, the
+cluster at s (`clusterAt`), the point and normal there, and the reach
+test against the cluster's corners. `findSwitchLines` is the two in a
+row, so the cached and the uncached search are the same code.
+
+**The key** (`switchKey`, an Int32Array): the chain count; the crossing
+count; per table crossing its two chain indices (`idxOf`, -1 = not drawn)
+and its over side (a, b, other); the cluster count; per cluster its
+spanned-chain count and the sorted chain indices. It changes, and the
+topology is rebuilt, when a crossing appears, goes, is reordered or
+flips; when a chain comes or goes; when clusters merge, split, renumber
+or span other chains. A rebuild with the same key reruns only
+`switchLinesFrom`. `__knotLabel.stats` counts `switchHits` and
+`switchMisses`.
+
+**What it saves.** Little, as step 1 said: in Node on def the key costs
+0.03 ms, the topology 1.8, the geometry 11.6 (uncached 13.2), so the
+cache keeps 14% of the switch (`swkey12_diag.ts`). The geometry part is
+mostly the reach test's `inFill` calls (37%), so the same commit adds an
+exact prefilter: a corner whose box (its G2 polygon's box, or q +/-
+(vq + h) for the wedge form, where `inFill` returns false outside both)
+misses the bounding box of the cross-section's nine points is skipped; a
+NaN point keeps every corner. `inFill` is pure and the test is an OR, so
+skipping corners where it is false changes nothing. Geometry def 11.6 ->
+7.4 ms, muse_hash 6.5 -> 3.8, g41_user_tw64 3.1 -> 1.5 (uncached def
+13.2 -> 10.0). `clusterAt`'s closed-chain branch also drops its
+per-span `[-len, 0, len]` array (same shifts in the same order).
+
+**Same answer.** (1) `pipe12_hash.ts` on the 12 scenes: pieces, lines
+and strips equal the base, cache and prefilter both
+(`pipe12/swcache.json`, `pipe12/reach.json`). (2) A topology kept from
+one geometry applied to moved geometry with the same key
+(`swcache12_scenes.ts`: every sample and junction centre moved by a
+smooth field, every crossing's s shifted, three amplitudes): 36 runs,
+the key held in 24, 0 differences. (3) The unit test
+`test/render/label/label_switch_cache.test.ts` on the 15 synthetic
+scenes, as built and with every crossing flipped at sigma 1.2 h (flipped
+j_cross gives a line at s = 17.2; none of the synthetic scenes switches
+at the default sigma), three moves each; it also checks the key sees an
+over flip and a dropped crossing, and that `sameSwitchLines` compares
+every field to the bit. Suite at `2cb21e4d`: 2386 passed, 6 skipped.
+
+**The key churns under small moves** on the big scenes: in def,
+muse_hash, g41_def_tw64 and g41_user_tw64 a move of 0.005 h already
+changes it, because junction clustering is geometric (clusters merge,
+split and renumber; def: 63 clusters' spanned chains differ). So in the
+browser the hit rate may be low while the knot moves; the stats say.
+
+**In the browser** (`verify12_locked.ps1`, `prof12_verify/`, flag on,
+in-thread, `verifySwitch` on: every rebuild also runs the uncached search
+and compares the lines to the bit). Cumulative counts at each page's end
+(checked < rebuilds: verify is switched on a few rebuilds in):
+
+| page | rebuilds | hits | misses | checked | diffs |
+|---|---|---|---|---|---|
+| settle (30 s) | 51 | 12 | 39 | 48 | 0 |
+| drag (rest, then a drag) | 135 | 70 | 65 | 132 | 0 |
+| dragw (worker host) | 82 | 62 | 20 | 79 | 0 |
+| flow (rest, then flow) | 67 | 30 | 37 | 64 | 0 |
+
+0 differences in 323 checked rebuilds. The hit rate is 24% while the
+knot settles and 46-76% after: the key churns as the step 2 note above
+says, so the cache saves at most its 14% of a 1% part. Frame p95 with
+verify on (the search runs twice): settle 776 ms, drag 693, dragw 708,
+flow 517; the rebuild is still the FieldModel, below.
+
+### Step 3: the part walk's tests, skipped where known false
+
+`partExtents`' `hits(t)` (oracle.ts) is the OR of pure tests: per member
+of the cluster, nine `footNear` searches (the cross-section's points, u
+up to 0.999 h either side), then per corner fill nine `inFill`s. Two
+exact skips: (1) one grid query of half-side 2h around the walker's
+point a per step; a member none of whose window segments (the same clip
+as footNear's, measured to the whole segment) lies within 2h of a is
+skipped, since every point is within 0.999 h of a, so every foot is
+farther than h and `d < h` fails; (2) a fill whose box (`fillBox`, the
+same box the switch search uses, now one method on the model) misses
+the nine points' box is skipped, since inFill is false outside it. A NaN
+point skips nothing. The nine points are computed once (the same
+expressions), and the closed chain's inside test drops its
+`[-len, 0, len]` array (same shifts).
+
+Same answer: `pipe12_hash.ts all` equals the base on the 12 scenes
+(`pipe12/step3_walk.json`); suite 2387 passed, 6 skipped. Node, median
+of 5 (`prof12/step3_base.log` -> `step3_walk.log`, under the lock):
+
+| scene | model before | model after |
+|---|---|---|
+| def | 450 ms | 302 |
+| muse_hash | 1210 | 579 |
+| g41_user_tw64 | 691 | 260 |
+| fat | 148 | 141 |
+| ring | 62 | 48 |
+
+def's profile (`prof12/cpu_s3walk`): partExtents 188 -> 43 ms a build.
+What is left in def's 302: the corner solve (`solveCorner` -> `newton`
+-> `footInWindow`, 125), `passReach` (91, most of it `candidates`, 85),
+then the rest of buildSpans; buildLabelPieces 75.
