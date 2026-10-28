@@ -161,3 +161,14 @@ Next:
 3. Step 5: sheet F's artifacts (range approved), then F2.
 4. #16 on muse_hash, g41_def_tw64 and g41_ring_tw64.
 5. Sheet A's curved EDT FAIL (6.751 px): check whether it predates K900.
+6. Truth "geo" checks a junction's node overlap before the crossing
+   table (`geoHider`), and the overlap can run on into a crossing: in
+   `j_hook_cross` the END's inner side lies inside the through's tube from
+   j0 through the crossing, so geo calls the over pass's border there
+   hidden. A geometric group needs the same crossing cut as the spans; fix
+   geo before trusting its extra-ink numbers.
+7. `j_hook_cross`'s 6x render (`.claude/probes/K868/oracle/j_hook_cross/
+   crossing_6x.png`) shows a free border end: the hook's inner border
+   stops inside the through's body where the END's group (cut at s 9.30)
+   rejoins j0. The same shape is crossing 292's; it needs the look
+   decided (Levi) before a fix.
