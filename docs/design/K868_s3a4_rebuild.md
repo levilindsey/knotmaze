@@ -351,3 +351,31 @@ def's profile (`prof12/cpu_s3walk`): partExtents 188 -> 43 ms a build.
 What is left in def's 302: the corner solve (`solveCorner` -> `newton`
 -> `footInWindow`, 125), `passReach` (91, most of it `candidates`, 85),
 then the rest of buildSpans; buildLabelPieces 75.
+
+### Step 3: passReach asks the grid for one chain
+
+`passReach` (oracle.ts) walks nine points across a pass and, per point,
+lists `candidates` within h, then keeps only those on the other pass's
+chain `pb`. `candidates` (geom.ts) now takes that chain (`only`) and
+drops the other chains' segments right after the grid query, before the
+per-segment feet. Each chain's candidates come from its own segments
+alone, so chain pb's list is the same, in the same order. Same answer:
+`pipe12/step3_reach.json` equals the base on the 12 scenes; suite 2387
+passed, 6 skipped (`pipe12/suite_step3reach.log`). Node, median of 5
+(`prof12/step3_reach.log`, under the lock):
+
+| scene | model, step3_walk | model after |
+|---|---|---|
+| def | 302 ms | 259 |
+| muse_hash | 579 | 514 |
+| g41_user_tw64 | 260 | 225 |
+| fat | 141 | 134 |
+| ring | 48 | 47.5 |
+
+What is left in def's build (`prof12/cpu_s3reach`, per build): the
+corner solve ~120 ms (`newton` -> `footInWindow`), passReach ~54
+(`candidates` 45), partExtents ~43; then buildLabelPieces ~73
+(`windowOf` 28), buildBandStrips ~26, the switch search ~13. def's
+whole rebuild in Node is now about 380 ms (was about 2 s in the browser
+at step 1): far over the 1 ms goal, which a from-scratch FieldModel per
+frame cannot reach (see the ledger items).

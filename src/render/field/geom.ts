@@ -381,11 +381,18 @@ const qBuf: number[] = [];
  * Every local minimum over s of |p − c_i(s)| on every chain within R
  * (design §3.4): segment-interior feet, and vertices where the feet of
  * both neighbouring segments clamp onto the vertex (an open chain's end
- * vertex counts when its one segment clamps there).
+ * vertex counts when its one segment clamps there). With only >= 0, chain
+ * only's alone (K868 S3a4: each chain's are found from its own segments,
+ * so they are the same, in the same order).
  */
-export function candidates(grid: SegGrid, px: number, py: number, R: number, out: Cand[]): void {
+export function candidates(grid: SegGrid, px: number, py: number, R: number, out: Cand[], only = -1): void {
   out.length = 0;
   grid.query(px, py, R, qBuf);
+  if (only >= 0) {
+    let n = 0;
+    for (let j = 0; j < qBuf.length; j++) if (grid.segChain[qBuf[j]] === only) qBuf[n++] = qBuf[j];
+    qBuf.length = n;
+  }
   if (qBuf.length === 0) return;
   // Per chain: map k → (t, d2) for the queried segments within R.
   qBuf.sort((a, b) => a - b);
