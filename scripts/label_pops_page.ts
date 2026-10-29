@@ -11,15 +11,22 @@
 //
 // ?oracle=<served path of an oracle module> swaps the FieldModel, so a
 // frozen copy of an older oracle can render the "before" frames.
+//
+// ?gpu=1 (K868 S3a7) renders with the GPU pieces (the app's labelGpu): the
+// tables (label_tables.ts), buildLabelPiecesGpu and LabelPass's GPU tubes,
+// as label_app.ts does with the flag on.
 import type { FieldScene } from "../src/render/field/scene";
 import type { FieldModel, OracleParams } from "../src/render/field/oracle";
-import { buildLabelPieces, labelLimits } from "../src/render/label/label_pieces";
+import { buildLabelPieces, buildLabelPiecesGpu, labelLimits } from "../src/render/label/label_pieces";
+import { LabelTableBuilder } from "../src/render/label/label_tables";
 import { LabelPass, type LabelCamera } from "../src/render/label/label_pass";
 import { BandPass, buildBandStrips } from "../src/render/label/label_band";
 import { findSwitchLines } from "../src/render/label/label_switch";
 
 const q = new URLSearchParams(location.search);
 const oraclePath = q.get("oracle") ?? "/src/render/field/oracle.ts";
+const gpu = q.get("gpu") === "1";
+const tableBuilder = new LabelTableBuilder();
 const logEl = document.getElementById("log")!;
 const log = (s: string): void => {
   logEl.textContent += s + "\n";
@@ -54,6 +61,7 @@ async function main(): Promise<void> {
   const band = new BandPass(gl);
   G.__pops = {
     oracle: oraclePath,
+    gpu,
     /** One frame: the coverage (base64, w*h bytes, row 0 = top) and the
      * CPU build's time. The scene arrives as JSON text. */
     render(sceneJson: string, cam: LabelCamera, w: number, h: number) {
@@ -71,11 +79,13 @@ async function main(): Promise<void> {
       const m = new O.FieldModel(scene, params);
       const lim = labelLimits(m.polys.length, m.clusters.length);
       if (lim) return { error: `label limits: ${lim}` };
-      const pieces = buildLabelPieces(m);
+      const T = gpu ? tableBuilder.build(m) : null;
+      const pieces = T ? buildLabelPiecesGpu(m, T) : buildLabelPieces(m);
       const lines = findSwitchLines(m);
       const strips = buildBandStrips(m, pieces, lines);
       const t1 = performance.now();
       pass.setPieces(pieces);
+      pass.setTables(T);
       pass.render(cam, w, h, true);
       const { L, D2 } = pass.textures;
       band.setStrips(strips);
@@ -85,7 +95,7 @@ async function main(): Promise<void> {
       return { cov: b64(cov), w: band.width, h: band.height, buildMs: t1 - t0, glError: gl.getError() };
     },
   };
-  log(`label pops page ready (oracle ${oraclePath})`);
+  log(`label pops page ready (oracle ${oraclePath}, gpu ${gpu})`);
   G.__popsReady = true;
 }
 

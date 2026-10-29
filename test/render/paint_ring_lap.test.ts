@@ -348,6 +348,10 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   // result by a whole lap only where it is +-len/2 (the antipode), and
   // there |dS| is len/2 either way.
   "label/label_glsl.ts: mod(dd + 0.5 * e.w, e.w)": [1, "fillOrder's closed-chain s wrap (K868 S3a2): ambiguous only at the antipode, where |dS| is the same"],
+  // K868 S3a7: the GPU pieces' depthAt wraps s onto a closed chain's lap
+  // (refDepth's float32 wrap). A quotient one off moves u by a whole lap
+  // only at the seam (u at 0 or len), where both laps name one point.
+  "label/label_glsl.ts: floor(u / len)": [1, "the GPU pieces' closed-chain s wrap (K868 S3a7): one off only at the seam, where both laps name one point"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];

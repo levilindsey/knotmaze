@@ -1,6 +1,6 @@
 // K868 S3a7: the GPU pieces' per-frame tables (S3a5 section 4's form), and
 // the checks' float32 reference of what the GPU tube shader computes. With
-// the label's GPU pieces on (`labelGpu`, URL `lbg`), the tubes are one
+// the label's GPU pieces on (`labelGpu`, URL `lbp`), the tubes are one
 // instance per chain segment (chain row, k): the vertex shader places the
 // segment from the point table, and the fragment shader evaluates
 // s = s[k] + t·segLen[k], the cluster (the span table) and the depth (the

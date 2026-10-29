@@ -182,9 +182,140 @@ void main() {
 #endif
 }`;
 
+/** K868 S3a7, the GPU pieces (labelGpu): one tube instance per chain
+ * segment (aSeg = the chain's row, k), placed from the segment's two points
+ * in the tables (label_tables.ts), with buildLabelPieces' end kinds (the
+ * joint to the next non-degenerate segment, an open chain's caps). Per
+ * fragment: s = s[k] + t segLen[k], the cluster and rank from the span
+ * table, the exact depth (plateauDepth over the pin table), then TUBE_FS's
+ * depth formula and words. label_tables.ts refS, refCluster and refDepth
+ * are its float32 reference, line for line. Master's pieces overlap by
+ * uEps at interior piece ends; these switch cluster exactly at the span
+ * bounds. */
+export const GPU_TUBE_VS = `${HEAD}
+uniform sampler2D uTbl;
+in vec2 aSeg;
+uniform mat3 uM; uniform vec2 uSize; uniform float uH;
+out vec2 vP; flat out vec4 vAB; flat out vec4 vN; flat out ivec2 vSeg;
+vec4 tb(int i) { return texelFetch(uTbl, ivec2(i % TBL_W, i / TBL_W), 0); }
+void main() {
+  int ci = int(aSeg.x + 0.5), k = int(aSeg.y + 0.5);
+  vec4 c0 = tb(3 * ci);
+  int pt = int(c0.x + 0.5), nseg = int(c0.y + 0.5);
+  bool closed = c0.z > 0.5;
+  vec2 a = tb(pt + k).xy, b = tb(pt + k + 1).xy;
+  // buildLabelPieces' end kind: the next segment with a direction (1), or
+  // an open chain's last end (2).
+  float endKind = 1.0; vec2 nx = vec2(0.0);
+  for (int j = 1; j <= 8; j++) {
+    int kn = k + j;
+    if (kn >= nseg) {
+      if (!closed) { endKind = 2.0; break; }
+      kn -= nseg;
+      if (kn >= nseg) continue;
+    }
+    vec2 dd = tb(pt + kn + 1).xy - tb(pt + kn).xy; float l = length(dd);
+    if (l > 1e-9) { nx = dd / l; break; }
+  }
+  float startKind = !closed && k == 0 ? 2.0 : 0.0;
+  vec2 d = b - a; float L = length(d);
+  vec2 u = L > 1e-9 ? d / L : vec2(1.0, 0.0); vec2 n = vec2(-u.y, u.x);
+  float r = uH * 1.05 + 1e-3; int id = gl_VertexID;
+  vec2 p = id == 0 ? a - u * r - n * r : id == 1 ? b + u * r - n * r : id == 2 ? a - u * r + n * r : b + u * r + n * r;
+  vP = p; vAB = vec4(a, b); vN = vec4(nx, endKind, startKind); vSeg = ivec2(ci, k);
+  vec2 dev = (uM * vec3(p, 1.0)).xy;
+  gl_Position = vec4(dev / uSize * 2.0 - 1.0, 0.0, 1.0);
+}`;
+
+export const GPU_TUBE_FS = `${HEAD}
+uniform sampler2D uTbl;
+uniform float uH; uniform float uEps; uniform float uZmin; uniform float uZinv; uniform float uRinv; uniform float uSinv;
+uniform float uWin; uniform float uRho;
+in vec2 vP; flat in vec4 vAB; flat in vec4 vN; flat in ivec2 vSeg;
+#ifdef PACKED
+layout(location = 0) out uint o;
+layout(location = 1) out uint oS;
+#else
+out uvec4 o;
+#endif
+vec4 tb(int i) { return texelFetch(uTbl, ivec2(i % TBL_W, i / TBL_W), 0); }
+float hat(float z, float d, float w) {
+  if (w <= 1e-12) return d <= 0.0 ? z : 0.0;
+  return d >= w ? 0.0 : z * (1.0 - d / w);
+}
+float trap(float z, float d, float r, float w) { return d <= r ? z : hat(z, d - r, w); }
+float pairDepth(float zL, float sL, float aL, float zR, float sR, float aR, float u) {
+  float g = sR - sL; float a = aL; float b = aR;
+  if (zL == zR) { if (a + b >= g) return zL; }
+  else if (a + b > 0.0) { float k = min(1.0, max(0.0, g - uRho) / (a + b)); a *= k; b *= k; }
+  float w = min(uWin, g - a - b);
+  return trap(zL, u - sL, a, w) + trap(zR, sR - u, b, w);
+}
+// plateauDepth over the pin table (s, z, rL, rR): refDepth.
+float depthAt(vec4 c0, vec4 c1, float s0, float s) {
+  int pb = int(c1.z + 0.5), n = int(c1.w + 0.5);
+  if (n == 0) return 0.0;
+  bool closed = c0.z > 0.5; float len = c0.w;
+  float u = s;
+  if (closed) { u = u - s0; u = u - len * floor(u / len); u = u + s0; }
+  int lo = -1, hi = n;
+  while (hi - lo > 1) { int mid = (lo + hi) >> 1; if (tb(pb + mid).x <= u) lo = mid; else hi = mid; }
+  if (closed) {
+    int iL = lo < 0 ? n - 1 : lo; int iR = lo + 1 >= n ? 0 : lo + 1;
+    vec4 PL = tb(pb + iL), PR = tb(pb + iR);
+    float sL = lo < 0 ? PL.x - len : PL.x;
+    float sR = lo + 1 >= n ? PR.x + len : PR.x;
+    if (n == 1) return trap(PL.y, min(u - sL, sR - u), max(PL.z, PL.w), min(uWin, len * 0.5));
+    return pairDepth(PL.y, sL, PL.w, PR.y, sR, PR.z, u);
+  }
+  if (lo < 0) { vec4 P0 = tb(pb); return trap(P0.y, P0.x - u, P0.z, uWin); }
+  if (lo + 1 >= n) { vec4 Pn = tb(pb + n - 1); return trap(Pn.y, u - Pn.x, Pn.w, uWin); }
+  vec4 PL = tb(pb + lo), PR = tb(pb + lo + 1);
+  return pairDepth(PL.y, PL.x, PL.w, PR.y, PR.x, PR.z, u);
+}
+void main() {
+  vec2 a = vAB.xy, b = vAB.zw, d = b - a; float L2 = dot(d, d);
+  float tr = L2 > 0.0 ? dot(vP - a, d) / L2 : 0.5;
+  // TUBE_FS's ends: EPS of overlap at the start, the joint's outer side.
+  float eL = uEps / max(sqrt(L2), 1e-9);
+  if (tr > 1.0 + eL && (vN.z < 0.5 || (vN.z < 1.5 && dot(vP - b, vN.xy) >= uEps))) discard;
+  if (tr < -eL && vN.w < 1.5) discard;
+  float t = clamp(tr, 0.0, 1.0); vec2 f = a + d * t; if (length(vP - f) >= uH) discard;
+  int ci = vSeg.x;
+  vec4 c0 = tb(3 * ci), c1 = tb(3 * ci + 1), c2 = tb(3 * ci + 2);
+  vec4 A = tb(int(c0.x + 0.5) + vSeg.y);
+  // refS, refCluster (an open chain clamps s into [s0, s0 + len]).
+  float s = A.z + t * A.w;
+  bool closedB = c0.z > 0.5;
+  float u = closedB ? s : min(max(s, c2.x), c2.x + c0.w);
+  int sb = int(c1.x + 0.5), lo = 0, hi = int(c1.y + 0.5) - 1;
+  while (lo < hi) { int mid = (lo + hi + 1) >> 1; if (tb(sb + mid).x <= u) lo = mid; else hi = mid - 1; }
+  vec4 sp = tb(sb + lo);
+  float z = depthAt(c0, c1, c2.x, s);
+  gl_FragDepth = 0.5 - 0.45 * (z - uZmin) * uZinv - 2e-4 * sp.z * uRinv - 2e-6 * s * uSinv;
+  uint chain = uint(ci) + 1u;
+  uint cl = uint(sp.y + 1.5);
+  uint closed = closedB ? 1u : 0u;
+  uint cap = ((tr > 1.0 && vN.z > 1.5) || (tr < 0.0 && vN.w > 1.5)) ? 1u : 0u;
+#ifdef PACKED
+  uint s11 = uint(clamp((s - c2.x) * c2.y, 0.0, 1.0) * 2047.0 + 0.5);
+  o = chain | (s11 << 8) | (cl << 19) | (cap << 28) | (closed << 29);
+  oS = floatBitsToUint(s);
+#else
+  o = uvec4(chain | (cap << 17) | (closed << 18), floatBitsToUint(s), cl, floatBitsToUint(z));
+#endif
+}`;
+
 /** The two programs' sources for one mode. */
 export function labelSources(packed: boolean, dataW: number): { tubeVs: string; tubeFs: string; fillVs: string; fillFs: string } {
   const def = (src: string): string =>
     src.replace("precision highp usampler2D;\n", `precision highp usampler2D;\n${packed ? "#define PACKED 1\n" : ""}#define DATA_W ${dataW}\n`);
   return { tubeVs: def(TUBE_VS), tubeFs: def(TUBE_FS), fillVs: def(FILL_VS), fillFs: def(FILL_FS) };
+}
+
+/** The GPU pieces' tube program for one mode (K868 S3a7). */
+export function labelGpuSources(packed: boolean, tblW: number): { tubeVs: string; tubeFs: string } {
+  const def = (src: string): string =>
+    src.replace("precision highp usampler2D;\n", `precision highp usampler2D;\n${packed ? "#define PACKED 1\n" : ""}#define TBL_W ${tblW}\n`);
+  return { tubeVs: def(GPU_TUBE_VS), tubeFs: def(GPU_TUBE_FS) };
 }

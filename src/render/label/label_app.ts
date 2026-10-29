@@ -34,7 +34,8 @@
 import { cornerRadius, FieldModel, type OracleParams } from "../field/oracle";
 import { buildFieldScene } from "../field/scene_export";
 import { gatherSceneInput, type SceneExportCtx } from "../field/scene_export_hook";
-import { buildLabelPieces, labelLimits, type LabelPieces } from "./label_pieces";
+import { buildLabelPieces, buildLabelPiecesGpu, labelLimits, type LabelPieces } from "./label_pieces";
+import { LabelTableBuilder, type LabelTables } from "./label_tables";
 import { BandPass, buildBandStrips, type BandStrips } from "./label_band";
 import { LabelPass, type LabelCamera } from "./label_pass";
 import { findSwitchLines, sameSwitchLines, sameKey, switchKey, switchLinesFrom, switchTopo, type SwitchTopo } from "./label_switch";
@@ -56,10 +57,13 @@ const INK_AUTO: [number, number, number] = [0.12, 0.11, 0.09];
  * strips: the rebuild's steps (gatherSceneInput, buildFieldScene, the
  * FieldModel, buildLabelPieces, the switch lines, buildBandStrips); upload:
  * setPieces + setStrips; label, band: the two passes' draws (CPU side);
- * composite: after(); frame: frame() + after(); rebuilt: 1 on a rebuild. */
+ * composite: after(); frame: frame() + after(); rebuilt: 1 on a rebuild.
+ * K868 S3a7, with the GPU pieces on (labelGpu): tables, the tables' build
+ * (LabelTableBuilder.build), and pieces is then buildLabelPiecesGpu (the
+ * fills, the DATA texture, the rank keys); upload adds setTables. */
 export const LABEL_PARTS = [
   "diff", "gather", "scene", "model", "pieces", "switch", "strips", "upload",
-  "label", "band", "composite", "frame", "rebuilt",
+  "label", "band", "composite", "frame", "rebuilt", "tables",
 ] as const;
 type Part = (typeof LABEL_PARTS)[number];
 const NPART = LABEL_PARTS.length;
@@ -88,6 +92,9 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
   let pass: LabelPass | null = null;
   let packed = true;
   let pieces: LabelPieces | null = null;
+  let tables: LabelTables | null = null;
+  const tableBuilder = new LabelTableBuilder();
+  let gpuOn = false;
   let off = false;
   let lastR: unknown = null;
   let builtCount = -1;
@@ -198,7 +205,15 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     stats.clusters = m.clusters.length;
     const lim = labelLimits(m.polys.length, m.clusters.length);
     if (lim) return fallback(lim);
-    pieces = buildLabelPieces(m);
+    gpuOn = ctx.params.labelGpu === true;
+    if (gpuOn) {
+      tables = tableBuilder.build(m);
+      lap(P.tables);
+      pieces = buildLabelPiecesGpu(m, tables);
+    } else {
+      tables = null;
+      pieces = buildLabelPieces(m);
+    }
     lap(P.pieces);
     // S3a4: the switch search's topology part is kept while its key holds;
     // the geometry part runs every rebuild (label_switch.ts).
@@ -218,7 +233,10 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     strips = buildBandStrips(m, pieces, lines);
     lap(P.strips);
     stats.rebuilds++;
-    if (pass) pass.setPieces(pieces);
+    if (pass) {
+      pass.setPieces(pieces);
+      pass.setTables(tables);
+    }
     if (band) band.setStrips(strips);
     lap(P.upload);
   };
@@ -229,6 +247,7 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     if (!pass) {
       pass = new LabelPass(g, packed);
       if (pieces) pass.setPieces(pieces);
+      pass.setTables(tables);
     }
     // World to device pixels: the root's transform (as the scene export's
     // camera), scaled from the screen's CSS pixels to the canvas's.
@@ -273,6 +292,11 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     row.fill(0);
     tPrev = t0;
     rowOpen = false;
+    // K868 S3a7: a labelGpu toggle rebuilds (the pieces' kind changes).
+    if (pieces && (ctx.params.labelGpu === true) !== gpuOn) {
+      pieces = null;
+      builtCount = -1;
+    }
     try {
       if (count !== builtCount) {
         builtCount = count;
