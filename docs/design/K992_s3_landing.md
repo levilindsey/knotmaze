@@ -197,3 +197,135 @@ K1000's `## Rules` hold, with these changes:
   0.01h step, between the far part (sTB 5.02h, past leg 1's 2H) and the
   rising part (4.67h). That sweep is test (C), red on c17f
   (`graze21.ts --rise 10` prints it).
+- **F4 · The tracked foot (c21: `mk_c17.mjs --refine 10 --foot track`).**
+  - A tangent foot is tracked, not chosen. It is the nearest point of its
+    arm within h/32 of the last foot, and the window re-centres while the
+    foot sits on its edge. So it follows one local minimum of |q − arm|
+    from V's own foot, and never jumps to another part of the arm that
+    comes as near.
+  - The branch's Newton carries each foot from iterate to iterate. The
+    final feet are tracked from q's, not a fresh nearest point (F1).
+  - den, the steep gate's measure, is taken from the tracked feet.
+  - An overlap gate joins the steep gate: ss(1 − ov/0.05h), where ov is
+    how much nearer the arm's nearest point is than the tracked contact.
+    Where another part of an arm comes as near, the ball stops over 0.05h
+    of ov instead of the foot jumping (call 2's measure).
+  - A closed chain's arc lengths unwrap into the window's domain, so the
+    seam does not move a foot.
+  - Result: j112/1 (muse_drag t2-t7) and j42/0 (muse_flow f0-f40) no
+    longer toggle, and corner_continuity (A), (B) and (C) pass.
+  - Residual: at a concave polyline vertex the feet of the two adjacent
+    segments tie, so the foot hops by about d·α (0.05-0.06h) while r and q
+    stay continuous. Seen at j42/0 muse_flow f19→f20 (1.391h→1.328h) and
+    f37→f38 (1.395h→1.458h), and at j112/1 muse_drag f5→f6
+    (1.002h→1.057h). fmax hops with it. A window of h/64 hops the same,
+    so it is the polyline, not the track. An interpolated-normal
+    projection would remove it.
+  - Look change: j42/0's arm A is nearly concentric with q, with minima
+    at 2.08h-2.11h. The nearest point is 0.025h nearer than the tracked
+    foot, so the overlap gate sits near 0.5 and the ball stops earlier:
+    r 1.33h on muse_drag (c17f 1.76h), 1.11h-1.30h on muse_flow.
+- **F5 · The part walk solved (`mk_walk21.mjs`, c21w = c21 on K1000's
+  continuous caps).** The walk's h/8 steps only find the last overlapping
+  step. The parting is then bisected between it and the next step to
+  1e-6h; where the next step lies past the walk's limit, the limit stands
+  in. The cap test passes all four sweeps, and corner_continuity passes
+  all three.
+  - Left alone: passReach (the depth pins' walk) still steps by h/8.
+    Its rL/rR do not reach the corners or caps, but the label's depth
+    reads them (`depth.ts`'s plateaus, the pin table in
+    `label_tables.ts`), and the census books their steps as "reach".
+    Master steps the same. Call 3's reach R is partExtents', so it stays
+    out of this stage. The σ march already bisects.
+- **F6 · The census of c21w (`census21.ps1`, `pops21/`, tags c21w and
+  c21wz) fails the gate in two windows.** Master is pops16's before16
+  and before16z; master's oracle on this tree (m21) reproduces before16
+  exactly. Pops (per transition) and area in px:
+
+  | zoom 1 | master | c21w |
+  |---|---|---|
+  | def_drag | 6 (0.15) 359 | 3 (0.07) 39 |
+  | def_flow | 27 (0.68) 1078 | 21 (0.53) 158 |
+  | muse_drag | 77 (1.93) 1273 | 51 (1.27) 1261 |
+  | muse_flow | 266 (6.65) 7368 | 97 (2.42) 1347 |
+  | all | 376 / 10078 | 172 / 2805 |
+
+  | window | master | c21w |
+  |---|---|---|
+  | def_drag@w0 | 249 / 77105 | 243 / 16704 |
+  | def_flow@w0 | 184 / 89876 | 153 / 1631 |
+  | def_flow@w1 | 229 / 62961 | 171 / 16388 |
+  | def_flow@w2 | 254 / 45930 | 253 / 4459 |
+  | muse_drag@w0 | 314 / 155916 | 107 / 13188 |
+  | muse_drag@w1 | 286 / 32786 | 279 / 3089 |
+  | muse_drag@w2 | 879 / 74530 | **889** / 60751 |
+  | muse_flow@w0 | 659 / 162138 | **685** / 11809 |
+  | muse_flow@w1 | 393 / 150117 | 205 / 39200 |
+  | muse_flow@w2 | 878 / 213948 | 418 / 23040 |
+  | all | 4325 / 1065307 | 3403 / 190259 |
+
+  - Zoom 1 passes on every run. In the windows the area falls on every
+    window (82% in all), but muse_flow@w0 has 26 more pops than master
+    and muse_drag@w2 10 more, so the gate fails.
+  - By class (class17, pops/px). Zoom 1, master: cap 135/5436,
+    rule:fold 30/1519, spans 42/791, rule 30/695, reach 81/651, refit
+    16/442, none 26/249, rule:switch 6/135, cluster 4/104, V:status
+    5/31, V:dV 1/25. Zoom 1, c21w: rule 67/1606, rule:switch 29/444,
+    reach 35/262, cap 12/253, none 21/153, spans 4/41, count 1/26, V:dV
+    2/12, refit 1/8.
+  - Windows, master: cap 264/576213, reach 1884/155401, rule:fold
+    25/110343, none 1395/97214, spans 673/73282, refit 35/36946,
+    rule:switch 6/7295, V:dV 20/6069, cluster 11/1974, rule 7/433, count
+    5/137. Windows, c21w: reach 1554/84367, none 1392/67723, cap
+    78/18645, spans 273/12996, V:dV 18/3461, refit 42/1674, rule 22/658,
+    cluster 10/463, count 12/258, rule:switch 2/14.
+  - So the caps, folds, refits and spans mostly go. What stays is reach
+    and none (master's own size), and at zoom 1 the rule's own class
+    grows (rule 30 to 67 pops, rule:switch 6 to 29).
+- **F7 · The attribution of muse_flow@w0's excess (step 6).** By cause,
+  c21w against master there: none 243/4147 against 140/1989, reach
+  357/6365 against 249/4588, count 11/190 against 4/69, spans 49/850
+  against 200/3547, refit 25/257 against 33/133829, jump:fold 0 against
+  33/18116. Sites, with `pops_near21.cjs` (the pops near a pixel per
+  tag) and `near21.ts` (the corners near it, frame by frame):
+  - (a) j12/0, 2h from (504, 445). c17f's foot A toggles here too (1.009h,
+    then 3.856h at f28, 1.025h, 3.868h at f32): F1's choice at a third
+    site. Under c17f and c19fb that made pops of −2231, +511, −420 and
+    +514 px (t27, t28, t31, t32). c21w's foot moves 1.008h to 1.047h and
+    its r 0.818h to 0.850h, smoothly, and those pops are gone. Seven
+    small ones stay at the same areas under c17f, c19fb and c21w (t24
+    +41/−4, t25 +9, t29 +24/−21/−6, t30 −17; master has only t34 +4):
+    they belong to c17's steep stop there (r 0.82h against master's
+    1.62h), not to the foot, the caps or the walk. c21w adds two (t27
+    −7, t28 −18).
+  - (b) j115/2 at (75, 745), θ 58°: 19 pops only c21w has (t30-t34, 4 to
+    208 px). The march's r jumps over f28-f33 (0.224, 0.180, 0.229,
+    0.138, 0.146, 0.160h), the fit's r with it (0.025, 0.027, 0.029,
+    0.010, 0.038, 0.020h; "crossing 110's pass 3.4h out"), and foot A
+    (0.749, 0.744, 0.739, 0.694, 0.733, 0.628h). It is not the overlap
+    gate: ove 0.25 and 1e6 give the same numbers. Nor the node count:
+    with 128 nodes the fit and the feet are smooth but the march still
+    jumps. It is the march's refinement choice. An interval is halved
+    only where S drops more than DROP (0.125) across it, so whether a
+    dip gets resolved flips from frame to frame. That is a choice of
+    call 2's kind, so it is in scope. With DROP 0.01 (`mk_c17.mjs
+    --drop 0.01`, c21d) the march's r is 0.131-0.154h, the fit's 0.025h
+    to 0.044h and foot A 0.749h to 0.730h, all smooth. c19fb's march is
+    smooth here (0.224, 0.226, 0.200, 0.194h), because the tracked foot
+    changes the integrand (denT).
+  - (c) A refit gate at j51/1 (t25): r 2.0h to 1.99977h under c21w,
+    where c19fb keeps 2.0h. 5 small pops, 34 px. Call 6 puts it in
+    scope, but it is not fixed here.
+  - (d) The "reach" pops are passReach's h/8 steps (F5), which master
+    has too. Out of scope.
+  - muse_drag@w2's 10 extra pops are not attributed (none 355 against
+    344, reach 343 against 426, spans 131 against 63, jump:amp 44
+    against 31, cluster 7 against 0).
+  - The fix for the single re-run is (b): c21w2 = c21w with DROP 0.01
+    (`mk_c17.mjs --refine 10 --foot track --drop 0.01`, then
+    `mk_cap19.mjs --mode cont` and `mk_walk21.mjs`). It passes
+    corner_continuity 3/3 and the cap test 4/4. At j115/2 its final r
+    is 0.021, 0.023, 0.026, 0.029, 0.033, 0.038, 0.043, 0.048h over
+    f27-f34 and foot A 0.750h to 0.725h. The march's r still steps
+    0.119h to 0.131h at f27 to f28. DROP 0.01 makes the choice's jump
+    smaller; it does not make it a measure. j12/0 is unchanged.
