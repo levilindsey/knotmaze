@@ -2,7 +2,8 @@
 # certified running minimum (--smin cert), K1000's continuous caps, the solved part walk) into
 # src/render/field/oracle.ts through the --src chain, then check that the
 # landed code lines equal the census's probe oracle. Run it on master's
-# oracle.ts (git checkout src/render/field/oracle.ts first to run it again).
+# oracle.ts: since the landing (78e9a7dd), restore it first with
+# git checkout 90d4290c -- src/render/field/oracle.ts.
 #   pwsh .claude/probes/S3a/land23.ps1 [-Tau 1e-4] [-Ref oracle_c23w.ts]
 param([string]$Tau = "1e-4", [string]$Ref = "oracle_c23w.ts")
 $ErrorActionPreference = "Stop"
