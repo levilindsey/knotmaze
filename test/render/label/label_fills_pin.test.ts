@@ -5,14 +5,17 @@
 // table, window records, crossing rows), fill instances, rank keys and
 // stats, in the same order, bit for bit (label_fills_pin_check.ts). On the
 // tracked field scenes; the stage's probe fills_pin18 runs the same check
-// on the 12 census scenes and every frame of the four sequences.
+// on the 12 census scenes and every frame of the four sequences. The pin
+// holds the z-split path (gpuFills false); the GPU fills (LABEL_GPU_FILLS,
+// the lbp default) are held to the same windows by checkGpuFillsWindows:
+// the same pieces, fills and crossing rows, ends within 1e-4.
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { FieldModel, type OracleParams, cornerRadius } from "../../../src/render/field/oracle";
 import type { FieldScene } from "../../../src/render/field/scene";
 import { LabelTableBuilder } from "../../../src/render/label/label_tables";
-import { checkFillsPin } from "./label_fills_pin_check";
+import { checkFillsPin, checkGpuFillsWindows } from "./label_fills_pin_check";
 
 const dir = join(__dirname, "..", "field", "scenes");
 const names = readdirSync(dir).filter((n) => n.endsWith(".json"));
@@ -52,5 +55,23 @@ describe("label fills: the records S3a7 wrote, bit for bit", () => {
     expect(seen.fills).toBeGreaterThan(0);
     expect(seen.windowRecords).toBeGreaterThan(0);
     expect(seen.crossingRows).toBeGreaterThan(0);
+  });
+});
+
+describe("label fills: the GPU fills' windows are the z-split windows' pieces", () => {
+  const builder = new LabelTableBuilder();
+  let records = 0;
+  for (const n of names) {
+    it(n, () => {
+      const s = load(n);
+      const m = new FieldModel(s, params(s));
+      const r = checkGpuFillsWindows(m, builder.build(m));
+      expect(r.diffs).toEqual([]);
+      expect(r.maxPos).toBeLessThanOrEqual(1e-4);
+      records += r.records;
+    });
+  }
+  it("the scenes write window records", () => {
+    expect(records).toBeGreaterThan(0);
   });
 });
