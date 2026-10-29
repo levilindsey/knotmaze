@@ -338,7 +338,7 @@ starts at θ ≈ 152°. A first trial faded all four margins (L − dV
 too): `omega_rate.ts` counted 177 rule breaches in 8361 corner-frame
 pairs, 68+ at the far end, where L jumps with Lcut's gate and the fade
 jumps with it, and no recorded corner left by the far end. F4j keeps
-the junction end only. It is commit c38d2319, kept as the probe
+the junction end only. It is commit 735bbe71, kept as the probe
 `form_b_f4j.ts`.
 - **Pops** (pops.ts, WINDOWS 0, WLEN 41), F2 → F4j: def_drag 21 / 771
   → 8 / 405, def_flow 69 / 1615 → 27 / 915, muse_drag 28 / 310 → 26 /
@@ -393,11 +393,11 @@ the junction end only. It is commit c38d2319, kept as the probe
   fill's size, which is continuous in θ. Listed for the next stage.
 
 **F5 · The gate on F2, the kept definition, against S1b's F13 (step 5,
-03:26-03:35).** src is F2 (608327af; `git diff 608327af HEAD -- src
+03:26-03:35).** src is F2 (db82744a; `git diff db82744a HEAD -- src
 test` is empty), so F2's pops run (F3: 209 pops / 3875 px over the four
 recordings; S1b 225 / 4051) is the gate's pops run. scenes.ts ran on
-608327af (`logs/scenes_f2.txt`); the pins, `npm test`, q5holes and q4
-ran on 11c3ecfb (`logs/*_f2k.txt`; `q5_f2k/`, `q4_f2k_1/`,
+db82744a (`logs/scenes_f2.txt`); the pins, `npm test`, q5holes and q4
+ran on 4e76036c (`logs/*_f2k.txt`; `q5_f2k/`, `q4_f2k_1/`,
 `q4_f2k_2/`). Paths are under `.claude/probes/K1040/s1/out/s1c/`.
 
 - **Pins** 22/22 (`logs/pins_f2k.txt`). **`npm test`** passes: 188
@@ -449,12 +449,12 @@ ran on 11c3ecfb (`logs/*_f2k.txt`; `q5_f2k/`, `q4_f2k_1/`,
 
 Stopped at 03:35, about 30 min before the cap, as the coordinator asked
 (the pins, then the Handoff). Steps 1-5 of the Order are done; step 6
-(R2, R3) was not started. src's form B is F2 (608327af) and has not
+(R2, R3) was not started. src's form B is F2 (db82744a) and has not
 changed since; nothing in the app imports it.
 
 **Done.**
 - F1: the pops accounting. f1's relabel was most of S1b's rise in pops.
-- F2 (608327af): the cap mix as a weighted sum of complete composites,
+- F2 (db82744a): the cap mix as a weighted sum of complete composites,
   one per gap between the units' sorted ramps, each unit a full member
   of its group or OWN in each (the header's Q2). It fixes S1b's F14
   and R1: the cap rate pin passes (1.62 per px), #1 2832 → 861 px.
@@ -465,7 +465,7 @@ changed since; nothing in the app imports it.
   kept: pops 209 → 121, but at rest it fades fills the oracle keeps
   (new #1 px on five scenes; four lose a wrong band), and the rate
   rule breaks at every fade width tried (0.25h, 0.5h, 1h). Its code:
-  `.claude/probes/K1040/s1/form_b_f4j.ts` (c38d2319).
+  `.claude/probes/K1040/s1/form_b_f4j.ts` (735bbe71).
 - F5: the gate on F2 against F13. #1, q4 and the pops improve, the
   shared checks and q5holes hold, and free ends fall below the oracle's
   count (not attributed). The probe gaps it found are listed below.

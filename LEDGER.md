@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1047.
+Next free ID: K1049.
 
 ## Waiting on Levi
 
@@ -804,9 +804,15 @@ Every other item below waits on the trigger it names.
 
 ## Residuals (known, not fixed)
 
-- **K1046** · Form B after S1b (`docs/design/K1040_s1b_holes_fades.md` ### Residuals): R2 a tie jump inside
+- **K1048** · K1040's probe gaps (`docs/design/K1040_s1c_handoff_pops.md` F5): q5holes skips a hole whose rim
+  is partly OWN; free ends fell below the oracle's count on 7 of 10 scenes (OWN read as a join? S1d step 2
+  tests it); q4's g41 crop holds no ink on g41_ring_tw42 and g41_ring_tw64.
+- **K1047** · Scene changes in K1040's recordings: a chain resampled (48 pops / 728 px) or a junction's arms
+  changed (5 / 54) between frames, and form B can't be continuous across them
+  (`docs/design/K1040_s1c_handoff_pops.md` F3). In the app, does a resample visibly move the outline? (K992)
+- **K1046** · Form B's residuals (`docs/design/K1040_s1b_holes_fades.md` ### Residuals): R2 a tie jump inside
   one top, R3 sliver fills' bound and evalPoint's rV, R4 the ω fade's width in motion (0.05h approved; S4b),
-  R5 #1's rise on four scenes, R6 q4's outer/none px on def. R1 goes to S1c.
+  R5 #1's unattributed px (861 in all, S1 2187; S1c F5), R6 q4's outer/none px on def. R1 fixed (S1c F2).
 - **K1000** · K868 label: V's folds and live/unsolved flips (class 1) still pop. K1040 carries it (F3's fades) and it
   closes at K1040 S4b. Stage 1's continuous caps landed with K992 in 9b549d30 (`K1000_continuous_caps.md` ## Handoff).
 - **K1002** · K868's corner balls are never checked against other threads (master, b16 and c17 alike): a large r can
