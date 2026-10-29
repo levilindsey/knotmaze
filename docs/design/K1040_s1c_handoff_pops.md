@@ -325,3 +325,69 @@ seen by the decision that changed, from the pass before the corner diff).
   half-width, so the circle cannot reach the far wall) or a blend over
   the candidates. room-L is Lcut's gate. Scene changes are the
   recorder's input (the physics resampled a chain), not form B's.
+
+**F4 · ω's V margin (F4j): fewer pops, wrong at rest, not kept (step
+4, 03:00-03:30).** F3's largest mechanism, a corner that appears or
+goes (74 pops / 1589 px; corner_why: V off arm 72 / 1543), is the
+solve's gate `dVa > tol && dVa < A.L - tol && ...`: as a pair opens,
+V's feet slide to an arm's end and the gate drops the corner and its
+whole fill in one frame. F4j faded ω over the margin instead:
+ω = ss(0, 1, 1 − ov/ovw) · ss(tol, vw, min(dVa, dVb)), vw = 0.25h (a
+new FormBParams `vw`). For straight arms dV = h·cot(θ/2), so the fade
+starts at θ ≈ 152°. A first trial faded all four margins (L − dV
+too): `omega_rate.ts` counted 177 rule breaches in 8361 corner-frame
+pairs, 68+ at the far end, where L jumps with Lcut's gate and the fade
+jumps with it, and no recorded corner left by the far end. F4j keeps
+the junction end only. It is commit c38d2319, kept as the probe
+`form_b_f4j.ts`.
+- **Pops** (pops.ts, WINDOWS 0, WLEN 41), F2 → F4j: def_drag 21 / 771
+  → 8 / 405, def_flow 69 / 1615 → 27 / 915, muse_drag 28 / 310 → 26 /
+  227, muse_flow 91 / 1179 → 60 / 459; all 209 / 3875 → 121 / 2006. By
+  mechanism (`out/s1c/pops_f4j/mech/mech.txt`): appear/go 74 / 1589 →
+  2 / 46 (one arm reaching L 0, muse_flow 5>6 and 18>19 at (26.8,
+  23.3)); chain resampled 48 / 728 → 35 / 438 and junction arms 5 / 54
+  → 2 / 18 (corner switches a scene change set off, now faded); root
+  21 / 674, radius 38 / 484, tangent foot 8 / 269, motion 10 / 42, ω
+  2 / 23, tie 2 / 8 and gate 1 / 4 unchanged. Changed px inside
+  F_OMEGA alone: 54 → 99, 1288 → 1664, 27 → 80, 104 → 1036. Pins 22 /
+  22, npm test passed (2532 tests).
+- **Rate** (`omega_rate.ts`: every corner in two consecutive frames
+  whose margin factor is below 1 on a side; |Δω| per px of label_pops'
+  local motion at V, t_a and t_b; rate2 floors the motion with the
+  junction centre's own):
+
+  | vw | pairs | median | p99 | max | > 3 | rate2 > 3 |
+  |---|---|---|---|---|---|---|
+  | 0.25h | 4626 | 0.153 | 3.83 | 76.6 | 84 | 65 |
+  | 0.5h | 7815 | 0.055 | 1.97 | 24.7 | 35 | 19 |
+  | 1h | 30528 | 0.027 | 1.51 | 100.8 | 146 | 64 |
+
+  Widening does not clear it. The worst pairs are θ turning fast on
+  short arms (L 0.3-0.5h) while the chain samples near the corner
+  barely move: dV = h·cot(θ/2) is ill-conditioned as θ → π
+  (d(dV)/dθ = −h / (2 sin²(θ/2))), and a fade keyed on dV inherits it.
+  0.5h would start the fade at θ ≈ 127° and 1h at 90°, fading fills
+  that show at rest.
+- **At rest the fade is wrong where the fill is big.** scenes.ts #1
+  (form B ink deeper than W + 1 px inside one oracle label), F2 → F4j:
+  muse_hash 173 → 131, muse_default_tw 171 → 173, def 36 → 41, ring
+  40 → 48, user_tw42.lightpaper 32 → 0, g41_def_tw42 0 → 27,
+  g41_ring_tw64 0 → 44, g41_user_tw42 31 → 0, g41_user_tw64 289 →
+  274, the rest 0 → 0 or 89 → 89; all 861 → 827. Every new px is
+  `foot+f8`. At g41_def_tw42 (592, 159), dpr 1, S1b and F2 fill the
+  mouth (top 1, ink 0); F4j shows arm 1's edge band through the faded
+  fill (ink 0.915; `hole_check.ts g41_def_tw42 1 592 159 1`). The px it
+  removed were a fill's own band where the oracle has none
+  (user_tw42.lightpaper, chain 29's corner, tB and arc, F 4-5 px). So
+  V at an arm's junction end does not mean the fill is small: the
+  oracle keeps some of these fills and not others, and the fade is a
+  rate fix laid over a definition that is wrong both ways. The shared
+  checks, free ends (169 → 164) and q5holes (43 counted, F5) move
+  nowhere else.
+- **Not kept.** F4j is clearly better on the pops, not on the gate:
+  two clean scenes gain a band across a filled mouth. src keeps F2, by
+  the coordinator's rule. The fix belongs in the definition: decide
+  the corner by its fill, not by dV. Check what the oracle's corner
+  does when V passes the junction end and continue form B's the same
+  way (V's foot along the arm's tangent past its end), or fade on the
+  fill's size, which is continuous in θ. Listed for the next stage.

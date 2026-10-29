@@ -15,7 +15,8 @@ import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
 import { segB, type Poly } from "../../../../src/render/field/geom";
 import type { FieldScene } from "../../../../src/render/field/scene";
-import { FormB } from "../../../../src/render/field/form_b";
+// F4j's form B (the V margin fade): F4 did not keep it in src (F2 has no vw).
+import { FormB } from "./form_b_f4j";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const seqDir = "C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/k868-s3a/.claude/probes/S3a/seq13";

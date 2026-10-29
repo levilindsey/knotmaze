@@ -1,4 +1,4 @@
-// K1040 S1c, F5: one hole's pixels under S1b's, F2's and the current form B.
+// K1040 S1c, F5: one hole's pixels under S1b's, F2's, F4j's and the current form B.
 // Prints top (−1 = paper), ink, the winning term and the fade bits in a window
 // of pixels around (i, j) at the given dpr, as q5holes.ts maps them.
 // Run: npx vite-node .claude/probes/K1040/s1/hole_check.ts <scene> <dpr> <i> <j> [radius=2]
@@ -8,6 +8,7 @@ import type { FieldScene } from "../../../../src/render/field/scene";
 import { FormB } from "../../../../src/render/field/form_b";
 import { FormB as FormBS1b } from "./form_b_s1b";
 import { FormB as FormBF2 } from "./form_b_f2";
+import { FormB as FormBF4j } from "./form_b_f4j";
 
 const sceneDir = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes";
 const [name = "muse_hash", ds = "2", is = "0", js = "0", rs = "2"] = process.argv.slice(2);
@@ -29,6 +30,7 @@ const world = (x: number, y: number): [number, number] => {
 const forms: [string, any][] = [
   ["S1b", new FormBS1b(s, { dpr })],
   ["F2", new FormBF2(s, { dpr })],
+  ["F4j", new FormBF4j(s, { dpr })],
   ["now", new FormB(s, { dpr })],
 ];
 for (const [tag, fb] of forms) {
