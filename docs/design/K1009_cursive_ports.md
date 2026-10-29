@@ -297,3 +297,45 @@ the removal of the join sets. Capitals are K931.
   - a `Ledger items` list: follow-ups and residuals. A question for Levi
     only about what shows on screen, in plain words;
   - K863's current handle fields.
+
+## Handoff
+
+J3a stopped at 14:01 (start 12:19:11), at Order step 7: the sheets are
+built and guarded. Nothing committed; the work is in the untracked
+`.claude/probes/K863/trace/` (record: `NOTES.md` `## K1009`, N1-N10).
+
+- **Built.** `work21/ports_k1009.json` (all 26 entries, the exits of
+  o, a, d, e, h, i and n, variants A, B, C), `tools/gen_k1009.py` (ports
+  reader, the solve, the assemble with presets untouched for the rest),
+  `tools/sheet_k1009.py`. The solve: uL, uR, a0, a1 (0.12-3.0), b0, b1
+  (+-15); objective J (dk/ds windowed over 20 u, clipped at 0.5/u^2,
+  3 u cusp guard) x (L/100 u)^3; penalties for radius < 2 u, speed ratio
+  < 0.3, crossings, cusp side, floor, r's band; start at the stretch
+  middles, a 1, b 0; bounded adaptive Nelder-Mead, maxfev 3000.
+- **o (N5).** B and C cut A's 4 u retrace and 12 u tail, add an exact
+  piece of o's top, then a cusp and a 4 u (B) or 10 u (C) reverse run.
+  No node of A moves.
+- **Sheets.** `out21/o_exits_v61.svg`, `out21/ot_v61.svg`,
+  `out21/low_v61.svg`, `out21/cursive_v61<a|b|c>_words.svg` (each with
+  a `.txt` report and a sidecar JSON). PNGs in `work21/sheets/png/`.
+  Guard: 0 matches on all six.
+- **Checks (N8-N10).** Presets path PASS (out20 MD5). Determinism PASS.
+  Locality PASS (untouched pieces move 0 u). Every port seam G2. Cusp
+  entries: tangent at the attach point, but six land at 0 u on the
+  letter's own cusp (hi x2, er, es, ow x2 in A and C): undesigned seams.
+  Side -0.01 to 0.21 u (et -0.01 u). Hooks 10 / 9 / 9 / 9 (v6.0 / A /
+  B / C, all on preset pieces); combs 15 / 13 / 12 / 12; rough FAIL
+  40 / 42 / 32 / 32. Solved pieces worse than v6.0: A only (seven o
+  pairs rough FAIL on o's tail turn, op +2 spikes); B and C none.
+  Continuity: on jumps 6.43 u and en 5.25 u (two minima each).
+- **Missing.** words/template writers (no template SVG), sensitivity
+  for ports, the 0 u cusp entries, the two-minima solves, 12 maxfev
+  solves, after-high entries of b, f, h, k, l and e pinned at their
+  bounds, U-sags after B and C's o, oe crossing e's lower curve in B
+  and C (pen 1), ea and et about 2 u below the baseline, ne and he at
+  the 30 u bound.
+- **Next.** Levi picks o (A, B or C) and ot's height; then J3b (the
+  other exits) starting with the 0 u cusp guard and the two-minima
+  solves.
+- **Rerun.** `& work21\dbg\checks2_batch_k1009.ps1` from the trace dir
+  (22 min), then the B and C census compares (NOTES N10).
