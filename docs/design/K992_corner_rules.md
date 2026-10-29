@@ -418,3 +418,145 @@ In the windows (`pops16/a16z/`):
   a16 rounds it at the fold (r 1.18h at j172/1). R2's straight-arm
   closed form misses that the curved arms carry the tangent points past
   the cap.
+
+**F8. b16 (`oracle_b16.ts`) passes zoom 1 and nine of the ten windows,
+but fails muse_drag@w2 on pops. Not landed.** b16 is a16 with two stops
+in place of the fold stop and R2 (`mk_b16.mjs`, κ 0.5):
+
+- **Rule 1, the steep stop.** The grown ball stops where its branch
+  turns steep, where den = 1 + nA·nB falls to half its value at V, so q's
+  speed per unit of δ at a stop is at most √2 times its speed at V.
+- **Rule 2, the cap stop.** A corner whose tangent feet pass cap − W is
+  grown again with each foot held to cap − W, so r stops where a foot
+  first reaches cap − W, measured along its arm from the root.
+- Both stops are found by the march's step halving, to 1e-5 h. over() > 0
+  now only decides whether the cap stop runs; nothing iterates on it.
+- **For the coordinator (call 2's letter).** The cap stop finds over = 0
+  along R1's branch, so it is arguably a solve on over(r). It has no
+  iteration count and is monotone in the caps. But it is a first
+  crossing, and classes 2 and 3 below come from that.
+
+Sweeps (`sweeps16.ps1`, output `pops16/sweeps_b16.txt`; K 16, 12 for the
+first). Each cell is the largest step in q, then that step over the arms'
+step; the last column is r/h at the sweep's two ends:
+
+| site | arms' step | m14 | a16 | b16 | r/h m14 / b16 |
+|---|---|---|---|---|---|
+| def_drag t0 j175/1 | 1.78e-2 | 1.536 (86x) | 0.027 (1.5x) | 0.004 (0.2x) | 1.14..1.12 / 0.75..0.72 |
+| def_flow t0 j43/1 | 1.60e-3 | 0.491 (307x) | 0.0006 (0.4x) | 0.0006 (0.4x) | 1.88..1.89 / 1.88..1.88 |
+| def_flow t8 j43/1 | 1.77e-3 | 0.517 (292x) | 0.0004 (0.3x) | 0.0004 (0.3x) | 1.92..1.92 / 1.91..1.92 |
+| muse_flow t0 j116/2 | 1.29e-3 | 2.362 (1825x) | 0.557 (431x) | 0.0007 (0.5x) | 0.79..0 / 0.30..0.30 |
+| muse_flow t34 j12/0 | 1.40e-3 | 1.363 (975x) | 0.0004 (0.3x) | 0.0002 (0.2x) | 1.62..0.27 / 0.84..0.84 |
+| muse_flow t11 j112/1 | 5.19e-4 | 1.345 (2589x) | 0.0089 (17x) | 0.0003 (0.5x) | 0.67..0.58 / 0.48..0.48 |
+| muse_drag t30 j105/0 | 6.74e-2 | 1.163 (17x) | 0.0185 (0.3x) | 0.100 (1.5x) | 0..0.87 / 0.52..0.51 |
+| def_flow t26 j172/1 | 1.28e-3 | 0.830 (646x) | 0.0082 (6.4x) | 0.0004 (0.3x) | 0..1.18 / 0.74..0.73 |
+| def_drag t12 j172/1 | 8.53e-4 | <1e-4 (0.1x) | 1.221 (1432x) | <1e-4 (0.1x) | 0..0 / 0.77..0.77 |
+| def_drag t13 j172/1 | 8.30e-4 | <1e-4 (0.0x) | 1.537 (1853x) | <1e-4 (0.0x) | 0..0 / 0.77..0.77 |
+| def_drag t22 j172/1 | 8.24e-4 | <1e-4 (0.0x) | 0.326 (396x) | <1e-4 (0.1x) | 0..0 / 0.77..0.77 |
+| def_drag t23 j172/1 | 7.97e-4 | <1e-4 (0.1x) | 0.327 (410x) | 0.0001 (0.1x) | 0..0 / 0.77..0.77 |
+| def_drag t31 j38/0 | 2.05e-3 | 0.0002 (0.1x) | 0.841 (409x) | 0.0002 (0.1x) | 0..0 / 0.63..0.63 |
+| def_drag t15 j49/2 | 3.67e-4 | <1e-4 (0.0x) | 0.583 (1590x) | 0.0001 (0.2x) | 0..0 / 0.47..0.47 |
+| def_drag t2 j45/1 | 7.75e-4 | <1e-4 (0.0x) | 1.039 (1341x) | 0.0003 (0.3x) | 0..0 / 0.61..0.60 |
+| muse_drag t21 j139/2 | 7.43e-3 | 0.078 (10x) | 0.437 (59x) | 0.453 (61x) | 0.34..0.39 / 0.59..1.67 |
+| muse_drag t0 j139/2 | 2.63e-2 | 0.093 (3.5x) | 0.120 (4.6x) | 0.093 (3.6x) | 1.19..0.18 / 1.24..0.39 |
+| muse_drag t13 j139/2 | 1.46e-2 | 0.017 (1.2x) | 0.029 (2.0x) | 0.019 (1.3x) | 0.04..0.23 / 0.19..0.45 |
+| muse_drag t25 j105/1 | 2.89e-3 | 0.175 (61x) | 0.175 (61x) | 0.287 (99x) | 0.24..0.80 / 0.27..1.16 |
+| def_flow t21 j56/1 | 1.74e-3 | 0.0007 (0.4x) | 0.0007 (0.4x) | 0.573 (329x) | 1.79..1.79 / 1.79..0.39 |
+
+- b16 stays live at every step of every sweep.
+- At every F6 and F7 site b16 moves q at most 1.5x the arms' step,
+  including all of a16's fold-stop jumps (j172/1, j38/0, j49/2, j45/1).
+- The last five rows are the sites of b16's new jumps in muse_drag@w2 and
+  def_flow@w2 (below).
+
+Unit sweeps (`unit16.ts --oracles m14,b16 --n 100`; the largest step
+over the sweep's step):
+- (A) t90's END cut through the cap: b16 1.41; r goes from 1.5h to 0.
+- (B) acute30's graze: b16 1.93, master 905. Round throughout (r 0.150h
+  to 0.402h).
+- (A') a curved END through the cap: b16 4.50 (12.35 at N 400). r jumps
+  1.653h -> 1.512h (q 0.167h) between L 2.150h and 2.145h. Master's q
+  jumps about 0.74h there.
+- `test/render/field/corner_continuity.test.ts` is (A) and (B). On
+  master, (B) fails (q jumps 905 sweep steps). b16 passes both.
+
+At zoom 1 (`pops16/b16/`; pops, pops a transition, area in px):
+
+| sequence | master | b16 |
+|---|---|---|
+| def_drag | 6 (0.15) 359 | 6 (0.15) 130 |
+| def_flow | 27 (0.68) 1078 | 6 (0.15) 108 |
+| muse_drag | 77 (1.93) 1273 | 62 (1.55) 1044 |
+| muse_flow | 266 (6.65) 7368 | 97 (2.42) 2438 |
+| all | 376 (2.35) 10078 | 171 (1.07) 3720 |
+
+By cause, master -> b16 (px): refit 3648 -> 1310, fold 2765 -> 330, amp
+1225 -> 719, spans 791 -> 1005, reach 651 -> 211, switch 614 -> 0, none
+249 -> 105, cluster 104 -> 40, status 31 -> 0.
+
+In the windows (`pops16/b16z/`):
+
+| window | master | a16 | b16 |
+|---|---|---|---|
+| def_drag@w0 | 249 (6.22) 77105 | 280 (7.00) 33862 | 220 (5.50) 12617 |
+| def_flow@w0 | 184 (4.60) 89876 | 153 (3.83) 1631 | 153 (3.83) 1631 |
+| def_flow@w1 | 229 (5.72) 62961 | 276 (6.90) 40587 | 117 (2.92) 19188 |
+| def_flow@w2 | 254 (6.35) 45930 | 285 (7.13) 32721 | 239 (5.97) 3524 |
+| muse_drag@w0 | 314 (7.85) 155916 | 253 (6.33) 38958 | 105 (2.63) 13269 |
+| muse_drag@w1 | 286 (7.15) 32786 | 293 (7.33) 292339 | 260 (6.50) 2855 |
+| muse_drag@w2 | 879 (21.98) 74530 | 908 (22.70) 320654 | **950 (23.75)** 65514 |
+| muse_flow@w0 | 659 (16.48) 162138 | 641 (16.02) 18352 | 659 (16.48) 13156 |
+| muse_flow@w1 | 393 (9.82) 150117 | 264 (6.60) 27880 | 174 (4.35) 16341 |
+| muse_flow@w2 | 878 (21.95) 213948 | 790 (19.75) 612284 | 400 (10.00) 44424 |
+| all | 4325 (10.81) 1065307 | 4143 (10.36) 1419268 | 3277 (8.19) 192519 |
+
+By cause, master -> b16 (px): refit 353178 -> 31802, fold 256946 ->
+3057, reach 155401 -> 69242, none 97214 -> 40078, switch 92356 -> 147,
+spans 73282 -> 6138, amp 34819 -> 41775, cluster 1974 -> 22, count
+137 -> 258.
+
+**The windows' noise floor is zero.** Master's muse_drag windows, rerun
+(`pops16/floor16z/`), match `before16z` exactly: pops, area and area by
+cause. So muse_drag@w2's 71 extra pops are real, and b16 fails the gate
+there. muse_flow@w0 ties at 659.
+
+**Why muse_drag@w2.** By cause, master -> b16 (pops / px): amp 31 / 11846
+-> 82 / 20111, reach 426 / 24019 -> 454 / 28374, spans 63 / 3111 -> 85 /
+2505, none 344 / 12400 -> 323 / 14468, refit 9 / 7842 -> 6 / 56, fold
+6 / 15312 -> 0. Most are tiny: p50 10 px, and 776 of the 950 are under
+50 px. `cap16.ts` traces b16's new jumps to three classes:
+
+1. **The caps jump (the cut loop: F6's class, outside these rules).**
+   muse_drag t21 j139/2: arm 2's cap at crossing 292's pass goes
+   1.506h -> 1.632h at step 8, then 1.612h -> 2.259h at step 13, where the
+   cut goes and the cap becomes the next junction. b16's r follows each:
+   0.613h -> 0.704h, then 0.699h -> 1.650h. Master's r jumps at step 8
+   (0.34h -> 0.51h), but its six-step walk never reaches the step-13 cap
+   (r stays 0.52h). The caps jump the same way at t0 j139/2 (steps 10
+   and 14; both oracles follow) and t25 j105/1 step 16 (1.946h ->
+   2.225h: master's r 0.453h -> 0.796h, b16's 0.588h -> 1.163h). b16 is
+   continuous in the caps, so it shows each cap jump in full where
+   master's walk sometimes damped it.
+2. **The cap stop's first crossing.** At t25 j105/1 step 7 the caps move
+   smoothly (1.833h -> 1.845h), but b16's r jumps 0.344h -> 0.482h;
+   master's moves smoothly. A foot's arc position is not monotone along
+   the branch, so the first δ at which it reaches cap − W jumps when a
+   local maximum passes the level. Unit (A') is the same.
+3. **The steep stop's first crossing.** def_flow t21 j56/1 step 12 (in
+   def_flow@w2): no fit runs and the caps are smooth, yet b16's r drops
+   from the rule's 1.792h to 0.390h. den is not monotone along the branch
+   either, and a local minimum crossed half its value at V.
+
+Classes 2 and 3 are one flaw: a stop at the first crossing of a quantity
+that is not monotone along the branch. A continuous stop has to blend
+over the crossings. One untried form: δ* = h plus the measure of the δs
+in [h, h + r] where both quantities pass, each gated smoothly.
+
+**Changes in look** (b16 against master, from the sweeps; no crop pairs,
+since nothing landed):
+- Corners that master's walk makes sharp are round under b16: j172/1
+  0.77h (0.74h in def_flow), j38/0 0.63h, j45/1 0.61h, j49/2 0.47h.
+- The steep stop rounds less in places: j175/1 0.75h against 1.14h.
+- Corners held by a cap are rounder, because master's walk stops below
+  the largest ball that fits: j139/2 0.59h-0.70h against 0.34h-0.52h,
+  j105/1 0.27h-0.59h against 0.24h-0.45h.
