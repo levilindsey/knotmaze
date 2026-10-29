@@ -90,10 +90,51 @@ void main() {
   gl_Position = vec4(dev / uSize * 2.0 - 1.0, 0.0, 1.0);
 }`;
 
+/** K868 S3a8a: plateauDepth over the pin table (label_tables.ts refDepth),
+ * shared by the GPU tubes and, with the GPU pieces on, the fills. Needs tb(),
+ * uWin and uRho. */
+const PLATEAU_GLSL = `float hat(float z, float d, float w) {
+  if (w <= 1e-12) return d <= 0.0 ? z : 0.0;
+  return d >= w ? 0.0 : z * (1.0 - d / w);
+}
+float trap(float z, float d, float r, float w) { return d <= r ? z : hat(z, d - r, w); }
+float pairDepth(float zL, float sL, float aL, float zR, float sR, float aR, float u) {
+  float g = sR - sL; float a = aL; float b = aR;
+  if (zL == zR) { if (a + b >= g) return zL; }
+  else if (a + b > 0.0) { float k = min(1.0, max(0.0, g - uRho) / (a + b)); a *= k; b *= k; }
+  float w = min(uWin, g - a - b);
+  return trap(zL, u - sL, a, w) + trap(zR, sR - u, b, w);
+}
+// plateauDepth over the pin table (s, z, rL, rR): refDepth.
+float depthAt(vec4 c0, vec4 c1, float s0, float s) {
+  int pb = int(c1.z + 0.5), n = int(c1.w + 0.5);
+  if (n == 0) return 0.0;
+  bool closed = c0.z > 0.5; float len = c0.w;
+  float u = s;
+  if (closed) { u = u - s0; u = u - len * floor(u / len); u = u + s0; }
+  int lo = -1, hi = n;
+  while (hi - lo > 1) { int mid = (lo + hi) >> 1; if (tb(pb + mid).x <= u) lo = mid; else hi = mid; }
+  if (closed) {
+    int iL = lo < 0 ? n - 1 : lo; int iR = lo + 1 >= n ? 0 : lo + 1;
+    vec4 PL = tb(pb + iL), PR = tb(pb + iR);
+    float sL = lo < 0 ? PL.x - len : PL.x;
+    float sR = lo + 1 >= n ? PR.x + len : PR.x;
+    if (n == 1) return trap(PL.y, min(u - sL, sR - u), max(PL.z, PL.w), min(uWin, len * 0.5));
+    return pairDepth(PL.y, sL, PL.w, PR.y, sR, PR.z, u);
+  }
+  if (lo < 0) { vec4 P0 = tb(pb); return trap(P0.y, P0.x - u, P0.z, uWin); }
+  if (lo + 1 >= n) { vec4 Pn = tb(pb + n - 1); return trap(Pn.y, u - Pn.x, Pn.w, uWin); }
+  vec4 PL = tb(pb + lo), PR = tb(pb + lo + 1);
+  return pairDepth(PL.y, PL.x, PL.w, PR.y, PR.x, PR.z, u);
+}`;
+
 export const FILL_FS = `${HEAD}
 uniform sampler2D uData; uniform usampler2D uT;
 #ifdef PACKED
 uniform usampler2D uS;
+#endif
+#ifdef GPU_FILLS
+uniform sampler2D uTbl; uniform float uWin; uniform float uRho;
 #endif
 uniform float uH; uniform float uSigma; uniform float uZmin; uniform float uZinv; uniform float uRinv; uniform float uSinv;
 in vec2 vP; flat in vec4 vQ; flat in vec4 vU; flat in vec4 vJ; flat in vec4 vO; flat in vec2 vX;
@@ -105,6 +146,30 @@ out uvec4 o;
 const int DW = DATA_W;
 vec4 tx(int i) { return texelFetch(uData, ivec2(i % DW, i / DW), 0); }
 float cr(vec2 a, vec2 b) { return a.x * b.y - a.y * b.x; }
+#ifdef GPU_FILLS
+vec4 tb(int i) { return texelFetch(uTbl, ivec2(i % TBL_W, i / TBL_W), 0); }
+${PLATEAU_GLSL}
+// K868 S3a8a, the GPU pieces on: footInWindow over one record per segment
+// piece, (ta, tb, chain, k) then (tx, ty, 0, 0). The segment and its s come
+// from the tables, so the foot's s is the GPU tube's s[k] + t segLen[k]
+// (the same clamp of the same dot product inside [ta, tb]) and its depth
+// the tube's exact plateau depth at that s.
+void foot(int off, int cnt, vec2 P, out float fd, out vec2 fp, out vec2 ft, out float fs, out float fz, out float fc) {
+  fd = 1e30; fp = vec2(0.0); ft = vec2(0.0); fs = 0.0; fz = 0.0; fc = -1.0;
+  for (int i = 0; i < cnt; i++) {
+    int r = off + i * 2;
+    vec4 w = tx(r);
+    int ci = int(w.z + 0.5);
+    int pk = int(tb(3 * ci).x + 0.5) + int(w.w + 0.5);
+    vec4 A = tb(pk);
+    vec2 a = A.xy, d = tb(pk + 1).xy - a; float L2 = dot(d, d);
+    float t = L2 > 0.0 ? clamp(dot(P - a, d) / L2, w.x, w.y) : w.x;
+    vec2 c = a + d * t; float dd = length(P - c);
+    if (dd < fd) { fd = dd; fp = c; ft = tx(r + 1).xy; fs = A.z + t * A.w; fc = w.z; }
+  }
+  if (fc >= 0.0) { int ci = int(fc + 0.5); fz = depthAt(tb(3 * ci), tb(3 * ci + 1), tb(3 * ci + 2).x, fs); }
+}
+#else
 // footInWindow over one arm window's records: the nearest foot, the first
 // on a tie; d = 1e30 when the window is empty.
 void foot(int off, int cnt, vec2 P, out float fd, out vec2 fp, out vec2 ft, out float fs, out float fz, out float fc) {
@@ -118,6 +183,7 @@ void foot(int off, int cnt, vec2 P, out float fd, out vec2 fp, out vec2 ft, out 
     if (dd < fd) { fd = dd; fp = c; ft = tc.xy; fs = mix(sz.x, sz.y, t); fz = mix(sz.z, sz.w, t); fc = tc.z; }
   }
 }
+#endif
 void main() {
   // inFill (g1): the ring between r and vq + h, inside both arm directions,
   // left of arm A's outgoing direction and right of arm B's.
@@ -239,40 +305,7 @@ layout(location = 1) out uint oS;
 out uvec4 o;
 #endif
 vec4 tb(int i) { return texelFetch(uTbl, ivec2(i % TBL_W, i / TBL_W), 0); }
-float hat(float z, float d, float w) {
-  if (w <= 1e-12) return d <= 0.0 ? z : 0.0;
-  return d >= w ? 0.0 : z * (1.0 - d / w);
-}
-float trap(float z, float d, float r, float w) { return d <= r ? z : hat(z, d - r, w); }
-float pairDepth(float zL, float sL, float aL, float zR, float sR, float aR, float u) {
-  float g = sR - sL; float a = aL; float b = aR;
-  if (zL == zR) { if (a + b >= g) return zL; }
-  else if (a + b > 0.0) { float k = min(1.0, max(0.0, g - uRho) / (a + b)); a *= k; b *= k; }
-  float w = min(uWin, g - a - b);
-  return trap(zL, u - sL, a, w) + trap(zR, sR - u, b, w);
-}
-// plateauDepth over the pin table (s, z, rL, rR): refDepth.
-float depthAt(vec4 c0, vec4 c1, float s0, float s) {
-  int pb = int(c1.z + 0.5), n = int(c1.w + 0.5);
-  if (n == 0) return 0.0;
-  bool closed = c0.z > 0.5; float len = c0.w;
-  float u = s;
-  if (closed) { u = u - s0; u = u - len * floor(u / len); u = u + s0; }
-  int lo = -1, hi = n;
-  while (hi - lo > 1) { int mid = (lo + hi) >> 1; if (tb(pb + mid).x <= u) lo = mid; else hi = mid; }
-  if (closed) {
-    int iL = lo < 0 ? n - 1 : lo; int iR = lo + 1 >= n ? 0 : lo + 1;
-    vec4 PL = tb(pb + iL), PR = tb(pb + iR);
-    float sL = lo < 0 ? PL.x - len : PL.x;
-    float sR = lo + 1 >= n ? PR.x + len : PR.x;
-    if (n == 1) return trap(PL.y, min(u - sL, sR - u), max(PL.z, PL.w), min(uWin, len * 0.5));
-    return pairDepth(PL.y, sL, PL.w, PR.y, sR, PR.z, u);
-  }
-  if (lo < 0) { vec4 P0 = tb(pb); return trap(P0.y, P0.x - u, P0.z, uWin); }
-  if (lo + 1 >= n) { vec4 Pn = tb(pb + n - 1); return trap(Pn.y, u - Pn.x, Pn.w, uWin); }
-  vec4 PL = tb(pb + lo), PR = tb(pb + lo + 1);
-  return pairDepth(PL.y, PL.x, PL.w, PR.y, PR.x, PR.z, u);
-}
+${PLATEAU_GLSL}
 void main() {
   vec2 a = vAB.xy, b = vAB.zw, d = b - a; float L2 = dot(d, d);
   float tr = L2 > 0.0 ? dot(vP - a, d) / L2 : 0.5;
@@ -307,9 +340,10 @@ void main() {
 }`;
 
 /** The two programs' sources for one mode. */
-export function labelSources(packed: boolean, dataW: number): { tubeVs: string; tubeFs: string; fillVs: string; fillFs: string } {
+export function labelSources(packed: boolean, dataW: number, gpuFills = false, tblW = 0): { tubeVs: string; tubeFs: string; fillVs: string; fillFs: string } {
+  const gf = gpuFills ? `#define GPU_FILLS 1\n#define TBL_W ${tblW}\n` : "";
   const def = (src: string): string =>
-    src.replace("precision highp usampler2D;\n", `precision highp usampler2D;\n${packed ? "#define PACKED 1\n" : ""}#define DATA_W ${dataW}\n`);
+    src.replace("precision highp usampler2D;\n", `precision highp usampler2D;\n${packed ? "#define PACKED 1\n" : ""}#define DATA_W ${dataW}\n${gf}`);
   return { tubeVs: def(TUBE_VS), tubeFs: def(TUBE_FS), fillVs: def(FILL_VS), fillFs: def(FILL_FS) };
 }
 
