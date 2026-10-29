@@ -111,3 +111,24 @@ Stage 1's `## Rules` hold, with these changes:
     and the pins it moved;
   - a `Ledger items` list;
   - K992's handle fields.
+
+## Findings
+
+**G1 (Order step 1, the crops).** `crops17.ts` renders master (oracle_m14)
+and b16 through the census page's label coverage, one labelled row per
+site, into `.claude/probes/S3a/pops17/crops17.png` (ring = the corner's
+ball, r about q; red master, blue b16). What changes:
+- j172/1 (t12), j38/0 (t31), j45/1 (t2), j49/2 (t15), def_drag: master
+  draws a sharp V; b16 rounds it, r 0.77h, 0.63h, 0.61h and 0.47h.
+- j175/1, def_drag t1: master r 1.12h, b16 0.72h, visibly less round.
+- j139/2, muse_drag t21/t23: master 0.34h/0.48h, b16 0.59h/1.80h. At t23
+  the drawn outline still shows a sharp V inside b16's 1.80h ring: the
+  drawing and the ball disagree there (not chased).
+- j105/1, muse_drag t28/t33: master 1.03h/0.87h, b16 1.55h/1.31h, a wider
+  round bend.
+- j12/0, muse_flow t29-t35: master flips between a 1.62h ball on a far
+  root and a 0.33h/0.27h ball at the near V (pops at t31, t32, t35); b16
+  holds 0.83-0.84h throughout.
+- j116/2, muse_flow t0-t3: master flips from a 0.79h ball on a far root to
+  a sharp V at t1 and back; b16 holds 0.30-0.33h.
+Sent to the coordinator at 10:08; step 2 went on without waiting.
