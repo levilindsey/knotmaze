@@ -1,0 +1,7 @@
+stderr | test/ui/url_codec.test.ts > token + overrides > round-trips the maze-plan knobs
+KnotMaze: unreadable link settings (old link version 8); kept the seed, every setting is at its default.
+
+stderr | test/ui/daily_link.test.ts > the front door (K56) > treats any other query as an ordinary design
+KnotMaze: unreadable link settings (old link version 4); kept the seed, every setting is at its default.
+KnotMaze: unreadable link settings (old link version 4); kept the seed, every setting is at its default.
+

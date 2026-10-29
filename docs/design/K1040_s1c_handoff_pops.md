@@ -299,7 +299,7 @@ seen by the decision that changed, from the pass before the corner diff).
     already at its arm's end (dV < 0.0005) and the other 0.03-0.08 from
     it; on the absent side both are at 0. The margin slides to 0
     continuously, and the corner, fill and all, goes in one step at the
-    gate. Fixed in F4.
+    gate. F4 tried a fade for it and did not keep it.
   - *root*, 21 / 674. In a near-parallel channel Newton's equidistance
     solve has several roots and the one it reaches flips. def_drag
     corner 141/431/432 (θ 1.508, r 0.300, h 0.26; feet 1.24 down arms
@@ -391,3 +391,56 @@ the junction end only. It is commit c38d2319, kept as the probe
   does when V passes the junction end and continue form B's the same
   way (V's foot along the arm's tangent past its end), or fade on the
   fill's size, which is continuous in θ. Listed for the next stage.
+
+**F5 · The gate on F2, the kept definition, against S1b's F13 (step 5,
+03:26-03:35).** src is F2 (608327af; `git diff 608327af HEAD -- src
+test` is empty), so F2's pops run (F3: 209 pops / 3875 px over the four
+recordings; S1b 225 / 4051) is the gate's pops run. scenes.ts ran on
+608327af (`logs/scenes_f2.txt`); the pins, `npm test`, q5holes and q4
+ran on 11c3ecfb (`logs/*_f2k.txt`; `q5_f2k/`, `q4_f2k_1/`,
+`q4_f2k_2/`). Paths are under `.claude/probes/K1040/s1/out/s1c/`.
+
+- **Pins** 22/22 (`logs/pins_f2k.txt`). **`npm test`** passes: 188
+  files, 2532 tests, 8 skipped (`logs/npm_test_f2k.txt`).
+- **scenes.ts, #1 failing px, S1b → F2:** muse_hash 1012 → 173,
+  muse_default_tw 193 → 171, def 65 → 36, fat 0 → 0, ring 101 → 40,
+  user_tw42.lightpaper 71 → 32, g41_def_tw42 0 → 0, g41_def_tw64
+  348 → 89, g41_ring_tw42 0 → 0, g41_ring_tw64 189 → 0, g41_user_tw42
+  70 → 31, g41_user_tw64 783 → 289; all 2832 → 861 (S1 2187).
+  `scenes_f2/gate_table.txt`.
+- **Free ends** 345 → 169 (muse_hash 113 → 39, g41_def_tw64 65 → 16,
+  g41_user_tw64 42 → 24). F2 now reads below the oracle's own count on
+  seven of the ten scenes F13 gives it for (muse_hash 39 against 108,
+  g41_def_tw64 16 against 64), where S1b sat at or above it, so fewer
+  is not plainly better here. Not attributed. Inferred, untested: OWN,
+  a surface no chain owns, may read as a join to the counter, as it
+  hides a hole from q5holes (below).
+- **The shared checks** fail on the same number of scenes as in F13,
+  check by check: #2 11, #3 1, #4 11, #5 11, #6 5, #7 2, #8 0,
+  #9 sections 5, #9 walks 11, #11 1, #14 1, #15 0, #16 2. The values
+  were not compared.
+- **q5holes:** 43 holes inside one group, every one an eye (the oracle
+  leaves at least half of it paper), 0 defects: 38 at dpr 1, 5 in
+  muse_hash at dpr 2 (`logs/q5holes_f2k.txt`). F13's 44th eye
+  (muse_hash, dpr 2, 2 px at world (19.147, 33.518), px (1290,
+  1563-1564)) is still paper under F2, but part of its rim is now OWN,
+  so it is not "inside one group" and goes uncounted: a probe gap, not
+  a change in the eye (`hole_check.ts muse_hash 2 1290 1563 2`). That
+  makes S1b's 44 eyes and 0 holes the oracle covers.
+- **q4** (exact area coverage against the AA, as F13), S1b → F2: px
+  with |Δ| > 0.5, def 41 → 32, fat 0 → 0, ring 10 → 10, g41_def_tw64
+  2 → 2, muse_hash 26 → 20; with |Δ| > 0.1, def 1332 → 1229, fat
+  1716 → 1716, ring 536 → 498, g41_def_tw64 453 → 313, muse_hash
+  1970 → 1458. The scenes S1b did not run have 0 px over 0.5, and over
+  0.1: muse_default_tw 1296, user_tw42.lightpaper 607, g41_def_tw42
+  293, g41_user_tw42 620, g41_user_tw64 335. q4's crop for the g41
+  scenes (640x640 device px at (1540, 1030), dpr 3) holds no ink on
+  g41_ring_tw42 and g41_ring_tw64, so those two read 0 px measured: a
+  probe gap. F4j, for comparison: over 0.5, def 30, ring 1,
+  g41_def_tw64 2, muse_hash 15 (`logs/q4_f4j_*.txt`).
+- **Incident.** The first launch of this run executed its jobs in the
+  main checkout for about 30 s: the launcher's loop variable `$w`
+  overwrote `$W`, the worktree's path (PowerShell names ignore case).
+  The pins and the start of `npm test` ran there before the jobs were
+  killed; its `git status` is clean. `run_s1c_gate.ps1` now names the
+  loop variable `$item`, and each job stops on a failed `Set-Location`.
