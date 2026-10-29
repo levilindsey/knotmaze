@@ -304,7 +304,7 @@ Definition change. Crops in `out/s1d/crops/`; corner_cmp's listings in
 
 ### F3 · The fillet's centre from the tracked feet and the rule (04:16-04:40)
 
-Definition change, WIP commit f47f059d (04:40). Gate (04:32-04:39):
+Definition change, WIP commit 65ff32c9 (04:40). Gate (04:32-04:39):
 `logs/gate_f3.txt`, `table_f2_f3.txt`, `mech_f3_merge.txt`,
 `corner_why_f3.txt`.
 
@@ -331,7 +331,7 @@ Definition change, WIP commit f47f059d (04:40). Gate (04:32-04:39):
 
 ### F4 · ω fades only the overlap past the margin gate's band (04:48)
 
-Definition change, WIP commit 249dae42 (with F5). `logs/gate_f4.txt`,
+Definition change, WIP commit b023d85e (with F5). `logs/gate_f4.txt`,
 `table_f3_f4.txt`, `omega_census_f3.txt`, `omega_census_f4.txt`.
 
 - **Why.** r = ∫S stops the ball where another part of an arm comes up
@@ -354,7 +354,7 @@ Definition change, WIP commit 249dae42 (with F5). `logs/gate_f4.txt`,
 
 ### F5 · θ from the interpolated tangent; a pass past L still cuts (04:50)
 
-Definition change, WIP commit 249dae42. Gate (04:49:40-04:55:54):
+Definition change, WIP commit b023d85e. Gate (04:49:40-04:55:54):
 `logs/gate_f5.txt`, `table_f4_f5.txt`, `table_s1cf5_f5.txt`,
 `mech_f5_merge.txt`; Lcut: `lcut_f5_*.txt`.
 
@@ -385,8 +385,8 @@ Definition change, WIP commit 249dae42. Gate (04:49:40-04:55:54):
 
 ### F6 · A through pass's two arms bury each other: tried, reverted (04:59-05:10)
 
-Definition change, WIP commit d2e8f923; reverted at 05:09:49
-(`src/render/field/form_b.ts` is 249dae42's again, F5). Gate
+Definition change, WIP commit d6d53448; reverted at 05:09:49
+(`src/render/field/form_b.ts` is b023d85e's again, F5). Gate
 (05:03-05:09): `logs/gate_f6.txt`, `gate_f6_mech.txt`,
 `table_f5_f6.txt`, `table_s1cf5_f6.txt`; b_rate: `rate/rate_f6.txt`.
 
@@ -431,13 +431,13 @@ Definition change, WIP commit d2e8f923; reverted at 05:09:49
 
 Stopped at 05:16 (cap 05:48:35); npm test on the final tree: 2532
 passed (`logs/npm_test_final.txt`). The final definition is F5 (WIP
-commit 249dae42); F6 is reverted.
+commit b023d85e); F6 is reverted.
 
 **Done:** steps 1-6 of the Order.
-- F1, free ends (5da7147e); F2, V off the arm (763cb39e); F3, the
+- F1, free ends (7a12e6f9); F2, V off the arm (a2978ed7); F3, the
   fillet's centre from the tracked feet and the integrated rule
-  (f47f059d); F4, ω past the margin band, and F5, θ from the
-  interpolated tangent with a pass past L still cutting (249dae42);
+  (65ff32c9); F4, ω past the margin band, and F5, θ from the
+  interpolated tangent with a pass past L still cutting (b023d85e);
   F6, tried and reverted.
 - The gate on F5 (`logs/gate_f5.txt`, `table_s1cf5_f5.txt`): pins 22
   of 22, npm 2532 passed, q5 0 defects; pops 20 / 191 px (S1c F5 209 /
@@ -450,7 +450,7 @@ commit 249dae42); F6 is reverted.
 1. The rate rule at through-pass bends: 9 of 161 b_rate sites breach
    (`rate/rate_f5.txt`), at the D1 fold's nearer-kept pick (F6's
    residual). Either blend the merged minima with continuous weights,
-   or bury locally and by depth at the bend. F6 (d2e8f923) is a start
+   or bury locally and by depth at the bend. F6 (d6d53448) is a start
    for the second; it has to leave muse_hash's crossing 71 and the 4
    junction free ends alone.
 2. The discrete edges left in the corner solve: solveCorner's null

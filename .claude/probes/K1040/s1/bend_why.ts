@@ -1,5 +1,5 @@
 // K1040 S1d: what inks the pixels across a b_rate breach, under S1d's base
-// (form_b_s1d_base.ts, 2dacd08d), S1d F2 (form_b_s1d_f2.ts, 763cb39e) and the
+// (form_b_s1d_base.ts, 2dacd08d), S1d F2 (form_b_s1d_f2.ts, a2978ed7) and the
 // working tree: per point on a short line, ink, top, the winning term
 // (kind, chain, s, corner, D, w) and the fade bits; then the junctions within
 // 1 of the point, with form B's arms there (kind, through) and its corners.

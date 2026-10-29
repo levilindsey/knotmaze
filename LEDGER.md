@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1049.
+Next free ID: K1050.
 
 ## Waiting on Levi
 
@@ -291,16 +291,19 @@ Next free ID: K1049.
 - **K1045** · Junction eyes, by look at K1040 S4b: where two junctions sit close, their threads close in a
   small eye of paper. Form B leaves a dot about 0.16 across, today's look a thin lens (0.67 x 0.12), or it
   could be covered (`docs/design/K1040_s1b_holes_fades.md` F1). Nothing to look at before S4b.
+- **K1049** · Through-pass bends, by look at K1040 S4b: where a thread passes through a junction and bends, form B
+  now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
+  with crops). Nothing to look at before S4b.
 
 ## In progress
 
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
-  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1, S1b and S1c merged (f6ad6990); S1d running.
-  - owner: nobody since 2026-10-29 05:24 (merged; agent `a370717011c6a40c5` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
+  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1d merged (e8944f2f); S1e waits for the weekly limit.
+  - owner: nobody since 2026-10-29 05:24 (S1d merged; S1e waits for the weekly usage limit, which resets Nov 2 11:00; S1d was agent `a370717011c6a40c5` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
   - branch: mainline; last commit: `e8944f2f`
   - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1), `s1/out/s1b/` and `s1/out/s1c/`, S1d's runs in `s1/out/s1d/`); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: S1e (paused at 85% weekly usage until Nov 2 11:00): the rate rule at through-pass bends (S1d F2 and F6: continuous weights for D1's merged minima, or a burial at the bend that reads depth), then the corner solve's last discrete edges and S1's gate; its brief is not written yet
+  - next: S1e (Opus; launch after the Nov 2 11:00 reset): the rate rule at through-pass bends (continuous weights for D1's merged minima, or a burial at the bend that reads depth; F6 is a start), then the corner solve's last discrete edges, F5's #1 +9 and S1's gate (the brief's Handoff, Next 1-3); write its brief first
   - brief: `docs/design/K1040_s1d_corner.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
@@ -804,15 +807,15 @@ Every other item below waits on the trigger it names.
 
 ## Residuals (known, not fixed)
 
-- **K1048** · K1040's probe gaps (`docs/design/K1040_s1c_handoff_pops.md` F5): q5holes skips a hole whose rim
-  is partly OWN; free ends fell below the oracle's count on 7 of 10 scenes (OWN read as a join? S1d step 2
-  tests it); q4's g41 crop holds no ink on g41_ring_tw42 and g41_ring_tw64.
+- **K1048** · K1040's probe gaps (`docs/design/K1040_s1c_handoff_pops.md` F5; `K1040_s1d_corner.md` F1, Handoff 5):
+  q5holes skips a hole with a partly OWN rim; q4's g41 crop holds no ink on the g41 rings; the free ends' oracle
+  column is K900's census (fe_own.ts is like for like); omega_rate.ts, corner_ab.ts, omega_census.ts import stale form Bs.
 - **K1047** · Scene changes in K1040's recordings: a chain resampled (48 pops / 728 px) or a junction's arms
   changed (5 / 54) between frames, and form B can't be continuous across them
   (`docs/design/K1040_s1c_handoff_pops.md` F3). In the app, does a resample visibly move the outline? (K992)
 - **K1046** · Form B's residuals (`docs/design/K1040_s1b_holes_fades.md` ### Residuals): R2 a tie jump inside
   one top, R3 sliver fills' bound and evalPoint's rV, R4 the ω fade's width in motion (0.05h approved; S4b),
-  R5 #1's unattributed px (861 in all, S1 2187; S1c F5), R6 q4's outer/none px on def. R1 fixed (S1c F2).
+  R5 #1's unattributed px (156 after S1d, its F5's +9: `K1040_s1d_corner.md` Handoff), R6 q4's outer/none px on def.
 - **K1000** · K868 label: V's folds and live/unsolved flips (class 1) still pop. K1040 carries it (F3's fades) and it
   closes at K1040 S4b. Stage 1's continuous caps landed with K992 in 9b549d30 (`K1000_continuous_caps.md` ## Handoff).
 - **K1002** · K868's corner balls are never checked against other threads (master, b16 and c17 alike): a large r can
