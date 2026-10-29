@@ -1,0 +1,499 @@
+{
+ "merge": {
+  "pops": 95,
+  "px": 1283,
+  "mergedPx": 585,
+  "popsLeft": 59,
+  "pxLeft": 572,
+  "whollyMerged": 7
+ },
+ "units": {
+  "0": 933,
+  "1": 348,
+  "2": 2
+ },
+ "table": {
+  "merge": {
+   "crossing60+": {
+    "pops": 16,
+    "px": 295,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 19,
+      "to": 20,
+      "at": [
+       23.096,
+       10.579
+      ],
+      "px": 49,
+      "mix": {
+       "merge": 28,
+       "motion arc": 1,
+       "winner arc>none": 5,
+       "winner tB>none": 15
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_merge_crossing60+_19.png"
+     }
+    ]
+   },
+   "junction": {
+    "pops": 32,
+    "px": 511,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 3,
+      "to": 4,
+      "at": [
+       23.095,
+       10.572
+      ],
+      "px": 48,
+      "mix": {
+       "winner none>arc": 6,
+       "merge": 27,
+       "winner none>tB": 15
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_merge_junction_3.png"
+     }
+    ]
+   }
+  },
+  "winner foot>foot/top": {
+   "crossing60+": {
+    "pops": 2,
+    "px": 8,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 0,
+      "to": 1,
+      "at": [
+       19.053,
+       32.654
+      ],
+      "px": 4,
+      "mix": {
+       "winner foot>foot/top": 2,
+       "gate foot": 2
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_winner-foot-foot-top_crossing60+_0.png"
+     }
+    ]
+   }
+  },
+  "motion foot": {
+   "crossing60+": {
+    "pops": 3,
+    "px": 12,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 1,
+      "to": 2,
+      "at": [
+       16.19,
+       4.746
+      ],
+      "px": 4,
+      "mix": {
+       "motion foot": 2,
+       "gate foot": 2
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_motion-foot_crossing60+_1.png"
+     }
+    ]
+   }
+  },
+  "winner arc>none": {
+   "junction": {
+    "pops": 1,
+    "px": 14,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 4,
+      "to": 5,
+      "at": [
+       19.737,
+       18.43
+      ],
+      "px": 14,
+      "mix": {
+       "winner arc>none": 7,
+       "motion arc": 5,
+       "merge": 2
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_winner-arc-none_junction_4.png"
+     }
+    ]
+   }
+  },
+  "winner none>arc/top": {
+   "junction": {
+    "pops": 3,
+    "px": 34,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 4,
+      "to": 5,
+      "at": [
+       19.862,
+       18.571
+      ],
+      "px": 18,
+      "mix": {
+       "motion arc": 2,
+       "winner none>arc/top": 5,
+       "winner none>arc": 4,
+       "gate arc": 5,
+       "merge": 2
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_winner-none-arc-top_junction_4.png"
+     }
+    ]
+   }
+  },
+  "motion arc": {
+   "junction": {
+    "pops": 6,
+    "px": 42,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 5,
+      "to": 6,
+      "at": [
+       22.959,
+       17.481
+      ],
+      "px": 13,
+      "mix": {
+       "motion arc": 6,
+       "merge": 5,
+       "winner arc>none": 2
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_motion-arc_junction_5.png"
+     }
+    ]
+   }
+  },
+  "winner none>tB": {
+   "junction": {
+    "pops": 1,
+    "px": 5,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 5,
+      "to": 6,
+      "at": [
+       24.888,
+       10.769
+      ],
+      "px": 5,
+      "mix": {
+       "motion tB": 2,
+       "winner none>tB": 3
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_winner-none-tB_junction_5.png"
+     }
+    ]
+   }
+  },
+  "winner foot>none": {
+   "junction": {
+    "pops": 4,
+    "px": 60,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 18,
+      "to": 19,
+      "at": [
+       26.826,
+       23.324
+      ],
+      "px": 25,
+      "mix": {
+       "winner foot>none": 8,
+       "merge": 4,
+       "winner foot>none/top": 2,
+       "winner foot>arc": 2,
+       "winner foot>arc/top": 4,
+       "winner none>arc/top": 3,
+       "winner none>arc": 2
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_winner-foot-none_junction_18.png"
+     }
+    ]
+   },
+   "crossing60+": {
+    "pops": 1,
+    "px": 7,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 32,
+      "to": 33,
+      "at": [
+       34.944,
+       6.647
+      ],
+      "px": 7,
+      "mix": {
+       "winner foot>none": 4,
+       "merge": 3
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_winner-foot-none_crossing60+_32.png"
+     }
+    ]
+   }
+  },
+  "winner none>foot": {
+   "junction": {
+    "pops": 3,
+    "px": 86,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 5,
+      "to": 6,
+      "at": [
+       26.505,
+       22.747
+      ],
+      "px": 57,
+      "mix": {
+       "merge": 3,
+       "winner none>foot": 52,
+       "winner arc>foot": 2
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_winner-none-foot_junction_5.png"
+     }
+    ]
+   },
+   "crossing60+": {
+    "pops": 2,
+    "px": 10,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 39,
+      "to": 40,
+      "at": [
+       34.967,
+       6.647
+      ],
+      "px": 6,
+      "mix": {
+       "winner none>foot": 5,
+       "merge": 1
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_winner-none-foot_crossing60+_39.png"
+     }
+    ]
+   }
+  },
+  "winner tB>none": {
+   "junction": {
+    "pops": 5,
+    "px": 34,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 37,
+      "to": 38,
+      "at": [
+       24.762,
+       10.71
+      ],
+      "px": 9,
+      "mix": {
+       "motion tB": 3,
+       "winner tB>none": 6
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_winner-tB-none_junction_37.png"
+     }
+    ]
+   },
+   "crossing60+": {
+    "pops": 2,
+    "px": 30,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 23,
+      "to": 24,
+      "at": [
+       22.944,
+       10.743
+      ],
+      "px": 16,
+      "mix": {
+       "winner tB>none": 16
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_winner-tB-none_crossing60+_23.png"
+     }
+    ]
+   }
+  },
+  "gate foot": {
+   "crossing60+": {
+    "pops": 4,
+    "px": 16,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 11,
+      "to": 12,
+      "at": [
+       22.95,
+       6.06
+      ],
+      "px": 4,
+      "mix": {
+       "gate foot": 2,
+       "motion foot": 2
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_gate-foot_crossing60+_11.png"
+     }
+    ]
+   }
+  },
+  "winner none>arc": {
+   "junction": {
+    "pops": 4,
+    "px": 73,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 18,
+      "to": 19,
+      "at": [
+       22.919,
+       17.473
+      ],
+      "px": 41,
+      "mix": {
+       "winner arc>none": 4,
+       "gate arc": 5,
+       "winner arc>none/top": 7,
+       "motion arc": 9,
+       "winner none>arc": 11,
+       "merge": 3,
+       "winner arc>tA": 1,
+       "winner arc>tA/top": 1
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_winner-none-arc_junction_18.png"
+     }
+    ]
+   }
+  },
+  "winner V>none": {
+   "junction": {
+    "pops": 1,
+    "px": 6,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 24,
+      "to": 25,
+      "at": [
+       5.322,
+       14.604
+      ],
+      "px": 6,
+      "mix": {
+       "winner V>none": 4,
+       "winner V>foot": 1,
+       "merge": 1
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_winner-V-none_junction_24.png"
+     }
+    ]
+   }
+  },
+  "winner arc>none/top": {
+   "junction": {
+    "pops": 2,
+    "px": 27,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 28,
+      "to": 29,
+      "at": [
+       26.782,
+       23.386
+      ],
+      "px": 14,
+      "mix": {
+       "winner none>arc": 1,
+       "winner arc>tB": 2,
+       "winner arc>tA": 3,
+       "winner arc>none/top": 4,
+       "merge": 1,
+       "winner arc>none": 2,
+       "winner arc>foot": 1
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_winner-arc-none-top_junction_28.png"
+     }
+    ]
+   }
+  },
+  "gate arc": {
+   "junction": {
+    "pops": 2,
+    "px": 8,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 31,
+      "to": 32,
+      "at": [
+       19.898,
+       18.548
+      ],
+      "px": 4,
+      "mix": {
+       "gate arc": 2,
+       "winner arc>none": 1,
+       "winner arc>none/top": 1
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_gate-arc_junction_31.png"
+     }
+    ]
+   }
+  },
+  "winner arc>tB": {
+   "crossing60+": {
+    "pops": 1,
+    "px": 5,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 37,
+      "to": 38,
+      "at": [
+       20.344,
+       24.862
+      ],
+      "px": 5,
+      "mix": {
+       "winner arc>tB": 2,
+       "merge": 2,
+       "winner none>tB": 1
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_flow\\crops\\muse_flow_winner-arc-tB_crossing60+_37.png"
+     }
+    ]
+   }
+  }
+ },
+ "lines": [
+  "muse_flow: by mechanism {\"merge\":48,\"winner foot>foot/top\":2,\"motion foot\":3,\"winner arc>none\":1,\"winner none>arc/top\":3,\"motion arc\":6,\"winner none>tB\":1,\"winner foot>none\":5,\"winner none>foot\":5,\"winner tB>none\":7,\"gate foot\":4,\"winner none>arc\":4,\"winner V>none\":1,\"winner arc>none/top\":2,\"gate arc\":2,\"winner arc>tB\":1}"
+ ]
+}

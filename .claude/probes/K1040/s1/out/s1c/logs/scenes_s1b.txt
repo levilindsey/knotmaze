@@ -1,0 +1,72 @@
+== muse_hash: build 7171 ms, raster 6483 ms (1240x900), own 3972 ms, checks 0 ms
+  #1 (form B) fail: 1012 px deeper than W + 1 px (mouth 1012 px), deepest F 11.18 px [lim W*ppu+1 = 4.24 px] by term {"foot":256,"foot+f2":576,"tA":43,"tB+f2":17,"arc+f2":2,"tB":56,"arc":62}
+  #2 (form B) corners 167: max ||t-q|-r| 1.01e-12 px, ||t-foot|-h| 1.32e-13 px, tangent 1.17e-12
+  #11 (form B) pass: 0 of 350 crossing centres not topped by the over
+  strips: 141 of 224392 inked px outside their term's strips {"tA/endpoint":62,"tB/endpoint":78,"V/V":1}; terms {"foot":215548,"tA":1664,"tB":1261,"arc":5892,"V":27}
+  free ends: 113 {"junction":113,"crossing":0,"other":0}; tie px 6356, 2+ surfaces px 118111
+== muse_default_tw: build 7089 ms, raster 3543 ms (1240x900), own 2051 ms, checks 0 ms
+  #1 (form B) fail: 193 px deeper than W + 1 px (mouth 193 px), deepest F 9.22 px [lim W*ppu+1 = 3.20 px] by term {"tB":46,"arc":74,"foot+f2":22,"tA":51}
+  #2 (form B) corners 330: max ||t-q|-r| 1.95e-12 px, ||t-foot|-h| 1.47e-13 px, tangent 1.63e-13
+  #11 (form B) pass: 0 of 350 crossing centres not topped by the over
+  strips: 76 of 175702 inked px outside their term's strips {"tB/endpoint":35,"tA/endpoint":41}; terms {"foot":161018,"tA":1184,"arc":12376,"tB":1090,"V":34}
+  free ends: 23 {"junction":23,"crossing":0,"other":0}; tie px 52, 2+ surfaces px 47900
+== def: build 6881 ms, raster 4153 ms (1240x900), own 3172 ms, checks 0 ms
+  #1 (form B) fail: 65 px deeper than W + 1 px (mouth 65 px), deepest F 7.07 px [lim W*ppu+1 = 3.21 px] by term {"foot+f2":29,"tA":4,"arc":3,"tB":6,"foot+f8":19,"V+f8":4}
+  #2 (form B) corners 373: max ||t-q|-r| 1.88e-12 px, ||t-foot|-h| 1.80e-13 px, tangent 6.07e-13
+  #11 (form B) pass: 0 of 353 crossing centres not topped by the over
+  strips: 27 of 178921 inked px outside their term's strips {"tB/endpoint":9,"tA/endpoint":15,"V/V":3}; terms {"foot":165156,"arc":11273,"tA":1294,"tB":1154,"V":44}
+  free ends: 23 {"junction":22,"crossing":0,"other":1}; tie px 91, 2+ surfaces px 49016
+== fat: build 4695 ms, raster 2619 ms (1240x900), own 2072 ms, checks 0 ms
+  #1 (form B) pass: 0 px deeper than W + 1 px (mouth 0 px) [lim W*ppu+1 = 3.25 px] by term {}
+  #2 (form B) corners 0: max ||t-q|-r| 0.00e+0 px, ||t-foot|-h| 0.00e+0 px, tangent 0.00e+0
+  #11 (form B) pass: 0 of 428 crossing centres not topped by the over
+  strips: 0 of 172910 inked px outside their term's strips {}; terms {"foot":172910}
+  free ends: 0 {"junction":0,"crossing":0,"other":0}; tie px 2, 2+ surfaces px 64466
+== ring: build 1108 ms, raster 2124 ms (1240x900), own 590 ms, checks 0 ms
+  #1 (form B) fail: 101 px deeper than W + 1 px (mouth 101 px), deepest F 9.00 px [lim W*ppu+1 = 4.67 px] by term {"foot+f8":43,"foot+f10":2,"foot+f2":56}
+  #2 (form B) corners 52: max ||t-q|-r| 2.42e-12 px, ||t-foot|-h| 1.48e-13 px, tangent 4.90e-14
+  #11 (form B) pass: 0 of 87 crossing centres not topped by the over
+  strips: 7 of 104215 inked px outside their term's strips {"V/V":7}; terms {"foot":100355,"tB":422,"tA":494,"arc":2904,"V":40}
+  free ends: 7 {"junction":6,"crossing":0,"other":1}; tie px 472, 2+ surfaces px 33976
+== user_tw42.lightpaper: build 1670 ms, raster 2554 ms (1240x900), own 1404 ms, checks 0 ms
+  #1 (form B) fail: 71 px deeper than W + 1 px (mouth 71 px), deepest F 7.62 px [lim W*ppu+1 = 3.71 px] by term {"foot+f2":39,"tB":21,"arc":9,"tB+f2":2}
+  #2 (form B) corners 153: max ||t-q|-r| 1.79e-12 px, ||t-foot|-h| 1.33e-13 px, tangent 7.29e-14
+  #11 (form B) pass: 0 of 156 crossing centres not topped by the over
+  strips: 25 of 111879 inked px outside their term's strips {"tB/endpoint":16,"tA/endpoint":9}; terms {"foot":105262,"arc":4822,"tB":823,"tA":933,"V":39}
+  free ends: 28 {"junction":28,"crossing":0,"other":0}; tie px 0, 2+ surfaces px 33199
+== g41_def_tw42: build 4804 ms, raster 1797 ms (1240x900), own 2377 ms, checks 0 ms
+  #1 (form B) pass: 0 px deeper than W + 1 px (mouth 0 px) [lim W*ppu+1 = 2.79 px] by term {}
+  #2 (form B) corners 426: max ||t-q|-r| 2.20e-12 px, ||t-foot|-h| 2.03e-13 px, tangent 8.26e-14
+  #11 (form B) pass: 0 of 353 crossing centres not topped by the over
+  strips: 9 of 123964 inked px outside their term's strips {"V/V":9}; terms {"foot":114746,"arc":7164,"tB":987,"tA":1027,"V":40}
+  free ends: 3 {"junction":3,"crossing":0,"other":0}; tie px 0, 2+ surfaces px 31793
+== g41_def_tw64: build 9186 ms, raster 5062 ms (1240x900), own 2991 ms, checks 0 ms
+  #1 (form B) fail: 348 px deeper than W + 1 px (mouth 348 px), deepest F 9.00 px [lim W*ppu+1 = 3.70 px] by term {"foot+f2":233,"foot":26,"tA":38,"arc":15,"tB":36}
+  #2 (form B) corners 298: max ||t-q|-r| 1.96e-12 px, ||t-foot|-h| 1.59e-13 px, tangent 1.00e-13
+  #11 (form B) pass: 0 of 353 crossing centres not topped by the over
+  strips: 77 of 167801 inked px outside their term's strips {"tA/endpoint":40,"tB/endpoint":37}; terms {"foot":157031,"tA":1984,"arc":7129,"tB":1657}
+  free ends: 65 {"junction":65,"crossing":0,"other":0}; tie px 1092, 2+ surfaces px 76575
+== g41_ring_tw42: build 1120 ms, raster 1678 ms (1240x900), own 652 ms, checks 0 ms
+  #1 (form B) pass: 0 px deeper than W + 1 px (mouth 0 px) [lim W*ppu+1 = 3.67 px] by term {}
+  #2 (form B) corners 63: max ||t-q|-r| 1.23e-12 px, ||t-foot|-h| 9.94e-14 px, tangent 6.22e-14
+  #11 (form B) pass: 0 of 87 crossing centres not topped by the over
+  strips: 0 of 69823 inked px outside their term's strips {}; terms {"foot":66864,"tB":320,"tA":322,"arc":2300,"V":17}
+  free ends: 0 {"junction":0,"crossing":0,"other":0}; tie px 0, 2+ surfaces px 17438
+== g41_ring_tw64: build 1639 ms, raster 2525 ms (1240x900), own 844 ms, checks 0 ms
+  #1 (form B) fail: 189 px deeper than W + 1 px (mouth 189 px), deepest F 9.22 px [lim W*ppu+1 = 5.04 px] by term {"foot+f2":146,"foot":43}
+  #2 (form B) corners 45: max ||t-q|-r| 2.15e-12 px, ||t-foot|-h| 1.16e-13 px, tangent 1.06e-13
+  #11 (form B) pass: 0 of 87 crossing centres not topped by the over
+  strips: 2 of 97488 inked px outside their term's strips {"tA/endpoint":1,"V/V":1}; terms {"foot":94057,"tB":498,"tA":629,"arc":2292,"V":12}
+  free ends: 13 {"junction":12,"crossing":1,"other":0}; tie px 830, 2+ surfaces px 42413
+== g41_user_tw42: build 1964 ms, raster 1982 ms (1240x900), own 814 ms, checks 0 ms
+  #1 (form B) fail: 70 px deeper than W + 1 px (mouth 70 px), deepest F 7.62 px [lim W*ppu+1 = 3.71 px] by term {"foot+f2":39,"tB":20,"arc":9,"tB+f2":2}
+  #2 (form B) corners 153: max ||t-q|-r| 1.85e-12 px, ||t-foot|-h| 1.23e-13 px, tangent 9.46e-14
+  #11 (form B) pass: 0 of 156 crossing centres not topped by the over
+  strips: 24 of 111865 inked px outside their term's strips {"tB/endpoint":15,"tA/endpoint":9}; terms {"foot":105260,"arc":4816,"tB":819,"tA":932,"V":38}
+  free ends: 28 {"junction":28,"crossing":0,"other":0}; tie px 0, 2+ surfaces px 33206
+== g41_user_tw64: build 3048 ms, raster 2711 ms (1240x900), own 2121 ms, checks 0 ms
+  #1 (form B) fail: 783 px deeper than W + 1 px (mouth 783 px), deepest F 12.21 px [lim W*ppu+1 = 5.00 px] by term {"foot":71,"foot+f2":400,"tB+f2":11,"tB":137,"arc":83,"tA":81}
+  #2 (form B) corners 120: max ||t-q|-r| 3.02e-12 px, ||t-foot|-h| 1.20e-13 px, tangent 9.03e-14
+  #11 (form B) pass: 0 of 156 crossing centres not topped by the over
+  strips: 209 of 148916 inked px outside their term's strips {"tA/endpoint":87,"tB/endpoint":122}; terms {"foot":140715,"arc":4720,"tB":1577,"tA":1888,"V":16}
+  free ends: 42 {"junction":42,"crossing":0,"other":0}; tie px 1447, 2+ surfaces px 78495

@@ -45,6 +45,8 @@ const WINDOWS = (process.env.WINDOWS ?? "0.2,0.5,0.8").split(",").map(Number);
 const WLEN = Number(process.env.WLEN ?? 4);
 const seqs = (process.argv[2] ?? "def_drag,def_flow,muse_drag,muse_flow").split(",");
 const r3 = (v: number) => Math.round(v * 1000) / 1000;
+// S1c: DUMP=1 stores each pop's pixel indices (o = j * nx + i) for pops_mech.ts.
+const DUMP = process.env.DUMP === "1";
 
 interface Frame {
   i: number;
@@ -251,7 +253,7 @@ interface PairOut {
   changed: number;
   unexplained: number;
   unexplainedInFades: Record<string, number>;
-  pops: { px: number; at: [number, number]; near: string }[];
+  pops: { px: number; at: [number, number]; near: string; pix?: number[] }[];
   maxMotionPx: number;
 }
 
@@ -292,6 +294,7 @@ function comparePair(fa: FormB, ra: Ras, fbb: FormB, rb: Ras, s: FieldScene, cam
     bad[o0] = 2;
     stack.push(o0);
     let size = 0;
+    const pix: number[] = [];
     let sx = 0;
     let sy = 0;
     while (stack.length) {
@@ -299,6 +302,7 @@ function comparePair(fa: FormB, ra: Ras, fbb: FormB, rb: Ras, s: FieldScene, cam
       const i = o % nx;
       const j = (o - i) / nx;
       size++;
+      if (DUMP) pix.push(o);
       sx += i + 0.5;
       sy += j + 0.5;
       for (let dj = -1; dj <= 1; dj++)
@@ -318,7 +322,7 @@ function comparePair(fa: FormB, ra: Ras, fbb: FormB, rb: Ras, s: FieldScene, cam
     const v = sy / size - f;
     const x = (d * u - c * v) / det;
     const y = (-b * u + a * v) / det;
-    pops.push({ px: size, at: [r3(x), r3(y)], near: classify(st, fa, x, y) });
+    pops.push({ px: size, at: [r3(x), r3(y)], near: classify(st, fa, x, y), ...(DUMP ? { pix } : {}) });
   }
   return { changed, unexplained, unexplainedInFades: inFades, pops, maxMotionPx: r3(maxMotionPx) };
 }
@@ -370,4 +374,4 @@ for (const name of seqs) {
   for (const l of lines) console.log(l);
   summary.push(...lines);
 }
-writeFileSync(join(outDir, "summary.txt"), `${summary.join("\n")}\n`);
+writeFileSync(join(outDir, seqs.length === 1 ? `summary_${seqs[0]}.txt` : "summary.txt"), `${summary.join("\n")}\n`);

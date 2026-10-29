@@ -1,0 +1,13 @@
+muse_hash: bur 165, own 385, own+bur:Bramp 25, own+bur:none 1
+muse_default_tw: own 22
+def: own 27, bur 2
+fat: none
+ring: fill/F9 2, own 56
+user_tw42.lightpaper: own 39
+g41_def_tw42: none
+g41_def_tw64: bur 56, own 177
+g41_ring_tw42: none
+g41_ring_tw64: own 85, bur 61
+g41_user_tw42: own 39
+g41_user_tw64: own 217, bur 157, own+bur:Bramp 26
+All: bur 441 px (mean ink 0.704), own 1047 px (mean ink 0.741), own+bur:Bramp 51 px (mean ink 0.658), own+bur:none 1 px (mean ink 0.889), fill/F9 2 px (mean ink 0.867)

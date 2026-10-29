@@ -1,0 +1,153 @@
+{
+ "merge": {
+  "pops": 23,
+  "px": 781,
+  "mergedPx": 323,
+  "popsLeft": 21,
+  "pxLeft": 408,
+  "whollyMerged": 1
+ },
+ "units": {
+  "0": 772,
+  "1": 9
+ },
+ "table": {
+  "merge": {
+   "junction": {
+    "pops": 15,
+    "px": 386,
+    "worst": [
+     {
+      "seq": "def_drag",
+      "from": 24,
+      "to": 25,
+      "at": [
+       25.19,
+       8.95
+      ],
+      "px": 41,
+      "mix": {
+       "merge": 25,
+       "winner none>arc/top": 5,
+       "winner foot>none": 9,
+       "winner foot>arc": 2
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_def_drag\\crops\\def_drag_merge_junction_24.png"
+     }
+    ]
+   }
+  },
+  "winner none>foot": {
+   "junction": {
+    "pops": 3,
+    "px": 127,
+    "worst": [
+     {
+      "seq": "def_drag",
+      "from": 0,
+      "to": 1,
+      "at": [
+       11.059,
+       4.894
+      ],
+      "px": 97,
+      "mix": {
+       "merge": 28,
+       "winner none>foot": 38,
+       "winner none>foot/top": 6,
+       "winner arc>foot": 2,
+       "winner arc>none/top": 22,
+       "winner arc>none": 1
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_def_drag\\crops\\def_drag_winner-none-foot_junction_0.png"
+     }
+    ]
+   }
+  },
+  "winner none>arc/top": {
+   "junction": {
+    "pops": 1,
+    "px": 70,
+    "worst": [
+     {
+      "seq": "def_drag",
+      "from": 0,
+      "to": 1,
+      "at": [
+       11.192,
+       5.732
+      ],
+      "px": 70,
+      "mix": {
+       "winner none>arc/top": 31,
+       "winner foot>arc/top": 2,
+       "merge": 2,
+       "winner none>arc": 6,
+       "winner foot>arc": 2,
+       "winner foot>none": 26,
+       "winner foot>none/top": 1
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_def_drag\\crops\\def_drag_winner-none-arc-top_junction_0.png"
+     }
+    ]
+   }
+  },
+  "winner foot>none": {
+   "junction": {
+    "pops": 3,
+    "px": 129,
+    "worst": [
+     {
+      "seq": "def_drag",
+      "from": 1,
+      "to": 2,
+      "at": [
+       11.064,
+       4.897
+      ],
+      "px": 99,
+      "mix": {
+       "merge": 26,
+       "winner foot>none": 41,
+       "winner foot>none/top": 6,
+       "winner none>arc/top": 23,
+       "winner foot>arc": 1,
+       "winner none>arc": 2
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_def_drag\\crops\\def_drag_winner-foot-none_junction_1.png"
+     }
+    ]
+   }
+  },
+  "winner arc>none/top": {
+   "junction": {
+    "pops": 1,
+    "px": 69,
+    "worst": [
+     {
+      "seq": "def_drag",
+      "from": 1,
+      "to": 2,
+      "at": [
+       11.186,
+       5.733
+      ],
+      "px": 69,
+      "mix": {
+       "winner arc>none/top": 32,
+       "winner arc>foot/top": 2,
+       "merge": 2,
+       "winner arc>none": 6,
+       "winner arc>foot": 1,
+       "winner none>foot": 26
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_def_drag\\crops\\def_drag_winner-arc-none-top_junction_1.png"
+     }
+    ]
+   }
+  }
+ },
+ "lines": [
+  "def_drag: by mechanism {\"merge\":15,\"winner none>foot\":3,\"winner none>arc/top\":1,\"winner foot>none\":3,\"winner arc>none/top\":1}"
+ ]
+}

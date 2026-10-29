@@ -1,0 +1,9 @@
+def_drag: by mechanism {"merge":15,"winner none>foot":3,"winner none>arc/top":1,"winner foot>none":3,"winner arc>none/top":1}
+merge (S1's f1): 323 of 781 pop px merged in either frame; 1 of 23 pops wholly merged; with the merged px excused 21 pops (408 px) remain
+ramp units at the pop px (max of the two frames): {"0":772,"1":9}
+mechanism | place | pops | px | worst (seq from>to at px)
+merge | junction | 15 | 386 | def_drag 24>25 (25.19, 8.95) 41 px
+winner foot>none | junction | 3 | 129 | def_drag 1>2 (11.064, 4.897) 99 px
+winner none>foot | junction | 3 | 127 | def_drag 0>1 (11.059, 4.894) 97 px
+winner none>arc/top | junction | 1 | 70 | def_drag 0>1 (11.192, 5.732) 70 px
+winner arc>none/top | junction | 1 | 69 | def_drag 1>2 (11.186, 5.733) 69 px

@@ -1,0 +1,301 @@
+{
+ "merge": {
+  "pops": 32,
+  "px": 338,
+  "mergedPx": 159,
+  "popsLeft": 14,
+  "pxLeft": 138,
+  "whollyMerged": 1
+ },
+ "units": {
+  "0": 218,
+  "1": 111,
+  "2": 9
+ },
+ "table": {
+  "winner none>arc/top": {
+   "junction": {
+    "pops": 2,
+    "px": 13,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 35,
+      "to": 36,
+      "at": [
+       22.879,
+       17.458
+      ],
+      "px": 7,
+      "mix": {
+       "winner none>arc/top": 3,
+       "motion arc": 1,
+       "gate arc": 3
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_drag\\crops\\muse_drag_winner-none-arc-top_junction_35.png"
+     }
+    ]
+   }
+  },
+  "winner V>none": {
+   "junction": {
+    "pops": 1,
+    "px": 17,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 0,
+      "to": 1,
+      "at": [
+       18.903,
+       18.337
+      ],
+      "px": 17,
+      "mix": {
+       "merge": 6,
+       "winner V>none": 7,
+       "winner foot>none": 4
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_drag\\crops\\muse_drag_winner-V-none_junction_0.png"
+     }
+    ]
+   }
+  },
+  "winner foot>foot/top": {
+   "crossing60+": {
+    "pops": 1,
+    "px": 4,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 1,
+      "to": 2,
+      "at": [
+       19.335,
+       15.027
+      ],
+      "px": 4,
+      "mix": {
+       "gate foot": 1,
+       "winner foot>foot/top": 3
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_drag\\crops\\muse_drag_winner-foot-foot-top_crossing60+_1.png"
+     }
+    ]
+   }
+  },
+  "winner arc>none/top": {
+   "junction": {
+    "pops": 1,
+    "px": 5,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 1,
+      "to": 2,
+      "at": [
+       22.851,
+       17.435
+      ],
+      "px": 5,
+      "mix": {
+       "winner arc>none/top": 2,
+       "motion arc": 2,
+       "gate arc": 1
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_drag\\crops\\muse_drag_winner-arc-none-top_junction_1.png"
+     }
+    ]
+   }
+  },
+  "motion arc": {
+   "junction": {
+    "pops": 3,
+    "px": 26,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 35,
+      "to": 36,
+      "at": [
+       22.993,
+       17.554
+      ],
+      "px": 12,
+      "mix": {
+       "motion arc": 5,
+       "merge": 4,
+       "winner arc>none": 3
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_drag\\crops\\muse_drag_motion-arc_junction_35.png"
+     }
+    ]
+   }
+  },
+  "merge": {
+   "junction": {
+    "pops": 5,
+    "px": 42,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 24,
+      "to": 25,
+      "at": [
+       23.144,
+       10.554
+      ],
+      "px": 22,
+      "mix": {
+       "merge": 17,
+       "winner none>arc": 5
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_drag\\crops\\muse_drag_merge_junction_24.png"
+     }
+    ]
+   },
+   "crossing60+": {
+    "pops": 11,
+    "px": 121,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 13,
+      "to": 14,
+      "at": [
+       23.055,
+       10.684
+      ],
+      "px": 42,
+      "mix": {
+       "merge": 25,
+       "winner arc>none": 5,
+       "winner tB>none": 11,
+       "winner tB>foot": 1
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_drag\\crops\\muse_drag_merge_crossing60+_13.png"
+     }
+    ]
+   },
+   "elsewhere": {
+    "pops": 2,
+    "px": 10,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 26,
+      "to": 27,
+      "at": [
+       16.017,
+       19.534
+      ],
+      "px": 6,
+      "mix": {
+       "merge": 4,
+       "winner foot>foot/top": 2
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_drag\\crops\\muse_drag_merge_elsewhere_26.png"
+     }
+    ]
+   }
+  },
+  "winner none>foot": {
+   "crossing60+": {
+    "pops": 2,
+    "px": 40,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 10,
+      "to": 11,
+      "at": [
+       34.828,
+       6.605
+      ],
+      "px": 21,
+      "mix": {
+       "merge": 7,
+       "winner none>foot": 12,
+       "winner arc>foot": 2
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_drag\\crops\\muse_drag_winner-none-foot_crossing60+_10.png"
+     }
+    ]
+   }
+  },
+  "winner foot>none": {
+   "crossing60+": {
+    "pops": 2,
+    "px": 40,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 11,
+      "to": 12,
+      "at": [
+       34.828,
+       6.605
+      ],
+      "px": 21,
+      "mix": {
+       "merge": 7,
+       "winner foot>none": 12,
+       "winner foot>arc": 2
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_drag\\crops\\muse_drag_winner-foot-none_crossing60+_11.png"
+     }
+    ]
+   }
+  },
+  "gate foot": {
+   "junction": {
+    "pops": 1,
+    "px": 4,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 22,
+      "to": 23,
+      "at": [
+       19.241,
+       18.595
+      ],
+      "px": 4,
+      "mix": {
+       "gate foot": 2,
+       "gate arc": 1,
+       "merge": 1
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_drag\\crops\\muse_drag_gate-foot_junction_22.png"
+     }
+    ]
+   }
+  },
+  "winner none>tB": {
+   "crossing60+": {
+    "pops": 1,
+    "px": 16,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 24,
+      "to": 25,
+      "at": [
+       22.92,
+       10.846
+      ],
+      "px": 16,
+      "mix": {
+       "winner none>tB": 13,
+       "merge": 3
+      },
+      "crop": ".claude\\probes\\K1040\\s1\\out\\s1c\\pops_s1b\\mech_muse_drag\\crops\\muse_drag_winner-none-tB_crossing60+_24.png"
+     }
+    ]
+   }
+  }
+ },
+ "lines": [
+  "muse_drag: by mechanism {\"winner none>arc/top\":2,\"winner V>none\":1,\"winner foot>foot/top\":1,\"winner arc>none/top\":1,\"motion arc\":3,\"merge\":18,\"winner none>foot\":2,\"winner foot>none\":2,\"gate foot\":1,\"winner none>tB\":1}"
+ ]
+}

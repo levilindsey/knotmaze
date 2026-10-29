@@ -1,0 +1,61 @@
+{
+ "scene": "fat",
+ "ms": {
+  "build": 4695,
+  "raster": 2619,
+  "own": 2072,
+  "checks": 0
+ },
+ "raster": {
+  "nx": 1240,
+  "ny": 900,
+  "scale": 1,
+  "inkedPx": 121969,
+  "multiPx": 64466,
+  "tiePx": 2
+ },
+ "check1": {
+  "id": 1,
+  "name": "interior ink",
+  "status": "pass",
+  "value": "0 px deeper than W + 1 px (mouth 0 px)",
+  "threshold": "0 px",
+  "n": 1116000
+ },
+ "check1deep": {
+  "byTerm": {},
+  "sites": []
+ },
+ "check2own": {
+  "corners": 0,
+  "ballPx": 0,
+  "footPx": 0,
+  "tangent": 0
+ },
+ "check11own": {
+  "n": 428,
+  "bad": 0,
+  "fails": []
+ },
+ "strips": {
+  "inked": 172910,
+  "bad": 0,
+  "byKind": {
+   "foot": 172910
+  },
+  "badByKind": {},
+  "worst": []
+ },
+ "freeEnds": {
+  "n": 0,
+  "by": {
+   "junction": 0,
+   "crossing": 0,
+   "other": 0
+  },
+  "list": []
+ },
+ "checks": [],
+ "captions": [],
+ "diagnostics": []
+}

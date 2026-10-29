@@ -179,3 +179,21 @@ scenes.ts and q4 to the Handoff.
 - **The report.** Your final report ends with `Ledger items` (new
   follow-ups, residuals, decisions for Levi) and K1040's handle fields:
   owner, branch, last commit, evidence, next, brief, env.
+
+## Findings
+
+Times are local (PDT). Start 02:05:12, cap 04:05:12.
+
+**F1 · The pops accounting: f1's relabel is most of S1b's rise
+(step 2, 02:05-02:25).** S1b's definition reproduces F13 exactly
+(225 pops / 4051 px; #1 2832 px). `pops_mech.ts` re-evaluates both
+frames of every pop pixel and marks it merged when two same-chain
+candidates lie within σ there (the merge in `pieces()`; S1's f1).
+1768 of the 4051 px (44%) are merged in either frame, but only 16 of
+the 225 pops are wholly merged. With the merged px excused, 145 pops
+of 4 px or more remain (1934 px), against S1's 123 (1764 px). So f1's
+relabel accounts for 80 of the 102 extra pops and 2117 of the 2287
+extra px, as S1b inferred. The flag says where a pixel sits, not what
+switched there; step 4 assigns mechanisms by what changes between the
+frames. Output: `out/s1c/pops_s1b/` (`pops.ts` with `DUMP=1` keeps
+each pop's pixels), `out/s1c/pops_s1b/mech/mech.txt`.
