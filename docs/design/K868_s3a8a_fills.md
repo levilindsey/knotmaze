@@ -431,3 +431,61 @@ fill carried the GPU foot as dead text.
 - The raster census re-ran on the split text
   (`pops18/raster18_split.log`): 0 px differ from S3a7's z-split fills
   at any level, and the table matches G5's.
+
+## Handoff
+
+Stopped 2026-10-28 11:45, with order steps 1-7 done except a clean
+browser frame-time A/B. Branch `k868-s3a` (worktree
+`.claude/worktrees/k868-s3a`); the work ends at `f68fdca`. Probes are in
+`.claude/probes/S3a/*18*`, and their results, logs and crops in
+`.claude/probes/S3a/pops18/`. The full suite passes on `f68fdca`: 2,436 tests,
+6 skipped. The dev server is stopped.
+
+With lbp on, the label now runs the CPU rewrite (bit for bit, pinned)
+and the GPU fills (`LABEL_GPU_FILLS`).
+
+**The goal is not met.** After the FieldModel, the label's CPU costs
+1.7-2.8 ms p50 and 2.8-7.2 ms p95 over two runs (G2, G8), plus the
+tables' 0.41-0.46 ms p95, against the 2 ms p95 goal. Nothing new pops
+unexplained (G6). With lbp off, nothing drawn changes.
+
+### Missing, in order
+
+1. **Window range records.** Write one record per window and shift
+   (about 730 a frame, against 31-35K today), with the fill shader
+   walking that range's table segments for the nearest foot. Pin the
+   walked foot against today's per-piece records: ends within 1e-4 in
+   float32, then the raster census.
+2. **The crossing rows** (0.5-1.0 ms p50, up to 3.9 ms p95). The near
+   test uses `Math.hypot` against a sum. A squared compare is not bit
+   for bit at the boundary and needs a pin decision; the other option
+   is moving the rows to the GPU.
+3. **The p95 spread** (G8): GC or load is inferred, not tested.
+   Re-time on a quiet machine, or count the allocations a frame.
+4. **A clean browser frame-time A/B.** The runs in G7 are physics
+   frames (`phw=0`, mid-settle). Measure on a settled page, with the
+   label's own share per frame and a GPU timer query on the tube and
+   fill passes.
+5. **flip_0.** Call 4's inference is falsified (G4). The band pass's
+   11-bit rounding of the tube's s is untested.
+
+### Residuals
+
+- With `gpuFills` set but the GPU fill program missing (a compile
+  failure), the fills are skipped silently (the `gf` guard in
+  `label_pass.ts`).
+- LabelPass compiles both fill programs: the z-split one at init, the
+  GPU one in setTables.
+- The GPU tube program has no K320 budget.
+- G7's GL error showed only on muse; why is not known, and what the
+  rejected draws left off screen was not checked.
+
+### For S3a8b and S3a10
+
+- The 2 ms budget includes the tables.
+- Shaders read the label tables directly: the fill's foot and the
+  shared `PLATEAU_GLSL` depth.
+- Keep a program's variants split in JS (K320, G9).
+- Unbind every texture unit by name after a pass (G7).
+- S3a10: the GPU fills need only window bounds (ta, tb, chain, k) and
+  their target: no z, no ZTOL and no vertexRanges.
