@@ -183,14 +183,28 @@ describe("form B: the terms", () => {
     expect(c.Vy).toBeCloseTo(H, 9);
     expect(c.qx).toBeCloseTo((H + c.r) / t15, 9);
     expect(c.qy).toBeCloseTo(H + c.r, 9);
-    // With little room the fit clamps r: a crossing 7h up the END caps it (L = 5, room 0.888).
+    // With little room the cap gate stops the ball: a crossing 7h up the END
+    // caps it (L = 5). On straight arms each foot sits ρ/tan 15° from the
+    // root, so w = ss(slack/0.5h) with slack = L − W − ρ/tan 15°, and r is
+    // S's integral over the solve's 32 nodes from h (S1d F3).
     const sc = tee(30, 0, [ray(7 * Math.cos(Math.PI / 6), 7 * Math.sin(Math.PI / 6), 120, -10, 10)], [{ a: { chain: 1, s: 7 }, b: { chain: 2, s: 10 }, over: "b" }]);
     const f2 = new FormB(sc);
     const c2 = cornerNear(f2, 1 / t15, 1);
     const end = f2.arms.find((a) => a.kind === "end")!;
     expect(end.L).toBeCloseTo(7 - 1 / Math.tan(Math.PI / 4) - 1, 9);
-    expect(c2.room).toBeCloseTo(end.L - W - H / t15, 9);
-    expect(c2.r).toBeCloseTo(Math.min(1.5 * H * t15, Math.max(0, c2.room) * t15), 9);
+    const r0 = 1.5 * H * t15;
+    const wAt = (rho: number) => smooth(0, 1, (end.L - W - rho / t15) / (0.5 * H));
+    let rInt = 0;
+    let sPrev = wAt(H);
+    for (let k = 1; k <= 32 && sPrev > 0; k++) {
+      const sK = Math.min(sPrev, wAt(H + (k * r0) / 32));
+      rInt += (0.5 * (sPrev + sK) * r0) / 32;
+      sPrev = sK;
+    }
+    expect(rInt).toBeLessThan(0.5 * r0);
+    expect(c2.r).toBeCloseTo(rInt, 9);
+    expect(c2.qx).toBeCloseTo((H + c2.r) / t15, 9);
+    expect(c2.qy).toBeCloseTo(H + c2.r, 9);
   });
 
   it("a curved arm: the corner matches a numeric rolling ball", () => {
@@ -209,7 +223,9 @@ describe("form B: the terms", () => {
     ];
     const fb = new FormB(scene([pts, ray(0, 0, 90, 0, 10, 0.05)], [junction([0, 0], arms)]));
     const c = cornerNear(fb, 1, 1);
-    expect(c.theta).toBeCloseTo(Math.acos(-1 / 9), 2);
+    // θ is the oracle's: between the arms' chords at 2h (S1d F3), the arc's
+    // chord turned H/R below the tangent.
+    expect(c.theta).toBeCloseTo(Math.PI / 2 + H / R, 5);
     const rho = H + c.r;
     expect(c.r).toBeCloseTo(Math.min(2 * H, 1.5 * H * Math.tan(c.theta / 2)), 9);
     // The circle's offset by ρ meets the END's offset x = ρ: y = √(R² + 2Rρ) − R (chord sag ≤ 4e-5).

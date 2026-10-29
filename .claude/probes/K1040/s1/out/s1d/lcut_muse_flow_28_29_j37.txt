@@ -1,0 +1,12 @@
+t 0.0000:
+  arm ei 0 pi 11 dir 1 sR 11.678 L 0.8400 Lcut 0.8400; passes: d 2.810 th 1.568 c 2.009; d 5.243 th 0.264 c 1.828; d 1.667 th 1.505 c 0.840
+  arm ei 1 pi 11 dir -1 sR 11.678 L 0.8332 Lcut 0.8332; passes: d 4.249 th 0.264 c 0.833; d 2.844 th 1.374 c 1.956; d 1.742 th 1.354 c 0.844
+  arm ei 2 pi 63 dir 1 sR -0.299 L 1.6128 Lcut 1.6128; passes: d 2.456 th 1.468 c 1.613
+t 0.2500 (L moved):
+  arm ei 0 pi 11 dir 1 sR 11.681 L 0.8413 Lcut 0.8413; passes: d 2.812 th 1.566 c 2.010; d 5.245 th 0.251 c 1.672; d 1.668 th 1.505 c 0.841
+  arm ei 1 pi 11 dir -1 sR 11.681 L 0.6784 Lcut 0.6784; passes: d 4.251 th 0.251 c 0.678; d 2.845 th 1.374 c 1.957; d 1.743 th 1.352 c 0.844
+  arm ei 2 pi 63 dir 1 sR -0.299 L 1.6128 Lcut 1.6128; passes: d 2.456 th 1.468 c 1.613
+t 1.0000:
+  arm ei 0 pi 11 dir 1 sR 11.693 L 0.8449 Lcut 0.8449; passes: d 2.816 th 1.561 c 2.012; d 5.250 th 0.247 c 1.633; d 1.672 th 1.505 c 0.845
+  arm ei 1 pi 11 dir -1 sR 11.693 L 0.6413 Lcut 0.6413; passes: d 4.258 th 0.247 c 0.641; d 2.847 th 1.390 c 1.968; d 1.744 th 1.347 c 0.843
+  arm ei 2 pi 63 dir 1 sR -0.299 L 1.6129 Lcut 1.6129; passes: d 2.456 th 1.468 c 1.613

@@ -15,6 +15,7 @@ $P = $PSScriptRoot
 $O = Join-Path $P "out\s1d"
 $L = Join-Path $O "logs"
 New-Item -ItemType Directory -Force $L | Out-Null
+New-Item -ItemType Directory -Force "$O\rate" | Out-Null
 $seqs = @("def_drag", "def_flow", "muse_drag", "muse_flow")
 $jobs = @()
 function Start-Job1([string]$name, [string]$cmd) {
