@@ -1,13 +1,27 @@
-muse_hash              #1  1012 ->  173  free ends  113 ->  39
-muse_default_tw        #1   193 ->  171  free ends   23 ->  12
-def                    #1    65 ->   36  free ends   23 ->  17
-fat                    #1     0 ->    0  free ends    0 ->   0
-ring                   #1   101 ->   40  free ends    7 ->   2
-user_tw42.lightpaper   #1    71 ->   32  free ends   28 ->  26
-g41_def_tw42           #1     0 ->    0  free ends    3 ->   1
-g41_def_tw64           #1   348 ->   89  free ends   65 ->  16
-g41_ring_tw42          #1     0 ->    0  free ends    0 ->   0
-g41_ring_tw64          #1   189 ->    0  free ends   13 ->   6
-g41_user_tw42          #1    70 ->   31  free ends   28 ->  26
-g41_user_tw64          #1   783 ->  289  free ends   42 ->  24
+muse_hash              #1  1012 ->   173  free ends  113 ->   39
+muse_default_tw        #1   193 ->   171  free ends   23 ->   12
+def                    #1    65 ->    36  free ends   23 ->   17
+fat                    #1     0 ->     0  free ends    0 ->    0
+ring                   #1   101 ->    40  free ends    7 ->    2
+user_tw42.lightpaper   #1    71 ->    32  free ends   28 ->   26
+g41_def_tw42           #1     0 ->     0  free ends    3 ->    1
+g41_def_tw64           #1   348 ->    89  free ends   65 ->   16
+g41_ring_tw42          #1     0 ->     0  free ends    0 ->    0
+g41_ring_tw64          #1   189 ->     0  free ends   13 ->    6
+g41_user_tw42          #1    70 ->    31  free ends   28 ->   26
+g41_user_tw64          #1   783 ->   289  free ends   42 ->   24
 All #1 2832 -> 861, free ends 345 -> 169
+Shared checks, scenes failing (of 12):
+  #11 depth order at crossings: 1 -> 1
+  #14 pinned depth keeps each crossing's over/under: 1 -> 1
+  #15 no group holds both passes of a crossing: 0 -> 0
+  #16 every crossing's over keeps both its borders: 2 -> 2
+  #2 corner joins: 11 -> 11
+  #3 dead-end caps: 1 -> 1
+  #4 arm width: 11 -> 11
+  #5 no double strokes: 11 -> 11
+  #6 under bands end on the over's outline: 5 -> 5
+  #7 over edges continuous: 2 -> 2
+  #8 two edges per section: 0 -> 0
+  #9 band width (outline walks): 11 -> 11
+  #9 band width (sections): 5 -> 5
