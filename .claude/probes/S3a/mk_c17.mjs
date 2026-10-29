@@ -322,6 +322,189 @@ if (FOOT === "track") {
 `,
   );
 }
+// K992 s4 (--smin cert, c23): S by construction. S at each fixed node is the
+// minimum of w over the stretch so far, certified to TAU by bounds on w's
+// inputs between evaluated points (no DROP: no sample placement decides
+// anything), the fold is located to 1e-6h, and footMaxA/B are certified upper
+// bounds of each foot over the stretch, so the cap refit's gate is a measure.
+// c23: mk_c17.mjs --refine 10 --foot track --smin cert --out oracle_c23.ts
+const SMIN = opt("smin", "");
+const TAU = Number(opt("tau", "1e-5"));
+if (SMIN === "cert") {
+  if (FOOT !== "track") throw new Error("--smin cert needs --foot track");
+  if (!SRC) s = `// K992 probe c23 (mk_c17.mjs --smin cert, tau ${TAU}): c21 with S the certified running minimum at fixed nodes.\n` + s;
+  repBlock(
+    ["        // S at fixed nodes h + k·dN (trapezoid rule), until S reaches 0.\n"],
+    "        // q: the branch point at δ* = h + area, from the last node below it.\n",
+    `        // K992 s4: S by construction. S at the fixed node h + k·dN is the
+        // minimum of w over [h, h + k·dN], certified to ${TAU}: between two
+        // evaluated points w has a lower bound from bounds on its inputs (den
+        // moves at most 2(2 − den)/δ per unit of δ, since a vertex foot turns
+        // its normal at tan(φ/2)/δ; a foot moves at most tan(φ/2) =
+        // sqrt(2/den − 1); the overlap margin at most |u| + 1; an interval
+        // whose ends differ by more, a foot's hop at a concave vertex, takes
+        // their difference), and only an interval whose bound falls below the
+        // running minimum by more than ${TAU} is halved, down to 1e-6h. Where
+        // the points fall decides nothing: each node's S is the minimum to
+        // within ${TAU}, the trapezoid over the fixed nodes is continuous in
+        // it, and a fold is located to 1e-6h. footMaxA/B are upper bounds of
+        // each foot over the stretch the march covered, so the cap refit runs
+        // wherever the cap gate could move r and skipping it changes nothing.
+        const dN = r / ${NODES};
+        const FLOOR = 1e-6 * h;
+        // The overlap margin: how much farther from q than the tracked
+        // contact the nearest point of the window outside the contact's basin
+        // is. The basin is the run of the arm around the contact over which
+        // the distance to q rises (it ends at a vertex where the distance
+        // starts to fall); ov = max(0, −margin).
+        const margin = (pl: Poly, x: number, y: number, sf: number, win: [number, number], dc: number): number => {
+          const f0 = pointAt(pl, sf);
+          const base = sf - normS(pl, sf);
+          let hi = win[1];
+          let k = f0.k;
+          let bk = base;
+          for (let it = 0; it <= pl.nseg; it++) {
+            const sv = bk + pl.s[k] + pl.segLen[k];
+            if (sv >= win[1]) break;
+            let k2 = k + 1;
+            let b2 = bk;
+            if (k2 >= pl.nseg) {
+              if (!pl.closed) break;
+              k2 = 0;
+              b2 = bk + pl.len;
+            }
+            const e = segB(pl, k2);
+            if ((pl.x[k2] - x) * (pl.x[e] - pl.x[k2]) + (pl.y[k2] - y) * (pl.y[e] - pl.y[k2]) < 0) {
+              hi = sv;
+              break;
+            }
+            k = k2;
+            bk = b2;
+          }
+          let lo = win[0];
+          k = f0.k;
+          bk = base;
+          for (let it = 0; it <= pl.nseg; it++) {
+            const sv = bk + pl.s[k];
+            if (sv <= win[0]) break;
+            let k2 = k - 1;
+            let b2 = bk;
+            if (k2 < 0) {
+              if (!pl.closed) break;
+              k2 = pl.nseg - 1;
+              b2 = bk - pl.len;
+            }
+            if ((pl.x[k] - x) * (pl.x[k2] - pl.x[k]) + (pl.y[k] - y) * (pl.y[k2] - pl.y[k]) < 0) {
+              lo = sv;
+              break;
+            }
+            k = k2;
+            bk = b2;
+          }
+          let d2 = Infinity;
+          if (lo > win[0]) d2 = footInWindow(pl, x, y, win[0], lo).d;
+          if (hi < win[1]) d2 = Math.min(d2, footInWindow(pl, x, y, hi, win[1]).d);
+          return d2 - dc;
+        };
+        type Pt = { p: Sol; d: number; w: number; den: number; fA: number; fB: number; mA: number; mB: number };
+        const at = (p: Sol, d: number): Pt => {
+          const gA = pointAt(pa, p.sA);
+          const gB = pointAt(pb, p.sB);
+          const ax = p.x - gA.x;
+          const ay = p.y - gA.y;
+          const bx = p.x - gB.x;
+          const by = p.y - gB.y;
+          const dA = Math.hypot(ax, ay);
+          const dB = Math.hypot(bx, by);
+          const den = 1 + (ax * bx + ay * by) / (dA * dB);
+          const mA = margin(pa, p.x, p.y, p.sA, winA, dA);
+          const mB = margin(pb, p.x, p.y, p.sB, winB, dB);
+          const fA = footA(p);
+          const fB = footB(p);
+          const slack = Math.min(capLimA - fA, capLimB - fB);
+          let w = ss(1 + Math.min(0, mA, mB) / (${OVE} * h)) * ss((den / denV - ${K0}) / ${+(K1 - K0).toFixed(6)});
+          if (slack !== Infinity) w *= ss(slack / (${EPSC} * h));
+          return { p, d, w, den, fA, fB, mA, mB };
+        };
+        // The lower bound over [f0's δ, f1's δ] (length D) of a function
+        // that moves at most L per unit of δ, or at most as far as its ends
+        // differ where they differ by more.
+        const vb = (f0: number, f1: number, L: number, D: number): number =>
+          f0 === Infinity || f1 === Infinity ? Math.min(f0, f1) - L * D : 0.5 * (f0 + f1) - 0.5 * Math.max(L * D, Math.abs(f1 - f0));
+        const bounds = (a: Pt, b: Pt): { w: number; fA: number; fB: number } => {
+          const D = b.d - a.d;
+          const den1 = vb(a.den, b.den, 4 / a.d, D);
+          const denLo = Math.max(1e-9, vb(a.den, b.den, (2 * (2 - Math.max(0, den1))) / a.d, D));
+          const U = Math.sqrt(2 / denLo);
+          const Lf = Math.sqrt(Math.max(0, 2 / denLo - 1));
+          const mLo = Math.min(vb(a.mA, b.mA, U + 1, D), vb(a.mB, b.mB, U + 1, D));
+          const fA = -vb(-a.fA, -b.fA, Lf, D);
+          const fB = -vb(-a.fB, -b.fB, Lf, D);
+          let w = ss(1 + Math.min(0, mLo) / (${OVE} * h)) * ss((denLo / denV - ${K0}) / ${+(K1 - K0).toFixed(6)});
+          const slack = Math.min(capLimA - fA, capLimB - fB);
+          if (slack !== Infinity) w *= ss(slack / (${EPSC} * h));
+          return { w, fA, fB };
+        };
+        // The minimum of w over [a, b] where it is below inc, to within ${TAU}.
+        const minOn = (a: Pt, b: Pt, inc: number): number => {
+          let m = Math.min(inc, b.w);
+          const st: Pt[] = [a, b];
+          while (st.length) {
+            const rt = st.pop()!;
+            const lf = st.pop()!;
+            if (rt.d - lf.d <= FLOOR || bounds(lf, rt).w >= m - ${TAU}) continue;
+            const dm = 0.5 * (lf.d + rt.d);
+            const pm = advance(lf.p, lf.d, dm, dm - lf.d);
+            if (!pm) continue;
+            const M = at(pm, dm);
+            if (M.w < m) m = M.w;
+            st.push(M, rt, lf, M);
+          }
+          return m;
+        };
+        let P0 = at(vt, h);
+        let S = P0.w;
+        let area = 0;
+        const nodes: Sol[] = [vt];
+        const nodeD: number[] = [h];
+        let fmA = P0.fA;
+        let fmB = P0.fB;
+        for (let k = 1; k <= ${NODES} && S > 0; k++) {
+          const d0 = h + (k - 1) * dN;
+          const d1 = h + k * dN;
+          const p1 = advance(P0.p, d0, d1, dN);
+          let P1: Pt;
+          if (p1) P1 = at(p1, d1);
+          else {
+            // The branch folds: its last point, located to 1e-6h.
+            P1 = P0;
+            let hiD = d1;
+            while (hiD - P1.d > FLOOR) {
+              const dm = 0.5 * (P1.d + hiD);
+              const pm = advance(P1.p, P1.d, dm, dm - P1.d);
+              if (pm) P1 = at(pm, dm);
+              else hiD = dm;
+            }
+          }
+          const fb = bounds(P0, P1);
+          fmA = Math.max(fmA, fb.fA);
+          fmB = Math.max(fmB, fb.fB);
+          const S1 = minOn(P0, P1, S);
+          area += 0.5 * (S + S1) * (P1.d - d0);
+          S = S1;
+          if (!p1) {
+            c.fold = P1.d;
+            break;
+          }
+          nodes.push(P1.p);
+          nodeD.push(d1);
+          P0 = P1;
+        }
+        c.footMaxA = fmA;
+        c.footMaxB = fmB;
+`,
+  );
+}
 writeFileSync(OUT, s);
 console.log(`wrote ${OUT}`);
 
