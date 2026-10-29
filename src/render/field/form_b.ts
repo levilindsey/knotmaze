@@ -10,7 +10,7 @@
 // by a run with no crossing), each arm's span [root, cap] with its cap as a
 // min over a fixed candidate set, and one corner per cyclically adjacent
 // arm pair (V, θ, r0, fit, r_max by bisection, q by Newton from V, the
-// tracked feet t_a, t_b, ω: the overlap gate times the V margin's fade).
+// tracked feet t_a, t_b, the overlap gate ω).
 //
 // Per pixel (evalPoint): the pieces (local minima of |p − c_i(s)|, one per
 // chain within σ), their surfaces, the top surface, and the ink as the max
@@ -44,13 +44,6 @@
 //   outside); an endpoint's term (D ≥ 0) counts only inside its surface.
 // - A fill covers at weight ω: a pixel covered by its surface only through
 //   fills mixes that surface's ink over what lies below by the fill's ω.
-// - ω's V margin (S1c F4): a corner exists only while V's feet lie inside
-//   both arms. As a pair opens toward straight they slide to the junction
-//   end of the arms and the corner went in one step, fill and all. ω
-//   carries ss(0, vw, m), m = min(dVa, dVb), the feet's distance from the
-//   junction end, so it has faded out by then. The far-end gate
-//   (dV >= L) stays hard: L jumps with Lcut's gate, so a fade there would
-//   jump with it, and no recorded corner left that way.
 
 import type { FieldScene } from "./scene";
 import { candidates, closestOnSeg, dS, footInWindow, makePoly, normS, pointAt, segB, segOfS, SegGrid, zAt } from "./geom";
@@ -78,8 +71,6 @@ export interface FormBParams {
   coneK?: number;
   /** D6: the overlap gate's width (default 0.05 h). */
   ovw?: number;
-  /** S1c F4: the V margin's fade width, world units (default 0.25 h). */
-  vw?: number;
   /** Corner radius share, cr in r0 = (cr/3)·min(2h, 1.5h·tan(θ/2)) (default look.cuspRadius, else 3). */
   cr?: number;
   /** D1: the fold fade (default true). */
@@ -245,7 +236,6 @@ export class FormB {
   readonly zt: number;
   readonly K: number;
   readonly ovw: number;
-  readonly vw: number;
   readonly cr: number;
   readonly fold: boolean;
   readonly force: NonNullable<FormBParams["force"]>;
@@ -282,7 +272,6 @@ export class FormB {
     this.zt = params.zt ?? 0.1 * look.depthAmp;
     this.K = params.coneK ?? h / this.zt;
     this.ovw = params.ovw ?? 0.05 * h;
-    this.vw = params.vw ?? 0.25 * h;
     this.cr = params.cr ?? look.cuspRadius ?? 3;
     this.fold = params.fold ?? true;
     this.force = params.force ?? {};
@@ -639,14 +628,7 @@ export class FormB {
         ov = Math.max(ov, R - c.d);
       }
     }
-    // The V margin (S1c F4): as a pair opens toward straight, V's feet slide
-    // to the junction end of their arms, where the gate above drops the
-    // corner and its whole fill with it. ω fades to 0 over the margin's last
-    // vw instead. Only the junction end: the far end's margin, L - dV, moves
-    // with L's own jumps (Lcut's gate) and dropped no corner in the
-    // recordings (F4).
-    const mV = Math.min(dVa, dVb);
-    const omega = this.force.omega ?? ss(0, 1, 1 - ov / this.ovw) * ss(tol, this.vw, mV);
+    const omega = this.force.omega ?? ss(0, 1, 1 - ov / this.ovw);
     return {
       j: ji,
       g: this.groupOf[ji],
