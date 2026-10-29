@@ -16,6 +16,10 @@
 // tables (label_tables.ts), buildLabelPiecesGpu and LabelPass's GPU tubes,
 // as label_app.ts does with the flag on. ?gf=1 / ?gf=0 (K868 S3a8a) force the
 // GPU pieces' fills on or off (S3a7's z-split windows); absent, the default.
+//
+// ?strips=ref (K868 S3a8b) builds the strips with the frozen S3a8a copy
+// (test/render/label/fixtures/label_band_ref.ts): the cuts' kinks as they
+// were before call 2, for the stage's raster census.
 import type { FieldScene } from "../src/render/field/scene";
 import type { FieldModel, OracleParams } from "../src/render/field/oracle";
 import { buildLabelPieces, buildLabelPiecesGpu, labelLimits } from "../src/render/label/label_pieces";
@@ -29,6 +33,7 @@ const oraclePath = q.get("oracle") ?? "/src/render/field/oracle.ts";
 const gpu = q.get("gpu") === "1";
 const gfq = q.get("gf");
 const gpuFills = gfq === null ? undefined : gfq === "1";
+const stripsRef = q.get("strips") === "ref";
 const tableBuilder = new LabelTableBuilder();
 const logEl = document.getElementById("log")!;
 const log = (s: string): void => {
@@ -50,6 +55,10 @@ interface OracleModule {
 
 async function main(): Promise<void> {
   const O = (await import(/* @vite-ignore */ oraclePath)) as OracleModule;
+  const refPath = "/test/render/label/fixtures/label_band_ref.ts";
+  const build = stripsRef
+    ? ((await import(/* @vite-ignore */ refPath)) as { buildBandStripsRef: typeof buildBandStrips }).buildBandStripsRef
+    : buildBandStrips;
   const canvas = document.createElement("canvas");
   canvas.width = 4;
   canvas.height = 4;
@@ -65,6 +74,7 @@ async function main(): Promise<void> {
   G.__pops = {
     oracle: oraclePath,
     gpu,
+    strips: stripsRef ? "ref" : "src",
     /** One frame: the coverage (base64, w*h bytes, row 0 = top) and the
      * CPU build's time. The scene arrives as JSON text. */
     render(sceneJson: string, cam: LabelCamera, w: number, h: number) {
@@ -85,7 +95,7 @@ async function main(): Promise<void> {
       const T = gpu ? tableBuilder.build(m) : null;
       const pieces = T ? buildLabelPiecesGpu(m, T, gpuFills) : buildLabelPieces(m);
       const lines = findSwitchLines(m);
-      const strips = buildBandStrips(m, pieces, lines);
+      const strips = build(m, pieces, lines);
       const t1 = performance.now();
       pass.setPieces(pieces);
       pass.setTables(T);
