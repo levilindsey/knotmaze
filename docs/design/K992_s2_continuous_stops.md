@@ -208,3 +208,159 @@ Sweeps (largest step; `pops17/sweeps_c17.txt` has master, b16 and c17,
   and c17f 2.03 / 2.45. B acute30: c17 dr 1.51, dq 5.82, over the test's
   bound (q moves 1/sin 15° = 3.86 times r on the 30° corner, and c17's
   step there is the node quantization); c17f 0.50 / 1.93, as b16.
+
+**G4 (Order step 3: the census. Neither rule passes, so this is step 5).**
+`scripts/label_pops.ts --oracle .claude/probes/S3a/oracle_c17.ts` (and
+`oracle_c17f.ts`), at zoom 1 (`pops17/c17`, `c17f`) and with `--windows`
+(`pops17/c17z`, `c17fz`), each under the perf lock. Master and b16 are
+stage 1's runs (`pops16/before16`, `b16`, `before16z`, `b16z`).
+`class17.ts` sorts every pop into a class (`pops17/class17_<tag>.txt`).
+Gate: no more pops per transition and no more pop area than master at
+zoom 1 and in every window, and less total area at each zoom.
+
+Zoom 1, pops (per transition) and area:
+
+| Sequence | master | b16 | c17 | c17f |
+|---|---|---|---|---|
+| def_drag | 6 (0.15) 359 | 6 (0.15) 130 | 2 (0.05) 114 | 0 (0.00) 0 |
+| def_flow | 27 (0.68) 1078 | 6 (0.15) 108 | 3 (0.07) 18 | 3 (0.07) 18 |
+| muse_drag | 77 (1.93) 1273 | 62 (1.55) 1044 | 50 (1.25) 918 | **163 (4.08) 2600** |
+| muse_flow | 266 (6.65) 7368 | 97 (2.42) 2438 | 151 (3.77) 2798 | 137 (3.42) 2358 |
+| all | 376 / 10078 | 171 / 3720 | 206 / 3848 | 303 / 4976 |
+
+The windows:
+
+| Window | master | b16 | c17 | c17f |
+|---|---|---|---|---|
+| def_drag@w0 | 249 (6.22) 77105 | 220 (5.50) 12617 | 216 (5.40) 21171 | 215 (5.38) 12676 |
+| def_flow@w0 | 184 (4.60) 89876 | 153 (3.83) 1631 | 153 (3.83) 1631 | 153 (3.83) 1631 |
+| def_flow@w1 | 229 (5.72) 62961 | 117 (2.92) 19188 | 106 (2.65) 1435 | 94 (2.35) 867 |
+| def_flow@w2 | 254 (6.35) 45930 | 239 (5.97) 3524 | 237 (5.92) 3471 | 237 (5.92) 3471 |
+| muse_drag@w0 | 314 (7.85) 155916 | 105 (2.63) 13269 | 108 (2.70) 13228 | 112 (2.80) 13206 |
+| muse_drag@w1 | 286 (7.15) 32786 | 260 (6.50) 2855 | 265 (6.63) 2859 | 273 (6.83) 20636 |
+| muse_drag@w2 | 879 (21.98) 74530 | **950 (23.75)** 65514 | **986 (24.65)** 54975 | **990 (24.75)** 54825 |
+| muse_flow@w0 | 659 (16.48) 162138 | 659 (16.48) 13156 | **716 (17.90)** 113677 | **731 (18.27)** 71445 |
+| muse_flow@w1 | 393 (9.82) 150117 | 174 (4.35) 16341 | 195 (4.88) 13091 | 181 (4.53) 12761 |
+| muse_flow@w2 | 878 (21.95) 213948 | 400 (10.00) 44424 | 449 (11.22) 79298 | 500 (12.50) 125903 |
+| all | 4325 / 1065307 | 3277 / 192519 | 3431 / 304836 | 3486 / 317421 |
+
+- **c17** passes at zoom 1. It fails two windows on pop count:
+  muse_drag@w2 (986 against 879) and muse_flow@w0 (716 against 659).
+- **c17f** fails at zoom 1 on muse_drag (163 pops against 77) and the
+  same two windows (990, 731). b16 also fails muse_drag@w2 (950).
+- Area passes everywhere for both, and the totals fall to 0.38 and 0.49
+  of master's at zoom 1, and to 0.29 and 0.30 in the windows.
+
+By class (`class17.ts`), as pops/area. Class 1 is the cut loop's cap
+jumps that the rule follows (cap) plus V's own moves, folds and live
+flips (V). The rule's own pops are rule:switch and rule:fold (V stayed
+with the arms, so these are c17's node quantization), rule, and refit
+without a cap change. The rest are not corner events.
+
+| Class | zoom 1 c17 | zoom 1 c17f | windows c17 | windows c17f |
+|---|---|---|---|---|
+| class 1: cap | 49/1649 | 120/3628 | 111/81610 | 121/111803 |
+| class 1: V | 2/9 | 2/12 | 21/4788 | 22/4602 |
+| rule:switch, rule:fold | 48/1206 | 0/0 | 18/50444 | 0/0 |
+| rule, refit | 12/187 | 10/163 | 55/2673 | 22/594 |
+| reach | 44/308 | 40/238 | 1553/95101 | 859/48522 |
+| spans | 25/237 | 114/790 | 451/26987 | 1813/120481 |
+| none | 21/140 | 15/92 | 1210/42097 | 631/26424 |
+| cluster, count | 5/112 | 2/53 | 12/1136 | 18/4995 |
+
+What fails, and why:
+- **muse_drag@w2** fails on small pops: under 50 px, master has 719 of
+  879, c17 819 of 986 and c17f 823 of 990. Against master (by the
+  census's cause), c17 has 81 jump:amp against 31; class17 puts 66 of its
+  pops there in cap and 16 in V, so that excess is class 1. It also has
+  reach 459 against 426 and spans 95 against 63. Without its class-1
+  pops, c17 still has 904.
+- **muse_flow@w0 under c17** is the node quantization at j12/0: rule:fold
+  14/33796 and rule:switch 4/16648, which add up to 18023, 15773 and
+  16648 px of pops at t3, t16 and t22. c17f removes it (the largest pop falls
+  from 10877 to 2231 px; b16's is 994), but its count rises to 731, and
+  the census now attributes those pops to spans (453/40731; c17's spans
+  is 133/14559).
+- **c17f moves the attribution to spans.** Its window total barely
+  changes (3486 against 3431), but 1813 pops go to spans (c17: 451), and
+  fewer to reach and none (in muse_drag@w2: spans 691 against 95, reach
+  167 against 459, none 45 against 341). So c17f changes a pass's spans
+  on many more frames. The largest spans events are at the census's spans
+  keys 66, 67, 45 and 84 (`jumpev16.cjs`, not traced further). Its
+  class-1 cap area also grows: 111803 against 81610 in the windows, and
+  muse_flow@w2 cap 47/101774 against 29/58734.
+- **c17f tips the cut loop at j100.** That is the zoom-1 failure: in
+  muse_drag, class17 puts cap at 65/1947 and spans at 71/472. j100/2
+  flips between r 0.873h and sharp at t4, t5, t6, t8, t10, t11, t13,
+  t14, t19, t33, t34 and t36, and j100/1 flips between sharp and about
+  1.49h (t10, t28-30). At t4, `cap16.ts` gives c17f's arm-A cap at
+  j100/2 as 1.186h (crossing 216's pass, 3.29h out). b16 and c17 give
+  3.822h (crossing 348's pass, 6.05h out), and c17f is back to 3.823h at
+  t5. With the cap at 1.186h, the re-fit finds no room past V and draws
+  the corner sharp. The cut loop reads the first solve's corners, and
+  c17f's first solve differs from c17's only by the refinement, so the
+  cut loop tips on a small change in the first solve. The suspect is the
+  side choice `fa >= fb`, but this was not traced: that is the cut loop's
+  caps (K1000), which this stage does not start on. footMaxA/B feed only
+  the re-fit gate (oracle_c17f.ts about line 1021), not the cut loop.
+
+Verdict: neither rule lands. `src/render/field/oracle.ts` is unchanged,
+`corner_continuity.test.ts` stays red, and there was no raster14, cost14
+or motion strip. The cost was not measured: the census logs' build p50s
+were taken under load. c17f's unit sweeps are inside the test's bound
+(G3), but the test was not run against c17f, because nothing landed.
+
+## Handoff
+
+Stopped at Order step 5 on 2026-10-28, inside the cap. Agent
+`a8ee2b8f6b53cc951` of claude session
+bf876705-c9fa-4b1f-83ea-e173dac6cff3.
+- **Branch:** `k992-corners`, worktree `.claude/worktrees/k992-corners`.
+  Commits: G1 `49545c96`, G2 `8dc3236a`, G3 `5badf654`, and G4 plus this
+  handoff on top. Only this brief is tracked. No change to `src/`,
+  tracked `scripts/`, tests or pins.
+- **Evidence (untracked) in `.claude/probes/S3a/`:**
+  - The rule's generator: `mk_c17.mjs`, with `--refine` (0 = c17,
+    10 = c17f) and `--drop` (0.125). Its outputs are `oracle_c17.ts` and
+    `oracle_c17f.ts`, plus the checks `oracle_c17chk.ts` and
+    `oracle_c17dbg.ts`.
+  - Probes: `class17.ts` (the classes above), `pick17.ts` (per-frame r, q
+    and fit under several oracles; `--detail`), `cap16.ts` (a corner's
+    caps and their sources), `nodes17.ts`, `fillmap17.ts`, `crops17.ts`,
+    `sweeps17.ps1` (the 20 sites plus the unit sweeps), and
+    `locked17.ps1` (one command under the perf lock).
+  - Results in `pops17/`: the census directories and logs, the
+    `class17_*.txt` files, `sweeps_c17*.txt`, `pick17_*.txt`,
+    `crops17.png` and `j139_t23_17.png`.
+- **To re-run:**
+  - The census: `pwsh .claude/probes/S3a/locked17.ps1 -What "<what>"
+    -Cmd "node node_modules\vite-node\vite-node.mjs scripts\label_pops.ts
+    --oracle .claude/probes/S3a/oracle_c17f.ts --out
+    .claude/probes/S3a/pops17 --tag <tag> --port 5392 [--windows]"`.
+  - The classes: `node node_modules\vite-node\vite-node.mjs
+    .claude\probes\S3a\class17.ts .claude/probes/S3a/pops17 <tag>
+    --oracle .claude/probes/S3a/oracle_<x>.ts`.
+  - The comparison: `node .claude\probes\S3a\cmp16.cjs .claude/probes/S3a
+    <dirs...>`.
+  - Env: `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts
+    --port 5392 --strictPort --host 127.0.0.1`.
+- **Open for the next stage:**
+  1. The gate. muse_drag@w2 fails for b16, c17 and c17f alike, mostly on
+     small reach, none and spans pops plus class 1. The coordinator or
+     Levi decides whether the gate counts class 1 and pops that are not
+     corner events.
+  2. Why c17f's first solve tips the cut loop at j100 (muse_drag t4/t5,
+     `cap16.ts muse_drag 4 j100/2 --k 2 --oracles b16,c17,c17f`), and
+     what changes the spans so often under c17f. Both lead into the cut
+     loop (K1000).
+  3. Landing c17f needs a `--src` mode in `mk_c17.mjs`: the chain
+     mk_a16 `--src`, then mk_b16 `--src`, then mk_c17, with b16's header
+     rep skipped.
+  4. Smaller items:
+     - c17f's footMax counts only nodes with S > 0.
+     - def_drag t2 j45/1 steps 0.011h (8.3x the arms).
+     - The refit gate flips without a cap change (c17: 30 pops, 405 px
+       in the windows).
+     - class17's cap class is a lower bound, and its V/q split is a
+       proxy.
+- The dev server on port 5392 is stopped.
