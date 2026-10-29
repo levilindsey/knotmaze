@@ -8,8 +8,14 @@
 //      across 2(h + r), below which the strip between them is narrower than
 //      the ball (master's solve jumped to another root there, about 900
 //      times the step).
-// At every step the corner stays live, and V, q and r move no more than
-// three times the sweep's step.
+//  (C) the tangent feet through a second contact: (B)'s sweep with the
+//      END's far part rising at 10° instead of parallel. Below about 2(h + r)
+//      the ball stops where it touches the END twice (its rising part and
+//      its far part) and the through once, and the branch past that point
+//      is steep, not folded. c17f's feet were a fresh nearest point from q
+//      there and jumped between the two contacts (K992 stage 3, F1 and F2).
+// At every step the corner stays live, and V, q and r (and in (C) the
+// tangent feet) move no more than three times the sweep's step.
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -49,8 +55,8 @@ function truncated(s0: FieldScene, ci: number, L: number): FieldScene {
   return s;
 }
 
-/** acute30 with its END rising at 30° to H off the through, then parallel (fixed point counts). */
-function grazing(H: number): FieldScene {
+/** acute30 with its END rising at 30° to H off the through, then parallel or rising at `rise` (fixed point counts). */
+function grazing(H: number, rise = 0): FieldScene {
   const s = scene("acute30");
   const h = s.look.halfWidth;
   const a = 30 * (Math.PI / 180);
@@ -61,7 +67,7 @@ function grazing(H: number): FieldScene {
   const n1 = 60;
   for (let i = 0; i <= n1; i++) pts.push(x0 + (run * i) / n1, y0 + ((H - y0) * i) / n1);
   const n2 = 90;
-  for (let i = 1; i <= n2; i++) pts.push(x0 + run + (18 * h * i) / n2, H);
+  for (let i = 1; i <= n2; i++) pts.push(x0 + run + (18 * h * i) / n2, H + ((18 * h * i) / n2) * Math.tan(rise));
   s.chains[1].pts = pts;
   s.chains[1].z = new Array(pts.length / 2).fill(0);
   let len = 0;
@@ -73,7 +79,7 @@ function grazing(H: number): FieldScene {
 /** Junction 0's corner `index` at every step of the sweep from `from` to `to`, and each step's motion. */
 function sweep(make: (u: number) => FieldScene, from: number, to: number, n: number, index: number) {
   const step = Math.abs(to - from) / n;
-  const out = { step, h: 1, dead: [] as number[], worst: { dV: 0, dq: 0, dr: 0, at: { dV: -1, dq: -1, dr: -1 } }, rounds: 0 };
+  const out = { step, h: 1, dead: [] as number[], worst: { dV: 0, dq: 0, dr: 0, dfA: 0, dfB: 0, at: { dV: -1, dq: -1, dr: -1, dfA: -1, dfB: -1 } }, rounds: 0 };
   let prev: Corner | null = null;
   for (let i = 0; i <= n; i++) {
     const sc = make(from + ((to - from) * i) / n);
@@ -90,8 +96,11 @@ function sweep(make: (u: number) => FieldScene, from: number, to: number, n: num
         dV: Math.hypot(c.V[0] - prev.V[0], c.V[1] - prev.V[1]),
         dq: Math.hypot(c.q[0] - prev.q[0], c.q[1] - prev.q[1]),
         dr: Math.abs(c.r - prev.r),
+        // The tangent feet, arc length along each arm (both round).
+        dfA: c.r > 0 && prev.r > 0 ? Math.abs(c.sTA - prev.sTA) : 0,
+        dfB: c.r > 0 && prev.r > 0 ? Math.abs(c.sTB - prev.sTB) : 0,
       };
-      for (const k of ["dV", "dq", "dr"] as const)
+      for (const k of ["dV", "dq", "dr", "dfA", "dfB"] as const)
         if (d[k] > out.worst[k]) {
           out.worst[k] = d[k];
           out.worst.at[k] = i;
@@ -102,10 +111,11 @@ function sweep(make: (u: number) => FieldScene, from: number, to: number, n: num
   return out;
 }
 
-function expectContinuous(r: ReturnType<typeof sweep>, what: string): void {
+type Motion = "dV" | "dq" | "dr" | "dfA" | "dfB";
+function expectContinuous(r: ReturnType<typeof sweep>, what: string, keys: Motion[] = ["dV", "dq", "dr"]): void {
   expect(r.dead, `${what}: steps with no live corner`).toEqual([]);
   const bound = 3 * r.step + 1e-6 * r.h;
-  for (const k of ["dV", "dq", "dr"] as const)
+  for (const k of keys)
     expect(r.worst[k], `${what}: the largest ${k} (step ${r.worst.at[k]}), ${(r.worst[k] / r.step).toFixed(2)} sweep steps`).toBeLessThanOrEqual(bound);
 }
 
@@ -124,5 +134,10 @@ describe("K992: corners are continuous in the geometry", () => {
     const r = sweep((H) => grazing(H), 2.3, 3.3, 100, 0);
     expectContinuous(r, "acute30 graze");
     expect(r.rounds).toBe(101);
+  });
+
+  it("(C) the tangent feet through a second contact: the END's far part rising at 10°", { timeout: 60_000 }, () => {
+    const r = sweep((H) => grazing(H, (10 * Math.PI) / 180), 2.3, 3.3, 100, 0);
+    expectContinuous(r, "acute30 graze feet", ["dV", "dq", "dr", "dfA", "dfB"]);
   });
 });
