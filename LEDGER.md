@@ -293,12 +293,12 @@ Next free ID: K1045.
 
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
-  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 running.
-  - owner: nobody since 2026-10-29 00:12 (merged; agent `af2f6426877a368bb` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
-  - branch: mainline; last commit: `1b7fa02c`
-  - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; S1's driver in `s1/`); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: S1b: fix the junction holes (F12) and each fade's rate (F11) in form_b.ts, then rerun S1's gate and attribute what remains (`docs/design/K1040_s1_reference.md` ## Handoff)
-  - brief: `docs/design/K1040_s1_reference.md`
+  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 merged (1b7fa02c); S1b running.
+  - owner: agent `a30195430cfc03d7a` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-29 00:19, 2 h cap ~02:19)
+  - branch: `k1040-field`, worktree `.claude/worktrees/k1040-field`; last commit: `27cfb2e1`
+  - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; S1's and S1b's driver in `s1/`, S1's baseline in `s1/out/`, S1b's runs in `s1/out/s1b/`); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
+  - next: S1b (running): fix the junction holes (F12) and each fade's rate (F11) in form_b.ts, rerun S1's gate, attribute what remains (the brief's Order); then S2
+  - brief: `docs/design/K1040_s1b_holes_fades.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
