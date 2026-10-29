@@ -1,0 +1,3 @@
+== def_flow: 41 kept frames; windows at frames 0 x 41; 40 pairs, 41 frames in 180 s
+  label_pops' rule: 75 pops (1649 px) by {"junction":69,"crossing60+":6}; unexplained outside fades 1777 px; inside fades {"f2":363,"f8":1290,"f6":34,"f4":7}; max motion 1.051 px
+  Q3 tie band (nSurf >= 2, dz < zt) per frame 89-121 px, sum {"crossing60+":3484,"crossing30-60":605,"junction":5}; tie mix px per frame 97,92,96,99,98,96,105,91,96,91,97,102,99,91,93,89,98,103,107,98,101,97,96,93,100,99,102,93,98,98,102,97,98,107,94,95,88,94,87,93,91

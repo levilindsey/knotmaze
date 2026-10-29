@@ -48,6 +48,8 @@ const SCENES = [
 const scenes = process.argv[2] ? process.argv[2].split(",") : SCENES;
 const SCALE = Number(process.env.SCALE ?? 1);
 const SKIP_CHECKS = process.env.SKIP_CHECKS === "1";
+// S1c: DEEPMAX caps the #1 deep sites listed (default 12); each carries its pixel (i, j).
+const DEEPMAX = Number(process.env.DEEPMAX ?? 12);
 
 function loadScene(name: string): FieldScene {
   const s = JSON.parse(readFileSync(join(sceneDir, `${name}.json`), "utf8")) as FieldScene;
@@ -145,9 +147,9 @@ function raster(fb: FormB, s: FieldScene, ctx: CheckContext) {
       if (!(ink[o] > 0.5 && F[o] > lim)) continue;
       const k = `${kind[o] >= 0 ? TERM_NAMES[kind[o]] : "none"}${fade[o] ? `+f${fade[o]}` : ""}`;
       deep[k] = (deep[k] ?? 0) + 1;
-      if (deepSites.length < 12) {
+      if (deepSites.length < DEEPMAX) {
         const [x, y] = world(i, j);
-        deepSites.push({ at: [r3(x), r3(y)], F: r3(F[o]), ink: r3(ink[o]), k, top: top[o] === OWN ? "own" : top[o], chain: chain[o], s: r3(sv[o]) });
+        deepSites.push({ at: [r3(x), r3(y)], ij: [i, j], F: r3(F[o]), ink: r3(ink[o]), k, top: top[o] === OWN ? "own" : top[o], chain: chain[o], s: r3(sv[o]) });
       }
     }
   return { nx, ny, c1, strips, tie, multi, inkedPx, deep, deepSites };

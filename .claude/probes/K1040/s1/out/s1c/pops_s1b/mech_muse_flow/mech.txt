@@ -1,0 +1,24 @@
+muse_flow: by mechanism {"merge":48,"winner foot>foot/top":2,"motion foot":3,"winner arc>none":1,"winner none>arc/top":3,"motion arc":6,"winner none>tB":1,"winner foot>none":5,"winner none>foot":5,"winner tB>none":7,"gate foot":4,"winner none>arc":4,"winner V>none":1,"winner arc>none/top":2,"gate arc":2,"winner arc>tB":1}
+merge (S1's f1): 585 of 1283 pop px merged in either frame; 7 of 95 pops wholly merged; with the merged px excused 59 pops (572 px) remain
+ramp units at the pop px (max of the two frames): {"0":933,"1":348,"2":2}
+mechanism | place | pops | px | worst (seq from>to at px)
+merge | junction | 32 | 511 | muse_flow 3>4 (23.095, 10.572) 48 px
+merge | crossing60+ | 16 | 295 | muse_flow 19>20 (23.096, 10.579) 49 px
+winner none>foot | junction | 3 | 86 | muse_flow 5>6 (26.505, 22.747) 57 px
+winner none>foot | crossing60+ | 2 | 10 | muse_flow 39>40 (34.967, 6.647) 6 px
+winner none>arc | junction | 4 | 73 | muse_flow 18>19 (22.919, 17.473) 41 px
+winner foot>none | junction | 4 | 60 | muse_flow 18>19 (26.826, 23.324) 25 px
+winner foot>none | crossing60+ | 1 | 7 | muse_flow 32>33 (34.944, 6.647) 7 px
+winner tB>none | junction | 5 | 34 | muse_flow 37>38 (24.762, 10.71) 9 px
+winner tB>none | crossing60+ | 2 | 30 | muse_flow 23>24 (22.944, 10.743) 16 px
+motion arc | junction | 6 | 42 | muse_flow 5>6 (22.959, 17.481) 13 px
+winner none>arc/top | junction | 3 | 34 | muse_flow 4>5 (19.862, 18.571) 18 px
+winner arc>none/top | junction | 2 | 27 | muse_flow 28>29 (26.782, 23.386) 14 px
+gate foot | crossing60+ | 4 | 16 | muse_flow 11>12 (22.95, 6.06) 4 px
+winner arc>none | junction | 1 | 14 | muse_flow 4>5 (19.737, 18.43) 14 px
+motion foot | crossing60+ | 3 | 12 | muse_flow 1>2 (16.19, 4.746) 4 px
+winner foot>foot/top | crossing60+ | 2 | 8 | muse_flow 0>1 (19.053, 32.654) 4 px
+gate arc | junction | 2 | 8 | muse_flow 31>32 (19.898, 18.548) 4 px
+winner V>none | junction | 1 | 6 | muse_flow 24>25 (5.322, 14.604) 6 px
+winner none>tB | junction | 1 | 5 | muse_flow 5>6 (24.888, 10.769) 5 px
+winner arc>tB | crossing60+ | 1 | 5 | muse_flow 37>38 (20.344, 24.862) 5 px

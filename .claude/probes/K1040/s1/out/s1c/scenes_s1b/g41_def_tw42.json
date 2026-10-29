@@ -1,0 +1,150 @@
+{
+ "scene": "g41_def_tw42",
+ "ms": {
+  "build": 4804,
+  "raster": 1797,
+  "own": 2377,
+  "checks": 0
+ },
+ "raster": {
+  "nx": 1240,
+  "ny": 900,
+  "scale": 1,
+  "inkedPx": 104468,
+  "multiPx": 31793,
+  "tiePx": 0
+ },
+ "check1": {
+  "id": 1,
+  "name": "interior ink",
+  "status": "pass",
+  "value": "0 px deeper than W + 1 px (mouth 0 px)",
+  "threshold": "0 px",
+  "n": 1116000
+ },
+ "check1deep": {
+  "byTerm": {},
+  "sites": []
+ },
+ "check2own": {
+  "corners": 426,
+  "ballPx": 2.204734264636848e-12,
+  "footPx": 2.026410169702985e-13,
+  "tangent": 8.262023669368418e-14
+ },
+ "check11own": {
+  "n": 353,
+  "bad": 0,
+  "fails": []
+ },
+ "strips": {
+  "inked": 123964,
+  "bad": 9,
+  "byKind": {
+   "foot": 114746,
+   "arc": 7164,
+   "tB": 987,
+   "tA": 1027,
+   "V": 40
+  },
+  "badByKind": {
+   "V/V": 9
+  },
+  "worst": [
+   [
+    25.278,
+    1.176,
+    "V"
+   ],
+   [
+    24.254,
+    1.221,
+    "V"
+   ],
+   [
+    25.278,
+    1.221,
+    "V"
+   ],
+   [
+    24.254,
+    1.266,
+    "V"
+   ],
+   [
+    25.278,
+    1.266,
+    "V"
+   ],
+   [
+    0.75,
+    7.453,
+    "V"
+   ],
+   [
+    0.75,
+    7.498,
+    "V"
+   ],
+   [
+    23.052,
+    10.436,
+    "V"
+   ],
+   [
+    1.107,
+    21.431,
+    "V"
+   ]
+  ]
+ },
+ "freeEnds": {
+  "n": 3,
+  "by": {
+   "junction": 3,
+   "crossing": 0,
+   "other": 0
+  },
+  "list": [
+   {
+    "at": [
+     20.601,
+     33.046
+    ],
+    "chain": 55,
+    "s": 36.156,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     12.683,
+     11.682
+    ],
+    "chain": 65,
+    "s": 10.321,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     22.435,
+     29.388
+    ],
+    "chain": 90,
+    "s": 13.223,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   }
+  ]
+ },
+ "checks": [],
+ "captions": [],
+ "diagnostics": []
+}

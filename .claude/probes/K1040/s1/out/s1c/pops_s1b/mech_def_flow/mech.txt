@@ -1,0 +1,14 @@
+def_flow: by mechanism {"merge":50,"winner foot>none":10,"winner none>foot":8,"winner none>arc/top":2,"winner arc>none/top":2,"winner tA>none":1,"winner none>tA":1,"gate arc":1}
+merge (S1's f1): 701 of 1649 pop px merged in either frame; 7 of 75 pops wholly merged; with the merged px excused 51 pops (816 px) remain
+ramp units at the pop px (max of the two frames): {"0":1601,"1":48}
+mechanism | place | pops | px | worst (seq from>to at px)
+merge | junction | 50 | 945 | def_flow 6>7 (11.122, 4.819) 88 px
+winner none>foot | junction | 6 | 265 | def_flow 16>17 (11.102, 4.863) 102 px
+winner none>foot | crossing60+ | 2 | 10 | def_flow 3>4 (21.178, 3.661) 6 px
+winner foot>none | junction | 6 | 159 | def_flow 17>18 (11.094, 4.822) 86 px
+winner foot>none | crossing60+ | 4 | 18 | def_flow 1>2 (21.165, 3.635) 5 px
+winner none>arc/top | junction | 2 | 119 | def_flow 16>17 (11.174, 5.65) 60 px
+winner arc>none/top | junction | 2 | 90 | def_flow 17>18 (11.127, 5.677) 60 px
+winner tA>none | junction | 1 | 21 | def_flow 33>34 (25.065, 30.349) 21 px
+winner none>tA | junction | 1 | 17 | def_flow 34>35 (25.04, 30.372) 17 px
+gate arc | junction | 1 | 5 | def_flow 37>38 (16.733, 13.76) 5 px

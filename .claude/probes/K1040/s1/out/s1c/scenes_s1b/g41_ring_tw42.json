@@ -1,0 +1,65 @@
+{
+ "scene": "g41_ring_tw42",
+ "ms": {
+  "build": 1120,
+  "raster": 1678,
+  "own": 652,
+  "checks": 0
+ },
+ "raster": {
+  "nx": 1240,
+  "ny": 900,
+  "scale": 1,
+  "inkedPx": 62253,
+  "multiPx": 17438,
+  "tiePx": 0
+ },
+ "check1": {
+  "id": 1,
+  "name": "interior ink",
+  "status": "pass",
+  "value": "0 px deeper than W + 1 px (mouth 0 px)",
+  "threshold": "0 px",
+  "n": 1116000
+ },
+ "check1deep": {
+  "byTerm": {},
+  "sites": []
+ },
+ "check2own": {
+  "corners": 63,
+  "ballPx": 1.225913578883506e-12,
+  "footPx": 9.937329768222359e-14,
+  "tangent": 6.220560092316847e-14
+ },
+ "check11own": {
+  "n": 87,
+  "bad": 0,
+  "fails": []
+ },
+ "strips": {
+  "inked": 69823,
+  "bad": 0,
+  "byKind": {
+   "foot": 66864,
+   "tB": 320,
+   "tA": 322,
+   "arc": 2300,
+   "V": 17
+  },
+  "badByKind": {},
+  "worst": []
+ },
+ "freeEnds": {
+  "n": 0,
+  "by": {
+   "junction": 0,
+   "crossing": 0,
+   "other": 0
+  },
+  "list": []
+ },
+ "checks": [],
+ "captions": [],
+ "diagnostics": []
+}
