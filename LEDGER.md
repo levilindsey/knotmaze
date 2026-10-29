@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1031.
+Next free ID: K1033.
 
 ## Waiting on Levi
 
@@ -297,14 +297,14 @@ Next free ID: K1031.
   - next: S3a8b4 (its brief's Order: gates 2 and 3 again against master26, every new window pop attributed to its piece with a verdict, each defect fixed or named); the merge once gate 3 is met; Levi sees lbp in motion after it; then S3a8d (K1010), S3a8c (K1007); then S3a10 (the FieldModel, about 265 ms of a 292 ms rebuilt frame, and the cut line's per-fragment inverse), K972, K973, sheet S3a, K943's bits, S3b
   - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`; K934: `docs/design/K934_recount.md`; S3a: `docs/design/K868_s3a_app.md`; S3a2: `docs/design/K868_s3a2_label.md`; S3a3: `docs/design/K868_s3a3_ink.md`; S3a4: `docs/design/K868_s3a4_rebuild.md`; S3a5: `docs/design/K868_s3a5_incremental.md`; S3a6: `docs/design/K868_s3a6_motion.md`; S3a7: `docs/design/K868_s3a7_pieces.md`; S3a8a: `docs/design/K868_s3a8a_fills.md`; S3a8b: `docs/design/K868_s3a8b_strips.md`; S3a8b2: `docs/design/K868_s3a8b2_wiring.md`; S3a8b3: `docs/design/K868_s3a8b3_cut_line.md`; S3a8b4: `docs/design/K868_s3a8b4_attribution.md` (both on branch `k868-s3a` until merged)
   - env: from the `k868-s3a` worktree, `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5381 --strictPort --host 127.0.0.1` (the config is untracked; S3a3's handoff, How to rerun)
-- **K992** · K868 corner rules continuous in the geometry (master's make 65-100% of the pop area). Stage 4's c23w (S the
-  certified minimum of wAt) landed in 9b549d30: windows 3236 pops / 132921 px (master 4325 / 1065307), zoom 1 101 / 1073
-  (376 / 10078). Left: F11 (corner_continuity (D), (E) skipped). Cost is K1022, sharp vs round K1001.
-  - owner: agent `a938433f6c7b49595` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, stage 5, started 2026-10-28 16:02, 2 h cap ~18:02); stage 4 merged 15:58 (`9b549d30`)
-  - branch: `k992-corners`, worktree `.claude/worktrees/k992-corners`; last commit: `952cf681` (stage 5's brief, on master; its WIP commits follow, unpushed)
-  - evidence: the worktree's `.claude/probes/S3a/` (keep the worktree; untracked except the generators and readers): S3a6's kit and stage 1's (`*14*`, `*16*`, `pops16/`), stage 2's `*17*` and `pops17/`, K1000 stage 1's `*19*`, `pops19/` and `cmpdir19/`, stage 3's `*21*` and `pops21/` (`mk_c17.mjs --foot track/--drop/--ove`, `mk_walk21.mjs`, `census21.ps1`, `locked21.ps1`, `land21.ps1`; the c21 oracles regenerate: mk_c17, then mk_cap19 `--mode cont`, then mk_walk21), stage 4's `*23*` and `pops23/`, stage 5's `*25*` and `pops25/`
-  - next: stage 5's Order: trace (E), define the branch from the frame alone and test that it is path-independent, build it, the census, land with (D) and (E) un-skipped, then raster25 and cost25 split by part (K1022); then the merge (agent_merge)
-  - brief: `docs/design/K992_s5_branch.md` (stage 4 `K992_s4_continuous_march.md` F9-F13 and ## Handoff, stage 3 `K992_s3_landing.md` F1-F8 and ## Handoff, stage 2 `K992_s2_continuous_stops.md`, stage 1 `K992_corner_rules.md`, K1000 `K1000_continuous_caps.md`)
+- **K992** · K868 corner rules continuous in the geometry (master's make 65-100% of the pop area). Stage 4's c23w landed
+  (9b549d30). Stage 5 made the march's branch a function of the frame ((D), (E) and the path test pass), but its census
+  fails: j56/1's r flips (def_flow@w1 area 27x); stage 6 traces and fixes it. Cost K1022, sharp/round K1001.
+  - owner: agent `a6bbed85539e13e9f` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, stage 6, started 2026-10-28 18:03, 2 h cap ~20:03); stage 5 stopped at its cap 17:56 (census failed, nothing landed)
+  - branch: `k992-corners`, worktree `.claude/worktrees/k992-corners`; last commit: `bd45e6e6` (stage 6's brief `27307006` cherry-picked onto stage 5's WIP `1a2bca55`; unpushed, base `952cf681`)
+  - evidence: the worktree's `.claude/probes/S3a/` (keep the worktree; untracked except the generators and readers): S3a6's kit and stage 1's (`*14*`, `*16*`, `pops16/`), stage 2's `*17*` and `pops17/`, K1000 stage 1's `*19*`, `pops19/` and `cmpdir19/`, stage 3's `*21*` and `pops21/` (`mk_c17.mjs --foot track/--drop/--ove`, `mk_walk21.mjs`, `census21.ps1`, `locked21.ps1`, `land21.ps1`; the c21 oracles regenerate: mk_c17, then mk_cap19 `--mode cont`, then mk_walk21), stage 4's `*23*` and `pops23/`, stage 5's `*25*` and `pops25/` (`census25.ps1`, `locked25.ps1`, `cmp25.ps1`, `march25.ts`, `d25.ts`, `pops25/c25z.log` and its crops, `npmtest25.log`; `mkt25.mjs` is stale), stage 6's `*27*` and `pops27/`
+  - next: stage 6's Order: trace j56/1 (a tie between two pieces, or a defect in stage 5's rule), make the branch continuous through it without the path-dependent branch, the tie test, the census at both zooms gated on pops and area, cost27 with the split (K1022); then the merge (agent_merge); then raster27
+  - brief: `docs/design/K992_s6_tie.md` (stage 5 `K992_s5_branch.md` F14-F17 and ## Handoff, on the branch; stage 4 `K992_s4_continuous_march.md` F9-F13 and ## Handoff, stage 3 `K992_s3_landing.md` F1-F8 and ## Handoff, stage 2 `K992_s2_continuous_stops.md`, stage 1 `K992_corner_rules.md`, K1000 `K1000_continuous_caps.md`)
   - env: from the `k992-corners` worktree, `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5392 --strictPort --host 127.0.0.1` (the config is untracked, copied from `k868-s3a`)
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -820,8 +820,8 @@ Every other item below waits on the trigger it names.
   31-35K), the crossing rows' `Math.hypot` near test (a pin call, or the GPU), and the p95 spread (GC or load,
   untested). `K868_s3a8a_fills.md` ## Handoff, Missing 1-3.
 - **K1022** · K992's c23w makes the label's CPU build 1.75x master's (the model 1.87x), over 2x on g41_def_tw42 (2.06)
-  and muse_default_tw (2.29); not attributed (the march, the caps, the walk, TAU 1e-4). Attribute and cut it with S3a10
-  (the FieldModel). `K992_s4_continuous_march.md` (cost23).
+  and muse_default_tw (2.29); not attributed (the march, the caps, the walk, TAU 1e-4). Stage 5's census builds took
+  916-1242 ms under load (master 433-784); stage 6's cost27 splits it. Cut it with S3a10. `K992_s4_continuous_march.md`.
 - **K1000** · K868 label: V's folds and live/unsolved flips (class 1) still pop. Stage 1 made the cut loop's caps
   continuous (branch `k992-corners`, `K1000_continuous_caps.md` ## Handoff); they landed with K992 in 9b549d30.
 - **K1015** · K868 label: passReach (the depth pins' walk) steps by h/8, so its reach moves in steps: the census's
@@ -1812,6 +1812,12 @@ Every other item below waits on the trigger it names.
 - **K1027** · Cursive a's and q's preset high joins after B3's reader fix: ba, va, wa 2.5-2.6 u from the font (1.7-1.9
   before B1), bq, vq, wq 5.0-5.4 u (2.2-3.0 in v6.1 A), as the redrawn tops miss where the font's joins land. J3's
   solved joins replace these presets (K1009). `K1019_cursive_b3.md` ## Handoff; NOTES N3.
+- **K1031** · K992 stage 5's branch rule (F15) leaves: far basins to the overlap gate; adjacency that forms while the
+  rival is nearer; a hop and a hop back in one interval; with several basins, a result that depends on the start basin;
+  the chord test, exact only on a straight q path; j115/2's V-foot hop at u 0.66 (F4). `K992_s5_branch.md` F15.
+- **K1032** · K992's continuity tests are slow under full-suite load: the short (D) and (E) 9.1 s and 6.6 s, K1000's (D)
+  22.6 s, against 60 s timeouts, so CI has little margin. The short (D) misses F11's jump at u 0.5175-0.52; only the full
+  sweep (`SWEEP=1`) and the path test cover it. `K992_s5_branch.md` F16-F17.
 - **K994** · npm audit (2026-10-28): 2 critical, 7 high, 2 moderate; production has 1 high (@xmldom/xmldom 0.8.13 via
   pixi.js 8.19.0), the rest is dev tooling. `npm audit fix` covers all but vitest's two criticals (take the next patched
   vitest); then turn Dependabot on. claude-config's dependency-vulnerability-roundup, 2026-10-28.
