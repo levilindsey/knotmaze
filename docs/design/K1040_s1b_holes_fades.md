@@ -265,3 +265,214 @@ with S1b's only in total, not class by class.
   hairpin, each with every fade held at 0, 0.25, 0.5, 0.75 and 1. The eye
   stays one 20 px component at its middle, where the oracle leaves paper
   too; the others enclose none.
+### F4 · Definition change: the fill's side test skips the foot's own arm (877b3e26)
+
+- Before: `inFill` refused a foot inside either arm's tube
+  (`fa.d < h − 1e-9·h`), the foot's own arm included. A foot lies h from
+  its own arm's centreline by construction, so that test flipped at
+  rounding level and the fill blinked along every corner's sides.
+- Now: the side test reads only the other arm.
+- Why: the first rate census (`out/s1b/rate/rate_before.txt`, F7) had
+  132 of 161 sites in breach; its largest class, a foot | none comb of
+  13,952 grid edges, went with F4.
+
+### F5 · Definition change: the burial is a ramp inside the tube, and the fill overlaps it (877b3e26)
+
+- Before: a piece B buried A's foot with its whole weight
+  w = B.ramp·B.selfW·A.ramp wherever the foot lay inside B's tube, a
+  step at B's outline. The fill held for r < dq ≤ rV.
+- Now: the burial is w·winW, with winW = 1 − ss(h − 2aa, h, |foot − B|):
+  one device px, inside the tube. The fill's side test starts where the
+  ramp starts (lim = h − 2aa), and its far bound is
+  V' = rV + 2aa / max(0.1, sin(θ/2)), so the fill spans the ramp's width
+  up to V.
+- Why: a step is the jump the rule forbids. Measured alternatives: the
+  ramp outside the tube, [h, h + 2aa], buried ink past the outline and
+  failed the T pin at 0.10; the inward ramp without the fill's overlap
+  left 69 of 161 sites in breach. F4 to F6 together: 132 → 33.
+
+### F6 · Definition change: a partial fill hands its buried weight to its arc (877b3e26)
+
+- Before: inside a fill with 0 < ω < 1 the foot kept (1 − ω) of its band,
+  the arc's ω·band2(dq − r) came only from T_ARC, and the pixel took the
+  larger term, so the ink jumped where the winner changed.
+- Now: the foot term carries the arc's share,
+  (1 − bur)·selfW·band2(h − D) + ω·band2(dq − r): the ink blends as ω
+  moves and across the winner change.
+- Why: the arc | foot class went from 458 grid edges to 0.
+
+### F7 · The rate census: 132 → 23 sites (b_rate.ts)
+
+- `b_rate.ts` walks ±3 px around S1's 161 recorded sites (the q4 fade
+  sites and the scene sites) at 1/8 px, and each step whose ink moves by
+  more than 0.02 again at 1/1024 px. A breach is over 3 per px.
+- Sites in breach, of 161: S1's definition 132 (`rate_before.txt`),
+  F4-F6 33 (`rate_f456*.txt`), F9 27 (`rate_f9.txt`), F10 23
+  (`rate_f10.txt`), F11 23 (`rate_f11.txt`, every class count the same).
+- What remains, in grid edges (fade bits: f1 fold, f2 cap, f4 tie, f8 ω):
+  foot+f2 | foot+f4 647 with the top changing and 307 without;
+  foot+f2 | none 75 (top changes); foot | foot+f4 74; arc | none 42 +
+  42; foot | foot+f2 2. The residuals below name what is known of them.
+
+### F8 · The fill key's bisector: no change (b_bisector.ts)
+
+- Every keyed fill pixel of the 12 scenes evaluated with the key held at
+  A's z and at B's z: the top differs at 0 px, so the jump on the
+  bisector changes nothing on screen and the definition keeps it.
+  `out/s1b/bisector/bisector.txt`.
+
+### F9 · Definition change: a same-chain corner buries in its other arm's tube (fe967fd9)
+
+- Before: only other pieces buried A's foot. Where a corner's two arms
+  are one chain, no second piece exists near the corner (the chain's
+  minima merge within σ), so nothing buried A's outline inside the
+  other arm's tube, and the outline ended in a step where the fill took
+  over (g41_ring_tw42, corner 31).
+- Now: such a corner buries A's foot inside the other arm's tube with
+  F5's ramp, read from the arm.
+- Why: b_rate 33 → 27.
+
+### F10 · Definition change: a cut nearer its root than λ reaches back past the root (fe967fd9)
+
+- Before: an arm's member ramp, ss(Lcut, Lcut − λ, d), began at its
+  root, so a cut closer to the root than λ began the ramp part-way
+  down, and a through chain's two arms met at the junction with
+  different weights: a step (muse_hash arms 28/29, chain s 39.4898,
+  Lcut 0.0662 < λ 0.4).
+- Now: the ramp reaches back past the root, and a through chain's two
+  arms keep one continuous ramp.
+- Why: b_rate 27 → 23.
+
+### F11 · Definition change: the arc keeps its share past a deeper burial (01:28)
+
+- Before (F6's form): the fill loop skipped a corner whose ω did not
+  exceed the burial found so far, so the arc's share dropped out where
+  a piece's burial passed ω. The eye pin at ω 0.5 jumped by 0.5 in
+  1/40 px at (1.0, −0.1): B's winW went 0.511 → 0.490, and the ink went
+  from the V term's 0.5 to a foot of 0.5 + 0.5.
+- Now: every fill that holds the foot gives the arc ω·band2(dq − r)
+  (their max), whichever burial wins; the burial stays the max of all.
+- Why: the eye reads 1.50 per px at every ω after it (2.36 at ω 0.25).
+  b_rate is unchanged (F7). 3375b7e7.
+
+### F12 · The rate pin (01:30)
+
+- `form B: watertight and the rate rule at every fade value (S1b)` in
+  `form_b.test.ts`: lines 1 px apart cross the T, acute, hairpin, eye,
+  cap and tie scenes, walked at 1/8 px and, where the ink moves by more
+  than 0.05, at 1/40 px; the bound is 3 per px. ω is also held at 0,
+  0.25, 0.5, 0.75 and 1. Fold, cap and tie are spatial fades: the walks
+  cross them, and holding one constant removes the ramp the rule is
+  about (the tie held at 0 is D4's hard switch, a jump of 1).
+- `out/s1b/logs/rate_pin3.txt`: T, acute, hairpin and tie 1.50 per px at
+  every value, the eye 1.50 (2.36 at ω 0.25); each natural walk shows
+  its scene's fade.
+- The cap scene fails, natural and at every ω: a jump of 0.752 in
+  1/40 px at (−0.9, 0.6025), where the END arm ends (L = Lcut = 0.3, y
+  0.6). Up to s 0.300 the END piece is in group 0 at ramp 0 and draws
+  ink 1.0; from s 0.302 it is OWN+1, under group 0, which reads 0.248
+  there. Inferred, not traced to a term: the 0.248 is the through
+  piece's band edge (D 0.3975). This is residual R1, pinned with
+  `it.fails`: the test turns red once R1 is fixed, and then becomes a
+  plain test.
+- S1's fade sweeps: D4's bound tightens to the rule (0.075 per 1/40 px).
+  D1's (0.075·1.05 per 1/20 px, about 1.6 per px) was already inside
+  it. D2+D5 and D6 sweep a scene parameter (a crossing's place, ω), not
+  the pixel's position, and keep their proportional bounds; motion's
+  rule is label_pops' (F13).
+
+### F13 · The gate against S1 (01:40; the F11 reruns 01:47)
+
+Run on fe967fd9 (F10), then again on 3375b7e7 (F11) into the `*_f11`
+directories and logs. The two agree: #1 pixels and free ends on all 12
+scenes, the shared checks' verdict counts, q5holes on all 13 runs, q4
+on def, fat and g41_def_tw64, and pops on <<POPS_SAME>>. `npm test`
+passes on 3375b7e7 (188 files, 2532 tests; `logs/npm_test_f11.txt`).
+
+| Scene | #1 failing px, S1 → S1b | Free ends, S1 → S1b (oracle) |
+|---|---|---|
+| muse_hash | 437 → 1012 | 118 → 113 (108) |
+| muse_default_tw | 257 → 193 | 134 → 23 (11) |
+| def | 101 → 65 | 113 → 23 (20) |
+| fat | 0 → 0 | 0 → 0 (0) |
+| ring | 112 → 101 | 23 → 7 (7) |
+| user_tw42.lightpaper | 143 → 71 | 99 → 28 (4) |
+| g41_def_tw42 | 37 → 0 | 80 → 3 (6) |
+| g41_def_tw64 | 209 → 348 | 115 → 65 (64) |
+| g41_ring_tw42 | 28 → 0 | 19 → 0 (4) |
+| g41_ring_tw64 | 70 → 189 | 14 → 13 (11) |
+| g41_user_tw42 | 141 → 70 | 98 → 28 (-) |
+| g41_user_tw64 | 652 → 783 | 58 → 42 (-) |
+| All | 2187 → 2832 | 871 → 345 |
+
+- #1 by term on all 12 (F11): foot+f2 1540 of 2832 px, foot 396, tB
+  322, arc 255, tA 217, foot+f8 62, tB+f2 32, the rest 8. g41_user_tw64's
+  783: foot 71, foot+f2 400, tA 81, tB 137, tB+f2 11, arc 83. #1 passes
+  on fat, g41_def_tw42 and g41_ring_tw42 (S1: fat only). Not attributed
+  by crop (step 5). `out/s1b/scenes/gate_table.txt`,
+  `logs/scenes_f11.txt`.
+- The shared checks (`runChecks`, scenes.ts line 273) read form B's ink
+  at ink ≥ 0.5 (the probe at line 272), along sections and walks laid
+  out from the K868 model; #2 (corner joins) and #14 read the model
+  alone. Scenes failing, S1 → S1b: #2 11 → 11, #3 1 → 1 (muse_hash:
+  Hausdorff 2.46 px, image 3.24 px), #4 11 → 11, #5 11 → 11, #6 5 → 5,
+  #7 3 → 2 (g41_def_tw64 passes now; muse_hash 21 of 700 lines,
+  g41_ring_tw64 3 of 174), #8 0 → 0, #9 sections 5 → 5, #9 walks
+  11 → 11, #11 1 → 1 (muse_hash), #14 1 → 1, #15 0 → 0, #16 2 → 2. Own
+  #2 (corner geometry, worst residual 3.0e-12 px) and own #11 hold on
+  all 12. The values were not compared with S1's, and #4-#7 and #9 are
+  not attributed on form B's ink (step 5).
+- q4, exact area coverage against the AA (`logs/q4.txt`,
+  `logs/q4_f11.txt`), S1 → S1b: pixels with |Δ| > 0.5, def 60 → 41, fat
+  0 → 0, ring 26 → 10, g41_def_tw64 46 → 2, muse_hash 51 → 26; with
+  |Δ| > 0.1, def 1463 → 1332, fat 1716 → 1716, ring 696 → 536,
+  g41_def_tw64 643 → 453, muse_hash 2115 → 1970. S1's 60 on def were
+  all inner+fade. S1b's 41 are inner 28, over 2 and outer/none 11, none
+  in a fade class (F2 took merges out of f1). The outer/none pixels all
+  read less ink than the hard form (mean Δ = −mean |Δ|), down to −0.984:
+  the AA'd form draws no term where the hard form inks nearly the whole
+  pixel. Not attributed.
+- q5holes (`logs/q5holes_f11.txt`): 38 holes in 9 of the 12 scenes at
+  dpr 1, and 6 in muse_hash at dpr 2. The oracle leaves at least half of
+  each one paper and covers none, so all 44 are eyes of the look (F1).
+
+Pops, the full run (`WINDOWS=0 WLEN=41`; `out/s1b/pops_full/`, F11 in
+`out/s1b/pops_f11/`):
+
+| Recording | Pops (px), S1 → S1b | Unexplained px outside fades | All unexplained px |
+|---|---|---|---|
+| def_drag | 18 (364) → 23 (781) | 420 → 816 | 2004 → 889 |
+| def_flow | 38 (656) → 75 (1649) | 841 → 1777 | 8633 → 3471 |
+| muse_drag | 13 (130) → 32 (338) | 356 → 621 | 2610 → 1845 |
+| muse_flow | 54 (614) → 95 (1283) | 1253 → 2234 | 9314 → 7989 |
+| All | 123 (1764) → 225 (4051) | 2870 → 5448 | 22561 → 14194 |
+
+- Observed: the unexplained pixels fell by 37%, and those outside fades
+  nearly doubled. S1's f1 label covered 10,622 of them; it covers 1 now
+  (F2: a merge is no fade). Pops by place: junction 97 → 169, crossing
+  26 → 56.
+- Inferred, not tested: most of the added pops are pixels S1 excused
+  under f1 that label_pops' rule now counts. The test: count S1b's pop
+  pixels where two same-chain minima merge within σ.
+### Residuals (S1b)
+
+- R1 · The g→OWN hand-off at an arm's end: past L a piece leaves its
+  group for OWN, under the group, and the group's ink there drops (0.75
+  in 1/40 px in the cap pin; b_rate's foot+f2 | foot+f4 class with the
+  top changing, ring chain 12, def chain 40). A fix moves the hard
+  switch: the member must fade before it leaves (a definition change,
+  not attempted for lack of time).
+- R2 · A tie jump inside one top (muse_hash chain 52), untraced.
+- R3 · Sliver fills: T_ARC has no dq bound (muse_hash corner 209, θ
+  172.6°), and evalPoint gives the fill a key and alpha only up to rV,
+  while inFill reaches V' (F5): b_rate's arc | none, 84 grid edges.
+- R4 · ovw: the approved 0.05h is unchanged. The pins hold ω at any
+  value in [0, 1] within the rule, so no wider fade was needed in the
+  image; ω's rate in motion (label_pops') was not separated from the
+  rest, so the width motion needs is not measured. S4b's call.
+- R5 · #1 rose on muse_hash, g41_def_tw64, g41_ring_tw64 and
+  g41_user_tw64 (F13), and foot+f2, the foot under the cap fade, holds
+  1540 of its 2832 px. Not attributed. R1 sits where the cap fade ends,
+  so a crop there is the first test.
+- R6 · q4's 11 outer/none pixels on def (F13): paper in the AA'd form
+  where the hard form inks up to 0.984 of the pixel. Not attributed.

@@ -1,0 +1,15 @@
+muse_hash dpr 1: 5 holes inside one group, in 5 groups; area px min 8 median 26 max 36; fade bits on 1; the oracle leaves >= half of it paper (an eye of the look) on 5, covers it (a defect) on 0
+muse_default_tw dpr 1: 4 holes inside one group, in 4 groups; area px min 110 median 121 max 180; fade bits on 1; the oracle leaves >= half of it paper (an eye of the look) on 4, covers it (a defect) on 0
+def dpr 1: 4 holes inside one group, in 4 groups; area px min 105 median 125 max 183; fade bits on 0; the oracle leaves >= half of it paper (an eye of the look) on 4, covers it (a defect) on 0
+fat dpr 1: 0 holes inside one group, in 0 groups; area px min - median - max -; fade bits on 0; the oracle leaves >= half of it paper (an eye of the look) on 0, covers it (a defect) on 0
+ring dpr 1: 1 holes inside one group, in 1 groups; area px min 1 median 1 max 1; fade bits on 0; the oracle leaves >= half of it paper (an eye of the look) on 1, covers it (a defect) on 0
+user_tw42.lightpaper dpr 1: 5 holes inside one group, in 4 groups; area px min 130 median 141 max 414; fade bits on 0; the oracle leaves >= half of it paper (an eye of the look) on 5, covers it (a defect) on 0
+g41_def_tw42 dpr 1: 4 holes inside one group, in 4 groups; area px min 160 median 165 max 229; fade bits on 1; the oracle leaves >= half of it paper (an eye of the look) on 4, covers it (a defect) on 0
+g41_def_tw64 dpr 1: 5 holes inside one group, in 5 groups; area px min 3 median 67 max 97; fade bits on 1; the oracle leaves >= half of it paper (an eye of the look) on 5, covers it (a defect) on 0
+g41_ring_tw42 dpr 1: 0 holes inside one group, in 0 groups; area px min - median - max -; fade bits on 0; the oracle leaves >= half of it paper (an eye of the look) on 0, covers it (a defect) on 0
+g41_ring_tw64 dpr 1: 0 holes inside one group, in 0 groups; area px min - median - max -; fade bits on 0; the oracle leaves >= half of it paper (an eye of the look) on 0, covers it (a defect) on 0
+g41_user_tw42 dpr 1: 5 holes inside one group, in 4 groups; area px min 129 median 142 max 414; fade bits on 0; the oracle leaves >= half of it paper (an eye of the look) on 5, covers it (a defect) on 0
+g41_user_tw64 dpr 1: 5 holes inside one group, in 4 groups; area px min 31 median 38 max 106; fade bits on 0; the oracle leaves >= half of it paper (an eye of the look) on 5, covers it (a defect) on 0
+muse_hash dpr 2: 6 holes inside one group, in 6 groups; area px min 2 median 98 max 151; fade bits on 1; the oracle leaves >= half of it paper (an eye of the look) on 6, covers it (a defect) on 0
+  prototype deep-ink blobs >= 4 px: 506 (23473 px); within 30 px of a hole: 25 (3398 px); compact (>= 1/4 of their box) 455, of which near a hole 24
+exit 0
