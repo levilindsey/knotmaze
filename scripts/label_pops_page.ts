@@ -30,6 +30,10 @@
 // check) runs the real edge vertex shader through transform feedback, with
 // the outline point and outward normal captured beside s, and compares every
 // vertex with refBandEdge (the Node float32 mirror).
+//
+// __pops.labels(x0, y0, x1, y1) (K868 S3a8b2) reads the last render's label
+// words in a box, for attributing a band pixel to the strip and test that
+// drew or dropped it (.claude/probes/S3a/crack22.ts).
 import type { FieldScene } from "../src/render/field/scene";
 import type { FieldModel, OracleParams } from "../src/render/field/oracle";
 import { buildLabelPieces, buildLabelPiecesGpu, labelLimits } from "../src/render/label/label_pieces";
@@ -188,6 +192,16 @@ async function main(): Promise<void> {
         edges: edges ? "gpu" : "cpu",
         edgeError: band.edgeError[0],
       };
+    },
+    /** The last render's label words (L) in the box x0..x1, y0..y1
+     * (inclusive, rows as cov: row 0 = the canvas's top), row by row; 0
+     * outside the canvas. For attributing a band pixel (K868 S3a8b2). */
+    labels(x0: number, y0: number, x1: number, y1: number): number[] {
+      const L = pass.read();
+      const out: number[] = [];
+      for (let y = y0; y <= y1; y++)
+        for (let x = x0; x <= x1; x++) out.push(x >= 0 && y >= 0 && x < pass.width && y < pass.height ? L[y * pass.width + x] : 0);
+      return out;
     },
     /** Call 5's browser same-answer check on one scene: every vertex of every
      * edge instance from the real vertex shader (transform feedback) against

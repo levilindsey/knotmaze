@@ -118,4 +118,39 @@ S3a8b's `## Rules` hold, with these changes:
 
 ## Findings
 
+- **P1 · Gate (a), the browser same-answer check: passes.** `7622b33d`
+  wired the edges (label_band.ts `BandPass.edgesReady` / `drawEdges`,
+  `buildBandStrips(..., {tubeEdges: false})`; label_app.ts; the census page
+  and driver). `.claude/probes/S3a/edge22.ts` runs the real `EDGE_VS`
+  through transform feedback (the page's `__pops.edgeCheck`: a capture
+  varying holding the outline point, the sided normal and s) against
+  `refBandEdge`, at 1e-4 world: the 12 raster scenes as built and with
+  their crossings flipped (12 + 12 frames, 366,816 instances each), then
+  every distinct frame of def_drag, def_flow, muse_drag and muse_flow
+  (41 each; 2,010,560 / 2,010,120 / 1,914,886 / 1,914,122 instances).
+  8,583,320 instances, 34,333,280 vertices: 0 differences, 0
+  draw-or-skip mismatches, max point 3.8e-6, max normal 1.8e-7, s exact;
+  0 GL errors, no context loss (`pops22/edge22.md`). Its exit 1 was the
+  page's favicon 404 alone (raster22 recorded the failed load:
+  `/favicon.ico`).
+- **P2 · Gate (b), the raster census, lbp on (GPU pieces and GPU edges)
+  against off: only S3a7 F4's classes.** `raster22.ts`
+  (`pops22/raster22/summary.md`), 12 scenes, |dcov| > 32: 161 px, 130 in
+  flip blobs and 31 rounding (blobs <= 6 px), 0 unexplained; control (the
+  lbp-on page twice) 0 / 0 px. The GPU edges alone (`?gpu=1` against
+  `?gpu=1&edges=cpu`, the same GPU pieces): 20 px over 2,714 cut segments,
+  all 20 within 3 px of a cut segment's uncut quad; the biggest is a 4 x 1
+  px column at a piece's end (`raster22/edges_0_g41_def_tw64.png`, looked
+  at). The largest class blob is flip_0 itself (13 px, a 1 px line along
+  a band's end at g41_user_tw64 (1365, 1879), `flip_0_g41_user_tw64.png`,
+  looked at), as in S3a8a.
+- **P3 · Gate (c), the pop census, lbp on against master's `pops15/`
+  (z1).** `gpu22_z1` against `off15_z1` (`cmp22_z1.md`), pops master /
+  lbp on: def_drag 6 / 6, def_flow 27 / 27, muse_drag 77 / 78 (1 new),
+  muse_flow 266 / 266 (5 new, 5 gone); pop area on is at or below
+  master's except def_flow (+5 px). Against S3a8a's lbp-on census
+  `gpu18_z1` (CPU edges): new 0, 0, 0, 2. The windows census and the
+  per-pop check run again under the lock (a page edit reloaded the census
+  page mid-run at 14:15:53 and broke both; not a result).
+
 ## Handoff
