@@ -1,0 +1,1 @@
+C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\k1040-field\.claude\probes\K1040\s1\out\s1b\crops\g41_user_tw64_5.842_2.043_r5.png: 132x132 device px at dpr 2 (px 0.0152 world), form B ink 4856 px, oracle ink 4549 px
