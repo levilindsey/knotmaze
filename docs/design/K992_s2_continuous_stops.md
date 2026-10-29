@@ -132,3 +132,36 @@ ball, r about q; red master, blue b16). What changes:
 - j116/2, muse_flow t0-t3: master flips from a 0.79h ball on a far root to
   a sharp V at t1 and back; b16 holds 0.30-0.33h.
 Sent to the coordinator at 10:08; step 2 went on without waiting.
+
+**G2 (the j139/2 t23 mismatch, chased: the drawing follows the ball).**
+`fillmap17.ts` (the CPU label, `visibleAt`, and `inFill` on a grid about
+q) and a 250 px/world close-up, `pops17/j139_t23_17.png` (master, b16,
+b16nc = b16 without the cap re-fit, c17; green dots = the tangent points
+q + uA, q + uB), show:
+- The ink inside b16's 1.80h ring at t23 is another thread: chains 46 and
+  84 (cluster 58), 0.82-0.88h from q, the same bend in every panel. The
+  corner's own arms (chains 66, 77) touch the ring at the tangent points,
+  and the drawn inner edge follows the ring's arc between them under b16
+  (1.80h), b16nc (2.00h) and c17 (1.37h).
+- With a foot past cap − W (b16nc: |footA| 0.797 > 0.751; arm A's cap is
+  0.903, the next junction) the census draws the same thing. The label's
+  fill (`inFill`) reads q, r, vq, uA, uB and the arm windows, never the
+  caps, and the fill and its arc keep the corner's cluster label wherever
+  the cluster's spans reach. Here they run through the cap (chain 66's
+  span 65.33..73.04 passes the cap at 69.62: the next junction is in the
+  same cluster). A foot past the end of its cluster's span would lose the
+  arc there; none of the swept corners has one.
+- So the census measures the rule at cap-held corners: the drawn arc is
+  the ball's arc. What no rule checks (master, b16, c17 alike) is the ball
+  against other threads. A large r can enclose a neighbour, and the
+  drawing never shows it (the ball is empty space and the neighbour draws
+  over it) unless the neighbour enters the fill between the arc and V.
+- The r jump at j139/2 between t21 and t22 (b16 0.59h → 1.67h, c17 0.31h →
+  1.27h) is arm A's cap moving from crossing 292's pass (0.607 from the
+  root) to the next junction (0.903): a cap jump followed faithfully
+  (class 1). Master keeps the pass cap there; why the cut loop answers
+  differently is the cut loop's question (K1000), not chased.
+- Also seen in the close-up: c17 draws the neighbour's apex (chains 46/84)
+  with a fan of white radial hairlines where b16 draws it round and master
+  cuts it; master's panel shows the same fan at another corner. The
+  census attributes it (below).
