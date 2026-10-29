@@ -1,0 +1,336 @@
+{
+ "seq": "muse_drag",
+ "keptFrames": 41,
+ "windows": [
+  8,
+  20,
+  32
+ ],
+ "wlen": 4,
+ "tol": 0.12549019607843137,
+ "amin": 4,
+ "perFrame": [
+  {
+   "i": 8,
+   "inked": 166817,
+   "tieBand": 9714,
+   "tieMix": 6292,
+   "tieBy": {
+    "junction": 285,
+    "crossing<15": 130,
+    "crossing30-60": 1211,
+    "crossing60+": 8060,
+    "crossing15-30": 28
+   },
+   "rasterMs": 3539
+  },
+  {
+   "i": 9,
+   "inked": 166813,
+   "tieBand": 9704,
+   "tieMix": 6280,
+   "tieBy": {
+    "junction": 284,
+    "crossing<15": 130,
+    "crossing30-60": 1220,
+    "crossing60+": 8042,
+    "crossing15-30": 28
+   },
+   "rasterMs": 3567
+  },
+  {
+   "i": 10,
+   "inked": 166832,
+   "tieBand": 9713,
+   "tieMix": 6280,
+   "tieBy": {
+    "junction": 286,
+    "crossing<15": 130,
+    "crossing30-60": 1208,
+    "crossing60+": 8061,
+    "crossing15-30": 28
+   },
+   "rasterMs": 3687
+  },
+  {
+   "i": 11,
+   "inked": 166848,
+   "tieBand": 9726,
+   "tieMix": 6309,
+   "tieBy": {
+    "junction": 284,
+    "crossing<15": 130,
+    "crossing30-60": 1293,
+    "crossing60+": 7991,
+    "crossing15-30": 28
+   },
+   "rasterMs": 5084
+  },
+  {
+   "i": 20,
+   "inked": 166764,
+   "tieBand": 9793,
+   "tieMix": 6394,
+   "tieBy": {
+    "junction": 281,
+    "crossing<15": 130,
+    "crossing30-60": 1271,
+    "crossing60+": 8083,
+    "crossing15-30": 28
+   },
+   "rasterMs": 8857
+  },
+  {
+   "i": 21,
+   "inked": 166727,
+   "tieBand": 9777,
+   "tieMix": 6438,
+   "tieBy": {
+    "junction": 280,
+    "crossing<15": 130,
+    "crossing30-60": 1271,
+    "crossing60+": 8068,
+    "crossing15-30": 28
+   },
+   "rasterMs": 9584
+  },
+  {
+   "i": 22,
+   "inked": 166818,
+   "tieBand": 9792,
+   "tieMix": 6400,
+   "tieBy": {
+    "junction": 279,
+    "crossing<15": 130,
+    "crossing30-60": 1277,
+    "crossing60+": 8078,
+    "crossing15-30": 28
+   },
+   "rasterMs": 6569
+  },
+  {
+   "i": 23,
+   "inked": 166803,
+   "tieBand": 9813,
+   "tieMix": 6375,
+   "tieBy": {
+    "junction": 298,
+    "crossing<15": 130,
+    "crossing30-60": 1279,
+    "crossing60+": 8078,
+    "crossing15-30": 28
+   },
+   "rasterMs": 5885
+  },
+  {
+   "i": 32,
+   "inked": 166861,
+   "tieBand": 10033,
+   "tieMix": 6481,
+   "tieBy": {
+    "junction": 298,
+    "crossing<15": 128,
+    "crossing30-60": 1291,
+    "crossing60+": 8288,
+    "crossing15-30": 28
+   },
+   "rasterMs": 4457
+  },
+  {
+   "i": 33,
+   "inked": 166836,
+   "tieBand": 10003,
+   "tieMix": 6435,
+   "tieBy": {
+    "junction": 307,
+    "crossing<15": 129,
+    "crossing30-60": 1353,
+    "crossing60+": 8186,
+    "crossing15-30": 28
+   },
+   "rasterMs": 4553
+  },
+  {
+   "i": 34,
+   "inked": 166825,
+   "tieBand": 9969,
+   "tieMix": 6445,
+   "tieBy": {
+    "junction": 311,
+    "crossing<15": 133,
+    "crossing30-60": 1351,
+    "crossing60+": 8146,
+    "crossing15-30": 28
+   },
+   "rasterMs": 5038
+  },
+  {
+   "i": 35,
+   "inked": 166785,
+   "tieBand": 9987,
+   "tieMix": 6468,
+   "tieBy": {
+    "junction": 307,
+    "crossing<15": 130,
+    "crossing30-60": 1343,
+    "crossing60+": 8179,
+    "crossing15-30": 28
+   },
+   "rasterMs": 6022
+  }
+ ],
+ "pairs": [
+  {
+   "from": 8,
+   "to": 9,
+   "changed": 3062,
+   "unexplained": 0,
+   "unexplainedInFades": {
+    "f1": 20,
+    "f2": 4,
+    "f7": 2,
+    "f6": 4,
+    "f3": 1
+   },
+   "pops": [],
+   "maxMotionPx": 1.145
+  },
+  {
+   "from": 9,
+   "to": 10,
+   "changed": 2581,
+   "unexplained": 1,
+   "unexplainedInFades": {
+    "f1": 12,
+    "f6": 6,
+    "f4": 1
+   },
+   "pops": [],
+   "maxMotionPx": 1.282
+  },
+  {
+   "from": 10,
+   "to": 11,
+   "changed": 2897,
+   "unexplained": 13,
+   "unexplainedInFades": {
+    "f1": 26,
+    "f5": 1,
+    "f2": 9,
+    "f7": 1,
+    "f4": 2,
+    "f6": 1,
+    "f8": 52,
+    "f9": 27,
+    "f3": 2
+   },
+   "pops": [
+    {
+     "px": 4,
+     "at": [
+      34.921,
+      6.671
+     ],
+     "near": "crossing60+"
+    }
+   ],
+   "maxMotionPx": 1.461
+  },
+  {
+   "from": 20,
+   "to": 21,
+   "changed": 3575,
+   "unexplained": 1,
+   "unexplainedInFades": {
+    "f1": 6,
+    "f7": 2,
+    "f2": 5,
+    "f6": 1
+   },
+   "pops": [],
+   "maxMotionPx": 2.692
+  },
+  {
+   "from": 21,
+   "to": 22,
+   "changed": 4692,
+   "unexplained": 1,
+   "unexplainedInFades": {
+    "f1": 13,
+    "f2": 2,
+    "f6": 11,
+    "f4": 1,
+    "f3": 2,
+    "f7": 1,
+    "f13": 1,
+    "f8": 3,
+    "f9": 2,
+    "f5": 1
+   },
+   "pops": [],
+   "maxMotionPx": 1.954
+  },
+  {
+   "from": 22,
+   "to": 23,
+   "changed": 2883,
+   "unexplained": 9,
+   "unexplainedInFades": {
+    "f1": 19,
+    "f6": 3,
+    "f2": 13,
+    "f5": 1,
+    "f7": 1,
+    "f4": 2,
+    "f3": 1
+   },
+   "pops": [],
+   "maxMotionPx": 0.9
+  },
+  {
+   "from": 32,
+   "to": 33,
+   "changed": 42076,
+   "unexplained": 15,
+   "unexplainedInFades": {
+    "f1": 45,
+    "f2": 31,
+    "f5": 1,
+    "f6": 32,
+    "f3": 17,
+    "f4": 4,
+    "f7": 1
+   },
+   "pops": [],
+   "maxMotionPx": 5.134
+  },
+  {
+   "from": 33,
+   "to": 34,
+   "changed": 9708,
+   "unexplained": 7,
+   "unexplainedInFades": {
+    "f1": 47,
+    "f6": 7,
+    "f3": 2,
+    "f7": 1,
+    "f2": 2
+   },
+   "pops": [],
+   "maxMotionPx": 0.685
+  },
+  {
+   "from": 34,
+   "to": 35,
+   "changed": 564,
+   "unexplained": 1,
+   "unexplainedInFades": {
+    "f1": 13,
+    "f6": 8,
+    "f3": 3
+   },
+   "pops": [],
+   "maxMotionPx": 0.691
+  }
+ ]
+}

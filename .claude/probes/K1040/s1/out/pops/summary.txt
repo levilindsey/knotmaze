@@ -1,0 +1,12 @@
+== def_drag: 41 kept frames; windows at frames 8, 20, 32 x 4; 9 pairs, 12 frames in 32 s
+  label_pops' rule: 2 pops (13 px) by {"junction":2}; unexplained outside fades 20 px; inside fades {"f1":310,"f2":2,"f8":35,"f9":13,"f3":2}; max motion 0.787 px
+  Q3 tie band (nSurf >= 2, dz < zt) per frame 77-81 px, sum {"crossing60+":947}; tie mix px per frame 80,83,83,92,92,91,92,94,97,96,99,96
+== def_flow: 41 kept frames; windows at frames 8, 20, 32 x 4; 9 pairs, 12 frames in 32 s
+  label_pops' rule: 8 pops (101 px) by {"junction":8}; unexplained outside fades 156 px; inside fades {"f1":1342,"f2":84,"f8":340,"f9":178,"f6":12,"f3":14,"f4":3}; max motion 1.051 px
+  Q3 tie band (nSurf >= 2, dz < zt) per frame 89-121 px, sum {"crossing60+":986,"crossing30-60":212}; tie mix px per frame 96,91,97,102,101,97,96,93,98,107,94,95
+== muse_drag: 41 kept frames; windows at frames 8, 20, 32 x 4; 9 pairs, 12 frames in 77 s
+  label_pops' rule: 1 pops (4 px) by {"crossing60+":1}; unexplained outside fades 48 px; inside fades {"f1":201,"f2":66,"f7":9,"f6":73,"f3":28,"f4":10,"f5":4,"f8":55,"f9":29,"f13":1}; max motion 5.134 px
+  Q3 tie band (nSurf >= 2, dz < zt) per frame 9704-10033 px, sum {"junction":3500,"crossing<15":1560,"crossing30-60":15368,"crossing60+":97260,"crossing15-30":336}; tie mix px per frame 6292,6280,6280,6309,6394,6438,6400,6375,6481,6435,6445,6468
+== muse_flow: 41 kept frames; windows at frames 8, 20, 32 x 4; 9 pairs, 12 frames in 79 s
+  label_pops' rule: 4 pops (61 px) by {"junction":1,"crossing60+":3}; unexplained outside fades 208 px; inside fades {"f1":648,"f7":89,"f6":267,"f2":436,"f4":54,"f3":161,"f5":18,"f8":125,"f9":14}; max motion 0.674 px
+  Q3 tie band (nSurf >= 2, dz < zt) per frame 9721-10042 px, sum {"junction":3638,"crossing<15":1510,"crossing30-60":15679,"crossing60+":97166,"crossing15-30":816}; tie mix px per frame 6460,6468,6426,6379,6307,6296,6312,6301,6446,6378,6365,6441

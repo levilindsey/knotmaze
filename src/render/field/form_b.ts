@@ -1046,6 +1046,31 @@ export class FormB {
   // its piece and aa outside. A term is evaluated by the strips it belongs
   // to; stripCheck says whether the pixel lies in one of them.
 
+  /** tan(φ/2) of the chain's turn φ at vertex v (0 at an open end), at most tan 80°. */
+  turnTan(pi: number, v: number): number {
+    const p = this.polys[pi];
+    if (!p.closed && (v <= 0 || v >= p.n - 1)) return 0;
+    const k1 = v;
+    const k0 = p.closed ? (v - 1 + p.nseg) % p.nseg : v - 1;
+    const b0 = segB(p, k0);
+    const b1 = segB(p, k1);
+    const ax = p.x[b0] - p.x[k0];
+    const ay = p.y[b0] - p.y[k0];
+    const bx = p.x[b1] - p.x[k1];
+    const by = p.y[b1] - p.y[k1];
+    const la = Math.hypot(ax, ay);
+    const lb = Math.hypot(bx, by);
+    if (!(la > 0 && lb > 0)) return 0;
+    const phi = Math.acos(Math.max(-1, Math.min(1, (ax * bx + ay * by) / (la * lb))));
+    return Math.min(Math.tan(phi / 2), Math.tan((80 * Math.PI) / 180));
+  }
+
+  /**
+   * Segment k's edge strip: a quad along the segment, mitred at each end by
+   * (h + aa)·tan(φ/2) for the turn φ there, from (h − W − aa)·cos(φ/2) to
+   * h + aa off the centreline. The mitre covers the convex side of a vertex,
+   * whose band points have the vertex as their nearest point (finding F8).
+   */
   inEdgeStrip(pi: number, k: number, x: number, y: number): boolean {
     const p = this.polys[pi];
     if (k < 0 || k >= p.nseg) return false;
@@ -1054,10 +1079,15 @@ export class FormB {
     const ey = p.y[b] - p.y[k];
     const l2 = ex * ex + ey * ey;
     if (!(l2 > 0)) return false;
+    const len = Math.sqrt(l2);
+    const tan0 = this.turnTan(pi, k);
+    const tan1 = this.turnTan(pi, b);
+    const out = this.h + this.aa;
     const t = ((x - p.x[k]) * ex + (y - p.y[k]) * ey) / l2;
-    if (t < -1e-12 || t > 1 + 1e-12) return false;
-    const d = Math.abs((x - p.x[k]) * ey - (y - p.y[k]) * ex) / Math.sqrt(l2);
-    return d >= this.h - this.W - this.aa - 1e-12 && d <= this.h + this.aa + 1e-12;
+    if (t < -(out * tan0) / len - 1e-12 || t > 1 + (out * tan1) / len + 1e-12) return false;
+    const d = Math.abs((x - p.x[k]) * ey - (y - p.y[k]) * ex) / len;
+    const cosHalf = 1 / Math.sqrt(1 + Math.max(tan0, tan1) ** 2);
+    return d >= (this.h - this.W - this.aa) * cosHalf - 1e-12 && d <= out + 1e-12;
   }
 
   inArcStrip(c: Corner, x: number, y: number): boolean {

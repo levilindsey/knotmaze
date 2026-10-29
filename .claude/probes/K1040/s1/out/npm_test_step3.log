@@ -1,0 +1,9 @@
+   ✓ post-interaction quiescence > re-sleeps after a realistic drag session  31969ms
+   ✓ post-interaction quiescence > keeps a pathological wound out of the loud attractor  101233ms
+
+ Test Files  188 passed | 2 skipped (190)
+      Tests  2522 passed | 8 skipped (2530)
+   Start at  23:43:11
+   Duration  134.42s (transform 13.87s, setup 0ms, collect 75.41s, tests 561.71s, environment 60ms, prepare 34.31s)
+
+npm test exit 0 in 143 s
