@@ -378,7 +378,7 @@ reference (F7) checks it.
 
 ### F4 · The alternatives, ruled out with numbers
 
-Step 2 (F2-F4) done 22:03.
+Step 2 (F2-F4) done 22:00.
 
 **(a) The CPU FieldModel made incremental (S3a10).** S3a5
 (`K868_s3a5_incremental.md`, which calls it "S3a9"; the ledger and this
