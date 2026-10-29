@@ -482,7 +482,9 @@ this handoff's commit (F5, F6). Probes and results: `.claude/probes/S3a/`
 `cmp15.mjs`, `atspec15.mjs`, `pops_at15.ts` (label_pops with `--at` crops),
 `cost15.ts`, `cost_tab15.ts`, `edit15.*`, `pops15/`).
 
-Done: steps 1-7, step 7 in Node only.
+Done: steps 1-7, step 7 in Node only. The full suite passes at 1db5ab33
+(10:09, under the perf lock: 182 files and 2404 tests passed, 6 skipped;
+the 09:15 run's one failure, K299's GLSL lint, passes).
 
 The flag: `labelGpu`, link key `lbp` (default off; it acts only with
 `lbi=1`). Off, nothing drawn changes (the off census runs reproduce F1's
