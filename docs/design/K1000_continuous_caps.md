@@ -417,10 +417,14 @@ jump:amp j42/1 5 / 26, reach 3:11, 3:27 and 68:9 2 each, and one each
 of refit and jump:fold j50/1, spans 77, reach 67:6 and 50:9, jump:amp
 j29/2.
 
-The pixel-by-pixel crops are `crops19.ts` (crops17.ts with these rows:
-j112/2 and j100/1, muse_drag frames 2-7, c17f red against c19fb blue),
-queued under the perf lock behind another agent's census when this was
-written; `pops19/crops19.png` when it has run.
+The pixel-by-pixel crops: `pops19/crops19.png` (`crops19.ts`, crops17.ts
+with these rows; c17f red, c19fb blue; muse_drag frames 2-7). j100/1 is
+round at t2, t3, t5 and t7 and sharp at t4 and t6 in both. j112/2 is
+round throughout under c17f, but on t4 and t6 the ink around it changes
+with j100's sharp corner and the arms the walk extends. Under c19fb it
+is sharp at t4 and t6. The wide row (t3-t5) shows the even frame's
+different stroke layout around both corners. Sent to the coordinator
+under call 5.
 
 Why the cut set flips every frame: c17f's corner j112/1 moves the foot
 of its tangent point on arm 1 between about 0.99h and 2.57h from frame
@@ -440,8 +444,8 @@ bf876705-c9fa-4b1f-83ea-e173dac6cff3 stopped at its 1 h 30 min mark
 State:
 - Steps 1-3 done. Step 4 not met (m19b is worse than master on def_flow
   and muse_drag at zoom 1 and in six windows), so nothing landed in
-  `src/render/field/oracle.ts`. Step 5 attributed above; the crops may
-  not have run (see below).
+  `src/render/field/oracle.ts`. Step 5 attributed above, crops included
+  (`pops19/crops19.png`, 12:58).
 - On the branch: the cap test `test/render/field/cap19_continuity.test.ts`
   (four sweeps, gated off in `npm test`; run it on a probe oracle with
   `$env:ORACLE19 = "m19b"; npx vitest run --config
@@ -478,9 +482,10 @@ Next:
    muse_drag; `ext19.ts`) drives j100/1 under c17f and j112/2 under
    c19fb round and sharp every other frame. A corner-rule fix, out of
    this brief's scope.
-4. If `pops19/crops19.png` is missing: `pwsh .claude/probes/S3a/locked19.ps1
-   -What "K1000 crops19" -Cmd "node node_modules\vite-node\vite-node.mjs
-   .claude\probes\S3a\crops19.ts --port 5392"` with the dev server up.
+4. To redraw the crops (the dev server up): `pwsh
+   .claude/probes/S3a/locked19.ps1 -What "K1000 crops19" -Cmd "node
+   node_modules\vite-node\vite-node.mjs .claude\probes\S3a\crops19.ts
+   --port 5392"`.
 
 Evidence, `.claude/probes/S3a/`: the probes `small19.cjs` (excess small
 pops by cause), `corner19.ts` (a corner frame by frame under several
