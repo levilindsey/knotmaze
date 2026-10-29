@@ -1,0 +1,207 @@
+    // K1000: continuous caps (docs/design/K1000_continuous_caps.md). The
+    // cut loop's choices are measures read at membership levels t in (0, 1]:
+    // - an arm holds a pass with weight ss(m/σ), m how far inside its padded
+    //   span the pass lies (both ends; the pad is the overlap reach + margin);
+    // - two junctions join with weight ss(1 + ov/λ), ov the overlap of two of
+    //   their spans on one chain, and a cluster's join is its widest path's
+    //   weakest link (a maximum spanning forest);
+    // - a pass counts up to the level q1 at which some holder on each side
+    //   still joins one cluster;
+    // - at each level t ≤ q1 the side whose farthest holder of weight ≥ t is
+    //   farther is cut, with weight ss((fa(t) − fb(t))/τ + 1/2), so an arm is
+    //   cut with the measure of the levels that cut it;
+    // - a second visit cuts both sides up to the level q2 at which the pass
+    //   is still held once its own cuts are taken at their weights;
+    // - a cut of weight w moves the arm's cap from its base cap to its reach
+    //   R over w in [0, w0], then from R to the cut over [w0, 1];
+    // - θ reads interpolated vertex tangents (tanAt), continuous in s.
+    // Three rounds (a first visit, two second visits), no early exit, no
+    // state between frames: the caps are a pure, continuous function of the
+    // frame, and a pass sliding into an arm lowers its cap monotonically.
+    const sig = h / 2;
+    const tau = h;
+    const lam = h / 2;
+    const w0 = 0.05;
+    const ss = (x: number): number => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
+    const NJ = scene.junctions.length;
+    const base = caps.map((l) => l.slice());
+    const baseWhy = this.armCaps.map((l) => l.map((c) => c.why));
+    const reach = scene.junctions.map((j, ji) =>
+      j.arms.map((arm, ai) => Math.min((ext.get(this.armKey(ji, arm)) ?? h) + this.W + this.margin, base[ji][ai])),
+    );
+    type Cut = { c: number; w: number; d: number; cx: number };
+    const cuts: Map<number, Cut>[][] = scene.junctions.map((j) => j.arms.map(() => new Map<number, Cut>()));
+    const applyCaps = () => {
+      scene.junctions.forEach((j, ji) =>
+        j.arms.forEach((_, ai) => {
+          const B = base[ji][ai];
+          const R = reach[ji][ai];
+          let cap = B;
+          let why = baseWhy[ji][ai];
+          for (const k of cuts[ji][ai].values()) {
+            if (!(k.w > 0)) continue;
+            const Rp = Math.max(k.c, R);
+            const Bp = Math.min(B, Rp + 64 * h);
+            const v = k.w <= w0 ? Bp - (Bp - Rp) * (k.w / w0) : Rp - (Rp - Math.min(k.c, Rp)) * ((k.w - w0) / (1 - w0));
+            if (v < cap) {
+              cap = v;
+              why = `crossing ${k.cx}'s pass ${(k.d / h).toFixed(2)}h out`;
+            }
+          }
+          caps[ji][ai] = cap;
+          this.armCaps[ji][ai] = { len: cap, why };
+        }),
+      );
+    };
+    // The widest-path join of two junctions, from the spans.
+    const connOf = (sp: [number, number, number, number][][]): ((u: number, v: number) => number) => {
+      const byPoly = new Map<number, [number, number, number][]>();
+      sp.forEach((l, ji) => {
+        for (const [pi, lo, hi] of l) {
+          const b = byPoly.get(pi) ?? [];
+          b.push([lo, hi, ji]);
+          byPoly.set(pi, b);
+        }
+      });
+      const best = new Map<number, number>();
+      for (const [pi, l] of byPoly) {
+        const p = this.polys[pi];
+        for (let x = 0; x < l.length; x++)
+          for (let y = x + 1; y < l.length; y++) {
+            const [la, ha, ja] = l[x];
+            const [lb, hb, jb] = l[y];
+            if (ja === jb) continue;
+            let ov = -Infinity;
+            for (const sh of p.closed ? [-p.len, 0, p.len] : [0]) ov = Math.max(ov, Math.min(ha, hb + sh) - Math.max(la, lb + sh));
+            const w = ss(1 + ov / lam);
+            if (!(w > 0)) continue;
+            const key = Math.min(ja, jb) * NJ + Math.max(ja, jb);
+            if (w > (best.get(key) ?? 0)) best.set(key, w);
+          }
+      }
+      const edges = [...best].sort((a, b) => b[1] - a[1] || a[0] - b[0]);
+      const parent = scene.junctions.map((_, i) => i);
+      const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+      const adj: [number, number][][] = scene.junctions.map(() => []);
+      for (const [key, w] of edges) {
+        const u = Math.floor(key / NJ);
+        const v = key % NJ;
+        if (find(u) === find(v)) continue;
+        parent[find(u)] = find(v);
+        adj[u].push([v, w]);
+        adj[v].push([u, w]);
+      }
+      const cache = new Map<number, Float64Array>();
+      return (u: number, v: number): number => {
+        if (u === v) return 1;
+        let a = cache.get(u);
+        if (!a) {
+          a = new Float64Array(NJ);
+          a[u] = 1;
+          const stack = [u];
+          while (stack.length) {
+            const x = stack.pop()!;
+            for (const [y, w] of adj[x])
+              if (y !== u && a[y] === 0) {
+                a[y] = Math.min(a[x], w);
+                stack.push(y);
+              }
+          }
+          cache.set(u, a);
+        }
+        return a[v];
+      };
+    };
+    type Held = { ji: number; ai: number; w: number; m: number; f: number };
+    // The arms holding the pass at (pi, s), with their weights.
+    const hold = (sp: [number, number, number, number][][], pi: number, s: number, pad: number): Held[] => {
+      const out: Held[] = [];
+      const p = this.polys[pi];
+      sp.forEach((l, ji) => {
+        for (const [q, lo, hi, ai] of l) {
+          if (q !== pi) continue;
+          const arm = scene.junctions[ji].arms[ai];
+          const L = arm.dir < 0 ? lo - pad : lo;
+          const H = arm.dir > 0 ? hi + pad : hi;
+          let m = -Infinity;
+          for (const sh of p.closed ? [-p.len, 0, p.len] : [0]) m = Math.max(m, Math.min(s + sh - L, H - (s + sh)));
+          const w = ss(m / sig);
+          if (w > 0) out.push({ ji, ai, w, m, f: Math.abs(dS(p, arm.s, s)) });
+        }
+      });
+      return out;
+    };
+    // ∫ over levels t in (0, T] of side A's share: ss((fa(t) − fb(t))/τ + 1/2)
+    // over the holders of weight ≥ t.
+    const sideA = (ha: Held[], hb: Held[], T: number): number => {
+      const lv = [...new Set([...ha, ...hb].map((x) => x.w))].sort((a, b) => a - b);
+      let acc = 0;
+      let prev = 0;
+      for (const l of lv) {
+        if (prev >= T) break;
+        const top = Math.min(l, T);
+        if (top > prev) {
+          let fa = -Infinity;
+          let fb = -Infinity;
+          for (const x of ha) if (x.w >= l) fa = Math.max(fa, x.f);
+          for (const x of hb) if (x.w >= l) fb = Math.max(fb, x.f);
+          const sA = fa === -Infinity ? 0 : fb === -Infinity ? 1 : ss((fa - fb) / tau + 0.5);
+          acc += (top - prev) * sA;
+        }
+        prev = l;
+      }
+      return acc;
+    };
+    // The overlap of two tubes crossing at θ reaches h·cot(θ/2) along each
+    // pass; then a margin of h (K900: the round cap clears the over pass's
+    // border at every θ; passMargin).
+    const P = passes.map((ps) => (ps ? { ...ps, near: h / Math.tan(Math.max(ps.th, 1e-3) / 2) + pm * h } : null));
+    const cutOf = (x: Held, s: number, near: number): { d: number; c: number } => {
+      const arm = scene.junctions[x.ji].arms[x.ai];
+      const d = arm.dir * dS(this.polys[this.idxOf.get(arm.chain)!], arm.s, s);
+      return { d, c: Math.max(0, d - near) };
+    };
+    const add = (x: Held, key: number, cx: number, s: number, near: number, w: number) => {
+      if (!(w > 0)) return;
+      const { d, c } = cutOf(x, s, near);
+      const old = cuts[x.ji][x.ai].get(key);
+      if (!old || w > old.w) cuts[x.ji][x.ai].set(key, { c, w, d, cx });
+    };
+    const q1 = new Float64Array(passes.length);
+    for (let it = 0; it < 3; it++) {
+      const sp = this.rawSpans(ext, caps);
+      const conn = connOf(sp);
+      P.forEach((ps, cx) => {
+        if (!ps || (it > 0 && !(q1[cx] > 0))) return;
+        const pad = ps.near - 1e-6 * h;
+        const ha = hold(sp, ps.ia, ps.sa, pad);
+        const hb = hold(sp, ps.ib, ps.sb, pad);
+        if (!ha.length || !hb.length) return;
+        if (it === 0) {
+          let q = 0;
+          for (const a of ha) for (const b of hb) q = Math.max(q, Math.min(a.w, b.w, conn(a.ji, b.ji)));
+          q1[cx] = q;
+          if (!(q > 0)) return;
+          for (const a of ha) add(a, 2 * cx, cx, ps.sa, ps.near, sideA(ha, hb, Math.min(q, a.w)));
+          for (const b of hb) {
+            const T = Math.min(q, b.w);
+            add(b, 2 * cx + 1, cx, ps.sb, ps.near, T - sideA(ha, hb, T));
+          }
+          return;
+        }
+        // A second visit: the hold left once the pass's own cuts apply.
+        const after = (x: Held, key: number, s: number): number => {
+          const own = cuts[x.ji][x.ai].get(key)?.w ?? 0;
+          const { d, c } = cutOf(x, s, ps.near);
+          return (1 - own) * x.w + own * ss(Math.min(x.m, c + pad - d) / sig);
+        };
+        const xa = ha.map((a) => after(a, 2 * cx, ps.sa));
+        const xb = hb.map((b) => after(b, 2 * cx + 1, ps.sb));
+        let q = 0;
+        ha.forEach((a, i) => hb.forEach((b, k) => (q = Math.max(q, Math.min(xa[i], xb[k], conn(a.ji, b.ji))))));
+        if (!(q > 0)) return;
+        ha.forEach((a, i) => add(a, 2 * cx, cx, ps.sa, ps.near, Math.min(q, xa[i])));
+        hb.forEach((b, k) => add(b, 2 * cx + 1, cx, ps.sb, ps.near, Math.min(q, xb[k])));
+      });
+      applyCaps();
+    }
