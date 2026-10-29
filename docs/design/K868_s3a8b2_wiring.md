@@ -144,13 +144,66 @@ S3a8b's `## Rules` hold, with these changes:
   at). The largest class blob is flip_0 itself (13 px, a 1 px line along
   a band's end at g41_user_tw64 (1365, 1879), `flip_0_g41_user_tw64.png`,
   looked at), as in S3a8a.
-- **P3 · Gate (c), the pop census, lbp on against master's `pops15/`
-  (z1).** `gpu22_z1` against `off15_z1` (`cmp22_z1.md`), pops master /
-  lbp on: def_drag 6 / 6, def_flow 27 / 27, muse_drag 77 / 78 (1 new),
-  muse_flow 266 / 266 (5 new, 5 gone); pop area on is at or below
+- **P3 · Gate (c), the pop census, lbp on against master's `pops15/`:
+  every new pop the check reads is explained or looked at and named, but
+  the check cannot see a defect both of today's paths share, and one is
+  real (P4).** z1: `gpu22_z1` against `off15_z1` (`cmp22_z1.md`), pops
+  master / lbp on: def_drag 6 / 6, def_flow 27 / 27, muse_drag 77 / 78 (1
+  new), muse_flow 266 / 266 (5 new, 5 gone); pop area on is at or below
   master's except def_flow (+5 px). Against S3a8a's lbp-on census
-  `gpu18_z1` (CPU edges): new 0, 0, 0, 2. The windows census and the
-  per-pop check run again under the lock (a page edit reloaded the census
-  page mid-run at 14:15:53 and broke both; not a result).
+  `gpu18_z1` (CPU edges): new 0, 0, 0, 2. The per-pop check
+  (`check22_z1/check18.md`): 6 new pops, all explained (causes none,
+  spans, reach). Windows (`gpu22_win` against `off15_win`,
+  `cmp22_win.md`; pops master / on, new / gone):
+
+  | run | pops | new / gone | new against `off20_win` / `gpu18_win` |
+  |---|---|---|---|
+  | def_drag@w0 | 249 / 250 | 1 / 0 | 1 / 0 |
+  | def_flow@w0 | 184 / 163 | 4 / 26 | 2 / 2 |
+  | def_flow@w1 | 229 / 229 | 0 / 0 | 0 / 0 |
+  | def_flow@w2 | 254 / 252 | 0 / 2 | 0 / 0 |
+  | muse_drag@w0 | 314 / 314 | 3 / 4 | 1 / 2 |
+  | muse_drag@w1 | 286 / 295 | 11 / 3 | 3 / 10 |
+  | muse_drag@w2 | 879 / 874 | 3 / 3 | 2 / 0 |
+  | muse_flow@w0 | 659 / 658 | 17 / 17 | 3 / 15 |
+  | muse_flow@w1 | 393 / 390 | 3 / 8 | 0 / 3 |
+  | muse_flow@w2 | 878 / 883 | 38 / 35 | 20 / 24 |
+
+  The per-pop check (`check22_win/check18.md`, 112 pops: new and grown):
+  110 explained, 2 not, both muse_flow@w1, t0 (759, 746) and t1 (754,
+  732): a field of short white dashes across the black band at a switch
+  place (ch60, cl69 / cl44), in today's off and on alike at one frame and
+  gone at the next; its off-against-on pixels are all flip class, and the
+  check marks it because the flip places differ between t and t + 1.
+  Looked at (`muse_flow@w1_t0_759_746.png`, `muse_flow@w1_t1_754_732.png`).
+  Inferred, not tested: P4's crack at many short cluster spans (every
+  dash lies across the thread, as a perpendicular seam would). The check
+  renders both of its columns on today's server (`label_pops.html` and
+  `?gpu=1`), so it explains any pop the two paths share: the 95 px
+  "reach" pop at muse_flow@w2 t22 (317, 240) is P4's crack, on both paths.
+- **P4 · The crack (call 4): N2's inference holds with `lbp` off. With
+  `lbp` on the same crack shows; its mechanism there is not measured.**
+  `crack22.ts` (`pops22/crack22/crack22_muse_flow@w2_t22.md`) emulates
+  BAND_FS per pixel around muse_flow@w2 t22 (317, 240) for master's strips
+  (`buildBandStripsRef`) and today's, on the page's label words (lbp
+  off). The emulation matches the GPU's band on every pixel (0 misses on
+  both). 97 crack pixels, one class. At (330, 225) master draws strip
+  #48369 (ch84, cl -1). Today two strips cover it and both drop it:
+  #18977 (ch45 cl61; the label here is another chain) and #48367 (ch84
+  **cl61**, s 25.293-25.356; across the edge is its own cluster). The
+  label there is ch84 **cl -1**, and no ch84 cl -1 strip reaches it.
+  Every crack pixel lies on cl61's side of the band's seam (the line
+  through c along n(t) = nA + t (nB - nA), 8db6ad52) and on cl -1's side
+  of the label pass's cut, which is perpendicular to the segment
+  (label_pieces.ts: an interior cut has ek = sk = 0, so TUBE_FS cuts flat
+  at tr = 0 and 1). No strip both covers the sliver between the two lines
+  and matches its label. With `lbp` on, the check's crop
+  (`check22_win/muse_flow@w2_t22_317_240.png`, viewed) shows the same
+  crack in the same place and frame, and it is gone at t + 1. Inferred,
+  not measured: the GPU tubes take the cluster from s at the perpendicular
+  projection (refCluster), so they cut flat too, while the band's cluster
+  changes along its own seam. N2's "with `lbp` on there are no piece
+  seams" does not hold at cluster bounds. The fix is not in this stage
+  (Handoff).
 
 ## Handoff
