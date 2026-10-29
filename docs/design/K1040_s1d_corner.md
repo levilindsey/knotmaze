@@ -258,3 +258,46 @@ The guess is refuted on muse_hash. Probe: `fe_own.ts`; output
   census, not like for like. `fe_own.ts`'s second line is the
   like-for-like measure: a free end in form B and in the oracle at the
   same site.
+
+### F2 · The two arms of one through pass get no corner (04:10)
+
+Definition change. Crops in `out/s1d/crops/`; corner_cmp's listings in
+`out/s1d/cmp_*.txt`.
+
+- **What popped.** At muse_flow 3>4 (23.095, 10.572) and 23>24
+  (23.103, 10.536), the corner that comes and goes is the one between
+  the two arms of one through pass: θ 2.9-3.07, V's feet at the root.
+  Its arc inks a stroke inside the oracle's group interior
+  (`muse_flow_23.095_10.572_f4_f2.png`, made with S1c's F2).
+- **The oracle never makes that corner.** Its corner loop skips a pair
+  whose arms are one chain, both through, at one s (`oracle.ts`, the
+  corner loop). corner_cmp lists the corner in form B and not in the
+  oracle (`cmp_muse_flow_3_j11.txt`, `cmp_muse_flow_4_j11.txt`).
+- **The change.** Form B's corner loop skips the same pair (`form_b.ts`,
+  after `eb`). The corner is gone for every geometry, so its V-off-arm
+  gate has no outcome left to jump. Two passes of one chain, and a
+  chain's two ends, keep their corners. The Y pin now expects 2 corners:
+  the through pass's bend at 270° gets none.
+- **After** (`muse_flow_23.095_10.572_f4_s1dF2.png`): the arc is gone.
+  In the crop, form B inks 138 px and the oracle 139 px.
+- **The gate** (`run_s1d_gate.ps1 -Tag f2`), against S1c's F5:
+  - Pins 22 of 22.
+  - #1: 861 -> 472 px. muse_hash 173 -> 94, def 36 -> 31, ring 40 -> 0,
+    user_tw42.lightpaper 32 -> 0, g41_user_tw42 31 -> 0, g41_user_tw64
+    289 -> 87. The other scenes hold.
+  - Free ends: 169 -> 159.
+  - Pops: 209 / 3875 px -> 118 / 1979 px (def_drag 8 / 405, def_flow
+    24 / 888, muse_drag 26 / 227, muse_flow 60 / 459).
+  - corner_why (`out/s1d/pops_f2/corner_why.txt`): V off arm 72 / 1543
+    -> 0. Still there: root 21 / 674, radius bisect 23 / 378, tangent
+    foot ("none") 7 / 261, room-L 9 / 63, arm L 0 2 / 46, r0 2 / 20 and
+    room-dV 3 / 14.
+  - Shared checks: each fails on the same scenes as before. Their
+    values improve or hold on every scene but one. On g41_ring_tw64,
+    #5 goes from 138 to 141 of 5536 walks, and its longest walk is
+    unchanged at 7.079 px.
+    - Observed: those 3 walks are not located, because scenes.ts's JSON
+      keeps only the longest walk.
+    - Inferred: the skip is the only change, so the 3 walks sit at a
+      through pass's bend that lost its fillet. The oracle draws no
+      fillet there either.

@@ -9,6 +9,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gunzipSync } from "node:zlib";
 import { FieldModel, cornerRadius, type OracleParams } from "../../../../src/render/field/oracle";
 import { FormB } from "../../../../src/render/field/form_b";
 import { FormB as FormBS1b } from "./form_b_s1b";
@@ -19,13 +20,23 @@ const here = dirname(fileURLToPath(import.meta.url));
 const outDir = process.env.OUT ?? join(here, "out", "s1b", "crops");
 mkdirSync(outDir, { recursive: true });
 const [name = "muse_hash", xs = "26.675", ys = "1.096", ds = "2", hw = "0.8", zs = "4", tag = ""] = process.argv.slice(2);
-const s = JSON.parse(readFileSync(`C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes/${name}.json`, "utf8")) as FieldScene;
+// SEQ=<seq>:<i> (S1d) crops recording <seq>'s frame i (pops_switch.ts's frame ids) instead of a scene file.
+const loadFrame = (spec: string): FieldScene => {
+  const [sq, fi] = spec.split(":");
+  const lines = gunzipSync(readFileSync(`C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/k868-s3a/.claude/probes/S3a/seq13/${sq}.jsonl.gz`)).toString("utf8").split("\n").filter(Boolean);
+  for (let k = 1; k < lines.length; k++) {
+    const fr = JSON.parse(lines[k]) as { i: number; scene: FieldScene };
+    if (fr.i === Number(fi)) return fr.scene;
+  }
+  throw new Error(`frame ${spec} not found`);
+};
+const s = process.env.SEQ ? loadFrame(process.env.SEQ) : (JSON.parse(readFileSync(`C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes/${name}.json`, "utf8")) as FieldScene);
 s.look.ctrlArc ??= 0.47;
 const h0 = s.look.halfWidth;
 const mapping: OracleParams = { rRound: 0, rOf: (_j, _i, th, st) => (st === "round" ? cornerRadius(3, h0, th) : 0), spans: "k883", crMax: 3 };
 // FORMB=s1b renders with S1b's definition (form_b_s1b.ts), for before/after crops (S1c F2).
 const FB = (process.env.FORMB === "s1b" ? FormBS1b : FormB) as typeof FormB;
-const fb = new FB(s, { dpr: Number(ds) });
+const fb = new FB(s, { dpr: ds === "cam" ? s.camera.dpr : Number(ds) });
 const m = new FieldModel(s, mapping);
 const X = Number(xs);
 const Y = Number(ys);

@@ -459,6 +459,13 @@ export class FormB {
         if (th <= 1e-6 || th >= Math.PI - 1e-6) continue;
         const ea = this.arms[a].ei;
         const eb = this.arms[b].ei;
+        // S1d F2: the two arms of one through pass are one tube, so they get
+        // no corner, as the oracle's corner loop says. Two passes of one
+        // chain, or its two ends, still do. The pair's corner used to come and
+        // go with the pass's bend (V's feet at the root: S1c F3's "V off arm").
+        const xa = j.arms[ea];
+        const xb = j.arms[eb];
+        if (xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && Math.abs(xa.s - xb.s) < 1e-6) continue;
         const ne = j.arms.length;
         let st = styles[ea]?.style;
         if ((ea + 1) % ne !== eb && (eb + 1) % ne === ea) st = styles[eb]?.style;
