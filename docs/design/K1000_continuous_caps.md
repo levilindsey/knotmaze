@@ -318,23 +318,36 @@ cluster 104 / 20 / 53 / 0, status 31 / 31 / 0 / 0, count 0 / 11 / 0 /
 26. By `class17.ts`, m19b (`pops19/class_m19b.txt`): cap 133 pops /
 4781 px, rule:fold 31 / 1529, rule 30 / 694, spans 31 / 652, reach 69 /
 636, refit 16 / 443, rule:switch 10 / 227, none 21 / 213, V 7 / 87,
-cluster 2 / 20, count 1 / 11.
+cluster 2 / 20, count 1 / 11. c19fb (`pops19/class_c19fb.txt`): cap
+137 / 3100, spans 132 / 996, reach 36 / 221, rule 9 / 151, none 13 / 74,
+count 1 / 26, V:dV 2 / 12, refit 1 / 12; its muse_drag (197 / 3021) is
+cap 104 / 2414, spans 70 / 460, reach 12 / 80, none 9 / 55, V:dV 2 / 12.
+c17f (K992's census): cap 120 / 3628, spans 114 / 790, reach 40 / 238,
+rule 9 / 151, none 15 / 92, cluster 2 / 53, V:dV 2 / 12, refit 1 / 12.
 
-The ten windows:
+The ten windows (`pops19/cmp_windows19.txt`; bold: worse than master):
 
-| Window | master | m19b | c17f |
-|---|---|---|---|
-| def_drag@w0 | 249 (6.22) 77105 | 249 (6.22) 77105 | 215 (5.38) 12676 |
-| def_flow@w0 | 184 (4.60) 89876 | 184 (4.60) **89890** | 153 (3.83) 1631 |
-| def_flow@w1 | 229 (5.72) 62961 | 229 (5.72) 62961 | 94 (2.35) 867 |
-| def_flow@w2 | 254 (6.35) 45930 | 254 (6.35) **45932** | 237 (5.92) 3471 |
-| muse_drag@w0 | 314 (7.85) 155916 | **356 (8.90) 229637** | 112 (2.80) 13206 |
-| muse_drag@w1 | 286 (7.15) 32786 | **310 (7.75) 234961** | 273 (6.83) 20636 |
-| muse_drag@w2 | 879 (21.98) 74530 | **892 (22.30) 97308** | 990 (24.75) 54825 |
-| muse_flow@w0 | 659 (16.48) 162138 | 624 (15.60) 10234 | 731 (18.27) 71445 |
-| muse_flow@w1 | 393 (9.82) 150117 | 369 (9.22) 20315 | 181 (4.53) 12761 |
-| muse_flow@w2 | 878 (21.95) 213948 | **900 (22.50)** 102743 | 500 (12.50) 125903 |
-| all | 4325 (10.81) 1065307 | 4367 (10.92) 971086 | 3486 (8.71) 317421 |
+| Window | master | m19b | c17f | c19fb |
+|---|---|---|---|---|
+| def_drag@w0 | 249 (6.22) 77105 | 249 (6.22) 77105 | 215 (5.38) 12676 | 215 (5.38) 12676 |
+| def_flow@w0 | 184 (4.60) 89876 | 184 (4.60) **89890** | 153 (3.83) 1631 | 153 (3.83) 1631 |
+| def_flow@w1 | 229 (5.72) 62961 | 229 (5.72) 62961 | 94 (2.35) 867 | 94 (2.35) 867 |
+| def_flow@w2 | 254 (6.35) 45930 | 254 (6.35) **45932** | 237 (5.92) 3471 | 237 (5.92) 3471 |
+| muse_drag@w0 | 314 (7.85) 155916 | **356 (8.90) 229637** | 112 (2.80) 13206 | 112 (2.80) 13206 |
+| muse_drag@w1 | 286 (7.15) 32786 | **310 (7.75) 234961** | 273 (6.83) 20636 | 273 (6.83) 20632 |
+| muse_drag@w2 | 879 (21.98) 74530 | **892 (22.30) 97308** | **990 (24.75)** 54825 | 861 (21.52) 50489 |
+| muse_flow@w0 | 659 (16.48) 162138 | 624 (15.60) 10234 | **731 (18.27)** 71445 | **721 (18.02)** 71201 |
+| muse_flow@w1 | 393 (9.82) 150117 | 369 (9.22) 20315 | 181 (4.53) 12761 | 181 (4.53) 12761 |
+| muse_flow@w2 | 878 (21.95) 213948 | **900 (22.50)** 102743 | 500 (12.50) 125903 | 506 (12.65) 118099 |
+| all | 4325 (10.81) 1065307 | 4367 (10.92) 971086 | 3486 (8.71) 317421 | 3353 (8.38) 305033 |
+
+By census cause (area, the ten windows), master / m19b / c17f / c19fb:
+refit 353178 / 99570 / 93040 / 77013, jump:fold 256946 / 317796 / 380 /
+344, reach 155401 / 119115 / 48522 / 51938, spans 73282 / 47539 /
+120481 / 109799, none 97214 / 99624 / 26424 / 29076, jump:switch 92356 /
+211893 / 0 / 0, jump:amp 34819 / 73365 / 23579 / 31449, cluster 1974 /
+1969 / 4835 / 5254, count 137 / 215 / 160 / 160. `class17.ts` ran at
+zoom 1 only.
 
 ### Step 4: not met, so nothing landed
 
@@ -357,11 +370,126 @@ several h between two recorded frames when the geometry moves a few
 hundredths of h per frame. Continuity in the sweep is not smoothness at
 the census's frame rate.
 
-### Step 5 (c19fb fails muse_drag on count): partly run
+### Step 5 (c19fb fails muse_drag at zoom 1 and muse_flow@w0 on count)
 
-c19fb's muse_drag excess over master is one site: jump:amp and refit
-pops of 61-103 px at (475-477, 378-383) in t1, t5, t6, t8, t10, t11,
-t13, t24, t28-t30, t33, t34 and t36 (`popdiff19.cjs before16 c19fb
-muse_drag`), which c17f already had. The ten small (< 50 px) excess pops
-were not cropped: `crops17.ts` is K992's master-against-b16 composite
-and was not adapted in time.
+c17f on the new caps (c19fb) passes muse_drag@w2, which c17f failed (861
+pops against master's 879), and still fails two runs on count: muse_drag
+at zoom 1 (197 against 77) and muse_flow@w0 (721 against 659).
+
+muse_flow@w0 (`small19.cjs before16z c19fbz muse_flow@w0`): 70 excess
+pops under 50 px (925 px), 54 of them label span ends on chains 66 (30
+pops, 321 px) and 67 (24, 381), then reach 3:2 (5, 84), none (4, 67),
+refit j51/1 (3, 21) and reach 58:15, 4:1, 66:12. c17f has all but 3 of
+them: c19fb over c17f is 3 pops (41 px), all spans 67 (t8 (238, 899) 33
+px, t18 and t19 (60, 767) 4 px). That window's failure is c17f's, not
+the caps'.
+
+muse_drag at zoom 1: `small19.cjs before16 c19fb muse_drag`: 164 excess pops under 50 px
+(1448 px) over master. Against c17f (`small19.cjs c17f c19fb
+muse_drag`) the caps add 52 small pops (635 px), 55 in all (873 px),
+every one at junctions j112 and j100: j112/2 (refit 31 pops / 368 px,
+jump:amp 9 / 49), j100/1 (jump:amp 8 / 115, refit 4 / 103) and j100/2
+(2 pops / 136 px, over 50 px). c17f has 23 pops (476 px) that c19fb
+lacks, 10 of them at j100/1 and 4 at j37/1.
+
+Ten of the excess small pops over master, by structure (`corner19.ts`
+and `ext19.ts` on the census's frames):
+- 1-3. t3 (503, 366) 18 px refit, t4 (503, 366) 17 px refit, t3 (498,
+  364) 4 px jump:amp, all j112/2: j112's corner 2 goes sharp (r 0.957h
+  to 0) on even frames and back on odd ones. c19fb caps its arm 0 at
+  crossing 194's pass, 3.92h on odd frames (a partial cut) and 1.47h on
+  even ones, where the fit finds no room past V. c17f caps that arm at
+  the next junction (10.32h) and keeps r 0.957h. New with the caps.
+- 4-6. t3 (483, 370) 26 px jump:amp, t4 (483, 370) 26 px refit, t5
+  (482, 371) 26 px jump:amp, all j100/1: j100's corner 1 goes sharp (r
+  1.50h to 0) on even frames under c17f and c19fb alike: crossing 216's
+  pass caps its arm 2 at 1.14-1.19h (no room past V) instead of
+  crossing 348's at 3.82h.
+- 7. t5 (614, 588) 4 px jump:amp j42/1: j42's corner 1, r 1.17h to
+  1.03h (c17f too).
+- 8-10. t3 (813, 213) 4 px and (816, 217) 10 px, t3 (732, 290) 13 px:
+  label span ends on chain 67 (c17f too; not cropped).
+
+All 164 by cause and key: refit j112/2 30 pops / 359 px, spans 67 27 /
+206, jump:amp j100/1 21 / 189, spans 62 20 / 97, refit j100/1 14 / 231,
+spans 68 10 / 73, jump:amp j112/2 9 / 49, none 9 / 55, spans 66 7 / 51,
+jump:amp j42/1 5 / 26, reach 3:11, 3:27 and 68:9 2 each, and one each
+of refit and jump:fold j50/1, spans 77, reach 67:6 and 50:9, jump:amp
+j29/2.
+
+The pixel-by-pixel crops are `crops19.ts` (crops17.ts with these rows:
+j112/2 and j100/1, muse_drag frames 2-7, c17f red against c19fb blue),
+queued under the perf lock behind another agent's census when this was
+written; `pops19/crops19.png` when it has run.
+
+Why the cut set flips every frame: c17f's corner j112/1 moves the foot
+of its tangent point on arm 1 between about 0.99h and 2.57h from frame
+to frame (frames 3, 4, 5: 0.989h, 2.572h, 0.987h; master's: 7.509h,
+7.515h), so on even frames the first part walk extends j112's arms
+(arm 1 from 0.99h to 7.65h, arm 2 from 1.24h to 7.50h), the cluster
+changes, and so does the cut set. That toggle is the corner rule's
+(K992; call 4 keeps it out of scope here); the new caps carry it to
+j112/2 too.
+
+## Handoff
+
+2026-10-28, 12:50 PDT: agent a9fc6d78211e9a64b of claude session
+bf876705-c9fa-4b1f-83ea-e173dac6cff3 stopped at its 1 h 30 min mark
+(started 11:22:40).
+
+State:
+- Steps 1-3 done. Step 4 not met (m19b is worse than master on def_flow
+  and muse_drag at zoom 1 and in six windows), so nothing landed in
+  `src/render/field/oracle.ts`. Step 5 attributed above; the crops may
+  not have run (see below).
+- On the branch: the cap test `test/render/field/cap19_continuity.test.ts`
+  (four sweeps, gated off in `npm test`; run it on a probe oracle with
+  `$env:ORACLE19 = "m19b"; npx vitest run --config
+  .claude/probes/S3a/vitest19.config.ts test/render/field/cap19_continuity.test.ts`,
+  or on src with `$env:CAP19 = "1"`). Master fails all four, m19b fails
+  (A) and (B), m19bs passes all four. `pairCrossScene` in
+  `test/render/field/scenes/gen.ts`. No pins moved.
+- The oracles in `.claude/probes/S3a/` are generated, untracked: `node
+  .claude/probes/S3a/mk_cap19.mjs --mode cont --in
+  .claude/probes/S3a/oracle_m14.ts --out oracle_m19b.ts` (master's rule
+  on the new caps; the mode reads `cap19_<mode>.ts.txt` and
+  `cap19_tan.ts.txt`, so `--mode cont_a` is variant a), the same with
+  `--in .claude/probes/S3a/oracle_c17f.ts --out oracle_c19fb.ts` (c17f on
+  the new caps), and `--mode dbg` for the instrumented copies (m19d,
+  c19fd). m19bs is m19b with the part walk's `const step = h / 8` set to
+  `h / 128`.
+- `npx vitest run test/render/field` at 12:48: 1 failed
+  (`corner_continuity.test.ts` (B), red as the brief keeps it), 56
+  passed, 9 skipped (the cap test among them).
+
+Next:
+1. Make the part walk continuous (`partExtents`, `const step = h / 8`):
+   the reach R steps by h/8 and is the cap's last jump source in the
+   sweeps (m19bs passes all four at h/128). A continuous walk, or a
+   reach interpolated between steps, then re-run the cap test and the
+   census.
+2. Find why m19b puts muse_drag's corners onto V folds at (905, 288)
+   and (766, 349) (t1-t17, t30-t31): inferred, not checked, that
+   partial holders and partial joins at rest (w and the joins strictly
+   between 0 and 1) move caps master had at a junction. Check by
+   snapping w and the joins to 0 or 1 at those frames (`corner19.ts`
+   with an m19b copy).
+3. K992: c17f's tangent-foot toggle at j112 corner 1 (frames 3-7 of
+   muse_drag; `ext19.ts`) drives j100/1 under c17f and j112/2 under
+   c19fb round and sharp every other frame. A corner-rule fix, out of
+   this brief's scope.
+4. If `pops19/crops19.png` is missing: `pwsh .claude/probes/S3a/locked19.ps1
+   -What "K1000 crops19" -Cmd "node node_modules\vite-node\vite-node.mjs
+   .claude\probes\S3a\crops19.ts --port 5392"` with the dev server up.
+
+Evidence, `.claude/probes/S3a/`: the probes `small19.cjs` (excess small
+pops by cause), `corner19.ts` (a corner frame by frame under several
+oracles), `ext19.ts`, `spans19.ts`, `cut19.ts`, `dbg19.ts`, `jump19.ts`,
+`popdiff19.cjs`, `crops19.ts`; the runners `census19.ps1`,
+`sweeps19.ps1`, `locked19.ps1`; results in `pops19/` (census per tag,
+`class_m19b.txt`, `class_c19fb.txt`, `sweeps_*.txt`,
+`cmp_windows19.txt`) and the per-tag junctions in `cmpdir19/`.
+
+Env: the census dev server, `npx vite --config
+.claude/probes/S3a/vite.private-cache.config.ts --port 5392 --strictPort
+--host 127.0.0.1` from the worktree.

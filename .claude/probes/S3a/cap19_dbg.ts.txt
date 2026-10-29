@@ -1,0 +1,72 @@
+    const tries = new Map<number, number>();
+    // K1000 dbg: the cut loop's decisions, per iteration and pass (only
+    // passes with an arm within 3h of holding them on both sides).
+    const LOG: Record<string, unknown>[] = [];
+    (this as unknown as { cutLog: Record<string, unknown>[] }).cutLog = LOG;
+    (this as unknown as { cutExt: unknown }).cutExt = [new Map(ext0), new Map(ext)];
+    (this as unknown as { cutCorners: unknown }).cutCorners = this.corners.map((c) => {
+      const g = c.g2?.ok ? c.g2 : null;
+      let fa = g ? g.sA : c.r > 0 ? c.sTA : c.sVA;
+      let fb = g ? g.sB : c.r > 0 ? c.sTB : c.sVB;
+      if (c.noV) {
+        fa = c.noVA ?? fa;
+        fb = c.noVB ?? fb;
+      }
+      const ea = Math.abs(dS(this.polys[c.a], c.armA.s, fa)) / h;
+      const eb = Math.abs(dS(this.polys[c.b], c.armB.s, fb)) / h;
+      return { j: c.junction, i: c.index, a: c.armIdxA, b: c.armIdxB, r: c.r / h, noV: !!c.noV, g2: !!g, ea, eb, ok: c.ok };
+    });
+    const marg = (sp2: [number, number, number, number][][], pi: number, s: number, pad: number, rt: number[]): number[][] => {
+      const out: number[][] = [];
+      const p = this.polys[pi];
+      sp2.forEach((l, ji) => {
+        for (const [q, lo, hi, ai] of l) {
+          if (q !== pi) continue;
+          const dir = scene.junctions[ji].arms[ai].dir;
+          const lo2 = dir < 0 ? lo - pad : lo;
+          const hi2 = dir > 0 ? hi + pad : hi;
+          let m = -Infinity;
+          for (const sh of p.closed ? [-p.len, 0, p.len] : [0]) m = Math.max(m, Math.min(s + sh - lo2, hi2 - (s + sh)));
+          if (m > -3 * h) out.push([ji, ai, +(m / h).toFixed(4), +(Math.abs(dS(p, scene.junctions[ji].arms[ai].s, s)) / h).toFixed(3), rt[ji]]);
+        }
+      });
+      return out;
+    };
+    let sp = this.rawSpans(ext, caps);
+    for (let it = 0; it < 12; it++) {
+      const roots2 = clusterRoots(sp);
+      let changed = false;
+      passes.forEach((ps, cx) => {
+        if (!ps) return;
+        const pad = h / Math.tan(Math.max(ps.th, 1e-3) / 2) + pm * h - 1e-6 * h;
+        const ha = holders(sp, ps.ia, ps.sa, pad);
+        const hb = holders(sp, ps.ib, ps.sb, pad);
+        const mA = marg(sp, ps.ia, ps.sa, pad, roots2);
+        const mB = marg(sp, ps.ib, ps.sb, pad, roots2);
+        const ent: Record<string, unknown> = { it, cx, pad: +(pad / h).toFixed(3), mA, mB };
+        if (mA.length && mB.length) LOG.push(ent);
+        if (!ha.length || !hb.length) return;
+        const ca = new Set(ha.map(([ji]) => roots2[ji]));
+        if (!hb.some(([ji]) => ca.has(roots2[ji]))) {
+          ent.same = false;
+          return;
+        }
+        ent.same = true;
+        // Both passes in one cluster: stop the arm(s) farther from their root.
+        const far = (hs: [number, number][], pi: number, s: number) =>
+          Math.max(...hs.map(([ji, ai]) => Math.abs(dS(this.polys[pi], scene.junctions[ji].arms[ai].s, s))));
+        const n = (tries.get(cx) ?? 0) + 1;
+        tries.set(cx, n);
+        const fa = far(ha, ps.ia, ps.sa);
+        const fb = far(hb, ps.ib, ps.sb);
+        ent.fa = +(fa / h).toFixed(4);
+        ent.fb = +(fb / h).toFixed(4);
+        ent.n = n;
+        ent.cut = (n > 1 || fa >= fb ? "a" : "") + (n > 1 || fb > fa ? "b" : "");
+        if (n > 1 || fa >= fb) for (const [ji, ai] of ha) cutAt(ji, ai, ps.sa, ps.th, cx);
+        if (n > 1 || fb > fa) for (const [ji, ai] of hb) cutAt(ji, ai, ps.sb, ps.th, cx);
+        changed = true;
+      });
+      sp = this.rawSpans(ext, caps);
+      if (!changed) break;
+    }
