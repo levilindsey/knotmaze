@@ -270,6 +270,69 @@ export function hookScene(a: number, R: number, gap = 2.5 * H): FieldScene {
   });
 }
 
+/** Where polylines a and b first cross: the arc length on each. */
+function crossAt(a: PathB, b: PathB): [number, number] {
+  let sa = 0;
+  for (let i = 1; i < a.xs.length; i++) {
+    const [ax, ay, ux, uy] = [a.xs[i - 1], a.ys[i - 1], a.xs[i] - a.xs[i - 1], a.ys[i] - a.ys[i - 1]];
+    let sb = 0;
+    for (let k = 1; k < b.xs.length; k++) {
+      const [bx, by, vx, vy] = [b.xs[k - 1], b.ys[k - 1], b.xs[k] - b.xs[k - 1], b.ys[k] - b.ys[k - 1]];
+      const den = ux * vy - uy * vx;
+      const t = ((bx - ax) * vy - (by - ay) * vx) / den;
+      const u = ((bx - ax) * uy - (by - ay) * ux) / den;
+      if (den !== 0 && t >= 0 && t < 1 && u >= 0 && u < 1) return [sa + t * Math.hypot(ux, uy), sb + u * Math.hypot(vx, vy)];
+      sb += Math.hypot(vx, vy);
+    }
+    sa += Math.hypot(ux, uy);
+  }
+  throw new Error("the ENDs do not cross");
+}
+
+/**
+ * K1000: j_pair_cross's family, for the cap continuity sweeps
+ * (cap19_continuity.test.ts). j0 and j1 sit `X` apart on one through (fixed
+ * samples, so j1's arm s moves and no point is added). j0's END leans at
+ * 60°; j1's leaves at heading `phi` and, with `bendAt`, turns right after
+ * that length on an arc of radius `bendR` through 40°. With `tAt`, j0's END
+ * carries a T (j2) that far along it, j2's END leaning back at 150°. The
+ * crossing is where the two ENDs meet, chain 1 over.
+ */
+export function pairCrossScene(o: { X?: number; phi?: number; bendAt?: number; bendR?: number; tAt?: number } = {}): FieldScene {
+  const X = o.X ?? 5 * H;
+  const phi = o.phi ?? 120;
+  const t = new PathB(-L, 0, 0).line(L).mark("j0").line(L + 8 * H);
+  const a = endFrom([0, 0], 60);
+  const [dx, dy] = dir(phi);
+  const b = new PathB(X + 0.1 * H * dx, 0.1 * H * dy, phi);
+  if (o.bendAt !== undefined) {
+    const R = o.bendR ?? 6 * H;
+    b.line(o.bendAt).arc(R, -40).line(L - o.bendAt - R * 40 * D2R);
+  } else b.line(L);
+  const paths = [t, a, b];
+  const junctions: Spec["junctions"] = [
+    { id: "j0", c: [0, 0], arms: [...through(0, t.marks.j0, "L", "R"), endArm(1, 0, 1, "U")] },
+    { id: "j1", c: [X, 0], arms: [...through(0, t.marks.j0 + X, "L", "R"), endArm(2, 0, 1, "U")] },
+  ];
+  if (o.tAt !== undefined) {
+    const [ux, uy] = dir(60);
+    const c2: [number, number] = [(0.1 * H + o.tAt) * ux, (0.1 * H + o.tAt) * uy];
+    paths.push(endFrom(c2, 150));
+    junctions.push({ id: "j2", c: c2, arms: [...through(1, o.tAt, "B", "F"), endArm(3, 0, 1, "U")] });
+  }
+  const [sa, sb] = crossAt(a, b);
+  return build({
+    name: "pair_cross19",
+    paths,
+    junctions,
+    crossings: [[1, sa, 2, sb]],
+    tips: [],
+    view: { c: [X / 2, 2.5], r: 7 },
+    pois: [],
+    params: { X, phi, bendAt: o.bendAt ?? -1, bendR: o.bendR ?? -1, tAt: o.tAt ?? -1 },
+  });
+}
+
 export function syntheticScenes(): FieldScene[] {
   const out: FieldScene[] = [];
   const O: [number, number] = [0, 0];
