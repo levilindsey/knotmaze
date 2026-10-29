@@ -197,3 +197,42 @@ page's build time differs (p50 282 / 299 / 495 / 472 ms against 272 / 389 /
 653 / 675 ms). Pops a transition, as F3 of S3a6: def drag 0.15 (6 pops,
 359 px), def flow 0.68 (27, 1078), muse drag 1.93 (77, 1273), muse flow
 6.65 (266, 7368).
+
+### F2. The tables on the CPU (08:38)
+
+`src/render/label/label_tables.ts`: `LabelTableBuilder.build(m)` writes one
+RGBA32F table a frame into preallocated arrays (grown by 1.25x, never
+shrunk): a chain table (3 texels a chain: point, span and pin bases and
+counts, `closed`, `len`, `s0`, `1 / len`), the points (`x, y, s, segLen` at
+each segment's start, plus the chain's end point: the label's polys, not
+SAMP), the spans (a sorted partition of `[s0, s0 + len]`, `(lo, cluster,
+rank)`, `clusterAt` resolved between every two span bounds) and the pins
+(`s, z, rL, rR`), plus the instance list (chain, k) and the depth
+normalizers (`zmin`, `zr`, `smax`, `nKeys`, master's definitions). The rank
+is master's: keys `1e6 + cluster` or the chain's id, ranked among the keys
+present. Its float32 reference (`refPoint`, `refS`, `refCluster`,
+`refDepth`, `refFragDepth`) is what the shaders will compute, op for op.
+
+Checks (`test/render/label/label_tables_check.ts`; probe
+`.claude/probes/S3a/tables15.ts`, logs `tables15_seq.log`), each table
+against its definition from the from-scratch build:
+- points: 0 mismatches on the 12 scenes; every `buildLabelPieces` tube
+  vertex against the table's point at the tube's s in float32: largest
+  5.91e-5 world (fat, a 20 000-sample chain at s near 636), every other
+  scene and every frame of the four sequences 1.53e-5 or less, under the
+  1e-4 gate.
+- spans: `refCluster` against `FieldModel.clusterAt` on 33 points a
+  segment (770 517 on muse_hash): 2 misses on the 12 scenes, both within an
+  ulp of a span bound, 0 elsewhere; on the sequences (9 a segment, 164
+  frames) 237 misses, all within an ulp of a bound. Every master tube's
+  cluster and rank: 0 misses on the 12 scenes; on the sequences 2 tubes
+  (def drag f14, muse flow f39), both shorter than 2e-6 world and within
+  2e-6 of a bound (the tube's own float32 ends), so 0 beyond float32.
+- pins: `refDepth` (float32) against `depthAt` at the same s: at most
+  4.0e-5 of the depth range (fat, s near 636), 1.2e-5 on the sequences;
+  against `depthAt` at the float64 s, 1.3e-4 (fat; the float32 s itself).
+- keys, `nKeys`, `zmin`, `zr`, `smax`: identical to `buildLabelPieces` on
+  every scene and frame.
+`test/render/label/label_tables.test.ts` runs the same checks on the 15
+tracked field scenes, a reused builder against a fresh one (identical
+tables after other frames: no warm state), and the depth formula's order.
