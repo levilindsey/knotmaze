@@ -1,0 +1,132 @@
+{
+ "scene": "fat",
+ "crop": [
+  300,
+  130,
+  940,
+  770
+ ],
+ "sub": 8,
+ "table": {
+  "all": {
+   "n": 84628,
+   "meanAbs": 0.0414,
+   "meanSigned": 0,
+   "p99": 0.111,
+   "max": 0.206,
+   "over01": 1716,
+   "over05": 0,
+   "worst": []
+  },
+  "inner": {
+   "n": 43059,
+   "meanAbs": 0.0367,
+   "meanSigned": -0.0001,
+   "p99": 0.105,
+   "max": 0.156,
+   "over01": 641,
+   "over05": 0,
+   "worst": []
+  },
+  "outer(all)": {
+   "n": 30214,
+   "meanAbs": 0.0483,
+   "meanSigned": -0.0003,
+   "p99": 0.116,
+   "max": 0.206,
+   "over01": 822,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/foot": {
+   "n": 25937,
+   "meanAbs": 0.0498,
+   "meanSigned": 0.0015,
+   "p99": 0.116,
+   "max": 0.206,
+   "over01": 708,
+   "over05": 0,
+   "worst": []
+  },
+  "over": {
+   "n": 7744,
+   "meanAbs": 0.0423,
+   "meanSigned": -0.0004,
+   "p99": 0.121,
+   "max": 0.17,
+   "over01": 184,
+   "over05": 0,
+   "worst": []
+  },
+  "inner+fade": {
+   "n": 2964,
+   "meanAbs": 0.0372,
+   "meanSigned": 0.0043,
+   "p99": 0.105,
+   "max": 0.142,
+   "over01": 50,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/foot+fade": {
+   "n": 2261,
+   "meanAbs": 0.0526,
+   "meanSigned": -0.005,
+   "p99": 0.123,
+   "max": 0.182,
+   "over01": 101,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/none": {
+   "n": 1691,
+   "meanAbs": 0.0224,
+   "meanSigned": -0.0224,
+   "p99": 0.047,
+   "max": 0.078,
+   "over01": 0,
+   "over05": 0,
+   "worst": []
+  },
+  "over+fade": {
+   "n": 647,
+   "meanAbs": 0.0437,
+   "meanSigned": 0.0022,
+   "p99": 0.119,
+   "max": 0.173,
+   "over01": 19,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/foot+2surf": {
+   "n": 182,
+   "meanAbs": 0.0401,
+   "meanSigned": 0.0252,
+   "p99": 0.126,
+   "max": 0.134,
+   "over01": 10,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/none+fade": {
+   "n": 129,
+   "meanAbs": 0.0224,
+   "meanSigned": -0.0224,
+   "p99": 0.063,
+   "max": 0.063,
+   "over01": 0,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/foot+2surf+fade": {
+   "n": 14,
+   "meanAbs": 0.0462,
+   "meanSigned": 0.0049,
+   "p99": 0.118,
+   "max": 0.118,
+   "over01": 3,
+   "over05": 0,
+   "worst": []
+  }
+ }
+}

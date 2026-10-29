@@ -1,0 +1,18 @@
+image 2480x1800, raster 2480x1800
+paper value 235/255
+raster 20 s {"deep":1074771,"protoOnly":24111,"both":0,"formBOnly":2,"protoOnlyGroup":18020,"bothGroup":0,"formBOnlyGroup":0}
+both by form B term {}; formB-only by term {"foot+f4":1,"foot":1}
+blobs >= 4 px: {"protoOnly":{"blobs":498,"px":23848}}
+  protoOnly 507 px at world (8.513, 8.749) px (837, 508), 100% group top
+  protoOnly 408 px at world (16.223, 34.046) px (1165, 1586), 100% group top
+  protoOnly 405 px at world (9.492, 9.042) px (879, 521), 100% group top
+  protoOnly 377 px at world (26.229, 1.018) px (1592, 179), 100% group top
+  protoOnly 377 px at world (33.674, 17.202) px (1909, 869), 100% group top
+  protoOnly 319 px at world (22.558, 2.462) px (1435, 241), 89% group top
+  protoOnly 311 px at world (33.525, 9.648) px (1902, 547), 93% group top
+  protoOnly 287 px at world (23.499, 27.79) px (1475, 1320), 100% group top
+  protoOnly 280 px at world (23.668, 10.435) px (1483, 580), 100% group top
+  protoOnly 278 px at world (21.735, 34.318) px (1400, 1598), 2% group top
+  protoOnly 260 px at world (29.236, 23.622) px (1720, 1142), 72% group top
+  protoOnly 252 px at world (4.902, 15.259) px (683, 786), 100% group top
+sheet: rows = the largest blobs; columns = prototype | form B ink | class (red proto-only, purple both, blue formB-only)

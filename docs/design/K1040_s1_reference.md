@@ -519,3 +519,159 @@ same 12 frames per recording:
   The second layer becomes the choice if the ties near junctions (about
   300 px per frame on muse) or three-way ties turn out not to be crossing
   pairs. The tie mix blends only the first adjacent tied pair (F4).
+
+**F11 (question 4, the outer edge's AA): the fetch-across coverage is
+unbiased and within about 0.1 of exact area coverage at edges and
+corners. It departs where a fade changes the ink inside a pixel, or where
+partial coverages overlap.**
+- **The probe.** `q4.ts` computes the reference's coverage the way a
+  strip would:
+  - each surface's ss(−aa, aa, ·) at the pixel centre, composited front
+    to back over whatever lies below, which is the label fetched across
+    the edge;
+  - exact area coverage is a hard-edged form B (aa = 1e-4 device px)
+    averaged over 8x8 subsamples;
+  - on a 640x640 device-px crop at the frame's centre of def, fat, ring,
+    g41_def_tw64 (dpr 3) and muse_hash;
+  - only pixels whose ink varies inside them are supersampled, 35k to
+    97k per scene (`out/q4/summary.txt`, one JSON per scene).
+- **Classes** come from the hard subsamples:
+  - outer: paper and a surface both appear;
+  - over: covered throughout, but the top surface changes (an outline
+    over another surface);
+  - inner: one top throughout (the band's inner edge).
+  Each is split by the AA eval's winning term and by fade bits. Δ is the
+  reference's ink minus the exact coverage. Ranges are over the five
+  scenes.
+
+| Class | Pixels | Mean abs Δ | Mean Δ | p99 abs Δ | Max abs Δ |
+|---|---|---|---|---|---|
+| all | 353,199 | 0.036-0.041 | -0.0003 to 0.0001 | 0.11-0.13 | 0.21-1.0 |
+| outer, straight edge (foot) | 92,940 | 0.047-0.050 | +0.002 | 0.10-0.12 | 0.15-0.26 |
+| outer, corner or end (arc, tA, tB) | 4,232 | 0.045-0.057 | -0.011 to +0.007 | 0.09-0.14 | 0.10-0.29 |
+| outer, centre outside every surface | 6,894 | 0.022 | -0.022 | 0.05 | 0.05-0.08 |
+| outer, two surfaces at the centre | 534 | 0.02-0.05 | +0.019 to +0.040 | 0.05-0.25 | 0.05-0.27 |
+| over (no fade) | 28,135 | 0.040-0.043 | 0.000 | 0.09-0.12 | 0.17-0.48 |
+| inner (no fade) | 165,984 | 0.035-0.037 | -0.001 | 0.10-0.11 | 0.16-0.50 |
+| inner, with fade bits | 35,810 | 0.024-0.045 | +0.001 to +0.010 | 0.10-0.56 | 0.14-1.0 |
+| over, with fade bits | 4,864 | 0.044-0.060 | -0.005 to +0.004 | 0.12-0.41 | 0.17-0.84 |
+
+- **Straight edges.** A smoothstep ramp is not a box filter. For a
+  straight edge the gap peaks at 0.096 axis-aligned and about 0.07 at
+  45°, and the p99 of 0.10-0.12 matches that. Inferred, not checked: the
+  maxima up to 0.26 are pixels that hold a second edge (the band's inner
+  edge is 2.2-3.7 px in).
+- **Corners and ends** add a little, because the edge curves inside the
+  pixel: a mean of 0.045-0.057 against 0.047-0.050, and a p99 up to 0.14.
+- **The one consistent bias:** a pixel whose centre is more than aa
+  outside every surface gets 0, although a corner of it reaches the edge
+  (0.71 px away at 45°). Its mean Δ is -0.022 on all five scenes, max
+  0.08 (0.125 once, under a fade). A strip that stops aa past its piece
+  misses these pixels by construction.
+- **Two partial coverages at an outer edge** read high, by +0.02 to
+  +0.04 on average and up to 0.27. Inferred: compositing two AA ramps
+  front to back counts their overlap twice.
+- **Fades carry the large departures.** All 183 pixels with abs Δ above
+  0.5 (def 60, fat 0, ring 26, g41_def_tw64 46, muse_hash 51) carry fade
+  bits, and the max reaches 1.0.
+  - They are not AA errors. `q4worst.ts` re-evaluates the worst fade
+    sites with aa = 1e-4, 0.25 and 0.5 px. Most give the same centre ink
+    at every aa: ring (5.041, 4.197) reads 1.0 in all three against an
+    exact 0.078.
+  - The reference's ink there changes within a fraction of a pixel
+    whatever aa is: a fade's cut, the tie mix (F_TIE, on own-piece
+    tops), or a change of winner. A sample at the pixel centre cannot
+    represent that.
+  - Inferred: the same mouth mechanism as F7's #1 failures and F9's
+    junction pops.
+- **One fade site is an AA effect.** At muse_hash (24.852, 26.65) no
+  surface covers the centre (top -1, nSurf 0). The AA ink is 0.97,
+  against 0 at aa 0.25 and hard, and an exact 0.34. Inferred, not
+  traced: the AA ramps of several fold pieces (own pieces are separate
+  surfaces) compound outside their edges.
+- **Answer.** Fetch-across over the fetched label matches exact area
+  coverage to within the smoothstep's own error, which is about 0.1 at
+  p99, unbiased, at outer edges, corners and outlines over another
+  surface. No runner-up label is needed there. It differs in three
+  places:
+  - by -0.02 where only a pixel's corner reaches the edge;
+  - by up to +0.6 where partial coverages of overlapping surfaces
+    compound;
+  - by up to 1.0 at fades, whose ink changes faster than any AA width.
+    That one is a definition matter: a fade must change no faster than
+    the AA ramp, or S2 must supersample those pixels.
+
+**F12 (question 5, muse_hash's stray ink): partly a definition defect.
+The reference itself leaves a paper hole inside some junctions and
+outlines it. Not fixed.**
+- **The probe.** `q5.ts` rasters form B at the prototype frame's camera
+  and dpr 2, 2480x1800, the size of the prototype's
+  `.claude/probes/K1040/out/muse_hash_dpr2.png`.
+  - A pixel is deep when it lies more than W + 1 px inside form B's top
+    surface, by Dexp.
+  - Prototype ink is an HSV value below half the paper's (paper 235). The
+    debug tint is blue, so luminance would misread it.
+- **Counts.** Form B inks 2 of its 1.07M deep pixels. The prototype inks
+  24,111 of them: 75% on junction-group tops, in 498 blobs of 4 px or
+  more (23,848 px).
+- **The sheet** (`out/q5/sheet.png`, the 8 largest blobs, as prototype,
+  form B, and class; `row4_x3.png` enlarges one) shows two kinds:
+  - **Lobes inside junctions** (rows 1, 3 and 4, at about (8.5, 8.7),
+    (9.5, 9.0) and (26.2, 1.0)). The prototype draws dark lobes around
+    the junction's centre. At the same centre the reference draws a
+    small ring.
+    - `q5line.ts` scans group 7's ring at y = 1.118. Its inside is
+      paper (nSurf 0) about 0.24 world across, from x = 26.58 to 26.81.
+    - The ring is ink on corner arcs #5 and #7, with the fold bit (f1)
+      set across the hole.
+  - **Strips along junction outlines** (rows 2 and 5-8). There the
+    prototype's outline lies inside the reference's surface, as if its
+    corners or arm edges sat elsewhere. Not attributed.
+- **The hole census.** `q5holes.ts` (`out/q5/holes.txt`, `holes.json`)
+  counts paper components bordered by one junction group and nothing
+  else, at each scene's camera at dpr 1:
+
+| Scene | Holes | Area (px, dpr 1) |
+|---|---|---|
+| muse_hash | 5 | 8-36 |
+| muse_default_tw | 4 | 110-180 |
+| def | 4 | 105-183 |
+| fat | 0 | - |
+| ring | 1 | 1 |
+| user_tw42.lightpaper | 5 | 130-414 |
+| g41_def_tw42 | 4 | 160-229 |
+| g41_def_tw64 | 5 | 3-97 |
+| g41_ring_tw42 | 0 | - |
+| g41_ring_tw64 | 0 | - |
+| g41_user_tw42 | 5 | 129-414 |
+| g41_user_tw64 | 5 | 31-106 |
+
+  - Every hole carries a fade bit: f1, and once f1 + f8.
+  - The terms on a hole's rim are endpoint discs (tA, tB), corner arcs,
+    and feet.
+  - At dpr 2, muse_hash has 6 holes: (26.675, 1.096) group 7,
+    (9.013, 8.954) group 110, (5.318, 14.94) group 55,
+    (25.339, 20.842) group 108, (4.611, 23.474) group 17 and
+    (19.147, 33.518) group 46. 21 of the prototype's 498 blobs
+    (3,315 px) lie within 30 px of one. That includes the lobes of rows
+    1, 3 and 4.
+- **Verdict.**
+  - **The hole is a definition defect.** The reference leaves part of a
+    junction uncovered and outlines it. Inferred, not traced: the fold's
+    fade (f1, selfW) withdraws the arm pieces near V. The corner fills
+    cover only outside each corner circle, so nothing covers what the
+    arms leave.
+  - **Not fixed in form_b.ts.** It was found at 00:00, with 40 minutes
+    of the stage left. A fix has to re-run the pins and the 12 scenes,
+    so it is the first item for the next stage (see the Handoff).
+  - **The prototype's lobes** surround the same centres. Inferred: the
+    prototype draws the same uncovered region's outline through its own
+    terms, as lobes where the reference draws a ring. Once the hole is
+    fixed in the definition, S4 checks whether any lobes remain. Any
+    that do are a prototype defect.
+  - **The other 477 blobs** (20,533 px) are not near a hole. On the
+    sheet they are mostly strips along outlines, not ink inside a
+    junction. Unattributed: the prototype's corner geometry, or the
+    frame's alignment.
+  - F5's "about a dozen junctions" is not reproduced as a count. This
+    probe finds 6 holes at dpr 2, and lobes on 3 of the sheet's 8 rows.

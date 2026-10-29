@@ -1,0 +1,12 @@
+== def_drag: 41 kept frames; windows at frames 0 x 41; 40 pairs, 41 frames in 112 s
+  label_pops' rule: 18 pops (364 px) by {"junction":18}; unexplained outside fades 420 px; inside fades {"f1":1455,"f2":18,"f9":34,"f8":70,"f3":7}; max motion 12.06 px
+  Q3 tie band (nSurf >= 2, dz < zt) per frame 76-83 px, sum {"crossing60+":3229}; tie mix px per frame 90,85,80,81,91,88,80,81,80,83,83,92,91,89,86,86,89,90,89,91,92,91,92,94,93,92,94,95,89,91,89,94,97,96,99,96,99,97,97,99,97
+== def_flow: 41 kept frames; windows at frames 0 x 41; 40 pairs, 41 frames in 113 s
+  label_pops' rule: 38 pops (656 px) by {"junction":38}; unexplained outside fades 841 px; inside fades {"f1":5319,"f2":337,"f9":721,"f7":4,"f6":37,"f3":50,"f8":1317,"f4":5,"f5":2}; max motion 1.051 px
+  Q3 tie band (nSurf >= 2, dz < zt) per frame 88-121 px, sum {"crossing60+":3471,"crossing30-60":605,"junction":5}; tie mix px per frame 97,92,96,99,98,96,105,91,96,91,97,102,99,91,93,89,98,103,107,98,101,97,96,93,100,99,102,93,98,98,102,97,98,107,94,95,88,94,87,93,91
+== muse_drag: 41 kept frames; windows at frames 0 x 41; 40 pairs, 41 frames in 221 s
+  label_pops' rule: 13 pops (130 px) by {"junction":6,"crossing60+":7}; unexplained outside fades 356 px; inside fades {"f1":982,"f6":286,"f3":123,"f2":516,"f5":25,"f4":81,"f7":47,"f9":73,"f8":119,"f12":1,"f13":1}; max motion 21.501 px
+  Q3 tie band (nSurf >= 2, dz < zt) per frame 9699-10106 px, sum {"junction":12166,"crossing<15":5332,"crossing30-60":52560,"crossing60+":331620,"crossing15-30":1179}; tie mix px per frame 6341,6326,6273,6276,6289,6274,6308,6325,6292,6280,6280,6309,6304,6300,6381,6391,6374,6389,6384,6387,6394,6438,6400,6375,6362,6367,6381,6387,6369,6342,6352,6513,6481,6435,6445,6468,6418,6423,6399,6417,6404
+== muse_flow: 41 kept frames; windows at frames 0 x 41; 40 pairs, 41 frames in 175 s
+  label_pops' rule: 54 pops (614 px) by {"crossing60+":19,"junction":35}; unexplained outside fades 1253 px; inside fades {"f1":2866,"f5":59,"f2":2277,"f4":250,"f6":1262,"f3":645,"f7":334,"f8":314,"f9":54}; max motion 0.949 px
+  Q3 tie band (nSurf >= 2, dz < zt) per frame 9706-10209 px, sum {"junction":12260,"crossing<15":5343,"crossing30-60":53271,"crossing60+":332800,"crossing15-30":2282}; tie mix px per frame 6420,6391,6396,6393,6373,6393,6444,6432,6460,6468,6426,6379,6388,6379,6367,6315,6311,6343,6365,6288,6307,6296,6312,6301,6319,6335,6349,6337,6348,6397,6383,6417,6446,6378,6365,6441,6469,6530,6484,6511,6474
