@@ -1,0 +1,18 @@
+radius room-L: 6 pops 99 px
+gone arm L 0: 2 pops 14 px
+gone V off arm: 3 pops 14 px
+new arm L 0: 2 pops 13 px
+
+muse_drag 16>17 (20.063, 18.994) 12 px junction [switch corner radius] 113/343/344 radius: r1 room (arm L 2.095>2.095, 1.132>0.899); r 0.874>0.239 omega 1
+muse_drag 16>17 (20.214, 19.055) 13 px junction [switch corner radius] 113/343/344 radius: r1 room (arm L 2.095>2.095, 1.132>0.899); r 0.874>0.239 omega 1
+muse_drag 25>26 (15.434, 17.567) 5 px junction [switch corner radius] 105/319/320 radius: r1 room (arm L 1.226>1.226, 0.779>0.887); r 0.072>0.256 omega 1
+muse_flow 5>6 (26.818, 23.233) 10 px junction [switch corner gone] 37/113/114 gone: arm L 0 (0, 1.457); present: theta 1.607 r 0.311 rV 0.424 omega 1 dVa 0.355/0.848 dVb 0.387/1.457
+muse_flow 5>6 (26.799, 23.383) 4 px junction [switch corner gone] 37/113/114 gone: arm L 0 (0, 1.457); present: theta 1.607 r 0.311 rV 0.424 omega 1 dVa 0.355/0.848 dVb 0.387/1.457
+muse_flow 10>11 (1.308, 17.28) 4 px junction [switch corner gone] 23/71/72 gone: V off arm (dVa 0.513/0.513, dVb 0.566/1.448); present: theta 1.256 r 0.306 rV 0.455 omega 1 dVa 0.592/0.957 dVb 0.574/1.448
+muse_flow 10>11 (1.191, 17.386) 4 px junction [switch corner gone] 23/71/72 gone: V off arm (dVa 0.513/0.513, dVb 0.566/1.448); present: theta 1.256 r 0.306 rV 0.455 omega 1 dVa 0.592/0.957 dVb 0.574/1.448
+muse_flow 18>19 (1.332, 17.28) 6 px junction [switch corner gone] 23/71/72 gone: V off arm (dVa 0.507/0.507, dVb 0.567/1.431); present: theta 1.238 r 0.258 rV 0.392 omega 1 dVa 0.593/0.95 dVb 0.579/1.431
+muse_flow 18>19 (26.823, 23.239) 9 px junction [switch corner new] 37/113/114 new: arm L 0 (0, 1.607); present: theta 1.555 r 0.251 rV 0.349 omega 1 dVa 0.371/0.836 dVb 0.411/1.607
+muse_flow 18>19 (26.846, 23.383) 4 px junction [switch corner new] 37/113/114 new: arm L 0 (0, 1.607); present: theta 1.555 r 0.251 rV 0.349 omega 1 dVa 0.371/0.836 dVb 0.411/1.607
+muse_flow 28>29 (26.807, 23.245) 9 px junction [switch corner radius] 37/113/114 radius: r1 room (arm L 0.829>0.679, 1.613>1.613); r 0.232>0.06 omega 1
+muse_flow 28>29 (26.799, 23.383) 4 px junction [switch corner radius] 37/113/114 radius: r1 room (arm L 0.829>0.679, 1.613>1.613); r 0.232>0.06 omega 1
+muse_flow 31>32 (19.848, 18.579) 56 px junction [switch corner radius] 113/343/344 radius: r1 room (arm L 2.348>2.348, 1.406>1.231); r 0.841>0.587 omega 1

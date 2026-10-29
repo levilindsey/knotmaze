@@ -1,0 +1,8 @@
+t 0.0000:
+  arm ei 0 pi 75 dir 1 sR 41.032 L 0.6909 Lcut 0.6909; passes: d -17.741 th 1.381 c -18.625; d -6.112 th 1.319 c -7.028; d -34.699 th 1.544 c -35.509; d -33.378 th 1.559 c -34.183
+  arm ei 1 pi 78 dir -1 sR 1.028 L 1.3274 Lcut Infinity; passes: 
+  arm ei 2 pi 75 dir -1 sR 41.032 L 0.9986 Lcut 0.9986; passes: d -20.712 th 1.317 c -21.629; d -7.036 th 1.437 c -7.894; d 1.826 th 1.505 c 0.999; d -15.095 th 1.460 c -15.942
+t 1.0000:
+  arm ei 0 pi 75 dir 1 sR 41.045 L 0.6890 Lcut 0.6890; passes: d -17.759 th 1.381 c -18.643; d -6.129 th 1.320 c -7.044; d -34.715 th 1.545 c -35.525; d -33.395 th 1.564 c -34.197
+  arm ei 1 pi 78 dir -1 sR 1.028 L 1.3290 Lcut Infinity; passes: 
+  arm ei 2 pi 75 dir -1 sR 41.045 L 1.0087 Lcut 1.0087; passes: d -20.726 th 1.334 c -21.634; d -7.040 th 1.427 c -7.901; d 1.835 th 1.506 c 1.009; d -15.105 th 1.461 c -15.951

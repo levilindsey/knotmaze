@@ -225,6 +225,44 @@ interface SurfEntry {
 
 const EMPTY: Cand[] = [];
 
+/**
+ * The unit tangent at arc s, interpolated along the segment between its two
+ * vertex tangents (each the mean of the directions of the segments that meet
+ * there): the oracle's K1000 tanAt. pointAt's tangent is constant per segment,
+ * so a crossing sliding over a vertex turned its pass θ in a step, and Lcut
+ * (through cot(θ/2)) with it (S1d F5).
+ */
+function tanAt(p: Poly, s: number): { tx: number; ty: number } {
+  const a = pointAt(p, s);
+  const vtx = (i: number): [number, number] => {
+    const kin = i > 0 ? i - 1 : p.closed ? p.nseg - 1 : -1;
+    const kout = i < p.nseg ? i : p.closed ? 0 : -1;
+    let x = 0;
+    let y = 0;
+    let last = -1;
+    for (const k of [kin, kout]) {
+      if (k < 0) continue;
+      const l = p.segLen[k] || 1;
+      const b = segB(p, k);
+      x += (p.x[b] - p.x[k]) / l;
+      y += (p.y[b] - p.y[k]) / l;
+      last = k;
+    }
+    const l = Math.sqrt(x * x + y * y);
+    if (l > 1e-12) return [x / l, y / l];
+    if (last < 0) return [a.tx, a.ty];
+    const lk = p.segLen[last] || 1;
+    const bk = segB(p, last);
+    return [(p.x[bk] - p.x[last]) / lk, (p.y[bk] - p.y[last]) / lk];
+  };
+  const [x0, y0] = vtx(a.k);
+  const [x1, y1] = vtx(segB(p, a.k));
+  const x = x0 + (x1 - x0) * a.t;
+  const y = y0 + (y1 - y0) * a.t;
+  const l = Math.sqrt(x * x + y * y);
+  return l > 1e-12 ? { tx: x / l, ty: y / l } : { tx: a.tx, ty: a.ty };
+}
+
 export class FormB {
   readonly scene: FieldScene;
   readonly h: number;
@@ -335,8 +373,10 @@ export class FormB {
       if (ia === undefined || ib === undefined) continue;
       const sa = normS(this.polys[ia], x.a.s);
       const sb = normS(this.polys[ib], x.b.s);
-      const ta = pointAt(this.polys[ia], sa);
-      const tb = pointAt(this.polys[ib], sb);
+      // S1d F5: the interpolated tangent, so θ turns smoothly as the crossing
+      // slides over a vertex (tanAt).
+      const ta = tanAt(this.polys[ia], sa);
+      const tb = tanAt(this.polys[ib], sb);
       const theta = Math.acos(Math.min(1, Math.abs(ta.tx * tb.tx + ta.ty * tb.ty)));
       this.passes[ia].push({ s: sa, theta });
       this.passes[ib].push({ s: sb, theta });
@@ -425,7 +465,9 @@ export class FormB {
         let Lcut = Infinity;
         for (const x of this.passes[pi]) {
           const d = delta(x.s);
-          if (d < -1e-12 || d > L) continue;
+          // S1d F5: a pass past L still cuts while its cut c lies short of L
+          // (c < d); skipping it there made L jump as the pass slid over L.
+          if (d < -1e-12) continue;
           const t = Math.tan(x.theta / 2);
           const c = t > 1e-12 ? d - h / t - h : -Infinity;
           if (c < Lcut) Lcut = c;
@@ -797,7 +839,11 @@ export class FormB {
         ov = Math.max(ov, R - c.d);
       }
     }
-    const omega = this.force.omega ?? ss(0, 1, 1 - ov / this.ovw);
+    // S1d F4: past the margin gate's band. r = ∫S stops the ball where another
+    // part of an arm comes up to 0.05h nearer q than its foot (the margin gate,
+    // above), so ω fades only an overlap past that band, one the margin gate
+    // did not stop.
+    const omega = this.force.omega ?? ss(0, 1, 1 - (ov - 0.05 * h) / this.ovw);
     return {
       j: ji,
       g: this.groupOf[ji],

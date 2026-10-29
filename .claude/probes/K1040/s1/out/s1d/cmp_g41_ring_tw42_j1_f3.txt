@@ -1,0 +1,16 @@
+g41_ring_tw42 junction 1 at (12.1659, 0.9204), h 0.21, arms 0:c0/through/s7.941 1:c1/through/s18.457 2:c0/through/s7.941 3:c1/through/s18.457
+form B arms:
+  arm 3 ei 0 chain-poly 0 through dir -1 (scene -1) sR 7.941 (scene 7.941) L 2.3043 Lcut 2.3043 ang -2.4704; oracle armDir ang -2.4704
+  arm 4 ei 1 chain-poly 1 through dir 1 (scene 1) sR 18.457 (scene 18.457) L 1.6600 Lcut 1.6600 ang -0.9507; oracle armDir ang -0.9507
+  arm 5 ei 2 chain-poly 0 through dir 1 (scene 1) sR 7.941 (scene 7.941) L 1.4982 Lcut 1.4982 ang 0.7685; oracle armDir ang 0.7685
+  arm 6 ei 3 chain-poly 1 through dir -1 (scene -1) sR 18.457 (scene 18.457) L 0.8555 Lcut 0.8555 ang 2.1569; oracle armDir ang 2.1569
+form B corners:
+  3(ei 0)/4(ei 1) th 1.5197 r0 0.2993 r1 0.2993 r 0.2993 room 1.1128 V (12.1235, 0.6120) q (12.0648, 0.2012) tA (11.9089, 0.4567) tB (12.2864, 0.4024) dV 0.2276/2.3043 0.2309/1.6600 w 1.000
+  4(ei 1)/5(ei 2) th 1.7192 r0 0.3656 r1 0.2632 r 0.2632 room 0.8856 V (12.4407, 0.8929) q (12.7897, 0.8644) tA (12.5949, 0.6875) tB (12.6242, 1.0690) dV 0.1750/1.6600 0.1696/1.4982 w 0.469
+  5(ei 2)/6(ei 3) th 1.3885 r0 0.2622 r1 0.2622 r 0.2622 room 0.2551 V (12.1992, 1.2483) q (12.2486, 1.6378) tA (12.3866, 1.4148) tB (12.0404, 1.4783) dV 0.2602/1.4982 0.2591/0.8555 w 1.000
+  6(ei 3)/3(ei 0) th 1.6558 r0 0.3430 r1 0.3151 r 0.3151 room 0.1971 V (11.8850, 0.9595) q (11.4474, 1.0401) tA (11.6834, 1.2488) tB (11.5960, 0.7623) dV 0.1839/0.8555 0.1930/2.3043 w 0.140
+oracle corners:
+  0/1 ok true th 1.5197 rule 0.2993 r 0.2993 V (12.1235, 0.6120) q (12.0648, 0.2012) tA (11.9089, 0.4567) tB (12.2864, 0.4024) sV 7.714/18.688 noV false why undefined
+  1/2 ok true th 1.7192 rule 0.3656 r 0.2618 V (12.4407, 0.8929) q (12.7877, 0.8645) tA (12.5939, 0.6885) tB (12.6231, 1.0681) sV 18.632/8.111 noV false why undefined
+  2/3 ok true th 1.3885 rule 0.2622 r 0.2622 V (12.1992, 1.2483) q (12.2486, 1.6378) tA (12.3866, 1.4148) tB (12.0404, 1.4783) sV 8.201/18.198 noV false why undefined
+  3/0 ok true th 1.6558 rule 0.3430 r 0.3147 V (11.8850, 0.9595) q (11.4479, 1.0400) tA (11.6837, 1.2485) tB (11.5964, 0.7625) sV 18.273/7.748 noV false why undefined

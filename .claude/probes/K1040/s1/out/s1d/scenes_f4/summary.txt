@@ -1,0 +1,228 @@
+== muse_hash: build 8079 ms, raster 5309 ms (1240x900), own 3320 ms, checks 24466 ms
+  #1 (form B) fail: 2 px deeper than W + 1 px (mouth 2 px), deepest F 4.47 px [lim W*ppu+1 = 4.24 px] by term {"tA":2}
+  #2 (form B) corners 147: max ||t-q|-r| 3.79e-11 px, ||t-foot|-h| 1.32e-13 px, tangent 8.82e-10
+  #11 (form B) pass: 0 of 350 crossing centres not topped by the over
+  strips: 22 of 224728 inked px outside their term's strips {"tA/endpoint":18,"tB/endpoint":4}; terms {"foot":218366,"tA":1152,"arc":4463,"tB":747}
+  free ends: 37 {"junction":37,"crossing":0,"other":0}; tie px 17046, 2+ surfaces px 127565
+  #2 corner joins: FAIL, gap max 25.1643 px, tangent angle max 64.405 deg, 1 solves failed [≤ 0.01 px; ≤ 0.5°; n 341]
+  #3 dead-end caps: FAIL, Hausdorff 2.4599 px; image 3.237 px (formB) [≤ 0.05 px; image ≤ 0.5 px; n 7]
+  #4 arm width: FAIL, max |2h' − 2h| 0.1368 px [2h ± 0.05 px; n 21; skipped span 1053, crossing 1348, end 196, neighbour 37]
+  #5 no double strokes: FAIL, 596 of 11281 walks not one run ≤ 1.1W (longest 7.161 px, W = 3.24 px) [one run, ≤ 1.1 W; n 11281; skipped neighbour 51930, outside 226, group 6]
+  #6 under bands end on the over's outline: FAIL, max end error 9.942 px; 9 of 1356 band ends off by more than 0.5 px [within 0.5 px, no gap, no overlap; n 1356]
+  #7 over edges continuous: FAIL, 21 of 700 over band lines broken within ±2h (39 more interrupted only by a third chain on top, not counted) [no break; n 700]
+  #8 two edges per section: PASS, 0 of 21 sections without exactly 2 runs [exactly 2 runs; n 21; skipped span 1053, crossing 1348, end 196, neighbour 37]
+  #9 band width (sections): PASS, max |W' − W| 0.1059 px [W ± 0.25 px; n 21; skipped span 1053, crossing 1348, end 196, neighbour 37]
+  #9 band width (outline walks): FAIL, max |W' − W| 3.9244 px [W ± 0.25 px; n 11281; skipped neighbour 51930, outside 226, group 6]
+  #11 depth order at crossings: FAIL, 349 of 350 crossings topped by the scene's over [all; n 350]
+  #14 pinned depth keeps each crossing's over/under: FAIL, 349 of 350 crossings; min z_over − z_under 2.000·amp (failures: 1 with table passes apart) [z_over > z_under and the under never on top, at every crossing; n 350]
+  #15 no group holds both passes of a crossing: PASS, 350 of 350 crossings [0 crossings with both passes in one group; n 350]
+  #16 every crossing's over keeps both its borders: FAIL, 24151 of 24154 over-side samples inked; 2 missing stretch(es) [0 missing stretches; n 24154]
+== muse_default_tw: build 6407 ms, raster 2947 ms (1240x900), own 2118 ms, checks 25675 ms
+  #1 (form B) fail: 58 px deeper than W + 1 px (mouth 58 px), deepest F 8.00 px [lim W*ppu+1 = 3.20 px] by term {"tB":17,"arc":14,"tA":19,"V+f8":5,"foot+f8":3}
+  #2 (form B) corners 305: max ||t-q|-r| 1.26e-11 px, ||t-foot|-h| 1.48e-13 px, tangent 1.17e-11
+  #11 (form B) pass: 0 of 350 crossing centres not topped by the over
+  strips: 38 of 176357 inked px outside their term's strips {"tB/endpoint":19,"tA/endpoint":18,"V/V":1}; terms {"foot":163963,"tA":1030,"arc":10411,"tB":945,"V":8}
+  free ends: 10 {"junction":10,"crossing":0,"other":0}; tie px 2029, 2+ surfaces px 48891
+  #2 corner joins: FAIL, gap max 13.4641 px, tangent angle max 16.828 deg [≤ 0.01 px; ≤ 0.5°; n 342]
+  #3 dead-end caps: PASS, Hausdorff 0.0000 px; image 0.000 px (formB) [≤ 0.05 px; image ≤ 0.5 px; n 7]
+  #4 arm width: FAIL, max |2h' − 2h| 0.1795 px [2h ± 0.05 px; n 260; skipped span 1279, crossing 2135, end 198, neighbour 35]
+  #5 no double strokes: FAIL, 524 of 29816 walks not one run ≤ 1.1W (longest 5.784 px, W = 2.20 px) [one run, ≤ 1.1 W; n 29816; skipped neighbour 35953, outside 16, group 5]
+  #6 under bands end on the over's outline: PASS, max end error 0.348 px; 0 of 1399 band ends off by more than 0.5 px [within 0.5 px, no gap, no overlap; n 1399]
+  #7 over edges continuous: PASS, 0 of 700 over band lines broken within ±2h [no break; n 700]
+  #8 two edges per section: PASS, 0 of 260 sections without exactly 2 runs [exactly 2 runs; n 260; skipped span 1279, crossing 2135, end 198, neighbour 35]
+  #9 band width (sections): PASS, max |W' − W| 0.1086 px [W ± 0.25 px; n 260; skipped span 1279, crossing 2135, end 198, neighbour 35]
+  #9 band width (outline walks): FAIL, max |W' − W| 3.5861 px [W ± 0.25 px; n 29816; skipped neighbour 35953, outside 16, group 5]
+  #11 depth order at crossings: PASS, 350 of 350 crossings topped by the scene's over [all; n 350]
+  #14 pinned depth keeps each crossing's over/under: PASS, 350 of 350 crossings; min z_over − z_under 2.000·amp [z_over > z_under and the under never on top, at every crossing; n 350]
+  #15 no group holds both passes of a crossing: PASS, 350 of 350 crossings [0 crossings with both passes in one group; n 350]
+  #16 every crossing's over keeps both its borders: PASS, 23679 of 23679 over-side samples inked; 0 missing stretch(es) [0 missing stretches; n 23679]
+== def: build 6865 ms, raster 4037 ms (1240x900), own 2153 ms, checks 25908 ms
+  #1 (form B) fail: 1 px deeper than W + 1 px (mouth 1 px), deepest F 3.61 px [lim W*ppu+1 = 3.21 px] by term {"tA":1}
+  #2 (form B) corners 332: max ||t-q|-r| 4.08e-12 px, ||t-foot|-h| 1.95e-13 px, tangent 1.29e-9
+  #11 (form B) pass: 0 of 353 crossing centres not topped by the over
+  strips: 10 of 179696 inked px outside their term's strips {"tB/endpoint":4,"tA/endpoint":6}; terms {"foot":168444,"arc":9138,"tB":1008,"tA":1106}
+  free ends: 5 {"junction":5,"crossing":0,"other":0}; tie px 2796, 2+ surfaces px 50386
+  #2 corner joins: FAIL, gap max 20.6588 px, tangent angle max 71.776 deg [≤ 0.01 px; ≤ 0.5°; n 386]
+  #3 dead-end caps: PASS, Hausdorff 0.0000 px; image 0.000 px (formB) [≤ 0.05 px; image ≤ 0.5 px; n 3]
+  #4 arm width: FAIL, max |2h' − 2h| 0.4200 px [2h ± 0.05 px; n 237; skipped span 1395, crossing 2066, end 210, neighbour 48]
+  #5 no double strokes: FAIL, 527 of 29661 walks not one run ≤ 1.1W (longest 5.809 px, W = 2.21 px) [one run, ≤ 1.1 W; n 29661; skipped neighbour 37835, outside 61, group 7]
+  #6 under bands end on the over's outline: FAIL, max end error 0.891 px; 1 of 1412 band ends off by more than 0.5 px [within 0.5 px, no gap, no overlap; n 1412]
+  #7 over edges continuous: PASS, 0 of 706 over band lines broken within ±2h [no break; n 706]
+  #8 two edges per section: PASS, 0 of 237 sections without exactly 2 runs [exactly 2 runs; n 237; skipped span 1395, crossing 2066, end 210, neighbour 48]
+  #9 band width (sections): FAIL, max |W' − W| 0.3445 px [W ± 0.25 px; n 237; skipped span 1395, crossing 2066, end 210, neighbour 48]
+  #9 band width (outline walks): FAIL, max |W' − W| 3.6017 px [W ± 0.25 px; n 29661; skipped neighbour 37835, outside 61, group 7]
+  #11 depth order at crossings: PASS, 353 of 353 crossings topped by the scene's over [all; n 353]
+  #14 pinned depth keeps each crossing's over/under: PASS, 353 of 353 crossings; min z_over − z_under 2.000·amp [z_over > z_under and the under never on top, at every crossing; n 353]
+  #15 no group holds both passes of a crossing: PASS, 353 of 353 crossings [0 crossings with both passes in one group; n 353]
+  #16 every crossing's over keeps both its borders: PASS, 23908 of 23908 over-side samples inked; 0 missing stretch(es) [0 missing stretches; n 23908]
+== fat: build 3365 ms, raster 2370 ms (1240x900), own 2201 ms, checks 14882 ms
+  #1 (form B) pass: 0 px deeper than W + 1 px (mouth 0 px) [lim W*ppu+1 = 3.25 px] by term {}
+  #2 (form B) corners 0: max ||t-q|-r| 0.00e+0 px, ||t-foot|-h| 0.00e+0 px, tangent 0.00e+0
+  #11 (form B) pass: 0 of 428 crossing centres not topped by the over
+  strips: 0 of 172910 inked px outside their term's strips {}; terms {"foot":172910}
+  free ends: 0 {"junction":0,"crossing":0,"other":0}; tie px 2, 2+ surfaces px 64466
+  #2 corner joins: n/a, gap max 0.0000 px, tangent angle max 0.000 deg [≤ 0.01 px; ≤ 0.5°; n 0]
+  #3 dead-end caps: n/a, Hausdorff 0.0000 px; image 0.000 px (formB) [≤ 0.05 px; image ≤ 0.5 px; n 0]
+  #4 arm width: FAIL, max |2h' − 2h| 0.2006 px [2h ± 0.05 px; n 169; skipped crossing 3276, neighbour 222]
+  #5 no double strokes: PASS, 0 of 16491 walks not one run ≤ 1.1W (longest 2.248 px, W = 2.25 px) [one run, ≤ 1.1 W; n 16491; skipped neighbour 35481]
+  #6 under bands end on the over's outline: PASS, max end error 0.280 px; 0 of 1712 band ends off by more than 0.5 px [within 0.5 px, no gap, no overlap; n 1712]
+  #7 over edges continuous: PASS, 0 of 856 over band lines broken within ±2h [no break; n 856]
+  #8 two edges per section: PASS, 0 of 169 sections without exactly 2 runs [exactly 2 runs; n 169; skipped crossing 3276, neighbour 222]
+  #9 band width (sections): PASS, max |W' − W| 0.1064 px [W ± 0.25 px; n 169; skipped crossing 3276, neighbour 222]
+  #9 band width (outline walks): PASS, max |W' − W| 0.0000 px [W ± 0.25 px; n 16491; skipped neighbour 35481]
+  #11 depth order at crossings: PASS, 428 of 428 crossings topped by the scene's over [all; n 428]
+  #14 pinned depth keeps each crossing's over/under: PASS, 428 of 428 crossings; min z_over − z_under 2.000·amp [z_over > z_under and the under never on top, at every crossing; n 428]
+  #15 no group holds both passes of a crossing: PASS, 428 of 428 crossings [0 crossings with both passes in one group; n 428]
+  #16 every crossing's over keeps both its borders: PASS, 32672 of 32672 over-side samples inked; 0 missing stretch(es) [0 missing stretches; n 32672]
+== ring: build 1051 ms, raster 1904 ms (1240x900), own 795 ms, checks 5512 ms
+  #1 (form B) pass: 0 px deeper than W + 1 px (mouth 0 px) [lim W*ppu+1 = 4.67 px] by term {}
+  #2 (form B) corners 41: max ||t-q|-r| 2.81e-13 px, ||t-foot|-h| 6.47e-14 px, tangent 3.05e-13
+  #11 (form B) pass: 0 of 87 crossing centres not topped by the over
+  strips: 0 of 104301 inked px outside their term's strips {}; terms {"foot":101431,"tB":361,"tA":411,"arc":2098}
+  free ends: 2 {"junction":1,"crossing":0,"other":1}; tie px 1554, 2+ surfaces px 34827
+  #2 corner joins: FAIL, gap max 20.1935 px, tangent angle max 13.006 deg [≤ 0.01 px; ≤ 0.5°; n 52]
+  #3 dead-end caps: PASS, Hausdorff 0.0000 px; image 0.000 px (formB) [≤ 0.05 px; image ≤ 0.5 px; n 2]
+  #4 arm width: FAIL, max |2h' − 2h| 0.3833 px [2h ± 0.05 px; n 98; skipped span 179, crossing 592, end 29, neighbour 18]
+  #5 no double strokes: FAIL, 121 of 6817 walks not one run ≤ 1.1W (longest 9.221 px, W = 3.67 px) [one run, ≤ 1.1 W; n 6817; skipped neighbour 19051, outside 22, group 1]
+  #6 under bands end on the over's outline: PASS, max end error 0.493 px; 0 of 348 band ends off by more than 0.5 px [within 0.5 px, no gap, no overlap; n 348]
+  #7 over edges continuous: PASS, 0 of 174 over band lines broken within ±2h [no break; n 174]
+  #8 two edges per section: PASS, 0 of 98 sections without exactly 2 runs [exactly 2 runs; n 98; skipped span 179, crossing 592, end 29, neighbour 18]
+  #9 band width (sections): FAIL, max |W' − W| 0.2785 px [W ± 0.25 px; n 98; skipped span 179, crossing 592, end 29, neighbour 18]
+  #9 band width (outline walks): FAIL, max |W' − W| 5.5519 px [W ± 0.25 px; n 6817; skipped neighbour 19051, outside 22, group 1]
+  #11 depth order at crossings: PASS, 87 of 87 crossings topped by the scene's over [all; n 87]
+  #14 pinned depth keeps each crossing's over/under: PASS, 87 of 87 crossings; min z_over − z_under 2.000·amp [z_over > z_under and the under never on top, at every crossing; n 87]
+  #15 no group holds both passes of a crossing: PASS, 87 of 87 crossings [0 crossings with both passes in one group; n 87]
+  #16 every crossing's over keeps both its borders: PASS, 5908 of 5908 over-side samples inked; 0 missing stretch(es) [0 missing stretches; n 5908]
+== user_tw42.lightpaper: build 1756 ms, raster 2210 ms (1240x900), own 1184 ms, checks 13061 ms
+  #1 (form B) pass: 0 px deeper than W + 1 px (mouth 0 px) [lim W*ppu+1 = 3.71 px] by term {}
+  #2 (form B) corners 143: max ||t-q|-r| 2.24e-11 px, ||t-foot|-h| 1.38e-13 px, tangent 9.98e-12
+  #11 (form B) pass: 0 of 156 crossing centres not topped by the over
+  strips: 0 of 112458 inked px outside their term's strips {}; terms {"foot":106559,"arc":4248,"tB":777,"tA":874}
+  free ends: 10 {"junction":10,"crossing":0,"other":0}; tie px 494, 2+ surfaces px 33943
+  #2 corner joins: FAIL, gap max 0.1109 px, tangent angle max 40.356 deg [≤ 0.01 px; ≤ 0.5°; n 164]
+  #3 dead-end caps: PASS, Hausdorff 0.0000 px; image 0.000 px (formB) [≤ 0.05 px; image ≤ 0.5 px; n 1]
+  #4 arm width: FAIL, max |2h' − 2h| 0.3315 px [2h ± 0.05 px; n 193; skipped span 620, crossing 1129, end 78, neighbour 48]
+  #5 no double strokes: FAIL, 201 of 17495 walks not one run ≤ 1.1W (longest 7.133 px, W = 2.71 px) [one run, ≤ 1.1 W; n 17495; skipped neighbour 22802, outside 3]
+  #6 under bands end on the over's outline: PASS, max end error 0.358 px; 0 of 624 band ends off by more than 0.5 px [within 0.5 px, no gap, no overlap; n 624]
+  #7 over edges continuous: PASS, 0 of 312 over band lines broken within ±2h [no break; n 312]
+  #8 two edges per section: PASS, 0 of 193 sections without exactly 2 runs [exactly 2 runs; n 193; skipped span 620, crossing 1129, end 78, neighbour 48]
+  #9 band width (sections): PASS, max |W' − W| 0.2062 px [W ± 0.25 px; n 193; skipped span 620, crossing 1129, end 78, neighbour 48]
+  #9 band width (outline walks): FAIL, max |W' − W| 4.4225 px [W ± 0.25 px; n 17495; skipped neighbour 22802, outside 3]
+  #11 depth order at crossings: PASS, 156 of 156 crossings topped by the scene's over [all; n 156]
+  #14 pinned depth keeps each crossing's over/under: PASS, 156 of 156 crossings; min z_over − z_under 2.000·amp [z_over > z_under and the under never on top, at every crossing; n 156]
+  #15 no group holds both passes of a crossing: PASS, 156 of 156 crossings [0 crossings with both passes in one group; n 156]
+  #16 every crossing's over keeps both its borders: PASS, 10975 of 10975 over-side samples inked; 0 missing stretch(es) [0 missing stretches; n 10975]
+== g41_def_tw42: build 4266 ms, raster 2030 ms (1240x900), own 2001 ms, checks 23048 ms
+  #1 (form B) pass: 0 px deeper than W + 1 px (mouth 0 px) [lim W*ppu+1 = 2.79 px] by term {}
+  #2 (form B) corners 380: max ||t-q|-r| 2.22e-11 px, ||t-foot|-h| 2.36e-13 px, tangent 1.36e-12
+  #11 (form B) pass: 0 of 353 crossing centres not topped by the over
+  strips: 0 of 124021 inked px outside their term's strips {}; terms {"foot":116007,"arc":6142,"tB":913,"tA":959}
+  free ends: 1 {"junction":1,"crossing":0,"other":0}; tie px 257, 2+ surfaces px 31858
+  #2 corner joins: FAIL, gap max 9.7169 px, tangent angle max 8.584 deg [≤ 0.01 px; ≤ 0.5°; n 386]
+  #3 dead-end caps: PASS, Hausdorff 0.0000 px; image 0.000 px (formB) [≤ 0.05 px; image ≤ 0.5 px; n 3]
+  #4 arm width: FAIL, max |2h' − 2h| 0.1324 px [2h ± 0.05 px; n 616; skipped span 1469, crossing 2561, end 215, neighbour 33]
+  #5 no double strokes: FAIL, 167 of 39821 walks not one run ≤ 1.1W (longest 4.718 px, W = 1.79 px) [one run, ≤ 1.1 W; n 39821; skipped neighbour 28860, outside 17, group 5]
+  #6 under bands end on the over's outline: PASS, max end error 0.168 px; 0 of 1412 band ends off by more than 0.5 px [within 0.5 px, no gap, no overlap; n 1412]
+  #7 over edges continuous: PASS, 0 of 706 over band lines broken within ±2h [no break; n 706]
+  #8 two edges per section: PASS, 0 of 616 sections without exactly 2 runs [exactly 2 runs; n 616; skipped span 1469, crossing 2561, end 215, neighbour 33]
+  #9 band width (sections): PASS, max |W' − W| 0.0611 px [W ± 0.25 px; n 616; skipped span 1469, crossing 2561, end 215, neighbour 33]
+  #9 band width (outline walks): FAIL, max |W' − W| 2.9249 px [W ± 0.25 px; n 39821; skipped neighbour 28860, outside 17, group 5]
+  #11 depth order at crossings: PASS, 353 of 353 crossings topped by the scene's over [all; n 353]
+  #14 pinned depth keeps each crossing's over/under: PASS, 353 of 353 crossings; min z_over − z_under 2.000·amp [z_over > z_under and the under never on top, at every crossing; n 353]
+  #15 no group holds both passes of a crossing: PASS, 353 of 353 crossings [0 crossings with both passes in one group; n 353]
+  #16 every crossing's over keeps both its borders: PASS, 23880 of 23880 over-side samples inked; 0 missing stretch(es) [0 missing stretches; n 23880]
+== g41_def_tw64: build 7736 ms, raster 4059 ms (1240x900), own 2164 ms, checks 24082 ms
+  #1 (form B) fail: 34 px deeper than W + 1 px (mouth 34 px), deepest F 7.00 px [lim W*ppu+1 = 3.70 px] by term {"tB":18,"arc":3,"tA":13}
+  #2 (form B) corners 262: max ||t-q|-r| 1.61e-11 px, ||t-foot|-h| 2.01e-13 px, tangent 1.31e-11
+  #11 (form B) pass: 0 of 353 crossing centres not topped by the over
+  strips: 35 of 168713 inked px outside their term's strips {"tA/endpoint":17,"tB/endpoint":18}; terms {"foot":160601,"tA":1631,"arc":5177,"tB":1304}
+  free ends: 11 {"junction":11,"crossing":0,"other":0}; tie px 6124, 2+ surfaces px 81573
+  #2 corner joins: FAIL, gap max 25.0339 px, tangent angle max 79.407 deg [≤ 0.01 px; ≤ 0.5°; n 386]
+  #3 dead-end caps: PASS, Hausdorff 0.0000 px; image 0.000 px (formB) [≤ 0.05 px; image ≤ 0.5 px; n 3]
+  #4 arm width: FAIL, max |2h' − 2h| 0.3093 px [2h ± 0.05 px; n 72; skipped span 1285, crossing 1644, end 215, neighbour 33]
+  #5 no double strokes: FAIL, 764 of 19536 walks not one run ≤ 1.1W (longest 6.439 px, W = 2.70 px) [one run, ≤ 1.1 W; n 19536; skipped neighbour 46638, outside 42, group 1]
+  #6 under bands end on the over's outline: FAIL, max end error 0.685 px; 2 of 1401 band ends off by more than 0.5 px [within 0.5 px, no gap, no overlap; n 1401]
+  #7 over edges continuous: PASS, 0 of 706 over band lines broken within ±2h (12 more interrupted only by a third chain on top, not counted) [no break; n 706]
+  #8 two edges per section: PASS, 0 of 72 sections without exactly 2 runs [exactly 2 runs; n 72; skipped span 1285, crossing 1644, end 215, neighbour 33]
+  #9 band width (sections): FAIL, max |W' − W| 0.2578 px [W ± 0.25 px; n 72; skipped span 1285, crossing 1644, end 215, neighbour 33]
+  #9 band width (outline walks): FAIL, max |W' − W| 3.7398 px [W ± 0.25 px; n 19536; skipped neighbour 46638, outside 42, group 1]
+  #11 depth order at crossings: PASS, 353 of 353 crossings topped by the scene's over [all; n 353]
+  #14 pinned depth keeps each crossing's over/under: PASS, 353 of 353 crossings; min z_over − z_under 2.000·amp [z_over > z_under and the under never on top, at every crossing; n 353]
+  #15 no group holds both passes of a crossing: PASS, 353 of 353 crossings [0 crossings with both passes in one group; n 353]
+  #16 every crossing's over keeps both its borders: PASS, 23910 of 23910 over-side samples inked; 0 missing stretch(es) [0 missing stretches; n 23910]
+== g41_ring_tw42: build 820 ms, raster 1389 ms (1240x900), own 401 ms, checks 5060 ms
+  #1 (form B) pass: 0 px deeper than W + 1 px (mouth 0 px) [lim W*ppu+1 = 3.67 px] by term {}
+  #2 (form B) corners 51: max ||t-q|-r| 2.71e-13 px, ||t-foot|-h| 1.44e-13 px, tangent 4.51e-14
+  #11 (form B) pass: 0 of 87 crossing centres not topped by the over
+  strips: 0 of 70014 inked px outside their term's strips {}; terms {"foot":67834,"tB":275,"tA":289,"arc":1616}
+  free ends: 0 {"junction":0,"crossing":0,"other":0}; tie px 9, 2+ surfaces px 17438
+  #2 corner joins: FAIL, gap max 0.1219 px, tangent angle max 17.066 deg [≤ 0.01 px; ≤ 0.5°; n 51]
+  #3 dead-end caps: PASS, Hausdorff 0.0000 px; image 0.000 px (formB) [≤ 0.05 px; image ≤ 0.5 px; n 2]
+  #4 arm width: FAIL, max |2h' − 2h| 0.9021 px [2h ± 0.05 px; n 305; skipped span 193, crossing 723, end 30, neighbour 7]
+  #5 no double strokes: PASS, 0 of 12566 walks not one run ≤ 1.1W (longest 2.908 px, W = 2.67 px) [one run, ≤ 1.1 W; n 12566; skipped neighbour 13988, group 2]
+  #6 under bands end on the over's outline: PASS, max end error 0.478 px; 0 of 348 band ends off by more than 0.5 px [within 0.5 px, no gap, no overlap; n 348]
+  #7 over edges continuous: PASS, 0 of 174 over band lines broken within ±2h [no break; n 174]
+  #8 two edges per section: PASS, 0 of 305 sections without exactly 2 runs [exactly 2 runs; n 305; skipped span 193, crossing 723, end 30, neighbour 7]
+  #9 band width (sections): FAIL, max |W' − W| 0.9021 px [W ± 0.25 px; n 305; skipped span 193, crossing 723, end 30, neighbour 7]
+  #9 band width (outline walks): PASS, max |W' − W| 0.2381 px [W ± 0.25 px; n 12566; skipped neighbour 13988, group 2]
+  #11 depth order at crossings: PASS, 87 of 87 crossings topped by the scene's over [all; n 87]
+  #14 pinned depth keeps each crossing's over/under: PASS, 87 of 87 crossings; min z_over − z_under 2.000·amp [z_over > z_under and the under never on top, at every crossing; n 87]
+  #15 no group holds both passes of a crossing: PASS, 87 of 87 crossings [0 crossings with both passes in one group; n 87]
+  #16 every crossing's over keeps both its borders: PASS, 5980 of 5980 over-side samples inked; 0 missing stretch(es) [0 missing stretches; n 5980]
+== g41_ring_tw64: build 957 ms, raster 1475 ms (1240x900), own 585 ms, checks 4890 ms
+  #1 (form B) pass: 0 px deeper than W + 1 px (mouth 0 px) [lim W*ppu+1 = 5.04 px] by term {}
+  #2 (form B) corners 38: max ||t-q|-r| 1.71e-13 px, ||t-foot|-h| 1.11e-13 px, tangent 3.36e-12
+  #11 (form B) pass: 0 of 87 crossing centres not topped by the over
+  strips: 0 of 97617 inked px outside their term's strips {}; terms {"foot":95215,"tB":412,"tA":512,"arc":1478}
+  free ends: 4 {"junction":3,"crossing":1,"other":0}; tie px 2339, 2+ surfaces px 43884
+  #2 corner joins: FAIL, gap max 21.7670 px, tangent angle max 25.546 deg [≤ 0.01 px; ≤ 0.5°; n 52]
+  #3 dead-end caps: PASS, Hausdorff 0.0000 px; image 0.000 px (formB) [≤ 0.05 px; image ≤ 0.5 px; n 2]
+  #4 arm width: FAIL, max |2h' − 2h| 0.4857 px [2h ± 0.05 px; n 71; skipped span 172, crossing 551, end 30, neighbour 14]
+  #5 no double strokes: FAIL, 151 of 5536 walks not one run ≤ 1.1W (longest 7.079 px, W = 4.04 px) [one run, ≤ 1.1 W; n 5536; skipped neighbour 20142, outside 25]
+  #6 under bands end on the over's outline: FAIL, max end error 0.589 px; 1 of 347 band ends off by more than 0.5 px [within 0.5 px, no gap, no overlap; n 347]
+  #7 over edges continuous: FAIL, 3 of 174 over band lines broken within ±2h [no break; n 174]
+  #8 two edges per section: PASS, 0 of 71 sections without exactly 2 runs [exactly 2 runs; n 71; skipped span 172, crossing 551, end 30, neighbour 14]
+  #9 band width (sections): FAIL, max |W' − W| 0.4072 px [W ± 0.25 px; n 71; skipped span 172, crossing 551, end 30, neighbour 14]
+  #9 band width (outline walks): FAIL, max |W' − W| 3.0436 px [W ± 0.25 px; n 5536; skipped neighbour 20142, outside 25]
+  #11 depth order at crossings: PASS, 87 of 87 crossings topped by the scene's over [all; n 87]
+  #14 pinned depth keeps each crossing's over/under: PASS, 87 of 87 crossings; min z_over − z_under 2.000·amp [z_over > z_under and the under never on top, at every crossing; n 87]
+  #15 no group holds both passes of a crossing: PASS, 87 of 87 crossings [0 crossings with both passes in one group; n 87]
+  #16 every crossing's over keeps both its borders: FAIL, 5990 of 5993 over-side samples inked; 1 missing stretch(es) [0 missing stretches; n 5993]
+== g41_user_tw42: build 2144 ms, raster 2349 ms (1240x900), own 971 ms, checks 11656 ms
+  #1 (form B) pass: 0 px deeper than W + 1 px (mouth 0 px) [lim W*ppu+1 = 3.71 px] by term {}
+  #2 (form B) corners 143: max ||t-q|-r| 2.23e-11 px, ||t-foot|-h| 1.84e-13 px, tangent 6.63e-12
+  #11 (form B) pass: 0 of 156 crossing centres not topped by the over
+  strips: 0 of 112452 inked px outside their term's strips {}; terms {"foot":106552,"arc":4243,"tB":779,"tA":878}
+  free ends: 10 {"junction":10,"crossing":0,"other":0}; tie px 495, 2+ surfaces px 33949
+  #2 corner joins: FAIL, gap max 0.1112 px, tangent angle max 40.345 deg [≤ 0.01 px; ≤ 0.5°; n 164]
+  #3 dead-end caps: PASS, Hausdorff 0.0000 px; image 0.000 px (formB) [≤ 0.05 px; image ≤ 0.5 px; n 1]
+  #4 arm width: FAIL, max |2h' − 2h| 0.3317 px [2h ± 0.05 px; n 193; skipped span 620, crossing 1129, end 78, neighbour 48]
+  #5 no double strokes: FAIL, 201 of 17542 walks not one run ≤ 1.1W (longest 7.133 px, W = 2.71 px) [one run, ≤ 1.1 W; n 17542; skipped neighbour 22736, outside 3]
+  #6 under bands end on the over's outline: PASS, max end error 0.358 px; 0 of 624 band ends off by more than 0.5 px [within 0.5 px, no gap, no overlap; n 624]
+  #7 over edges continuous: PASS, 0 of 312 over band lines broken within ±2h [no break; n 312]
+  #8 two edges per section: PASS, 0 of 193 sections without exactly 2 runs [exactly 2 runs; n 193; skipped span 620, crossing 1129, end 78, neighbour 48]
+  #9 band width (sections): PASS, max |W' − W| 0.2063 px [W ± 0.25 px; n 193; skipped span 620, crossing 1129, end 78, neighbour 48]
+  #9 band width (outline walks): FAIL, max |W' − W| 4.4225 px [W ± 0.25 px; n 17542; skipped neighbour 22736, outside 3]
+  #11 depth order at crossings: PASS, 156 of 156 crossings topped by the scene's over [all; n 156]
+  #14 pinned depth keeps each crossing's over/under: PASS, 156 of 156 crossings; min z_over − z_under 2.000·amp [z_over > z_under and the under never on top, at every crossing; n 156]
+  #15 no group holds both passes of a crossing: PASS, 156 of 156 crossings [0 crossings with both passes in one group; n 156]
+  #16 every crossing's over keeps both its borders: PASS, 10975 of 10975 over-side samples inked; 0 missing stretch(es) [0 missing stretches; n 10975]
+== g41_user_tw64: build 3892 ms, raster 3249 ms (1240x900), own 1338 ms, checks 9778 ms
+  #1 (form B) fail: 52 px deeper than W + 1 px (mouth 52 px), deepest F 8.00 px [lim W*ppu+1 = 5.00 px] by term {"arc":8,"tB":22,"tA":22}
+  #2 (form B) corners 108: max ||t-q|-r| 2.22e-11 px, ||t-foot|-h| 1.57e-13 px, tangent 8.02e-12
+  #11 (form B) pass: 0 of 156 crossing centres not topped by the over
+  strips: 42 of 149656 inked px outside their term's strips {"tA/endpoint":30,"tB/endpoint":12}; terms {"foot":143930,"arc":2990,"tB":1148,"tA":1588}
+  free ends: 22 {"junction":22,"crossing":0,"other":0}; tie px 5113, 2+ surfaces px 82204
+  #2 corner joins: FAIL, gap max 23.7031 px, tangent angle max 40.628 deg [≤ 0.01 px; ≤ 0.5°; n 163]
+  #3 dead-end caps: PASS, Hausdorff 0.0000 px; image 0.000 px (formB) [≤ 0.05 px; image ≤ 0.5 px; n 1]
+  #4 arm width: PASS, max |2h' − 2h| 0.0000 px [2h ± 0.05 px; n 2; skipped span 492, crossing 782, end 86, neighbour 26]
+  #5 no double strokes: FAIL, 295 of 7711 walks not one run ≤ 1.1W (longest 9.011 px, W = 4.00 px) [one run, ≤ 1.1 W; n 7711; skipped neighbour 29051, outside 237, group 2]
+  #6 under bands end on the over's outline: FAIL, max end error 15.822 px; 4 of 615 band ends off by more than 0.5 px [within 0.5 px, no gap, no overlap; n 615]
+  #7 over edges continuous: PASS, 0 of 312 over band lines broken within ±2h (11 more interrupted only by a third chain on top, not counted) [no break; n 312]
+  #8 two edges per section: PASS, 0 of 2 sections without exactly 2 runs [exactly 2 runs; n 2; skipped span 492, crossing 782, end 86, neighbour 26]
+  #9 band width (sections): PASS, max |W' − W| 0.0000 px [W ± 0.25 px; n 2; skipped span 492, crossing 782, end 86, neighbour 26]
+  #9 band width (outline walks): FAIL, max |W' − W| 5.0118 px [W ± 0.25 px; n 7711; skipped neighbour 29051, outside 237, group 2]
+  #11 depth order at crossings: PASS, 156 of 156 crossings topped by the scene's over [all; n 156]
+  #14 pinned depth keeps each crossing's over/under: PASS, 156 of 156 crossings; min z_over − z_under 2.000·amp [z_over > z_under and the under never on top, at every crossing; n 156]
+  #15 no group holds both passes of a crossing: PASS, 156 of 156 crossings [0 crossings with both passes in one group; n 156]
+  #16 every crossing's over keeps both its borders: PASS, 11563 of 11563 over-side samples inked; 0 missing stretch(es) [0 missing stretches; n 11563]
