@@ -797,3 +797,57 @@ Gate: the full suite and the deploy.
 **Look questions.** None this stage.
 - Smooth-min's rounding does not arise: the look is decided (F4 b).
 - The fade widths become look questions only where a fade shows in motion. The prototype's frames are not the definition's look (F5's stray ink), so a crop now would mislead. S4b asks them, with crops beside the current look.
+
+## Handoff
+
+Written 22:28 2026-10-28, by the K1040 stage agent (started 21:32). The Order is done, inside the 2 h cap.
+
+**Done.**
+- F1-F7 above:
+  - the binding looks and the rule that carries each (F1);
+  - form B as a per-pixel definition (F2) and its discrete decisions with their fades (F3);
+  - the alternatives ruled out (F4);
+  - the GPU cost, measured on the desktop and estimated for the Pixel (F5);
+  - a verdict on each open K868/K992 item (F6);
+  - the staged plan S1-S8 (F7).
+- The timing prototype, committed under `.claude/probes/K1040/`:
+  - `proto.html` and `proto.js`: form B per pixel, with CPU tiles;
+  - `run.mjs`, the headed-Chrome runner;
+  - `run_locked.ps1`, the runner under the perf lock;
+  - `smin_dev.cjs`, F4 b's smooth-min deviation.
+- No production code; nothing under `src/`, `test/` or `scripts/` changed. Nothing pushed.
+
+**The verdict.**
+- Form B is cheap per pixel: at most 4 pieces, 13 corners and 14 burial tests.
+- Searching for those candidates per pixel misses the Pixel's 4 ms by 1.6-40x (F5).
+- The search goes to the rasterizer: K923's label and band passes, with form B's terms evaluated in the band strips and MAX blending (F7).
+
+**Next: S1, the float64 reference** (F7). It settles F7's five questions first:
+1. a surface's z (max or nearest; the cone key);
+2. the cap at both ends of a burial pair;
+3. D4 in raster form, after counting the tie-band pixels;
+4. the outer edge's AA;
+5. the prototype's stray ink on muse_hash.
+
+The coordinator files F6's verdicts in the ledger: closes the moot items and retargets the carried ones to their stages.
+
+**Rerun the prototype** (from the worktree; no dev server, it loads `proto.html` from file://):
+
+```powershell
+$sc = 'C:\Users\lsl\Repositories\knotmaze\.claude\probes\K868\scenes'
+& .claude\probes\K1040\run_locked.ps1 -RunArgs @("$sc\def.json", "$sc\fat.json", "$sc\muse_hash.json", "$sc\ring.json")
+& .claude\probes\K1040\run_locked.ps1 -RunArgs @("$sc\def.json", "$sc\fat.json", '--fit', '822x1506', '--calib')
+```
+
+- `run_locked.ps1` takes the perf lock (`$env:TEMP\claude-perf.lock`, owner K1040), waits up to 20 min for another owner, and deletes the lock after.
+- Flags: `--dpr 2` (default), `--cr 3` (corner rounding: r scales by cr/3; default 3), `--fit WxH` (fit the knot into a phone-sized buffer), `--calib` (K923's disc-search calibration at 822×1506), `--out <dir>`.
+- Outputs go to `.claude/probes/K1040/out/` (untracked): `results_*.json` and a PNG per scene.
+- Chrome is headed, off-screen, ANGLE D3D11, with a fresh temporary profile.
+- The timer query needs `EXT_disjoint_timer_query_webgl2`, which the desktop has and the Pixel 11 does not.
+
+**Residuals.**
+- Stray ink inside about a dozen muse_hash junctions in the prototype. Not diagnosed; S1 question 5.
+- The Pixel numbers are estimates: the phone was not connected (`adb devices` empty). S3 and S4a measure them by render sync.
+- The desktop's timer readings are bimodal (2.7-4.9x). The cause, a GPU power state, is inferred, not checked.
+- The prototype's outer edge is a hard, aliased cut (S1 question 4, S4b).
+- The prototype's CPU prep reads 0.3-2.7 ms without tiles, and its first (cold) repetition, with tiles, up to 38 ms. S5 owns the budget.
