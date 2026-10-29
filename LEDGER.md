@@ -294,10 +294,10 @@ Next free ID: K1045.
 - **K1040** · Junction renderer redesign: the label, borders and corners as a per-pixel function of the frame on the GPU,
   continuous and watertight by construction, against the definition's float64 CPU evaluation (the CPU FieldModel stays
   the look reference; `K868_field_border.md` §3.5, §5, §8 S3). Design stage running; K868's repairs and K992 wait on it.
-  - owner: agent `a377492c94a629e4f` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, the design and feasibility stage, started 2026-10-28 21:33, 2 h cap)
-  - branch: `k1040-field`, worktree `.claude/worktrees/k1040-field`; last commit: `10f13f3d` (master, the brief; no stage commit yet)
+  - owner: nobody since 2026-10-28 22:36 (merged; agent `a377492c94a629e4f` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
+  - branch: mainline; last commit: `4c64e84b`
   - evidence: the brief's ## Findings on the branch; `.claude/probes/K1040/` (the WebGL2 timing prototype, its source committed on the branch with `git add -f`)
-  - next: the brief's Order: F1 the look calls it carries, F2-F4 the definition, its discrete decisions and the alternatives ruled out, F5 timings at dpr 2, F6 what of K868's and K992's open items survives, F7 the staged plan
+  - next: write S1's brief from F7 (the float64 reference, Opus 2 h)
   - brief: `docs/design/K1040_junction_field.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1` (a copy of S3a's private-cache config)
 - **K868** · Border look, junctions done right: one field renderer (union within a surface, occlusion
