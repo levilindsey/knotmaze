@@ -329,3 +329,96 @@ K1000's `## Rules` hold, with these changes:
     f27-f34 and foot A 0.750h to 0.725h. The march's r still steps
     0.119h to 0.131h at f27 to f28. DROP 0.01 makes the choice's jump
     smaller; it does not make it a measure. j12/0 is unchanged.
+- **F8 · The re-run (c21w2, tags c21w2 and c21w2z) fails at both
+  zooms.** Pops / px, master, then c21w, then c21w2:
+
+  | zoom 1 | master | c21w | c21w2 |
+  |---|---|---|---|
+  | def_drag | 6 / 359 | 3 / 39 | **25** / 198 |
+  | def_flow | 27 / 1078 | 21 / 158 | **78** / 666 |
+  | muse_drag | 77 / 1273 | 51 / 1261 | 38 / 440 |
+  | muse_flow | 266 / 7368 | 97 / 1347 | 146 / 1935 |
+  | all | 376 / 10078 | 172 / 2805 | 287 / 3239 |
+
+  | window | master | c21w | c21w2 |
+  |---|---|---|---|
+  | def_drag@w0 | 249 / 77105 | 243 / 16704 | **250** / 26689 |
+  | def_flow@w0 | 184 / 89876 | 153 / 1631 | 153 / 1631 |
+  | def_flow@w1 | 229 / 62961 | 171 / 16388 | 153 / 3688 |
+  | def_flow@w2 | 254 / 45930 | 253 / 4459 | 254 / 3919 |
+  | muse_drag@w0 | 314 / 155916 | 107 / 13188 | 109 / 13122 |
+  | muse_drag@w1 | 286 / 32786 | 279 / 3089 | **290** / 16998 |
+  | muse_drag@w2 | 879 / 74530 | **889** / 60751 | **881** / 58197 |
+  | muse_flow@w0 | 659 / 162138 | **685** / 11809 | 655 / 10582 |
+  | muse_flow@w1 | 393 / 150117 | 205 / 39200 | 214 / 62237 |
+  | muse_flow@w2 | 878 / 213948 | 418 / 23040 | 421 / 24438 |
+  | all | 4325 / 1065307 | 3403 / 190259 | 3380 / 221501 |
+
+  - muse_flow@w0 now passes. But def_drag and def_flow fail at zoom 1,
+    and def_drag@w0, muse_drag@w1 and muse_drag@w2 fail in the windows,
+    all on count.
+  - By class (class17). Zoom 1: rule 126/1659, rule:switch 78/929,
+    reach 35/276, none 18/121, cap 8/107, refit 14/85, count 1/26, spans
+    5/25, V:dV 2/11. Windows: reach 1436/68591, none 1308/54553, rule
+    62/35489, spans 344/20710, cap 86/20417, rule:switch 38/12868, refit
+    57/4425, V:dV 17/3436, cluster 20/754, count 12/258. The rule's own
+    classes grow: at zoom 1, 204 pops against c21w's 96 and master's 36.
+  - The new pops are one-frame jumps spread over many corners (def_flow:
+    j52/1 18 pops, j48/1 10, j50/2 10, ...). Observed at def_drag j39/1
+    (t1-t2): r is 1.849h, 0.738h, 1.890h on f1-f3 (c21w: 1.848h, 1.832h,
+    1.889h). With the overlap gate off (ove 1e6, c21dx) r sits at the
+    rule's 1.99h-2.0h on all three frames. So the overlap gate causes
+    the collapse.
+  - Inferred, not traced: the gate puts dips in wAt that are narrower
+    than the march's nodes. S is a running minimum of point samples, so
+    a dip counts only on frames where a sample lands in it. DROP 0.125
+    seldom refines into one (c21w's r still wobbles there); DROP 0.01
+    does on some frames and not others. A smaller DROP is a finer step,
+    not continuity.
+  - Not censused, because step 6 allows one re-run: DROP 0.01 with a
+    wider overlap gate (ove 0.25h; c21do, and c21w3 with the caps and
+    the walk). It is smooth at j39/1 (r 1.974h-1.994h over f0-f4) and at
+    j115/2 (final r 0.022h to 0.049h, foot A 0.753h to 0.726h), and
+    passes corner_continuity 3/3 and the cap test 4/4.
+  - The whole suite with c21w2 swapped in for the oracle (vitest19
+    config, ORACLE19=c21w2) passes, 185 files and 2443 tests, so landing
+    a c21 oracle moves no pin in the suite.
+
+## Handoff
+
+2026-10-28 14:30, the K992 s3 agent, stopped at Order step 6: the re-run
+fails, so nothing landed. `src/` is master's, and the cap test's gate
+stands.
+
+- **Where things are.**
+  - Branch `k992-corners`. Commits: 1e48c93f (F1-F3, test (C)),
+    e64f8a65 (c21: `mk_c17.mjs --foot track`), 1c5eb2b3
+    (`mk_walk21.mjs`), 09f8af25 (F4-F7 and the probes), then this
+    handoff.
+  - Probes under `.claude/probes/S3a/`:
+    - generators: `mk_c17.mjs` (`--foot track`, `--drop`, `--ove`,
+      `--nodes`), `mk_cap19.mjs`, `mk_walk21.mjs`;
+    - census: `census21.ps1` and `locked21.ps1` (run under the lock),
+      `pops21/` (c21w, c21wz, c21w2, c21w2z, m21, and `class21_*.txt`),
+      the `cmpdir19/` junctions;
+    - readers: `near21.ts`, `pops_near21.cjs`, `bycause21.cjs`,
+      `trace21.ts`, `graze21.ts`;
+    - landing: `land21.ps1` (the `--src` chain; `-Drop` and `-Ref`).
+  - The probe oracles are untracked and regenerate with mk_c17, then
+    mk_cap19 `--mode cont`, then mk_walk21: c21, c21w, c21w2, c21w3,
+    c21d, c21do, c21dx, c21o, c21x, c21n, c21dbg.
+- **Next, for the coordinator to decide.**
+  1. Make the march's S continuous. Either take the narrow dips out of
+     wAt (for example c21w3's ove 0.25h; check j42/0's look, F4), or
+     solve each interval's minimum of wAt instead of sampling it, which
+     makes the refinement choice a measure (call 2). Then run one
+     census.
+  2. Still in scope and not fixed: the refit gate at j51/1 (F7 c), and
+     j12/0's seven steep-stop pops (F7 a).
+  3. To land: run `land21.ps1` with the candidate's `-Drop` / `-Ref`.
+     Remove the cap test's gate (`cap19_continuity.test.ts` lines
+     72-77). Then `npm test` (no pins moved under c21w2), raster14,
+     cost14 and the crops.
+- **Env.** The dev server on 5392 is stopped. To restart it: `npx vite
+  --config .claude/probes/S3a/vite.private-cache.config.ts --port 5392
+  --strictPort --host 127.0.0.1`.
