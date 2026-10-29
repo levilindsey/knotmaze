@@ -289,8 +289,6 @@ export class FormB {
   readonly groupOf: number[];
   readonly nGroups: number;
   readonly corners: Corner[] = [];
-  /** S1d F6: per arm, the other arm of its through pass (one tube, no corner), or -1. */
-  readonly tubeOf: number[] = [];
   readonly diagnostics: string[] = [];
   /** Per chain: crossing passes (s, θ_c) on it. */
   readonly passes: { s: number; theta: number }[][];
@@ -498,21 +496,6 @@ export class FormB {
         this.arms.push({ j: ji, g: this.groupOf[ji], pi, sR, dir, kind: arm.kind, L, Lcut, ux, uy, ang: Math.atan2(uy, ux), ei });
       });
     });
-
-    // S1d F6: the two arms of one through pass (F2 gives them no corner).
-    for (let i = 0; i < this.arms.length; i++) this.tubeOf.push(-1);
-    for (let a = 0; a < this.arms.length; a++) {
-      for (let b = a + 1; b < this.arms.length; b++) {
-        const A = this.arms[a];
-        const B = this.arms[b];
-        if (A.j !== B.j) continue;
-        const xa = scene.junctions[A.j].arms[A.ei];
-        const xb = scene.junctions[B.j].arms[B.ei];
-        if (xa.chain !== xb.chain || xa.kind !== "through" || xb.kind !== "through" || Math.abs(xa.s - xb.s) >= 1e-6) continue;
-        this.tubeOf[a] = b;
-        this.tubeOf[b] = a;
-      }
-    }
 
     // 4. Corners: one per cyclically adjacent arm pair.
     this.cell = Math.max(2 * h, 0.25);
@@ -1190,21 +1173,6 @@ export class FormB {
         if (wt > bur) {
           bur = wt;
           burBit = 0;
-        }
-      }
-      // S1d F6: a through pass's two arms are one tube with no corner (F2)
-      // and one piece wherever they lie within σ, so no piece buries A's
-      // outline in the other arm's tube: read that tube from the arm as above
-      // (S1b F9), over the whole arm. Nothing here is gated on the bend.
-      if (S < OWN && bur < 1) {
-        for (const ai of this.armsOf[A.chain]) {
-          const bi = this.tubeOf[ai];
-          if (bi < 0 || this.arms[ai].g !== S || this.arms[bi].g !== S || !this.onArm(ai, A)) continue;
-          const wt = 1 - ss(h - 2 * aa, h, this.footArm(bi, fx, fy).d);
-          if (wt > bur) {
-            bur = wt;
-            burBit = 0;
-          }
         }
       }
       // A partial fill hands the buried weight to its arc (S1b F6): the

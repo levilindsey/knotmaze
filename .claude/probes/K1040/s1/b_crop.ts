@@ -13,6 +13,7 @@ import { gunzipSync } from "node:zlib";
 import { FieldModel, cornerRadius, type OracleParams } from "../../../../src/render/field/oracle";
 import { FormB } from "../../../../src/render/field/form_b";
 import { FormB as FormBS1b } from "./form_b_s1b";
+import { FormB as FormBS1dBase } from "./form_b_s1d_base";
 import type { FieldScene } from "../../../../src/render/field/scene";
 import { encodePng } from "../../../../test/render/field/png";
 
@@ -35,7 +36,8 @@ s.look.ctrlArc ??= 0.47;
 const h0 = s.look.halfWidth;
 const mapping: OracleParams = { rRound: 0, rOf: (_j, _i, th, st) => (st === "round" ? cornerRadius(3, h0, th) : 0), spans: "k883", crMax: 3 };
 // FORMB=s1b renders with S1b's definition (form_b_s1b.ts), for before/after crops (S1c F2).
-const FB = (process.env.FORMB === "s1b" ? FormBS1b : FormB) as typeof FormB;
+// FORMB=s1b | s1d_base (S1d: form B at 2dacd08d, the stage's base) swaps form B's panels.
+const FB = (process.env.FORMB === "s1b" ? FormBS1b : process.env.FORMB === "s1d_base" ? FormBS1dBase : FormB) as typeof FormB;
 const fb = new FB(s, { dpr: ds === "cam" ? s.camera.dpr : Number(ds) });
 const m = new FieldModel(s, mapping);
 const X = Number(xs);
