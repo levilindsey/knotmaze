@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1030.
+Next free ID: K1031.
 
 ## Waiting on Levi
 
@@ -312,7 +312,7 @@ Next free ID: K1030.
   - owner: agent `a08f2337d096c7eeb` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, J3b = K1009 + K1028, started 2026-10-28 17:12, 2 h cap ~19:12)
   - branch: mainline, no code (outputs untracked in `.claude/probes/K863/trace/`: J3b's `work24/dbg/*_k1009b.*`, `work24/`, `out24/`); last commit: `205c3643` (J3b's brief)
   - evidence: `.claude/probes/K863/trace/` (per stage: `tools/*_k<ID>.py`, `work<n>/`, `out<n>/`; `NOTES.md` has a section per version with its rerun commands); Drive `K863/` (each version's SVGs; v5.1: `cursive_v51.svg`, `cursive_v51_words.svg`, `split_combs.svg`, `k917_junctions.svg`; v5.2: `cursive_v52.svg`, `cursive_v52_words.svg`; v5.3: `cursive_v53.svg`, `cursive_v53_words.svg`, `combs_v53.svg`; v5.4: `cursive_v54_words.svg`, `e_joins_v54.svg`; v5.5: `cursive_v55.svg`, `cursive_v55_words.svg`, `combs_v55.svg`; v5.6: `cursive_v56.svg`, `cursive_v56_nodes.svg`, `cursive_v56_words.svg`, `combs_v56.svg`; v5.7: `cursive_v57.svg`, `cursive_v57_nodes.svg`, `cursive_v57_words.svg`, `combs_v57.svg`; v5.8: `cursive_v58.svg`, `cursive_v58_nodes.svg`, `cursive_v58_words.svg`, `combs_v58.svg`; K944: `e_tails_k950.svg`, `words_edit_test.svg`, `combs_edit_test.svg`; J1 uploaded nothing, no visible change; v5.9 = J2: `cursive_v59_words.svg`, `combs_v59.svg`; v6.0 = B1: `cursive_v60.svg`, `cursive_v60_words.svg`, `combs_v60.svg`, `letters_v60.svg`; v6.1 = J3a: `o_exits_v61.svg`, `ot_v61.svg`, `low_v61.svg`, `cursive_v61<a|b|c>_words.svg`; v6.2 = B2: `corners_v62.svg`, `gq_words_v62.svg`, `cursive_v62_words.svg`; v6.3 = B3: `g_top_v63.svg`, `high_joins_v63.svg`, `gq_words_v63.svg`, `cursive_v63_words.svg`); Levi's file to edit: `out23/cursive_template.svg` (B3's g top on `out22/`'s, B2's g and q on `out20/cursive_template.svg`, which `work20/dbg/build_from_svg.ps1 -Name k990` built on B1's join sets, `work20/template_map_k990.json`); B1's census `out20/census_v60.txt`, distances `work20/fit/bodydist_k990.txt`, locality `work20/local/b1/sensitivity.txt` and `work20/cmp_j2_b1.txt`, debug scripts `work20/dbg/temp_k990/` (rerun list: B1's handoff); J2's census `work19/dbg/census_k962.py`, crops `work19/crops/`, locality harness `work19/dbg/sensitivity_k962.py` (rerun list: J2's handoff); J3a's census `work21/dbg/census_k1009.py`, rerun `work21/dbg/checks2_batch_k1009.ps1`, Levi's two pictures `work21/levi/` (made by `levi_crops_k1009.ps1` there); B2's record `NOTES.md` `## K1012` (N1-N10 with rerun commands), build `work22/base`, rerun `work22/dbg/checks_k1012.ps1` (census, compare, distances, word sheets, guard), the high-entry check sheets `work22/sheets/`; B3's record `NOTES.md` `## K1019` (N1-N6 with rerun commands), builds `work23/base_a` (v6.3a) and `work23/base` (v6.3), reader `work23/dbg/asdrawn_k1019.py`, census `work23/dbg/census_k1019.py`, rerun `work23/dbg/checks_k1019.ps1`; J3b's record `NOTES.md` `## K1009b`, ports `work24/ports_k1009b.json`, the before build `work24/b0`, sheets `out24/` (v6.4)
-  - next: J3b (its brief's Order: K1028's tools, the causes of B's sags, o's cusp exit, the corner at a stem's top, ot at the crossbar two ways, oe and every o join clean, the checks and sheets); then Levi's looks (o's exit B on every join; ot tangent or level); then B4: a's and q's tops refit like g's (K1029; Levi likes g's, K1025); then J3c: every other exit (b, v and w high, into g too: K1026), J3a's leftovers (K1014), the leads and tails (K1006), f's lower-loop end into its exit (K990), K991 and K948 for the remaining pairs, K937, K997, K998, and the join sets removed; then Levi reviews again; Levi edits the newest `cursive_template.svg` once the letters look right and `build_from_svg.ps1` builds from it; K927; then map the letters onto threads (the a/c/d/g/o/q junctions and the top corners of a, g and q, `K863_trace.md` ## Levi's calls); capitals are K931
+  - next: J3b (its brief's Order: K1028's tools, the causes of B's sags, o's cusp exit, the corner at a stem's top, ot at the crossbar two ways, oe, og (K1030) and every o join clean, the checks and sheets); then Levi's looks (o's exit B on every join; ot tangent or level); then B4: a's and q's tops refit like g's (K1029; Levi likes g's, K1025); then J3c: every other exit (b, v and w high; into g at v6.3's attach, K1026), J3a's leftovers (K1014), the leads and tails (K1006), f's lower-loop end into its exit (K990), K991 and K948 for the remaining pairs, K937, K997, K998, and the join sets removed; then Levi reviews again; Levi edits the newest `cursive_template.svg` once the letters look right and `build_from_svg.ps1` builds from it; K927; then map the letters onto threads (the a/c/d/g/o/q junctions and the top corners of a, g and q, `K863_trace.md` ## Levi's calls); capitals are K931
   - brief: `docs/design/K863_trace.md` (## Levi's calls); stages: v3 `K886_cursive_v3.md`, v4 `K902_cursive_frames.md`, v5 `K904_cursive_v5.md`, v5.1 `K916_cursive_v51.md`, v5.2 `K925_cursive_v52.md`, v5.3 `K930_cursive_smooth.md`, v5.4 `K926_cursive_e.md`, v5.5 `K945_cursive_v55.md`, v5.6 `K959_cursive_v56.md`, v5.7 `K965_cursive_v57.md`, v5.8 `K969_cursive_v58.md`, K944 `K944_cursive_asdrawn.md`, J1 `K980_cursive_local.md`, J2 `K962_cursive_joins.md`, B1 `K990_cursive_bodies.md` (## Handoff), J3a `K1009_cursive_ports.md` (## Handoff), B2 `K1012_cursive_gq_corner.md` (## Handoff), B3 `K1019_cursive_b3.md` (## Handoff), J3b `K1009_cursive_j3b.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
@@ -775,15 +775,15 @@ Every other item below waits on the trigger it names.
 - **K1028** · Cursive tools for J3b: the census and `sheet_k1009` measure a solved join at its own ends (B3's
   `census_k1019.py`; the sheets still show the frame), the reference runs on along the stroke to the attach point, a
   census word with bg, vg or wg, and builds use B3's reader with its alignment guard (latent in `asdrawn_k980.py`). J3b's call 8.
-- **K1026** · Cursive joins into g after B3's refit: bg, vg, wg 2.2-2.4 -> 6.1-6.2 u from the font (g's even top runs up
-  to 3.4 u inside the old). Levi kept the top (K1025) but did not answer the joins' height; J3c solves b's, v's and w's
-  high exits into g (K1009) and shows them by look. `K1019_cursive_b3.md` ## Handoff; NOTES N5.
 - **K1029** · Cursive a's and q's tops are not even: |k| peaks and drops at their first node (a .0173 -> .0081, q .0121
   -> .0074 on the way to the bowl), where g's v6.3 top rises evenly. Levi likes g's (K1025): refit a's and q's the same
   way, the corner held (K928's smoothness), as stage B4 after J3b. `K1019_cursive_b3.md`; NOTES N4, N6.
 - **K1009** · Cursive J3: letters declare ports and each join is solved per pair, replacing the join presets (Levi,
   2026-10-28: "more flexible and procedural and less preconfigured"). J3a built the ports and o's three exits (v6.1,
   `e45f59b8`); J3b solves o's exit B (K1013) on every join and ot at the crossbar (`K1009_cursive_j3b.md`); J3c the rest, K1014.
+- **K1030** · Cursive og needs work, by look (Levi, 2026-10-28: "*og join needs work"). o's line into g's top is
+  28.72 u from the font in v6.3 (19.46 in v6.1 A); B3's census: "lazy dog" badness 193.5 -> 278.0. J3b takes it with
+  o's 26 joins (its calls 7 and 9). `K1019_cursive_b3.md` ## Handoff; `K863_trace.md` ## Levi's calls.
 - **K990** · Cursive bodies, Levi's v5.8 review (2026-10-28): B1 (v6.0) gave a its top corner (its flat top is K1004), k
   the sharper leg and p the shorter end. Left: f still ends its lower loop in a curl below the crossing, not a cusp into
   its exit (fe 22.55 u, ff 16.55, fo 9.07 off the font); J3. `K990_cursive_bodies.md` ## Handoff.
@@ -2111,6 +2111,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1026** · Cursive joins into g after B3's refit: Levi likes bg and vg where v6.3 lands them (2026-10-28); J3c keeps that attach, wg's with them. Done in 3b03127c (2026-10-28).
 - **K1025** · Cursive v6.3, by look: Levi likes g's new top (2026-10-28); a's and q's tops follow (K1029), the joins into g go to J3c (K1026). Done in cbd489be (2026-10-28).
 - **K1020** · Cursive g's top refit to curve evenly from the corner, like a's and q's (B3, v6.3; largest |dk/ds| 6.66e-3 -> 7.07e-4 /u^2); the joins into g it moved are K1026. Done in f2c2db5b (2026-10-28).
 - **K1019** · Cursive reader: frames carried by true arclength (B3's `asdrawn_k1019.py`): ba, va, wa 6.8-7.0 -> 2.5-2.6 u, bq, vq, wq 22.9-23.3 -> 5.0-5.4 u; the census measures a solved join at its own ends (K1028). Done in f2c2db5b (2026-10-28).
