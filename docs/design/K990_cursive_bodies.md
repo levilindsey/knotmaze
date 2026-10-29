@@ -256,3 +256,97 @@ Not this stage:
   - K863's current handle fields.
 
 ## Handoff
+
+### B1 handoff (K990 agent, 2026-10-28, 08:53-10:51)
+
+Stopped at 10:51, inside the 2 h cap. The work is untracked in
+`.claude/probes/K863/trace/` (`work20/`, `out20/`, tools in
+`work20/dbg/*_k990.py`); `NOTES.md` `## K990` has the commands, the
+numbers and the deviations.
+
+**Body edits** (one template, `work20/edit/cursive_template_input.svg`;
+the build re-derived only a, f, k, o and p; every other stroke 0 u from
+J2's). Distance from the font's path (traced centreline), edited
+stretch, before -> after (`work20/fit/bodydist_k990.txt`):
+- o: 5 -> 8 cubics. Node 5 is a 180 deg cusp at the top (the close),
+  then a 4 u overstroke back along the closing curve and a 12 u G2 tail
+  that ends at +10 deg with k 0. `exit o` is no longer exempt in the
+  census; the body's cusp is named instead. 2.47 -> 7.41 u (the tail's
+  end).
+- a: 12 -> 11 cubics. Node 6 is one 180 deg corner shared by the
+  turnaround and the stem top; the bowl leaves it at -4 deg, 0.71 u
+  above the old stem top. 0.87 -> 8.04 u (the bowl's first stretch after
+  the corner sits above the font's rounder top).
+- p: the end is cut 40 fu (end 1 deg, k -0.018; was -15.6 deg,
+  -0.040). 0.76 u -> cut away; the new end lies on J2's path.
+- f: 11 -> 12 cubics, no corner: the loop ends 20 u further on, at 50
+  deg with k 0 (was 40.7 deg, k 0.226). 1.89 -> 4.30 u (the moved end).
+- k: the leg's turn is now a corner (node 15, a 100 deg turn: in at 160
+  deg, out at 60); node 9 is the stem's cusp. 2.52 -> 3.77 u (the
+  corner's tip).
+- h, b: no body edit. b, v, w checked only: their drawn ends sit
+  0.08-0.34 u off the font's path, and their exits leave at -22.0,
+  -17.1 and -20.5 deg against the font's -12.5 to -14.5 (left as they
+  are; see the ledger items).
+All five distances over 2.5 u are Levi's named exceptions (call 4).
+
+**Re-chosen sets** (`work20/fit/take_k990.txt`; joinfit on the moved
+sets only, the take read from the census, rule v2 in `NOTES.md`):
+taken lead b and lead h (evenness: b's knee gone, |k| max 0.0930 at the
+middle -> 0.0035 near the seam; h's 0.0202 -> 0.0053, a gentle hump
+left), ful_n_e, ful_n_s, mrr_f_o|o, ful_n_f, ful_o_f, ful_o_x|x,
+mod_o_n, mod_o_o. Kept at J2's: ful_b_o, mod_n_n, cnt_o_n, ful_o_e|e
+(oe), mod_o_t, and low-smooth (its rule-B set brought ff and fe toward
+the font but put knees in ff, fe and the unedited ee, so it was kept by
+look). `k962.evar.o` untouched. oe: dist 5.29 -> 8.12 u, peak 0.0799 ->
+0.0776, the 1 hook kept, spikes 38 -> 20.
+
+**Census J2 -> B1** (152 pieces, `out20/census_v60.txt`): hooks 12 ->
+10 pieces, over budget 40 -> 56, comb spikes 24 -> 15, rough FAIL 57 ->
+40, seams not G2 0 -> 0. Worst moved rows: fe 22.55 u, ff 16.55, ot
+12.76, fo 9.07 (rough FAIL), oe 8.12 (FAIL, 1 hook), ow / op 8.15, oa
+7.35, og 7.32, ba 6.89, ov 6.6; their peaks all <= 0.0342 except ox
+0.1365 (J2 0.1998) and oe 0.0776. The top peak is now J2's untouched t
+tail (0.1685).
+
+**Harness** (`work20/local/b1/sensitivity.txt`, run 10:27-10:48 on the
+final B1 template; `derive_k990.ps1 -Stage b1` re-derived all nine edits,
+22 builds, h_add and p_delete included): all nine PASS. Untouched max 0 u
+for every edit (0 pieces over 1e-6); words without the edited letter
+byte-identical for every edit; drag gain max 1.06 (e_end; d_fused 0.96,
+n_retrace 0.92, x_move 1.00; the other five are single-step edits with no
+drag series). Touched max: x_move 5.00 u, w_corner 4.02, d_fused 3.66,
+e_end 2.52, n_retrace 2.27, p_delete 1.08, r_line 0.82, h_add 0.03,
+joins_tick 0. h_add and p_delete pass as derived; nothing needed
+re-deriving by hand.
+
+**Unedited build against J2's** (`work20/cmp_j2_b1.txt`): 73 of 510
+pieces moved; bodies o, a, p, k, f only (12.14, 11.85, 9.66, 7.26, 6.96
+u); the frames those bodies carry (f exit 21.12, a after_o 16.44, a
+after_b 14.39, o exit 10.89, p exit 10.67), one split (p@3562, 0.31 u),
+the word joins and letters next to them (largest fo 15.22, a 15.04) and
+leads b and h; junctions and tails 0.
+
+**Outputs** (`out20/`, all free of images, data: URIs, raster hrefs
+and the chart): `cursive_template.svg` (Levi's file to edit, after
+Levi's review), `cursive_v60.svg`, `cursive_v60_words.svg`,
+`combs_v60.svg` (the 14 sheet words), `letters_v60.svg`,
+`census_v60.txt`; the map `work20/template_map_k990.json` (key k990).
+
+**Missing / next stage**
+- Combs of the moved pairs outside the 14 sheet words (coffee: of, ff,
+  fe, ee; oat: oa; bad: ba) and crops of the lead-ins listed below:
+  `pwsh -NoProfile -File work20\dbg\post_k990.ps1` makes both
+  (`out20/combs_v60_more.svg`, `work20/crops/Z_lead_*`); not run, one
+  Python process at a time while the harness ran. letters_v60.svg's
+  coffee, oat and bad rows show those pairs meanwhile.
+- Levi's review of `letters_v60.svg` and `cursive_template.svg`,
+  above all the o's exit, which now sits lower and flatter than the
+  font's (oa, og, ov, ow, op, oe and ot are 6.6-12.8 u from the font;
+  of and ox stay near it), and a's
+  flatter top.
+- The f exit's position and angle (ff, fe float 16.55 and 22.55 u above
+  the font; fo dips 9.07 u, rough FAIL): K998.
+- Lead-ins with a knee, listed not fixed: e (even), f (fox), l (lazy);
+  their crops come from `post_k990.ps1` (above).
+
