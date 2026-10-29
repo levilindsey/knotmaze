@@ -300,10 +300,10 @@ Next free ID: K1022.
 - **K992** · K868 corner rules continuous in the geometry (master's make 65-100% of the pop area). Stage 3's c21w
   (tracked foot, bisected part walk) cuts the windows to 3403 pops / 190259 px (master 4325 / 1065307) but fails two
   on count, from the march's sampled S; stage 4 makes S exact and lands. Sharp vs round is K1001.
-  - owner: agent `a4f6363afebf35c2b` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, stage 4, started 2026-10-28 14:38, 2 h cap ~16:38); stage 3 stopped 14:32 at its step 6 (the re-run failed the gate), nothing landed
-  - branch: `k992-corners`, worktree `.claude/worktrees/k992-corners`; last commit: `90d4290c` (stage 4's brief, on stage 3's WIP `7ff4f637`, unpushed); 6 behind master (docs and ledger only). Its own suite is red until a rule lands (`corner_continuity.test.ts` (B)/(C) fail on master's oracle): don't merge before
+  - owner: nobody since 2026-10-28 15:58 (merged; agent `a4f6363afebf35c2b` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
+  - branch: mainline; last commit: `9b549d30`
   - evidence: the worktree's `.claude/probes/S3a/` (keep the worktree; untracked except the generators and readers): S3a6's kit and stage 1's (`*14*`, `*16*`, `pops16/`), stage 2's `*17*` and `pops17/`, K1000 stage 1's `*19*`, `pops19/` and `cmpdir19/`, stage 3's `*21*` and `pops21/` (`mk_c17.mjs --foot track/--drop/--ove`, `mk_walk21.mjs`, `census21.ps1`, `locked21.ps1`, `land21.ps1`; the c21 oracles regenerate: mk_c17, then mk_cap19 `--mode cont`, then mk_walk21), stage 4's `*23*` and `pops23/`
-  - next: stage 4's Order: S as the exact minimum of wAt (no DROP choice), footMaxA/B and j51/1's refit gate as measures, the census, land with the cap test's gate removed; then the merge (agent_merge), raster14, cost14 and the crops for Levi (j42/0's corner shrinks under the overlap gate, F4; with K1001)
+  - next: stage 5: make the march's branch a function of the frame (F11), so corner_continuity's (D) and (E) run again (each takes ~18 s; (E)'s q jump of 0.117h is untraced); brief to write
   - brief: `docs/design/K992_s4_continuous_march.md` on branch `k992-corners` (stage 3 `K992_s3_landing.md` F1-F8 and ## Handoff, stage 2 `K992_s2_continuous_stops.md`, stage 1 `K992_corner_rules.md`, K1000 `K1000_continuous_caps.md`)
   - env: from the `k992-corners` worktree, `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5392 --strictPort --host 127.0.0.1` (the config is untracked, copied from `k868-s3a`)
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
