@@ -1,0 +1,24 @@
+muse_hash: S1b 113, F2 39; S1b sites lost under src 75, kept 38; src sites new 4
+lost sites inked (>= 0.5) under src: 0; inked in the oracle: 1; a free end in the oracle (inked, runs <= 1): 1
+lost sites with top OWN at the site: 10; with OWN ink on the ring: 55; free again with OWN read as paper: 0
+src (F2) free ends 39: inked in the oracle 9, a free end in the oracle too 2
+  (30.32, 3.274) chain 3 side 1: ink 0.147 top g8; ring inked 12/64, own 5; runs 0, OWN as paper 0; oracle ink false runs -1
+  (30.622, 3.304) chain 3 side 1: ink 0.131 top g8; ring inked 16/64, own 0; runs 0, OWN as paper 0; oracle ink false runs -1
+  (22.492, 5.97) chain 3 side -1: ink 0.064 top g5; ring inked 20/64, own 0; runs 0, OWN as paper 0; oracle ink false runs -1
+  (23.953, 2.199) chain 3 side -1: ink 0.070 top g6; ring inked 20/64, own 5; runs 0, OWN as paper 0; oracle ink false runs -1
+  (8.735, 25.678) chain 5 side 1: ink 0.179 top g13; ring inked 15/64, own 4; runs 0, OWN as paper 0; oracle ink false runs -1
+  (4.006, 28.153) chain 5 side -1: ink 0.029 top own; ring inked 22/64, own 13; runs 0, OWN as paper 0; oracle ink false runs -1
+  (1.118, 13.3) chain 6 side 1: ink 0.090 top g19; ring inked 14/64, own 0; runs 0, OWN as paper 0; oracle ink false runs -1
+  (0.638, 12.854) chain 6 side 1: ink 0.043 top g19; ring inked 23/64, own 4; runs 0, OWN as paper 0; oracle ink false runs -1
+  (2.091, 11.49) chain 6 side 1: ink 0.048 top g21; ring inked 14/64, own 11; runs 0, OWN as paper 0; oracle ink false runs -1
+  (1.59, 11.079) chain 6 side -1: ink 0.027 top g21; ring inked 17/64, own 11; runs 0, OWN as paper 0; oracle ink false runs -1
+  (1.151, 20.885) chain 9 side 1: ink 0.156 top g28; ring inked 10/64, own 5; runs 0, OWN as paper 0; oracle ink false runs -1
+  (12.985, 31.381) chain 20 side -1: ink 0.048 top own; ring inked 17/64, own 11; runs 0, OWN as paper 0; oracle ink false runs -1
+  (28.213, 15.29) chain 30 side 1: ink 0.019 top g52; ring inked 10/64, own 8; runs 0, OWN as paper 0; oracle ink false runs -1
+  (29.285, 14.737) chain 30 side -1: ink 0.179 top g52; ring inked 11/64, own 5; runs 0, OWN as paper 0; oracle ink false runs -1
+  (25.619, 28.486) chain 36 side -1: ink 0.060 top g33; ring inked 0/64, own 0; runs 0, OWN as paper 0; oracle ink false runs -1
+  (21.223, 21.308) chain 38 side 1: ink 0.022 top g30; ring inked 9/64, own 2; runs 0, OWN as paper 0; oracle ink false runs -1
+  (21.074, 21.399) chain 38 side 1: ink 0.194 top g30; ring inked 11/64, own 5; runs 0, OWN as paper 0; oracle ink false runs -1
+  (16.801, 21.468) chain 38 side 1: ink 0.044 top g29; ring inked 13/64, own 4; runs 0, OWN as paper 0; oracle ink false runs -1
+  (9.331, 29.406) chain 43 side 1: ink 0.033 top g12; ring inked 12/64, own 1; runs 0, OWN as paper 0; oracle ink false runs -1
+  (18.854, 33.207) chain 44 side -1: ink 0.055 top g46; ring inked 24/64, own 3; runs 0, OWN as paper 0; oracle ink false runs -1
