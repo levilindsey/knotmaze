@@ -1,0 +1,426 @@
+
+> knotmaze@0.4.0 test
+> npm run typecheck && vitest run
+
+
+> knotmaze@0.4.0 typecheck
+> tsc && tsc -p notices
+
+
+ RUN  v3.2.7 C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/k1040-field
+
+stdout | test/game/minotaur.test.ts > K174: the minotaur's controls > a pull finds a still player sooner
+K174 mean seconds to find a still player: pull 0 69.1, pull 1 48.8
+
+ ✓ test/render/samp_table.test.ts (15 tests) 5452ms
+   ✓ slot windows and RANGES > daily4: lanes and RANGES reproduce the renderer's idScratch exactly  989ms
+   ✓ slot windows and RANGES > dense: lanes and RANGES reproduce the renderer's idScratch exactly  2002ms
+   ✓ slot windows and RANGES > fat: lanes and RANGES reproduce the renderer's idScratch exactly  934ms
+   ✓ slot windows and RANGES > knot: lanes and RANGES reproduce the renderer's idScratch exactly  721ms
+   ✓ base64 payloads > round-trips float32 and float64 arrays bit for bit  443ms
+ ✓ test/physics/host_seam.test.ts (6 tests) 5956ms
+   ✓ K7 host seam: main.ts and src/app write the physics only through the host > main.ts and src/app have no write to the system outside the host  1194ms
+   ✓ K7 host seam: main.ts and src/app write the physics only through the host > the scan sees main's system and host (it is not scanning nothing)  2322ms
+   ✓ K7 host seam: main.ts and src/app write the physics only through the host > the scan covers src/app and sees the SceneRef's and the probe context's fields  2411ms
+ ✓ test/render/field/label_yield.test.ts (10 tests) 7243ms
+   ✓ label ink: the visible member does not depend on the visiting order (K964 class C) > j_pair_cross  1194ms
+   ✓ label ink: the visible member does not depend on the visiting order (K964 class C) > x4_throughs  1807ms
+   ✓ label ink: the visible member does not depend on the visiting order (K964 class C) > x4_ends  1106ms
+   ✓ label ink: the visible member does not depend on the visiting order (K964 class C) > y120  1085ms
+   ✓ label ink: the visible member does not depend on the visiting order (K964 class C) > j_hook_cross  1293ms
+ ✓ test/core/text_pen_order.test.ts (12 tests) 6076ms
+   ✓ K558 emblems keep assignOverUnder byte for byte > pins the maze crossings of titled and cartouche scenes (text excluded)  346ms
+   ✓ K558 text crossings follow pen order (the later stroke over) > a titled daily and a cartouche word follow pen order too  551ms
+   ✓ K558 text crossings follow pen order (the later stroke over) > marks only text crossings penOrder, and never ties  444ms
+   ✓ K558 text crossings follow pen order (the later stroke over) > reverse flips every text crossing and nothing else  506ms
+   ✓ K558 text crossings follow pen order (the later stroke over) > keeps checkAlternation true, with no warning, on titled dailies 1-30, cartouches and words  3834ms
+ ✓ test/game/turnstiles.test.ts (16 tests) 7487ms
+   ✓ turnstiles: the controller > walks the kit's route, bounces included, at the kit's fewest strokes  362ms
+   ✓ turnstiles: the controller > at a turnstile dead end, a hint and the compass point back out  6491ms
+ ✓ test/core/glyph_lint.test.ts (20 tests) 8150ms
+   ✓ glyph lint: the authored set > K580: the tangent exemplar's root parts, tapers monotonically from double width and closes its crotch in time  351ms
+   ✓ glyph lint: the authored set > K643: the lint judges the taper at the part it is given  1488ms
+   ✓ glyph lint: the authored set > K643: an injected bulge past taperBulgeLU fails taper-g1  657ms
+   ✓ glyph lint: the authored set > K643: widenCrotch lengthens the tangent exemplar's crotch and keeps it lint-clean  1361ms
+   ✓ glyph lint: the authored set > K643: the probe flags build changed glyphs, and nothing when absent  3017ms
+ ✓ test/game/minotaur.test.ts (47 tests) 9003ms
+   ✓ MinotaurChase: the minotaur's movement > never sets foot on a tail once out, and roams to the dead ends  527ms
+   ✓ K174: the minotaur's controls > the chase at roamPull 0 is pinned tick for tick  421ms
+   ✓ K174: the minotaur's controls > a pull finds a still player sooner  963ms
+   ✓ K324 stage 3: the guard and the stalker > the guard and the stalker are pinned tick for tick  491ms
+   ✓ K324 stage 3: the guard and the stalker > a roaming guard never leaves its territory, and walks back into it  5020ms
+   ✓ K324 stage 3: the guard and the stalker > each hunting step aims with the model's accuracy, else steps at random  510ms
+ ✓ test/game/beat_clock.test.ts (14 tests) 4764ms
+   ✓ beat math > round-trips every beat of every tempo  4729ms
+stderr | test/ui/url_codec.test.ts > token + overrides > round-trips the maze-plan knobs
+KnotMaze: unreadable link settings (old link version 8); kept the seed, every setting is at its default.
+
+ ✓ test/physics/open_chain.test.ts (4 tests) 4633ms
+   ✓ open-chain + anchored ends (P4 maze physics) > settles with the seam removed and the loose ends pinned  2245ms
+   ✓ open-chain + anchored ends (P4 maze physics) > stays healthy when the seam is carved right next to a crossing  2359ms
+ ✓ test/render/ribbon_round.test.ts (12 tests) 9996ms
+   ✓ round joins: past the threshold the outline is the round ideal > a hairpin with unequal legs: no thorn, no bite, the concave clamp holds  1065ms
+   ✓ round joins: past the threshold the outline is the round ideal > a 130 deg turn (the i's joint) and a 180 deg fold meet the target  4877ms
+   ✓ round joins: past the threshold the outline is the round ideal > K675: the glyph cusps that turn 103 to 114 deg are fully round  3109ms
+   ✓ round joins: a turn swept through the threshold moves continuously > the outline meets the target at every degree from 100 deg up  779ms
+ ✓ test/core/title_topology.test.ts (2 tests) 11156ms
+   ✓ K552 the title never changes the maze > keeps the plan, the maze walk, start, exit and optimal on dailies 1-30 and every shape at gs 6/12/18  11129ms
+ ✓ test/physics/worker_host.test.ts (26 tests) 4206ms
+   ✓ WorkerHost on a fake worker > clears main's grab on a reset and on a rebuild  626ms
+   ✓ the name build (K7 stage 7) > steps the adopted build as an init-built one, bit for bit  365ms
+   ✓ WorkerHost's ready timeout > does not fail a working worker over a main-thread stall  1524ms
+   ✓ the probe bridge > matches the in-thread host: the freeze patch, stepUntil and the dump  709ms
+ ✓ test/physics/emblem_physics.test.ts (4 tests) 11265ms
+   ✓ emblem physics (K115 stage 5a) > holds every pinned emblem particle at its initial position  768ms
+   ✓ emblem physics (K115 stage 5a) > sleeps a live star island in its maze hole, inside the hole (K115 5b)  9905ms
+   ✓ emblem physics (K115 stage 5a) > settles and sleeps a live trefoil  347ms
+ ✓ test/notices/notices.test.ts (47 tests) 4978ms
+   ✓ the tracked credits > ship the Hershey acknowledgements as soon as anything in the app mentions the fonts  609ms
+   ✓ the real build > builds, and its page lists exactly the packages the bundle contains  3940ms
+ ✓ test/game/explore_burn.test.ts (8 tests) 4133ms
+   ✓ subtractBurnt (K290) > hides every burnt point and keeps every unburnt solid point (seeded)  4124ms
+ ✓ test/ui/param_codec.test.ts (26 tests) 3257ms
+   ✓ token robustness > never throws on random input  659ms
+   ✓ token round trip (seeded property test) > decodes exactly what it encodes, over random subsets and values  2516ms
+ ✓ test/render/field/corner_continuity.test.ts (5 tests | 2 skipped) 13844ms
+   ✓ K992: corners are continuous in the geometry > (A) a corner swept through the cap: t90's END cut from 6h to 1h  2594ms
+   ✓ K992: corners are continuous in the geometry > (B) an arm swept through a graze: acute30's END parallel at H, 2.3h to 3.3h  5127ms
+   ✓ K992: corners are continuous in the geometry > (C) the tangent feet through a second contact: the END's far part rising at 10°  6120ms
+ ✓ test/render/explore_cut.test.ts (24 tests) 3132ms
+   ✓ K76 stage 2d: High contrast dots (kExploreLookCpu hc, out.dot) > HC lifts only the strength: hc x (1 - 0.55 u^2) is the plain coverage  1947ms
+   ✓ K397: the dots fit the fade and cut by their own shape > draws a cap and exactly two dots inside every fade, short or long  867ms
+ ✓ test/ui/url_codec.test.ts (53 tests) 3272ms
+   ✓ token + overrides > reads every param's override key after a token  333ms
+   ✓ unreadable links > never throws on random queries  820ms
+   ✓ links round trip (seeded property test) > reads back what it writes, and writes it back the same  1867ms
+ ✓ test/physics/byte_identity.test.ts (2 tests) 2859ms
+   ✓ knot-mode byte identity (golden guard) > is deterministic across identical runs  1455ms
+   ✓ knot-mode byte identity (golden guard) > matches the recorded knot-mode fingerprints  1402ms
+ ✓ test/render/pluck_model.test.ts (79 tests) 2504ms
+   ✓ reduced-motion cue (K104) > stays in [0, 1], and is 0 outside the extent and at its ends  301ms
+   ✓ rounded base collapse > never narrows past the allowance; zero stays zero  407ms
+   ✓ under-node clip on a self-crossing (K344) > still tucks the under pass under its partner  567ms
+   ✓ under-node clip on a self-crossing (K344) > the weight falls smoothly from 1 at the node to 0 at G1's split  489ms
+ ✓ test/core/maze_plan_identity.test.ts (4 tests) 14329ms
+   ✓ maze plan identity (K87) > builds the same plan as the frozen pre-K87 module  7887ms
+   ✓ maze plan at the K74 defaults > builds the pinned plans, each reaching every piece  1458ms
+   ✓ searched maze at the K74 stage 4 defaults (greedyTrap on) > builds the pinned searched walk graphs for dailies 1-3  2151ms
+   ✓ applied maze at the K74 defaults (stage 2, H1) > builds the pinned walk graphs with H1 off and at the default share  2829ms
+ ✓ test/physics/particle_system.test.ts (10 tests) 15673ms
+   ✓ particle system > keeps crossings coupled while bindings slide  1534ms
+   ✓ particle system > keeps crossings transversal (no tangential gluing)  1625ms
+   ✓ particle system > relaxes without NaN  1400ms
+   ✓ particle system > reduces total path length as the knot settles  1178ms
+   ✓ particle system > higher slack settles to a longer (looser) rest state  3420ms
+   ✓ particle system > grab drags a particle toward the target; release reports a pluck  1472ms
+   ✓ particle system > goes quiescent at rest and reports settle completion  4279ms
+   ✓ particle system > reset returns particles to the lattice  740ms
+ ✓ test/core/greedy_trap.test.ts (17 tests) 2655ms
+   ✓ exact heading vs the float prototype (parity, dailies 1-8) > walks differ only on the pinned near-tie days  835ms
+   ✓ the search seam in generation (scene_graph, H1-in-loop) > with greedyTrap on, daily 3 is cut, solvable and within the growth cap  1294ms
+ ✓ test/physics/junction.test.ts (2 tests) 2166ms
+   ✓ degree-3 junction (P4 maze physics) > fuses three arms into a stable merge with a straight-through stem  2162ms
+ ✓ test/core/scene_graph.test.ts (16 tests) 14961ms
+   ✓ titled scenes (K115 stage 3a) > hangs the title on the chosen entrance, keeping exit and optimal  583ms
+   ✓ titled scenes (K115 stage 3a) > builds the same titled scene twice, bit for bit  600ms
+   ✓ titled scenes (K115 stage 3a) > attaches on dailies 1-30 and every shape at gs 6/12/18  7384ms
+   ✓ cartouche scenes (K115 stage 4a) > never disconnects start/exit (solvability sweep)  2456ms
+   ✓ cartouche emblem scenes (K115 stage 5b) > keeps the holed walk exactly (island sweep, solvability as in 4a)  2730ms
+ ✓ test/game/locks.test.ts (18 tests) 3416ms
+   ✓ locks and keys: the controller > never traps the player without ice: the exit stays reachable from every state a walker reaches  1553ms
+   ✓ locks and keys: the controller > composes with ice, the color rule, turnstiles, one-way runs and hidden runs  1090ms
+ ✓ test/render/paint_fx.test.ts (8 tests) 14427ms
+   ✓ G2.1 FX mirror vs the frozen per-sample code > the reveal width mask equals revealMaskFor's interval union  8644ms
+   ✓ G2.1 FX mirror vs the frozen per-sample code > ignition times are continuous along a chain (no bands by design)  306ms
+   ✓ G2.1 FX mirror vs the frozen per-sample code > a chain's FX settle time (fxDone) skips only identity FX  1705ms
+   ✓ G2.1 FX mirror vs the frozen per-sample code > the settled-slot skip (CTRLIDX .w) changes nothing, at any time  1389ms
+   ✓ G2.1 FX mirror vs the frozen per-sample code > the burn hot head leaves points continuously, BURN_HOT_ARC behind the tip  2014ms
+ ✓ test/render/gap_mask.test.ts (16 tests) 2991ms
+   ✓ K573: the search's SAMP index walk > the walk reads gapOverPt's points, chunk by chunk and in the protect run  2246ms
+   ✓ K573 step 2: the curvature stride > keeps the bounds and covers the reach on smooth chains  486ms
+ ✓ test/physics/snapshot.test.ts (8 tests) 2104ms
+   ✓ snapshot round trip (K7) > carries positions, passes, emergent rows and the header exactly  1084ms
+   ✓ MirrorSystem (K7) > reads what the live system reads, in the same pass objects  890ms
+ ✓ test/core/maze_reachable.test.ts (4 tests) 2411ms
+   ✓ maze plan: every piece reachable from the start (K110) > leaves no piece unreached in small shaped designs  1306ms
+   ✓ maze plan: every piece reachable from the start (K110) > leaves no piece unreached with long-tail dead ends (K74 defaults)  815ms
+stdout | test/render/field/form_b.test.ts > form B: the fades are continuous > D2 + D5: a crossing slides up the END; the cap ramp and r move the ink by what the step explains
+[form_b] D2+D5 sweep: max |Δink| per step 0.002 = 0.0300
+
+ ✓ test/render/paint_explore.test.ts (13 tests) 2369ms
+   ✓ K76 kExploreAt mirror vs the model's chainVis > agrees exactly on random pieces (rings, wraps, open chains), flags off  1191ms
+   ✓ K76 kExploreAt mirror vs the model's chainVis > the whole-chain flag is sound: chainWhole => visibility 1 everywhere  999ms
+stdout | test/render/field/form_b.test.ts > form B: the fades are continuous > D6: ω from 0 to 1 moves the ink at most in proportion
+[form_b] D6: max |Δink| per Δω 0.01 = 0.01000
+
+ ✓ test/render/paint_fire.test.ts (15 tests) 16222ms
+   ✓ K410 kCharAtCpu, the CPU twin of kCharAt (K409's world-unit fronts) > matches the every-item reference on random scenes (rings, wraps, open chains), char  5038ms
+   ✓ K410 kCharAtCpu, the CPU twin of kCharAt (K409's world-unit fronts) > matches the every-item reference on random scenes (rings, wraps, open chains), gone  4881ms
+   ✓ K409: the fire's widths are world lengths > frontRange covers every point a front touches, at the chain's tightest ctrl  6206ms
+ ✓ test/render/paint_math.test.ts (5 tests) 2090ms
+   ✓ paint mirror geometry (G2.0) > kArcU is monotone and wraps by one total per lap  948ms
+   ✓ paint mirror geometry (G2.0) > kCtrlOfArc reproduces the bake's per-sample ctrl exactly  637ms
+stdout | test/render/field/form_b.test.ts > form B: the fades are continuous > D1: the fold across a hairpin moves the ink no faster than an outline's AA
+[form_b] D1 fold: max |Δink| along the hairpin walks = 0.0748 (step aa/10)
+
+ ✓ test/render/paint_gameplay.test.ts (20 tests) 15775ms
+   ✓ G2.3 paint mirror vs the retired per-sample pass > gold spans, caps, pulses and hover compose as the accent strip did  496ms
+   ✓ G2.3 paint mirror vs the retired per-sample pass > K75: crests over a trail fade brighten the thread's own paint (no gold bands)  2835ms
+   ✓ G2.3 paint mirror vs the retired per-sample pass > K75 + K93: pulse trains and the hover end at the reach, fading over its end  7079ms
+   ✓ G2.3 paint mirror vs the retired per-sample pass > K145, K111 stage 3: the hover glow peaks at both edges and fades out toward the middle  474ms
+   ✓ G2.3 paint mirror vs the retired per-sample pass > K145, K298: the glow peaks at the hover point, ends at its length and fades toward the run's ends  654ms
+   ✓ G2.3 paint mirror vs the retired per-sample pass > K145: the glow wraps across a closed chain's seam, and strength 0 draws nothing  1194ms
+   ✓ G2.3 paint mirror vs the retired per-sample pass > K525: a telegraph piece lights its span between its end gaps and fades, at its alpha  648ms
+   ✓ G2.3 paint mirror vs the retired per-sample pass > K525: the telegraph mixes toward its colour across both rims, under the hover glow's whitening  722ms
+   ✓ G2.3 paint mirror vs the retired per-sample pass > K324 s2: a riding lead piece paints the fixed piece from uKTeleAt, on open and closed chains  946ms
+ ✓ test/render/field/k883.test.ts (13 tests) 2788ms
+   ✓ §3.4 on j_hook_cross: an END that hooks back over its own through (muse_hash's crossing 292) > needs both K900 rules: the cut at L + h and the refused same-chain joins  396ms
+   ✓ K909: junction groups from geometry > groups geo keeps #15 and #16 on the synthetic crossing scenes  481ms
+   ✓ K909: junction groups from geometry > floors each arm's span at the K883 span  478ms
+   ✓ K909: junction groups from geometry > hookLook (sheet G): j_hook_cross's END is the one hook arm; cap hides its free cap, carry draws its side back to the root  325ms
+ ✓ test/render/confetti_model.test.ts (50 tests) 1692ms
+stdout | test/render/field/form_b.test.ts > form B: the max decomposition > every winning term lies in one of its strips
+[form_b] strips: tube: 2408 inked, 0 outside, edge 2408; dead end: 1455 inked, 0 outside, edge 1204, cap 251; crossing: 4396 inked, 0 outside, edge 4396; T: 3144 inked, 0 outside, edge 2594, arc 448, endpoint 90, cap 12; acute: 2843 inked, 0 outside, edge 2567, arc 175, endpoint 89, cap 12; Y: 3576 inked, 0 outside, edge 2897, endpoint 131, arc 548
+
+ ✓ test/render/loss_fx_model.test.ts (8 tests) 1875ms
+   ✓ AshPool > releases taper over the window and every piece dies bounded  1795ms
+ ✓ test/core/section_colors.test.ts (23 tests) 1757ms
+   ✓ junctionBlend (fixed blend distance) > stays continuous along every run at every distance  1454ms
+ ✓ test/game/minotaur_turns.test.ts (59 tests) 1938ms
+   ✓ TurnMinotaur > never enters the sanctuary, never returns to its lair, never sees the entrance  704ms
+   ✓ K546 runs contact > puts every runs catch of many games on one point inside the move  640ms
+ ✓ test/game/monsters.test.ts (16 tests) 1473ms
+   ✓ K137 s3d: the monster list keeps the minotaur's game > extras never stand on the start or the exit, sleep at home, and replay from the taps  966ms
+ ✓ test/render/field/corner_solve.test.ts (3 tests) 1478ms
+   ✓ corner solve > every synthetic corner solves: §3.8's r under the web cap, and r = 2h  1033ms
+   ✓ corner solve > the one-sided windows agree with S1b's two-sided ones where both solve  382ms
+ ✓ test/app/auto_pick.test.ts (16 tests) 1128ms
+   ✓ random mode picks only a valid segment (K244) > never picks an invalid segment over many picks, and reaches every valid one  692ms
+   ✓ music mode picks a valid segment near the note's pitch (K244) > never picks an invalid segment, and stays in the note's own pitch while it can  342ms
+ ✓ test/game/one_way.test.ts (16 tests) 1628ms
+   ✓ one-way runs: the controller > never leaves the player stuck: a fresh run or the backtrack is always open  615ms
+ ✓ test/core/maze_apply.test.ts (10 tests) 962ms
+   ✓ maze apply: H1 fused arm cut (K74 stage 2) > cuts H's and keeps every invariant, tail and vertex  419ms
+ ✓ test/core/text_graph.test.ts (32 tests) 1679ms
+   ✓ buildTextGraph (K115) > plans and attaches a cartouche word (K115 stage 4a)  564ms
+ ✓ test/game/k137b_block.test.ts (19 tests) 1496ms
+   ✓ K137-b: the real-time chase routes around broken runs > stalker: never enters a broken run, plans around them, replays  427ms
+ ✓ test/core/maze_trapzone.test.ts (4 tests) 2864ms
+   ✓ K74 stage 3 trap-zone finish > corridor plans still reach every piece and carry the H1 guard only when H1 runs  636ms
+   ✓ K74 stage 3 trap-zone finish > away and near flank plans are valid and differ from stub on some seed  1184ms
+   ✓ K74 stage 3 trap-zone finish > H1's guard adds no junctions inside the exit clearance  740ms
+stdout | test/render/field/form_b.test.ts > form B: watertight at every fade value (S1b) > eye: 1 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] watertight eye: natural 20, fold=0 20, fold=0.25 20, fold=0.5 20, fold=0.75 20, fold=1 20, omega=0 20, omega=0.25 20, omega=0.5 20, omega=0.75 20, omega=1 20, cap=0 20, cap=0.25 20, cap=0.5 20, cap=0.75 20, cap=1 20, tie=0 20, tie=0.25 20, tie=0.5 20, tie=0.75 20, tie=1 20
+
+ ✓ test/game/sword.test.ts (13 tests) 811ms
+ ✓ test/app/beat_catch.test.ts (4 tests) 2798ms
+   ✓ K774: a catch on the beat > lands every catch exactly once on the fixed flow, and the rider rests at the start (length)  1362ms
+   ✓ K774: a catch on the beat > lands every catch exactly once on the fixed flow, and the rider rests at the start (even)  1273ms
+ ✓ test/game/sprint.test.ts (10 tests) 887ms
+   ✓ K137 s3c: sprint on the turn clock > by runs: two moves make one minotaur turn, and it stands through the first  324ms
+ ✓ test/game/collapse.test.ts (13 tests) 646ms
+   ✓ collapse par search > agrees with a brute force on 120 random small mazes  557ms
+ ✓ test/core/maze_solvable.test.ts (2 tests) 1325ms
+   ✓ maze plan: a route from start to exit (K109) > leaves no small shaped design without a route  1123ms
+ ✓ test/render/hash2d.test.ts (10 tests) 929ms
+   ✓ hash2d (K154): uniformity and independence > is a bijection: no two cells share both words  441ms
+stdout | test/render/field/form_b.test.ts > form B: watertight at every fade value (S1b) > T: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] watertight T: natural 0, fold=0 0, fold=0.25 0, fold=0.5 0, fold=0.75 0, fold=1 0, omega=0 0, omega=0.25 0, omega=0.5 0, omega=0.75 0, omega=1 0, cap=0 0, cap=0.25 0, cap=0.5 0, cap=0.75 0, cap=1 0, tie=0 0, tie=0.25 0, tie=0.5 0, tie=0.75 0, tie=1 0
+
+ ✓ test/core/maze_plan.test.ts (13 tests) 637ms
+ ✓ test/game/hidden_runs.test.ts (10 tests) 607ms
+stderr | test/ui/daily_link.test.ts > the front door (K56) > treats any other query as an ordinary design
+KnotMaze: unreadable link settings (old link version 4); kept the seed, every setting is at its default.
+KnotMaze: unreadable link settings (old link version 4); kept the seed, every setting is at its default.
+
+ ✓ test/ui/daily_link.test.ts (25 tests) 823ms
+   ✓ the daily design > builds the same mazes it always has (golden)  595ms
+ ✓ test/physics/tug.test.ts (5 tests) 589ms
+   ✓ grab chase rate (K610/K792) > defaults to 0.6 and follows tuning.grabChase  315ms
+ ✓ test/core/deterministic_math.test.ts (2 tests) 599ms
+   ✓ deterministic generation math (K108) > builds mazes without calling an approximated function  564ms
+ ✓ test/core/glyph_flag.test.ts (15 tests) 508ms
+ ✓ test/render/label/label_switch_cache.test.ts (3 tests) 497ms
+   ✓ K868 S3a4 the switch search's topology cache > a kept topology gives the uncached lines on moved geometry with the same key  455ms
+stdout | test/render/field/form_b.test.ts > form B: watertight at every fade value (S1b) > acute: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] watertight acute: natural 0, fold=0 0, fold=0.25 0, fold=0.5 0, fold=0.75 0, fold=1 0, omega=0 0, omega=0.25 0, omega=0.5 0, omega=0.75 0, omega=1 0, cap=0 0, cap=0.25 0, cap=0.5 0, cap=0.75 0, cap=1 0, tie=0 0, tie=0.25 0, tie=0.5 0, tie=0.75 0, tie=1 0
+
+ ✓ test/render/paint_ring_lap.test.ts (10 tests) 852ms
+   ✓ K299 exact lap helpers > kWrap lands in [0, m) at the true ring position  590ms
+ ✓ test/core/shapes.test.ts (18 tests) 730ms
+   ✓ shaped lattices: maze fabric end to end > plans, applies, and walks on every shape/anchor combo  497ms
+ ✓ test/game/ice.test.ts (6 tests) 718ms
+   ✓ ice: the slide > walks straight on along the strand and stops where the header says  562ms
+ ✓ test/game/fire_clock.test.ts (8 tests) 587ms
+   ✓ the real-time fire's rules (K114 stage 2) > never lets the fire reach the dot mid-run (generated mazes, r < 1)  557ms
+ ✓ test/game/rule_controller.test.ts (7 tests) 771ms
+ ✓ test/render/label/label_tables.test.ts (17 tests) 672ms
+ ✓ test/game/title_attempt.test.ts (6 tests) 373ms
+   ✓ K552 attempts across the title flag > both walks share one fingerprint, and the title's forced walk reaches the seam  348ms
+ ✓ test/game/color_rule.test.ts (7 tests) 844ms
+   ✓ color rule: placement > the planted route is legal after obeyAlong, on every draw  372ms
+ ✓ test/game/beat_rider.test.ts (14 tests) 338ms
+ ✓ test/game/fabric_controller.test.ts (25 tests) 652ms
+ ✓ test/render/label/label_band_gpu.test.ts (36 tests) 983ms
+   ✓ K868 S3a8b2: the GPU edges wired > strips without the tube edges are the full strips' others, in order  551ms
+stdout | test/render/field/form_b.test.ts > form B: watertight at every fade value (S1b) > hairpin: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] watertight hairpin: natural 0, fold=0 0, fold=0.25 0, fold=0.5 0, fold=0.75 0, fold=1 0, omega=0 0, omega=0.25 0, omega=0.5 0, omega=0.75 0, omega=1 0, cap=0 0, cap=0.25 0, cap=0.5 0, cap=0.75 0, cap=1 0, tie=0 0, tie=0.25 0, tie=0.5 0, tie=0.75 0, tie=1 0
+
+ ✓ test/render/field/form_b.test.ts (16 tests) 5024ms
+   ✓ form B: the fades are continuous > D2 + D5: a crossing slides up the END; the cap ramp and r move the ink by what the step explains  398ms
+   ✓ form B: the fades are continuous > D6: ω from 0 to 1 moves the ink at most in proportion  430ms
+   ✓ form B: the max decomposition > every winning term lies in one of its strips  486ms
+   ✓ form B: watertight at every fade value (S1b) > eye: 1 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1  1162ms
+   ✓ form B: watertight at every fade value (S1b) > T: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1  704ms
+   ✓ form B: watertight at every fade value (S1b) > acute: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1  757ms
+   ✓ form B: watertight at every fade value (S1b) > hairpin: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1  907ms
+ ✓ test/core/glyph_taper.test.ts (4 tests) 390ms
+ ✓ test/render/trail_paint.test.ts (4 tests) 287ms
+ ✓ test/game/cut.test.ts (18 tests) 310ms
+ ✓ test/render/paint_section.test.ts (3 tests) 380ms
+ ✓ test/game/rule_search.test.ts (11 tests) 404ms
+ ✓ test/render/label/label_strips_pin.test.ts (31 tests) 396ms
+ ✓ test/physics/settle_budget.test.ts (9 tests) 279ms
+ ✓ test/core/walk_graph.test.ts (5 tests) 196ms
+ ✓ test/render/field/depth.test.ts (8 tests) 239ms
+ ✓ test/render/label/label_fills_pin.test.ts (32 tests) 221ms
+ ✓ test/game/daily_calendar.test.ts (9 tests) 175ms
+ ✓ test/game/hints.test.ts (16 tests) 226ms
+ ✓ test/game/daily_attempt.test.ts (12 tests) 200ms
+ ✓ test/game/spool.test.ts (12 tests) 246ms
+ ✓ test/game/fire.test.ts (11 tests) 202ms
+ ✓ test/game/explore_view.test.ts (42 tests) 155ms
+ ✓ test/game/mud.test.ts (8 tests) 319ms
+ ✓ test/game/text_walk.test.ts (7 tests) 196ms
+ ✓ test/game/star_rating.test.ts (15 tests) 161ms
+ ✓ test/ui/panel_search.test.ts (54 tests) 114ms
+ ✓ test/ui/view_clamp.test.ts (23 tests) 142ms
+ ✓ test/core/glyph_flare.test.ts (2 tests) 151ms
+ ✓ test/game/fragile.test.ts (13 tests) 175ms
+ ✓ test/render/background_model.test.ts (27 tests) 59ms
+ ✓ test/ui/grid_align_curve.test.ts (7 tests) 74ms
+ ✓ test/render/marker_glyphs.test.ts (16 tests) 87ms
+ ✓ test/render/web_fade.test.ts (31 tests) 59ms
+ ✓ test/game/fabric_trail.test.ts (4 tests) 114ms
+ ✓ test/game/route_plan.test.ts (22 tests) 147ms
+ ✓ test/core/emblem_graph.test.ts (8 tests) 59ms
+ ✓ test/loader/loader_geometry.test.ts (14 tests) 45ms
+ ✓ test/core/lattice_grower.test.ts (5 tests) 116ms
+ ✓ test/core/hershey_greek.test.ts (4 tests) 41ms
+ ✓ test/game/daily_store.test.ts (33 tests) 47ms
+ ✓ test/audio/knot_synth.test.ts (16 tests) 34ms
+ ✓ test/ui/appear_mode.test.ts (5 tests) 55ms
+ ✓ test/ui/mode_badge.test.ts (13 tests) 36ms
+ ✓ test/game/par.test.ts (12 tests) 53ms
+ ✓ test/render/field/cap19_continuity.test.ts (4 tests) 23904ms
+   ✓ K1000: the arm caps are continuous in the geometry > (A) the side at a tie: j1's END leans from 110° to 130°  2330ms
+   ✓ K1000: the arm caps are continuous in the geometry > (B) membership: the crossing slides into the padded span of j0's END  3722ms
+   ✓ K1000: the arm caps are continuous in the geometry > (C) θ: the crossing slides over the vertices of an arc  1616ms
+   ✓ K1000: the arm caps are continuous in the geometry > (D) the cluster: j1 moves away until the Ts' spans on the through part  16233ms
+ ✓ test/audio/pitch_space.test.ts (11 tests) 36ms
+ ✓ test/render/program_registry.test.ts (7 tests) 372ms
+   ✓ program registry (K307) > lists every program site in src/, per file  355ms
+ ✓ test/util/det_math.test.ts (5 tests) 29ms
+ ✓ test/physics/text_pinned.test.ts (3 tests) 30ms
+ ✓ test/render/explore_gates.test.ts (18 tests) 164ms
+ ✓ test/game/walker.test.ts (17 tests) 35ms
+ ✓ test/ui/key_moves.test.ts (57 tests) 32ms
+ ✓ test/physics/sleep_gate.test.ts (5 tests) 28ms
+ ✓ test/ui/undo_stack.test.ts (12 tests) 37ms
+ ✓ test/ui/maze_hud.test.ts (28 tests) 26ms
+ ✓ test/render/rim_curve.test.ts (4 tests) 22ms
+ ✓ test/render/junction_routes.test.ts (32 tests) 20ms
+ ✓ test/ui/title_flag.test.ts (5 tests) 26ms
+ ✓ test/ui/snore_link.test.ts (35 tests) 21ms
+ ✓ test/render/corner_share.test.ts (5 tests) 21ms
+ ✓ test/ui/accessibility.test.ts (26 tests) 30ms
+ ✓ test/ui/offscreen_indicators.test.ts (22 tests) 19ms
+ ✓ test/audio/snore_sfx.test.ts (19 tests) 19ms
+ ✓ test/game/snares.test.ts (8 tests) 20ms
+ ✓ test/geometry/bend_radius.test.ts (12 tests) 17ms
+ ✓ test/core/reveal_plan.test.ts (8 tests) 15ms
+ ✓ test/game/mino_feedback.test.ts (16 tests) 15ms
+ ✓ test/game/lures.test.ts (9 tests) 19ms
+ ✓ test/game/k795_tunables.test.ts (6 tests) 19ms
+ ✓ test/audio/song_scheduler.test.ts (9 tests) 14ms
+ ✓ test/game/explore_finish.test.ts (11 tests) 15ms
+ ✓ test/geometry/spline_generator.test.ts (9 tests) 15ms
+ ✓ test/render/field/field_core.test.ts (10 tests) 13ms
+ ✓ test/ui/head_indicator.test.ts (21 tests) 15ms
+ ✓ test/ui/gamepad.test.ts (13 tests) 13ms
+ ✓ test/game/share_text.test.ts (18 tests) 12ms
+ ✓ test/app/context_loss.test.ts (13 tests) 12ms
+ ✓ test/app/loop_flags.test.ts (15 tests) 12ms
+ ✓ test/render/fog_arc.test.ts (15 tests) 12ms
+ ✓ test/render/paint_root.test.ts (13 tests) 27ms
+ ✓ test/render/telegraph_route.test.ts (20 tests) 11ms
+ ✓ test/ui/param_tags.test.ts (6 tests) 12ms
+ ✓ test/ui/motion.test.ts (11 tests) 11ms
+ ✓ test/game/maze_stats.test.ts (12 tests) 11ms
+ ✓ test/ui/panel_sheet.test.ts (19 tests) 10ms
+ ✓ test/core/glyph_fairness.test.ts (5 tests) 12ms
+ ✓ test/game/tap_pick.test.ts (19 tests) 10ms
+ ✓ test/render/pluck_ripple.test.ts (10 tests) 18ms
+ ✓ test/render/field/scene_export.test.ts (8 tests) 9ms
+ ✓ test/render/background_shaders.test.ts (6 tests) 11ms
+ ✓ test/ui/seed_text.test.ts (4 tests) 8ms
+ ✓ test/render/tip_stadium.test.ts (5 tests) 9ms
+ ✓ test/render/walked_gold.test.ts (7 tests) 10ms
+ ✓ test/ui/finish_peek.test.ts (6 tests) 6ms
+ ✓ test/render/ribbon_lean.test.ts (3 tests) 12ms
+ ✓ test/game/lives.test.ts (8 tests) 7ms
+ ✓ test/ui/panel_rows.test.ts (4 tests) 8ms
+ ✓ test/game/tunnels.test.ts (6 tests) 9ms
+ ✓ test/render/path_irregularity.test.ts (5 tests) 7ms
+ ✓ test/render/shader_warmup.test.ts (13 tests) 18ms
+ ✓ test/ui/move_pad.test.ts (6 tests) 6ms
+ ✓ test/render/explore_strip.test.ts (15 tests) 14ms
+ ✓ test/render/clip_band.test.ts (7 tests) 7ms
+ ✓ test/core/shape_injection.test.ts (5 tests) 9ms
+ ✓ test/game/sonar.test.ts (4 tests) 6ms
+ ✓ test/ui/loader_config.test.ts (4 tests) 7ms
+ ✓ test/game/darkness.test.ts (4 tests) 6ms
+ ✓ test/ui/toast_place.test.ts (6 tests) 5ms
+ ✓ test/ui/cut_buttons.test.ts (2 tests) 4ms
+ ↓ test/sweep.manual.test.ts (1 test | 1 skipped)
+ ↓ test/render/field/oracle.manual.test.ts (5 tests | 5 skipped)
+ ✓ test/app/lifecycle.test.ts (3 tests) 5ms
+ ✓ test/render/sdf_gap_bind.test.ts (4 tests) 6ms
+ ✓ test/render/k320_slim.test.ts (6 tests) 9ms
+ ✓ test/render/thread_look.test.ts (5 tests) 5ms
+ ✓ test/render/joint_pairs.test.ts (5 tests) 4ms
+ ✓ test/render/label/label_limits.test.ts (2 tests) 5ms
+ ✓ test/render/sdf_explore.test.ts (4 tests) 4ms
+ ✓ test/physics/physics_host.test.ts (15 tests) 27886ms
+   ✓ the worker core in lockstep with the in-thread host (K7) > matches bit for bit at 60 fps through every input  7784ms
+   ✓ the worker core in lockstep with the in-thread host (K7) > matches bit for bit at 25 fps, the remainder carried between frames  2609ms
+   ✓ the worker core in lockstep with the in-thread host (K7) > matches bit for bit with the temperature on, and both sleep once it is off  2317ms
+   ✓ the worker core in lockstep with the in-thread host (K7) > pre-settles as the in-thread loop does, to its sim cap, then goes live  2260ms
+   ✓ the worker core in lockstep with the in-thread host (K7) > settles first (until the first sleep) and asleep after it  2348ms
+   ✓ the worker core in lockstep with the in-thread host (K7) > runs the physics-off load as the in-thread loop does  2250ms
+   ✓ the worker core in lockstep with the in-thread host (K7) > halts as the in-thread host does when the state goes non-finite  478ms
+   ✓ the worker core in lockstep with the in-thread host (K7) > drops messages of another gen and rebuilds on a newer init  788ms
+   ✓ the worker core's probe messages and failure (K7) > steps until a sim time, dumps, freezes, pauses, and stops on an error  467ms
+   ✓ the worker core in lockstep on a pen-order text scene (K558) > matches bit for bit with the reverse switch on, through a drag, and both sleep  6030ms
+ ✓ test/physics/maze_fabric.test.ts (4 tests) 31250ms
+   ✓ maze fabric physics (P4 Stage 6a) > settles finite, bounded, and quiescent  13738ms
+   ✓ maze fabric physics (P4 Stage 6a) > holds every junction coincident at rest  14089ms
+   ✓ maze fabric physics (P4 Stage 6a) > pins the corner ends exactly at their anchors  3367ms
+ ✓ test/render/field/g2.test.ts (3 tests) 45828ms
+   ✓ G2 corners > clothoid and quintic: G2 joins, no crossing, one hump, both sizings  45713ms
+ ✓ test/physics/sleep.regression.test.ts (6 tests) 47802ms
+   ✓ fresh-settle sleep (K41 links) > the fat knot link sleeps  8427ms
+   ✓ fresh-settle sleep (K41 links) > the user's rect fabric link sleeps  7554ms
+   ✓ the titled daily (K115 stage 3a) > Daily #12 with its title thread sleeps  14191ms
+   ✓ the cartouche design (K115 stage 4a) > a rect cartouche design sleeps  7221ms
+   ✓ frame-rate independent sleep (K63) > sleeps at one sim time at 10 and 60 fps  10397ms
+ ✓ test/quiescence.regression.test.ts (2 tests) 134369ms
+   ✓ post-interaction quiescence > re-sleeps after a realistic drag session  32211ms
+   ✓ post-interaction quiescence > keeps a pathological wound out of the loud attractor  102156ms
+
+ Test Files  188 passed | 2 skipped (190)
+      Tests  2526 passed | 8 skipped (2534)
+   Start at  01:19:34
+   Duration  135.95s (transform 21.62s, setup 0ms, collect 92.25s, tests 611.08s, environment 53ms, prepare 42.65s)
+
+exit 0
