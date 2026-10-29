@@ -290,6 +290,35 @@ The top sites:
 - muse_drag t30 j105/0;
 - def_flow j172/1 at t26 and t32.
 
+**F5. Call 2 alone is worse than master** (`oracle_c16.ts`, made by
+`mk_c16.mjs`: master's root, with S3a6's Illinois re-fit solve in place of
+the six-step iteration; `pops16/c16`, `pops16/c16z`; `cmp16.cjs`).
+
+At zoom 1 (pops / a transition / area px, master first):
+
+| sequence | master | call 2 |
+|---|---|---|
+| def_drag | 6 / 0.15 / 359 | 56 / 1.40 / 2287 |
+| def_flow | 27 / 0.68 / 1078 | 74 / 1.85 / 2579 |
+| muse_drag | 77 / 1.93 / 1273 | 226 / 5.65 / 5879 |
+| muse_flow | 266 / 6.65 / 7368 | 532 / 13.30 / 19948 |
+| all | 376 / 2.35 / 10078 | 888 / 5.55 / 30693 |
+
+- By cause, only the re-fit's own area falls (3648 -> 2981 px). Every
+  other cause grows: reach 651 -> 9991, spans 791 -> 3302, unexplained
+  249 -> 2677, q fold 2765 -> 5649, cluster 104 -> 934.
+- The windows were stopped after 5 of 10, to free the lock for a16:
+  1230 pops / 431788 px for master against 1247 / 600235 for call 2.
+  def_flow@w2 alone went from 45930 to 251848 px. muse_drag@w0 improved
+  (155916 -> 118219), and def_flow@w0 is unchanged.
+- The largest new pop (`c16/muse_flow_crops/pop_reach_0_t2.png`, 205 px)
+  is a corner whose border changes from a square notch to a round arc in
+  one frame.
+- Inferred, not tested: the solve lands r exactly on over(r) = 0, and
+  over(r) jumps wherever master's q changes root as r varies, so the
+  solved r follows those jumps. Master's six coarse steps often stop
+  short of them. Call 2 needs a continuous root under it (R1).
+
 **F6. Rules, and their Node sweeps** (`sweep16.ts`: frame t is blended
 into t + 1 in K steps, every number in the scene lerped, and the corner is
 followed by key).
@@ -338,3 +367,54 @@ step in q, then that step over the arms' step near the junction:
   A cut that appears is a discrete event, like a cluster merge. Making
   r continuous across it would need a continuous cap from the cut loop,
   which is outside these rules.
+
+**F7. R1 + R2 (`oracle_a16.ts`) fails the gate.** It removes the two
+causes it targets, but its fold stop makes new jumps.
+
+At zoom 1 (`pops16/a16/`; pops, pops a transition, area in px):
+
+| sequence | master | a16 |
+|---|---|---|
+| def_drag | 6 (0.15) 359 | 104 (2.60) 3802 |
+| def_flow | 27 (0.68) 1078 | 75 (1.88) 1398 |
+| muse_drag | 77 (1.93) 1273 | 393 (9.82) 16994 |
+| muse_flow | 266 (6.65) 7368 | 789 (19.73) 32600 |
+| all | 376 (2.35) 10078 | 1361 (8.51) 54794 |
+
+a16's area by cause: fold 20219, reach 7443, amp 6911, spans 5964,
+refit 5443, none 4240, switch 3480, cluster 987, count 107.
+
+In the windows (`pops16/a16z/`):
+
+| window | master | a16 |
+|---|---|---|
+| def_drag@w0 | 249 (6.22) 77105 | 280 (7.00) 33862 |
+| def_flow@w0 | 184 (4.60) 89876 | 153 (3.83) 1631 |
+| def_flow@w1 | 229 (5.72) 62961 | 276 (6.90) 40587 |
+| def_flow@w2 | 254 (6.35) 45930 | 285 (7.13) 32721 |
+| muse_drag@w0 | 314 (7.85) 155916 | 253 (6.33) 38958 |
+| muse_drag@w1 | 286 (7.15) 32786 | 293 (7.33) 292339 |
+| muse_drag@w2 | 879 (21.98) 74530 | 908 (22.70) 320654 |
+| muse_flow@w0 | 659 (16.48) 162138 | 641 (16.02) 18352 |
+| muse_flow@w1 | 393 (9.82) 150117 | 264 (6.60) 27880 |
+| muse_flow@w2 | 878 (21.95) 213948 | 790 (19.75) 612284 |
+| all | 4325 (10.81) 1065307 | 4143 (10.36) 1419268 |
+
+- By cause, master to a16 in the windows: switch 92356 -> 1091 and refit
+  353178 -> 83788 (the two causes R1 and R2 target). But reach 155401 ->
+  549507, none 97214 -> 247456, spans 73282 -> 160328, amp 34819 ->
+  82844, cluster 1974 -> 23334, fold 256946 -> 270698.
+- **Why: the fold stop is ill-conditioned.** Sweep def_drag t12 j172/1
+  (K 16, `fold16.ts`): master is sharp at every step (its re-fit took r
+  1.253h -> 0, "the next junction"). a16's r alternates 1.182h / 1.195h
+  between steps, and q jumps up to 1.22 world a step (1431x the arms'
+  step, median 0.32 world). Near a fold, q's speed per unit of δ,
+  |u| = sqrt(2/den) with den = 1 + nA·nB, has no bound. So a stop found
+  where Newton misses lands at δs a halving apart, and q follows.
+- The same at a16's other new jump sites (`sweep16.ts`, K 16, largest q
+  step over the arms' step): def_drag t13 j172/1 1852x, t22 j172/1 396x,
+  t23 j172/1 410x, t31 j38/0 409x, t15 j49/2 1590x, t2 j45/1 1341x.
+- **A change in look, too.** Where master's re-fit made a corner sharp,
+  a16 rounds it at the fold (r 1.18h at j172/1). R2's straight-arm
+  closed form misses that the curved arms carry the tangent points past
+  the cap.
