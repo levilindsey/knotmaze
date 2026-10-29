@@ -808,10 +808,37 @@ export class FormB {
   }
 
   /**
-   * The ink of surface S at (x, y) as if S were on top: max over its exposed-outline
-   * terms of weight · band. inside: S covers the pixel (endpoint terms count only then).
+   * S's coverage at (x, y): its pieces' outline AA at their fold weight (a
+   * folding far piece fades out whole, ink and cover, finding F3), and its
+   * fills at weight ω. fade: F_OMEGA when a partial fill sets it.
    */
-  inkOf(S: number, x: number, y: number, P: Piece[], inside: boolean): { v: number; term: Term | null; fade: number; Dexp: number } {
+  alphaOf(S: number, x: number, y: number, P: Piece[]): { a: number; fade: number } {
+    let aP = 0;
+    for (const A of P) if (A.surf === S) aP = Math.max(aP, A.selfW * ss(-this.aa, this.aa, this.h - A.d));
+    let aF = 0;
+    let om = 1;
+    if (S < OWN && aP < 1)
+      for (const ci of this.cornersNear(x, y)) {
+        const c = this.corners[ci];
+        if (c.g !== S || !(c.r > 0 && c.omega > 0)) continue;
+        const dq = Math.hypot(x - c.qx, y - c.qy);
+        if (dq > c.rV * (1 + 1e-9) + 1e-12 || !this.inWedge(c, x, y)) continue;
+        const f = c.omega * ss(-this.aa, this.aa, dq - c.r);
+        if (f > aF) {
+          aF = f;
+          om = c.omega;
+        }
+      }
+    return { a: Math.max(aP, aF), fade: aF > aP && om < 1 ? F_OMEGA : 0 };
+  }
+
+  /**
+   * The ink of surface S at (x, y) as if S were on top, premultiplied by S's
+   * coverage a: max over its exposed-outline terms of weight · band. The
+   * endpoint discs (t_a, t_b, V) are clipped by a, so no term reaches past S's
+   * own outline AA (finding F4).
+   */
+  inkOf(S: number, x: number, y: number, P: Piece[]): { v: number; term: Term | null; fade: number; Dexp: number; a: number; afade: number } {
     const h = this.h;
     const W = this.W;
     const aa = this.aa;
@@ -820,6 +847,8 @@ export class FormB {
     let fade = 0;
     let Dexp = Infinity;
     const near = S < OWN ? this.cornersNear(x, y) : [];
+    const al = this.alphaOf(S, x, y, P);
+    const aS = al.a;
     const take = (val: number, t: Term) => {
       if (val > v) {
         v = val;
@@ -865,22 +894,22 @@ export class FormB {
       if (c.g !== S) continue;
       const om = c.omega;
       const omBit = om > 0 && om < 1 ? F_OMEGA : 0;
-      if (inside) {
+      if (aS > 0) {
         if (om > 0) {
           const DA = Math.hypot(x - c.tax, y - c.tay);
           const DB = Math.hypot(x - c.tbx, y - c.tby);
-          const bA = this.band(DA);
-          const bB = this.band(DB);
+          const bA = aS * this.band(DA);
+          const bB = aS * this.band(DB);
           if (bA > 0 || bB > 0) fade |= omBit;
-          if (om >= 0.5) Dexp = Math.min(Dexp, DA, DB);
+          if (om >= 0.5 && aS >= 0.5) Dexp = Math.min(Dexp, DA, DB);
           take(om * bA, { kind: T_TA, surf: S, chain: this.arms[c.a].pi, s: c.sA, k: c.kA, vtx: -1, corner: ci, D: DA, w: om, v: om * bA });
           take(om * bB, { kind: T_TB, surf: S, chain: this.arms[c.b].pi, s: c.sB, k: c.kB, vtx: -1, corner: ci, D: DB, w: om, v: om * bB });
         }
         if (om < 1) {
           const DV = Math.hypot(x - c.Vx, y - c.Vy);
-          const bV = this.band(DV);
+          const bV = aS * this.band(DV);
           if (bV > 0) fade |= omBit;
-          if (1 - om >= 0.5) Dexp = Math.min(Dexp, DV);
+          if (1 - om >= 0.5 && aS >= 0.5) Dexp = Math.min(Dexp, DV);
           take((1 - om) * bV, { kind: T_V, surf: S, chain: -1, s: 0, k: -1, vtx: -1, corner: ci, D: DV, w: 1 - om, v: (1 - om) * bV });
         }
       }
@@ -892,16 +921,18 @@ export class FormB {
         take(om * b2, { kind: T_ARC, surf: S, chain: -1, s: 0, k: -1, vtx: -1, corner: ci, D, w: om, v: om * b2 });
       }
     }
-    return { v, term, fade, Dexp };
+    return { v, term, fade, Dexp, a: aS, afade: al.fade };
   }
 
   private pbuf: Piece[] = [];
 
   evalPoint(x: number, y: number): PixelEval {
     const h = this.h;
+    const aa = this.aa;
     const P = this.pbuf;
     let fade = this.pieces(x, y, P);
-    // Covering surfaces and their keys (Q1: the cone key, max over covering pieces and fills).
+    // Every surface whose coverage reaches the pixel, keyed by Q1's cone key
+    // (max over its pieces and fills). Covering: a piece within h, or a fill.
     const surf: SurfEntry[] = [];
     const entry = (id: number): SurfEntry => {
       let e = surf.find((u) => u.id === id);
@@ -912,9 +943,9 @@ export class FormB {
       return e;
     };
     for (const A of P) {
-      if (!(A.d < h)) continue;
+      if (!(A.d < h + aa)) continue;
       const e = entry(A.surf);
-      e.pieceCover = true;
+      if (A.d < h && A.selfW >= 0.5) e.pieceCover = true;
       if (A.key > e.key) {
         e.key = A.key;
         e.z = A.z;
@@ -922,15 +953,16 @@ export class FormB {
         e.s = A.s;
       }
     }
-    const near = this.cornersNear(x, y);
-    for (const ci of near) {
+    for (const ci of this.cornersNear(x, y)) {
       const c = this.corners[ci];
-      if (!this.inFill(c, x, y)) continue;
+      if (!(c.r > 0 && c.omega > 0)) continue;
+      const dq = Math.hypot(x - c.qx, y - c.qy);
+      if (!(dq > c.r - aa) || dq > c.rV * (1 + 1e-9) + 1e-12 || !this.inWedge(c, x, y)) continue;
       const nearerA = Math.hypot(x - c.tax, y - c.tay) <= Math.hypot(x - c.tbx, y - c.tby);
       const z = nearerA ? c.zA : c.zB;
       const key = this.K === Infinity ? z : z - h / this.K;
       const e = entry(c.g);
-      e.fillW = Math.max(e.fillW, c.omega);
+      if (this.inFill(c, x, y)) e.fillW = Math.max(e.fillW, c.omega);
       if (key > e.key) {
         e.key = key;
         e.z = z;
@@ -939,68 +971,72 @@ export class FormB {
       }
     }
     surf.sort((u, v) => v.key - u.key);
-    const res: PixelEval = { ink: 0, top: -1, chain: -1, s: 0, z: 0, key: -Infinity, term: null, fade: 0, nSurf: surf.length, dz: Infinity, dkey: Infinity, Dexp: Infinity };
-    if (surf.length === 0) {
-      // Paper: only the strips' outer AA reaches here.
-      const seen = new Set<number>();
-      for (const A of P) {
-        if (seen.has(A.surf)) continue;
-        seen.add(A.surf);
-        const o = this.inkOf(A.surf, x, y, P, false);
-        if (o.v > res.ink) {
-          res.ink = o.v;
-          res.term = o.term;
+    const outs = surf.map((e) => this.inkOf(e.id, x, y, P));
+    const covers = (e: SurfEntry) => e.pieceCover || e.fillW > 0;
+    const res: PixelEval = { ink: 0, top: -1, chain: -1, s: 0, z: 0, key: -Infinity, term: null, fade: 0, nSurf: surf.filter(covers).length, dz: Infinity, dkey: Infinity, Dexp: Infinity };
+    const i1 = surf.findIndex(covers);
+    if (i1 >= 0) {
+      const S1 = surf[i1];
+      res.top = S1.id;
+      res.chain = S1.chain;
+      res.s = S1.s;
+      res.z = S1.z;
+      res.key = S1.key;
+      res.Dexp = outs[i1].Dexp;
+      const i2 = surf.findIndex((e, i) => i > i1 && covers(e));
+      if (i2 >= 0) {
+        res.dz = Math.abs(S1.z - surf[i2].z);
+        res.dkey = S1.key - surf[i2].key;
+      }
+    }
+    // Premultiplied "over" in key order (F4): each surface's ink through the
+    // coverage of every surface above it. A fill covers at ω, so what lies
+    // below shows through it at 1 − ω (F_OMEGA when that is visible).
+    const comp = (ord: number[]) => {
+      let T = 1;
+      let ink = 0;
+      let best = 0;
+      let term: Term | null = null;
+      let fd = 0;
+      let pend = 0;
+      for (const i of ord) {
+        const o = outs[i];
+        const c = T * o.v;
+        if (c > 0) {
+          ink += c;
+          fd |= o.fade | pend;
+          if (c > best) {
+            best = c;
+            term = o.term;
+          }
         }
-        fade |= o.fade;
+        pend |= o.afade;
+        T *= 1 - o.a;
+        if (!(T > 0)) break;
       }
-      res.fade = fade;
-      return res;
+      return { ink: Math.min(1, ink), term, fd };
+    };
+    const order = surf.map((_, i) => i);
+    let r = comp(order);
+    // The tie mix (Q1): the first adjacent pair within zt whose order matters
+    // blends its two orders by t = ss(−zt, zt, Δkey).
+    for (let i = 0; i + 1 < order.length; i++) {
+      const gap = surf[i].key - surf[i + 1].key;
+      if (!(gap < this.zt)) continue;
+      const sw = order.slice();
+      sw[i] = i + 1;
+      sw[i + 1] = i;
+      const r2 = comp(sw);
+      if (r2.ink === r.ink) continue;
+      const t = ss(-this.zt, this.zt, gap);
+      const ink = t * r.ink + (1 - t) * r2.ink;
+      fade |= F_TIE;
+      r = (1 - t) * r2.ink > t * r.ink ? { ink, term: r2.term, fd: r.fd | r2.fd } : { ink, term: r.term, fd: r.fd | r2.fd };
+      break;
     }
-    const S1 = surf[0];
-    const S2 = surf.length > 1 ? surf[1] : null;
-    res.top = S1.id;
-    res.chain = S1.chain;
-    res.s = S1.s;
-    res.z = S1.z;
-    res.key = S1.key;
-    if (S2) {
-      res.dz = Math.abs(S1.z - S2.z);
-      res.dkey = S1.key - S2.key;
-    }
-    const o1 = this.inkOf(S1.id, x, y, P, true);
-    let ink = o1.v;
-    let term = o1.term;
-    fade |= o1.fade;
-    res.Dexp = o1.Dexp;
-    const o2 = S2 ? this.inkOf(S2.id, x, y, P, true) : null;
-    if (!S1.pieceCover && S1.fillW < 1) {
-      // A fill covers at weight ω: mix over what lies below.
-      ink = S1.fillW * ink + (1 - S1.fillW) * (o2 ? o2.v : 0);
-      fade |= F_OMEGA;
-    }
-    if (S2 && o2 && S1.key - S2.key < this.zt) {
-      const t = ss(-this.zt, this.zt, S1.key - S2.key);
-      if (Math.abs(o1.v - o2.v) > 0) fade |= F_TIE;
-      fade |= o2.fade;
-      const mixed = t * ink + (1 - t) * o2.v;
-      if (o2.v > ink && (1 - t) * o2.v > t * ink) term = o2.term;
-      ink = mixed;
-    }
-    // The outer AA of a surface above the top one whose edge lies within aa outside.
-    for (const A of P) {
-      if (A.d < h || A.d >= h + this.aa || A.surf === S1.id) continue;
-      const keyEdge = this.K === Infinity ? A.z : A.z - h / this.K;
-      if (keyEdge <= S1.key) continue;
-      const o = this.inkOf(A.surf, x, y, P, false);
-      if (o.v > ink) {
-        ink = o.v;
-        term = o.term;
-      }
-      fade |= o.fade;
-    }
-    res.ink = ink;
-    res.term = term;
-    res.fade = fade;
+    res.ink = r.ink;
+    res.term = r.term;
+    res.fade = fade | r.fd;
     return res;
   }
 
@@ -1058,11 +1094,30 @@ export class FormB {
     if (t.kind === T_ARC) return { ok: this.inArcStrip(c, x, y), cls: "arc" };
     const pa = this.arms[c.a].pi;
     const pb = this.arms[c.b].pi;
-    const around = (pi: number, k: number) => this.inEdgeStrip(pi, k - 1, x, y) || this.inEdgeStrip(pi, k, x, y) || this.inEdgeStrip(pi, k + 1, x, y);
-    if (t.kind === T_TA) return { ok: this.inArcStrip(c, x, y) || around(pa, c.kA), cls: "endpoint" };
-    if (t.kind === T_TB) return { ok: this.inArcStrip(c, x, y) || around(pb, c.kB), cls: "endpoint" };
+    if (t.kind === T_TA) return { ok: this.inArcStrip(c, x, y) || this.nearStrips(pa, c.kA, x, y), cls: "endpoint" };
+    if (t.kind === T_TB) return { ok: this.inArcStrip(c, x, y) || this.nearStrips(pb, c.kB, x, y), cls: "endpoint" };
     const fa = this.footArm(c.a, c.Vx, c.Vy);
     const fb = this.footArm(c.b, c.Vx, c.Vy);
-    return { ok: around(pa, fa.k) || around(pb, fb.k), cls: "V" };
+    return { ok: this.nearStrips(pa, fa.k, x, y) || this.nearStrips(pb, fb.k, x, y), cls: "V" };
+  }
+
+  /** Is (x, y) in the edge strip of a segment within W + 2aa of arc length from segment k0 (an endpoint disc's reach)? */
+  nearStrips(pi: number, k0: number, x: number, y: number): boolean {
+    const p = this.polys[pi];
+    if (this.inEdgeStrip(pi, k0, x, y)) return true;
+    const R = this.W + 2 * this.aa;
+    for (const dir of [-1, 1]) {
+      let acc = 0;
+      let k = k0;
+      for (let i = 0; i < p.nseg; i++) {
+        k += dir;
+        if (p.closed) k = ((k % p.nseg) + p.nseg) % p.nseg;
+        else if (k < 0 || k >= p.nseg) break;
+        if (acc > R) break;
+        if (this.inEdgeStrip(pi, k, x, y)) return true;
+        acc += p.segLen[k];
+      }
+    }
+    return false;
   }
 }

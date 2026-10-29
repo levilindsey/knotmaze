@@ -213,3 +213,82 @@ Then `## Handoff`.
 - Your final report ends with `Ledger items` (new follow-ups, residuals,
   decisions for Levi) and K1040's handle fields: owner, branch, last
   commit, evidence, next, brief, env.
+
+## Findings
+
+Times (`Get-Date`, 2026-10-28): start 22:40:40; step 1 (read) done about
+22:49; step 2 (form_b.ts and its pins) done 23:30. The pins are
+`test/render/field/form_b.test.ts`: 12 tests, about 0.6 s.
+
+**F1 (question 1, a surface's z): the cone key.** A pixel orders its
+surfaces by key = z − d/K, with K = h/zt per piece. A surface's key is
+the max over its pieces within h + aa. A fill's key is z(nearer foot) −
+h/K, which meets its tubes' keys at their outlines. Among equal z the
+nearest piece wins, and the trade between z and d is continuous. The max
+form cannot give that: two segments of one chain at equal z tie on draw
+order (K1033).
+- Evidence: pin D4. Across a tie line, with the mix, the ink moves under
+  0.1 per step. Without it (`zt: 1e-9`), it jumps more than 0.5.
+
+**F2 (question 2, the cap at both ends): both ramps.** B's burial of A's
+foot weighs ramp_B · selfW_B · ramp_A (`capBoth`). With B's ramp alone,
+A's foot flips at s_cap(A), where A's piece leaves the group and becomes
+its own surface.
+- Evidence: pin D2 + D5. A crossing slides up an END from 2.05 to 4.5 in
+  steps of 0.002, which moves the cap ramp and r.
+- Over six probes the max |Δink| is 0.0300 per step. That is the step
+  times the outline AA's slope (1.5/(2aa)), so the ramps add nothing
+  sharper.
+
+**F3 (D1, the fold): the far piece fades whole.** The farther piece of a
+same-chain pair within 2σ is weighted ss(σ, 2σ, Δs). The weight applies
+to its ink and to its coverage, and the piece labels the top only at a
+weight of 0.5 or more.
+- Weighting the ink alone left a jump of 0.5 on the hairpin pin. The far
+  piece, its ink faded to 0, stayed opaque and hid the near piece until
+  the merge at σ dropped it.
+- Pin D1, walking at aa/10: 0.5000 before the fix, 0.0748 after (the AA
+  ramp explains 0.075).
+
+**F4 (the definition at outlines): premultiplied over, with the endpoint
+discs clipped by coverage.** The D2 + D5 sweep found two definition
+defects at outlines, each a jump of about 0.5:
+- A top surface's edge AA faded to paper instead of over the ink below.
+  The over chain's outline crossing the END's band took the ink from 0.5
+  to 1.0.
+- The endpoint discs (t_a, t_b, V) counted only where their surface
+  covered the pixel, which left a hard edge at the outline (0.491 to 1.0).
+
+Now each surface carries a coverage a:
+- pieces: selfW · ss(−aa, aa, h − d);
+- fills: ω · ss(−aa, aa, |p − q| − r).
+
+Its ink is premultiplied by a, and the endpoint discs are multiplied by a.
+The pixel composites, front to back in key order, every surface whose
+coverage reaches it: ink = Σ ι_i · Π_{j<i} (1 − a_j). The tie mix blends
+the two orders of the first adjacent pair within zt whose order matters.
+This is question 4's fetch-across in reference form (F9).
+
+**F5 (D6, ω): the ink moves by at most Δω.** A fill covers at ω and its
+arc ink is ω · band2, so pin D6 measures 0.01000 per Δω of 0.01. The
+earlier mix, ω · ι + (1 − ω) · below, applied ω twice: its slope reached
+2.
+
+**F6 (the strips on the pins): an endpoint disc reaches W + 2aa of arc
+length.** On the six pin scenes, every winning term lies in a strip that
+evaluates it, with 0 outside:
+
+| Pin scene | Inked pixels |
+|---|---|
+| tube | 2408 |
+| dead end | 1455 |
+| crossing | 4396 |
+| T | 3142 |
+| acute | 2841 |
+| Y | 3596 |
+
+An endpoint disc spans the edge strips of every segment within W + 2aa
+of arc length from its foot (`nearStrips`). That is five segments at the
+pins' 0.2 spacing. A reach of ±1 segment missed 4 Y pixels. A GPU stage
+evaluates each disc from those segments' strips, or gives it its own
+quad.

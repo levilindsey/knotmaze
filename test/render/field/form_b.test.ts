@@ -138,7 +138,7 @@ describe("form B: the terms", () => {
     expect(e.ink).toBeCloseTo(1, 12);
     expect(e.term?.kind).toBe(T_ARC);
     // Inside the fill, away from the band: covered, no ink.
-    const f = fb.evalPoint(1.2, 1.2);
+    const f = fb.evalPoint(1.1, 1.1);
     expect(f.top).toBe(0);
     expect(f.ink).toBe(0);
     // The through's side band past t_a, the END's past t_b.
@@ -180,12 +180,12 @@ describe("form B: the terms", () => {
     expect(c.Vy).toBeCloseTo(H, 9);
     expect(c.qx).toBeCloseTo((H + c.r) / t15, 9);
     expect(c.qy).toBeCloseTo(H + c.r, 9);
-    // With no room the fit clamps r: a crossing 6h up the END caps it.
-    const sc = tee(30, 0, [ray(6 * Math.cos(Math.PI / 6), 6 * Math.sin(Math.PI / 6), 120, -10, 10)], [{ a: { chain: 1, s: 6 }, b: { chain: 2, s: 10 }, over: "b" }]);
+    // With little room the fit clamps r: a crossing 7h up the END caps it (L = 5, room 0.888).
+    const sc = tee(30, 0, [ray(7 * Math.cos(Math.PI / 6), 7 * Math.sin(Math.PI / 6), 120, -10, 10)], [{ a: { chain: 1, s: 7 }, b: { chain: 2, s: 10 }, over: "b" }]);
     const f2 = new FormB(sc);
     const c2 = cornerNear(f2, 1 / t15, 1);
     const end = f2.arms.find((a) => a.kind === "end")!;
-    expect(end.L).toBeCloseTo(6 - 1 / Math.tan(Math.PI / 4) - 1, 9);
+    expect(end.L).toBeCloseTo(7 - 1 / Math.tan(Math.PI / 4) - 1, 9);
     expect(c2.room).toBeCloseTo(end.L - W - H / t15, 9);
     expect(c2.r).toBeCloseTo(Math.min(1.5 * H * t15, Math.max(0, c2.room) * t15), 9);
   });
@@ -260,6 +260,7 @@ describe("form B: the fades are continuous", () => {
     expect(capSeen).toBe(true);
     // A step moves the arc by ≤ step (slope 1.5/(2aa)) and the ramp by ≤ 1.5·step/λ.
     expect(maxJump).toBeLessThan(1.5 * step * (1 / (2 * AA) + 1 / H) * 1.5);
+    console.log(`[form_b] D2+D5 sweep: max |Δink| per step ${step} = ${maxJump.toFixed(4)}`);
   });
 
   it("D4: across the tie line the ink mixes; without the mix it jumps", () => {
@@ -301,9 +302,10 @@ describe("form B: the fades are continuous", () => {
       prev = ink;
     }
     expect(maxJump).toBeLessThanOrEqual(0.0100001);
+    console.log(`[form_b] D6: max |Δink| per Δω 0.01 = ${maxJump.toFixed(5)}`);
   });
 
-  it("D1: the fold across a hairpin (measured, reported)", () => {
+  it("D1: the fold across a hairpin moves the ink no faster than an outline's AA", () => {
     // A hairpin of radius 0.9h: two legs 1.8h apart; a pixel walks along the legs into the bend.
     const R = 0.9 * H;
     const pts: number[] = [...line(-10, -R, 0, -R)];
@@ -325,8 +327,8 @@ describe("form B: the fades are continuous", () => {
       }
     }
     expect(fold).toBe(true);
-    // Recorded in the brief's findings (D1); the bound is loose on purpose.
-    expect(maxJump).toBeLessThan(1.01);
+    // A step of aa/10 across an outline's AA ramp (slope 1.5/(2aa)) moves the ink by 0.075.
+    expect(maxJump).toBeLessThan(0.075 * 1.05);
     console.log(`[form_b] D1 fold: max |Δink| along the hairpin walks = ${maxJump.toFixed(4)} (step aa/10)`);
   });
 });
