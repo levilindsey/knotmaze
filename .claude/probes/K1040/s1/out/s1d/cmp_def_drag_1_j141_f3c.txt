@@ -1,0 +1,11 @@
+def_drag:1 junction 141 at (10.8576, 4.3618), h 0.26, arms 0:c56/through/s3.135 1:c56/through/s3.135 2:c88/end/s0.000
+form B arms:
+  arm 430 ei 0 chain-poly 56 through dir 1 (scene 1) sR 3.135 (scene 3.135) L 0.8834 Lcut Infinity ang -2.3499; oracle armDir ang -2.3499
+  arm 431 ei 1 chain-poly 56 through dir -1 (scene -1) sR 3.135 (scene 3.135) L 3.3218 Lcut Infinity ang 0.5478; oracle armDir ang 0.5478
+  arm 432 ei 2 chain-poly 88 end dir 1 (scene 1) sR -0.193 (scene 0.000) L 2.1422 Lcut Infinity ang 1.9059; oracle armDir ang 1.9059
+form B corners:
+  431(ei 1)/432(ei 2) th 1.3581 r0 0.3148 r1 0.1999 r 0.1999 room 1.2316 V (10.9925, 4.6719) q (11.0930, 4.9802) tA (11.2360, 4.8406) tB (10.8979, 4.9369) dV 0.2679/3.3218 0.2877/2.1422 w 1.000
+  432(ei 2)/430(ei 0) th 2.0274 r0 0.5200 r1 0.5200 r 0.5200 room 0.2943 V (10.5638, 4.3635) q (9.9515, 4.4676) tA (10.4431, 4.6370) tB (10.3450, 4.1276) dV 0.1962/2.1422 0.1915/0.8834 w 1.000
+oracle corners:
+  1/2 ok true th 1.3581 rule 0.3148 r 0.1998 V (10.9925, 4.6719) q (11.0930, 4.9800) tA (11.2359, 4.8405) tB (10.8979, 4.9368) sV 2.867/0.095 noV false why undefined
+  2/0 ok true th 2.0274 rule 0.5200 r 0.5200 V (10.5638, 4.3635) q (9.9515, 4.4676) tA (10.4431, 4.6370) tB (10.3450, 4.1276) sV 0.003/3.326 noV false why undefined

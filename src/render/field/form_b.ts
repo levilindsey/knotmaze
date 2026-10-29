@@ -431,13 +431,25 @@ export class FormB {
           if (c < Lcut) Lcut = c;
         }
         L = Math.max(0, Math.min(L, Lcut));
-        const a0 = pointAt(p, sR);
-        const a1 = pointAt(p, sR + dir * Math.min(2 * h, Math.max(L, 1e-6)));
+        // S1d F3: the oracle's armDir, the chord at 2h along the chain from the
+        // scene arm's s (an END arm's sR is the chain's end extended to c',
+        // short of it), clamped to an open chain's ends only, never to L
+        // (whose gates jump).
+        const sB = arm.kind === "end" ? normS(p, arm.s) : sR;
+        const a0 = pointAt(p, sB);
+        let s1 = sB + dir * 2 * h;
+        if (!p.closed) s1 = Math.min(Math.max(s1, p.s0), p.s0 + p.len);
+        const a1 = pointAt(p, s1);
         let ux = a1.x - a0.x;
         let uy = a1.y - a0.y;
-        const ul = Math.hypot(ux, uy) || 1;
-        ux /= ul;
-        uy /= ul;
+        const ul = Math.hypot(ux, uy);
+        if (ul < 1e-12) {
+          ux = a0.tx * dir;
+          uy = a0.ty * dir;
+        } else {
+          ux /= ul;
+          uy /= ul;
+        }
         this.armsOf[pi].push(this.arms.length);
         this.arms.push({ j: ji, g: this.groupOf[ji], pi, sR, dir, kind: arm.kind, L, Lcut, ux, uy, ang: Math.atan2(uy, ux), ei });
       });
@@ -566,53 +578,203 @@ export class FormB {
     if (!(crossA * sgn > 0 && crossB * sgn < 0)) return null;
     const pa = this.polys[A.pi];
     const pb = this.polys[B.pi];
-    const ta = pointAt(pa, V.fa.s);
-    const tb = pointAt(pb, V.fb.s);
-    const theta = Math.acos(Math.max(-1, Math.min(1, A.dir * B.dir * (ta.tx * tb.tx + ta.ty * tb.ty))));
+    // S1d F3: the oracle's K992 corner, compact. θ is the opening of the
+    // arms' chords at 2h (th0, from ux/uy), and the rule's r follows from it.
+    // The ball grows along V's own branch of the medial axis with its feet
+    // tracked, never chosen, and stops by measure: r = ∫ S dρ over ρ from h
+    // to h + r_rule, S the running minimum over 32 fixed nodes of
+    // w = ss(1 + min(0, mA, mB)/0.05h) · ss((den/den(V) − 0.3)/0.4) ·
+    // ss(slack/0.5h): the margin gate (below), the steep gate (den = 1 + nA·nB)
+    // and the cap gate (slack = L − W − the foot's distance from the root, the
+    // smaller of the two arms). Each w is continuous in the
+    // geometry, and so is r: no root, bisection or nearest foot is chosen
+    // (S1c F3's root, radius bisect and tangent foot).
+    const theta = th0;
     const t2 = Math.tan(theta / 2);
     const r0 = style * (this.cr / 3) * Math.min(2 * h, 1.5 * h * t2);
-    const room = Math.max(0, Math.min(A.L - this.W - dVa, B.L - this.W - dVb));
-    const r1 = Math.min(r0, room * t2);
-    // Tracked windows: the feet move away from V's feet as r grows.
-    const wa: [number, number] = [dVa - h, dVa + 4 * h];
-    const wb: [number, number] = [dVb - h, dVb + 4 * h];
-    // Direction along which both distances grow at unit rate, from V.
-    const gax = (V.x - V.fa.x) / V.fa.d;
-    const gay = (V.y - V.fa.y) / V.fa.d;
-    const gbx = (V.x - V.fb.x) / V.fb.d;
-    const gby = (V.y - V.fb.y) / V.fb.d;
-    const det = gax * gby - gay * gbx;
-    const ex = Math.abs(det) > 1e-12 ? (gby - gay) / det : bx;
-    const ey = Math.abs(det) > 1e-12 ? (gax - gbx) / det : by;
-    const solveQ = (r: number) => {
-      const q = this.solveEq(a, b, h + r, V.x + ex * r, V.y + ey * r, wa, wb);
-      const da = this.armDist(a, q.fa.s);
-      const db = this.armDist(b, q.fb.s);
-      const lo = tol;
-      const feasible = q.ok && da > lo && da < A.L - lo && db > lo && db < B.L - lo && da > wa[0] + lo && da < wa[1] - lo && db > wb[0] + lo && db < wb[1] - lo;
-      return { q, da, db, feasible };
+    const winA = this.armWindow(a);
+    const winB = this.armWindow(b);
+    type TFoot = Foot & { u: number };
+    type Tk = { x: number; y: number; fa: TFoot; fb: TFoot };
+    // A tracked foot: the nearest point within h/32 of the last one, the
+    // window moved while the foot sits on its edge (the oracle's footLocal).
+    // u is the foot's s in the arm window's domain.
+    const footT = (p: Poly, win: [number, number], x: number, y: number, s0: number): TFoot => {
+      const w = h / 32;
+      let s = Math.min(Math.max(s0, win[0]), win[1]);
+      for (let it = 0; ; it++) {
+        const lo = Math.max(win[0], s - w);
+        const hi = Math.min(win[1], s + w);
+        const f = footInWindow(p, x, y, lo, hi);
+        const u = s + dS(p, s, f.s);
+        const edge = (u <= lo + 1e-9 * h && lo > win[0]) || (u >= hi - 1e-9 * h && hi < win[1]);
+        if (!edge || it >= 4096 || Math.abs(u - s) <= 1e-12 * h) return { ...f, u };
+        s = u;
+      }
     };
-    let r = r1;
-    let sol = solveQ(r);
-    if (r > 0 && !sol.feasible) {
-      let lo = 0;
-      let hi = r1;
-      const eps = 1 / (64 * this.ppuDev);
-      while (hi - lo > eps) {
-        const m = 0.5 * (lo + hi);
-        if (solveQ(m).feasible) lo = m;
-        else hi = m;
+    // Newton on |q − tracked foot| = ρ on both arms, its step held to limit.
+    const newtonT = (rho: number, x0: number, y0: number, uA: number, uB: number, limit: number): Tk & { ok: boolean } => {
+      let x = x0;
+      let y = y0;
+      let fA = footT(pa, winA, x, y, uA);
+      let fB = footT(pb, winB, x, y, uB);
+      for (let it = 0; it < 60; it++) {
+        const ra = fA.d - rho;
+        const rb = fB.d - rho;
+        if (Math.abs(ra) < 1e-12 * Math.max(1, rho) && Math.abs(rb) < 1e-12 * Math.max(1, rho)) break;
+        if (!(fA.d > 1e-12 && fB.d > 1e-12)) break;
+        const nax = (x - fA.x) / fA.d;
+        const nay = (y - fA.y) / fA.d;
+        const nbx = (x - fB.x) / fB.d;
+        const nby = (y - fB.y) / fB.d;
+        const det = nax * nby - nay * nbx;
+        if (Math.abs(det) < 1e-12) break;
+        let dx = (-ra * nby + rb * nay) / det;
+        let dy = (-nax * rb + nbx * ra) / det;
+        const dl = Math.hypot(dx, dy);
+        if (dl > limit) {
+          dx *= limit / dl;
+          dy *= limit / dl;
+        }
+        x += dx;
+        y += dy;
+        fA = footT(pa, winA, x, y, fA.u);
+        fB = footT(pb, winB, x, y, fB.u);
       }
-      r = lo;
-      sol = solveQ(r);
-      if (!sol.feasible) {
-        r = 0;
-        sol = solveQ(0);
+      const ok = Math.max(Math.abs(fA.d - rho), Math.abs(fB.d - rho)) < 1e-9 * Math.max(1, rho);
+      return { x, y, fa: fA, fb: fB, ok };
+    };
+    // V's branch from ρ0 toward ρT: predict along u (nA·u = nB·u = 1) and
+    // polish with Newton held near the prediction; a miss halves the step,
+    // down to 1e-5h. Returns the farthest point reached and its ρ.
+    const advance = (from: Tk, rho0: number, rhoT: number, st0: number): { p: Tk; rho: number } => {
+      let p = from;
+      let rc = rho0;
+      let st = st0;
+      while (rhoT - rc > 1e-12 * rhoT) {
+        const rn = Math.min(rhoT, rc + st);
+        const dd = rn - rc;
+        const nax = (p.x - p.fa.x) / p.fa.d;
+        const nay = (p.y - p.fa.y) / p.fa.d;
+        const nbx = (p.x - p.fb.x) / p.fb.d;
+        const nby = (p.y - p.fb.y) / p.fb.d;
+        const den = 1 + nax * nbx + nay * nby;
+        let next: Tk | null = null;
+        if (den > 1e-9) {
+          const ux = (nax + nbx) / den;
+          const uy = (nay + nby) / den;
+          const gx = p.x + ux * dd;
+          const gy = p.y + uy * dd;
+          const acc = Math.min(h, Math.max(0.5 * Math.hypot(ux, uy) * dd, 1e-3 * h));
+          const n = newtonT(rn, gx, gy, p.fa.u, p.fb.u, acc);
+          if (n.ok && Math.hypot(n.x - gx, n.y - gy) <= acc) next = n;
+        }
+        if (next) {
+          p = next;
+          rc = rn;
+          st = Math.min(st0, 2 * st);
+        } else {
+          st /= 2;
+          if (st < 1e-5 * h) break;
+        }
       }
+      // Within the loop's tolerance of the target counts as there: ρ is then
+      // the target itself, so a reached node is never read as the branch's end.
+      return { p, rho: rhoT - rc <= 1e-12 * rhoT ? rhoT : rc };
+    };
+    const denOf = (p: Tk): number => 1 + ((p.x - p.fa.x) * (p.x - p.fb.x) + (p.y - p.fa.y) * (p.y - p.fb.y)) / (p.fa.d * p.fb.d);
+    const slackOf = (p: Tk): number => Math.min(A.L - this.W - (p.fa.u - A.sR) * A.dir, B.L - this.W - (p.fb.u - B.sR) * B.dir);
+    const v0: Tk = { x: V.x, y: V.y, fa: { ...V.fa, u: A.sR + A.dir * dVa }, fb: { ...V.fb, u: B.sR + B.dir * dVb } };
+    const denV = denOf(v0);
+    // The margin gate (the oracle's K992 s3 overlap gate): how much nearer to
+    // q the arm's window comes, outside the tracked foot's basin (the run
+    // around the foot where the distance to q rises, out to the first vertex
+    // where it starts to fall), than the foot itself. The ball stops over a
+    // margin from 0 to −0.05h, before another part of the arm is nearer than
+    // its contact, instead of a foot jumping there (or tracking a polyline
+    // segment's own foot past the arc's centre of curvature).
+    const marginOf = (pl: Poly, x: number, y: number, sf: number, win: [number, number], dc: number): number => {
+      const f0 = pointAt(pl, sf);
+      const base = sf - normS(pl, sf);
+      let hi = win[1];
+      let k = f0.k;
+      let bk = base;
+      for (let it = 0; it <= pl.nseg; it++) {
+        const sv = bk + pl.s[k] + pl.segLen[k];
+        if (sv >= win[1]) break;
+        let k2 = k + 1;
+        let b2 = bk;
+        if (k2 >= pl.nseg) {
+          if (!pl.closed) break;
+          k2 = 0;
+          b2 = bk + pl.len;
+        }
+        const e = segB(pl, k2);
+        if ((pl.x[k2] - x) * (pl.x[e] - pl.x[k2]) + (pl.y[k2] - y) * (pl.y[e] - pl.y[k2]) < 0) {
+          hi = sv;
+          break;
+        }
+        k = k2;
+        bk = b2;
+      }
+      let lo = win[0];
+      k = f0.k;
+      bk = base;
+      for (let it = 0; it <= pl.nseg; it++) {
+        const sv = bk + pl.s[k];
+        if (sv <= win[0]) break;
+        let k2 = k - 1;
+        let b2 = bk;
+        if (k2 < 0) {
+          if (!pl.closed) break;
+          k2 = pl.nseg - 1;
+          b2 = bk - pl.len;
+        }
+        if ((pl.x[k] - x) * (pl.x[k2] - pl.x[k]) + (pl.y[k] - y) * (pl.y[k2] - pl.y[k]) < 0) {
+          lo = sv;
+          break;
+        }
+        k = k2;
+        bk = b2;
+      }
+      let d2 = Infinity;
+      if (lo > win[0]) d2 = footInWindow(pl, x, y, win[0], lo).d;
+      if (hi < win[1]) d2 = Math.min(d2, footInWindow(pl, x, y, hi, win[1]).d);
+      return d2 - dc;
+    };
+    const wOf = (p: Tk): number => {
+      const mA = marginOf(pa, p.x, p.y, p.fa.u, winA, p.fa.d);
+      const mB = marginOf(pb, p.x, p.y, p.fb.u, winB, p.fb.d);
+      return ss(0, 1, 1 + Math.min(0, mA, mB) / (0.05 * h)) * ss(0, 1, (denOf(p) / denV - 0.3) / 0.4) * ss(0, 1, slackOf(p) / (0.5 * h));
+    };
+    let r = 0;
+    let q = v0;
+    let room = slackOf(v0);
+    if (r0 > 0) {
+      const dN = r0 / 32;
+      const nodes: Tk[] = [v0];
+      let sPrev = wOf(v0);
+      let integ = 0;
+      for (let k = 1; k <= 32 && sPrev > 0; k++) {
+        const rho0 = h + (k - 1) * dN;
+        const adv = advance(nodes[k - 1], rho0, h + k * dN, dN);
+        const sK = Math.min(sPrev, wOf(adv.p));
+        integ += 0.5 * (sPrev + sK) * (adv.rho - rho0);
+        room = Math.min(room, slackOf(adv.p));
+        if (adv.rho < h + k * dN) break; // the branch ends here: S is 0 past it
+        nodes.push(adv.p);
+        sPrev = sK;
+      }
+      // q: the branch at ρ = h + r, from the node at or below it.
+      const k0 = Math.min(nodes.length - 1, Math.floor(integ / dN));
+      const adv = advance(nodes[k0], h + k0 * dN, h + integ, dN);
+      q = adv.p;
+      r = adv.rho - h;
     }
-    const q = sol.q;
+    const r1 = r;
     const fa = q.fa;
     const fb = q.fb;
+    const sol = { da: (fa.u - A.sR) * A.dir, db: (fb.u - B.sR) * B.dir };
     const tax = fa.x + (h * (q.x - fa.x)) / fa.d;
     const tay = fa.y + (h * (q.y - fa.y)) / fa.d;
     const tbx = fb.x + (h * (q.x - fb.x)) / fb.d;

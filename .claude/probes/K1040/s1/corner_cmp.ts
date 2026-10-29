@@ -35,9 +35,13 @@ const p = (v: [number, number] | undefined) => (v ? `(${f(v[0])}, ${f(v[1])})` :
 const jn = s.junctions[J];
 console.log(`${spec} junction ${J} at ${p(jn.c as [number, number])}, h ${h}, arms ${jn.arms.map((a, i) => `${i}:c${a.chain}/${a.kind}/s${f(a.s, 3)}`).join(" ")}`);
 console.log("form B arms:");
-for (const ai of fb.armsOf[J] ?? []) {
+const omx = om as unknown as { polys: unknown[]; armDir: (p: unknown, arm: unknown, ell: number) => [number, number] };
+for (let ai = 0; ai < fb.arms.length; ai++) {
   const a = fb.arms[ai];
-  console.log(`  arm ${ai} ei ${a.ei} chain-poly ${a.pi} ${a.kind} dir ${a.dir} sR ${f(a.sR, 3)} L ${f(a.L)} Lcut ${f(a.Lcut)} ang ${f(a.ang, 3)}`);
+  if (a.j !== J) continue;
+  const sa = jn.arms[a.ei];
+  const od = omx.armDir(omx.polys[a.pi], sa, 2 * h);
+  console.log(`  arm ${ai} ei ${a.ei} chain-poly ${a.pi} ${a.kind} dir ${a.dir} (scene ${sa.dir}) sR ${f(a.sR, 3)} (scene ${f(sa.s, 3)}) L ${f(a.L)} Lcut ${f(a.Lcut)} ang ${f(a.ang, 4)}; oracle armDir ang ${f(Math.atan2(od[1], od[0]), 4)}`);
 }
 console.log("form B corners:");
 for (const c of fb.corners as unknown as Record<string, number>[]) {
