@@ -1,0 +1,4 @@
+ei 0/1 r 0.2993 R 0.5093 ovw 0.01050 w 1.000; arm ei 0: none; arm ei 1: none
+ei 1/2 r 0.2632 R 0.4732 ovw 0.01050 w 0.469; arm ei 1: s 19.057 armDist 0.600 (L 1.660) from foot -0.136 R−d 0.00010; arm ei 2: s 8.524 armDist 0.583 (L 1.498) from foot -0.131 R−d 0.00547
+ei 2/3 r 0.2622 R 0.4722 ovw 0.01050 w 1.000; arm ei 2: none; arm ei 3: none
+ei 3/0 r 0.3151 R 0.5251 ovw 0.01050 w 0.140; arm ei 3: none; arm ei 0: s 5.800 armDist 2.141 (L 2.304) from foot 1.557 R−d 0.00803
