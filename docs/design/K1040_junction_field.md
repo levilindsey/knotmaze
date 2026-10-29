@@ -861,8 +861,39 @@ $sc = 'C:\Users\lsl\Repositories\knotmaze\.claude\probes\K868\scenes'
 - K868 and K992 close into K1040 (F6). Their branches and worktrees stay:
   `k868-s3a` holds oracle30 and the recordings
   (`.claude/probes/S3a/seq13/`), and `k992-corners` the corner census kit.
-- F6's verdicts go into the ledger: the moot items are dropped, and K1040's
-  handle lists each carried item with the stage that closes it.
+- F6's verdicts go into the ledger: the moot items are dropped, and the
+  carried items stay open; the stage that closes each is listed below.
 - S3 and S4a measure on the Pixel, so Levi is asked to connect it before
   S3.
 - S1's brief: `docs/design/K1040_s1_reference.md`.
+
+### The other K868 and K992 items
+
+The coordinator's triage of the open items F6 did not cover, filed in the
+ledger with F6's verdicts.
+
+- **Dropped as moot:** K964, K971, K984, K1011, K1016, K1017, K1018,
+  K1023, K1031 and K1038. Each is tied to the CPU label paths, the switch
+  lines or the corner march. F6 found K979, K1007, K1010, K1015 and
+  K1022 moot the same way.
+- **Carried, by the stage that closes them:**
+  - S1: K953, a tube past its span in a junction core (form B's burial).
+  - S2: K875, master's registration against the oracle; K958, the look
+    reference's own residuals (attribute them, don't copy them).
+  - S3: K1033 and K1039 (F6); K967, ctrlArc, cr and the camera's rotation
+    and pivot come from the look; K873, the passes read the drawn samples,
+    flow included. S3's brief takes K1008's and K1024's lessons: a GPU
+    program needs a fallback and a K320 budget, and a compile failure is
+    never silent.
+  - S4b: K1000, K1041, K1043, K972 and K973 (F6); K955 and K956, free
+    ends and band ends; K1002, a corner ball against other threads; K1003,
+    a V apex's hairline fan (master shows it too). K1001 is Levi's look in
+    motion there.
+  - S6: K985 (F6, with S3); K993, the census's blind spots. S6's brief
+    takes K1037's lessons (F6).
+  - S7: K966, the reveal, fog, plucks and the trail.
+  - S8: K1032, the old continuity tests go with the old code.
+- **Unchanged:** K871, K872 and K884 (the exporter), K876 (the image
+  probe), K877 (the FieldModel's residuals; it stays the look reference),
+  K957 (the free-end check) and K974 (probes) are about tools K1040 keeps
+  using. K943 is F3 D11's bit; Levi compares it behind a flag.
