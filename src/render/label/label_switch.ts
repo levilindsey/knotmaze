@@ -126,6 +126,8 @@ let S = new Float64Array(64);
 const PX = new Float64Array(9);
 const PY = new Float64Array(9);
 let NEAR = new Int32Array(16);
+let NB = new Int32Array(64);
+let DD = new Float64Array(64);
 
 /** The geometry part: the switch lines on the model's current geometry. */
 export function switchLinesFrom(T: SwitchTopo, m: FieldModel): SwitchLine[] {
@@ -150,23 +152,35 @@ export function switchLinesFrom(T: SwitchTopo, m: FieldModel): SwitchLine[] {
     return o;
   };
   for (const P of T.pairs) {
+    // K868 S3a8b: a chain over every crossing of the pair never has J's fill
+    // over it (fillOver is false everywhere), so no candidate flips and the
+    // pair has no line. Same lines, to the bit.
+    if (P.over.indexOf(0) < 0) continue;
     const p = polys[P.pi];
     const n = P.refs.length;
     if (S.length < n) S = new Float64Array(2 * n);
+    if (NB.length < n) {
+      NB = new Int32Array(2 * n);
+      DD = new Float64Array(2 * n);
+    }
     for (let i = 0; i < n; i++) {
       const r = P.refs[i];
       const x = X[r >> 1];
       S[i] = normS(p, r & 1 ? x.b.s : x.a.s);
     }
-    // The oracle's fillOrder: is cluster J's fill over the chain at s?
+    // The oracle's fillOrder: is cluster J's fill over the chain at s? It
+    // scans the current crossing's near list (below) in index order: every
+    // crossing within sigma of s, so the same nearest and the same ties.
+    let nb = 0;
     const fillOver = (s: number): boolean => {
       let best = Infinity;
       let res = false;
-      for (let i = 0; i < n; i++) {
-        const d = Math.abs(dS(p, s, S[i]));
+      for (let q = 0; q < nb; q++) {
+        const k = NB[q];
+        const d = Math.abs(dS(p, s, S[k]));
         if (d <= sigma && d < best) {
           best = d;
-          res = P.over[i] === 0;
+          res = P.over[k] === 0;
         }
       }
       return res;
@@ -221,10 +235,22 @@ export function switchLinesFrom(T: SwitchTopo, m: FieldModel): SwitchLine[] {
     // The candidates in the order the uncached search listed them.
     for (let i = 0; i < n; i++) {
       const si = S[i];
-      test(si - sigma);
-      test(si + sigma);
+      // K868 S3a8b: crossing i's near list, the crossings within 3 sigma of
+      // it in index order. Its candidates lie within sigma of si and test
+      // them at +-eps, so every crossing fillOver can pick is within
+      // 2 sigma + eps of si (the short-way distance is a metric).
+      nb = 0;
       for (let j = 0; j < n; j++) {
         const d = dS(p, si, S[j]);
+        if (Math.abs(d) <= 3 * sigma) {
+          NB[nb] = j;
+          DD[nb++] = d;
+        }
+      }
+      test(si - sigma);
+      test(si + sigma);
+      for (let q = 0; q < nb; q++) {
+        const d = DD[q];
         if (d > 0 && d <= 2 * sigma) test(si + d / 2);
       }
     }
