@@ -204,3 +204,8 @@ Binding on every later cursive stage:
   it without a break. A cusp entry ends with its tangent collinear with
   the stem's first tangent and stays on one side of the stem until it
   meets it.
+- **g and q take a's top-right corner** (Levi, 2026-10-28: "I think we
+  need g and q to have the same top right corner treatment as a"). Their
+  turnaround and the top of the right-side stroke become one point, a
+  corner with two tangents, as B1 made a's, and the thread runs around
+  them the same way. Stage B2, K1012 (`K1012_cursive_gq_corner.md`).
