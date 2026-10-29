@@ -231,3 +231,20 @@ Binding on every later cursive stage:
   meet g's top where v6.3 lands them, a little lower on its shoulder
   than before; J3c keeps that attach. o's line into g needs work: J3b
   takes it (K1030).
+- **o's joins come from b0; ot meets t's stem at a tangent; og stays as
+  v6.4 draws it** (Levi, 2026-10-28, on v6.4's sheets: "b0 is the
+  best", "Definitely tangent", "Yes. v64 of is better", the last about
+  og; K1034, K1030). Out of o, b0 (`work24/b0`'s bodies with
+  `work21/ports_k1009.json`'s port B, K1013's call) beats v6.4's
+  variant H (a sharp point at o's top, then a short run back along the
+  shoulder) and v6.3 (`out24/o_exits_v64.svg`). ot takes the tangent
+  entry, Ht: it dips, then climbs t's stem, instead of running level
+  into the crossbar (`out24/ot_v64.svg`). og keeps v6.4's attach at g's
+  left shoulder (50.5 u, `out24/cursive_v64_words.svg`). J3c starts
+  from these three on v6.5's bodies (B4 built v6.5 with variant H's
+  joins out of o, before these calls). Their known faults still get
+  fixed: b0's solves that stop at maxfev (ob, od, oe, of, ok, ol), oe's
+  two crossings, its dips and humps into m, n, v, x and z at the s = 10
+  bound, its sagging cusp entries into i, j, p, s, u, w and y, and Ht's
+  U, which clears t's stem by 0.0017 u. Each visible change goes to Levi
+  as a picture beside b0.
