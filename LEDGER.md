@@ -19,10 +19,13 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1001.
+Next free ID: K1002.
 
 ## Waiting on Levi
 
+- **K1001** · K992's corners, sharp or round: where two threads split, today's corner is a sharp point (at some splits
+  it jumps between shapes in motion); stage 1's b16 rounds it into a small arch that holds steady. Asked Levi
+  2026-10-28 with crops (`k992-corners` worktree, `.claude/probes/S3a/pops17/crops17.png`); stage 2 goes on meanwhile.
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
