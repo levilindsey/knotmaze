@@ -1,0 +1,12 @@
+def_flow: by mechanism {"scene chain samples":16,"switch corner gone":18,"switch corner radius":8,"switch corner new":15,"switch corner root":3,"switch corner fields":5,"scene junction arms":4}
+merge (S1's f1): 697 of 1615 pop px merged in either frame; 7 of 69 pops wholly merged; with the merged px excused 45 pops (788 px) remain
+ramp units at the pop px (max of the two frames): {"0":1601,"1":14}
+mechanism | place | pops | px | worst (seq from>to at px)
+scene chain samples | junction | 16 | 361 | def_flow 6>7 (11.122, 4.819) 88 px
+switch corner gone | junction | 18 | 308 | def_flow 33>34 (25.203, 30.913) 37 px
+switch corner new | junction | 15 | 267 | def_flow 10>11 (28.966, 1.229) 35 px
+switch corner fields | junction | 5 | 254 | def_flow 16>17 (11.102, 4.863) 102 px
+switch corner radius | junction | 8 | 233 | def_flow 17>18 (11.094, 4.822) 86 px
+switch corner root | junction | 3 | 164 | def_flow 4>5 (11.123, 4.811) 85 px
+scene junction arms | junction | 4 | 28 | def_flow 37>38 (27.295, 24.566) 13 px
+sweep: 1820 interpolated scenes built in 63 s (NC 8, LEV 30, jump > 0.02)

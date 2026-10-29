@@ -39,7 +39,7 @@ const r3 = (v: number) => Math.round(v * 1000) / 1000;
 // fade between the frames, or it is motion beyond label_pops' rule.
 const SWEEP = process.env.SWEEP !== "0";
 const NC = 8;
-const LEV = Number(process.env.LEV ?? 10);
+const LEV = Number(process.env.LEV ?? 30);
 const JUMP = 0.02;
 let nBuild = 0;
 let msBuild = 0;
@@ -171,7 +171,6 @@ function mech(a: Tr, b: Tr): string {
 function mechSwitch(a: Tr, b: Tr): string {
   if (a.merged !== b.merged) return "merge";
   if (a.np !== b.np) return `gate pieces ${KN[a.kind]}>${KN[b.kind]}`;
-  if (a.nc !== b.nc) return `gate corners ${KN[a.kind]}>${KN[b.kind]}`;
   if (a.nSurf !== b.nSurf) return `gate surfaces ${KN[a.kind]}>${KN[b.kind]}`;
   if ((a.fade ^ b.fade) & 4) return "tie";
   if (a.own !== b.own) return `handoff ${KN[a.kind]}`;
@@ -180,7 +179,48 @@ function mechSwitch(a: Tr, b: Tr): string {
   if (a.fade !== b.fade) return `fade ${bitNames(a.fade ^ b.fade)}`;
   return `jump ${KN[a.kind]}`;
 }
-const placeOf = (near: string) => (near === "junction" ? "junction" : near === "crossing60+" ? "crossing60+" : "elsewhere");
+/**
+ * The corner solves that jump across a bisected switch (2^-LEV of the pair, so a
+ * continuous field moves far less than 1e-6): among the corners whose fill can
+ * reach (x, y) on either side, a corner that exists on one side only, or whose
+ * fillet center q jumps at the same r (a different root of the equidistance
+ * solve), whose r jumps (the feasibility bisection), or whose ω jumps (the
+ * overlap gate). Empty when no corner jumps.
+ */
+const CF = ["Vx", "Vy", "qx", "qy", "r", "r1", "rV", "theta", "room", "omega", "ov", "dA", "dB", "tax", "tay", "tbx", "tby"];
+function cornerSwitch(f1: FormB, f2: FormB, x: number, y: number): { tag: string; detail: string } | null {
+  type C = Record<string, number>;
+  const near = (f: FormB) => {
+    const cs = (f as unknown as { corners: C[] }).corners;
+    const m = new Map<string, C>();
+    for (const i of f.cornersNear(x, y)) {
+      const c = cs[i];
+      if (Math.hypot(x - c.qx, y - c.qy) <= c.rV + f.W + 4 * f.aa) m.set(`${c.j}/${c.a}/${c.b}`, c);
+    }
+    return { m, all: new Map(cs.map((c) => [`${c.j}/${c.a}/${c.b}`, c])) };
+  };
+  const A = near(f1);
+  const B = near(f2);
+  const keys = new Set([...A.m.keys(), ...B.m.keys()]);
+  const found: { rank: number; tag: string; detail: string }[] = [];
+  for (const k of keys) {
+    const c = A.all.get(k);
+    const d = B.all.get(k);
+    if (!c || !d) {
+      found.push({ rank: 0, tag: c ? "gone" : "new", detail: `${k}` });
+      continue;
+    }
+    const jumped = CF.filter((f) => Math.abs(c[f] - d[f]) > 1e-6);
+    if (!jumped.length) continue;
+    const q = jumped.includes("qx") || jumped.includes("qy");
+    const tag = jumped.includes("r") ? "radius" : q ? "root" : jumped.includes("omega") ? "overlap" : `fields`;
+    found.push({ rank: tag === "radius" ? 1 : tag === "root" ? 2 : 3, tag, detail: `${k} ${jumped.map((f) => `${f} ${r3(c[f])}>${r3(d[f])}`).join(" ")}` });
+  }
+  if (!found.length) return null;
+  found.sort((p, q) => p.rank - q.rank);
+  return { tag: found[0].tag, detail: found.map((f) => `${f.tag} ${f.detail}`).join("; ") };
+}
+const placeOf =(near: string) => (near === "junction" ? "junction" : near === "crossing60+" ? "crossing60+" : "elsewhere");
 
 interface Pop {
   px: number;
@@ -194,6 +234,8 @@ interface Cell {
   worst: { seq: string; from: number; to: number; at: [number, number]; px: number; mix: Record<string, number>; sw?: Record<string, unknown>; crop?: string }[];
 }
 const table: Record<string, Record<string, Cell>> = {};
+/** Every pop with its mechanism and sweep, for corner_why.ts. */
+const allPops: unknown[] = [];
 const mergeAcc = { pops: 0, px: 0, mergedPx: 0, popsLeft: 0, pxLeft: 0, whollyMerged: 0 };
 const lines: string[] = [];
 const units: Record<string, number> = {};
@@ -365,8 +407,9 @@ for (const seq of seqs) {
         if (jump > JUMP) {
           const t1 = trace(at(lo), x, y);
           const t2 = trace(at(hi), x, y);
-          top = `switch ${mechSwitch(t1, t2)}`;
-          sw = { at: [r3(x), r3(y)], t: r3(lo), jump: r3(jump), total: r3(repD), a: t1, b: t2 };
+          const cs = cornerSwitch(at(lo), at(hi), x, y);
+          top = cs ? `switch corner ${cs.tag}` : `switch ${mechSwitch(t1, t2)}`;
+          sw = { at: [r3(x), r3(y)], t: lo, jump: r3(jump), total: r3(repD), a: t1, b: t2, corners: cs?.detail };
         } else {
           top = fm ? `smooth fade ${bitNames(fm)}` : "smooth motion";
           sw = { at: [r3(x), r3(y)], total: r3(repD), maxStep: r3(Math.abs(iv[js + 1] - iv[js])), fadeMid: fm };
@@ -378,6 +421,7 @@ for (const seq of seqs) {
       cell.pops++;
       cell.px += pop.px;
       cell.worst.push({ seq, from: pair.from, to: pair.to, at: pop.at, px: pop.px, mix, sw });
+      allPops.push({ seq, from: pair.from, to: pair.to, at: pop.at, px: pop.px, place, top, sw });
       cell.worst.sort((p, q) => q.px - p.px);
       if (cell.worst.length > Math.max(1, CROPS)) cell.worst.length = Math.max(1, CROPS);
     }
@@ -435,5 +479,5 @@ for (const [mk, row] of rows)
   }
 if (SWEEP) lines.push(`sweep: ${nBuild} interpolated scenes built in ${Math.round(msBuild / 1000)} s (NC ${NC}, LEV ${LEV}, jump > ${JUMP})`);
 writeFileSync(join(outDir, "mech.txt"), `${lines.join("\n")}\n`);
-writeFileSync(join(outDir, "mech.json"), JSON.stringify({ merge: mergeAcc, units, table, lines: lines.filter((l) => l.includes(": by mechanism")) }, null, 1));
+writeFileSync(join(outDir, "mech.json"), JSON.stringify({ merge: mergeAcc, units, table, all: allPops, lines:lines.filter((l) => l.includes(": by mechanism")) }, null, 1));
 for (const l of lines) console.log(l);

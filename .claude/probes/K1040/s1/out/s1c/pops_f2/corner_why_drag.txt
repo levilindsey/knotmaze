@@ -1,0 +1,42 @@
+root: 15 pops 485 px
+new V off arm: 9 pops 249 px
+gone V off arm: 6 pops 200 px
+radius r0: 2 pops 20 px
+radius bisect: 2 pops 14 px
+radius room-L: 1 pops 5 px
+
+def_drag 0>1 (29.084, 1.304) 9 px junction [switch corner gone] 25/79/80 gone: V off arm (dVa 0/1.95, dVb 0/1.216); present: theta 2.949 r 0.351 rV 0.386 omega 1
+def_drag 0>1 (11.059, 4.894) 97 px junction [switch corner root] 141/431/432 root: q moved 0.008; r 0.3 omega 1
+def_drag 0>1 (11.192, 5.732) 70 px junction [switch corner root] 141/431/432 root: q moved 0.008; r 0.3 omega 1
+def_drag 0>1 (11.691, 5.638) 25 px junction [switch corner root] 141/431/432 root: q moved 0.008; r 0.3 omega 1
+def_drag 0>1 (33.188, 7.319) 10 px junction [switch corner radius] 29/93/91 radius: r1 r0; r 0.337>0.324 omega 1
+def_drag 0>1 (25.207, 8.93) 34 px junction [switch corner new] 85/260/261 new: V off arm (dVa 0/0.681, dVb 0/1.164); present: theta 3.001 r 0.512 rV 0.616 omega 1
+def_drag 1>2 (29.101, 1.356) 4 px junction [switch corner new] 25/79/80 new: V off arm (dVa 0/1.956, dVb 0/1.222); present: theta 2.939 r 0.335 rV 0.355 omega 1
+def_drag 1>2 (11.064, 4.897) 99 px junction [switch corner root] 141/431/432 root: q moved 0.008; r 0.3 omega 1
+def_drag 1>2 (11.186, 5.733) 69 px junction [switch corner root] 141/431/432 root: q moved 0.008; r 0.3 omega 1
+def_drag 1>2 (11.691, 5.638) 25 px junction [switch corner root] 141/431/432 root: q moved 0.008; r 0.3 omega 1
+def_drag 1>2 (25.212, 8.922) 34 px junction [switch corner gone] 85/260/261 gone: V off arm (dVa 0/0.688, dVb 0/1.157); present: theta 2.992 r 0.505 rV 0.606 omega 1
+def_drag 3>4 (33.188, 7.319) 10 px junction [switch corner radius] 29/93/91 radius: r1 r0; r 0.324>0.337 omega 1
+def_drag 4>5 (25.212, 8.922) 34 px junction [switch corner new] 85/260/261 new: V off arm (dVa 0/0.688, dVb 0/1.157); present: theta 2.991 r 0.505 rV 0.606 omega 1
+def_drag 10>11 (25.193, 8.941) 38 px junction [switch corner gone] 85/260/261 gone: V off arm (dVa 0/0.685, dVb 0/1.158); present: theta 2.995 r 0.507 rV 0.609 omega 1
+def_drag 11>12 (25.198, 8.938) 39 px junction [switch corner new] 85/260/261 new: V off arm (dVa 0/0.687, dVb 0/1.156); present: theta 2.993 r 0.511 rV 0.616 omega 1
+def_drag 12>13 (29.079, 1.311) 8 px junction [switch corner new] 25/79/80 new: V off arm (dVa 0/1.95, dVb 0/1.217); present: theta 2.943 r 0.351 rV 0.386 omega 1
+def_drag 16>17 (25.191, 8.947) 37 px junction [switch corner gone] 85/260/261 gone: V off arm (dVa 0/0.684, dVb 0/1.158); present: theta 2.994 r 0.505 rV 0.605 omega 1
+def_drag 17>18 (25.185, 8.952) 39 px junction [switch corner new] 85/260/261 new: V off arm (dVa 0/0.686, dVb 0/1.156); present: theta 2.992 r 0.51 rV 0.613 omega 1
+def_drag 22>23 (25.186, 8.947) 39 px junction [switch corner gone] 85/260/261 gone: V off arm (dVa 0/0.682, dVb 0/1.158); present: theta 2.993 r 0.503 rV 0.601 omega 1
+def_drag 24>25 (25.19, 8.95) 41 px junction [switch corner new] 85/260/261 new: V off arm (dVa 0/0.684, dVb 0/1.164); present: theta 2.988 r 0.508 rV 0.61 omega 1
+def_drag 29>30 (29.088, 1.293) 10 px junction [switch corner new] 25/79/80 new: V off arm (dVa 0/1.951, dVb 0/1.217); present: theta 2.942 r 0.352 rV 0.389 omega 1
+muse_drag 1>2 (22.851, 17.435) 5 px junction [switch corner radius] 114/347/345 radius: bisect (r1 0.323); r 0.323>0.252 omega 1
+muse_drag 1>2 (22.952, 17.528) 9 px junction [switch corner radius] 114/347/345 radius: bisect (r1 0.323); r 0.323>0.252 omega 1
+muse_drag 10>11 (34.806, 6.578) 17 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 10>11 (34.762, 6.735) 8 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 10>11 (34.631, 7.033) 9 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 11>12 (34.806, 6.578) 17 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 11>12 (34.762, 6.735) 8 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 11>12 (34.631, 7.033) 9 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 13>14 (23.052, 10.686) 43 px crossing60+ [switch corner gone] 11/36/34 gone: V off arm (dVa 0/0.934, dVb 0/1.46); present: theta 3.056 r 0.444 rV 0.502 omega 1
+muse_drag 16>17 (34.825, 6.578) 15 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 16>17 (34.762, 6.735) 8 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 16>17 (34.631, 7.033) 9 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 24>25 (23.045, 10.679) 40 px crossing60+ [switch corner new] 11/36/34 new: V off arm (dVa 0/0.934, dVb 0/1.459); present: theta 3.065 r 0.454 rV 0.516 omega 1
+muse_drag 31>32 (23.48, 27.425) 5 px junction [switch corner radius] 162/491/492 radius: r1 room (arm L 0.636>0.729, 1.328>1.328); r 0.129>0.204 omega 1 | 163/496/494 radius: r1 room (arm L 1.328>1.328, 0.498>0.59); r 0.034>0.142 omega 1

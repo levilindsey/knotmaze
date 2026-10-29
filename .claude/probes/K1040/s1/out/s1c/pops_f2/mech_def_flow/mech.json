@@ -1,0 +1,3088 @@
+{
+ "merge": {
+  "pops": 69,
+  "px": 1615,
+  "mergedPx": 697,
+  "popsLeft": 45,
+  "pxLeft": 788,
+  "whollyMerged": 7
+ },
+ "units": {
+  "0": 1601,
+  "1": 14
+ },
+ "table": {
+  "scene chain samples": {
+   "junction": {
+    "pops": 16,
+    "px": 361,
+    "worst": [
+     {
+      "seq": "def_flow",
+      "from": 6,
+      "to": 7,
+      "at": [
+       11.122,
+       4.819
+      ],
+      "px": 88,
+      "mix": {
+       "winner foot>none": 33,
+       "merge": 37,
+       "winner foot>arc": 1,
+       "winner none>arc/top": 14,
+       "winner none>arc": 2,
+       "winner foot>none/top": 1
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_def_flow\\crops\\def_flow_scene-chain-samples_junction_6.png"
+     }
+    ]
+   }
+  },
+  "switch corner gone": {
+   "junction": {
+    "pops": 18,
+    "px": 308,
+    "worst": [
+     {
+      "seq": "def_flow",
+      "from": 33,
+      "to": 34,
+      "at": [
+       25.203,
+       30.913
+      ],
+      "px": 37,
+      "mix": {
+       "merge": 16,
+       "winner arc>none/top": 6,
+       "winner none>foot": 8,
+       "winner arc>foot": 1,
+       "winner arc>foot/top": 2,
+       "winner arc>none": 2,
+       "motion tB": 1,
+       "gate tB": 1
+      },
+      "sw": {
+       "at": [
+        25.095,
+        30.743
+       ],
+       "t": 0.7927403103094548,
+       "jump": 0.888,
+       "total": 1,
+       "a": {
+        "ink": 0.8878910635493604,
+        "top": 31,
+        "kind": 5,
+        "chain": -1,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 3
+       },
+       "b": {
+        "ink": 0,
+        "top": -1,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 0,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 2
+       },
+       "corners": "gone 42/130/131"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_def_flow\\crops\\def_flow_switch-corner-gone_junction_33.png"
+     }
+    ]
+   }
+  },
+  "switch corner radius": {
+   "junction": {
+    "pops": 8,
+    "px": 233,
+    "worst": [
+     {
+      "seq": "def_flow",
+      "from": 17,
+      "to": 18,
+      "at": [
+       11.094,
+       4.822
+      ],
+      "px": 86,
+      "mix": {
+       "winner foot>none": 41,
+       "merge": 21,
+       "winner foot>none/top": 4,
+       "winner none>arc/top": 16,
+       "winner foot>arc/top": 2,
+       "winner none>arc": 2
+      },
+      "sw": {
+       "at": [
+        11.084,
+        4.601
+       ],
+       "t": 0.5814609441440552,
+       "jump": 1,
+       "total": 1,
+       "a": {
+        "ink": 1,
+        "top": 58,
+        "kind": 1,
+        "chain": 56,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 2
+       },
+       "b": {
+        "ink": 0,
+        "top": 58,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 2
+       },
+       "corners": "radius 141/431/432 qx 11.185>11.162 qy 5.338>5.251 r 0.273>0.272 rV 0.714>0.624 dA 1.265>1.204 dB 1.265>1.093 tax 11.447>11.427 tay 5.263>5.19 tbx 10.926>10.893 tby 5.423>5.295"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_def_flow\\crops\\def_flow_switch-corner-radius_junction_17.png"
+     }
+    ]
+   }
+  },
+  "switch corner new": {
+   "junction": {
+    "pops": 15,
+    "px": 267,
+    "worst": [
+     {
+      "seq": "def_flow",
+      "from": 10,
+      "to": 11,
+      "at": [
+       28.966,
+       1.229
+      ],
+      "px": 35,
+      "mix": {
+       "merge": 20,
+       "winner foot>none": 12,
+       "winner foot>arc/top": 1,
+       "winner foot>arc": 1,
+       "winner none>arc/top": 1
+      },
+      "sw": {
+       "at": [
+        28.9,
+        1.11
+       ],
+       "t": 0.8729078135220334,
+       "jump": 1,
+       "total": 1,
+       "a": {
+        "ink": 0,
+        "top": -1,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 0,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 3
+       },
+       "b": {
+        "ink": 1,
+        "top": 18,
+        "kind": 5,
+        "chain": -1,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 4
+       },
+       "corners": "new 25/79/80"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_def_flow\\crops\\def_flow_switch-corner-new_junction_10.png"
+     }
+    ]
+   }
+  },
+  "switch corner root": {
+   "junction": {
+    "pops": 3,
+    "px": 164,
+    "worst": [
+     {
+      "seq": "def_flow",
+      "from": 4,
+      "to": 5,
+      "at": [
+       11.123,
+       4.811
+      ],
+      "px": 85,
+      "mix": {
+       "winner none>foot": 37,
+       "merge": 34,
+       "winner arc>foot": 1,
+       "winner arc>none/top": 10,
+       "winner arc>none": 3
+      },
+      "sw": {
+       "at": [
+        11.084,
+        4.601
+       ],
+       "t": 0.49101902334950864,
+       "jump": 1,
+       "total": 1,
+       "a": {
+        "ink": 0,
+        "top": 58,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 2
+       },
+       "b": {
+        "ink": 1,
+        "top": 58,
+        "kind": 1,
+        "chain": 56,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 2
+       },
+       "corners": "root 141/431/432 qx 11.209>11.214 qy 5.226>5.248 rV 0.61>0.632 dA 1.194>1.216 dB 1.093>1.151 tax 11.478>11.484 tay 5.157>5.179 tbx 10.937>10.947 tby 5.285>5.324"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_def_flow\\crops\\def_flow_switch-corner-root_junction_4.png"
+     }
+    ]
+   }
+  },
+  "switch corner fields": {
+   "junction": {
+    "pops": 5,
+    "px": 254,
+    "worst": [
+     {
+      "seq": "def_flow",
+      "from": 16,
+      "to": 17,
+      "at": [
+       11.102,
+       4.863
+      ],
+      "px": 102,
+      "mix": {
+       "winner none>foot": 45,
+       "merge": 30,
+       "winner arc>none/top": 20,
+       "winner arc>none": 1,
+       "winner arc>foot/top": 3,
+       "winner none>foot/top": 3
+      },
+      "sw": {
+       "at": [
+        11.084,
+        4.601
+       ],
+       "t": 0.9987384654814377,
+       "jump": 1,
+       "total": 1,
+       "a": {
+        "ink": 0,
+        "top": 58,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 2
+       },
+       "b": {
+        "ink": 1,
+        "top": 58,
+        "kind": 1,
+        "chain": 56,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 2
+       },
+       "corners": "fields 141/431/432 dB 1.17>1.199 tbx 10.911>10.915 tby 5.353>5.367"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_def_flow\\crops\\def_flow_switch-corner-fields_junction_16.png"
+     }
+    ]
+   }
+  },
+  "scene junction arms": {
+   "junction": {
+    "pops": 4,
+    "px": 28,
+    "worst": [
+     {
+      "seq": "def_flow",
+      "from": 37,
+      "to": 38,
+      "at": [
+       27.295,
+       24.566
+      ],
+      "px": 13,
+      "mix": {
+       "winner none>arc": 3,
+       "merge": 7,
+       "winner arc>none": 1,
+       "gate arc": 2
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_def_flow\\crops\\def_flow_scene-junction-arms_junction_37.png"
+     }
+    ]
+   }
+  }
+ },
+ "all": [
+  {
+   "seq": "def_flow",
+   "from": 0,
+   "to": 1,
+   "at": [
+    31.026,
+    4.803
+   ],
+   "px": 10,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 0,
+   "to": 1,
+   "at": [
+    16.939,
+    5.192
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 1,
+   "to": 2,
+   "at": [
+    5.022,
+    30.891
+   ],
+   "px": 23,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     5.086,
+     30.878
+    ],
+    "t": 0.6888152322499081,
+    "jump": 0.999,
+    "total": 1,
+    "a": {
+     "ink": 0.0008873991002966708,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 1,
+     "top": 11,
+     "kind": 1,
+     "chain": 2,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "gone 17/55/53"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 2,
+   "to": 3,
+   "at": [
+    25.248,
+    8.858
+   ],
+   "px": 21,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     25.274,
+     8.809
+    ],
+    "t": 0.6507884367601946,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 56,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 1,
+     "top": 56,
+     "kind": 1,
+     "chain": 31,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "gone 85/260/261"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 3,
+   "to": 4,
+   "at": [
+    31.034,
+    4.805
+   ],
+   "px": 9,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     31.004,
+     4.781
+    ],
+    "t": 0.7344559979392216,
+    "jump": 0.965,
+    "total": 0.999,
+    "a": {
+     "ink": 0.9647857732143857,
+     "top": 43,
+     "kind": 1,
+     "chain": 61,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": 43,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "radius 66/204/202 qx 31.201>31.205 qy 4.978>4.988 r 0.151>0.151 rV 0.177>0.183 dB 0.279>1.173 tax 31.343>31.345 tay 4.926>4.933 tbx 31.213>31.063 tby 4.828>5.04"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 3,
+   "to": 4,
+   "at": [
+    25.231,
+    8.888
+   ],
+   "px": 29,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     25.274,
+     8.809
+    ],
+    "t": 0.1399507214082405,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 56,
+     "kind": 1,
+     "chain": 31,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": 56,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "new 85/260/261"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 4,
+   "to": 5,
+   "at": [
+    11.123,
+    4.811
+   ],
+   "px": 85,
+   "place": "junction",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     11.084,
+     4.601
+    ],
+    "t": 0.49101902334950864,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 58,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 58,
+     "kind": 1,
+     "chain": 56,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "root 141/431/432 qx 11.209>11.214 qy 5.226>5.248 rV 0.61>0.632 dA 1.194>1.216 dB 1.093>1.151 tax 11.478>11.484 tay 5.157>5.179 tbx 10.937>10.947 tby 5.285>5.324"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 4,
+   "to": 5,
+   "at": [
+    11.18,
+    5.62
+   ],
+   "px": 59,
+   "place": "junction",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     11.487,
+     5.407
+    ],
+    "t": 0.49101902334950864,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 1,
+     "top": 58,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "root 141/431/432 qx 11.209>11.214 qy 5.226>5.248 rV 0.61>0.632 dA 1.194>1.216 dB 1.093>1.151 tax 11.478>11.484 tay 5.157>5.179 tbx 10.937>10.947 tby 5.285>5.324"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 4,
+   "to": 5,
+   "at": [
+    11.657,
+    5.533
+   ],
+   "px": 20,
+   "place": "junction",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     11.666,
+     5.497
+    ],
+    "t": 0.49101902334950864,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 58,
+     "kind": 1,
+     "chain": 56,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0,
+     "top": 58,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "root 141/431/432 qx 11.209>11.214 qy 5.226>5.248 rV 0.61>0.632 dA 1.194>1.216 dB 1.093>1.151 tax 11.478>11.484 tay 5.157>5.179 tbx 10.937>10.947 tby 5.285>5.324"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 4,
+   "to": 5,
+   "at": [
+    5.075,
+    30.9
+   ],
+   "px": 8,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     5.086,
+     30.922
+    ],
+    "t": 0.24955812096595764,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 11,
+     "kind": 1,
+     "chain": 2,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0,
+     "top": 11,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "new 17/55/53"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 6,
+   "to": 7,
+   "at": [
+    11.122,
+    4.819
+   ],
+   "px": 88,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 6,
+   "to": 7,
+   "at": [
+    11.3,
+    5.518
+   ],
+   "px": 30,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 6,
+   "to": 7,
+   "at": [
+    11.653,
+    5.524
+   ],
+   "px": 21,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 6,
+   "to": 7,
+   "at": [
+    11.052,
+    5.751
+   ],
+   "px": 25,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 6,
+   "to": 7,
+   "at": [
+    31.284,
+    29.344
+   ],
+   "px": 8,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 7,
+   "to": 8,
+   "at": [
+    31.054,
+    4.792
+   ],
+   "px": 8,
+   "place": "junction",
+   "top": "switch corner fields",
+   "sw": {
+    "at": [
+     31.049,
+     4.781
+    ],
+    "t": 0.49642918223980814,
+    "jump": 0.997,
+    "total": 1,
+    "a": {
+     "ink": 0.00257997783676589,
+     "top": 43,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 43,
+     "kind": 1,
+     "chain": 61,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "fields 66/204/202 dB 1.173>0.275 tbx 31.084>31.244 tby 5.043>4.832"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 7,
+   "to": 8,
+   "at": [
+    16.982,
+    5.195
+   ],
+   "px": 16,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     17.038,
+     5.183
+    ],
+    "t": 0.0613166430266574,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 1,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "gone 5/17/18"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 7,
+   "to": 8,
+   "at": [
+    25.237,
+    8.858
+   ],
+   "px": 12,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     25.274,
+     8.854
+    ],
+    "t": 0.6097030633827671,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 56,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 56,
+     "kind": 1,
+     "chain": 31,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "gone 85/260/261"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 7,
+   "to": 8,
+   "at": [
+    25.305,
+    8.961
+   ],
+   "px": 10,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     25.319,
+     8.944
+    ],
+    "t": 0.6097030633827671,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 56,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "gone 85/260/261"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 8,
+   "to": 9,
+   "at": [
+    25.24,
+    8.935
+   ],
+   "px": 33,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 9,
+   "to": 10,
+   "at": [
+    16.982,
+    5.202
+   ],
+   "px": 17,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     17.038,
+     5.183
+    ],
+    "t": 0.35290481336414814,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 1,
+     "top": 1,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "new 5/17/18"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 9,
+   "to": 10,
+   "at": [
+    5.086,
+    30.884
+   ],
+   "px": 15,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     5.131,
+     30.878
+    ],
+    "t": 0.07019925012718886,
+    "jump": 0.991,
+    "total": 0.989,
+    "a": {
+     "ink": 0.009199379078860703,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 11,
+     "kind": 1,
+     "chain": 2,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "gone 17/55/53"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 10,
+   "to": 11,
+   "at": [
+    28.966,
+    1.229
+   ],
+   "px": 35,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     28.9,
+     1.11
+    ],
+    "t": 0.8729078135220334,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 1,
+     "top": 18,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 4
+    },
+    "corners": "new 25/79/80"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 10,
+   "to": 11,
+   "at": [
+    3.429,
+    10.465
+   ],
+   "px": 4,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     3.429,
+     10.51
+    ],
+    "t": 0.22997292259242386,
+    "jump": 0.768,
+    "total": 0.806,
+    "a": {
+     "ink": 0.7675535797254767,
+     "top": 111,
+     "kind": 1,
+     "chain": 70,
+     "own": false,
+     "w": 0.9670802433394227,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0,
+     "top": 111,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 4
+    },
+    "corners": "new 159/484/485"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 10,
+   "to": 11,
+   "at": [
+    5.101,
+    30.888
+   ],
+   "px": 9,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     5.131,
+     30.878
+    ],
+    "t": 0.007633056258782744,
+    "jump": 0.952,
+    "total": 0.942,
+    "a": {
+     "ink": 1,
+     "top": 11,
+     "kind": 1,
+     "chain": 2,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0.048241396584608465,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "new 17/55/53"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 12,
+   "to": 13,
+   "at": [
+    5.093,
+    30.87
+   ],
+   "px": 12,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     5.131,
+     30.922
+    ],
+    "t": 0.6325225871987641,
+    "jump": 0.983,
+    "total": 0.99,
+    "a": {
+     "ink": 0,
+     "top": 11,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0.982942451361437,
+     "top": 11,
+     "kind": 1,
+     "chain": 22,
+     "own": false,
+     "w": 0.9958325023088601,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "gone 17/55/53"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 14,
+   "to": 15,
+   "at": [
+    25.276,
+    8.957
+   ],
+   "px": 30,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     25.274,
+     8.899
+    ],
+    "t": 0.7266722157364711,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 56,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 56,
+     "kind": 1,
+     "chain": 31,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "gone 85/260/261"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 14,
+   "to": 15,
+   "at": [
+    5.099,
+    30.887
+   ],
+   "px": 10,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     5.131,
+     30.922
+    ],
+    "t": 0.05098639440257102,
+    "jump": 0.993,
+    "total": 0.993,
+    "a": {
+     "ink": 0.9930510728150891,
+     "top": 11,
+     "kind": 1,
+     "chain": 22,
+     "own": false,
+     "w": 0.9999850409933833,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0,
+     "top": 11,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "new 17/55/53"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 15,
+   "to": 16,
+   "at": [
+    28.986,
+    1.221
+   ],
+   "px": 25,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     28.855,
+     1.155
+    ],
+    "t": 0.7978288517333567,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 18,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 4
+    },
+    "b": {
+     "ink": 1,
+     "top": 18,
+     "kind": 1,
+     "chain": 61,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "gone 25/79/80"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 15,
+   "to": 16,
+   "at": [
+    16.983,
+    5.201
+   ],
+   "px": 18,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     16.993,
+     5.139
+    ],
+    "t": 0.08019029616843909,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 1,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "gone 5/17/18"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 16,
+   "to": 17,
+   "at": [
+    11.102,
+    4.863
+   ],
+   "px": 102,
+   "place": "junction",
+   "top": "switch corner fields",
+   "sw": {
+    "at": [
+     11.084,
+     4.601
+    ],
+    "t": 0.9987384654814377,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 58,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 58,
+     "kind": 1,
+     "chain": 56,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "fields 141/431/432 dB 1.17>1.199 tbx 10.911>10.915 tby 5.353>5.367"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 16,
+   "to": 17,
+   "at": [
+    11.174,
+    5.65
+   ],
+   "px": 60,
+   "place": "junction",
+   "top": "switch corner fields",
+   "sw": {
+    "at": [
+     11.353,
+     5.586
+    ],
+    "t": 0.9987384654814377,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 0,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 58,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 0,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "fields 141/431/432 dB 1.17>1.199 tbx 10.911>10.915 tby 5.353>5.367"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 16,
+   "to": 17,
+   "at": [
+    11.642,
+    5.586
+   ],
+   "px": 24,
+   "place": "junction",
+   "top": "switch corner fields",
+   "sw": {
+    "at": [
+     11.711,
+     5.765
+    ],
+    "t": 0.9987384654814377,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 58,
+     "kind": 1,
+     "chain": 56,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0,
+     "top": 58,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "fields 141/431/432 dB 1.17>1.199 tbx 10.911>10.915 tby 5.353>5.367"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 16,
+   "to": 17,
+   "at": [
+    5.108,
+    30.855
+   ],
+   "px": 4,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     5.086,
+     30.833
+    ],
+    "t": 0.194888353231363,
+    "jump": 0.746,
+    "total": 0.755,
+    "a": {
+     "ink": 1,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0.25380112035069824,
+     "top": -1,
+     "kind": 1,
+     "chain": 2,
+     "own": false,
+     "w": 1,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "gone 17/55/53"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 17,
+   "to": 18,
+   "at": [
+    11.094,
+    4.822
+   ],
+   "px": 86,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     11.084,
+     4.601
+    ],
+    "t": 0.5814609441440552,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 58,
+     "kind": 1,
+     "chain": 56,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": 58,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "radius 141/431/432 qx 11.185>11.162 qy 5.338>5.251 r 0.273>0.272 rV 0.714>0.624 dA 1.265>1.204 dB 1.265>1.093 tax 11.447>11.427 tay 5.263>5.19 tbx 10.926>10.893 tby 5.423>5.295"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 17,
+   "to": 18,
+   "at": [
+    16.983,
+    5.201
+   ],
+   "px": 18,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     16.993,
+     5.139
+    ],
+    "t": 0.6363624831428751,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 1,
+     "top": 1,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "new 5/17/18"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 17,
+   "to": 18,
+   "at": [
+    11.127,
+    5.677
+   ],
+   "px": 60,
+   "place": "junction",
+   "top": "switch corner fields",
+   "sw": {
+    "at": [
+     11.442,
+     5.452
+    ],
+    "t": 0.7057337638689205,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 1,
+     "top": 58,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "fields 141/431/432 dB 1.17>1.199 tbx 10.904>10.908 tby 5.353>5.368"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 17,
+   "to": 18,
+   "at": [
+    11.623,
+    5.6
+   ],
+   "px": 23,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     11.711,
+     5.765
+    ],
+    "t": 0.5814609441440552,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 58,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 1,
+     "top": 58,
+     "kind": 1,
+     "chain": 56,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "radius 141/431/432 qx 11.185>11.162 qy 5.338>5.251 r 0.273>0.272 rV 0.714>0.624 dA 1.265>1.204 dB 1.265>1.093 tax 11.447>11.427 tay 5.263>5.19 tbx 10.926>10.893 tby 5.423>5.295"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 17,
+   "to": 18,
+   "at": [
+    25.273,
+    8.97
+   ],
+   "px": 34,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     25.274,
+     8.899
+    ],
+    "t": 0.03535141795873642,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 56,
+     "kind": 1,
+     "chain": 31,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0,
+     "top": 56,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "new 85/260/261"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 17,
+   "to": 18,
+   "at": [
+    35.1,
+    11.322
+   ],
+   "px": 8,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     35.122,
+     11.316
+    ],
+    "t": 0.45346685650292784,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 92,
+     "kind": 1,
+     "chain": 49,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": 92,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "radius 133/407/408 qx 34.43>34.42 qy 11.136>11.151 r 0.231>0.233 rV 0.668>0.685 dA 1.24>1.257 dB 1.16>1.163 tax 34.638>34.631 tay 11.236>11.251 tbx 34.255>34.249 tby 10.985>10.993"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 17,
+   "to": 18,
+   "at": [
+    5.09,
+    30.896
+   ],
+   "px": 10,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     5.131,
+     30.922
+    ],
+    "t": 0.14234376733656973,
+    "jump": 0.989,
+    "total": 0.99,
+    "a": {
+     "ink": 0.9888739117418713,
+     "top": 11,
+     "kind": 1,
+     "chain": 2,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0,
+     "top": 11,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "new 17/55/53"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 18,
+   "to": 19,
+   "at": [
+    29.028,
+    1.21
+   ],
+   "px": 31,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     28.855,
+     1.11
+    ],
+    "t": 0.8762242625234649,
+    "jump": 0.877,
+    "total": 1,
+    "a": {
+     "ink": 0.8768755137380868,
+     "top": 18,
+     "kind": 1,
+     "chain": 3,
+     "own": false,
+     "w": 0.9653565072534813,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0,
+     "top": 18,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 4
+    },
+    "corners": "new 25/79/80"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 20,
+   "to": 21,
+   "at": [
+    3.452,
+    10.51
+   ],
+   "px": 4,
+   "place": "junction",
+   "top": "scene junction arms"
+  },
+  {
+   "seq": "def_flow",
+   "from": 21,
+   "to": 22,
+   "at": [
+    26.07,
+    1.166
+   ],
+   "px": 44,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     26.125,
+     1.02
+    ],
+    "t": 0.6196415817830712,
+    "jump": 0.153,
+    "total": 1,
+    "a": {
+     "ink": 0.633155691376982,
+     "top": 17,
+     "kind": 1,
+     "chain": 60,
+     "own": false,
+     "w": 0.633155691376982,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 8,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0.4798210936335715,
+     "top": 17,
+     "kind": 1,
+     "chain": 60,
+     "own": false,
+     "w": 0.4798210936335715,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 8,
+     "nc": 2
+    },
+    "corners": "radius 24/76/77 qx 26.469>26.468 qy 1.234>1.234 r 0.264>0.264 rV 0.482>0.481 omega 0.367>0.52 ov 0.008>0.006 dA 0.829>0.829 dB 0.848>0.847 tax 26.421>26.42 tay 0.974>0.974 tbx 26.333>26.332 tby 1.46>1.46"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 22,
+   "to": 23,
+   "at": [
+    26.077,
+    1.15
+   ],
+   "px": 48,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 22,
+   "to": 23,
+   "at": [
+    29.124,
+    1.296
+   ],
+   "px": 6,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 23,
+   "to": 24,
+   "at": [
+    26.065,
+    1.143
+   ],
+   "px": 45,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     26.214,
+     1.065
+    ],
+    "t": 0.38757202320266515,
+    "jump": 0.292,
+    "total": 1,
+    "a": {
+     "ink": 0.17561910797099925,
+     "top": 17,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 0.17561910797099925,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 8,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0.46760800481447623,
+     "top": 17,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 0.46760800481447623,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 8,
+     "nc": 2
+    },
+    "corners": "radius 24/76/77 qx 26.466>26.464 qy 1.229>1.229 r 0.269>0.268 rV 0.491>0.489 omega 0.176>0.468 ov 0.01>0.007 dA 0.844>0.842 dB 0.864>0.862 tax 26.422>26.42 tay 0.964>0.964 tbx 26.33>26.328 tby 1.462>1.461"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 23,
+   "to": 24,
+   "at": [
+    29.084,
+    1.198
+   ],
+   "px": 25,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     29.124,
+     1.289
+    ],
+    "t": 0.46146416279952973,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 18,
+     "kind": 1,
+     "chain": 61,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0,
+     "top": 18,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "new 25/79/80"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 23,
+   "to": 24,
+   "at": [
+    15.366,
+    31.42
+   ],
+   "px": 9,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     15.381,
+     31.415
+    ],
+    "t": 0.5608793656574562,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 13,
+     "kind": 1,
+     "chain": 47,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0,
+     "top": 13,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "radius 19/59/60 qx 15.31>15.313 qy 30.698>30.697 r 0.247>0.247 rV 0.688>0.691 dA 1.128>1.131 dB 1.257>1.261 tax 15.208>15.211 tay 30.473>30.472 tbx 15.341>15.344 tby 30.942>30.942"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 24,
+   "to": 25,
+   "at": [
+    5.111,
+    30.858
+   ],
+   "px": 9,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     5.131,
+     30.878
+    ],
+    "t": 0.9298131407704204,
+    "jump": 0.997,
+    "total": 1,
+    "a": {
+     "ink": 0.9972763737846945,
+     "top": 11,
+     "kind": 1,
+     "chain": 2,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0,
+     "top": 11,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "new 17/55/53"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 24,
+   "to": 25,
+   "at": [
+    15.366,
+    31.42
+   ],
+   "px": 9,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     15.381,
+     31.415
+    ],
+    "t": 0.2898316375212744,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 13,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 1,
+     "top": 13,
+     "kind": 1,
+     "chain": 47,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "radius 19/59/60 qx 15.32>15.297 qy 30.691>30.697 r 0.25>0.247 rV 0.705>0.681 dA 1.141>1.14 dB 1.295>1.251 tax 15.215>15.204 tay 30.464>30.469 tbx 15.363>15.329 tby 30.937>30.942"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 25,
+   "to": 26,
+   "at": [
+    15.344,
+    31.419
+   ],
+   "px": 12,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 27,
+   "to": 28,
+   "at": [
+    29.148,
+    1.212
+   ],
+   "px": 11,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     29.168,
+     1.289
+    ],
+    "t": 0.6331476147752255,
+    "jump": 0.955,
+    "total": 0.992,
+    "a": {
+     "ink": 0.9545125768854138,
+     "top": 18,
+     "kind": 1,
+     "chain": 61,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0,
+     "top": 18,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "new 25/79/80"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 27,
+   "to": 28,
+   "at": [
+    3.454,
+    10.53
+   ],
+   "px": 9,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     3.474,
+     10.465
+    ],
+    "t": 0.3518655211664736,
+    "jump": 0.979,
+    "total": 1,
+    "a": {
+     "ink": 0.989011304122968,
+     "top": 111,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 4
+    },
+    "b": {
+     "ink": 0.009740152149734144,
+     "top": -1,
+     "kind": 1,
+     "chain": 62,
+     "own": false,
+     "w": 1,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "gone 159/484/485"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 27,
+   "to": 28,
+   "at": [
+    5.086,
+    30.839
+   ],
+   "px": 7,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     5.131,
+     30.833
+    ],
+    "t": 0.8331054359441623,
+    "jump": 1,
+    "total": 0.951,
+    "a": {
+     "ink": 0,
+     "top": 11,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 11,
+     "kind": 1,
+     "chain": 2,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "gone 17/55/53"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 29,
+   "to": 30,
+   "at": [
+    5.086,
+    30.826
+   ],
+   "px": 13,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 31,
+   "to": 32,
+   "at": [
+    5.077,
+    30.833
+   ],
+   "px": 16,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     5.041,
+     30.788
+    ],
+    "t": 0.64159754908178,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "gone 17/55/53"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 32,
+   "to": 33,
+   "at": [
+    10.614,
+    6.728
+   ],
+   "px": 4,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 32,
+   "to": 33,
+   "at": [
+    5.077,
+    30.833
+   ],
+   "px": 16,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 33,
+   "to": 34,
+   "at": [
+    25.065,
+    30.349
+   ],
+   "px": 21,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     25.095,
+     30.296
+    ],
+    "t": 0.7927403103094548,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 31,
+     "kind": 2,
+     "chain": 75,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0,
+     "top": 31,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "gone 42/130/131"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 33,
+   "to": 34,
+   "at": [
+    25.203,
+    30.913
+   ],
+   "px": 37,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     25.095,
+     30.743
+    ],
+    "t": 0.7927403103094548,
+    "jump": 0.888,
+    "total": 1,
+    "a": {
+     "ink": 0.8878910635493604,
+     "top": 31,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "gone 42/130/131"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 34,
+   "to": 35,
+   "at": [
+    25.04,
+    30.372
+   ],
+   "px": 17,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 34,
+   "to": 35,
+   "at": [
+    25.168,
+    30.912
+   ],
+   "px": 25,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "def_flow",
+   "from": 36,
+   "to": 37,
+   "at": [
+    3.407,
+    10.604
+   ],
+   "px": 12,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     3.385,
+     10.645
+    ],
+    "t": 0.9142763125710189,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 111,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 4
+    },
+    "b": {
+     "ink": 0.9999219702507245,
+     "top": 111,
+     "kind": 1,
+     "chain": 62,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "gone 159/484/485"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 37,
+   "to": 38,
+   "at": [
+    3.377,
+    10.622
+   ],
+   "px": 6,
+   "place": "junction",
+   "top": "scene junction arms"
+  },
+  {
+   "seq": "def_flow",
+   "from": 37,
+   "to": 38,
+   "at": [
+    16.733,
+    13.76
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "scene junction arms"
+  },
+  {
+   "seq": "def_flow",
+   "from": 37,
+   "to": 38,
+   "at": [
+    27.295,
+    24.566
+   ],
+   "px": 13,
+   "place": "junction",
+   "top": "scene junction arms"
+  },
+  {
+   "seq": "def_flow",
+   "from": 38,
+   "to": 39,
+   "at": [
+    5.07,
+    30.815
+   ],
+   "px": 20,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     5.041,
+     30.788
+    ],
+    "t": 0.94340836990159,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "gone 17/55/53"
+   }
+  },
+  {
+   "seq": "def_flow",
+   "from": 39,
+   "to": 40,
+   "at": [
+    5.073,
+    30.822
+   ],
+   "px": 17,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     5.041,
+     30.788
+    ],
+    "t": 0.06259037530981004,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 1,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "new 17/55/53"
+   }
+  }
+ ],
+ "lines": [
+  "def_flow: by mechanism {\"scene chain samples\":16,\"switch corner gone\":18,\"switch corner radius\":8,\"switch corner new\":15,\"switch corner root\":3,\"switch corner fields\":5,\"scene junction arms\":4}"
+ ]
+}
