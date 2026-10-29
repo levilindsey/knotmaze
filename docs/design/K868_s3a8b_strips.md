@@ -234,3 +234,32 @@ p95 until both stages are done.
   - a `Ledger items` list: follow-ups and residuals. A question for Levi
     only about what shows on screen, in plain words;
   - K868's current handle fields: branch, last commit, evidence and next.
+
+## Findings
+
+- **N1 · The profile, before (2026-10-28 12:08, under the lock).** Node
+  23.7, every distinct frame of the four sequences (164), each call the
+  first of its kind after the frame's FieldModel, tables and pieces, in
+  the app's order; `.claude/probes/S3a/prof20.ts` (parts from laps in
+  copies `inst20.mjs` generates; the instrumented and real outputs equal
+  on 164 of 164 frames). Results: `pops20/prof20_before.md`. p50 / p95 ms,
+  uninstrumented totals:
+
+  | | def_drag | def_flow | muse_drag | muse_flow |
+  |---|---|---|---|---|
+  | switchLinesFrom | 12.5 / 18.7 | 13.0 / 18.9 | 5.4 / 11.0 | 4.1 / 8.7 |
+  | switchTopo (key changed) | 0 / 3.0 | 1.9 / 4.6 | 0 / 2.2 | 1.1 / 2.0 |
+  | buildBandStrips | 25.9 / 46.5 | 26.1 / 31.0 | 17.7 / 33.2 | 16.0 / 21.5 |
+
+  Per part (instrumented, so the laps' own cost sits in the switch's
+  candidates and flip test): the switch lines are the flip test (9.2 /
+  10.9 def_drag; 12,600 candidates per frame on def, 7,800 on muse, each
+  scanning every crossing of its pair twice), the reach test (2.4 /
+  6.1), the candidates' loop (3.4 / 4.1) and the cluster (1.4 / 2.2); the
+  push is nothing (2 to 42 lines). The strips are the tube edges and
+  their cuts (17.8 / 34.6 def_drag), the output's Float32Array (5.1 /
+  5.4: 1.0 M numbers pushed through a JS array), the caps (1.6 / 2.7),
+  the normals and bounds (0.8 / 2.4) and the fill arcs (0.5 / 0.9); the
+  switch strips and the setup are nothing. 56,600 strips on def, 52,500
+  on muse. The brief's ~6 ms for the switch lines is half of def's 12.5 here;
+  where that figure came from (warm calls, the browser) is not checked.

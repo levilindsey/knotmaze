@@ -4,9 +4,13 @@
 // STRIPS (pure CPU, buildBandStrips): one instanced quad per outline piece,
 // W device pixels wide on the piece's inner side, with the outward normal n
 // at both ends:
-//   tube edges   each chain segment's two edges at +-h, cut where the
-//                cluster changes (the label pieces' bounds), the normals
-//                averaged at the vertices so a chain's strips join;
+//   tube edges   each chain segment's two edges at +-h, the normals
+//                averaged at the vertices so a chain's strips join, cut
+//                where the cluster changes (the label pieces' bounds). A
+//                cut piece is exactly its part of the segment's uncut quad
+//                (S3a8b call 2): its outline point and normal at a cut are
+//                the segment's ends' interpolated, so the outline runs
+//                straight across the cut;
 //   caps         an open chain's two end half circles (radius h);
 //   fill arcs    each drawn corner's arc (radius r about q, tA to tB, the
 //                label's fills), normals toward q.
@@ -156,8 +160,9 @@ export function buildBandStrips(m: FieldModel, lp: LabelPieces, lines?: readonly
         const ay = p.y[k] + (p.y[b] - p.y[k]) * t0;
         const bx = p.x[k] + (p.x[b] - p.x[k]) * t1;
         const by = p.y[k] + (p.y[b] - p.y[k]) * t1;
-        const na = i === 0 ? nA : [nsx[k], nsy[k]];
-        const nb = i + 2 === cuts.length ? nB : [nsx[k], nsy[k]];
+        // S3a8b call 2: at a cut, the vertex normals interpolated at its t.
+        const na = i === 0 ? nA : [nA[0] + (nB[0] - nA[0]) * t0, nA[1] + (nB[1] - nA[1]) * t0];
+        const nb = i + 2 === cuts.length ? nB : [nA[0] + (nB[0] - nA[0]) * t1, nA[1] + (nB[1] - nA[1]) * t1];
         const cl = m.clusterAt(ci, (u0 + u1) / 2);
         const rk = rank.get(keyOf(ci, cl)) ?? 0;
         const da = dep(m.depthAt(ci, u0), rk, u0);
