@@ -69,12 +69,7 @@ function expectContinuous(r: ReturnType<typeof sweep>, what: string): void {
     expect(j.fine / r.h, `${what}: arm ${j.arm} after u = ${j.u.toFixed(4)} (${(j.coarse / r.h).toFixed(3)}h a step)`).toBeLessThanOrEqual(0.01);
 }
 
-// Until the caps land (K1000 step 4) master's cut loop fails every sweep, so
-// the suite runs only on a probe oracle (ORACLE19, .claude/probes/S3a/
-// vitest19.config.ts) or with CAP19=1; landing the caps removes this gate.
-const run = process.env.ORACLE19 !== undefined || process.env.CAP19 === "1";
-
-describe.runIf(run)("K1000: the arm caps are continuous in the geometry", () => {
+describe("K1000: the arm caps are continuous in the geometry", () => {
   it("(A) the side at a tie: j1's END leans from 110° to 130°", { timeout: 120_000 }, () => {
     const r = sweep((phi) => pairCrossScene({ phi }), 110, 130, 40);
     expectContinuous(r, "lean");

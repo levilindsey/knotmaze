@@ -260,6 +260,12 @@ export interface Corner {
   armIdxB?: number;
   /** K883: the radius the rule asked for, before the arm-span fit. */
   rRule?: number;
+  /** K992: the δ at which the ball's branch folded (r stopped there). */
+  fold?: number;
+  /** K992 s2: the farthest arc length from the root each tangent foot
+   * reached on the march (the cap gate reads it). */
+  footMaxA?: number;
+  footMaxB?: number;
   /** K883: why the fit shrank the round (absent when it did not). */
   fit?: string;
   /** K883: no V (the arms stay closer than 2h); noVA/noVB are the arc
@@ -892,36 +898,47 @@ export class FieldModel {
       geoCaps(this, this.params.geoCut === true).forEach((l, ji) => l.forEach((c, ai) => setCap(ji, ai, c.len, c.why)));
       ext = this.geoExtents(new GeoGroups(this, this.armCaps), ext0);
     }
+    // K1000: a pass's tangent, interpolated along its segment between the
+    // vertex tangents (each the mean of its two segments' directions), so θ
+    // moves continuously as a crossing slides over a vertex.
+    const tanAt = (p: Poly, s: number): { tx: number; ty: number } => {
+      const a = pointAt(p, s);
+      const dirOf = (k: number): [number, number] => {
+        const b = segB(p, k);
+        const l = p.segLen[k] || 1;
+        return [(p.x[b] - p.x[k]) / l, (p.y[b] - p.y[k]) / l];
+      };
+      const vtx = (i: number): [number, number] => {
+        const kin = i > 0 ? i - 1 : p.closed ? p.nseg - 1 : -1;
+        const kout = i < p.nseg ? i : p.closed ? 0 : -1;
+        let x = 0;
+        let y = 0;
+        for (const k of [kin, kout]) {
+          if (k < 0) continue;
+          const [dx, dy] = dirOf(k);
+          x += dx;
+          y += dy;
+        }
+        const l = Math.sqrt(x * x + y * y);
+        return l > 1e-12 ? [x / l, y / l] : dirOf(kout >= 0 ? kout : kin);
+      };
+      const [x0, y0] = vtx(a.k);
+      const [x1, y1] = vtx(segB(p, a.k));
+      const x = x0 + (x1 - x0) * a.t;
+      const y = y0 + (y1 - y0) * a.t;
+      const l = Math.sqrt(x * x + y * y);
+      return l > 1e-12 ? { tx: x / l, ty: y / l } : { tx: a.tx, ty: a.ty };
+    };
     // Crossing passes per chain, with the acute crossing angle.
     const passes = scene.crossings.map((cx) => {
       const ia = this.idxOf.get(cx.a.chain);
       const ib = this.idxOf.get(cx.b.chain);
       if (ia === undefined || ib === undefined) return null;
-      const ta = pointAt(this.polys[ia], normS(this.polys[ia], cx.a.s));
-      const tb = pointAt(this.polys[ib], normS(this.polys[ib], cx.b.s));
+      const ta = tanAt(this.polys[ia], normS(this.polys[ia], cx.a.s));
+      const tb = tanAt(this.polys[ib], normS(this.polys[ib], cx.b.s));
       const th = Math.asin(Math.min(1, Math.abs(cross(ta.tx, ta.ty, tb.tx, tb.ty))));
       return { ia, ib, sa: cx.a.s, sb: cx.b.s, th };
     });
-    // Which junction arms' spans contain (pi, s).
-    const inSpan = (p: Poly, lo: number, hi: number, s: number): boolean => {
-      if (!p.closed) return s >= lo && s <= hi;
-      for (const sh of [-p.len, 0, p.len]) if (s + sh >= lo && s + sh <= hi) return true;
-      return false;
-    };
-    // pad: how far past its far end an arm's span still holds a pass (the
-    // pass's overlap reach + margin: a group ending closer than that still
-    // touches the crossing's overlap).
-    const holders = (sp: [number, number, number, number][][], pi: number, s: number, pad = 0): [number, number][] => {
-      const out: [number, number][] = [];
-      sp.forEach((l, ji) => {
-        for (const [q, lo, hi, ai] of l) {
-          if (q !== pi) continue;
-          const dir = scene.junctions[ji].arms[ai].dir;
-          if (inSpan(this.polys[pi], dir < 0 ? lo - pad : lo, dir > 0 ? hi + pad : hi, s)) out.push([ji, ai]);
-        }
-      });
-      return out;
-    };
     const clusterRoots = (sp: [number, number, number, number][][]): number[] => {
       const parent = sp.map((_, i) => i);
       const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])));
@@ -947,47 +964,216 @@ export class FieldModel {
       }
       return sp.map((_, i) => find(i));
     };
-    // Stop an arm short of a pass: the overlap of two tubes crossing at θ
-    // reaches h·cot(θ/2) along each pass; then a margin of h (K900: the
-    // round cap clears the over pass's border at every θ; passMargin).
-    const cutAt = (ji: number, ai: number, s: number, th: number, cx: number) => {
-      const arm = scene.junctions[ji].arms[ai];
-      const p = this.polys[this.idxOf.get(arm.chain)!];
-      const d = arm.dir * dS(p, arm.s, s);
-      const near = h / Math.tan(Math.max(th, 1e-3) / 2) + pm * h;
-      setCap(ji, ai, Math.max(0, d - near), `crossing ${cx}'s pass ${(d / h).toFixed(2)}h out`);
-    };
     // K922's part walk (the only extent since K934): walk each uncapped arm
     // on from its span's end while its cross-section still overlaps another
     // member of its cluster.
     const partWalk = k883;
     if (partWalk) ext = this.partExtents(ext, caps, clusterRoots);
-    const tries = new Map<number, number>();
-    let sp = this.rawSpans(ext, caps);
-    for (let it = 0; it < 12; it++) {
-      const roots2 = clusterRoots(sp);
-      let changed = false;
-      passes.forEach((ps, cx) => {
-        if (!ps) return;
-        const pad = h / Math.tan(Math.max(ps.th, 1e-3) / 2) + pm * h - 1e-6 * h;
-        const ha = holders(sp, ps.ia, ps.sa, pad);
-        const hb = holders(sp, ps.ib, ps.sb, pad);
-        if (!ha.length || !hb.length) return;
-        const ca = new Set(ha.map(([ji]) => roots2[ji]));
-        if (!hb.some(([ji]) => ca.has(roots2[ji]))) return;
-        // Both passes in one cluster: stop the arm(s) farther from their root.
-        const far = (hs: [number, number][], pi: number, s: number) =>
-          Math.max(...hs.map(([ji, ai]) => Math.abs(dS(this.polys[pi], scene.junctions[ji].arms[ai].s, s))));
-        const n = (tries.get(cx) ?? 0) + 1;
-        tries.set(cx, n);
-        const fa = far(ha, ps.ia, ps.sa);
-        const fb = far(hb, ps.ib, ps.sb);
-        if (n > 1 || fa >= fb) for (const [ji, ai] of ha) cutAt(ji, ai, ps.sa, ps.th, cx);
-        if (n > 1 || fb > fa) for (const [ji, ai] of hb) cutAt(ji, ai, ps.sb, ps.th, cx);
-        changed = true;
+    // K1000: continuous caps (docs/design/K1000_continuous_caps.md). The
+    // cut loop's choices are measures read at membership levels t in (0, 1]:
+    // - an arm holds a pass with weight ss(m/σ), m how far inside its padded
+    //   span the pass lies (both ends; the pad is the overlap reach + margin);
+    // - two junctions join with weight ss(1 + ov/λ), ov the overlap of two of
+    //   their spans on one chain, and a cluster's join is its widest path's
+    //   weakest link (a maximum spanning forest);
+    // - a pass counts up to the level q1 at which some holder on each side
+    //   still joins one cluster;
+    // - at each level t ≤ q1, with fa(t), fb(t) the farthest holders of weight
+    //   ≥ t, side A is cut with share ss((fa − fb)/τ + 2) and side B with
+    //   ss((fb − fa)/τ): A alone at a tie or farther (master's fa ≥ fb), B
+    //   alone once fb − fa ≥ 2τ, both in between, so at every level one side
+    //   is cut in full; an arm is cut with the measure of its side's shares;
+    // - a second visit cuts both sides up to the level q2 at which the pass
+    //   is still held once its own cuts are taken at their weights;
+    // - a cut of weight w moves the arm's cap from its base cap to its reach
+    //   R over w in [0, w0], then from R to the cut over [w0, 1];
+    // - θ reads interpolated vertex tangents (tanAt), continuous in s.
+    // Three rounds (a first visit, two second visits), no early exit, no
+    // state between frames: the caps are a pure, continuous function of the
+    // frame, and a pass sliding into an arm lowers its cap monotonically.
+    const sig = h / 2;
+    const tau = h / 4;
+    const lam = h / 2;
+    const w0 = 0.05;
+    const ss = (x: number): number => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
+    const NJ = scene.junctions.length;
+    const base = caps.map((l) => l.slice());
+    const baseWhy = this.armCaps.map((l) => l.map((c) => c.why));
+    const reach = scene.junctions.map((j, ji) =>
+      j.arms.map((arm, ai) => Math.min((ext.get(this.armKey(ji, arm)) ?? h) + this.W + this.margin, base[ji][ai])),
+    );
+    type Cut = { c: number; w: number; d: number; cx: number };
+    const cuts: Map<number, Cut>[][] = scene.junctions.map((j) => j.arms.map(() => new Map<number, Cut>()));
+    const applyCaps = () => {
+      scene.junctions.forEach((j, ji) =>
+        j.arms.forEach((_, ai) => {
+          const B = base[ji][ai];
+          const R = reach[ji][ai];
+          let cap = B;
+          let why = baseWhy[ji][ai];
+          for (const k of cuts[ji][ai].values()) {
+            if (!(k.w > 0)) continue;
+            const Rp = Math.max(k.c, R);
+            const Bp = Math.min(B, Rp + 64 * h);
+            const v = k.w <= w0 ? Bp - (Bp - Rp) * (k.w / w0) : Rp - (Rp - Math.min(k.c, Rp)) * ((k.w - w0) / (1 - w0));
+            if (v < cap) {
+              cap = v;
+              why = `crossing ${k.cx}'s pass ${(k.d / h).toFixed(2)}h out`;
+            }
+          }
+          caps[ji][ai] = cap;
+          this.armCaps[ji][ai] = { len: cap, why };
+        }),
+      );
+    };
+    // The widest-path join of two junctions, from the spans.
+    const connOf = (sp: [number, number, number, number][][]): ((u: number, v: number) => number) => {
+      const byPoly = new Map<number, [number, number, number][]>();
+      sp.forEach((l, ji) => {
+        for (const [pi, lo, hi] of l) {
+          const b = byPoly.get(pi) ?? [];
+          b.push([lo, hi, ji]);
+          byPoly.set(pi, b);
+        }
       });
-      sp = this.rawSpans(ext, caps);
-      if (!changed) break;
+      const best = new Map<number, number>();
+      for (const [pi, l] of byPoly) {
+        const p = this.polys[pi];
+        for (let x = 0; x < l.length; x++)
+          for (let y = x + 1; y < l.length; y++) {
+            const [la, ha, ja] = l[x];
+            const [lb, hb, jb] = l[y];
+            if (ja === jb) continue;
+            let ov = -Infinity;
+            for (const sh of p.closed ? [-p.len, 0, p.len] : [0]) ov = Math.max(ov, Math.min(ha, hb + sh) - Math.max(la, lb + sh));
+            const w = ss(1 + ov / lam);
+            if (!(w > 0)) continue;
+            const key = Math.min(ja, jb) * NJ + Math.max(ja, jb);
+            if (w > (best.get(key) ?? 0)) best.set(key, w);
+          }
+      }
+      const edges = [...best].sort((a, b) => b[1] - a[1] || a[0] - b[0]);
+      const parent = scene.junctions.map((_, i) => i);
+      const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+      const adj: [number, number][][] = scene.junctions.map(() => []);
+      for (const [key, w] of edges) {
+        const u = Math.floor(key / NJ);
+        const v = key % NJ;
+        if (find(u) === find(v)) continue;
+        parent[find(u)] = find(v);
+        adj[u].push([v, w]);
+        adj[v].push([u, w]);
+      }
+      const cache = new Map<number, Float64Array>();
+      return (u: number, v: number): number => {
+        if (u === v) return 1;
+        let a = cache.get(u);
+        if (!a) {
+          a = new Float64Array(NJ);
+          a[u] = 1;
+          const stack = [u];
+          while (stack.length) {
+            const x = stack.pop()!;
+            for (const [y, w] of adj[x])
+              if (y !== u && a[y] === 0) {
+                a[y] = Math.min(a[x], w);
+                stack.push(y);
+              }
+          }
+          cache.set(u, a);
+        }
+        return a[v];
+      };
+    };
+    type Held = { ji: number; ai: number; w: number; m: number; f: number };
+    // The arms holding the pass at (pi, s), with their weights.
+    const hold = (sp: [number, number, number, number][][], pi: number, s: number, pad: number): Held[] => {
+      const out: Held[] = [];
+      const p = this.polys[pi];
+      sp.forEach((l, ji) => {
+        for (const [q, lo, hi, ai] of l) {
+          if (q !== pi) continue;
+          const arm = scene.junctions[ji].arms[ai];
+          const L = arm.dir < 0 ? lo - pad : lo;
+          const H = arm.dir > 0 ? hi + pad : hi;
+          let m = -Infinity;
+          for (const sh of p.closed ? [-p.len, 0, p.len] : [0]) m = Math.max(m, Math.min(s + sh - L, H - (s + sh)));
+          const w = ss(m / sig);
+          if (w > 0) out.push({ ji, ai, w, m, f: Math.abs(dS(p, arm.s, s)) });
+        }
+      });
+      return out;
+    };
+    // ∫ over levels t in (0, T] of one side's share, over the holders of weight ≥ t.
+    const side = (ha: Held[], hb: Held[], T: number, isA: boolean): number => {
+      const lv = [...new Set([...ha, ...hb].map((x) => x.w))].sort((a, b) => a - b);
+      let acc = 0;
+      let prev = 0;
+      for (const l of lv) {
+        if (prev >= T) break;
+        const top = Math.min(l, T);
+        if (top > prev) {
+          let fa = -Infinity;
+          let fb = -Infinity;
+          for (const x of ha) if (x.w >= l) fa = Math.max(fa, x.f);
+          for (const x of hb) if (x.w >= l) fb = Math.max(fb, x.f);
+          const sA = fa === -Infinity ? 0 : fb === -Infinity ? 1 : ss((fa - fb) / tau + 2);
+          const sB = fb === -Infinity ? 0 : fa === -Infinity ? 1 : ss((fb - fa) / tau);
+          acc += (top - prev) * (isA ? sA : sB);
+        }
+        prev = l;
+      }
+      return acc;
+    };
+    // The overlap of two tubes crossing at θ reaches h·cot(θ/2) along each
+    // pass; then a margin of h (K900: the round cap clears the over pass's
+    // border at every θ; passMargin).
+    const P = passes.map((ps) => (ps ? { ...ps, near: h / Math.tan(Math.max(ps.th, 1e-3) / 2) + pm * h } : null));
+    const cutOf = (x: Held, s: number, near: number): { d: number; c: number } => {
+      const arm = scene.junctions[x.ji].arms[x.ai];
+      const d = arm.dir * dS(this.polys[this.idxOf.get(arm.chain)!], arm.s, s);
+      return { d, c: Math.max(0, d - near) };
+    };
+    const add = (x: Held, key: number, cx: number, s: number, near: number, w: number) => {
+      if (!(w > 0)) return;
+      const { d, c } = cutOf(x, s, near);
+      const old = cuts[x.ji][x.ai].get(key);
+      if (!old || w > old.w) cuts[x.ji][x.ai].set(key, { c, w, d, cx });
+    };
+    const q1 = new Float64Array(passes.length);
+    for (let it = 0; it < 3; it++) {
+      const sp = this.rawSpans(ext, caps);
+      const conn = connOf(sp);
+      P.forEach((ps, cx) => {
+        if (!ps || (it > 0 && !(q1[cx] > 0))) return;
+        const pad = ps.near - 1e-6 * h;
+        const ha = hold(sp, ps.ia, ps.sa, pad);
+        const hb = hold(sp, ps.ib, ps.sb, pad);
+        if (!ha.length || !hb.length) return;
+        if (it === 0) {
+          let q = 0;
+          for (const a of ha) for (const b of hb) q = Math.max(q, Math.min(a.w, b.w, conn(a.ji, b.ji)));
+          q1[cx] = q;
+          if (!(q > 0)) return;
+          for (const a of ha) add(a, 2 * cx, cx, ps.sa, ps.near, side(ha, hb, Math.min(q, a.w), true));
+          for (const b of hb) add(b, 2 * cx + 1, cx, ps.sb, ps.near, side(ha, hb, Math.min(q, b.w), false));
+          return;
+        }
+        // A second visit: the hold left once the pass's own cuts apply.
+        const after = (x: Held, key: number, s: number): number => {
+          const own = cuts[x.ji][x.ai].get(key)?.w ?? 0;
+          const { d, c } = cutOf(x, s, ps.near);
+          return (1 - own) * x.w + own * ss(Math.min(x.m, c + pad - d) / sig);
+        };
+        const xa = ha.map((a) => after(a, 2 * cx, ps.sa));
+        const xb = hb.map((b) => after(b, 2 * cx + 1, ps.sb));
+        let q = 0;
+        ha.forEach((a, i) => hb.forEach((b, k) => (q = Math.max(q, Math.min(xa[i], xb[k], conn(a.ji, b.ji))))));
+        if (!(q > 0)) return;
+        ha.forEach((a, i) => add(a, 2 * cx, cx, ps.sa, ps.near, Math.min(q, xa[i])));
+        hb.forEach((b, k) => add(b, 2 * cx + 1, cx, ps.sb, ps.near, Math.min(q, xb[k])));
+      });
+      applyCaps();
     }
     // Fit each round corner inside its arms' caps: the tangent point's foot
     // at most cap − W from the root, so r ≤ (cap − W − |V's foot|)·tan(θ/2).
@@ -1004,23 +1190,23 @@ export class FieldModel {
       };
       const over = () =>
         Math.max(Math.abs(dS(pa, c.armA.s, c.sTA)) - (capA - this.W), Math.abs(dS(pb, c.armB.s, c.sTB)) - (capB - this.W));
-      if (!(over() > 1e-9 * h)) continue;
+      // K992 rule 2, the cap stop: a corner whose tangent feet pass cap − W
+      // is grown again with its feet held to cap − W (rule 1's stop), so r is
+      // the largest ball on V's branch that fits its caps; over() > 0 only
+      // skips the corners that stop would not change. It replaces master's
+      // over() walk (r −= over·tan(θ/2), six times), whose steps and root
+      // changes popped.
+      // K992 s2: the cap gate changes only a corner whose feet came within
+      // 0.5h of cap − W somewhere on the first march (footMaxA/B); the
+      // others keep r, which the gate would return unchanged.
+      const fmA = c.footMaxA ?? Math.abs(dS(pa, c.armA.s, c.sTA));
+      const fmB = c.footMaxB ?? Math.abs(dS(pb, c.armB.s, c.sTB));
+      if (!(Math.max(fmA - (capA - this.W - 0.5 * h), fmB - (capB - this.W - 0.5 * h)) > 0)) continue;
       const why = capA - Math.abs(dS(pa, c.armA.s, c.sTA)) < capB - Math.abs(dS(pb, c.armB.s, c.sTB))
         ? this.armCaps[c.junction][c.armIdxA!].why
         : this.armCaps[c.junction][c.armIdxB!].why;
       const r0 = c.r;
-      let r = Math.min(c.r, Math.max(0, room()) * Math.tan(c.theta / 2));
-      let fit = this.solveCorner(c.junction, c.index, c.armA, c.a, c.armB, c.b, c.theta, c.style, r);
-      for (let it = 0; it < 6 && r > 0; it++) {
-        const o = Math.max(
-          Math.abs(dS(pa, c.armA.s, fit.sTA)) - (capA - this.W),
-          Math.abs(dS(pb, c.armB.s, fit.sTB)) - (capB - this.W),
-        );
-        if (!(o > 1e-6 * h) && fit.ok) break;
-        r = Math.max(0, r - Math.max(o, 0.02 * h) * Math.tan(c.theta / 2));
-        if (r < 1e-3 * h) r = 0;
-        fit = this.solveCorner(c.junction, c.index, c.armA, c.a, c.armB, c.b, c.theta, c.style, r);
-      }
+      const fit = this.solveCorner(c.junction, c.index, c.armA, c.a, c.armB, c.b, c.theta, c.style, c.rRule!, c.rRule, capA - this.W, capB - this.W);
       Object.assign(c, { ...fit, cluster: c.cluster, armIdxA: c.armIdxA, armIdxB: c.armIdxB, rRule: c.rRule });
       c.fit = `r ${(r0 / h).toFixed(3)}h → ${(c.r / h).toFixed(3)}h: ${why}${room() <= 0 ? " (no room past V: sharp)" : ""}`;
     }
@@ -1046,9 +1232,10 @@ export class FieldModel {
    * short of its cap, walk on from the span's end in h/8 steps (up to 12h)
    * while some point of its cross-section lies inside another member of its
    * cluster: another arm's span's tube (on the walker's own chain only away
-   * from the walker), or a corner fill of the cluster. The extent becomes
-   * the last overlapping step's distance − margin, so the span ends W past
-   * the parting; caps clamp it (rawSpans). Spans and clusters are rebuilt
+   * from the walker), or a corner fill of the cluster. The parting is then
+   * bisected between the last overlapping step and the next (K992 stage 3),
+   * and the extent becomes the parting's distance − margin, so the span ends
+   * W past the parting; caps clamp it (rawSpans). Spans and clusters are rebuilt
    * and the walk rerun until nothing moves (4 rounds at most).
    */
   private partExtents(
@@ -1160,7 +1347,22 @@ export class FieldModel {
           if (!hits(e0)) continue;
           let last = e0;
           for (let t = e0 + step; t <= Math.min(room, e0 + 12 * h) && t - last < h; t += step) if (hits(t)) last = t;
-          const part = Math.min(room, last + step);
+          // K992 s3: the parting is solved, not stepped. The steps above find
+          // the last overlapping one; the next step overlaps nothing (the walk
+          // tried it), so the parting lies between them and is bisected to
+          // 1e-6h: the reach moves with the geometry, not in h/8 jumps. Where
+          // the next step lies past the walk's limit, the limit stands in for
+          // it, and a run that overlaps there ends at the limit.
+          const lim = Math.min(room, e0 + 12 * h);
+          let tIn = last;
+          let tOut = Math.min(last + step, lim);
+          if (tOut < last + step && hits(tOut)) tIn = tOut;
+          while (tOut - tIn > 1e-6 * h) {
+            const mid = 0.5 * (tIn + tOut);
+            if (hits(mid)) tIn = mid;
+            else tOut = mid;
+          }
+          const part = Math.min(room, tOut);
           const want = part - this.margin;
           const cur = ext.get(key) ?? h;
           if (want > cur + 1e-6 * h) {
@@ -1235,12 +1437,17 @@ export class FieldModel {
     theta: number,
     style: "round" | "sharp",
     r: number,
+    /** K992: the windows' radius, the rule's r whatever r the fit or the fold take. */
+    rWin = r,
+    /** K992: the tangent feet's limits, arc length from the root (cap − W). */
+    capLimA = Infinity,
+    capLimB = Infinity,
   ): Corner {
     const h = this.h;
     const pa = this.polys[a];
     const pb = this.polys[b];
     const half = theta / 2;
-    const reachQ = (h + r) / Math.max(Math.sin(half), 1e-3);
+    const reachQ = (h + rWin) / Math.max(Math.sin(half), 1e-3);
     const Lw = Math.min(4 * h + 2 * reachQ, 1e6);
     // S2: each window covers its own arm only, from just behind the root
     // outward. A two-sided window let the feet jump to the chain's other
@@ -1306,13 +1513,13 @@ export class FieldModel {
       }
       return best!;
     };
-    const newton = (delta: number, x0: number, y0: number): Sol => {
+    const newton = (delta: number, x0: number, y0: number, limit?: number, its = 200): Sol => {
       let x = x0;
       let y = y0;
       let ok = false;
       let fA = footInWindow(pa, x, y, winA[0], winA[1]);
       let fB = footInWindow(pb, x, y, winB[0], winB[1]);
-      for (let it = 0; it < 200; it++) {
+      for (let it = 0; it < its; it++) {
         const ra = fA.d - delta;
         const rb = fB.d - delta;
         if (Math.abs(ra) < 1e-12 * Math.max(1, delta) && Math.abs(rb) < 1e-12 * Math.max(1, delta)) {
@@ -1328,7 +1535,7 @@ export class FieldModel {
         let dx = (-ra * nby + rb * nay) / det;
         let dy = (-nax * rb + nbx * ra) / det;
         const dl = Math.hypot(dx, dy);
-        const lim = 0.5 * Math.max(delta, h);
+        const lim = limit ?? 0.5 * Math.max(delta, h);
         if (dl > lim) {
           dx *= lim / dl;
           dy *= lim / dl;
@@ -1341,6 +1548,78 @@ export class FieldModel {
       const res = Math.max(Math.abs(fA.d - delta), Math.abs(fB.d - delta));
       if (res < 1e-9 * Math.max(1, delta)) ok = true;
       return { x, y, res, fa: 0, fb: 0, sA: fA.s, sB: fB.s, ok };
+    };
+    // K992 s3: the tangent feet are tracked, not chosen. A tracked foot is
+    // the nearest point of its arm within h/32 of the last one, the window
+    // re-centred while the foot sits on its edge: a descent that follows one
+    // local minimum of |q − arm| and never jumps to another part of the arm
+    // that comes as near (there the nearest point flips between two
+    // contacts as q crosses the tie). Arc lengths stay in the window's
+    // domain (unwrap), so a closed chain's seam does not move them.
+    const unwrap = (p: Poly, s: number, win: [number, number]): number => {
+      if (!p.closed) return s;
+      let best = s;
+      let bd = Infinity;
+      for (let m = -2; m <= 2; m++) {
+        const t = s + m * p.len;
+        const e = t < win[0] ? win[0] - t : t > win[1] ? t - win[1] : 0;
+        if (e < bd) {
+          bd = e;
+          best = t;
+        }
+      }
+      return best;
+    };
+    const footLocal = (p: Poly, x: number, y: number, s0: number, win: [number, number]): ReturnType<typeof footInWindow> & { u: number } => {
+      const w = h / 32;
+      let s = Math.min(Math.max(s0, win[0]), win[1]);
+      for (let it = 0; ; it++) {
+        const lo = Math.max(win[0], s - w);
+        const hi = Math.min(win[1], s + w);
+        const f = footInWindow(p, x, y, lo, hi);
+        const u = s + dS(p, s, f.s);
+        const edge = (u <= lo + 1e-9 * h && lo > win[0]) || (u >= hi - 1e-9 * h && hi < win[1]);
+        if (!edge || it >= 4096 || Math.abs(u - s) <= 1e-12 * h) return { ...f, u };
+        s = u;
+      }
+    };
+    // Newton on |q − tracked foot| = δ on both arms, each foot carried from
+    // iterate to iterate.
+    const newtonT = (delta: number, x0: number, y0: number, sA0: number, sB0: number, limit?: number, its = 200): Sol => {
+      let x = x0;
+      let y = y0;
+      let ok = false;
+      let fA = footLocal(pa, x, y, sA0, winA);
+      let fB = footLocal(pb, x, y, sB0, winB);
+      for (let it = 0; it < its; it++) {
+        const ra = fA.d - delta;
+        const rb = fB.d - delta;
+        if (Math.abs(ra) < 1e-12 * Math.max(1, delta) && Math.abs(rb) < 1e-12 * Math.max(1, delta)) {
+          ok = true;
+          break;
+        }
+        const nax = (x - fA.x) / fA.d;
+        const nay = (y - fA.y) / fA.d;
+        const nbx = (x - fB.x) / fB.d;
+        const nby = (y - fB.y) / fB.d;
+        const det = nax * nby - nay * nbx;
+        if (Math.abs(det) < 1e-12) break;
+        let dx = (-ra * nby + rb * nay) / det;
+        let dy = (-nax * rb + nbx * ra) / det;
+        const dl = Math.hypot(dx, dy);
+        const lim = limit ?? 0.5 * Math.max(delta, h);
+        if (dl > lim) {
+          dx *= lim / dl;
+          dy *= lim / dl;
+        }
+        x += dx;
+        y += dy;
+        fA = footLocal(pa, x, y, fA.u, winA);
+        fB = footLocal(pb, x, y, fB.u, winB);
+      }
+      const res = Math.max(Math.abs(fA.d - delta), Math.abs(fB.d - delta));
+      if (res < 1e-9 * Math.max(1, delta)) ok = true;
+      return { x, y, res, fa: 0, fb: 0, sA: fA.u, sB: fB.u, ok };
     };
     const v = solve(h);
     const c: Corner = {
@@ -1370,7 +1649,7 @@ export class FieldModel {
       vq: 0,
       resV: v.res,
       resQ: 0,
-      rRule: r,
+      rRule: rWin,
     };
     if (!v.ok) {
       // S2: no V when the two centrelines stay closer than 2h all along
@@ -1397,7 +1676,277 @@ export class FieldModel {
       );
     }
     if (r > 0) {
-      const qq = solve(h + r);
+      // K992 rule 1, the grown ball: q is V's root continued along the
+      // medial axis as the ball grows from δ = h to h + r, and the ball stops
+      // early where its branch turns steep (den = 1 + nA·nB below 0.5 of
+      // its value at V) or a tangent foot passes its limit (the cap stop).
+      // Each step predicts along u (nA·u = nB·u = 1, |u| = sqrt(2/den), q's
+      // speed per unit of δ) and polishes with Newton held near the
+      // prediction; a miss, or a step past a stop, halves the step, so each
+      // stop is located to 1e-5 h. No other root is a candidate, so q cannot
+      // switch branch, and q's speed at a stop is bounded (a stop at the fold
+      // itself, where |u| has no bound, jumped with every step halving).
+      let qq: Sol;
+      if (v.ok) {
+        let cur: Sol = v;
+        // K992 s2, the continuous stops: the ball grows by the measure of
+        // V's branch that passes both tests, read as a running minimum, so
+        // r = ∫ S dδ over δ from h to h + r, S = min over [h, δ] of
+        // w = ss((den/den(V) − 0.3)/0.4) · ss(slack/0.5h): the steep gate
+        // (den = 1 + nA·nB; |u| = sqrt(2/den) is q's speed per unit of δ) and
+        // the cap gate (slack = cap − W − |foot|, the smaller of the two
+        // arms). Both tests read continuous quantities, the running minimum
+        // and the integral keep r continuous and monotone in them, and no
+        // first crossing is taken.
+        // K992 s3: den from the tracked feet, and the overlap gate. ov is how
+        // much nearer to q the nearest point of either arm's window is than
+        // its tracked contact (0 until another part of the arm comes as near):
+        // the ball stops over ov from 0 to 0.05h instead of a foot jumping
+        // there.
+        const denT = (p: Sol): number => {
+          const gA = pointAt(pa, p.sA);
+          const gB = pointAt(pb, p.sB);
+          const ax = p.x - gA.x;
+          const ay = p.y - gA.y;
+          const bx = p.x - gB.x;
+          const by = p.y - gB.y;
+          return 1 + (ax * bx + ay * by) / (Math.hypot(ax, ay) * Math.hypot(bx, by));
+        };
+        const ovAt = (p: Sol): number => {
+          const gA = pointAt(pa, p.sA);
+          const gB = pointAt(pb, p.sB);
+          const oA = Math.hypot(p.x - gA.x, p.y - gA.y) - footInWindow(pa, p.x, p.y, winA[0], winA[1]).d;
+          const oB = Math.hypot(p.x - gB.x, p.y - gB.y) - footInWindow(pb, p.x, p.y, winB[0], winB[1]).d;
+          return Math.max(0, oA, oB);
+        };
+        const vt: Sol = { ...v, sA: unwrap(pa, v.sA, winA), sB: unwrap(pb, v.sB, winB) };
+        cur = vt;
+        const denV = denT(vt);
+        const ss = (x: number): number => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
+        const footA = (p: Sol): number => Math.abs(dS(pa, A.s, p.sA));
+        const footB = (p: Sol): number => Math.abs(dS(pb, B.s, p.sB));
+        const wAt = (p: Sol): number => {
+          const gs = ss(1 - ovAt(p) / (0.05 * h)) * ss((denT(p) / denV - 0.3) / 0.4);
+          const slack = Math.min(capLimA - footA(p), capLimB - footB(p));
+          return slack === Infinity ? gs : gs * ss(slack / (0.5 * h));
+        };
+        // The branch from δ = d0 to dT: each step predicts along u and
+        // polishes with Newton held near the prediction; a miss halves it.
+        const advance = (from: Sol, d0: number, dT: number, st0: number): Sol | null => {
+          let p = from;
+          let dc = d0;
+          let st = st0;
+          while (dT - dc > 1e-12 * dT) {
+            const d1 = Math.min(dT, dc + st);
+            const dd = d1 - dc;
+            const fA = footLocal(pa, p.x, p.y, p.sA, winA);
+            const fB = footLocal(pb, p.x, p.y, p.sB, winB);
+            const nax = (p.x - fA.x) / fA.d;
+            const nay = (p.y - fA.y) / fA.d;
+            const nbx = (p.x - fB.x) / fB.d;
+            const nby = (p.y - fB.y) / fB.d;
+            const den = 1 + nax * nbx + nay * nby;
+            let next: Sol | null = null;
+            if (den > 1e-9) {
+              const ux = (nax + nbx) / den;
+              const uy = (nay + nby) / den;
+              const gx = p.x + ux * dd;
+              const gy = p.y + uy * dd;
+              const acc = Math.min(h, Math.max(0.5 * Math.hypot(ux, uy) * dd, 1e-3 * h));
+              const n = newtonT(d1, gx, gy, p.sA, p.sB, acc, 60);
+              if (n.ok && Math.hypot(n.x - gx, n.y - gy) <= acc) next = n;
+            }
+            if (next) {
+              p = next;
+              dc = d1;
+              st = Math.min(st0, 2 * st);
+            } else {
+              st /= 2;
+              if (st < 1e-5 * h) return null;
+            }
+          }
+          return p;
+        };
+        // K992 s4: S by construction. S at the fixed node h + k·dN is the
+        // minimum of w over [h, h + k·dN], certified to 0.0001: between two
+        // evaluated points w has a lower bound from bounds on its inputs (den
+        // moves at most 2(2 − den)/δ per unit of δ, since a vertex foot turns
+        // its normal at tan(φ/2)/δ; a foot moves at most tan(φ/2) =
+        // sqrt(2/den − 1); the overlap margin at most |u| + 1; an interval
+        // whose ends differ by more, a foot's hop at a concave vertex, takes
+        // their difference), and only an interval whose bound falls below the
+        // running minimum by more than 0.0001 is halved, down to 1e-6h. Where
+        // the points fall decides nothing: each node's S is the minimum to
+        // within 0.0001, the trapezoid over the fixed nodes is continuous in
+        // it, and a fold is located to 1e-6h. footMaxA/B are upper bounds of
+        // each foot over the stretch the march covered, so the cap refit runs
+        // wherever the cap gate could move r and skipping it changes nothing.
+        const dN = r / 32;
+        const FLOOR = 1e-6 * h;
+        // The overlap margin: how much farther from q than the tracked
+        // contact the nearest point of the window outside the contact's basin
+        // is. The basin is the run of the arm around the contact over which
+        // the distance to q rises (it ends at a vertex where the distance
+        // starts to fall); ov = max(0, −margin).
+        const margin = (pl: Poly, x: number, y: number, sf: number, win: [number, number], dc: number): number => {
+          const f0 = pointAt(pl, sf);
+          const base = sf - normS(pl, sf);
+          let hi = win[1];
+          let k = f0.k;
+          let bk = base;
+          for (let it = 0; it <= pl.nseg; it++) {
+            const sv = bk + pl.s[k] + pl.segLen[k];
+            if (sv >= win[1]) break;
+            let k2 = k + 1;
+            let b2 = bk;
+            if (k2 >= pl.nseg) {
+              if (!pl.closed) break;
+              k2 = 0;
+              b2 = bk + pl.len;
+            }
+            const e = segB(pl, k2);
+            if ((pl.x[k2] - x) * (pl.x[e] - pl.x[k2]) + (pl.y[k2] - y) * (pl.y[e] - pl.y[k2]) < 0) {
+              hi = sv;
+              break;
+            }
+            k = k2;
+            bk = b2;
+          }
+          let lo = win[0];
+          k = f0.k;
+          bk = base;
+          for (let it = 0; it <= pl.nseg; it++) {
+            const sv = bk + pl.s[k];
+            if (sv <= win[0]) break;
+            let k2 = k - 1;
+            let b2 = bk;
+            if (k2 < 0) {
+              if (!pl.closed) break;
+              k2 = pl.nseg - 1;
+              b2 = bk - pl.len;
+            }
+            if ((pl.x[k] - x) * (pl.x[k2] - pl.x[k]) + (pl.y[k] - y) * (pl.y[k2] - pl.y[k]) < 0) {
+              lo = sv;
+              break;
+            }
+            k = k2;
+            bk = b2;
+          }
+          let d2 = Infinity;
+          if (lo > win[0]) d2 = footInWindow(pl, x, y, win[0], lo).d;
+          if (hi < win[1]) d2 = Math.min(d2, footInWindow(pl, x, y, hi, win[1]).d);
+          return d2 - dc;
+        };
+        type Pt = { p: Sol; d: number; w: number; den: number; fA: number; fB: number; mA: number; mB: number; kA: number; tA: number; kB: number; tB: number };
+        const at = (p: Sol, d: number): Pt => {
+          const gA = pointAt(pa, p.sA);
+          const gB = pointAt(pb, p.sB);
+          const ax = p.x - gA.x;
+          const ay = p.y - gA.y;
+          const bx = p.x - gB.x;
+          const by = p.y - gB.y;
+          const dA = Math.hypot(ax, ay);
+          const dB = Math.hypot(bx, by);
+          const den = 1 + (ax * bx + ay * by) / (dA * dB);
+          const mA = margin(pa, p.x, p.y, p.sA, winA, dA);
+          const mB = margin(pb, p.x, p.y, p.sB, winB, dB);
+          const fA = footA(p);
+          const fB = footB(p);
+          const slack = Math.min(capLimA - fA, capLimB - fB);
+          let w = ss(1 + Math.min(0, mA, mB) / (0.05 * h)) * ss((den / denV - 0.3) / 0.4);
+          if (slack !== Infinity) w *= ss(slack / (0.5 * h));
+          return { p, d, w, den, fA, fB, mA, mB, kA: gA.k, tA: gA.t, kB: gB.k, tB: gB.t };
+        };
+        // The lower bound over [f0's δ, f1's δ] (length D) of a function
+        // that moves at most L per unit of δ, or at most as far as its ends
+        // differ where they differ by more.
+        const vb = (f0: number, f1: number, L: number, D: number): number =>
+          f0 === Infinity || f1 === Infinity ? Math.min(f0, f1) - L * D : 0.5 * (f0 + f1) - 0.5 * Math.max(L * D, Math.abs(f1 - f0));
+        // A foot on one segment's interior at both ends stays on it (it moves
+        // along the arm at a constant rate there): its normal is fixed and the
+        // foot linear in δ. Only a foot at a vertex turns its normal.
+        const inner = (t: number): boolean => t > 1e-9 && t < 1 - 1e-9;
+        const bounds = (a: Pt, b: Pt): { w: number; fA: number; fB: number } => {
+          const D = b.d - a.d;
+          const segA = a.kA === b.kA && inner(a.tA) && inner(b.tA) && Math.abs(b.p.sA - a.p.sA) < pa.segLen[a.kA];
+          const segB_ = a.kB === b.kB && inner(a.tB) && inner(b.tB) && Math.abs(b.p.sB - a.p.sB) < pb.segLen[a.kB];
+          const nRot = (segA ? 0 : 1) + (segB_ ? 0 : 1);
+          const den1 = vb(a.den, b.den, (2 * nRot) / a.d, D);
+          const denLo = Math.max(1e-9, vb(a.den, b.den, (nRot * (2 - Math.max(0, den1))) / a.d, D));
+          const U = Math.sqrt(2 / denLo);
+          const Lf = Math.sqrt(Math.max(0, 2 / denLo - 1));
+          const mLo = Math.min(vb(a.mA, b.mA, U + 1, D), vb(a.mB, b.mB, U + 1, D));
+          const fA = segA ? Math.max(a.fA, b.fA) : -vb(-a.fA, -b.fA, Lf, D);
+          const fB = segB_ ? Math.max(a.fB, b.fB) : -vb(-a.fB, -b.fB, Lf, D);
+          let w = ss(1 + Math.min(0, mLo) / (0.05 * h)) * ss((denLo / denV - 0.3) / 0.4);
+          const slack = Math.min(capLimA - fA, capLimB - fB);
+          if (slack !== Infinity) w *= ss(slack / (0.5 * h));
+          return { w, fA, fB };
+        };
+        // The minimum of w over [a, b] where it is below inc, to within 0.0001.
+        const minOn = (a: Pt, b: Pt, inc: number): number => {
+          let m = Math.min(inc, b.w);
+          const st: Pt[] = [a, b];
+          while (st.length) {
+            const rt = st.pop()!;
+            const lf = st.pop()!;
+            if (rt.d - lf.d <= FLOOR || bounds(lf, rt).w >= m - 0.0001) continue;
+            const dm = 0.5 * (lf.d + rt.d);
+            const pm = advance(lf.p, lf.d, dm, dm - lf.d);
+            if (!pm) continue;
+            const M = at(pm, dm);
+            if (M.w < m) m = M.w;
+            st.push(M, rt, lf, M);
+          }
+          return m;
+        };
+        let P0 = at(vt, h);
+        let S = P0.w;
+        let area = 0;
+        const nodes: Sol[] = [vt];
+        const nodeD: number[] = [h];
+        let fmA = P0.fA;
+        let fmB = P0.fB;
+        for (let k = 1; k <= 32 && S > 0; k++) {
+          const d0 = h + (k - 1) * dN;
+          const d1 = h + k * dN;
+          const p1 = advance(P0.p, d0, d1, dN);
+          let P1: Pt;
+          if (p1) P1 = at(p1, d1);
+          else {
+            // The branch folds: its last point, located to 1e-6h.
+            P1 = P0;
+            let hiD = d1;
+            while (hiD - P1.d > FLOOR) {
+              const dm = 0.5 * (P1.d + hiD);
+              const pm = advance(P1.p, P1.d, dm, dm - P1.d);
+              if (pm) P1 = at(pm, dm);
+              else hiD = dm;
+            }
+          }
+          const fb = bounds(P0, P1);
+          fmA = Math.max(fmA, fb.fA);
+          fmB = Math.max(fmB, fb.fB);
+          const S1 = minOn(P0, P1, S);
+          area += 0.5 * (S + S1) * (P1.d - d0);
+          S = S1;
+          if (!p1) {
+            c.fold = P1.d;
+            break;
+          }
+          nodes.push(P1.p);
+          nodeD.push(d1);
+          P0 = P1;
+        }
+        c.footMaxA = fmA;
+        c.footMaxB = fmB;
+        // q: the branch point at δ* = h + area, from the last node below it.
+        let iq = 0;
+        while (iq + 1 < nodes.length && nodeD[iq + 1] <= h + area) iq++;
+        qq = advance(nodes[iq], nodeD[iq], h + area, dN) ?? nodes[iq];
+        r = area;
+        c.r = r;
+      } else qq = solve(h + r);
       c.ok = c.ok && qq.ok;
       c.resQ = qq.res;
       if (!qq.ok) {
@@ -1414,8 +1963,11 @@ export class FieldModel {
         );
       }
       c.q = [qq.x, qq.y];
-      const fA = footInWindow(pa, qq.x, qq.y, winA[0], winA[1]);
-      const fB = footInWindow(pb, qq.x, qq.y, winB[0], winB[1]);
+      // K992 s3: the tangent feet are the contacts the branch tracked to q
+      // (a local descent from q's own), not a fresh nearest point: q can sit
+      // where another part of an arm is as near (F1, F2).
+      const fA = footLocal(pa, qq.x, qq.y, unwrap(pa, qq.sA, winA), winA);
+      const fB = footLocal(pb, qq.x, qq.y, unwrap(pb, qq.sB, winB), winB);
       c.tA = [fA.x + ((qq.x - fA.x) * h) / fA.d, fA.y + ((qq.y - fA.y) * h) / fA.d];
       c.tB = [fB.x + ((qq.x - fB.x) * h) / fB.d, fB.y + ((qq.y - fB.y) * h) / fB.d];
       c.sTA = fA.s;
