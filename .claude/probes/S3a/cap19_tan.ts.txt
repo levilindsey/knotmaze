@@ -1,0 +1,31 @@
+    // K1000: a pass's tangent, interpolated along its segment between the
+    // vertex tangents (each the mean of its two segments' directions), so θ
+    // moves continuously as a crossing slides over a vertex.
+    const tanAt = (p: Poly, s: number): { tx: number; ty: number } => {
+      const a = pointAt(p, s);
+      const dirOf = (k: number): [number, number] => {
+        const b = segB(p, k);
+        const l = p.segLen[k] || 1;
+        return [(p.x[b] - p.x[k]) / l, (p.y[b] - p.y[k]) / l];
+      };
+      const vtx = (i: number): [number, number] => {
+        const kin = i > 0 ? i - 1 : p.closed ? p.nseg - 1 : -1;
+        const kout = i < p.nseg ? i : p.closed ? 0 : -1;
+        let x = 0;
+        let y = 0;
+        for (const k of [kin, kout]) {
+          if (k < 0) continue;
+          const [dx, dy] = dirOf(k);
+          x += dx;
+          y += dy;
+        }
+        const l = Math.sqrt(x * x + y * y);
+        return l > 1e-12 ? [x / l, y / l] : dirOf(kout >= 0 ? kout : kin);
+      };
+      const [x0, y0] = vtx(a.k);
+      const [x1, y1] = vtx(segB(p, a.k));
+      const x = x0 + (x1 - x0) * a.t;
+      const y = y0 + (y1 - y0) * a.t;
+      const l = Math.sqrt(x * x + y * y);
+      return l > 1e-12 ? { tx: x / l, ty: y / l } : { tx: a.tx, ty: a.ty };
+    };
