@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1002.
+Next free ID: K1004.
 
 ## Waiting on Levi
 
@@ -813,6 +813,11 @@ Every other item below waits on the trigger it names.
 
 ## Residuals (known, not fixed)
 
+- **K1002** · K868's corner balls are never checked against other threads (master, b16 and c17 alike): a large r can
+  enclose a neighbour (j139/2 t23: chains 46/84 sit 0.82-0.88h from q inside b16's 1.80h ring), which shows only once
+  the neighbour reaches the fill between the arc and V. `K992_s2_continuous_stops.md` G2 (branch `k992-corners`).
+- **K1003** · K868 label: a V apex can draw as a fan of white hairlines (c17 at the neighbour's apex by j139/2 t23;
+  master at another corner). K992 stage 2's census attributes it. `K992_s2_continuous_stops.md` G2.
 - **K1000** · Outside K992's corner rules, two discontinuities remain: caps that jump when the cut loop adds or removes
   a cut (j116/2, j139/2, j105/1; b16 follows them in full), and V's folds and live/unsolved flips (4 and 19 on master,
   no pop area yet). `K992_corner_rules.md` (branch `k992-corners`) Findings and Handoff.
