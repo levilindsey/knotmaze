@@ -294,10 +294,10 @@ Next free ID: K1045.
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 running.
-  - owner: agent `af2f6426877a368bb` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, S1 the float64 reference, started 2026-10-28 22:41, 2 h cap)
-  - branch: `k1040-field`, worktree `.claude/worktrees/k1040-field`; last commit: `d0d81741` (master, S1's brief; no stage commit yet)
+  - owner: nobody since 2026-10-29 00:12 (merged; agent `af2f6426877a368bb` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
+  - branch: mainline; last commit: `1b7fa02c`
   - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; S1's driver in `s1/`); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: S1, then S2 beside S3 (F7); S3 and S4a need the Pixel on adb. The carried items and their stages: the design doc's ## Coordinator's calls
+  - next: S1b: fix the junction holes (F12) and each fade's rate (F11) in form_b.ts, then rerun S1's gate and attribute what remains (`docs/design/K1040_s1_reference.md` ## Handoff)
   - brief: `docs/design/K1040_s1_reference.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
