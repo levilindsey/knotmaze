@@ -603,3 +603,197 @@ The reference needs four things oracle30 lacks:
 - coverage (the band with aa) instead of a binary label.
 
 It reads master's `src/render/field/` directly: geom.ts, depth.ts, scene.ts and checks.ts.
+
+### F7 · The staged plan
+
+Step 4 done 22:27.
+
+**The design the plan builds.**
+
+- **The label pass (K923's).** Every chain segment is drawn as a capsule of radius h, depth-tested on z. Every corner's fill is drawn too: the curvilinear triangle between the two arms' sides and the fillet arc.
+  - It writes the top surface per pixel (the packed R32UI word: surface, chain, s) and a depth that can be sampled.
+  - The rasterizer is the candidate search. A capsule reaches exactly the pixels it covers, which is the search F5 shows a per-pixel loop cannot afford.
+- **The band pass.** One instanced strip per outline piece: each tube edge at ±h (two per segment), each fillet arc, each dead end's cap.
+  - A strip reaches W + aa inside its piece and aa outside.
+  - Its fragment evaluates only its own piece's terms of F2: the side foot with its burial weight, the endpoints at its ends, and the arc with ω.
+  - Burial is tested against the arms of the piece's own group, read from a per-group arm table: at most 4 arms of at most 9 segments each. F5 counted at most 14 tests per pixel, p99 at most 7. So there is no search.
+  - The fragment inks only where the label says its surface is on top, and writes coverage with MAX blending. F2's ink is a max over terms, so the max over overlapping strips equals F2's ink exactly, provided every term's support lies inside the strips that evaluate it. S1 checks that.
+- **The CPU prep, per frame:** depth per sample, the arm spans and their caps, and the corners in closed form. There are no tiles. F5's prototype spent 0.3-2.7 ms on these on the desktop.
+
+K923 measured the same two passes on the Pixel, with its own band test (a similarity test against the label across the edge):
+- label 1.83 ms; label + band 5.3 ms at full detail;
+- with LOD and the packed label: 2.67 ms worst median, p95 3.43 ms.
+
+Form B's band fragment does more than K923's test: a foot, up to 14 burial tests, and the corner terms. So S4a measures the band on the Pixel before anything is built on it.
+
+S4 is split into two halves (S4a, S4b) so each fits the 2 h cap. F6's "S4" means both halves.
+
+| Stage | Model, cap | After | Proves |
+|---|---|---|---|
+| S1 · The reference | Opus, 2 h | - | The definition is continuous and watertight on real scenes. Settles five questions. |
+| S2 · The reference's sheets and census | Sonnet, 1 h | S1 | How the reference differs from the look reference, every difference attributed |
+| S3 · The label pass | Opus, 2 h | S1 | The GPU's top surface equals the reference's; what the label costs |
+| S4a · The band: tube edges and burial | Opus, 2 h | S3 | Term 1 on the GPU meets check #12; what the band costs on the Pixel |
+| S4b · The band: corners, ties, the outer edge; the flag | Opus, 2 h | S4a | All of F2 on the GPU, checks #12 and #13; Levi's first look in motion |
+| S5 · The CPU prep in budget | Opus, 2 h | S3 | The prep fits the Pixel's frame |
+| S6 · The census in motion | Sonnet, 1 h | S4b | No pops outside the fades in knot mode, the settle and the zoom |
+| S7 · Paint on the field | Opus, 2 h | S4b | Tint, hover rim, reveal masks and explore on the new field |
+| S8 · The switch-over | Sonnet, 1 h | Levi accepts | The flag on by default; the old paths deleted |
+
+This is about 15 h of agent time. Code agents run two at a time on different files:
+- S2 runs beside S3;
+- S5 runs beside S4a or S4b. Both take the perf lock for their timings;
+- S6 runs beside S7.
+
+**S1 · The reference (Opus, 2 h).**
+
+It builds `src/render/field/form_b.ts`: F2 in float64, pure TS, beside the oracle. Nothing in the app imports it.
+- It reads geom.ts, depth.ts and scene.ts.
+- oracle30 lends the margin framework, the verdict classes, TOL and the PNG writer (F6).
+- Its vitest pins run on small committed fixtures. The S1a scenes are untracked (`.claude/probes/K868/scenes/`), so the run over all 12 is a probe script.
+
+It settles five questions, each by the reference's own checks:
+1. **A surface's z at a pixel.** F2 says the nearest member's. A depth test computes the max over covering pieces, and two segments of one chain at equal z tie on draw order (K1033). The candidates:
+   - write F2 in the max form;
+   - key the depth test on z − d/K (the cone trick): among equal z the nearest piece wins, a continuous trade between z and d.
+2. **The cap at both ends of a burial pair.** F2 fades B's burial by B's ramp. Suppose A's own foot is buried up to s_cap(A) and exposed past it, because A's piece becomes its own surface there. Then it flips at the cap unless A's ramp also fades it.
+3. **D4 in raster form.** The top surface's strip does not know the runner-up's z. The candidates:
+   - tie strips over each crossing pair's tie band: K923's switch strips, moved to where |Δz| < ε_z;
+   - a second depth layer, under a stencil limited to the tie bands.
+
+   First count the tie-band pixels per frame on the recordings. If only grazing crossings and the k42 cyclic triple (F3 D4) have any, the cheaper option wins.
+4. **The outer edge's AA.** A strip also covers aa outside its piece. Its fragment blends its coverage over the label fetched across the edge (K923's fetch across), so no runner-up label is needed. The reference computes coverage the same way.
+5. **The prototype's stray junction ink on muse_hash** (F5's caveat). Diagnose it against the reference, so S4 does not inherit it.
+
+Gate:
+- checks.ts's checks 1-9 and 11 pass on the reference's ink, on the 12 scenes;
+- label_pops' rule (`scripts/label_pops.ts`) holds on the reference over its four recordings (def_drag, def_flow, muse_drag, muse_flow): no pixel changes more than the motion explains, outside the four fades;
+- every term's support lies inside the strips that evaluate it (the max decomposition);
+- the free-end check (K910, K934) runs on the reference.
+
+Levi does not look.
+
+Reuses `src/render/field/` (geom, depth, scene, scene_export, checks) and oracle30's parts. Deletes nothing.
+
+**S2 · The reference's sheets and census (Sonnet, 1 h).**
+- It draws the reference on the 12 scenes, as whole frames and junction crops, beside the FieldModel's look (the look reference) and master's. It runs the reference's census over every recording.
+- Gate: every difference from the look reference is attributed, either to a change S1 made on purpose (named) or to a defect sent back to S1.
+- Levi looks only if a crop shows a look difference. Each one becomes a look question, with its crop beside the current look.
+- Reuses the layout of K868's sheets (`.claude/probes/K868/sheets/`) and `scripts/label_pops.ts`.
+
+**S3 · The label pass (Opus, 2 h).**
+
+It draws the label, depth-tested, into the packed R32UI label and the depth texture:
+- capsules per chain segment, and the corner fills;
+- surfaces from the topological groups and the arm spans (s per fragment), with the depth key S1 chose;
+- static instances, rebuilt only when a chain's segment count changes (K985).
+
+It also ports proto.js's prep (depth, groups, corners), without the tiles. It counts the groups per scene against the packed word's 8 cluster bits (255; def's junction ids reach j175), and widens the field if needed.
+
+Gate:
+- oracle30-style verdicts at every pixel centre on the 12 scenes: 0 DEFECT. K1033 closes;
+- the label's own pops over the recordings fall only inside the fades;
+- on the Pixel, by render sync at dpr 2, the label costs at most 2 ms (K923: 1.83 ms). On the desktop, by timer query;
+- its page tool does not count the favicon 404 as an error. K1039 closes.
+
+Levi does not look; a debug view sits behind the probe hook.
+
+Reuses:
+- label_pass.ts: the targets, the two draws, the state restore;
+- label_glsl.ts: the packed word, whose cluster bits become the surface;
+- label_band_gpu.ts: the static instance layout;
+- label_tables.ts: the s, span and pin tables per fragment;
+- label_app.ts: the glue, camera, fallback and `__knotLabel`.
+
+It keeps one point table, not two. The candidates:
+- SAMP (samp_table.ts, read through fabric_sdf.ts's sampAt), which the renderer already keeps in page-lifetime FloatRows and uploads by dirty rows;
+- label_tables'.
+
+The stage measures both uploads and keeps one.
+
+It deletes nothing: the old flags stay until S8.
+
+**S4a · The band: tube edges and burial (Opus, 2 h).**
+
+It draws:
+- the tube-edge strips and the dead-end caps;
+- term 1: the foot, with burial against the group's arm table and F3 D1-D2's fades;
+- the endpoint terms where a burial ends;
+- MAX blending, and coverage by S1's rule.
+
+Its gate runs on fat (no corners) and on the straight parts of the others:
+- the GPU's ink against the reference's, through checks.ts' InkProbe (coverage from luminance, run ends by interpolation): ΔF ≤ 1/32 px (check #12) away from corners;
+- on the Pixel, by render sync at dpr 2, label + band ≤ 4 ms (check #13), measured before going on. If it misses, try K923's LOD and the packed label first, then fewer burial reads (narrower windows in the arm table).
+
+Levi does not look yet.
+
+Reuses label_band.ts (`buildBandStrips`: one instanced quad per outline piece, with its outward normal) and label_band_gpu.ts.
+
+**S4b · The band: corners, ties, the outer edge; the flag (Opus, 2 h).**
+
+It adds:
+- the fillet-arc strips and the corner terms (V, t_a, t_b, ω);
+- S1's rules for D4 and the outer edge;
+- a new flag param appended to CODEC_PARAMS, off by default.
+
+Gate:
+- check #12 everywhere, and checks 1-9 and 11, on the GPU frames;
+- the pop census over the recordings (`scripts/label_pops.ts` driving the new passes): no pops outside the fades. K1000, K1041 and K1043 close;
+- the free-end check against the reference on all 12 scenes, and the checks on g41_user_tw64 and sheet K's cases. K972 and K973 close;
+- check #13 on the Pixel.
+
+Levi's first look in motion is here: behind the flag, on the desktop and the Pixel. The look questions are asked here, each with crops beside the current look:
+- K1001's split corners (sharp, as F2 draws them);
+- the fade widths (foldw = σ, capw = h, zt = 0.1·amp, ovw = 0.05h), wherever a fade shows.
+
+Reuses junction_field.ts's record textures as the pattern for the corner table.
+
+**S5 · The CPU prep in budget (Opus, 2 h).**
+- It measures depth, spans and corners per frame in the app on the Pixel.
+  - It records a master drag baseline first (K979's lesson).
+  - The prep allocates nothing per frame, and p95 is reported (K1007's lesson).
+- Gate: the prep's p95 in a Pixel drag is at most 2 ms. That number is a proposal; Levi or the coordinator sets it. If the prep misses, three remedies:
+  - compute the groups only when the diagram changes;
+  - run the corner solve as a GPU pass (one instance per corner, into a float table);
+  - or run it in the physics worker.
+- Reference: S3's verdicts are unchanged after the move.
+- Levi does not look.
+
+**S6 · The census in motion (Sonnet, 1 h).**
+- It records knot mode and the settle, and checks the 8x zoom (K985).
+- It runs the pop census and the free-end check on the GPU path over every recording, against the reference.
+- Its brief carries K1037's three census lessons.
+- Gate: no pops outside the fades; free ends equal the reference's.
+
+**S7 · Paint on the field (Opus, 2 h).**
+- It moves the app's paint onto the field:
+  - the highlight tint (goal 7), from the label's chain and s;
+  - the hover rim (K345), as a second band width on the same D;
+  - the reveal masks (K275, K268), multiplying the ink;
+  - the explore view.
+- Gate: the paint and reveal probes pass under the flag, and the reveal sheets match master's away from junctions.
+- Levi looks in motion at the whole app, behind the flag.
+
+**S8 · The switch-over (Sonnet, 1 h, after Levi accepts).**
+
+It turns the flag on by default and deletes:
+- the `lbi`/`lbp` label path: label_pieces.ts, label_switch.ts, and the FieldModel's per-frame use;
+- G3-1's gap search, which K892 keeps until this point.
+
+What it keeps:
+- the FieldModel, as the off-line look reference, until the reference replaces it;
+- junction_field.ts, arm_strip.ts and gap_mask.ts, which serve the ribbon looks. They go only if those looks also move to the field.
+
+Gate: the full suite and the deploy.
+
+**Where the float64 reference and the census come in:**
+- S1 builds the reference and runs the census rule on it, so the definition is shown continuous before any shader exists;
+- S2 compares it with the look reference;
+- S3 gates the label against it, pixel by pixel;
+- S4a and S4b gate the ink against it (ΔF, the checks, free ends), and S4b runs the census on the GPU;
+- S5 reruns S3's verdicts after the prep moves;
+- S6 runs the census everywhere.
+
+**Look questions.** None this stage.
+- Smooth-min's rounding does not arise: the look is decided (F4 b).
+- The fade widths become look questions only where a fade shows in motion. The prototype's frames are not the definition's look (F5's stray ink), so a crop now would mislead. S4b asks them, with crops beside the current look.
