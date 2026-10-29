@@ -19,13 +19,13 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1022.
+Next free ID: K1024.
 
 ## Waiting on Levi
 
-- **K1001** · K992's corners, sharp or round: where two threads split, today's corner is a sharp point (at some splits
-  it jumps between shapes in motion); stage 1's b16 rounds it into a small arch that holds steady. Asked Levi
-  2026-10-28 with crops (`k992-corners` worktree, `.claude/probes/S3a/pops17/crops17.png`); stage 2 goes on meanwhile.
+- **K1001** · K992's corners, sharp or round: where two threads split, the corner is a sharp point; stage 1's b16 rounded
+  it into a small arch (not landed). Stage 4's c23w (9b549d30) keeps the point and holds it steady in motion; one tip
+  (j115/2) rounds slightly. Levi sees it in motion with S3a8b3's `lbp` review (`k992-corners` `pops23/crops23.png`).
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -297,14 +297,14 @@ Next free ID: K1022.
   - next: S3a8b3 (its brief's Order: the pop check's third side, one cut line for every pass, the three gates on both paths); the merge once its gates pass; Levi sees lbp in motion after it; then S3a8d (K1010), S3a8c (K1007); then S3a10 (the FieldModel, about 265 ms of a 292 ms rebuilt frame), K972, K973, sheet S3a, K943's bits, S3b
   - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`; K934: `docs/design/K934_recount.md`; S3a: `docs/design/K868_s3a_app.md`; S3a2: `docs/design/K868_s3a2_label.md`; S3a3: `docs/design/K868_s3a3_ink.md`; S3a4: `docs/design/K868_s3a4_rebuild.md`; S3a5: `docs/design/K868_s3a5_incremental.md`; S3a6: `docs/design/K868_s3a6_motion.md`; S3a7: `docs/design/K868_s3a7_pieces.md`; S3a8a: `docs/design/K868_s3a8a_fills.md`; S3a8b: `docs/design/K868_s3a8b_strips.md`; S3a8b2: `docs/design/K868_s3a8b2_wiring.md`; S3a8b3: `docs/design/K868_s3a8b3_cut_line.md` (branch `k868-s3a` until merged)
   - env: from the `k868-s3a` worktree, `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5381 --strictPort --host 127.0.0.1` (the config is untracked; S3a3's handoff, How to rerun)
-- **K992** · K868 corner rules continuous in the geometry (master's make 65-100% of the pop area). Stage 3's c21w
-  (tracked foot, bisected part walk) cuts the windows to 3403 pops / 190259 px (master 4325 / 1065307) but fails two
-  on count, from the march's sampled S; stage 4 makes S exact and lands. Sharp vs round is K1001.
+- **K992** · K868 corner rules continuous in the geometry (master's make 65-100% of the pop area). Stage 4's c23w (S the
+  certified minimum of wAt) landed in 9b549d30: windows 3236 pops / 132921 px (master 4325 / 1065307), zoom 1 101 / 1073
+  (376 / 10078). Left: F11 (corner_continuity (D), (E) skipped). Cost is K1022, sharp vs round K1001.
   - owner: nobody since 2026-10-28 15:58 (merged; agent `a4f6363afebf35c2b` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
   - branch: mainline; last commit: `9b549d30`
   - evidence: the worktree's `.claude/probes/S3a/` (keep the worktree; untracked except the generators and readers): S3a6's kit and stage 1's (`*14*`, `*16*`, `pops16/`), stage 2's `*17*` and `pops17/`, K1000 stage 1's `*19*`, `pops19/` and `cmpdir19/`, stage 3's `*21*` and `pops21/` (`mk_c17.mjs --foot track/--drop/--ove`, `mk_walk21.mjs`, `census21.ps1`, `locked21.ps1`, `land21.ps1`; the c21 oracles regenerate: mk_c17, then mk_cap19 `--mode cont`, then mk_walk21), stage 4's `*23*` and `pops23/`
   - next: stage 5: make the march's branch a function of the frame (F11), so corner_continuity's (D) and (E) run again (each takes ~18 s; (E)'s q jump of 0.117h is untraced); brief to write
-  - brief: `docs/design/K992_s4_continuous_march.md` on branch `k992-corners` (stage 3 `K992_s3_landing.md` F1-F8 and ## Handoff, stage 2 `K992_s2_continuous_stops.md`, stage 1 `K992_corner_rules.md`, K1000 `K1000_continuous_caps.md`)
+  - brief: `docs/design/K992_s4_continuous_march.md` (stage 3 `K992_s3_landing.md` F1-F8 and ## Handoff, stage 2 `K992_s2_continuous_stops.md`, stage 1 `K992_corner_rules.md`, K1000 `K1000_continuous_caps.md`)
   - env: from the `k992-corners` worktree, `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5392 --strictPort --host 127.0.0.1` (the config is untracked, copied from `k868-s3a`)
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -816,8 +816,11 @@ Every other item below waits on the trigger it names.
 - **K1007** · K868 S3a8c, S3a8a's leftovers: one window range record per window and shift (about 730 a frame, not
   31-35K), the crossing rows' `Math.hypot` near test (a pin call, or the GPU), and the p95 spread (GC or load,
   untested). `K868_s3a8a_fills.md` ## Handoff, Missing 1-3.
+- **K1022** · K992's c23w makes the label's CPU build 1.75x master's (the model 1.87x), over 2x on g41_def_tw42 (2.06)
+  and muse_default_tw (2.29); not attributed (the march, the caps, the walk, TAU 1e-4). Attribute and cut it with S3a10
+  (the FieldModel). `K992_s4_continuous_march.md` (cost23).
 - **K1000** · K868 label: V's folds and live/unsolved flips (class 1) still pop. Stage 1 made the cut loop's caps
-  continuous (branch `k992-corners`, `K1000_continuous_caps.md` ## Handoff); they land with K992 (stage 4; stage 3 failed the gate).
+  continuous (branch `k992-corners`, `K1000_continuous_caps.md` ## Handoff); they landed with K992 in 9b549d30.
 - **K1015** · K868 label: passReach (the depth pins' walk) steps by h/8, so its reach moves in steps: the census's
   largest pop class in the windows ("reach": 1554 of c21w's 3403 pops; master 1884). Make it continuous as K992 stage
   3 made the part walk (bisect the parting). `K992_s3_landing.md` F5 (branch `k992-corners`).
@@ -1797,6 +1800,9 @@ Every other item below waits on the trigger it names.
 - **K1021** · Cursive B2's measures, reported: g's and q's corners sit 1.96 and 1.89 u above a's (each at its own
   stem top); the new tops run 9.2-9.3 u off the font (a's 8.0); q's junction stretch 0.31 to 0.92 u (within 3.0);
   og's dmax 19.91 to 20.74 u (rough before and after). `K1012_cursive_gq_corner.md` ## Handoff.
+- **K1023** · K992 stage 4's untraced spots: 2 of raster14's 5 "none" px (3 traced to sub-threshold corner moves),
+  j51/1's refit gate, j12/0, a concave-vertex hop in j115/2's V foot near u 0.66; thin census margins (muse_flow@w0 655
+  vs 659, muse_drag@w1 283 vs 286); TAU lets r move up to 1e-4 rRule a frame. `K992_s4_continuous_march.md` ## Handoff.
 - **K994** · npm audit (2026-10-28): 2 critical, 7 high, 2 moderate; production has 1 high (@xmldom/xmldom 0.8.13 via
   pixi.js 8.19.0), the rest is dev tooling. `npm audit fix` covers all but vitest's two criticals (take the next patched
   vitest); then turn Dependabot on. claude-config's dependency-vulnerability-roundup, 2026-10-28.
