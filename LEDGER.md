@@ -23,9 +23,6 @@ Next free ID: K1022.
 
 ## Waiting on Levi
 
-- **K1013** · Cursive o's join, by look: A (leaves from o's side) or B (a point at o's top, then a short run back; its
-  dips and the oe crossing are J3b's to fix; C dropped). ot is decided: the crossbar (Levi, `K863_trace.md`). Asked
-  2026-10-28 with crops in `.claude/probes/K863/trace/work21/levi/` (from `out21/o_exits_v61.svg`).
 - **K1001** · K992's corners, sharp or round: where two threads split, today's corner is a sharp point (at some splits
   it jumps between shapes in motion); stage 1's b16 rounds it into a small arch that holds steady. Asked Levi
   2026-10-28 with crops (`k992-corners` worktree, `.claude/probes/S3a/pops17/crops17.png`); stage 2 goes on meanwhile.
@@ -315,7 +312,7 @@ Next free ID: K1022.
   - owner: agent `a3e0ff8a895c74995` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, B3 = K1019 + K1020, started 2026-10-28 15:25, 2 h cap ~17:25); B2 = K1012 stopped 15:15, handoff `ca7d2da3`
   - branch: mainline, no code (outputs untracked in `.claude/probes/K863/trace/`: B3's `work23/dbg/*_k1019.*`, `work23/`, `out23/`); last commit: `a327823e` (B3's brief)
   - evidence: `.claude/probes/K863/trace/` (per stage: `tools/*_k<ID>.py`, `work<n>/`, `out<n>/`; `NOTES.md` has a section per version with its rerun commands); Drive `K863/` (each version's SVGs; v5.1: `cursive_v51.svg`, `cursive_v51_words.svg`, `split_combs.svg`, `k917_junctions.svg`; v5.2: `cursive_v52.svg`, `cursive_v52_words.svg`; v5.3: `cursive_v53.svg`, `cursive_v53_words.svg`, `combs_v53.svg`; v5.4: `cursive_v54_words.svg`, `e_joins_v54.svg`; v5.5: `cursive_v55.svg`, `cursive_v55_words.svg`, `combs_v55.svg`; v5.6: `cursive_v56.svg`, `cursive_v56_nodes.svg`, `cursive_v56_words.svg`, `combs_v56.svg`; v5.7: `cursive_v57.svg`, `cursive_v57_nodes.svg`, `cursive_v57_words.svg`, `combs_v57.svg`; v5.8: `cursive_v58.svg`, `cursive_v58_nodes.svg`, `cursive_v58_words.svg`, `combs_v58.svg`; K944: `e_tails_k950.svg`, `words_edit_test.svg`, `combs_edit_test.svg`; J1 uploaded nothing, no visible change; v5.9 = J2: `cursive_v59_words.svg`, `combs_v59.svg`; v6.0 = B1: `cursive_v60.svg`, `cursive_v60_words.svg`, `combs_v60.svg`, `letters_v60.svg`; v6.1 = J3a: `o_exits_v61.svg`, `ot_v61.svg`, `low_v61.svg`, `cursive_v61<a|b|c>_words.svg`; v6.2 = B2: `corners_v62.svg`, `gq_words_v62.svg`, `cursive_v62_words.svg`); Levi's file to edit: `out22/cursive_template.svg` (B2's g and q on `out20/cursive_template.svg`, which `work20/dbg/build_from_svg.ps1 -Name k990` built on B1's join sets, `work20/template_map_k990.json`; B3 writes `out23/cursive_template.svg`); B1's census `out20/census_v60.txt`, distances `work20/fit/bodydist_k990.txt`, locality `work20/local/b1/sensitivity.txt` and `work20/cmp_j2_b1.txt`, debug scripts `work20/dbg/temp_k990/` (rerun list: B1's handoff); J2's census `work19/dbg/census_k962.py`, crops `work19/crops/`, locality harness `work19/dbg/sensitivity_k962.py` (rerun list: J2's handoff); J3a's census `work21/dbg/census_k1009.py`, rerun `work21/dbg/checks2_batch_k1009.ps1`, Levi's two pictures `work21/levi/` (made by `levi_crops_k1009.ps1` there); B2's record `NOTES.md` `## K1012` (N1-N10 with rerun commands), build `work22/base`, rerun `work22/dbg/checks_k1012.ps1` (census, compare, distances, word sheets, guard), the high-entry check sheets `work22/sheets/`
-  - next: B3 (frames carried by arclength, K1019; g's even top, K1020; its brief's Order); Levi picks o's exit by look (K1013; ot meets t at the crossbar, Levi's call); then J3b: every other exit, J3a's leftovers (K1014), the leads and tails (K1006), f's lower-loop end into its exit (K990), K991 and K948 for the remaining pairs, K937, K997, K998, and the join sets removed; then Levi reviews again; Levi edits the newest `cursive_template.svg` once the letters look right and `build_from_svg.ps1` builds from it; K927; then map the letters onto threads (the a/c/d/g/o/q junctions and the top corners of a, g and q, `K863_trace.md` ## Levi's calls); capitals are K931
+  - next: B3 (frames carried by arclength, K1019; g's even top, K1020; its brief's Order); then J3b: o's exit B (Levi's pick, K1013; its dips and the oe crossing) and ot at the crossbar (Levi's call), every other exit, J3a's leftovers (K1014), the leads and tails (K1006), f's lower-loop end into its exit (K990), K991 and K948 for the remaining pairs, K937, K997, K998, and the join sets removed; then Levi reviews again; Levi edits the newest `cursive_template.svg` once the letters look right and `build_from_svg.ps1` builds from it; K927; then map the letters onto threads (the a/c/d/g/o/q junctions and the top corners of a, g and q, `K863_trace.md` ## Levi's calls); capitals are K931
   - brief: `docs/design/K863_trace.md` (## Levi's calls); stages: v3 `K886_cursive_v3.md`, v4 `K902_cursive_frames.md`, v5 `K904_cursive_v5.md`, v5.1 `K916_cursive_v51.md`, v5.2 `K925_cursive_v52.md`, v5.3 `K930_cursive_smooth.md`, v5.4 `K926_cursive_e.md`, v5.5 `K945_cursive_v55.md`, v5.6 `K959_cursive_v56.md`, v5.7 `K965_cursive_v57.md`, v5.8 `K969_cursive_v58.md`, K944 `K944_cursive_asdrawn.md`, J1 `K980_cursive_local.md`, J2 `K962_cursive_joins.md`, B1 `K990_cursive_bodies.md` (## Handoff), J3a `K1009_cursive_ports.md` (## Handoff), B2 `K1012_cursive_gq_corner.md` (## Handoff), B3 `K1019_cursive_b3.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
@@ -783,7 +780,7 @@ Every other item below waits on the trigger it names.
   (coordinator's call; K928's smoothness). `K1012_cursive_gq_corner.md` N10; `K1019_cursive_b3.md`.
 - **K1009** · Cursive J3: letters declare ports and each join is solved per pair, replacing the join presets (Levi,
   2026-10-28: "more flexible and procedural and less preconfigured"). J3a built the ports and o's three exits (v6.1,
-  `e45f59b8`); J3b, the other exits, waits on K1013 and takes K1014. `K1009_cursive_ports.md` ## Handoff.
+  `e45f59b8`); J3b builds o's exit B (Levi's pick, K1013) and the other exits, and takes K1014. `K1009_cursive_ports.md` ## Handoff.
 - **K990** · Cursive bodies, Levi's v5.8 review (2026-10-28): B1 (v6.0) gave a its top corner (its flat top is K1004), k
   the sharper leg and p the shorter end. Left: f still ends its lower loop in a curl below the crossing, not a cusp into
   its exit (fe 22.55 u, ff 16.55, fo 9.07 off the font); J3. `K990_cursive_bodies.md` ## Handoff.
@@ -2099,6 +2096,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1013** · Cursive o's join, by look: Levi picked B (a point at o's top, then a short run back: "B for o's exit"); J3b builds it and fixes its dips and the oe crossing (K1009). Recorded in 15323c08 (2026-10-28).
 - **K1012** · Cursive B2: g and q take a's top-right corner, one point with two tangents (v6.2; Levi's request); g's top is K1020. Done in ca7d2da3 (2026-10-28).
 - **K1004** · Cursive o and a after B1: Levi likes a's top corner; o's exits are bad, and J3 takes them (K1009). Answered 2026-10-28.
 - **K1005** · Cursive joins out of B1's o start low. Dropped: superseded by K1009 (solved joins replace the re-fit).
