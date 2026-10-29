@@ -431,3 +431,124 @@ Making it subpixel needs the analytic outline at the mask's edge, which
 is form B again. Ruled out.
 
 **(d) Form B exact on the GPU.** Measured by the prototype: F5.
+
+### F5 · Form B on the GPU, measured
+
+Step 3 done 22:11 (desktop measured; the phone estimated, since it was
+not connected: `adb devices` listed nothing).
+
+**The prototype** (`.claude/probes/K1040/`: `proto.html`, `proto.js`,
+`run.mjs`, `run_locked.ps1`) is a standalone WebGL2 page, with no pixi
+and no app code. Per scene it:
+- transforms the S1a export to device px;
+- computes the depth hats and the groups (arm spans, union-find, the
+  crossing cut at s ∓ 2h);
+- computes the corners (q, r, t_a, t_b, V, ω) at the straight arms;
+- bins segments and corners into 16 px tiles;
+- uploads it all as textures.
+
+One fragment shader then evaluates form B per pixel:
+- pieces: the nearest point of each chain within σ, at most 4;
+- the top surface by z;
+- side feet with their burial tests;
+- the corner terms (wedge arc, t_a, t_b, V).
+
+Timing uses `EXT_disjoint_timer_query_webgl2`, which Chrome exposes on
+the desktop (RX 6800 XT, ANGLE D3D11). Each scene is timed three ways:
+- 60 frames on rAF;
+- 40 queries each waited for (the "synced" loop);
+- K923's render sync as a check: 3×30 draws, each ending in a 1 px
+  readPixels, minus a floor shader.
+
+The desktop's timings are bimodal, and the cause is inferred, not
+checked: a GPU power state. The same draw reads 2.7-4.9x apart between
+the two query loops. The fast state agrees with the render sync, so the
+tables give both: the fast state, and the slow state (the synced p50).
+
+**Desktop, dpr 2, each scene's own camera** (2480×1800 = 4.46 Mpx;
+results_dpr2_1793250529903.json):
+
+| scene | h / W px | GPU ms, fast (rAF p50 / sync) | GPU ms, slow (synced p50) | CPU prep p50 (tiles) | CPU prep max |
+|---|---|---|---|---|---|
+| def | 11.6 / 4.4 | 0.98 / 1.0 | 4.78 | 5.6 ms (2.7) | 38 ms |
+| fat | 11.8 / 4.5 | 0.72 / 0.7 | 3.36 | 3.3 ms (1.5) | 22 ms |
+| muse_hash | 17.0 / 6.5 | 1.55 / 1.5 | 7.52 | 6.0 ms (3.3) | 8 ms |
+| ring | 19.3 / 7.3 | 0.53 / 0.5 | 2.33 | 1.3 ms (0.8) | 3 ms |
+
+The upload adds 0.6-1.3 ms. The CPU max is the first, cold repetition.
+fat's prep read 7.9 ms p50 in an earlier run, so run-to-run spread is
+large.
+
+**Candidates per pixel**, max / p95 over the frame's pixels, which are
+mostly empty: p50 is 0-18.
+
+| scene | tile list (loop) | segments within reach | pieces | corners in the tile | burial tests |
+|---|---|---|---|---|---|
+| def | 71 / 41 | 37 / 21 | 3 / 2 | 10 / 5 | 14 / p99 5 |
+| fat | 40 / 32 | 22 / 17 | 4 / 2 | 0 / 0 | 0 |
+| muse_hash | 94 / 62 | 54 / 33 | 3 / 2 | 13 / 7 | 14 / p99 7 |
+| ring | 45 / 25 | 31 / 15 | 3 / 2 | 7 / 3 | 14 / p99 0 |
+
+**At the phone's buffer.** Here `--fit 822x1506` fits the knot into the
+Pixel 11's portrait buffer at dpr 2, so h is about 5.7 px and the
+density is the phone's
+(`results_fit822x1506_1793250456645.json`):
+- def: 0.50 ms (render sync) / 0.68 ms (rAF p50) fast, 1.84 ms slow.
+  CPU prep 8.0 ms p50, of which tiles 4.4 ms. Tile list 98 / 67;
+  within reach 38 / 21; corners 11 / 6.
+- fat: 1.0 / 1.25 ms, 1.29 ms synced, so no fast state was seen in this
+  run. CPU prep 3.2 ms. Tile list 63 / 49.
+
+**The Pixel 11, estimated.** The ratio comes from K923's disc search,
+calibrated by `calib()` at 822×1506 on the desktop with timer queries:
+- desktop: 29 taps 0.095 ms, 45 taps 0.135 ms (floor 0.040);
+- Pixel: 4.50 and 6.75 ms (K923);
+- ratio: 47-50x on totals, 71-82x over the floor.
+
+The estimates for def at the phone's buffer, from 0.5-1.84 ms on the
+desktop:
+- fetch-bound: 24-150 ms;
+- ALU-bound, at an FP32 spec-sheet ratio of about 13x (a guess, not
+  measured): 6.5-24 ms.
+
+K892 measured the same class of work on the Pixel: G3-1's per-pixel
+searches (up to 64 SAMP points with segment math) cost +24.5 to +48 ms.
+
+So form B by per-pixel tile loops misses check #13 (≤ 4 ms on the Pixel
+at dpr 2):
+- by 1.6x at the most optimistic end;
+- by 6-40x on the fetch evidence.
+
+A perfect binning would not rescue it. Looping only over the segments
+within reach (21 instead of 67 at p95) cuts the loop about 3x, which
+still gives 8-50 ms fetch-bound.
+
+**What it shows.**
+- The definition itself is cheap. Per pixel it touches at most 4 pieces,
+  13 corners and 14 burial tests (p95 2 / 7 / 0).
+- The cost is the search for candidates: up to 98 segments a pixel at
+  the phone's density, to find the 2-3 that matter.
+- On the desktop, form B per pixel fits easily: ≤ 1.5 ms fast and
+  2.3-7.5 ms slow at 4.46 Mpx.
+- The search must not be a per-pixel loop. The rasterizer can do it:
+  each segment's quad reaches exactly the pixels within its reach, as
+  K923's label and band passes do. That path was measured on the Pixel
+  itself at 2.67 ms worst median (LOD + packed label, p95 3.43 ms),
+  against estimates here.
+
+The CPU binning (0.8-4.4 ms on the desktop) goes with it. The rest of
+the prep (depth, groups, corners: 0.3-2.7 ms) must become incremental
+or move off the main thread. The depth already exists per particle in
+the physics.
+
+**Caveats.**
+- The prototype draws the tube boundary (D = 0) as a hard, aliased cut:
+  F2's band AA covers only the inner edge. The real outer edge needs
+  coverage blended over the next surface, so the label carries the
+  runner-up surface near the outline.
+- `muse_hash_dpr2.png` shows stray ink inside about a dozen junctions.
+  The cause is not diagnosed; a corner term is the likely suspect. Its
+  look is therefore not the definition's, and it was not checked
+  against a reference. The timing is valid for the amount of work, not
+  for correctness.
+- Debug tint: blue marks pixels whose top surface is a junction group.
