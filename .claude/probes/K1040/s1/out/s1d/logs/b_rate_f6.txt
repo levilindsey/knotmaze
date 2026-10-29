@@ -1,0 +1,17 @@
+muse_hash: 23 sites, 0 s
+muse_default_tw: 12 sites, 1 s
+def: 18 sites, 1 s
+fat: 0 sites, 1 s
+ring: 18 sites, 1 s
+user_tw42.lightpaper: 12 sites, 1 s
+g41_def_tw42: 12 sites, 1 s
+g41_def_tw64: 18 sites, 2 s
+g41_ring_tw42: 12 sites, 2 s
+g41_ring_tw64: 12 sites, 2 s
+g41_user_tw42: 12 sites, 2 s
+g41_user_tw64: 12 sites, 2 s
+b_rate: R 3 px, step 0.125 px, LIM 3/px, jump > 0.02 at 1/1024 px; params {}
+totals by class (grid edges):
+     102 jump foot | foot
+      44 jump foot | none
+sites 161, with breaches 6

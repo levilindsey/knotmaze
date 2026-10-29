@@ -1,0 +1,60 @@
+b_rate: R 3 px, step 0.125 px, LIM 3/px, jump > 0.02 at 1/1024 px; params {}
+totals by class (grid edges):
+     185 jump foot | none
+     116 jump foot | foot
+sites 36, with breaches 9
+
+g41_ring_tw42 (9.348, 0.951) [#1 foot+f1]: max |grad ink| 8.00/px, 32 breaches: 16 jump foot | none; 16 jump foot | foot
+    worst at (9.3654, 0.9778) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+    worst at (9.3667, 0.9778) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+g41_ring_tw42 (9.348, 0.98) [#1 foot+f1]: max |grad ink| 8.00/px, 33 breaches: 16 jump foot | none; 17 jump foot | foot
+    worst at (9.3654, 0.9778) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+    worst at (9.3667, 0.9778) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+g41_ring_tw42 (9.378, 0.98) [#1 foot+f1]: max |grad ink| 8.00/px, 93 breaches: 73 jump foot | none; 20 jump foot | foot
+    worst at (9.3655, 0.9778) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+    worst at (9.3668, 0.9778) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+g41_ring_tw42 (9.408, 0.98) [#1 foot+f1]: max |grad ink| 8.00/px, 66 breaches: 62 jump foot | none; 4 jump foot | foot
+    worst at (9.3843, 0.9797) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+    worst at (9.3856, 0.9799) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+g41_ring_tw42 (9.348, 1.01) [#1 foot+f1]: max |grad ink| 1.14/px, 0 breaches
+g41_ring_tw42 (9.378, 1.01) [#1 foot+f1]: max |grad ink| 8.00/px, 18 breaches: 18 jump foot | none
+    worst at (9.3874, 0.9801) x jump 1.000: foot top 5 ink 1.000 || none top 5 ink 0.000 corner -1 chain 1
+    worst at (9.3880, 0.9802) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+g41_ring_tw42 (10.215, 2.355) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_ring_tw42 (19.658, 3.371) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_ring_tw42 (4.805, 4.148) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_ring_tw42 (20.944, 4.597) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_ring_tw42 (14.996, 5.732) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_ring_tw42 (10.872, 5.792) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (5.613, 1.534) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (5.378, 1.622) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (11.678, 1.622) [#1 foot+f1]: max |grad ink| 5.30/px, 10 breaches: 10 jump foot | foot
+    worst at (11.7066, 1.6134) x jump 0.635: foot top 25 ink 1.000 || foot top 25 ink 0.365 corner -1 chain 23
+    worst at (11.7063, 1.6122) x jump 0.621: foot top 25 ink 0.954 || foot top 25 ink 0.333 corner -1 chain 23
+user_tw42.lightpaper (11.707, 1.622) [#1 foot+f1]: max |grad ink| 4.82/px, 22 breaches: 22 jump foot | foot
+    worst at (11.7066, 1.6134) x jump 0.635: foot top 25 ink 1.000 || foot top 25 ink 0.365 corner -1 chain 23
+    worst at (11.7063, 1.6122) x jump 0.621: foot top 25 ink 0.954 || foot top 25 ink 0.333 corner -1 chain 23
+user_tw42.lightpaper (3.641, 1.71) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (3.523, 1.74) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (12.797, 1.74) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (12.915, 1.858) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (12.885, 1.887) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (13.739, 1.975) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (13.503, 2.182) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (13.709, 2.182) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (5.613, 1.534) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (5.378, 1.622) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (11.678, 1.622) [#1 foot+f1]: max |grad ink| 5.28/px, 9 breaches: 9 jump foot | foot
+    worst at (11.7066, 1.6134) x jump 0.637: foot top 25 ink 0.997 || foot top 25 ink 0.360 corner -1 chain 23
+    worst at (11.7069, 1.6146) x jump 0.623: foot top 25 ink 1.000 || foot top 25 ink 0.377 corner -1 chain 23
+g41_user_tw42 (11.708, 1.622) [#1 foot+f1]: max |grad ink| 5.03/px, 18 breaches: 18 jump foot | foot
+    worst at (11.7066, 1.6134) x jump 0.637: foot top 25 ink 0.997 || foot top 25 ink 0.360 corner -1 chain 23
+    worst at (11.7068, 1.6140) y jump 0.631: foot top 25 ink 0.369 || foot top 25 ink 1.000 corner -1 chain 23
+g41_user_tw42 (3.641, 1.71) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (3.523, 1.74) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (12.797, 1.74) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (12.885, 1.887) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (13.68, 1.887) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (13.739, 1.975) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (13.503, 2.182) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (13.709, 2.182) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches

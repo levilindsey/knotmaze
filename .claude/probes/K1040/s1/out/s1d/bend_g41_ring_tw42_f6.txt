@@ -1,0 +1,27 @@
+base:
+  u -0.00500 ink 0.000 top 5 fade 0 term none
+  u -0.00333 ink 0.000 top 5 fade 0 term none
+  u -0.00167 ink 0.000 top 5 fade 0 term none
+  u 0.00000 ink 0.000 top 5 fade 0 term none
+  u 0.00167 ink 0.000 top 5 fade 0 term none
+  u 0.00333 ink 0.000 top 5 fade 0 term none
+  u 0.00500 ink 0.000 top 5 fade 0 term none
+  junction 12 at (9.5771, 1.0325) scene arms 1/through/-1 8/end/-1 1/through/1; arms: ei 0 through pi 1 dir -1 sR 113.360 L 2.681; ei 1 end pi 8 dir -1 sR 1.415 L 1.575; ei 2 through pi 1 dir 1 sR 113.360 L 0.750; corners: 0/1 r 0.4200 w 1.000; 1/2 r 0.2930 w 1.000; 2/0 r 0.3131 w 1.000
+f2:
+  u -0.00500 ink 0.000 top 5 fade 0 term none
+  u -0.00333 ink 0.524 top 5 fade 0 term foot chain 1 s 113.267 corner -1 D 0.0467 w 0.524
+  u -0.00167 ink 0.374 top 5 fade 0 term foot chain 1 s 113.268 corner -1 D 0.0460 w 0.374
+  u 0.00000 ink 0.236 top 5 fade 0 term foot chain 1 s 113.270 corner -1 D 0.0452 w 0.236
+  u 0.00167 ink 1.000 top 5 fade 0 term foot chain 1 s 113.473 corner -1 D 0.0455 w 1.000
+  u 0.00333 ink 1.000 top 5 fade 0 term foot chain 1 s 113.474 corner -1 D 0.0466 w 1.000
+  u 0.00500 ink 1.000 top 5 fade 0 term foot chain 1 s 113.476 corner -1 D 0.0477 w 1.000
+  junction 12 at (9.5771, 1.0325) scene arms 1/through/-1 8/end/-1 1/through/1; arms: ei 0 through pi 1 dir -1 sR 113.360 L 2.681; ei 1 end pi 8 dir -1 sR 1.415 L 1.575; ei 2 through pi 1 dir 1 sR 113.360 L 0.750; corners: 0/1 r 0.4200 w 1.000; 1/2 r 0.2930 w 1.000
+src:
+  u -0.00500 ink 0.000 top 5 fade 0 term none
+  u -0.00333 ink 0.000 top 5 fade 0 term none
+  u -0.00167 ink 0.000 top 5 fade 0 term none
+  u 0.00000 ink 0.000 top 5 fade 0 term none
+  u 0.00167 ink 0.000 top 5 fade 0 term none
+  u 0.00333 ink 0.000 top 5 fade 0 term none
+  u 0.00500 ink 0.000 top 5 fade 0 term none
+  junction 12 at (9.5771, 1.0325) scene arms 1/through/-1 8/end/-1 1/through/1; arms: ei 0 through pi 1 dir -1 sR 113.360 L 2.681; ei 1 end pi 8 dir -1 sR 1.415 L 1.575; ei 2 through pi 1 dir 1 sR 113.360 L 0.750; corners: 1/2 r 0.2520 w 1.000
