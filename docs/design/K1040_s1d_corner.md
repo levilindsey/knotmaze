@@ -227,3 +227,34 @@ definition, and leave the rest to the Handoff.
   - `Ledger items`: new follow-ups, residuals, and decisions for Levi;
   - K1040's handle fields: owner, branch, last commit, evidence, next,
     brief, env.
+
+## Findings
+
+Start 03:48:35 (cap 05:48:35).
+
+### F1 · Free ends: the counter does not read OWN as a join (03:56)
+
+The guess is refuted on muse_hash. Probe: `fe_own.ts`; output
+`out/s1d/fe_own_muse_hash.txt`.
+
+- **Lost sites.** S1b has 113 free ends and F2 has 39. Of S1b's sites,
+  75 have no F2 free end within 2W.
+  - At all 75, F2's ink at the site is below 0.5. The counter walks
+    only inked points, so these sites are not candidates under F2 at
+    all. The counter reads ink only, never a surface, and F2 does not
+    draw ink there.
+  - Reading OWN ink as paper makes 0 of the 75 free again.
+  - The oracle (FieldModel.evalPoint) inks 1 of the 75, and that one
+    is a free end in the oracle too.
+  - So S1b's extra free ends were S1b's own stray outline ink. The
+    oracle has none of it, and F2 matches the oracle at 74 of the 75.
+- **F2's own 39 free ends,** read like for like at the same sites: the
+  oracle inks 9 of them, and only 2 are free ends in the oracle. So 30
+  of F2's free ends are form B ink that the oracle does not draw at
+  all, and 7 are ink that joins in the oracle.
+- **The counter is unchanged,** and F2's counts stand: 169 in all, 39
+  on muse_hash.
+- **For a later stage:** the oracle column (108 on muse_hash) is K900's
+  census, not like for like. `fe_own.ts`'s second line is the
+  like-for-like measure: a free end in form B and in the oracle at the
+  same site.
