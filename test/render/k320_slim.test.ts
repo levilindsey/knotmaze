@@ -23,6 +23,7 @@ import { PLUCK_STILL_FRAG, withExploreStill } from "../../src/render/pluck_overl
 import { G3_CHAIN_GLSL, JUNCTION_CUT_GLSL } from "../../src/render/fabric_sdf";
 import { labelSources } from "../../src/render/label/label_glsl";
 import { DATA_W } from "../../src/render/label/label_pieces";
+import { TBL_W } from "../../src/render/label/label_tables";
 
 // The section fragment as ribbon/ribbon_shader.ts writes it (the same
 // slice paint_explore.test.ts and the K320 probe use), interpolated with
@@ -137,6 +138,15 @@ describe("K320 stage 1: char budgets", () => {
     expect(lab.tubeFs.length).toBeLessThanOrEqual(1_600);
     expect(lab.fillVs.length).toBeLessThanOrEqual(650);
     expect(lab.fillFs.length).toBeLessThanOrEqual(4_000);
+    // K868 S3a8a (2026-10-28): with the GPU pieces the fills compile from
+    // the same text with GPU_FILLS, its blocks kept or dropped in JS
+    // (labelSources), so each program carries only its own foot: the
+    // z-split fill above is still master's text char for char, and the
+    // GPU fill (the table foot and the tube's plateau depthAt) measures
+    // 684 + 6,200 here (the vertex stage: its two #defines).
+    const gpu = labelSources(true, DATA_W, true, TBL_W);
+    expect(gpu.fillVs.length).toBeLessThanOrEqual(700);
+    expect(gpu.fillFs.length).toBeLessThanOrEqual(6_250);
     const band = readFileSync(new URL("../../src/render/label/label_band.ts", import.meta.url), "utf8").replace(/\r\n/g, "\n");
     const h0 = band.indexOf("const HEAD = `");
     const HEAD = band.slice(h0 + "const HEAD = `".length, band.indexOf("`;", h0));

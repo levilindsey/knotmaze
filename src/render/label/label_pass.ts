@@ -373,14 +373,20 @@ export class LabelPass {
       }
       gl.bindVertexArray(gf ? this.gpuFillVao : this.fillVao);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, p.nFills);
+      // K868 S3a8a: each unit by name. With GPU_FILLS the active unit here is
+      // 3, and an unbind that assumed unit 2 left the R32UI S texture bound
+      // there: pixi's next draws failed (GL_INVALID_OPERATION, a sampler type
+      // mismatch; seen on muse at lbp=1). The end state without GPU_FILLS is
+      // unchanged: units 0-2 unbound, unit 0 active.
       if (gf) {
         gl.activeTexture(gl.TEXTURE3);
         gl.bindTexture(gl.TEXTURE_2D, null);
       }
       if (this.packed) {
+        gl.activeTexture(gl.TEXTURE2);
         gl.bindTexture(gl.TEXTURE_2D, null);
-        gl.activeTexture(gl.TEXTURE1);
       }
+      gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, null);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, null);
