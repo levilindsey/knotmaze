@@ -205,5 +205,56 @@ S3a8b's `## Rules` hold, with these changes:
   changes along its own seam. N2's "with `lbp` on there are no piece
   seams" does not hold at cluster bounds. The fix is not in this stage
   (Handoff).
+- **P5 · flip_0 (S3a8b call 7): the 11-bit rounding hypothesis is
+  falsified.** `flip22.ts` (`pops22/flip22.md`, under the lock) renders
+  g41_user_tw64 on both pages (lbp off, band edges "cpu"; `?gpu=1`, edges
+  "gpu") and reads the label words in a 21 x 21 px box around
+  (1365, 1879). The band's coverage differs on a 13 px row, as in P2 and
+  S3a7 (x 1359-1371, y 1879-1880; off 0, on 255, two partial). At all 13
+  the label word is bit for bit the same on both paths: ch20, cl24 and the
+  same s11 (188-225, s 0.337-0.433; one level is 0.00259). Of the box's
+  428 other labelled pixels 427 match too (1 has another key). The band
+  decodes s from s11 alone, so its sigma test reads the same s on both
+  paths: the flip is not the word's rounding. Observed: s rises about 3
+  levels per pixel along the row, so the row runs along chain 20, and
+  what flips is a lateral edge of the band, not an end in s. Inferred,
+  not tested: S3a8a G4 narrowed flip_0 to "the tube's own s or depth"; s
+  is now ruled out, which leaves the label's depth under the band (the
+  word carries none). It stays classed an order flip.
+- **P6 · The cost (S3a8b call 6), under the lock (`cost22.ps1`), on
+  a45ef47a's code (no crack fix).** Node, lbp on (`pops22/prof22_after.md`:
+  an instrumented copy that drew what the real build drew on 164 of 164
+  frames, 59 topology rebuilds), p50 / p95 ms over def_drag, def_flow,
+  muse_drag and muse_flow:
+  - the strips: 1.85-3.31 / 3.17-5.65 uninstrumented, against lbp off's
+    `buildBandStrips` 16.7-28.4 / 25.1-46.9. Per part: setup 0.01-0.03;
+    the per-chain loop with the caps 1.37-2.04 / 2.38-2.77; the fill arcs
+    0.50-1.25 / 0.68-2.75; switch strips at most 0.003 / 0.013; output
+    0.35-0.60 / 0.49-0.71. About 5200-6700 strips (off: 52500-56600);
+  - `buildLabelPiecesGpu` 1.95-4.16 / 5.2-8.6 (off: `buildLabelPieces`
+    27.3-53.0 / 43.1-76.3); the tables 0.26-0.45 / 0.38-1.24;
+  - the switch lines, apart (S3a8d): `switchLinesFrom` 2.77-6.50 /
+    6.33-13.35, the largest part here after the FieldModel; the switch
+    key 0.03-0.06 / 0.06-0.24; `switchTopo` when the key changed 1.09-1.68
+    p50 (the flow sequences) and up to 4.79 p95;
+  - all but the FieldModel: 8.2-16.2 / 15.7-27.0 (off 49.6-87.4 /
+    72.5-125.9). The FieldModel alone: 256-474 / 395-557 on, 249-474 off.
+
+  Browser (`prof22.mjs`, `pops22/prof22_browser.md`): runs off, on, on,
+  off at 1240 x 900, the physics worker on, a 5 s circular drag after
+  sleep; band edges "gpu" on both on runs and "cpu" off; the GPU timer
+  extension present, 0 disjoint, 0 errors logged. Rebuilt frames, p50 /
+  p95 ms:
+  - strips 1.2 / 1.8-2.0 on against 11.9-12.8 / 17.0-34.1 off; pieces
+    1.8 / 2.8-3.7 against 20.3-20.8 / 33.3-39.7; tables 0.3 / 0.7-0.8;
+    switch 3.6-3.8 / 7.3-9.0 on and 2.4-3.9 / 7.2-7.5 off; upload 0.2-0.3
+    against 0.7-0.8;
+  - the FieldModel ("model") 264.8-268.7 on and 262.6-266.9 off, scene
+    18.1-18.4. The frame: 291.3-293.0 on against 324.4-326.4 off (rAF
+    intervals p50 305 against 325-342). lbp on saves about 33 ms per
+    rebuilt frame, and the FieldModel is about 90% of what is left;
+  - GPU per frame p50: the label pass 2.05-2.08 on against 1.88-1.89 off
+    (+0.17 and +0.19, each on run against its pair); the band pass 0.160
+    against 0.143-0.144.
 
 ## Handoff
