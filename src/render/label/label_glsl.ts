@@ -339,12 +339,20 @@ void main() {
 #endif
 }`;
 
+/** K868 S3a8a: keeps one side of each `#ifdef GPU_FILLS` block (the side
+ * this program compiles), so a fill program carries only its own foot (K320:
+ * no dead text); without GPU_FILLS the text is S3a7's, char for char. The
+ * blocks hold no nested directive. */
+function gpuFillsText(src: string, on: boolean): string {
+  return src.replace(/#ifdef GPU_FILLS\n([\s\S]*?)(?:#else\n([\s\S]*?))?#endif\n/g, (_m, a: string, b: string | undefined) => (on ? a : (b ?? "")));
+}
+
 /** The two programs' sources for one mode. */
 export function labelSources(packed: boolean, dataW: number, gpuFills = false, tblW = 0): { tubeVs: string; tubeFs: string; fillVs: string; fillFs: string } {
   const gf = gpuFills ? `#define GPU_FILLS 1\n#define TBL_W ${tblW}\n` : "";
   const def = (src: string): string =>
     src.replace("precision highp usampler2D;\n", `precision highp usampler2D;\n${packed ? "#define PACKED 1\n" : ""}#define DATA_W ${dataW}\n${gf}`);
-  return { tubeVs: def(TUBE_VS), tubeFs: def(TUBE_FS), fillVs: def(FILL_VS), fillFs: def(FILL_FS) };
+  return { tubeVs: def(TUBE_VS), tubeFs: def(TUBE_FS), fillVs: def(FILL_VS), fillFs: gpuFillsText(def(FILL_FS), gpuFills) };
 }
 
 /** The GPU pieces' tube program for one mode (K868 S3a7). */
