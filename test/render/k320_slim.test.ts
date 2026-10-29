@@ -21,6 +21,7 @@ import {
 } from "../../src/render/paint_glsl";
 import { PLUCK_STILL_FRAG, withExploreStill } from "../../src/render/pluck_overlay";
 import { G3_CHAIN_GLSL, JUNCTION_CUT_GLSL } from "../../src/render/fabric_sdf";
+import { bandEdgeSources } from "../../src/render/label/label_band_gpu";
 import { labelSources } from "../../src/render/label/label_glsl";
 import { DATA_W } from "../../src/render/label/label_pieces";
 import { TBL_W } from "../../src/render/label/label_tables";
@@ -160,6 +161,17 @@ describe("K320 stage 1: char budgets", () => {
     expect(text("BAND_FS").length).toBeLessThanOrEqual(2_350);
     expect(text("COMP_VS").length).toBeLessThanOrEqual(250);
     expect(text("COMP_FS").length).toBeLessThanOrEqual(350);
+    // K868 S3a8b (2026-10-28): the band edges from the tables
+    // (label_band_gpu.ts, call 3), both depth variants split in JS
+    // (bandEdgeSources), at today's lengths rounded up to the next 50.
+    // Measured: vertex 1,949 (both), fragment 1,770 without depth and 3,830
+    // with it (the pin table's plateau depthAt).
+    const edge = bandEdgeSources(TBL_W, false);
+    const edgeD = bandEdgeSources(TBL_W, true);
+    expect(edge.vs.length).toBeLessThanOrEqual(1_950);
+    expect(edge.fs.length).toBeLessThanOrEqual(1_800);
+    expect(edgeD.vs.length).toBeLessThanOrEqual(1_950);
+    expect(edgeD.fs.length).toBeLessThanOrEqual(3_850);
   });
 });
 

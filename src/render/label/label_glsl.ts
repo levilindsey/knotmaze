@@ -91,9 +91,10 @@ void main() {
 }`;
 
 /** K868 S3a8a: plateauDepth over the pin table (label_tables.ts refDepth),
- * shared by the GPU tubes and, with the GPU pieces on, the fills. Needs tb(),
+ * shared by the GPU tubes and, with the GPU pieces on, the fills, and by the
+ * band edges from the tables (label_band_gpu.ts, K868 S3a8b). Needs tb(),
  * uWin and uRho. */
-const PLATEAU_GLSL = `float hat(float z, float d, float w) {
+export const PLATEAU_GLSL = `float hat(float z, float d, float w) {
   if (w <= 1e-12) return d <= 0.0 ? z : 0.0;
   return d >= w ? 0.0 : z * (1.0 - d / w);
 }

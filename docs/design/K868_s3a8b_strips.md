@@ -263,3 +263,80 @@ p95 until both stages are done.
   switch strips and the setup are nothing. 56,600 strips on def, 52,500
   on muse. The brief's ~6 ms for the switch lines is half of def's 12.5 here;
   where that figure came from (warm calls, the browser) is not checked.
+
+- **N2 · Call 2, the cut rule (lbp off), `8db6ad52`.** A cut piece is now
+  exactly its part of the segment's uncut quad: at a cut inside a segment
+  its outline point and normal are the segment's end vertices and vertex
+  normals interpolated at the cut's t (before: the segment's own normal, a
+  kink). Nothing else in the strips moves. Pin:
+  `test/render/label/label_strips_pin.test.ts` against the frozen S3a8a
+  code (`fixtures/label_band_ref.ts`, `fixtures/label_switch_ref.ts`): every
+  number bit for bit except a cut's point and normal, which must equal the
+  uncut quad's interpolated at the cut within float32; the switch lines
+  line for line. The stage's probe `strips_pin20.ts` on every frame of the
+  four sequences: 0 differences, 251,248 cut ends (def_drag 70,932,
+  def_flow 70,428, muse_drag 54,780, muse_flow 55,108) within 3.7e-6 world
+  (normals 5.9e-8) of their uncut quads.
+  - Raster census (`raster20.ts`, `pops20/raster20.log`; 12 scenes, the
+    census page's `?strips=ref` against today, lbp off, |dcov| > 32):
+    2,703 cut segments, 194 px changed, all 194 within 3 px of a cut
+    segment's uncut quad, 0 off them, control (ref against ref) 0 px. Per
+    scene 0 to 95 px (g41_user_tw64 95, g41_ring_tw64 64). The three
+    largest blobs are 12-15 px slivers along a piece's end edge at a cut:
+    `pops20/cuts/cut{0,1,2}_g41_user_tw64.png`, looked at. Passes.
+  - Pop census (`label_pops.ts`, `pops20/off20_*` against master's
+    `pops15/off15_*`, `cmp15.mjs`; pops master / today): z1 def_drag 6 / 6,
+    def_flow 27 / 28 (one blob split, nothing new), muse_drag 77 / 77,
+    muse_flow 266 / 266 (2 new, 2 gone); the ten windows 51 new, 46 gone. So the
+    brief's inference ("removes pops rather than adding them") does not
+    hold: the rule trades pops at cuts about one for one. The strict gate
+    (nothing new pops) fails; read by intent (call 5),
+    `pops_cut20.ts` (from pops_check18) re-rendered every new or grown pop
+    (73) in master's strips and today's on the same frame and classified
+    each changed px in its box: z1 2 of 2 and windows 69 of 71 changed only
+    within 3 px of a cut segment's uncut quad (the rule), 1 is master's
+    own ink (no px changed: the census's matching), and 1 (muse_drag@w0
+    t22, 23 px) has 31 px near a cut and 1 px just past the 3 px margin:
+    the same streak. Tables: `pops20/cut20_z1/cut20.md`,
+    `pops20/cut20_win/cut20.md`, a crop per pop beside them. Looked at:
+    the largest new pops (muse_flow@w2 t5, t8, t14, t22, 71-94 px, one
+    place at (300-345, 220-255)) are a one-frame hairline crack, 1-2 px
+    wide and about 40 px long, through the band at a cut, where master's
+    band is solid (`muse_flow@w2_t22_317_240.png`); muse_drag@w0 t22 is a
+    14 x 2 px gap in the band at a cut. Not established: why the band
+    leaves a crack there (inferred, not checked: the band's piece seam now
+    tilts with the interpolated normal while the label pass still cuts
+    its tube pieces along the segment's own normal, so a sliver between
+    them fails each piece's label test). With lbp on, the band has no
+    piece seams at all, so the lbp-on census is where this is settled.
+
+- **N3 · Call 3, the band edges from the tables: the same answer in Node.**
+  `src/render/label/label_band_gpu.ts` (not wired yet): two instances per
+  chain segment (the sides) from `LabelTables.segs`, placed in the VS from
+  the point table with vertex normals from the neighbours (a zero-length
+  neighbour borrows up to `BORROW` 8 segments on); per fragment s = s[k] +
+  t segLen[k], the cluster from the span table (binary search), the depth
+  from the pin table (`PLATEAU_GLSL`, now exported by label_glsl.ts).
+  `refBandEdge` is the VS in float32 (`Math.fround` at every step);
+  `test/render/label/label_band_gpu_check.ts` compares it with
+  buildBandStrips' edges per segment and side: end points, normals and s,
+  each cut (where the fragment's float32 s reaches the span bound) and
+  each piece's cluster at its middle. `band_gpu20.ts`, every frame of the
+  four sequences (`pops20/band_gpu20.txt`): 0 differences, gate 1e-4:
+
+  | | segments | CPU pieces | cut ends | outline | normal | cut point | s |
+  |---|---|---|---|---|---|---|---|
+  | def_drag | 1,005,280 | 1,023,013 | 70,932 | 5.4e-6 | 1.2e-5 | 2.1e-5 | 1.5e-5 |
+  | def_flow | 1,005,060 | 1,022,667 | 70,428 | 5.4e-6 | 1.2e-5 | 2.2e-5 | 1.5e-5 |
+  | muse_drag | 957,443 | 971,138 | 54,780 | 5.4e-6 | 8.0e-6 | 1.9e-5 | 1.5e-5 |
+  | muse_flow | 957,061 | 970,838 | 55,108 | 5.4e-6 | 8.1e-6 | 1.9e-5 | 1.5e-5 |
+
+  Two def_drag pieces shorter than float32's resolution of s take the
+  neighbour's cluster on the GPU (counted, not failed: sub-pixel). BORROW
+  never bound. `test/render/label/label_band_gpu.test.ts` runs the check on
+  the 15 tracked scenes as built and flipped (30 cases), plus the instance
+  layout (uploads only when a chain's segment count changes) and the depth
+  variant's split in JS (K320). Not done: the wiring (the GL draw in
+  BandPass, the CPU strips without tube edges, the app and the census
+  page), so the browser same-answer gate and both lbp-on censuses are not
+  run.
