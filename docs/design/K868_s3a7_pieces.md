@@ -236,3 +236,86 @@ against its definition from the from-scratch build:
 `test/render/label/label_tables.test.ts` runs the same checks on the 15
 tracked field scenes, a reused builder against a fresh one (identical
 tables after other frames: no warm state), and the depth formula's order.
+
+### F3. Exact depth, rank and the order flips (09:20)
+
+The GPU pieces' depth is `refFragDepth`, op for op: the exact `depthAt` from
+the pin table at the fragment's s (a closed chain wraps s onto its lap in
+float32, `u - len * floor(u / len)`, listed in K299's `ROUNDED_QUOTIENTS`),
+the rank of the span the s falls in, and master's formula
+(`0.5 - 0.45 z' - 2e-4 rank / nKeys - 2e-6 s / smax`). Master's CPU pieces
+keep their linear z. `.claude/probes/S3a/raster15.ts` lists the places where
+the two orders differ (`pops15/raster15/flips15.md`): it samples every
+master tube at h / 4, pairs samples of different keys (or of one chain more
+than 4 h apart along it) within 2 h, keeps a pair whose front differs
+between master's depth (linear z, the piece's rank) and the GPU's (exact z,
+the span's rank) or ties exactly, and merges pairs within 2 h into places.
+
+| scene | places | largest exact z gap at a flip (% of range) | master's largest linear error (%) |
+|---|---|---|---|
+| def | 388 | 0.0303 | 0.0015 or less |
+| fat | 0 | - | 0.0015 or less |
+| g41_def_tw42 | 442 | 0.0198 | 0.0015 or less |
+| g41_def_tw64 | 330 | 0.0244 | 0.0015 or less |
+| g41_ring_tw42 | 61 | 0.0036 | 0.0047 |
+| g41_ring_tw64 | 51 | 0.0298 | 0.0015 or less |
+| g41_user_tw42 | 166 | 0.0067 | 0.0015 or less |
+| g41_user_tw64 | 126 | 0.0265 | 0.0015 or less |
+| muse_default_tw | 358 | 0.0245 | 0.0015 or less |
+| muse_hash | 287 | 0.0253 | 0.0015 or less |
+| ring | 55 | 0.0037 | 0.0015 or less |
+| user_tw42.lightpaper | 166 | 0.0053 | 0.0015 or less |
+
+Every flip is a near-cancellation: the z gap is offset by the rank term
+(2e-4 of the depth a full rank range, about 0.044 % of the z range) or the s
+term to within master's linear error, so the depth gap at every place is
+under 0.031 % of the range. Most places are under a third tube or in the
+interior of a fill, so few reach a pixel (F4).
+
+### F4. The same answer and the raster census (09:25)
+
+The same answer: the shaders compute F2's float32 reference op for op, so
+F2's numbers are the GPU path's: positions within 5.91e-5 world (gate 1e-4)
+on the 12 scenes and every frame of the four sequences, the depth within
+4.0e-5 of the range (F2's pins check). The GPU's own per-fragment depth was not read back: the shader transcribes the reference, and the raster census below is the check on the GPU.
+
+The raster census (`.claude/probes/S3a/raster15.ts`, under the perf lock;
+`pops15/raster15/summary.md`): the census page renders each of the 12
+scenes with the GPU pieces off (master), on, and on again (the control),
+and compares the label pass's coverage per pixel (a change is more than
+32 / 255). A changed pixel is credited to a flip when an F3 place lies
+within 6 h of it, to float32 rounding when its blob has 6 px or fewer, and
+is unexplained otherwise.
+
+| scene | changed px | flip | rounding | unexplained | control | blobs |
+|---|---|---|---|---|---|---|
+| def | 3 | 3 | 0 | 0 | 0 | 3 |
+| fat | 7 | 0 | 7 | 0 | 0 | 7 |
+| g41_def_tw42 | 20 | 17 | 3 | 0 | 0 | 20 |
+| g41_def_tw64 | 30 | 28 | 2 | 0 | 0 | 27 |
+| g41_ring_tw42 | 11 | 6 | 5 | 0 | 0 | 11 |
+| g41_ring_tw64 | 5 | 2 | 3 | 0 | 0 | 5 |
+| g41_user_tw42 | 17 | 13 | 4 | 0 | 0 | 17 |
+| g41_user_tw64 | 22 | 21 | 1 | 0 | 0 | 10 |
+| muse_default_tw | 1 | 1 | 0 | 0 | 0 | 1 |
+| muse_hash | 15 | 11 | 4 | 0 | 0 | 12 |
+| ring | 3 | 3 | 0 | 0 | 0 | 3 |
+| user_tw42.lightpaper | 14 | 12 | 2 | 0 | 0 | 14 |
+| total | 148 | 117 | 31 | 0 | 0 | 130 |
+
+No context was lost; the control is 0 px on every scene (no warm state on
+the GPU path). Crops looked at (`pops15/raster15/*.png`, master | GPU |
+change):
+- flip_0, the largest (g41_user_tw64 at 1365, 1879, 13 px): one pixel row
+  of ink added along a band's flat end. It is NOT a depth flip:
+  `.claude/probes/S3a/check15.ts` finds the same front tube at that pixel
+  in both paths (chain 20, cluster 24, rank 51, z 0.7233 linear and exact;
+  the only other tube there, chain 11, is the same key further back).
+  Inferred, not verified: the s written there rounds differently (master
+  mixes the piece's float32 ends, the GPU adds t * segLen to the segment's
+  s) and a band window's bound passes within that rounding of the row's
+  pixel centres, so the whole row flips. That is float32 rounding; the 6 h
+  radius over-credits flips.
+- flip_1 (g41_def_tw64, 4 px): the GPU fills a small white notch where a
+  thin line meets a thick band.
+- rounding_0 (muse_hash, 2 px): a thin tip moved by a pixel.
