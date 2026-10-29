@@ -14,7 +14,8 @@
 //
 // ?gpu=1 (K868 S3a7) renders with the GPU pieces (the app's labelGpu): the
 // tables (label_tables.ts), buildLabelPiecesGpu and LabelPass's GPU tubes,
-// as label_app.ts does with the flag on.
+// as label_app.ts does with the flag on. ?gf=1 / ?gf=0 (K868 S3a8a) force the
+// GPU pieces' fills on or off (S3a7's z-split windows); absent, the default.
 import type { FieldScene } from "../src/render/field/scene";
 import type { FieldModel, OracleParams } from "../src/render/field/oracle";
 import { buildLabelPieces, buildLabelPiecesGpu, labelLimits } from "../src/render/label/label_pieces";
@@ -26,6 +27,8 @@ import { findSwitchLines } from "../src/render/label/label_switch";
 const q = new URLSearchParams(location.search);
 const oraclePath = q.get("oracle") ?? "/src/render/field/oracle.ts";
 const gpu = q.get("gpu") === "1";
+const gfq = q.get("gf");
+const gpuFills = gfq === null ? undefined : gfq === "1";
 const tableBuilder = new LabelTableBuilder();
 const logEl = document.getElementById("log")!;
 const log = (s: string): void => {
@@ -80,7 +83,7 @@ async function main(): Promise<void> {
       const lim = labelLimits(m.polys.length, m.clusters.length);
       if (lim) return { error: `label limits: ${lim}` };
       const T = gpu ? tableBuilder.build(m) : null;
-      const pieces = T ? buildLabelPiecesGpu(m, T) : buildLabelPieces(m);
+      const pieces = T ? buildLabelPiecesGpu(m, T, gpuFills) : buildLabelPieces(m);
       const lines = findSwitchLines(m);
       const strips = buildBandStrips(m, pieces, lines);
       const t1 = performance.now();

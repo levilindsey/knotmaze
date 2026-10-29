@@ -22,6 +22,10 @@
 //     ends (unshifted s, as footInWindow returns it), and the WHOLE
 //     segment's direction times the arm's dir (inFill's side test)
 //   crossing rows, 1 texel each: (chain, s, over, wrap length or 0)
+// K868 S3a8a, with the GPU pieces on (gpuFills): a window's records are 2
+// texels each, one per segment piece in the window, (ta, tb, chain, k) and
+// (tx, ty, 0, 0); the fill shader takes the segment, its s and the exact
+// depth from the tables, so no z splits (and no ZTOL) on the CPU.
 import type { FieldModel } from "../field/oracle";
 import { normS, pointAt, segB } from "../field/geom";
 import type { LabelTables } from "./label_tables";
@@ -65,6 +69,9 @@ export interface LabelPieces {
    * key (chain, cluster and rank at offsets 8-10, what the band pass's rank
    * map reads), not tubes; LabelPass draws the GPU tubes instead. */
   keysOnly?: boolean;
+  /** K868 S3a8a, with keysOnly: the window records are the GPU pieces' (one
+   * per segment piece; the fill shader's GPU_FILLS foot reads the tables). */
+  gpuFills?: boolean;
 }
 
 /** The corner fills and the DATA texture (buildLabelFills). */
@@ -291,7 +298,7 @@ const RANGES = [0, 0, 0, 0, 0, 0];
  * come from the entries whose other chain it spans (each entry's point
  * found once a frame, the rows visited in the old order), and everything
  * is written straight into float32 scratch. */
-export function buildLabelFills(m: FieldModel, ZTOL: number, rankOf: ReadonlyMap<number, number>, nKeyList: number): LabelFills {
+export function buildLabelFills(m: FieldModel, ZTOL: number, rankOf: ReadonlyMap<number, number>, nKeyList: number, gpuFills = false): LabelFills {
   const polys = m.polys;
   const h = m.h;
   const D = DATA_SCR;
@@ -421,6 +428,22 @@ export function buildLabelFills(m: FieldModel, ZTOL: number, rankOf: ReadonlyMap
           const l = L[k] || 1;
           const ta = (a - sh - sa) / l;
           const tb = (b - sh - sa) / l;
+          if (gpuFills) {
+            // One record per piece: its clamps, chain and segment.
+            const d = D.room(8);
+            const o = D.n;
+            d[o] = ta;
+            d[o + 1] = tb;
+            d[o + 2] = pi;
+            d[o + 3] = k;
+            d[o + 4] = tx;
+            d[o + 5] = ty;
+            d[o + 6] = 0;
+            d[o + 7] = 0;
+            D.n = o + 8;
+            windowRecords++;
+            continue;
+          }
           wp = p;
           wpi = pi;
           wk = k;
@@ -557,6 +580,10 @@ export function buildLabelFills(m: FieldModel, ZTOL: number, rankOf: ReadonlyMap
   dataArr.set(D.a.subarray(0, D.n));
   return { fills: F.a.slice(0, F.n), nFills, data: dataArr, dataRows, g2Skipped, windowRecords, crossingRows };
 }
+/** K868 S3a8a: with the GPU pieces on, the fills' windows are the GPU
+ * pieces' records (gpuFills), unless a caller asks for S3a7's z-split ones. */
+export const LABEL_GPU_FILLS = false;
+
 /** K868 S3a7, the GPU pieces (labelGpu): the tubes are LabelPass's GPU
  * tubes, drawn from the tables (label_tables.ts), one instance per chain
  * segment with the exact depth per fragment. This builds what stays on the
@@ -566,9 +593,12 @@ export function buildLabelFills(m: FieldModel, ZTOL: number, rankOf: ReadonlyMap
  * tables' (equal to buildLabelPieces'); the windows' ZTOL is still
  * buildLabelPieces' over the vertices, so the fills are bit for bit
  * master's. */
-export function buildLabelPiecesGpu(m: FieldModel, T: LabelTables): LabelPieces {
-  const vr = vertexRanges(m);
-  const ZTOL = 1e-4 * Math.max(vr.zmax - vr.zmin, 1e-9);
+export function buildLabelPiecesGpu(m: FieldModel, T: LabelTables, gpuFills = LABEL_GPU_FILLS): LabelPieces {
+  let ZTOL = 0;
+  if (!gpuFills) {
+    const vr = vertexRanges(m);
+    ZTOL = 1e-4 * Math.max(vr.zmax - vr.zmin, 1e-9);
+  }
   const nk = T.keys.length;
   const tubes = new Float32Array(Math.max(1, nk) * TUBE_FLOATS);
   for (let i = 0; i < nk; i++) {
@@ -578,7 +608,7 @@ export function buildLabelPiecesGpu(m: FieldModel, T: LabelTables): LabelPieces 
     tubes[o + 9] = key >= 1e6 ? key - 1e6 : -1;
     tubes[o + 10] = i;
   }
-  const F = buildLabelFills(m, ZTOL, T.rankOf, nk);
+  const F = buildLabelFills(m, ZTOL, T.rankOf, nk, gpuFills);
   return {
     tubes,
     nTubes: nk,
@@ -603,5 +633,6 @@ export function buildLabelPiecesGpu(m: FieldModel, T: LabelTables): LabelPieces 
       zWidened: false,
     },
     keysOnly: true,
+    gpuFills,
   };
 }

@@ -22,9 +22,36 @@
 // instance per chain segment (label_glsl.ts GPU_TUBE_VS/FS) in place of
 // buildLabelPieces' tubes; the pieces then carry only the fills and the
 // rank keys (keysOnly).
+//
+// K868 S3a8a: with gpuFills (the GPU pieces' window records), the fills draw
+// with the GPU_FILLS fill program, which reads the tables too (uTbl): the
+// foot's segment, its s (the tube's s[k] + t segLen[k]) and the exact depth.
 import { DATA_W, FILL_FLOATS, TUBE_FLOATS, type LabelPieces } from "./label_pieces";
 import { labelGpuSources, labelSources } from "./label_glsl";
 import { SEG_FLOATS, TBL_W, type LabelTables } from "./label_tables";
+
+/** The fill instance's attributes: name, size, offset in floats. */
+const FILL_ATTRS: [string, number, number][] = [
+  ["aQ", 4, 0],
+  ["aU", 4, 4],
+  ["aJ", 4, 8],
+  ["aO", 4, 12],
+  ["aX", 2, 16],
+];
+
+/** One instanced VAO over buf with the program's attribute locations. */
+function bindAttrs(gl: WebGL2RenderingContext, p: Prog, vao: WebGLVertexArrayObject, buf: WebGLBuffer, stride: number, list: [string, number, number][]): void {
+  gl.bindVertexArray(vao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  for (const [n, size, off] of list) {
+    const loc = gl.getAttribLocation(p.prog, n);
+    if (loc < 0) continue;
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, size, gl.FLOAT, false, stride * 4, off * 4);
+    gl.vertexAttribDivisor(loc, 1);
+  }
+  gl.bindVertexArray(null);
+}
 
 /** World to device pixels: dev = (a x + c y + tx, b x + d y + ty). */
 export interface LabelCamera {
@@ -97,6 +124,8 @@ export class LabelPass {
   private segCap = 0;
   private tblTex: WebGLTexture | null = null;
   private tblRows = 0;
+  private gpuFill: Prog | null = null;
+  private gpuFillVao: WebGLVertexArrayObject | null = null;
   width = 0;
   height = 0;
 
@@ -110,18 +139,8 @@ export class LabelPass {
     this.fillBuf = gl.createBuffer()!;
     this.tubeVao = gl.createVertexArray()!;
     this.fillVao = gl.createVertexArray()!;
-    const attrs = (p: Prog, vao: WebGLVertexArrayObject, buf: WebGLBuffer, stride: number, list: [string, number, number][]): void => {
-      gl.bindVertexArray(vao);
-      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-      for (const [n, size, off] of list) {
-        const loc = gl.getAttribLocation(p.prog, n);
-        if (loc < 0) continue;
-        gl.enableVertexAttribArray(loc);
-        gl.vertexAttribPointer(loc, size, gl.FLOAT, false, stride * 4, off * 4);
-        gl.vertexAttribDivisor(loc, 1);
-      }
-      gl.bindVertexArray(null);
-    };
+    const attrs = (p: Prog, vao: WebGLVertexArrayObject, buf: WebGLBuffer, stride: number, list: [string, number, number][]): void =>
+      bindAttrs(gl, p, vao, buf, stride, list);
     attrs(this.tube, this.tubeVao, this.tubeBuf, TUBE_FLOATS, [
       ["aAB", 4, 0],
       ["aS", 4, 4],
@@ -129,13 +148,7 @@ export class LabelPass {
       ["aN", 4, 12],
       ["aC", 2, 16],
     ]);
-    attrs(this.fill, this.fillVao, this.fillBuf, FILL_FLOATS, [
-      ["aQ", 4, 0],
-      ["aU", 4, 4],
-      ["aJ", 4, 8],
-      ["aO", 4, 12],
-      ["aX", 2, 16],
-    ]);
+    attrs(this.fill, this.fillVao, this.fillBuf, FILL_FLOATS, FILL_ATTRS);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     this.dataTex = gl.createTexture()!;
   }
@@ -184,6 +197,11 @@ export class LabelPass {
       }
       gl.bindVertexArray(null);
       this.tblTex = gl.createTexture()!;
+      const fsrc = labelSources(this.packed, DATA_W, true, TBL_W);
+      this.gpuFill = compile(gl, fsrc.fillVs, fsrc.fillFs, "gpu fill");
+      this.gpuFillVao = gl.createVertexArray()!;
+      bindAttrs(gl, this.gpuFill, this.gpuFillVao, this.fillBuf, FILL_FLOATS, FILL_ATTRS);
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
     }
     const n = T.nSegs * SEG_FLOATS;
     gl.bindBuffer(gl.ARRAY_BUFFER, this.segBuf);
@@ -325,26 +343,40 @@ export class LabelPass {
       gl.bindVertexArray(this.tubeVao);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, p.nTubes);
     }
-    if (fills && p.nFills) {
+    // K868 S3a8a: the GPU pieces' records need the GPU_FILLS program.
+    const gf = p.gpuFills === true && !!tbl && !!this.gpuFill && !!this.gpuFillVao && !!this.tblTex;
+    if (fills && p.nFills && (gf || p.gpuFills !== true)) {
+      const fp = gf ? this.gpuFill! : this.fill;
       gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.fboL);
       gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.fboT);
       gl.blitFramebuffer(0, 0, w, h, 0, 0, w, h, gl.COLOR_BUFFER_BIT, gl.NEAREST);
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.fboL);
-      common(this.fill);
-      gl.uniform1f(this.fill.u("uSigma"), p.sigma);
+      common(fp);
+      gl.uniform1f(fp.u("uSigma"), p.sigma);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.T);
-      gl.uniform1i(this.fill.u("uT"), 0);
+      gl.uniform1i(fp.u("uT"), 0);
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, this.dataTex);
-      gl.uniform1i(this.fill.u("uData"), 1);
+      gl.uniform1i(fp.u("uData"), 1);
       if (this.packed) {
         gl.activeTexture(gl.TEXTURE2);
         gl.bindTexture(gl.TEXTURE_2D, this.S);
-        gl.uniform1i(this.fill.u("uS"), 2);
+        gl.uniform1i(fp.u("uS"), 2);
       }
-      gl.bindVertexArray(this.fillVao);
+      if (gf && tbl) {
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, this.tblTex);
+        gl.uniform1i(fp.u("uTbl"), 3);
+        gl.uniform1f(fp.u("uWin"), tbl.win);
+        gl.uniform1f(fp.u("uRho"), tbl.rho);
+      }
+      gl.bindVertexArray(gf ? this.gpuFillVao : this.fillVao);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, p.nFills);
+      if (gf) {
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+      }
       if (this.packed) {
         gl.bindTexture(gl.TEXTURE_2D, null);
         gl.activeTexture(gl.TEXTURE1);
@@ -398,6 +430,10 @@ export class LabelPass {
     gl.deleteProgram(this.tube.prog);
     gl.deleteProgram(this.fill.prog);
     if (this.gpuTube) gl.deleteProgram(this.gpuTube.prog);
+    if (this.gpuFill) gl.deleteProgram(this.gpuFill.prog);
+    if (this.gpuFillVao) gl.deleteVertexArray(this.gpuFillVao);
+    this.gpuFill = null;
+    this.gpuFillVao = null;
     if (this.segBuf) gl.deleteBuffer(this.segBuf);
     if (this.segVao) gl.deleteVertexArray(this.segVao);
     if (this.tblTex) gl.deleteTexture(this.tblTex);
