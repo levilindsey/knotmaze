@@ -234,3 +234,144 @@ Stage agent, claude session bf876705 (agent a377492c). Times are
 | 23 | Reveal fades (appearance, explore) | K275, K268 | must not regress: the reveal masks multiply the ink |
 | 24 | G3-1's gap search stays until K868 settles | K892 (Levi 2026-10-27) | replaced only when the new field lands behind its flag and Levi accepts it |
 | 25 | The free-end image check is the judge; it counts runs of ink | K910, K934 | the gate of the first look stage (F7) |
+
+### F2 · The definition (form B, exact, per pixel)
+
+Units are world units unless marked px; at dpr 2 a world unit is
+2·pxPerUnit device px (def 44.7, fat 45.5). S1a's def and fat: h 0.26
+(11.6 px), W 0.0988 (4.4 px), samples about 0.09 apart (4 px).
+
+**Per frame, on the CPU (a pure function of the frame, no warm start):**
+
+1. Chains c_i: the drawn samples (`renderer.chainSamples`), arc length s.
+   An END arm's chain gains one segment from its terminal to c′, the
+   nearest point of the through's centreline (§3.6). A dead end keeps the
+   polyline's own round end.
+2. Depth z_i(s): §3.3's pinned hats, per sample, from the crossing table
+   (`src/render/field/depth.ts` as it stands).
+3. Groups: a group G is a junction cluster (junctions joined by a chain
+   run with no crossing cut between them: diagram topology). Each arm a of
+   G is chain i on [s_root, s_cap(a)]; s_cap is the minimum of a FIXED
+   candidate set (the chain's end, the next root on the chain, and for
+   each crossing of the table on that run, d_c − h·cot(θ_c/2) − h), so it
+   moves continuously (F3 D3). A pair of passes that K943 marks "crossed"
+   stays two surfaces (a bit per pair, default off = today's fused look).
+4. Corners: one per cyclically adjacent arm pair (a, b) of a junction
+   (the export's `corners[]`), solved in closed form or by a bounded
+   Newton that starts from V (no state from the last frame):
+   - V: where the facing sides (offsets of c_a and c_b by h) cross.
+   - θ: the angle between the arms' tangents at V's feet.
+   - r0 = style · (cr/3) · min(2h, 1.5h·tan(θ/2)); style 0 (sharp) or 1
+     (round) from the builder pins, then `crs` (topology-fixed).
+   - fit: r1 = min(r0, room · tan(θ/2)), room = min over a, b of
+     (s_cap − W − |V's foot − s_root|), clamped at 0.
+   - feasibility: r = min(r1, r_max), where r_max is the largest radius
+     whose ball still touches both arms within their spans (bisection to
+     1/64 px; continuous because the feasible set is [0, r_max]).
+   - q at h + r from both centrelines (Newton from V along the bisector);
+     the feet t_a, t_b are the local minima of |q − c| reached from V's
+     feet (K992 S3 F4's tracked foot, within the frame); the overlap gate
+     ω = ss(1 − ov/ovw), ov = how much nearer another part of either arm
+     comes to q than its foot, ovw = 0.05h (F1 row 17). The fill is the
+     curvilinear triangle V, t_a, t_b outside the ball, at weight ω.
+5. Tiles: 16×16 device px. A tile lists the segments within
+   h + W + 1 px of it and the corners within r + h + W + 1 px of it.
+
+**Per pixel, on the GPU:**
+
+- Pieces: the local minima of |p − c_i(s)| over the tile's segments,
+  one per chain within |Δs| ≤ σ (σ = π·h, K868 §3.4), each with (chain,
+  s, d, z, surface). A piece's surface is G when s lies in an arm span of
+  G, else the piece itself. A fill is a piece of its corner's group.
+- Cover: piece P covers p iff d_P < h; fill F covers p iff p is in F.
+- Top surface: z_S(p) is the z of S's nearest covering piece (a fill
+  takes its corner's nearer foot's z); top = argmax_S z_S. The label is
+  (top, its nearest piece's chain and s).
+- Exposed-outline terms of the top surface S, each a distance D_τ and an
+  exposure weight w_τ in [0, 1]:
+  1. a side foot: for each piece A of S within h + W, f_A = c_A + h·(p −
+     c_A)/d_A, D = h − d_A, w = 1 − max over the other pieces B of S
+     (and fills) of inside(f_A, B) · ramp_B, where inside is
+     [|f_A − c_B| < h], c_B read from a window of ±3 segments around B's
+     own nearest segment, and ramp_B is the cap fade (F3 D2);
+  2. exposed endpoints: each corner's tangent points t_a, t_b, and V when
+     r = 0 (sharp), D = |p − E|, w = 1 − ω for V and ω for t_a, t_b; plus
+     every other crossing of two member sides that the CPU found exposed
+     (a list per group, usually empty);
+  3. fillet arcs: for each corner of S with p in the wedge from q
+     between t_a and t_b, D = |p − q| − r, w = ω.
+- Ink: ink(p) = max_τ w_τ · band(D_τ), band(D) = 1 − ss(W − aa, W + aa,
+  D), aa half a device px. With every w binary this equals band(min D)
+  over the exposed terms: the exact definition. The max keeps it
+  continuous while a w fades.
+- Depth tie (F3 D4): with the two highest surfaces S1, S2 within ε_z,
+  ink = mix(ink_S2-on-top, ink_S1-on-top, ss(−ε_z, ε_z, z_S1 − z_S2)).
+- Colour: paper outside every tube; the reveal masks multiply ink as
+  today; the tint (goal 7) and the hover rim (K345: a second band width
+  on the same D) read the label.
+
+```glsl
+// SEG[k] = a, b (device px); SA[k] = chain, s0, ds, z0, z1, surfLo, surfHi
+// TILE[t] = offset, count into IDX; CRN[c] = q, r, ta, tb, V, surf, omega
+Piece P[4]; int n = 0;
+for (int i = 0; i < TILE[t].count; ++i) {           // pass 1: pieces
+  int k = IDX[TILE[t].offset + i];
+  vec2 du = segDist(p, SEG[k]);                    // distance, parameter
+  if (du.x > h + W + aa) continue;
+  float s = SA[k].s0 + du.y * SA[k].ds;
+  mergeOrInsert(P, n, SA[k].chain, s, du.x,        // same chain, |ds| <= sigma: keep
+                mix(SA[k].z0, SA[k].z1, du.y),      //   the nearer; else keep 4 nearest
+                surfaceOf(k, s), k);
+}
+int top = argmaxSurfaceZ(P, n, fillsCovering(p));  // z of each surface's nearest piece
+if (top < 0) return paper;
+float ink = 0.0;
+for (int a = 0; a < n; ++a) if (P[a].surf == top && P[a].d < h + W) {  // term 1
+  vec2 f = c(P[a]) + h * normalize(p - c(P[a]));
+  float bur = 0.0;
+  for (int b = 0; b < n; ++b) if (b != a && P[b].surf == top)
+    bur = max(bur, insideWindow(f, P[b].seg, 3) * capRamp(P[b]));
+  bur = max(bur, insideFills(f, top));
+  ink = max(ink, (1.0 - bur) * band(h - P[a].d));
+}
+for (int c in tileCorners(t)) if (CRN[c].surf == top) {   // terms 2, 3
+  ink = max(ink, CRN[c].omega * band(length(p - CRN[c].ta)));
+  ink = max(ink, CRN[c].omega * band(length(p - CRN[c].tb)));
+  if (inWedge(p, CRN[c])) ink = max(ink, CRN[c].omega * band(length(p - CRN[c].q) - CRN[c].r));
+  ink = max(ink, (1.0 - CRN[c].omega) * band(length(p - CRN[c].V)));
+}
+// the depth tie: the same with the runner-up on top, mixed by ss(-eps_z, eps_z, dz)
+```
+
+What it is not: no state between frames, no march, no switch lines, no
+walk with a step, no readback. Every input is a closed form or a bounded
+solve of the current frame, and the CPU part is O(samples + corners).
+
+### F3 · Every discrete decision, and its fade
+
+| # | Decision | Kind | Can it flip in motion? | Fade, parameter, width |
+|---|---|---|---|---|
+| D1 | Same-chain pieces within σ are one piece | continuous except a hairpin tighter than about h (a fold; oracle30's limit) | only at a fold, which collision mostly prevents (KINK_MIN_SEPARATION 2.6) | burial by the other piece weighted ss(2σ, σ, Δs): `foldw` = σ |
+| D2 | Which surface a piece belongs to (s inside an arm span) | topology-fixed set; the span's end moves continuously | yes, as the cap passes a foot | capRamp: B buries with weight ss(s_cap, s_cap − λ, s_B); `capw` λ = h (a look call only if a ramp shows) |
+| D3 | The cap: the first of the chain's end, the next root, a crossing cut | min over a candidate set fixed by the diagram, each candidate continuous (L = h·cot(θ_c/2) is continuous in θ_c) | no: a min over a fixed set is continuous. No cut loop, no h/8 walk (the K1000 and K1015 classes) | none needed |
+| D4 | Which surface is on top | continuous z; a flip at z_S1 = z_S2 | yes, at grazing crossings far from their pins, the k42 cyclic triple, group against group | `zt` ε_z = 0.1·amp (amp 0.6032: ε_z 0.06), the two orders mixed |
+| D5 | Whether a corner has a V | V exists while the facing sides cross inside both spans | yes, at a split (K1001) or as an arm shortens | none needed: r → 0 before V leaves (room → 0 and tan(θ/2) → 0 both drive r1 to 0); V itself is an exposed endpoint that moves continuously |
+| D6 | Which part of an arm the ball touches | continuous while one local minimum is nearest | yes, at grazes (K992 j152/1) | the overlap gate ω = ss(1 − ov/ovw): `ovw` = 0.05h (brief: a parameter) |
+| D7 | Sharp or round per corner | topology-fixed (builder pins, `crs`) | no, only on an edit | none |
+| D8 | r = min(r0, fit, r_max) | continuous, and monotone in room | no | none |
+| D9 | An END arm's extension to c′ | topology-fixed (the arm's kind); c′ continuous | no | none (its cap is buried by construction) |
+| D10 | Exposed or buried, per foot | continuous in effect: at the flip the foot sits on the exposed endpoint E, so D_foot = D_E | no | none (term 2 is what makes it continuous) |
+| D11 | K943's crossed pair inside a group | topology-fixed bit | no | none |
+| D12 | Group clusters | topology-fixed (chains without a cut between junctions) | no; two groups that only come near each other stay two surfaces, ordered by depth (D4) | none |
+
+Two of the hypothesis' known problems do not arise in this form:
+- **The closing that jumps at 2ρ.** No general closing is applied: a
+  fillet exists only for the export's adjacent arm pairs (topology), and
+  its r reaches 0 continuously through fit and r_max. A gap between two
+  members that are not an adjacent arm pair never fills.
+- **Where a corner exists.** Corner identity is topology (D7); its
+  geometry fades through r → 0 (D5, D8) and ω (D6).
+
+What can still pop, by design: nothing outside the four fades (D1, D2,
+D4, D6), each over a stated width. A census against the float64
+reference (F7) checks it.
