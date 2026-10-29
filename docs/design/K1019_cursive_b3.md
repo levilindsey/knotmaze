@@ -122,3 +122,86 @@ B2's `## Rules` hold, with these changes:
   - a `Ledger items` list: follow-ups and residuals. A question for
     Levi only about what shows on screen, in plain words;
   - K863's current handle fields.
+
+## Handoff
+
+B3 stopped at 16:50 (start 15:25:06) with Order steps 1-7 done.
+Nothing committed or uploaded; the work is in the untracked
+`.claude/probes/K863/trace/` (record: `NOTES.md` `## K1019`, N1-N6,
+with the commands).
+
+- **Built.** `work23/base_a`: v6.3a, the reader fix alone, on out22's
+  template. `work23/base`: v6.3, the reader fix plus g's refit, on
+  `out23/cursive_template.svg`, where only `letter-g-s1` differs from
+  out22. Both are the ports build, variant A. Tools:
+  `work23/dbg/*_k1019.*`.
+- **The reader fix (N1).** K980's `transport` used a Bezier t as an arc
+  fraction at both ends of the carry; the two errors cancel only where
+  the drawn cubic is the written one. `asdrawn_k1019.py` carries by true
+  arclength over the same kept-node span, and a one-to-one cubic keeps
+  its t. Moved (v6.2 -> v6.3a): a's after_o / after_b 13.93 / 12.24 u,
+  q's 32.22 / 30.87 u, p's split p@3562 0.027 u; nothing else beyond
+  1.2e-13 fu. They land 2.0-3.3 u of arc past the redrawn stroke's
+  nearest point, since B1 and B2 lengthened the tops.
+- **v6.3a (N2).** Locality: 5 of 575 pieces moved (those four frames and
+  p's split); all 22 sheet words byte-identical. Census: bad's ba dmax
+  6.89 -> 2.49 u; no other row changed (oat's oa only in its frame
+  number).
+- **The twelve joins (N3, N5), u, v6.1 A / v6.2 / v6.3.** ba 6.89 / 6.89
+  / 2.48, va 6.81 / 6.81 / 2.46, wa 6.97 / 6.97 / 2.57; bq 2.17 / 22.87
+  / 5.04, vq 2.98 / 23.09 / 5.37, wq 2.74 / 23.25 / 5.26; bg 2.24 /
+  2.24 / 6.15, vg 2.22 / 2.22 / 6.12, wg 2.37 / 2.37 / 6.24; solved, at
+  the join's own ends: oa 23.22 / 23.22 / 23.22, og 19.46 / 20.91 /
+  28.72, oq 23.82 / 29.03 / 29.03. None is back at its old value: the
+  redrawn tops of a and q no longer pass where the font's joins land
+  (their nearest point lies 1.0-1.3 u off the old frame for a, 2.8 u for
+  q), and g's even top runs up to 3.4 u inside the old one where bg, vg
+  and wg land.
+- **Call 4 (N3).** The census measured solved joins (oa, og, oq) at the
+  entry frame, not at the join: the reference was cut at the frame, and
+  a solved join ends at the ports' attach, 19-62 u away.
+  `census_k1019.py` cuts at the join's own ends and keeps "dist at the
+  frame". v6.3: oa 23.22 (frame 25.48), oq 29.03 (31.93), og 28.72
+  (33.74). What remains is the retrace past the font connector's end.
+- **g's refit (N4).** Drawn cubic 1 split at the fused junction J (y 60
+  u), J -> node 2 kept; T -> M -> J refit as two cubics with T's point
+  and 176 deg tangent held and G2 at M and J. 8 -> 9 cubics (the corner
+  is now node 6). k at T 0.0200 -> 0.0058 /u; largest |dk/ds| to the
+  leftmost point 6.66e-3 -> 7.07e-4 /u^2 (a 9.72e-4, q 1.75e-3); 45 / 90
+  deg of turn at 84.6 / 162.8 -> 90.8 / 160.9 u (a 84.8 / 162.4, q 89.7
+  / 162.0). From the font: T -> J mean 1.57 -> 2.06 u, max 9.17 -> 9.28
+  u; the whole g's max 9.17 -> 9.34 u, at the corner.
+- **The alignment guard (N5).** The refit's extra node made g's written
+  and drawn node counts equal, so the reader aligned them one-to-one and
+  moved g's frames 72-74 u and its corner 79 u. The copy now aligns
+  one-to-one only if every pair lies within 25 u, else by the DP; v6.3a
+  rebuilds byte for byte with it. The bug stays latent in
+  `tools/asdrawn_k980.py`.
+- **v6.3 (N5).** Locality PASS: 20 of 575 pieces moved, every one
+  touching g (after_o / after_b 6.37 / 6.28 u, splits 3.26 / 3.22 u).
+  Census: one row changed, og in "jumps over the lazy dog", dmax 20.28
+  -> 28.73 u (badness 193.5 -> 278.0); 83 over budget, as before. Worst:
+  oe 686.1, cursive ve 328.9, oat at 314.5, ice jet even et 300.0. g's
+  frames land 5.2-5.3 u of arc past the nearest point; a nearest-point
+  carry gives bg / vg / wg 5.5-5.6 u (probe `work23/probe_nearest63`).
+- **Sheets (N6).** `out23/high_joins_v63.svg`, `out23/g_top_v63.svg`,
+  `out23/gq_words_v63.svg` and `out23/cursive_v63_words.svg`, with the
+  template. Guard: ALL CLEAN on all five. Crops looked at: listed in N6.
+- **Missing.** Nothing the brief asked for. Open: the carry for g's
+  frames (nearest point; waits on Levi's look), the joins into g after
+  the refit, a census word with bg, vg or wg, a solved-join reference
+  continued along the stroke, refit option B.
+- **Next.** Levi looks at g's top beside a and q, and at the joins from
+  b, v and w into g; then the carry for g's frames.
+- **Rerun.** From the trace dir: `mk_asdrawn_k1019.py` (writes the
+  reader; N1, N5); `gtop_k1019.py refit out22\cursive_template.svg
+  out23\cursive_template.svg work23\gtop_refit_k1019.txt --w-font 0.04
+  --split "0.35,0.65"` and `gtop_k1019.py curv` (N4); `build_k1019.ps1
+  <template> -Dir work23\base_a (or work23\base) -Mode ports -Variant A
+  -Ports work21\ports_k1009.json -Tail long -Map
+  work20\template_map_k990.json -Base work16\fewnode\bodies.json` (N2,
+  N5); `& work23\dbg\checks_k1019.ps1` (censuses, compares, bodydist,
+  joins, the three sheets, guard); `gtop_sheet_k1019.py
+  out22\cursive_template.svg out23\cursive_template.svg
+  out23\g_top_v63.svg`; `export_k1019.ps1` (PNGs). Full commands in
+  NOTES.
