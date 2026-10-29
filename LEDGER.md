@@ -297,10 +297,10 @@ Next free ID: K1049.
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1, S1b and S1c merged (f6ad6990); S1d running.
-  - owner: agent `a370717011c6a40c5` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-29 03:48, 2 h cap ~05:48)
-  - branch: `k1040-field`, worktree `.claude/worktrees/k1040-field`; last commit: `2dacd08d`
+  - owner: nobody since 2026-10-29 05:24 (merged; agent `a370717011c6a40c5` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
+  - branch: mainline; last commit: `e8944f2f`
   - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1), `s1/out/s1b/` and `s1/out/s1c/`, S1d's runs in `s1/out/s1d/`); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: S1d (running): make the corner solve continuous (S1c F3: V off arm, the fillet's root, radius and foot choice, Lcut's gate) so S1's gate (label_pops' rule) can hold; then S2 beside S3
+  - next: S1e (paused at 85% weekly usage until Nov 2 11:00): the rate rule at through-pass bends (S1d F2 and F6: continuous weights for D1's merged minima, or a burial at the bend that reads depth), then the corner solve's last discrete edges and S1's gate; its brief is not written yet
   - brief: `docs/design/K1040_s1d_corner.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
