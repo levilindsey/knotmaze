@@ -340,3 +340,50 @@ p95 until both stages are done.
   BandPass, the CPU strips without tube edges, the app and the census
   page), so the browser same-answer gate and both lbp-on censuses are not
   run.
+
+- **N4 · Call 4, the switch lines: two exact CPU fixes; still over the goal.**
+  In `switchLinesFrom` (`src/render/label/label_switch.ts`): (1) a pair whose
+  chain is over every one of its crossings is skipped, since its fillOver
+  is false everywhere and no candidate can flip (about 20% of the pairs);
+  (2) each crossing's candidates scan a near list (the pair's crossings
+  within 3 sigma of it, in index order) instead of every crossing: a
+  candidate lies within sigma of its crossing and fillOver reads only
+  crossings within sigma of the candidate +- eps, and the short-way
+  distance is a metric, so the same nearest crossing and the same tie.
+  Pins: `label_strips_pin.test.ts` (the switch lines line for line, bit for
+  bit, against `fixtures/label_switch_ref.ts`), and the stage's
+  `sw20.ts` on every distinct frame of the four sequences as built and
+  flipped (328 scenes, 6,555 lines, 451,106 pairs, 91,881 skipped): 0
+  scenes differ (`pops20/sw20.log`). Back to back under the lock, each
+  call the first on a fresh FieldModel, order alternating per frame
+  (`sw20t.ts`, `pops20/sw20t.md`), ms p50 / p95:
+
+  | | before (S3a8a) | after |
+  |---|---|---|
+  | def_drag | 14.7 / 21.0 | 7.6 / 12.4 |
+  | def_flow | 14.0 / 20.1 | 6.9 / 12.8 |
+  | muse_drag | 6.9 / 10.3 | 4.8 / 8.5 |
+  | muse_flow | 4.4 / 11.1 | 2.9 / 7.8 |
+
+  Still 15 to 25 times the goal (0.5 ms p95). Per part after
+  (`pops20/prof20_after.md`, instrumented, so the laps sit in the
+  candidates and the flip test): candidates 3.7 / 4.7 (11,800 a frame on
+  def, from 12,600), flip test 3.5 / 5.1 (from 9.2 / 10.9), cluster 1.7 /
+  2.4, reach test 2.6 / 6.7 (unchanged). What is left is the search
+  itself, not the lines' placement (2 to 42 lines a frame, the push is
+  nothing), so call 4's fallback (CPU writes chain, s and cluster, the VS
+  places from SAMP) would not reach the goal: the next stage needs a way
+  to find the lines that does not test 7,000 to 12,000 candidates a frame
+  (a decision, listed in the handoff).
+
+- **N5 · The profile after (buildBandStrips, lbp off, with the cut rule).**
+  `pops20/prof20_after.md`, uninstrumented p50 / p95 ms: def_drag 28.2 /
+  47.9 (N1 25.9 / 46.5), def_flow 25.7 / 31.5 (26.1 / 31.0), muse_drag
+  23.6 / 37.5 (17.7 / 33.2), muse_flow 22.9 / 25.7 (16.0 / 21.5); the tube
+  edges and cuts 19.5 / 37.8 on def_drag (17.8 / 34.6). Not a back-to-back
+  pair (12:08 and 13:20, other agents' work on the machine unknown), and
+  the output part, which the cut rule does not touch, also rose on muse
+  (3.5 to 4.9 ms p50, the same strip count), so the cut rule's own cost is
+  not established from these. With lbp on the tube edges leave the CPU
+  (call 3), which is where the strips' goal is met or not; not measured,
+  since the GPU edges are not wired.
