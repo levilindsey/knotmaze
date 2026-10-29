@@ -1,0 +1,1945 @@
+{
+ "scene": "g41_user_tw42",
+ "ms": {
+  "build": 1681,
+  "raster": 1677,
+  "own": 936,
+  "checks": 10382
+ },
+ "raster": {
+  "nx": 1240,
+  "ny": 900,
+  "scale": 1,
+  "inkedPx": 99584,
+  "multiPx": 33206,
+  "tiePx": 0
+ },
+ "check1": {
+  "id": 1,
+  "name": "interior ink",
+  "status": "fail",
+  "value": "141 px deeper than W + 1 px (mouth 118 px), deepest F 12.21 px",
+  "threshold": "0 px",
+  "n": 1116000,
+  "worst": [
+   3.1402929563624116,
+   7.451421713833401
+  ]
+ },
+ "check1deep": {
+  "byTerm": {
+   "foot+f1": 77,
+   "foot+f2": 23,
+   "tB": 7,
+   "tB+f1": 13,
+   "arc": 7,
+   "foot+f3": 10,
+   "arc+f1": 2,
+   "tB+f3": 2
+  },
+  "sites": [
+   {
+    "at": [
+     5.613,
+     1.534
+    ],
+    "F": 11.18,
+    "ink": 1,
+    "k": "foot+f1",
+    "top": 17,
+    "chain": 7,
+    "s": 53.253
+   },
+   {
+    "at": [
+     5.378,
+     1.622
+    ],
+    "F": 5.657,
+    "ink": 1,
+    "k": "foot+f1",
+    "top": 17,
+    "chain": 7,
+    "s": 52.935
+   },
+   {
+    "at": [
+     11.678,
+     1.622
+    ],
+    "F": 4.472,
+    "ink": 0.642,
+    "k": "foot+f1",
+    "top": 25,
+    "chain": 23,
+    "s": 23.312
+   },
+   {
+    "at": [
+     11.708,
+     1.622
+    ],
+    "F": 4.123,
+    "ink": 1,
+    "k": "foot+f1",
+    "top": 25,
+    "chain": 23,
+    "s": 23.386
+   },
+   {
+    "at": [
+     3.641,
+     1.71
+    ],
+    "F": 9,
+    "ink": 1,
+    "k": "foot+f1",
+    "top": 17,
+    "chain": 28,
+    "s": 2.112
+   },
+   {
+    "at": [
+     3.523,
+     1.74
+    ],
+    "F": 5,
+    "ink": 1,
+    "k": "foot+f1",
+    "top": 17,
+    "chain": 28,
+    "s": 2.112
+   },
+   {
+    "at": [
+     12.797,
+     1.74
+    ],
+    "F": 8.544,
+    "ink": 1,
+    "k": "foot+f1",
+    "top": 25,
+    "chain": 14,
+    "s": 0.283
+   },
+   {
+    "at": [
+     12.885,
+     1.887
+    ],
+    "F": 5,
+    "ink": 0.9,
+    "k": "foot+f1",
+    "top": 25,
+    "chain": 14,
+    "s": 0.462
+   },
+   {
+    "at": [
+     13.68,
+     1.887
+    ],
+    "F": 6,
+    "ink": 1,
+    "k": "foot+f1",
+    "top": 25,
+    "chain": 23,
+    "s": 25.577
+   },
+   {
+    "at": [
+     13.739,
+     1.975
+    ],
+    "F": 8,
+    "ink": 1,
+    "k": "foot+f1",
+    "top": 25,
+    "chain": 23,
+    "s": 25.708
+   },
+   {
+    "at": [
+     13.503,
+     2.182
+    ],
+    "F": 4.472,
+    "ink": 1,
+    "k": "foot+f1",
+    "top": 25,
+    "chain": 14,
+    "s": 1.264
+   },
+   {
+    "at": [
+     13.709,
+     2.182
+    ],
+    "F": 9.434,
+    "ink": 1,
+    "k": "foot+f1",
+    "top": 25,
+    "chain": 14,
+    "s": 1.53
+   }
+  ]
+ },
+ "check2own": {
+  "corners": 153,
+  "ballPx": 1.853474429637112e-12,
+  "footPx": 1.2255934682239296e-13,
+  "tangent": 9.462474326430795e-14
+ },
+ "check11own": {
+  "n": 156,
+  "bad": 0,
+  "fails": []
+ },
+ "strips": {
+  "inked": 111994,
+  "bad": 24,
+  "byKind": {
+   "foot": 105411,
+   "arc": 4799,
+   "tB": 821,
+   "tA": 927,
+   "V": 36
+  },
+  "badByKind": {
+   "tB/endpoint": 15,
+   "tA/endpoint": 9
+  },
+  "worst": [
+   [
+    13.209,
+    5.626,
+    "tB"
+   ],
+   [
+    13.238,
+    5.626,
+    "tB"
+   ],
+   [
+    13.209,
+    5.656,
+    "tB"
+   ],
+   [
+    13.238,
+    5.656,
+    "tB"
+   ],
+   [
+    13.297,
+    5.891,
+    "tA"
+   ],
+   [
+    13.297,
+    5.921,
+    "tA"
+   ],
+   [
+    13.297,
+    5.95,
+    "tA"
+   ],
+   [
+    13.268,
+    5.979,
+    "tA"
+   ],
+   [
+    13.268,
+    6.009,
+    "tA"
+   ],
+   [
+    0.226,
+    16.254,
+    "tA"
+   ]
+  ]
+ },
+ "freeEnds": {
+  "n": 98,
+  "by": {
+   "junction": 98,
+   "crossing": 0,
+   "other": 0
+  },
+  "list": [
+   {
+    "at": [
+     14.784,
+     7.343
+    ],
+    "chain": 0,
+    "s": 0.151,
+    "side": 1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     15.855,
+     5.245
+    ],
+    "chain": 0,
+    "s": 3.536,
+    "side": 1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     15.914,
+     5.312
+    ],
+    "chain": 0,
+    "s": 3.639,
+    "side": 1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     14.446,
+     7.308
+    ],
+    "chain": 0,
+    "s": 0.143,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     16.383,
+     5.431
+    ],
+    "chain": 0,
+    "s": 3.985,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     1.752,
+     18.56
+    ],
+    "chain": 6,
+    "s": 56.641,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     16.764,
+     4.688
+    ],
+    "chain": 7,
+    "s": 0.835,
+    "side": 1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     16.693,
+     4.576
+    ],
+    "chain": 7,
+    "s": 0.946,
+    "side": 1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     11.168,
+     13.425
+    ],
+    "chain": 7,
+    "s": 32.231,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     11.129,
+     13.325
+    ],
+    "chain": 7,
+    "s": 32.4,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     1.624,
+     3.485
+    ],
+    "chain": 7,
+    "s": 47.317,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     1.59,
+     3.295
+    ],
+    "chain": 7,
+    "s": 47.546,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     3.43,
+     1.482
+    ],
+    "chain": 7,
+    "s": 50.865,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     16.52,
+     5.056
+    ],
+    "chain": 7,
+    "s": 0.541,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     7.435,
+     11.772
+    ],
+    "chain": 7,
+    "s": 24.459,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     7.35,
+     11.866
+    ],
+    "chain": 7,
+    "s": 24.614,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     1.463,
+     3.957
+    ],
+    "chain": 7,
+    "s": 46.949,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     1.362,
+     3.759
+    ],
+    "chain": 7,
+    "s": 47.156,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     4.593,
+     1.417
+    ],
+    "chain": 7,
+    "s": 52.013,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     5.442,
+     1.595
+    ],
+    "chain": 7,
+    "s": 53.021,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     5.558,
+     1.563
+    ],
+    "chain": 7,
+    "s": 53.161,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     19.809,
+     11.281
+    ],
+    "chain": 8,
+    "s": -0.125,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     3.588,
+     7.238
+    ],
+    "chain": 9,
+    "s": 0.106,
+    "side": 1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     3.059,
+     6.711
+    ],
+    "chain": 9,
+    "s": 0.753,
+    "side": 1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     2.955,
+     6.659
+    ],
+    "chain": 9,
+    "s": 0.886,
+    "side": 1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     3.229,
+     7.264
+    ],
+    "chain": 9,
+    "s": 0.223,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     3.175,
+     7.169
+    ],
+    "chain": 9,
+    "s": 0.378,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     3.046,
+     7.077
+    ],
+    "chain": 9,
+    "s": 0.606,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     7.404,
+     3.491
+    ],
+    "chain": 9,
+    "s": 9.084,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     5.847,
+     11.261
+    ],
+    "chain": 10,
+    "s": 6.901,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     4.918,
+     13.604
+    ],
+    "chain": 11,
+    "s": 8.171,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     4.925,
+     13.517
+    ],
+    "chain": 11,
+    "s": 8.281,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     4.96,
+     13.395
+    ],
+    "chain": 11,
+    "s": 8.465,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     3.766,
+     18.769
+    ],
+    "chain": 13,
+    "s": 2.318,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     15.408,
+     2.739
+    ],
+    "chain": 14,
+    "s": 3.437,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     15.512,
+     2.891
+    ],
+    "chain": 14,
+    "s": 3.65,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     13.611,
+     2.192
+    ],
+    "chain": 14,
+    "s": 1.4,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     13.785,
+     2.162
+    ],
+    "chain": 14,
+    "s": 1.613,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     22.313,
+     14.242
+    ],
+    "chain": 15,
+    "s": 28.128,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     22.221,
+     14.216
+    ],
+    "chain": 15,
+    "s": 28.268,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     17.318,
+     14.617
+    ],
+    "chain": 15,
+    "s": 55.586,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     14.346,
+     7.325
+    ],
+    "chain": 15,
+    "s": 69.532,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     22.69,
+     14.988
+    ],
+    "chain": 15,
+    "s": 27.23,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     22.66,
+     14.878
+    ],
+    "chain": 15,
+    "s": 27.377,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     19.616,
+     11.259
+    ],
+    "chain": 15,
+    "s": 32.308,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     17.894,
+     15.066
+    ],
+    "chain": 15,
+    "s": 56.307,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     23.058,
+     10.191
+    ],
+    "chain": 16,
+    "s": 37.953,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     23.091,
+     10.309
+    ],
+    "chain": 16,
+    "s": 38.159,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     23.088,
+     10.394
+    ],
+    "chain": 16,
+    "s": 38.291,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     20.747,
+     7.948
+    ],
+    "chain": 16,
+    "s": 34.28,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     3.092,
+     7.925
+    ],
+    "chain": 18,
+    "s": 3.504,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     9.38,
+     16.316
+    ],
+    "chain": 20,
+    "s": 3.345,
+    "side": 1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     1.701,
+     13.575
+    ],
+    "chain": 21,
+    "s": 0.24,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     4.056,
+     10.55
+    ],
+    "chain": 21,
+    "s": 4.644,
+    "side": 1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     1.249,
+     13.208
+    ],
+    "chain": 21,
+    "s": 0.711,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     1.242,
+     13.021
+    ],
+    "chain": 21,
+    "s": 0.865,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     2.468,
+     8.033
+    ],
+    "chain": 22,
+    "s": 26.94,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     2.597,
+     7.851
+    ],
+    "chain": 22,
+    "s": 27.242,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     3.093,
+     7.42
+    ],
+    "chain": 22,
+    "s": 27.875,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     3.505,
+     7.194
+    ],
+    "chain": 22,
+    "s": 28.669,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     13.66,
+     1.907
+    ],
+    "chain": 23,
+    "s": 25.576,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     13.733,
+     1.98
+    ],
+    "chain": 23,
+    "s": 25.694,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     21.836,
+     4.213
+    ],
+    "chain": 23,
+    "s": 37.859,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     6.884,
+     13.479
+    ],
+    "chain": 23,
+    "s": -0.05,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     15.279,
+     2.981
+    ],
+    "chain": 23,
+    "s": 27.681,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     20.057,
+     5.422
+    ],
+    "chain": 23,
+    "s": 33.274,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     12.652,
+     13.322
+    ],
+    "chain": 24,
+    "s": 1.693,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     14.951,
+     12.733
+    ],
+    "chain": 24,
+    "s": 4.143,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     8.174,
+     17.965
+    ],
+    "chain": 26,
+    "s": 1.411,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     4.771,
+     19.151
+    ],
+    "chain": 26,
+    "s": 5.149,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     4.596,
+     19.105
+    ],
+    "chain": 26,
+    "s": 5.355,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     4.041,
+     18.849
+    ],
+    "chain": 26,
+    "s": 5.958,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     4.015,
+     18.742
+    ],
+    "chain": 26,
+    "s": 6.113,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     4.45,
+     18.683
+    ],
+    "chain": 27,
+    "s": 0.273,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     4.106,
+     1.591
+    ],
+    "chain": 28,
+    "s": 2.944,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     5.428,
+     1.29
+    ],
+    "chain": 28,
+    "s": 4.585,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     5.504,
+     1.32
+    ],
+    "chain": 28,
+    "s": 4.68,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     3.539,
+     1.763
+    ],
+    "chain": 28,
+    "s": 2.414,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     3.621,
+     1.695
+    ],
+    "chain": 28,
+    "s": 2.546,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     13.272,
+     5.584
+    ],
+    "chain": 29,
+    "s": 24.67,
+    "side": 1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     1.988,
+     13.394
+    ],
+    "chain": 30,
+    "s": 16.031,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     1.949,
+     13.506
+    ],
+    "chain": 30,
+    "s": 16.164,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     1.891,
+     13.606
+    ],
+    "chain": 30,
+    "s": 16.311,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     9.638,
+     20.59
+    ],
+    "chain": 30,
+    "s": 43.946,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     5.119,
+     14.02
+    ],
+    "chain": 30,
+    "s": 54.515,
+    "side": 1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     6.774,
+     13.592
+    ],
+    "chain": 30,
+    "s": 56.325,
+    "side": 1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     10.109,
+     12.13
+    ],
+    "chain": 30,
+    "s": 60.02,
+    "side": 1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     7.646,
+     3.273
+    ],
+    "chain": 30,
+    "s": 0.289,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     7.431,
+     3.179
+    ],
+    "chain": 30,
+    "s": 0.576,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     2.373,
+     13.092
+    ],
+    "chain": 30,
+    "s": 15.663,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     2.362,
+     13.221
+    ],
+    "chain": 30,
+    "s": 15.788,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     -0.049,
+     16.63
+    ],
+    "chain": 30,
+    "s": 23.119,
+    "side": -1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     -0.871,
+     18.516
+    ],
+    "chain": 30,
+    "s": 25.201,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     6.319,
+     13.487
+    ],
+    "chain": 30,
+    "s": 55.884,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     2.412,
+     3.414
+    ],
+    "chain": 32,
+    "s": 6.745,
+    "side": 1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     2.295,
+     3.227
+    ],
+    "chain": 32,
+    "s": 6.951,
+    "side": 1,
+    "runs": 1,
+    "angle": 1,
+    "near": "junction"
+   },
+   {
+    "at": [
+     1.834,
+     3.214
+    ],
+    "chain": 32,
+    "s": 7.282,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   },
+   {
+    "at": [
+     1.712,
+     3.14
+    ],
+    "chain": 32,
+    "s": 7.451,
+    "side": -1,
+    "runs": 0,
+    "angle": 0,
+    "near": "junction"
+   }
+  ]
+ },
+ "checks": [
+  {
+   "id": 2,
+   "name": "corner joins",
+   "status": "fail",
+   "value": "gap max 0.1112 px, tangent angle max 40.345 deg",
+   "threshold": "≤ 0.01 px; ≤ 0.5°",
+   "n": 164,
+   "worst": [
+    16.424512572074597,
+    5.435738053452602
+   ],
+   "details": [
+    "corner j0/0 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j0/0 end on chain 0: gap 0.0000 px, angle 0.000 deg",
+    "corner j0/1 end on chain 0: gap 0.0000 px, angle 0.000 deg",
+    "corner j0/1 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j1/0 end on chain 0: gap 0.1112 px, angle 40.345 deg",
+    "corner j1/0 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j1/1 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j1/1 end on chain 0: gap 0.0000 px, angle 0.000 deg",
+    "corner j2/0 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j2/0 end on chain 0: gap 0.0000 px, angle 0.000 deg",
+    "corner j2/1 end on chain 0: gap 0.0000 px, angle 0.000 deg",
+    "corner j2/1 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j3/0 end on chain 1: gap 0.0000 px, angle 0.000 deg",
+    "corner j3/0 end on chain 24: gap 0.0000 px, angle 0.000 deg",
+    "corner j3/2 end on chain 24: gap 0.0184 px, angle 6.169 deg",
+    "corner j3/2 end on chain 1: gap 0.0000 px, angle 0.000 deg",
+    "corner j4/0 end on chain 24: gap 0.0000 px, angle 0.000 deg",
+    "corner j4/0 end on chain 1: gap 0.0000 px, angle 0.000 deg",
+    "corner j4/1 end on chain 1: gap 0.0000 px, angle 0.000 deg",
+    "corner j4/1 end on chain 24: gap 0.0000 px, angle 0.000 deg",
+    "corner j5/1 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j5/1 end on chain 2: gap 0.0000 px, angle 0.000 deg",
+    "corner j5/2 end on chain 2: gap 0.0000 px, angle 0.000 deg",
+    "corner j5/2 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j6/1 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j6/1 end on chain 3: gap 0.0000 px, angle 0.000 deg",
+    "corner j6/2 end on chain 3: gap 0.0000 px, angle 0.000 deg",
+    "corner j6/2 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j7/0 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j7/0 end on chain 3: gap 0.0000 px, angle 0.000 deg",
+    "corner j7/1 end on chain 3: gap 0.0000 px, angle 0.000 deg",
+    "corner j7/1 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j8/1 end on chain 16: gap 0.0000 px, angle 0.000 deg",
+    "corner j8/1 end on chain 4: gap 0.0000 px, angle 0.000 deg",
+    "corner j8/2 end on chain 4: gap 0.0000 px, angle 0.000 deg",
+    "corner j8/2 end on chain 16: gap 0.0000 px, angle 0.000 deg",
+    "corner j9/0 end on chain 16: gap 0.0000 px, angle 0.000 deg",
+    "corner j9/0 end on chain 4: gap 0.0000 px, angle 0.000 deg",
+    "corner j9/1 end on chain 4: gap 0.0000 px, angle 0.000 deg",
+    "corner j9/1 end on chain 16: gap 0.0000 px, angle 0.000 deg",
+    "corner j10/1 end on chain 29: gap 0.0000 px, angle 0.000 deg",
+    "corner j10/1 end on chain 5: gap 0.0000 px, angle 0.000 deg",
+    "corner j10/2 end on chain 5: gap 0.0000 px, angle 0.000 deg",
+    "corner j10/2 end on chain 29: gap 0.0000 px, angle 0.000 deg",
+    "corner j11/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j11/0 end on chain 5: gap 0.0000 px, angle 0.000 deg",
+    "corner j11/1 end on chain 5: gap 0.0000 px, angle 0.000 deg",
+    "corner j11/1 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j12/0 end on chain 16: gap 0.0000 px, angle 0.000 deg",
+    "corner j12/0 end on chain 6: gap 0.0000 px, angle 0.000 deg",
+    "corner j12/2 end on chain 6: gap 0.0000 px, angle 0.000 deg",
+    "corner j12/2 end on chain 16: gap 0.0000 px, angle 0.000 deg",
+    "corner j13/0 end on chain 6: gap 0.0000 px, angle 0.000 deg",
+    "corner j13/0 end on chain 13: gap 0.0000 px, angle 0.000 deg",
+    "corner j13/1 end on chain 13: gap 0.0000 px, angle 0.000 deg",
+    "corner j13/1 end on chain 6: gap 0.0000 px, angle 0.000 deg",
+    "corner j14/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j14/0 end on chain 6: gap 0.0000 px, angle 0.000 deg",
+    "corner j14/1 end on chain 6: gap 0.0000 px, angle 0.000 deg",
+    "corner j14/1 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j15/0 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j15/0 end on chain 25: gap 0.0000 px, angle 0.000 deg",
+    "corner j15/1 end on chain 25: gap 0.0000 px, angle 0.000 deg",
+    "corner j15/1 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j16/0 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j16/0 end on chain 31: gap 0.0000 px, angle 0.000 deg",
+    "corner j16/1 end on chain 31: gap 0.0000 px, angle 0.000 deg",
+    "corner j16/1 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j17/0 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j17/0 end on chain 24: gap 0.0000 px, angle 0.000 deg",
+    "corner j17/1 end on chain 24: gap 0.0000 px, angle 0.000 deg",
+    "corner j17/1 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j18/0 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j18/0 end on chain 24: gap 0.0000 px, angle 0.000 deg",
+    "corner j18/1 end on chain 24: gap 0.0000 px, angle 0.000 deg",
+    "corner j18/1 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j19/1 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j19/1 end on chain 10: gap 0.0000 px, angle 0.000 deg",
+    "corner j19/2 end on chain 10: gap 0.0000 px, angle 0.000 deg",
+    "corner j19/2 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j20/0 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j20/0 end on chain 32: gap 0.0000 px, angle 0.000 deg",
+    "corner j20/1 end on chain 32: gap 0.0000 px, angle 0.000 deg",
+    "corner j20/1 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j21/0 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j21/0 end on chain 28: gap 0.0000 px, angle 0.000 deg",
+    "corner j21/1 end on chain 28: gap 0.0000 px, angle 0.000 deg",
+    "corner j21/1 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j21/2 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j21/2 end on chain 28: gap 0.0000 px, angle 0.000 deg",
+    "corner j21/3 end on chain 28: gap 0.0000 px, angle 0.000 deg",
+    "corner j21/3 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j22/0 end on chain 28: gap 0.0000 px, angle 0.000 deg",
+    "corner j22/0 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j22/2 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j22/2 end on chain 28: gap 0.0000 px, angle 0.000 deg",
+    "corner j23/0 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j23/0 end on chain 29: gap 0.0000 px, angle 0.000 deg",
+    "corner j23/2 end on chain 29: gap 0.0000 px, angle 0.000 deg",
+    "corner j23/2 end on chain 7: gap 0.0000 px, angle 0.000 deg",
+    "corner j24/1 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j24/1 end on chain 8: gap 0.0000 px, angle 0.000 deg",
+    "corner j24/2 end on chain 8: gap 0.0000 px, angle 0.000 deg",
+    "corner j24/2 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j25/1 end on chain 20: gap 0.0000 px, angle 0.000 deg",
+    "corner j25/1 end on chain 8: gap 0.0000 px, angle 0.000 deg",
+    "corner j25/2 end on chain 8: gap 0.0000 px, angle 0.000 deg",
+    "corner j25/2 end on chain 20: gap 0.0000 px, angle 0.000 deg",
+    "corner j26/0 end on chain 9: gap 0.0000 px, angle 0.000 deg",
+    "corner j26/0 end on chain 22: gap 0.0000 px, angle 0.000 deg",
+    "corner j26/2 end on chain 22: gap 0.0000 px, angle 0.000 deg",
+    "corner j26/2 end on chain 9: gap 0.0000 px, angle 0.000 deg",
+    "corner j27/0 end on chain 9: gap 0.0000 px, angle 0.000 deg",
+    "corner j27/0 end on chain 22: gap 0.0000 px, angle 0.000 deg",
+    "corner j27/1 end on chain 22: gap 0.0000 px, angle 0.000 deg",
+    "corner j27/1 end on chain 9: gap 0.0000 px, angle 0.000 deg",
+    "corner j28/0 end on chain 28: gap 0.0000 px, angle 0.000 deg",
+    "corner j28/0 end on chain 9: gap 0.0000 px, angle 0.000 deg",
+    "corner j29/0 end on chain 9: gap 0.0000 px, angle 0.000 deg",
+    "corner j29/0 end on chain 29: gap 0.0000 px, angle 0.000 deg",
+    "corner j29/1 end on chain 29: gap 0.0000 px, angle 0.000 deg",
+    "corner j29/1 end on chain 9: gap 0.0000 px, angle 0.000 deg",
+    "corner j30/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j30/0 end on chain 9: gap 0.0000 px, angle 0.000 deg",
+    "corner j30/2 end on chain 9: gap 0.0000 px, angle 0.000 deg",
+    "corner j30/2 end on chain 30: gap 0.0533 px, angle 0.000 deg",
+    "corner j31/0 end on chain 9: gap 0.0000 px, angle 0.000 deg",
+    "corner j31/0 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j31/2 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j31/2 end on chain 9: gap 0.0000 px, angle 0.000 deg",
+    "corner j32/0 end on chain 10: gap 0.0000 px, angle 0.000 deg",
+    "corner j32/0 end on chain 11: gap 0.0000 px, angle 0.000 deg",
+    "corner j33/1 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j33/1 end on chain 11: gap 0.0000 px, angle 0.000 deg",
+    "corner j33/2 end on chain 11: gap 0.0000 px, angle 0.000 deg",
+    "corner j33/2 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j34/0 end on chain 11: gap 0.0000 px, angle 0.000 deg",
+    "corner j34/0 end on chain 20: gap 0.0000 px, angle 0.000 deg",
+    "corner j34/1 end on chain 20: gap 0.0000 px, angle 0.000 deg",
+    "corner j34/1 end on chain 11: gap 0.0000 px, angle 0.000 deg",
+    "corner j35/0 end on chain 11: gap 0.0000 px, angle 0.000 deg",
+    "corner j35/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j35/1 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j35/1 end on chain 11: gap 0.0000 px, angle 0.000 deg",
+    "corner j35/2 end on chain 11: gap 0.0000 px, angle 0.000 deg",
+    "corner j35/2 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j35/3 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j35/3 end on chain 11: gap 0.0000 px, angle 0.000 deg",
+    "corner j36/0 end on chain 11: gap 0.0000 px, angle 0.000 deg",
+    "corner j36/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j36/2 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j36/2 end on chain 11: gap 0.0000 px, angle 0.000 deg",
+    "corner j37/0 end on chain 29: gap 0.0000 px, angle 0.000 deg",
+    "corner j37/0 end on chain 12: gap 0.0000 px, angle 0.000 deg",
+    "corner j37/1 end on chain 12: gap 0.0000 px, angle 0.000 deg",
+    "corner j37/1 end on chain 29: gap 0.0000 px, angle 0.000 deg",
+    "corner j38/0 end on chain 12: gap 0.0000 px, angle 0.000 deg",
+    "corner j38/0 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j38/2 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j38/2 end on chain 12: gap 0.0000 px, angle 0.000 deg",
+    "corner j39/1 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j39/1 end on chain 13: gap 0.0000 px, angle 0.000 deg",
+    "corner j39/2 end on chain 13: gap 0.0000 px, angle 0.000 deg",
+    "corner j39/2 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j40/1 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j40/1 end on chain 14: gap 0.0000 px, angle 0.000 deg",
+    "corner j40/2 end on chain 14: gap 0.0000 px, angle 0.000 deg",
+    "corner j40/2 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j41/0 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j41/0 end on chain 14: gap 0.0000 px, angle 0.000 deg",
+    "corner j41/1 end on chain 14: gap 0.0009 px, angle 0.000 deg",
+    "corner j41/1 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j41/2 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j41/2 end on chain 14: gap 0.0000 px, angle 0.000 deg",
+    "corner j41/3 end on chain 14: gap 0.0000 px, angle 0.000 deg",
+    "corner j41/3 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j42/0 end on chain 14: gap 0.0000 px, angle 0.000 deg",
+    "corner j42/0 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j42/2 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j42/2 end on chain 14: gap 0.0000 px, angle 0.000 deg",
+    "corner j43/0 end on chain 17: gap 0.0000 px, angle 0.000 deg",
+    "corner j43/0 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j43/1 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j43/1 end on chain 17: gap 0.0000 px, angle 0.000 deg",
+    "corner j44/1 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j44/1 end on chain 17: gap 0.0000 px, angle 0.000 deg",
+    "corner j44/2 end on chain 17: gap 0.0000 px, angle 0.000 deg",
+    "corner j44/2 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j45/0 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j45/0 end on chain 16: gap 0.0000 px, angle 0.000 deg",
+    "corner j45/1 end on chain 16: gap 0.0000 px, angle 0.000 deg",
+    "corner j45/1 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j45/2 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j45/2 end on chain 16: gap 0.0000 px, angle 0.000 deg",
+    "corner j45/3 end on chain 16: gap 0.0000 px, angle 0.000 deg",
+    "corner j45/3 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j46/0 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j46/0 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j46/1 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j46/1 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j47/0 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j47/0 end on chain 16: gap 0.0000 px, angle 0.000 deg",
+    "corner j47/1 end on chain 16: gap 0.0000 px, angle 0.000 deg",
+    "corner j47/1 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j48/1 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j48/1 end on chain 29: gap 0.0000 px, angle 0.000 deg",
+    "corner j48/2 end on chain 29: gap 0.0000 px, angle 0.000 deg",
+    "corner j48/2 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j49/0 end on chain 29: gap 0.0000 px, angle 0.000 deg",
+    "corner j49/0 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j49/1 end on chain 15: gap 0.0000 px, angle 0.000 deg",
+    "corner j49/1 end on chain 29: gap 0.0000 px, angle 0.000 deg",
+    "corner j50/0 end on chain 25: gap 0.0000 px, angle 0.000 deg",
+    "corner j50/0 end on chain 16: gap 0.0000 px, angle 0.000 deg",
+    "corner j50/2 end on chain 16: gap 0.0000 px, angle 0.000 deg",
+    "corner j50/2 end on chain 25: gap 0.0000 px, angle 0.000 deg",
+    "corner j51/0 end on chain 20: gap 0.0000 px, angle 0.000 deg",
+    "corner j51/0 end on chain 17: gap 0.0000 px, angle 0.000 deg",
+    "corner j51/2 end on chain 17: gap 0.0000 px, angle 0.000 deg",
+    "corner j51/2 end on chain 20: gap 0.0000 px, angle 0.000 deg",
+    "corner j52/1 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j52/1 end on chain 17: gap 0.0000 px, angle 0.000 deg",
+    "corner j52/2 end on chain 17: gap 0.0000 px, angle 0.000 deg",
+    "corner j52/2 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j53/0 end on chain 18: gap 0.0000 px, angle 0.000 deg",
+    "corner j53/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j53/2 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j53/2 end on chain 18: gap 0.0000 px, angle 0.000 deg",
+    "corner j54/0 end on chain 22: gap 0.0000 px, angle 0.000 deg",
+    "corner j54/0 end on chain 18: gap 0.0000 px, angle 0.000 deg",
+    "corner j54/1 end on chain 18: gap 0.0000 px, angle 0.000 deg",
+    "corner j54/1 end on chain 22: gap 0.0000 px, angle 0.000 deg",
+    "corner j54/2 end on chain 22: gap 0.0000 px, angle 0.000 deg",
+    "corner j54/2 end on chain 18: gap 0.0000 px, angle 0.000 deg",
+    "corner j54/3 end on chain 18: gap 0.0000 px, angle 0.000 deg",
+    "corner j54/3 end on chain 22: gap 0.0000 px, angle 0.000 deg",
+    "corner j55/0 end on chain 22: gap 0.0000 px, angle 0.000 deg",
+    "corner j55/0 end on chain 18: gap 0.0000 px, angle 0.000 deg",
+    "corner j55/1 end on chain 18: gap 0.0000 px, angle 0.000 deg",
+    "corner j55/1 end on chain 22: gap 0.0000 px, angle 0.000 deg",
+    "corner j56/0 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j56/0 end on chain 19: gap 0.0000 px, angle 0.000 deg",
+    "corner j56/1 end on chain 19: gap 0.0000 px, angle 0.000 deg",
+    "corner j56/1 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j57/1 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j57/1 end on chain 19: gap 0.0000 px, angle 0.000 deg",
+    "corner j57/2 end on chain 19: gap 0.0000 px, angle 0.000 deg",
+    "corner j57/2 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j58/0 end on chain 21: gap 0.0000 px, angle 0.000 deg",
+    "corner j58/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j58/2 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j58/2 end on chain 21: gap 0.0000 px, angle 0.000 deg",
+    "corner j59/1 end on chain 22: gap 0.0000 px, angle 0.000 deg",
+    "corner j59/1 end on chain 21: gap 0.0000 px, angle 0.000 deg",
+    "corner j59/2 end on chain 21: gap 0.0000 px, angle 0.000 deg",
+    "corner j59/2 end on chain 22: gap 0.0000 px, angle 0.000 deg",
+    "corner j60/1 end on chain 22: gap 0.0000 px, angle 0.000 deg",
+    "corner j60/1 end on chain 33: gap 0.0000 px, angle 0.000 deg",
+    "corner j60/2 end on chain 33: gap 0.0000 px, angle 0.000 deg",
+    "corner j60/2 end on chain 22: gap 0.0000 px, angle 0.000 deg",
+    "corner j61/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j61/0 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j61/1 end on chain 23: gap 0.0000 px, angle 0.000 deg",
+    "corner j61/1 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j62/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j62/0 end on chain 24: gap 0.0000 px, angle 0.000 deg",
+    "corner j62/2 end on chain 24: gap 0.0000 px, angle 0.000 deg",
+    "corner j62/2 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j63/1 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j63/1 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j63/2 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j63/2 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j64/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j64/0 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j64/1 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j64/1 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j64/2 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j64/2 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j64/3 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j64/3 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j65/0 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j65/0 end on chain 27: gap 0.0000 px, angle 0.000 deg",
+    "corner j65/1 end on chain 27: gap 0.0000 px, angle 0.000 deg",
+    "corner j65/1 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j66/0 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j66/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j66/1 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j66/1 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j66/2 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j66/2 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j66/3 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j66/3 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j67/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j67/0 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j67/1 end on chain 26: gap 0.0000 px, angle 0.000 deg",
+    "corner j67/1 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j68/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j68/0 end on chain 27: gap 0.0000 px, angle 0.000 deg",
+    "corner j68/1 end on chain 27: gap 0.0000 px, angle 0.000 deg",
+    "corner j68/1 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j69/1 end on chain 29: gap 0.0000 px, angle 0.000 deg",
+    "corner j69/1 end on chain 34: gap 0.0000 px, angle 0.000 deg",
+    "corner j69/2 end on chain 34: gap 0.0000 px, angle 0.000 deg",
+    "corner j69/2 end on chain 29: gap 0.0000 px, angle 0.000 deg",
+    "corner j70/0 end on chain 30: gap 0.1104 px, angle 15.360 deg",
+    "corner j70/0 end on chain 34: gap 0.0000 px, angle 0.000 deg",
+    "corner j70/1 end on chain 34: gap 0.0000 px, angle 0.000 deg",
+    "corner j70/1 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j71/0 end on chain 32: gap 0.0000 px, angle 0.000 deg",
+    "corner j71/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j71/2 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j71/2 end on chain 32: gap 0.0000 px, angle 0.000 deg",
+    "corner j72/0 end on chain 33: gap 0.0000 px, angle 0.000 deg",
+    "corner j72/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j72/2 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j72/2 end on chain 33: gap 0.0000 px, angle 0.000 deg",
+    "corner j73/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j73/0 end on chain 31: gap 0.0114 px, angle 0.000 deg",
+    "corner j73/1 end on chain 31: gap 0.0000 px, angle 0.000 deg",
+    "corner j73/1 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j74/0 end on chain 31: gap 0.0000 px, angle 0.000 deg",
+    "corner j74/0 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j74/1 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j74/1 end on chain 31: gap 0.0000 px, angle 0.000 deg",
+    "corner j74/2 end on chain 31: gap 0.0000 px, angle 0.000 deg",
+    "corner j74/2 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j74/3 end on chain 30: gap 0.0000 px, angle 0.000 deg",
+    "corner j74/3 end on chain 31: gap 0.0000 px, angle 0.000 deg"
+   ]
+  },
+  {
+   "id": 3,
+   "name": "dead-end caps",
+   "status": "pass",
+   "value": "Hausdorff 0.0000 px; image 0.000 px (formB)",
+   "threshold": "≤ 0.05 px; image ≤ 0.5 px",
+   "n": 1,
+   "worst": [
+    23.835099323074985,
+    4.517637417601421
+   ]
+  },
+  {
+   "id": 4,
+   "name": "arm width",
+   "status": "fail",
+   "value": "max |2h' − 2h| 0.3317 px",
+   "threshold": "2h ± 0.05 px",
+   "n": 193,
+   "skipped": "span 620, crossing 1129, end 78, neighbour 48",
+   "worst": [
+    5.868932751807415,
+    10.12723906329652
+   ]
+  },
+  {
+   "id": 5,
+   "name": "no double strokes",
+   "status": "fail",
+   "value": "602 of 17542 walks not one run ≤ 1.1W (longest 7.133 px, W = 2.71 px)",
+   "threshold": "one run, ≤ 1.1 W",
+   "n": 17542,
+   "skipped": "neighbour 22736, outside 3",
+   "worst": [
+    7.884859140401106,
+    12.462334521346648
+   ],
+   "details": [
+    "longest at (21.609, 14.150)"
+   ]
+  },
+  {
+   "id": 6,
+   "name": "under bands end on the over's outline",
+   "status": "pass",
+   "value": "max end error 0.358 px; 0 of 624 band ends off by more than 0.5 px",
+   "threshold": "within 0.5 px, no gap, no overlap",
+   "n": 624,
+   "worst": [
+    3.9845693170316414,
+    7.042873866271492
+   ],
+   "details": []
+  },
+  {
+   "id": 7,
+   "name": "over edges continuous",
+   "status": "pass",
+   "value": "0 of 312 over band lines broken within ±2h",
+   "threshold": "no break",
+   "n": 312,
+   "details": []
+  },
+  {
+   "id": 8,
+   "name": "two edges per section",
+   "status": "pass",
+   "value": "0 of 193 sections without exactly 2 runs",
+   "threshold": "exactly 2 runs",
+   "n": 193,
+   "skipped": "span 620, crossing 1129, end 78, neighbour 48"
+  },
+  {
+   "id": 9,
+   "name": "band width (sections)",
+   "status": "pass",
+   "value": "max |W' − W| 0.2063 px",
+   "threshold": "W ± 0.25 px",
+   "n": 193,
+   "skipped": "span 620, crossing 1129, end 78, neighbour 48",
+   "worst": [
+    5.868932751807415,
+    10.12723906329652
+   ]
+  },
+  {
+   "id": 9,
+   "name": "band width (outline walks)",
+   "status": "fail",
+   "value": "max |W' − W| 4.4225 px",
+   "threshold": "W ± 0.25 px",
+   "n": 17542,
+   "skipped": "neighbour 22736, outside 3",
+   "worst": [
+    21.60873517099992,
+    14.150111243332457
+   ]
+  },
+  {
+   "id": 11,
+   "name": "depth order at crossings",
+   "status": "pass",
+   "value": "156 of 156 crossings topped by the scene's over",
+   "threshold": "all",
+   "n": 156,
+   "details": []
+  },
+  {
+   "id": 14,
+   "name": "pinned depth keeps each crossing's over/under",
+   "status": "pass",
+   "value": "156 of 156 crossings; min z_over − z_under 2.000·amp",
+   "threshold": "z_over > z_under and the under never on top, at every crossing",
+   "n": 156,
+   "details": []
+  },
+  {
+   "id": 15,
+   "name": "no group holds both passes of a crossing",
+   "status": "pass",
+   "value": "156 of 156 crossings",
+   "threshold": "0 crossings with both passes in one group",
+   "n": 156,
+   "details": []
+  },
+  {
+   "id": 16,
+   "name": "every crossing's over keeps both its borders",
+   "status": "pass",
+   "value": "10975 of 10975 over-side samples inked; 0 missing stretch(es)",
+   "threshold": "0 missing stretches",
+   "n": 10975,
+   "details": []
+  }
+ ],
+ "captions": [
+  "#2 corner joins: FAIL, gap max 0.1112 px, tangent angle max 40.345 deg [≤ 0.01 px; ≤ 0.5°; n 164]",
+  "#3 dead-end caps: PASS, Hausdorff 0.0000 px; image 0.000 px (formB) [≤ 0.05 px; image ≤ 0.5 px; n 1]",
+  "#4 arm width: FAIL, max |2h' − 2h| 0.3317 px [2h ± 0.05 px; n 193; skipped span 620, crossing 1129, end 78, neighbour 48]",
+  "#5 no double strokes: FAIL, 602 of 17542 walks not one run ≤ 1.1W (longest 7.133 px, W = 2.71 px) [one run, ≤ 1.1 W; n 17542; skipped neighbour 22736, outside 3]",
+  "#6 under bands end on the over's outline: PASS, max end error 0.358 px; 0 of 624 band ends off by more than 0.5 px [within 0.5 px, no gap, no overlap; n 624]",
+  "#7 over edges continuous: PASS, 0 of 312 over band lines broken within ±2h [no break; n 312]",
+  "#8 two edges per section: PASS, 0 of 193 sections without exactly 2 runs [exactly 2 runs; n 193; skipped span 620, crossing 1129, end 78, neighbour 48]",
+  "#9 band width (sections): PASS, max |W' − W| 0.2063 px [W ± 0.25 px; n 193; skipped span 620, crossing 1129, end 78, neighbour 48]",
+  "#9 band width (outline walks): FAIL, max |W' − W| 4.4225 px [W ± 0.25 px; n 17542; skipped neighbour 22736, outside 3]",
+  "#11 depth order at crossings: PASS, 156 of 156 crossings topped by the scene's over [all; n 156]",
+  "#14 pinned depth keeps each crossing's over/under: PASS, 156 of 156 crossings; min z_over − z_under 2.000·amp [z_over > z_under and the under never on top, at every crossing; n 156]",
+  "#15 no group holds both passes of a crossing: PASS, 156 of 156 crossings [0 crossings with both passes in one group; n 156]",
+  "#16 every crossing's over keeps both its borders: PASS, 10975 of 10975 over-side samples inked; 0 missing stretch(es) [0 missing stretches; n 10975]"
+ ],
+ "diagnostics": []
+}
