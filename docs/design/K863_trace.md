@@ -214,3 +214,10 @@ Binding on every later cursive stage:
   crossbar"). Of J3a's three heights for ot (v6.0's top, halfway, the
   font's; `out21/ot_v61.svg`), the lowest: the font's, where o's line
   meets t's stem at the crossbar. J3b builds it (K1009).
+- **o's exit is J3a's B** (Levi, 2026-10-28: "B for o's exit"; K1013).
+  Of J3a's o exits (`out21/o_exits_v61.svg`; B's words are
+  `out21/cursive_v61b_words.svg`), B: o's stroke comes to a point at
+  its top, then runs a short way back into the exit, the cusp and
+  overstroke K976 asked for. A, which leaves from o's side, and C are
+  not taken. J3b builds B for every o join and fixes its dips and the
+  oe crossing (K1009).
