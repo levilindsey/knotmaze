@@ -209,3 +209,8 @@ Binding on every later cursive stage:
   turnaround and the top of the right-side stroke become one point, a
   corner with two tangents, as B1 made a's, and the thread runs around
   them the same way. Stage B2, K1012 (`K1012_cursive_gq_corner.md`).
+- **o's line meets t at the crossbar** (Levi, 2026-10-28: "In
+  "knotmaze" definitely the lowest join to the t is best--at the
+  crossbar"). Of J3a's three heights for ot (v6.0's top, halfway, the
+  font's; `out21/ot_v61.svg`), the lowest: the font's, where o's line
+  meets t's stem at the crossbar. J3b builds it (K1009).
