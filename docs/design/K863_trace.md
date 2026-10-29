@@ -221,3 +221,9 @@ Binding on every later cursive stage:
   overstroke K976 asked for. A, which leaves from o's side, and C are
   not taken. J3b builds B for every o join and fixes its dips and the
   oe crossing (K1009).
+- **g's new top is right** (Levi, 2026-10-28: "G new top looks good";
+  K1025). B3's refit stays (v6.3, `out23/g_top_v63.svg`): g's top
+  curves evenly from its corner, beside a and q. a's and q's tops get
+  the same refit next (K1029). Where b's, v's and w's lines meet g, a
+  little lower on its shoulder since the refit, was the question's
+  other half; J3c solves those joins and shows them again (K1026).
