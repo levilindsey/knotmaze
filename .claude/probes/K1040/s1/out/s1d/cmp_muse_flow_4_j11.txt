@@ -1,0 +1,13 @@
+muse_flow:4 junction 11 at (23.8787, 10.2316), h 0.4, arms 0:c77/through/s11.142 1:c3/end/s62.122 2:c77/through/s11.142
+form B arms:
+  arm 109 ei 0 chain-poly 11 through dir -1 sR 1.973 L 1.2209 Lcut 1.2209 ang -2.780
+  arm 111 ei 2 chain-poly 11 through dir 1 sR 1.973 L 0.0000 Lcut -3.1263 ang 0.628
+  arm 112 ei 0 chain-poly 11 through dir 1 sR 11.845 L 0.7522 Lcut 0.7522 ang -1.963
+  arm 113 ei 1 chain-poly 11 through dir -1 sR 11.845 L 0.6406 Lcut 0.6406 ang 0.620
+form B corners:
+  34(ei 0)/35(ei 1) th 1.6296 r0 1.2728 r1 1.0758 r 1.0758 room 1.0143 V (23.6832, 9.7450) q (23.0990, 8.5560) tA (23.1302, 9.6314) tB (24.0459, 9.0667) dV 0.3803/1.5467 0.4304/1.9461 w 1.000
+  35(ei 1)/36(ei 2) th 1.9346 r0 1.6000 r1 0.9296 r 0.6818 room 0.6407 V (24.2976, 10.2871) q (25.1679, 10.1070) tA (24.5657, 9.7875) tB (24.7646, 10.6567) dV 0.2917/1.9461 0.2007/0.9935 w 1.000
+  36(ei 2)/34(ei 0) th 3.0447 r0 1.6000 r1 1.6000 r 0.4645 room 0.8086 V (23.5526, 10.6068) q (23.2380, 10.9864) tA (23.6480, 10.7683) tB (22.8636, 10.7115) dV 0.0329/0.9935 0.0059/1.5467 w 1.000
+oracle corners:
+  0/1 ok true th 1.6825 rule 0.6711 r 0.6711 V (23.6832, 9.7450) q (23.3360, 8.9675) tA (23.2795, 9.6362) tB (23.9260, 9.2874) sV 10.762/61.983 noV false why undefined
+  1/2 ok true th 1.9071 rule 0.8000 r 0.2519 V (24.2976, 10.2871) q (24.5852, 10.2897) tA (24.3624, 10.1722) tB (24.3654, 10.4128) sV 62.122/11.343 noV false why undefined

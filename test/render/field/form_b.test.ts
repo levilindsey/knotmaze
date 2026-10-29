@@ -149,7 +149,7 @@ describe("form B: the terms", () => {
     expect(fb.evalPoint(0.2, -(H - W / 2)).ink).toBeCloseTo(1, 12);
   });
 
-  it("a Y: three 120° corners at r = 2h, q = c + bis·3h/sin 60°", () => {
+  it("a Y: 120° corners at r = 2h, q = c + bis·3h/sin 60°, none inside the through pass's bend", () => {
     const pts = [...ray(0, 0, 210, 10, 0), ...ray(0, 0, 330, 0, 10).slice(2)];
     const arms: SceneArm[] = [
       { chain: 0, s: 10, dir: -1, kind: "through" },
@@ -157,9 +157,11 @@ describe("form B: the terms", () => {
       { chain: 1, s: 0, dir: 1, kind: "end" },
     ];
     const fb = new FormB(scene([pts, ray(0, 0, 90, 0, 10)], [junction([0, 0], arms)]));
-    expect(fb.corners.length).toBe(3);
+    // S1d F2: the two arms of one through pass are one tube (the oracle's
+    // corner loop), so the bend at 270° gets no corner.
+    expect(fb.corners.length).toBe(2);
     const s60 = Math.sin(Math.PI / 3);
-    for (const bis of [270, 30, 150]) {
+    for (const bis of [30, 150]) {
       const b = (bis * Math.PI) / 180;
       const c = cornerNear(fb, (Math.cos(b) * H) / s60, (Math.sin(b) * H) / s60);
       expect(c.theta).toBeCloseTo((2 * Math.PI) / 3, 9);
