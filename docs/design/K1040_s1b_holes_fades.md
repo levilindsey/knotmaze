@@ -187,3 +187,81 @@ Then `## Handoff`. Stop at the cap wherever step 5 stands.
 - **The report.** Your final report ends with `Ledger items` (new
   follow-ups, residuals, decisions for Levi) and K1040's handle fields:
   owner, branch, last commit, evidence, next, brief, env.
+
+## Findings
+
+S1b agent. Start 2026-10-29 00:18:39 (cap 02:18:39); read done about
+00:24; the hole trace and the oracle census 00:29; the sweep and the pins
+00:41.
+
+### F1 · The holes are the look's eyes, and f1 does not open them (00:29)
+
+Observed:
+- `q5holes.ts` now asks the oracle (FieldModel, K883's mapping at cr 3, as
+  `scenes.ts`) about every hole pixel. Of the 44 holes at dpr 1 and the 6
+  on muse_hash at dpr 2, the oracle leaves 86-100% of each hole's pixels as
+  paper too: 0 holes the oracle covers. The counts are S1's (muse_hash 5,
+  muse_default_tw 4, def 4, fat 0, ring 1, user_tw42.lightpaper 5,
+  g41_def_tw42 4, g41_def_tw64 5, g41_ring_tw42 0, g41_ring_tw64 0,
+  g41_user_tw42 5, g41_user_tw64 5; muse_hash at dpr 2: 6).
+  `out/s1b/q5_before/holes.txt`.
+- muse_hash g7, (26.675, 1.096), traced with `b_hole.ts`: group 7 is j7 +
+  j8, 1.72 apart, and chains 3 and 37 leave an eye between them. Corners 5
+  and 7 (one at each junction) both reach r = r_max = 0.125, the eye's
+  inscribed circle (r0 0.958 and 1.187), so both balls sit at the eye's
+  middle. The fills cover the eye outside the ball; the ball is paper,
+  ringed by the arc term's ink. The oracle, whose corner r is bounded by
+  its caps and not by the eye, leaves a lens about 0.67 x 0.12 world;
+  form B leaves a dot about 0.16 across. So form B covers more of the eye
+  than the oracle. Crop (form B | oracle | form B's top surface):
+  `out/s1b/crops/muse_hash_26.675_1.096.png`.
+- def g116, (30.555, 17.488): corners 371 and 373 have ω = 0 (ov 0.036 and
+  0.059 against ovw 0.013), so the eye is bounded by the feet and the V
+  terms, a sharp-cornered eye; the oracle's is the same eye with round
+  corners. `out/s1b/crops/def_30.555_17.488.png`. The holes the oracle
+  shares at 86-98% rather than 100% are such ω = 0 corners: form B's sharp
+  V leaves a little more paper than the oracle's round corner.
+- F12's inference is falsified: no hole has an arm piece near V withdrawn.
+  f1 was set at every hole because `pieces()` set F_FOLD on every
+  same-chain merge (twin minima within σ, for example chain 3 at s 34.906
+  and 34.866 on the eye's concave side), not only where a fold weight is
+  partial.
+- What can open paper at all: no fold value changes coverage (the nearer
+  piece of a fold pair covers wherever the farther one does, d_near ≤
+  d_far < h); the cap ramp and the tie mix do not touch coverage; ω
+  changes it only at exactly 0 (the cover test is fillW > 0).
+
+Decision (S1b): no definition change for the eyes. Covering them would
+depart from the oracle, which is the look's reference. The brief's
+"0 holes" is read as 0 holes the oracle covers, which held before S1b and
+holds after. Which eye the look wants (form B's dot, the oracle's lens,
+or covered) is Levi's call at S4b; a Ledger item.
+
+### F2 · f1 no longer marks merges (labelling, not a definition change)
+
+`pieces()` no longer sets F_FOLD on a merge: a minimum dropped within σ of
+a kept one would enter at the fold weight ss(σ, 2σ, σ) = 0, so a merge is
+no fade. F_FOLD now means a partial fold weight (σ < Δs < 2σ) or a burial
+by a folding piece. No ink changes. It changes which pixels carry f1, so
+S1's per-class fade counts (F11's fade bits, `pops.ts`'s classes) compare
+with S1b's only in total, not class by class.
+
+### F3 · Watertight at every fade value (00:41)
+
+- `FormBParams.force` (probes and pins only) holds the fold weight, ω, the
+  cap ramp or the tie mix's t at one value wherever it applies.
+- `b_sweep.ts` at the 50 former hole sites (window ±0.8 world at the
+  census's dpr; enclosed paper components with the oracle's share of each):
+  natural 44 components, 5263 px. fold, cap and tie held at 0, 0.25, 0.5,
+  0.75 and 1: identical. ω = 0: 40 components, 7480 px (eyes grow into
+  their corners; four open into a neighbouring paper region or the
+  window's border). ω = 0.25 to 1: 44 components, 4783 px (corners whose
+  ω is 0 by nature get their fills). 0 components the oracle covers, at
+  every value. `out/s1b/sweep/sweep.txt`.
+- Pin, `form B: watertight at every fade value (S1b)` in
+  `test/render/field/form_b.test.ts`: an eye that reproduces g7 (two
+  junctions 3h apart joined by arcs at ±1.4h; corners 0 and 5 reach r =
+  r_max = 0.217 at the eye's middle, as at g7), a T, an acute pair and a
+  hairpin, each with every fade held at 0, 0.25, 0.5, 0.75 and 1. The eye
+  stays one 20 px component at its middle, where the oracle leaves paper
+  too; the others enclose none.

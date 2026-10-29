@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { F_CAP, F_FOLD, F_TIE, FormB, OWN, T_ARC, T_FOOT } from "../../../src/render/field/form_b";
 import type { FormBParams } from "../../../src/render/field/form_b";
+import { FieldModel, cornerRadius } from "../../../src/render/field/oracle";
 import type { FieldScene, SceneArm, SceneCrossing, SceneJunction, SceneLook } from "../../../src/render/field/scene";
 
 const H = 1;
@@ -370,4 +371,140 @@ describe("form B: the max decomposition", () => {
     }
     console.log(`[form_b] strips: ${report.join("; ")}`);
   });
+});
+
+describe("form B: watertight at every fade value (S1b)", () => {
+  /** Sizes of the paper components (top < 0, 8-connected) that touch no border of the raster. */
+  function enclosedPaper(fb: FormB, x0: number, y0: number, x1: number, y1: number, step = 0.1): { sizes: number[]; centres: [number, number][] } {
+    const nx = Math.round((x1 - x0) / step);
+    const ny = Math.round((y1 - y0) / step);
+    const paper = new Uint8Array(nx * ny);
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) paper[j * nx + i] = fb.evalPoint(x0 + (i + 0.5) * step, y0 + (j + 0.5) * step).top < 0 ? 1 : 0;
+    const seen = new Uint8Array(nx * ny);
+    const sizes: number[] = [];
+    const centres: [number, number][] = [];
+    for (let o0 = 0; o0 < nx * ny; o0++) {
+      if (!paper[o0] || seen[o0]) continue;
+      let n = 0;
+      let sx = 0;
+      let sy = 0;
+      let border = false;
+      const st = [o0];
+      seen[o0] = 1;
+      while (st.length) {
+        const o = st.pop()!;
+        const i = o % nx;
+        const j = (o - i) / nx;
+        n++;
+        sx += x0 + (i + 0.5) * step;
+        sy += y0 + (j + 0.5) * step;
+        if (i === 0 || j === 0 || i === nx - 1 || j === ny - 1) border = true;
+        for (let dj = -1; dj <= 1; dj++)
+          for (let di = -1; di <= 1; di++) {
+            const u = i + di;
+            const v = j + dj;
+            if (u < 0 || v < 0 || u >= nx || v >= ny) continue;
+            const q = v * nx + u;
+            if (paper[q] && !seen[q]) {
+              seen[q] = 1;
+              st.push(q);
+            }
+          }
+      }
+      if (!border) {
+        sizes.push(n);
+        centres.push([sx / n, sy / n]);
+      }
+    }
+    return { sizes, centres };
+  }
+
+  /**
+   * muse_hash group 7's eye (F12, S1b F2): two threads between two junctions
+   * 3h apart leave a paper eye, as the oracle does. A fade may move its outline
+   * but never adds a component or closes it.
+   */
+  function eye(): FieldScene {
+    const L = 3;
+    const A = 1.4;
+    const arc = (sgn: number) => {
+      const p: number[] = [];
+      for (let i = 0; i <= 30; i++) {
+        const x = (L * i) / 30;
+        p.push(x, sgn * A * Math.sin((Math.PI * x) / L));
+      }
+      return p;
+    };
+    const len = (p: number[]) => {
+      let s = 0;
+      for (let k = 2; k < p.length; k += 2) s += Math.hypot(p[k] - p[k - 2], p[k + 1] - p[k - 1]);
+      return s;
+    };
+    const up = arc(1);
+    const lo = arc(-1);
+    const c0 = [...line(-8, 0, 0, 0), ...up.slice(2), ...line(L, 0, L + 8, 0).slice(2)];
+    const corners = () => [0, 1, 2].map(() => ({ style: "round" as const, pinned: false }));
+    const j0: SceneJunction = {
+      id: "j0",
+      c: [0, 0],
+      arms: [
+        { chain: 1, s: 0, dir: 1, kind: "end" },
+        { chain: 0, s: 8, dir: 1, kind: "through" },
+        { chain: 0, s: 8, dir: -1, kind: "through" },
+      ],
+      corners: corners(),
+    };
+    const j1: SceneJunction = {
+      id: "j1",
+      c: [L, 0],
+      arms: [
+        { chain: 0, s: 8 + len(up), dir: 1, kind: "through" },
+        { chain: 0, s: 8 + len(up), dir: -1, kind: "through" },
+        { chain: 1, s: len(lo), dir: -1, kind: "end" },
+      ],
+      corners: corners(),
+    };
+    return scene([c0, lo], [j0, j1]);
+  }
+
+  function hairpin(): FieldScene {
+    const R = 1.3 * H;
+    const pts: number[] = [...line(-10, -R, 0, -R)];
+    for (let i = 1; i <= 60; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 60;
+      pts.push(R * Math.cos(a), R * Math.sin(a));
+    }
+    pts.push(...line(0, R, -10, R).slice(2));
+    return scene([pts]);
+  }
+
+  const VALUES = [0, 0.25, 0.5, 0.75, 1];
+  const variants: [string, FormBParams["force"]][] = [["natural", undefined]];
+  for (const k of ["fold", "omega", "cap", "tie"] as const) for (const v of VALUES) variants.push([`${k}=${v}`, { [k]: v }]);
+  const cases: [string, () => FieldScene, number, [number, number, number, number]][] = [
+    ["eye", eye, 1, [-3, -3.2, 6, 3.2]],
+    ["T", () => tee(90, 0.3), 0, [-4, -4, 4, 4]],
+    ["acute", () => tee(30, 0), 0, [-4, -4, 4, 4]],
+    ["hairpin", hairpin, 0, [-6, -4, 4, 4]],
+  ];
+  for (const [name, make, want, box] of cases)
+    it(`${name}: ${want} enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1`, () => {
+      const sc = make();
+      const report: string[] = [];
+      for (const [tag, force] of variants) {
+        const fb = new FormB(sc, { force });
+        const { sizes, centres } = enclosedPaper(fb, ...box);
+        report.push(`${tag} ${sizes.join("+") || 0}`);
+        expect(sizes.length, `${name} ${tag}: ${sizes.join(", ")} px`).toBe(want);
+        // The eye stays where it was: around the eye's middle.
+        for (const [cx, cy] of centres) expect(Math.hypot(cx - 1.5, cy), `${name} ${tag}`).toBeLessThan(0.5);
+      }
+      if (name === "eye") {
+        // The oracle (K883's mapping at cr 3, as scenes.ts) leaves the eye's middle as paper too.
+        const m = new FieldModel(sc, { rRound: 0, rOf: (_j, _i, th, st) => (st === "round" ? cornerRadius(3, H, th) : 0), spans: "k883", crMax: 3 });
+        const o = m.evalPoint(1.5, 0, false);
+        expect(!o.inside && !o.ink, "oracle paper at the eye's middle").toBe(true);
+      }
+      console.log(`[form_b] watertight ${name}: ${report.join(", ")}`);
+    });
 });

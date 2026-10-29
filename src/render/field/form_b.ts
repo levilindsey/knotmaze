@@ -72,6 +72,13 @@ export interface FormBParams {
   fold?: boolean;
   /** Depth window, arc length (default look.depthWindow · (look.ctrlArc ?? 1)). */
   depthWindow?: number;
+  /**
+   * Probes and pins only (S1b): hold a fade at one value wherever it applies,
+   * to sweep it across 0..1 on a fixed frame. fold: every fold pair's far
+   * piece weight; omega: every corner's ω; cap: the cap ramp inside its ramp;
+   * tie: the tie mix's t wherever it mixes.
+   */
+  force?: { fold?: number; omega?: number; cap?: number; tie?: number };
 }
 
 export const T_NONE = 0;
@@ -225,6 +232,7 @@ export class FormB {
   readonly cr: number;
   readonly capBoth: boolean;
   readonly fold: boolean;
+  readonly force: NonNullable<FormBParams["force"]>;
   readonly polys: Poly[];
   readonly idxOf = new Map<number, number>();
   readonly grid: SegGrid;
@@ -260,6 +268,7 @@ export class FormB {
     this.cr = params.cr ?? look.cuspRadius ?? 3;
     this.capBoth = params.capBoth ?? true;
     this.fold = params.fold ?? true;
+    this.force = params.force ?? {};
 
     // 1. Chains; END arms extended to c′ (the nearest point of a through's centreline).
     scene.chains.forEach((c, i) => this.idxOf.set(c.id, i));
@@ -612,7 +621,7 @@ export class FormB {
         ov = Math.max(ov, R - c.d);
       }
     }
-    const omega = ss(0, 1, 1 - ov / this.ovw);
+    const omega = this.force.omega ?? ss(0, 1, 1 - ov / this.ovw);
     return {
       j: ji,
       g: this.groupOf[ji],
@@ -715,7 +724,8 @@ export class FormB {
       const a = this.arms[ai];
       const d = this.armDist(ai, s);
       if (d < -1e-12 || d > a.L + 1e-12) continue;
-      const rp = a.Lcut === Infinity ? 1 : ss(a.Lcut, a.Lcut - this.lambda, d);
+      const fc = this.force.cap;
+      const rp = a.Lcut === Infinity ? 1 : fc !== undefined && d > a.Lcut - this.lambda && d < a.Lcut ? fc : ss(a.Lcut, a.Lcut - this.lambda, d);
       if (g < 0 || rp > ramp) {
         g = a.g;
         ramp = rp;
@@ -739,10 +749,8 @@ export class FormB {
           merged = true;
           break;
         }
-      if (merged) {
-        fade |= F_FOLD;
-        continue;
-      }
+      // A merge is no fade (S1b F2): the dropped minimum would enter at weight 0.
+      if (merged) continue;
       kept.push(c);
     }
     for (const c of kept) {
@@ -780,7 +788,7 @@ export class FormB {
           if (ds >= 2 * this.sigma) continue;
           fade |= F_FOLD;
           const far = A.d >= B.d ? A : B;
-          far.selfW = Math.min(far.selfW, ss(this.sigma, 2 * this.sigma, ds));
+          far.selfW = Math.min(far.selfW, this.force.fold ?? ss(this.sigma, 2 * this.sigma, ds));
         }
     return fade;
   }
@@ -1028,7 +1036,7 @@ export class FormB {
       sw[i + 1] = i;
       const r2 = comp(sw);
       if (r2.ink === r.ink) continue;
-      const t = ss(-this.zt, this.zt, gap);
+      const t = this.force.tie ?? ss(-this.zt, this.zt, gap);
       const ink = t * r.ink + (1 - t) * r2.ink;
       fade |= F_TIE;
       r = (1 - t) * r2.ink > t * r.ink ? { ink, term: r2.term, fd: r.fd | r2.fd } : { ink, term: r.term, fd: r.fd | r2.fd };

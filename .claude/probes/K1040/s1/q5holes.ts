@@ -5,15 +5,23 @@
 // prototype's frame: of the prototype's deep-ink blobs (q5.ts's protoOnly), how
 // many lie within 30 px of a hole.
 // Run: npx vite-node .claude/probes/K1040/s1/q5holes.ts [scene...]
-import { readFileSync, writeFileSync } from "node:fs";
+// S1b: OUT sets the output folder (default out/q5). Each hole also reports how
+// many of its pixels the oracle (FieldModel, K883's mapping at cr 3, as
+// scenes.ts) leaves as paper too: a hole the oracle shares is an eye of the
+// look, one it covers is a defect. NO_ORACLE=1 skips that.
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { FieldScene } from "../../../../src/render/field/scene";
 import { FormB, OWN, TERM_NAMES } from "../../../../src/render/field/form_b";
 import { decodePng } from "../../../../test/render/field/png";
+import { FieldModel, cornerRadius } from "../../../../src/render/field/oracle";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const sceneDir = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes";
+const outDir = process.env.OUT ?? join(here, "out", "q5");
+mkdirSync(outDir, { recursive: true });
+const ORACLE = process.env.NO_ORACLE !== "1";
 const ALL = ["muse_hash", "muse_default_tw", "def", "fat", "ring", "user_tw42.lightpaper", "g41_def_tw42", "g41_def_tw64", "g41_ring_tw42", "g41_ring_tw64", "g41_user_tw42", "g41_user_tw64"];
 
 function census(name: string, dpr: number, proto: boolean) {
@@ -46,11 +54,12 @@ function census(name: string, dpr: number, proto: boolean) {
       fadeAt[o] = r.fade;
     }
   const seen = new Uint8Array(n);
-  const holes: { at: [number, number]; i: number; j: number; px: number; group: number; ringTerms: Record<string, number>; fade: number }[] = [];
+  const holes: { at: [number, number]; i: number; j: number; px: number; group: number; ringTerms: Record<string, number>; fade: number; oraclePaper?: number; pix?: number[] }[] = [];
   for (let o0 = 0; o0 < n; o0++) {
     if (top[o0] >= 0 || seen[o0]) continue;
     const st = [o0];
     seen[o0] = 1;
+    const pix: number[] = [];
     let px = 0;
     let si = 0;
     let sj = 0;
@@ -61,6 +70,7 @@ function census(name: string, dpr: number, proto: boolean) {
     while (st.length) {
       const o = st.pop() as number;
       px++;
+      pix.push(o);
       const i = o % nx;
       const j = (o - i) / nx;
       si += i;
@@ -89,10 +99,27 @@ function census(name: string, dpr: number, proto: boolean) {
     const ci = si / px;
     const cj = sj / px;
     const [x, y] = world(ci, cj);
-    holes.push({ at: [Math.round(x * 1000) / 1000, Math.round(y * 1000) / 1000], i: Math.round(ci), j: Math.round(cj), px, group: [...groups][0], ringTerms, fade: fadeOr });
+    holes.push({ at: [Math.round(x * 1000) / 1000, Math.round(y * 1000) / 1000], i: Math.round(ci), j: Math.round(cj), px, group: [...groups][0], ringTerms, fade: fadeOr, pix });
   }
+  let eyes = 0;
+  if (ORACLE && holes.length) {
+    const hw = s.look.halfWidth;
+    const m = new FieldModel(s, { rRound: 0, rOf: (_j, _i, th, st) => (st === "round" ? cornerRadius(3, hw, th) : 0), spans: "k883", crMax: 3 });
+    for (const hl of holes) {
+      let op = 0;
+      for (const o of hl.pix ?? []) {
+        const i = o % nx;
+        const [x, y] = world(i + 0.5, (o - i) / nx + 0.5);
+        const r = m.evalPoint(x, y, false);
+        if (!r.inside && !r.ink) op++;
+      }
+      hl.oraclePaper = op;
+      if (op >= 0.5 * hl.px) eyes++;
+    }
+  }
+  for (const hl of holes) delete hl.pix;
   const areas = holes.map((h) => h.px).sort((x, y) => x - y);
-  const line = `${name} dpr ${dpr}: ${holes.length} holes inside one group, in ${new Set(holes.map((h) => h.group)).size} groups; area px min ${areas[0] ?? "-"} median ${areas[Math.floor(areas.length / 2)] ?? "-"} max ${areas[areas.length - 1] ?? "-"}; fade bits on ${holes.filter((h) => h.fade).length}`;
+  const line = `${name} dpr ${dpr}: ${holes.length} holes inside one group, in ${new Set(holes.map((h) => h.group)).size} groups; area px min ${areas[0] ?? "-"} median ${areas[Math.floor(areas.length / 2)] ?? "-"} max ${areas[areas.length - 1] ?? "-"}; fade bits on ${holes.filter((h) => h.fade).length}${ORACLE ? `; the oracle leaves >= half of it paper (an eye of the look) on ${eyes}, covers it (a defect) on ${holes.length - eyes}` : ""}`;
   let protoLine = "";
   if (proto) {
     const img = decodePng(readFileSync(join(here, "..", "out", "muse_hash_dpr2.png")));
@@ -184,5 +211,5 @@ if (names.includes("muse_hash")) {
   out.push(r.line, r.protoLine);
   rows.muse_hash_dpr2 = r.holes.slice(0, 40);
 }
-writeFileSync(join(here, "out", "q5", "holes.txt"), `${out.join("\n")}\n`);
-writeFileSync(join(here, "out", "q5", "holes.json"), JSON.stringify(rows, null, 1));
+writeFileSync(join(outDir, "holes.txt"), `${out.join("\n")}\n`);
+writeFileSync(join(outDir, "holes.json"), JSON.stringify(rows, null, 1));
