@@ -1,0 +1,5 @@
+BREACH muse_flow 15>16 98/298/296 theta 2.532>2.701 fV 0.612>0.275 omega 0.612>0.275 |dfV| 0.336 rate 3.499/px rate2 3.499 (centre 0.074 px); in h: dVa 0.325/2.806 dVb 0.287/2.155 > dVa 0.173/2.818 dVb 0.27/2.148
+BREACH muse_flow 25>26 19/59/60 theta 2.561>2.723 fV 0.605>0.256 omega 0.605>0.256 |dfV| 0.349 rate 8.68/px rate2 6.951 (centre 0.05 px); in h: dVa 0.298/2.677 dVb 0.285/6.484 > dVa 0.166/2.679 dVb 0.255/6.497
+BREACH muse_flow 29>30 19/59/60 theta 2.554>2.722 fV 0.603>0.222 omega 0.603>0.222 |dfV| 0.382 rate 3.556/px rate2 3.261 (centre 0.117 px); in h: dVa 0.285/2.727 dVb 0.305/6.533 > dVa 0.152/2.729 dVb 0.27/6.54
+muse_flow: 1672 corner-pairs with fV < 1 on a side; worst muse_flow 25>26 19/59/60 theta 2.561>2.723 fV 0.605>0.256 omega 0.605>0.256 |dfV| 0.349 rate 8.68/px rate2 6.951 (centre 0.05 px); in h: dVa 0.298/2.677 dVb 0.285/6.484 > dVa 0.166/2.679 dVb 0.255/6.497
+All: 7815 corner-pairs; |Δω| per px of motion: median 0.055, p99 1.965, max 24.729; above 3: 35; with the junction centre's motion as a floor (rate2), above 3: 19

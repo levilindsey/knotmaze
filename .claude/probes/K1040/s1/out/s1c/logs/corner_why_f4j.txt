@@ -1,0 +1,8 @@
+root: 21 pops 674 px
+radius bisect: 24 pops 387 px
+none: 8 pops 269 px
+radius room-L: 9 pops 63 px
+gone arm L 0: 1 pops 23 px
+new arm L 0: 1 pops 23 px
+radius r0: 2 pops 20 px
+radius room-dV: 3 pops 14 px

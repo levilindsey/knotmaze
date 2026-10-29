@@ -151,7 +151,7 @@ for (const seq of seqs) {
         const has = (c ?? d) as C;
         const aw = absentWhy(c ? F2 : F1, j, a, b);
         cls = `${c ? "gone" : "new"} ${aw.split(" (")[0]}`;
-        why = `${c ? "gone" : "new"}: ${aw}; present: theta ${r3(has.theta)} r ${r3(has.r)} rV ${r3(has.rV)} omega ${r3(has.omega)}`;
+        why = `${c ? "gone" : "new"}: ${aw}; present: theta ${r3(has.theta)} r ${r3(has.r)} rV ${r3(has.rV)} omega ${r3(has.omega)} dVa ${r3(has.dVa)}/${r3((c ? F1 : F2).arms[a].L)} dVb ${r3(has.dVb)}/${r3((c ? F1 : F2).arms[b].L)}`;
       } else {
         const jumped = ["qx", "qy", "r", "r1", "r0", "room", "theta", "omega", "ov", "Vx", "Vy", "dVa", "dVb"].filter((f) => Math.abs(c[f] - d[f]) > 1e-6);
         if (!jumped.length) continue;

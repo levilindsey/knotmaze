@@ -1,0 +1,263 @@
+{
+ "scene": "ring",
+ "crop": [
+  300,
+  130,
+  940,
+  770
+ ],
+ "sub": 8,
+ "table": {
+  "all": {
+   "n": 42568,
+   "meanAbs": 0.0384,
+   "meanSigned": 0.0002,
+   "p99": 0.102,
+   "max": 0.699,
+   "over01": 487,
+   "over05": 1,
+   "worst": [
+    {
+     "at": [
+      20.029,
+      4.588
+     ],
+     "aa": 0.912,
+     "exact": 0.656
+    },
+    {
+     "at": [
+      6.783,
+      7.261
+     ],
+     "aa": 0.994,
+     "exact": 0.531
+    },
+    {
+     "at": [
+      6.783,
+      7.291
+     ],
+     "aa": 0.715,
+     "exact": 0.016
+    }
+   ]
+  },
+  "inner": {
+   "n": 22757,
+   "meanAbs": 0.0351,
+   "meanSigned": -0.0001,
+   "p99": 0.099,
+   "max": 0.699,
+   "over01": 192,
+   "over05": 1,
+   "worst": [
+    {
+     "at": [
+      6.783,
+      7.291
+     ],
+     "aa": 0.715,
+     "exact": 0.016
+    }
+   ]
+  },
+  "outer(all)": {
+   "n": 14954,
+   "meanAbs": 0.0462,
+   "meanSigned": 0.0003,
+   "p99": 0.108,
+   "max": 0.255,
+   "over01": 255,
+   "over05": 0,
+   "worst": [
+    {
+     "at": [
+      20.029,
+      4.588
+     ],
+     "aa": 0.912,
+     "exact": 0.656
+    }
+   ]
+  },
+  "outer/foot": {
+   "n": 13183,
+   "meanAbs": 0.048,
+   "meanSigned": 0.0019,
+   "p99": 0.108,
+   "max": 0.175,
+   "over01": 229,
+   "over05": 0,
+   "worst": []
+  },
+  "over": {
+   "n": 2917,
+   "meanAbs": 0.0408,
+   "meanSigned": 0.0006,
+   "p99": 0.101,
+   "max": 0.462,
+   "over01": 30,
+   "over05": 0,
+   "worst": [
+    {
+     "at": [
+      6.783,
+      7.261
+     ],
+     "aa": 0.994,
+     "exact": 0.531
+    }
+   ]
+  },
+  "inner+fade": {
+   "n": 1761,
+   "meanAbs": 0.0145,
+   "meanSigned": 0.001,
+   "p99": 0.095,
+   "max": 0.15,
+   "over01": 9,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/none": {
+   "n": 1090,
+   "meanAbs": 0.0223,
+   "meanSigned": -0.0223,
+   "p99": 0.047,
+   "max": 0.063,
+   "over01": 0,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/arc": {
+   "n": 239,
+   "meanAbs": 0.0537,
+   "meanSigned": 0.0048,
+   "p99": 0.113,
+   "max": 0.128,
+   "over01": 7,
+   "over05": 0,
+   "worst": []
+  },
+  "over+fade": {
+   "n": 179,
+   "meanAbs": 0.0201,
+   "meanSigned": 0.0057,
+   "p99": 0.095,
+   "max": 0.107,
+   "over01": 1,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/foot+fade": {
+   "n": 143,
+   "meanAbs": 0.05,
+   "meanSigned": 0.0006,
+   "p99": 0.212,
+   "max": 0.222,
+   "over01": 4,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/arc+fade": {
+   "n": 70,
+   "meanAbs": 0.0253,
+   "meanSigned": 0.0002,
+   "p99": 0.12,
+   "max": 0.12,
+   "over01": 1,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/tB": {
+   "n": 68,
+   "meanAbs": 0.0532,
+   "meanSigned": -0.0057,
+   "p99": 0.135,
+   "max": 0.135,
+   "over01": 1,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/tA": {
+   "n": 66,
+   "meanAbs": 0.0502,
+   "meanSigned": -0.0085,
+   "p99": 0.131,
+   "max": 0.131,
+   "over01": 2,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/foot+2surf": {
+   "n": 50,
+   "meanAbs": 0.0267,
+   "meanSigned": 0.0189,
+   "p99": 0.069,
+   "max": 0.069,
+   "over01": 0,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/tA+fade": {
+   "n": 17,
+   "meanAbs": 0.061,
+   "meanSigned": 0.0353,
+   "p99": 0.16,
+   "max": 0.16,
+   "over01": 2,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/foot+2surf+fade": {
+   "n": 13,
+   "meanAbs": 0.0936,
+   "meanSigned": 0.0936,
+   "p99": 0.255,
+   "max": 0.255,
+   "over01": 7,
+   "over05": 0,
+   "worst": [
+    {
+     "at": [
+      20.029,
+      4.588
+     ],
+     "aa": 0.912,
+     "exact": 0.656
+    }
+   ]
+  },
+  "outer/tB+fade": {
+   "n": 11,
+   "meanAbs": 0.0564,
+   "meanSigned": 0.0462,
+   "p99": 0.111,
+   "max": 0.111,
+   "over01": 1,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/tA+2surf+fade": {
+   "n": 3,
+   "meanAbs": 0.1198,
+   "meanSigned": 0.1198,
+   "p99": 0.22,
+   "max": 0.22,
+   "over01": 1,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/tA+2surf": {
+   "n": 1,
+   "meanAbs": 0.0156,
+   "meanSigned": 0.0156,
+   "p99": 0.016,
+   "max": 0.016,
+   "over01": 0,
+   "over05": 0,
+   "worst": []
+  }
+ }
+}

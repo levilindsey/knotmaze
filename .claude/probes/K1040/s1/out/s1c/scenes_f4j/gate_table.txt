@@ -1,0 +1,27 @@
+muse_hash              #1   173 ->   131  free ends   39 ->   39
+muse_default_tw        #1   171 ->   173  free ends   12 ->   12
+def                    #1    36 ->    41  free ends   17 ->   16
+fat                    #1     0 ->     0  free ends    0 ->    0
+ring                   #1    40 ->    48  free ends    2 ->    2
+user_tw42.lightpaper   #1    32 ->     0  free ends   26 ->   24
+g41_def_tw42           #1     0 ->    27  free ends    1 ->    1
+g41_def_tw64           #1    89 ->    89  free ends   16 ->   16
+g41_ring_tw42          #1     0 ->     0  free ends    0 ->    0
+g41_ring_tw64          #1     0 ->    44  free ends    6 ->    6
+g41_user_tw42          #1    31 ->     0  free ends   26 ->   24
+g41_user_tw64          #1   289 ->   274  free ends   24 ->   24
+All #1 861 -> 827, free ends 169 -> 164
+Shared checks, scenes failing (of 12):
+  #11 depth order at crossings: 1 -> 1
+  #14 pinned depth keeps each crossing's over/under: 1 -> 1
+  #15 no group holds both passes of a crossing: 0 -> 0
+  #16 every crossing's over keeps both its borders: 2 -> 2
+  #2 corner joins: 11 -> 11
+  #3 dead-end caps: 1 -> 1
+  #4 arm width: 11 -> 11
+  #5 no double strokes: 11 -> 11
+  #6 under bands end on the over's outline: 5 -> 5
+  #7 over edges continuous: 2 -> 2
+  #8 two edges per section: 0 -> 0
+  #9 band width (outline walks): 11 -> 11
+  #9 band width (sections): 5 -> 5

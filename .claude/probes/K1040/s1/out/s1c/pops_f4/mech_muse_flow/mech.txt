@@ -1,0 +1,14 @@
+muse_flow: by mechanism {"smooth motion":7,"scene chain samples":19,"switch corner radius":25,"switch gate surfaces none>foot":1,"switch corner gone":1,"switch corner new":1,"switch corner root":3,"switch corner fields":3}
+merge (S1's f1): 125 of 459 pop px merged in either frame; 4 of 60 pops wholly merged; with the merged px excused 37 pops (287 px) remain
+ramp units at the pop px (max of the two frames): {"0":334,"1":125}
+mechanism | place | pops | px | worst (seq from>to at px)
+switch corner radius | junction | 25 | 212 | muse_flow 18>19 (22.909, 17.485) 38 px
+scene chain samples | junction | 11 | 90 | muse_flow 4>5 (19.862, 18.571) 18 px
+scene chain samples | crossing60+ | 8 | 39 | muse_flow 39>40 (34.733, 7.017) 8 px
+smooth motion | crossing60+ | 7 | 28 | muse_flow 0>1 (19.053, 32.654) 4 px
+switch corner root | crossing60+ | 3 | 25 | muse_flow 31>32 (34.867, 6.701) 14 px
+switch corner gone | junction | 1 | 23 | muse_flow 5>6 (26.79, 23.31) 23 px
+switch corner new | junction | 1 | 23 | muse_flow 18>19 (26.814, 23.327) 23 px
+switch corner fields | crossing60+ | 3 | 15 | muse_flow 32>33 (34.717, 7.046) 6 px
+switch gate surfaces none>foot | junction | 1 | 4 | muse_flow 5>6 (26.33, 22.749) 4 px
+sweep: 1471 interpolated scenes built in 37 s (NC 8, LEV 30, jump > 0.02)

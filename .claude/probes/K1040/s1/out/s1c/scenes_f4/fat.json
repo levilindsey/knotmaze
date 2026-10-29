@@ -1,0 +1,211 @@
+{
+ "scene": "fat",
+ "ms": {
+  "build": 4277,
+  "raster": 1963,
+  "own": 1419,
+  "checks": 12111
+ },
+ "raster": {
+  "nx": 1240,
+  "ny": 900,
+  "scale": 1,
+  "inkedPx": 121969,
+  "multiPx": 64466,
+  "tiePx": 2
+ },
+ "check1": {
+  "id": 1,
+  "name": "interior ink",
+  "status": "pass",
+  "value": "0 px deeper than W + 1 px (mouth 0 px)",
+  "threshold": "0 px",
+  "n": 1116000
+ },
+ "check1deep": {
+  "byTerm": {},
+  "sites": []
+ },
+ "check2own": {
+  "corners": 0,
+  "ballPx": 0,
+  "footPx": 0,
+  "tangent": 0
+ },
+ "check11own": {
+  "n": 428,
+  "bad": 0,
+  "fails": []
+ },
+ "strips": {
+  "inked": 172910,
+  "bad": 0,
+  "byKind": {
+   "foot": 172910
+  },
+  "badByKind": {},
+  "worst": []
+ },
+ "freeEnds": {
+  "n": 0,
+  "by": {
+   "junction": 0,
+   "crossing": 0,
+   "other": 0
+  },
+  "list": []
+ },
+ "checks": [
+  {
+   "id": 2,
+   "name": "corner joins",
+   "status": "n/a",
+   "value": "gap max 0.0000 px, tangent angle max 0.000 deg",
+   "threshold": "≤ 0.01 px; ≤ 0.5°",
+   "n": 0,
+   "details": []
+  },
+  {
+   "id": 3,
+   "name": "dead-end caps",
+   "status": "n/a",
+   "value": "Hausdorff 0.0000 px; image 0.000 px (formB)",
+   "threshold": "≤ 0.05 px; image ≤ 0.5 px",
+   "n": 0
+  },
+  {
+   "id": 4,
+   "name": "arm width",
+   "status": "fail",
+   "value": "max |2h' − 2h| 0.2006 px",
+   "threshold": "2h ± 0.05 px",
+   "n": 169,
+   "skipped": "crossing 3276, neighbour 222",
+   "worst": [
+    32.56480508970361,
+    19.131084895358892
+   ]
+  },
+  {
+   "id": 5,
+   "name": "no double strokes",
+   "status": "pass",
+   "value": "0 of 16491 walks not one run ≤ 1.1W (longest 2.248 px, W = 2.25 px)",
+   "threshold": "one run, ≤ 1.1 W",
+   "n": 16491,
+   "skipped": "neighbour 35481",
+   "details": [
+    "longest at (2.604, 2.026)"
+   ]
+  },
+  {
+   "id": 6,
+   "name": "under bands end on the over's outline",
+   "status": "pass",
+   "value": "max end error 0.280 px; 0 of 1712 band ends off by more than 0.5 px",
+   "threshold": "within 0.5 px, no gap, no overlap",
+   "n": 1712,
+   "worst": [
+    5.912973171827074,
+    4.611354325823368
+   ],
+   "details": []
+  },
+  {
+   "id": 7,
+   "name": "over edges continuous",
+   "status": "pass",
+   "value": "0 of 856 over band lines broken within ±2h",
+   "threshold": "no break",
+   "n": 856,
+   "details": []
+  },
+  {
+   "id": 8,
+   "name": "two edges per section",
+   "status": "pass",
+   "value": "0 of 169 sections without exactly 2 runs",
+   "threshold": "exactly 2 runs",
+   "n": 169,
+   "skipped": "crossing 3276, neighbour 222"
+  },
+  {
+   "id": 9,
+   "name": "band width (sections)",
+   "status": "pass",
+   "value": "max |W' − W| 0.1064 px",
+   "threshold": "W ± 0.25 px",
+   "n": 169,
+   "skipped": "crossing 3276, neighbour 222",
+   "worst": [
+    32.56480508970361,
+    19.131084895358892
+   ]
+  },
+  {
+   "id": 9,
+   "name": "band width (outline walks)",
+   "status": "pass",
+   "value": "max |W' − W| 0.0000 px",
+   "threshold": "W ± 0.25 px",
+   "n": 16491,
+   "skipped": "neighbour 35481",
+   "worst": [
+    2.603648240683531,
+    2.02598828288457
+   ]
+  },
+  {
+   "id": 11,
+   "name": "depth order at crossings",
+   "status": "pass",
+   "value": "428 of 428 crossings topped by the scene's over",
+   "threshold": "all",
+   "n": 428,
+   "details": []
+  },
+  {
+   "id": 14,
+   "name": "pinned depth keeps each crossing's over/under",
+   "status": "pass",
+   "value": "428 of 428 crossings; min z_over − z_under 2.000·amp",
+   "threshold": "z_over > z_under and the under never on top, at every crossing",
+   "n": 428,
+   "details": []
+  },
+  {
+   "id": 15,
+   "name": "no group holds both passes of a crossing",
+   "status": "pass",
+   "value": "428 of 428 crossings",
+   "threshold": "0 crossings with both passes in one group",
+   "n": 428,
+   "details": []
+  },
+  {
+   "id": 16,
+   "name": "every crossing's over keeps both its borders",
+   "status": "pass",
+   "value": "32672 of 32672 over-side samples inked; 0 missing stretch(es)",
+   "threshold": "0 missing stretches",
+   "n": 32672,
+   "details": []
+  }
+ ],
+ "captions": [
+  "#2 corner joins: n/a, gap max 0.0000 px, tangent angle max 0.000 deg [≤ 0.01 px; ≤ 0.5°; n 0]",
+  "#3 dead-end caps: n/a, Hausdorff 0.0000 px; image 0.000 px (formB) [≤ 0.05 px; image ≤ 0.5 px; n 0]",
+  "#4 arm width: FAIL, max |2h' − 2h| 0.2006 px [2h ± 0.05 px; n 169; skipped crossing 3276, neighbour 222]",
+  "#5 no double strokes: PASS, 0 of 16491 walks not one run ≤ 1.1W (longest 2.248 px, W = 2.25 px) [one run, ≤ 1.1 W; n 16491; skipped neighbour 35481]",
+  "#6 under bands end on the over's outline: PASS, max end error 0.280 px; 0 of 1712 band ends off by more than 0.5 px [within 0.5 px, no gap, no overlap; n 1712]",
+  "#7 over edges continuous: PASS, 0 of 856 over band lines broken within ±2h [no break; n 856]",
+  "#8 two edges per section: PASS, 0 of 169 sections without exactly 2 runs [exactly 2 runs; n 169; skipped crossing 3276, neighbour 222]",
+  "#9 band width (sections): PASS, max |W' − W| 0.1064 px [W ± 0.25 px; n 169; skipped crossing 3276, neighbour 222]",
+  "#9 band width (outline walks): PASS, max |W' − W| 0.0000 px [W ± 0.25 px; n 16491; skipped neighbour 35481]",
+  "#11 depth order at crossings: PASS, 428 of 428 crossings topped by the scene's over [all; n 428]",
+  "#14 pinned depth keeps each crossing's over/under: PASS, 428 of 428 crossings; min z_over − z_under 2.000·amp [z_over > z_under and the under never on top, at every crossing; n 428]",
+  "#15 no group holds both passes of a crossing: PASS, 428 of 428 crossings [0 crossings with both passes in one group; n 428]",
+  "#16 every crossing's over keeps both its borders: PASS, 32672 of 32672 over-side samples inked; 0 missing stretch(es) [0 missing stretches; n 32672]"
+ ],
+ "diagnostics": []
+}
