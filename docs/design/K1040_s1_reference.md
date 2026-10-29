@@ -675,3 +675,143 @@ outlines it. Not fixed.**
     frame's alignment.
   - F5's "about a dozen junctions" is not reproduced as a count. This
     probe finds 6 holes at dpr 2, and lobes on 3 of the sheet's 8 rows.
+
+## Handoff
+
+S1 stage agent, 2026-10-29. Steps 1-5 of the Order are done. Every part
+of the gate fails except the free-end count, which runs. Each failing
+part is written up as a finding. The stage ended within its 2 h cap.
+
+### Done
+
+- **form_b.ts and its pins** (F1-F6). `src/render/field/form_b.ts` is
+  the float64 reference. `test/render/field/form_b.test.ts` pins it on
+  the six pin scenes. `npm test` (tsc included) passed at bc0d2037. It
+  passed again at 8838fb32: 188 files, 2,522 tests, 2 files and 8 tests
+  skipped. No file under src/ or test/ has changed since bc0d2037. The
+  later commits touch only `.claude/probes/` and this brief.
+- **The 12 scenes** (F7, F8): `out/scenes/`.
+- **The recordings and Q3** (F9, F10). The 12-frame subset is in
+  `out/pops/`. The full run, every kept frame, is in `out/pops_full/`:
+
+| Recording | Pairs | Pops (px) | Where | Unexplained px outside fades | Max motion |
+|---|---|---|---|---|---|
+| def_drag | 40 | 18 (364) | 18 junction | 420 | 12.1 px |
+| def_flow | 40 | 38 (656) | 38 junction | 841 | 1.05 px |
+| muse_drag | 40 | 13 (130) | 6 junction, 7 crossing 60°+ | 356 | 21.5 px |
+| muse_flow | 40 | 54 (614) | 35 junction, 19 crossing 60°+ | 1253 | 0.95 px |
+
+  - That is 123 pops in 160 pairs: 97 at junctions, 26 at crossings.
+    8838fb32's commit message says 92 and 31, which is wrong.
+  - The full run's Q3 tie band agrees with F10. It is 76-121 px per
+    frame on def and 9,699-10,209 on muse, mostly at crossings of 60° or
+    more. About 300 px per frame on muse lie near junctions, and 5 px in
+    all on def.
+  - The `rasterMs` in pops' JSON was recorded without the perf lock. It
+    is not a measurement.
+- **Q4** (F11) and **Q5** (F12): `out/q4/`, `out/q5/`.
+
+### The gate, part by part
+
+- **Checks 1-9 and 11 on the reference's ink: fail** (F7,
+  `out/scenes/summary.txt`).
+  - **Form B's own checks:**
+    - #2 passes on all 12 scenes. Corners meet within 3e-12 px.
+    - #11 passes on all 12 scenes. The over tops every crossing centre.
+    - #1 fails on 11 scenes, all but fat, at junction mouths.
+  - **checks.ts:**
+    - #8 passes on all 12.
+    - #3 and #11 fail only on muse_hash, where the oracle's own base
+      fails them too.
+    - #7 fails on 3 scenes, #6 and #9's sections on 5, and #4, #5 and
+      #9's walks on 11.
+    - Its #2 fails on 11, but it measures the oracle's corners, not
+      form B's.
+    - #4-#7 and #9 are undiagnosed.
+- **label_pops' rule: fails.** 123 pops, nearly all at junctions and at
+  crossings of 60° or more.
+- **Terms inside their strips: holds for edge and arc strips** once the
+  edge strips have mitres (F8). At most 0.14% of inked pixels miss, and
+  every miss is an endpoint or V disc that reaches outside the tube.
+  Those discs need their own quads.
+- **Free ends: the check runs.** Its counts (F7) are above the oracle's
+  on 9 of the 10 scenes the oracle has. On six of them the counts are 3x
+  to 25x the oracle's. Fat has 0 in both.
+  - All but two of the free ends are at junctions.
+  - The two columns are not like for like.
+  - None was checked by eye.
+
+### Next, in order
+
+1. **Fix the junction holes (F12) in form_b.ts.** Find why a group
+   leaves paper around V when the fold's fade (f1) is on, and make the
+   group cover it. Then rerun the pins, `scenes.ts` on all 12, and
+   `q5holes.ts`, which should find 0 holes. This changes the definition,
+   so it belongs to S1, before S2 builds on it.
+2. **Re-diagnose the mouths.** Rerun #1, the free ends and `pops.ts`
+   after the fix: the holes, the fades' second outlines, #1's mouth ink
+   and the junction pops may be one mechanism (F7, F9, F11). Crop each
+   remaining site and name the term that changes. A fade must change
+   the ink no faster than the AA ramp (F11).
+3. **Diagnose #4-#7 and #9 on form B's ink** (F7). runChecks' #2
+   measures the oracle's corners, so use own #2.
+4. **Look at the free ends by eye** where the counts are furthest from
+   the oracle's (12x to 25x): user_tw42.lightpaper, g41_def_tw42 and
+   muse_default_tw.
+5. **For S2:**
+   - tie strips for every crossing pair with |Δz| < zt, and a log of the
+     runner-up surface at each tie pixel (F10);
+   - a quad per endpoint and V disc (F8);
+   - mitred edge strips (F8);
+   - fetch-across is enough at outer edges (F11).
+6. **For S4:** after step 1, check whether the prototype's lobes on
+   muse_hash remain. Then attribute the 477 blobs that are not near a
+   hole (F12).
+   - F12 calls them "mostly strips along outlines", but that rests on
+     the sheet's 8 largest blobs.
+   - 446 of all 498 blobs fill at least a quarter of their bounding box
+     (`holes.txt`), so many of the small ones may be lobes.
+
+### Smaller residuals, for whichever stage reaches them
+
+- **Three-way ties.** The tie mix blends only the first adjacent tied
+  pair (F4, F10), so a third surface within zt is unhandled.
+- **The fill key.** A fill's key takes the nearer foot's z (F1). Where
+  its two feet differ in z, the key jumps by zA − zB at the bisector.
+  This is unmeasured.
+- **AA (F11).**
+  - A pixel that only a corner of reaches the edge reads 0, a bias of
+    -0.022.
+  - Two partial coverages compound: up to +0.27 at outer edges, and
+    +0.63 at muse_hash (24.852, 26.65).
+- **Pops (F9).** label_pops' pops have no crops and no term
+  attribution yet.
+- **F5's count.** F5's "about a dozen junctions" is not reproduced as a
+  count (F12).
+
+### How to rerun
+
+Run everything from the worktree root. No timing is claimed, so none of
+it needs the perf lock.
+
+- **Pins:** `npx vitest run test/render/field/form_b.test.ts`.
+- **Step 3:** `npx vite-node .claude/probes/K1040/s1/scenes.ts [scene...]`
+  writes `out/scenes/` (summary.txt, one JSON per scene, run_all.log).
+  It takes several minutes for all 12.
+- **Step 4:** `npx vite-node .claude/probes/K1040/s1/pops.ts [recording...]`.
+  - The env sets the windows: WINDOWS (window starts as fractions, or 0),
+    WLEN (kept frames per window) and OUTSUB (the output folder under
+    `out/`).
+  - The subset uses the defaults.
+  - The full run, about 10 minutes: `WINDOWS=0 WLEN=41 OUTSUB=pops_full`.
+- **Q4:**
+  - `npx vite-node .claude/probes/K1040/s1/q4.ts [scene...]` (env CROP,
+    default 640) writes `out/q4/`. The five scenes take a few minutes.
+  - `q4worst.ts [scene...]` re-evaluates the worst fade sites at three
+    aa widths.
+- **Q5:**
+  - `q5.ts` writes `out/q5/sheet.png` and `result.json`.
+  - `q5holes.ts [scene...]` writes `holes.txt` and `holes.json`: each
+    scene at dpr 1, plus muse_hash at dpr 2 against the prototype.
+  - `q5line.ts` (one row across group 7's hole) and `q5zoom.ts` (an
+    enlarged sheet row) are one-offs.
