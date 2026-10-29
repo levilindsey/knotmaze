@@ -159,3 +159,41 @@ K1000's `## Rules` hold, with these changes:
   - a `Ledger items` list;
   - K992's handle fields (owner, branch, last commit, evidence, next,
     brief, env).
+
+## Findings
+
+- **F1 · j112/1 (muse_drag t2-t7, arms 1 and 2): the final foot is a
+  fresh nearest point from q, and q sits on a medial-axis triple point.**
+  - The march's steep gate stops the ball where its arm-A foot jumps
+    along the arm: den/denV falls from 0.98 to 0.21 at δ − h ≈ 0.405h,
+    where the nearest point on arm A moves from 0.99h to 2.58h. The ball
+    touches arm A twice and arm B once there (distance ≈ 1.406h). Neither
+    the cap gate (no caps in reach) nor a fold is involved.
+  - On the last refined interval [d0, d1] the trapezoid gives area =
+    (d0 − h) + (d1 − d0)/2, so δ* is that interval's midpoint, within
+    Δ/2 (dN/2048) of the tie, on either side of it from frame to frame.
+  - The final feet are `footInWindow`'s nearest points from q. Before
+    the tie that is the near contact (0.99h); past it, the far one
+    (2.57h), since advance() also uses nearest points and past the tie
+    follows the A2-B bisector. r moves less than Δ.
+  - Arm B's cap follows (32.03h against 4.85h), then the part walk, the
+    cluster and the cut set.
+  - Probes: `trace21.ts` (r, the feet, every local minimum of |q − arm|),
+    with `oracle_c21dbg.ts` (c17f with the march's S and drops logged).
+- **F2 · j42/0 (arms 0 and 1): the same choice.** The steep gate stops
+  at δ − h ≈ 1.765h (den/denV 0.93 to 0.135), where the arm-A nearest
+  point jumps from 3.08h to 6.33h.
+  - muse_drag t2-t7: the q foot alternates 6.33h and 3.08h; arm B's cap
+    3.14h and 14.43h.
+  - muse_flow (whole frames f0-f40): the foot sits at 2.93h on most
+    frames and at 5.78h-6.21h on f5-f7, f15, f24, f28, f33, f35, f37 and
+    f39, while r moves smoothly (1.61h to 1.73h). Arm B's cap moves with
+    it (14.5h against 2.96h), which moves chains 66 and 67's span ends.
+- **F3 · A fold is safe; a steep stop is not.** Where the far contact
+  folds the branch (advance() fails), q stays at the last node before
+  the tie and nothing flips. corner_continuity's (B) graze, whose END's
+  far part runs parallel, stops by a fold and passes. With the far part
+  rising at 10° the stop is steep: c17f's arm-B foot moves 0.51h in one
+  0.01h step, between the far part (sTB 5.02h, past leg 1's 2H) and the
+  rising part (4.67h). That sweep is test (C), red on c17f
+  (`graze21.ts --rise 10` prints it).
