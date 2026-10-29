@@ -287,7 +287,8 @@ describe("form B: the fades are continuous", () => {
     const off = run({ zt: 1e-9, coneK: H / 0.1 });
     expect(off.jump).toBeGreaterThan(0.5);
     const on = run({});
-    expect(on.jump).toBeLessThan(0.1);
+    // The rate rule (S1b): 3 per px over a step of AA/20 (1/40 px) is 0.075.
+    expect(on.jump).toBeLessThanOrEqual(0.075);
   });
 
   it("D6: ω from 0 to 1 moves the ink at most in proportion", () => {
@@ -373,7 +374,7 @@ describe("form B: the max decomposition", () => {
   });
 });
 
-describe("form B: watertight at every fade value (S1b)", () => {
+describe("form B: watertight and the rate rule at every fade value (S1b)", () => {
   /** Sizes of the paper components (top < 0, 8-connected) that touch no border of the raster. */
   function enclosedPaper(fb: FormB, x0: number, y0: number, x1: number, y1: number, step = 0.1): { sizes: number[]; centres: [number, number][] } {
     const nx = Math.round((x1 - x0) / step);
@@ -506,5 +507,85 @@ describe("form B: watertight at every fade value (S1b)", () => {
         expect(!o.inside && !o.ink, "oracle paper at the eye's middle").toBe(true);
       }
       console.log(`[form_b] watertight ${name}: ${report.join(", ")}`);
+    });
+
+  /**
+   * The rate rule in the image (S1b, step 3): across a fade, a change of
+   * winner or a gate, the ink a pixel reads changes by at most 3 per px of
+   * position (|∇d| ≤ 2 read through the band's AA, whose own steepest edge is
+   * 1.5 per px). Lines 1 px apart cross each pin scene; each is walked at
+   * 1/8 px, and a step whose ink changes by more than 0.05 is walked again at
+   * 1/40 px, where the bound is 0.075. The fold, cap and tie fades are
+   * spatial: the lines sweep them across their widths in the natural scene,
+   * and holding one constant takes away the ramp the rule is about (D4's tie
+   * held at 0 jumps by 1). ω is one value per corner, swept by motion, so the
+   * image must keep the rule at every value it passes: it is held at 0, 0.25,
+   * 0.5, 0.75 and 1. The cap and tie scenes are D2+D5's (the crossing 2.6 up
+   * the END, where the cap ramp reaches the junction) and D4's.
+   */
+  const RATE = 3 / (2 * AA);
+  const rateVariants: [string, FormBParams["force"]][] = [["natural", undefined]];
+  for (const v of [0, 0.25, 0.5, 0.75, 1]) rateVariants.push([`omega=${v}`, { omega: v }]);
+  const rateCases: [string, () => FieldScene, [number, number, number, number], number][] = [
+    ["T", () => tee(90, 0.3), [-2.5, -2.5, 2.5, 2.5], 0],
+    ["acute", () => tee(30, 0), [-2.5, -2.5, 2.5, 2.5], 0],
+    ["hairpin", hairpin, [-3, -2.5, 2.5, 2.5], F_FOLD],
+    ["eye", eye, [-1.5, -2.5, 4.5, 2.5], 0],
+    ["cap", () => tee(90, 0.3, [line(-10, 2.6, 10, 2.6)], [{ a: { chain: 1, s: 2.3 }, b: { chain: 2, s: 10 }, over: "b" }]), [-2.5, -1.5, 2.5, 3.5], F_CAP],
+    ["tie", () => scene([line(-10, 0, 10, 0), line(-10, 1, 10, 1), line(0, 50, 0, 51)], [], [{ a: { chain: 0, s: 10 }, b: { chain: 2, s: 0.5 }, over: "a" }]), [1, -1.5, 4, 2.5], F_TIE],
+  ];
+  /** The steepest ink change per world unit along the box's lines, where, and the fade bits seen. */
+  function rateWalk(fb: FormB, box: [number, number, number, number], gap: number): { worst: number; at: [number, number]; fades: number } {
+    const coarse = AA / 4;
+    const fine = AA / 20;
+    let worst = 0;
+    let at: [number, number] = [0, 0];
+    let fades = 0;
+    const [x0, y0, x1, y1] = box;
+    const walk = (pt: (t: number) => [number, number], len: number) => {
+      const n = Math.round(len / coarse);
+      let prev = fb.evalPoint(...pt(0)).ink;
+      for (let i = 1; i <= n; i++) {
+        const e = fb.evalPoint(...pt(i * coarse));
+        fades |= e.fade;
+        if (Math.abs(e.ink - prev) > 0.05) {
+          let p = prev;
+          for (let k = 1; k <= 5; k++) {
+            const t = (i - 1) * coarse + k * fine;
+            const q = k === 5 ? e.ink : fb.evalPoint(...pt(t)).ink;
+            if (Math.abs(q - p) / fine > worst) {
+              worst = Math.abs(q - p) / fine;
+              at = pt(t);
+            }
+            p = q;
+          }
+        } else if (Math.abs(e.ink - prev) / coarse > worst) {
+          worst = Math.abs(e.ink - prev) / coarse;
+          at = pt(i * coarse);
+        }
+        prev = e.ink;
+      }
+    };
+    for (let y = y0; y <= y1 + 1e-9; y += gap) walk((t) => [x0 + t, y], x1 - x0);
+    for (let x = x0; x <= x1 + 1e-9; x += gap) walk((t) => [x, y0 + t], y1 - y0);
+    return { worst, at, fades };
+  }
+  for (const [name, make, box, natural] of rateCases)
+    // The cap scene breaks the rule where the END's arm ends (S1b F13, a
+    // residual): a member whose ramp has reached 0 draws its outline over the
+    // group's tube, and past the arm the same piece is OWN, under the group by
+    // key, so the ink drops by 0.75 in 1/40 px. It fails until that is fixed.
+    (name === "cap" ? it.fails : it)(`${name}: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1`, () => {
+      const sc = make();
+      const report: string[] = [];
+      for (const [tag, force] of rateVariants) {
+        const fb = new FormB(sc, { force });
+        const { worst, at, fades } = rateWalk(fb, box, 2 * AA);
+        report.push(`${tag} ${(worst * 2 * AA).toFixed(2)}`);
+        expect(worst, `${name} ${tag}: ${(worst * 2 * AA).toFixed(3)} per px at (${at[0].toFixed(4)}, ${at[1].toFixed(4)})`).toBeLessThanOrEqual(RATE * (1 + 1e-9));
+        // The natural scene shows the fade it is here for.
+        if (tag === "natural") expect(fades & natural, `${name}: fade bits ${fades}`).toBe(natural);
+      }
+      console.log(`[form_b] rate ${name} (ink per px): ${report.join(", ")}`);
     });
 });

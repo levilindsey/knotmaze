@@ -961,12 +961,16 @@ export class FormB {
       let arc = 0;
       for (const ci of near) {
         const c = this.corners[ci];
-        if (c.g !== S || !(c.omega > bur)) continue;
-        if (this.inFill(c, fx, fy, A)) {
+        if (c.g !== S || !(c.omega > 0) || (c.omega >= 1 && bur >= 1)) continue;
+        if (!this.inFill(c, fx, fy, A)) continue;
+        if (c.omega > bur) {
           bur = c.omega;
           burBit = F_OMEGA;
-          arc = c.omega < 1 ? c.omega * this.band2(Math.hypot(x - c.qx, y - c.qy) - c.r) : 0;
         }
+        // The arc keeps its share where a deeper burial wins the max (S1b
+        // F11): (1 − bur)·A's band + ω·the arc's band, continuous where the
+        // burial passes ω.
+        if (c.omega < 1) arc = Math.max(arc, c.omega * this.band2(Math.hypot(x - c.qx, y - c.qy) - c.r));
       }
       const w = (1 - bur) * A.selfW;
       const D = h - A.d;
@@ -975,6 +979,7 @@ export class FormB {
         if (bur > 0 && bur < 1) fade |= burBit;
         if (A.selfW < 1) fade |= F_FOLD;
       }
+      if (arc > 0) fade |= F_OMEGA;
       if (w >= 0.5) Dexp = Math.min(Dexp, D);
       take(w * b2 + arc, { kind: T_FOOT, surf: S, chain: A.chain, s: A.s, k: A.k, vtx: A.vtx, corner: -1, D, w, v: w * b2 + arc });
     }

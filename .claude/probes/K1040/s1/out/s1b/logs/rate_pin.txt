@@ -1,0 +1,95 @@
+
+ RUN  v3.2.7 C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/k1040-field
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > eye: 1 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] watertight eye: natural 20, fold=0 20, fold=0.25 20, fold=0.5 20, fold=0.75 20, fold=1 20, omega=0 20, omega=0.25 20, omega=0.5 20, omega=0.75 20, omega=1 20, cap=0 20, cap=0.25 20, cap=0.5 20, cap=0.75 20, cap=1 20, tie=0 20, tie=0.25 20, tie=0.5 20, tie=0.75 20, tie=1 20
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > T: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] watertight T: natural 0, fold=0 0, fold=0.25 0, fold=0.5 0, fold=0.75 0, fold=1 0, omega=0 0, omega=0.25 0, omega=0.5 0, omega=0.75 0, omega=1 0, cap=0 0, cap=0.25 0, cap=0.5 0, cap=0.75 0, cap=1 0, tie=0 0, tie=0.25 0, tie=0.5 0, tie=0.75 0, tie=1 0
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > acute: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] watertight acute: natural 0, fold=0 0, fold=0.25 0, fold=0.5 0, fold=0.75 0, fold=1 0, omega=0 0, omega=0.25 0, omega=0.5 0, omega=0.75 0, omega=1 0, cap=0 0, cap=0.25 0, cap=0.5 0, cap=0.75 0, cap=1 0, tie=0 0, tie=0.25 0, tie=0.5 0, tie=0.75 0, tie=1 0
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > hairpin: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] watertight hairpin: natural 0, fold=0 0, fold=0.25 0, fold=0.5 0, fold=0.75 0, fold=1 0, omega=0 0, omega=0.25 0, omega=0.5 0, omega=0.75 0, omega=1 0, cap=0 0, cap=0.25 0, cap=0.5 0, cap=0.75 0, cap=1 0, tie=0 0, tie=0.25 0, tie=0.5 0, tie=0.75 0, tie=1 0
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > T: the rate rule, |Δink| ≤ 3 per px, natural and with each fade held at 0, 0.5 and 1
+[form_b] rate T (ink per px): natural 1.50, fold=0 1.50, fold=0.5 1.50, fold=1 1.50, omega=0 1.50, omega=0.5 1.50, omega=1 1.50, cap=0 1.50, cap=0.5 1.50, cap=1 1.50, tie=0 1.50, tie=0.5 1.50, tie=1 1.50
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > acute: the rate rule, |Δink| ≤ 3 per px, natural and with each fade held at 0, 0.5 and 1
+[form_b] rate acute (ink per px): natural 1.50, fold=0 1.50, fold=0.5 1.50, fold=1 1.50, omega=0 1.50, omega=0.5 1.50, omega=1 1.50, cap=0 1.50, cap=0.5 1.50, cap=1 1.50, tie=0 1.50, tie=0.5 1.50, tie=1 1.50
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > hairpin: the rate rule, |Δink| ≤ 3 per px, natural and with each fade held at 0, 0.5 and 1
+[form_b] rate hairpin (ink per px): natural 1.50, fold=0 1.50, fold=0.5 1.50, fold=1 1.50, omega=0 1.50, omega=0.5 1.50, omega=1 1.50, cap=0 1.50, cap=0.5 1.50, cap=1 1.50, tie=0 1.50, tie=0.5 1.50, tie=1 1.50
+
+ ❯ test/render/field/form_b.test.ts (22 tests | 3 failed | 11 skipped) 11834ms
+   ↓ form B: the terms > a straight tube's side feet: band2 of h − d, the outline at 0.5
+   ↓ form B: the terms > a dead end keeps the polyline's round end
+   ↓ form B: the terms > a crossing: the over's outline runs across, the under's ends on it
+   ↓ form B: the terms > a T: V, θ, r, q and the feet in closed form; the mouth buried; the arc band inked
+   ↓ form B: the terms > a Y: three 120° corners at r = 2h, q = c + bis·3h/sin 60°
+   ↓ form B: the terms > an acute pair: r = 1.5h·tan(θ/2), the fit and the cap in closed form
+   ↓ form B: the terms > a curved arm: the corner matches a numeric rolling ball
+   ↓ form B: the fades are continuous > D2 + D5: a crossing slides up the END; the cap ramp and r move the ink by what the step explains
+   ✓ form B: the fades are continuous > D4: across the tie line the ink mixes; without the mix it jumps 41ms
+   ↓ form B: the fades are continuous > D6: ω from 0 to 1 moves the ink at most in proportion
+   ↓ form B: the fades are continuous > D1: the fold across a hairpin moves the ink no faster than an outline's AA
+   ↓ form B: the max decomposition > every winning term lies in one of its strips
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > eye: 1 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1  486ms
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > T: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1 237ms
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > acute: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1 224ms
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > hairpin: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1  324ms
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > T: the rate rule, |Δink| ≤ 3 per px, natural and with each fade held at 0, 0.5 and 1  1509ms
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > acute: the rate rule, |Δink| ≤ 3 per px, natural and with each fade held at 0, 0.5 and 1  1843ms
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > hairpin: the rate rule, |Δink| ≤ 3 per px, natural and with each fade held at 0, 0.5 and 1  3236ms
+   × form B: watertight and the rate rule at every fade value (S1b) > eye: the rate rule, |Δink| ≤ 3 per px, natural and with each fade held at 0, 0.5 and 1 2367ms
+     → eye omega=0.5: 20.000 per px at (1.0000, -0.1000): expected 200 to be less than or equal to 30.000000030000002
+   × form B: watertight and the rate rule at every fade value (S1b) > cap: the rate rule, |Δink| ≤ 3 per px, natural and with each fade held at 0, 0.5 and 1 204ms
+     → cap natural: 30.071 per px at (-0.9000, 0.6025): expected 300.71249999999975 to be less than or equal to 30.000000030000002
+   × form B: watertight and the rate rule at every fade value (S1b) > tie: the rate rule, |Δink| ≤ 3 per px, natural and with each fade held at 0, 0.5 and 1 1362ms
+     → tie tie=0: 40.000 per px at (2.9425, 0.1000): expected 400 to be less than or equal to 30.000000030000002
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > eye: the rate rule, |Δink| ≤ 3 per px, natural and with each fade held at 0, 0.5 and 1
+AssertionError: eye omega=0.5: 20.000 per px at (1.0000, -0.1000): expected 200 to be less than or equal to 30.000000030000002
+ ❯ test/render/field/form_b.test.ts:577:126
+    575|         const { worst, at, fades } = rateWalk(fb, box, 2 * AA);
+    576|         report.push(`${tag} ${(worst * 2 * AA).toFixed(2)}`);
+    577|         expect(worst, `${name} ${tag}: ${(worst * 2 * AA).toFixed(3)} …
+       |                                                                                                                              ^
+    578|         // The natural scene shows the fade it is here for.
+    579|         if (tag === "natural") expect(fades & natural, `${name}: fade …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > cap: the rate rule, |Δink| ≤ 3 per px, natural and with each fade held at 0, 0.5 and 1
+AssertionError: cap natural: 30.071 per px at (-0.9000, 0.6025): expected 300.71249999999975 to be less than or equal to 30.000000030000002
+ ❯ test/render/field/form_b.test.ts:577:126
+    575|         const { worst, at, fades } = rateWalk(fb, box, 2 * AA);
+    576|         report.push(`${tag} ${(worst * 2 * AA).toFixed(2)}`);
+    577|         expect(worst, `${name} ${tag}: ${(worst * 2 * AA).toFixed(3)} …
+       |                                                                                                                              ^
+    578|         // The natural scene shows the fade it is here for.
+    579|         if (tag === "natural") expect(fades & natural, `${name}: fade …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > tie: the rate rule, |Δink| ≤ 3 per px, natural and with each fade held at 0, 0.5 and 1
+AssertionError: tie tie=0: 40.000 per px at (2.9425, 0.1000): expected 400 to be less than or equal to 30.000000030000002
+ ❯ test/render/field/form_b.test.ts:577:126
+    575|         const { worst, at, fades } = rateWalk(fb, box, 2 * AA);
+    576|         report.push(`${tag} ${(worst * 2 * AA).toFixed(2)}`);
+    577|         expect(worst, `${name} ${tag}: ${(worst * 2 * AA).toFixed(3)} …
+       |                                                                                                                              ^
+    578|         // The natural scene shows the fade it is here for.
+    579|         if (tag === "natural") expect(fades & natural, `${name}: fade …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 8 passed | 11 skipped (22)
+   Start at  01:24:44
+   Duration  12.45s (transform 157ms, setup 0ms, collect 188ms, tests 11.83s, environment 0ms, prepare 126ms)
+
