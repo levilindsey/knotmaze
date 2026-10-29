@@ -165,3 +165,46 @@ q + uA, q + uB), show:
   with a fan of white radial hairlines where b16 draws it round and master
   cuts it; master's panel shows the same fan at another corner. The
   census attributes it (below).
+
+**G3 (Order step 2: the continuous stops, c17 and c17f).** Probe oracles
+from `mk_c17.mjs` (on b16): `oracle_c17.ts` (32 nodes, trapezoid) and
+`oracle_c17f.ts` (`--refine 10`). The rule, one sentence per part:
+- **Steep stop:** the ball grows from δ = h by the integral, over V's
+  branch up to h + r, of the running minimum of a smoothstep of
+  den/den(V) (0 at 0.3, 1 at 0.7; den = 1 + nA·nB), so a branch that
+  turns steep lowers r in proportion, with no first crossing (r ≤ rRule,
+  the integral's range).
+- **Cap stop:** the same integrand is multiplied by a smoothstep of the
+  cap slack (cap − W minus the foot's arc length, the smaller over the
+  two arms; 0 at slack 0, 1 at 0.5h), so r shrinks continuously as
+  either foot nears cap − W and never passes it. The cap pass runs only
+  on corners whose first march came within 0.5h of cap − W (footMaxA/B);
+  for the rest the factor is 1 and r is unchanged.
+- **c17f's refinement:** an interval where the integrand drops by more
+  than 0.125, or where the branch folds, is halved, down to 1/1024 of a
+  node interval, so r follows the drop's location continuously. Why: a
+  foot can jump along its arm inside one node interval (j54/1, muse_drag
+  t18-23: sB 4.910 → 3.471, den/den(V) 0.011), and c17's trapezoid then
+  moves r by a node interval (rRule/32) when the jump crosses a node: c17
+  flips 1.350h ↔ 1.407h there, c17f holds 1.38h. Same at j12/0
+  (muse_flow t3, t16, t22: c17 0.89 → 0.84 → 0.78 → 0.84h; c17f follows
+  b16, 0.88 → 0.81h, smoothly).
+
+Sweeps (largest step; `pops17/sweeps_c17.txt` has master, b16 and c17,
+`sweeps_c17f.txt` c17 and c17f; every step live under both):
+- **The four new sites:** def_flow t21 j56/1: b16 1.40h, c17 0.018h,
+  c17f 0.0085h (2.0x the arms' step). muse_drag t0 j139/2: b16 0.167h,
+  c17 0.12h, c17f 0.11h; t21 j139/2: b16 0.95h, c17 and c17f 0.79h;
+  muse_drag t25 j105/1: b16 0.575h, c17 and c17f 0.475h. The last three
+  are cap jumps the rule follows (`cap16.ts`: the pass caps jump inside
+  one source and switch sources, class 1, K1000).
+- **Stage 1's 20 sites:** c17 steps at def_flow t0 and t8 j43/1 (0.058h
+  and 0.060h, 11x the arms) and muse_flow t0 j116/2 (3.4x): the node
+  quantization; c17f 0.0009h, 0.0008h and 0.0002h (≤ 0.5x). Besides the
+  cap sites, c17f's largest step is def_drag t2 j45/1, 0.011h (8.3x the
+  arms' step; r 0.58h → 0.59h).
+- **The unit sweeps (sweep steps; the test's bound is 3):** A t90: dr
+  1.00, dq 1.42. A' curved: master 12.34 / 14.74, b16 4.19 / 4.98, c17
+  and c17f 2.03 / 2.45. B acute30: c17 dr 1.51, dq 5.82, over the test's
+  bound (q moves 1/sin 15° = 3.86 times r on the 30° corner, and c17's
+  step there is the node quantization); c17f 0.50 / 1.93, as b16.
