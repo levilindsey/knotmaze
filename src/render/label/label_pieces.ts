@@ -94,11 +94,11 @@ export function vertexRanges(m: FieldModel): { zmin: number; zmax: number; smax:
   let smax = 1;
   for (let ci = 0; ci < polys.length; ci++) {
     const p = polys[ci];
+    if (p.n > 0) smax = Math.max(smax, Math.abs(p.s[0]) + p.len + 1);
     for (let k = 0; k < p.n; k++) {
       const z = m.depthAt(ci, p.s[k]);
       zmin = Math.min(zmin, z);
       zmax = Math.max(zmax, z);
-      smax = Math.max(smax, Math.abs(p.s[0]) + p.len + 1);
     }
   }
   if (!Number.isFinite(zmin)) {
@@ -254,66 +254,187 @@ export function buildLabelPieces(m: FieldModel): LabelPieces {
   };
 }
 
+/** A growable float32 scratch (K868 S3a8a). Only its capacity carries from
+ * one frame to the next: a build writes from 0 and copies out what it wrote,
+ * so nothing an earlier frame left in it changes an answer. */
+class Scratch {
+  a = new Float32Array(1 << 14);
+  n = 0;
+  /** The array, with room for k more floats at n. */
+  room(k: number): Float32Array {
+    if (this.n + k > this.a.length) {
+      const g = new Float32Array(Math.max(this.n + k, this.a.length * 2));
+      g.set(this.a.subarray(0, this.n));
+      this.a = g;
+    }
+    return this.a;
+  }
+}
+const DATA_SCR = new Scratch();
+const FILL_SCR = new Scratch();
+/** A window's shifts (one, or a closed chain's three) and its segment
+ * ranges, one [kLo, kHi) pair per shift. */
+const SHIFTS = [0, 0, 0];
+const RANGES = [0, 0, 0, 0, 0, 0];
+
 /** The corner fills and the DATA texture: the chain table, the arm windows
  * (split where the depth bends by more than ZTOL) and the crossing rows.
  * A fill's rank is its cluster's among the tubes' keys (rankOf), or
- * nKeyList for a cluster no tube piece carries. */
+ * nKeyList for a cluster no tube piece carries.
+ *
+ * K868 S3a8a: the records of S3a7's code, bit for bit and in its order
+ * (test/render/label/label_fills_pin.test.ts pins them against the frozen
+ * copy in fixtures/label_fills_ref.ts), at a fraction of its cost: a window
+ * binary-searches each shift's segment range in the s table (s[k] and
+ * s[k] + segLen[k] both rise with k; the old code scanned every segment), a
+ * z split hands its ends' depths to its halves, a cluster's crossing rows
+ * come from the entries whose other chain it spans (each entry's point
+ * found once a frame, the rows visited in the old order), and everything
+ * is written straight into float32 scratch. */
 export function buildLabelFills(m: FieldModel, ZTOL: number, rankOf: ReadonlyMap<number, number>, nKeyList: number): LabelFills {
   const polys = m.polys;
   const h = m.h;
+  const D = DATA_SCR;
+  D.n = 0;
   // Data: chain table first.
-  const data: number[] = [];
-  for (const p of polys) data.push(p.s0, p.len, p.closed ? 1 : 0, 0);
-  let texel = polys.length;
+  for (const p of polys) {
+    const d = D.room(4);
+    const o = D.n;
+    d[o] = p.s0;
+    d[o + 1] = p.len;
+    d[o + 2] = p.closed ? 1 : 0;
+    d[o + 3] = 0;
+    D.n = o + 4;
+  }
 
-  // Window records in footInWindow's order, z split ascending.
+  // Window records in footInWindow's order, z split ascending. emit reads
+  // the segment being split from these.
   let windowRecords = 0;
-  const windowOf = (pi: number, lo: number, hi: number, dir: number): [number, number] => {
-    const off = texel;
-    let cnt = 0;
-    const p = polys[pi];
-    const shifts = p.closed ? [-p.len, 0, p.len] : [0];
-    for (let k = 0; k < p.nseg; k++) {
-      const sa = p.s[k];
-      const sb = sa + p.segLen[k];
-      const kb = segB(p, k);
-      const tx = (p.x[kb] - p.x[k]) * dir;
-      const ty = (p.y[kb] - p.y[k]) * dir;
-      for (const sh of shifts) {
-        const a = Math.max(lo, sa + sh);
-        const b = Math.min(hi, sb + sh);
-        if (b < a) continue;
-        const l = p.segLen[k] || 1;
-        const ta = (a - sh - sa) / l;
-        const tb = (b - sh - sa) / l;
-        const emit = (u0: number, u1: number, depthLeft: number): void => {
-          const s0 = sa + u0 * (sb - sa);
-          const s1 = sa + u1 * (sb - sa);
-          const z0 = m.depthAt(pi, s0);
-          const z1 = m.depthAt(pi, s1);
-          if (depthLeft > 0 && u1 - u0 > 1 / 64) {
-            const zm = m.depthAt(pi, (s0 + s1) / 2);
-            if (Math.abs(zm - (z0 + z1) / 2) > ZTOL) {
-              const um = (u0 + u1) / 2;
-              emit(u0, um, depthLeft - 1);
-              emit(um, u1, depthLeft - 1);
-              return;
-            }
-          }
-          data.push(
-            p.x[k] + (p.x[kb] - p.x[k]) * u0, p.y[k] + (p.y[kb] - p.y[k]) * u0,
-            p.x[k] + (p.x[kb] - p.x[k]) * u1, p.y[k] + (p.y[kb] - p.y[k]) * u1,
-            s0, s1, z0, z1,
-            tx, ty, pi, 0
-          );
-          texel += 3;
-          cnt++;
-        };
-        emit(ta, tb, 6);
+  let wp = polys[0];
+  let wpi = 0;
+  let wk = 0;
+  let wkb = 0;
+  let wsa = 0;
+  let wsb = 0;
+  let wtx = 0;
+  let wty = 0;
+  const emit = (u0: number, u1: number, z0: number, z1: number, depthLeft: number): void => {
+    const s0 = wsa + u0 * (wsb - wsa);
+    const s1 = wsa + u1 * (wsb - wsa);
+    if (depthLeft > 0 && u1 - u0 > 1 / 64) {
+      const zm = m.depthAt(wpi, (s0 + s1) / 2);
+      if (Math.abs(zm - (z0 + z1) / 2) > ZTOL) {
+        const um = (u0 + u1) / 2;
+        const zu = m.depthAt(wpi, wsa + um * (wsb - wsa));
+        emit(u0, um, z0, zu, depthLeft - 1);
+        emit(um, u1, zu, z1, depthLeft - 1);
+        return;
       }
     }
-    windowRecords += cnt;
-    return [off, cnt];
+    const x = wp.x;
+    const y = wp.y;
+    const d = D.room(12);
+    const o = D.n;
+    d[o] = x[wk] + (x[wkb] - x[wk]) * u0;
+    d[o + 1] = y[wk] + (y[wkb] - y[wk]) * u0;
+    d[o + 2] = x[wk] + (x[wkb] - x[wk]) * u1;
+    d[o + 3] = y[wk] + (y[wkb] - y[wk]) * u1;
+    d[o + 4] = s0;
+    d[o + 5] = s1;
+    d[o + 6] = z0;
+    d[o + 7] = z1;
+    d[o + 8] = wtx;
+    d[o + 9] = wty;
+    d[o + 10] = wpi;
+    d[o + 11] = 0;
+    D.n = o + 12;
+    windowRecords++;
+  };
+  let wOff = 0;
+  let wCnt = 0;
+  const windowOf = (pi: number, lo: number, hi: number, dir: number): void => {
+    wOff = D.n / 4;
+    const before = windowRecords;
+    const p = polys[pi];
+    const nseg = p.nseg;
+    const S = p.s;
+    const L = p.segLen;
+    let ns = 1;
+    SHIFTS[0] = 0;
+    if (p.closed) {
+      SHIFTS[0] = -p.len;
+      SHIFTS[1] = 0;
+      SHIFTS[2] = p.len;
+      ns = 3;
+    }
+    // Each shift's segments meeting [lo, hi]: s[k] + segLen[k] + sh >= lo
+    // from kLo on, s[k] + sh <= hi before kHi (a NaN bound meets every
+    // segment, as the scan's b < a test lets it).
+    const all = Number.isNaN(lo) || Number.isNaN(hi);
+    let nr = 0;
+    for (let j = 0; j < ns; j++) {
+      const sh = SHIFTS[j];
+      let kLo = 0;
+      let kHi = nseg;
+      if (!all) {
+        let a1 = nseg;
+        while (kLo < a1) {
+          const mid = (kLo + a1) >> 1;
+          if (S[mid] + L[mid] + sh >= lo) a1 = mid;
+          else kLo = mid + 1;
+        }
+        let b0 = kLo;
+        while (b0 < kHi) {
+          const mid = (b0 + kHi) >> 1;
+          if (S[mid] + sh > hi) kHi = mid;
+          else b0 = mid + 1;
+        }
+      }
+      if (kLo < kHi) {
+        // Insert by start (at most three ranges).
+        let i = nr++;
+        while (i > 0 && RANGES[2 * i - 2] > kLo) {
+          RANGES[2 * i] = RANGES[2 * i - 2];
+          RANGES[2 * i + 1] = RANGES[2 * i - 1];
+          i--;
+        }
+        RANGES[2 * i] = kLo;
+        RANGES[2 * i + 1] = kHi;
+      }
+    }
+    // The ranges' union in ascending k, each k's shifts in order: the
+    // scan's order, without the segments it skipped.
+    let kNext = 0;
+    for (let r = 0; r < nr; r++) {
+      const k1 = RANGES[2 * r + 1];
+      for (let k = Math.max(RANGES[2 * r], kNext); k < k1; k++) {
+        const sa = S[k];
+        const sb = sa + L[k];
+        const kb = segB(p, k);
+        const tx = (p.x[kb] - p.x[k]) * dir;
+        const ty = (p.y[kb] - p.y[k]) * dir;
+        for (let j = 0; j < ns; j++) {
+          const sh = SHIFTS[j];
+          const a = Math.max(lo, sa + sh);
+          const b = Math.min(hi, sb + sh);
+          if (b < a) continue;
+          const l = L[k] || 1;
+          const ta = (a - sh - sa) / l;
+          const tb = (b - sh - sa) / l;
+          wp = p;
+          wpi = pi;
+          wk = k;
+          wkb = kb;
+          wsa = sa;
+          wsb = sb;
+          wtx = tx;
+          wty = ty;
+          emit(ta, tb, m.depthAt(pi, sa + ta * (sb - sa)), m.depthAt(pi, sa + tb * (sb - sa)), 6);
+        }
+      }
+      if (k1 > kNext) kNext = k1;
+    }
+    wCnt = windowRecords - before;
   };
 
   // The crossing table by chain (oracle ensureXBy).
@@ -325,13 +446,38 @@ export function buildLabelFills(m: FieldModel, ZTOL: number, rankOf: ReadonlyMap
     xBy[ia].push({ s: normS(polys[ia], x.a.s), oi: ib, over: x.over === "a" });
     xBy[ib].push({ s: normS(polys[ib], x.b.s), oi: ia, over: x.over === "b" });
   }
+  // Every entry once, numbered in the old visiting order (chain, then its
+  // xBy order), with its point and its row, listed by its other chain.
+  let nE = 0;
+  for (const l of xBy) nE += l.length;
+  const eX = new Float64Array(nE);
+  const eY = new Float64Array(nE);
+  const eRow = new Float64Array(4 * nE);
+  const byOther: number[][] = polys.map(() => []);
+  for (let pi = 0, id = 0; pi < polys.length; pi++) {
+    const p = polys[pi];
+    for (const e of xBy[pi]) {
+      const at = pointAt(p, e.s);
+      eX[id] = at.x;
+      eY[id] = at.y;
+      eRow[4 * id] = pi;
+      eRow[4 * id + 1] = e.s;
+      eRow[4 * id + 2] = e.over ? 1 : 0;
+      eRow[4 * id + 3] = p.closed ? p.len : 0;
+      byOther[e.oi].push(id);
+      id++;
+    }
+  }
 
-  const fillRaw: number[] = [];
+  const F = FILL_SCR;
+  F.n = 0;
   let nFills = 0;
   let g2Skipped = 0;
   let crossingRows = 0;
+  const drawn: number[] = [];
+  const cand: number[] = [];
   for (let J = 0; J < m.clusters.length; J++) {
-    const drawn: number[] = [];
+    drawn.length = 0;
     for (const k of m.clusters[J].corners) {
       const c = m.corners[k];
       if (c.r <= 0 || !c.ok) continue;
@@ -342,52 +488,75 @@ export function buildLabelFills(m: FieldModel, ZTOL: number, rankOf: ReadonlyMap
       drawn.push(k);
     }
     if (!drawn.length) continue;
-    // This cluster's crossing rows.
+    // This cluster's crossing rows: the entries whose other chain it spans.
     const spans = m.clusters[J].spans;
-    const xOff = texel;
+    const xOff = D.n / 4;
     let xCnt = 0;
-    for (let pi = 0; pi < polys.length; pi++) {
-      for (const e of xBy[pi]) {
-        if (!spans.has(e.oi)) continue;
-        const at = pointAt(polys[pi], e.s);
-        let near = false;
-        for (const k of drawn) {
-          const c = m.corners[k];
-          if (Math.hypot(at.x - c.q[0], at.y - c.q[1]) <= c.vq + 3 * h + m.sigma) {
-            near = true;
-            break;
-          }
+    cand.length = 0;
+    for (const oi of spans.keys()) {
+      const l = byOther[oi];
+      if (l) for (const id of l) cand.push(id);
+    }
+    cand.sort((a, b) => a - b);
+    for (const id of cand) {
+      let near = false;
+      for (const k of drawn) {
+        const c = m.corners[k];
+        if (Math.hypot(eX[id] - c.q[0], eY[id] - c.q[1]) <= c.vq + 3 * h + m.sigma) {
+          near = true;
+          break;
         }
-        if (!near) continue;
-        data.push(pi, e.s, e.over ? 1 : 0, polys[pi].closed ? polys[pi].len : 0);
-        texel++;
-        xCnt++;
       }
+      if (!near) continue;
+      const d = D.room(4);
+      const o = D.n;
+      d[o] = eRow[4 * id];
+      d[o + 1] = eRow[4 * id + 1];
+      d[o + 2] = eRow[4 * id + 2];
+      d[o + 3] = eRow[4 * id + 3];
+      D.n = o + 4;
+      xCnt++;
     }
     crossingRows += xCnt;
     let rank = rankOf.get(1e6 + J);
     if (rank === undefined) rank = nKeyList; // a cluster with no tube piece
     for (const k of drawn) {
       const c = m.corners[k];
-      const [offA, cntA] = windowOf(c.a, c.winA[0], c.winA[1], c.armA.dir);
-      const [offB, cntB] = windowOf(c.b, c.winB[0], c.winB[1], c.armB.dir);
+      windowOf(c.a, c.winA[0], c.winA[1], c.armA.dir);
+      const offA = wOff;
+      const cntA = wCnt;
+      windowOf(c.b, c.winB[0], c.winB[1], c.armB.dir);
       const sg = Math.sign(c.uA[0] * c.uB[1] - c.uA[1] * c.uB[0]);
-      fillRaw.push(
-        c.q[0], c.q[1], c.r, c.vq + h,
-        c.uA[0], c.uA[1], c.uB[0], c.uB[1],
-        J, rank, sg, 0,
-        offA, cntA, offB, cntB,
-        xOff, xCnt
-      );
+      const f = F.room(FILL_FLOATS);
+      const o = F.n;
+      f[o] = c.q[0];
+      f[o + 1] = c.q[1];
+      f[o + 2] = c.r;
+      f[o + 3] = c.vq + h;
+      f[o + 4] = c.uA[0];
+      f[o + 5] = c.uA[1];
+      f[o + 6] = c.uB[0];
+      f[o + 7] = c.uB[1];
+      f[o + 8] = J;
+      f[o + 9] = rank;
+      f[o + 10] = sg;
+      f[o + 11] = 0;
+      f[o + 12] = offA;
+      f[o + 13] = cntA;
+      f[o + 14] = wOff;
+      f[o + 15] = wCnt;
+      f[o + 16] = xOff;
+      f[o + 17] = xCnt;
+      F.n = o + FILL_FLOATS;
       nFills++;
     }
   }
+  const texel = D.n / 4;
   const dataRows = Math.max(1, Math.ceil(texel / DATA_W));
   const dataArr = new Float32Array(DATA_W * dataRows * 4);
-  dataArr.set(data);
-  return { fills: new Float32Array(fillRaw), nFills, data: dataArr, dataRows, g2Skipped, windowRecords, crossingRows };
+  dataArr.set(D.a.subarray(0, D.n));
+  return { fills: F.a.slice(0, F.n), nFills, data: dataArr, dataRows, g2Skipped, windowRecords, crossingRows };
 }
-
 /** K868 S3a7, the GPU pieces (labelGpu): the tubes are LabelPass's GPU
  * tubes, drawn from the tables (label_tables.ts), one instance per chain
  * segment with the exact depth per fragment. This builds what stays on the
