@@ -515,7 +515,8 @@ By cause, master -> b16 (px): refit 353178 -> 31802, fold 256946 ->
 spans 73282 -> 6138, amp 34819 -> 41775, cluster 1974 -> 22, count
 137 -> 258.
 
-**The windows' noise floor is zero.** Master's muse_drag windows, rerun
+**The windows' noise floor is zero** (measured on muse_drag's three
+windows; F1 had not measured it). Master's muse_drag windows, rerun
 (`pops16/floor16z/`), match `before16z` exactly: pops, area and area by
 cause. So muse_drag@w2's 71 extra pops are real, and b16 fails the gate
 there. muse_flow@w0 ties at 659.
@@ -560,3 +561,70 @@ since nothing landed):
 - Corners held by a cap are rounder, because master's walk stops below
   the largest ball that fits: j139/2 0.59h-0.70h against 0.34h-0.52h,
   j105/1 0.27h-0.59h against 0.24h-0.45h.
+
+## Handoff
+
+2026-10-28, stopped at 09:42 (started 08:19:52) by the stop rule's second
+clause: no rule beats master, and F5, F7 and F8 say why. Nothing landed
+in `src/`.
+
+- **Branch.** `k992-corners`, worktree
+  `C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\k992-corners`.
+  The last commit is the one that adds this handoff. Never pushed.
+- **Committed.**
+  - The census windows, `55bfdbce` (S3a7 cherry-picks it).
+  - F1-F8 in this brief.
+  - `test/render/field/corner_continuity.test.ts`, sweeps (A) and (B).
+    It is **red** on this branch, because src's oracle is still master's:
+    in sweep (B), the graze, q jumps 905 sweep steps. b16 passes both
+    sweeps (`unit16.ts`). Merge the test only together with a rule that
+    turns it green, since a red suite blocks the deploy.
+- **Evidence.** It is in the worktree's untracked `.claude/probes/S3a/`,
+  so keep the worktree.
+  - Oracles: `oracle_m14.ts` (master), `oracle_c16.ts` (call 2),
+    `oracle_a16.ts` (R1 + R2), `oracle_f16.ts` (R1 + master's re-fit),
+    `oracle_b16.ts`.
+  - Their generators: `mk_c16.mjs`, `mk_a16.mjs`, `mk_b16.mjs`.
+  - Landing copies on src's imports: `oracle_b16src.ts.txt` and
+    `oracle_a16src.ts.txt`. To remake them, run
+    `node .claude/probes/S3a/mk_a16.mjs --src --out <a>`, then
+    `node .claude/probes/S3a/mk_b16.mjs --src --in <a> --out <b>`.
+  - Node probes: `sweep16.ts`, `sweeps16.ps1`, `unit16.ts`, `fold16.ts`,
+    `cap16.ts`, `disc16.ts`.
+  - Census readers: `cmp16.cjs`, `popsby16.cjs`, `jumpev16.cjs`.
+  - Census output in `pops16/`: `before16`, `before16z`, `floor16z`,
+    `c16`, `c16z` (5 of 10 windows), `a16`, `a16z`, `b16`, `b16z`.
+  - Also in `pops16/`: `sweeps_b16.txt` and `disc16_m.txt` / `.json`.
+- **Not done.** The gate failed, so there is no raster census
+  (`raster14.ts`), no build cost (`cost14.ts`), and no crop pairs or
+  motion strip.
+- **Next stage.**
+  1. Make both of b16's stops continuous across non-monotone crossings
+     (F8's classes 2 and 3). A first crossing jumps when a local
+     extremum passes the level, and so does a running max or min. One
+     untried form: δ* = h plus the measure of the δs in [h, h + r]
+     where both tests pass, each gated smoothly. That measure grows from
+     zero as an extremum crosses the level.
+  2. Sweep F8's four new sites and unit (A'):
+     - muse_drag t21 and t0 j139/2;
+     - muse_drag t25 j105/1;
+     - def_flow t21 j56/1.
+  3. Rerun the census at both zooms. muse_drag@w2 is the window to beat:
+     master has 879 pops.
+  4. If the rule passes, land it with the continuity test. Then run the
+     raster census and the cost, and make the crop pairs and motion
+     strip for Levi.
+- **Outside these rules.** The caps' own jumps (F6's j116/2 and F8's
+  class 1) need a continuous cap from the cut loop.
+- **Env.** All commands run from the worktree.
+  - Dev server: `npx vite --config
+    .claude/probes/S3a/vite.private-cache.config.ts --port 5392
+    --strictPort --host 127.0.0.1`.
+  - Census runs and timings go under the perf lock: `pwsh
+    .claude/probes/S3a/locked16.ps1 -What <what> -Cmd <cmd>`.
+  - Census: `node node_modules\vite-node\vite-node.mjs
+    scripts\label_pops.ts <seq> [--windows] --oracle <oracle> --out
+    .claude/probes/S3a/pops16 --tag <tag> --port 5392 [--crops 0]`.
+  - Sweeps run in Node and need no lock: `node
+    node_modules\vite-node\vite-node.mjs .claude\probes\S3a\sweep16.ts
+    <seq> <t> <key> --k 16 --oracles m14,b16`.
