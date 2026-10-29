@@ -552,3 +552,54 @@ the physics.
   against a reference. The timing is valid for the amount of work, not
   for correctness.
 - Debug tint: blue marks pixels whose top surface is a junction group.
+
+### F6 · What survives of the open items
+
+F6 done 22:21. Each verdict is against F2's definition as F7 builds it:
+- a raster label;
+- form B evaluated in the band strips;
+- no FieldModel, march, walk or switch line in the frame.
+
+"S<n>" is a stage of F7.
+
+| Item | What it is | Verdict |
+|---|---|---|
+| K1000 | V's folds and the live/unsolved flips pop (class 1) | **Carried.** A corner is a closed form of the frame (F2 step 4). There is no march, so no live or unsolved state. V is an exposed endpoint whose weight fades with ω (F3 D5, D6). Closes when S4 lands and its census shows no corner pops outside ω's fade. |
+| K1001 | Sharp or round where two threads split; Levi has not seen it in motion | **Still needed:** it is Levi's look call. F2 draws the sharp point: fit takes r to 0 continuously (F1 row 8). A round variant would put a floor on r, which is a new look. Only the route changes: Levi sees it behind S4's flag, not with `lbp`. |
+| K1007 (S3a8c) | Window range records, the crossing rows' hypot near test, the p95 spread | **Moot.** All three belong to the FieldModel's per-frame CPU build, which leaves the frame. Its p95 lesson becomes part of S5's gate: no allocation per frame, p95 reported. |
+| K1010 (S3a8d) | The GPU finds the switch lines | **Moot.** Form B has no switch lines. A depth switch is F3 D4's fade, designed in S1 and drawn in S4. |
+| K1015 | passReach steps by h/8, so the reach moves in steps | **Moot.** There is no walk. Depth is depth.ts's closed-form hats per sample, and a cap is a minimum over a fixed candidate set (F3 D3). |
+| K1022 | c23w's CPU build costs 1.75x master's | **Moot.** The FieldModel leaves the frame. It stays as the off-line look reference, where its cost does not matter. "Cut it with S3a10" is ruled out (F4 a). |
+| K1033 | At a span bound on a vertex, the GPU and the CPU disagree | **Carried, in general form.** Spans are intervals of s. The GPU and the reference both read s as s0 + t·len of the same segment, so each bound has one owner by construction. One tie remains: two segments of one chain at equal z around a vertex, where draw order decides. That is S1's question 1. Closes when S3's gate passes on muse_hash (0 DEFECT pixels against the reference). |
+| K1037 | K992's census and test tools | **Partly still needed.** `oracle_m25dbg` and `march27` are moot, since the march goes. Three census lessons stay: label_pops calls a pop "none" when the nearest event is far; vitest `SWEEP=1` ends in the onTaskUpdate timeout; the census ran 2x its estimate. Write them into S6's brief, then close. |
+| K1039 | S3a8b5's gate-1 and raster tools | **Mostly moot.** same24, same28 and raster26 test the old label's layout. One lesson stays: a page tool must not count the favicon 404 as an error. S3's gate tool gets a favicon or filters it. Close when S3 lands. |
+| K1041 | The corner march's remaining switches | **Carried.** Every switch on its list belongs to a march or a walk: the hop onto a far piece, the sharp fallback, Newton refusals, the part walk's start gate, boolean cluster roots, rc's J, the restart's weight. F2's corner has no march. Its discrete parts are D5-D8, each continuous or faded. Closes when S4 lands. |
+| K1043 | A 33-pixel band run decided by one label pixel under eps; hairpins; fills without margins | **Carried.** In F2 no pixel reads a neighbour's label to decide a run: each strip pixel's ink comes from its own analytic distance, so one pixel cannot decide 33. The hairpin is F3 D1's fold fade, whose width S1 sets. The reference gives fills their margins (S1). Closes when S1's reference and S4's census pass. |
+| K972 | Tube-against-tube switches missed (twist eyes), small islands missing, an open hook at loop tips | **Carried.** The depth test plus D4 handles tube against tube with no switch search. Every outline piece has its own strip, so no search can miss an island. At a loop tip F2 inks the exposed outline of the union, which closes the teardrop (K910's rule). Closes when S4's checks pass on g41_user_tw64 and sheet K's cases. |
+| K973 | A line missing inside a loop; missing junction ticks; extra free ends | **Carried.** The causes are K972's: a search that misses, a switch line that adds a segment. Closes when S4's free-end check (K910, K934) matches the reference on all 12 scenes. |
+| K979 | S3a4's measurement leftovers | **Moot.** The switch keys go with the switch lines, and the knot-mode p50 is the FieldModel's. One lesson stays: S5 records a master drag baseline before it measures. |
+| K985 | Point counts change between frames; knot mode and the settle never recorded; the 8x zoom assumed | **Still needed, all three, for the new census.** A change in a chain's point count changes the strip instances, so S3 rebuilds instances on a count change, as `label_band_gpu.ts`'s BandEdgeLayout does. S6 records knot mode and the settle, and checks the zoom. |
+| S3a10 | The CPU FieldModel made incremental | **Moot.** Ruled out as the renderer (F4 a). |
+
+**What of oracle30 seeds the reference.** `.claude/probes/S3a/oracle30.ts` on `k868-s3a` (872 lines) evaluates the old label definition in float64, at the census's disputed pixels.
+
+Carries over:
+- the float64 segment geometry and its s parameterization;
+- depth, through `depthAt` (the same pinned hats as depth.ts);
+- the margin framework: EDGE, CUT and DEPTH margins with eps 1e-3 px plus ulp(D), which file a pixel as boundary rather than defect;
+- the verdict classes (agree, fix, DEFECT, both, boundary, undefined) and TOL 32/255;
+- the driver that evaluates a census's popped pixels;
+- the PNG writer.
+
+Does not carry over, because it is the old definition:
+- the cut lines and bilinear claims (K1033's undefined folds);
+- the cluster cut lines, and `FieldModel.clusterAt`, whose spans come from the passReach walk;
+- the band emulation (`prepBand`, `bandAt`) and the packed word.
+
+The reference needs four things oracle30 lacks:
+- form B's three terms;
+- the corners in closed form (F2 step 4, as `proto.js` computes them);
+- the fades (D1, D2, D4, D6);
+- coverage (the band with aa) instead of a binary label.
+
+It reads master's `src/render/field/` directly: geom.ts, depth.ts, scene.ts and checks.ts.
