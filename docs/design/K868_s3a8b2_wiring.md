@@ -258,3 +258,104 @@ S3a8b's `## Rules` hold, with these changes:
     against 0.143-0.144.
 
 ## Handoff
+
+2026-10-28, stopped at Order step 7 (started 13:40, stopped about
+15:10). Commits on `k868-s3a`: `7622b33d` (the wiring), `487b6637` (gates
+a and b), `a45ef47a` (gate c, the crack), `69f499c3` (flip_0, the cost)
+and this handoff. The full suite on `69f499c3`: 185 files and 2503 tests
+pass, 2 files and 6 tests skipped (`pops22/suite22.log`).
+
+**Where each call stands.**
+- Call 3 (wire the GPU band edges): done in `7622b33d`. The fallback: a
+  band-edge program that fails to compile keeps its reason in
+  `BandPass.edgeError` and warns once, and `label_app.ts` builds the CPU's
+  tube edges instead (`stats.bandEdges` "cpu", `stats.edgeFallback` the
+  reason).
+- The gates: (a) and (b) pass (P1, P2). In (c) every new pop is explained
+  except two at muse_flow@w1 (P3), inferred to be the crack's class at
+  short cluster spans, not measured.
+- Call 4 (the crack): with `lbp` off the mechanism is N2's (P4). **The
+  fix is not made.** It moves every cluster cut on both label paths and on
+  the GPU band edge, so all three gates must run again, and that did not
+  fit in what was left of the stage. The design is below.
+- Call 5: flip_0 (P5) and the cost (P6) are done.
+- Call 7: at rest, the raster census (gate b) found nothing outside
+  S3a7 F4's classes, so there was no at-rest crop. The crack's crop and
+  the two muse_flow@w1 pops' crops went to `main`.
+
+**The crack fix (call 4), designed, for the next stage.** Every pass cuts
+along one line: at a cluster bound at t on segment k, the line through
+c = p(t) along n(t) = nA + t (nB - nA), with the band's unit vertex
+normals (label_band.ts's cut rule, 8db6ad52). Share one helper; do not
+copy it. A cut piece is then exactly its part of the uncut quad.
+1. CPU pieces (`lbp` off, `label_pieces.ts`). A cut end carries a tilt
+   k = (n.u) / (n.v), with u along the segment and v its left normal, one
+   per end. That makes TUBE_FLOATS 20, not 18 (`label_pass.ts`'s attribute
+   layout; `raster22.ts` reads TUBE_FLOATS), with a new end kind for a
+   tilted cut.
+   - TUBE_VS extends the quad by uH |k| past a tilted end.
+   - TUBE_FS discards past the tilted line, with y = dot(vP - a, v):
+     dot(vP - b, u) - k1 y > eps at the end, dot(vP - a, u) - k0 y < -eps
+     at the start. It does not clamp t on that side.
+   - The cap bit stays kind 2's.
+2. GPU tubes (GPU_TUBE_VS/FS in `label_glsl.ts`; their mirror
+   `refS`/`refCluster` in `label_tables.ts`). They take s, the cluster and
+   the rank at t_b, the root in [0, 1] of
+   (P - a) x nA + t [(P - a) x dn - d x nA] - t^2 (d x dn) = 0, the
+   bilinear quad's inverse (dn = nB - nA). nA and nB come from the tables,
+   as EDGE_VS takes them. Today the tubes take the perpendicular
+   projection, so they cut flat.
+3. The GPU band edges (EDGE_FS in `label_band_gpu.ts`) take the cluster at
+   the same t_b, not at the interpolated vSv. vSv is affine per triangle,
+   so today's seam bends at the quad's diagonal.
+4. Open points:
+   - a z-split within h |k| of a tilted cut overlaps it (depth decides);
+   - whether to clamp |k| at sharp turns.
+5. Then:
+   - `crack22.ts` again, plus an `lbp`-on emulation: the crack crops must
+     show no crack;
+   - the raster and pop censuses on both paths;
+   - gate (b) again;
+   - the two muse_flow@w1 pops.
+
+**Open checks.**
+- flip_0 (P5): by elimination what is left is depth, untested. A probe
+  that reads the label pass's depth under the band on both pages would
+  settle it.
+- `pops_check18.ts` compares today's off with today's on, so a defect
+  both paths share reads "explained" (the crack did). Give it master's
+  frames as a third side.
+- `pops_check18.ts` does not check the page's `edges` per frame.
+- `locked22.ps1`'s owner check is a prefix match, so a second call from
+  this owner skips the wait and releases the lock (K370's gotcha in
+  `probes.md`). Run one at a time, or match the owner exactly.
+- `edge22.ts` and `raster22.ts` exit 1 on the page's favicon 404, which
+  is not a result.
+
+**What changes the later stages.**
+- S3a8d (the switch lines): with `lbp` on, `switchLinesFrom` (2.8-6.5 ms
+  p50, 13.4 p95) and `switchTopo` (up to 4.8 p95) are the largest label
+  CPU after the FieldModel. The strips are 1.8-3.3 ms, and
+  `buildLabelPiecesGpu` 1.9-4.2.
+- S3a8c (K1007, the windows and crossing rows): the crack fix changes the
+  label's cuts and the band's cluster per fragment. Land it first, or
+  S3a8c's censuses move under it.
+- S3a10: the FieldModel takes 256-474 ms p50 in Node, and about 265 ms
+  of a 292 ms rebuilt frame in the browser.
+
+**Evidence.**
+- Probes, in `.claude/probes/S3a/` (untracked):
+  - `edge22.ts` (gate a);
+  - `raster22.ts` (gate b);
+  - `chain22.ps1` and `chain22b.ps1`, which run gate c's pop census
+    (`pops22/gpu22_*`), its comparisons (`cmp22_*.md`) and
+    `pops_check18.ts` (`check22_*`);
+  - `crack22.ts`;
+  - `flip22.ts`;
+  - `cost22.ps1`, which runs `inst22.mjs`, `prof22.ts`, `prof22.mjs` and
+    `prof22_table.mjs`;
+  - `locked22.ps1`.
+- Outputs, in `pops22/`: `crack22/`, `check22_win/`, `flip22.md`,
+  `prof22_after.md`, `prof22_browser.md`, `cost22/` and `suite22.log`.
+- The dev server: `.claude/probes/S3a/vite.private-cache.config.ts`, on
+  port 5381.
