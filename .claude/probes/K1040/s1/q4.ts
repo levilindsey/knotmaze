@@ -19,7 +19,7 @@ import { FormB, TERM_NAMES } from "../../../../src/render/field/form_b";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const sceneDir = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes";
-const outDir = join(here, "out", "q4");
+const outDir = process.env.OUT ?? join(here, "out", "q4");
 mkdirSync(outDir, { recursive: true });
 const CROP = Number(process.env.CROP ?? 640);
 const SUB = 8;

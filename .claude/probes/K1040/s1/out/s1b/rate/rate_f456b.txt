@@ -1,0 +1,315 @@
+b_rate: R 3 px, step 0.125 px, LIM 3/px, jump > 0.02 at 1/1024 px; params {}
+totals by class (grid edges):
+    1739 jump foot | none
+     647 jump foot+f2 | foot+f4 (top changes)
+     532 jump foot | foot
+     381 jump foot+f2 | foot+f4
+     378 jump foot+f2 | none
+      75 jump foot+f2 | none (top changes)
+      49 jump foot+f8 | foot+f8
+      45 jump foot | tB
+      42 jump arc | none (top changes)
+      42 jump arc | none
+       9 jump arc | foot
+       2 jump foot | foot+f2 (top changes)
+sites 161, with breaches 69
+
+muse_hash (11.375, 3.126) [q4 inner+fade]: max |grad ink| 1.49/px, 0 breaches
+muse_hash (30.298, 3.314) [q4 inner+fade]: max |grad ink| 7.50/px, 64 breaches: 32 jump foot+f2 | foot+f4; 32 jump foot+f2 | none
+    worst at (30.3667, 3.3257) x jump 0.927: foot+f2 top 8 ink 0.927 || none top 8 ink 0.000 corner -1 chain 3
+    worst at (30.3736, 3.3023) x jump 0.927: foot+f2 top 8 ink 0.927 || none top 8 ink 0.000 corner -1 chain 3
+muse_hash (16.822, 3.595) [q4 inner+fade]: max |grad ink| 8.00/px, 84 breaches: 32 jump foot+f2 | foot+f4; 37 jump foot+f2 | none; 14 jump foot | none; 1 jump arc | foot
+    worst at (16.7039, 3.7124) x jump 1.000: none top 93 ink 0.000 || foot top 93 ink 1.000 corner -1 chain 82
+    worst at (16.6987, 3.7163) y jump 1.000: none top 93 ink 0.000 || foot top 93 ink 1.000 corner -1 chain 82
+muse_hash (5.553, 14.959) [q4 outer/foot+fade]: max |grad ink| 1.91/px, 0 breaches
+muse_hash (14.381, 3.314) [q4 over+fade]: max |grad ink| 7.04/px, 43 breaches: 43 jump foot+f2 | foot+f4 (top changes)
+    worst at (14.2852, 3.4549) x jump 0.873: foot+f4 top 1048576 ink 0.127 || foot+f2 top 80 ink 1.000 corner -1 chain 47
+    worst at (14.2871, 3.4519) y jump 0.868: foot+f4 top 1048576 ink 0.132 || foot+f2 top 80 ink 1.000 corner -1 chain 47
+muse_hash (14.287, 3.455) [q4 over+fade]: max |grad ink| 7.58/px, 81 breaches: 81 jump foot+f2 | foot+f4 (top changes)
+    worst at (14.2505, 3.5078) x jump 0.946: foot+f4 top 1048576 ink 0.054 || foot+f2 top 80 ink 1.000 corner -1 chain 47
+    worst at (14.2518, 3.5059) y jump 0.945: foot+f4 top 1048576 ink 0.055 || foot+f2 top 80 ink 1.000 corner -1 chain 47
+muse_hash (14.193, 3.595) [q4 over+fade]: max |grad ink| 7.59/px, 73 breaches: 73 jump foot+f2 | foot+f4 (top changes)
+    worst at (14.2511, 3.5070) x jump 0.947: foot+f4 top 1048576 ink 0.053 || foot+f2 top 80 ink 1.000 corner -1 chain 47
+    worst at (14.2517, 3.5060) y jump 0.945: foot+f4 top 1048576 ink 0.055 || foot+f2 top 80 ink 1.000 corner -1 chain 47
+muse_hash (24.899, 26.603) [q4 outer/arc+fade]: max |grad ink| 7.94/px, 28 breaches: 14 jump arc | none (top changes); 14 jump arc | none
+    worst at (24.8753, 26.6323) x jump 0.956: none top -1 ink 0.000 || arc top -1 ink 0.956 corner 209 chain -1
+    worst at (24.8814, 26.6274) y jump 0.952: none top -1 ink 0.000 || arc top -1 ink 0.952 corner 209 chain -1
+muse_hash (24.852, 26.65) [q4 outer/arc+fade]: max |grad ink| 7.95/px, 28 breaches: 14 jump arc | none (top changes); 14 jump arc | none
+    worst at (24.8753, 26.6324) x jump 0.956: none top -1 ink 0.000 || arc top -1 ink 0.956 corner 209 chain -1
+    worst at (24.8813, 26.6274) y jump 0.952: none top -1 ink 0.000 || arc top -1 ink 0.952 corner 209 chain -1
+muse_hash (24.899, 26.65) [q4 outer/arc+fade]: max |grad ink| 7.95/px, 28 breaches: 14 jump arc | none (top changes); 14 jump arc | none
+    worst at (24.8752, 26.6324) x jump 0.956: none top -1 ink 0.000 || arc top -1 ink 0.956 corner 209 chain -1
+    worst at (24.8814, 26.6273) y jump 0.952: none top -1 ink 0.000 || arc top -1 ink 0.952 corner 209 chain -1
+muse_hash (3.863, 13.644) [q4 outer/foot+2surf+fade]: max |grad ink| 1.93/px, 0 breaches
+muse_hash (27.012, 0.919) [#1 foot+f1]: max |grad ink| 8.00/px, 25 breaches: 25 jump foot | none
+    worst at (27.0763, 1.0364) x jump 1.000: none top 7 ink 0.000 || foot top 7 ink 1.000 corner -1 chain 3
+    worst at (27.0926, 1.0188) x jump 1.000: none top 7 ink 0.000 || foot top 7 ink 1.000 corner -1 chain 3
+muse_hash (26.26, 0.966) [#1 foot+f1]: max |grad ink| 8.00/px, 63 breaches: 53 jump foot | none; 10 jump foot | foot
+    worst at (26.2483, 1.0336) y jump 1.000: none top 7 ink 0.000 || foot top 7 ink 1.000 corner -1 chain 3
+    worst at (26.2424, 1.0277) y jump 1.000: none top 7 ink 0.000 || foot top 7 ink 1.000 corner -1 chain 3
+muse_hash (3.957, 1.06) [#1 foot+f1]: max |grad ink| 8.00/px, 58 breaches: 22 jump foot | none; 28 jump foot | foot; 8 jump arc | foot
+    worst at (4.0214, 1.0424) x jump 1.000: none top 67 ink 0.000 || foot top 67 ink 1.000 corner -1 chain 41
+    worst at (4.0230, 1.0424) x jump 1.000: foot top 67 ink 1.000 || none top 67 ink 0.000 corner -1 chain 41
+muse_hash (27.669, 1.435) [#1 foot+f2]: max |grad ink| 1.38/px, 0 breaches
+muse_hash (25.885, 1.482) [#1 foot+f2]: max |grad ink| 1.19/px, 0 breaches
+muse_hash (27.622, 1.482) [#1 foot+f2]: max |grad ink| 1.41/px, 0 breaches
+muse_hash (23.913, 2.14) [#1 foot+f2]: max |grad ink| 7.77/px, 74 breaches: 74 jump foot+f2 | foot+f4
+    worst at (23.9189, 2.1587) y jump 0.967: foot+f2 top 6 ink 1.000 || foot+f4 top 6 ink 0.033 corner -1 chain 3
+    worst at (23.9182, 2.1576) x jump 0.965: foot+f4 top 6 ink 0.032 || foot+f2 top 6 ink 0.998 corner -1 chain 3
+muse_hash (22.598, 2.75) [#1 foot+f2]: max |grad ink| 7.37/px, 74 breaches: 38 jump foot+f2 | none; 36 jump foot+f2 | foot+f4
+    worst at (22.6567, 2.8664) y jump 0.917: foot+f2 top 96 ink 0.996 || foot+f4 top 96 ink 0.079 corner -1 chain 68
+    worst at (22.6610, 2.8615) x jump 0.913: foot+f2 top 96 ink 1.000 || foot+f4 top 96 ink 0.087 corner -1 chain 68
+muse_hash (22.598, 2.797) [#1 foot+f2]: max |grad ink| 7.37/px, 74 breaches: 38 jump foot+f2 | none; 36 jump foot+f2 | foot+f4
+    worst at (22.6567, 2.8664) y jump 0.917: foot+f2 top 96 ink 0.996 || foot+f4 top 96 ink 0.079 corner -1 chain 68
+    worst at (22.6609, 2.8616) x jump 0.913: foot+f2 top 96 ink 1.000 || foot+f4 top 96 ink 0.087 corner -1 chain 68
+muse_hash (10.812, 2.891) [#1 foot+f2]: max |grad ink| 7.78/px, 75 breaches: 37 jump foot+f2 | foot+f4; 38 jump foot+f2 | none
+    worst at (10.7827, 2.8955) y jump 0.973: foot+f4 top 3 ink 0.024 || foot+f2 top 3 ink 0.997 corner -1 chain 52
+    worst at (10.7864, 2.8910) x jump 0.972: foot+f4 top 3 ink 0.028 || foot+f2 top 3 ink 1.000 corner -1 chain 52
+muse_hash (10.859, 2.891) [#1 foot+f2]: max |grad ink| 7.78/px, 75 breaches: 37 jump foot+f2 | foot+f4; 38 jump foot+f2 | none
+    worst at (10.7827, 2.8954) y jump 0.974: foot+f4 top 3 ink 0.024 || foot+f2 top 3 ink 0.997 corner -1 chain 52
+    worst at (10.7864, 2.8910) x jump 0.972: foot+f4 top 3 ink 0.028 || foot+f2 top 3 ink 1.000 corner -1 chain 52
+muse_hash (10.812, 2.938) [#1 foot+f2]: max |grad ink| 7.78/px, 75 breaches: 37 jump foot+f2 | foot+f4; 38 jump foot+f2 | none
+    worst at (10.7827, 2.8955) y jump 0.973: foot+f4 top 3 ink 0.024 || foot+f2 top 3 ink 0.997 corner -1 chain 52
+    worst at (10.7864, 2.8910) x jump 0.972: foot+f4 top 3 ink 0.028 || foot+f2 top 3 ink 1.000 corner -1 chain 52
+muse_default_tw (13.617, 1.121) [#1 foot+f1]: max |grad ink| 4.97/px, 2 breaches: 2 jump foot | none
+    worst at (13.4821, 1.2421) y jump 0.685: none top 49 ink 0.000 || foot top 49 ink 0.685 corner -1 chain 83
+    worst at (13.4841, 1.2446) x jump 0.584: foot top 49 ink 0.584 || none top 49 ink 0.000 corner -1 chain 83
+muse_default_tw (26.608, 1.121) [#1 foot+f1]: max |grad ink| 7.99/px, 18 breaches: 14 jump foot | none; 4 jump foot | foot
+    worst at (26.5256, 1.2390) x jump 1.000: foot top 7 ink 1.000 || none top 7 ink 0.000 corner -1 chain 3
+    worst at (26.5237, 1.2371) y jump 1.000: none top 7 ink 0.000 || foot top 7 ink 1.000 corner -1 chain 3
+muse_default_tw (26.563, 1.166) [#1 foot+f1]: max |grad ink| 7.99/px, 30 breaches: 15 jump foot | none; 15 jump foot | foot
+    worst at (26.5316, 1.2447) x jump 1.000: foot top 7 ink 1.000 || none top 7 ink 0.000 corner -1 chain 3
+    worst at (26.5198, 1.2334) x jump 1.000: foot top 7 ink 1.000 || none top 7 ink 0.000 corner -1 chain 3
+muse_default_tw (3.278, 1.346) [#1 foot+f1]: max |grad ink| 1.49/px, 0 breaches
+muse_default_tw (27.552, 1.391) [#1 foot+f1]: max |grad ink| 7.97/px, 14 breaches: 4 jump foot | foot; 10 jump foot | none
+    worst at (27.6676, 1.2730) x jump 1.000: none top 7 ink 0.000 || foot top 7 ink 1.000 corner -1 chain 37
+    worst at (27.6623, 1.2674) x jump 1.000: none top 7 ink 0.000 || foot top 7 ink 1.000 corner -1 chain 37
+muse_default_tw (22.832, 2.47) [#1 tB]: max |grad ink| 8.00/px, 44 breaches: 23 jump foot | none; 14 jump foot | foot; 7 jump foot | tB
+    worst at (22.9444, 2.4335) y jump 1.000: none top 96 ink 0.000 || foot top 96 ink 1.000 corner -1 chain 68
+    worst at (22.9486, 2.4307) x jump 1.000: none top 96 ink 0.000 || foot top 96 ink 1.000 corner -1 chain 68
+muse_default_tw (22.877, 2.47) [#1 tB]: max |grad ink| 8.00/px, 45 breaches: 24 jump foot | none; 14 jump foot | foot; 7 jump foot | tB
+    worst at (22.9411, 2.5206) x jump 1.000: none top 96 ink 0.000 || foot top 96 ink 1.000 corner -1 chain 57
+    worst at (22.9276, 2.4450) y jump 1.000: none top 96 ink 0.000 || foot top 96 ink 1.000 corner -1 chain 68
+muse_default_tw (22.832, 2.515) [#1 tB]: max |grad ink| 8.00/px, 44 breaches: 23 jump foot | none; 14 jump foot | foot; 7 jump foot | tB
+    worst at (22.9353, 2.5150) x jump 1.000: none top 96 ink 0.000 || foot top 96 ink 1.000 corner -1 chain 57
+    worst at (22.9388, 2.4374) y jump 1.000: none top 96 ink 0.000 || foot top 96 ink 1.000 corner -1 chain 68
+muse_default_tw (22.877, 2.515) [#1 tB]: max |grad ink| 8.00/px, 45 breaches: 24 jump foot | none; 14 jump foot | foot; 7 jump foot | tB
+    worst at (22.9353, 2.5150) x jump 1.000: none top 96 ink 0.000 || foot top 96 ink 1.000 corner -1 chain 57
+    worst at (22.9276, 2.4450) y jump 1.000: none top 96 ink 0.000 || foot top 96 ink 1.000 corner -1 chain 68
+muse_default_tw (22.832, 2.56) [#1 tB]: max |grad ink| 8.00/px, 41 breaches: 20 jump foot | none; 14 jump foot | foot; 7 jump foot | tB
+    worst at (22.9275, 2.4451) y jump 1.000: none top 96 ink 0.000 || foot top 96 ink 1.000 corner -1 chain 68
+    worst at (22.9388, 2.5183) y jump 1.000: foot top 96 ink 1.000 || none top 96 ink 0.000 corner -1 chain 57
+muse_default_tw (22.877, 2.56) [#1 tB]: max |grad ink| 8.00/px, 41 breaches: 20 jump foot | none; 14 jump foot | foot; 7 jump foot | tB
+    worst at (22.9320, 2.4420) x jump 1.000: none top 96 ink 0.000 || foot top 96 ink 1.000 corner -1 chain 68
+    worst at (22.9388, 2.5183) y jump 1.000: foot top 96 ink 1.000 || none top 96 ink 0.000 corner -1 chain 57
+muse_default_tw (22.787, 2.605) [#1 tB]: max |grad ink| 7.21/px, 8 breaches: 5 jump foot | foot; 3 jump foot | tB
+    worst at (22.9219, 2.5021) y jump 0.924: foot top 96 ink 1.000 || tB top 96 ink 0.076 corner -1 chain 57
+    worst at (22.9178, 2.4982) x jump 0.881: tB top 96 ink 0.119 || foot top 96 ink 1.000 corner -1 chain 57
+def (25.497, 3.797) [q4 inner+fade]: max |grad ink| 1.48/px, 0 breaches
+def (10.682, 3.842) [q4 inner+fade]: max |grad ink| 1.45/px, 0 breaches
+def (13.681, 4.647) [q4 inner+fade]: max |grad ink| 1.49/px, 0 breaches
+def (30.823, 6.438) [q4 over+fade]: max |grad ink| 8.00/px, 50 breaches: 2 jump foot | foot+f2 (top changes); 48 jump foot+f2 | none (top changes)
+    worst at (30.8647, 6.5219) x jump 1.000: foot+f2 top 76 ink 1.000 || none top 1048576 ink 0.000 corner -1 chain 40
+    worst at (30.8671, 6.5275) x jump 1.000: foot+f2 top 76 ink 1.000 || none top 1048576 ink 0.000 corner -1 chain 40
+def (30.912, 6.662) [q4 over+fade]: max |grad ink| 8.00/px, 27 breaches: 27 jump foot+f2 | none (top changes)
+    worst at (30.8672, 6.5279) y jump 1.000: none top 1048576 ink 0.000 || foot+f2 top 76 ink 1.000 corner -1 chain 40
+    worst at (30.8672, 6.5277) x jump 1.000: foot+f2 top 76 ink 1.000 || none top 1048576 ink 0.000 corner -1 chain 40
+def (6.296, 6.796) [q4 over+fade]: max |grad ink| 5.55/px, 67 breaches: 18 jump foot+f2 | foot+f4; 49 jump foot+f2 | foot+f4 (top changes)
+    worst at (6.3099, 6.8016) x jump 0.708: foot+f4 top 1048576 ink 0.292 || foot+f2 top 87 ink 1.000 corner -1 chain 45
+    worst at (6.3128, 6.8043) y jump 0.706: foot+f2 top 87 ink 1.000 || foot+f4 top 1048576 ink 0.294 corner -1 chain 45
+def (10.593, 1.022) [#1 foot+f1]: max |grad ink| 8.00/px, 29 breaches: 14 jump foot | none; 15 jump foot | foot
+    worst at (10.4811, 1.0255) y jump 1.000: none top 46 ink 0.000 || foot top 46 ink 1.000 corner -1 chain 45
+    worst at (10.4814, 1.0276) x jump 1.000: foot top 46 ink 1.000 || none top 46 ink 0.000 corner -1 chain 45
+def (26.034, 1.291) [#1 foot+f1]: max |grad ink| 8.00/px, 42 breaches: 22 jump foot | none; 20 jump foot | foot
+    worst at (25.9669, 1.2493) y jump 1.000: foot top 17 ink 1.000 || none top 17 ink 0.000 corner -1 chain 3
+    worst at (25.9613, 1.2535) y jump 1.000: foot top 17 ink 1.000 || none top 17 ink 0.000 corner -1 chain 3
+def (17.127, 1.694) [#1 foot+f1]: max |grad ink| 1.44/px, 0 breaches
+def (16.993, 1.828) [#1 foot+f1]: max |grad ink| 6.32/px, 4 breaches: 1 jump foot | none; 3 jump foot | foot
+    worst at (16.8692, 1.9623) x jump 0.835: foot top 4 ink 0.985 || foot top 4 ink 0.150 corner -1 chain 60
+    worst at (16.8643, 1.9578) y jump 0.615: foot top 4 ink 0.262 || foot top 4 ink 0.877 corner -1 chain 60
+def (17.082, 2.812) [#1 foot+f1]: max |grad ink| 1.45/px, 0 breaches
+def (13.681, 4.647) [#1 foot+f1]: max |grad ink| 1.49/px, 0 breaches
+def (10.861, 4.782) [#1 foot+f1]: max |grad ink| 8.00/px, 13 breaches: 4 jump foot | none; 9 jump foot | foot
+    worst at (10.9505, 4.6510) y jump 1.000: foot top 58 ink 1.000 || none top 58 ink 0.000 corner -1 chain 88
+    worst at (10.9435, 4.6477) x jump 1.000: none top 58 ink 0.000 || foot top 58 ink 1.000 corner -1 chain 88
+def (22.99, 4.916) [#1 foot+f1]: max |grad ink| 8.00/px, 34 breaches: 13 jump foot | none; 21 jump foot | foot
+    worst at (22.9518, 4.8153) x jump 1.000: foot top 108 ink 1.000 || none top 108 ink 0.000 corner -1 chain 67
+    worst at (22.9396, 4.8201) y jump 1.000: foot top 108 ink 1.000 || none top 108 ink 0.000 corner -1 chain 67
+def (7.46, 5.095) [#1 foot+f1]: max |grad ink| 7.94/px, 30 breaches: 16 jump foot | foot; 14 jump foot | none
+    worst at (7.5495, 5.0332) y jump 1.000: foot top 99 ink 1.000 || none top 99 ink 0.000 corner -1 chain 56
+    worst at (7.5580, 5.0502) x jump 1.000: none top 99 ink 0.000 || foot top 99 ink 1.000 corner -1 chain 56
+def (7.236, 5.14) [#1 foot+f1]: max |grad ink| 1.16/px, 0 breaches
+def (7.415, 5.14) [#1 foot+f1]: max |grad ink| 7.95/px, 8 breaches: 6 jump foot | foot; 2 jump foot | none
+    worst at (7.5470, 5.0281) x jump 1.000: none top 99 ink 0.000 || foot top 99 ink 1.000 corner -1 chain 56
+    worst at (7.5493, 5.0327) y jump 1.000: foot top 99 ink 1.000 || none top 99 ink 0.000 corner -1 chain 56
+def (33.508, 5.543) [#1 foot+f3]: max |grad ink| 1.29/px, 0 breaches
+ring (19.699, 3.507) [q4 inner+fade]: max |grad ink| 8.00/px, 19 breaches: 19 jump foot | none
+    worst at (19.6153, 3.4957) x jump 1.000: foot top 6 ink 1.000 || none top 6 ink 0.000 corner -1 chain 11
+    worst at (19.6089, 3.5053) y jump 1.000: foot top 6 ink 1.000 || none top 6 ink 0.000 corner -1 chain 11
+ring (19.879, 3.657) [q4 inner+fade]: max |grad ink| 1.39/px, 0 breaches
+ring (5.041, 4.197) [q4 inner+fade]: max |grad ink| 8.00/px, 55 breaches: 38 jump foot | none; 17 jump foot | foot
+    worst at (5.0297, 4.2160) y jump 1.000: foot top 3 ink 1.000 || none top 3 ink 0.000 corner -1 chain 1
+    worst at (4.9659, 4.2684) y jump 1.000: foot top 3 ink 1.000 || none top 3 ink 0.000 corner -1 chain 1
+ring (16.455, 2.816) [q4 over+fade]: max |grad ink| 4.81/px, 73 breaches: 38 jump foot+f2 | foot+f4; 35 jump foot+f2 | foot+f4 (top changes)
+    worst at (16.4709, 2.8235) x jump 0.605: foot+f4 top 1048576 ink 0.395 || foot+f2 top 2 ink 1.000 corner -1 chain 0
+    worst at (16.4700, 2.8230) y jump 0.603: foot+f2 top 2 ink 1.000 || foot+f4 top 1048576 ink 0.397 corner -1 chain 0
+ring (14.503, 4.317) [q4 over+fade]: max |grad ink| 7.86/px, 62 breaches: 62 jump foot+f2 | foot+f4 (top changes)
+    worst at (14.5931, 4.3701) y jump 0.982: foot+f4 top 1048576 ink 0.018 || foot+f2 top 8 ink 1.000 corner -1 chain 12
+    worst at (14.5921, 4.3696) x jump 0.981: foot+f2 top 8 ink 1.000 || foot+f4 top 1048576 ink 0.019 corner -1 chain 12
+ring (14.563, 4.348) [q4 over+fade]: max |grad ink| 7.88/px, 77 breaches: 77 jump foot+f2 | foot+f4 (top changes)
+    worst at (14.5968, 4.3722) y jump 0.983: foot+f4 top 1048576 ink 0.017 || foot+f2 top 8 ink 1.000 corner -1 chain 12
+    worst at (14.5938, 4.3705) x jump 0.982: foot+f2 top 8 ink 1.000 || foot+f4 top 1048576 ink 0.018 corner -1 chain 12
+ring (12.61, 0.593) [#1 foot+f1]: max |grad ink| 1.35/px, 0 breaches
+ring (12.52, 0.683) [#1 foot+f1]: max |grad ink| 1.46/px, 0 breaches
+ring (9.156, 0.773) [#1 foot+f8]: max |grad ink| 1.19/px, 0 breaches
+ring (9.186, 0.803) [#1 foot+f8]: max |grad ink| 1.21/px, 0 breaches
+ring (9.186, 0.833) [#1 foot+f8]: max |grad ink| 1.22/px, 0 breaches
+ring (9.216, 0.863) [#1 foot+f8]: max |grad ink| 1.30/px, 0 breaches
+ring (9.216, 0.893) [#1 foot+f1]: max |grad ink| 1.30/px, 0 breaches
+ring (9.246, 0.893) [#1 foot+f8]: max |grad ink| 1.30/px, 0 breaches
+ring (9.216, 0.923) [#1 foot+f8]: max |grad ink| 1.30/px, 0 breaches
+ring (9.246, 0.923) [#1 foot+f8]: max |grad ink| 1.45/px, 0 breaches
+ring (9.276, 0.923) [#1 foot+f8]: max |grad ink| 1.45/px, 0 breaches
+ring (9.216, 0.954) [#1 foot+f8]: max |grad ink| 1.51/px, 0 breaches
+user_tw42.lightpaper (5.613, 1.534) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (5.378, 1.622) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (11.678, 1.622) [#1 foot+f1]: max |grad ink| 8.00/px, 101 breaches: 72 jump foot | none; 29 jump foot | foot
+    worst at (11.7007, 1.6159) x jump 1.000: foot top 25 ink 1.000 || none top 25 ink 0.000 corner -1 chain 23
+    worst at (11.7011, 1.6171) x jump 1.000: foot top 25 ink 1.000 || none top 25 ink 0.000 corner -1 chain 23
+user_tw42.lightpaper (11.707, 1.622) [#1 foot+f1]: max |grad ink| 8.00/px, 155 breaches: 125 jump foot | none; 30 jump foot | foot
+    worst at (11.7178, 1.6134) x jump 1.000: foot top 25 ink 1.000 || none top 25 ink 0.000 corner -1 chain 23
+    worst at (11.7178, 1.6146) x jump 1.000: foot top 25 ink 1.000 || none top 25 ink 0.000 corner -1 chain 23
+user_tw42.lightpaper (3.641, 1.71) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (3.523, 1.74) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (12.797, 1.74) [#1 foot+f1]: max |grad ink| 8.00/px, 41 breaches: 41 jump foot | none
+    worst at (12.7934, 1.7106) x jump 1.000: foot top 25 ink 1.000 || none top 25 ink 0.000 corner -1 chain 14
+    worst at (12.7823, 1.7202) y jump 1.000: foot top 25 ink 1.000 || none top 25 ink 0.000 corner -1 chain 14
+user_tw42.lightpaper (12.915, 1.858) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (12.885, 1.887) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (13.739, 1.975) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (13.503, 2.182) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+user_tw42.lightpaper (13.709, 2.182) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_def_tw42 (10.944, 4.738) [#1 foot+f1]: max |grad ink| 0.43/px, 0 breaches
+g41_def_tw42 (16.731, 4.96) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_def_tw42 (16.776, 5.049) [#1 foot+f1]: max |grad ink| 0.02/px, 0 breaches
+g41_def_tw42 (16.82, 5.183) [#1 foot+f1]: max |grad ink| 8.00/px, 61 breaches: 52 jump foot | foot; 9 jump foot | none
+    worst at (16.8313, 5.1849) x jump 1.000: foot top 1 ink 1.000 || none top 1 ink 0.000 corner -1 chain 1
+    worst at (16.8311, 5.1852) y jump 1.000: foot top 1 ink 1.000 || none top 1 ink 0.000 corner -1 chain 1
+g41_def_tw42 (16.865, 5.183) [#1 foot+f1]: max |grad ink| 8.00/px, 58 breaches: 49 jump foot | foot; 9 jump foot | none
+    worst at (16.8313, 5.1849) x jump 1.000: foot top 1 ink 1.000 || none top 1 ink 0.000 corner -1 chain 1
+    worst at (16.8304, 5.1867) x jump 1.000: foot top 1 ink 1.000 || none top 1 ink 0.000 corner -1 chain 1
+g41_def_tw42 (16.954, 5.227) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_def_tw42 (10.677, 6.607) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_def_tw42 (0.884, 7.453) [#1 foot+f1]: max |grad ink| 0.43/px, 0 breaches
+g41_def_tw42 (0.706, 7.542) [#1 foot+f9]: max |grad ink| 5.12/px, 49 breaches: 49 jump foot+f8 | foot+f8
+    worst at (0.7416, 7.5513) x jump 0.639: foot+f8 top 64 ink 0.361 || foot+f8 top 64 ink 1.000 corner -1 chain 62
+    worst at (0.7232, 7.5643) x jump 0.639: foot+f8 top 64 ink 0.361 || foot+f8 top 64 ink 1.000 corner -1 chain 62
+g41_def_tw42 (11.479, 8.789) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_def_tw42 (24.833, 9.278) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_def_tw42 (34.626, 9.634) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_def_tw64 (16.881, 13.617) [q4 inner+fade]: max |grad ink| 0.00/px, 0 breaches
+g41_def_tw64 (16.881, 13.632) [q4 inner+fade]: max |grad ink| 0.10/px, 0 breaches
+g41_def_tw64 (16.866, 13.647) [q4 inner+fade]: max |grad ink| 1.49/px, 0 breaches
+g41_def_tw64 (21.311, 16.155) [q4 over+fade]: max |grad ink| 5.98/px, 77 breaches: 4 jump foot+f2 | foot+f4; 73 jump foot+f2 | foot+f4 (top changes)
+    worst at (21.2863, 16.2001) x jump 0.750: foot+f4 top 1048576 ink 0.250 || foot+f2 top 33 ink 1.000 corner -1 chain 16
+    worst at (21.2866, 16.1996) y jump 0.748: foot+f4 top 1048576 ink 0.252 || foot+f2 top 33 ink 1.000 corner -1 chain 16
+g41_def_tw64 (21.296, 16.185) [q4 over+fade]: max |grad ink| 6.59/px, 77 breaches: 77 jump foot+f2 | foot+f4 (top changes)
+    worst at (21.2691, 16.2301) x jump 0.825: foot+f4 top 1048576 ink 0.175 || foot+f2 top 33 ink 1.000 corner -1 chain 16
+    worst at (21.2697, 16.2289) y jump 0.822: foot+f4 top 1048576 ink 0.178 || foot+f2 top 33 ink 1.000 corner -1 chain 16
+g41_def_tw64 (21.266, 16.23) [q4 over+fade]: max |grad ink| 6.96/px, 77 breaches: 77 jump foot+f2 | foot+f4 (top changes)
+    worst at (21.2561, 16.2525) x jump 0.874: foot+f4 top 1048576 ink 0.126 || foot+f2 top 33 ink 1.000 corner -1 chain 16
+    worst at (21.2566, 16.2517) y jump 0.873: foot+f4 top 1048576 ink 0.127 || foot+f2 top 33 ink 1.000 corner -1 chain 16
+g41_def_tw64 (32.71, 0.551) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_def_tw64 (32.755, 0.551) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_def_tw64 (32.8, 0.551) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_def_tw64 (32.8, 0.596) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_def_tw64 (24.375, 1.092) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_def_tw64 (9.102, 1.137) [#1 foot+f2]: max |grad ink| 0.81/px, 0 breaches
+g41_def_tw64 (9.147, 1.137) [#1 foot+f2]: max |grad ink| 3.35/px, 29 breaches: 29 jump foot+f2 | none
+    worst at (9.1752, 1.1007) y jump 0.413: none top 46 ink 0.000 || foot+f2 top 46 ink 0.413 corner -1 chain 45
+    worst at (9.1864, 1.1148) y jump 0.413: none top 46 ink 0.000 || foot+f2 top 46 ink 0.413 corner -1 chain 45
+g41_def_tw64 (9.102, 1.182) [#1 foot+f2]: max |grad ink| 0.81/px, 0 breaches
+g41_def_tw64 (9.147, 1.182) [#1 foot+f2]: max |grad ink| 0.79/px, 0 breaches
+g41_def_tw64 (9.192, 1.182) [#1 foot+f2]: max |grad ink| 3.36/px, 23 breaches: 23 jump foot+f2 | none
+    worst at (9.2051, 1.1380) y jump 0.413: none top 46 ink 0.000 || foot+f2 top 46 ink 0.413 corner -1 chain 45
+    worst at (9.2194, 1.1557) x jump 0.413: foot+f2 top 46 ink 0.413 || none top 46 ink 0.000 corner -1 chain 45
+g41_def_tw64 (23.339, 1.182) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_def_tw64 (25.186, 1.227) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_ring_tw42 (9.348, 0.951) [#1 foot+f1]: max |grad ink| 8.00/px, 122 breaches: 106 jump foot | none; 16 jump foot | foot
+    worst at (9.3717, 0.9282) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+    worst at (9.3713, 0.9286) x jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+g41_ring_tw42 (9.348, 0.98) [#1 foot+f1]: max |grad ink| 8.00/px, 122 breaches: 105 jump foot | none; 17 jump foot | foot
+    worst at (9.3462, 0.9501) x jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+    worst at (9.3455, 0.9507) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+g41_ring_tw42 (9.378, 0.98) [#1 foot+f1]: max |grad ink| 8.00/px, 93 breaches: 73 jump foot | none; 20 jump foot | foot
+    worst at (9.3655, 0.9778) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+    worst at (9.3668, 0.9778) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+g41_ring_tw42 (9.408, 0.98) [#1 foot+f1]: max |grad ink| 8.00/px, 66 breaches: 62 jump foot | none; 4 jump foot | foot
+    worst at (9.3843, 0.9797) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+    worst at (9.3856, 0.9799) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+g41_ring_tw42 (9.348, 1.01) [#1 foot+f1]: max |grad ink| 8.00/px, 87 breaches: 87 jump foot | none
+    worst at (9.3194, 0.9813) y jump 1.000: foot top 5 ink 1.000 || none top 5 ink 0.000 corner -1 chain 1
+    worst at (9.3194, 0.9814) x jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+g41_ring_tw42 (9.378, 1.01) [#1 foot+f1]: max |grad ink| 8.00/px, 52 breaches: 52 jump foot | none
+    worst at (9.3874, 0.9801) x jump 1.000: foot top 5 ink 1.000 || none top 5 ink 0.000 corner -1 chain 1
+    worst at (9.3880, 0.9802) y jump 1.000: none top 5 ink 0.000 || foot top 5 ink 1.000 corner -1 chain 1
+g41_ring_tw42 (10.215, 2.355) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_ring_tw42 (19.658, 3.371) [#1 foot+f1]: max |grad ink| 8.00/px, 178 breaches: 178 jump foot | none
+    worst at (19.6792, 3.3657) y jump 1.000: foot top 6 ink 1.000 || none top 6 ink 0.000 corner -1 chain 11
+    worst at (19.6789, 3.3660) x jump 1.000: foot top 6 ink 1.000 || none top 6 ink 0.000 corner -1 chain 11
+g41_ring_tw42 (4.805, 4.148) [#1 foot+f1]: max |grad ink| 8.00/px, 60 breaches: 60 jump foot | none
+    worst at (4.7975, 4.1315) y jump 1.000: foot top 3 ink 1.000 || none top 3 ink 0.000 corner -1 chain 1
+    worst at (4.7950, 4.1298) y jump 1.000: foot top 3 ink 1.000 || none top 3 ink 0.000 corner -1 chain 1
+g41_ring_tw42 (20.944, 4.597) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_ring_tw42 (14.996, 5.732) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_ring_tw42 (10.872, 5.792) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_ring_tw64 (12.536, 0.698) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_ring_tw64 (12.567, 0.729) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_ring_tw64 (11.783, 0.849) [#1 foot+f1]: max |grad ink| 8.00/px, 81 breaches: 81 jump foot | none
+    worst at (11.7981, 0.8312) y jump 1.000: none top 1 ink 0.000 || foot top 1 ink 1.000 corner -1 chain 0
+    worst at (11.7979, 0.8314) x jump 1.000: none top 1 ink 0.000 || foot top 1 ink 1.000 corner -1 chain 0
+g41_ring_tw64 (12.567, 1.06) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_ring_tw64 (12.597, 1.09) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_ring_tw64 (10.337, 1.994) [#1 foot+f2]: max |grad ink| 0.81/px, 0 breaches
+g41_ring_tw64 (10.367, 1.994) [#1 foot+f2]: max |grad ink| 0.77/px, 0 breaches
+g41_ring_tw64 (10.337, 2.024) [#1 foot+f2]: max |grad ink| 3.65/px, 32 breaches: 32 jump foot+f2 | none
+    worst at (10.3176, 2.0453) x jump 0.452: none top 5 ink 0.000 || foot+f2 top 5 ink 0.452 corner -1 chain 1
+    worst at (10.3082, 2.0366) x jump 0.452: none top 5 ink 0.000 || foot+f2 top 5 ink 0.452 corner -1 chain 1
+g41_ring_tw64 (10.367, 2.024) [#1 foot+f2]: max |grad ink| 0.03/px, 0 breaches
+g41_ring_tw64 (10.367, 2.054) [#1 foot+f2]: max |grad ink| 3.65/px, 35 breaches: 35 jump foot+f2 | none
+    worst at (10.3390, 2.0653) x jump 0.452: none top 5 ink 0.000 || foot+f2 top 5 ink 0.452 corner -1 chain 1
+    worst at (10.3444, 2.0703) x jump 0.452: none top 5 ink 0.000 || foot+f2 top 5 ink 0.452 corner -1 chain 1
+g41_ring_tw64 (10.397, 2.054) [#1 foot+f2]: max |grad ink| 0.79/px, 0 breaches
+g41_ring_tw64 (19.738, 3.652) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (5.613, 1.534) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (5.378, 1.622) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (11.678, 1.622) [#1 foot+f1]: max |grad ink| 8.00/px, 99 breaches: 70 jump foot | none; 29 jump foot | foot
+    worst at (11.7011, 1.6171) x jump 1.000: foot top 25 ink 1.000 || none top 25 ink 0.000 corner -1 chain 23
+    worst at (11.7013, 1.6176) y jump 1.000: none top 25 ink 0.000 || foot top 25 ink 1.000 corner -1 chain 23
+g41_user_tw42 (11.708, 1.622) [#1 foot+f1]: max |grad ink| 8.00/px, 148 breaches: 119 jump foot | none; 29 jump foot | foot
+    worst at (11.7179, 1.6134) x jump 1.000: foot top 25 ink 1.000 || none top 25 ink 0.000 corner -1 chain 23
+    worst at (11.7180, 1.6146) x jump 1.000: foot top 25 ink 1.000 || none top 25 ink 0.000 corner -1 chain 23
+g41_user_tw42 (3.641, 1.71) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (3.523, 1.74) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (12.797, 1.74) [#1 foot+f1]: max |grad ink| 8.00/px, 41 breaches: 41 jump foot | none
+    worst at (12.7847, 1.7185) y jump 1.000: foot top 25 ink 1.000 || none top 25 ink 0.000 corner -1 chain 14
+    worst at (12.7740, 1.7277) x jump 1.000: foot top 25 ink 1.000 || none top 25 ink 0.000 corner -1 chain 14
+g41_user_tw42 (12.885, 1.887) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (13.68, 1.887) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (13.739, 1.975) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (13.503, 2.182) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw42 (13.709, 2.182) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw64 (5.082, 0.644) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw64 (5.204, 0.644) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw64 (5.082, 0.674) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw64 (5.204, 0.674) [#1 foot+f1]: max |grad ink| 1.12/px, 0 breaches
+g41_user_tw64 (5.629, 0.735) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw64 (5.052, 0.948) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw64 (5.66, 0.978) [#1 foot+f1]: max |grad ink| 8.00/px, 33 breaches: 33 jump foot | none
+    worst at (5.6864, 0.9666) x jump 1.000: none top 17 ink 0.000 || foot top 17 ink 1.000 corner -1 chain 7
+    worst at (5.6884, 0.9704) x jump 1.000: none top 17 ink 0.000 || foot top 17 ink 1.000 corner -1 chain 7
+g41_user_tw64 (5.629, 1.039) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw64 (5.538, 1.069) [#1 foot+f1]: max |grad ink| 0.00/px, 0 breaches
+g41_user_tw64 (11.589, 1.769) [#1 foot+f2]: max |grad ink| 0.88/px, 0 breaches
+g41_user_tw64 (11.62, 1.769) [#1 foot+f2]: max |grad ink| 0.04/px, 0 breaches
+g41_user_tw64 (11.559, 1.799) [#1 foot+f2]: max |grad ink| 1.10/px, 0 breaches

@@ -4,7 +4,8 @@
 // oracle's ink (FieldModel, K883's mapping at cr 3, as scenes.ts), and form B's
 // top surface (a colour per surface, paper white, fade bits darkened).
 // Run: npx vite-node .claude/probes/K1040/s1/b_crop.ts <scene> <x> <y> [dpr=2] [halfWorld=0.8] [zoom=4] [tag]
-// Writes out/s1b/crops/<scene>_<x>_<y>[_tag].png (OUT overrides the folder).
+// Writes out/s1b/crops/<scene>_<x>_<y>[_tag].png (OUT overrides the folder;
+// SUB samples each device px SUB x SUB times, the field kept at dpr).
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -27,7 +28,8 @@ const X = Number(xs);
 const Y = Number(ys);
 const half = Number(hw);
 const zoom = Math.max(1, Math.round(Number(zs)));
-const n = Math.max(8, Math.round(2 * half * fb.ppuDev));
+const SUB = Number(process.env.SUB ?? 1); // samples per device px (the field stays at dpr)
+const n = Math.max(8, Math.round(2 * half * fb.ppuDev * SUB));
 const px = (2 * half) / n;
 const W3 = 3 * n * zoom + 2 * zoom;
 const H = n * zoom;

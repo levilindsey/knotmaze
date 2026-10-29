@@ -79,6 +79,8 @@ export interface FormBParams {
    * tie: the tie mix's t wherever it mixes.
    */
   force?: { fold?: number; omega?: number; cap?: number; tie?: number };
+  /** Probes only (S1b): the fill's key from the nearer tangent point's z (default), or always A's or B's. */
+  fillKey?: "nearer" | "a" | "b";
 }
 
 export const T_NONE = 0;
@@ -233,6 +235,7 @@ export class FormB {
   readonly capBoth: boolean;
   readonly fold: boolean;
   readonly force: NonNullable<FormBParams["force"]>;
+  readonly fillKey: "nearer" | "a" | "b";
   readonly polys: Poly[];
   readonly idxOf = new Map<number, number>();
   readonly grid: SegGrid;
@@ -269,6 +272,7 @@ export class FormB {
     this.capBoth = params.capBoth ?? true;
     this.fold = params.fold ?? true;
     this.force = params.force ?? {};
+    this.fillKey = params.fillKey ?? "nearer";
 
     // 1. Chains; END arms extended to c′ (the nearest point of a through's centreline).
     scene.chains.forEach((c, i) => this.idxOf.set(c.id, i));
@@ -699,18 +703,37 @@ export class FormB {
     return (rax * wy - ray * wx) * s >= 0 && (wx * rby - wy * rbx) * s >= 0;
   }
 
-  /** The fill: the curvilinear triangle V, t_a, t_b outside the ball (closed along the sides). */
-  inFill(c: Corner, x: number, y: number): boolean {
+  /**
+   * The fill: the curvilinear triangle V, t_a, t_b outside the ball. Its sides
+   * reach 2aa into the arms' tubes, where their burial ramps (winW) reach 1,
+   * so a fill and a tube that abut at V bury without a dip (S1b F5). With
+   * `own`, the piece whose outline point (x, y) is, the side test against
+   * own's arm is skipped: the point lies on that side by construction, and
+   * the test read polyline rounding (S1b F4).
+   */
+  inFill(c: Corner, x: number, y: number, own?: Piece): boolean {
     if (!(c.r > 0 && c.omega > 0)) return false;
     const dq = Math.hypot(x - c.qx, y - c.qy);
-    if (!(dq > c.r) || dq > c.rV * (1 + 1e-9) + 1e-12) return false;
+    // Past V to V', where the two sides' 2aa overlaps meet.
+    if (!(dq > c.r) || dq > c.rV + (2 * this.aa) / Math.max(0.1, Math.sin(c.theta / 2)) + 1e-12) return false;
     if (!this.inWedge(c, x, y)) return false;
-    const tol = 1e-9 * this.h;
     const h = this.h;
-    const fa = this.footArm(c.a, x, y, 0, Math.max(c.dVa, c.dA) + 2 * h);
-    if (fa.d < h - tol) return false;
+    const lim = h - 2 * this.aa;
+    if (!(own && this.onArm(c.a, own))) {
+      const fa = this.footArm(c.a, x, y, 0, Math.max(c.dVa, c.dA) + 2 * h);
+      if (fa.d < lim) return false;
+    }
+    if (own && this.onArm(c.b, own)) return true;
     const fb = this.footArm(c.b, x, y, 0, Math.max(c.dVb, c.dB) + 2 * h);
-    return fb.d >= h - tol;
+    return fb.d >= lim;
+  }
+
+  /** Is piece A on arm ai (its chain, inside the arm's span)? */
+  onArm(ai: number, A: Piece): boolean {
+    const a = this.arms[ai];
+    if (a.pi !== A.chain) return false;
+    const d = this.armDist(ai, A.s);
+    return d >= -1e-12 && d <= a.L + 1e-12;
   }
 
   // -------------------------------------------------------------------------
@@ -807,6 +830,26 @@ export class FormB {
     return false;
   }
 
+  /**
+   * How deep (x, y) lies in B's tube, read from the same window as
+   * insideWin: 0 on B's outline, rising to 1 at 2aa inside it. A burial is a
+   * ramp, not a cut. It lies inside the tube, so an outline that only touches
+   * B (a dead end's cap on a through's far side) stays whole, and the fill
+   * overlaps it (inFill), so the two bury without a dip (S1b F5).
+   */
+  winW(B: Piece, x: number, y: number): number {
+    const p = this.polys[B.chain];
+    let d2 = Infinity;
+    for (let o = -3; o <= 3; o++) {
+      let k = B.k + o;
+      if (p.closed) k = ((k % p.nseg) + p.nseg) % p.nseg;
+      else if (k < 0 || k >= p.nseg) continue;
+      const b = segB(p, k);
+      d2 = Math.min(d2, closestOnSeg(x, y, p.x[k], p.y[k], p.x[b], p.y[b]).d2);
+    }
+    return 1 - ss(this.h - 2 * this.aa, this.h, Math.sqrt(d2));
+  }
+
   band(D: number): number {
     return 1 - ss(this.W - this.aa, this.W + this.aa, D);
   }
@@ -874,17 +917,23 @@ export class FormB {
         if (B === A || B.surf !== S) continue;
         const w = B.ramp * B.selfW * (this.capBoth ? A.ramp : 1);
         if (w <= bur) continue;
-        if (this.insideWin(B, fx, fy)) {
-          bur = w;
-          burBit = B.selfW < 1 ? F_FOLD : F_CAP;
+        const wb = w * this.winW(B, fx, fy);
+        if (wb > bur) {
+          bur = wb;
+          burBit = w < 1 ? (B.selfW < 1 ? F_FOLD : F_CAP) : 0;
         }
       }
+      // A partial fill hands the buried weight to its arc (S1b F6): the
+      // term is (1 − ω)·A's band + ω·the arc's band, the two outlines' blend,
+      // so the cut at t_a's normal, where the two bands meet, is continuous.
+      let arc = 0;
       for (const ci of near) {
         const c = this.corners[ci];
         if (c.g !== S || !(c.omega > bur)) continue;
-        if (this.inFill(c, fx, fy)) {
+        if (this.inFill(c, fx, fy, A)) {
           bur = c.omega;
           burBit = F_OMEGA;
+          arc = c.omega < 1 ? c.omega * this.band2(Math.hypot(x - c.qx, y - c.qy) - c.r) : 0;
         }
       }
       const w = (1 - bur) * A.selfW;
@@ -895,7 +944,7 @@ export class FormB {
         if (A.selfW < 1) fade |= F_FOLD;
       }
       if (w >= 0.5) Dexp = Math.min(Dexp, D);
-      take(w * b2, { kind: T_FOOT, surf: S, chain: A.chain, s: A.s, k: A.k, vtx: A.vtx, corner: -1, D, w, v: w * b2 });
+      take(w * b2 + arc, { kind: T_FOOT, surf: S, chain: A.chain, s: A.s, k: A.k, vtx: A.vtx, corner: -1, D, w, v: w * b2 + arc });
     }
     for (const ci of near) {
       const c = this.corners[ci];
@@ -966,7 +1015,7 @@ export class FormB {
       if (!(c.r > 0 && c.omega > 0)) continue;
       const dq = Math.hypot(x - c.qx, y - c.qy);
       if (!(dq > c.r - aa) || dq > c.rV * (1 + 1e-9) + 1e-12 || !this.inWedge(c, x, y)) continue;
-      const nearerA = Math.hypot(x - c.tax, y - c.tay) <= Math.hypot(x - c.tbx, y - c.tby);
+      const nearerA = this.fillKey === "nearer" ? Math.hypot(x - c.tax, y - c.tay) <= Math.hypot(x - c.tbx, y - c.tby) : this.fillKey === "a";
       const z = nearerA ? c.zA : c.zB;
       const key = this.K === Infinity ? z : z - h / this.K;
       const e = entry(c.g);

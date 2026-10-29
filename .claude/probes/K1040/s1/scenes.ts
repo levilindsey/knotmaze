@@ -28,7 +28,7 @@ import { FormB, OWN, TERM_NAMES } from "../../../../src/render/field/form_b";
 import { exitsBoth } from "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K934/exits";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const outDir = join(here, "out", "scenes");
+const outDir = process.env.OUT ?? join(here, "out", "scenes");
 mkdirSync(outDir, { recursive: true });
 const sceneDir = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes";
 const SCENES = [
