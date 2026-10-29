@@ -18,6 +18,14 @@
 // and its chain's s0 and length, to read the packed word's s) and the
 // member's depth at both ends (the tube pass's formula; a fill's is 0.09 x).
 //
+// GPU EDGES (K868 S3a8b2): with the label's GPU pieces on (lbp), the tube
+// edges are not strips. render()'s `edges` draws them uncut from the label
+// tables (label_band_gpu.ts: two static instances a segment, s and the
+// cluster per fragment), and buildBandStrips' `tubeEdges: false` leaves them
+// out, keeping the caps, fill arcs and switch strips in the same order. If
+// the edge program fails to compile, edgesReady() says so with the reason
+// (edgeError, logged once) and the caller builds the CPU's edges instead.
+//
 // THE PASS, per strip fragment, d = its distance inside the outline in
 // device pixels (the strip's own coordinate):
 //   1. discard unless the label here is the strip's member (simLab);
@@ -33,11 +41,14 @@
 // drawn yet: the handoff lists the switch ink this leaves out.
 //
 // composite() draws C over the canvas in one colour after app.render().
+import type { Poly } from "../field/geom";
 import type { FieldModel } from "../field/oracle";
+import { BandEdgeLayout, bandEdgeSources } from "./label_band_gpu";
 import type { LabelCamera } from "./label_pass";
 import { compile, type Prog } from "./label_pass";
 import { TUBE_FLOATS, type LabelPieces } from "./label_pieces";
 import { findSwitchLines, type SwitchLine } from "./label_switch";
+import { SEG_FLOATS, TBL_W, type LabelTables } from "./label_tables";
 
 /** Floats per strip instance: aQ (outline points), aN (outward normals),
  * aM (chain + 1, cluster + 1, flags, 0), aS (sa, sb, chain s0, chain len),
@@ -55,11 +66,30 @@ export interface BandStrips {
   /** The ink's width in world units (the oracle's W). */
   W: number;
   stats: { edges: number; caps: number; arcs: number; switches: number };
+  /** False: the tube edges are left out (the GPU draws them, BandPass's
+   * edges); the caps, fill arcs and switch strips are all here. */
+  tubeEdges: boolean;
+}
+
+export interface BandBuildOptions {
+  /** K868 S3a8b2: false leaves the tube edges to the GPU (label_band_gpu.ts);
+   * the default (true) builds them here, the lbp-off path and the
+   * reference. */
+  tubeEdges?: boolean;
+}
+
+/** A segment has a direction: the test the tube edges skip by. */
+function segOk(p: Poly, k: number): boolean {
+  const b = k + 1 === p.n ? 0 : k + 1;
+  const dx = p.x[b] - p.x[k];
+  const dy = p.y[b] - p.y[k];
+  return Math.sqrt(dx * dx + dy * dy) > 1e-9;
 }
 
 /** lines: the switch lines (label_switch.ts). The app passes its cached ones
  * (SwitchCache); left out, the uncached search runs (the probes). */
-export function buildBandStrips(m: FieldModel, lp: LabelPieces, lines?: readonly SwitchLine[]): BandStrips {
+export function buildBandStrips(m: FieldModel, lp: LabelPieces, lines?: readonly SwitchLine[], opts?: BandBuildOptions): BandStrips {
+  const tubeEdges = opts?.tubeEdges !== false;
   const polys = m.polys;
   const h = m.h;
   const out: number[] = [];
@@ -87,8 +117,51 @@ export function buildBandStrips(m: FieldModel, lp: LabelPieces, lines?: readonly
     out.push(ax, ay, bx, by, nax, nay, nbx, nby, chain1, cl1, flags, 0, sa, sb, s0, len, da, db);
   };
 
+  // Caps: an open chain's ends, half circles of radius h. ok(k): segment k
+  // has a direction; a chain with none has no caps (and no edges).
+  const capChain = (ci: number, p: Poly, ok: (k: number) => boolean): void => {
+    let k0 = 0;
+    while (k0 < p.nseg && !ok(k0)) k0++;
+    if (k0 === p.nseg) return;
+    let k1 = p.nseg - 1;
+    while (k1 > 0 && !ok(k1)) k1--;
+    const ends: [number, number, number, number][] = [];
+    const b0 = k0 + 1;
+    const l0 = Math.hypot(p.x[b0] - p.x[k0], p.y[b0] - p.y[k0]) || 1;
+    ends.push([0, -(p.x[b0] - p.x[k0]) / l0, -(p.y[b0] - p.y[k0]) / l0, p.s[0]]);
+    const b1 = k1 + 1;
+    const l1 = Math.hypot(p.x[b1] - p.x[k1], p.y[b1] - p.y[k1]) || 1;
+    ends.push([p.n - 1, (p.x[b1] - p.x[k1]) / l1, (p.y[b1] - p.y[k1]) / l1, p.s[p.n - 1]]);
+    for (const [v, ux, uy, s] of ends) {
+      const cx = p.x[v];
+      const cy = p.y[v];
+      const cl = m.clusterAt(ci, s);
+      const rk = rank.get(keyOf(ci, cl)) ?? 0;
+      const d = dep(m.depthAt(ci, s), rk, s);
+      const K = 12;
+      const dir = (q: number): [number, number] => {
+        const an = -Math.PI / 2 + (Math.PI * q) / K;
+        const c = Math.cos(an);
+        const sn = Math.sin(an);
+        return [ux * c - uy * sn, uy * c + ux * sn];
+      };
+      for (let q = 0; q < K; q++) {
+        const [dax, day] = dir(q);
+        const [dbx, dby] = dir(q + 1);
+        push(cx + h * dax, cy + h * day, cx + h * dbx, cy + h * dby, dax, day, dbx, dby, ci + 1, cl + 1, F_CAP, s, s, p.s0, p.len, d, d);
+        caps++;
+      }
+    }
+  };
+
   for (let ci = 0; ci < polys.length; ci++) {
     const p = polys[ci];
+    if (!tubeEdges) {
+      // K868 S3a8b2: the GPU draws the tube edges (BandPass's edges); an open
+      // chain's caps stay here.
+      if (!p.closed) capChain(ci, p, (k) => segOk(p, k));
+      continue;
+    }
     const closedFlag = p.closed ? F_CLOSED : 0;
     // Unit left normals per segment; a zero-length one borrows a neighbour's.
     const nsx = new Float64Array(p.nseg);
@@ -177,42 +250,7 @@ export function buildBandStrips(m: FieldModel, lp: LabelPieces, lines?: readonly
         }
       }
     }
-    // Caps: an open chain's ends, half circles of radius h.
-    if (!p.closed) {
-      const ends: [number, number, number, number][] = [];
-      {
-        let k0 = 0;
-        while (k0 < p.nseg - 1 && !okSeg[k0]) k0++;
-        const b0 = k0 + 1;
-        const l0 = Math.hypot(p.x[b0] - p.x[k0], p.y[b0] - p.y[k0]) || 1;
-        ends.push([0, -(p.x[b0] - p.x[k0]) / l0, -(p.y[b0] - p.y[k0]) / l0, p.s[0]]);
-        let k1 = p.nseg - 1;
-        while (k1 > 0 && !okSeg[k1]) k1--;
-        const b1 = k1 + 1;
-        const l1 = Math.hypot(p.x[b1] - p.x[k1], p.y[b1] - p.y[k1]) || 1;
-        ends.push([p.n - 1, (p.x[b1] - p.x[k1]) / l1, (p.y[b1] - p.y[k1]) / l1, p.s[p.n - 1]]);
-      }
-      for (const [v, ux, uy, s] of ends) {
-        const cx = p.x[v];
-        const cy = p.y[v];
-        const cl = m.clusterAt(ci, s);
-        const rk = rank.get(keyOf(ci, cl)) ?? 0;
-        const d = dep(m.depthAt(ci, s), rk, s);
-        const K = 12;
-        const dir = (q: number): [number, number] => {
-          const an = -Math.PI / 2 + (Math.PI * q) / K;
-          const c = Math.cos(an);
-          const sn = Math.sin(an);
-          return [ux * c - uy * sn, uy * c + ux * sn];
-        };
-        for (let q = 0; q < K; q++) {
-          const [dax, day] = dir(q);
-          const [dbx, dby] = dir(q + 1);
-          push(cx + h * dax, cy + h * day, cx + h * dbx, cy + h * dby, dax, day, dbx, dby, ci + 1, cl + 1, F_CAP, s, s, p.s0, p.len, d, d);
-          caps++;
-        }
-      }
-    }
+    if (!p.closed) capChain(ci, p, (k) => okSeg[k] === 1);
   }
 
   // Fill arcs: the corners the label's fill pass draws.
@@ -253,7 +291,7 @@ export function buildBandStrips(m: FieldModel, lp: LabelPieces, lines?: readonly
     switches++;
   }
   const n = out.length / BAND_FLOATS;
-  return { strips: new Float32Array(out), n, W: m.W, stats: { edges, caps, arcs, switches } };
+  return { strips: new Float32Array(out), n, W: m.W, stats: { edges, caps, arcs, switches }, tubeEdges };
 }
 
 const HEAD = `#version 300 es
@@ -370,7 +408,20 @@ export interface BandOptions {
   sigma: number;
   /** K923's depth rule (step 3 above). */
   depth: boolean;
+  /** K868 S3a8b2: draw the tube edges on the GPU from these tables (the
+   * strips were built with tubeEdges false). Left out: the strips' own. */
+  edges?: BandEdges | null;
 }
+
+/** The GPU edges' input: one frame's label tables, LabelPass's upload of
+ * them (textures.tbl), and the tube's half-width h (world). */
+export interface BandEdges {
+  T: LabelTables;
+  tbl: WebGLTexture;
+  h: number;
+}
+
+const edgeWarned = [false, false];
 
 export class BandPass {
   private gl: WebGL2RenderingContext;
@@ -382,6 +433,16 @@ export class BandPass {
   private C: WebGLTexture | null = null;
   private fbo: WebGLFramebuffer | null = null;
   private n = 0;
+  // K868 S3a8b2, the GPU edges (label_band_gpu.ts): a program per variant
+  // ([default, depth]), compiled on first use, over one instance buffer.
+  private edgeProg: [Prog | null, Prog | null] = [null, null];
+  private edgeVao: [WebGLVertexArrayObject | null, WebGLVertexArrayObject | null] = [null, null];
+  private edgeBuf: WebGLBuffer | null = null;
+  private edgeCap = 0;
+  private edgeLayout = new BandEdgeLayout();
+  /** Why a variant's edge program failed ([default, depth]); that variant's
+   * tube edges are then the CPU's. */
+  readonly edgeError: [string | null, string | null] = [null, null];
   width = 0;
   height = 0;
 
@@ -453,35 +514,134 @@ export class BandPass {
     gl.disable(gl.CULL_FACE);
     gl.colorMask(true, true, true, true);
     gl.clearBufferfv(gl.COLOR, 0, new Float32Array([0, 0, 0, 0]));
-    if (this.n) {
+    const e = o.edges && o.edges.T.nSegs > 0 && this.edgesReady(o.depth) ? o.edges : null;
+    if (this.n || e) {
       gl.enable(gl.BLEND);
       gl.blendEquation(gl.MAX);
       gl.blendFunc(gl.ONE, gl.ONE);
-      const pr = this.band;
-      gl.useProgram(pr.prog);
-      gl.uniformMatrix3fv(pr.u("uM"), false, new Float32Array([cam.a, cam.b, 0, cam.c, cam.d, 0, cam.tx, cam.ty, 1]));
-      gl.uniform2f(pr.u("uSize"), w, h);
-      gl.uniform1f(pr.u("uW"), o.W);
-      gl.uniform1f(pr.u("uSigma"), o.sigma);
-      gl.uniform1f(pr.u("uLr"), 1);
-      gl.uniform1i(pr.u("uDepth"), o.depth ? 1 : 0);
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, L);
-      gl.uniform1i(pr.u("uL"), 0);
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, D2);
-      gl.uniform1i(pr.u("uD2"), 1);
-      gl.bindVertexArray(this.vao);
-      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.n);
-      gl.bindVertexArray(null);
-      gl.bindTexture(gl.TEXTURE_2D, null);
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, null);
+      const mat = new Float32Array([cam.a, cam.b, 0, cam.c, cam.d, 0, cam.tx, cam.ty, 1]);
+      if (this.n) {
+        const pr = this.band;
+        gl.useProgram(pr.prog);
+        gl.uniformMatrix3fv(pr.u("uM"), false, mat);
+        gl.uniform2f(pr.u("uSize"), w, h);
+        gl.uniform1f(pr.u("uW"), o.W);
+        gl.uniform1f(pr.u("uSigma"), o.sigma);
+        gl.uniform1f(pr.u("uLr"), 1);
+        gl.uniform1i(pr.u("uDepth"), o.depth ? 1 : 0);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, L);
+        gl.uniform1i(pr.u("uL"), 0);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, D2);
+        gl.uniform1i(pr.u("uD2"), 1);
+        gl.bindVertexArray(this.vao);
+        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.n);
+        gl.bindVertexArray(null);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+      }
+      if (e) this.drawEdges(e, mat, L, D2, w, h, o);
       gl.useProgram(null);
       gl.blendEquation(gl.FUNC_ADD);
       gl.disable(gl.BLEND);
     }
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  /** Whether the GPU edges can draw in this variant (o.depth): compiles its
+   * program on first use. A failure keeps its reason in edgeError, is
+   * logged once, and the caller builds the CPU's tube edges instead. */
+  edgesReady(depth: boolean): boolean {
+    const v = depth ? 1 : 0;
+    if (this.edgeProg[v]) return true;
+    if (this.edgeError[v] !== null) return false;
+    const gl = this.gl;
+    let pr: Prog;
+    try {
+      const src = bandEdgeSources(TBL_W, depth);
+      pr = compile(gl, src.vs, src.fs, depth ? "band edge (depth)" : "band edge");
+    } catch (err) {
+      const why = err instanceof Error ? err.message : String(err);
+      this.edgeError[v] = why;
+      if (!edgeWarned[v]) {
+        edgeWarned[v] = true;
+        console.warn(`K868 band pass: the GPU edges' ${depth ? "depth " : ""}program failed (${why}); the CPU draws the tube edges.`);
+      }
+      return false;
+    }
+    if (!this.edgeBuf) this.edgeBuf = gl.createBuffer()!;
+    const vao = gl.createVertexArray()!;
+    gl.bindVertexArray(vao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeBuf);
+    const loc = gl.getAttribLocation(pr.prog, "aSeg");
+    if (loc >= 0) {
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, SEG_FLOATS * 4, 0);
+      // Two instances (the two sides) per segment.
+      gl.vertexAttribDivisor(loc, 2);
+    }
+    gl.bindVertexArray(null);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    this.edgeProg[v] = pr;
+    this.edgeVao[v] = vao;
+    return true;
+  }
+
+  /** The tube edges, two instances per chain segment, from the tables
+   * (label_band_gpu.ts). The instances upload only when a chain's segment
+   * count changes. Units: uL 0, uTbl 1, uD2 2 (depth), unbound after. */
+  private drawEdges(e: BandEdges, mat: Float32Array, L: WebGLTexture, D2: WebGLTexture, w: number, h: number, o: BandOptions): void {
+    const gl = this.gl;
+    const v = o.depth ? 1 : 0;
+    const pr = this.edgeProg[v]!;
+    const T = e.T;
+    if (this.edgeLayout.update(T)) {
+      const n = T.nSegs * SEG_FLOATS;
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeBuf);
+      if (this.edgeCap < n) {
+        this.edgeCap = Math.ceil(n * 1.25) + SEG_FLOATS;
+        gl.bufferData(gl.ARRAY_BUFFER, this.edgeCap * 4, gl.STATIC_DRAW);
+      }
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, T.segs, 0, n);
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    }
+    gl.useProgram(pr.prog);
+    gl.uniformMatrix3fv(pr.u("uM"), false, mat);
+    gl.uniform2f(pr.u("uSize"), w, h);
+    gl.uniform1f(pr.u("uW"), o.W);
+    gl.uniform1f(pr.u("uH"), e.h);
+    gl.uniform1f(pr.u("uSigma"), o.sigma);
+    gl.uniform1f(pr.u("uLr"), 1);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, L);
+    gl.uniform1i(pr.u("uL"), 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, e.tbl);
+    gl.uniform1i(pr.u("uTbl"), 1);
+    if (o.depth) {
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D, D2);
+      gl.uniform1i(pr.u("uD2"), 2);
+      gl.uniform1f(pr.u("uZmin"), T.zmin);
+      gl.uniform1f(pr.u("uZinv"), 1 / T.zr);
+      gl.uniform1f(pr.u("uRinv"), 1 / T.nKeys);
+      gl.uniform1f(pr.u("uSinv"), 1 / T.smax);
+      gl.uniform1f(pr.u("uWin"), T.win);
+      gl.uniform1f(pr.u("uRho"), T.rho);
+    }
+    gl.bindVertexArray(this.edgeVao[v]);
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, 2 * T.nSegs);
+    gl.bindVertexArray(null);
+    if (o.depth) {
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, null);
   }
 
   /** C over the bound canvas (the default framebuffer), in one colour. */
@@ -543,5 +703,15 @@ export class BandPass {
     gl.deleteVertexArray(this.emptyVao);
     gl.deleteProgram(this.band.prog);
     gl.deleteProgram(this.comp.prog);
+    for (let v = 0; v < 2; v++) {
+      const pr = this.edgeProg[v];
+      const vao = this.edgeVao[v];
+      if (pr) gl.deleteProgram(pr.prog);
+      if (vao) gl.deleteVertexArray(vao);
+      this.edgeProg[v] = null;
+      this.edgeVao[v] = null;
+    }
+    if (this.edgeBuf) gl.deleteBuffer(this.edgeBuf);
+    this.edgeBuf = null;
   }
 }

@@ -13,6 +13,9 @@
 //   label_pass.ts    the GL targets (L, D2, T) and the two draws
 //   label_band.ts    S3a3: the band pass, the ink drawn from L (and D2):
 //                    its strips (pure CPU) and the composite
+//   label_band_gpu.ts  S3a8b: with lbp on, the band's tube edges from the
+//                    label tables (S3a8b2 wired them; the strips then keep
+//                    the caps, fill arcs and switch strips)
 //
 // The pieces come from a FieldModel (../field/oracle.ts, labelOnly) built
 // on the main thread from the renderer's samples (the mirror's, under the
@@ -38,7 +41,7 @@ import { buildLabelPieces, buildLabelPiecesGpu, labelLimits, type LabelPieces } 
 import { LabelTableBuilder, type LabelTables } from "./label_tables";
 import { BandPass, buildBandStrips, type BandStrips } from "./label_band";
 import { LabelPass, type LabelCamera } from "./label_pass";
-import { findSwitchLines, sameSwitchLines, sameKey, switchKey, switchLinesFrom, switchTopo, type SwitchTopo } from "./label_switch";
+import { findSwitchLines, sameSwitchLines, sameKey, switchKey, switchLinesFrom, switchTopo, type SwitchLine, type SwitchTopo } from "./label_switch";
 
 // The scene export leaves look.ctrlArc unset; S3a's probes use 0.47 (the
 // diagram depth's window is depthWindow x ctrlArc).
@@ -102,6 +105,10 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
   let band: BandPass | null = null;
   let strips: BandStrips | null = null;
   let bandDepth = false;
+  // S3a8b2: the last rebuild's model and switch lines, for a strips rebuild
+  // when the tube edges move between the CPU and the GPU (render()).
+  let keptModel: FieldModel | null = null;
+  let keptLines: readonly SwitchLine[] = [];
   // The drawn positions the pieces were built from, one copy per chain.
   let drawn: (Float32Array | null)[] = [];
   const stats = {
@@ -116,6 +123,10 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     switchMisses: 0,
     switchChecked: 0,
     switchDiffs: 0,
+    // S3a8b2: who drew the last render's tube edges ("gpu" or "cpu"), and
+    // why the GPU's edge program failed, if it did.
+    bandEdges: "" as string,
+    edgeFallback: "" as string,
   };
   let swTopo: SwitchTopo | null = null;
   let verifySwitch = false;
@@ -174,6 +185,7 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     band = null;
     pieces = null;
     strips = null;
+    keptModel = null;
     requestFrame();
   };
 
@@ -230,7 +242,12 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
       if (!sameSwitchLines(lines, findSwitchLines(m))) stats.switchDiffs++;
       tPrev = performance.now();
     }
-    strips = buildBandStrips(m, pieces, lines);
+    keptModel = m;
+    keptLines = lines;
+    // S3a8b2: with the GPU pieces on, the GPU draws the tube edges, unless
+    // the band pass's edge program has failed (render() settles it).
+    const gpuEdges = gpuOn && (!band || band.edgeError[bandDepth ? 1 : 0] === null);
+    strips = buildBandStrips(m, pieces, lines, { tubeEdges: !gpuEdges });
     lap(P.strips);
     stats.rebuilds++;
     if (pass) {
@@ -262,15 +279,26 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     cam = { a: s * sx, b: 0, c: 0, d: t * sy, tx: root.position.x * sx, ty: root.position.y * sy };
     pass.render(cam, w, hh, true);
     lap(P.label);
-    const { L, D2 } = pass.textures;
+    const { L, D2, tbl } = pass.textures;
     if (packed && pieces && strips && L && D2) {
       if (!band) {
         band = new BandPass(g);
         band.setStrips(strips);
       }
+      // S3a8b2: the tube edges on the GPU when the pieces are (lbp) and its
+      // edge program compiles (else logged once, label_band.ts); strips
+      // built for the other side are rebuilt from the kept model.
+      const gpuEdges = gpuOn && !!tables && !!tbl && band.edgesReady(bandDepth);
+      if (strips.tubeEdges === gpuEdges && keptModel) {
+        strips = buildBandStrips(keptModel, pieces, keptLines, { tubeEdges: !gpuEdges });
+        band.setStrips(strips);
+      }
+      stats.bandEdges = gpuEdges ? "gpu" : "cpu";
+      stats.edgeFallback = band.edgeError[bandDepth ? 1 : 0] ?? "";
       // The ink's width in device pixels: W world units at the camera's scale.
       const px = Math.sqrt(Math.abs(cam.a * cam.d - cam.b * cam.c));
-      band.render(L, D2, cam, w, hh, { W: strips.W * px, sigma: pieces.sigma, depth: bandDepth });
+      const edges = gpuEdges && tables && tbl ? { T: tables, tbl, h: pieces.h } : null;
+      band.render(L, D2, cam, w, hh, { W: strips.W * px, sigma: pieces.sigma, depth: bandDepth, edges });
     }
     lap(P.band);
     stats.renders++;
@@ -354,6 +382,7 @@ export function createLabelApp(ctx: SceneExportCtx, requestFrame: () => void): L
     band = null;
     pieces = null;
     strips = null;
+    keptModel = null;
     off = true;
     const G = globalThis as unknown as Record<string, unknown>;
     if (G.__knotLabel === api) delete G.__knotLabel;
