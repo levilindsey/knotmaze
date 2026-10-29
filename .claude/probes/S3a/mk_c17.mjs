@@ -329,7 +329,7 @@ if (FOOT === "track") {
 // bounds of each foot over the stretch, so the cap refit's gate is a measure.
 // c23: mk_c17.mjs --refine 10 --foot track --smin cert --out oracle_c23.ts
 const SMIN = opt("smin", "");
-const TAU = Number(opt("tau", "1e-5"));
+const TAU = Number(opt("tau", "1e-4"));
 if (SMIN === "cert") {
   if (FOOT !== "track") throw new Error("--smin cert needs --foot track");
   if (!SRC) s = `// K992 probe c23 (mk_c17.mjs --smin cert, tau ${TAU}): c21 with S the certified running minimum at fixed nodes.\n` + s;
@@ -406,7 +406,7 @@ if (SMIN === "cert") {
           if (hi < win[1]) d2 = Math.min(d2, footInWindow(pl, x, y, hi, win[1]).d);
           return d2 - dc;
         };
-        type Pt = { p: Sol; d: number; w: number; den: number; fA: number; fB: number; mA: number; mB: number };
+        type Pt = { p: Sol; d: number; w: number; den: number; fA: number; fB: number; mA: number; mB: number; kA: number; tA: number; kB: number; tB: number };
         const at = (p: Sol, d: number): Pt => {
           const gA = pointAt(pa, p.sA);
           const gB = pointAt(pb, p.sB);
@@ -424,22 +424,29 @@ if (SMIN === "cert") {
           const slack = Math.min(capLimA - fA, capLimB - fB);
           let w = ss(1 + Math.min(0, mA, mB) / (${OVE} * h)) * ss((den / denV - ${K0}) / ${+(K1 - K0).toFixed(6)});
           if (slack !== Infinity) w *= ss(slack / (${EPSC} * h));
-          return { p, d, w, den, fA, fB, mA, mB };
+          return { p, d, w, den, fA, fB, mA, mB, kA: gA.k, tA: gA.t, kB: gB.k, tB: gB.t };
         };
         // The lower bound over [f0's δ, f1's δ] (length D) of a function
         // that moves at most L per unit of δ, or at most as far as its ends
         // differ where they differ by more.
         const vb = (f0: number, f1: number, L: number, D: number): number =>
           f0 === Infinity || f1 === Infinity ? Math.min(f0, f1) - L * D : 0.5 * (f0 + f1) - 0.5 * Math.max(L * D, Math.abs(f1 - f0));
+        // A foot on one segment's interior at both ends stays on it (it moves
+        // along the arm at a constant rate there): its normal is fixed and the
+        // foot linear in δ. Only a foot at a vertex turns its normal.
+        const inner = (t: number): boolean => t > 1e-9 && t < 1 - 1e-9;
         const bounds = (a: Pt, b: Pt): { w: number; fA: number; fB: number } => {
           const D = b.d - a.d;
-          const den1 = vb(a.den, b.den, 4 / a.d, D);
-          const denLo = Math.max(1e-9, vb(a.den, b.den, (2 * (2 - Math.max(0, den1))) / a.d, D));
+          const segA = a.kA === b.kA && inner(a.tA) && inner(b.tA) && Math.abs(b.p.sA - a.p.sA) < pa.segLen[a.kA];
+          const segB_ = a.kB === b.kB && inner(a.tB) && inner(b.tB) && Math.abs(b.p.sB - a.p.sB) < pb.segLen[a.kB];
+          const nRot = (segA ? 0 : 1) + (segB_ ? 0 : 1);
+          const den1 = vb(a.den, b.den, (2 * nRot) / a.d, D);
+          const denLo = Math.max(1e-9, vb(a.den, b.den, (nRot * (2 - Math.max(0, den1))) / a.d, D));
           const U = Math.sqrt(2 / denLo);
           const Lf = Math.sqrt(Math.max(0, 2 / denLo - 1));
           const mLo = Math.min(vb(a.mA, b.mA, U + 1, D), vb(a.mB, b.mB, U + 1, D));
-          const fA = -vb(-a.fA, -b.fA, Lf, D);
-          const fB = -vb(-a.fB, -b.fB, Lf, D);
+          const fA = segA ? Math.max(a.fA, b.fA) : -vb(-a.fA, -b.fA, Lf, D);
+          const fB = segB_ ? Math.max(a.fB, b.fB) : -vb(-a.fB, -b.fB, Lf, D);
           let w = ss(1 + Math.min(0, mLo) / (${OVE} * h)) * ss((denLo / denV - ${K0}) / ${+(K1 - K0).toFixed(6)});
           const slack = Math.min(capLimA - fA, capLimB - fB);
           if (slack !== Infinity) w *= ss(slack / (${EPSC} * h));
