@@ -42,11 +42,13 @@
 //   node node_modules\vite-node\vite-node.mjs scripts\label_pops.ts
 //     <seq>[,<seq>...] [--seqdir <dir>] [--out <dir>] [--tag <name>]
 //     [--oracle <path of an oracle module>] [--port 5381] [--crops 3]
-//     [--zoom 1] [--frames <n, a smoke test>] [--gpu]
+//     [--zoom 1] [--windows] [--frames <n, a smoke test>] [--gpu]
 // --oracle swaps the FieldModel in the page AND here (a frozen copy of an
 // older oracle gives a before/after on the same frames). --zoom scales the
-// frozen camera about the view's centre. --gpu renders with the GPU
-// pieces (K868 S3a7, the app's labelGpu; the page's ?gpu=1). Writes <out>/<tag>/<seq>.json
+// frozen camera about the view's centre. --windows (K992) runs each
+// sequence in its fixed WINDOWS instead, at follow mode's maximum zoom, as
+// <seq>@w<k> (--zoom is ignored). --gpu renders with the GPU pieces (K868
+// S3a7, the app's labelGpu; the page's ?gpu=1). Writes <out>/<tag>/<seq>.json
 // (every pop and event), <seq>_crops/*.png (frame i | frame i+1 | change:
 // red ink gained, blue lost, green the pop's pixels, magenta the event)
 // and summary.md.
@@ -73,6 +75,24 @@ const ORACLE = opt("oracle", "src/render/field/oracle.ts");
 const PORT = Number(opt("port", "5381"));
 const NCROP = Number(opt("crops", "3"));
 const ZOOM = Number(opt("zoom", "1"));
+/** --windows: each sequence in its WINDOWS at the maximum zoom (K992). */
+const WINDOWED = argv.includes("--windows");
+/**
+ * K992's census windows, fixed so that every run measures the same ones:
+ * world centres, at most three per sequence. A window is the recorded
+ * viewport at follow mode's maximum zoom, 4 min(w, h) / 13 css px a world
+ * unit (camera.ts FOLLOW_SPAN; 12.4x def's fit, 13.0x muse's; fit mode
+ * stops at 8x). Each is centred on a junction cluster with the most corner
+ * pop area (causes jump:*, status, refit) in master's census, S3a6's
+ * before14, picked greedily over the area left by the ones before it
+ * (.claude/probes/S3a/win16.ts). def_drag's corner pops all sit at j175.
+ */
+const WINDOWS: Record<string, [number, number][]> = {
+  def_drag: [[19.734, 22.328]], // j175
+  def_flow: [[24.702, 32.685], [19.759, 22.3], [23.024, 8.836]], // j43, j175, j172
+  muse_drag: [[24.584, 13.391], [31.758, 10.884], [14.709, 16.677]], // j116-j117, j12, j105
+  muse_flow: [[31.549, 10.427], [24.905, 13.445], [12.609, 15]], // j12, j116-j117, j112
+};
 /** Distinct frames to take per sequence (a smoke test); 0 = all. */
 const NFRAMES = Number(opt("frames", "0"));
 /** --full: also write each transition's whole change image (1x). */
@@ -159,6 +179,18 @@ function frozenCamera(scene: FieldScene): { cam: Cam; w: number; h: number } {
   const tx = cx + (e * dpr - cx) * ZOOM;
   const ty = cy + (f * dpr - cy) * ZOOM;
   return { cam: { a: A, b: 0, c: 0, d: D, tx, ty }, w, h };
+}
+/** A window's camera: the maximum zoom, centred on world point c. */
+function windowCamera(scene: FieldScene, c: [number, number]): { cam: Cam; w: number; h: number } {
+  const [a, b, cc, d] = scene.camera.worldToCss;
+  if (Math.abs(b) > 1e-9 || Math.abs(cc) > 1e-9) throw new Error("a rotated camera: not supported");
+  const dpr = scene.camera.dpr || 1;
+  const w = Math.round(scene.camera.viewport[0] * dpr);
+  const h = Math.round(scene.camera.viewport[1] * dpr);
+  const s = ((4 * Math.min(scene.camera.viewport[0], scene.camera.viewport[1])) / 13) * dpr;
+  const A = Math.sign(a) * s;
+  const D = Math.sign(d) * s;
+  return { cam: { a: A, b: 0, c: 0, d: D, tx: w / 2 - A * c[0], ty: h / 2 - D * c[1] }, w, h };
 }
 
 // ------------------------------------------------------------------- PNG
@@ -784,7 +816,7 @@ const browser = await puppeteer.launch({
     "--disable-renderer-backgrounding",
   ],
 });
-const summary: string[] = [`# label pops: ${TAG}`, "", `oracle \`${ORACLE}\`, zoom ${ZOOM}, GPU pieces ${GPU ? "on" : "off"}, TOL ${TOL}/255, AMIN ${AMIN} px, attribution within ${RATTR} h, jump > ${JUMP} world`, ""];
+const summary: string[] = [`# label pops: ${TAG}`, "", `oracle \`${ORACLE}\`, ${WINDOWED ? "windows at the maximum zoom" : `zoom ${ZOOM}`}, GPU pieces ${GPU ? "on" : "off"}, TOL ${TOL}/255, AMIN ${AMIN} px, attribution within ${RATTR} h, jump > ${JUMP} world`, ""];
 try {
   const page = await browser.newPage();
   page.on("console", (m) => {
@@ -794,10 +826,15 @@ try {
   await page.waitForFunction("window.__popsReady || window.__popsError", { timeout: 120000 });
   const perr = await page.evaluate("window.__popsError");
   if (perr) throw new Error(`page: ${perr}`);
-  for (const name of seqs) {
-    const frames = loadSeq(name);
+  const runs = seqs.flatMap((seq) =>
+    WINDOWED
+      ? (WINDOWS[seq] ?? []).map((c, k) => ({ seq, name: `${seq}@w${k}`, centre: c as [number, number] | null }))
+      : [{ seq, name: seq, centre: null as [number, number] | null }]
+  );
+  for (const { seq, name, centre } of runs) {
+    const frames = loadSeq(seq);
     if (NFRAMES > 0) frames.length = Math.min(frames.length, NFRAMES);
-    const { cam, w, h } = frozenCamera(frames[0].scene);
+    const { cam, w, h } = centre ? windowCamera(frames[0].scene, centre) : frozenCamera(frames[0].scene);
     const sc = Math.sqrt(Math.abs(cam.a * cam.d));
     const hw = frames[0].scene.look.halfWidth;
     const band = frames[0].scene.look.band;
@@ -909,6 +946,7 @@ try {
         oracle: ORACLE,
         gpu: GPU,
         zoom: ZOOM,
+        ...(centre ? { window: centre } : {}),
         cam,
         w,
         h,
