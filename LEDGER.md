@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1045.
+Next free ID: K1047.
 
 ## Waiting on Levi
 
@@ -288,6 +288,9 @@ Next free ID: K1045.
 - **K809** · Panel search on your phone (K793): typing in the box must not jump or zoom the maze, the
   keyboard must not cover the box, results scroll under the sticky bar, and Enter closes the keyboard
   and outlines the best row (an inferred risk, not seen; `docs/design/K793.md`)
+- **K1045** · Junction eyes, by look at K1040 S4b: where two junctions sit close, their threads close in a
+  small eye of paper. Form B leaves a dot about 0.16 across, today's look a thin lens (0.67 x 0.12), or it
+  could be covered (`docs/design/K1040_s1b_holes_fades.md` F1). Nothing to look at before S4b.
 
 ## In progress
 
@@ -801,6 +804,9 @@ Every other item below waits on the trigger it names.
 
 ## Residuals (known, not fixed)
 
+- **K1046** · Form B after S1b (`docs/design/K1040_s1b_holes_fades.md` ### Residuals): R2 a tie jump inside
+  one top, R3 sliver fills' bound and evalPoint's rV, R4 the ω fade's width in motion (0.05h approved; S4b),
+  R5 #1's rise on four scenes, R6 q4's outer/none px on def. R1 goes to S1c.
 - **K1000** · K868 label: V's folds and live/unsolved flips (class 1) still pop. K1040 carries it (F3's fades) and it
   closes at K1040 S4b. Stage 1's continuous caps landed with K992 in 9b549d30 (`K1000_continuous_caps.md` ## Handoff).
 - **K1002** · K868's corner balls are never checked against other threads (master, b16 and c17 alike): a large r can

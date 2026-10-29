@@ -237,6 +237,11 @@ Stage agent, claude session bf876705 (agent a377492c). Times are
 
 ### F2 · The definition (form B, exact, per pixel)
 
+> Amended since by S1 (`docs/design/K1040_s1_reference.md`, F1-F6) and
+> S1b (`docs/design/K1040_s1b_holes_fades.md`, its `Definition change:`
+> Findings F4-F6 and F9-F11). `src/render/field/form_b.ts` is the current
+> definition: where this section differs, the code and those Findings hold.
+
 Units are world units unless marked px; at dpr 2 a world unit is
 2·pxPerUnit device px (def 44.7, fat 45.5). S1a's def and fat: h 0.26
 (11.6 px), W 0.0988 (4.4 px), samples about 0.09 apart (4 px).
@@ -348,6 +353,10 @@ walk with a step, no readback. Every input is a closed form or a bounded
 solve of the current frame, and the CPU part is O(samples + corners).
 
 ### F3 · Every discrete decision, and its fade
+
+> S1b changed several of these fades and their widths under its rate rule
+> (`docs/design/K1040_s1b_holes_fades.md`, F4-F6 and F9-F11); form_b.ts is
+> current.
 
 | # | Decision | Kind | Can it flip in motion? | Fade, parameter, width |
 |---|---|---|---|---|
