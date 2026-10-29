@@ -195,3 +195,42 @@ into Findings. Append `## Findings` (F1, F2, ...) to this brief as you go.
 - Your final report ends with `Ledger items` (new follow-ups, residuals,
   decisions for Levi) and K1040's handle fields: owner, branch, last
   commit, evidence, next, brief, env.
+
+## Findings
+
+Stage agent, claude session bf876705 (agent a377492c). Times are
+`Get-Date`, PDT, 2026-10-28.
+
+- Start 21:32:22. Step 1 (reading, F1) done 21:46.
+
+### F1 · The calls, and the rule that carries each
+
+"The new definition" is F2's. A rule in quotes is F2's name for it.
+
+| # | Look | Where decided | The rule that carries it |
+|---|---|---|---|
+| 1 | Paper background, two edge strokes per thread, hollow interior, no fills, no gaps | K868 §1-2; K797 (b6585962) | "ink": a pixel is ink iff it lies in the top surface and within W of that surface's exposed outline |
+| 2 | Over's edges run through a crossing; the under's stop on the over's outline | K868 §2.2, §3.2 | "top": per pixel, the surface with the greatest z among those that contain it |
+| 3 | A junction is ONE outline: no mouth border, no double strokes, no butts; 3-way and 4-way alike | Levi 10-23 and 10-25; K857 (0c09ef63), K854 (ccae4ffe), K883 | "exposed": distance to the exposed outline (a member side counts only where no other member or fill of the surface covers it), never min over members |
+| 4 | Missing borders are wrong (an arm that loses its side, a group that swallows a passing thread) | K874/K883 sheet B, K909 B2, K910 | "groups" only within junction spans; "cut" at d − (L + h) on a crossing; exposure is per surface |
+| 5 | G1 rolling-ball corners, not a mitre or a smooth-min blob | K881 sheet E; K868 §3.7 | "fillet": term 3, the arc of radius r centred at h + r from both centrelines, plus its tangent points |
+| 6 | The `cr` slider: r(θ) = (cr/3)·min(2h, 1.5h·tan(θ/2)) | K874/K883 sheet C; sheet F approved (K915, K922) | "radius": the same r(θ), then "fit" shrinks it continuously by the room on the arms |
+| 7 | Sharp or round per corner: `crs`, builder pins win | Levi 10-22; K830 (e5fbdff4); K868 §2 goal 4 | per-corner input bit, topology-fixed (F3 D7) |
+| 8 | Sharp point where two threads split | K1001: waiting on Levi; b16's arch does not land (K1040 brief) | "fit": r → 0 continuously as the room → 0; the arch is not built; the look stays behind the flag until Levi sees it in motion |
+| 9 | Dead ends: closed hollow caps | Levi 10-22 and 10-25; K868 §3.6 | a dead end is the tube's own semicircular cap, part of its member's outline |
+| 10 | END arms tuck into the through thread | K868 §3.6; K915, K922 (binding) | "end": the END arm extends to c′ on the through's centreline and is capped there; that cap is always buried |
+| 11 | Arms keep the thread width and line up | Levi 10-25 | every member is a chain tube of the same h; the arms are the chains themselves |
+| 12 | Depth comes from the crossing diagram | K868 §3.3 (2026-10-26) | "depth": pinned hat sums on each chain; group z = z of the nearest member; ties fade (F3 D4) |
+| 13 | Two threads of one junction that cross: both inks fuse them today; K943 proposes the over's line | K943: open, behind a flag for Levi to compare (sheet `K943_crossing_in_junction.png`) | a per-pair bit inside a group: one surface (fused, today's look) or two surfaces ordered by "depth" (K943's flag) (F3 D2) |
+| 14 | The hook's look (now / cap / carry / seam) | K909, K915, K922: still open | a parameter of "end"; not decided here |
+| 15 | The cap triple's notched cuts | K915 Handoff item 3: still open | open; F2 draws the cut as a straight buried cap, same as master |
+| 16 | A pure function of the frame; a topology change fades over a stated width | K1040 brief; K992 call 3; K1000 call 2; K868 §2 goal 6 | F2 keeps no state between frames; every flip in F3 has a fade with a named parameter |
+| 17 | The overlap gate's width, 0.05h | K992 S3 F4 (`K992_s3_landing.md`); K1040 brief | a parameter, `ovw` (F3 D9) |
+| 18 | Graphite (pencil) look later | K868 §1, §9 | F2 exposes the outline distance and the arc coordinate, so a texture can follow the outline |
+| 19 | The highlight tint (solved path) | K868 §2 goal 7 | the top surface's chain and s, read per pixel |
+| 20 | The hover rim follows the outline | K345 | the same exposed distance, a second band width |
+| 21 | Behind a flag; no back-compat | K1040 brief; CLAUDE.md (2026-10-13); K922 | a param appended to `CODEC_PARAMS`, default off |
+| 22 | 60 fps on the Pixel 11: GPU at most 4 ms a frame at dpr 2 | K868 §2 goal 8; §6 check 13 | F5's budget |
+| 23 | Reveal fades (appearance, explore) | K275, K268 | must not regress: the reveal masks multiply the ink |
+| 24 | G3-1's gap search stays until K868 settles | K892 (Levi 2026-10-27) | replaced only when the new field lands behind its flag and Levi accepts it |
+| 25 | The free-end image check is the judge; it counts runs of ink | K910, K934 | the gate of the first look stage (F7) |
