@@ -24,6 +24,7 @@
 //   crossing rows, 1 texel each: (chain, s, over, wrap length or 0)
 import type { FieldModel } from "../field/oracle";
 import { normS, pointAt, segB } from "../field/geom";
+import type { LabelTables } from "./label_tables";
 
 /** Floats per tube instance: aAB, aS, aK (chain, cluster, rank, flags),
  * aN (next direction, endKind, startKind), aC (chain s0, 1 / len). */
@@ -60,6 +61,21 @@ export interface LabelPieces {
     crossingRows: number;
     zWidened: boolean;
   };
+  /** buildLabelPiecesGpu's (K868 S3a7): `tubes` holds one record per rank
+   * key (chain, cluster and rank at offsets 8-10, what the band pass's rank
+   * map reads), not tubes; LabelPass draws the GPU tubes instead. */
+  keysOnly?: boolean;
+}
+
+/** The corner fills and the DATA texture (buildLabelFills). */
+export interface LabelFills {
+  fills: Float32Array;
+  nFills: number;
+  data: Float32Array;
+  dataRows: number;
+  g2Skipped: number;
+  windowRecords: number;
+  crossingRows: number;
 }
 
 /** Why the packed label cannot hold a scene of this many chains and
@@ -70,10 +86,9 @@ export function labelLimits(chains: number, clusters: number): string | null {
   return null;
 }
 
-export function buildLabelPieces(m: FieldModel): LabelPieces {
+/** v6's ranges: z over the vertices, s over every chain's span. */
+export function vertexRanges(m: FieldModel): { zmin: number; zmax: number; smax: number } {
   const polys = m.polys;
-  const h = m.h;
-  // v6's ranges: z over the vertices, s over every chain's span.
   let zmin = Infinity;
   let zmax = -Infinity;
   let smax = 1;
@@ -90,6 +105,16 @@ export function buildLabelPieces(m: FieldModel): LabelPieces {
     zmin = 0;
     zmax = 0;
   }
+  return { zmin, zmax, smax };
+}
+
+export function buildLabelPieces(m: FieldModel): LabelPieces {
+  const polys = m.polys;
+  const h = m.h;
+  const vr = vertexRanges(m);
+  let zmin = vr.zmin;
+  let zmax = vr.zmax;
+  const smax = vr.smax;
   const zr0 = Math.max(zmax - zmin, 1e-9);
   const ZTOL = 1e-4 * zr0;
   const keyOf = (ci: number, cl: number): number => (cl >= 0 ? 1e6 + cl : m.idOf[ci]);
@@ -202,7 +227,40 @@ export function buildLabelPieces(m: FieldModel): LabelPieces {
   zmin = pzmin;
   zmax = pzmax;
   const zr = Math.max(zmax - zmin, 1e-9);
+  const F = buildLabelFills(m, ZTOL, rankOf, keys.length);
+  return {
+    tubes,
+    nTubes,
+    fills: F.fills,
+    nFills: F.nFills,
+    data: F.data,
+    dataRows: F.dataRows,
+    h,
+    sigma: m.sigma,
+    zmin,
+    zr,
+    smax,
+    nKeys: Math.max(1, keys.length),
+    stats: {
+      zSplits,
+      clusterSplits,
+      keys: keys.length,
+      fillCorners: F.nFills,
+      g2Skipped: F.g2Skipped,
+      windowRecords: F.windowRecords,
+      crossingRows: F.crossingRows,
+      zWidened,
+    },
+  };
+}
 
+/** The corner fills and the DATA texture: the chain table, the arm windows
+ * (split where the depth bends by more than ZTOL) and the crossing rows.
+ * A fill's rank is its cluster's among the tubes' keys (rankOf), or
+ * nKeyList for a cluster no tube piece carries. */
+export function buildLabelFills(m: FieldModel, ZTOL: number, rankOf: ReadonlyMap<number, number>, nKeyList: number): LabelFills {
+  const polys = m.polys;
+  const h = m.h;
   // Data: chain table first.
   const data: number[] = [];
   for (const p of polys) data.push(p.s0, p.len, p.closed ? 1 : 0, 0);
@@ -308,7 +366,7 @@ export function buildLabelPieces(m: FieldModel): LabelPieces {
     }
     crossingRows += xCnt;
     let rank = rankOf.get(1e6 + J);
-    if (rank === undefined) rank = keys.length; // a cluster with no tube piece
+    if (rank === undefined) rank = nKeyList; // a cluster with no tube piece
     for (const k of drawn) {
       const c = m.corners[k];
       const [offA, cntA] = windowOf(c.a, c.winA[0], c.winA[1], c.armA.dir);
@@ -327,28 +385,54 @@ export function buildLabelPieces(m: FieldModel): LabelPieces {
   const dataRows = Math.max(1, Math.ceil(texel / DATA_W));
   const dataArr = new Float32Array(DATA_W * dataRows * 4);
   dataArr.set(data);
+  return { fills: new Float32Array(fillRaw), nFills, data: dataArr, dataRows, g2Skipped, windowRecords, crossingRows };
+}
+
+/** K868 S3a7, the GPU pieces (labelGpu): the tubes are LabelPass's GPU
+ * tubes, drawn from the tables (label_tables.ts), one instance per chain
+ * segment with the exact depth per fragment. This builds what stays on the
+ * CPU: the fills and the DATA texture (with the tables' ranks, which are
+ * buildLabelPieces' ranks) and one record per rank key in `tubes` (chain,
+ * cluster, rank: what the band pass's rank map reads). The ranges are the
+ * tables' (equal to buildLabelPieces'); the windows' ZTOL is still
+ * buildLabelPieces' over the vertices, so the fills are bit for bit
+ * master's. */
+export function buildLabelPiecesGpu(m: FieldModel, T: LabelTables): LabelPieces {
+  const vr = vertexRanges(m);
+  const ZTOL = 1e-4 * Math.max(vr.zmax - vr.zmin, 1e-9);
+  const nk = T.keys.length;
+  const tubes = new Float32Array(Math.max(1, nk) * TUBE_FLOATS);
+  for (let i = 0; i < nk; i++) {
+    const key = T.keys[i];
+    const o = i * TUBE_FLOATS;
+    tubes[o + 8] = key >= 1e6 ? 0 : (m.idxOf.get(key) ?? 0);
+    tubes[o + 9] = key >= 1e6 ? key - 1e6 : -1;
+    tubes[o + 10] = i;
+  }
+  const F = buildLabelFills(m, ZTOL, T.rankOf, nk);
   return {
     tubes,
-    nTubes,
-    fills: new Float32Array(fillRaw),
-    nFills,
-    data: dataArr,
-    dataRows,
-    h,
+    nTubes: nk,
+    fills: F.fills,
+    nFills: F.nFills,
+    data: F.data,
+    dataRows: F.dataRows,
+    h: m.h,
     sigma: m.sigma,
-    zmin,
-    zr,
-    smax,
-    nKeys: Math.max(1, keys.length),
+    zmin: T.zmin,
+    zr: T.zr,
+    smax: T.smax,
+    nKeys: T.nKeys,
     stats: {
-      zSplits,
-      clusterSplits,
-      keys: keys.length,
-      fillCorners: nFills,
-      g2Skipped,
-      windowRecords,
-      crossingRows,
-      zWidened,
+      zSplits: 0,
+      clusterSplits: 0,
+      keys: nk,
+      fillCorners: F.nFills,
+      g2Skipped: F.g2Skipped,
+      windowRecords: F.windowRecords,
+      crossingRows: F.crossingRows,
+      zWidened: false,
     },
+    keysOnly: true,
   };
 }

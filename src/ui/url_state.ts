@@ -501,6 +501,8 @@ export interface UrlParams extends ShapeInjectionParams {
   loaderTrail: number;
   /** K868 S3a: the border look draws its ink from the label passes (field/label_ink). */
   labelInk: boolean;
+  /** K868 S3a7: the label's tubes on the GPU (one instance per chain segment, exact depth per fragment); takes effect with labelInk. */
+  labelGpu: boolean;
   // K830: share of junction wedges drawn rounded (0 all sharp, 1 all rounded).
   cornerRoundShare: number;
   // K835: how loosely the drawn route follows the thread (0 = exactly on
@@ -1326,6 +1328,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   loaderFill: "solid", // K852
   loaderTrail: 2.6, // K852 (today's trail, world units)
   labelInk: false, // K868 S3a
+  labelGpu: false, // K868 S3a7
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1906,6 +1909,7 @@ function readLegacy(
     loaderFill: readChoice(query, "lfl", LOADER_FILLS, D.loaderFill),
     loaderTrail: readNumber(query, "ltr", D.loaderTrail),
     labelInk: readBool(query, "lbi", D.labelInk), // K868 S3a
+    labelGpu: readBool(query, "lbp", D.labelGpu), // K868 S3a7
     cameraMode: readChoice(query, "cam", CAMERA_MODES, D.cameraMode),
     trailLength: readNumber(query, "trl", D.trailLength),
     tension: readNumber(query, "tn", D.tension),

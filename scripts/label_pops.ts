@@ -42,10 +42,11 @@
 //   node node_modules\vite-node\vite-node.mjs scripts\label_pops.ts
 //     <seq>[,<seq>...] [--seqdir <dir>] [--out <dir>] [--tag <name>]
 //     [--oracle <path of an oracle module>] [--port 5381] [--crops 3]
-//     [--zoom 1] [--frames <n, a smoke test>]
+//     [--zoom 1] [--frames <n, a smoke test>] [--gpu]
 // --oracle swaps the FieldModel in the page AND here (a frozen copy of an
 // older oracle gives a before/after on the same frames). --zoom scales the
-// frozen camera about the view's centre. Writes <out>/<tag>/<seq>.json
+// frozen camera about the view's centre. --gpu renders with the GPU
+// pieces (K868 S3a7, the app's labelGpu; the page's ?gpu=1). Writes <out>/<tag>/<seq>.json
 // (every pop and event), <seq>_crops/*.png (frame i | frame i+1 | change:
 // red ink gained, blue lost, green the pop's pixels, magenta the event)
 // and summary.md.
@@ -76,6 +77,8 @@ const ZOOM = Number(opt("zoom", "1"));
 const NFRAMES = Number(opt("frames", "0"));
 /** --full: also write each transition's whole change image (1x). */
 const FULL = argv.includes("--full");
+/** --gpu: the GPU pieces (K868 S3a7). */
+const GPU = argv.includes("--gpu");
 
 /** Coverage change that counts (of 255), and the colour match tolerance. */
 const TOL = 32;
@@ -781,13 +784,13 @@ const browser = await puppeteer.launch({
     "--disable-renderer-backgrounding",
   ],
 });
-const summary: string[] = [`# label pops: ${TAG}`, "", `oracle \`${ORACLE}\`, zoom ${ZOOM}, TOL ${TOL}/255, AMIN ${AMIN} px, attribution within ${RATTR} h, jump > ${JUMP} world`, ""];
+const summary: string[] = [`# label pops: ${TAG}`, "", `oracle \`${ORACLE}\`, zoom ${ZOOM}, GPU pieces ${GPU ? "on" : "off"}, TOL ${TOL}/255, AMIN ${AMIN} px, attribution within ${RATTR} h, jump > ${JUMP} world`, ""];
 try {
   const page = await browser.newPage();
   page.on("console", (m) => {
     if (m.type() === "error") console.log(`[page] ${m.text()}`);
   });
-  await page.goto(`http://127.0.0.1:${PORT}/scripts/label_pops.html?oracle=${encodeURIComponent(served)}`);
+  await page.goto(`http://127.0.0.1:${PORT}/scripts/label_pops.html?oracle=${encodeURIComponent(served)}${GPU ? "&gpu=1" : ""}`);
   await page.waitForFunction("window.__popsReady || window.__popsError", { timeout: 120000 });
   const perr = await page.evaluate("window.__popsError");
   if (perr) throw new Error(`page: ${perr}`);
@@ -904,6 +907,7 @@ try {
       JSON.stringify({
         name,
         oracle: ORACLE,
+        gpu: GPU,
         zoom: ZOOM,
         cam,
         w,

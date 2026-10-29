@@ -16,8 +16,15 @@
 //
 // Per render: clear L (0 = paper), S and D2 (1); draw the tubes (LESS,
 // depth written per fragment); blit L to T; draw the fills into L and D2.
+//
+// K868 S3a7, the GPU pieces (labelGpu): setTables() uploads the tables
+// (label_tables.ts) each frame, rows in use only, and the tube draw is one
+// instance per chain segment (label_glsl.ts GPU_TUBE_VS/FS) in place of
+// buildLabelPieces' tubes; the pieces then carry only the fills and the
+// rank keys (keysOnly).
 import { DATA_W, FILL_FLOATS, TUBE_FLOATS, type LabelPieces } from "./label_pieces";
-import { labelSources } from "./label_glsl";
+import { labelGpuSources, labelSources } from "./label_glsl";
+import { SEG_FLOATS, TBL_W, type LabelTables } from "./label_tables";
 
 /** World to device pixels: dev = (a x + c y + tx, b x + d y + ty). */
 export interface LabelCamera {
@@ -83,6 +90,13 @@ export class LabelPass {
   private S: WebGLTexture | null = null;
   private fboTube: WebGLFramebuffer | null = null;
   private pieces: LabelPieces | null = null;
+  private tables: LabelTables | null = null;
+  private gpuTube: Prog | null = null;
+  private segVao: WebGLVertexArrayObject | null = null;
+  private segBuf: WebGLBuffer | null = null;
+  private segCap = 0;
+  private tblTex: WebGLTexture | null = null;
+  private tblRows = 0;
   width = 0;
   height = 0;
 
@@ -146,6 +160,55 @@ export class LabelPass {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+  }
+
+  /** K868 S3a7, the GPU pieces: upload one frame's tables (label_tables.ts),
+   * the rows in use only, and its segment instances. null: master's tubes. */
+  setTables(T: LabelTables | null): void {
+    this.tables = T;
+    if (!T) return;
+    const gl = this.gl;
+    if (!this.gpuTube) {
+      const src = labelGpuSources(this.packed, TBL_W);
+      this.gpuTube = compile(gl, src.tubeVs, src.tubeFs, "gpu tube");
+      this.segBuf = gl.createBuffer()!;
+      this.segVao = gl.createVertexArray()!;
+      gl.bindVertexArray(this.segVao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.segBuf);
+      const loc = gl.getAttribLocation(this.gpuTube.prog, "aSeg");
+      if (loc >= 0) {
+        gl.enableVertexAttribArray(loc);
+        gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, SEG_FLOATS * 4, 0);
+        gl.vertexAttribDivisor(loc, 1);
+      }
+      gl.bindVertexArray(null);
+      this.tblTex = gl.createTexture()!;
+    }
+    const n = T.nSegs * SEG_FLOATS;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.segBuf);
+    if (this.segCap < Math.max(n, 1)) {
+      this.segCap = Math.ceil(Math.max(n, 1) * 1.25) + SEG_FLOATS;
+      gl.bufferData(gl.ARRAY_BUFFER, this.segCap * 4, gl.DYNAMIC_DRAW);
+    }
+    if (n) gl.bufferSubData(gl.ARRAY_BUFFER, 0, T.segs, 0, n);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.tblTex);
+    gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    if (this.tblRows < T.rows) {
+      this.tblRows = Math.ceil(T.rows * 1.25) + 1;
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, TBL_W, this.tblRows, 0, gl.RGBA, gl.FLOAT, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    }
+    // The builder's data grows in whole rows, so T.rows rows are there.
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, TBL_W, T.rows, gl.RGBA, gl.FLOAT, T.data, 0);
     gl.bindTexture(gl.TEXTURE_2D, null);
   }
 
@@ -240,7 +303,23 @@ export class LabelPass {
       gl.uniform1f(pr.u("uRinv"), 1 / p.nKeys);
       gl.uniform1f(pr.u("uSinv"), 1 / p.smax);
     };
-    if (p.nTubes) {
+    const tbl = this.tables;
+    if (p.keysOnly) {
+      // K868 S3a7: the GPU tubes, one instance per chain segment.
+      if (tbl && this.gpuTube && tbl.nSegs) {
+        const g = this.gpuTube;
+        common(g);
+        gl.uniform1f(g.u("uEps"), 0.05 * pxWorld);
+        gl.uniform1f(g.u("uWin"), tbl.win);
+        gl.uniform1f(g.u("uRho"), tbl.rho);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.tblTex);
+        gl.uniform1i(g.u("uTbl"), 0);
+        gl.bindVertexArray(this.segVao);
+        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, tbl.nSegs);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+      }
+    } else if (p.nTubes) {
       common(this.tube);
       gl.uniform1f(this.tube.u("uEps"), 0.05 * pxWorld);
       gl.bindVertexArray(this.tubeVao);
@@ -318,6 +397,16 @@ export class LabelPass {
     gl.deleteVertexArray(this.fillVao);
     gl.deleteProgram(this.tube.prog);
     gl.deleteProgram(this.fill.prog);
+    if (this.gpuTube) gl.deleteProgram(this.gpuTube.prog);
+    if (this.segBuf) gl.deleteBuffer(this.segBuf);
+    if (this.segVao) gl.deleteVertexArray(this.segVao);
+    if (this.tblTex) gl.deleteTexture(this.tblTex);
+    this.gpuTube = null;
+    this.segBuf = null;
+    this.segVao = null;
+    this.tblTex = null;
+    this.segCap = this.tblRows = 0;
+    this.tables = null;
     this.pieces = null;
   }
 }

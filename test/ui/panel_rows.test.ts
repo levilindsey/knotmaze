@@ -26,6 +26,8 @@ const EXEMPT: Readonly<Record<string, string>> = {
     "phw: main.ts reads it once, when it creates the physics host, so a change needs a reload (K7)",
   mazeFabric:
     "mf: left the panel and the codec in K323 Stage A; `&mf=0` (knot mode) is a link-only probe flag until K326",
+  labelGpu:
+    "lbp: K868 S3a7's GPU pieces, a link-only stage flag (it takes effect with labelInk) until the coordinator turns it on",
 };
 
 // View rows: `row(<parent>, <view>, "<viewKey>")` writes param `key`.
