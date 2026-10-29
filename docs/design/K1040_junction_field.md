@@ -851,3 +851,18 @@ $sc = 'C:\Users\lsl\Repositories\knotmaze\.claude\probes\K868\scenes'
 - The desktop's timer readings are bimodal (2.7-4.9x). The cause, a GPU power state, is inferred, not checked.
 - The prototype's outer edge is a hard, aliased cut (S1 question 4, S4b).
 - The prototype's CPU prep reads 0.3-2.7 ms without tiles, and its first (cold) repetition, with tiles, up to 38 ms. S5 owns the budget.
+
+## Coordinator's calls
+
+2026-10-28 22:45, the coordinating session.
+
+- F7's plan is approved as written: S1 to S8, with S4 in two halves.
+- S5's gate: the CPU prep's p95 in a Pixel drag is at most 2 ms a frame.
+- K868 and K992 close into K1040 (F6). Their branches and worktrees stay:
+  `k868-s3a` holds oracle30 and the recordings
+  (`.claude/probes/S3a/seq13/`), and `k992-corners` the corner census kit.
+- F6's verdicts go into the ledger: the moot items are dropped, and K1040's
+  handle lists each carried item with the stage that closes it.
+- S3 and S4a measure on the Pixel, so Levi is asked to connect it before
+  S3.
+- S1's brief: `docs/design/K1040_s1_reference.md`.
