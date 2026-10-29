@@ -411,9 +411,11 @@ export class LabelPass {
     return out;
   }
 
-  /** The label, depth and copy textures (K915's band pass reads L and D2). */
-  get textures(): { L: WebGLTexture | null; D2: WebGLTexture | null } {
-    return { L: this.L, D2: this.D2 };
+  /** The label, depth and copy textures (K915's band pass reads L and D2),
+   * and the label tables (K868 S3a8b2: the band's GPU edges read them;
+   * null until setTables has had tables). */
+  get textures(): { L: WebGLTexture | null; D2: WebGLTexture | null; tbl: WebGLTexture | null } {
+    return { L: this.L, D2: this.D2, tbl: this.tblTex };
   }
 
   private freeTargets(): void {
