@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K999.
+Next free ID: K1000.
 
 ## Waiting on Levi
 
@@ -810,6 +810,9 @@ Every other item below waits on the trigger it names.
 
 ## Residuals (known, not fixed)
 
+- **K999** · `.claude/rules/probes.md` (51 KB, about 13k tokens) attaches on every Read under `.claude/probes/**`, so the
+  cursive agents (K863's trace and crops live there) carry browser-probe lore they never use, again after each
+  compaction (CC93). Fix: narrow its `paths:` to the browser probes, or split it (K173's pattern); interim, B1 reads crop copies.
 - **K954** · K940's probe caveats: `ydiff.ts` lists a self-crossing by its first pass only (`yjudge.mjs`
   inherits it; d4's x252); the census prints #16 stretches without a point (K934's `at_s.ts` finds it). `.claude/probes/K940/`, `.claude/probes/K934/`.
 - **K957** · K868's free-end check (the runs count, K934) misses site I (an overshoot tail shorter than the
