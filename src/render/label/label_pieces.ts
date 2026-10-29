@@ -581,8 +581,11 @@ export function buildLabelFills(m: FieldModel, ZTOL: number, rankOf: ReadonlyMap
   return { fills: F.a.slice(0, F.n), nFills, data: dataArr, dataRows, g2Skipped, windowRecords, crossingRows };
 }
 /** K868 S3a8a: with the GPU pieces on, the fills' windows are the GPU
- * pieces' records (gpuFills), unless a caller asks for S3a7's z-split ones. */
-export const LABEL_GPU_FILLS = false;
+ * pieces' records (gpuFills): one 2-texel record per segment piece, no
+ * z-splits, no vertexRanges, and the fill shader takes s and z the way the
+ * GPU tubes do. A caller can still ask for S3a7's z-split records
+ * (gpuFills false; the fills pin holds them bit for bit). */
+export const LABEL_GPU_FILLS = true;
 
 /** K868 S3a7, the GPU pieces (labelGpu): the tubes are LabelPass's GPU
  * tubes, drawn from the tables (label_tables.ts), one instance per chain
@@ -590,9 +593,10 @@ export const LABEL_GPU_FILLS = false;
  * CPU: the fills and the DATA texture (with the tables' ranks, which are
  * buildLabelPieces' ranks) and one record per rank key in `tubes` (chain,
  * cluster, rank: what the band pass's rank map reads). The ranges are the
- * tables' (equal to buildLabelPieces'); the windows' ZTOL is still
- * buildLabelPieces' over the vertices, so the fills are bit for bit
- * master's. */
+ * tables' (equal to buildLabelPieces'). With gpuFills false the windows'
+ * ZTOL is buildLabelPieces' over the vertices, so the fills are bit for
+ * bit master's; with gpuFills (the default, LABEL_GPU_FILLS) the windows
+ * are the GPU fills' records and need no ZTOL. */
 export function buildLabelPiecesGpu(m: FieldModel, T: LabelTables, gpuFills = LABEL_GPU_FILLS): LabelPieces {
   let ZTOL = 0;
   if (!gpuFills) {

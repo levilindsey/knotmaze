@@ -95,7 +95,7 @@ async function main(): Promise<void> {
       const px = Math.sqrt(Math.abs(cam.a * cam.d - cam.b * cam.c));
       band.render(L!, D2!, cam, w, h, { W: strips.W * px, sigma: pieces.sigma, depth: false });
       const cov = band.read();
-      return { cov: b64(cov), w: band.width, h: band.height, buildMs: t1 - t0, glError: gl.getError() };
+      return { cov: b64(cov), w: band.width, h: band.height, buildMs: t1 - t0, glError: gl.getError(), gpuFills: pieces.gpuFills === true };
     },
   };
   log(`label pops page ready (oracle ${oraclePath}, gpu ${gpu})`);

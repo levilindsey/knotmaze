@@ -51,17 +51,90 @@ export function diffPieces(got: LabelPieces, want: LabelPieces): string[] {
   return out;
 }
 
-/** The pin on one frame: buildLabelPiecesGpu (the lbp path) and
- * buildLabelFills at the reference's ZTOL (the path lbp off shares). */
+/** The pin on one frame: buildLabelPiecesGpu without the GPU fills (the
+ * lbp path S3a7 shipped) and buildLabelFills at the reference's ZTOL (the
+ * path lbp off shares), both with gpuFills false whatever
+ * LABEL_GPU_FILLS says. */
 export function checkFillsPin(
   m: FieldModel,
   T: LabelTables
 ): { pieces: string[]; fills: string[]; counts: { nFills: number; windowRecords: number; crossingRows: number } } {
   const want = buildLabelPiecesGpuRef(m, T);
-  const pieces = diffPieces(buildLabelPiecesGpu(m, T), want);
+  const pieces = diffPieces(buildLabelPiecesGpu(m, T, false), want);
   const vr = vertexRangesRef(m);
   const ZTOL = 1e-4 * Math.max(vr.zmax - vr.zmin, 1e-9);
-  const fills = diffFills(buildLabelFills(m, ZTOL, T.rankOf, T.keys.length), buildLabelFillsRef(m, ZTOL, T.rankOf, T.keys.length));
+  const fills = diffFills(buildLabelFills(m, ZTOL, T.rankOf, T.keys.length, false), buildLabelFillsRef(m, ZTOL, T.rankOf, T.keys.length));
   const counts = { nFills: want.nFills, windowRecords: want.stats.windowRecords, crossingRows: want.stats.crossingRows };
   return { pieces, fills, counts };
+}
+
+/** K868 S3a8a: the GPU fills' windows against the S3a7 code's. The
+ * reference at ZTOL = Infinity never splits, so it writes one 3-texel
+ * record per segment piece of each window: the GPU fills' 2-texel records
+ * must be the same pieces in the same order (count, chain and direction
+ * bit for bit), every fill instance the same apart from its window and
+ * crossing offsets, its crossing rows bit for bit, and each piece's ends
+ * as the fill shader computes them in float32 (a + (b - a) t from the
+ * tables' points, t = ta, tb) within `tol` of the reference's. */
+export function checkGpuFillsWindows(
+  m: FieldModel,
+  T: LabelTables,
+  tol = 1e-4
+): { diffs: string[]; records: number; maxPos: number } {
+  const R = buildLabelFillsRef(m, Infinity, T.rankOf, T.keys.length);
+  const G = buildLabelFills(m, 0, T.rankOf, T.keys.length, true);
+  const out: string[] = [];
+  for (const k of ["nFills", "g2Skipped", "windowRecords", "crossingRows"] as const) same(out, k, G[k], R[k]);
+  if (out.length) return { diffs: out, records: 0, maxPos: NaN };
+  const f = Math.fround;
+  const D = T.data;
+  let records = 0;
+  let maxPos = 0;
+  for (let i = 0; i < R.nFills && out.length < 8; i++) {
+    const o = i * FILL_FLOATS;
+    for (let j = 0; j < FILL_FLOATS; j++) {
+      if (j >= 12 && j <= 16) continue; // offA, cntA, offB, cntB, xOff
+      if (!Object.is(G.fills[o + j], R.fills[o + j])) out.push(`fill ${i} float ${j}: ${G.fills[o + j]} vs ${R.fills[o + j]}`);
+    }
+    const gx = G.fills[o + 16] * 4;
+    const rx = R.fills[o + 16] * 4;
+    for (let r = 0; r < R.fills[o + 17] * 4; r++) {
+      if (!Object.is(G.data[gx + r], R.data[rx + r])) {
+        out.push(`fill ${i} crossing rows float ${r}: ${G.data[gx + r]} vs ${R.data[rx + r]}`);
+        break;
+      }
+    }
+    for (const w of [12, 14]) {
+      const go = G.fills[o + w];
+      const ro = R.fills[o + w];
+      const n = R.fills[o + w + 1];
+      same(out, `fill ${i} window ${w} count`, G.fills[o + w + 1], n);
+      for (let r = 0; r < n && out.length < 8; r++) {
+        const g = (go + 2 * r) * 4;
+        const q = (ro + 3 * r) * 4;
+        const ta = G.data[g];
+        const tb = G.data[g + 1];
+        const ci = G.data[g + 2];
+        const k = G.data[g + 3];
+        same(out, `fill ${i} window ${w} record ${r} chain`, ci, R.data[q + 10]);
+        same(out, `fill ${i} window ${w} record ${r} tx`, G.data[g + 4], R.data[q + 8]);
+        same(out, `fill ${i} window ${w} record ${r} ty`, G.data[g + 5], R.data[q + 9]);
+        const pk = (D[12 * ci] + k) * 4;
+        const ax = D[pk];
+        const ay = D[pk + 1];
+        const dx = f(D[pk + 4] - ax);
+        const dy = f(D[pk + 5] - ay);
+        const e = [
+          f(ax + f(dx * ta)) - R.data[q],
+          f(ay + f(dy * ta)) - R.data[q + 1],
+          f(ax + f(dx * tb)) - R.data[q + 2],
+          f(ay + f(dy * tb)) - R.data[q + 3],
+        ];
+        for (const v of e) maxPos = Math.max(maxPos, Math.abs(v));
+        if (e.some((v) => !(Math.abs(v) <= tol))) out.push(`fill ${i} window ${w} record ${r} ends off by ${e.map((v) => v.toExponential(2)).join(", ")}`);
+        records++;
+      }
+    }
+  }
+  return { diffs: out, records, maxPos };
 }
