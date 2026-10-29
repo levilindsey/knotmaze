@@ -1,0 +1,10 @@
+muse_hash junction 32 at (1.4315, 20.7793), h 0.4, arms 0:c9/through/s11.139 1:c9/through/s11.139 2:c27/end/s0.000
+form B arms:
+  arm 97 ei 0 chain-poly 9 through dir -1 (scene -1) sR 11.139 (scene 11.139) L 0.1703 Lcut 0.1703 ang -2.3364; oracle armDir ang -2.3364
+  arm 98 ei 1 chain-poly 9 through dir 1 (scene 1) sR 11.139 (scene 11.139) L 0.6531 Lcut 0.6531 ang -0.1102; oracle armDir ang -0.1102
+  arm 99 ei 2 chain-poly 27 end dir 1 (scene 1) sR -0.278 (scene 0.000) L 1.2074 Lcut Infinity ang 2.5420; oracle armDir ang 2.5420
+form B corners:
+  98(ei 1)/99(ei 2) th 2.6522 r0 1.6000 r1 0.8907 r 0.8907 room 0.2539 V (1.6509, 21.1016) q (2.1551, 21.8828) tA (1.8543, 21.0445) tB (1.5392, 21.2394) dV 0.1042/0.6531 0.2381/1.2074 w 1.000
+oracle corners:
+  1/2 ok true th 2.6522 rule 0.8000 r 0.4383 V (1.6509, 21.1016) q (1.9106, 21.4878) tA (1.7843, 21.0681) tB (1.5863, 21.1929) sV 11.243/-0.040 noV false why undefined
+  2/0 ok true th 1.4048 rule 0.5079 r 0.1254 V (0.8930, 20.7473) q (0.7109, 20.7311) tA (0.7787, 20.8365) tB (0.8084, 20.6522) sV 0.179/10.742 noV false why undefined
