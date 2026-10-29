@@ -754,6 +754,21 @@ export class FormB {
         ramp = rp;
       }
     }
+    // A cut nearer its root than λ reaches back past the root (S1b F10): the
+    // group's arm on the root's other side fades with it, so a chain through
+    // a junction keeps one continuous ramp where its two arms meet.
+    if (g >= 0 && ramp > 0) {
+      const p = this.polys[pi];
+      const fc = this.force.cap;
+      for (const ai of this.armsOf[pi]) {
+        const a = this.arms[ai];
+        if (a.g !== g || a.Lcut === Infinity) continue;
+        let d = this.armDist(ai, s);
+        if (p.closed && d > p.len / 2) d -= p.len;
+        if (!(d < 1e-12 && d > a.Lcut - this.lambda)) continue;
+        ramp = Math.min(ramp, fc !== undefined && d < a.Lcut ? fc : ss(a.Lcut, a.Lcut - this.lambda, d));
+      }
+    }
     return { g, ramp: g < 0 ? 1 : ramp };
   }
 
@@ -921,6 +936,23 @@ export class FormB {
         if (wb > bur) {
           bur = wb;
           burBit = w < 1 ? (B.selfW < 1 ? F_FOLD : F_CAP) : 0;
+        }
+      }
+      // A corner whose two arms are one chain (the chain turns back through
+      // the junction) has one piece wherever the arms lie within σ, so no
+      // piece buries A's outline in the other arm's tube. Read that tube from
+      // the arm, with winW's ramp, so the fill's side meets a burial (S1b F9).
+      for (const ci of near) {
+        if (bur >= 1) break;
+        const c = this.corners[ci];
+        if (c.g !== S || this.arms[c.a].pi !== A.chain || this.arms[c.b].pi !== A.chain) continue;
+        const other = this.onArm(c.a, A) ? c.b : this.onArm(c.b, A) ? c.a : -1;
+        if (other < 0) continue;
+        const span = other === c.a ? Math.max(c.dVa, c.dA) : Math.max(c.dVb, c.dB);
+        const wt = 1 - ss(h - 2 * aa, h, this.footArm(other, fx, fy, 0, span + 2 * h).d);
+        if (wt > bur) {
+          bur = wt;
+          burBit = 0;
         }
       }
       // A partial fill hands the buried weight to its arc (S1b F6): the
