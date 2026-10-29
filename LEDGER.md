@@ -296,12 +296,12 @@ Next free ID: K1047.
 
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
-  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 merged (1b7fa02c); S1b running.
-  - owner: nobody since 2026-10-29 02:02 (merged; agent `a30195430cfc03d7a` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
-  - branch: mainline; last commit: `a98938c5`
-  - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; S1's and S1b's driver in `s1/`, S1's baseline in `s1/out/`, S1b's runs in `s1/out/s1b/`); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: S1c: test S1b's pops relabel (F13), count F14 over its #1 class, fix R1 and F14 as one definition change, then attribute the remaining pops (`docs/design/K1040_s1b_holes_fades.md` ## Handoff)
-  - brief: `docs/design/K1040_s1b_holes_fades.md`
+  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 and S1b merged (a98938c5); S1c running.
+  - owner: agent `ab997db66a5c71458` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, started 2026-10-29 02:05, 2 h cap ~04:05)
+  - branch: `k1040-field`, worktree `.claude/worktrees/k1040-field`; last commit: `a287fe82`
+  - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1) and `s1/out/s1b/` (S1b), S1c's runs in `s1/out/s1c/`); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
+  - next: S1c (running): fix F14 and R1 as one definition change, then a table of the pops by mechanism (the brief's Order); at its merge, decide S2 or another definition stage from that table
+  - brief: `docs/design/K1040_s1c_handoff_pops.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
