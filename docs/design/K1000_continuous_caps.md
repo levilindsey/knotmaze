@@ -146,3 +146,76 @@ K992 stage 2's `## Rules` hold, with these changes:
   - a `Ledger items` list;
   - K1000's handle fields (owner, branch, last commit, evidence, next,
     brief, env).
+
+## Findings
+
+Traced with `cut19.ts` (the cut loop's log per step, from
+`mk_cap19.mjs --mode dbg`), `ext19.ts` (each arm's extents, caps and
+spans, and the corners' feet) and `spans19.ts` (a chain's span clusters);
+all three blend a transition in K steps like `cap16.ts`.
+
+- **H1 · j116/2 (master, muse_flow t0, K16 step 4 to 5): the side, fed by
+  a holder's entry.** On crossing 225, side A's holders are j116/2 (3.58h
+  from its root, well inside its span) and j68/2, which enters as its
+  padded span reaches the pass (margin −0.0024h to +0.0018h) 10.16h from
+  its root; side B's holder is j117/0 (4.15h); all three are in one
+  cluster. `fa` is the maximum over the holders, so j68/2's entry moves it
+  from 3.58h to 10.16h, past `fb` (4.15h): `fa >= fb` flips, the cut moves
+  from side B to side A, and j116/2, a deep holder, is cut at
+  max(0, 3.577h − 3.579h) = 0 instead of keeping the next junction
+  (13.97h). Its corner goes from r 0.79h to sharp in one step. Two binary
+  choices meet: membership (a pass at margin 0 adds its whole distance to
+  `fa`) and the side (all or nothing on the sign of fa − fb); the cap is
+  discontinuous because the cut lands on an arm whose span ends far past
+  the cut.
+- **H2 · j139/2 (master, muse_drag t21, and t21 to t22): θ, not a
+  decision.** No cut decision flips on master here (side B also holds
+  j141/0, 16.6h out, so the side never moves). The pass's angle comes from
+  `pointAt`'s segment direction (`geom.ts`), constant along a segment, so
+  `near = h·cot(θ/2) + pm·h` jumps when crossing 292 slides over a
+  polyline vertex: pad 3.584h to 3.457h at t21 step 7 to 8 of 16 (cap
+  1.506h to 1.632h; r 0.344h to 0.505h, under c17f 0.296h to 0.460h), and
+  3.484h to 3.621h at step 57 to 58 of 64 (cap 1.601h to 1.463h; r 0.517h
+  to 0.399h). The brief's "cap moves to the next junction at t21 to t22"
+  is b16's and c17f's (H4), not master's.
+- **H3 · j105/1 (master, muse_drag t25): θ again.** Step 22 to 23 of 24:
+  pad 3.421h to 3.149h, j105/1's cap 1.942h to 2.218h, r 0.448h to
+  0.789h: stage 1 F8's "step 16, 1.946 to 2.225h".
+- **H4 · j139/2 (c17f, and b16, muse_drag t21 to t22, K16 step 12 to
+  13): the side at a tie, then the second visit.** On crossing 292, side
+  A's farthest holder j105/2 and side B's j139/2 are 5.085h and 5.086h
+  from the pass; fa − fb goes from −0.0016h to +0.0004h and the cut moves
+  from side B to side A (j105/2 to 1.607h, j140/1 to 1.03h). That first
+  cut splits the cluster (c105, c140), so no second visit cuts side B:
+  j139/2's cap goes from 1.612h to 2.259h (the next junction), r 0.453h to
+  1.246h. Master never reaches the tie (H2).
+- **H5 · j100/2 (c17f, muse_drag t4 to t5): the cluster test, fed from
+  outside the loop.** Not `fa >= fb`. Crossing 216 (side A: j87/0 5.14h
+  out, j100/2 3.29h; side B: j112/2 3.45h) is cut on side A (j100/2's cap
+  1.186h) only while j112 is in j100's cluster (c165); otherwise j100/2's
+  cap is crossing 348's cut, 3.823h (r 0 against 0.873h). It chatters
+  about every second step of 32 across the whole transition. The source
+  is c17f's j112 corner 1 (arms 1 and 2, r 0.406h, steady): its arm-1
+  tangent foot sits at 2.572h or 0.988h from one step to the next, and
+  only in the long state does the first part walk reach j112/1 and /2 to
+  7.65h and 7.50h, which joins the cluster. Master's j112 is steady
+  (extents 8.39h, 7.51h, 10.42h). The cut loop's binary cluster test turns
+  c17f's foot toggle into the cap jump; a continuous cluster measure
+  follows the walk, which still jumps.
+- **The spans (c17f): not the cut loop.** The largest spans events (keys
+  66 and 67, muse_drag t4) are the same tangent-foot toggle: c17f's j42
+  corner 0 (arms 0 and 1, r 1.767h, steady) puts its arm-0 foot at 6.335h
+  or 3.080h, irregularly from step to step; the extent and the first part
+  walk follow (8.65h against 3.08h) and chain 66's cluster (j40, j42,
+  j142) splits and rejoins. The caps there are the next junction
+  throughout. Inferred, not verified: c17f's δ* = h + area puts q where
+  `footInWindow` has two nearly equal nearest points on arm A. It belongs
+  to K992's corner rule (`mk_c17.mjs`), so it is left (a ledger item).
+
+The cut loop's discontinuous choices, then: membership (a margin's sign:
+H1), the side (the sign of fa − fb, a maximum over the members: H1, H4),
+the cluster test (union-find on touching spans: H4, H5), the second visit
+(whether the pass is still held after its first cut: H4), and θ from
+segment directions (H2, H3). The rest is continuous: the cut
+max(0, d − near) in d and near, and an arm's cap as the minimum of its
+cuts (which pass caps an arm switches only where two cuts are equal).
