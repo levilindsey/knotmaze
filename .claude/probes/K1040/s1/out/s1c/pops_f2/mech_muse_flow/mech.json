@@ -1,0 +1,3983 @@
+{
+ "merge": {
+  "pops": 91,
+  "px": 1179,
+  "mergedPx": 560,
+  "popsLeft": 59,
+  "pxLeft": 499,
+  "whollyMerged": 6
+ },
+ "units": {
+  "0": 857,
+  "1": 322
+ },
+ "table": {
+  "switch corner gone": {
+   "crossing60+": {
+    "pops": 1,
+    "px": 45,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 0,
+      "to": 1,
+      "at": [
+       23.085,
+       10.575
+      ],
+      "px": 45,
+      "mix": {
+       "merge": 28,
+       "winner arc>none": 6,
+       "winner tB>none": 11
+      },
+      "sw": {
+       "at": [
+        23.114,
+        10.45
+       ],
+       "t": 0.7464014221914113,
+       "jump": 1,
+       "total": 1,
+       "a": {
+        "ink": 1,
+        "top": 0,
+        "kind": 5,
+        "chain": -1,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 3
+       },
+       "b": {
+        "ink": 0,
+        "top": 0,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 2
+       },
+       "corners": "gone 11/36/34"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_flow\\crops\\muse_flow_switch-corner-gone_crossing60+_0.png"
+     }
+    ]
+   },
+   "junction": {
+    "pops": 10,
+    "px": 191,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 23,
+      "to": 24,
+      "at": [
+       23.103,
+       10.536
+      ],
+      "px": 49,
+      "mix": {
+       "merge": 26,
+       "motion arc": 1,
+       "winner arc>none": 5,
+       "winner tB>none": 17
+      },
+      "sw": {
+       "at": [
+        23.161,
+        10.403
+       ],
+       "t": 0.41256780875846744,
+       "jump": 0.894,
+       "total": 1,
+       "a": {
+        "ink": 0.8942179991905239,
+        "top": 0,
+        "kind": 5,
+        "chain": -1,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 2
+       },
+       "b": {
+        "ink": 0,
+        "top": 0,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 1
+       },
+       "corners": "gone 11/36/34"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_flow\\crops\\muse_flow_switch-corner-gone_junction_23.png"
+     }
+    ]
+   }
+  },
+  "smooth motion": {
+   "crossing60+": {
+    "pops": 7,
+    "px": 28,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 0,
+      "to": 1,
+      "at": [
+       19.053,
+       32.654
+      ],
+      "px": 4,
+      "mix": {
+       "winner foot>foot/top": 2,
+       "gate foot": 2
+      },
+      "sw": {
+       "at": [
+        19.077,
+        32.654
+       ],
+       "total": 0.927,
+       "maxStep": 0.155,
+       "fadeMid": 0
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_flow\\crops\\muse_flow_smooth-motion_crossing60+_0.png"
+     }
+    ]
+   }
+  },
+  "scene chain samples": {
+   "crossing60+": {
+    "pops": 11,
+    "px": 166,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 19,
+      "to": 20,
+      "at": [
+       23.096,
+       10.579
+      ],
+      "px": 49,
+      "mix": {
+       "merge": 28,
+       "motion arc": 1,
+       "winner arc>none": 5,
+       "winner tB>none": 15
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_flow\\crops\\muse_flow_scene-chain-samples_crossing60+_19.png"
+     }
+    ]
+   },
+   "junction": {
+    "pops": 14,
+    "px": 138,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 1,
+      "to": 2,
+      "at": [
+       4.355,
+       28.772
+      ],
+      "px": 37,
+      "mix": {
+       "merge": 27,
+       "winner arc>foot/top": 1,
+       "winner arc>foot": 3,
+       "winner none>foot": 6
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_flow\\crops\\muse_flow_scene-chain-samples_junction_1.png"
+     }
+    ]
+   }
+  },
+  "switch corner new": {
+   "junction": {
+    "pops": 13,
+    "px": 238,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 3,
+      "to": 4,
+      "at": [
+       23.095,
+       10.572
+      ],
+      "px": 48,
+      "mix": {
+       "winner none>arc": 6,
+       "merge": 27,
+       "winner none>tB": 15
+      },
+      "sw": {
+       "at": [
+        23.067,
+        10.45
+       ],
+       "t": 0.15116482647135854,
+       "jump": 1,
+       "total": 1,
+       "a": {
+        "ink": 0,
+        "top": 0,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 2
+       },
+       "b": {
+        "ink": 1,
+        "top": 0,
+        "kind": 5,
+        "chain": -1,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 3
+       },
+       "corners": "new 11/36/34"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_flow\\crops\\muse_flow_switch-corner-new_junction_3.png"
+     }
+    ]
+   },
+   "crossing60+": {
+    "pops": 2,
+    "px": 91,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 24,
+      "to": 25,
+      "at": [
+       23.085,
+       10.572
+      ],
+      "px": 46,
+      "mix": {
+       "merge": 26,
+       "motion arc": 1,
+       "winner none>arc": 3,
+       "winner none>tB": 16
+      },
+      "sw": {
+       "at": [
+        23.067,
+        10.45
+       ],
+       "t": 0.779355346923694,
+       "jump": 1,
+       "total": 1,
+       "a": {
+        "ink": 0,
+        "top": 0,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 1
+       },
+       "b": {
+        "ink": 1,
+        "top": 0,
+        "kind": 5,
+        "chain": -1,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 2
+       },
+       "corners": "new 11/36/34"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_flow\\crops\\muse_flow_switch-corner-new_crossing60+_24.png"
+     }
+    ]
+   }
+  },
+  "switch corner radius": {
+   "junction": {
+    "pops": 25,
+    "px": 212,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 18,
+      "to": 19,
+      "at": [
+       22.909,
+       17.485
+      ],
+      "px": 38,
+      "mix": {
+       "winner arc>none": 4,
+       "gate arc": 5,
+       "winner arc>none/top": 7,
+       "motion arc": 8,
+       "winner none>arc": 9,
+       "merge": 3,
+       "winner arc>tA": 1,
+       "winner arc>tA/top": 1
+      },
+      "sw": {
+       "at": [
+        22.879,
+        17.444
+       ],
+       "t": 0.3758552430663258,
+       "jump": 1,
+       "total": 1,
+       "a": {
+        "ink": 1,
+        "top": 84,
+        "kind": 5,
+        "chain": -1,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 1
+       },
+       "b": {
+        "ink": 0,
+        "top": -1,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 0,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 1
+       },
+       "corners": "radius 114/347/345 qx 22.422>22.624 qy 17.207>17.295 r 0.466>0.326 rV 0.891>0.671 dA 0.991>0.991 dB 0.966>0.907 tax 22.593>22.676 tay 17.64>17.617 tbx 22.853>22.906 tby 17.03>17.131"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_flow\\crops\\muse_flow_switch-corner-radius_junction_18.png"
+     }
+    ]
+   }
+  },
+  "switch gate surfaces none>foot": {
+   "junction": {
+    "pops": 1,
+    "px": 4,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 5,
+      "to": 6,
+      "at": [
+       26.33,
+       22.749
+      ],
+      "px": 4,
+      "mix": {
+       "winner arc>foot/top": 2,
+       "winner none>foot/top": 1,
+       "winner none>foot": 1
+      },
+      "sw": {
+       "at": [
+        26.353,
+        22.749
+       ],
+       "t": 0.49750315258279443,
+       "jump": 1,
+       "total": 1,
+       "a": {
+        "ink": 0,
+        "top": 32,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 3
+       },
+       "b": {
+        "ink": 1,
+        "top": 1048576,
+        "kind": 1,
+        "chain": 11,
+        "own": true,
+        "w": 1,
+        "nSurf": 2,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 1
+       }
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_flow\\crops\\muse_flow_switch-gate-surfaces-none-foot_junction_5.png"
+     }
+    ]
+   }
+  },
+  "scene junction arms": {
+   "junction": {
+    "pops": 1,
+    "px": 26,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 26,
+      "to": 27,
+      "at": [
+       4.098,
+       1.124
+      ],
+      "px": 26,
+      "mix": {
+       "winner foot>none": 3,
+       "merge": 19,
+       "winner foot>arc": 2,
+       "winner none>arc": 1,
+       "winner none>arc/top": 1
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_flow\\crops\\muse_flow_scene-junction-arms_junction_26.png"
+     }
+    ]
+   }
+  },
+  "switch corner root": {
+   "crossing60+": {
+    "pops": 3,
+    "px": 25,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 31,
+      "to": 32,
+      "at": [
+       34.867,
+       6.701
+      ],
+      "px": 14,
+      "mix": {
+       "merge": 11,
+       "winner arc>foot/top": 1,
+       "winner none>foot": 2
+      },
+      "sw": {
+       "at": [
+        34.944,
+        6.647
+       ],
+       "t": 0.9926785017596558,
+       "jump": 1,
+       "total": 1,
+       "a": {
+        "ink": 0,
+        "top": 11,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 2
+       },
+       "b": {
+        "ink": 1,
+        "top": 11,
+        "kind": 1,
+        "chain": 58,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 2
+       },
+       "corners": "root 13/41/42 qx 34.72>34.72 qy 6.874>6.875 rV 0.256>0.256 dA 1.263>1.264 dB 0.71>1.316 tax 34.823>34.823 tay 6.903>6.903 tbx 34.659>34.614 tby 6.786>6.894"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_flow\\crops\\muse_flow_switch-corner-root_crossing60+_31.png"
+     }
+    ]
+   }
+  },
+  "switch corner fields": {
+   "crossing60+": {
+    "pops": 3,
+    "px": 15,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 32,
+      "to": 33,
+      "at": [
+       34.717,
+       7.046
+      ],
+      "px": 6,
+      "mix": {
+       "merge": 4,
+       "winner arc>none/top": 1,
+       "gate foot": 1
+      },
+      "sw": {
+       "at": [
+        34.756,
+        7.023
+       ],
+       "t": 0.756463787634857,
+       "jump": 0.999,
+       "total": 1,
+       "a": {
+        "ink": 1,
+        "top": 11,
+        "kind": 5,
+        "chain": -1,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 2
+       },
+       "b": {
+        "ink": 0.0009257652484181896,
+        "top": -1,
+        "kind": 1,
+        "chain": 58,
+        "own": true,
+        "w": 1,
+        "nSurf": 0,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 2
+       },
+       "corners": "fields 13/41/42 dB 1.312>0.71 tbx 34.62>34.665 tby 6.89>6.783"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_flow\\crops\\muse_flow_switch-corner-fields_crossing60+_32.png"
+     }
+    ]
+   }
+  }
+ },
+ "all": [
+  {
+   "seq": "muse_flow",
+   "from": 0,
+   "to": 1,
+   "at": [
+    23.085,
+    10.575
+   ],
+   "px": 45,
+   "place": "crossing60+",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     23.114,
+     10.45
+    ],
+    "t": 0.7464014221914113,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0,
+     "top": 0,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "gone 11/36/34"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 0,
+   "to": 1,
+   "at": [
+    19.053,
+    32.654
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     19.077,
+     32.654
+    ],
+    "total": 0.927,
+    "maxStep": 0.155,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 1,
+   "to": 2,
+   "at": [
+    16.19,
+    4.746
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 1,
+   "to": 2,
+   "at": [
+    23.02,
+    6.037
+   ],
+   "px": 5,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 1,
+   "to": 2,
+   "at": [
+    4.355,
+    28.772
+   ],
+   "px": 37,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 3,
+   "to": 4,
+   "at": [
+    16.143,
+    4.699
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     16.166,
+     4.722
+    ],
+    "total": 0.245,
+    "maxStep": 0.031,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 3,
+   "to": 4,
+   "at": [
+    23.095,
+    10.572
+   ],
+   "px": 48,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     23.067,
+     10.45
+    ],
+    "t": 0.15116482647135854,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 0,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "new 11/36/34"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 3,
+   "to": 4,
+   "at": [
+    4.378,
+    28.701
+   ],
+   "px": 19,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     4.336,
+     28.711
+    ],
+    "t": 0.2838274611858651,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 16,
+     "kind": 1,
+     "chain": 5,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": 16,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "new 19/59/60"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 3,
+   "to": 4,
+   "at": [
+    4.387,
+    28.856
+   ],
+   "px": 12,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     4.43,
+     28.852
+    ],
+    "t": 0.2838274611858651,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 1,
+     "top": 16,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "new 19/59/60"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 4,
+   "to": 5,
+   "at": [
+    19.737,
+    18.43
+   ],
+   "px": 14,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 4,
+   "to": 5,
+   "at": [
+    19.862,
+    18.571
+   ],
+   "px": 18,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 4,
+   "to": 5,
+   "at": [
+    26.747,
+    23.289
+   ],
+   "px": 10,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 4,
+   "to": 5,
+   "at": [
+    26.776,
+    23.43
+   ],
+   "px": 6,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 5,
+   "to": 6,
+   "at": [
+    24.366,
+    10.082
+   ],
+   "px": 6,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     24.381,
+     10.121
+    ],
+    "t": 0.7747076426167041,
+    "jump": 0.694,
+    "total": 0.684,
+    "a": {
+     "ink": 1,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 6
+    },
+    "b": {
+     "ink": 0.3063120134298212,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 6
+    },
+    "corners": "radius 11/35/36 qx 25.123>25.395 qy 10.117>10.062 r 0.643>0.857 rV 0.839>1.117 dA 0.775>0.961 dB 0.991>0.991 tax 24.554>24.64 tay 9.817>9.655 tbx 24.759>24.808 tby 10.647>10.686"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 5,
+   "to": 6,
+   "at": [
+    24.499,
+    10.121
+   ],
+   "px": 6,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     24.522,
+     10.121
+    ],
+    "t": 0.7747076426167041,
+    "jump": 0.958,
+    "total": 0.953,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 6
+    },
+    "b": {
+     "ink": 0.9576670610678424,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 6
+    },
+    "corners": "radius 11/35/36 qx 25.123>25.395 qy 10.117>10.062 r 0.643>0.857 rV 0.839>1.117 dA 0.775>0.961 dB 0.991>0.991 tax 24.554>24.64 tay 9.817>9.655 tbx 24.759>24.808 tby 10.647>10.686"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 5,
+   "to": 6,
+   "at": [
+    24.428,
+    10.413
+   ],
+   "px": 9,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     24.428,
+     10.45
+    ],
+    "t": 0.7747076426167041,
+    "jump": 1,
+    "total": 0.999,
+    "a": {
+     "ink": 1,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 3,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 6
+    },
+    "b": {
+     "ink": 0,
+     "top": 0,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 3,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 6
+    },
+    "corners": "radius 11/35/36 qx 25.123>25.395 qy 10.117>10.062 r 0.643>0.857 rV 0.839>1.117 dA 0.775>0.961 dB 0.991>0.991 tax 24.554>24.64 tay 9.817>9.655 tbx 24.759>24.808 tby 10.647>10.686"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 5,
+   "to": 6,
+   "at": [
+    24.579,
+    10.412
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     24.569,
+     10.403
+    ],
+    "t": 0.7747076426167041,
+    "jump": 0.984,
+    "total": 0.96,
+    "a": {
+     "ink": 0.016478496656969075,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 6
+    },
+    "b": {
+     "ink": 1,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 6
+    },
+    "corners": "radius 11/35/36 qx 25.123>25.395 qy 10.117>10.062 r 0.643>0.857 rV 0.839>1.117 dA 0.775>0.961 dB 0.991>0.991 tax 24.554>24.64 tay 9.817>9.655 tbx 24.759>24.808 tby 10.647>10.686"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 5,
+   "to": 6,
+   "at": [
+    24.888,
+    10.769
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     24.898,
+     10.778
+    ],
+    "t": 0.7747076426167041,
+    "jump": 1,
+    "total": 0.998,
+    "a": {
+     "ink": 0,
+     "top": 0,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 6
+    },
+    "b": {
+     "ink": 0.9997999283412701,
+     "top": 0,
+     "kind": 3,
+     "chain": 77,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 6
+    },
+    "corners": "radius 11/35/36 qx 25.123>25.395 qy 10.117>10.062 r 0.643>0.857 rV 0.839>1.117 dA 0.775>0.961 dB 0.991>0.991 tax 24.554>24.64 tay 9.817>9.655 tbx 24.759>24.808 tby 10.647>10.686"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 5,
+   "to": 6,
+   "at": [
+    10.272,
+    17.272
+   ],
+   "px": 9,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     10.251,
+     17.257
+    ],
+    "t": 0.188864880008623,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 4
+    },
+    "b": {
+     "ink": 1,
+     "top": 54,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 5
+    },
+    "corners": "new 72/217/218"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 5,
+   "to": 6,
+   "at": [
+    10.131,
+    17.34
+   ],
+   "px": 9,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     10.11,
+     17.304
+    ],
+    "t": 0.188864880008623,
+    "jump": 0.968,
+    "total": 0.993,
+    "a": {
+     "ink": 1,
+     "top": 54,
+     "kind": 1,
+     "chain": 55,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 4
+    },
+    "b": {
+     "ink": 0.032389212622620955,
+     "top": 54,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 5
+    },
+    "corners": "new 72/217/218"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 5,
+   "to": 6,
+   "at": [
+    22.832,
+    17.411
+   ],
+   "px": 7,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     22.832,
+     17.397
+    ],
+    "t": 0.8048154215794057,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 1,
+     "top": 84,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "radius 114/347/345 qx 22.637>22.479 qy 17.31>17.243 r 0.26>0.36 rV 0.577>0.747 dA 0.942>0.943 dB 0.887>0.965 tax 22.668>22.591 tay 17.569>17.586 tbx 22.853>22.794 tby 17.165>17.068"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 5,
+   "to": 6,
+   "at": [
+    22.952,
+    17.504
+   ],
+   "px": 11,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     22.926,
+     17.538
+    ],
+    "t": 0.8048154215794057,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 84,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 3,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0.00009855432205141401,
+     "top": 84,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 3,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "radius 114/347/345 qx 22.637>22.479 qy 17.31>17.243 r 0.26>0.36 rV 0.577>0.747 dA 0.942>0.943 dB 0.887>0.965 tax 22.668>22.591 tay 17.569>17.586 tbx 22.853>22.794 tby 17.165>17.068"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 5,
+   "to": 6,
+   "at": [
+    26.33,
+    22.749
+   ],
+   "px": 4,
+   "place": "junction",
+   "top": "switch gate surfaces none>foot",
+   "sw": {
+    "at": [
+     26.353,
+     22.749
+    ],
+    "t": 0.49750315258279443,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 32,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 1,
+     "top": 1048576,
+     "kind": 1,
+     "chain": 11,
+     "own": true,
+     "w": 1,
+     "nSurf": 2,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    }
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 5,
+   "to": 6,
+   "at": [
+    26.79,
+    23.31
+   ],
+   "px": 23,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     26.776,
+     23.172
+    ],
+    "t": 0.49750315258279443,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 32,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 1,
+     "top": 32,
+     "kind": 1,
+     "chain": 63,
+     "own": false,
+     "w": 1,
+     "nSurf": 2,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "gone 37/113/114"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 7,
+   "to": 8,
+   "at": [
+    22.339,
+    2.586
+   ],
+   "px": 6,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 9,
+   "to": 10,
+   "at": [
+    32.672,
+    19.266
+   ],
+   "px": 5,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 11,
+   "to": 12,
+   "at": [
+    22.95,
+    6.06
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     22.973,
+     6.037
+    ],
+    "total": 0.207,
+    "maxStep": 0.026,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 13,
+   "to": 14,
+   "at": [
+    4.026,
+    1.068
+   ],
+   "px": 13,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     3.961,
+     1.108
+    ],
+    "t": 0.3547795668710023,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 67,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 4
+    },
+    "b": {
+     "ink": 0.9999984889282297,
+     "top": 67,
+     "kind": 1,
+     "chain": 41,
+     "own": false,
+     "w": 0.9999984889282297,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "gone 92/278/279"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 13,
+   "to": 14,
+   "at": [
+    4.111,
+    1.192
+   ],
+   "px": 10,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     4.101,
+     1.202
+    ],
+    "t": 0.3547795668710023,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 67,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "gone 92/278/279"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 13,
+   "to": 14,
+   "at": [
+    22.269,
+    2.586
+   ],
+   "px": 4,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     22.269,
+     2.563
+    ],
+    "t": 0.9454415813088417,
+    "jump": 1,
+    "total": 0.938,
+    "a": {
+     "ink": 1,
+     "top": 96,
+     "kind": 3,
+     "chain": 57,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0,
+     "top": 96,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "radius 130/393/394 qx 22.032>22.018 qy 2.528>2.604 r 0.181>0.143 r1 0.181>0.143 rV 0.41>0.333 theta 0.919>0.824 room 0.365>0.327 dA 1.116>1.086 dB 0.817>0.757 tax 21.864>21.882 tay 2.594>2.648 tbx 22.171>22.129 tby 2.643>2.694"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 13,
+   "to": 14,
+   "at": [
+    4.486,
+    28.739
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     4.524,
+     28.758
+    ],
+    "t": 0.5169772130902857,
+    "jump": 0.997,
+    "total": 0.957,
+    "a": {
+     "ink": 0.0030094842144859912,
+     "top": 16,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 1,
+     "top": 16,
+     "kind": 1,
+     "chain": 5,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "gone 19/59/60"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 13,
+   "to": 14,
+   "at": [
+    4.324,
+    28.903
+   ],
+   "px": 12,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     4.383,
+     28.899
+    ],
+    "t": 0.5169772130902857,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 16,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 1,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "gone 19/59/60"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 14,
+   "to": 15,
+   "at": [
+    24.37,
+    10.109
+   ],
+   "px": 4,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     24.381,
+     10.168
+    ],
+    "t": 0.18849853926803917,
+    "jump": 0.975,
+    "total": 0.968,
+    "a": {
+     "ink": 0.024973816022110906,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 6
+    },
+    "b": {
+     "ink": 1,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 6
+    },
+    "corners": "radius 11/35/36 qx 25.409>25.121 qy 10.07>10.125 r 0.861>0.634 rV 1.123>0.831 dA 0.96>0.773 dB 0.974>0.973 tax 24.65>24.562 tay 9.664>9.828 tbx 24.806>24.757 tby 10.685>10.643"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 14,
+   "to": 15,
+   "at": [
+    24.449,
+    10.46
+   ],
+   "px": 9,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     24.428,
+     10.403
+    ],
+    "t": 0.18849853926803917,
+    "jump": 0.998,
+    "total": 0.997,
+    "a": {
+     "ink": 0.001534124870283482,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 3,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 6
+    },
+    "b": {
+     "ink": 1,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 3,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 6
+    },
+    "corners": "radius 11/35/36 qx 25.409>25.121 qy 10.07>10.125 r 0.861>0.634 rV 1.123>0.831 dA 0.96>0.773 dB 0.974>0.973 tax 24.65>24.562 tay 9.664>9.828 tbx 24.806>24.757 tby 10.685>10.643"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 14,
+   "to": 15,
+   "at": [
+    24.579,
+    10.412
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     24.616,
+     10.45
+    ],
+    "t": 0.18849853926803917,
+    "jump": 0.962,
+    "total": 0.957,
+    "a": {
+     "ink": 0.9620033094306318,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 6
+    },
+    "b": {
+     "ink": 0,
+     "top": 0,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 6
+    },
+    "corners": "radius 11/35/36 qx 25.409>25.121 qy 10.07>10.125 r 0.861>0.634 rV 1.123>0.831 dA 0.96>0.773 dB 0.974>0.973 tax 24.65>24.562 tay 9.664>9.828 tbx 24.806>24.757 tby 10.685>10.643"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 14,
+   "to": 15,
+   "at": [
+    24.898,
+    10.745
+   ],
+   "px": 7,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     24.898,
+     10.778
+    ],
+    "t": 0.18849853926803917,
+    "jump": 0.992,
+    "total": 0.989,
+    "a": {
+     "ink": 0.9923423309652925,
+     "top": 0,
+     "kind": 3,
+     "chain": 77,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 6
+    },
+    "b": {
+     "ink": 0,
+     "top": 0,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 6
+    },
+    "corners": "radius 11/35/36 qx 25.409>25.121 qy 10.07>10.125 r 0.861>0.634 rV 1.123>0.831 dA 0.96>0.773 dB 0.974>0.973 tax 24.65>24.562 tay 9.664>9.828 tbx 24.806>24.757 tby 10.685>10.643"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 14,
+   "to": 15,
+   "at": [
+    4.533,
+    28.763
+   ],
+   "px": 10,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     4.524,
+     28.758
+    ],
+    "t": 0.253985021263361,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 16,
+     "kind": 1,
+     "chain": 5,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": 16,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "new 19/59/60"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 14,
+   "to": 15,
+   "at": [
+    4.363,
+    28.921
+   ],
+   "px": 23,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     4.383,
+     28.899
+    ],
+    "t": 0.253985021263361,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 1,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 1,
+     "top": 16,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "new 19/59/60"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 16,
+   "to": 17,
+   "at": [
+    10.261,
+    17.2
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 16,
+   "to": 17,
+   "at": [
+    10.157,
+    17.296
+   ],
+   "px": 6,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 17,
+   "to": 18,
+   "at": [
+    4.048,
+    1.058
+   ],
+   "px": 15,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     4.054,
+     1.061
+    ],
+    "t": 0.4772040821844712,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 67,
+     "kind": 1,
+     "chain": 41,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": 67,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "new 92/278/279"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 17,
+   "to": 18,
+   "at": [
+    4.133,
+    1.182
+   ],
+   "px": 12,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     4.195,
+     1.155
+    ],
+    "t": 0.4772040821844712,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0.9997922567238041,
+     "top": 67,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "new 92/278/279"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 18,
+   "to": 19,
+   "at": [
+    22.909,
+    17.485
+   ],
+   "px": 38,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     22.879,
+     17.444
+    ],
+    "t": 0.3758552430663258,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 84,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "radius 114/347/345 qx 22.422>22.624 qy 17.207>17.295 r 0.466>0.326 rV 0.891>0.671 dA 0.991>0.991 dB 0.966>0.907 tax 22.593>22.676 tay 17.64>17.617 tbx 22.853>22.906 tby 17.03>17.131"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 18,
+   "to": 19,
+   "at": [
+    26.814,
+    23.327
+   ],
+   "px": 23,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     26.823,
+     23.172
+    ],
+    "t": 0.5197520767105743,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 32,
+     "kind": 1,
+     "chain": 63,
+     "own": false,
+     "w": 1,
+     "nSurf": 2,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": 32,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "new 37/113/114"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 18,
+   "to": 19,
+   "at": [
+    11.495,
+    31.833
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     11.472,
+     31.856
+    ],
+    "total": 0.195,
+    "maxStep": 0.026,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 19,
+   "to": 20,
+   "at": [
+    23.096,
+    10.579
+   ],
+   "px": 49,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 20,
+   "to": 21,
+   "at": [
+    22.199,
+    2.633
+   ],
+   "px": 4,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     22.175,
+     2.61
+    ],
+    "t": 0.32059033296536654,
+    "jump": 0.94,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 96,
+     "kind": 3,
+     "chain": 57,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0.06028143176607981,
+     "top": 96,
+     "kind": 3,
+     "chain": 57,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "radius 130/393/394 qx 21.963>21.955 qy 2.596>2.643 r 0.146>0.123 r1 0.146>0.123 rV 0.342>0.294 theta 0.833>0.768 room 0.331>0.305 dA 1.095>1.076 dB 0.784>0.743 tax 21.825>21.837 tay 2.644>2.679 tbx 22.076>22.049 tby 2.69>2.722"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 20,
+   "to": 21,
+   "at": [
+    23.1,
+    10.56
+   ],
+   "px": 45,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     23.067,
+     10.45
+    ],
+    "t": 0.6391885102493688,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 0,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "new 11/36/34"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 20,
+   "to": 21,
+   "at": [
+    10.259,
+    17.163
+   ],
+   "px": 6,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     10.251,
+     17.163
+    ],
+    "t": 0.4124631523154676,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0.0003492239708539194,
+     "top": -1,
+     "kind": 1,
+     "chain": 55,
+     "own": false,
+     "w": 1,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 1,
+     "top": 54,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 4
+    },
+    "corners": "new 72/217/218"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 20,
+   "to": 21,
+   "at": [
+    10.144,
+    17.27
+   ],
+   "px": 7,
+   "place": "junction",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     10.11,
+     17.21
+    ],
+    "t": 0.4124631523154676,
+    "jump": 0.836,
+    "total": 0.843,
+    "a": {
+     "ink": 1,
+     "top": 54,
+     "kind": 1,
+     "chain": 55,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0.16359009359163745,
+     "top": 54,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 4
+    },
+    "corners": "new 72/217/218"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 20,
+   "to": 21,
+   "at": [
+    11.495,
+    31.833
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     11.472,
+     31.856
+    ],
+    "total": 0.333,
+    "maxStep": 0.043,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 23,
+   "to": 24,
+   "at": [
+    4.098,
+    1.12
+   ],
+   "px": 26,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     4.148,
+     1.014
+    ],
+    "t": 0.14417556626722217,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 67,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 1,
+     "top": 67,
+     "kind": 1,
+     "chain": 41,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "gone 92/278/279"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 23,
+   "to": 24,
+   "at": [
+    23.103,
+    10.536
+   ],
+   "px": 49,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     23.161,
+     10.403
+    ],
+    "t": 0.41256780875846744,
+    "jump": 0.894,
+    "total": 1,
+    "a": {
+     "ink": 0.8942179991905239,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": 0,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "gone 11/36/34"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 23,
+   "to": 24,
+   "at": [
+    23.478,
+    27.25
+   ],
+   "px": 8,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     23.536,
+     27.256
+    ],
+    "t": 0.9883875409141183,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 1,
+     "merged": true,
+     "fade": 0,
+     "nc": 4
+    },
+    "b": {
+     "ink": 1,
+     "top": 115,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": true,
+     "fade": 0,
+     "nc": 4
+    },
+    "corners": "radius 162/491/492 qx 23.487>23.528 qy 27.225>27.062 r 0.083>0.16 r1 0.083>0.163 rV 0.133>0.3 room 0.096>0.189 dA 0.565>0.77 dB 0.586>0.945 tax 23.407>23.371 tay 27.248>27.09 tbx 23.532>23.662 tby 27.294>27.151; radius 163/496/494 qx 23.699>23.579 qy 27.093>27.108 r 0>0.093 r1 0>0.093 rV 0>0.121 room 0>0.077 dA 0.373>0.464 dB 0.307>0.382 tax 23.699>23.656 tay 27.093>27.159 tbx 23.699>23.642 tby 27.093>27.04"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 23,
+   "to": 24,
+   "at": [
+    23.57,
+    27.403
+   ],
+   "px": 7,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     23.49,
+     27.397
+    ],
+    "t": 0.9883875409141183,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 115,
+     "kind": 3,
+     "chain": 78,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": true,
+     "fade": 0,
+     "nc": 4
+    },
+    "b": {
+     "ink": 0,
+     "top": 115,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 4
+    },
+    "corners": "radius 162/491/492 qx 23.487>23.528 qy 27.225>27.062 r 0.083>0.16 r1 0.083>0.163 rV 0.133>0.3 room 0.096>0.189 dA 0.565>0.77 dB 0.586>0.945 tax 23.407>23.371 tay 27.248>27.09 tbx 23.532>23.662 tby 27.294>27.151; radius 163/496/494 qx 23.699>23.579 qy 27.093>27.108 r 0>0.093 r1 0>0.093 rV 0>0.121 room 0>0.077 dA 0.373>0.464 dB 0.307>0.382 tax 23.699>23.656 tay 27.093>27.159 tbx 23.699>23.642 tby 27.093>27.04"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 24,
+   "to": 25,
+   "at": [
+    23.085,
+    10.572
+   ],
+   "px": 46,
+   "place": "crossing60+",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     23.067,
+     10.45
+    ],
+    "t": 0.779355346923694,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 0,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 1,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "new 11/36/34"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 24,
+   "to": 25,
+   "at": [
+    5.322,
+    14.604
+   ],
+   "px": 6,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     5.322,
+     14.628
+    ],
+    "t": 0.013074113638140261,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 55,
+     "kind": 4,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 4
+    },
+    "b": {
+     "ink": 0,
+     "top": 55,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 4
+    },
+    "corners": "radius 73/222/220 Vx 5.349>5.536 Vy 14.71>14.957 qx 5.342>5.351 qy 15.079>14.893 r 0.229>0.114 r1 0.229>0.607 rV 0.369>0.195 theta 1.292>1.324 room 0.303>0.779 omega 0>0.996 ov 0.296>0.001 dA 1.992>0.702 dB 0.438>0.606 tax 5.169>5.377 tay 14.93>15.004 tbx 5.531>5.443 tby 14.949>14.825"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 24,
+   "to": 25,
+   "at": [
+    22.865,
+    17.473
+   ],
+   "px": 13,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     22.832,
+     17.538
+    ],
+    "t": 0.9398525931173936,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 84,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "radius 114/347/345 qx 22.441>22.613 qy 17.227>17.306 r 0.469>0.347 rV 0.896>0.707 dA 1.012>1.012 dB 0.973>0.914 tax 22.603>22.673 tay 17.667>17.648 tbx 22.876>22.919 tby 17.053>17.144"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 24,
+   "to": 25,
+   "at": [
+    22.992,
+    17.56
+   ],
+   "px": 15,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     23.067,
+     17.397
+    ],
+    "t": 0.9398525931173936,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0.00005229416785124321,
+     "top": 84,
+     "kind": 1,
+     "chain": 49,
+     "own": true,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 1,
+     "merged": false,
+     "fade": 6,
+     "nc": 1
+    },
+    "b": {
+     "ink": 1,
+     "top": 84,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "radius 114/347/345 qx 22.441>22.613 qy 17.227>17.306 r 0.469>0.347 rV 0.896>0.707 dA 1.012>1.012 dB 0.973>0.914 tax 22.603>22.673 tay 17.667>17.648 tbx 22.876>22.919 tby 17.053>17.144"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 25,
+   "to": 26,
+   "at": [
+    10.12,
+    17.247
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     10.157,
+     17.304
+    ],
+    "t": 0.2765729072270915,
+    "jump": 0.83,
+    "total": 0.855,
+    "a": {
+     "ink": 0,
+     "top": 54,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 4
+    },
+    "b": {
+     "ink": 0.8299931021232735,
+     "top": 54,
+     "kind": 1,
+     "chain": 55,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "gone 72/217/218"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 26,
+   "to": 27,
+   "at": [
+    4.098,
+    1.124
+   ],
+   "px": 26,
+   "place": "junction",
+   "top": "scene junction arms"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 27,
+   "to": 28,
+   "at": [
+    24.804,
+    10.731
+   ],
+   "px": 7,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 28,
+   "to": 29,
+   "at": [
+    23.086,
+    10.57
+   ],
+   "px": 43,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     23.067,
+     10.45
+    ],
+    "t": 0.2908751955255866,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": 0,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "gone 11/36/34"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 28,
+   "to": 29,
+   "at": [
+    26.787,
+    23.354
+   ],
+   "px": 17,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     26.823,
+     23.406
+    ],
+    "t": 0.23551854770630598,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 32,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "radius 37/113/114 qx 26.85>26.826 qy 23.732>23.518 r 0.294>0.143 r1 0.294>0.143 rV 0.416>0.201 room 0.292>0.142 dA 0.635>0.501 dB 0.805>0.579 tax 27.03>26.917 tay 23.5>23.407 tbx 26.607>26.717 tby 23.567>23.425"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 29,
+   "to": 30,
+   "at": [
+    23.063,
+    10.608
+   ],
+   "px": 45,
+   "place": "crossing60+",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     23.161,
+     10.45
+    ],
+    "t": 0.9752701432444155,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 0,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 3,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 1,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 3,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "new 11/36/34"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 29,
+   "to": 30,
+   "at": [
+    23.499,
+    27.275
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     23.443,
+     27.256
+    ],
+    "t": 0.8971481580520049,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 5
+    },
+    "b": {
+     "ink": 1,
+     "top": 115,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 5
+    },
+    "corners": "radius 162/491/492 qx 23.474>23.522 qy 27.252>27.087 r 0.068>0.149 r1 0.068>0.149 rV 0.109>0.28 room 0.08>0.176 dA 0.558>0.746 dB 0.577>0.924 tax 23.409>23.375 tay 27.269>27.114 tbx 23.511>23.644 tby 27.308>27.173; radius 163/496/494 qx 23.691>23.602 qy 27.102>27.111 r 0>0.069 r1 0>0.069 rV 0>0.09 room 0>0.058 dA 0.37>0.441 dB 0.31>0.36 tax 23.691>23.659 tay 27.102>27.151 tbx 23.691>23.651 tby 27.102>27.062"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 29,
+   "to": 30,
+   "at": [
+    23.546,
+    27.415
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     23.583,
+     27.397
+    ],
+    "t": 0.8971481580520049,
+    "jump": 0.908,
+    "total": 0.886,
+    "a": {
+     "ink": 1,
+     "top": 115,
+     "kind": 1,
+     "chain": 78,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": true,
+     "fade": 0,
+     "nc": 5
+    },
+    "b": {
+     "ink": 0.09159020345126845,
+     "top": 115,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 5
+    },
+    "corners": "radius 162/491/492 qx 23.474>23.522 qy 27.252>27.087 r 0.068>0.149 r1 0.068>0.149 rV 0.109>0.28 room 0.08>0.176 dA 0.558>0.746 dB 0.577>0.924 tax 23.409>23.375 tay 27.269>27.114 tbx 23.511>23.644 tby 27.308>27.173; radius 163/496/494 qx 23.691>23.602 qy 27.102>27.111 r 0>0.069 r1 0>0.069 rV 0>0.09 room 0>0.058 dA 0.37>0.441 dB 0.31>0.36 tax 23.691>23.659 tay 27.102>27.151 tbx 23.691>23.651 tby 27.102>27.062"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 31,
+   "to": 32,
+   "at": [
+    34.733,
+    6.577
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     34.756,
+     6.6
+    ],
+    "t": 0.9926785017596558,
+    "jump": 0.952,
+    "total": 0.987,
+    "a": {
+     "ink": 0.04841161385311932,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 11,
+     "kind": 1,
+     "chain": 4,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "root 13/41/42 qx 34.72>34.72 qy 6.874>6.875 rV 0.256>0.256 dA 1.263>1.264 dB 0.71>1.316 tax 34.823>34.823 tay 6.903>6.903 tbx 34.659>34.614 tby 6.786>6.894"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 31,
+   "to": 32,
+   "at": [
+    34.867,
+    6.701
+   ],
+   "px": 14,
+   "place": "crossing60+",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     34.944,
+     6.647
+    ],
+    "t": 0.9926785017596558,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 11,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 11,
+     "kind": 1,
+     "chain": 58,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "root 13/41/42 qx 34.72>34.72 qy 6.874>6.875 rV 0.256>0.256 dA 1.263>1.264 dB 0.71>1.316 tax 34.823>34.823 tay 6.903>6.903 tbx 34.659>34.614 tby 6.786>6.894"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 31,
+   "to": 32,
+   "at": [
+    34.709,
+    7.043
+   ],
+   "px": 7,
+   "place": "crossing60+",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     34.709,
+     7.023
+    ],
+    "t": 0.9926785017596558,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "root 13/41/42 qx 34.72>34.72 qy 6.874>6.875 rV 0.256>0.256 dA 1.263>1.264 dB 0.71>1.316 tax 34.823>34.823 tay 6.903>6.903 tbx 34.659>34.614 tby 6.786>6.894"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 31,
+   "to": 32,
+   "at": [
+    19.757,
+    18.477
+   ],
+   "px": 6,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     19.781,
+     18.43
+    ],
+    "t": 0.15088543039746583,
+    "jump": 0.961,
+    "total": 0.965,
+    "a": {
+     "ink": 0.03885720119795888,
+     "top": 83,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 83,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "radius 113/343/344 qx 20.636>20.409 qy 18.738>18.701 r 0.739>0.567 r1 0.739>0.567 rV 1.022>0.793 room 0.754>0.579 dA 1.233>1.153 dB 1.073>0.977 tax 20.147>20.063 tay 18.185>18.252 tbx 20.004>19.941 tby 19.12>19.021"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 31,
+   "to": 32,
+   "at": [
+    19.898,
+    18.548
+   ],
+   "px": 4,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     19.875,
+     18.571
+    ],
+    "t": 0.15088543039746583,
+    "jump": 0.947,
+    "total": 0.898,
+    "a": {
+     "ink": 1,
+     "top": 83,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0.05252200650790327,
+     "top": -1,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 0,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "radius 113/343/344 qx 20.636>20.409 qy 18.738>18.701 r 0.739>0.567 r1 0.739>0.567 rV 1.022>0.793 room 0.754>0.579 dA 1.233>1.153 dB 1.073>0.977 tax 20.147>20.063 tay 18.185>18.252 tbx 20.004>19.941 tby 19.12>19.021"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 31,
+   "to": 32,
+   "at": [
+    19.71,
+    18.665
+   ],
+   "px": 6,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     19.734,
+     18.618
+    ],
+    "t": 0.15088543039746583,
+    "jump": 0.975,
+    "total": 0.977,
+    "a": {
+     "ink": 0.025123024459556054,
+     "top": 83,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 83,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "radius 113/343/344 qx 20.636>20.409 qy 18.738>18.701 r 0.739>0.567 r1 0.739>0.567 rV 1.022>0.793 room 0.754>0.579 dA 1.233>1.153 dB 1.073>0.977 tax 20.147>20.063 tay 18.185>18.252 tbx 20.004>19.941 tby 19.12>19.021"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 32,
+   "to": 33,
+   "at": [
+    34.733,
+    6.577
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "switch corner fields",
+   "sw": {
+    "at": [
+     34.756,
+     6.6
+    ],
+    "t": 0.016440987354144454,
+    "jump": 0.952,
+    "total": 0.861,
+    "a": {
+     "ink": 1,
+     "top": 11,
+     "kind": 1,
+     "chain": 4,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0.048380195427965345,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "fields 13/41/42 dB 1.315>0.71 tbx 34.614>34.659 tby 6.894>6.786"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 32,
+   "to": 33,
+   "at": [
+    34.935,
+    6.628
+   ],
+   "px": 5,
+   "place": "crossing60+",
+   "top": "switch corner fields",
+   "sw": {
+    "at": [
+     34.944,
+     6.647
+    ],
+    "t": 0.016440987354144454,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 11,
+     "kind": 1,
+     "chain": 58,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": 11,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "fields 13/41/42 dB 1.315>0.71 tbx 34.614>34.659 tby 6.894>6.786"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 32,
+   "to": 33,
+   "at": [
+    34.717,
+    7.046
+   ],
+   "px": 6,
+   "place": "crossing60+",
+   "top": "switch corner fields",
+   "sw": {
+    "at": [
+     34.756,
+     7.023
+    ],
+    "t": 0.756463787634857,
+    "jump": 0.999,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0.0009257652484181896,
+     "top": -1,
+     "kind": 1,
+     "chain": 58,
+     "own": true,
+     "w": 1,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "fields 13/41/42 dB 1.312>0.71 tbx 34.62>34.665 tby 6.89>6.783"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 32,
+   "to": 33,
+   "at": [
+    22.997,
+    23.758
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     22.926,
+     23.829
+    ],
+    "total": 0.414,
+    "maxStep": 0.059,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 32,
+   "to": 33,
+   "at": [
+    25.029,
+    26.711
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     25.039,
+     26.692
+    ],
+    "t": 0.23887111712247133,
+    "jump": 0.967,
+    "total": 0.979,
+    "a": {
+     "ink": 0.03297032325333282,
+     "top": 115,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 1,
+     "top": 115,
+     "kind": 1,
+     "chain": 75,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "gone 163/494/495"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 34,
+   "to": 35,
+   "at": [
+    23.07,
+    10.622
+   ],
+   "px": 37,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 37,
+   "to": 38,
+   "at": [
+    24.393,
+    10.156
+   ],
+   "px": 4,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 37,
+   "to": 38,
+   "at": [
+    24.321,
+    10.483
+   ],
+   "px": 7,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 37,
+   "to": 38,
+   "at": [
+    24.452,
+    10.45
+   ],
+   "px": 4,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 37,
+   "to": 38,
+   "at": [
+    23.045,
+    10.661
+   ],
+   "px": 41,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 37,
+   "to": 38,
+   "at": [
+    24.762,
+    10.71
+   ],
+   "px": 9,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 37,
+   "to": 38,
+   "at": [
+    20.325,
+    24.646
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 37,
+   "to": 38,
+   "at": [
+    20.462,
+    24.721
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 38,
+   "to": 39,
+   "at": [
+    22.292,
+    10.849
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     22.316,
+     10.872
+    ],
+    "total": 0.329,
+    "maxStep": 0.043,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 39,
+   "to": 40,
+   "at": [
+    34.775,
+    6.563
+   ],
+   "px": 5,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 39,
+   "to": 40,
+   "at": [
+    34.967,
+    6.624
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 39,
+   "to": 40,
+   "at": [
+    34.827,
+    6.718
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 39,
+   "to": 40,
+   "at": [
+    34.733,
+    7.017
+   ],
+   "px": 8,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  }
+ ],
+ "lines": [
+  "muse_flow: by mechanism {\"switch corner gone\":11,\"smooth motion\":7,\"scene chain samples\":25,\"switch corner new\":15,\"switch corner radius\":25,\"switch gate surfaces none>foot\":1,\"scene junction arms\":1,\"switch corner root\":3,\"switch corner fields\":3}"
+ ]
+}

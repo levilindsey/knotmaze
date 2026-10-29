@@ -1,0 +1,1406 @@
+{
+ "merge": {
+  "pops": 28,
+  "px": 310,
+  "mergedPx": 141,
+  "popsLeft": 13,
+  "pxLeft": 133,
+  "whollyMerged": 0
+ },
+ "units": {
+  "0": 218,
+  "1": 83,
+  "2": 9
+ },
+ "table": {
+  "smooth fade omega": {
+   "junction": {
+    "pops": 2,
+    "px": 23,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 0,
+      "to": 1,
+      "at": [
+       18.903,
+       18.337
+      ],
+      "px": 17,
+      "mix": {
+       "merge": 6,
+       "winner V>none": 7,
+       "winner foot>none": 4
+      },
+      "sw": {
+       "at": [
+        18.983,
+        18.243
+       ],
+       "total": 1,
+       "maxStep": 0.728,
+       "fadeMid": 8
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_drag\\crops\\muse_drag_smooth-fade-omega_junction_0.png"
+     }
+    ]
+   }
+  },
+  "smooth motion": {
+   "crossing60+": {
+    "pops": 1,
+    "px": 4,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 1,
+      "to": 2,
+      "at": [
+       19.335,
+       15.027
+      ],
+      "px": 4,
+      "mix": {
+       "gate foot": 1,
+       "winner foot>foot/top": 3
+      },
+      "sw": {
+       "at": [
+        19.358,
+        15.003
+       ],
+       "total": 0.943,
+       "maxStep": 0.23,
+       "fadeMid": 0
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_drag\\crops\\muse_drag_smooth-motion_crossing60+_1.png"
+     }
+    ]
+   },
+   "elsewhere": {
+    "pops": 2,
+    "px": 10,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 26,
+      "to": 27,
+      "at": [
+       16.017,
+       19.534
+      ],
+      "px": 6,
+      "mix": {
+       "merge": 4,
+       "winner foot>foot/top": 2
+      },
+      "sw": {
+       "at": [
+        15.931,
+        19.416
+       ],
+       "total": 0.962,
+       "maxStep": 0.173,
+       "fadeMid": 0
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_drag\\crops\\muse_drag_smooth-motion_elsewhere_26.png"
+     }
+    ]
+   }
+  },
+  "switch corner radius": {
+   "junction": {
+    "pops": 3,
+    "px": 19,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 1,
+      "to": 2,
+      "at": [
+       22.952,
+       17.528
+      ],
+      "px": 9,
+      "mix": {
+       "motion arc": 4,
+       "merge": 3,
+       "winner none>arc": 2
+      },
+      "sw": {
+       "at": [
+        22.926,
+        17.585
+       ],
+       "t": 0.7916284276871011,
+       "jump": 0.965,
+       "total": 0.959,
+       "a": {
+        "ink": 0.03485916979974901,
+        "top": 84,
+        "kind": 5,
+        "chain": -1,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 3,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 1
+       },
+       "b": {
+        "ink": 1,
+        "top": 84,
+        "kind": 5,
+        "chain": -1,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 3,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 1
+       },
+       "corners": "radius 114/347/345 qx 22.553>22.664 qy 17.263>17.316 r 0.323>0.252 rV 0.693>0.571 dA 0.947>0.947 dB 0.922>0.863 tax 22.63>22.687 tay 17.577>17.567 tbx 22.842>22.882 tby 17.118>17.189"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_drag\\crops\\muse_drag_switch-corner-radius_junction_1.png"
+     }
+    ]
+   }
+  },
+  "scene chain samples": {
+   "junction": {
+    "pops": 3,
+    "px": 24,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 35,
+      "to": 36,
+      "at": [
+       22.993,
+       17.554
+      ],
+      "px": 12,
+      "mix": {
+       "motion arc": 5,
+       "merge": 4,
+       "winner arc>none": 3
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_drag\\crops\\muse_drag_scene-chain-samples_junction_35.png"
+     }
+    ]
+   },
+   "crossing60+": {
+    "pops": 4,
+    "px": 39,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 17,
+      "to": 18,
+      "at": [
+       34.825,
+       6.578
+      ],
+      "px": 15,
+      "mix": {
+       "merge": 3,
+       "winner foot>none": 11,
+       "winner foot>arc": 1
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_drag\\crops\\muse_drag_scene-chain-samples_crossing60+_17.png"
+     }
+    ]
+   }
+  },
+  "switch corner root": {
+   "crossing60+": {
+    "pops": 9,
+    "px": 100,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 10,
+      "to": 11,
+      "at": [
+       34.806,
+       6.578
+      ],
+      "px": 17,
+      "mix": {
+       "merge": 5,
+       "winner none>foot": 11,
+       "winner arc>foot": 1
+      },
+      "sw": {
+       "at": [
+        34.756,
+        6.553
+       ],
+       "t": 0.6419239948736504,
+       "jump": 1,
+       "total": 1,
+       "a": {
+        "ink": 0,
+        "top": 11,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 3
+       },
+       "b": {
+        "ink": 1,
+        "top": 11,
+        "kind": 1,
+        "chain": 4,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 3
+       },
+       "corners": "root 13/41/42 qx 34.672>34.672 qy 6.861>6.861 rV 0.29>0.291 dA 1.34>1.341 dB 0.779>1.277 tax 34.772>34.771 tay 6.9>6.9 tbx 34.613>34.565 tby 6.771>6.858"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_drag\\crops\\muse_drag_switch-corner-root_crossing60+_10.png"
+     }
+    ]
+   }
+  },
+  "switch corner gone": {
+   "crossing60+": {
+    "pops": 1,
+    "px": 43,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 13,
+      "to": 14,
+      "at": [
+       23.052,
+       10.686
+      ],
+      "px": 43,
+      "mix": {
+       "merge": 25,
+       "winner arc>none": 5,
+       "winner tB>none": 12,
+       "winner tB>foot": 1
+      },
+      "sw": {
+       "at": [
+        23.161,
+        10.591
+       ],
+       "t": 0.322288244147785,
+       "jump": 1,
+       "total": 1,
+       "a": {
+        "ink": 1,
+        "top": 0,
+        "kind": 5,
+        "chain": -1,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 3
+       },
+       "b": {
+        "ink": 0,
+        "top": 0,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 2
+       },
+       "corners": "gone 11/36/34"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_drag\\crops\\muse_drag_switch-corner-gone_crossing60+_13.png"
+     }
+    ]
+   }
+  },
+  "smooth fade tie": {
+   "junction": {
+    "pops": 1,
+    "px": 4,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 22,
+      "to": 23,
+      "at": [
+       19.241,
+       18.595
+      ],
+      "px": 4,
+      "mix": {
+       "gate foot": 2,
+       "gate arc": 1,
+       "merge": 1
+      },
+      "sw": {
+       "at": [
+        19.171,
+        18.618
+       ],
+       "total": 0.5,
+       "maxStep": 0.068,
+       "fadeMid": 4
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_drag\\crops\\muse_drag_smooth-fade-tie_junction_22.png"
+     }
+    ]
+   },
+   "crossing60+": {
+    "pops": 1,
+    "px": 4,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 31,
+      "to": 32,
+      "at": [
+       25.203,
+       19.44
+      ],
+      "px": 4,
+      "mix": {
+       "merge": 3,
+       "winner foot>foot": 1
+      },
+      "sw": {
+       "at": [
+        25.133,
+        19.51
+       ],
+       "total": 0.396,
+       "maxStep": 0.057,
+       "fadeMid": 4
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_drag\\crops\\muse_drag_smooth-fade-tie_crossing60+_31.png"
+     }
+    ]
+   }
+  },
+  "switch corner new": {
+   "crossing60+": {
+    "pops": 1,
+    "px": 40,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 24,
+      "to": 25,
+      "at": [
+       23.045,
+       10.679
+      ],
+      "px": 40,
+      "mix": {
+       "merge": 20,
+       "winner none>arc": 6,
+       "winner none>tB": 14
+      },
+      "sw": {
+       "at": [
+        23.067,
+        10.544
+       ],
+       "t": 0.14259660232346505,
+       "jump": 1,
+       "total": 1,
+       "a": {
+        "ink": 0,
+        "top": 0,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 2
+       },
+       "b": {
+        "ink": 1,
+        "top": 0,
+        "kind": 5,
+        "chain": -1,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 3
+       },
+       "corners": "new 11/36/34"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f2\\mech_muse_drag\\crops\\muse_drag_switch-corner-new_crossing60+_24.png"
+     }
+    ]
+   }
+  }
+ },
+ "all": [
+  {
+   "seq": "muse_drag",
+   "from": 0,
+   "to": 1,
+   "at": [
+    18.842,
+    18.118
+   ],
+   "px": 6,
+   "place": "junction",
+   "top": "smooth fade omega",
+   "sw": {
+    "at": [
+     18.842,
+     18.149
+    ],
+    "total": 1,
+    "maxStep": 0.75,
+    "fadeMid": 8
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 0,
+   "to": 1,
+   "at": [
+    18.903,
+    18.337
+   ],
+   "px": 17,
+   "place": "junction",
+   "top": "smooth fade omega",
+   "sw": {
+    "at": [
+     18.983,
+     18.243
+    ],
+    "total": 1,
+    "maxStep": 0.728,
+    "fadeMid": 8
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 1,
+   "to": 2,
+   "at": [
+    19.335,
+    15.027
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     19.358,
+     15.003
+    ],
+    "total": 0.943,
+    "maxStep": 0.23,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 1,
+   "to": 2,
+   "at": [
+    22.851,
+    17.435
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     22.832,
+     17.445
+    ],
+    "t": 0.7916284276871011,
+    "jump": 0.804,
+    "total": 1,
+    "a": {
+     "ink": 0.8037500638752633,
+     "top": 84,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 3,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 3,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "radius 114/347/345 qx 22.553>22.664 qy 17.263>17.316 r 0.323>0.252 rV 0.693>0.571 dA 0.947>0.947 dB 0.922>0.863 tax 22.63>22.687 tay 17.577>17.567 tbx 22.842>22.882 tby 17.118>17.189"
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 1,
+   "to": 2,
+   "at": [
+    22.952,
+    17.528
+   ],
+   "px": 9,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     22.926,
+     17.585
+    ],
+    "t": 0.7916284276871011,
+    "jump": 0.965,
+    "total": 0.959,
+    "a": {
+     "ink": 0.03485916979974901,
+     "top": 84,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 3,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 1,
+     "top": 84,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 3,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "radius 114/347/345 qx 22.553>22.664 qy 17.263>17.316 r 0.323>0.252 rV 0.693>0.571 dA 0.947>0.947 dB 0.922>0.863 tax 22.63>22.687 tay 17.577>17.567 tbx 22.842>22.882 tby 17.118>17.189"
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 4,
+   "to": 5,
+   "at": [
+    23.405,
+    27.275
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_drag",
+   "from": 10,
+   "to": 11,
+   "at": [
+    34.806,
+    6.578
+   ],
+   "px": 17,
+   "place": "crossing60+",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     34.756,
+     6.553
+    ],
+    "t": 0.6419239948736504,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 11,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 1,
+     "top": 11,
+     "kind": 1,
+     "chain": 4,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "root 13/41/42 qx 34.672>34.672 qy 6.861>6.861 rV 0.29>0.291 dA 1.34>1.341 dB 0.779>1.277 tax 34.772>34.771 tay 6.9>6.9 tbx 34.613>34.565 tby 6.771>6.858"
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 10,
+   "to": 11,
+   "at": [
+    34.762,
+    6.735
+   ],
+   "px": 8,
+   "place": "crossing60+",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     34.756,
+     6.741
+    ],
+    "t": 0.6419239948736504,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 1,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "root 13/41/42 qx 34.672>34.672 qy 6.861>6.861 rV 0.29>0.291 dA 1.34>1.341 dB 0.779>1.277 tax 34.772>34.771 tay 6.9>6.9 tbx 34.613>34.565 tby 6.771>6.858"
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 10,
+   "to": 11,
+   "at": [
+    34.631,
+    7.033
+   ],
+   "px": 9,
+   "place": "crossing60+",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     34.663,
+     7.023
+    ],
+    "t": 0.6419239948736504,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 1,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "root 13/41/42 qx 34.672>34.672 qy 6.861>6.861 rV 0.29>0.291 dA 1.34>1.341 dB 0.779>1.277 tax 34.772>34.771 tay 6.9>6.9 tbx 34.613>34.565 tby 6.771>6.858"
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 11,
+   "to": 12,
+   "at": [
+    34.806,
+    6.578
+   ],
+   "px": 17,
+   "place": "crossing60+",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     34.756,
+     6.553
+    ],
+    "t": 0.1653817598707974,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 11,
+     "kind": 1,
+     "chain": 4,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0,
+     "top": 11,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "root 13/41/42 qx 34.672>34.672 qy 6.861>6.86 rV 0.291>0.29 dA 1.341>1.34 dB 1.277>0.779 tax 34.771>34.772 tay 6.9>6.9 tbx 34.565>34.613 tby 6.858>6.771"
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 11,
+   "to": 12,
+   "at": [
+    34.762,
+    6.735
+   ],
+   "px": 8,
+   "place": "crossing60+",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     34.756,
+     6.741
+    ],
+    "t": 0.1653817598707974,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 1,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 1,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "root 13/41/42 qx 34.672>34.672 qy 6.861>6.86 rV 0.291>0.29 dA 1.341>1.34 dB 1.277>0.779 tax 34.771>34.772 tay 6.9>6.9 tbx 34.565>34.613 tby 6.858>6.771"
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 11,
+   "to": 12,
+   "at": [
+    34.631,
+    7.033
+   ],
+   "px": 9,
+   "place": "crossing60+",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     34.663,
+     7.023
+    ],
+    "t": 0.1653817598707974,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "root 13/41/42 qx 34.672>34.672 qy 6.861>6.86 rV 0.291>0.29 dA 1.341>1.34 dB 1.277>0.779 tax 34.771>34.772 tay 6.9>6.9 tbx 34.565>34.613 tby 6.858>6.771"
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 13,
+   "to": 14,
+   "at": [
+    23.052,
+    10.686
+   ],
+   "px": 43,
+   "place": "crossing60+",
+   "top": "switch corner gone",
+   "sw": {
+    "at": [
+     23.161,
+     10.591
+    ],
+    "t": 0.322288244147785,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0,
+     "top": 0,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "gone 11/36/34"
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 16,
+   "to": 17,
+   "at": [
+    34.825,
+    6.578
+   ],
+   "px": 15,
+   "place": "crossing60+",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     34.756,
+     6.553
+    ],
+    "t": 0.20645494852215052,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 11,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 1,
+     "top": 11,
+     "kind": 1,
+     "chain": 4,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "root 13/41/42 qx 34.673>34.672 qy 6.859>6.86 rV 0.29>0.291 dA 1.34>1.341 dB 0.779>1.277 tax 34.772>34.772 tay 6.898>6.899 tbx 34.614>34.565 tby 6.769>6.856"
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 16,
+   "to": 17,
+   "at": [
+    34.762,
+    6.735
+   ],
+   "px": 8,
+   "place": "crossing60+",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     34.756,
+     6.741
+    ],
+    "t": 0.20645494852215052,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 1,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "root 13/41/42 qx 34.673>34.672 qy 6.859>6.86 rV 0.29>0.291 dA 1.34>1.341 dB 0.779>1.277 tax 34.772>34.772 tay 6.898>6.899 tbx 34.614>34.565 tby 6.769>6.856"
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 16,
+   "to": 17,
+   "at": [
+    34.631,
+    7.033
+   ],
+   "px": 9,
+   "place": "crossing60+",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     34.663,
+     7.023
+    ],
+    "t": 0.20645494852215052,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 1,
+     "top": 11,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "root 13/41/42 qx 34.673>34.672 qy 6.859>6.86 rV 0.29>0.291 dA 1.34>1.341 dB 0.779>1.277 tax 34.772>34.772 tay 6.898>6.899 tbx 34.614>34.565 tby 6.769>6.856"
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 17,
+   "to": 18,
+   "at": [
+    34.825,
+    6.578
+   ],
+   "px": 15,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_drag",
+   "from": 17,
+   "to": 18,
+   "at": [
+    34.762,
+    6.735
+   ],
+   "px": 8,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_drag",
+   "from": 17,
+   "to": 18,
+   "at": [
+    34.631,
+    7.033
+   ],
+   "px": 9,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_drag",
+   "from": 22,
+   "to": 23,
+   "at": [
+    19.241,
+    18.595
+   ],
+   "px": 4,
+   "place": "junction",
+   "top": "smooth fade tie",
+   "sw": {
+    "at": [
+     19.171,
+     18.618
+    ],
+    "total": 0.5,
+    "maxStep": 0.068,
+    "fadeMid": 4
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 24,
+   "to": 25,
+   "at": [
+    23.045,
+    10.679
+   ],
+   "px": 40,
+   "place": "crossing60+",
+   "top": "switch corner new",
+   "sw": {
+    "at": [
+     23.067,
+     10.544
+    ],
+    "t": 0.14259660232346505,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 0,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 0,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "new 11/36/34"
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 26,
+   "to": 27,
+   "at": [
+    16.017,
+    19.534
+   ],
+   "px": 6,
+   "place": "elsewhere",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     15.931,
+     19.416
+    ],
+    "total": 0.962,
+    "maxStep": 0.173,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 28,
+   "to": 29,
+   "at": [
+    16.096,
+    19.581
+   ],
+   "px": 4,
+   "place": "elsewhere",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     16.072,
+     19.557
+    ],
+    "total": 0.276,
+    "maxStep": 0.039,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 30,
+   "to": 31,
+   "at": [
+    25.18,
+    19.457
+   ],
+   "px": 7,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_drag",
+   "from": 31,
+   "to": 32,
+   "at": [
+    25.203,
+    19.44
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth fade tie",
+   "sw": {
+    "at": [
+     25.133,
+     19.51
+    ],
+    "total": 0.396,
+    "maxStep": 0.057,
+    "fadeMid": 4
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 31,
+   "to": 32,
+   "at": [
+    23.48,
+    27.425
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     23.443,
+     27.444
+    ],
+    "t": 0.3220875516999513,
+    "jump": 0.889,
+    "total": 0.839,
+    "a": {
+     "ink": 1,
+     "top": 115,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 1,
+     "merged": false,
+     "fade": 0,
+     "nc": 4
+    },
+    "b": {
+     "ink": 0.11080274473998952,
+     "top": 115,
+     "kind": 2,
+     "chain": 78,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 4
+    },
+    "corners": "radius 162/491/492 qx 23.441>23.477 qy 27.189>27.04 r 0.129>0.204 r1 0.129>0.226 rV 0.184>0.336 room 0.123>0.216 dA 0.54>0.728 dB 0.539>0.954 tax 23.32>23.278 tay 27.232>27.089 tbx 23.5>23.646 tby 27.304>27.155; radius 163/496/494 qx 23.596>23.445 qy 27.167>27.172 r 0.034>0.142 r1 0.034>0.142 rV 0.045>0.196 room 0.029>0.122 dA 0.42>0.748 dB 0.342>0.446 tax 23.624>23.516 tay 27.186>27.295 tbx 23.619>23.543 tby 27.142>27.069"
+   }
+  },
+  {
+   "seq": "muse_drag",
+   "from": 35,
+   "to": 36,
+   "at": [
+    22.879,
+    17.458
+   ],
+   "px": 7,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_drag",
+   "from": 35,
+   "to": 36,
+   "at": [
+    22.993,
+    17.554
+   ],
+   "px": 12,
+   "place": "junction",
+   "top": "scene chain samples"
+  }
+ ],
+ "lines": [
+  "muse_drag: by mechanism {\"smooth fade omega\":2,\"smooth motion\":3,\"switch corner radius\":3,\"scene chain samples\":7,\"switch corner root\":9,\"switch corner gone\":1,\"smooth fade tie\":2,\"switch corner new\":1}"
+ ]
+}

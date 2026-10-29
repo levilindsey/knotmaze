@@ -1,0 +1,9 @@
+def_drag: by mechanism {"switch corner gone":5,"switch corner root":6,"switch corner radius":2,"switch corner new":8}
+merge (S1's f1): 323 of 771 pop px merged in either frame; 1 of 21 pops wholly merged; with the merged px excused 19 pops (398 px) remain
+ramp units at the pop px (max of the two frames): {"0":771}
+mechanism | place | pops | px | worst (seq from>to at px)
+switch corner root | junction | 6 | 385 | def_drag 1>2 (11.064, 4.897) 99 px
+switch corner new | junction | 8 | 209 | def_drag 24>25 (25.19, 8.95) 41 px
+switch corner gone | junction | 5 | 157 | def_drag 22>23 (25.186, 8.947) 39 px
+switch corner radius | junction | 2 | 20 | def_drag 0>1 (33.188, 7.319) 10 px
+sweep: 798 interpolated scenes built in 29 s (NC 8, LEV 30, jump > 0.02)
