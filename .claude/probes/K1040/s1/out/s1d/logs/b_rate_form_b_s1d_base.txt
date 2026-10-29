@@ -1,0 +1,6 @@
+g41_ring_tw42: 12 sites, 0 s
+user_tw42.lightpaper: 12 sites, 0 s
+g41_user_tw42: 12 sites, 1 s
+b_rate: R 3 px, step 0.125 px, LIM 3/px, jump > 0.02 at 1/1024 px; params {}
+totals by class (grid edges):
+sites 36, with breaches 0

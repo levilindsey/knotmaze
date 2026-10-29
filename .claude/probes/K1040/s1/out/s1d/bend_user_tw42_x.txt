@@ -1,0 +1,54 @@
+base:
+  u -0.03000 ink 0.000 top 25 fade 0 term none
+  u -0.02571 ink 0.000 top 25 fade 0 term none
+  u -0.02143 ink 0.000 top 25 fade 0 term none
+  u -0.01714 ink 0.000 top 25 fade 0 term none
+  u -0.01286 ink 0.000 top 25 fade 0 term none
+  u -0.00857 ink 0.000 top 25 fade 0 term none
+  u -0.00429 ink 0.000 top 25 fade 0 term none
+  u 0.00000 ink 0.000 top 25 fade 0 term none
+  u 0.00429 ink 0.000 top 25 fade 0 term none
+  u 0.00857 ink 0.000 top 25 fade 0 term none
+  u 0.01286 ink 0.000 top 25 fade 0 term none
+  u 0.01714 ink 0.000 top 25 fade 0 term none
+  u 0.02143 ink 0.000 top 25 fade 0 term none
+  u 0.02571 ink 0.000 top 25 fade 0 term none
+  u 0.03000 ink 0.000 top 25 fade 0 term none
+  junction 31 at (11.5808, 1.4789) scene arms 9/end/-1 23/through/1 23/through/-1; arms: ei 0 end pi 9 dir -1 sR 14.044 L 1.343; ei 1 through pi 23 dir 1 sR 23.354 L 0.770; ei 2 through pi 23 dir -1 sR 23.354 L 0.441; corners: 0/1 r 0.4200 w 1.000; 1/2 r 0.4200 w 1.000; 2/0 r 0.0498 w 1.000
+  junction 40 at (12.4270, 1.5462) scene arms 23/through/-1 23/through/1 14/end/1; arms: ei 0 through pi 23 dir -1 sR 24.124 L 0.770; ei 1 through pi 23 dir 1 sR 24.124 L 2.039; ei 2 end pi 14 dir 1 sR -0.130 L 2.034; corners: 1/2 r 0.1455 w 1.000; 2/0 r 0.4200 w 1.000
+f2:
+  u -0.03000 ink 0.000 top 25 fade 0 term none
+  u -0.02571 ink 0.000 top 25 fade 0 term none
+  u -0.02143 ink 0.048 top 25 fade 0 term foot chain 23 s 23.306 corner -1 D 0.0834 w 1.000
+  u -0.01714 ink 0.361 top 25 fade 0 term foot chain 23 s 23.309 corner -1 D 0.0807 w 1.000
+  u -0.01286 ink 0.756 top 25 fade 0 term foot chain 23 s 23.313 corner -1 D 0.0780 w 1.000
+  u -0.00857 ink 0.993 top 25 fade 0 term foot chain 23 s 23.316 corner -1 D 0.0754 w 1.000
+  u -0.00429 ink 0.675 top 25 fade 0 term foot chain 23 s 23.368 corner -1 D 0.0728 w 0.675
+  u 0.00000 ink 0.887 top 25 fade 0 term foot chain 23 s 23.372 corner -1 D 0.0715 w 0.887
+  u 0.00429 ink 0.997 top 25 fade 0 term foot chain 23 s 23.376 corner -1 D 0.0701 w 0.997
+  u 0.00857 ink 1.000 top 25 fade 0 term foot chain 23 s 23.380 corner -1 D 0.0687 w 1.000
+  u 0.01286 ink 1.000 top 25 fade 0 term foot chain 23 s 23.384 corner -1 D 0.0673 w 1.000
+  u 0.01714 ink 0.565 top 25 fade 0 term foot chain 23 s 23.427 corner -1 D 0.0662 w 0.565
+  u 0.02143 ink 0.922 top 25 fade 0 term foot chain 23 s 23.431 corner -1 D 0.0660 w 0.922
+  u 0.02571 ink 1.000 top 25 fade 0 term foot chain 23 s 23.435 corner -1 D 0.0657 w 1.000
+  u 0.03000 ink 1.000 top 25 fade 0 term foot chain 23 s 23.440 corner -1 D 0.0655 w 1.000
+  junction 31 at (11.5808, 1.4789) scene arms 9/end/-1 23/through/1 23/through/-1; arms: ei 0 end pi 9 dir -1 sR 14.044 L 1.343; ei 1 through pi 23 dir 1 sR 23.354 L 0.770; ei 2 through pi 23 dir -1 sR 23.354 L 0.441; corners: 0/1 r 0.4200 w 1.000; 2/0 r 0.0498 w 1.000
+  junction 40 at (12.4270, 1.5462) scene arms 23/through/-1 23/through/1 14/end/1; arms: ei 0 through pi 23 dir -1 sR 24.124 L 0.770; ei 1 through pi 23 dir 1 sR 24.124 L 2.039; ei 2 end pi 14 dir 1 sR -0.130 L 2.034; corners: 1/2 r 0.1455 w 1.000; 2/0 r 0.4200 w 1.000
+src:
+  u -0.03000 ink 0.000 top 25 fade 0 term none
+  u -0.02571 ink 0.000 top 25 fade 0 term none
+  u -0.02143 ink 0.048 top 25 fade 0 term foot chain 23 s 23.306 corner -1 D 0.0834 w 0.995
+  u -0.01714 ink 0.310 top 25 fade 0 term foot chain 23 s 23.309 corner -1 D 0.0807 w 0.859
+  u -0.01286 ink 0.453 top 25 fade 0 term foot chain 23 s 23.313 corner -1 D 0.0780 w 0.599
+  u -0.00857 ink 0.307 top 25 fade 0 term foot chain 23 s 23.316 corner -1 D 0.0754 w 0.309
+  u -0.00429 ink 0.265 top 25 fade 0 term foot chain 23 s 23.368 corner -1 D 0.0728 w 0.265
+  u 0.00000 ink 0.598 top 25 fade 0 term foot chain 23 s 23.372 corner -1 D 0.0715 w 0.598
+  u 0.00429 ink 0.890 top 25 fade 0 term foot chain 23 s 23.376 corner -1 D 0.0701 w 0.890
+  u 0.00857 ink 1.000 top 25 fade 0 term foot chain 23 s 23.380 corner -1 D 0.0687 w 1.000
+  u 0.01286 ink 1.000 top 25 fade 0 term foot chain 23 s 23.384 corner -1 D 0.0673 w 1.000
+  u 0.01714 ink 0.239 top 25 fade 0 term foot chain 23 s 23.427 corner -1 D 0.0662 w 0.239
+  u 0.02143 ink 0.712 top 25 fade 0 term foot chain 23 s 23.431 corner -1 D 0.0660 w 0.712
+  u 0.02571 ink 0.997 top 25 fade 0 term foot chain 23 s 23.435 corner -1 D 0.0657 w 0.997
+  u 0.03000 ink 1.000 top 25 fade 0 term foot chain 23 s 23.440 corner -1 D 0.0655 w 1.000
+  junction 31 at (11.5808, 1.4789) scene arms 9/end/-1 23/through/1 23/through/-1; arms: ei 0 end pi 9 dir -1 sR 14.044 L 1.348; ei 1 through pi 23 dir 1 sR 23.354 L 0.770; ei 2 through pi 23 dir -1 sR 23.354 L 0.448; corners: 0/1 r 0.4200 w 1.000; 2/0 r 0.0135 w 1.000
+  junction 40 at (12.4270, 1.5462) scene arms 23/through/-1 23/through/1 14/end/1; arms: ei 0 through pi 23 dir -1 sR 24.124 L 0.770; ei 1 through pi 23 dir 1 sR 24.124 L 2.039; ei 2 end pi 14 dir 1 sR -0.130 L 2.034; corners: 1/2 r 0.1289 w 1.000; 2/0 r 0.4200 w 1.000

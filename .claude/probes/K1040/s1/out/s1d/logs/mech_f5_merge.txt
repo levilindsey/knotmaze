@@ -1,0 +1,15 @@
+def_drag: by mechanism {}
+def_flow: by mechanism {}
+muse_drag: by mechanism {"smooth motion":5,"scene junction arms":1,"scene chain samples":1,"smooth fade tie":1}
+muse_flow: by mechanism {"smooth motion":7,"scene chain samples":5}
+merge (S1's f1): 44 of 191 pop px merged in either frame; 0 of 20 pops wholly merged; with the merged px excused 14 pops (126 px) remain
+ramp units at the pop px (max of the two frames): {"0":141,"1":43,"2":7}
+mechanism | place | pops | px | worst (seq from>to at px)
+scene chain samples | junction | 3 | 107 | muse_flow 7>8 (8.179, 22.752) 81 px
+scene chain samples | crossing60+ | 3 | 16 | muse_drag 30>31 (25.18, 19.457) 7 px
+smooth motion | junction | 2 | 18 | muse_drag 26>27 (15.452, 17.515) 10 px
+smooth motion | crossing60+ | 8 | 32 | muse_drag 1>2 (19.335, 15.027) 4 px
+smooth motion | elsewhere | 2 | 10 | muse_drag 26>27 (16.017, 19.534) 6 px
+scene junction arms | junction | 1 | 4 | muse_drag 27>28 (15.673, 17.445) 4 px
+smooth fade tie | crossing60+ | 1 | 4 | muse_drag 31>32 (25.203, 19.44) 4 px
+sweep: 0 interpolated scenes built in 0 s (NC 8, LEV 30, jump > 0.02)
