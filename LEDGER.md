@@ -300,14 +300,23 @@ Next free ID: K1007.
   - next: S3a8a per its brief: the per-pop check (it closes S3a7's pop gate), the profile, CPU fixes with the records pinned, the fills' float32 s, the GPU only if still over 2 ms p95, the censuses, the cost in Node and a browser; then S3a8b (the strips uncut, the switch lines); Levi sees lbp in motion once the gates pass; then S3a10 (porting only rules that pass), K972, K973, K923, sheet S3a, K943's bits, S3b
   - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`; K934: `docs/design/K934_recount.md`; S3a: `docs/design/K868_s3a_app.md`; S3a2: `docs/design/K868_s3a2_label.md`; S3a3: `docs/design/K868_s3a3_ink.md`; S3a4: `docs/design/K868_s3a4_rebuild.md`; S3a5: `docs/design/K868_s3a5_incremental.md`; S3a6: `docs/design/K868_s3a6_motion.md`; S3a7: `docs/design/K868_s3a7_pieces.md`; S3a8a: `docs/design/K868_s3a8a_fills.md` (branch `k868-s3a` until merged)
   - env: from the `k868-s3a` worktree, `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5381 --strictPort --host 127.0.0.1` (the config is untracked; S3a3's handoff, How to rerun)
-- **K992** · K868 corner rules continuous in the geometry (master's make 65-100% of the pop area). Stage 1: none beat
-  master; b16 (the grown ball, two stops) won zoom 1 and 9 of 10 windows but failed muse_drag@w2 (950 vs 879 pops),
-  as its stops jump. Stage 2 makes them continuous; V vs round goes to Levi with crops first.
-  - owner: agent `a8ee2b8f6b53cc951` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, stage 2, started 2026-10-28 09:46, 2 h cap ~11:46)
-  - branch: `k992-corners`, worktree `.claude/worktrees/k992-corners`; last commit: `b4c786d6` (stage 2's brief; stage 1's handoff is `305e1542`); at the merge `55bfdbce` conflicts: master has it as `a41af955`, resolved against S3a7, so skip it
-  - evidence: the worktree's untracked `.claude/probes/S3a/` (keep the worktree): S3a6's kit, copied (`seq13/`, `scenes/`, `pops14/before14/`, `oracle_*14.ts`, the harnesses); stage 1's oracles, sweeps, `pops16/` and b16's landing copy `oracle_b16src.ts.txt`; stage 2's `*17*` files and `pops17/`; lock wrapper `locked16.ps1`
-  - next: stage 2's Order: crops of b16 against master for Levi (V vs round), continuous cap and steep stops (call 2 read by its test), the sweeps, the census (muse_drag@w2's 879 pops to beat); land only if it passes the gate (`corner_continuity.test.ts` is red on the branch until then)
-  - brief: `docs/design/K992_s2_continuous_stops.md` on branch `k992-corners` (stage 1: `K992_corner_rules.md`, F1-F8 and Handoff)
+- **K992** · K868 corner rules continuous in the geometry (master's make 65-100% of the pop area). Stage 2's c17f has
+  continuous stops and cuts the windows' pop area to 0.30 of master's, but fails the gate (which counts every pop) where
+  the cut loop's caps jump, so it waits on K1000. Sharp vs round is K1001.
+  - owner: nobody since 2026-10-28 11:09 (stage 2 stopped at its Order step 5, gate failed); waits on K1000 stage 1
+  - branch: `k992-corners`, worktree `.claude/worktrees/k992-corners`; last commit: `fdad7227` (stage 2's handoff, unpushed; K1000 continues on top); at the merge `55bfdbce` conflicts: master has it as `a41af955`, resolved against S3a7, so skip it
+  - evidence: the worktree's untracked `.claude/probes/S3a/` (keep the worktree): S3a6's kit, copied (`seq13/`, `scenes/`, `pops14/before14/`, `oracle_*14.ts`, the harnesses); stage 1's oracles, sweeps, `pops16/` and b16's landing copy `oracle_b16src.ts.txt`; stage 2's `mk_c17.mjs`, `oracle_c17*.ts`, `class17.ts`, `pick17.ts`, `cap16.ts`, `nodes17.ts`, `fillmap17.ts`, `crops17.ts`, `sweeps17.ps1` and `pops17/` (census, classes, sweeps, crops); lock wrapper `locked17.ps1`
+  - next: once K1000's caps land, re-run c17f's census on them; if it passes, land c17f (`mk_c17.mjs --src`, stage 2 Handoff item 3) with `corner_continuity.test.ts` green, then the raster census, the cost and a motion strip; K1001's answer comes before any tuning; Handoff item 4 lists the small leftovers
+  - brief: `docs/design/K992_s2_continuous_stops.md` on branch `k992-corners` (G1-G4, Handoff; stage 1: `K992_corner_rules.md`)
+  - env: from the `k992-corners` worktree, `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5392 --strictPort --host 127.0.0.1` (the config is untracked, copied from `k868-s3a`)
+- **K1000** · K868 label: the cut loop's caps jump when a cut appears or leaves (j116/2, j139/2, j105/1 on master; c17f
+  tips it at j100), and a round corner follows each jump, so K992 waits on it. V's folds and live/unsolved flips are a
+  later stage. Stage 1 makes the caps a continuous function of the frame.
+  - owner: agent `a9fc6d78211e9a64b` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, stage 1, started 2026-10-28 11:23, 2 h cap ~13:23)
+  - branch: `k992-corners`, worktree `.claude/worktrees/k992-corners`; last commit: `ff9fae87` (stage 1's brief, unpushed)
+  - evidence: the worktree's untracked `.claude/probes/S3a/` (K992's kit, listed there); stage 1's `*19*` files and `pops19/`
+  - next: the brief's Order: trace the cap jumps (H1...), continuous caps with a cap continuity test, the census for master's rule and for c17f on the new caps; land the caps if master's rule on them is no worse
+  - brief: `docs/design/K1000_continuous_caps.md` on branch `k992-corners` (K992's briefs on the same branch)
   - env: from the `k992-corners` worktree, `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5392 --strictPort --host 127.0.0.1` (the config is untracked, copied from `k868-s3a`)
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -817,10 +826,7 @@ Every other item below waits on the trigger it names.
   enclose a neighbour (j139/2 t23: chains 46/84 sit 0.82-0.88h from q inside b16's 1.80h ring), which shows only once
   the neighbour reaches the fill between the arc and V. `K992_s2_continuous_stops.md` G2 (branch `k992-corners`).
 - **K1003** · K868 label: a V apex can draw as a fan of white hairlines (c17 at the neighbour's apex by j139/2 t23;
-  master at another corner). K992 stage 2's census attributes it. `K992_s2_continuous_stops.md` G2.
-- **K1000** · Outside K992's corner rules, two discontinuities remain: caps that jump when the cut loop adds or removes
-  a cut (j116/2, j139/2, j105/1; b16 follows them in full), and V's folds and live/unsolved flips (4 and 19 on master,
-  no pop area yet). `K992_corner_rules.md` (branch `k992-corners`) Findings and Handoff.
+  master at another corner). Stage 2's census never attributed it; untraced. `K992_s2_continuous_stops.md` G2.
 - **K999** · `.claude/rules/probes.md` (51 KB, about 13k tokens) attaches on every Read under `.claude/probes/**`, so the
   cursive agents (K863's trace and crops live there) carry browser-probe lore they never use, again after each
   compaction (CC93). Fix: narrow its `paths:` to the browser probes, or split it (K173's pattern); interim, B1 reads crop copies.
