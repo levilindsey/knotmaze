@@ -1,0 +1,13 @@
+muse_hash              #1  1012 ->  173  free ends  113 ->  39
+muse_default_tw        #1   193 ->  171  free ends   23 ->  12
+def                    #1    65 ->   36  free ends   23 ->  17
+fat                    #1     0 ->    0  free ends    0 ->   0
+ring                   #1   101 ->   40  free ends    7 ->   2
+user_tw42.lightpaper   #1    71 ->   32  free ends   28 ->  26
+g41_def_tw42           #1     0 ->    0  free ends    3 ->   1
+g41_def_tw64           #1   348 ->   89  free ends   65 ->  16
+g41_ring_tw42          #1     0 ->    0  free ends    0 ->   0
+g41_ring_tw64          #1   189 ->    0  free ends   13 ->   6
+g41_user_tw42          #1    70 ->   31  free ends   28 ->  26
+g41_user_tw64          #1   783 ->  289  free ends   42 ->  24
+All #1 2832 -> 861, free ends 345 -> 169

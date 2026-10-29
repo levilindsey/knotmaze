@@ -31,6 +31,77 @@ const extra = JSON.parse(process.env.PARAMS ?? "{}") as FormBParams;
 const AMIN = 4;
 const KN = ["none", "foot", "tA", "tB", "V", "arc"];
 const r3 = (v: number) => Math.round(v * 1000) / 1000;
+// SWEEP (default on): each pop's frame pair is interpolated (chains' samples
+// and depths, every s, junction centres) at NC steps, and the worst step is
+// bisected LEV times at the pop's pixel whose ink changes most. A change
+// still above JUMP at 1/(NC * 2^LEV) of the frame step is a hard switch,
+// named by what differs across it; anything else is smooth: it crosses a
+// fade between the frames, or it is motion beyond label_pops' rule.
+const SWEEP = process.env.SWEEP !== "0";
+const NC = 8;
+const LEV = Number(process.env.LEV ?? 10);
+const JUMP = 0.02;
+let nBuild = 0;
+let msBuild = 0;
+const BITS = ["fold", "cap", "tie", "omega"];
+const bitNames = (b: number) => BITS.filter((_, i) => b & (1 << i)).join("+") || "none";
+/** Why scenes A and B cannot be interpolated, or "" when they can. */
+function mismatch(A: FieldScene, B: FieldScene): string {
+  if (A.chains.length !== B.chains.length) return "chain count";
+  for (let i = 0; i < A.chains.length; i++) {
+    if (A.chains[i].id !== B.chains[i].id || A.chains[i].closed !== B.chains[i].closed) return "chain id";
+    if (A.chains[i].pts.length !== B.chains[i].pts.length) return "chain samples";
+  }
+  if (A.crossings.length !== B.crossings.length) return "crossing count";
+  for (let i = 0; i < A.crossings.length; i++) {
+    const a = A.crossings[i];
+    const b = B.crossings[i];
+    if (a.a.chain !== b.a.chain || a.b.chain !== b.b.chain || a.over !== b.over || !!a.emergent !== !!b.emergent) return "crossing";
+  }
+  if (A.junctions.length !== B.junctions.length) return "junction count";
+  for (let i = 0; i < A.junctions.length; i++) {
+    const a = A.junctions[i];
+    const b = B.junctions[i];
+    if (a.id !== b.id || a.arms.length !== b.arms.length) return "junction";
+    for (let k = 0; k < a.arms.length; k++) if (a.arms[k].chain !== b.arms[k].chain || a.arms[k].dir !== b.arms[k].dir || a.arms[k].kind !== b.arms[k].kind) return "junction arms";
+    if (JSON.stringify(a.corners ?? null) !== JSON.stringify(b.corners ?? null)) return "corner styles";
+  }
+  if (A.deadEnds.length !== B.deadEnds.length) return "dead ends";
+  for (let i = 0; i < A.deadEnds.length; i++) if (A.deadEnds[i].chain !== B.deadEnds[i].chain) return "dead ends";
+  return "";
+}
+function chainLen(pts: number[], closed: boolean): number {
+  let L = 0;
+  const n = pts.length / 2;
+  for (let k = 0; k + 1 < n; k++) L += Math.sqrt((pts[2 * k + 2] - pts[2 * k]) ** 2 + (pts[2 * k + 3] - pts[2 * k + 1]) ** 2);
+  if (closed && n > 1) L += Math.sqrt((pts[0] - pts[2 * n - 2]) ** 2 + (pts[1] - pts[2 * n - 1]) ** 2);
+  return L;
+}
+/** A and B interpolated at t (they must match); s on a closed chain takes the short way round. */
+function lerpScene(A: FieldScene, B: FieldScene, t: number): FieldScene {
+  const L = (a: number, b: number) => a + (b - a) * t;
+  const chains = A.chains.map((c, i) => ({ ...c, pts: c.pts.map((v, k) => L(v, B.chains[i].pts[k])), z: c.z.map((v, k) => L(v, B.chains[i].z[k])) }));
+  const lens = chains.map((c, i) => [chainLen(A.chains[i].pts, c.closed), chainLen(B.chains[i].pts, c.closed), chainLen(c.pts, c.closed)]);
+  const idx = new Map(A.chains.map((c, i) => [c.id, i]));
+  const sL = (chain: number, a: number, b: number) => {
+    const i = idx.get(chain) ?? chain;
+    if (!chains[i]?.closed) return L(a, b);
+    const [la, lb, lt] = lens[i];
+    const fa = a / la;
+    let fb = b / lb;
+    if (fb - fa > 0.5) fb -= 1;
+    else if (fa - fb > 0.5) fb += 1;
+    const fr = L(fa, fb);
+    return (fr - Math.floor(fr)) * lt;
+  };
+  return {
+    ...A,
+    chains,
+    crossings: A.crossings.map((c, i) => ({ ...c, a: { ...c.a, s: sL(c.a.chain, c.a.s, B.crossings[i].a.s) }, b: { ...c.b, s: sL(c.b.chain, c.b.s, B.crossings[i].b.s) } })),
+    junctions: A.junctions.map((j, i) => ({ ...j, c: [L(j.c[0], B.junctions[i].c[0]), L(j.c[1], B.junctions[i].c[1])] as [number, number], arms: j.arms.map((a, k) => ({ ...a, s: sL(a.chain, a.s, B.junctions[i].arms[k].s) })) })),
+    deadEnds: A.deadEnds.map((d, i) => ({ ...d, s: sL(d.chain, d.s, B.deadEnds[i].s) })),
+  };
+}
 
 interface Frame {
   i: number;
@@ -77,6 +148,7 @@ interface Tr {
   nu: number;
   merged: boolean;
   fade: number;
+  nc: number;
 }
 const P: Piece[] = [];
 function trace(fb: FormB, x: number, y: number): Tr {
@@ -85,7 +157,7 @@ function trace(fb: FormB, x: number, y: number): Tr {
   let nu = 0;
   for (const A of P) if (A.g >= 0 && A.ramp > 0 && A.ramp < 1) nu++;
   const t = r.term;
-  return { ink: r.ink, top: r.top, kind: t ? t.kind : 0, chain: t ? t.chain : -1, own: t ? t.surf >= OWN : false, w: t ? t.w : 0, nSurf: r.nSurf, np: P.length, nu, merged: mergedAt(fb, x, y), fade: r.fade };
+  return { ink: r.ink, top: r.top, kind: t ? t.kind : 0, chain: t ? t.chain : -1, own: t ? t.surf >= OWN : false, w: t ? t.w : 0, nSurf: r.nSurf, np: P.length, nu, merged: mergedAt(fb, x, y), fade: r.fade, nc: (fb as unknown as { cornersNear(x: number, y: number): number[] }).cornersNear(x, y).length };
 }
 function mech(a: Tr, b: Tr): string {
   if (a.merged || b.merged) return "merge";
@@ -94,6 +166,19 @@ function mech(a: Tr, b: Tr): string {
   if (Math.abs(a.w - b.w) > 0.125) return `weight ${KN[a.kind]}`;
   if (a.nSurf !== b.nSurf || a.np !== b.np) return `gate ${KN[a.kind]}`;
   return `motion ${KN[a.kind]}`;
+}
+/** What differs across a hard switch, causes first. */
+function mechSwitch(a: Tr, b: Tr): string {
+  if (a.merged !== b.merged) return "merge";
+  if (a.np !== b.np) return `gate pieces ${KN[a.kind]}>${KN[b.kind]}`;
+  if (a.nc !== b.nc) return `gate corners ${KN[a.kind]}>${KN[b.kind]}`;
+  if (a.nSurf !== b.nSurf) return `gate surfaces ${KN[a.kind]}>${KN[b.kind]}`;
+  if ((a.fade ^ b.fade) & 4) return "tie";
+  if (a.own !== b.own) return `handoff ${KN[a.kind]}`;
+  if (a.kind === b.kind && a.chain === b.chain && Math.abs(a.w - b.w) > 0.05) return `weight ${KN[a.kind]}`;
+  if (a.kind !== b.kind || a.chain !== b.chain) return `winner ${KN[a.kind]}>${KN[b.kind]}${a.top !== b.top ? "/top" : ""}`;
+  if (a.fade !== b.fade) return `fade ${bitNames(a.fade ^ b.fade)}`;
+  return `jump ${KN[a.kind]}`;
 }
 const placeOf = (near: string) => (near === "junction" ? "junction" : near === "crossing60+" ? "crossing60+" : "elsewhere");
 
@@ -106,7 +191,7 @@ interface Pop {
 interface Cell {
   pops: number;
   px: number;
-  worst: { seq: string; from: number; to: number; at: [number, number]; px: number; mix: Record<string, number>; crop?: string }[];
+  worst: { seq: string; from: number; to: number; at: [number, number]; px: number; mix: Record<string, number>; sw?: Record<string, unknown>; crop?: string }[];
 }
 const table: Record<string, Record<string, Cell>> = {};
 const mergeAcc = { pops: 0, px: 0, mergedPx: 0, popsLeft: 0, pxLeft: 0, whollyMerged: 0 };
@@ -202,12 +287,32 @@ for (const seq of seqs) {
   const byMech: Record<string, number> = {};
   for (const pair of dump.pairs) {
     if (!pair.pops.length) continue;
-    const fa = get(kOf.get(pair.from)!);
-    const fbb = get(kOf.get(pair.to)!);
+    const kA = kOf.get(pair.from)!;
+    const kB = kOf.get(pair.to)!;
+    const fa = get(kA);
+    const fbb = get(kB);
+    const why = SWEEP ? mismatch(frames[kA].scene, frames[kB].scene) : "";
+    const tc = new Map<number, FormB>([
+      [0, fa],
+      [1, fbb],
+    ]);
+    const at = (t: number) => {
+      let fb = tc.get(t);
+      if (!fb) {
+        const t0 = performance.now();
+        fb = new FormB(lerpScene(frames[kA].scene, frames[kB].scene, t), extra);
+        msBuild += performance.now() - t0;
+        nBuild++;
+        if (Number.isInteger(t * NC)) tc.set(t, fb);
+      }
+      return fb;
+    };
     const left = new Uint8Array(nx * ny);
     for (const pop of pair.pops) {
       const mix: Record<string, number> = {};
       let mergedPx = 0;
+      let rep: [number, number] = [0, 0];
+      let repD = -1;
       for (const o of pop.pix) {
         const x0 = ((o % nx) + 0.5 - e) as number;
         const y0 = (Math.floor(o / nx) + 0.5 - f) as number;
@@ -217,6 +322,10 @@ for (const seq of seqs) {
         const tb = trace(fbb, x, y);
         const m = mech(ta, tb);
         mix[m] = (mix[m] ?? 0) + 1;
+        if (Math.abs(tb.ink - ta.ink) > repD) {
+          repD = Math.abs(tb.ink - ta.ink);
+          rep = [x, y];
+        }
         const uk = `${Math.max(ta.nu, tb.nu)}`;
         units[uk] = (units[uk] ?? 0) + 1;
         if (m === "merge") mergedPx++;
@@ -226,13 +335,49 @@ for (const seq of seqs) {
       mergeAcc.px += pop.px;
       mergeAcc.mergedPx += mergedPx;
       if (mergedPx === pop.px) mergeAcc.whollyMerged++;
-      const top = Object.entries(mix).sort((p, q) => q[1] - p[1])[0][0];
+      let top = Object.entries(mix).sort((p, q) => q[1] - p[1])[0][0];
+      let sw: Record<string, unknown> | undefined;
+      if (SWEEP && why) top = `scene ${why}`;
+      else if (SWEEP) {
+        const [x, y] = rep;
+        const iv: number[] = [];
+        for (let j = 0; j <= NC; j++) iv.push(at(j / NC).evalPoint(x, y).ink);
+        let js = 0;
+        for (let j = 1; j < NC; j++) if (Math.abs(iv[j + 1] - iv[j]) > Math.abs(iv[js + 1] - iv[js])) js = j;
+        let lo = js / NC;
+        let hi = (js + 1) / NC;
+        let ilo = iv[js];
+        let ihi = iv[js + 1];
+        for (let l = 0; l < LEV; l++) {
+          const mt = (lo + hi) / 2;
+          const im = at(mt).evalPoint(x, y).ink;
+          if (Math.abs(im - ilo) >= Math.abs(ihi - im)) {
+            hi = mt;
+            ihi = im;
+          } else {
+            lo = mt;
+            ilo = im;
+          }
+        }
+        const jump = Math.abs(ihi - ilo);
+        let fm = 0;
+        for (let j = 1; j < NC; j++) fm |= at(j / NC).evalPoint(x, y).fade;
+        if (jump > JUMP) {
+          const t1 = trace(at(lo), x, y);
+          const t2 = trace(at(hi), x, y);
+          top = `switch ${mechSwitch(t1, t2)}`;
+          sw = { at: [r3(x), r3(y)], t: r3(lo), jump: r3(jump), total: r3(repD), a: t1, b: t2 };
+        } else {
+          top = fm ? `smooth fade ${bitNames(fm)}` : "smooth motion";
+          sw = { at: [r3(x), r3(y)], total: r3(repD), maxStep: r3(Math.abs(iv[js + 1] - iv[js])), fadeMid: fm };
+        }
+      }
       byMech[top] = (byMech[top] ?? 0) + 1;
       const place = placeOf(pop.near);
       const cell = ((table[top] ??= {})[place] ??= { pops: 0, px: 0, worst: [] });
       cell.pops++;
       cell.px += pop.px;
-      cell.worst.push({ seq, from: pair.from, to: pair.to, at: pop.at, px: pop.px, mix });
+      cell.worst.push({ seq, from: pair.from, to: pair.to, at: pop.at, px: pop.px, mix, sw });
       cell.worst.sort((p, q) => q.px - p.px);
       if (cell.worst.length > Math.max(1, CROPS)) cell.worst.length = Math.max(1, CROPS);
     }
@@ -288,6 +433,7 @@ for (const [mk, row] of rows)
     const w = cell.worst[0];
     lines.push(`${mk} | ${place} | ${cell.pops} | ${cell.px} | ${w.seq} ${w.from}>${w.to} (${w.at.map(r3).join(", ")}) ${w.px} px`);
   }
+if (SWEEP) lines.push(`sweep: ${nBuild} interpolated scenes built in ${Math.round(msBuild / 1000)} s (NC ${NC}, LEV ${LEV}, jump > ${JUMP})`);
 writeFileSync(join(outDir, "mech.txt"), `${lines.join("\n")}\n`);
 writeFileSync(join(outDir, "mech.json"), JSON.stringify({ merge: mergeAcc, units, table, lines: lines.filter((l) => l.includes(": by mechanism")) }, null, 1));
 for (const l of lines) console.log(l);

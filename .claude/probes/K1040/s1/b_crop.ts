@@ -11,6 +11,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { FieldModel, cornerRadius, type OracleParams } from "../../../../src/render/field/oracle";
 import { FormB } from "../../../../src/render/field/form_b";
+import { FormB as FormBS1b } from "./form_b_s1b";
 import type { FieldScene } from "../../../../src/render/field/scene";
 import { encodePng } from "../../../../test/render/field/png";
 
@@ -22,7 +23,9 @@ const s = JSON.parse(readFileSync(`C:/Users/lsl/Repositories/knotmaze/.claude/pr
 s.look.ctrlArc ??= 0.47;
 const h0 = s.look.halfWidth;
 const mapping: OracleParams = { rRound: 0, rOf: (_j, _i, th, st) => (st === "round" ? cornerRadius(3, h0, th) : 0), spans: "k883", crMax: 3 };
-const fb = new FormB(s, { dpr: Number(ds) });
+// FORMB=s1b renders with S1b's definition (form_b_s1b.ts), for before/after crops (S1c F2).
+const FB = (process.env.FORMB === "s1b" ? FormBS1b : FormB) as typeof FormB;
+const fb = new FB(s, { dpr: Number(ds) });
 const m = new FieldModel(s, mapping);
 const X = Number(xs);
 const Y = Number(ys);
