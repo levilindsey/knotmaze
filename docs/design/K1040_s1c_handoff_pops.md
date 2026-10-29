@@ -444,3 +444,69 @@ ran on 11c3ecfb (`logs/*_f2k.txt`; `q5_f2k/`, `q4_f2k_1/`,
   The pins and the start of `npm test` ran there before the jobs were
   killed; its `git status` is clean. `run_s1c_gate.ps1` now names the
   loop variable `$item`, and each job stops on a failed `Set-Location`.
+
+## Handoff
+
+Stopped at 03:35, about 30 min before the cap, as the coordinator asked
+(the pins, then the Handoff). Steps 1-5 of the Order are done; step 6
+(R2, R3) was not started. src's form B is F2 (608327af) and has not
+changed since; nothing in the app imports it.
+
+**Done.**
+- F1: the pops accounting. f1's relabel was most of S1b's rise in pops.
+- F2 (608327af): the cap mix as a weighted sum of complete composites,
+  one per gap between the units' sorted ramps, each unit a full member
+  of its group or OWN in each (the header's Q2). It fixes S1b's F14
+  and R1: the cap rate pin passes (1.62 per px), #1 2832 → 861 px.
+- F3: the mechanism table over F2's 209 pops / 3875 px. The corner
+  solve's switches are 78% of the px; scene changes (the recorder
+  resampling a chain) 20%.
+- F4: a fade for the largest row (V off arm), F4j, measured and not
+  kept: pops 209 → 121, but at rest it fades fills the oracle keeps
+  (new #1 px on five scenes; four lose a wrong band), and the rate
+  rule breaks at every fade width tried (0.25h, 0.5h, 1h). Its code:
+  `.claude/probes/K1040/s1/form_b_f4j.ts` (c38d2319).
+- F5: the gate on F2 against F13. #1, q4 and the pops improve, the
+  shared checks and q5holes hold, and free ends fall below the oracle's
+  count (not attributed). The probe gaps it found are listed below.
+
+**Next, in order.**
+1. The corner when V passes an arm's junction end: F3's V off arm,
+   72 pops / 1543 px, the largest row. Decide the corner by its fill,
+   not by dV: see what the oracle's corner does past the junction end
+   and continue form B's the same way (V's foot along the arm's
+   tangent past its end), or fade on the fill's size, which is
+   continuous in θ. Whether a filled mouth may show a band at rest
+   (F4j's look) is a question for Levi, with a picture
+   (`hole_check.ts g41_def_tw42 1 592 159 1` is the spot).
+2. Root, radius bisect and tangent foot, 53 pops / 1330 px: one
+   problem, a fillet that is not unique in a near-parallel channel.
+   Make it unique there (r capped by the channel's half-width) or
+   blend over the candidates.
+3. room-L and arm L 0, 11 pops / 109 px: Lcut's gate (a pass counts
+   only while its cut lies in [0, L]).
+4. R2 (muse_hash chain 52's tie jump), then R3 (sliver fills).
+5. Probe gaps (F5): q5holes skips a hole whose rim is partly OWN; the
+   free-end count fell below the oracle's on seven scenes, maybe
+   reading OWN as a join (untested); q4's g41 crop holds no ink on
+   g41_ring_tw42 and g41_ring_tw64.
+
+**How to rerun** (from the worktree root; outputs and logs under
+`.claude/probes/K1040/s1/out/s1c/`):
+- The gate on src's form B, its jobs in parallel:
+  `pwsh .claude/probes/K1040/s1/run_s1c_gate.ps1 -Tag <t> -What
+  pins,npm,pops,scenes,q5,q4` (`-MaxMin`, default 40). It blocks until
+  the jobs exit and prints each exit code; logs go to
+  `logs/<job>_<t>.txt` and `.err`. The pins, `npm test`, q5holes and
+  q4 together took about 3 min. Once pops is done, `-What mech` runs
+  pops_mech per recording, the merge and corner_why into `pops_<t>/`.
+  It works in the checkout it sits in, so run the worktree's copy.
+- `-What rate` (omega_rate.ts) reads F4j's form B, not src's. A wider
+  fade: `$env:VWH='0.5'` (in h), `$env:OUT=<file>`.
+- `pwsh .claude/probes/K1040/s1/gate_table.ps1 <before> <after>`
+  compares two scenes.ts logs, per scene and per shared check. F13's
+  is `out/s1b/logs/scenes_f11.txt`, F2's `out/s1c/logs/scenes_f2.txt`.
+- `npx.cmd vite-node .claude/probes/K1040/s1/hole_check.ts <scene>
+  <dpr> <i> <j> [r]` prints a pixel window's top, term and fade bits
+  under S1b, F2, F4j and src (`form_b_s1b.ts`, `form_b_f2.ts` and
+  `form_b_f4j.ts` are frozen copies).
