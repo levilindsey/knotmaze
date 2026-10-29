@@ -300,11 +300,11 @@ Next free ID: K1024.
 - **K992** · K868 corner rules continuous in the geometry (master's make 65-100% of the pop area). Stage 4's c23w (S the
   certified minimum of wAt) landed in 9b549d30: windows 3236 pops / 132921 px (master 4325 / 1065307), zoom 1 101 / 1073
   (376 / 10078). Left: F11 (corner_continuity (D), (E) skipped). Cost is K1022, sharp vs round K1001.
-  - owner: nobody since 2026-10-28 15:58 (merged; agent `a4f6363afebf35c2b` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
-  - branch: mainline; last commit: `9b549d30`
-  - evidence: the worktree's `.claude/probes/S3a/` (keep the worktree; untracked except the generators and readers): S3a6's kit and stage 1's (`*14*`, `*16*`, `pops16/`), stage 2's `*17*` and `pops17/`, K1000 stage 1's `*19*`, `pops19/` and `cmpdir19/`, stage 3's `*21*` and `pops21/` (`mk_c17.mjs --foot track/--drop/--ove`, `mk_walk21.mjs`, `census21.ps1`, `locked21.ps1`, `land21.ps1`; the c21 oracles regenerate: mk_c17, then mk_cap19 `--mode cont`, then mk_walk21), stage 4's `*23*` and `pops23/`
-  - next: stage 5: make the march's branch a function of the frame (F11), so corner_continuity's (D) and (E) run again (each takes ~18 s; (E)'s q jump of 0.117h is untraced); brief to write
-  - brief: `docs/design/K992_s4_continuous_march.md` (stage 3 `K992_s3_landing.md` F1-F8 and ## Handoff, stage 2 `K992_s2_continuous_stops.md`, stage 1 `K992_corner_rules.md`, K1000 `K1000_continuous_caps.md`)
+  - owner: agent `a938433f6c7b49595` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, stage 5, started 2026-10-28 16:02, 2 h cap ~18:02); stage 4 merged 15:58 (`9b549d30`)
+  - branch: `k992-corners`, worktree `.claude/worktrees/k992-corners`; last commit: `952cf681` (stage 5's brief, on master; its WIP commits follow, unpushed)
+  - evidence: the worktree's `.claude/probes/S3a/` (keep the worktree; untracked except the generators and readers): S3a6's kit and stage 1's (`*14*`, `*16*`, `pops16/`), stage 2's `*17*` and `pops17/`, K1000 stage 1's `*19*`, `pops19/` and `cmpdir19/`, stage 3's `*21*` and `pops21/` (`mk_c17.mjs --foot track/--drop/--ove`, `mk_walk21.mjs`, `census21.ps1`, `locked21.ps1`, `land21.ps1`; the c21 oracles regenerate: mk_c17, then mk_cap19 `--mode cont`, then mk_walk21), stage 4's `*23*` and `pops23/`, stage 5's `*25*` and `pops25/`
+  - next: stage 5's Order: trace (E), define the branch from the frame alone and test that it is path-independent, build it, the census, land with (D) and (E) un-skipped, then raster25 and cost25 split by part (K1022); then the merge (agent_merge)
+  - brief: `docs/design/K992_s5_branch.md` (stage 4 `K992_s4_continuous_march.md` F9-F13 and ## Handoff, stage 3 `K992_s3_landing.md` F1-F8 and ## Handoff, stage 2 `K992_s2_continuous_stops.md`, stage 1 `K992_corner_rules.md`, K1000 `K1000_continuous_caps.md`)
   - env: from the `k992-corners` worktree, `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5392 --strictPort --host 127.0.0.1` (the config is untracked, copied from `k868-s3a`)
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
