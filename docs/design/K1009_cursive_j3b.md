@@ -238,3 +238,79 @@ B3's `## Rules` hold (they build on B2's), with these changes:
   - a `Ledger items` list: follow-ups and residuals. Ask Levi only
     about what shows on screen, in plain words;
   - K863's current handle fields.
+
+## Handoff
+
+J3b stopped at 19:05 (start 17:12:45) with Order steps 1-7 done (calls 1-10),
+except the locality check (below). Nothing committed or uploaded; the work
+is in the untracked `.claude/probes/K863/trace/` (record: `NOTES.md`
+`## K1009b`, N1-N7, with the commands).
+
+- **v6.4.** `work24/b0`'s bodies (no body change) with
+  `work24/ports_k1009b.json` variant **H** (o's ports only, made by
+  `work24/dbg/mk_ports_k1009b.py`). **Ht** is H with ot's tangent entry.
+  Compared with b0 (`work24/b0`, `work21/ports_k1009.json` B) and v6.3
+  (`work23/base`, A).
+- **K1028's tools (call 8, N1).** `work24/dbg/gen_k1009b.py`,
+  `census_k1009b.py`, `sheet_k1009b.py`: copies made by asserted
+  replacements (`mk_*_k1009b.py`), the originals untouched. The font
+  distance is measured at each join's own ends and run on along the font
+  letters' skeletons (`dist_max_u`); the entry-frame distance stays beside
+  it (`dist_max_frame_u`). On the old ports gen_k1009b equals gen_k1009
+  to the bit (`work24/verify_k1009b.txt`: 0 differences).
+- **Causes (call 2, N2).** b0's connectors inherit the body's curvature
+  at o's exit (k0 -0.0271/u, leaving -3.1 deg): into m, n, v, x, z they
+  dip, hump back and attach at the s = 10 bound past the arch top. Cusp
+  entries into i, j, p, s, u, w, y sag about R(1 - cos a) (oi 27.8 u).
+  Six solves stopped at maxfev (ob, od, oe, of, ok, ol).
+- **Cusp exit (call 3, N3).** o's exit leaves its top cusp turned
+  180 deg with its starting curvature kL free (-0.0043 to -0.0219/u); the
+  overstroke stays within 0.5 u of o's last 12 u for 6.70-14.11 u (largest
+  0.033-0.216 u over the first 4 u). All 26 o joins status 0, nfev
+  623-4392 of 8000. m, n, v, x, z merge at the arch top with one dip.
+- **Corner (call 4, N4).** i, j, p, s, u, w, y end at the stem's top cusp
+  with a corner, arrival [30, 40] deg (from the font's joins). All seven
+  sit at 30.00 deg, the low bound; lowest point y 112.5-115.5 (b0
+  90.5-106.9, font 105.4); 0 stem crossings; side margin 0.197 (op) to
+  1.40 u.
+- **ot (call 5, N4, N6).** At the crossbar, 55.7 u down t's upstroke
+  (y 122.3). Level (H): arrives +0.5 deg, its lowest point 0.51 u below
+  the meet, font distance 11.07 u (own ends) / 54.92 u (frame). Tangent
+  (Ht): arrives +70.2 deg, a U 29.76 u deep that hugs the stem (margin
+  0.0017 u), 22.83 / 54.92 u. Low entries into t (nt, at, it, et) keep
+  their cusp 34.5-36.0 u down the stem, where the font meets.
+- **oe (call 6, N5).** Converges (status 0, nfev 1300; b0 stopped at
+  maxfev with 2 crossings) at the s = 90 bound with 1 crossing, the
+  allowance: the K948 elbow candidate.
+- **Fused (call 7, N5).** c, d, g, o attach at the bowl's left shoulder
+  where the font meets (oc 57.5, od 55.5, og 50.5, oo 57.0 u; +17.5 to
+  +26.1 deg). oa and oq keep the 37.6 bound and a flat top (K1029).
+- **og (N6).** v6.3: a hook at o's cusp, then a straight ramp over g's
+  bowl top to the 37.08 u bound. b0: one sag, the same bound. v6.4: no
+  hook, one shallow sag (lowest y 104.7; the font about 103.5), meeting
+  g's left shoulder at 50.48 u at +17.5 deg, so g's top stays g's ink.
+  kmax 0.139 / 0.027 / 0.012 per u; badness in "jumps over the lazy dog"
+  78 / 14 / 42 (B3's 278 was the old measure). The own-ends distance
+  (8.75 / 4.35 / 7.12 u) ranks b0 nearer because each build's reference
+  is cut at its own attach. g's body and b, v, w -> g are unchanged.
+- **Checks (call 9, N7).** Census (v6.4 / b0 / v6.3): badness 13,205 /
+  12,156 / 16,134; undesigned seams 6 / 8 / 9; spikes 25 / 25 / 34; rough
+  FAIL 47 / 47 / 76. Every o row: status 0, rough ok, 0 spikes. Worst
+  rows oh 455, os 446, ok 442 (by design: the 100 bound up the ascender,
+  no deep os dip). Determinism 5 of 5 byte-identical. Continuity: on and
+  oi jump under the o-cusp sweep (7.84 and 13.71 u: two minima), oe is
+  smooth, the i and u sweeps were degenerate (they moved a node 35 and
+  23.7 u down the stem).
+- **Locality: not verified.** The first run failed: J2's builds
+  (`work19/local/j2`) have no designed o cusp, so the cusp exit raised.
+  `locality_k1009b.py` now grafts b0's o into every J2 build; the rerun
+  ran past 12 min and was stopped at the cap with no output. Rerun it
+  alone (about 15-20 min).
+- **Sheets (call 10).** `out24/cursive_v64_words.svg`,
+  `o_exits_v64.svg`, `ot_v64.svg` and the base `cursive_template.svg`;
+  the guard ALL CLEAN.
+- **Open.** Locality; on's and oi's two minima (a multi-start or
+  continuation solve); the i and u continuity sweeps should move the
+  stem-top node; the corner sits at its 30 deg bound on all seven; ob,
+  of, oh, ok, ol climb the ascender to the 100 bound; oa and oq's flat
+  tops (K1029); Levi's pick of ot, level or tangent.
