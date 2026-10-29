@@ -198,7 +198,7 @@ test/
 ```bash
 npm run dev      # Vite dev server
 npm run build    # Production build
-npm test         # Vitest
+npm test         # Type-check (tsc, as the build does), then Vitest
 ```
 
 Phone and build A/Bs: `pwsh scripts/phone.ps1 [-Wireless] [-Ports 5173,5174] [-Url <link>]` tunnels the phone (USB, or over Tailscale after one `-Wireless` run while plugged in, until it reboots) to local servers and Chrome DevTools (probes in `.claude/probes/`, e.g. `phone_probe.mjs`); `pwsh scripts/preview.ps1 -Port <p> [-Ref <commit>]` builds any commit into its own directory and serves it.
