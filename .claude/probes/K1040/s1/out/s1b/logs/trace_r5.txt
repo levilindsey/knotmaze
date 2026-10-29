@@ -1,0 +1,10 @@
+(5.841980, 2.043000): ink 0.802 term foot top 23 fade 2
+  piece #0 chain 29 s 0.1671 k 4 d/h 0.2958 surf 23 selfW 1.000 ramp 1.000
+  piece #1 chain 9 s 7.4561 k 152 d/h 0.9743 surf 23 selfW 1.000 ramp 0.198 BAND
+     B #0 chain 29 w 0.198 winW 1.0000
+     corner 41 om 1.000 r/h 2.000 inFill false: dq-r 0.7239h, dq-(rV+ext) 0.2952h, wedge true, onA false onB false, fa.d/h 1.33846 fb.d/h 0.31488 lim/h 0.96832 theta 113.6 armA chain 9 armB chain 29 fa.k 147
+(5.842020, 2.043000): ink 0.802 term foot top 23 fade 2
+  piece #0 chain 29 s 0.1672 k 4 d/h 0.2957 surf 23 selfW 1.000 ramp 1.000
+  piece #1 chain 9 s 7.4561 k 152 d/h 0.9744 surf 23 selfW 1.000 ramp 0.198 BAND
+     B #0 chain 29 w 0.198 winW 1.0000
+     corner 41 om 1.000 r/h 2.000 inFill false: dq-r 0.7240h, dq-(rV+ext) 0.2953h, wedge true, onA false onB false, fa.d/h 1.33852 fb.d/h 0.31480 lim/h 0.96832 theta 113.6 armA chain 9 armB chain 29 fa.k 147

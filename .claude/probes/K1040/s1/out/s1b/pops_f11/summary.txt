@@ -1,0 +1,12 @@
+== def_drag: 41 kept frames; windows at frames 0 x 41; 40 pairs, 41 frames in 178 s
+  label_pops' rule: 23 pops (781 px) by {"junction":23}; unexplained outside fades 816 px; inside fades {"f2":19,"f8":54}; max motion 12.06 px
+  Q3 tie band (nSurf >= 2, dz < zt) per frame 76-84 px, sum {"crossing60+":3230}; tie mix px per frame 90,85,80,81,91,88,80,81,80,83,83,92,91,89,86,86,89,90,89,91,92,91,92,94,93,92,94,95,89,91,89,94,97,96,99,96,99,97,97,99,97
+== def_flow: 41 kept frames; windows at frames 0 x 41; 40 pairs, 41 frames in 165 s
+  label_pops' rule: 75 pops (1649 px) by {"junction":69,"crossing60+":6}; unexplained outside fades 1777 px; inside fades {"f2":363,"f8":1290,"f6":34,"f4":7}; max motion 1.051 px
+  Q3 tie band (nSurf >= 2, dz < zt) per frame 89-121 px, sum {"crossing60+":3484,"crossing30-60":605,"junction":5}; tie mix px per frame 97,92,96,99,98,96,105,91,96,91,97,102,99,91,93,89,98,103,107,98,101,97,96,93,100,99,102,93,98,98,102,97,98,107,94,95,88,94,87,93,91
+== muse_drag: 41 kept frames; windows at frames 0 x 41; 40 pairs, 41 frames in 169 s
+  label_pops' rule: 32 pops (338 px) by {"junction":13,"crossing60+":17,"crossing30-60":2}; unexplained outside fades 621 px; inside fades {"f6":289,"f2":725,"f4":179,"f1":1,"f8":27,"f12":2,"f5":1}; max motion 21.501 px
+  Q3 tie band (nSurf >= 2, dz < zt) per frame 9702-10107 px, sum {"junction":12166,"crossing<15":5332,"crossing30-60":52560,"crossing60+":331693,"crossing15-30":1179}; tie mix px per frame 6341,6326,6272,6275,6288,6273,6307,6324,6291,6279,6279,6308,6303,6299,6380,6390,6373,6388,6383,6387,6394,6438,6399,6375,6362,6367,6381,6387,6369,6342,6352,6513,6481,6434,6445,6468,6418,6423,6399,6417,6404
+== muse_flow: 41 kept frames; windows at frames 0 x 41; 40 pairs, 41 frames in 170 s
+  label_pops' rule: 95 pops (1283 px) by {"crossing60+":31,"junction":64}; unexplained outside fades 2234 px; inside fades {"f4":561,"f2":3663,"f6":1422,"f8":104,"f3":1,"f5":4}; max motion 0.949 px
+  Q3 tie band (nSurf >= 2, dz < zt) per frame 9708-10209 px, sum {"junction":12260,"crossing<15":5343,"crossing30-60":53271,"crossing60+":332847,"crossing15-30":2282}; tie mix px per frame 6409,6381,6386,6386,6366,6386,6439,6427,6453,6463,6421,6372,6381,6374,6362,6311,6307,6340,6362,6285,6305,6295,6312,6300,6319,6336,6350,6336,6348,6397,6383,6417,6446,6378,6365,6441,6469,6530,6484,6510,6473

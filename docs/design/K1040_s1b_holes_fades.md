@@ -386,7 +386,7 @@ with S1b's only in total, not class by class.
 Run on fe967fd9 (F10), then again on 3375b7e7 (F11) into the `*_f11`
 directories and logs. The two agree: #1 pixels and free ends on all 12
 scenes, the shared checks' verdict counts, q5holes on all 13 runs, q4
-on def, fat and g41_def_tw64, and pops on <<POPS_SAME>>. `npm test`
+on def, fat and g41_def_tw64, and pops on all four recordings (finished 01:50). `npm test`
 passes on 3375b7e7 (188 files, 2532 tests; `logs/npm_test_f11.txt`).
 
 | Scene | #1 failing px, S1 → S1b | Free ends, S1 → S1b (oracle) |
@@ -454,6 +454,46 @@ Pops, the full run (`WINDOWS=0 WLEN=41`; `out/s1b/pops_full/`, F11 in
 - Inferred, not tested: most of the added pops are pixels S1 excused
   under f1 that label_pops' rule now counts. The test: count S1b's pop
   pixels where two same-chain minima merge within σ.
+### F14 · One #1 site: the cap fade un-buries a foot inside a member's tube (01:55)
+
+The deepest foot+f2 #1 site on g41_user_tw64 (F 7.211 px, ink 0.802,
+top 23): `b_crop.ts g41_user_tw64 5.842 2.043 2 1.0 4 r5` (crop
+`out/s1b/crops/g41_user_tw64_5.842_2.043_r5.png`) and `b_trace_bur.ts
+g41_user_tw64 5.842 2.043 x` (`out/s1b/logs/trace_r5.txt`).
+
+Observed:
+- Two pieces of group 23 hold the site: chain 29 at s 0.167 (0.19 from
+  its free start; d/h 0.296, ramp 1) and chain 9 at s 7.456 (d/h 0.974,
+  in the band; ramp 0.198). The ink is chain 9's band. Its burier is
+  chain 29's tube (winW 1.000) at w = B.ramp · B.selfW · A.ramp = 0.198,
+  so the foot inks 1 − 0.198 = 0.802; the bit is f2 because w < 1 with
+  the burier's selfW at 1 (form_b.ts line 938).
+- Corner 41 (arms on chains 9 and 29, θ 113.6°, r/h 2, ω 1) is the
+  junction where chain 29 starts. Its fill does not hold the foot
+  (0.295h outside V').
+- The oracle panel shows interior there and no stroke (its light gray
+  is interior and its white paper, read against panel 3's surfaces),
+  and the round end of the paper between the two arms about 30 device
+  px to the right. Form B carries chain 9's boundary about 25 device px
+  past that end into the interior, fading out leftwards.
+- F is the distance to the nearest change in form B's top map
+  (scenes.ts), so the stroke lies inside surface 23, 7.2 px from any
+  change of surface.
+
+Inferred, at this one site:
+- The ink comes from the member ramp's weight on the burial. As chain
+  9's arm ramps out of the group (0.198, about 0.3λ before Lcut by the
+  ramp's formula), its burial by a full member weakens with it, and its
+  band shows inside the group's interior. Past Lcut the piece is OWN,
+  chain 29's group stays on top and the ink drops to 0 in one step,
+  which is R1's jump. So the #1 ink and R1 come from one structure, and
+  R5's guess holds in this form: the ink sits in the cap fade, on the
+  near side of R1's switch, not at a change of surface.
+- A fix would keep a foot buried while a full member's tube holds it
+  (w not scaled by the foot's own ramp) and fade the hand-off to OWN
+  (R1): a definition change, not tried. Whether the other foot+f2 px
+  share the mechanism is untested; the test is a b_trace_bur pass over
+  check1deep's sites (A.ramp < 1, the burier's winW near 1).
 ### Residuals (S1b)
 
 - R1 · The g→OWN hand-off at an arm's end: past L a piece leaves its
@@ -472,7 +512,64 @@ Pops, the full run (`WINDOWS=0 WLEN=41`; `out/s1b/pops_full/`, F11 in
   rest, so the width motion needs is not measured. S4b's call.
 - R5 · #1 rose on muse_hash, g41_def_tw64, g41_ring_tw64 and
   g41_user_tw64 (F13), and foot+f2, the foot under the cap fade, holds
-  1540 of its 2832 px. Not attributed. R1 sits where the cap fade ends,
-  so a crop there is the first test.
+  1540 of its 2832 px. One site attributed (F14): a foot ramping out of
+  its group loses its burial with it, inside a full member's tube, on
+  the near side of R1's switch. The other sites are untested.
 - R6 · q4's 11 outer/none pixels on def (F13): paper in the AA'd form
   where the hard form inks up to 0.984 of the pixel. Not attributed.
+
+## Handoff
+
+Stopped at 01:56 (cap 02:18:39) in step 5 of the Order, partly done.
+The last commit is this section's (`git log -1`); form_b.ts last
+changed in 3375b7e7.
+
+Done:
+- Steps 1-4. The holes are the look's eyes, so S1's F12 premise is
+  falsified (F1; which eye the look wants is Levi's call at S4b). f1 is
+  relabelled (F2), and form B is watertight at every fade value (F3).
+- Definition changes F4-F6 (877b3e26), F9-F10 (fe967fd9) and F11
+  (3375b7e7). The rate census went from 132 to 23 sites (F7), and the
+  bisector needs nothing (F8). The rate pin is in
+  test/render/field/form_b.test.ts (F12), and the gate against S1 is F13.
+- Step 5, part: the pops rerun on F11 matches the F10 run on all four
+  recordings (F13), and one #1 site is attributed by crop and term (F14).
+
+Next, the rest of step 5 and then S1b's residuals:
+- Count F14's mechanism over every foot+f2 #1 site (check1deep's
+  sites: A.ramp < 1 with the burier's winW near 1), and crop the deepest
+  sites on muse_hash and the other g41 tw64 scenes.
+- Pops: test F13's inference that the rise is mostly the F2 relabel
+  (count the S1b pop px where same-chain minima merge within σ).
+- q4's outer/none px on def (R6).
+- Checks #4-#7 and #9 on form B's ink. The shared checks read it
+  thresholded at 0.5 (scenes.ts); #2 and #14 read the model only.
+- Free ends by eye on user_tw42.lightpaper, g41_def_tw42 and
+  muse_default_tw (b_crop.ts at their free-end sites).
+- R1 together with F14: fade the hand-off to OWN, and keep a foot's
+  burial at full weight while a member's tube holds it. When R1 is
+  fixed the cap pin's it.fails turns red; flip it to it. Then R2, R3
+  and R4 as listed.
+
+How to rerun, from the worktree root (outputs go under
+`.claude/probes/K1040/s1/out/s1b/`):
+- Suite: `npm.cmd test`. The pins alone:
+  `npx.cmd vitest run test/render/field/form_b.test.ts`.
+- Rate census: `$env:TAG='x'; npx.cmd vite-node .claude/probes/K1040/s1/b_rate.ts`.
+- Bisector: `npx.cmd vite-node .claude/probes/K1040/s1/b_bisector.ts [scene...]`
+  (env OUT, DPR).
+- Crop: `npx.cmd vite-node .claude/probes/K1040/s1/b_crop.ts <scene> <x> <y> [dpr=2] [halfWorld=0.8] [zoom=4] [tag]`
+  (env OUT, SUB). The panels are form B's ink, the oracle's ink (light
+  gray = interior, white = paper) and form B's top surface with fade
+  bits darkened.
+- One site's burial:
+  `npx.cmd vite-node .claude/probes/K1040/s1/b_trace_bur.ts <scene> <x> <y> [x|y]`.
+  A chain around a site: `node .claude/probes/K1040/s1/b_site.mjs <scene> <chain> <x> <y>`.
+  Its junction lines found no arm at chain 29's start on
+  g41_user_tw64, where FormB's corner 41 has one, so check the scene's
+  arm fields before trusting them.
+- Scenes gate: `$env:OUT='<dir>'; npx.cmd vite-node .claude/probes/K1040/s1/scenes.ts`.
+- q4: `$env:OUT='<dir>'; npx.cmd vite-node .claude/probes/K1040/s1/q4.ts <scene...>`.
+- Pops (about 12 min):
+  `$env:WINDOWS='0'; $env:WLEN='41'; $env:OUTSUB='s1b/pops_x'; npx.cmd vite-node .claude/probes/K1040/s1/pops.ts`.
+- Holes: `$env:OUT='<dir>'; npx.cmd vite-node .claude/probes/K1040/s1/q5holes.ts` (env NO_ORACLE).
