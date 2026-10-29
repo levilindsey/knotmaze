@@ -387,3 +387,55 @@ p95 until both stages are done.
   not established from these. With lbp on the tube edges leave the CPU
   (call 3), which is where the strips' goal is met or not; not measured,
   since the GPU edges are not wired.
+
+## Handoff
+
+2026-10-28 13:30, the S3a8b agent, stopped near the 1h30 mark (start 12:01):
+no further step fits before the 2 h cap.
+Done: step 1 (N1), step 2 (N2: the rule, its pin, both gates read), step
+3's Node half (N3: the GPU edges' shaders, layout and float32 mirror,
+same answer on every frame), step 4's exact CPU fixes (N4, N5). Missing,
+for the next stage:
+
+1. **Wire call 3** (step 3's browser half). `label_band_gpu.ts` is
+   complete but unused. Plan: LabelPass exposes its table texture with
+   `textures` (today it does not); BandPass gains an edge draw that
+   compiles `bandEdgeSources(TBL_W, depth)` lazily per variant (a compile
+   failure falls back to the CPU edges with a reason), uploads the
+   instances when `BandEdgeLayout.update(T)` says so (aSeg at divisor 2),
+   draws `drawArraysInstanced(TRIANGLE_STRIP, 0, 4, 2 * nSegs)` after the
+   CPU strips with uM, uSize, uW, uH (= m.h), uSigma, uLr, uL, uTbl and,
+   for depth, uD2, uZmin, uZinv, uRinv, uSinv, uWin, uRho from the tables,
+   and unbinds every unit by name after (G7); buildBandStrips takes an
+   option to leave out the tube edges (caps, fill arcs and switch strips
+   stay on the CPU); label_app's lbp on and the census page take it (the
+   page's `?gpu=1` today switches only the GPU pieces). New program text
+   needs nothing more: its K320 budgets are in `k320_slim.test.ts`.
+2. **Call 5's lbp-on gates**: the browser same-answer check against the
+   Node mirror, the raster census (only S3a7 F4 classes), and the pop
+   census, which settles N2's hairline cracks (with lbp on there are no
+   piece seams).
+3. **Call 4, a decision**: N4 leaves the switch lines at 7.6 / 12.4 ms
+   p50 / p95 on def_drag, and the cost is finding them (7,000 to 12,000
+   candidates a frame), not placing them, so call 4's fallback would not
+   meet the goal. More exact CPU fixes are possible (a sorted window
+   instead of the O(n^2) near lists, a cheaper exact reject before the
+   reach test), but not to 0.5 ms. Until the lines are found another way
+   the label cannot meet S3a8c's 2 ms p95 gate either.
+4. **flip_0** (call 7): not checked; it needs the strips reading s from
+   the tables in the browser (item 1).
+5. **Cost** (call 6): Node per part with lbp on (after item 1); the
+   browser's lbi=1 lbp off against on, back to back, `__knotLabel.timers()`,
+   frame times and the GPU time.
+
+Evidence: `.claude/probes/S3a/` (untracked): the stage's `*20*` probes
+(prof20 + inst20, strips_pin20, raster20, pops_cut20, band_gpu20, sw20,
+sw20t, chain20a/b, locked20) and `pops20/` (profiles, logs, census
+outputs, crops). The census runs read master's `pops15/`. Dev server:
+`npx.cmd vite --config .claude/probes/S3a/vite.private-cache.config.ts
+--port 5381 --strictPort --host 127.0.0.1` from the worktree (stopped).
+Residuals: N2's one-frame hairline cracks at cuts with lbp off
+(mechanism not established); `locked20.ps1` takes the lock after 30
+minutes of waiting whoever holds it; BORROW 8 against the CPU's unbounded
+borrow (never bound on 164 frames); two sub-float32 def_drag pieces take
+the neighbour's cluster on the GPU.
