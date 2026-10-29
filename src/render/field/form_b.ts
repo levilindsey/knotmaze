@@ -25,9 +25,16 @@
 //   depth test over pieces, it is continuous, and it breaks the equal-z
 //   ties of one chain's segments by distance instead of draw order (K1033).
 //   `coneK: Infinity` gives the max form (z alone, ties by distance).
-// - Q2, the cap at both ends of a burial pair: B buries A's foot with
-//   weight ramp_B · ramp_A (`capBoth`, default on), so a foot that leaves
-//   its group at its own cap is already exposed when it leaves.
+// - Q2, the cap (S1c F2): a piece inside its arm's cap ramp is a full
+//   member of its group with weight ramp, and OWN with weight 1 − ramp.
+//   The pixel mixes complete composites, one per configuration: with the
+//   ramps sorted, u in [0, 1) makes each piece whose ramp exceeds u a
+//   member (n + 1 configurations for n such pieces, weighted by the gaps
+//   between the sorted ramps). Within one, a burial weighs B.selfW alone,
+//   so a foot stays buried at full weight while a full member's tube holds
+//   it, and the hand-off to OWN at L (ramp 0) is continuous whether OWN
+//   lies over the group or under it. F_CAP marks where the
+//   configurations' inks differ.
 // - D1, the fold: one chain's minima within σ merge (the nearer is kept).
 //   Of two kept minima of one chain within 2σ, the farther one's own terms
 //   and its burial of others are weighted ss(σ, 2σ, Δs), so a minimum
@@ -66,8 +73,6 @@ export interface FormBParams {
   ovw?: number;
   /** Corner radius share, cr in r0 = (cr/3)·min(2h, 1.5h·tan(θ/2)) (default look.cuspRadius, else 3). */
   cr?: number;
-  /** Q2: fade a burial by both pieces' cap ramps (default true). */
-  capBoth?: boolean;
   /** D1: the fold fade (default true). */
   fold?: boolean;
   /** Depth window, arc length (default look.depthWindow · (look.ctrlArc ?? 1)). */
@@ -232,7 +237,6 @@ export class FormB {
   readonly K: number;
   readonly ovw: number;
   readonly cr: number;
-  readonly capBoth: boolean;
   readonly fold: boolean;
   readonly force: NonNullable<FormBParams["force"]>;
   readonly fillKey: "nearer" | "a" | "b";
@@ -269,7 +273,6 @@ export class FormB {
     this.K = params.coneK ?? h / this.zt;
     this.ovw = params.ovw ?? 0.05 * h;
     this.cr = params.cr ?? look.cuspRadius ?? 3;
-    this.capBoth = params.capBoth ?? true;
     this.fold = params.fold ?? true;
     this.force = params.force ?? {};
     this.fillKey = params.fillKey ?? "nearer";
@@ -930,12 +933,14 @@ export class FormB {
       let burBit = 0;
       for (const B of P) {
         if (B === A || B.surf !== S) continue;
-        const w = B.ramp * B.selfW * (this.capBoth ? A.ramp : 1);
+        // A member buries at full weight whatever either cap ramp reads (S1c
+        // F2): the ramps weigh the configurations in evalPoint instead.
+        const w = B.selfW;
         if (w <= bur) continue;
         const wb = w * this.winW(B, fx, fy);
         if (wb > bur) {
           bur = wb;
-          burBit = w < 1 ? (B.selfW < 1 ? F_FOLD : F_CAP) : 0;
+          burBit = w < 1 ? F_FOLD : 0;
         }
       }
       // A corner whose two arms are one chain (the chain turns back through
@@ -1019,12 +1024,67 @@ export class FormB {
   }
 
   private pbuf: Piece[] = [];
+  private ubuf: number[] = [];
 
   evalPoint(x: number, y: number): PixelEval {
+    const P = this.pbuf;
+    const fade = this.pieces(x, y, P);
+    // The cap mix (S1c F2; Q2 in the header): the pieces inside their cap
+    // ramps, sorted by ramp. Configuration k makes the k lowest OWN and the
+    // rest full members, and weighs ramp[k] − ramp[k − 1] (ramp[−1] = 0,
+    // ramp[n] = 1). The ink is the weighted sum; the labels are the heaviest
+    // configuration's, the term the one that inks most.
+    const U = this.ubuf;
+    U.length = 0;
+    for (const A of P) if (A.g >= 0 && A.ramp < 1) U.push(A.idx);
+    if (U.length === 0) {
+      const one = this.evalLayers(x, y, P);
+      one.fade |= fade;
+      return one;
+    }
+    U.sort((i, k) => P[i].ramp - P[k].ramp);
+    let res: PixelEval | null = null;
+    let wRes = -1;
+    let term: Term | null = null;
+    let vTerm = -1;
+    let ink = 0;
+    let fd = fade;
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (let k = 0; k <= U.length; k++) {
+      const wk = (k < U.length ? P[U[k]].ramp : 1) - (k > 0 ? P[U[k - 1]].ramp : 0);
+      if (!(wk > 0)) continue;
+      for (let i = 0; i < U.length; i++) {
+        const A = P[U[i]];
+        A.surf = i < k ? OWN + A.idx : A.g;
+      }
+      const r = this.evalLayers(x, y, P);
+      ink += wk * r.ink;
+      fd |= r.fade;
+      lo = Math.min(lo, r.ink);
+      hi = Math.max(hi, r.ink);
+      if (wk * r.ink > vTerm) {
+        vTerm = wk * r.ink;
+        term = r.term;
+      }
+      if (wk > wRes) {
+        wRes = wk;
+        res = r;
+      }
+    }
+    for (const i of U) P[i].surf = P[i].g;
+    const out = res as PixelEval;
+    out.ink = Math.min(1, ink);
+    out.term = term;
+    out.fade = fd | (hi - lo > 1e-9 ? F_CAP : 0);
+    return out;
+  }
+
+  /** One configuration's layered composite at (x, y), with the pieces' surf as set. */
+  private evalLayers(x: number, y: number, P: Piece[]): PixelEval {
     const h = this.h;
     const aa = this.aa;
-    const P = this.pbuf;
-    let fade = this.pieces(x, y, P);
+    let fade = 0;
     // Every surface whose coverage reaches the pixel, keyed by Q1's cone key
     // (max over its pieces and fills). Covering: a piece within h, or a fill.
     const surf: SurfEntry[] = [];

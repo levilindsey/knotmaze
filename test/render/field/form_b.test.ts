@@ -571,11 +571,10 @@ describe("form B: watertight and the rate rule at every fade value (S1b)", () =>
     return { worst, at, fades };
   }
   for (const [name, make, box, natural] of rateCases)
-    // The cap scene breaks the rule where the END's arm ends (S1b F13, a
-    // residual): a member whose ramp has reached 0 draws its outline over the
-    // group's tube, and past the arm the same piece is OWN, under the group by
-    // key, so the ink drops by 0.75 in 1/40 px. It fails until that is fixed.
-    (name === "cap" ? it.fails : it)(`${name}: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1`, () => {
+    // The cap scene was S1b F13's residual R1: the END's piece switched to
+    // OWN at L in one step, a drop of 0.75 in 1/40 px. The cap mix (S1c F2)
+    // makes the hand-off a mix of complete composites, continuous at L.
+    it(`${name}: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1`, () => {
       const sc = make();
       const report: string[] = [];
       for (const [tag, force] of rateVariants) {

@@ -197,3 +197,57 @@ extra px, as S1b inferred. The flag says where a pixel sits, not what
 switched there; step 4 assigns mechanisms by what changes between the
 frames. Output: `out/s1c/pops_s1b/` (`pops.ts` with `DUMP=1` keeps
 each pop's pixels), `out/s1c/pops_s1b/mech/mech.txt`.
+
+**F2 · The cap mix: one definition change fixes F14 and R1 (step 3,
+02:25-02:38).**
+- **The count.** `b_f14.ts` traced every #1 deep pixel won by a side
+  foot with F_CAP on S1b's dump of all 12 scenes: 1542 px. In 1047
+  (68%, mean ink 0.741) the foot's own ramp is below 1 while a full
+  member's tube holds it (U ≥ 0.99): S1b's burial weight
+  B.ramp · B.selfW · A.ramp let the foot's own ramp unbury it (F14). In
+  441 (29%, mean ink 0.704) the foot is full and its burier is the one
+  in its ramp, the mirror case. 51 px are both, through the burier's
+  ramp; 1 has no burier; 2 are F9's fill. So 1540 of 1542 share one
+  mechanism, a burial scaled by a cap ramp. R1 (the cap pin: the END's
+  piece switched to OWN at L, 0.75 in 1/40 px) is the same ramp's far
+  end, where the piece's surface changed in one step.
+- **The change** (`form_b.ts`, the header's Q2). A piece with g ≥ 0
+  inside its arm's cap ramp (ramp < 1) is a unit. With the units' ramps
+  sorted, one u in [0, 1) makes each unit whose ramp exceeds u a full
+  member of its group (surf = g) and the rest OWN (surf = OWN + idx):
+  n + 1 complete composites for n units, weighted by the gaps between
+  the sorted ramps (w_k = r_k − r_(k−1), with r_(−1) = 0 and r_n = 1).
+  The ink is their weighted sum; the labels come from the heaviest
+  composite and the term from the largest w · ink; the fade bits are
+  their union, plus F_CAP where their inks differ by more than 1e-9.
+  Inside a composite a burial weighs B.selfW alone, so a foot stays
+  buried at full weight while a full member's tube holds it. A unit
+  entering (ramp → 1) or reaching L (ramp → 0) takes its composite's
+  weight to 0, so both ends are continuous, whether OWN lies over the
+  group or under it. Without units the evaluation is S1b's, bit for bit
+  (now `evalLayers`). The `capBoth` param (S1b's A.ramp factor) is
+  gone. Cost: one more composite per unit, inside caps only.
+- **The pins.** The cap rate pin passes now (`it.fails` → `it`: 1.62
+  per px against 3, F_CAP shown); 22 of 22 form B tests. `npm test`:
+  188 files, 2532 tests (`logs/npm_test_f2.txt`).
+- **#1 on all 12** (`scenes.ts`; `out/s1c/scenes_f2/gate_table.txt`):
+  2832 → 861 px. By term: foot+f2 1540 → 0, foot 396 → 3, tB+f2
+  32 → 0; the rest stay (tB 322 → 320, arc 255 → 251, tA 217 → 216,
+  foot+f8 62 → 59). Per scene: muse_hash 1012 → 173, g41_user_tw64
+  783 → 289, g41_def_tw64 348 → 89, g41_ring_tw64 189 → 0 (passes
+  now), muse_default_tw 193 → 171, ring 101 → 40, user_tw42.lightpaper
+  71 → 32, g41_user_tw42 70 → 31, def 65 → 36. Free ends 345 → 169. No
+  other check changed its outcome on any scene. `b_f14.ts` on the new
+  dump finds 2 foot px with F_CAP left (muse_hash, both with F_TIE too).
+- **The rate** (`b_rate.ts`, 161 sites; `out/s1c/rate/rate_f2.txt`):
+  sites with breaches 23 → 3. The 1105 foot jumps are gone (647 + 307
+  + 75 foot+f2 | foot+f4, 74 foot | foot+f4, 2 more); the 3 sites left
+  are muse_hash corner 209's sliver (R3, 84 arc jumps, as before).
+- **Crops** (`out/s1c/crops/<scene>_<x>_<y>_<class>_{s1b,f2}.png`, the
+  deepest site of each class on muse_hash and the three g41 tw64
+  scenes; `b_crop.ts` with `FORMB=s1b` renders `form_b_s1b.ts`, S1b's
+  form B with its imports re-rooted). The dark band where a buried arm
+  showed through its group's interior is gone. What stays is a faint
+  grey: the arm's outline fading in across its cap ramp, the hand-off
+  itself (`g41_user_tw64_3.227_14.632_own_f2.png`,
+  `muse_hash_15.461_21.814_own_f2.png`).

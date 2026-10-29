@@ -1,0 +1,13 @@
+muse_hash: own 1, own+bur:winW 1
+muse_default_tw: none
+def: none
+fat: none
+ring: none
+user_tw42.lightpaper: none
+g41_def_tw42: none
+g41_def_tw64: none
+g41_ring_tw42: none
+g41_ring_tw64: none
+g41_user_tw42: none
+g41_user_tw64: none
+All: own 1 px (mean ink 0.723), own+bur:winW 1 px (mean ink 0.512)
