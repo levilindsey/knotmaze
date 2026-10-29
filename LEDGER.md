@@ -26,9 +26,9 @@ Next free ID: K1045.
 - **K1029** · Cursive v6.5, by look (picture sent 2026-10-28): B4 refit a's and q's tops like g's, so each curves evenly
   from the corner into the bowl, sitting 1.0-1.3 u further from the font. Drive `K863/aq_top_v65.svg`,
   `cursive_v65_words.svg` (quag, aqua); `K1029_cursive_b4.md` ## Handoff; NOTES `## K1029` N2c, N4.
-- **K1001** · K992's corners, sharp or round: where two threads split, the corner is a sharp point; stage 1's b16 rounded
-  it into a small arch (not landed). Stage 4's c23w (9b549d30) keeps the point and holds it steady in motion; one tip
-  (j115/2) rounds slightly. Levi sees it in motion with K868's `lbp` review, after the crack fix lands (`k992-corners` `pops23/crops23.png`).
+- **K1001** · Corners, sharp or round: where two threads split, the corner is a sharp point (K1040 F1 row 8: r goes to 0
+  as the room closes); stage 1's b16 rounded it into a small arch (not landed). Levi sees it in motion at K1040 S4b,
+  behind its flag; there is nothing to look at before then.
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -291,33 +291,15 @@ Next free ID: K1045.
 
 ## In progress
 
-- **K1040** · Junction renderer redesign: the label, borders and corners as a per-pixel function of the frame on the GPU,
-  continuous and watertight by construction, against the definition's float64 CPU evaluation (the CPU FieldModel stays
-  the look reference; `K868_field_border.md` §3.5, §5, §8 S3). Design stage running; K868's repairs and K992 wait on it.
-  - owner: nobody since 2026-10-28 22:36 (merged; agent `a377492c94a629e4f` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3)
-  - branch: mainline; last commit: `4c64e84b`
-  - evidence: the brief's ## Findings on the branch; `.claude/probes/K1040/` (the WebGL2 timing prototype, its source committed on the branch with `git add -f`)
-  - next: write S1's brief from F7 (the float64 reference, Opus 2 h)
-  - brief: `docs/design/K1040_junction_field.md`
-  - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1` (a copy of S3a's private-cache config)
-- **K868** · Border look, junctions done right: one field renderer (union within a surface, occlusion
-  by depth between surfaces), exact G1 rolling-ball fillets and G2 candidates, checked against a
-  CPU oracle before app work. Supersedes K862/K864-K866 (parked). `docs/design/K868_field_border.md`.
-  - owner: nobody since 2026-10-28 21:04 (agent `afb156e76f1ccee25` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3, S3a8b6, stopped by the coordinator at its Order step 2: K868's repairs pause for K1040); its float64 oracle met every known answer it ran on, and gate 3 is still not met
-  - branch: `k868-s3a`, worktree `.claude/worktrees/k868-s3a`, rebased onto master `9a285b3c`; last commit: `de8f3f6a` (S3a8b6's Q17 and Handoff; WIP, unpushed)
-  - evidence: `.claude/probes/K868/` (scenes, oracle, sheets, `s2/` probes), `.claude/probes/K883/`, `.claude/probes/K900/` (census positions, the free-end image check `indep.ts`), `.claude/probes/K909/`, `.claude/probes/K915/`, `.claude/probes/K922/` (sheet I, `README.md`), `.claude/probes/K924/` (`run.ps1`, `tally.mjs`, `at.ts`, `tdiff.mjs`), `.claude/probes/K940/` (sheet J, `jcrops/`, `S/`, per-scene `ydiff/`, `cls/`, `indep/`), `.claude/probes/K934/` (sheet K `K_recount.png`, `sheetk/`, `dropped/`, `ext3/`, `indep/`, census logs), S3a's to S3a5's in the `k868-s3a` worktree's `.claude/probes/S3a/` (each stage brief's `## Handoff` lists its files and rerun commands; S3a5's: `seq13_*.ts` and `seq13/`, the four recorded sequences; S3a6's: `pops14/` (census results; `before14/` is master), `oracle_m14.ts`, `locked14.ps1`, and the census itself, tracked: `scripts/label_pops.ts`; S3a7's: `pops15/` (census runs, `at15_*` crops, `raster15/`), the `*15*` probes (`tables15.ts`, `check15.ts`, `pops_at15.ts`, `atspec15.mjs`, `cost15.ts`), `locked15.ps1`; S3a8a's: `*18*`, `pops18/`, `locked18.ps1`; S3a8b's: `*20*`, `pops20/`, `locked20.ps1`; S3a8b2's: `*22*`, `pops22/` (its gate (c) runs are master's frames for S3a8b3), `locked22.ps1`; S3a8b3's: `*24*`, `pops24/`, `locked24.ps1`; S3a8b4's: `*26*`, `pops26/`, `master26/` (master at `9a285b3c`), `attr26.ts`, `locked26.ps1`; S3a8b5's: `*28*`, `pops28/`, `attr28.ts`, `crack28t.ts`, `locked28.ps1` (its Handoff lists the rest); S3a8b6's: `*30*`, `pops30/` (`oracle30_known/`: the oracle's verdicts on the known answers), `oracle30.ts` and `locked30.ps1` (tracked on the branch), `s3a8b4/` (S3a8b4's tree at `a04f3926`); S3a3's: `gpu10/cmp10_all.log`, `ksites10/` (sheet K sites), `drag11/`, `gp11/`, `settle11/`, `ab/s3a3_off/`; copy them to the main checkout before removing the worktree); sheets A-K, B2, B3 and K883_worst12, check reports and a README on Drive `K868/`; `docs/design/K868_s1a_notes.md`, `docs/design/K868_s1b_oracle.md`, `docs/design/K868_s2_g2.md`
-  - next: paused for K1040, which decides what of S3a survives. If the repairs resume: S3a8b6's Handoff (the g41 and muse_hash verdicts with and without `--gpu`, Q16's 11 zoom-1 fix pops, Q17 closed, then step 3's traces, the VS-bound guess first; attr28's two t14 DEFECTs read boundary by the oracle, so they do not count against gate 3); the merge once gate 3 is met; then S3a8d (K1010), S3a8c (K1007); then S3a10 (the FieldModel, about 265 ms of a 292 ms rebuilt frame), K972, K973, sheet S3a, K943's bits, S3b
-  - brief: `docs/design/K868_field_border.md`; S2: `docs/design/K868_s2_g2.md`; K883: `docs/design/K883_oracle_borders.md`; K900: `docs/design/K900_oracle_holes.md`; K909: `docs/design/K909_geo_groups.md`; K915: `docs/design/K915_surface_borders.md`; K922: `docs/design/K922_junction_extent.md`; K923: `docs/design/K923_s3_bench.md`; K924: `docs/design/K924_label_artifacts.md`; K940: `docs/design/K940_label_fixes.md`; K934: `docs/design/K934_recount.md`; S3a: `docs/design/K868_s3a_app.md`; S3a2: `docs/design/K868_s3a2_label.md`; S3a3: `docs/design/K868_s3a3_ink.md`; S3a4: `docs/design/K868_s3a4_rebuild.md`; S3a5: `docs/design/K868_s3a5_incremental.md`; S3a6: `docs/design/K868_s3a6_motion.md`; S3a7: `docs/design/K868_s3a7_pieces.md`; S3a8a: `docs/design/K868_s3a8a_fills.md`; S3a8b: `docs/design/K868_s3a8b_strips.md`; S3a8b2: `docs/design/K868_s3a8b2_wiring.md`; S3a8b3: `docs/design/K868_s3a8b3_cut_line.md`; S3a8b4: `docs/design/K868_s3a8b4_attribution.md`; S3a8b5: `docs/design/K868_s3a8b5_shared_cut.md`; S3a8b6: `docs/design/K868_s3a8b6_oracle.md` (Q17, ## Handoff; the last four on branch `k868-s3a` until merged)
-  - env: from the `k868-s3a` worktree, `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5381 --strictPort --host 127.0.0.1` (the config is untracked; S3a3's handoff, How to rerun)
-- **K992** · K868 corner rules continuous in the geometry (master's make 65-100% of the pop area). Stage 4's c23w landed
-  (9b549d30). Stages 5-7 patched the march's switches; stage 7's census fails def_drag@w0 on the restart's steep weight
-  (F23), and K1041 lists the switches left. Paused for K1040. Cost K1022, sharp/round K1001.
-  - owner: nobody since 2026-10-28 20:58 (agent `a32c290cb13ce9582` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3, stage 7, stopped by the coordinator: K992 is paused while K1040 redesigns the junction renderer)
-  - branch: `k992-corners`, worktree `.claude/worktrees/k992-corners`; last commit: `4b7db34d` (stage 7's F23 and Handoff; WIP, unpushed, base `952cf681`)
-  - evidence: the worktree's `.claude/probes/S3a/` (keep the worktree; untracked except the generators and readers): S3a6's kit and stage 1's (`*14*`, `*16*`, `pops16/`), stage 2's `*17*` and `pops17/`, K1000 stage 1's `*19*`, `pops19/` and `cmpdir19/`, stage 3's `*21*` and `pops21/` (`mk_c17.mjs --foot track/--drop/--ove`, `mk_walk21.mjs`, `census21.ps1`, `locked21.ps1`, `land21.ps1`; the c21 oracles regenerate: mk_c17, then mk_cap19 `--mode cont`, then mk_walk21), stage 4's `*23*` and `pops23/`, stage 5's `*25*` and `pops25/` (`census25.ps1`, `locked25.ps1`, `cmp25.ps1`, `march25.ts`, `d25.ts`, `pops25/c25z.log` and its crops, `npmtest25.log`; `mkt25.mjs` is stale), stage 6's `*27*` and `pops27/` (`census27.ps1`, `locked27.ps1`, `cmp27.ps1`, `class27.ts`, `diff27.mjs`, `march27.ts`, `mkdbg27.mjs`, `cost27.ts`, `mkcost27.mjs`; oracles `oracle_c27.ts`, `oracle_s27dbg2.ts`, `oracle_m27t.ts`, `oracle_c27t.ts`; crops `frames27_j56_t5.json`, `_t8.json`, `frames27_j56_f38_39.json`, `_f39_40.json`, `frames27_j104_f19_20.json`, `frames27_j18_f27_28.json`; `pops27/c27z/`, `c27/`, `class_c27z.log`, `class_c27.log`, `march27_j56_*.log`, `tests27.log`), stage 7's `*29*` and `pops29/` (`c29z/` the windows and `class_c29z.log` their gate, `c29/` zoom 1 ungated, `march29_dd_*.log`, `r29_def_drag_j56.txt`)
-  - next: paused for K1040, which decides whether the corner march survives. If it does: stage 7's Handoff (the march goes on past S = 0 so ss(Sm/0.2) goes; the census at both zooms with the gate; cost27), then K1041; if not, K992 closes into K1040
-  - brief: `docs/design/K992_s7_recover.md` (F21-F23 and ## Handoff; stage 6 `K992_s6_tie.md` F18-F20 and ## Handoff, stage 5 `K992_s5_branch.md` F14-F17 and ## Handoff, on the branch; stage 4 `K992_s4_continuous_march.md` F9-F13 and ## Handoff, stage 3 `K992_s3_landing.md` F1-F8 and ## Handoff, stage 2 `K992_s2_continuous_stops.md`, stage 1 `K992_corner_rules.md`, K1000 `K1000_continuous_caps.md`)
-  - env: from the `k992-corners` worktree, `npx vite --config .claude/probes/S3a/vite.private-cache.config.ts --port 5392 --strictPort --host 127.0.0.1` (the config is untracked, copied from `k868-s3a`)
+- **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
+  frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
+  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 running.
+  - owner: agent `af2f6426877a368bb` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, S1 the float64 reference, started 2026-10-28 22:41, 2 h cap)
+  - branch: `k1040-field`, worktree `.claude/worktrees/k1040-field`; last commit: `d0d81741` (master, S1's brief; no stage commit yet)
+  - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; S1's driver in `s1/`); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
+  - next: S1, then S2 beside S3 (F7); S3 and S4a need the Pixel on adb. The carried items and their stages: the design doc's ## Coordinator's calls
+  - brief: `docs/design/K1040_s1_reference.md`
+  - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
@@ -816,26 +798,11 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
-- **K1010** · K868 S3a8d: in the lbp path the GPU finds the switch lines (instances built when the topology changes,
-  each candidate evaluated once a frame); a cluster switch is cut along S3a8b3's `label_cut.ts` line. The CPU search
-  costs 7.6 / 12.4 ms p50 / p95 on def_drag for 2 to 42 lines. `K868_s3a8b2_wiring.md` call 6; S3a8b N4.
-- **K1007** · K868 S3a8c, S3a8a's leftovers: one window range record per window and shift (about 730 a frame, not
-  31-35K), the crossing rows' `Math.hypot` near test (a pin call, or the GPU), and the p95 spread (GC or load,
-  untested). `K868_s3a8a_fills.md` ## Handoff, Missing 1-3.
-- **K1022** · K992's c23w makes the label's CPU build 1.75x master's (the model 1.87x), over 2x on g41_def_tw42 (2.06)
-  and muse_default_tw (2.29); not attributed (the march, the caps, the walk, TAU 1e-4). Stage 5's census builds took
-  916-1242 ms under load (master 433-784); stage 6's cost27 splits it. Cut it with S3a10. `K992_s4_continuous_march.md`.
-- **K1000** · K868 label: V's folds and live/unsolved flips (class 1) still pop. Stage 1 made the cut loop's caps
-  continuous (branch `k992-corners`, `K1000_continuous_caps.md` ## Handoff); they landed with K992 in 9b549d30.
-- **K1015** · K868 label: passReach (the depth pins' walk) steps by h/8, so its reach moves in steps: the census's
-  largest pop class in the windows ("reach": 1554 of c21w's 3403 pops; master 1884). Make it continuous as K992 stage
-  3 made the part walk (bisect the parting). `K992_s3_landing.md` F5 (branch `k992-corners`).
-- **K984** · K868's readback call, before S3a10: time a same-frame readback of a few KB after a GPU pass, on the
-  desktop and the Pixel, and sketch the clusters, pass tags and switch topology on the GPU (no readback at all). One
-  frame late is out (wrong on every flow frame). `K868_s3a5_incremental.md` sections 9-10; `K868_s3a6_motion.md`.
 
 ## Residuals (known, not fixed)
 
+- **K1000** · K868 label: V's folds and live/unsolved flips (class 1) still pop. K1040 carries it (F3's fades) and it
+  closes at K1040 S4b. Stage 1's continuous caps landed with K992 in 9b549d30 (`K1000_continuous_caps.md` ## Handoff).
 - **K1002** · K868's corner balls are never checked against other threads (master, b16 and c17 alike): a large r can
   enclose a neighbour (j139/2 t23: chains 46/84 sit 0.82-0.88h from q inside b16's 1.80h ring), which shows only once
   the neighbour reaches the fill between the arc and V. `K992_s2_continuous_stops.md` G2 (branch `k992-corners`).
@@ -852,17 +819,11 @@ Every other item below waits on the trigger it names.
 - **K958** · K868 extent part's residuals (K934 step 3, `ext3/`): a crescent sliver at muse_hash (20.30, 1.40);
   an island under K955's free end (m4); a lens wedge with a free end at g41_def_tw64 (0.90, 14.40); a notch (r1);
   spur ends (u3); a 1 px hairline island at g41_user_tw64 (9.79, 12.93).
-- **K964** · K868's label residue after S3a2 (`K868_s3a2_label.md` ## Handoff): class A, edge ties 0.003 px from
-  a tube's edge (inferred: float32 interpolation); class B, one chain covering a pixel twice on a steep z flank (GPU
-  keeps the larger z, the oracle the nearest point's); open ends 1-2 cells on 4 scenes; def's fill at (658, 548).
 - **K966** · K868 with `labelInk` on: the ink ignores the thread reveal, fog, the appearance reveal and plucks, is one
   low-contrast colour over every layer (S3a3), and cuts or crosses the trail. Fix before the flag becomes the default.
   S3a2's and S3a3's handoffs; `gp7/`, `gp11/` crops on `k868-s3a`.
 - **K967** · K868's label app fixes ctrlArc at 0.47 and the corner radius at 3, and its camera assumes no rotation
   or pivot; the panel's labelInk checkbox does not refresh after the 255 fallback. S3a2's handoff on `k868-s3a`.
-- **K971** · K868's label rebuild with `lbi`, fabric mode: about 0.44 s a frame after S3a4 (app counter p95 510 ms; was
-  2.2 s; flag off 1.4 ms), so in-thread the knot never sleeps (worker host 28 s, flag off 15 s). The cost is the
-  FieldModel, rebuilt each frame; S3a5 found 1 ms needs the GPU (S3a7, S3a8, S3a10; `K868_s3a5_incremental.md`).
 - **K972** · K868's band ink against the oracle (S3a3 R1-R3): tube-against-tube switches are not found (twist eyes;
   g41_user_tw64's V diagonal), small closed islands are missing (sheet K a1), and loop tips draw an open hook where
   the oracle closes a teardrop (d1; K910's free-end rule makes the teardrop right). `K868_s3a3_ink.md` ## Handoff.
@@ -871,9 +832,6 @@ Every other item below waits on the trigger it names.
   user scenes); more free ends than the oracle on 11 of 12 scenes (def 27/1, muse_hash 75/10). S3a3's handoff.
 - **K974** · K868 probes: S3a2's `label7` has no def row; the dev server's build stamp shows the SHA at the server's
   start, not the current one. S3a3's handoff (K320's budgets landed in S3a4).
-- **K979** · K868 S3a4's measurement leftovers: the switch key churns as clusters renumber (about 6 ms of 440); knot
-  mode's model p50 rose 71 -> 80 ms (probably the cursive agent's load; rerun back to back); the drag pages have no
-  step-1 baseline. `K868_s3a4_rebuild.md` ## Handoff.
 - **K982** · Cursive K944 leftovers: loop crossings are recorded, never read; Inkscape's rewrite loses up to 4.4e-4 u.
   J1 fixed "fox" and p's entry turn (`K980_cursive_local.md` ## Handoff).
 - **K977** · Cursive v5.8's leftovers: b's bottom notch (1.77 -> 0.46) and z's descender notch (0.43 -> 0.25) still
@@ -1789,44 +1747,24 @@ Every other item below waits on the trigger it names.
 - **K1008** · K868 label's GPU path: a fill-program compile failure skips the fills silently (the `gf` guard in
   `label_pass.ts`), both fill programs compile, the GPU tube program has no K320 budget, and G7's GL error shows
   only on muse (unexplained). `K868_s3a8a_fills.md` ## Handoff, Residuals.
-- **K1011** · K868 label's GPU band edges: a zero-length neighbour borrows at most 8 segments on (BORROW; the CPU has
-  no limit; never bound on 164 frames), and two sub-float32 def_drag pieces take the neighbour's cluster.
-  `K868_s3a8b_strips.md` N3.
 - **K1014** · Cursive J3a's leftovers for J3b: 0 u cusp entries (hi×2, er, es, ow×2), on and en jumping between two
   minima (6.43/5.25 u), 12 maxfev solves, b f h k l e's after-high entries pinned at bounds, ea/et ~2 u below the
   baseline, ne/he at the 30 u bound, no words/template writers, no port sensitivity. `K1009_cursive_ports.md`.
-- **K1016** · K992 stage 3's tracked foot hops 0.05-0.06h at a concave polyline vertex (F4); an interpolated-normal
-  projection would remove it. `K992_s3_landing.md` (branch `k992-corners`).
-- **K1017** · K992's census, not yet explained: the "none" class (1392 of c21w's 3403 window pops; master 1395),
-  muse_drag@w2's excess (+10 c21w, +2 c21w2), and the rule classes at zoom 1 (rule plus rule:switch: master 36 pops,
-  c21w 96, c21w2 204). `K992_s3_landing.md` ## Findings (branch `k992-corners`).
-- **K1018** · K868 flip_0: a 13 px row along chain 20 that differs between the label paths. s and the 11-bit rounding
-  are ruled out (same label word on both); depth is left by elimination, untested. A probe reading the label pass's
-  depth under the band on both pages settles it. `K868_s3a8b2_wiring.md` P5.
 - **K1021** · Cursive B2's measures, reported: g's and q's corners sit 1.96 and 1.89 u above a's (each at its own
   stem top); the new tops run 9.2-9.3 u off the font (a's 8.0); q's junction stretch 0.31 to 0.92 u (within 3.0);
   og's dmax 19.91 to 20.74 u (rough before and after). `K1012_cursive_gq_corner.md` ## Handoff.
-- **K1023** · K992 stage 4's untraced spots: 2 of raster14's 5 "none" px (3 traced to sub-threshold corner moves),
-  j51/1's refit gate, j12/0, a concave-vertex hop in j115/2's V foot near u 0.66; thin census margins (muse_flow@w0 655
-  vs 659, muse_drag@w1 283 vs 286); TAU lets r move up to 1e-4 rRule a frame. `K992_s4_continuous_march.md` ## Handoff.
 - **K1024** · K868 S3a8b3's open points: at one muse_drag point only the GPU's cut root lies on its line, so the
   mirror's root is the odd one (`pops24/same24_fold.md`); lbp's GPU tube program has no fallback (a compile error turns
   the label off, as on master; the edge program falls back to CPU edges), and the cut line lengthened it. Its Q3, Q7.
 - **K1027** · Cursive a's and q's preset high joins: after v6.5's rounder tops, ba, va, wa sit 7.6-7.7 u from the font
   (2.5-2.6 in v6.4) and bq, vq, wq 10.0-10.2 u (5.0-5.4); bq, vq, wq start with a ~160° hook (since v6.3). J3c's solved
   joins replace these presets. `K1029_cursive_b4.md` ## Handoff; NOTES `## K1029` N3a, N4.
-- **K1031** · K992 stage 5's branch rule (F15) leaves: far basins to the overlap gate; adjacency that forms while the
-  rival is nearer; a hop and a hop back in one interval; with several basins, a result that depends on the start basin;
-  the chord test, exact only on a straight q path; j115/2's V-foot hop at u 0.66 (F4). `K992_s5_branch.md` F15.
 - **K1032** · K992's continuity tests are slow under full-suite load: the short (D) and (E) 9.1 s and 6.6 s, K1000's (D)
   22.6 s, against 60 s timeouts, so CI has little margin. The short (D) misses F11's jump at u 0.5175-0.52; only the full
   sweep (`SWEEP=1`) and the path test cover it. `K992_s5_branch.md` F16-F17.
 - **K1037** · K992's census and test tools (stage 6's leftovers): label_pops calls j56/1's def_flow@w1 pops "none" (nearest
   event 473-719 px away); `oracle_m25dbg.ts` keys on `__dbg25`, so `march27.ts` can't print master's nodes; SWEEP=1 vitest
   ends in "Timeout calling onTaskUpdate"; the census takes 2x its estimate (c27z 34 min). `K992_s6_tie.md` F20, ## Handoff.
-- **K1038** · K992's F19 residual: its 0.1h landing bound can refuse a jump while S > 0 where den(V) < 0.45 (none seen),
-  a jump in r. Stage 7's call 1c, as corrected (19:50), fades the whole weight past a jump to 0 before a refusal.
-  `K992_s6_tie.md` F19, `K992_s7_recover.md`.
 - **K1035** · Cursive J3b's leftovers for J3c: oi switches between two minima as o's top moves (13.71 u, as on does,
   K1014); the seven corners (i j p s u w y after o) all sit at the 30° low end, and os skips the font's deep dip; b f
   h k l attach at the 100 bound (oh, ok far from the font) and oe at 90 with one crossing (K948). NOTES `## K1009b` N4-N7.
@@ -2149,6 +2087,23 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1038** · K992's F19 landing-bound residual. Dropped: moot, the march goes (K1040) (2026-10-28).
+- **K1031** · K992 stage 5's branch rule leftovers. Dropped: moot, the march goes (K1040) (2026-10-28).
+- **K1023** · K992 stage 4's untraced spots. Dropped: moot, the march goes (K1040) (2026-10-28).
+- **K1018** · K868 flip_0, a 13 px row that differs between the label paths. Dropped: moot, both label paths go (K1040 S8) (2026-10-28).
+- **K1017** · K992's census, the unexplained classes. Dropped: moot, K1040 S6 recensuses the new field and master's path goes at S8 (2026-10-28).
+- **K1016** · K992 stage 3's tracked foot hops at a concave vertex. Dropped: moot, the march goes (K1040); S1's recordings gate covers a foot at a vertex (2026-10-28).
+- **K1011** · K868 label's GPU band edges (BORROW, sub-float32 pieces). Dropped: moot, K1040's band strips borrow no clusters (F7) (2026-10-28).
+- **K971** · K868's label rebuild with `lbi` at 0.44 s a frame. Dropped: moot, K1040 drops the per-frame FieldModel (F4) (2026-10-28).
+- **K964** · K868's label residue after S3a2. Dropped: moot, the S3a label path goes (K1040 S8); its class B is K1040 S1's question 1 (2026-10-28).
+- **K984** · K868's readback call before S3a10. Dropped: moot, K1040 reads nothing back and rules out S3a10 (F4) (2026-10-28).
+- **K979** · K868 S3a4's measurement leftovers. Dropped: moot, the per-frame FieldModel they measured leaves the frame (K1040 F6) (2026-10-28).
+- **K1022** · K992's c23w makes the label's CPU build 1.75x master's. Dropped: moot, the corner march goes and K1040's corners are closed form (F6) (2026-10-28).
+- **K1015** · K868 label: passReach steps by h/8. Dropped: moot, K1040's depth needs no passReach walk (F6) (2026-10-28).
+- **K1010** · K868 S3a8d, the switch lines found on the GPU. Dropped: moot, K1040's label has no switch lines (F6) (2026-10-28).
+- **K1007** · K868 S3a8c, S3a8a's leftovers (window range records, the near test, the p95 spread). Dropped: moot, K1040 replaces the CPU label path they measure (F6) (2026-10-28).
+- **K992** · K868 corner rules continuous in the geometry: the corner march (stage 4's c23w landed in 9b549d30). Dropped: superseded by K1040, whose corners are closed form (F2, F6); worktree `k992-corners` kept (the census kit) (2026-10-28).
+- **K868** · Border look, junctions done right: one field renderer with exact G1 fillets, checked against a CPU oracle (`K868_field_border.md`). Dropped: superseded by K1040, which carries its goals (F1, F6, F7); worktree `k868-s3a` kept (oracle30, the recordings) (2026-10-28).
 - **K1034** · Cursive v6.4 looks: Levi picked b0's joins out of o, ot's tangent entry (Ht) and v6.4's og. Done in 67e1bf84 (2026-10-28).
 - **K1030** · Cursive og: Levi kept v6.4's (o meets g's left shoulder at 50.5 u). Done in 67e1bf84 (2026-10-28).
 - **K1028** · Cursive tools for J3b: own-ends census and sheets, the run-on font reference, bg/wg/vg census words; b0 built through B3's reader (`work24/b0_build.log`). Done in 72ef51cb (2026-10-28).
