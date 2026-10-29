@@ -191,3 +191,72 @@ K930's writer (`tools/fewnode_k930.py`).
   - a `Ledger items` list: follow-ups and residuals. A question for
     Levi only about what shows on screen, in plain words;
   - K863's current handle fields.
+
+## Handoff
+
+B2 stopped at 15:15 (start 14:18:41) with Order steps 1-7 done.
+Nothing committed or uploaded; the work is in the untracked
+`.claude/probes/K863/trace/` (record: `NOTES.md` `## K1012`, N1-N10,
+with every rerun command).
+
+- **Built.** `out22/cursive_template.svg`: only g's and q's
+  Letters-layer paths differ from `out20` (`verify_tpl_k1012.py`).
+  `work22/base`: v6.2, the ports build, variant A. Tools in
+  `work22/dbg/*_k1012.*`; `edit_k1012.py` is B1's edit made per letter,
+  and on out18's a it writes out20's a byte for byte.
+- **Today's g and q (N1).** a's old spur (12.9 / 12.1 u), the
+  turnaround 1.29 / 1.02 u below and right of the stem top T, and the
+  bowl's top 3.06 / 2.47 u below T (a's was level with it).
+- **The edit (N2).** B1's parameters unchanged (the bowl leaves T 4 deg
+  above level). g: 9 -> 8 cubics, corner node 5, turn 178.0 deg, bowl
+  and stem 73.3 deg apart. q: 11 -> 10 cubics, corner node 4, turn
+  179.7 deg, 70.5 deg apart. Every other joint G2. The corners sit at
+  each letter's own T, 122.28 u (g) and 122.21 u (q) above the
+  baseline: 1.96 and 1.89 u above a's (120.32 u). a not moved.
+- **Fused entries (N5).** The junctions (y 60 u) did not move; the
+  turnaround is now the body's start, at T. Junction stretches 0.62 u
+  (g) and 0.92 u (q, was 0.31): within 3.0 u. The new tops run 9.2 u
+  off the font's (a's 8.0 u since B1): reported, not budgeted.
+- **Checks.** Build: J3a's script with a logged fallback to the k962
+  word and template writers, since `words_k1009.py` and
+  `template_k1009.py` do not exist (N3; the mode picks only those two,
+  so the result is the one asked for). Locality PASS: of 575 pieces, 25
+  moved, all touching g or q; the 500 that touch neither moved 0 u; the
+  11 words without g or q are byte-identical (N4). Census against v6.1
+  A: one row changed, og (lazy dog) dmax 19.91 -> 20.74 u, rough FAIL
+  before and after; g's and q's seams at about 1e-13 (N6). Bodies
+  against the font: g 2.50 -> 9.17 u, q 2.77 -> 9.30 u, both at the new
+  top (N7).
+- **Sheets (N8).** `out22/corners_v62.svg`, `out22/gq_words_v62.svg`,
+  `out22/cursive_v62_words.svg`, v6.1 A against v6.2. Guard: ALL CLEAN
+  on all four out22 files. Crops looked at: listed in N8.
+- **A reader bug the census misses (N9).** `tools/asdrawn_k980.py`
+  `transport` reads Bezier t as an arc fraction at both ends. Where the
+  edit merges cubics, the carried high-entry frames land far off: q's
+  after_o / after_b moved 36.1 / 34.6 u onto the bowl's left side, so
+  the preset joins bq, vq and wq sag onto q's left shoulder (2.2-3.0 ->
+  22.9-23.3 u from the font). a has carried the same error since B1
+  (16.4 / 14.4 u; ba, va and wa land low, 1.7-1.9 -> 6.8-7.0 u). By true
+  arclength they would land 4.3 / 4.2 u (q) and 2.7 / 2.2 u (a) from
+  the old places. Check sheets: `work22/sheets/high_into_gq_v62.svg`
+  and `high_into_a_v61.svg` (not in out22); no census word holds bq,
+  vq or wq. Not fixed here: it moves a's words (call 6). oq's and oa's
+  font distances (59.3 and 38.5 u; the census's oa in oat, 39.5 u,
+  third worst) are likely measured to the moved frame, not the join
+  (inferred from gen_k1009's code, not tested).
+- **g's shoulder (N10).** g's new cubic is short (58.9 u against a's
+  95.4 and q's 125.2 u) and meets the kept cubic 2 where the bowl
+  already turns at radius 42 u: it runs nearly straight from the
+  corner, then bends late. No angle or w_pk of the one-cubic edit
+  removes it; a fix refits cubic 2 as well.
+- **Missing.** The reader fix (N9), g's shoulder (N10), threads
+  (call 7).
+- **Next.** Fix `transport` (true arclength), rebuild, and recheck ba,
+  va, wa, oa, bq, vq, wq and oq; Levi looks at the corners and g's top.
+- **Rerun.** From the trace dir: `measure_k1012.py` (N1),
+  `edit_k1012.py edit` and `verify_tpl_k1012.py` (N2),
+  `build_from_svg.ps1 -Mode ports -Variant A` (N3), `cmp_k1012.py`
+  (N4), `fused_k1012.py` (N5), `& work22\dbg\checks_k1012.ps1` (N6-N8:
+  census, compare, distances, the two word sheets, guard),
+  `corners_k1012.py` (N8), `frames_k1012.py` (N9), `wpk_k1012.py`
+  (N10); the full commands are in NOTES.
