@@ -16,6 +16,18 @@
 //      there and jumped between the two contacts (K992 stage 3, F1 and F2).
 // At every step the corner stays live, and V, q and r (and in (C) the
 // tangent feet) move no more than three times the sweep's step.
+// Two more blend recorded frames (K992 stage 4, scenes/frames23_*.json: the
+// census sequences cropped to the chains within 3h of one junction):
+//  (D) muse_flow's j115/2 from f30 toward f31, where the march's halving
+//      choice flipped: an interval was halved only where S dropped by more
+//      than DROP across it, so the march's r went 0.23h, 0.18h, 0.23h, 0.18h
+//      within the blend (stage 3, F7 b);
+//  (E) def_drag's j39/1 from f1 to f3, through the overlap gate's narrow
+//      dips: S counted a dip only when a sample landed in it, and r went
+//      1.85h, 0.74h, 1.89h on f1-f3 at DROP 0.01 (stage 3, F8).
+// These blends move every point at once, so no step bound applies: the
+// largest step of V, q and r is halved 20 times toward its larger half,
+// and must shrink below 5e-4h. A jump keeps its size however small the step.
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -140,4 +152,83 @@ describe("K992: corners are continuous in the geometry", () => {
     const r = sweep((H) => grazing(H, (10 * Math.PI) / 180), 2.3, 3.3, 100, 0);
     expectContinuous(r, "acute30 graze feet", ["dV", "dq", "dr", "dfA", "dfB"]);
   });
+
+  it("(D) j115/2's march through the halving choice: muse_flow f30 toward f31", { timeout: 60_000 }, () => {
+    // u stops at 0.625: near 0.66 V's foot on arm A hops at a concave vertex
+    // (0.06h; stage 3's F4, out of stage 4's scope), and the march's r with it.
+    expectNoJump(frameSweep(blended("frames23_j115"), "j115", 2, 0, 0.625, 40), "j115/2");
+  });
+
+  it("(E) j39/1 through the overlap gate's dips: def_drag f1 to f3", { timeout: 60_000 }, () => {
+    expectNoJump(frameSweep(blended("frames23_j39"), "j39", 1, 0, 1, 40), "j39/1");
+  });
 });
+
+/**
+ * Two recorded frames, blended: every number whose counterpart exists moves
+ * linearly from frame a to frame b, and a chain whose point count differs
+ * stays at frame a (as `.claude/probes/S3a/trace21.ts` blends them).
+ */
+function blended(name: string): (u: number) => FieldScene {
+  const { a, b } = JSON.parse(readFileSync(join(__dirname, "scenes", `${name}.json`), "utf8")) as { a: FieldScene; b: FieldScene };
+  const lerp = (x: unknown, y: unknown, u: number): unknown => {
+    if (typeof x === "number" && typeof y === "number") return x + (y - x) * u;
+    if (Array.isArray(x)) return Array.isArray(y) && x.length === y.length ? x.map((v, i) => lerp(v, y[i], u)) : x;
+    if (x && y && typeof x === "object" && typeof y === "object") {
+      const o: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(x)) o[k] = k in y ? lerp(v, (y as Record<string, unknown>)[k], u) : v;
+      return o;
+    }
+    return x;
+  };
+  return (u) => lerp(a, b, u) as FieldScene;
+}
+
+type Moved = "dV" | "dq" | "dr";
+const moved = (a: Corner, b: Corner, k: Moved): number =>
+  k === "dr" ? Math.abs(a.r - b.r) : k === "dq" ? Math.hypot(a.q[0] - b.q[0], a.q[1] - b.q[1]) : Math.hypot(a.V[0] - b.V[0], a.V[1] - b.V[1]);
+
+/** The junction `jid`'s corner `index` in the blend at u, or null where it is not live. */
+function cornerAt(make: (u: number) => FieldScene, jid: string, index: number, u: number): { c: Corner; h: number } | null {
+  const s = make(u);
+  const h = s.look.halfWidth;
+  const c = new FieldModel(s, params(h)).corners.find((x) => s.junctions[x.junction].id === jid && x.index === index);
+  return c && live(c) ? { c: { ...c } as Corner, h } : null;
+}
+
+/** The blend from u0 to u1 in n steps: the largest step of V, q and r, and that step halved k times toward its larger half. */
+function frameSweep(make: (u: number) => FieldScene, jid: string, index: number, u0: number, u1: number, n: number, k = 20) {
+  const at = (i: number) => u0 + ((u1 - u0) * i) / n;
+  const cs = Array.from({ length: n + 1 }, (_, i) => cornerAt(make, jid, index, at(i)));
+  const out = { h: cs.find((x) => x)?.h ?? 1, dead: cs.flatMap((x, i) => (x ? [] : [i])), worst: { dV: 0, dq: 0, dr: 0 }, at: { dV: -1, dq: -1, dr: -1 }, halved: { dV: 0, dq: 0, dr: 0 } };
+  for (const key of ["dV", "dq", "dr"] as const) {
+    for (let i = 1; i <= n; i++) {
+      const [p, c] = [cs[i - 1], cs[i]];
+      if (p && c && moved(p.c, c.c, key) > out.worst[key]) {
+        out.worst[key] = moved(p.c, c.c, key);
+        out.at[key] = i;
+      }
+    }
+    if (out.at[key] < 0) continue;
+    let [ua, ub] = [at(out.at[key] - 1), at(out.at[key])];
+    let [A, B] = [cs[out.at[key] - 1]!.c, cs[out.at[key]]!.c];
+    for (let j = 0; j < k; j++) {
+      const um = 0.5 * (ua + ub);
+      const M = cornerAt(make, jid, index, um);
+      if (!M) {
+        out.dead.push(um);
+        break;
+      }
+      if (moved(A, M.c, key) >= moved(M.c, B, key)) [ub, B] = [um, M.c];
+      else [ua, A] = [um, M.c];
+    }
+    out.halved[key] = moved(A, B, key);
+  }
+  return out;
+}
+
+function expectNoJump(r: ReturnType<typeof frameSweep>, what: string): void {
+  expect(r.dead, `${what}: blends with no live corner`).toEqual([]);
+  for (const k of ["dV", "dq", "dr"] as const)
+    expect(r.halved[k], `${what}: the largest ${k} (step ${r.at[k]}, ${(r.worst[k] / r.h).toFixed(4)}h) after 20 halvings, in h`).toBeLessThanOrEqual(5e-4 * r.h);
+}
