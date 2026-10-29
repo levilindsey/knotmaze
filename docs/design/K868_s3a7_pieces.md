@@ -183,3 +183,17 @@ gates pass. If a gate fails, the findings say which one and why.
   - a `Ledger items` list (follow-ups and residuals; a question for Levi
     only about what shows on screen, in plain words);
   - K868's current handle fields (branch, last commit, evidence, next).
+
+## Findings
+
+### F1. The census's noise floor (08:25)
+
+Master's census rerun at zoom 1 (`pops15/floor15/`, `--oracle
+.claude/probes/S3a/oracle_m14.ts`, the same command as `before14`; `src/`
+is unchanged since `c26a9875`), against `pops14/before14/`: the four
+sequences' `transitions` records (every pop, its pixels, its cause and every
+event) are byte-identical, so the noise floor is 0 pops and 0 px. Only the
+page's build time differs (p50 282 / 299 / 495 / 472 ms against 272 / 389 /
+653 / 675 ms). Pops a transition, as F3 of S3a6: def drag 0.15 (6 pops,
+359 px), def flow 0.68 (27, 1078), muse drag 1.93 (77, 1273), muse flow
+6.65 (266, 7368).
