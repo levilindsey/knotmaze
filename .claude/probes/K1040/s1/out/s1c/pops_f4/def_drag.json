@@ -1,0 +1,1394 @@
+{
+ "seq": "def_drag",
+ "keptFrames": 41,
+ "windows": [
+  0
+ ],
+ "wlen": 41,
+ "tol": 0.12549019607843137,
+ "amin": 4,
+ "perFrame": [
+  {
+   "i": 0,
+   "inked": 123403,
+   "tieBand": 1356,
+   "tieMix": 3025,
+   "tieBy": {
+    "crossing60+": 1315,
+    "junction": 41
+   },
+   "rasterMs": 3005
+  },
+  {
+   "i": 1,
+   "inked": 123424,
+   "tieBand": 1347,
+   "tieMix": 3004,
+   "tieBy": {
+    "crossing60+": 1299,
+    "junction": 45,
+    "crossing30-60": 3
+   },
+   "rasterMs": 3328
+  },
+  {
+   "i": 2,
+   "inked": 123400,
+   "tieBand": 1322,
+   "tieMix": 2964,
+   "tieBy": {
+    "crossing60+": 1274,
+    "junction": 45,
+    "crossing30-60": 3
+   },
+   "rasterMs": 3086
+  },
+  {
+   "i": 3,
+   "inked": 123409,
+   "tieBand": 1340,
+   "tieMix": 2962,
+   "tieBy": {
+    "crossing60+": 1292,
+    "junction": 45,
+    "crossing30-60": 3
+   },
+   "rasterMs": 3342
+  },
+  {
+   "i": 4,
+   "inked": 123402,
+   "tieBand": 1335,
+   "tieMix": 2978,
+   "tieBy": {
+    "crossing60+": 1285,
+    "junction": 47,
+    "crossing30-60": 3
+   },
+   "rasterMs": 2704
+  },
+  {
+   "i": 5,
+   "inked": 123358,
+   "tieBand": 1333,
+   "tieMix": 2985,
+   "tieBy": {
+    "crossing60+": 1281,
+    "junction": 49,
+    "crossing30-60": 3
+   },
+   "rasterMs": 3331
+  },
+  {
+   "i": 6,
+   "inked": 123316,
+   "tieBand": 1328,
+   "tieMix": 2981,
+   "tieBy": {
+    "crossing60+": 1275,
+    "junction": 50,
+    "crossing30-60": 3
+   },
+   "rasterMs": 2953
+  },
+  {
+   "i": 7,
+   "inked": 123344,
+   "tieBand": 1327,
+   "tieMix": 2987,
+   "tieBy": {
+    "crossing60+": 1273,
+    "junction": 51,
+    "crossing30-60": 3
+   },
+   "rasterMs": 3818
+  },
+  {
+   "i": 8,
+   "inked": 123366,
+   "tieBand": 1316,
+   "tieMix": 2976,
+   "tieBy": {
+    "crossing60+": 1263,
+    "junction": 50,
+    "crossing30-60": 3
+   },
+   "rasterMs": 2699
+  },
+  {
+   "i": 9,
+   "inked": 123366,
+   "tieBand": 1321,
+   "tieMix": 2969,
+   "tieBy": {
+    "crossing60+": 1268,
+    "junction": 50,
+    "crossing30-60": 3
+   },
+   "rasterMs": 2965
+  },
+  {
+   "i": 10,
+   "inked": 123397,
+   "tieBand": 1320,
+   "tieMix": 2987,
+   "tieBy": {
+    "crossing60+": 1267,
+    "junction": 50,
+    "crossing30-60": 3
+   },
+   "rasterMs": 4041
+  },
+  {
+   "i": 11,
+   "inked": 123362,
+   "tieBand": 1338,
+   "tieMix": 2982,
+   "tieBy": {
+    "crossing60+": 1286,
+    "junction": 49,
+    "crossing30-60": 3
+   },
+   "rasterMs": 2477
+  },
+  {
+   "i": 12,
+   "inked": 123356,
+   "tieBand": 1318,
+   "tieMix": 2965,
+   "tieBy": {
+    "crossing60+": 1268,
+    "junction": 47,
+    "crossing30-60": 3
+   },
+   "rasterMs": 3450
+  },
+  {
+   "i": 13,
+   "inked": 123369,
+   "tieBand": 1320,
+   "tieMix": 2988,
+   "tieBy": {
+    "crossing60+": 1270,
+    "junction": 46,
+    "crossing30-60": 4
+   },
+   "rasterMs": 3017
+  },
+  {
+   "i": 14,
+   "inked": 123328,
+   "tieBand": 1320,
+   "tieMix": 2968,
+   "tieBy": {
+    "crossing60+": 1269,
+    "junction": 47,
+    "crossing30-60": 4
+   },
+   "rasterMs": 3075
+  },
+  {
+   "i": 15,
+   "inked": 123357,
+   "tieBand": 1314,
+   "tieMix": 2965,
+   "tieBy": {
+    "crossing60+": 1263,
+    "junction": 47,
+    "crossing30-60": 4
+   },
+   "rasterMs": 2463
+  },
+  {
+   "i": 16,
+   "inked": 123340,
+   "tieBand": 1318,
+   "tieMix": 2969,
+   "tieBy": {
+    "crossing60+": 1268,
+    "junction": 46,
+    "crossing30-60": 4
+   },
+   "rasterMs": 3159
+  },
+  {
+   "i": 17,
+   "inked": 123329,
+   "tieBand": 1320,
+   "tieMix": 2979,
+   "tieBy": {
+    "crossing60+": 1269,
+    "junction": 47,
+    "crossing30-60": 4
+   },
+   "rasterMs": 3330
+  },
+  {
+   "i": 18,
+   "inked": 123315,
+   "tieBand": 1323,
+   "tieMix": 2989,
+   "tieBy": {
+    "crossing60+": 1272,
+    "junction": 47,
+    "crossing30-60": 4
+   },
+   "rasterMs": 2702
+  },
+  {
+   "i": 19,
+   "inked": 123332,
+   "tieBand": 1331,
+   "tieMix": 2990,
+   "tieBy": {
+    "crossing60+": 1280,
+    "junction": 47,
+    "crossing30-60": 4
+   },
+   "rasterMs": 3687
+  },
+  {
+   "i": 20,
+   "inked": 123317,
+   "tieBand": 1327,
+   "tieMix": 2983,
+   "tieBy": {
+    "crossing60+": 1277,
+    "junction": 46,
+    "crossing30-60": 4
+   },
+   "rasterMs": 3617
+  },
+  {
+   "i": 21,
+   "inked": 123313,
+   "tieBand": 1320,
+   "tieMix": 2984,
+   "tieBy": {
+    "crossing60+": 1270,
+    "junction": 46,
+    "crossing30-60": 4
+   },
+   "rasterMs": 2295
+  },
+  {
+   "i": 22,
+   "inked": 123347,
+   "tieBand": 1325,
+   "tieMix": 2986,
+   "tieBy": {
+    "crossing60+": 1275,
+    "junction": 46,
+    "crossing30-60": 4
+   },
+   "rasterMs": 3757
+  },
+  {
+   "i": 23,
+   "inked": 123325,
+   "tieBand": 1339,
+   "tieMix": 2975,
+   "tieBy": {
+    "crossing60+": 1289,
+    "junction": 46,
+    "crossing30-60": 4
+   },
+   "rasterMs": 3036
+  },
+  {
+   "i": 24,
+   "inked": 123339,
+   "tieBand": 1345,
+   "tieMix": 2966,
+   "tieBy": {
+    "crossing60+": 1295,
+    "junction": 46,
+    "crossing30-60": 4
+   },
+   "rasterMs": 3603
+  },
+  {
+   "i": 25,
+   "inked": 123360,
+   "tieBand": 1344,
+   "tieMix": 2965,
+   "tieBy": {
+    "crossing60+": 1294,
+    "junction": 46,
+    "crossing30-60": 4
+   },
+   "rasterMs": 3039
+  },
+  {
+   "i": 26,
+   "inked": 123375,
+   "tieBand": 1345,
+   "tieMix": 2969,
+   "tieBy": {
+    "crossing60+": 1295,
+    "junction": 46,
+    "crossing30-60": 4
+   },
+   "rasterMs": 4022
+  },
+  {
+   "i": 27,
+   "inked": 123390,
+   "tieBand": 1337,
+   "tieMix": 2937,
+   "tieBy": {
+    "crossing60+": 1287,
+    "junction": 46,
+    "crossing30-60": 4
+   },
+   "rasterMs": 2763
+  },
+  {
+   "i": 28,
+   "inked": 123353,
+   "tieBand": 1340,
+   "tieMix": 2955,
+   "tieBy": {
+    "crossing60+": 1291,
+    "junction": 45,
+    "crossing30-60": 4
+   },
+   "rasterMs": 3264
+  },
+  {
+   "i": 29,
+   "inked": 123355,
+   "tieBand": 1350,
+   "tieMix": 2959,
+   "tieBy": {
+    "crossing60+": 1301,
+    "junction": 46,
+    "crossing30-60": 3
+   },
+   "rasterMs": 2753
+  },
+  {
+   "i": 30,
+   "inked": 123369,
+   "tieBand": 1337,
+   "tieMix": 2973,
+   "tieBy": {
+    "crossing60+": 1289,
+    "junction": 45,
+    "crossing30-60": 3
+   },
+   "rasterMs": 3165
+  },
+  {
+   "i": 31,
+   "inked": 123326,
+   "tieBand": 1362,
+   "tieMix": 3023,
+   "tieBy": {
+    "crossing60+": 1311,
+    "junction": 48,
+    "crossing30-60": 3
+   },
+   "rasterMs": 2630
+  },
+  {
+   "i": 32,
+   "inked": 123416,
+   "tieBand": 1367,
+   "tieMix": 2996,
+   "tieBy": {
+    "crossing60+": 1316,
+    "junction": 48,
+    "crossing30-60": 3
+   },
+   "rasterMs": 3916
+  },
+  {
+   "i": 33,
+   "inked": 123375,
+   "tieBand": 1368,
+   "tieMix": 3017,
+   "tieBy": {
+    "crossing60+": 1316,
+    "junction": 49,
+    "crossing30-60": 3
+   },
+   "rasterMs": 4057
+  },
+  {
+   "i": 34,
+   "inked": 123394,
+   "tieBand": 1368,
+   "tieMix": 3033,
+   "tieBy": {
+    "crossing60+": 1316,
+    "junction": 49,
+    "crossing30-60": 3
+   },
+   "rasterMs": 2476
+  },
+  {
+   "i": 35,
+   "inked": 123406,
+   "tieBand": 1368,
+   "tieMix": 3021,
+   "tieBy": {
+    "crossing60+": 1316,
+    "junction": 49,
+    "crossing30-60": 3
+   },
+   "rasterMs": 4009
+  },
+  {
+   "i": 36,
+   "inked": 123403,
+   "tieBand": 1369,
+   "tieMix": 3025,
+   "tieBy": {
+    "crossing60+": 1317,
+    "junction": 49,
+    "crossing30-60": 3
+   },
+   "rasterMs": 2913
+  },
+  {
+   "i": 37,
+   "inked": 123399,
+   "tieBand": 1369,
+   "tieMix": 3041,
+   "tieBy": {
+    "crossing60+": 1317,
+    "junction": 49,
+    "crossing30-60": 3
+   },
+   "rasterMs": 3080
+  },
+  {
+   "i": 38,
+   "inked": 123403,
+   "tieBand": 1369,
+   "tieMix": 3037,
+   "tieBy": {
+    "crossing60+": 1317,
+    "junction": 49,
+    "crossing30-60": 3
+   },
+   "rasterMs": 3393
+  },
+  {
+   "i": 39,
+   "inked": 123408,
+   "tieBand": 1368,
+   "tieMix": 3033,
+   "tieBy": {
+    "crossing60+": 1316,
+    "junction": 49,
+    "crossing30-60": 3
+   },
+   "rasterMs": 2370
+  },
+  {
+   "i": 40,
+   "inked": 123407,
+   "tieBand": 1369,
+   "tieMix": 3028,
+   "tieBy": {
+    "crossing60+": 1317,
+    "junction": 49,
+    "crossing30-60": 3
+   },
+   "rasterMs": 3048
+  }
+ ],
+ "pairs": [
+  {
+   "from": 0,
+   "to": 1,
+   "changed": 20327,
+   "unexplained": 205,
+   "unexplainedInFades": {
+    "f2": 4,
+    "f6": 4
+   },
+   "pops": [
+    {
+     "px": 97,
+     "at": [
+      11.059,
+      4.894
+     ],
+     "near": "junction",
+     "pix": [
+      186463,
+      187704,
+      188945,
+      190186,
+      191427,
+      192668,
+      193909,
+      193910,
+      195151,
+      196392,
+      197633,
+      198872,
+      198871,
+      198870,
+      198869,
+      197628,
+      197627,
+      197626,
+      198865,
+      198864,
+      200103,
+      201342,
+      202581,
+      201341,
+      200101,
+      198860,
+      200099,
+      201339,
+      202579,
+      202578,
+      201338,
+      200098,
+      198858,
+      198859,
+      197620,
+      196381,
+      197622,
+      195141,
+      193901,
+      192661,
+      191422,
+      190182,
+      188942,
+      187701,
+      188941,
+      190180,
+      190181,
+      191421,
+      191420,
+      192659,
+      193899,
+      195139,
+      192660,
+      193900,
+      195140,
+      196380,
+      196379,
+      197619,
+      200102,
+      198862,
+      198863,
+      197623,
+      196384,
+      197624,
+      197625,
+      196385,
+      196386,
+      196389,
+      196388,
+      196387,
+      197629,
+      197630,
+      196393,
+      195152,
+      193912,
+      193911,
+      192671,
+      191430,
+      190189,
+      188948,
+      192670,
+      192669,
+      191429,
+      191428,
+      190188,
+      190187,
+      188947,
+      190185,
+      188946,
+      187706,
+      188944,
+      188943,
+      187705,
+      186465,
+      187703,
+      187702,
+      186464
+     ]
+    },
+    {
+     "px": 70,
+     "at": [
+      11.192,
+      5.732
+     ],
+     "near": "junction",
+     "pix": [
+      208794,
+      210035,
+      211275,
+      212515,
+      213754,
+      214993,
+      216232,
+      216231,
+      217470,
+      217469,
+      217468,
+      217467,
+      217466,
+      217465,
+      216224,
+      214985,
+      214986,
+      214987,
+      214988,
+      214989,
+      214984,
+      214983,
+      216222,
+      217462,
+      218703,
+      219944,
+      221185,
+      222425,
+      223665,
+      224906,
+      226146,
+      227386,
+      228626,
+      228625,
+      227385,
+      226144,
+      226145,
+      224905,
+      224904,
+      223663,
+      222423,
+      221182,
+      223664,
+      222424,
+      221184,
+      221183,
+      219943,
+      219942,
+      218702,
+      217461,
+      216221,
+      216225,
+      216226,
+      216227,
+      216228,
+      216229,
+      216230,
+      214990,
+      213751,
+      212512,
+      211273,
+      214991,
+      214992,
+      213752,
+      213753,
+      212513,
+      212514,
+      211274,
+      210034,
+      208795
+     ]
+    },
+    {
+     "px": 25,
+     "at": [
+      11.691,
+      5.638
+     ],
+     "near": "junction",
+     "pix": [
+      208797,
+      210038,
+      211278,
+      212518,
+      213759,
+      214999,
+      216240,
+      217480,
+      218721,
+      219961,
+      219960,
+      219959,
+      218720,
+      218719,
+      217478,
+      217479,
+      216239,
+      216238,
+      214997,
+      214998,
+      213758,
+      213757,
+      212517,
+      211277,
+      210037
+     ]
+    },
+    {
+     "px": 10,
+     "at": [
+      33.188,
+      7.319
+     ],
+     "near": "junction",
+     "pix": [
+      260119,
+      261360,
+      262601,
+      262600,
+      263839,
+      263838,
+      262597,
+      261357,
+      262598,
+      261359
+     ]
+    }
+   ],
+   "maxMotionPx": 5.842
+  },
+  {
+   "from": 1,
+   "to": 2,
+   "changed": 9255,
+   "unexplained": 193,
+   "unexplainedInFades": {
+    "f6": 3
+   },
+   "pops": [
+    {
+     "px": 99,
+     "at": [
+      11.064,
+      4.897
+     ],
+     "near": "junction",
+     "pix": [
+      186463,
+      187704,
+      188945,
+      190186,
+      191427,
+      192668,
+      193909,
+      193910,
+      195151,
+      196392,
+      197633,
+      197634,
+      196393,
+      195152,
+      193912,
+      193911,
+      192671,
+      191430,
+      190189,
+      188948,
+      192670,
+      192669,
+      191429,
+      191428,
+      190188,
+      190187,
+      188947,
+      190185,
+      188946,
+      187706,
+      188944,
+      188943,
+      190182,
+      191422,
+      192661,
+      193901,
+      195141,
+      196381,
+      197622,
+      198863,
+      200103,
+      201342,
+      202581,
+      201341,
+      200101,
+      198860,
+      200099,
+      201339,
+      202579,
+      202578,
+      201338,
+      200098,
+      198858,
+      198859,
+      197619,
+      196379,
+      195139,
+      193899,
+      192659,
+      200102,
+      198864,
+      198865,
+      198866,
+      197627,
+      197628,
+      198869,
+      198870,
+      200111,
+      198871,
+      197630,
+      197629,
+      196389,
+      196388,
+      196387,
+      196386,
+      196385,
+      196384,
+      197626,
+      197625,
+      197624,
+      198862,
+      197623,
+      197620,
+      196380,
+      195140,
+      193900,
+      192660,
+      191420,
+      190180,
+      191421,
+      190181,
+      188941,
+      187701,
+      188942,
+      187705,
+      186465,
+      187703,
+      187702,
+      186464
+     ]
+    },
+    {
+     "px": 69,
+     "at": [
+      11.186,
+      5.733
+     ],
+     "near": "junction",
+     "pix": [
+      208794,
+      210035,
+      211275,
+      212515,
+      213754,
+      214993,
+      216232,
+      216231,
+      217470,
+      217469,
+      217468,
+      217467,
+      217466,
+      217465,
+      216224,
+      214985,
+      214986,
+      214987,
+      214988,
+      214989,
+      214984,
+      213743,
+      214983,
+      216222,
+      217462,
+      218703,
+      219944,
+      221184,
+      222425,
+      223665,
+      224906,
+      226146,
+      227386,
+      228626,
+      228625,
+      227385,
+      226144,
+      226145,
+      224905,
+      224904,
+      223663,
+      223664,
+      222424,
+      222423,
+      221182,
+      221183,
+      219943,
+      219942,
+      218702,
+      217461,
+      216221,
+      216225,
+      216226,
+      216227,
+      216228,
+      216229,
+      216230,
+      214990,
+      213751,
+      212512,
+      211273,
+      214991,
+      214992,
+      213752,
+      213753,
+      212513,
+      212514,
+      211274,
+      210034
+     ]
+    },
+    {
+     "px": 25,
+     "at": [
+      11.691,
+      5.638
+     ],
+     "near": "junction",
+     "pix": [
+      208797,
+      210038,
+      211278,
+      212518,
+      213759,
+      214999,
+      216240,
+      217480,
+      218721,
+      219961,
+      219960,
+      219959,
+      218720,
+      218719,
+      217478,
+      217479,
+      216239,
+      216238,
+      214997,
+      214998,
+      213758,
+      213757,
+      212517,
+      211277,
+      210037
+     ]
+    }
+   ],
+   "maxMotionPx": 2.41
+  },
+  {
+   "from": 2,
+   "to": 3,
+   "changed": 6507,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 3.037
+  },
+  {
+   "from": 3,
+   "to": 4,
+   "changed": 5209,
+   "unexplained": 11,
+   "unexplainedInFades": {},
+   "pops": [
+    {
+     "px": 10,
+     "at": [
+      33.188,
+      7.319
+     ],
+     "near": "junction",
+     "pix": [
+      260119,
+      261360,
+      262601,
+      262600,
+      263839,
+      263838,
+      262597,
+      261357,
+      262598,
+      261359
+     ]
+    }
+   ],
+   "maxMotionPx": 2.953
+  },
+  {
+   "from": 4,
+   "to": 5,
+   "changed": 4746,
+   "unexplained": 1,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 1.166
+  },
+  {
+   "from": 5,
+   "to": 6,
+   "changed": 3107,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 1.089
+  },
+  {
+   "from": 6,
+   "to": 7,
+   "changed": 2613,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.93
+  },
+  {
+   "from": 7,
+   "to": 8,
+   "changed": 2680,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.807
+  },
+  {
+   "from": 8,
+   "to": 9,
+   "changed": 2814,
+   "unexplained": 0,
+   "unexplainedInFades": {
+    "f8": 8
+   },
+   "pops": [],
+   "maxMotionPx": 0.787
+  },
+  {
+   "from": 9,
+   "to": 10,
+   "changed": 2818,
+   "unexplained": 0,
+   "unexplainedInFades": {
+    "f6": 2,
+    "f8": 27
+   },
+   "pops": [],
+   "maxMotionPx": 0.765
+  },
+  {
+   "from": 10,
+   "to": 11,
+   "changed": 2327,
+   "unexplained": 0,
+   "unexplainedInFades": {
+    "f6": 1
+   },
+   "pops": [],
+   "maxMotionPx": 0.722
+  },
+  {
+   "from": 11,
+   "to": 12,
+   "changed": 2699,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.687
+  },
+  {
+   "from": 12,
+   "to": 13,
+   "changed": 2178,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.691
+  },
+  {
+   "from": 13,
+   "to": 14,
+   "changed": 2121,
+   "unexplained": 0,
+   "unexplainedInFades": {
+    "f8": 8
+   },
+   "pops": [],
+   "maxMotionPx": 0.709
+  },
+  {
+   "from": 14,
+   "to": 15,
+   "changed": 1961,
+   "unexplained": 0,
+   "unexplainedInFades": {
+    "f8": 8
+   },
+   "pops": [],
+   "maxMotionPx": 0.658
+  },
+  {
+   "from": 15,
+   "to": 16,
+   "changed": 2355,
+   "unexplained": 0,
+   "unexplainedInFades": {
+    "f6": 1
+   },
+   "pops": [],
+   "maxMotionPx": 0.649
+  },
+  {
+   "from": 16,
+   "to": 17,
+   "changed": 1549,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.646
+  },
+  {
+   "from": 17,
+   "to": 18,
+   "changed": 1490,
+   "unexplained": 0,
+   "unexplainedInFades": {
+    "f2": 5,
+    "f6": 1
+   },
+   "pops": [],
+   "maxMotionPx": 0.664
+  },
+  {
+   "from": 18,
+   "to": 19,
+   "changed": 1430,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.681
+  },
+  {
+   "from": 19,
+   "to": 20,
+   "changed": 1524,
+   "unexplained": 0,
+   "unexplainedInFades": {
+    "f8": 35
+   },
+   "pops": [],
+   "maxMotionPx": 0.679
+  },
+  {
+   "from": 20,
+   "to": 21,
+   "changed": 1452,
+   "unexplained": 0,
+   "unexplainedInFades": {
+    "f8": 8,
+    "f6": 1
+   },
+   "pops": [],
+   "maxMotionPx": 0.687
+  },
+  {
+   "from": 21,
+   "to": 22,
+   "changed": 1571,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.687
+  },
+  {
+   "from": 22,
+   "to": 23,
+   "changed": 2412,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.714
+  },
+  {
+   "from": 23,
+   "to": 24,
+   "changed": 2255,
+   "unexplained": 0,
+   "unexplainedInFades": {
+    "f6": 1
+   },
+   "pops": [],
+   "maxMotionPx": 0.754
+  },
+  {
+   "from": 24,
+   "to": 25,
+   "changed": 2148,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.709
+  },
+  {
+   "from": 25,
+   "to": 26,
+   "changed": 2276,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.709
+  },
+  {
+   "from": 26,
+   "to": 27,
+   "changed": 2262,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.811
+  },
+  {
+   "from": 27,
+   "to": 28,
+   "changed": 2308,
+   "unexplained": 0,
+   "unexplainedInFades": {
+    "f8": 5
+   },
+   "pops": [],
+   "maxMotionPx": 0.856
+  },
+  {
+   "from": 28,
+   "to": 29,
+   "changed": 2421,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.821
+  },
+  {
+   "from": 29,
+   "to": 30,
+   "changed": 2384,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.687
+  },
+  {
+   "from": 30,
+   "to": 31,
+   "changed": 21290,
+   "unexplained": 1,
+   "unexplainedInFades": {
+    "f2": 5,
+    "f6": 1
+   },
+   "pops": [],
+   "maxMotionPx": 12.06
+  },
+  {
+   "from": 31,
+   "to": 32,
+   "changed": 10432,
+   "unexplained": 2,
+   "unexplainedInFades": {
+    "f2": 4,
+    "f6": 1
+   },
+   "pops": [],
+   "maxMotionPx": 0.933
+  },
+  {
+   "from": 32,
+   "to": 33,
+   "changed": 2219,
+   "unexplained": 1,
+   "unexplainedInFades": {
+    "f2": 5,
+    "f6": 1
+   },
+   "pops": [],
+   "maxMotionPx": 0.327
+  },
+  {
+   "from": 33,
+   "to": 34,
+   "changed": 9,
+   "unexplained": 0,
+   "unexplainedInFades": {
+    "f2": 1
+   },
+   "pops": [],
+   "maxMotionPx": 0.042
+  },
+  {
+   "from": 34,
+   "to": 35,
+   "changed": 0,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.012
+  },
+  {
+   "from": 35,
+   "to": 36,
+   "changed": 0,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.004
+  },
+  {
+   "from": 36,
+   "to": 37,
+   "changed": 0,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.002
+  },
+  {
+   "from": 37,
+   "to": 38,
+   "changed": 0,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.002
+  },
+  {
+   "from": 38,
+   "to": 39,
+   "changed": 22,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.002
+  },
+  {
+   "from": 39,
+   "to": 40,
+   "changed": 0,
+   "unexplained": 0,
+   "unexplainedInFades": {},
+   "pops": [],
+   "maxMotionPx": 0.002
+  }
+ ]
+}

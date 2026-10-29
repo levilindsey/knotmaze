@@ -1,0 +1,3 @@
+== def_drag: 41 kept frames; windows at frames 0 x 41; 40 pairs, 41 frames in 170 s
+  label_pops' rule: 8 pops (405 px) by {"junction":8}; unexplained outside fades 414 px; inside fades {"f2":24,"f6":17,"f8":99}; max motion 12.06 px
+  Q3 tie band (nSurf >= 2, dz < zt) per frame 1314-1369 px, sum {"crossing60+":52859,"junction":1938,"crossing30-60":136}; tie mix px per frame 3025,3004,2964,2962,2978,2985,2981,2987,2976,2969,2987,2982,2965,2988,2968,2965,2969,2979,2989,2990,2983,2984,2986,2975,2966,2965,2969,2937,2955,2959,2973,3023,2996,3017,3033,3021,3025,3041,3037,3033,3028

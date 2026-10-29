@@ -1,0 +1,78 @@
+root: 21 pops 674 px
+radius bisect: 24 pops 387 px
+none: 8 pops 269 px
+radius room-L: 9 pops 63 px
+gone arm L 0: 1 pops 23 px
+new arm L 0: 1 pops 23 px
+radius r0: 2 pops 20 px
+radius room-dV: 3 pops 14 px
+
+def_drag 0>1 (11.059, 4.894) 97 px junction [switch corner root] 141/431/432 root: q moved 0.008; r 0.3 omega 1
+def_drag 0>1 (11.192, 5.732) 70 px junction [switch corner root] 141/431/432 root: q moved 0.008; r 0.3 omega 1
+def_drag 0>1 (11.691, 5.638) 25 px junction [switch corner root] 141/431/432 root: q moved 0.008; r 0.3 omega 1
+def_drag 0>1 (33.188, 7.319) 10 px junction [switch corner radius] 29/93/91 radius: r1 r0; r 0.337>0.324 omega 1
+def_drag 1>2 (11.064, 4.897) 99 px junction [switch corner root] 141/431/432 root: q moved 0.008; r 0.3 omega 1
+def_drag 1>2 (11.186, 5.733) 69 px junction [switch corner root] 141/431/432 root: q moved 0.008; r 0.3 omega 1
+def_drag 1>2 (11.691, 5.638) 25 px junction [switch corner root] 141/431/432 root: q moved 0.008; r 0.3 omega 1
+def_drag 3>4 (33.188, 7.319) 10 px junction [switch corner radius] 29/93/91 radius: r1 r0; r 0.324>0.337 omega 1
+def_flow 3>4 (31.034, 4.805) 9 px junction [switch corner radius] 66/204/202 radius: bisect (r1 0.411); r 0.151>0.151 omega 1
+def_flow 4>5 (11.123, 4.811) 85 px junction [switch corner root] 141/431/432 root: q moved 0.023; r 0.278 omega 1
+def_flow 4>5 (11.18, 5.62) 59 px junction [switch corner root] 141/431/432 root: q moved 0.023; r 0.278 omega 1
+def_flow 4>5 (11.657, 5.533) 20 px junction [switch corner root] 141/431/432 root: q moved 0.023; r 0.278 omega 1
+def_flow 7>8 (31.054, 4.792) 8 px junction [switch corner fields] 
+def_flow 16>17 (11.102, 4.863) 102 px junction [switch corner fields] 
+def_flow 16>17 (11.174, 5.65) 60 px junction [switch corner fields] 
+def_flow 16>17 (11.642, 5.586) 24 px junction [switch corner fields] 
+def_flow 17>18 (11.094, 4.822) 86 px junction [switch corner radius] 141/431/432 radius: bisect (r1 0.412); r 0.273>0.272 omega 1
+def_flow 17>18 (11.127, 5.677) 60 px junction [switch corner fields] 
+def_flow 17>18 (11.623, 5.6) 23 px junction [switch corner radius] 141/431/432 radius: bisect (r1 0.412); r 0.273>0.272 omega 1
+def_flow 17>18 (35.1, 11.322) 8 px junction [switch corner radius] 133/407/408 radius: bisect (r1 0.243); r 0.231>0.233 omega 1
+def_flow 21>22 (26.07, 1.166) 44 px junction [switch corner radius] 24/76/77 radius: bisect (r1 0.359); r 0.264>0.264 omega 0.367
+def_flow 23>24 (26.065, 1.143) 45 px junction [switch corner radius] 24/76/77 radius: bisect (r1 0.358); r 0.269>0.268 omega 0.176
+def_flow 23>24 (15.366, 31.42) 9 px junction [switch corner radius] 19/59/60 radius: bisect (r1 0.276); r 0.247>0.247 omega 1
+def_flow 24>25 (15.366, 31.42) 9 px junction [switch corner radius] 19/59/60 radius: bisect (r1 0.275); r 0.25>0.247 omega 1
+muse_drag 1>2 (22.851, 17.435) 5 px junction [switch corner radius] 114/347/345 radius: bisect (r1 0.323); r 0.323>0.252 omega 1
+muse_drag 1>2 (22.952, 17.528) 9 px junction [switch corner radius] 114/347/345 radius: bisect (r1 0.323); r 0.323>0.252 omega 1
+muse_drag 10>11 (34.806, 6.578) 17 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 10>11 (34.762, 6.735) 8 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 10>11 (34.631, 7.033) 9 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 11>12 (34.806, 6.578) 17 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 11>12 (34.762, 6.735) 8 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 11>12 (34.631, 7.033) 9 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 16>17 (34.825, 6.578) 15 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 16>17 (34.762, 6.735) 8 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 16>17 (34.631, 7.033) 9 px crossing60+ [switch corner root] 13/41/42 root: q moved 0.001; r 0.107 omega 1
+muse_drag 31>32 (23.48, 27.425) 5 px junction [switch corner radius] 162/491/492 radius: r1 room (arm L 0.636>0.729, 1.328>1.328); r 0.129>0.204 omega 1 | 163/496/494 radius: r1 room (arm L 1.328>1.328, 0.498>0.59); r 0.034>0.142 omega 1
+muse_flow 5>6 (24.366, 10.082) 6 px junction [switch corner radius] 11/35/36 radius: bisect (r1 0.922); r 0.643>0.857 omega 1
+muse_flow 5>6 (24.499, 10.121) 6 px junction [switch corner radius] 11/35/36 radius: bisect (r1 0.922); r 0.643>0.857 omega 1
+muse_flow 5>6 (24.428, 10.413) 9 px junction [switch corner radius] 11/35/36 radius: bisect (r1 0.922); r 0.643>0.857 omega 1
+muse_flow 5>6 (24.579, 10.412) 5 px junction [switch corner radius] 11/35/36 radius: bisect (r1 0.922); r 0.643>0.857 omega 1
+muse_flow 5>6 (24.888, 10.769) 5 px junction [switch corner radius] 11/35/36 radius: bisect (r1 0.922); r 0.643>0.857 omega 1
+muse_flow 5>6 (22.832, 17.411) 7 px junction [switch corner radius] 114/347/345 radius: bisect (r1 0.36); r 0.26>0.36 omega 1
+muse_flow 5>6 (22.952, 17.504) 11 px junction [switch corner radius] 114/347/345 radius: bisect (r1 0.36); r 0.26>0.36 omega 1
+muse_flow 5>6 (26.79, 23.31) 23 px junction [switch corner gone] 37/113/114 gone: arm L 0 (0, 1.457); present: theta 1.655 r 0.371 rV 0.507 omega 1 dVa 0.355/0.848 dVb 0.387/1.457
+muse_flow 13>14 (22.269, 2.586) 4 px junction [switch corner radius] 130/393/394 radius: r1 room (dV); r 0.181>0.143 omega 1
+muse_flow 14>15 (24.37, 10.109) 4 px junction [switch corner radius] 11/35/36 radius: bisect (r1 0.888); r 0.861>0.634 omega 1
+muse_flow 14>15 (24.449, 10.46) 9 px junction [switch corner radius] 11/35/36 radius: bisect (r1 0.888); r 0.861>0.634 omega 1
+muse_flow 14>15 (24.579, 10.412) 5 px junction [switch corner radius] 11/35/36 radius: bisect (r1 0.888); r 0.861>0.634 omega 1
+muse_flow 14>15 (24.898, 10.745) 7 px junction [switch corner radius] 11/35/36 radius: bisect (r1 0.888); r 0.861>0.634 omega 1
+muse_flow 18>19 (22.909, 17.485) 38 px junction [switch corner radius] 114/347/345 radius: bisect (r1 0.466); r 0.466>0.326 omega 1
+muse_flow 18>19 (26.814, 23.327) 23 px junction [switch corner new] 37/113/114 new: arm L 0 (0, 1.607); present: theta 1.614 r 0.327 rV 0.459 omega 1 dVa 0.371/0.836 dVb 0.411/1.607
+muse_flow 20>21 (22.199, 2.633) 4 px junction [switch corner radius] 130/393/394 radius: r1 room (dV); r 0.146>0.123 omega 1
+muse_flow 23>24 (23.478, 27.25) 8 px junction [switch corner radius] 162/491/492 radius: r1 room (arm L 0.678>0.771, 1.4>1.4); r 0.083>0.16 omega 1 | 163/496/494 radius: r1 room (arm L 1.4>1.4, 0.443>0.535); r 0>0.093 omega 1
+muse_flow 23>24 (23.57, 27.403) 7 px junction [switch corner radius] 162/491/492 radius: r1 room (arm L 0.678>0.771, 1.4>1.4); r 0.083>0.16 omega 1 | 163/496/494 radius: r1 room (arm L 1.4>1.4, 0.443>0.535); r 0>0.093 omega 1
+muse_flow 24>25 (5.322, 14.604) 6 px junction [switch corner radius] 73/222/220 radius: r1 room (dV); r 0.229>0.114 omega 0
+muse_flow 24>25 (22.865, 17.473) 13 px junction [switch corner radius] 114/347/345 radius: bisect (r1 0.469); r 0.469>0.347 omega 1
+muse_flow 24>25 (22.992, 17.56) 15 px junction [switch corner radius] 114/347/345 radius: bisect (r1 0.469); r 0.469>0.347 omega 1
+muse_flow 28>29 (26.787, 23.354) 17 px junction [switch corner radius] 37/113/114 radius: r1 room (arm L 0.829>0.679, 1.613>1.613); r 0.294>0.143 omega 1
+muse_flow 29>30 (23.499, 27.275) 5 px junction [switch corner radius] 162/491/492 radius: r1 room (arm L 0.671>0.767, 1.391>1.391); r 0.068>0.149 omega 1 | 163/496/494 radius: r1 room (arm L 1.391>1.391, 0.424>0.52); r 0>0.069 omega 1
+muse_flow 29>30 (23.546, 27.415) 5 px junction [switch corner radius] 162/491/492 radius: r1 room (arm L 0.671>0.767, 1.391>1.391); r 0.068>0.149 omega 1 | 163/496/494 radius: r1 room (arm L 1.391>1.391, 0.424>0.52); r 0>0.069 omega 1
+muse_flow 31>32 (34.733, 6.577) 4 px crossing60+ [switch corner root] 13/41/42 root: q moved 0; r 0.107 omega 1
+muse_flow 31>32 (34.867, 6.701) 14 px crossing60+ [switch corner root] 13/41/42 root: q moved 0; r 0.107 omega 1
+muse_flow 31>32 (34.709, 7.043) 7 px crossing60+ [switch corner root] 13/41/42 root: q moved 0; r 0.107 omega 1
+muse_flow 31>32 (19.757, 18.477) 6 px junction [switch corner radius] 113/343/344 radius: r1 room (arm L 2.348>2.348, 1.406>1.231); r 0.739>0.567 omega 1
+muse_flow 31>32 (19.898, 18.548) 4 px junction [switch corner radius] 113/343/344 radius: r1 room (arm L 2.348>2.348, 1.406>1.231); r 0.739>0.567 omega 1
+muse_flow 31>32 (19.71, 18.665) 6 px junction [switch corner radius] 113/343/344 radius: r1 room (arm L 2.348>2.348, 1.406>1.231); r 0.739>0.567 omega 1
+muse_flow 32>33 (34.733, 6.577) 4 px crossing60+ [switch corner fields] 
+muse_flow 32>33 (34.935, 6.628) 5 px crossing60+ [switch corner fields] 
+muse_flow 32>33 (34.717, 7.046) 6 px crossing60+ [switch corner fields] 

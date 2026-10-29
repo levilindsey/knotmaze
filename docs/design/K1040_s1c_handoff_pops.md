@@ -251,3 +251,77 @@ each pop's pixels), `out/s1c/pops_s1b/mech/mech.txt`.
   grey: the arm's outline fading in across its cap ramp, the hand-off
   itself (`g41_user_tw64_3.227_14.632_own_f2.png`,
   `muse_hash_15.461_21.814_own_f2.png`).
+
+**F3 · The mechanism table: the hard switches are the corner solve's
+(step 4, 02:38-03:00).** `pops_mech.ts` takes every pop of F2's
+definition (209 pops / 3875 px over the four recordings; S1b 225 /
+4051), finds its pixel with the largest ink step and bisects the frame
+pair's interpolated scene there (8 coarse steps, then 30 halvings:
+2^-33 of a frame). A step above 0.02 at that width is a hard switch;
+otherwise the pop is smooth: motion beyond label_pops' rule, or a fade
+(named by the fade bits seen between the frames). At a switch it diffs
+the corners that reach the pixel (dq ≤ rV + W + 4aa) on either side, by
+junction and arm pair. A pair whose frames cannot be interpolated (a
+chain resampled, a junction's arms changed) is a scene change, not form
+B's. Cells: pops / px; the worst site (recording from>to, world point,
+px). Its crop is `out/s1c/pops_f2/mech_<seq>/crops/<seq>_<mechanism>_<place>_<from>.png`
+(the `switch-gate-*`, `switch-winner-*` crops there are the same pops
+seen by the decision that changed, from the pass before the corner diff).
+
+| Mechanism | junction | crossing ≥ 60° | elsewhere |
+|---|---|---|---|
+| corner appears | 36 / 714; muse_flow 3>4 (23.095, 10.572) 48 | 3 / 131; muse_flow 24>25 (23.085, 10.572) 46 | - |
+| corner goes | 33 / 656; muse_flow 23>24 (23.103, 10.536) 49 | 2 / 88; muse_flow 0>1 (23.085, 10.575) 45 | - |
+| corner root (q jumps, same r) | 9 / 549; def_drag 1>2 (11.064, 4.897) 99 | 12 / 125; muse_drag 10>11 (34.806, 6.578) 17 | - |
+| corner radius (r jumps) | 38 / 484; def_flow 17>18 (11.094, 4.822) 86 | - | - |
+| corner tangent foot jumps | 5 / 254; def_flow 16>17 (11.102, 4.863) 102 | 3 / 15; muse_flow 32>33 (34.717, 7.046) 6 | - |
+| scene: a chain resampled | 33 / 523; def_flow 6>7 (11.122, 4.819) 88 | 15 / 205; muse_flow 19>20 (23.096, 10.579) 49 | - |
+| scene: a junction's arms changed | 5 / 54; muse_flow 26>27 (4.098, 1.124) 26 | - | - |
+| motion beyond the rule | - | 8 / 32; muse_drag 1>2 (19.335, 15.027) 4 | 2 / 10; muse_drag 26>27 (16.017, 19.534) 6 |
+| fade weight ω (the overlap gate) | 2 / 23; muse_drag 0>1 (18.903, 18.337) 17 | - | - |
+| the tie mix | 1 / 4; muse_drag 22>23 (19.241, 18.595) | 1 / 4; muse_drag 31>32 (25.203, 19.44) | - |
+| gate: surfaces none → foot | 1 / 4; muse_flow 5>6 (26.33, 22.749) | - | - |
+
+- **By family.** Corner-solve switches 141 pops / 3016 px (78% of the
+  px), scene changes 53 / 782 (20%), smooth 14 / 73, one gate 1 / 4.
+  Every corner pop sits at a junction; its crossing ≥ 60° cells are
+  junction corners with a crossing within 3 h. No hard switch was found
+  in the per-pixel decisions (winner, fold, cap, burial, tie) beyond
+  that one gate pop. The two ω pops and two tie pops are fades that ran
+  from one end to the other inside one frame pair.
+- **Why the corners jump** (`corner_why.ts`: at each corner pop's
+  bisected switch, the gate or field that flipped;
+  `out/s1c/pops_f2/corner_why.txt`, `corner_why_dv.txt`):
+  - *V off arm*, 72 pops / 1543 px (38 appear / 822, 34 go / 721).
+    solveCorner drops a corner when V's feet leave an arm. Every one is
+    a pair opening toward straight (θ at V's feet 2.89-3.07) with a full
+    fill (r 0.33-1.6, ω 1). On the present side one of V's feet is
+    already at its arm's end (dV < 0.0005) and the other 0.03-0.08 from
+    it; on the absent side both are at 0. The margin slides to 0
+    continuously, and the corner, fill and all, goes in one step at the
+    gate. Fixed in F4.
+  - *root*, 21 / 674. In a near-parallel channel Newton's equidistance
+    solve has several roots and the one it reaches flips. def_drag
+    corner 141/431/432 (θ 1.508, r 0.300, h 0.26; feet 1.24 down arms
+    about 2(h + r) apart) has three on both sides of the switch:
+    (11.187, 5.335) kB 17, (11.189, 5.342) kB 18, (11.216, 5.428) kB 19.
+    The pick moves q by 0.008 (rV 0.691 → 0.698), and the wedge and fill
+    edges cross pixels: chain 56's outline goes buried ↔ exposed (ink
+    0 ↔ 1), 99 px at (11.064, 4.897), 69 at (11.186, 5.733)
+    (`pops_switch.ts` with `ROOTS=141/431/432`).
+  - *radius bisect*, 24 / 387: r1 is infeasible and the bisection's
+    largest feasible r jumps (feasibility in r is not an interval).
+  - *tangent foot*, 8 / 269 (corner_why's "none": q and r hold): q's
+    nearest point on an arm flips between segments (corner 141/431/432
+    dB 1.17 → 1.199; def_flow 66/204/202 dB 1.173 → 0.275).
+  - *room-L*, 9 / 63: an arm's L jumps (Lcut counts a pass only while
+    its cut lies in [0, L]), so room and r1 jump. Also arm L 0, 2 / 46
+    (muse_flow 37/113/114); r0, 2 / 20; room-dV, 3 / 14.
+- **Listed, not fixed.** Root, radius bisect and tangent foot (53 pops,
+  1330 px) are one problem: in a near-parallel channel the fillet's
+  center is a discrete choice (a root, a feasible r, a nearest foot),
+  and no short change makes it continuous. Fixing it needs a fillet
+  that is unique there (for example r capped by the channel's
+  half-width, so the circle cannot reach the far wall) or a blend over
+  the candidates. room-L is Lcut's gate. Scene changes are the
+  recorder's input (the physics resampled a chain), not form B's.

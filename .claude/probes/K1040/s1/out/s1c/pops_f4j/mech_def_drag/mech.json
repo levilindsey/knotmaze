@@ -1,0 +1,549 @@
+{
+ "merge": {
+  "pops": 8,
+  "px": 405,
+  "mergedPx": 64,
+  "popsLeft": 10,
+  "pxLeft": 339,
+  "whollyMerged": 0
+ },
+ "units": {
+  "0": 405
+ },
+ "table": {
+  "switch corner root": {
+   "junction": {
+    "pops": 6,
+    "px": 385,
+    "worst": [
+     {
+      "seq": "def_drag",
+      "from": 1,
+      "to": 2,
+      "at": [
+       11.064,
+       4.897
+      ],
+      "px": 99,
+      "mix": {
+       "merge": 26,
+       "winner foot>none": 41,
+       "winner foot>none/top": 6,
+       "winner none>arc/top": 23,
+       "winner foot>arc": 1,
+       "winner none>arc": 2
+      },
+      "sw": {
+       "at": [
+        11.039,
+        4.646
+       ],
+       "t": 0.6863528648391366,
+       "jump": 1,
+       "total": 1,
+       "a": {
+        "ink": 1,
+        "top": 58,
+        "kind": 1,
+        "chain": 56,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 2
+       },
+       "b": {
+        "ink": 0,
+        "top": 58,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": false,
+        "fade": 0,
+        "nc": 2
+       },
+       "corners": "root 141/431/432 qx 11.189>11.187 qy 5.342>5.335 rV 0.698>0.691 dA 1.25>1.242 dB 1.27>1.237 tax 11.476>11.473 tay 5.254>5.247 tbx 10.904>10.898 tby 5.436>5.415"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f4j\\mech_def_drag\\crops\\def_drag_switch-corner-root_junction_1.png"
+     }
+    ]
+   }
+  },
+  "switch corner radius": {
+   "junction": {
+    "pops": 2,
+    "px": 20,
+    "worst": [
+     {
+      "seq": "def_drag",
+      "from": 0,
+      "to": 1,
+      "at": [
+       33.188,
+       7.319
+      ],
+      "px": 10,
+      "mix": {
+       "winner none>arc": 2,
+       "merge": 3,
+       "motion arc": 1,
+       "gate arc": 2,
+       "winner arc>none/top": 2
+      },
+      "sw": {
+       "at": [
+        33.242,
+        7.287
+       ],
+       "t": 0.7663877230370417,
+       "jump": 0.852,
+       "total": 0.847,
+       "a": {
+        "ink": 0,
+        "top": 22,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 1,
+        "np": 1,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 2
+       },
+       "b": {
+        "ink": 0.8524511953681881,
+        "top": 22,
+        "kind": 5,
+        "chain": -1,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 1,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 2
+       },
+       "corners": "radius 29/93/91 qx 32.887>32.937 qy 7.595>7.563 r 0.337>0.324 r1 0.339>0.324 rV 0.664>0.607 theta 1.432>1.387 dA 0.882>0.813 dB 1.332>1.221 tax 33.124>33.169 tay 7.834>7.789 tbx 32.763>32.845 tby 7.281>7.252"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\k1040-field\\.claude\\probes\\K1040\\s1\\out\\s1c\\pops_f4j\\mech_def_drag\\crops\\def_drag_switch-corner-radius_junction_0.png"
+     }
+    ]
+   }
+  }
+ },
+ "all": [
+  {
+   "seq": "def_drag",
+   "from": 0,
+   "to": 1,
+   "at": [
+    11.059,
+    4.894
+   ],
+   "px": 97,
+   "place": "junction",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     11.039,
+     4.646
+    ],
+    "t": 0.7388188622426242,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 58,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 58,
+     "kind": 1,
+     "chain": 56,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "root 141/431/432 qx 11.187>11.189 qy 5.335>5.342 rV 0.691>0.698 dA 1.243>1.25 dB 1.237>1.27 tax 11.474>11.476 tay 5.247>5.254 tbx 10.898>10.904 tby 5.415>5.436"
+   }
+  },
+  {
+   "seq": "def_drag",
+   "from": 0,
+   "to": 1,
+   "at": [
+    11.192,
+    5.732
+   ],
+   "px": 70,
+   "place": "junction",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     11.353,
+     5.676
+    ],
+    "t": 0.7388188622426242,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 0,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 1,
+     "top": 58,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 0,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "root 141/431/432 qx 11.187>11.189 qy 5.335>5.342 rV 0.691>0.698 dA 1.243>1.25 dB 1.237>1.27 tax 11.474>11.476 tay 5.247>5.254 tbx 10.898>10.904 tby 5.415>5.436"
+   }
+  },
+  {
+   "seq": "def_drag",
+   "from": 0,
+   "to": 1,
+   "at": [
+    11.691,
+    5.638
+   ],
+   "px": 25,
+   "place": "junction",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     11.666,
+     5.541
+    ],
+    "t": 0.7388188622426242,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 58,
+     "kind": 1,
+     "chain": 56,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 0,
+     "top": 58,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "root 141/431/432 qx 11.187>11.189 qy 5.335>5.342 rV 0.691>0.698 dA 1.243>1.25 dB 1.237>1.27 tax 11.474>11.476 tay 5.247>5.254 tbx 10.898>10.904 tby 5.415>5.436"
+   }
+  },
+  {
+   "seq": "def_drag",
+   "from": 0,
+   "to": 1,
+   "at": [
+    33.188,
+    7.319
+   ],
+   "px": 10,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     33.242,
+     7.287
+    ],
+    "t": 0.7663877230370417,
+    "jump": 0.852,
+    "total": 0.847,
+    "a": {
+     "ink": 0,
+     "top": 22,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0.8524511953681881,
+     "top": 22,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "radius 29/93/91 qx 32.887>32.937 qy 7.595>7.563 r 0.337>0.324 r1 0.339>0.324 rV 0.664>0.607 theta 1.432>1.387 dA 0.882>0.813 dB 1.332>1.221 tax 33.124>33.169 tay 7.834>7.789 tbx 32.763>32.845 tby 7.281>7.252"
+   }
+  },
+  {
+   "seq": "def_drag",
+   "from": 1,
+   "to": 2,
+   "at": [
+    11.064,
+    4.897
+   ],
+   "px": 99,
+   "place": "junction",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     11.039,
+     4.646
+    ],
+    "t": 0.6863528648391366,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 58,
+     "kind": 1,
+     "chain": 56,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": 58,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "root 141/431/432 qx 11.189>11.187 qy 5.342>5.335 rV 0.698>0.691 dA 1.25>1.242 dB 1.27>1.237 tax 11.476>11.473 tay 5.254>5.247 tbx 10.904>10.898 tby 5.436>5.415"
+   }
+  },
+  {
+   "seq": "def_drag",
+   "from": 1,
+   "to": 2,
+   "at": [
+    11.186,
+    5.733
+   ],
+   "px": 69,
+   "place": "junction",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     11.353,
+     5.676
+    ],
+    "t": 0.6863528648391366,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 58,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 0,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": -1,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 0,
+     "np": 0,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "root 141/431/432 qx 11.189>11.187 qy 5.342>5.335 rV 0.698>0.691 dA 1.25>1.242 dB 1.27>1.237 tax 11.476>11.473 tay 5.254>5.247 tbx 10.904>10.898 tby 5.436>5.415"
+   }
+  },
+  {
+   "seq": "def_drag",
+   "from": 1,
+   "to": 2,
+   "at": [
+    11.691,
+    5.638
+   ],
+   "px": 25,
+   "place": "junction",
+   "top": "switch corner root",
+   "sw": {
+    "at": [
+     11.666,
+     5.541
+    ],
+    "t": 0.6863528648391366,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 0,
+     "top": 58,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "b": {
+     "ink": 1,
+     "top": 58,
+     "kind": 1,
+     "chain": 56,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": false,
+     "fade": 0,
+     "nc": 1
+    },
+    "corners": "root 141/431/432 qx 11.189>11.187 qy 5.342>5.335 rV 0.698>0.691 dA 1.25>1.242 dB 1.27>1.237 tax 11.476>11.473 tay 5.254>5.247 tbx 10.904>10.898 tby 5.436>5.415"
+   }
+  },
+  {
+   "seq": "def_drag",
+   "from": 3,
+   "to": 4,
+   "at": [
+    33.188,
+    7.319
+   ],
+   "px": 10,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     33.242,
+     7.287
+    ],
+    "t": 0.7760356299113482,
+    "jump": 0.857,
+    "total": 0.853,
+    "a": {
+     "ink": 0.8569861748411318,
+     "top": 22,
+     "kind": 5,
+     "chain": -1,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "b": {
+     "ink": 0,
+     "top": 22,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 1,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 2
+    },
+    "corners": "radius 29/93/91 qx 32.936>32.886 qy 7.562>7.594 r 0.324>0.337 r1 0.324>0.339 rV 0.607>0.664 theta 1.387>1.432 dA 0.814>0.883 dB 1.221>1.332 tax 33.169>33.124 tay 7.788>7.834 tbx 32.845>32.762 tby 7.251>7.28"
+   }
+  }
+ ],
+ "lines": [
+  "def_drag: by mechanism {\"switch corner root\":6,\"switch corner radius\":2}"
+ ]
+}

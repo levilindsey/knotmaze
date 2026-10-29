@@ -1,0 +1,276 @@
+{
+ "scene": "g41_user_tw64",
+ "crop": [
+  1540,
+  1030,
+  2180,
+  1670
+ ],
+ "sub": 8,
+ "table": {
+  "all": {
+   "n": 25144,
+   "meanAbs": 0.0382,
+   "meanSigned": 0.0004,
+   "p99": 0.105,
+   "max": 0.358,
+   "over01": 335,
+   "over05": 0,
+   "worst": [
+    {
+     "at": [
+      15.097,
+      12.473
+     ],
+     "aa": 0.942,
+     "exact": 0.584
+    },
+    {
+     "at": [
+      15.076,
+      12.483
+     ],
+     "aa": 0.896,
+     "exact": 0.542
+    },
+    {
+     "at": [
+      15.056,
+      12.493
+     ],
+     "aa": 0.811,
+     "exact": 0.498
+    },
+    {
+     "at": [
+      15.066,
+      12.493
+     ],
+     "aa": 1,
+     "exact": 0.734
+    },
+    {
+     "at": [
+      15.046,
+      12.503
+     ],
+     "aa": 0.978,
+     "exact": 0.645
+    }
+   ]
+  },
+  "inner": {
+   "n": 13116,
+   "meanAbs": 0.0375,
+   "meanSigned": 0.0005,
+   "p99": 0.101,
+   "max": 0.266,
+   "over01": 150,
+   "over05": 0,
+   "worst": [
+    {
+     "at": [
+      15.066,
+      12.493
+     ],
+     "aa": 1,
+     "exact": 0.734
+    }
+   ]
+  },
+  "outer(all)": {
+   "n": 7698,
+   "meanAbs": 0.0484,
+   "meanSigned": 0,
+   "p99": 0.114,
+   "max": 0.237,
+   "over01": 142,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/foot": {
+   "n": 6881,
+   "meanAbs": 0.0501,
+   "meanSigned": 0.0012,
+   "p99": 0.111,
+   "max": 0.236,
+   "over01": 118,
+   "over05": 0,
+   "worst": []
+  },
+  "inner+fade": {
+   "n": 2545,
+   "meanAbs": 0.0061,
+   "meanSigned": 0.0007,
+   "p99": 0.075,
+   "max": 0.358,
+   "over01": 8,
+   "over05": 0,
+   "worst": [
+    {
+     "at": [
+      15.097,
+      12.473
+     ],
+     "aa": 0.942,
+     "exact": 0.584
+    },
+    {
+     "at": [
+      15.046,
+      12.503
+     ],
+     "aa": 0.978,
+     "exact": 0.645
+    }
+   ]
+  },
+  "over": {
+   "n": 1660,
+   "meanAbs": 0.047,
+   "meanSigned": 0.0012,
+   "p99": 0.109,
+   "max": 0.21,
+   "over01": 29,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/none": {
+   "n": 505,
+   "meanAbs": 0.0213,
+   "meanSigned": -0.0213,
+   "p99": 0.047,
+   "max": 0.047,
+   "over01": 0,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/arc": {
+   "n": 144,
+   "meanAbs": 0.0487,
+   "meanSigned": -0.0008,
+   "p99": 0.11,
+   "max": 0.118,
+   "over01": 3,
+   "over05": 0,
+   "worst": []
+  },
+  "over+fade": {
+   "n": 125,
+   "meanAbs": 0.0221,
+   "meanSigned": 0.0053,
+   "p99": 0.314,
+   "max": 0.354,
+   "over01": 6,
+   "over05": 0,
+   "worst": [
+    {
+     "at": [
+      15.076,
+      12.483
+     ],
+     "aa": 0.896,
+     "exact": 0.542
+    },
+    {
+     "at": [
+      15.056,
+      12.493
+     ],
+     "aa": 0.811,
+     "exact": 0.498
+    }
+   ]
+  },
+  "outer/tA": {
+   "n": 57,
+   "meanAbs": 0.0497,
+   "meanSigned": -0.0034,
+   "p99": 0.121,
+   "max": 0.121,
+   "over01": 2,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/tB": {
+   "n": 47,
+   "meanAbs": 0.0472,
+   "meanSigned": -0.0029,
+   "p99": 0.101,
+   "max": 0.101,
+   "over01": 1,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/foot+2surf": {
+   "n": 20,
+   "meanAbs": 0.0768,
+   "meanSigned": 0.0758,
+   "p99": 0.237,
+   "max": 0.237,
+   "over01": 7,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/tA+fade": {
+   "n": 14,
+   "meanAbs": 0.0767,
+   "meanSigned": 0.0489,
+   "p99": 0.232,
+   "max": 0.232,
+   "over01": 2,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/foot+fade": {
+   "n": 12,
+   "meanAbs": 0.0706,
+   "meanSigned": 0.0243,
+   "p99": 0.194,
+   "max": 0.194,
+   "over01": 2,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/tB+fade": {
+   "n": 10,
+   "meanAbs": 0.0605,
+   "meanSigned": -0.0313,
+   "p99": 0.14,
+   "max": 0.14,
+   "over01": 2,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/tA+2surf+fade": {
+   "n": 5,
+   "meanAbs": 0.1581,
+   "meanSigned": 0.1581,
+   "p99": 0.222,
+   "max": 0.222,
+   "over01": 4,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/foot+2surf+fade": {
+   "n": 2,
+   "meanAbs": 0.1575,
+   "meanSigned": 0.1575,
+   "p99": 0.216,
+   "max": 0.216,
+   "over01": 1,
+   "over05": 0,
+   "worst": []
+  },
+  "outer/arc+fade": {
+   "n": 1,
+   "meanAbs": 0.031,
+   "meanSigned": 0.031,
+   "p99": 0.031,
+   "max": 0.031,
+   "over01": 0,
+   "over05": 0,
+   "worst": []
+  }
+ }
+}

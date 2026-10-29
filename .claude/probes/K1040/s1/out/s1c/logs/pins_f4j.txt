@@ -1,0 +1,63 @@
+
+ RUN  v3.2.7 C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/k1040-field
+
+stdout | test/render/field/form_b.test.ts > form B: the fades are continuous > D2 + D5: a crossing slides up the END; the cap ramp and r move the ink by what the step explains
+[form_b] D2+D5 sweep: max |Δink| per step 0.002 = 0.0300
+
+stdout | test/render/field/form_b.test.ts > form B: the fades are continuous > D6: ω from 0 to 1 moves the ink at most in proportion
+[form_b] D6: max |Δink| per Δω 0.01 = 0.01000
+
+stdout | test/render/field/form_b.test.ts > form B: the fades are continuous > D1: the fold across a hairpin moves the ink no faster than an outline's AA
+[form_b] D1 fold: max |Δink| along the hairpin walks = 0.0748 (step aa/10)
+
+stdout | test/render/field/form_b.test.ts > form B: the max decomposition > every winning term lies in one of its strips
+[form_b] strips: tube: 2408 inked, 0 outside, edge 2408; dead end: 1455 inked, 0 outside, edge 1204, cap 251; crossing: 4396 inked, 0 outside, edge 4396; T: 3144 inked, 0 outside, edge 2594, arc 448, endpoint 90, cap 12; acute: 2843 inked, 0 outside, edge 2567, arc 175, endpoint 89, cap 12; Y: 3576 inked, 0 outside, edge 2897, endpoint 131, arc 548
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > eye: 1 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] watertight eye: natural 20, fold=0 20, fold=0.25 20, fold=0.5 20, fold=0.75 20, fold=1 20, omega=0 20, omega=0.25 20, omega=0.5 20, omega=0.75 20, omega=1 20, cap=0 20, cap=0.25 20, cap=0.5 20, cap=0.75 20, cap=1 20, tie=0 20, tie=0.25 20, tie=0.5 20, tie=0.75 20, tie=1 20
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > T: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] watertight T: natural 0, fold=0 0, fold=0.25 0, fold=0.5 0, fold=0.75 0, fold=1 0, omega=0 0, omega=0.25 0, omega=0.5 0, omega=0.75 0, omega=1 0, cap=0 0, cap=0.25 0, cap=0.5 0, cap=0.75 0, cap=1 0, tie=0 0, tie=0.25 0, tie=0.5 0, tie=0.75 0, tie=1 0
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > acute: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] watertight acute: natural 0, fold=0 0, fold=0.25 0, fold=0.5 0, fold=0.75 0, fold=1 0, omega=0 0, omega=0.25 0, omega=0.5 0, omega=0.75 0, omega=1 0, cap=0 0, cap=0.25 0, cap=0.5 0, cap=0.75 0, cap=1 0, tie=0 0, tie=0.25 0, tie=0.5 0, tie=0.75 0, tie=1 0
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > hairpin: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] watertight hairpin: natural 0, fold=0 0, fold=0.25 0, fold=0.5 0, fold=0.75 0, fold=1 0, omega=0 0, omega=0.25 0, omega=0.5 0, omega=0.75 0, omega=1 0, cap=0 0, cap=0.25 0, cap=0.5 0, cap=0.75 0, cap=1 0, tie=0 0, tie=0.25 0, tie=0.5 0, tie=0.75 0, tie=1 0
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > T: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] rate T (ink per px): natural 1.50, omega=0 1.50, omega=0.25 1.50, omega=0.5 1.50, omega=0.75 1.50, omega=1 1.50
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > acute: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] rate acute (ink per px): natural 1.50, omega=0 1.50, omega=0.25 1.50, omega=0.5 1.50, omega=0.75 1.50, omega=1 1.50
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > hairpin: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] rate hairpin (ink per px): natural 1.50, omega=0 1.50, omega=0.25 1.50, omega=0.5 1.50, omega=0.75 1.50, omega=1 1.50
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > eye: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] rate eye (ink per px): natural 1.50, omega=0 1.50, omega=0.25 2.36, omega=0.5 1.50, omega=0.75 1.50, omega=1 1.50
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > cap: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] rate cap (ink per px): natural 1.62, omega=0 1.62, omega=0.25 1.62, omega=0.5 1.62, omega=0.75 1.62, omega=1 1.62
+
+stdout | test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > tie: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[form_b] rate tie (ink per px): natural 1.50, omega=0 1.50, omega=0.25 1.50, omega=0.5 1.50, omega=0.75 1.50, omega=1 1.50
+
+ ✓ test/render/field/form_b.test.ts (22 tests) 16553ms
+   ✓ form B: the fades are continuous > D2 + D5: a crossing slides up the END; the cap ramp and r move the ink by what the step explains  300ms
+   ✓ form B: the max decomposition > every winning term lies in one of its strips  452ms
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > eye: 1 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1  778ms
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > acute: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1  456ms
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > hairpin: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1  722ms
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > T: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1  1293ms
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > acute: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1  1207ms
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > hairpin: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1  1903ms
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > eye: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1  3312ms
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > cap: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1  3266ms
+   ✓ form B: watertight and the rate rule at every fade value (S1b) > tie: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1  2205ms
+
+ Test Files  1 passed (1)
+      Tests  22 passed (22)
+   Start at  03:14:54
+   Duration  17.45s (transform 262ms, setup 0ms, collect 319ms, tests 16.55s, environment 0ms, prepare 156ms)
+
