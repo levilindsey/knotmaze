@@ -319,3 +319,195 @@ change):
 - flip_1 (g41_def_tw64, 4 px): the GPU fills a small white notch where a
   thin line meets a thick band.
 - rounding_0 (muse_hash, 2 px): a thin tip moved by a pixel.
+
+### F5. The pop census, GPU pieces off against on (10:03)
+
+`scripts/label_pops.ts` (with K992's census windows, cherry-picked as
+`06d90998`), under the perf lock from 09:29: the four sequences at zoom 1
+and in K992's windows at the maximum zoom, with the GPU pieces off (`--tag
+off15_z1`, `off15_win`) and on (`--gpu`, `gpu15_z1`, `gpu15_win`), all in
+`.claude/probes/S3a/pops15/`. `.claude/probes/S3a/cmp15.mjs` compares the
+two (`pops15/cmp15_z1.md`, `pops15/cmp15_win.md`). A pop is new when the
+other run's same transition has no pop within 3 px of its box, and gone the
+other way round. A transition is identical when its pops match in area, box
+and ink. Off reproduces F1's run pop for pop.
+
+Zoom 1:
+
+| run | pops off | on | a transition off | on | area off px | on | largest off | on | new | gone | identical transitions |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| def_drag | 6 | 6 | 0.15 | 0.15 | 359 | 359 | 144 | 144 | 0 | 0 | 40 of 40 |
+| def_flow | 27 | 27 | 0.68 | 0.68 | 1078 | 1078 | 225 | 225 | 0 | 0 | 40 of 40 |
+| muse_drag | 77 | 78 | 1.93 | 1.95 | 1273 | 1266 | 146 | 146 | 1 | 0 | 31 of 40 |
+| muse_flow | 266 | 266 | 6.65 | 6.65 | 7368 | 7357 | 237 | 237 | 3 | 3 | 28 of 40 |
+
+K992's windows at the maximum zoom:
+
+| run | pops off | on | a transition off | on | area off px | on | largest off | on | new | gone | identical transitions |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| def_drag@w0 | 249 | 250 | 6.22 | 6.25 | 77105 | 77111 | 19589 | 19589 | 1 | 0 | 38 of 40 |
+| def_flow@w0 | 184 | 162 | 4.60 | 4.05 | 89876 | 89738 | 32026 | 32038 | 2 | 24 | 20 of 40 |
+| def_flow@w1 | 229 | 229 | 5.72 | 5.72 | 62961 | 62958 | 20750 | 20750 | 0 | 0 | 36 of 40 |
+| def_flow@w2 | 254 | 252 | 6.35 | 6.30 | 45930 | 45922 | 11045 | 11045 | 0 | 2 | 38 of 40 |
+| muse_drag@w0 | 314 | 315 | 7.85 | 7.88 | 155916 | 155929 | 25454 | 25454 | 1 | 0 | 39 of 40 |
+| muse_drag@w1 | 286 | 286 | 7.15 | 7.15 | 32786 | 32787 | 3950 | 3950 | 1 | 1 | 38 of 40 |
+| muse_drag@w2 | 879 | 885 | 21.98 | 22.13 | 74530 | 74736 | 9612 | 9612 | 3 | 0 | 31 of 40 |
+| muse_flow@w0 | 659 | 653 | 16.48 | 16.32 | 162138 | 162102 | 29498 | 29498 | 2 | 8 | 28 of 40 |
+| muse_flow@w1 | 393 | 393 | 9.82 | 9.82 | 150117 | 150118 | 34774 | 34774 | 0 | 0 | 39 of 40 |
+| muse_flow@w2 | 878 | 871 | 21.95 | 21.77 | 213948 | 213540 | 23934 | 23934 | 14 | 16 | 11 of 40 |
+
+Per sequence at the maximum zoom (its windows summed):
+
+| sequence | pops off | on | area off px | on |
+|---|---|---|---|---|
+| def_drag | 249 | 250 | 77105 | 77111 |
+| def_flow | 667 | 643 | 198767 | 198618 |
+| muse_drag | 1479 | 1486 | 263232 | 263452 |
+| muse_flow | 1930 | 1917 | 526203 | 525760 |
+
+Most of muse_drag's extra area is not new pops. In window 2, t3 and t4
+(+128 and +84 px of the +206), K992's large `reach` pops at one corner
+come out bigger with the GPU pieces: at t3 master's two loss pops of 952
+and 335 px merge into one of 1379 px and the gain pop grows from 684 to
+720 px; at t4 one loss pop grows from 1901 to 1985 px. The frame's changed
+pixels number the same to within 6 px (41039 against 41033 at t3): about the
+same ink changes, and the census assigns a little more of it to the pop.
+
+In the transitions that differ without a new or gone pop, the same pops
+come out a few px larger or smaller: muse_drag t4 9 -> 5 px, t7 13 -> 15,
+t10 and t12 6 -> 5, t19 and t20 11 -> 12, t27 8 -> 4, t31 12 -> 5;
+muse_flow t3 25 -> 26, t5 27 -> 28, t13 20 -> 21, t23 65 -> 60, t24
+66 -> 61, t27 46 -> 47, t34 67 -> 68, t35 28 -> 25, t37 11 -> 12.
+
+The new pops, cropped in both paths at the same place
+(`.claude/probes/S3a/pops_at15.ts`, `scripts/label_pops.ts` plus `--at
+"run:t:x:y"`; `atspec15.mjs` lists the places; under the perf lock at
+09:58; `pops15/at15_off_*` and `at15_gpu_*`, `<run>_crops/at_t<t>_<x>_<y>.png`,
+frame t | frame t+1 | change):
+- zoom 1, muse_drag t3 at (505, 367), 6 px, NEW: both paths draw the same
+  thing. Frame 4 has a few stray dots of ink just past a thread's end, in
+  master too; master's are scattered and fall under the census's minimum
+  area, and on the GPU path one or two of them touch, so 6 px join into a
+  blob the census counts. Same ink, not a new artifact.
+- muse_drag's windows, the five new pops (w0 t1 13 px, w1 t13 5 px, w2 t8
+  5 px, t15 4 px, t18 8 px; 10:00-10:02, `pops15/at15_*_mw`): in every
+  one the two paths change the same ink between the two frames (the same
+  edge moving, the same seam of light dashes inside a dark thread), and the
+  census counts a few px of it as a pop on one path and not the other. w1
+  t13 is the seam that master's census counts one transition earlier (the
+  gone pop at t12). Two differ in what is drawn, and both in the GPU path's
+  favour: master's frame has stray light pinholes inside the dark ink
+  (three at w0 t1, two at w2 t8) that the GPU path does not draw. Inferred,
+  not checked: they are master's piece seams (the CPU tubes split at
+  ZTOL), which one instance per segment does not have.
+- def_drag w0 t30 at (1221, 145), 4 px (10:02, `pops15/at15_*_dw`): the
+  same. Both paths draw the same frames but for one stray pinhole in
+  master's frame 30, the same ink changes (a light wedge advancing), and
+  the GPU path's census counts 4 px at the wedge's tip as a pop.
+
+The gate (per sequence and zoom, no more pops a transition and no more pop
+area with the GPU pieces on):
+- met by def_drag and def_flow at zoom 1 (identical), muse_flow at zoom 1
+  (the same count, 11 px less area), and def_flow and muse_flow at the
+  maximum zoom (fewer pops, less area);
+- NOT met by muse_drag at zoom 1 (one more pop of 6 px; 7 px less area),
+  def_drag at the maximum zoom (one more pop; 6 px more area) and muse_drag
+  at the maximum zoom (7 more pops; 220 px more area, 212 px of it the
+  two grown reach pops at window 2's t3 and t4).
+
+Every new pop cropped so far is the same ink counted differently, not a new
+artifact. Not cropped (no time): muse_flow's three new pops at zoom 1, the
+new pops in def_flow's windows (2) and muse_flow's (2 and 14), and muse_drag
+w2's grown reach pops at t3 and t4.
+
+### F6. Cost (09:58)
+
+Node v23.7.0, every distinct frame of the four sequences (41 each), in the
+app's order, one `LabelTableBuilder` reused across frames as in
+`label_app.ts`.
+
+Off against on (`.claude/probes/S3a/cost15.ts`, `pops15/cost15_load.md`):
+per frame, 3 rounds of A B B A after a warm-up, the per-frame median; ms
+over the frames. Off is `buildLabelPieces`; on is the tables
+(`LabelTableBuilder.build`) plus `buildLabelPiecesGpu`. TAKEN UNDER LOAD:
+my own pop census's Chrome was rendering the whole time.
+
+| sequence | off: pieces p50 | p95 | max | on: tables p50 | p95 | max | on: pieces p50 | p95 | on: total p50 | p95 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| def_drag | 93.030 | 95.168 | 98.225 | 0.420 | 0.779 | 4.076 | 56.497 | 57.694 | 56.878 | 58.224 |
+| def_flow | 91.678 | 95.934 | 96.827 | 0.448 | 0.494 | 0.563 | 56.260 | 58.692 | 56.676 | 59.181 |
+| muse_drag | 69.401 | 71.776 | 74.401 | 0.379 | 0.455 | 0.668 | 39.112 | 40.945 | 39.513 | 41.356 |
+| muse_flow | 69.649 | 72.208 | 72.736 | 0.402 | 0.469 | 0.512 | 39.251 | 40.657 | 39.665 | 41.126 |
+
+The GPU path's CPU parts alone (`.claude/probes/S3a/cost_tab15.ts`,
+`pops15/cost_tab15.md`), under the perf lock at 09:57 with none of my other
+runs going: per frame, the first call of each after the frame's
+`FieldModel` (what the app pays), in the app's order, and the tables'
+median over 9 more calls; ms over the frames.
+
+| sequence | tables first p50 | p95 | max | tables repeat p50 | p95 | vertexRanges p50 | p95 | buildLabelFills p50 | p95 | max |
+|---|---|---|---|---|---|---|---|---|---|---|
+| def_drag | 0.269 | 4.127 | 4.813 | 0.189 | 0.623 | 0.838 | 3.391 | 32.967 | 58.739 | 59.659 |
+| def_flow | 0.260 | 0.410 | 0.426 | 0.190 | 0.227 | 0.844 | 1.371 | 32.498 | 58.021 | 71.793 |
+| muse_drag | 0.379 | 0.456 | 4.125 | 0.281 | 0.307 | 1.448 | 1.620 | 38.493 | 40.756 | 68.669 |
+| muse_flow | 0.256 | 0.437 | 0.711 | 0.164 | 0.285 | 0.814 | 1.460 | 23.042 | 39.527 | 49.030 |
+
+- `buildLabelPieces` leaves the per-frame path: with `lbp` on,
+  `label_app.ts` calls the table builder and `buildLabelPiecesGpu`
+  instead, and the CPU tubes are gone (30-36 ms a frame p50 in the load
+  run: off's pieces against on's total).
+- The tables' gate (0.25 ms p95 a frame) is NOT met in Node: the first
+  call is 0.26-0.38 ms p50 and 0.41-0.46 ms p95 (def_drag 4.1 ms, from a
+  few frames with a spike, probably a collection), and even the warm
+  repeats are 0.23-0.62 ms p95. Not measured in the browser.
+- What stays on the CPU is `buildLabelPiecesGpu`, 23-38 ms a frame p50
+  and 40-59 ms p95: almost all of it `buildLabelFills` (the window records,
+  the crossings, the fills and the DATA texture; its `windowOf` scans every
+  segment for each window), and `vertexRanges` (a `depthAt` per vertex,
+  only for ZTOL's z range) 0.8-1.4 ms p50. That is S3a8's work.
+- The GPU pass's own time: not measured. No timer query was tried and no
+  frame-time A/B was run in a browser.
+
+## Handoff
+
+(K868 S3a7 agent, 2026-10-28 08:20-10:10, stopped at the wrap-up time.)
+
+Branch `k868-s3a` (worktree `.claude/worktrees/k868-s3a`), never pushed.
+Commits: `0c11b49f` the tables and their float32 reference (F2), `79c74f59`
+the GPU tubes behind `lbp` (WIP when committed), `06d90998` the cherry-pick
+of K992's `census windows` (its message kept; the two conflict hunks in
+`scripts/label_pops.ts` are named in `7eebf704`), `7eebf704` F3 and F4, then
+this handoff's commit (F5, F6). Probes and results: `.claude/probes/S3a/`
+(`*15*`: `tables15.ts`, `raster15.ts`, `check15.ts`, `diag15.mjs`,
+`cmp15.mjs`, `atspec15.mjs`, `pops_at15.ts` (label_pops with `--at` crops),
+`cost15.ts`, `cost_tab15.ts`, `edit15.*`, `pops15/`).
+
+Done: steps 1-7, step 7 in Node only.
+
+The flag: `labelGpu`, link key `lbp` (default off; it acts only with
+`lbi=1`). Off, nothing drawn changes (the off census runs reproduce F1's
+run). On: the tubes are one instance per chain segment, placed, keyed and
+given their exact depth per fragment from `LabelTableBuilder`'s tables;
+`buildLabelPiecesGpu` keeps the fills, the window records and the rank keys
+on the CPU (S3a8).
+
+The gates: positions and depth pass (F2, F4); the raster census
+attributes every changed pixel (F4); the pop census is NOT clean (F5:
+def_drag and muse_drag at the maximum zoom, and muse_drag at zoom 1, have
+more pops or more pop area with the GPU pieces); the tables' cost gate is
+NOT met in Node (F6).
+
+Missing:
+- crops of the new pops not yet looked at (F5): muse_flow's three at zoom 1,
+  def_flow's windows (2), muse_flow's windows (2 and 14), and muse_drag w2's
+  grown reach pops at t3 and t4. `atspec15.mjs <offDir> <onDir>` prints
+  the `--at` places for `pops_at15.ts`;
+- the GPU pass's own time (no timer query was tried) and any frame-time
+  change in a browser; F6's cost is Node's;
+- flip_0's mechanism (F4) is inferred, not verified;
+- Levi has not seen the flag on in motion (call 5).
+
+Next: the coordinator's call on the pop gate (F5: no new artifact found in the
+crops looked at, but def_drag and muse_drag break the numbers) and on the
+tables' cost (F6). Then S3a8, whose CPU cost to remove is
+`buildLabelFills` (23-38 ms a frame p50 in Node).
