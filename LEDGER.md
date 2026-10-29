@@ -19,10 +19,13 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K995.
+Next free ID: K999.
 
 ## Waiting on Levi
 
+- **K995** · Cursive b's lead-in (K991): J2 removed its spike, but a soft knee is left where it turns up, as in the
+  font's own lead (2.96 u off it). Keep the knee, or one even curve that strays a little more? Picture sent 2026-10-28:
+  `.claude/probes/K863/trace/work19/crops/K995_b_lead.png` (v5.8 above, v5.9 below).
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -306,10 +309,10 @@ Next free ID: K995.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
-  - owner: agent `a38199ee25cf8b7f4` of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (opus, stage J2 = K962, started 2026-10-28 06:54, 2 h cap ~08:54)
-  - branch: mainline, no code (outputs untracked); last commit: `37037f72` (J2's brief); J2's brief is `docs/design/K962_cursive_joins.md`, its handoff is appended there at the end
-  - evidence: `.claude/probes/K863/trace/` (per stage: `tools/*_k<ID>.py`, `work<n>/`, `out<n>/`; `NOTES.md` has a section per version with its rerun commands); Drive `K863/` (each version's SVGs; v5.1: `cursive_v51.svg`, `cursive_v51_words.svg`, `split_combs.svg`, `k917_junctions.svg`; v5.2: `cursive_v52.svg`, `cursive_v52_words.svg`; v5.3: `cursive_v53.svg`, `cursive_v53_words.svg`, `combs_v53.svg`; v5.4: `cursive_v54_words.svg`, `e_joins_v54.svg`; v5.5: `cursive_v55.svg`, `cursive_v55_words.svg`, `combs_v55.svg`; v5.6: `cursive_v56.svg`, `cursive_v56_nodes.svg`, `cursive_v56_words.svg`, `combs_v56.svg`; v5.7: `cursive_v57.svg`, `cursive_v57_nodes.svg`, `cursive_v57_words.svg`, `combs_v57.svg`; v5.8: `cursive_v58.svg`, `cursive_v58_nodes.svg`, `cursive_v58_words.svg`, `combs_v58.svg`; K944: `e_tails_k950.svg`, `words_edit_test.svg`, `combs_edit_test.svg`; J1 uploaded nothing, no visible change); Levi's file to edit: J1's `out18/cursive_template.svg`, built with `work18/dbg/build_from_svg.ps1`; J1's locality harness: `work18/dbg/sensitivity_k980.py`
-  - next: J2 (`K962_cursive_joins.md`: the e variants with no build-time fit, G2 seams, then K962, K948, K946, K949, K937, K988; its handoff reports on Levi's entry notes, K991); then Levi's v5.8 review (2026-10-28): a body pass (K976 o, K990 a k p) and the entries (K991), and Levi reviews again; Levi edits the newest `cursive_template.svg` once the letters look right (J2 changes no letter body) and `build_from_svg.ps1` builds from it; K927; then map the letters onto threads (the a/c/d/g/o/q junctions and a's top corner, `K863_trace.md` ## Levi's calls); capitals are K931
+  - owner: nobody since 2026-10-28 08:26 (agent J2 of claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 stopped at its 1 h 30 checkpoint; merged as b1023618); the next stage is not launched yet
+  - branch: mainline, no code (outputs untracked); last commit: `b1023618` (J2's handoff, at the end of `docs/design/K962_cursive_joins.md`)
+  - evidence: `.claude/probes/K863/trace/` (per stage: `tools/*_k<ID>.py`, `work<n>/`, `out<n>/`; `NOTES.md` has a section per version with its rerun commands); Drive `K863/` (each version's SVGs; v5.1: `cursive_v51.svg`, `cursive_v51_words.svg`, `split_combs.svg`, `k917_junctions.svg`; v5.2: `cursive_v52.svg`, `cursive_v52_words.svg`; v5.3: `cursive_v53.svg`, `cursive_v53_words.svg`, `combs_v53.svg`; v5.4: `cursive_v54_words.svg`, `e_joins_v54.svg`; v5.5: `cursive_v55.svg`, `cursive_v55_words.svg`, `combs_v55.svg`; v5.6: `cursive_v56.svg`, `cursive_v56_nodes.svg`, `cursive_v56_words.svg`, `combs_v56.svg`; v5.7: `cursive_v57.svg`, `cursive_v57_nodes.svg`, `cursive_v57_words.svg`, `combs_v57.svg`; v5.8: `cursive_v58.svg`, `cursive_v58_nodes.svg`, `cursive_v58_words.svg`, `combs_v58.svg`; K944: `e_tails_k950.svg`, `words_edit_test.svg`, `combs_edit_test.svg`; J1 uploaded nothing, no visible change; v5.9 = J2: `cursive_v59_words.svg`, `combs_v59.svg`); Levi's file to edit: `out18/cursive_template.svg` (J2 changed no body), built with `work19/dbg/build_from_svg.ps1 -Name k962` on J2's frozen join sets (`work19/template_map_k962.json`); J2's census `work19/dbg/census_k962.py`, crops `work19/crops/`, locality harness `work19/dbg/sensitivity_k962.py` (rerun list: J2's handoff)
+  - next: brief and launch the body pass (K976 o's cusp exit, K990 a k p f, K996 J2's body findings; bodies only, then re-choose the join sets those bodies move), then a joins stage (K991's cusp-entry rule, K948 with br, K997, K998, K937); K995 waits on Levi; then Levi reviews again; Levi edits the newest `cursive_template.svg` once the letters look right and `build_from_svg.ps1` builds from it; K927; then map the letters onto threads (the a/c/d/g/o/q junctions and a's top corner, `K863_trace.md` ## Levi's calls); capitals are K931
   - brief: `docs/design/K863_trace.md` (## Levi's calls); stages: v3 `K886_cursive_v3.md`, v4 `K902_cursive_frames.md`, v5 `K904_cursive_v5.md`, v5.1 `K916_cursive_v51.md`, v5.2 `K925_cursive_v52.md`, v5.3 `K930_cursive_smooth.md`, v5.4 `K926_cursive_e.md`, v5.5 `K945_cursive_v55.md`, v5.6 `K959_cursive_v56.md`, v5.7 `K965_cursive_v57.md`, v5.8 `K969_cursive_v58.md`, K944 `K944_cursive_asdrawn.md`, J1 `K980_cursive_local.md`, J2 `K962_cursive_joins.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
@@ -754,36 +757,39 @@ Every other item below waits on the trigger it names.
 - **K935** · K922's follow-ups (endSnap is unconditional since K934): the 23 crossing-cut free ends; the 9 span-end
   triples the walk never starts; d2-d4's fill-outline and z-tie cuts; probe fixes (fe_mech R = 2W, K915's `h.ts`
   FULL_DIR). `K922_junction_extent.md` ## Handoff.
-- **K937** · Cursive: fit the connector into o (`cnct.mod_n_o`) on its own at the 86 u junction. v5.2's
-  shared refit moved ho, to, io, do, mo, nd and ng about 1 u off the font (ho 1.78 to 2.87 u), still
-  inside its fill. Untested. `K925_cursive_v52.md` ## Handoff, `NOTES.md` ## v5.2.
+- **K937** · Cursive: fit the connector into o (`cnct.mod_n_o`) on its own at the 86 u junction. J2 kept one set for
+  ma la ug no ho do po ro (to io mo ng too) and chose smoothness: ho 2.85, no 2.89, do 2.76, ro 2.89 u (were 1.78-2.00),
+  inside 3.0; an o-only set may win the distance back. `K962_cursive_joins.md` ## Handoff (K937).
 - **K941** · K924's follow-ups: trace F, the fill's paper edge at muse_hash #5's 9 sites (corner prims at
   (4.2, 12.1) and (11.9, 15.75)); attribute the 2 unattributed missing stretches; check that group ink's 106
   broken lines are S's; N's 7 extra (open-chain starts) go to the extent walk. `K924_label_artifacts.md` ## Handoff.
 - **K961** · Cursive v5.8: 8 of 30 body strokes have more than 12 nodes (m 21, k 18, h 16, w 16, y 15, p 14, a 13,
   n 13; f is down to 12): k and p are at the fewest any candidate has, fewer-node h and n peak above their caps, m, y
   and w fall outside the 10% peak window, and a's 13th node holds its bowl top. `work16/fewnode/` in K863's probes.
-- **K946** · Cursive generator hooks (`gen_k925`): d's entry (curvature 194 1/u), the hippo lead-in
-  (6408 1/u), b's word-initial lead-in (a small step, in v5.3 too), and the na and nq joins (G1 only).
-  `K930_cursive_smooth.md` ## Handoff.
-- **K948** · Cursive v5.4: the o-entry e (be, we, ve, oe; Drive `K863/e_joins_v54.svg`) turns from its
-  level crossbar up into the eye's back in a short span, an elbow where the font turns smoothly (4x
-  crops). Likely `evar_k926`'s start curve, which meets the body at s 298 of 1052; unchecked. oe is 5.7 u off.
-- **K949** · Cursive joins still off the font after v5.4: fe 18.8 u (v5.8 15.34), bk 7.85 (check the reference cut
-  near k's loop entry), ee 6.9, br 5.5 (the refit sits on its bounds; blend's L=b params give 5.2), y's
-  final tail 3.58. `K926_cursive_e.md` ## Handoff.
-- **K962** · Cursive joins: v5.5's seam spikes ("minimum", "hippo": p to o, h's entry) and m's exit hook; v5.7's 17 rows
-  worse by over 0.25 u (fo 3.10 -> 4.19 the worst; on moved body ends, kn unexplained); minimum's um tooth and last m
-  spike; v5.8's ma +0.36 u, la -0.29 (a's entry moved 0.59 u). Stage J2: `K962_cursive_joins.md`.
+- **K948** · Cursive: the e after o, b, v and w (be, we, ve, oe; Drive `K863/e_joins_v54.svg`) turns from its level
+  crossbar up into the eye's back in a short span, an elbow. J2 kept J1's sets (hooked; oe 5.29 u): re-choose e's
+  after_o start (`k962.evar.o`) with `ful_b_e|e` and `ful_o_e|e`, or redesign it. `K962_cursive_joins.md` ## Handoff.
+- **K949** · Cursive joins still off the font: fe 18.8 u (v5.8 15.34), bk 7.85 (check the reference cut near k's loop
+  entry), ee 6.9, br 5.18 after J2 (its new set made a deeper V), y's final tail 3.55 after J2. fe, bk and ee are not
+  in J2's census words (K998). `K926_cursive_e.md`, `K962_cursive_joins.md` ## Handoff.
 - **K976** · Cursive o's exit, Levi's call (2026-10-28): an abrupt cusp, then a slight overstroke into the exit segment,
-  replacing the S-bend where o's right side turns into its exit ("a bit of an awkward crotch"). Every o exit, plain and
-  fused; J2 leaves that seam a cusp. With K990, before the hand edits. `K863_trace.md` ## Levi's calls.
+  replacing the S-bend ("a bit of an awkward crotch"); every o exit, plain and fused (`K863_trace.md` ## Levi's calls).
+  Then re-choose the six o-exit sets, all J1's (a seam cusp needs exit kind "cusp"; `K962_cursive_joins.md` ## Handoff).
 - **K990** · Cursive bodies, Levi's v5.8 review (2026-10-28): a's top turnaround reaches the exact top of its right-side
   stroke as a corner (a thread later runs around it unbroken); k's leg meets the stem at a sharper angle; p's end into
-  its exit is shorter; f's cusp into its exit is fixed. With K976 (o), before the hand edits. `K863_trace.md` ## Levi's calls.
-- **K991** · Cursive entries, Levi's v5.8 review (2026-10-28): b's entry bends (K946); h's entry misses the curvature at
-  h's start; cusp entries (t, p; also i j r s u w y) meet the stem from one side at its tangent, never crossing it. J2's
-  handoff says which its outputs fix (`K962_cursive_joins.md`). `K863_trace.md` ## Levi's calls.
+  its exit is shorter; f's cusp into its exit is fixed. With K976 and K996, before the hand edits. `K863_trace.md` ## Levi's calls.
+- **K991** · Cursive entries (Levi, v5.8 review, 2026-10-28): cusp entries (t, p; also i j r s u w y) meet the stem
+  from one side at its tangent, never crossing it; h's entry matches h's start curvature; b's is K995. J2 left the
+  cusp entries at 143-172° (crossing ~20 u lower) and h's lead curling: `K962_cursive_joins.md` ## Handoff, notes 2, 4.
+- **K996** · Cursive body edits J2 measured (`K962_cursive_joins.md` ## Handoff, Body defects): p's last cubic runs
+  130 fu flat (end it near x 430, K990); f's lower loop ends mid-turn (fo's red fan, K990); h's start curves too
+  tightly for its lead (K991); the b, v and w exits end 17-22° below level (K948). In the body pass, Levi reviews.
+- **K997** · Cursive joins: the take rule (`joinfit_k962`, `freeze_k962`) should read the census's peak away from the
+  seam, with the hook as its own term. J2 took fo and tail t for losing J1's hooks though that peak rose (fo 0.114 to
+  0.146, tail t 0.044 to 0.169); t's tail shows a red burst in v5.9. `K962_cursive_joins.md` ## Handoff.
+- **K998** · Cursive census coverage: add words holding fe, bk, ee (K949), na, nq (K946) and the pairs that share a
+  re-chosen set (to io mo ng); then explain or re-choose the pieces over budget: ot 6.56 u, tail t 6.53, lead f 6.46
+  (unexplained), oe 5.29, br 5.18, fo 4.64, lead h, tail y, lead s, lead l, ur, et. `K962_cursive_joins.md` ## Handoff.
 - **K943** · K868: draw the over thread's line where two threads of one junction cross (about 110 spots; both inks
   fuse them now; Drive `K868/sheets/K943_crossing_in_junction.png`), behind a flag for Levi to compare. The oracle
   needs simLab to split a crossing's two passes (K940 step 5, `S/`); the app needs 1-2 label bits (S3). Under extent part this is label ink's largest class (#16 50/8, missing 41/16; K934).
@@ -1740,8 +1746,6 @@ Every other item below waits on the trigger it names.
   checks it). `K868_s3a5_incremental.md` 11.6, 11.9, 11.10.
 - **K986** · Cursive: rough fails n after K944's n edit (facet 0.0056 > 0.0053, peak 14.67 at 166 u), the same with
   and without K981, so the fork is not the cause. Untraced. `K980_cursive_local.md` ## Handoff.
-- **K988** · Cursive: maze's z exit node is a near-cusp; its comb is a capped spike (v5.8 and J1) whose teeth fan
-  differently after a 0.016 u join move. In J2 (`K962_cursive_joins.md`).
 - **K989** · Cursive: frames with a bk (after_o with s: b f h k l x z; s_fused: a c d g o q) still go through K944's
   node alignment, not a rule on the drawn curve (h's node add moved them 1e-4 u); edits are emulated, never made in
   the GUI. `K980_cursive_local.md` ## Handoff.
@@ -2047,6 +2051,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K962** · Cursive joins J2: one frozen setting per key, nothing fitted at build time; hooks 28 to 10, comb spikes 62 to 16; minimum's m tail, hippo's po, ma and la smooth (fo's burst is f's body, K996; h's entry K991). Done in b1023618 (2026-10-28).
+- **K946** · Cursive generator hooks: d's entry fixed in J2 (nd and lead d, no hooks); b's lead spike gone (its knee is K995); the hippo lead-in is K991, na and nq (unmeasured) K998. Done in b1023618 (2026-10-28).
+- **K988** · Cursive: maze's z exit hook (the capped comb spike) gone in J2, ze 2.28 u; a seam micro-hook, like the J1-kept sets still at the floor (K948). Done in b1023618 (2026-10-28).
 - **K975** · Cursive v5.8, Levi's review: another pass before the hand edits: o's exit (K976), the a k p f bodies (K990), the b h t p entries (K991). Answered 2026-10-28.
 - **K950** · Cursive word-final e tail: long (Levi, 2026-10-28: "Long tail on e seems goood"), already the default of J1's `build_from_svg.ps1` (c23c6980). Done (2026-10-28).
 - **K980** · Cursive J1: every derived piece local (v5.8's shared fits frozen in the map), the e variants a continuous fit; K944's nine edits pass with untouched pieces at 0 u (baseline up to 5.12 u). Done in c23c6980 (2026-10-28).
