@@ -1188,8 +1188,6 @@ export class FieldModel {
         const vB = Math.abs(dS(pb, c.armB.s, c.sVB));
         return Math.min(capA - this.W - vA, capB - this.W - vB);
       };
-      const over = () =>
-        Math.max(Math.abs(dS(pa, c.armA.s, c.sTA)) - (capA - this.W), Math.abs(dS(pb, c.armB.s, c.sTB)) - (capB - this.W));
       // K992 rule 2, the cap stop: a corner whose tangent feet pass cap − W
       // is grown again with its feet held to cap − W (rule 1's stop), so r is
       // the largest ball on V's branch that fits its caps; over() > 0 only
@@ -1688,7 +1686,6 @@ export class FieldModel {
       // itself, where |u| has no bound, jumped with every step halving).
       let qq: Sol;
       if (v.ok) {
-        let cur: Sol = v;
         // K992 s2, the continuous stops: the ball grows by the measure of
         // V's branch that passes both tests, read as a running minimum, so
         // r = ∫ S dδ over δ from h to h + r, S = min over [h, δ] of
@@ -1712,24 +1709,11 @@ export class FieldModel {
           const by = p.y - gB.y;
           return 1 + (ax * bx + ay * by) / (Math.hypot(ax, ay) * Math.hypot(bx, by));
         };
-        const ovAt = (p: Sol): number => {
-          const gA = pointAt(pa, p.sA);
-          const gB = pointAt(pb, p.sB);
-          const oA = Math.hypot(p.x - gA.x, p.y - gA.y) - footInWindow(pa, p.x, p.y, winA[0], winA[1]).d;
-          const oB = Math.hypot(p.x - gB.x, p.y - gB.y) - footInWindow(pb, p.x, p.y, winB[0], winB[1]).d;
-          return Math.max(0, oA, oB);
-        };
         const vt: Sol = { ...v, sA: unwrap(pa, v.sA, winA), sB: unwrap(pb, v.sB, winB) };
-        cur = vt;
         const denV = denT(vt);
         const ss = (x: number): number => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
         const footA = (p: Sol): number => Math.abs(dS(pa, A.s, p.sA));
         const footB = (p: Sol): number => Math.abs(dS(pb, B.s, p.sB));
-        const wAt = (p: Sol): number => {
-          const gs = ss(1 - ovAt(p) / (0.05 * h)) * ss((denT(p) / denV - 0.3) / 0.4);
-          const slack = Math.min(capLimA - footA(p), capLimB - footB(p));
-          return slack === Infinity ? gs : gs * ss(slack / (0.5 * h));
-        };
         // The branch from δ = d0 to dT: each step predicts along u and
         // polishes with Newton held near the prediction; a miss halves it.
         const advance = (from: Sol, d0: number, dT: number, st0: number): Sol | null => {
