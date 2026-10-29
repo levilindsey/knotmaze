@@ -219,3 +219,149 @@ the cluster test (union-find on touching spans: H4, H5), the second visit
 segment directions (H2, H3). The rest is continuous: the cut
 max(0, d − near) in d and near, and an arm's cap as the minimum of its
 cuts (which pass caps an arm switches only where two cuts are equal).
+
+### The continuous cut loop (m19b), one sentence per decision
+
+`.claude/probes/S3a/cap19_cont.ts.txt` (committed, force-added), spliced
+into the branch's oracle by `mk_cap19.mjs --mode cont` (`oracle_m19b.ts`;
+on c17f's corners, `oracle_c19fb.ts`).
+- **Membership:** an arm holds a pass with weight ss(m/σ), σ = h/2, m how
+  far inside the arm's padded span the pass lies.
+- **The cluster:** two junctions join with weight ss(1 + ov/λ), λ = h/2,
+  ov the overlap of two of their spans on one chain, and two holders join
+  at the weakest link of their widest path (a maximum spanning forest).
+- **Counting the pass:** it counts up to the level q1, the largest t at
+  which a holder on each side has weight ≥ t and the two join at ≥ t.
+- **The side:** at each level t ≤ q1, with fa(t), fb(t) the farthest
+  holders of weight ≥ t, side A is cut with share ss((fa − fb)/τ + 2) and
+  side B with ss((fb − fa)/τ), τ = h/4 (A alone at a tie, as master; B
+  alone once fb − fa ≥ h/2), and an arm's cut weight is its side's share
+  integrated over the levels up to its own weight.
+- **The second visit:** two more rounds cut both sides up to the level
+  at which the pass is still held once its own cuts are taken at their
+  weights.
+- **The cap:** a cut of weight w moves the arm's cap from its base B to
+  its reach R = min(ext + W + margin, B) over w in [0, 0.05], then from R
+  to master's cut max(0, d − near) over [0.05, 1]; an arm takes the
+  minimum over its cuts.
+- **θ:** interpolated vertex tangents (`tanAt`), continuous in s.
+- Three rounds, no early exit, no state between frames.
+
+Variant a (`cap19_cont_a.ts.txt`, m19: half shares at a tie, τ = h)
+failed k883's tie pin (#15: master cuts side A alone at fa = fb); b keeps
+master's answer at the tie and at both ends.
+
+### The cap test
+
+`test/render/field/cap19_continuity.test.ts` (+ `pairCrossScene` in
+`scenes/gen.ts`): four sweeps of j_pair_cross's family, each step that
+moves a cap > 0.05h bisected 16 times (a jump keeps its size, a ramp
+falls under 0.01h). (A) the side at a tie (j1's END leans 110° to 130°),
+(B) membership (the crossing slides into the padded span of j0's END, a
+T 2h out; plus monotony of the T's forward arm), (C) θ (the crossing
+slides over an arc's vertices), (D) the cluster (j1 moves off until the
+Ts' spans part). 6 s with `labelOnly`. Gated (ORACLE19 or CAP19=1) until
+caps land.
+- Master: all four fail ((D): 11.49h left at X 7.30).
+- m19b: (C) and (D) pass; (A) keeps 0.110h at φ 121.299° to 121.300°
+  and (B) 0.123h at X 4.7549 to 4.7485. Both are the reach R stepping by
+  h/8 (6.943h to 6.818h; 4.885h to 4.760h; `dbg19.ts` on
+  `oracle_m19bx.ts`): `partExtents` walks in steps of h/8, and the cap
+  reads R while 0 < w < 1. Master's spans, e = min(ext + W + margin,
+  cap), carry the same step for every arm the walk extends, cut or not:
+  it is upstream of the cut loop (the part walk, K922), not one of its
+  choices. With the walk's step cut to h/128 (`oracle_m19bs.ts`, the
+  only change) all four sweeps pass (56 s): the walk's step, now 0.008h
+  and under the tolerance, was the only jump left in m19b's caps on
+  them. A continuous walk (bisect the last step) would make (A) and (B)
+  read the loop alone.
+
+### The sweeps (`sweeps19.ps1`, `pops19/sweeps_m19b.txt`, `sweeps_c19fb.txt`)
+
+Largest corner-radius step dr over the traced blends (dq: q's step
+against the arms' step):
+
+| Site | master | m19b | c17f | c19fb |
+|---|---|---|---|---|
+| H1 muse_flow t0 j116/2 | 0.791h | 0.0002h | 0.0002h | 0.0002h |
+| H2 muse_drag t21 j139/2 | 0.161h (dq 10.5x) | 0.006h | 0.793h (H4) | 0.012h |
+| H3 muse_drag t25 j105/1 | 0.343h (dq 61x) | 0.042h (7.5x) | 0.475h | 0.037h |
+| H5 muse_drag t4 j100/2 | 0 | 0 | 0.873h | 0.873h |
+| muse_flow t34 j12/0 | 1.310h | 0.0001h | 0.0001h | 0.0001h |
+| muse_flow t11 j112/1 | 0.104h (dq 2589x) | 0.0003h (1.0x) | 0.0003h | 0.0003h |
+| muse_drag t0 j139/2 | 0.166h | 0.163h | 0.112h | 0.053h |
+
+Unchanged by the caps (not cap-driven): muse_drag t30 j105/0 (0.869h at
+step 1 under all four), def_flow t26 j172/1 (1.188h, master and m19b),
+def_drag t0 j175/1 and def_flow t0, t8 j43/1 (q jumps 86x to 307x with
+dr ≤ 0.002h); stage 1's other sites and the synthetic A, A', B sweeps
+read the same under each pair. H5 stays: c17f's tangent-foot toggle
+moves the part walk, and the cluster measure follows the walk.
+
+### The census (step 3)
+
+Zoom 1 (`cmp16.cjs` on `cmpdir19`): pops (a transition) area.
+
+| Run | master | m19b | c17f | c19fb |
+|---|---|---|---|---|
+| def_drag | 6 (0.15) 359 | 6 (0.15) 359 | 0 (0.00) 0 | 0 (0.00) 0 |
+| def_flow | 27 (0.68) 1078 | **29 (0.72) 1099** | 3 (0.07) 18 | 3 (0.07) 18 |
+| muse_drag | 77 (1.93) 1273 | **87 (2.17) 2678** | 163 (4.08) 2600 | **197 (4.92) 3021** |
+| muse_flow | 266 (6.65) 7368 | 229 (5.72) 5157 | 137 (3.42) 2358 | 131 (3.27) 1553 |
+| all | 376 (2.35) 10078 | 351 (2.19) 9293 | 303 (1.89) 4976 | 331 (2.07) 4592 |
+
+By census cause (area), master / m19b / c17f / c19fb: refit 3648 /
+1940 / 2044 / 1424, jump:fold 2765 / 3311 / 47 / 35, jump:amp 1225 /
+1195 / 1688 / 1816, jump:switch 614 / 1284 / 24 / 0, spans 791 / 652 /
+790 / 996, reach 651 / 636 / 238 / 221, none 249 / 213 / 92 / 74,
+cluster 104 / 20 / 53 / 0, status 31 / 31 / 0 / 0, count 0 / 11 / 0 /
+26. By `class17.ts`, m19b (`pops19/class_m19b.txt`): cap 133 pops /
+4781 px, rule:fold 31 / 1529, rule 30 / 694, spans 31 / 652, reach 69 /
+636, refit 16 / 443, rule:switch 10 / 227, none 21 / 213, V 7 / 87,
+cluster 2 / 20, count 1 / 11.
+
+The ten windows:
+
+| Window | master | m19b | c17f |
+|---|---|---|---|
+| def_drag@w0 | 249 (6.22) 77105 | 249 (6.22) 77105 | 215 (5.38) 12676 |
+| def_flow@w0 | 184 (4.60) 89876 | 184 (4.60) **89890** | 153 (3.83) 1631 |
+| def_flow@w1 | 229 (5.72) 62961 | 229 (5.72) 62961 | 94 (2.35) 867 |
+| def_flow@w2 | 254 (6.35) 45930 | 254 (6.35) **45932** | 237 (5.92) 3471 |
+| muse_drag@w0 | 314 (7.85) 155916 | **356 (8.90) 229637** | 112 (2.80) 13206 |
+| muse_drag@w1 | 286 (7.15) 32786 | **310 (7.75) 234961** | 273 (6.83) 20636 |
+| muse_drag@w2 | 879 (21.98) 74530 | **892 (22.30) 97308** | 990 (24.75) 54825 |
+| muse_flow@w0 | 659 (16.48) 162138 | 624 (15.60) 10234 | 731 (18.27) 71445 |
+| muse_flow@w1 | 393 (9.82) 150117 | 369 (9.22) 20315 | 181 (4.53) 12761 |
+| muse_flow@w2 | 878 (21.95) 213948 | **900 (22.50)** 102743 | 500 (12.50) 125903 |
+| all | 4325 (10.81) 1065307 | 4367 (10.92) 971086 | 3486 (8.71) 317421 |
+
+### Step 4: not met, so nothing landed
+
+Master's rule on the new caps (m19b) is worse than master at zoom 1 on
+def_flow and muse_drag, and in six of the ten windows (bold above). It
+is better on muse_flow (zoom 1 and every window's area, −95% at w0) and
+in total area. The muse_drag regression is new V fold/switch pops of
+115-192 px near (905, 288) in t1, t6, t8, t10, t11 and t17 and near (766,
+349) in t30 and t31, against a few refit pops lost (t19 (765, 349) 146
+px); def_flow's is two new pops of 10 and 11 px at (254, 645), t31 and
+t32 (`popdiff19.cjs`). Inferred, not verified: m19b's caps differ from
+master's at rest wherever a holder sits partly inside the pad or two
+spans partly overlap (w and the joins strictly between 0 and 1), which
+moves the corners onto V folds.
+
+Continuity did not remove the cap's pops: class17 still files 133 pops
+(4781 px) under the cap at zoom 1. A continuous cap that moves from B to
+R over w in [0, 0.05], with w ramping over σ = h/2, still changes by
+several h between two recorded frames when the geometry moves a few
+hundredths of h per frame. Continuity in the sweep is not smoothness at
+the census's frame rate.
+
+### Step 5 (c19fb fails muse_drag on count): partly run
+
+c19fb's muse_drag excess over master is one site: jump:amp and refit
+pops of 61-103 px at (475-477, 378-383) in t1, t5, t6, t8, t10, t11,
+t13, t24, t28-t30, t33, t34 and t36 (`popdiff19.cjs before16 c19fb
+muse_drag`), which c17f already had. The ten small (< 50 px) excess pops
+were not cropped: `crops17.ts` is K992's master-against-b16 composite
+and was not adapted in time.
