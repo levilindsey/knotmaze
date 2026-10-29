@@ -375,3 +375,59 @@ Two of the hypothesis' known problems do not arise in this form:
 What can still pop, by design: nothing outside the four fades (D1, D2,
 D4, D6), each over a stated width. A census against the float64
 reference (F7) checks it.
+
+### F4 · The alternatives, ruled out with numbers
+
+Step 2 (F2-F4) done 22:03.
+
+**(a) The CPU FieldModel made incremental (S3a10).** S3a5
+(`K868_s3a5_incremental.md`, which calls it "S3a9"; the ledger and this
+brief say S3a10) measured and estimated it on def and muse_hash, in
+Node on the desktop:
+- best case, the warm corner solves alone with no fallback: 1.8 ms p50,
+  3.2-3.6 ms p95 (measured, §3a);
+- a realistic incremental frame: 6-14 ms p50 without cold fallbacks
+  (estimated), 10-30 ms with them as prototyped, 50-150 ms with today's
+  step test (the warm passReach walks alone measured 24-69 ms p50);
+- from scratch, today: 251-338 ms (def) and 525-660 ms (muse).
+
+Even the 6-14 ms best case is CPU time on the desktop, on the main
+thread, every frame in motion; the phone's CPU is slower still, and the
+frame's whole budget is 16.7 ms. It also fails the binding calls: a
+warm start is state between frames, so the label is not a pure function
+of the frame, and the warm/cold switch is itself a discrete decision
+(the fallbacks are where it pops). Ruled out as the renderer; it stays
+the look reference.
+
+**(b) A smooth-min SDF blend.** `.claude/probes/K1040/smin_dev.cjs` on
+def at dpr 2 (h 11.6 px, W 4.4 px): 563 junction corners, 484 of them
+filleted (θ < 179°); θ from 45° to 180°, most at 60-105°.
+- The fillet's apex, matched per corner, needs k from 0.01 to 20.9 px
+  (p50 19.7): no single k fits. The best single k (13.4 px) leaves the
+  apex up to 3.35 px off the exact fillet, and the outline up to 3.44 px
+  off anywhere along the corner.
+- Even with k matched to each corner's apex, the smin outline leaves the
+  arc by up to 0.62 px off the bisector: 20x check #12's 1/32 px.
+- The band is the worse part. smin is not a distance, so its level sets
+  are not parallel: the band's inner edge (the −W level) sits up to
+  8.30 px from where the exact band's does, at the best single k. The
+  stroke would swell in every acute corner.
+- Plain min (k 0, no fillet) is 10.5 px off at the apex.
+A smooth-min is continuous, but it is a different look from the G1
+rolling-ball corners Levi chose (F1 row 5, K881 sheet E), and a
+per-corner k needs the same CPU corner pass as form B. No look question
+arises: the look is decided.
+
+**(c) A raster coverage mask plus jump flooding.** The band needs the
+distance to the exposed outline only within W + aa ≈ 5 px, so a JFA
+needs steps 4, 2, 1 (27 taps a pixel) plus a +1 pass (36 taps). K923
+measured about 0.15 ms per full-screen tap on the Pixel 11 (6.75 ms for
+45 taps), so the flood costs 4.1-5.4 ms before the coverage mask itself
+(the label pass, 1.83 ms on the Pixel): 5.9-7.2 ms against the 4 ms
+budget. Its error: distances to pixel centres, ±0.5 px (±0.7 px on a
+diagonal) against 1/32 px, and the mask flips a whole pixel whenever the
+outline crosses a pixel centre, a 1 px pop in motion by construction.
+Making it subpixel needs the analytic outline at the mask's edge, which
+is form B again. Ruled out.
+
+**(d) Form B exact on the GPU.** Measured by the prototype: F5.
