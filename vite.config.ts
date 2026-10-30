@@ -82,7 +82,7 @@ export default defineConfig({
   // resolve against whichever path the page loaded from). The dev server
   // still serves at /.
   base: "./",
-  // K122: emits licenses.html (third-party notices) from the bundled modules.
+  // K122: emits credits.html (credits and third-party notices) from the bundled modules.
   plugins: [notices(), workerPreload(), loaderInline()],
   // K7 stage 3: the physics worker (src/physics/physics_worker.ts, the
   // default host; `phw=0` opts out) is an ES module worker, bundled on its

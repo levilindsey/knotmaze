@@ -24,7 +24,7 @@
 // for bit against V8 on 320k inputs, cold and optimized, and against Firefox
 // running this same code. This port follows V8's FastMathHypot step for step,
 // so V8's BSD-3-Clause notice ships with the app (K122): the "v8-math-hypot"
-// credit in notices/credits.ts, shown on licenses.html. Keep it while this
+// credit in notices/credits.ts, shown on credits.html. Keep it while this
 // function ports V8's.
 export function hypot2(x: number, y: number): number {
   const ax = Math.abs(x);

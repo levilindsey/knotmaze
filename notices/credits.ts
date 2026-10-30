@@ -1,5 +1,5 @@
 // K122: what the credits page says that npm cannot know. TRACKED SOURCE -
-// edit this file, never the generated page (dist/licenses.html).
+// edit this file, never the generated page (dist/credits.html).
 //
 // The page itself is built by vite_plugin.ts from the modules that really
 // end up in the bundle (notices.ts), so a new dependency shows up by itself.
@@ -167,6 +167,10 @@ export interface Credit {
   // false = what it credits is not in the app yet, so the page leaves it
   // out. Flip it in the commit that adds the thing.
   shipped: boolean;
+  // K321: "art" and "music" entries render in their own "Art and icons"
+  // and "Music and sound" sections, above the built-with line; an entry
+  // with no section is a technique or license notice in "Credits".
+  section?: "art" | "music";
 }
 
 // Courtesy credits owe the authors a mention rather than a license: the
@@ -208,6 +212,7 @@ export const CREDITS: readonly Credit[] = [
     by: "Traditional English ballad",
     note: "The tune music mode plays.",
     shipped: true,
+    section: "music",
   },
   // V8's Math.hypot. hypot2 in src/util/det_math.ts (K108) follows the
   // two-argument path of V8's Math.hypot step for step (FastMathHypot, which

@@ -460,7 +460,7 @@ describe("the page", () => {
     const research = RESEARCH.slice(0, 3);
     const html = renderPage({ ...base, packages: pkgs, credits: [], research });
     expect(html).toContain('<h2 id="research">Research and techniques</h2>');
-    expect(html.indexOf('id="software"')).toBeLessThan(html.indexOf('id="research"'));
+    expect(html.indexOf('id="licenses"')).toBeLessThan(html.indexOf('id="research"'));
     expect(html.indexOf('id="research"')).toBeLessThan(html.indexOf('class="foot"'));
     for (const r of research) {
       expect(html, r.id).toContain(`<li id="research-${r.id}"><h3>${escapeHtml(r.technique)}</h3>`);
@@ -477,6 +477,59 @@ describe("the page", () => {
     const none = renderPage({ ...base, packages: pkgs, credits: [] });
     expect(none).not.toContain("Research and techniques");
     expect(none).not.toContain('class="jump"');
+  });
+
+  // K321: the credits page (renamed from licenses.html, people first).
+  it("names the emitted page credits.html", () => {
+    expect(NOTICES_FILE).toBe("credits.html");
+    expect(NOTICES_BANNER).toContain("credits.html");
+    expect(NOTICES_BANNER).not.toContain("licenses.html");
+  });
+
+  it("puts Levi's header lines first", () => {
+    const html = renderPage({ ...base, packages: pkgs, credits: CREDITS.filter((c) => c.shipped) });
+    expect(html).toContain("<title>Credits \u00b7 Knotmaze</title>");
+    expect(html).toContain("<h1>Credits</h1>");
+    expect(html).toContain("Created by Levi Lindsey");
+    expect(html).toContain("\u00a9 2026");
+    expect(html).toContain("All rights reserved.");
+    expect(html.indexOf("Created by Levi Lindsey")).toBeLessThan(html.indexOf("<h2"));
+    expect(html.indexOf("\u00a9 2026")).toBeLessThan(html.indexOf("<h2"));
+  });
+
+  it("puts the Claude Code line below the art and music sections, with its link", () => {
+    const html = renderPage({
+      ...base,
+      packages: [],
+      credits: [
+        { id: "a", title: "Icons", by: "Artist", note: "Art.", shipped: true, section: "art" },
+        { id: "m", title: "Tune", by: "Musician", note: "Music.", shipped: true, section: "music" },
+        { id: "t", title: "Technique", by: "Someone", note: "Tech.", shipped: true },
+      ],
+    });
+    expect(html).toContain('<a href="https://claude.com/claude-code" rel="noopener">Claude Code</a>');
+    expect(html).toContain("Built with");
+    expect(html).toContain("(Anthropic)");
+    expect(html.indexOf('id="art"')).toBeLessThan(html.indexOf('id="music"'));
+    expect(html.indexOf('id="music"')).toBeLessThan(html.indexOf("Built with"));
+    expect(html.indexOf("Built with")).toBeLessThan(html.indexOf('id="credits"'));
+  });
+
+  it("renders an art or music section only while it has entries", () => {
+    const musicOnly = renderPage({
+      ...base,
+      packages: [],
+      credits: [{ id: "m", title: "Tune", by: "Musician", note: "Music.", shipped: true, section: "music" }],
+    });
+    expect(musicOnly).toContain('<h2 id="music">Music and sound</h2>');
+    expect(musicOnly).not.toContain("Art and icons");
+    const none = renderPage({
+      ...base,
+      packages: [],
+      credits: [{ id: "t", title: "Technique", by: "Someone", note: "Tech.", shipped: true }],
+    });
+    expect(none).not.toContain("Art and icons");
+    expect(none).not.toContain("Music and sound");
   });
 
   it("escapes a research entry, links its sources and lists a repeated file once", () => {
@@ -674,7 +727,7 @@ describe("the tracked research", () => {
 });
 
 describe("the dev server", () => {
-  it("answers /licenses.html with a placeholder and passes everything else on", () => {
+  it("answers /credits.html with a placeholder and passes everything else on", () => {
     const plugin = notices();
     let middleware: ((req: { url?: string }, res: FakeRes, next: () => void) => void) | undefined;
     type FakeRes = { statusCode: number; headers: Record<string, string>; body: string; setHeader(k: string, v: string): void; end(b: string): void };
@@ -817,7 +870,7 @@ describe("the real build", () => {
     // K277: the research section ships, after the packages.
     expect(html).toContain('<h2 id="research">Research and techniques</h2>');
     for (const r of RESEARCH) expect(html, r.id).toContain(`id="research-${r.id}"`);
-    expect(html.indexOf('id="software"')).toBeLessThan(html.indexOf('id="research"'));
+    expect(html.indexOf('id="licenses"')).toBeLessThan(html.indexOf('id="research"'));
     expect(html).toContain("Copyright 2014, the V8 project authors. All rights reserved.");
     expect(html).toContain("THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS");
     expect(html).toContain("Hershey");

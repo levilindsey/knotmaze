@@ -137,6 +137,7 @@ blockquote{margin:.5rem 0 0;padding:.65rem .9rem;background:var(--card);border-l
 blockquote p{margin:0 0 .6rem}
 blockquote p:last-child{margin:0}
 .foot{margin-top:2.5rem;border-top:1px solid var(--rule);padding-top:1rem}
+.built{color:var(--muted);font-size:.875rem}
 .jump{font-size:.9rem}
 .research{list-style:none;padding:0;margin:0}
 .research>li{background:var(--card);border-radius:8px;padding:.75rem .9rem .2rem;margin:0 0 .8rem;overflow-wrap:anywhere}
@@ -151,7 +152,10 @@ blockquote p:last-child{margin:0}
 export function renderPage(m: PageModel): string {
   const groups = groupByText(m.packages);
 
-  const credits = m.credits
+  // K321: art and music entries (credit.section) get their own sections,
+  // above the built-with line; the rest are techniques and notices.
+  const bySection = (section?: "art" | "music") => m.credits.filter((c) => c.section === section);
+  const renderCredits = (list: readonly Credit[]) => list
     .map((c) => {
       const title = c.url
         ? `<a href="${escapeHtml(c.url)}" rel="noopener">${escapeHtml(c.title)}</a>`
@@ -167,6 +171,13 @@ export function renderPage(m: PageModel): string {
       );
     })
     .join("\n");
+  const credits = renderCredits(bySection(undefined));
+  const creditSection = (id: string, heading: string, list: readonly Credit[]) =>
+    list.length ? `<h2 id="${id}">${heading}</h2>\n<ul class="credits">\n${renderCredits(list)}\n</ul>\n` : "";
+  const artSection = creditSection("art", "Art and icons", bySection("art"));
+  const musicSection = creditSection("music", "Music and sound", bySection("music"));
+  const creditsSection = credits ? `<h2 id="credits">Credits</h2>\n<ul class="credits">\n${credits}\n</ul>\n` : "";
+  const builtWith = `<p class="built">Built with <a href="https://claude.com/claude-code" rel="noopener">Claude Code</a> (Anthropic)</p>\n`;
 
   const index = m.packages
     .map(
@@ -238,15 +249,14 @@ ${researchCards}
 </ul>
 `
     : "";
-  const jump = research.length
-    ? `<p class="jump">${[
-        m.credits.length ? `<a href="#credits">Credits</a>` : "",
-        `<a href="#software">Open-source software</a>`,
-        `<a href="#research">Research and techniques</a>`,
-      ]
-        .filter(Boolean)
-        .join(" · ")}</p>\n`
-    : "";
+  const jumpLinks = [
+    bySection("art").length ? `<a href="#art">Art and icons</a>` : "",
+    bySection("music").length ? `<a href="#music">Music and sound</a>` : "",
+    credits ? `<a href="#credits">Credits</a>` : "",
+    `<a href="#licenses">Open-source licenses</a>`,
+    research.length ? `<a href="#research">Research and techniques</a>` : "",
+  ].filter(Boolean);
+  const jump = jumpLinks.length > 1 ? `<p class="jump">${jumpLinks.join(" · ")}</p>\n` : "";
 
   return `<!doctype html>
 <html lang="en">
@@ -254,16 +264,16 @@ ${researchCards}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>Credits and licenses · Knotmaze</title>
+<title>Credits · Knotmaze</title>
 <style>${CSS}</style>
 </head>
 <body>
 <main>
 <a class="home" href="./">← Knotmaze</a>
-<h1>Credits and licenses</h1>
-<p>Knotmaze is made by <a href="https://snoringcat.games" rel="noopener">Snoring Cat</a>. It stands on other people's work, credited here.</p>
-${jump}${m.credits.length ? `<h2 id="credits">Credits</h2>\n<ul class="credits">\n${credits}\n</ul>` : ""}
-<h2 id="software">Open-source software</h2>
+<h1>Credits</h1>
+<p>Created by Levi Lindsey</p>
+<p>© 2026 <a href="https://snoringcat.games" rel="noopener">Snoring Cat</a> LLC. All rights reserved.</p>
+${jump}${artSection}${musicSection}${builtWith}${creditsSection}<h2 id="licenses">Open-source licenses</h2>
 ${software}
 ${researchSection}<p class="foot">Generated from the modules bundled into this build (Knotmaze v${escapeHtml(m.build.version)} · ${escapeHtml(m.build.sha)}).</p>
 </main>
