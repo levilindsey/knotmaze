@@ -616,11 +616,89 @@ export interface Placement<T> {
 // times: the first draw that is solvable and bites, else the last solvable
 // draw, else none. A draw bites when its search differs from `base`'s (the
 // plain rule by default; the color rule under ice passes the ice rule).
+// K788: can the player walk into a trap under `rule`? A forward search over
+// (arrival, state) nodes (a tap on the arrival run is a backtrack, never a
+// move) finds every node the player can reach; SAFE nodes reach the exit by
+// taps alone. A backtrack undoes a whole move, so a player outside SAFE
+// escapes along their own path unless a move on it blocks its backtrack
+// (`blocksBack`: a one-way run). A TRAP is a reached blocking move into a
+// node that is not SAFE (the start itself unsafe counts too). Clocked rules
+// (period > 1) turn the clock on a backtrack, so this period-1 check does
+// not judge them and reports no trap.
+export function ruleHasTrap(walk: RuleWalk, rule: WalkRule): boolean {
+  if ((rule.period ?? 1) !== 1 || !rule.blocksBack) return false;
+  const E = walk.edges.length;
+  const S = rule.states;
+  const SRC = 2 * E;
+  const keyOf = (run: number, to: string): number =>
+    2 * run + (walk.edges[run].va === to ? 0 : 1);
+  const vertOf = (key: number): string =>
+    key === SRC ? walk.start : (key & 1) === 0 ? walk.edges[key >> 1].va : walk.edges[key >> 1].vb;
+  const N = (2 * E + 1) * S;
+  const seen = new Uint8Array(N);
+  const fwd: number[][] = [];
+  const blocked = new Uint8Array(N);
+  const exitNodes: number[] = [];
+  const start = SRC * S + rule.start;
+  const queue = [start];
+  seen[start] = 1;
+  const reached: number[] = [];
+  for (let qi = 0; qi < queue.length; qi++) {
+    const n = queue[qi];
+    reached.push(n);
+    const key = Math.floor(n / S);
+    const v = vertOf(key);
+    if (v === walk.exit) {
+      exitNodes.push(n);
+      continue;
+    }
+    const lastRun = key === SRC ? -1 : key >> 1;
+    const outs: number[] = [];
+    for (const run of walk.vertices.get(v)!.edges) {
+      if (run === lastRun) continue;
+      const m = rule.step(v, run, n % S, lastRun, 0);
+      if (!m) continue;
+      const t = keyOf(m.runs[m.runs.length - 1], m.to) * S + m.state;
+      outs.push(t);
+      if (rule.blocksBack(m.runs)) blocked[t] = 1;
+      if (!seen[t]) {
+        seen[t] = 1;
+        queue.push(t);
+      }
+    }
+    fwd[n] = outs;
+  }
+  const rev = new Map<number, number[]>();
+  for (const n of reached) {
+    for (const t of fwd[n] ?? []) {
+      const list = rev.get(t);
+      if (list) list.push(n);
+      else rev.set(t, [n]);
+    }
+  }
+  const ok = new Uint8Array(N);
+  const stack = [...exitNodes];
+  for (const n of exitNodes) ok[n] = 1;
+  while (stack.length > 0) {
+    const t = stack.pop()!;
+    for (const n of rev.get(t) ?? []) {
+      if (!ok[n]) {
+        ok[n] = 1;
+        stack.push(n);
+      }
+    }
+  }
+  if (!ok[start]) return true;
+  for (const n of reached) if (blocked[n] && !ok[n]) return true;
+  return false;
+}
+
 export function placeRule<T>(
   walk: RuleWalk,
   draw: () => T,
   ruleOf: (layout: T) => WalkRule,
-  base: WalkRule | null = null
+  base: WalkRule | null = null,
+  accept?: (rule: WalkRule) => boolean
 ): Placement<T> {
   const plain = ruleSearch(walk, base ?? plainRule(walk));
   let last: T | null = null;
@@ -629,6 +707,7 @@ export function placeRule<T>(
     const rule = ruleOf(layout);
     const legal = ruleSearch(walk, rule);
     if (!legal.solvable) continue;
+    if (accept && !accept(rule)) continue;
     last = layout;
     if (searchBites(legal, plain)) return { layout, bites: true, draws: i };
   }
