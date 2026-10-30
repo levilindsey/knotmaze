@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1051.
+Next free ID: K1052.
 
 ## Waiting on Levi
 
@@ -291,6 +291,7 @@ Next free ID: K1051.
 - **K1049** · Through-pass bends, by look at K1040 S4b: where a thread passes through a junction and bends, form B
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops). Nothing to look at before S4b.
+- **K1051** · Turn on Dependabot for knotmaze (GitHub setting; K994 follow-up, audit clean 732ab944).
 
 ## In progress
 
@@ -298,9 +299,9 @@ Next free ID: K1051.
   K783/K728 (optional K414, K932), each done by a test or a number. Muse commits and pushes each task to
   master from the main checkout and keeps the ledger; Claude reviews what landed after the Nov 2 reset.
   - owner: muse (Levi's Paseo sessions; their ids aren't known here) from 2026-10-29, not started when filed; brief by claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3
-  - branch: mainline (the main checkout); last commit: none yet
+  - branch: mainline (the main checkout); last commit: `732ab944`
   - evidence: each task's commits on master (`git log --grep=K<ID>`), whose messages are the reports
-  - next: Levi starts Muse on the brief; after the Nov 2 11:00 reset Claude reviews what landed
+  - next: Task 2 K788 one-way + ice trap
   - brief: `docs/design/K1050_muse_week.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
@@ -1808,9 +1809,6 @@ Every other item below waits on the trigger it names.
 - **K1044** · Cursive v6.5's leftovers (B4): a's largest |dk/ds| (8.51e-4 /u²) sits above g's 7.07e-4 mark where the held
   bowl starts; fa and fq moved 0.67 / 2.39 u, and no census word holds them; oa and oq dip 4.4 / 3.4 u deeper, the attach
   on its bound (34.3 / 34.6 u from the corner). For J3c. `K1029_cursive_b4.md` ## Handoff; NOTES `## K1029` N2c, N3c, N4b.
-- **K994** · npm audit (2026-10-28): 2 critical, 7 high, 2 moderate; production has 1 high (@xmldom/xmldom 0.8.13 via
-  pixi.js 8.19.0), the rest is dev tooling. `npm audit fix` covers all but vitest's two criticals (take the next patched
-  vitest); then turn Dependabot on. claude-config's dependency-vulnerability-roundup, 2026-10-28.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2107,6 +2105,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K994** · audit clean: vitest ^4.1.12, @xmldom 0.8.15 (npm audit fix). Done in 732ab944 (2026-10-29).
 - **K1029** · Cursive v6.5's a and q tops (B4): approved by Levi's look, with g's, 2026-10-29 (untracked `K863/trace/work25/base`, no commit).
 - **K1038** · K992's F19 landing-bound residual. Dropped: moot, the march goes (K1040) (2026-10-28).
 - **K1031** · K992 stage 5's branch rule leftovers. Dropped: moot, the march goes (K1040) (2026-10-28).
