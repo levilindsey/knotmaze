@@ -367,8 +367,8 @@ state, the map, both rules and the par search.
   {mode, state, idx, par, parCuts, cuts, route, end, walk, shortest,
   shown}, null with no walker). Probes: `.claude/probes/K114/walker/`
   (`par_census.ts`, `balance.ts`: the Keep-it-in balance probe; run with
-  `node node_modules\vite-node\vite-node.mjs --config <that
-  folder>\vite.node.config.mjs <that folder>\<script>.ts <out.md>`).
+  `node scripts/run_node.mjs <that folder>\<script>.ts <out.md>`; K1057: no
+  `--config` - the runner reads none, and the folder's vite.node.config.mjs only set the private cache, log level and noDiscovery now baked into it).
 
 ## The aids (K137 stage 2)
 

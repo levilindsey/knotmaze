@@ -15,7 +15,7 @@ with its source; the narrative is in `docs/history.md`. Elsewhere:
 
 - CLAUDE.md's Verification rule: never `--virtual-time-budget` for
   anything physics-dependent; use `scripts/diag_screenshot.mjs`.
-- `physics-kinks.md`: the vite-node harness that reproduces the
+- `physics-kinks.md`: the scripts/run_node.mjs harness that reproduces the
   browser's physics exactly (KINK EYES, PROBE LORE), why a hold probe
   must move past the tug slop first (K41's PROBE LORE);
   `physics-collision.md`: the off-screen headed window (P3.23);
@@ -225,13 +225,12 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   `loadConfigFromFile` instead. The turn-aligned minotaur (K80 turns
   stage 1, 2026-10-14): `.claude/probes/K80/turns/` holds `compare.ts`
   (the module against the research harness `sim.ts`, trace by trace;
-  run with vite-node and `vite.node.config.mjs`, output compare.md) and
+  run with `node scripts/run_node.mjs <that folder>\compare.ts` (K1057: no config - the runner reads none; the folder's vite.node.config.mjs only set the private cache, log level and noDiscovery now baked into it), output compare.md) and
   `turns_page.mjs <base> <outDir> [hunter|guard|stalker] [seeds]` (real
   clicks: roam, hunt and catch shots, the catch checks, a wait). Probe
   links: `?<seed>&am=instant&mt=hunter`. Stage 2 (2026-10-14):
   `.claude/probes/K80/turns2/` holds `sweep.ts` (the retune's grid:
-  `node node_modules\vite-node\vite-node.mjs --config <that
-  folder>\vite.node.config.mjs <that folder>\sweep.ts <out.md> <grid>
+  `node scripts/run_node.mjs <that folder>\sweep.ts <out.md> <grid>
   [reps]`; full_*.md, sweep_*.md), `compare_after.ts` (module vs
   harness at the new defaults, 0 mismatches) and `rt/` (K174's real-time
   sim on H1 mazes, results.md, still.md).
@@ -294,9 +293,9 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   restart the stamps belong to).
 - K114 (2026-10-14), the burn race: `.claude/probes/K114/burn/` holds
   `burn_sim.ts` (R.6.1: scripted players over dailies 1-30 against the
-  shipped controller; run `node node_modules\vite-node\vite-node.mjs
-  --config <that folder>\vite.node.config.mjs <that folder>\burn_sim.ts
-  <out.md> "rs=0.75,0.9" "hs=0"`, about 2 s; results_rebased.md and
+  shipped controller; run `node scripts/run_node.mjs
+  <that folder>\burn_sim.ts
+  <out.md> "rs=0.75,0.9" "hs=0"` (K1057: no --config; see the K80 turns note above), about 2 s; results_rebased.md and
   results_tuning_rebased.md are the current dailies, results.md and
   results_tuning.md the ones before K74 stage 2's H1) and `burn_page.mjs
   <base> <outDir> race|loss|perf [seeds]` (real clicks: the lit fuse, a
@@ -665,9 +664,8 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   the exit and cannot undo out because a move on its path blocks its
   backtrack; results.md) and `census/trap_detail.ts <seed> '<rules
   json>'` (one trap's blocking moves) run with `node
-  node_modules\vite-node\vite-node.mjs --config <that
-  folder>\vite.node.config.mjs <script> ...` from the checkout.
-  `page/plan.ts [seed=7] [keys=2]` (same runner, `page/`'s config) writes
+  scripts/run_node.mjs <script> ...` from the checkout (K1057: no --config; the census and page folders' configs only set the private cache, log level and noDiscovery now baked into the runner).
+  `page/plan.ts [seed=7] [keys=2]` (same runner) writes
   `plan.json`: Route A from the start to the far end of a lock run L,
   holding no key, then Route B through every key to the exit.
   `page/locks_page.mjs <base> [desktop|phone]` (run from the checkout; on

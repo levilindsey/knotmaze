@@ -137,7 +137,7 @@ only with the files it is about; `probes.md` lists the area's other files.
   read-only readiness check (never wakes the phone), scripts/phone.ps1's
   tunnels and ONE tab by intent, K156's watchdog, the runs and a
   teardown; it masks the serial and address in all it prints. `pairs.mjs <dir>` writes `pair_*.png`
-  (cr0 | base), `crop.mjs` crops and upscales, `capfix.ts` (vite-node)
+  (cr0 | base), `crop.mjs` crops and upscales, `capfix.ts` (run through scripts/run_node.mjs)
   prints the unit fixture's cap at several CAP_ROUND. `run_locked.ps1
   -What <what> -Cmds "& .claude/probes/K395/<batch>.ps1"` runs a batch
   under the perf lock (`batch_ab.ps1`, `batch_ab2.ps1`). The dev server
