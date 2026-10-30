@@ -43,7 +43,7 @@ const DAILY: WarmContext = {
   explore: false,
   burn: false,
   fog: false,
-  reduced: false,
+  reduced: false, sdf: false, roots: false, root: false,
   ripple: true,
   bgIds: ["vellum"],
   maxBatchTextures: 16,

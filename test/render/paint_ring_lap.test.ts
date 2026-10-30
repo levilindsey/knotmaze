@@ -181,7 +181,7 @@ function paintAt(D: KData, U: KUniforms, arc: number): KPaintState {
   const c = kChain(D, 0);
   const a = kWrap(arc, TOTAL);
   const ctrl = Math.min(N - 1e-6, a / STEP);
-  return kPaintAt(D, U, c, ctrl, a, PX, { p: 0, band: false, v: 0, rim: 0 });
+  return kPaintAt(D, U, c, ctrl, a, PX, { p: 0, band: false, v: 0, rim: 0, tele: 0 });
 }
 const span = (c0: number, c1: number): Item => ({ type: PAINT_ITEM.SPAN, c0, c1 });
 const pulse = (cJ: number, cF: number, flags = 0): Item => ({ type: PAINT_ITEM.PULSE, c0: cJ, c1: cF, a: 0, b: 0, flags });
