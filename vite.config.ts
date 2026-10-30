@@ -3,7 +3,6 @@ import { readFileSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
-import type { Plugin } from "vite";
 import { notices, noticesWorker } from "./notices/vite_plugin";
 import { loaderInline } from "./src/loader/vite_plugin";
 
@@ -41,35 +40,12 @@ const inClaudeDir = (path: string): boolean => {
   return !rel.startsWith("..") && !isAbsolute(rel);
 };
 
-// K7 stage 7: a modulepreload of the physics worker's chunk
-// (physics_worker-<hash>.js), so its fetch runs beside the main chunk's
-// instead of starting only when main constructs the Worker. The worker's own
-// fetch then comes from the HTTP cache (levi.dev's proxy caches assets for 4
-// hours). Measured on the desktop with 40 ms an asset: the worker's hello
-// 35-55 ms sooner, its ready 40-60 ms sooner (docs/design/K7_worker.md, the
-// Stage 7 handoff). The build fails if the worker stops being its own chunk.
-function workerPreload(): Plugin {
-  return {
-    name: "k7-worker-preload",
-    apply: "build",
-    transformIndexHtml: {
-      order: "post",
-      handler(_html, ctx) {
-        const file = Object.keys(ctx.bundle ?? {}).find((k) =>
-          /(^|\/)physics_worker-[^/]*\.js$/.test(k)
-        );
-        if (!file) throw new Error("k7-worker-preload: no physics worker chunk");
-        return [
-          {
-            tag: "link",
-            attrs: { rel: "modulepreload", href: `./${file}` },
-            injectTo: "head",
-          },
-        ];
-      },
-    },
-  };
-}
+// K414 (was K7 stage 7): the physics worker's chunk is no longer
+// modulepreloaded from the HTML: a `phw=0` page downloaded it and never
+// ran it. Nothing references the chunk until main constructs the Worker
+// (early in boot, src/main.ts), which is its fetch. Stage 7's parallel-
+// fetch head start (hello 35-55 ms sooner at 40 ms an asset) is given
+// up for that.
 
 export default defineConfig({
   // RELATIVE base: the same build serves at knotmaze.pages.dev/ and,
@@ -78,9 +54,7 @@ export default defineConfig({
   // still serves at /.
   base: "./",
   // K122: emits licenses.html (third-party notices) from the bundled modules.
-  // K7 stage 7: workerPreload() starts the physics worker's fetch beside
-  // the main chunk's.
-  plugins: [notices(), workerPreload(), loaderInline()],
+  plugins: [notices(), loaderInline()],
   // K7 stage 3: the physics worker (src/physics/physics_worker.ts, the
   // default host; `phw=0` opts out) is an ES module worker, bundled on its
   // own; noticesWorker() hands its modules to the notices page.
