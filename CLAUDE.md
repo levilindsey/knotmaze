@@ -130,7 +130,7 @@ src/
 notices/                  # K122 build-time Node code (own tsconfig), not app code; lore: .claude/rules/notices.md
   credits.ts              # Tracked credits, license fallbacks, license policy
   notices.ts, page.ts     # Collect + check the bundled packages; render the page
-  vite_plugin.ts          # Emits licenses.html, fails the build on an unlicensed package
+  vite_plugin.ts          # Emits credits.html, fails the build on an unlicensed package
 test/
   core/
     lattice_grower.test.ts, maze_plan.test.ts, maze_apply.test.ts,
@@ -237,8 +237,8 @@ record). Core insight, learned over three wrong iterations, still
 binding: **the threads ARE the maze paths** — never reintroduce a
 between-threads/cell-passage route.
 
-- Knot mode is guarded BYTE-IDENTICAL by the golden snapshot
-  (`test/physics/byte_identity.test.ts`) — keep it green.
+- Knot mode and two maze links are guarded BYTE-IDENTICAL by the golden
+  snapshots (`test/physics/byte_identity.test.ts`) — keep them green.
 - The stage-by-stage record (Stages 0–26 and the dated rounds since)
   is in `docs/history.md`; open P4 work is in `LEDGER.md`.
 
