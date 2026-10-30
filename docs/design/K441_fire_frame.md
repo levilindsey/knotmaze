@@ -199,3 +199,54 @@ No `src/` change (docs only), so nothing moves: no pin, no codec param. `npm run
 - evidence: `.claude/probes/K441/` (that worktree)
 - next: the same-state rerun under the lock (Owed), then close K441 or open K441 s2
 - brief: `docs/design/K441_fire_frame.md`
+
+## Owed rerun (2026-10-30)
+
+Build: master `e7b5a5ef0e2dcdcab90a5afadb39a917d18df605` (`P4 v0.4.0 e7b5a5ef`, built by `pwsh scripts/preview.ps1 -Port 5541`; every kept run's stamp reads that build, sim 5.0-5.1 s, `| asleep`). No `src/` change: the harness edits are in the untracked `.claude/probes/K441/` (`k441_page.mjs`, `k441_pool.mjs`, `run_k441.ps1`).
+
+Method, as the Owed section and K1062 run E prescribe. `k441_page.mjs`'s realtime path now waits, before the throttle and the drive, until `__knotPerf().asleep` is true and `__knotPluckState().active` is empty; the turn path records the same gate after its walk. Every window records `asleep` at its start and end (sampled per frame inside the window, from `__knotPerf().asleep`) and is marked `discarded` if it woke at any stand frame. The batch ran on `http://127.0.0.1:5541/` under the perf lock (owner `K441-rerun-E-muse-batch3`, taken 2026-10-30T01:25:53-07:00; the single rerun below re-took it at 01:31:56) with the plan `r3:realtime:1:0`, `r3:turn:1:0`, `r3:realtime:4:0`, `r3:turn:4:0`, `r4:realtime:1:0`, `r4:turn:1:0`, `r4:realtime:4:0`, `r4:turn:4:0`, run through `pwsh -NoProfile -Command "& ./.claude/probes/K441/run_k441.ps1 ..."`. The first batch's host wrapper timed out after seven items had written kept files; the eighth (`r4:turn:4:0`, not discarded - incomplete) was rerun on its own under the lock, same build and port, and kept. The `prof5` profile run from the Owed recipe was skipped, as K1062 run E directs (it needs an unminified build and attributes cost rather than testing the prediction). Raw rows: `.claude/probes/K441/out_rerun/*.json`; pooled with `node .claude/probes/K441/k441_pool.mjs .claude/probes/K441/out_rerun`. Load label: the lock was this run's for every item, but the desktop carried its usual background load (the batch's per-item `cpu-other` lines list TGitCache at 2.8-14.2 s an item and several editor/agent processes), so read the tick means as desktop-under-load, not quiet-machine numbers.
+
+### Asleep at both ends of every kept window
+
+| run | stand frames | L | asleep start -> end | woke | discarded |
+|---|---|---|---|---|---|
+| r3_rt_x1 | 49 | 34.60 -> 50.20 | true -> true | false | false |
+| r3_turn_x1 | 89 | 36.87 -> 36.87 | true -> true | false | false |
+| r3_rt_x4 | 17 | 37.40 -> 51.10 | true -> true | false | false |
+| r3_turn_x4 | 29 | 36.87 -> 36.87 | true -> true | false | false |
+| r4_rt_x1 | 50 | 34.40 -> 50.00 | true -> true | false | false |
+| r4_turn_x1 | 104 | 36.87 -> 36.87 | true -> true | false | false |
+| r4_rt_x4 | 15 | 38.40 -> 51.10 | true -> true | false | false |
+| r4_turn_x4 | 33 | 36.87 -> 36.87 | true -> true | false | false |
+
+All eight runs kept: asleep at both ends, no wake in any stand frame.
+
+### Pooled table (`k441_pool.mjs`, turn stand W = 36.87, realtime window L 31.87-41.87)
+
+| window | n | dt p50 | dt p90 | dt mean | drawFire | df own | setBurn own | syncEx own | burnOnly | setExplore | fireLights | fireFx | render | df p90 | %draw | %setBurn | %sync | %setEx |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| realtime_x1 L 31.87..41.87 (2 runs) | 45 | 20.00 | 53.50 | 29.69 | 0.607 | 0.078 | -0.020 | 0.020 | 0.027 | 0.424 | 0.000 | 0.078 | 1.867 | 1.000 | 100.00 | 100.00 | 100.00 | 100.00 |
+| realtime_x1 bin 30-35 | 4 | 54.70 | 73.00 | 41.05 | 0.900 | 0.075 | -0.000 | 0.050 | 0.025 | 0.675 | 0.000 | 0.075 | 3.100 | 1.700 | 100.00 | 100.00 | 100.00 | 100.00 |
+| realtime_x1 bin 35-40 | 30 | 20.00 | 53.50 | 28.56 | 0.593 | 0.080 | -0.023 | 0.020 | 0.033 | 0.397 | 0.000 | 0.087 | 1.787 | 1.300 | 100.00 | 100.00 | 100.00 | 100.00 |
+| realtime_x1 bin 40-45 | 32 | 18.70 | 37.60 | 26.37 | 0.534 | 0.091 | -0.019 | 0.012 | 0.016 | 0.375 | 0.000 | 0.059 | 1.869 | 0.700 | 100.00 | 100.00 | 100.00 | 100.00 |
+| realtime_x1 bin 45-50 | 31 | 19.20 | 36.60 | 26.09 | 0.610 | 0.090 | -0.003 | 0.019 | 0.013 | 0.381 | 0.000 | 0.110 | 1.852 | 0.900 | 100.00 | 100.00 | 100.00 | 100.00 |
+| realtime_x1 all stand frames | 99 | 19.10 | 38.00 | 27.57 | 0.592 | 0.085 | -0.014 | 0.019 | 0.021 | 0.395 | 0.000 | 0.086 | 1.894 | 0.900 | 100.00 | 100.00 | 100.00 | 100.00 |
+| realtime_x4 L 31.87..41.87 (2 runs) | 10 | 179.70 | 249.80 | 129.22 | 2.670 | 0.280 | -0.090 | 0.130 | 0.100 | 1.920 | 0.050 | 0.280 | 10.900 | 3.500 | 100.00 | 100.00 | 100.00 | 100.00 |
+| realtime_x4 bin 30-35 | 0 | - | - | - | - | - | - | - | - | - | - | - | - | - | 0.00 | 0.00 | 0.00 | 0.00 |
+| realtime_x4 bin 35-40 | 6 | 198.10 | 249.80 | 143.37 | 2.833 | 0.333 | -0.050 | 0.067 | 0.117 | 2.017 | 0.067 | 0.283 | 10.950 | 3.500 | 100.00 | 100.00 | 100.00 | 100.00 |
+| realtime_x4 bin 40-45 | 12 | 160.80 | 179.70 | 107.99 | 2.250 | 0.258 | -0.050 | 0.083 | 0.142 | 1.492 | 0.017 | 0.308 | 9.142 | 2.900 | 100.00 | 100.00 | 100.00 | 100.00 |
+| realtime_x4 bin 45-50 | 12 | 143.60 | 162.10 | 99.20 | 2.425 | 0.300 | -0.050 | 0.067 | 0.108 | 1.525 | 0.000 | 0.475 | 7.625 | 2.800 | 100.00 | 100.00 | 100.00 | 100.00 |
+| realtime_x4 all stand frames | 32 | 143.60 | 198.10 | 114.08 | 2.450 | 0.294 | -0.047 | 0.069 | 0.119 | 1.600 | 0.019 | 0.397 | 8.919 | 3.100 | 100.00 | 100.00 | 100.00 | 100.00 |
+| turn_x1 (L 36.87, 2 runs) | 193 | 35.70 | 54.20 | 31.05 | 0.105 | 0.026 | -0.013 | 0.005 | 0.008 | 0.003 | 0.001 | 0.076 | 1.956 | 0.200 | 100.00 | 50.26 | 50.26 | 50.26 |
+| turn_x4 (L 36.87, 2 runs) | 62 | 54.10 | 182.00 | 93.73 | 0.552 | 0.179 | -0.063 | 0.019 | 0.044 | 0.011 | 0.002 | 0.360 | 9.006 | 0.800 | 100.00 | 51.61 | 51.61 | 51.61 |
+
+Per run, the frame loop's own tick cost (`__knotPerf` over the stand frames, ms; mean / p50 / p95 / max): r3_rt_x1 23.00 / 23.80 / 56.60 / 72.30; r3_turn_x1 18.26 / 22.30 / 45.40 / 68.00; r3_rt_x4 103.14 / 142.30 / 231.80 / 231.80; r3_turn_x4 95.73 / 149.20 / 221.00 / 254.20; r4_rt_x1 22.88 / 26.60 / 42.10 / 60.20; r4_turn_x1 19.14 / 22.20 / 57.60 / 61.30; r4_rt_x4 102.20 / 143.40 / 230.30 / 230.30; r4_turn_x4 (the rerun) 83.29 / 127.20 / 198.00 / 216.70.
+
+### The tick gap against the prediction
+
+| throttle | realtime tick mean (r3, r4) | turn tick mean (r3, r4) | realtime - turn | prediction (Handoff, Owed) |
+|---|---|---|---|---|
+| 1x | 22.94 (23.00, 22.88) | 18.70 (18.26, 19.14) | +4.24 (pairs +4.74, +3.74) | about +0.23, plus the HUD and main.ts lines (about +0.03; about +0.26 in all) |
+| 4x | 102.67 (103.14, 102.20) | 89.51 (95.73, 83.29) | +13.16 (pairs +7.42, +18.91) | about +1.85, plus the HUD and main.ts lines (about +0.15; about +2.00 in all) |
+
+Observed: with both stands asleep, the tick gap is far below the first stands' confounded +10 ms (1x) and +60-65 ms (4x), and in that sense the correction holds - most of that gap was the awake path against the rest path. It does not fall to the chain-only prediction: the residual +4.24 ms at 1x and +13.16 ms at 4x sit above it, as does the same-share fire chain itself in this pool (`drawFire` 0.607 vs 0.105 at 1x, +0.50; 2.670 vs 0.552 at 4x, +2.12, nearly all of it `ribbons.setExplore` at +0.42 and +1.91). The 4x same-share window holds only 10 frames and the two 4x pairs differ by 11.5 ms, so the 4x residual is thin; the load label above applies to all of it. Inferred, not measured here: how much of the residual is background load and throttled-frame scheduling, rather than the fire clock, is not separated by this rerun. Whether a K441 s2 opens on these numbers is Claude's call (K1062 run E); this rerun ends K441 as the Owed section directs.
