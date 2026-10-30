@@ -168,7 +168,7 @@ function build(sp: Spec): FieldScene {
     return { id: j.id, c: j.c, arms: sorted.map((a) => a.arm), corners };
   });
   const deadEnds: SceneDeadEnd[] = [];
-  chains.forEach((ch, i) => {
+  chains.forEach((_ch, i) => {
     const len = sp.paths[i].len;
     const tipStart = sp.tips.some(([c, e]) => c === i && !e);
     const tipEnd = sp.tips.some(([c, e]) => c === i && e);

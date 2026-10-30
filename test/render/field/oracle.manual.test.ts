@@ -414,7 +414,7 @@ describe("K868 oracle (manual)", () => {
       const html = sheetHtml(
         `K868 sheet B: ${name}, master next to the oracle`,
         [
-          `Scene ${name} exported by S1a (master ${s.source?.build ?? ""}); h = ${h} world units = ${(h * s.camera.pxPerUnit).toFixed(1)} CSS px at the scene camera, W = ${s.look.band} world units = ${(s.look.band / h).toFixed(2)}h; cr = ${cr}.`,
+          `Scene ${name} exported by S1a (master ${s.source?.kind === "app" ? s.source.build : ""}); h = ${h} world units = ${(h * s.camera.pxPerUnit).toFixed(1)} CSS px at the scene camera, W = ${s.look.band} world units = ${(s.look.band / h).toFixed(2)}h; cr = ${cr}.`,
           `Oracle: ${rText}. Rows: the full frame, then 6x crops at S1a's zoom cameras (512 px squares at the frame centre, the POI).`,
           "Captions: #k check: PASS/FAIL, measured value [threshold; n sites; skipped sites by reason]. #1 counts ink pixels deeper than W + 1 px inside the oracle's regions: on master's pixels it finds double strokes and fills. The image checks measure master's screenshot with the oracle's geometry; their thresholds are the exact field's, so read them as measurements.",
         ],
