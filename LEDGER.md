@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1056.
+Next free ID: K1057.
 
 ## Waiting on Levi
 
@@ -208,8 +208,8 @@ Next free ID: K1056.
   `K138_plan.md` Questions
 - **K727** · K708 defaults call: lives 3 (rec keep: about a third of blind real-time games reach 3
   catches; the turn clock bites only at 2) and swordMoves 8 (a turn-clock breather: a seeker touches
-  the minotaur in 0.5%, 19.3% at 20; if it should slay, change the flee rule or its pace)
-  (docs/design/K708.md)
+  the minotaur in 0.5%, 19.3% at 20; real-time seeker (K728): taken ~100%, touches 4.4-8.9%;
+  if it should slay, change the flee rule or its pace) (docs/design/K708.md, 'K783 and K728')
 - **K730** · K720 call 1: the minotaur sounds (catch notes, growl, heartbeat, footsteps) ignored
   Muted and none and played under both; they are now silent with sound off like every other sound.
   Keep that (rec), or give them their own setting? (docs/design/K720.md Handoff)
@@ -292,15 +292,18 @@ Next free ID: K1056.
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops). Nothing to look at before S4b.
 - **K1051** · Turn on Dependabot for knotmaze (GitHub setting; K994 follow-up, audit clean 732ab944).
+- **K783** · Lure and snare stocks: set them at lures 2, snares 1? (Turn-clock sim: greedy catches
+  0.69 -> 0.20 a game at 2 lures, the third buys 0.06; snares 0.69 -> 0.66.) Table:
+  docs/design/K708.md, 'K783 and K728 (2026-10-29)'.
 
 ## In progress
 
 - **K1053** · Muse batch 2 through Paseo, one run at a time, gated by `.claude/probes/K1053/chain.ps1`: run A
   K783 and K728 (the sims), B K1052, C K1054, K1055 and K810's table (docs/design/K1053_muse_batch2.md)
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator); each run is a Muse agent the chain starts in Paseo, titled `knotmaze K1053 <run>`
-  - branch: mainline; last commit: `077dde52`
+  - branch: mainline; last commit: `9d673405`
   - evidence: `.claude/probes/K1053/` (chain.ps1, queue.txt, done.txt, chain.log; untracked, desktop only) and each run's commits on master
-  - next: when chain.log ends (queue empty or STOP), review each run on master (commits, deploys, ledger), then close K1053
+  - next: run A done (9d673405); run B (K1052) next
   - brief: `docs/design/K1053_muse_batch2.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/chain.ps1` (resumes at the first run not in done.txt; needs the Paseo daemon)
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
@@ -564,9 +567,6 @@ merged):
   run (the K764 case); plus the beat rider's catch (K774: `.claude/probes/K774/beat_phone.mjs`
   check B, unrun on the phone); and the turnstile dim on a real phone (K138 s4 slice 1, 3dad5914;
   K760)
-- **K783** · Simulated games for lures and snares (the K708 harness: catches per game at stocks 0-3)
-  to set their stocks; saved attempts do not record the tools yet (K137 s4 Handoff). Reopened
-  2026-10-29: cea08eb5 measured load-to-asleep timings instead; K1053 run A.
 - **K579** · GPU confetti: upload each launch once, move the pieces in a vertex shader, no per-frame
   CPU sim or upload. Pays if K318 raises the counts (Levi asked 10-20); needs K307's warm-up;
   streamers need a CPU sim. The phone's fall isn't CPU-bound (K578). K628.
@@ -727,9 +727,6 @@ Every other item below waits on the trigger it names.
 - **K709** · Phone kit hardening: the adb reconnect is built (K717, `.claude/probes/K578/phone/`
   adb_reconnect*.ps1 and watchdog_reconnect.ps1, on by default) but only its healthy-link no-op is
   tested; lib703 END cannot cross midnight; run_k717 skips a late probe; walker_phone takes 1 candidate
-- **K728** · Real-time seeker for the K708 sim (a sword-seeking player on MinotaurChase): the
-  real-time sword best case is unmeasured and informs K727 (.claude/probes/K708/rt/, ~35 s a
-  sweep). Reopened 2026-10-29: cea08eb5 measured a 60 s deviation instead; K1053 run A.
 - **K786** · When K138 makes monsters obey one-way runs (its stage 6), the lure hop matrix and the
   snare runs (K137 s4, af04d8c7) need the directed graph; today one-way binds only the player
   (inferred by the K137 s4 rebase)
@@ -808,6 +805,9 @@ Every other item below waits on the trigger it names.
 - **K1055** · Worker preload back for worker pages: K414 (2525712c) dropped K7 stage 7's worker-chunk
   modulepreload for every page, so default (worker) pages lost its 35-55 ms hello head start; an inline
   build-time script can add it unless phw=0. K1053 run C.
+- **K1056** · Real-time lure and snare stocks (MinotaurChase.lure/setSnare) unsimulated: K783 measured the
+  turn clock only; the real-time table would set the stocks for real-time games too (harness: rt_sim.ts tool
+  policy + stocks) (docs/design/K708.md, K783 and K728)
 
 ## Residuals (known, not fixed)
 
@@ -2090,6 +2090,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K728** · real-time seeker measured: taken 99.9-100%, slew/banish 4.4-8.9% vs blind 0.2-0.7% (docs/design/K708.md). Done in 9d673405 (2026-10-29).
 - **K932** · bench_frame readPixels sync; K923 runner folded to scripts/k923 (.claude/probes/K932/results.md). Done in b6d0e1b2 (2026-10-29).
 - **K414** · static worker preload dropped; phw=0 downloads no worker chunk, and default pages lost K7 s7's head start (back in K1055). Done in 2525712c (2026-10-29).
 - **K1050** · Muse batch 1 (d504b686..24940b10), reviewed: K994, K788, K743/K762/K763, K747, K807, K810, K393, K414 and K932 landed; K783/K728 reopened (cea08eb5 measured other things); left K1052, K1054 (K743's chase tap), K1055 (K414's preload); batch 2 is K1053. Done in 24940b10 (2026-10-29).
