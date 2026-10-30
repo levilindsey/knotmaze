@@ -299,9 +299,9 @@ Next free ID: K1052.
   K783/K728 (optional K414, K932), each done by a test or a number. Muse commits and pushes each task to
   master from the main checkout and keeps the ledger; Claude reviews what landed after the Nov 2 reset.
   - owner: muse (Levi's Paseo sessions; their ids aren't known here) from 2026-10-29, not started when filed; brief by claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3
-  - branch: mainline (the main checkout); last commit: `732ab944`
+  - branch: mainline (the main checkout); last commit: `cff5a0d7`
   - evidence: each task's commits on master (`git log --grep=K<ID>`), whose messages are the reports
-  - next: Task 2 K788 one-way + ice trap
+  - next: Task 3 K743/K762/K763
   - brief: `docs/design/K1050_muse_week.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
@@ -732,11 +732,6 @@ Every other item below waits on the trigger it names.
 - **K786** · When K138 makes monsters obey one-way runs (its stage 6), the lure hop matrix and the
   snare runs (K137 s4, af04d8c7) need the directed graph; today one-way binds only the player
   (inferred by the K137 s4 rebase)
-- **K788** · One-way runs plus ice trap the player: one-way 0.4 with ice 0.25 ends with no legal tap
-  or in a dead end on 42 of 50 seeds (44 with ky 2; seeds 9 and 49 trap only with the keys). A slide
-  crosses a one-way run and its backtrack is refused (seeds 3 and 4 traced). Nothing rejects the
-  layout, and no Undo control rescues the player (K778). Keep the maze solvable under the rules, as
-  the keys do (K138 s4 census, `.claude/probes/K138/s4/census/results.md`)
 - **K873** · K868 integration needs flow (`fw`) as its own scene input: fw moves the drawn samples,
   so every K868 scene so far is `fw=0`. `docs/design/K868_s1a_notes.md`.
 - **K887** · Refresh the open-work report (K585's artifact): v7 (2026-10-22 09:27) predates the K138
@@ -2105,6 +2100,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K788** · placement rejects trapping one-way draws (ruleHasTrap); census 42/50+44/50 -> 0/50. Done in cff5a0d7 (2026-10-29).
 - **K994** · audit clean: vitest ^4.1.12, @xmldom 0.8.15 (npm audit fix). Done in 732ab944 (2026-10-29).
 - **K1029** · Cursive v6.5's a and q tops (B4): approved by Levi's look, with g's, 2026-10-29 (untracked `K863/trace/work25/base`, no commit).
 - **K1038** · K992's F19 landing-bound residual. Dropped: moot, the march goes (K1040) (2026-10-28).
