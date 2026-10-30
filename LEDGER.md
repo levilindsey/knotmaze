@@ -1588,7 +1588,7 @@ Every other item below waits on the trigger it names.
   __knotChaseTap ignores broken runs; broken-run counts need main.ts to report every accepted run
 - **K712** · Lives (K137 s3a): hearts are in neither Undo nor saved attempts, and default 3 when
   switched on is tooltip advice only (a toggle or a 0-to-3 snap would make it real; K137_s3a.md
-  Residuals g)
+  Residuals g). First half checked cb73089e: no Undo or saved attempt can hold hearts today.
 - **K714** · K114 balance probe: its cutter keeps cutting once the walker is inside the fence;
   dailies 1, 12, 23, 28 and 29 have a one-run fence at radius 1, so Keep it in is trivial there
 - **K719** · K580 s5 leftovers: an unidentified gap-mask slot bites the a bowl in ai at xh 2 (0.059
