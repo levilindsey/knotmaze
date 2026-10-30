@@ -301,9 +301,9 @@ Next free ID: K1059.
 - **K1053** · Muse batch 2 through Paseo, one run at a time, gated by `.claude/probes/K1053/chain.ps1`: run A
   K783 and K728 (the sims), B K1052, C K1054, K1055 and K810's table (docs/design/K1053_muse_batch2.md)
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator); each run is a Muse agent the chain starts in Paseo, titled `knotmaze K1053 <run>`
-  - branch: mainline; last commit: `244f161e`
+  - branch: mainline; last commit: `99c4aff7`
   - evidence: `.claude/probes/K1053/` (chain.ps1, queue.txt, done.txt, chain.log; untracked, desktop only) and each run's commits on master
-  - next: chain restarted 2026-10-29 for runs B and C (run A reviewed: its Done checks pass); when chain.log ends, review B and C on master, then close K1053
+  - next: run C: K1054, K1055 and K810's table; then Claude reviews runs B and C and closes K1053
   - brief: `docs/design/K1053_muse_batch2.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` (starts chain.ps1 outside Claude Code; resumes at the first run not in done.txt; needs the Paseo daemon)
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
@@ -800,8 +800,6 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
-- **K1052** · Fix the 92 test type errors in small batches (npm run probe:types names them), then fold
-  tsconfig.tests.json into npm test (docs/design/K393_probe.md).
 - **K1055** · Worker preload back for worker pages: K414 (2525712c) dropped K7 stage 7's worker-chunk
   modulepreload for every page, so default (worker) pages lost its 35-55 ms hello head start; an inline
   build-time script can add it unless phw=0. K1053 run C.
@@ -2096,6 +2094,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1052** · test type errors fixed 92 -> 0 in 4 batches; tsconfig.tests.json folded into npm run typecheck. Done in 99c4aff7 (2026-10-29).
 - **K728** · real-time seeker measured: taken 99.9-100%, slew/banish 4.4-8.9% vs blind 0.2-0.7% (docs/design/K708.md). Done in 9d673405 (2026-10-29).
 - **K932** · bench_frame readPixels sync; K923 runner folded to scripts/k923 (.claude/probes/K932/results.md). Done in b6d0e1b2 (2026-10-29).
 - **K414** · static worker preload dropped; phw=0 downloads no worker chunk, and default pages lost K7 s7's head start (back in K1055). Done in 2525712c (2026-10-29).
