@@ -213,3 +213,105 @@ Read first: `.claude/rules/gameplay-links.md` (the codec) and `.claude/rules/phy
    message.
 
 Done when the test passes, `npm test` passes and the push's deploy is green.
+
+## Run E · K1061 and K396
+
+### K1061 · The last vite-node recipes
+
+K1057 (d4d83422) tracked `scripts/run_node.mjs` and pointed probes.md's recipes at it, but these
+files still run `node_modules\vite-node\vite-node.mjs`, which left with vitest 4: the command
+`scripts/fold_census.ps1` spawns for each job, and the run comments of `scripts/fold_census.ts`,
+`scripts/label_pops.ts`, `scripts/panel_inventory.ts`, `test/render/field/scenes/gen.ts` and
+`test/render/field/scenes/write.ts`. Two of them load a Vite config, which `run_node.mjs` cannot
+do (it runs with `configFile: false`): `scripts/fold_census.vite.config.mjs` (a private deps
+cache) and `scripts/panel_inventory.vite.config.mjs` (a private cache, and `tweakpane` aliased to
+the recording stub).
+
+Read first: `.claude/rules/probes.md`.
+
+1. Give `scripts/run_node.mjs` an optional `--config <file>` before the entry, as vite-node had:
+   it loads that Vite config, and where the config sets something the runner also sets (both
+   configs set `cacheDir`, `logLevel` and `optimizeDeps`), the config's value wins. Without the
+   flag the runner behaves exactly as it does now. Update its header.
+2. Point every file above at the runner, with `--config` where it loads a config, and fix the two
+   configs' "vite-node config" comments. Leave `docs/design/` (history), `.claude/probes/` (frozen
+   probe recipes; K1040's and S3a's are junction work, not this task) and
+   `scripts/split_rules.json` alone.
+3. Run each changed recipe once, writing only under `.claude/probes/K1061/` and never over a
+   tracked file (`docs/design/K339_inventory.md`, the test scenes' fixtures):
+   - `panel_inventory.ts`, its output in `.claude/probes/K1061/`. Give its row count and the
+     tracked inventory's in the commit message.
+   - `fold_census.ps1` on a jobs file cut to a few jobs (`node scripts/fold_census.mjs jobs`),
+     `-Out` under `.claude/probes/K1061/`. It takes the perf lock itself.
+   - `label_pops.ts --frames 2` on one sequence, only if its inputs already exist on this
+     machine; start its dev server as its header says and stop it afterwards.
+   - The two test scene scripts, if they take an output path.
+
+   A recipe that can only write tracked files, or needs inputs this machine lacks, is not run:
+   say which in the commit message.
+
+Done when the runs above work, `npm test` passes and the push's deploy is green.
+
+### K396 · `scripts/dev.ps1`
+
+Levi's phone loads a dev server on the LAN, started by a command a session has to remember
+(`vite --host 0.0.0.0 --port 5173 --strictPort`). Make it a script, so a ledger `env:` line can
+name it (claude-config `rules/sessions.md`, "Environment belongs in scripts").
+
+1. `pwsh scripts/dev.ps1 [-Port 5173]` runs that command from the checkout's own `node_modules`,
+   in the foreground.
+2. Before it starts, it checks that `node_modules` holds vite; if not, it stops with a message
+   naming `npm ci`. It warns, without stopping, when `package-lock.json` is newer than
+   `node_modules\.package-lock.json` (the dependencies changed since the last install). It never
+   runs `npm ci` or `npm install` itself: in an agent worktree `node_modules` can be a junction to
+   the main checkout's, and an install through it empties the main one (K1058).
+3. Add one line for it where `.claude/rules/probes.md` describes `scripts/phone.ps1` and
+   `scripts/preview.ps1`.
+
+Check on a port other than 5173, which Levi may be using: the page loads from
+`http://localhost:<port>/`; a second start on the same port fails (strictPort); stopping it
+leaves no node process of yours behind. Done when those checks pass, `npm test` passes and the
+push's deploy is green.
+
+## Run F · K1056: lures and snares in real time
+
+K783 (run A) measured the stocks on the turn clock only. Levi set the defaults from that table on
+2026-10-29 (lures 2, snares 1), and the same stocks apply to the real-time chase, which nobody has
+simulated with tools. This run measures them there. No `src/` change, and no default changes.
+
+Read first: `.claude/rules/gameplay-minotaur.md`, `.claude/rules/probes.md`, and in
+`docs/design/K708.md` the real-time sections and "K783 and K728 (2026-10-29)". The harness is in
+`.claude/probes/K708/rt/` (untracked, this machine only); run A's `run_rt_a.ps1` and its `s728`
+sweep show how a sweep is added and run. Put new harness files there too.
+
+1. Before changing anything, run the greedy and fleer rows the control in step 3 needs and keep
+   their per-game results.
+2. Give `rt/rt_sim.ts` the tools through the game's own calls, made as the page makes them
+   (`src/main.ts` near line 3725: `MinotaurChase.lure(edge, lureRangeOf(params.lureRange))` at
+   the shipped `lureRange`, and `MinotaurChase.setSnare(edge)`). Stocks are per game and don't
+   refill on a catch. Mirror the turn sim's policies (K708.md, "K783: lures and snares on the turn
+   clock") as closely as real time allows, judged at the player's decision points:
+   - Lure: while the minotaur hunts within 3 runs of the player, pluck the run whose lure
+     destination lies farthest from the player in runs, among those farther from the player than
+     the minotaur; ties to the lowest run id; with none, spend nothing.
+   - Snare: when the hunting minotaur's route to the player enters a run at the player's vertex
+     that it hasn't entered yet, lay the snare on that run (a snare springs when a monster steps
+     onto its run and holds it for `snareHoldS`, 3 s).
+
+   Write each policy's exact rule into the new section. Check one game by hand: a spent lure is
+   heard and turns the minotaur, and a laid snare springs and holds it.
+3. Add a sweep `s1056` to `rt/rt_sweeps.ts`: the shipped real-time hunter settings
+   (`PARAM_DEFAULTS`; name any the harness can't take from there), sword off, no extra monsters;
+   lures 0 to 3 crossed with snares 0 to 3; players greedy and fleer; the same 288 H1 mazes x 3
+   reps as `s708` (864 games a cell). Control: its (0, 0) cells must match step 1's results game
+   for game (catches and finish). Name any existing sweep whose rows they also equal.
+4. Add `## K1056: lures and snares in real time (<date>)` at the end of `docs/design/K708.md`, as
+   run A's section did: the policies, the commands and run times, mean catches a game per cell
+   for each player, the share of games with 3 or more catches, tools spent a game, a reading, and
+   a suggested real-time stock beside the shipped 2 and 1.
+
+Done when the section is committed and pushed (docs only, so no deploy) and the control holds.
+Then, if the suggestion is the shipped 2 and 1, close K1056 with the section's commit. If not,
+the stock is Levi's call: `ledger.mjs move K1056 --to "Waiting on Levi"` and rewrite its text as
+that question (the suggestion, and where the table is). If the sim needs more than a harness
+change, stop and report.
