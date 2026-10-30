@@ -1524,7 +1524,9 @@ export class TurnMinotaur {
   // K137 s3b: arriving on the sword's spot takes it; a committed move that
   // was no flee is dropped (the flee is decided now).
   private takeSword(p2: number): void {
-    if (!swordTake(this.sword, p2, this.turns)) return;
+    // K747: the player's move number (a sprint's skipped move counts),
+    // not the minotaur's turn count.
+    if (!swordTake(this.sword, p2, this.inputs.length)) return;
     if (!this.commitFlee) {
       this.committed = [];
       this.committedPlan = null;
@@ -1535,7 +1537,7 @@ export class TurnMinotaur {
   // K137 s3b: a touch while it flees, no catch: timed sends it to its lair
   // (its sleep counts from now), one-use slays it.
   private touchSword(p2: number): void {
-    const kind = swordTouch(this.sword as SwordState, this.turns);
+    const kind = swordTouch(this.sword as SwordState, this.inputs.length);
     this.lastTouch = { kind, player: p2, turn: this.turns };
     if (kind === "banish") {
       this.state = initMino(this.tg);
