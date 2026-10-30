@@ -595,12 +595,12 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   gameplay-panel.md's ONE-WAY RUNS ROW.
 - LURES AND SNARES PARAMS (K137 stage 4, 2026-10-21; brief
   `docs/design/K137_s4.md`): `lures` (`lur`, a number, PARAM_RANGES [0, 5]
-  = LURES_MAX, default 0 = off) and `snares` (`snr`, [0, 3] = SNARES_MAX,
-  default 0) are APPENDED at 210-211, after K138 stage 3's `oneWay` (209);
+  = LURES_MAX, default 2 since K783 (2026-10-29); 0 = off) and `snares` (`snr`, [0, 3] = SNARES_MAX,
+  default 1 since K783) are APPENDED at 210-211, after K138 stage 3's `oneWay` (209);
   CODEC_VERSION stays 8. They were 209-210 on their branch until the
   rebase onto 04c4d9e1 (K138 stage 3, whose `oneWay` took 209), which
   renumbered them and re-froze the table pin.
-  Neither daily-exempt nor a MAZE key (free play only: a daily keeps 0).
+  Neither daily-exempt nor a MAZE key (free play only: a daily is classic, so no tools show there).
   Both under onClockChange in undo_stack.ts's LIVE_EFFECTS (a change
   restarts the solve, which refills both stocks). Pins that moved: the
   table pin, url_codec.test.ts's defaults table and OVERRIDE_KEYS (`lur`,
