@@ -40,6 +40,7 @@ import {
 import { gridAlignSlider, gridAlignStrength } from "./grid_align_curve";
 import { createPanelSearch, type PanelSearchUi } from "./panel_search_ui";
 import { PARAM_TAGS } from "./param_tags";
+import { SHAPE_INJECTION_PARAMS } from "../core/shape_injection";
 import { PAR_SLACK_MAX, PAR_SLACK_MIN } from "../game/par";
 import { SPOOL_SLACK_MAX, SPOOL_SLACK_MIN } from "../game/spool";
 import { HINTS_MAX } from "../game/hints";
@@ -1034,39 +1035,56 @@ export function buildPanel(
     D.turnBias, regenerateWhenDone
   );
   const fText = folder("Text & emblem", false, fDesign);
+  // K814: these rows read label, tip and enum options from
+  // SHAPE_INJECTION_PARAMS, so the wording lives once, in the descriptor.
+  const shapeParam = (key: string) => {
+    const d = SHAPE_INJECTION_PARAMS.find((x) => (x.key as string) === key);
+    if (!d) throw new Error(`SHAPE_INJECTION_PARAMS has no ${key}`);
+    return d;
+  };
+  const shapeEnumOptions = (key: string): Record<string, string> => {
+    const out: Record<string, string> = {};
+    for (const o of shapeParam(key).options ?? []) out[o === "" ? "none" : o] = o;
+    return out;
+  };
+  const textParam = shapeParam("text");
+  const cartoucheParam = shapeParam("cartouche");
+  const emblemParam = shapeParam("emblem");
+  const cartoucheShapeParam = shapeParam("cartoucheShape");
+  const penReverseParam = shapeParam("penReverse");
   row(
-    fText, p, "text", { label: "Text" },
-    "Cursive text design: type words to build them as pinned knotwork text instead of the lattice maze. Empty = the usual design. Regenerates the design.",
+    fText, p, "text", { label: textParam.label },
+    textParam.tip,
     D.text, regenerateWhenDone
   );
   const cartoucheRow = row(
-    fText, p, "cartouche", { label: "Cartouche" },
-    "In-maze cartouche: a word inside the maze, in a stamped hole with a thread frame; walking it counts like any maze run (4-5 letters fit at grid 18). Empty = no cartouche. Regenerates the design.",
+    fText, p, "cartouche", { label: cartoucheParam.label },
+    cartoucheParam.tip,
     D.cartouche, regenerateWhenDone
   );
   row(
     fText, p, "emblem",
     {
-      label: "Emblem",
-      options: { none: "", star: "star", trefoil: "trefoil", triquetra: "triquetra", solomon: "solomon", wreath: "wreath" },
+      label: emblemParam.label,
+      options: shapeEnumOptions("emblem"),
     },
-    "Standalone emblem: a predefined knot shape shown alone instead of the lattice maze. None = the usual design. Regenerates the design.",
+    emblemParam.tip,
     D.emblem, regenerateWhenDone
   );
   row(
     fText, p, "cartoucheShape",
     {
-      label: "Cartouche shape",
-      options: { none: "", star: "star", trefoil: "trefoil", triquetra: "triquetra", solomon: "solomon", wreath: "wreath" },
+      label: cartoucheShapeParam.label,
+      options: shapeEnumOptions("cartoucheShape"),
     },
-    "Cartouche shape: a predefined knot emblem floating as a decorative island inside the cartouche hole (found visually, never walked or counted). Wins the hole over the Cartouche word. None = the word (or no cartouche). Regenerates the design.",
+    cartoucheShapeParam.tip,
     D.cartoucheShape, regenerateWhenDone
   );
   // K558: which stroke of a cursive crossing lies on top (text, title and
   // cartouche words). Off = pen order, the later stroke over.
   row(
-    fText, p, "penReverse", { label: "Earlier stroke on top" },
-    "Cursive text crossings: each stroke passes over the strokes drawn before it, as a pen draws (a t's bar over its stem, an l's downstroke over its upstroke). Check to reverse it, so the earlier stroke lies on top. Applies to the Text, the daily's title and the Cartouche word. Regenerates the design.",
+    fText, p, "penReverse", { label: penReverseParam.label },
+    penReverseParam.tip,
     D.penReverse, regenerateWhenDone
   );
   // SEED ROW: the design's seed as the link's base-36 token (?<seed>...).
