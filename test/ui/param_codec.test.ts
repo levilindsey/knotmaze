@@ -370,7 +370,7 @@ describe("codec table", () => {
       } else if (p.type === "color") {
         expect([p.name, def]).toEqual([p.name, expect.stringMatching(/^#[0-9a-f]{6}$/)]);
         expect(enumNames).not.toContain(p.name);
-      } else {
+      } else if (p.type === "enum") {
         expect(enumNames).toContain(p.name);
         expect(new Set(p.options).size).toBe(p.options.length);
         const options = ENUM_OPTIONS[p.name as keyof typeof ENUM_OPTIONS]!;

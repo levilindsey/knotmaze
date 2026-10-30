@@ -7,7 +7,7 @@
 // Run: npx vitest run test/sweep.manual.test.ts
 import { describe, it } from "vitest";
 import { generateLatticeKnotwork } from "../src/core/lattice_grower";
-import { ParticleSystem } from "../src/physics/particle_system";
+import { DEFAULT_TUNING, ParticleSystem } from "../src/physics/particle_system";
 import type { CrossingPass } from "../src/physics/particle_system";
 
 const CONTACT_DIST = 0.4;
@@ -22,16 +22,7 @@ function metrics(seed: number, slack: number) {
   });
   const ps = new ParticleSystem(graph);
   for (let i = 0; i < 1500; i++) {
-    ps.step(1 / 60, {
-      temperature: 0,
-      slack,
-      drag: 0.5,
-      repulsion: 1,
-      bend: 1,
-      smooth: 0.25,
-      stiffness: 1,
-      gridAlign: 0,
-    });
+    ps.step(1 / 60, { ...DEFAULT_TUNING, slack });
   }
 
   const tangent = (pass: CrossingPass): [number, number] => {

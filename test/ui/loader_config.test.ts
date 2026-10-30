@@ -9,6 +9,7 @@ import {
   readLoaderMirror,
 } from "../../src/ui/loader_config";
 import { PARAM_DEFAULTS } from "../../src/ui/url_state";
+import type { UrlParams } from "../../src/ui/url_state";
 
 describe("K828/K852 loader config", () => {
   it("the defaults reproduce today's loader drawing", () => {
@@ -28,13 +29,15 @@ describe("K828/K852 loader config", () => {
   });
 
   it("the loader's look comes from its own params, not the maze's", () => {
-    const cfg = loaderCfgFromParams({
+    const mazeLook: UrlParams = {
+      seed: 0,
       ...PARAM_DEFAULTS,
       gap: PARAM_DEFAULTS.gap * 2,
       threadWidth: PARAM_DEFAULTS.threadWidth * 0.5,
       pathColor: "#ff0000",
       backgroundBase: "#001122",
-    });
+    };
+    const cfg = loaderCfgFromParams(mazeLook);
     // Maze look changes leave the loader alone (K852).
     expect(cfg.gapSamples).toBe(0.6);
     expect(cfg.threadW).toBe(0.42);

@@ -16,7 +16,7 @@ import {
 import type { StatEntry } from "../../src/ui/maze_hud";
 import type { SwordPhase } from "../../src/game/sword";
 
-const BASE = {
+const BASE: Parameters<typeof statRows>[0] = {
   timeMs: 61_000,
   path: 12.34,
   optimal: 9.87,

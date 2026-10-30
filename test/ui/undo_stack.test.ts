@@ -171,7 +171,7 @@ describe("restorePlan", () => {
     ]);
     expect(restorePlan(a, { ...a, seed: 99 }, false).rebuild).toBe(true);
     expect(restorePlan(a, { ...a, gridSize: a.gridSize + 2 }, false).rebuild).toBe(true);
-    expect(restorePlan(a, { ...a, hueShift: 40, deadEnds: !a.deadEnds }, false)).toMatchObject({
+    expect(restorePlan(a, { ...a, hueShift: 40, deadEndDensity: a.deadEndDensity === 0 ? 0.5 : 0 }, false)).toMatchObject({
       rebuild: true,
       effects: [],
     });
@@ -183,11 +183,13 @@ describe("restorePlan", () => {
 
   it("skips an appearance preset's implied values", () => {
     const a = design({ appearMode: "random" });
-    const rolled = { ...a, appearSpeed: a.appearSpeed + 1, appearSequence: "spiral" } as UrlParams;
+    // "spiral" is not an AppearSequence on purpose: a rolled preset value
+    // the plan must skip, not rebuild on.
+    const rolled = { ...a, appearSpeed: a.appearSpeed + 1, appearSequence: "spiral" } as unknown as UrlParams;
     expect(restorePlan(a, rolled, false).changed).toEqual([]);
     const custom = design({ appearMode: "custom" });
     expect(
-      restorePlan(custom, { ...custom, appearSequence: "spiral" } as UrlParams, false).rebuild
+      restorePlan(custom, { ...custom, appearSequence: "spiral" } as unknown as UrlParams, false).rebuild
     ).toBe(true);
   });
 
