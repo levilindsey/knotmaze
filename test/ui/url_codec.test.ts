@@ -604,6 +604,33 @@ describe("links", () => {
     expect(parseParams(`?${encodeParams(m)}`)).toEqual(m);
   });
 
+  // K1054: no K138 rule can be on during a real-time chase - the chase
+  // needs gameMode "minotaur" (clockOf), and fabricRulesOf zeroes every
+  // rule mechanism outside "classic", so the controller's rule is always
+  // null in a chase and handleChaseTap's planRoute needs no ruled twin.
+  it("keeps every K138 rule off outside the classic game (K1054)", () => {
+    const chase = withSeed(7, {
+      gameMode: "minotaur",
+      clock: "realtime",
+      ice: 0.25,
+      colorRule: "cycle",
+      turnstiles: 3,
+      hiddenRuns: 2,
+      oneWay: 0.4,
+      keys: 2,
+    });
+    expect(fabricRulesOf(chase)).toMatchObject({
+      ice: 0,
+      colorRule: "off",
+      turnstiles: 0,
+      hiddenRuns: 0,
+      oneWay: 0,
+      keys: 0,
+    });
+    const classic = fabricRulesOf({ ...chase, gameMode: "classic" });
+    expect(classic).toMatchObject({ ice: 0.25, colorRule: "cycle", turnstiles: 3, oneWay: 0.4, keys: 2 });
+  });
+
   it("reads the real-time mode from override keys", () => {
     const p = parseParams(
       "?7&clk=realtime&plp=12&mwp=0.25&mhp=0.75&mpj=0.1&mpc=0.5&mpn=1&mpx=3" +
