@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1078.
+Next free ID: K1079.
 
 ## Waiting on Levi
 
@@ -294,6 +294,9 @@ Next free ID: K1078.
 - **K1051** · Turn on Dependabot for knotmaze (GitHub setting; K994 follow-up, audit clean 732ab944).
 - **K1075** · K137 sounds unchecked: the snap pluck and the strand glissando need an ear (left by K658; K658
   doc Findings filed).
+- **K1078** · Hand K1040's gated stages to Muse, one per run: S3 (label pass) now, as S1e changes only band
+  and corner rules; S1e stays with Claude after Nov 2. S3, S4a and S5 time on the Pixel, which Levi plugs in
+  (docs/design/K1040_junction_field.md F7).
 
 ## In progress
 
