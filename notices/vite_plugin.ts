@@ -3,13 +3,13 @@
 //   build  generateBundle reads which modules each output chunk really
 //          contains, resolves them to npm packages, checks every package
 //          against the license policy (notices/credits.ts) and emits
-//          licenses.html next to index.html. A package with no usable
+//          credits.html next to index.html. A package with no usable
 //          license text, or a license outside the allowed list, FAILS THE
 //          BUILD (npm test builds too, so the deploy workflow stops before
 //          publishing). Every JS chunk gets a one-line pointer to the page,
 //          and the legal comments a package keeps in its own code (/*! */,
 //          @license) are preserved instead of being stripped.
-//   serve  /licenses.html answers with a placeholder page: the package
+//   serve  /credits.html answers with a placeholder page: the package
 //          list comes from a production build.
 //
 // Vite 8 has build.license, which writes the same inventory to
@@ -25,7 +25,7 @@ import { gatherNotices } from "./notices";
 import type { BundledModule } from "./notices";
 import { renderPage } from "./page";
 
-export const NOTICES_FILE = "licenses.html";
+export const NOTICES_FILE = "credits.html";
 export const NOTICES_BANNER = `/*! Third-party licenses and credits: ${NOTICES_FILE}, next to index.html */`;
 
 const shippedCredits = () => CREDITS.filter((c) => c.shipped);

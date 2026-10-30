@@ -11,17 +11,21 @@ Binding lore for the credits and licenses page (K122, 2026-10-13). The
 research, the tooling choice and the verification record are in
 `docs/design/K122.md`.
 
-- WHAT SHIPS. `licenses.html` next to index.html, built by
+- WHAT SHIPS. `credits.html` next to index.html, built by
   `notices/vite_plugin.ts` from the modules each output chunk really
   contains (Rolldown's `chunk.modules`, renderedLength > 0; package.json's
   dependency list is never consulted, so the page cannot drift). Per
   package: name, version, license id, project link and the full license
   text with its copyright line; packages with the same words share one
-  block. The panel's credit line links to it ("Licenses", a new tab,
-  `${BASE_URL}licenses.html`). Every JS chunk carries a one-line pointer to
+  block. The panel's credit line links to it ("Credits", a new tab,
+  `${BASE_URL}credits.html`). Every JS chunk carries a one-line pointer to
   the page, and packages' own `/*! */` and `@license` comments are kept
   (`output.comments.legal`; Vite 8 strips them by default, and only
   Tweakpane's one-liner exists, so the page is the real carrier).
+  The page opens with "Created by Levi Lindsey" and the Snoring Cat
+  copyright line, then the art and music credits, the built-with line,
+  the techniques and notices, the packages under "Open-source licenses"
+  and the research section (K321).
 - THE GUARD. The build FAILS, and so does `npm test` (it builds in
   memory), when a bundled package has no license text, declares no license
   or one outside ALLOWED_LICENSES, has MIT/ISC/BSD text without a
@@ -78,11 +82,11 @@ research, the tooling choice and the verification record are in
   text with `shipped: false`. The commit that adds the font data sets
   `shipped: true`; test/notices fails while any `src/` or `public/` file
   names Hershey (or is a .jhf file) and the flag is still false.
-- URLS. Pages 308-redirects `/licenses.html` to `/licenses` (measured
+- URLS. Pages 308-redirects `/credits.html` to `/credits` (measured
   2026-10-13 on `/404.html`, directly and through the levi.dev proxy,
   which rewrites the Location under `/knotmaze/`). The page's own links are
   relative (`./`), so it reads the same at knotmaze.pages.dev and at
-  levi.dev/knotmaze/. The dev server answers `/licenses.html` with a
+  levi.dev/knotmaze/. The dev server answers `/credits.html` with a
   placeholder; the package list needs a production build.
 - TYPES. `notices/tsconfig.json` (Node types; also covers
   `test/notices` and `vite.config.ts`) is not part of the root tsconfig,
