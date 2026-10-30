@@ -7,7 +7,9 @@ import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
 import { buildWalkGraph } from "../../src/core/walk_graph";
 import { FabricMazeController } from "../../src/game/fabric_controller";
 import { buildFire } from "../../src/game/fire";
-import { firstSmolderIndex, litArms, planRoute, routeWarning, telegraphTouchesRoute } from "../../src/game/route_plan";
+import { firstSmolderIndex, litArms, planRoute, planRouteRuled, routeWarning, telegraphTouchesRoute } from "../../src/game/route_plan";
+import { oneWayRule } from "../../src/game/one_way";
+import { ruleMaze } from "./rule_fixtures";
 import { DEFAULT_TURN_MINO, turnConfig, TurnMinotaur } from "../../src/game/minotaur_turns";
 
 // K480 (stage 1): multi-run taps - the pure route planner, the burn's
@@ -343,5 +345,59 @@ describe("walking a route (the controller sees ordinary taps)", () => {
     expect(c.solved).toBe(false);
     expect(c.tapEdge(route[route.length - 1])).toBe("win");
     expect(c.tapEdge(route[0])).toBe("noop");
+  });
+});
+
+describe("planRouteRuled (K743)", () => {
+  it("follows a legal route to the tapped point under one-way runs", () => {
+    // Run 1 (A-B) is one-way in at B, so the plain route's A -> B is refused.
+    const rule = oneWayRule(G, new Map([[1, "B"]]));
+    expect(planRoute(G, "S", { edge: 2, at: 0.5 }, 100)).toEqual([0, 1, 2]);
+    const ruled = planRouteRuled(G, rule, { vertex: "S", state: 0, last: -1, phase: 0 }, { edge: 2, at: 0.5 }, 100);
+    expect(ruled).toEqual([0, 4, 2]);
+    // Every move of the ruled route is legal, and it walks run 2.
+    let at = "S";
+    let state = 0;
+    let came = -1;
+    const walked: number[] = [];
+    for (const run of ruled!) {
+      if (walked.length > 0 && run === came) continue;
+      const m = rule.step(at, run, state, came, 0);
+      expect(m).not.toBeNull();
+      walked.push(...m!.runs);
+      at = m!.to;
+      state = m!.state;
+      came = m!.runs[m!.runs.length - 1];
+      if (walked.includes(2)) break;
+    }
+    expect(walked).toEqual([0, 4, 2]);
+  });
+
+  it("keeps today's behavior when no legal route exists", () => {
+    // Runs 1 and 4 both one-way in at their far ends: C is unreachable
+    // legally from S, so the plain (part-refused) route answers.
+    const rule = oneWayRule(G, new Map([[1, "B"], [4, "C"]]));
+    const ruled = planRouteRuled(G, rule, { vertex: "S", state: 0, last: -1, phase: 0 }, { edge: 2, at: 0.5 }, 100);
+    expect(ruled).toEqual(planRoute(G, "S", { edge: 2, at: 0.5 }, 100));
+  });
+
+  it("walks a ruled tap through the controller to the win", () => {
+    const { walk, cont } = ruleMaze(3);
+    const c = new FabricMazeController(walk, false, null, { oneWay: 0.4 }, { seed: 3, cont: () => cont });
+    expect(c.rule).not.toBeNull();
+    const exitRun = walk.edges.find((e) => e.va === walk.exit || e.vb === walk.exit)!;
+    const at = exitRun.va === walk.exit ? 0 : exitRun.length;
+    const route = planRouteRuled(walk, c.rule, { vertex: c.head, state: c.ruleState, last: c.arrivalEdge, phase: c.strokes }, { edge: exitRun.id, at }, Infinity)!;
+    expect(route[route.length - 1]).toBe(exitRun.id);
+    for (const eid of route) {
+      const r = c.tapEdge(eid);
+      if (r === "advance" || r === "backtrack") {
+        while (c.carry.length > 0) c.tapEdge(c.carry[0]);
+      } else {
+        expect(r).toBe("win");
+      }
+      if (c.solved) break;
+    }
+    expect(c.solved).toBe(true);
   });
 });
