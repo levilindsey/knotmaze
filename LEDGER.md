@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1057.
+Next free ID: K1059.
 
 ## Waiting on Levi
 
@@ -301,11 +301,11 @@ Next free ID: K1057.
 - **K1053** · Muse batch 2 through Paseo, one run at a time, gated by `.claude/probes/K1053/chain.ps1`: run A
   K783 and K728 (the sims), B K1052, C K1054, K1055 and K810's table (docs/design/K1053_muse_batch2.md)
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator); each run is a Muse agent the chain starts in Paseo, titled `knotmaze K1053 <run>`
-  - branch: mainline; last commit: `9d673405`
+  - branch: mainline; last commit: `244f161e`
   - evidence: `.claude/probes/K1053/` (chain.ps1, queue.txt, done.txt, chain.log; untracked, desktop only) and each run's commits on master
-  - next: run A done (9d673405); run B (K1052) next
+  - next: chain restarted 2026-10-29 for runs B and C (run A reviewed: its Done checks pass); when chain.log ends, review B and C on master, then close K1053
   - brief: `docs/design/K1053_muse_batch2.md`
-  - env: `pwsh -NoProfile -File .claude/probes/K1053/chain.ps1` (resumes at the first run not in done.txt; needs the Paseo daemon)
+  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` (starts chain.ps1 outside Claude Code; resumes at the first run not in done.txt; needs the Paseo daemon)
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1d merged (e8944f2f); S1e waits for the weekly limit.
@@ -1800,6 +1800,12 @@ Every other item below waits on the trigger it names.
 - **K1054** · The real-time chase's tap past the choices plans with `planRoute` (main.ts `handleChaseTap`),
   not `planRouteRuled`: with a rule on, it can stop at its first refused run. K743 (f61eff23) fixed only the
   renderer's `targetAt`. K1053 run C.
+- **K1057** · probes.md's vite-node recipes (K80 turns2, K114 burn, K138 s4 census: `node
+  node_modules\vite-node\vite-node.mjs ...`) fail: vite-node is no longer installed (vitest 4 dropped it).
+  `.claude/probes/K708/run_node.mjs` (Vite's SSR loader) replaces it; update the recipes.
+- **K1058** · Removing a worktree can empty the main checkout's node_modules: each `.claude/worktrees/*`
+  links node_modules by junction, and `git worktree remove --force` deletes through it (2026-10-29 20:18,
+  remover unknown). The worktrees sit inside the checkout, so Node finds packages upward: try no junction.
 
 ## Approved, to schedule (2026-10-11)
 
