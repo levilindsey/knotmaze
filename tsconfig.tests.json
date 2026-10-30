@@ -1,8 +1,9 @@
 {
-  // K393 groundwork (Option B): the test-inclusive check that gates
-  // nothing. `npm run probe:types` runs it soft and names the files it
-  // still skips; docs/design/K393_probe.md records the count and why the
-  // default tsconfig stays src-only for now.
+  // K393 groundwork (Option B), folded in by K1052: the test-inclusive
+  // check. `npm run typecheck` runs it, so `npm test` and the deploy
+  // type-check src and test together; the default tsconfig stays
+  // src-only for editor speed. `npm run probe:types` still soft-counts
+  // its errors without gating.
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "types": ["vite/client", "node"]

@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc && tsc -p notices",
+    "typecheck": "tsc && tsc -p notices && tsc -p tsconfig.tests.json",
     "probe:types": "node scripts/probe_types.mjs",
     "test": "npm run typecheck && vitest run"
   },
