@@ -158,6 +158,9 @@ describe("links", () => {
       lures: 0, snares: 0, // K137 stage 4
       keys: 0, lockMode: "exit", // K138 stage 4
       snareHold: 3, lureRange: 6, hiddenReveal: 3, // K795
+      followDelayMin: 1, followDelayMax: 2, followShortcut: 0.25, // K807
+      swordRingMin: 4, swordRingMax: 8, sleeperRingMin: 1, sleeperRingMax: 3,
+      nearHops: 2, routeWeight: 4,
       beatTiming: "even", beatPerRun: 1, // K795 beat timing
       mud: 0, // K137 s5
       threadLook: "fill", // K797b
@@ -991,6 +994,9 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   snareHold: "snh", lureRange: "lrg", hiddenReveal: "hrv", // K795
   beatTiming: "btm", beatPerRun: "btr", // K795 beat timing
   mud: "mud", // K137 s5
+  followDelayMin: "fdm", followDelayMax: "fdx", followShortcut: "fsc", // K807
+  swordRingMin: "srm", swordRingMax: "srx", sleeperRingMin: "zrm", sleeperRingMax: "zrx",
+  nearHops: "nhp", routeWeight: "rwt",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

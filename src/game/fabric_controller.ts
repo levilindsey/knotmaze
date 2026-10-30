@@ -150,12 +150,12 @@ import { ICE_SHARE_MAX, iceRule, placeIce } from "./ice";
 import type { RuleMove, RuleSearch, WalkRule } from "./rule_search";
 import { composeRules, ruleSearch } from "./rule_search";
 import type { TurnstileLayout } from "./turnstiles";
-import { placeTurnstiles, turnstileRule, TURNSTILES_MAX } from "./turnstiles";
+import { nearHopsOf, placeTurnstiles, turnstileRule, NEAR_HOPS, TURNSTILES_MAX } from "./turnstiles";
 import type { HiddenLayout } from "./hidden_runs";
 import { mudCost, mudOf, placeMud } from "./mud";
 import { hiddenOver, placeHidden, HIDDEN_MAX } from "./hidden_runs";
 import type { OneWayLayout } from "./one_way";
-import { oneWayBlocksBack, oneWayRule, placeOneWay, ONE_WAY_MAX } from "./one_way";
+import { oneWayBlocksBack, oneWayRule, placeOneWay, routeWeightOf, ONE_WAY_MAX, ROUTE_WEIGHT } from "./one_way";
 import type { LockLayout, LockMode } from "./locks";
 import { keysIn, lockGateOpen, lockModeOf, lockOpens, lockRule, placeLocks, KEY_COLOR_COUNT, KEYS_MAX } from "./locks";
 
@@ -183,6 +183,10 @@ export interface FabricRules {
   // K138 s4: keys (0: off) and the locks' form.
   keys?: number;
   lockMode?: LockMode;
+  // K807: how far from the route a turnstile may sit (junction hops) and
+  // a base-route run's tickets in the one-way draw.
+  nearHops?: number;
+  routeWeight?: number;
   // K137 s5: muddy runs laid (0: off; game/mud.ts).
   mud?: number;
 }
@@ -379,6 +383,9 @@ export class FabricMazeController {
   // K138 s4: keys (0: off) and the locks' form.
   keyCount = 0;
   lockMode: LockMode = "exit";
+  // K807: the turnstiles' reach and the one-way draw's route weight.
+  nearHops = NEAR_HOPS;
+  routeWeight = ROUTE_WEIGHT;
   // K137 s5: muddy runs asked for, laid at reset, and their fewest-moves map.
   mudCount = 0;
   mudRuns: ReadonlySet<number> = new Set();
@@ -464,6 +471,8 @@ export class FabricMazeController {
     this.oneWayShare = ruled && ow > 0 ? Math.min(ONE_WAY_MAX, ow) : 0;
     this.keyCount = clampCount(rules.keys, KEYS_MAX);
     this.lockMode = lockModeOf(rules.lockMode);
+    this.nearHops = nearHopsOf(rules.nearHops);
+    this.routeWeight = routeWeightOf(rules.routeWeight);
     // K137 s5: muddy runs work with or without a chase, but not under a
     // K138 rule layout or collapse (the kit rates par in taps; a call
     // in K137_s5.md).
@@ -627,7 +636,7 @@ export class FabricMazeController {
       return null;
     }
     const key =
-      `${this.iceShare}|${this.colorMode}|${this.turnstileCount}|${this.hiddenCount}|${this.oneWayShare}` +
+      `${this.iceShare}|${this.colorMode}|${this.turnstileCount}|${this.hiddenCount}|${this.oneWayShare}|${this.nearHops}|${this.routeWeight}` +
       (this.keyCount > 0 ? `|k${this.keyCount}${this.lockMode}` : "");
     const made = this.placements.get(key);
     if (made) return made;
@@ -646,11 +655,11 @@ export class FabricMazeController {
     // K138 s2: the turnstiles bite against (and compose with) ice and the
     // color rule; the hidden runs against all three.
     const pre = composed();
-    const ts = placeTurnstiles(this.walk, this.turnstileCount, src.seed, pre);
+    const ts = placeTurnstiles(this.walk, this.turnstileCount, src.seed, pre, this.nearHops);
     if (ts.layout && ts.layout.length > 0) rules.push(turnstileRule(this.walk, ts.layout));
     // K138 s3: the one-way runs bite against (and compose with) the rules
     // above; the hidden runs against them all.
-    const ow = placeOneWay(this.walk, this.oneWayShare, src.seed, composed());
+    const ow = placeOneWay(this.walk, this.oneWayShare, src.seed, composed(), this.routeWeight);
     const oneWay = ow.layout && ow.layout.size > 0 ? ow.layout : null;
     if (oneWay) rules.push(oneWayRule(this.walk, oneWay));
     // K138 s4: the keys and the locks bite against (and compose with) the

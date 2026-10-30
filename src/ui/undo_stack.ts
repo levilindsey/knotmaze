@@ -214,6 +214,10 @@ export const LIVE_EFFECTS = {
     // K795: the snare's hold, the lure's range (a new chase reads them) and
     // the hidden runs' reveal distance (the hidden runs' restart).
     "snareHold", "lureRange", "hiddenReveal",
+    // K807: the follower's, sword's, sleepers', turnstiles' and one-way's
+    // tunables (a restart lays them anew, as their parent rows do).
+    "followDelayMin", "followDelayMax", "followShortcut", "swordRingMin",
+    "swordRingMax", "sleeperRingMin", "sleeperRingMax", "nearHops", "routeWeight",
     // K137 stage 2: the spool and the hints (a restart refills both).
     "spool", "spoolSlack", "hints",
     // K138 stage 1: ice and the color rule (a restart places them anew).

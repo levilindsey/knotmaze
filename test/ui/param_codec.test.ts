@@ -297,6 +297,15 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["loaderTrail", "number"], // K852
   ["labelInk", "boolean"], // K868 S3a
   ["labelGpu", "boolean"], // K868 S3a7
+  ["followDelayMin", "number"], // K807
+  ["followDelayMax", "number"],
+  ["followShortcut", "number"],
+  ["swordRingMin", "number"],
+  ["swordRingMax", "number"],
+  ["sleeperRingMin", "number"],
+  ["sleeperRingMax", "number"],
+  ["nearHops", "number"],
+  ["routeWeight", "number"],
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

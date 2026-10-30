@@ -36,6 +36,18 @@ import type { ParMode } from "../game/par";
 import { PAR_MODES, PAR_SLACK_DEFAULT } from "../game/par";
 import { LURE_RANGE, lureRangeOf } from "../game/lures";
 import { SNARE_HOLD, snareHoldOf } from "../game/snares";
+import {
+  FOLLOW_DELAY_MAX,
+  FOLLOW_DELAY_MIN,
+  FOLLOW_SHORTCUT,
+  followDelayOf,
+  followShortcutOf,
+  SLEEPER_RING_MAX,
+  SLEEPER_RING_MIN,
+} from "../game/monsters";
+import { SWORD_RING_MAX, SWORD_RING_MIN } from "../game/sword";
+import { NEAR_HOPS } from "../game/turnstiles";
+import { ROUTE_WEIGHT } from "../game/one_way";
 import { REVEAL_RUNS } from "../game/hidden_runs";
 import { BEAT_PER_RUN, BEAT_TIMINGS } from "../game/beat_rider";
 import type { BeatTiming } from "../game/beat_rider";
@@ -947,6 +959,23 @@ export interface UrlParams extends ShapeInjectionParams {
   snareHold: number;
   lureRange: number;
   hiddenReveal: number;
+  // K807: the next tunables, each defaulting to its constant so no design
+  // moves: the follower's delay bounds (followDelayMin/Max, FOLLOW_DELAY_
+  // MIN/MAX 1/2 of game/monsters.ts) and its shortcut chance (follow-
+  // Shortcut, FOLLOW_SHORTCUT 0.25), the sword's ring (swordRingMin/Max,
+  // SWORD_RING_MIN/MAX 4/8) and the sleepers' (sleeperRingMin/Max,
+  // SLEEPER_RING_MIN/MAX 1/3) off the shortest way, how far a turnstile
+  // may sit (nearHops, NEAR_HOPS 2) and the one-way draw's route weight
+  // (routeWeight, ROUTE_WEIGHT 4). Free play only (none daily-exempt).
+  followDelayMin: number;
+  followDelayMax: number;
+  followShortcut: number;
+  swordRingMin: number;
+  swordRingMax: number;
+  sleeperRingMin: number;
+  sleeperRingMax: number;
+  nearHops: number;
+  routeWeight: number;
   // K795 (Levi, 2026-10-21): the beat's run timing, even (every run takes
   // beatPerRun beats, 1..4, default 1, so the dot's speed varies with the
   // run's length) or length (K114's multi-beat runs: beatLength and
@@ -1299,6 +1328,16 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   snareHold: SNARE_HOLD,
   lureRange: LURE_RANGE,
   hiddenReveal: REVEAL_RUNS,
+  // K807: the constants these params replace.
+  followDelayMin: FOLLOW_DELAY_MIN,
+  followDelayMax: FOLLOW_DELAY_MAX,
+  followShortcut: FOLLOW_SHORTCUT,
+  swordRingMin: SWORD_RING_MIN,
+  swordRingMax: SWORD_RING_MAX,
+  sleeperRingMin: SLEEPER_RING_MIN,
+  sleeperRingMax: SLEEPER_RING_MAX,
+  nearHops: NEAR_HOPS,
+  routeWeight: ROUTE_WEIGHT,
   // K795: the beat rides every run in one beat (Levi, 2026-10-21: "each
   // segment is traveled in the same amount of time", one beat per run); the
   // one default this stage changes on purpose (K114's multi-beat runs are
@@ -1384,6 +1423,8 @@ export function fabricRulesOf(
     | "keys"
     | "lockMode"
     | "mud"
+    | "nearHops"
+    | "routeWeight"
   >
 ): FabricRules {
   return {
@@ -1407,6 +1448,9 @@ export function fabricRulesOf(
     // K138 stage 4: keys and the lock, likewise.
     keys: p.gameMode === "classic" ? p.keys : 0,
     lockMode: p.lockMode,
+    // K807: the turnstiles' reach and the one-way draw's route weight.
+    nearHops: p.nearHops,
+    routeWeight: p.routeWeight,
     // K137 s5: muddy runs in every game mode (with or without a chase).
     mud: p.mud,
   };
@@ -1491,6 +1535,10 @@ export function turnMinoParamsOf(p: Omit<UrlParams, "seed">): TurnMinoParams {
     // K795: the snare's hold and the lure's range (whole turns and runs).
     snareHold: snareHoldOf(p.snareHold),
     lureRange: lureRangeOf(p.lureRange),
+    // K807: the follower's delay bounds and shortcut chance.
+    followDelayMin: followDelayOf(p.followDelayMin, FOLLOW_DELAY_MIN),
+    followDelayMax: followDelayOf(p.followDelayMax, FOLLOW_DELAY_MAX),
+    followShortcut: followShortcutOf(p.followShortcut),
   };
 }
 
@@ -2206,6 +2254,16 @@ function readLegacy(
     snareHold: readNumber(query, "snh", D.snareHold),
     lureRange: readNumber(query, "lrg", D.lureRange),
     hiddenReveal: readNumber(query, "hrv", D.hiddenReveal),
+    // K807's tunables (`&fdm=0&fdx=3&fsc=0.5&srm=2&srx=9&zrm=0&zrx=4&nhp=3&rwt=6`).
+    followDelayMin: readNumber(query, "fdm", D.followDelayMin),
+    followDelayMax: readNumber(query, "fdx", D.followDelayMax),
+    followShortcut: readNumber(query, "fsc", D.followShortcut),
+    swordRingMin: readNumber(query, "srm", D.swordRingMin),
+    swordRingMax: readNumber(query, "srx", D.swordRingMax),
+    sleeperRingMin: readNumber(query, "zrm", D.sleeperRingMin),
+    sleeperRingMax: readNumber(query, "zrx", D.sleeperRingMax),
+    nearHops: readNumber(query, "nhp", D.nearHops),
+    routeWeight: readNumber(query, "rwt", D.routeWeight),
     // K795's beat timing (`&btm=length`, `&btr=1`; PARAM_RANGES clamps the
     // beats to 1..4).
     beatTiming: readChoice(query, "btm", BEAT_TIMINGS, D.beatTiming),

@@ -65,6 +65,32 @@ export const SLEEPER_GRACE_S = 1;
 export const FOLLOW_DELAY_MIN = 1;
 export const FOLLOW_DELAY_MAX = 2;
 export const FOLLOW_SHORTCUT = 0.25;
+// K807: the delay params' range (moves), and the shortcut chance's.
+export const FOLLOW_DELAY_PARAM_MIN = 0;
+export const FOLLOW_DELAY_PARAM_MAX = 5;
+
+// A delay param's value: an integer in the param range (garbage: the
+// constant named by `fallback`).
+export function followDelayOf(n: unknown, fallback: number): number {
+  if (typeof n !== "number" || !Number.isFinite(n)) return fallback;
+  return Math.max(FOLLOW_DELAY_PARAM_MIN, Math.min(FOLLOW_DELAY_PARAM_MAX, Math.round(n)));
+}
+
+// The shortcut-chance param's value, held to 0..1 (garbage: FOLLOW_SHORTCUT).
+export function followShortcutOf(n: unknown): number {
+  if (typeof n !== "number" || !Number.isFinite(n)) return FOLLOW_SHORTCUT;
+  return Math.max(0, Math.min(1, n));
+}
+
+// K807: the sleeper ring params' range (runs off the shortest way).
+export const SLEEPER_RING_PARAM_MIN = 0;
+export const SLEEPER_RING_PARAM_MAX = 8;
+
+// A sleeper ring param's value (garbage: the constant named by `fallback`).
+export function sleeperRingOf(n: unknown, fallback: number): number {
+  if (typeof n !== "number" || !Number.isFinite(n)) return fallback;
+  return Math.max(SLEEPER_RING_PARAM_MIN, Math.min(SLEEPER_RING_PARAM_MAX, Math.round(n)));
+}
 
 export interface MonsterSpec {
   readonly kind: MonsterKind;
@@ -84,9 +110,9 @@ export function monsterRng(seed: number, i: number): TurnRng {
 
 // The follower's delay, 1 or 2 (draw 0 of its stream's turn -1 counter, so
 // it never meets a turn's draw).
-export function followDelay(seed: number, i: number): number {
+export function followDelay(seed: number, i: number, min = FOLLOW_DELAY_MIN, max = FOLLOW_DELAY_MAX): number {
   const u = monsterRng(seed, i).at(-1).next();
-  return u < 0.5 ? FOLLOW_DELAY_MIN : FOLLOW_DELAY_MAX;
+  return u < 0.5 ? min : max;
 }
 
 // Where the sleepers lie, in draw order (index i = monster i). `skip`:
@@ -96,7 +122,8 @@ export function sleeperSpots(
   seed: number,
   count: number,
   avoid: SwordAvoid = {},
-  skip: readonly number[] = []
+  skip: readonly number[] = [],
+  ring: { min: number; max: number } = { min: SLEEPER_RING_MIN, max: SLEEPER_RING_MAX }
 ): number[] {
   const n = sleepersOf(count);
   if (n === 0) return [];
@@ -113,7 +140,7 @@ export function sleeperSpots(
     if (g.isEnd[v]) continue; // Junctions only.
     if (v === g.start || v === g.exit || v === startJ || v === exitJ) continue;
     const h = hop[v];
-    if (h < SLEEPER_RING_MIN || h > SLEEPER_RING_MAX) continue;
+    if (h < ring.min || h > ring.max) continue;
     if (nearStart && nearStart[v] >= 0 && nearStart[v] <= 1) continue;
     if (near && near[v] >= 0 && near[v] <= (avoid.hops as number)) continue;
     if (dEx && dEx[v] <= (avoid.dist as number)) continue;
@@ -151,9 +178,10 @@ export function monsterSpecs(
   count: number,
   mode: SleepKind,
   avoid: SwordAvoid = {},
-  skip: readonly number[] = []
+  skip: readonly number[] = [],
+  ring?: { min: number; max: number }
 ): MonsterSpec[] {
-  const spots = sleeperSpots(g, seed, count, avoid, skip);
+  const spots = sleeperSpots(g, seed, count, avoid, skip, ring);
   const kinds = monsterKinds(seed, spots.length, mode);
   return spots.map((home, i) => ({ kind: kinds[i], home }));
 }

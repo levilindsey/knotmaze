@@ -41,6 +41,15 @@ import { composeRules, exemptRun, meterLength, placeRule, plainRule, ruleHasTrap
 export const ONE_WAY_MAX = 0.6;
 // A base-route run's tickets in the draw (1 for any other core run).
 export const ROUTE_WEIGHT = 4;
+// K807: the route-weight param's range (tickets; 1: unweighted).
+export const ROUTE_WEIGHT_PARAM_MIN = 1;
+export const ROUTE_WEIGHT_PARAM_MAX = 10;
+
+// The route-weight param's value (garbage: ROUTE_WEIGHT).
+export function routeWeightOf(n: unknown): number {
+  if (typeof n !== "number" || !Number.isFinite(n)) return ROUTE_WEIGHT;
+  return Math.max(ROUTE_WEIGHT_PARAM_MIN, Math.min(ROUTE_WEIGHT_PARAM_MAX, Math.round(n)));
+}
 
 // One-way runs: run id -> the vertex it must be entered from.
 export type OneWayLayout = ReadonlyMap<number, string>;
@@ -235,7 +244,8 @@ export function placeOneWay(
   walk: RuleWalk,
   share: number,
   seed: number,
-  base: WalkRule | null = null
+  base: WalkRule | null = null,
+  routeWeight = ROUTE_WEIGHT
 ): Placement<OneWayLayout> {
   const s = Math.max(0, Math.min(ONE_WAY_MAX, share));
   if (!(s > 0)) return { layout: null, bites: false, draws: 0 };
@@ -247,7 +257,7 @@ export function placeOneWay(
   const rng = ruleRng(seed, "oneWay");
   const drawFor = (n: number) => (): OneWayLayout => {
     const pool = core.runs.slice();
-    const weight = pool.map((r) => (onRoute.has(r) ? ROUTE_WEIGHT : 1));
+    const weight = pool.map((r) => (onRoute.has(r) ? routeWeight : 1));
     let total = 0;
     for (const w of weight) total += w;
     const flip = rng.nextInt(2) === 1;

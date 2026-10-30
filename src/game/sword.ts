@@ -31,6 +31,15 @@ export const SWORD_MOVES_DEFAULT = 8;
 // Runs off the optimal route the sword may lie.
 export const SWORD_RING_MIN = 4;
 export const SWORD_RING_MAX = 8;
+// K807: the sword ring params' range (runs).
+export const SWORD_RING_PARAM_MIN = 0;
+export const SWORD_RING_PARAM_MAX = 12;
+
+// A sword ring param's value (garbage: the constant named by `fallback`).
+export function swordRingOf(n: unknown, fallback: number): number {
+  if (typeof n !== "number" || !Number.isFinite(n)) return fallback;
+  return Math.max(SWORD_RING_PARAM_MIN, Math.min(SWORD_RING_PARAM_MAX, Math.round(n)));
+}
 // The sword's own stream ("SWRD").
 export const SWORD_SALT = 0x53575244;
 
@@ -153,7 +162,12 @@ export function runHops(g: ChaseGraph, sources: readonly number[]): Int32Array {
 }
 
 // Where the sword lies (-1: no spot in range).
-export function swordSpot(g: ChaseGraph, seed: number, avoid: SwordAvoid = {}): number {
+export function swordSpot(
+  g: ChaseGraph,
+  seed: number,
+  avoid: SwordAvoid = {},
+  ring: { min: number; max: number } = { min: SWORD_RING_MIN, max: SWORD_RING_MAX }
+): number {
   const route = optimalRouteVertices(g);
   if (route.length === 0) return -1;
   const hop = runHops(g, route);
@@ -166,7 +180,7 @@ export function swordSpot(g: ChaseGraph, seed: number, avoid: SwordAvoid = {}): 
   for (let v = 0; v < g.ids.length; v++) {
     if (v === g.start || v === g.exit || v === startJ || v === exitJ) continue;
     const h = hop[v];
-    if (h < SWORD_RING_MIN || h > SWORD_RING_MAX) continue;
+    if (h < ring.min || h > ring.max) continue;
     if (near && near[v] >= 0 && near[v] <= (avoid.hops as number)) continue;
     if (dEx && dEx[v] <= (avoid.dist as number)) continue;
     (g.isEnd[v] ? tips : juncs).push(v);
