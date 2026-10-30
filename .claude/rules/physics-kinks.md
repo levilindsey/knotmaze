@@ -71,7 +71,7 @@ only with the files it is about; `physics.md` lists the area's other files.
   distance outruns the depth tents' z separation, pressure on the arms
   beside the crossing fights the coupling - lags 0.5-1.4, mv bursts to
   1e-1 through the friction switch); 2.6 inflated default eyes (median
-  1.25 -> 1.34) without lifting the boxed outliers. PROBE LORE: a vite-node harness that
+  1.25 -> 1.34) without lifting the boxed outliers. PROBE LORE: a scripts/run_node.mjs harness (K1057; Vite's SSR loader) that
   builds the scene with main.ts's own calls (parseParams,
   generateLatticeKnotwork, the maze plan/apply) and steps step(0.1)
   frames (pixi caps a frame's dt at 0.1 s; gs 18 runs ~5 fps here)
