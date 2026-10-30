@@ -292,6 +292,9 @@ Next free ID: K1062.
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops). Nothing to look at before S4b.
 - **K1051** · Turn on Dependabot for knotmaze (GitHub setting; K994 follow-up, audit clean 732ab944).
+- **K1056** · Lure and snare stock for real time: set the shared defaults to lures 0, snares 3? (Real-time
+  sim: lures buy nothing and hurt the fleer, snares take greedy 2.61 -> 2.14; the turn clock suggested
+  the opposite, 2 and 1, and 2 / 1 is shipped.) Table: docs/design/K708.md, 'K1056' (be60105d).
 
 ## In progress
 
@@ -299,9 +302,9 @@ Next free ID: K1062.
   K783 and K728 (the sims), B K1052, C K1054, K1055 and K810's table, D K783's defaults, K1057 and
   K1060, E K1061 and K396, F K1056 (docs/design/K1053_muse_batch2.md)
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator); each run is a Muse agent the chain starts in Paseo, titled `knotmaze K1053 <run>`
-  - branch: mainline; last commit: `7b174bec`
+  - branch: mainline; last commit: `be60105d`
   - evidence: `.claude/probes/K1053/` (chain.ps1, queue.txt, done.txt, chain.log; untracked, desktop only) and each run's commits on master
-  - next: run E done (K1061 011274f9, K396 7b174bec, deploys green); run F K1056 queued; Claude reviews E and F, then closes K1053
+  - next: run F done (K1056 be60105d, docs only, no deploy; suggestion lures 0 snares 3, not shipped 2/1, so K1056 to Waiting on Levi); Claude reviews E and F, then closes K1053
   - brief: `docs/design/K1053_muse_batch2.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` (starts chain.ps1 outside Claude Code; resumes at the first run not in done.txt; needs the Paseo daemon)
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
@@ -795,9 +798,6 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
-- **K1056** · Real-time lure and snare stocks (MinotaurChase.lure/setSnare) unsimulated: K783 measured the
-  turn clock only; the real-time table would set the stocks for real-time games too (harness: rt_sim.ts tool
-  policy + stocks) (docs/design/K708.md, K783 and K728)
 
 ## Residuals (known, not fixed)
 
