@@ -30,6 +30,11 @@ function moved(a: Float32Array, b: Float32Array, p: number): number {
   return Math.hypot(a[p * 2] - b[p * 2], a[p * 2 + 1] - b[p * 2 + 1]);
 }
 
+// prev and zPos are private; the tug contract (positions and prev move
+// together, z never) is checked through this view of the same arrays.
+const internals = (ps: ParticleSystem): { prev: Float32Array; zPos: Float32Array } =>
+  ps as unknown as { prev: Float32Array; zPos: Float32Array };
+
 describe("ParticleSystem.tug (K279)", () => {
   it("moves only the stretch, by at most amp, positions and prev together", () => {
     const ps = build();
@@ -37,8 +42,8 @@ describe("ParticleSystem.tug (K279)", () => {
     const arr = ps.chains[chain];
     expect(arr.length).toBeGreaterThan(12);
     const pos0 = ps.positions.slice();
-    const prev0 = ps.prev.slice();
-    const z0 = ps.zPos.slice();
+    const prev0 = internals(ps).prev.slice();
+    const z0 = internals(ps).zPos.slice();
     const amp = 0.15;
     const n = ps.tug(chain, 2.5, 8.5, 5.5, 1, amp);
     expect(n).toBe(6); // slots 3..8
@@ -47,10 +52,10 @@ describe("ParticleSystem.tug (K279)", () => {
     for (let s = 0; s < arr.length; s++) {
       const p = arr[s];
       const d = moved(ps.positions, pos0, p);
-      const dPrev = moved(ps.prev, prev0, p);
+      const dPrev = moved(internals(ps).prev, prev0, p);
       expect(Math.abs(d - dPrev)).toBeLessThan(1e-6);
       // At rest: the velocity (pos - prev) is unchanged.
-      expect(ps.positions[p * 2] - ps.prev[p * 2]).toBeCloseTo(pos0[p * 2] - prev0[p * 2], 5);
+      expect(ps.positions[p * 2] - internals(ps).prev[p * 2]).toBeCloseTo(pos0[p * 2] - prev0[p * 2], 5);
       if (s < 3 || s > 8) expect(d).toBe(0);
       else expect(d).toBeGreaterThan(0);
       expect(d).toBeLessThanOrEqual(amp + 1e-6);
@@ -66,7 +71,7 @@ describe("ParticleSystem.tug (K279)", () => {
     for (let p = 0; p < ps.positions.length / 2; p++) {
       if (!inStretch.has(p)) expect(moved(ps.positions, pos0, p)).toBe(0);
     }
-    expect(ps.zPos).toEqual(z0);
+    expect(internals(ps).zPos).toEqual(z0);
   });
 
   it("side flips the direction; amp 0 or an empty stretch moves nothing", () => {

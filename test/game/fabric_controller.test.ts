@@ -496,7 +496,7 @@ describe("the cartouche walk (K115 stage 4a)", () => {
       )!;
       const chain = built.graph.strands.indexOf(main);
       return w.edges
-        .map((e, i) => i)
+        .map((_e, i) => i)
         .filter((i) => w.edges[i].chain === chain);
     };
     const c = new FabricMazeController(w);
@@ -567,7 +567,7 @@ describe("the daily title walk (K115 stage 3a)", () => {
     const built = buildSceneGraph({
       ...dailyParams(12),
       gridSize: 8,
-      title: dailyTitle(12),
+      title: dailyTitle(12), glyphs2: "",
     });
     expect(built.walk).toBeDefined();
     return built.walk!;

@@ -14,7 +14,7 @@ const breathe = (): Promise<void> =>
 
 function emblemScene(emblem: string): { ps: ParticleSystem; tuning: PhysicsTuning } {
   const p = dailyParams(1);
-  const { graph } = buildSceneGraph({ ...p, title: "", emblem });
+  const { graph } = buildSceneGraph({ ...p, title: "", emblem, glyphs2: "" });
   const ps = new ParticleSystem(graph);
   return {
     ps,
@@ -86,7 +86,7 @@ describe("emblem physics (K115 stage 5a)", () => {
     const p = dailyParams(1);
     const plan = planEmblemHole("star", p.gridSize, p.shape);
     expect(plan).not.toBeNull();
-    const { graph } = buildSceneGraph({ ...p, title: "", cartouche: "", cartoucheShape: "star", seed: 11 });
+    const { graph } = buildSceneGraph({ ...p, title: "", cartouche: "", cartoucheShape: "star", seed: 11, glyphs2: "" });
     const first = graph.strands.findIndex((s) => s.nodes[0].startsWith("sn"));
     expect(first).toBeGreaterThanOrEqual(0);
     const ps = new ParticleSystem(graph);

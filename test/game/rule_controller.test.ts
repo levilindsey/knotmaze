@@ -175,12 +175,13 @@ describe("rules in the controller: off", () => {
   it("with both rules off every result is as before", () => {
     for (let seed = 1; seed <= 4; seed++) {
       const { walk, cont } = ruleMaze(seed);
-      const a = new FabricMazeController(walk, false, null, { parMode: "count" });
+      // "count" is not a ParMode on purpose: an unrecognized mode reads as off.
+      const a = new FabricMazeController(walk, false, null, { parMode: "count" as never });
       const b = new FabricMazeController(
         walk,
         false,
         null,
-        { parMode: "count", ice: 0, colorRule: "off" },
+        { parMode: "count" as never, ice: 0, colorRule: "off" },
         { seed, cont: () => cont }
       );
       expect(b.rulesOn).toBe(false);
@@ -205,7 +206,7 @@ describe("rules in the controller: off", () => {
     expect(make(2, { colorRule: "alternate", collapse: "free" }).rulesOn).toBe(false);
     expect(make(2, { colorRule: "alternate", cut: "on" }).rulesOn).toBe(false);
     expect(make(2, { ice: 0.25, spool: 0.5 }).rulesOn).toBe(false);
-    expect(make(2, { ice: 0.25, parMode: "count" }).rulesOn).toBe(true);
+    expect(make(2, { ice: 0.25, parMode: "count" as never }).rulesOn).toBe(true);
     // No source: no rule.
     const { walk } = ruleMaze(2);
     expect(new FabricMazeController(walk, false, null, { ice: 0.25 }).rulesOn).toBe(false);
