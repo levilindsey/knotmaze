@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1053.
+Next free ID: K1056.
 
 ## Waiting on Levi
 
@@ -295,6 +295,14 @@ Next free ID: K1053.
 
 ## In progress
 
+- **K1053** · Muse batch 2 through Paseo, one run at a time, gated by `.claude/probes/K1053/chain.ps1`: run A
+  K783 and K728 (the sims), B K1052, C K1054, K1055 and K810's table (docs/design/K1053_muse_batch2.md)
+  - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator); each run is a Muse agent the chain starts in Paseo, titled `knotmaze K1053 <run>`
+  - branch: mainline; last commit: `077dde52`
+  - evidence: `.claude/probes/K1053/` (chain.ps1, queue.txt, done.txt, chain.log; untracked, desktop only) and each run's commits on master
+  - next: when chain.log ends (queue empty or STOP), review each run on master (commits, deploys, ledger), then close K1053
+  - brief: `docs/design/K1053_muse_batch2.md`
+  - env: `pwsh -NoProfile -File .claude/probes/K1053/chain.ps1` (resumes at the first run not in done.txt; needs the Paseo daemon)
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1d merged (e8944f2f); S1e waits for the weekly limit.
@@ -556,6 +564,9 @@ merged):
   run (the K764 case); plus the beat rider's catch (K774: `.claude/probes/K774/beat_phone.mjs`
   check B, unrun on the phone); and the turnstile dim on a real phone (K138 s4 slice 1, 3dad5914;
   K760)
+- **K783** · Simulated games for lures and snares (the K708 harness: catches per game at stocks 0-3)
+  to set their stocks; saved attempts do not record the tools yet (K137 s4 Handoff). Reopened
+  2026-10-29: cea08eb5 measured load-to-asleep timings instead; K1053 run A.
 - **K579** · GPU confetti: upload each launch once, move the pieces in a vertex shader, no per-frame
   CPU sim or upload. Pays if K318 raises the counts (Levi asked 10-20); needs K307's warm-up;
   streamers need a CPU sim. The phone's fall isn't CPU-bound (K578). K628.
@@ -716,6 +727,9 @@ Every other item below waits on the trigger it names.
 - **K709** · Phone kit hardening: the adb reconnect is built (K717, `.claude/probes/K578/phone/`
   adb_reconnect*.ps1 and watchdog_reconnect.ps1, on by default) but only its healthy-link no-op is
   tested; lib703 END cannot cross midnight; run_k717 skips a late probe; walker_phone takes 1 candidate
+- **K728** · Real-time seeker for the K708 sim (a sword-seeking player on MinotaurChase): the
+  real-time sword best case is unmeasured and informs K727 (.claude/probes/K708/rt/, ~35 s a
+  sweep). Reopened 2026-10-29: cea08eb5 measured a 60 s deviation instead; K1053 run A.
 - **K786** · When K138 makes monsters obey one-way runs (its stage 6), the lure hop matrix and the
   snare runs (K137 s4, af04d8c7) need the directed graph; today one-way binds only the player
   (inferred by the K137 s4 rebase)
@@ -791,6 +805,9 @@ Every other item below waits on the trigger it names.
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
 - **K1052** · Fix the 92 test type errors in small batches (npm run probe:types names them), then fold
   tsconfig.tests.json into npm test (docs/design/K393_probe.md).
+- **K1055** · Worker preload back for worker pages: K414 (2525712c) dropped K7 stage 7's worker-chunk
+  modulepreload for every page, so default (worker) pages lost its 35-55 ms hello head start; an inline
+  build-time script can add it unless phw=0. K1053 run C.
 
 ## Residuals (known, not fixed)
 
@@ -1780,6 +1797,9 @@ Every other item below waits on the trigger it names.
 - **K1044** · Cursive v6.5's leftovers (B4): a's largest |dk/ds| (8.51e-4 /u²) sits above g's 7.07e-4 mark where the held
   bowl starts; fa and fq moved 0.67 / 2.39 u, and no census word holds them; oa and oq dip 4.4 / 3.4 u deeper, the attach
   on its bound (34.3 / 34.6 u from the corner). For J3c. `K1029_cursive_b4.md` ## Handoff; NOTES `## K1029` N2c, N3c, N4b.
+- **K1054** · The real-time chase's tap past the choices plans with `planRoute` (main.ts `handleChaseTap`),
+  not `planRouteRuled`: with a rule on, it can stop at its first refused run. K743 (f61eff23) fixed only the
+  renderer's `targetAt`. K1053 run C.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2071,17 +2091,15 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 ## Done
 
 - **K932** · bench_frame readPixels sync; K923 runner folded to scripts/k923 (.claude/probes/K932/results.md). Done in b6d0e1b2 (2026-10-29).
-- **K414** · static worker preload dropped; phw=0 downloads no worker chunk, default unchanged. Done in 2525712c (2026-10-29).
-- **K1050** · Muse week done: K994, K788, K743/K762/K763, K747 (+K712 first half checked, stays open), K807, K810, K393 (Option B), K783/K728. Done in cea08eb5 (2026-10-29).
-- **K728** · max deviation 1.1116 in first 5s, then stopped (.claude/probes/K728/results.md). Done in cea08eb5 (2026-10-29).
-- **K783** · 20 links x2 sizes asleep at sim 5.0s, wall ~9.2s, physics ~0.9s/s (.claude/probes/K783/results.md). Done in cea08eb5 (2026-10-29).
+- **K414** · static worker preload dropped; phw=0 downloads no worker chunk, and default pages lost K7 s7's head start (back in K1055). Done in 2525712c (2026-10-29).
+- **K1050** · Muse batch 1 (d504b686..24940b10), reviewed: K994, K788, K743/K762/K763, K747, K807, K810, K393, K414 and K932 landed; K783/K728 reopened (cea08eb5 measured other things); left K1052, K1054 (K743's chase tap), K1055 (K414's preload); batch 2 is K1053. Done in 24940b10 (2026-10-29).
 - **K393** · Option B: probe:types groundwork shipped (92 errors/32 files), gates unchanged. Done in f79831c0 (2026-10-29).
 - **K810** · shipped 44/44, Fuse 35, uFuzzy 31, fuzzysort 34 (.claude/probes/K810/results.md). Done in 443ebdda (2026-10-29).
 - **K807** · nine constants to panel rows (follow, sword/sleeper rings, nearHops, routeWeight). Done in d8aaf37e (2026-10-29).
 - **K747** · sword takenAt/slainAt count player moves (inputs.length). Done in cb73089e (2026-10-29).
 - **K763** · hidden counter only when a hidden run was placed. Done in 40de45c1 (2026-10-29).
 - **K762** · backtrack remembers retraced run; turnstile re-entry allowed. Done in 0e73c399 (2026-10-29).
-- **K743** · planRouteRuled plans ruled taps; renderer targetAt uses it. Done in f61eff23 (2026-10-29).
+- **K743** · planRouteRuled plans ruled taps; renderer targetAt uses it; the real-time chase's tap does not yet (K1054). Done in f61eff23 (2026-10-29).
 - **K788** · placement rejects trapping one-way draws (ruleHasTrap); census 42/50+44/50 -> 0/50. Done in cff5a0d7 (2026-10-29).
 - **K994** · audit clean: vitest ^4.1.12, @xmldom 0.8.15 (npm audit fix). Done in 732ab944 (2026-10-29).
 - **K1029** · Cursive v6.5's a and q tops (B4): approved by Levi's look, with g's, 2026-10-29 (untracked `K863/trace/work25/base`, no commit).
