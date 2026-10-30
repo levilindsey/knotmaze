@@ -7,58 +7,57 @@ Levi's eye; that work stays with Claude and Levi. Work the tasks in order. They 
 so a stopped task doesn't block the next one. When the list is done, stop: don't take on other
 ledger items.
 
-Read `CLAUDE.md` first (the project, the commit policy, the verification rule). For each task,
-read its item in `LEDGER.md` (search for the ID; the file is long) and the design-doc section
-named under it.
+Muse works the way Claude does (Levi, 2026-10-29: "I want [Muse] to auto commit and push in the same
+way you do"): in the main checkout on `master`, committing and pushing each finished task without
+asking, and keeping `LEDGER.md` current. No branches and no worktrees.
 
-## Setup, once
+Read `CLAUDE.md` first (the project, the commit policy, the verification rule). Below, `ledger.mjs`
+means `node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs`, run from the repo; add
+`--dry-run` to see an edit before it is made. For each task, read its item (`ledger.mjs show K788`)
+and the design-doc section named under it.
+
+## Each task, start to finish
 
 ```powershell
 cd C:\Users\lsl\Repositories\knotmaze
-git fetch origin
-git worktree add --no-track -b muse/K994 .claude\worktrees\muse origin/master
-cd .claude\worktrees\muse
-npm ci
-# The untracked probes tasks 2 and 8 use (all of K138 is 228 MB; take only its census).
-# robocopy exits with 1 when it copied files: that is success.
-robocopy C:\Users\lsl\Repositories\knotmaze\.claude\probes\K708 .claude\probes\K708 /E
-robocopy C:\Users\lsl\Repositories\knotmaze\.claude\probes\K138\s4\census .claude\probes\K138\s4\census /E
+git status          # changes that no task of this brief made aren't yours: leave them alone
+git pull --ff-only
 ```
 
-Start each later task from a clean tree on a new branch:
+1. Start level with origin (above). If the pull refuses because origin's commits were rewritten
+   (an hourly job re-dates work-hours commits), run `git fetch` and `git rebase origin/master`.
+   Never force anything.
+2. Make the change. Before committing, `npm test` passes: it type-checks `src` (`tsc`, then
+   `tsc -p notices`) and runs the whole Vitest suite. While you iterate, run single files with
+   `npx vitest run <file>`. A dependency or build change also needs
+   `pwsh scripts/preview.ps1 -BuildOnly` to pass (it builds into `%TEMP%`; don't run
+   `npm run build` in this tree).
+3. Commit the work with its report as the message (see Reports). Stage your files by name: never
+   `git add -A`, `git add .` or `git commit -a`, so nothing you didn't write goes in.
+4. `git push origin master`. If it is refused, run `git pull --rebase`, rerun `npm test` when the
+   new commits touched code, and push again. Never force-push, skip hooks or push another branch.
+5. A push that touches code deploys to production: `.github/workflows/deploy.yml` runs `npm ci`,
+   `npm test` and `npm run build`, then publishes, in about 5 minutes. A push that touches only
+   `LEDGER.md`, `CLAUDE.md`, `docs/`, `.claude/`, `README.md` or `LICENSE` doesn't deploy. Watch
+   the run to its end: `gh run list --workflow deploy.yml --commit $(git rev-parse HEAD)` lists it
+   (give it half a minute to appear), then `gh run watch <run id> --exit-status`. If it fails, fix
+   it in a new commit or `git revert` yours, and push.
+6. Then update the ledger, in a commit of its own. Take the work commit's SHA from
+   `git rev-parse --short=8 HEAD`: a global git hook moves weekday 08:00-18:00 commits to the
+   evening, which changes the SHA `git commit` printed. Then:
+   - `ledger.mjs done K788 --commit <sha> --what "<one short line>"` moves the task's item to
+     Done (a task says when it stays open instead);
+   - `ledger.mjs add --section Next --text "<one to three lines>"` files each follow-up you found
+     (`--section Residuals` for a known bug left in); it prints the new ID;
+   - `ledger.mjs handle K1050 --last-commit <sha> --next "<the next task>"` keeps this brief's
+     item current;
+   - `ledger.mjs lint` must not show more findings than before your edits (an item is at most 3
+     lines, a handle field 1 line);
+   - commit `LEDGER.md` alone as `LEDGER: K788 done (<sha>)`, and push it (it doesn't deploy).
 
-```powershell
-git fetch origin
-git switch --no-track -c muse/K788 origin/master
-```
+## When a task stops
 
-After leaving `muse/K994`, run `npm ci` again: that branch's `node_modules` won't match master's
-lockfile.
-
-## Working rules
-
-- Work only in `.claude\worktrees\muse`. Leave the main checkout
-  (`C:\Users\lsl\Repositories\knotmaze`) alone: no branch switches, edits or builds there. Claude's
-  sessions need it on master.
-- Commit on the task's branch as often as you like: the local `muse/*` branches are how the work
-  comes back. Start each message with the ID (`K788: ...`). Never push, and never merge, rebase or
-  reset master: Claude reviews and merges after the reset.
-- `npm test` type-checks `src` (`tsc`, then `tsc -p notices`) and runs the whole Vitest suite.
-  While you iterate, run single files: `npx vitest run <file>`.
-- Dev servers go on ports 5500-5599 (5173 is Levi's own server, 5401 is K1040's).
-- Browser checks use their own Chrome profile, never Levi's. Probe links add `&snd=none`. Never use
-  Chrome's `--virtual-time-budget` (`CLAUDE.md`, "Verification rule"). No phone work this week.
-- Never run `wrangler pages project create` or other wrangler scaffolding here: it rewrites
-  `package.json`, the lockfile and `.gitignore`.
-- Don't edit `LEDGER.md`, `CLAUDE.md` or `.claude/rules/`, and don't run claude-config's tools
-  (`ledger.mjs`, `agent_merge.ps1`). Claude files your reports into the ledger.
-- A global git hook moves weekday 08:00-18:00 commit times to the evening, which changes the SHA
-  `git commit` prints. That's expected; take SHAs from `git rev-parse HEAD`.
-
-## Stop rules
-
-Stop a task, commit what you have, write the question into its report and go on to the next task
-when:
+Stop a task and go on to the next when:
 
 1. a test's expected value has to change for your fix to pass. The exceptions are tests you wrote
    for the task and task 5's appended link keys. This guards the pins:
@@ -72,6 +71,33 @@ when:
 4. about 2 hours of work on one task haven't made its check pass;
 5. the diff passes about 300 lines, tests not counted.
 
+Then:
+
+- Push only the part that is finished and passes `npm test` by itself, its report saying
+  `Status: partial`.
+- Save the rest as a patch in `.claude/probes/<ID>/` (make the folder first):
+  `git diff --output=.claude/probes/<ID>/wip.patch -- <files>`, with any new files copied beside
+  it. Then put back only the files you changed (`git restore -- <files>`, and delete the new
+  ones).
+- Record the stop in the item's text, at most 3 lines: what's left, the question, the patch. A
+  question about looks or feel goes to Levi (`ledger.mjs move K788 --to "Waiting on Levi"`); a
+  technical one stays where it is, for Claude after the reset. Commit and push the ledger.
+
+## Rules
+
+- Work only in the main checkout, `C:\Users\lsl\Repositories\knotmaze`, on `master`. Levi may
+  change files here too: never stage, stash, restore, reset, clean or delete a change you didn't
+  make. If git refuses a pull or rebase because of one, stop and ask Levi.
+- Dev servers go on ports 5500-5599 (5173 is Levi's own server, 5401 is K1040's).
+- Browser checks use their own Chrome profile, never Levi's. Probe links add `&snd=none`. Never use
+  Chrome's `--virtual-time-budget` (`CLAUDE.md`, "Verification rule"). No phone work this week.
+- Never run `wrangler pages project create` or other wrangler scaffolding here: it rewrites
+  `package.json`, the lockfile and `.gitignore`.
+- Don't edit `CLAUDE.md` or `.claude/rules/`: findings go in the commit message, open work in
+  `LEDGER.md`.
+- Scripts and probes go in `.claude/probes/<ID>/`, which git ignores. Tasks 2 and 8 use probes
+  already there: `.claude/probes/K138/s4/census/` and `.claude/probes/K708/`.
+
 ## Off limits
 
 - Junctions: K1040 and every item about junction drawing, with their briefs and probes,
@@ -80,13 +106,12 @@ when:
 - Physics and its constants (`MIN_PASS_SEPARATION`, `DEPTH_WINDOW`, the sleep gate; K595).
 - The thread renderer and its GPU performance (K8, K611, K919), and dropping knot mode (K326).
 - Phone passes, and every item waiting on Levi's look.
-- Every other worktree under `.claude/worktrees/` and every branch not named `muse/*`: they hold
-  other agents' work. Above all, don't merge, push or build on `park/muse-2026-10-26` or
-  `k893-g31-revert`.
+- The worktrees under `.claude/worktrees/` and every branch but `master`: they hold other agents'
+  work. Above all, don't merge, push or build on `park/muse-2026-10-26` or `k893-g31-revert`.
 
 ## Reports
 
-A task's last commit message is its report:
+A task's work commit carries its report as the message:
 
 ```
 K788: <what was done, in one line>
@@ -97,7 +122,7 @@ Checked: the commands run and the numbers, before -> after
 Left: anything not done
 ```
 
-Tasks 6 and 8 change no code: they put their results in the doc named there and commit that.
+Tasks 6 and 8 change no code: their results go in the doc named there, committed the same way.
 
 ## Tasks
 
@@ -111,11 +136,12 @@ covers everything except vitest's two criticals, which need a newer vitest (toda
   nearest release that fixes its criticals, a new major included, provided the suite passes with
   no test edits and only a few lines of config change.
 - If `@xmldom/xmldom` is still flagged after that, pin a patched 0.8.x with an `overrides` entry in
-  `package.json`. If no 0.8.x is patched, stop and ask.
-- Ask before any other major-version bump (vite's included) and before any change to pixi.js
-  itself: a pixi change can change rendering. Turning on Dependabot is Levi's (a GitHub setting).
+  `package.json`. If no 0.8.x is patched, stop with that question.
+- Any other major-version bump (vite's included), and any change to pixi.js itself, is a stop: a
+  pixi change can change rendering. Turning on Dependabot is Levi's (a GitHub setting): when
+  K994 closes, file it as a new item in Waiting on Levi.
 - Done: `npm audit --omit=dev` shows no high or critical; the report lists what plain `npm audit`
-  still shows, and why; `npm test` and `npm run build` pass in the worktree.
+  still shows, and why; `npm test` passes and `pwsh scripts/preview.ps1 -BuildOnly` builds.
 
 ### 2. K788 · One-way runs plus ice can trap the player
 
@@ -156,6 +182,8 @@ traced). Nothing rejects the layout, and no Undo rescues the player (K778).
   `src/game/fabric_controller.ts` says whether every rule found a layout. Done: no "0 / 0" counter
   shows when nothing was placed, with a test.
 
+Each of the three closes on its own commit.
+
 ### 4. K747 and the first half of K712 · Sword counts, hearts
 
 - K747: the sword's `takenAt` and `slainAt` (`src/game/sword.ts`) count minotaur turns, so after a
@@ -167,7 +195,8 @@ traced). Nothing rejects the layout, and no Undo rescues the player (K778).
   (`src/game/daily_attempt.ts`, `src/game/daily_store.ts`); add the hearts the way the store has
   added fields before (its version and migration), with tests. If no Undo or saved attempt can
   hold hearts (for example, turning lives on leaves the daily), say so in the report and skip that
-  half. The second half, the default of 3 hearts when lives are switched on, is Levi's.
+  half. The second half, the default of 3 hearts when lives are switched on, is Levi's, so K712
+  stays open: add "first half done in <sha>" to its text instead of closing it.
 
 ### 5. K807 · The next gameplay constants become panel rows
 
@@ -192,12 +221,12 @@ The panel search uses a hand-rolled matcher, chosen from the libraries' docs
 (`docs/design/K793.md`). Run Fuse.js, uFuzzy and fuzzysort on the 44 queries in
 `test/ui/panel_search_fixture.ts`, scored the way the fixture scores the shipped matcher.
 
-- Measurement only: the app's search, `package.json` and the lockfile don't change. Install the
-  libraries with `npm install --no-save`, run `npm ci` when done, and check that `git status`
-  shows neither file changed.
+- Measurement only: the app's search, `package.json`, the lockfile and `node_modules` don't
+  change. Install the libraries inside `.claude/probes/K810/` (its own `npm init -y`, then
+  `npm install`).
 - Done: a table in `docs/design/K793.md`'s Handoff with each library's pass count beside the
-  shipped matcher's, the settings used, and where the script lives (`.claude/probes/K810/` in the
-  worktree).
+  shipped matcher's, the settings used, and where the script lives (`.claude/probes/K810/`). If a
+  library beats the matcher, file "adopt it?" as a new item in Next.
 
 ### 7. K393 · Type-check the test files
 
@@ -208,29 +237,30 @@ unseen.
 - Add a `tsconfig.test.json` that extends `tsconfig.json` and includes `test`, and add
   `tsc -p tsconfig.test.json` to `typecheck`.
 - Fix the errors it reports in test files only, without changing what any test checks. A type
-  error that shows a real bug in `src` goes in the report, unfixed.
+  error that shows a real bug in `src` goes in the report, unfixed, and in a new Residuals item.
 - Done: `npm test` type-checks `test/` and passes; no test's expected values changed.
 
 ### 8. K783 and K728 · Numbers from the game simulations
 
 Probe work only: no `src` change and no default change. The harness is `.claude/probes/K708/`
-(copied in at setup; `docs/design/K708.md`); real-time sweeps run with
-`.claude/probes/K708/rt/run_rt.ps1`, about 35 s each.
+(`docs/design/K708.md`); real-time sweeps run with `.claude/probes/K708/rt/run_rt.ps1`, about
+35 s each.
 
 - K783: catches per game with lure and snare stocks of 0 to 3 (`docs/design/K137_s4.md` Handoff).
-  Report the table and a suggested stock with its reason; the stock itself is Levi's call.
+  Report the table and a suggested stock with its reason. The stock is Levi's call, so K783 then
+  moves to Waiting on Levi with the suggestion as its question.
 - K728: add a sword-seeking player to the real-time sim (`MinotaurChase`) and measure the sword's
-  real-time best case, which feeds K727 (a defaults call waiting on Levi).
-- Done: both tables in a new section at the end of `docs/design/K708.md`, committed on
-  `muse/K783`. The scripts stay in `.claude/probes/K708/` (untracked; Claude copies them out at
-  review).
+  real-time best case. It feeds K727 (a defaults call waiting on Levi): close K728 and add a
+  pointer to its numbers to K727's text.
+- Done: both tables in a new section at the end of `docs/design/K708.md`, committed and pushed
+  (docs only, so no deploy). The scripts stay in `.claude/probes/K708/`.
 
 ### Optional, if time is left
 
 - K414: a `phw=0` page still downloads the physics worker's chunk (about 90 KB raw), because of K7
   stage 7's modulepreload (`vite.config.ts`, the preload code around lines 44-83). Done: a `phw=0`
-  load fetches no worker chunk and a default load still preloads it, checked in a headed Chrome's
-  network log.
+  load fetches no worker chunk and a default load still preloads it, checked on a
+  `pwsh scripts/preview.ps1 -Port 5500` build in a headed Chrome's network log.
 - K932, desktop Chrome only (skip it if it needs the phone): `scripts/bench_frame.mjs` times only
   the CPU's submission, because Chrome's WebGL `finish()` doesn't wait for the GPU (K923 read
   0.0-0.1 ms for 3.8 ms of GPU work). End each timed frame with a 1-pixel `readPixels`, recheck the
@@ -242,5 +272,5 @@ Probe work only: no `src` change and no default change. The harness is `.claude/
 
 ## After the week
 
-After the Nov 2 reset Claude reviews each `muse/<ID>` branch (the diff, `npm test`, the pins), then
-merges it or sends it back with notes, and updates the ledger. Muse merges nothing.
+Leave K1050 open. After the Nov 2 reset Claude reviews what landed on master (each task's commits,
+`npm test`, the pins), follows up in the ledger and closes K1050.
