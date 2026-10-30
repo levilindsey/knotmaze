@@ -59,11 +59,12 @@ export function ruleFields(fc: FabricMazeController): RuleFields {
     // K138: the rules row, the turnstiles laid and the hidden runs found.
     rules: rulesValue(fc),
     turnstiles: fc.turnstileCount > 0 ? (fc.ruleLook?.turnstiles?.length ?? 0) : null,
+    // K763: no counter when no hidden run was placed (not "0 / 0 found").
     hidden:
-      fc.hiddenCount > 0
+      fc.hiddenCount > 0 && fc.ruleLook?.hidden
         ? {
             found: fc.revealed.size,
-            of: fc.ruleLook?.hidden?.length ?? 0,
+            of: fc.ruleLook.hidden.length,
             fewest: fc.fewestRuns,
             withAll: fc.fewestWithHidden,
           }

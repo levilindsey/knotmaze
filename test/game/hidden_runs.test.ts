@@ -223,6 +223,14 @@ describe("hidden runs: the controller", () => {
     expect(rulesValue(make(3, { colorRule: "alternate" }))).toBe("alternate");
   });
 
+  it("shows no 0 / 0 counter when no hidden run was placed (K763)", () => {
+    // Seed 1 under alternate places no hidden run (the color rule bars
+    // every candidate), so the HUD row stays away entirely.
+    const c = make(1, { hiddenRuns: 2, colorRule: "alternate" });
+    expect(c.ruleLook!.hidden).toBeNull();
+    expect(ruleFields(c).hidden).toBeNull();
+  });
+
   it("composes with turnstiles and ice", () => {
     for (const seed of SEEDS.slice(0, 4)) {
       const c = make(seed, { hiddenRuns: 2, turnstiles: 4, ice: 0.25 });
