@@ -485,9 +485,9 @@ Next free ID: K1064.
 - **K1062** · Muse batch 3: G K1056's real-time lure fix (queued first), A K321, B K658, C K326
   stage A, D K814, E K441, F K645 (docs/design/K1062_muse_batch3.md)
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator)
-  - branch: mainline; last commit: `be729dce`
+  - branch: mainline; last commit: `b65bf3fb`
   - evidence: .claude/probes/K1053/ (queue.txt tags 3G and 3A-3F, chain.log, done.txt)
-  - next: chain runs 3G, then 3A-3F (queued 2026-10-29 23:45); Claude reviews each run on master, then closes K1062
+  - next: Claude reviews run G on master; next run A (K321)
   - brief: `docs/design/K1062_muse_batch3.md`
   - env: pwsh -NoProfile -File .claude/probes/K1053/start.ps1
 
@@ -789,9 +789,6 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
-- **K1056** · Real-time lures last one tick: within detectStart the lured minotaur re-spots you the
-  next tick (`detect()` after `lure()`), so run F's lures bought nothing. Fix to the turn clock's
-  rule, rerun s1056, then the stock (batch 3 run G; K708.md 'K1056', be60105d).
 
 ## Residuals (known, not fixed)
 
@@ -2076,6 +2073,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1056** · Real-time lure lasts until the target (run G, K1062): detect() no longer re-spots a lured monster, both clocks suggest the shipped 2 lures / 1 snare. Done in b65bf3fb (2026-10-30).
 - **K654** · the moving lead rides uKTeleAt, no texel rewrite (K324 s2). Done in ea3e63b8 (2026-10-29).
 - **K650** · the TELE census, GPU vs mirror with the riding lead (K324 s2). Done in a90a1ceb (2026-10-29).
 - **K1053** · Muse batch 2, runs A-F, reviewed on master. Done in b849de95 (2026-10-29).
