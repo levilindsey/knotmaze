@@ -449,6 +449,18 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("loaderTrail"),
   flag("labelInk"), // K868 S3a: the border look's ink from the label passes
   flag("labelGpu"), // K868 S3a7: the label's tubes on the GPU
+  // K807: the follower's delay bounds (moves) and shortcut chance, the
+  // sword's and sleepers' rings (runs off the shortest way), how far a
+  // turnstile may sit (junction hops) and the one-way draw's route weight.
+  num("followDelayMin"),
+  num("followDelayMax"),
+  num("followShortcut"),
+  num("swordRingMin"),
+  num("swordRingMax"),
+  num("sleeperRingMin"),
+  num("sleeperRingMax"),
+  num("nearHops"),
+  num("routeWeight"),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -642,6 +654,15 @@ export const PARAM_RANGES: Readonly<
   snareHold: [1, 8], // K795 (SNARE_HOLD_MIN..MAX)
   lureRange: [1, 12], // K795 (LURE_RANGE_MIN..MAX)
   hiddenReveal: [1, 8], // K795 (REVEAL_RUNS_MIN..MAX)
+  followDelayMin: [0, 5], // K807 (FOLLOW_DELAY_PARAM_MIN..MAX)
+  followDelayMax: [0, 5], // K807 (FOLLOW_DELAY_PARAM_MIN..MAX)
+  followShortcut: [0, 1], // K807 (a chance)
+  swordRingMin: [0, 12], // K807 (SWORD_RING_PARAM_MIN..MAX)
+  swordRingMax: [0, 12], // K807 (SWORD_RING_PARAM_MIN..MAX)
+  sleeperRingMin: [0, 8], // K807 (SLEEPER_RING_PARAM_MIN..MAX)
+  sleeperRingMax: [0, 8], // K807 (SLEEPER_RING_PARAM_MIN..MAX)
+  nearHops: [0, 6], // K807 (0..NEAR_HOPS_PARAM_MAX)
+  routeWeight: [1, 10], // K807 (ROUTE_WEIGHT_PARAM_MIN..MAX)
   beatPerRun: [1, 4], // K795 (BEAT_PER_RUN_MIN..MAX)
   mud: [0, 6], // K137 s5 (MUD_MAX)
   goldWidth: [0, 1], // K799

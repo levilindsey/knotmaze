@@ -55,6 +55,8 @@ import {
   type Snare,
 } from "./snares";
 import {
+  FOLLOW_DELAY_MAX,
+  FOLLOW_DELAY_MIN,
   FOLLOW_SHORTCUT,
   followDelay,
   monsterRng,
@@ -106,6 +108,11 @@ export interface TurnMinoParams {
   // the runs a lure is heard within (`lureRange`; LURE_RANGE when absent).
   snareHold?: number;
   lureRange?: number;
+  // K807: the follower's delay bounds and shortcut chance (the FOLLOW_
+  // constants when absent).
+  followDelayMin?: number;
+  followDelayMax?: number;
+  followShortcut?: number;
 }
 
 // The defaults: the research's hunter (section 0: prox, stall 0.1, roam 3-8
@@ -213,6 +220,11 @@ export interface TurnConfig {
   // default, so a default design's config is what it was.
   snareHold?: number;
   lureRange?: number;
+  // K807: the follower's delay bounds and shortcut chance (set only off
+  // their defaults, as snareHold and lureRange are).
+  followDelayMin?: number;
+  followDelayMax?: number;
+  followShortcut?: number;
 }
 
 // Two runs a move, or a charge, forces the telegraph on (section 2.6).
@@ -240,6 +252,9 @@ export function turnConfig(p: TurnMinoParams): TurnConfig {
   if (p.speed === "charge") base.chaseSpeed = 2;
   if (p.snareHold !== undefined && p.snareHold !== SNARE_HOLD) base.snareHold = p.snareHold;
   if (p.lureRange !== undefined && p.lureRange !== LURE_RANGE) base.lureRange = p.lureRange;
+  if (p.followDelayMin !== undefined && p.followDelayMin !== FOLLOW_DELAY_MIN) base.followDelayMin = p.followDelayMin;
+  if (p.followDelayMax !== undefined && p.followDelayMax !== FOLLOW_DELAY_MAX) base.followDelayMax = p.followDelayMax;
+  if (p.followShortcut !== undefined && p.followShortcut !== FOLLOW_SHORTCUT) base.followShortcut = p.followShortcut;
   if (p.model === "stalker") return { ...base, policy: "chase" };
   if (p.pull > 0) base.pull = p.pull;
   if (p.model === "guard") return { ...base, home: true, rMin: 1, rMax: p.territory };
@@ -1317,7 +1332,7 @@ export class TurnMinotaur {
   // turn.
   setMonsters(specs: readonly MonsterSpec[], seed: number): void {
     this.extras.length = 0;
-    specs.forEach((s, i) => this.extras.push(newTurnExtra(s, seed, i)));
+    specs.forEach((s, i) => this.extras.push(newTurnExtra(s, seed, i, this.cfg.followDelayMin, this.cfg.followDelayMax)));
   }
 
   // K137 s4 (4.10): a LURE plucked on run `edge`, free in time (no turn
@@ -1413,7 +1428,7 @@ export class TurnMinotaur {
           const before = this.snares.length > 0 || this.mud.size > 0 ? cloneMino(x.state) : null;
           const at0 = x.at;
           const rng = x.rng.at(this.turns);
-          path = x.kind === "sleeper" ? decide(g, cfg, x.state, p, ++x.life, rng) : followStep(g, x, p, rng);
+          path = x.kind === "sleeper" ? decide(g, cfg, x.state, p, ++x.life, rng) : followStep(g, x, p, rng, this.cfg.followShortcut);
           if (before !== null && x.phase === "awake") {
             const k = cutAtSnare(this.snares, path, before, x.state);
             if (k < 0 && this.mud.size > 0) cutAtMud(this.mud, path, before, x.state);
@@ -1427,7 +1442,7 @@ export class TurnMinotaur {
       } else if (x.phase === "waiting") {
         if (!stand && --x.wait <= 0) {
           x.phase = "awake";
-          path = followStep(g, x, p, x.rng.at(this.turns));
+          path = followStep(g, x, p, x.rng.at(this.turns), this.cfg.followShortcut);
           live = x.phase === "awake";
         }
       } else if (x.kind === "sleeper") {
@@ -2375,11 +2390,11 @@ function homeState(v: number): MinoState {
   return { v, prev: -1, dest: -1, mode: 0, lastSeen: -1, left: true, spot: spotAtVertex(v) };
 }
 
-export function newTurnExtra(s: MonsterSpec, seed: number, i: number): TurnExtra {
+export function newTurnExtra(s: MonsterSpec, seed: number, i: number, delayMin?: number, delayMax?: number): TurnExtra {
   return {
     kind: s.kind,
     home: s.home,
-    delay: s.kind === "follower" ? followDelay(seed, i) : 0,
+    delay: s.kind === "follower" ? followDelay(seed, i, delayMin, delayMax) : 0,
     rng: monsterRng(seed, i),
     phase: "asleep",
     shown: "asleep",
@@ -2437,7 +2452,7 @@ function trailIndexAfter(x: TurnExtra, w: number): number {
 // FOLLOW_SHORTCUT, or off the trail) a step toward you, rejoining the trail
 // where it lands on it. You at the entrance: it loses you and walks home,
 // where it sleeps again.
-function followStep(g: TurnGraph, x: TurnExtra, p: number, rng: TurnRng): TurnStep[] {
+export function followStep(g: TurnGraph, x: TurnExtra, p: number, rng: TurnRng, shortcut = FOLLOW_SHORTCUT): TurnStep[] {
   const m = x.state;
   let mv: TurnStep | null = null;
   if (!x.homing && p === g.start) x.homing = true;
@@ -2448,7 +2463,7 @@ function followStep(g: TurnGraph, x: TurnExtra, p: number, rng: TurnRng): TurnSt
       allowed(g, next[1]) &&
       !g.isBlocked(next[0]) &&
       (g.chase.ea[next[0]] === m.v || g.chase.eb[next[0]] === m.v);
-    if (onTrail && rng.next() >= FOLLOW_SHORTCUT) {
+    if (onTrail && rng.next() >= shortcut) {
       mv = next;
       x.at++;
     } else if (!cutOff(g, m.v, p)) {

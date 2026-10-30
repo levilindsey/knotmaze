@@ -44,14 +44,14 @@ import { PAR_SLACK_MAX, PAR_SLACK_MIN } from "../game/par";
 import { SPOOL_SLACK_MAX, SPOOL_SLACK_MIN } from "../game/spool";
 import { HINTS_MAX } from "../game/hints";
 import { ICE_SHARE_MAX, ICE_SHARE_ON } from "../game/ice";
-import { TURNSTILES_MAX } from "../game/turnstiles";
+import { NEAR_HOPS_PARAM_MAX, TURNSTILES_MAX } from "../game/turnstiles";
 import { HIDDEN_MAX, REVEAL_RUNS_MAX, REVEAL_RUNS_MIN } from "../game/hidden_runs";
 import { MUD_MAX } from "../game/mud"; // K137 s5
-import { ONE_WAY_MAX } from "../game/one_way";
+import { ONE_WAY_MAX, ROUTE_WEIGHT_PARAM_MAX, ROUTE_WEIGHT_PARAM_MIN } from "../game/one_way";
 import { KEYS_MAX } from "../game/locks";
 import { LIVES_MAX, LIVES_RECOMMENDED, livesOf } from "../game/lives";
-import { SWORD_MOVES_MAX, SWORD_MOVES_MIN } from "../game/sword";
-import { SLEEPERS_MAX } from "../game/monsters";
+import { SWORD_MOVES_MAX, SWORD_MOVES_MIN, SWORD_RING_PARAM_MAX, SWORD_RING_PARAM_MIN } from "../game/sword";
+import { FOLLOW_DELAY_PARAM_MAX, FOLLOW_DELAY_PARAM_MIN, SLEEPER_RING_PARAM_MAX, SLEEPER_RING_PARAM_MIN, SLEEPERS_MAX } from "../game/monsters";
 import { LURES_MAX, LURE_RANGE_MAX, LURE_RANGE_MIN } from "../game/lures"; // K137 stage 4
 import { SNARES_MAX, SNARE_HOLD_MAX, SNARE_HOLD_MIN } from "../game/snares";
 import { BEAT_PER_RUN_MAX, BEAT_PER_RUN_MIN } from "../game/beat_rider"; // K795
@@ -1979,6 +1979,13 @@ export function buildPanel(
     "Turnstile junctions (0: none). At a turnstile only two of its three runs connect, and the open pair turns one step with every move you make, backtracks included; a band through the junction shows the open pair. Going back the way you came is always allowed. The fewest moves and par read the turnstiles. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
     D.turnstiles, () => callbacks.onClockChange()
   );
+  // K807: how far from the route a turnstile may sit (NEAR_HOPS by default).
+  const nearHopsRow = row(
+    fRules, p, "nearHops",
+    { min: 0, max: NEAR_HOPS_PARAM_MAX, step: 1, label: "Turnstiles near (hops)" },
+    "How far from the shortest way a turnstile junction may sit, in junctions away from it (0: only junctions on the way itself). Shown while Turnstiles are on. Restarts the solve.",
+    D.nearHops, () => callbacks.onClockChange()
+  );
   const hiddenRunsRow = row(
     fRules, p, "hiddenRuns",
     { min: 0, max: HIDDEN_MAX, step: 1, label: "Hidden runs" },
@@ -2017,6 +2024,13 @@ export function buildPanel(
       params.oneWay = Math.round(params.oneWay * 20) / 20;
       callbacks.onClockChange();
     }
+  );
+  // K807: a route run's tickets in the one-way draw (ROUTE_WEIGHT by default).
+  const routeWeightRow = row(
+    fRules, p, "routeWeight",
+    { min: ROUTE_WEIGHT_PARAM_MIN, max: ROUTE_WEIGHT_PARAM_MAX, step: 1, label: "One-way route weight" },
+    "How strongly the one-way draw favours runs on the shortest way: that many tickets against one for any other loop run (1: no favour). Shown while One-way runs are on. Restarts the solve.",
+    D.routeWeight, () => callbacks.onClockChange()
   );
   // K138 stage 4 (game/locks.ts): keys and the lock, the same scope and
   // restart.
@@ -2359,6 +2373,19 @@ export function buildPanel(
     "How long the minotaur flees once you take the sword: moves on the turn clock (a wait counts), runs walked in real time. Restarts the solve.",
     D.swordMoves, () => callbacks.onClockChange()
   );
+  // K807: how far off the shortest way the sword lies (its ring by default).
+  const swordRingMinRow = row(
+    fMino, p, "swordRingMin",
+    { min: SWORD_RING_PARAM_MIN, max: SWORD_RING_PARAM_MAX, step: 1, label: "Sword ring from (runs)" },
+    "Nearest the sword may lie to the shortest way, in runs away from it. Shown while the Sword is on; if no junction qualifies, no sword is laid. Restarts the solve.",
+    D.swordRingMin, () => callbacks.onClockChange()
+  );
+  const swordRingMaxRow = row(
+    fMino, p, "swordRingMax",
+    { min: SWORD_RING_PARAM_MIN, max: SWORD_RING_PARAM_MAX, step: 1, label: "Sword ring to (runs)" },
+    "Farthest the sword may lie from the shortest way, in runs away from it. Shown while the Sword is on. Restarts the solve.",
+    D.swordRingMax, () => callbacks.onClockChange()
+  );
   // K137 stage 3c (4.29, game/sprint.ts): sprint, on both clocks. Like the
   // sword it restarts the solve (onClockChange), which gives sprint back.
   const sprintRow = row(
@@ -2381,6 +2408,38 @@ export function buildPanel(
     { options: { wakes: "wake", follows: "follow", both: "both" }, label: "Sleeper kind" },
     "Turn clock: wakes hunts you once woken; follows trails your path a run or two behind, so stopping or turning back lets it catch you (the entrance puts it back to sleep); both mixes the two. Restarts the solve.",
     D.sleepKind, () => callbacks.onClockChange()
+  );
+  // K807: how far off the shortest way the sleepers lie (their ring by
+  // default), and the follower's delay bounds and shortcut chance.
+  const sleeperRingMinRow = row(
+    fMino, p, "sleeperRingMin",
+    { min: SLEEPER_RING_PARAM_MIN, max: SLEEPER_RING_PARAM_MAX, step: 1, label: "Sleeper ring from (runs)" },
+    "Turn clock: nearest a sleeper or follower may lie to the shortest way, in runs away from it. Shown while Sleepers are on. Restarts the solve.",
+    D.sleeperRingMin, () => callbacks.onClockChange()
+  );
+  const sleeperRingMaxRow = row(
+    fMino, p, "sleeperRingMax",
+    { min: SLEEPER_RING_PARAM_MIN, max: SLEEPER_RING_PARAM_MAX, step: 1, label: "Sleeper ring to (runs)" },
+    "Turn clock: farthest a sleeper or follower may lie from the shortest way, in runs away from it. Shown while Sleepers are on. Restarts the solve.",
+    D.sleeperRingMax, () => callbacks.onClockChange()
+  );
+  const followDelayMinRow = row(
+    fMino, p, "followDelayMin",
+    { min: FOLLOW_DELAY_PARAM_MIN, max: FOLLOW_DELAY_PARAM_MAX, step: 1, label: "Follower delay from (moves)" },
+    "Turn clock: a follower starts after you leave its junction; each one draws a delay between these bounds, this one the sooner. Shown while Sleepers are on. Restarts the solve.",
+    D.followDelayMin, () => callbacks.onClockChange()
+  );
+  const followDelayMaxRow = row(
+    fMino, p, "followDelayMax",
+    { min: FOLLOW_DELAY_PARAM_MIN, max: FOLLOW_DELAY_PARAM_MAX, step: 1, label: "Follower delay to (moves)" },
+    "Turn clock: the later of a follower's delay bounds (see Follower delay from). Shown while Sleepers are on. Restarts the solve.",
+    D.followDelayMax, () => callbacks.onClockChange()
+  );
+  const followShortcutRow = row(
+    fMino, p, "followShortcut",
+    { min: 0, max: 1, step: 0.05, label: "Follower shortcut chance" },
+    "Turn clock: at each junction, the chance a follower leaves your trail and steps straight toward you instead. Shown while Sleepers are on. Restarts the solve.",
+    D.followShortcut, () => callbacks.onClockChange()
   );
   // K137 stage 6: the real-time clock's own extras.
   const minoExtrasRow = row(
@@ -3511,11 +3570,13 @@ export function buildPanel(
     iceRow.hidden = !fab || params.gameMode !== "classic";
     colorRuleRow.hidden = !fab || params.gameMode !== "classic";
     turnstilesRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 2
+    nearHopsRow.hidden = turnstilesRow.hidden || params.turnstiles <= 0; // K807
     hiddenRunsRow.hidden = !fab || params.gameMode !== "classic";
     tunnelsRow.hidden = !fab; // K137 tunnels (4.13): every game mode
     mudRow.hidden = !fab; // K137 s5: every game mode
     hiddenRevealRow.hidden = hiddenRunsRow.hidden || params.hiddenRuns <= 0; // K795
     oneWayRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 3
+    routeWeightRow.hidden = oneWayRow.hidden || params.oneWay <= 0; // K807
     keysRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 4
     lockModeRow.hidden = keysRow.hidden || params.keys <= 0;
     // Under the thread reveal too (K76 stage 2c: the same two settings).
@@ -3526,10 +3587,18 @@ export function buildPanel(
     livesRow.hidden = !minoOn;
     swordRow.hidden = !minoOn; // K137 stage 3b
     swordMovesRow.hidden = !minoOn || params.sword === "off";
+    swordRingMinRow.hidden = swordMovesRow.hidden; // K807
+    swordRingMaxRow.hidden = swordMovesRow.hidden; // K807
     sprintRow.hidden = !minoOn; // K137 stage 3c
     // K137 stage 3d: the extra monsters play on the turn clock only.
     sleepersRow.hidden = !minoOn || realtime;
     sleepKindRow.hidden = !minoOn || realtime || params.sleepers <= 0;
+    // K807: the sleepers' ring and the follower's rows beside Sleeper kind.
+    sleeperRingMinRow.hidden = sleepKindRow.hidden;
+    sleeperRingMaxRow.hidden = sleepKindRow.hidden;
+    followDelayMinRow.hidden = sleepKindRow.hidden;
+    followDelayMaxRow.hidden = sleepKindRow.hidden;
+    followShortcutRow.hidden = sleepKindRow.hidden;
     minoExtrasRow.hidden = !minoOn || !realtime; // K137 stage 6
     minoScentRow.hidden = !minoOn || !realtime; // 4.34 scent needs the real-time clock
     // K137 stage 4: the lures and snares play on the turn clock only, and

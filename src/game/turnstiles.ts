@@ -32,6 +32,14 @@ export const TURNSTILE_PERIOD = 3;
 export const TURNSTILES_MAX = 8;
 // How far from the plain route a turnstile may sit, in junction hops.
 export const NEAR_HOPS = 2;
+// K807: the near-hops param's top (0: the route's own junctions only).
+export const NEAR_HOPS_PARAM_MAX = 6;
+
+// The near-hops param's value (garbage: NEAR_HOPS).
+export function nearHopsOf(n: unknown): number {
+  if (typeof n !== "number" || !Number.isFinite(n)) return NEAR_HOPS;
+  return Math.max(0, Math.min(NEAR_HOPS_PARAM_MAX, Math.round(n)));
+}
 
 export type TurnstileWalk = RuleWalk & { titleVertices?: Set<string> };
 
@@ -126,7 +134,7 @@ export function turnstileArms(walk: TurnstileWalk, id: string): [number, number,
 
 // The candidates, nearest the plain route first (ties in the walk's vertex
 // order): junctions within NEAR_HOPS hops of it.
-export function turnstileCandidates(walk: TurnstileWalk, base: WalkRule | null = null): string[] {
+export function turnstileCandidates(walk: TurnstileWalk, base: WalkRule | null = null, hopsMax = NEAR_HOPS): string[] {
   const route = ruleSearch(walk, base ?? plainRule(walk)).routeRuns;
   const hops = new Map<string, number>();
   let frontier: string[] = [];
@@ -141,7 +149,7 @@ export function turnstileCandidates(walk: TurnstileWalk, base: WalkRule | null =
       frontier.push(at);
     }
   }
-  for (let h = 1; h <= NEAR_HOPS; h++) {
+  for (let h = 1; h <= hopsMax; h++) {
     const next: string[] = [];
     for (const v of frontier) {
       for (const r of walk.vertices.get(v)!.edges) {
@@ -172,11 +180,12 @@ export function placeTurnstiles(
   walk: TurnstileWalk,
   count: number,
   seed: number,
-  base: WalkRule | null = null
+  base: WalkRule | null = null,
+  hopsMax = NEAR_HOPS
 ): Placement<TurnstileLayout> {
   const n = Math.max(0, Math.min(TURNSTILES_MAX, Math.floor(count)));
   if (n === 0) return { layout: null, bites: false, draws: 0 };
-  const pool = turnstileCandidates(walk, base);
+  const pool = turnstileCandidates(walk, base, hopsMax);
   if (pool.length === 0) return { layout: null, bites: false, draws: 0 };
   const rng = ruleRng(seed, "turnstiles");
   const draw = (): TurnstileLayout => {

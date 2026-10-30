@@ -76,8 +76,8 @@ import { spoolPercentUsed } from "./game/spool";
 
 import { revealedBy, revealRunsOf, runAtCtrl } from "./game/hidden_runs";
 import { catchHeart, heartsToast, livesOf, type HeartLoss } from "./game/lives";
-import { newSword, swordSpot, type SwordAvoid, type SwordPhase } from "./game/sword";
-import { monsterSpecs, sleeperSpots, sleepersOf } from "./game/monsters";
+import { newSword, swordRingOf, swordSpot, SWORD_RING_MAX, SWORD_RING_MIN, type SwordAvoid, type SwordPhase } from "./game/sword";
+import { monsterSpecs, sleeperRingOf, sleeperSpots, sleepersOf, SLEEPER_RING_MAX, SLEEPER_RING_MIN } from "./game/monsters";
 import { sprintAfterMove, sprintToggle, sprintValue, type SprintState } from "./game/sprint";
 import { luresOf } from "./game/lures"; // K137 stage 4
 import { snareHoldOf, snaresOf } from "./game/snares";
@@ -2191,7 +2191,7 @@ async function main(): Promise<void> {
         : scene.chase
           ? { dist: params.minoGuardRoam }
           : { hops: params.minoTerritory };
-    const spot = swordSpot(m.g, params.seed, avoid);
+    const spot = swordSpot(m.g, params.seed, avoid, { min: swordRingOf(params.swordRingMin, SWORD_RING_MIN), max: swordRingOf(params.swordRingMax, SWORD_RING_MAX) });
     if (spot < 0) return;
     const s = newSword(spot, params.sword, params.swordMoves);
     scene.chase?.setSword(s);
@@ -2207,7 +2207,7 @@ async function main(): Promise<void> {
     if (tm && sleepersOf(params.sleepers) > 0) {
       const avoid: SwordAvoid = params.minotaur !== "guard" ? { hops: 1 } : { hops: params.minoTerritory };
       const skip = tm.sword ? [tm.sword.spot] : [];
-      tm.setMonsters(monsterSpecs(tm.g, params.seed, params.sleepers, params.sleepKind, avoid, skip), params.seed);
+      tm.setMonsters(monsterSpecs(tm.g, params.seed, params.sleepers, params.sleepKind, avoid, skip, { min: sleeperRingOf(params.sleeperRingMin, SLEEPER_RING_MIN), max: sleeperRingOf(params.sleeperRingMax, SLEEPER_RING_MAX) }), params.seed);
     }
     // K137 stage 6: the real-time clock's extras - awake hunters on
     // the sleepers' junctions (their own spots, off the sword's).
@@ -2215,7 +2215,7 @@ async function main(): Promise<void> {
     if (ch && sleepersOf(params.minoExtras) > 0) {
       const avoid: SwordAvoid = params.minotaur !== "guard" ? { hops: 1 } : { hops: params.minoTerritory };
       const skip = ch.sword ? [ch.sword.spot] : [];
-      ch.setExtras(sleeperSpots(ch.g, params.seed, params.minoExtras, avoid, skip));
+      ch.setExtras(sleeperSpots(ch.g, params.seed, params.minoExtras, avoid, skip, { min: sleeperRingOf(params.sleeperRingMin, SLEEPER_RING_MIN), max: sleeperRingOf(params.sleeperRingMax, SLEEPER_RING_MAX) }));
     }
   };
   // The sword's news since the last look, on either clock: a toast for each
