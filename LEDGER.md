@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1077.
+Next free ID: K1078.
 
 ## Waiting on Levi
 
@@ -292,6 +292,8 @@ Next free ID: K1077.
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops). Nothing to look at before S4b.
 - **K1051** · Turn on Dependabot for knotmaze (GitHub setting; K994 follow-up, audit clean 732ab944).
+- **K1075** · K137 sounds unchecked: the snap pluck and the strand glissando need an ear (left by K658; K658
+  doc Findings filed).
 
 ## In progress
 
@@ -482,14 +484,6 @@ Next free ID: K1077.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
-- **K1062** · Muse batch 3: G K1056's real-time lure fix (queued first), A K321, B K658, C K326
-  stage A, D K814, E K441, F K645 (docs/design/K1062_muse_batch3.md)
-  - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator)
-  - branch: mainline; last commit: `e9e5cc15`
-  - evidence: .claude/probes/K1053/ (queue.txt tags 3G and 3A-3F, chain.log, done.txt)
-  - next: Claude reviews run F on master, then closes K1062 (runs A-G all done)
-  - brief: `docs/design/K1062_muse_batch3.md`
-  - env: pwsh -NoProfile -File .claude/probes/K1053/start.ps1
 
 ## Next, in order
 
@@ -635,8 +629,8 @@ Every other item below waits on the trigger it names.
 - **K313** · A loader that looks like the maze (`docs/design/K313_loader.md`): stage 1 (desktop)
   done in K824. Left: stage 2's phone measures in K156's next pass, then camera and trail tuning
   with Levi. Full text: `docs/ledger_notes.md`, K313.
-- **K326** · Drop knot mode (`mazeFabric`; `docs/design/K323_game_mode.md` s4-5): A freezes a golden
-  (after K7 s2); B deletes (after A, K323 s1, K307 s2, K329), retargets `scripts/fold_census.*`,
+- **K326** · Drop knot mode (`mazeFabric`; `docs/design/K323_game_mode.md` s4-5): A done, the maze
+  golden (057c5173); B deletes (after K323 s1, K307 s2, K329), retargets `scripts/fold_census.*`,
   `test/physics/byte_identity.test.ts`; optional C: knot paint (after B, K111 s5).
 - **K327** · Labels that say what they size (Levi 10-14): `indicatorSize` (edge arrows, a viewer
   pref) and `markerSize` (maze icons) sound alike; proposed "Edge arrow size" and "Maze icon size";
@@ -774,30 +768,9 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
-- **K1064** · K658 finding c1fog tail: 'tail crossing breaks nothing (exempt)' FAIL cracked [0]
-  (docs/design/K658_page_checks.md, c1fog). K840 breaks END runs; probe expectation stale.
-- **K1065** · K658 finding c1fog fog: 'Undo explored fog intact IoU' FAIL 0.9613 vs 0.97, 34/34 stamps (K658
-  doc, c1fog). Probe threshold; stamp count intact.
-- **K1066** · K658 finding c1plain tail: 'tail crossing breaks nothing (exempt)' FAIL cracked [0] (K658 doc,
-  c1plain). K840 breaks END runs; probe expectation stale.
-- **K1067** · K658 finding c1click tail: 'tail crossing breaks nothing (exempt)' FAIL cracked [0] by real
-  clicks (K658 doc, c1click). K840; probe expectation stale.
-- **K1068** · K658 finding c1touch tail: 'tail crossing breaks nothing (exempt)' FAIL cracked [0] by touch
-  taps (K658 doc, c1touch). K840; probe expectation stale.
-- **K1069** · K658 finding c1rt tail: 'tail crossing breaks nothing (exempt)' FAIL cracked [0] on realtime
-  (K658 doc, c1rt). K840; probe expectation stale.
-- **K1070** · K658 finding c1rt buttons: 'banner buttons Undo + Restart' FAIL Restart-only [What the numbers
-  mean, Restart, x] (K658 doc, c1rt). Realtime Undo correctly absent.
-- **K1071** · K658 finding c1rt undo-click: 'Undo clicked, banner hides' FAIL clicked false, Stranded stays
-  (K658 doc, c1rt). No Undo button on realtime by design.
-- **K1072** · K658 finding c1rt undo-head: 'Undo head back one move' FAIL head stays mnode_109 taps 5 (K658
-  doc, c1rt). Follows Restart-only realtime banner.
-- **K1073** · K658 finding c1rt undo-cracked: 'Undo last run cracked again' FAIL still broken [220,221]
-  stranded (K658 doc, c1rt). Follows Restart-only realtime banner.
-- **K1074** · K658 finding c4 stub: 'a stub was found' FAIL candidates [] tail limit 1 (K658 doc, c4). K840
-  leaves no exempt snap stub; c5 covers snap break.
-- **K1075** · K137 sounds unchecked: the snap pluck and the strand glissando need an ear (left by K658; K658
-  doc Findings filed).
+- **K1077** · Real-time stand ticks +4.24 ms (1x) / +13.16 ms (4x) over the turn stand, both asleep; the fire
+  chain explains about +0.5 (setExplore +0.42). Attribute the rest with the prof5 profile on an unminified
+  build, under the perf lock (docs/design/K441_fire_frame.md, owed rerun of 2026-10-30).
 
 ## Residuals (known, not fixed)
 
@@ -2084,6 +2057,18 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1074** · K658 check: c4 stub. Dropped: stale check, K840 leaves snap no exempt stub; c5 covers snap (K658_page_checks.md) (2026-10-30).
+- **K1073** · K658 check: real-time Undo. Dropped: by design, the real-time Stranded banner offers Restart only (K658_page_checks.md) (2026-10-30).
+- **K1072** · K658 check: real-time Undo. Dropped: by design, the real-time Stranded banner offers Restart only (K658_page_checks.md) (2026-10-30).
+- **K1071** · K658 check: real-time Undo. Dropped: by design, the real-time Stranded banner offers Restart only (K658_page_checks.md) (2026-10-30).
+- **K1070** · K658 check: real-time Undo. Dropped: by design, the real-time Stranded banner offers Restart only (K658_page_checks.md) (2026-10-30).
+- **K1065** · K658 check: fog IoU 0.9613 after Undo. Dropped: inside K137's 0.956-0.981 spread, the 0.97 line is too tight (K658_page_checks.md) (2026-10-30).
+- **K1069** · K658 check: exempt tail crossing. Dropped: stale check, K840 (4507a632) breaks run ends too (K658_page_checks.md) (2026-10-30).
+- **K1068** · K658 check: exempt tail crossing. Dropped: stale check, K840 (4507a632) breaks run ends too (K658_page_checks.md) (2026-10-30).
+- **K1067** · K658 check: exempt tail crossing. Dropped: stale check, K840 (4507a632) breaks run ends too (K658_page_checks.md) (2026-10-30).
+- **K1066** · K658 check: exempt tail crossing. Dropped: stale check, K840 (4507a632) breaks run ends too (K658_page_checks.md) (2026-10-30).
+- **K1064** · K658 check: exempt tail crossing. Dropped: stale check, K840 (4507a632) breaks run ends too (K658_page_checks.md) (2026-10-30).
+- **K1062** · Muse batch 3, runs G and A-F, reviewed on master. Done in 687e956b (2026-10-30).
 - **K645** · K140 frame A/B on one build 5406c4e6: cannons cost unresolved at 1x, +3.2/+5.6 ms at 4x (K653_checks.md). Done in e9e5cc15 (2026-10-30).
 - **K441** · Owed same-state rerun done: 8/8 stands asleep at both ends, tick gap +4.24 ms (1x) / +13.16 ms (4x) vs +0.23/+1.85 prediction in docs/design/K441_fire_frame.md. Done in 7bf9f07f (2026-10-30).
 - **K814** · Text & emblem rows built from SHAPE_INJECTION_PARAMS. Done in 3fc7b612 (2026-10-30).
