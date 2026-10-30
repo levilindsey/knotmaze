@@ -299,9 +299,9 @@ Next free ID: K1062.
   K783 and K728 (the sims), B K1052, C K1054, K1055 and K810's table, D K783's defaults, K1057 and
   K1060 (docs/design/K1053_muse_batch2.md)
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator); each run is a Muse agent the chain starts in Paseo, titled `knotmaze K1053 <run>`
-  - branch: mainline; last commit: `d4d83422`
+  - branch: mainline; last commit: `528af3ba`
   - evidence: `.claude/probes/K1053/` (chain.ps1, queue.txt, done.txt, chain.log; untracked, desktop only) and each run's commits on master
-  - next: run D: K1060 (pin the worker preload's phw reader)
+  - next: run D done (K783 7128df43, K1057 d4d83422, K1060 528af3ba); Claude reviews D on master, then closes K1053
   - brief: `docs/design/K1053_muse_batch2.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` (starts chain.ps1 outside Claude Code; resumes at the first run not in done.txt; needs the Paseo daemon)
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
@@ -801,9 +801,6 @@ Every other item below waits on the trigger it names.
 - **K1056** · Real-time lure and snare stocks (MinotaurChase.lure/setSnare) unsimulated: K783 measured the
   turn clock only; the real-time table would set the stocks for real-time games too (harness: rt_sim.ts tool
   policy + stocks) (docs/design/K708.md, K783 and K728)
-- **K1060** · K1055's inline phw reader (`vite.config.ts`, `workerPreloadScript`) copies the link codec's
-  walk and assumes phw defaults on; only a probe checks it (`.claude/probes/K414/check_k1055.mjs`). Pin it in
-  the suite against parseParams. K1053 run D.
 - **K1061** · scripts/fold_census.ps1, scripts/label_pops.ts and scripts/panel_inventory.ts still call
   vite-node (dropped with vitest 4); panel_inventory's config also sets a tweakpane resolve alias a
   config-free runner cannot do. Point them at scripts/run_node.mjs (K1057 follow-up).
@@ -2089,6 +2086,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1060** · workerPreloadScript moved to src/loader/worker_preload.ts (default derived from PARAM_DEFAULTS.physicsWorker); test/loader/worker_preload.test.ts pins its decision against parseParams (probe forms, seeded writer links, overrides, other version, garbage). Done in 528af3ba (2026-10-29).
 - **K1057** · scripts/run_node.mjs tracked (was .claude/probes/K708/run_node.mjs); rules recipes rewritten to it, no vite-node left in rules; burn_sim and par_census run through it. Done in d4d83422 (2026-10-29).
 - **K783** · a chase starts with 2 lures and 1 snare (PARAM_DEFAULTS; sliders already existed); url_codec defaults pin 0/0 -> 2/1 only, page checks in .claude/probes/K783/ passed. Done in 7128df43 (2026-10-29).
 - **K1059** · K1055's request count. Dropped: decided by Claude: count network downloads. The worker fetch is served from the HTTP cache, so K1055's check holds (c70db4fa) (2026-10-29).
