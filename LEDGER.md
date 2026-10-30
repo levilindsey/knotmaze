@@ -485,9 +485,9 @@ Next free ID: K1077.
 - **K1062** · Muse batch 3: G K1056's real-time lure fix (queued first), A K321, B K658, C K326
   stage A, D K814, E K441, F K645 (docs/design/K1062_muse_batch3.md)
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator)
-  - branch: mainline; last commit: `3fc7b612`
+  - branch: mainline; last commit: `7bf9f07f`
   - evidence: .claude/probes/K1053/ (queue.txt tags 3G and 3A-3F, chain.log, done.txt)
-  - next: Claude reviews run D on master; next run E (K441)
+  - next: Claude reviews run E on master; next run F (K645)
   - brief: `docs/design/K1062_muse_batch3.md`
   - env: pwsh -NoProfile -File .claude/probes/K1053/start.ps1
 
@@ -695,9 +695,6 @@ Every other item below waits on the trigger it names.
 - **K657** · K137 follow-ups: the win banner's strokes/par and snapped rows (showFabricWin is free
   since K336 merged); keep copy from promising par = perfect play (par counts runs, stars length; a
   100%-efficient walk lost strict par, seed 7, slack 0).
-- **K441** · The real-time fire's frame cost, profiled (9850741): about 1% of a frame (+0.23 ms at 1x,
-  +1.85 at 4x CPU, nearly all `ExploreGaps.setExplore`); no fix built. Owed: a same-state rerun under
-  the perf lock, realtime stand after the first sleep (`docs/design/K441_fire_frame.md` Handoff, Owed).
 - **K688** · Healing cuts against monsters (Levi took R.3.5, decision 6): a cut closes again after a
   few moves; cut with the minotaur or the fire. After the K114 walker stage
   (`docs/design/K80_gameplay_additions.md` R.3.5).
@@ -2090,6 +2087,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K441** · Owed same-state rerun done: 8/8 stands asleep at both ends, tick gap +4.24 ms (1x) / +13.16 ms (4x) vs +0.23/+1.85 prediction in docs/design/K441_fire_frame.md. Done in 7bf9f07f (2026-10-30).
 - **K814** · Text & emblem rows built from SHAPE_INJECTION_PARAMS. Done in 3fc7b612 (2026-10-30).
 - **K658** · K137 page gaps checked: 155 checks in docs/design/K658_page_checks.md, FAILs K1064-K1074, sounds K1075. Done in b51bc22b (2026-10-30).
 - **K321** · Credits page: licenses.html became credits.html, Levi header first, Scarborough Fair in Music and sound, Built with Claude Code below art/music. Done in bc18a40f (2026-10-30).
