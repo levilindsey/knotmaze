@@ -297,11 +297,11 @@ Next free ID: K1062.
 
 - **K1053** · Muse batch 2 through Paseo, one run at a time, gated by `.claude/probes/K1053/chain.ps1`: run A
   K783 and K728 (the sims), B K1052, C K1054, K1055 and K810's table, D K783's defaults, K1057 and
-  K1060 (docs/design/K1053_muse_batch2.md)
+  K1060, E K1061 and K396, F K1056 (docs/design/K1053_muse_batch2.md)
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator); each run is a Muse agent the chain starts in Paseo, titled `knotmaze K1053 <run>`
-  - branch: mainline; last commit: `528af3ba`
+  - branch: mainline; last commit: `a9942ac3`
   - evidence: `.claude/probes/K1053/` (chain.ps1, queue.txt, done.txt, chain.log; untracked, desktop only) and each run's commits on master
-  - next: run D done (K783 7128df43, K1057 d4d83422, K1060 528af3ba); Claude reviews D on master, then closes K1053
+  - next: runs A-D done and reviewed; E (K1061, K396) and F (K1056) queued 2026-10-29 22:59; when chain.log ends, Claude reviews E and F on master, then closes K1053
   - brief: `docs/design/K1053_muse_batch2.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` (starts chain.ps1 outside Claude Code; resumes at the first run not in done.txt; needs the Paseo daemon)
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
