@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1059.
+Next free ID: K1060.
 
 ## Waiting on Levi
 
@@ -301,9 +301,9 @@ Next free ID: K1059.
 - **K1053** · Muse batch 2 through Paseo, one run at a time, gated by `.claude/probes/K1053/chain.ps1`: run A
   K783 and K728 (the sims), B K1052, C K1054, K1055 and K810's table (docs/design/K1053_muse_batch2.md)
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator); each run is a Muse agent the chain starts in Paseo, titled `knotmaze K1053 <run>`
-  - branch: mainline; last commit: `99c4aff7`
+  - branch: mainline; last commit: `a7a81e8c`
   - evidence: `.claude/probes/K1053/` (chain.ps1, queue.txt, done.txt, chain.log; untracked, desktop only) and each run's commits on master
-  - next: run C: K1054, K1055 and K810's table; then Claude reviews runs B and C and closes K1053
+  - next: Claude reviews run C (K1054 closed moot, K1055 partial on check counting, K810 table landed), then closes K1053
   - brief: `docs/design/K1053_muse_batch2.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` (starts chain.ps1 outside Claude Code; resumes at the first run not in done.txt; needs the Paseo daemon)
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
@@ -806,6 +806,9 @@ Every other item below waits on the trigger it names.
 - **K1056** · Real-time lure and snare stocks (MinotaurChase.lure/setSnare) unsimulated: K783 measured the
   turn clock only; the real-time table would set the stocks for real-time games too (harness: rt_sim.ts tool
   policy + stocks) (docs/design/K708.md, K783 and K728)
+- **K1059** · K1055 remainder: gated worker preload landed (c70db4fa; 1 network download, phw=0 none), but
+  check.mjs counts 2 request events (preload + cache-served worker fetch) in this Chrome, not Done's 1 -
+  accept server-hit counting or amend the check (Claude/Levi call).
 
 ## Residuals (known, not fixed)
 
