@@ -238,6 +238,7 @@ describe("TurnMinotaur.lastCatch (2.8)", () => {
       sleep: 0,
       pull: 0,
       lair: true,
+      byLength: false,
     };
     const tm = new TurnMinotaur(g, turnConfig(params), 7);
     expect(tm.lastCatch).toBeNull();

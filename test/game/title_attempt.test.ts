@@ -37,7 +37,7 @@ function walkOf(titled: boolean): WalkGraph {
   let w = walks.get(titled);
   if (w) return w;
   const params = { ...dailyParams(DAY), dailyTitleThread: titled };
-  const scene = buildSceneGraph({ ...params, title: sceneTitle(DAY, params) });
+  const scene = buildSceneGraph({ ...params, title: sceneTitle(DAY, params), glyphs2: "" });
   w = scene.walk ?? buildWalkGraph(scene.graph)!;
   walks.set(titled, w);
   return w;

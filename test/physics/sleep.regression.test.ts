@@ -61,7 +61,7 @@ function buildScene(query: string): {
       ...DEFAULT_MAZE_PARAMS,
       branchDensity: params.branchDensity,
       fourWayFraction: params.fourWayFraction,
-      deadEndDensity: params.deadEnds ? params.deadEndDensity : 0,
+      deadEndDensity: (params as { deadEnds?: boolean }).deadEnds ? params.deadEndDensity : 0,
       deadEndLength: params.deadEndLength,
       hCutShare: params.hCutShare,
       entranceClearance: params.entranceClearance,
@@ -139,7 +139,7 @@ describe("the titled daily (K115 stage 3a)", () => {
   // pump its tail strand awake.
   it("Daily #12 with its title thread sleeps", { timeout: 180000 }, async () => {
     const p = dailyParams(12);
-    const { graph } = buildSceneGraph({ ...p, title: dailyTitle(12) });
+    const { graph } = buildSceneGraph({ ...p, title: dailyTitle(12), glyphs2: "" });
     const ps = new ParticleSystem(graph);
     const tuning: PhysicsTuning = {
       temperature: 0,
@@ -180,7 +180,7 @@ describe("the cartouche design (K115 stage 4a)", () => {
       cartouche: "knot",
       seed: 11,
       gridSize: 18,
-      shape: "rect",
+      shape: "rect", glyphs2: "",
     });
     expect(graph.nodes.has("cj_a")).toBe(true);
     const ps = new ParticleSystem(graph);
