@@ -38,7 +38,7 @@ function emblemScene(emblem: string, seed: number, gridSize: number): SceneParam
     ...dailyParams(1),
     title: "",
     cartouche: "",
-    cartoucheShape: emblem,
+    cartoucheShape: emblem, glyphs2: "",
     seed,
     shape: "rect",
     gridSize,
@@ -63,11 +63,11 @@ describe("K558 emblems keep assignOverUnder byte for byte", () => {
       const nodes = new Map([...g.nodes].filter(([id]) => !/^c*tn\d/.test(id)));
       return { ...g, nodes };
     };
-    const titled = buildSceneGraph({ ...dailyParams(8), title: dailyTitle(8) });
+    const titled = buildSceneGraph({ ...dailyParams(8), title: dailyTitle(8), glyphs2: "" });
     const cart = buildSceneGraph({
       ...dailyParams(1),
       title: "",
-      cartouche: "knot",
+      cartouche: "knot", glyphs2: "",
       seed: 11,
       shape: "rect",
       gridSize: 18,
@@ -83,14 +83,14 @@ describe("K558 emblems keep assignOverUnder byte for byte", () => {
 const TEXT_ID = (id: string): boolean => /^tn\d/.test(id);
 
 function titledDaily(n: number, penReverse = false): TangleGraph {
-  return buildSceneGraph({ ...dailyParams(n), title: dailyTitle(n), penReverse } as SceneParams).graph;
+  return buildSceneGraph({ ...dailyParams(n), title: dailyTitle(n), penReverse, glyphs2: "" } as SceneParams).graph;
 }
 
 function cartoucheScene(word: string, penReverse = false): TangleGraph {
   return buildSceneGraph({
     ...dailyParams(1),
     title: "",
-    cartouche: word,
+    cartouche: word, glyphs2: "",
     seed: 11,
     shape: "rect",
     gridSize: 18,
@@ -223,7 +223,7 @@ describe("K558 text crossings follow pen order (the later stroke over)", () => {
     }
     for (const [word] of WORDS) {
       for (const reverse of [false, true]) {
-        const g = buildSceneGraph({ ...dailyParams(1), text: word, penReverse: reverse } as SceneParams).graph;
+        const g = buildSceneGraph({ ...dailyParams(1), text: word, penReverse: reverse, title: "", glyphs2: "" } as SceneParams).graph;
         expect(checkAlternation(g), word).toBe(true);
       }
     }

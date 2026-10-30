@@ -73,7 +73,7 @@ function sweepCases(): Case[] {
 // `{ ...params, title: sceneTitle(daily, params) }`).
 function build(c: Case, flag: boolean): SceneGraph {
   const params = { ...c.design, dailyTitleThread: flag };
-  const p: SceneParams = { ...params, title: sceneTitle(c.day, params) };
+  const p: SceneParams = { ...params, title: sceneTitle(c.day, params), glyphs2: "" };
   return buildSceneGraph(p);
 }
 

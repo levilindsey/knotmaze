@@ -9,7 +9,7 @@ import {
 import type { MazeParams, MazePlan, SpliceSite } from "../../src/core/maze_plan";
 import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
 import { SHAPES, planAnchors } from "../../src/core/shapes";
-import type { ShapeName } from "../../src/core/shapes";
+import type { ShapeId } from "../../src/core/shapes";
 import { buildWalkGraph } from "../../src/core/walk_graph";
 import type { WalkGraph } from "../../src/core/walk_graph";
 import type { TangleGraph } from "../../src/core/types";
@@ -33,14 +33,14 @@ import { buildMazePlan as buildMazePlanV1 } from "./fixtures/maze_plan_v1";
 const PRE_K74: Partial<UrlParams> = { exitClearance: 5, deadEndDensity: 0.25, deadEndLength: 0, hCutShare: 0, exitCorridor: 0, exitFlank: "stub", exitTaperRadius: 0, exitTaperStrength: 0 };
 
 function design(
-  shape: ShapeName,
+  shape: ShapeId,
   gridSize: number,
   seed: number,
   deadEnds: boolean,
   knobs: Partial<UrlParams> = {}
 ): UrlParams {
   // K323: the old switch is density 0 (off) or PRE_K74's density (on).
-  return { ...PARAM_DEFAULTS, ...PRE_K74, shape, gridSize, seed, deadEndDensity: deadEnds ? PRE_K74.deadEndDensity : 0, ...knobs };
+  return { ...PARAM_DEFAULTS, ...PRE_K74, shape, gridSize, seed, deadEndDensity: deadEnds ? (PRE_K74.deadEndDensity ?? 0.25) : 0, ...knobs };
 }
 
 function graphOf(p: UrlParams): TangleGraph {

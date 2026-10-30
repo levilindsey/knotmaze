@@ -41,8 +41,11 @@ vi.setConfig({ testTimeout: 120_000 });
 // 0 today's module takes the old placement), and the K74 pin below
 // fingerprints whole plans at the new defaults.
 
-// The maze knobs every link and daily had before K74.
-const PRE_K74: Partial<UrlParams> = {
+// The maze knobs every link and daily had before K74. K323 removed the
+// deadEnds switch (density 0 is its off); cases still carry it, so the pin's
+// params type keeps it beside UrlParams.
+type PinParams = UrlParams & { deadEnds?: boolean };
+const PRE_K74: Partial<PinParams> = {
   exitClearance: 5,
   deadEnds: false,
   deadEndDensity: 0.25,
@@ -54,7 +57,7 @@ const PRE_K74: Partial<UrlParams> = {
   exitTaperStrength: 0,
   greedyTrap: "off",
 };
-const BASE: UrlParams = { ...PARAM_DEFAULTS, ...PRE_K74 };
+const BASE: PinParams = { ...PARAM_DEFAULTS, ...PRE_K74, seed: 0 };
 
 function graphOf(p: UrlParams): TangleGraph {
   return generateLatticeKnotwork({
@@ -66,13 +69,13 @@ function graphOf(p: UrlParams): TangleGraph {
   });
 }
 
-function mazeParamsOf(p: UrlParams): MazeParams {
+function mazeParamsOf(p: PinParams): MazeParams {
   return {
     ...DEFAULT_MAZE_PARAMS,
     branchDensity: p.branchDensity,
     fourWayFraction: p.fourWayFraction,
     // K323: cases still carry the old switch; density 0 is its off.
-    deadEndDensity: (p as { deadEnds?: boolean }).deadEnds === false ? 0 : p.deadEndDensity,
+    deadEndDensity: p.deadEnds === false ? 0 : p.deadEndDensity,
     deadEndLength: p.deadEndLength,
     hCutShare: p.hCutShare,
     exitCorridor: p.exitCorridor,
@@ -109,11 +112,11 @@ function mulberry32(a: number): () => number {
 // Panel steps: knobs land on the values a slider can write.
 const step = (x: number, s: number): number => Math.round(x / s) * s;
 
-function cases(): [string, UrlParams][] {
+function cases(): [string, PinParams][] {
   const rng = mulberry32(87);
   const seed = (): number => Math.floor(rng() * 2147483647);
   const pick = <T>(xs: readonly T[]): T => xs[Math.floor(rng() * xs.length)];
-  const out: [string, UrlParams][] = [];
+  const out: [string, PinParams][] = [];
   for (const deadEnds of [false, true]) {
     for (const gridSize of [6, 12, 18]) {
       for (const shape of SHAPES) {
@@ -215,11 +218,11 @@ function fnv(s: string): string {
   return (h >>> 0).toString(16).padStart(8, "0");
 }
 
-function k74Cases(): [string, UrlParams][] {
+function k74Cases(): [string, PinParams][] {
   const rng = mulberry32(74);
   const seed = (): number => Math.floor(rng() * 2147483647);
   const pick = <T>(xs: readonly T[]): T => xs[Math.floor(rng() * xs.length)];
-  const out: [string, UrlParams][] = [];
+  const out: [string, PinParams][] = [];
   for (const gridSize of [6, 12, 18]) {
     for (const shape of SHAPES) {
       out.push([`defaults gs ${gridSize} ${shape}`, { ...PARAM_DEFAULTS, gridSize, shape, seed: seed() }]);
