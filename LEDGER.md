@@ -299,9 +299,9 @@ Next free ID: K1061.
   K783 and K728 (the sims), B K1052, C K1054, K1055 and K810's table, D K783's defaults, K1057 and
   K1060 (docs/design/K1053_muse_batch2.md)
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator); each run is a Muse agent the chain starts in Paseo, titled `knotmaze K1053 <run>`
-  - branch: mainline; last commit: `5e2940de`
+  - branch: mainline; last commit: `7128df43`
   - evidence: `.claude/probes/K1053/` (chain.ps1, queue.txt, done.txt, chain.log; untracked, desktop only) and each run's commits on master
-  - next: run D (K783's defaults, K1057, K1060) queued 2026-10-29 22:10; when chain.log ends, Claude reviews D on master, then closes K1053
+  - next: run D: K1057 (scripts/run_node.mjs), then K1060
   - brief: `docs/design/K1053_muse_batch2.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` (starts chain.ps1 outside Claude Code; resumes at the first run not in done.txt; needs the Paseo daemon)
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
@@ -804,9 +804,6 @@ Every other item below waits on the trigger it names.
 - **K1060** · K1055's inline phw reader (`vite.config.ts`, `workerPreloadScript`) copies the link codec's
   walk and assumes phw defaults on; only a probe checks it (`.claude/probes/K414/check_k1055.mjs`). Pin it in
   the suite against parseParams. K1053 run D.
-- **K783** · Lure and snare stocks: a chase starts with lures 2, snares 1, tunable in the panel (Levi,
-  2026-10-29: "sgtm. Make it tunable with param sliders"; the rows exist). Table: docs/design/K708.md,
-  'K783 and K728 (2026-10-29)'. K1053 run D.
 - **K1057** · The probe recipes that run `node node_modules\vite-node\vite-node.mjs` (K80 turns2, K114
   burn, K138 s4 census) fail: vitest 4 dropped vite-node. Track `.claude/probes/K708/run_node.mjs` (Vite's
   SSR loader) as `scripts/run_node.mjs` and point the recipes at it. K1053 run D.
@@ -2092,6 +2089,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K783** · a chase starts with 2 lures and 1 snare (PARAM_DEFAULTS; sliders already existed); url_codec defaults pin 0/0 -> 2/1 only, page checks in .claude/probes/K783/ passed. Done in 7128df43 (2026-10-29).
 - **K1059** · K1055's request count. Dropped: decided by Claude: count network downloads. The worker fetch is served from the HTTP cache, so K1055's check holds (c70db4fa) (2026-10-29).
 - **K1055** · Worker preload back for worker pages: an inline head script modulepreloads the worker chunk unless phw=0 (hello about 26 ms sooner on first loads). Done in c70db4fa (2026-10-29).
 - **K1054** · no K138 rule can be on in a realtime chase (fabricRulesOf zeroes them outside classic; chase needs minotaur), so handleChaseTap needs no ruled twin; gate pinned in url_codec.test.ts. Done in 0a58f52f (2026-10-29).
