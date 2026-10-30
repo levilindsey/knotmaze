@@ -485,9 +485,9 @@ Next free ID: K1064.
 - **K1062** · Muse batch 3: G K1056's real-time lure fix (queued first), A K321, B K658, C K326
   stage A, D K814, E K441, F K645 (docs/design/K1062_muse_batch3.md)
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator)
-  - branch: mainline; last commit: `b65bf3fb`
+  - branch: mainline; last commit: `bc18a40f`
   - evidence: .claude/probes/K1053/ (queue.txt tags 3G and 3A-3F, chain.log, done.txt)
-  - next: Claude reviews run G on master; next run A (K321)
+  - next: Claude reviews run A on master; next run B (K658)
   - brief: `docs/design/K1062_muse_batch3.md`
   - env: pwsh -NoProfile -File .claude/probes/K1053/start.ps1
 
@@ -653,9 +653,6 @@ Every other item below waits on the trigger it names.
 - **K331** · Touch gets K298's pick margins (Levi, 2026-10-14): touch moves from world-unit radii to
   the mouse's form, with its own margin row beside `pickMargin` at ~4 px, so zones stop growing
   under a pinch zoom. With K330 after K329 (`docs/design/K298_hover_glow.md`, "Notes").
-- **K321** · The credits page (`docs/design/K321_credits.md`; Levi 10-14, approved): page and panel
-  link become Credits (`credits.html`): Levi's name and copyright line, art, icon and music credits,
-  "Built with Claude Code" (not prominent), then techniques, licenses, research. Small sonnet stage.
 - **K318** · Win effects (Levi 10-14): one show, many themes; thirteen themes in a Win effects
   folder (Theme dropdown, Party default), built in twelve stages. Stage 1 after the confetti stage
   and K111 s5. `docs/design/K318_win_effects.md` ("Build stages").
@@ -2073,6 +2070,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K321** · Credits page: licenses.html became credits.html, Levi header first, Scarborough Fair in Music and sound, Built with Claude Code below art/music. Done in bc18a40f (2026-10-30).
 - **K1056** · Real-time lure lasts until the target (run G, K1062): detect() no longer re-spots a lured monster, both clocks suggest the shipped 2 lures / 1 snare. Done in b65bf3fb (2026-10-30).
 - **K654** · the moving lead rides uKTeleAt, no texel rewrite (K324 s2). Done in ea3e63b8 (2026-10-29).
 - **K650** · the TELE census, GPU vs mirror with the riding lead (K324 s2). Done in a90a1ceb (2026-10-29).
