@@ -295,12 +295,12 @@ Next free ID: K1051.
 ## In progress
 
 - **K1050** · Muse's week (2026-10-29 to Nov 2): K994, K788, K743/K762/K763, K747/K712, K807, K810, K393,
-  K783/K728 (optional K414, K932), each done by a test or a number, on one local `muse/<ID>` branch per
-  task; Claude reviews and merges after the Nov 2 reset.
+  K783/K728 (optional K414, K932), each done by a test or a number. Muse commits and pushes each task to
+  master from the main checkout and keeps the ledger; Claude reviews what landed after the Nov 2 reset.
   - owner: muse (Levi's Paseo sessions; their ids aren't known here) from 2026-10-29, not started when filed; brief by claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3
-  - branch: `muse/<ID>` per task, worktree `.claude/worktrees/muse`; last commit: none yet
-  - evidence: each branch's last commit message (the task's report)
-  - next: Levi starts Muse on the brief; after the Nov 2 11:00 reset Claude reviews each branch
+  - branch: mainline (the main checkout); last commit: none yet
+  - evidence: each task's commits on master (`git log --grep=K<ID>`), whose messages are the reports
+  - next: Levi starts Muse on the brief; after the Nov 2 11:00 reset Claude reviews what landed
   - brief: `docs/design/K1050_muse_week.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
