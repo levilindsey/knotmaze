@@ -19,7 +19,7 @@ import { NODE_TYPE } from "../../src/core/types";
 // K115 stage 3a: titled scenes (the daily title thread).
 
 function scene(n: number, over: Partial<SceneParams> = {}): SceneParams {
-  return { ...dailyParams(n), title: dailyTitle(n), ...over };
+  return { ...dailyParams(n), title: dailyTitle(n), glyphs2: "", ...over };
 }
 
 function hashText(text: string): string {
@@ -160,7 +160,7 @@ describe("cartouche scenes (K115 stage 4a)", () => {
     return {
       ...dailyParams(1),
       title: "",
-      cartouche: word,
+      cartouche: word, glyphs2: "",
       seed,
       shape,
       gridSize,
@@ -228,7 +228,7 @@ describe("cartouche scenes (K115 stage 4a)", () => {
     const s = buildSceneGraph({
       ...dailyParams(12),
       title: dailyTitle(12),
-      cartouche: "knot",
+      cartouche: "knot", glyphs2: "",
     } as SceneParams);
     expect(s.walk?.start).toBe("mentr_a");
     expect(s.walk?.mazeStart).toBe("tseam");
@@ -315,7 +315,7 @@ describe("cartouche emblem scenes (K115 stage 5b)", () => {
       ...dailyParams(1),
       title: "",
       cartouche: "",
-      cartoucheShape: emblem,
+      cartoucheShape: emblem, glyphs2: "",
       seed,
       shape,
       gridSize,

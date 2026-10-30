@@ -8,7 +8,7 @@ import {
 import type { MazeParams, MazePlan } from "../../src/core/maze_plan";
 import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
 import { SHAPES, planAnchors } from "../../src/core/shapes";
-import type { ShapeName } from "../../src/core/shapes";
+import type { ShapeId } from "../../src/core/shapes";
 import { buildWalkGraph } from "../../src/core/walk_graph";
 import type { TangleGraph } from "../../src/core/types";
 import { PARAM_DEFAULTS } from "../../src/ui/url_state";
@@ -23,8 +23,9 @@ import { buildMazePlan as buildMazePlanV1 } from "./fixtures/maze_plan_v1";
 // buildMazePlan repairs those plans. .claude/probes/K109/verify.ts runs the
 // same checks over 1110 designs, against the frozen pre-K109 module too.
 
-function design(shape: ShapeName, gridSize: number, seed: number, deadEnds: boolean): UrlParams {
-  return { ...PARAM_DEFAULTS, shape, gridSize, seed, deadEnds };
+function design(shape: ShapeId, gridSize: number, seed: number, deadEnds: boolean): UrlParams {
+  // K323: the old deadEnds switch is density 0 (off) or the default (on).
+  return { ...PARAM_DEFAULTS, shape, gridSize, seed, deadEndDensity: deadEnds ? PARAM_DEFAULTS.deadEndDensity : 0 };
 }
 
 function graphOf(p: UrlParams): TangleGraph {
@@ -42,7 +43,7 @@ function mazeParamsOf(p: UrlParams): MazeParams {
     ...DEFAULT_MAZE_PARAMS,
     branchDensity: p.branchDensity,
     fourWayFraction: p.fourWayFraction,
-    deadEndDensity: p.deadEnds ? p.deadEndDensity : 0,
+    deadEndDensity: p.deadEndDensity,
     deadEndLength: p.deadEndLength,
     hCutShare: p.hCutShare,
     entranceClearance: p.entranceClearance,

@@ -56,7 +56,9 @@ function sourcesOf(dir: string): string[] {
     .map((f) => join(root, f));
 }
 
-function build(p: UrlParams): string {
+// K323 removed the deadEnds switch (density 0 is its off); shaped designs
+// below still carry it, so build reads it off the wider type.
+function build(p: UrlParams & { deadEnds?: boolean }): string {
   const graph = generateLatticeKnotwork({
     gridSize: p.gridSize,
     weaveDensity: p.weaveDensity,
@@ -104,7 +106,7 @@ describe("deterministic generation math (K108)", () => {
 
   it("builds mazes without calling an approximated function", () => {
     // Params first: only the build runs rigged.
-    const designs: [string, UrlParams][] = [];
+    const designs: [string, UrlParams & { deadEnds?: boolean }][] = [];
     for (let n = 1; n <= 3; n++) designs.push([`daily ${n}`, dailyParams(n)]);
     let seed = 1080;
     for (const shape of SHAPES) {

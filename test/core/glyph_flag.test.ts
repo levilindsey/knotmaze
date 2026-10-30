@@ -14,7 +14,7 @@ import type { TangleGraph } from "../../src/core/types";
 // renderer finds chainTipFused (the strand's first or last node).
 const fusedTipStrands = (g: TangleGraph) =>
   g.strands.filter((s) => {
-    if (s.closed || s.nodes.length < 2) return false;
+    if (s.isClosed || s.nodes.length < 2) return false;
     const a = g.nodes.get(s.nodes[0]);
     const b = g.nodes.get(s.nodes[s.nodes.length - 1]);
     return a?.type === NODE_TYPE.JUNCTION || b?.type === NODE_TYPE.JUNCTION;

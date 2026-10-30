@@ -385,7 +385,7 @@ describe("exact heading vs the float prototype (parity, dailies 1-8)", () => {
     const differ: number[] = [];
     for (let day = 1; day <= 8; day++) {
       const p = dailyParams(day);
-      const { graph } = buildSceneGraph({ ...p, greedyTrap: "off" });
+      const { graph } = buildSceneGraph({ ...p, greedyTrap: "off", title: "", glyphs2: "" });
       const wg = buildWalkGraph(graph)!;
       const pos = new Map<string, [number, number]>();
       for (const id of wg.vertices.keys()) pos.set(id, graph.nodes.get(id)!.latticePos as [number, number]);
@@ -401,14 +401,14 @@ describe("exact heading vs the float prototype (parity, dailies 1-8)", () => {
 describe("the search seam in generation (scene_graph, H1-in-loop)", () => {
   it("with greedyTrap off the scene walk is the pinned shipped maze", () => {
     const p = dailyParams(1);
-    const { graph } = buildSceneGraph({ ...p, greedyTrap: "off" });
+    const { graph } = buildSceneGraph({ ...p, greedyTrap: "off", title: "", glyphs2: "" });
     expect(walkFingerprint(buildWalkGraph(graph)!)).toBe("w1.189.283.ba405cd2");
   });
 
   it("with greedyTrap on, daily 3 is cut, solvable and within the growth cap", () => {
     const p = dailyParams(3);
-    const off = buildWalkGraph(buildSceneGraph({ ...p, greedyTrap: "off" }).graph)!;
-    const on = buildWalkGraph(buildSceneGraph({ ...p, greedyTrap: "on" }).graph)!;
+    const off = buildWalkGraph(buildSceneGraph({ ...p, greedyTrap: "off", title: "", glyphs2: "" }).graph)!;
+    const on = buildWalkGraph(buildSceneGraph({ ...p, greedyTrap: "on", title: "", glyphs2: "" }).graph)!;
     const junctions = (wg: typeof off) => [...wg.vertices.values()].filter((v) => !v.isEnd).length;
     expect(Number.isFinite(on.optimalLength)).toBe(true);
     expect(junctions(on)).toBeLessThan(junctions(off));
