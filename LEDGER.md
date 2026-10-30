@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1060.
+Next free ID: K1061.
 
 ## Waiting on Levi
 
@@ -292,18 +292,16 @@ Next free ID: K1060.
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops). Nothing to look at before S4b.
 - **K1051** · Turn on Dependabot for knotmaze (GitHub setting; K994 follow-up, audit clean 732ab944).
-- **K783** · Lure and snare stocks: set them at lures 2, snares 1? (Turn-clock sim: greedy catches
-  0.69 -> 0.20 a game at 2 lures, the third buys 0.06; snares 0.69 -> 0.66.) Table:
-  docs/design/K708.md, 'K783 and K728 (2026-10-29)'.
 
 ## In progress
 
 - **K1053** · Muse batch 2 through Paseo, one run at a time, gated by `.claude/probes/K1053/chain.ps1`: run A
-  K783 and K728 (the sims), B K1052, C K1054, K1055 and K810's table (docs/design/K1053_muse_batch2.md)
+  K783 and K728 (the sims), B K1052, C K1054, K1055 and K810's table, D K783's defaults, K1057 and
+  K1060 (docs/design/K1053_muse_batch2.md)
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator); each run is a Muse agent the chain starts in Paseo, titled `knotmaze K1053 <run>`
-  - branch: mainline; last commit: `a7a81e8c`
+  - branch: mainline; last commit: `5e2940de`
   - evidence: `.claude/probes/K1053/` (chain.ps1, queue.txt, done.txt, chain.log; untracked, desktop only) and each run's commits on master
-  - next: Claude reviews run C (K1054 closed moot, K1055 partial on check counting, K810 table landed), then closes K1053
+  - next: run D (K783's defaults, K1057, K1060) queued 2026-10-29 22:10; when chain.log ends, Claude reviews D on master, then closes K1053
   - brief: `docs/design/K1053_muse_batch2.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` (starts chain.ps1 outside Claude Code; resumes at the first run not in done.txt; needs the Paseo daemon)
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
@@ -800,15 +798,18 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
-- **K1055** · Worker preload back for worker pages: K414 (2525712c) dropped K7 stage 7's worker-chunk
-  modulepreload for every page, so default (worker) pages lost its 35-55 ms hello head start; an inline
-  build-time script can add it unless phw=0. K1053 run C.
 - **K1056** · Real-time lure and snare stocks (MinotaurChase.lure/setSnare) unsimulated: K783 measured the
   turn clock only; the real-time table would set the stocks for real-time games too (harness: rt_sim.ts tool
   policy + stocks) (docs/design/K708.md, K783 and K728)
-- **K1059** · K1055 remainder: gated worker preload landed (c70db4fa; 1 network download, phw=0 none), but
-  check.mjs counts 2 request events (preload + cache-served worker fetch) in this Chrome, not Done's 1 -
-  accept server-hit counting or amend the check (Claude/Levi call).
+- **K1060** · K1055's inline phw reader (`vite.config.ts`, `workerPreloadScript`) copies the link codec's
+  walk and assumes phw defaults on; only a probe checks it (`.claude/probes/K414/check_k1055.mjs`). Pin it in
+  the suite against parseParams. K1053 run D.
+- **K783** · Lure and snare stocks: a chase starts with lures 2, snares 1, tunable in the panel (Levi,
+  2026-10-29: "sgtm. Make it tunable with param sliders"; the rows exist). Table: docs/design/K708.md,
+  'K783 and K728 (2026-10-29)'. K1053 run D.
+- **K1057** · The probe recipes that run `node node_modules\vite-node\vite-node.mjs` (K80 turns2, K114
+  burn, K138 s4 census) fail: vitest 4 dropped vite-node. Track `.claude/probes/K708/run_node.mjs` (Vite's
+  SSR loader) as `scripts/run_node.mjs` and point the recipes at it. K1053 run D.
 
 ## Residuals (known, not fixed)
 
@@ -1798,9 +1799,6 @@ Every other item below waits on the trigger it names.
 - **K1044** · Cursive v6.5's leftovers (B4): a's largest |dk/ds| (8.51e-4 /u²) sits above g's 7.07e-4 mark where the held
   bowl starts; fa and fq moved 0.67 / 2.39 u, and no census word holds them; oa and oq dip 4.4 / 3.4 u deeper, the attach
   on its bound (34.3 / 34.6 u from the corner). For J3c. `K1029_cursive_b4.md` ## Handoff; NOTES `## K1029` N2c, N3c, N4b.
-- **K1057** · probes.md's vite-node recipes (K80 turns2, K114 burn, K138 s4 census: `node
-  node_modules\vite-node\vite-node.mjs ...`) fail: vite-node is no longer installed (vitest 4 dropped it).
-  `.claude/probes/K708/run_node.mjs` (Vite's SSR loader) replaces it; update the recipes.
 - **K1058** · Removing a worktree can empty the main checkout's node_modules: each `.claude/worktrees/*`
   links node_modules by junction, and `git worktree remove --force` deletes through it (2026-10-29 20:18,
   remover unknown). The worktrees sit inside the checkout, so Node finds packages upward: try no junction.
@@ -2094,6 +2092,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1059** · K1055's request count. Dropped: decided by Claude: count network downloads. The worker fetch is served from the HTTP cache, so K1055's check holds (c70db4fa) (2026-10-29).
+- **K1055** · Worker preload back for worker pages: an inline head script modulepreloads the worker chunk unless phw=0 (hello about 26 ms sooner on first loads). Done in c70db4fa (2026-10-29).
 - **K1054** · no K138 rule can be on in a realtime chase (fabricRulesOf zeroes them outside classic; chase needs minotaur), so handleChaseTap needs no ruled twin; gate pinned in url_codec.test.ts. Done in 0a58f52f (2026-10-29).
 - **K1052** · test type errors fixed 92 -> 0 in 4 batches; tsconfig.tests.json folded into npm run typecheck. Done in 99c4aff7 (2026-10-29).
 - **K728** · real-time seeker measured: taken 99.9-100%, slew/banish 4.4-8.9% vs blind 0.2-0.7% (docs/design/K708.md). Done in 9d673405 (2026-10-29).
