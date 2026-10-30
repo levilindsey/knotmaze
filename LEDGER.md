@@ -485,9 +485,9 @@ Next free ID: K1077.
 - **K1062** · Muse batch 3: G K1056's real-time lure fix (queued first), A K321, B K658, C K326
   stage A, D K814, E K441, F K645 (docs/design/K1062_muse_batch3.md)
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator)
-  - branch: mainline; last commit: `7bf9f07f`
+  - branch: mainline; last commit: `e9e5cc15`
   - evidence: .claude/probes/K1053/ (queue.txt tags 3G and 3A-3F, chain.log, done.txt)
-  - next: Claude reviews run E on master; next run F (K645)
+  - next: Claude reviews run F on master, then closes K1062 (runs A-G all done)
   - brief: `docs/design/K1062_muse_batch3.md`
   - env: pwsh -NoProfile -File .claude/probes/K1053/start.ps1
 
@@ -686,9 +686,6 @@ Every other item below waits on the trigger it names.
 - **K611** · Main's drag frame is 19-26 ms (a drag runs at 30 fps); `RibbonRenderer.update` is 63%
   (gap slots 28%, splines 22%, tickPaint 17%). K370's 50 ms needs it under 12 ms. Overlaps K5
   R3/R4 and G3-2. `docs/design/K370.md` ("The gap to 50 ms", 2).
-- **K645** · K336's last unrun check: K140's GPU frame A/B at amounts 1 and 3, cannons on/off, under
-  the perf lock (recipe in `docs/design/K653_checks.md` Handoff). The sheets, curl strip and spray
-  count are done (K653): the finish spray throws no streamers.
 - **K649** · K525's tuning: rim strengths 0.6/0.8/1 and fades 0.2/0.3; junction-end gaps (runs under
   1.95 world get no rims; try gap 0 at interior junctions); the ticks' touch alphas vs the line's
   0.7; the fog glow (a dim dot on the Pixel, K662); the sheet extras. `docs/design/K525_telegraph.md` Handoff.
@@ -2087,6 +2084,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K645** · K140 frame A/B on one build 5406c4e6: cannons cost unresolved at 1x, +3.2/+5.6 ms at 4x (K653_checks.md). Done in e9e5cc15 (2026-10-30).
 - **K441** · Owed same-state rerun done: 8/8 stands asleep at both ends, tick gap +4.24 ms (1x) / +13.16 ms (4x) vs +0.23/+1.85 prediction in docs/design/K441_fire_frame.md. Done in 7bf9f07f (2026-10-30).
 - **K814** · Text & emblem rows built from SHAPE_INJECTION_PARAMS. Done in 3fc7b612 (2026-10-30).
 - **K658** · K137 page gaps checked: 155 checks in docs/design/K658_page_checks.md, FAILs K1064-K1074, sounds K1075. Done in b51bc22b (2026-10-30).
