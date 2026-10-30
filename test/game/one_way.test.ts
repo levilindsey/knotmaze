@@ -399,7 +399,7 @@ describe("one-way runs: the controller", () => {
     for (const seed of [3, 4]) {
       const params = paramsFromValues(seed, {});
       const { graph, walk: built } = buildSceneGraph({ ...params, title: "", glyphs2: "" });
-      const walk = built ?? buildWalkGraph(graph);
+      const walk = (built ?? buildWalkGraph(graph))!;
       let cont: Int32Array | null = null;
       const source = () => ({
         seed: params.seed,

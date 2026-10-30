@@ -299,9 +299,9 @@ Next free ID: K1052.
   K783/K728 (optional K414, K932), each done by a test or a number. Muse commits and pushes each task to
   master from the main checkout and keeps the ledger; Claude reviews what landed after the Nov 2 reset.
   - owner: muse (Levi's Paseo sessions; their ids aren't known here) from 2026-10-29, not started when filed; brief by claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3
-  - branch: mainline (the main checkout); last commit: `cb73089e`
+  - branch: mainline (the main checkout); last commit: `d8aaf37e`
   - evidence: each task's commits on master (`git log --grep=K<ID>`), whose messages are the reports
-  - next: Task 5 K807 panel rows
+  - next: Task 6 K810 done pending; Task 7 K393
   - brief: `docs/design/K1050_muse_week.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
@@ -1818,9 +1818,6 @@ Every other item below waits on the trigger it names.
   enemies score); enemies enter at a third marker (its own icon and placement param, its last run
   closed to you); turns or real time. Builds on K804 dots, K80, K114, K83, K138 one-way runs
   (`docs/design/levi_notes_2026-10-21.md`)
-- **K807** · Param rows, the next batch from K795's audit: the follower's delay and shortcut chance,
-  the sword's and sleepers' distance off the shortest way, NEAR_HOPS (turnstiles), ROUTE_WEIGHT
-  (one-way runs) (after K795; its audit table in `docs/design/K795.md`)
 - **K810** · Panel search: run Fuse.js, uFuzzy and fuzzysort on the 44 queries in
   `test/ui/panel_search_fixture.ts` and record the pass counts in K793's Handoff (the hand-rolled
   matcher was chosen from their docs; `docs/design/K793.md`)
@@ -2094,6 +2091,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K807** · nine constants to panel rows (follow, sword/sleeper rings, nearHops, routeWeight). Done in d8aaf37e (2026-10-29).
 - **K747** · sword takenAt/slainAt count player moves (inputs.length). Done in cb73089e (2026-10-29).
 - **K763** · hidden counter only when a hidden run was placed. Done in 40de45c1 (2026-10-29).
 - **K762** · backtrack remembers retraced run; turnstile re-entry allowed. Done in 0e73c399 (2026-10-29).
