@@ -1,6 +1,6 @@
 // K868 S1b: the synthetic scenes of docs/design/K868_field_border.md §4,
 // at h = 1 world unit and W = 0.38h, with a camera of 10 CSS px per unit
-// (h = 10 px at 1x). Run `npx vite-node test/render/field/scenes/gen.ts` to
+// (h = 10 px at 1x). Run `node scripts/run_node.mjs test/render/field/scenes/gen.ts` to
 // rewrite the JSON fixtures beside this file; tests read the fixtures.
 //
 // World coordinates are y-up (the camera flips y). Chains are sampled every
@@ -648,4 +648,4 @@ export function writeFixtures(): string[] {
   return names;
 }
 
-// Regenerate the fixtures: `npx vite-node test/render/field/scenes/write.ts`.
+// Regenerate the fixtures: `node scripts/run_node.mjs test/render/field/scenes/write.ts`.

@@ -39,7 +39,7 @@
 //
 // Run from the checkout, with a dev server serving it (the K868 env
 // command; any port) and the perf lock held (a pixel-exact GPU probe):
-//   node node_modules\vite-node\vite-node.mjs scripts\label_pops.ts
+//   node scripts\run_node.mjs scripts\label_pops.ts
 //     <seq>[,<seq>...] [--seqdir <dir>] [--out <dir>] [--tag <name>]
 //     [--oracle <path of an oracle module>] [--port 5381] [--crops 3]
 //     [--zoom 1] [--windows] [--frames <n, a smoke test>] [--gpu [--edges-cpu]]

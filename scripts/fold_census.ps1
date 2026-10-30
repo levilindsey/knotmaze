@@ -39,7 +39,7 @@ try {
     $part = "$dir\$i.jsonl"
     if (Test-Path $part) { [System.IO.File]::Delete($part) }
     $nodeArgs = @(
-      "`"$wt\node_modules\vite-node\vite-node.mjs`"", "--config", "`"$wt\scripts\fold_census.vite.config.mjs`"",
+      "`"$wt\scripts\run_node.mjs`"", "--config", "`"$wt\scripts\fold_census.vite.config.mjs`"",
       "`"$wt\scripts\fold_census.ts`"", "`"$Src`"", "`"$Jobs`"", "`"$part`"", "$i", "$($i + 1)"
     )
     $procs += Start-Process -FilePath "C:\Program Files\nodejs\node.exe" -WorkingDirectory $wt -ArgumentList $nodeArgs `
