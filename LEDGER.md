@@ -299,9 +299,9 @@ Next free ID: K1052.
   K783/K728 (optional K414, K932), each done by a test or a number. Muse commits and pushes each task to
   master from the main checkout and keeps the ledger; Claude reviews what landed after the Nov 2 reset.
   - owner: muse (Levi's Paseo sessions; their ids aren't known here) from 2026-10-29, not started when filed; brief by claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3
-  - branch: mainline (the main checkout); last commit: `cff5a0d7`
+  - branch: mainline (the main checkout); last commit: `f61eff23`
   - evidence: each task's commits on master (`git log --grep=K<ID>`), whose messages are the reports
-  - next: Task 3 K743/K762/K763
+  - next: Task 4 K747/K712, then K807
   - brief: `docs/design/K1050_muse_week.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
@@ -1627,8 +1627,6 @@ Every other item below waits on the trigger it names.
   - K749: after a walked pickup on the real phone, all three sword toasts clear the pad
 - **K741** · cutRules() still says the fewest cuts when the Lead par is only an upper bound (par at
   most P) (`docs/design/K698_polish.md` Handoff)
-- **K743** · K480 planRoute ignores the rules (K138 s1): a tap past the choices walks part of a
-  route and stops at its first refused run; plan with ruleSearch (`docs/design/K138_s1.md` Handoff)
 - **K744** · K138 s1 page gaps: blips of other colors at some junctions under the rule colors (cause
   unverified, maybe the junction webs); not page-checked: a backtrack undoing a slide, ice with
   alternate, strict par lost under a rule, the share (`docs/design/K138_s1.md` Handoff)
@@ -2100,6 +2098,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K743** · planRouteRuled plans ruled taps; renderer targetAt uses it. Done in f61eff23 (2026-10-29).
 - **K788** · placement rejects trapping one-way draws (ruleHasTrap); census 42/50+44/50 -> 0/50. Done in cff5a0d7 (2026-10-29).
 - **K994** · audit clean: vitest ^4.1.12, @xmldom 0.8.15 (npm audit fix). Done in 732ab944 (2026-10-29).
 - **K1029** · Cursive v6.5's a and q tops (B4): approved by Levi's look, with g's, 2026-10-29 (untracked `K863/trace/work25/base`, no commit).
