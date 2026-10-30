@@ -4,13 +4,17 @@
 //
 // Per frame: the time of the frame's FIRST draw call (drawElements,
 // drawArrays and their Instanced / Range forms, all wrapped on the app's
-// context), then gl.finish() in a requestAnimationFrame callback that runs
-// right after the app's own ticker callback (registered after Pixi's, so
-// it keeps that order every frame), and the time again. frameMs = first
-// draw -> finish returned: the CPU's submission plus the GPU work still
-// queued, nothing from before the first draw (a mid-tick upload or the
-// sim). submitMs = first draw -> the finish call, finishMs = blocked in
-// finish. No app code: everything hangs off the page's canvas, plus
+// context), then a 1-px readPixels in a requestAnimationFrame callback
+// that runs right after the app's own ticker callback (registered after
+// Pixi's, so it keeps that order every frame), and the time again.
+// frameMs = first draw -> the read returned: the CPU's submission plus
+// the GPU work still queued, nothing from before the first draw (a
+// mid-tick upload or the sim). submitMs = first draw -> the read call,
+// finishMs = blocked in the read. K932: gl.finish() stood here until
+// K923 showed it does not wait for the GPU in Chrome (0.0-0.1 ms read
+// for 3.8 ms of work); a readPixels cannot return before the GPU is
+// done (bench.js's sync=1 method). No app code: everything hangs off
+// the page's canvas, plus
 // __knotRenderer().update (ms per call, the way g1/probe_perf wraps it) and
 // the page's caps when the hooks exist.
 //
@@ -98,6 +102,7 @@ const BENCH = (SEC) => new Promise((resolve) => {
     r.update = function (...a) { const t = performance.now(); const v = base.apply(this, a); upd.ms += performance.now() - t; upd.n++; return v; };
   }
   const frame = [], submit = [], fin = [], iv = [], perFrameDraws = [];
+  const px = new Uint8Array(4); // K932: the 1-px read's sink.
   let last = -1, lost = 0;
   const onLost = () => { lost++; };
   canvas.addEventListener("webglcontextlost", onLost);
@@ -108,7 +113,7 @@ const BENCH = (SEC) => new Promise((resolve) => {
     last = now;
     if (tFirst >= 0) {
       const t1 = performance.now();
-      gl.finish();
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
       const t2 = performance.now();
       frame.push(t2 - tFirst); submit.push(t1 - tFirst); fin.push(t2 - t1); perFrameDraws.push(draws);
       drawsTotal += draws;
