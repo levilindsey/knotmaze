@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1062.
+Next free ID: K1064.
 
 ## Waiting on Levi
 
@@ -292,21 +292,9 @@ Next free ID: K1062.
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops). Nothing to look at before S4b.
 - **K1051** · Turn on Dependabot for knotmaze (GitHub setting; K994 follow-up, audit clean 732ab944).
-- **K1056** · Lure and snare stock for real time: set the shared defaults to lures 0, snares 3? (Real-time
-  sim: lures buy nothing and hurt the fleer, snares take greedy 2.61 -> 2.14; the turn clock suggested
-  the opposite, 2 and 1, and 2 / 1 is shipped.) Table: docs/design/K708.md, 'K1056' (be60105d).
 
 ## In progress
 
-- **K1053** · Muse batch 2 through Paseo, one run at a time, gated by `.claude/probes/K1053/chain.ps1`: run A
-  K783 and K728 (the sims), B K1052, C K1054, K1055 and K810's table, D K783's defaults, K1057 and
-  K1060, E K1061 and K396, F K1056 (docs/design/K1053_muse_batch2.md)
-  - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator); each run is a Muse agent the chain starts in Paseo, titled `knotmaze K1053 <run>`
-  - branch: mainline; last commit: `be60105d`
-  - evidence: `.claude/probes/K1053/` (chain.ps1, queue.txt, done.txt, chain.log; untracked, desktop only) and each run's commits on master
-  - next: run F done (K1056 be60105d, docs only, no deploy; suggestion lures 0 snares 3, not shipped 2/1, so K1056 to Waiting on Levi); Claude reviews E and F, then closes K1053
-  - brief: `docs/design/K1053_muse_batch2.md`
-  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` (starts chain.ps1 outside Claude Code; resumes at the first run not in done.txt; needs the Paseo daemon)
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1d merged (e8944f2f); S1e waits for the weekly limit.
@@ -494,6 +482,14 @@ Next free ID: K1062.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
+- **K1062** · Muse batch 3: G K1056's real-time lure fix (queued first), A K321, B K658, C K326
+  stage A, D K814, E K441, F K645 (docs/design/K1062_muse_batch3.md)
+  - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator)
+  - branch: mainline; last commit: `be729dce`
+  - evidence: .claude/probes/K1053/ (queue.txt tags 3G and 3A-3F, chain.log, done.txt)
+  - next: chain runs 3G, then 3A-3F (queued 2026-10-29 23:45); Claude reviews each run on master, then closes K1062
+  - brief: `docs/design/K1062_muse_batch3.md`
+  - env: pwsh -NoProfile -File .claude/probes/K1053/start.ps1
 
 ## Next, in order
 
@@ -702,11 +698,6 @@ Every other item below waits on the trigger it names.
 - **K649** · K525's tuning: rim strengths 0.6/0.8/1 and fades 0.2/0.3; junction-end gaps (runs under
   1.95 world get no rims; try gap 0 at interior junctions); the ticks' touch alphas vs the line's
   0.7; the fog glow (a dim dot on the Pixel, K662); the sheet extras. `docs/design/K525_telegraph.md` Handoff.
-- **K650** · K525's unrun check: the GPU-vs-mirror census for the TELE paint item (adapt
-  `census_rim.mjs`; K324 s2 runs it with the moving end). SwiftShader is done (K653: 8/8 compile, 13/13 link).
-- **K654** · K324 s2 input (K525): a moving end can ride a uniform like the hover point
-  (`uKReach.w`), so a moving minotaur rewrites no texel; today a changed lead rewrites the paint
-  texture.
 - **K657** · K137 follow-ups: the win banner's strokes/par and snapped rows (showFabricWin is free
   since K336 merged); keep copy from promising par = perfect play (par counts runs, stars length; a
   100%-efficient walk lost strict par, seed 7, slack 0).
@@ -798,6 +789,9 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
+- **K1056** · Real-time lures last one tick: within detectStart the lured minotaur re-spots you the
+  next tick (`detect()` after `lure()`), so run F's lures bought nothing. Fix to the turn clock's
+  rule, rerun s1056, then the stock (batch 3 run G; K708.md 'K1056', be60105d).
 
 ## Residuals (known, not fixed)
 
@@ -1790,6 +1784,8 @@ Every other item below waits on the trigger it names.
 - **K1058** · Removing a worktree can empty the main checkout's node_modules: each `.claude/worktrees/*`
   links node_modules by junction, and `git worktree remove --force` deletes through it (2026-10-29 20:18,
   remover unknown). The worktrees sit inside the checkout, so Node finds packages upward: try no junction.
+- **K1063** · `scripts/run_node.mjs` still opens Vite's WebSocket server, so parallel runs print 'WebSocket
+  server error: Port 24678' (harmless); `server.ws: false` should stop it (K1061, 011274f9).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2080,6 +2076,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K654** · the moving lead rides uKTeleAt, no texel rewrite (K324 s2). Done in ea3e63b8 (2026-10-29).
+- **K650** · the TELE census, GPU vs mirror with the riding lead (K324 s2). Done in a90a1ceb (2026-10-29).
+- **K1053** · Muse batch 2, runs A-F, reviewed on master. Done in b849de95 (2026-10-29).
 - **K396** · scripts/dev.ps1 LAN dev server, checks verified on 5531. Done in 7b174bec (2026-10-29).
 - **K1061** · run_node --config; last vite-node recipes pointed at it, panel/fold runs pass. Done in 011274f9 (2026-10-29).
 - **K1060** · workerPreloadScript moved to src/loader/worker_preload.ts (default derived from PARAM_DEFAULTS.physicsWorker); test/loader/worker_preload.test.ts pins its decision against parseParams (probe forms, seeded writer links, overrides, other version, garbage). Done in 528af3ba (2026-10-29).
