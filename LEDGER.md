@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1052.
+Next free ID: K1053.
 
 ## Waiting on Levi
 
@@ -299,9 +299,9 @@ Next free ID: K1052.
   K783/K728 (optional K414, K932), each done by a test or a number. Muse commits and pushes each task to
   master from the main checkout and keeps the ledger; Claude reviews what landed after the Nov 2 reset.
   - owner: muse (Levi's Paseo sessions; their ids aren't known here) from 2026-10-29, not started when filed; brief by claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3
-  - branch: mainline (the main checkout); last commit: `443ebdda`
+  - branch: mainline (the main checkout); last commit: `f79831c0`
   - evidence: each task's commits on master (`git log --grep=K<ID>`), whose messages are the reports
-  - next: Task 7 K393
+  - next: Task 8 K783/K728
   - brief: `docs/design/K1050_muse_week.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
@@ -805,6 +805,8 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
+- **K1052** · Fix the 92 test type errors in small batches (npm run probe:types names them), then fold
+  tsconfig.tests.json into npm test (docs/design/K393_probe.md).
 
 ## Residuals (known, not fixed)
 
@@ -1277,8 +1279,6 @@ Every other item below waits on the trigger it names.
   (expects `#maze-hud .km-title`; its `?daily=1.aBMge` and `?1471kin.c` predate K132).
 - **K392** · K5 M1's code residuals: `host_seam.test.ts` matches names and misses nested
   binding patterns and element access; 25 lines of `src/app/probe_hooks.ts` pass 80 columns.
-- **K393** · Nothing type-checks `test/`: tsconfig includes `src` only and vitest strips types,
-  so a test's type error goes unseen (K5 M1). Fix: a tsconfig over `test/`, run by `npm test`.
 - **K403** · Doc drift from the K74/K80/K114 briefs: `minotaur_turns.ts` 41-42 puts abbott in stage
   3 (`K80_turns.md`: stage 4); `gameplay-minotaur.md` cites "codec v5 108-116"; `main.ts` 3177-3179
   says tapsWait is off (on, 3283); `K74.md` 104 and 114-116 misname stage 3's sections.
@@ -2088,6 +2088,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K393** · Option B: probe:types groundwork shipped (92 errors/32 files), gates unchanged. Done in f79831c0 (2026-10-29).
 - **K810** · shipped 44/44, Fuse 35, uFuzzy 31, fuzzysort 34 (.claude/probes/K810/results.md). Done in 443ebdda (2026-10-29).
 - **K807** · nine constants to panel rows (follow, sword/sleeper rings, nearHops, routeWeight). Done in d8aaf37e (2026-10-29).
 - **K747** · sword takenAt/slainAt count player moves (inputs.length). Done in cb73089e (2026-10-29).
