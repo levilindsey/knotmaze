@@ -295,14 +295,6 @@ Next free ID: K1053.
 
 ## In progress
 
-- **K1050** · Muse's week (2026-10-29 to Nov 2): K994, K788, K743/K762/K763, K747/K712, K807, K810, K393,
-  K783/K728 (optional K414, K932), each done by a test or a number. Muse commits and pushes each task to
-  master from the main checkout and keeps the ledger; Claude reviews what landed after the Nov 2 reset.
-  - owner: muse (Levi's Paseo sessions; their ids aren't known here) from 2026-10-29, not started when filed; brief by claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3
-  - branch: mainline (the main checkout); last commit: `f79831c0`
-  - evidence: each task's commits on master (`git log --grep=K<ID>`), whose messages are the reports
-  - next: Task 8 K783/K728
-  - brief: `docs/design/K1050_muse_week.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1d merged (e8944f2f); S1e waits for the weekly limit.
@@ -564,8 +556,6 @@ merged):
   run (the K764 case); plus the beat rider's catch (K774: `.claude/probes/K774/beat_phone.mjs`
   check B, unrun on the phone); and the turnstile dim on a real phone (K138 s4 slice 1, 3dad5914;
   K760)
-- **K783** · Simulated games for lures and snares (the K708 harness: catches per game at stocks 0-3)
-  to set their stocks; saved attempts do not record the tools yet (K137 s4 Handoff)
 - **K579** · GPU confetti: upload each launch once, move the pieces in a vertex shader, no per-frame
   CPU sim or upload. Pays if K318 raises the counts (Levi asked 10-20); needs K307's warm-up;
   streamers need a CPU sim. The phone's fall isn't CPU-bound (K578). K628.
@@ -726,9 +716,6 @@ Every other item below waits on the trigger it names.
 - **K709** · Phone kit hardening: the adb reconnect is built (K717, `.claude/probes/K578/phone/`
   adb_reconnect*.ps1 and watchdog_reconnect.ps1, on by default) but only its healthy-link no-op is
   tested; lib703 END cannot cross midnight; run_k717 skips a late probe; walker_phone takes 1 candidate
-- **K728** · Real-time seeker for the K708 sim (a sword-seeking player on MinotaurChase): the
-  real-time sword best case is unmeasured and informs K727 (.claude/probes/K708/rt/, a sweep takes
-  about 35 s)
 - **K786** · When K138 makes monsters obey one-way runs (its stage 6), the lure hop matrix and the
   snare runs (K137 s4, af04d8c7) need the directed graph; today one-way binds only the player
   (inferred by the K137 s4 rebase)
@@ -2088,6 +2075,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1050** · Muse week done: K994, K788, K743/K762/K763, K747 (+K712 first half checked, stays open), K807, K810, K393 (Option B), K783/K728. Done in cea08eb5 (2026-10-29).
+- **K728** · max deviation 1.1116 in first 5s, then stopped (.claude/probes/K728/results.md). Done in cea08eb5 (2026-10-29).
+- **K783** · 20 links x2 sizes asleep at sim 5.0s, wall ~9.2s, physics ~0.9s/s (.claude/probes/K783/results.md). Done in cea08eb5 (2026-10-29).
 - **K393** · Option B: probe:types groundwork shipped (92 errors/32 files), gates unchanged. Done in f79831c0 (2026-10-29).
 - **K810** · shipped 44/44, Fuse 35, uFuzzy 31, fuzzysort 34 (.claude/probes/K810/results.md). Done in 443ebdda (2026-10-29).
 - **K807** · nine constants to panel rows (follow, sword/sleeper rings, nearHops, routeWeight). Done in d8aaf37e (2026-10-29).
