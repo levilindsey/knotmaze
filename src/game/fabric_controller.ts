@@ -395,6 +395,11 @@ export class FabricMazeController {
   // K138 s3: per forward move, did it take a one-way run (its backtrack is
   // refused)?
   private backLocked: boolean[] = [];
+  // K762: the run a just-finished backtrack retraced, and the vertex it
+  // left the head at: re-entering that run is judged as arriving by it
+  // (the head did), not by the path's new top run.
+  private undoneRun = -1;
+  private undoneVertex: string | null = null;
   // The kit's runs left: while a move carries on, the value at its end;
   // otherwise memoized per tap count.
   private pendingLeft = Infinity;
@@ -916,7 +921,12 @@ export class FabricMazeController {
   ruleMove(eid: number): RuleMove | null {
     const rule = this.rule;
     if (!rule) return null;
-    return rule.step(this.head, eid, this.ruleState, this.arrivalEdge, this.strokes);
+    // K762: re-entering the run a backtrack just retraced is judged with
+    // that run as the arrival (going back the way you came), so a
+    // turnstile that let you through still lets you back in.
+    const last =
+      eid === this.undoneRun && this.head === this.undoneVertex ? eid : this.arrivalEdge;
+    return rule.step(this.head, eid, this.ruleState, last, this.strokes);
   }
   private ruleAllows(eid: number): boolean {
     return this.ruleMove(eid) !== null;
@@ -995,6 +1005,8 @@ export class FabricMazeController {
     this.moveStarts = [];
     this.stateStack = [];
     this.backLocked = [];
+    this.undoneRun = -1;
+    this.undoneVertex = null;
     this.pendingLeft = Infinity;
     this.leftMemo = { taps: -1, trail: false, reveals: 0, value: Infinity };
     // K138 s2: every hidden run hidden again (Undo replays the reveals it
@@ -1166,6 +1178,8 @@ export class FabricMazeController {
       this.moveStarts = [];
       this.stateStack = [];
       this.backLocked = [];
+      this.undoneRun = -1;
+      this.undoneVertex = null;
       this.carry = [];
     }
     this.judge();
@@ -1393,6 +1407,10 @@ export class FabricMazeController {
       this.taps.push(edgeId);
       this.logMove(head, edgeId, carrying);
       if (undo) this.carry = undo;
+      // K762: remember the retraced run while the head stands where the
+      // backtrack left it (mid-undo, the carry still owns the taps).
+      this.undoneRun = this.carry.length === 0 ? edgeId : -1;
+      this.undoneVertex = this.carry.length === 0 ? this.head : null;
       this.cross(edgeId);
       this.fireArrive(head, depart, e.length, this.head);
       this.judge();
@@ -1448,6 +1466,9 @@ export class FabricMazeController {
       this.ruleState = move.state;
       this.carry = move.runs.slice(1);
     }
+    // K762: a fresh move spends the retraced-run memory.
+    this.undoneRun = -1;
+    this.undoneVertex = null;
     this.cross(edgeId);
     if (!this.isTitleEdge(edgeId)) this.walkedDist += e.length;
     this.pathEdges.push(edgeId);

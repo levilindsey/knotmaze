@@ -343,3 +343,31 @@ describe("turnstiles: the controller", () => {
     expect(found).toBeGreaterThan(0);
   });
 });
+
+describe("turnstiles: re-entering after a backtrack (K762)", () => {
+  it("lets the player back in through the run just retraced", () => {
+    let checked = 0;
+    for (const seed of SEEDS) {
+      const c = make(seed, { turnstiles: 4 });
+      const turns = new Set((c.ruleLook!.turnstiles ?? []).map((x) => x.vertex));
+      if (turns.size === 0) continue;
+      const best = ruleSearch(c.walk, c.rule!);
+      for (const run of best.route) {
+        const atTurn = turns.has(c.head) && run !== c.arrivalEdge;
+        const headBefore = c.head;
+        const r = tap(c, run);
+        if (!atTurn || r !== "advance") continue;
+        // Back out over the run just walked, then re-enter it: the
+        // turnstile that let the player through lets them back in.
+        expect(tap(c, run)).toBe("backtrack");
+        expect(c.head).toBe(headBefore);
+        expect(c.choices()).toContain(run);
+        expect(tap(c, run)).toBe("advance");
+        checked++;
+        break;
+      }
+      if (checked > 0) break;
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+});
