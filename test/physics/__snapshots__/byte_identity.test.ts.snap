@@ -38,3 +38,42 @@ exports[`knot-mode byte identity (golden guard) > matches the recorded knot-mode
   },
 }
 `;
+
+exports[`maze byte identity (golden guard) > matches the recorded maze fingerprints 1`] = `
+{
+  "default": {
+    "checkpoints": [
+      {
+        "hash": 127194518,
+        "sum": 8789.590433,
+      },
+      {
+        "hash": 1310271450,
+        "sum": 8788.588138,
+      },
+      {
+        "hash": -1017683217,
+        "sum": 8788.589541,
+      },
+    ],
+    "count": 557,
+  },
+  "fat": {
+    "checkpoints": [
+      {
+        "hash": 1977776316,
+        "sum": 8859.328263,
+      },
+      {
+        "hash": -1706044398,
+        "sum": 8873.684045,
+      },
+      {
+        "hash": 1862570556,
+        "sum": 8886.326019,
+      },
+    ],
+    "count": 564,
+  },
+}
+`;
