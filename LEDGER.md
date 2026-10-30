@@ -1795,9 +1795,6 @@ Every other item below waits on the trigger it names.
 - **K1044** · Cursive v6.5's leftovers (B4): a's largest |dk/ds| (8.51e-4 /u²) sits above g's 7.07e-4 mark where the held
   bowl starts; fa and fq moved 0.67 / 2.39 u, and no census word holds them; oa and oq dip 4.4 / 3.4 u deeper, the attach
   on its bound (34.3 / 34.6 u from the corner). For J3c. `K1029_cursive_b4.md` ## Handoff; NOTES `## K1029` N2c, N3c, N4b.
-- **K1054** · The real-time chase's tap past the choices plans with `planRoute` (main.ts `handleChaseTap`),
-  not `planRouteRuled`: with a rule on, it can stop at its first refused run. K743 (f61eff23) fixed only the
-  renderer's `targetAt`. K1053 run C.
 - **K1057** · probes.md's vite-node recipes (K80 turns2, K114 burn, K138 s4 census: `node
   node_modules\vite-node\vite-node.mjs ...`) fail: vite-node is no longer installed (vitest 4 dropped it).
   `.claude/probes/K708/run_node.mjs` (Vite's SSR loader) replaces it; update the recipes.
@@ -2094,6 +2091,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1054** · no K138 rule can be on in a realtime chase (fabricRulesOf zeroes them outside classic; chase needs minotaur), so handleChaseTap needs no ruled twin; gate pinned in url_codec.test.ts. Done in 0a58f52f (2026-10-29).
 - **K1052** · test type errors fixed 92 -> 0 in 4 batches; tsconfig.tests.json folded into npm run typecheck. Done in 99c4aff7 (2026-10-29).
 - **K728** · real-time seeker measured: taken 99.9-100%, slew/banish 4.4-8.9% vs blind 0.2-0.7% (docs/design/K708.md). Done in 9d673405 (2026-10-29).
 - **K932** · bench_frame readPixels sync; K923 runner folded to scripts/k923 (.claude/probes/K932/results.md). Done in b6d0e1b2 (2026-10-29).
