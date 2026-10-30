@@ -421,6 +421,7 @@ L.push("- **Shows**: whether the row shows at today's defaults (maze mode), and 
 L.push("- **Effect**: the `PanelCallbacks` its change runs (onRegenerate rebuilds the design; the others apply live or restart the solve).");
 L.push("- **Added**: the commit whose diff first added the key to the panel file, and the ledger item in its subject.");
 L.push("- **Read by**: the source files that read `.key`, outside the ui plumbing (panel, url_state, param_codec, daily_link), with counts; a heuristic.");
+L.push("- **Tip**: the row's tooltip, the binding's `api.element.title` (set by `row()` in `tweakpane_panel.ts`).");
 L.push("");
 L.push("The helpers `refreshCond` defines:");
 L.push("");
@@ -439,15 +440,15 @@ for (const f of folders) {
 L.push("");
 L.push("## Rows");
 L.push("");
-L.push("| # | Folder | Label · key | Codec | Type · default · range | Kind | Hidden when | Shows | Effect | Added | Read by |");
-L.push("|---|---|---|---|---|---|---|---|---|---|---|");
+L.push("| # | Folder | Label · key | Codec | Type · default · range | Kind | Hidden when | Shows | Effect | Added | Read by | Tip |");
+L.push("|---|---|---|---|---|---|---|---|---|---|---|---|");
 let n = 0;
 for (const it of items) {
   if (it.kind === "folder") continue;
   n++;
   if (it.kind === "button") {
     L.push(
-      `| ${n} | ${esc(folderPath(it.parent))} | button "${esc(it.title)}"${it.label ? ` (label ${esc(it.label)})` : ""} | | | | ${esc(buttonRule.get(it.title) ?? "")} | ${shows(it)} | ${esc((effects.get(it) ?? []).join(", "))} | ${esc(addedBy(it.title))} | |`
+      `| ${n} | ${esc(folderPath(it.parent))} | button "${esc(it.title)}"${it.label ? ` (label ${esc(it.label)})` : ""} | | | | ${esc(buttonRule.get(it.title) ?? "")} | ${shows(it)} | ${esc((effects.get(it) ?? []).join(", "))} | ${esc(addedBy(it.title))} | | ${esc(String((it.api.element as Record<string, unknown>).title ?? ""))} |`
     );
     continue;
   }
@@ -456,7 +457,7 @@ for (const it of items) {
   const idx = codecIndex.get(b.key);
   const codec = objKind(b) === "setting" ? "" : `${idx ?? "-"} · ${shortKey.get(b.key) ?? "-"}`;
   L.push(
-    `| ${n} | ${esc(folderPath(b.parent))} | ${esc(label === b.key ? `\`${b.key}\`` : `${label} · \`${b.key}\``)} | ${codec} | ${esc(typeText(b))} | ${kindText(b)} | ${esc(ruleOf(b))} | ${shows(b)} | ${esc((effects.get(b) ?? []).join(", "))} | ${esc(addedBy(b.key))} | ${esc(objKind(b) === "seed" ? "" : readersOf(b.key))} |`
+    `| ${n} | ${esc(folderPath(b.parent))} | ${esc(label === b.key ? `\`${b.key}\`` : `${label} · \`${b.key}\``)} | ${codec} | ${esc(typeText(b))} | ${kindText(b)} | ${esc(ruleOf(b))} | ${shows(b)} | ${esc((effects.get(b) ?? []).join(", "))} | ${esc(addedBy(b.key))} | ${esc(objKind(b) === "seed" ? "" : readersOf(b.key))} | ${esc(String((b.api.element as Record<string, unknown>).title ?? ""))} |`
   );
 }
 L.push("");
