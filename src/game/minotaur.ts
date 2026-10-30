@@ -303,6 +303,7 @@ export interface ChaseMonster {
 interface RtMonster extends ChaseMonster {
   rng: SeededRNG;
   stopRng: TurnRng;
+  lureDest: number;
 }
 
 export type ChaseEvent =
@@ -630,6 +631,13 @@ export class MinotaurChase {
   private seedNum = 0;
   sprintLeft = 0;
   private sprinting = false;
+  // K1056: the vertex a heard lure is drawing this monster to, -1 = not
+  // lured. While it is set, detect() does not spot the player and the
+  // monster heads there at its roam pace (like TurnMinotaur's `lure` on
+  // MinoState, minotaur_turns.ts); reaching it clears it and the model
+  // resumes. `dest` mirrors it for the hunter and the guard (their roam
+  // destination); the stalker, which has no destinations, reads only this.
+  private lureDest = -1;
 
   constructor(walk: WalkGraph, params: ChaseParams, seed: number) {
     this.seedNum = seed;
@@ -719,6 +727,7 @@ export class MinotaurChase {
         arrivals: 0,
         rng: new SeededRNG(s),
         stopRng: new TurnRng(s),
+        lureDest: -1,
       };
     });
   }
@@ -734,9 +743,12 @@ export class MinotaurChase {
 
   // K137 stage 7: pluck a lure on run `edge`. Every monster in range
   // (the minotaur unless it flees or is slain, and each extra) makes
-  // the run's nearer end its roam destination and forgets its hunt,
-  // as the turn clock's lure does. Returns how many heard, or -1 for
-  // a run that is not a run (the caller spends nothing then).
+  // the run's nearer end its destination and forgets its hunt, as the
+  // turn clock's lure does (K1056: and stays lured until it gets there:
+  // detect() does not spot the player on the way, so a hunter it lured
+  // away has to see you again, as `lures.ts` says). A newer lure it
+  // hears replaces the target. Returns how many heard, or -1 for a run
+  // that is not a run (the caller spends nothing then).
   lure(edge: number, range: number): number {
     if (!Number.isInteger(edge) || edge < 0 || edge >= this.g.len.length) return -1;
     const g = {
@@ -751,6 +763,9 @@ export class MinotaurChase {
       const target = lureTarget(g, v, edge, range);
       if (target < 0) return;
       this.dest = target;
+      // Already standing on it: the turn clock's lure is spent at once
+      // there, so nothing stays lured (it may be spotted next detect()).
+      this.lureDest = this.mino.edge < 0 && this.mino.vertex === target ? -1 : target;
       if (this.mode === "hunt") this.mode = "wander";
       heard++;
     };
@@ -776,13 +791,14 @@ export class MinotaurChase {
       hold: this.hold, aimed: this.aimed, lastEdge: this.lastEdge,
       legPace: this.legPace, arrivals: this.arrivals,
       rng: this.rng, stopRng: this.stopRng,
-      sword: this.sword, model: this.params.model,
+      sword: this.sword, model: this.params.model, lureDest: this.lureDest,
     };
     this.actingId = this.extras.indexOf(x);
     this.mino = x.spot; this.mode = x.mode; this.timer = x.timer;
     this.dest = x.dest; this.hold = x.hold; this.aimed = x.aimed;
     this.lastEdge = x.lastEdge; this.legPace = x.legPace;
     this.arrivals = x.arrivals; this.rng = x.rng; this.stopRng = x.stopRng;
+    this.lureDest = x.lureDest;
     this.sword = null; this.params.model = "hunter";
     try {
       fn();
@@ -790,12 +806,13 @@ export class MinotaurChase {
       x.spot = this.mino; x.mode = this.mode; x.timer = this.timer;
       x.dest = this.dest; x.hold = this.hold; x.aimed = this.aimed;
       x.lastEdge = this.lastEdge; x.legPace = this.legPace;
-      x.arrivals = this.arrivals;
+      x.arrivals = this.arrivals; x.lureDest = this.lureDest;
       this.mino = saved.mino; this.mode = saved.mode; this.timer = saved.timer;
       this.dest = saved.dest; this.hold = saved.hold; this.aimed = saved.aimed;
       this.lastEdge = saved.lastEdge; this.legPace = saved.legPace;
       this.arrivals = saved.arrivals; this.rng = saved.rng;
       this.stopRng = saved.stopRng; this.sword = saved.sword;
+      this.lureDest = saved.lureDest;
       this.actingId = -1;
       this.params.model = saved.model;
     }
@@ -810,6 +827,7 @@ export class MinotaurChase {
       x.hold = 0;
       x.aimed = true;
       x.lastEdge = -1;
+      x.lureDest = -1;
     }
   }
 
@@ -841,6 +859,7 @@ export class MinotaurChase {
     }
     this.hold = 0;
     this.dest = -1;
+    this.lureDest = -1; // K1056: fleeing the sword ends a lure.
     this.aimed = true;
     if (m.edge >= 0) m.dir = m.dir > 0 ? -1 : 1;
   }
@@ -853,6 +872,7 @@ export class MinotaurChase {
     out.push({ kind: "sword", what: kind });
     this.hold = 0;
     this.dest = -1;
+    this.lureDest = -1;
     this.aimed = true;
     this.lastEdge = -1;
     if (kind === "banish") {
@@ -1114,6 +1134,7 @@ export class MinotaurChase {
       if (mode) this.mode = mode;
       this.timer = ticksOf(timer);
       this.dest = -1;
+      this.lureDest = -1;
       this.hold = 0;
       this.aimed = true;
       this.lastEdge = -1;
@@ -1144,6 +1165,7 @@ export class MinotaurChase {
     }
     this.timer = ticksOf(this.params.wake);
     this.dest = -1;
+    this.lureDest = -1; // K1056: a catch ends a lure.
     this.hold = 0;
     this.aimed = true;
     this.lastEdge = -1;
@@ -1317,7 +1339,15 @@ export class MinotaurChase {
       // and a stop that rounds to 0 ticks keeps the tick's movement. The
       // stalker takes no long stops.
       const stop = g.isEnd[m.vertex] ? 0 : this.junctionStop();
+      // K1056: reaching the lure's target ends the lure here, before the
+      // arrival is read as a roam one: the hunter and the guard pause at
+      // it and pick their next roam destination (roamArrival, below, with
+      // `dest` still the target), the stalker just drops its destination.
+      // detect() in this same step may spot the player again.
+      const luredArrival = this.lureDest >= 0 && m.vertex === this.lureDest;
+      if (luredArrival) this.lureDest = -1;
       if (this.mode === "wander" && P.model !== "stalker" && this.roamArrival()) return;
+      if (luredArrival && P.model === "stalker") this.dest = -1;
       if (stop > 0) {
         this.hold = stop;
         return;
@@ -1332,6 +1362,19 @@ export class MinotaurChase {
     const P = this.params;
     const v = this.mino.vertex;
     const hunting = this.mode === "hunt";
+    // K1056: while lured, every model heads for the lure's target along
+    // the shortest route (the guard leaves its territory, as the turn
+    // clock's stepToward does; the stalker, which has no destinations,
+    // routes the same way and draws no decision). Cut off from it (a
+    // broken run), the lure is spent and the model decides, as the turn
+    // clock's decide() does.
+    if (this.lureDest >= 0) {
+      this.aimed = true;
+      const choice = this.roamEdgeFrom(v, this.lureDest, true);
+      if (choice) return choice;
+      this.lureDest = -1;
+      this.dest = -1;
+    }
     if (P.model !== "guard" && P.model !== "stalker") {
       return hunting ? this.huntEdgeFrom(v) : this.roamEdge();
     }
@@ -1576,7 +1619,7 @@ export class MinotaurChase {
   // Wandering at vertex v toward `dest`: the first run of the shortest
   // route there (the exit tail out of its lair). Pure (K324 2.2: the chase
   // and plan() both ask it). Null = stay, or no destination.
-  roamEdgeFrom(v: number, dest = this.dest): [number, 1 | -1] | null {
+  roamEdgeFrom(v: number, dest = this.dest, unrestricted = false): [number, 1 | -1] | null {
     const g = this.g;
     if (v === g.exit) {
       const tail = g.adj[v][0];
@@ -1585,9 +1628,10 @@ export class MinotaurChase {
     }
     if (dest < 0) return null;
     // K324 stage 3: a guard inside its territory, bound for a vertex in it,
-    // keeps to the territory's runs.
+    // keeps to the territory's runs (K1056: a lured guard does not:
+    // `unrestricted`, the turn clock's lure route).
     let ok: Uint8Array | null = null;
-    if (this.params.model === "guard") {
+    if (this.params.model === "guard" && !unrestricted) {
       const t = this.territory();
       if (t.vin[v] && t.vin[dest]) ok = t.ein;
     }
@@ -1687,7 +1731,10 @@ export class MinotaurChase {
     const m = this.mino;
     const P = this.params;
     const hunting = this.mode === "hunt";
-    const deciding = P.model === "stalker" || (P.model === "guard" && hunting);
+    // K1056: a lured monster's plan is its route to the lure's target,
+    // whatever its model (no decision is read ahead for the stalker).
+    const lured = this.lureDest >= 0;
+    const deciding = !lured && (P.model === "stalker" || (P.model === "guard" && hunting));
     const out: ChasePlan = { lead: null, steps: [], dest: -1, hunting };
     const n = Math.min(PLAN_REACH_MAX, Math.max(0, Math.floor(reach) || 0));
     // K137 s3b: slain, no plan; fleeing, its flee route (fleeEdgeFrom on).
@@ -1711,8 +1758,8 @@ export class MinotaurChase {
       v = m.vertex;
     }
     const p = this.player;
-    const dest = this.dest;
-    const tracking = hunting || (P.model === "stalker" && !this.invisible());
+    const dest = lured ? this.lureDest : this.dest;
+    const tracking = !lured && (hunting || (P.model === "stalker" && !this.invisible()));
     if (!hunting && !deciding) {
       if (dest >= 0 && v === dest && out.lead) {
         out.dest = dest;
@@ -1730,7 +1777,7 @@ export class MinotaurChase {
         if (d.drew) k++;
         choice = d.choice;
       } else {
-        choice = hunting ? this.huntEdgeFrom(v) : this.roamEdgeFrom(v, dest);
+        choice = hunting ? this.huntEdgeFrom(v) : this.roamEdgeFrom(v, dest, lured);
       }
       if (!choice) break;
       const [eid, dir] = choice;
@@ -1777,6 +1824,9 @@ export class MinotaurChase {
   // (guardDetect / guardLose). Lost, the hunter and the guard check where
   // they last saw you; the stalker stalks on.
   private detect(out: ChaseEvent[]): void {
+    // K1056: a lured monster does not spot the player until it reaches
+    // the lure's target (contact in step() still catches on the way).
+    if (this.lureDest >= 0) return;
     const P = this.params;
     const d = this.huntDistance();
     const guard = P.model === "guard";

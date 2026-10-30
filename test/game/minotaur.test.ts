@@ -1187,3 +1187,124 @@ describe("K137 stage 6: real-time extras", () => {
     expect(replay.extras[0].mode).toBe(live.extras[0].mode);
   });
 });
+
+describe("K1056: a real-time lure lasts until it reaches the target", () => {
+  // G1: B -1- A -0- S, B -2- C -3- X, B -4- D, A -5- C. A lure on run 0
+  // (S-A) heard at B targets A (S is the start, never a target); a lure
+  // on run 3 (C-X) targets C. The player stands at C, 10 u from B and
+  // 20 u from A along B, inside sight (25) the whole way B -> A.
+  const lureP = (model: "hunter" | "guard" | "stalker"): ChaseParams =>
+    P({
+      playerPace: 0,
+      wanderPace: 5,
+      approachPace: 10,
+      paceJitter: 0,
+      pauseChance: 0,
+      stopMin: 0.2,
+      stopMax: 0.2,
+      catchDist: 0.5,
+      wake: 0,
+      detectStart: 25,
+      detectEnd: 30,
+      ...(model === "guard"
+        ? { model: "guard" as const, territory: 12, guardDetect: 25, guardLose: 30, guardAccuracy: 0.4 }
+        : model === "stalker"
+          ? { model: "stalker" as const, stalkerAccuracy: 0.5 }
+          : {}),
+    });
+
+  // Step until the main monster stands at `vertex`; true when any step
+  // before that arrival spotted the player.
+  const spottedBeforeArrival = (sim: MinotaurChase, vertex: number, out: ChaseEvent[]): boolean => {
+    let spotted = false;
+    for (let i = 0; i < 10 * CHASE_HZ; i++) {
+      const n = out.length;
+      sim.step(out);
+      if (sim.mino.edge < 0 && sim.mino.vertex === vertex) return spotted;
+      if (out.slice(n).some((e) => e.kind === "spotted")) spotted = true;
+      expect(sim.mode).not.toBe("hunt");
+    }
+    throw new Error("never arrived");
+  };
+
+  for (const model of ["hunter", "guard", "stalker"] as const) {
+    it(`${model}: no spot while lured within sight, a spot after arrival; plan and retarget`, () => {
+      const sim = new MinotaurChase(G1, lureP(model), 1);
+      const A = sim.g.index.get("A")!;
+      const C = sim.g.index.get("C")!;
+      sim.place("minotaur", "B", "wander");
+      sim.place("player", "C");
+      if (model === "guard") expect(sim.territory().vin[A]).toBe(0); // A is outside its ground.
+      expect(sim.lure(0, 6)).toBe(1);
+      expect(sim.plan(8)).toEqual({ lead: null, steps: [[1, A]], dest: A, hunting: false });
+      // A second lure it hears replaces the target.
+      expect(sim.lure(3, 6)).toBe(1);
+      expect(sim.plan(8)).toEqual({ lead: null, steps: [[2, C]], dest: C, hunting: false });
+      expect(sim.lure(0, 6)).toBe(1);
+      expect(sim.plan(8)).toEqual({ lead: null, steps: [[1, A]], dest: A, hunting: false });
+      const out: ChaseEvent[] = [];
+      expect(spottedBeforeArrival(sim, A, out)).toBe(false);
+      // Arrived (for the guard, outside its territory): it reverts to
+      // its model, and the player, still in sight, is spotted.
+      expect(sim.mino.edge).toBe(-1);
+      expect(sim.mino.vertex).toBe(A);
+      for (let i = 0; i < 5 && sim.mode !== "hunt"; i++) sim.step(out);
+      expect(sim.mode).toBe("hunt");
+      expect(out.some((e) => e.kind === "spotted")).toBe(true);
+    });
+
+    it(`${model}: a catch on the way to the lure's target still counts`, () => {
+      const sim = new MinotaurChase(G1, lureP(model), 1);
+      sim.place("minotaur", "B", "wander");
+      sim.place("player", { edge: 1, pos: 5, dir: 1 }); // Midway B -> A.
+      expect(sim.lure(0, 6)).toBe(1);
+      const out = runUntil(sim, "caught", 10 * CHASE_HZ);
+      expect(sim.catches).toBe(1);
+      expect(out.some((e) => e.kind === "spotted")).toBe(false);
+    });
+  }
+
+  it("extra: no spot while lured within sight, a spot after arrival", () => {
+    // Range 1: the extra at B hears the A lure (1 run); the minotaur in
+    // its lair at X does not (2 runs), so only the extra is lured.
+    const sim = new MinotaurChase(G1, P({ ...lureP("hunter"), wake: 1000 }), 1);
+    const A = sim.g.index.get("A")!;
+    const B = sim.g.index.get("B")!;
+    sim.setExtras([B]);
+    sim.place("player", "C");
+    expect(sim.lure(0, 1)).toBe(1);
+    const out: ChaseEvent[] = [];
+    let arrived = false;
+    for (let i = 0; i < 10 * CHASE_HZ && !arrived; i++) {
+      sim.step(out);
+      const x = sim.extras[0];
+      arrived = x.spot.edge < 0 && x.spot.vertex === A;
+      if (!arrived) expect(x.mode).not.toBe("hunt");
+    }
+    expect(arrived).toBe(true);
+    for (let i = 0; i < 5 && sim.extras[0].mode !== "hunt"; i++) sim.step(out);
+    expect(sim.extras[0].mode).toBe("hunt");
+  });
+
+  it("extra: a second lure retargets it", () => {
+    const sim = new MinotaurChase(G1, P({ ...lureP("hunter"), wake: 1000 }), 1);
+    sim.setExtras([sim.g.index.get("B")!]);
+    sim.place("player", "C");
+    expect(sim.lure(0, 1)).toBe(1); // To A, along run 1.
+    // To C, along run 2. The lair minotaur hears this one too (C is 1
+    // run from X) but stays in its lair; the extra's next run is what
+    // shows the retarget.
+    expect(sim.lure(3, 1)).toBe(2);
+    run(sim, 2);
+    expect(sim.extras[0].spot.edge).toBe(2);
+  });
+
+  it("extra: a catch on the way to the lure's target still counts", () => {
+    const sim = new MinotaurChase(G1, P({ ...lureP("hunter"), wake: 1000 }), 1);
+    sim.setExtras([sim.g.index.get("B")!]);
+    sim.place("player", { edge: 1, pos: 5, dir: 1 });
+    expect(sim.lure(0, 1)).toBe(1);
+    runUntil(sim, "caught", 10 * CHASE_HZ);
+    expect(sim.catches).toBe(1);
+  });
+});
