@@ -156,6 +156,7 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   re-optimized the shared `.vite` deps under other servers. Chrome
   refuses some ports (ERR_UNSAFE_PORT: 6000 and 6665-6669 among them), so
   probe servers skip them (K465, 2026-10-15).
+- `scripts/dev.ps1 [-Port 5173]` starts Levi's LAN dev server (`vite --host 0.0.0.0 --port <Port> --strictPort` from the checkout's own `node_modules`; it checks that vite is installed and warns on a stale install, never installs) - the script a ledger `env:` line names for the phone's server; agents use a port other than 5173, which is Levi's own.
 
 - K73 (2026-10-13), corner chrome probes: `.claude/probes/K73/`
   (probe_badge.mjs free | official | replay | narrow, probe_exit.mjs
