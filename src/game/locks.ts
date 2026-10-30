@@ -38,7 +38,7 @@
 // off is bit-identical.
 
 import type { RuleWalk, WalkRule, Placement } from "./rule_search";
-import { composeRules, exemptRun, meterLength, placeRule, plainRule, ruleRng, ruleSearch } from "./rule_search";
+import { composeRules, exemptRun, meterLength, placeRule, plainRule, ruleHasTrap, ruleRng, ruleSearch } from "./rule_search";
 import { oneWayCore } from "./one_way";
 
 export type LockMode = "exit" | "shortcut" | "colors";
@@ -344,7 +344,7 @@ export function placeLocks(
     }
     return { mode, keys: picked, locks: lockMap };
   };
-  return placeRule(walk, draw, ruleOf, base);
+  return placeRule(walk, draw, ruleOf, base, (rule) => !ruleHasTrap(walk, rule));
 }
 
 // The shortcut form's placement: candidate locks on the route, each
@@ -400,7 +400,7 @@ function placeShortcut(
     }
     return { mode: "shortcut", keys, locks: map };
   };
-  return placeRule(walk, draw, ruleOf, base);
+  return placeRule(walk, draw, ruleOf, base, (rule) => !ruleHasTrap(walk, rule));
 }
 
 // The colors form's placement: the exit form's gates (the runs into
@@ -450,5 +450,5 @@ function placeColorGates(
     }
     return { mode: "colors", keys: chosen.map((c) => c.vertex), locks: gates, keyColors };
   };
-  return placeRule(walk, draw, ruleOf, base);
+  return placeRule(walk, draw, ruleOf, base, (rule) => !ruleHasTrap(walk, rule));
 }

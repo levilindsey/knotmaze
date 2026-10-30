@@ -14,6 +14,11 @@ import {
 import { iceRule, placeIce } from "../../src/game/ice";
 import { ruleMaze } from "./rule_fixtures";
 import { ruleFields, ruleShareTags } from "../../src/app/rule_loss";
+import { paramsFromValues } from "../../src/ui/url_state";
+import { buildSceneGraph } from "../../src/core/scene_graph";
+import { buildWalkGraph } from "../../src/core/walk_graph";
+import { walkerMapOf } from "../../src/game/walker";
+import { ruleHasTrap } from "../../src/game/rule_search";
 
 // K138 stage 3: one-way runs (one_way.ts) and the controller's one-way rule.
 
@@ -388,6 +393,28 @@ describe("one-way runs: the controller", () => {
     }
     for (const n of placedOf.values()) expect(n).toBeGreaterThanOrEqual(4);
     expect(placedOf.size).toBe(2);
+  });
+
+  it("K788: seeds 3 and 4 lay no one-way + ice trap, with or without keys", () => {
+    for (const seed of [3, 4]) {
+      const params = paramsFromValues(seed, {});
+      const { graph, walk: built } = buildSceneGraph({ ...params, title: "", glyphs2: "" });
+      const walk = built ?? buildWalkGraph(graph);
+      let cont: Int32Array | null = null;
+      const source = () => ({
+        seed: params.seed,
+        cont: () => (cont ??= walkerMapOf(graph, walk).cont),
+      });
+      for (const rules of [{ oneWay: 0.4, ice: 0.25 }, { keys: 2, oneWay: 0.4, ice: 0.25 }]) {
+        const c = new FabricMazeController(walk, false, null, rules, source());
+        expect(c.rule).not.toBeNull();
+        expect(ruleHasTrap(walk, c.rule!)).toBe(false);
+      }
+      // Off: no rule at all (nothing changes with one-way and ice at 0).
+      const off = new FabricMazeController(walk, false, null, {}, source());
+      expect(off.rulesOn).toBe(false);
+      expect(off.ruleLook).toBeNull();
+    }
   });
 
   it("composes with turnstiles and hidden runs, and fills the HUD row and the share tag", () => {

@@ -36,7 +36,7 @@
 // them off such a move too.
 
 import type { RuleWalk, WalkRule, Placement } from "./rule_search";
-import { composeRules, exemptRun, meterLength, placeRule, plainRule, ruleRng, ruleSearch } from "./rule_search";
+import { composeRules, exemptRun, meterLength, placeRule, plainRule, ruleHasTrap, ruleRng, ruleSearch } from "./rule_search";
 
 export const ONE_WAY_MAX = 0.6;
 // A base-route run's tickets in the draw (1 for any other core run).
@@ -245,14 +245,14 @@ export function placeOneWay(
   if (count === 0) return { layout: null, bites: false, draws: 0 };
   const onRoute = new Set(plain.routeRuns);
   const rng = ruleRng(seed, "oneWay");
-  const draw = (): OneWayLayout => {
+  const drawFor = (n: number) => (): OneWayLayout => {
     const pool = core.runs.slice();
     const weight = pool.map((r) => (onRoute.has(r) ? ROUTE_WEIGHT : 1));
     let total = 0;
     for (const w of weight) total += w;
     const flip = rng.nextInt(2) === 1;
     const out = new Map<number, string>();
-    for (let k = 0; k < count; k++) {
+    for (let k = 0; k < n; k++) {
       let t = rng.nextInt(total);
       let j = 0;
       while (t >= weight[j]) {
@@ -268,12 +268,20 @@ export function placeOneWay(
     }
     return out;
   };
-  return placeRule(
-    walk,
-    draw,
-    (layout) => (base ? composeRules(base, oneWayRule(walk, layout)) : oneWayRule(walk, layout)),
-    base
-  );
+  const ruleOf = (layout: OneWayLayout): WalkRule =>
+    base ? composeRules(base, oneWayRule(walk, layout)) : oneWayRule(walk, layout);
+  const accept = (rule: WalkRule): boolean => !ruleHasTrap(walk, rule);
+  // K788: a trapping (or unsolvable) round places nothing; the stream runs
+  // on, so redraw whole rounds, then rounds of half as many runs, before
+  // giving up (only null outcomes retry, so a placed draw never moves).
+  let placed: Placement<OneWayLayout> | null = null;
+  for (let n = count; ; n = Math.max(1, Math.floor(n / 2))) {
+    const round = placeRule(walk, drawFor(n), ruleOf, base, accept);
+    placed = placed
+      ? { layout: round.layout, bites: round.bites, draws: placed.draws + round.draws }
+      : round;
+    if (placed.layout || n <= 1) return placed;
+  }
 }
 
 // How many of the layout's runs lie on a route (the census's count).
