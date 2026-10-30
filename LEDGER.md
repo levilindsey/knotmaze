@@ -299,9 +299,9 @@ Next free ID: K1052.
   K783/K728 (optional K414, K932), each done by a test or a number. Muse commits and pushes each task to
   master from the main checkout and keeps the ledger; Claude reviews what landed after the Nov 2 reset.
   - owner: muse (Levi's Paseo sessions; their ids aren't known here) from 2026-10-29, not started when filed; brief by claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3
-  - branch: mainline (the main checkout); last commit: `f61eff23`
+  - branch: mainline (the main checkout); last commit: `cb73089e`
   - evidence: each task's commits on master (`git log --grep=K<ID>`), whose messages are the reports
-  - next: Task 4 K747/K712, then K807
+  - next: Task 5 K807 panel rows
   - brief: `docs/design/K1050_muse_week.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
@@ -1633,8 +1633,6 @@ Every other item below waits on the trigger it names.
   - Real phone (K749): the patches show at real size at nearly every junction in both rules (dark
     magenta among pink, dark teal among olive); a backtrack undoing a 3-run slide passed. Next:
     trace each patch to its run, or hide the web meshes. `.claude/probes/K749/out/rules/`
-- **K747** · The sword takenAt and slainAt count minotaur turns, so after a sprint on the turn clock
-  they read one less than the move (K137 s3c Handoff)
 - **K748** · Sprint polish (K137 s3c): a focus outline lingers on the sprint button after F; no real
   phone pass yet (emulated 411x753). The s3a fragile page check is weak on the hunter and the fire
   side is unit-tested only
@@ -1660,8 +1658,6 @@ Every other item below waits on the trigger it names.
   head disc and gold trail cover it there), and it is weak over pale lavender
 - **K761** · K138 s2: the rule search models waiting detours of up to 4 taps, so the fewest and par
   can overstate a maze that rewards a longer wait at a turnstile (`src/game/rule_search.ts`)
-- **K762** · K138 s2: after a backtrack, a turnstile can refuse re-entering the run just retraced
-- **K763** · K138 s2: the HUD reads 0 / 0 found when no hidden run was placed
 - **K769** · K137 s3d: with the minotaur traveling by length, the extra monsters still step one run
   a move; under `clk=beat` the sleeper rows show and the extras are laid (read from the code,
   untested)
@@ -2098,6 +2094,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K747** · sword takenAt/slainAt count player moves (inputs.length). Done in cb73089e (2026-10-29).
+- **K763** · hidden counter only when a hidden run was placed. Done in 40de45c1 (2026-10-29).
+- **K762** · backtrack remembers retraced run; turnstile re-entry allowed. Done in 0e73c399 (2026-10-29).
 - **K743** · planRouteRuled plans ruled taps; renderer targetAt uses it. Done in f61eff23 (2026-10-29).
 - **K788** · placement rejects trapping one-way draws (ruleHasTrap); census 42/50+44/50 -> 0/50. Done in cff5a0d7 (2026-10-29).
 - **K994** · audit clean: vitest ^4.1.12, @xmldom 0.8.15 (npm audit fix). Done in 732ab944 (2026-10-29).
