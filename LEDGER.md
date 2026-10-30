@@ -739,9 +739,6 @@ Every other item below waits on the trigger it names.
 - **K931** · Cursive capitals, once the lowercase settles: traced from the same font, entering from
   above or below, or from a direction kept within rules (Levi, 2026-10-27).
   `K863_trace.md` ## Levi's calls, "Capitals, later".
-- **K932** · `scripts/bench_frame.mjs` times only CPU submission: Chrome's WebGL `finish()` doesn't
-  wait for the GPU (K923: 0.0-0.1 ms read for 3.8 ms of GPU work). End each frame with a 1-px
-  `readPixels`, recheck the GPU times taken with it, fold in K923's runner. `K923_s3_bench.md` ## Handoff.
 - **K935** · K922's follow-ups (endSnap is unconditional since K934): the 23 crossing-cut free ends; the 9 span-end
   triples the walk never starts; d2-d4's fill-outline and z-tie cuts; probe fixes (fe_mech R = 2W, K915's `h.ts`
   FULL_DIR). `K922_junction_extent.md` ## Handoff.
@@ -873,8 +870,6 @@ Every other item below waits on the trigger it names.
 - **K413** · The phone lock (`.claude/probes/agents/phone_lock_take.ps1`) is one line, owner | time |
   what, with no waiter field, so the briefs' "release it between items when K290 or K395 waits"
   never triggers (K7 s7 handoff). Add a waiter line, or drop the rule; claude-config CC62.
-- **K414** · Since K7 s7's modulepreload, a `phw=0` page downloads the worker chunk it never runs
-  (90 KB raw, beside the 1.0 MB main chunk).
 - **K416** · `docs/design/K5_K6_split.md` is stale beyond §2.3 (R1 updates its table): §1.3 ranges
   (f04aa4b), the strip block, §5.1 pins (`paint_explore.test.ts`, `paint_ring_lap.test.ts`), §5.3
   and §6 sequencing, `__knotRenderer`'s move to `src/app/probe_hooks.ts` (K5 R1 brief).
@@ -2075,6 +2070,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K932** · bench_frame readPixels sync; K923 runner folded to scripts/k923 (.claude/probes/K932/results.md). Done in b6d0e1b2 (2026-10-29).
+- **K414** · static worker preload dropped; phw=0 downloads no worker chunk, default unchanged. Done in 2525712c (2026-10-29).
 - **K1050** · Muse week done: K994, K788, K743/K762/K763, K747 (+K712 first half checked, stays open), K807, K810, K393 (Option B), K783/K728. Done in cea08eb5 (2026-10-29).
 - **K728** · max deviation 1.1116 in first 5s, then stopped (.claude/probes/K728/results.md). Done in cea08eb5 (2026-10-29).
 - **K783** · 20 links x2 sizes asleep at sim 5.0s, wall ~9.2s, physics ~0.9s/s (.claude/probes/K783/results.md). Done in cea08eb5 (2026-10-29).
