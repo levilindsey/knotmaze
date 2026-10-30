@@ -49,6 +49,10 @@ function uniforms(dist: number): KUniforms {
     uKKnots: K,
     uKGamut: new Float32Array([HUE, arc, sat, light]),
     uKSect: new Float32Array([dist, Math.min(1, dist), 0, 0]),
+    uKPaint: new Float32Array(4),
+    uKPulse: new Float32Array(4),
+    uKReach: new Float32Array(4),
+    uKGold: new Float32Array(4),
   };
 }
 

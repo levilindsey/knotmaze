@@ -34,7 +34,10 @@ class FakeGl implements WarmGl {
   statusReads = 0;
   failing = new Set<string>();
   attribs: Record<string, string[]> = {};
-  constructor(public parallelExt = true) {}
+  parallelExt: boolean;
+  constructor(parallelExt = true) {
+    this.parallelExt = parallelExt;
+  }
   nameOf(p: FakeProgram): string {
     const fs = p.shaders.find((s) => s.type === 0x8b30)?.source ?? "";
     return /SHADER_NAME (\S+)/.exec(fs)?.[1] ?? "?";

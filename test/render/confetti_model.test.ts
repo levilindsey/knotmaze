@@ -535,7 +535,7 @@ describe("the side cannons (screen space, K336)", () => {
       foilShare: 0.3,
       confettiCannons: true,
       cannonAmount: 1,
-      streamerShare: 0.2,
+      streamerShare: 0.2, cannonSpread: CANNON_SPREAD,
     };
     const on = confettiPlanFor(s, false, 1400, 900);
     expect(on).toEqual(confettiPlan(1, false, 1400, 900, 1, 0.3, 1, 0.2));
@@ -546,8 +546,8 @@ describe("the side cannons (screen space, K336)", () => {
       ).toEqual({ ...on, cannon: 0, streamers: 0 });
     }
     expect(planThrows(on)).toBe(true);
-    expect(planThrows({ rain: 0, spray: 0, cannon: 1, streamers: 0, foil: 0, shine: 0 })).toBe(true);
-    expect(planThrows({ rain: 0, spray: 0, cannon: 0, streamers: 1, foil: 0, shine: 0 })).toBe(true);
+    expect(planThrows({ rain: 0, spray: 0, cannon: 1, streamers: 0, foil: 0, shine: 0, spread: CANNON_SPREAD })).toBe(true);
+    expect(planThrows({ rain: 0, spray: 0, cannon: 0, streamers: 1, foil: 0, shine: 0, spread: CANNON_SPREAD })).toBe(true);
     expect(planThrows(confettiPlanFor(s, true, 1400, 900))).toBe(false);
     expect(planThrows(confettiPlanFor({ ...s, confettiAmount: 0 }, false, 1400, 900))).toBe(false);
   });
@@ -757,7 +757,7 @@ describe("the side cannons (screen space, K336)", () => {
     expect(b.active).toBe(false);
     // Cannons alone hold the sim active until their last piece falls out.
     const c = new ConfettiSim();
-    const only = { rain: 0, spray: 0, cannon: 100, streamers: 0, foil: 0, shine: 1 };
+    const only = { rain: 0, spray: 0, cannon: 100, streamers: 0, foil: 0, shine: 1, spread: CANNON_SPREAD };
     expect(c.burst(only, w, h, 0, 0, 1, seeded(22))).toBe(true);
     expect(c.active).toBe(true);
     const t = runOut(c, h);
@@ -801,7 +801,7 @@ describe("the streamers (K336)", () => {
 
   it("spawns after both cannons' paper, so every other piece is unchanged", () => {
     const [w, h] = [1400, 900];
-    const base = { rain: 300, spray: 100, cannon: 80, streamers: 0, foil: 0.3, shine: 1 };
+    const base = { rain: 300, spray: 100, cannon: 80, streamers: 0, foil: 0.3, shine: 1, spread: CANNON_SPREAD };
     const a = new ConfettiSim();
     const b = new ConfettiSim();
     a.burst(base, w, h, 3, 4, 1, seeded(31));
@@ -815,7 +815,7 @@ describe("the streamers (K336)", () => {
     expect(b.active).toBe(false);
     // Streamers alone throw, and hold the sim active until the last falls out.
     const c = new ConfettiSim();
-    const only = { rain: 0, spray: 0, cannon: 0, streamers: 30, foil: 0, shine: 1 };
+    const only = { rain: 0, spray: 0, cannon: 0, streamers: 30, foil: 0, shine: 1, spread: CANNON_SPREAD };
     expect(planThrows(only)).toBe(true);
     expect(c.burst(only, w, h, 0, 0, 1, seeded(32))).toBe(true);
     expect(c.active).toBe(true);
@@ -941,7 +941,7 @@ describe("the streamers (K336)", () => {
   it("keeps every segment within its length while the body trails the head", () => {
     const [w, h] = [1400, 900];
     const sim = new ConfettiSim();
-    const plan = { rain: 0, spray: 0, cannon: 0, streamers: 40, foil: 0, shine: 1 };
+    const plan = { rain: 0, spray: 0, cannon: 0, streamers: 40, foil: 0, shine: 1, spread: CANNON_SPREAD };
     sim.burst(plan, w, h, 0, 0, 1, seeded(51));
     const pool = sim.streamers;
     let worst = 0;

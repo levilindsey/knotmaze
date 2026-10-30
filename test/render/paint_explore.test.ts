@@ -296,8 +296,8 @@ describe("K76 kExploreAt mirror vs the model's chainVis", () => {
       const c1 = kChain(D1, 0);
       for (let q = 0; q < top * 8; q++) {
         const ctrl = q / 8;
-        const s0: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
-        const s1: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+        const s0: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
+        const s1: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
         kPaintAt(D0, U, c0, ctrl, ctrl, 0.01, s0);
         kPaintAt(D1, U1, c1, ctrl, ctrl, 0.01, s1);
         expect(s1).toEqual(s0);

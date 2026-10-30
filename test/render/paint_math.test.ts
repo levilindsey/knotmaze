@@ -58,7 +58,7 @@ export function layout(chains: FrozenSamples[]): KData {
       c.controlArcLengths
     );
   });
-  return { stat, geom, paint: new Float32Array(16) };
+  return { stat, geom, reveal: new Float32Array(16), paint: new Float32Array(16) };
 }
 
 describe("paint mirror geometry (G2.0)", () => {

@@ -174,7 +174,7 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
       const us = oldPaintU(arcs, c.total, closed, arcOf, spans, caps, pulses, clock);
       // The thread's paint under the pulses (spans + caps alone).
       const under = oldPaintU(arcs, c.total, closed, arcOf, spans, caps, [], clock);
-      const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+      const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
       for (let k = 0; k < ch.count; k++) {
         const famB = us[k] >= 124 / 256;
         const famA = us[k] < 112 / 256;
@@ -212,7 +212,7 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     for (let i = 0; i <= 20; i++) {
       const p = i / 20;
       const got = [...S];
-      kComposePaint(U, got, { p, band: false, v: 0, rim: 0 }, 0);
+      kComposePaint(U, got, { p, band: false, v: 0, rim: 0, tele: 0 }, 0);
       const goldRgb = [U.uKGold[0], U.uKGold[1], U.uKGold[2]];
       for (let c = 0; c < 3; c++) expect(got[c]).toBeCloseTo(S[c] + (goldRgb[c] - S[c]) * p, 6);
       // The retired look, for the record.
@@ -265,8 +265,8 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
       const arcs: number[] = [];
       for (let a = a0; a <= a1; a += 0.005) arcs.push(a);
       const oldU = oldPaintU(arcs, c.total, false, arcOf, spans, caps, pulses, clock);
-      const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
-      const st0: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+      const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
+      const st0: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
       let prev: number[] | null = null;
       let prevOld: number[] | null = null;
       arcs.forEach((a, k) => {
@@ -404,7 +404,7 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     const c = kChain(D, 0);
     const aJ = kArcOfCtrl(D, c, 10);
     const aF = kArcOfCtrl(D, c, 30);
-    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
     const mid = aJ + 0.4;
     const got = kPaintAt(D, U, c, 11, mid, 0.02, st);
     expect(got.band).toBe(true);
@@ -455,7 +455,7 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     const aS = arcOf(cS);
     const aH = arcOf(30);
     const farP = pAt(5);
-    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
     let prev = -1;
     let maxStep = 0;
     let solid = 0;
@@ -589,8 +589,8 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     const spans: OldSpan[] = [{ c0: 40, c1: 70 }];
     const G = 0.45;
     const PX = 0.02;
-    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
-    const st0: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
+    const st0: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
     // The sample arcs and their ctrls, found once (the tables are shared).
     const samples: [number, number][] = [];
     {
@@ -675,7 +675,7 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     const G = 0.45;
     const PX = 0.02;
     const S = 0.4;
-    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
     for (const EF of [0, 0.1, 0.2, 0.3, 0.75, 1.5]) {
       const U = uniforms(k);
       const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], [], U, [{ c0: 10, c1: 80, gap: G }]);
@@ -704,7 +704,7 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
     const G = 0.45;
     const PX = 0.02;
-    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
     const U = uniforms(k);
     const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], [], U, [{ c0: 5, c1: 50, gap: G }]);
     const c = kChain(D, 0);
@@ -745,7 +745,7 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
     const G = 0.45;
     const PX = 0.02;
-    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
     const pulses: OldPulse[] = [{ cJunction: 5, cFar: 50, inward: false, onPath: false, hovered: true }];
     const sideEdge = 0.04; // Near a ribbon edge, where the glow is strong.
     let checked = 0;
@@ -799,7 +799,7 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     const U = uniforms({ clock: 20, pulseBorn: 0, spacing: 2.5 });
     for (let i = 0; i < 2000; i++) {
       const S0 = [r(), r(), r()];
-      const st: KPaintState = { p: r() < 0.3 ? 0 : r(), band: false, v: r(), rim: 0 };
+      const st: KPaintState = { p: r() < 0.3 ? 0 : r(), band: false, v: r(), rim: 0, tele: 0 };
       const rim = r() < 0.1 ? 0 : r() * 0.6;
       // Plain arrays: the shader keeps the intermediate color at its own
       // precision too (a Float32Array would round it between the steps).
@@ -819,7 +819,7 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
     const G = 0.45;
     const PX = 0.02;
-    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
     // A run across the seam (slots n - 12 .. n + 12, unwrapped), hovered just
     // past the seam (unwrapped too, as FabricMazeRenderer.setGlow gives it).
     const c0 = n - 12;
@@ -880,7 +880,7 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     const G = 0.45;
     const PX = 0.02;
     const S = 0.4;
-    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
     const D0 = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], [], uniforms(k));
     const c0 = 30;
     const u0 = kArcOfCtrl(D0, kChain(D0, 0), c0);
