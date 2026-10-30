@@ -39,7 +39,7 @@ import {
 import type { ParticleSystem } from "../physics/particle_system";
 import type { WalkGraph, WalkEdge } from "../core/walk_graph";
 import { walkDistances } from "../core/walk_graph";
-import { litArms, planRoute } from "../game/route_plan";
+import { litArms, planRoute, planRouteRuled } from "../game/route_plan";
 import { darknessAlpha, pruneDarkStamps } from "../game/darkness";
 import {
   PATH_IRREGULARITY_DEFAULT,
@@ -1461,13 +1461,27 @@ export class FabricMazeRenderer {
       if (!m) continue;
       const d2 = m.d * m.d;
       if (d2 >= best2) continue;
-      const route = planRoute(
-        this.walk,
-        controller.head,
-        { edge: e.id, at: m.at },
-        reach,
-        (r) => controller.broken(r) || controller.isHidden(r)
-      );
+      const route = controller.rule
+        ? planRouteRuled(
+            this.walk,
+            controller.rule,
+            {
+              vertex: controller.head,
+              state: controller.ruleState,
+              last: controller.arrivalEdge,
+              phase: controller.strokes,
+            },
+            { edge: e.id, at: m.at },
+            reach,
+            (r) => controller.broken(r) || controller.isHidden(r)
+          )
+        : planRoute(
+            this.walk,
+            controller.head,
+            { edge: e.id, at: m.at },
+            reach,
+            (r) => controller.broken(r) || controller.isHidden(r)
+          );
       if (!route) continue;
       best2 = d2;
       best = { eid: e.id, at: m.at, d: m.d, route };

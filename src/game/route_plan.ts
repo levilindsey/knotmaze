@@ -34,6 +34,7 @@
 // refused when it comes up, as today.
 
 import type { WalkGraph } from "../core/walk_graph";
+import type { WalkRule } from "./rule_search";
 import type { Fire } from "./fire";
 import { armSafe } from "./fire";
 
@@ -123,6 +124,147 @@ export function planRoute(
     v = p.from;
   }
   route.push(e.id);
+  return route;
+}
+
+// K743: where the head stands for a ruled tap: its vertex, the rule's
+// state there, the run it arrived by (-1: none) and the moves made (the
+// rule's clock reads it mod its period).
+export interface RouteFrom {
+  vertex: string;
+  state: number;
+  last?: number;
+  phase?: number;
+}
+
+// K743: planRoute under a rule (K138 s1 residual): the shortest legal
+// walk (in lattice arc) from the head to the tapped point, judged move
+// by move with the kit's rule (one-way runs only from their entry, a
+// slide whole, the turnstile's clock turning per move), the tapped run
+// walked by the move that reaches it. A tap on a run at the head is
+// that run's move, as planRoute's incident case. When no legal walk
+// reaches the point within `reach` (or the tap at the head is refused),
+// today's planRoute answers instead, so the tap walks to its first
+// refused run and says why, exactly as before. `blocked` (broken or
+// hidden runs) bars every run of a move, as it bars the tapped run.
+export function planRouteRuled(
+  walk: WalkGraph,
+  rule: WalkRule | null,
+  from: RouteFrom,
+  target: TappedRun,
+  reach: number,
+  blocked?: (eid: number) => boolean
+): number[] | null {
+  const head = from.vertex;
+  if (!rule) return planRoute(walk, head, target, reach, blocked);
+  const e = walk.edges[target.edge];
+  if (!e || !walk.vertices.has(head)) return null;
+  if (blocked && blocked(e.id)) return null;
+  const plain = (): number[] | null => planRoute(walk, head, target, reach, blocked);
+  if (e.va === head || e.vb === head) {
+    const m = rule.step(head, e.id, from.state, from.last ?? -1, from.phase ?? 0);
+    if (m && !m.runs.some((r) => blocked && blocked(r))) return [...m.runs];
+    return plain();
+  }
+  const E = walk.edges.length;
+  const S = rule.states;
+  const P = rule.period ?? 1;
+  const SRC = 2 * E;
+  const keyOf = (run: number, to: string): number =>
+    2 * run + (walk.edges[run].va === to ? 0 : 1);
+  const vertOf = (key: number): string =>
+    key === SRC ? head : (key & 1) === 0 ? walk.edges[key >> 1].va : walk.edges[key >> 1].vb;
+  const lastOk =
+    from.last !== undefined && from.last >= 0 && from.last < E &&
+    (walk.edges[from.last].va === head || walk.edges[from.last].vb === head);
+  const arrival = (key: number): number => (key === SRC ? (lastOk ? from.last! : -1) : key >> 1);
+  const N = (2 * E + 1) * S * P;
+  const srcPhase = ((from.phase ?? 0) % P + P) % P;
+  const source = (SRC * S + from.state) * P + srcPhase;
+  const nodeOf = (mRuns: number[], to: string, state: number, ph: number): number =>
+    (keyOf(mRuns[mRuns.length - 1], to) * S + state) * P + ((ph + 1) % P);
+  const at = Math.min(e.length, Math.max(0, target.at));
+  const dist = new Float64Array(N).fill(Infinity);
+  const parent = new Int32Array(N).fill(-1);
+  const parentRun = new Int32Array(N).fill(-1);
+  dist[source] = 0;
+  const done = new Uint8Array(N);
+  let best = Infinity;
+  let bestNode = -1;
+  let bestRun = -1;
+  for (;;) {
+    let n = -1;
+    let nd = Infinity;
+    for (let i = 0; i < N; i++) {
+      if (!done[i] && dist[i] < nd) {
+        nd = dist[i];
+        n = i;
+      }
+    }
+    if (n < 0 || nd > best) break;
+    done[n] = 1;
+    const ks = Math.floor(n / P);
+    const key = Math.floor(ks / S);
+    const state = ks % S;
+    const ph = n % P;
+    const v = vertOf(key);
+    if (v === walk.exit && key !== SRC) continue;
+    const bar = arrival(key);
+    for (const run of walk.vertices.get(v)!.edges) {
+      if (run === bar) continue;
+      const m = rule.step(v, run, state, bar, ph);
+      if (!m) continue;
+      if (blocked && m.runs.some((r) => blocked(r))) continue;
+      let len = 0;
+      let ti = -1;
+      for (let i = 0; i < m.runs.length; i++) {
+        if (m.runs[i] === e.id) {
+          ti = i;
+          break;
+        }
+        len += walk.edges[m.runs[i]].length;
+      }
+      if (ti >= 0) {
+        let cur = v;
+        for (let i = 0; i < ti; i++) {
+          const re = walk.edges[m.runs[i]];
+          cur = re.va === cur ? re.vb : re.va;
+        }
+        const total = nd + len + (walk.edges[e.id].va === cur ? at : e.length - at);
+        if (total < best) {
+          best = total;
+          bestNode = n;
+          bestRun = run;
+        }
+        continue;
+      }
+      for (const r of m.runs) len += walk.edges[r].length;
+      const tn = nodeOf(m.runs, m.to, m.state, ph);
+      if (nd + len < dist[tn]) {
+        dist[tn] = nd + len;
+        parent[tn] = n;
+        parentRun[tn] = run;
+      }
+    }
+  }
+  if (bestNode < 0 || best > reach + 1e-9) return plain();
+  const taps: number[] = [];
+  for (let n = bestNode; n !== source; n = parent[n]) taps.push(parentRun[n]);
+  taps.reverse();
+  taps.push(bestRun);
+  const route: number[] = [];
+  let atV = head;
+  let state = from.state;
+  let came = arrival(SRC);
+  let ph = srcPhase;
+  for (const run of taps) {
+    const m = rule.step(atV, run, state, came, ph)!;
+    route.push(...m.runs);
+    atV = m.to;
+    state = m.state;
+    came = m.runs[m.runs.length - 1];
+    ph = (ph + 1) % P;
+  }
   return route;
 }
 
