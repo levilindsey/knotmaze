@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1064.
+Next free ID: K1076.
 
 ## Waiting on Levi
 
@@ -485,9 +485,9 @@ Next free ID: K1064.
 - **K1062** · Muse batch 3: G K1056's real-time lure fix (queued first), A K321, B K658, C K326
   stage A, D K814, E K441, F K645 (docs/design/K1062_muse_batch3.md)
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator)
-  - branch: mainline; last commit: `bc18a40f`
+  - branch: mainline; last commit: `b51bc22b`
   - evidence: .claude/probes/K1053/ (queue.txt tags 3G and 3A-3F, chain.log, done.txt)
-  - next: Claude reviews run A on master; next run B (K658)
+  - next: Claude reviews run B on master; next run C (K326 stage A)
   - brief: `docs/design/K1062_muse_batch3.md`
   - env: pwsh -NoProfile -File .claude/probes/K1053/start.ps1
 
@@ -698,9 +698,6 @@ Every other item below waits on the trigger it names.
 - **K657** · K137 follow-ups: the win banner's strokes/par and snapped rows (showFabricWin is free
   since K336 merged); keep copy from promising par = perfect play (par counts runs, stars length; a
   100%-efficient walk lost strict par, seed 7, slack 0).
-- **K658** · K137's page gaps: real clicks and touch taps, a click while stranded, sound, the
-  real-time clocks with fragile or par, the panel rows, chase + fragile edge cases.
-  `.claude/probes/K137/page/`.
 - **K441** · The real-time fire's frame cost, profiled (9850741): about 1% of a frame (+0.23 ms at 1x,
   +1.85 at 4x CPU, nearly all `ExploreGaps.setExplore`); no fix built. Owed: a same-state rerun under
   the perf lock, realtime stand after the first sleep (`docs/design/K441_fire_frame.md` Handoff, Owed).
@@ -786,6 +783,30 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
+- **K1064** · K658 finding c1fog tail: 'tail crossing breaks nothing (exempt)' FAIL cracked [0]
+  (docs/design/K658_page_checks.md, c1fog). K840 breaks END runs; probe expectation stale.
+- **K1065** · K658 finding c1fog fog: 'Undo explored fog intact IoU' FAIL 0.9613 vs 0.97, 34/34 stamps (K658
+  doc, c1fog). Probe threshold; stamp count intact.
+- **K1066** · K658 finding c1plain tail: 'tail crossing breaks nothing (exempt)' FAIL cracked [0] (K658 doc,
+  c1plain). K840 breaks END runs; probe expectation stale.
+- **K1067** · K658 finding c1click tail: 'tail crossing breaks nothing (exempt)' FAIL cracked [0] by real
+  clicks (K658 doc, c1click). K840; probe expectation stale.
+- **K1068** · K658 finding c1touch tail: 'tail crossing breaks nothing (exempt)' FAIL cracked [0] by touch
+  taps (K658 doc, c1touch). K840; probe expectation stale.
+- **K1069** · K658 finding c1rt tail: 'tail crossing breaks nothing (exempt)' FAIL cracked [0] on realtime
+  (K658 doc, c1rt). K840; probe expectation stale.
+- **K1070** · K658 finding c1rt buttons: 'banner buttons Undo + Restart' FAIL Restart-only [What the numbers
+  mean, Restart, x] (K658 doc, c1rt). Realtime Undo correctly absent.
+- **K1071** · K658 finding c1rt undo-click: 'Undo clicked, banner hides' FAIL clicked false, Stranded stays
+  (K658 doc, c1rt). No Undo button on realtime by design.
+- **K1072** · K658 finding c1rt undo-head: 'Undo head back one move' FAIL head stays mnode_109 taps 5 (K658
+  doc, c1rt). Follows Restart-only realtime banner.
+- **K1073** · K658 finding c1rt undo-cracked: 'Undo last run cracked again' FAIL still broken [220,221]
+  stranded (K658 doc, c1rt). Follows Restart-only realtime banner.
+- **K1074** · K658 finding c4 stub: 'a stub was found' FAIL candidates [] tail limit 1 (K658 doc, c4). K840
+  leaves no exempt snap stub; c5 covers snap break.
+- **K1075** · K137 sounds unchecked: the snap pluck and the strand glissando need an ear (left by K658; K658
+  doc Findings filed).
 
 ## Residuals (known, not fixed)
 
@@ -2070,6 +2091,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K658** · K137 page gaps checked: 155 checks in docs/design/K658_page_checks.md, FAILs K1064-K1074, sounds K1075. Done in b51bc22b (2026-10-30).
 - **K321** · Credits page: licenses.html became credits.html, Levi header first, Scarborough Fair in Music and sound, Built with Claude Code below art/music. Done in bc18a40f (2026-10-30).
 - **K1056** · Real-time lure lasts until the target (run G, K1062): detect() no longer re-spots a lured monster, both clocks suggest the shipped 2 lures / 1 snare. Done in b65bf3fb (2026-10-30).
 - **K654** · the moving lead rides uKTeleAt, no texel rewrite (K324 s2). Done in ea3e63b8 (2026-10-29).
