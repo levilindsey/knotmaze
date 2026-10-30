@@ -462,3 +462,60 @@ describe("K137 s3b: the sword in real time", () => {
     }
   });
 });
+
+describe("K747: the sword's move numbers under a sprint", () => {
+  it("takenAt and slainAt count player moves, not minotaur turns", () => {
+    let slain = 0;
+    for (const model of MODELS) {
+      for (const seed of SEEDS) {
+        const walk = realMaze(seed);
+        const p: TurnMinoParams = { ...DEFAULT_TURN_MINO, model };
+        const t = new TurnMinotaur(walk, turnConfig(p), turnSeed(seed));
+        const g = t.g;
+        const spot = tailJunction(g, g.start);
+        t.setSword(newSword(spot, "oneuse", 20));
+        // Eight waits let it roam out (turnChase's setup), then a sprint
+        // pair walks onto the sword's spot: the skipped move first.
+        for (let i = 0; i < 8; i++) t.turn(-1);
+        const toward = (from: number, goal: number): number => {
+          let edge = -1;
+          let best = Infinity;
+          for (const e of g.adj[from]) {
+            const far = g.ea[e] === from ? g.eb[e] : g.ea[e];
+            if (g.blocked[e]) continue;
+            const h = t.tg.hopd(far, goal);
+            if (h < best) {
+              best = h;
+              edge = e;
+            }
+          }
+          return edge;
+        };
+        let tookOnSkip = false;
+        for (let s = 0; s < 2 && t.sword!.phase === "ready"; s++) {
+          const e = toward(t.player, spot);
+          if (e < 0) break;
+          const far = g.ea[e] === t.player ? g.eb[e] : g.ea[e];
+          t.turn(e, s === 0 ? { sprint: "skip" } : undefined);
+          t.setProgress(1);
+          if (far === spot && s === 0) tookOnSkip = true;
+        }
+        if (t.sword!.phase !== "fleeing") continue;
+        expect(tookOnSkip).toBe(true);
+        expect(t.sword!.takenAt).toBe(t.inputs.length);
+        expect(t.sword!.takenAt).toBe(t.turns + 1);
+        // Chase it (turnChase's policy); a touch slays it.
+        for (let i = 0; i < 60 && !t.finished && t.sword!.phase === "fleeing"; i++) {
+          t.turn(toward(t.player, t.state.v));
+          t.setProgress(1);
+          if (t.lastTouch?.kind === "slay") {
+            expect(t.sword!.slainAt).toBe(t.inputs.length);
+            expect(t.sword!.slainAt).toBe(t.turns + 1);
+            slain++;
+          }
+        }
+      }
+    }
+    expect(slain).toBeGreaterThan(0);
+  });
+});
