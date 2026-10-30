@@ -485,9 +485,9 @@ Next free ID: K1076.
 - **K1062** · Muse batch 3: G K1056's real-time lure fix (queued first), A K321, B K658, C K326
   stage A, D K814, E K441, F K645 (docs/design/K1062_muse_batch3.md)
   - owner: claude session bf876705-c9fa-4b1f-83ea-e173dac6cff3 (coordinator)
-  - branch: mainline; last commit: `b51bc22b`
+  - branch: mainline; last commit: `057c5173`
   - evidence: .claude/probes/K1053/ (queue.txt tags 3G and 3A-3F, chain.log, done.txt)
-  - next: Claude reviews run B on master; next run C (K326 stage A)
+  - next: Claude reviews run C on master; next run D (K814)
   - brief: `docs/design/K1062_muse_batch3.md`
   - env: pwsh -NoProfile -File .claude/probes/K1053/start.ps1
 
