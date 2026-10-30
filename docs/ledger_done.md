@@ -2334,3 +2334,19 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K800 (Done 2026-10-21)
 
 - **K800** · Looks set by the link (LOOK_KEYS exempt; Link look chip). Done in 879d190e (2026-10-21).
+
+## K828 (Done 2026-10-22)
+
+- **K828** Loader params: loaderSpeed/loaderMove (codec 243-244, LOOK_KEYS), gap/threadWidth/pathColor/backgroundBase drive the loading trefoil, keep-loading-animation preview switch. Done in 9bd67c8e (2026-10-22).
+
+## K829 (Done 2026-10-22)
+
+- **K829** The tapered glyph root leans onto its swept-disc envelope (K718 call 1: the a's-J 0.031-0.059 LU scoop; `gln=0` keeps the square offset for A/B). Done in 2fbaf8a3 (2026-10-22).
+
+## K792 (Done 2026-10-22)
+
+- **K792** · A try key for the K610 grab chase rate: `?gcr=` (0, 2] sets PhysicsTuning.grabChase (default in MAX_SLIDE_GRABBED). Done in da1d64cc (K827) (2026-10-22).
+
+## K36 (Done 2026-10-22)
+
+- **K36** · Add to home screen: a trefoil icon set from the loader's geometry (favicon.svg, icon-192/512, apple-touch-icon, manifest.webmanifest); template leftovers deleted. Done in c46d3cc9 (K823) (2026-10-22).
