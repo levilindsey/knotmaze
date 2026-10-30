@@ -192,3 +192,69 @@ two checks not run (below). All probes and results are untracked under
   K645 (b); a visible still pair of the bleed needs a probe that shows the
   glow (headed, real-GPU, a real chase)
 - brief: this file
+
+## K645: the frame A/B (2026-10-30)
+
+Run F of `docs/design/K1062_muse_batch3.md` (K336's last unrun check, item
+(b) above). Measurement only; no default changed. One build of master
+`5406c4e6`, served by `scripts/preview.ps1 -Port 5550` and compared across
+links on that one base. The harness is K140's, copied to
+`.claude/probes/K645/` (`k140_ab.mjs`, `run_ab.ps1`; K140's copies
+untouched): `LINK` is `?7&am=instant&ms=4`, four tabs on the one base (no
+extra keys, `&cfa=3`, `&cfc=0`, `&cfa=3&cfc=0`), each tab's build stamp
+checked against `5406c4e6` and its live params read back
+(`__knotParams()`: cfa 1/3, cfc true/false as labelled). Five scenarios,
+5 reps each, the rep order rotating: N (the cannons-on tab, no burst, the
+control), C1/C3 (a burst with the cannons on, amounts 1 and 3) and O1/O3
+(a burst with `cfc=0`, amounts 1 and 3). Each measure is a 6 s rAF window
+from the burst; the CPU throttle went on after the load settle. Everything
+below ran under the perf lock (taken 2026-10-30T01:41:49, released
+01:51:04), in a headed off-screen Chrome at 1400x900. Raw runs:
+`.claude/probes/K645/results/ab_desk_cpu1.json` and `ab_desk_cpu4.json`.
+
+- Cannon peaks (step 4, one burst a tab, `__knotConfetti().cannon` read
+  every 250 ms for 6 s, outside the measured windows): cannons on peak
+  494, `cfc=0` peak 0, at both throttles (thrown true both). A burst
+  throws rain 865 + spray 320 at amount 1 (2594 + 960 at amount 3) and,
+  with the cannons on, cannon 494 + streamers 124 at either amount (the
+  cannon count follows `cfn`, not `cfa`); with `cfc=0`, cannon 0 and
+  streamers 0.
+- Every page was asleep at open: yes, all four tabs in both throttle
+  runs (`asleepAtOpen` true for ON1, ON3, OFF1 and OFF3 in each JSON).
+
+Medians over the 5 reps. The interval's max is the median of the reps'
+maxima (the worst rep's maximum in brackets); frames over 25 ms is the
+median per rep; CPU busy is the machine-wide share over the window.
+
+Desktop, CPU throttle 1x:
+
+| Scenario | Frames | Interval mean / p95 / max (ms) | Frames >25 ms | JS mean / p95 (ms) | __knotPerf mean / p95 (ms) | CPU busy |
+|---|---|---|---|---|---|---|
+| N | 158 | 37.81 / 58.40 / 89.8 (91.8) | 109 | 22.51 / 60.90 | 22.63 / 60.90 | 11% |
+| C1 | 151 | 39.70 / 58.50 / 90.0 (90.8) | 110 | 22.18 / 62.10 | 22.16 / 62.60 | 11% |
+| C3 | 143 | 42.15 / 58.30 / 90.6 (108.2) | 112 | 21.64 / 60.40 | 21.74 / 58.80 | 10% |
+| O1 | 155 | 38.62 / 72.50 / 90.4 (107.3) | 103 | 21.26 / 61.40 | 21.31 / 61.40 | 12% |
+| O3 | 156 | 38.78 / 59.60 / 91.2 (112.7) | 111 | 21.42 / 61.10 | 21.18 / 61.00 | 11% |
+
+Desktop, CPU throttle 4x:
+
+| Scenario | Frames | Interval mean / p95 / max (ms) | Frames >25 ms | JS mean / p95 (ms) | __knotPerf mean / p95 (ms) | CPU busy |
+|---|---|---|---|---|---|---|
+| N | 71 | 84.03 / 162.70 / 180.8 (216.5) | 41 | 77.38 / 157.20 | 76.24 / 157.20 | 23% |
+| C1 | 69 | 90.87 / 179.20 / 183.0 (198.5) | 46 | 85.86 / 165.20 | 84.62 / 165.00 | 22% |
+| C3 | 65 | 95.70 / 180.10 / 198.2 (217.0) | 49 | 90.12 / 173.40 | 89.00 / 173.20 | 23% |
+| O1 | 71 | 87.67 / 166.50 / 184.7 (202.7) | 41 | 82.05 / 162.30 | 80.79 / 161.80 | 23% |
+| O3 | 69 | 90.13 / 164.70 / 181.0 (233.9) | 47 | 84.56 / 159.30 | 83.32 / 159.10 | 23% |
+
+Reading. The fabric at rest sets the floor on this machine tonight: the
+no-burst control already runs at a 37.81 ms mean interval at 1x
+(84.03 ms at 4x), so the 1x rows sit within a few ms of each other and
+the cannons' cost is not resolved there (C1 39.70 against O1 38.62 and
+N 37.81; JS means all between 21.26 and 22.51 ms). At 4x the ordering
+is consistent: C1 runs 3.20 ms over O1 on the interval mean (90.87
+against 87.67) and C3 5.57 ms over O3 (95.70 against 90.13), with the
+JS means showing the same gaps (85.86/82.05 and 90.12/84.56); the
+control is cheapest (84.03). So a burst costs frame time the rain and
+spray already dominate, and the cannons add a few ms a frame under 4x
+throttle at either amount. What that means for the cannons' defaults
+is Claude and Levi's call; none changed here.
