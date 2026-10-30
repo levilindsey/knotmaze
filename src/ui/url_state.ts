@@ -1318,9 +1318,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   sleepKind: "wake",
   // K138 stage 3: no one-way runs.
   oneWay: 0,
-  // K137 stage 4: no lures, no snares.
-  lures: 0,
-  snares: 0,
+  // K137 stage 4; K783 (2026-10-29): a chase starts with 2 lures, 1 snare.
+  lures: 2,
+  snares: 1,
   // K138 stage 4: no keys (the lock's form waits for a count).
   keys: 0,
   lockMode: "exit",

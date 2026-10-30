@@ -155,7 +155,7 @@ describe("links", () => {
       turnstiles: 0, hiddenRuns: 0, // K138 stage 2
       sleepers: 0, sleepKind: "wake", // K137 stage 3d
       oneWay: 0, // K138 stage 3
-      lures: 0, snares: 0, // K137 stage 4
+      lures: 2, snares: 1, // K137 stage 4; K783: a chase starts with 2 and 1
       keys: 0, lockMode: "exit", // K138 stage 4
       snareHold: 3, lureRange: 6, hiddenReveal: 3, // K795
       followDelayMin: 1, followDelayMax: 2, followShortcut: 0.25, // K807
@@ -1075,7 +1075,7 @@ if (name === "cartouche") return "knot";
   if (name === "sonarPings") return 7; // 4.26: its default is 0 (unlimited)
   if (name === "tunnels") return 1; // 4.13: its default is 0 (off)
   if (name === "oneWay") return 0.4; // K138 stage 3: its default is 0 (off)
-  if (name === "lures") return 3; // K137 stage 4: both default to 0 (off)
+  if (name === "lures") return 3; // K137 stage 4; K783: defaults 2 and 1
   if (name === "snares") return 2;
   if (name === "beatPerRun") return 2; // K795: half of 1 is under its floor 1
   if (name === "keys") return 2; // K138 stage 4: its default is 0 (off)

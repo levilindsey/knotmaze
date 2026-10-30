@@ -889,7 +889,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
     would pick (probes.md, K137 stage 4).
   - REPLAY: `tools` records each use before input `at` (inputs.length
     then), so a replay rebuilds the lures and snares between the taps.
-  - OFF (lures 0 and snares 0, so every daily): `tools` and `snares` stay
+  - OFF (lures 0 and snares 0; since K783 the defaults are 2 and 1, and a daily is classic so no tools show there): `tools` and `snares` stay
     empty, no field is added (a monster's `lure` is absent until a lure is
     heard) and nothing draws, so K80_DIGESTS, MODEL_DIGESTS, TURN_GAMES,
     LENGTH_GAMES, K87, the golden dailies and byte identity held. Tests:
