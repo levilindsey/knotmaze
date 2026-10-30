@@ -27,7 +27,7 @@
 // The heavy states run IN SEQUENCE on one knot (long use, not a fresh knot
 // per state).
 //
-// Usage (vite-node; scripts/fold_census.ps1 runs it in parallel):
+// Usage (scripts/run_node.mjs; scripts/fold_census.ps1 runs it in parallel):
 //   fold_census.ts <srcRoot> <jobs.json> <out.jsonl> [from] [to]
 //   jobs.json = [{ id, set, query, heavy? }] (scripts/fold_census.mjs jobs)
 // srcRoot is the checkout whose src/ is measured; the fold definition is

@@ -3,7 +3,7 @@
 // button it makes. scripts/panel_inventory.vite.config.mjs aliases the
 // "tweakpane" import to this file. Only the slice of the API that
 // src/ui/tweakpane_panel.ts uses is here: addFolder, addBinding, addButton,
-// on(...), hidden, refresh(), element.
+// on(...), hidden, refresh(), element, children.
 
 type Handler = (ev?: unknown) => void;
 
@@ -109,6 +109,7 @@ export class ButtonApi {
 class Container {
   element = stubElement();
   hidden = false;
+  children: unknown[] = [];
   constructor(readonly rec: RecFolder | null) {}
   addFolder(opts: { title: string; expanded?: boolean }): FolderApi {
     const rec = {
@@ -118,6 +119,7 @@ class Container {
       parent: this.rec,
     } as RecFolder;
     rec.api = new FolderApi(rec);
+    this.children.push(rec.api);
     record.items.push(rec);
     return rec.api;
   }
@@ -127,11 +129,13 @@ class Container {
     opts?: Record<string, unknown>
   ): BindingApi {
     const api = new BindingApi(obj, key);
+    this.children.push(api);
     record.items.push({ kind: "binding", parent: this.rec, obj, key, opts, api });
     return api;
   }
   addButton(opts: { title: string; label?: string }): ButtonApi {
     const api = new ButtonApi(opts.title);
+    this.children.push(api);
     record.items.push({
       kind: "button",
       parent: this.rec,
@@ -147,6 +151,15 @@ class Container {
 }
 
 export class FolderApi extends Container {
+  get title(): string {
+    return this.rec?.title ?? "";
+  }
+  get expanded(): boolean {
+    return this.rec?.expanded ?? true;
+  }
+  set expanded(v: boolean) {
+    if (this.rec) this.rec.expanded = v;
+  }
   foldHandlers: Handler[] = [];
   on(event: string, cb: Handler): this {
     if (event === "fold") this.foldHandlers.push(cb);

@@ -18,7 +18,7 @@
 //     heuristic: short keys such as gap or shape also match other objects).
 //
 // Usage, from the checkout's root:
-//   node node_modules/vite-node/vite-node.mjs --config scripts/panel_inventory.vite.config.mjs scripts/panel_inventory.ts [out.md]
+//   node scripts/run_node.mjs --config scripts/panel_inventory.vite.config.mjs scripts/panel_inventory.ts [out.md]
 // The default output is docs/design/K339_inventory.md. Nothing outside the
 // output file is written; no browser, no build.
 
