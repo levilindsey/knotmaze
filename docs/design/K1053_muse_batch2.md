@@ -126,3 +126,90 @@ pages, which are the default (its commit: hello 35-55 ms sooner at 40 ms an asse
 K810 (443ebdda) left its numbers in `.claude/probes/K810/results.md` and in its Done line, but
 the item asked for them in `docs/design/K793.md`'s Handoff. Add them there as a short subsection:
 the table, the query file, the date and the commit. Docs only.
+
+## Run D · K783, K1057 and K1060
+
+### K783 · A chase starts with 2 lures and 1 snare
+
+Levi, 2026-10-29, answering Claude's "I'd start with 2 lures and 1 snare" (run A's turn-clock table,
+`docs/design/K708.md`, "K783 and K728 (2026-10-29)"): "sgtm. Make it tunable with param sliders".
+The sliders already exist (`src/ui/tweakpane_panel.ts`, `luresRow` and `snaresRow` in the Minotaur
+folder; link keys `lur` and `snr`), so this task changes the defaults and nothing else.
+
+Read first: `.claude/rules/gameplay-minotaur.md` (the lures and snares entries),
+`.claude/rules/gameplay-links.md`, and CLAUDE.md's "Pre-launch: no back-compat".
+
+1. `src/ui/url_state.ts`, `PARAM_DEFAULTS`: `lures: 0` becomes `2`, `snares: 0` becomes `1`. Leave
+   the rows, their ranges, the link keys, the codec and `CODEC_VERSION` alone. Pre-launch, a
+   default edit changes what older links mean, and that is accepted.
+2. Fix each test the change moves, and list each in the commit message with its old and new
+   expected value. Expect tests that build a chase at the defaults and assumed it had no tools.
+   Lures and snares are stocks, not part of the maze, so no generated maze may change. A pin that
+   moves only because it covers every param or the link token (a golden daily's design, a codec
+   pin) is re-frozen and named in the commit, as CLAUDE.md's "Pre-launch: no back-compat" says.
+   If a maze's layout, a K87 identity pin or a test unrelated to lures and snares changes, stop and
+   report it.
+3. Lore and docs that state the old defaults as today's behaviour: grep `.claude/rules/`, `docs/`
+   and `README.md`, and update those. Leave dated history as it is.
+4. Page check on a build (`pwsh scripts/preview.ps1 -BuildOnly`, then serve it; headed Chrome,
+   never `--virtual-time-budget`). `.claude/probes/K137/s4/tools_page.mjs` shows how to read the
+   tools (`__knotTurnMino().tools`, the buttons' badges, the HUD's rows). Keep the probe and its
+   output in `.claude/probes/K783/`. Check:
+   - `?7&am=instant&mt=hunter&snd=none`: lure badge 2, snare badge 1, HUD rows 2 and 1, and
+     `__knotParams()` reads lures 2 and snares 1.
+   - The same link plus `&lur=0&snr=0`: no tool buttons, no lure or snare HUD row.
+   - `?7&am=instant&snd=none` (classic): no tool buttons, no lure or snare HUD row.
+
+Done when `npm test` passes, the three page checks hold, and the push's deploy is green.
+
+### K1057 · The probe recipes' runner
+
+vitest 4 dropped vite-node, so every recipe in the rules files that runs `node
+node_modules\vite-node\vite-node.mjs` fails. Run A's `.claude/probes/K708/run_node.mjs` (Vite's SSR
+module loader) does the same job, but `.claude/probes/` is untracked and exists on this desktop
+only.
+
+Read first: `.claude/rules/probes.md`.
+
+1. Move it to `scripts/run_node.mjs`, tracked, with its usage in the header. Fix what the move
+   breaks: its `root` is three levels up from the probes folder, and its per-process deps caches
+   must land somewhere git ignores, not in `scripts/`. Point anything that called the old path at
+   the new one.
+2. Rewrite each recipe that calls vite-node to call it: `gameplay-mechanisms.md` (line 370 on
+   2026-10-29), `physics-kinks.md` (74), `probes-pluck.md` (140), `probes.md` (18, 228, 233, 297,
+   668). The old recipes passed `--config <folder>\vite.node.config.mjs`, and run_node.mjs reads no
+   config, so check what each config set; where a recipe still needs it, say so in the recipe.
+3. Run two of those recipes whose probe folders exist on this machine (K114's `burn_sim.ts`
+   takes about 2 s) and give their results in the commit message.
+
+Done when no rules file names vite-node except as history, two recipes run through
+`scripts/run_node.mjs`, `npm test` passes and the push's deploy is green.
+
+### K1060 · Pin the worker preload's phw reader
+
+K1055 (c70db4fa) put an inline script in index.html's head that modulepreloads the physics
+worker's chunk unless the page will run in-thread. To decide before the app loads, it reads `phw`
+with its own copy of the link codec's walk (`vite.config.ts`, `workerPreloadScript`), and it
+assumes `physicsWorker` defaults on (a phw entry in the blob reads as off). Only a probe checks it
+(`.claude/probes/K414/check_k1055.mjs`, 14 URL forms in Node). A wrong decision costs a download
+or the head start, never behaviour, so nothing would notice one.
+
+Read first: `.claude/rules/gameplay-links.md` (the codec) and `.claude/rules/physics-worker.md`.
+
+1. Move `workerPreloadScript` and the values it bakes in (`PHW_INDEX`, `CODEC_TYPE_CODES`,
+   `CODEC_VERSION`) out of `vite.config.ts` into a module the suite can import, beside the loader's
+   inline plugin in `src/loader/`. Pin the default it assumes: build it from
+   `PARAM_DEFAULTS.physicsWorker` (a blob entry means the other value), or, if `url_state.ts` will
+   not load in the Vite config, assert in the test that the default is on.
+2. Add a test that runs the generated script against a stub `location` and `document` and
+   compares its decision with what the app reads (`parseParams`'s `physicsWorker`) for: the
+   probe's 14 forms; seeded random links written by the codec's own writer, with params changed
+   before and after phw's index, every codec type among them, and phw both ways; `key=value`
+   links; a token followed by `&phw=0` and by `&phw=1`; a token of another codec version; an
+   unreadable blob. Check once by hand that the test fails when the script's decision is
+   inverted, and say so in the commit message.
+3. Build before and after (`pwsh scripts/preview.ps1 -BuildOnly`) and compare `index.html`'s
+   inline script: it may change only where item 1 needs it to. Give the result in the commit
+   message.
+
+Done when the test passes, `npm test` passes and the push's deploy is green.
