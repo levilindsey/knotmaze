@@ -305,9 +305,9 @@ Next free ID: K1081.
 - **K1079** · Muse batch 4, runs A-E one at a time through the K1053 chain: K331+K330 touch picks, K549
   text-scene fit, K486 button help, K1077 the real-time profile, K412 the preload on the real network.
   - owner: the Muse chain (.claude/probes/K1053/chain.ps1; agent ids in chain.log), coordinated by claude 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `bc5f0043`
+  - branch: mainline; last commit: `f578b6ee`
   - evidence: .claude/probes/K1053/ (queue.txt tags 4A-4E, chain.log, done.txt) and each run's .claude/probes/<ID>/
-  - next: run 4B (K549 text-scene fit)
+  - next: run 4C (K486 touch help for the panel's buttons)
   - brief: `docs/design/K1079_muse_batch4.md`
   - env: pwsh -NoProfile -File .claude/probes/K1053/start.ps1
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
@@ -667,7 +667,6 @@ Every other item below waits on the trigger it names.
 - **K543** · K74 stage 4's before/after sheet of three finishes (searched vs shipped, dailies 1-3) was not made in the build stage; make it from `.claude/probes/K74/stage4/build_measure.ts` output or a diag_screenshot pair when Levi wants the look check. Sheet: `.claude/probes/K74/stage4/sheet/contact_sheet.png` (`notes.md` beside it).
 
 - **K548** · Overnight runner has no usage gate: the 92% weekly pause (Next binding rule) is checked by hand only; 2026-10-15/16 runs 1-6 launched at 88% (under the line, audit 2026-10-18) but nothing stops a launch over it. Add a /usage check to the runner before each batch, or a ledger-stamped usage line per run close.
-- **K549** · Text scene fit ignores the open panel: a wide word's exit side sits under the panel (stage 2 probe stalled at tn97 by mouse; programmatic walk solved). Fit text scenes against the panel-cleared range like mazes (K198 view clamp), or close the panel for text scenes.
 - **K569** · After K115 stage 9 (Levi, 2026-10-20): some lifted-pen strokes (dots, bars, accents)
   become maze threads, each a separate thread through the point, forced crossings at both ends with
   it underneath so it ends where the glyph wants. `docs/design/K115_glyphs.md` section 11, call 2.
@@ -2056,6 +2055,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K549** · Text scenes fit beside the open panel (fitArea/fitPlacement in view_clamp, camera reads panel only for params.text); probe .claude/probes/K549/. Done in f578b6ee (2026-10-30).
 - **K330** · touch press on a choice lights its hover glow at once. Done in bc5f0043 (2026-10-30).
 - **K331** · touch picks in pixels (touchPickMargin); with K330 glow on press. Done in bc5f0043 (2026-10-30).
 - **K327** · Labels that say what they size: 'Off-screen arrow size' and 'Maze marker size' (K534, 35f3ec28), word labels for the rest (K541); the panel inventory at HEAD shows no row labelled with its key. Done in 2c351ae4 (2026-10-30).
