@@ -305,9 +305,9 @@ Next free ID: K1081.
 - **K1079** · Muse batch 4, runs A-E one at a time through the K1053 chain: K331+K330 touch picks, K549
   text-scene fit, K486 button help, K1077 the real-time profile, K412 the preload on the real network.
   - owner: the Muse chain (.claude/probes/K1053/chain.ps1; agent ids in chain.log), coordinated by claude 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `f578b6ee`
+  - branch: mainline; last commit: `20afc256`
   - evidence: .claude/probes/K1053/ (queue.txt tags 4A-4E, chain.log, done.txt) and each run's .claude/probes/<ID>/
-  - next: run 4C (K486 touch help for the panel's buttons)
+  - next: run 4D (K1077 the real-time profile)
   - brief: `docs/design/K1079_muse_batch4.md`
   - env: pwsh -NoProfile -File .claude/probes/K1053/start.ps1
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
@@ -662,8 +662,6 @@ Every other item below waits on the trigger it names.
   `HIGH_CONTRAST_OVERRIDES` (`src/ui/accessibility.ts`); the glint has little room on light threads over black (inferred, not shot; fallback a stronger glint). Small: a unit test and a screenshot.
 - **K485** · Pixel pass for the phone sheet and row help (scripts/phone.ps1): the sheet query, Back,
   the peek, help taps; K467 ran only in phone emulation
-- **K486** · Touch help for the panel's buttons: Reset path, Replay settle, Reset to defaults, the
-  seed row, the dice, Daily, stats (K467 covered the 161 rows only)
 - **K543** · K74 stage 4's before/after sheet of three finishes (searched vs shipped, dailies 1-3) was not made in the build stage; make it from `.claude/probes/K74/stage4/build_measure.ts` output or a diag_screenshot pair when Levi wants the look check. Sheet: `.claude/probes/K74/stage4/sheet/contact_sheet.png` (`notes.md` beside it).
 
 - **K548** · Overnight runner has no usage gate: the 92% weekly pause (Next binding rule) is checked by hand only; 2026-10-15/16 runs 1-6 launched at 88% (under the line, audit 2026-10-18) but nothing stops a launch over it. Add a /usage check to the runner before each batch, or a ledger-stamped usage line per run close.
@@ -2055,6 +2053,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K486** · Touch help for the panel's nine buttons (K467's mechanism on buttons); probe .claude/probes/K486/. Done in 20afc256 (2026-10-30).
 - **K549** · Text scenes fit beside the open panel (fitArea/fitPlacement in view_clamp, camera reads panel only for params.text); probe .claude/probes/K549/. Done in f578b6ee (2026-10-30).
 - **K330** · touch press on a choice lights its hover glow at once. Done in bc5f0043 (2026-10-30).
 - **K331** · touch picks in pixels (touchPickMargin); with K330 glow on press. Done in bc5f0043 (2026-10-30).
