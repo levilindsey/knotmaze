@@ -5,7 +5,7 @@ import {
   RANGE_EASE,
   clampFitView,
   easeIntoRange,
-  easePanel,
+  easePanel, fitArea, fitPlacement,
   noAllowance,
   panRange,
   stepPanelTween,
@@ -460,5 +460,48 @@ describe("the panel edge's tween", () => {
       stepRange(b, g.w, g.h, MAX, g.panel, g.panel, allowB);
       expect(b.panX).toBeCloseTo(a.panX, 9);
     }
+  });
+});
+// K549: a text scene (a standalone word, params.text) fits beside the open
+// panel: its fit area is the panel-cleared part of the screen, so at home
+// (zoom 1, pan 0) the whole word, start and exit markers included, sits
+// left of the panel. Mazes and knot scenes keep the full-viewport fit.
+describe("K549: the text scene's fit area and placement", () => {
+  const MARGIN = 40;
+  const MAXS = 90;
+  // A wide word's padded bounds (world), as computeFitTarget pads them.
+  const WORD = { minX: 0, minY: 0, maxX: 44, maxY: 8 };
+  const DW = 1280;
+  const DH = 800;
+  const PANEL_LEFT = 950; // The 320 px side panel, 10 px from the edge.
+
+  it("a wide text scene with the panel open fits inside the cleared range", () => {
+    const area = fitArea(DW, PANEL_LEFT, true);
+    expect(area).toEqual({ left: 0, right: PANEL_LEFT - PANEL_GAP });
+    const p = fitPlacement(WORD, DH, MARGIN, MAXS, area);
+    const startX = p.x + WORD.minX * p.scale;
+    const exitX = p.x + WORD.maxX * p.scale;
+    // Both ends of the word land inside the cleared range, margins kept.
+    expect(startX).toBeGreaterThanOrEqual(MARGIN - 1e-9);
+    expect(exitX).toBeLessThanOrEqual(PANEL_LEFT - PANEL_GAP - MARGIN + 1e-9);
+    expect(exitX).toBeLessThan(PANEL_LEFT - PANEL_GAP);
+    // The full-viewport fit is wider: this scale is the cleared one.
+    const full = fitPlacement(WORD, DH, MARGIN, MAXS, fitArea(DW, null, true));
+    expect(p.scale).toBeLessThan(full.scale);
+    expect(full.x + WORD.maxX * full.scale).toBeGreaterThan(PANEL_LEFT - PANEL_GAP);
+  });
+
+  it("mazes (not text scenes) and a closed panel keep the full-viewport fit", () => {
+    expect(fitArea(DW, PANEL_LEFT, false)).toEqual({ left: 0, right: DW });
+    expect(fitArea(DW, null, true)).toEqual({ left: 0, right: DW });
+    expect(fitArea(DW, NaN, true)).toEqual({ left: 0, right: DW });
+    // The placement in the full area is exactly today's fit formula.
+    const p = fitPlacement(WORD, DH, MARGIN, MAXS, { left: 0, right: DW });
+    const w = WORD.maxX - WORD.minX;
+    const h = WORD.maxY - WORD.minY;
+    const s = Math.min((DW - MARGIN * 2) / w, (DH - MARGIN * 2) / h, MAXS);
+    expect(p.scale).toBeCloseTo(s, 12);
+    expect(p.x).toBeCloseTo((DW - w * s) / 2 - WORD.minX * s, 9);
+    expect(p.y).toBeCloseTo((DH - h * s) / 2 - WORD.minY * s, 9);
   });
 });

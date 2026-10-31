@@ -181,3 +181,66 @@ export function stepRange(
   easeIntoRange(view, w, h, before, allow, rate, gap);
   clampFitView(view, w, h, maxZoom, now, allow, gap);
 }
+
+// K549: THE TEXT SCENE'S FIT. A maze's home view may sit under the open
+// panel: K198's pan range lets the player bring its right edge clear.
+// A standalone word (a text scene, params.text) is read whole, start to
+// exit, so its FIT is placed in the panel-cleared part of the screen
+// instead: with the panel open the fit area ends PANEL_GAP left of the
+// panel, and the word is centred there at a smaller scale. Every other
+// scene, and a text scene with the panel closed (or the phone's sheet,
+// which the camera reads as no panel), keeps the full-viewport fit.
+// Pure, like the pan range above; src/app/camera.ts supplies the panel's
+// left edge and whether the scene is a text scene.
+export interface FitArea {
+  left: number;
+  right: number;
+}
+
+// The screen band the fit centres in. A cleared band too narrow to read
+// a word in (under 200 px: the panel covers the screen in practice, and
+// the sheet already reads as no panel) falls back to the full viewport.
+export function fitArea(
+  screenW: number,
+  panelLeft: number | null,
+  textScene: boolean,
+  gap: number = PANEL_GAP
+): FitArea {
+  const full: FitArea = { left: 0, right: screenW };
+  if (!textScene || panelLeft === null || !Number.isFinite(panelLeft)) return full;
+  const right = panelLeft - gap;
+  return right >= 200 && right < screenW ? { left: 0, right } : full;
+}
+
+// Padded scene bounds, as computeFitTarget pads them.
+export interface FitBounds {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+
+// The fit's placement: the largest scale that fits the bounds in the
+// area (margin on every side, capped at maxScale), centred in it. In
+// the full area this is exactly the fit camera's long-standing formula.
+export function fitPlacement(
+  bounds: FitBounds,
+  screenH: number,
+  margin: number,
+  maxScale: number,
+  area: FitArea
+): { scale: number; x: number; y: number } {
+  const w = Math.max(bounds.maxX - bounds.minX, 1);
+  const h = Math.max(bounds.maxY - bounds.minY, 1);
+  const availW = area.right - area.left;
+  const scale = Math.min(
+    (availW - margin * 2) / w,
+    (screenH - margin * 2) / h,
+    maxScale
+  );
+  return {
+    scale,
+    x: area.left + (availW - w * scale) / 2 - bounds.minX * scale,
+    y: (screenH - h * scale) / 2 - bounds.minY * scale,
+  };
+}
