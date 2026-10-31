@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1081.
+Next free ID: K1084.
 
 ## Waiting on Levi
 
@@ -305,9 +305,9 @@ Next free ID: K1081.
 - **K1079** · Muse batch 4, runs A-E one at a time through the K1053 chain: K331+K330 touch picks, K549
   text-scene fit, K486 button help, K1077 the real-time profile, K412 the preload on the real network.
   - owner: the Muse chain (.claude/probes/K1053/chain.ps1; agent ids in chain.log), coordinated by claude 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `20afc256`
+  - branch: mainline; last commit: `51f97bbc`
   - evidence: .claude/probes/K1053/ (queue.txt tags 4A-4E, chain.log, done.txt) and each run's .claude/probes/<ID>/
-  - next: run 4D (K1077 the real-time profile)
+  - next: run 4E (K412 the preload on the real network)
   - brief: `docs/design/K1079_muse_batch4.md`
   - env: pwsh -NoProfile -File .claude/probes/K1053/start.ps1
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
@@ -767,9 +767,12 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
-- **K1077** · Real-time stand ticks +4.24 ms (1x) / +13.16 ms (4x) over the turn stand, both asleep; the fire
-  chain explains about +0.5 (setExplore +0.42). Attribute the rest with the prof5 profile on an unminified
-  build, under the perf lock (docs/design/K441_fire_frame.md, owed rerun of 2026-10-30).
+- **K1081** · K1077: the button ticks' panel-rect reads pay a forced layout on the realtime stand
+  (+1.07 ms x1, +4.49 x4; main.ts aidTick, frame_loop.ts:699): skip/cache the rect (K441_fire_frame.md K1077).
+- **K1082** · K1077 (= K441 s2): the burn re-declare rebuilds fillets every frame on the realtime stand
+  (about +1.1 ms x1, +8.4 ms x4): incremental setExplore (K441_fire_frame.md K1077, K441 s2 sketch).
+- **K1083** · K1077: RibbonRenderer.update redoes gap slots every frame on the realtime stand (about
+  +0.97 ms x1, +4.5 ms x4) behind the setExplore invalidation: declare only changed chains (K441 K1077).
 
 ## Residuals (known, not fixed)
 
@@ -2053,6 +2056,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1077** · prof5-prof8 attribute the residual: 82% of +4.24 x1, 87% of +13.16 x4; three clusters (button-tick rects, fillet rebuild, gap-slot pass) filed as K1081-K1083. Done in 51f97bbc (2026-10-30).
 - **K486** · Touch help for the panel's nine buttons (K467's mechanism on buttons); probe .claude/probes/K486/. Done in 20afc256 (2026-10-30).
 - **K549** · Text scenes fit beside the open panel (fitArea/fitPlacement in view_clamp, camera reads panel only for params.text); probe .claude/probes/K549/. Done in f578b6ee (2026-10-30).
 - **K330** · touch press on a choice lights its hover glow at once. Done in bc5f0043 (2026-10-30).
