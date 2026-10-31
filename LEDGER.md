@@ -196,7 +196,9 @@ Next free ID: K1087.
 - **K715** · adb deaths: a Muse hopnbop session ran headless Godot 4.7.2 (--import, GUT); an editor
   exit runs adb kill-server (shutdown_adb_on_exit, default true; editor settings written at death 2,
   23:50:21; a Godot crash 23:31:56 before death 1). Set it false (claude-config Setup-GodotAndroid.ps1)?
-  No deaths during K726 (2026-10-21 02:16-03:02).
+  No deaths during K726 (2026-10-21 02:16-03:02). Confirmed 2026-10-31: a headless 4.7.2 `--editor
+  --quit` kills the server only when the project has a runnable Android preset; 13 kills 23:15-00:20
+  on 10-30 (TEMP adb.log, "killed by remote request"). Any hopnbop Godot run can cut a phone pass.
 - **K721** · K137 sword calls (s3a calls 3, 4), built as recommended: in real time the flee counts
   runs walked (alt: seconds); while it flees the telegraph turns pale blue 0x8fd0ff (alt: no
   telegraph, the glow alone). `K137_s3b.md` Handoff, The calls
