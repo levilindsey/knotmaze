@@ -287,7 +287,7 @@ Just past the cut, the fire chain itself: `applyExploreGaps` (`src/render/ribbon
 
 | # | function (source) | turn | realtime | diff | cum % of +13.16 | caller chain on the realtime stand |
 |---|---|---|---|---|---|---|
-| 1 | `getBoundingClientRect` (browser; `src/main.ts:3650` in `aidTick`) | 4.771 | 9.264 | +4.493 | 34% | `aidTick` <- `cutTick` <- `fabricTick` <- `restFrame` (row 1 at 1x; 59% of the realtime stand's rect time, 91% of the turn stand's rect time goes through the camera poll's `readPanel`, `src/app/camera.ts:133`) |
+| 1 | `getBoundingClientRect` (browser; `src/main.ts:3650` in `aidTick`) | 4.771 | 9.264 | +4.493 | 34% | `aidTick` <- `cutTick` <- `fabricTick` <- `restFrame` (row 1 at 1x; 59% of the realtime stand's rect time, 91% of the turn stand's rect time goes through the camera poll's `readPanel`, `src/app/camera.ts:219`, which `stepPanel` (`:226`) calls every frame) |
 | 2 | `rebuildFillets` own (`src/render/ribbon/joinery.ts:654`) | 3.161 | 6.855 | +3.694 | 62% | <- `tickPaintPalette` <- `tickPaint` <- `fabricTick` |
 | 3 | `sampleAt` (`src/render/ribbon/sampling.ts:38`) | 8.925 | 12.247 | +3.322 | 87% | <- `protectReach`/`computeGapSlot` (`src/render/ribbon/crossing_gaps.ts:370`) <- `RibbonRenderer.update` <- `flowRender` <- `restFrame` |
 

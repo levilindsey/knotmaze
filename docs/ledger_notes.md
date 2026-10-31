@@ -4600,3 +4600,22 @@ Shortened in LEDGER.md 2026-10-28 (v5.8's numbers added).
 - **K962** · Cursive joins: v5.5's seam spikes ("minimum", "hippo": p to o, h's entry) and m's exit hook; v5.7's 17
   rows worse by over 0.25 u (fo 3.10 -> 4.19, ot, br, be, og, ow, op, es, ov, ev, ug, ju, kn, qu, py; each on a moved
   body end, kn unexplained); minimum's um tooth and last m spike. `work15/dbg/fid_cmp_v57.txt` in K863's probes.
+
+## K1085
+
+Shortened in LEDGER.md 2026-10-30 (over three lines). Full text:
+
+- **K1085** · Under reduced motion the camera's fit still eases (about 1 s) where K198's panel tween snaps:
+  updateCamera's 0.08/frame ease (`src/app/camera.ts:436-438`) and easeView's range ease (:257) have no
+  reduced path; only stepPanel (:229) has one. K549 (f578b6ee) adds a trigger: a panel toggle now re-fits a
+  text scene. Fix: snap both when reduced (resize and reset then snap too).
+
+## K1086
+
+Shortened in LEDGER.md 2026-10-30 (over three lines). Full text:
+
+- **K1086** · K412 probe: the first reload in each warm profile started the app's main script 3.5 s (levi.dev)
+  and 3.2 s (pages.dev) late, against 68-216 ms on reloads 3-5. All of it comes before main (main to DCL 30-75
+  ms), on both origins, with no service worker. Unexplained: record navigation timing on that reload to split
+  the old page's teardown from a first cache read (`.claude/probes/K412/k412_run.mjs`, records in
+  `k412_results.jsonl`).
