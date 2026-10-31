@@ -382,13 +382,12 @@ Next free ID: K1087.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c
   merged e6c6034..aa3cdd1).
-  - owner: nobody since 2026-10-27 13:23 (round 27c merged in a9c4dfec)
-  - branch: mainline; last commit: `a9c4dfec`
-  - evidence: .claude/probes/rounds/2026-10-27-01df23a5/ and its -g31 twin, .claude/probes/rounds/2026-10-27c/ (main checkout, untracked); the kit is scripts/phone_pass/
-  - next: a later phone window: K568's confetti recheck (K896), the kit fixes with an m11 A/A floor (K895), K919's compile-out if one is built, and `k539_g31.mjs` and `pixdiff_g31.mjs` once (only parse-checked, K907). The d0406df..01df23a5 bisect is done (K893, K906).
-  - brief: docs/design/K156.md, "Round 2026-10-27"
-  - env: none; the pass builds and serves both builds itself (ports
-    5480-5489); check nobody is using the phone first (K234)
+  - owner: muse, paseo run 'knotmaze K156 round 2026-10-30', launched by claude 7301c55b once the phone is on the desktop's USB (nobody before that; briefed 2026-10-30 21:58)
+  - branch: mainline; last commit: `b581f620`
+  - evidence: .claude/probes/rounds/2026-10-30/ (main checkout, untracked); the kit is scripts/phone_pass/
+  - next: round 2026-10-30's steps: K896 confetti recheck, K309 ring-lap on the Pixel, K485 sheet portrait checks, K895 kit fixes + A/A floor; later, K919's compile-out if one is built
+  - brief: docs/design/K156.md, "Round 2026-10-30"
+  - env: none; the pass builds and serves both builds itself (ports 5480-5489); the phone on the desktop's USB; check nobody is using the phone first (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
   dead ends. Stages 1-2 merged (stage 2: 189b024..f799991; MAX fixed, joints fade).
