@@ -514,19 +514,29 @@ export function buildPanel(
     "background:rgba(255,255,255,.06);color:#c8cad3;font-size:11px;" +
     "line-height:1.4;white-space:pre-line}" +
     ".kp-row.kp-help-open{flex-wrap:wrap}" +
-    ".kp-row.kp-help-open>.kp-help{display:block}" +
+    ".kp-row.kp-help-open>.kp-help.kp-help-on{display:block}" +
     ".kp-i{display:none;box-sizing:border-box;width:11px;height:11px;" +
     "margin-left:5px;border:1px solid currentColor;border-radius:50%;" +
     "font:italic 600 8px/9px Georgia,serif;text-align:center;opacity:.5;" +
     "vertical-align:1px;pointer-events:none}" +
     ".kp-i::before{content:'i'}" +
-    ".kp-row.kp-help-open .kp-i{opacity:.95;color:#8ea0c0}" +
+    ".kp-i.kp-i-on{opacity:.95;color:#8ea0c0}" +
+    ".kp-i:focus-visible{outline:1px solid #8ea0c0;outline-offset:1px}" +
+    ".kp-i.kp-i-btn{pointer-events:auto;cursor:pointer;width:20px;" +
+    "height:20px;font-size:11px;line-height:18px;flex:0 0 auto}" +
     ".kp-has-help>.tp-lblv_l:focus-visible{outline:1px solid #8ea0c0;" +
     "outline-offset:-1px;border-radius:3px}" +
     "@media (pointer:coarse)," + SHEET_QUERY + "{" +
     ".kp-has-help .kp-i{display:inline-block}" +
     ".kp-has-help>.tp-lblv_l{cursor:pointer;" +
-    "-webkit-tap-highlight-color:transparent}}" +
+    "-webkit-tap-highlight-color:transparent}" +
+    // K486: an unlabeled button blade hides its label (Tweakpane's nol
+    // rule); where help is wanted the label slot shows, holding only the
+    // (i), beside the full-width button.
+    ".tp-lblv-nol.kp-has-help{display:flex;flex-wrap:wrap}" +
+    ".tp-lblv-nol.kp-has-help>.tp-lblv_l{display:block;flex:0 0 auto;" +
+    "padding-right:10px}" +
+    ".tp-lblv-nol.kp-has-help>.tp-lblv_v{flex:1 1 auto;width:auto}}" +
     // K552: a disabled row that must still explain itself (Title thread off
     // a daily). Tweakpane's disabled rule puts pointer-events:none on the
     // whole row, which hides its tooltip and its label-tap help, so the row
@@ -637,6 +647,8 @@ export function buildPanel(
     row: HTMLElement;
     label: HTMLElement;
     block: HTMLElement;
+    mark: HTMLElement;
+    source: HTMLElement;
   }
   let helpOpen: HelpRow | null = null;
   let helpSeq = 0;
@@ -646,19 +658,24 @@ export function buildPanel(
     if (!h) return;
     helpOpen = null;
     h.row.classList.remove("kp-help-open");
+    h.block.classList.remove("kp-help-on");
+    h.mark.classList.remove("kp-i-on");
     h.label.setAttribute("aria-expanded", "false");
   };
   const openHelp = (h: HelpRow): void => {
     closeHelp();
     helpOpen = h;
-    h.block.textContent = h.row.title;
+    h.block.textContent = h.source.title;
     h.row.classList.add("kp-help-open");
+    h.block.classList.add("kp-help-on");
+    h.mark.classList.add("kp-i-on");
     h.label.setAttribute("aria-expanded", "true");
   };
-  // The open block's text follows its row's title (markOverridden).
+  // The open block's text follows its source's title (markOverridden, the
+  // daily label).
   const syncHelpText = (): void => {
-    if (helpOpen && helpOpen.block.textContent !== helpOpen.row.title) {
-      helpOpen.block.textContent = helpOpen.row.title;
+    if (helpOpen && helpOpen.block.textContent !== helpOpen.source.title) {
+      helpOpen.block.textContent = helpOpen.source.title;
     }
   };
   // A block goes with its row: hidden by refreshCond, or inside a folder that
@@ -703,31 +720,45 @@ export function buildPanel(
   };
   sheetMQ.addEventListener("change", syncHelpGate);
   coarseMQ.addEventListener("change", syncHelpGate);
-  const wireHelp = (
-    rowEl: HTMLElement,
-    label: HTMLElement,
-    glyph: Node | null
-  ): void => {
-    const id = `kp-help-${++helpSeq}`;
+  const makeHelpBlock = (rowEl: HTMLElement): HTMLElement => {
     const block = document.createElement("div");
     block.className = "kp-help";
-    block.id = id;
+    block.id = `kp-help-${++helpSeq}`;
     rowEl.appendChild(block);
+    return block;
+  };
+  const makeHelpMark = (): HTMLElement => {
     const mark = document.createElement("span");
     mark.className = "kp-i";
     mark.setAttribute("aria-hidden", "true");
-    // The "i" is CSS (.kp-i::before), so the label's text stays the label's.
-    label.insertBefore(mark, glyph);
+    return mark;
+  };
+  // One help: a block inside `rowEl`, its text read from `sourceEl`'s title
+  // when it opens, a tap on `target` toggling it (the gate makes the target
+  // a button only while help is wanted, K482). One block at a time.
+  const registerHelp = (
+    rowEl: HTMLElement,
+    target: HTMLElement,
+    sourceEl: HTMLElement,
+    mark: HTMLElement,
+    block: HTMLElement
+  ): void => {
     rowEl.classList.add("kp-has-help");
-    const h: HelpRow = { row: rowEl, label, block };
+    const h: HelpRow = {
+      row: rowEl,
+      label: target,
+      block,
+      mark,
+      source: sourceEl,
+    };
     helpRows.push(h);
     applyHelpGate(h);
     const toggle = (): void => {
       if (helpOpen === h) closeHelp();
       else openHelp(h);
     };
-    label.addEventListener("click", (e) => {
-      // K482: off the sheet with a fine pointer the label is not a help
+    target.addEventListener("click", (e) => {
+      // K482: off the sheet with a fine pointer the target is not a help
       // button at all (its title tooltip is the help).
       if (!helpWanted()) return;
       // The reset glyph has its own pointerdown; never open help for it.
@@ -736,12 +767,40 @@ export function buildPanel(
       e.preventDefault();
       toggle();
     });
-    label.addEventListener("keydown", (e) => {
+    target.addEventListener("keydown", (e) => {
       if (!helpWanted()) return;
       if (e.key !== "Enter" && e.key !== " ") return;
       e.preventDefault();
       toggle();
     });
+  };
+  const wireHelp = (
+    rowEl: HTMLElement,
+    label: HTMLElement,
+    glyph: Node | null
+  ): void => {
+    const block = makeHelpBlock(rowEl);
+    const mark = makeHelpMark();
+    // The "i" is CSS (.kp-i::before), so the label's text stays the label's.
+    label.insertBefore(mark, glyph);
+    registerHelp(rowEl, label, rowEl, mark, block);
+  };
+  // K486: an icon button sharing a row (the seed row's dice, the daily
+  // row's stats) has no label of its own: a larger (i) beside it in the
+  // row's value cell is the tap target, the block is the host row's and
+  // the text is the button's own title. The button keeps its own tap.
+  const wireMarkHelp = (
+    rowEl: HTMLElement,
+    sourceEl: HTMLElement,
+    cell: HTMLElement
+  ): void => {
+    const block = makeHelpBlock(rowEl);
+    const mark = makeHelpMark();
+    mark.classList.add("kp-i-btn");
+    mark.removeAttribute("aria-hidden");
+    mark.setAttribute("aria-label", `Help: ${sourceEl.title}`);
+    cell.appendChild(mark);
+    registerHelp(rowEl, mark, sourceEl, mark, block);
   };
 
   // K468 THE PEEK: while a row is dragged on the sheet, everything but that
@@ -867,6 +926,14 @@ export function buildPanel(
   const button = (parent: Parent, title: string, tipText: string): ButtonApi => {
     const api = parent.addButton({ title }) as ButtonApi;
     api.element.title = tipText;
+    // K486: a button gets K467's help too. An unlabeled blade's label is
+    // hidden (the stylesheet shows its slot, holding only the (i), where
+    // help is wanted), the block opens under the button, and the button
+    // itself keeps its tap.
+    api.element.classList.add("kp-row");
+    const label = api.element.querySelector(".tp-lblv_l");
+    if (tipText && label instanceof HTMLElement)
+      wireHelp(api.element, label, null);
     return api;
   };
 
@@ -1096,6 +1163,9 @@ export function buildPanel(
   seedApi.element.title =
     "The design's seed - the first part of the link. Type a seed (or any word) and press Enter to load that design; the dice rolls a random one.";
   seedApi.element.classList.add("kp-row", "kp-seed");
+  // K486: the seed row is a binding built by hand, so wire its help here.
+  const seedLabel = seedApi.element.querySelector(".tp-lblv_l");
+  if (seedLabel instanceof HTMLElement) wireHelp(seedApi.element, seedLabel, null);
   const syncSeed = (): void => {
     // The silk angle row shows an AUTO angle, which the seed picks (the row
     // is built later; syncSeed only runs once the panel exists).
@@ -1127,6 +1197,10 @@ export function buildPanel(
     syncSeed();
   });
   seedApi.element.querySelector(".tp-lblv_v")?.appendChild(dice);
+  // K486: the dice gets its own help beside it in the seed row.
+  const seedValue = seedApi.element.querySelector(".tp-lblv_v");
+  if (seedValue instanceof HTMLElement)
+    wireMarkHelp(seedApi.element, dice, seedValue);
   // Focusing the field selects the token, so typing replaces it.
   seedApi.element
     .querySelector("input")
@@ -1144,13 +1218,23 @@ export function buildPanel(
   const dailyStats = document.createElement("button");
   dailyStats.type = "button";
   dailyStats.className = "kp-dice";
-  dailyStats.title = "Your daily stats";
+  dailyStats.title =
+    "Your daily stats: days played and solved, your current and best streaks, your best time, and every day's result - tap a day in the list to play it.";
   dailyStats.setAttribute("aria-label", "Your daily stats");
   dailyStats.innerHTML =
     '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" ' +
     'd="M2 13h12v1.5H2zM3 8h2.4v4H3zm3.8-4h2.4v8H6.8zm3.8 2H13v6h-2.4z"/></svg>';
   dailyStats.addEventListener("click", callbacks.onShowDailyStats);
   dailyApi.element.querySelector(".tp-lblv_v")?.appendChild(dailyStats);
+  // K486: the Daily button's help (main.ts replaces this text with today's
+  // dated line at once), and the stats button's own help beside it.
+  dailyApi.element.title =
+    "Play today's daily maze: the same maze for everyone today. An unfinished attempt picks up where you left it; results are kept in your daily stats (the chart button).";
+  const dailyLabel = dailyApi.element.querySelector(".tp-lblv_l");
+  if (dailyLabel instanceof HTMLElement) wireHelp(dailyApi.element, dailyLabel, null);
+  const dailyValue = dailyApi.element.querySelector(".tp-lblv_v");
+  if (dailyValue instanceof HTMLElement)
+    wireMarkHelp(dailyApi.element, dailyStats, dailyValue);
 
   // --- Game (K323 Stage A) ------------------------------------------------
   // After Design, before Maze, expanded (K323 question 1). Every row is a
@@ -3948,6 +4032,7 @@ export function buildPanel(
         searchUi?.relabel();
       }
       dailyApi.element.title = tip;
+      syncHelpText();
     },
     setOnDaily: (on) => {
       if (titleThreadRow.disabled !== !on) titleThreadRow.disabled = !on;
