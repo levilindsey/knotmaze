@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1084.
+Next free ID: K1085.
 
 ## Waiting on Levi
 
@@ -305,9 +305,9 @@ Next free ID: K1084.
 - **K1079** · Muse batch 4, runs A-E one at a time through the K1053 chain: K331+K330 touch picks, K549
   text-scene fit, K486 button help, K1077 the real-time profile, K412 the preload on the real network.
   - owner: the Muse chain (.claude/probes/K1053/chain.ps1; agent ids in chain.log), coordinated by claude 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `51f97bbc`
+  - branch: mainline; last commit: `19cfdd67`
   - evidence: .claude/probes/K1053/ (queue.txt tags 4A-4E, chain.log, done.txt) and each run's .claude/probes/<ID>/
-  - next: run 4E (K412 the preload on the real network)
+  - next: runs A-E done; Claude reviews batch 4 and closes K1079
   - brief: `docs/design/K1079_muse_batch4.md`
   - env: pwsh -NoProfile -File .claude/probes/K1053/start.ps1
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
@@ -573,9 +573,6 @@ merged):
 - **K409** · Levi's burn calls 1-3 merged (6b9eb8f..3231d59). Left: step 4, the ember over the smoke
   (NOT BUILT in `render-explore.md`), after K525 (paint files) and K623/K624. The phone sheet passed
   (K631 part 1, 10-20). `docs/design/K409.md`.
-- **K412** · K7's worker-chunk modulepreload on a real network (measured only on localhost): a
-  fresh-profile load of https://levi.dev/knotmaze/ through `stage7/k7_frames.mjs`; its `wk` column
-  reads `c` when the worker's fetch came from the cache through the proxy. Rides K7's phone pass.
 
 Every other item below waits on the trigger it names.
 
@@ -773,6 +770,8 @@ Every other item below waits on the trigger it names.
   (about +1.1 ms x1, +8.4 ms x4): incremental setExplore (K441_fire_frame.md K1077, K441 s2 sketch).
 - **K1083** · K1077: RibbonRenderer.update redoes gap slots every frame on the realtime stand (about
   +0.97 ms x1, +4.5 ms x4) behind the setExplore invalidation: declare only changed chains (K441 K1077).
+- **K1084** · K412: pages.dev hashed assets are max-age=0, so the worker fetch revalidates (304, 300 B)
+  where levi.dev serves transfer 0; long max-age on Pages /assets/* (_headers). `K412_preload_network.md`.
 
 ## Residuals (known, not fixed)
 
@@ -2056,6 +2055,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K412** · preload verified on real network: through levi.dev proxy chunk downloads once, worker fetch transfer 0 (5 fresh + 5 warm per origin, desktop Chrome); pages.dev revalidates (max-age=0), fix filed K1084. Done in 19cfdd67 (2026-10-30).
 - **K1077** · prof5-prof8 attribute the residual: 82% of +4.24 x1, 87% of +13.16 x4; three clusters (button-tick rects, fillet rebuild, gap-slot pass) filed as K1081-K1083. Done in 51f97bbc (2026-10-30).
 - **K486** · Touch help for the panel's nine buttons (K467's mechanism on buttons); probe .claude/probes/K486/. Done in 20afc256 (2026-10-30).
 - **K549** · Text scenes fit beside the open panel (fitArea/fitPlacement in view_clamp, camera reads panel only for params.text); probe .claude/probes/K549/. Done in f578b6ee (2026-10-30).
