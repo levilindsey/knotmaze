@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1080.
+Next free ID: K1081.
 
 ## Waiting on Levi
 
@@ -297,15 +297,17 @@ Next free ID: K1080.
 - **K1078** · Hand K1040's gated stages to Muse, one per run: S3 (label pass) now, as S1e changes only band
   and corner rules; S1e stays with Claude after Nov 2. S3, S4a and S5 time on the Pixel, which Levi plugs in
   (docs/design/K1040_junction_field.md F7).
+- **K1080** · On the phone, zoom in and out and tap threads and junction choices: do the tap targets feel
+  right? They now stay the same finger size at every zoom (K331, bc5f0043).
 
 ## In progress
 
 - **K1079** · Muse batch 4, runs A-E one at a time through the K1053 chain: K331+K330 touch picks, K549
   text-scene fit, K486 button help, K1077 the real-time profile, K412 the preload on the real network.
   - owner: the Muse chain (.claude/probes/K1053/chain.ps1; agent ids in chain.log), coordinated by claude 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `ba4dfee7`
+  - branch: mainline; last commit: `bc5f0043`
   - evidence: .claude/probes/K1053/ (queue.txt tags 4A-4E, chain.log, done.txt) and each run's .claude/probes/<ID>/
-  - next: run 4A (K331+K330)
+  - next: run 4B (K549 text-scene fit)
   - brief: `docs/design/K1079_muse_batch4.md`
   - env: pwsh -NoProfile -File .claude/probes/K1053/start.ps1
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
@@ -644,9 +646,6 @@ Every other item below waits on the trigger it names.
 - **K332** · Arrow-key hints (Levi 10-14): a small key icon (or chord, K333) near each choice's
   start, shown after the first arrow key press. After K329. Hooks: `key_moves.ts` (`keyMap`,
   `chordMap`, `keyStep`, `stepWaiting`), K83's `MarkerMesh`, `marker_glyphs.ts`.
-- **K331** · Touch gets K298's pick margins (Levi, 2026-10-14): touch moves from world-unit radii to
-  the mouse's form, with its own margin row beside `pickMargin` at ~4 px, so zones stop growing
-  under a pinch zoom. With K330 after K329 (`docs/design/K298_hover_glow.md`, "Notes").
 - **K318** · Win effects (Levi 10-14): one show, many themes; thirteen themes in a Win effects
   folder (Theme dropdown, Party default), built in twelve stages. Stage 1 after the confetti stage
   and K111 s5. `docs/design/K318_win_effects.md` ("Build stages").
@@ -1165,9 +1164,6 @@ Every other item below waits on the trigger it names.
 - **K319** · ANGLE's Vulkan backend lacks `KHR_parallel_shader_compile` (K307 s1) and phones may
   too: K307's warm-up then links blocking and stalls for the longest compile (section-rgb, ~2.8 s
   cold on D3D11). The phone's answer rides K156's next pass.
-- **K330** · A touch press on a choice lights no hover glow until the
-  finger moves: the `pendingTap` path in `src/main.ts` sets no glow run
-  (K298's stage 1). Built with K331 (touch picks), after K329.
 - **K342** · The snore link (K325) is verified on desktop Chrome only. Unchecked: Android Chrome
   (the touch delay's feel, a tab switch cutting the sound; rides K156's next phone pass),
   Safari/iOS, other desktop browsers. `gameplay-audio.md`, THE SNORING CAT LINK.
@@ -2060,6 +2056,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K330** · touch press on a choice lights its hover glow at once. Done in bc5f0043 (2026-10-30).
+- **K331** · touch picks in pixels (touchPickMargin); with K330 glow on press. Done in bc5f0043 (2026-10-30).
 - **K327** · Labels that say what they size: 'Off-screen arrow size' and 'Maze marker size' (K534, 35f3ec28), word labels for the rest (K541); the panel inventory at HEAD shows no row labelled with its key. Done in 2c351ae4 (2026-10-30).
 - **K785** · Lore attach cost: the hubs now attach only their own lore (re-measured 2026-10-30: frame_loop.ts 2 rules files, 3k tokens, was 11 / 28k; K774's five files 7, 30k, was about 60k, 16k of it the minotaur lore for minotaur_turns.ts). Done in 2dc2af1d (2026-10-30).
 - **K1074** · K658 check: c4 stub. Dropped: stale check, K840 leaves snap no exempt stub; c5 covers snap (K658_page_checks.md) (2026-10-30).
