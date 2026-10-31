@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1087.
+Next free ID: K1088.
 
 ## Waiting on Levi
 
@@ -301,6 +301,11 @@ Next free ID: K1087.
   (docs/design/K1040_junction_field.md F7).
 - **K1080** · On the phone, zoom in and out and tap threads and junction choices: do the tap targets feel
   right? They now stay the same finger size at every zoom (K331, bc5f0043).
+- **K1087** · Off the desktop's USB the kit reaches the phone only by adb on 5555 over Tailscale (`scripts/phone.ps1
+  -Wireless`, run over USB), and each phone reboot closes it: refused since 10-23 02:42 and at 10-31 07:15; no Wireless
+  debugging pairing here. Levi's call: re-arm 5555 over USB after a reboot (automatable: whenever Windows sees the Pixel
+  on USB), or pair Wireless debugging once (its port changes each time; mDNS can't reach the desktop). Blocks K156's
+  round 2026-10-30.
 
 ## In progress
 
@@ -384,12 +389,12 @@ Next free ID: K1087.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c
   merged e6c6034..aa3cdd1).
-  - owner: muse, paseo run 'knotmaze K156 round 2026-10-30', launched by claude 7301c55b once the phone is on the desktop's USB (nobody before that; briefed 2026-10-30 21:58)
-  - branch: mainline; last commit: `b581f620`
+  - owner: nobody since 2026-10-31 07:27 (round 2026-10-30 briefed, never launched: on 10-30's evening the phone was on a charger off the desktop's USB, and 5555 over Tailscale has been closed since the 10-23 reboot, K1087; the phone is away most of 10-31)
+  - branch: mainline; last commit: `2de5b991`
   - evidence: .claude/probes/rounds/2026-10-30/ (main checkout, untracked); the kit is scripts/phone_pass/
-  - next: round 2026-10-30's steps: K896 confetti recheck, K309 ring-lap on the Pixel, K485 sheet portrait checks, K895 kit fixes + A/A floor; later, K919's compile-out if one is built
+  - next: when Levi says the phone is on its charger and K1087 has given it a path: `scripts/phone_pass.ps1 -Phase check` exits 0 and usage is under 95%, then launch Muse on the brief's section with a status watcher
   - brief: docs/design/K156.md, "Round 2026-10-30"
-  - env: none; the pass builds and serves both builds itself (ports 5480-5489); the phone on the desktop's USB; check nobody is using the phone first (K234)
+  - env: the phone reachable by adb: on the desktop's USB, or over Tailscale after `scripts/phone.ps1 -Wireless` (one USB run per phone reboot, K1087); the pass builds and serves both builds itself (ports 5480-5489); check nobody is using the phone first (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
   dead ends. Stages 1-2 merged (stage 2: 189b024..f799991; MAX fixed, joints fade).
