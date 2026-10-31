@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1085.
+Next free ID: K1087.
 
 ## Waiting on Levi
 
@@ -302,14 +302,6 @@ Next free ID: K1085.
 
 ## In progress
 
-- **K1079** · Muse batch 4, runs A-E one at a time through the K1053 chain: K331+K330 touch picks, K549
-  text-scene fit, K486 button help, K1077 the real-time profile, K412 the preload on the real network.
-  - owner: the Muse chain (.claude/probes/K1053/chain.ps1; agent ids in chain.log), coordinated by claude 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `19cfdd67`
-  - evidence: .claude/probes/K1053/ (queue.txt tags 4A-4E, chain.log, done.txt) and each run's .claude/probes/<ID>/
-  - next: runs A-E done; Claude reviews batch 4 and closes K1079
-  - brief: `docs/design/K1079_muse_batch4.md`
-  - env: pwsh -NoProfile -File .claude/probes/K1053/start.ps1
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1d merged (e8944f2f); S1e waits for the weekly limit.
@@ -764,14 +756,17 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
-- **K1081** · K1077: the button ticks' panel-rect reads pay a forced layout on the realtime stand
-  (+1.07 ms x1, +4.49 x4; main.ts aidTick, frame_loop.ts:699): skip/cache the rect (K441_fire_frame.md K1077).
+- **K1081** · K1077: panel-rect reads force a layout per tick: aidTick on the realtime stand (+1.07 ms x1, +4.49 x4;
+  main.ts:3650, frame_loop.ts:699) and the camera poll on every stand (~1.0 x1, ~4.3 x4; camera.ts:226 -> :219).
+  Desktop only (no read under the phone's sheet; aidTick needs the panel open). Skip/cache the rect (K441 K1077).
 - **K1082** · K1077 (= K441 s2): the burn re-declare rebuilds fillets every frame on the realtime stand
   (about +1.1 ms x1, +8.4 ms x4): incremental setExplore (K441_fire_frame.md K1077, K441 s2 sketch).
 - **K1083** · K1077: RibbonRenderer.update redoes gap slots every frame on the realtime stand (about
-  +0.97 ms x1, +4.5 ms x4) behind the setExplore invalidation: declare only changed chains (K441 K1077).
-- **K1084** · K412: pages.dev hashed assets are max-age=0, so the worker fetch revalidates (304, 300 B)
-  where levi.dev serves transfer 0; long max-age on Pages /assets/* (_headers). `K412_preload_network.md`.
+  +0.97 ms x1, +4.5 ms x4): declare only changed chains (K441 K1077). Trace the trigger first: needsFxRender
+  (paint_state.ts:719) reruns it on exploreUpdatePending (explore_gaps.ts:397, fabric_maze_renderer.ts:1082) or fxLive; under fxLive that fix won't stop it.
+- **K1084** · K412: hashed assets are max-age=0 on Pages: pages.dev revalidates the worker fetch (304, 300 B), and
+  levi.dev's proxy edge REVALIDATEs the chunk (fresh hello 941 ms vs 466 direct; that this is the cause is inferred).
+  Long max-age on /assets/* (_headers), then re-run `.claude/probes/K412/k412_run.mjs` on both. `K412_preload_network.md`.
 
 ## Residuals (known, not fixed)
 
@@ -1763,6 +1758,12 @@ Every other item below waits on the trigger it names.
   remover unknown). The worktrees sit inside the checkout, so Node finds packages upward: try no junction.
 - **K1063** · `scripts/run_node.mjs` still opens Vite's WebSocket server, so parallel runs print 'WebSocket
   server error: Port 24678' (harmless); `server.ws: false` should stop it (K1061, 011274f9).
+- **K1085** · Reduced motion doesn't snap the camera's fit: updateCamera's 0.08/frame ease (`src/app/camera.ts:436`)
+  and easeView's range ease (:257) have no reduced path, unlike K198's panel tween (:229). K549 (f578b6ee) makes a
+  panel toggle re-fit a text scene. Fix: snap both when reduced. Full text: `docs/ledger_notes.md`.
+- **K1086** · K412 probe: each warm profile's first reload started main 3.5 s (levi.dev) / 3.2 s (pages.dev) late
+  vs 68-216 ms later; all before main, both origins, no service worker. Record navigation timing on it to split
+  old-page teardown from a first cache read (`.claude/probes/K412/`; full text `docs/ledger_notes.md`).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2055,6 +2056,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1079** · Muse batch 4: A K331+K330 bc5f0043, B K549 f578b6ee, C K486 20afc256, D K1077 51f97bbc, E K412 19cfdd67; all passed review (K1081, K1083, K1084 amended; residuals K1085, K1086 filed). Done in 19cfdd67 (2026-10-30).
 - **K412** · preload verified on real network: through levi.dev proxy chunk downloads once, worker fetch transfer 0 (5 fresh + 5 warm per origin, desktop Chrome); pages.dev revalidates (max-age=0), fix filed K1084. Done in 19cfdd67 (2026-10-30).
 - **K1077** · prof5-prof8 attribute the residual: 82% of +4.24 x1, 87% of +13.16 x4; three clusters (button-tick rects, fillet rebuild, gap-slot pass) filed as K1081-K1083. Done in 51f97bbc (2026-10-30).
 - **K486** · Touch help for the panel's nine buttons (K467's mechanism on buttons); probe .claude/probes/K486/. Done in 20afc256 (2026-10-30).
