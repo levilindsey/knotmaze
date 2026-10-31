@@ -7,6 +7,8 @@ import {
   PANEL_TWEEN_S,
   clampFitView,
   easePanel,
+  fitArea,
+  fitPlacement,
   noAllowance,
   stepPanelTween,
   stepRange,
@@ -123,16 +125,22 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     minY -= pad;
     maxX += pad;
     maxY += pad;
-    const w = Math.max(maxX - minX, 1);
-    const h = Math.max(maxY - minY, 1);
     // Fit the knot, but never zoom in past a comfortable thread scale.
-    out.scale = Math.min(
-      (app.screen.width - FIT_MARGIN * 2) / w,
-      (app.screen.height - FIT_MARGIN * 2) / h,
-      90
+    // K549: a text scene (a standalone word) fits beside the open panel
+    // instead (fitArea in ui/view_clamp.ts); the sheet on a phone reads
+    // as no panel there, as it does for the pan range (K468).
+    const panelLeft =
+      params.text !== "" && readPanel() && panelBox ? panelBox.left : null;
+    const placed = fitPlacement(
+      { minX, minY, maxX, maxY },
+      app.screen.height,
+      FIT_MARGIN,
+      90,
+      fitArea(app.screen.width, panelLeft, params.text !== "")
     );
-    out.x = (app.screen.width - w * out.scale) / 2 - minX * out.scale;
-    out.y = (app.screen.height - h * out.scale) / 2 - minY * out.scale;
+    out.scale = placed.scale;
+    out.x = placed.x;
+    out.y = placed.y;
   }
 
   // ---- CAMERA ------------------------------------------------------------
