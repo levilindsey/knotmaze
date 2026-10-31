@@ -301,11 +301,9 @@ Next free ID: K1088.
   (docs/design/K1040_junction_field.md F7).
 - **K1080** · On the phone, zoom in and out and tap threads and junction choices: do the tap targets feel
   right? They now stay the same finger size at every zoom (K331, bc5f0043).
-- **K1087** · Off the desktop's USB the kit reaches the phone only by adb on 5555 over Tailscale (`scripts/phone.ps1
-  -Wireless`, run over USB), and each phone reboot closes it: refused since 10-23 02:42 and at 10-31 07:15; no Wireless
-  debugging pairing here. Levi's call: re-arm 5555 over USB after a reboot (automatable: whenever Windows sees the Pixel
-  on USB), or pair Wireless debugging once (its port changes each time; mDNS can't reach the desktop). Blocks K156's
-  round 2026-10-30.
+- **K1087** · Off USB the kit reaches the phone only by adb on 5555 over Tailscale (`scripts/phone.ps1 -Wireless`), and
+  every phone reboot closes it (refused since 10-23 02:42). Levi's call: re-arm it over USB after a reboot (automatable
+  when Windows sees the Pixel), or pair Wireless debugging (its port changes; undiscoverable here). Blocks K156's round.
 
 ## In progress
 
