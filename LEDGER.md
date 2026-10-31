@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1079.
+Next free ID: K1080.
 
 ## Waiting on Levi
 
@@ -300,6 +300,14 @@ Next free ID: K1079.
 
 ## In progress
 
+- **K1079** · Muse batch 4, runs A-E one at a time through the K1053 chain: K331+K330 touch picks, K549
+  text-scene fit, K486 button help, K1077 the real-time profile, K412 the preload on the real network.
+  - owner: the Muse chain (.claude/probes/K1053/chain.ps1; agent ids in chain.log), coordinated by claude 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - branch: mainline; last commit: `ba4dfee7`
+  - evidence: .claude/probes/K1053/ (queue.txt tags 4A-4E, chain.log, done.txt) and each run's .claude/probes/<ID>/
+  - next: run 4A (K331+K330)
+  - brief: `docs/design/K1079_muse_batch4.md`
+  - env: pwsh -NoProfile -File .claude/probes/K1053/start.ps1
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1d merged (e8944f2f); S1e waits for the weekly limit.
@@ -548,11 +556,6 @@ merged):
 - **K876** · K868 oracle image probe: auto ink (pink on light paper) and markers/arrowheads count as ink,
   so sheet D fails every image check. Rerun D on the dsf 3 shots, dark paper and cr/fl variants, add
   exact-field checks on S1a's scenes and a bounded reach; compare the END tuck with §3.6.
-- **K785** · Lore attach cost (frame_loop.ts narrowed in 2dc2af1d, 12 rules files to 2; the other hubs open): reading `src/app/frame_loop.ts` attaches 11 rules files (about 28k
-  tokens), and the K774 reading set (main.ts, frame_loop, minotaur_turns, input_keys,
-  fabric_maze_renderer) about 60k. K774 and K138 s4 compacted 7 and 9 times in their first 30 min
-  with no commit (2026-10-21, agent_watch). Narrow each rule to the files it documents rather than
-  every caller (`docs/lore_index.md`, K173, K437); re-measure with a fresh agent
 - **K784** · Phone sitting 6 on real touches: one-way runs (K138 s3, ow), lures and snares (K137 s4,
   lur and snr; emulated only so far), the K775 overflow, and a touch press on an unrevealed hidden
   run (the K764 case); plus the beat rider's catch (K774: `.claude/probes/K774/beat_phone.mjs`
@@ -635,9 +638,6 @@ Every other item below waits on the trigger it names.
 - **K326** · Drop knot mode (`mazeFabric`; `docs/design/K323_game_mode.md` s4-5): A done, the maze
   golden (057c5173); B deletes (after K323 s1, K307 s2, K329), retargets `scripts/fold_census.*`,
   `test/physics/byte_identity.test.ts`; optional C: knot paint (after B, K111 s5).
-- **K327** · Labels that say what they size (Levi 10-14): `indicatorSize` (edge arrows, a viewer
-  pref) and `markerSize` (maze icons) sound alike; proposed "Edge arrow size" and "Maze icon size";
-  Touch & feel mixes words with camelCase keys. In K323's design; rel. K247, K292, K297.
 - **K328** · Hover rim profile (Levi, 10-14): an opaque outer band, then a
   fade from further in; High contrast reuses it at fade 0. Paint library
   only (K8 s1), with K111 s5 and K265; and hide the glow at strength 0 (K298).
@@ -2060,6 +2060,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K327** · Labels that say what they size: 'Off-screen arrow size' and 'Maze marker size' (K534, 35f3ec28), word labels for the rest (K541); the panel inventory at HEAD shows no row labelled with its key. Done in 2c351ae4 (2026-10-30).
+- **K785** · Lore attach cost: the hubs now attach only their own lore (re-measured 2026-10-30: frame_loop.ts 2 rules files, 3k tokens, was 11 / 28k; K774's five files 7, 30k, was about 60k, 16k of it the minotaur lore for minotaur_turns.ts). Done in 2dc2af1d (2026-10-30).
 - **K1074** · K658 check: c4 stub. Dropped: stale check, K840 leaves snap no exempt stub; c5 covers snap (K658_page_checks.md) (2026-10-30).
 - **K1073** · K658 check: real-time Undo. Dropped: by design, the real-time Stranded banner offers Restart only (K658_page_checks.md) (2026-10-30).
 - **K1072** · K658 check: real-time Undo. Dropped: by design, the real-time Stranded banner offers Restart only (K658_page_checks.md) (2026-10-30).
