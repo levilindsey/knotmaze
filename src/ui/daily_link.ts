@@ -248,6 +248,7 @@ export const DAILY_EXEMPT_KEYS = [
   "frayWidth",
   // K298: how near a thread the mouse picks it (Touch & feel).
   "pickMargin",
+  "touchPickMargin", // K331: touch's own margin, the same preference kind
   "pickChoiceRatio",
   // Physics on/off: a device-speed choice; the settled layout is the same.
   "physics",

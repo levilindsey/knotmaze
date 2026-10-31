@@ -1242,9 +1242,9 @@ export class FabricMazeRenderer {
   }
 
   // The tappable run a world point takes among the current choices, or -1.
-  // maxD is the pick radius from the centerline (world): main.ts pickRadius
-  // (K298), touch's max(0.9, 1.6 x threadWidth), the mouse's half-width
-  // plus its choice margin. K479: the nearest run wins, except that the
+  // maxD is the pick radius from the centerline (world): pickRadius
+  // (K298; K331: touch too), half the drawn width plus the pointer's own
+  // choice margin in screen px. K479: the nearest run wins, except that the
   // run the player arrived on (a tap on it backtracks) must be clearly
   // nearer than the nearest outgoing run (game/tap_pick.ts), so a tap
   // where the arms converge goes on. Hover, cursor, tap and press all

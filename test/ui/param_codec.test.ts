@@ -306,6 +306,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["sleeperRingMax", "number"],
   ["nearHops", "number"],
   ["routeWeight", "number"],
+  ["touchPickMargin", "number"], // K331
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

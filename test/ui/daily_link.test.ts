@@ -393,6 +393,7 @@ describe("the daily design and its exempt preferences (K56)", () => {
       // K298 (Levi: a slider for the mouse's pick margin, and the choices'
       // ratio to it).
       "pickMargin",
+      "touchPickMargin", // K331
       "pickChoiceRatio",
       "physics",
       // K147, proposed with it.
