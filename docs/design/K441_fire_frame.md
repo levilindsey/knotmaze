@@ -250,3 +250,57 @@ Per run, the frame loop's own tick cost (`__knotPerf` over the stand frames, ms;
 | 4x | 102.67 (103.14, 102.20) | 89.51 (95.73, 83.29) | +13.16 (pairs +7.42, +18.91) | about +1.85, plus the HUD and main.ts lines (about +0.15; about +2.00 in all) |
 
 Observed: with both stands asleep, the tick gap is far below the first stands' confounded +10 ms (1x) and +60-65 ms (4x), and in that sense the correction holds - most of that gap was the awake path against the rest path. It does not fall to the chain-only prediction: the residual +4.24 ms at 1x and +13.16 ms at 4x sit above it, as does the same-share fire chain itself in this pool (`drawFire` 0.607 vs 0.105 at 1x, +0.50; 2.670 vs 0.552 at 4x, +2.12, nearly all of it `ribbons.setExplore` at +0.42 and +1.91). The 4x same-share window holds only 10 frames and the two 4x pairs differ by 11.5 ms, so the 4x residual is thin; the load label above applies to all of it. Inferred, not measured here: how much of the residual is background load and throttled-frame scheduling, rather than the fire clock, is not separated by this rerun. Whether a K441 s2 opens on these numbers is Claude's call (K1062 run E); this rerun ends K441 as the Owed section directs.
+
+## K1077
+
+Build: master `fe7fa774` (no `src/` change; measurement only). Unminified build in `.claude/probes/K1077/build` (`npx vite build --minify false`), served at `http://127.0.0.1:5557/`; `run_k441.ps1`, `k441_page.mjs`, `k441_pool.mjs`, `k441_prof.mjs` and the lock scripts copied to `.claude/probes/K1077/` with both ports on 5557 and `k441_prof.mjs`'s pairs set to this run's labels. Under the perf lock (owner `K1077-muse-batch4-runD`, 2026-10-30 09:20-09:23 -07:00): `prof5:realtime:1:1`, `prof6:turn:1:1`, `prof7:realtime:4:1`, `prof8:turn:4:1`. All four windows kept by the asleep gate (asleep true at both ends, no wake; batch 3's `discarded` flag false throughout). Caller chains and self-under-entry sums: `.claude/probes/K1077/analyze.mjs` over the same profiles. Load label: the desktop carried its usual background load (per-item `cpu-other`: Godot 7.9-8.0 s, TGitCache 3.3-6.1 s, agent processes 12.8-22.2 s on two items), so read the ms as desktop-under-load numbers; the 4x realtime window holds 12 frames and is thin, as batch 3's was.
+
+| run | frames | stand L | tick mean (p50) | asleep |
+|---|---|---|---|---|
+| prof5 realtime x1 | 34 | 36.4 -> 50.2 | 19.54 (25.30) | true -> true |
+| prof6 turn x1 | 82 | 36.87 | 16.38 (24.40) | true -> true |
+| prof7 realtime x4 | 12 | 41.1 -> 50.9 | 89.62 (60.00) | true -> true |
+| prof8 turn x4 | 30 | 36.87 | 91.05 (132.70) | true -> true |
+
+This run's own tick gap is +3.17 ms at 1x and -1.43 ms at 4x (the 12-frame realtime window again; batch 3's +13.16 does not reproduce as a tick mean here). The tables below therefore charge their rows against batch 3's gaps (+4.24 / +13.16), the numbers this run was sent to attribute; per-frame profile totals bracket them (non-idle CPU per frame: realtime 22.02 vs turn 18.07 ms at 1x, +3.95; 120.03 vs 109.23 at 4x, +10.81). Self time per frame from `k441_prof.mjs` (100 us sampling; one rAF frame is one tick in the continuous loop the probe forces). Rows are in self-diff order and stop once they pass 80% of the reference gap; positives overshoot 100% further down because other functions run cheaper on the realtime stand (`(idle)` alone is -4.89 ms/frame at 1x: the realtime stand idles less, which is the gap restated).
+
+### 1x: rows to 82% of +4.24 ms
+
+| # | function (source) | turn | realtime | diff | cum % of +4.24 | caller chain on the realtime stand |
+|---|---|---|---|---|---|---|
+| 1 | `getBoundingClientRect` (browser; `src/main.ts:3650` in `aidTick`) | 1.120 | 2.188 | +1.068 | 25% | `aidTick` (`src/main.ts:3642`) <- `cutTick` (`src/main.ts:3807`) <- `fabricTick` <- `restFrame` <- frame tick (`src/app/frame_loop.ts:699` calls `cutTick` every fabric frame) |
+| 2 | `buildProfile` (`src/render/ribbon/joinery.ts:992`) | 0.170 | 0.592 | +0.422 | 35% | <- `rebuildFillets` (`src/render/ribbon/joinery.ts:654`) <- `tickPaintPalette` <- `tickPaint` (`src/render/ribbon_renderer.ts:574`) <- `fabricTick` |
+| 3 | `pushFan` (`src/render/ribbon_mesh.ts:803`) | 0.684 | 0.961 | +0.277 | 42% | <- `emitFan` (`src/render/ribbon/joinery.ts:1450`) <- `rebuildFillets` <- `tickPaint` (same chain as row 2) |
+| 4 | `sampleAt` (`src/render/ribbon/sampling.ts:38`) | 1.735 | 2.010 | +0.275 | 48% | <- `computeGapSlot` (`src/render/ribbon/crossing_gaps.ts:370`) <- `RibbonRenderer.update` (`src/render/ribbon_renderer.ts:1811`) <- `flowRender` <- `restFrame` |
+| 5 | `computeGapSlot` (`src/render/ribbon/crossing_gaps.ts:370`) | 1.209 | 1.452 | +0.243 | 54% | <- `RibbonRenderer.update` <- `flowRender` <- `restFrame` (same chain as row 4) |
+| 6 | `(program)` (browser/native, no source) | 1.053 | 1.288 | +0.235 | 59% | root: unattributed native time (see Reading) |
+| 7 | `visit` (`src/render/ribbon/joinery.ts:745`) | 0.028 | 0.257 | +0.229 | 65% | <- `rebuildFillets` <- `tickPaint` (row 2's chain) |
+| 8 | `setMaskIds` (`src/render/ribbon_mesh.ts:342`) | 0.000 | 0.191 | +0.191 | 69% | <- `assignGapIds` (`src/render/ribbon/crossing_gaps.ts:1259`) <- `RibbonRenderer.update` <- `flowRender` (row 4's chain; 0.000 on the turn stand: realtime-only in this window) |
+| 9 | `noise3D` (simplex, via renderer update) | 0.182 | 0.339 | +0.157 | 73% | <- `RibbonRenderer.update` <- `flowRender` <- `restFrame` |
+| 10 | `layout` (pluck overlay, via pluck tick) | 0.128 | 0.277 | +0.148 | 77% | <- pluck tick <- `fabricTick` <- `restFrame` |
+| 11 | `bufferSubData` (WebGL upload) | 0.433 | 0.555 | +0.122 | 79% | <- `updateBuffer`/`updateBuffers` <- Pixi draw <- render |
+| 12 | `RibbonRenderer.update` own (`src/render/ribbon_renderer.ts:1811`) | 0.051 | 0.172 | +0.121 | 82% | <- `flowRender` <- `restFrame` |
+
+Just past the cut, the fire chain itself: `applyExploreGaps` (`src/render/ribbon/explore_gaps.ts:315`) +0.118, `subtractBurnt` (`src/game/explore_view.ts:518`, under `burnOnlyPieces`, `src/render/fabric_maze_renderer.ts:2862`) +0.105, `writePaintItems` (`src/render/ribbon_renderer.ts:586`, under `setExplore`, `src/render/ribbon_renderer.ts:2414`) +0.051. Whole-subtree sums (every self sample whose stack contains the entry): `drawFire` (`src/render/fabric_maze_renderer.ts:2507`) +0.526, of it `setBurn` (`src/render/fabric_maze_renderer.ts:2836`) +0.434 and `setExplore` +0.355 - batch 3's +0.50 chain, confirmed; and `cutTick` +1.407, of it `aidTick` +1.411 (row 1 is its rect).
+
+### 4x: rows to 87% of +13.16 ms
+
+| # | function (source) | turn | realtime | diff | cum % of +13.16 | caller chain on the realtime stand |
+|---|---|---|---|---|---|---|
+| 1 | `getBoundingClientRect` (browser; `src/main.ts:3650` in `aidTick`) | 4.771 | 9.264 | +4.493 | 34% | `aidTick` <- `cutTick` <- `fabricTick` <- `restFrame` (row 1 at 1x; 59% of the realtime stand's rect time, 91% of the turn stand's rect time goes through the camera poll's `readPanel`, `src/app/camera.ts:133`) |
+| 2 | `rebuildFillets` own (`src/render/ribbon/joinery.ts:654`) | 3.161 | 6.855 | +3.694 | 62% | <- `tickPaintPalette` <- `tickPaint` <- `fabricTick` |
+| 3 | `sampleAt` (`src/render/ribbon/sampling.ts:38`) | 8.925 | 12.247 | +3.322 | 87% | <- `protectReach`/`computeGapSlot` (`src/render/ribbon/crossing_gaps.ts:370`) <- `RibbonRenderer.update` <- `flowRender` <- `restFrame` |
+
+Next rows down: `pushFan` +1.787, `flank` (`src/render/ribbon/joinery.ts:2074`) +1.256, `buildProfile` +1.205 (row 2's chain: the fillet cluster), `setMaskIds` +0.711 (realtime-only, row 8's chain), `applyExploreGaps` +0.555 and `drawFire` own +0.367 (the fire chain). Whole-subtree sums: `cutTick` +5.225 (`aidTick` +5.121), `drawFire` +3.155 (`setBurn` +2.617, `setExplore` +2.470).
+
+### Reading
+
+The residual is not one function; it is three clusters, all downstream of L moving every frame:
+
+1. **Forced layout under the button ticks (+1.41 ms x1, +5.12 x4, subtree).** `cutTick` runs every fabric frame on both stands (`src/app/frame_loop.ts:699`, outside the GAME gate), and its aid/sprint/tool/beat ticks read the open panel's rect (`src/main.ts:3650`, `:3695`, `:3804`) when the panel is open. On the turn stand those rects are nearly free (the aid share of rect time is 7-9%); on the realtime stand the fire's per-frame work ahead of them - the GAME block's `fireSet` HUD lead write (`src/main.ts:2631`, `:2643`) and the re-declared fabric - leaves layout dirty, so the same reads force a layout pass (row 1; `layout` self time also rises). Observed: the chain shares and the rect split (realtime 59-65% aid-side, turn 91-92% camera-poll side; the poll's own rect, `readPanel`, is cheaper on the realtime stand, 0.77 vs 1.03 ms). Inferred: the dirty-layout mechanism - no layout-dirty probe was run; the per-call cost split is what the profiles show.
+2. **The fillet rebuild rides `tickPaint` every frame (rows 2, 3, 7 at 1x, about +1.1 ms gross; row 2 and its cluster about +8.4 ms at 4x).** `drawFire`'s key changes with L (`src/render/fabric_maze_renderer.ts:2507`), `setBurn` re-declares the burn through `syncExplore` (`src/render/fabric_maze_renderer.ts:4693`) and `ribbons.setExplore` (`src/render/ribbon_renderer.ts:2414`), and the paint pass then rebuilds fillets (`rebuildFillets`, `buildProfile`, `pushFan`, `visit`, `flank`, `emitFan`) instead of standing pat as the turn stand's unchanged burn lets it. This is the K441 s2 site from the Handoff, now with its downstream cluster priced: the re-declare's own subtree is +0.53/+3.16 ms, and the fillet work it wakes is the larger half at 4x.
+3. **The renderer's gap-slot pass redoes its work (rows 4, 5, 8, 9, 12 at 1x, about +0.97 ms; rows 3 and 7 at 4x, about +4.5 ms).** Under `RibbonRenderer.update` <- `flowRender`, `computeGapSlot`/`assignGapIds`/`setMaskIds`/`sampleAt` run at realtime rates; `setMaskIds` and `assignGapIds` do not appear on the turn stand at all in these windows. Same trigger as cluster 2 (the per-frame explore re-declare invalidates the gap assignment), separate subtree.
+
+What this run could not attribute, and why: `(program)` (+0.235 ms at 1x, row 6) is browser/native time with no source; at 4x it runs *cheaper* on the realtime stand (-3.88), as do several shared functions at both throttles - sampling and load noise at these window sizes (34/82 frames at 1x, 12/30 at 4x), which is also why the positive rows overshoot the net gap. The 4x table is charged against batch 3's +13.16 because this run's own 4x tick means (89.62 vs 91.05, 12 realtime frames under the load label above) show no gap to attribute; the 1x tick gap (+3.17 here, +4.24 in batch 3) and the per-frame CPU totals (+3.95 / +10.81 non-idle) say the cost is real, and the profile rows say where it sits. Nothing here separates background-load scheduling from fire-clock work inside the shared renderer functions beyond the caller chains given.
+
+Costs worth fixing, filed as Next items with their measured ms: K1081 (cluster 1: skip or cache the button ticks' panel rect), K1082 (cluster 2 = K441 s2: incremental `setExplore` so the fillet rebuild stands pat), K1083 (cluster 3: declare only changed chains so the gap-slot pass stands pat). K1077 closes on these tables: rows pass 80% of both reference gaps (82% at 1x, 87% at 4x).
