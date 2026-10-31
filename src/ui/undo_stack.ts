@@ -139,7 +139,7 @@ export const LIVE_EFFECTS = {
     "flowSpeed", "appearSpeed", "appearFx", "settleBudget", "loadSettle",
     "pluckSize", "pluckGhost", "pluckReach", "pluckWhole", "pluckCrossings",
     "pluckGlow", "pluckRipple", "rippleStrength", "rippleAuto", "pluckSheen",
-    "pluckTug", "tugAuto", "autoPluckGain", "pickMargin", "pickChoiceRatio",
+    "pluckTug", "tugAuto", "autoPluckGain", "pickMargin", "touchPickMargin", "pickChoiceRatio",
     "tugLimit", "snapBack", "pluckStyle", "simSpeed", "slack",
     "drag", "repulsion", "bend", "stiffness", "smooth", "gridAlign",
   ],

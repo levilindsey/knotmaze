@@ -281,6 +281,7 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   pluckTug: ["ptg", "twitch", "jolt", "nudge", "physics", "real movement", "twang", "wobble", "knot moves"],
   tugAuto: ["pta", "music", "random", "twitch", "jolt", "nudge", "knot rest", "physics", "auto plucks"],
   pickMargin: ["pkm", "mouse", "click area", "hit area", "hitbox", "cursor", "easier to click", "grab"],
+  touchPickMargin: ["tpm", "touch", "tap area", "hit area", "hitbox", "finger", "easier to tap", "grab"],
   pickChoiceRatio: ["pkr", "mouse", "click area", "hit area", "hitbox", "cursor", "easier to click", "next moves"],
   tugLimit: ["tl", "drag", "pull", "stretch", "elastic", "rubber band", "resistance", "grab"],
   snapBack: ["sb", "drag", "release", "return", "bounce back", "springy", "ease", "let go"],

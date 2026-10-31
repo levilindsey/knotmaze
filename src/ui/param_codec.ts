@@ -461,6 +461,7 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("sleeperRingMax"),
   num("nearHops"),
   num("routeWeight"),
+  num("touchPickMargin"), // K331: touch's pick margin (CSS px past the edge)
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -599,6 +600,7 @@ export const PARAM_RANGES: Readonly<
   hoverGlowLength: [0.5, 15],
   hoverGlowFade: [0, 1.5],
   pickMargin: [0, 20],
+  touchPickMargin: [0, 20], // K331
   pickChoiceRatio: [1, 4],
   minoSight: [0, 20],
   minoRoamRuns: [1, 30],

@@ -124,7 +124,7 @@ describe("links", () => {
       minoRestart: false, minoLair: true,
       hoverGlowWidth: 0.85,
       hoverGlowLength: 3, hoverGlowFade: 0.2,
-      pickMargin: 4, pickChoiceRatio: 1.5,
+      pickMargin: 4, touchPickMargin: 4, pickChoiceRatio: 1.5,
       revealDistance: 2.5, revealFade: 1, revealLook: "beacon",
       burnt: "gone",
       minoGiveUp: 3, minoRoamMin: 3, minoTurnPull: 0,
@@ -231,6 +231,18 @@ describe("links", () => {
     expect(parseParams("?7&pkr=x").pickChoiceRatio).toBe(1.5);
     const q = parseParams(`?${encodeParams(withSeed(7, { pickMargin: 99, pickChoiceRatio: -3 }))}`);
     expect([q.pickMargin, q.pickChoiceRatio]).toEqual([20, 1]);
+  });
+
+  // K331: touch's own pick margin ([0, 20] CSS px past a thread's edge),
+  // the same kind as the mouse's, with its own override key.
+  it("reads the touch pick margin from its override key", () => {
+    expect(parseParams("?7&tpm=2.5").touchPickMargin).toBe(2.5);
+    expect(parseParams("?7&tpm=30").touchPickMargin).toBe(20);
+    expect(parseParams("?7&tpm=-1").touchPickMargin).toBe(0);
+    expect(parseParams("?7&tpm=x").touchPickMargin).toBe(4);
+    const p = parseParams("?7&tpm=2.5");
+    expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+    expect(encodeParams(parseParams("?7&tpm=4"))).toBe("7");
   });
 
   // K98: the marker size's override key, its clamp to [0.25, 3], and the
@@ -978,7 +990,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg", hoverGlowWidth: "hgw",
   revealDistance: "rvd", revealFade: "rvf", revealLook: "rvl",
   hoverGlowLength: "hgl", hoverGlowFade: "hgf",
-  pickMargin: "pkm", pickChoiceRatio: "pkr",
+  pickMargin: "pkm", touchPickMargin: "tpm", pickChoiceRatio: "pkr",
   minotaur: "mt", minoSpeed: "msp", minoTelegraph: "mtg", minoTelegraphLook: "mtl", minoSight: "msi",
   minoRoamRuns: "mro", minoTerritory: "mtr", minoAccuracy: "mac",
   minoPause: "mpa", minoSleep: "msl", hCutShare: "hcs",

@@ -87,6 +87,24 @@ export interface PointerInputDeps {
   onPluck?: (chain: number, ctrl: number) => void;
 }
 
+// K331: the pick radius from a thread's centerline (world) for a pointer
+// type, pure so the zoom test can call the production code. Half the drawn
+// width plus the pointer's own margin in CSS px past the ribbon's edge
+// (pickMargin for mouse/pen, touchPickMargin for touch), times
+// pickChoiceRatio on a choice. Screen px, because aim error is in screen
+// px: the zone past the edge is the same number of px at every zoom.
+// fabric.runDistance is not a pick and does not read this.
+export function pickRadiusFor(
+  p: Pick<UrlParams, "threadWidth" | "pickMargin" | "touchPickMargin" | "pickChoiceRatio">,
+  scale: number,
+  pt: string,
+  choice = false
+): number {
+  const margin = pt === "touch" ? p.touchPickMargin : p.pickMargin;
+  const px = margin * (choice ? p.pickChoiceRatio : 1);
+  return 0.5 * p.threadWidth + px / Math.max(1e-6, scale);
+}
+
 export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
   const {
     app,
@@ -120,23 +138,19 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
     (e.clientY - root.position.y) / root.scale.y,
   ];
   const GRAB_RADIUS = 0.7;
-  // K298, PICK MARGINS (Levi: "reduce the amount of mouse margin we allow
-  // for clicking/hovering over a thread ... And add a slider"). The pick
-  // radius from a thread's centerline (world) for a pointer type. A MOUSE
-  // (a pen too) reaches the half-width plus `pickMargin` CSS px past the
-  // ribbon's edge, and a CHOICE (edgeAt: a run from the current junction)
-  // `pickChoiceRatio` times that margin. Screen px, because aim error is
-  // in screen px; a world margin balloons when zoomed in. TOUCH keeps its
-  // world radii exactly: GRAB_RADIUS for threads, max(0.9, 1.6 tw) for
-  // choices. Hover, click, the thread cursor and the tug's grab all read
-  // these, so the cursor never promises a grab that the click then misses.
-  const pickRadius = (pt: string, choice = false): number => {
-    if (pt === "touch") {
-      return choice ? Math.max(0.9, 1.6 * params.threadWidth) : GRAB_RADIUS;
-    }
-    const px = params.pickMargin * (choice ? params.pickChoiceRatio : 1);
-    return 0.5 * params.threadWidth + px / Math.max(1e-6, root.scale.x);
-  };
+  // K298/K331, PICK MARGINS (Levi: "reduce the amount of mouse margin we
+  // allow for clicking/hovering over a thread ... And add a slider"; K331:
+  // touch takes the same form with its own margin). The pick radius from a
+  // thread's centerline (world) for a pointer type (pickRadiusFor): half
+  // the drawn width plus the pointer's margin in CSS px past the ribbon's
+  // edge (pickMargin mouse/pen, touchPickMargin touch), and a CHOICE
+  // (edgeAt: a run from the current junction) pickChoiceRatio times that
+  // margin. Screen px, because aim error is in screen px; a world margin
+  // balloons when zoomed in (touch's old world radii did exactly that).
+  // Hover, click, the thread cursor and the tug's grab all read these, so
+  // the cursor never promises a grab that the click then misses.
+  const pickRadius = (pt: string, choice = false): number =>
+    pickRadiusFor(params, root.scale.x, pt, choice);
   // Is a thread within the pointer's pick radius? A particle, or the
   // rendered ribbon between particles: particles sit up to ~0.64 world
   // apart, so at a tight mouse margin a point on the ribbon's edge can be
@@ -165,12 +179,13 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
     const k = Math.round(hit.ctrl);
     return arr[closed ? ((k % arr.length) + arr.length) % arr.length : Math.max(0, Math.min(arr.length - 1, k))];
   };
-  // The tug's grab radius: touch's as before; for a mouse, wide enough
-  // that a press onThread accepted always finds a particle (the press may
-  // sit on the ribbon between two of them).
+  // The tug's grab radius: wide enough that a press onThread accepted
+  // always finds a particle (the press may sit on the ribbon between two
+  // of them). K331: touch needs the widening too - its pick radius is the
+  // pixel form now, not the old 0.7 world.
   const grabRadius = (pt: string): number => {
     const r = pickRadius(pt);
-    return pt === "touch" ? r : Math.sqrt(r * r + GRAB_RADIUS * GRAB_RADIUS);
+    return Math.sqrt(r * r + GRAB_RADIUS * GRAB_RADIUS);
   };
 
   // Stage 19 - bounded tug + snap-back, pointer-layer only (the physics
@@ -560,13 +575,25 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
           const pressTarget = inWaitZone(x, y)
             ? null
             : scene.fabric.targetAt(x, y, scene.fabricController, pickRadius("touch", true), tapReach());
+          const pressEid =
+            pressTarget?.eid ?? scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius("touch", true));
           scene.fabric.setTelegraphHover(
-            resolveTelegraphHover(
-              pressTarget?.eid ?? scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius("touch", true)),
-              pressTarget?.route ?? null,
-              inWaitZone(x, y)
-            )
+            resolveTelegraphHover(pressEid, pressTarget?.route ?? null, inWaitZone(x, y))
           );
+          // K330: the press lights the choice's hover glow at once, the
+          // glow run the mouse's hover would set (setGlowAt with this eid).
+          // A wait-zone press is no choice, and the cut paths keep their
+          // own press behavior. Release, cancel and a move off the choice
+          // clear it (endDrag, beginPinch and the slop conversion below).
+          if (
+            pressEid >= 0 &&
+            !inWaitZone(x, y) &&
+            !(deps.cutArmed?.() ?? false) &&
+            !(deps.cutPick?.() ?? false) &&
+            scene.fabric.setGlowRun(pressEid, x, y)
+          ) {
+            scene.fabric.update(scene.fabricController);
+          }
           pendingTap = { id: e.pointerId, sx: e.clientX, sy: e.clientY, x, y };
           return;
         }
@@ -670,7 +697,9 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
         Math.hypot(e.clientX - pendingTap.sx, e.clientY - pendingTap.sy) >
           TAP_SLOP
       ) {
-        // The finger is dragging, not tapping: it pans instead.
+        // The finger is dragging, not tapping: it pans instead. K330: a
+        // move off the choice takes the press's glow with it.
+        clearGlow();
         dragPan = {
           id: e.pointerId,
           x: pendingTap.sx,

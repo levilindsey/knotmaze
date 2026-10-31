@@ -3125,8 +3125,8 @@ export function buildPanel(
     "Auto plucks tug too (the random and music sound modes). Off = only your own plucks tug, so the knot can rest while the music plays. Applies to the next pluck.",
     D.tugAuto, () => callbacks.onSlackChange()
   );
-  // K298: how near a thread the MOUSE picks it (a pen's too; touch keeps
-  // its own wider reach). No step (K130); an edit keeps 2 decimals.
+  // K298: how near a thread the MOUSE picks it (a pen's too); K331: touch
+  // has its own row right after. No step (K130); an edit keeps 2 decimals.
   row(
     fFeel, p, "pickMargin",
     {
@@ -3137,9 +3137,25 @@ export function buildPanel(
       format: (v: number) => v.toFixed(2),
       label: "Mouse pick margin",
     },
-    "Mouse pick margin: how far past a thread's edge, in screen pixels, the mouse still hovers, clicks or grabs it (a pen too; touch keeps its own wider reach). 0 = only on the thread itself. Applies live.",
+    "Mouse pick margin: how far past a thread's edge, in screen pixels, the mouse still hovers, clicks or grabs it (a pen too; touch has its own margin below). 0 = only on the thread itself. Applies live.",
     D.pickMargin, () => {
       params.pickMargin = Math.round(params.pickMargin * 100) / 100;
+      callbacks.onSlackChange();
+    }
+  );
+  row(
+    fFeel, p, "touchPickMargin",
+    {
+      min: 0,
+      max: PICK_MARGIN_MAX,
+      keyScale: 0.5,
+      pointerScale: 0.05,
+      format: (v: number) => v.toFixed(2),
+      label: "Touch pick margin",
+    },
+    "Touch pick margin: how far past a thread's edge, in screen pixels, a touch still taps or grabs it (your next moves get the choice ratio below on top of it). It stays the same finger size at every zoom. 0 = only on the thread itself. Applies live.",
+    D.touchPickMargin, () => {
+      params.touchPickMargin = Math.round(params.touchPickMargin * 100) / 100;
       callbacks.onSlackChange();
     }
   );
@@ -3153,7 +3169,7 @@ export function buildPanel(
       format: (v: number) => v.toFixed(2),
       label: "Choice pick ratio",
     },
-    "Choice pick ratio: the mouse pick margin of your next moves (the runs out of your current junction), as a multiple of the margin above, so a choice is easier to hit than other threads. 1 = the same margin. Applies live.",
+    "Choice pick ratio: the pick margin of your next moves (the runs out of your current junction), as a multiple of the margin for other threads (the mouse's or touch's own), so a choice is easier to hit than other threads. 1 = the same margin. Applies live.",
     D.pickChoiceRatio, () => {
       params.pickChoiceRatio = Math.round(params.pickChoiceRatio * 100) / 100;
       callbacks.onSlackChange();

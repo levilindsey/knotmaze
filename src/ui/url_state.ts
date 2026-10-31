@@ -753,12 +753,14 @@ export interface UrlParams extends ShapeInjectionParams {
   hoverGlowFade: number;
   // K813: the hover glow's color (white = the whitening it has today).
   hoverColor: string;
-  // K298, the MOUSE's pick margins (a pen's too; touch keeps today's
-  // radii, main.ts pickRadius): how far past a thread's edge a pointer
-  // still picks it, in CSS px ([0, PICK_MARGIN_MAX]; hover, click, the
-  // thread cursor, the grab), and a choice's margin as a multiple of it
-  // ([PICK_CHOICE_RATIO_MIN, PICK_CHOICE_RATIO_MAX]). Viewer preferences.
+  // K298, the MOUSE's pick margins (a pen's too); K331: touch has its own
+  // margin of the same kind, so its zones stay one finger size at every zoom:
+  // how far past a thread's edge a pointer still picks it, in CSS px
+  // ([0, PICK_MARGIN_MAX]; hover, click, the thread cursor, the grab), and
+  // a choice's margin as a multiple of it ([PICK_CHOICE_RATIO_MIN,
+  // PICK_CHOICE_RATIO_MAX], touch included). Viewer preferences.
   pickMargin: number;
+  touchPickMargin: number;
   pickChoiceRatio: number;
   // K80 turns: the TURN-ALIGNED minotaur (game/minotaur_turns.ts), a
   // modifier of the turn clock (clk=realtime runs real time's own model and
@@ -1220,6 +1222,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // the edge at 1400x900) and a choice 0.9 (14 px, 1.45x as far past the
   // edge); now 4 px, and a choice 1.5x that (6 px).
   pickMargin: 4,
+  touchPickMargin: 4, // K331: touch's own margin, the mouse's 4 px form
   pickChoiceRatio: 1.5,
   minotaur: "hunter",
   minoSpeed: DEFAULT_TURN_MINO.speed,
@@ -1480,6 +1483,10 @@ export function clampHoverGlowFade(v: number): number {
 }
 // K298: [0, PICK_MARGIN_MAX] and [PICK_CHOICE_RATIO_MIN,
 // PICK_CHOICE_RATIO_MAX]; garbage reads as the default.
+export function clampTouchPickMargin(v: number): number {
+  if (!Number.isFinite(v)) return PARAM_DEFAULTS.touchPickMargin;
+  return Math.min(PICK_MARGIN_MAX, Math.max(0, v));
+}
 export function clampPickMargin(v: number): number {
   if (!Number.isFinite(v)) return PARAM_DEFAULTS.pickMargin;
   return Math.min(PICK_MARGIN_MAX, Math.max(0, v));
@@ -1725,6 +1732,7 @@ function fromCodecValues(
   p.hoverGlowLength = clampHoverGlowLength(p.hoverGlowLength);
   p.hoverGlowFade = clampHoverGlowFade(p.hoverGlowFade);
   p.pickMargin = clampPickMargin(p.pickMargin);
+  p.touchPickMargin = clampTouchPickMargin(p.touchPickMargin);
   p.pickChoiceRatio = clampPickChoiceRatio(p.pickChoiceRatio);
   p.revealDistance = clampRevealDistance(p.revealDistance);
   p.revealFade = clampRevealFade(p.revealFade);
@@ -2128,8 +2136,9 @@ function readLegacy(
     // K298's hover glow length and end fade (`&hgl=5&hgf=0.1`).
     hoverGlowLength: clampHoverGlowLength(readNumber(query, "hgl", D.hoverGlowLength)),
     hoverGlowFade: clampHoverGlowFade(readNumber(query, "hgf", D.hoverGlowFade)),
-    // K298's mouse pick margins (`&pkm=2&pkr=3`).
+    // K298's mouse pick margins (`&pkm=2&pkr=3`); K331: touch's (`&tpm=2`).
     pickMargin: clampPickMargin(readNumber(query, "pkm", D.pickMargin)),
+    touchPickMargin: clampTouchPickMargin(readNumber(query, "tpm", D.touchPickMargin)),
     pickChoiceRatio: clampPickChoiceRatio(readNumber(query, "pkr", D.pickChoiceRatio)),
     // K80 turns' turn-aligned minotaur model (`&mt=hunter&msp=two&mtg=0`;
     // `mt=off` reads the default model, hunter).
