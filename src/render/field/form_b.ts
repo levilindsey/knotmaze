@@ -85,6 +85,12 @@ export interface FormBParams {
    * (default true); false keeps the straight model's h·cot(θ/2) (S1d).
    */
   curvedReach?: boolean;
+  /**
+   * S1e F4: the straight reach h·cot(θ/2) holds up to this many h (default
+   * 4, crossings steeper than 2·atan(1/4) ≈ 28°); a longer one is measured
+   * on the curved threads, never below it.
+   */
+  curvedFrom?: number;
   /** Depth window, arc length (default look.depthWindow · (look.ctrlArc ?? 1)). */
   depthWindow?: number;
   /**
@@ -313,6 +319,8 @@ export class FormB {
   readonly delta: number;
   /** S1e F4: the crossing reach measured on the curved threads. */
   readonly curved: boolean;
+  /** S1e F4: the reach, in h, up to which the straight model holds. */
+  readonly curvedFrom: number;
   readonly force: NonNullable<FormBParams["force"]>;
   readonly fillKey: "nearer" | "a" | "b";
   readonly polys: Poly[];
@@ -351,6 +359,7 @@ export class FormB {
     this.fold = params.fold ?? true;
     this.delta = params.merge ?? 2 * this.aa;
     this.curved = params.curvedReach ?? true;
+    this.curvedFrom = params.curvedFrom ?? 4;
     this.force = params.force ?? {};
     this.fillKey = params.fillKey ?? "nearer";
 
@@ -511,9 +520,11 @@ export class FormB {
           if (d < -1e-12) continue;
           const t = Math.tan(x.theta / 2);
           let reach = t > 1e-12 ? h / t : Infinity;
-          // S1e F4: measured on the curved threads wherever the straight
-          // reach would cut short of L.
-          if (this.curved && d - reach - h < L) reach = this.curvedReachOf(pi, x, dir, reach, h);
+          // S1e F4: a straight reach past curvedFrom·h is measured on the
+          // curved threads (never below curvedFrom·h) wherever it would cut
+          // short of L. max(R, min(r0, e_c)) is continuous in θ.
+          const reachMin = this.curvedFrom * h;
+          if (this.curved && reach > reachMin && d - reach - h < L) reach = Math.max(reachMin, this.curvedReachOf(pi, x, dir, reach, h));
           const c = d - reach - h;
           if (c < Lcut) Lcut = c;
         }
