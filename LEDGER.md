@@ -498,9 +498,9 @@ Next free ID: K1126.
   D K787 + K584, E K112, F K403 + K263 + K600 + K609 + K462; no junction or cursive work. Runs 6A-6F chained
   from 2026-11-02.
   - owner: muse runs 6A-6F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 20:20
-  - branch: mainline; last commit: `3ff7144a`
+  - branch: mainline; last commit: `c647e223`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 6A-6F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run F (K403, K263, K600, K609, K462)
+  - next: Run F done (K403, K263, K600, K609, K462 closed); batch 6 complete, Claude reviews and closes K1107
   - brief: `docs/design/K1107_muse_batch6.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 - **K1108** · Muse batch 7 (`docs/design/K1108_muse_batch7.md`): A K368, B K1100, C K748, D K1109 + K1099,
@@ -861,9 +861,6 @@ Every other item below waits on the trigger it names.
 - **K267** · Stale `highlightMode` mentions after K248 in `docs/design/` (K76, K76_reveal_mode,
   K174, K193, K198, levi_notes_2026-10-13), and v4 `.J` probe links in rules files (gameplay-motion,
   probes-phone, render-pluck, probes.md (K80)), play links in K174, K180, K198, brief templates.
-- **K263** · `minotaur.ts` exports `undoAllowed`, but nothing in `src` calls it, no move undo
-  exists, and `docs/design/K80_turns.md` step 2 cites it as real time's behavior. Delete it, or wire
-  it when an undo lands.
 - **K262** · K132 (41e81b5) broke two harnesses: K80's `.claude/probes/K80/lib.ts` (removed
   `codecDefaults(3)`; see `.claude/probes/K174/rt/rt_lib.ts`) and K100's `vite.fogdaily.config.ts`
   (removed `DAILY_V1`). K114 fixes its copy (`docs/design/K114_burn.md`).
@@ -1214,9 +1211,6 @@ Every other item below waits on the trigger it names.
   (expects `#maze-hud .km-title`; its `?daily=1.aBMge` and `?1471kin.c` predate K132).
 - **K392** · K5 M1's code residuals: `host_seam.test.ts` matches names and misses nested
   binding patterns and element access; 25 lines of `src/app/probe_hooks.ts` pass 80 columns.
-- **K403** · Doc drift from the K74/K80/K114 briefs: `minotaur_turns.ts` 41-42 puts abbott in stage
-  3 (`K80_turns.md`: stage 4); `gameplay-minotaur.md` cites "codec v5 108-116"; `main.ts` 3177-3179
-  says tapsWait is off (on, 3283); `K74.md` 104 and 114-116 misname stage 3's sections.
 - **K405** · After K395, a "M" at a kink loop's tip: the inner edge turns +31° to +56° (stations
   75-89, `?7` chain 9) as the 5-station circumradius follows the control spacing. Try a smooth
   radius envelope or wider min window. `.claude/rules/render-pluck.md` ("Pluck loop tip (K395)").
@@ -1286,9 +1280,6 @@ Every other item below waits on the trigger it names.
 - **K460** · Phone probe tooling: `phone6.ps1` holds the phone lock while it waits for perf and
   logs the tailnet address unmasked; `scripts/phone.ps1` wakes the phone, leaves a 9222 forward;
   `phone_run.ps1` hardcodes owner and hosts (live variant: K395's `phone_run_live.ps1`).
-- **K462** · K323 Stage A's design (`docs/design/K323_game_mode.md`: the params table ~l.89, the
-  undo list ~l.222) predates `fireClock`, `burnt` and K440's real-time pair (`fsr`, `fdr`): Stage A
-  carries the pair and labels it (its proposed labels describe the turn pair).
 - **K464** · K5 R2's leftovers (`docs/design/K5_R2.md`, Stage R2 handoff): the G3 and
   FILLET_REACH_PER_HALF facade getters (with R4 or G3's data plane), stale facade comments, the G3-0
   hooks' home (R5), GapSource solve() (R3 or G3-1).
@@ -1378,7 +1369,6 @@ Every other item below waits on the trigger it names.
 - **K596** · Fabric `?b` (today's defaults) can stay awake forever after a drag: a six-substep limit
   cycle at max move 0.0197 per substep, above QUIET_EPS 0.015; 1 of 23 fabric seeds,
   history-dependent (5 of 6 grab points re-sleep). Fix: K595. `.claude/probes/K372/results.md`.
-- **K600** · `.claude/rules/gameplay-links.md` lacks the `gm` key (`gameMode`) and a K534 entry.
 - **K602** · K456 loose ends (untested): `KHR_parallel_shader_compile` stays off after a restore; a
   failed WebGL start after Reload is unhandled; scheduled notes ring out after a loss; a focused
   panel field still takes keys; no phone pickup watch. `docs/design/K456.md` (Handoff).
@@ -1396,9 +1386,6 @@ Every other item below waits on the trigger it names.
 - **K608** · K515's hover route: in the zoom-3 diff, a thin sliver is darker with the hover, at the
   seam between the route's two lit stretches. Undiagnosed.
   `.claude/probes/K515/hover/zoom3/sheet_diff.png`.
-- **K609** · K395's example loop `9:133` no longer exists in `?7` (2026-10-20), so render-pluck.md's
-  Pluck loop tip entry and probes-pluck.md's K395 recipe point at a loop that no longer reproduces.
-  K406's sheet used chain 2, key 427 (`.claude/probes/K406/sheet/notes.md`).
 - **K612** · The desktop worker's substeps cost 1.2x in-thread ones on the same page (13.4 against
   10.8 ms on the daily); not attributed, maybe the phone's 2.1-2.9x cause. Rides K370's next stage.
   `docs/design/K370.md`.
@@ -2041,6 +2028,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K462** · K323 table and undo list updated to shipped burn rows (2026-11). Done in a0bafbb7 (2026-11-03).
+- **K609** · pluck docs point at chain 2 key 427, rechecked live on 5585. Done in c647e223 (2026-11-03).
+- **K600** · gameplay-links.md gains gm key and K534 entry. Done in 54433e6e (2026-11-03).
+- **K263** · lore and K80 brief no longer cite undoAllowed (removed 35f3ec28/K534). Done in 2f4bcfbe (2026-11-03).
+- **K403** · abbott comment stage 4, codec citation by name, K74 stage 3 sections 4.2-4.3 and handoff files. Done in bbe69373 (2026-11-03).
 - **K1033** · form B names a surface by its covering pieces only (`labelBy: "cover"`, S3b F1-F2): the census reads 0 DEFECT and 0 fade on all 12 scenes (was 137 and 216). Done in 07b4a6ac (2026-11-02).
 - **K1113** · Cursive b, v and w (J3f, v6.9): ends rounded out (about -8°; the font's -12 to -16°), exit ports, every join out of them solved, their presets deleted; out of b/v/w hooks 43→0, spikes 49→3, rough 47→27. Levi's look: K1119. Done in ba9c38b3 (2026-11-02).
 - **K112** · cross-tab sync only; the camera half is K1109. Done in 3ff7144a (2026-11-02).
