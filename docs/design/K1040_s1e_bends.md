@@ -328,4 +328,32 @@ binding pass.
 - Not attributed: the rest of g41_user_tw64's +7 #1 px (byTerm tA +6
   under S1d's counts) lies outside the 12-site lists.
 
+### F3 · The gate, part by part, on candidate 1 (17:07)
+
+Against S1d F5; every count from the c1 run in `s1/out/s1e/`
+(`logs/gate_table_c1.txt` puts the scene lines side by side).
+
+- **The rate rule: passes.** b_rate: 0 of 161 sites above 3/px
+  (`rate/rate_c1.txt`; F5 had 9).
+- **Checks 1-9 and 11 on the reference's ink: fail, as F5**
+  (`logs/scenes_c1.txt`).
+  - **Form B's own checks:** #2 passes on all 12 (corners meet within
+    1e-11 px); #11 passes on all 12; #1 fails on 5 scenes, 156 px
+    (muse_default_tw 58, g41_user_tw64 59, g41_def_tw64 34, muse_hash 4,
+    def 1), the same pixels as F5.
+  - **checks.ts:** #8 passes on all 12. #3 and #11 fail on 1 scene
+    (muse_hash), #7 on 2, #6 and #9's sections on 5, #5 and #9's walks
+    on 10, #2 and #4 on 11. Every count equals F5's.
+- **label_pops' rule: fails.** 16 pops, 168 px, on muse_drag (6, 36 px)
+  and muse_flow (10, 132 px); def_drag and def_flow have none. F5 had
+  20 pops, 191 px. pops_mech (merge, `logs/mech_c1_merge.txt`): 14 pops,
+  126 px, remain once merged pixels are excused; the three largest are
+  junction "scene chain samples" pops (104 px). corner_why: no corner pop.
+- **Terms inside their strips: holds, as F5.** 145 of 1.69M inked px
+  miss, all of them in endpoint and V discs.
+- **Free ends: the check runs.** 114 on the 12 scenes, as F5; F2's four
+  on g41_user_tw64 are the Lcut loop's defect.
+- **q5holes and q4 (not gate items):** the same holes, all eyes of the
+  look; q4's |Δ| counts move by at most 3 px a scene.
+
 ## Handoff
