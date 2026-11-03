@@ -508,9 +508,9 @@ Next free ID: K1133.
 - **K1131** · Muse batch 8 (`docs/design/K1131_muse_batch8.md`): A K332, B K657, C K1081, D K1082, E K1083, F
   K1115; Next in ledger order, no junction, cursive, physics or phone work.
   - owner: muse runs 8A-8F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 04:10
-  - branch: mainline; last commit: `3346474f`
+  - branch: mainline; last commit: `2592be6c`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 8A-8F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run B (K657)
+  - next: Run C (K1081)
   - brief: `docs/design/K1131_muse_batch8.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
@@ -649,9 +649,6 @@ Every other item below waits on the trigger it names.
 - **K649** · K525's tuning: rim strengths 0.6/0.8/1 and fades 0.2/0.3; junction-end gaps (runs under
   1.95 world get no rims; try gap 0 at interior junctions); the ticks' touch alphas vs the line's
   0.7; the fog glow (a dim dot on the Pixel, K662); the sheet extras. `docs/design/K525_telegraph.md` Handoff.
-- **K657** · K137 follow-ups: the win banner's strokes/par and snapped rows (showFabricWin is free
-  since K336 merged); keep copy from promising par = perfect play (par counts runs, stars length; a
-  100%-efficient walk lost strict par, seed 7, slack 0).
 - **K688** · Healing cuts against monsters (Levi took R.3.5, decision 6): a cut closes again after a
   few moves; cut with the minotaur or the fire. After the K114 walker stage
   (`docs/design/K80_gameplay_additions.md` R.3.5).
@@ -2001,6 +1998,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K657** · win banner shows snapped and par rows. Done in 2592be6c (2026-11-03).
 - **K332** · key hints after the first direction press. Done in 3346474f (2026-11-03).
 - **K1108** · Muse batch 7: runs A-F passed their gates (2026-11-03 00:29 to 03:06) and closed K368, K1100, K748, K1109, K1099, K1101, K426, K437; filed K1126, K1127, K1129 (Levi) and K1128. Done in 8ab9e8e9 (2026-11-03).
 - **K437** · rules name frame_loop.ts; half rate added. Done in 8ab9e8e9 (2026-11-03).
