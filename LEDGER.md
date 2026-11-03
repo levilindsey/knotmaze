@@ -492,9 +492,9 @@ Next free ID: K1118.
   D K787 + K584, E K112, F K403 + K263 + K600 + K609 + K462; no junction or cursive work. Runs 6A-6F chained
   from 2026-11-02.
   - owner: muse runs 6A-6F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 20:20
-  - branch: mainline; last commit: `5f28e0b1`
+  - branch: mainline; last commit: `07802509`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 6A-6F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run C (K128 + K212 + K490); Claude reviews Run B on master as it lands
+  - next: Run D (K787 + K584); Claude reviews Run C (K128+K212 done 07802509, K490 explained)
   - brief: `docs/design/K1107_muse_batch6.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 - **K1108** · Muse batch 7 (`docs/design/K1108_muse_batch7.md`): A K368, B K1100, C K748, D K1109 + K1099,
@@ -925,10 +925,6 @@ Every other item below waits on the trigger it names.
 - **K214** · `particle_system.ts` and `forces.ts` still attach 30.8 KB of
   lore after the split: all the physics lore is about them, so only
   trimming the text would cut it (`docs/design/K173.md`).
-- **K212** · PixiJS warns "Attribute aGap/aGapId/aUV is not present in the shader" on every
-  load (K132's probes; Levi's console 2026-10-14, K311). Find which mesh binds attributes its
-  program does not declare (`docs/design/K299_choice_pulse_bug.md`). On 2026-10-20 a run
-  printed 10 of them, adding aEnv, aCol and aClipA/B/F (K406's probe).
 - **K208** · `restoreYarn` keeps its own copy of the travel-direction
   rule; it could share `travelOrder` / `moveEnds` (`src/render/fog_arc.ts`,
   K100).
@@ -968,9 +964,6 @@ Every other item below waits on the trigger it names.
 - **K125** · Scarborough Fair's loop is 50 beats (`src/audio/songs.ts`; K116 found it), not whole
   3/4 bars, so a part that keeps bars would slip each loop. Grow its closing rest from 2 beats to 3
   before any band part (K116's call 6).
-- **K128** · `src/render/marker_mesh.ts:32` declares `in vec2 aUV;` but never reads it while the
-  marker geometry carries it, so PixiJS warns "Attribute aUV is not present" per marker mesh on
-  every load (K83; found by K81 stage 3a). Read it in the shader or drop it from the geometry.
 - **K131** · Phone probe kit (`.claude/probes/K79/phone/`, untracked): `drift.mjs` and `frames.mjs`
   take slow full-size PNG shots (10-25 s; use JPEG or clipped); `bench.mjs`'s `thermal()` reads the
   stale temperatures block (`.claude/probes/K81/phone/lib.mjs` reads the live one).
@@ -1311,10 +1304,6 @@ Every other item below waits on the trigger it names.
   (docs/design/K467.md Handoff)
 - **K487** · The shipped probes .claude/probes/K92/undo.mjs and K198/stage2/pan.mjs predate the
   phone sheet; sheet-aware copies are in .claude/probes/K467/
-- **K490** · A console "Failed to load resource ... 404" on every load of K465's preview build (not
-  a pageerror; cause not investigated): check master's build and name the URL.
-  K466 saw it on a vite dev server too (`.claude/probes/K466/sheet/key.txt`), so it is not
-  preview-only.
 - **K491** · K465's exit marker over unseen thread is pixel-verified only at 2600x1600 `&gs=4` (the
   exit is never on screen unseen at 411x753); no phone walk brings it on screen
 - **K494** · K466 B (`rve=past|back`): up to 4.67 ctrl of unexplored thread shows; three covered
@@ -2045,6 +2034,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K490** · explained, not reproduced: no 404 on master dev or preview build across the brief's links, a K466-style xp=threads load or a panel open; every file index.html/manifest names serves 200, and K466's log never recorded the URL. Done in 07802509 (2026-11-02).
+- **K212** · pluck strip split into one geometry per program (blur vs still); all eight attribute warnings (aGap, aGapId, aUV, aEnv, aCol, aClipA/B/F) gone, pictures pixel-identical. Done in 07802509 (2026-11-02).
+- **K128** · marker aUV slot dropped from the geometry and the dead declaration removed; PixiJS aUV warning gone (probe .claude/probes/K212/). Done in 07802509 (2026-11-02).
 - **K1104** · Cursive v6.7 (J3d): the joins into a and q attach on their lower bounds; the after-high stretch's [0, 90] was picked by a sweep with 85 tying; b's, v's and w's other high exits are still presets (`K1027_cursive_j3d.md` ## Handoff). Dropped: folded into K1113: the six are v6.6's presets again (K1102), so their attach bounds and the sweep's stretch are moot, and b's, v's and w's other high exits are K1113's scope (2026-11-02).
 - **K1102** · Cursive a/q joins: Levi chose v6.6's ("aq: definitely 6.6", 2026-11-02); J3e restored them exactly for ba, va, wa, bq, vq and wq. Done in d505cbbf (2026-11-02).
 - **K495** · End glow row shows only under thread reveal with the halo or beacon look. Done in 5f28e0b1 (2026-11-02).
