@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1124.
+Next free ID: K1126.
 
 ## Waiting on Levi
 
@@ -379,10 +379,10 @@ Next free ID: K1124.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c
   merged e6c6034..aa3cdd1).
-  - owner: muse run 6P, chained by `.claude/probes/K1053/chain.ps1` (queue tag 6P, after 6E), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, queued 2026-11-02 22:55
-  - branch: mainline; last commit: `9f5b77f1`
-  - evidence: .claude/probes/rounds/2026-11-02/ (untracked; round 2026-10-30's in .claude/probes/rounds/2026-10-30/)
-  - next: round 2026-11-02: K895 (a) median, (b) the portrait A/A floor, (c) the WMI detached start, (d) phases refuse after a watchdog trip; then step 6 (K309's pre-fix control p3, k539_g31/pixdiff_g31)
+  - owner: nobody since 2026-11-03 00:05 (round 2026-11-02 ended: step 7 done)
+  - branch: mainline; last commit: `780cda7f`
+  - evidence: .claude/probes/rounds/2026-11-02/ (untracked)
+  - next: K895 (b) retake at -Moves 0,7,11 plus installer finish refusal (K1124); K309 control from failing (k, n) pairs (K1125)
   - brief: docs/design/K156.md, "Round 2026-11-02" (steps from "Round 2026-10-30")
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
@@ -760,6 +760,11 @@ Every other item below waits on the trigger it names.
 - **K1115** · Panel: after Reset, 107 stepped rows land one step below their default when a link held an
   off-grid value (the list: 5f28e0b1's message; 6B fixed four rows, K130/K495, by dropping `step`). Wants one
   general fix, not per row (Claude's call).
+- **K1124** · K895 (b): retake portrait A/A at -Moves 0,7,11 (13 hits the finish; K156 round 2026-11-02)
+  and install; make install_floor.mjs refuse finish samples. (a)(c)(d) done (8d4d0617, 33fa558b).
+- **K1125** · K309 control unproven: 7a87cae 0 px (rim+span, chain 4 n 28); pick case from failing (k, n)
+  pairs; explain rimSeam full-frame diff (K156 round 2026-11-02).
+  .claude/probes/rounds/2026-11-02/k309/rim_head/).
 
 ## Residuals (known, not fixed)
 
