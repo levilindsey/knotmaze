@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1088.
+Next free ID: K1089.
 
 ## Waiting on Levi
 
@@ -373,10 +373,10 @@ Next free ID: K1088.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c
   merged e6c6034..aa3cdd1).
-  - owner: muse via paseo, run 'knotmaze K156 round 2026-10-30' (id: paseo ls), launched 2026-11-02 16:27 by claude 7301c55b
-  - branch: mainline; last commit: `2de5b991`
-  - evidence: .claude/probes/rounds/2026-10-30/ (main checkout, untracked); the kit is scripts/phone_pass/
-  - next: Muse runs the round per the brief and reports; then Claude reviews the report and its commits and updates this handle
+  - owner: nobody since 2026-11-02 16:52 (round 2026-10-30 ended: the watchdog tripped on a physical touch at 16:45)
+  - branch: mainline; last commit: `9f5b77f1`
+  - evidence: .claude/probes/rounds/2026-10-30/ (untracked)
+  - next: K895 (median, portrait A/A floor at -Moves 0,7,11,13, WMI detached start) and round step 6 (K309 pre-fix control p3, k539_g31/pixdiff_g31 trial) in a fresh phone window
   - brief: docs/design/K156.md, "Round 2026-10-30"
   - env: the phone on the desktop's USB (2026-11-02; 5555 over Tailscale re-armed 16:21 as a fallback); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
@@ -607,9 +607,6 @@ Every other item below waits on the trigger it names.
 - **K265** · High contrast's own highlight (K111 s5; Levi 10-14): white rim on both edges, hard
   inner edge; looks 1-3 go (`hcl`, `__knotHcLook`). After K298; never beside K299, K76 2c, K268 s2.
   `docs/design/K111.md` ("Levi's pick", "For stage 5"); looks `.claude/probes/K111/stage4/sheet/`.
-- **K309** · Check K299's ring-lap fix on the phone (PowerVR rounds float division its own way; only
-  the desktop GPU was checked): in K156's next round, Levi's link `?qoietk.KSIeBoGlf4-` at node_2
-  and the seam cases of K299's A/B. `docs/design/K299_choice_pulse_bug.md` ("Not done").
 - **K312** · Add K299's lesson to claude-config `rules/lessons.md` (WebGL): GPU float division is
   approximate (ANGLE D3D11 `floor(k*n/n)` = k-1 in 3275 of 16384 pairs), so ring and lap math must
   be integer-corrected. Held while Levi is away (config edits wait for approval).
@@ -639,8 +636,6 @@ Every other item below waits on the trigger it names.
   the stage's four small residuals that show (`docs/design/K268.md`, "Stage 2 handoff").
 - **K368** · A ring for the ripple under High contrast (K289 e; Levi, 2026-10-15: yes):
   `HIGH_CONTRAST_OVERRIDES` (`src/ui/accessibility.ts`); the glint has little room on light threads over black (inferred, not shot; fallback a stronger glint). Small: a unit test and a screenshot.
-- **K485** · Pixel pass for the phone sheet and row help (scripts/phone.ps1): the sheet query, Back,
-  the peek, help taps; K467 ran only in phone emulation
 - **K543** · K74 stage 4's before/after sheet of three finishes (searched vs shipped, dailies 1-3) was not made in the build stage; make it from `.claude/probes/K74/stage4/build_measure.ts` output or a diag_screenshot pair when Levi wants the look check. Sheet: `.claude/probes/K74/stage4/sheet/contact_sheet.png` (`notes.md` beside it).
 
 - **K548** · Overnight runner has no usage gate: the 92% weekly pause (Next binding rule) is checked by hand only; 2026-10-15/16 runs 1-6 launched at 88% (under the line, audit 2026-10-18) but nothing stops a launch over it. Add a /usage check to the runner before each batch, or a ledger-stamped usage line per run close.
@@ -685,8 +680,6 @@ Every other item below waits on the trigger it names.
   join_k886.py, the venv's requirements), without the chart or its crops, once K886 lands.
 - **K895** · phone_pass kit: `-Phase start` hangs a piped caller; `summary.mjs` takes the lower of
   two reps at n=2 (use the mean); fabric m11 needs an A/A floor and a fresh `noise.json`. (K907 moved the round probes into `scripts/phone_pass/`.)
-- **K896** · K568's confetti recheck on the phone (about 15 fps lost over the 8 s fall, round
-  2026-10-20's left over 1): a `-Phase looks` window. `docs/design/K156.md`.
 - **K912** · Cursive generator follow-ups from K902: o and b exits per class (ok 10.9, or 6.5 u);
   f's exit walk; `--high-exit` by rerun; per-left split overfit. v5 (K904) fixed h's and k's after-o
   entries, og, oq, ng and nq. `docs/design/K902_cursive_frames.md` ## Results.
@@ -761,6 +754,10 @@ Every other item below waits on the trigger it names.
   a90a739a aa8bfad6 ab57cd38 ab96ea9e ac1c3e02 ac645b91 ac64a844 adaaf5d4 adfeea92 ae12adbf
   ae18c5a4) with `.claude/probes/K161/cleanup.ps1` (DryRun first; copies probes, keeps branches).
   Levi: yes (2026-11-02); run it after the K156 round.
+- **K1088** · K568's confetti fall costs the Pixel 11 about 15 fps on master (round 2026-10-30 step 2:
+  45.0/45.3 fps, 119-122 of ~360 frames over 25 ms, none over 50, against 65a7787's 60.1/60.3, two runs a
+  build in both orders, thermal status 0). Trim the piece counts or per-piece cost, or accept it.
+  docs/design/K156.md round 2026-10-30 handoff.
 
 ## Residuals (known, not fixed)
 
@@ -2050,6 +2047,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K485** · Pixel sheet pass on the phone: 34/34 portrait checks ok on master (keys, landscape, live skipped). Done in 9f5b77f1 (2026-11-02).
+- **K309** · K299 ring-lap fix on the PowerVR: 319/16384 division misses (all k-1); every seam case 0 px on master. Done in 9f5b77f1 (2026-11-02).
+- **K896** · Confetti recheck on the phone (round 2026-10-30): master 45.0/45.3 fps vs 65a7787 60.1/60.3 over the 8 s fall, both orders; cost reproduced. Done in 9f5b77f1 (2026-11-02).
 - **K1051** · Turn on Dependabot for knotmaze. Dropped: already on: Dependabot alerts and security updates (checked 2026-11-02) (2026-11-02).
 - **K715** · adb deaths: Godot's shutdown_adb_on_exit is now false (claude-config Setup-GodotAndroid.ps1 step 5; applied on the desktop). Done in claude-config f914c3a4 (2026-11-02).
 - **K1087** · The phone's network path off USB (5555 over Tailscale closes on every reboot). Dropped: decided 2026-11-02: re-arm 5555 over USB after each phone reboot, automated; the job is claude-config CC132 (2026-11-02).
