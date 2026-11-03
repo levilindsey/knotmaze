@@ -248,3 +248,14 @@ Binding on every later cursive stage:
   bound, its sagging cusp entries into i, j, p, s, u, w and y, and Ht's
   U, which clears t's stem by 0.0017 u. Each visible change goes to Levi
   as a picture beside b0.
+- **J3c's joins out of o stand** (Levi, 2026-11-02, K1089, on v6.6's
+  pictures: "1. V6.6 seems best / 2. Seems good / 3. Seems good / 4.
+  V6.6 seems best"). The questions, in that order: o into i and j (p,
+  s, u, w and y alike), where v6.6 runs level into the stem's top
+  instead of b0's sag; o into m and n (v, x and z alike), where the
+  hump at the arch is gone at the cost of a deeper dip before it; oe,
+  where v6.6 comes down straighter, above the font's swoop, instead of
+  b0's S that hugs it ("Seems good", read as the current one); ot,
+  where v6.6 meets t's stem at the crossbar after a deeper dip than
+  b0's. v6.6 draws all four as Levi wants them
+  (`out26/o_joins_v66.svg`, `out26/ot_v66.svg`; Drive `K863/`).
