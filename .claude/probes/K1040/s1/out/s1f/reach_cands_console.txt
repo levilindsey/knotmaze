@@ -1,0 +1,27 @@
+== def: h 0.2600; arms 563, L = 0 c1 1; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 81/0/0/1  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 186/1/0/3
+== fat: h 0.2600; arms 0, L = 0 c1 0; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 0/0/0/0  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 0/0/0/0
+== ring: h 0.2900; arms 76, L = 0 c1 0; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 18/0/0/0  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 32/0/0/0
+== user_tw42.lightpaper: h 0.2100; arms 233, L = 0 c1 0; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 27/0/0/0  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 75/0/0/1
+== g41_def_tw42: h 0.2100; arms 563, L = 0 c1 0; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 91/0/0/0  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 166/0/0/0
+== g41_def_tw64: h 0.3200; arms 563, L = 0 c1 14; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 79/0/0/5  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 3/0/0/0  qc2F1 199/4/0/18
+== muse_hash: h 0.4000; arms 503, L = 0 c1 46; binding pass past 4h 6; default != c1 on 4
+   moved/restored/shortened/cap only: c2 90/7/0/10  c3 6/4/0/2  qc1 6/4/0/2  qc2 6/4/0/2  qc3 6/4/0/2  ql1 6/4/0/2  ql2 6/4/0/2  qc2F2 21/5/0/5  qc2F1 176/11/0/30
+== muse_default_tw: h 0.2600; arms 503, L = 0 c1 0; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 64/0/0/0  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 153/0/0/2
+== g41_ring_tw42: h 0.2100; arms 76, L = 0 c1 0; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 19/0/0/0  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 2/0/0/0  qc2F1 35/0/0/0
+== g41_ring_tw64: h 0.3200; arms 76, L = 0 c1 4; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 19/2/0/2  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 33/3/0/1
+== g41_user_tw42: h 0.2100; arms 233, L = 0 c1 0; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 27/0/0/0  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 75/0/0/1
+== g41_user_tw64: h 0.3200; arms 233, L = 0 c1 21; binding pass past 4h 11; default != c1 on 10
+   moved/restored/shortened/cap only: c2 55/8/0/5  c3 11/7/0/1  qc1 11/7/0/1  qc2 11/7/0/1  qc3 11/7/0/1  ql1 9/6/0/1  ql2 10/6/0/1  qc2F2 18/8/0/0  qc2F1 81/11/0/9
+ALL moved/restored/shortened/cap only: c2 570/17/0/23  c3 17/11/0/3  qc1 17/11/0/3  qc2 17/11/0/3  qc3 17/11/0/3  ql1 15/10/0/3  ql2 16/10/0/3  qc2F2 44/13/0/5  qc2F1 1211/30/0/65; default != c1 on 14
+ALL arms != c3 (L or min(Lcut, L + λ), 1e-9): c2 572  c3 0  qc1 0  qc2 0  qc3 0  ql1 4  ql2 2  qc2F2 36  qc2F1 1275
+wrote C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/agent-a43dac8f0673db4df/.claude/probes/K1040/s1/out/s1f/reach_cands.txt

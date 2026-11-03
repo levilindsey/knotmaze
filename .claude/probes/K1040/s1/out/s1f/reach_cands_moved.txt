@@ -1,0 +1,60 @@
+== def: h 0.2600; arms 563, L = 0 c1 1; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 81/0/0/1  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 186/1/0/3
+== fat: h 0.2600; arms 0, L = 0 c1 0; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 0/0/0/0  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 0/0/0/0
+== ring: h 0.2900; arms 76, L = 0 c1 0; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 18/0/0/0  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 32/0/0/0
+== user_tw42.lightpaper: h 0.2100; arms 233, L = 0 c1 0; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 27/0/0/0  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 75/0/0/1
+== g41_def_tw42: h 0.2100; arms 563, L = 0 c1 0; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 91/0/0/0  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 166/0/0/0
+== g41_def_tw64: h 0.3200; arms 563, L = 0 c1 14; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 79/0/0/5  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 3/0/0/0  qc2F1 199/4/0/18
+== muse_hash: h 0.4000; arms 503, L = 0 c1 46; binding pass past 4h 6; default != c1 on 4
+   moved/restored/shortened/cap only: c2 90/7/0/10  c3 6/4/0/2  qc1 6/4/0/2  qc2 6/4/0/2  qc3 6/4/0/2  ql1 6/4/0/2  ql2 6/4/0/2  qc2F2 21/5/0/5  qc2F1 176/11/0/30
+  arm 111 (j 36 pi 11 dir 1 through) L c1 0.000/-2.605 c2 0.000/-0.876 c3 0.000/-1.555 qc1 0.000/-1.555 qc2 0.000/-1.555 qc3 0.000/-1.555 ql1 0.000/-1.555 ql2 0.000/-1.555 qc2F2 0.000/-0.755 qc2F1 0.000/-0.648 FAR
+    bind d 1.11h θ 0.2997 (chain 11→11) r0 6.62h e_c 2.30h | e* qc1 2.08 qc2 2.08 qc3 2.08 ql1 3.25 ql2 3.25 qc2F2 1.78 qc2F1 1.73
+  arm 197 (j 65 pi 83 dir 1 through) L c1 0.000/-10.348 c2 0.945/1.114 c3 0.612/0.612 qc1 0.612/0.612 qc2 0.612/0.612 qc3 0.612/0.612 ql1 0.612/0.612 ql2 0.612/0.612 qc2F2 0.945/1.345 qc2F1 0.945/1.345 FAR
+    bind d 6.53h θ 0.0637 (chain 83→83) r0 31.40h e_c 2.74h | e* qc1 2.37 qc2 2.37 qc3 2.37 ql1 3.88 ql2 3.88 qc2F2 2.08 qc2F1 2.10
+  arm 336 (j 111 pi 83 dir 1 through) L c1 0.000/-11.293 c2 0.169/0.169 c3 0.000/-0.334 qc1 0.000/-0.334 qc2 0.000/-0.334 qc3 0.000/-0.334 ql1 0.000/-0.334 ql2 0.000/-0.334 qc2F2 0.435/0.435 qc2F1 0.426/0.426 FAR
+    bind d 4.17h θ 0.0637 (chain 83→83) r0 31.40h e_c 2.74h | e* qc1 2.37 qc2 2.37 qc3 2.37 ql1 3.88 ql2 3.88 qc2F2 2.08 qc2F1 2.10
+  arm 367 (j 121 pi 83 dir 1 end) L c1 0.000/-8.182 c2 0.425/0.425 c3 0.425/0.425 qc1 0.425/0.425 qc2 0.425/0.425 qc3 0.425/0.425 ql1 0.425/0.425 ql2 0.425/0.425 qc2F2 0.425/0.425 qc2F1 0.430/0.430 FAR
+    bind d 11.94h θ 0.0637 (chain 83→83) r0 31.40h e_c 2.74h | e* qc1 2.37 qc2 2.37 qc3 2.37 ql1 3.88 ql2 3.88 qc2F2 2.08 qc2F1 2.10
+  arm 378 (j 125 pi 83 dir -1 through) L c1 0.000/-6.352 c2 0.434/0.434 c3 0.434/0.434 qc1 0.434/0.434 qc2 0.434/0.434 qc3 0.434/0.434 ql1 0.434/0.434 ql2 0.434/0.434 qc2F2 0.434/0.434 qc2F1 0.434/0.434 FAR
+    bind d 16.52h θ 0.0637 (chain 83→83) r0 31.40h e_c 2.50h | e* qc1 2.32 qc2 2.32 qc3 2.32 ql1 3.61 ql2 3.61 qc2F2 2.00 qc2F1 1.98
+  arm 477 (j 157 pi 83 dir -1 end) L c1 0.000/-1.028 c2 1.150/1.150 c3 1.150/1.150 qc1 1.150/1.150 qc2 1.150/1.150 qc3 1.150/1.150 ql1 1.150/1.150 ql2 1.150/1.150 qc2F2 1.150/1.150 qc2F1 1.165/1.165 FAR
+    bind d 29.83h θ 0.0637 (chain 83→83) r0 31.40h e_c 2.50h | e* qc1 2.32 qc2 2.32 qc3 2.32 ql1 3.61 ql2 3.61 qc2F2 2.00 qc2F1 1.98
+== muse_default_tw: h 0.2600; arms 503, L = 0 c1 0; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 64/0/0/0  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 153/0/0/2
+== g41_ring_tw42: h 0.2100; arms 76, L = 0 c1 0; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 19/0/0/0  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 2/0/0/0  qc2F1 35/0/0/0
+== g41_ring_tw64: h 0.3200; arms 76, L = 0 c1 4; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 19/2/0/2  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 33/3/0/1
+== g41_user_tw42: h 0.2100; arms 233, L = 0 c1 0; binding pass past 4h 0; default != c1 on 0
+   moved/restored/shortened/cap only: c2 27/0/0/0  c3 0/0/0/0  qc1 0/0/0/0  qc2 0/0/0/0  qc3 0/0/0/0  ql1 0/0/0/0  ql2 0/0/0/0  qc2F2 0/0/0/0  qc2F1 75/0/0/1
+== g41_user_tw64: h 0.3200; arms 233, L = 0 c1 21; binding pass past 4h 11; default != c1 on 10
+   moved/restored/shortened/cap only: c2 55/8/0/5  c3 11/7/0/1  qc1 11/7/0/1  qc2 11/7/0/1  qc3 11/7/0/1  ql1 9/6/0/1  ql2 10/6/0/1  qc2F2 18/8/0/0  qc2F1 81/11/0/9
+  arm 81 (j 26 pi 22 dir -1 through) L c1 0.000/-22.671 c2 0.772/1.092 c3 0.772/1.092 qc1 0.772/1.092 qc2 0.772/1.092 qc3 0.772/1.092 ql1 0.772/1.092 ql2 0.772/1.092 qc2F2 0.772/1.092 qc2F1 0.772/1.092 FAR
+    bind d 23.12h θ 0.0215 (chain 22→22) r0 92.97h e_c 2.69h | e* qc1 2.33 qc2 2.33 qc3 2.33 ql1 3.36 ql2 3.36 qc2F2 2.02 qc2F1 2.05
+  arm 83 (j 27 pi 22 dir -1 end) L c1 0.000/-18.932 c2 0.959/0.959 c3 0.959/0.959 qc1 0.959/0.959 qc2 0.959/0.959 qc3 0.959/0.959 ql1 0.959/0.959 ql2 0.959/0.959 qc2F2 0.959/0.959 qc2F1 0.959/0.959 FAR
+    bind d 34.81h θ 0.0215 (chain 22→22) r0 92.97h e_c 2.69h | e* qc1 2.33 qc2 2.33 qc3 2.33 ql1 3.36 ql2 3.36 qc2F2 2.02 qc2F1 2.05
+  arm 97 (j 32 pi 11 dir 1 through) L c1 0.874/0.874 c2 1.389/1.389 c3 0.978/0.978 qc1 0.978/0.978 qc2 0.978/0.978 qc3 0.978/0.978 ql1 0.874 ql2 0.978/0.978 qc2F2 1.584/1.584 qc2F1 1.588/1.588 FAR
+    bind d 8.06h θ 0.4544 (chain 11→11) r0 4.33h e_c 2.72h | e* qc1 2.06 qc2 2.06 qc3 2.06 ql1 4.33 ql2 3.77 qc2F2 2.11 qc2F1 2.09
+  arm 99 (j 32 pi 11 dir -1 through) L c1 0.379/0.379 c2 0.976/0.976 c3 0.483/0.483 qc1 0.483/0.483 qc2 0.483/0.483 qc3 0.483/0.483 ql1 0.483/0.483 ql2 0.483/0.483 qc2F2 1.063/1.063 qc2F1 1.064/1.064 FAR
+    bind d 6.51h θ 0.4544 (chain 11→11) r0 4.33h e_c 2.46h | e* qc1 2.22 qc2 2.22 qc3 2.22 ql1 3.15 ql2 3.15 qc2F2 2.19 qc2F1 2.19
+  arm 106 (j 35 pi 11 dir 1 through) L c1 0.195/0.195 c2 0.754/0.754 c3 0.299/0.299 qc1 0.299/0.299 qc2 0.299/0.299 qc3 0.299/0.299 ql1 0.299/0.299 ql2 0.299/0.299 qc2F2 0.906/0.906 qc2F1 0.909/0.909 FAR
+    bind d 5.94h θ 0.4544 (chain 11→11) r0 4.33h e_c 2.58h | e* qc1 2.06 qc2 2.06 qc3 2.06 ql1 3.99 ql2 3.99 qc2F2 2.11 qc2F1 2.09
+  arm 110 (j 36 pi 11 dir -1 end) L c1 0.000/-0.464 c2 0.123/0.123 c3 0.000/-0.360 qc1 0.000/-0.360 qc2 0.000/-0.360 qc3 0.000/-0.360 ql1 0.000 ql2 0.000 qc2F2 0.220/0.220 qc2F1 0.221/0.221 FAR
+    bind d 3.87h θ 0.4544 (chain 11→11) r0 4.33h e_c 2.49h | e* qc1 2.19 qc2 2.19 qc3 2.19 ql1 4.33 ql2 4.33 qc2F2 2.19 qc2F1 2.19
+  arm 168 (j 54 pi 22 dir -1 through) L c1 0.000/-25.576 c2 0.609/0.609 c3 0.609/0.609 qc1 0.609/0.609 qc2 0.609/0.609 qc3 0.609/0.609 ql1 0.609/0.609 ql2 0.609/0.609 qc2F2 0.609/0.609 qc2F1 0.609/0.609 FAR
+    bind d 14.05h θ 0.0215 (chain 22→22) r0 92.97h e_c 2.69h | e* qc1 2.33 qc2 2.33 qc3 2.33 ql1 3.36 ql2 3.36 qc2F2 2.02 qc2F1 2.05
+  arm 172 (j 55 pi 22 dir -1 through) L c1 0.000/-23.444 c2 2.133/2.453 c3 2.133/2.453 qc1 2.133/2.453 qc2 2.133/2.453 qc3 2.133/2.453 ql1 2.133/2.453 ql2 2.133/2.453 qc2F2 2.133/2.453 qc2F1 2.133/2.453 FAR
+    bind d 20.71h θ 0.0215 (chain 22→22) r0 92.97h e_c 2.69h | e* qc1 2.33 qc2 2.33 qc3 2.33 ql1 3.36 ql2 3.36 qc2F2 2.02 qc2F1 2.05
+  arm 183 (j 59 pi 22 dir -1 through) L c1 0.000/-27.519 c2 0.067/0.067 c3 0.067/0.067 qc1 0.067/0.067 qc2 0.067/0.067 qc3 0.067/0.067 ql1 0.067/0.067 ql2 0.067/0.067 qc2F2 0.067/0.067 qc2F1 0.120/0.120 FAR
+    bind d 7.98h θ 0.0215 (chain 22→22) r0 92.97h e_c 2.69h | e* qc1 2.33 qc2 2.33 qc3 2.33 ql1 3.36 ql2 3.36 qc2F2 2.02 qc2F1 2.05
+  arm 185 (j 60 pi 22 dir 1 through) L c1 0.000/-28.133 c2 0.743/0.743 c3 0.338/0.338 qc1 0.338/0.338 qc2 0.338/0.338 qc3 0.338/0.338 ql1 0.000/-3.445 ql2 0.000/-0.524 qc2F2 0.948/0.948 qc2F1 0.945/0.945 FAR
+    bind d 6.05h θ 0.0215 (chain 22→22) r0 92.97h e_c 2.73h | e* qc1 2.36 qc2 2.36 qc3 2.36 ql1 15.82 ql2 6.69 qc2F2 2.09 qc2F1 2.10
+  arm 186 (j 60 pi 22 dir -1 through) L c1 0.000/-27.163 c2 1.707/1.707 c3 1.308/1.308 qc1 1.308/1.308 qc2 1.308/1.308 qc3 1.308/1.308 ql1 1.262/1.262 ql2 1.308/1.308 qc2F2 1.943/1.943 qc2F1 1.931/1.931 FAR
+    bind d 9.09h θ 0.0215 (chain 22→22) r0 92.97h e_c 2.75h | e* qc1 2.33 qc2 2.33 qc3 2.33 ql1 4.15 ql2 3.85 qc2F2 2.02 qc2F1 2.05
+ALL moved/restored/shortened/cap only: c2 570/17/0/23  c3 17/11/0/3  qc1 17/11/0/3  qc2 17/11/0/3  qc3 17/11/0/3  ql1 15/10/0/3  ql2 16/10/0/3  qc2F2 44/13/0/5  qc2F1 1211/30/0/65; default != c1 on 14
+ALL arms != c3 (L or min(Lcut, L + λ), 1e-9): c2 572  c3 0  qc1 0  qc2 0  qc3 0  ql1 4  ql2 2  qc2F2 36  qc2F1 1275
