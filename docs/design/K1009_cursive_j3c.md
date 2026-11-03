@@ -75,7 +75,7 @@ Their known faults still get fixed (Levi's calls, last bullet):
      the clearance profile (call 3), b0 against Ht against K.
    - **og.** v6.4's: o's cusp exit (`cusp_exit`, 12 u, 4 u overstroke,
      0.5 u band) for this one pair, and g's attach at the shoulder,
-     stretch from the junction [72.1, 87.1] (H's SHOULDER record).
+     stretch from the junction [71.6, 86.6] (H's SHOULDER record).
      Everything else out of o stays b0's, including oo, oc, od, oa, oq,
      ob, of, oh, ok, ol and oe.
 3. **A clearance hint in a generator copy.** `gen_k1009c.py` (copy of
