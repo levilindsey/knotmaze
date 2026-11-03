@@ -170,7 +170,7 @@ did.
 - Repo `C:\Users\lsl\Repositories\knotmaze`; the branch is
   `worktree-agent-a70bc9c2ddf155015` (worktree
   `.claude/worktrees/agent-a70bc9c2ddf155015`), from J3d's tip
-  `6347f873`.
+  `94f751ee`.
 - The work is untracked, in the main checkout's
   `.claude/probes/K863/trace/`. Python: `venv\Scripts\python.exe -I`;
   the font `font\PlaywriteUSTrad[wght].ttf`.

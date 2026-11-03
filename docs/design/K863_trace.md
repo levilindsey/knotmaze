@@ -259,3 +259,26 @@ Binding on every later cursive stage:
   where v6.6 meets t's stem at the crossbar after a deeper dip than
   b0's. v6.6 draws all four as Levi wants them
   (`out26/o_joins_v66.svg`, `out26/ot_v66.svg`; Drive `K863/`).
+- **v6.6's a/q joins stand; b, v and w go less down, more out** (Levi,
+  2026-11-02, on the a/q picture font | v6.6 | v6.7: "aq: definitely
+  6.6. BUT, these letters--b,v,w--all have too much of a downward
+  hook/cusp--it should be less down and more out"). J3e restored v6.6's
+  joins for ba, va, wa, bq, vq and wq (K1102); b's, v's and w's exits
+  are K1113.
+- **The new f stands** (Levi, 2026-11-02, on J3e's f: "The new f is
+  better"): f's corner at 65 u, where the font's pen turns, and the
+  solved joins out of f (v6.8, `K990_cursive_j3e.md`). fm, fn, fv and
+  fz sit farther from the font than v6.7's presets did; that is
+  reported, not fixed per pair (K1116).
+- **One join rule, from J3f on** (K1112). Levi asked on 2026-11-02: "In
+  general, taking a step back, with all of our cursive fixes, they seem
+  very finicky and individually tuned. How much is left? Is there not
+  some higher level better general principles approach we could have
+  taken?" The coordinator's answer, standing unless Levi objects:
+  1. No per-pair data. A fix goes into a letter (its body or its ports)
+     and is checked on every pair of that letter.
+  2. One join rule for every pair: port the exits J3 has not, then
+     delete J2's per-class presets and the six pins.
+  3. The gates are smoothness (the census's hooks, spikes, rough and
+     seams) and locality. Distance to the font is reported per letter,
+     not chased per pair. Levi judges one sheet per letter.
