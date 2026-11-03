@@ -5,13 +5,16 @@ import { firstSmolderIndex, routeWarning } from "../game/route_plan";
 import { GamepadInput } from "../ui/gamepad";
 import type { GamepadSnapshot } from "../ui/gamepad";
 import {
+  DIAGONAL_VECTORS,
   HeldKeys,
   KEY_REACH,
+  KEY_VECTORS,
   MoveWait,
   absorbsChord,
   chordEdges,
   chordMatters,
   departureVectors,
+  hintMap,
   holdDue,
   keyBelongsElsewhere,
   keyDirOf,
@@ -23,8 +26,10 @@ import {
 } from "../ui/key_moves";
 import type {
   Departure,
+  Diagonal,
   KeyDir,
   LastPress,
+  RunEnds,
   WaitingMove,
 } from "../ui/key_moves";
 import { cutKeyOf } from "../ui/cut_buttons";
@@ -93,6 +98,19 @@ export interface KeyInputDeps {
   toolKey?: (k: ToolKind) => boolean;
 }
 
+// K332: one arrow-key hint at the player's junction: the run it takes,
+// the direction (a cardinal, or a diagonal with `chord`), the world
+// point KEY_REACH of arc along the run, and the direction's angle
+// (atan2 of its vector, y down) for the disc's rotation.
+export interface KeyHint {
+  edge: number;
+  dir: KeyDir | Diagonal;
+  chord: boolean;
+  x: number;
+  y: number;
+  angle: number;
+}
+
 export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
   const {
     params,
@@ -157,6 +175,14 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
     a.taps === b.taps &&
     a.inputs === b.inputs &&
     a.catches === b.catches;
+  // K332: the arrow-key hints' session flag (set by the first direction
+  // press through keyPress - the keyboard, the move pad and the gamepad
+  // all reach it; never written to storage) and their cache, keyed on
+  // the junction and the solve stamp above.
+  let keyHintsSeen = false;
+  let hintCacheVertex: string | null = null;
+  let hintCacheStamp: KeyStamp | null = null;
+  let hintCache: KeyHint[] = [];
   // K333/K334: the move not taken yet (ui/key_moves.ts MoveWait), and the
   // solve it was made in (keyStep drops it when that changes).
   const moveWait = new MoveWait();
@@ -200,6 +226,101 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
       keyPointAt,
       reach
     );
+  };
+  // K332: the world point KEY_REACH of arc along a run from one end,
+  // walked the way chordDirection walks it (0.1 ctrl steps; the far end
+  // when shorter, or a self-loop's farthest point).
+  const hintTmp = new Float32Array(2);
+  const reachPoint = (e: RunEnds, fromA: boolean, ox: number, oy: number): [number, number] => {
+    const len = e.ctrlB - e.ctrlA;
+    const start = fromA ? e.ctrlA : e.ctrlB;
+    const sign = fromA ? 1 : -1;
+    keyPointAt(e.chain, start, hintTmp);
+    let px = hintTmp[0];
+    let py = hintTmp[1];
+    let arc = 0;
+    let fx = px;
+    let fy = py;
+    let fd = -1;
+    for (let f = 0.1; ; f += 0.1) {
+      const ff = Math.min(f, len);
+      keyPointAt(e.chain, start + sign * ff, hintTmp);
+      const sx = hintTmp[0] - px;
+      const sy = hintTmp[1] - py;
+      arc += Math.sqrt(sx * sx + sy * sy);
+      px = hintTmp[0];
+      py = hintTmp[1];
+      const d = (px - ox) * (px - ox) + (py - oy) * (py - oy);
+      if (d > fd) {
+        fd = d;
+        fx = px;
+        fy = py;
+      }
+      if (arc >= KEY_REACH) break;
+      if (ff >= len) {
+        if (d < 0.25 * fd) {
+          px = fx;
+          py = fy;
+        }
+        break;
+      }
+    }
+    return [px, py];
+  };
+  // The reach point of `edge` at junction `v`, from the end whose chord
+  // best matches the hint direction's vector (a self-loop leaves twice).
+  const hintPoint = (
+    edge: number,
+    v: string,
+    vec: readonly [number, number]
+  ): { x: number; y: number } | null => {
+    const e = scene.walkGraph?.edges[edge];
+    if (!e || !scene.fabric) return null;
+    scene.fabric.vertexWorld(v, keyPt, 0);
+    const ox = keyPt[0];
+    const oy = keyPt[1];
+    let best: { x: number; y: number } | null = null;
+    let bestDot = -Infinity;
+    for (const fromA of [true, false]) {
+      if ((fromA ? e.va : e.vb) !== v) continue;
+      const [px, py] = reachPoint(e, fromA, ox, oy);
+      const dx = px - ox;
+      const dy = py - oy;
+      const n = Math.sqrt(dx * dx + dy * dy);
+      if (!(n > 1e-6)) continue;
+      const dot = (dx / n) * vec[0] + (dy / n) * vec[1];
+      if (dot > bestDot) {
+        bestDot = dot;
+        best = { x: px, y: py };
+      }
+    }
+    return best;
+  };
+  // K332: the hints at the player's junction - nothing until the first
+  // direction press, then hintMap over its departures, each with its
+  // reach point and angle. Cached on the vertex and the solve stamp:
+  // recomputed only when they change.
+  const keyHints = (): KeyHint[] => {
+    if (!keyHintsSeen) return [];
+    const v = keyVertex();
+    if (v === null) return [];
+    const stamp = keyStamp();
+    if (hintCacheVertex === v && hintCacheStamp !== null && sameStamp(hintCacheStamp, stamp)) {
+      return hintCache;
+    }
+    const out: KeyHint[] = [];
+    for (const h of hintMap(keyDepartures(v))) {
+      const vec = h.chord
+        ? DIAGONAL_VECTORS[h.dir as Diagonal]
+        : KEY_VECTORS[h.dir as KeyDir];
+      const pt = hintPoint(h.edge, v, vec);
+      if (!pt) continue;
+      out.push({ ...h, x: pt.x, y: pt.y, angle: Math.atan2(vec[1], vec[0]) });
+    }
+    hintCacheVertex = v;
+    hintCacheStamp = stamp;
+    hintCache = out;
+    return out;
   };
   // Keys play only a maze on screen and still open: not in knot mode,
   // during the intro, once solved or while the finish lands.
@@ -332,6 +453,7 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
   };
   // A fresh press (or a pad press) at `at` (performance.now()).
   const keyPress = (dir: KeyDir, at: number): void => {
+    keyHintsSeen = true; // K332: a direction press (pad and gamepad too).
     if (keyVertex() === null) return;
     // A press waiting out its window that this key does not join goes
     // first.
@@ -636,6 +758,7 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
 
   return {
     keyStep,
+    keyHints,
     keysLive,
     keyDepartures,
     keyVertex,

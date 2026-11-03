@@ -3658,6 +3658,7 @@ async function main(): Promise<void> {
     if (chalk) aidButtons.setChalk(fc.chalk.has(fc.head));
     const fabric = scene.fabric;
     if (!fabric || !fc) return;
+    fabric.setKeyHints(keyInput.keyHints()); // K332: every frame (the renderer keeps the last list).
     const compass = params.compass && !fc.walkerMode;
     const route = params.showShortestPath && !fc.walkerMode; // K839
     const marks = settings.chalk === true;
