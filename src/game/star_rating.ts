@@ -74,10 +74,14 @@ export function rateCuts(cuts: number, par: number, upper = false): StarRating |
   };
 }
 
-// What each of Lead's stars needs.
-export function cutRules(): string[] {
+// What each of Lead's stars needs. K741: with an upper-bound par the
+// fewest is unknown, so the first line says what three stars need and
+// that par is only an upper bound; the exact-par line is unchanged.
+export function cutRules(upper = false): string[] {
   return [
-    "★★★ at par: the fewest cuts that lead the walker out",
+    upper
+      ? "★★★ at par or fewer cuts: par here is only an upper bound"
+      : "★★★ at par: the fewest cuts that lead the walker out",
     "★★ one cut over par",
     "★ any finish",
   ];
@@ -164,7 +168,7 @@ export function starExplanation(r: StarRating): string[] {
   if (r.cuts) {
     const { cuts, par, upper } = r.cuts;
     return [
-      ...cutRules(),
+      ...cutRules(upper),
       `You led the walker out with ${cuts === 1 ? "1 cut" : `${cuts} cuts`}; ` +
         `par is ${upper ? `at most ${par}` : par}.`,
     ];

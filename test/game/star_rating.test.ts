@@ -245,4 +245,26 @@ describe("Lead the walker's stars (K114 walker)", () => {
       "You led the walker out with 0 cuts; par is 0."
     );
   });
+
+  it("K741: the exact-par cut rules are pinned literally", () => {
+    const exact = [
+      "★★★ at par: the fewest cuts that lead the walker out",
+      "★★ one cut over par",
+      "★ any finish",
+    ];
+    expect(cutRules()).toEqual(exact);
+    expect(cutRules(false)).toEqual(exact);
+  });
+
+  it("K741: an upper-bound par never says fewest, and explains itself", () => {
+    const upper = cutRules(true);
+    expect(upper[0]).not.toContain("fewest");
+    expect(upper[0]).toContain("par or fewer cuts");
+    expect(upper[0]).toContain("only an upper bound");
+    expect(upper.slice(1)).toEqual(cutRules().slice(1));
+    const lines = starExplanation(rateCuts(3, 2, true)!);
+    expect(lines.slice(0, 3)).toEqual(upper);
+    expect(lines.join(" ")).not.toContain("fewest");
+    expect(lines[3]).toBe("You led the walker out with 3 cuts; par is at most 2.");
+  });
 });
