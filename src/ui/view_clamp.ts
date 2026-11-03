@@ -37,6 +37,40 @@ export const PANEL_GAP = 10;
 // ease, viewHoming in main.ts).
 export const RANGE_EASE = 0.15;
 
+// K1085: the fit ease's share per frame (camera.ts's updateCamera), and
+// the reduced-motion answers for the fit and the range. An explicit
+// range rate (0 included: fitToScreen's hold) always stands; with no
+// rate, reduced motion snaps (1) and full motion keeps stepRange's
+// default (undefined).
+export const FIT_EASE = 0.08;
+export function fitEase(reduced: boolean): number {
+  return reduced ? 1 : FIT_EASE;
+}
+// K1085, case d: under reduced motion the fit snaps only on a jump (a
+// panel toggle, a resize), not on the settle drift, whose steps the snap
+// would follow unsmoothed. Read off the probe table
+// (.claude/probes/K1085/): the drift's largest recompute step was
+// 14.95 px and 0.031 of the scale; a text scene's panel toggle jumped
+// 33.9 px and 0.59 of the scale in one frame.
+export const FIT_JUMP_PX = 20;
+export const FIT_JUMP_SCALE = 0.1;
+export function fitTargetJumped(
+  prev: { scale: number; x: number; y: number },
+  cur: { scale: number; x: number; y: number }
+): boolean {
+  if (Math.hypot(cur.x - prev.x, cur.y - prev.y) > FIT_JUMP_PX) return true;
+  return (
+    prev.scale > 0 &&
+    Math.abs(cur.scale - prev.scale) / prev.scale > FIT_JUMP_SCALE
+  );
+}
+export function rangeRate(
+  rate: number | undefined,
+  reduced: boolean
+): number | undefined {
+  return rate !== undefined ? rate : reduced ? 1 : undefined;
+}
+
 export interface FitView {
   // Zoom on top of the auto-fit: 1 = home (the furthest out), up to the max.
   zoom: number;

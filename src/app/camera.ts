@@ -8,9 +8,13 @@ import {
   clampFitView,
   easePanel,
   fitArea,
+  FIT_EASE,
+  fitEase,
+  fitTargetJumped,
   fitPlacement,
   noAllowance,
   stepPanelTween,
+  rangeRate,
   stepRange,
   type OpenPanel,
 } from "../ui/view_clamp";
@@ -162,6 +166,8 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
   // point (sx, sy) at scale s (placeWorldAt) - and each mode maps it onto
   // its own state, so pinch / wheel / drag behave identically in both.
   const fitCur = { scale: 1, x: 0, y: 0 };
+  // K1085: last frame's fit target, for the reduced-motion jump test.
+  const prevFitTarget = { scale: 1, x: 0, y: 0 };
   const view = { zoom: 1, panX: 0, panY: 0 };
   const cam = { s: 1, cx: 0, cy: 0, vl: 0, vx: 0, vy: 0 };
   let camFollow = false;
@@ -263,7 +269,7 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
       openPanelAt(panelTPrev),
       openPanel(),
       panAllow,
-      rate
+      rangeRate(rate, motion.reduced)
     );
   };
   const applyView = (): void => {
@@ -433,11 +439,18 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
   const updateCamera = (dt: number): void => {
     stepPanel(dt);
     if (fitFrames++ % 3 === 0) computeFitTarget();
-    fitCur.scale += (fitTarget.scale - fitCur.scale) * 0.08;
-    fitCur.x += (fitTarget.x - fitCur.x) * 0.08;
-    fitCur.y += (fitTarget.y - fitCur.y) * 0.08;
+    // K1085: reduced motion snaps the fit only on a jump (fitTargetJumped);
+    // the settle drift keeps the ease, which smooths it.
+    const jumped = fitTargetJumped(prevFitTarget, fitTarget);
+    prevFitTarget.scale = fitTarget.scale;
+    prevFitTarget.x = fitTarget.x;
+    prevFitTarget.y = fitTarget.y;
+    const fitE = motion.reduced && !jumped ? FIT_EASE : fitEase(motion.reduced);
+    fitCur.scale += (fitTarget.scale - fitCur.scale) * fitE;
+    fitCur.x += (fitTarget.x - fitCur.x) * fitE;
+    fitCur.y += (fitTarget.y - fitCur.y) * fitE;
     // K6-2 (pulled from K6-3's list): snap the ease's last remainder, at
-    // converged()'s own thresholds. The 0.08 ease never lands, and once
+    // converged()'s own thresholds. The FIT_EASE ease never lands, and once
     // the frame loop gates updateCamera on CAMERA the creep would freeze
     // up to CONVERGED_PX short of the target - a resting frame a
     // sub-pixel off master's. Snapped, both land on the target exactly.
@@ -554,7 +567,7 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     computeFitTarget(fitScratch);
     if (!camFollow) {
       if (panAllow.loX || panAllow.hiX || panAllow.loY || panAllow.hiY) return false;
-      // The fit's ease never lands (8% of the rest a frame): test what is
+      // The fit's ease never lands (FIT_EASE of the rest a frame): test what is
       // LEFT of it, not the next step. A step test let the last 0.125 px
       // creep out unflagged, 100-250 px of the frame changing on a few
       // frames after the camera "stopped" (the shadow report's UNDER at fw=0).
