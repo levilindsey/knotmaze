@@ -1,0 +1,37 @@
+
+ RUN  v4.1.12 C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/agent-a43dac8f0673db4df
+
+stdout | test/render/field/form_b.test.ts > form B: a crossing's reach (S1f, K1092) > an eye: the arm's L is continuous where the walk's jumps (reach_eye.ts)
+[form_b] eye sweep, largest |ΔL| per 0.002 of w: quad 0.0211, walk 3.2522; quad L 0.136..2.034
+
+ ↓ test/render/field/form_b.test.ts > form B: the terms > a straight tube's side feet: band2 of h − d, the outline at 0.5
+ ↓ test/render/field/form_b.test.ts > form B: the terms > a dead end keeps the polyline's round end
+ ↓ test/render/field/form_b.test.ts > form B: the terms > a crossing: the over's outline runs across, the under's ends on it
+ ↓ test/render/field/form_b.test.ts > form B: the terms > a T: V, θ, r, q and the feet in closed form; the mouth buried; the arc band inked
+ ↓ test/render/field/form_b.test.ts > form B: the terms > a Y: 120° corners at r = 2h, q = c + bis·3h/sin 60°, none inside the through pass's bend
+ ↓ test/render/field/form_b.test.ts > form B: the terms > an acute pair: r = 1.5h·tan(θ/2), the fit and the cap in closed form
+ ↓ test/render/field/form_b.test.ts > form B: the terms > a curved arm: the corner matches a numeric rolling ball
+ ↓ test/render/field/form_b.test.ts > form B: the fades are continuous > D2 + D5: a crossing slides up the END; the cap ramp and r move the ink by what the step explains
+ ↓ test/render/field/form_b.test.ts > form B: the fades are continuous > D4: across the tie line the ink mixes; without the mix it jumps
+ ↓ test/render/field/form_b.test.ts > form B: the fades are continuous > D6: ω from 0 to 1 moves the ink at most in proportion
+ ↓ test/render/field/form_b.test.ts > form B: the fades are continuous > D1: the fold across a hairpin moves the ink no faster than an outline's AA
+ ↓ test/render/field/form_b.test.ts > form B: the max decomposition > every winning term lies in one of its strips
+ ↓ test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > eye: 1 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+ ↓ test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > T: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+ ↓ test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > acute: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+ ↓ test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > hairpin: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+ ↓ test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > T: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+ ↓ test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > acute: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+ ↓ test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > hairpin: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+ ↓ test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > eye: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+ ↓ test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > cap: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+ ↓ test/render/field/form_b.test.ts > form B: watertight and the rate rule at every fade value (S1b) > tie: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+ ✓ test/render/field/form_b.test.ts > form B: a crossing's reach (S1f, K1092) > straight threads: the reach is r0 = h·cot(θ/2) exactly, at every angle 25ms
+ ✓ test/render/field/form_b.test.ts > form B: a crossing's reach (S1f, K1092) > a near-tangent pass whose partner turns away 2 behind it: the reach stops at 4h, not r0 (K1092's phantom) 2ms
+ ✓ test/render/field/form_b.test.ts > form B: a crossing's reach (S1f, K1092) > an eye: the arm's L is continuous where the walk's jumps (reach_eye.ts) 128ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed | 22 skipped (25)
+   Start at  18:48:27
+   Duration  562ms (transform 170ms, setup 0ms, import 217ms, tests 157ms, environment 0ms)
+
