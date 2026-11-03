@@ -10,6 +10,8 @@
 // letter, so every layout's X and U; WASD and the arrows move by their
 // codes and never reach it).
 
+import { blurOnPointerClick } from "./pointer_blur";
+
 export interface CutButtonsHooks {
   arm: () => void;
   undo: () => void;
@@ -91,6 +93,7 @@ export class CutButtons {
       b.title = tip;
       b.innerHTML = svg;
       b.addEventListener("click", () => act());
+      blurOnPointerClick(b);
       el.appendChild(b);
       return b;
     };

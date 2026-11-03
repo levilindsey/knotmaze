@@ -9,6 +9,8 @@
 // every layout's H and C; WASD and the arrows move by their codes and never
 // reach it.
 
+import { blurOnPointerClick } from "./pointer_blur";
+
 export interface AidButtonsHooks {
   hint: () => void;
   chalk: () => void;
@@ -103,6 +105,7 @@ export class AidButtons {
       b.innerHTML = svg;
       b.hidden = true;
       b.addEventListener("click", () => act());
+      blurOnPointerClick(b);
       el.appendChild(b);
       return b;
     };

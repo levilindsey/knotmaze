@@ -5,6 +5,8 @@
 // drops to a row of its own below them then (ui/mode_badge.ts). A button
 // that cannot act stays in place, dimmed and disabled.
 
+import { blurOnPointerClick } from "./pointer_blur";
+
 export interface UndoButtonsHooks {
   undo: () => void;
   redo: () => void;
@@ -62,6 +64,7 @@ export class UndoButtons {
       b.innerHTML = ARROW;
       b.disabled = true;
       b.addEventListener("click", () => act());
+      blurOnPointerClick(b);
       el.appendChild(b);
       return b;
     };

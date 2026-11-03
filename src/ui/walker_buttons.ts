@@ -10,6 +10,8 @@
 //   cut); Reset restarts the walk; Undo takes back the last turn.
 // Keys (walkerKeyOf, by the typed letter like cutKeyOf): G goes, U undoes.
 
+import { blurOnPointerClick } from "./pointer_blur";
+
 export interface WalkerButtonsHooks {
   go: () => void;
   reset: () => void;
@@ -90,6 +92,7 @@ export class WalkerButtons {
       b.title = tip;
       b.innerHTML = html;
       b.addEventListener("click", () => act());
+      blurOnPointerClick(b);
       el.appendChild(b);
       return b;
     };

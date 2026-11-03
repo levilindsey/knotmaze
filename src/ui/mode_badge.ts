@@ -28,6 +28,7 @@
 // otherwise a short fade-in).
 
 import { formatDayDate } from "../game/daily_calendar";
+import { blurOnPointerClick } from "./pointer_blur";
 import type { SolveRecord } from "../game/daily_store";
 import { whenReduced } from "./motion";
 import { SHEET_QUERY } from "./panel_sheet";
@@ -277,6 +278,7 @@ export class ModeBadge {
     this.el.id = "mode-badge";
     this.el.className = "km-mode";
     this.el.hidden = true;
+    blurOnPointerClick(this.el);
     this.el.addEventListener("click", () => {
       const k = this.kindShown;
       if (k === "free") this.actions.free();
