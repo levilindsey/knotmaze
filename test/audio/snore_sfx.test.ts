@@ -21,12 +21,18 @@ interface FakeHost extends SampleHost {
   playOk: boolean;
   latency: number;
   decodeCalls: number;
+  offlineMode: "none" | "ok" | "reject" | "throw";
+  offlineCalls: number;
   received: ArrayBuffer[];
   plays: Array<{ gain: number }>;
   create(): void; // A context comes to exist (as KnotSynth's ensure() does).
 }
 
-function makeHost(hasCtx = true, canOpen = hasCtx): FakeHost {
+function makeHost(
+  hasCtx = true,
+  canOpen = hasCtx,
+  offlineMode: FakeHost["offlineMode"] = "none"
+): FakeHost {
   let waiters: Array<() => void> = [];
   const h: FakeHost = {
     hasCtx,
@@ -36,6 +42,8 @@ function makeHost(hasCtx = true, canOpen = hasCtx): FakeHost {
     playOk: true,
     latency: 0,
     decodeCalls: 0,
+    offlineMode,
+    offlineCalls: 0,
     received: [],
     plays: [],
     whenOpen(cb) {
@@ -69,6 +77,19 @@ function makeHost(hasCtx = true, canOpen = hasCtx): FakeHost {
       for (const cb of w) cb();
     },
   };
+  if (offlineMode !== "none") {
+    h.decodeOffline = () => {
+      h.offlineCalls++;
+      if (h.offlineMode === "throw") throw new Error("no OfflineAudioContext");
+      if (h.offlineMode === "reject") {
+        return Promise.reject(new Error("offline cannot decode"));
+      }
+      return Promise.resolve({
+        duration: DURATION,
+        sampleRate: 44100,
+      } as AudioBuffer);
+    };
+  }
   return h;
 }
 
@@ -86,8 +107,12 @@ interface Rig {
   failNextLoad: { on: boolean };
 }
 
-function rig(hasCtx = true, canOpen = hasCtx): Rig {
-  const host = makeHost(hasCtx, canOpen);
+function rig(
+  hasCtx = true,
+  canOpen = hasCtx,
+  offlineMode: FakeHost["offlineMode"] = "none"
+): Rig {
+  const host = makeHost(hasCtx, canOpen, offlineMode);
   const enabled = { on: true };
   const clock = { t: 0 };
   const failNextLoad = { on: false };
@@ -322,6 +347,72 @@ describe("SnoreSfx clock", () => {
     expect(r.sfx.sinceStartMs()).toBe(0); // Not heard yet.
     r.clock.t = 280;
     expect(r.sfx.sinceStartMs()).toBeCloseTo(200, 6);
+  });
+});
+
+describe("SnoreSfx offline decode (K343)", () => {
+  it("decodes before the gate: preload with no context ends decoded", async () => {
+    const r = rig(false, false, "ok"); // No context, and none may be made.
+    await ready(r);
+    expect(r.sfx.stats).toEqual({ fetches: 1, decodes: 1, plays: 0 });
+    expect(r.host.offlineCalls).toBe(1);
+    expect(r.host.decodeCalls).toBe(0); // The context decode never ran.
+    expect(r.host.hasCtx).toBe(false);
+  });
+
+  it("the first play after the gate opens starts, with no second fetch or decode", async () => {
+    const r = rig(false, true, "ok");
+    await ready(r);
+    expect(r.sfx.play()).toBe("unavailable"); // No context yet: cannot sound.
+    expect(r.sfx.stats.plays).toBe(0);
+    r.host.create(); // The gate opens, as the first touch's release does.
+    expect(r.sfx.play()).toBe("started");
+    expect(r.sfx.stats).toEqual({ fetches: 1, decodes: 1, plays: 1 });
+    expect(r.loads.n).toBe(1);
+    expect(r.host.offlineCalls).toBe(1);
+    expect(r.host.decodeCalls).toBe(0);
+    expect(r.sfx.lastPlay).toEqual({ sampleRate: 44100, duration: DURATION });
+  });
+
+  it("falls back to the context decode when the offline decode rejects", async () => {
+    const r = rig(true, true, "reject");
+    await ready(r);
+    expect(r.host.offlineCalls).toBe(1);
+    expect(r.host.decodeCalls).toBe(1);
+    expect(r.sfx.stats.decodes).toBe(1);
+    expect(r.sfx.play()).toBe("started");
+  });
+
+  it("falls back when the offline decode throws (no OfflineAudioContext)", async () => {
+    const r = rig(true, true, "throw");
+    await ready(r);
+    expect(r.host.offlineCalls).toBe(1);
+    expect(r.host.decodeCalls).toBe(1);
+    expect(r.sfx.play()).toBe("started");
+  });
+
+  it("undecodable bytes give up with one warning, offline first", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const r = rig(true, true, "reject");
+    r.host.decodeFails = true;
+    await ready(r);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(r.sfx.play()).toBe("unavailable");
+    r.sfx.preload();
+    await flush();
+    expect(r.loads.n).toBe(1);
+    expect(r.host.offlineCalls).toBe(1);
+    expect(r.host.decodeCalls).toBe(1);
+    expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  it("a silenced play is unavailable even with the buffer decoded", async () => {
+    const r = rig(false, true, "ok");
+    await ready(r);
+    r.enabled.on = false;
+    expect(r.sfx.play()).toBe("unavailable");
+    expect(r.host.plays).toHaveLength(0);
+    expect(r.sfx.stats.plays).toBe(0);
   });
 });
 
