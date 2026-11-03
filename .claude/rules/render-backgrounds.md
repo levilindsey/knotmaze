@@ -33,7 +33,7 @@ only with the files it is about; `render.md` lists the area's other files.
   pixels ARE background pixels - a flat fog read as a flat square. (4)
   K24/K6 HOOK: needsFrame() + tick(dt, sceneActive); the drift pauses
   after 2.5 s of an otherwise still scene (sceneActive, the frame loop's
-  flags since K6-1, `render-loop.md`; main.ts's sceneAnimating() stood
+  flags since K6-1, `render-loop.md`; src/app/frame_loop.ts's sceneAnimating() stood
   in before, which kept a solved fabric drifting forever) and stops under
   reduced motion (the Motion
   setting, ui/motion.ts).

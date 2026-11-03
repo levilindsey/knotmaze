@@ -68,7 +68,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   (`pag`, [0, 1], default 0.5 = -6 dB). At 1 it is the mix before K279,
   since a gain of 1 multiplies exactly. `pluck(freq, strength, when,
   auto)` routes by the flag (`outFor`), and plucks queued before the
-  context keep their flag. main.ts's fabricTick calls `synth.setAutoGain`
+  context keep their flag. src/app/frame_loop.ts's fabricTick calls `synth.setAutoGain`
   every frame, which is safe before the context exists. Only the level
   moves: an auto pluck's strength, which also sets its brightness, is
   unchanged. Taps (TAP_STRENGTH 0.55) and drag releases play as before.
