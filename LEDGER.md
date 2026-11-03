@@ -300,7 +300,7 @@ Next free ID: K1132.
   (unless it is off). Does it read well on the light threads over black? Pictures: .claude/probes/K368/shots/
   (K368, 71250dca)
 - **K1127** · On a narrow phone, the hidden-runs line in the corner panel now wraps in whole phrases (no lone
-  'them', no dot at a line's end). Does it read well? Pictures: .claude/probes/K1100/ (K1100, a0546b30)
+  'them', no dot at a line's end). Does it read well? Pictures: .claude/probes/K1100/out/k1127/stills/ (360x740 and 320x640, stats off and on; K1100, a0546b30)
 - **K1129** · With Reduced motion on and the camera following the player, the view still glides after every
   move. Should it hold still instead, and jump only when the player gets near the edge of the screen? (K1099,
   follow camera)
@@ -504,11 +504,12 @@ Next free ID: K1132.
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`
 - **K1131** · Muse batch 8 (`docs/design/K1131_muse_batch8.md`): A K332, B K657, C K1081, D K1082, E K1083, F
   K1115; Next in ledger order, no junction, cursive, physics or phone work.
-  - owner: nobody yet
-  - branch: mainline; last commit: `004e9c13`
-  - evidence: docs/design/K1131_muse_batch8.md (the brief; no run started)
-  - next: Claude reviews the brief
+  - owner: muse runs 8A-8F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 04:10
+  - branch: mainline; last commit: `f8f45ec1`
+  - evidence: `.claude/probes/K1053/` (queue.txt lines 8A-8F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
+  - next: Run A (K332)
   - brief: `docs/design/K1131_muse_batch8.md`
+  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
 ## Next, in order
 
