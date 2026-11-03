@@ -299,12 +299,12 @@ Next free ID: K1094.
 
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
-  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1e merged (96de6db3); S1f next (2026-11-02).
-  - owner: nobody since 2026-11-02 17:46 (merged; agent `a7035825805c31d73` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `96de6db3`
+  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1e merged (96de6db3); S1f running (2026-11-02).
+  - owner: claude agent `a43dac8f0673db4df` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (Opus, 2 h cap), since 2026-11-02 17:51
+  - branch: `worktree-agent-a43dac8f0673db4df`, worktree `.claude/worktrees/agent-a43dac8f0673db4df`; last commit: `0528702d` (the base)
   - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1), `s1/out/s1b/` and `s1/out/s1c/`, S1d's runs in `s1/out/s1d/`, S1e's in `s1/out/s1e/` (gate `s1/run_s1e_gate.ps1`, table `s1/gate_table.ps1`; probes `b_rate.ts`, `bend_s1e.ts`, `attr_f4f5.ts`, `lcut_far.ts`, `attr_c2.ts`, `arms_c3.ts`; commands in its Handoff)); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: S1f: a brief from S1e's Handoff (`docs/design/K1040_s1e_bends.md`): Next 1, a curved reach that is continuous by construction (F4; candidates 2 and 3 stay in form B, `params.curvedReach` off), then the gate; Next 2, the corner solve's last discrete edges (item 2); Next 3, the 14 pops left (126 px) and j129's corner; then the rest of S1 and S2 per the plan (`K1040_junction_field.md` F7)
-  - brief: S1e's Handoff, `docs/design/K1040_s1e_bends.md` (the stage's record, F1-F4)
+  - next: S1f: the phantom reach (K1092), a curved reach continuous by construction and portable to S4's shader, then the gate against S1e's final (c1); item 2 (the corner solve's discrete edges) if time remains; then the 14 pops left and j129's corner, the rest of S1 and S2 (`K1040_junction_field.md` F7)
+  - brief: `docs/design/K1040_s1f_reach.md` on the agent's branch (it writes it first, from S1e's Handoff); until then `docs/design/K1040_s1e_bends.md` ## Handoff
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
