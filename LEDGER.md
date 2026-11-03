@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1111.
+Next free ID: K1112.
 
 ## Waiting on Levi
 
@@ -291,6 +291,9 @@ Next free ID: K1111.
 - **K1110** · On the phone, with sound on and the settings panel left open from last time, reload and make
   your very first touch a tap on Made by Snoring Cat: do you hear the snore before the studio page opens?
   (K343, 933571af)
+- **K1111** · In the settings panel, drag Backdrop intensity, Pulse reach, Settle budget and Load settle: do
+  the sliders still feel right? (They now move in finer steps; Reset to defaults now lands on the exact
+  default.) (K130, 5f28e0b1)
 
 ## In progress
 
@@ -493,9 +496,9 @@ Next free ID: K1111.
   D K787 + K584, E K112, F K403 + K263 + K600 + K609 + K462; no junction or cursive work. Runs 6A-6F chained
   from 2026-11-02.
   - owner: muse runs 6A-6F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 20:20
-  - branch: mainline; last commit: `933571af`
+  - branch: mainline; last commit: `5f28e0b1`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 6A-6F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run B (K130 + K495); Claude reviews Run A on master as it lands
+  - next: Run C (K128 + K212 + K490); Claude reviews Run B on master as it lands
   - brief: `docs/design/K1107_muse_batch6.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 - **K1108** · Muse batch 7 (`docs/design/K1108_muse_batch7.md`): A K368, B K1100, C K748, D K1109 + K1099,
@@ -956,9 +959,6 @@ Every other item below waits on the trigger it names.
 - **K128** · `src/render/marker_mesh.ts:32` declares `in vec2 aUV;` but never reads it while the
   marker geometry carries it, so PixiJS warns "Attribute aUV is not present" per marker mesh on
   every load (K83; found by K81 stage 3a). Read it in the shader or drop it from the geometry.
-- **K130** · Rows with a slider step (`backgroundIntensity`, `pulseReach`, `settleBudget`,
-  `loadSettle`) snap to Tweakpane's step grid from the row's first value: after an off-grid link,
-  "Reset to defaults" writes a wrong default (intensity 0.48). `src/ui/tweakpane_panel.ts`; K79 B1.
 - **K131** · Phone probe kit (`.claude/probes/K79/phone/`, untracked): `drift.mjs` and `frames.mjs`
   take slow full-size PNG shots (10-25 s; use JPEG or clipped); `bench.mjs`'s `thermal()` reads the
   stale temperatures block (`.claude/probes/K81/phone/lib.mjs` reads the live one).
@@ -1309,8 +1309,6 @@ Every other item below waits on the trigger it names.
   ends do not move, and 1x2y3z f0 stays flagged after a 3.27 ctrl move (undiagnosed); a moved fade
   changes its length and its dots' size; the keep-out cache can go stale after a tug or a settle;
   the pad may count the gap's fade twice (docs/design/K466.md Handoff).
-- **K495** · The panel's end-glow row (`rvg`, K466) shows for every reveal-end look; hide it for the
-  looks without a halo (gameplay-panel.md EXPLORATION ROWS).
 - **K497** · Tap preference (K479) on touch: a real touch tap and touch hover/tap parity are
   unverified on a phone (a touch press lights the glow since K330, bc5f0043); a mid-flight tap ahead of
   the dot is empty space, and `setGlowRun` may center the glow in that stretch (cosmetic).
@@ -2030,6 +2028,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K495** · End glow row shows only under thread reveal with the halo or beacon look. Done in 5f28e0b1 (2026-11-02).
+- **K130** · Reset to defaults writes the exact default for backgroundIntensity, pulseReach, settleBudget and loadSettle (step removed, edits keep 2 decimals / whole numbers). Done in 5f28e0b1 (2026-11-02).
 - **K343** · Snore decoded on OfflineAudioContext before the gate (KnotSynth.decodeOffline, SnoreSfx falls back to context decode); first touch plays it. Probe .claude/probes/K343/snore.mjs: decodes 1 before input, one tap plays 1, never stacked. Done in 933571af (2026-11-02).
 - **K1091** · Muse batch 5, runs 5A-5E (5b8522a5..7bf0fbf4), reviewed; Claude fixed K442's fire-lead line (6e617fec); K1086, K1095 and K1099-K1101 stay open. Done in 7bf0fbf4 (2026-11-02).
 - **K1039** · K868's gate-tool leftovers: S3's verdict runner requests no favicon (a data: URL) and drops any favicon request from its error count; same24, same28 and raster26 are K868's, superseded by K1040. Done in 05727f6c (2026-11-02).
