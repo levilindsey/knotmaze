@@ -47,5 +47,5 @@ for (const name of SCENES) {
     }
   }
   const hs = [...hist.entries()].sort((a, b) => a[0] - b[0]).map(([b, v]) => `<=${b}:${((100 * v) / wSum).toFixed(0)}%`).join(" ");
-  console.log(`${name}: h ${h.toFixed(3)} seg l/h ${(lSum / nseg / h).toFixed(3)} | window mean ${(winW / wSum).toFixed(1)} max ${maxWin} [${hs}] | quad/slab ${(quad / slab).toFixed(1)} | spans walked ${(spanW / wSum).toFixed(1)} | foldR/h ${(T.fold / h).toFixed(2)}`);
+  console.log(`${name}: h ${h.toFixed(3)} seg l/h ${(lSum / nseg / h).toFixed(3)} | window mean ${(winW / wSum).toFixed(1)} max ${maxWin} [${hs}] | quad/slab ${(quad / slab).toFixed(1)} | spans walked ${(spanW / wSum).toFixed(1)} | foldR/h ${(T.foldR / h).toFixed(2)}`);
 }

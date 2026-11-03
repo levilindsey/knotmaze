@@ -307,4 +307,104 @@ had named a non-covering second minimum of the same chain within sigma in
 s, and the GPU the covering one. What is left is MERGE, DEPTH=, DEPTH and
 EDGE only.
 
+### F3. The scan's cost: the slab clip and the carried scan, 1.6-2.6x; each side's early end exact but no faster, reverted (21:50-22:21)
+
+Where the time went, from the tables (`win_stats.ts`, weighted by segment
+length; `out/win_stats.txt`). A capsule's quad reached h + pad past both
+ends, so with segments 0.17-0.41 h long it covered its slab 5.9-12.7
+times over (1 + 2h/l), and every fragment of it ran the merge scan over
+its segment's window:
+
+| scene | h | l/h | window mean / max | quad / slab | spans walked |
+|---|---|---|---|---|---|
+| muse_hash | 0.400 | 0.171 | 9.0 / 40 | 12.7 | 4.6 |
+| muse_default_tw | 0.260 | 0.248 | 3.4 / 24 | 9.1 | 5.4 |
+| def | 0.260 | 0.242 | 3.4 / 23 | 9.3 | 8.2 |
+| fat | 0.260 | 0.318 | 2.9 / 14 | 7.3 | 0.5 |
+| ring | 0.290 | 0.302 | 4.5 / 20 | 7.6 | 8.1 |
+| user_tw42.lightpaper | 0.210 | 0.292 | 3.1 / 21 | 7.9 | 5.3 |
+| g41_def_tw42 | 0.210 | 0.298 | 2.7 / 18 | 7.7 | 8.2 |
+| g41_def_tw64 | 0.320 | 0.200 | 4.7 / 32 | 11.0 | 8.0 |
+| g41_ring_tw42 | 0.210 | 0.410 | 3.0 / 13 | 5.9 | 8.1 |
+| g41_ring_tw64 | 0.320 | 0.276 | 5.4 / 23 | 8.2 | 7.8 |
+| g41_user_tw42 | 0.210 | 0.292 | 3.1 / 21 | 7.9 | 5.3 |
+| g41_user_tw64 | 0.320 | 0.197 | 6.4 / 38 | 11.1 | 4.8 |
+
+Three cuts, each timed and censused under the perf lock:
+
+1. **The slab clip (kept, CAPSULE_VS).** The fragment shader keeps t in
+   [0, 1), a free end's cap, and at t <= 0 only the convex wedge at a
+   (past the previous segment's end too, within h). That wedge reaches
+   back h |sin phi| for a turn phi below 90 degrees, h past it. So an
+   inner end now extends by that plus the pad at a and by the pad alone
+   at b; free ends and zero-length segments keep h + pad. No fragment it
+   drops was kept, so labelAt is unchanged.
+2. **The carried scan (kept, CAPSULE_FS).** Consecutive segments share a
+   point, so the merge scan carries it: one texel fetch a step, not two
+   or three. It tests the distance before the foot rule; both only skip,
+   so the order does not change the result.
+3. **Each side's early end (measured at 22:16, reverted).** NB's z/w held
+   each side's window arc; each side scanned outward from k and ended
+   once |p - Q| - (arc left) >= d + 1e-3 h. It was exact (census
+   identical) but no faster: muse_hash 3.87 to 3.72 ms, the other eleven
+   0.01-0.06 ms slower. `nbWindows` already keeps only what can hide a
+   fragment: (i) arc within foldR, (ii) within 2h of segment k, (iii)
+   turning enough to come back, so a straight stretch gets +-1, and the
+   early end seldom fires before the window ends. It moved labelAt,
+   `nbWindows` and the pins for nothing, so cut 3 is reverted (it stays
+   in 41951b5c).
+
+Desktop timing by timer query, 61 draws a scene, under the perf lock.
+Before: 1778fc58 (F1) at 21:52 (`out/time_summary_pre3.md`). After: cuts 1
+and 2 at 22:18 (`out/time_summary_s3b_final.md`; the first run of them, at
+21:57, `s3b_a`, is within 0.01 ms). Cut 3: 22:16 (`s3b_b`). Scan off: cuts
+1 and 2 with the merge scan skipped (`--noscan 1`, a timing knob whose
+labels are wrong), 21:59 (`s3b_a_noscan`). The two cuts were timed
+together. Sync is the wall time of the draw plus `pass.sync()`, with
+about 2 ms fixed, so it moves less.
+
+| scene | GPU p50 / p95 before | after | x | sync p50 | cut 3 | scan off |
+|---|---|---|---|---|---|---|
+| muse_hash | 10.236 / 10.515 | 3.869 / 3.938 | 2.65 | 11.5 to 5.2 | 3.719 / 3.821 | 1.792 / 1.831 |
+| muse_default_tw | 4.146 / 4.448 | 2.128 / 2.162 | 1.95 | 5.4 to 3.4 | 2.165 / 2.205 | 1.595 / 1.742 |
+| def | 4.544 / 4.741 | 2.205 / 2.231 | 2.06 | 5.8 to 3.5 | 2.242 / 2.269 | 1.656 / 1.823 |
+| fat | 2.360 / 2.385 | 1.189 / 1.197 | 1.98 | 3.4 to 2.4 | 1.250 / 1.255 | 0.794 / 0.799 |
+| ring | 1.968 / 2.014 | 1.016 / 1.029 | 1.94 | 3.1 to 2.2 | 1.030 / 1.056 | 0.735 / 0.755 |
+| user_tw42.lightpaper | 2.397 / 2.441 | 1.269 / 1.290 | 1.89 | 3.6 to 2.8 | 1.307 / 1.323 | 0.956 / 1.268 |
+| g41_def_tw42 | 3.268 / 3.553 | 1.827 / 1.863 | 1.79 | 4.8 to 4.1 | 1.875 / 1.907 | 1.472 / 1.498 |
+| g41_def_tw64 | 6.607 / 6.903 | 2.750 / 2.769 | 2.40 | 7.9 to 5.0 | 2.746 / 2.770 | 1.810 / 1.837 |
+| g41_ring_tw42 | 1.235 / 1.453 | 0.761 / 0.777 | 1.62 | 2.4 to 2.6 | 0.787 / 0.802 | 0.625 / 0.637 |
+| g41_ring_tw64 | 2.371 / 2.400 | 1.124 / 1.141 | 2.11 | 3.5 to 2.9 | 1.140 / 1.156 | 0.761 / 0.778 |
+| g41_user_tw42 | 2.401 / 2.589 | 1.266 / 1.291 | 1.90 | 3.6 to 3.1 | 1.305 / 1.324 | 0.953 / 0.973 |
+| g41_user_tw64 | 5.198 / 5.288 | 1.999 / 2.017 | 2.60 | 6.4 to 3.7 | 1.986 / 1.998 | 1.114 / 1.139 |
+
+The census after, at 22:19:30-22:21:10 (`out/verdict_summary_s3b_final.md`,
+errors 0), is F2's line for line: the same agree, boundary, fade and
+DEFECT counts, the same boundary kinds and the same covered counts on all
+12 scenes (`verdict_summary_a.md` against it, run times stripped: 0
+differences; cut 3's `verdict_summary_s3b_b.md` too). **0 DEFECT still.**
+
+What is left is the scan itself. After minus scan off: muse_hash 2.08 ms
+(54% of its 3.87), g41_def_tw64 0.94, g41_user_tw64 0.89, 0.14-0.55 on the
+other nine. muse_hash is the outlier because its h is large against its
+segments (l/h 0.17), so its windows hold 9 segments on average and up to
+40. The span walk (4.6-8.2 spans a fragment) was not timed separately.
+Both are left for S5 (Later work).
+
+Commands (from the worktree; each `run_locked.ps1` run takes the perf lock
+and appends a run to `out/<mode>_summary.md`, and the labelled copies hold
+one run each):
+
+```powershell
+& .claude\probes\K1040\s3\run_locked.ps1 -RunArgs @('time')
+& .claude\probes\K1040\s3\run_locked.ps1 -RunArgs @('time', '--noscan', '1')
+& .claude\probes\K1040\s3\run_locked.ps1 -RunArgs @('verdict')
+node scripts/run_node.mjs .claude/probes/K1040/s3/win_stats.ts
+& .claude\probes\K1040\s3\time_table.ps1 pre3 s3b_final s3b_b s3b_a_noscan
+# the census compare, run times stripped:
+$norm = { param($f) Get-Content $f | Where-Object { $_ -match '^\s*- ' } |
+  ForEach-Object { $_ -replace '; \d+ ms$', '' } }
+Compare-Object (& $norm out\verdict_summary_a.md) (& $norm out\verdict_summary_s3b_final.md)
+```
+
 ## Handoff
