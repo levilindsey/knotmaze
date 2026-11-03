@@ -728,9 +728,6 @@ Every other item below waits on the trigger it names.
   45.0/45.3 fps, 119-122 of ~360 frames over 25 ms, none over 50, against 65a7787's 60.1/60.3, two runs a
   build in both orders, thermal status 0). Trim the piece counts or per-piece cost, or accept it.
   docs/design/K156.md round 2026-10-30 handoff.
-- **K1094** · Ledger hygiene from the K1091 planner, unverified: stale or duplicate items (K443, K404, K497,
-  K604, K801), the Next section's stale queue narrative, K1081-K1083 still pointing at K1077 (Done). Check
-  each, then drop or fix (`docs/ledger_notes.md`).
 
 ## Residuals (known, not fixed)
 
@@ -2015,6 +2012,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1094** · Ledger hygiene from the K1091 planner: K443, K404, K801 dropped, K497 reworded, the Next narrative moved to docs/history.md; K604 stays (still true: `mf` is outside the codec until K326 drops knot mode) and K1081-K1083 keep K1077 as their origin (their pointers hold). Done in 2ba1fcf7 (2026-11-02).
 - **K1098** · Look check: reduced motion's panel and resize snap. Dropped: nothing to see on a maze: there a panel toggle or a resize does not move the fit at all (K1085's probe, cases a and c, the same before and after); the text-scene toggle measured 89 -> 2 frames under reduce (`.claude/probes/K1085/`) (2026-11-02).
 - **K592** · Gap search rounded a negative kStart the wrong way: kStart can go negative (ring seam crossings, pinned in gap_mask.test.ts), and its three decodes use floor(x + 0.5) now (K817). Done in 52aa617a (2026-10-22).
 - **K801** · K138 s4 slice 2 calls (keys at core junctions, placeholder icons). Dropped: duplicate of K789 (K1094) (2026-11-02).
