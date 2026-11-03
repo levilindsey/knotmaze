@@ -220,7 +220,7 @@ final definition and leave the rest to the Handoff.
 
 Start 17:50:37 (cap 19:50:37).
 
-### F1 · Definition change: the quadratic reach, K1092 (17:58-18:16, bd3f32ae)
+### F1 · Definition change: the quadratic reach, K1092 (17:58-18:16, b400a081)
 
 In the Lcut loop a pass's reach is now
 
@@ -357,7 +357,7 @@ reach drops from 4.33h to 4h. F3 has their ink against the oracle.
   pass): below 4h the reach is r0, above it the reach stays at 4.0000h
   (fineR) and L at its value there.
 
-### F3 · The j55 arc's two sites and the other changes, attributed (18:16-18:45, e3a22da9)
+### F3 · The j55 arc's two sites and the other changes, attributed (18:16-18:45, 06ed2732)
 
 #1 moves only on g41_user_tw64, 59 -> 61 px. `$env:TAG = "q"; npx
 vite-node .claude/probes/K1040/s1/attr_s1f.ts` (out/s1f/attr_q.txt)
@@ -429,9 +429,9 @@ one by one: muse_hash 367, 378, 477 and g41_user_tw64 83, 183, 185, 186,
 99, 106 (chain 22's arms near j55 are inside F3's windows); #1 and the
 shared checks show no other change on their scenes.
 
-### F4 · The gate against S1e's final (18:05-18:12 on bd3f32ae)
+### F4 · The gate against S1e's final (18:05-18:12 on b400a081)
 
-On the final definition (nothing under `src/` changed after bd3f32ae),
+On the final definition (nothing under `src/` changed after b400a081),
 against out/s1e/logs/*_final* and *_c1*:
 
 | Check | S1e final (c1) | S1f (q) |
@@ -457,7 +457,7 @@ Reproduce from the worktree:
 Every change against S1e's final is attributed in F1 and F3; none moves
 ink away from the oracle.
 
-### F5 · The pins (18:40-18:54, 98602972)
+### F5 · The pins (18:40-18:54, 23aaca05)
 
 `test/render/field/form_b.test.ts` gains "form B: a crossing's reach
 (S1f, K1092)", three tests:
@@ -521,13 +521,13 @@ continuous forms are not made; they are Next 1. Nothing is timed, and
 the perf lock was never taken.
 
 **What landed** on `worktree-agent-a43dac8f0673db4df` (unpushed):
-- e6f6147b: this brief, the frozen S1e c1 form B and the gate runner;
-- bd3f32ae: Definition change, the quadratic reach as the default (F1),
+- abd6d372: this brief, the frozen S1e c1 form B and the gate runner;
+- b400a081: Definition change, the quadratic reach as the default (F1),
   with its candidates probe, the eye sweep and the gate;
-- e3a22da9: the j55 attribution (F3) and the reach's fine sweeps;
-- 7b50584d: F1-F4;
-- 98602972: the pins (F5);
-- 4cde68fc: item 2's d-edge census, tee sweep, gate sweeps and null-gate
+- 06ed2732: the j55 attribution (F3) and the reach's fine sweeps;
+- a727f582: F1-F4;
+- 23aaca05: the pins (F5);
+- 0b106e15: item 2's d-edge census, tee sweep, gate sweeps and null-gate
   census;
 - the commit with this Handoff: `gate699.ts`, F5, F6.
 
