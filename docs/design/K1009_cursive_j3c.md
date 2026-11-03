@@ -177,3 +177,46 @@ J3b's `## Rules` hold, with these changes:
   fields.
 
 ## Handoff
+
+J3c stage agent (coordinator session 7301c55b), 2026-11-02 16:31-17:25. Branch `worktree-agent-a396032821cae8823`, worktree
+`.claude/worktrees/agent-a396032821cae8823`; nothing pushed. Everything else is in the main checkout's untracked
+`.claude/probes/K863/trace/`: `NOTES.md` `## K1009c` (N1-N5, rerun commands), `work26/`, `out26/`, tools `work26/dbg/*_k1009c.*`.
+
+**What changed** (v6.6 = v6.5's bodies, joins only; variant K in `work26/ports_k1009c.json`):
+1. **Convergence.** o's exit takes maxfev 8000: all 26 o solves end status 0 (b0 stopped at maxfev on ob od oe of ok ol; the largest
+   is oy at 6125 evaluations).
+2. **oe.** The second crossing was not on the picture: o's overstroke retraces the oval's top and the connector peels off it tangentially, which
+   the crossing test counted. `pins.oe.xl_skip_u = 45` (the first 45 u are not tested against o's own body): 1 crossing of 1 allowed, converged
+   in 534 evaluations. Its look: a straighter descent than b0's, dmax to the font 12.74 u (b0 4.97). Stiffer weights changed nothing.
+3. **m n v x z.** After o the merge stretch is [0, top]: the connector attaches at the arch top (om 1.60, on 3.20, ov 3.50, oz 3.50, ox 0.00),
+   the hump is gone. dmax to the font (b0 -> v6.6): om 7.45 -> 2.58, on 6.50 -> 2.78, ov 6.56 -> 2.95, ox 19.11 -> 12.29, oz 16.05 -> 14.60.
+   The dip before the arch is deeper than b0's (om lowest point 106.0 u, b0 112.1).
+4. **i j p s u w y.** A corner entry (+30..+40 deg) in place of the cusp entry: the lowest point is 104.8-105.6 u (b0's sagging cusp
+   entries 90.5-95.1 u). dmax: oi 12.27 -> 2.56, oj 16.57 -> 2.54, oy 12.35 -> 2.53, ou 14.77 -> 2.59 (op 3.03 -> 2.72); os 27.08 -> 36.17 is
+   the exception. Six corners arrive at the +40 deg bound (oi oj os ou ow oy); op at 36.2 deg with side margin -0.05 (the test's tolerance edge).
+5. **ot.** The tangent entry at the crossbar (55.7 u below t's top) with `side_clear [0.002, 0.3]`: clearance min 0.0154 u (Ht 0.0017 u),
+   1.43 u at b = 10 u, 6.47 u at b = 20 u; 0 crossings; it sags 19.5 u under the x-height (lowest 100.47 u; b0 13.9 u under). Table: N3.
+6. **og.** v6.4's: o's cusp exit (12 u, 4 u overstroke, 0.5 u band) and the attach 50.48 u from g's top-right cusp (identical to v6.5's og).
+The rest of the census, locality (942 untouched pieces byte-identical to v6.5's) and determinism hold (N5).
+
+**What Levi should look at** (Drive `K863/`, each is a guarded SVG; columns: the font, b0, v6.5, v6.6):
+- `o_joins_v66.svg`: the 26 joins out of o. (a) Rows oi oj op os ou ow oy: does the connector now read as a level run into the stem's top
+  where b0 sagged like a hammock? (b) Rows om on ov ox oz: the S now meets the arch at its top, no hump, but it dips deeper first: better?
+  (c) Row oe: v6.6's S descends straighter than b0's and sits above the font's swoop (b0 hugged it): which does he prefer?
+  (d) og is v6.4's, as he picked.
+- `ot_v66.svg`: ot and knotmaze. The connector comes up to t's stem from the left and meets it at the crossbar, after dipping lower than b0's:
+  is that dip too deep for "definitely tangent"?
+- `cursive_v66_words.svg`: the 21 census words, v6.5 beside v6.6, for the o and t joins in words.
+
+**Checks** (`pwsh -NoProfile -File work26\dbg\checks_k1009c.ps1 [step]`, from the trace folder; steps build census_v66 cmp_b0_v66 cmp_v65_v66
+locality sheet_o sheet_ot sheet_words guard det; one Python at a time): census 252 rows (undesigned seams 6, spikes 25, rough FAIL 47: as v6.5;
+worst rows ol tail 365.3, os 336.7, cursive ve 328.9, oh 323.2, ok 322.8); seams G2 at every undesigned o seam; locality PASS; determinism
+PASS (25 files byte-identical, 8 differ by path/pid/clock; the o sheet byte-identical); guard ALL CLEAN. Clearance:
+`venv\Scripts\python.exe -I work26\dbg\clearance_k1009c.py work26\clearance_ot.txt`.
+
+**Next:**
+1. Levi's picks from the pictures above: oe's shape, ot's dip and clearance (C in `side_clear` is the knob), the +40 deg corners.
+2. The rest of the stage list (call 7): every other exit (b, v, w high exits; into g at v6.3's attach, K1026), the joins into a and q (K1027),
+   K1014, K1035, K1036, K1044, leads and tails (K1006), f's lower-loop end (K990), K991 and K948 for the remaining pairs, K937, K997, K998,
+   removing the join sets. The ascender attaches ob of oh ok ol still sit at their [0, 100] bound and oe at [0, 90] (as b0; J3b found widening worse).
+3. The coordinator merges this branch after the Muse round and updates K863's handle; os (36.2 u), oh and ok (34.8 u) are the o rows farthest from the font.
