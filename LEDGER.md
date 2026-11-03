@@ -484,10 +484,10 @@ Next free ID: K1102.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: agent `a4d6c4eb46ea384c4` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-02 18:18, 2 h cap ~20:18)
-  - branch: `worktree-agent-a4d6c4eb46ea384c4`, worktree `.claude/worktrees/agent-a4d6c4eb46ea384c4`; last commit: `f96c760e`
+  - owner: nobody since 2026-11-02 19:56 (merged; agent `a4d6c4eb46ea384c4` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `bf2ba829`
   - evidence: `.claude/probes/K1040/s3/` (its gate runs and results); oracle30 and the recordings: worktree `k868-s3a` (`.claude/probes/S3a/seq13/`); F7's S3 entry names the modules it reuses
-  - next: S3 per F7: the label (capsules per chain segment, corner fills, surfaces with S1's depth key, static instances), then its gate: oracle30 0 DEFECT (K1033), pops only inside the fades, at most 2 ms on the Pixel at dpr 2, the favicon 404 not an error (K1039); then S4a
+  - next: S3b: the class-B rule decided (a) (coordinator, 2026-11-02, by the checks): form B names a surface by its covering pieces only, a Definition change with its own Finding in form_b.ts after S1g merges; then the census (expect the 137 class-B DEFECTs gone, closing K1033), the scan's cost (clip each capsule to its segment's slab, tighten the windows) and the Pixel timing (K923's harness, both locks); then step 5 (the pops over the four recordings, the point-table upload) and S5's nbWindows prep (`docs/design/K1040_s3_label.md` ## Handoff)
   - brief: `docs/design/K1040_s3_label.md` on the agent's branch (it writes it first); until then F7's S3 entry in `docs/design/K1040_junction_field.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`
 
