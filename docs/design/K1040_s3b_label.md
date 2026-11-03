@@ -359,10 +359,10 @@ Three cuts, each timed and censused under the perf lock:
    turning enough to come back, so a straight stretch gets +-1, and the
    early end seldom fires before the window ends. It moved labelAt,
    `nbWindows` and the pins for nothing, so cut 3 is reverted (it stays
-   in 41951b5c).
+   in f31eea57).
 
 Desktop timing by timer query, 61 draws a scene, under the perf lock.
-Before: 1778fc58 (F1) at 21:52 (`out/time_summary_pre3.md`). After: cuts 1
+Before: 07b4a6ac (F1) at 21:52 (`out/time_summary_pre3.md`). After: cuts 1
 and 2 at 22:18 (`out/time_summary_s3b_final.md`; the first run of them, at
 21:57, `s3b_a`, is within 0.01 ms). Cut 3: 22:16 (`s3b_b`). Scan off: cuts
 1 and 2 with the merge scan skipped (`--noscan 1`, a timing knob whose
@@ -422,7 +422,7 @@ the 12 scenes and a first floor run over two. Each began with the
 launcher in front.
 **The gate fails by 5-20x.** By K923's method the label costs 10.6-39.6 ms
 above the readback floor; K923's prototype label cost 1.83 ms. F3's cuts
-help there too, less than on the desktop: 1.1-1.6x from 1778fc58's shader
+help there too, less than on the desktop: 1.1-1.6x from 07b4a6ac's shader
 (pre3) by K923's method, 1.07-1.9x at 2480x1800.
 
 **The kit** (new): `phone_time.mjs` bundles `page.ts` with rolldown
@@ -515,7 +515,7 @@ $s3 = '.claude\probes\K1040\s3'
 & $s3\run_phone.ps1 -RunArgs @('--fit', '411x753', '--label', 'fitnoscan', '--b2b', '--noscan')
 # The swapped shaders: build the file, then pass its absolute path.
 $o = "$PWD\$s3\out"
-cmd /c "git show 1778fc58:src/render/field/label_b_glsl.ts > $o\label_b_glsl_1778fc58.ts"
+cmd /c "git show 07b4a6ac:src/render/field/label_b_glsl.ts > $o\label_b_glsl_1778fc58.ts"
 $src = [IO.File]::ReadAllText("$PWD\src\render\field\label_b_glsl.ts")
 $nofd = $src.Replace('gl_FragDepth = 0.5 - key * uKeyScale;', '/* K1097 HSR probe: no gl_FragDepth */')
 [IO.File]::WriteAllText("$o\label_b_glsl_nofd.ts", $nofd)
@@ -535,12 +535,12 @@ Step 5 was not started. The branch is
 `worktree-agent-a99cc3250b93f7bc0`, never pushed.
 
 **What landed, commit by commit:**
-- `d4ad825d`: the brief.
-- `1778fc58` (F1-F2): form B names a surface by its covering pieces only
+- `a0c72856`: the brief.
+- `07b4a6ac` (F1-F2): form B names a surface by its covering pieces only
   (`labelBy: "cover"` in `form_b.ts`, pinned in `label_b.test.ts`). The
   census reads 0 DEFECT and 0 fade on all 12 scenes, so K1033 can close.
-- `41951b5c`: step 3 WIP.
-- `2e1f0815` (F3): in `label_b_glsl.ts`, the slab clip (VS) and the
+- `f31eea57`: step 3 WIP.
+- `e3a0f028` (F3): in `label_b_glsl.ts`, the slab clip (VS) and the
   carried scan (FS). The desktop runs 1.6-2.6x faster and the census is
   unchanged. Cut 3 (each side's early end) was exact but no faster, so it
   was reverted. `npm test`: 2617 passed, 8 skipped.
@@ -550,7 +550,7 @@ Step 5 was not started. The branch is
 
 **Before (F0, the stage start) and after**, the census at dpr 2 and
 2480x1800. The desktop column is the GPU p50 by timer query, in ms. The
-Pixel column is the sync p50 by K923's method, from 1778fc58's shader to
+Pixel column is the sync p50 by K923's method, from 07b4a6ac's shader to
 now, with the floor taken off in parentheses.
 
 | scene | DEFECT | fade | desktop GPU p50 | Pixel sync p50 |
