@@ -485,9 +485,9 @@ Next free ID: K1099.
   D K1084 (K1086 report only), E K1063 + K593; no junction or cursive work. Runs 5A-5E chained from
   2026-11-02.
   - owner: muse runs 5A-5E chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 18:00
-  - branch: mainline; last commit: `04e2c1f4`
+  - branch: mainline; last commit: `36bcafd6`
   - evidence: `.claude/probes/K1053/` (`queue.txt` lines 5A-5E, `chain.log`, `chain.out.txt`, `done.txt`)
-  - next: Run C done (K228 65b0d43c, K442 3c57bd37, K741 04e2c1f4); Run D next, chained after the coordinator's review; Claude reviews Run C, then closes K1091 after Run E
+  - next: Run D done (K1084 fc9b0eec, docs 36bcafd6; K1086 left open with nav-timing finding); Run E next after coordinator review
   - brief: `docs/design/K1091_muse_batch5.md`
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
@@ -768,9 +768,6 @@ Every other item below waits on the trigger it names.
 - **K1083** · K1077: RibbonRenderer.update redoes gap slots every frame on the realtime stand (about
   +0.97 ms x1, +4.5 ms x4): declare only changed chains (K441 K1077). Trace the trigger first: needsFxRender
   (paint_state.ts:719) reruns it on exploreUpdatePending (explore_gaps.ts:397, fabric_maze_renderer.ts:1082) or fxLive; under fxLive that fix won't stop it.
-- **K1084** · K412: hashed assets are max-age=0 on Pages: pages.dev revalidates the worker fetch (304, 300 B), and
-  levi.dev's proxy edge REVALIDATEs the chunk (fresh hello 941 ms vs 466 direct; that this is the cause is inferred).
-  Long max-age on /assets/* (_headers), then re-run `.claude/probes/K412/k412_run.mjs` on both. `K412_preload_network.md`.
 - **K1088** · K568's confetti fall costs the Pixel 11 about 15 fps on master (round 2026-10-30 step 2:
   45.0/45.3 fps, 119-122 of ~360 frames over 25 ms, none over 50, against 65a7787's 60.1/60.3, two runs a
   build in both orders, thermal status 0). Trim the piece counts or per-piece cost, or accept it.
@@ -2070,6 +2067,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1084** · hashed /assets/* now max-age=31536000 immutable on Pages; worker fetch cache-served 10/10, levi fresh hello 941->347 ms. Done in fc9b0eec (2026-11-02).
 - **K741** · cutRules(upper) drops 'fewest cuts' for upper-bound par; exact-par pinned. Done in 04e2c1f4 (2026-11-02).
 - **K442** · walked/fire lead lines true under both fire clocks; tests pin old phrases gone. Done in 3c57bd37 (2026-11-02).
 - **K228** · pointerleave clears the choice hover too (probe K228 before 0 stays, after -1; guard held). Done in 65b0d43c (2026-11-02).
