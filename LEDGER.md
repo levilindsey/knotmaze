@@ -508,9 +508,9 @@ Next free ID: K1135.
 - **K1131** · Muse batch 8 (`docs/design/K1131_muse_batch8.md`): A K332, B K657, C K1081, D K1082, E K1083, F
   K1115; Next in ledger order, no junction, cursive, physics or phone work.
   - owner: muse runs 8A-8F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 04:10
-  - branch: mainline; last commit: `b4d7f006`
+  - branch: mainline; last commit: `91387212`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 8A-8F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run F (K1115)
+  - next: Run F done; batch 8 complete, Claude reviews and closes K1131
   - brief: `docs/design/K1131_muse_batch8.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
@@ -744,9 +744,6 @@ Every other item below waits on the trigger it names.
   189-187 from 2.438h to 1.431h; F2 changes r at 155 corners. S1g made pops crops only: S1h makes at-rest
   before/after crops, Claude looks, and Levi gets a picture if it reads as a change (`K1040_s1g_gates.md` ##
   Handoff).
-- **K1115** · Panel: after Reset, 107 stepped rows land one step below their default when a link held an
-  off-grid value (the list: 5f28e0b1's message; 6B fixed four rows, K130/K495, by dropping `step`). Wants one
-  general fix, not per row (Claude's call).
 
 ## Residuals (known, not fixed)
 
@@ -1999,6 +1996,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1115** · one general Reset fix in row/doReset. Done in 91387212 (2026-11-03).
 - **K1082** · incremental burn declare; fillets split out. Done in afaccf39 (2026-11-03).
 - **K1081** · one panel rect read a frame (camera cache). Done in efe7faa3 (2026-11-03).
 - **K657** · win banner shows snapped and par rows. Done in 2592be6c (2026-11-03).
