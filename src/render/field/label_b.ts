@@ -89,11 +89,7 @@ export interface LabelBTables {
   spans: { lo: number; code: number }[][];
   /** Per chain: point offset. */
   ptOff: number[];
-  /**
-   * NB: per segment (indexed as PTS) its merge-scan window (m-, m+, arc-,
-   * arc+): the segments back and ahead, and their arcs (back from segment
-   * k's start, ahead from its end), which end each side's scan early (S3b).
-   */
+  /** NB: per segment (indexed as PTS) its merge-scan window (m-, m+, 0, 0). */
   nb: Float32Array;
   /** The merge scan's reach in s: 1.5 sigma with the fold (a far piece covers from there), else sigma. */
   foldR: number;
@@ -276,15 +272,6 @@ function nbWindows(p: Poly, h: number, foldR: number, out: Float32Array, off: nu
     }
     out[4 * (off + k)] = mMinus;
     out[4 * (off + k) + 1] = mPlus;
-    // S3b: each side's arc. A point Q of the window with less arc than rem
-    // left after it bounds what is left: no point there is nearer to p0
-    // than |p0 - Q| - rem, so a side's scan ends once that reaches d.
-    let arcM = 0;
-    for (let st = 1; st <= mMinus; st++) arcM += p.segLen[segIx(k - st)];
-    let arcP = 0;
-    for (let st = 1; st <= mPlus; st++) arcP += p.segLen[segIx(k + st)];
-    out[4 * (off + k) + 2] = arcM;
-    out[4 * (off + k) + 3] = arcP;
   }
 }
 
@@ -476,43 +463,18 @@ function footAt(p: Poly, k: number, x: number, y: number): { t: number; d: numbe
   return { t, d: Math.hypot(x - fx, y - fy), cap };
 }
 
-/** The margin of the scan's early end (MERGE_END * h): above the float32 error of its sums. */
-export const MERGE_END = 1e-3;
-
-/**
- * Whether a nearer candidate of chain p in segment k's window lies within
- * foldR of s (the merge scan). Each side runs outward from k and ends once
- * its point Q is d + margin farther from p than the window's arc left after
- * Q (S3b: no later point is then nearer than d, so the full window's answer).
- */
+/** Whether a nearer candidate of chain p in segment k's window lies within foldR of s (the merge scan). */
 function mergedAway(p: Poly, k: number, T: LabelBTables, off: number, x: number, y: number, d: number, s: number): boolean {
-  const o = 4 * (off + k);
-  const m0 = T.nb[o];
-  const m1 = T.nb[o + 1];
+  const m0 = T.nb[4 * (off + k)];
+  const m1 = T.nb[4 * (off + k) + 1];
   const ns = p.nseg;
-  const mg = d + MERGE_END * T.h;
-  const hit = (j: number): boolean => {
-    if (j === k) return false;
+  for (let jr = k - m0; jr <= k + m1; jr++) {
+    const j = jr < 0 ? jr + ns : jr >= ns ? jr - ns : jr;
+    if (j === k) continue;
     const q = footAt(p, j, x, y);
-    if (!q || !(q.d < d)) return false;
+    if (!q || !(q.d < d)) continue;
     const sq = normS(p, p.s[j] + q.t * p.segLen[j]);
-    return Math.abs(dS(p, s, sq)) < T.foldR;
-  };
-  // Ahead: segment j from its start point j.
-  let rem = T.nb[o + 3];
-  for (let st = 1, j = k; st <= m1; st++) {
-    j = j + 1 === ns ? 0 : j + 1;
-    if (Math.hypot(x - p.x[j], y - p.y[j]) - rem >= mg) break;
-    if (hit(j)) return true;
-    rem -= p.segLen[j];
-  }
-  // Back: segment j - 1 from its end point j.
-  rem = T.nb[o + 2];
-  for (let st = 1, j = k; st <= m0; st++) {
-    if (Math.hypot(x - p.x[j], y - p.y[j]) - rem >= mg) break;
-    j = j > 0 ? j - 1 : ns - 1;
-    if (hit(j)) return true;
-    rem -= p.segLen[j];
+    if (Math.abs(dS(p, s, sq)) < T.foldR) return true;
   }
   return false;
 }

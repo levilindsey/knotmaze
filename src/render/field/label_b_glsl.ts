@@ -12,7 +12,7 @@
 // DEBUG_OUT adds a second target (RGBA32F: key, s, d, fill) for the probes'
 // verdicts; the label itself is the word and the depth.
 
-import { FILL_TEXELS, MERGE_END, TEX_W } from "./label_b";
+import { FILL_TEXELS, TEX_W } from "./label_b";
 
 const HEAD = `#version 300 es
 precision highp float;
@@ -20,7 +20,6 @@ precision highp int;
 precision highp sampler2D;
 #define TEX_W ${TEX_W}
 #define FILL_TEXELS ${FILL_TEXELS}
-#define MERGE_END ${MERGE_END.toFixed(6)}
 uniform sampler2D uPts;
 uniform sampler2D uChain;
 uniform sampler2D uSpan;
@@ -116,30 +115,6 @@ void main() {
 
 const CAPSULE_FS = `${HEAD}${OUTS}
 flat in ivec2 vSeg;
-// The merge scan's test of segment j = (Qa, Qb): a candidate nearer than d
-// within uFold of s. pp is the point before Qa when hasPp (else fetched, if
-// the foot rule needs it). The distance comes before the foot rule: both
-// only refuse, so the order does not change the answer (labelAt's order).
-bool nearer(vec2 p, int off, int n, int nseg, bool closed, vec4 c1, int j, vec4 Qa, vec4 Qb, bool hasPp, vec2 pp, float d, float s) {
-  float tq = segT(p, Qa.xy, Qb.xy);
-  float tc = clamp(tq, 0.0, 1.0);
-  if (!(distance(p, mix(Qa.xy, Qb.xy, tc)) < d)) return false;
-  if (tq <= 0.0) {
-    if (closed || j > 0) {
-      vec2 q = hasPp ? pp : fetch(uPts, off + (j > 0 ? j - 1 : nseg - 1)).xy;
-      if (segT(p, q, Qa.xy) < 1.0) return false;
-    }
-  } else if (tq >= 1.0) {
-    if (closed || j + 1 < nseg) return false;
-  }
-  int jb = (j + 1 == n) ? 0 : j + 1;
-  float sq = Qa.z + tc * ((jb == 0 ? c1.x + c1.y : Qb.z) - Qa.z);
-  float ds = sq - s;
-  // s and sq both lie in [s0, s0 + len], so one lap wraps ds (no rounded
-  // quotient: K299's rule, test/render/paint_ring_lap.test.ts).
-  if (closed) ds -= ds > 0.5 * c1.y ? c1.y : ds < -0.5 * c1.y ? -c1.y : 0.0;
-  return abs(ds) < uFold;
-}
 void main() {
   vec2 p = worldAt();
   int ci = vSeg.x;
@@ -173,41 +148,48 @@ void main() {
   float s = A.z + t * (sb - A.z);
   if (closed && s >= c1.x + c1.y) s -= c1.y;
   // The merge scan (form B's merge and fold): a nearer candidate of this
-  // chain within uFold of s hides this one. Only segment k's window, each
-  // side outward from k (S3b): a side ends once its point is d + margin
-  // farther from p than the window's arc left after it (no point there is
-  // nearer than d: labelAt's mergedAway), and it carries its points (one
-  // fetch a step, not two or three).
+  // chain within uFold of s hides this one. Only segment k's window.
+  // S3b: consecutive segments share a point, so the scan carries it (one
+  // fetch a step, not two or three), and it tests the distance before the
+  // foot rule (both only skip, so the order does not change the result:
+  // labelAt's order).
   vec4 nb = fetch(uNb, off + k);
   int m0 = int(nb.x);
   int m1 = int(nb.y);
-  float mg = d + MERGE_END * uH;
-  // Ahead: segment j from its start Qa (Qp before it).
-  vec4 Qp = A;
-  vec4 Qa = B;
-  float rem = nb.w;
-  int j = kb;
+  int j = k - m0;
+  if (j < 0) j += nseg;
+  vec4 Qa = fetch(uPts, off + j);
+  vec4 Qp = Qa;
   for (int q = 0; q < 4096; q++) {
-    if (q >= m1 || distance(p, Qa.xy) - rem >= mg) break;
+    if (q > m0 + m1) break;
     int jb = (j + 1 == n) ? 0 : j + 1;
     vec4 Qb = fetch(uPts, off + jb);
-    if (j != k && nearer(p, off, n, nseg, closed, c1, j, Qa, Qb, true, Qp.xy, d, s)) discard;
-    rem -= distance(Qa.xy, Qb.xy);
+    if (j != k) {
+      float tq = segT(p, Qa.xy, Qb.xy);
+      float dq = distance(p, mix(Qa.xy, Qb.xy, clamp(tq, 0.0, 1.0)));
+      if (dq < d) {
+        bool foot = true;
+        if (tq <= 0.0) {
+          if (closed || j > 0) {
+            vec2 pp = q > 0 ? Qp.xy : fetch(uPts, off + (j > 0 ? j - 1 : nseg - 1)).xy;
+            foot = !(segT(p, pp, Qa.xy) < 1.0);
+          }
+        } else if (tq >= 1.0) {
+          foot = !(closed || j + 1 < nseg);
+        }
+        if (foot) {
+          float sq = Qa.z + clamp(tq, 0.0, 1.0) * ((jb == 0 ? c1.x + c1.y : Qb.z) - Qa.z);
+          float ds = sq - s;
+          // s and sq both lie in [s0, s0 + len], so one lap wraps ds (no
+          // rounded quotient: K299's rule, test/render/paint_ring_lap.test.ts).
+          if (closed) ds -= ds > 0.5 * c1.y ? c1.y : ds < -0.5 * c1.y ? -c1.y : 0.0;
+          if (abs(ds) < uFold) discard;
+        }
+      }
+    }
     Qp = Qa;
     Qa = Qb;
     j = jb;
-  }
-  // Back: segment j - 1 from its end Qe.
-  vec4 Qe = A;
-  rem = nb.z;
-  j = k;
-  for (int q = 0; q < 4096; q++) {
-    if (q >= m0 || distance(p, Qe.xy) - rem >= mg) break;
-    j = j > 0 ? j - 1 : nseg - 1;
-    vec4 Qs = fetch(uPts, off + j);
-    if (j != k && nearer(p, off, n, nseg, closed, c1, j, Qs, Qe, false, Qs.xy, d, s)) discard;
-    rem -= distance(Qs.xy, Qe.xy);
-    Qe = Qs;
   }
   int so = int(c1.z);
   int ns = int(c1.w);
