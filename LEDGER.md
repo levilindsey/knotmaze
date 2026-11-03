@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1135.
+Next free ID: K1137.
 
 ## Waiting on Levi
 
@@ -304,9 +304,10 @@ Next free ID: K1135.
 - **K1129** · With Reduced motion on and the camera following the player, the view still glides after every
   move. Should it hold still instead, and jump only when the player gets near the edge of the screen? (K1099,
   follow camera)
-- **K1132** · After you press an arrow key (or WASD) once, small arrows now sit at the start of each run at
-  your junction showing which key takes it. Do they read well at the size of the one-way chevrons? Pictures:
-  .claude/probes/K332/shots/ (K332, 3346474f)
+- **K1132** · After you press an arrow key (or WASD) once, small arrows sit at the start of each run at your
+  junction, showing which key takes it. At the default marker size they sit mostly under your own marker,
+  and only their tips show. Move them out past the marker, or keep them as they are? Pictures:
+  `.claude/probes/K332/shots/` (crop_*_5x.png; K332, 3346474f)
 
 ## In progress
 
@@ -505,14 +506,6 @@ Next free ID: K1135.
   - next: S3c: the label pass without discards for the Pixel's GPU (one shaded fragment per pixel, depth from the vertex shader as K923's label set it), gated on the Pixel's 2 ms; if it misses, the coarser target (K923's lr), a new budget (Levi's) only after both; then step 5: the pops (def_drag, def_flow, muse_drag, muse_flow) and SAMP's upload against label_tables'
   - brief: `docs/design/K1040_s3b_label.md` (F1-F4, ## Handoff); S3's Handoff in `docs/design/K1040_s3_label.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`
-- **K1131** · Muse batch 8 (`docs/design/K1131_muse_batch8.md`): A K332, B K657, C K1081, D K1082, E K1083, F
-  K1115; Next in ledger order, no junction, cursive, physics or phone work.
-  - owner: muse runs 8A-8F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 04:10
-  - branch: mainline; last commit: `91387212`
-  - evidence: `.claude/probes/K1053/` (queue.txt lines 8A-8F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run F done; batch 8 complete, Claude reviews and closes K1131
-  - brief: `docs/design/K1131_muse_batch8.md`
-  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
 ## Next, in order
 
@@ -728,9 +721,11 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
-- **K1083** · K1077: gap slots on the realtime burn stand — traced 2026-11-03 (K1131 Run E): neither
-  exploreUpdatePending nor the fxLive branch holds there (cause none, 0 solves/frame; stands pat), so
-  the changed-chains declare was not built; awake updates still re-solve every slot (K1134).
+- **K1083** · K1077: gap slots on the realtime burn stand, to retrace with the flow on. Run E (K1131) read
+  cause none, 0 solves a frame, but with `fw=0`; K1077's link had the flow on
+  (`.claude/probes/K1077/k441_page.mjs:114`), and its realtime extra was setMaskIds +0.19 ms, computeGapSlot
+  +0.24 and sampleAt +0.28 at 1x (`docs/design/K441_fire_frame.md`, K1077). Next: rerun
+  `.claude/probes/K1083/gaps.mjs` on that link.
 - **K1088** · K568's confetti fall costs the Pixel 11 about 15 fps on master (round 2026-10-30 step 2:
   45.0/45.3 fps, 119-122 of ~360 frames over 25 ms, none over 50, against 65a7787's 60.1/60.3, two runs a
   build in both orders, thermal status 0). Trim the piece counts or per-piece cost, or accept it.
@@ -1695,12 +1690,14 @@ Every other item below waits on the trigger it names.
   every run, so the tracked `phone_time_summary.md` grows with each rerun (S3b's Handoff).
 - **K1128** · Sprint: no real phone pass yet (emulated 411x753); the s3a fragile page check is weak on the
   hunter, and the fire side is unit-tested only (split from K748)
-- **K1133** · Burn re-declare: fillet rebuilds still fire on front-crossing frames (2-3 per 119 on the K1082
-  realtime stand, driven by the gap gate's uwRev under-window updates, before and after the incremental
-  declare alike; split from K1082)
-- **K1134** · Gap slots stand pat on the K1083 burn stands (cause none on 120/120 frames; 0 updates and 0 gap
-  solves a frame, realtime and turn, on master and pre-K1082 alike), so K1077 cluster 3 does not reproduce
-  there; solves still run per awake update (drag 287/frame) (split from K1083)
+- **K1133** · Burn re-declare: fillet rebuilds on front-crossing frames (2-3 per 119 on K1082's realtime
+  stand, uwRev under-window updates, before and after the declare alike; split from K1082), measured with
+  `fw=0`. On K1077's flow-on stand, buildProfile, pushFan and visit under rebuildFillets cost +0.42, +0.28
+  and +0.23 ms at 1x, realtime over turn: retrace with the flow on, with K1083, before deciding.
+- **K1135** · Reset's reanchorStep (K1115, 91387212; `src/ui/tweakpane_panel.ts` row()) reaches Tweakpane
+  internals (`controller.value.value_.constraint_`, a StepConstraint's origin) and silently does nothing if
+  they change; tweakpane is `^4.0.5` and the tests pin source text only. Guard: a behavior test on a real Pane
+  (a happy-dom or jsdom dev dependency) plus a warn-once.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1993,9 +1990,13 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1106** · A build check that every `dist/assets/` file name carries a content hash: `public/_headers`
   caches `/assets/*` immutable for a year (K1084, fc9b0eec), so a file put in `public/assets/` would stay stale
   in browsers.
+- **K1136** · Phone A/A floor: fabric@0 reads loose (fps ±8.3, frames over 25 ms ±33) from one outlier rep; a
+  later A/A may tighten it (`docs/design/K156.md`, Round 2026-11-03 handoff, Left over 2).
 
 ## Done
 
+- **K1134** · Gap slots stand pat on the K1083 burn stands (cause none on 120/120 frames; 0 updates and 0 gap solves a frame, realtime and turn, on master and pre-K1082 alike), so K1077 cluster 3 does not reproduce there; solves still run per awake update (drag 287/frame) (split from K1083). Dropped: its stands were `fw=0`, which removes K1077's flow trigger; folded into K1083's retrace (the drag stand's re-solve per awake update is expected: the geometry moves) (2026-11-03).
+- **K1131** · Muse batch 8: K332, K657, K1081 and K1115 done, K1082's declare half; K1083 and K1133 were measured with `fw=0`, not on K1077's flow-on stand (the brief's error), so both retrace. Done in 91387212 (2026-11-03).
 - **K1115** · one general Reset fix in row/doReset. Done in 91387212 (2026-11-03).
 - **K1082** · incremental burn declare; fillets split out. Done in afaccf39 (2026-11-03).
 - **K1081** · one panel rect read a frame (camera cache). Done in efe7faa3 (2026-11-03).
