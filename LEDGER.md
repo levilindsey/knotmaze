@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1089.
+Next free ID: K1091.
 
 ## Waiting on Levi
 
@@ -290,6 +290,10 @@ Next free ID: K1089.
   (docs/design/K1040_junction_field.md F7).
 - **K1080** · On the phone, zoom in and out and tap threads and junction choices: do the tap targets feel
   right? They now stay the same finger size at every zoom (K331, bc5f0043).
+- **K1089** · Cursive J3c's look calls (v6.6; Drive `K863/`: `o_joins_v66.svg`, `ot_v66.svg`,
+  `cursive_v66_words.svg`): oe, b0's near-font S or the converged straighter one; ot's dip under the x-height
+  (19.5 u; more air costs a deeper dip, `side_clear`'s C); the deeper dips into m n v x z; the corner entries
+  into i j p s u w y. `docs/design/K1009_cursive_j3c.md` Handoff.
 
 ## In progress
 
@@ -1752,6 +1756,10 @@ Every other item below waits on the trigger it names.
 - **K1086** · K412 probe: each warm profile's first reload started main 3.5 s (levi.dev) / 3.2 s (pages.dev) late
   vs 68-216 ms later; all before main, both origins, no service worker. Record navigation timing on it to split
   old-page teardown from a first cache read (`.claude/probes/K412/`; full text `docs/ledger_notes.md`).
+- **K1090** · Cursive v6.6 (J3c) o-join residuals: six corners at the +40 degree bound (oi oj os ou ow oy), op
+  at the side-margin tolerance (-0.05); ob of oh ok ol attach at the [0, 100] bound, oe at [0, 90], oc od at
+  their lower bounds (as b0; J3b found widening worse); os (36.2 u), oh, ok (34.8 u) sit farthest from the
+  font; the words sheet lacks b0. `docs/design/K1009_cursive_j3c.md` Handoff.
 
 ## Approved, to schedule (2026-10-11)
 
