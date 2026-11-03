@@ -714,6 +714,13 @@ function vertexBuffer(data: Float32Array, label: string): Buffer {
 // partial sizes - the PARTIAL BUFFER UPLOADS lore).
 class PluckBlurMesh {
   readonly mesh: Mesh;
+  // K212: one geometry per program. The blur program reads aEnv/aCol/
+  // aClip* and never aGap*, the still programs the reverse; one shared
+  // geometry made pixi warn about the other program's attributes on
+  // every draw. Both geometries wrap the same data arrays, so uploads
+  // and the drawing are unchanged.
+  readonly blurGeometry: MeshGeometry;
+  readonly stillGeometry: MeshGeometry;
   readonly indices = new Uint32Array((MAX_STATIONS - 1) * 6);
   readonly pos = new Float32Array(MAX_STATIONS * 4);
   readonly uv = new Float32Array(MAX_STATIONS * 4);
@@ -754,29 +761,45 @@ class PluckBlurMesh {
   used = 0;
 
   constructor() {
-    const geometry = new MeshGeometry({
-      positions: this.pos,
-      uvs: this.uv,
-      indices: this.indices,
-    });
-    const add = (name: string, data: Float32Array, n: 2 | 3 | 4): void => {
-      geometry.addAttribute(name, {
-        buffer: vertexBuffer(data, "attribute-" + name),
-        format: n === 2 ? "float32x2" : n === 3 ? "float32x3" : "float32x4",
-        stride: n * 4,
-        offset: 0,
+    const mkGeometry = (
+      attrs: ReadonlyArray<readonly [string, Float32Array, 2 | 3 | 4]>
+    ): MeshGeometry => {
+      const geometry = new MeshGeometry({
+        positions: this.pos,
+        uvs: this.uv,
+        indices: this.indices,
       });
+      for (const [name, data, n] of attrs) {
+        geometry.addAttribute(name, {
+          buffer: vertexBuffer(data, "attribute-" + name),
+          format: n === 2 ? "float32x2" : n === 3 ? "float32x3" : "float32x4",
+          stride: n * 4,
+          offset: 0,
+        });
+      }
+      return geometry;
     };
-    add("aEnv", this.env, 2);
-    add("aAux", this.aux, 4);
-    add("aCol", this.col, 3);
-    add("aClipA", this.clipA, 4);
-    add("aClipB", this.clipB, 4);
-    add("aClipF", this.clipF, 4);
-    add("aGap", this.gap, 4);
-    add("aGapId", this.gapId, 4);
-    this.mesh = new Mesh({ geometry, shader: pluckShader(), texture: Texture.WHITE });
+    this.blurGeometry = mkGeometry([
+      ["aEnv", this.env, 2],
+      ["aAux", this.aux, 4],
+      ["aCol", this.col, 3],
+      ["aClipA", this.clipA, 4],
+      ["aClipB", this.clipB, 4],
+      ["aClipF", this.clipF, 4],
+    ]);
+    this.stillGeometry = mkGeometry([
+      ["aAux", this.aux, 4],
+      ["aGap", this.gap, 4],
+      ["aGapId", this.gapId, 4],
+    ]);
+    this.mesh = new Mesh({ geometry: this.blurGeometry, shader: pluckShader(), texture: Texture.WHITE });
     this.mesh.visible = false;
+  }
+
+  // Point the mesh at the geometry its current program reads (takeMesh
+  // and the still warm-up set the shader beside this).
+  useStill(still: boolean): void {
+    this.mesh.geometry = still ? this.stillGeometry : this.blurGeometry;
   }
 
   upload(names: string[]): void {
@@ -1376,6 +1399,7 @@ export class PluckOverlay {
       // A fresh mesh: its indices are all zero (a pool mesh keeps its last
       // pluck's quads).
       this.warmStill = this.newMesh();
+      this.warmStill.useStill(true);
       this.warmStill.mesh.shader = pluckStillShader();
       this.warmStill.mesh.visible = true;
       this.warmStillFrames = 3;
@@ -1447,6 +1471,7 @@ export class PluckOverlay {
   // per program, and each program reads only its own attributes).
   private takeMesh(still: boolean): PluckBlurMesh {
     const m = this.free.pop() ?? this.newMesh();
+    m.useStill(still);
     m.mesh.shader = still ? pluckStillShader() : pluckShader();
     return m;
   }
