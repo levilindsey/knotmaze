@@ -456,3 +456,110 @@ Reproduce from the worktree:
 
 Every change against S1e's final is attributed in F1 and F3; none moves
 ink away from the oracle.
+
+### F5 · The pins (18:40-18:54, 98602972)
+
+`test/render/field/form_b.test.ts` gains "form B: a crossing's reach
+(S1f, K1092)", three tests:
+- straight threads: the reach is r0 = h·cot(θ/2) exactly, θ 0.05-0.6;
+- K1092's phantom: a near-tangent pass whose partner turns away 2 behind
+  it cuts at 4h, so L = D − 5H (the walk read the turn-away as the
+  overlap's end);
+- the eye: the largest |ΔL| per 0.002 of w is 0.0211 for the quad reach
+  and 3.2522 for the walk.
+
+`npm test`: 191 files, 2576 passed, 8 skipped. Run the three alone with
+`npx vitest run test/render/field/form_b.test.ts -t "reach"`.
+
+### F6 · Item 2: which gates a corner with fill reaches (18:49-19:05)
+
+Two of the gates are reached with fill. They pop, and each needs a
+continuous form. That is a definition change for the next stage, and
+none was made here. Synthetic scenes use h = 1.
+
+| Gate | Reached with fill? | Evidence |
+|---|---|---|
+| Lcut loop, d < −1e-12 (line 542) | **Yes.** A crossing slides across a tee's root. Arm +1's L goes 10 → 0, and corner 0-1 (r 0.866, ω 1) goes null. Ink at (1.6, 1.25) steps 1.0 at a dc step of 0.01 and of 1e-4. Arm −1's L goes 0 → 10, and corner 1-2 (r 2.0) appears. | `dedge.ts` (tee), `gates.ts` A. Census, passes behind a root whose overlap reaches it: 74 arm-pass pairs, 37 with a corner with fill (def 1/1, g41_def_tw64 14/10, muse_hash 42/17, g41_ring_tw64 4/3, g41_user_tw64 13/6). Nearest is muse_hash arm 109 (j36, through, closed): pass at d −1.112h, d/(reach + h) −0.222, corner 109-110 r 1.088. Closed chains would jump L 0 → len − reach − h (inferred, not swept). |
+| 699, low side (V's foot at an arm's root) | **Yes.** On a Y with chain 1's root at (−e, 0), corner 0-1 (θ 2.0) holds r 2.0, ω 1 up to e 0.64205 and is null at 0.64210 (h·cot(1.0) = 0.6421). Ink steps 1.0 at three points around V, at an e step of 5e-5. | `gate699.ts` E1, E2. Census at rest: 16 low-side nulls. 2 sit at θ ≈ π. The other 14, in muse_hash and g41_user_tw64, sit beside a through arm with L ≤ 0.169 (world units) whose wedge side is negative too. In each scene, the passing corner nearest the low side sits at dV 0.036h-0.315h with r 0.42-1.04 and ω 1. Examples: g41_user_tw64 jj12 at 0.036h (θ 3.012, r 0.64) and muse_hash jj124 at 0.071h (θ 2.218, r 0.787). |
+| 699 high side and 681 (L → 0) | No. The cap gate takes r to 0 first: sweep B gives r 2.0 at L 2.77, 1.29 at 1.95, 0.030 at 1.13, 0 at 0.72; null at L 0.577 (V's foot), and 681 later. At the switch, ink at six points around V steps 0.0000. | `gates.ts` B, B2. Census: each scene's passing corner nearest the high side (L − dV 0.0004h-0.027h) has r 0. g41_ring_tw42 is the exception, its nearest at 1.29h. |
+| 597, θ ≥ π − 1e-6 | Reached with r 2.0 and ω 1 but **no fill**: the fillet's depth r(1/sin(θ/2) − 1) goes to 0. Ink steps 0.0104, 0.0002, 0.0000 at β steps 0.002, 5e-5, 2e-6. The corner's existence still switches, which labels may see. | `gates.ts` C1-C3 (a Y of ends; a through pair gets no corner, line 606). |
+| ω's ±0.5h exclusion (line 922) | Not at rest. Over 1953 corners with r > 0, counting the skipped candidates changes ω on none. The largest skipped overlap is 0.0250h (g41_ring_tw42 corner 29-30) against the band's start at 0.05h. Not swept. | `gates.ts` D. |
+| 694, no V | Not swept. One null at rest: g41_user_tw64 jj30, arms 93-91, θ 0.984, L 1.045/1.290. | `gates_census.ts` |
+| 704, V outside the wedge | Not swept. Never the deciding gate at rest; the nearest passing corners sit 0.36h-0.66h inside with r 0-0.33. | `gates_census.ts` |
+
+The census replays the corner loop and solveCorner's head over all 3622
+cyclically adjacent arm pairs of the 12 scenes:
+
+| Gate | Pairs |
+|---|---|
+| 597 | 525 |
+| 606 | 609 |
+| 681 | 76 |
+| 694 | 1 |
+| 699 | 292 |
+| corner | 2119 |
+
+Every pair the replay passes has its corner in `fb.corners` (0
+mismatches).
+
+Candidate continuous forms for the next stage, each a `Definition
+change:`:
+- **The d-edge.** Option one is a mirror cut for passes behind the root,
+  c = |d| − reach − h, so an overlap that reaches the root cuts the arm
+  from either side. Option two is an arm span [L0, L1] whose start
+  moves.
+- **699's low side.** A factor continuous in the geometry that takes r
+  to 0 as either foot nears its root, the way the cap gate does at L
+  (for example ss(dV/0.05h) on both feet at ρ = 0). Or open the solver's
+  window behind the root so the margin factor, which falls over
+  −0.05h..0, does it, with the gate moved behind that band.
+
+## Handoff (19:08)
+
+**Stopped:** the Order is done through item 2's sweeps. Item 2's
+continuous forms are not made; they are Next 1. Nothing is timed, and
+the perf lock was never taken.
+
+**What landed** on `worktree-agent-a43dac8f0673db4df` (unpushed):
+- e6f6147b: this brief, the frozen S1e c1 form B and the gate runner;
+- bd3f32ae: Definition change, the quadratic reach as the default (F1),
+  with its candidates probe, the eye sweep and the gate;
+- e3a22da9: the j55 attribution (F3) and the reach's fine sweeps;
+- 7b50584d: F1-F4;
+- 98602972: the pins (F5);
+- 4cde68fc: item 2's d-edge census, tee sweep, gate sweeps and null-gate
+  census;
+- the commit with this Handoff: `gate699.ts`, F5, F6.
+
+**Reproduce** (from the worktree; outputs under `out/s1f/`):
+
+| What | Command |
+|---|---|
+| The gate (F4) | `pwsh .claude/probes/K1040/s1/run_s1f_gate.ps1 -Tag q`, then `-Tag q -What mech`, then `gate_table.ps1` on `out/s1e/logs/scenes_final.txt` and `out/s1f/logs/scenes_q.txt` |
+| The reach (F1, F2) | `npx vite-node .claude/probes/K1040/s1/reach_cands.ts`; `reach_eye.ts 0.05 0.5 3 250 eye`; `reach_sweep.ts muse_hash 197 ec 1 40 probe` |
+| Attribution (F3) | `$env:TAG = "q"`, then `npx vite-node .claude/probes/K1040/s1/attr_s1f.ts`; `win_ink.ts <scene> <x> <y>`; the crops as F3 says |
+| Pins (F5) | `npx vitest run test/render/field/form_b.test.ts -t "reach"` |
+| Item 2 (F6) | `npx vite-node .claude/probes/K1040/s1/dedge.ts`; `gates.ts` (about a minute); `gates_census.ts`; `gate699.ts` |
+
+**Next:**
+1. **Make the two gates that pop continuous** (F6), each change with its
+   own `Definition change:` Finding.
+   - The d-edge: the mirror cut or the moving start. Gate it against
+     this stage's final, on the 37 filled corners and the tee sweep.
+   - 699's low side: r → 0 as a foot reaches its root. Use
+     `gate699.ts`'s Y and the census's nearest corners (muse_hash jj124,
+     g41_user_tw64 jj12).
+   - Then sweep 694 (g41_user_tw64 jj30 is the one at rest) and 704.
+   - Run ω's exclusion with a kink sliding past the foot by ±0.5h.
+2. **The brief's Later work:**
+   - the 14 pops the merge leaves (126 px; the gate counts 16 / 168 px
+     for S1e's final and S1f alike);
+   - the three junction pops (104 px);
+   - j129's corner.
+3. **Residuals:**
+   - e*'s steepness as κ → 0 (F2: de*/dκ = −T²/(2a³));
+   - member()'s back-reach reads any cut out to |Lcut| + λ;
+   - group 21's missing hook stroke and its new free end (chain 22,
+     s 27.608, at (2.098, 7.251); F3);
+   - the j55 arc lies 5 px inside its fill label (F3);
+   - 597's discrete corner existence may reach the labels.
