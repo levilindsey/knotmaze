@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1110.
+Next free ID: K1111.
 
 ## Waiting on Levi
 
@@ -288,6 +288,9 @@ Next free ID: K1110.
   better? Picture sent in chat 2026-11-02 19:29 (font, v6.6, v6.7); the v6.7 sheets are on Drive `K863/`
   (`*_v67*.svg`). If v6.6, the cursive stage then running restores v6.6's joins for the six pairs
   (`K1027_cursive_j3d.md` ## Handoff).
+- **K1110** · On the phone, with sound on and the settings panel left open from last time, reload and make
+  your very first touch a tap on Made by Snoring Cat: do you hear the snore before the studio page opens?
+  (K343, 933571af)
 
 ## In progress
 
@@ -490,9 +493,9 @@ Next free ID: K1110.
   D K787 + K584, E K112, F K403 + K263 + K600 + K609 + K462; no junction or cursive work. Runs 6A-6F chained
   from 2026-11-02.
   - owner: muse runs 6A-6F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 20:20
-  - branch: mainline; last commit: `0135271a`
+  - branch: mainline; last commit: `933571af`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 6A-6F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: the chain runs 6A-6F; Claude reviews each run on master as it lands; the chain pauses (pending lines commented out) for the K1040 S1g and K863 J3e merges
+  - next: Run B (K130 + K495); Claude reviews Run A on master as it lands
   - brief: `docs/design/K1107_muse_batch6.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 - **K1108** · Muse batch 7 (`docs/design/K1108_muse_batch7.md`): A K368, B K1100, C K748, D K1109 + K1099,
@@ -1132,9 +1135,6 @@ Every other item below waits on the trigger it names.
 - **K342** · The snore link (K325) is verified on desktop Chrome only. Unchecked: Android Chrome
   (the touch delay's feel, a tab switch cutting the sound; rides K156's next phone pass),
   Safari/iOS, other desktop browsers. `gameplay-audio.md`, THE SNORING CAT LINK.
-- **K343** · K325's snore is silent before the first activation (no AudioContext: a first hover is
-  silent, and the gesture that opens the audio gate plays nothing, the MP3 undecoded). Fix: decode
-  on an OfflineAudioContext before the gate. `gameplay-audio.md`, THE SNORING CAT LINK.
 - **K348** · Key-move edges left by K329/K333/K334: the X assignment switches only past KEY_TIE, a
   hold shorter than HOLD_DELAY pauses at the first junction, a wait tap mid-move isn't queued, and
   four smaller ones. Lore: TIE CYCLES, CHORDS AND THE MOVE WAIT in `gameplay-moves.md`.
@@ -2030,6 +2030,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K343** · Snore decoded on OfflineAudioContext before the gate (KnotSynth.decodeOffline, SnoreSfx falls back to context decode); first touch plays it. Probe .claude/probes/K343/snore.mjs: decodes 1 before input, one tap plays 1, never stacked. Done in 933571af (2026-11-02).
 - **K1091** · Muse batch 5, runs 5A-5E (5b8522a5..7bf0fbf4), reviewed; Claude fixed K442's fire-lead line (6e617fec); K1086, K1095 and K1099-K1101 stay open. Done in 7bf0fbf4 (2026-11-02).
 - **K1039** · K868's gate-tool leftovers: S3's verdict runner requests no favicon (a data: URL) and drops any favicon request from its error count; same24, same28 and raster26 are K868's, superseded by K1040. Done in 05727f6c (2026-11-02).
 - **K1027** · Cursive: the six high joins of b, v and w into a and q solved in v6.7 (J3d), replacing the presets; the look call is K1102. Done in 94f751ee (2026-11-02).
