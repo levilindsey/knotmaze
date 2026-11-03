@@ -7,6 +7,7 @@ import type { MotionSetting } from "../ui/motion";
 import type { PanelSettings } from "../ui/tweakpane_panel";
 import type { UrlParams } from "../ui/url_state";
 import { resolveTelegraphHover } from "../game/mino_feedback";
+import { effectiveParam } from "../ui/accessibility";
 import type { SceneRef } from "./scene_ref";
 
 // K5 M6 (docs/design/K5_K6_split.md, 2.2): pointer input, moved out of
@@ -249,7 +250,7 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
     at: { ctrl?: number; arc?: number },
     strength: number,
     delay = 0,
-    look: PluckRipple = params.pluckRipple
+    look: PluckRipple = effectiveParam(params, { reducedMotion: motion.reduced, highContrast: settings.highContrast === true }, "pluckRipple")
   ): void => {
     if (!scene.renderer || look === "off" || !(strength > 0)) return;
     ripples.look = look;

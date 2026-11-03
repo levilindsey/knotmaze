@@ -1103,7 +1103,7 @@ export function installProbeHooks(ctx: ProbeCtx): void {
   ) => {
     if (o.paused !== undefined) ctx.ripples.paused = o.paused;
     if (o.t !== undefined) ctx.ripples.setTime(o.t);
-    return { count: ctx.ripples.activeCount, look: ctx.ripples.look };
+    return { count: ctx.ripples.activeCount, look: ctx.ripples.look, looks: (ctx.ripples as unknown as { live: ReadonlyArray<{ look: string }> }).live.map((r) => r.look) };
   };
   (window as unknown as Record<string, unknown>).__knotPluckState = () =>
     ctx.scene.renderer
