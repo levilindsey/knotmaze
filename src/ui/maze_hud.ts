@@ -151,9 +151,13 @@ export interface StatEntry {
   id: StatId;
   label: string;
   value: string;
+  // K775: this row's value may wrap inside its box (only the hidden runs
+  // row, whose value is far longer than any other).
+  wrap?: boolean;
 }
 
-const entry = (id: StatId, value: string): StatEntry => ({ id, label: STATS[id].label, value });
+const entry = (id: StatId, value: string, wrap = false): StatEntry =>
+  wrap ? { id, label: STATS[id].label, value, wrap: true } : { id, label: STATS[id].label, value };
 
 // The rows that are part of the game, not stats (K80's catches, K114's
 // fire): the HUD shows them with the stat rows off too.
@@ -237,6 +241,8 @@ export function ensureHudStyles(): void {
     ".km-hud .k{color:#8ea0c0;white-space:nowrap}" +
     ".km-hud .v{color:#e4ecf8;text-align:right;white-space:nowrap;" +
     "font-variant-numeric:tabular-nums}" +
+    // K775: only the hidden runs row wraps (its value cell carries km-wrap).
+    ".km-hud .v.km-wrap{white-space:normal}" +
     // K137 stage 2: the spool gauge's flash on a refused move.
     "@keyframes km-flash{0%,40%{color:#ff8a7a;text-shadow:0 0 6px #ff5a40}" +
     "100%{color:#e4ecf8;text-shadow:none}}" +
@@ -264,6 +270,7 @@ export function ensureHudStyles(): void {
     ".km-banner .k{color:#8ea0c0;white-space:nowrap}" +
     ".km-banner .v{color:#e4ecf8;text-align:right;white-space:nowrap;" +
     "font-variant-numeric:tabular-nums}" +
+    ".km-banner .v.km-wrap{white-space:normal}" +
     ".km-btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;" +
     "margin-top:10px}" +
     ".km-btn{min-height:32px;padding:0 14px;border-radius:7px;" +
@@ -435,7 +442,7 @@ function rowsEl(rows: readonly StatEntry[]): HTMLDivElement {
     kEl.className = "k";
     kEl.textContent = r.label;
     const vEl = document.createElement("span");
-    vEl.className = "v";
+    vEl.className = r.wrap ? "v km-wrap" : "v";
     vEl.textContent = r.value;
     el.append(kEl, vEl);
   }
@@ -466,14 +473,14 @@ export class MazeHud {
   render(s: HudSnapshot | null): void {
     // K80: the real-time mode's catch count is part of the game, not a
     // stat: its row shows with the stat rows off too (K114: and the fire's).
-    const game = s ? gameRows(s) : [];
+    const game = s ? gameEntries(s) : [];
     if (!s || (!s.showStats && game.length === 0)) {
       this.el.hidden = true;
       this.lastSig = "";
       return;
     }
-    const rows: Array<[string, string]> = s.showStats ? statRows(s) : game;
-    const sig = JSON.stringify(rows);
+    const rows: StatEntry[] = s.showStats ? statEntries(s) : game;
+    const sig = JSON.stringify(rows.map((r) => [r.label, r.value, r.wrap ?? false]));
     this.el.hidden = false;
     if (sig === this.lastSig) return;
     this.lastSig = sig;
@@ -481,16 +488,16 @@ export class MazeHud {
     this.timeCell = null;
     this.leadCell = null;
     this.spoolCell = null;
-    for (const [k, v] of rows) {
+    for (const r of rows) {
       const kEl = document.createElement("span");
       kEl.className = "k";
-      kEl.textContent = k;
+      kEl.textContent = r.label;
       const vEl = document.createElement("span");
-      vEl.className = "v";
-      vEl.textContent = v;
-      if (k === "time") this.timeCell = vEl;
-      if (k === STATS.fireLead.label) this.leadCell = vEl;
-      if (k === STATS.spool.label) this.spoolCell = vEl;
+      vEl.className = r.wrap ? "v km-wrap" : "v";
+      vEl.textContent = r.value;
+      if (r.id === "time") this.timeCell = vEl;
+      if (r.id === "fireLead") this.leadCell = vEl;
+      if (r.id === "spool") this.spoolCell = vEl;
       this.el.append(kEl, vEl);
     }
   }
@@ -740,7 +747,7 @@ export function ruleEntries(s: RuleFields): StatEntry[] {
   // fewest 16, 14 with them".
   if (s.rules) rows.push(entry("rules", s.rules));
   if (s.turnstiles != null) rows.push(entry("turnstiles", String(s.turnstiles)));
-  if (s.hidden) rows.push(entry("hidden", hiddenValue(s.hidden)));
+  if (s.hidden) rows.push(entry("hidden", hiddenValue(s.hidden), true));
   // K138 stage 3: "one-way 12" (the runs laid one-way).
   if (s.oneWay != null) rows.push(entry("oneWay", String(s.oneWay)));
   // K138 stage 4: "keys 1 / 3" (held of those laid).
