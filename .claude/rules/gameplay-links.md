@@ -318,6 +318,20 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   corridor 24 / away / 0 / 0, so links without them build the trap-zone
   finish. CODEC_VERSION stays 6 (append only).
 
+- GAME MODE PARAM (K534 Stage A1, 2026-10-16; brief
+  `docs/design/K323_game_mode.md`): `gameMode` (`gm`: classic |
+  minotaur | burn, default classic; `GAME_MODES` in
+  `src/ui/url_state.ts`) is in `CODEC_PARAMS`
+  (`src/ui/param_codec.ts`), appended by K534. Classic is the plain
+  maze; minotaur adds the minotaur (the clock `clk` applies only
+  there: `clockOf`); burn is the burn race (gameplay-fire.md). In a
+  key=value link `gm` wins; without it the old mode keys imply one
+  (`readGameMode`): `fi=fuse` is burn, `clk=realtime` or a named
+  `mt` model is minotaur. Not a DAILY_EXEMPT_KEY: a daily plays
+  classic, and choosing another mode leaves the daily (an ordinary
+  design). Panel: the Game folder's Game mode row (gameplay-panel.md).
+  The same K534 commit closed K263 (`undoAllowed` deleted,
+  gameplay-minotaur.md).
 - FRAGILE AND PAR PARAMS (K137 stage 1, 2026-10-20; brief
   `docs/design/K137_s1.md`): `fragile` (`fg`: off | crack | snap, default
   off), `parMode` (`pa`: off | strict | strokes, default off) and
