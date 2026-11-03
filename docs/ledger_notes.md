@@ -4619,3 +4619,16 @@ Shortened in LEDGER.md 2026-10-30 (over three lines). Full text:
   ms), on both origins, with no service worker. Unexplained: record navigation timing on that reload to split
   the old page's teardown from a first cache read (`.claude/probes/K412/k412_run.mjs`, records in
   `k412_results.jsonl`).
+
+## K1094
+
+The K1091 planner's ledger-hygiene list (2026-11-02), unverified by the coordinator:
+- K443: superseded by K795 (the beat rows and tunables).
+- K404: likely stale.
+- K497: its first clause was done by K330.
+- K604: moot.
+- K801: duplicates K789's tail.
+- K1064-K1074: near-duplicate Done lines (the nightly archive takes them after a week anyway).
+- The Next section's "queue" narrative is stale.
+- K1081-K1083 still point at K1077, which is Done.
+- Checked and wrong: K1086 sits in Residuals, not the Approved region.

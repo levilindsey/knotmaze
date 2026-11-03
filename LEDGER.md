@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1094.
+Next free ID: K1095.
 
 ## Waiting on Levi
 
@@ -483,14 +483,14 @@ Next free ID: K1094.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
-- **K1091** · Muse batch 5: a planner drafts the brief from the ledger (no junction or cursive work); the
-  coordinator reviews it, commits it as `docs/design/<ID>_muse_batch5.md` and launches Muse once the K1040 S1e
-  junction agent has merged (one writer per repo).
-  - owner: claude agent `af3475cba37b08bdd` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (Sonnet planner, read-only), since 2026-11-02 17:30
-  - branch: mainline; last commit: `9dbb6f62`
-  - evidence: `.claude/probes/batch5/muse_batch5_draft.md` (the draft, untracked)
-  - next: review the draft against the ledger, commit the brief, launch Muse after S1e merges (`.claude/probes/K1053/chain.ps1` to chain the runs)
-  - brief: `docs/design/K1079_muse_batch4.md` (the model)
+- **K1091** · Muse batch 5 (`docs/design/K1091_muse_batch5.md`): A K775 + K738, B K1085, C K228 + K442 + K741,
+  D K1084 (K1086 report only), E K1063 + K593; no junction or cursive work. Runs 5A-5E chained from
+  2026-11-02.
+  - owner: muse runs 5A-5E chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 18:00
+  - branch: mainline; last commit: `b61c368a` (the brief)
+  - evidence: `.claude/probes/K1053/` (`queue.txt` lines 5A-5E, `chain.log`, `chain.out.txt`, `done.txt`)
+  - next: runs 5A-5E in order; Claude reviews each on master, files what each reports (B: camera motions with no reduced path; D: any levi.dev proxy cache residual), then closes K1091
+  - brief: `docs/design/K1091_muse_batch5.md`
 
 ## Next, in order
 
@@ -768,6 +768,9 @@ Every other item below waits on the trigger it names.
   45.0/45.3 fps, 119-122 of ~360 frames over 25 ms, none over 50, against 65a7787's 60.1/60.3, two runs a
   build in both orders, thermal status 0). Trim the piece counts or per-piece cost, or accept it.
   docs/design/K156.md round 2026-10-30 handoff.
+- **K1094** · Ledger hygiene from the K1091 planner, unverified: stale or duplicate items (K443, K404, K497,
+  K604, K801), the Next section's stale queue narrative, K1081-K1083 still pointing at K1077 (Done). Check
+  each, then drop or fix (`docs/ledger_notes.md`).
 
 ## Residuals (known, not fixed)
 
