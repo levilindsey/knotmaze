@@ -263,6 +263,19 @@ function realMaze(seed: number): { walk: WalkGraph; map: WalkerMap } {
 const OK = (r: string): boolean =>
   r !== "reject" && r !== "noop" && r !== "smolder" && r !== "spool";
 
+// K787: the results a whole game may return. "reject" means the minotaur
+// and the controller disagree (K774's phantom move); "noop" answers only
+// a turn after the game finished, which ride's over() already prevents.
+// The failure names the seed, the timing and the move.
+function assertTurnResults(seed: number, timing: BeatTiming, results: readonly string[]): void {
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
+    if (r !== "moved" && r !== "caught" && r !== "win") {
+      throw new Error(`seed ${seed} ${timing} move ${i + 1}: turn returned "${r}"`);
+    }
+  }
+}
+
 // A whole game on the beat: a player who taps a random arm of the junction
 // ahead now and then, a 60 Hz frame of two ticks, until the game ends.
 function ride(
@@ -270,7 +283,7 @@ function ride(
   map: WalkerMap,
   c: FabricMazeController,
   seed: number,
-  onMove: (run: number) => void,
+  onMove: (run: number) => string | void,
   over: () => boolean,
   timing: BeatTiming = "length",
   perRun = 1
@@ -279,15 +292,27 @@ function ride(
   const r = new BeatRider(map, 100, 2, 4, walk.start, timing, perRun);
   const deps: BeatDeparture[] = [];
   let t = 0;
+  // K787 (K774): a catch the minotaur counted but the controller has not
+  // landed. The next commit lands it before any tap (main.ts moveAlong,
+  // as in beat_catch.test.ts) and refuses that move.
+  let pendingCatch = false;
   r.queue(walk.vertices.get(walk.start)!.edges[0], 0);
-  for (; t < 60000 && !over(); t += 2) {
+  // 300000 ticks: with catches landed a game takes up to 236594 (seed 3,
+  // length); 60000 was calibrated on the phantom games of K774.
+  for (; t < 300000 && !over(); t += 2) {
     if (rng.next() < 0.02) {
       const arms = walk.vertices.get(r.ahead)!.edges;
       r.queue(arms[rng.nextInt(arms.length)], t);
     }
     const got = r.advance(t, (run) => {
+      if (pendingCatch) {
+        c.respawn(false);
+        r.restAt(c.head);
+        pendingCatch = false;
+        return false;
+      }
       if (over() || !OK(c.tapEdge(run))) return false;
-      onMove(run);
+      if (onMove(run) === "caught") pendingCatch = true;
       return true;
     });
     for (const d of got) {
@@ -300,6 +325,15 @@ function ride(
   return { deps, ticks: t };
 }
 
+describe("assertTurnResults (K787)", () => {
+  it("flags a reject after a catch, and accepts a clean game", () => {
+    expect(() => assertTurnResults(3, "length", ["moved", "caught", "reject"])).toThrow(
+      'seed 3 length move 3: turn returned "reject"'
+    );
+    expect(() => assertTurnResults(3, "length", ["moved", "caught", "moved", "win"])).not.toThrow();
+  });
+});
+
 // Both run timings (K795): K114's by length, and the default, one beat a run.
 const TIMINGS: Array<[BeatTiming, number]> = [["length", 1], ["even", 1]];
 
@@ -311,20 +345,30 @@ describe.each(TIMINGS)("whole games on the beat (%s, %i)", (timing, perRun) => {
       const c = new FabricMazeController(walk, false);
       const t = new TurnMinotaur(walk, turnConfig({ ...DEFAULT_TURN_MINO, model: "hunter" }), turnSeed(seed));
       let turns = 0;
+      const results: string[] = [];
       const { deps } = ride(
         walk,
         map,
         c,
         seed,
         (run) => {
-          t.turn(run);
+          const res = t.turn(run);
+          results.push(res);
           t.setProgress(1);
           turns++;
+          return res;
         },
         () => c.solved || t.finished,
         timing,
         perRun
       );
+      assertTurnResults(seed, timing, results);
+      expect(
+        c.solved || t.finished,
+        'seed ' + seed + ' ' + timing + ': game did not end (last turn ' +
+          String(results[results.length - 1]) + ' at move ' + turns + ')'
+      ).toBe(true);
+      expect(c.respawns).toBe(t.catches);
       expect(turns).toBe(deps.length);
       expect(c.taps.length).toBe(deps.length);
       if (c.solved || t.finished) ended++;
