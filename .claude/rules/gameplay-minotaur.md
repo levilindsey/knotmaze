@@ -294,9 +294,9 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   two still apart (stage 1 animated no catching move). Display: lair
   until it leaves; hunt = the stalker sees you or prox mode != 0 (the
   committed state); else wander, with real time's glow alphas. PARAMS,
-  108-116 (codec v5 then, v6 since K76 stage 2c), after minoRefog (107;
-  109-117 on the branch until K111 stage 3 removed highlightMode's 108;
-  stage 3a appended six more at 140-145, its entry below):
+  (in `CODEC_PARAMS`, `src/ui/param_codec.ts`), after minoRefog (the
+  branch carried them one later until K111 stage 3 removed highlightMode;
+  stage 3a appended six more, its entry below):
   minotaur `mt`, minoSpeed `msp` (one), minoTelegraph `mtg` (on),
   minoSight `msi` (2 runs; 4 until stage 2), minoRoamRuns `mro` (8),
   minoTerritory `mtr` (6; both 1 at least since stage 2), minoAccuracy

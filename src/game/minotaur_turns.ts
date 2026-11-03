@@ -66,7 +66,7 @@ import {
 } from "./monsters";
 
 // The `minotaur` param: off, or the movement model (section 2.3). K80
-// stage 3 appends "abbott".
+// stage 4 appends "abbott".
 export type TurnMinotaurSetting = "off" | "hunter" | "guard" | "stalker";
 export const MINOTAUR_SETTINGS: readonly TurnMinotaurSetting[] = [
   "off",
