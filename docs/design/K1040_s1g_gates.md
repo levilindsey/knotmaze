@@ -225,3 +225,91 @@ final definition and leave the rest to the Handoff.
 ## Findings
 
 Start 19:27:41 (cap 21:27:41).
+
+### F1. Definition change: the d-edge, a pass behind the root cuts at its distance (`dEdge: "near"`, 19:53)
+
+The Lcut loop skipped a pass behind an arm's root (`d < −1e-12`), so L
+popped from its span to 0 as a pass slid over the root (S1f F6: the tee's
+arm +1, L 10 → 0, ink 1.0 at (1.6, 1.25)). Now a pass behind the root, at
+arc distance u = −d (on a closed chain u = len − d, the arc back to the
+root), cuts the arm at c = u: L is continuous at d = 0 (u → 0 behind,
+d − reach − h < 0 in front), with slope 1, so the span's end mirrors the
+pass and moves at its speed. Lcut still steps there (0 behind, −reach − h
+in front), but only where L = 0 on both through arms, where the cap mix
+reads ramp 0 as OWN in every weighted configuration (S1f F6's argument);
+the sweeps show no ink step at that point. Candidates, behind
+`dEdge` (`dedge_s1g.ts`, old = S1f's final `form_b_s1f_q.ts`):
+
+| | tee coarse ink step (dc 0.01) | tee fine | ring coarse | ring fine | arms moved | corners moved | lost fill | F6's 37 filled corners emptied |
+|---|---|---|---|---|---|---|---|---|
+| skip (S1f final) | 1.000 at dc 0 | 1.000 | 1.000 | 1.000 | - | - | - | - |
+| mirror, c = u − reach − h | 0.148 | 0 | 0.174 | 0 | 1242 | 739 | 256 | 37 |
+| **near, c = u** | **0.148** | **0** | **0.174** | **0** | **607** | **100** | **4** | **1** |
+
+(0.148 and 0.174 are the sweeps' ordinary rate elsewhere: the old
+definition shows the same steps away from dc 0. L's largest step is the
+dc step itself, 0.01 and 1e-4.) The ring is a closed circle of radius 8
+through the junction, so the wrap is swept too (old L step 48.26 there).
+
+Mirror is the symmetric form but costs a quarter of the scenes' fill at
+rest, so near, its strict relaxation (the weakest continuous cut of slope
+1: any c = u + K with K > 0 leaves L(0⁻) = K), is the default. The four
+corners near empties are all muse_hash: j0 0-1 (r 0.043h), j36 109-110
+(r 2.721h: arm 109's L 2.950h → 1.112h for a pass 1.112h behind its root,
+and the cap gate, continuous in L, takes r to 0 there; F6's one emptied
+corner), j155 471-472 (0.120h), j156 475-473 (0.125h).
+
+The gate (`run_s1g_gate.ps1 -Tag near -What scenes,rate,pins`, then
+`gate_table.ps1 out/s1f/logs/scenes_q.txt out/s1g/logs/scenes_near.txt`):
+#1 158 → 154 (muse_hash 4 → 0, no scene worse), free ends 110 → 102
+(muse_hash 37 → 32, g41_def_tw64 11 → 9, g41_user_tw64 22 → 21); every
+shared check's failing-scene count unchanged; b_rate 161 sites, 0
+breaches (4 sites' maxima moved by at most 0.08/px); the pins pass.
+Reproduce: `$env:PARAMS='{"dEdge":"near"}'; $env:TAG='near'; npx vite-node
+.claude/probes/K1040/s1/dedge_s1g.ts` (→ `out/s1g/dedge_near.txt`).
+
+### F2. Definition change: the root gate, r goes to 0 as a foot reaches its root (`rootBand: 0.5`, 20:08)
+
+699's low side: V is solved in the window [0, L], so a foot behind its
+root clamps to the root (dV = 0) and the window test nulls the corner with
+its full r. On `gate699.ts`'s Y (θ 2.0, chain 1's root at (−e, 0)) S1f's
+final switches at e 0.64205 → 0.64210 from r 2.0h, ω 1 to null, and the
+seven probe points step 0.864, 1.0, 1.0, 0.736, 1.0, 0.303 and 0.048.
+The root gate is a fourth factor of solveCorner's w (after the margin,
+steep and cap gates): ss(d/band) on each tracked foot's distance d from
+its arm's root, the low-side twin of the cap gate (S1f's ss(slack/0.5h)).
+r is the integral of w's running min, so it goes to 0 continuously as
+either foot reaches its root, and the window null is then reached only
+with r = 0, ω = 1, which draws like a null corner (S1d D5). The window
+test itself is unchanged. `gate699_s1g.ts` (old = `form_b_s1f_q.ts`; the
+census is against the same form B with rootBand 0, the gate alone):
+
+| band | E1 coarse (e step 0.005h): r's step, ink's largest | E2 fine at the switch (0.00005h): r, ink | corners whose r moved at rest | lost fill |
+|---|---|---|---|---|
+| 0 (S1f final) | 2.000, 1.000 (at the switch) | 2.000, 1.000 | - | - |
+| 0.05h | 0.299, 0.756 | 0.001, 0.0025 | 3 | 0 |
+| **0.5h** | **0.030, 0.125** | **0.000, 0.0006** | **155** | **0** |
+
+At 0.05h the arc moves about 11 times as fast as the root (the tip sits
+r(1/sin(θ/2) − 1) from V, 0.188r at θ 2.0, and all of r goes in 0.05h of
+motion), past label_pops' local motion + 1 px. At 0.5h it moves about 1.1
+times as fast, the cap gate's own rate, and its largest coarse ink step
+(0.125, at e 0.35) is the sweep's ordinary edge motion. So 0.5h is the
+default. Census at rest, by scene: def 17, fat 0, ring 4,
+user_tw42.lightpaper 17, g41_def_tw42 17, g41_def_tw64 17, muse_hash 18,
+muse_default_tw 22, g41_ring_tw42 5, g41_ring_tw64 4, g41_user_tw42 17,
+g41_user_tw64 17. 129 of the 155 have dV 0.25-0.5h, near-straight corners
+whose fillet is a sliver: the tip moves (old r − new r)(1/sin(θ/2) − 1),
+at most 0.221h (muse_hash j124 375-376, the census's nearest: θ 2.218,
+dV 0.071h, r 1.967h → 0.078h), then 0.101h (muse_default_tw j164
+499-497), every other at most 0.077h, 16 more than 0.05h. The other
+nearest, g41_user_tw64 j12 36-37 (θ 3.012, dV 0.036h): r 2.000h → 0.028h,
+a tip move of 0.004h.
+
+The gate, with F1 (`run_s1g_gate.ps1 -Tag rb05 -What scenes,rate,pins`):
+the same as F1's in every count (#1 158 → 154, free ends 110 → 102,
+every shared check unchanged), b_rate identical to F1's at all 161 sites
+(0 breaches), the pins pass (25). Reproduce:
+`$env:PARAMS='{"rootBand":0.5}'; $env:TAG='rb05'; npx vite-node
+.claude/probes/K1040/s1/gate699_s1g.ts` (→ `out/s1g/gate699_rb05.txt`;
+`rb005` for 0.05h).

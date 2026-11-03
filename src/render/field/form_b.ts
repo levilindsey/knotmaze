@@ -114,9 +114,17 @@ export interface FormBParams {
    * whose L pops as a pass slides over the root). "mirror": it cuts at
    * c = |d| − reach − h, the reach measured toward the root, so L and Lcut
    * meet the front side's −reach − h at d = 0. "near": c = |d| (L meets 0
-   * there; Lcut does not, where L = 0 on both arms).
+   * there; Lcut does not, where L = 0 on both arms). Default "near" (S1g F1).
    */
   dEdge?: "skip" | "mirror" | "near";
+  /**
+   * S1g: the root gate's band, in h (0: off, S1f's final; default 0.5, S1g
+   * F2). A fourth factor of solveCorner's w (after the margin, steep and cap
+   * gates), ss(d/band) on each tracked foot's distance d from its arm's
+   * root, the low-side twin of the cap gate: r goes to 0 as either foot
+   * reaches its root, before the window test's null (dV ≤ tol) does.
+   */
+  rootBand?: number;
   /** Depth window, arc length (default look.depthWindow · (look.ctrlArc ?? 1)). */
   depthWindow?: number;
   /**
@@ -352,6 +360,8 @@ export class FormB {
   readonly reachSep: "chord" | "line";
   /** S1g: a pass behind an arm's root. */
   readonly dEdge: "skip" | "mirror" | "near";
+  /** S1g: the root gate's band, in h (0: off). */
+  readonly rootBand: number;
   readonly force: NonNullable<FormBParams["force"]>;
   readonly fillKey: "nearer" | "a" | "b";
   readonly polys: Poly[];
@@ -393,7 +403,8 @@ export class FormB {
     this.curvedFrom = params.curvedFrom ?? 4;
     this.reachSteps = params.reachSteps ?? 2;
     this.reachSep = params.reachSep ?? "chord";
-    this.dEdge = params.dEdge ?? "skip";
+    this.dEdge = params.dEdge ?? "near";
+    this.rootBand = params.rootBand ?? 0.5;
     this.force = params.force ?? {};
     this.fillKey = params.fillKey ?? "nearer";
 
@@ -900,7 +911,11 @@ export class FormB {
     const wOf = (p: Tk): number => {
       const mA = marginOf(pa, p.x, p.y, p.fa.u, winA, p.fa.d);
       const mB = marginOf(pb, p.x, p.y, p.fb.u, winB, p.fb.d);
-      return ss(0, 1, 1 + Math.min(0, mA, mB) / (0.05 * h)) * ss(0, 1, (denOf(p) / denV - 0.3) / 0.4) * ss(0, 1, slackOf(p) / (0.5 * h));
+      const w = ss(0, 1, 1 + Math.min(0, mA, mB) / (0.05 * h)) * ss(0, 1, (denOf(p) / denV - 0.3) / 0.4) * ss(0, 1, slackOf(p) / (0.5 * h));
+      if (!(this.rootBand > 0)) return w;
+      // S1g: the root gate (rootBand), each foot's distance from its root.
+      const rb = this.rootBand * h;
+      return w * ss(0, 1, ((p.fa.u - A.sR) * A.dir) / rb) * ss(0, 1, ((p.fb.u - B.sR) * B.dir) / rb);
     };
     let r = 0;
     let q = v0;

@@ -1,0 +1,1820 @@
+{
+ "muse_hash": {
+  "sites": [
+   {
+    "at": [
+     11.375,
+     3.126
+    ],
+    "src": "q4 inner+fade",
+    "maxSlope": 1.4899385936287004,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     30.298,
+     3.314
+    ],
+    "src": "q4 inner+fade",
+    "maxSlope": 1.4780691050078207,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     16.822,
+     3.595
+    ],
+    "src": "q4 inner+fade",
+    "maxSlope": 0.3076944287742345,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     5.553,
+     14.959
+    ],
+    "src": "q4 outer/foot+fade",
+    "maxSlope": 1.4921152794808616,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     14.381,
+     3.314
+    ],
+    "src": "q4 over+fade",
+    "maxSlope": 1.2383531892555975,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     14.287,
+     3.455
+    ],
+    "src": "q4 over+fade",
+    "maxSlope": 0.969387760458698,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     14.193,
+     3.595
+    ],
+    "src": "q4 over+fade",
+    "maxSlope": 1.2204378710246164,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     24.899,
+     26.603
+    ],
+    "src": "q4 outer/arc+fade",
+    "maxSlope": 1.4807774462314098,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     24.852,
+     26.65
+    ],
+    "src": "q4 outer/arc+fade",
+    "maxSlope": 1.4568413305301182,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     24.899,
+     26.65
+    ],
+    "src": "q4 outer/arc+fade",
+    "maxSlope": 1.4331234718769839,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     3.863,
+     13.644
+    ],
+    "src": "q4 outer/foot+2surf+fade",
+    "maxSlope": 1.9266311500728457,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     27.012,
+     0.919
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4679733217761317,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     26.26,
+     0.966
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4816470087458615,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     3.957,
+     1.06
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4123540389598777,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     27.669,
+     1.435
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.8903031195635318,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     25.885,
+     1.482
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 1.1864490406245398,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     27.622,
+     1.482
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 1.184838394463882,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     23.913,
+     2.14
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 1.1560427825055752,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     22.598,
+     2.75
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.2804297516238885,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     22.598,
+     2.797
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.28043993999088535,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     10.812,
+     2.891
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.40838047935045996,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     10.859,
+     2.891
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.2780315851421745,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     10.812,
+     2.938
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.21013162730324053,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   }
+  ]
+ },
+ "muse_default_tw": {
+  "sites": [
+   {
+    "at": [
+     13.617,
+     1.121
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4688191956674608,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     26.608,
+     1.121
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4917407498770512,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     26.563,
+     1.166
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4921604200930272,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     3.278,
+     1.346
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4921594603773256,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     27.552,
+     1.391
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.487597974466241,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     22.832,
+     2.47
+    ],
+    "src": "#1 tB",
+    "maxSlope": 2.8879026657807394,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     22.877,
+     2.47
+    ],
+    "src": "#1 tB",
+    "maxSlope": 2.8776274362083694,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     22.832,
+     2.515
+    ],
+    "src": "#1 tB",
+    "maxSlope": 2.894936954609725,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     22.877,
+     2.515
+    ],
+    "src": "#1 tB",
+    "maxSlope": 2.8846568631661977,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     22.832,
+     2.56
+    ],
+    "src": "#1 tB",
+    "maxSlope": 2.9019745433949993,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     22.877,
+     2.56
+    ],
+    "src": "#1 tB",
+    "maxSlope": 2.8916896215272923,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     22.787,
+     2.605
+    ],
+    "src": "#1 tB",
+    "maxSlope": 2.9193120890187387,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   }
+  ]
+ },
+ "def": {
+  "sites": [
+   {
+    "at": [
+     25.497,
+     3.797
+    ],
+    "src": "q4 inner+fade",
+    "maxSlope": 1.4640878623165898,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     10.682,
+     3.842
+    ],
+    "src": "q4 inner+fade",
+    "maxSlope": 1.4526654145659137,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     13.681,
+     4.647
+    ],
+    "src": "q4 inner+fade",
+    "maxSlope": 1.4892611490786392,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     30.823,
+     6.438
+    ],
+    "src": "q4 over+fade",
+    "maxSlope": 1.3926283407717355,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     30.912,
+     6.662
+    ],
+    "src": "q4 over+fade",
+    "maxSlope": 1.3854772549060144,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     6.296,
+     6.796
+    ],
+    "src": "q4 over+fade",
+    "maxSlope": 1.138942861879642,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     10.593,
+     1.022
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.2824071519054474,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     26.034,
+     1.291
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4894542943879436,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     17.127,
+     1.694
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4162023726236037,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     16.993,
+     1.828
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4860779904224959,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     17.082,
+     2.812
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.470726690268907,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     13.681,
+     4.647
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4892611490786392,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     10.861,
+     4.782
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4497630797164804,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     22.99,
+     4.916
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4881136464321862,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     7.46,
+     5.095
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4561256484614509,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     7.236,
+     5.14
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.492129856884941,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     7.415,
+     5.14
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4585600736424436,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     33.508,
+     5.543
+    ],
+    "src": "#1 foot+f3",
+    "maxSlope": 1.285881716011386,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   }
+  ]
+ },
+ "fat": {
+  "sites": []
+ },
+ "ring": {
+  "sites": [
+   {
+    "at": [
+     19.699,
+     3.507
+    ],
+    "src": "q4 inner+fade",
+    "maxSlope": 1.489081207718697,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     19.879,
+     3.657
+    ],
+    "src": "q4 inner+fade",
+    "maxSlope": 1.390099489990095,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     5.041,
+     4.197
+    ],
+    "src": "q4 inner+fade",
+    "maxSlope": 1.4736365248460306,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     16.455,
+     2.816
+    ],
+    "src": "q4 over+fade",
+    "maxSlope": 1.0896240420171965,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     14.503,
+     4.317
+    ],
+    "src": "q4 over+fade",
+    "maxSlope": 1.2924440965128046,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     14.563,
+     4.348
+    ],
+    "src": "q4 over+fade",
+    "maxSlope": 0.3079436692755543,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     12.61,
+     0.593
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.3715122662633181,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     12.52,
+     0.683
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4244086579121777,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.156,
+     0.773
+    ],
+    "src": "#1 foot+f8",
+    "maxSlope": 1.2130746945405226,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.186,
+     0.803
+    ],
+    "src": "#1 foot+f8",
+    "maxSlope": 1.2403197181329597,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.186,
+     0.833
+    ],
+    "src": "#1 foot+f8",
+    "maxSlope": 1.2404138655724708,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.216,
+     0.863
+    ],
+    "src": "#1 foot+f8",
+    "maxSlope": 1.3313829827341417,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.216,
+     0.893
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.3314392669761759,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.246,
+     0.893
+    ],
+    "src": "#1 foot+f8",
+    "maxSlope": 1.3313255256121002,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.216,
+     0.923
+    ],
+    "src": "#1 foot+f8",
+    "maxSlope": 1.3314925247787466,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.246,
+     0.923
+    ],
+    "src": "#1 foot+f8",
+    "maxSlope": 1.444170560542986,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.276,
+     0.923
+    ],
+    "src": "#1 foot+f8",
+    "maxSlope": 1.4442034151741057,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.216,
+     0.954
+    ],
+    "src": "#1 foot+f8",
+    "maxSlope": 1.4440422879016532,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   }
+  ]
+ },
+ "user_tw42.lightpaper": {
+  "sites": [
+   {
+    "at": [
+     5.613,
+     1.534
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4202881930270408,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     5.378,
+     1.622
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4845069520804026,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     11.678,
+     1.622
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4735809363078372,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     11.707,
+     1.622
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.8542447802883624,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     3.641,
+     1.71
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4125198450918202,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     3.523,
+     1.74
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.258704521485178,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     12.797,
+     1.74
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 0,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     12.915,
+     1.858
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4886293029309057,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     12.885,
+     1.887
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 0,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     13.739,
+     1.975
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.3108057759831135,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     13.503,
+     2.182
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 0,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     13.709,
+     2.182
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.3207585147217449,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   }
+  ]
+ },
+ "g41_def_tw42": {
+  "sites": [
+   {
+    "at": [
+     10.944,
+     4.738
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.3688308114624599,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     16.731,
+     4.96
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.487196113818368,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     16.776,
+     5.049
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4661862305165165,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     16.82,
+     5.183
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.403827385437106,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     16.865,
+     5.183
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.43689453043143,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     16.954,
+     5.227
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4467186113502013,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     10.677,
+     6.607
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 0,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     0.884,
+     7.453
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4383401831162788,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     0.706,
+     7.542
+    ],
+    "src": "#1 foot+f9",
+    "maxSlope": 1.434092337794043,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     11.479,
+     8.789
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4611426691443405,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     24.833,
+     9.278
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4894016530745438,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     34.626,
+     9.634
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.351555758669555,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   }
+  ]
+ },
+ "g41_def_tw64": {
+  "sites": [
+   {
+    "at": [
+     16.881,
+     13.617
+    ],
+    "src": "q4 inner+fade",
+    "maxSlope": 0,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     16.881,
+     13.632
+    ],
+    "src": "q4 inner+fade",
+    "maxSlope": 0,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     16.866,
+     13.647
+    ],
+    "src": "q4 inner+fade",
+    "maxSlope": 1.491477507419484,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     21.311,
+     16.155
+    ],
+    "src": "q4 over+fade",
+    "maxSlope": 0.9051851889902143,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     21.296,
+     16.185
+    ],
+    "src": "q4 over+fade",
+    "maxSlope": 0.7270652661170152,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     21.266,
+     16.23
+    ],
+    "src": "q4 over+fade",
+    "maxSlope": 0.46218236734121854,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     32.71,
+     0.551
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.371571386984181,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     32.755,
+     0.551
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.3715955760126954,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     32.8,
+     0.551
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 2.0143344249252464,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     32.8,
+     0.596
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 2.0159931611808775,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     24.375,
+     1.092
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.366152934289147,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.102,
+     1.137
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.022989742713037192,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.147,
+     1.137
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.0229827459416765,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.102,
+     1.182
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.03346791036006169,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.147,
+     1.182
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.09462771930433844,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.192,
+     1.182
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.09822800947304888,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     23.339,
+     1.182
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.3528559548172723,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     25.186,
+     1.227
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.3757248894045686,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   }
+  ]
+ },
+ "g41_ring_tw42": {
+  "sites": [
+   {
+    "at": [
+     9.348,
+     0.951
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 2.0839804398835673,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.348,
+     0.98
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 2.0388147587448024,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.378,
+     0.98
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 2.038922085215823,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.408,
+     0.98
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.894258604818564,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.348,
+     1.01
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.140083671556546,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     9.378,
+     1.01
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.140093398743419,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     10.215,
+     2.355
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4270084537980718,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     19.658,
+     3.371
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4891383712738628,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     4.805,
+     4.148
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 0,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     20.944,
+     4.597
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 2.7485719828563875,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     14.996,
+     5.732
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.3993382499126437,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     10.872,
+     5.792
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.2047439149791304,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   }
+  ]
+ },
+ "g41_ring_tw64": {
+  "sites": [
+   {
+    "at": [
+     12.536,
+     0.698
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.293585442214094,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     12.567,
+     0.729
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 0,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     11.783,
+     0.849
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.431600126192424,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     12.567,
+     1.06
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.3645992242252651,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     12.597,
+     1.09
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.3578734633575307,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     10.337,
+     1.994
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.011634617712334677,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     10.367,
+     1.994
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.015352583682821885,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     10.337,
+     2.024
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.011639265119263414,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     10.367,
+     2.024
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.017266109710951216,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     10.367,
+     2.054
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.06355998844065963,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     10.397,
+     2.054
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.12587054149224441,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     19.738,
+     3.652
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 0.4438372950979552,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   }
+  ]
+ },
+ "g41_user_tw42": {
+  "sites": [
+   {
+    "at": [
+     5.613,
+     1.534
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4184110144505508,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     5.378,
+     1.622
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4844957353370534,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     11.678,
+     1.622
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.478399629157769,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     11.708,
+     1.622
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.8670692904472634,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     3.641,
+     1.71
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4129793780758488,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     3.523,
+     1.74
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.2587363649203143,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     12.797,
+     1.74
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 0,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     12.885,
+     1.887
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 0,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     13.68,
+     1.887
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.1480523102422158,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     13.739,
+     1.975
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.308362534151546,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     13.503,
+     2.182
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 0,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     13.709,
+     2.182
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.3221607677848173,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   }
+  ]
+ },
+ "g41_user_tw64": {
+  "sites": [
+   {
+    "at": [
+     5.082,
+     0.644
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4525850741922213,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     5.204,
+     0.644
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4911798115438248,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     5.082,
+     0.674
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.2874299855381617,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     5.204,
+     0.674
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 0,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     5.629,
+     0.735
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.3985502522545614,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     5.052,
+     0.948
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.3044476692031735,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     5.66,
+     0.978
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.1934134087396497,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     5.629,
+     1.039
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4123949235292486,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     5.538,
+     1.069
+    ],
+    "src": "#1 foot+f1",
+    "maxSlope": 1.4863301575225147,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     11.589,
+     1.769
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.03947360025516991,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     11.62,
+     1.769
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.023336443732199563,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   },
+   {
+    "at": [
+     11.559,
+     1.799
+    ],
+    "src": "#1 foot+f2",
+    "maxSlope": 0.12969003919106664,
+    "breaches": 0,
+    "classes": {},
+    "worst": []
+   }
+  ]
+ }
+}
