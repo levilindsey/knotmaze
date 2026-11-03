@@ -192,7 +192,7 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
     line:
       "How much further you can walk before the fire reaches the junction " +
       "you stand at. The fire closes in as you walk, backing up included, " +
-      "and in real time while you stand there too.",
+      "and, if it burns in real time, while you stand still too.",
   },
   // FabricMazeController.fireClosest: the least lead over every arrival.
   closestCall: {
