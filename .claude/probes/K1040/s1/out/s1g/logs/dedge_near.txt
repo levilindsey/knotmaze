@@ -1,0 +1,21 @@
+  def                    arms moved  87, corners moved  14 (lost fill 0, gained 0); F6 arms with fill 1, their filled corners now empty 0
+  fat                    arms moved   0, corners moved   0 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  ring                   arms moved  12, corners moved   3 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  user_tw42.lightpaper   arms moved  51, corners moved   7 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  g41_def_tw42           arms moved 112, corners moved   3 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  g41_def_tw64           arms moved  81, corners moved  17 (lost fill 0, gained 0); F6 arms with fill 10, their filled corners now empty 0
+  muse_hash              arms moved  71, corners moved  26 (lost fill 4, gained 0); F6 arms with fill 17, their filled corners now empty 1
+  muse_default_tw        arms moved  77, corners moved  16 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  g41_ring_tw42          arms moved  14, corners moved   1 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  g41_ring_tw64          arms moved  11, corners moved   3 (lost fill 0, gained 0); F6 arms with fill 3, their filled corners now empty 0
+  g41_user_tw42          arms moved  51, corners moved   7 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  g41_user_tw64          arms moved  40, corners moved   3 (lost fill 0, gained 0); F6 arms with fill 6, their filled corners now empty 0
+  all: arms moved 607, corners moved 100 (lost fill 4, gained 0); F6 arms with fill 37, filled corners now empty 1
+  tee coarse old: largest step (dc step 0.0100): L+1 10.0000 (dc 0.0000); L−1 10.0000 (dc 0.0100); ink(1.6, 1.25) 1.0000 (dc 0.0000); ink(-1.25, 1.25) 0.1480 (dc -1.8600); ink(1.25, -1.25) 0.1480 (dc 0.6400); ink(-1.25, -1.25) 0.1480 (dc -1.8600)
+  tee coarse new: largest step (dc step 0.0100): L+1 0.0100 (dc -1.9500); L−1 0.0100 (dc 0.0500); ink(1.6, 1.25) 0.1480 (dc 2.2300); ink(-1.25, 1.25) 0.1480 (dc -1.8600); ink(1.25, -1.25) 0.1480 (dc 0.6400); ink(-1.25, -1.25) 0.1480 (dc -1.8600)
+  tee fine old: largest step (dc step 0.0001): L+1 10.0000 (dc 0.0000); L−1 10.0000 (dc 0.0001); ink(1.6, 1.25) 1.0000 (dc 0.0000); ink(-1.25, 1.25) 0.0000 (dc 0.0000); ink(1.25, -1.25) 0.0000 (dc 0.0000); ink(-1.25, -1.25) 0.0000 (dc 0.0000)
+  tee fine new: largest step (dc step 0.0001): L+1 0.0001 (dc -0.0049); L−1 0.0001 (dc 0.0004); ink(1.6, 1.25) 0.0000 (dc 0.0000); ink(-1.25, 1.25) 0.0000 (dc 0.0000); ink(1.25, -1.25) 0.0000 (dc 0.0000); ink(-1.25, -1.25) 0.0000 (dc 0.0000)
+  ring coarse old: largest step (dc step 0.0100): L+1 48.2554 (dc 0.0000); L−1 48.2550 (dc 0.0100); ink(1.6, 1.25) 1.0000 (dc 0.0000); ink(-1.25, 1.25) 0.1737 (dc -1.6000); ink(0, 1.05) 0.1679 (dc 0.8900); ink(0, -0.95) 0.1313 (dc 0.7100)
+  ring coarse new: largest step (dc step 0.0100): L+1 0.0100 (dc 2.1400); L−1 0.0100 (dc -2.3200); ink(1.6, 1.25) 0.1736 (dc 0.8500); ink(-1.25, 1.25) 0.1737 (dc -1.6000); ink(0, 1.05) 0.1679 (dc 0.8900); ink(0, -0.95) 0.1313 (dc 0.7100)
+  ring fine old: largest step (dc step 0.0001): L+1 48.2648 (dc -0.0005); L−1 48.2649 (dc -0.0005); ink(1.6, 1.25) 1.0000 (dc -0.0005); ink(-1.25, 1.25) 0.0000 (dc 0.0000); ink(0, 1.05) 0.0000 (dc 0.0000); ink(0, -0.95) 0.0000 (dc 0.0000)
+  ring fine new: largest step (dc step 0.0001): L+1 0.0001 (dc -0.0049); L−1 0.0004 (dc 0.0000); ink(1.6, 1.25) 0.0000 (dc 0.0000); ink(-1.25, 1.25) 0.0000 (dc 0.0000); ink(0, 1.05) 0.0000 (dc 0.0000); ink(0, -0.95) 0.0000 (dc 0.0000)
