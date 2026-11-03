@@ -86,8 +86,12 @@ is the mode that reads the param today. Proposed labels are section 3's.
 | clock (clk, 84) | turn | Maze, "clock" | realtime: chase, always | Game > Minotaur, "Real time" (checkbox) |
 | minotaur (mt, 108) | off | Maze > Minotaur, "minotaur" | turn clock | Game > Minotaur, "Behavior" (no `off`) |
 | fire (fi, 118) | off | Maze > Burn race, "fire" | turn, minotaur off | removed: `gameMode = burn` |
-| fireSpeed (fsp, 119) | 0.75 | Burn race, "fireSpeed" | burn | Game > Burn race, "Fire speed (x yours)" |
+| fireSpeed (fsp, 119) | 0.6 (0.75 until K280) | Burn race, "fireSpeed" | burn | Game > Burn race, "Fire speed (x yours)" |
 | fireDelay (fdl, 120) | 0 | Burn race, "fireDelay" | burn | Game > Burn race, "Head start (units)" |
+| fireClock (fck) | turn | (K114 stage 2; not in this table as designed) | burn | Game > Burn race, "Fire clock" |
+| fireSpeedRt (fsr) | 0.2 | (K440) | burn on the realtime clock | Game > Burn race, "Fire speed (x yours)" (the realtime pair's row; same label) |
+| fireDelayRt (fdr) | 20 | (K440) | burn on the realtime clock | Game > Burn race, "Head start (units)" (same label) |
+| burnt (fbt) | gone (gone \| char) | (K290 stage 3a) | burn (a look; live) | Game > Burn race, "Burnt threads" |
 | playerPace (plp, 85) | 10 | Maze, "playerPace" | real time | Game > Minotaur RT, "Your speed (units/s)" |
 | minoWanderPace (mwp, 86) | 0.5 | Minotaur, "minoWanderPace (x your pace)" | real time | tuning, "Wander speed (x yours)" |
 | minoHuntPace (mhp, 87) | 0.7 | Minotaur, "minoHuntPace (x your pace)" | real time | tuning, "Hunt speed (x yours)" |
@@ -122,6 +126,15 @@ is the mode that reads the param today. Proposed labels are section 3's.
 | markerSize (mks, 104, exempt) | 1.08 | Maze, key (931) | all | Maze, "Maze marker size" |
 
 "tuning" = the collapsed "Minotaur tuning" subfolder of Game (section 3.1).
+
+*Updated 2026-11-03 (K462): the five burn rows above are what Stage A
+actually carries. `fireClock` (`fck`), `burnt` (`fbt`) and K440's
+real-time pair (`fsr`, `fdr`) all postdate this design; the panel shows
+one speed row and one delay row at a time, the clock's own pair, under
+the same two labels (so the labels proposed here for the turn pair also
+label the real-time pair). Defaults read from `PARAM_DEFAULTS`
+(`src/ui/url_state.ts`); the codec rows are in `CODEC_PARAMS`
+(`src/ui/param_codec.ts`). The rest of this section is as designed.*
 
 ## 2. The model: gameMode, the clock, the model
 
@@ -218,8 +231,8 @@ is the mode that reads the param today. Proposed labels are section 3's.
   maze).
 - `ENUM_OPTIONS` (`url_state.ts:778`) gains `gameMode: GAME_MODES` and
   loses `fire`.
-- UNDO: `undo_stack.ts` LIVE_EFFECTS' `onClockChange` list becomes
-  `[gameMode, clock, minotaur, fireSpeed, fireDelay]` (the Game mode row
+- UNDO (updated 2026-11-03, K462): `undo_stack.ts` LIVE_EFFECTS' `onClockChange` list as shipped is
+  `[gameMode, clock, minotaur, fireSpeed, fireDelay, fireClock, fireSpeedRt, fireDelayRt]` among its mode and fire keys (later stages appended more: fragile, par, the sword, sprint, the sleepers, lures and snares) (the Game mode row
   runs onClockChange: a mode change restarts the solve). onChaseChange
   and onTurnMinoChange keep their lists.
 - DAILY_LINK: the exempt set does not change. `MAZE_PARAM_KEYS`
