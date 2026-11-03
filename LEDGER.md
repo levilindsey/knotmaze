@@ -300,10 +300,10 @@ Next free ID: K1112.
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: 44ce69a1); S3 (K1097) merged short of its gate; S1g running (2026-11-02).
-  - owner: agent `a8056cde26bf07a6a` (S1g) of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 19:28
-  - branch: `worktree-agent-a8056cde26bf07a6a`, worktree `.claude/worktrees/agent-a8056cde26bf07a6a`; last commit: `82f6efd0`
+  - owner: nobody since 2026-11-02 21:18 (merged)
+  - branch: mainline; last commit: `52945e6e`
   - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1), `s1/out/s1b/` and `s1/out/s1c/`, S1d's runs in `s1/out/s1d/`, S1e's in `s1/out/s1e/` (gate `s1/run_s1e_gate.ps1`, table `s1/gate_table.ps1`; probes `b_rate.ts`, `bend_s1e.ts`, `attr_f4f5.ts`, `lcut_far.ts`, `attr_c2.ts`, `arms_c3.ts`; commands in its Handoff)); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: S1g (running since 2026-11-02 19:28): continuous forms for the Lcut behind-root edge and 699's low side (each a Definition change Finding), the sweep of 694, 704 and the omega exclusion; then the 14 pops (126 px), the 3 junction pops (104 px) and j129's corner (`docs/design/K1040_s1g_gates.md` on its branch; S1f's Handoff in `docs/design/K1040_s1f_reach.md`)
+  - next: S1h after S3b merges: S1g's Handoff Next 1-2 (a robust V solve from the roots out plus a continuous wedge weight for the 704 test; V's foot blended over its candidate feet), crops of S1g's at-rest changes; then S1f's Later work (the 14 pops, the 3 junction pops, j129's corner)
   - brief: `docs/design/K1040_s1g_gates.md` on the agent's branch; S1f's Handoff in `docs/design/K1040_s1f_reach.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
