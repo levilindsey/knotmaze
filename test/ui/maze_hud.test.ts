@@ -224,6 +224,38 @@ describe("K137 rule rows", () => {
   });
 });
 
+describe("K657 win banner snapped and par rows", () => {
+  const WIN = {
+    timeMs: 61_000, path: 12, optimal: 9, efficiency: null, backtrack: null,
+    junctions: 3, deadEnds: null,
+  };
+  it("shows snapped, then its par or strokes row, with the HUD's strings", () => {
+    const strict = statEntries({
+      ...WIN, snapped: 3, parLeft: { par: 12, left: 4 }, parStrokes: null,
+    });
+    expect(strict.slice(-2).map((r) => [r.id, r.label, r.value])).toEqual([
+      ["snapped", "snapped", "3"],
+      ["par", "par", "12 \u00B7 4 left"],
+    ]);
+    const strokes = statEntries({
+      ...WIN, snapped: 1, parLeft: null, parStrokes: { par: 12, strokes: 9 },
+    });
+    expect(strokes.slice(-2).map((r) => [r.id, r.label, r.value])).toEqual([
+      ["snapped", "snapped", "1"],
+      ["strokes", "strokes", "9 / par 12"],
+    ]);
+  });
+
+  it("dashes an infinite par, and shows neither row without the fields", () => {
+    const inf = statEntries({ ...WIN, parLeft: { par: Infinity, left: Infinity } });
+    expect(inf.at(-1)?.value).toBe("\u2014 \u00B7 \u2014 left");
+    const plain = statEntries(WIN).map((r) => r.id);
+    expect(plain).not.toContain("snapped");
+    expect(plain).not.toContain("par");
+    expect(plain).not.toContain("strokes");
+  });
+});
+
 describe("K139 collapse row", () => {
   it("reads the score against par, and par as found when the search gave up", () => {
     const rows = ruleEntries({ collapse: { pct: 58, par: "\u226562%" } });

@@ -558,6 +558,11 @@ export interface WinInfo {
   collapse?: { pct: number; par: string } | null;
   // K114: the runs cut (absent or null: the cut off).
   cuts?: number | null;
+  // K657: fragile runs broken and par's rows at the finish, as ruleFields
+  // builds them for the HUD (absent or null: that rule off).
+  snapped?: number | null;
+  parLeft?: { par: number; left: number } | null;
+  parStrokes?: { par: number; strokes: number } | null;
   // K137 stage 3a: the hearts left (absent or null: lives off).
   hearts?: { left: number; of: number } | null;
   // K114 walker: the walker's score (absent or null: no walker).

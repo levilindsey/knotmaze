@@ -188,6 +188,13 @@ describe("share text", () => {
   });
 });
 
+describe("par lines count runs (K657)", () => {
+  it("the par and strokes lines count runs, never length or perfect play", () => {
+    expect(STATS.par.line).toContain("runs");
+    expect(STATS.strokes.line).toContain("runs");
+  });
+});
+
 describe("stat lines under both fire clocks (K442)", () => {
   it("drops the turn-clock-only claims from the table and its explanations", () => {
     for (const { line } of Object.values(STATS)) {
