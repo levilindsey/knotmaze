@@ -54,6 +54,19 @@ export interface MotionQueryLike {
 export interface MotionRootLike {
   dataset: { motion?: string };
 }
+// The slice of a storage event this needs: another tab's write of the
+// Motion key (key null: that tab cleared storage).
+export interface MotionStorageEvent {
+  key: string | null;
+  newValue: string | null;
+}
+// The emitter whose storage events this follows (the window, normally).
+export interface MotionEventsLike {
+  addEventListener(
+    type: "storage",
+    fn: (e: MotionStorageEvent) => void
+  ): void;
+}
 
 export class MotionSetting {
   private readonly storage: StorageLike | null;
@@ -65,7 +78,13 @@ export class MotionSetting {
   constructor(
     storage: StorageLike | null,
     query: MotionQueryLike | null,
-    root: MotionRootLike | null
+    root: MotionRootLike | null,
+    // K112: another tab's choice, followed live. Defaults to the window
+    // where there is one; null (no window, a test, a caller that opts
+    // out) leaves the setting as it was before cross-tab sync.
+    events: MotionEventsLike | null = typeof window !== "undefined"
+      ? (window as unknown as MotionEventsLike)
+      : null
   ) {
     this.storage = storage;
     this.root = root;
@@ -87,6 +106,21 @@ export class MotionSetting {
       }
     } catch {
       // No live updates: the state at load stands.
+    }
+    // K112: a choice made in another tab of this browser lands here.
+    // Never write storage on this path: the other tab already did, and
+    // a write of our own would echo back as another event.
+    const onStorage = (e: MotionStorageEvent): void => {
+      if (e.key !== null && e.key !== MOTION_KEY) return;
+      const next = parseMotionPref(e.newValue);
+      if (next === this.choice) return;
+      this.choice = next;
+      this.changed();
+    };
+    try {
+      events?.addEventListener("storage", onStorage);
+    } catch {
+      // No cross-tab updates: this tab's own choices still work.
     }
     this.applyRoot();
   }
