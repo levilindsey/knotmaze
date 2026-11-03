@@ -110,6 +110,7 @@ export interface MinotaurView {
 import { FogBackdrop } from "./background";
 import { fogArcStations, moveEnds, travelOrder } from "./fog_arc";
 import { MarkerMesh } from "./marker_mesh";
+import type { Diagonal, KeyDir } from "../ui/key_moves";
 import {
   chainVis,
   exploreDistances,
@@ -334,6 +335,12 @@ const TICK_POOL: MarkerMesh[] = [];
 // middle, turned along the run by the tangent over CHEVRON_TANGENT ctrl
 // either side.
 const CHEVRON_POOL: MarkerMesh[] = [];
+// K332: the arrow-key hints' meshes, page-lifetime like the chevrons.
+// One disc per hint at the chevrons' scale, its arrow turned to the
+// direction that takes its run. The marker program is already warm
+// (program_registry.ts: knot-marker, wave 1 in fabric mode), and the
+// arrow is the start role's glyph, so no new program or glyph.
+const HINT_POOL: MarkerMesh[] = [];
 const CHEVRON_SCALE = 0.55;
 const CHEVRON_LONG = 16;
 const CHEVRON_TANGENT = 0.4;
@@ -607,6 +614,17 @@ interface TrailPaint {
   routes: PaintRoute[];
   // K127: every pass of the path stack (the arms it has traveled).
   traveled: PaintRoute[];
+}
+
+// K332: one arrow-key hint as main.ts feeds it (input_keys.ts KeyHint):
+// the run, the direction that takes it, its world point and its angle.
+export interface KeyHintDisc {
+  readonly edge: number;
+  readonly dir: KeyDir | Diagonal;
+  readonly chord: boolean;
+  readonly x: number;
+  readonly y: number;
+  readonly angle: number;
 }
 
 export class FabricMazeRenderer {
@@ -4263,6 +4281,7 @@ export class FabricMazeRenderer {
     this.drawAids(controller, dotChain >= 0, r); // K137 stage 2
     this.drawShortestRoute(controller); // K839
     this.drawOneWay(controller, r); // K138 stage 3
+    this.drawKeyHints(controller, dotChain >= 0, r); // K332
     this.drawLocks(controller, r); // K138 stage 4
 
     // Start/exit discs sit at the renderer's OWN sample of their ctrl
@@ -4453,6 +4472,10 @@ export class FabricMazeRenderer {
   // along the run. None on a hidden run, nor on thread a reveal has not
   // shown yet (the minotaur's test).
   private chevrons: MarkerMesh[] = [];
+  // K332: the hint discs' meshes and, per mesh, the hint it shows.
+  private hintMeshes: MarkerMesh[] = [];
+  private hintMeta: { edge: number; dir: KeyDir | Diagonal; chord: boolean }[] = [];
+  private hintList: readonly KeyHintDisc[] = [];
   private drawOneWay(controller: FabricMazeController, r: number): void {
     let n = 0;
     const ow = controller.ruleLook?.oneWay ?? null;
@@ -4558,6 +4581,70 @@ export class FabricMazeRenderer {
     let k = 0;
     for (const mk of this.chevrons) if (mk.mesh.visible) k++;
     return k;
+  }
+  // K332: main.ts (aidTick) hands the current hints over every frame;
+  // the renderer keeps the last list it was given.
+  setKeyHints(list: readonly KeyHintDisc[]): void {
+    this.hintList = list;
+  }
+  // The hint discs shown now, for the probes: layer-local x, y and
+  // radius, the direction (and run) each wears.
+  get keyHintMarkers(): {
+    x: number;
+    y: number;
+    r: number;
+    dir: KeyDir | Diagonal;
+    edge: number;
+    chord: boolean;
+  }[] {
+    const out: {
+      x: number;
+      y: number;
+      r: number;
+      dir: KeyDir | Diagonal;
+      edge: number;
+      chord: boolean;
+    }[] = [];
+    for (let i = 0; i < this.hintMeshes.length; i++) {
+      const mk = this.hintMeshes[i];
+      if (!mk.mesh.visible) continue;
+      out.push({
+        x: mk.mesh.position.x,
+        y: mk.mesh.position.y,
+        r: mk.mesh.scale.x,
+        dir: this.hintMeta[i].dir,
+        edge: this.hintMeta[i].edge,
+        chord: this.hintMeta[i].chord,
+      });
+    }
+    return out;
+  }
+  // K332: one arrow disc per hint at its reach point, turned to its
+  // direction. Hidden while the dot travels, once the solve is over,
+  // and while the list is empty.
+  private drawKeyHints(controller: FabricMazeController, moving: boolean, r: number): void {
+    let n = 0;
+    if (!moving && !controller.solved && this.hintList.length > 0) {
+      const glyph = markerGlyph("arrow", "start");
+      for (const h of this.hintList) {
+        const mk = this.hintMesh(n);
+        this.hintMeta[n] = { edge: h.edge, dir: h.dir, chord: h.chord };
+        n++;
+        mk.setGlyph(glyph);
+        mk.mesh.rotation = h.angle;
+        mk.place(h.x, h.y, r * CHEVRON_SCALE);
+      }
+    }
+    for (let i = n; i < this.hintMeshes.length; i++) this.hintMeshes[i].hide();
+  }
+  private hintMesh(i: number): MarkerMesh {
+    while (this.hintMeshes.length <= i) {
+      const j = this.hintMeshes.length;
+      const mk = HINT_POOL[j] ?? (HINT_POOL[j] = new MarkerMesh());
+      this.overContainer.addChildAt(mk.mesh, this.overContainer.getChildIndex(this.markers.head.mesh));
+      this.hintMeshes.push(mk);
+    }
+    return this.hintMeshes[i];
   }
   private chevronMesh(i: number): MarkerMesh {
     while (this.chevrons.length <= i) {
@@ -4953,7 +5040,7 @@ export class FabricMazeRenderer {
   destroy(): void {
     // The marker meshes outlive the scene (markerMeshes): hand them back
     // before the containers go (the minotaur's sits in minoLayer).
-    for (const mk of [...Object.values(this.markers), ...this.ticks, ...this.extraMeshes, ...this.chevrons]) {
+    for (const mk of [...Object.values(this.markers), ...this.ticks, ...this.extraMeshes, ...this.chevrons, ...this.hintMeshes]) {
       mk.mesh.removeFromParent();
       mk.hide();
     }

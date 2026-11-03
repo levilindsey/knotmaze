@@ -484,6 +484,48 @@ export function chordMap(
   return dirMap(deps, DIAGONALS, DIAGONAL_VECTORS, o);
 }
 
+// K332's hintMap follows; holdRules is after it.
+// K332: one hint per run - the direction that takes it. `hintMap` inverts
+// keyMap and chordMap: a run two directions take wears the one with the
+// smaller err, and a cardinal beats a diagonal at equal err (within
+// 1e-12). A run no direction takes (a tie, nothing within tolerance)
+// gets no entry. Sorted by run id.
+export interface HintEntry {
+  edge: number;
+  dir: KeyDir | Diagonal;
+  chord: boolean;
+}
+
+export function hintMap(
+  deps: readonly Departure[],
+  o: { exclude?: number; tolerance?: number; tie?: number } = {}
+): HintEntry[] {
+  const best = new Map<number, HintEntry & { err: number }>();
+  const offer = (edge: number, dir: KeyDir | Diagonal, chord: boolean, err: number): void => {
+    const cur = best.get(edge);
+    if (
+      !cur ||
+      err < cur.err - 1e-12 ||
+      (Math.abs(err - cur.err) <= 1e-12 && !chord && cur.chord)
+    ) {
+      best.set(edge, { edge, dir, chord, err });
+    }
+  };
+  const keys = keyMap(deps, o);
+  for (const dir of KEY_DIRS) {
+    const p = keys[dir];
+    if (p.edge >= 0 && "err" in p) offer(p.edge, dir, false, p.err);
+  }
+  const chords = chordMap(deps, o);
+  for (const dir of DIAGONALS) {
+    const p = chords[dir];
+    if (p.edge >= 0 && "err" in p) offer(p.edge, dir, true, p.err);
+  }
+  return [...best.values()]
+    .map(({ edge, dir, chord }) => ({ edge, dir, chord }))
+    .sort((a, b) => a.edge - b.edge);
+}
+
 // A hold stops at a tie cycle's pick: the player chose no arm there.
 function holdRules(p: KeyPick, hold: boolean): KeyPick {
   return hold && p.edge >= 0 && "err" in p && p.cycle === true ? TIE : p;
