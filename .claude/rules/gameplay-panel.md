@@ -153,8 +153,9 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   little further, beyond the crossing) or back (it ends before the
   crossing). Applies live." and "How strongly the light at the end of a
   thread you have not explored shows (the halo and beacon ends): soft or
-  bright (larger and brighter). Applies live." The glow row shows for
-  every look, though only halo and beacon draw a halo.
+  bright (larger and brighter). Applies live." The glow row shows only
+  for the halo and beacon looks, the two that draw a halo (K130/K495,
+  5f28e0b1).
 
 - BURNT ROW (K290 stage 3a, 2026-10-15): "burnt" (gone / char) in the
   Burn race folder, last since K440, hidden while the fire is off like
