@@ -508,9 +508,9 @@ Next free ID: K1133.
 - **K1131** · Muse batch 8 (`docs/design/K1131_muse_batch8.md`): A K332, B K657, C K1081, D K1082, E K1083, F
   K1115; Next in ledger order, no junction, cursive, physics or phone work.
   - owner: muse runs 8A-8F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 04:10
-  - branch: mainline; last commit: `2592be6c`
+  - branch: mainline; last commit: `efe7faa3`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 8A-8F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run C (K1081)
+  - next: Run D (K1082)
   - brief: `docs/design/K1131_muse_batch8.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
@@ -728,9 +728,6 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
-- **K1081** · K1077: panel-rect reads force a layout per tick: aidTick on the realtime stand (+1.07 ms x1, +4.49 x4;
-  main.ts:3650, frame_loop.ts:699) and the camera poll on every stand (~1.0 x1, ~4.3 x4; camera.ts:226 -> :219).
-  Desktop only (no read under the phone's sheet; aidTick needs the panel open). Skip/cache the rect (K441 K1077).
 - **K1082** · K1077 (= K441 s2): the burn re-declare rebuilds fillets every frame on the realtime stand
   (about +1.1 ms x1, +8.4 ms x4): incremental setExplore (K441_fire_frame.md K1077, K441 s2 sketch).
 - **K1083** · K1077: RibbonRenderer.update redoes gap slots every frame on the realtime stand (about
@@ -1998,6 +1995,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1081** · one panel rect read a frame (camera cache). Done in efe7faa3 (2026-11-03).
 - **K657** · win banner shows snapped and par rows. Done in 2592be6c (2026-11-03).
 - **K332** · key hints after the first direction press. Done in 3346474f (2026-11-03).
 - **K1108** · Muse batch 7: runs A-F passed their gates (2026-11-03 00:29 to 03:06) and closed K368, K1100, K748, K1109, K1099, K1101, K426, K437; filed K1126, K1127, K1129 (Levi) and K1128. Done in 8ab9e8e9 (2026-11-03).
