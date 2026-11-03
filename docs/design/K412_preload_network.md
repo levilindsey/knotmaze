@@ -124,3 +124,58 @@ freshness fix is filed as K1084 (long `max-age` for hashed `/assets/*`
 on Pages, e.g. `_headers`): its cost there is one revalidation round
 trip plus 300 B per fetch (two per warm reload), not a second download.
 K412 closes on the tables above.
+
+## After K1084 (2026-11-02, fc9b0eec)
+
+Same runner and URLs as above, on the build that added `public/_headers`
+(`P4 v0.4.0 fc9b0ee`), under the perf lock (owner `K1091`, 2026-11-02).
+The runner now also records each load's navigation timing (for K1086).
+Chunk headers on the downloaded response, every load, both origins:
+`cache-control: public, max-age=31536000, immutable` (Pages serves the
+rule from `_headers`; the proxy passes the same value through, with
+`age` present on its edge HITs).
+
+### levi.dev (through the proxy)
+
+| Load | Preload start→end · transfer | Worker start→end · transfer | Hello (ms) | Preload cf | Worker response |
+|---|---|---|---|---|---|
+| fresh 1 | 215.7→403.6 · 66088 | 745.5→737.9 · 0 | 750.9 | MISS | 200, max-age=31536000, MISS |
+| fresh 2 | 233.8→360.1 · 66100 | 661.9→654.7 · 0 | 667.4 | REVALIDATED | 200, max-age=31536000, REVALIDATED |
+| fresh 3 | 167.5→202.0 · 66088 | 308.5→300.0 · 0 | 313.8 | HIT | 200, max-age=31536000, HIT |
+| fresh 4 | 168.5→217.0 · 66088 | 322.3→314.3 · 0 | 327.6 | HIT | 200, max-age=31536000, HIT |
+| fresh 5 | 165.8→203.7 · 66100 | 341.9→332.9 · 0 | 347.4 | HIT | 200, max-age=31536000, HIT |
+| warm 1 | 164.7→199.9 · 66088 | 315.1→305.2 · 0 | 320.3 | HIT | 200, max-age=31536000, HIT |
+| warm 2 | 3397.5→3397.5 · 0 | 3419.6→3414.1 · 0 | 3424.7 | HIT | 200, max-age=31536000, HIT |
+| warm 3 | 95.3→95.3 · 0 | 114.4→108.5 · 0 | 119.3 | HIT | 200, max-age=31536000, HIT |
+| warm 4 | 119.7→119.7 · 0 | 138.9→133.7 · 0 | 143.9 | HIT | 200, max-age=31536000, HIT |
+| warm 5 | 100.9→100.9 · 0 | 117.1→112.0 · 0 | 121.8 | HIT | 200, max-age=31536000, HIT |
+
+Fresh hello median 347.4 ms (range 313.8–750.9); warm median 143.9 ms
+with the same one slow first reload (3424.7 ms, transfers still 0/0).
+
+### knotmaze.pages.dev (direct)
+
+| Load | Preload start→end · transfer | Worker start→end · transfer | Hello (ms) | Preload response | Worker response |
+|---|---|---|---|---|---|
+| fresh 1 | 85.1→153.1 · 65943 | 275.8→269.4 · 0 | 281.4 | 200, max-age=31536000, — | 200 (cache) |
+| fresh 2 | 76.3→121.2 · 65943 | 243.6→237.3 · 0 | 249.0 | 200, max-age=31536000, — | 200 (cache) |
+| fresh 3 | 79.5→105.4 · 65943 | 302.5→296.9 · 0 | 308.5 | 200, max-age=31536000, — | 200 (cache) |
+| fresh 4 | 99.8→164.7 · 65943 | 299.4→293.0 · 0 | 304.8 | 200, max-age=31536000, — | 200 (cache) |
+| fresh 5 | 94.2→134.1 · 65943 | 272.3→264.8 · 0 | 278.0 | 200, max-age=31536000, — | 200 (cache) |
+| warm 1 | 111.0→169.5 · 65943 | 350.7→344.4 · 0 | 355.7 | 200, max-age=31536000, — | 200 (cache) |
+| warm 2 | 3680.9→3680.9 · 0 | 3702.5→3698.2 · 0 | 3707.2 | 200, max-age=31536000, — | 200 (cache) |
+| warm 3 | 61.8→61.8 · 0 | 84.0→77.6 · 0 | 89.4 | 200, max-age=31536000, — | 200 (cache) |
+| warm 4 | 60.0→60.0 · 0 | 81.2→76.5 · 0 | 86.1 | 200, max-age=31536000, — | 200 (cache) |
+| warm 5 | 61.5→61.5 · 0 | 81.5→77.1 · 0 | 86.2 | 200, max-age=31536000, — | 200 (cache) |
+
+Fresh hello median 281.4 ms (range 249.0–308.5); warm median 89.4 ms
+with the same one slow first reload (3707.2 ms, transfers still 0/0).
+
+On pages.dev the worker's fetch is now served from the cache in 10/10
+loads (`transferSize` 0, status 200, no 304) where it revalidated in
+10/10 before, warm reloads 2–5 move nothing at all, and the fresh hello
+median fell from 466.2 ms to 281.4 ms. Through levi.dev the worker's
+fetch stayed `transferSize` 0 as before and warm reloads still move
+nothing, while the fresh hello median fell from 940.8 ms to 347.4 ms —
+the long-lived origin response lets the proxy edge HIT instead of
+revalidating, so no separate proxy fix is owed.
