@@ -80,6 +80,11 @@ export interface FormBParams {
   fold?: boolean;
   /** D1's merge blend width δ (S1e, default 2 aa); 0 keeps the discrete pick (S1d). */
   merge?: number;
+  /**
+   * S1e F4: a crossing's reach along an arm, measured on the curved threads
+   * (default true); false keeps the straight model's h·cot(θ/2) (S1d).
+   */
+  curvedReach?: boolean;
   /** Depth window, arc length (default look.depthWindow · (look.ctrlArc ?? 1)). */
   depthWindow?: number;
   /**
@@ -243,6 +248,14 @@ interface SurfEntry {
 }
 
 const EMPTY: Cand[] = [];
+
+/** A crossing pass on a chain: its s, θ_c, and the partner pass's chain index and s. */
+export interface Pass {
+  s: number;
+  theta: number;
+  qi: number;
+  sq: number;
+}
 const NO_ALTS: Alt[] = [];
 
 /**
@@ -298,6 +311,8 @@ export class FormB {
   readonly fold: boolean;
   /** D1's merge blend width δ (S1e). */
   readonly delta: number;
+  /** S1e F4: the crossing reach measured on the curved threads. */
+  readonly curved: boolean;
   readonly force: NonNullable<FormBParams["force"]>;
   readonly fillKey: "nearer" | "a" | "b";
   readonly polys: Poly[];
@@ -312,8 +327,8 @@ export class FormB {
   readonly nGroups: number;
   readonly corners: Corner[] = [];
   readonly diagnostics: string[] = [];
-  /** Per chain: crossing passes (s, θ_c) on it. */
-  readonly passes: { s: number; theta: number }[][];
+  /** Per chain: crossing passes (s, θ_c) on it, with the partner's chain and s. */
+  readonly passes: Pass[][];
   private cgrid = new Map<number, number[]>();
   private readonly cell: number;
   private cbuf: Cand[] = [];
@@ -335,6 +350,7 @@ export class FormB {
     this.cr = params.cr ?? look.cuspRadius ?? 3;
     this.fold = params.fold ?? true;
     this.delta = params.merge ?? 2 * this.aa;
+    this.curved = params.curvedReach ?? true;
     this.force = params.force ?? {};
     this.fillKey = params.fillKey ?? "nearer";
 
@@ -401,8 +417,8 @@ export class FormB {
       const ta = tanAt(this.polys[ia], sa);
       const tb = tanAt(this.polys[ib], sb);
       const theta = Math.acos(Math.min(1, Math.abs(ta.tx * tb.tx + ta.ty * tb.ty)));
-      this.passes[ia].push({ s: sa, theta });
-      this.passes[ib].push({ s: sb, theta });
+      this.passes[ia].push({ s: sa, theta, qi: ib, sq: sb });
+      this.passes[ib].push({ s: sb, theta, qi: ia, sq: sa });
       this.depthChains[ia].pins.push({ s: sa, z: x.over === "a" ? amp : -amp });
       this.depthChains[ib].pins.push({ s: sb, z: x.over === "b" ? amp : -amp });
     }
@@ -465,7 +481,9 @@ export class FormB {
     });
     this.nGroups = gid.size;
 
-    // Arms and their spans: L = min(chain end, next root, each crossing cut d_c − h·cot(θ_c/2) − h).
+    // Arms and their spans: L = min(chain end, next root, each crossing cut
+    // d_c − reach_c − h), reach_c = h·cot(θ_c/2) on straight threads
+    // (curvedReachOf, S1e F4).
     this.armsOf = this.polys.map(() => []);
     scene.junctions.forEach((j, ji) => {
       j.arms.forEach((arm, ei) => {
@@ -492,7 +510,11 @@ export class FormB {
           // (c < d); skipping it there made L jump as the pass slid over L.
           if (d < -1e-12) continue;
           const t = Math.tan(x.theta / 2);
-          const c = t > 1e-12 ? d - h / t - h : -Infinity;
+          let reach = t > 1e-12 ? h / t : Infinity;
+          // S1e F4: measured on the curved threads wherever the straight
+          // reach would cut short of L.
+          if (this.curved && d - reach - h < L) reach = this.curvedReachOf(pi, x, dir, reach, h);
+          const c = d - reach - h;
           if (c < Lcut) Lcut = c;
         }
         L = Math.max(0, Math.min(L, Lcut));
@@ -1094,6 +1116,43 @@ export class FormB {
         if (alts) A.alts = alts;
       }
     return fade;
+  }
+
+  /**
+   * S1e F4: how far a crossing's overlap reaches back along chain pi from
+   * pass x, toward the arm's root (s − dir·e). Two straight threads crossing
+   * at θ overlap out to r0 = h·cot(θ/2), where the arm's centreline lies
+   * h(1 + cos θ) from the partner's; this walks the curved threads, in steps
+   * of 0.004 with a linear fit over the last one and the partner's foot
+   * tracked, to the first point where it does. Never past r0, which it
+   * equals on straight threads; a near-tangent pass (θ → 0, r0 → ∞) reaches
+   * only as far as the two threads stay together.
+   */
+  curvedReachOf(pi: number, x: Pass, dir: number, r0: number, hw: number): number {
+    const pa = this.polys[pi];
+    const pq = this.polys[x.qi];
+    const target = hw * (1 + Math.cos(x.theta));
+    const step = 0.004;
+    const lim = Math.min(r0, 40);
+    const win = 4 * step + 0.02;
+    let sPartner = x.sq;
+    let eLast = 0;
+    let dLast = 0;
+    for (let i = 1; i * step <= lim + 1e-12; i++) {
+      const e = i * step;
+      let sArm = x.s - dir * e;
+      if (pa.closed) sArm = normS(pa, sArm);
+      else if (sArm < pa.s0 || sArm > pa.s0 + pa.len) break;
+      const at = pointAt(pa, sArm);
+      const lo = pq.closed ? sPartner - win : Math.max(pq.s0, sPartner - win);
+      const hi = pq.closed ? sPartner + win : Math.min(pq.s0 + pq.len, sPartner + win);
+      const ft = footInWindow(pq, at.x, at.y, lo, hi);
+      sPartner = ft.s;
+      if (ft.d >= target) return Math.min(r0, eLast + ((target - dLast) / (ft.d - dLast)) * (e - eLast));
+      eLast = e;
+      dLast = ft.d;
+    }
+    return r0;
   }
 
   /**

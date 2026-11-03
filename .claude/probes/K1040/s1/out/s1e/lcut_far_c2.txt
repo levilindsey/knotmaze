@@ -1,0 +1,124 @@
+== def: arms 563, L = 0 on 1, bound by a pass past L0 0; moved > 1e-3 by F4 80, fade 80, curv 0
+   curv: |ΔL| > 0.01 on 0, > 0.05 on 0, max 0.000; L = 0 arms it reopens 0
+  arm 107 (j 34 pi 8 dir 1) L0 12.983 L 1.110 | F4 1.085 fade 1.085 curv 1.110 | binds d 1.633 θ 1.4712 c 1.085
+  arm 115 (j 37 pi 76 dir 1) L0 7.526 L 0.528 | F4 0.526 fade 0.526 curv 0.528 | binds d 1.046 θ 1.5707 c 0.526
+  arm 140 (j 45 pi 61 dir -1) L0 6.396 L 0.996 | F4 0.983 fade 0.983 curv 0.996 | binds d 1.547 θ 1.4152 c 0.983
+  arm 153 (j 49 pi 82 dir 1) L0 12.418 L 1.166 | F4 1.161 fade 1.161 curv 1.166 | binds d 1.699 θ 1.5009 c 1.161
+  arm 155 (j 50 pi 62 dir 1) L0 5.665 L 1.319 | F4 1.305 fade 1.305 curv 1.319 | binds d 1.825 θ 1.5695 c 1.305
+  arm 163 (j 53 pi 82 dir -1) L0 2.582 L 0.450 | F4 0.445 fade 0.445 curv 0.450 | binds d 1.002 θ 1.4385 c 0.445
+  arm 169 (j 55 pi 61 dir -1) L0 6.214 L 1.543 | F4 1.538 fade 1.538 curv 1.543 | binds d 2.063 θ 1.5519 c 1.538
+  arm 175 (j 57 pi 82 dir -1) L0 6.253 L 0.924 | F4 0.912 fade 0.912 curv 0.924 | binds d 1.502 θ 1.3334 c 0.912
+  ... 72 more
+== fat: arms 0, L = 0 on 0, bound by a pass past L0 0; moved > 1e-3 by F4 0, fade 0, curv 0
+   curv: |ΔL| > 0.01 on 0, > 0.05 on 0, max 0.000; L = 0 arms it reopens 0
+== ring: arms 76, L = 0 on 0, bound by a pass past L0 0; moved > 1e-3 by F4 18, fade 18, curv 0
+   curv: |ΔL| > 0.01 on 0, > 0.05 on 0, max 0.000; L = 0 arms it reopens 0
+  arm 0 (j 0 pi 1 dir -1) L0 3.662 L 1.048 | F4 1.041 fade 1.041 curv 1.048 | binds d 1.662 θ 1.4368 c 1.041
+  arm 10 (j 3 pi 1 dir 1) L0 6.665 L 1.051 | F4 1.040 fade 1.040 curv 1.051 | binds d 1.648 θ 1.4796 c 1.040
+  arm 28 (j 9 pi 1 dir -1) L0 6.304 L 2.117 | F4 2.109 fade 2.109 curv 2.117 | binds d 2.736 θ 1.4212 c 2.109
+  arm 42 (j 13 pi 2 dir 1) L0 8.469 L 1.118 | F4 1.108 fade 1.108 curv 1.118 | binds d 1.710 θ 1.5000 c 1.108
+  arm 43 (j 14 pi 2 dir -1) L0 3.960 L 1.346 | F4 1.342 fade 1.342 curv 1.346 | binds d 1.923 θ 1.5676 c 1.342
+  arm 47 (j 15 pi 2 dir 1) L0 16.642 L 0.164 | F4 0.156 fade 0.156 curv 0.164 | binds d 0.818 θ 1.3257 c 0.156
+  arm 53 (j 17 pi 2 dir -1) L0 6.848 L 1.016 | F4 0.993 fade 0.993 curv 1.016 | binds d 1.709 θ 1.1960 c 0.993
+  arm 54 (j 17 pi 2 dir 1) L0 26.488 L 0.634 | F4 0.629 fade 0.629 curv 0.634 | binds d 1.234 θ 1.4896 c 0.629
+  ... 10 more
+== user_tw42.lightpaper: arms 233, L = 0 on 0, bound by a pass past L0 0; moved > 1e-3 by F4 27, fade 27, curv 0
+   curv: |ΔL| > 0.01 on 0, > 0.05 on 0, max 0.000; L = 0 arms it reopens 0
+  arm 100 (j 33 pi 30 dir 1) L0 1.892 L 0.224 | F4 0.220 fade 0.220 curv 0.224 | binds d 0.647 θ 1.5366 c 0.220
+  arm 105 (j 34 pi 11 dir -1) L0 4.184 L 0.893 | F4 0.884 fade 0.884 curv 0.893 | binds d 1.446 θ 1.0757 c 0.884
+  arm 106 (j 35 pi 11 dir 1) L0 3.551 L 1.549 | F4 1.519 fade 1.519 curv 1.549 | binds d 2.013 θ 1.2757 c 1.519
+  arm 109 (j 35 pi 30 dir -1) L0 7.276 L 2.318 | F4 2.314 fade 2.314 curv 2.318 | binds d 2.736 θ 1.5637 c 2.314
+  arm 11 (j 3 pi 24 dir -1) L0 1.933 L 0.200 | F4 0.188 fade 0.188 curv 0.200 | binds d 0.694 θ 1.2366 c 0.188
+  arm 118 (j 38 pi 23 dir -1) L0 15.481 L 0.321 | F4 0.291 fade 0.291 curv 0.321 | binds d 0.901 θ 0.9676 c 0.291
+  arm 138 (j 45 pi 15 dir 1) L0 1.921 L 0.779 | F4 0.768 fade 0.768 curv 0.779 | binds d 1.251 θ 1.3104 c 0.768
+  arm 14 (j 4 pi 24 dir 1) L0 11.005 L 1.784 | F4 1.746 fade 1.746 curv 1.784 | binds d 2.360 θ 0.9598 c 1.746
+  ... 19 more
+== g41_def_tw42: arms 563, L = 0 on 0, bound by a pass past L0 0; moved > 1e-3 by F4 91, fade 91, curv 0
+   curv: |ΔL| > 0.01 on 0, > 0.05 on 0, max 0.000; L = 0 arms it reopens 0
+  arm 0 (j 0 pi 0 dir -1) L0 20.064 L 1.001 | F4 0.997 fade 0.997 curv 1.001 | binds d 1.441 θ 1.4654 c 0.997
+  arm 13 (j 4 pi 1 dir -1) L0 4.915 L 0.981 | F4 0.976 fade 0.976 curv 0.981 | binds d 1.437 θ 1.3920 c 0.976
+  arm 14 (j 4 pi 60 dir -1) L0 7.941 L 0.990 | F4 0.989 fade 0.989 curv 0.990 | binds d 1.412 θ 1.5582 c 0.989
+  arm 155 (j 50 pi 62 dir 1) L0 5.726 L 1.474 | F4 1.466 fade 1.466 curv 1.474 | binds d 1.891 θ 1.5497 c 1.466
+  arm 200 (j 65 pi 82 dir 1) L0 3.661 L 0.449 | F4 0.443 fade 0.443 curv 0.449 | binds d 0.944 θ 1.2494 c 0.443
+  arm 203 (j 66 pi 61 dir -1) L0 2.088 L 0.540 | F4 0.533 fade 0.533 curv 0.540 | binds d 0.960 θ 1.5394 c 0.533
+  arm 216 (j 70 pi 45 dir 1) L0 2.716 L 0.387 | F4 0.380 fade 0.380 curv 0.387 | binds d 0.868 θ 1.2942 c 0.380
+  arm 218 (j 71 pi 46 dir 1) L0 14.321 L 1.044 | F4 1.036 fade 1.036 curv 1.044 | binds d 1.458 θ 1.5577 c 1.036
+  ... 83 more
+== g41_def_tw64: arms 563, L = 0 on 14, bound by a pass past L0 1; moved > 1e-3 by F4 75, fade 75, curv 0
+   curv: |ΔL| > 0.01 on 0, > 0.05 on 0, max 0.000; L = 0 arms it reopens 0
+  arm 459 (j 150 pi 61 dir 1) L0 0.920 L 0.686 | F4 0.920 fade 0.920 curv 0.686 | binds d 1.611 θ 0.9725 c 0.686 FAR
+  arm 107 (j 34 pi 8 dir 1) L0 13.631 L 0.963 | F4 0.908 fade 0.908 curv 0.963 | binds d 1.718 θ 1.1570 c 0.908
+  arm 111 (j 35 pi 75 dir 1) L0 9.596 L 0.398 | F4 0.364 fade 0.364 curv 0.398 | binds d 1.174 θ 1.1570 c 0.364
+  arm 140 (j 45 pi 61 dir -1) L0 6.834 L 0.895 | F4 0.880 fade 0.880 curv 0.895 | binds d 1.688 θ 1.1609 c 0.880
+  arm 153 (j 49 pi 82 dir 1) L0 12.420 L 1.197 | F4 1.195 fade 1.195 curv 1.197 | binds d 1.848 θ 1.5314 c 1.195
+  arm 155 (j 50 pi 62 dir 1) L0 5.768 L 1.207 | F4 1.187 fade 1.187 curv 1.207 | binds d 1.866 θ 1.4560 c 1.187
+  arm 163 (j 53 pi 82 dir -1) L0 2.569 L 0.337 | F4 0.335 fade 0.335 curv 0.337 | binds d 1.021 θ 1.4370 c 0.335
+  arm 175 (j 57 pi 82 dir -1) L0 6.643 L 0.766 | F4 0.738 fade 0.738 curv 0.766 | binds d 1.630 θ 1.0201 c 0.738
+  ... 67 more
+== muse_hash: arms 503, L = 0 on 39, bound by a pass past L0 6; moved > 1e-3 by F4 79, fade 79, curv 0
+   curv: |ΔL| > 0.01 on 0, > 0.05 on 0, max 0.000; L = 0 arms it reopens 0
+  arm 422 (j 139 pi 66 dir 1) L0 0.920 L 0.843 | F4 0.920 fade 0.920 curv 0.843 | binds d 2.177 θ 0.8096 c 0.843 FAR
+  arm 423 (j 140 pi 66 dir -1) L0 0.920 L 0.815 | F4 0.920 fade 0.920 curv 0.815 | binds d 1.786 θ 1.2194 c 0.813 FAR
+  arm 454 (j 149 pi 68 dir -1) L0 0.912 L 0.905 | F4 0.912 fade 0.912 curv 0.905 | binds d 1.790 θ 1.3789 c 0.905 FAR
+  arm 116 (j 38 pi 12 dir 1) L0 28.897 L 2.824 | F4 2.809 fade 2.809 curv 2.824 | binds d 3.790 θ 1.2062 c 2.809
+  arm 117 (j 38 pi 36 dir 1) L0 13.196 L 0.185 | F4 0.137 fade 0.137 curv 0.185 | binds d 1.278 θ 0.9899 c 0.137
+  arm 120 (j 39 pi 12 dir -1) L0 28.897 L 0.824 | F4 0.806 fade 0.806 curv 0.824 | binds d 1.697 θ 1.3670 c 0.806
+  arm 124 (j 41 pi 14 dir -1) L0 3.237 L 0.638 | F4 0.602 fade 0.602 curv 0.638 | binds d 1.488 θ 1.3771 c 0.602
+  arm 127 (j 42 pi 66 dir 1) L0 4.149 L 0.008 | F4 0.000 fade 0.000 curv 0.008 | binds d 0.797 θ 1.5569 c -0.008
+  ... 71 more
+== muse_default_tw: arms 503, L = 0 on 0, bound by a pass past L0 0; moved > 1e-3 by F4 64, fade 64, curv 0
+   curv: |ΔL| > 0.01 on 0, > 0.05 on 0, max 0.000; L = 0 arms it reopens 0
+  arm 102 (j 33 pi 9 dir -1) L0 6.673 L 0.688 | F4 0.682 fade 0.682 curv 0.688 | binds d 1.230 θ 1.4700 c 0.682
+  arm 112 (j 37 pi 11 dir 1) L0 4.394 L 0.888 | F4 0.873 fade 0.873 curv 0.888 | binds d 1.426 θ 1.4494 c 0.873
+  arm 118 (j 39 pi 12 dir -1) L0 27.865 L 1.131 | F4 1.118 fade 1.118 curv 1.131 | binds d 1.677 θ 1.4299 c 1.118
+  arm 124 (j 41 pi 14 dir -1) L0 2.790 L 0.659 | F4 0.656 fade 0.656 curv 0.659 | binds d 1.180 θ 1.5546 c 0.656
+  arm 140 (j 46 pi 71 dir -1) L0 18.537 L 0.263 | F4 0.254 fade 0.254 curv 0.263 | binds d 0.801 θ 1.4732 c 0.254
+  arm 154 (j 51 pi 58 dir 1) L0 5.348 L 0.842 | F4 0.837 fade 0.837 curv 0.842 | binds d 1.371 θ 1.5184 c 0.837
+  arm 171 (j 56 pi 66 dir 1) L0 5.364 L 0.739 | F4 0.735 fade 0.735 curv 0.739 | binds d 1.265 θ 1.5321 c 0.735
+  arm 174 (j 57 pi 66 dir -1) L0 2.653 L 0.523 | F4 0.519 fade 0.519 curv 0.523 | binds d 1.060 θ 1.4928 c 0.519
+  ... 56 more
+== g41_ring_tw42: arms 76, L = 0 on 0, bound by a pass past L0 0; moved > 1e-3 by F4 19, fade 19, curv 0
+   curv: |ΔL| > 0.01 on 0, > 0.05 on 0, max 0.000; L = 0 arms it reopens 0
+  arm 0 (j 0 pi 1 dir -1) L0 3.687 L 1.131 | F4 1.121 fade 1.121 curv 1.131 | binds d 1.572 θ 1.4307 c 1.121
+  arm 10 (j 3 pi 1 dir 1) L0 6.624 L 1.165 | F4 1.149 fade 1.149 curv 1.165 | binds d 1.591 θ 1.4724 c 1.149
+  arm 2 (j 0 pi 0 dir 1) L0 8.096 L 1.135 | F4 1.131 fade 1.131 curv 1.135 | binds d 1.556 θ 1.5491 c 1.131
+  arm 30 (j 9 pi 1 dir 1) L0 3.353 L 1.018 | F4 1.009 fade 1.009 curv 1.018 | binds d 1.487 θ 1.3293 c 1.009
+  arm 40 (j 13 pi 2 dir -1) L0 13.875 L 1.145 | F4 1.144 fade 1.144 curv 1.145 | binds d 1.582 θ 1.4870 c 1.144
+  arm 42 (j 13 pi 2 dir 1) L0 8.366 L 1.192 | F4 1.179 fade 1.179 curv 1.192 | binds d 1.599 θ 1.5705 c 1.179
+  arm 43 (j 14 pi 2 dir -1) L0 3.876 L 0.987 | F4 0.979 fade 0.979 curv 0.987 | binds d 1.495 θ 1.2014 c 0.979
+  arm 45 (j 14 pi 2 dir 1) L0 13.875 L 1.822 | F4 1.813 fade 1.813 curv 1.822 | binds d 2.329 θ 1.2014 c 1.813
+  ... 11 more
+== g41_ring_tw64: arms 76, L = 0 on 2, bound by a pass past L0 0; moved > 1e-3 by F4 17, fade 17, curv 0
+   curv: |ΔL| > 0.01 on 0, > 0.05 on 0, max 0.000; L = 0 arms it reopens 0
+  arm 10 (j 3 pi 1 dir 1) L0 6.617 L 0.954 | F4 0.945 fade 0.945 curv 0.954 | binds d 1.621 θ 1.4650 c 0.945
+  arm 24 (j 7 pi 1 dir 1) L0 6.101 L 1.417 | F4 1.414 fade 1.414 curv 1.417 | binds d 2.154 θ 1.3006 c 1.414
+  arm 30 (j 9 pi 1 dir 1) L0 3.554 L 1.106 | F4 1.105 fade 1.105 curv 1.106 | binds d 1.853 θ 1.2834 c 1.105
+  arm 42 (j 13 pi 2 dir 1) L0 8.504 L 1.056 | F4 1.047 fade 1.047 curv 1.056 | binds d 1.709 θ 1.5031 c 1.047
+  arm 43 (j 14 pi 2 dir -1) L0 3.997 L 1.229 | F4 1.223 fade 1.223 curv 1.229 | binds d 1.970 θ 1.2861 c 1.223
+  arm 47 (j 15 pi 2 dir 1) L0 16.788 L 0.004 | F4 0.000 fade 0.000 curv 0.004 | binds d 0.797 θ 1.1392 c -0.023
+  arm 53 (j 17 pi 2 dir -1) L0 7.027 L 0.952 | F4 0.934 fade 0.934 curv 0.952 | binds d 1.831 θ 1.0133 c 0.934
+  arm 55 (j 18 pi 3 dir -1) L0 71.406 L 0.187 | F4 0.148 fade 0.148 curv 0.187 | binds d 0.868 θ 1.3488 c 0.148
+  ... 9 more
+== g41_user_tw42: arms 233, L = 0 on 0, bound by a pass past L0 0; moved > 1e-3 by F4 27, fade 27, curv 0
+   curv: |ΔL| > 0.01 on 0, > 0.05 on 0, max 0.000; L = 0 arms it reopens 0
+  arm 100 (j 33 pi 30 dir 1) L0 1.892 L 0.224 | F4 0.220 fade 0.220 curv 0.224 | binds d 0.647 θ 1.5366 c 0.220
+  arm 105 (j 34 pi 11 dir -1) L0 4.184 L 0.893 | F4 0.884 fade 0.884 curv 0.893 | binds d 1.446 θ 1.0757 c 0.884
+  arm 106 (j 35 pi 11 dir 1) L0 3.551 L 1.549 | F4 1.519 fade 1.519 curv 1.549 | binds d 2.013 θ 1.2757 c 1.519
+  arm 109 (j 35 pi 30 dir -1) L0 7.276 L 2.318 | F4 2.314 fade 2.314 curv 2.318 | binds d 2.736 θ 1.5637 c 2.314
+  arm 11 (j 3 pi 24 dir -1) L0 1.933 L 0.200 | F4 0.188 fade 0.188 curv 0.200 | binds d 0.694 θ 1.2366 c 0.188
+  arm 118 (j 38 pi 23 dir -1) L0 15.481 L 0.321 | F4 0.291 fade 0.291 curv 0.321 | binds d 0.901 θ 0.9675 c 0.291
+  arm 138 (j 45 pi 15 dir 1) L0 1.921 L 0.779 | F4 0.768 fade 0.768 curv 0.779 | binds d 1.251 θ 1.3104 c 0.768
+  arm 14 (j 4 pi 24 dir 1) L0 11.005 L 1.784 | F4 1.746 fade 1.746 curv 1.784 | binds d 2.360 θ 0.9598 c 1.746
+  ... 19 more
+== g41_user_tw64: arms 233, L = 0 on 13, bound by a pass past L0 7; moved > 1e-3 by F4 47, fade 47, curv 0
+   curv: |ΔL| > 0.01 on 0, > 0.05 on 0, max 0.000; L = 0 arms it reopens 0
+  arm 111 (j 36 pi 30 dir 1) L0 0.790 L 0.744 | F4 0.790 fade 0.790 curv 0.744 | binds d 1.405 θ 1.5071 c 0.744 FAR
+  arm 135 (j 44 pi 15 dir 1) L0 0.705 L 0.683 | F4 0.705 fade 0.705 curv 0.683 | binds d 1.425 θ 1.2862 c 0.678 FAR
+  arm 144 (j 46 pi 15 dir -1) L0 0.761 L 0.754 | F4 0.761 fade 0.761 curv 0.754 | binds d 1.467 θ 1.3475 c 0.746 FAR
+  arm 0 (j 0 pi 0 dir 1) L0 4.679 L 0.729 | F4 0.682 fade 0.682 curv 0.729 | binds d 1.590 θ 0.9959 c 0.682
+  arm 1 (j 0 pi 15 dir -1) L0 13.375 L 0.449 | F4 0.410 fade 0.410 curv 0.449 | binds d 1.065 θ 1.5243 c 0.410
+  arm 102 (j 33 pi 11 dir 1) L0 4.390 L 0.884 | F4 0.877 fade 0.877 curv 0.884 | binds d 1.638 θ 1.2554 c 0.877
+  arm 106 (j 35 pi 11 dir 1) L0 3.982 L 0.754 | F4 0.195 fade 0.195 curv 0.754 | binds d 1.899 θ 0.4544 c 0.195
+  arm 110 (j 36 pi 11 dir -1) L0 3.818 L 0.123 | F4 0.000 fade 0.000 curv 0.123 | binds d 1.240 θ 0.4544 c -0.464
+  ... 39 more
+ALL: bound past L0 14; moved by F4 544, fade 544, curv 0
