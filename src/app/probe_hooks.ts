@@ -245,6 +245,7 @@ export function installProbeHooks(ctx: ProbeCtx): void {
   (window as unknown as Record<string, unknown>).__knotSnore = () => ({
     ...ctx.snore.stats,
     sinceStartMs: ctx.snore.sinceStartMs(),
+    lastPlay: ctx.snore.lastPlay,
   });
   // K19/K20 probes: the daily on screen, the attempt, the clock and the
   // stored records (as the stats view reads them).

@@ -532,6 +532,17 @@ export class KnotSynth {
     return this.readyPromise ?? Promise.resolve();
   }
 
+  // K343: decodes with no live context at all. An OfflineAudioContext has
+  // no autoplay gate and makes no sound, so bytes fetched before the
+  // first gesture can be ready to play when the gate opens. An
+  // AudioBuffer belongs to no context: a live context resamples it on
+  // play when its rate differs from 44100. Rejects on undecodable
+  // bytes; throws where OfflineAudioContext does not exist, and the
+  // caller falls back to decodeSample.
+  decodeOffline(bytes: ArrayBuffer): Promise<AudioBuffer> {
+    return new OfflineAudioContext(1, 1, 44100).decodeAudioData(bytes);
+  }
+
   // K325: decodes an encoded sound (MP3 and the like) for playSample, at the
   // context's own sample rate. Resolves null while no context exists and
   // none may be made (the gate closed, or K720: sound off; retry from
@@ -651,6 +662,7 @@ export class KnotSynth {
           lastFreq: self.stats.lastFreq,
           samples: self.stats.samples,
           state: self.ctx ? self.ctx.state : "none",
+          sampleRate: self.ctx ? self.ctx.sampleRate : 0,
           engine: self.engine,
           peak: peakOf(self.analyser!),
           sfxPeak: peakOf(self.sfxAnalyser!),

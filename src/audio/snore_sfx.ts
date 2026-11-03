@@ -2,10 +2,11 @@
 // (public/snoring-cat-snore.mp3: 64 kbps mono MP3, 7.8 KB, encoded from
 // hopnbop's single_cat_snore.wav) that the panel's "Made by Snoring Cat" link
 // plays on hover and on touch-down (ui/snore_link.ts drives the link). This
-// module owns the sound: the lazy load, the decode once an audio context
-// exists, the level, the "never stacked" rule and the clock the link's
-// traversal delay reads. It knows nothing of the DOM or of KnotSynth beyond
-// the SampleHost slice, so the tests drive it with fakes. Lore:
+// module owns the sound: the lazy load, the decode (offline first,
+// K343; else once an audio context exists), the level, the "never
+// stacked" rule and the clock the link's traversal delay reads.
+// It knows nothing of the DOM or of KnotSynth beyond the SampleHost
+// slice, so the tests drive it with fakes. Lore:
 // .claude/rules/gameplay-audio.md (K325, K720).
 
 // What play() did. "started": the snore began now. "sounding": one is already
@@ -33,6 +34,11 @@ export interface SampleHost {
   // Null while no context exists and none may be made, never once one
   // exists; rejects on undecodable bytes.
   decodeSample(bytes: ArrayBuffer): Promise<AudioBuffer | null>;
+  // K343: decodes with no live context (an OfflineAudioContext), so the
+  // snore can be ready before the autoplay gate opens. Optional: a host
+  // without it, or whose offline decode rejects or throws, falls back
+  // to decodeSample above.
+  decodeOffline?: (bytes: ArrayBuffer) => Promise<AudioBuffer>;
   // False when nothing could sound (gate closed, sound off, context not
   // running).
   playSample(buf: AudioBuffer, gain: number): boolean;
@@ -61,6 +67,7 @@ export class SnoreSfx {
   private buffer: AudioBuffer | null = null;
   private loading = false; // A fetch is in flight.
   private decoding = false; // A decode is in flight.
+  private offlineFailed = false; // Offline decode missing/failed: use the context.
   private ctxWait = false; // Registered with host.whenOpen.
   private broken = false; // The bytes would not decode: give up.
   // The clock of the last snore: when play() started it, how long it sounds
@@ -70,6 +77,8 @@ export class SnoreSfx {
   private latencyMs = 0;
   // Diagnostics (window.__knotSnore in main.ts).
   readonly stats = { fetches: 0, decodes: 0, plays: 0 };
+  // Probe diagnostics (window.__knotSnore): the last buffer played.
+  lastPlay: { sampleRate: number; duration: number } | null = null;
 
   constructor(opts: SnoreSfxOptions) {
     this.host = opts.host;
@@ -78,9 +87,9 @@ export class SnoreSfx {
     this.now = opts.now ?? (() => performance.now());
   }
 
-  // Starts the lazy load: the fetch now, the decode as soon as the audio
-  // context exists. Safe to call again and again; a failed fetch is retried by
-  // the next call.
+  // Starts the lazy load: the fetch now, the decode as soon as the bytes
+  // land (offline first, K343; else once a context exists). Safe to call
+  // again and again; a failed fetch is retried by the next call.
   preload(): void {
     if (this.broken || this.buffer || this.loading) return;
     if (this.bytes) {
@@ -116,6 +125,7 @@ export class SnoreSfx {
     const t = this.now();
     if (t < this.soundingUntil) return "sounding";
     if (!this.host.playSample(this.buffer, SNORE_GAIN)) return "unavailable";
+    this.lastPlay = { sampleRate: this.buffer.sampleRate, duration: this.buffer.duration };
     this.stats.plays++;
     this.startedAt = t;
     this.latencyMs = Math.max(0, this.host.outputLatency() * 1000);
@@ -131,7 +141,43 @@ export class SnoreSfx {
     return Math.max(0, t - this.startedAt - this.latencyMs);
   }
 
+  // K343: decode offline first, so the buffer is ready before the
+  // autoplay gate opens; fall back to the context decode only when the
+  // host has no offline decode or it rejects/throws.
   private decodeWhenPossible(): void {
+    if (!this.bytes || this.buffer || this.decoding || this.broken) return;
+    const offline = this.host.decodeOffline;
+    if (!this.offlineFailed && offline) {
+      this.decoding = true;
+      let p: Promise<AudioBuffer>;
+      try {
+        // A copy: decodeAudioData detaches what it is given.
+        p = offline.call(this.host, this.bytes.slice(0));
+      } catch {
+        this.decoding = false;
+        this.offlineFailed = true;
+        this.decodeWithContext();
+        return;
+      }
+      p.then(
+        (buf) => {
+          this.decoding = false;
+          this.buffer = buf;
+          this.bytes = null;
+          this.stats.decodes++;
+        },
+        () => {
+          this.decoding = false;
+          this.offlineFailed = true;
+          this.decodeWithContext();
+        }
+      );
+      return;
+    }
+    this.decodeWithContext();
+  }
+
+  private decodeWithContext(): void {
     if (!this.bytes || this.buffer || this.decoding || this.broken) return;
     this.decoding = true;
     // A copy: decodeAudioData detaches what it is given.
