@@ -680,6 +680,7 @@ Every other item below waits on the trigger it names.
   join_k886.py, the venv's requirements), without the chart or its crops, once K886 lands.
 - **K895** · phone_pass kit: `-Phase start` hangs a piped caller; `summary.mjs` takes the lower of
   two reps at n=2 (use the mean); fabric m11 needs an A/A floor and a fresh `noise.json`. (K907 moved the round probes into `scripts/phone_pass/`.)
+  And a trip goes unseen until cleanup (round 2026-10-30: K485 ran 16:48-16:52 after the 16:45:32 trip): steps refuse once `state/watchdog.trip` exists.
 - **K912** · Cursive generator follow-ups from K902: o and b exits per class (ok 10.9, or 6.5 u);
   f's exit walk; `--high-exit` by rerun; per-left split overfit. v5 (K904) fixed h's and k's after-o
   entries, og, oq, ng and nq. `docs/design/K902_cursive_frames.md` ## Results.
@@ -750,10 +751,6 @@ Every other item below waits on the trigger it names.
 - **K1084** · K412: hashed assets are max-age=0 on Pages: pages.dev revalidates the worker fetch (304, 300 B), and
   levi.dev's proxy edge REVALIDATEs the chunk (fresh hello 941 ms vs 466 direct; that this is the cause is inferred).
   Long max-age on /assets/* (_headers), then re-run `.claude/probes/K412/k412_run.mjs` on both. `K412_preload_network.md`.
-- **K671** · Remove 16 merged, clean agent worktrees (a035f2e7 a3a9d69f a57e1aa8 a5b99d86 a5c384f5
-  a90a739a aa8bfad6 ab57cd38 ab96ea9e ac1c3e02 ac645b91 ac64a844 adaaf5d4 adfeea92 ae12adbf
-  ae18c5a4) with `.claude/probes/K161/cleanup.ps1` (DryRun first; copies probes, keeps branches).
-  Levi: yes (2026-11-02); run it after the K156 round.
 - **K1088** · K568's confetti fall costs the Pixel 11 about 15 fps on master (round 2026-10-30 step 2:
   45.0/45.3 fps, 119-122 of ~360 frames over 25 ms, none over 50, against 65a7787's 60.1/60.3, two runs a
   build in both orders, thermal status 0). Trim the piece counts or per-piece cost, or accept it.
@@ -2047,10 +2044,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K671** · Remove 16 merged, clean agent worktrees with K161's cleanup.ps1. Dropped: already gone: removed after 10-27 without a K161 run (inferred: Claude Code's sweep of old clean worktrees); branches kept, all merged; the open items' probes were copied at merge (2026-11-02).
 - **K485** · Pixel sheet pass on the phone: 34/34 portrait checks ok on master (keys, landscape, live skipped). Done in 9f5b77f1 (2026-11-02).
 - **K309** · K299 ring-lap fix on the PowerVR: 319/16384 division misses (all k-1); every seam case 0 px on master. Done in 9f5b77f1 (2026-11-02).
 - **K896** · Confetti recheck on the phone (round 2026-10-30): master 45.0/45.3 fps vs 65a7787 60.1/60.3 over the 8 s fall, both orders; cost reproduced. Done in 9f5b77f1 (2026-11-02).
-- **K1051** · Turn on Dependabot for knotmaze. Dropped: already on: Dependabot alerts and security updates (checked 2026-11-02) (2026-11-02).
+- **K1051** · Turn on Dependabot for knotmaze. Done by Levi in the repo settings: alerts and security updates on (2026-11-02).
 - **K715** · adb deaths: Godot's shutdown_adb_on_exit is now false (claude-config Setup-GodotAndroid.ps1 step 5; applied on the desktop). Done in claude-config f914c3a4 (2026-11-02).
 - **K1087** · The phone's network path off USB (5555 over Tailscale closes on every reboot). Dropped: decided 2026-11-02: re-arm 5555 over USB after each phone reboot, automated; the job is claude-config CC132 (2026-11-02).
 - **K1079** · Muse batch 4: A K331+K330 bc5f0043, B K549 f578b6ee, C K486 20afc256, D K1077 51f97bbc, E K412 19cfdd67; all passed review (K1081, K1083, K1084 amended; residuals K1085, K1086 filed). Done in 19cfdd67 (2026-10-30).
