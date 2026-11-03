@@ -502,14 +502,6 @@ Next free ID: K1130.
   - next: S3c: the label pass without discards for the Pixel's GPU (one shaded fragment per pixel, depth from the vertex shader as K923's label set it), gated on the Pixel's 2 ms; if it misses, the coarser target (K923's lr), a new budget (Levi's) only after both; then step 5: the pops (def_drag, def_flow, muse_drag, muse_flow) and SAMP's upload against label_tables'
   - brief: `docs/design/K1040_s3b_label.md` (F1-F4, ## Handoff); S3's Handoff in `docs/design/K1040_s3_label.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`
-- **K1108** · Muse batch 7 (`docs/design/K1108_muse_batch7.md`): A K368, B K1100, C K748, D K1109 + K1099,
-  E K1101, F K426 + K437; no junction or cursive work. Runs 7A-7F chained after batch 6.
-  - owner: muse runs 7A-7F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 00:28
-  - branch: mainline; last commit: `8ab9e8e9`
-  - evidence: `.claude/probes/K1053/` (queue.txt lines 7A-7F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Claude reviews batch 7 and closes K1108
-  - brief: `docs/design/K1108_muse_batch7.md`
-  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
 ## Next, in order
 
@@ -2005,6 +1997,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1108** · Muse batch 7: runs A-F passed their gates (2026-11-03 00:29 to 03:06) and closed K368, K1100, K748, K1109, K1099, K1101, K426, K437; filed K1126, K1127, K1129 (Levi) and K1128. Done in 8ab9e8e9 (2026-11-03).
 - **K437** · rules name frame_loop.ts; half rate added. Done in 8ab9e8e9 (2026-11-03).
 - **K426** · index rows complete; scripts/lore_index_check.mjs. Done in 8ab9e8e9 (2026-11-03).
 - **K1101** · 119 pairs merged under one heading. Done in b5743a42 (2026-11-03).
