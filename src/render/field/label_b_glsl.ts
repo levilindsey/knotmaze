@@ -40,10 +40,6 @@ vec4 toClip(vec2 p) {
   vec2 dev = vec2(uM0.x * p.x + uM0.z * p.y + uM1.x, uM0.y * p.x + uM0.w * p.y + uM1.y);
   return vec4(dev.x / uView.x * 2.0 - 1.0, 1.0 - dev.y / uView.y * 2.0, 0.5, 1.0);
 }
-vec2 worldAt() {
-  vec2 dev = vec2(gl_FragCoord.x, uView.y - gl_FragCoord.y);
-  return vec2(uI0.x * dev.x + uI0.z * dev.y + uI1.x, uI0.y * dev.x + uI0.w * dev.y + uI1.y);
-}
 float segT(vec2 p, vec2 a, vec2 b) {
   vec2 d = b - a;
   float l2 = dot(d, d);
@@ -55,11 +51,16 @@ uint packWord(int ci, float s, vec4 c1, uint code, uint fill, uint cap, uint clo
 }
 `;
 
+// Fragment shaders only (gl_FragCoord).
 const OUTS = `
 layout(location = 0) out uint oWord;
 #ifdef DEBUG_OUT
 layout(location = 1) out vec4 oDbg;
 #endif
+vec2 worldAt() {
+  vec2 dev = vec2(gl_FragCoord.x, uView.y - gl_FragCoord.y);
+  return vec2(uI0.x * dev.x + uI0.z * dev.y + uI1.x, uI0.y * dev.x + uI0.w * dev.y + uI1.y);
+}
 `;
 
 const CAPSULE_VS = `${HEAD}
