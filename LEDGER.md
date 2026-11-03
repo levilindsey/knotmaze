@@ -307,10 +307,10 @@ Next free ID: K1119.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
-  - owner: agent `a6420b23c491748f8` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-02 21:30, 2 h cap ~23:30)
-  - branch: `worktree-agent-a6420b23c491748f8`, worktree `.claude/worktrees/agent-a6420b23c491748f8`; last commit: `6da27898`
+  - owner: nobody since 2026-11-02 23:06 (merged; agent `a6420b23c491748f8` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `ba9c38b3`
   - evidence: `.claude/probes/K863/trace/` (`NOTES.md` has every version's files and rerun commands; J3f: `work29/`, `out29/`, `work29/dbg/*_k1113.*`, NOTES `## K1113`; J3e: `work28/`, `out28/`, NOTES `## K990e`); Drive `K863/`; Levi's file to edit: `out25/cursive_template.svg`; the full file list as of v6.6: `docs/ledger_notes.md` `## K863`
-  - next: J3f: b, v and w exits less down and more out (K1113), then the remaining exits in order under the one join rule (K1112), finishing each letter before the next
+  - next: Levi's v6.9 look (Waiting on Levi); then K1112's next letter, c, one stage (K1113_cursive_j3f.md ## Handoff, Next)
   - brief: docs/design/K1113_cursive_j3f.md on the agent's branch; J3e's Handoff in `docs/design/K990_cursive_j3e.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
