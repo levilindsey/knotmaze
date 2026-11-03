@@ -99,6 +99,16 @@ works on default-shader meshes such as erases); and the URL-state
 rewrite drops `#hash` on load (pass probe args through page.evaluate).
 Three "no effect" toggles in a row meant the probe, not the renderer.
 
+PROBE LORE (2026-11-03, K1131): **a re-measurement copies the original
+stand's link verbatim**, read from the old probe's source, and names
+anything it changes. Batch 8's brief called K1077's realtime and turn
+stands `fw=0`, but K1077's link had the flow on
+(`.claude/probes/K1077/k441_page.mjs:114`), and the flow re-runs
+`renderer.update()` every other frame (`flowRender`,
+`src/app/frame_loop.ts`). K1083's retrace on the `fw=0` stands read 0
+gap solves a frame and found nothing to fix (K1083 and K1133 reopened
+for a flow-on retrace).
+
 ## Probe gotchas, hooks and tooling
 
 - *K550 (2026-10-20), the worker host:* two loads of one link do NOT
