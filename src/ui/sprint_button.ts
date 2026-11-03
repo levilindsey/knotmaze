@@ -8,6 +8,8 @@
 // running, dimmed and disabled once spent. The group carries K698's
 // `km-control` class, so the bottom toasts keep clear of it.
 
+import { blurOnPointerClick } from "./pointer_blur";
+
 export interface SprintButtonHooks {
   press: () => void;
 }
@@ -66,6 +68,7 @@ export class SprintButton {
       "Sprint (F), once a game: your next two moves cost the minotaur one turn (in real time you run your next two runs at twice your pace).";
     b.innerHTML = BOLT;
     b.addEventListener("click", () => hooks.press());
+    blurOnPointerClick(b);
     el.appendChild(b);
     document.body.appendChild(el);
     this.el = el;

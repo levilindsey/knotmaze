@@ -11,6 +11,7 @@
 // clear of it.
 
 import { LURE_RANGE } from "../game/lures";
+import { blurOnPointerClick } from "./pointer_blur";
 import { SNARE_HOLD } from "../game/snares";
 
 export type ToolKind = "lure" | "snare";
@@ -126,6 +127,7 @@ export class ToolButtons {
       badge.textContent = "0";
       b.appendChild(badge);
       b.addEventListener("click", () => hooks.press(k));
+      blurOnPointerClick(b);
       el.appendChild(b);
       return { btn: b, badge, on: false, count: -1 };
     };

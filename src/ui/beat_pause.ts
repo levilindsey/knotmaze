@@ -6,6 +6,8 @@
 // until it is pressed again, so a pause cannot be used to study the board
 // mid-run; a hidden canvas also takes no taps. It carries `km-control`
 // (share.ts TOAST_AVOID_CLASS), so the toasts rise above it.
+import { blurOnPointerClick } from "./pointer_blur";
+
 const STYLE_ID = "km-beat-pause-style";
 const PAUSE_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>';
@@ -76,6 +78,7 @@ export function createBeatPause(onToggle: (held: boolean) => void): BeatPause {
     else delete document.documentElement.dataset.beatPaused;
   };
   paint();
+  blurOnPointerClick(el);
   el.addEventListener("click", (e) => {
     e.preventDefault();
     const next = !held;

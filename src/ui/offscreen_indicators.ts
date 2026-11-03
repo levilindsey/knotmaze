@@ -55,6 +55,7 @@
 //   instant.
 
 import { whenReduced } from "./motion";
+import { blurOnPointerClick } from "./pointer_blur";
 
 export interface Rect {
   left: number;
@@ -564,6 +565,7 @@ export class OffscreenIndicators {
       inert: null,
       pending: null,
     };
+    blurOnPointerClick(el);
     el.addEventListener("click", () => {
       if (e.on && this.env.tapEnabled()) e.target.onTap?.();
     });
