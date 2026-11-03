@@ -7,6 +7,7 @@ import { rateRun, walkedOf } from "../../src/game/star_rating";
 import {
   gameEntries,
   gameRows,
+  hiddenValue,
   lossEntries,
   ruleEntries,
   ruleLossEntries,
@@ -433,7 +434,7 @@ describe("K138 rule rows", () => {
     expect(rows.map((r) => [r.id, r.label, r.value])).toEqual([
       ["rules", "rules", "ice 25% \u00B7 cycle"],
       ["turnstiles", "turnstiles", "4"],
-      ["hidden", "hidden", "1 / 2 found \u00B7 fewest 16, 14 with them"],
+      ["hidden", "hidden", "1\u00A0/\u00A02 found \u00B7\u00A0fewest\u00A016, 14\u00A0with\u00A0them"],
       ["oneWay", "one-way", "12"], // K138 stage 3
       ["keys", "keys", "1 / 3"], // K138 stage 4
       ["muddy", "muddy", "3"], // K137 s5
@@ -446,7 +447,33 @@ describe("K138 rule rows", () => {
     ).toEqual([]);
     expect(
       ruleEntries({ hidden: { found: 0, of: 0, fewest: 9, withAll: Infinity } })[0].value
-    ).toBe("0 / 0 found \u00B7 fewest 9, \u2014 with them");
+    ).toBe("0\u00A0/\u00A00 found \u00B7\u00A0fewest\u00A09, \u2014\u00A0with\u00A0them");
+  });
+});
+
+describe("K1100 non-breaking joins in the hidden row", () => {
+  const NB = "\u00A0";
+  it("has no plain space inside its phrases and a plain space between them", () => {
+    const v = hiddenValue({ found: 1, of: 2, fewest: 16, withAll: 14 });
+    expect(v.split(" ")).toEqual([
+      `1${NB}/${NB}2`,
+      "found",
+      `\u00B7${NB}fewest${NB}16,`,
+      `14${NB}with${NB}them`,
+    ]);
+    // Reading U+00A0 as a space, the text is the old text unchanged.
+    expect(v.replaceAll(NB, " ")).toBe("1 / 2 found \u00B7 fewest 16, 14 with them");
+  });
+
+  it("keeps the joins in the dash case (a fewest with no way)", () => {
+    const v = hiddenValue({ found: 0, of: 0, fewest: 9, withAll: Infinity });
+    expect(v.split(" ")).toEqual([
+      `0${NB}/${NB}0`,
+      "found",
+      `\u00B7${NB}fewest${NB}9,`,
+      `\u2014${NB}with${NB}them`,
+    ]);
+    expect(v.replaceAll(NB, " ")).toBe("0 / 0 found \u00B7 fewest 9, \u2014 with them");
   });
 });
 
@@ -466,7 +493,7 @@ describe("K775 wrap rows", () => {
     ];
     expect(all.filter((r) => r.wrap).map((r) => r.id)).toEqual(["hidden"]);
     expect(all.find((r) => r.id === "hidden")?.value).toBe(
-      "1 / 2 found \u00B7 fewest 16, 14 with them"
+      "1\u00A0/\u00A02 found \u00B7\u00A0fewest\u00A016, 14\u00A0with\u00A0them"
     );
   });
 });

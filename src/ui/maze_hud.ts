@@ -111,8 +111,13 @@ export interface HiddenShown {
 }
 
 // K138 stage 2: "1 / 2 found · fewest 16, 14 with them" (a dash for no way).
+// K1100: non-breaking joins (U+00A0) keep each phrase whole when the row
+// wraps: inside "1 / 2", "fewest 16," and "14 with them", and between the
+// "·" and "fewest", so a line may break before the "·" but not after it.
+// What a reader sees (U+00A0 as a space) is unchanged.
 export function hiddenValue(h: HiddenShown): string {
-  return `${h.found} / ${h.of} found \u00B7 fewest ${fmtPar(h.fewest)}, ${fmtPar(h.withAll)} with them`;
+  const NB = "\u00A0";
+  return `${h.found}${NB}/${NB}${h.of} found \u00B7${NB}fewest${NB}${fmtPar(h.fewest)}, ${fmtPar(h.withAll)}${NB}with${NB}them`;
 }
 
 // K137 stage 3b: what the sword row reads (game/sword.ts SwordState).
