@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1127.
+Next free ID: K1128.
 
 ## Waiting on Levi
 
@@ -299,6 +299,8 @@ Next free ID: K1127.
 - **K1126** · With High contrast on, a plucked thread now shows the ring ripple whatever ripple you picked
   (unless it is off). Does it read well on the light threads over black? Pictures: .claude/probes/K368/shots/
   (K368, 71250dca)
+- **K1127** · On a narrow phone, the hidden-runs line in the corner panel now wraps in whole phrases (no lone
+  'them', no dot at a line's end). Does it read well? Pictures: .claude/probes/K1100/ (K1100, a0546b30)
 
 ## In progress
 
@@ -500,9 +502,9 @@ Next free ID: K1127.
 - **K1108** · Muse batch 7 (`docs/design/K1108_muse_batch7.md`): A K368, B K1100, C K748, D K1109 + K1099,
   E K1101, F K426 + K437; no junction or cursive work. Runs 7A-7F chained after batch 6.
   - owner: muse runs 7A-7F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 00:28
-  - branch: mainline; last commit: `71250dca`
+  - branch: mainline; last commit: `a0546b30`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 7A-7F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run B (K1100)
+  - next: Run C (K748)
   - brief: `docs/design/K1108_muse_batch7.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
@@ -1689,9 +1691,6 @@ Every other item below waits on the trigger it names.
   ease (0.15 a frame, `src/app/camera.ts` updateCamera; a double-click reset) and the follow camera's spring
   (FOLLOW_W). Inferred, unchecked: FIT_JUMP_PX (20) is absolute, read on the probe's 1000x800 window, so on a
   larger window the settle drift's steps may pass it and snap unsmoothed; scale it by the view.
-- **K1100** · Wrapped HUD hidden-runs row leaves an orphan ('them' alone at 411x753 stats off and 360x740 on)
-  and a dangling '·' line end at 360x740 (`.claude/probes/K775/shots/`): `text-wrap: balance`, or non-breaking
-  joins in '13 with them'. With K1095 in a later Muse batch.
 - **K1101** · `docs/ledger_notes.md` holds 119 `## K<n> (2026-10-15, shortened by the diet)` headings twice,
   with differing bodies (the second copies from about line 3016): merge each pair under one heading, keeping
   both texts' facts. Mechanical; a Muse task.
@@ -2018,6 +2017,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1100** · non-breaking joins in the hidden row. Done in a0546b30 (2026-11-03).
 - **K368** · High contrast wears the ring. Done in 71250dca (2026-11-03).
 - **K1107** · Muse batch 6: runs A-F passed their gates (2026-11-02 20:20 to 2026-11-03 00:28) and closed all 14 items (K343, K130, K495, K128, K212, K490, K787, K584, K112, K403, K263, K600, K609, K462); Levi checks K1110, K1111 and K1118. Done in c647e223 (2026-11-03).
 - **K895** · phone_pass kit (K156 round 2026-11-02): (a) the median averages at even n and (d) a phase refuses once its pass has `state/watchdog.trip` (8d4d0617, test `test/phone_pass/k895.test.ts`); (c) servers and watchdog start detached through WMI (33fa558b). (b), the A/A floor, continues as K1124. Done in 33fa558b (2026-11-03).
