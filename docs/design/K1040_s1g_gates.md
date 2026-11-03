@@ -535,3 +535,96 @@ Reproduce:
   `q4attr/`, `popattr/`; about 3, 2 and 1 min).
 - `npx vite-node .claude/probes/K1040/s1/q5eye_s1g.ts` (→
   `out/s1g/q5eye.txt`), then `q5eye_who_s1g.ts` (→ `out/s1g/q5eye_who.txt`).
+
+## Handoff
+
+Stopped at 20:51 (start 19:27:41, cap 21:27:41) with Order steps 1-5
+done. Step 6 (S1f's Later work) was not started: a definition change
+there needs its own sweep, census and gate, and the gate alone took 20
+min. Levi has not looked at anything from this stage.
+
+**What landed** (branch `worktree-agent-a8056cde26bf07a6a`, unpushed,
+not merged):
+
+| commit | subject (short) |
+|---|---|
+| `90c0968f` | K1040 S1g: the brief, the frozen S1f final form B and the S1g gate runner |
+| `82f6efd0` | WIP: the d-edge behind a param, `dedge_s1g.ts` census and sweeps |
+| `3e50511b` | WIP: F1 and F2 (defaults `dEdge: "near"`, `rootBand: 0.5`), `gate699_s1g.ts`, `gate694_s1g.ts` |
+| `79897ecb` | WIP: F3, F4, F5 (no definition change) |
+| `d3846800` | F6: the gate against S1f's final |
+
+`new FormB(scene, {dEdge: "skip", rootBand: 0})` reproduces S1f's final.
+
+**The gates made continuous:**
+- **F1, the d-edge** (`dEdge: "near"`). A pass behind an arm's root now
+  cuts the arm at its arc distance, so L is continuous at d = 0 with
+  slope 1.
+  - The tee and ring sweeps' ink step goes 1.000 → 0.148 and 0.174
+    coarse (the sweeps' ordinary rate) and 1.000 → 0 fine.
+  - At rest it moves 607 arms and 100 corners. 4 lose fill, all in
+    muse_hash: j0 0-1, j36 109-110 (r 2.721h → 0), j155 471-472 and
+    j156 475-473 (which is F3's seed failure, not the d-edge).
+  - `mirror` was rejected: it moves 1242 arms and 739 corners, and 256
+    lose fill.
+- **F2, 699's low side** (`rootBand: 0.5`). solveCorner's w gets a
+  fourth factor, ss(d / 0.5h) on each foot's distance from its root.
+  r then goes to 0 as a foot reaches its root, so the window null is
+  reached only with r = 0.
+  - On gate699's Y, r's coarse step goes 2.000 → 0.030. The largest
+    coarse ink step goes 1.000 → 0.125, and the fine one goes to 0.0006.
+  - At rest it moves 155 corners' r and loses no fill. The largest tip
+    move is 0.221h (muse_hash j124 375-376).
+- **No change, each by its sweep:**
+  - 694 (F3) is a seed failure of solveEq. It is reached with fill at 2
+    corners at rest: g41_user_tw64 j30 93-91 and muse_hash j156 475-473.
+  - 704 (F4) is never reached on a bend; it is reached with fill only
+    behind F3's retry. F4's sweep found a different pop: corner 2-0 on a
+    tight bend, where r jumps 0.05-0.2h per 0.005 κ.
+  - ω's ±0.5h exclusion (F5) never decides: ovEx is at most 0.0255h,
+    against the band's 0.05h. A kink by the foot makes V's foot jump,
+    with fill.
+
+**The gate (F6):** S1g's final against S1f's final (`-Tag q`). No check
+is worse on any scene without an attribution.
+- Pins: 25 pass (q 22). `npm test`: 2576 passed, 8 skipped.
+- #1 158 → 154 and free ends 110 → 102. Every shared check is
+  unchanged.
+- b_rate: 0 breaches at 161 sites, max 2.92. Four of F1's sites moved,
+  by at most 0.08/px.
+- The pops: muse_flow 10 → 11. The new pop is corner_why's
+  `muse_flow 31>32 155/471/472`, which comes from F1 together with F5's
+  foot jump, and the merge excuses it. The merge leaves 14 pops (126 px),
+  the same as q.
+- q4: muse_hash's |Δ|>0.5 count goes 7 → 11 (max 0.652 → 0.841), at
+  F1's corners j155 471-472 and j0 0-1.
+- q5holes: muse_hash 4 → 3 and muse_default_tw 5 → 4. This is a
+  classification change in the census; the eye's paper and ink are
+  unchanged.
+
+**Reproduce:** each Finding ends with its commands.
+- The gate: `pwsh .claude/probes/K1040/s1/run_s1g_gate.ps1 -Tag g1`,
+  then `-Tag g1 -What mech`, then
+  `gate_table.ps1 out/s1f/logs/scenes_q.txt out/s1g/logs/scenes_g1.txt`.
+- The attributions: `q5attr_run_s1g.ps1`, `q4attr_run_s1g.ps1` and
+  `popattr_run_s1g.ps1`.
+- The probes read two inputs: the main checkout's scenes
+  (`.claude/probes/K868/scenes`) and S3a's seq13
+  (`.claude/worktrees/k868-s3a/.claude/probes/S3a/seq13`).
+- q5holes exits 1 in a worktree, because its dpr-2 block needs the main
+  checkout's `.claude/probes/K1040/out/muse_hash_dpr2.png`.
+
+**Next:**
+1. **A robust V solve.** Find the first equidistant point by
+   continuation from the roots, so that 694 can never be a basin
+   failure, and replace 704's test with a continuous wedge weight (F3,
+   F4).
+2. **Blend V's foot over its candidate feet**, with weights continuous
+   in the geometry. This covers F5's kink pop, F4's tight-bend pop on
+   corner 2-0, and the muse_flow 31>32 pop that F1 exposes (F6).
+3. **Scope 2, S1f's Later work** (not started):
+   - the 14 pops the merge leaves (126 px);
+   - the three junction pops (104 px; muse_flow 7>8, 80 px), which
+     pops_mech files as "scene chain samples", meaning a chain's sample
+     count changes between the two frames (`pops_mech.ts` line 53);
+   - j129's tA corner on muse_hash.
