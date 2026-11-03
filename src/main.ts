@@ -3645,8 +3645,8 @@ async function main(): Promise<void> {
   // finished solve drops a waiting cut.
   const panelCoversCut = (): boolean => {
     if (!panel.isOpen()) return false;
-    const r = camera.panelWrap?.getBoundingClientRect();
-    return !!r && r.width > 0 && cutButtons.covered(r);
+    const r = camera.panelCssRect();
+    return !!r && cutButtons.covered(r);
   };
   // K137 stage 2: the aid buttons (shown while their aid is on, the keys are
   // live and no open panel covers them) and the renderer's chalk and
@@ -3659,8 +3659,8 @@ async function main(): Promise<void> {
     aidHintShown = hint;
     aidChalkShown = chalk;
     aidButtons.setButtons(hint, chalk);
-    const r = panel.isOpen() ? camera.panelWrap?.getBoundingClientRect() : null;
-    aidButtons.setVisible((hint || chalk) && !(r && r.width > 0 && aidButtons.covered(r)));
+    const r = camera.panelCssRect();
+    aidButtons.setVisible((hint || chalk) && !(r && aidButtons.covered(r)));
     if (hint) aidButtons.setHint(fc.hintsLeft, (scene.fabric?.hintRun ?? -1) >= 0);
     if (chalk) aidButtons.setChalk(fc.chalk.has(fc.head));
     const fabric = scene.fabric;
@@ -3705,8 +3705,8 @@ async function main(): Promise<void> {
       else if (c.sprintLeft < 2) sprintState = "first";
       if (sprintState !== was) updateHud();
     }
-    const r = panel.isOpen() ? camera.panelWrap?.getBoundingClientRect() : null;
-    const on = sprintOn() && keysLive() && !(r && r.width > 0 && sprintButton.covered(r));
+    const r = camera.panelCssRect();
+    const on = sprintOn() && keysLive() && !(r && sprintButton.covered(r));
     sprintButton.setShown(on);
     sprintButton.setLook(sprintState === "used" ? "used" : sprintState === "ready" ? "ready" : "armed");
   };
@@ -3787,8 +3787,8 @@ async function main(): Promise<void> {
     // K795: the tooltips quote the lure's range and the snare's hold.
     toolButtons.setTips(lureRangeOf(params.lureRange), snareHoldOf(params.snareHold));
     toolButtons.setShift(sprintButton.isShown);
-    const r = panel.isOpen() ? camera.panelWrap?.getBoundingClientRect() : null;
-    const on = (lure || snare) && keysLive() && !(r && r.width > 0 && toolButtons.covered(r));
+    const r = camera.panelCssRect();
+    const on = (lure || snare) && keysLive() && !(r && toolButtons.covered(r));
     toolButtons.setShown(on);
     if (!on || (toolArmed === "lure" && !lure) || (toolArmed === "snare" && !snare)) {
       toolArmed = null;
@@ -3814,8 +3814,8 @@ async function main(): Promise<void> {
       beatPause.setHeld(false);
       beat?.setHeld(false);
     }
-    const r = live && panel.isOpen() ? camera.panelWrap?.getBoundingClientRect() : null;
-    beatPause.setShown(live && !(r && r.width > 0 && beatPause.covered(r)));
+    const r = live ? camera.panelCssRect() : null;
+    beatPause.setShown(live && !(r && beatPause.covered(r)));
   };
   const cutTick = (): void => {
     aidTick();
@@ -4079,8 +4079,8 @@ async function main(): Promise<void> {
   };
   const panelCoversWalker = (): boolean => {
     if (!panel.isOpen()) return false;
-    const r = camera.panelWrap?.getBoundingClientRect();
-    return !!r && r.width > 0 && walkerButtons.covered(r);
+    const r = camera.panelCssRect();
+    return !!r && walkerButtons.covered(r);
   };
   // Every frame (cutTick): the buttons, and the route thread. Lead shows
   // its whole walk (from the run under way while it walks), Delay its way

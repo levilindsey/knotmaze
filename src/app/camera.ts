@@ -223,12 +223,75 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     typeof window !== "undefined" && typeof window.matchMedia === "function"
       ? window.matchMedia(SHEET_QUERY)
       : null;
+  // K1081: the wrapper's rect, cached. This read (stepPanel's, once a
+  // frame) is the only one: the button ticks in main.ts used to read
+  // the same element again each, forcing a layout per tick. It
+  // re-reads only when what the last box was read under changes: the
+  // screen size, the wrapper's identity, or the wrapper's display
+  // (the panel flips it as it opens and shuts). The sheet query is
+  // checked live, before and after the cache, and never reads.
+  let panelRectKey: {
+    w: number;
+    h: number;
+    wrap: HTMLElement;
+    display: string;
+  } | null = null;
+  let panelRectOpen = false; // The last read found the panel open.
   const readPanel = (): boolean => {
-    if (sheetMQ?.matches) return false;
-    const r = panelWrap?.getBoundingClientRect();
-    if (!r || r.width <= 0) return false;
+    if (sheetMQ?.matches) {
+      panelRectOpen = false;
+      return false;
+    }
+    if (!panelWrap) {
+      panelRectOpen = false;
+      return false;
+    }
+    const k = panelRectKey;
+    if (
+      k &&
+      k.wrap === panelWrap &&
+      k.w === app.screen.width &&
+      k.h === app.screen.height &&
+      k.display === panelWrap.style.display
+    ) {
+      return panelRectOpen;
+    }
+    const r = panelWrap.getBoundingClientRect();
+    panelRectKey = {
+      w: app.screen.width,
+      h: app.screen.height,
+      wrap: panelWrap,
+      display: panelWrap.style.display,
+    };
+    if (!r || r.width <= 0) {
+      panelRectOpen = false;
+      return false;
+    }
     panelBox = { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+    panelRectOpen = true;
     return true;
+  };
+  // K1081: the cached box for main.ts's button ticks (covered() asks
+  // whether an open panel covers their corner). Null while the panel
+  // is shut, on the sheet, or before the first read, and whenever what
+  // the box was read under has changed since (the next readPanel
+  // refreshes it). panelBox itself keeps the last open box either way:
+  // the closing tween still reads it through openPanelAt.
+  const panelCssRect = (): Rect | null => {
+    if (sheetMQ?.matches || !panelRectOpen || !panelBox || !panelWrap) {
+      return null;
+    }
+    const k = panelRectKey;
+    if (
+      !k ||
+      k.wrap !== panelWrap ||
+      k.w !== app.screen.width ||
+      k.h !== app.screen.height ||
+      k.display !== panelWrap.style.display
+    ) {
+      return null;
+    }
+    return panelBox;
   };
   const stepPanel = (dt: number): void => {
     const open = readPanel();
@@ -622,6 +685,7 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     touchCamera,
     panAllow,
     openPanel,
+    panelCssRect,
     followScale,
     placeWorldAt,
     zoomAt,
