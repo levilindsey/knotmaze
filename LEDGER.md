@@ -485,9 +485,9 @@ Next free ID: K1099.
   D K1084 (K1086 report only), E K1063 + K593; no junction or cursive work. Runs 5A-5E chained from
   2026-11-02.
   - owner: muse runs 5A-5E chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 18:00
-  - branch: mainline; last commit: `36bcafd6`
+  - branch: mainline; last commit: `edb4b4ac`
   - evidence: `.claude/probes/K1053/` (`queue.txt` lines 5A-5E, `chain.log`, `chain.out.txt`, `done.txt`)
-  - next: Run D done (K1084 fc9b0eec, docs 36bcafd6; K1086 left open with nav-timing finding); Run E next after coordinator review
+  - next: Run E done (K1063 68a1c57a, K593 edb4b4ac); batch 5 complete, Claude reviews and closes K1091
   - brief: `docs/design/K1091_muse_batch5.md`
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
@@ -1412,8 +1412,6 @@ Every other item below waits on the trigger it names.
 - **K592** · The gap search rounds indices with `int(x + 0.5)`, which truncates toward zero, so a
   negative kStart rounds the wrong way (`src/render/gap_mask.ts`, `int(t4.z + 0.5)` and the range's
   start). Check whether kStart can go negative. From K573's agent report. Done in K817: kStart can go negative (ring seam crossings, pinned in gap_mask.test.ts); the three kStart decodes (gapRange, gapProtCover's start, the self-exclusion s0) now use floor(x + 0.5); the test mirror rounds the same way; K320 char budget held by inlining instead of a helper.
-- **K593** · `scripts/preview.ps1` fails in an agent worktree that has no `node_modules` junction
-  (K573's run). Make it find or make the junction, or fail with that message.
 - **K594** · Phone kit flakes in K573's run: adb died 3x (unexplained), a foreground kit start hangs
   the tool, `cleanup.mjs` timed out after a watchdog trip, two reverse tunnels stayed on the phone.
   `.claude/probes/K573/logs/`; full text `docs/ledger_notes.md`.
@@ -1758,8 +1756,6 @@ Every other item below waits on the trigger it names.
 - **K1058** · Removing a worktree can empty the main checkout's node_modules: each `.claude/worktrees/*`
   links node_modules by junction, and `git worktree remove --force` deletes through it (2026-10-29 20:18,
   remover unknown). The worktrees sit inside the checkout, so Node finds packages upward: try no junction.
-- **K1063** · `scripts/run_node.mjs` still opens Vite's WebSocket server, so parallel runs print 'WebSocket
-  server error: Port 24678' (harmless); `server.ws: false` should stop it (K1061, 011274f9).
 - **K1086** · K412 probe: each warm profile's first reload started main 3.5 s (levi.dev) / 3.2 s (pages.dev) late
   vs 68-216 ms later; all before main, both origins, no service worker. Record navigation timing on it to split
   old-page teardown from a first cache read (`.claude/probes/K412/`; full text `docs/ledger_notes.md`).
@@ -2067,6 +2063,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K593** · preview.ps1 junctions main node_modules into bare worktrees or fails naming npm ci. Done in edb4b4ac (2026-11-02).
+- **K1063** · run_node.mjs server.ws false; parallel probes no longer print Port 24678 error. Done in 68a1c57a (2026-11-02).
 - **K1084** · hashed /assets/* now max-age=31536000 immutable on Pages; worker fetch cache-served 10/10, levi fresh hello 941->347 ms. Done in fc9b0eec (2026-11-02).
 - **K741** · cutRules(upper) drops 'fewest cuts' for upper-bound par; exact-par pinned. Done in 04e2c1f4 (2026-11-02).
 - **K442** · walked/fire lead lines true under both fire clocks; tests pin old phrases gone. Done in 3c57bd37 (2026-11-02).
