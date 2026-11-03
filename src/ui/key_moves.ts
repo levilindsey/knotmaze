@@ -484,6 +484,78 @@ export function chordMap(
   return dirMap(deps, DIAGONALS, DIAGONAL_VECTORS, o);
 }
 
+// K1132: where a hint disc sits along its run. "reach" is today's
+// placement (KEY_REACH of arc, under the head marker at the defaults);
+// "out" puts the disc past the head marker: its arc distance is the
+// head disc's radius plus HINT_CLEAR hint radii, so it follows the
+// marker size and the thread width. The picker and hintMap keep
+// KEY_REACH either way - only the drawn disc moves.
+export type KeyHintPlace = "reach" | "out";
+// The "out" clearance past the head disc's rim, in hint radii.
+export const HINT_CLEAR = 1.25;
+
+// The arc distance (world units along the run) a hint disc sits at
+// under `place`, for a head disc of radius `headR` and a hint disc of
+// radius `hintR`.
+export function hintArcDistance(
+  place: KeyHintPlace,
+  headR: number,
+  hintR: number
+): number {
+  return place === "out" ? headR + HINT_CLEAR * hintR : KEY_REACH;
+}
+
+// The point `dist` world units of arc along run `e` from one end (the
+// walk chordDirection makes, returning the point): the far end when
+// the run is shorter (`held` true), or a self-loop's farthest point
+// when its end comes back to the junction.
+export function arcPoint(
+  e: RunEnds,
+  fromA: boolean,
+  ox: number,
+  oy: number,
+  pointAt: PointAt,
+  dist: number
+): { x: number; y: number; held: boolean } {
+  const len = e.ctrlB - e.ctrlA;
+  const start = fromA ? e.ctrlA : e.ctrlB;
+  const sign = fromA ? 1 : -1;
+  const p = new Float32Array(2);
+  pointAt(e.chain, start, p);
+  let px = p[0];
+  let py = p[1];
+  let arc = 0;
+  let fx = px;
+  let fy = py;
+  let fd = -1;
+  for (let f = REACH_STEP; ; f += REACH_STEP) {
+    const ff = Math.min(f, len);
+    pointAt(e.chain, start + sign * ff, p);
+    const sx = p[0] - px;
+    const sy = p[1] - py;
+    arc += Math.sqrt(sx * sx + sy * sy);
+    px = p[0];
+    py = p[1];
+    const d = (px - ox) * (px - ox) + (py - oy) * (py - oy);
+    if (d > fd) {
+      fd = d;
+      fx = px;
+      fy = py;
+    }
+    if (arc >= dist) break;
+    if (ff >= len) {
+      // Shorter than the distance: its end, or for a loop back to the
+      // junction, its farthest point.
+      if (d < 0.25 * fd) {
+        px = fx;
+        py = fy;
+      }
+      return { x: px, y: py, held: true };
+    }
+  }
+  return { x: px, y: py, held: false };
+}
+
 // K332's hintMap follows; holdRules is after it.
 // K332: one hint per run - the direction that takes it. `hintMap` inverts
 // keyMap and chordMap: a run two directions take wears the one with the
