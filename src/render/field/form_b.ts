@@ -25,6 +25,11 @@
 //   depth test over pieces, it is continuous, and it breaks the equal-z
 //   ties of one chain's segments by distance instead of draw order (K1033).
 //   `coneK: Infinity` gives the max form (z alone, ties by distance).
+//   S3b F1 (Definition change, `labelBy`): the label's key and name come
+//   from the covering pieces (d < h, fold weight >= 1/2) and the covering
+//   fills alone, so the name switches at d = h; the ink's composite still
+//   orders the surfaces by their reach key (every piece within h + aa, every
+//   fill within its aa shell).
 // - Q2, the cap (S1c F2): a piece inside its arm's cap ramp is a full
 //   member of its group with weight ramp, and OWN with weight 1 − ramp.
 //   The pixel mixes complete composites, one per configuration: with the
@@ -125,6 +130,17 @@ export interface FormBParams {
    * reaches its root, before the window test's null (dV ≤ tol) does.
    */
   rootBand?: number;
+  /**
+   * S3b: who names a surface in the label (evalPoint's top, chain, s, z,
+   * key, dkey). "cover" (default, S3b F1): its covering pieces (within h,
+   * fold weight ≥ 1/2) and the fills that cover the pixel, so the name
+   * switches at d = h and a non-covering piece can neither name its
+   * surface nor lift it above another covering surface. "reach": every
+   * piece within h + aa and every fill within its aa shell (S1g's final,
+   * S3's class B). The ink's composite order keeps the reach key either
+   * way.
+   */
+  labelBy?: "cover" | "reach";
   /** Depth window, arc length (default look.depthWindow · (look.ctrlArc ?? 1)). */
   depthWindow?: number;
   /**
@@ -279,10 +295,16 @@ export const OWN = 1 << 20;
 
 interface SurfEntry {
   id: number;
+  /** The reach key (pieces within h + aa, fills within their aa shell): the ink's composite order. */
   key: number;
   z: number;
   chain: number;
   s: number;
+  /** The cover key and name (S3b F1): its covering pieces and covering fills only. */
+  ckey: number;
+  cz: number;
+  cchain: number;
+  cs: number;
   pieceCover: boolean;
   fillW: number;
 }
@@ -362,6 +384,8 @@ export class FormB {
   readonly dEdge: "skip" | "mirror" | "near";
   /** S1g: the root gate's band, in h (0: off). */
   readonly rootBand: number;
+  /** S3b: who names a surface in the label ("cover": its covering pieces and fills). */
+  readonly labelBy: "cover" | "reach";
   readonly force: NonNullable<FormBParams["force"]>;
   readonly fillKey: "nearer" | "a" | "b";
   readonly polys: Poly[];
@@ -405,6 +429,7 @@ export class FormB {
     this.reachSep = params.reachSep ?? "chord";
     this.dEdge = params.dEdge ?? "near";
     this.rootBand = params.rootBand ?? 0.5;
+    this.labelBy = params.labelBy ?? "cover";
     this.force = params.force ?? {};
     this.fillKey = params.fillKey ?? "nearer";
 
@@ -1596,11 +1621,14 @@ export class FormB {
     let fade = 0;
     // Every surface whose coverage reaches the pixel, keyed by Q1's cone key
     // (max over its pieces and fills). Covering: a piece within h, or a fill.
+    // Two keys per surface (S3b F1): the reach key over everything within
+    // reach orders the ink's composite; the cover key over the covering
+    // pieces and fills alone picks and names the label's top (labelBy).
     const surf: SurfEntry[] = [];
     const entry = (id: number): SurfEntry => {
       let e = surf.find((u) => u.id === id);
       if (!e) {
-        e = { id, key: -Infinity, z: 0, chain: -1, s: 0, pieceCover: false, fillW: 0 };
+        e = { id, key: -Infinity, z: 0, chain: -1, s: 0, ckey: -Infinity, cz: 0, cchain: -1, cs: 0, pieceCover: false, fillW: 0 };
         surf.push(e);
       }
       return e;
@@ -1608,12 +1636,19 @@ export class FormB {
     for (const A of P) {
       if (!(A.d < h + aa)) continue;
       const e = entry(A.surf);
-      if (A.d < h && A.selfW >= 0.5) e.pieceCover = true;
+      const cov = A.d < h && A.selfW >= 0.5;
+      if (cov) e.pieceCover = true;
       if (A.key > e.key) {
         e.key = A.key;
         e.z = A.z;
         e.chain = A.chain;
         e.s = A.s;
+      }
+      if (cov && A.key > e.ckey) {
+        e.ckey = A.key;
+        e.cz = A.z;
+        e.cchain = A.chain;
+        e.cs = A.s;
       }
     }
     for (const ci of this.cornersNear(x, y)) {
@@ -1625,31 +1660,50 @@ export class FormB {
       const z = nearerA ? c.zA : c.zB;
       const key = this.K === Infinity ? z : z - h / this.K;
       const e = entry(c.g);
-      if (this.inFill(c, x, y)) e.fillW = Math.max(e.fillW, c.omega);
+      const inF = this.inFill(c, x, y);
+      if (inF) e.fillW = Math.max(e.fillW, c.omega);
       if (key > e.key) {
         e.key = key;
         e.z = z;
         e.chain = this.arms[nearerA ? c.a : c.b].pi;
         e.s = nearerA ? c.sA : c.sB;
       }
+      if (inF && key > e.ckey) {
+        e.ckey = key;
+        e.cz = z;
+        e.cchain = this.arms[nearerA ? c.a : c.b].pi;
+        e.cs = nearerA ? c.sA : c.sB;
+      }
     }
     surf.sort((u, v) => v.key - u.key);
     const outs = surf.map((e) => this.inkOf(e.id, x, y, P));
     const covers = (e: SurfEntry) => e.pieceCover || e.fillW > 0;
     const res: PixelEval = { ink: 0, top: -1, chain: -1, s: 0, z: 0, key: -Infinity, term: null, fade: 0, nSurf: surf.filter(covers).length, dz: Infinity, dkey: Infinity, Dexp: Infinity };
-    const i1 = surf.findIndex(covers);
+    // The label's top: the covering surface with the highest label key (the
+    // cover key, or the reach key under labelBy "reach"); among equal keys
+    // the first in the composite order. The runner-up gives dz and dkey.
+    const byCover = this.labelBy === "cover";
+    const lkey = (e: SurfEntry) => (byCover ? e.ckey : e.key);
+    let i1 = -1;
+    let i2 = -1;
+    for (let i = 0; i < surf.length; i++) {
+      if (!covers(surf[i])) continue;
+      if (i1 < 0 || lkey(surf[i]) > lkey(surf[i1])) {
+        i2 = i1;
+        i1 = i;
+      } else if (i2 < 0 || lkey(surf[i]) > lkey(surf[i2])) i2 = i;
+    }
     if (i1 >= 0) {
       const S1 = surf[i1];
       res.top = S1.id;
-      res.chain = S1.chain;
-      res.s = S1.s;
-      res.z = S1.z;
-      res.key = S1.key;
+      res.chain = byCover ? S1.cchain : S1.chain;
+      res.s = byCover ? S1.cs : S1.s;
+      res.z = byCover ? S1.cz : S1.z;
+      res.key = lkey(S1);
       res.Dexp = outs[i1].Dexp;
-      const i2 = surf.findIndex((e, i) => i > i1 && covers(e));
       if (i2 >= 0) {
-        res.dz = Math.abs(S1.z - surf[i2].z);
-        res.dkey = S1.key - surf[i2].key;
+        res.dz = Math.abs(res.z - (byCover ? surf[i2].cz : surf[i2].z));
+        res.dkey = res.key - lkey(surf[i2]);
       }
     }
     // Premultiplied "over" in key order (F4): each surface's ink through the

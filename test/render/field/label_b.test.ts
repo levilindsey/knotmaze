@@ -4,7 +4,7 @@
 import { appendFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { FormB } from "../../../src/render/field/form_b";
-import type { FieldScene, SceneArm, SceneJunction } from "../../../src/render/field/scene";
+import type { FieldScene, SceneArm, SceneCrossing, SceneJunction } from "../../../src/render/field/scene";
 import { buildLabelB, labelAt, MAX_GROUPS, packWord, unpackWord } from "../../../src/render/field/label_b";
 import { labelVerdict, sampleOf } from "../../../src/render/field/label_b_verdict";
 
@@ -20,15 +20,15 @@ function ray(cx: number, cy: number, deg: number, r0: number, r1: number, step =
   return line(cx + r0 * Math.cos(a), cy + r0 * Math.sin(a), cx + r1 * Math.cos(a), cy + r1 * Math.sin(a), step);
 }
 
-function scene(chains: number[][], junctions: SceneJunction[] = [], z: number[] = []): FieldScene {
+function scene(chains: number[][], junctions: SceneJunction[] = [], z: number[] = [], crossings: SceneCrossing[] = [], depthWindow = 3): FieldScene {
   return {
     version: 1,
     name: "label_b.test",
     source: { kind: "synthetic", generator: "label_b.test", params: {} },
     camera: { worldToCss: [10, 0, 0, -10, 100, 100], pxPerUnit: 10, dpr: 1, viewport: [200, 200] },
-    look: { halfWidth: 1, band: 0.38, cornerRoundShare: 1, cuspRadius: 3, depthAmp: 1, depthWindow: 3, paper: "#fff", ink: "#000" },
+    look: { halfWidth: 1, band: 0.38, cornerRoundShare: 1, cuspRadius: 3, depthAmp: 1, depthWindow, paper: "#fff", ink: "#000" },
     chains: chains.map((pts, id) => ({ id, closed: false, pts, z: new Array(pts.length / 2).fill(z[id] ?? 0) })),
-    crossings: [],
+    crossings,
     junctions,
     deadEnds: [],
   };
@@ -127,10 +127,36 @@ const FIXTURES: Record<string, () => FieldScene> = {
         ),
       ],
     ),
+  raisedTee,
 };
 
-function census(sc: FieldScene, step = 0.05, R = 3) {
-  const fb = new FormB(sc);
+// S3b F1's pin: a tee whose end arm rises toward an over-crossing at s = 4
+// (chain 2 passes under it; depthWindow 6, so the depth tent reaches the
+// junction). Beside the end arm, at h <= d < h + aa, its piece is a full
+// member of the group (ramp 1) with a cone key above the through's covering
+// piece: the reach rule named the group by the end arm there (S3's class B),
+// the cover rule names it by the through, as the pass does.
+function raisedTee(): FieldScene {
+  return scene(
+    [line(-10, 0, 10, 0), ray(0, 0, 90, 0, 10), line(-10, 4, 10, 4)],
+    [
+      junction(
+        [0, 0],
+        [
+          { chain: 0, s: 10, dir: 1, kind: "through" },
+          { chain: 1, s: 0, dir: 1, kind: "end" },
+          { chain: 0, s: 10, dir: -1, kind: "through" },
+        ],
+      ),
+    ],
+    [],
+    [{ a: { chain: 1, s: 4 }, b: { chain: 2, s: 10 }, over: "a" }],
+    6,
+  );
+}
+
+function census(sc: FieldScene, step = 0.05, R = 3, params?: ConstructorParameters<typeof FormB>[1]) {
+  const fb = new FormB(sc, params);
   const T = buildLabelB(fb);
   const counts: Record<string, number> = {};
   const bad: string[] = [];
@@ -154,6 +180,43 @@ describe("label B: labelAt is form B's top", () => {
       expect(counts.agree).toBeGreaterThan(0);
     });
   }
+});
+
+describe("label B: form B names a surface by its covering pieces (S3b F1)", () => {
+  // P: 0.5 from the through (covering), 1.02 from the end arm (h <= d < h + aa).
+  const px = 1.02;
+  const py = 0.5;
+  it("under the reach rule a non-covering piece within h + aa named the group", () => {
+    const fb = new FormB(raisedTee(), { labelBy: "reach" });
+    const r = fb.evalPoint(px, py);
+    expect([r.top, r.chain]).toEqual([0, 1]);
+    expect(r.s).toBeCloseTo(0.5, 9);
+    const { counts } = census(raisedTee(), 0.05, 3, { labelBy: "reach" });
+    expect(counts["DEFECT:lower"] ?? 0).toBeGreaterThan(0);
+  });
+  it("the cover rule names it by the through, as the pass does", () => {
+    const fb = new FormB(raisedTee());
+    const r = fb.evalPoint(px, py);
+    expect([r.top, r.chain]).toEqual([0, 0]);
+    expect(r.s).toBeCloseTo(11.02, 9);
+    expect(r.key).toBeCloseTo(-0.05, 9);
+    const g = labelAt(fb, buildLabelB(fb), px, py);
+    expect([g.code, g.chain]).toEqual([1, 0]);
+    expect(g.s).toBeCloseTo(11.02, 4);
+  });
+  it("the ink, its fade bits and the surface count do not change", () => {
+    const sc = raisedTee();
+    const a = new FormB(sc, { labelBy: "reach" });
+    const b = new FormB(sc);
+    let n = 0;
+    for (let y = -3; y <= 3; y += 0.1)
+      for (let x = -3; x <= 3; x += 0.1) {
+        const u = a.evalPoint(x, y);
+        const v = b.evalPoint(x, y);
+        if (v.ink !== u.ink || v.fade !== u.fade || v.nSurf !== u.nSurf) n++;
+      }
+    expect(n).toBe(0);
+  });
 });
 
 describe("label B: the merge scan's windows", () => {
