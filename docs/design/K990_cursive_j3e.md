@@ -202,9 +202,109 @@ removing the join sets.
 
 ## Handoff
 
-(WIP, 20:10: N1 done, N2 under way, N3 not started.)
+J3e, 2026-11-02, 19:43:55 to 20:58 (cap 21:43:55), branch
+`worktree-agent-a70bc9c2ddf155015`. N1, N2 and N3 are done, and so is
+K1102 (Levi's answer). Everything is in the main checkout's
+`.claude/probes/K863/trace/`: `work28/`, `out28/`, the tools in
+`work28/dbg/*_k990e.*`, and the record with its rerun commands in
+`NOTES.md` `## K990e`.
 
-**N1: f's corner, B (v6.7, 44 u) against C (65 u).** C's corner is
+**What changed, v6.7 -> v6.8.**
+- f's corner climbs from 44 u to 65 u, where the font's pen turns
+  (variant C, N1 below). f's end point and end tangent are kept.
+- Every join out of f (fa..fz) is solved from f's exit port: variant M
+  = L plus `variants.M.f.exit` (a merge at f's end, stretch [0, 2] u,
+  maxfev 8000) in `work28/ports_k990e.json`
+  (`work28/dbg/mk_ports_k990e.py`). It needs four pins: fo's exit
+  [0, 12] u, fv's [0, 6] u, and a 2 u lower bound on r's and s's
+  entries for fr and fs (N2 below).
+- K1102 (Levi, 2026-11-02, about 20:30: "aq: definitely 6.6."): J3d's
+  six pins are dropped, so ba, va, wa, bq, vq and wq are v6.6's preset
+  joins again.
+- Nothing else moves; both locality checks PASS (Checks).
+
+One deviation from the brief: f's exit port sits on f in variant M
+(`variants.M.f.exit`), not in per-pair pins the way J3d wrote b's, v's
+and w's. Every pair out of f is solved, and `gen_k1027.solve_join`
+reads both forms the same way.
+
+**The joins out of f.** These are census distances to the font (max,
+u). Every v6.8 row has no hook and rough ok, and none is farther from
+the font than v6.6's (`work28/ftable_k990e.txt`):
+
+| pair | v6.6 | v6.7 | v6.8 | pair | v6.6 | v6.7 | v6.8 |
+|---|---|---|---|---|---|---|---|
+| fa | 13.88 | 17.11 | 9.52 | fn | 13.29 | 3.17 | 10.29 |
+| fb | 16.48 | 6.87 | 3.73 | fo | 9.07 | 13.96 | 7.79 |
+| fc | 19.75 | 22.78 | 9.34 | fp | 22.74 | 14.13 | 12.82 |
+| fd | 13.62 | 16.69 | 9.52 | fq | 10.89 | 14.25 | 9.60 |
+| fe | 22.59 | 15.34 | 13.62 | fr | 13.92 | 7.90 | 6.34 |
+| ff | 16.58 | 6.96 | 3.75 | fs | 18.97 | 10.86 | 9.37 |
+| fg | 12.67 | 15.87 | 9.55 | ft | 20.59 | 14.07 | 13.24 |
+| fh | 17.43 | 7.39 | 6.60 | fu | 22.68 | 14.15 | 12.64 |
+| fi | 22.89 | 14.13 | 12.68 | fv | 13.22 | 3.15 | 6.59 |
+| fj | 22.94 | 14.16 | 12.63 | fw | 22.67 | 14.15 | 12.96 |
+| fk | 17.59 | 7.44 | 6.66 | fx | 21.31 | 12.45 | 11.36 |
+| fl | 16.66 | 7.02 | 3.75 | fy | 22.97 | 14.16 | 12.68 |
+| fm | 13.40 | 3.23 | 6.41 | fz | 18.92 | 10.09 | 11.46 |
+
+The same joins in words:
+- after's ft: 20.55 / 14.05 / 13.21;
+- coffee's fe: 22.55 / 15.31 / 13.59;
+- coffee's ff: 16.55 / 6.95 / 3.72;
+- quick brown fox's fo: 9.07 / 14.04 / 7.80 (J3d's v6.6 figure).
+
+What changed against v6.7:
+- fa, fc, fd, fg and fq lose v6.7's two hooks each, with their spikes
+  and their rough FAIL.
+- fo, alone and in quick brown fox, loses its rough FAIL.
+- fm, fn, fv and fz are farther from the font than v6.7's presets,
+  though still closer than v6.6's. Their solves stop on a bound (Next
+  2).
+
+**K1102: the six joins from b, v and w into a and q.** The table gives
+the distance (max, u), then hooks / spikes / rough
+(`work28/dbg/aqtable_k990e.py`):
+
+| pair | v6.6 | v6.7 (J3d, solved) | v6.8 |
+|---|---|---|---|
+| ba | 7.61, 0 / 0 / ok | 5.19, 0 / 0 / ok | 7.61, 0 / 0 / ok |
+| va | 7.56, 0 / 0 / ok | 6.94, 0 / 0 / ok | 7.56, 0 / 0 / ok |
+| wa | 7.67, 0 / 0 / ok | 7.00, 0 / 0 / ok | 7.67, 0 / 0 / ok |
+| bq | 9.96, 2 / 29 / FAIL | 5.63, 0 / 0 / ok | 9.96, 2 / 29 / FAIL |
+| vq | 10.15, 2 / 32 / FAIL | 6.69, 0 / 0 / ok | 10.15, 2 / 32 / FAIL |
+| wq | 10.15, 2 / 33 / FAIL | 6.74, 0 / 0 / ok | 10.15, 2 / 33 / FAIL |
+| bad's ba | 7.59, 0 / 0 / ok | 5.19, 0 / 0 / ok | 7.59, 0 / 0 / ok |
+
+Every v6.8 row equals v6.6's in distance, hooks, spikes, rough and
+badness. `locality66` finds these joins and their strokes
+byte-identical to v6.6's. With Levi's choice, bq, vq and wq take back
+v6.6's two hooks and rough FAIL.
+
+**Pins and why (N2).** The trials are in `work28/try_pins/`; NOTES
+`### N2` has the details.
+- **fo, exit [0, 12] u.** At [0, 2], fo sits 9.85 u from the font, over
+  v6.6's 9.07. With [0, 12] it leaves f 6.92 u before the end and comes
+  to 7.79 u. Giving every pair [0, 12] moves fi, fu, fy and fr farther
+  from the font.
+- **fv, exit [0, 6] u.** It goes from 9.92 to 6.59 u and leaves f 5.39 u
+  before the end. A longer stretch moves fm, fn and fz farther, so they
+  keep [0, 2].
+- **fr and fs, entry lower bound 2 u** (their own entries otherwise).
+  Left free, each solve runs back to the stroke's start and meets it
+  reversed, an undesigned 180° seam. At 2 u they meet G2: fr at 6.34 u,
+  fs at 9.37 u.
+
+The checks the brief names:
+- **K991**: every cusp entry meets the stem from one side.
+  `side_min_u` is at least -0.0134, inside the 0.05 u tolerance; fj
+  (-0.0001) and fw (-0.0134) are the only two below 0.
+- **K948**: fe crosses once and meets e with a 0.7° turn, so it has no
+  elbow.
+- **The solves**: all 26 end with status 0, nfev 386 to 5664
+  (`work28/solves_v68.txt`).
+
+**The variant table (N1): f's corner, B (v6.7, 44 u) against C (65 u).** C's corner is
 fitted to the font's pen path (`work28/dbg/fitC_k990e.py`): (224.62,
 883.40) in the template, 65.2 u high, a 167.6° cusp; node 8, its
 arrival tangent, the end and the end tangent are kept.
@@ -228,4 +328,90 @@ closer on all nine: fa 10.62 -> 9.52, fo 11.36 -> 9.85, fe 15.16 ->
 13.62, fi 15.03 -> 12.68, fu 15.01 -> 12.64, fy 15.05 -> 12.68, ft
 14.92 -> 13.24, fr 7.52 -> 4.23, ff 5.59 -> 3.75. Only the traced
 skeleton favours B: it cuts the corner where the two strokes' ink
-merges. C is kept.
+merges. The presets and the solved joins agree, so the recheck the
+brief asks for changes nothing. C is kept.
+
+**What Levi should look at.** All three sheets are on Drive `K863/`,
+each with the grey font on the left.
+- `f_v68.svg` (font | v6.7 | v6.8: f, fa..fz, of, coffee, after): In
+  each row, do the right-hand f and its join into the next letter
+  follow the grey font more closely than the middle ones do?
+- `cursive_v68_words.svg` (font | v6.7 | v6.8: coffee, quick brown fox,
+  after): Do the right-hand words' f's flow into their next letters as
+  smoothly as the rest of the writing?
+- `aq_joins_v68.svg` (font | v6.6 | v6.7 | v6.8: ba va wa bq vq wq,
+  then oa, oq, bad and wave): Does the right-hand column's ba, va, wa,
+  bq, vq and wq look the same as the v6.6 column you chose?
+
+**Checks.** Run them with `pwsh -NoProfile -File
+work28\dbg\checks_k990e.ps1 [step ...]` from the trace folder; the logs
+are in `work28/checks_logs/` and NOTES `## K990e` has the run order.
+- **Census** (`census_v67`, `census_v68`, `cmp`): 349 pieces each,
+  J3d's words and pairs plus fa..fz.
+  - 225 rows are equal in every column.
+  - The distance moves in 37: the 30 joins out of f above, and the
+    six's 7.
+  - The other 87 differ only in the per-word curvature normalisation
+    (kmax_p95; ft's and fa's tails also in the spikes it scales). One
+    more, fx's tail, differs by 0.01% in its peak curvature rate.
+  - The counts (pieces with), v6.7 -> v6.8: hooks 30 -> 28, spikes
+    44 -> 42, rough FAIL 69 -> 65, undesigned seams 11 -> 11. None of
+    those seams is on a join out of f.
+  - Files: `work28/census_cmp_v67_v68.txt`, `census_cmpf_v67_v68.txt`,
+    and `census_cmpf_v66_v68.txt` (the joins out of f against v6.6).
+- **Locality** (`locality`, v6.7 against v6.8): PASS. bodies.json
+  differs in f alone and join_params.json is byte-identical. The 1144
+  untouched pieces (of 1288, in 223 words) are byte-identical. What
+  moved:
+  - f's strokes (59 pieces);
+  - the joins out of f (32);
+  - the first strokes after f (25 of 29: a solved join now attaches
+    along them);
+  - the six's joins and a's and q's first strokes after them (8 each);
+  - b's, v's and w's strokes before a and q (5 of 8, by under
+    0.0005 u).
+- **Locality against v6.6** (`locality66`): PASS. The 1168 pieces
+  touching neither f nor a join out of f, the six's included, are
+  byte-identical to v6.6's.
+- **Solves** (`solves`): all 26 pairs out of f, as above.
+- **Determinism** (`det`): a second build in `work28/det/base`.
+  - 25 files are byte-identical. The 8 that differ are run logs,
+    words_report's two path lines and Inkscape's stderr, as for J3d.
+  - The f sheet again: its SVG, report and sidecar are byte-identical.
+  - After K1102, the f and words sheets were redrawn on the final ports
+    into `work28/det/postK1102/`: SVGs, reports and sidecars are
+    byte-identical to the uploaded ones.
+- **Guard** (`work20/dbg/check_out_k990.py out28`): ALL CLEAN on 4
+  files, and on the upload folder before each upload.
+
+**Next.**
+
+1. **b's, v's and w's exits: the next cursive stage's scope.** Levi
+   wrote this on 2026-11-02, with "aq: definitely 6.6.", verbatim: "BUT,
+   these letters--b,v,w--all have too much of a downward
+   hook/cusp--it should be less down and more out". The exits are set
+   in two places:
+   - **The template's b, v and w body ends** (`out28/cursive_template.svg`,
+     as in out27). These are K948's exits, drawn at b -22.0°, v -17.1°
+     and w -20.5° (y up). The font's path leaves at about -13° (b and v
+     -12.5 to -13.9°, w -13.2 to -14.5°), so the drawn exits are 3-9°
+     steeper (NOTES `## K990`, B1's check).
+   - **The joins out of b, v and w.** Apart from the six, these are
+     still presets (K1104: "b's, v's and w's other high exits are still
+     presets"). Their connector classes are `cnct.ful_b_*` in
+     `work28/base/join_params.json` (`classes`, picked per pair by
+     `pair_class`). The sheet reports name `cnct.ful_b_o` for ba, va
+     and wa and `cnct.ful_b_o|q` for bq, vq and wq.
+
+   The "before" picture is `out28/aq_joins_v68.svg`'s v6.8 column
+   (= v6.6), with the crops in `work28/sheets/png/`: `zoom_aq_six.png`
+   (the six rows, all four columns) and
+   `zoom_exit_v68_{ba,va,wa,bq,vq,wq}.png` (each exit up close). In
+   each one, the end rises to a point and the join leaves it downward
+   before turning out.
+2. **fm, fn, fv and fz** are farther from the font than v6.7's presets:
+   6.41, 10.29, 6.59 and 11.46 u, against 3.23, 3.17, 3.15 and 10.09
+   (all still within v6.6). Their attaches sit on a bound (fm 10, fn 0,
+   fz 10, fv 0 u), and so does fe's (30 u). The right letters' entry
+   stretches or hints, per pair, are the levers.
+3. **The leads and tails (K1006).** A word-final f has no tail.
