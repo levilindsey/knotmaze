@@ -732,11 +732,6 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
-- **K1083** · K1077: gap slots on the realtime burn stand, to retrace with the flow on. Run E (K1131) read
-  cause none, 0 solves a frame, but with `fw=0`; K1077's link had the flow on
-  (`.claude/probes/K1077/k441_page.mjs:114`), and its realtime extra was setMaskIds +0.19 ms, computeGapSlot
-  +0.24 and sampleAt +0.28 at 1x (`docs/design/K441_fire_frame.md`, K1077). Next: rerun
-  `.claude/probes/K1083/gaps.mjs` on that link.
 - **K1088** · K568's confetti fall costs the Pixel 11 about 15 fps on master (round 2026-10-30 step 2:
   45.0/45.3 fps, 119-122 of ~360 frames over 25 ms, none over 50, against 65a7787's 60.1/60.3, two runs a
   build in both orders, thermal status 0). Trim the piece counts or per-piece cost, or accept it.
@@ -2006,6 +2001,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1083** · retraced with the flow on: no realtime extra. Done in 257db545 (2026-11-03).
 - **K1110** · Levi heard the snore on the phone's first touch (2026-11-03: 'The snore sound is good'). Done in 933571af (2026-11-03).
 - **K1134** · Gap slots stand pat on the K1083 burn stands (cause none on 120/120 frames; 0 updates and 0 gap solves a frame, realtime and turn, on master and pre-K1082 alike), so K1077 cluster 3 does not reproduce there; solves still run per awake update (drag 287/frame) (split from K1083). Dropped: its stands were `fw=0`, which removes K1077's flow trigger; folded into K1083's retrace (the drag stand's re-solve per awake update is expected: the geometry moves) (2026-11-03).
 - **K1131** · Muse batch 8: K332, K657, K1081 and K1115 done, K1082's declare half; K1083 and K1133 were measured with `fw=0`, not on K1077's flow-on stand (the brief's error), so both retrace. Done in 91387212 (2026-11-03).
