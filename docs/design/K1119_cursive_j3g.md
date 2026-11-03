@@ -182,6 +182,35 @@ J3f did); the coordinator sends Levi the PNGs.
 - K1006 (leads and tails), K1116's residuals, K991, K1014, K1035, K1036,
   K1044, K1090, K937, K997 and K998.
 
+## Progress (WIP, at milestones)
+
+- 07:59, round 1 measured. All the tools are in `work30/dbg/`:
+  - `mk_template_k1119.py` variant R is the swoosh: a circular cap of
+    radius R_R from P_up to the top, then one cubic down and out to the
+    end;
+  - `variants_k1119.ps1` builds, counts and solves each candidate into
+    `work30/try_<C>/`, `work30/census/` and `work30/solves/`;
+  - `aqcmp_k1119.py`, `locality_k1119.py`, `mk_ports_k1119.py` (Pe90,
+    Pe60), `checks_k1119.ps1` (a draft) and `preview_k1119.py` are the
+    rest.
+- Round 1 candidates are R1, R3, R4 and R5. Every one beats v6.9 on the
+  census of the 78 pairs and the words: spikes 29 to 26, rough 75 to
+  61-66, hooks 19 and seams 7 unchanged; the bvw joins go from 3 spikes
+  and 27 rough to 0 spikes and 13-18 rough.
+- The solves gate: R4 is the only one where everything converges. R1
+  hits MAXFEV on wu, R3 on by and wi, R5 on bp, all of them corner
+  entries.
+- R4's exit is too steep. Its joins leave at -29 to -34 deg, against
+  v6.8's -21 and v6.9's -8. The end curvature is high and the attach
+  sits 2 u back. They drop 12.5-15.4 u, against v6.8's 22.7 and v6.9's
+  3-7.
+- The a/q dip is only partly back with R4. The last half sits 4.6-5.2 u
+  off v6.6's for a, down from 10-12, and 11.4-11.9 for q, down from
+  17-18. The lowest point is 100.7 against 99 for a, and 99.0 against
+  92.2-92.6 for q.
+- Round 2 is running: x3, x5 and x6 have flatter, deeper ends (2 u back
+  at -18.5 to -24 deg, 15-16.6 u below the top).
+
 ## Handoff
 
 (Appended at the stage's end.)
