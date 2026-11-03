@@ -387,11 +387,11 @@ Next free ID: K1130.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c
   merged e6c6034..aa3cdd1).
-  - owner: nobody since 2026-11-03 00:05 (round 2026-11-02 ended: step 7 done)
-  - branch: mainline; last commit: `780cda7f`
-  - evidence: .claude/probes/rounds/2026-11-02/ (untracked)
-  - next: K895 (b) retake at -Moves 0,7,11 plus installer finish refusal (K1124); K309 control from failing (k, n) pairs (K1125)
-  - brief: docs/design/K156.md, "Round 2026-11-02" (steps from "Round 2026-10-30")
+  - owner: muse session 01a1a11c-476a-7a13-9f54-9eb3140cde68 (chain run 8P), coordinated by claude session 7301c55b
+  - branch: mainline; last commit: `4f3faba5`
+  - evidence: .claude/probes/rounds/2026-11-03/ (untracked)
+  - next: round 2026-11-03: K1124 installer finish refusal, then portrait A/A at -Moves 0,7,11 and install; K1125 K309 control from failing (k, n) pairs and rimSeam difference
+  - brief: docs/design/K156.md, "Round 2026-11-03"
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
