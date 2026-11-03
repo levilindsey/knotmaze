@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1129.
+Next free ID: K1130.
 
 ## Waiting on Levi
 
@@ -301,6 +301,9 @@ Next free ID: K1129.
   (K368, 71250dca)
 - **K1127** · On a narrow phone, the hidden-runs line in the corner panel now wraps in whole phrases (no lone
   'them', no dot at a line's end). Does it read well? Pictures: .claude/probes/K1100/ (K1100, a0546b30)
+- **K1129** · With Reduced motion on and the camera following the player, the view still glides after every
+  move. Should it hold still instead, and jump only when the player gets near the edge of the screen? (K1099,
+  follow camera)
 
 ## In progress
 
@@ -502,9 +505,9 @@ Next free ID: K1129.
 - **K1108** · Muse batch 7 (`docs/design/K1108_muse_batch7.md`): A K368, B K1100, C K748, D K1109 + K1099,
   E K1101, F K426 + K437; no junction or cursive work. Runs 7A-7F chained after batch 6.
   - owner: muse runs 7A-7F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 00:28
-  - branch: mainline; last commit: `5323a521`
+  - branch: mainline; last commit: `05724e27`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 7A-7F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run D (K1109 + K1099)
+  - next: Run E (K1101)
   - brief: `docs/design/K1108_muse_batch7.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
@@ -1684,10 +1687,6 @@ Every other item below waits on the trigger it names.
   .claude/probes/K775 (hud775.mjs, out/before|after). In the shots (`.claude/probes/K775/shots/`) the last
   glyph of each value straddles the painted border (~6 px past it); a fix: let the sword row's value wrap
   like the hidden row, or shrink the column gap.
-- **K1099** · Reduced motion still glides in two camera motions K1085 left (32603535): the reset's viewHoming
-  ease (0.15 a frame, `src/app/camera.ts` updateCamera; a double-click reset) and the follow camera's spring
-  (FOLLOW_W). Inferred, unchecked: FIT_JUMP_PX (20) is absolute, read on the probe's 1000x800 window, so on a
-  larger window the settle drift's steps may pass it and snap unsmoothed; scale it by the view.
 - **K1101** · `docs/ledger_notes.md` holds 119 `## K<n> (2026-10-15, shortened by the diet)` headings twice,
   with differing bodies (the second copies from about line 3016): merge each pair under one heading, keeping
   both texts' facts. Mechanical; a Muse task.
@@ -1696,8 +1695,6 @@ Every other item below waits on the trigger it names.
   discrete corner existence vs the labels (`K1040_s1f_reach.md` F2, F3, F6).
 - **K1105** · Junction S3: form B merges a piece only into kept candidates, while the label scan drops a
   fragment against any nearer candidate; the two could disagree, not seen in the census (`K1040_s3_label.md`).
-- **K1109** · The camera's reduced-motion jump on an edge-indicator tap was code-reviewed, not probed
-  (`src/app/camera.ts`; split from K112 2026-11-02; Muse batch 7 Run D, `docs/design/K1108_muse_batch7.md`)
 - **K1116** · Cursive v6.8 (J3e): fm, fn, fv and fz sit farther from the font than v6.7's presets (6.41,
   10.29, 6.59, 11.46 u against 3.23, 3.17, 3.15, 10.09), their attaches and fe's on a bound; Levi judged the
   new f better (2026-11-02: "The new f is better"), so these are reported, not fixed per pair. f's exit at its
@@ -2016,6 +2013,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1099** · reset snaps; jump threshold checked; follow spring to Levi. Done in 05724e27 (2026-11-03).
+- **K1109** · probed: the taps jump. Done in 05724e27 (2026-11-03).
 - **K748** · no focus ring after a pointer click; phone pass and fragile check split out. Done in 5323a521 (2026-11-03).
 - **K1100** · non-breaking joins in the hidden row. Done in a0546b30 (2026-11-03).
 - **K368** · High contrast wears the ring. Done in 71250dca (2026-11-03).
