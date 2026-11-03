@@ -199,6 +199,7 @@ export interface A11yTargets {
   fadeLength: number;
   gap: number;
   markerSize: number;
+  pluckRipple: string;
 }
 export type A11yKey = keyof A11yTargets;
 
@@ -235,6 +236,10 @@ export const HIGH_CONTRAST_OVERRIDES: Readonly<OverrideTable> = {
   fadeLength: () => 0,
   gap: (v) => Math.max(v, HIGH_CONTRAST_GAP_MIN),
   markerSize: (v) => Math.max(v, HIGH_CONTRAST_MARKER_MIN),
+  // K368: a viewer who turned the ripple off keeps it off; every other
+  // look wears the ring, because the glint has little room on light
+  // threads over black.
+  pluckRipple: (v) => (v === "off" ? "off" : "ring"),
 };
 
 function tablesFor(flags: A11yFlags): Array<Readonly<OverrideTable>> {

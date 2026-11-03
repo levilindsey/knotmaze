@@ -29,6 +29,7 @@ import {
   BACKGROUND_COLOR_MODES,
 } from "../../src/render/background_model";
 import { PARAM_DEFAULTS } from "../../src/ui/url_state";
+import { PLUCK_RIPPLES } from "../../src/render/pluck_model";
 
 // An in-memory Storage that can refuse reads and/or writes (motion.test.ts).
 class FakeStorage implements StorageLike {
@@ -344,6 +345,31 @@ describe("effectiveParams", () => {
     );
   });
 
+  it("High contrast wears the ring ripple, and off stays off (K368)", () => {
+    const worn = (stored: string) =>
+      effectiveParam(
+        { ...viewer, pluckRipple: stored as typeof viewer.pluckRipple },
+        on({ highContrast: true }),
+        "pluckRipple"
+      );
+    expect(worn("wave")).toBe("ring");
+    expect(worn("glint")).toBe("ring");
+    expect(worn("ring")).toBe("ring");
+    expect(worn("off")).toBe("off");
+    for (const look of PLUCK_RIPPLES) {
+      expect(
+        effectiveParam(
+          { ...viewer, pluckRipple: look },
+          on({ reducedMotion: true }),
+          "pluckRipple"
+        )
+      ).toBe(look);
+    }
+    expect(overriddenKeys(on({ highContrast: true }))).toContain("pluckRipple");
+    expect(overriddenKeys(on({ reducedMotion: true }))).not.toContain("pluckRipple");
+    expect(overriddenKeys(NO_A11Y)).not.toContain("pluckRipple");
+  });
+
   it("the raising overrides keep a viewer's own larger value", () => {
     const big = { ...viewer, gap: 0.3, markerSize: 2.5 };
     const e = effectiveParams(big, on({ highContrast: true }));
@@ -401,6 +427,7 @@ describe("the override values are real choices", () => {
     expect(BACKGROUNDS).toContain(hc("background"));
     expect(BACKGROUND_COLOR_MODES).toContain(hc("backgroundColorMode"));
     expect(GAMUT_PALETTES).toContain(hc("palette"));
+    expect(PLUCK_RIPPLES).toContain(hc("pluckRipple"));
     expect(hc("backgroundBase")).toMatch(/^#[0-9a-f]{6}$/);
     expect(hc("pathColor")).toMatch(/^#[0-9a-f]{6}$/);
     expect(hc("markerSize") as number).toBeGreaterThanOrEqual(MARKER_SIZE_MIN);
