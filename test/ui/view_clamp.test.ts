@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   FIT_EASE,
+  HOME_EASE,
   PANEL_GAP,
   PANEL_TWEEN_S,
   RANGE_EASE,
   clampFitView,
   easeIntoRange,
-  easePanel, fitArea, fitEase, fitPlacement, fitTargetJumped, rangeRate,
+  easePanel, fitArea, fitEase, fitPlacement, fitTargetJumped, homeEase, rangeRate,
   noAllowance,
   panRange,
   stepPanelTween,
@@ -513,6 +514,12 @@ describe("K1085: the reduced-motion fit and range rates", () => {
     expect(FIT_EASE).toBe(0.08);
     expect(fitEase(false)).toBe(FIT_EASE);
     expect(fitEase(true)).toBe(1);
+  });
+
+  it("homeEase is HOME_EASE at full motion and a snap under reduced motion (K1099)", () => {
+    expect(HOME_EASE).toBe(0.15);
+    expect(homeEase(false)).toBe(HOME_EASE);
+    expect(homeEase(true)).toBe(1);
   });
 
   it("rangeRate keeps an explicit rate, including 0, in both modes", () => {

@@ -12,6 +12,7 @@ import {
   fitEase,
   fitTargetJumped,
   fitPlacement,
+  homeEase,
   noAllowance,
   stepPanelTween,
   rangeRate,
@@ -476,9 +477,11 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     }
     if (!camFollow) {
       if (viewHoming) {
-        view.zoom += (1 - view.zoom) * 0.15;
-        view.panX -= view.panX * 0.15;
-        view.panY -= view.panY * 0.15;
+        // K1099: under Reduced motion this lands home on the next frame.
+        const homeE = homeEase(motion.reduced);
+        view.zoom += (1 - view.zoom) * homeE;
+        view.panX -= view.panX * homeE;
+        view.panY -= view.panY * homeE;
         // K149: zoom 1 can have a pan range (the panel open, K198), so the
         // pan must settle too (else a reset from a panned zoom-1 view snaps
         // on frame one).
