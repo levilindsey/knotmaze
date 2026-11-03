@@ -7,3 +7,74 @@ stride 4, scale 2
 
 renderer errors: 0 (favicon requests filtered: 0)
 
+# verdict 2026-11-03T03:18:46.883Z
+
+stride 4, scale 2
+
+- muse_hash: 2480x1800/4, n 279000, covered 112220 (gpu 112221); agree 278941, boundary 59, fade 0, DEFECT 0; groups 117, segs 23349, fills 149; lost 0; 1464 ms
+  - boundary:DEPTH= 34; boundary:MERGE 24; boundary:EDGE 1
+
+renderer errors: 0 (favicon requests filtered: 0)
+
+# verdict 2026-11-03T03:18:56.123Z
+
+stride 1, scale 2
+
+- muse_hash: 2480x1800/1, n 4464000, covered 1796145 (gpu 1796148); agree 4463117, boundary 883, fade 0, DEFECT 0; groups 117, segs 23349, fills 149; lost 0; 12562 ms
+  - boundary:DEPTH= 519; boundary:MERGE 336; boundary:DEPTH 21; boundary:EDGE 7
+- muse_default_tw: 2480x1800/1, n 4464000, covered 1349659 (gpu 1349662); agree 4463616, boundary 381, fade 1, DEFECT 2; groups 117, segs 23642, fills 305; lost 0; 7070 ms
+  - boundary:MERGE 345; boundary:DEPTH= 30; boundary:EDGE 6; fade:lower[cap,tie] 1; DEFECT:higher 1; DEFECT:lower 1
+- def: 2480x1800/1, n 4464000, covered 1368096 (gpu 1368097); agree 4463591, boundary 407, fade 0, DEFECT 2; groups 125, segs 24518, fills 332; lost 0; 15398 ms
+  - boundary:MERGE 373; boundary:DEPTH= 33; DEFECT:lower 2; boundary:EDGE 1
+- fat: 2480x1800/1, n 4464000, covered 1283051 (gpu 1283051); agree 4463779, boundary 221, fade 0, DEFECT 0; groups 0, segs 17325, fills 0; lost 0; 11442 ms
+  - boundary:MERGE 216; boundary:EDGE 5
+- ring: 2480x1800/1, n 4464000, covered 879552 (gpu 879552); agree 4463905, boundary 92, fade 0, DEFECT 3; groups 16, segs 4564, fills 41; lost 0; 5013 ms
+  - boundary:MERGE 90; DEFECT:higher-samechain 2; DEFECT:lower-samechain 1; boundary:DEPTH 1; boundary:DEPTH= 1
+- user_tw42.lightpaper: 2480x1800/1, n 4464000, covered 1105129 (gpu 1105130); agree 4463253, boundary 622, fade 79, DEFECT 46; groups 47, segs 10645, fills 143; lost 0; 5271 ms
+  - boundary:MERGE 604; fade:lower[cap,tie] 47; DEFECT:lower 42; boundary:DEPTH= 15; fade:lower[cap] 14; fade:lower[merge] 9; fade:lower[cap,tie,merge] 6; DEFECT:lower-gfill 4; boundary:EDGE 3; fade:lower[cap,merge] 2; fade:lower-gfill[cap] 1
+- g41_def_tw42: 2480x1800/1, n 4464000, covered 1155830 (gpu 1155831); agree 4462418, boundary 1484, fade 57, DEFECT 41; groups 125, segs 24660, fills 380; lost 0; 6572 ms
+  - boundary:MERGE 1455; fade:lower[cap,tie] 42; DEFECT:lower 34; boundary:DEPTH= 25; fade:lower[cap] 10; DEFECT:lower-gfill 7; boundary:EDGE 4; fade:lower[cap,tie,merge] 4; fade:lower[merge] 1
+- g41_def_tw64: 2480x1800/1, n 4464000, covered 1604608 (gpu 1604609); agree 4463502, boundary 497, fade 0, DEFECT 1; groups 125, segs 24353, fills 261; lost 0; 13312 ms
+  - boundary:MERGE 433; boundary:DEPTH= 51; boundary:DEPTH 8; boundary:EDGE 5; DEFECT:higher 1
+- g41_ring_tw42: 2480x1800/1, n 4464000, covered 670465 (gpu 670464); agree 4463534, boundary 462, fade 0, DEFECT 4; groups 16, segs 4606, fills 51; lost 0; 3614 ms
+  - boundary:MERGE 457; boundary:EDGE 3; boundary:DEPTH= 2; DEFECT:higher-samechain 2; DEFECT:lower 1; DEFECT:lower-gfill 1
+- g41_ring_tw64: 2480x1800/1, n 4464000, covered 952110 (gpu 952108); agree 4463904, boundary 91, fade 0, DEFECT 5; groups 16, segs 4554, fills 38; lost 0; 6350 ms
+  - boundary:MERGE 88; DEFECT:higher-samechain 3; DEFECT:lower-samechain 2; boundary:EDGE 2; boundary:DEPTH= 1
+- g41_user_tw42: 2480x1800/1, n 4464000, covered 1105136 (gpu 1105135); agree 4463259, boundary 617, fade 79, DEFECT 45; groups 47, segs 10645, fills 143; lost 0; 6531 ms
+  - boundary:MERGE 603; fade:lower[cap,tie] 46; DEFECT:lower 41; fade:lower[cap] 14; boundary:DEPTH= 9; fade:lower[merge] 9; fade:lower[cap,tie,merge] 7; boundary:EDGE 5; DEFECT:lower-gfill 4; fade:lower[cap,merge] 2; fade:lower-gfill[cap] 1
+- g41_user_tw64: 2480x1800/1, n 4464000, covered 1477373 (gpu 1477371); agree 4463658, boundary 342, fade 0, DEFECT 0; groups 47, segs 10547, fills 104; lost 0; 10775 ms
+  - boundary:MERGE 200; boundary:DEPTH= 133; boundary:DEPTH 7; boundary:EDGE 2
+
+renderer errors: 0 (favicon requests filtered: 0)
+
+# verdict 2026-11-03T03:28:11.110Z
+
+stride 1, scale 2
+
+- muse_hash: 2480x1800/1, n 4464000, covered 1796145 (gpu 1796148); agree 4463117, boundary 883, fade 0, DEFECT 0; groups 117, segs 23349, fills 149; lost 0; 12550 ms
+  - boundary:DEPTH= 519; boundary:MERGE 336; boundary:DEPTH 21; boundary:EDGE 7
+- muse_default_tw: 2480x1800/1, n 4464000, covered 1349659 (gpu 1349662); agree 4463616, boundary 382, fade 1, DEFECT 1; groups 117, segs 23642, fills 305; lost 0; 6746 ms
+  - boundary:MERGE 345; boundary:DEPTH= 31; boundary:EDGE 6; fade:lower[cap,tie] 1; DEFECT:lower 1
+- def: 2480x1800/1, n 4464000, covered 1368096 (gpu 1368097); agree 4463591, boundary 407, fade 0, DEFECT 2; groups 125, segs 24518, fills 332; lost 0; 7048 ms
+  - boundary:MERGE 373; boundary:DEPTH= 33; DEFECT:lower 2; boundary:EDGE 1
+- fat: 2480x1800/1, n 4464000, covered 1283051 (gpu 1283051); agree 4463779, boundary 221, fade 0, DEFECT 0; groups 0, segs 17325, fills 0; lost 0; 5150 ms
+  - boundary:MERGE 216; boundary:EDGE 5
+- ring: 2480x1800/1, n 4464000, covered 879552 (gpu 879552); agree 4463905, boundary 95, fade 0, DEFECT 0; groups 16, segs 4564, fills 41; lost 0; 3965 ms
+  - boundary:MERGE 90; boundary:DEPTH= 4; boundary:DEPTH 1
+- user_tw42.lightpaper: 2480x1800/1, n 4464000, covered 1105129 (gpu 1105130); agree 4463253, boundary 622, fade 79, DEFECT 46; groups 47, segs 10645, fills 143; lost 0; 4974 ms
+  - boundary:MERGE 604; fade:lower[cap,tie] 47; DEFECT:lower 42; boundary:DEPTH= 15; fade:lower[cap] 14; fade:lower[merge] 9; fade:lower[cap,tie,merge] 6; DEFECT:lower-gfill 4; boundary:EDGE 3; fade:lower[cap,merge] 2; fade:lower-gfill[cap] 1
+- g41_def_tw42: 2480x1800/1, n 4464000, covered 1155830 (gpu 1155831); agree 4462418, boundary 1484, fade 57, DEFECT 41; groups 125, segs 24660, fills 380; lost 0; 5303 ms
+  - boundary:MERGE 1455; fade:lower[cap,tie] 42; DEFECT:lower 34; boundary:DEPTH= 25; fade:lower[cap] 10; DEFECT:lower-gfill 7; boundary:EDGE 4; fade:lower[cap,tie,merge] 4; fade:lower[merge] 1
+- g41_def_tw64: 2480x1800/1, n 4464000, covered 1604608 (gpu 1604609); agree 4463502, boundary 498, fade 0, DEFECT 0; groups 125, segs 24353, fills 261; lost 0; 9878 ms
+  - boundary:MERGE 433; boundary:DEPTH= 52; boundary:DEPTH 8; boundary:EDGE 5
+- g41_ring_tw42: 2480x1800/1, n 4464000, covered 670465 (gpu 670464); agree 4463534, boundary 464, fade 0, DEFECT 2; groups 16, segs 4606, fills 51; lost 0; 2739 ms
+  - boundary:MERGE 457; boundary:DEPTH= 4; boundary:EDGE 3; DEFECT:lower 1; DEFECT:lower-gfill 1
+- g41_ring_tw64: 2480x1800/1, n 4464000, covered 952110 (gpu 952108); agree 4463904, boundary 96, fade 0, DEFECT 0; groups 16, segs 4554, fills 38; lost 0; 5817 ms
+  - boundary:MERGE 88; boundary:DEPTH= 6; boundary:EDGE 2
+- g41_user_tw42: 2480x1800/1, n 4464000, covered 1105136 (gpu 1105135); agree 4463259, boundary 617, fade 79, DEFECT 45; groups 47, segs 10645, fills 143; lost 0; 5612 ms
+  - boundary:MERGE 603; fade:lower[cap,tie] 46; DEFECT:lower 41; fade:lower[cap] 14; boundary:DEPTH= 9; fade:lower[merge] 9; fade:lower[cap,tie,merge] 7; boundary:EDGE 5; DEFECT:lower-gfill 4; fade:lower[cap,merge] 2; fade:lower-gfill[cap] 1
+- g41_user_tw64: 2480x1800/1, n 4464000, covered 1477373 (gpu 1477371); agree 4463658, boundary 342, fade 0, DEFECT 0; groups 47, segs 10547, fills 104; lost 0; 9969 ms
+  - boundary:MERGE 200; boundary:DEPTH= 133; boundary:DEPTH 7; boundary:EDGE 2
+
+renderer errors: 0 (favicon requests filtered: 0)
+

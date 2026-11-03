@@ -135,13 +135,14 @@ function pct(a: number[], q: number): number {
   return s[Math.min(s.length - 1, Math.floor(q * s.length))];
 }
 
-async function time(scene: FieldScene, opts: { scale?: number; frames?: number } = {}) {
+async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean } = {}) {
   const scale = opts.scale ?? 2;
   const frames = opts.frames ?? 60;
   scene.look.ctrlArc ??= 0.47;
   const fb = new FormB(scene, { dpr: scale });
   const tp0 = performance.now();
   const T: LabelBTables = buildLabelB(fb);
+  if (opts.noscan) T.nb.fill(0);
   const prepMs = performance.now() - tp0;
   const { M, W, H } = camera(scene, scale);
   const pass = new LabelBPass(gl, false);

@@ -204,6 +204,177 @@ Then `## Handoff`. Stop at the cap wherever the Order stands; steps 2 and
 
 ## Findings
 
-Times (`Get-Date`, 2026-11-02): start 18:18:20; brief written 18:30.
+Times (`Get-Date`, 2026-11-02): start 18:18:20; brief written about
+18:25 (f96c760e); the pass and its pins committed 18:43 (992cff3c); the
+verdict runner 18:53 (c5f12caa, WIP); resumed after a compaction
+19:03:04; the merge scan coded 19:06:55, committed 19:18 (463238a2);
+muse_hash at 0 DEFECT 19:18:48; the 12-scene census 19:18:55-19:20:40;
+resumed after a second compaction about 19:24; the verdict's tie
+margin, census again 19:28:10-19:29:31; desktop timing
+19:29:31-19:29:47, without the scan 19:31:33-19:31:49; suite green
+19:35; stopped about 19:45 with the gate not met (class B below).
+
+**The pass.** `label_b.ts` (tables, `labelAt`, the float64 mirror of
+the fragment rule), `label_b_glsl.ts` (capsule and fill shaders),
+`label_b_pass.ts` (GL: an R32UI word and a DEPTH_COMPONENT32F texture,
+`gl_FragDepth = 0.5 - key * keyScale` with LESS, five RGBA32F tables
+read by `texelFetch`).
+The word keeps label_glsl.ts's packed layout (`label_b.ts` line 39).
+Static instances are rebuilt only on a segment-count change (one build
+per scene in every timing run).
+
+**D1, muse_hash (K1033): form B's merge and fold.** Before the scan, at
+stride 4: 12 DEFECT, MERGE 1939, fade 6. form B's `pieces()` sends a
+candidate within sigma (|dS|) of a KEPT nearer candidate of its chain
+into `alts`, and the fold gives the far piece of a kept pair
+`selfW = ss(sigma, 2 sigma, ds)` (it covers only from 1.5 sigma). The
+capsules drew every segment's foot, so a hairpin's or a kink's far side
+won by depth where form B had merged it into the near one. **The merge
+scan:** a capsule fragment of segment k is discarded when a nearer
+candidate of the same chain (geom.ts's candidate rule) lies within
+|dS| < foldR (1.5 sigma with the fold, else sigma). It reads only
+segment k's window (`nbWindows`: the segments that could hold such a
+candidate, from necessary conditions on the arc to them, their distance
+and the turning between them), two numbers per segment in a fifth
+table. Pin: the crossed
+hairpin (`hairpinX`) departs from form B at 80 points without the scan,
+0 with it. Residual: form B's merge is greedy (into kept candidates
+only), the scan drops a fragment against any nearer candidate; no
+census site traced to it.
+
+**Verdict correction (`label_b_verdict.ts`): key ties.** After the scan,
+12 DEFECTs on 5 scenes were exact ties that fp32 broke the other way
+(the sites traced had the mirror agreeing with form B and the GPU not):
+|dkey| 1.5e-9 to 1.1e-6, between two chains (g41_def_tw64,
+muse_default_tw) or two distinct pieces of one chain (ring and its g41
+variants, e.g. ring 763,351: c1 at s 9.76 and at -0.19, both at d
+0.0732, form B and the mirror take 9.76). DEPTH= excluded the same chain
+and code, and its margin was the depth word's rounding alone (a few
+1e-7). A tie is now a boundary the way an edge is: the margin adds the
+image of the position margin (each piece's d moves by epsW, the gap by
+2 epsW / K, about 7e-6 on ring and user_tw42), and any two distinct
+pieces count (the same chain reaches DEPTH= only beyond sigma: agree and
+MERGE return first). 149 DEFECT became 137; DEPTH= rose by the same 12
+(muse_default_tw 1, ring 3, g41_def_tw64 1, g41_ring_tw42 2,
+g41_ring_tw64 5). The label rule is untouched, and the smallest
+class-B gap is 5.9e-5, so the margin absorbs none of class B.
+
+**The census** (stride 1, dpr 2, 2480x1800, every pixel centre against
+`FormB.evalPoint`; page errors 0, favicon requests 0, context lost 0 on
+every scene; `s3/out/verdict_summary.md`, last run):
+
+| scene | agree | boundary | fade | DEFECT | groups |
+|---|---|---|---|---|---|
+| muse_hash | 4463117 | 883 | 0 | 0 | 117 |
+| muse_default_tw | 4463616 | 382 | 1 | 1 | 117 |
+| def | 4463591 | 407 | 0 | 2 | 125 |
+| fat | 4463779 | 221 | 0 | 0 | 0 |
+| ring | 4463905 | 95 | 0 | 0 | 16 |
+| user_tw42.lightpaper | 4463253 | 622 | 79 | 46 | 47 |
+| g41_def_tw42 | 4462418 | 1484 | 57 | 41 | 125 |
+| g41_def_tw64 | 4463502 | 498 | 0 | 0 | 125 |
+| g41_ring_tw42 | 4463534 | 464 | 0 | 2 | 16 |
+| g41_ring_tw64 | 4463904 | 96 | 0 | 0 | 16 |
+| g41_user_tw42 | 4463259 | 617 | 79 | 45 | 47 |
+| g41_user_tw64 | 4463658 | 342 | 0 | 0 | 47 |
+
+137 DEFECT on 6 scenes, all class B. Groups: at most 125, under the
+word's 255.
+
+**Label rule question (not changed): who names a group.** Every
+remaining DEFECT: the GPU equals its mirror, form B gives the same group
+code but another chain, nSurf 1, fade 0, and the GPU's key is lower
+(`lower`; `lower-gfill` where a corner fill covers). form_b.ts
+`evalLayers` (about line 1466): every piece within h + aa raises its
+surface's key and, when highest, names the surface's chain and s, while
+only a piece within h with selfW >= 0.5, or a fill, makes the surface
+cover. So where two arms of one group meet, an arm that does not cover
+the point (h <= d < h + aa, or a folded far piece) can name it. def
+851,376: c62 at d 0.2411 covers (key -0.0668); c84 at d 0.2647 > h 0.26
+names it (key -0.0614). user_tw42.lightpaper 1106,1411 (the largest
+gap, 0.089): c30 at d 0.1935 covers (z -0.0926, key -0.1375); c11 at d
+0.2103 > h 0.2100 names it (z 0, key -0.0488). |dkey| over the 137
+sites: 5.9e-5 to 8.9e-2, so the sliver is thin but the key gap need not
+be.
+The capsules discard d >= h, so the GPU names a group by its highest
+covering piece or fill. The two differ in slivers at most aa wide (half
+a device pixel) along same-group seams; both sites traced
+(`out/diag_*.txt`) are such shells, and all 137 carry fade 0. Possible
+under form B's rule though not seen: a non-covering piece lifting its
+group above another group's covering piece, which changes the top, not
+only the name. One depth-tested pass cannot take a group's key from the
+pieces within h + aa and its cover from those within h. Ways out: (a)
+form B names a surface by its covering pieces only (the name then
+switches at d = h, the arm's half-ink line, not at h + aa where its ink
+starts); that would be a definition change with its own Finding; (b) a
+second pass: shells (h <= d < h + aa) and folded pieces of the first
+pass's top group, depth-tested against it and reading its label (exact
+for the same-group case, every site seen; not for the other); (c) a
+per-fragment cover test for a shell's group. form_b.ts was not edited.
+Next 1.
+
+**Timing, desktop** (timer query over 61 draws, 60 frames and the
+warm-up, 2480x1800 at dpr 2; GPU p50 with the scan / without it, p95
+within 0.25 ms of p50; render sync runs 0.8-1.3 ms above): muse_hash
+10.38 / 3.67 ms, muse_default_tw 4.15 / 2.58, def 4.55 / 2.90, fat
+2.37 / 1.35, ring 1.98 / 1.23, user_tw42.lightpaper 2.41 / 1.56,
+g41_def_tw42 3.28 / 2.33, g41_def_tw64 6.60 / 3.53, g41_ring_tw42
+1.24 / 0.90, g41_ring_tw64 2.38 / 1.33, g41_user_tw42 2.41 / 1.56,
+g41_user_tw64 5.20 / 2.33. The scan costs 0.3-6.7 ms (2.8x on
+muse_hash). Upload of all five tables 0.0-0.1 ms (213-901 kB); prep
+8.5-95 ms of CPU (S5; `nbWindows` walks about 2M segment pairs on
+muse_hash). The gate's 2 ms is the Pixel's at its own viewport (about
+1.24 Mpx against these 4.46 Mpx), so these do not convert, but the
+scan's share is the first cost to cut.
+
+**Not run (the cap):** the Pixel's render-sync timing, the label's pops
+over the recordings, the point-table upload comparison (SAMP against
+the label tables).
+
+**K1039:** the page's favicon is a data: URL (no request), and the
+runner drops any favicon request from its error count: 0 errors and 0
+favicon requests on all 12 scenes in every run.
 
 ## Handoff
+
+What landed (branch `worktree-agent-a4d6c4eb46ea384c4`, not pushed):
+f96c760e the brief; 992cff3c the pass (`label_b.ts`, `label_b_glsl.ts`,
+`label_b_pass.ts`, `label_b_verdict.ts`) and its pins
+(`test/render/field/label_b.test.ts`); c5f12caa the verdict runner
+(`.claude/probes/K1040/s3/`: `page.ts`, `s3.mjs`, `run_locked.ps1`,
+`count.ts`); 463238a2 the merge scan (CAPSULE_FS and `labelAt`), the
+hairpinX pin, `diag.ts`, `fixdbg.ts`; the last commit: the verdict's tie
+margin, `defects.mjs`, the runner's `--noscan`, the summaries and the
+three traced sites (`out/diag_*.txt`), these Findings. No app hook: the
+pass runs only on the probe page, so
+master's default draw is unchanged. Outside `src/render/field/` and
+`test/`: `.claude/probes/K1040/s3/` (force-added) and this brief.
+
+Measurements, from the worktree:
+- Pins: `npx.cmd vitest run test/render/field/label_b.test.ts` (19
+  tests; `$env:LABELB_LOG='<file>'` appends the fixtures' verdict
+  counts).
+- Census: `& .claude\probes\K1040\s3\run_locked.ps1 -RunArgs
+  @('verdict')` (perf lock; 12 scenes, 80-105 s; `out/verdict_*.json`,
+  `out/verdict_summary.md`), then `node
+  .claude/probes/K1040/s3/defects.mjs [scenes]` (DEFECT sites by class;
+  `$env:ALL='1'` lists each with its key gap) and `node
+  scripts/run_node.mjs .claude/probes/K1040/s3/diag.ts <scene> <i> <j>`
+  (one site: candidates, pieces, evalPoint, labelAt).
+- Timing: `& .claude\probes\K1040\s3\run_locked.ps1 -RunArgs @('time')`,
+  and `@('time', '--noscan', '1')` with every scan window emptied
+  (`out/time_summary.md`).
+
+Next:
+1. Class B: settle who names a group (the Finding's options). With (a)
+   form B changes (its owner's stage), and this pass should clear the
+   137 unchanged if each is a shell naming its group (two traced, all
+   137 share the pattern); with (b) a shell pass lands here. Then re-run
+   the census for K1033's gate.
+2. Cut the scan's cost (overdraw: every capsule overlapping a pixel runs
+   its window; clip each capsule to its segment's slab, tighten the
+   windows), then time the Pixel by render sync at dpr 2 (K923's
+   harness, both locks).
+3. Step 5: the label's pops over the four recordings (label_pops' rule
+   against the fade bits) and the point-table upload comparison; S5:
+   `nbWindows`' prep.

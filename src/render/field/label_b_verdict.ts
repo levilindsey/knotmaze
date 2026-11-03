@@ -104,9 +104,14 @@ export function labelVerdict(fb: FormB, T: LabelBTables, x: number, y: number, g
   if (dEdge < epsW) return { cls: "boundary", why: "EDGE", ref };
   if (refCode >= 0 && g.code >= 0) {
     const D = 0.5 - r.key * T.keyScale;
-    const keyEps = (4 * ulp32(D)) / T.keyScale + 8 * ulp32(Math.abs(r.key) + fb.h * T.invK);
+    // A key tie is a decision boundary like an edge: within epsW of it means
+    // a key gap under the depth word's rounding plus the margin's image (each
+    // piece's d moves by epsW, so the gap by 2 epsW / K). The tie is between
+    // two distinct pieces: another code, another chain, or the same chain
+    // beyond sigma (agree and MERGE returned above), e.g. a loop's two ends.
+    const keyEps = (4 * ulp32(D)) / T.keyScale + 8 * ulp32(Math.abs(r.key) + fb.h * T.invK) + 2 * epsW * T.invK;
     if (r.nSurf >= 2 && r.dkey < keyEps) return { cls: "boundary", why: "DEPTH", ref };
-    if (Math.abs(g.key - r.key) < keyEps && (refCode !== g.code || r.chain !== g.chain)) return { cls: "boundary", why: "DEPTH=", ref };
+    if (Math.abs(g.key - r.key) < keyEps) return { cls: "boundary", why: "DEPTH=", ref };
     if (refCode !== g.code && (nearBound(T, g.chain, g.s, sTol(g.s)) || nearBound(T, r.chain, r.s, sTol(r.s)))) return { cls: "boundary", why: "CUT", ref };
   }
   const fl: string[] = [];

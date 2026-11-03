@@ -39,6 +39,8 @@ const val = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] :
 const pos = args.slice(1).filter((a, i, all) => !a.startsWith("--") && !(i > 0 && all[i - 1].startsWith("--")));
 const scenes = pos.length ? pos[0].split(",") : SCENES;
 const stride = Number(val("--stride", 1)), scale = Number(val("--scale", 2)), frames = Number(val("--frames", 60));
+// --noscan 1 (time only): every merge-scan window emptied, to price the scan.
+const noscan = val("--noscan", "0") === "1";
 const outDir = join(here, "out");
 mkdirSync(outDir, { recursive: true });
 
@@ -69,7 +71,7 @@ const errors = [];
 let favicon = 0;
 const isFav = (u) => /favicon/i.test(u ?? "");
 const stamp = new Date().toISOString();
-const summary = [`# ${mode} ${stamp}`, "", `stride ${stride}, scale ${scale}${mode === "time" ? `, frames ${frames}` : ""}`, ""];
+const summary = [`# ${mode} ${stamp}`, "", `stride ${stride}, scale ${scale}${mode === "time" ? `, frames ${frames}${noscan ? ", NO merge scan" : ""}` : ""}`, ""];
 try {
   const page = await browser.newPage();
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
@@ -94,7 +96,7 @@ try {
     const res =
       mode === "verdict"
         ? await page.evaluate((s, o) => window.s3.verdict(s, o), scene, { scale, stride })
-        : await page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames });
+        : await page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, noscan });
     res.scene = name;
     res.wallMs = Date.now() - t0;
     writeFileSync(join(outDir, `${mode}_${name}.json`), JSON.stringify(res, null, 1));
