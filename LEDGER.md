@@ -299,10 +299,10 @@ Next free ID: K1102.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
-  - owner: agent `ac83c987a53ec3ee7` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-02 18:18, 2 h cap ~20:18)
-  - branch: `worktree-agent-ac83c987a53ec3ee7`, worktree `.claude/worktrees/agent-ac83c987a53ec3ee7`; last commit: `5b8522a5`
+  - owner: nobody since 2026-11-02 19:54 (merged; agent `ac83c987a53ec3ee7` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `94f751ee`
   - evidence: `.claude/probes/K863/trace/` (`NOTES.md` has every version's files and rerun commands; J3d: `work27/`, `out27/`, `tools/*_k1027.*`, NOTES `## K1027`); Drive `K863/` (v6.7 sheets: `*_v67*.svg`); Levi's file to edit: `out25/cursive_template.svg`; the full file list as of v6.6: `docs/ledger_notes.md` `## K863`
-  - next: J3d (v6.7): the solved joins into a and q (K1027) and f's lower-loop end as a cusp into its exit (K990); then b, v and w's other high exits, the J3 and B4 leftovers (K1014, K1035, K1036, K1044, K1090), the leads and tails (K1006), K991 and K948 for the remaining pairs, K937, K997, K998, and the join sets removed; then Levi reviews again; Levi edits the newest `cursive_template.svg` once the letters look right and `build_from_svg.ps1` builds from it; K927; then map the letters onto threads (`K863_trace.md` ## Levi's calls); capitals are K931
+  - next: J3e (running since 2026-11-02 19:44): f's corner (variant C at ~64 u vs the built 44 u, by the checks), then f's exit port and the solved joins out of f (K991, K948); v6.8 in `.claude/probes/K863/trace/` work28/, out28/ (`docs/design/K990_cursive_j3e.md` on its branch; J3d's Handoff in `docs/design/K1027_cursive_j3d.md`)
   - brief: `docs/design/K1027_cursive_j3d.md` on the agent's branch (it writes it first); until then J3c's Handoff (`docs/design/K1009_cursive_j3c.md`) and `K863_trace.md` ## Levi's calls
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
