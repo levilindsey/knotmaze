@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  FIT_EASE,
   PANEL_GAP,
   PANEL_TWEEN_S,
   RANGE_EASE,
   clampFitView,
   easeIntoRange,
-  easePanel, fitArea, fitPlacement,
+  easePanel, fitArea, fitEase, fitPlacement, fitTargetJumped, rangeRate,
   noAllowance,
   panRange,
   stepPanelTween,
@@ -503,5 +504,41 @@ describe("K549: the text scene's fit area and placement", () => {
     expect(p.scale).toBeCloseTo(s, 12);
     expect(p.x).toBeCloseTo((DW - w * s) / 2 - WORD.minX * s, 9);
     expect(p.y).toBeCloseTo((DH - h * s) / 2 - WORD.minY * s, 9);
+  });
+});
+
+// K1085: reduced motion snaps the camera's fit and its range ease.
+describe("K1085: the reduced-motion fit and range rates", () => {
+  it("fitEase is FIT_EASE at full motion and a snap under reduced motion", () => {
+    expect(FIT_EASE).toBe(0.08);
+    expect(fitEase(false)).toBe(FIT_EASE);
+    expect(fitEase(true)).toBe(1);
+  });
+
+  it("rangeRate keeps an explicit rate, including 0, in both modes", () => {
+    expect(rangeRate(0, true)).toBe(0);
+    expect(rangeRate(0, false)).toBe(0);
+    expect(rangeRate(1, true)).toBe(1);
+    expect(rangeRate(1, false)).toBe(1);
+    expect(rangeRate(0.3, true)).toBe(0.3);
+    expect(rangeRate(RANGE_EASE, false)).toBe(RANGE_EASE);
+  });
+
+  it("rangeRate with no rate snaps when reduced and keeps the default otherwise", () => {
+    expect(rangeRate(undefined, true)).toBe(1);
+    expect(rangeRate(undefined, false)).toBeUndefined();
+  });
+
+  it("fitTargetJumped separates the settle drift from a panel toggle's jump", () => {
+    const at = { scale: 20, x: 100, y: 50 };
+    // The drift's largest recompute step in the probe table, and rest.
+    expect(fitTargetJumped(at, { scale: 19.4, x: 112, y: 59 })).toBe(false);
+    expect(fitTargetJumped(at, at)).toBe(false);
+    expect(fitTargetJumped(at, { scale: 20, x: 119, y: 50 })).toBe(false);
+    expect(fitTargetJumped(at, { scale: 21.8, x: 100, y: 50 })).toBe(false);
+    // A text scene's panel toggle, and each half of it alone.
+    expect(fitTargetJumped(at, { scale: 31.7, x: 105, y: 17 })).toBe(true);
+    expect(fitTargetJumped(at, { scale: 20, x: 121, y: 50 })).toBe(true);
+    expect(fitTargetJumped(at, { scale: 22.2, x: 100, y: 50 })).toBe(true);
   });
 });
