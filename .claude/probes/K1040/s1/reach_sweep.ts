@@ -109,8 +109,11 @@ ny /= nl;
 out.push(`sweep: chain ${ch.id} vertex ${vi} (${f(ch.pts[2 * vi])}, ${f(ch.pts[2 * vi + 1])}), ${f(vd, 4)} from the matched point at eV ${f(eV / hw, 3)}h, moved δ h along (${f(nx, 3)}, ${f(ny, 3)}), δ in [−${range}, ${range}], ${steps} steps`);
 out.push(`  δ(h)     r0(h)    e_c(h)   e*1(h)   e*2(h)   reach: quad    c2       c3      | L: quad   c2      c3`);
 const cols: number[][] = [];
+// DC (env, h): the sweep's centre, so a fine sweep can sit on one step of a coarse one.
+const dc = Number(process.env.DC ?? 0);
+if (dc) out.push(`  (centred at δ ${dc} h: δ in [${dc - range}, ${dc + range}])`);
 for (let i = 0; i <= steps; i++) {
-  const dl = -range + (2 * range * i) / steps;
+  const dl = dc - range + (2 * range * i) / steps;
   const sc = structuredClone(sc0);
   sc.chains[x0.qi].pts[2 * vi] += dl * hw * nx;
   sc.chains[x0.qi].pts[2 * vi + 1] += dl * hw * ny;

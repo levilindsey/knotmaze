@@ -1,0 +1,16 @@
+
+muse_hash (29.930, 20.675) ±1 arm 111's root (j 36, c11, L 0.000 -> 0.000, Lcut -2.605 -> -1.555): c1: 85x85 px; |ink − oracle| > 0.5 on 499; partial ink in the oracle's fill 381; mean ink 0.3117
+muse_hash (29.930, 20.675) ±1 arm 111's root (j 36, c11, L 0.000 -> 0.000, Lcut -2.605 -> -1.555): q: 85x85 px; |ink − oracle| > 0.5 on 499; partial ink in the oracle's fill 381; mean ink 0.3117
+  c1 against q: ink differs by > 0.02 on 0 px, > 0.5 on 0; max 0.0000
+muse_hash (14.028, 0.912) ±1 arm 336's root (j 111, c83, L 0.000 -> 0.000, Lcut -11.293 -> -0.334): c1: 85x85 px; |ink − oracle| > 0.5 on 200; partial ink in the oracle's fill 577; mean ink 0.2142
+muse_hash (14.028, 0.912) ±1 arm 336's root (j 111, c83, L 0.000 -> 0.000, Lcut -11.293 -> -0.334): q: 85x85 px; |ink − oracle| > 0.5 on 182; partial ink in the oracle's fill 478; mean ink 0.2081
+  c1 against q: ink differs by > 0.02 on 293 px, > 0.5 on 9; max 0.7314
+g41_user_tw64 (5.781, 14.894) ±1 arm 110's root (j 36, c11, L 0.000 -> 0.000, Lcut -0.464 -> -0.360): c1: 132x132 px; |ink − oracle| > 0.5 on 637; partial ink in the oracle's fill 958; mean ink 0.2614
+g41_user_tw64 (5.781, 14.894) ±1 arm 110's root (j 36, c11, L 0.000 -> 0.000, Lcut -0.464 -> -0.360): q: 132x132 px; |ink − oracle| > 0.5 on 637; partial ink in the oracle's fill 935; mean ink 0.2611
+  c1 against q: ink differs by > 0.02 on 64 px, > 0.5 on 0; max 0.1389
+muse_hash (13.394, 1.605) ±1 arm 197's root (j 65, c83, L 0.000 -> 0.612, Lcut -10.348 -> 0.612): c1: 85x85 px; |ink − oracle| > 0.5 on 281; partial ink in the oracle's fill 579; mean ink 0.2897
+muse_hash (13.394, 1.605) ±1 arm 197's root (j 65, c83, L 0.000 -> 0.612, Lcut -10.348 -> 0.612): q: 85x85 px; |ink − oracle| > 0.5 on 266; partial ink in the oracle's fill 474; mean ink 0.2835
+  c1 against q: ink differs by > 0.02 on 287 px, > 0.5 on 10; max 0.7244
+g41_user_tw64 (5.649, 12.643) ±1 arm 97's root (j 32, c11, L 0.874 -> 0.978, Lcut 0.874 -> 0.978): c1: 132x132 px; |ink − oracle| > 0.5 on 4; partial ink in the oracle's fill 302; mean ink 0.2567
+g41_user_tw64 (5.649, 12.643) ±1 arm 97's root (j 32, c11, L 0.874 -> 0.978, Lcut 0.874 -> 0.978): q: 132x132 px; |ink − oracle| > 0.5 on 1; partial ink in the oracle's fill 171; mean ink 0.2552
+  c1 against q: ink differs by > 0.02 on 264 px, > 0.5 on 4; max 0.6274

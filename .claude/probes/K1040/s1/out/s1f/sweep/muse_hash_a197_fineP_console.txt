@@ -1,0 +1,3 @@
+muse_hash arm 197 (pi 83 dir 1 through, L 0.6116): binding pass s 4.4792 → chain 83 sq 9.8340 σ -1, d 6.53h θ 0.0637 r0 31.40h; e_c 2.744h; h 0.4
+largest step between neighbouring δ (δ step 0.0010 h; reaches in h, L in world units): r0 0.0100 (at δ 0.701); e_c 0.0008 (at δ 0.750); e*1 0.0013 (at δ 0.750); e*2 0.0013 (at δ 0.750); reach quad 0.0100 (at δ 0.701); reach c2 0.0008 (at δ 0.750); reach c3 0.0100 (at δ 0.701); L quad 0.0040 (at δ 0.701); L c2 0.0000 (at δ 0.000); L c3 0.0040 (at δ 0.701)
+wrote C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/agent-a43dac8f0673db4df/.claude/probes/K1040/s1/out/s1f/sweep/muse_hash_a197_fineP.txt
