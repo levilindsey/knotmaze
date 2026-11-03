@@ -504,9 +504,9 @@ Next free ID: K1138.
   past the head marker, behind a probe hook); B, K1083 and K1133 retraced on K1077's flow-on stand; C, K1135's
   behavior test; D, batch 10's brief drafted.
   - owner: muse runs 9A-9D, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 06:52
-  - branch: mainline; last commit: `6f23bf20`
+  - branch: mainline; last commit: `610408d3`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K1132/`, `.claude/probes/K1083/flow/`
-  - next: Run A done; next Run B
+  - next: Run B done; next Run C
   - brief: `docs/design/K1137_muse_batch9.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 9A-9D)
 - **K1119** · Cursive J3g (v7.0), Levi's answers to v6.9 (2026-11-03): b, v and w exit between v6.8 and
@@ -1696,10 +1696,9 @@ Every other item below waits on the trigger it names.
   every run, so the tracked `phone_time_summary.md` grows with each rerun (S3b's Handoff).
 - **K1128** · Sprint: no real phone pass yet (emulated 411x753); the s3a fragile page check is weak on the
   hunter, and the fire side is unit-tested only (split from K748)
-- **K1133** · Burn re-declare: fillet rebuilds on front-crossing frames (2-3 per 119 on K1082's realtime
-  stand, uwRev under-window updates, before and after the declare alike; split from K1082), measured with
-  `fw=0`. On K1077's flow-on stand, buildProfile, pushFan and visit under rebuildFillets cost +0.42, +0.28
-  and +0.23 ms at 1x, realtime over turn: retrace with the flow on, with K1083, before deciding.
+- **K1133** · Burn re-declare: fillet rebuilds on front-crossing frames, retraced with the flow on
+  (K1137 Run B, K1077 stand): realtime 71/119 vs turn 59/119 (burn cross-check 0.56 vs 0.50 a frame); the
+  12 without an update split uwRev 8, joint-key 4; a fix needs incremental fillets (joinery), not the declare.
 - **K1135** · Reset's reanchorStep (K1115, 91387212; `src/ui/tweakpane_panel.ts` row()) reaches Tweakpane
   internals (`controller.value.value_.constraint_`, a StepConstraint's origin) and silently does nothing if
   they change; tweakpane is `^4.0.5` and the tests pin source text only. Guard: a behavior test on a real Pane
