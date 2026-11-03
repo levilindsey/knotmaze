@@ -284,18 +284,11 @@ Next free ID: K1138.
   doc Findings filed).
 - **K1080** · On the phone, zoom in and out and tap threads and junction choices: do the tap targets feel
   right? They now stay the same finger size at every zoom (K331, bc5f0043).
-- **K1110** · On the phone, with sound on and the settings panel left open from last time, reload and make
-  your very first touch a tap on Made by Snoring Cat: do you hear the snore before the studio page opens?
-  (K343, 933571af)
 - **K1111** · In the settings panel, drag Backdrop intensity, Pulse reach, Settle budget and Load settle: do
   the sliders still feel right? (They now move in finer steps; Reset to defaults now lands on the exact
   default.) (K130, 5f28e0b1)
 - **K1118** · With the game open in two browser tabs, change Motion in one: does the other tab follow at once,
   with no reload? (K112, 3ff7144a)
-- **K1119** · Cursive v6.9 (J3f): do the joins out of b, v and w now leave less down and more out, including
-  the straight climbs into b, f, h, k and l (Drive K863/ `b_v69.svg`, `v_v69.svg`, `w_v69.svg`)? And the six
-  a/q joins, now straight without v6.6's dip: fine, or keep v6.6's (`aq_joins_v69.svg`; if v6.6's, J3f's next
-  is a's and q's entry angle)? Sent as pictures 2026-11-02 (`K1113_cursive_j3f.md` ## Handoff).
 - **K1126** · With High contrast on, a plucked thread now shows the ring ripple whatever ripple you picked
   (unless it is off). Does it read well on the light threads over black? Pictures: .claude/probes/K368/shots/
   (K368, 71250dca)
@@ -306,8 +299,9 @@ Next free ID: K1138.
   follow camera)
 - **K1132** · After you press an arrow key (or WASD) once, small arrows sit at the start of each run at your
   junction, showing which key takes it. At the default marker size they sit mostly under your own marker,
-  and only their tips show. Move them out past the marker, or keep them as they are? Pictures:
-  `.claude/probes/K332/shots/` (crop_*_5x.png; K332, 3346474f)
+  and only their tips show. Move them out past the marker, or keep them as they are? Pictures, sent 2026-11-03:
+  `.claude/probes/K1132/shots/` (sheet_desk.png, left now, right out; the out placement is
+  `__knotKeyHintPlace("out")`, 6f23bf20)
 
 ## In progress
 
@@ -326,7 +320,7 @@ Next free ID: K1138.
   - owner: nobody since 2026-11-02 23:06 (merged; agent `a6420b23c491748f8` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
   - branch: mainline; last commit: `ba9c38b3`
   - evidence: .claude/probes/K863/trace/ (`NOTES.md` has every version's files and rerun commands; J3f: `work29/`, `out29/`, `work29/dbg/*_k1113.*`, NOTES `## K1113`; J3e: `work28/`, `out28/`, NOTES `## K990e`); Drive `K863/` (v6.9: `*_v69.svg`); Levi's file to edit: `out25/cursive_template.svg`; the full file list as of v6.6: `docs/ledger_notes.md` `## K863`
-  - next: Levi's v6.9 look (K1119); then K1112's next letter, c, one stage (`K1113_cursive_j3f.md` ## Handoff, Next)
+  - next: J3g (K1119): b/v/w exits between v6.8 and v6.9, the a/q dip back; then K1112's next letter, c, one stage
   - brief: `docs/design/K1113_cursive_j3f.md` (## Handoff); J3e's Handoff in `docs/design/K990_cursive_j3e.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
@@ -500,11 +494,11 @@ Next free ID: K1138.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-02 23:08 (merged; agent `a99cc3250b93f7bc0` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `c4863a50`
-  - evidence: `.claude/probes/K1040/s3/` (`phone_time.mjs`, `run_phone.ps1`, `phone_table.ps1`, `win_stats.ts`, `time_table.ps1`; `out/`, the summaries tracked; S3b's outputs that share S3's names in the main checkout's `out/s3b/`); oracle30 and the recordings: worktree `k868-s3a` (`.claude/probes/S3a/seq13/`)
-  - next: S3c: the label pass without discards for the Pixel's GPU (one shaded fragment per pixel, depth from the vertex shader as K923's label set it), gated on the Pixel's 2 ms; if it misses, the coarser target (K923's lr), a new budget (Levi's) only after both; then step 5: the pops (def_drag, def_flow, muse_drag, muse_flow) and SAMP's upload against label_tables'
-  - brief: `docs/design/K1040_s3b_label.md` (F1-F4, ## Handoff); S3's Handoff in `docs/design/K1040_s3_label.md`
+  - owner: agent `aaf87e9d3775b20e4` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-03 07:10, 2 h cap ~09:10)
+  - branch: `worktree-agent-aaf87e9d3775b20e4`, worktree `.claude/worktrees/agent-aaf87e9d3775b20e4`; last commit: `37e82c50`
+  - evidence: .claude/probes/K1040/s3/ (phone_time.mjs, run_phone.ps1, phone_table.ps1, win_stats.ts, time_table.ps1; out/); oracle30 and the recordings: worktree k868-s3a (.claude/probes/S3a/seq13/)
+  - next: S3c's variants without discards, the census, desktop timing, then the phone commands for when the phone is free
+  - brief: docs/design/K1040_s3c_label.md (its branch); S3b's Handoff in docs/design/K1040_s3b_label.md
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`
 - **K1137** · Muse batch 9 (`docs/design/K1137_muse_batch9.md`): A, K1132's pictures (a key-hint placement
   past the head marker, behind a probe hook); B, K1083 and K1133 retraced on K1077's flow-on stand; C, K1135's
@@ -515,6 +509,14 @@ Next free ID: K1138.
   - next: Run A done; next Run B
   - brief: `docs/design/K1137_muse_batch9.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 9A-9D)
+- **K1119** · Cursive J3g (v7.0), Levi's answers to v6.9 (2026-11-03): b, v and w exit between v6.8 and
+  v6.9, closer to v6.8 ("still exit somewhat downward and with a swoosh"); the six a/q joins get v6.6's dip
+  back ("We need that dip"); the e after them decided by the checks. One sheet per letter for Levi.
+  - owner: agent `adcba68466fb7684f` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-03 07:17, 2 h cap ~09:17)
+  - branch: `worktree-agent-adcba68466fb7684f`, worktree `.claude/worktrees/agent-adcba68466fb7684f`; last commit: `845437c0`
+  - evidence: .claude/probes/K863/trace/ (work30/, out30/, NOTES ## K1119)
+  - next: b/v/w exit rule between v6.8 and v6.9, the a/q dip, the e decision, the gates, sheets and upload
+  - brief: docs/design/K1119_cursive_j3g.md (its branch); J3f's Handoff in docs/design/K1113_cursive_j3f.md
 
 ## Next, in order
 
@@ -1122,8 +1124,8 @@ Every other item below waits on the trigger it names.
 - **K319** · ANGLE's Vulkan backend lacks `KHR_parallel_shader_compile` (K307 s1) and phones may
   too: K307's warm-up then links blocking and stalls for the longest compile (section-rgb, ~2.8 s
   cold on D3D11). The phone's answer rides K156's next pass.
-- **K342** · The snore link (K325) is verified on desktop Chrome only. Unchecked: Android Chrome
-  (the touch delay's feel, a tab switch cutting the sound; rides K156's next phone pass),
+- **K342** · The snore link (K325) is verified on desktop Chrome, and Levi heard it on the phone's first
+  touch (2026-11-03, K1110). Unchecked: Android Chrome (the touch delay's feel, a tab switch cutting the sound; rides K156's next phone pass),
   Safari/iOS, other desktop browsers. `gameplay-audio.md`, THE SNORING CAT LINK.
 - **K348** · Key-move edges left by K329/K333/K334: the X assignment switches only past KEY_TIE, a
   hold shorter than HOLD_DELAY pauses at the first junction, a wait tap mid-move isn't queued, and
@@ -2004,6 +2006,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1110** · Levi heard the snore on the phone's first touch (2026-11-03: 'The snore sound is good'). Done in 933571af (2026-11-03).
 - **K1134** · Gap slots stand pat on the K1083 burn stands (cause none on 120/120 frames; 0 updates and 0 gap solves a frame, realtime and turn, on master and pre-K1082 alike), so K1077 cluster 3 does not reproduce there; solves still run per awake update (drag 287/frame) (split from K1083). Dropped: its stands were `fw=0`, which removes K1077's flow trigger; folded into K1083's retrace (the drag stand's re-solve per awake update is expected: the geometry moves) (2026-11-03).
 - **K1131** · Muse batch 8: K332, K657, K1081 and K1115 done, K1082's declare half; K1083 and K1133 were measured with `fw=0`, not on K1077's flow-on stand (the brief's error), so both retrace. Done in 91387212 (2026-11-03).
 - **K1115** · one general Reset fix in row/doReset. Done in 91387212 (2026-11-03).
