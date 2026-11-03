@@ -135,7 +135,32 @@ function pct(a: number[], q: number): number {
   return s[Math.min(s.length - 1, Math.floor(q * s.length))];
 }
 
-async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean } = {}) {
+// K923 bench.js's fit (S3b step 4): the chains' bbox plus h, times 1.04,
+// centred on a fit[0] x fit[1] CSS px canvas at the scale (the Pixel's
+// 411x753 at dpr 2 is 822x1506 device px).
+function fitCamera(scene: FieldScene, h: number, fit: [number, number], scale: number) {
+  const W = Math.round(fit[0] * scale);
+  const H = Math.round(fit[1] * scale);
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const ch of scene.chains)
+    for (let i = 0; i + 1 < ch.pts.length; i += 2) {
+      const x = ch.pts[i], y = ch.pts[i + 1];
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+    }
+  x0 -= h; y0 -= h; x1 += h; y1 += h;
+  const s = Math.min(W / ((x1 - x0) * 1.04), H / ((y1 - y0) * 1.04));
+  const M = [s, 0, 0, s, W / 2 - ((x0 + x1) / 2) * s, H / 2 - ((y0 + y1) / 2) * s] as unknown as Affine;
+  return { M, W, H };
+}
+
+// opts.fit: K923's fit on that canvas (else the scene's own camera);
+// opts.b2b: K923's render sync, the frames back to back in one task after
+// 10 warm-up renders (else one a frame, after a rAF); opts.floor: no upload
+// and no draw, only the 1-px readback (K923's floor).
+async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean; fit?: [number, number]; b2b?: boolean; floor?: boolean } = {}) {
   const scale = opts.scale ?? 2;
   const frames = opts.frames ?? 60;
   scene.look.ctrlArc ??= 0.47;
@@ -144,21 +169,23 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
   const T: LabelBTables = buildLabelB(fb);
   if (opts.noscan) T.nb.fill(0);
   const prepMs = performance.now() - tp0;
-  const { M, W, H } = camera(scene, scale);
+  const { M, W, H } = opts.fit ? fitCamera(scene, fb.h, opts.fit, scale) : camera(scene, scale);
   const pass = new LabelBPass(gl, false);
   pass.resize(W, H);
   pass.upload(T);
   // Warm-up (shader compile, first allocation).
-  pass.draw(M);
-  pass.sync();
+  for (let k = 0; k < (opts.b2b ? 10 : 1); k++) {
+    pass.draw(M);
+    pass.sync();
+  }
   const up: number[] = [];
   const sync: number[] = [];
   for (let k = 0; k < frames; k++) {
-    await nextFrame();
+    if (!opts.b2b) await nextFrame();
     const u0 = performance.now();
-    pass.upload(T);
+    if (!opts.floor) pass.upload(T);
     const u1 = performance.now();
-    pass.draw(M);
+    if (!opts.floor) pass.draw(M);
     pass.sync();
     const u2 = performance.now();
     up.push(u1 - u0);

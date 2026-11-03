@@ -137,7 +137,14 @@ matter most.
   diagram change, the corner solve off the main thread).
 - The app's hook behind a flag (S4b adds the flag param); the pass runs
   only on the probe page.
-- Whatever of steps 4 and 5 the cap leaves.
+- Whatever of steps 4 and 5 the cap leaves. (S3b's end: step 4 ran, F4;
+  step 5 did not.)
+- The scan's remaining cost (F3: muse_hash 2.08 of 3.87 ms on the desktop;
+  F4: half of muse_hash's 41 ms on the Pixel) and the span walk, untimed
+  alone.
+- The Pixel gate (F4): the label costs 10.6-39.6 ms there by K923's
+  method against 2 ms, with the scan off still 6.3-19.7 ms above the floor. A decision before
+  S4 builds the band on this pass.
 
 ## Where things are
 
@@ -407,4 +414,184 @@ $norm = { param($f) Get-Content $f | Where-Object { $_ -match '^\s*- ' } |
 Compare-Object (& $norm out\verdict_summary_a.md) (& $norm out\verdict_summary_s3b_final.md)
 ```
 
+### F4. The Pixel: 10.6-39.6 ms by K923's method, against the 2 ms gate (22:37-22:49)
+
+The kit's read-only check (`scripts/phone_pass.ps1 -Phase check`) passed
+before every run, so step 4 ran: nine runs under both locks, eight over
+the 12 scenes and a first floor run over two. Each began with the
+launcher in front.
+**The gate fails by 5-20x.** By K923's method the label costs 10.6-39.6 ms
+above the readback floor; K923's prototype label cost 1.83 ms. F3's cuts
+help there too, less than on the desktop: 1.1-1.6x from 1778fc58's shader
+(pre3) by K923's method, 1.07-1.9x at 2480x1800.
+
+**The kit** (new): `phone_time.mjs` bundles `page.ts` with rolldown
+(`--glsl <file>` swaps another `label_b_glsl.ts` in at bundle time), serves
+it on 127.0.0.1:5403, adds the adb reverse and the 9222 forward only if
+missing, opens the page with `am start` (a VIEW intent, no key or input
+event) and drives `window.s3.time` over CDP. A `getevent` watch stops the
+run at any input event; none fired. After the run it closes its own tab,
+sends HOME if the launcher was in front, and removes only the tunnels it
+added. `run_phone.ps1` runs it after the kit's read-only check, under the
+phone lock and then the perf lock, and releases both by owner.
+`phone_table.ps1` tabulates the runs. The renderer is ANGLE on Vulkan,
+PowerVR C-Series CXTP-48-1536, with no timer query, so the measure is
+render sync: the draw plus a 1-px `readPixels`. In every run: thermal 0,
+battery 22.6-23.4 C, no media playing, 0 context losses.
+
+**Two setups.** (a) S3's `time()`: the scene's camera at scale 2
+(2480x1800), one render a rAF, 60 frames. (b) K923's (`--fit 411x753
+--b2b`, new in `page.ts`): the Pixel's window at dpr 2 (822x1506), K923's
+fit (the chains' bbox plus h, times 1.04, centred), 60 renders back to
+back in one task after 10 warm-ups. Its floor (`--floor`, the readback
+alone) is 1.0-2.8 ms. The gate's numbers are (b)'s.
+
+(b), sync p50/p95 ms. The middle three columns are timing-only variants
+whose labels are wrong: the scan off (`--noscan`, every window empty); no
+`gl_FragDepth` (both writes removed, so depth is the vertex's constant
+0.5); and no `gl_FragDepth` and none of the nine `discard`s.
+
+| scene | final | pre3 | scan off | no FragDepth | no FragDepth, no discard | floor | final − floor |
+|---|---|---|---|---|---|---|---|
+| muse_hash | 41.1/48.8 | 57.9/66.7 | 21.2/24.6 | 36.9/49.0 | 8.3/14.2 | 1.5/3.0 | 39.6 |
+| muse_default_tw | 23.3/32.9 | 34.5/45.0 | 18.6/22.0 | 25.4/33.8 | 6.0/7.5 | 2.0/4.3 | 21.3 |
+| def | 24.8/36.2 | 35.5/43.7 | 20.2/24.7 | 24.8/34.9 | 8.2/9.4 | 2.3/4.2 | 22.5 |
+| fat | 22.0/25.2 | 24.2/33.8 | 14.2/18.7 | 20.8/25.4 | 6.9/8.2 | 2.1/3.8 | 19.9 |
+| ring | 13.8/15.9 | 21.0/25.2 | 9.1/11.1 | 13.6/15.7 | 7.0/8.4 | 2.8/4.4 | 11.0 |
+| user_tw42.lightpaper | 17.4/21.1 | 25.4/31.4 | 12.3/16.9 | 17.5/20.9 | 7.3/9.5 | 2.6/3.9 | 14.8 |
+| g41_def_tw42 | 25.3/29.9 | 31.0/41.8 | 20.1/25.9 | 26.8/34.8 | 9.2/15.0 | 2.2/3.7 | 23.1 |
+| g41_def_tw64 | 32.5/42.7 | 42.8/53.2 | 20.2/23.8 | 34.2/41.4 | 9.2/14.1 | 2.0/3.7 | 30.5 |
+| g41_ring_tw42 | 11.6/14.0 | 14.3/17.1 | 9.1/11.4 | 11.7/14.8 | 6.0/7.2 | 1.0/3.4 | 10.6 |
+| g41_ring_tw64 | 15.2/18.9 | 24.7/28.9 | 9.8/13.6 | 14.8/18.7 | 6.5/7.9 | 1.9/3.9 | 13.3 |
+| g41_user_tw42 | 17.8/22.3 | 26.9/30.4 | 12.6/17.5 | 17.4/21.9 | 7.8/10.5 | 2.6/4.2 | 15.2 |
+| g41_user_tw64 | 23.6/32.0 | 38.0/48.0 | 13.6/16.7 | 24.4/31.0 | 7.1/9.9 | 2.0/3.7 | 21.6 |
+
+(a), sync p50/p95 ms, final against pre3: muse_hash 43.6/52.9 against
+82.3/92.9, muse_default_tw 28.6/37.3 against 40.0/46.7, def 27.3/38.0
+against 42.0/51.5, fat 22.9/30.9 against 28.5/37.9, ring 19.4/25.4 against
+24.1/33.1, user_tw42 25.1/29.4 against 26.8/35.1, g41_def_tw42 25.5/33.7
+against 34.2/43.3, g41_def_tw64 34.6/42.9 against 55.7/62.4, g41_ring_tw42
+14.5/18.3 against 21.7/26.1, g41_ring_tw64 21.4/24.8 against 25.6/34.3,
+g41_user_tw42 25.6/28.8 against 30.2/37.8, g41_user_tw64 29.6/35.5 against
+44.1/50.7. Uploads took 0.1-0.4 ms (213-901 kB). `buildLabelB` took 11-104 ms
+on the phone (`prepMs`).
+
+**Where the time goes, measured.**
+- **The scan** (scan off): 9.1-21.2 ms remain, 6.3-19.7 ms above the
+  floor, still 3-10x the gate. The scan is half of muse_hash (41.1 to
+  21.2 ms) and 2.5-12.3 ms of the others.
+- **`gl_FragDepth`**: removing both writes changes nothing beyond the
+  noise: every scene stays within 10% of final, either way.
+- **The discards**: removing them as well gives 6.0-9.2 ms, 1.9-5x faster
+  than final.
+
+Observed: the cost follows the discards, not the depth writes. Inferred,
+not tested: with a `discard` in the shader, the PowerVR shades every
+capsule and fill fragment that covers a pixel, because its hidden-surface
+removal cannot drop a fragment that may still discard. The pass then pays
+its overdraw times the foot test and the scan. Without the discards, at
+the vertex's constant depth and LESS, only a pixel's first fragment
+passes, and the GPU can reject the rest before shading them.
+
+K923's label set depth from the vertex (`scripts/k923/bench.js`,
+LABEL_VS's `gl_Position`, line 288), never writes `gl_FragDepth` and has
+no discard: that file's seven discards are all in later shaders (lines
+374-426).
+
+Even the variant without discards costs 4.0-7.2 ms above the floor
+(observed), 2-3.6x the gate. Inferred: that is about one shading a
+covered pixel plus the geometry (23,349 instanced capsules on
+muse_hash), and these runs cannot split the two. This needs a decision
+before S4 builds the band on this pass (Later work, Handoff Next 1).
+
+Commands (from the worktree; each run appends to
+`out/phone_time_summary.md` and writes `out/phone_time_<label>_<scene>.json`):
+
+```powershell
+$s3 = '.claude\probes\K1040\s3'
+& $s3\run_phone.ps1                                   # (a), 2480x1800
+& $s3\run_phone.ps1 -RunArgs @('--fit', '411x753', '--label', 'fit', '--b2b')
+& $s3\run_phone.ps1 -RunArgs @('--fit', '411x753', '--label', 'floorall', '--b2b', '--floor')
+& $s3\run_phone.ps1 -RunArgs @('--fit', '411x753', '--label', 'fitnoscan', '--b2b', '--noscan')
+# The swapped shaders: build the file, then pass its absolute path.
+$o = "$PWD\$s3\out"
+cmd /c "git show 1778fc58:src/render/field/label_b_glsl.ts > $o\label_b_glsl_1778fc58.ts"
+$src = [IO.File]::ReadAllText("$PWD\src\render\field\label_b_glsl.ts")
+$nofd = $src.Replace('gl_FragDepth = 0.5 - key * uKeyScale;', '/* K1097 HSR probe: no gl_FragDepth */')
+[IO.File]::WriteAllText("$o\label_b_glsl_nofd.ts", $nofd)
+[IO.File]::WriteAllText("$o\label_b_glsl_nofd_nodiscard.ts", $nofd.Replace('discard;', '{} /* K1097 HSR probe: no discard */'))
+& $s3\run_phone.ps1 -RunArgs @('--glsl', "$o\label_b_glsl_1778fc58.ts", '--label', 'pre3')
+& $s3\run_phone.ps1 -RunArgs @('--glsl', "$o\label_b_glsl_1778fc58.ts", '--fit', '411x753', '--label', 'pre3fit', '--b2b')
+& $s3\run_phone.ps1 -RunArgs @('--glsl', "$o\label_b_glsl_nofd.ts", '--fit', '411x753', '--label', 'nofd', '--b2b')
+& $s3\run_phone.ps1 -RunArgs @('--glsl', "$o\label_b_glsl_nofd_nodiscard.ts", '--fit', '411x753', '--label', 'nofdnd', '--b2b')
+& $s3\phone_table.ps1 fit pre3fit fitnoscan nofd nofdnd floorall -Floor floorall
+& $s3\phone_table.ps1 final pre3
+```
+
 ## Handoff
+
+S3b stopped after step 4, at 22:58 (start 21:29:41, cap 23:29:41).
+Step 5 was not started. The branch is
+`worktree-agent-a99cc3250b93f7bc0`, never pushed.
+
+**What landed, commit by commit:**
+- `d4ad825d`: the brief.
+- `1778fc58` (F1-F2): form B names a surface by its covering pieces only
+  (`labelBy: "cover"` in `form_b.ts`, pinned in `label_b.test.ts`). The
+  census reads 0 DEFECT and 0 fade on all 12 scenes, so K1033 can close.
+- `41951b5c`: step 3 WIP.
+- `2e1f0815` (F3): in `label_b_glsl.ts`, the slab clip (VS) and the
+  carried scan (FS). The desktop runs 1.6-2.6x faster and the census is
+  unchanged. Cut 3 (each side's early end) was exact but no faster, so it
+  was reverted. `npm test`: 2617 passed, 8 skipped.
+- This commit (F4): the Pixel kit (`phone_time.mjs`, `run_phone.ps1`,
+  `phone_table.ps1`; `page.ts`'s `time()` gains K923's fit,
+  back-to-back renders and the floor), its numbers, and this Handoff.
+
+**Before (F0, the stage start) and after**, the census at dpr 2 and
+2480x1800. The desktop column is the GPU p50 by timer query, in ms. The
+Pixel column is the sync p50 by K923's method, from 1778fc58's shader to
+now, with the floor taken off in parentheses.
+
+| scene | DEFECT | fade | desktop GPU p50 | Pixel sync p50 |
+|---|---|---|---|---|
+| muse_hash | 0 → 0 | 0 → 0 | 10.199 → 3.869 | 57.9 → 41.1 (39.6) |
+| muse_default_tw | 1 → 0 | 1 → 0 | 4.126 → 2.128 | 34.5 → 23.3 (21.3) |
+| def | 2 → 0 | 0 → 0 | 4.546 → 2.205 | 35.5 → 24.8 (22.5) |
+| fat | 0 → 0 | 0 → 0 | 2.363 → 1.189 | 24.2 → 22.0 (19.9) |
+| ring | 0 → 0 | 0 → 0 | 1.964 → 1.016 | 21.0 → 13.8 (11.0) |
+| user_tw42.lightpaper | 46 → 0 | 79 → 0 | 2.395 → 1.269 | 25.4 → 17.4 (14.8) |
+| g41_def_tw42 | 41 → 0 | 57 → 0 | 3.280 → 1.827 | 31.0 → 25.3 (23.1) |
+| g41_def_tw64 | 0 → 0 | 0 → 0 | 6.579 → 2.750 | 42.8 → 32.5 (30.5) |
+| g41_ring_tw42 | 2 → 0 | 0 → 0 | 1.230 → 0.761 | 14.3 → 11.6 (10.6) |
+| g41_ring_tw64 | 0 → 0 | 0 → 0 | 2.373 → 1.124 | 24.7 → 15.2 (13.3) |
+| g41_user_tw42 | 45 → 0 | 79 → 0 | 2.391 → 1.266 | 26.9 → 17.8 (15.2) |
+| g41_user_tw64 | 0 → 0 | 0 → 0 | 5.206 → 1.999 | 38.0 → 23.6 (21.6) |
+| total | 137 → 0 | 216 → 0 | | |
+
+**Commands:** F2's census, F3's desktop timing and F4's Pixel blocks.
+Everything runs from the worktree, under `run_locked.ps1` (the perf lock)
+or `run_phone.ps1` (both locks). The outputs are in
+`.claude/probes/K1040/s3/out/`, untracked except the summaries and tables
+the Findings cite. They are also copied to the main checkout's same path.
+
+**Next:**
+1. **The Pixel gate (F4)** needs a decision before S4 builds the band on
+   this pass. The label costs 10.6-39.6 ms there against 2 ms. The cost
+   follows the discards. Even with no discard it costs 4.0-7.2 ms above
+   the floor. The options: restructure the
+   pass for the tile-based GPU (one shaded fragment a pixel, and fewer or
+   smaller capsules), a coarser label target (K923's `lr`), or a new
+   budget.
+2. **Step 5**, not run:
+   - The pops over def_drag, def_flow, muse_drag and muse_flow. The
+     recordings are read-only, in
+     `.claude/worktrees/k868-s3a/.claude/probes/S3a/seq13/`; the tools
+     are `scripts/label_pops.ts` and S1's `.claude/probes/K1040/s1/pops*.ts`.
+   - Then SAMP's upload against label_tables'. The label tables upload
+     213-901 KB a scene, in 0.2-0.4 ms on the Pixel.
+3. **The rest:**
+   - the scan's remaining cost and the untimed span walk (F3, F4);
+   - S5's `nbWindows` prep (`buildLabelB` takes 9-128 ms on the desktop,
+     12-103 ms on the Pixel);
+   - S4b's flag hook.
