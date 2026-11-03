@@ -601,6 +601,8 @@ export function buildPanel(
     key: string;
     def: unknown;
     custom?: CustomDefault;
+    // K1115: moves this row's step grid onto its default (see row()).
+    reanchor?: () => void;
   }
   const tracked: Tracked[] = [];
   const markRow = (t: Tracked): void => {
@@ -863,7 +865,36 @@ export function buildPanel(
     ) as RowApi;
     api.element.title = tipText;
     api.element.classList.add("kp-row");
-    const t: Tracked = { api, obj, key, def, custom };
+    // K1115: Tweakpane anchors a stepped binding's step grid on the
+    // value the row first shows (the StepConstraint's origin is the
+    // binding's initial value), so a link holding an off-grid value
+    // makes a reset refresh land a step off the default. reanchorStep
+    // moves that anchor onto the default; both reset paths (the glyph
+    // below and doReset) call it before they refresh. Tweakpane has no
+    // setter for the origin, so walk the binding's constraint tree.
+    const reanchorStep = (): void => {
+      if (typeof opts?.step !== "number" || typeof def !== "number") return;
+      const findStep = (c: unknown): { origin: number } | null => {
+        if (!c || typeof c !== "object") return null;
+        const o = c as { origin?: unknown; constraints?: unknown };
+        if (typeof o.origin === "number") return o as { origin: number };
+        if (Array.isArray(o.constraints)) {
+          for (const sub of o.constraints) {
+            const hit = findStep(sub);
+            if (hit) return hit;
+          }
+        }
+        return null;
+      };
+      const ctl = (
+        api as unknown as {
+          controller?: { value?: { value_?: { constraint_?: unknown } } };
+        }
+      ).controller;
+      const sc = findStep(ctl?.value?.value_?.constraint_);
+      if (sc) sc.origin = def;
+    };
+    const t: Tracked = { api, obj, key, def, custom, reanchor: reanchorStep };
     // Set by the change handler: Tweakpane's refresh() fires it whenever the
     // shown value changes, so a reset must not run the row's effects again.
     let fired = false;
@@ -884,6 +915,7 @@ export function buildPanel(
         } else {
           if (obj[key] === def) return;
           obj[key] = def;
+          reanchorStep();
         }
         fired = false;
         api.refresh?.();
@@ -3455,6 +3487,8 @@ export function buildPanel(
     () => callbacks.onStatsToggle(settings.showStats === true)
   );
   const doReset = (): void => {
+    // K1115: every stepped row's grid onto its default before the refresh.
+    for (const t of tracked) t.reanchor?.();
     Object.assign(params, PARAM_DEFAULTS);
     settings.temperature = SETTINGS_DEFAULTS.temperature;
     Object.assign(clockView, clockViewOf()); // K795: the Clock rows too

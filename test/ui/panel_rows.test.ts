@@ -139,3 +139,39 @@ describe("K130/K495: stepped rows and the end glow row", () => {
     expect(line).toContain('"beacon"');
   });
 });
+
+describe("K1115: one general Reset fix in row/doReset", () => {
+  it("re-anchors the step grid on the default inside row()", () => {
+    const start = PANEL.indexOf("const row = (");
+    const end = PANEL.indexOf("const button = (", start);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const rowSrc = PANEL.slice(start, end);
+    expect(rowSrc).toContain("const reanchorStep");
+    expect(rowSrc).toContain("sc.origin = def");
+    expect(rowSrc).toContain("reanchor: reanchorStep");
+  });
+
+  it("is used by both reset paths before they refresh", () => {
+    const glyph = PANEL.indexOf('btn.addEventListener("pointerdown"');
+    expect(glyph).toBeGreaterThan(-1);
+    const glyphSrc = PANEL.slice(glyph, PANEL.indexOf("api.refresh?.();", glyph));
+    expect(glyphSrc).toContain("obj[key] = def;");
+    expect(glyphSrc).toContain("reanchorStep();");
+    const dz = PANEL.indexOf("const doReset = (): void => {");
+    expect(dz).toBeGreaterThan(-1);
+    const dzSrc = PANEL.slice(dz, PANEL.indexOf("pane.refresh();", dz));
+    expect(dzSrc).toContain("t.reanchor?.()");
+    expect(dzSrc).toContain("Object.assign(params, PARAM_DEFAULTS);");
+  });
+
+  it("gains or loses no row's step for the fix", () => {
+    // 135 stepped bindings today (K130's sweep surface); a new stepped
+    // row updates this pin on purpose, like the codec's key order.
+    expect(PANEL.match(/step:/g)).toHaveLength(135);
+    for (const k of ["backgroundIntensity", "pulseReach", "settleBudget", "loadSettle"]) {
+      const i = PANEL.indexOf(`"${k}"`);
+      expect(PANEL.slice(i, PANEL.indexOf("\n  );", i)), k).not.toContain("step:");
+    }
+  });
+});
