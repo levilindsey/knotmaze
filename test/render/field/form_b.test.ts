@@ -606,3 +606,86 @@ describe("form B: watertight and the rate rule at every fade value (S1b)", () =>
       console.log(`[form_b] rate ${name} (ink per px): ${report.join(", ")}`);
     });
 });
+
+describe("form B: a crossing's reach (S1f, K1092)", () => {
+  // Chain 0 along y = 0 (s = x + 10) through a junction at the origin; its
+  // arm with dir +1 meets a pass at x = D, d = D from the root.
+  const D = 60;
+  const teeArms: SceneArm[] = [
+    { chain: 0, s: 10, dir: 1, kind: "through" },
+    { chain: 1, s: 0, dir: 1, kind: "end" },
+    { chain: 0, s: 10, dir: -1, kind: "through" },
+  ];
+  const passScene = (partner: number[], sq: number) =>
+    scene([line(-10, 0, 100, 0), ray(0, 0, 90, 0, 10), partner], [junction([0, 0], teeArms)], [{ a: { chain: 0, s: 10 + D }, b: { chain: 2, s: sq }, over: "a" }]);
+  const armOf = (fb: FormB, pi: number, dir: number) => fb.arms.find((a) => a.pi === pi && a.dir === dir)!;
+
+  it("straight threads: the reach is r0 = h·cot(θ/2) exactly, at every angle", () => {
+    for (const th of [0.05, 0.2, 0.4, 0.6]) {
+      const ct = Math.cos(th);
+      const st = Math.sin(th);
+      const sc = passScene(line(D - 70 * ct, -70 * st, D + 70 * ct, 70 * st), 70);
+      const quad = armOf(new FormB(sc), 0, 1);
+      const straight = armOf(new FormB(sc, { reach: "straight" }), 0, 1);
+      const r0 = H / Math.tan(th / 2);
+      expect(straight.Lcut, `θ ${th}`).toBeCloseTo(D - r0 - H, 6);
+      expect(quad.Lcut, `θ ${th}`).toBeCloseTo(straight.Lcut, 9);
+      expect(quad.L, `θ ${th}`).toBeCloseTo(straight.L, 9);
+    }
+  });
+
+  it("a near-tangent pass whose partner turns away 2 behind it: the reach stops at 4h, not r0 (K1092's phantom)", () => {
+    const th = 0.05;
+    const p1x = D - 2 * Math.cos(th);
+    const p1y = -2 * Math.sin(th);
+    // The partner climbs straight up to P1, then runs at θ through the pass.
+    const partner = [...line(p1x, -20, p1x, p1y).slice(0, -2), ...line(p1x, p1y, D + 40 * Math.cos(th), 40 * Math.sin(th))];
+    const sc = passScene(partner, 20 + p1y + 2);
+    const quad = armOf(new FormB(sc), 0, 1);
+    const straight = armOf(new FormB(sc, { reach: "straight" }), 0, 1);
+    // Straight: r0 = 40h behind a pass whose threads part after 2.
+    expect(straight.L).toBeCloseTo(D - H / Math.tan(th / 2) - H, 6);
+    // The quadratic reach: e* < 4h there, so the floor binds.
+    expect(quad.L).toBeCloseTo(D - 4 * H - H, 9);
+  });
+
+  it("an eye: the arm's L is continuous where the walk's jumps (reach_eye.ts)", () => {
+    // Chain 1 crosses chain 0 at the origin at θ0, its vertex at x = 7
+    // lifted by w; a junction at x = 12 (s 32) sends chain 0's dir −1 arm
+    // to the pass, d = 12.
+    const th0 = 0.05;
+    const arms: SceneArm[] = [
+      { chain: 0, s: 32, dir: 1, kind: "through" },
+      { chain: 0, s: 32, dir: -1, kind: "through" },
+      { chain: 2, s: 0, dir: 1, kind: "end" },
+    ];
+    const eye = (w: number) => {
+      const pts1: number[] = [];
+      for (const x of [-20, -10, -1, 1, 3, 7, 11, 20, 30, 40]) pts1.push(x, th0 * x + (x === 7 ? w : 0));
+      return scene([line(-20, 0, 40, 0), pts1, ray(12, 0, 270, 0, 10)], [junction([12, 0], arms)], [{ a: { chain: 0, s: 20 }, b: { chain: 1, s: 20 * Math.hypot(1, th0) }, over: "a" }]);
+    };
+    const stepOf = { quad: 0, walk: 0 };
+    let prev: { quad: number; walk: number } | null = null;
+    let lo = Infinity;
+    let hi = -Infinity;
+    const step = 0.002;
+    for (let k = 0; k <= 110; k++) {
+      const sc = eye(1.4 + k * step);
+      const cur = { quad: armOf(new FormB(sc), 0, -1).L, walk: armOf(new FormB(sc, { reach: "walk" }), 0, -1).L };
+      if (prev) {
+        stepOf.quad = Math.max(stepOf.quad, Math.abs(cur.quad - prev.quad));
+        stepOf.walk = Math.max(stepOf.walk, Math.abs(cur.walk - prev.walk));
+      }
+      lo = Math.min(lo, cur.quad);
+      hi = Math.max(hi, cur.quad);
+      prev = cur;
+    }
+    // The walk's first crossing of its target flips from the eye's far
+    // side to its near side (S1f F2: L 0 -> 3.27 in one 0.002 step).
+    expect(stepOf.walk).toBeGreaterThan(3);
+    // The quadratic reach moves L by its slope (about 10 per unit of w) and no more.
+    expect(stepOf.quad).toBeLessThan(0.05);
+    expect(hi - lo).toBeGreaterThan(1);
+    console.log(`[form_b] eye sweep, largest |ΔL| per ${step} of w: quad ${stepOf.quad.toFixed(4)}, walk ${stepOf.walk.toFixed(4)}; quad L ${lo.toFixed(3)}..${hi.toFixed(3)}`);
+  });
+});
