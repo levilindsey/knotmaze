@@ -306,6 +306,72 @@ interface Parent {
   addButton: (opts: { title: string; label?: string }) => unknown;
 }
 
+// K1115/K1135: Tweakpane anchors a stepped binding's step grid on the
+// value the row first shows (the StepConstraint's origin is the binding's
+// initial value), so a link holding an off-grid value makes a reset
+// refresh land a step off the default. The re-anchor moves that origin
+// onto the default. Tweakpane has no setter for the origin, so it walks
+// the binding's constraint tree through Tweakpane internals
+// (`controller.value.value_.constraint_`); if those internals change and
+// no step constraint is found, warn once per page (K1135) instead of
+// silently landing a step off. Exported for the behavior test on a real
+// Pane (test/ui/reanchor_step.test.ts), which runs this same code path.
+export function findStepConstraint(root: unknown): { origin: number } | null {
+  if (!root || typeof root !== "object") return null;
+  const o = root as { origin?: unknown; constraints?: unknown };
+  if (typeof o.origin === "number") return o as { origin: number };
+  if (Array.isArray(o.constraints)) {
+    for (const sub of o.constraints) {
+      const hit = findStepConstraint(sub);
+      if (hit) return hit;
+    }
+  }
+  return null;
+}
+
+export function stepConstraintOf(api: unknown): { origin: number } | null {
+  const ctl = (
+    api as {
+      controller?: { value?: { value_?: { constraint_?: unknown } } };
+    } | null
+  )?.controller;
+  return findStepConstraint(ctl?.value?.value_?.constraint_);
+}
+
+let stepReanchorWarned = false;
+
+export function warnStepReanchorOnce(): void {
+  if (stepReanchorWarned) return;
+  stepReanchorWarned = true;
+  console.warn(
+    "K1135: Reset could not re-anchor a stepped row (no step constraint " +
+      "found in the Tweakpane binding); the reset value may land a step " +
+      "off its default."
+  );
+}
+
+// Test-only: re-arm the warn-once above.
+export function resetStepReanchorWarnForTest(): void {
+  stepReanchorWarned = false;
+}
+
+// Move `api`'s step grid onto `def`. Returns false (and warns once) when
+// the binding carries no step constraint to move.
+export function reanchorStepBinding(
+  api: unknown,
+  stepSize: unknown,
+  def: unknown
+): boolean {
+  if (typeof stepSize !== "number" || typeof def !== "number") return false;
+  const sc = stepConstraintOf(api);
+  if (!sc) {
+    warnStepReanchorOnce();
+    return false;
+  }
+  sc.origin = def;
+  return true;
+}
+
 export function buildPanel(
   params: UrlParams,
   settings: PanelSettings,
@@ -865,34 +931,11 @@ export function buildPanel(
     ) as RowApi;
     api.element.title = tipText;
     api.element.classList.add("kp-row");
-    // K1115: Tweakpane anchors a stepped binding's step grid on the
-    // value the row first shows (the StepConstraint's origin is the
-    // binding's initial value), so a link holding an off-grid value
-    // makes a reset refresh land a step off the default. reanchorStep
-    // moves that anchor onto the default; both reset paths (the glyph
-    // below and doReset) call it before they refresh. Tweakpane has no
-    // setter for the origin, so walk the binding's constraint tree.
+    // K1115: both reset paths (the glyph below and doReset) re-anchor
+    // this row's step grid on its default before they refresh, through
+    // the shared K1135 helper above buildPanel.
     const reanchorStep = (): void => {
-      if (typeof opts?.step !== "number" || typeof def !== "number") return;
-      const findStep = (c: unknown): { origin: number } | null => {
-        if (!c || typeof c !== "object") return null;
-        const o = c as { origin?: unknown; constraints?: unknown };
-        if (typeof o.origin === "number") return o as { origin: number };
-        if (Array.isArray(o.constraints)) {
-          for (const sub of o.constraints) {
-            const hit = findStep(sub);
-            if (hit) return hit;
-          }
-        }
-        return null;
-      };
-      const ctl = (
-        api as unknown as {
-          controller?: { value?: { value_?: { constraint_?: unknown } } };
-        }
-      ).controller;
-      const sc = findStep(ctl?.value?.value_?.constraint_);
-      if (sc) sc.origin = def;
+      reanchorStepBinding(api, opts?.step, def);
     };
     const t: Tracked = { api, obj, key, def, custom, reanchor: reanchorStep };
     // Set by the change handler: Tweakpane's refresh() fires it whenever the
