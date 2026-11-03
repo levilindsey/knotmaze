@@ -1,0 +1,127 @@
+{
+ "muse_hash": [
+  {
+   "at": [
+    26.654,
+    1.084
+   ],
+   "i": 805,
+   "j": 91,
+   "px": 52,
+   "group": 7,
+   "ringTerms": {
+    "foot": 67,
+    "tA": 18,
+    "tB": 5
+   },
+   "fade": 16,
+   "oraclePaper": 52
+  },
+  {
+   "at": [
+    9,
+    8.944
+   ],
+   "i": 429,
+   "j": 258,
+   "px": 36,
+   "group": 110,
+   "ringTerms": {
+    "foot": 84,
+    "tA": 2
+   },
+   "fade": 16,
+   "oraclePaper": 34
+  },
+  {
+   "at": [
+    5.27,
+    14.925
+   ],
+   "i": 349,
+   "j": 386,
+   "px": 23,
+   "group": 55,
+   "ringTerms": {
+    "tB": 13,
+    "arc": 12,
+    "tA": 7,
+    "foot": 28
+   },
+   "fade": 17,
+   "oraclePaper": 23
+  }
+ ],
+ "muse_default_tw": [
+  {
+   "at": [
+    27.069,
+    1.23
+   ],
+   "i": 822,
+   "j": 77,
+   "px": 160,
+   "group": 7,
+   "ringTerms": {
+    "foot": 91,
+    "tA": 9,
+    "arc": 37,
+    "tB": 7
+   },
+   "fade": 16,
+   "oraclePaper": 159
+  },
+  {
+   "at": [
+    5.166,
+    3.077
+   ],
+   "i": 335,
+   "j": 118,
+   "px": 2,
+   "group": 48,
+   "ringTerms": {
+    "foot": 11,
+    "tA": 3
+   },
+   "fade": 18,
+   "oraclePaper": 2
+  },
+  {
+   "at": [
+    8.976,
+    8.859
+   ],
+   "i": 419,
+   "j": 247,
+   "px": 163,
+   "group": 110,
+   "ringTerms": {
+    "foot": 91,
+    "tA": 8,
+    "tB": 8,
+    "arc": 39
+   },
+   "fade": 16,
+   "oraclePaper": 163
+  },
+  {
+   "at": [
+    5.459,
+    14.982
+   ],
+   "i": 341,
+   "j": 383,
+   "px": 94,
+   "group": 55,
+   "ringTerms": {
+    "arc": 39,
+    "tB": 6,
+    "tA": 7,
+    "foot": 62
+   },
+   "fade": 25,
+   "oraclePaper": 94
+  }
+ ]
+}

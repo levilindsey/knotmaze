@@ -1,0 +1,163 @@
+{
+ "muse_hash": [
+  {
+   "at": [
+    26.654,
+    1.084
+   ],
+   "i": 805,
+   "j": 91,
+   "px": 52,
+   "group": 7,
+   "ringTerms": {
+    "foot": 67,
+    "tA": 18,
+    "tB": 5
+   },
+   "fade": 16,
+   "oraclePaper": 52
+  },
+  {
+   "at": [
+    9.007,
+    8.946
+   ],
+   "i": 429,
+   "j": 258,
+   "px": 33,
+   "group": 110,
+   "ringTerms": {
+    "tB": 2,
+    "foot": 54,
+    "tA": 18
+   },
+   "fade": 16,
+   "oraclePaper": 33
+  },
+  {
+   "at": [
+    5.303,
+    14.928
+   ],
+   "i": 350,
+   "j": 386,
+   "px": 28,
+   "group": 55,
+   "ringTerms": {
+    "tA": 8,
+    "tB": 8,
+    "foot": 54
+   },
+   "fade": 17,
+   "oraclePaper": 27
+  },
+  {
+   "at": [
+    25.321,
+    20.828
+   ],
+   "i": 777,
+   "j": 512,
+   "px": 50,
+   "group": 108,
+   "ringTerms": {
+    "tB": 13,
+    "arc": 8,
+    "tA": 13,
+    "foot": 42
+   },
+   "fade": 16,
+   "oraclePaper": 50
+  }
+ ],
+ "muse_default_tw": [
+  {
+   "at": [
+    27.069,
+    1.23
+   ],
+   "i": 822,
+   "j": 77,
+   "px": 160,
+   "group": 7,
+   "ringTerms": {
+    "foot": 91,
+    "tA": 9,
+    "arc": 37,
+    "tB": 7
+   },
+   "fade": 16,
+   "oraclePaper": 159
+  },
+  {
+   "at": [
+    5.166,
+    3.077
+   ],
+   "i": 335,
+   "j": 118,
+   "px": 2,
+   "group": 48,
+   "ringTerms": {
+    "foot": 11,
+    "tA": 3
+   },
+   "fade": 18,
+   "oraclePaper": 2
+  },
+  {
+   "at": [
+    8.976,
+    8.859
+   ],
+   "i": 419,
+   "j": 247,
+   "px": 163,
+   "group": 110,
+   "ringTerms": {
+    "foot": 91,
+    "tA": 8,
+    "tB": 8,
+    "arc": 39
+   },
+   "fade": 16,
+   "oraclePaper": 163
+  },
+  {
+   "at": [
+    5.483,
+    14.978
+   ],
+   "i": 342,
+   "j": 383,
+   "px": 103,
+   "group": 55,
+   "ringTerms": {
+    "arc": 27,
+    "tB": 6,
+    "tA": 6,
+    "foot": 81
+   },
+   "fade": 25,
+   "oraclePaper": 103
+  },
+  {
+   "at": [
+    25.263,
+    20.81
+   ],
+   "i": 782,
+   "j": 512,
+   "px": 164,
+   "group": 108,
+   "ringTerms": {
+    "arc": 37,
+    "tA": 11,
+    "foot": 78,
+    "tB": 14
+   },
+   "fade": 16,
+   "oraclePaper": 164
+  }
+ ]
+}

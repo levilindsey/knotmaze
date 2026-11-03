@@ -1,0 +1,392 @@
+{
+ "merge": {
+  "pops": 11,
+  "px": 137,
+  "mergedPx": 27,
+  "popsLeft": 10,
+  "pxLeft": 100,
+  "whollyMerged": 0
+ },
+ "units": {
+  "0": 114,
+  "1": 23
+ },
+ "table": {
+  "smooth motion": {
+   "crossing60+": {
+    "pops": 6,
+    "px": 24,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 0,
+      "to": 1,
+      "at": [
+       19.053,
+       32.654
+      ],
+      "px": 4,
+      "mix": {
+       "winner foot>foot/top": 2,
+       "gate foot": 2
+      },
+      "sw": {
+       "at": [
+        19.077,
+        32.654
+       ],
+       "total": 0.927,
+       "maxStep": 0.155,
+       "fadeMid": 0
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-a8056cde26bf07a6a\\.claude\\probes\\K1040\\s1\\out\\s1g\\pops_g1\\mech_muse_flow\\crops\\muse_flow_smooth-motion_crossing60+_0.png"
+     }
+    ]
+   }
+  },
+  "scene chain samples": {
+   "crossing60+": {
+    "pops": 1,
+    "px": 4,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 1,
+      "to": 2,
+      "at": [
+       16.19,
+       4.746
+      ],
+      "px": 4,
+      "mix": {
+       "motion foot": 2,
+       "gate foot": 2
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-a8056cde26bf07a6a\\.claude\\probes\\K1040\\s1\\out\\s1g\\pops_g1\\mech_muse_flow\\crops\\muse_flow_scene-chain-samples_crossing60+_1.png"
+     }
+    ]
+   },
+   "junction": {
+    "pops": 3,
+    "px": 104,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 7,
+      "to": 8,
+      "at": [
+       8.177,
+       22.757
+      ],
+      "px": 80,
+      "mix": {
+       "merge": 14,
+       "winner arc>foot": 2,
+       "winner arc>tA": 3,
+       "winner arc>none/top": 17,
+       "winner arc>none": 4,
+       "winner arc>tB/top": 1,
+       "gate arc": 5,
+       "motion arc": 5,
+       "winner none>arc": 26,
+       "winner arc>tA/top": 1,
+       "winner arc>foot/top": 1,
+       "winner none>tA": 1
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-a8056cde26bf07a6a\\.claude\\probes\\K1040\\s1\\out\\s1g\\pops_g1\\mech_muse_flow\\crops\\muse_flow_scene-chain-samples_junction_7.png"
+     }
+    ]
+   }
+  },
+  "switch corner radius": {
+   "junction": {
+    "pops": 1,
+    "px": 5,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 31,
+      "to": 32,
+      "at": [
+       9.509,
+       8.966
+      ],
+      "px": 5,
+      "mix": {
+       "merge": 3,
+       "winner tA>none": 2
+      },
+      "sw": {
+       "at": [
+        9.5,
+        8.994
+       ],
+       "t": 0.9989742283942178,
+       "jump": 1,
+       "total": 1,
+       "a": {
+        "ink": 1,
+        "top": 110,
+        "kind": 2,
+        "chain": 72,
+        "own": false,
+        "w": 1,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 3
+       },
+       "b": {
+        "ink": 0,
+        "top": 110,
+        "kind": 0,
+        "chain": -1,
+        "own": false,
+        "w": 0,
+        "nSurf": 1,
+        "np": 2,
+        "nu": 0,
+        "merged": true,
+        "fade": 0,
+        "nc": 3
+       },
+       "corners": "radius 155/471/472 Vx 9.396>8.739 Vy 8.966>8.905 qx 9.396>8.861 qy 8.966>8.91 r 0>0.055 r1 0>0.055 rV 0>0.122 room -0.019>0.674 dA 1.75>0.756 dB 1.574>0.649 tax 9.396>8.843 tay 8.966>8.858 tbx 9.396>8.838 tby 8.966>8.96"
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-a8056cde26bf07a6a\\.claude\\probes\\K1040\\s1\\out\\s1g\\pops_g1\\mech_muse_flow\\crops\\muse_flow_switch-corner-radius_junction_31.png"
+     }
+    ]
+   }
+  }
+ },
+ "all": [
+  {
+   "seq": "muse_flow",
+   "from": 0,
+   "to": 1,
+   "at": [
+    19.053,
+    32.654
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     19.077,
+     32.654
+    ],
+    "total": 0.927,
+    "maxStep": 0.155,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 1,
+   "to": 2,
+   "at": [
+    16.19,
+    4.746
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 1,
+   "to": 2,
+   "at": [
+    11.598,
+    17.306
+   ],
+   "px": 16,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 1,
+   "to": 2,
+   "at": [
+    11.431,
+    17.392
+   ],
+   "px": 8,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 3,
+   "to": 4,
+   "at": [
+    16.143,
+    4.699
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     16.166,
+     4.722
+    ],
+    "total": 0.245,
+    "maxStep": 0.031,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 7,
+   "to": 8,
+   "at": [
+    8.177,
+    22.757
+   ],
+   "px": 80,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 11,
+   "to": 12,
+   "at": [
+    22.95,
+    6.06
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     22.973,
+     6.037
+    ],
+    "total": 0.207,
+    "maxStep": 0.026,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 18,
+   "to": 19,
+   "at": [
+    11.495,
+    31.833
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     11.472,
+     31.856
+    ],
+    "total": 0.195,
+    "maxStep": 0.026,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 31,
+   "to": 32,
+   "at": [
+    9.509,
+    8.966
+   ],
+   "px": 5,
+   "place": "junction",
+   "top": "switch corner radius",
+   "sw": {
+    "at": [
+     9.5,
+     8.994
+    ],
+    "t": 0.9989742283942178,
+    "jump": 1,
+    "total": 1,
+    "a": {
+     "ink": 1,
+     "top": 110,
+     "kind": 2,
+     "chain": 72,
+     "own": false,
+     "w": 1,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "b": {
+     "ink": 0,
+     "top": 110,
+     "kind": 0,
+     "chain": -1,
+     "own": false,
+     "w": 0,
+     "nSurf": 1,
+     "np": 2,
+     "nu": 0,
+     "merged": true,
+     "fade": 0,
+     "nc": 3
+    },
+    "corners": "radius 155/471/472 Vx 9.396>8.739 Vy 8.966>8.905 qx 9.396>8.861 qy 8.966>8.91 r 0>0.055 r1 0>0.055 rV 0>0.122 room -0.019>0.674 dA 1.75>0.756 dB 1.574>0.649 tax 9.396>8.843 tay 8.966>8.858 tbx 9.396>8.838 tby 8.966>8.96"
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 32,
+   "to": 33,
+   "at": [
+    22.997,
+    23.758
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     22.926,
+     23.829
+    ],
+    "total": 0.414,
+    "maxStep": 0.059,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 38,
+   "to": 39,
+   "at": [
+    22.292,
+    10.849
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     22.316,
+     10.872
+    ],
+    "total": 0.329,
+    "maxStep": 0.043,
+    "fadeMid": 0
+   }
+  }
+ ],
+ "lines": [
+  "muse_flow: by mechanism {\"smooth motion\":6,\"scene chain samples\":4,\"switch corner radius\":1}"
+ ]
+}

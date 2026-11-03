@@ -435,3 +435,103 @@ weights continuous in the geometry (Next 2). Reproduce: `npx vite-node
 vite-node .claude/probes/K1040/s1/gateomegaf_s1g.ts` (→
 `gateomegaf_2_0.15.txt`; the other two: TH 1.2, H 0.6, X 2.42-2.46 and
 TH 2, H 0.3, X 1.40-1.44).
+
+### F6. The gate: S1g's final (`-Tag g1`, F1 + F2) against S1f's final (`-Tag q`) (20:24-20:48)
+
+No check is worse on any scene without an attribution. Each move was
+attributed by rerunning its measure under four definitions: s1f
+(`{"dEdge":"skip","rootBand":0}`, which reproduces `-Tag q`'s counts
+here), near (F1 only), rb05 (F2 only) and both (g1). Every move that
+was split is F1's. F2 moves none of them; its change at rest is F2's
+census (155 corners' r, tip at most 0.221h). The rate sites are split
+by F1's own gate, whose four values g1 repeats; `-Tag rb05` ran with
+F1, so it doesn't split them. The pops' unexplained-px and fade counts
+were not split.
+
+- **Pins and `npm test`:** pins 25 passed (q 22, before S1g's pins);
+  `npm test` 2576 passed, 8 skipped (q 2573, 8).
+- **scenes.ts with the free ends** (`gate_table.ps1`): F1's gate exactly.
+  #1 158 → 154 (muse_hash 4 → 0), free ends 110 → 102 (muse_hash
+  37 → 32, g41_def_tw64 11 → 9, g41_user_tw64 22 → 21), no scene worse.
+  Every shared check's failing-scene count is unchanged: #2 11, #3 1, #4
+  11, #5 10, #6 5, #7 2, #8 0, #9 outline walks 10 and sections 5, #11
+  1, #14 1, #15 0, #16 2.
+- **b_rate:** 161 sites, 0 breaches, max 2.92 (q's). F1's four sites
+  moved: muse_hash (5.553, 14.959) 1.41 → 1.49 and (11.375, 3.126)
+  1.48 → 1.49; g41_def_tw64 (32.8, 0.596) 2.08 → 2.02 and (32.8, 0.551)
+  2.08 → 2.01.
+- **The pops:**
+  - def_drag, def_flow and muse_drag keep their pops (muse_drag 6, 36
+    px). muse_drag's unexplained px outside fades go 218 → 212.
+  - muse_flow goes 10 → 11 pops (132 → 137 px). Its unexplained px go
+    639 → 629 outside fades; inside fades f8 29 → 8, f24 2 → 0, f16
+    210 → 216 and f6 12 → 10.
+  - After pops_mech's merge: q has 16 pops (168 px), 30 px merged, and
+    14 pops (126 px) left. g1 has 17 pops (173 px), 33 px merged, and
+    the same 14 pops (126 px) left.
+  - corner_why: q has none. g1 has one, which the merge excuses:
+    `muse_flow 31>32 (9.509, 8.966) 5 px [switch corner radius]
+    155/471/472: r1 room (dV); r 0 > 0.055`.
+- **That pop is F1's, through F5's foot jump.** `popattr_s1g.ts` sweeps
+  the corner's r over the 31 > 32 interpolation in 100 steps, then
+  bisects the largest step 24 times.
+  - s1f and rb05: r stays 0.050-0.055. The largest step is 0.0065 at
+    t 0.4085, with room and dV unchanged. S1f has that jump too; it is
+    under the pops' threshold.
+  - near and both: r is 0 until t 0.998974, then 0 → 0.0548 within
+    1e-9, where V's foot jumps (dV 1.750/1.574 → 0.561/0.463).
+  - S1f's definition has the same foot jump at the same t. Its room
+    stays where the cap gate is saturated (0.31 → 1.03), so r doesn't
+    see the jump. F1's cut leaves the corner's room at −0.019 before the
+    jump, and the cap gate passes the jump to r.
+  - This is F5's class (V's foot switching across an arm's medial
+    axis), which Next 1-2 cover.
+- **q4:** only muse_hash's |Δ|>0.5 count moves, 7 → 11 (max 0.652 →
+  0.841; inner 2 → 4, outer 0 → 1, inner+fade 4 → 6).
+  - Elsewhere the |Δ|>0.1 counts move by at most 5 (def 1135 → 1138,
+    g41_def_tw64 305 → 300), and no other |Δ|>0.5 count moves.
+  - q4attr on muse_hash gives s1f 7, near 11, rb05 7 and both 11, so F1.
+  - The new misses sit at two of F1's four corners near empties. One is
+    (8.65-8.70, 8.81-9.00), 0.51 from j155 (471-472). The other is
+    (23.21-23.26, 10.40-10.55), 0.60 from j0 (0-1). There the AA eval
+    gives 0.73-1.0 where the exact coverage is 0-0.48.
+- **q5holes:** muse_hash goes 4 → 3 holes and muse_default_tw 5 → 4,
+  because the group 108 eye at (25.3, 20.8) stops counting. q5attr gives
+  s1f 4/5, near 3/4, rb05 4/5 and both 3/4, so F1.
+  - **The eye is unchanged** (`q5eye_s1g.ts`). Its paper component (50
+    px and 164 px, closed) and its rim's ink ≥ 0.5 are the same under
+    s1f and near, and match the oracle's.
+  - near hands part of the rim from group 108 to a chain's own surface
+    (9 of 76 rim px in muse_hash, 1 of 140 in muse_default_tw): F1's cut
+    ends the arm's span there, and the chain draws past the cut.
+    q5holes counts a hole only when ONE junction group tops its whole
+    rim, so the census changed its classification. The look did not
+    change.
+  - Over the 161 × 161 px box around the eye, max |Δink| is 0.0004 in
+    muse_default_tw. In muse_hash it is 1.0, on 50 px in x 846..857 and
+    y 493..582, which the box's right edge clips: not the eye.
+    `q5eye_who_s1g.ts` widens the box. The region is 196 px (x 846..879,
+    y 486..587), all in two of F1's corners: j36 109-110 (group 31, r
+    2.721h → 0, F1's emptied corner; 39 px go from its ink to paper) and
+    j62 189-187 (group 47, r 2.438h → 1.431h, one of F1's 100 moved
+    corners). No other corner within 4 of the region changes r.
+  - Other F1 moves in q5: muse_hash group 110's hole at (9.0, 8.94), between
+    j155 and j156 (both F1 corners near empties), 33 → 36 px (the
+    oracle's paper is 34); group 55 at (5.3, 14.9), 28 → 23 px;
+    muse_default_tw group 55, 103 → 94 px.
+  - q5holes exits 1 in this worktree. Its dpr-2 prototype block reads
+    `.claude/probes/K1040/out/muse_hash_dpr2.png`, which exists only in
+    the main checkout; every dpr-1 line completes before that.
+
+Reproduce:
+- `pwsh .claude/probes/K1040/s1/run_s1g_gate.ps1 -Tag g1`, then `-Tag g1
+  -What mech` (→ `out/s1g/logs/*_g1*`, `pops_g1/`, `q4_g1_*/`,
+  `scenes_g1/`, `rate/rate_g1.*`).
+- `pwsh .claude/probes/K1040/s1/gate_table.ps1
+  .claude/probes/K1040/s1/out/s1f/logs/scenes_q.txt
+  .claude/probes/K1040/s1/out/s1g/logs/scenes_g1.txt`.
+- The attributions: `pwsh .claude/probes/K1040/s1/q5attr_run_s1g.ps1`,
+  `q4attr_run_s1g.ps1` and `popattr_run_s1g.ps1` (→ `out/s1g/q5attr/`,
+  `q4attr/`, `popattr/`; about 3, 2 and 1 min).
+- `npx vite-node .claude/probes/K1040/s1/q5eye_s1g.ts` (→
+  `out/s1g/q5eye.txt`), then `q5eye_who_s1g.ts` (→ `out/s1g/q5eye_who.txt`).

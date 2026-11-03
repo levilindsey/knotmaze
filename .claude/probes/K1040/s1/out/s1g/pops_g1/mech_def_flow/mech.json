@@ -1,0 +1,16 @@
+{
+ "merge": {
+  "pops": 0,
+  "px": 0,
+  "mergedPx": 0,
+  "popsLeft": 0,
+  "pxLeft": 0,
+  "whollyMerged": 0
+ },
+ "units": {},
+ "table": {},
+ "all": [],
+ "lines": [
+  "def_flow: by mechanism {}"
+ ]
+}
