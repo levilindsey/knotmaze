@@ -1723,10 +1723,9 @@ Every other item below waits on the trigger it names.
 - **K1037** · K992's census and test tools (stage 6's leftovers): label_pops calls j56/1's def_flow@w1 pops "none" (nearest
   event 473-719 px away); `oracle_m25dbg.ts` keys on `__dbg25`, so `march27.ts` can't print master's nodes; SWEEP=1 vitest
   ends in "Timeout calling onTaskUpdate"; the census takes 2x its estimate (c27z 34 min). `K992_s6_tie.md` F20, ## Handoff.
-- **K1035** · Cursive J3b's leftovers for J3c: oi switches between two minima as o's top moves (13.71 u, as on does,
-  K1014); the seven corners (i j p s u w y after o) all sit at the 30° low end, and os skips the font's deep dip; b f
-  h k l attach at the 100 bound (oh, ok far from the font) and oe at 90 with one crossing (K948). NOTES `## K1009b` N4-N7.
-  J3c's v6.6 replaced these joins with b0's (oe's crossing fixed); what is left is K1090.
+- **K1035** · Cursive J3b's leftovers (v6.4): oi switches between two minima as o's top moves (13.71 u, as on does,
+  K1014); the corners into i j p s u w y sat at the 30° low end, os skipped the font's dip, b f h k l at the 100 bound,
+  oe crossed once (K948). NOTES `## K1009b` N4-N7. v6.6 took b0's joins (oe fixed); the rest is K1090.
 - **K1036** · Cursive J3b's census and checks: port-cusp entries at s = 0 (hi, er, es) count as 180° seams; the
   own-ends reference is cut at each build's own attach, so it ranks og's b0 (4.35 u) above v6.4 (7.12 u), which
   looks nearer; the i and u continuity sweeps move nothing (sweep the stem-top node). NOTES `## K1009b` N1, N6, N7.
@@ -1758,10 +1757,9 @@ Every other item below waits on the trigger it names.
 - **K1086** · K412 probe: each warm profile's first reload started main 3.5 s (levi.dev) / 3.2 s (pages.dev) late
   vs 68-216 ms later; all before main, both origins, no service worker. Record navigation timing on it to split
   old-page teardown from a first cache read (`.claude/probes/K412/`; full text `docs/ledger_notes.md`).
-- **K1090** · Cursive v6.6 (J3c) o-join residuals: six corners at the +40 degree bound (oi oj os ou ow oy), op
-  at the side-margin tolerance (-0.05); ob of oh ok ol attach at the [0, 100] bound, oe at [0, 90], oc od at
-  their lower bounds (as b0; J3b found widening worse); os (36.2 u), oh, ok (34.8 u) sit farthest from the
-  font; the words sheet lacks b0. `docs/design/K1009_cursive_j3c.md` Handoff.
+- **K1090** · Cursive v6.6 (J3c) o joins: the oi oj os ou ow oy corners at the +40° bound, op at the side-margin
+  tolerance (-0.05); ob of oh ok ol attach at [0, 100]'s end, oe at [0, 90]'s, oc od at their lower bounds (as b0); os, oh,
+  ok farthest from the font (34.8-36.2 u); the words sheet lacks b0. `K1009_cursive_j3c.md` ## Handoff.
 
 ## Approved, to schedule (2026-10-11)
 
