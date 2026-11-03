@@ -341,7 +341,7 @@ const CHEVRON_POOL: MarkerMesh[] = [];
 // (program_registry.ts: knot-marker, wave 1 in fabric mode), and the
 // arrow is the start role's glyph, so no new program or glyph.
 const HINT_POOL: MarkerMesh[] = [];
-const CHEVRON_SCALE = 0.55;
+export const CHEVRON_SCALE = 0.55;
 const CHEVRON_LONG = 16;
 const CHEVRON_TANGENT = 0.4;
 // K138 stage 4: the keys' and the locks' meshes, page-lifetime like the
@@ -618,6 +618,8 @@ interface TrailPaint {
 
 // K332: one arrow-key hint as main.ts feeds it (input_keys.ts KeyHint):
 // the run, the direction that takes it, its world point and its angle.
+// K1132: `held` says the run was shorter than the placement's arc
+// distance, so the disc sits at the run's end (the probes count them).
 export interface KeyHintDisc {
   readonly edge: number;
   readonly dir: KeyDir | Diagonal;
@@ -625,6 +627,7 @@ export interface KeyHintDisc {
   readonly x: number;
   readonly y: number;
   readonly angle: number;
+  readonly held: boolean;
 }
 
 export class FabricMazeRenderer {
@@ -4513,7 +4516,7 @@ export class FabricMazeRenderer {
   private chevrons: MarkerMesh[] = [];
   // K332: the hint discs' meshes and, per mesh, the hint it shows.
   private hintMeshes: MarkerMesh[] = [];
-  private hintMeta: { edge: number; dir: KeyDir | Diagonal; chord: boolean }[] = [];
+  private hintMeta: { edge: number; dir: KeyDir | Diagonal; chord: boolean; held: boolean }[] = [];
   private hintList: readonly KeyHintDisc[] = [];
   private drawOneWay(controller: FabricMazeController, r: number): void {
     let n = 0;
@@ -4635,6 +4638,7 @@ export class FabricMazeRenderer {
     dir: KeyDir | Diagonal;
     edge: number;
     chord: boolean;
+    held: boolean;
   }[] {
     const out: {
       x: number;
@@ -4643,6 +4647,7 @@ export class FabricMazeRenderer {
       dir: KeyDir | Diagonal;
       edge: number;
       chord: boolean;
+      held: boolean;
     }[] = [];
     for (let i = 0; i < this.hintMeshes.length; i++) {
       const mk = this.hintMeshes[i];
@@ -4654,6 +4659,7 @@ export class FabricMazeRenderer {
         dir: this.hintMeta[i].dir,
         edge: this.hintMeta[i].edge,
         chord: this.hintMeta[i].chord,
+        held: this.hintMeta[i].held,
       });
     }
     return out;
@@ -4667,7 +4673,7 @@ export class FabricMazeRenderer {
       const glyph = markerGlyph("arrow", "start");
       for (const h of this.hintList) {
         const mk = this.hintMesh(n);
-        this.hintMeta[n] = { edge: h.edge, dir: h.dir, chord: h.chord };
+        this.hintMeta[n] = { edge: h.edge, dir: h.dir, chord: h.chord, held: h.held };
         n++;
         mk.setGlyph(glyph);
         mk.mesh.rotation = h.angle;

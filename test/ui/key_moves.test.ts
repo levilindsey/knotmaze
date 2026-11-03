@@ -7,8 +7,10 @@ import {
   chordMap,
   chordMatters,
   chordOf,
+  arcPoint,
   departureVectors,
   HeldKeys,
+  hintArcDistance,
   hintMap,
   holdDue,
   joinsChord,
@@ -471,6 +473,65 @@ describe("K332 hintMap", () => {
     const deps = [dep(1, 0), dep(2, 0), dep(3, 0), dep(4, 180)];
     expect(hintMap(deps)).toEqual([{ edge: 4, dir: "left", chord: false }]);
     expect(hintMap([])).toEqual([]);
+  });
+});
+
+describe("K1132 hint placement", () => {
+  // A straight run: ctrl c sits at world (0.3c, 0), so arc = 0.3 per ctrl.
+  const straight: PointAt = (_chain, ctrl, out) => {
+    out[0] = ctrl * 0.3;
+    out[1] = 0;
+  };
+  const run = (ctrlB: number): RunEnds => ({ va: "a", vb: "b", chain: 0, ctrlA: 0, ctrlB });
+
+  it("pins both placements' arc distance for given radii", () => {
+    // "reach" is KEY_REACH whatever the radii.
+    expect(hintArcDistance("reach", 0.52, 0.286)).toBe(KEY_REACH);
+    expect(hintArcDistance("reach", 2, 1)).toBe(KEY_REACH);
+    // "out" at the defaults (head 0.52, hint 0.286): past the head disc,
+    // clearing its rim by 1.25 hint radii.
+    expect(hintArcDistance("out", 0.52, 0.286)).toBeCloseTo(0.52 + 1.25 * 0.286, 12);
+    expect(hintArcDistance("out", 0.52, 0.286)).toBeCloseTo(0.8775, 12);
+    // It follows the radii: double both, double the distance.
+    expect(hintArcDistance("out", 1.04, 0.572)).toBeCloseTo(1.755, 12);
+  });
+
+  it("walks the reach point at KEY_REACH and the out point past the head disc", () => {
+    const e = run(10);
+    const reachPt = arcPoint(e, true, 0, 0, straight, hintArcDistance("reach", 0.52, 0.286));
+    expect(reachPt.held).toBe(false);
+    expect(reachPt.x).toBeCloseTo(0.51, 2);
+    // Under the head marker: its centre lies inside the head disc (0.52).
+    expect(Math.hypot(reachPt.x, reachPt.y)).toBeLessThan(0.52);
+    const outPt = arcPoint(e, true, 0, 0, straight, hintArcDistance("out", 0.52, 0.286));
+    expect(outPt.held).toBe(false);
+    expect(outPt.x).toBeCloseTo(0.9, 2);
+    // Past it: the discs do not even touch (0.52 + 0.286).
+    expect(Math.hypot(outPt.x, outPt.y)).toBeGreaterThan(0.52 + 0.286);
+    // From the far end the walk runs the other way.
+    const back = arcPoint(e, false, 3, 0, straight, KEY_REACH);
+    expect(back.held).toBe(false);
+    expect(back.x).toBeCloseTo(2.49, 2);
+  });
+
+  it("a run shorter than the distance keeps its disc at its end", () => {
+    const e = run(1); // 0.3 of arc in all.
+    const outPt = arcPoint(e, true, 0, 0, straight, hintArcDistance("out", 0.52, 0.286));
+    expect(outPt.held).toBe(true);
+    expect(outPt.x).toBeCloseTo(0.3, 6);
+    expect(arcPoint(e, true, 0, 0, straight, KEY_REACH).held).toBe(true);
+  });
+
+  it("a self-loop shorter than the distance ends at its farthest point", () => {
+    // Out along +x and back to the junction: ctrl c at (sin(pi c / 10), 0).
+    const loop: PointAt = (_chain, ctrl, out) => {
+      out[0] = Math.sin((ctrl / 10) * Math.PI);
+      out[1] = 0;
+    };
+    const pt = arcPoint(run(10), true, 0, 0, loop, 5);
+    expect(pt.held).toBe(true);
+    expect(pt.x).toBeCloseTo(1, 6);
+    expect(pt.y).toBeCloseTo(0, 6);
   });
 });
 

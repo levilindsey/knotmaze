@@ -11,9 +11,11 @@ import {
   KEY_VECTORS,
   MoveWait,
   absorbsChord,
+  arcPoint,
   chordEdges,
   chordMatters,
   departureVectors,
+  hintArcDistance,
   hintMap,
   holdDue,
   keyBelongsElsewhere,
@@ -28,8 +30,8 @@ import type {
   Departure,
   Diagonal,
   KeyDir,
+  KeyHintPlace,
   LastPress,
-  RunEnds,
   WaitingMove,
 } from "../ui/key_moves";
 import { cutKeyOf } from "../ui/cut_buttons";
@@ -42,6 +44,7 @@ import type { AidKey } from "../ui/aid_buttons";
 import { sprintKeyOf } from "../game/sprint";
 import { MovePad } from "../ui/move_pad";
 import type { UrlParams } from "../ui/url_state";
+import { CHEVRON_SCALE } from "../render/fabric_maze_renderer";
 import type { SceneRef } from "./scene_ref";
 
 // K5 M6 (docs/design/K5_K6_split.md, 2.2): key input, moved out of main()
@@ -98,6 +101,8 @@ export interface KeyInputDeps {
   toolKey?: (k: ToolKind) => boolean;
 }
 
+// K1132: `held` - the run is shorter than the placement's arc
+// distance, so the disc sits at the run's end.
 // K332: one arrow-key hint at the player's junction: the run it takes,
 // the direction (a cardinal, or a diagonal with `chord`), the world
 // point KEY_REACH of arc along the run, and the direction's angle
@@ -109,6 +114,7 @@ export interface KeyHint {
   x: number;
   y: number;
   angle: number;
+  held: boolean;
 }
 
 export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
@@ -183,6 +189,12 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
   let hintCacheVertex: string | null = null;
   let hintCacheStamp: KeyStamp | null = null;
   let hintCache: KeyHint[] = [];
+  // K1132: the hints' placement ("reach" is today's and the default;
+  // the probe hook __knotKeyHintPlace sets it) and the head radius the
+  // cached "out" points were placed with.
+  let keyHintPlace: KeyHintPlace = "reach";
+  let hintCachePlace: KeyHintPlace = "reach";
+  let hintCacheHeadR = -1;
   // K333/K334: the move not taken yet (ui/key_moves.ts MoveWait), and the
   // solve it was made in (keyStep drops it when that changes).
   const moveWait = new MoveWait();
@@ -227,71 +239,34 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
       reach
     );
   };
-  // K332: the world point KEY_REACH of arc along a run from one end,
-  // walked the way chordDirection walks it (0.1 ctrl steps; the far end
-  // when shorter, or a self-loop's farthest point).
-  const hintTmp = new Float32Array(2);
-  const reachPoint = (e: RunEnds, fromA: boolean, ox: number, oy: number): [number, number] => {
-    const len = e.ctrlB - e.ctrlA;
-    const start = fromA ? e.ctrlA : e.ctrlB;
-    const sign = fromA ? 1 : -1;
-    keyPointAt(e.chain, start, hintTmp);
-    let px = hintTmp[0];
-    let py = hintTmp[1];
-    let arc = 0;
-    let fx = px;
-    let fy = py;
-    let fd = -1;
-    for (let f = 0.1; ; f += 0.1) {
-      const ff = Math.min(f, len);
-      keyPointAt(e.chain, start + sign * ff, hintTmp);
-      const sx = hintTmp[0] - px;
-      const sy = hintTmp[1] - py;
-      arc += Math.sqrt(sx * sx + sy * sy);
-      px = hintTmp[0];
-      py = hintTmp[1];
-      const d = (px - ox) * (px - ox) + (py - oy) * (py - oy);
-      if (d > fd) {
-        fd = d;
-        fx = px;
-        fy = py;
-      }
-      if (arc >= KEY_REACH) break;
-      if (ff >= len) {
-        if (d < 0.25 * fd) {
-          px = fx;
-          py = fy;
-        }
-        break;
-      }
-    }
-    return [px, py];
-  };
-  // The reach point of `edge` at junction `v`, from the end whose chord
-  // best matches the hint direction's vector (a self-loop leaves twice).
+  // K1132: the point at the placement's arc distance along its run,
+  // from the end whose arc chord best matches the hint direction's
+  // vector (a self-loop leaves twice), and whether the run was
+  // shorter than that distance (arcPoint's held).
   const hintPoint = (
     edge: number,
     v: string,
-    vec: readonly [number, number]
-  ): { x: number; y: number } | null => {
+    vec: readonly [number, number],
+    dist: number
+  ): { x: number; y: number; held: boolean } | null => {
     const e = scene.walkGraph?.edges[edge];
     if (!e || !scene.fabric) return null;
     scene.fabric.vertexWorld(v, keyPt, 0);
     const ox = keyPt[0];
     const oy = keyPt[1];
-    let best: { x: number; y: number } | null = null;
+    let best: { x: number; y: number; held: boolean } | null = null;
     let bestDot = -Infinity;
     for (const fromA of [true, false]) {
       if ((fromA ? e.va : e.vb) !== v) continue;
-      const [px, py] = reachPoint(e, fromA, ox, oy);
-      const dx = px - ox;
-      const dy = py - oy;
+      const pt = arcPoint(e, fromA, ox, oy, keyPointAt, dist);
+      const dx = pt.x - ox;
+      const dy = pt.y - oy;
       const n = Math.sqrt(dx * dx + dy * dy);
       if (!(n > 1e-6)) continue;
       const dot = (dx / n) * vec[0] + (dy / n) * vec[1];
       if (dot > bestDot) {
         bestDot = dot;
-        best = { x: px, y: py };
+        best = pt;
       }
     }
     return best;
@@ -305,7 +280,21 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
     const v = keyVertex();
     if (v === null) return [];
     const stamp = keyStamp();
-    if (hintCacheVertex === v && hintCacheStamp !== null && sameStamp(hintCacheStamp, stamp)) {
+    // K1132: the cache is keyed on the placement too, and in "out" on
+    // the head radius (the distance follows the marker size and the
+    // thread width), so the probe hook's switch and a marker resize
+    // re-place the discs on the next frame.
+    const place = keyHintPlace;
+    const headR = scene.fabric?.markerRadius() ?? 0;
+    const dist =
+      headR > 0 ? hintArcDistance(place, headR, headR * CHEVRON_SCALE) : KEY_REACH;
+    if (
+      hintCacheVertex === v &&
+      hintCacheStamp !== null &&
+      sameStamp(hintCacheStamp, stamp) &&
+      hintCachePlace === place &&
+      (place !== "out" || hintCacheHeadR === headR)
+    ) {
       return hintCache;
     }
     const out: KeyHint[] = [];
@@ -313,12 +302,14 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
       const vec = h.chord
         ? DIAGONAL_VECTORS[h.dir as Diagonal]
         : KEY_VECTORS[h.dir as KeyDir];
-      const pt = hintPoint(h.edge, v, vec);
+      const pt = hintPoint(h.edge, v, vec, dist);
       if (!pt) continue;
-      out.push({ ...h, x: pt.x, y: pt.y, angle: Math.atan2(vec[1], vec[0]) });
+      out.push({ ...h, x: pt.x, y: pt.y, held: pt.held, angle: Math.atan2(vec[1], vec[0]) });
     }
     hintCacheVertex = v;
     hintCacheStamp = stamp;
+    hintCachePlace = place;
+    hintCacheHeadR = headR;
     hintCache = out;
     return out;
   };
@@ -769,6 +760,13 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
     inputWait,
     // K456: a lost WebGL context drops every held key, as blur does.
     dropKeys,
+    // K1132: the probe hook's hint placement (probe_hooks.ts).
+    get keyHintPlace() {
+      return keyHintPlace;
+    },
+    set keyHintPlace(v: KeyHintPlace) {
+      keyHintPlace = v;
+    },
     get keyHold() {
       return keyHold;
     },
