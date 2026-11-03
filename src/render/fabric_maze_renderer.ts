@@ -781,6 +781,11 @@ export class FabricMazeRenderer {
   // K290: the burnt stretches drawFire last found (null = nothing burnt or
   // the fire off), declared to the ribbons by syncExplore.
   private burnSpans: BurntSpan[] | null = null;
+  // K1082: burnOnlyPieces per chain, keyed on the chain's own spans.
+  private readonly burnPiecesCache = new Map<
+    number,
+    { key: string; pieces: ExplorePiece[] }
+  >();
   private seenV = new Map<string, number>();
   private seenRuns = new Set<number>();
   private seenRestart = -1;
@@ -2878,16 +2883,50 @@ export class FabricMazeRenderer {
   // K290: the burn's visibility with the reveal off: every chain whole,
   // less what burnt under "gone".
   private burnOnlyPieces(spans: BurntSpan[], gone: boolean): ExplorePiece[] {
-    const chains: { n: number; closed: boolean }[] = [];
-    for (let c = 0; c < this.ps.chains.length; c++) {
-      chains.push({ n: this.ps.chains[c].length, closed: this.ps.chainBreakAfter[c] < 0 });
+    // K1082: per chain, cached on the chain's own burnt spans (other
+    // chains' spans and the fronts never reach this chain's pieces).
+    const byChain = new Map<number, BurntSpan[]>();
+    if (gone) {
+      for (const s of spans) {
+        if (!(s.b1 > s.b0)) continue;
+        let l = byChain.get(s.chain);
+        if (!l) byChain.set(s.chain, (l = []));
+        l.push(s);
+      }
     }
-    const base = wholePieces(chains);
-    return gone ? subtractBurnt(base, spans, this.ringN) : base;
+    const out: ExplorePiece[] = [];
+    for (let c = 0; c < this.ps.chains.length; c++) {
+      const cs = byChain.get(c) ?? [];
+      const key = gone ? cs.map((s) => `${s.b0},${s.b1}`).join(";") : "";
+      const hit = this.burnPiecesCache.get(c);
+      if (hit && hit.key === key) {
+        out.push(...hit.pieces);
+        continue;
+      }
+      const n = this.ps.chains[c].length;
+      const closed = this.ps.chainBreakAfter[c] < 0;
+      let pieces: ExplorePiece[] = [];
+      if (n >= 2) {
+        const base = wholePieces([{ n, closed }]);
+        if (base.length > 0) base[0].chain = c;
+        pieces = gone && cs.length > 0 ? subtractBurnt(base, cs, this.ringN) : base;
+      }
+      this.burnPiecesCache.set(c, { key, pieces });
+      out.push(...pieces);
+    }
+    return out;
   }
 
   // Where the minotaur was last drawn (world), for its off-screen
   // indicator; false when it is not drawn.
+  // K1082 probe-only: drop the burn caches and re-declare the current
+  // burn in full (the stale check: the tables must not move).
+  probeBurnRedeclare(): void {
+    this.burnPiecesCache.clear();
+    this.ribbons.probeExploreFull();
+    this.syncExplore();
+  }
+
   minotaurWorld(out: Float32Array | Float64Array): boolean {
     if (!this.minoShown) return false;
     out[0] = this.minoX;

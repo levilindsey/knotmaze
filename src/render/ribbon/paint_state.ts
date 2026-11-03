@@ -73,6 +73,24 @@ import {
 const TELE_JUNCTION_FADE = 0.2;
 const TELE_MID_FADE = 0.3;
 
+// K1082: whether two KPAINT explore-item layouts (per category:chain,
+// the [start, count] item segments) are identical, so an explore-only
+// rewrite may keep the untouched chains' slot lists.
+function paintRangesEqual(
+  a: Map<string, [number, number][]>,
+  b: Map<string, [number, number][]>
+): boolean {
+  if (a.size !== b.size) return false;
+  for (const [k, v] of a) {
+    const w = b.get(k);
+    if (!w || w.length !== v.length) return false;
+    for (let i = 0; i < v.length; i++) {
+      if (w[i][0] !== v[i][0] || w[i][1] !== v[i][1]) return false;
+    }
+  }
+  return true;
+}
+
 export class PaintState {
   readonly r: RibbonRenderer;
   constructor(r: RibbonRenderer) {
@@ -183,6 +201,13 @@ export class PaintState {
   private paintOverflowWarned = false;
   // The declaration last written to KPAINT (setPaint skips identical ones).
   /** @internal ribbon */ paintKey = "";
+  // K1082: the last KPAINT write, for the explore-only rewrite.
+  private paintCache: {
+    items: number[];
+    slots: Array<Array<number[] | undefined> | null>;
+    painted: Uint8Array;
+    ranges: Map<string, [number, number][]>;
+  } | null = null;
 
   // The CPU mirror's view of this frame (paint_math.ts): the data-texture
   // mirrors, the uniform values, and helpers for probe scripts.
@@ -936,15 +961,40 @@ export class PaintState {
     }
   }
 
-  /** @internal ribbon */ writePaintItems(): void {
+  // K1082: an explore-only redeclaration (fronts / charred spans moved
+  // on `touched` chains): rebuild those chains' KPAINT slots only, when
+  // the explore items kept their layout; else a full rewrite.
+  /** @internal ribbon */ writePaintItemsExplore(touched: Set<number>): void {
+    this.writePaintItems(touched);
+  }
+
+  /** @internal ribbon */ writePaintItems(onlyChains: Set<number> | null = null): void {
     const items: number[] = [];
     const n = this.ps.chains.length;
-    const slots: Array<Array<number[] | undefined> | null> = new Array(n).fill(null);
+    const cached = onlyChains ? this.paintCache : null;
+    const slots: Array<Array<number[] | undefined> | null> = cached
+      ? cached.slots.slice()
+      : new Array(n).fill(null);
+    if (cached && onlyChains) {
+      for (const c of onlyChains) if (c >= 0 && c < n) slots[c] = null;
+    }
+    // K1082: the explore items' layout this write (category:chain ->
+    // [start, count] item segments), checked against the cached one.
+    const ranges = new Map<string, [number, number][]>();
+    const noteRange = (cat: string, chain: number, id: number): void => {
+      const k = cat + ":" + chain;
+      let l = ranges.get(k);
+      if (!l) ranges.set(k, (l = []));
+      const last = l[l.length - 1];
+      if (last && last[0] + last[1] === id) last[1]++;
+      else l.push([id, 1]);
+    };
     let overflow = 0;
     // The chains carrying gameplay paint (KGEOM G0.w): K76's VIS items set
     // none, so the paint evaluation stays gated on real paint.
     const painted = new Uint8Array(n);
     const touch = (chain: number, lo: number, hi: number, item: number): void => {
+      if (onlyChains && !onlyChains.has(chain)) return;
       const type = items[item * 8];
       if (
         type !== EXPLORE_ITEM_VIS &&
@@ -1046,6 +1096,7 @@ export class PaintState {
         if (p.chain >= n || this.exploreWhole[p.chain]) continue;
         const i = items.length / 8;
         items.push(...visItem(p));
+        noteRange("vis", p.chain, i);
         const [lo, hi] = visRange(p);
         touch(p.chain, lo, hi, i);
       }
@@ -1054,6 +1105,7 @@ export class PaintState {
         if (s.chain >= n || !(s.b1 > s.b0)) continue;
         const i = items.length / 8;
         items.push(...charItem(s));
+        noteRange("char", s.chain, i);
         const [lo, hi] = charRange(s);
         touch(s.chain, lo, hi, i);
       }
@@ -1065,6 +1117,7 @@ export class PaintState {
         if (f.chain >= n) continue;
         const i = items.length / 8;
         items.push(...frontItem(f, gone));
+        noteRange("front", f.chain, i);
         const [lo, hi] = frontRange(f, gone, minArcPerCtrl(f.chain));
         touch(f.chain, lo, hi, i);
       }
@@ -1072,6 +1125,7 @@ export class PaintState {
         if (s.chain >= n || !(s.b1 > s.b0)) continue;
         const i = items.length / 8;
         items.push(...smolderItem(s));
+        noteRange("smolder", s.chain, i);
         const [lo, hi] = charRange(s);
         touch(s.chain, lo, hi, i);
       }
@@ -1112,7 +1166,16 @@ export class PaintState {
       this.paintOverflowWarned = true;
       console.warn(`G2 paint: ${overflow} slot references beyond the shader's 32 per slot`);
     }
-    this.paintScene.setPaintFlags(painted);
+    if (onlyChains && (!cached || !paintRangesEqual(cached.ranges, ranges))) {
+      // The explore items moved house (a span was born or died): the
+      // cached slot lists point at the wrong items. Full rewrite.
+      this.paintCache = null;
+      this.writePaintItems();
+      return;
+    }
+    const paintedNow = onlyChains && cached ? cached.painted : painted;
+    this.paintCache = { items, slots, painted: paintedNow, ranges };
+    this.paintScene.setPaintFlags(paintedNow);
     this.lastPaintUpload = this.paintScene.setPaintItems(
       Float32Array.from(items),
       items.length / 8,
