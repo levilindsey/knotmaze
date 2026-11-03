@@ -82,7 +82,8 @@ export interface FormBParams {
   merge?: number;
   /**
    * S1e F4: a crossing's reach along an arm, measured on the curved threads
-   * (default true); false keeps the straight model's h·cot(θ/2) (S1d).
+   * when true. Off by default (the straight model's h·cot(θ/2), S1d): S1e's
+   * gate found candidate 3 (true, curvedFrom 4) two #1 sites worse.
    */
   curvedReach?: boolean;
   /**
@@ -358,7 +359,7 @@ export class FormB {
     this.cr = params.cr ?? look.cuspRadius ?? 3;
     this.fold = params.fold ?? true;
     this.delta = params.merge ?? 2 * this.aa;
-    this.curved = params.curvedReach ?? true;
+    this.curved = params.curvedReach ?? false;
     this.curvedFrom = params.curvedFrom ?? 4;
     this.force = params.force ?? {};
     this.fillKey = params.fillKey ?? "nearer";
@@ -492,7 +493,7 @@ export class FormB {
 
     // Arms and their spans: L = min(chain end, next root, each crossing cut
     // d_c − reach_c − h), reach_c = h·cot(θ_c/2) on straight threads
-    // (curvedReachOf, S1e F4).
+    // (curvedReachOf when params.curvedReach, S1e F4).
     this.armsOf = this.polys.map(() => []);
     scene.junctions.forEach((j, ji) => {
       j.arms.forEach((arm, ei) => {
