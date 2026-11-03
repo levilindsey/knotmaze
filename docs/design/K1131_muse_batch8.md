@@ -450,14 +450,21 @@ Tasks, in order:
    frame: `tickFireFx` a no-op, `fireFx.clear()`, two frames), the
    declared gap and paint tables equal the before code's, read
    through the renderer's probe hooks, and a same-state capture
-   pair reads 0 px (a same-build control first).
+   pair reads 0 px (a same-build control first). The cache must
+   never go stale either: add a probe-only hook that drops it and
+   re-declares the current burn on every chain, and on every 10th
+   frame of the realtime stand read the declared tables, call the
+   hook, and read them again. They must be identical (a chain left
+   stale by another chain's change shows here, not in the three
+   pinned states).
 3. The fillets. Take the after table on the same stands. If fillet
    rebuilds still run every burning frame because the paint
    revision bumps upstream of the declare, stop this part under
    K1050's stop rule 2 (the fix would live in the fillet rebuild,
    which this batch does not touch): keep the declare if its own
    counters and table checks pass, file the fillet remainder
-   (below), and close nothing.
+   (below), and close K1082 for the declare half only, as the
+   close lines at the end of this run say.
 
 Done check:
 
@@ -467,6 +474,7 @@ Done check:
   stand; the turn stand is unchanged.
 - The declared tables equal the before code's on the three pinned
   states, and the same-state pair reads 0 px.
+- The every-10th-frame stale check finds no difference.
 - Fillet rebuilds a frame fall on the realtime stand, or task 3's
   stop fired and the remainder is filed.
 - `npm test` passes.
@@ -474,13 +482,15 @@ Done check:
 Report: the before and after tables, the table-equality reads, and
 whether the fillets stood pat.
 
-If task 3 stopped, file the rest:
+Close, when every Done row passes and the fillets stood pat:
+`ledger.mjs done K1082 --commit <sha8> --what "incremental burn declare; fillets stand pat"`.
+
+If task 3 stopped, file the fillet half:
 `ledger.mjs add --section Residuals --text "Burn re-declare: the fillets still rebuild every burning frame (the paint revision bumps upstream of the declare; split from K1082)"`,
-then close nothing for the fillet half: end with
-`ledger.mjs done K1082 --commit <sha8> --what "incremental burn declare; fillets split out"`
-only when the declare's own Done rows pass, and say in the commit
-which half is which. Otherwise keep K1082 open and record the stop
-in its text.
+and when the declare's own Done rows pass, close with
+`ledger.mjs done K1082 --commit <sha8> --what "incremental burn declare; fillets split out"`,
+saying in the commit which half is which. If the declare's own rows
+fail, keep K1082 open and record the stop in its text.
 Suggested ports: 5580-5589.
 
 ## Run E · K1083: gap slots declare only the chains that changed
@@ -529,7 +539,14 @@ Tasks, in order:
    for chains whose inputs changed; a frame with no changed chain
    writes none. The written tables must equal the before code's on
    the same three pinned burn states Run D used (same-state pair
-   0 px, same-build control first). If the cache key needs a shader
+   0 px, same-build control first). The cache must never go stale
+   either, as in Run D: a probe-only hook drops it and rewrites
+   every chain's slots for the current state, and on every 10th
+   frame the tables read the same before and after the hook, on
+   the realtime stand and on a drag stand (a knot link with physics
+   on and `&phw=0`, one thread pulled with `page.mouse` for 60
+   frames, so the threads it crosses are rewritten or caught
+   stale). If the cache key needs a shader
    text change or a change in `crossing_gaps.ts`'s slot math, stop
    under K1050's stop rule 2 and report: the slot contents are the
    thread ribbons' core, which this batch does not touch.
@@ -544,8 +561,9 @@ Done check:
   reports why neither could be read.
 - Under the pending flag: after table shows slot writes only on
   changed chains (zero on unchanged frames), tables equal, pair
-  0 px. Under `fxLive`: no code change, and the table is the
-  report.
+  0 px; the every-10th-frame stale check finds no difference on
+  the realtime and drag stands. Under `fxLive`: no code change,
+  and the table is the report.
 - `npm test` passes.
 
 Report: the cause table and, when task 2 ran, the before and after
@@ -628,8 +646,7 @@ Done check:
 Report: the before and after sweeps (counts and the names that
 moved), the drag samples, and where the fix lives.
 
-If code changed, file this for Levi, as written:
-`ledger.mjs add --section "Waiting on Levi" --text "Reset to defaults now lands on the exact default on every slider, even when the link you opened held a value between steps. Pictures and sweep: .claude/probes/K1115/ (K1115, <sha>)"`
+No item for Levi: the sweep decides this one.
 
 Close: `ledger.mjs done K1115 --commit <sha8> --what "one general Reset fix in row/doReset"`.
 Suggested ports: 5595-5599.
