@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1134.
+Next free ID: K1135.
 
 ## Waiting on Levi
 
@@ -508,9 +508,9 @@ Next free ID: K1134.
 - **K1131** · Muse batch 8 (`docs/design/K1131_muse_batch8.md`): A K332, B K657, C K1081, D K1082, E K1083, F
   K1115; Next in ledger order, no junction, cursive, physics or phone work.
   - owner: muse runs 8A-8F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 04:10
-  - branch: mainline; last commit: `afaccf39`
+  - branch: mainline; last commit: `b4d7f006`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 8A-8F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run E (K1083)
+  - next: Run F (K1115)
   - brief: `docs/design/K1131_muse_batch8.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
@@ -728,9 +728,9 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
-- **K1083** · K1077: RibbonRenderer.update redoes gap slots every frame on the realtime stand (about
-  +0.97 ms x1, +4.5 ms x4): declare only changed chains (K441 K1077). Trace the trigger first: needsFxRender
-  (paint_state.ts:719) reruns it on exploreUpdatePending (explore_gaps.ts:397, fabric_maze_renderer.ts:1082) or fxLive; under fxLive that fix won't stop it.
+- **K1083** · K1077: gap slots on the realtime burn stand — traced 2026-11-03 (K1131 Run E): neither
+  exploreUpdatePending nor the fxLive branch holds there (cause none, 0 solves/frame; stands pat), so
+  the changed-chains declare was not built; awake updates still re-solve every slot (K1134).
 - **K1088** · K568's confetti fall costs the Pixel 11 about 15 fps on master (round 2026-10-30 step 2:
   45.0/45.3 fps, 119-122 of ~360 frames over 25 ms, none over 50, against 65a7787's 60.1/60.3, two runs a
   build in both orders, thermal status 0). Trim the piece counts or per-piece cost, or accept it.
@@ -1701,6 +1701,9 @@ Every other item below waits on the trigger it names.
 - **K1133** · Burn re-declare: fillet rebuilds still fire on front-crossing frames (2-3 per 119 on the K1082
   realtime stand, driven by the gap gate's uwRev under-window updates, before and after the incremental
   declare alike; split from K1082)
+- **K1134** · Gap slots stand pat on the K1083 burn stands (cause none on 120/120 frames; 0 updates and 0 gap
+  solves a frame, realtime and turn, on master and pre-K1082 alike), so K1077 cluster 3 does not reproduce
+  there; solves still run per awake update (drag 287/frame) (split from K1083)
 
 ## Approved, to schedule (2026-10-11)
 
