@@ -108,6 +108,15 @@ export interface FormBParams {
    * point to the partner's tangent line at its matched point.
    */
   reachSep?: "chord" | "line";
+  /**
+   * S1g: a pass behind an arm's root (the Lcut loop's d < 0; on a closed
+   * chain, the arc len − d back to the root). "skip": no cut (S1f's final,
+   * whose L pops as a pass slides over the root). "mirror": it cuts at
+   * c = |d| − reach − h, the reach measured toward the root, so L and Lcut
+   * meet the front side's −reach − h at d = 0. "near": c = |d| (L meets 0
+   * there; Lcut does not, where L = 0 on both arms).
+   */
+  dEdge?: "skip" | "mirror" | "near";
   /** Depth window, arc length (default look.depthWindow · (look.ctrlArc ?? 1)). */
   depthWindow?: number;
   /**
@@ -341,6 +350,8 @@ export class FormB {
   /** S1f: the quadratic reach's fits and separation. */
   readonly reachSteps: number;
   readonly reachSep: "chord" | "line";
+  /** S1g: a pass behind an arm's root. */
+  readonly dEdge: "skip" | "mirror" | "near";
   readonly force: NonNullable<FormBParams["force"]>;
   readonly fillKey: "nearer" | "a" | "b";
   readonly polys: Poly[];
@@ -382,6 +393,7 @@ export class FormB {
     this.curvedFrom = params.curvedFrom ?? 4;
     this.reachSteps = params.reachSteps ?? 2;
     this.reachSep = params.reachSep ?? "chord";
+    this.dEdge = params.dEdge ?? "skip";
     this.force = params.force ?? {};
     this.fillKey = params.fillKey ?? "nearer";
 
@@ -534,26 +546,43 @@ export class FormB {
           const d = delta(q.s);
           if (d > 1e-9 && d < L) L = d;
         }
-        let Lcut = Infinity;
-        for (const x of this.passes[pi]) {
-          const d = delta(x.s);
-          // S1d F5: a pass past L still cuts while its cut c lies short of L
-          // (c < d); skipping it there made L jump as the pass slid over L.
-          if (d < -1e-12) continue;
+        // A pass's reach toward the root, measured from the pass in direction
+        // md (dir for a pass in front of the root, −dir for one behind it).
+        const reachAt = (x: Pass, md: number, d: number): number => {
           const t = Math.tan(x.theta / 2);
           let reach = t > 1e-12 ? h / t : Infinity;
           // S1e F4: a straight reach past curvedFrom·h is measured on the
           // curved threads (never below curvedFrom·h) wherever it would cut
           // short of L. max(R, min(r0, e_c)) is continuous in θ.
           const reachMin = this.curvedFrom * h;
-          if (this.reach === "walk" && reach > reachMin && d - reach - h < L) reach = Math.max(reachMin, this.curvedReachOf(pi, x, dir, reach, h));
+          if (this.reach === "walk" && reach > reachMin && d - reach - h < L) reach = Math.max(reachMin, this.curvedReachOf(pi, x, md, reach, h));
           // S1f: reach = min(r0, max(F, e*)), one expression with no gate:
           // r0 wherever r0 ≤ F, and e* ≤ r0 is continuous in the geometry.
           else if (this.reach === "quad") {
             const fl = Math.max(1, this.curvedFrom) * h;
-            if (reach > fl) reach = Math.min(reach, Math.max(fl, this.quadReachOf(pi, x, dir, h, fl)));
+            if (reach > fl) reach = Math.min(reach, Math.max(fl, this.quadReachOf(pi, x, md, h, fl)));
           }
-          const c = d - reach - h;
+          return reach;
+        };
+        let Lcut = Infinity;
+        for (const x of this.passes[pi]) {
+          const d = delta(x.s);
+          // S1g: a pass behind the root (d < 0 on an open chain; on a closed
+          // one every pass is also the arc len − d behind it) cuts at its
+          // mirror distance u: c = u − reach − h ("mirror") or c = u
+          // ("near"). Both meet the front side's L = 0 at u = 0, so L is
+          // continuous as the pass slides over the root; "skip" is S1f's.
+          if (this.dEdge !== "skip") {
+            const u = p.closed ? p.len - d : -d;
+            if (p.closed || d < -1e-12) {
+              const c = this.dEdge === "near" ? u : u - reachAt(x, -dir, u) - h;
+              if (c < Lcut) Lcut = c;
+            }
+          }
+          // S1d F5: a pass past L still cuts while its cut c lies short of L
+          // (c < d); skipping it there made L jump as the pass slid over L.
+          if (d < -1e-12) continue;
+          const c = d - reachAt(x, dir, d) - h;
           if (c < Lcut) Lcut = c;
         }
         L = Math.max(0, Math.min(L, Lcut));

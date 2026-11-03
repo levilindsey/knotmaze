@@ -1,0 +1,2176 @@
+1. census at rest: S1f final (old) vs the worktree's form B with {"dEdge":"mirror"} (new)
+  def arm 0 (j0 c0 dir -1 through): L 3.757h -> 2.717h, Lcut 3.757h -> 2.717h
+  def arm 3 (j0 c60 dir 1 through): L 7.408h -> 2.997h, Lcut 7.408h -> 2.997h
+  def arm 6 (j1 c0 dir 1 through): L 2.231h -> 0.904h, Lcut 2.231h -> 0.904h
+  def arm 8 (j2 c62 dir -1 through): L 1.851h -> 1.671h, Lcut 1.851h -> 1.671h
+  def arm 12 (j3 c45 dir -1 through): L 2.273h -> 0.886h, Lcut 2.273h -> 0.886h
+  def arm 14 (j4 c60 dir -1 through): L 4.069h -> 3.307h, Lcut 4.069h -> 3.307h
+  def arm 15 (j4 c1 dir 1 through): L 6.493h -> 3.806h, Lcut 6.493h -> 3.806h
+  def arm 18 (j5 c1 dir 1 through): L 3.526h -> 2.860h, Lcut 3.526h -> 2.860h
+  def arm 20 (j6 c45 dir 1 through): L 2.116h -> 1.476h, Lcut 2.116h -> 1.476h
+  def arm 25 (j7 c44 dir 1 through): L 1.955h -> 0.922h, Lcut 1.955h -> 0.922h
+  def arm 27 (j8 c2 dir 1 through): L 3.527h -> 2.608h, Lcut 7.237h -> 2.608h
+  def arm 29 (j9 c2 dir -1 through): L 3.527h -> 3.527h, Lcut 6.135h -> 3.710h
+  def arm 34 (j10 c2 dir 1 through): L 3.465h -> 1.580h, Lcut 6.055h -> 1.580h
+  def arm 35 (j11 c2 dir -1 through): L 3.465h -> 2.590h, Lcut 5.045h -> 2.590h
+  def arm 40 (j12 c2 dir 1 through): L 3.192h -> 2.051h, Lcut 6.474h -> 2.051h
+  def arm 41 (j13 c2 dir -1 through): L 3.192h -> 3.192h, Lcut 5.243h -> 3.283h
+  def arm 46 (j14 c2 dir -1 through): L 4.102h -> 3.955h, Lcut 4.102h -> 3.955h
+  def arm 48 (j15 c2 dir -1 through): L 10.847h -> 1.208h, Lcut 10.847h -> 1.208h
+  def arm 52 (j16 c2 dir 1 through): L 5.760h -> 3.431h, Lcut 5.760h -> 3.431h
+  def arm 55 (j17 c2 dir -1 through): L 3.965h -> 2.513h, Lcut 3.965h -> 2.513h
+  def arm 56 (j18 c2 dir 1 through): L 5.497h -> 4.037h, Lcut 5.497h -> 4.037h
+  def arm 61 (j19 c2 dir -1 through): L 5.314h -> 4.466h, Lcut 5.314h -> 4.466h
+  def arm 63 (j20 c2 dir 1 through): L 4.574h -> 4.436h, Lcut 4.574h -> 4.436h
+  def arm 67 (j21 c90 dir -1 through): L 3.511h -> 1.386h, Lcut Infinityh -> 1.386h
+  def arm 70 (j22 c60 dir 1 through): L 2.725h -> 1.308h, Lcut 2.725h -> 1.308h
+  def arm 72 (j23 c3 dir 1 through): L 8.249h -> 3.841h, Lcut 11.461h -> 3.841h
+  def arm 73 (j23 c60 dir -1 through): L 7.975h -> 4.704h, Lcut 15.301h -> 4.704h
+  def arm 75 (j24 c3 dir -1 through): L 8.249h -> 3.212h, Lcut 12.090h -> 3.212h
+  def arm 78 (j24 c60 dir 1 through): L 7.975h -> 7.326h, Lcut 12.678h -> 7.326h
+  def arm 79 (j25 c61 dir 1 through): L 7.513h -> 4.691h, Lcut 7.513h -> 4.691h
+  def arm 84 (j26 c44 dir -1 through): L 3.138h -> 2.140h, Lcut 7.063h -> 2.140h
+  def arm 85 (j27 c30 dir 1 through): L 1.599h -> 1.470h, Lcut 1.599h -> 1.470h
+  def arm 88 (j28 c67 dir -1 through): L 1.318h -> 1.072h, Lcut 1.318h -> 1.072h
+  def arm 91 (j29 c79 dir 1 through): L 5.920h -> 4.134h, Lcut 5.920h -> 4.134h
+  def arm 95 (j30 c6 dir -1 through): L 4.981h -> 2.030h, Lcut 4.981h -> 2.030h
+  def arm 98 (j31 c65 dir -1 through): L 4.179h -> 2.145h, Lcut 4.179h -> 2.145h
+  def arm 100 (j32 c80 dir 1 through): L 3.589h -> 1.209h, Lcut 11.868h -> 1.209h
+  def arm 104 (j33 c80 dir -1 through): L 2.495h -> 1.478h, Lcut 2.495h -> 1.478h
+  def arm 107 (j34 c8 dir 1 through closed): L 4.174h -> 0.499h, Lcut 4.174h -> 0.499h
+  def arm 111 (j35 c75 dir 1 through): L 2.112h -> 2.018h, Lcut 2.112h -> 2.018h
+  def arm 113 (j36 c89 dir -1 through): L 1.238h -> 0.825h, Lcut 1.238h -> 0.825h
+  def arm 117 (j37 c76 dir -1 through): L 3.438h -> 2.022h, Lcut 3.438h -> 2.022h
+  def arm 119 (j38 c78 dir -1 through): L 4.180h -> 2.447h, Lcut 4.180h -> 2.447h
+  def arm 123 (j39 c82 dir -1 through): L 2.250h -> 1.668h, Lcut 2.250h -> 1.668h
+  def arm 125 (j40 c37 dir 1 through): L 4.540h -> 2.384h, Lcut 4.540h -> 2.384h
+  def arm 129 (j41 c82 dir 1 through): L 1.726h -> 1.523h, Lcut 1.726h -> 1.523h
+  def arm 130 (j42 c75 dir -1 through): L 5.728h -> 3.890h, Lcut 9.814h -> 3.890h
+  def arm 133 (j43 c90 dir 1 through): L 1.143h -> 1.127h, Lcut 1.143h -> 1.127h
+  def arm 138 (j44 c61 dir -1 through): L 2.201h -> 0.915h, Lcut 2.201h -> 0.915h
+  def arm 140 (j45 c61 dir -1 through): L 3.782h -> 1.854h, Lcut 3.782h -> 1.854h
+  def arm 143 (j46 c66 dir -1 through): L 1.787h -> 1.092h, Lcut 1.787h -> 1.092h
+  def arm 147 (j47 c61 dir 1 through): L 2.134h -> 1.289h, Lcut 2.134h -> 1.289h
+  def arm 150 (j48 c58 dir -1 through): L 1.655h -> 1.332h, Lcut 1.655h -> 1.332h
+  def arm 153 (j49 c82 dir 1 through): L 4.464h -> 1.116h, Lcut 4.464h -> 1.116h
+  def arm 155 (j50 c62 dir 1 through): L 5.018h -> 0.894h, Lcut 5.018h -> 0.894h
+  def arm 157 (j51 c62 dir 1 through): L 1.933h -> 1.083h, Lcut 1.933h -> 1.083h
+  def arm 161 (j52 c75 dir -1 through): L 2.162h -> 0.720h, Lcut 2.162h -> 0.720h
+  def arm 165 (j53 c82 dir 1 through): L 7.569h -> 1.713h, Lcut 7.569h -> 1.713h
+  def arm 166 (j54 c61 dir 1 through): L 2.478h -> 1.246h, Lcut 2.478h -> 1.246h
+  def arm 169 (j55 c61 dir -1 through): L 5.915h -> 0.577h, Lcut 5.915h -> 0.577h
+  def arm 173 (j56 c82 dir -1 through): L 1.678h -> 0.756h, Lcut 1.678h -> 0.756h
+  def arm 175 (j57 c82 dir -1 through): L 3.507h -> 2.051h, Lcut 3.507h -> 2.051h
+  def arm 180 (j58 c75 dir 1 through): L 3.790h -> 2.012h, Lcut 3.790h -> 2.012h
+  def arm 182 (j59 c61 dir 1 through): L 2.361h -> 2.136h, Lcut 2.361h -> 2.136h
+  def arm 185 (j60 c31 dir 1 through): L 4.053h -> 1.061h, Lcut 4.053h -> 1.061h
+  def arm 189 (j61 c61 dir -1 through): L 3.232h -> 1.847h, Lcut 3.232h -> 1.847h
+  def arm 191 (j62 c56 dir -1 through): L 3.588h -> 1.840h, Lcut 3.588h -> 1.840h
+  def arm 193 (j63 c56 dir -1 through): L 3.549h -> 2.052h, Lcut 3.549h -> 2.052h
+  def arm 196 (j64 c37 dir 1 through): L 2.195h -> 1.846h, Lcut 2.195h -> 1.846h
+  def arm 199 (j65 c82 dir -1 through): L 10.894h -> 2.124h, Lcut 10.894h -> 2.124h
+  def arm 202 (j66 c61 dir 1 through): L 7.470h -> 1.893h, Lcut 7.470h -> 1.893h
+  def arm 206 (j67 c61 dir 1 through): L 1.975h -> 1.669h, Lcut 1.975h -> 1.669h
+  def arm 210 (j68 c45 dir 1 through): L 1.944h -> 1.113h, Lcut 1.944h -> 1.113h
+  def arm 211 (j69 c28 dir 1 through): L 5.410h -> 3.397h, Lcut 5.410h -> 3.397h
+  def arm 215 (j70 c45 dir -1 through): L 3.470h -> 0.954h, Lcut 8.290h -> 0.954h
+  def arm 219 (j71 c46 dir -1 through): L 6.327h -> 3.915h, Lcut 6.327h -> 3.915h
+  def arm 220 (j72 c29 dir 1 through): L 3.682h -> 1.542h, Lcut 6.970h -> 1.542h
+  def arm 224 (j73 c29 dir -1 through): L 3.682h -> 3.288h, Lcut 5.224h -> 3.288h
+  def arm 226 (j74 c29 dir 1 through): L 5.343h -> 3.018h, Lcut 5.343h -> 3.018h
+  def arm 229 (j75 c84 dir 1 through): L 1.231h -> 1.103h, Lcut 1.231h -> 1.103h
+  def arm 233 (j76 c89 dir -1 through): L 3.704h -> 3.704h, Lcut Infinityh -> 5.989h
+  def arm 235 (j77 c30 dir 1 through): L 4.912h -> 3.885h, Lcut 9.717h -> 3.885h
+  def arm 240 (j78 c30 dir -1 through): L 4.912h -> 4.805h, Lcut 8.797h -> 4.805h
+  def arm 242 (j79 c30 dir -1 through): L 3.546h -> 1.259h, Lcut 12.344h -> 1.259h
+  def arm 244 (j80 c30 dir 1 through): L 1.758h -> 1.430h, Lcut 1.758h -> 1.430h
+  def arm 247 (j81 c30 dir 1 through): L 3.246h -> 3.200h, Lcut 3.246h -> 3.200h
+  def arm 250 (j82 c61 dir -1 through): L 5.219h -> 2.863h, Lcut 5.219h -> 2.863h
+  def arm 253 (j83 c31 dir 1 through): L 3.460h -> 3.460h, Lcut 4.189h -> 4.043h
+  def arm 258 (j84 c31 dir -1 through): L 3.460h -> 0.729h, Lcut 7.503h -> 0.729h
+  def arm 261 (j85 c31 dir -1 through): L 4.466h -> 2.642h, Lcut 4.466h -> 2.642h
+  def arm 262 (j86 c61 dir 1 through): L 1.920h -> 1.768h, Lcut 1.920h -> 1.768h
+  def arm 265 (j87 c45 dir -1 through): L 4.820h -> 4.424h, Lcut 4.820h -> 4.424h
+  def arm 270 (j88 c56 dir -1 through): L 3.398h -> 2.212h, Lcut Infinityh -> 2.212h
+  def arm 273 (j89 c61 dir -1 through): L 2.088h -> 0.767h, Lcut 2.088h -> 0.767h
+  def arm 276 (j90 c76 dir -1 through): L 5.765h -> 4.580h, Lcut 5.765h -> 4.580h
+  def arm 279 (j91 c67 dir 1 through): L 6.142h -> 1.914h, Lcut 6.142h -> 1.914h
+  def arm 281 (j92 c79 dir -1 through): L 5.289h -> 2.994h, Lcut 5.289h -> 2.994h
+  def arm 283 (j93 c36 dir -1 through): L 3.921h -> 0.729h, Lcut 3.921h -> 0.729h
+  def arm 286 (j94 c62 dir 1 through): L 3.744h -> 1.095h, Lcut 8.655h -> 1.095h
+  def arm 291 (j95 c58 dir 1 through): L 2.514h -> 1.714h, Lcut 2.514h -> 1.714h
+  def arm 294 (j96 c37 dir -1 through): L 2.606h -> 1.326h, Lcut 2.606h -> 1.326h
+  def arm 296 (j97 c37 dir -1 through): L 4.086h -> 3.826h, Lcut 4.086h -> 3.826h
+  def arm 300 (j98 c37 dir 1 through): L 4.727h -> 4.196h, Lcut 4.727h -> 4.196h
+  def arm 301 (j99 c37 dir -1 through): L 3.542h -> 3.346h, Lcut 3.542h -> 3.346h
+  def arm 304 (j100 c48 dir 1 through): L 2.469h -> 2.191h, Lcut 2.469h -> 2.191h
+  def arm 309 (j101 c43 dir 1 through): L 3.526h -> 1.144h, Lcut 12.270h -> 1.144h
+  def arm 312 (j102 c38 dir -1 through): L 4.347h -> 4.044h, Lcut 4.347h -> 4.044h
+  def arm 313 (j102 c44 dir 1 through): L 5.100h -> 4.185h, Lcut 5.100h -> 4.185h
+  def arm 315 (j103 c44 dir -1 through): L 5.201h -> 4.067h, Lcut 5.201h -> 4.067h
+  def arm 317 (j104 c67 dir 1 through): L 7.966h -> 5.537h, Lcut 14.499h -> 5.537h
+  def arm 320 (j105 c61 dir 1 through): L 5.734h -> 5.704h, Lcut 5.734h -> 5.704h
+  def arm 325 (j106 c61 dir -1 through): L 1.815h -> 0.873h, Lcut 1.815h -> 0.873h
+  def arm 326 (j107 c62 dir 1 through): L 4.911h -> 4.839h, Lcut 4.911h -> 4.839h
+  def arm 329 (j108 c41 dir -1 through): L 3.997h -> 3.156h, Lcut 3.997h -> 3.156h
+  def arm 334 (j109 c41 dir 1 through): L 3.231h -> 2.900h, Lcut 3.231h -> 2.900h
+  def arm 337 (j110 c88 dir -1 through): L 3.323h -> 2.159h, Lcut 7.224h -> 2.159h
+  def arm 338 (j111 c82 dir -1 through): L 3.421h -> 1.840h, Lcut 3.421h -> 1.840h
+  def arm 342 (j112 c42 dir 1 through): L 3.557h -> 2.241h, Lcut 17.120h -> 2.241h
+  def arm 346 (j113 c42 dir 1 through): L 7.907h -> 5.798h, Lcut 13.563h -> 5.798h
+  def arm 349 (j114 c42 dir -1 through): L 7.907h -> 5.656h, Lcut 13.705h -> 5.656h
+  def arm 352 (j115 c42 dir -1 through): L 3.463h -> 2.193h, Lcut 17.168h -> 2.193h
+  def arm 354 (j116 c42 dir -1 through): L 2.231h -> 0.954h, Lcut 2.231h -> 0.954h
+  def arm 356 (j117 c43 dir -1 through): L 6.135h -> 2.408h, Lcut 6.135h -> 2.408h
+  def arm 361 (j118 c43 dir 1 through): L 8.744h -> 4.670h, Lcut 8.744h -> 4.670h
+  def arm 363 (j119 c43 dir -1 through): L 7.924h -> 2.752h, Lcut 7.924h -> 2.752h
+  def arm 364 (j119 c80 dir -1 through): L 8.323h -> 2.775h, Lcut 8.323h -> 2.775h
+  def arm 366 (j120 c80 dir 1 through): L 8.279h -> 4.798h, Lcut 8.279h -> 4.798h
+  def arm 370 (j121 c44 dir 1 through): L 3.138h -> 3.138h, Lcut 5.278h -> 3.925h
+  def arm 372 (j122 c44 dir 1 through): L 8.063h -> 6.329h, Lcut Infinityh -> 6.329h
+  def arm 377 (j123 c61 dir 1 through): L 4.334h -> 3.167h, Lcut 4.334h -> 3.167h
+  def arm 378 (j124 c88 dir -1 through): L 4.080h -> 2.495h, Lcut 4.080h -> 2.495h
+  def arm 383 (j125 c45 dir -1 through): L 4.041h -> 0.380h, Lcut 4.041h -> 0.380h
+  def arm 386 (j126 c45 dir 1 through): L 7.574h -> 4.383h, Lcut 7.574h -> 4.383h
+  def arm 388 (j127 c84 dir 1 through): L 2.478h -> 0.799h, Lcut 2.478h -> 0.799h
+  def arm 392 (j128 c46 dir -1 through): L 5.069h -> 3.750h, Lcut 5.069h -> 3.750h
+  def arm 393 (j129 c82 dir 1 through): L 4.720h -> 3.329h, Lcut 4.720h -> 3.329h
+  def arm 397 (j130 c48 dir 1 through): L 2.324h -> 1.471h, Lcut 2.324h -> 1.471h
+  def arm 400 (j131 c50 dir -1 through): L 3.535h -> 1.061h, Lcut Infinityh -> 1.061h
+  def arm 402 (j132 c61 dir 1 through): L 2.134h -> 0.739h, Lcut 2.134h -> 0.739h
+  def arm 406 (j133 c79 dir 1 through): L 4.861h -> 4.299h, Lcut 4.861h -> 4.299h
+  def arm 407 (j133 c49 dir 1 through): L 5.991h -> 5.184h, Lcut 5.991h -> 5.184h
+  def arm 409 (j134 c82 dir -1 through): L 4.955h -> 3.543h, Lcut 4.955h -> 3.543h
+  def arm 412 (j135 c50 dir -1 through): L 4.849h -> 4.596h, Lcut Infinityh -> 4.596h
+  def arm 416 (j136 c88 dir 1 through): L 6.426h -> 0.846h, Lcut 6.426h -> 0.846h
+  def arm 418 (j137 c77 dir 1 through): L 2.179h -> 1.991h, Lcut 2.179h -> 1.991h
+  def arm 422 (j138 c55 dir 1 through): L 1.835h -> 0.504h, Lcut 1.835h -> 0.504h
+  def arm 425 (j139 c55 dir -1 through): L 4.443h -> 0.000h, Lcut 4.443h -> -0.108h
+  def arm 427 (j140 c89 dir -1 through): L 3.542h -> 2.447h, Lcut Infinityh -> 2.447h
+  def arm 431 (j141 c56 dir -1 through): L 12.777h -> 5.610h, Lcut Infinityh -> 5.610h
+  def arm 435 (j142 c56 dir 1 through): L 9.064h -> 3.672h, Lcut 9.064h -> 3.672h
+  def arm 436 (j143 c62 dir -1 through): L 4.127h -> 2.644h, Lcut 4.127h -> 2.644h
+  def arm 440 (j144 c59 dir 1 through): L 4.368h -> 4.285h, Lcut 4.368h -> 4.285h
+  def arm 444 (j145 c60 dir -1 through): L 4.196h -> 3.831h, Lcut 4.196h -> 3.831h
+  def arm 447 (j146 c58 dir -1 through): L 5.388h -> 0.502h, Lcut 5.388h -> 0.502h
+  def arm 449 (j147 c82 dir -1 through): L 2.813h -> 1.194h, Lcut 2.813h -> 1.194h
+  def arm 452 (j148 c62 dir 1 through): L 3.983h -> 3.755h, Lcut 3.983h -> 3.755h
+  def arm 456 (j149 c60 dir 1 through): L 4.027h -> 3.843h, Lcut 4.027h -> 3.843h
+  def arm 459 (j150 c61 dir 1 through): L 3.461h -> 3.461h, Lcut 3.813h -> 3.810h
+  def arm 462 (j151 c60 dir 1 through): L 1.381h -> 0.963h, Lcut 1.381h -> 0.963h
+  def arm 463 (j152 c61 dir -1 through): L 3.461h -> 0.352h, Lcut 7.270h -> 0.352h
+  def arm 466 (j153 c61 dir 1 through): L 5.374h -> 3.351h, Lcut 5.374h -> 3.351h
+  def arm 469 (j154 c61 dir -1 through): L 4.306h -> 3.183h, Lcut 4.306h -> 3.183h
+  def arm 472 (j155 c61 dir -1 through): L 5.501h -> 3.956h, Lcut 5.501h -> 3.956h
+  def arm 476 (j156 c61 dir 1 through): L 4.014h -> 3.825h, Lcut 4.014h -> 3.825h
+  def arm 478 (j157 c61 dir -1 through): L 3.802h -> 1.022h, Lcut 3.802h -> 1.022h
+  def arm 483 (j158 c75 dir 1 through): L 5.728h -> 4.086h, Lcut 9.617h -> 4.086h
+  def arm 484 (j159 c62 dir 1 through): L 3.491h -> 2.129h, Lcut 5.926h -> 2.129h
+  def arm 489 (j160 c62 dir -1 through): L 3.491h -> 2.436h, Lcut 5.620h -> 2.436h
+  def arm 490 (j161 c62 dir 1 through): L 2.036h -> 1.559h, Lcut 2.036h -> 1.559h
+  def arm 494 (j162 c62 dir 1 through): L 3.463h -> 1.114h, Lcut 5.732h -> 1.114h
+  def arm 496 (j163 c62 dir -1 through): L 3.463h -> 2.269h, Lcut 4.577h -> 2.269h
+  def arm 499 (j164 c62 dir -1 through): L 3.904h -> 3.745h, Lcut 3.904h -> 3.745h
+  def arm 504 (j165 c62 dir -1 through): L 5.017h -> 2.196h, Lcut 5.017h -> 2.196h
+  def arm 505 (j165 c69 dir 1 through): L 3.103h -> 2.994h, Lcut 3.103h -> 2.994h
+  def arm 506 (j166 c62 dir 1 through): L 0.863h -> 0.737h, Lcut 0.863h -> 0.737h
+  def arm 511 (j167 c63 dir 1 through): L 3.336h -> 2.028h, Lcut Infinityh -> 2.028h
+  def arm 514 (j168 c63 dir 1 through): L 4.644h -> 4.644h, Lcut Infinityh -> 5.364h
+  def arm 515 (j169 c82 dir -1 through): L 4.898h -> 4.779h, Lcut Infinityh -> 4.779h
+  def arm 518 (j170 c66 dir -1 through): L 10.312h -> 4.003h, Lcut Infinityh -> 4.003h
+  def arm 522 (j171 c66 dir -1 through): L 2.263h -> 2.209h, Lcut 2.263h -> 2.209h
+  def arm 525 (j172 c67 dir -1 through): L 7.966h -> 6.533h, Lcut 13.503h -> 6.533h
+  def arm 527 (j173 c88 dir 1 through): L 3.027h -> 1.812h, Lcut 3.027h -> 1.812h
+  def arm 531 (j174 c71 dir -1 through): L 9.892h -> 2.064h, Lcut 9.892h -> 2.064h
+  def arm 533 (j175 c82 dir 1 through): L 8.862h -> 4.893h, Lcut 8.862h -> 4.893h
+  def arm 536 (j176 c74 dir 1 through): L 3.592h -> 3.169h, Lcut 5.790h -> 3.169h
+  def arm 541 (j177 c74 dir -1 through): L 3.592h -> 2.199h, Lcut 6.761h -> 2.199h
+  def arm 544 (j178 c75 dir -1 through): L 7.339h -> 3.816h, Lcut 7.339h -> 3.816h
+  def arm 545 (j179 c82 dir -1 through): L 4.030h -> 3.935h, Lcut 4.030h -> 3.935h
+  def arm 550 (j180 c90 dir -1 through): L 8.318h -> 4.897h, Lcut Infinityh -> 4.897h
+  def arm 551 (j181 c76 dir -1 through): L 8.120h -> 6.269h, Lcut Infinityh -> 6.269h
+  def arm 556 (j182 c78 dir 1 through): L 7.421h -> 4.722h, Lcut 7.421h -> 4.722h
+  def arm 557 (j183 c88 dir -1 through): L 8.239h -> 4.611h, Lcut Infinityh -> 4.611h
+  def arm 560 (j184 c88 dir 1 through): L 3.323h -> 3.323h, Lcut 5.482h -> 3.901h
+  def corner j0 0-1: r 0.657h -> 0.460h, ω 1.000 -> 1.000
+  def corner j0 3-0: r 0.664h -> 0.583h, ω 1.000 -> 1.000
+  def corner j1 5-6: r 0.838h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j2 7-8: r 0.353h -> 0.146h, ω 1.000 -> 1.000
+  def corner j3 11-12: r 1.115h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j4 13-14: r 0.518h -> 0.458h, ω 1.000 -> 1.000
+  def corner j6 20-21: r 0.530h -> 0.000h, ω 1.000 -> 1.000
+  def corner j7 24-25: r 0.867h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j8 27-28: r 1.250h -> 0.676h, ω 1.000 -> 1.000
+  def corner j10 33-34: r 2.000h -> 0.306h, ω 1.000 -> 1.000
+  def corner j11 37-35: r 1.400h -> 1.079h, ω 1.000 -> 1.000
+  def corner j12 40-38: r 1.990h -> 1.973h, ω 1.000 -> 1.000
+  def corner j14 45-46: r 1.663h -> 1.617h, ω 1.000 -> 1.000
+  def corner j15 47-48: r 2.000h -> 0.353h, ω 1.000 -> 1.000
+  def corner j16 52-50: r 1.040h -> 0.941h, ω 1.000 -> 1.000
+  def corner j17 54-55: r 1.855h -> 1.839h, ω 1.000 -> 1.000
+  def corner j21 66-67: r 1.988h -> 0.079h, ω 1.000 -> 1.000
+  def corner j22 69-70: r 0.977h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j23 72-73: r 0.790h -> 0.789h, ω 1.000 -> 1.000
+  def corner j24 78-75: r 0.771h -> 0.770h, ω 1.000 -> 1.000
+  def corner j26 83-84: r 1.066h -> 0.376h, ω 1.000 -> 1.000
+  def corner j27 87-85: r 0.567h -> 0.351h, ω 1.000 -> 1.000
+  def corner j29 93-91: r 1.085h -> 1.066h, ω 1.000 -> 1.000
+  def corner j30 95-96: r 0.617h -> 0.202h, ω 1.000 -> 1.000
+  def corner j31 98-99: r 1.936h -> 0.834h, ω 1.000 -> 1.000
+  def corner j32 102-100: r 1.508h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j33 104-105: r 1.309h -> 0.180h, ω 1.000 -> 1.000
+  def corner j34 107-108: r 0.679h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  def corner j35 110-111: r 0.082h -> 0.040h, ω 1.000 -> 1.000
+  def corner j36 112-113: r 0.013h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j37 116-117: r 0.494h -> 0.205h, ω 1.000 -> 1.000
+  def corner j38 118-119: r 0.649h -> 0.479h, ω 1.000 -> 1.000
+  def corner j39 122-123: r 0.771h -> 0.346h, ω 1.000 -> 1.000
+  def corner j40 124-125: r 0.719h -> 0.422h, ω 1.000 -> 1.000
+  def corner j41 128-129: r 0.269h -> 0.150h, ω 1.000 -> 1.000
+  def corner j44 138-136: r 0.537h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j45 140-141: r 0.597h -> 0.024h, ω 1.000 -> 1.000
+  def corner j46 143-144: r 0.633h -> 0.000h, ω 1.000 -> 1.000
+  def corner j47 146-147: r 0.019h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  def corner j48 149-150: r 0.458h -> 0.095h, ω 1.000 -> 1.000
+  def corner j49 153-151: r 0.503h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  def corner j50 155-156: r 0.524h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  def corner j51 157-158: r 0.023h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  def corner j52 161-162: r 0.380h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  def corner j53 164-165: r 2.000h -> 0.929h, ω 1.000 -> 1.000
+  def corner j54 166-167: r 0.987h -> 0.506h, ω 1.000 -> 1.000
+  def corner j55 171-169: r 0.961h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  def corner j56 173-174: r 0.482h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j57 175-176: r 0.531h -> 0.133h, ω 1.000 -> 1.000
+  def corner j58 180-178: r 2.000h -> 1.997h, ω 1.000 -> 1.000
+  def corner j59 182-183: r 0.333h -> 0.141h, ω 1.000 -> 1.000
+  def corner j60 185-186: r 2.000h -> 0.251h, ω 1.000 -> 1.000
+  def corner j62 191-192: r 1.998h -> 1.115h, ω 1.000 -> 1.000
+  def corner j63 193-194: r 1.998h -> 1.051h, ω 1.000 -> 1.000
+  def corner j64 196-197: r 0.251h -> 0.081h, ω 1.000 -> 1.000
+  def corner j66 202-203: r 2.000h -> 1.700h, ω 1.000 -> 1.000
+  def corner j67 206-207: r 0.090h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j68 209-210: r 0.290h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j70 214-215: r 1.982h -> 0.001h, ω 1.000 -> 1.000
+  def corner j72 220-221: r 2.000h -> 0.367h, ω 1.000 -> 1.000
+  def corner j74 226-227: r 1.304h -> 0.887h, ω 1.000 -> 1.000
+  def corner j79 242-243: r 1.293h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j80 246-244: r 0.011h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j81 247-248: r 1.027h -> 0.999h, ω 1.000 -> 1.000
+  def corner j82 250-251: r 0.965h -> 0.698h, ω 1.000 -> 1.000
+  def corner j84 258-256: r 1.657h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  def corner j86 264-262: r 0.110h -> 0.021h, ω 1.000 -> 1.000
+  def corner j88 269-270: r 2.000h -> 1.135h, ω 1.000 -> 1.000
+  def corner j89 273-271: r 0.074h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  def corner j91 278-279: r 2.000h -> 1.828h, ω 1.000 -> 1.000
+  def corner j92 281-282: r 1.575h -> 1.575h, ω 1.000 -> 1.000
+  def corner j93 283-284: r 2.000h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j94 288-286: r 1.863h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j95 290-291: r 0.833h -> 0.000h, ω 1.000 -> 1.000
+  def corner j96 294-292: r 2.000h -> 0.376h, ω 1.000 -> 1.000
+  def corner j97 296-297: r 1.166h -> 1.125h, ω 1.000 -> 1.000
+  def corner j100 304-305: r 0.368h -> 0.146h, ω 1.000 -> 1.000
+  def corner j101 309-307: r 1.602h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j106 325-323: r 0.281h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  def corner j108 329-330: r 0.648h -> 0.434h, ω 1.000 -> 1.000
+  def corner j109 333-334: r 0.530h -> 0.445h, ω 1.000 -> 1.000
+  def corner j110 336-337: r 1.450h -> 0.666h, ω 1.000 -> 1.000
+  def corner j111 340-338: r 1.993h -> 0.667h, ω 1.000 -> 1.000
+  def corner j112 342-343: r 1.969h -> 1.135h, ω 1.000 -> 1.000
+  def corner j115 351-352: r 2.000h -> 1.524h, ω 1.000 -> 1.000
+  def corner j116 354-355: r 0.172h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  def corner j117 356-357: r 1.408h -> 0.651h, ω 1.000 -> 1.000
+  def corner j119 362-363: r 0.618h -> 0.560h, ω 1.000 -> 1.000
+  def corner j119 363-364: r 1.499h -> 1.336h, ω 1.000 -> 1.000
+  def corner j119 364-365: r 0.588h -> 0.572h, ω 1.000 -> 1.000
+  def corner j123 377-375: r 1.141h -> 0.859h, ω 1.000 -> 1.000
+  def corner j124 378-379: r 0.701h -> 0.155h, ω 1.000 -> 1.000
+  def corner j125 382-383: r 2.000h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  def corner j127 387-388: r 2.000h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j129 393-394: r 1.304h -> 1.270h, ω 1.000 -> 1.000
+  def corner j130 397-398: r 0.890h -> 0.007h, ω 1.000 -> 1.000
+  def corner j131 399-400: r 1.865h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j132 404-402: r 2.000h -> 0.000h, ω 1.000 -> 1.000
+  def corner j136 416-417: r 2.000h -> 0.171h, ω 1.000 -> 1.000
+  def corner j137 418-419: r 0.912h -> 0.681h, ω 1.000 -> 1.000
+  def corner j138 422-423: r 0.018h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  def corner j139 425-426: r 2.000h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  def corner j142 434-435: r 1.122h -> 1.070h, ω 1.000 -> 1.000
+  def corner j143 438-436: r 0.668h -> 0.533h, ω 1.000 -> 1.000
+  def corner j146 447-445: r 2.000h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j147 448-449: r 1.481h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j148 451-452: r 0.966h -> 0.960h, ω 1.000 -> 1.000
+  def corner j151 461-462: r 0.655h -> 0.007h, ω 1.000 -> 1.000
+  def corner j152 465-463: r 1.135h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  def corner j157 478-479: r 2.000h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j158 482-483: r 1.193h -> 1.195h, ω 1.000 -> 1.000
+  def corner j160 488-489: r 1.804h -> 1.792h, ω 1.000 -> 1.000
+  def corner j161 490-491: r 1.450h -> 0.344h, ω 1.000 -> 1.000
+  def corner j162 494-495: r 1.840h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  def corner j163 496-497: r 1.691h -> 0.850h, ω 1.000 -> 1.000
+  def corner j164 501-499: r 1.323h -> 1.323h, ω 1.000 -> 1.000
+  def corner j165 503-504: r 0.438h -> 0.040h, ω 1.000 -> 1.000
+  def corner j167 510-511: r 1.982h -> 1.076h, ω 1.000 -> 1.000
+  def corner j171 522-523: r 0.407h -> 0.359h, ω 1.000 -> 1.000
+  def corner j173 529-527: r 2.000h -> 0.695h, ω 1.000 -> 1.000
+  def corner j176 536-537: r 1.524h -> 1.396h, ω 1.000 -> 1.000
+  def corner j177 541-539: r 1.690h -> 0.756h, ω 1.000 -> 1.000
+  def F6 arm 425 (j139) d -2.499h reach 1.608h: 425-426 r 2.000h ω 1.000 -> none
+  ring arm 1 (j0 c1 dir 1 through): L 4.013h -> 3.588h, Lcut 4.013h -> 3.588h
+  ring arm 3 (j1 c0 dir -1 through): L 7.407h -> 4.743h, Lcut 7.407h -> 4.743h
+  ring arm 4 (j1 c1 dir 1 through): L 4.752h -> 2.397h, Lcut 4.752h -> 2.397h
+  ring arm 8 (j2 c1 dir -1 through): L 3.398h -> 0.617h, Lcut 3.398h -> 0.617h
+  ring arm 12 (j3 c1 dir -1 through): L 4.597h -> 3.586h, Lcut 4.597h -> 3.586h
+  ring arm 14 (j4 c1 dir -1 through): L 6.916h -> 0.683h, Lcut 6.916h -> 0.683h
+  ring arm 18 (j5 c1 dir -1 through): L 2.141h -> 0.801h, Lcut 2.141h -> 0.801h
+  ring arm 20 (j6 c1 dir 1 through): L 6.209h -> 1.847h, Lcut 6.209h -> 1.847h
+  ring arm 24 (j7 c1 dir 1 through): L 5.299h -> 0.227h, Lcut 5.299h -> 0.227h
+  ring arm 27 (j8 c1 dir -1 through): L 4.808h -> 1.691h, Lcut 4.808h -> 1.691h
+  ring arm 28 (j9 c1 dir -1 through): L 7.274h -> 4.223h, Lcut 7.274h -> 4.223h
+  ring arm 33 (j10 c1 dir 1 through): L 1.515h -> 0.835h, Lcut 1.515h -> 0.835h
+  ring arm 34 (j11 c1 dir 1 through): L 1.986h -> 1.598h, Lcut 1.986h -> 1.598h
+  ring arm 37 (j12 c1 dir -1 through): L 9.635h -> 2.425h, Lcut 9.635h -> 2.425h
+  ring arm 42 (j13 c2 dir 1 through): L 3.822h -> 3.405h, Lcut 3.822h -> 3.405h
+  ring arm 45 (j14 c2 dir 1 through): L 7.390h -> 4.627h, Lcut 7.390h -> 4.627h
+  ring arm 46 (j15 c2 dir -1 through): L 6.646h -> 0.538h, Lcut 6.646h -> 0.538h
+  ring arm 51 (j16 c2 dir -1 through): L 1.962h -> 0.523h, Lcut 1.962h -> 0.523h
+  ring arm 53 (j17 c2 dir -1 through): L 3.426h -> 2.170h, Lcut 3.426h -> 2.170h
+  ring arm 55 (j18 c3 dir -1 through): L 0.762h -> 0.253h, Lcut 0.762h -> 0.253h
+  ring arm 59 (j19 c3 dir -1 through): L 3.295h -> 1.812h, Lcut 3.295h -> 1.812h
+  ring arm 62 (j20 c3 dir -1 through): L 3.824h -> 2.440h, Lcut 3.824h -> 2.440h
+  ring arm 66 (j21 c3 dir 1 through): L 1.821h -> 1.004h, Lcut 1.821h -> 1.004h
+  ring arm 69 (j22 c3 dir -1 through): L 3.577h -> 3.404h, Lcut 3.577h -> 3.404h
+  ring arm 71 (j23 c4 dir 1 through): L 4.041h -> 1.916h, Lcut 4.041h -> 1.916h
+  ring arm 75 (j24 c4 dir 1 through): L 9.452h -> 3.899h, Lcut 9.452h -> 3.899h
+  ring corner j1 3-4: r 1.590h -> 1.313h, ω 1.000 -> 1.000
+  ring corner j1 4-5: r 0.665h -> 0.664h, ω 1.000 -> 1.000
+  ring corner j2 7-8: r 1.654h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  ring corner j4 14-15: r 2.000h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  ring corner j5 18-16: r 0.496h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  ring corner j6 19-20: r 1.951h -> 1.554h, ω 1.000 -> 1.000
+  ring corner j7 23-24: r 0.774h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  ring corner j8 27-25: r 0.759h -> 0.228h, ω 1.000 -> 1.000
+  ring corner j10 32-33: r 0.004h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  ring corner j11 36-34: r 0.380h -> 0.037h, ω 1.000 -> 1.000
+  ring corner j15 48-46: r 2.000h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  ring corner j16 50-51: r 0.565h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  ring corner j17 52-53: r 0.532h -> 0.270h, ω 1.000 -> 1.000
+  ring corner j18 55-56: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  ring corner j21 65-66: r 0.266h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  ring corner j23 70-71: r 0.624h -> 0.298h, ω 1.000 -> 1.000
+  ring corner j24 74-75: r 1.218h -> 1.304h, ω 1.000 -> 1.000
+  user_tw42.lightpaper arm 0 (j0 c15 dir 1 through): L 3.621h -> 2.258h, Lcut Infinityh -> 2.258h
+  user_tw42.lightpaper arm 3 (j1 c0 dir -1 through): L 5.117h -> 0.288h, Lcut 5.117h -> 0.288h
+  user_tw42.lightpaper arm 8 (j2 c15 dir -1 through): L 3.501h -> 0.977h, Lcut 11.405h -> 0.977h
+  user_tw42.lightpaper arm 10 (j3 c24 dir 1 through): L 1.042h -> 0.897h, Lcut 1.042h -> 0.897h
+  user_tw42.lightpaper arm 14 (j4 c24 dir 1 through): L 8.317h -> 0.507h, Lcut 8.317h -> 0.507h
+  user_tw42.lightpaper arm 16 (j5 c15 dir 1 through): L 3.507h -> 2.059h, Lcut 14.129h -> 2.059h
+  user_tw42.lightpaper arm 18 (j6 c15 dir 1 through): L 1.862h -> 1.088h, Lcut 1.862h -> 1.088h
+  user_tw42.lightpaper arm 23 (j7 c15 dir 1 through): L 2.094h -> 2.082h, Lcut 2.094h -> 2.082h
+  user_tw42.lightpaper arm 25 (j8 c16 dir 1 through): L 5.617h -> 1.941h, Lcut 5.617h -> 1.941h
+  user_tw42.lightpaper arm 27 (j9 c16 dir 1 through): L 2.135h -> 2.046h, Lcut 2.135h -> 2.046h
+  user_tw42.lightpaper arm 31 (j10 c29 dir 1 through): L 3.625h -> 2.246h, Lcut Infinityh -> 2.246h
+  user_tw42.lightpaper arm 35 (j11 c30 dir 1 through): L 4.304h -> 1.433h, Lcut 4.304h -> 1.433h
+  user_tw42.lightpaper arm 38 (j12 c6 dir 1 through): L 11.121h -> 5.282h, Lcut 11.121h -> 5.282h
+  user_tw42.lightpaper arm 41 (j13 c6 dir 1 through): L 4.572h -> 4.551h, Lcut 4.572h -> 4.551h
+  user_tw42.lightpaper arm 42 (j14 c30 dir -1 through): L 3.530h -> 1.245h, Lcut 14.434h -> 1.245h
+  user_tw42.lightpaper arm 47 (j15 c7 dir -1 through): L 7.825h -> 7.465h, Lcut 7.825h -> 7.465h
+  user_tw42.lightpaper arm 50 (j16 c7 dir 1 through): L 7.744h -> 4.819h, Lcut 7.744h -> 4.819h
+  user_tw42.lightpaper arm 53 (j17 c7 dir -1 through): L 8.198h -> 4.079h, Lcut 8.198h -> 4.079h
+  user_tw42.lightpaper arm 54 (j18 c7 dir 1 through): L 3.666h -> 3.666h, Lcut 5.928h -> 4.298h
+  user_tw42.lightpaper arm 58 (j19 c7 dir -1 through): L 3.666h -> 2.262h, Lcut 7.964h -> 2.262h
+  user_tw42.lightpaper arm 62 (j20 c7 dir -1 through): L 7.597h -> 4.623h, Lcut 7.597h -> 4.623h
+  user_tw42.lightpaper arm 64 (j21 c28 dir 1 through): L 10.043h -> 4.881h, Lcut Infinityh -> 4.881h
+  user_tw42.lightpaper arm 65 (j21 c7 dir 1 through): L 9.925h -> 7.265h, Lcut 18.127h -> 7.265h
+  user_tw42.lightpaper arm 69 (j22 c7 dir -1 through): L 9.925h -> 8.202h, Lcut 17.190h -> 8.202h
+  user_tw42.lightpaper arm 72 (j23 c29 dir 1 through): L 2.142h -> 2.026h, Lcut 2.142h -> 2.026h
+  user_tw42.lightpaper arm 73 (j24 c15 dir 1 through): L 3.598h -> 0.888h, Lcut 7.475h -> 0.888h
+  user_tw42.lightpaper arm 76 (j25 c20 dir -1 through): L 2.141h -> 0.998h, Lcut 2.141h -> 0.998h
+  user_tw42.lightpaper arm 81 (j26 c22 dir -1 through): L 3.621h -> 1.997h, Lcut 17.371h -> 1.997h
+  user_tw42.lightpaper arm 82 (j27 c9 dir 1 through): L 3.598h -> 1.638h, Lcut 8.131h -> 1.638h
+  user_tw42.lightpaper arm 87 (j28 c9 dir -1 through): L 3.598h -> 3.598h, Lcut 5.236h -> 4.534h
+  user_tw42.lightpaper arm 88 (j29 c9 dir -1 through): L 4.443h -> 1.494h, Lcut 4.443h -> 1.494h
+  user_tw42.lightpaper arm 93 (j30 c9 dir -1 through): L 6.732h -> 4.448h, Lcut 6.732h -> 4.448h
+  user_tw42.lightpaper arm 95 (j31 c23 dir 1 through): L 3.665h -> 2.131h, Lcut 30.337h -> 2.131h
+  user_tw42.lightpaper arm 99 (j32 c11 dir 1 through): L 7.054h -> 4.976h, Lcut 7.054h -> 4.976h
+  user_tw42.lightpaper arm 101 (j33 c30 dir -1 through): L 3.454h -> 1.048h, Lcut 14.267h -> 1.048h
+  user_tw42.lightpaper arm 103 (j34 c11 dir 1 through): L 4.470h -> 4.208h, Lcut 4.470h -> 4.208h
+  user_tw42.lightpaper arm 106 (j35 c11 dir 1 through): L 7.234h -> 4.536h, Lcut 7.234h -> 4.536h
+  user_tw42.lightpaper arm 109 (j35 c30 dir -1 through): L 11.021h -> 10.590h, Lcut 11.021h -> 10.590h
+  user_tw42.lightpaper arm 112 (j36 c30 dir -1 through): L 5.991h -> 4.599h, Lcut 17.012h -> 4.599h
+  user_tw42.lightpaper arm 115 (j37 c29 dir -1 through): L 10.115h -> 4.880h, Lcut 14.189h -> 4.880h
+  user_tw42.lightpaper arm 117 (j38 c23 dir 1 through): L 1.901h -> 1.387h, Lcut 1.901h -> 1.387h
+  user_tw42.lightpaper arm 120 (j39 c26 dir -1 through): L 3.529h -> 2.051h, Lcut 10.951h -> 2.051h
+  user_tw42.lightpaper arm 123 (j40 c23 dir 1 through): L 9.708h -> 5.796h, Lcut 26.672h -> 5.796h
+  user_tw42.lightpaper arm 127 (j41 c23 dir 1 through): L 9.783h -> 9.783h, Lcut 16.964h -> 15.504h
+  user_tw42.lightpaper arm 131 (j42 c23 dir -1 through): L 9.783h -> 7.180h, Lcut 25.288h -> 7.180h
+  user_tw42.lightpaper arm 132 (j43 c17 dir 1 through): L 3.619h -> 1.680h, Lcut 8.598h -> 1.680h
+  user_tw42.lightpaper arm 136 (j44 c15 dir -1 through): L 7.904h -> 4.478h, Lcut 7.904h -> 4.478h
+  user_tw42.lightpaper arm 139 (j45 c16 dir -1 through): L 5.027h -> 4.455h, Lcut 5.027h -> 4.455h
+  user_tw42.lightpaper arm 140 (j45 c15 dir -1 through): L 3.743h -> 3.657h, Lcut 3.743h -> 3.657h
+  user_tw42.lightpaper arm 144 (j46 c15 dir -1 through): L 3.598h -> 3.598h, Lcut 4.486h -> 3.877h
+  user_tw42.lightpaper arm 147 (j47 c15 dir 1 through): L 10.622h -> 5.566h, Lcut 10.622h -> 5.566h
+  user_tw42.lightpaper arm 148 (j48 c15 dir 1 through): L 5.804h -> 5.804h, Lcut Infinityh -> 5.879h
+  user_tw42.lightpaper arm 153 (j49 c29 dir 1 through): L 12.850h -> 5.871h, Lcut Infinityh -> 5.871h
+  user_tw42.lightpaper arm 156 (j50 c16 dir -1 through): L 4.840h -> 4.018h, Lcut 4.840h -> 4.018h
+  user_tw42.lightpaper arm 159 (j51 c17 dir -1 through): L 3.619h -> 3.619h, Lcut 5.300h -> 4.978h
+  user_tw42.lightpaper arm 160 (j52 c30 dir -1 through): L 1.109h -> 0.614h, Lcut 1.109h -> 0.614h
+  user_tw42.lightpaper arm 165 (j53 c30 dir 1 through): L 7.638h -> 4.360h, Lcut 7.638h -> 4.360h
+  user_tw42.lightpaper arm 166 (j54 c22 dir 1 through): L 9.889h -> 3.860h, Lcut 15.507h -> 3.860h
+  user_tw42.lightpaper arm 172 (j55 c22 dir -1 through): L 9.889h -> 5.618h, Lcut 13.749h -> 5.618h
+  user_tw42.lightpaper arm 175 (j56 c23 dir 1 through): L 10.821h -> 3.829h, Lcut 10.821h -> 3.829h
+  user_tw42.lightpaper arm 176 (j57 c23 dir -1 through): L 10.822h -> 4.809h, Lcut 10.822h -> 4.809h
+  user_tw42.lightpaper arm 181 (j58 c30 dir 1 through): L 10.857h -> 7.494h, Lcut 10.857h -> 7.494h
+  user_tw42.lightpaper arm 183 (j59 c22 dir -1 through): L 1.530h -> 0.838h, Lcut 1.530h -> 0.838h
+  user_tw42.lightpaper arm 186 (j60 c22 dir -1 through): L 8.591h -> 4.706h, Lcut 8.591h -> 4.706h
+  user_tw42.lightpaper arm 190 (j61 c30 dir -1 through): L 3.574h -> 1.025h, Lcut 20.587h -> 1.025h
+  user_tw42.lightpaper arm 193 (j62 c24 dir -1 through): L 4.873h -> 4.856h, Lcut 4.873h -> 4.856h
+  user_tw42.lightpaper arm 195 (j63 c30 dir 1 through): L 5.074h -> 4.753h, Lcut 5.074h -> 4.753h
+  user_tw42.lightpaper arm 197 (j64 c30 dir 1 through): L 4.845h -> 3.890h, Lcut 4.845h -> 3.890h
+  user_tw42.lightpaper arm 198 (j64 c26 dir -1 through): L 6.025h -> 4.486h, Lcut Infinityh -> 4.486h
+  user_tw42.lightpaper arm 203 (j65 c26 dir -1 through): L 7.422h -> 5.580h, Lcut 7.422h -> 5.580h
+  user_tw42.lightpaper arm 204 (j66 c26 dir -1 through): L 10.898h -> 4.221h, Lcut 10.898h -> 4.221h
+  user_tw42.lightpaper arm 207 (j66 c30 dir 1 through): L 6.646h -> 3.962h, Lcut 6.646h -> 3.962h
+  user_tw42.lightpaper arm 208 (j67 c30 dir -1 through): L 1.895h -> 1.641h, Lcut 1.895h -> 1.641h
+  user_tw42.lightpaper arm 211 (j68 c30 dir 1 through): L 2.603h -> 2.531h, Lcut 2.603h -> 2.531h
+  user_tw42.lightpaper arm 214 (j69 c29 dir 1 through): L 10.115h -> 4.074h, Lcut 14.995h -> 4.074h
+  user_tw42.lightpaper arm 219 (j70 c30 dir 1 through): L 3.672h -> 2.106h, Lcut 8.340h -> 2.106h
+  user_tw42.lightpaper arm 221 (j71 c30 dir -1 through): L 3.672h -> 3.672h, Lcut 5.778h -> 4.668h
+  user_tw42.lightpaper arm 224 (j72 c30 dir -1 through): L 10.904h -> 4.776h, Lcut 10.904h -> 4.776h
+  user_tw42.lightpaper arm 228 (j73 c30 dir -1 through): L 10.813h -> 4.502h, Lcut 10.813h -> 4.502h
+  user_tw42.lightpaper arm 229 (j74 c31 dir -1 through): L 6.137h -> 5.170h, Lcut Infinityh -> 5.170h
+  user_tw42.lightpaper arm 230 (j74 c30 dir 1 through): L 3.985h -> 3.897h, Lcut 3.985h -> 3.897h
+  user_tw42.lightpaper corner j0 0-1: r 0.479h -> 0.071h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j1 3-4: r 0.039h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  user_tw42.lightpaper corner j2 7-8: r 0.662h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  user_tw42.lightpaper corner j4 13-14: r 1.306h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  user_tw42.lightpaper corner j5 16-17: r 1.121h -> 0.161h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j6 20-18: r 0.253h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  user_tw42.lightpaper corner j7 22-23: r 0.046h -> 0.038h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j8 25-26: r 0.450h -> 0.245h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j9 27-28: r 0.015h -> 0.003h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j10 31-32: r 0.783h -> 0.290h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j11 34-35: r 0.956h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  user_tw42.lightpaper corner j14 42-43: r 0.690h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  user_tw42.lightpaper corner j16 49-50: r 0.970h -> 0.970h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j19 58-59: r 1.197h -> 0.278h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j21 64-65: r 0.570h -> 0.567h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j23 72-70: r 0.074h -> 0.021h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j24 75-73: r 1.144h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  user_tw42.lightpaper corner j25 78-76: r 2.000h -> 0.154h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j26 81-79: r 0.466h -> 0.029h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j29 88-89: r 1.799h -> 0.011h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j33 101-102: r 1.398h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  user_tw42.lightpaper corner j35 106-107: r 0.845h -> 0.829h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j38 116-117: r 0.543h -> 0.003h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j39 120-121: r 0.722h -> 0.205h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j43 132-133: r 2.000h -> 1.539h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j44 136-137: r 0.654h -> 0.640h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j52 162-160: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  user_tw42.lightpaper corner j55 171-172: r 0.738h -> 0.736h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j56 174-175: r 1.109h -> 1.096h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j61 189-190: r 1.240h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  user_tw42.lightpaper corner j64 200-197: r 1.096h -> 1.096h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j66 204-205: r 1.407h -> 1.481h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j66 206-207: r 1.001h -> 0.864h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j67 208-209: r 0.058h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  user_tw42.lightpaper corner j68 211-212: r 0.139h -> 0.095h, ω 1.000 -> 1.000
+  user_tw42.lightpaper corner j73 227-228: r 1.000h -> 0.946h, ω 1.000 -> 1.000
+  g41_def_tw42 arm 0 (j0 c0 dir -1 through): L 4.749h -> 3.734h, Lcut 4.749h -> 3.734h
+  g41_def_tw42 arm 3 (j0 c60 dir 1 through): L 9.742h -> 4.360h, Lcut 9.742h -> 4.360h
+  g41_def_tw42 arm 6 (j1 c0 dir 1 through): L 2.888h -> 1.676h, Lcut 2.888h -> 1.676h
+  g41_def_tw42 arm 8 (j2 c62 dir -1 through): L 2.382h -> 2.196h, Lcut 2.382h -> 2.196h
+  g41_def_tw42 arm 12 (j3 c45 dir -1 through): L 2.713h -> 1.754h, Lcut 2.713h -> 1.754h
+  g41_def_tw42 arm 14 (j4 c60 dir -1 through): L 4.709h -> 4.584h, Lcut 4.709h -> 4.584h
+  g41_def_tw42 arm 15 (j4 c1 dir 1 through): L 9.087h -> 4.646h, Lcut 9.087h -> 4.646h
+  g41_def_tw42 arm 18 (j5 c1 dir 1 through): L 4.658h -> 3.667h, Lcut 4.658h -> 3.667h
+  g41_def_tw42 arm 20 (j6 c45 dir 1 through): L 2.657h -> 2.508h, Lcut 2.657h -> 2.508h
+  g41_def_tw42 arm 23 (j7 c44 dir -1 through): L 2.347h -> 2.213h, Lcut 2.347h -> 2.213h
+  g41_def_tw42 arm 27 (j8 c2 dir 1 through): L 4.269h -> 3.098h, Lcut 9.326h -> 3.098h
+  g41_def_tw42 arm 29 (j9 c2 dir -1 through): L 4.269h -> 4.269h, Lcut 7.367h -> 5.057h
+  g41_def_tw42 arm 34 (j10 c2 dir 1 through): L 4.178h -> 2.425h, Lcut 8.381h -> 2.425h
+  g41_def_tw42 arm 35 (j11 c2 dir -1 through): L 4.178h -> 4.178h, Lcut 6.603h -> 4.203h
+  g41_def_tw42 arm 40 (j12 c2 dir 1 through): L 3.949h -> 2.408h, Lcut 8.330h -> 2.408h
+  g41_def_tw42 arm 41 (j13 c2 dir -1 through): L 3.949h -> 3.949h, Lcut 6.357h -> 4.381h
+  g41_def_tw42 arm 44 (j14 c2 dir 1 through): L 4.767h -> 4.697h, Lcut 4.767h -> 4.697h
+  g41_def_tw42 arm 48 (j15 c2 dir -1 through): L 11.403h -> 2.113h, Lcut 11.403h -> 2.113h
+  g41_def_tw42 arm 52 (j16 c2 dir 1 through): L 8.120h -> 4.160h, Lcut 8.120h -> 4.160h
+  g41_def_tw42 arm 53 (j17 c2 dir 1 through): L 5.162h -> 4.199h, Lcut 5.162h -> 4.199h
+  g41_def_tw42 arm 56 (j18 c2 dir 1 through): L 8.655h -> 4.778h, Lcut 8.655h -> 4.778h
+  g41_def_tw42 arm 61 (j19 c2 dir -1 through): L 7.104h -> 5.221h, Lcut 7.104h -> 5.221h
+  g41_def_tw42 arm 62 (j20 c2 dir -1 through): L 5.682h -> 5.525h, Lcut 5.682h -> 5.525h
+  g41_def_tw42 arm 67 (j21 c90 dir -1 through): L 4.406h -> 3.270h, Lcut Infinityh -> 3.270h
+  g41_def_tw42 arm 70 (j22 c60 dir 1 through): L 3.128h -> 2.160h, Lcut 3.128h -> 2.160h
+  g41_def_tw42 arm 72 (j23 c3 dir 1 through): L 10.108h -> 4.831h, Lcut 14.485h -> 4.831h
+  g41_def_tw42 arm 73 (j23 c60 dir -1 through): L 9.788h -> 6.922h, Lcut 19.519h -> 6.922h
+  g41_def_tw42 arm 75 (j24 c3 dir -1 through): L 10.108h -> 4.377h, Lcut 14.938h -> 4.377h
+  g41_def_tw42 arm 78 (j24 c60 dir 1 through): L 9.788h -> 9.731h, Lcut 16.710h -> 9.731h
+  g41_def_tw42 arm 79 (j25 c61 dir 1 through): L 8.232h -> 4.101h, Lcut 8.232h -> 4.101h
+  g41_def_tw42 arm 84 (j26 c44 dir -1 through): L 4.093h -> 2.729h, Lcut 8.691h -> 2.729h
+  g41_def_tw42 arm 85 (j27 c30 dir 1 through): L 2.582h -> 2.369h, Lcut 2.582h -> 2.369h
+  g41_def_tw42 arm 90 (j28 c67 dir 1 through): L 2.785h -> 1.959h, Lcut 2.785h -> 1.959h
+  g41_def_tw42 arm 91 (j29 c79 dir 1 through): L 7.666h -> 4.883h, Lcut 7.666h -> 4.883h
+  g41_def_tw42 arm 95 (j30 c6 dir -1 through): L 6.417h -> 2.748h, Lcut 6.417h -> 2.748h
+  g41_def_tw42 arm 98 (j31 c65 dir -1 through): L 5.647h -> 2.772h, Lcut 5.647h -> 2.772h
+  g41_def_tw42 arm 100 (j32 c80 dir 1 through): L 4.330h -> 2.195h, Lcut 15.228h -> 2.195h
+  g41_def_tw42 arm 104 (j33 c80 dir -1 through): L 2.757h -> 2.332h, Lcut 2.757h -> 2.332h
+  g41_def_tw42 arm 107 (j34 c8 dir 1 through closed): L 6.556h -> 2.235h, Lcut 6.556h -> 2.235h
+  g41_def_tw42 arm 109 (j35 c75 dir -1 through): L 2.612h -> 2.599h, Lcut 2.612h -> 2.599h
+  g41_def_tw42 arm 113 (j36 c89 dir -1 through): L 1.972h -> 1.757h, Lcut 1.972h -> 1.757h
+  g41_def_tw42 arm 117 (j37 c76 dir -1 through): L 5.254h -> 2.983h, Lcut 5.254h -> 2.983h
+  g41_def_tw42 arm 119 (j38 c78 dir -1 through): L 5.786h -> 3.053h, Lcut 5.786h -> 3.053h
+  g41_def_tw42 arm 123 (j39 c82 dir -1 through): L 2.566h -> 2.536h, Lcut 2.566h -> 2.536h
+  g41_def_tw42 arm 125 (j40 c37 dir 1 through): L 5.941h -> 3.438h, Lcut 5.941h -> 3.438h
+  g41_def_tw42 arm 129 (j41 c82 dir 1 through): L 2.516h -> 2.319h, Lcut 2.516h -> 2.319h
+  g41_def_tw42 arm 130 (j42 c75 dir -1 through): L 7.004h -> 5.437h, Lcut 11.785h -> 5.437h
+  g41_def_tw42 arm 135 (j43 c90 dir -1 through): L 2.383h -> 2.079h, Lcut 2.383h -> 2.079h
+  g41_def_tw42 arm 136 (j44 c61 dir -1 through): L 2.655h -> 2.321h, Lcut 2.655h -> 2.321h
+  g41_def_tw42 arm 140 (j45 c61 dir -1 through): L 6.664h -> 2.527h, Lcut 6.664h -> 2.527h
+  g41_def_tw42 arm 143 (j46 c66 dir -1 through): L 2.654h -> 1.800h, Lcut 2.654h -> 1.800h
+  g41_def_tw42 arm 147 (j47 c61 dir 1 through): L 2.766h -> 1.956h, Lcut 2.766h -> 1.956h
+  g41_def_tw42 arm 150 (j48 c58 dir -1 through): L 2.873h -> 2.227h, Lcut 2.873h -> 2.227h
+  g41_def_tw42 arm 153 (j49 c82 dir 1 through): L 6.747h -> 1.680h, Lcut 6.747h -> 1.680h
+  g41_def_tw42 arm 155 (j50 c62 dir 1 through): L 6.981h -> 1.497h, Lcut 6.981h -> 1.497h
+  g41_def_tw42 arm 157 (j51 c62 dir 1 through): L 2.202h -> 1.810h, Lcut 2.202h -> 1.810h
+  g41_def_tw42 arm 161 (j52 c75 dir -1 through): L 2.780h -> 1.539h, Lcut 2.780h -> 1.539h
+  g41_def_tw42 arm 165 (j53 c82 dir 1 through): L 10.228h -> 2.223h, Lcut 10.228h -> 2.223h
+  g41_def_tw42 arm 166 (j54 c61 dir 1 through): L 2.969h -> 2.633h, Lcut 2.969h -> 2.633h
+  g41_def_tw42 arm 169 (j55 c61 dir -1 through): L 7.348h -> 2.663h, Lcut 7.348h -> 2.663h
+  g41_def_tw42 arm 173 (j56 c82 dir -1 through): L 2.778h -> 2.032h, Lcut 2.778h -> 2.032h
+  g41_def_tw42 arm 175 (j57 c82 dir -1 through): L 6.340h -> 2.944h, Lcut 6.340h -> 2.944h
+  g41_def_tw42 arm 180 (j58 c75 dir 1 through): L 5.539h -> 2.631h, Lcut 5.539h -> 2.631h
+  g41_def_tw42 arm 181 (j59 c61 dir -1 through): L 3.048h -> 2.528h, Lcut 3.048h -> 2.528h
+  g41_def_tw42 arm 185 (j60 c31 dir 1 through): L 6.006h -> 1.819h, Lcut 6.006h -> 1.819h
+  g41_def_tw42 arm 189 (j61 c61 dir -1 through): L 5.227h -> 2.566h, Lcut 5.227h -> 2.566h
+  g41_def_tw42 arm 191 (j62 c56 dir -1 through): L 5.036h -> 2.544h, Lcut 5.036h -> 2.544h
+  g41_def_tw42 arm 193 (j63 c56 dir -1 through): L 4.864h -> 2.753h, Lcut 4.864h -> 2.753h
+  g41_def_tw42 arm 198 (j64 c37 dir -1 through): L 2.694h -> 2.285h, Lcut 2.694h -> 2.285h
+  g41_def_tw42 arm 199 (j65 c82 dir -1 through): L 11.359h -> 2.110h, Lcut 11.359h -> 2.110h
+  g41_def_tw42 arm 204 (j66 c61 dir 1 through): L 9.817h -> 2.538h, Lcut 9.817h -> 2.538h
+  g41_def_tw42 arm 205 (j67 c61 dir -1 through): L 2.603h -> 2.450h, Lcut 2.603h -> 2.450h
+  g41_def_tw42 arm 210 (j68 c45 dir 1 through): L 2.361h -> 1.987h, Lcut 2.361h -> 1.987h
+  g41_def_tw42 arm 211 (j69 c28 dir 1 through): L 7.390h -> 4.475h, Lcut 7.390h -> 4.475h
+  g41_def_tw42 arm 215 (j70 c45 dir -1 through): L 4.290h -> 1.810h, Lcut 11.510h -> 1.810h
+  g41_def_tw42 arm 219 (j71 c46 dir -1 through): L 8.436h -> 4.931h, Lcut 8.436h -> 4.931h
+  g41_def_tw42 arm 220 (j72 c29 dir 1 through): L 4.472h -> 2.574h, Lcut 8.989h -> 2.574h
+  g41_def_tw42 arm 224 (j73 c29 dir -1 through): L 4.472h -> 4.472h, Lcut 7.046h -> 4.517h
+  g41_def_tw42 arm 226 (j74 c29 dir 1 through): L 7.369h -> 4.274h, Lcut 7.369h -> 4.274h
+  g41_def_tw42 arm 229 (j75 c84 dir 1 through): L 2.142h -> 1.895h, Lcut 2.142h -> 1.895h
+  g41_def_tw42 arm 233 (j76 c89 dir -1 through): L 4.508h -> 4.508h, Lcut Infinityh -> 7.738h
+  g41_def_tw42 arm 235 (j77 c30 dir 1 through): L 6.056h -> 4.901h, Lcut 12.674h -> 4.901h
+  g41_def_tw42 arm 240 (j78 c30 dir -1 through): L 6.056h -> 6.056h, Lcut 10.957h -> 6.618h
+  g41_def_tw42 arm 242 (j79 c30 dir -1 through): L 4.415h -> 2.203h, Lcut 15.372h -> 2.203h
+  g41_def_tw42 arm 244 (j80 c30 dir 1 through): L 2.801h -> 2.306h, Lcut 2.801h -> 2.306h
+  g41_def_tw42 arm 247 (j81 c30 dir 1 through): L 4.658h -> 4.495h, Lcut 4.658h -> 4.495h
+  g41_def_tw42 arm 250 (j82 c61 dir -1 through): L 6.947h -> 4.196h, Lcut 6.947h -> 4.196h
+  g41_def_tw42 arm 253 (j83 c31 dir 1 through): L 4.327h -> 4.327h, Lcut 6.783h -> 4.843h
+  g41_def_tw42 arm 258 (j84 c31 dir -1 through): L 4.327h -> 2.456h, Lcut 9.170h -> 2.456h
+  g41_def_tw42 arm 260 (j85 c31 dir 1 through): L 4.676h -> 4.640h, Lcut 4.676h -> 4.640h
+  g41_def_tw42 arm 263 (j86 c61 dir -1 through): L 2.718h -> 2.698h, Lcut 2.718h -> 2.698h
+  g41_def_tw42 arm 265 (j87 c45 dir -1 through): L 7.220h -> 6.099h, Lcut 7.220h -> 6.099h
+  g41_def_tw42 arm 270 (j88 c56 dir -1 through): L 4.352h -> 3.035h, Lcut Infinityh -> 3.035h
+  g41_def_tw42 arm 273 (j89 c61 dir -1 through): L 2.967h -> 1.746h, Lcut 2.967h -> 1.746h
+  g41_def_tw42 arm 276 (j90 c76 dir -1 through): L 7.602h -> 5.339h, Lcut 7.602h -> 5.339h
+  g41_def_tw42 arm 279 (j91 c67 dir 1 through): L 8.173h -> 2.589h, Lcut 8.173h -> 2.589h
+  g41_def_tw42 arm 281 (j92 c79 dir -1 through): L 6.970h -> 4.837h, Lcut 6.970h -> 4.837h
+  g41_def_tw42 arm 283 (j93 c36 dir -1 through): L 5.366h -> 2.448h, Lcut 5.366h -> 2.448h
+  g41_def_tw42 arm 286 (j94 c62 dir 1 through): L 4.559h -> 1.898h, Lcut 11.439h -> 1.898h
+  g41_def_tw42 arm 291 (j95 c58 dir 1 through): L 3.266h -> 2.628h, Lcut 3.266h -> 2.628h
+  g41_def_tw42 arm 294 (j96 c37 dir -1 through): L 4.902h -> 1.427h, Lcut 4.902h -> 1.427h
+  g41_def_tw42 arm 296 (j97 c37 dir -1 through): L 5.035h -> 4.889h, Lcut 5.035h -> 4.889h
+  g41_def_tw42 arm 300 (j98 c37 dir 1 through): L 7.074h -> 5.026h, Lcut 7.074h -> 5.026h
+  g41_def_tw42 arm 301 (j99 c37 dir -1 through): L 4.585h -> 4.432h, Lcut 4.585h -> 4.432h
+  g41_def_tw42 arm 306 (j100 c48 dir -1 through): L 2.793h -> 2.654h, Lcut 2.793h -> 2.654h
+  g41_def_tw42 arm 309 (j101 c43 dir 1 through): L 4.264h -> 2.027h, Lcut 15.368h -> 2.027h
+  g41_def_tw42 arm 310 (j102 c38 dir 1 through): L 7.133h -> 5.765h, Lcut 7.133h -> 5.765h
+  g41_def_tw42 arm 313 (j102 c44 dir 1 through): L 6.940h -> 6.660h, Lcut 6.940h -> 6.660h
+  g41_def_tw42 arm 315 (j103 c44 dir -1 through): L 7.426h -> 4.799h, Lcut 7.426h -> 4.799h
+  g41_def_tw42 arm 317 (j104 c67 dir 1 through): L 9.743h -> 7.242h, Lcut 18.471h -> 7.242h
+  g41_def_tw42 arm 320 (j105 c61 dir 1 through): L 7.766h -> 7.577h, Lcut 7.766h -> 7.577h
+  g41_def_tw42 arm 325 (j106 c61 dir -1 through): L 2.305h -> 2.057h, Lcut 2.305h -> 2.057h
+  g41_def_tw42 arm 326 (j107 c62 dir 1 through): L 6.880h -> 6.456h, Lcut 6.880h -> 6.456h
+  g41_def_tw42 arm 329 (j108 c41 dir -1 through): L 4.938h -> 4.511h, Lcut 4.938h -> 4.511h
+  g41_def_tw42 arm 334 (j109 c41 dir 1 through): L 4.204h -> 4.172h, Lcut 4.204h -> 4.172h
+  g41_def_tw42 arm 337 (j110 c88 dir -1 through): L 4.111h -> 2.697h, Lcut 8.627h -> 2.697h
+  g41_def_tw42 arm 338 (j111 c82 dir -1 through): L 4.709h -> 2.473h, Lcut 4.709h -> 2.473h
+  g41_def_tw42 arm 342 (j112 c42 dir 1 through): L 4.357h -> 2.919h, Lcut 20.666h -> 2.919h
+  g41_def_tw42 arm 346 (j113 c42 dir 1 through): L 9.794h -> 7.276h, Lcut 16.309h -> 7.276h
+  g41_def_tw42 arm 349 (j114 c42 dir -1 through): L 9.794h -> 6.515h, Lcut 17.070h -> 6.515h
+  g41_def_tw42 arm 352 (j115 c42 dir -1 through): L 4.282h -> 2.233h, Lcut 21.352h -> 2.233h
+  g41_def_tw42 arm 354 (j116 c42 dir -1 through): L 2.949h -> 1.767h, Lcut 2.949h -> 1.767h
+  g41_def_tw42 arm 356 (j117 c43 dir -1 through): L 7.818h -> 3.553h, Lcut 7.818h -> 3.553h
+  g41_def_tw42 arm 361 (j118 c43 dir 1 through): L 11.104h -> 6.291h, Lcut 11.104h -> 6.291h
+  g41_def_tw42 arm 363 (j119 c43 dir -1 through): L 10.309h -> 3.980h, Lcut 10.309h -> 3.980h
+  g41_def_tw42 arm 364 (j119 c80 dir -1 through): L 10.476h -> 3.981h, Lcut 10.476h -> 3.981h
+  g41_def_tw42 arm 366 (j120 c80 dir 1 through): L 10.898h -> 6.526h, Lcut 10.898h -> 6.526h
+  g41_def_tw42 arm 370 (j121 c44 dir 1 through): L 4.093h -> 4.093h, Lcut 6.822h -> 4.598h
+  g41_def_tw42 arm 372 (j122 c44 dir 1 through): L 9.789h -> 8.539h, Lcut Infinityh -> 8.539h
+  g41_def_tw42 arm 377 (j123 c61 dir 1 through): L 5.576h -> 4.408h, Lcut 5.576h -> 4.408h
+  g41_def_tw42 arm 378 (j124 c88 dir -1 through): L 5.203h -> 3.615h, Lcut 5.203h -> 3.615h
+  g41_def_tw42 arm 383 (j125 c45 dir -1 through): L 5.658h -> 0.954h, Lcut 5.658h -> 0.954h
+  g41_def_tw42 arm 386 (j126 c45 dir 1 through): L 8.105h -> 3.825h, Lcut 8.105h -> 3.825h
+  g41_def_tw42 arm 388 (j127 c84 dir 1 through): L 3.894h -> 1.602h, Lcut 3.894h -> 1.602h
+  g41_def_tw42 arm 392 (j128 c46 dir -1 through): L 6.608h -> 5.095h, Lcut 6.608h -> 5.095h
+  g41_def_tw42 arm 393 (j129 c82 dir 1 through): L 5.577h -> 4.490h, Lcut 5.577h -> 4.490h
+  g41_def_tw42 arm 397 (j130 c48 dir 1 through): L 2.709h -> 2.469h, Lcut 2.709h -> 2.469h
+  g41_def_tw42 arm 400 (j131 c50 dir -1 through): L 4.442h -> 1.825h, Lcut Infinityh -> 1.825h
+  g41_def_tw42 arm 402 (j132 c61 dir 1 through): L 3.340h -> 1.790h, Lcut 3.340h -> 1.790h
+  g41_def_tw42 arm 406 (j133 c79 dir 1 through): L 7.200h -> 4.832h, Lcut 7.200h -> 4.832h
+  g41_def_tw42 arm 407 (j133 c49 dir 1 through): L 7.779h -> 6.842h, Lcut 7.779h -> 6.842h
+  g41_def_tw42 arm 409 (j134 c82 dir -1 through): L 6.681h -> 4.587h, Lcut 6.681h -> 4.587h
+  g41_def_tw42 arm 412 (j135 c50 dir -1 through): L 5.948h -> 5.948h, Lcut Infinityh -> 6.267h
+  g41_def_tw42 arm 416 (j136 c88 dir 1 through): L 8.094h -> 1.367h, Lcut 8.094h -> 1.367h
+  g41_def_tw42 arm 418 (j137 c77 dir 1 through): L 2.736h -> 2.662h, Lcut 2.736h -> 2.662h
+  g41_def_tw42 arm 422 (j138 c55 dir 1 through): L 2.170h -> 1.363h, Lcut 2.170h -> 1.363h
+  g41_def_tw42 arm 425 (j139 c55 dir -1 through): L 6.960h -> 0.799h, Lcut 6.960h -> 0.799h
+  g41_def_tw42 arm 427 (j140 c89 dir -1 through): L 4.264h -> 3.474h, Lcut Infinityh -> 3.474h
+  g41_def_tw42 arm 431 (j141 c56 dir -1 through): L 15.585h -> 7.387h, Lcut Infinityh -> 7.387h
+  g41_def_tw42 arm 435 (j142 c56 dir 1 through): L 11.678h -> 4.825h, Lcut 11.678h -> 4.825h
+  g41_def_tw42 arm 436 (j143 c62 dir -1 through): L 5.188h -> 3.697h, Lcut 5.188h -> 3.697h
+  g41_def_tw42 arm 441 (j144 c59 dir -1 through): L 5.289h -> 5.240h, Lcut 5.289h -> 5.240h
+  g41_def_tw42 arm 444 (j145 c60 dir -1 through): L 5.089h -> 4.735h, Lcut 5.089h -> 4.735h
+  g41_def_tw42 arm 447 (j146 c58 dir -1 through): L 7.763h -> 1.719h, Lcut 7.763h -> 1.719h
+  g41_def_tw42 arm 449 (j147 c82 dir -1 through): L 2.897h -> 2.236h, Lcut 2.897h -> 2.236h
+  g41_def_tw42 arm 452 (j148 c62 dir 1 through): L 4.906h -> 4.846h, Lcut 4.906h -> 4.846h
+  g41_def_tw42 arm 456 (j149 c60 dir 1 through): L 4.951h -> 4.897h, Lcut 4.951h -> 4.897h
+  g41_def_tw42 arm 459 (j150 c61 dir 1 through): L 4.141h -> 4.141h, Lcut 6.871h -> 4.761h
+  g41_def_tw42 arm 462 (j151 c60 dir 1 through): L 2.333h -> 2.001h, Lcut 2.333h -> 2.001h
+  g41_def_tw42 arm 463 (j152 c61 dir -1 through): L 4.141h -> 2.730h, Lcut 8.902h -> 2.730h
+  g41_def_tw42 arm 466 (j153 c61 dir 1 through): L 7.203h -> 4.807h, Lcut 7.203h -> 4.807h
+  g41_def_tw42 arm 471 (j154 c61 dir 1 through): L 5.249h -> 5.030h, Lcut 5.249h -> 5.030h
+  g41_def_tw42 arm 472 (j155 c61 dir -1 through): L 7.206h -> 5.013h, Lcut 7.206h -> 5.013h
+  g41_def_tw42 arm 476 (j156 c61 dir 1 through): L 5.046h -> 4.905h, Lcut 5.046h -> 4.905h
+  g41_def_tw42 arm 478 (j157 c61 dir -1 through): L 5.318h -> 1.998h, Lcut 5.318h -> 1.998h
+  g41_def_tw42 arm 483 (j158 c75 dir 1 through): L 7.004h -> 4.782h, Lcut 12.441h -> 4.782h
+  g41_def_tw42 arm 484 (j159 c62 dir 1 through): L 4.240h -> 2.814h, Lcut 7.750h -> 2.814h
+  g41_def_tw42 arm 489 (j160 c62 dir -1 through): L 4.240h -> 3.510h, Lcut 7.054h -> 3.510h
+  g41_def_tw42 arm 490 (j161 c62 dir 1 through): L 2.509h -> 2.387h, Lcut 2.509h -> 2.387h
+  g41_def_tw42 arm 494 (j162 c62 dir 1 through): L 4.228h -> 1.825h, Lcut 7.709h -> 1.825h
+  g41_def_tw42 arm 496 (j163 c62 dir -1 through): L 4.228h -> 3.481h, Lcut 6.053h -> 3.481h
+  g41_def_tw42 arm 499 (j164 c62 dir -1 through): L 4.875h -> 4.834h, Lcut 4.875h -> 4.834h
+  g41_def_tw42 arm 504 (j165 c62 dir -1 through): L 7.014h -> 3.502h, Lcut 7.014h -> 3.502h
+  g41_def_tw42 arm 505 (j165 c69 dir 1 through): L 4.797h -> 4.314h, Lcut 4.797h -> 4.314h
+  g41_def_tw42 arm 506 (j166 c62 dir 1 through): L 1.761h -> 1.679h, Lcut 1.761h -> 1.679h
+  g41_def_tw42 arm 511 (j167 c63 dir 1 through): L 4.104h -> 2.439h, Lcut Infinityh -> 2.439h
+  g41_def_tw42 arm 514 (j168 c63 dir 1 through): L 5.780h -> 5.780h, Lcut Infinityh -> 6.543h
+  g41_def_tw42 arm 515 (j169 c82 dir -1 through): L 6.198h -> 5.204h, Lcut Infinityh -> 5.204h
+  g41_def_tw42 arm 518 (j170 c66 dir -1 through): L 12.640h -> 5.107h, Lcut Infinityh -> 5.107h
+  g41_def_tw42 arm 521 (j171 c66 dir 1 through): L 3.110h -> 2.755h, Lcut 3.110h -> 2.755h
+  g41_def_tw42 arm 525 (j172 c67 dir -1 through): L 9.743h -> 8.728h, Lcut 16.985h -> 8.728h
+  g41_def_tw42 arm 529 (j173 c88 dir 1 through): L 4.754h -> 2.472h, Lcut 4.754h -> 2.472h
+  g41_def_tw42 arm 531 (j174 c71 dir -1 through): L 11.284h -> 2.586h, Lcut 11.284h -> 2.586h
+  g41_def_tw42 arm 533 (j175 c82 dir 1 through): L 11.452h -> 7.315h, Lcut 11.452h -> 7.315h
+  g41_def_tw42 arm 536 (j176 c74 dir 1 through): L 4.452h -> 4.439h, Lcut 7.300h -> 4.439h
+  g41_def_tw42 arm 541 (j177 c74 dir -1 through): L 4.452h -> 2.848h, Lcut 8.891h -> 2.848h
+  g41_def_tw42 arm 544 (j178 c75 dir -1 through): L 8.745h -> 4.631h, Lcut 8.745h -> 4.631h
+  g41_def_tw42 arm 547 (j179 c82 dir 1 through): L 6.233h -> 4.866h, Lcut 6.233h -> 4.866h
+  g41_def_tw42 arm 550 (j180 c90 dir -1 through): L 10.093h -> 7.676h, Lcut Infinityh -> 7.676h
+  g41_def_tw42 arm 551 (j181 c76 dir -1 through): L 9.863h -> 7.948h, Lcut Infinityh -> 7.948h
+  g41_def_tw42 arm 556 (j182 c78 dir 1 through): L 8.717h -> 3.828h, Lcut 8.717h -> 3.828h
+  g41_def_tw42 arm 557 (j183 c88 dir -1 through): L 9.953h -> 6.734h, Lcut Infinityh -> 6.734h
+  g41_def_tw42 arm 560 (j184 c88 dir 1 through): L 4.111h -> 4.111h, Lcut 6.808h -> 4.515h
+  g41_def_tw42 corner j0 3-0: r 1.099h -> 1.093h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j1 5-6: r 1.445h -> 0.327h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j2 7-8: r 0.865h -> 0.652h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j3 11-12: r 1.234h -> 0.164h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j6 20-21: r 0.914h -> 0.743h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j7 23-24: r 0.653h -> 0.497h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j8 27-28: r 1.567h -> 1.361h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j10 33-34: r 1.999h -> 1.477h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j12 40-38: r 2.000h -> 2.000h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j21 66-67: r 1.999h -> 1.973h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j22 69-70: r 1.397h -> 0.448h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j26 83-84: r 1.222h -> 0.633h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j27 87-85: r 1.971h -> 1.747h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j28 89-90: r 1.941h -> 0.729h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j30 95-96: r 1.043h -> 0.771h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j31 98-99: r 2.000h -> 1.944h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j32 102-100: r 1.752h -> 0.859h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j33 104-105: r 1.250h -> 0.771h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j34 107-108: r 0.859h -> 0.522h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j35 109-110: r 1.028h -> 1.019h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j36 112-113: r 0.891h -> 0.653h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j37 116-117: r 0.899h -> 0.975h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j38 118-119: r 1.131h -> 1.009h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j39 122-123: r 0.615h -> 0.589h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j40 124-125: r 0.997h -> 0.919h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j41 128-129: r 0.328h -> 0.155h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j43 134-135: r 0.728h -> 0.391h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j44 136-137: r 1.154h -> 1.107h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j45 140-141: r 1.059h -> 0.471h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j46 143-144: r 1.405h -> 0.529h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j47 146-147: r 0.548h -> 0.000h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j48 149-150: r 1.296h -> 1.174h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j49 153-151: r 0.844h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw42 corner j50 155-156: r 1.017h -> 0.157h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j51 157-158: r 0.273h -> 0.010h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j52 161-162: r 0.925h -> 0.175h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j53 164-165: r 1.997h -> 1.446h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j55 171-169: r 1.026h -> 0.472h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j56 173-174: r 0.939h -> 0.911h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j57 175-176: r 1.019h -> 0.824h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j59 183-181: r 1.289h -> 0.766h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j60 185-186: r 2.000h -> 1.912h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j62 191-192: r 1.994h -> 1.918h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j63 193-194: r 1.999h -> 1.908h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j64 197-198: r 0.996h -> 0.890h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j66 204-202: r 1.836h -> 1.625h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j67 207-205: r 0.827h -> 0.633h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j68 209-210: r 0.519h -> 0.122h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j70 214-215: r 1.997h -> 0.962h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j72 220-221: r 2.000h -> 1.707h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j74 226-227: r 1.483h -> 1.470h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j75 229-230: r 0.607h -> 0.276h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j79 242-243: r 1.257h -> 0.326h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j80 246-244: r 0.778h -> 0.287h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j84 258-256: r 1.610h -> 1.040h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j86 263-264: r 1.250h -> 1.226h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j89 273-271: r 0.737h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw42 corner j94 288-286: r 1.899h -> 0.647h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j95 290-291: r 0.766h -> 0.165h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j96 294-292: r 1.736h -> 0.030h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j100 305-306: r 1.312h -> 1.147h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j101 309-307: r 1.781h -> 0.669h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j106 325-323: r 0.795h -> 0.548h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j109 333-334: r 1.031h -> 1.029h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j110 336-337: r 1.923h -> 1.233h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j111 340-338: r 1.945h -> 1.363h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j112 342-343: r 1.952h -> 1.852h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j115 351-352: r 1.871h -> 1.054h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j116 354-355: r 0.863h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw42 corner j124 378-379: r 1.033h -> 0.933h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j125 382-383: r 1.998h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw42 corner j127 387-388: r 2.000h -> 0.412h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j130 397-398: r 1.222h -> 0.940h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j131 399-400: r 1.753h -> 0.372h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j132 404-402: r 2.000h -> 1.883h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j136 416-417: r 2.000h -> 1.769h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j137 418-419: r 1.983h -> 1.947h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j138 422-423: r 0.060h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw42 corner j139 425-426: r 2.000h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw42 corner j143 438-436: r 1.030h -> 0.994h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j146 447-445: r 1.999h -> 0.855h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j147 448-449: r 1.552h -> 0.719h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j151 461-462: r 1.830h -> 1.337h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j152 465-463: r 1.392h -> 1.116h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j157 478-479: r 1.826h -> 0.766h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j161 490-491: r 1.899h -> 1.722h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j162 494-495: r 1.944h -> 0.539h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j165 503-504: r 0.893h -> 0.638h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j166 506-507: r 0.043h -> 0.015h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j167 510-511: r 1.966h -> 1.461h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j171 523-521: r 1.098h -> 0.826h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j173 528-529: r 1.476h -> 1.035h, ω 1.000 -> 1.000
+  g41_def_tw42 corner j177 541-539: r 1.730h -> 1.635h, ω 1.000 -> 1.000
+  g41_def_tw64 arm 0 (j0 c0 dir -1 through): L 2.703h -> 1.806h, Lcut 2.703h -> 1.806h
+  g41_def_tw64 arm 3 (j0 c60 dir 1 through): L 5.501h -> 2.078h, Lcut 5.501h -> 2.078h
+  g41_def_tw64 arm 6 (j1 c0 dir 1 through): L 1.245h -> 0.401h, Lcut 1.245h -> 0.401h
+  g41_def_tw64 arm 8 (j2 c62 dir -1 through): L 1.003h -> 0.955h, Lcut 1.003h -> 0.955h
+  g41_def_tw64 arm 12 (j3 c45 dir -1 through): L 1.425h -> 0.274h, Lcut 1.425h -> 0.274h
+  g41_def_tw64 arm 14 (j4 c60 dir -1 through): L 2.838h -> 2.273h, Lcut 2.838h -> 2.273h
+  g41_def_tw64 arm 15 (j4 c1 dir 1 through): L 4.788h -> 2.855h, Lcut 4.788h -> 2.855h
+  g41_def_tw64 arm 17 (j5 c1 dir -1 through): L 2.396h -> 2.054h, Lcut 2.396h -> 2.054h
+  g41_def_tw64 arm 20 (j6 c45 dir 1 through): L 1.613h -> 0.610h, Lcut 1.613h -> 0.610h
+  g41_def_tw64 arm 25 (j7 c44 dir 1 through): L 1.190h -> 0.000h, Lcut 1.190h -> -0.458h
+  g41_def_tw64 arm 27 (j8 c2 dir 1 through): L 2.926h -> 1.758h, Lcut 5.652h -> 1.758h
+  g41_def_tw64 arm 29 (j9 c2 dir -1 through): L 2.926h -> 2.726h, Lcut 4.684h -> 2.726h
+  g41_def_tw64 arm 34 (j10 c2 dir 1 through): L 2.839h -> 0.791h, Lcut 4.518h -> 0.791h
+  g41_def_tw64 arm 35 (j11 c2 dir -1 through): L 2.839h -> 1.679h, Lcut 3.630h -> 1.679h
+  g41_def_tw64 arm 40 (j12 c2 dir 1 through): L 2.578h -> 1.334h, Lcut 4.805h -> 1.334h
+  g41_def_tw64 arm 41 (j13 c2 dir -1 through): L 2.578h -> 2.227h, Lcut 3.912h -> 2.227h
+  g41_def_tw64 arm 44 (j14 c2 dir 1 through): L 2.747h -> 2.672h, Lcut 2.747h -> 2.672h
+  g41_def_tw64 arm 48 (j15 c2 dir -1 through): L 10.130h -> 0.395h, Lcut 10.130h -> 0.395h
+  g41_def_tw64 arm 52 (j16 c2 dir 1 through): L 3.909h -> 2.118h, Lcut 3.909h -> 2.118h
+  g41_def_tw64 arm 55 (j17 c2 dir -1 through): L 2.742h -> 2.562h, Lcut 2.742h -> 2.562h
+  g41_def_tw64 arm 56 (j18 c2 dir 1 through): L 4.012h -> 3.083h, Lcut 4.012h -> 3.083h
+  g41_def_tw64 arm 61 (j19 c2 dir -1 through): L 4.083h -> 3.362h, Lcut 4.083h -> 3.362h
+  g41_def_tw64 arm 62 (j20 c2 dir -1 through): L 3.419h -> 3.126h, Lcut 3.419h -> 3.126h
+  g41_def_tw64 arm 67 (j21 c90 dir -1 through): L 2.775h -> 0.650h, Lcut Infinityh -> 0.650h
+  g41_def_tw64 arm 70 (j22 c60 dir 1 through): L 1.901h -> 0.731h, Lcut 1.901h -> 0.731h
+  g41_def_tw64 arm 72 (j23 c3 dir 1 through): L 6.684h -> 2.832h, Lcut 8.763h -> 2.832h
+  g41_def_tw64 arm 73 (j23 c60 dir -1 through): L 6.502h -> 3.345h, Lcut 11.988h -> 3.345h
+  g41_def_tw64 arm 75 (j24 c3 dir -1 through): L 6.684h -> 2.079h, Lcut 9.516h -> 2.079h
+  g41_def_tw64 arm 78 (j24 c60 dir 1 through): L 6.502h -> 5.486h, Lcut 9.847h -> 5.486h
+  g41_def_tw64 arm 79 (j25 c61 dir 1 through): L 6.318h -> 3.633h, Lcut 6.318h -> 3.633h
+  g41_def_tw64 arm 84 (j26 c44 dir -1 through): L 2.452h -> 1.216h, Lcut 4.899h -> 1.216h
+  g41_def_tw64 arm 85 (j27 c30 dir 1 through): L 1.348h -> 0.753h, Lcut 1.348h -> 0.753h
+  g41_def_tw64 arm 88 (j28 c67 dir -1 through): L 0.724h -> 0.202h, Lcut 0.724h -> 0.202h
+  g41_def_tw64 arm 91 (j29 c79 dir 1 through): L 3.826h -> 2.905h, Lcut 3.826h -> 2.905h
+  g41_def_tw64 arm 95 (j30 c6 dir -1 through): L 3.426h -> 1.404h, Lcut 3.426h -> 1.404h
+  g41_def_tw64 arm 98 (j31 c65 dir -1 through): L 3.044h -> 1.497h, Lcut 3.044h -> 1.497h
+  g41_def_tw64 arm 100 (j32 c80 dir 1 through): L 2.899h -> 0.599h, Lcut 9.463h -> 0.599h
+  g41_def_tw64 arm 104 (j33 c80 dir -1 through): L 1.798h -> 0.717h, Lcut 1.798h -> 0.717h
+  g41_def_tw64 arm 107 (j34 c8 dir 1 through closed): L 2.837h -> 0.000h, Lcut 2.837h -> -0.144h
+  g41_def_tw64 arm 109 (j35 c75 dir -1 through): L 1.482h -> 1.139h, Lcut 1.482h -> 1.139h
+  g41_def_tw64 arm 113 (j36 c89 dir -1 through): L 0.694h -> 0.143h, Lcut 0.694h -> 0.143h
+  g41_def_tw64 arm 117 (j37 c76 dir -1 through): L 2.470h -> 2.062h, Lcut 2.470h -> 2.062h
+  g41_def_tw64 arm 119 (j38 c78 dir -1 through): L 3.150h -> 1.459h, Lcut 3.150h -> 1.459h
+  g41_def_tw64 arm 123 (j39 c82 dir -1 through): L 1.429h -> 0.882h, Lcut 1.429h -> 0.882h
+  g41_def_tw64 arm 125 (j40 c37 dir 1 through): L 3.295h -> 1.571h, Lcut 3.295h -> 1.571h
+  g41_def_tw64 arm 129 (j41 c82 dir 1 through): L 0.999h -> 0.888h, Lcut 0.999h -> 0.888h
+  g41_def_tw64 arm 130 (j42 c75 dir -1 through): L 4.810h -> 2.158h, Lcut 7.996h -> 2.158h
+  g41_def_tw64 arm 133 (j43 c90 dir 1 through): L 1.102h -> 0.089h, Lcut 1.102h -> 0.089h
+  g41_def_tw64 arm 136 (j44 c61 dir -1 through): L 1.718h -> 0.000h, Lcut 1.718h -> -0.032h
+  g41_def_tw64 arm 140 (j45 c61 dir -1 through): L 2.749h -> 1.170h, Lcut 2.749h -> 1.170h
+  g41_def_tw64 arm 143 (j46 c66 dir -1 through): L 1.112h -> 0.348h, Lcut 1.112h -> 0.348h
+  g41_def_tw64 arm 147 (j47 c61 dir 1 through): L 1.415h -> 0.582h, Lcut 1.415h -> 0.582h
+  g41_def_tw64 arm 148 (j48 c58 dir 1 through): L 1.046h -> 0.810h, Lcut 1.046h -> 0.810h
+  g41_def_tw64 arm 153 (j49 c82 dir 1 through): L 3.734h -> 0.603h, Lcut 3.734h -> 0.603h
+  g41_def_tw64 arm 155 (j50 c62 dir 1 through): L 3.709h -> 0.361h, Lcut 3.709h -> 0.361h
+  g41_def_tw64 arm 157 (j51 c62 dir 1 through): L 1.300h -> 0.388h, Lcut 1.300h -> 0.388h
+  g41_def_tw64 arm 161 (j52 c75 dir -1 through): L 1.099h -> 0.004h, Lcut 1.099h -> 0.004h
+  g41_def_tw64 arm 165 (j53 c82 dir 1 through): L 5.088h -> 1.046h, Lcut 5.088h -> 1.046h
+  g41_def_tw64 arm 166 (j54 c61 dir 1 through): L 0.776h -> 0.488h, Lcut 0.776h -> 0.488h
+  g41_def_tw64 arm 169 (j55 c61 dir -1 through): L 4.144h -> 0.000h, Lcut 4.144h -> -0.484h
+  g41_def_tw64 arm 173 (j56 c82 dir -1 through): L 1.088h -> 0.000h, Lcut 1.088h -> -0.400h
+  g41_def_tw64 arm 175 (j57 c82 dir -1 through): L 2.306h -> 1.471h, Lcut 2.306h -> 1.471h
+  g41_def_tw64 arm 180 (j58 c75 dir 1 through): L 2.736h -> 1.256h, Lcut 2.736h -> 1.256h
+  g41_def_tw64 arm 182 (j59 c61 dir 1 through): L 1.533h -> 0.952h, Lcut 1.533h -> 0.952h
+  g41_def_tw64 arm 185 (j60 c31 dir 1 through): L 3.406h -> 0.475h, Lcut 3.406h -> 0.475h
+  g41_def_tw64 arm 189 (j61 c61 dir -1 through): L 2.848h -> 1.034h, Lcut 2.848h -> 1.034h
+  g41_def_tw64 arm 191 (j62 c56 dir -1 through): L 2.861h -> 0.721h, Lcut 2.861h -> 0.721h
+  g41_def_tw64 arm 193 (j63 c56 dir -1 through): L 2.795h -> 1.307h, Lcut 2.795h -> 1.307h
+  g41_def_tw64 arm 196 (j64 c37 dir 1 through): L 1.457h -> 1.253h, Lcut 1.457h -> 1.253h
+  g41_def_tw64 arm 199 (j65 c82 dir -1 through): L 10.369h -> 1.785h, Lcut 10.369h -> 1.785h
+  g41_def_tw64 arm 204 (j66 c61 dir 1 through): L 5.238h -> 1.215h, Lcut 5.238h -> 1.215h
+  g41_def_tw64 arm 206 (j67 c61 dir 1 through): L 1.197h -> 0.689h, Lcut 1.197h -> 0.689h
+  g41_def_tw64 arm 210 (j68 c45 dir 1 through): L 1.254h -> 0.423h, Lcut 1.254h -> 0.423h
+  g41_def_tw64 arm 211 (j69 c28 dir 1 through): L 3.649h -> 2.211h, Lcut 3.649h -> 2.211h
+  g41_def_tw64 arm 215 (j70 c45 dir -1 through): L 2.794h -> 0.577h, Lcut 6.844h -> 0.577h
+  g41_def_tw64 arm 219 (j71 c46 dir -1 through): L 4.653h -> 2.900h, Lcut 4.653h -> 2.900h
+  g41_def_tw64 arm 220 (j72 c29 dir 1 through): L 2.936h -> 0.823h, Lcut 5.133h -> 0.823h
+  g41_def_tw64 arm 224 (j73 c29 dir -1 through): L 2.936h -> 2.197h, Lcut 3.759h -> 2.197h
+  g41_def_tw64 arm 226 (j74 c29 dir 1 through): L 4.407h -> 2.130h, Lcut 4.407h -> 2.130h
+  g41_def_tw64 arm 229 (j75 c84 dir 1 through): L 0.541h -> 0.356h, Lcut 0.541h -> 0.356h
+  g41_def_tw64 arm 233 (j76 c89 dir -1 through): L 3.000h -> 3.000h, Lcut Infinityh -> 4.485h
+  g41_def_tw64 arm 235 (j77 c30 dir 1 through): L 3.796h -> 3.646h, Lcut 7.271h -> 3.646h
+  g41_def_tw64 arm 240 (j78 c30 dir -1 through): L 3.796h -> 3.475h, Lcut 7.442h -> 3.475h
+  g41_def_tw64 arm 242 (j79 c30 dir -1 through): L 2.967h -> 0.508h, Lcut 10.409h -> 0.508h
+  g41_def_tw64 arm 244 (j80 c30 dir 1 through): L 0.925h -> 0.768h, Lcut 0.925h -> 0.768h
+  g41_def_tw64 arm 249 (j81 c30 dir -1 through): L 2.320h -> 2.206h, Lcut 2.320h -> 2.206h
+  g41_def_tw64 arm 250 (j82 c61 dir -1 through): L 4.077h -> 1.918h, Lcut 4.077h -> 1.918h
+  g41_def_tw64 arm 253 (j83 c31 dir 1 through): L 2.866h -> 2.595h, Lcut 2.990h -> 2.595h
+  g41_def_tw64 arm 258 (j84 c31 dir -1 through): L 2.866h -> 0.124h, Lcut 5.461h -> 0.124h
+  g41_def_tw64 arm 261 (j85 c31 dir -1 through): L 3.203h -> 2.099h, Lcut 3.203h -> 2.099h
+  g41_def_tw64 arm 262 (j86 c61 dir 1 through): L 1.182h -> 0.947h, Lcut 1.182h -> 0.947h
+  g41_def_tw64 arm 265 (j87 c45 dir -1 through): L 4.050h -> 3.371h, Lcut 4.050h -> 3.371h
+  g41_def_tw64 arm 270 (j88 c56 dir -1 through): L 2.707h -> 1.721h, Lcut Infinityh -> 1.721h
+  g41_def_tw64 arm 273 (j89 c61 dir -1 through): L 1.409h -> 0.136h, Lcut 1.409h -> 0.136h
+  g41_def_tw64 arm 276 (j90 c76 dir -1 through): L 4.282h -> 3.315h, Lcut 4.282h -> 3.315h
+  g41_def_tw64 arm 279 (j91 c67 dir 1 through): L 4.977h -> 0.673h, Lcut 4.977h -> 0.673h
+  g41_def_tw64 arm 281 (j92 c79 dir -1 through): L 4.105h -> 1.487h, Lcut 4.105h -> 1.487h
+  g41_def_tw64 arm 283 (j93 c36 dir -1 through): L 2.960h -> 0.000h, Lcut 2.960h -> -0.255h
+  g41_def_tw64 arm 286 (j94 c62 dir 1 through): L 2.993h -> 0.311h, Lcut 6.452h -> 0.311h
+  g41_def_tw64 arm 291 (j95 c58 dir 1 through): L 1.633h -> 1.034h, Lcut 1.633h -> 1.034h
+  g41_def_tw64 arm 294 (j96 c37 dir -1 through): L 1.944h -> 0.581h, Lcut 1.944h -> 0.581h
+  g41_def_tw64 arm 296 (j97 c37 dir -1 through): L 3.221h -> 2.317h, Lcut 3.221h -> 2.317h
+  g41_def_tw64 arm 300 (j98 c37 dir 1 through): L 3.229h -> 2.694h, Lcut 3.229h -> 2.694h
+  g41_def_tw64 arm 301 (j99 c37 dir -1 through): L 2.517h -> 2.177h, Lcut 2.517h -> 2.177h
+  g41_def_tw64 arm 304 (j100 c48 dir 1 through): L 1.347h -> 1.267h, Lcut 1.347h -> 1.267h
+  g41_def_tw64 arm 309 (j101 c43 dir 1 through): L 2.851h -> 0.476h, Lcut 9.590h -> 0.476h
+  g41_def_tw64 arm 312 (j102 c38 dir -1 through): L 3.581h -> 3.209h, Lcut 3.581h -> 3.209h
+  g41_def_tw64 arm 313 (j102 c44 dir 1 through): L 3.853h -> 3.831h, Lcut 3.853h -> 3.831h
+  g41_def_tw64 arm 315 (j103 c44 dir -1 through): L 3.579h -> 2.762h, Lcut 3.579h -> 2.762h
+  g41_def_tw64 arm 317 (j104 c67 dir 1 through): L 6.485h -> 4.124h, Lcut 10.946h -> 4.124h
+  g41_def_tw64 arm 320 (j105 c61 dir 1 through): L 4.473h -> 4.231h, Lcut 4.473h -> 4.231h
+  g41_def_tw64 arm 325 (j106 c61 dir -1 through): L 1.074h -> 0.211h, Lcut 1.074h -> 0.211h
+  g41_def_tw64 arm 326 (j107 c62 dir 1 through): L 3.459h -> 3.304h, Lcut 3.459h -> 3.304h
+  g41_def_tw64 arm 329 (j108 c41 dir -1 through): L 2.867h -> 2.240h, Lcut 2.867h -> 2.240h
+  g41_def_tw64 arm 334 (j109 c41 dir 1 through): L 2.332h -> 2.016h, Lcut 2.332h -> 2.016h
+  g41_def_tw64 arm 337 (j110 c88 dir -1 through): L 2.574h -> 1.171h, Lcut 5.519h -> 1.171h
+  g41_def_tw64 arm 338 (j111 c82 dir -1 through): L 2.734h -> 1.188h, Lcut 2.734h -> 1.188h
+  g41_def_tw64 arm 342 (j112 c42 dir 1 through): L 2.861h -> 1.489h, Lcut 13.820h -> 1.489h
+  g41_def_tw64 arm 346 (j113 c42 dir 1 through): L 6.411h -> 4.350h, Lcut 10.958h -> 4.350h
+  g41_def_tw64 arm 349 (j114 c42 dir -1 through): L 6.411h -> 4.547h, Lcut 10.761h -> 4.547h
+  g41_def_tw64 arm 352 (j115 c42 dir -1 through): L 2.819h -> 1.728h, Lcut 13.580h -> 1.728h
+  g41_def_tw64 arm 354 (j116 c42 dir -1 through): L 1.227h -> 0.321h, Lcut 1.227h -> 0.321h
+  g41_def_tw64 arm 356 (j117 c43 dir -1 through): L 4.594h -> 1.566h, Lcut 4.594h -> 1.566h
+  g41_def_tw64 arm 361 (j118 c43 dir 1 through): L 6.739h -> 3.327h, Lcut 6.739h -> 3.327h
+  g41_def_tw64 arm 363 (j119 c43 dir -1 through): L 6.404h -> 1.928h, Lcut 6.404h -> 1.928h
+  g41_def_tw64 arm 364 (j119 c80 dir -1 through): L 6.800h -> 1.819h, Lcut 6.800h -> 1.819h
+  g41_def_tw64 arm 366 (j120 c80 dir 1 through): L 6.564h -> 3.498h, Lcut 6.564h -> 3.498h
+  g41_def_tw64 arm 370 (j121 c44 dir 1 through): L 2.452h -> 2.447h, Lcut 3.668h -> 2.447h
+  g41_def_tw64 arm 372 (j122 c44 dir 1 through): L 6.555h -> 5.083h, Lcut Infinityh -> 5.083h
+  g41_def_tw64 arm 377 (j123 c61 dir 1 through): L 2.743h -> 2.202h, Lcut 2.743h -> 2.202h
+  g41_def_tw64 arm 378 (j124 c88 dir -1 through): L 2.939h -> 1.623h, Lcut 2.939h -> 1.623h
+  g41_def_tw64 arm 383 (j125 c45 dir -1 through): L 2.904h -> 0.000h, Lcut 2.904h -> -0.031h
+  g41_def_tw64 arm 386 (j126 c45 dir 1 through): L 6.745h -> 4.100h, Lcut 6.745h -> 4.100h
+  g41_def_tw64 arm 388 (j127 c84 dir 1 through): L 2.542h -> 0.000h, Lcut 2.542h -> -0.041h
+  g41_def_tw64 arm 392 (j128 c46 dir -1 through): L 4.020h -> 2.307h, Lcut 4.020h -> 2.307h
+  g41_def_tw64 arm 393 (j129 c82 dir 1 through): L 3.502h -> 2.471h, Lcut 3.502h -> 2.471h
+  g41_def_tw64 arm 397 (j130 c48 dir 1 through): L 1.387h -> 0.789h, Lcut 1.387h -> 0.789h
+  g41_def_tw64 arm 400 (j131 c50 dir -1 through): L 2.792h -> 0.457h, Lcut Infinityh -> 0.457h
+  g41_def_tw64 arm 404 (j132 c61 dir 1 through): L 1.244h -> 0.000h, Lcut 1.244h -> -0.012h
+  g41_def_tw64 arm 406 (j133 c79 dir 1 through): L 3.456h -> 3.217h, Lcut 3.456h -> 3.217h
+  g41_def_tw64 arm 407 (j133 c49 dir 1 through): L 4.838h -> 3.956h, Lcut 4.838h -> 3.956h
+  g41_def_tw64 arm 409 (j134 c82 dir -1 through): L 4.070h -> 1.399h, Lcut 4.070h -> 1.399h
+  g41_def_tw64 arm 412 (j135 c50 dir -1 through): L 3.973h -> 3.249h, Lcut Infinityh -> 3.249h
+  g41_def_tw64 arm 416 (j136 c88 dir 1 through): L 5.665h -> 0.248h, Lcut 5.665h -> 0.248h
+  g41_def_tw64 arm 418 (j137 c77 dir 1 through): L 1.139h -> 0.883h, Lcut 1.139h -> 0.883h
+  g41_def_tw64 arm 422 (j138 c55 dir 1 through): L 0.837h -> 0.000h, Lcut 0.837h -> -0.213h
+  g41_def_tw64 arm 425 (j139 c55 dir -1 through): L 2.907h -> 0.000h, Lcut 2.907h -> -0.337h
+  g41_def_tw64 arm 427 (j140 c89 dir -1 through): L 2.888h -> 1.596h, Lcut Infinityh -> 1.596h
+  g41_def_tw64 arm 431 (j141 c56 dir -1 through): L 10.684h -> 4.428h, Lcut Infinityh -> 4.428h
+  g41_def_tw64 arm 435 (j142 c56 dir 1 through): L 7.106h -> 2.168h, Lcut 7.106h -> 2.168h
+  g41_def_tw64 arm 436 (j143 c62 dir -1 through): L 3.009h -> 1.704h, Lcut 3.009h -> 1.704h
+  g41_def_tw64 arm 441 (j144 c59 dir -1 through): L 3.364h -> 3.117h, Lcut 3.364h -> 3.117h
+  g41_def_tw64 arm 444 (j145 c60 dir -1 through): L 3.314h -> 2.784h, Lcut 3.314h -> 2.784h
+  g41_def_tw64 arm 447 (j146 c58 dir -1 through): L 3.930h -> 0.000h, Lcut 3.930h -> -0.085h
+  g41_def_tw64 arm 449 (j147 c82 dir -1 through): L 1.658h -> 0.739h, Lcut 1.658h -> 0.739h
+  g41_def_tw64 arm 453 (j148 c62 dir -1 through): L 2.730h -> 2.431h, Lcut 2.730h -> 2.431h
+  g41_def_tw64 arm 454 (j149 c60 dir -1 through): L 2.993h -> 2.781h, Lcut 2.993h -> 2.781h
+  g41_def_tw64 arm 457 (j150 c61 dir -1 through): L 2.845h -> 2.142h, Lcut 2.845h -> 2.142h
+  g41_def_tw64 arm 462 (j151 c60 dir 1 through): L 0.651h -> 0.350h, Lcut 0.651h -> 0.350h
+  g41_def_tw64 arm 463 (j152 c61 dir -1 through): L 2.876h -> 0.000h, Lcut 5.721h -> -0.734h
+  g41_def_tw64 arm 466 (j153 c61 dir 1 through): L 3.998h -> 2.362h, Lcut 3.998h -> 2.362h
+  g41_def_tw64 arm 469 (j154 c61 dir -1 through): L 3.247h -> 1.609h, Lcut 3.247h -> 1.609h
+  g41_def_tw64 arm 472 (j155 c61 dir -1 through): L 4.044h -> 2.607h, Lcut 4.044h -> 2.607h
+  g41_def_tw64 arm 476 (j156 c61 dir 1 through): L 2.827h -> 2.388h, Lcut 2.827h -> 2.388h
+  g41_def_tw64 arm 478 (j157 c61 dir -1 through): L 2.883h -> 0.283h, Lcut 2.883h -> 0.283h
+  g41_def_tw64 arm 483 (j158 c75 dir 1 through): L 4.810h -> 3.186h, Lcut 6.968h -> 3.186h
+  g41_def_tw64 arm 484 (j159 c62 dir 1 through): L 2.755h -> 1.139h, Lcut 4.148h -> 1.139h
+  g41_def_tw64 arm 489 (j160 c62 dir -1 through): L 2.755h -> 1.393h, Lcut 3.894h -> 1.393h
+  g41_def_tw64 arm 490 (j161 c62 dir 1 through): L 1.271h -> 0.761h, Lcut 1.271h -> 0.761h
+  g41_def_tw64 arm 494 (j162 c62 dir 1 through): L 2.778h -> 0.423h, Lcut 4.199h -> 0.423h
+  g41_def_tw64 arm 496 (j163 c62 dir -1 through): L 2.778h -> 1.421h, Lcut 3.201h -> 1.421h
+  g41_def_tw64 arm 500 (j164 c62 dir 1 through): L 2.608h -> 2.328h, Lcut 2.608h -> 2.328h
+  g41_def_tw64 arm 503 (j165 c69 dir -1 through): L 2.204h -> 1.953h, Lcut 2.204h -> 1.953h
+  g41_def_tw64 arm 504 (j165 c62 dir -1 through): L 4.093h -> 1.144h, Lcut 4.093h -> 1.144h
+  g41_def_tw64 arm 506 (j166 c62 dir 1 through): L 0.080h -> 0.000h, Lcut 0.080h -> -0.069h
+  g41_def_tw64 arm 511 (j167 c63 dir 1 through): L 2.752h -> 0.635h, Lcut Infinityh -> 0.635h
+  g41_def_tw64 arm 514 (j168 c63 dir 1 through): L 3.803h -> 3.387h, Lcut Infinityh -> 3.387h
+  g41_def_tw64 arm 515 (j169 c82 dir -1 through): L 3.938h -> 3.153h, Lcut Infinityh -> 3.153h
+  g41_def_tw64 arm 518 (j170 c66 dir -1 through): L 8.487h -> 2.896h, Lcut Infinityh -> 2.896h
+  g41_def_tw64 arm 522 (j171 c66 dir -1 through): L 1.301h -> 1.178h, Lcut 1.301h -> 1.178h
+  g41_def_tw64 arm 525 (j172 c67 dir -1 through): L 6.485h -> 4.461h, Lcut 10.609h -> 4.461h
+  g41_def_tw64 arm 527 (j173 c88 dir 1 through): L 2.196h -> 0.948h, Lcut 2.196h -> 0.948h
+  g41_def_tw64 arm 531 (j174 c71 dir -1 through): L 10.252h -> 2.202h, Lcut 10.252h -> 2.202h
+  g41_def_tw64 arm 533 (j175 c82 dir 1 through): L 6.886h -> 3.851h, Lcut 6.886h -> 3.851h
+  g41_def_tw64 arm 536 (j176 c74 dir 1 through): L 2.991h -> 2.370h, Lcut 3.830h -> 2.370h
+  g41_def_tw64 arm 541 (j177 c74 dir -1 through): L 2.991h -> 0.839h, Lcut 5.361h -> 0.839h
+  g41_def_tw64 arm 544 (j178 c75 dir -1 through): L 5.747h -> 2.597h, Lcut 5.747h -> 2.597h
+  g41_def_tw64 arm 547 (j179 c82 dir 1 through): L 2.694h -> 2.687h, Lcut 2.694h -> 2.687h
+  g41_def_tw64 arm 550 (j180 c90 dir -1 through): L 6.780h -> 3.425h, Lcut Infinityh -> 3.425h
+  g41_def_tw64 arm 551 (j181 c76 dir -1 through): L 6.598h -> 4.739h, Lcut Infinityh -> 4.739h
+  g41_def_tw64 arm 556 (j182 c78 dir 1 through): L 6.179h -> 3.312h, Lcut 6.179h -> 3.312h
+  g41_def_tw64 arm 557 (j183 c88 dir -1 through): L 6.687h -> 3.658h, Lcut Infinityh -> 3.658h
+  g41_def_tw64 arm 560 (j184 c88 dir 1 through): L 2.574h -> 2.574h, Lcut 3.745h -> 2.945h
+  g41_def_tw64 corner j0 0-1: r 0.024h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw64 corner j0 3-0: r 0.354h -> 0.035h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j1 5-6: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_def_tw64 corner j3 11-12: r 0.075h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j4 13-14: r 0.207h -> 0.048h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j4 14-15: r 1.367h -> 0.498h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j5 19-17: r 1.466h -> 0.764h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j6 20-21: r 0.006h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j7 24-25: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_def_tw64 corner j8 27-28: r 0.804h -> 0.013h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j9 29-30: r 0.736h -> 0.569h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j10 33-34: r 1.637h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw64 corner j11 37-35: r 0.565h -> 0.065h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j12 40-38: r 1.927h -> 0.427h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j14 44-45: r 0.955h -> 0.878h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j15 47-48: r 2.000h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j16 52-50: r 1.094h -> 0.086h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j17 54-55: r 1.750h -> 1.749h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j20 64-62: r 1.024h -> 0.937h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j21 66-67: r 1.328h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j22 69-70: r 0.094h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j23 72-73: r 0.468h -> 0.446h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j24 75-76: r 1.871h -> 0.863h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j24 78-75: r 0.484h -> 0.432h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j26 83-84: r 0.799h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw64 corner j27 87-85: r 0.008h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j29 93-91: r 0.565h -> 0.466h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j30 95-96: r 0.380h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw64 corner j31 98-99: r 1.817h -> 0.050h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j32 102-100: r 0.945h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j33 104-105: r 0.467h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j34 107-108: r 0.339h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j35 109-110: r 0.807h -> 0.428h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j36 112-113: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_def_tw64 corner j37 116-117: r 0.258h -> 0.145h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j38 118-119: r 0.489h -> 0.495h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j40 124-125: r 0.387h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw64 corner j43 133-134: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_def_tw64 corner j45 140-141: r 0.475h -> 0.024h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j46 143-144: r 0.003h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j49 153-151: r 0.202h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j50 155-156: r 0.257h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j52 161-162: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_def_tw64 corner j53 164-165: r 2.000h -> 0.048h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j54 166-167: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_def_tw64 corner j55 171-169: r 0.397h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j56 173-174: r 0.015h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j57 175-176: r 0.189h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw64 corner j58 180-178: r 1.999h -> 0.266h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j59 182-183: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_def_tw64 corner j60 185-186: r 1.974h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw64 corner j61 188-189: r 2.000h -> 0.083h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j62 191-192: r 2.000h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw64 corner j63 193-194: r 1.797h -> 0.006h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j66 204-202: r 2.000h -> 0.291h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j68 209-210: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_def_tw64 corner j69 213-211: r 1.939h -> 1.568h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j70 214-215: r 1.925h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw64 corner j72 220-221: r 1.991h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw64 corner j73 224-225: r 1.445h -> 0.606h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j74 226-227: r 0.957h -> 0.358h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j79 242-243: r 0.749h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j81 248-249: r 1.111h -> 0.958h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j82 250-251: r 0.174h -> 0.020h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j83 253-254: r 1.968h -> 1.731h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j84 258-256: r 1.612h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j85 261-259: r 1.971h -> 1.444h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j88 269-270: r 1.797h -> 0.644h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j91 278-279: r 2.000h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw64 corner j92 281-282: r 1.311h -> 0.003h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j93 283-284: r 1.958h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j94 288-286: r 1.536h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j95 290-291: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_def_tw64 corner j96 294-292: r 1.813h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j97 296-297: r 0.878h -> 0.543h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j98 299-300: r 0.730h -> 0.575h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j101 309-307: r 1.045h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j106 325-323: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_def_tw64 corner j108 329-330: r 0.314h -> 0.133h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j109 333-334: r 0.085h -> 0.004h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j110 336-337: r 0.682h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw64 corner j111 340-338: r 1.907h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw64 corner j112 342-343: r 1.440h -> 0.190h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j115 351-352: r 2.000h -> 0.814h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j117 356-357: r 1.567h -> 0.018h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j119 363-364: r 1.717h -> 0.288h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j119 364-365: r 0.318h -> 0.262h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j123 377-375: r 0.540h -> 0.270h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j124 378-379: r 0.320h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw64 corner j125 382-383: r 2.000h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j127 387-388: r 1.578h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j130 397-398: r 0.015h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j131 399-400: r 1.066h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j132 403-404: r 0.118h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j134 409-410: r 1.397h -> 0.324h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j135 412-413: r 1.262h -> 1.199h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j136 416-417: r 2.000h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j139 425-426: r 2.000h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j142 434-435: r 0.721h -> 0.227h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j143 438-436: r 0.272h -> 0.001h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j146 447-445: r 2.000h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j147 448-449: r 0.147h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j148 453-451: r 1.565h -> 0.990h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j149 454-455: r 2.000h -> 1.979h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j150 457-458: r 0.587h -> 0.271h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j151 461-462: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_def_tw64 corner j152 465-463: r 0.585h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j154 469-470: r 2.000h -> 0.364h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j156 476-477: r 0.298h -> 0.022h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j157 478-479: r 2.000h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j159 486-484: r 2.000h -> 0.542h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j160 488-489: r 0.358h -> 0.151h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j161 490-491: r 0.001h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j162 494-495: r 1.245h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j163 496-497: r 1.495h -> 0.001h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j165 503-504: r 0.192h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j165 504-505: r 1.721h -> 0.048h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j167 510-511: r 1.275h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j171 522-523: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_def_tw64 corner j173 529-527: r 0.813h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_def_tw64 corner j176 536-537: r 0.888h -> 0.523h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j177 541-539: r 1.641h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_def_tw64 corner j178 544-542: r 0.456h -> 0.399h, ω 1.000 -> 1.000
+  g41_def_tw64 F6 arm 107 (j34) d -2.583h reach 1.727h: 107-108 r 0.339h ω 1.000 -> none
+  g41_def_tw64 F6 arm 169 (j55) d -2.129h reach 1.614h: 171-169 r 0.397h ω 1.000 -> none
+  g41_def_tw64 F6 arm 173 (j56) d -2.387h reach 1.788h: 173-174 r 0.015h ω 1.000 -> none
+  g41_def_tw64 F6 arm 283 (j93) d -2.152h reach 1.407h: 283-284 r 1.958h ω 1.000 -> none
+  g41_def_tw64 F6 arm 383 (j125) d -2.101h reach 1.132h: 382-383 r 2.000h ω 1.000 -> none
+  g41_def_tw64 F6 arm 388 (j127) d -2.438h reach 1.479h: 387-388 r 1.578h ω 1.000 -> none
+  g41_def_tw64 F6 arm 404 (j132) d -2.111h reach 1.123h: 403-404 r 0.118h ω 1.000 -> none
+  g41_def_tw64 F6 arm 425 (j139) d -2.176h reach 1.512h: 425-426 r 2.000h ω 1.000 -> none
+  g41_def_tw64 F6 arm 447 (j146) d -2.279h reach 1.364h: 447-445 r 2.000h ω 1.000 -> none
+  g41_def_tw64 F6 arm 463 (j152) d -2.158h reach 1.892h: 465-463 r 0.585h ω 1.000 -> none
+  muse_hash arm 0 (j0 c77 dir 1 through): L 3.652h -> 0.086h, Lcut 9.517h -> 0.086h
+  muse_hash arm 5 (j1 c77 dir -1 through): L 2.170h -> 0.170h, Lcut 3.380h -> 0.170h
+  muse_hash arm 8 (j2 c28 dir 1 through): L 0.500h -> 0.318h, Lcut 0.500h -> 0.318h
+  muse_hash arm 10 (j3 c52 dir 1 through): L 2.275h -> 0.107h, Lcut 4.042h -> 0.107h
+  muse_hash arm 12 (j4 c68 dir -1 through): L 0.000h -> 0.000h, Lcut -0.272h -> -0.362h
+  muse_hash arm 15 (j5 c3 dir 1 through): L 2.304h -> 0.000h, Lcut 2.304h -> -0.026h
+  muse_hash arm 20 (j6 c3 dir -1 through): L 0.181h -> 0.000h, Lcut 0.181h -> -0.327h
+  muse_hash arm 22 (j7 c3 dir 1 through): L 5.379h -> 0.895h, Lcut 6.775h -> 0.895h
+  muse_hash arm 23 (j7 c37 dir -1 through): L 5.368h -> 2.621h, Lcut Infinityh -> 2.621h
+  muse_hash arm 25 (j8 c3 dir -1 through): L 5.379h -> 1.395h, Lcut 6.274h -> 1.395h
+  muse_hash arm 29 (j9 c3 dir 1 through): L 2.416h -> 0.161h, Lcut 2.416h -> 0.161h
+  muse_hash arm 33 (j10 c3 dir 1 through): L 2.118h -> 1.112h, Lcut 2.118h -> 1.112h
+  muse_hash arm 36 (j11 c77 dir 1 through): L 2.338h -> 2.338h, Lcut 5.865h -> 3.737h
+  muse_hash arm 39 (j12 c66 dir 1 through): L 0.902h -> 0.863h, Lcut 0.902h -> 0.863h
+  muse_hash arm 41 (j13 c58 dir 1 through): L 3.376h -> 1.310h, Lcut 3.376h -> 1.310h
+  muse_hash arm 45 (j14 c43 dir 1 through): L 2.335h -> 0.294h, Lcut 5.160h -> 0.294h
+  muse_hash arm 46 (j15 c5 dir 1 through): L 0.409h -> 0.000h, Lcut 0.409h -> -0.344h
+  muse_hash arm 49 (j16 c5 dir 1 through): L 2.217h -> 0.803h, Lcut 2.217h -> 0.803h
+  muse_hash arm 53 (j17 c5 dir 1 through): L 2.160h -> 1.878h, Lcut 2.160h -> 1.878h
+  muse_hash arm 57 (j18 c5 dir 1 through): L 6.676h -> 0.711h, Lcut 9.403h -> 0.711h
+  muse_hash arm 60 (j19 c5 dir -1 through): L 6.676h -> 2.727h, Lcut 7.387h -> 2.727h
+  muse_hash arm 61 (j20 c62 dir 1 through): L 2.244h -> 0.484h, Lcut Infinityh -> 0.484h
+  muse_hash arm 65 (j21 c64 dir 1 through): L 0.396h -> 0.267h, Lcut 0.396h -> 0.267h
+  muse_hash arm 68 (j22 c6 dir -1 through): L 0.664h -> 0.000h, Lcut 0.664h -> -0.314h
+  muse_hash arm 70 (j23 c6 dir 1 through): L 4.036h -> 1.962h, Lcut 4.036h -> 1.962h
+  muse_hash arm 75 (j24 c6 dir -1 through): L 3.058h -> 0.000h, Lcut 3.058h -> -0.130h
+  muse_hash arm 76 (j25 c33 dir 1 through): L 1.765h -> 1.397h, Lcut 1.765h -> 1.397h
+  muse_hash arm 79 (j26 c43 dir -1 through): L 2.643h -> 0.000h, Lcut 2.643h -> -0.275h
+  muse_hash arm 84 (j27 c43 dir -1 through): L 5.483h -> 1.088h, Lcut 5.483h -> 1.088h
+  muse_hash arm 85 (j28 c66 dir -1 through): L 1.801h -> 0.637h, Lcut 1.801h -> 0.637h
+  muse_hash arm 88 (j29 c67 dir -1 through): L 1.643h -> 0.000h, Lcut 1.643h -> -0.260h
+  muse_hash arm 91 (j30 c64 dir 1 through): L 3.586h -> 2.131h, Lcut 3.586h -> 2.131h
+  muse_hash arm 96 (j31 c9 dir 1 through): L 2.169h -> 1.159h, Lcut 2.169h -> 1.159h
+  muse_hash arm 98 (j32 c9 dir 1 through): L 1.633h -> 0.426h, Lcut 1.633h -> 0.426h
+  muse_hash arm 100 (j33 c9 dir 1 through): L 2.356h -> 0.943h, Lcut 2.356h -> 0.943h
+  muse_hash arm 103 (j34 c38 dir 1 through): L 2.375h -> 0.417h, Lcut 2.998h -> 0.417h
+  muse_hash arm 107 (j35 c38 dir -1 through): L 2.327h -> 0.504h, Lcut 3.519h -> 0.504h
+  muse_hash arm 109 (j36 c11 dir -1 through closed): L 2.950h -> 0.000h, Lcut 2.950h -> -3.888h
+  muse_hash arm 113 (j37 c11 dir -1 through closed): L 2.156h -> 2.077h, Lcut 2.156h -> 2.077h
+  muse_hash arm 115 (j38 c36 dir -1 through): L 3.132h -> 0.343h, Lcut 3.132h -> 0.343h
+  muse_hash arm 119 (j39 c35 dir -1 through): L 7.601h -> 2.711h, Lcut Infinityh -> 2.711h
+  muse_hash arm 121 (j40 c85 dir 1 through): L 3.117h -> 1.630h, Lcut 6.517h -> 1.630h
+  muse_hash arm 126 (j41 c14 dir 1 through): L 2.879h -> 1.505h, Lcut 2.879h -> 1.505h
+  muse_hash arm 129 (j42 c66 dir -1 through): L 0.743h -> 0.000h, Lcut 0.743h -> -0.020h
+  muse_hash arm 131 (j43 c71 dir -1 through): L 3.285h -> 0.400h, Lcut 3.285h -> 0.400h
+  muse_hash arm 133 (j44 c71 dir 1 through): L 1.029h -> 0.142h, Lcut 1.029h -> 0.142h
+  muse_hash arm 138 (j45 c71 dir 1 through): L 0.829h -> 0.292h, Lcut 0.829h -> 0.292h
+  muse_hash arm 139 (j46 c71 dir 1 through): L 0.727h -> 0.082h, Lcut 0.727h -> 0.082h
+  muse_hash arm 143 (j47 c64 dir 1 through): L 0.267h -> 0.251h, Lcut 0.267h -> 0.251h
+  muse_hash arm 147 (j48 c64 dir -1 through): L 2.984h -> 0.569h, Lcut 2.984h -> 0.569h
+  muse_hash arm 150 (j49 c75 dir -1 through): L 3.571h -> 0.000h, Lcut 3.571h -> -0.543h
+  muse_hash arm 151 (j50 c71 dir -1 through): L 0.687h -> 0.000h, Lcut 0.687h -> -1.512h
+  muse_hash arm 156 (j51 c58 dir 1 through): L 2.596h -> 0.000h, Lcut 2.596h -> -0.253h
+  muse_hash arm 158 (j52 c66 dir 1 through): L 3.755h -> 0.000h, Lcut 3.755h -> -0.246h
+  muse_hash arm 161 (j53 c70 dir 1 through): L 0.853h -> 0.554h, Lcut 0.853h -> 0.554h
+  muse_hash arm 163 (j54 c39 dir 1 through): L 0.000h -> 0.000h, Lcut -0.070h -> -0.187h
+  muse_hash arm 168 (j55 c58 dir -1 through): L 1.042h -> 0.000h, Lcut 1.042h -> -0.412h
+  muse_hash arm 169 (j56 c66 dir -1 through): L 2.770h -> 2.574h, Lcut 2.770h -> 2.574h
+  muse_hash arm 173 (j57 c66 dir 1 through): L 3.006h -> 0.634h, Lcut 3.006h -> 0.634h
+  muse_hash arm 177 (j58 c43 dir -1 through): L 2.892h -> 0.565h, Lcut 2.892h -> 0.565h
+  muse_hash arm 178 (j59 c43 dir -1 through): L 0.000h -> 0.000h, Lcut -0.122h -> -0.552h
+  muse_hash arm 183 (j60 c71 dir 1 through): L 1.129h -> 0.237h, Lcut 1.129h -> 0.237h
+  muse_hash arm 185 (j61 c44 dir -1 through): L 3.162h -> 0.000h, Lcut 3.162h -> -0.130h
+  muse_hash arm 187 (j62 c71 dir -1 through): L 2.440h -> 0.000h, Lcut 2.440h -> -0.057h
+  muse_hash arm 191 (j63 c71 dir -1 through): L 6.664h -> 3.582h, Lcut 6.664h -> 3.582h
+  muse_hash arm 194 (j64 c28 dir 1 through): L 3.743h -> 1.576h, Lcut 3.743h -> 1.576h
+  muse_hash arm 197 (j65 c83 dir 1 through): L 1.529h -> 0.266h, Lcut 1.529h -> 0.266h
+  muse_hash arm 201 (j66 c68 dir 1 through): L 3.545h -> 2.225h, Lcut Infinityh -> 2.225h
+  muse_hash arm 203 (j67 c50 dir -1 through): L 3.102h -> 1.295h, Lcut 3.102h -> 1.295h
+  muse_hash arm 205 (j68 c50 dir -1 through): L 5.569h -> 1.255h, Lcut 7.159h -> 1.255h
+  muse_hash arm 210 (j69 c30 dir 1 through): L 2.364h -> 0.331h, Lcut 3.701h -> 0.331h
+  muse_hash arm 212 (j70 c30 dir -1 through): L 2.364h -> 1.337h, Lcut 2.695h -> 1.337h
+  muse_hash arm 215 (j71 c67 dir 1 through): L 0.089h -> 0.000h, Lcut 0.089h -> -0.047h
+  muse_hash arm 218 (j72 c55 dir 1 through): L 2.168h -> 1.991h, Lcut 2.168h -> 1.991h
+  muse_hash arm 222 (j73 c61 dir 1 through): L 6.958h -> 2.188h, Lcut Infinityh -> 2.188h
+  muse_hash arm 224 (j74 c33 dir -1 through): L 3.228h -> 2.760h, Lcut Infinityh -> 2.760h
+  muse_hash arm 228 (j75 c33 dir -1 through): L 2.490h -> 0.270h, Lcut Infinityh -> 0.270h
+  muse_hash arm 230 (j76 c33 dir 1 through): L 2.479h -> 0.072h, Lcut 2.479h -> 0.072h
+  muse_hash arm 233 (j77 c33 dir 1 through): L 2.244h -> 0.141h, Lcut Infinityh -> 0.141h
+  muse_hash arm 237 (j78 c33 dir 1 through): L 8.055h -> 2.385h, Lcut Infinityh -> 2.385h
+  muse_hash arm 239 (j79 c55 dir -1 through): L 2.493h -> 0.555h, Lcut 2.493h -> 0.555h
+  muse_hash arm 243 (j80 c38 dir 1 through): L 2.327h -> 1.192h, Lcut 2.831h -> 1.192h
+  muse_hash arm 245 (j81 c75 dir 1 through): L 3.147h -> 0.912h, Lcut 3.147h -> 0.912h
+  muse_hash arm 247 (j82 c63 dir -1 through): L 1.665h -> 0.476h, Lcut 1.665h -> 0.476h
+  muse_hash arm 251 (j83 c75 dir 1 through): L 0.514h -> 0.000h, Lcut 0.514h -> -0.225h
+  muse_hash arm 255 (j84 c75 dir -1 through): L 0.222h -> 0.012h, Lcut 0.222h -> 0.012h
+  muse_hash arm 256 (j85 c67 dir -1 through): L 2.057h -> 1.961h, Lcut 2.057h -> 1.961h
+  muse_hash arm 260 (j86 c38 dir -1 through): L 2.375h -> 0.623h, Lcut 2.792h -> 0.623h
+  muse_hash arm 262 (j87 c84 dir -1 through): L 0.135h -> 0.000h, Lcut 0.135h -> -0.374h
+  muse_hash arm 265 (j88 c70 dir 1 through): L 2.347h -> 0.592h, Lcut 6.096h -> 0.592h
+  muse_hash arm 270 (j89 c43 dir 1 through): L 2.826h -> 2.628h, Lcut 2.826h -> 2.628h
+  muse_hash arm 272 (j90 c72 dir 1 through): L 3.200h -> 1.713h, Lcut 3.200h -> 1.713h
+  muse_hash arm 274 (j91 c52 dir -1 through): L 1.922h -> 0.364h, Lcut 1.922h -> 0.364h
+  muse_hash arm 278 (j92 c41 dir 1 through): L 3.132h -> 1.703h, Lcut 3.132h -> 1.703h
+  muse_hash arm 281 (j93 c46 dir -1 through): L 2.201h -> 0.870h, Lcut 5.416h -> 0.870h
+  muse_hash arm 283 (j94 c54 dir 1 through): L 0.602h -> 0.501h, Lcut 0.602h -> 0.501h
+  muse_hash arm 286 (j95 c69 dir 1 through): L 2.561h -> 0.257h, Lcut Infinityh -> 0.257h
+  muse_hash arm 290 (j96 c43 dir -1 through): L 1.472h -> 1.417h, Lcut 1.472h -> 1.417h
+  muse_hash arm 291 (j96 c70 dir 1 through): L 3.613h -> 1.243h, Lcut 3.613h -> 1.243h
+  muse_hash arm 295 (j97 c43 dir 1 through): L 1.557h -> 1.051h, Lcut 1.557h -> 1.051h
+  muse_hash arm 298 (j98 c71 dir 1 through): L 2.878h -> 2.560h, Lcut 2.878h -> 2.560h
+  muse_hash arm 301 (j99 c46 dir -1 through): L 2.569h -> 0.000h, Lcut 2.569h -> -0.559h
+  muse_hash arm 302 (j100 c84 dir -1 through): L 3.795h -> 1.127h, Lcut 3.795h -> 1.127h
+  muse_hash arm 303 (j100 c45 dir -1 through): L 1.605h -> 0.809h, Lcut 1.605h -> 0.809h
+  muse_hash arm 308 (j101 c45 dir 1 through): L 0.679h -> 0.000h, Lcut 0.679h -> -0.004h
+  muse_hash arm 309 (j102 c45 dir -1 through): L 0.000h -> 0.000h, Lcut -0.034h -> -0.035h
+  muse_hash arm 314 (j103 c45 dir 1 through): L 0.655h -> 0.000h, Lcut 0.655h -> -0.249h
+  muse_hash arm 315 (j104 c45 dir -1 through): L 2.043h -> 1.335h, Lcut 2.043h -> 1.335h
+  muse_hash arm 320 (j105 c84 dir 1 through): L 1.819h -> 0.753h, Lcut 1.819h -> 0.753h
+  muse_hash arm 322 (j106 c46 dir 1 through): L 2.191h -> 1.289h, Lcut 2.191h -> 1.289h
+  muse_hash arm 324 (j107 c46 dir 1 through): L 2.375h -> 1.229h, Lcut 2.994h -> 1.229h
+  muse_hash arm 329 (j108 c46 dir -1 through): L 2.375h -> 0.619h, Lcut 3.604h -> 0.619h
+  muse_hash arm 330 (j109 c46 dir -1 through): L 3.215h -> 3.071h, Lcut 3.215h -> 3.071h
+  muse_hash arm 335 (j110 c79 dir 1 through): L 2.408h -> 0.000h, Lcut 2.408h -> -0.344h
+  muse_hash arm 338 (j111 c83 dir -1 through): L 2.364h -> 0.000h, Lcut 2.629h -> -0.835h
+  muse_hash arm 340 (j112 c84 dir -1 through): L 2.205h -> 1.480h, Lcut 2.205h -> 1.480h
+  muse_hash arm 342 (j113 c85 dir -1 through): L 4.690h -> 3.085h, Lcut 4.690h -> 3.085h
+  muse_hash arm 347 (j114 c67 dir -1 through): L 2.363h -> 1.259h, Lcut 3.706h -> 1.259h
+  muse_hash arm 348 (j115 c50 dir 1 through): L 5.569h -> 1.590h, Lcut 6.825h -> 1.590h
+  muse_hash arm 352 (j116 c50 dir -1 through): L 1.528h -> 0.127h, Lcut 1.528h -> 0.127h
+  muse_hash arm 356 (j117 c50 dir -1 through): L 7.040h -> 0.734h, Lcut 7.040h -> 0.734h
+  muse_hash arm 357 (j118 c82 dir -1 through): L 1.879h -> 1.498h, Lcut 1.879h -> 1.498h
+  muse_hash arm 360 (j119 c67 dir 1 through): L 2.363h -> 1.343h, Lcut 3.621h -> 1.343h
+  muse_hash arm 364 (j120 c66 dir -1 through): L 0.000h -> 0.000h, Lcut -0.177h -> -0.192h
+  muse_hash arm 366 (j121 c52 dir -1 through): L 2.275h -> 1.767h, Lcut 2.382h -> 1.767h
+  muse_hash arm 369 (j122 c79 dir -1 through): L 1.137h -> 0.976h, Lcut 1.137h -> 0.976h
+  muse_hash arm 374 (j123 c66 dir 1 through): L 0.000h -> 0.000h, Lcut -0.398h -> -0.889h
+  muse_hash arm 377 (j124 c55 dir 1 through): L 1.626h -> 1.515h, Lcut 1.626h -> 1.515h
+  muse_hash arm 380 (j125 c83 dir 1 through): L 3.395h -> 1.085h, Lcut 3.395h -> 1.085h
+  muse_hash arm 381 (j126 c68 dir 1 through): L 2.281h -> 0.000h, Lcut 2.656h -> -0.018h
+  muse_hash arm 386 (j127 c80 dir -1 through): L 2.885h -> 0.581h, Lcut 2.885h -> 0.581h
+  muse_hash arm 389 (j128 c79 dir -1 through): L 3.203h -> 1.676h, Lcut 3.203h -> 1.676h
+  muse_hash arm 390 (j129 c68 dir -1 through): L 3.021h -> 0.290h, Lcut 3.021h -> 0.290h
+  muse_hash arm 393 (j130 c82 dir 1 through): L 3.291h -> 0.940h, Lcut 3.291h -> 0.940h
+  muse_hash arm 397 (j131 c58 dir -1 through): L 3.208h -> 0.000h, Lcut 3.208h -> -0.069h
+  muse_hash arm 400 (j132 c84 dir -1 through): L 3.521h -> 1.769h, Lcut 3.521h -> 1.769h
+  muse_hash arm 404 (j133 c64 dir 1 through): L 2.075h -> 0.555h, Lcut 2.075h -> 0.555h
+  muse_hash arm 407 (j134 c64 dir 1 through): L 2.431h -> 0.107h, Lcut 3.418h -> 0.107h
+  muse_hash arm 410 (j135 c62 dir 1 through): L 7.837h -> 2.728h, Lcut Infinityh -> 2.728h
+  muse_hash arm 411 (j136 c75 dir -1 through): L 2.113h -> 1.738h, Lcut 2.113h -> 1.738h
+  muse_hash arm 414 (j137 c64 dir -1 through): L 2.431h -> 0.987h, Lcut 2.538h -> 0.987h
+  muse_hash arm 417 (j138 c66 dir -1 through): L 2.148h -> 1.792h, Lcut 2.148h -> 1.792h
+  muse_hash arm 422 (j139 c66 dir 1 through): L 2.108h -> 0.000h, Lcut 2.108h -> -0.267h
+  muse_hash arm 423 (j140 c66 dir -1 through): L 2.033h -> 0.000h, Lcut 2.033h -> -0.192h
+  muse_hash arm 426 (j141 c66 dir -1 through): L 3.241h -> 2.078h, Lcut 3.241h -> 2.078h
+  muse_hash arm 431 (j142 c85 dir -1 through): L 3.117h -> 3.117h, Lcut 4.748h -> 3.400h
+  muse_hash arm 433 (j143 c68 dir 1 through): L 1.145h -> 0.000h, Lcut 1.145h -> -0.045h
+  muse_hash arm 436 (j144 c67 dir -1 through): L 2.339h -> 1.704h, Lcut 2.339h -> 1.704h
+  muse_hash arm 437 (j144 c82 dir -1 through): L 3.790h -> 2.986h, Lcut 3.790h -> 2.986h
+  muse_hash arm 441 (j145 c67 dir 1 through): L 3.603h -> 3.318h, Lcut 3.603h -> 3.318h
+  muse_hash arm 442 (j146 c71 dir -1 through): L 3.202h -> 1.059h, Lcut Infinityh -> 1.059h
+  muse_hash arm 445 (j146 c67 dir 1 through): L 7.200h -> 1.522h, Lcut 8.352h -> 1.522h
+  muse_hash arm 448 (j147 c67 dir -1 through): L 7.200h -> 1.151h, Lcut 8.722h -> 1.151h
+  muse_hash arm 449 (j148 c82 dir -1 through): L 5.196h -> 1.826h, Lcut Infinityh -> 1.826h
+  muse_hash arm 454 (j149 c68 dir -1 through): L 2.262h -> 0.376h, Lcut 2.262h -> 0.376h
+  muse_hash arm 455 (j150 c77 dir -1 through): L 2.338h -> 2.338h, Lcut 6.075h -> 3.528h
+  muse_hash arm 459 (j151 c69 dir 1 through): L 3.051h -> 2.818h, Lcut Infinityh -> 2.818h
+  muse_hash arm 462 (j152 c70 dir 1 through): L 3.748h -> 2.939h, Lcut 3.748h -> 2.939h
+  muse_hash arm 465 (j153 c80 dir -1 through): L 0.512h -> 0.296h, Lcut 0.512h -> 0.296h
+  muse_hash arm 469 (j154 c71 dir 1 through): L 2.193h -> 0.367h, Lcut 5.070h -> 0.367h
+  muse_hash arm 472 (j155 c74 dir -1 through): L 5.304h -> 2.027h, Lcut Infinityh -> 2.027h
+  muse_hash arm 473 (j156 c72 dir -1 through): L 5.401h -> 0.834h, Lcut Infinityh -> 0.834h
+  muse_hash arm 478 (j157 c72 dir 1 through): L 0.007h -> 0.000h, Lcut 0.007h -> -0.132h
+  muse_hash arm 480 (j158 c72 dir 1 through): L 0.847h -> 0.234h, Lcut 0.847h -> 0.234h
+  muse_hash arm 483 (j159 c77 dir 1 through): L 2.170h -> 1.210h, Lcut 2.339h -> 1.210h
+  muse_hash arm 487 (j160 c79 dir -1 through): L 2.595h -> 1.740h, Lcut 2.595h -> 1.740h
+  muse_hash arm 490 (j161 c85 dir 1 through): L 1.902h -> 1.853h, Lcut 1.902h -> 1.853h
+  muse_hash arm 493 (j162 c75 dir -1 through): L 2.505h -> 1.722h, Lcut 2.505h -> 1.722h
+  muse_hash arm 495 (j163 c75 dir 1 through): L 4.128h -> 1.375h, Lcut 4.128h -> 1.375h
+  muse_hash arm 497 (j164 c75 dir 1 through): L 2.767h -> 0.664h, Lcut 2.767h -> 0.664h
+  muse_hash arm 502 (j165 c84 dir -1 through): L 2.257h -> 2.014h, Lcut 2.257h -> 2.014h
+  muse_hash corner j0 0-1: r 0.043h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j1 4-5: r 1.507h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j3 10-11: r 0.920h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j5 17-15: r 2.757h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j7 21-22: r 2.137h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j7 22-23: r 0.174h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j8 27-25: r 0.198h -> 0.004h, ω 1.000 -> 1.000
+  muse_hash corner j9 29-30: r 1.895h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j13 41-42: r 0.156h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j14 45-43: r 0.452h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j18 57-55: r 4.000h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j20 63-61: r 0.769h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j24 74-75: r 0.218h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j26 79-80: r 3.921h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j28 85-86: r 0.173h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j31 95-96: r 1.232h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_hash corner j32 98-99: r 2.227h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_hash corner j33 100-101: r 0.267h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j34 103-104: r 0.605h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j35 106-107: r 0.550h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j36 109-110: r 2.721h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j37 113-114: r 0.913h -> 0.750h, ω 1.000 -> 1.000
+  muse_hash corner j38 115-116: r 2.505h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j40 121-122: r 0.266h -> 0.003h, ω 1.000 -> 1.000
+  muse_hash corner j41 125-126: r 2.160h -> 0.039h, ω 1.000 -> 1.000
+  muse_hash corner j43 130-131: r 2.712h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j48 146-147: r 3.305h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_hash corner j49 150-148: r 4.000h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j51 155-156: r 3.293h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j52 157-158: r 4.000h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j53 161-162: r 0.047h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_hash corner j55 168-166: r 0.008h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j57 172-173: r 4.000h -> 0.005h, ω 1.000 -> 1.000
+  muse_hash corner j61 185-186: r 0.187h -> 0.000h, ω 0.660 -> 0.000  LOST FILL
+  muse_hash corner j62 189-187: r 2.438h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j64 193-194: r 4.000h -> 0.027h, ω 1.000 -> 1.000
+  muse_hash corner j65 196-197: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  muse_hash corner j67 203-204: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  muse_hash corner j68 205-206: r 0.004h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j69 209-210: r 0.646h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j70 211-212: r 0.001h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j72 218-219: r 1.618h -> 1.430h, ω 1.000 -> 1.000
+  muse_hash corner j73 222-220: r 0.297h -> 0.266h, ω 1.000 -> 1.000
+  muse_hash corner j75 227-228: r 0.056h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j76 229-230: r 3.877h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j77 233-234: r 1.167h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j79 238-239: r 4.000h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j82 247-248: r 0.038h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j83 250-251: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  muse_hash corner j85 258-256: r 0.132h -> 0.113h, ω 1.000 -> 1.000
+  muse_hash corner j86 260-261: r 0.243h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j88 265-266: r 0.442h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j91 274-275: r 2.157h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j92 277-278: r 4.000h -> 3.467h, ω 1.000 -> 1.000
+  muse_hash corner j93 280-281: r 1.887h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_hash corner j95 286-287: r 0.191h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j96 290-291: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  muse_hash corner j96 291-292: r 0.101h -> 0.006h, ω 1.000 -> 1.000
+  muse_hash corner j97 295-293: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  muse_hash corner j99 301-299: r 2.518h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j100 302-303: r 0.004h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j100 303-304: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  muse_hash corner j103 313-314: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  muse_hash corner j104 315-316: r 0.141h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_hash corner j105 319-320: r 0.033h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j106 321-322: r 0.171h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j107 326-324: r 0.495h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_hash corner j108 328-329: r 0.245h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j110 335-333: r 4.000h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j112 340-341: r 0.465h -> 0.228h, ω 1.000 -> 1.000
+  muse_hash corner j114 347-345: r 0.136h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_hash corner j115 350-348: r 0.168h -> 0.000h, ω 1.000 -> 1.000
+  muse_hash corner j116 351-352: r 0.053h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j117 355-356: r 2.090h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_hash corner j118 359-357: r 1.406h -> 0.587h, ω 1.000 -> 1.000
+  muse_hash corner j122 369-370: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  muse_hash corner j126 381-382: r 0.404h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j127 386-384: r 3.251h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j129 392-390: r 2.294h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j130 393-394: r 0.229h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j131 397-398: r 3.183h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j132 400-401: r 0.029h -> 0.029h, ω 1.000 -> 1.000
+  muse_hash corner j133 404-402: r 1.053h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j134 406-407: r 0.587h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j135 410-408: r 0.245h -> 0.341h, ω 1.000 -> 1.000
+  muse_hash corner j139 422-420: r 0.889h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j140 423-424: r 2.457h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j143 433-434: r 0.065h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j144 435-436: r 0.213h -> 0.051h, ω 1.000 -> 1.000
+  muse_hash corner j144 436-437: r 0.971h -> 0.001h, ω 1.000 -> 1.000
+  muse_hash corner j146 442-443: r 0.169h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_hash corner j146 445-442: r 0.381h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_hash corner j147 447-448: r 0.385h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_hash corner j149 454-452: r 1.235h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j152 461-462: r 0.162h -> 0.161h, ω 1.000 -> 1.000
+  muse_hash corner j153 465-466: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  muse_hash corner j154 469-467: r 0.612h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j155 471-472: r 0.120h -> 0.051h, ω 1.000 -> 1.000
+  muse_hash corner j156 475-473: r 0.125h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_hash corner j159 482-483: r 0.004h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_hash corner j160 486-487: r 0.040h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_hash corner j161 489-490: r 0.435h -> 0.386h, ω 1.000 -> 1.000
+  muse_hash corner j162 492-493: r 0.473h -> 0.034h, ω 1.000 -> 1.000
+  muse_hash corner j163 495-496: r 4.000h -> 0.259h, ω 1.000 -> 1.000
+  muse_hash corner j164 499-497: r 4.000h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_hash corner j58 176-177: r 0.000h -> 0.006h, ω 0.000 -> 1.000  GAINED FILL
+  muse_hash F6 arm 15 (j5) d -1.999h reach 1.025h: 17-15 r 2.757h ω 1.000 -> none
+  muse_hash F6 arm 75 (j24) d -2.151h reach 1.281h: 74-75 r 0.218h ω 1.000 -> none
+  muse_hash F6 arm 79 (j26) d -2.005h reach 1.280h: 79-80 r 3.921h ω 1.000 -> none
+  muse_hash F6 arm 109 (j36) d -1.112h reach 4.000h: 109-110 r 2.721h ω 1.000 -> none
+  muse_hash F6 arm 150 (j49) d -1.911h reach 1.455h: 150-148 r 4.000h ω 1.000 -> none
+  muse_hash F6 arm 156 (j51) d -1.841h reach 1.094h: 155-156 r 3.293h ω 1.000 -> none
+  muse_hash F6 arm 158 (j52) d -2.022h reach 1.268h: 157-158 r 4.000h ω 1.000 -> none
+  muse_hash F6 arm 168 (j55) d -1.842h reach 1.254h: 168-166 r 0.008h ω 1.000 -> none
+  muse_hash F6 arm 185 (j61) d -2.207h reach 1.337h: 185-186 r 0.187h ω 0.660 -> none
+  muse_hash F6 arm 187 (j62) d -2.165h reach 1.222h: 189-187 r 2.438h ω 1.000 -> none
+  muse_hash F6 arm 301 (j99) d -1.598h reach 1.158h: 301-299 r 2.518h ω 1.000 -> none
+  muse_hash F6 arm 335 (j110) d -1.748h reach 1.092h: 335-333 r 4.000h ω 1.000 -> none
+  muse_hash F6 arm 381 (j126) d -2.195h reach 1.213h: 381-382 r 0.404h ω 1.000 -> none
+  muse_hash F6 arm 397 (j131) d -2.135h reach 1.204h: 397-398 r 3.183h ω 1.000 -> none
+  muse_hash F6 arm 422 (j139) d -2.165h reach 1.432h: 422-420 r 0.889h ω 1.000 -> none
+  muse_hash F6 arm 423 (j140) d -3.142h reach 2.334h: 423-424 r 2.457h ω 1.000 -> none
+  muse_hash F6 arm 433 (j143) d -2.170h reach 1.215h: 433-434 r 0.065h ω 1.000 -> none
+  muse_default_tw arm 0 (j0 c77 dir 1 through): L 4.771h -> 1.058h, Lcut 13.651h -> 1.058h
+  muse_default_tw arm 5 (j1 c77 dir -1 through): L 3.460h -> 1.222h, Lcut 6.330h -> 1.222h
+  muse_default_tw arm 6 (j2 c28 dir -1 through): L 1.971h -> 1.763h, Lcut 1.971h -> 1.763h
+  muse_default_tw arm 10 (j3 c52 dir 1 through): L 3.388h -> 0.816h, Lcut 6.852h -> 0.816h
+  muse_default_tw arm 12 (j4 c68 dir 1 through): L 2.048h -> 1.338h, Lcut 2.048h -> 1.338h
+  muse_default_tw arm 15 (j5 c3 dir 1 through): L 3.212h -> 2.198h, Lcut 3.212h -> 2.198h
+  muse_default_tw arm 20 (j6 c3 dir -1 through): L 1.863h -> 1.056h, Lcut 1.863h -> 1.056h
+  muse_default_tw arm 22 (j7 c3 dir 1 through): L 8.398h -> 2.696h, Lcut 11.467h -> 2.696h
+  muse_default_tw arm 23 (j7 c37 dir -1 through): L 8.262h -> 5.181h, Lcut Infinityh -> 5.181h
+  muse_default_tw arm 25 (j8 c3 dir -1 through): L 8.398h -> 3.069h, Lcut 11.094h -> 3.069h
+  muse_default_tw arm 29 (j9 c3 dir 1 through): L 3.199h -> 1.290h, Lcut 3.199h -> 1.290h
+  muse_default_tw arm 31 (j10 c3 dir -1 through): L 4.182h -> 4.155h, Lcut 4.182h -> 4.155h
+  muse_default_tw arm 36 (j11 c77 dir 1 through): L 3.105h -> 3.105h, Lcut 8.880h -> 5.829h
+  muse_default_tw arm 39 (j12 c66 dir 1 through): L 1.991h -> 1.870h, Lcut 1.991h -> 1.870h
+  muse_default_tw arm 41 (j13 c58 dir 1 through): L 4.762h -> 3.993h, Lcut 4.762h -> 3.993h
+  muse_default_tw arm 45 (j14 c43 dir 1 through): L 3.611h -> 1.606h, Lcut 9.453h -> 1.606h
+  muse_default_tw arm 48 (j15 c5 dir -1 through): L 1.941h -> 1.611h, Lcut 1.941h -> 1.611h
+  muse_default_tw arm 49 (j16 c5 dir 1 through): L 4.068h -> 3.241h, Lcut 4.068h -> 3.241h
+  muse_default_tw arm 53 (j17 c5 dir 1 through): L 4.216h -> 3.984h, Lcut 4.216h -> 3.984h
+  muse_default_tw arm 57 (j18 c5 dir 1 through): L 8.865h -> 1.888h, Lcut 14.013h -> 1.888h
+  muse_default_tw arm 60 (j19 c5 dir -1 through): L 8.865h -> 5.149h, Lcut 10.753h -> 5.149h
+  muse_default_tw arm 61 (j20 c62 dir 1 through): L 3.237h -> 1.346h, Lcut Infinityh -> 1.346h
+  muse_default_tw arm 64 (j21 c64 dir 1 through): L 2.007h -> 1.614h, Lcut 2.007h -> 1.614h
+  muse_default_tw arm 69 (j22 c6 dir 1 through): L 2.316h -> 1.966h, Lcut 2.316h -> 1.966h
+  muse_default_tw arm 72 (j23 c6 dir 1 through): L 7.540h -> 4.696h, Lcut 7.540h -> 4.696h
+  muse_default_tw arm 75 (j24 c6 dir -1 through): L 5.918h -> 0.923h, Lcut 5.918h -> 0.923h
+  muse_default_tw arm 76 (j25 c33 dir 1 through): L 3.992h -> 3.024h, Lcut 3.992h -> 3.024h
+  muse_default_tw arm 79 (j26 c43 dir -1 through): L 3.411h -> 1.083h, Lcut 3.411h -> 1.083h
+  muse_default_tw arm 84 (j27 c43 dir -1 through): L 8.928h -> 4.172h, Lcut 8.928h -> 4.172h
+  muse_default_tw arm 85 (j28 c66 dir -1 through): L 4.137h -> 2.581h, Lcut 4.137h -> 2.581h
+  muse_default_tw arm 89 (j29 c67 dir 1 through): L 2.751h -> 2.557h, Lcut 2.751h -> 2.557h
+  muse_default_tw arm 91 (j30 c64 dir 1 through): L 7.212h -> 3.614h, Lcut 7.212h -> 3.614h
+  muse_default_tw arm 96 (j31 c9 dir 1 through): L 3.336h -> 2.153h, Lcut 3.336h -> 2.153h
+  muse_default_tw arm 98 (j32 c9 dir 1 through): L 2.360h -> 1.839h, Lcut 2.360h -> 1.839h
+  muse_default_tw arm 100 (j33 c9 dir 1 through): L 4.093h -> 2.624h, Lcut 4.093h -> 2.624h
+  muse_default_tw arm 103 (j34 c38 dir 1 through): L 3.446h -> 2.386h, Lcut 5.900h -> 2.386h
+  muse_default_tw arm 107 (j35 c38 dir -1 through): L 3.454h -> 2.580h, Lcut 6.892h -> 2.580h
+  muse_default_tw arm 109 (j36 c11 dir -1 through closed): L 3.001h -> 0.520h, Lcut 3.001h -> 0.520h
+  muse_default_tw arm 112 (j37 c11 dir 1 through closed): L 3.356h -> 3.285h, Lcut 3.356h -> 3.285h
+  muse_default_tw arm 117 (j38 c36 dir -1 through): L 2.976h -> 1.788h, Lcut 2.976h -> 1.788h
+  muse_default_tw arm 120 (j39 c35 dir -1 through): L 10.920h -> 5.652h, Lcut Infinityh -> 5.652h
+  muse_default_tw arm 121 (j40 c85 dir 1 through): L 5.066h -> 3.619h, Lcut 10.050h -> 3.619h
+  muse_default_tw arm 126 (j41 c14 dir 1 through): L 4.589h -> 2.522h, Lcut 4.589h -> 2.522h
+  muse_default_tw arm 129 (j42 c66 dir -1 through): L 2.309h -> 1.984h, Lcut 2.309h -> 1.984h
+  muse_default_tw arm 131 (j43 c71 dir -1 through): L 3.336h -> 1.662h, Lcut 3.336h -> 1.662h
+  muse_default_tw arm 133 (j44 c71 dir 1 through): L 2.496h -> 2.265h, Lcut 2.496h -> 2.265h
+  muse_default_tw arm 138 (j45 c71 dir 1 through): L 2.889h -> 1.873h, Lcut 2.889h -> 1.873h
+  muse_default_tw arm 139 (j46 c71 dir 1 through): L 2.041h -> 0.977h, Lcut 2.041h -> 0.977h
+  muse_default_tw arm 143 (j47 c64 dir 1 through): L 1.600h -> 1.198h, Lcut 1.600h -> 1.198h
+  muse_default_tw arm 147 (j48 c64 dir -1 through): L 3.467h -> 1.923h, Lcut 3.467h -> 1.923h
+  muse_default_tw arm 150 (j49 c75 dir -1 through): L 6.546h -> 1.066h, Lcut 6.546h -> 1.066h
+  muse_default_tw arm 151 (j50 c71 dir -1 through): L 2.076h -> 1.041h, Lcut 2.076h -> 1.041h
+  muse_default_tw arm 154 (j51 c58 dir 1 through): L 3.220h -> 0.993h, Lcut 3.220h -> 0.993h
+  muse_default_tw arm 158 (j52 c66 dir 1 through): L 7.514h -> 1.696h, Lcut 7.514h -> 1.696h
+  muse_default_tw arm 161 (j53 c70 dir 1 through): L 2.315h -> 1.517h, Lcut 2.315h -> 1.517h
+  muse_default_tw arm 165 (j54 c39 dir -1 through): L 2.083h -> 1.246h, Lcut 2.083h -> 1.246h
+  muse_default_tw arm 168 (j55 c58 dir 1 through): L 2.045h -> 1.270h, Lcut 2.045h -> 1.270h
+  muse_default_tw arm 169 (j56 c66 dir -1 through): L 3.699h -> 2.828h, Lcut 3.699h -> 2.828h
+  muse_default_tw arm 173 (j57 c66 dir 1 through): L 5.402h -> 1.996h, Lcut 5.402h -> 1.996h
+  muse_default_tw arm 177 (j58 c43 dir -1 through): L 3.502h -> 1.894h, Lcut 3.502h -> 1.894h
+  muse_default_tw arm 178 (j59 c43 dir -1 through): L 1.467h -> 0.909h, Lcut 1.467h -> 0.909h
+  muse_default_tw arm 181 (j60 c71 dir -1 through): L 2.401h -> 2.247h, Lcut 2.401h -> 2.247h
+  muse_default_tw arm 185 (j61 c44 dir -1 through): L 4.389h -> 1.319h, Lcut 4.389h -> 1.319h
+  muse_default_tw arm 187 (j62 c71 dir -1 through): L 3.128h -> 1.843h, Lcut 3.128h -> 1.843h
+  muse_default_tw arm 191 (j63 c71 dir -1 through): L 7.384h -> 4.483h, Lcut 7.384h -> 4.483h
+  muse_default_tw arm 194 (j64 c28 dir 1 through): L 6.175h -> 3.926h, Lcut 6.175h -> 3.926h
+  muse_default_tw arm 197 (j65 c83 dir 1 through): L 3.676h -> 1.174h, Lcut 8.648h -> 1.174h
+  muse_default_tw arm 201 (j66 c68 dir 1 through): L 5.232h -> 4.351h, Lcut Infinityh -> 4.351h
+  muse_default_tw arm 203 (j67 c50 dir -1 through): L 5.586h -> 3.299h, Lcut 5.586h -> 3.299h
+  muse_default_tw arm 205 (j68 c50 dir -1 through): L 8.293h -> 2.813h, Lcut 11.562h -> 2.813h
+  muse_default_tw arm 210 (j69 c30 dir 1 through): L 3.490h -> 2.044h, Lcut 6.719h -> 2.044h
+  muse_default_tw arm 212 (j70 c30 dir -1 through): L 3.490h -> 3.229h, Lcut 5.534h -> 3.229h
+  muse_default_tw arm 215 (j71 c67 dir 1 through): L 2.286h -> 1.445h, Lcut 2.286h -> 1.445h
+  muse_default_tw arm 217 (j72 c55 dir -1 through): L 4.349h -> 4.133h, Lcut 4.349h -> 4.133h
+  muse_default_tw arm 222 (j73 c61 dir 1 through): L 10.480h -> 3.883h, Lcut Infinityh -> 3.883h
+  muse_default_tw arm 224 (j74 c33 dir -1 through): L 5.006h -> 5.006h, Lcut Infinityh -> 5.148h
+  muse_default_tw arm 228 (j75 c33 dir -1 through): L 3.674h -> 1.474h, Lcut Infinityh -> 1.474h
+  muse_default_tw arm 230 (j76 c33 dir 1 through): L 3.766h -> 0.730h, Lcut 3.766h -> 0.730h
+  muse_default_tw arm 233 (j77 c33 dir 1 through): L 3.421h -> 2.139h, Lcut Infinityh -> 2.139h
+  muse_default_tw arm 237 (j78 c33 dir 1 through): L 12.001h -> 5.561h, Lcut Infinityh -> 5.561h
+  muse_default_tw arm 239 (j79 c55 dir -1 through): L 3.639h -> 2.109h, Lcut 3.639h -> 2.109h
+  muse_default_tw arm 243 (j80 c38 dir 1 through): L 3.454h -> 3.438h, Lcut 6.034h -> 3.438h
+  muse_default_tw arm 245 (j81 c75 dir 1 through): L 6.169h -> 2.480h, Lcut 6.169h -> 2.480h
+  muse_default_tw arm 247 (j82 c63 dir -1 through): L 4.250h -> 2.959h, Lcut 4.250h -> 2.959h
+  muse_default_tw arm 251 (j83 c75 dir 1 through): L 2.196h -> 1.048h, Lcut 2.196h -> 1.048h
+  muse_default_tw arm 255 (j84 c75 dir -1 through): L 1.951h -> 0.644h, Lcut 1.951h -> 0.644h
+  muse_default_tw arm 256 (j85 c67 dir -1 through): L 4.402h -> 4.366h, Lcut 4.402h -> 4.366h
+  muse_default_tw arm 260 (j86 c38 dir -1 through): L 3.446h -> 2.454h, Lcut 5.832h -> 2.454h
+  muse_default_tw arm 262 (j87 c84 dir -1 through): L 1.599h -> 0.764h, Lcut 1.599h -> 0.764h
+  muse_default_tw arm 265 (j88 c70 dir 1 through): L 3.429h -> 2.294h, Lcut 9.401h -> 2.294h
+  muse_default_tw arm 270 (j89 c43 dir 1 through): L 5.842h -> 5.217h, Lcut 5.842h -> 5.217h
+  muse_default_tw arm 272 (j90 c72 dir 1 through): L 5.379h -> 4.204h, Lcut 5.379h -> 4.204h
+  muse_default_tw arm 274 (j91 c52 dir -1 through): L 3.180h -> 1.988h, Lcut 3.180h -> 1.988h
+  muse_default_tw arm 278 (j92 c41 dir 1 through): L 6.667h -> 4.095h, Lcut 6.667h -> 4.095h
+  muse_default_tw arm 281 (j93 c46 dir -1 through): L 3.371h -> 2.216h, Lcut 8.662h -> 2.216h
+  muse_default_tw arm 283 (j94 c54 dir 1 through): L 2.526h -> 2.170h, Lcut 2.526h -> 2.170h
+  muse_default_tw arm 286 (j95 c69 dir 1 through): L 3.725h -> 0.947h, Lcut Infinityh -> 0.947h
+  muse_default_tw arm 290 (j96 c43 dir -1 through): L 3.627h -> 3.368h, Lcut 3.627h -> 3.368h
+  muse_default_tw arm 291 (j96 c70 dir 1 through): L 7.814h -> 3.879h, Lcut 7.814h -> 3.879h
+  muse_default_tw arm 295 (j97 c43 dir 1 through): L 5.273h -> 3.880h, Lcut 5.273h -> 3.880h
+  muse_default_tw arm 296 (j98 c71 dir -1 through): L 3.243h -> 3.243h, Lcut 5.489h -> 4.759h
+  muse_default_tw arm 301 (j99 c46 dir -1 through): L 4.073h -> 0.237h, Lcut 4.073h -> 0.237h
+  muse_default_tw arm 302 (j100 c84 dir -1 through): L 7.039h -> 3.026h, Lcut 7.039h -> 3.026h
+  muse_default_tw arm 303 (j100 c45 dir -1 through): L 4.072h -> 2.639h, Lcut 4.072h -> 2.639h
+  muse_default_tw arm 308 (j101 c45 dir 1 through): L 2.522h -> 1.097h, Lcut 2.522h -> 1.097h
+  muse_default_tw arm 309 (j102 c45 dir -1 through): L 1.989h -> 0.745h, Lcut 1.989h -> 0.745h
+  muse_default_tw arm 314 (j103 c45 dir 1 through): L 1.978h -> 0.970h, Lcut 1.978h -> 0.970h
+  muse_default_tw arm 315 (j104 c45 dir -1 through): L 4.092h -> 3.192h, Lcut 4.092h -> 3.192h
+  muse_default_tw arm 320 (j105 c84 dir 1 through): L 3.906h -> 2.456h, Lcut 3.906h -> 2.456h
+  muse_default_tw arm 322 (j106 c46 dir 1 through): L 4.041h -> 2.882h, Lcut 4.041h -> 2.882h
+  muse_default_tw arm 324 (j107 c46 dir 1 through): L 3.420h -> 3.420h, Lcut 5.394h -> 3.490h
+  muse_default_tw arm 329 (j108 c46 dir -1 through): L 3.420h -> 1.974h, Lcut 6.910h -> 1.974h
+  muse_default_tw arm 332 (j109 c46 dir 1 through): L 3.371h -> 3.371h, Lcut 5.587h -> 5.291h
+  muse_default_tw arm 335 (j110 c79 dir 1 through): L 3.720h -> 0.608h, Lcut 3.720h -> 0.608h
+  muse_default_tw arm 336 (j111 c83 dir 1 through): L 4.971h -> 4.850h, Lcut 4.971h -> 4.850h
+  muse_default_tw arm 340 (j112 c84 dir -1 through): L 4.668h -> 3.976h, Lcut 4.668h -> 3.976h
+  muse_default_tw arm 342 (j113 c85 dir -1 through): L 7.963h -> 4.518h, Lcut 7.963h -> 4.518h
+  muse_default_tw arm 347 (j114 c67 dir -1 through): L 3.193h -> 2.200h, Lcut 7.045h -> 2.200h
+  muse_default_tw arm 348 (j115 c50 dir 1 through): L 8.293h -> 3.269h, Lcut 11.106h -> 3.269h
+  muse_default_tw arm 353 (j116 c50 dir 1 through): L 3.544h -> 2.865h, Lcut 3.544h -> 2.865h
+  muse_default_tw arm 356 (j117 c50 dir -1 through): L 9.404h -> 2.361h, Lcut 9.404h -> 2.361h
+  muse_default_tw arm 358 (j118 c82 dir 1 through): L 4.231h -> 4.010h, Lcut 4.231h -> 4.010h
+  muse_default_tw arm 360 (j119 c67 dir 1 through): L 3.193h -> 3.193h, Lcut 5.393h -> 3.852h
+  muse_default_tw arm 363 (j120 c66 dir 1 through): L 1.050h -> 0.986h, Lcut 1.050h -> 0.986h
+  muse_default_tw arm 366 (j121 c52 dir -1 through): L 3.388h -> 3.388h, Lcut 4.204h -> 3.464h
+  muse_default_tw arm 371 (j122 c79 dir 1 through): L 2.969h -> 2.943h, Lcut 2.969h -> 2.943h
+  muse_default_tw arm 373 (j123 c66 dir -1 through): L 1.139h -> 1.120h, Lcut 1.139h -> 1.120h
+  muse_default_tw arm 377 (j124 c55 dir 1 through): L 3.737h -> 3.278h, Lcut 3.737h -> 3.278h
+  muse_default_tw arm 380 (j125 c83 dir 1 through): L 5.287h -> 3.670h, Lcut 5.287h -> 3.670h
+  muse_default_tw arm 381 (j126 c68 dir 1 through): L 3.533h -> 1.143h, Lcut 6.399h -> 1.143h
+  muse_default_tw arm 386 (j127 c80 dir -1 through): L 4.463h -> 2.181h, Lcut 4.463h -> 2.181h
+  muse_default_tw arm 389 (j128 c79 dir -1 through): L 6.157h -> 3.629h, Lcut 6.157h -> 3.629h
+  muse_default_tw arm 390 (j129 c68 dir -1 through): L 3.985h -> 2.463h, Lcut 3.985h -> 2.463h
+  muse_default_tw arm 393 (j130 c82 dir 1 through): L 4.307h -> 4.169h, Lcut 4.307h -> 4.169h
+  muse_default_tw arm 397 (j131 c58 dir -1 through): L 3.756h -> 1.259h, Lcut 3.756h -> 1.259h
+  muse_default_tw arm 400 (j132 c84 dir -1 through): L 7.268h -> 4.537h, Lcut 7.268h -> 4.537h
+  muse_default_tw arm 404 (j133 c64 dir 1 through): L 4.354h -> 2.810h, Lcut 4.354h -> 2.810h
+  muse_default_tw arm 407 (j134 c64 dir 1 through): L 3.532h -> 1.326h, Lcut 5.972h -> 1.326h
+  muse_default_tw arm 408 (j135 c62 dir 1 through): L 11.071h -> 4.583h, Lcut Infinityh -> 4.583h
+  muse_default_tw arm 413 (j136 c75 dir 1 through): L 4.136h -> 4.089h, Lcut 4.136h -> 4.089h
+  muse_default_tw arm 414 (j137 c64 dir -1 through): L 3.532h -> 2.440h, Lcut 4.858h -> 2.440h
+  muse_default_tw arm 417 (j138 c66 dir -1 through): L 4.188h -> 4.046h, Lcut 4.188h -> 4.046h
+  muse_default_tw arm 422 (j139 c66 dir 1 through): L 3.584h -> 0.848h, Lcut 5.881h -> 0.848h
+  muse_default_tw arm 423 (j140 c66 dir -1 through): L 3.584h -> 2.298h, Lcut 4.432h -> 2.298h
+  muse_default_tw arm 426 (j141 c66 dir -1 through): L 5.305h -> 3.674h, Lcut 5.305h -> 3.674h
+  muse_default_tw arm 431 (j142 c85 dir -1 through): L 5.066h -> 4.983h, Lcut 8.686h -> 4.983h
+  muse_default_tw arm 433 (j143 c68 dir 1 through): L 2.293h -> 1.044h, Lcut 2.293h -> 1.044h
+  muse_default_tw arm 437 (j144 c82 dir -1 through): L 7.004h -> 5.064h, Lcut 7.004h -> 5.064h
+  muse_default_tw arm 438 (j144 c67 dir 1 through): L 4.506h -> 4.226h, Lcut 4.506h -> 4.226h
+  muse_default_tw arm 441 (j145 c67 dir 1 through): L 6.955h -> 5.468h, Lcut 6.955h -> 5.468h
+  muse_default_tw arm 442 (j146 c71 dir -1 through): L 4.962h -> 2.636h, Lcut Infinityh -> 2.636h
+  muse_default_tw arm 445 (j146 c67 dir 1 through): L 10.653h -> 4.297h, Lcut 13.719h -> 4.297h
+  muse_default_tw arm 448 (j147 c67 dir -1 through): L 10.653h -> 3.066h, Lcut 14.949h -> 3.066h
+  muse_default_tw arm 449 (j148 c82 dir -1 through): L 7.990h -> 3.751h, Lcut Infinityh -> 3.751h
+  muse_default_tw arm 454 (j149 c68 dir -1 through): L 3.533h -> 2.866h, Lcut 4.676h -> 2.866h
+  muse_default_tw arm 455 (j150 c77 dir -1 through): L 3.105h -> 3.105h, Lcut 8.934h -> 5.776h
+  muse_default_tw arm 459 (j151 c69 dir 1 through): L 4.792h -> 4.672h, Lcut Infinityh -> 4.672h
+  muse_default_tw arm 462 (j152 c70 dir 1 through): L 5.972h -> 5.723h, Lcut 5.972h -> 5.723h
+  muse_default_tw arm 465 (j153 c80 dir -1 through): L 2.275h -> 1.682h, Lcut 2.275h -> 1.682h
+  muse_default_tw arm 469 (j154 c71 dir 1 through): L 3.243h -> 2.246h, Lcut 8.002h -> 2.246h
+  muse_default_tw arm 472 (j155 c74 dir -1 through): L 8.355h -> 4.106h, Lcut Infinityh -> 4.106h
+  muse_default_tw arm 473 (j156 c72 dir -1 through): L 8.299h -> 2.496h, Lcut Infinityh -> 2.496h
+  muse_default_tw arm 478 (j157 c72 dir 1 through): L 2.145h -> 1.065h, Lcut 2.145h -> 1.065h
+  muse_default_tw arm 480 (j158 c72 dir 1 through): L 2.473h -> 2.283h, Lcut 2.473h -> 2.283h
+  muse_default_tw arm 483 (j159 c77 dir 1 through): L 3.460h -> 2.870h, Lcut 4.682h -> 2.870h
+  muse_default_tw arm 487 (j160 c79 dir -1 through): L 5.062h -> 3.485h, Lcut 5.062h -> 3.485h
+  muse_default_tw arm 490 (j161 c85 dir 1 through): L 3.984h -> 3.903h, Lcut 3.984h -> 3.903h
+  muse_default_tw arm 493 (j162 c75 dir -1 through): L 4.978h -> 4.776h, Lcut 4.978h -> 4.776h
+  muse_default_tw arm 495 (j163 c75 dir 1 through): L 7.171h -> 3.722h, Lcut 7.171h -> 3.722h
+  muse_default_tw arm 497 (j164 c75 dir 1 through): L 4.248h -> 2.153h, Lcut 4.248h -> 2.153h
+  muse_default_tw arm 501 (j165 c84 dir 1 through): L 4.053h -> 3.994h, Lcut 4.053h -> 3.994h
+  muse_default_tw corner j0 0-1: r 0.714h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_default_tw corner j1 4-5: r 1.178h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j2 6-7: r 0.673h -> 0.401h, ω 1.000 -> 1.000
+  muse_default_tw corner j3 10-11: r 2.295h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j4 12-13: r 0.410h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j5 17-15: r 4.000h -> 3.345h, ω 1.000 -> 1.000
+  muse_default_tw corner j6 20-18: r 0.095h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_default_tw corner j7 21-22: r 4.000h -> 2.653h, ω 1.000 -> 1.000
+  muse_default_tw corner j7 22-23: r 0.680h -> 0.529h, ω 1.000 -> 1.000
+  muse_default_tw corner j8 27-25: r 0.716h -> 0.669h, ω 1.000 -> 1.000
+  muse_default_tw corner j9 29-30: r 3.999h -> 0.612h, ω 1.000 -> 1.000
+  muse_default_tw corner j12 39-37: r 0.303h -> 0.148h, ω 1.000 -> 1.000
+  muse_default_tw corner j14 45-43: r 2.155h -> 0.149h, ω 1.000 -> 1.000
+  muse_default_tw corner j15 47-48: r 0.225h -> 0.018h, ω 1.000 -> 1.000
+  muse_default_tw corner j18 57-55: r 4.000h -> 0.866h, ω 1.000 -> 1.000
+  muse_default_tw corner j20 63-61: r 1.878h -> 0.090h, ω 1.000 -> 1.000
+  muse_default_tw corner j21 64-65: r 0.130h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j22 69-67: r 1.078h -> 1.105h, ω 1.000 -> 1.000
+  muse_default_tw corner j24 74-75: r 0.905h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j26 79-80: r 4.000h -> 0.003h, ω 1.000 -> 1.000
+  muse_default_tw corner j28 85-86: r 2.903h -> 0.825h, ω 1.000 -> 1.000
+  muse_default_tw corner j29 89-90: r 0.522h -> 0.374h, ω 1.000 -> 1.000
+  muse_default_tw corner j31 95-96: r 3.301h -> 1.075h, ω 1.000 -> 1.000
+  muse_default_tw corner j32 98-99: r 0.977h -> 1.078h, ω 1.000 -> 1.000
+  muse_default_tw corner j33 100-101: r 0.747h -> 0.728h, ω 1.000 -> 1.000
+  muse_default_tw corner j34 103-104: r 2.553h -> 1.121h, ω 1.000 -> 1.000
+  muse_default_tw corner j35 106-107: r 2.009h -> 1.231h, ω 1.000 -> 1.000
+  muse_default_tw corner j36 109-110: r 3.191h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_default_tw corner j38 117-115: r 2.975h -> 0.422h, ω 1.000 -> 1.000
+  muse_default_tw corner j41 125-126: r 2.974h -> 1.512h, ω 1.000 -> 1.000
+  muse_default_tw corner j42 128-129: r 0.680h -> 0.230h, ω 1.000 -> 1.000
+  muse_default_tw corner j43 130-131: r 4.000h -> 1.348h, ω 1.000 -> 1.000
+  muse_default_tw corner j44 133-134: r 0.818h -> 0.523h, ω 1.000 -> 1.000
+  muse_default_tw corner j45 137-138: r 0.943h -> 0.519h, ω 1.000 -> 1.000
+  muse_default_tw corner j46 141-139: r 0.322h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_default_tw corner j47 143-144: r 0.134h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j48 146-147: r 4.000h -> 1.561h, ω 1.000 -> 1.000
+  muse_default_tw corner j49 150-148: r 4.000h -> 0.818h, ω 1.000 -> 1.000
+  muse_default_tw corner j50 151-152: r 0.606h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j51 156-154: r 4.000h -> 0.016h, ω 1.000 -> 1.000
+  muse_default_tw corner j52 157-158: r 3.942h -> 2.543h, ω 1.000 -> 1.000
+  muse_default_tw corner j53 161-162: r 2.227h -> 0.966h, ω 1.000 -> 1.000
+  muse_default_tw corner j54 164-165: r 0.323h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j55 167-168: r 0.333h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j58 176-177: r 0.355h -> 0.142h, ω 1.000 -> 1.000
+  muse_default_tw corner j59 180-178: r 0.009h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_default_tw corner j60 181-182: r 0.690h -> 0.724h, ω 1.000 -> 1.000
+  muse_default_tw corner j61 185-186: r 0.853h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j62 189-187: r 4.000h -> 3.073h, ω 1.000 -> 1.000
+  muse_default_tw corner j65 196-197: r 2.176h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j67 203-204: r 0.682h -> 0.677h, ω 1.000 -> 1.000
+  muse_default_tw corner j68 205-206: r 1.224h -> 0.688h, ω 1.000 -> 1.000
+  muse_default_tw corner j69 209-210: r 0.941h -> 0.091h, ω 1.000 -> 1.000
+  muse_default_tw corner j70 211-212: r 0.726h -> 0.710h, ω 1.000 -> 1.000
+  muse_default_tw corner j71 214-215: r 0.078h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_default_tw corner j72 219-217: r 0.605h -> 0.602h, ω 1.000 -> 1.000
+  muse_default_tw corner j73 222-220: r 0.798h -> 1.412h, ω 1.000 -> 1.000
+  muse_default_tw corner j75 227-228: r 1.209h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j76 229-230: r 4.000h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j77 233-234: r 2.722h -> 1.282h, ω 1.000 -> 1.000
+  muse_default_tw corner j79 238-239: r 4.000h -> 2.114h, ω 1.000 -> 1.000
+  muse_default_tw corner j81 244-245: r 0.276h -> 0.012h, ω 1.000 -> 1.000
+  muse_default_tw corner j82 247-248: r 2.132h -> 0.856h, ω 1.000 -> 1.000
+  muse_default_tw corner j83 250-251: r 1.103h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j84 254-255: r 0.422h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_default_tw corner j86 260-261: r 1.107h -> 0.478h, ω 1.000 -> 1.000
+  muse_default_tw corner j87 264-262: r 0.003h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_default_tw corner j88 265-266: r 1.728h -> 0.728h, ω 1.000 -> 1.000
+  muse_default_tw corner j91 274-275: r 4.000h -> 2.783h, ω 1.000 -> 1.000
+  muse_default_tw corner j93 280-281: r 3.580h -> 2.283h, ω 1.000 -> 1.000
+  muse_default_tw corner j94 283-284: r 1.441h -> 0.960h, ω 1.000 -> 1.000
+  muse_default_tw corner j95 286-287: r 1.788h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_default_tw corner j96 289-290: r 2.373h -> 2.132h, ω 1.000 -> 1.000
+  muse_default_tw corner j96 290-291: r 0.807h -> 0.790h, ω 1.000 -> 1.000
+  muse_default_tw corner j99 301-299: r 3.552h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_default_tw corner j100 302-303: r 0.666h -> 0.591h, ω 1.000 -> 1.000
+  muse_default_tw corner j100 303-304: r 0.904h -> 0.438h, ω 1.000 -> 1.000
+  muse_default_tw corner j101 307-308: r 1.149h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j102 309-310: r 0.467h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_default_tw corner j103 313-314: r 1.457h -> 0.001h, ω 1.000 -> 1.000
+  muse_default_tw corner j104 315-316: r 3.274h -> 2.240h, ω 1.000 -> 1.000
+  muse_default_tw corner j105 319-320: r 3.247h -> 1.638h, ω 1.000 -> 1.000
+  muse_default_tw corner j106 321-322: r 3.225h -> 1.623h, ω 1.000 -> 1.000
+  muse_default_tw corner j108 328-329: r 2.640h -> 0.341h, ω 1.000 -> 1.000
+  muse_default_tw corner j110 335-333: r 4.000h -> 0.001h, ω 1.000 -> 1.000
+  muse_default_tw corner j114 347-345: r 0.747h -> 0.319h, ω 1.000 -> 1.000
+  muse_default_tw corner j115 350-348: r 1.238h -> 0.879h, ω 1.000 -> 1.000
+  muse_default_tw corner j116 353-351: r 0.553h -> 0.441h, ω 1.000 -> 1.000
+  muse_default_tw corner j124 376-377: r 0.560h -> 0.318h, ω 1.000 -> 1.000
+  muse_default_tw corner j125 379-380: r 0.931h -> 0.921h, ω 1.000 -> 1.000
+  muse_default_tw corner j126 381-382: r 1.948h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j127 386-384: r 3.443h -> 1.115h, ω 1.000 -> 1.000
+  muse_default_tw corner j128 388-389: r 1.160h -> 1.088h, ω 1.000 -> 1.000
+  muse_default_tw corner j129 392-390: r 2.658h -> 1.193h, ω 1.000 -> 1.000
+  muse_default_tw corner j130 393-394: r 1.962h -> 1.850h, ω 1.000 -> 1.000
+  muse_default_tw corner j131 397-398: r 4.000h -> 0.024h, ω 1.000 -> 1.000
+  muse_default_tw corner j133 404-402: r 4.000h -> 2.012h, ω 1.000 -> 1.000
+  muse_default_tw corner j134 406-407: r 1.945h -> 0.009h, ω 1.000 -> 1.000
+  muse_default_tw corner j137 416-414: r 0.853h -> 0.649h, ω 1.000 -> 1.000
+  muse_default_tw corner j138 417-418: r 1.004h -> 0.923h, ω 1.000 -> 1.000
+  muse_default_tw corner j139 422-420: r 3.473h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  muse_default_tw corner j140 423-424: r 2.779h -> 0.947h, ω 1.000 -> 1.000
+  muse_default_tw corner j143 433-434: r 1.536h -> 0.062h, ω 1.000 -> 1.000
+  muse_default_tw corner j146 442-443: r 2.960h -> 2.062h, ω 1.000 -> 1.000
+  muse_default_tw corner j147 447-448: r 1.032h -> 0.923h, ω 1.000 -> 1.000
+  muse_default_tw corner j149 454-452: r 2.853h -> 1.783h, ω 1.000 -> 1.000
+  muse_default_tw corner j153 465-466: r 1.499h -> 0.176h, ω 1.000 -> 1.000
+  muse_default_tw corner j154 469-467: r 3.533h -> 1.506h, ω 1.000 -> 1.000
+  muse_default_tw corner j156 475-473: r 0.713h -> 0.534h, ω 1.000 -> 1.000
+  muse_default_tw corner j157 477-478: r 0.583h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  muse_default_tw corner j158 480-481: r 0.433h -> 0.293h, ω 1.000 -> 1.000
+  muse_default_tw corner j159 482-483: r 0.727h -> 0.726h, ω 1.000 -> 1.000
+  muse_default_tw corner j160 486-487: r 0.969h -> 0.917h, ω 1.000 -> 1.000
+  muse_default_tw corner j161 489-490: r 2.874h -> 2.772h, ω 1.000 -> 1.000
+  muse_default_tw corner j162 492-493: r 2.852h -> 2.647h, ω 1.000 -> 1.000
+  muse_default_tw corner j164 499-497: r 3.993h -> 3.742h, ω 1.000 -> 1.000
+  muse_default_tw corner j165 500-501: r 2.473h -> 2.410h, ω 1.000 -> 1.000
+  g41_ring_tw42 arm 1 (j0 c1 dir 1 through): L 5.868h -> 5.336h, Lcut 5.868h -> 5.336h
+  g41_ring_tw42 arm 3 (j1 c0 dir -1 through): L 10.978h -> 7.148h, Lcut 10.978h -> 7.148h
+  g41_ring_tw42 arm 4 (j1 c1 dir 1 through): L 7.918h -> 4.079h, Lcut 7.918h -> 4.079h
+  g41_ring_tw42 arm 8 (j2 c1 dir -1 through): L 6.612h -> 2.182h, Lcut 6.612h -> 2.182h
+  g41_ring_tw42 arm 12 (j3 c1 dir -1 through): L 7.395h -> 5.474h, Lcut 7.395h -> 5.474h
+  g41_ring_tw42 arm 14 (j4 c1 dir -1 through): L 9.928h -> 2.641h, Lcut 9.928h -> 2.641h
+  g41_ring_tw42 arm 18 (j5 c1 dir -1 through): L 2.996h -> 2.151h, Lcut 2.996h -> 2.151h
+  g41_ring_tw42 arm 20 (j6 c1 dir 1 through): L 11.289h -> 3.323h, Lcut 11.289h -> 3.323h
+  g41_ring_tw42 arm 24 (j7 c1 dir 1 through): L 7.780h -> 2.732h, Lcut 7.780h -> 2.732h
+  g41_ring_tw42 arm 27 (j8 c1 dir -1 through): L 7.329h -> 3.170h, Lcut 7.329h -> 3.170h
+  g41_ring_tw42 arm 28 (j9 c1 dir -1 through): L 8.967h -> 4.803h, Lcut 8.967h -> 4.803h
+  g41_ring_tw42 arm 33 (j10 c1 dir 1 through): L 3.186h -> 2.220h, Lcut 3.186h -> 2.220h
+  g41_ring_tw42 arm 34 (j11 c1 dir 1 through): L 2.901h -> 2.868h, Lcut 2.901h -> 2.868h
+  g41_ring_tw42 arm 37 (j12 c1 dir -1 through): L 12.765h -> 3.570h, Lcut 12.765h -> 3.570h
+  g41_ring_tw42 arm 42 (j13 c2 dir 1 through): L 5.615h -> 5.446h, Lcut 5.615h -> 5.446h
+  g41_ring_tw42 arm 45 (j14 c2 dir 1 through): L 8.633h -> 4.661h, Lcut 8.633h -> 4.661h
+  g41_ring_tw42 arm 46 (j15 c2 dir -1 through): L 9.670h -> 3.353h, Lcut 9.670h -> 3.353h
+  g41_ring_tw42 arm 51 (j16 c2 dir -1 through): L 2.826h -> 2.258h, Lcut 2.826h -> 2.258h
+  g41_ring_tw42 arm 53 (j17 c2 dir -1 through): L 7.152h -> 3.617h, Lcut 7.152h -> 3.617h
+  g41_ring_tw42 arm 57 (j18 c3 dir 1 through): L 2.432h -> 2.154h, Lcut 2.432h -> 2.154h
+  g41_ring_tw42 arm 59 (j19 c3 dir -1 through): L 4.722h -> 3.015h, Lcut 4.722h -> 3.015h
+  g41_ring_tw42 arm 63 (j20 c3 dir 1 through): L 5.143h -> 4.393h, Lcut 5.143h -> 4.393h
+  g41_ring_tw42 arm 66 (j21 c3 dir 1 through): L 3.035h -> 2.352h, Lcut 3.035h -> 2.352h
+  g41_ring_tw42 arm 69 (j22 c3 dir -1 through): L 5.394h -> 5.290h, Lcut 5.394h -> 5.290h
+  g41_ring_tw42 arm 71 (j23 c4 dir 1 through): L 6.758h -> 2.959h, Lcut 6.758h -> 2.959h
+  g41_ring_tw42 arm 75 (j24 c4 dir 1 through): L 13.814h -> 5.753h, Lcut 13.814h -> 5.753h
+  g41_ring_tw42 corner j1 6-3: r 1.500h -> 1.621h, ω 1.000 -> 1.000
+  g41_ring_tw42 corner j2 7-8: r 1.695h -> 0.790h, ω 1.000 -> 1.000
+  g41_ring_tw42 corner j5 18-16: r 0.996h -> 0.669h, ω 1.000 -> 1.000
+  g41_ring_tw42 corner j8 27-25: r 1.288h -> 1.288h, ω 1.000 -> 1.000
+  g41_ring_tw42 corner j10 32-33: r 1.147h -> 0.424h, ω 1.000 -> 1.000
+  g41_ring_tw42 corner j11 36-34: r 1.417h -> 1.392h, ω 1.000 -> 1.000
+  g41_ring_tw42 corner j16 50-51: r 1.420h -> 1.445h, ω 1.000 -> 1.000
+  g41_ring_tw42 corner j17 52-53: r 1.263h -> 1.215h, ω 1.000 -> 1.000
+  g41_ring_tw42 corner j18 56-57: r 0.912h -> 0.914h, ω 1.000 -> 1.000
+  g41_ring_tw42 corner j21 65-66: r 1.482h -> 0.806h, ω 1.000 -> 1.000
+  g41_ring_tw42 corner j23 70-71: r 1.044h -> 0.927h, ω 1.000 -> 1.000
+  g41_ring_tw64 arm 1 (j0 c1 dir 1 through): L 3.333h -> 3.112h, Lcut 3.333h -> 3.112h
+  g41_ring_tw64 arm 3 (j1 c0 dir -1 through): L 6.581h -> 4.244h, Lcut 6.581h -> 4.244h
+  g41_ring_tw64 arm 4 (j1 c1 dir 1 through): L 3.956h -> 1.986h, Lcut 3.956h -> 1.986h
+  g41_ring_tw64 arm 8 (j2 c1 dir -1 through): L 2.977h -> 0.277h, Lcut 2.977h -> 0.277h
+  g41_ring_tw64 arm 12 (j3 c1 dir -1 through): L 4.512h -> 2.953h, Lcut 4.512h -> 2.953h
+  g41_ring_tw64 arm 14 (j4 c1 dir -1 through): L 6.379h -> 0.486h, Lcut 6.379h -> 0.486h
+  g41_ring_tw64 arm 18 (j5 c1 dir -1 through): L 1.385h -> 0.539h, Lcut 1.385h -> 0.539h
+  g41_ring_tw64 arm 20 (j6 c1 dir 1 through): L 5.543h -> 1.315h, Lcut 5.543h -> 1.315h
+  g41_ring_tw64 arm 24 (j7 c1 dir 1 through): L 4.418h -> 0.000h, Lcut 4.418h -> -0.416h
+  g41_ring_tw64 arm 27 (j8 c1 dir -1 through): L 4.176h -> 1.298h, Lcut 4.176h -> 1.298h
+  g41_ring_tw64 arm 28 (j9 c1 dir -1 through): L 6.858h -> 3.453h, Lcut 6.858h -> 3.453h
+  g41_ring_tw64 arm 33 (j10 c1 dir 1 through): L 0.994h -> 0.576h, Lcut 0.994h -> 0.576h
+  g41_ring_tw64 arm 35 (j11 c1 dir -1 through): L 1.171h -> 0.902h, Lcut 1.171h -> 0.902h
+  g41_ring_tw64 arm 37 (j12 c1 dir -1 through): L 9.868h -> 1.964h, Lcut 9.868h -> 1.964h
+  g41_ring_tw64 arm 42 (j13 c2 dir 1 through): L 3.271h -> 2.495h, Lcut 3.271h -> 2.495h
+  g41_ring_tw64 arm 45 (j14 c2 dir 1 through): L 7.060h -> 3.821h, Lcut 7.060h -> 3.821h
+  g41_ring_tw64 arm 46 (j15 c2 dir -1 through): L 5.877h -> 0.000h, Lcut 5.877h -> -0.072h
+  g41_ring_tw64 arm 51 (j16 c2 dir -1 through): L 1.621h -> 0.000h, Lcut 1.621h -> -0.150h
+  g41_ring_tw64 arm 53 (j17 c2 dir -1 through): L 2.919h -> 1.544h, Lcut 2.919h -> 1.544h
+  g41_ring_tw64 arm 55 (j18 c3 dir -1 through): L 0.461h -> 0.000h, Lcut 0.461h -> -0.082h
+  g41_ring_tw64 arm 59 (j19 c3 dir -1 through): L 2.951h -> 1.474h, Lcut 2.951h -> 1.474h
+  g41_ring_tw64 arm 62 (j20 c3 dir -1 through): L 3.350h -> 2.538h, Lcut 3.350h -> 2.538h
+  g41_ring_tw64 arm 66 (j21 c3 dir 1 through): L 1.454h -> 0.703h, Lcut 1.454h -> 0.703h
+  g41_ring_tw64 arm 69 (j22 c3 dir -1 through): L 3.093h -> 2.393h, Lcut 3.093h -> 2.393h
+  g41_ring_tw64 arm 71 (j23 c4 dir 1 through): L 3.563h -> 1.465h, Lcut 3.563h -> 1.465h
+  g41_ring_tw64 arm 75 (j24 c4 dir 1 through): L 8.158h -> 3.297h, Lcut 8.158h -> 3.297h
+  g41_ring_tw64 corner j1 3-4: r 1.653h -> 0.490h, ω 1.000 -> 1.000
+  g41_ring_tw64 corner j1 4-5: r 0.481h -> 0.457h, ω 1.000 -> 1.000
+  g41_ring_tw64 corner j1 6-3: r 0.540h -> 0.540h, ω 1.000 -> 1.000
+  g41_ring_tw64 corner j2 7-8: r 1.496h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_ring_tw64 corner j3 11-12: r 0.735h -> 0.734h, ω 1.000 -> 1.000
+  g41_ring_tw64 corner j4 14-15: r 2.000h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_ring_tw64 corner j5 18-16: r 0.355h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_ring_tw64 corner j6 19-20: r 1.982h -> 0.552h, ω 1.000 -> 1.000
+  g41_ring_tw64 corner j7 23-24: r 0.593h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_ring_tw64 corner j8 27-25: r 0.748h -> 0.251h, ω 1.000 -> 1.000
+  g41_ring_tw64 corner j10 32-33: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_ring_tw64 corner j11 35-36: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_ring_tw64 corner j13 41-42: r 1.477h -> 0.681h, ω 1.000 -> 1.000
+  g41_ring_tw64 corner j15 48-46: r 2.000h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_ring_tw64 corner j16 50-51: r 0.591h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_ring_tw64 corner j17 52-53: r 0.405h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_ring_tw64 corner j19 59-60: r 2.000h -> 1.618h, ω 1.000 -> 1.000
+  g41_ring_tw64 corner j21 65-66: r 0.030h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_ring_tw64 corner j22 68-69: r 1.911h -> 1.460h, ω 1.000 -> 1.000
+  g41_ring_tw64 corner j23 70-71: r 0.570h -> 0.036h, ω 1.000 -> 1.000
+  g41_ring_tw64 corner j24 74-75: r 1.009h -> 1.082h, ω 1.000 -> 1.000
+  g41_ring_tw64 F6 arm 24 (j7) d -2.324h reach 1.740h: 23-24 r 0.593h ω 1.000 -> none
+  g41_ring_tw64 F6 arm 46 (j15) d -2.490h reach 1.562h: 48-46 r 2.000h ω 1.000 -> none
+  g41_ring_tw64 F6 arm 51 (j16) d -2.652h reach 1.802h: 50-51 r 0.591h ω 1.000 -> none
+  g41_user_tw42 arm 0 (j0 c15 dir 1 through): L 3.621h -> 2.258h, Lcut Infinityh -> 2.258h
+  g41_user_tw42 arm 3 (j1 c0 dir -1 through): L 5.117h -> 0.288h, Lcut 5.117h -> 0.288h
+  g41_user_tw42 arm 8 (j2 c15 dir -1 through): L 3.501h -> 0.977h, Lcut 11.405h -> 0.977h
+  g41_user_tw42 arm 10 (j3 c24 dir 1 through): L 1.042h -> 0.897h, Lcut 1.042h -> 0.897h
+  g41_user_tw42 arm 14 (j4 c24 dir 1 through): L 8.317h -> 0.507h, Lcut 8.317h -> 0.507h
+  g41_user_tw42 arm 16 (j5 c15 dir 1 through): L 3.507h -> 2.059h, Lcut 14.129h -> 2.059h
+  g41_user_tw42 arm 18 (j6 c15 dir 1 through): L 1.862h -> 1.089h, Lcut 1.862h -> 1.089h
+  g41_user_tw42 arm 23 (j7 c15 dir 1 through): L 2.094h -> 2.082h, Lcut 2.094h -> 2.082h
+  g41_user_tw42 arm 25 (j8 c16 dir 1 through): L 5.617h -> 1.941h, Lcut 5.617h -> 1.941h
+  g41_user_tw42 arm 27 (j9 c16 dir 1 through): L 2.135h -> 2.046h, Lcut 2.135h -> 2.046h
+  g41_user_tw42 arm 31 (j10 c29 dir 1 through): L 3.625h -> 2.246h, Lcut Infinityh -> 2.246h
+  g41_user_tw42 arm 35 (j11 c30 dir 1 through): L 4.304h -> 1.433h, Lcut 4.304h -> 1.433h
+  g41_user_tw42 arm 38 (j12 c6 dir 1 through): L 11.121h -> 5.282h, Lcut 11.121h -> 5.282h
+  g41_user_tw42 arm 41 (j13 c6 dir 1 through): L 4.572h -> 4.551h, Lcut 4.572h -> 4.551h
+  g41_user_tw42 arm 42 (j14 c30 dir -1 through): L 3.530h -> 1.245h, Lcut 14.434h -> 1.245h
+  g41_user_tw42 arm 47 (j15 c7 dir -1 through): L 7.825h -> 7.465h, Lcut 7.825h -> 7.465h
+  g41_user_tw42 arm 50 (j16 c7 dir 1 through): L 7.744h -> 4.819h, Lcut 7.744h -> 4.819h
+  g41_user_tw42 arm 53 (j17 c7 dir -1 through): L 8.198h -> 4.079h, Lcut 8.198h -> 4.079h
+  g41_user_tw42 arm 54 (j18 c7 dir 1 through): L 3.666h -> 3.666h, Lcut 5.928h -> 4.298h
+  g41_user_tw42 arm 58 (j19 c7 dir -1 through): L 3.666h -> 2.262h, Lcut 7.964h -> 2.262h
+  g41_user_tw42 arm 62 (j20 c7 dir -1 through): L 7.597h -> 4.623h, Lcut 7.597h -> 4.623h
+  g41_user_tw42 arm 64 (j21 c28 dir 1 through): L 10.043h -> 4.881h, Lcut Infinityh -> 4.881h
+  g41_user_tw42 arm 65 (j21 c7 dir 1 through): L 9.925h -> 7.265h, Lcut 18.127h -> 7.265h
+  g41_user_tw42 arm 69 (j22 c7 dir -1 through): L 9.925h -> 8.202h, Lcut 17.190h -> 8.202h
+  g41_user_tw42 arm 72 (j23 c29 dir 1 through): L 2.142h -> 2.026h, Lcut 2.142h -> 2.026h
+  g41_user_tw42 arm 73 (j24 c15 dir 1 through): L 3.598h -> 0.888h, Lcut 7.475h -> 0.888h
+  g41_user_tw42 arm 76 (j25 c20 dir -1 through): L 2.141h -> 0.998h, Lcut 2.141h -> 0.998h
+  g41_user_tw42 arm 81 (j26 c22 dir -1 through): L 3.621h -> 1.997h, Lcut 17.371h -> 1.997h
+  g41_user_tw42 arm 82 (j27 c9 dir 1 through): L 3.598h -> 1.638h, Lcut 8.131h -> 1.638h
+  g41_user_tw42 arm 87 (j28 c9 dir -1 through): L 3.598h -> 3.598h, Lcut 5.236h -> 4.534h
+  g41_user_tw42 arm 88 (j29 c9 dir -1 through): L 4.443h -> 1.494h, Lcut 4.443h -> 1.494h
+  g41_user_tw42 arm 93 (j30 c9 dir -1 through): L 6.732h -> 4.448h, Lcut 6.732h -> 4.448h
+  g41_user_tw42 arm 95 (j31 c23 dir 1 through): L 3.665h -> 2.131h, Lcut 30.337h -> 2.131h
+  g41_user_tw42 arm 99 (j32 c11 dir 1 through): L 7.054h -> 4.976h, Lcut 7.054h -> 4.976h
+  g41_user_tw42 arm 101 (j33 c30 dir -1 through): L 3.454h -> 1.048h, Lcut 14.267h -> 1.048h
+  g41_user_tw42 arm 103 (j34 c11 dir 1 through): L 4.470h -> 4.208h, Lcut 4.470h -> 4.208h
+  g41_user_tw42 arm 106 (j35 c11 dir 1 through): L 7.234h -> 4.536h, Lcut 7.234h -> 4.536h
+  g41_user_tw42 arm 109 (j35 c30 dir -1 through): L 11.021h -> 10.590h, Lcut 11.021h -> 10.590h
+  g41_user_tw42 arm 112 (j36 c30 dir -1 through): L 5.991h -> 4.599h, Lcut 17.012h -> 4.599h
+  g41_user_tw42 arm 115 (j37 c29 dir -1 through): L 10.115h -> 4.880h, Lcut 14.189h -> 4.880h
+  g41_user_tw42 arm 117 (j38 c23 dir 1 through): L 1.901h -> 1.387h, Lcut 1.901h -> 1.387h
+  g41_user_tw42 arm 120 (j39 c26 dir -1 through): L 3.529h -> 2.051h, Lcut 10.951h -> 2.051h
+  g41_user_tw42 arm 123 (j40 c23 dir 1 through): L 9.708h -> 5.796h, Lcut 26.672h -> 5.796h
+  g41_user_tw42 arm 127 (j41 c23 dir 1 through): L 9.783h -> 9.783h, Lcut 16.964h -> 15.504h
+  g41_user_tw42 arm 131 (j42 c23 dir -1 through): L 9.783h -> 7.181h, Lcut 25.288h -> 7.181h
+  g41_user_tw42 arm 132 (j43 c17 dir 1 through): L 3.619h -> 1.680h, Lcut 8.598h -> 1.680h
+  g41_user_tw42 arm 136 (j44 c15 dir -1 through): L 7.904h -> 4.478h, Lcut 7.904h -> 4.478h
+  g41_user_tw42 arm 139 (j45 c16 dir -1 through): L 5.027h -> 4.455h, Lcut 5.027h -> 4.455h
+  g41_user_tw42 arm 140 (j45 c15 dir -1 through): L 3.743h -> 3.657h, Lcut 3.743h -> 3.657h
+  g41_user_tw42 arm 144 (j46 c15 dir -1 through): L 3.598h -> 3.598h, Lcut 4.486h -> 3.877h
+  g41_user_tw42 arm 147 (j47 c15 dir 1 through): L 10.622h -> 5.566h, Lcut 10.622h -> 5.566h
+  g41_user_tw42 arm 148 (j48 c15 dir 1 through): L 5.804h -> 5.804h, Lcut Infinityh -> 5.879h
+  g41_user_tw42 arm 153 (j49 c29 dir 1 through): L 12.850h -> 5.871h, Lcut Infinityh -> 5.871h
+  g41_user_tw42 arm 156 (j50 c16 dir -1 through): L 4.840h -> 4.018h, Lcut 4.840h -> 4.018h
+  g41_user_tw42 arm 159 (j51 c17 dir -1 through): L 3.619h -> 3.619h, Lcut 5.300h -> 4.978h
+  g41_user_tw42 arm 160 (j52 c30 dir -1 through): L 1.109h -> 0.614h, Lcut 1.109h -> 0.614h
+  g41_user_tw42 arm 165 (j53 c30 dir 1 through): L 7.638h -> 4.360h, Lcut 7.638h -> 4.360h
+  g41_user_tw42 arm 166 (j54 c22 dir 1 through): L 9.889h -> 3.860h, Lcut 15.507h -> 3.860h
+  g41_user_tw42 arm 172 (j55 c22 dir -1 through): L 9.889h -> 5.618h, Lcut 13.749h -> 5.618h
+  g41_user_tw42 arm 175 (j56 c23 dir 1 through): L 10.821h -> 3.829h, Lcut 10.821h -> 3.829h
+  g41_user_tw42 arm 176 (j57 c23 dir -1 through): L 10.822h -> 4.809h, Lcut 10.822h -> 4.809h
+  g41_user_tw42 arm 181 (j58 c30 dir 1 through): L 10.857h -> 7.494h, Lcut 10.857h -> 7.494h
+  g41_user_tw42 arm 183 (j59 c22 dir -1 through): L 1.530h -> 0.838h, Lcut 1.530h -> 0.838h
+  g41_user_tw42 arm 186 (j60 c22 dir -1 through): L 8.591h -> 4.706h, Lcut 8.591h -> 4.706h
+  g41_user_tw42 arm 190 (j61 c30 dir -1 through): L 3.574h -> 1.025h, Lcut 20.587h -> 1.025h
+  g41_user_tw42 arm 193 (j62 c24 dir -1 through): L 4.873h -> 4.856h, Lcut 4.873h -> 4.856h
+  g41_user_tw42 arm 195 (j63 c30 dir 1 through): L 5.074h -> 4.753h, Lcut 5.074h -> 4.753h
+  g41_user_tw42 arm 197 (j64 c30 dir 1 through): L 4.845h -> 3.889h, Lcut 4.845h -> 3.889h
+  g41_user_tw42 arm 198 (j64 c26 dir -1 through): L 6.025h -> 4.486h, Lcut Infinityh -> 4.486h
+  g41_user_tw42 arm 203 (j65 c26 dir -1 through): L 7.422h -> 5.580h, Lcut 7.422h -> 5.580h
+  g41_user_tw42 arm 204 (j66 c26 dir -1 through): L 10.898h -> 4.221h, Lcut 10.898h -> 4.221h
+  g41_user_tw42 arm 207 (j66 c30 dir 1 through): L 6.646h -> 3.962h, Lcut 6.646h -> 3.962h
+  g41_user_tw42 arm 208 (j67 c30 dir -1 through): L 1.895h -> 1.641h, Lcut 1.895h -> 1.641h
+  g41_user_tw42 arm 211 (j68 c30 dir 1 through): L 2.603h -> 2.531h, Lcut 2.603h -> 2.531h
+  g41_user_tw42 arm 214 (j69 c29 dir 1 through): L 10.115h -> 4.074h, Lcut 14.995h -> 4.074h
+  g41_user_tw42 arm 219 (j70 c30 dir 1 through): L 3.672h -> 2.106h, Lcut 8.340h -> 2.106h
+  g41_user_tw42 arm 221 (j71 c30 dir -1 through): L 3.672h -> 3.672h, Lcut 5.778h -> 4.668h
+  g41_user_tw42 arm 224 (j72 c30 dir -1 through): L 10.904h -> 4.776h, Lcut 10.904h -> 4.776h
+  g41_user_tw42 arm 228 (j73 c30 dir -1 through): L 10.813h -> 4.502h, Lcut 10.813h -> 4.502h
+  g41_user_tw42 arm 229 (j74 c31 dir -1 through): L 6.137h -> 5.170h, Lcut Infinityh -> 5.170h
+  g41_user_tw42 arm 230 (j74 c30 dir 1 through): L 3.985h -> 3.897h, Lcut 3.985h -> 3.897h
+  g41_user_tw42 corner j0 0-1: r 0.479h -> 0.071h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j1 3-4: r 0.039h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw42 corner j2 7-8: r 0.662h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw42 corner j4 13-14: r 1.306h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw42 corner j5 16-17: r 1.121h -> 0.161h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j6 20-18: r 0.253h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_user_tw42 corner j7 22-23: r 0.046h -> 0.039h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j8 25-26: r 0.450h -> 0.245h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j9 27-28: r 0.015h -> 0.003h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j10 31-32: r 0.783h -> 0.289h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j11 34-35: r 0.956h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw42 corner j14 42-43: r 0.690h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_user_tw42 corner j16 49-50: r 0.970h -> 0.970h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j19 58-59: r 1.197h -> 0.278h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j21 64-65: r 0.570h -> 0.567h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j23 72-70: r 0.074h -> 0.021h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j24 75-73: r 1.144h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw42 corner j25 78-76: r 2.000h -> 0.154h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j26 81-79: r 0.466h -> 0.029h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j29 88-89: r 1.799h -> 0.011h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j33 101-102: r 1.398h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_user_tw42 corner j35 106-107: r 0.845h -> 0.829h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j38 116-117: r 0.542h -> 0.003h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j39 120-121: r 0.722h -> 0.205h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j43 132-133: r 2.000h -> 1.539h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j44 136-137: r 0.654h -> 0.640h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j52 162-160: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_user_tw42 corner j55 171-172: r 0.738h -> 0.736h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j56 174-175: r 1.109h -> 1.096h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j61 189-190: r 1.240h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw42 corner j64 200-197: r 1.096h -> 1.096h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j66 204-205: r 1.407h -> 1.481h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j66 206-207: r 1.001h -> 0.864h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j67 208-209: r 0.058h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_user_tw42 corner j68 211-212: r 0.139h -> 0.095h, ω 1.000 -> 1.000
+  g41_user_tw42 corner j73 227-228: r 1.000h -> 0.946h, ω 1.000 -> 1.000
+  g41_user_tw64 arm 2 (j0 c15 dir 1 through): L 2.454h -> 1.282h, Lcut Infinityh -> 1.282h
+  g41_user_tw64 arm 3 (j1 c0 dir -1 through): L 2.740h -> 0.000h, Lcut 2.740h -> -0.370h
+  g41_user_tw64 arm 8 (j2 c15 dir -1 through): L 2.203h -> 0.000h, Lcut 6.632h -> -0.085h
+  g41_user_tw64 arm 10 (j3 c24 dir 1 through): L 0.000h -> 0.000h, Lcut -0.133h -> -0.278h
+  g41_user_tw64 arm 13 (j4 c24 dir 1 through): L 4.662h -> 0.000h, Lcut 4.662h -> -0.179h
+  g41_user_tw64 arm 16 (j5 c15 dir 1 through): L 2.350h -> 1.268h, Lcut 8.760h -> 1.268h
+  g41_user_tw64 arm 18 (j6 c15 dir 1 through): L 0.936h -> 0.000h, Lcut 0.936h -> -0.307h
+  g41_user_tw64 arm 23 (j7 c15 dir 1 through): L 0.810h -> 0.166h, Lcut 0.810h -> 0.166h
+  g41_user_tw64 arm 25 (j8 c16 dir 1 through): L 2.238h -> 1.133h, Lcut 2.238h -> 1.133h
+  g41_user_tw64 arm 27 (j9 c16 dir 1 through): L 0.574h -> 0.097h, Lcut 0.574h -> 0.097h
+  g41_user_tw64 arm 31 (j10 c29 dir 1 through): L 2.468h -> 0.798h, Lcut Infinityh -> 0.798h
+  g41_user_tw64 arm 35 (j11 c30 dir 1 through): L 2.351h -> 0.645h, Lcut 2.351h -> 0.645h
+  g41_user_tw64 arm 38 (j12 c6 dir 1 through): L 6.816h -> 3.624h, Lcut 6.816h -> 3.624h
+  g41_user_tw64 arm 39 (j13 c6 dir -1 through): L 3.312h -> 2.665h, Lcut 3.312h -> 2.665h
+  g41_user_tw64 arm 43 (j14 c30 dir -1 through): L 2.228h -> 0.280h, Lcut 8.684h -> 0.280h
+  g41_user_tw64 arm 47 (j15 c7 dir -1 through): L 4.185h -> 3.647h, Lcut 4.185h -> 3.647h
+  g41_user_tw64 arm 50 (j16 c7 dir 1 through): L 3.985h -> 2.939h, Lcut 3.985h -> 2.939h
+  g41_user_tw64 arm 53 (j17 c7 dir -1 through): L 4.392h -> 2.108h, Lcut 4.392h -> 2.108h
+  g41_user_tw64 arm 54 (j18 c7 dir 1 through): L 2.486h -> 2.486h, Lcut 4.017h -> 2.528h
+  g41_user_tw64 arm 58 (j19 c7 dir -1 through): L 2.486h -> 1.531h, Lcut 5.014h -> 1.531h
+  g41_user_tw64 arm 62 (j20 c7 dir -1 through): L 4.495h -> 1.911h, Lcut 4.495h -> 1.911h
+  g41_user_tw64 arm 64 (j21 c28 dir 1 through): L 6.864h -> 2.635h, Lcut Infinityh -> 2.635h
+  g41_user_tw64 arm 65 (j21 c7 dir 1 through): L 6.663h -> 3.815h, Lcut 11.679h -> 3.815h
+  g41_user_tw64 arm 69 (j22 c7 dir -1 through): L 6.663h -> 5.017h, Lcut 10.478h -> 5.017h
+  g41_user_tw64 arm 72 (j23 c29 dir 1 through): L 1.108h -> 0.504h, Lcut 1.108h -> 0.504h
+  g41_user_tw64 arm 73 (j24 c15 dir 1 through): L 2.379h -> 0.000h, Lcut 3.753h -> -0.048h
+  g41_user_tw64 arm 76 (j25 c20 dir -1 through): L 0.898h -> 0.000h, Lcut 0.898h -> -0.153h
+  g41_user_tw64 arm 81 (j26 c22 dir -1 through): L 2.413h -> 1.317h, Lcut 10.981h -> 1.317h
+  g41_user_tw64 arm 82 (j27 c9 dir 1 through): L 2.502h -> 0.527h, Lcut 5.222h -> 0.527h
+  g41_user_tw64 arm 87 (j28 c9 dir -1 through): L 2.502h -> 2.502h, Lcut 3.029h -> 2.720h
+  g41_user_tw64 arm 88 (j29 c9 dir -1 through): L 2.476h -> 0.951h, Lcut 2.476h -> 0.951h
+  g41_user_tw64 arm 93 (j30 c9 dir -1 through): L 3.265h -> 3.163h, Lcut 3.265h -> 3.163h
+  g41_user_tw64 arm 95 (j31 c23 dir 1 through): L 2.448h -> 0.748h, Lcut 18.831h -> 0.748h
+  g41_user_tw64 arm 97 (j32 c11 dir 1 through): L 3.056h -> 1.509h, Lcut 3.056h -> 1.509h
+  g41_user_tw64 arm 101 (j33 c30 dir -1 through): L 2.217h -> 0.062h, Lcut 8.348h -> 0.062h
+  g41_user_tw64 arm 105 (j34 c11 dir -1 through): L 3.397h -> 2.315h, Lcut 3.397h -> 2.315h
+  g41_user_tw64 arm 107 (j35 c30 dir 1 through): L 3.917h -> 3.917h, Lcut 6.241h -> 6.206h
+  g41_user_tw64 arm 108 (j35 c11 dir -1 through): L 2.355h -> 0.936h, Lcut 2.355h -> 0.936h
+  g41_user_tw64 arm 112 (j36 c30 dir -1 through): L 3.917h -> 2.324h, Lcut 10.123h -> 2.324h
+  g41_user_tw64 arm 115 (j37 c29 dir -1 through): L 6.692h -> 2.507h, Lcut 9.361h -> 2.507h
+  g41_user_tw64 arm 117 (j38 c23 dir 1 through): L 1.099h -> 0.406h, Lcut 1.099h -> 0.406h
+  g41_user_tw64 arm 120 (j39 c26 dir -1 through): L 2.199h -> 1.356h, Lcut 6.396h -> 1.356h
+  g41_user_tw64 arm 123 (j40 c23 dir 1 through): L 6.540h -> 3.196h, Lcut 16.383h -> 3.196h
+  g41_user_tw64 arm 127 (j41 c23 dir 1 through): L 6.528h -> 6.528h, Lcut 9.843h -> 9.736h
+  g41_user_tw64 arm 131 (j42 c23 dir -1 through): L 6.528h -> 3.315h, Lcut 16.264h -> 3.315h
+  g41_user_tw64 arm 132 (j43 c17 dir 1 through): L 2.348h -> 0.740h, Lcut 5.243h -> 0.740h
+  g41_user_tw64 arm 136 (j44 c15 dir -1 through): L 4.429h -> 2.118h, Lcut 4.429h -> 2.118h
+  g41_user_tw64 arm 138 (j45 c15 dir 1 through): L 1.663h -> 1.628h, Lcut 1.663h -> 1.628h
+  g41_user_tw64 arm 139 (j45 c16 dir -1 through): L 2.653h -> 2.109h, Lcut 2.653h -> 2.109h
+  g41_user_tw64 arm 144 (j46 c15 dir -1 through): L 2.331h -> 1.374h, Lcut 2.331h -> 1.374h
+  g41_user_tw64 arm 147 (j47 c15 dir 1 through): L 6.410h -> 3.619h, Lcut 6.410h -> 3.619h
+  g41_user_tw64 arm 148 (j48 c15 dir 1 through): L 4.187h -> 3.736h, Lcut Infinityh -> 3.736h
+  g41_user_tw64 arm 153 (j49 c29 dir 1 through): L 8.836h -> 3.267h, Lcut Infinityh -> 3.267h
+  g41_user_tw64 arm 156 (j50 c16 dir -1 through): L 2.530h -> 1.898h, Lcut 2.530h -> 1.898h
+  g41_user_tw64 arm 159 (j51 c17 dir -1 through): L 2.348h -> 2.348h, Lcut 3.088h -> 2.895h
+  g41_user_tw64 arm 161 (j52 c30 dir 1 through): L 0.000h -> 0.000h, Lcut -0.045h -> -0.209h
+  g41_user_tw64 arm 165 (j53 c30 dir 1 through): L 3.455h -> 2.320h, Lcut 3.455h -> 2.320h
+  g41_user_tw64 arm 166 (j54 c22 dir 1 through): L 6.665h -> 1.903h, Lcut 10.395h -> 1.903h
+  g41_user_tw64 arm 172 (j55 c22 dir -1 through): L 6.665h -> 3.730h, Lcut 8.568h -> 3.730h
+  g41_user_tw64 arm 175 (j56 c23 dir 1 through): L 6.594h -> 1.533h, Lcut 6.594h -> 1.533h
+  g41_user_tw64 arm 176 (j57 c23 dir -1 through): L 6.897h -> 2.514h, Lcut 6.897h -> 2.514h
+  g41_user_tw64 arm 181 (j58 c30 dir 1 through): L 6.706h -> 2.386h, Lcut 6.706h -> 2.386h
+  g41_user_tw64 arm 183 (j59 c22 dir -1 through): L 0.209h -> 0.000h, Lcut 0.209h -> -0.094h
+  g41_user_tw64 arm 186 (j60 c22 dir -1 through): L 4.088h -> 1.055h, Lcut 4.088h -> 1.055h
+  g41_user_tw64 arm 190 (j61 c30 dir -1 through): L 2.470h -> 0.000h, Lcut 12.593h -> -0.145h
+  g41_user_tw64 arm 191 (j62 c24 dir 1 through): L 3.233h -> 2.009h, Lcut 3.233h -> 2.009h
+  g41_user_tw64 arm 194 (j63 c30 dir -1 through): L 3.416h -> 2.945h, Lcut 3.416h -> 2.945h
+  g41_user_tw64 arm 197 (j64 c30 dir 1 through): L 3.679h -> 1.695h, Lcut 3.679h -> 1.695h
+  g41_user_tw64 arm 198 (j64 c26 dir -1 through): L 4.215h -> 3.056h, Lcut Infinityh -> 3.056h
+  g41_user_tw64 arm 203 (j65 c26 dir -1 through): L 4.197h -> 3.555h, Lcut 4.197h -> 3.555h
+  g41_user_tw64 arm 204 (j66 c26 dir -1 through): L 5.669h -> 2.912h, Lcut 5.669h -> 2.912h
+  g41_user_tw64 arm 205 (j66 c30 dir -1 through): L 1.932h -> 1.700h, Lcut 1.932h -> 1.700h
+  g41_user_tw64 arm 210 (j67 c30 dir 1 through): L 1.161h -> 0.000h, Lcut 1.161h -> -0.037h
+  g41_user_tw64 arm 212 (j68 c30 dir 1 through): L 1.914h -> 0.526h, Lcut 1.914h -> 0.526h
+  g41_user_tw64 arm 214 (j69 c29 dir 1 through): L 6.692h -> 2.669h, Lcut 9.198h -> 2.669h
+  g41_user_tw64 arm 219 (j70 c30 dir 1 through): L 2.400h -> 1.009h, Lcut 4.454h -> 1.009h
+  g41_user_tw64 arm 222 (j71 c30 dir -1 through): L 2.400h -> 2.054h, Lcut 3.409h -> 2.054h
+  g41_user_tw64 arm 224 (j72 c30 dir -1 through): L 6.456h -> 2.509h, Lcut 6.456h -> 2.509h
+  g41_user_tw64 arm 228 (j73 c30 dir -1 through): L 6.132h -> 2.279h, Lcut 6.132h -> 2.279h
+  g41_user_tw64 arm 229 (j74 c31 dir -1 through): L 4.219h -> 2.788h, Lcut Infinityh -> 2.788h
+  g41_user_tw64 arm 232 (j74 c30 dir -1 through): L 1.867h -> 1.582h, Lcut 1.867h -> 1.582h
+  g41_user_tw64 corner j0 2-0: r 0.207h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j1 3-4: r 1.742h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j2 7-8: r 0.788h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j5 16-17: r 1.101h -> 0.000h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j6 20-18: r 0.000h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j8 25-26: r 0.402h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_user_tw64 corner j10 31-32: r 0.213h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j11 34-35: r 0.875h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j12 38-36: r 0.320h -> 0.320h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j13 39-40: r 0.656h -> 0.786h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j14 43-44: r 0.603h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j16 49-50: r 0.644h -> 0.512h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j19 58-59: r 1.196h -> 0.066h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j20 61-62: r 0.247h -> 0.073h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j21 64-65: r 0.182h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_user_tw64 corner j24 75-73: r 0.239h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j25 78-76: r 0.000h -> 0.000h, ω 1.000 -> 0.000
+  g41_user_tw64 corner j26 81-79: r 0.045h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j29 88-89: r 1.711h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_user_tw64 corner j31 94-95: r 2.000h -> 0.001h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j32 97-98: r 2.000h -> 1.268h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j33 101-102: r 1.744h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j34 104-105: r 1.801h -> 1.832h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j35 107-108: r 0.002h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j35 108-109: r 0.129h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j37 114-115: r 0.438h -> 0.443h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j38 116-117: r 0.003h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j39 120-121: r 0.762h -> 0.256h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j40 123-124: r 0.195h -> 0.154h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j43 132-133: r 0.906h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j44 136-137: r 0.381h -> 0.346h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j45 138-139: r 0.009h -> 0.005h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j45 141-138: r 0.000h -> 0.000h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j46 143-144: r 0.611h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_user_tw64 corner j47 146-147: r 0.458h -> 0.462h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j49 152-153: r 0.526h -> 0.547h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j50 156-154: r 1.414h -> 0.235h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j53 165-163: r 0.358h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j54 166-167: r 0.200h -> 0.015h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j54 169-166: r 1.148h -> 0.011h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j55 171-172: r 0.104h -> 0.088h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j56 174-175: r 0.304h -> 0.007h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j58 181-179: r 0.880h -> 0.014h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j60 186-187: r 1.980h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_user_tw64 corner j61 189-190: r 1.814h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j63 196-194: r 1.406h -> 1.404h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j64 197-198: r 1.352h -> 0.137h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j64 200-197: r 1.047h -> 0.000h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j66 204-205: r 0.072h -> 0.024h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j67 209-210: r 1.918h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j68 212-213: r 0.144h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j70 218-219: r 1.641h -> 0.000h, ω 1.000 -> 0.000  LOST FILL
+  g41_user_tw64 corner j71 221-222: r 0.479h -> 0.405h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j72 223-224: r 0.618h -> 0.492h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j73 227-228: r 0.354h -> 0.350h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j74 231-232: r 0.896h -> 0.479h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j74 232-229: r 0.050h -> 0.000h, ω 1.000 -> 1.000  LOST FILL
+  g41_user_tw64 F6 arm 3 (j1) d -2.062h reach 1.432h: 3-4 r 1.742h ω 1.000 -> none
+  g41_user_tw64 F6 arm 8 (j2) d -2.249h reach 1.334h: 7-8 r 0.788h ω 1.000 -> none
+  g41_user_tw64 F6 arm 18 (j6) d -2.110h reach 1.417h: 20-18 r 0.000h ω 1.000 -> none
+  g41_user_tw64 F6 arm 73 (j24) d -2.204h reach 1.252h: 75-73 r 0.239h ω 1.000 -> none
+  g41_user_tw64 F6 arm 190 (j61) d -1.921h reach 1.066h: 189-190 r 1.814h ω 1.000 -> none
+  g41_user_tw64 F6 arm 210 (j67) d -3.298h reach 2.336h: 209-210 r 1.918h ω 1.000 -> none
+  def                    arms moved 193, corners moved 122 (lost fill 36, gained 0); F6 arms with fill 1, their filled corners now empty 1
+  fat                    arms moved   0, corners moved   0 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  ring                   arms moved  26, corners moved  17 (lost fill 8, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  user_tw42.lightpaper   arms moved  81, corners moved  36 (lost fill 10, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  g41_def_tw42           arms moved 193, corners moved  93 (lost fill 6, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  g41_def_tw64           arms moved 193, corners moved 123 (lost fill 51, gained 0); F6 arms with fill 10, their filled corners now empty 10
+  muse_hash              arms moved 171, corners moved 106 (lost fill 73, gained 1); F6 arms with fill 17, their filled corners now empty 17
+  muse_default_tw        arms moved 171, corners moved 117 (lost fill 29, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  g41_ring_tw42          arms moved  26, corners moved  11 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  g41_ring_tw64          arms moved  26, corners moved  21 (lost fill 8, gained 0); F6 arms with fill 3, their filled corners now empty 3
+  g41_user_tw42          arms moved  81, corners moved  36 (lost fill 10, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  g41_user_tw64          arms moved  81, corners moved  57 (lost fill 25, gained 0); F6 arms with fill 6, their filled corners now empty 6
+  all: arms moved 1242, corners moved 739 (lost fill 256, gained 1); F6 arms with fill 37, filled corners now empty 37
+2. tee coarse, old, dc in [-2.5, 2.5] step 0.0100
+   -2.5000 L+1  10.000 L−1   0.500   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -2.2500 L+1  10.000 L−1   0.250   0-1: 0.866, 1.000                        ink 0.000 0.500 0.000 0.500
+   -2.0000 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 1.000 0.000 1.000
+   -1.7500 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -1.5000 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -1.2500 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -1.0000 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.7500 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.5000 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 1.000 0.000 1.000
+   -0.2500 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.500 0.000 0.500
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.2500 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.500 0.000
+    0.5000 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 1.000 0.000
+    0.7500 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    1.0000 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 0.216 0.000 0.000 0.000
+    1.2500 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 0.000
+    1.5000 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 0.000
+    1.7500 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 0.000
+    2.0000 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 0.000 0.000 1.000 0.000
+    2.2500 L+1   0.250 L−1  10.000   1-2: 2.000, 1.000                        ink 0.896 0.000 0.500 0.000
+    2.5000 L+1   0.500 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+  tee coarse old: largest step (dc step 0.0100): L+1 10.0000 (dc 0.0000); L−1 10.0000 (dc 0.0100); ink(1.6, 1.25) 1.0000 (dc 0.0000); ink(-1.25, 1.25) 0.1480 (dc -1.8600); ink(1.25, -1.25) 0.1480 (dc 0.6400); ink(-1.25, -1.25) 0.1480 (dc -1.8600)
+2. tee coarse, new, dc in [-2.5, 2.5] step 0.0100
+   -2.5000 L+1   0.500 L−1   0.500                                            ink 1.000 0.000 0.000 0.000
+   -2.2500 L+1   0.250 L−1   0.250                                            ink 1.000 0.500 0.000 0.500
+   -2.0000 L+1   0.000 L−1   0.000                                            ink 1.000 1.000 0.000 1.000
+   -1.7500 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -1.5000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -1.2500 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -1.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.7500 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.5000 L+1   0.000 L−1   0.000                                            ink 1.000 1.000 0.000 1.000
+   -0.2500 L+1   0.000 L−1   0.000                                            ink 1.000 0.500 0.000 0.500
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.2500 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.500 0.000
+    0.5000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 1.000 0.000
+    0.7500 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    1.0000 L+1   0.000 L−1   0.000                                            ink 0.216 0.000 0.000 0.000
+    1.2500 L+1   0.000 L−1   0.000                                            ink 0.000 0.000 0.000 0.000
+    1.5000 L+1   0.000 L−1   0.000                                            ink 0.000 0.000 0.000 0.000
+    1.7500 L+1   0.000 L−1   0.000                                            ink 0.000 0.000 0.000 0.000
+    2.0000 L+1   0.000 L−1   0.000                                            ink 0.000 0.000 1.000 0.000
+    2.2500 L+1   0.250 L−1   0.250                                            ink 0.896 0.000 0.500 0.000
+    2.5000 L+1   0.500 L−1   0.500                                            ink 1.000 0.000 0.000 0.000
+  tee coarse new: largest step (dc step 0.0100): L+1 0.0100 (dc 2.0300); L−1 0.0100 (dc 2.0300); ink(1.6, 1.25) 0.1480 (dc 2.2300); ink(-1.25, 1.25) 0.1480 (dc -1.8600); ink(1.25, -1.25) 0.1480 (dc 0.6400); ink(-1.25, -1.25) 0.1480 (dc -1.8600)
+2. tee fine, old, dc in [-0.005, 0.005] step 0.0001
+   -0.0050 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0040 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0030 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0020 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0010 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0010 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0020 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0030 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0040 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0050 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+  tee fine old: largest step (dc step 0.0001): L+1 10.0000 (dc 0.0000); L−1 10.0000 (dc 0.0001); ink(1.6, 1.25) 1.0000 (dc 0.0000); ink(-1.25, 1.25) 0.0000 (dc 0.0000); ink(1.25, -1.25) 0.0000 (dc 0.0000); ink(-1.25, -1.25) 0.0000 (dc 0.0000)
+2. tee fine, new, dc in [-0.005, 0.005] step 0.0001
+   -0.0050 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0040 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0030 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0020 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0010 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0010 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0020 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0030 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0040 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0050 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+  tee fine new: largest step (dc step 0.0001): L+1 0.0000 (dc 0.0000); L−1 0.0000 (dc 0.0000); ink(1.6, 1.25) 0.0000 (dc 0.0000); ink(-1.25, 1.25) 0.0000 (dc 0.0000); ink(1.25, -1.25) 0.0000 (dc 0.0000); ink(-1.25, -1.25) 0.0000 (dc 0.0000)
+2. ring coarse, old, dc in [-2.5, 2.5] step 0.0100
+   -2.5000 L+1  45.765 L−1   0.499   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 1.000
+   -2.2500 L+1  46.015 L−1   0.249   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 1.000
+   -2.0000 L+1  46.265 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 1.000
+   -1.7500 L+1  46.515 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 1.000 0.000 1.000
+   -1.5000 L+1  46.765 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 1.000
+   -1.2500 L+1  47.015 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 1.000
+   -1.0000 L+1  47.265 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 1.000
+   -0.7500 L+1  47.515 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 1.000 0.972
+   -0.5000 L+1  47.765 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 1.000 0.000 0.000
+   -0.2500 L+1  48.015 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.970 0.000 0.000
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.2500 L+1   0.000 L−1  48.015   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.5000 L+1   0.000 L−1  47.765   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.7500 L+1   0.000 L−1  47.515   1-2: 2.000, 1.000                        ink 1.000 0.000 1.000 0.972
+    1.0000 L+1   0.000 L−1  47.265   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 1.000
+    1.2500 L+1   0.000 L−1  47.015   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 1.000
+    1.5000 L+1   0.000 L−1  46.765   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 1.000
+    1.7500 L+1   0.000 L−1  46.515   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 1.000
+    2.0000 L+1   0.000 L−1  46.265   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 1.000
+    2.2500 L+1   0.250 L−1  46.015   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 1.000
+    2.5000 L+1   0.500 L−1  45.765   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 1.000
+  ring coarse old: largest step (dc step 0.0100): L+1 48.2554 (dc 0.0000); L−1 48.2550 (dc 0.0100); ink(1.6, 1.25) 1.0000 (dc 0.0000); ink(-1.25, 1.25) 0.1737 (dc -1.6000); ink(0, 1.05) 0.1679 (dc 0.8900); ink(0, -0.95) 0.1313 (dc 0.7100)
+2. ring coarse, new, dc in [-2.5, 2.5] step 0.0100
+   -2.5000 L+1   0.499 L−1   0.499                                            ink 1.000 0.000 0.000 1.000
+   -2.2500 L+1   0.249 L−1   0.249                                            ink 1.000 0.000 0.000 1.000
+   -2.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 1.000
+   -1.7500 L+1   0.000 L−1   0.000                                            ink 1.000 1.000 0.000 1.000
+   -1.5000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 1.000
+   -1.2500 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 1.000
+   -1.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 1.000
+   -0.7500 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 1.000 0.972
+   -0.5000 L+1   0.000 L−1   0.000                                            ink 1.000 1.000 0.000 0.000
+   -0.2500 L+1   0.000 L−1   0.000                                            ink 1.000 0.970 0.000 0.000
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.2500 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.5000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.7500 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 1.000 0.972
+    1.0000 L+1   0.000 L−1   0.000                                            ink 0.000 0.000 0.000 1.000
+    1.2500 L+1   0.000 L−1   0.000                                            ink 0.000 0.000 0.000 1.000
+    1.5000 L+1   0.000 L−1   0.000                                            ink 0.000 0.000 0.000 1.000
+    1.7500 L+1   0.000 L−1   0.000                                            ink 0.000 0.000 0.000 1.000
+    2.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 1.000
+    2.2500 L+1   0.250 L−1   0.250                                            ink 1.000 0.000 0.000 1.000
+    2.5000 L+1   0.500 L−1   0.500                                            ink 1.000 0.000 0.000 1.000
+  ring coarse new: largest step (dc step 0.0100): L+1 0.0100 (dc -2.3200); L−1 0.0100 (dc -2.3200); ink(1.6, 1.25) 0.1736 (dc 0.8500); ink(-1.25, 1.25) 0.1737 (dc -1.6000); ink(0, 1.05) 0.1679 (dc 0.8900); ink(0, -0.95) 0.1313 (dc 0.7100)
+2. ring fine, old, dc in [-0.005, 0.005] step 0.0001
+   -0.0050 L+1  48.260 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0040 L+1  48.261 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0030 L+1  48.262 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0020 L+1  48.263 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0010 L+1  48.264 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 0.000
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0010 L+1   0.000 L−1  48.264   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0020 L+1   0.000 L−1  48.263   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0030 L+1   0.000 L−1  48.262   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0040 L+1   0.000 L−1  48.261   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0050 L+1   0.000 L−1  48.260   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+  ring fine old: largest step (dc step 0.0001): L+1 48.2648 (dc -0.0005); L−1 48.2649 (dc -0.0005); ink(1.6, 1.25) 1.0000 (dc -0.0005); ink(-1.25, 1.25) 0.0000 (dc 0.0000); ink(0, 1.05) 0.0000 (dc 0.0000); ink(0, -0.95) 0.0000 (dc 0.0000)
+2. ring fine, new, dc in [-0.005, 0.005] step 0.0001
+   -0.0050 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0040 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0030 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0020 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0010 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0010 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0020 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0030 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0040 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0050 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+  ring fine new: largest step (dc step 0.0001): L+1 0.0000 (dc 0.0000); L−1 0.0000 (dc 0.0000); ink(1.6, 1.25) 0.0000 (dc 0.0000); ink(-1.25, 1.25) 0.0000 (dc 0.0000); ink(0, 1.05) 0.0000 (dc 0.0000); ink(0, -0.95) 0.0000 (dc 0.0000)
