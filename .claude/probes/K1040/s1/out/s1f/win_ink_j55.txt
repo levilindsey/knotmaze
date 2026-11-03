@@ -1,0 +1,6 @@
+g41_user_tw64 (2.817, 6.953) ±0.6: c1: 79x79 px; |ink − oracle| > 0.5 on 292; partial ink in the oracle's fill 730; mean ink 0.2919
+g41_user_tw64 (2.817, 6.953) ±0.6: q: 79x79 px; |ink − oracle| > 0.5 on 145; partial ink in the oracle's fill 141; mean ink 0.2308
+g41_user_tw64 (2.817, 6.953) ±1.5: c1: 197x197 px; |ink − oracle| > 0.5 on 1104; partial ink in the oracle's fill 1830; mean ink 0.2569
+g41_user_tw64 (2.817, 6.953) ±1.5: q: 197x197 px; |ink − oracle| > 0.5 on 832; partial ink in the oracle's fill 559; mean ink 0.2300
+g41_user_tw64 (2.45, 7.3) ±1: c1: 132x132 px; |ink − oracle| > 0.5 on 782; partial ink in the oracle's fill 1452; mean ink 0.2836
+g41_user_tw64 (2.45, 7.3) ±1: q: 132x132 px; |ink − oracle| > 0.5 on 490; partial ink in the oracle's fill 267; mean ink 0.2256

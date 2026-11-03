@@ -1,0 +1,3 @@
+eye sweep: θ0 0.05, apex vertex (7, 7θ0 + w), w in [0.5, 3] h, 250 steps; arm root at d = 12 h, dir -1; floor 4h
+largest step between neighbouring w (w step 0.0100 h; all in h): θ 0.0000 (at w 0.000); r0 0.0000 (at w 0.000); e_c 32.2911 (at w 1.510); e*1 0.1026 (at w 0.510); e*2 1.9135 (at w 0.780); e*3 1.5283 (at w 1.360); reach quad 1.9135 (at w 0.780); reach c2 32.2911 (at w 1.510); reach c3 32.2911 (at w 1.510); L quad 0.1070 (at w 1.400); L c2 3.2661 (at w 1.510); L c3 3.2661 (at w 1.510)
+wrote C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/agent-a43dac8f0673db4df/.claude/probes/K1040/s1/out/s1f/sweep/eye_t0.05.txt

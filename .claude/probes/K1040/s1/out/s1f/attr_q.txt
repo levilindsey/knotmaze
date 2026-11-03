@@ -1,0 +1,117 @@
+== def: #1 sites c1 1 -> q 1; changed 0
+== fat: #1 sites c1 0 -> q 0; changed 0
+== ring: #1 sites c1 0 -> q 0; changed 0
+== user_tw42.lightpaper: #1 sites c1 0 -> q 0; changed 0
+== g41_def_tw42: #1 sites c1 0 -> q 0; changed 0
+== g41_def_tw64: #1 sites c1 12 -> q 12; changed 0
+== muse_hash: #1 sites c1 4 -> q 4; changed 0
+== muse_default_tw: #1 sites c1 12 -> q 12; changed 0
+== g41_ring_tw42: #1 sites c1 0 -> q 0; changed 0
+== g41_ring_tw64: #1 sites c1 0 -> q 0; changed 0
+== g41_user_tw42: #1 sites c1 0 -> q 0; changed 0
+== g41_user_tw64: #1 sites c1 12 -> q 12; changed 4
+  site 526,646 (world 9.1570, 18.2500) F 7.00 gone in q
+    c1: ink 1.000* term tB c26 j64 arms 197:L1.177,198:L1.349 D 0.0812 w 1.000 v 1.000; top 42 chain 26 nSurf 1 dz Infinity Dexp 0.0812 fade 0.000
+      piece c26 s 0.084 d 0.2876 surf 42 key -0.0667 g 42 (group 42: j63,j64) ramp 1.000 selfW 1.000 z 0.000
+        arm 196 (j63 dir 1 end) L 1.349 Lcut 2.327 d 0.3230: on the arm ramp 1.000
+        arm 198 (j64 dir -1 through) L 1.349 Lcut Infinity d 1.0259: on the arm ramp 1.000
+        arm 200 (j64 dir 1 through) L 0.978 Lcut 0.978 d -1.0259: not read
+      piece c30 s 39.623 d 0.3179 surf 42 key -0.0737 g 42 (group 42: j63,j64) ramp 1.000 selfW 1.000 z 0.000
+        arm 194 (j63 dir -1 through) L 1.093 Lcut 1.093 d 0.3040: on the arm ramp 1.000
+        arm 195 (j63 dir 1 through) L 0.943 Lcut 0.943 d -0.3040: not read
+        arm 197 (j64 dir 1 through) L 1.177 Lcut 1.177 d -8.3787: not read
+        arm 199 (j64 dir -1 through) L 0.542 Lcut 0.542 d 8.3787: not read
+    q: ink 1.000* term tB c26 j64 arms 197:L1.177,198:L1.349 D 0.0812 w 1.000 v 1.000; top 42 chain 26 nSurf 1 dz Infinity Dexp 0.0812 fade 0.000
+      piece c26 s 0.084 d 0.2876 surf 42 key -0.0667 g 42 (group 42: j63,j64) ramp 1.000 selfW 1.000 z 0.000
+        arm 196 (j63 dir 1 end) L 1.349 Lcut 2.327 d 0.3230: on the arm ramp 1.000
+        arm 198 (j64 dir -1 through) L 1.349 Lcut Infinity d 1.0259: on the arm ramp 1.000
+        arm 200 (j64 dir 1 through) L 0.978 Lcut 0.978 d -1.0259: not read
+      piece c30 s 39.623 d 0.3179 surf 42 key -0.0737 g 42 (group 42: j63,j64) ramp 1.000 selfW 1.000 z 0.000
+        arm 194 (j63 dir -1 through) L 1.093 Lcut 1.093 d 0.3040: on the arm ramp 1.000
+        arm 195 (j63 dir 1 through) L 0.943 Lcut 0.943 d -0.3040: not read
+        arm 197 (j64 dir 1 through) L 1.177 Lcut 1.177 d -8.3787: not read
+        arm 199 (j64 dir -1 through) L 0.542 Lcut 0.542 d 8.3787: not read
+  site 527,646 (world 9.1870, 18.2500) F 8.00 gone in q
+    c1: ink 1.000* term tB c26 j64 arms 197:L1.177,198:L1.349 D 0.1097 w 1.000 v 1.000; top 42 chain 26 nSurf 1 dz Infinity Dexp 0.1097 fade 0.000
+      piece c26 s 0.063 d 0.2664 surf 42 key -0.0618 g 42 (group 42: j63,j64) ramp 1.000 selfW 1.000 z 0.000
+        arm 196 (j63 dir 1 end) L 1.349 Lcut 2.327 d 0.3019: on the arm ramp 1.000
+        arm 198 (j64 dir -1 through) L 1.349 Lcut Infinity d 1.0470: on the arm ramp 1.000
+        arm 200 (j64 dir 1 through) L 0.978 Lcut 0.978 d -1.0470: not read
+      piece c30 s 39.645 d 0.2981 surf 42 key -0.0692 g 42 (group 42: j63,j64) ramp 1.000 selfW 1.000 z 0.000
+        arm 194 (j63 dir -1 through) L 1.093 Lcut 1.093 d 0.2819: on the arm ramp 1.000
+        arm 195 (j63 dir 1 through) L 0.943 Lcut 0.943 d -0.2819: not read
+        arm 197 (j64 dir 1 through) L 1.177 Lcut 1.177 d -8.3566: not read
+        arm 199 (j64 dir -1 through) L 0.542 Lcut 0.542 d 8.3566: not read
+    q: ink 1.000* term tB c26 j64 arms 197:L1.177,198:L1.349 D 0.1097 w 1.000 v 1.000; top 42 chain 26 nSurf 1 dz Infinity Dexp 0.1097 fade 0.000
+      piece c26 s 0.063 d 0.2664 surf 42 key -0.0618 g 42 (group 42: j63,j64) ramp 1.000 selfW 1.000 z 0.000
+        arm 196 (j63 dir 1 end) L 1.349 Lcut 2.327 d 0.3019: on the arm ramp 1.000
+        arm 198 (j64 dir -1 through) L 1.349 Lcut Infinity d 1.0470: on the arm ramp 1.000
+        arm 200 (j64 dir 1 through) L 0.978 Lcut 0.978 d -1.0470: not read
+      piece c30 s 39.645 d 0.2981 surf 42 key -0.0692 g 42 (group 42: j63,j64) ramp 1.000 selfW 1.000 z 0.000
+        arm 194 (j63 dir -1 through) L 1.093 Lcut 1.093 d 0.2819: on the arm ramp 1.000
+        arm 195 (j63 dir 1 through) L 0.943 Lcut 0.943 d -0.2819: not read
+        arm 197 (j64 dir 1 through) L 1.177 Lcut 1.177 d -8.3566: not read
+        arm 199 (j64 dir -1 through) L 0.542 Lcut 0.542 d 8.3566: not read
+  site 318,274 (world 2.8320, 6.9380) F 5.00 new in q
+    c1: ink 1.000* term foot c22 D 0.0941 w 1.000 v 1.000; top 1048576 chain 22 nSurf 1 dz Infinity Dexp 0.0941 fade 0.000
+      piece c22 s 29.008 d 0.2259 surf 21 key -0.0524 g 21 (group 21: j26,j53,j54,j55) ramp 0.000 selfW 1.000 z 0.000
+        arm 80 (j26 dir 1 through) L 0.421 Lcut 0.421 d -0.2044: not read
+        arm 81 (j26 dir -1 through) L 0.000 Lcut -22.671 d 0.2044: not read
+        arm 166 (j54 dir 1 through) L 2.133 Lcut 3.326 d 2.7006: not read
+        arm 168 (j54 dir -1 through) L 0.000 Lcut -25.576 d -2.7006: behind its root, within λ of its cut ramp 0.000
+        arm 170 (j55 dir 1 through) L 0.772 Lcut 1.194 d 0.5679: on the arm ramp 1.000
+        arm 172 (j55 dir -1 through) L 0.000 Lcut -23.444 d -0.5679: behind its root, within λ of its cut ramp 0.000
+      piece c18 s 3.219 d 0.3665 surf 21 key -0.0850 g 21 (group 21: j26,j53,j54,j55) ramp 1.000 selfW 1.000 z 0.000
+        arm 163 (j53 dir 1 end) L 2.037 Lcut Infinity d 3.3696: not read
+        arm 167 (j54 dir 1 through) L 2.060 Lcut Infinity d 1.3328: on the arm ramp 1.000
+        arm 169 (j54 dir -1 through) L 2.037 Lcut Infinity d -1.3328: not read
+        arm 171 (j55 dir -1 end) L 2.060 Lcut Infinity d 0.7270: on the arm ramp 1.000
+    q: ink 0.868* term arc c-1 j55 arms 170:L0.772,171:L2.060 D 0.1188 w 1.000 v 0.868; top 21 chain 22 nSurf 1 dz Infinity Dexp 0.1188 fade 0.000
+      piece c22 s 29.008 d 0.2259 surf 21 key -0.0524 g 21 (group 21: j26,j53,j54,j55) ramp 1.000 selfW 1.000 z 0.000
+        arm 80 (j26 dir 1 through) L 0.421 Lcut 0.421 d -0.2044: not read
+        arm 81 (j26 dir -1 through) L 0.772 Lcut 3.514 d 0.2044: on the arm ramp 1.000
+        arm 166 (j54 dir 1 through) L 2.133 Lcut 3.326 d 2.7006: not read
+        arm 168 (j54 dir -1 through) L 0.609 Lcut 0.609 d -2.7006: not read
+        arm 170 (j55 dir 1 through) L 0.772 Lcut 1.194 d 0.5679: on the arm ramp 1.000
+        arm 172 (j55 dir -1 through) L 2.133 Lcut 2.742 d -0.5679: not read
+      piece c18 s 3.219 d 0.3665 surf 21 key -0.0850 g 21 (group 21: j26,j53,j54,j55) ramp 1.000 selfW 1.000 z 0.000
+        arm 163 (j53 dir 1 end) L 2.037 Lcut Infinity d 3.3696: not read
+        arm 167 (j54 dir 1 through) L 2.060 Lcut Infinity d 1.3328: on the arm ramp 1.000
+        arm 169 (j54 dir -1 through) L 2.037 Lcut Infinity d -1.3328: not read
+        arm 171 (j55 dir -1 end) L 2.060 Lcut Infinity d 0.7270: on the arm ramp 1.000
+  site 317,275 (world 2.8010, 6.9690) F 5.00 new in q
+    c1: ink 1.000* term foot c22 D 0.0609 w 1.000 v 1.000; top 1048576 chain 22 nSurf 1 dz Infinity Dexp 0.0609 fade 0.000
+      piece c22 s 28.980 d 0.2591 surf 21 key -0.0601 g 21 (group 21: j26,j53,j54,j55) ramp 0.000 selfW 1.000 z 0.000
+        arm 80 (j26 dir 1 through) L 0.421 Lcut 0.421 d -0.2330: not read
+        arm 81 (j26 dir -1 through) L 0.000 Lcut -22.671 d 0.2330: not read
+        arm 166 (j54 dir 1 through) L 2.133 Lcut 3.326 d 2.6720: not read
+        arm 168 (j54 dir -1 through) L 0.000 Lcut -25.576 d -2.6720: behind its root, within λ of its cut ramp 0.000
+        arm 170 (j55 dir 1 through) L 0.772 Lcut 1.194 d 0.5393: on the arm ramp 1.000
+        arm 172 (j55 dir -1 through) L 0.000 Lcut -23.444 d -0.5393: behind its root, within λ of its cut ramp 0.000
+      piece c18 s 3.239 d 0.3240 surf 21 key -0.0752 g 21 (group 21: j26,j53,j54,j55) ramp 1.000 selfW 1.000 z 0.000
+        arm 163 (j53 dir 1 end) L 2.037 Lcut Infinity d 3.3892: not read
+        arm 167 (j54 dir 1 through) L 2.060 Lcut Infinity d 1.3524: on the arm ramp 1.000
+        arm 169 (j54 dir -1 through) L 2.037 Lcut Infinity d -1.3524: not read
+        arm 171 (j55 dir -1 end) L 2.060 Lcut Infinity d 0.7074: on the arm ramp 1.000
+    q: ink 0.673* term arc c-1 j55 arms 170:L0.772,171:L2.060 D 0.1204 w 1.000 v 0.673; top 21 chain 22 nSurf 1 dz Infinity Dexp 0.1204 fade 0.000
+      piece c22 s 28.980 d 0.2591 surf 21 key -0.0601 g 21 (group 21: j26,j53,j54,j55) ramp 1.000 selfW 1.000 z 0.000
+        arm 80 (j26 dir 1 through) L 0.421 Lcut 0.421 d -0.2330: not read
+        arm 81 (j26 dir -1 through) L 0.772 Lcut 3.514 d 0.2330: on the arm ramp 1.000
+        arm 166 (j54 dir 1 through) L 2.133 Lcut 3.326 d 2.6720: not read
+        arm 168 (j54 dir -1 through) L 0.609 Lcut 0.609 d -2.6720: not read
+        arm 170 (j55 dir 1 through) L 0.772 Lcut 1.194 d 0.5393: on the arm ramp 1.000
+        arm 172 (j55 dir -1 through) L 2.133 Lcut 2.742 d -0.5393: not read
+      piece c18 s 3.239 d 0.3240 surf 21 key -0.0752 g 21 (group 21: j26,j53,j54,j55) ramp 1.000 selfW 1.000 z 0.000
+        arm 163 (j53 dir 1 end) L 2.037 Lcut Infinity d 3.3892: not read
+        arm 167 (j54 dir 1 through) L 2.060 Lcut Infinity d 1.3524: on the arm ramp 1.000
+        arm 169 (j54 dir -1 through) L 2.037 Lcut Infinity d -1.3524: not read
+        arm 171 (j55 dir -1 end) L 2.060 Lcut Infinity d 0.7074: on the arm ramp 1.000
+  junction 64's arms:
+    arm 197 (c30 dir 1 through): L 1.177 -> 1.177, Lcut 1.177 -> 1.177
+    arm 198 (c26 dir -1 through): L 1.349 -> 1.349, Lcut Infinity -> Infinity
+    arm 199 (c30 dir -1 through): L 0.542 -> 0.542, Lcut 0.542 -> 0.542
+    arm 200 (c26 dir 1 through): L 0.978 -> 0.978, Lcut 0.978 -> 0.978
+  junction 55's arms:
+    arm 170 (c22 dir 1 through): L 0.772 -> 0.772, Lcut 1.194 -> 1.194
+    arm 171 (c18 dir -1 end): L 2.060 -> 2.060, Lcut Infinity -> Infinity
+    arm 172 (c22 dir -1 through): L 0.000 -> 2.133, Lcut -23.444 -> 2.742
