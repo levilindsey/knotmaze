@@ -221,4 +221,111 @@ Handoff.
 
 Start 16:31:26 (cap 18:31:26).
 
+### F1 · Definition change: D1's merge blend (16:40-17:02)
+
+**The bends.** `bend_s1e.ts` walks each breach line in 0.025 px steps
+(241 points over 0.06 world) on S1d F5 (frozen `form_b_s1d_f5.ts`) and
+the working tree. F5's steepest steps:
+
+| Line | F5 | c1 | The term that jumps (F5) |
+|---|---|---|---|
+| user_tw42.lightpaper, x through (11.695, 1.622) | 20.5/px | 1.81/px | foot of chain 23: s 23.387 -> 23.426, w 1.000 -> 0.478 |
+| g41_ring_tw42, y through (9.38, 0.98) | 31.9/px | 1.84/px | foot of chain 1: s 113.270 -> 113.473, w 0.199 -> 1.000 |
+| g41_user_tw42, x through (11.695, 1.622) | 20.0/px | 1.82/px | foot of chain 23: s 23.387 -> 23.426, w 1.000 -> 0.491 |
+
+At each bend D1's merge switches between two minima of the through
+pass's own chain, one on each arm of the bend. d is continuous across
+the switch; the burial weight is not, because the two feet sit on
+different arms (S1d F6's residual, confirmed on all three).
+
+**The change (candidate 1), `src/render/field/form_b.ts`.** Each kept
+piece A carries the minima the merge dropped into it (`Piece.alts`, same
+chain, |Δs| ≤ σ). Each dropped minimum X adds a foot term of its own:
+buried as A's would be (by the pieces other than A), with F9's corner
+rule and `inFill` reading X's chain and s, at weight
+w = (1 − bur)·selfW_A·β, and its arc at arc·β:
+
+- β = ss(1, 0, u)·ss(δ, 0, d_X − d_A)·ss(σ, σ/2, |Δs|);
+- u = min(1, (d_X − d_A)/(m − d_A)), 0 when m − d_A ≤ 1e-15. m is the
+  barrier: the largest distance from the pixel to the chain between A
+  and X (at A, at X or at a vertex between them);
+- δ = 2aa (`FormBParams.merge`; 0 restores S1d's discrete pick).
+
+β is 1 where X ties A, so the pick switches with both feet at full
+weight on both sides. It is 0 where X is born (m = d_X), δ farther than
+A, or σ away along the chain, where the fold's far piece takes over at
+selfW 0. A new fade bit, `F_MERGE` (16), marks a foot with 0 < β < 1
+(band2 > 0, bur < 1). Same-chain minima within σ still never bury each
+other, and the kept piece alone gives the top surface, the label, the
+cover and the burial of others.
+
+**Results against S1d F5** (gate run `run_s1e_gate.ps1 -Tag c1`, outputs
+`s1/out/s1e/`):
+
+- b_rate: 161 sites, **9 -> 0 in breach** (`rate/rate_c1.txt`). The nine
+  former breach sites read 1.14-2.08/px; no other site rose.
+- pins 22/22; `npm test` exit 0.
+- scenes.ts, 12 scenes: every check line identical to F5 (#1 156 px,
+  free ends 114, the shared checks); inked px +475 of 1.69M (the dropped
+  feet); the max decomposition misses 145 px as F5 (endpoint and V discs).
+- pops, label_pops' rule: **20 pops / 191 px -> 16 / 168 px** (muse_drag
+  8/47 -> 6/36, muse_flow 12/144 -> 10/132, def_* 0 both). Unexplained
+  px outside the fades 1194 -> 902. pops_mech: gone are 2 "scene chain
+  samples" and 2 "smooth motion" pops at crossings 60+ and the "smooth
+  fade tie" one; muse_drag 1>2 at (19.335, 15.027), 4 px, now reads
+  "smooth fade none"; the 3 junction "scene chain samples" pops (104 px,
+  worst muse_flow 7>8, 80 px) remain. corner_why: no corner pop, as F5.
+- q5holes: the same holes, every one an eye of the look (0 defects);
+  fade bits now on 5, 4 and 4 of them (f16 at the eyes' rims).
+- q4: every scene's mean |Δ| and max unchanged; muse_hash |Δ| > 0.5
+  6 -> 7 px, g41_user_tw64 |Δ| > 0.1 326 -> 329, ring 502 -> 501.
+
+Residuals:
+- A dropped minimum with |Δs| in (σ/2, σ) blends only partly (β's last
+  factor), so a swap there still moves w by up to 1 − ss(σ, σ/2, |Δs|).
+  No b_rate site shows one.
+- The fold's far-piece weight for |Δs| in (σ, 2σ) is as S1b left it.
+- The u ramp is steep where the barrier is shallow (m close to d_A):
+  continuous, never steeper than the step it replaces.
+- **For S4a:** a foot strip of X's segment needs d_A (the nearest minimum
+  of its chain within σ) and the barrier m to weigh β. Neither is local
+  to the segment; the label's (chain, s) gives A, and m needs the
+  chain's vertices between A and X from the sample table.
+
+### F2 · F5's #1 +9 and its free ends, attributed (17:00-17:04)
+
+`attr_f4f5.ts` (output `out/s1e/attr_f4f5.txt`) rebuilds four frozen
+variants: f4 (both of S1d F5's changes reverted), f5a (F4 + θ from
+`tanAt`), f5b (F4 + the Lcut loop's skip only behind the root) and f5
+(e8944f2f). For each #1 site and free end in only one of S1d's F4 and
+F5 lists (scenes.ts's check1deep lists keep at most 12 sites a scene;
+free ends keyed by chain, s to 0.1 and side) it prints every variant's
+ink, winning term and corner, and the arm whose L moved with its
+binding pass.
+
+- **θ (f5a = f5, f5b = f4): L moves by 0.003-0.02.**
+  - muse_hash's +2 #1 sites, (704,133) and (705,133): tA of chain 57 at
+    junction 129, ink 0.374/0.435 -> 0.530/0.568 (arm 390, L
+    1.204 -> 1.209).
+  - g41_user_tw64's tB sites at junction 64 (chain 26): 3 new, 1 gone
+    (arm 197, L 1.170 -> 1.177).
+  - Borderline free ends either way: muse_hash j76 and j99 (two gone,
+    two new), g41_def_tw42 j166 (+1), muse_default_tw j102 (−1),
+    user_tw42.lightpaper and g41_user_tw42 j53 (−1 each).
+  - No defect: a slightly different tangent, sites on either side of
+    the 0.5 ink line.
+- **The Lcut loop (f5b = f5): a defect.** g41_user_tw64's free ends
+  22 -> 26, all at junctions 54 and 55, and its 2 arc sites at j55
+  ((318,274), (317,275); now foot c22 at ink 1.0 on a moved label
+  boundary). Arms 168 and 172 (chain 22, dir −1) lose their whole span,
+  L 0.621 -> 0 and 2.133 -> 0. Their binding pass lies past each arm's
+  next root, at d 4.495 and 6.627, and crosses at θ 0.0215 rad (1.2°):
+  its cut c = d − h/tan(θ/2) − h reaches about 30 world units back
+  (c −25.6 and −23.4). F4 skipped passes past the next root; F5 counts
+  them, so that L moves continuously as a pass slides over the root,
+  and with them the straight-line reach h/tan(θ/2), which a near-tangent
+  pass extends far past where the two threads overlap.
+- Not attributed: the rest of g41_user_tw64's +7 #1 px (byTerm tA +6
+  under S1d's counts) lies outside the 12-site lists.
+
 ## Handoff

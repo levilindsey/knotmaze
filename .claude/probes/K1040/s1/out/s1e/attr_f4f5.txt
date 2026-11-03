@@ -1,0 +1,59 @@
+== muse_hash: #1 f4 2 -> f5 4; free ends 37 -> 37; arms 503/503, L or Lcut differs on 455
+  #1 sites only in f4: 0, only in f5: 2
+  site 704,133 (21.940, 3.079) F 5.10 new in f5: f4 0.374  tA c57 j129 arms 392:L1.416,390:L1.204 | f5a 0.530* tA c57 j129 arms 392:L1.416,390:L1.209 | f5b 0.374  tA c57 j129 arms 392:L1.416,390:L1.204 | f5 0.530* tA c57 j129 arms 392:L1.416,390:L1.209 | src 0.530* tA c57 j129 arms 392:L1.416,390:L1.209
+  site 705,133 (21.987, 3.079) F 5.00 new in f5: f4 0.435  tA c57 j129 arms 392:L1.416,390:L1.204 | f5a 0.568* tA c57 j129 arms 392:L1.416,390:L1.209 | f5b 0.435  tA c57 j129 arms 392:L1.416,390:L1.204 | f5 0.568* tA c57 j129 arms 392:L1.416,390:L1.209 | src 0.568* tA c57 j129 arms 392:L1.416,390:L1.209
+    arm 390 (j 129 pi 68 dir -1): L f4 1.204 f5a 1.209 f5b 1.204 f5 1.209; f5 binding pass d 2.056 theta 1.4594 c 1.209 (f4 skips d > L; f4 theta there 1.4505)
+  free end gone in f5: chain 41 s -0.081 side 1 at (2.410, 6.352); nearest corner V 0.113 away, junction 76; arms whose L moved > 1e-3: 3
+    arm 229 (j 76 pi 41 dir 1): L f4 3.120 f5a 3.123 f5b 3.120 f5 3.123; f5 binding pass d 3.924 theta 1.5662 c 3.123 (f4 skips d > L; f4 theta there 1.5601)
+    arm 230 (j 76 pi 33 dir 1): L f4 0.990 f5a 0.991 f5b 0.990 f5 0.991; f5 binding pass d 1.793 theta 1.5664 c 0.991 (f4 skips d > L; f4 theta there 1.5639)
+    arm 231 (j 76 pi 33 dir -1): L f4 0.034 f5a 0.029 f5b 0.034 f5 0.029; f5 binding pass d 0.850 theta 1.5186 c 0.029 (f4 skips d > L; f4 theta there 1.5312)
+  free end gone in f5: chain 46 s 3.375 side -1 at (14.212, 14.397); nearest corner V 0.132 away, junction 99; arms whose L moved > 1e-3: 2
+    arm 299 (j 99 pi 45 dir 1): L f4 2.677 f5a 2.681 f5b 2.677 f5 2.681; f5 binding pass d 3.691 theta 1.1621 c 2.681 (f4 skips d > L; f4 theta there 1.1550)
+    arm 301 (j 99 pi 46 dir -1): L f4 1.023 f5a 1.028 f5b 1.023 f5 1.028; f5 binding pass d 1.837 theta 1.5482 c 1.028 (f4 skips d > L; f4 theta there 1.5364)
+  free end new in f5: chain 33 s 11.353 side -1 at (2.407, 6.320); nearest corner V 0.082 away, junction 76; arms whose L moved > 1e-3: 3
+    arm 229 (j 76 pi 41 dir 1): L f4 3.120 f5a 3.123 f5b 3.120 f5 3.123; f5 binding pass d 3.924 theta 1.5662 c 3.123 (f4 skips d > L; f4 theta there 1.5601)
+    arm 230 (j 76 pi 33 dir 1): L f4 0.990 f5a 0.991 f5b 0.990 f5 0.991; f5 binding pass d 1.793 theta 1.5664 c 0.991 (f4 skips d > L; f4 theta there 1.5639)
+    arm 231 (j 76 pi 33 dir -1): L f4 0.034 f5a 0.029 f5b 0.034 f5 0.029; f5 binding pass d 0.850 theta 1.5186 c 0.029 (f4 skips d > L; f4 theta there 1.5312)
+  free end new in f5: chain 45 s -0.101 side -1 at (14.264, 14.487); nearest corner V 0.159 away, junction 99; arms whose L moved > 1e-3: 2
+    arm 299 (j 99 pi 45 dir 1): L f4 2.677 f5a 2.681 f5b 2.677 f5 2.681; f5 binding pass d 3.691 theta 1.1621 c 2.681 (f4 skips d > L; f4 theta there 1.1550)
+    arm 301 (j 99 pi 46 dir -1): L f4 1.023 f5a 1.028 f5b 1.023 f5 1.028; f5 binding pass d 1.837 theta 1.5482 c 1.028 (f4 skips d > L; f4 theta there 1.5364)
+== g41_user_tw64: #1 f4 12 -> f5 12; free ends 22 -> 26; arms 233/233, L or Lcut differs on 212
+  #1 sites only in f4: 3, only in f5: 3
+  site 318,274 (2.832, 6.938) F 5.00 gone in f5: f4 0.868* arc c-1 j55 arms 170:L0.772,171:L2.060 | f5a 0.868* arc c-1 j55 arms 170:L0.772,171:L2.060 | f5b 1.000* foot c22 | f5 1.000* foot c22 | src 1.000* foot c22
+  site 317,275 (2.801, 6.969) F 5.00 gone in f5: f4 0.673* arc c-1 j55 arms 170:L0.772,171:L2.060 | f5a 0.673* arc c-1 j55 arms 170:L0.772,171:L2.060 | f5b 1.000* foot c22 | f5 1.000* foot c22 | src 1.000* foot c22
+  site 524,647 (9.096, 18.281) F 5.00 gone in f5: f4 1.000* tB c26 j64 arms 197:L1.170,198:L1.349 | f5a 1.000* tB c26 j64 arms 197:L1.177,198:L1.349 | f5b 1.000* tB c26 j64 arms 197:L1.170,198:L1.349 | f5 1.000* tB c26 j64 arms 197:L1.177,198:L1.349 | src 1.000* tB c26 j64 arms 197:L1.177,198:L1.349
+  site 524,643 (9.096, 18.159) F 5.00 new in f5: f4 0.093  tB c26 j64 arms 197:L1.170,198:L1.349 | f5a 0.552* tB c26 j64 arms 197:L1.177,198:L1.349 | f5b 0.093  tB c26 j64 arms 197:L1.170,198:L1.349 | f5 0.552* tB c26 j64 arms 197:L1.177,198:L1.349 | src 0.552* tB c26 j64 arms 197:L1.177,198:L1.349
+  site 526,644 (9.157, 18.190) F 7.00 new in f5: f4 0.508* tB c26 j64 arms 197:L1.170,198:L1.349 | f5a 0.991* tB c26 j64 arms 197:L1.177,198:L1.349 | f5b 0.508* tB c26 j64 arms 197:L1.170,198:L1.349 | f5 0.991* tB c26 j64 arms 197:L1.177,198:L1.349 | src 0.991* tB c26 j64 arms 197:L1.177,198:L1.349
+  site 527,645 (9.187, 18.220) F 8.00 new in f5: f4 0.035  tB c26 j64 arms 197:L1.170,198:L1.349 | f5a 0.559* tB c26 j64 arms 197:L1.177,198:L1.349 | f5b 0.035  tB c26 j64 arms 197:L1.170,198:L1.349 | f5 0.559* tB c26 j64 arms 197:L1.177,198:L1.349 | src 0.559* tB c26 j64 arms 197:L1.177,198:L1.349
+    arm 197 (j 64 pi 30 dir 1): L f4 1.170 f5a 1.177 f5b 1.170 f5 1.177; f5 binding pass d 1.840 theta 1.5006 c 1.177 (f4 skips d > L; f4 theta there 1.4810)
+  free end gone in f5: chain 22 s 27.608 side 1 at (2.098, 7.251); nearest corner V 0.727 away, junction 54; arms whose L moved > 1e-3: 1
+    arm 168 (j 54 pi 22 dir -1): L f4 0.621 f5a 0.609 f5b 0.000 f5 0.000; f5 binding pass d 4.495 theta 0.0215 c -25.576 (f4 skips d > L; f4 theta there 0.0253)
+  free end new in f5: chain 9 s 0.034 side -1 at (2.735, 6.499); nearest corner V 0.560 away, junction 55; arms whose L moved > 1e-3: 1
+    arm 172 (j 55 pi 22 dir -1): L f4 2.133 f5a 2.133 f5b 0.000 f5 0.000; f5 binding pass d 6.627 theta 0.0215 c -23.444 (f4 skips d > L; f4 theta there 0.0253)
+  free end new in f5: chain 18 s 3.566 side 1 at (2.654, 6.896); nearest corner V 0.283 away, junction 55; arms whose L moved > 1e-3: 1
+    arm 172 (j 55 pi 22 dir -1): L f4 2.133 f5a 2.133 f5b 0.000 f5 0.000; f5 binding pass d 6.627 theta 0.0215 c -23.444 (f4 skips d > L; f4 theta there 0.0253)
+  free end new in f5: chain 18 s 1.583 side -1 at (2.196, 8.161); nearest corner V 0.159 away, junction 54; arms whose L moved > 1e-3: 1
+    arm 168 (j 54 pi 22 dir -1): L f4 0.621 f5a 0.609 f5b 0.000 f5 0.000; f5 binding pass d 4.495 theta 0.0215 c -25.576 (f4 skips d > L; f4 theta there 0.0253)
+  free end new in f5: chain 18 s 2.145 side -1 at (2.550, 7.981); nearest corner V 0.189 away, junction 54; arms whose L moved > 1e-3: 1
+    arm 168 (j 54 pi 22 dir -1): L f4 0.621 f5a 0.609 f5b 0.000 f5 0.000; f5 binding pass d 4.495 theta 0.0215 c -25.576 (f4 skips d > L; f4 theta there 0.0253)
+  free end new in f5: chain 18 s 3.680 side -1 at (2.133, 6.991); nearest corner V 0.770 away, junction 55; arms whose L moved > 1e-3: 1
+    arm 172 (j 55 pi 22 dir -1): L f4 2.133 f5a 2.133 f5b 0.000 f5 0.000; f5 binding pass d 6.627 theta 0.0215 c -23.444 (f4 skips d > L; f4 theta there 0.0253)
+== g41_def_tw42: #1 f4 0 -> f5 0; free ends 1 -> 2; arms 563/563, L or Lcut differs on 498
+  #1 sites only in f4: 0, only in f5: 0
+  free end new in f5: chain 65 s 10.321 side -1 at (12.683, 11.682); nearest corner V 0.140 away, junction 166; arms whose L moved > 1e-3: 1
+    arm 508 (j 166 pi 62 dir -1): L f4 0.357 f5a 0.353 f5b 0.357 f5 0.353; f5 binding pass d 0.834 theta 1.3159 c 0.353 (f4 skips d > L; f4 theta there 1.3299)
+== muse_default_tw: #1 f4 12 -> f5 12; free ends 10 -> 9; arms 503/503, L or Lcut differs on 455
+  #1 sites only in f4: 0, only in f5: 0
+  free end gone in f5: chain 45 s 15.773 side -1 at (3.676, 21.809); nearest corner V 0.345 away, junction 102; arms whose L moved > 1e-3: 2
+    arm 309 (j 102 pi 45 dir -1): L f4 0.521 f5a 0.517 f5b 0.521 f5 0.517; f5 binding pass d 1.064 theta 1.4713 c 0.517 (f4 skips d > L; f4 theta there 1.4855)
+    arm 311 (j 102 pi 45 dir 1): L f4 0.191 f5a 0.194 f5b 0.191 f5 0.194; f5 binding pass d 0.718 theta 1.5553 c 0.194 (f4 skips d > L; f4 theta there 1.5448)
+== user_tw42.lightpaper: #1 f4 0 -> f5 0; free ends 10 -> 9; arms 233/233, L or Lcut differs on 212
+  #1 sites only in f4: 0, only in f5: 0
+  free end gone in f5: chain 22 s 23.621 side -1 at (3.921, 10.349); nearest corner V 1.214 away, junction 53; arms whose L moved > 1e-3: 2
+    arm 164 (j 53 pi 30 dir -1): L f4 0.899 f5a 0.916 f5b 0.899 f5 0.916; f5 binding pass d 1.386 theta 1.3581 c 0.916 (f4 skips d > L; f4 theta there 1.2987)
+    arm 165 (j 53 pi 30 dir 1): L f4 1.606 f5a 1.604 f5b 1.606 f5 1.604; f5 binding pass d 2.062 theta 1.4054 c 1.604 (f4 skips d > L; f4 theta there 1.4125)
+== g41_user_tw42: #1 f4 0 -> f5 0; free ends 10 -> 9; arms 233/233, L or Lcut differs on 212
+  #1 sites only in f4: 0, only in f5: 0
+  free end gone in f5: chain 22 s 23.621 side -1 at (3.921, 10.349); nearest corner V 1.214 away, junction 53; arms whose L moved > 1e-3: 2
+    arm 164 (j 53 pi 30 dir -1): L f4 0.899 f5a 0.916 f5b 0.899 f5 0.916; f5 binding pass d 1.386 theta 1.3581 c 0.916 (f4 skips d > L; f4 theta there 1.2987)
+    arm 165 (j 53 pi 30 dir 1): L f4 1.606 f5a 1.604 f5b 1.606 f5 1.604; f5 binding pass d 2.062 theta 1.4054 c 1.604 (f4 skips d > L; f4 theta there 1.4125)
