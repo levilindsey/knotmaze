@@ -449,3 +449,24 @@ describe("K138 rule rows", () => {
     ).toBe("0 / 0 found \u00B7 fewest 9, \u2014 with them");
   });
 });
+
+describe("K775 wrap rows", () => {
+  it("only the hidden runs row carries the wrap flag", () => {
+    const all = [
+      ...statEntries(BASE),
+      ...gameEntries({ catches: 1, sword: { phase: "slain", left: 0, slainAt: 9 }, sprint: "used" }),
+      ...ruleEntries({
+        rules: "ice 25% \u00B7 cycle",
+        turnstiles: 4,
+        hidden: { found: 1, of: 2, fewest: 16, withAll: 14 },
+        oneWay: 12,
+        keys: { held: 1, of: 3 },
+        muddy: 3,
+      }),
+    ];
+    expect(all.filter((r) => r.wrap).map((r) => r.id)).toEqual(["hidden"]);
+    expect(all.find((r) => r.id === "hidden")?.value).toBe(
+      "1 / 2 found \u00B7 fewest 16, 14 with them"
+    );
+  });
+});

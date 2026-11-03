@@ -1093,6 +1093,11 @@ async function main(): Promise<void> {
     lookChip.layout(modeBadge.el);
   };
   window.addEventListener("resize", fitModeBadge);
+  // K738: the HUD's own rows change size as their numbers grow (the path
+  // counter, the sword row), and nothing above re-fits for that. Watch the
+  // HUD: fit() only moves the badge, so it cannot resize the HUD in turn.
+  const hudFitObserver = new ResizeObserver(() => fitModeBadge());
+  hudFitObserver.observe(hud.el);
   // K848: the panel can start open (kp-open lands before the first
   // badge fit runs), leaving the chip undocked at the screen edge:
   // re-fit once the first frames have settled.
