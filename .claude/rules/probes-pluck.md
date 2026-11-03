@@ -127,7 +127,7 @@ only with the files it is about; `probes.md` lists the area's other files.
   `capan.mjs <dump.json> <tipArc>` tabulate a dump per station (capan:
   the circumradius, rMin, the raw and dumped caps, both blur edges and
   their turns). `ttog.mjs <host> <outDir> <phone|desk|cdp> <query>
-  <in|out> [t] [togs]`, env `ONLY=<chain>:<key>` (the loop), `ZOOM`
+  <in|out> [t] [togs]`, env `ONLY=<chain>:<key>` (the loop; today on `?7` use chain 2, key 427 - `ONLY=2:427`, K406, rechecked K609; K395's chain 9 loop no longer exists), `ZOOM`
   (wheel steps at its tip) and `DUMP=1`, shoots one frozen page with
   toggles: base | nocap | noghost | noW | nooverlay | crX (capRound = X;
   cr0 is the pre-K395 cap, so `base,cr0` is the same-state A/B); `cdp`
