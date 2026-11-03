@@ -95,8 +95,7 @@ handoff of the stage before it.
    - A catch reuses the real-time path: `respawn()`, the counter, the
      HUD's caught row, the toast, and K174's re-fog when `minoRefog` is
      on.
-   - No move undo while it is on, as real time's `undoAllowed(clock)`
-     does. Section 2.10's Reset path rule (the restart, logged, not a
+   - No move undo while it is on, as real time's `undoAllowed(clock)` (removed in K534, K263) did. Section 2.10's Reset path rule (the restart, logged, not a
      catch) applies wherever Reset path exists outside the dailies.
    - The marker, its glow and its off-screen indicator are real time's;
      reuse them, dim while roaming and stronger while hunting.
@@ -231,7 +230,7 @@ Done:
   turn and call), `TurnMinotaur` (commit, telegraph, `turn(edge)` with
   -1 a wait, catches, respawn), `turnConfig`, `telegraphOn`, `turnSeed`.
   A walk edge id is the chase edge index; candidates sort by run id.
-  `minotaur.ts` gained `undoAllowed(clock, minotaur)`.
+  `minotaur.ts` gained `undoAllowed(clock, minotaur)` (removed in K534, K263).
   `test/game/minotaur_turns.test.ts`, 30 cases: every contact case, the
   RNG, params to config (the forced telegraph), undo, TurnGraph on real
   mazes, each model, commit-then-take, the sanctuary and the lair, the

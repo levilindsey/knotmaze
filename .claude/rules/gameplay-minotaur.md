@@ -34,7 +34,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   params, seedMix(seed) and the player's inputs (replayChase), and the
   module uses only exact math (K108). THE PLAYER: one run per tap at
   playerPace; a tap while moving QUEUES (the latest wins, it leaves on
-  arrival); no undo (`undoAllowed(clock)`, which K92 must consult) and no
+  arrival); no move undo (there is no `undoAllowed`; removed in 35f3ec28, K263) and no
   wait move. THE MINOTAUR: waits `wake` s in its lair at the exit end,
   then wanders (shortest route to a junction roamRange/4..roamRange away,
   or with chance deadEndBias a dead-end tip, since K174 leaning toward
@@ -305,7 +305,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   chances); SHARED: minoFog, minoRefog and the minotaurIndicator setting.
   Not daily-exempt. UNDO: `minotaur` restarts the solve (onClockChange
   covers clock and minotaur), the tuning rows are live (onTurnMinoChange
-  -> setConfig); no move undo (`undoAllowed(clock, minotaur)`). THE WAIT
+  -> setConfig); no move undo (there is no `undoAllowed`; removed in 35f3ec28, K263). THE WAIT
   TAP: within max(1.5 head discs, 0.9) world of your junction AND nearer
   it than any run's tappable part (renderer `runDistance`, every run's
   HEAD_EXCLUDE neighborhood excluded), checked before run hit-testing.
