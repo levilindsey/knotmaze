@@ -1,0 +1,6 @@
+g41_user_tw64 (2.832, 6.938) ±0.004: c1: 8x8 px; |ink − oracle| > 0.5 on 8; partial ink in the oracle's fill 0; mean ink 1.0000
+g41_user_tw64 (2.832, 6.938) ±0.004: q: 8x8 px; |ink − oracle| > 0.5 on 0; partial ink in the oracle's fill 8; mean ink 0.7334
+  c1 against q: ink differs by > 0.02 on 60 px, > 0.5 on 8; max 0.7057
+g41_user_tw64 (2.801, 6.969) ±0.004: c1: 8x8 px; |ink − oracle| > 0.5 on 20; partial ink in the oracle's fill 0; mean ink 1.0000
+g41_user_tw64 (2.801, 6.969) ±0.004: q: 8x8 px; |ink − oracle| > 0.5 on 1; partial ink in the oracle's fill 20; mean ink 0.6038
+  c1 against q: ink differs by > 0.02 on 64 px, > 0.5 on 21; max 0.8321

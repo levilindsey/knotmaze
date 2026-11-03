@@ -219,3 +219,240 @@ final definition and leave the rest to the Handoff.
 ## Findings
 
 Start 17:50:37 (cap 19:50:37).
+
+### F1 · Definition change: the quadratic reach, K1092 (17:58-18:16, bd3f32ae)
+
+In the Lcut loop a pass's reach is now
+
+    reach = min(r0, max(F, e*)),   r0 = h·cot(θ/2),   F = 4h,
+
+with e* from `quadReachOf` (form_b.ts, after `curvedReachOf`). It models
+the threads' separation behind the pass as g(e) = a·e + ½κe², κ ≥ 0,
+where g is the chord between the two threads at matched arc length e
+behind the pass (a = 2 sin(θ/2), target T = 2h cos(θ/2)), and solves
+g(e*) = T in closed form:
+
+    κ = max(0, 2(g(e_k) − a·e_k) / e_k²),   e* = 2T / (a + √(a² + 2κT)).
+
+Two fits: the first samples at e_0 = F, the second at e_1 = max(F, e*),
+each clamped to the arc behind the pass (half the chain on a closed
+one). The partner's side is σ = sign(−dir·t_a·t_b).
+
+- **Params.** `reach`: "quad" (the default), "walk" (S1e's walk: c2 with
+  `curvedFrom: 0`, c3 with the default) or "straight" (c1); the legacy
+  `curvedReach` still maps true to "walk" and false to "straight".
+  `curvedFrom` (4) is F in h, `reachSteps` (2) the number of fits,
+  `reachSep` "chord" (the default) or "line" (the distance to the
+  partner's tangent line: a = sin θ, T = h(1 + cos θ)).
+- **r0 exactly on straight threads.** Two straight threads at θ are
+  2e·sin(θ/2) apart at matched arc length e, so κ = 0 and
+  e* = T/a = h·cot(θ/2) = r0, whatever the sample.
+- **Never above r0, finite at θ = 0** (κ ≥ 0; a = 0 gives √(2T/κ)), and
+  r0 itself wherever r0 ≤ F: only passes shallower than
+  2·atan(h/F) = 0.49 rad can change.
+- **Continuous by construction.** Each fit is pointAt at two arc lengths
+  that move continuously, then a closed form; the clamps, max and min
+  are continuous. σ flips only where the tangents are perpendicular,
+  where r0 = h < F and e* is not read. No first crossing, no cap that
+  jumps, no gate: the code's `reach > fl` test only skips work, since the
+  expression equals r0 there. F2 measures it.
+- **Portable:** two fits of two pointAt each, then a square root.
+
+The candidates, arm by arm before any gate run (`npx vite-node
+.claude/probes/K1040/s1/reach_cands.ts`; out/s1f/reach_cands_console.txt,
+the listing reach_cands.txt untracked):
+
+| Candidate | Moved / restored / shortened / cap only, against c1 | Arms ≠ c3 |
+|---|---|---|
+| c2 (S1e's walk, no floor) | 570 / 17 / 0 / 23 | 572 |
+| c3 (S1e's walk, floor 4h) | 17 / 11 / 0 / 3 | 0 |
+| qc1, qc2, qc3 (chord, 1-3 fits, F 4h) | 17 / 11 / 0 / 3 each | 0 |
+| ql1 (tangent line, 1 fit) | 15 / 10 / 0 / 3 | 4 |
+| ql2 (tangent line, 2 fits) | 16 / 10 / 0 / 3 | 2 |
+| qc2F2 (F 2h) | 44 / 13 / 0 / 5 | 36 |
+| qc2F1 (F h) | 1211 / 30 / 0 / 65 | 1275 |
+
+Chosen by the checks: **qc2**.
+- The chord, not the tangent line: the line leaves g41_user_tw64's arm
+  185 at L 0 (e* 15.82h with one fit, 6.69h with two, both past
+  d − h), and with one fit arm 97 too.
+- F = 4h: F = 2h and F = h move 44 and 1211 arms, ordinary ones the bind
+  leaves alone.
+- Two fits: the scenes cannot tell one, two or three apart. One fit
+  extrapolates a parabola fitted at F out to wherever the reach lands,
+  which is what ql1's 15.82h on arm 185 shows; the second fit samples
+  there.
+- On the 12 scenes the floor binds on every arm the reach moves (e* < 4h
+  at each), so q equals S1e's c3 arm for arm. The scenes cannot tell q
+  from a bare cap min(r0, 4h) either: the 17 arms it moves are exactly
+  the 17 whose binding pass has r0 > 4h (muse_hash 6, g41_user_tw64 11).
+  What rules out the bare cap is the bind "r0 exactly on straight
+  threads": a cap would cut the reach at every straight shallow
+  crossing, where the threads do overlap out to r0.
+
+The arms it moves against c1 (out/s1f/moved_c3_quad.txt, attr_q.txt):
+- muse_hash, chain 83's pass (θ 0.0637, r0 31.4h): restored 197
+  (L 0 -> 0.612), 367 (0 -> 0.425), 378 (0 -> 0.434), 477 (0 -> 1.150);
+  cap only 111 (Lcut −2.605 -> −1.555), 336 (−11.293 -> −0.334).
+- g41_user_tw64, chain 22's pass (θ 0.0215, r0 92.97h): restored 81
+  (0 -> 0.772), 83 (0 -> 0.959), 168 (0 -> 0.609), 172 (0 -> 2.133), 183
+  (0 -> 0.067), 185 (0 -> 0.338), 186 (0 -> 1.308).
+- g41_user_tw64, chain 11's pass (θ 0.4544, r0 4.33h, just past F):
+  lengthened 97 (0.874 -> 0.978), 99 (0.379 -> 0.483), 106
+  (0.195 -> 0.299), each by (r0 − 4h) = 0.104.
+- g41_user_tw64, cap only: 110 (Lcut −0.464 -> −0.360).
+
+Each restored or cap-only arm is K1092's phantom reach: r0 runs 31h
+(muse_hash) and 93h (g41_user_tw64) behind passes whose threads part by
+T within 4h. The cap-only arms keep L 0, and only member()'s back-reach
+ramp reads their new cut.
+Chain 11's three are a pass just shallower than 2·atan(1/4), whose
+reach drops from 4.33h to 4h. F3 has their ink against the oracle.
+
+### F2 · The reach is continuous; e* can be steep where κ → 0 (18:13-18:30)
+
+- **An eye.** `npx vite-node .claude/probes/K1040/s1/reach_eye.ts 0.05
+  0.5 3 250 eye`: synthetic, h = 1, a pass at θ0 0.05 (r0 40.025h), the
+  partner's vertex at x = 7 lifted by w so the threads part and come
+  back, the arm's root at d = 12h. Largest step between neighbouring w,
+  0.01h apart (out/s1f/sweep/eye_t0.05.txt):
+
+  | Column | Largest step | At w |
+  |---|---|---|
+  | c2's walked e_c | 32.29h | 1.510 |
+  | L under c2 and c3 | 3.266 | 1.510 |
+  | quad e*, 1 fit | 0.103h | |
+  | quad e*, 2 fits | 1.91h | 0.780 (L 0 there) |
+  | quad e*, 3 fits | 1.53h | 1.360 |
+  | L under the quad | 0.107 | 1.400 |
+
+  c2's walk jumps where the eye's peak crosses its target (L c2/c3 0 at
+  w 1.5, 3.266 at 1.51), while the quad's L runs 1.095 -> 1.181. Across
+  the jump at 500 steps (`... reach_eye.ts 0.05 1.5 1.505 500
+  eyefineB`), e_c still jumps 32.27h and L c2/c3 3.244 at w 1.502; the
+  quad's reach and L step at most 0.0001.
+- **e*'s steepness.** At e*2's largest step (`... reach_eye.ts 0.05 0.76
+  0.8 400 eyefineA`, steps of 1e-4h) its largest step is 0.0228h at
+  w 0.766: continuous (it shrinks with the step) but about 228h per h of
+  vertex motion. There the second sample falls where the eye has closed
+  back to g ≈ a·e, so κ ≈ 0, and de*/dκ = −T²/(2a³) at κ = 0 is large at
+  small θ. L is 0 there (the reach exceeds d − h), so in this sweep it
+  does not reach the ink; where it does, the ink moves fast but
+  continuously. A residual (Handoff).
+- **A real pass.** `npx vite-node .claude/probes/K1040/s1/reach_sweep.ts
+  muse_hash 197 ec 1 40 probe`: muse_hash arm 197, chain 83's vertex 128
+  moved δh along the separation (out/s1f/sweep/muse_hash_a197_*.txt).
+  At δ steps of 0.05h the quad equals c3 throughout; largest steps r0
+  6.19h, reach 0.4448h, L 0.1725. Fine sweeps (δ step 0.001h; `$env:DC
+  = "<centre>"`, then `... reach_sweep.ts muse_hash 197 ec 0.025 50
+  <tag>`) at the coarse steps:
+
+  | Sweep | δ centre | Reach | L | r0 |
+  |---|---|---|---|---|
+  | fineM | −0.675 | 0.0165h | 0.0066 | 0.0187h |
+  | fineP | 0.725 | 0.0100h | 0.0040 | 0.0100h |
+  | fineR | 0.375 | 0 | 0 | 0.1644h |
+
+  The coarse steps are r0's own slope (the moved vertex sets θ at the
+  pass): below 4h the reach is r0, above it the reach stays at 4.0000h
+  (fineR) and L at its value there.
+
+### F3 · The j55 arc's two sites and the other changes, attributed (18:16-18:45, e3a22da9)
+
+#1 moves only on g41_user_tw64, 59 -> 61 px. `$env:TAG = "q"; npx
+vite-node .claude/probes/K1040/s1/attr_s1f.ts` (out/s1f/attr_q.txt)
+lists the sites in one build's list only:
+
+- **(318, 274) and (317, 275)**, world (2.832, 6.938) and (2.801, 6.969),
+  5 px deep, new in q: S1e F4's j55 sites.
+  - The term: the fillet arc of corner j55 (arms 170, L 0.772, and 171,
+    L 2.060), ink 0.868 and 0.673, under top surface 21 (group 21:
+    junctions 26, 53, 54, 55).
+  - In c1 the same points carry chain 22's foot at ink 1.0 under chain
+    22's own label (OWN). Chain 22's piece there had cap ramp 0:
+    member()'s back-reach (S1b F10) read the phantom cuts of arms 168
+    (Lcut −25.576, the point at d −2.70) and 172 (Lcut −23.444,
+    d −0.568), so the piece left group 21 and the label fell to chain 22
+    alone.
+  - In q those arms' cuts are 0.609 and 2.742, not read there, and arm 81
+    (L 0.772, Lcut 3.514) covers the point with ramp 1. The piece joins
+    group 21, the label becomes surface 21, and the arc's ink lies 5 px
+    inside it, which #1 counts. These are S1d F4's arc sites, hidden
+    since S1d F5's phantom reach.
+  - The look. The oracle inks both sites (56 and 44 of 64 sub-pixels
+    within ±0.004 of them): q's ink is within 0.5 of the oracle's on 64
+    and 63 of them, c1's (ink 1 throughout) on 56 and 44
+    (out/s1f/win_ink_j55_sites.txt). Around them q is nearer the oracle
+    in every window (`npx vite-node .claude/probes/K1040/s1/win_ink.ts
+    g41_user_tw64 <x> <y> <half>`; win_ink_j55.txt):
+
+    | Window | Px off the oracle by > 0.5, c1 -> q | Partial ink in the oracle's fill, c1 -> q |
+    |---|---|---|
+    | ±0.6 at the sites | 292 -> 145 | 730 -> 141 |
+    | ±1.0 at (2.45, 7.3) | 782 -> 490 | 1452 -> 267 |
+    | ±1.5 at the sites | 1104 -> 832 | 1830 -> 559 |
+
+  - Crops (`$env:FORMB = "s1e_c1"` for c1, then `npx vite-node
+    .claude/probes/K1040/s1/b_crop.ts g41_user_tw64 <x> <y> 2 0.8 4
+    <tag>`; out/s1f/crops/g41_user_tw64_2.817_6.953_{c1,q}.png and
+    g41_user_tw64_2.45_7.3_{c1,q}.png: form B, the oracle, the labels).
+    c1 cuts group 21's fill into fragments with chain 22's own surface;
+    q draws one fill with a closed hole at (2.38, 7.505), as the oracle
+    does. q5holes finds that hole (50 px, group 21, the oracle's paper on
+    all of it): g41_user_tw64's holes go from 4 in 3 groups to 5 in 4,
+    defects 0 -> 0.
+  - So #1's +2 is a label change that puts the arc 5 px inside a fill
+    label, with the ink nearer the oracle, not further.
+- (526, 646) and (527, 646) only dropped out of the 12-site list
+  (scenes.ts lists 12 a scene, in raster order); their count is the same.
+
+**Free ends**, g41_user_tw64 26 -> 22. Five go (chain 9 at
+(2.735, 6.499); chain 18 at (2.654, 6.896), (2.196, 8.161),
+(2.55, 7.981), (2.133, 6.991)) and one comes (chain 22, s 27.608, at
+(2.098, 7.251)): this undoes S1d F5's 22 -> 26. The new one is where the
+oracle draws a hook stroke at group 21's hole and q shows only a faint
+tick (the crop at (2.45, 7.3)): a residual.
+
+**The other moved arms** (`... win_ink.ts <scene> arm:<i> 1.0`;
+win_ink_cap.txt, ±1.0 around each arm's root):
+
+| Arm | Ink, c1 against q | Px off the oracle by > 0.5, c1 -> q | Partial ink, c1 -> q |
+|---|---|---|---|
+| muse_hash 111 (cap only) | identical | same | same |
+| muse_hash 336 (cap only) | 293 px > 0.02, 9 > 0.5 | 200 -> 182 | 577 -> 478 |
+| g41_user_tw64 110 (cap only) | 64 px > 0.02, max 0.139 | 637 -> 637 | 958 -> 935 |
+| muse_hash 197 (restored) | 287 px > 0.02, 10 > 0.5 | 281 -> 266 | 579 -> 474 |
+| g41_user_tw64 97 (lengthened) | 264 px > 0.02, 4 > 0.5 | 4 -> 1 | 302 -> 171 |
+
+Every arm windowed moves toward the oracle or not at all. Not windowed
+one by one: muse_hash 367, 378, 477 and g41_user_tw64 83, 183, 185, 186,
+99, 106 (chain 22's arms near j55 are inside F3's windows); #1 and the
+shared checks show no other change on their scenes.
+
+### F4 · The gate against S1e's final (18:05-18:12 on bd3f32ae)
+
+On the final definition (nothing under `src/` changed after bd3f32ae),
+against out/s1e/logs/*_final* and *_c1*:
+
+| Check | S1e final (c1) | S1f (q) |
+|---|---|---|
+| #1, all scenes | 156 px | 158 (g41_user_tw64 59 -> 61, F3) |
+| Free ends | 114 | 110 (g41_user_tw64 26 -> 22, F3) |
+| Shared checks, scenes failing of 12 | #2 11, #3 1, #4 11, #5 10, #6 5, #7 2, #8 0, #9 10 and 5, #11 1, #14 1, #15 0, #16 2 | the same, each |
+| b_rate | 0 of 161 | 0 of 161 |
+| Pins | 22 passed | 22 passed |
+| npm test | passed | 191 files, 2573 passed, 8 skipped |
+| Pops (label_pops' rule) | 16 / 168 px | 16 / 168 px: muse_drag 6 / 36, muse_flow 10 / 132, def 0 |
+| pops_mech merge, corner_why | | identical to c1's (corner_why empty in both) |
+| q5holes | | g41_user_tw64 4 holes in 3 groups -> 5 in 4 (F3), defects 0 -> 0; the rest identical |
+| q4 | | only muse_hash moves: n 98812 -> 98769, px with \|Δ\| > 0.1 1419 -> 1417; mean \|Δ\|, p99, max and \|Δ\| > 0.5 the same |
+
+Reproduce from the worktree:
+- `pwsh .claude/probes/K1040/s1/run_s1f_gate.ps1 -Tag q`, then
+  `pwsh .claude/probes/K1040/s1/run_s1f_gate.ps1 -Tag q -What mech`;
+- `pwsh .claude/probes/K1040/s1/gate_table.ps1
+  .claude/probes/K1040/s1/out/s1e/logs/scenes_final.txt
+  .claude/probes/K1040/s1/out/s1f/logs/scenes_q.txt`.
+
+Every change against S1e's final is attributed in F1 and F3; none moves
+ink away from the oracle.
