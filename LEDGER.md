@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1137.
+Next free ID: K1138.
 
 ## Waiting on Levi
 
@@ -506,6 +506,15 @@ Next free ID: K1137.
   - next: S3c: the label pass without discards for the Pixel's GPU (one shaded fragment per pixel, depth from the vertex shader as K923's label set it), gated on the Pixel's 2 ms; if it misses, the coarser target (K923's lr), a new budget (Levi's) only after both; then step 5: the pops (def_drag, def_flow, muse_drag, muse_flow) and SAMP's upload against label_tables'
   - brief: `docs/design/K1040_s3b_label.md` (F1-F4, ## Handoff); S3's Handoff in `docs/design/K1040_s3_label.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`
+- **K1137** · Muse batch 9 (`docs/design/K1137_muse_batch9.md`): A, K1132's pictures (a key-hint placement
+  past the head marker, behind a probe hook); B, K1083 and K1133 retraced on K1077's flow-on stand; C, K1135's
+  behavior test; D, batch 10's brief drafted.
+  - owner: muse runs 9A-9D, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 06:52
+  - branch: mainline; last commit: 82c9a79b (the brief)
+  - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K1132/`, `.claude/probes/K1083/flow/`
+  - next: Run A (K1132's pictures), then B, C and D
+  - brief: `docs/design/K1137_muse_batch9.md`
+  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 9A-9D)
 
 ## Next, in order
 
