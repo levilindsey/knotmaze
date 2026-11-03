@@ -533,7 +533,7 @@ only with the files it is about; `render.md` lists the area's other files.
   toggles leave it). The cap is 0.9 x the 5-station circumradius, min
   over +-2, minus the thread. A loop's spline bends most at its control
   points, so the circumradius oscillates with the control spacing (`?7`
-  chain 9's loop: 5.6 at the tip between shoulders of 0.38-0.41), the min
+  chain 9's loop: 5.6 at the tip between shoulders of 0.38-0.41; that loop no longer exists in `?7` - today's example is chain 2, key 427 (K406, rechecked K609)), the min
   over +-2 makes plateaus, and CAP_SLOPE turns them into straight ramps
   that meet in corners: a triangle at the tip (stations 80-84: 0.083,
   0.153, 0.223, 0.173, 0.103). The strip's inner edge turned by -112 and
@@ -574,7 +574,7 @@ only with the files it is about; `render.md` lists the area's other files.
   (capRound 0) against `base` on one frozen page; `capan.mjs` reads a
   DUMP's caps and edge turns per station.
 - VERIFIED, same state (`base` vs `cr0`; `out/ab_*`, `pair_*.png` =
-  cr0 | base): `?7` chain 9's loop at the phone viewport (zoom steps 3
+  cr0 | base): `?7` chain 9's loop at the phone viewport (zoom steps 3; that loop is gone - use chain 2, key 427 today, K406/K609)
   and 4) and the desktop, both knob ends (psz 3, pgh 1, pw 1.5, ride,
   wave; psz 0.5, pgh 0, pw 0, pinch, ring) and two kink loops of K344's
   design (3:95, 62:539): the V and the seam are gone in every case. K344's
