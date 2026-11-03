@@ -49,21 +49,44 @@ if ($Ref) {
   $label = "worktree-" + (git -C $repo rev-parse --short HEAD).Trim()
 }
 
+# A plain checkout with no node_modules (an agent worktree, say) borrows
+# the main checkout's through a junction; without one anywhere, say what
+# is missing instead of letting npx fetch a stray vite (K593). The
+# junction is this run's own: it is deleted in the finally below, by
+# deleting the junction itself, never recursively through it.
+$madeJunction = $null
+if (-not (Test-Path (Join-Path $source "node_modules"))) {
+  $commonDir = (git -C $source rev-parse --git-common-dir).Trim()
+  if (-not [System.IO.Path]::IsPathRooted($commonDir)) { $commonDir = Join-Path $source $commonDir }
+  $mainNm = Join-Path (Split-Path $commonDir -Parent) "node_modules"
+  if (Test-Path $mainNm) {
+    $madeJunction = Join-Path $source "node_modules"
+    New-Item -ItemType Junction -Path $madeJunction -Target $mainNm | Out-Null
+  } else {
+    throw "node_modules not found in $source and no main checkout copy at $mainNm. Run 'npm ci' in $source and retry."
+  }
+}
+
 $out = Join-Path $root $label
 try {
   Push-Location $source
-  npx vite build --outDir $out --emptyOutDir
-  if ($LASTEXITCODE -ne 0) { throw "vite build failed" }
+  try {
+    npx vite build --outDir $out --emptyOutDir
+    if ($LASTEXITCODE -ne 0) { throw "vite build failed" }
+  } finally { Pop-Location }
+
+  if ($BuildOnly) { Write-Host "Built $label into $out"; return }
+  Write-Host "Serving $label on http://localhost:$Port (Ctrl+C stops)"
+  Push-Location $repo
+  try { npx vite preview --outDir $out --host --port $Port --strictPort }
+  finally { Pop-Location }
 } finally {
-  Pop-Location
   if ($worktree) {
     (Get-Item (Join-Path $worktree "node_modules") -Force).Delete()
     git -C $repo worktree remove --force $worktree | Out-Null
   }
+  if ($madeJunction) {
+    $j = Get-Item $madeJunction -Force -ErrorAction SilentlyContinue
+    if ($j -and $j.LinkType) { $j.Delete() }
+  }
 }
-
-if ($BuildOnly) { Write-Host "Built $label into $out"; return }
-Write-Host "Serving $label on http://localhost:$Port (Ctrl+C stops)"
-Push-Location $repo
-try { npx vite preview --outDir $out --host --port $Port --strictPort }
-finally { Pop-Location }
