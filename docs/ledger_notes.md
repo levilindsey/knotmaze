@@ -4620,6 +4620,13 @@ Shortened in LEDGER.md 2026-10-30 (over three lines). Full text:
   the old page's teardown from a first cache read (`.claude/probes/K412/k412_run.mjs`, records in
   `k412_results.jsonl`).
 
+Update 2026-11-02 (Muse batch 5, run D): each warm profile's first reload starts main ~3.4 s (levi.dev) / ~3.7 s
+(pages.dev) late vs 57-116 ms on reloads 3-5. Navigation timing: responseEnd ~85 ms, unload instant, chunk transfers 0;
+the delay is responseEnd -> domInteractive, so the parser itself waited. Inferred, unchecked: the renderer busy tearing
+down the first page, perhaps its WebGL context waiting on the GPU process's cold shader compiles (later reloads hit the
+program cache). Next: a performance trace of that reload, and runs that reload only after the first page sleeps, or
+with salted shaders (`.claude/probes/K412/k412_results.jsonl`).
+
 ## K1094
 
 The K1091 planner's ledger-hygiene list (2026-11-02), unverified by the coordinator:

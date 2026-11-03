@@ -722,6 +722,8 @@ The stage measures both uploads and keeps one.
 
 It deletes nothing: the old flags stay until S8.
 
+**S3's result (K1097, 2026-11-02).** It stopped short of the gate: all 137 DEFECTs (on 6 of the 12 scenes) are class B, form B naming a group by a piece within h + aa that does not cover it (`K1040_s3_label.md` Findings). Decided by the checks: (a), form B names a surface by its covering pieces only, so the name switches at d = h. It costs nothing at run time, the slivers it moves are at most aa wide, and it removes the risk of a non-covering piece lifting its group above another group's covering piece. It lands as **S3b**, after S1g merges, since form_b.ts belongs to the S1 line: the Definition change, the census again (0 DEFECT closes K1033), the scan's cost (clip each capsule to its segment's slab) and the Pixel timing, then the pops over the recordings and the point-table comparison. K1039 closed in S3.
+
 **S4a · The band: tube edges and burial (Opus, 2 h).**
 
 It draws:
