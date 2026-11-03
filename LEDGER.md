@@ -494,22 +494,14 @@ Next free ID: K1126.
   - next: S3c: the label pass without discards for the Pixel's GPU (one shaded fragment per pixel, depth from the vertex shader as K923's label set it), gated on the Pixel's 2 ms; if it misses, the coarser target (K923's lr), a new budget (Levi's) only after both; then step 5: the pops (def_drag, def_flow, muse_drag, muse_flow) and SAMP's upload against label_tables'
   - brief: `docs/design/K1040_s3b_label.md` (F1-F4, ## Handoff); S3's Handoff in `docs/design/K1040_s3_label.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`
-- **K1107** · Muse batch 6 (`docs/design/K1107_muse_batch6.md`): A K343, B K130 + K495, C K128 + K212 + K490,
-  D K787 + K584, E K112, F K403 + K263 + K600 + K609 + K462; no junction or cursive work. Runs 6A-6F chained
-  from 2026-11-02.
-  - owner: muse runs 6A-6F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 20:20
-  - branch: mainline; last commit: `c647e223`
-  - evidence: `.claude/probes/K1053/` (queue.txt lines 6A-6F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run F done (K403, K263, K600, K609, K462 closed); batch 6 complete, Claude reviews and closes K1107
-  - brief: `docs/design/K1107_muse_batch6.md`
-  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 - **K1108** · Muse batch 7 (`docs/design/K1108_muse_batch7.md`): A K368, B K1100, C K748, D K1109 + K1099,
   E K1101, F K426 + K437; no junction or cursive work. Runs 7A-7F chained after batch 6.
-  - owner: nobody since 2026-11-02 20:20 (queued behind K1107; no run started)
-  - branch: mainline; last commit: `0135271a`
-  - evidence: `.claude/probes/K1053/` once lines 7A-7F are queued
-  - next: once batch 6 is reviewed, append 7A-7F to `.claude/probes/K1053/queue.txt` in batch 5's line form and restart the chain if it stopped
+  - owner: muse runs 7A-7F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 00:28
+  - branch: mainline; last commit: `714e3f28`
+  - evidence: `.claude/probes/K1053/` (queue.txt lines 7A-7F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
+  - next: Run A (K368)
   - brief: `docs/design/K1108_muse_batch7.md`
+  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
 ## Next, in order
 
@@ -673,9 +665,6 @@ Every other item below waits on the trigger it names.
   don't re-run patch_items.mjs (`docs/design/K777.md` Handoff).
 - **K890** · Move the K863 tracer into tracked `scripts/` (trace_k879.py, review_k879.py, K886's
   join_k886.py, the venv's requirements), without the chart or its crops, once K886 lands.
-- **K895** · phone_pass kit: `-Phase start` hangs a piped caller; `summary.mjs` takes the lower of
-  two reps at n=2 (use the mean); fabric m11 needs an A/A floor and a fresh `noise.json`. (K907 moved the round probes into `scripts/phone_pass/`.)
-  And a trip goes unseen until cleanup (round 2026-10-30: K485 ran 16:48-16:52 after the 16:45:32 trip): steps refuse once `state/watchdog.trip` exists.
 - **K912** · Cursive generator follow-ups from K902: o and b exits per class (ok 10.9, or 6.5 u);
   f's exit walk; `--high-exit` by rerun; per-left split overfit. v5 (K904) fixed h's and k's after-o
   entries, og, oq, ng and nq. `docs/design/K902_cursive_frames.md` ## Results.
@@ -2028,6 +2017,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1107** · Muse batch 6: runs A-F passed their gates (2026-11-02 20:20 to 2026-11-03 00:28) and closed all 14 items (K343, K130, K495, K128, K212, K490, K787, K584, K112, K403, K263, K600, K609, K462); Levi checks K1110, K1111 and K1118. Done in c647e223 (2026-11-03).
+- **K895** · phone_pass kit (K156 round 2026-11-02): (a) the median averages at even n and (d) a phase refuses once its pass has `state/watchdog.trip` (8d4d0617, test `test/phone_pass/k895.test.ts`); (c) servers and watchdog start detached through WMI (33fa558b). (b), the A/A floor, continues as K1124. Done in 33fa558b (2026-11-03).
 - **K462** · K323 table and undo list updated to shipped burn rows (2026-11). Done in a0bafbb7 (2026-11-03).
 - **K609** · pluck docs point at chain 2 key 427, rechecked live on 5585. Done in c647e223 (2026-11-03).
 - **K600** · gameplay-links.md gains gm key and K534 entry. Done in 54433e6e (2026-11-03).
