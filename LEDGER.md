@@ -505,9 +505,9 @@ Next free ID: K1130.
 - **K1108** · Muse batch 7 (`docs/design/K1108_muse_batch7.md`): A K368, B K1100, C K748, D K1109 + K1099,
   E K1101, F K426 + K437; no junction or cursive work. Runs 7A-7F chained after batch 6.
   - owner: muse runs 7A-7F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 00:28
-  - branch: mainline; last commit: `05724e27`
+  - branch: mainline; last commit: `b5743a42`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 7A-7F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run E (K1101)
+  - next: Run F (K426 + K437)
   - brief: `docs/design/K1108_muse_batch7.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
@@ -1687,9 +1687,6 @@ Every other item below waits on the trigger it names.
   .claude/probes/K775 (hud775.mjs, out/before|after). In the shots (`.claude/probes/K775/shots/`) the last
   glyph of each value straddles the painted border (~6 px past it); a fix: let the sword row's value wrap
   like the hidden row, or shrink the column gap.
-- **K1101** · `docs/ledger_notes.md` holds 119 `## K<n> (2026-10-15, shortened by the diet)` headings twice,
-  with differing bodies (the second copies from about line 3016): merge each pair under one heading, keeping
-  both texts' facts. Mechanical; a Muse task.
 - **K1103** · Junction form B after S1f: F2's e* is steep as kappa -> 0; member() reaches back to |Lcut| +
   lambda; group 21's hook stroke and the free end at chain 22 s 27.608; j55's arc 5 px inside its label; 597's
   discrete corner existence vs the labels (`K1040_s1f_reach.md` F2, F3, F6).
@@ -2013,6 +2010,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1101** · 119 pairs merged under one heading. Done in b5743a42 (2026-11-03).
 - **K1099** · reset snaps; jump threshold checked; follow spring to Levi. Done in 05724e27 (2026-11-03).
 - **K1109** · probed: the taps jump. Done in 05724e27 (2026-11-03).
 - **K748** · no focus ring after a pointer click; phone pass and fragile check split out. Done in 5323a521 (2026-11-03).
