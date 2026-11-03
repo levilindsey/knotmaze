@@ -880,9 +880,15 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
   app.canvas.addEventListener("pointerup", endDrag);
   app.canvas.addEventListener("pointercancel", endDrag);
   // A mouse that leaves the canvas (for the panel, say) takes the hover
-  // glow with it (K145). The choice hover keeps its old behavior.
+  // glow with it (K145), and the choice hover too (K228: clearGlow leaves
+  // the choice hover, as its other call sites want, so clear it here).
   app.canvas.addEventListener("pointerleave", (e) => {
-    if (e.pointerType === "mouse" && !pendingPluck) clearGlow();
+    if (e.pointerType === "mouse" && !pendingPluck) {
+      clearGlow();
+      if (scene.fabric && scene.fabricController && scene.fabric.setHover(-1)) {
+        scene.fabric.update(scene.fabricController);
+      }
+    }
     setWaitCue(false); // K80 turns 3a.
   });
 
