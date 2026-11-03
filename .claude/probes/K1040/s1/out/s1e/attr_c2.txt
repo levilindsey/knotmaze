@@ -1,0 +1,15 @@
+== muse_hash: #1 c1 4 sites -> c2 12; arms 503, L moved > 1e-3 on 80
+  site 702,130 F 4.24 new in c2: c1 1.000* tA c57 j129 arms 392:L1.416,390:L1.209 | c2 1.000* tA c57 j129 arms 392:L1.416,390:L1.244
+  site 703,131 F 4.47 new in c2: c1 1.000* tA c57 j129 arms 392:L1.416,390:L1.209 | c2 1.000* tA c57 j129 arms 392:L1.416,390:L1.244
+  site 702,132 F 5.83 new in c2: c1 0.305  tA c57 j129 arms 392:L1.416,390:L1.209 | c2 1.000* tA c57 j129 arms 392:L1.416,390:L1.244
+  site 704,132 F 5.10 new in c2: c1 1.000* tA c57 j129 arms 392:L1.416,390:L1.209 | c2 1.000* tA c57 j129 arms 392:L1.416,390:L1.244
+  site 705,132 F 5.00 new in c2: c1 1.000* tA c57 j129 arms 392:L1.416,390:L1.209 | c2 1.000* tA c57 j129 arms 392:L1.416,390:L1.244
+  site 706,132 F 5.00 new in c2: c1 1.000* tA c57 j129 arms 392:L1.416,390:L1.209 | c2 1.000* tA c57 j129 arms 392:L1.416,390:L1.244
+  site 707,132 F 5.10 new in c2: c1 0.487  tA c57 j129 arms 392:L1.416,390:L1.209 | c2 0.606* tA c57 j129 arms 392:L1.416,390:L1.244
+  site 703,133 F 6.33 new in c2: c1 0.103  tA c57 j129 arms 392:L1.416,390:L1.209 | c2 0.986* tA c57 j129 arms 392:L1.416,390:L1.244
+    arm 390 (j 129 pi 68 dir -1): L c1 1.209 -> c2 1.244; c1 binding pass d 2.056 θ 1.4594 c 1.209
+== g41_user_tw64: #1 c1 12 sites -> c2 12; arms 233, L moved > 1e-3 on 50
+  site 526,646 F 7.00 gone in c2: c1 1.000* tB c26 j64 arms 197:L1.177,198:L1.349 | c2 1.000* tB c26 j64 arms 197:L1.177,198:L1.349
+  site 527,646 F 8.00 gone in c2: c1 1.000* tB c26 j64 arms 197:L1.177,198:L1.349 | c2 1.000* tB c26 j64 arms 197:L1.177,198:L1.349
+  site 318,274 F 5.00 new in c2: c1 1.000* foot c22 | c2 0.868* arc c-1 j55 arms 170:L0.772,171:L2.060
+  site 317,275 F 5.00 new in c2: c1 1.000* foot c22 | c2 0.673* arc c-1 j55 arms 170:L0.772,171:L2.060
