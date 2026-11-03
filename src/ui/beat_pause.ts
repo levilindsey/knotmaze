@@ -48,7 +48,7 @@ export interface BeatPause {
   // Lifts the button above the sprint button (both sit bottom left).
   setRaised(on: boolean): void;
   setHeld(held: boolean): void;
-  covered(rect: DOMRect): boolean;
+  covered(rect: { left: number; top: number; right: number; bottom: number }): boolean;
 }
 
 // `onToggle` runs on a press with the new state (true: paused).
@@ -99,7 +99,7 @@ export function createBeatPause(onToggle: (held: boolean) => void): BeatPause {
       el.classList.toggle("km-up", on);
     },
     setHeld,
-    covered(r: DOMRect) {
+    covered(r: { left: number; top: number; right: number; bottom: number }) {
       const b = el.getBoundingClientRect();
       return b.right > r.left && b.left < r.right && b.bottom > r.top && b.top < r.bottom;
     },
