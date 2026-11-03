@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1097.
+Next free ID: K1098.
 
 ## Waiting on Levi
 
@@ -285,15 +285,8 @@ Next free ID: K1097.
   with crops). Nothing to look at before S4b.
 - **K1075** · K137 sounds unchecked: the snap pluck and the strand glissando need an ear (left by K658; K658
   doc Findings filed).
-- **K1078** · Hand K1040's gated stages to Muse, one per run: S3 (label pass) now, as S1e changes only band
-  and corner rules; S1e stays with Claude after Nov 2. S3, S4a and S5 time on the Pixel, which Levi plugs in
-  (docs/design/K1040_junction_field.md F7).
 - **K1080** · On the phone, zoom in and out and tap threads and junction choices: do the tap targets feel
   right? They now stay the same finger size at every zoom (K331, bc5f0043).
-- **K1089** · Cursive J3c's look calls (v6.6; Drive `K863/`: `o_joins_v66.svg`, `ot_v66.svg`,
-  `cursive_v66_words.svg`): oe, b0's near-font S or the converged straighter one; ot's dip under the x-height
-  (19.5 u; more air costs a deeper dip, `side_clear`'s C); the deeper dips into m n v x z; the corner entries
-  into i j p s u w y. `docs/design/K1009_cursive_j3c.md` Handoff.
 - **K1096** · On the phone, with the stat rows on, play a maze with hidden runs and the sword: does the
   top-left readout stay whole, and clear of the Free play pill and the menu button, as its numbers grow? (K775,
   K738, 5b8522a5)
@@ -302,7 +295,7 @@ Next free ID: K1097.
 
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
-  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1e merged (96de6db3); S1f running (2026-11-02).
+  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1e merged (96de6db3); S1f and S3 (K1097) running (2026-11-02).
   - owner: claude agent `a43dac8f0673db4df` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (Opus, 2 h cap), since 2026-11-02 17:51
   - branch: `worktree-agent-a43dac8f0673db4df`, worktree `.claude/worktrees/agent-a43dac8f0673db4df`; last commit: `0528702d` (the base)
   - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1), `s1/out/s1b/` and `s1/out/s1c/`, S1d's runs in `s1/out/s1d/`, S1e's in `s1/out/s1e/` (gate `s1/run_s1e_gate.ps1`, table `s1/gate_table.ps1`; probes `b_rate.ts`, `bend_s1e.ts`, `attr_f4f5.ts`, `lcut_far.ts`, `attr_c2.ts`, `arms_c3.ts`; commands in its Handoff)); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
@@ -312,11 +305,11 @@ Next free ID: K1097.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
-  - owner: nobody since 2026-11-02 17:24 (merged; agent `a396032821cae8823` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `c7cadb2c`
-  - evidence: `.claude/probes/K863/trace/` (per stage: `tools/*_k<ID>.py`, `work<n>/`, `out<n>/`; `NOTES.md` has a section per version with its rerun commands); Drive `K863/` (each version's SVGs; v5.1: `cursive_v51.svg`, `cursive_v51_words.svg`, `split_combs.svg`, `k917_junctions.svg`; v5.2: `cursive_v52.svg`, `cursive_v52_words.svg`; v5.3: `cursive_v53.svg`, `cursive_v53_words.svg`, `combs_v53.svg`; v5.4: `cursive_v54_words.svg`, `e_joins_v54.svg`; v5.5: `cursive_v55.svg`, `cursive_v55_words.svg`, `combs_v55.svg`; v5.6: `cursive_v56.svg`, `cursive_v56_nodes.svg`, `cursive_v56_words.svg`, `combs_v56.svg`; v5.7: `cursive_v57.svg`, `cursive_v57_nodes.svg`, `cursive_v57_words.svg`, `combs_v57.svg`; v5.8: `cursive_v58.svg`, `cursive_v58_nodes.svg`, `cursive_v58_words.svg`, `combs_v58.svg`; K944: `e_tails_k950.svg`, `words_edit_test.svg`, `combs_edit_test.svg`; J1 uploaded nothing, no visible change; v5.9 = J2: `cursive_v59_words.svg`, `combs_v59.svg`; v6.0 = B1: `cursive_v60.svg`, `cursive_v60_words.svg`, `combs_v60.svg`, `letters_v60.svg`; v6.1 = J3a: `o_exits_v61.svg`, `ot_v61.svg`, `low_v61.svg`, `cursive_v61<a|b|c>_words.svg`; v6.2 = B2: `corners_v62.svg`, `gq_words_v62.svg`, `cursive_v62_words.svg`; v6.3 = B3: `g_top_v63.svg`, `high_joins_v63.svg`, `gq_words_v63.svg`, `cursive_v63_words.svg`; v6.4 = J3b: `o_exits_v64.svg`, `ot_v64.svg`, `cursive_v64_words.svg`; v6.5 = B4: `aq_top_v65.svg`, `aq_joins_v65.svg`, `cursive_v65_words.svg`; v6.6 = J3c: `o_joins_v66.svg`, `ot_v66.svg`, `cursive_v66_words.svg`); Levi's file to edit: `out25/cursive_template.svg` (`out26/`'s is the same file; K1029 passed 2026-10-29; B4's a and q tops on `out24/`'s,J3a's 4 u edit of o on `out23/`'s, B3's g top on `out22/`'s, B2's g and q on `out20/cursive_template.svg`, which `work20/dbg/build_from_svg.ps1 -Name k990` built on B1's join sets, `work20/template_map_k990.json`); B1's census `out20/census_v60.txt`, distances `work20/fit/bodydist_k990.txt`, locality `work20/local/b1/sensitivity.txt` and `work20/cmp_j2_b1.txt`, debug scripts `work20/dbg/temp_k990/` (rerun list: B1's handoff); J2's census `work19/dbg/census_k962.py`, crops `work19/crops/`, locality harness `work19/dbg/sensitivity_k962.py` (rerun list: J2's handoff); J3a's census `work21/dbg/census_k1009.py`, rerun `work21/dbg/checks2_batch_k1009.ps1`, Levi's two pictures `work21/levi/` (made by `levi_crops_k1009.ps1` there); B2's record `NOTES.md` `## K1012` (N1-N10 with rerun commands), build `work22/base`, rerun `work22/dbg/checks_k1012.ps1` (census, compare, distances, word sheets, guard), the high-entry check sheets `work22/sheets/`; B3's record `NOTES.md` `## K1019` (N1-N6 with rerun commands), builds `work23/base_a` (v6.3a) and `work23/base` (v6.3), reader `work23/dbg/asdrawn_k1019.py`, census `work23/dbg/census_k1019.py`, rerun `work23/dbg/checks_k1019.ps1`; J3b's record `NOTES.md` `## K1009b` (N1-N7), ports `work24/ports_k1009b.json` (v6.4 = H; ot's tangent = Ht), the before build `work24/b0` (built through B3's reader, `work24/b0_build.log`), sheets `out24/` (v6.4) and `work24/sheets/`, tools `work24/dbg/{gen,census,sheet,locality}_k1009b.py`, checks `work24/dbg/checks_k1009b.ps1`, locality `work24/locality_k1009b.txt`; B4's record `NOTES.md` `## K1029`, tools `work25/dbg/*_k1029.*`, build `work25/base` (v6.5), sheets `out25/`; J3c's record `NOTES.md` `## K1009c` (N1-N5 with rerun commands), ports `work26/ports_k1009c.json` (v6.6 = K), census `work26/census_v66.txt`, ot's clearance `work26/clearance_ot.txt`, locality `work26/locality_k1009c.txt`, checks `work26/dbg/checks_k1009c.ps1` (logs `work26/checks_logs/`), tools `work26/dbg/*_k1009c.*`, sheets `out26/` (v6.6) and `work26/sheets/`
-  - next: Levi's v6.6 look calls (K1089: oe's S, ot's dip, the dips into m n v x z, the corner entries into i j p s u w y); then every other exit (b, v and w high; into g at v6.3's attach, K1026), the joins into a and q (K1027), the J3 and B4 leftovers (K1014, K1035, K1036, K1044, K1090), the leads and tails (K1006), f's lower-loop end into its exit (K990), K991 and K948 for the remaining pairs, K937, K997, K998, and the join sets removed; then Levi reviews again; Levi edits the newest `cursive_template.svg` once the letters look right and `build_from_svg.ps1` builds from it; K927; then map the letters onto threads (the a/c/d/g/o/q junctions and the top corners of a, g and q, `K863_trace.md` ## Levi's calls); capitals are K931
-  - brief: J3c's Handoff (`docs/design/K1009_cursive_j3c.md`) and `K863_trace.md` ## Levi's calls
+  - owner: agent `ac83c987a53ec3ee7` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-02 18:18, 2 h cap ~20:18)
+  - branch: `worktree-agent-ac83c987a53ec3ee7`, worktree `.claude/worktrees/agent-ac83c987a53ec3ee7`; last commit: `5b8522a5`
+  - evidence: `.claude/probes/K863/trace/` (`NOTES.md` has every version's files and rerun commands; J3d: `work27/`, `out27/`, `tools/*_k1027.*`, NOTES `## K1027`); Drive `K863/` (v6.7 sheets: `*_v67*.svg`); Levi's file to edit: `out25/cursive_template.svg`; the full file list as of v6.6: `docs/ledger_notes.md` `## K863`
+  - next: J3d (v6.7): the solved joins into a and q (K1027) and f's lower-loop end as a cusp into its exit (K990); then b, v and w's other high exits, the J3 and B4 leftovers (K1014, K1035, K1036, K1044, K1090), the leads and tails (K1006), K991 and K948 for the remaining pairs, K937, K997, K998, and the join sets removed; then Levi reviews again; Levi edits the newest `cursive_template.svg` once the letters look right and `build_from_svg.ps1` builds from it; K927; then map the letters onto threads (`K863_trace.md` ## Levi's calls); capitals are K931
+  - brief: `docs/design/K1027_cursive_j3d.md` on the agent's branch (it writes it first); until then J3c's Handoff (`docs/design/K1009_cursive_j3c.md`) and `K863_trace.md` ## Levi's calls
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -492,8 +485,17 @@ Next free ID: K1097.
   - owner: muse runs 5A-5E chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 18:00
   - branch: mainline; last commit: `5b8522a5`
   - evidence: `.claude/probes/K1053/` (`queue.txt` lines 5A-5E, `chain.log`, `chain.out.txt`, `done.txt`)
-  - next: Run B (K1085); Run A partial: fixes in 5b8522a5, residual K1095, Waiting K1096, K775/K738 left open for Claude review
+  - next: runs 5B-5E, chained again after the coordinator's ledger commit; Run A reviewed: CI green, K775 and K738 fixed by its probe's rects in 36 states (badge overlaps 11 -> 0, hidden-row overflows 12 -> 0), to close once Claude has seen screenshots; its residual K1095 and phone look K1096 filed; Claude reviews each later run and files what it reports (B: camera motions with no reduced path; D: any levi.dev proxy cache residual), then closes K1091; batch 6's draft comes from a planner (`.claude/probes/batch6/muse_batch6_draft.md`)
   - brief: `docs/design/K1091_muse_batch5.md`
+- **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
+  the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
+  Pixel's 2 ms.
+  - owner: agent `a4d6c4eb46ea384c4` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-02 18:18, 2 h cap ~20:18)
+  - branch: `worktree-agent-a4d6c4eb46ea384c4`, worktree `.claude/worktrees/agent-a4d6c4eb46ea384c4`; last commit: `f96c760e`
+  - evidence: `.claude/probes/K1040/s3/` (its gate runs and results); oracle30 and the recordings: worktree `k868-s3a` (`.claude/probes/S3a/seq13/`); F7's S3 entry names the modules it reuses
+  - next: S3 per F7: the label (capsules per chain segment, corner fills, surfaces with S1's depth key, static instances), then its gate: oracle30 0 DEFECT (K1033), pops only inside the fades, at most 2 ms on the Pixel at dpr 2, the favicon 404 not an error (K1039); then S4a
+  - brief: `docs/design/K1040_s3_label.md` on the agent's branch (it writes it first); until then F7's S3 entry in `docs/design/K1040_junction_field.md`
+  - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`
 
 ## Next, in order
 
@@ -2075,6 +2077,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1078** · Hand K1040's gated stages to Muse. Dropped: Levi (2026-11-02) left Claude agents or Muse to the coordinator per task; the junction stages stay with Claude agents (S3 runs as K1097's agent) (2026-11-02).
+- **K1089** · Cursive J3c's look calls: Levi kept v6.6 on all four (oe, ot's dip, the dips into m n v x z, the entries into i j p s u w y; `K863_trace.md` Levi's calls). Done in b283c1e7 (2026-11-02).
 - **K671** · Remove 16 merged, clean agent worktrees with K161's cleanup.ps1. Dropped: already gone: removed after 10-27 without a K161 run (inferred: Claude Code's sweep of old clean worktrees); branches kept, all merged; the open items' probes were copied at merge (2026-11-02).
 - **K485** · Pixel sheet pass on the phone: 34/34 portrait checks ok on master (keys, landscape, live skipped). Done in 9f5b77f1 (2026-11-02).
 - **K309** · K299 ring-lap fix on the PowerVR: 319/16384 division misses (all k-1); every seam case 0 px on master. Done in 9f5b77f1 (2026-11-02).
