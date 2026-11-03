@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1132.
+Next free ID: K1133.
 
 ## Waiting on Levi
 
@@ -304,6 +304,9 @@ Next free ID: K1132.
 - **K1129** · With Reduced motion on and the camera following the player, the view still glides after every
   move. Should it hold still instead, and jump only when the player gets near the edge of the screen? (K1099,
   follow camera)
+- **K1132** · After you press an arrow key (or WASD) once, small arrows now sit at the start of each run at
+  your junction showing which key takes it. Do they read well at the size of the one-way chevrons? Pictures:
+  .claude/probes/K332/shots/ (K332, 3346474f)
 
 ## In progress
 
@@ -505,9 +508,9 @@ Next free ID: K1132.
 - **K1131** · Muse batch 8 (`docs/design/K1131_muse_batch8.md`): A K332, B K657, C K1081, D K1082, E K1083, F
   K1115; Next in ledger order, no junction, cursive, physics or phone work.
   - owner: muse runs 8A-8F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 04:10
-  - branch: mainline; last commit: `f8f45ec1`
+  - branch: mainline; last commit: `3346474f`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 8A-8F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run A (K332)
+  - next: Run B (K657)
   - brief: `docs/design/K1131_muse_batch8.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
@@ -614,9 +617,6 @@ Every other item below waits on the trigger it names.
 - **K328** · Hover rim profile (Levi, 10-14): an opaque outer band, then a
   fade from further in; High contrast reuses it at fade 0. Paint library
   only (K8 s1), with K111 s5 and K265; and hide the glow at strength 0 (K298).
-- **K332** · Arrow-key hints (Levi 10-14): a small key icon (or chord, K333) near each choice's
-  start, shown after the first arrow key press. After K329. Hooks: `key_moves.ts` (`keyMap`,
-  `chordMap`, `keyStep`, `stepWaiting`), K83's `MarkerMesh`, `marker_glyphs.ts`.
 - **K318** · Win effects (Levi 10-14): one show, many themes; thirteen themes in a Win effects
   folder (Theme dropdown, Party default), built in twelve stages. Stage 1 after the confetti stage
   and K111 s5. `docs/design/K318_win_effects.md` ("Build stages").
@@ -2001,6 +2001,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K332** · key hints after the first direction press. Done in 3346474f (2026-11-03).
 - **K1108** · Muse batch 7: runs A-F passed their gates (2026-11-03 00:29 to 03:06) and closed K368, K1100, K748, K1109, K1099, K1101, K426, K437; filed K1126, K1127, K1129 (Levi) and K1128. Done in 8ab9e8e9 (2026-11-03).
 - **K437** · rules name frame_loop.ts; half rate added. Done in 8ab9e8e9 (2026-11-03).
 - **K426** · index rows complete; scripts/lore_index_check.mjs. Done in 8ab9e8e9 (2026-11-03).
