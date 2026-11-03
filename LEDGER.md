@@ -485,9 +485,9 @@ Next free ID: K1099.
   D K1084 (K1086 report only), E K1063 + K593; no junction or cursive work. Runs 5A-5E chained from
   2026-11-02.
   - owner: muse runs 5A-5E chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 18:00
-  - branch: mainline; last commit: `32603535`
+  - branch: mainline; last commit: `04e2c1f4`
   - evidence: `.claude/probes/K1053/` (`queue.txt` lines 5A-5E, `chain.log`, `chain.out.txt`, `done.txt`)
-  - next: Run B done in 32603535; runs C-E next, chained after the coordinator's ledger commit; Claude reviews Run B and files its reported camera motions (viewHoming reset ease, follow spring), then closes K1091
+  - next: Run C done (K228 65b0d43c, K442 3c57bd37, K741 04e2c1f4); Run D next, chained after the coordinator's review; Claude reviews Run C, then closes K1091 after Run E
   - brief: `docs/design/K1091_muse_batch5.md`
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
@@ -919,8 +919,6 @@ Every other item below waits on the trigger it names.
 - **K230** · K92 did not check the badge's last fit level (bare icon) with the panel open; its phone
   checks were desktop emulation, so K156's next phone pass covers K92 (`gameplay-badge.md`). No
   phone look reaches the badge's fit levels at 411 px: use an emulated narrower viewport.
-- **K228** · A choice's hover stays lit after the mouse leaves the canvas
-  (`src/main.ts`; seen by K145's agent, whose glow clears there).
 - **K226** · K98's spider glyph and role have no mesh (`MeshRole` excludes
   it in `src/render/marker_glyphs.ts`) until K114's call 7 decides what
   the spider marks.
@@ -1293,8 +1291,6 @@ Every other item below waits on the trigger it names.
 - **K439** · The G3-0 probe hooks (g3DataState, g3TableRows, g3Expected, captureScene, restoreScene; ribbon_renderer.ts
   4924-5182 at 4afb8dc) stay on the renderer's facade through K5 R2; R5 gives them a part, e.g. `ribbon/scene_probe.ts`
   (`docs/design/K5_R2.md`, Questions 1).
-- **K442** · `src/game/maze_stats.ts` STATS: the walked and fire lead lines are false under the
-  real-time fire (K114 s2). After K137 s1, which edits `maze_stats.ts`.
 - **K443** · Two panel rows labelled `clock`: K80's in Maze (turn-based | real time) and the fire's
   in Burn race (turn | realtime). Match the wording or rename one (K114 s2); rides a later param stage.
 - **K444** · K408's start-marker fade: the gap slot moves in one frame when the fade starts, and the
@@ -1591,8 +1587,6 @@ Every other item below waits on the trigger it names.
   its class, not the indicators avoid list; the sword toasts were checked shown directly, not after
   a walked pickup; No hints left is unreachable by tap (Hint disables at 0)
   - K749: after a walked pickup on the real phone, all three sword toasts clear the pad
-- **K741** · cutRules() still says the fewest cuts when the Lead par is only an upper bound (par at
-  most P) (`docs/design/K698_polish.md` Handoff)
 - **K744** · K138 s1 page gaps: blips of other colors at some junctions under the rule colors (cause
   unverified, maybe the junction webs); not page-checked: a backtrack undoing a slide, ice with
   alternate, strict par lost under a rule, the share (`docs/design/K138_s1.md` Handoff)
@@ -2076,6 +2070,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K741** · cutRules(upper) drops 'fewest cuts' for upper-bound par; exact-par pinned. Done in 04e2c1f4 (2026-11-02).
+- **K442** · walked/fire lead lines true under both fire clocks; tests pin old phrases gone. Done in 3c57bd37 (2026-11-02).
+- **K228** · pointerleave clears the choice hover too (probe K228 before 0 stays, after -1; guard held). Done in 65b0d43c (2026-11-02).
 - **K1085** · Reduced motion snaps the camera's fit on a jump and its range ease (32603535). Done in 32603535 (2026-11-02).
 - **K1078** · Hand K1040's gated stages to Muse. Dropped: Levi (2026-11-02) left Claude agents or Muse to the coordinator per task; the junction stages stay with Claude agents (S3 runs as K1097's agent) (2026-11-02).
 - **K1089** · Cursive J3c's look calls: Levi kept v6.6 on all four (oe, ot's dip, the dips into m n v x z, the entries into i j p s u w y; `K863_trace.md` Levi's calls). Done in b283c1e7 (2026-11-02).
