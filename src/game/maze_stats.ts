@@ -191,7 +191,8 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
     label: "fire lead",
     line:
       "How much further you can walk before the fire reaches the junction " +
-      "you stand at. The fire spreads only as you walk, backing up included.",
+      "you stand at. The fire closes in as you walk, backing up included, " +
+      "and in real time while you stand there too.",
   },
   // FabricMazeController.fireClosest: the least lead over every arrival.
   closestCall: {
@@ -200,13 +201,13 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "The smallest fire lead you had on any arrival, the exit included. " +
       "The nearer to 0, the closer the fire came.",
   },
-  // FabricMazeController.walkedDist: every run walked, forward and back; it
-  // is the fire's clock (game/fire.ts) and the stars' measure.
+  // FabricMazeController.walkedDist: every run walked, forward and back; the
+  // stars' measure, and on the turn clock the fire's clock too (game/fire.ts).
   walked: {
     label: "walked",
     line:
-      "Every run you walked this attempt, forward and back. The fire's " +
-      "clock runs on it, not on time.",
+      "Every run you walked this attempt, forward and back. The stars " +
+      "count every step of it.",
   },
   // K137: FabricMazeController.brokenRuns() (game/fragile.ts: snap breaks a
   // run at its first crossing, crack at its second).

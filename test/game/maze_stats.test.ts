@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  STATS,
   SolveClock,
   efficiencyOf,
   efficiencyPercent,
+  explainedStats,
   formatDuration,
   moveGrid,
 } from "../../src/game/maze_stats";
@@ -183,5 +185,27 @@ describe("share text", () => {
     );
     // No minotaur ran: no tag.
     expect(shareText({ ...base, catches: null }).split("\n")[0]).toBe("Knotmaze \u{1F9F6}");
+  });
+});
+
+describe("stat lines under both fire clocks (K442)", () => {
+  it("drops the turn-clock-only claims from the table and its explanations", () => {
+    for (const { line } of Object.values(STATS)) {
+      expect(line).not.toContain("spreads only as you walk");
+      expect(line).not.toContain("clock runs on it, not on time");
+    }
+    const explained = explainedStats(["closestCall"]).map((id) => STATS[id].line);
+    expect(explained.join(" ")).not.toContain("spreads only as you walk");
+    expect(explained.join(" ")).not.toContain("clock runs on it, not on time");
+  });
+
+  it("still names what the fire lead and the walked meter measure", () => {
+    expect(STATS.fireLead.line).toContain(
+      "How much further you can walk before the fire reaches the junction you stand at."
+    );
+    expect(STATS.fireLead.line).toContain("fire");
+    expect(STATS.walked.line).toContain("Every run you walked this attempt, forward and back.");
+    expect(STATS.walked.label).toBe("walked");
+    expect(STATS.fireLead.label).toBe("fire lead");
   });
 });
