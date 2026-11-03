@@ -220,7 +220,8 @@ describe("label B: form B names a surface by its covering pieces (S3b F1)", () =
 });
 
 describe("label B: the merge scan's windows", () => {
-  // Every census point: the windows give what a scan of the whole chain gives.
+  // Every census point: the windows and each side's early end (S3b) give
+  // what a scan of the whole chain gives (infinite arcs never end early).
   for (const name of ["hairpin", "kink", "hairpinX", "bend", "tee"]) {
     it(name, () => {
       const fb = new FormB(FIXTURES[name]());
@@ -232,6 +233,8 @@ describe("label B: the merge scan's windows", () => {
           const m0 = p.closed ? Math.floor((p.nseg - 1) / 2) : k;
           full[o] = m0;
           full[o + 1] = p.closed ? p.nseg - 1 - m0 : p.nseg - 1 - k;
+          full[o + 2] = Infinity;
+          full[o + 3] = Infinity;
         }
       });
       const TF = { ...T, nb: full };
