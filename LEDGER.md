@@ -295,21 +295,21 @@ Next free ID: K1118.
 
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
-  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: 44ce69a1); S3 (K1097) merged short of its gate; S1g running (2026-11-02).
+  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: 44ce69a1); S3 (K1097) merged short of its gate; S1g merged (52945e6e); S3b (K1097) running (2026-11-02).
   - owner: nobody since 2026-11-02 21:18 (merged)
   - branch: mainline; last commit: `52945e6e`
   - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1), `s1/out/s1b/` and `s1/out/s1c/`, S1d's runs in `s1/out/s1d/`, S1e's in `s1/out/s1e/` (gate `s1/run_s1e_gate.ps1`, table `s1/gate_table.ps1`; probes `b_rate.ts`, `bend_s1e.ts`, `attr_f4f5.ts`, `lcut_far.ts`, `attr_c2.ts`, `arms_c3.ts`; commands in its Handoff)); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: S1h after S3b merges: S1g's Handoff Next 1-2 (a robust V solve from the roots out plus a continuous wedge weight for the 704 test; V's foot blended over its candidate feet), crops of S1g's at-rest changes; then S1f's Later work (the 14 pops, the 3 junction pops, j129's corner)
-  - brief: `docs/design/K1040_s1g_gates.md` on the agent's branch; S1f's Handoff in `docs/design/K1040_s1f_reach.md`
+  - next: S3b (K1097) running; then S1h: S1g's Handoff Next 1-2 (a robust V solve from the roots out plus a continuous wedge weight for the 704 test; V's foot blended over its candidate feet) and the crops of S1g's at-rest changes (K1114); then S1f's Later work (the 14 pops, the 3 junction pops, j129's corner)
+  - brief: `docs/design/K1040_s1g_gates.md` ## Handoff; S1f's Handoff in `docs/design/K1040_s1f_reach.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
-  - owner: nobody since 2026-11-02 21:23 (merged)
-  - branch: mainline; last commit: `d505cbbf`
-  - evidence: `.claude/probes/K863/trace/` (`NOTES.md` has every version's files and rerun commands; J3e: `work28/`, `out28/`, `tools/*_k990e.*`, NOTES `## K990e`; J3d: `work27/`, `out27/`, NOTES `## K1027`); Drive `K863/` (v6.7 sheets `*_v67*.svg`); Levi's file to edit: `out25/cursive_template.svg`; the full file list as of v6.6: `docs/ledger_notes.md` `## K863`
-  - next: J3f: the join sweep's first stage (b, v and w exits less down and more out, then the remaining exits; no per-pair data), launching after this merge
-  - brief: `docs/design/K990_cursive_j3e.md` on the agent's branch; J3d's Handoff in `docs/design/K1027_cursive_j3d.md`
+  - owner: agent `a6420b23c491748f8` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-02 21:30, 2 h cap ~23:30)
+  - branch: `worktree-agent-a6420b23c491748f8`, worktree `.claude/worktrees/agent-a6420b23c491748f8`; last commit: `6da27898`
+  - evidence: `.claude/probes/K863/trace/` (`NOTES.md` has every version's files and rerun commands; J3f: `work29/`, `out29/`, `work29/dbg/*_k1113.*`, NOTES `## K1113`; J3e: `work28/`, `out28/`, NOTES `## K990e`); Drive `K863/`; Levi's file to edit: `out25/cursive_template.svg`; the full file list as of v6.6: `docs/ledger_notes.md` `## K863`
+  - next: J3f: b, v and w exits less down and more out (K1113), then the remaining exits in order under the one join rule (K1112), finishing each letter before the next
+  - brief: docs/design/K1113_cursive_j3f.md on the agent's branch; J3e's Handoff in `docs/design/K990_cursive_j3e.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -482,11 +482,11 @@ Next free ID: K1118.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-02 19:40 (agent `a4d6c4eb46ea384c4` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c stopped short of its gate: all 137 DEFECTs are class B; merged 19:56; S3b waits for S1g's merge)
-  - branch: mainline; last commit: `bf2ba829`
-  - evidence: `.claude/probes/K1040/s3/` (`out/diag_*.txt`, the verdict table; commands in the brief's Handoff); oracle30 and the recordings: worktree `k868-s3a` (`.claude/probes/S3a/seq13/`)
-  - next: S3b: the class-B rule decided (a) (coordinator, 2026-11-02, by the checks): form B names a surface by its covering pieces only, a Definition change with its own Finding in form_b.ts after S1g merges; then the census (expect the 137 class-B DEFECTs gone, closing K1033), the scan's cost (clip each capsule to its segment's slab, tighten the windows) and the Pixel timing (K923's harness, both locks); then step 5 (the pops over the four recordings, the point-table upload) and S5's nbWindows prep (`docs/design/K1040_s3_label.md` ## Handoff)
-  - brief: `docs/design/K1040_s3_label.md` ## Handoff; the class-B decision in K1040's F7 S3 entry (`docs/design/K1040_junction_field.md`)
+  - owner: agent `a99cc3250b93f7bc0` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-02 21:30, 2 h cap ~23:30)
+  - branch: `worktree-agent-a99cc3250b93f7bc0`, worktree `.claude/worktrees/agent-a99cc3250b93f7bc0`; last commit: `6da27898`
+  - evidence: `.claude/probes/K1040/s3/` (`out/`, the verdict table; commands in the brief's Handoff); oracle30 and the recordings: worktree `k868-s3a` (`.claude/probes/S3a/seq13/`)
+  - next: S3b: the baseline on S1g's form B, the Definition change (a), the census (0 DEFECT closes K1033), the scan's cost (desktop timing), the Pixel's time if it answers, the label's pops
+  - brief: docs/design/K1040_s3b_label.md on the agent's branch; S3's Handoff in `docs/design/K1040_s3_label.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`
 - **K1107** · Muse batch 6 (`docs/design/K1107_muse_batch6.md`): A K343, B K130 + K495, C K128 + K212 + K490,
   D K787 + K584, E K112, F K403 + K263 + K600 + K609 + K462; no junction or cursive work. Runs 6A-6F chained
