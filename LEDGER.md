@@ -484,10 +484,10 @@ Next free ID: K1119.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: agent `a99cc3250b93f7bc0` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-02 21:30, 2 h cap ~23:30)
-  - branch: `worktree-agent-a99cc3250b93f7bc0`, worktree `.claude/worktrees/agent-a99cc3250b93f7bc0`; last commit: `6da27898`
+  - owner: nobody since 2026-11-02 23:08 (merged; agent `a99cc3250b93f7bc0` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `c4863a50`
   - evidence: `.claude/probes/K1040/s3/` (`out/`, the verdict table; commands in the brief's Handoff); oracle30 and the recordings: worktree `k868-s3a` (`.claude/probes/S3a/seq13/`)
-  - next: S3b: the baseline on S1g's form B, the Definition change (a), the census (0 DEFECT closes K1033), the scan's cost (desktop timing), the Pixel's time if it answers, the label's pops
+  - next: S3c: the label pass without discards for the Pixel's GPU (one shaded fragment per pixel, depth from the vertex shader as K923's label set it), gated on the Pixel's 2 ms; if it misses, the coarser target (K923's lr), a new budget (Levi's) only after both; then step 5: the pops (def_drag, def_flow, muse_drag, muse_flow) and SAMP's upload against label_tables'
   - brief: docs/design/K1040_s3b_label.md on the agent's branch; S3's Handoff in `docs/design/K1040_s3_label.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`
 - **K1107** · Muse batch 6 (`docs/design/K1107_muse_batch6.md`): A K343, B K130 + K495, C K128 + K212 + K490,
