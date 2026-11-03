@@ -510,9 +510,9 @@ Next free ID: K1138.
   past the head marker, behind a probe hook); B, K1083 and K1133 retraced on K1077's flow-on stand; C, K1135's
   behavior test; D, batch 10's brief drafted.
   - owner: muse runs 9A-9D, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 06:52
-  - branch: mainline; last commit: 82c9a79b (the brief)
+  - branch: mainline; last commit: `6f23bf20`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K1132/`, `.claude/probes/K1083/flow/`
-  - next: Run A (K1132's pictures), then B, C and D
+  - next: Run A done; next Run B
   - brief: `docs/design/K1137_muse_batch9.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 9A-9D)
 
