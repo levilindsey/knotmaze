@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1091.
+Next free ID: K1092.
 
 ## Waiting on Levi
 
@@ -483,6 +483,14 @@ Next free ID: K1091.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
+- **K1091** · Muse batch 5: a planner drafts the brief from the ledger (no junction or cursive work); the
+  coordinator reviews it, commits it as `docs/design/<ID>_muse_batch5.md` and launches Muse once the K1040 S1e
+  junction agent has merged (one writer per repo).
+  - owner: claude agent `af3475cba37b08bdd` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (Sonnet planner, read-only), since 2026-11-02 17:30
+  - branch: mainline; last commit: `9dbb6f62`
+  - evidence: `.claude/probes/batch5/muse_batch5_draft.md` (the draft, untracked)
+  - next: review the draft against the ledger, commit the brief, launch Muse after S1e merges (`.claude/probes/K1053/chain.ps1` to chain the runs)
+  - brief: `docs/design/K1079_muse_batch4.md` (the model)
 
 ## Next, in order
 
