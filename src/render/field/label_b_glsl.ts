@@ -22,6 +22,8 @@ uniform sampler2D uPts;
 uniform sampler2D uChain;
 uniform sampler2D uSpan;
 uniform sampler2D uFill;
+// per segment (as uPts) its merge-scan window (m-, m+) (label_b.ts nbWindows)
+uniform sampler2D uNb;
 // world -> device px: u = m0.x x + m0.z y + m1.x, v = m0.y x + m0.w y + m1.y
 uniform vec4 uM0;
 uniform vec2 uM1;
@@ -33,6 +35,8 @@ uniform float uH;
 uniform float uInvK;
 uniform float uKeyScale;
 uniform float uPad;
+// the merge scan's reach in s (label_b.ts foldR)
+uniform float uFold;
 vec4 fetch(sampler2D t, int i) {
   return texelFetch(t, ivec2(i % TEX_W, i / TEX_W), 0);
 }
@@ -121,6 +125,39 @@ void main() {
   float sb = kb == 0 ? c1.x + c1.y : B.z;
   float s = A.z + t * (sb - A.z);
   if (closed && s >= c1.x + c1.y) s -= c1.y;
+  // The merge scan (form B's merge and fold): a nearer candidate of this
+  // chain within uFold of s hides this one. Only segment k's window.
+  vec4 nb = fetch(uNb, off + k);
+  int m0 = int(nb.x);
+  int m1 = int(nb.y);
+  for (int q = 0; q < 4096; q++) {
+    if (q > m0 + m1) break;
+    int j = k - m0 + q;
+    if (j < 0) j += nseg;
+    else if (j >= nseg) j -= nseg;
+    if (j == k) continue;
+    int jb = (j + 1 == n) ? 0 : j + 1;
+    vec4 Qa = fetch(uPts, off + j);
+    vec4 Qb = fetch(uPts, off + jb);
+    float tq = segT(p, Qa.xy, Qb.xy);
+    if (tq <= 0.0) {
+      if (closed || j > 0) {
+        int jp = j > 0 ? j - 1 : nseg - 1;
+        if (segT(p, fetch(uPts, off + jp).xy, Qa.xy) < 1.0) continue;
+      }
+    } else if (tq >= 1.0) {
+      if (closed || j + 1 < nseg) continue;
+    }
+    tq = clamp(tq, 0.0, 1.0);
+    float dq = distance(p, mix(Qa.xy, Qb.xy, tq));
+    if (!(dq < d)) continue;
+    float sq = Qa.z + tq * ((jb == 0 ? c1.x + c1.y : Qb.z) - Qa.z);
+    float ds = sq - s;
+    // s and sq both lie in [s0, s0 + len], so one lap wraps ds (no rounded
+    // quotient: K299's rule, test/render/paint_ring_lap.test.ts).
+    if (closed) ds -= ds > 0.5 * c1.y ? c1.y : ds < -0.5 * c1.y ? -c1.y : 0.0;
+    if (abs(ds) < uFold) discard;
+  }
   int so = int(c1.z);
   int ns = int(c1.w);
   uint code = uint(fetch(uSpan, so).y);

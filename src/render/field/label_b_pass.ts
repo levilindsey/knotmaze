@@ -53,10 +53,11 @@ export class LabelBPass {
   private L: WebGLTexture | null = null;
   private D: WebGLTexture | null = null;
   private G: WebGLTexture | null = null;
-  private tabs: Record<"pts" | "chain" | "span" | "fill", Tex>;
+  private tabs: Record<"pts" | "chain" | "span" | "fill" | "nb", Tex>;
   private h = 0;
   private invK = 0;
   private keyScale = 1;
+  private foldR = 0;
   width = 0;
   height = 0;
   /** Instance rebuilds so far (K985: only on a segment-count change). */
@@ -77,7 +78,7 @@ export class LabelBPass {
     this.instBuf = gl.createBuffer() as WebGLBuffer;
     this.fbo = gl.createFramebuffer() as WebGLFramebuffer;
     const mkTab = (): Tex => ({ tex: gl.createTexture() as WebGLTexture, rows: 0 });
-    this.tabs = { pts: mkTab(), chain: mkTab(), span: mkTab(), fill: mkTab() };
+    this.tabs = { pts: mkTab(), chain: mkTab(), span: mkTab(), fill: mkTab(), nb: mkTab() };
     this.tq = gl.getExtension("EXT_disjoint_timer_query_webgl2");
   }
 
@@ -144,6 +145,7 @@ export class LabelBPass {
     this.uploadTab(this.tabs.chain, T.chain, T.chainRows);
     this.uploadTab(this.tabs.span, T.span, T.spanRows);
     this.uploadTab(this.tabs.fill, T.fill, T.fillRows);
+    this.uploadTab(this.tabs.nb, T.nb, T.ptsRows);
     if (T.layoutKey !== this.layoutKey) {
       gl.bindVertexArray(this.vao);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.instBuf);
@@ -159,6 +161,7 @@ export class LabelBPass {
     this.h = T.h;
     this.invK = T.invK;
     this.keyScale = T.keyScale;
+    this.foldR = T.foldR;
     gl.bindVertexArray(prevVao);
     gl.bindBuffer(gl.ARRAY_BUFFER, prevBuf);
     gl.bindTexture(gl.TEXTURE_2D, prevTex);
@@ -185,8 +188,9 @@ export class LabelBPass {
     gl.uniform1f(u("uInvK"), this.invK);
     gl.uniform1f(u("uKeyScale"), this.keyScale);
     gl.uniform1f(u("uPad"), pad);
-    const names = ["uPts", "uChain", "uSpan", "uFill"] as const;
-    const keys = ["pts", "chain", "span", "fill"] as const;
+    gl.uniform1f(u("uFold"), this.foldR);
+    const names = ["uPts", "uChain", "uSpan", "uFill", "uNb"] as const;
+    const keys = ["pts", "chain", "span", "fill", "nb"] as const;
     names.forEach((n, i) => {
       gl.activeTexture(gl.TEXTURE0 + i);
       gl.bindTexture(gl.TEXTURE_2D, this.tabs[keys[i]].tex);
@@ -209,7 +213,7 @@ export class LabelBPass {
       scissor: gl.isEnabled(gl.SCISSOR_TEST),
       cull: gl.isEnabled(gl.CULL_FACE),
       active: gl.getParameter(gl.ACTIVE_TEXTURE),
-      tex: [0, 1, 2, 3].map((i) => {
+      tex: [0, 1, 2, 3, 4].map((i) => {
         gl.activeTexture(gl.TEXTURE0 + i);
         return gl.getParameter(gl.TEXTURE_BINDING_2D);
       }),

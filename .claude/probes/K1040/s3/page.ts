@@ -179,7 +179,7 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number }
     timer: pass.hasTimer,
     gpu: { n: gpu.length, p50: pct(gpu, 0.5), p95: pct(gpu, 0.95) },
     sync: { p50: pct(sync, 0.5), p95: pct(sync, 0.95) },
-    upload: { p50: pct(up, 0.5), p95: pct(up, 0.95), bytes: (T.pts.length + T.chain.length + T.span.length + T.fill.length) * 4 },
+    upload: { p50: pct(up, 0.5), p95: pct(up, 0.95), bytes: (T.pts.length + T.chain.length + T.span.length + T.fill.length + T.nb.length) * 4 },
     prepMs,
     instanceBuilds: builds,
   };

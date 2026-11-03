@@ -38,7 +38,49 @@ function junction(c: [number, number], arms: SceneArm[]): SceneJunction {
   return { id: "j0", c, arms, corners: arms.map(() => ({ style: "round" as const, pinned: false })) };
 }
 
+// A U-turn of radius r between two legs along -x: a point inside the U has
+// a minimum on each leg, within 1.5 sigma near the turn (the fold, D1).
+function hairpin(r: number): number[] {
+  const out = line(-8, r, 0, r);
+  const m = Math.max(4, Math.round((Math.PI * r) / 0.2));
+  for (let i = 1; i < m; i++) {
+    const a = Math.PI / 2 - (Math.PI * i) / m;
+    out.push(r * Math.cos(a), r * Math.sin(a));
+  }
+  out.push(...line(0, -r, -8, -r));
+  return out;
+}
+
+// A prolate cycloid's loop (x = 0.35 t - 0.8 sin t, y = -0.8 cos t): a kink
+// loop that crosses itself, its points within h of three or more minima.
+function kink(): number[] {
+  const out: number[] = [];
+  for (let t = -1.5 * Math.PI; t <= 1.5 * Math.PI + 1e-9; t += 0.2) out.push(0.35 * t - 0.8 * Math.sin(t), -0.8 * Math.cos(t));
+  return out;
+}
+
+// The hairpin at half width 0.5 (sigma 1.57), crossed by a line at x = -2.5:
+// over the bottom leg, under the top one. Form B takes z from the crossings'
+// pins (not the scene's z), so near the turn the bottom leg rides about a
+// third of the amplitude above the top one, and inside the fold the far
+// minimum out-keys the near one unless the merge scan drops it.
+function hairpinX(): FieldScene {
+  const hp = hairpin(0.3);
+  let len = 0;
+  for (let i = 2; i < hp.length; i += 2) len += Math.hypot(hp[i] - hp[i - 2], hp[i + 1] - hp[i - 1]);
+  const sc = scene([hp, line(-2.5, -3, -2.5, 3)]);
+  sc.look.halfWidth = 0.5;
+  sc.crossings = [
+    { a: { chain: 0, s: 5.5 }, b: { chain: 1, s: 3.3 }, over: "b" },
+    { a: { chain: 0, s: len - 5.5 }, b: { chain: 1, s: 2.7 }, over: "a" },
+  ];
+  return sc;
+}
+
 const FIXTURES: Record<string, () => FieldScene> = {
+  hairpin: () => scene([hairpin(0.6)]),
+  kink: () => scene([kink()]),
+  hairpinX,
   tube: () => scene([line(-8, 0, 8, 0)]),
   bend: () => scene([[...line(-8, -6, 0, 0), ...line(0, 0, 8, -6).slice(2)]]),
   crossing: () => scene([line(-8, 0, 8, 0), line(0, -8, 0, 8)], [], [0.1, -0.1]),
@@ -110,6 +152,58 @@ describe("label B: labelAt is form B's top", () => {
       if (process.env.LABELB_LOG) appendFileSync(process.env.LABELB_LOG, `${name} ${JSON.stringify(counts)} ${JSON.stringify(bad)}\n`);
       expect(bad).toEqual([]);
       expect(counts.agree).toBeGreaterThan(0);
+    });
+  }
+});
+
+describe("label B: the merge scan's windows", () => {
+  // Every census point: the windows give what a scan of the whole chain gives.
+  for (const name of ["hairpin", "kink", "hairpinX", "bend", "tee"]) {
+    it(name, () => {
+      const fb = new FormB(FIXTURES[name]());
+      const T = buildLabelB(fb);
+      const full = new Float32Array(T.nb.length);
+      fb.polys.forEach((p, ci) => {
+        for (let k = 0; k < p.nseg; k++) {
+          const o = 4 * (T.ptOff[ci] + k);
+          const m0 = p.closed ? Math.floor((p.nseg - 1) / 2) : k;
+          full[o] = m0;
+          full[o + 1] = p.closed ? p.nseg - 1 - m0 : p.nseg - 1 - k;
+        }
+      });
+      const TF = { ...T, nb: full };
+      let diff = 0;
+      let wide = 0;
+      for (let k = 0; k < T.nb.length; k += 4) wide = Math.max(wide, T.nb[k], T.nb[k + 1]);
+      for (let y = -3; y <= 3; y += 0.05)
+        for (let x = -3; x <= 3; x += 0.05) {
+          const a = labelAt(fb, T, x, y);
+          const b = labelAt(fb, TF, x, y);
+          if (a.chain !== b.chain || a.s !== b.s || a.key !== b.key) diff++;
+        }
+      expect(diff).toBe(0);
+      if (name !== "bend" && name !== "tee") expect(wide).toBeGreaterThan(1);
+    });
+  }
+});
+
+describe("label B: the merge scan matters", () => {
+  // Without it (foldR 0: every minimum within h drawn) the fold's far
+  // minimum out-keys the near one inside hairpinX's turn: the label leaves
+  // form B's there (a MERGE or fold-fade margin on one chain; a DEFECT where
+  // the far piece's code differs or it beats another chain, as on muse_hash).
+  for (const name of ["hairpinX"]) {
+    it(name, () => {
+      const fb = new FormB(FIXTURES[name]());
+      const T0 = { ...buildLabelB(fb), foldR: 0 };
+      const off: Record<string, number> = {};
+      for (let y = -3; y <= 3; y += 0.05)
+        for (let x = -3; x <= 3; x += 0.05) {
+          const v = labelVerdict(fb, T0, x, y, sampleOf(labelAt(fb, T0, x, y)));
+          if (v.cls !== "agree") off[`${v.cls}:${v.why}`] = (off[`${v.cls}:${v.why}`] ?? 0) + 1;
+        }
+      if (process.env.LABELB_LOG) appendFileSync(process.env.LABELB_LOG, `${name} without the scan: ${JSON.stringify(off)}\n`);
+      expect(Object.values(off).reduce((a, b) => a + b, 0)).toBeGreaterThan(20);
     });
   }
 });
