@@ -300,10 +300,10 @@ Next free ID: K1092.
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1d merged (e8944f2f); S1e running (2026-11-02).
-  - owner: claude agent `a7035825805c31d73` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (S1e, Opus), since 2026-11-02 16:31
-  - branch: `worktree-agent-a7035825805c31d73`, worktree `.claude/worktrees/agent-a7035825805c31d73`; last commit: `e8944f2f`
+  - owner: nobody since 2026-11-02 17:46 (merged; agent `a7035825805c31d73` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `96de6db3`
   - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1), `s1/out/s1b/` and `s1/out/s1c/`, S1d's runs in `s1/out/s1d/`); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: S1e under way (launched 2026-11-02 16:31, cap 2 h): the agent writes `docs/design/K1040_s1e_<topic>.md` from S1d's Handoff (Next 1-3: the rate rule at through-pass bends (continuous weights for D1's merged minima, or a burial at the bend that reads depth; F6 is a start), the corner solve's last discrete edges, F5's #1 +9 and S1's gate), does the stage and reports; merge after the K156 Muse round
+  - next: S1f: a brief from S1e's Handoff (`docs/design/K1040_s1e_bends.md`): Next 1, a curved reach that is continuous by construction (F4; candidates 2 and 3 stay in form B, `params.curvedReach` off), then the gate; Next 2, the corner solve's last discrete edges (item 2); Next 3, the 14 pops left (126 px) and j129's corner; then the rest of S1 and S2 per the plan (`K1040_junction_field.md` F7)
   - brief: the agent's `docs/design/K1040_s1e_<topic>.md` on its branch; until then S1d's Handoff, `docs/design/K1040_s1d_corner.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
