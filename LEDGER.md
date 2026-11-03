@@ -505,9 +505,9 @@ Next free ID: K1130.
 - **K1108** · Muse batch 7 (`docs/design/K1108_muse_batch7.md`): A K368, B K1100, C K748, D K1109 + K1099,
   E K1101, F K426 + K437; no junction or cursive work. Runs 7A-7F chained after batch 6.
   - owner: muse runs 7A-7F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 00:28
-  - branch: mainline; last commit: `b5743a42`
+  - branch: mainline; last commit: `8ab9e8e9`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 7A-7F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run F (K426 + K437)
+  - next: Claude reviews batch 7 and closes K1108
   - brief: `docs/design/K1108_muse_batch7.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
@@ -1223,8 +1223,6 @@ Every other item below waits on the trigger it names.
 - **K425** · Probes editing `ribbon_renderer.ts`: `K290/stage3b/dump_variants.ts` + copies (K76 2d,
   K290 3a), `variant_build.ps1` (`g2/`, `K4/`), `K154_K169/edit_rr2.ps1`, `edit_rr3.ps1`. Repoint to
   `src/render/ribbon/ribbon_shader.ts` (R1's copy `.claude/probes/K5/R1/dump_variants.ts`); R2's gap files too (notes).
-- **K426** · `docs/lore_index.md`'s render-paint row lacks
-  `test/render/paint_ring_lap.test.ts` (drift from before K5 R1).
 - **K427** · `warmup.mjs`'s unregistered-program check works only on a dev build
   (checkLinks defaults to `import.meta.env.DEV`), so a prod A/B cannot catch an
   unregistered program (K5 R1 handoff, `checks/`).
@@ -1243,9 +1241,6 @@ Every other item below waits on the trigger it names.
 - **K435** · Lore (K290 3c): render-explore.md THE BURN says the band darkens the unburnt side under
   char only, but the code does it under both looks (check THE EMBER DRAWS); probes.md: a true FX-off
   frame needs a no-op tickFireFx, fireFx.clear() and two frames (stage3c `width_probe.mjs`).
-- **K437** · Rules prose names main.ts for code K5 M3 moved to `src/app/frame_loop.ts`: gameplay-indicators.md 25,
-  gameplay-audio.md 32, render-backgrounds.md 35, render-web-fade.md 39, render-explore.md 373, render-shaders.md
-  134-136; nothing documents flow's half rate (`flowParity`). For the docs batch with K425, K426, K431, K432, K435.
 - **K439** · The G3-0 probe hooks (g3DataState, g3TableRows, g3Expected, captureScene, restoreScene; ribbon_renderer.ts
   4924-5182 at 4afb8dc) stay on the renderer's facade through K5 R2; R5 gives them a part, e.g. `ribbon/scene_probe.ts`
   (`docs/design/K5_R2.md`, Questions 1).
@@ -2010,6 +2005,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K437** · rules name frame_loop.ts; half rate added. Done in 8ab9e8e9 (2026-11-03).
+- **K426** · index rows complete; scripts/lore_index_check.mjs. Done in 8ab9e8e9 (2026-11-03).
 - **K1101** · 119 pairs merged under one heading. Done in b5743a42 (2026-11-03).
 - **K1099** · reset snaps; jump threshold checked; follow spring to Levi. Done in 05724e27 (2026-11-03).
 - **K1109** · probed: the taps jump. Done in 05724e27 (2026-11-03).
