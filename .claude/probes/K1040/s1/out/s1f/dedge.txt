@@ -1,0 +1,116 @@
+1. census: passes behind an arm's root whose overlap reaches the root (−(reach + h) < d < 0)
+  def arm 425 (j139 c55 dir -1 through) L 1.155: pass s 36.716 -> chain 55, d -2.499h, reach 1.61h, d/(reach+h) -0.958; corners 425-426 r 0.520 ω 1.000
+  def: 1 arm-pass pairs inside (−(reach + h), 0), 1 with a corner with fill; nearest: def arm 425 (j139 c55 dir -1 through) L 1.155: pass s 36.716 -> chain 55, d -2.499h, reach 1.61h, d/(reach+h) -0.958; corners 425-426 r 0.520 ω 1.000
+  fat: 0 arm-pass pairs inside (−(reach + h), 0), 0 with a corner with fill; nearest: no pass behind a root
+  ring: 0 arm-pass pairs inside (−(reach + h), 0), 0 with a corner with fill; nearest: ring arm 55 (j18 c3 dir -1 through) L 0.221: pass s 71.933 -> chain 3, d -3.100h, reach 1.85h, d/(reach+h) -1.089; corners 55-56 r 0.000 ω 1.000
+  user_tw42.lightpaper: 0 arm-pass pairs inside (−(reach + h), 0), 0 with a corner with fill; nearest: user_tw42.lightpaper arm 3 (j1 c0 dir -1 through) L 1.075: pass s 4.948 -> chain 15, d -2.471h, reach 1.18h, d/(reach+h) -1.132; corners 3-4 r 0.008 ω 1.000
+  g41_def_tw42: 0 arm-pass pairs inside (−(reach + h), 0), 0 with a corner with fill; nearest: g41_def_tw42 arm 425 (j139 c55 dir -1 through) L 1.462: pass s 36.758 -> chain 55, d -3.202h, reach 1.40h, d/(reach+h) -1.332; corners 425-426 r 0.420 ω 1.000
+  g41_def_tw64 arm 25 (j7 c44 dir 1 through) L 0.381: pass s 12.772 -> chain 44, d -2.285h, reach 1.74h, d/(reach+h) -0.833; corners 24-25 r 0.000 ω 1.000
+  g41_def_tw64 arm 107 (j34 c8 dir 1 through closed) L 0.908: pass s 13.628 -> chain 8, d -2.583h, reach 1.73h, d/(reach+h) -0.947; corners 107-108 r 0.108 ω 1.000
+  g41_def_tw64 arm 136 (j44 c61 dir -1 through) L 0.550: pass s 45.683 -> chain 61, d -2.493h, reach 1.52h, d/(reach+h) -0.987; corners none
+  g41_def_tw64 arm 169 (j55 c61 dir -1 through) L 1.326: pass s 87.197 -> chain 61, d -2.129h, reach 1.61h, d/(reach+h) -0.815; corners 171-169 r 0.127 ω 1.000
+  g41_def_tw64 arm 173 (j56 c82 dir -1 through) L 0.348: pass s 59.641 -> chain 82, d -2.387h, reach 1.79h, d/(reach+h) -0.856; corners 173-174 r 0.005 ω 1.000
+  g41_def_tw64 arm 283 (j93 c36 dir -1 through) L 0.947: pass s 9.855 -> chain 36, d -2.152h, reach 1.41h, d/(reach+h) -0.894; corners 283-284 r 0.626 ω 1.000
+  g41_def_tw64 arm 383 (j125 c45 dir -1 through) L 0.929: pass s 14.237 -> chain 62, d -2.101h, reach 1.13h, d/(reach+h) -0.985; corners 382-383 r 0.640 ω 1.000
+  g41_def_tw64 arm 388 (j127 c84 dir 1 through) L 0.814: pass s 3.788 -> chain 28, d -2.438h, reach 1.48h, d/(reach+h) -0.983; corners 387-388 r 0.505 ω 1.000
+  g41_def_tw64 arm 404 (j132 c61 dir 1 through) L 0.398: pass s 30.670 -> chain 61, d -2.111h, reach 1.12h, d/(reach+h) -0.994; corners 403-404 r 0.038 ω 1.000
+  g41_def_tw64 arm 422 (j138 c55 dir 1 through) L 0.268: pass s 29.498 -> chain 58, d -2.237h, reach 1.45h, d/(reach+h) -0.913; corners none
+  g41_def_tw64 arm 425 (j139 c55 dir -1 through) L 0.930: pass s 36.718 -> chain 55, d -2.176h, reach 1.51h, d/(reach+h) -0.866; corners 425-426 r 0.640 ω 1.000
+  g41_def_tw64 arm 447 (j146 c58 dir -1 through) L 1.258: pass s 13.481 -> chain 55, d -2.279h, reach 1.36h, d/(reach+h) -0.964; corners 447-445 r 0.640 ω 1.000
+  g41_def_tw64 arm 463 (j152 c61 dir -1 through) L 0.920: pass s 9.028 -> chain 61, d -2.158h, reach 1.89h, d/(reach+h) -0.746; corners 465-463 r 0.187 ω 1.000
+  g41_def_tw64 arm 506 (j166 c62 dir 1 through) L 0.026: pass s 59.369 -> chain 45, d -2.510h, reach 1.58h, d/(reach+h) -0.973; corners none
+  g41_def_tw64: 14 arm-pass pairs inside (−(reach + h), 0), 10 with a corner with fill; nearest: g41_def_tw64 arm 463 (j152 c61 dir -1 through) L 0.920: pass s 9.028 -> chain 61, d -2.158h, reach 1.89h, d/(reach+h) -0.746; corners 465-463 r 0.187 ω 1.000
+  muse_hash arm 12 (j4 c68 dir -1 through) L 0.000: pass s 7.231 -> chain 82, d -2.906h, reach 2.27h, d/(reach+h) -0.889; corners none
+  muse_hash arm 13 (j4 c68 dir 1 through) L 0.000: pass s 5.285 -> chain 82, d -1.957h, reach 1.23h, d/(reach+h) -0.878; corners none
+  muse_hash arm 15 (j5 c3 dir 1 through) L 0.922: pass s 27.026 -> chain 82, d -1.999h, reach 1.03h, d/(reach+h) -0.987; corners 17-15 r 1.103 ω 1.000
+  muse_hash arm 20 (j6 c3 dir -1 through) L 0.073: pass s 32.531 -> chain 2, d -1.962h, reach 1.29h, d/(reach+h) -0.857; corners none
+  muse_hash arm 46 (j15 c5 dir 1 through) L 0.164: pass s 3.581 -> chain 70, d -1.914h, reach 1.26h, d/(reach+h) -0.848; corners none
+  muse_hash arm 68 (j22 c6 dir -1 through) L 0.266: pass s 6.246 -> chain 6, d -1.907h, reach 1.22h, d/(reach+h) -0.859; corners none
+  muse_hash arm 75 (j24 c6 dir -1 through) L 1.223: pass s 18.397 -> chain 64, d -2.151h, reach 1.28h, d/(reach+h) -0.943; corners 74-75 r 0.087 ω 1.000
+  muse_hash arm 79 (j26 c43 dir -1 through) L 1.057: pass s 42.463 -> chain 62, d -2.005h, reach 1.28h, d/(reach+h) -0.879; corners 79-80 r 1.568 ω 1.000
+  muse_hash arm 88 (j29 c67 dir -1 through) L 0.657: pass s 13.661 -> chain 66, d -2.134h, reach 1.39h, d/(reach+h) -0.892; corners none
+  muse_hash arm 109 (j36 c11 dir -1 through closed) L 1.180: pass s 2.390 -> chain 11, d -1.112h, reach 4.00h, d/(reach+h) -0.222; corners 109-110 r 1.088 ω 1.000
+  muse_hash arm 129 (j42 c66 dir -1 through) L 0.297: pass s 83.964 -> chain 38, d -1.994h, reach 1.01h, d/(reach+h) -0.990; corners none
+  muse_hash arm 150 (j49 c75 dir -1 through) L 1.429: pass s 17.419 -> chain 71, d -1.911h, reach 1.45h, d/(reach+h) -0.779; corners 150-148 r 1.600 ω 1.000
+  muse_hash arm 151 (j50 c71 dir -1 through) L 0.275: pass s 36.521 -> chain 71, d -1.648h, reach 2.16h, d/(reach+h) -0.521; corners none
+  muse_hash arm 156 (j51 c58 dir 1 through) L 1.038: pass s 34.699 -> chain 4, d -1.841h, reach 1.09h, d/(reach+h) -0.879; corners 155-156 r 1.317 ω 1.000
+  muse_hash arm 158 (j52 c66 dir 1 through) L 1.502: pass s 6.495 -> chain 66, d -2.022h, reach 1.27h, d/(reach+h) -0.891; corners 157-158 r 1.600 ω 1.000
+  muse_hash arm 163 (j54 c39 dir 1 through) L 0.000: pass s 5.048 -> chain 44, d -1.978h, reach 1.16h, d/(reach+h) -0.914; corners none
+  muse_hash arm 165 (j54 c39 dir -1 through) L 0.000: pass s 6.645 -> chain 44, d -2.014h, reach 1.08h, d/(reach+h) -0.966; corners none
+  muse_hash arm 168 (j55 c58 dir -1 through) L 0.417: pass s 25.618 -> chain 58, d -1.842h, reach 1.25h, d/(reach+h) -0.817; corners 168-166 r 0.003 ω 1.000
+  muse_hash arm 178 (j59 c43 dir -1 through) L 0.000: pass s 45.247 -> chain 43, d -1.884h, reach 1.44h, d/(reach+h) -0.774; corners none
+  muse_hash arm 179 (j59 c43 dir 1 through) L 0.000: pass s 43.562 -> chain 7, d -2.331h, reach 1.45h, d/(reach+h) -0.950; corners none
+  muse_hash arm 185 (j61 c44 dir -1 through) L 1.265: pass s 27.758 -> chain 31, d -2.207h, reach 1.34h, d/(reach+h) -0.944; corners 185-186 r 0.075 ω 0.660
+  muse_hash arm 187 (j62 c71 dir -1 through) L 0.976: pass s 6.297 -> chain 66, d -2.165h, reach 1.22h, d/(reach+h) -0.974; corners 189-187 r 0.975 ω 1.000
+  muse_hash arm 215 (j71 c67 dir 1 through) L 0.036: pass s 35.128 -> chain 67, d -2.253h, reach 1.30h, d/(reach+h) -0.979; corners none
+  muse_hash arm 251 (j83 c75 dir 1 through) L 0.206: pass s 18.566 -> chain 71, d -1.967h, reach 1.19h, d/(reach+h) -0.897; corners 250-251 r 0.000 ω 1.000
+  muse_hash arm 262 (j87 c84 dir -1 through) L 0.054: pass s 29.472 -> chain 53, d -1.904h, reach 1.28h, d/(reach+h) -0.836; corners none
+  muse_hash arm 301 (j99 c46 dir -1 through) L 1.028: pass s 4.217 -> chain 53, d -1.598h, reach 1.16h, d/(reach+h) -0.741; corners 301-299 r 1.007 ω 1.000
+  muse_hash arm 308 (j101 c45 dir 1 through) L 0.272: pass s 6.276 -> chain 48, d -2.275h, reach 1.28h, d/(reach+h) -0.998; corners none
+  muse_hash arm 309 (j102 c45 dir -1 through) L 0.000: pass s 16.573 -> chain 9, d -1.986h, reach 1.02h, d/(reach+h) -0.983; corners none
+  muse_hash arm 311 (j102 c45 dir 1 through) L 0.000: pass s 14.991 -> chain 5, d -1.970h, reach 1.00h, d/(reach+h) -0.983; corners none
+  muse_hash arm 314 (j103 c45 dir 1 through) L 0.262: pass s 18.014 -> chain 9, d -1.916h, reach 1.16h, d/(reach+h) -0.885; corners 313-314 r 0.000 ω 1.000
+  muse_hash arm 335 (j110 c79 dir 1 through) L 0.963: pass s 14.168 -> chain 64, d -1.748h, reach 1.09h, d/(reach+h) -0.836; corners 335-333 r 1.600 ω 1.000
+  muse_hash arm 338 (j111 c83 dir -1 through) L 0.945: pass s 4.479 -> chain 83, d -4.165h, reach 4.00h, d/(reach+h) -0.833; corners none
+  muse_hash arm 363 (j120 c66 dir 1 through) L 0.000: pass s 57.377 -> chain 67, d -2.076h, reach 1.25h, d/(reach+h) -0.921; corners none
+  muse_hash arm 364 (j120 c66 dir -1 through) L 0.000: pass s 58.995 -> chain 38, d -1.970h, reach 1.16h, d/(reach+h) -0.911; corners none
+  muse_hash arm 373 (j123 c66 dir -1 through) L 0.000: pass s 72.615 -> chain 38, d -1.763h, reach 1.16h, d/(reach+h) -0.816; corners none
+  muse_hash arm 374 (j123 c66 dir 1 through) L 0.000: pass s 70.932 -> chain 84, d -2.445h, reach 2.33h, d/(reach+h) -0.733; corners none
+  muse_hash arm 381 (j126 c68 dir 1 through) L 0.912: pass s 0.915 -> chain 46, d -2.195h, reach 1.21h, d/(reach+h) -0.992; corners 381-382 r 0.162 ω 1.000
+  muse_hash arm 397 (j131 c58 dir -1 through) L 1.283: pass s 42.263 -> chain 3, d -2.135h, reach 1.20h, d/(reach+h) -0.968; corners 397-398 r 1.273 ω 1.000
+  muse_hash arm 422 (j139 c66 dir 1 through) L 0.843: pass s 67.890 -> chain 8, d -2.165h, reach 1.43h, d/(reach+h) -0.890; corners 422-420 r 0.356 ω 1.000
+  muse_hash arm 423 (j140 c66 dir -1 through) L 0.813: pass s 70.932 -> chain 84, d -3.142h, reach 2.33h, d/(reach+h) -0.942; corners 423-424 r 0.983 ω 1.000
+  muse_hash arm 433 (j143 c68 dir 1 through) L 0.458: pass s 15.072 -> chain 2, d -2.170h, reach 1.22h, d/(reach+h) -0.980; corners 433-434 r 0.026 ω 1.000
+  muse_hash arm 478 (j157 c72 dir 1 through) L 0.003: pass s 3.087 -> chain 64, d -2.092h, reach 1.22h, d/(reach+h) -0.940; corners none
+  muse_hash: 42 arm-pass pairs inside (−(reach + h), 0), 17 with a corner with fill; nearest: muse_hash arm 109 (j36 c11 dir -1 through closed) L 1.180: pass s 2.390 -> chain 11, d -1.112h, reach 4.00h, d/(reach+h) -0.222; corners 109-110 r 1.088 ω 1.000
+  muse_default_tw: 0 arm-pass pairs inside (−(reach + h), 0), 0 with a corner with fill; nearest: muse_default_tw arm 301 (j99 c46 dir -1 through) L 1.059: pass s 4.227 -> chain 53, d -2.485h, reach 1.25h, d/(reach+h) -1.105; corners 301-299 r 0.924 ω 1.000
+  g41_ring_tw42: 0 arm-pass pairs inside (−(reach + h), 0), 0 with a corner with fill; nearest: g41_ring_tw42 arm 51 (j16 c2 dir -1 through) L 0.594: pass s 43.574 -> chain 2, d -5.263h, reach 2.00h, d/(reach+h) -1.752; corners 50-51 r 0.298 ω 1.000
+  g41_ring_tw64 arm 24 (j7 c1 dir 1 through) L 1.414: pass s 83.484 -> chain 1, d -2.324h, reach 1.74h, d/(reach+h) -0.848; corners 23-24 r 0.190 ω 1.000
+  g41_ring_tw64 arm 46 (j15 c2 dir -1 through) L 1.881: pass s 27.418 -> chain 2, d -2.490h, reach 1.56h, d/(reach+h) -0.972; corners 48-46 r 0.640 ω 1.000
+  g41_ring_tw64 arm 51 (j16 c2 dir -1 through) L 0.519: pass s 44.258 -> chain 2, d -2.652h, reach 1.80h, d/(reach+h) -0.947; corners 50-51 r 0.189 ω 1.000
+  g41_ring_tw64 arm 55 (j18 c3 dir -1 through) L 0.148: pass s 72.268 -> chain 3, d -2.695h, reach 1.78h, d/(reach+h) -0.970; corners none
+  g41_ring_tw64: 4 arm-pass pairs inside (−(reach + h), 0), 3 with a corner with fill; nearest: g41_ring_tw64 arm 24 (j7 c1 dir 1 through) L 1.414: pass s 83.484 -> chain 1, d -2.324h, reach 1.74h, d/(reach+h) -0.848; corners 23-24 r 0.190 ω 1.000
+  g41_user_tw42: 0 arm-pass pairs inside (−(reach + h), 0), 0 with a corner with fill; nearest: g41_user_tw42 arm 3 (j1 c0 dir -1 through) L 1.075: pass s 4.948 -> chain 15, d -2.471h, reach 1.18h, d/(reach+h) -1.132; corners 3-4 r 0.008 ω 1.000
+  g41_user_tw64 arm 3 (j1 c0 dir -1 through) L 0.877: pass s 5.101 -> chain 15, d -2.062h, reach 1.43h, d/(reach+h) -0.848; corners 3-4 r 0.558 ω 1.000
+  g41_user_tw64 arm 8 (j2 c15 dir -1 through) L 0.705: pass s 29.438 -> chain 16, d -2.249h, reach 1.33h, d/(reach+h) -0.963; corners 7-8 r 0.252 ω 1.000
+  g41_user_tw64 arm 10 (j3 c24 dir 1 through) L 0.000: pass s 1.030 -> chain 24, d -2.178h, reach 1.46h, d/(reach+h) -0.887; corners none
+  g41_user_tw64 arm 11 (j3 c24 dir -1 through) L 0.000: pass s 2.360 -> chain 2, d -1.976h, reach 1.11h, d/(reach+h) -0.937; corners none
+  g41_user_tw64 arm 13 (j4 c24 dir 1 through) L 1.492: pass s 3.610 -> chain 2, d -2.073h, reach 1.25h, d/(reach+h) -0.921; corners none
+  g41_user_tw64 arm 18 (j6 c15 dir 1 through) L 0.299: pass s 34.639 -> chain 7, d -2.110h, reach 1.42h, d/(reach+h) -0.873; corners 20-18 r 0.000 ω 1.000
+  g41_user_tw64 arm 73 (j24 c15 dir 1 through) L 0.761: pass s 31.959 -> chain 6, d -2.204h, reach 1.25h, d/(reach+h) -0.979; corners 75-73 r 0.077 ω 1.000
+  g41_user_tw64 arm 76 (j25 c20 dir -1 through) L 0.287: pass s 3.901 -> chain 31, d -2.156h, reach 1.31h, d/(reach+h) -0.934; corners 78-76 r 0.000 ω 1.000
+  g41_user_tw64 arm 160 (j52 c30 dir -1 through) L 0.000: pass s 62.063 -> chain 7, d -2.123h, reach 1.17h, d/(reach+h) -0.979; corners none
+  g41_user_tw64 arm 161 (j52 c30 dir 1 through) L 0.000: pass s 60.721 -> chain 23, d -2.070h, reach 1.28h, d/(reach+h) -0.908; corners none
+  g41_user_tw64 arm 183 (j59 c22 dir -1 through) L 0.067: pass s 25.017 -> chain 30, d -2.036h, reach 1.13h, d/(reach+h) -0.956; corners none
+  g41_user_tw64 arm 190 (j61 c30 dir -1 through) L 0.790: pass s 58.227 -> chain 7, d -1.921h, reach 1.07h, d/(reach+h) -0.930; corners 189-190 r 0.581 ω 1.000
+  g41_user_tw64 arm 210 (j67 c30 dir 1 through) L 0.371: pass s 27.017 -> chain 6, d -3.298h, reach 2.34h, d/(reach+h) -0.989; corners 209-210 r 0.614 ω 1.000
+  g41_user_tw64: 13 arm-pass pairs inside (−(reach + h), 0), 6 with a corner with fill; nearest: g41_user_tw64 arm 3 (j1 c0 dir -1 through) L 0.877: pass s 5.101 -> chain 15, d -2.062h, reach 1.43h, d/(reach+h) -0.848; corners 3-4 r 0.558 ω 1.000
+  all scenes: 74 inside; nearest overall: muse_hash arm 109 (j36 c11 dir -1 through closed) L 1.180: pass s 2.390 -> chain 11, d -1.112h, reach 4.00h, d/(reach+h) -0.222; corners 109-110 r 1.088 ω 1.000
+2. sweep: chain 2 crosses chain 0 at x = dc, 90°, over (h 1); a tee with its END at 60°
+  dc      L+1     L−1    corners (arms a-b: r, ω)                          ink at (1.6, 1.25) (-1.25, 1.25) (1.25, -1.25) (-1.25, -1.25)
+  -2.500  10.000   0.500   0-1: 0.866, 1.000                                0.000 0.000 0.000 0.000
+  -2.250  10.000   0.250   0-1: 0.866, 1.000                                0.000 0.500 0.000 0.500
+  -2.000  10.000   0.000   0-1: 0.866, 1.000                                0.000 1.000 0.000 1.000
+  -1.750  10.000   0.000   0-1: 0.866, 1.000                                0.000 0.000 0.000 0.000
+  -1.500  10.000   0.000   0-1: 0.866, 1.000                                0.000 0.000 0.000 0.000
+  -1.250  10.000   0.000   0-1: 0.866, 1.000                                0.000 0.000 0.000 0.000
+  -1.000  10.000   0.000   0-1: 0.866, 1.000                                0.000 0.000 0.000 0.000
+  -0.750  10.000   0.000   0-1: 0.866, 1.000                                0.000 0.000 0.000 0.000
+  -0.500  10.000   0.000   0-1: 0.866, 1.000                                0.000 1.000 0.000 1.000
+  -0.250  10.000   0.000   0-1: 0.866, 1.000                                0.000 0.500 0.000 0.500
+  -0.020  10.000   0.000   0-1: 0.866, 1.000                                0.000 0.000 0.000 0.000
+  -0.010  10.000   0.000   0-1: 0.866, 1.000                                0.000 0.000 0.000 0.000
+   0.000   0.000   0.000                                                    1.000 0.000 0.000 0.000
+   0.010   0.000  10.000   1-2: 2.000, 1.000                                1.000 0.000 0.000 0.000
+   0.020   0.000  10.000   1-2: 2.000, 1.000                                1.000 0.000 0.000 0.000
+   0.250   0.000  10.000   1-2: 2.000, 1.000                                1.000 0.000 0.500 0.000
+   0.500   0.000  10.000   1-2: 2.000, 1.000                                1.000 0.000 1.000 0.000
+   0.750   0.000  10.000   1-2: 2.000, 1.000                                1.000 0.000 0.000 0.000
+   1.000   0.000  10.000   1-2: 2.000, 1.000                                0.216 0.000 0.000 0.000
+   1.250   0.000  10.000   1-2: 2.000, 1.000                                0.000 0.000 0.000 0.000
+   1.500   0.000  10.000   1-2: 2.000, 1.000                                0.000 0.000 0.000 0.000
+   1.750   0.000  10.000   1-2: 2.000, 1.000                                0.000 0.000 0.000 0.000
+   2.000   0.000  10.000   1-2: 2.000, 1.000                                0.000 0.000 1.000 0.000
+   2.250   0.250  10.000   1-2: 2.000, 1.000                                0.896 0.000 0.500 0.000
+   2.500   0.500  10.000   1-2: 2.000, 1.000                                1.000 0.000 0.000 0.000
+  largest step between neighbouring dc (step 0.010): L+1 10.0000 (at dc 0.000); L−1 10.0000 (at dc 0.010); ink(1.6, 1.25) 1.0000 (at dc 0.000); ink(-1.25, 1.25) 0.1480 (at dc -1.860); ink(1.25, -1.25) 0.1480 (at dc 0.640); ink(-1.25, -1.25) 0.1480 (at dc -1.860)

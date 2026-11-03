@@ -1,0 +1,350 @@
+  def jj6 arms 21-22 (end/through): gate 699; θ 1.112 L 1.456/0.384 dV 1.508h/1.476h wedge 0.910h/0.775h
+  def jj28 arms 88-89 (through/end): gate 699; θ 1.150 L 0.343/2.093 dV 1.318h/1.483h wedge 0.770h/0.997h
+  def jj33 arms 105-103 (end/through): gate 699; θ 1.077 L 1.178/0.384 dV 1.516h/1.478h wedge 0.916h/0.750h
+  def jj34 arms 108-106 (end/through): gate 699; θ 1.529 L 1.138/0.130 dV 0.874h/0.499h wedge 0.989h/0.596h
+  def jj36 arms 114-112 (through/end): gate 699; θ 1.486 L 0.215/1.210 dV 0.825h/0.951h wedge 0.671h/0.953h
+  def jj55 arms 170-171 (through/end): gate 699; θ 1.734 L 0.150/1.228 dV 0.577h/0.866h wedge 0.687h/1.064h
+  def jj56 arms 174-172 (end/through): gate 699; θ 1.584 L 1.172/0.196 dV 0.899h/0.756h wedge 0.953h/0.720h
+  def jj68 arms 208-209 (through/end): gate 699; θ 1.312 L 0.289/3.072 dV 1.113h/1.286h wedge 0.771h/0.977h
+  def jj70 arms 216-214 (through/end): gate 699; θ 1.399 L 0.248/1.357 dV 0.954h/1.043h wedge 0.721h/0.918h
+  def jj75 arms 230-231 (end/through): gate 699; θ 1.227 L 1.336/0.287 dV 1.338h/1.103h wedge 0.939h/0.755h
+  def jj84 arms 256-257 (end/through): gate 699; θ 1.513 L 1.562/0.189 dV 0.977h/0.729h wedge 0.955h/0.718h
+  def jj89 arms 271-272 (end/through): gate 699; θ 1.252 L 1.439/0.199 dV 1.149h/0.767h wedge 0.953h/0.594h
+  def jj101 arms 307-308 (end/through): gate 699; θ 1.446 L 1.521/0.297 dV 1.167h/1.144h wedge 1.027h/0.766h
+  def jj125 arms 381-382 (through/end): gate 699; θ 1.566 L 0.099/3.262 dV 0.380h/0.615h wedge 0.577h/0.986h
+  def jj131 arms 401-399 (through/end): gate 699; θ 1.266 L 0.276/1.223 dV 1.061h/1.282h wedge 0.742h/0.957h
+  def jj132 arms 403-404 (through/end): gate 699; θ 1.402 L 0.192/3.554 dV 0.739h/1.098h wedge 0.735h/0.974h
+  def jj136 arms 417-415 (end/through): gate 699; θ 1.296 L 2.507/0.220 dV 1.171h/0.846h wedge 0.957h/0.724h
+  def jj138 arms 423-421 (end/through): gate 699; θ 1.461 L 1.544/0.131 dV 0.911h/0.504h wedge 1.032h/0.521h
+  def jj146 arms 445-446 (end/through): gate 699; θ 1.266 L 3.752/0.131 dV 0.988h/0.502h wedge 0.956h/0.517h
+  def jj147 arms 450-448 (through/end): gate 699; θ 1.075 L 0.310/1.265 dV 1.194h/1.511h wedge 0.736h/0.920h
+  def jj152 arms 464-465 (through/end): gate 699; θ 1.406 L 0.092/1.021 dV 0.352h/0.788h wedge 0.401h/0.982h
+  def jj166 arms 506-507 (through/end): gate 699; θ 1.598 L 0.224/1.190 dV 0.863h/1.012h wedge 0.746h/1.055h
+  def jj166 arms 507-508 (end/through): gate 699; θ 1.167 L 1.190/0.192 dV 1.190h/0.737h wedge 0.932h/0.553h
+  def jj174 arms 531-532 (through/end): gate 699; θ 3.102 L 2.572/3.001 dV 0.000h/0.457h wedge 0.930h/0.926h
+  def: 597 77, 606 100, 681 1, 699 24, corner 361
+    nearest dV low (0.2472): def jj136 416-417: θ 2.665 L 1.671/2.507 dV 0.247h/0.675h wedge 0.924h/0.963h; r 0.5200 ω 1.0000
+    nearest L − dV (0.0004): def jj157 479-480: θ 1.579 L 1.794/0.266 dV 1.099h/1.022h wedge 1.013h/0.858h; r 0.0000 ω 1.0000
+    nearest wedge (0.5512): def jj66 203-204: θ 1.699 L 1.435/0.492 dV 0.732h/0.544h wedge 1.000h/0.551h; r 0.0579 ω 1.0000
+    nearest π − θ (0.4768): def jj136 416-417: θ 2.665 L 1.671/2.507 dV 0.247h/0.675h wedge 0.924h/0.963h; r 0.5200 ω 1.0000
+  fat: 
+  ring jj4 arms 15-13 (end/through): gate 699; θ 1.495 L 1.922/0.198 dV 0.963h/0.683h wedge 0.952h/0.707h
+  ring jj5 arms 16-17 (end/through): gate 699; θ 1.683 L 1.510/0.232 dV 0.889h/0.801h wedge 0.990h/0.755h
+  ring jj7 arms 22-23 (through/end): gate 699; θ 1.835 L 0.066/1.322 dV 0.227h/0.541h wedge 0.577h/1.013h
+  ring jj12 arms 37-38 (through/end): gate 699; θ 3.094 L 2.794/1.510 dV 0.000h/0.520h wedge 0.929h/0.923h
+  ring jj15 arms 47-48 (through/end): gate 699; θ 1.701 L 0.156/1.934 dV 0.538h/0.842h wedge 0.747h/0.968h
+  ring jj16 arms 49-50 (through/end): gate 699; θ 1.550 L 0.152/1.322 dV 0.523h/0.872h wedge 0.640h/0.969h
+  ring jj18 arms 56-57 (end/through): gate 699; θ 1.662 L 1.384/0.073 dV 0.579h/0.253h wedge 1.033h/0.400h
+  ring: 597 6, 606 18, 699 7, corner 45
+    nearest dV low (0.3146): ring jj4 14-15: θ 2.744 L 2.006/1.922 dV 0.315h/0.685h wedge 0.945h/0.967h; r 0.5800 ω 1.0000
+    nearest L − dV (0.0114): ring jj18 55-56: θ 1.622 L 0.221/1.384 dV 0.750h/0.843h wedge 0.693h/0.957h; r 0.0000 ω 1.0000
+    nearest wedge (0.6298): ring jj3 11-12: θ 1.382 L 0.960/1.333 dV 0.843h/1.059h wedge 0.877h/0.630h; r 0.2249 ω 1.0000
+    nearest π − θ (0.3973): ring jj4 14-15: θ 2.744 L 2.006/1.922 dV 0.315h/0.685h wedge 0.945h/0.967h; r 0.5800 ω 1.0000
+  user_tw42.lightpaper jj0 arms 1-2 (end/through): gate 699; θ 1.082 L 1.183/0.474 dV 1.851h/2.258h wedge 1.150h/0.869h
+  user_tw42.lightpaper jj2 arms 6-7 (through/end): gate 699; θ 1.164 L 0.205/1.229 dV 0.977h/1.353h wedge 0.632h/1.011h
+  user_tw42.lightpaper jj3 arms 11-9 (through/end): gate 699; θ 1.259 L 0.188/2.513 dV 0.897h/1.191h wedge 0.591h/1.018h
+  user_tw42.lightpaper jj3 arms 9-10 (end/through): gate 699; θ 1.201 L 2.513/0.219 dV 1.434h/1.042h wedge 0.980h/0.777h
+  user_tw42.lightpaper jj4 arms 12-13 (through/end): gate 699; θ 1.132 L 0.106/2.640 dV 0.507h/0.991h wedge 0.291h/0.966h
+  user_tw42.lightpaper jj14 arms 43-44 (end/through): gate 699; θ 0.983 L 1.237/0.262 dV 1.630h/1.245h wedge 1.047h/0.666h
+  user_tw42.lightpaper jj24 arms 74-75 (through/end): gate 699; θ 1.222 L 0.187/1.286 dV 0.888h/1.243h wedge 0.614h/0.984h
+  user_tw42.lightpaper jj25 arms 77-78 (through/end): gate 699; θ 0.802 L 0.209/1.388 dV 0.998h/1.425h wedge 0.310h/1.018h
+  user_tw42.lightpaper jj26 arms 79-80 (end/through): gate 699; θ 0.952 L 1.344/0.419 dV 1.923h/1.997h wedge 1.171h/0.805h
+  user_tw42.lightpaper jj29 arms 89-90 (end/through): gate 699; θ 0.855 L 2.624/0.314 dV 1.882h/1.494h wedge 0.956h/0.745h
+  user_tw42.lightpaper jj33 arms 102-100 (end/through): gate 699; θ 1.275 L 1.271/0.220 dV 1.309h/1.048h wedge 0.989h/0.754h
+  user_tw42.lightpaper jj59 arms 183-184 (through/end): gate 699; θ 1.110 L 0.321/2.451 dV 1.530h/1.507h wedge 0.717h/0.978h
+  user_tw42.lightpaper jj59 arms 184-182 (end/through): gate 699; θ 1.757 L 2.451/0.176 dV 0.923h/0.838h wedge 1.015h/0.856h
+  user_tw42.lightpaper jj61 arms 188-189 (through/end): gate 699; θ 1.251 L 0.215/1.275 dV 1.025h/1.412h wedge 0.833h/0.957h
+  user_tw42.lightpaper: 597 42, 606 27, 699 14, corner 150
+    nearest dV low (0.0408): user_tw42.lightpaper jj49 151-152: θ 3.025 L 0.761/1.219 dV 0.041h/0.455h wedge 0.934h/0.922h; r 0.4200 ω 1.0000
+    nearest L − dV (0.0268): user_tw42.lightpaper jj1 4-5: θ 2.754 L 2.694/0.060 dV 0.651h/0.261h wedge 0.962h/0.933h; r 0.0000 ω 1.0000
+    nearest wedge (0.5561): user_tw42.lightpaper jj32 97-98: θ 0.565 L 1.734/1.045 dV 2.385h/2.626h wedge 0.970h/0.556h; r 0.0908 ω 1.0000
+    nearest π − θ (0.1171): user_tw42.lightpaper jj49 151-152: θ 3.025 L 0.761/1.219 dV 0.041h/0.455h wedge 0.934h/0.922h; r 0.4200 ω 1.0000
+  g41_def_tw42 jj139 arms 426-424 (end/through): gate 699; θ 1.294 L 1.452/0.168 dV 1.188h/0.799h wedge 0.953h/0.693h
+  g41_def_tw42: 597 73, 606 104, 699 1, corner 385
+    nearest dV low (0.0895): g41_def_tw42 jj174 531-532: θ 3.077 L 2.370/3.132 dV 0.089h/0.622h wedge 0.950h/0.942h; r 0.4200 ω 1.0000
+    nearest L − dV (0.0016): g41_def_tw42 jj125 381-382: θ 1.542 L 0.200/3.229 dV 0.953h/1.027h wedge 0.774h/0.978h; r 0.0000 ω 1.0000
+    nearest wedge (0.6616): g41_def_tw42 jj29 93-91: θ 1.553 L 1.058/1.610 dV 0.869h/0.980h wedge 0.972h/0.662h; r 0.2969 ω 1.0000
+    nearest π − θ (0.0650): g41_def_tw42 jj174 531-532: θ 3.077 L 2.370/3.132 dV 0.089h/0.622h wedge 0.950h/0.942h; r 0.4200 ω 1.0000
+  g41_def_tw64 jj1 arms 4-5 (through/end): gate 699; θ 1.874 L 0.128/1.584 dV 0.401h/0.746h wedge 0.756h/0.986h
+  g41_def_tw64 jj2 arms 7-8 (end/through): gate 699; θ 1.315 L 2.066/0.321 dV 1.299h/1.003h wedge 0.956h/0.850h
+  g41_def_tw64 jj3 arms 10-11 (through/end): gate 699; θ 1.901 L 0.088/2.948 dV 0.274h/0.674h wedge 0.689h/1.002h
+  g41_def_tw64 jj6 arms 21-22 (end/through): gate 699; θ 1.199 L 1.314/0.195 dV 1.074h/0.610h wedge 0.917h/0.507h
+  g41_def_tw64 jj10 arms 32-33 (through/end): gate 699; θ 1.462 L 0.253/1.259 dV 0.791h/0.990h wedge 0.748h/0.891h
+  g41_def_tw64 jj15 arms 49-47 (through/end): gate 699; θ 1.945 L 0.126/1.791 dV 0.395h/0.688h wedge 0.867h/0.995h
+  g41_def_tw64 jj21 arms 65-66 (through/end): gate 699; θ 1.367 L 0.208/1.225 dV 0.650h/0.989h wedge 0.643h/0.902h
+  g41_def_tw64 jj22 arms 68-69 (through/end): gate 699; θ 1.640 L 0.234/2.116 dV 0.731h/0.875h wedge 0.742h/0.965h
+  g41_def_tw64 jj26 arms 82-83 (through/end): gate 699; θ 1.180 L 0.389/1.270 dV 1.216h/1.465h wedge 0.770h/1.030h
+  g41_def_tw64 jj28 arms 88-89 (through/end): gate 699; θ 1.181 L 0.232/1.979 dV 0.724h/1.175h wedge 0.504h/1.016h
+  g41_def_tw64 jj28 arms 89-90 (end/through): gate 699; θ 1.857 L 1.979/0.065 dV 0.699h/0.202h wedge 0.977h/0.595h
+  g41_def_tw64 jj32 arms 101-102 (through/end): gate 699; θ 1.514 L 0.192/1.374 dV 0.599h/0.978h wedge 0.564h/1.078h
+  g41_def_tw64 jj33 arms 105-103 (end/through): gate 699; θ 1.200 L 1.231/0.229 dV 1.137h/0.717h wedge 0.884h/0.611h
+  g41_def_tw64 jj35 arms 110-111 (end/through): gate 699; θ 1.462 L 1.147/0.364 dV 1.103h/1.139h wedge 1.050h/0.724h
+  g41_def_tw64 jj36 arms 114-112 (through/end): gate 699; θ 1.391 L 0.046/1.272 dV 0.143h/0.338h wedge 0.173h/0.998h
+  g41_def_tw64 jj39 arms 122-123 (end/through): gate 699; θ 1.558 L 1.248/0.457 dV 1.316h/1.429h wedge 1.410h/0.789h
+  g41_def_tw64 jj41 arms 128-129 (end/through): gate 699; θ 1.708 L 1.191/0.320 dV 0.916h/0.999h wedge 1.106h/0.658h
+  g41_def_tw64 jj43 arms 134-135 (end/through): gate 699; θ 1.893 L 1.652/0.028 dV 0.485h/0.089h wedge 0.980h/0.507h
+  g41_def_tw64 jj44 arms 136-137 (through/end): gate 699; θ 1.453 L 0.550/1.283 dV 1.718h/1.334h wedge 0.702h/1.327h
+  g41_def_tw64 jj45 arms 141-139 (end/through): gate 699; θ 1.852 L 1.283/0.374 dV 0.905h/1.170h wedge 1.187h/0.617h
+  g41_def_tw64 jj46 arms 144-142 (end/through): gate 699; θ 1.448 L 1.281/0.111 dV 0.634h/0.348h wedge 0.945h/0.506h
+  g41_def_tw64 jj47 arms 145-146 (through/end): gate 699; θ 1.681 L 0.186/1.281 dV 0.582h/0.679h wedge 0.621h/0.949h
+  g41_def_tw64 jj47 arms 146-147 (end/through): gate 699; θ 1.185 L 1.281/0.453 dV 1.485h/1.415h wedge 1.107h/0.747h
+  g41_def_tw64 jj48 arms 148-149 (through/end): gate 699; θ 1.584 L 0.335/1.260 dV 1.046h/0.721h wedge 0.494h/1.026h
+  g41_def_tw64 jj50 arms 156-154 (end/through): gate 699; θ 1.899 L 1.207/0.115 dV 0.736h/0.361h wedge 1.020h/0.604h
+  g41_def_tw64 jj51 arms 157-158 (through/end): gate 699; θ 1.176 L 0.416/1.207 dV 1.300h/1.480h wedge 0.807h/1.106h
+  g41_def_tw64 jj51 arms 158-159 (end/through): gate 699; θ 1.863 L 1.207/0.124 dV 0.607h/0.388h wedge 0.943h/0.636h
+  g41_def_tw64 jj52 arms 162-160 (end/through): gate 699; θ 1.952 L 1.495/0.001 dV 0.380h/0.004h wedge 0.952h/0.461h
+  g41_def_tw64 jj53 arms 163-164 (through/end): gate 699; θ 1.204 L 0.335/1.495 dV 1.046h/1.211h wedge 0.651h/0.913h
+  g41_def_tw64 jj54 arms 167-168 (end/through): gate 699; θ 1.240 L 1.238/0.156 dV 0.932h/0.488h wedge 1.108h/0.244h
+  g41_def_tw64 jj60 arms 186-184 (end/through): gate 699; θ 1.794 L 1.579/0.152 dV 0.734h/0.475h wedge 0.994h/0.733h
+  g41_def_tw64 jj61 arms 187-188 (through/end): gate 699; θ 1.373 L 0.331/1.579 dV 1.034h/1.281h wedge 0.921h/0.985h
+  g41_def_tw64 jj64 arms 196-197 (through/end): gate 699; θ 1.324 L 0.466/1.427 dV 1.457h/1.280h wedge 0.728h/1.082h
+  g41_def_tw64 jj67 arms 206-207 (through/end): gate 699; θ 1.339 L 0.383/1.521 dV 1.197h/1.206h wedge 0.723h/0.978h
+  g41_def_tw64 jj67 arms 207-205 (end/through): gate 699; θ 1.474 L 1.521/0.220 dV 1.018h/0.689h wedge 1.019h/0.647h
+  g41_def_tw64 jj68 arms 208-209 (through/end): gate 699; θ 1.354 L 0.135/3.024 dV 0.423h/0.883h wedge 0.471h/0.956h
+  g41_def_tw64 jj70 arms 216-214 (through/end): gate 699; θ 1.300 L 0.185/1.217 dV 0.577h/0.987h wedge 0.552h/0.930h
+  g41_def_tw64 jj72 arms 221-222 (end/through): gate 699; θ 1.294 L 1.060/0.263 dV 1.120h/0.823h wedge 0.917h/0.670h
+  g41_def_tw64 jj75 arms 229-230 (through/end): gate 699; θ 1.910 L 0.173/1.148 dV 0.541h/0.747h wedge 0.757h/1.046h
+  g41_def_tw64 jj75 arms 230-231 (end/through): gate 699; θ 1.258 L 1.148/0.114 dV 0.581h/0.356h wedge 0.948h/0.350h
+  g41_def_tw64 jj79 arms 243-241 (end/through): gate 699; θ 1.579 L 0.939/0.163 dV 0.766h/0.508h wedge 0.993h/0.555h
+  g41_def_tw64 jj80 arms 245-246 (through/end): gate 699; θ 1.502 L 0.246/1.267 dV 0.768h/1.001h wedge 0.598h/1.068h
+  g41_def_tw64 jj80 arms 246-244 (end/through): gate 699; θ 1.316 L 1.267/0.296 dV 1.204h/0.925h wedge 0.912h/0.751h
+  g41_def_tw64 jj84 arms 256-257 (end/through): gate 699; θ 1.494 L 1.314/0.040 dV 0.528h/0.124h wedge 0.954h/0.287h
+  g41_def_tw64 jj86 arms 264-262 (end/through): gate 699; θ 1.367 L 2.259/0.378 dV 1.232h/1.182h wedge 0.974h/0.791h
+  g41_def_tw64 jj89 arms 271-272 (end/through): gate 699; θ 1.406 L 1.394/0.044 dV 0.718h/0.136h wedge 0.952h/0.192h
+  g41_def_tw64 jj89 arms 273-271 (through/end): gate 699; θ 1.230 L 0.451/1.394 dV 1.409h/1.406h wedge 0.706h/1.072h
+  g41_def_tw64 jj91 arms 277-278 (through/end): gate 699; θ 1.418 L 0.216/2.278 dV 0.673h/1.030h wedge 0.718h/0.921h
+  g41_def_tw64 jj94 arms 287-288 (through/end): gate 699; θ 1.443 L 0.099/1.352 dV 0.311h/0.629h wedge 0.480h/0.947h
+  g41_def_tw64 jj96 arms 292-293 (end/through): gate 699; θ 1.485 L 2.096/0.186 dV 1.037h/0.581h wedge 1.040h/0.729h
+  g41_def_tw64 jj101 arms 307-308 (end/through): gate 699; θ 1.498 L 1.180/0.152 dV 0.876h/0.476h wedge 0.977h/0.580h
+  g41_def_tw64 jj106 arms 323-324 (end/through): gate 699; θ 1.550 L 2.192/0.068 dV 0.589h/0.211h wedge 0.993h/0.375h
+  g41_def_tw64 jj116 arms 354-355 (through/end): gate 699; θ 1.264 L 0.393/2.093 dV 1.227h/1.255h wedge 0.705h/0.971h
+  g41_def_tw64 jj116 arms 355-353 (end/through): gate 699; θ 1.932 L 2.093/0.103 dV 0.730h/0.321h wedge 1.008h/0.709h
+  g41_def_tw64 jj130 arms 398-396 (end/through): gate 699; θ 1.219 L 1.281/0.252 dV 1.213h/0.789h wedge 0.870h/0.691h
+  g41_def_tw64 jj131 arms 401-399 (through/end): gate 699; θ 1.372 L 0.146/0.989 dV 0.457h/0.883h wedge 0.577h/0.885h
+  g41_def_tw64 jj136 arms 417-415 (end/through): gate 699; θ 1.365 L 2.412/0.079 dV 0.371h/0.248h wedge 1.016h/0.266h
+  g41_def_tw64 jj137 arms 419-420 (end/through): gate 699; θ 1.416 L 2.021/0.283 dV 1.138h/0.883h wedge 0.978h/0.755h
+  g41_def_tw64 jj138 arms 422-423 (through/end): gate 699; θ 1.404 L 0.268/1.227 dV 0.837h/1.211h wedge 0.875h/0.887h
+  g41_def_tw64 jj140 arms 427-428 (through/end): gate 699; θ 1.414 L 0.924/0.402 dV 1.255h/1.255h wedge 0.838h/1.074h
+  g41_def_tw64 jj147 arms 450-448 (through/end): gate 699; θ 1.266 L 0.237/1.236 dV 0.739h/1.121h wedge 0.636h/0.914h
+  g41_def_tw64 jj151 arms 460-461 (through/end): gate 699; θ 1.679 L 0.112/2.937 dV 0.350h/0.678h wedge 0.605h/1.028h
+  g41_def_tw64 jj154 arms 470-471 (end/through): gate 699; θ 0.995 L 1.262/0.515 dV 1.726h/1.609h wedge 0.934h/0.785h
+  g41_def_tw64 jj157 arms 479-480 (end/through): gate 699; θ 1.662 L 1.573/0.091 dV 0.519h/0.283h wedge 1.037h/0.529h
+  g41_def_tw64 jj161 arms 491-492 (end/through): gate 699; θ 1.795 L 2.138/0.244 dV 0.893h/0.761h wedge 0.986h/0.863h
+  g41_def_tw64 jj162 arms 495-493 (end/through): gate 699; θ 1.550 L 1.291/0.135 dV 0.794h/0.423h wedge 0.947h/0.599h
+  g41_def_tw64 jj165 arms 505-502 (through/through): gate 699; θ 1.253 L 0.625/0.366 dV 1.446h/1.144h wedge 0.992h/1.015h
+  g41_def_tw64 jj166 arms 506-507 (through/end): gate 699; θ 1.652 L 0.026/1.225 dV 0.080h/0.729h wedge 0.179h/0.978h
+  g41_def_tw64 jj167 arms 509-510 (through/end): gate 699; θ 1.510 L 0.203/0.943 dV 0.635h/0.841h wedge 0.644h/0.913h
+  g41_def_tw64 jj177 arms 539-540 (end/through): gate 699; θ 1.461 L 1.394/0.269 dV 1.021h/0.839h wedge 0.946h/0.717h
+  g41_def_tw64: 597 71, 606 106, 681 14, 699 70, corner 302
+    nearest dV low (0.0844): g41_def_tw64 jj174 531-532: θ 2.890 L 3.281/2.890 dV 0.084h/0.406h wedge 0.934h/0.929h; r 0.6400 ω 1.0000
+    nearest L − dV (0.0069): g41_def_tw64 jj62 192-190: θ 1.851 L 1.644/0.231 dV 0.825h/0.714h wedge 0.998h/0.831h; r 0.0000 ω 1.0000
+    nearest wedge (0.5368): g41_def_tw64 jj38 120-118: θ 1.956 L 0.467/1.248 dV 1.007h/0.756h wedge 0.537h/1.099h; r 0.0006 ω 1.0000
+    nearest π − θ (0.2519): g41_def_tw64 jj174 531-532: θ 2.890 L 3.281/2.890 dV 0.084h/0.406h wedge 0.934h/0.929h; r 0.6400 ω 1.0000
+  muse_hash jj0 arms 1-2 (end/through): gate 699; θ 1.517 L 1.069/0.034 dV 0.561h/0.086h wedge 0.824h/0.499h
+  muse_hash jj1 arms 3-4 (through/end): gate 699; θ 1.618 L 0.068/1.214 dV 0.170h/0.610h wedge 0.603h/0.850h
+  muse_hash jj2 arms 6-7 (through/end): gate 699; θ 1.748 L 0.127/1.961 dV 0.318h/0.647h wedge 0.527h/1.009h
+  muse_hash jj2 arms 7-8 (end/through): gate 699; θ 1.331 L 1.961/0.200 dV 0.984h/0.500h wedge 0.970h/0.609h
+  muse_hash jj3 arms 11-9 (end/through): gate 699; θ 1.451 L 1.178/0.043 dV 0.382h/0.107h wedge 0.853h/0.468h
+  muse_hash jj6 arms 20-18 (through/end): gate 699; θ 1.763 L 0.073/0.873 dV 0.178h/0.000h wedge -1.192h/0.097h
+  muse_hash jj7 arms 23-24 (through/through): gate 699; θ 1.748 L 2.147/0.358 dV 0.931h/0.895h wedge 1.115h/1.025h
+  muse_hash jj7 arms 24-21 (through/through): gate 699; θ 1.445 L 0.358/1.049 dV 0.895h/1.089h wedge 0.961h/0.924h
+  muse_hash jj9 arms 30-28 (end/through): gate 699; θ 1.821 L 1.618/0.064 dV 0.513h/0.161h wedge 0.949h/0.630h
+  muse_hash jj10 arms 31-32 (through/end): gate 699; θ 1.190 L 0.445/0.212 dV 1.025h/0.530h wedge 0.674h/0.663h
+  muse_hash jj10 arms 32-33 (end/through): gate 699; θ 1.698 L 0.212/0.847 dV 0.530h/0.949h wedge 0.980h/0.739h
+  muse_hash jj12 arms 39-37 (through/end): gate 699; θ 1.520 L 0.361/1.119 dV 0.902h/1.105h wedge 0.953h/1.262h
+  muse_hash jj14 arms 43-44 (end/through): gate 699; θ 1.573 L 1.091/0.117 dV 0.743h/0.294h wedge 0.795h/0.729h
+  muse_hash jj15 arms 46-47 (through/end): gate 699; θ 1.586 L 0.164/1.248 dV 0.409h/0.000h wedge -0.840h/0.885h
+  muse_hash jj16 arms 49-50 (through/end): gate 699; θ 1.159 L 0.887/0.375 dV 1.586h/0.937h wedge 0.863h/1.057h
+  muse_hash jj17 arms 54-52 (end/through): gate 699; θ 0.915 L 0.669/0.751 dV 1.671h/1.751h wedge 0.804h/0.782h
+  muse_hash jj20 arms 62-63 (through/end): gate 699; θ 1.416 L 0.194/1.018 dV 0.484h/0.847h wedge 0.668h/0.814h
+  muse_hash jj21 arms 65-66 (through/end): gate 699; θ 1.047 L 0.159/2.353 dV 0.396h/0.000h wedge -0.898h/1.096h
+  muse_hash jj22 arms 67-68 (end/through): gate 699; θ 1.378 L 1.338/0.266 dV 1.073h/0.664h wedge 1.176h/0.521h
+  muse_hash jj25 arms 78-76 (end/through): gate 699; θ 1.286 L 0.287/0.706 dV 0.718h/1.194h wedge 0.888h/0.736h
+  muse_hash jj28 arms 86-87 (end/through): gate 699; θ 1.121 L 2.023/0.255 dV 1.113h/0.637h wedge 0.892h/0.486h
+  muse_hash jj29 arms 90-88 (end/through): gate 699; θ 0.926 L 1.284/0.657 dV 1.693h/1.643h wedge 1.197h/0.693h
+  muse_hash jj30 arms 91-92 (through/end): gate 699; θ 0.906 L 1.434/0.551 dV 1.760h/1.378h wedge 0.797h/0.807h
+  muse_hash jj32 arms 99-97 (end/through): gate 699; θ 1.405 L 1.207/0.170 dV 0.906h/0.426h wedge 0.856h/0.699h
+  muse_hash jj33 arms 101-102 (end/through): gate 699; θ 1.740 L 1.207/0.377 dV 0.991h/0.943h wedge 1.146h/0.719h
+  muse_hash jj34 arms 104-105 (end/through): gate 699; θ 1.428 L 1.135/0.167 dV 0.721h/0.417h wedge 0.804h/0.611h
+  muse_hash jj35 arms 108-106 (through/end): gate 699; θ 1.151 L 0.202/1.415 dV 0.504h/0.970h wedge 0.473h/0.824h
+  muse_hash jj38 arms 116-117 (end/through): gate 699; θ 1.608 L 2.809/0.137 dV 0.000h/0.343h wedge 0.948h/-0.821h
+  muse_hash jj42 arms 128-129 (end/through): gate 699; θ 1.511 L 1.529/0.297 dV 0.702h/0.743h wedge 0.879h/0.627h
+  muse_hash jj43 arms 132-130 (through/end): gate 699; θ 1.644 L 0.160/1.497 dV 0.400h/0.598h wedge 0.794h/0.750h
+  muse_hash jj44 arms 133-134 (through/end): gate 699; θ 1.654 L 0.412/1.497 dV 1.029h/1.196h wedge 0.749h/1.367h
+  muse_hash jj44 arms 134-135 (end/through): gate 699; θ 1.612 L 1.497/0.057 dV 0.665h/0.142h wedge 0.762h/0.656h
+  muse_hash jj45 arms 136-137 (through/end): gate 699; θ 1.804 L 0.117/1.413 dV 0.292h/0.725h wedge 0.581h/0.969h
+  muse_hash jj45 arms 137-138 (end/through): gate 699; θ 1.345 L 1.413/0.332 dV 1.092h/0.829h wedge 1.036h/0.585h
+  muse_hash jj46 arms 140-141 (through/end): gate 699; θ 2.007 L 0.033/1.413 dV 0.082h/0.629h wedge 0.523h/0.954h
+  muse_hash jj46 arms 141-139 (end/through): gate 699; θ 1.097 L 1.413/0.291 dV 1.198h/0.727h wedge 0.955h/0.541h
+  muse_hash jj47 arms 143-144 (through/end): gate 699; θ 1.761 L 0.107/1.516 dV 0.267h/0.676h wedge 0.531h/0.978h
+  muse_hash jj47 arms 144-142 (end/through): gate 699; θ 1.293 L 1.516/0.100 dV 0.000h/0.251h wedge 0.710h/-1.179h
+  muse_hash jj48 arms 145-146 (through/end): gate 699; θ 1.607 L 0.228/1.516 dV 0.569h/0.908h wedge 0.683h/1.014h
+  muse_hash jj50 arms 151-152 (through/end): gate 699; θ 1.513 L 0.275/1.627 dV 0.687h/0.872h wedge 0.714h/0.877h
+  muse_hash jj53 arms 162-160 (end/through): gate 699; θ 1.255 L 1.364/0.222 dV 1.002h/0.554h wedge 1.011h/0.541h
+  muse_hash jj57 arms 174-172 (through/end): gate 699; θ 1.303 L 0.254/1.814 dV 0.634h/1.015h wedge 0.598h/0.942h
+  muse_hash jj58 arms 175-176 (through/end): gate 699; θ 1.542 L 0.226/1.457 dV 0.565h/0.895h wedge 0.489h/1.114h
+  muse_hash jj58 arms 176-177 (end/through): gate 699; θ 1.815 L 1.457/1.157 dV 0.863h/2.892h wedge 0.866h/0.993h
+  muse_hash jj60 arms 181-182 (through/end): gate 699; θ 1.797 L 0.095/1.318 dV 0.237h/0.576h wedge 0.538h/0.924h
+  muse_hash jj60 arms 182-183 (end/through): gate 699; θ 1.087 L 1.318/0.452 dV 1.447h/1.129h wedge 1.136h/0.635h
+  muse_hash jj65 arms 198-196 (through/end): gate 699; θ 1.300 L 0.106/1.301 dV 0.266h/0.744h wedge 0.467h/0.821h
+  muse_hash jj68 arms 206-207 (end/through): gate 699; θ 1.560 L 0.763/0.502 dV 1.306h/1.255h wedge 1.287h/0.840h
+  muse_hash jj69 arms 208-209 (through/end): gate 699; θ 1.570 L 0.132/1.118 dV 0.331h/0.742h wedge 0.602h/0.924h
+  muse_hash jj70 arms 213-211 (through/end): gate 699; θ 1.099 L 0.535/0.642 dV 1.337h/1.588h wedge 0.730h/1.089h
+  muse_hash jj71 arms 214-215 (end/through): gate 699; θ 1.181 L 1.127/0.036 dV 0.000h/0.089h wedge 0.624h/-1.207h
+  muse_hash jj75 arms 226-227 (through/end): gate 699; θ 1.537 L 0.108/1.077 dV 0.270h/0.000h wedge -1.117h/0.690h
+  muse_hash jj76 arms 231-229 (through/end): gate 699; θ 1.570 L 0.029/3.123 dV 0.045h/0.000h wedge -1.166h/0.426h
+  muse_hash jj77 arms 234-232 (end/through): gate 699; θ 1.486 L 1.383/0.056 dV 0.486h/0.141h wedge 0.894h/0.446h
+  muse_hash jj78 arms 235-236 (through/end): gate 699; θ 2.024 L 0.898/0.004 dV 0.228h/0.011h wedge 0.794h/0.459h
+  muse_hash jj78 arms 236-237 (end/through): gate 699; θ 1.760 L 0.004/3.222 dV 0.011h/0.062h wedge 0.051h/0.754h
+  muse_hash jj79 arms 240-238 (through/end): gate 699; θ 1.477 L 0.222/3.222 dV 0.555h/0.934h wedge 0.712h/0.903h
+  muse_hash jj80 arms 241-242 (through/end): gate 699; θ 1.132 L 0.477/0.446 dV 1.192h/1.114h wedge 0.754h/0.852h
+  muse_hash jj81 arms 244-245 (end/through): gate 699; θ 0.825 L 0.543/1.259 dV 1.356h/2.679h wedge 0.605h/0.945h
+  muse_hash jj82 arms 248-249 (end/through): gate 699; θ 1.290 L 0.717/0.190 dV 0.925h/0.476h wedge 0.835h/0.582h
+  muse_hash jj84 arms 253-254 (through/end): gate 699; θ 1.381 L 0.005/1.296 dV 0.012h/0.000h wedge -1.104h/0.746h
+  muse_hash jj84 arms 254-255 (end/through): gate 699; θ 1.944 L 1.296/0.089 dV 0.714h/0.222h wedge 1.021h/0.367h
+  muse_hash jj86 arms 261-259 (end/through): gate 699; θ 1.687 L 1.221/0.249 dV 0.948h/0.623h wedge 1.070h/0.721h
+  muse_hash jj87 arms 264-262 (end/through): gate 699; θ 1.830 L 1.322/0.054 dV 0.722h/0.135h wedge 1.001h/0.334h
+  muse_hash jj88 arms 266-267 (end/through): gate 699; θ 0.980 L 1.108/0.237 dV 1.018h/0.592h wedge 0.693h/0.434h
+  muse_hash jj91 arms 275-276 (end/through): gate 699; θ 1.330 L 2.177/0.146 dV 0.612h/0.364h wedge 0.937h/0.421h
+  muse_hash jj93 arms 282-280 (through/end): gate 699; θ 1.089 L 0.348/1.063 dV 0.870h/1.260h wedge 0.636h/0.811h
+  muse_hash jj94 arms 283-284 (through/end): gate 699; θ 1.702 L 0.241/1.839 dV 0.602h/0.903h wedge 0.763h/1.028h
+  muse_hash jj94 arms 284-285 (end/through): gate 699; θ 1.186 L 1.839/0.201 dV 0.984h/0.501h wedge 0.968h/0.364h
+  muse_hash jj95 arms 287-288 (end/through): gate 699; θ 1.371 L 1.091/0.103 dV 0.740h/0.257h wedge 0.928h/0.370h
+  muse_hash jj96 arms 292-289 (through/through): gate 699; θ 1.058 L 0.567/0.497 dV 1.417h/1.243h wedge 0.952h/0.935h
+  muse_hash jj100 arms 304-305 (through/through): gate 699; θ 1.049 L 0.451/0.324 dV 1.127h/0.809h wedge 0.881h/0.750h
+  muse_hash jj101 arms 307-308 (end/through): gate 699; θ 1.593 L 2.886/0.272 dV 0.619h/0.679h wedge 0.932h/0.620h
+  muse_hash jj104 arms 316-317 (end/through): gate 699; θ 0.913 L 0.740/0.534 dV 1.749h/1.335h wedge 0.911h/0.661h
+  muse_hash jj105 arms 318-319 (through/end): gate 699; θ 1.084 L 0.301/1.229 dV 0.753h/1.263h wedge 0.674h/0.680h
+  muse_hash jj107 arms 325-326 (through/end): gate 699; θ 1.034 L 0.492/2.078 dV 1.229h/1.525h wedge 0.787h/0.739h
+  muse_hash jj108 arms 327-328 (through/end): gate 699; θ 1.410 L 0.248/0.786 dV 0.619h/0.876h wedge 0.616h/0.884h
+  muse_hash jj111 arms 337-338 (end/through): gate 699; θ 1.166 L 0.503/0.945 dV 1.259h/1.358h wedge 0.849h/0.721h
+  muse_hash jj114 arms 345-346 (end/through): gate 699; θ 1.066 L 1.049/0.503 dV 1.375h/1.259h wedge 1.194h/0.659h
+  muse_hash jj116 arms 353-351 (through/end): gate 699; θ 1.030 L 0.051/1.383 dV 0.127h/0.000h wedge -1.247h/0.666h
+  muse_hash jj117 arms 354-355 (through/end): gate 699; θ 1.493 L 0.294/0.969 dV 0.734h/1.133h wedge 0.825h/1.134h
+  muse_hash jj119 arms 360-361 (through/end): gate 699; θ 0.805 L 0.945/0.793 dV 1.709h/1.982h wedge 0.841h/0.719h
+  muse_hash jj119 arms 361-362 (end/through): gate 699; θ 1.541 L 0.793/0.537 dV 1.008h/1.343h wedge 1.230h/0.595h
+  muse_hash jj124 arms 376-377 (end/through): gate 699; θ 0.823 L 0.652/0.650 dV 1.593h/1.626h wedge 1.329h/0.456h
+  muse_hash jj125 arms 379-380 (end/through): gate 699; θ 1.296 L 0.413/1.358 dV 1.033h/1.375h wedge 0.990h/0.676h
+  muse_hash jj127 arms 384-385 (end/through): gate 699; θ 2.068 L 2.131/0.232 dV 0.829h/0.581h wedge 1.043h/0.951h
+  muse_hash jj129 arms 391-392 (through/end): gate 699; θ 1.503 L 0.116/1.416 dV 0.290h/0.639h wedge 0.542h/0.922h
+  muse_hash jj133 arms 402-403 (end/through): gate 699; θ 1.082 L 1.338/0.222 dV 1.038h/0.555h wedge 0.955h/0.326h
+  muse_hash jj134 arms 405-406 (through/end): gate 699; θ 1.464 L 0.043/1.156 dV 0.107h/0.560h wedge 0.301h/0.922h
+  muse_hash jj136 arms 412-413 (end/through): gate 699; θ 1.436 L 0.481/0.695 dV 1.203h/1.224h wedge 1.077h/0.822h
+  muse_hash jj137 arms 416-414 (end/through): gate 699; θ 1.274 L 0.478/0.972 dV 1.195h/1.293h wedge 0.967h/0.800h
+  muse_hash jj138 arms 417-418 (through/end): gate 699; θ 1.278 L 0.859/1.230 dV 2.148h/1.624h wedge 0.859h/1.472h
+  muse_hash jj141 arms 426-427 (through/end): gate 699; θ 1.298 L 1.296/0.445 dV 1.557h/1.111h wedge 0.676h/1.103h
+  muse_hash jj142 arms 431-429 (through/end): gate 699; θ 1.282 L 1.247/0.451 dV 1.453h/1.128h wedge 0.826h/1.061h
+  muse_hash jj146 arms 443-444 (through/through): gate 699; θ 1.238 L 0.609/0.424 dV 1.351h/1.059h wedge 1.100h/0.877h
+  muse_hash jj147 arms 446-447 (through/end): gate 699; θ 1.621 L 0.461/1.281 dV 1.151h/1.130h wedge 0.827h/1.131h
+  muse_hash jj148 arms 449-450 (through/end): gate 699; θ 1.395 L 2.078/0.325 dV 1.265h/0.811h wedge 0.688h/1.017h
+  muse_hash jj148 arms 450-451 (end/through): gate 699; θ 1.593 L 0.325/0.730 dV 0.811h/0.890h wedge 0.923h/0.743h
+  muse_hash jj149 arms 452-453 (end/through): gate 699; θ 0.413 L 0.923/0.150 dV 0.000h/0.376h wedge 1.265h/-1.209h
+  muse_hash jj151 arms 458-459 (end/through): gate 699; θ 1.426 L 0.399/1.221 dV 0.998h/1.236h wedge 0.991h/0.776h
+  muse_hash jj151 arms 460-458 (through/end): gate 699; θ 0.962 L 1.025/0.399 dV 1.619h/0.998h wedge 0.809h/0.746h
+  muse_hash jj153 arms 466-464 (end/through): gate 699; θ 1.419 L 2.885/0.118 dV 0.373h/0.296h wedge 1.002h/0.423h
+  muse_hash jj154 arms 467-468 (end/through): gate 699; θ 1.287 L 1.258/0.147 dV 0.780h/0.367h wedge 0.679h/0.650h
+  muse_hash jj156 arms 474-475 (through/end): gate 699; θ 2.038 L 0.334/2.122 dV 0.834h/0.933h wedge 0.776h/1.244h
+  muse_hash jj157 arms 477-478 (end/through): gate 699; θ 2.146 L 1.150/0.003 dV 0.323h/0.007h wedge 0.905h/0.196h
+  muse_hash jj158 arms 480-481 (through/end): gate 699; θ 1.174 L 0.339/1.196 dV 0.847h/1.146h wedge 0.477h/0.989h
+  muse_hash jj158 arms 481-479 (end/through): gate 699; θ 2.040 L 1.196/0.094 dV 0.719h/0.234h wedge 0.983h/0.692h
+  muse_hash jj164 arms 498-499 (through/end): gate 699; θ 1.266 L 0.266/1.895 dV 0.664h/1.136h wedge 0.709h/0.902h
+  muse_hash: 597 76, 606 85, 681 42, 699 108, corner 192
+    nearest dV low (0.0710): muse_hash jj124 375-376: θ 2.218 L 0.606/0.652 dV 0.071h/0.315h wedge 0.861h/0.815h; r 0.7868 ω 1.0000
+    nearest L − dV (0.0064): muse_hash jj159 484-482: θ 1.093 L 0.484/0.598 dV 1.204h/1.271h wedge 0.726h/0.689h; r 0.0000 ω 1.0000
+    nearest wedge (0.3641): muse_hash jj64 195-193: θ 0.699 L 0.630/1.162 dV 1.437h/2.205h wedge 0.629h/0.364h; r 0.0000 ω 1.0000
+    nearest π − θ (0.1884): muse_hash jj23 72-70: θ 2.953 L 1.421/1.614 dV 0.640h/0.186h wedge 0.946h/0.959h; r 1.6000 ω 1.0000
+  muse_default_tw jj0 arms 1-2 (end/through): gate 699; θ 1.250 L 1.174/0.275 dV 1.381h/1.058h wedge 1.108h/0.668h
+  muse_default_tw jj3 arms 11-9 (end/through): gate 699; θ 1.370 L 1.349/0.212 dV 1.141h/0.816h wedge 0.900h/0.789h
+  muse_default_tw jj6 arms 18-19 (end/through): gate 699; θ 1.411 L 1.298/0.274 dV 1.167h/1.056h wedge 0.942h/0.802h
+  muse_default_tw jj36 arms 110-111 (end/through): gate 699; θ 1.431 L 2.279/0.135 dV 0.977h/0.520h wedge 1.010h/0.592h
+  muse_default_tw jj59 arms 179-180 (through/end): gate 699; θ 1.439 L 0.236/1.203 dV 0.909h/1.004h wedge 0.718h/0.901h
+  muse_default_tw jj75 arms 226-227 (through/end): gate 699; θ 1.153 L 0.383/1.281 dV 1.474h/1.645h wedge 0.800h/1.184h
+  muse_default_tw jj76 arms 231-229 (through/end): gate 699; θ 1.422 L 0.190/3.167 dV 0.730h/1.093h wedge 0.731h/0.996h
+  muse_default_tw jj83 arms 252-250 (through/end): gate 699; θ 1.313 L 0.272/3.055 dV 1.048h/1.271h wedge 0.778h/0.954h
+  muse_default_tw jj84 arms 253-254 (through/end): gate 699; θ 1.366 L 0.168/1.061 dV 0.644h/1.041h wedge 0.679h/0.898h
+  muse_default_tw jj87 arms 263-264 (through/end): gate 699; θ 1.226 L 0.199/1.304 dV 0.764h/1.197h wedge 0.640h/0.928h
+  muse_default_tw jj95 arms 287-288 (end/through): gate 699; θ 1.293 L 1.439/0.246 dV 1.286h/0.947h wedge 1.024h/0.713h
+  muse_default_tw jj99 arms 299-300 (end/through): gate 699; θ 1.756 L 2.882/0.062 dV 0.683h/0.237h wedge 0.972h/0.587h
+  muse_default_tw jj101 arms 306-307 (through/end): gate 699; θ 1.220 L 0.285/2.961 dV 1.097h/1.383h wedge 0.759h/0.985h
+  muse_default_tw jj102 arms 310-311 (end/through): gate 699; θ 1.458 L 2.879/0.194 dV 1.069h/0.745h wedge 0.954h/0.749h
+  muse_default_tw jj110 arms 333-334 (end/through): gate 699; θ 1.432 L 2.443/0.158 dV 0.998h/0.608h wedge 0.974h/0.691h
+  muse_default_tw jj120 arms 365-363 (end/through): gate 699; θ 1.097 L 1.203/0.273 dV 1.421h/1.050h wedge 0.914h/0.697h
+  muse_default_tw jj123 arms 372-373 (end/through): gate 699; θ 1.402 L 1.111/0.296 dV 1.187h/1.139h wedge 1.054h/0.715h
+  muse_default_tw jj123 arms 374-372 (through/end): gate 699; θ 1.047 L 0.291/1.111 dV 1.120h/1.503h wedge 0.650h/0.933h
+  muse_default_tw jj126 arms 382-383 (end/through): gate 699; θ 1.243 L 1.117/0.297 dV 1.301h/1.143h wedge 0.924h/0.754h
+  muse_default_tw jj139 arms 420-421 (end/through): gate 699; θ 1.272 L 1.084/0.221 dV 1.203h/0.848h wedge 0.904h/0.747h
+  muse_default_tw jj143 arms 434-432 (end/through): gate 699; θ 1.300 L 2.116/0.271 dV 1.279h/1.044h wedge 0.989h/0.791h
+  muse_default_tw jj157 arms 476-477 (through/end): gate 699; θ 1.360 L 0.277/1.370 dV 1.065h/1.184h wedge 0.781h/0.919h
+  muse_default_tw: 597 86, 606 75, 699 22, corner 320
+    nearest dV low (0.1308): muse_default_tw jj57 172-173: θ 2.820 L 1.857/1.404 dV 0.659h/0.131h wedge 0.951h/0.956h; r 1.0400 ω 1.0000
+    nearest L − dV (0.0144): muse_default_tw jj1 3-4: θ 1.451 L 0.318/1.400 dV 1.207h/1.212h wedge 0.784h/1.065h; r 0.0000 ω 1.0000
+    nearest wedge (0.5583): muse_default_tw jj58 175-176: θ 1.549 L 0.493/1.203 dV 1.091h/0.898h wedge 0.558h/1.047h; r 0.0146 ω 1.0000
+    nearest π − θ (0.3217): muse_default_tw jj57 172-173: θ 2.820 L 1.857/1.404 dV 0.659h/0.131h wedge 0.951h/0.956h; r 1.0400 ω 1.0000
+  g41_ring_tw42: 597 6, 606 19, corner 51
+    nearest dV low (0.2295): g41_ring_tw42 jj4 14-15: θ 2.539 L 2.085/1.929 dV 0.229h/0.750h wedge 0.957h/0.990h; r 0.4200 ω 1.0000
+    nearest L − dV (1.2879): g41_ring_tw42 jj5 16-17: θ 1.673 L 1.575/0.452 dV 0.921h/0.863h wedge 0.995h/0.770h; r 0.1525 ω 1.0000
+    nearest wedge (0.6443): g41_ring_tw42 jj3 11-12: θ 1.652 L 1.123/1.553 dV 0.642h/0.824h wedge 0.956h/0.644h; r 0.3349 ω 1.0000
+    nearest π − θ (0.5223): g41_ring_tw42 jj20 61-62: θ 2.619 L 1.955/0.922 dV 0.649h/0.291h wedge 0.942h/0.923h; r 0.4200 ω 1.0000
+  g41_ring_tw64 jj2 arms 9-7 (through/end): gate 699; θ 2.048 L 0.089/3.666 dV 0.277h/0.709h wedge 0.720h/0.988h
+  g41_ring_tw64 jj4 arms 15-13 (end/through): gate 699; θ 1.452 L 1.905/0.155 dV 0.901h/0.486h wedge 0.947h/0.621h
+  g41_ring_tw64 jj5 arms 16-17 (end/through): gate 699; θ 1.642 L 1.487/0.172 dV 0.879h/0.539h wedge 0.996h/0.706h
+  g41_ring_tw64 jj10 arms 31-32 (through/end): gate 699; θ 1.359 L 0.184/1.445 dV 0.576h/1.001h wedge 0.326h/1.186h
+  g41_ring_tw64 jj11 arms 36-34 (end/through): gate 699; θ 1.583 L 1.323/0.289 dV 0.935h/0.902h wedge 0.993h/0.710h
+  g41_ring_tw64 jj18 arms 55-56 (through/end): gate 699; θ 1.541 L 0.148/1.370 dV 0.461h/0.802h wedge 0.604h/0.942h
+  g41_ring_tw64 jj21 arms 64-65 (through/end): gate 699; θ 1.866 L 0.225/1.504 dV 0.703h/0.804h wedge 0.801h/1.019h
+  g41_ring_tw64: 597 8, 606 16, 681 4, 699 7, corner 41
+    nearest dV low (0.1244): g41_ring_tw64 jj12 37-38: θ 2.973 L 3.158/1.487 dV 0.124h/0.506h wedge 0.947h/0.935h; r 0.6400 ω 1.0000
+    nearest L − dV (0.0023): g41_ring_tw64 jj11 35-36: θ 1.431 L 0.375/1.323 dV 1.169h/1.149h wedge 0.748h/1.009h; r 0.0000 ω 1.0000
+    nearest wedge (0.5495): g41_ring_tw64 jj8 25-26: θ 1.612 L 1.445/0.416 dV 0.900h/1.223h wedge 1.098h/0.549h; r 0.0000 ω 1.0000
+    nearest π − θ (0.1681): g41_ring_tw64 jj12 37-38: θ 2.973 L 3.158/1.487 dV 0.124h/0.506h wedge 0.947h/0.935h; r 0.6400 ω 1.0000
+  g41_user_tw42 jj0 arms 1-2 (end/through): gate 699; θ 1.082 L 1.183/0.474 dV 1.851h/2.258h wedge 1.150h/0.869h
+  g41_user_tw42 jj2 arms 6-7 (through/end): gate 699; θ 1.164 L 0.205/1.229 dV 0.977h/1.353h wedge 0.632h/1.011h
+  g41_user_tw42 jj3 arms 11-9 (through/end): gate 699; θ 1.259 L 0.188/2.513 dV 0.897h/1.191h wedge 0.591h/1.018h
+  g41_user_tw42 jj3 arms 9-10 (end/through): gate 699; θ 1.201 L 2.513/0.219 dV 1.434h/1.042h wedge 0.980h/0.777h
+  g41_user_tw42 jj4 arms 12-13 (through/end): gate 699; θ 1.132 L 0.106/2.640 dV 0.507h/0.991h wedge 0.291h/0.966h
+  g41_user_tw42 jj14 arms 43-44 (end/through): gate 699; θ 0.983 L 1.237/0.262 dV 1.630h/1.245h wedge 1.047h/0.666h
+  g41_user_tw42 jj24 arms 74-75 (through/end): gate 699; θ 1.222 L 0.187/1.286 dV 0.888h/1.243h wedge 0.614h/0.984h
+  g41_user_tw42 jj25 arms 77-78 (through/end): gate 699; θ 0.802 L 0.209/1.388 dV 0.998h/1.425h wedge 0.310h/1.018h
+  g41_user_tw42 jj26 arms 79-80 (end/through): gate 699; θ 0.952 L 1.344/0.419 dV 1.923h/1.997h wedge 1.171h/0.805h
+  g41_user_tw42 jj29 arms 89-90 (end/through): gate 699; θ 0.855 L 2.624/0.314 dV 1.882h/1.494h wedge 0.956h/0.745h
+  g41_user_tw42 jj33 arms 102-100 (end/through): gate 699; θ 1.275 L 1.271/0.220 dV 1.309h/1.048h wedge 0.989h/0.754h
+  g41_user_tw42 jj59 arms 183-184 (through/end): gate 699; θ 1.110 L 0.321/2.451 dV 1.530h/1.507h wedge 0.717h/0.978h
+  g41_user_tw42 jj59 arms 184-182 (end/through): gate 699; θ 1.757 L 2.451/0.176 dV 0.923h/0.838h wedge 1.015h/0.856h
+  g41_user_tw42 jj61 arms 188-189 (through/end): gate 699; θ 1.251 L 0.215/1.275 dV 1.025h/1.412h wedge 0.833h/0.957h
+  g41_user_tw42: 597 42, 606 27, 699 14, corner 150
+    nearest dV low (0.0408): g41_user_tw42 jj49 151-152: θ 3.024 L 0.761/1.219 dV 0.041h/0.455h wedge 0.934h/0.922h; r 0.4200 ω 1.0000
+    nearest L − dV (0.0262): g41_user_tw42 jj1 4-5: θ 2.753 L 2.693/0.060 dV 0.651h/0.261h wedge 0.963h/0.933h; r 0.0000 ω 1.0000
+    nearest wedge (0.5561): g41_user_tw42 jj32 97-98: θ 0.565 L 1.734/1.045 dV 2.385h/2.627h wedge 0.970h/0.556h; r 0.0908 ω 1.0000
+    nearest π − θ (0.1172): g41_user_tw42 jj49 151-152: θ 3.024 L 0.761/1.219 dV 0.041h/0.455h wedge 0.934h/0.922h; r 0.4200 ω 1.0000
+  g41_user_tw64 jj0 arms 0-1 (end/through): gate 699; θ 1.109 L 0.682/0.410 dV 1.331h/1.282h wedge 1.053h/0.462h
+  g41_user_tw64 jj7 arms 21-22 (through/end): gate 699; θ 1.353 L 0.053/1.358 dV 0.166h/0.522h wedge 0.110h/0.995h
+  g41_user_tw64 jj7 arms 22-23 (end/through): gate 699; θ 1.389 L 1.358/0.259 dV 1.084h/0.810h wedge 1.026h/0.612h
+  g41_user_tw64 jj8 arms 26-24 (end/through): gate 699; θ 1.581 L 1.222/0.363 dV 1.146h/1.133h wedge 1.218h/0.672h
+  g41_user_tw64 jj9 arms 27-28 (through/end): gate 699; θ 1.908 L 0.184/1.222 dV 0.574h/0.772h wedge 0.617h/1.134h
+  g41_user_tw64 jj9 arms 28-29 (end/through): gate 699; θ 1.299 L 1.222/0.031 dV 0.000h/0.097h wedge 0.865h/-1.093h
+  g41_user_tw64 jj10 arms 32-30 (end/through): gate 699; θ 1.401 L 1.055/0.255 dV 0.835h/0.798h wedge 1.059h/0.305h
+  g41_user_tw64 jj11 arms 33-34 (through/end): gate 699; θ 1.400 L 0.206/3.156 dV 0.645h/1.011h wedge 0.641h/0.948h
+  g41_user_tw64 jj13 arms 40-41 (end/through): gate 699; θ 0.206 L 0.863/0.853 dV 2.696h/2.665h wedge 0.931h/-0.255h
+  g41_user_tw64 jj14 arms 44-42 (end/through): gate 699; θ 1.817 L 0.916/0.090 dV 0.641h/0.280h wedge 0.891h/0.718h
+  g41_user_tw64 jj19 arms 59-57 (end/through): gate 699; θ 1.130 L 0.792/0.490 dV 1.585h/1.531h wedge 1.024h/0.793h
+  g41_user_tw64 jj23 arms 72-70 (through/end): gate 699; θ 1.506 L 0.355/2.333 dV 1.108h/1.154h wedge 0.888h/1.042h
+  g41_user_tw64 jj26 arms 79-80 (end/through): gate 699; θ 1.428 L 0.986/0.421 dV 1.394h/1.317h wedge 1.334h/0.762h
+  g41_user_tw64 jj27 arms 83-84 (end/through): gate 699; θ 1.154 L 0.959/0.169 dV 0.000h/0.527h wedge 1.081h/-0.766h
+  g41_user_tw64 jj29 arms 89-90 (end/through): gate 699; θ 0.952 L 2.255/0.304 dV 1.409h/0.951h wedge 0.837h/0.742h
+  g41_user_tw64 jj30 arms 93-91 (through/end): gate 694; θ 0.984 L 1.045/1.290
+  g41_user_tw64 jj31 arms 96-94 (through/end): gate 699; θ 1.159 L 0.239/1.113 dV 0.748h/1.060h wedge 0.457h/0.934h
+  g41_user_tw64 jj33 arms 102-100 (end/through): gate 699; θ 1.529 L 0.877/0.020 dV 0.000h/0.062h wedge 0.491h/-1.164h
+  g41_user_tw64 jj34 arms 103-104 (through/end): gate 699; θ 0.731 L 0.741/0.598 dV 2.156h/1.870h wedge 0.724h/0.992h
+  g41_user_tw64 jj37 arms 113-114 (through/end): gate 699; θ 0.874 L 0.802/3.084 dV 2.507h/2.167h wedge 0.922h/1.086h
+  g41_user_tw64 jj39 arms 121-119 (end/through): gate 699; θ 1.150 L 0.826/0.434 dV 1.029h/1.356h wedge 0.802h/0.545h
+  g41_user_tw64 jj43 arms 133-134 (end/through): gate 699; θ 1.398 L 1.161/0.237 dV 1.028h/0.740h wedge 0.727h/0.854h
+  g41_user_tw64 jj46 arms 142-143 (through/end): gate 699; θ 1.200 L 0.440/0.706 dV 1.374h/1.356h wedge 0.740h/0.935h
+  g41_user_tw64 jj59 arms 183-184 (through/end): gate 699; θ 2.219 L 0.067/1.708 dV 0.209h/0.598h wedge 0.778h/0.949h
+  g41_user_tw64 jj68 arms 213-211 (end/through): gate 699; θ 1.230 L 1.148/0.168 dV 0.792h/0.526h wedge 1.028h/0.127h
+  g41_user_tw64 jj71 arms 220-221 (through/end): gate 699; θ 0.424 L 0.657/0.779 dV 2.054h/2.186h wedge 0.081h/1.068h
+  g41_user_tw64: 597 38, 606 32, 681 15, 694 1, 699 25, corner 122
+    nearest dV low (0.0359): g41_user_tw64 jj12 36-37: θ 3.012 L 0.976/1.160 dV 0.447h/0.036h wedge 0.931h/0.938h; r 0.6400 ω 1.0000
+    nearest L − dV (0.0251): g41_user_tw64 jj74 230-231: θ 1.134 L 0.506/0.892 dV 1.557h/1.618h wedge 1.019h/0.994h; r 0.0000 ω 1.0000
+    nearest wedge (0.3830): g41_user_tw64 jj70 217-218: θ 1.299 L 0.323/0.987 dV 0.749h/0.754h wedge 0.383h/0.906h; r 0.0000 ω 1.0000
+    nearest π − θ (0.1294): g41_user_tw64 jj12 36-37: θ 3.012 L 0.976/1.160 dV 0.447h/0.036h wedge 0.931h/0.938h; r 0.6400 ω 1.0000
+all scenes: 597 525, 606 609, 681 76, 694 1, 699 292, corner 2119; pairs that pass every gate but have no corner: 0
