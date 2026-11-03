@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1133.
+Next free ID: K1134.
 
 ## Waiting on Levi
 
@@ -508,9 +508,9 @@ Next free ID: K1133.
 - **K1131** · Muse batch 8 (`docs/design/K1131_muse_batch8.md`): A K332, B K657, C K1081, D K1082, E K1083, F
   K1115; Next in ledger order, no junction, cursive, physics or phone work.
   - owner: muse runs 8A-8F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 04:10
-  - branch: mainline; last commit: `efe7faa3`
+  - branch: mainline; last commit: `afaccf39`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 8A-8F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run D (K1082)
+  - next: Run E (K1083)
   - brief: `docs/design/K1131_muse_batch8.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
@@ -728,8 +728,6 @@ Every other item below waits on the trigger it names.
 - **K956** · K868: where a band runs into its own group's union and the census expects its over line, label ink
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
-- **K1082** · K1077 (= K441 s2): the burn re-declare rebuilds fillets every frame on the realtime stand
-  (about +1.1 ms x1, +8.4 ms x4): incremental setExplore (K441_fire_frame.md K1077, K441 s2 sketch).
 - **K1083** · K1077: RibbonRenderer.update redoes gap slots every frame on the realtime stand (about
   +0.97 ms x1, +4.5 ms x4): declare only changed chains (K441 K1077). Trace the trigger first: needsFxRender
   (paint_state.ts:719) reruns it on exploreUpdatePending (explore_gaps.ts:397, fabric_maze_renderer.ts:1082) or fxLive; under fxLive that fix won't stop it.
@@ -1700,6 +1698,9 @@ Every other item below waits on the trigger it names.
   every run, so the tracked `phone_time_summary.md` grows with each rerun (S3b's Handoff).
 - **K1128** · Sprint: no real phone pass yet (emulated 411x753); the s3a fragile page check is weak on the
   hunter, and the fire side is unit-tested only (split from K748)
+- **K1133** · Burn re-declare: fillet rebuilds still fire on front-crossing frames (2-3 per 119 on the K1082
+  realtime stand, driven by the gap gate's uwRev under-window updates, before and after the incremental
+  declare alike; split from K1082)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1995,6 +1996,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1082** · incremental burn declare; fillets split out. Done in afaccf39 (2026-11-03).
 - **K1081** · one panel rect read a frame (camera cache). Done in efe7faa3 (2026-11-03).
 - **K657** · win banner shows snapped and par rows. Done in 2592be6c (2026-11-03).
 - **K332** · key hints after the first direction press. Done in 3346474f (2026-11-03).
