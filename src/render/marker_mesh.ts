@@ -37,7 +37,6 @@ const QUAD_HALF = 1.25;
 const MARKER_VERT = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 aPosition;
-in vec2 aUV;
 out vec2 vP;
 out vec4 vColor;
 uniform mat3 uProjectionMatrix;
@@ -173,6 +172,12 @@ export class MarkerMesh {
       uvs: new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]),
       indices: new Uint32Array([0, 1, 2, 0, 2, 3]),
     });
+    // K128: the shader never reads aUV (vP is aPosition), and pixi warns
+    // about every geometry attribute its shader lacks - drop
+    // MeshGeometry's default slot (ribbon_mesh.ts's pattern).
+    const uvBuffer = geometry.attributes.aUV.buffer;
+    delete geometry.attributes.aUV;
+    geometry.buffers.splice(geometry.buffers.indexOf(uvBuffer), 1);
     this.mesh = new Mesh({ geometry, shader, texture: Texture.WHITE });
     this.mesh.visible = false;
   }
