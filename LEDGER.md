@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1112.
+Next free ID: K1118.
 
 ## Waiting on Levi
 
@@ -284,10 +284,6 @@ Next free ID: K1112.
   doc Findings filed).
 - **K1080** · On the phone, zoom in and out and tap threads and junction choices: do the tap targets feel
   right? They now stay the same finger size at every zoom (K331, bc5f0043).
-- **K1102** · Cursive v6.7's six solved joins of b, v and w into a and q: one smooth stroke, or are v6.6's
-  better? Picture sent in chat 2026-11-02 19:29 (font, v6.6, v6.7); the v6.7 sheets are on Drive `K863/`
-  (`*_v67*.svg`). If v6.6, the cursive stage then running restores v6.6's joins for the six pairs
-  (`K1027_cursive_j3d.md` ## Handoff).
 - **K1110** · On the phone, with sound on and the settings panel left open from last time, reload and make
   your very first touch a tap on Made by Snoring Cat: do you hear the snore before the studio page opens?
   (K343, 933571af)
@@ -746,6 +742,22 @@ Every other item below waits on the trigger it names.
   45.0/45.3 fps, 119-122 of ~360 frames over 25 ms, none over 50, against 65a7787's 60.1/60.3, two runs a
   build in both orders, thermal status 0). Trim the piece counts or per-piece cost, or accept it.
   docs/design/K156.md round 2026-10-30 handoff.
+- **K1112** · Cursive: one join rule for every pair (the answer to Levi's step-back question of 2026-11-02,
+  `K863_trace.md` "Levi's calls"): port the exits J3 has not (b c g j k l m p q r s t u v w x y z), letter by
+  letter, b, v and w first; then delete J2's presets (join_params `cnct.*`) and the six pins (og, oe, fo, fv,
+  fr, fs). No per-pair data: a fix goes into a letter's body or ports. Gates: the census's smoothness and
+  locality; font distance reported per letter; Levi judges one sheet per letter.
+- **K1113** · Cursive: b, v and w end in too much of a downward hook/cusp; Levi (2026-11-02): "it should be
+  less down and more out". Their exits are drawn 3-9° steeper than the font's (K948) and their joins are J2's
+  presets: J3f ports the three exits and solves their joins, the first letters of K1112; before picture
+  `out28/aq_joins_v68.svg` (`K990_cursive_j3e.md` ## Handoff, Next 1).
+- **K1114** · Junctions: look at S1g's at-rest changes. F1 empties j36 109-110 (muse_hash) and cuts j62
+  189-187 from 2.438h to 1.431h; F2 changes r at 155 corners. S1g made pops crops only: S1h makes at-rest
+  before/after crops, Claude looks, and Levi gets a picture if it reads as a change (`K1040_s1g_gates.md` ##
+  Handoff).
+- **K1115** · Panel: after Reset, 107 stepped rows land one step below their default when a link held an
+  off-grid value (the list: 5f28e0b1's message; 6B fixed four rows, K130/K495, by dropping `step`). Wants one
+  general fix, not per row (Claude's call).
 
 ## Residuals (known, not fixed)
 
@@ -1726,13 +1738,18 @@ Every other item below waits on the trigger it names.
 - **K1103** · Junction form B after S1f: F2's e* is steep as kappa -> 0; member() reaches back to |Lcut| +
   lambda; group 21's hook stroke and the free end at chain 22 s 27.608; j55's arc 5 px inside its label; 597's
   discrete corner existence vs the labels (`K1040_s1f_reach.md` F2, F3, F6).
-- **K1104** · Cursive v6.7 (J3d): the joins into a and q attach on their lower bounds; the after-high stretch's
-  [0, 90] was picked by a sweep with 85 tying; b's, v's and w's other high exits are still presets
-  (`K1027_cursive_j3d.md` ## Handoff).
 - **K1105** · Junction S3: form B merges a piece only into kept candidates, while the label scan drops a
   fragment against any nearer candidate; the two could disagree, not seen in the census (`K1040_s3_label.md`).
 - **K1109** · The camera's reduced-motion jump on an edge-indicator tap was code-reviewed, not probed
   (`src/app/camera.ts`; split from K112 2026-11-02; Muse batch 7 Run D, `docs/design/K1108_muse_batch7.md`)
+- **K1116** · Cursive v6.8 (J3e): fm, fn, fv and fz sit farther from the font than v6.7's presets (6.41,
+  10.29, 6.59, 11.46 u against 3.23, 3.17, 3.15, 10.09), their attaches and fe's on a bound; Levi judged the
+  new f better (2026-11-02: "The new f is better"), so these are reported, not fixed per pair. f's exit at its
+  2.00 u bound; fr and fs need a 2 u lower bound on r's and s's entries; fj's and fw's side_min slightly
+  negative; bq, vq and wq hook back (v6.6's, Levi's choice) (`K990_cursive_j3e.md` ## Handoff).
+- **K1117** · Junctions S1g (form B's gates): the d-edge's span step at d = 0; the jj30 probe's 0.51 step; q4
+  AA misses up to 0.84; S1f's r step of 0.0065; q5holes exits 1 in a worktree and misclassifies an eye whose
+  rim is a chain's own surface; the rb05 tag clash (`K1040_s1g_gates.md` ## Handoff).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2028,6 +2045,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1104** · Cursive v6.7 (J3d): the joins into a and q attach on their lower bounds; the after-high stretch's [0, 90] was picked by a sweep with 85 tying; b's, v's and w's other high exits are still presets (`K1027_cursive_j3d.md` ## Handoff). Dropped: folded into K1113: the six are v6.6's presets again (K1102), so their attach bounds and the sweep's stretch are moot, and b's, v's and w's other high exits are K1113's scope (2026-11-02).
+- **K1102** · Cursive a/q joins: Levi chose v6.6's ("aq: definitely 6.6", 2026-11-02); J3e restored them exactly for ba, va, wa, bq, vq and wq. Done in d505cbbf (2026-11-02).
 - **K495** · End glow row shows only under thread reveal with the halo or beacon look. Done in 5f28e0b1 (2026-11-02).
 - **K130** · Reset to defaults writes the exact default for backgroundIntensity, pulseReach, settleBudget and loadSettle (step removed, edits keep 2 decimals / whole numbers). Done in 5f28e0b1 (2026-11-02).
 - **K343** · Snore decoded on OfflineAudioContext before the gate (KnotSynth.decodeOffline, SnoreSfx falls back to context decode); first touch plays it. Probe .claude/probes/K343/snore.mjs: decodes 1 before input, one tap plays 1, never stacked. Done in 933571af (2026-11-02).
