@@ -43,23 +43,38 @@ interface Site {
   mirror: { code: number; chain: number; s: number; key: number; fill: boolean; cls: string; why: string };
 }
 
-function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; stride?: number } = {}) {
+// K1040 S3c: the tent pass (opts.tent) and the coarser target (opts.lr: the
+// pass draws into ceil(W / lr) x ceil(H / lr) with the camera over lr; the
+// census reads each coarse texel at its own centre, device px ((i + 0.5) lr,
+// (j + 0.5) lr), against form B at the scale). A DEFECT is re-verdicted at
+// the margins in BUCKETS (device px); the first that clears it is its bucket.
+const BUCKETS = [0.003, 0.01, 0.03, 0.1, 0.3, 1];
+
+function coarse(M: Affine, W: number, H: number, lr: number): { M: Affine; W: number; H: number } {
+  if (lr === 1) return { M, W, H };
+  return { M: M.map((v) => v / lr) as unknown as Affine, W: Math.ceil(W / lr), H: Math.ceil(H / lr) };
+}
+
+function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; stride?: number; tent?: boolean; lr?: number } = {}) {
   const scale = opts.scale ?? 2;
   const stride = opts.stride ?? 1;
+  const lr = opts.lr ?? 1;
   scene.look.ctrlArc ??= 0.47;
   const t0 = performance.now();
   const fb = new FormB(scene, { dpr: scale });
   const t1 = performance.now();
   const T = buildLabelB(fb);
   const t2 = performance.now();
-  const { M, W, H } = camera(scene, scale);
-  const pass = new LabelBPass(gl, true);
+  const dev = camera(scene, scale);
+  const { M: Mc, W, H } = coarse(dev.M, dev.W, dev.H, lr);
+  const pass = new LabelBPass(gl, true, opts.tent ? "tent" : "capsule");
+  pass.tentEpsPx /= lr;
   pass.resize(W, H);
   pass.upload(T);
-  pass.draw(M);
+  pass.draw(Mc);
   const { word, dbg } = pass.read();
   const t3 = performance.now();
-  const [a, b, c, d, e, f] = M;
+  const [a, b, c, d, e, f] = dev.M;
   const det = a * d - b * c;
   const counts: Record<string, number> = {};
   const add = (k: string) => (counts[k] = (counts[k] ?? 0) + 1);
@@ -71,8 +86,8 @@ function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; s
   const D = dbg as Float32Array;
   for (let j = 0; j < H; j += stride) {
     for (let i = 0; i < W; i += stride) {
-      const u = i + 0.5 - e;
-      const v = j + 0.5 - f;
+      const u = (i + 0.5) * lr - e;
+      const v = (j + 0.5) * lr - f;
       const x = (d * u - c * v) / det;
       const y = (-b * u + a * v) / det;
       const px = j * W + i;
@@ -87,6 +102,17 @@ function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; s
       n++;
       add(vd.cls);
       if (vd.cls !== "agree") add(`${vd.cls}:${vd.why}`);
+      let bk = "";
+      if (vd.cls === "DEFECT") {
+        bk = "none";
+        for (const ep of BUCKETS)
+          if (labelVerdict(fb, T, x, y, g, ep).cls !== "DEFECT") {
+            bk = String(ep);
+            break;
+          }
+        add(`bucket:${bk}`);
+        add(`bucket:${bk}:${vd.why}`);
+      }
       if ((vd.cls === "DEFECT" || (vd.cls === "fade" && sites.length < maxSites / 2)) && sites.length < maxSites) {
         const mg = sampleOf(labelAt(fb, T, x, y));
         const mv = labelVerdict(fb, T, x, y, mg);
@@ -94,7 +120,7 @@ function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; s
           i,
           j,
           cls: vd.cls,
-          why: vd.why,
+          why: bk ? `${vd.why}@${bk}` : vd.why,
           x,
           y,
           ref: vd.ref,
@@ -113,6 +139,8 @@ function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; s
     H,
     scale,
     stride,
+    mode: pass.mode,
+    lr,
     n,
     chains: T.nChains,
     segs: T.nInst,
@@ -160,17 +188,20 @@ function fitCamera(scene: FieldScene, h: number, fit: [number, number], scale: n
 // opts.b2b: K923's render sync, the frames back to back in one task after
 // 10 warm-up renders (else one a frame, after a rAF); opts.floor: no upload
 // and no draw, only the 1-px readback (K923's floor).
-async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean; fit?: [number, number]; b2b?: boolean; floor?: boolean } = {}) {
+async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean; fit?: [number, number]; b2b?: boolean; floor?: boolean; tent?: boolean; lr?: number } = {}) {
   const scale = opts.scale ?? 2;
   const frames = opts.frames ?? 60;
+  const lr = opts.lr ?? 1;
   scene.look.ctrlArc ??= 0.47;
   const fb = new FormB(scene, { dpr: scale });
   const tp0 = performance.now();
   const T: LabelBTables = buildLabelB(fb);
   if (opts.noscan) T.nb.fill(0);
   const prepMs = performance.now() - tp0;
-  const { M, W, H } = opts.fit ? fitCamera(scene, fb.h, opts.fit, scale) : camera(scene, scale);
-  const pass = new LabelBPass(gl, false);
+  const dev = opts.fit ? fitCamera(scene, fb.h, opts.fit, scale) : camera(scene, scale);
+  const { M, W, H } = coarse(dev.M, dev.W, dev.H, lr);
+  const pass = new LabelBPass(gl, false, opts.tent ? "tent" : "capsule");
+  pass.tentEpsPx /= lr;
   pass.resize(W, H);
   pass.upload(T);
   // Warm-up (shader compile, first allocation).
@@ -201,6 +232,8 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
     renderer: renderer(),
     W,
     H,
+    mode: pass.mode,
+    lr,
     segs: T.nInst,
     fills: T.nFills,
     groups: T.nGroups,

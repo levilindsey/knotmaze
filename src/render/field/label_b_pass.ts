@@ -9,10 +9,17 @@
 // fills, depth-tested LESS on the cone key. The caller's GL state is saved
 // and restored around draw(). Timer queries (EXT_disjoint_timer_query_webgl2)
 // bracket the two draws when the extension exists.
+// Mode "tent" (K1040 S3c, label_b_tent_glsl.ts): the same targets, tables and
+// uniforms, drawn as geometry whose vertex depth is the cone key - segments
+// (slab and joint wedge), free-end caps, fills - with no discard and no
+// gl_FragDepth. The cap instances (chain, end) are rebuilt with the layout.
 
 import type { LabelBTables } from "./label_b";
 import { TEX_W } from "./label_b";
 import { labelBSources } from "./label_b_glsl";
+import { labelBTentSources, TENT_CAP_VERTS, TENT_FILL_VERTS, TENT_SEG_VERTS } from "./label_b_tent_glsl";
+
+export type LabelBMode = "capsule" | "tent";
 
 /** World -> device px: u = a x + c y + e, v = b x + d y + f (FieldScene's worldToCss times dpr). */
 export type Affine = [number, number, number, number, number, number];
@@ -66,14 +73,31 @@ export class LabelBPass {
   private pending: WebGLQuery[] = [];
   /** GPU times (ms) of finished draws, oldest first. */
   readonly times: number[] = [];
+  readonly mode: LabelBMode;
+  /** Tent mode: the facets' chord error target, in the target's px. */
+  tentEpsPx = 0.002;
+  private tent: { seg: WebGLProgram; cap: WebGLProgram; fill: WebGLProgram; capVao: WebGLVertexArrayObject; capBuf: WebGLBuffer } | null = null;
+  private capKey = "";
+  private nCaps = 0;
 
-  constructor(gl: WebGL2RenderingContext, debug = false) {
+  constructor(gl: WebGL2RenderingContext, debug = false, mode: LabelBMode = "capsule") {
     this.gl = gl;
     this.debug = debug;
+    this.mode = mode;
     if (debug && !gl.getExtension("EXT_color_buffer_float")) throw new Error("label_b debug: no EXT_color_buffer_float");
     const src = labelBSources(debug);
     this.capsule = compile(gl, src.capsuleVs, src.capsuleFs);
     this.fillPr = compile(gl, src.fillVs, src.fillFs);
+    if (mode === "tent") {
+      const ts = labelBTentSources(debug);
+      this.tent = {
+        seg: compile(gl, ts.segVs, ts.fs),
+        cap: compile(gl, ts.capVs, ts.fs),
+        fill: compile(gl, ts.fillVs, ts.fs),
+        capVao: gl.createVertexArray() as WebGLVertexArrayObject,
+        capBuf: gl.createBuffer() as WebGLBuffer,
+      };
+    }
     this.vao = gl.createVertexArray() as WebGLVertexArrayObject;
     this.instBuf = gl.createBuffer() as WebGLBuffer;
     this.fbo = gl.createFramebuffer() as WebGLFramebuffer;
@@ -157,6 +181,24 @@ export class LabelBPass {
       this.nInst = T.nInst;
       this.instanceBuilds++;
     }
+    if (this.tent) {
+      // The free ends: (chain, 0) and (chain, 1) per open chain with a segment.
+      let closed = "";
+      for (let ci = 0; ci < T.nChains; ci++) closed += T.chain[8 * ci + 3] > 0.5 ? "c" : "o";
+      const key = `${T.layoutKey}|${closed}`;
+      if (key !== this.capKey) {
+        const caps: number[] = [];
+        for (let ci = 0; ci < T.nChains; ci++) if (T.chain[8 * ci + 3] <= 0.5 && T.chain[8 * ci + 2] > 0) caps.push(ci, 0, ci, 1);
+        gl.bindVertexArray(this.tent.capVao);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.tent.capBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(caps.length ? caps : [0, 0]), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribDivisor(0, 1);
+        this.capKey = key;
+        this.nCaps = caps.length / 2;
+      }
+    }
     this.nFills = T.nFills;
     this.h = T.h;
     this.invK = T.invK;
@@ -233,14 +275,17 @@ export class LabelBPass {
     gl.clearBufferfv(gl.DEPTH, 0, [1]);
     const ppd = Math.sqrt(Math.abs(M[0] * M[3] - M[1] * M[2]));
     const pad = 2 / Math.max(ppd, 1e-9);
-    gl.bindVertexArray(this.vao);
-    gl.useProgram(this.capsule);
-    this.uniforms(this.capsule, M, pad);
-    if (this.nInst > 0) gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.nInst);
-    if (this.nFills > 0) {
-      gl.useProgram(this.fillPr);
-      this.uniforms(this.fillPr, M, pad);
-      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.nFills);
+    if (this.tent) this.drawTent(M, ppd);
+    else {
+      gl.bindVertexArray(this.vao);
+      gl.useProgram(this.capsule);
+      this.uniforms(this.capsule, M, pad);
+      if (this.nInst > 0) gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.nInst);
+      if (this.nFills > 0) {
+        gl.useProgram(this.fillPr);
+        this.uniforms(this.fillPr, M, pad);
+        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.nFills);
+      }
     }
     if (q && this.tq) {
       gl.endQuery(this.tq.TIME_ELAPSED_EXT);
@@ -261,6 +306,34 @@ export class LabelBPass {
       gl.bindTexture(gl.TEXTURE_2D, t);
     });
     gl.activeTexture(save.active);
+  }
+
+  /** Tent mode's draws: segments, then caps, then fills (draw() holds the state). */
+  private drawTent(M: Affine, ppd: number): void {
+    const gl = this.gl;
+    const t = this.tent;
+    if (!t) return;
+    const eps = this.tentEpsPx / Math.max(ppd, 1e-9);
+    const use = (pr: WebGLProgram) => {
+      gl.useProgram(pr);
+      this.uniforms(pr, M, 0);
+      gl.uniform1f(gl.getUniformLocation(pr, "uEps"), eps);
+    };
+    gl.bindVertexArray(this.vao);
+    if (this.nInst > 0) {
+      use(t.seg);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, TENT_SEG_VERTS, this.nInst);
+    }
+    if (this.nCaps > 0) {
+      gl.bindVertexArray(t.capVao);
+      use(t.cap);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, TENT_CAP_VERTS, this.nCaps);
+    }
+    if (this.nFills > 0) {
+      gl.bindVertexArray(this.vao);
+      use(t.fill);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, TENT_FILL_VERTS, this.nFills);
+    }
   }
 
   /** Collects finished timer queries into times; returns how many are still pending. */
@@ -330,5 +403,12 @@ export class LabelBPass {
     gl.deleteVertexArray(this.vao);
     gl.deleteProgram(this.capsule);
     gl.deleteProgram(this.fillPr);
+    if (this.tent) {
+      gl.deleteProgram(this.tent.seg);
+      gl.deleteProgram(this.tent.cap);
+      gl.deleteProgram(this.tent.fill);
+      gl.deleteVertexArray(this.tent.capVao);
+      gl.deleteBuffer(this.tent.capBuf);
+    }
   }
 }

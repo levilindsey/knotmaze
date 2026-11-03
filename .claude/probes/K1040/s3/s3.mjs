@@ -41,6 +41,12 @@ const scenes = pos.length ? pos[0].split(",") : SCENES;
 const stride = Number(val("--stride", 1)), scale = Number(val("--scale", 2)), frames = Number(val("--frames", 60));
 // --noscan 1 (time only): every merge-scan window emptied, to price the scan.
 const noscan = val("--noscan", "0") === "1";
+// K1040 S3c: --tent 1 the tent pass (no discard), --lr n its coarser target;
+// --tag name: outputs out/<mode>_<tag>_<scene>.json, out/<mode>_<tag>_summary.md.
+const tent = val("--tent", "0") === "1";
+const lr = Number(val("--lr", 1));
+const tag = val("--tag", "");
+const pre = tag ? `${mode}_${tag}` : mode;
 const outDir = join(here, "out");
 mkdirSync(outDir, { recursive: true });
 
@@ -71,7 +77,7 @@ const errors = [];
 let favicon = 0;
 const isFav = (u) => /favicon/i.test(u ?? "");
 const stamp = new Date().toISOString();
-const summary = [`# ${mode} ${stamp}`, "", `stride ${stride}, scale ${scale}${mode === "time" ? `, frames ${frames}${noscan ? ", NO merge scan" : ""}` : ""}`, ""];
+const summary = [`# ${pre} ${stamp}`, "", `stride ${stride}, scale ${scale}, ${tent ? "TENT" : "capsule"} pass, lr ${lr}${mode === "time" ? `, frames ${frames}${noscan ? ", NO merge scan" : ""}` : ""}`, ""];
 try {
   const page = await browser.newPage();
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
@@ -95,11 +101,11 @@ try {
     const t0 = Date.now();
     const res =
       mode === "verdict"
-        ? await page.evaluate((s, o) => window.s3.verdict(s, o), scene, { scale, stride })
-        : await page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, noscan });
+        ? await page.evaluate((s, o) => window.s3.verdict(s, o), scene, { scale, stride, tent, lr })
+        : await page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, noscan, tent, lr });
     res.scene = name;
     res.wallMs = Date.now() - t0;
-    writeFileSync(join(outDir, `${mode}_${name}.json`), JSON.stringify(res, null, 1));
+    writeFileSync(join(outDir, `${pre}_${name}.json`), JSON.stringify(res, null, 1));
     if (mode === "verdict") {
       const c = res.counts;
       const cls = ["agree", "boundary", "fade", "DEFECT"].map((k) => `${k} ${c[k] ?? 0}`).join(", ");
@@ -118,6 +124,6 @@ try {
   rmSync(profile, { recursive: true, force: true });
 }
 summary.push("", `renderer errors: ${errors.length} (favicon requests filtered: ${favicon})`, ...errors.slice(0, 20).map((e) => `- ${e}`), "");
-appendFileSync(join(outDir, `${mode}_summary.md`), summary.join("\n") + "\n");
+appendFileSync(join(outDir, `${pre}_summary.md`), summary.join("\n") + "\n");
 console.log(`errors ${errors.length}, favicon ${favicon}`);
 for (const e of errors.slice(0, 10)) console.log(e);
