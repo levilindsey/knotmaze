@@ -1,0 +1,9 @@
+muse_flow: by mechanism {"smooth motion":6,"scene chain samples":4,"switch corner radius":1}
+merge (S1's f1): 27 of 137 pop px merged in either frame; 0 of 11 pops wholly merged; with the merged px excused 10 pops (100 px) remain
+ramp units at the pop px (max of the two frames): {"0":114,"1":23}
+mechanism | place | pops | px | worst (seq from>to at px)
+scene chain samples | junction | 3 | 104 | muse_flow 7>8 (8.177, 22.757) 80 px
+scene chain samples | crossing60+ | 1 | 4 | muse_flow 1>2 (16.19, 4.746) 4 px
+smooth motion | crossing60+ | 6 | 24 | muse_flow 0>1 (19.053, 32.654) 4 px
+switch corner radius | junction | 1 | 5 | muse_flow 31>32 (9.509, 8.966) 5 px
+sweep: 263 interpolated scenes built in 7 s (NC 8, LEV 30, jump > 0.02)

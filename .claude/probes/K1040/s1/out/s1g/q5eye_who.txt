@@ -1,0 +1,20 @@
+muse_hash, px box x 820..900, y 470..610: 196 px with |Δink| > 0.01, in px x 846..879, y 486..587; their world centroid (29.445, 21.522)
+  39 px: g31 ink 1 -> paper ink 0
+  26 px: own ink 1 -> own ink 1
+  24 px: g31 ink 0 -> g31 ink 1
+  19 px: g47 ink 1 -> g47 ink 1
+  18 px: paper ink 0 -> paper ink 0
+  18 px: g47 ink 0 -> g47 ink 1
+  14 px: g47 ink 1 -> paper ink 0
+  10 px: g47 ink 0 -> g47 ink 0
+  9 px: g31 ink 1 -> g31 ink 1
+  6 px: g31 ink 0 -> g31 ink 0
+  5 px: g31 ink 0 -> paper ink 0
+  2 px: own ink 0 -> own ink 0
+  2 px: g47 ink 0 -> own ink 0
+  2 px: g47 ink 1 -> own ink 1
+  1 px: paper ink 1 -> paper ink 0
+  1 px: own ink 0 -> own ink 1
+corners whose r changed (|Δr| > 1e-6 h), nearest first, within 4 world of the centroid:
+  j36 109-110 group 31: r 2.721h -> 0.000h, V (29.742, 20.159) at 1.395
+  j62 189-187 group 47: r 2.438h -> 1.431h, V (29.091, 23.936) at 2.439

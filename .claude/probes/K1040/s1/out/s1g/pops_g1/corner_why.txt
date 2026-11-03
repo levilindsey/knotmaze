@@ -1,0 +1,3 @@
+radius room-dV: 1 pops 5 px
+
+muse_flow 31>32 (9.509, 8.966) 5 px junction [switch corner radius] 155/471/472 radius: r1 room (dV); r 0>0.055 omega 1

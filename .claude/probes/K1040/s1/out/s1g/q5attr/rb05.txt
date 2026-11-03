@@ -1,0 +1,2 @@
+muse_hash dpr 1: 4 holes inside one group, in 4 groups; area px min 28 median 50 max 52; fade bits on 4; the oracle leaves >= half of it paper (an eye of the look) on 4, covers it (a defect) on 0
+muse_default_tw dpr 1: 5 holes inside one group, in 5 groups; area px min 2 median 160 max 164; fade bits on 5; the oracle leaves >= half of it paper (an eye of the look) on 5, covers it (a defect) on 0

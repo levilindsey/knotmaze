@@ -1,0 +1,5 @@
+def_drag: by mechanism {}
+merge (S1's f1): 0 of 0 pop px merged in either frame; 0 of 0 pops wholly merged; with the merged px excused 0 pops (0 px) remain
+ramp units at the pop px (max of the two frames): {}
+mechanism | place | pops | px | worst (seq from>to at px)
+sweep: 0 interpolated scenes built in 0 s (NC 8, LEV 30, jump > 0.02)

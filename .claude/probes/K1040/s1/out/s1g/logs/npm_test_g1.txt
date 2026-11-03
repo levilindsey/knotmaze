@@ -1,0 +1,17 @@
+
+> knotmaze@0.4.0 test
+> npm run typecheck && vitest run
+
+
+> knotmaze@0.4.0 typecheck
+> tsc && tsc -p notices && tsc -p tsconfig.tests.json
+
+
+ RUN  v4.1.12 C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/agent-a8056cde26bf07a6a
+
+
+ Test Files  191 passed | 2 skipped (193)
+      Tests  2576 passed | 8 skipped (2584)
+   Start at  20:04:26
+   Duration  138.76s (transform 42.78s, setup 0ms, import 110.51s, tests 812.85s, environment 35ms)
+
