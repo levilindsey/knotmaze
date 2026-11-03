@@ -201,3 +201,31 @@ K1090; K991 and K948 for the pairs not out of f; K937, K997, K998;
 removing the join sets.
 
 ## Handoff
+
+(WIP, 20:10: N1 done, N2 under way, N3 not started.)
+
+**N1: f's corner, B (v6.7, 44 u) against C (65 u).** C's corner is
+fitted to the font's pen path (`work28/dbg/fitC_k990e.py`): (224.62,
+883.40) in the template, 65.2 u high, a 167.6° cusp; node 8, its
+arrival tangent, the end and the end tangent are kept.
+`fbody_k990e.py` (u):
+
+| measure | B | C |
+|---|---|---|
+| traced skeleton: body -> font max | 1.02 | 8.77 |
+| pen path: f's end -> pen max (mean) | 2.69 (0.49) | 0.85 (0.20) |
+| pen upstroke / exit -> f's end max | 21.06 / 21.19 | 0.82 / 0.82 |
+| end-region ink farther than 4.6 u from the body | 91.0 u² | 0.2 u² |
+| body outside the wght-100 ink | 0.00 | 0.00 |
+| end point to the font's exit | 0.06 | 0.06 |
+
+Joins out of f as presets (census dmax, u; B -> C): ff 6.96 -> 6.61,
+fr 7.90 -> 8.18, fi 14.13 -> 13.58, fu 14.15 -> 13.60, fy 14.16 ->
+13.59, fe 15.34 -> 15.05, ft 14.07 -> 13.40, fo 13.96 -> 14.28, fa
+17.11 -> 17.10; counts equal (43 pieces: hooks 3, spikes 6, rough FAIL
+10, undesigned seams 1). Solved (ports M, f's exit [0, 2] u), C is
+closer on all nine: fa 10.62 -> 9.52, fo 11.36 -> 9.85, fe 15.16 ->
+13.62, fi 15.03 -> 12.68, fu 15.01 -> 12.64, fy 15.05 -> 12.68, ft
+14.92 -> 13.24, fr 7.52 -> 4.23, ff 5.59 -> 3.75. Only the traced
+skeleton favours B: it cuts the corner where the two strokes' ink
+merges. C is kept.
