@@ -356,4 +356,127 @@ Against S1d F5; every count from the c1 run in `s1/out/s1e/`
 - **q5holes and q4 (not gate items):** the same holes, all eyes of the
   look; q4's |Δ| counts move by at most 3 px a scene.
 
+### F4 · The Lcut loop's phantom reach: candidates 2 and 3, gated, not adopted (17:08-17:45)
+
+`lcut_far.ts` (output `out/s1e/lcut_far.txt`, run on c1) lists every arm
+of the 12 scenes with its root span L0 (chain end or next root), the
+pass that binds its Lcut, and its span under three rules.
+
+- **Extent.** 14 arms in 3 scenes are bound by a pass past L0
+  (g41_def_tw64 1, muse_hash 6, g41_user_tw64 7).
+  - 7 are real far cuts: θ 0.81-1.51 rad, the pass 1.4-2.2 past the
+    root, L 0.01-0.23 short of L0 (g41_def_tw64 arm 459: L0 0.920,
+    L 0.686).
+  - 7 lose their whole span to a near-tangent pass: muse_hash arms 197,
+    367 and 477 (chain 83, θ 0.0637) and g41_user_tw64 arms 168, 172, 81
+    and 83 (chain 22, θ 0.0215). The straight reach h/tan(θ/2) runs
+    10-30 world units back, far past where the two threads part.
+  - The same phantom reach zeroes arms whose pass lies inside L0, which
+    S1d F4 shared: 10 more (muse_hash 4, g41_ring_tw64 2, g41_user_tw64 4)
+    reopen under candidate 2.
+- **Rules** (arms each moves by more than 1e-3 against c1):
+  - S1d F4's skip: 14. It restores the 7 but undoes the 7 real cuts, and L
+    jumps as a pass slides over the root (S1d F5's reason).
+  - The far pass's reach faded out over [L0, L0 + h]: the same 14, since
+    every far pass lies more than h past its root. Rejected.
+  - **The curved reach (candidate 2):** reach = min(h/tan(θ/2), e_c),
+    e_c the first distance back along the arm at which the partner
+    thread (its foot tracked) lies h(1 + cos θ) away, which is where the
+    straight model's reach ends. It equals the straight reach on
+    straight threads and never exceeds it, so it only lengthens arms. It
+    restores the 7, keeps the 7 real cuts (within 0.008), reopens the
+    10, and lengthens 547 arms: by at most 0.04 world (4 px at the
+    census's 100 px a unit) on the ordinary scenes, 0.06 on ring and
+    0.09 on g41_def_tw64.
+- **Candidate 2 in form B** (88e6615e): `curvedReachOf` walks back in
+  steps of 0.004 with a linear fit over the last one, at most 40 units,
+  and runs only for a pass whose straight cut lies short of L0, so it
+  cannot move an arm the straight cut leaves alone (the curved cut is
+  never shorter). `lcut_far_c2.txt` (run at 88e6615e): the probe's own
+  curv rule moves 0 arms against it.
+- **Candidate 2's gate** (against c1; `logs/gate_table_c2.txt`,
+  `attr_c2.txt`): the rate rule passes (0 of 161), the pins and npm
+  test pass, every shared check is equal, and label_pops improves (16
+  pops, 168 px -> 14, 150 px: muse_drag 6 -> 4, its junction pops
+  3 -> 1). Free ends 114 -> 111 (g41_user_tw64 26 -> 22, muse_hash
+  37 -> 38). **#1 156 -> 167:** muse_hash 4 -> 13, all tA of chain 57 at
+  j129, where arm 390 (chain 68) grows 1.209 -> 1.244 under a θ 1.4594
+  pass, the corner F2's θ change pushed over; g41_user_tw64 59 -> 61,
+  the j55 arc below. Rejected: it lengthens 547 ordinary arms, and one
+  of them tips j129's corner into ink.
+- **Candidate 3** (e8449d1d, `params.curvedFrom`): the straight reach up
+  to 4 h (crossings steeper than 2·atan(1/4) ≈ 28°); past it,
+  max(4 h, min(r0, e_c)), which is continuous in θ at the floor.
+  `arms_c3.ts` (output `arms_c3.txt`): it moves 14 arms, against c2's
+  547. It reopens 11 zeroed arms (L = 0: muse_hash 46 -> 42,
+  g41_user_tw64 21 -> 14), the 7 near-tangent ones among them (muse_hash
+  arm 197: 0 -> 0.612, c2 0.945), and lengthens 3 arms of g41_user_tw64
+  chain 11 by 0.10 world each (θ 0.4544, a straight reach of 4.3 h, just
+  past the floor; arm 97 0.874 -> 0.978).
+- **Candidate 3's gate** (against c1; `logs/gate_table_c3.txt`,
+  `attr_c3.txt`): the rate rule passes (0 of 161), the pins and npm
+  test pass, every shared check and label_pops are unchanged (16 pops,
+  168 px; 14, 126 px once merged), and free ends drop 114 -> 110
+  (g41_user_tw64 26 -> 22, F2's four). **#1 156 -> 158:** two
+  g41_user_tw64 sites, (318,274) and (317,275), at F 5 px. c1's winner
+  there is chain 22's foot; c3's is j55's fillet arc (arms 170 and 171,
+  their L unchanged; ink 0.87 and 0.67), once j55's arms 168 and 172
+  have their spans back. They are the arc sites S1d F4 had.
+- **Not adopted.** The brief lets an attributed #1 change through, but
+  the curved reach is not continuous by construction. e_c is the first
+  distance at which the partner lies h(1 + cos θ) away, so where the
+  partner comes back (an eye) e_c jumps as the distance's peak crosses
+  the target, and the walk's 40-unit cap jumps to r0. No gate sequence
+  holds such a pass, so the gate could not show the pop (not measured).
+  `curvedReach` stays in form B, off by default: the default builds c1's
+  arms exactly on all 12 scenes (`arms_c3.txt`: "default != c1 on 0"),
+  `{ curvedReach: true }` builds c3, and adding `curvedFrom: 0` builds
+  c2. On the final tree (the default, c1) the gate repeats c1's
+  results: every line of `logs/scenes_final.txt` but the timings equals
+  c1's (`logs/gate_table_final.txt`), b_rate finds 0 of 161, and the
+  pins and npm test pass.
+
 ## Handoff
+
+**Stopped at 17:43**, inside the 2 h cap (16:31-18:31): Order steps
+1-4 done, step 5 (item 2) not reached. The definition is candidate 1;
+F4's candidates sit in form B behind `curvedReach`, off.
+
+**What landed** (branch `worktree-agent-a7035825805c31d73`, not pushed):
+- F1, definition change (d83901a9, written up in c2b8b1ac): D1's merge
+  blend, β = ss(1,0,u)·ss(δ,0,d_X−d_A)·ss(σ,σ/2,|Δs|). The rate rule
+  passes (b_rate 9 -> 0 of 161) and label_pops drops from 20 pops,
+  191 px to 16, 168 px; #1, the shared checks and the free ends equal
+  S1d F5's.
+- F2 (c2b8b1ac): F5's #1 +9 and its free ends, attributed.
+- F3 (397d71ac): the gate on c1, part by part, and `lcut_far.ts`.
+- F4 (88e6615e and e8449d1d, the candidates; this Handoff's commit
+  turns them off): the Lcut loop's phantom reach, which zeroes 7 arms
+  through near-tangent passes. Candidates 2 and 3 gated, not adopted.
+
+**Measurements.** Outputs are in `.claude/probes/K1040/s1/out/s1e/`
+(copied to the main checkout's); run from the worktree root.
+- The gate: `pwsh .claude/probes/K1040/s1/run_s1e_gate.ps1 -Tag <tag>`,
+  then `-What mech` once pops is done. The table:
+  `pwsh .claude/probes/K1040/s1/gate_table.ps1 <logs/scenes_A.txt>
+  <logs/scenes_B.txt>`. c1: `logs/*_c1*` (F3); c2 and c3:
+  `logs/*_c2*`, `logs/*_c3*` (F4); the final tree: `logs/*_final*`.
+- b_rate alone: `$env:OUT = "<worktree>\.claude\probes\K1040\s1\out\s1e\rate";
+  $env:TAG = "_c1"; npx.cmd vite-node .claude\probes\K1040\s1\b_rate.ts`.
+- One bend: `npx.cmd vite-node .claude\probes\K1040\s1\bend_s1e.ts
+  <scene> <x> <y> <dx> <dy> 241 0.06`.
+- Attribution, each `npx.cmd vite-node .claude\probes\K1040\s1\<name>`:
+  `attr_f4f5.ts` (F2), `lcut_far.ts` (F4's extent, on the default),
+  `attr_c2.ts` (`$env:CAND = "c3"` for c3) and `arms_c3.ts` (the arms
+  c2 and c3 move, and the default against c1).
+
+**Next:**
+1. The phantom reach (F4): a curved reach that is continuous by
+   construction (no first crossing, no cap that jumps to r0), then the
+   gate. The j55 arc's two interior sites come back with it and need
+   their own attribution in the look.
+2. Item 2, the corner solve's last discrete edges (Order step 5).
+3. The pops the merge leaves (14, 126 px): the three junction "scene
+   chain samples" pops (104 px; muse_flow 7>8 at (8.177, 22.757),
+   80 px). And j129's tA corner, which inks once arm 390 grows 0.035
+   (c2's muse_hash +9): a corner that sensitive to its arm's length.

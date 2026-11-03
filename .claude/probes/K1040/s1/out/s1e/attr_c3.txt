@@ -1,0 +1,6 @@
+== g41_user_tw64: #1 c1 12 sites -> c3 12; arms 233, L moved > 1e-3 on 10
+  site 526,646 F 7.00 gone in c3: c1 1.000* tB c26 j64 arms 197:L1.177,198:L1.349 | c3 1.000* tB c26 j64 arms 197:L1.177,198:L1.349
+  site 527,646 F 8.00 gone in c3: c1 1.000* tB c26 j64 arms 197:L1.177,198:L1.349 | c3 1.000* tB c26 j64 arms 197:L1.177,198:L1.349
+  site 318,274 F 5.00 new in c3: c1 1.000* foot c22 | c3 0.868* arc c-1 j55 arms 170:L0.772,171:L2.060
+  site 317,275 F 5.00 new in c3: c1 1.000* foot c22 | c3 0.673* arc c-1 j55 arms 170:L0.772,171:L2.060
+== muse_hash: #1 c1 4 sites -> c3 4; arms 503, L moved > 1e-3 on 4
