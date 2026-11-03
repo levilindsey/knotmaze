@@ -293,3 +293,26 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   d-pad, unions, edges, unplug, and the held-at-arrival rule through
   HeldKeys/MoveWait/queuedPressHeld). Unprobed on real hardware -
   first pad check rides the next phone/desktop play pass.
+
+- KEY HINTS (K332, 3346474f, 2026-11-03; ui/key_moves.ts hintMap,
+  app/input_keys.ts keyHints, render/fabric_maze_renderer.ts
+  drawKeyHints): after the page's first direction press (keys, the
+  move pad or a gamepad set `keyHintsSeen`; nothing is stored), each
+  run at the head's junction that a direction takes wears a small
+  arrow disc pointing along it. `hintMap` inverts keyMap and
+  chordMap: a run two directions take wears the one with the smaller
+  err, a cardinal beats a diagonal at equal err (within 1e-12), and a
+  run no direction takes (a tie, nothing within tolerance) gets none.
+  `keyHints()` is [] until the first press and caches per vertex and
+  stamp; main.ts hands it to `fabric.setKeyHints` every frame. A disc
+  sits KEY_REACH (0.5) of arc along its run, a MarkerMesh `arrow`
+  glyph at r x CHEVRON_SCALE (r the marker radius, 0.52 at the
+  defaults, so 0.286), inserted below the head marker in
+  overContainer, and hidden while the dot moves, once solved, or with
+  an empty list. No new shader program (the marker's). Probe:
+  `.claude/probes/K332/hints.mjs`; hook
+  `__knotFabricRenderer().keyHintMarkers` (layer-local x, y, r, dir,
+  edge, chord). OPEN LOOK (K1132): at the defaults the discs sit
+  mostly under the head marker and only their tips show; KEY_REACH is
+  a fixed arc length, while the marker radius follows thread width
+  and marker size (markerRadiusFor).
