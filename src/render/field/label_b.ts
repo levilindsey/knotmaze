@@ -26,9 +26,15 @@
 // candidate exactly when geom.ts candidates() takes it - an interior foot,
 // or vertex k when the previous segment's foot is clamped at its far end
 // (or there is none), or an open chain's last vertex - so a vertex's two
-// segments never both claim one foot (K1033). It covers when d < h. Its
-// key is z(foot) - d/K; the depth test keeps the highest key. A fill covers
-// where FormB.inFill does, keyed z(nearer tangent point) - h/K.
+// segments never both claim one foot (K1033). It covers when d < h, and
+// when no nearer candidate of its own chain lies within foldR of its s:
+// form B's merge (pieces(): a minimum within sigma of a kept one drops into
+// its alts) and its fold (a kept far piece within 1.5 sigma has selfW < 1/2
+// and does not cover). The scan visits only segment k's window NB, the
+// segments that can hold a second minimum for a point within h of k (the
+// bound in nbWindows). Its key is z(foot) - d/K; the depth test keeps the
+// highest key. A fill covers where FormB.inFill does, keyed z(nearer
+// tangent point) - h/K.
 //
 // The word keeps label_glsl.ts's PACKED layout: bits 0-7 chain + 1 (0 =
 // paper), 8-18 s11 = round(clamp((s - s0) / len) * 2047), 19-26 the
@@ -36,7 +42,7 @@
 // foot), 29 closed.
 
 import { FormB, type Corner } from "./form_b";
-import { normS, segB, type Poly } from "./geom";
+import { dS, normS, segB, type Poly } from "./geom";
 
 export const TEX_W = 1024;
 /** Surface codes in the word: 8 bits, group + 1 (0 = the piece's own). */
@@ -83,6 +89,10 @@ export interface LabelBTables {
   spans: { lo: number; code: number }[][];
   /** Per chain: point offset. */
   ptOff: number[];
+  /** NB: per segment (indexed as PTS) its merge-scan window (m-, m+, 0, 0). */
+  nb: Float32Array;
+  /** The merge scan's reach in s: 1.5 sigma with the fold (a far piece covers from there), else sigma. */
+  foldR: number;
 }
 
 function rows(n: number): number {
@@ -183,6 +193,88 @@ function armWindowWalk(fb: FormB, ai: number, d1: number): [number, number, numb
   return [sLo, sHi, k0, cnt];
 }
 
+/**
+ * The merge scan's windows (NB), per segment k of chain p: m- and m+, the
+ * farthest segments back and ahead that can hold a second distance minimum
+ * within foldR of a point p0 within h of segment k. Necessary conditions
+ * for a minimum on segment j ahead (behind is symmetric): g(s) =
+ * (gamma(s) - p0) . T(s), whose zeros are the minima, rises at rate 1
+ * along each segment and jumps by (v_i - p0) . (T_i+ - T_i-) at vertex i;
+ * between two minima it falls back, so the vertices between them carry
+ * |jumps| >= the arc between them, and |v_i - p0| < h + max(|v_i - v_k|,
+ * |v_i - v_k+1|). So: (i) the arc s_j - s_k+1 < foldR; (ii) segments j and
+ * k lie within 2h (|mid_j - mid_k| - (l_j + l_k) / 2 < 2h, a lower bound
+ * on their distance); (iii) sum over vertices k+1..j of (h + max(...))
+ * |T_i+ - T_i-| >= s_j - s_k+1. The adjacent segments always pass (iii).
+ * Straight stretches give +-1; a tight turn, more.
+ */
+function nbWindows(p: Poly, h: number, foldR: number, out: Float32Array, off: number): void {
+  const ns = p.nseg;
+  const n = p.n;
+  const tx = new Float64Array(ns);
+  const ty = new Float64Array(ns);
+  const ok = new Uint8Array(ns);
+  const mx = new Float64Array(ns);
+  const my = new Float64Array(ns);
+  const hl = new Float64Array(ns);
+  for (let k = 0; k < ns; k++) {
+    const kb = segB(p, k);
+    const dx = p.x[kb] - p.x[k];
+    const dy = p.y[kb] - p.y[k];
+    const l = Math.sqrt(dx * dx + dy * dy);
+    if (l > 0) {
+      tx[k] = dx / l;
+      ty[k] = dy / l;
+      ok[k] = 1;
+    }
+    mx[k] = (p.x[k] + p.x[kb]) / 2;
+    my[k] = (p.y[k] + p.y[kb]) / 2;
+    hl[k] = l / 2;
+  }
+  // |T_i+ - T_i-| at vertex i (2 when a side has no direction).
+  const turn = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const a = i > 0 ? i - 1 : p.closed ? ns - 1 : -1;
+    const b = i < ns ? i : -1;
+    if (a < 0 || b < 0) continue;
+    turn[i] = ok[a] && ok[b] ? Math.sqrt((tx[b] - tx[a]) ** 2 + (ty[b] - ty[a]) ** 2) : 2;
+  }
+  const slack = 1e-4;
+  const segIx = (i: number) => ((i % ns) + ns) % ns;
+  for (let k = 0; k < ns; k++) {
+    const kb = segB(p, k);
+    const reach = (i: number) =>
+      h + Math.max(Math.hypot(p.x[i] - p.x[k], p.y[i] - p.y[k]), Math.hypot(p.x[i] - p.x[kb], p.y[i] - p.y[kb]));
+    const near = (j: number) => Math.hypot(mx[j] - mx[k], my[j] - my[k]) - hl[j] - hl[k] < 2 * h + slack;
+    let mPlus = 0;
+    let S = 0;
+    let arc = 0;
+    for (let step = 1; step < ns; step++) {
+      const jr = k + step;
+      if (!p.closed && jr > ns - 1) break;
+      if (step > 1) arc += p.segLen[segIx(jr - 1)];
+      if (arc >= foldR + slack) break;
+      const j = segIx(jr);
+      S += reach(j) * turn[j];
+      if (near(j) && S >= arc - slack) mPlus = step;
+    }
+    let mMinus = 0;
+    S = 0;
+    arc = 0;
+    for (let step = 1; step < ns; step++) {
+      const jr = k - step;
+      if (!p.closed && jr < 0) break;
+      if (step > 1) arc += p.segLen[segIx(jr + 1)];
+      if (arc >= foldR + slack) break;
+      const i = segIx(jr + 1);
+      S += reach(i) * turn[i];
+      if (near(segIx(jr)) && S >= arc - slack) mMinus = step;
+    }
+    out[4 * (off + k)] = mMinus;
+    out[4 * (off + k) + 1] = mPlus;
+  }
+}
+
 export function buildLabelB(fb: FormB): LabelBTables {
   const P = fb.polys;
   const nChains = P.length;
@@ -215,6 +307,9 @@ export function buildLabelB(fb: FormB): LabelBTables {
       inst[ii++] = k;
     }
   });
+  const foldR = fb.fold ? 1.5 * fb.sigma : fb.sigma;
+  const nb = new Float32Array(ptsRows * TEX_W * 4);
+  P.forEach((p, ci) => nbWindows(p, fb.h, foldR, nb, ptOff[ci]));
   const spans = P.map((_, ci) => chainSpans(fb, ci));
   let nSpan = 0;
   for (const s of spans) nSpan += s.length;
@@ -280,6 +375,8 @@ export function buildLabelB(fb: FormB): LabelBTables {
     invK,
     spans,
     ptOff,
+    nb,
+    foldR,
   };
 }
 
@@ -339,7 +436,8 @@ export function labelAt(fb: FormB, T: LabelBTables, x: number, y: number): Label
   return best;
 }
 
-function capsuleAt(p: Poly, ci: number, k: number, T: LabelBTables, x: number, y: number, h: number): LabelHit | null {
+/** The candidate foot on segment k (geom.ts candidates()' rule), or null. */
+function footAt(p: Poly, k: number, x: number, y: number): { t: number; d: number; cap: boolean } | null {
   const kb = segB(p, k);
   const ax = p.x[k];
   const ay = p.y[k];
@@ -362,11 +460,34 @@ function capsuleAt(p: Poly, ci: number, k: number, T: LabelBTables, x: number, y
   const t = Math.min(1, Math.max(0, tr));
   const fx = ax + (bx - ax) * t;
   const fy = ay + (by - ay) * t;
-  const d = Math.hypot(x - fx, y - fy);
-  if (!(d < h)) return null;
+  return { t, d: Math.hypot(x - fx, y - fy), cap };
+}
+
+/** Whether a nearer candidate of chain p in segment k's window lies within foldR of s (the merge scan). */
+function mergedAway(p: Poly, k: number, T: LabelBTables, off: number, x: number, y: number, d: number, s: number): boolean {
+  const m0 = T.nb[4 * (off + k)];
+  const m1 = T.nb[4 * (off + k) + 1];
+  const ns = p.nseg;
+  for (let jr = k - m0; jr <= k + m1; jr++) {
+    const j = jr < 0 ? jr + ns : jr >= ns ? jr - ns : jr;
+    if (j === k) continue;
+    const q = footAt(p, j, x, y);
+    if (!q || !(q.d < d)) continue;
+    const sq = normS(p, p.s[j] + q.t * p.segLen[j]);
+    if (Math.abs(dS(p, s, sq)) < T.foldR) return true;
+  }
+  return false;
+}
+
+function capsuleAt(p: Poly, ci: number, k: number, T: LabelBTables, x: number, y: number, h: number): LabelHit | null {
+  const f = footAt(p, k, x, y);
+  if (!f || !(f.d < h)) return null;
+  const { t, d, cap } = f;
+  const s = normS(p, p.s[k] + t * p.segLen[k]);
+  if (mergedAway(p, k, T, T.ptOff[ci], x, y, d, s)) return null;
+  const kb = segB(p, k);
   const z = p.z[k] + (p.z[kb] - p.z[k]) * t;
   const key = z - d * T.invK;
-  const s = normS(p, p.s[k] + t * p.segLen[k]);
   const code = spanCode(T.spans[ci], s);
   return { word: packWord(ci, s, p.s0, p.len, code, false, cap, p.closed), key, chain: ci, s, code, fill: false };
 }
