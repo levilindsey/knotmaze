@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1098.
+Next free ID: K1099.
 
 ## Waiting on Levi
 
@@ -290,6 +290,8 @@ Next free ID: K1098.
 - **K1096** · On the phone, with the stat rows on, play a maze with hidden runs and the sword: does the
   top-left readout stay whole, and clear of the Free play pill and the menu button, as its numbers grow? (K775,
   K738, 5b8522a5)
+- **K1098** · With Reduce motion on, open and close the settings panel and resize the window: does the view now
+  jump straight to its new framing, with no glide? (K1085, 32603535)
 
 ## In progress
 
@@ -483,9 +485,9 @@ Next free ID: K1098.
   D K1084 (K1086 report only), E K1063 + K593; no junction or cursive work. Runs 5A-5E chained from
   2026-11-02.
   - owner: muse runs 5A-5E chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 18:00
-  - branch: mainline; last commit: `5b8522a5`
+  - branch: mainline; last commit: `32603535`
   - evidence: `.claude/probes/K1053/` (`queue.txt` lines 5A-5E, `chain.log`, `chain.out.txt`, `done.txt`)
-  - next: runs 5B-5E, chained again after the coordinator's ledger commit; Run A reviewed: CI green, K775 and K738 fixed by its probe's rects in 36 states (badge overlaps 11 -> 0, hidden-row overflows 12 -> 0), to close once Claude has seen screenshots; its residual K1095 and phone look K1096 filed; Claude reviews each later run and files what it reports (B: camera motions with no reduced path; D: any levi.dev proxy cache residual), then closes K1091; batch 6's draft comes from a planner (`.claude/probes/batch6/muse_batch6_draft.md`)
+  - next: Run B done in 32603535; runs C-E next, chained after the coordinator's ledger commit; Claude reviews Run B and files its reported camera motions (viewHoming reset ease, follow spring), then closes K1091
   - brief: `docs/design/K1091_muse_batch5.md`
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
@@ -1767,9 +1769,6 @@ Every other item below waits on the trigger it names.
   remover unknown). The worktrees sit inside the checkout, so Node finds packages upward: try no junction.
 - **K1063** · `scripts/run_node.mjs` still opens Vite's WebSocket server, so parallel runs print 'WebSocket
   server error: Port 24678' (harmless); `server.ws: false` should stop it (K1061, 011274f9).
-- **K1085** · Reduced motion doesn't snap the camera's fit: updateCamera's 0.08/frame ease (`src/app/camera.ts:436`)
-  and easeView's range ease (:257) have no reduced path, unlike K198's panel tween (:229). K549 (f578b6ee) makes a
-  panel toggle re-fit a text scene. Fix: snap both when reduced. Full text: `docs/ledger_notes.md`.
 - **K1086** · K412 probe: each warm profile's first reload started main 3.5 s (levi.dev) / 3.2 s (pages.dev) late
   vs 68-216 ms later; all before main, both origins, no service worker. Record navigation timing on it to split
   old-page teardown from a first cache read (`.claude/probes/K412/`; full text `docs/ledger_notes.md`).
@@ -2077,6 +2076,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1085** · Reduced motion snaps the camera's fit on a jump and its range ease (32603535). Done in 32603535 (2026-11-02).
 - **K1078** · Hand K1040's gated stages to Muse. Dropped: Levi (2026-11-02) left Claude agents or Muse to the coordinator per task; the junction stages stay with Claude agents (S3 runs as K1097's agent) (2026-11-02).
 - **K1089** · Cursive J3c's look calls: Levi kept v6.6 on all four (oe, ot's dip, the dips into m n v x z, the entries into i j p s u w y; `K863_trace.md` Levi's calls). Done in b283c1e7 (2026-11-02).
 - **K671** · Remove 16 merged, clean agent worktrees with K161's cleanup.ps1. Dropped: already gone: removed after 10-27 without a K161 run (inferred: Claude Code's sweep of old clean worktrees); branches kept, all merged; the open items' probes were copied at merge (2026-11-02).
