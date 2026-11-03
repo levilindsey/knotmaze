@@ -1592,10 +1592,12 @@ export function buildPanel(
     "Distance between traveling pulses on the current junction's arms. Applies live.",
     D.pulseSpacing, () => callbacks.onSlackChange()
   );
+  // No step (K130): a step grid starts at the row's first value, so an
+  // off-grid link value would snap the default on Reset. 2 decimals kept.
   const pulseReachRow = row(
-    fPath, p, "pulseReach", { min: 0.5, max: 15, step: 0.25, label: "Pulse reach" },
+    fPath, p, "pulseReach", { min: 0.5, max: 15, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label: "Pulse reach" },
     "How far the current junction's pulses, and the hover highlight on a choice, reach along each arm, in lattice units, before fading out. Applies live.",
-    D.pulseReach, () => callbacks.onTrailChange()
+    D.pulseReach, () => { params.pulseReach = Math.round(params.pulseReach * 100) / 100; callbacks.onTrailChange(); }
   );
   // K813: the pulse band's color and its width across the thread (in the
   // border look these draw inside the outline too).
@@ -2724,10 +2726,11 @@ export function buildPanel(
     }
   );
 
+  // No step (K130): see pulseReach. An edit keeps 2 decimals.
   const backgroundIntensityRow = row(
-    fLook, p, "backgroundIntensity", { min: 0, max: 1, step: 0.05, label: "Backdrop intensity" },
+    fLook, p, "backgroundIntensity", { min: 0, max: 1, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label: "Backdrop intensity" },
     "Backdrop contrast: 0 = the plain page color, 1 = the strongest look. Applies live.",
-    D.backgroundIntensity, () => callbacks.onBackgroundChange()
+    D.backgroundIntensity, () => { params.backgroundIntensity = Math.round(params.backgroundIntensity * 100) / 100; callbacks.onBackgroundChange(); }
   );
   // K79: the backdrop's animation speed. The param's default is AUTO (-1:
   // each effect's own pace - 1 for the drifting ones, 0 for vellum), so
@@ -3094,18 +3097,20 @@ export function buildPanel(
     D.appearFx, appearEdited(() => callbacks.onSlackChange())
   );
   appearRows.push(appearSequenceRow, appearSpeedRow, appearFxRow);
+  // No step on either (K130): see pulseReach. The budget keeps whole
+  // numbers, load settle 2 decimals.
   // THE LOAD SETTLE (K147, main.ts): how the first settle is paced. Both
   // take effect at the next load or Replay settle (the budget also follows
   // the slider while a settle is running).
   row(
-    fDeveloper, p, "settleBudget", { min: 0, max: SETTLE_BUDGET_MAX, step: 1, label: "Settle budget" },
+    fDeveloper, p, "settleBudget", { min: 0, max: SETTLE_BUDGET_MAX, format: (v: number) => v.toFixed(0), label: "Settle budget" },
     "Settle budget: at most this many milliseconds of physics per frame while the knot first settles after loading, so the intro stays smooth on slow devices - the settle plays in slow motion instead of the frame rate dropping. Ends when the knot first comes to rest (or at the latest after five minutes on screen). 0 = off: the physics keeps up with real time and the intro stutters while it settles. Applies at the next load or Replay settle.",
-    D.settleBudget, () => callbacks.onSlackChange()
+    D.settleBudget, () => { params.settleBudget = Math.round(params.settleBudget); callbacks.onSlackChange(); }
   );
   row(
-    fDeveloper, p, "loadSettle", { min: 0, max: LOAD_SETTLE_MAX, step: 0.05, label: "Load settle" },
+    fDeveloper, p, "loadSettle", { min: 0, max: LOAD_SETTLE_MAX, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label: "Load settle" },
     "Load settle: seconds of physics to run before the knot appears, so it starts its intro already partly relaxed. A loading knot shows if this takes a noticeable moment. 0 = appear at once; the max = wait until the knot is fully at rest (settle first, then the intro). Applies at the next load or Replay settle.",
-    D.loadSettle, () => callbacks.onSlackChange()
+    D.loadSettle, () => { params.loadSettle = Math.round(params.loadSettle * 100) / 100; callbacks.onSlackChange(); }
   );
   button(
     fMotion,
@@ -3581,7 +3586,7 @@ export function buildPanel(
     revealFadeRow.hidden = !threads;
     revealLookRow.hidden = !threads;
     revealEndCrossRow.hidden = !threads;
-    revealEndGlowRow.hidden = !threads;
+    revealEndGlowRow.hidden = !threads || (params.revealLook !== "halo" && params.revealLook !== "beacon");
     revealFinishRow.hidden = !threads;
     // K323: only the minotaur reads a realtime `clock` (clockOf); classic
     // and the burn race play it on the turn clock. K795: every game mode

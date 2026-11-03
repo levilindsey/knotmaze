@@ -106,3 +106,36 @@ describe("K795: every param has a panel row or a reason", () => {
     expect([...rows].filter((k) => !(k in PARAM_DEFAULTS))).toEqual([]);
   });
 });
+
+describe("K130/K495: stepped rows and the end glow row", () => {
+  // The text of one row(...) call, from its key to its closing `);`.
+  const rowText = (key: string): string => {
+    const i = PANEL.indexOf(`"${key}"`);
+    expect(i, `${key} row`).toBeGreaterThan(-1);
+    const end = PANEL.indexOf("\n  );", i);
+    expect(end, `${key} row end`).toBeGreaterThan(i);
+    return PANEL.slice(i, end);
+  };
+
+  it("gives the four K130 rows no step, so Reset writes the exact default", () => {
+    for (const k of ["backgroundIntensity", "pulseReach", "settleBudget", "loadSettle"]) {
+      expect(rowText(k), k).not.toContain("step:");
+    }
+  });
+
+  it("keeps the old steps' decimals in the four rows' change handlers", () => {
+    expect(rowText("backgroundIntensity")).toContain("Math.round(params.backgroundIntensity * 100) / 100");
+    expect(rowText("pulseReach")).toContain("Math.round(params.pulseReach * 100) / 100");
+    expect(rowText("loadSettle")).toContain("Math.round(params.loadSettle * 100) / 100");
+    expect(rowText("settleBudget")).toContain("Math.round(params.settleBudget)");
+  });
+
+  it("shows the end glow row only for the halo and beacon looks", () => {
+    const i = PANEL.indexOf("revealEndGlowRow.hidden");
+    expect(i).toBeGreaterThan(-1);
+    const line = PANEL.slice(i, PANEL.indexOf(";", i));
+    expect(line).toContain("revealLook");
+    expect(line).toContain('"halo"');
+    expect(line).toContain('"beacon"');
+  });
+});
