@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1131.
+Next free ID: K1132.
 
 ## Waiting on Levi
 
@@ -502,6 +502,13 @@ Next free ID: K1131.
   - next: S3c: the label pass without discards for the Pixel's GPU (one shaded fragment per pixel, depth from the vertex shader as K923's label set it), gated on the Pixel's 2 ms; if it misses, the coarser target (K923's lr), a new budget (Levi's) only after both; then step 5: the pops (def_drag, def_flow, muse_drag, muse_flow) and SAMP's upload against label_tables'
   - brief: `docs/design/K1040_s3b_label.md` (F1-F4, ## Handoff); S3's Handoff in `docs/design/K1040_s3_label.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`
+- **K1131** · Muse batch 8 (`docs/design/K1131_muse_batch8.md`): A K332, B K657, C K1081, D K1082, E K1083, F
+  K1115; Next in ledger order, no junction, cursive, physics or phone work.
+  - owner: nobody yet
+  - branch: mainline; last commit: `004e9c13`
+  - evidence: docs/design/K1131_muse_batch8.md (the brief; no run started)
+  - next: Claude reviews the brief
+  - brief: `docs/design/K1131_muse_batch8.md`
 
 ## Next, in order
 
