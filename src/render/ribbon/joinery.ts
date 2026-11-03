@@ -178,6 +178,8 @@ export class Joinery {
   private fieldProfPool: Float32Array[] = [];
   fieldProfLen = 0;
   private filletKey = "";
+  // K1082: actual rebuilds (past the gate), for the probes.
+  filletRebuildCount = 0;
   // Scratch for the junction-field composition (rebuildFillets).
   private fieldMbScratch = new Float32Array(4);
   // K81: the band corner's two arm frames (rebuildFillets cornerCubic).
@@ -681,6 +683,7 @@ export class Joinery {
     // J1 times (G2.1), so they need no rebuild.
     if (!force && !this.r.revealOn && key === this.filletKey) return;
     this.filletKey = key;
+    this.filletRebuildCount++;
     this.stripRowsUsed = 0;
     if (!this.r.filletMesh) {
       let armTotal = 0;

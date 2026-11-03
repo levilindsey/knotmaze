@@ -114,6 +114,93 @@ function sameSpans(a: BurntSpan[] | null, b: BurntSpan[] | null): boolean {
   return true;
 }
 
+// K1082 (K441 s2 sketch a/b): the chains a redeclaration actually has to
+// rewrite - a chain whose pieces changed, or whose burn (gate, char,
+// fronts, smolder) changed. Everything else keeps its declared slots.
+export function groupPiecesByChain(
+  pieces: readonly ExplorePiece[]
+): Map<number, ExplorePiece[]> {
+  const out = new Map<number, ExplorePiece[]>();
+  for (const p of pieces) {
+    let l = out.get(p.chain);
+    if (!l) out.set(p.chain, (l = []));
+    l.push(p);
+  }
+  return out;
+}
+
+function spansTouched(
+  out: Set<number>,
+  a: readonly BurntSpan[] | null | undefined,
+  b: readonly BurntSpan[] | null | undefined
+): void {
+  const ga = new Map<number, BurntSpan[]>();
+  for (const s of a ?? []) {
+    let l = ga.get(s.chain);
+    if (!l) ga.set(s.chain, (l = []));
+    l.push(s);
+  }
+  const gb = new Map<number, BurntSpan[]>();
+  for (const s of b ?? []) {
+    let l = gb.get(s.chain);
+    if (!l) gb.set(s.chain, (l = []));
+    l.push(s);
+  }
+  for (const c of new Set([...ga.keys(), ...gb.keys()])) {
+    if (!sameSpans(ga.get(c) ?? null, gb.get(c) ?? null)) out.add(c);
+  }
+}
+
+export function exploreTouchedChains(
+  prevByChain: ReadonlyMap<number, ExplorePiece[]>,
+  pieces: readonly ExplorePiece[],
+  prevBurn: ExploreBurn | null,
+  burn: ExploreBurn | null
+): Set<number> {
+  const out = new Set<number>();
+  const next = groupPiecesByChain(pieces);
+  for (const c of new Set([...prevByChain.keys(), ...next.keys()])) {
+    if (!samePieces(prevByChain.get(c) ?? [], next.get(c) ?? [])) out.add(c);
+  }
+  spansTouched(out, prevBurn?.char, burn?.char);
+  spansTouched(out, prevBurn?.smolder, burn?.smolder);
+  const fa = prevBurn?.fronts ?? null;
+  const fb = burn?.fronts ?? null;
+  if (fa !== fb) {
+    const ga = new Map<number, { c: number; dir: number; kind: number }[]>();
+    for (const f of fa ?? []) {
+      let l = ga.get(f.chain);
+      if (!l) ga.set(f.chain, (l = []));
+      l.push(f);
+    }
+    const gb = new Map<number, { c: number; dir: number; kind: number }[]>();
+    for (const f of fb ?? []) {
+      let l = gb.get(f.chain);
+      if (!l) gb.set(f.chain, (l = []));
+      l.push(f);
+    }
+    for (const c of new Set([...ga.keys(), ...gb.keys()])) {
+      const x = ga.get(c) ?? [];
+      const y = gb.get(c) ?? [];
+      let diff = x.length !== y.length;
+      for (let i = 0; !diff && i < x.length; i++) {
+        diff = x[i].c !== y[i].c || x[i].dir !== y[i].dir || x[i].kind !== y[i].kind;
+      }
+      if (diff) out.add(c);
+    }
+  }
+  const gateA = prevBurn?.gate ?? null;
+  const gateB = burn?.gate ?? null;
+  if (gateA !== gateB) {
+    const ga = gateA ? groupPiecesByChain(gateA) : new Map<number, ExplorePiece[]>();
+    const gb = gateB ? groupPiecesByChain(gateB) : new Map<number, ExplorePiece[]>();
+    for (const c of new Set([...ga.keys(), ...gb.keys()])) {
+      if (!samePieces(ga.get(c) ?? [], gb.get(c) ?? [])) out.add(c);
+    }
+  }
+  return out;
+}
+
 // K268 stage 2 (K275), the joint gate: a junction's web and fans emit no
 // record once an arm's visibility at its slot is at most this, nor a free
 // tip's cap once its thread's is at the tip (exploreJointShown). Above it
@@ -187,6 +274,16 @@ export class ExploreGaps {
   // run), and a stub fades out INTO an unvisited one (vis 0 at its slot).
   private exploreJointRev = -1;
   private exploreJointKey = "";
+  // K1082: probe counters for the incremental declare (calls, chains
+  // actually rewritten, crossing slots the gap gate visited).
+  readonly declareStats = { calls: 0, chains: 0, gapIter: 0 };
+  // K1082: the stale-check hook's full redeclare (fabric probeBurnRedeclare).
+  forceFullExplore = false;
+  private charredCache: Uint8Array | null = null;
+  // K1082: the last gap kind per slot (0 none, 1 hidden, 2 solid,
+  // 3 shaped, 4 fallback), so an incremental gate keeps the counts.
+  private gapKind = new Int8Array(0);
+  private gapKindApprox = new Uint8Array(0);
 
   constructor(r: RibbonRenderer) {
     this.r = r;
@@ -199,6 +296,101 @@ export class ExploreGaps {
     this.exploreContrast = on;
     const E = knotUniformValues().uKExplore!;
     if (E[0] > 0.5) E[0] = on ? 2 : 1;
+  }
+
+  // K1082: a redeclaration whose pieces and burn changed on `touched`
+  // chains only (a burning frame's fronts and charred spans): rewrite
+  // those chains' declaration, mesh state, paint items and gap slots;
+  // every other chain keeps what the last declare wrote.
+  private setExploreTouched(
+    pieces: ExplorePiece[],
+    burn: ExploreBurn | null,
+    touched: Set<number>
+  ): void {
+    const r = this.r;
+    r.explorePieces = pieces;
+    r.exploreBurn = burn;
+    const grouped = groupPiecesByChain(pieces);
+    for (const c of touched) {
+      const l = grouped.get(c);
+      if (l) r.exploreByChain.set(c, l);
+      else r.exploreByChain.delete(c);
+    }
+    if (burn?.gate) {
+      const g = this.exploreGateByChain ?? new Map<number, ExplorePiece[]>();
+      const gg = groupPiecesByChain(burn.gate);
+      for (const c of touched) {
+        const l = gg.get(c);
+        if (l) g.set(c, l);
+        else g.delete(c);
+      }
+      this.exploreGateByChain = g;
+    } else {
+      this.exploreGateByChain = null;
+    }
+    const n = r.ps.chains.length;
+    let flagsChanged = false;
+    for (const c of touched) {
+      if (c < 0 || c >= n) continue;
+      const l = r.exploreByChain.get(c);
+      const w =
+        l && chainWhole(l, r.ps.chains[c].length, r.ps.chainBreakAfter[c] < 0) ? 1 : 0;
+      if (r.exploreWhole[c] !== w) {
+        r.exploreWhole[c] = w;
+        flagsChanged = true;
+      }
+    }
+    let charred = this.charredCache;
+    const hasBurnItems =
+      (burn?.char?.length ?? 0) > 0 ||
+      (burn?.fronts?.length ?? 0) > 0 ||
+      (burn?.smolder?.length ?? 0) > 0;
+    if (charred === null && hasBurnItems) {
+      charred = new Uint8Array(n);
+      this.charredCache = charred;
+      flagsChanged = true;
+    }
+    if (charred) {
+      for (const c of touched) {
+        if (c < 0 || c >= n) continue;
+        let v = 0;
+        for (const s of burn?.char ?? []) {
+          if (s.chain === c && s.b1 > s.b0) {
+            v = 1;
+            break;
+          }
+        }
+        if (!v) {
+          for (const f of burn?.fronts ?? []) {
+            if (f.chain === c) {
+              v = 1;
+              break;
+            }
+          }
+        }
+        if (!v) {
+          for (const s of burn?.smolder ?? []) {
+            if (s.chain === c && s.b1 > s.b0) {
+              v = 1;
+              break;
+            }
+          }
+        }
+        if (charred[c] !== v) {
+          charred[c] = v;
+          flagsChanged = true;
+        }
+      }
+    }
+    for (const c of touched) {
+      if (c < 0 || c >= r.fills.length) continue;
+      r.fills[c].mesh.renderable = r.exploreByChain.has(c);
+    }
+    if (flagsChanged) r.paintScene.setExploreFlags(r.exploreWhole, charred);
+    if (r.style.paletteMode) r.writePaintItemsExplore(touched);
+    this.declareStats.chains += touched.size;
+    this.exploreRev++;
+    if (r.applyExploreGaps(touched)) r.gaps.upload();
   }
 
   // Declare the visible pieces (null = the mode off: every chain draws on
@@ -223,8 +415,25 @@ export class ExploreGaps {
     E[3] = this.r.style.threadWidth;
     if (!pieces) burn = null;
     const prev = this.r.explorePieces;
+    this.declareStats.calls++;
+    const forceFull = this.forceFullExplore;
+    this.forceFullExplore = false;
+    if (!forceFull && prev && pieces && this.r.exploreWhole.length === this.r.ps.chains.length) {
+      const sameAll =
+        (prev === pieces || samePieces(prev, pieces)) && sameBurn(this.r.exploreBurn, burn);
+      if (!sameAll) {
+        const touched = exploreTouchedChains(this.r.exploreByChain, pieces, this.r.exploreBurn, burn);
+        if (touched.size === 0) {
+          this.r.explorePieces = pieces;
+          this.r.exploreBurn = burn;
+          return;
+        }
+        this.setExploreTouched(pieces, burn, touched);
+        return;
+      }
+    }
     if (
-      (prev === pieces || (prev && pieces && samePieces(prev, pieces))) &&
+      !forceFull && (prev === pieces || (prev && pieces && samePieces(prev, pieces))) &&
       sameBurn(this.r.exploreBurn, burn)
     ) {
       return;
@@ -286,8 +495,10 @@ export class ExploreGaps {
     const fsh = pieces ? junctionShaderExplore() : junctionShader();
     if (this.r.filletMesh) this.r.filletMesh.mesh.shader = fsh;
     if (this.r.filletTopMesh) this.r.filletTopMesh.mesh.shader = fsh;
+    this.charredCache = charred;
     this.r.paintScene.setExploreFlags(pieces ? whole : null, charred);
     if (this.r.style.paletteMode) this.r.writePaintItems();
+    this.declareStats.chains += pieces ? this.r.exploreByChain.size : 0;
     this.exploreRev++;
     // The gap gate follows at once (the slots keep their last solve).
     if (this.r.applyExploreGaps()) this.r.gaps.upload();
@@ -312,14 +523,33 @@ export class ExploreGaps {
   // fade's gap fades along the over thread exactly as the thread does.
   // Hidden, solid and fallback slots keep 2b's scalar (setVis); a shaped
   // slot's texel 1.w still carries it for the fans and the still pluck.
-  applyExploreGaps(): boolean {
+  applyExploreGaps(touched: Set<number> | null = null): boolean {
     const on = this.r.explorePieces !== null;
     let changed = false;
     const dirtyUnder = new Set<number>();
     const st = this.exploreGapCounts;
-    st.hidden = st.solid = st.shaped = st.fallback = st.approx = st.mismatch = 0;
+    if (this.gapKind.length < this.r.markerBase) {
+      this.gapKind = new Int8Array(this.r.markerBase);
+      this.gapKindApprox = new Uint8Array(this.r.markerBase);
+    }
+    if (!touched) {
+      st.hidden = st.solid = st.shaped = st.fallback = st.approx = st.mismatch = 0;
+      this.gapKind.fill(0);
+      this.gapKindApprox.fill(0);
+    }
     for (let s = 0; s < this.r.markerBase; s++) {
       if (!this.r.slotLive[s]) continue;
+      if (touched && on) {
+        const oc = this.r.slotOverChain[s];
+        if (
+          !touched.has(oc) &&
+          !touched.has(this.r.slotProtChain[s * 2]) &&
+          !touched.has(this.r.slotProtChain[s * 2 + 1])
+        ) {
+          continue;
+        }
+      }
+      this.declareStats.gapIter++;
       const v = on ? this.r.exploreVisAt(this.r.slotOverChain[s], this.r.slotOverCtrl[s]) : 1;
       const cut = on ? this.r.exploreCutAt(s, v) : null;
       if (cut && cut.shape) {
@@ -329,8 +559,21 @@ export class ExploreGaps {
         if (this.r.gaps.setVis(s, v)) changed = true;
       }
       if (cut) {
-        st[cut.kind]++;
-        if (cut.approx) st.approx++;
+        const kindCode = cut.kind === "hidden" ? 1 : cut.kind === "solid" ? 2 : cut.kind === "shaped" ? 3 : 4;
+        const prevKind = this.gapKind[s];
+        if (prevKind !== kindCode) {
+          if (prevKind === 1) st.hidden--;
+          else if (prevKind === 2) st.solid--;
+          else if (prevKind === 3) st.shaped--;
+          else if (prevKind === 4) st.fallback--;
+          this.gapKind[s] = kindCode;
+          st[cut.kind]++;
+        }
+        if (cut.approx !== (this.gapKindApprox[s] === 1)) {
+          st.approx += cut.approx ? 1 : -1;
+          this.gapKindApprox[s] = cut.approx ? 1 : 0;
+        }
+        // (approx counted with the kind above, K1082)
         if ((cut.kind === "hidden" && v !== 0) || (cut.kind === "solid" && v !== 1)) {
           st.mismatch++;
         }

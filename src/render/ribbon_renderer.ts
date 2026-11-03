@@ -2409,6 +2409,20 @@ export class RibbonRenderer {
     if (this.applyExploreGaps()) this.gaps.upload();
   }
 
+  // K1082: the incremental declare's paint rewrite and probe surface.
+  /** @internal ribbon */ writePaintItemsExplore(touched: Set<number>): void {
+    this.paintState.writePaintItemsExplore(touched);
+  }
+  /** @internal ribbon */ probeExploreFull(): void {
+    this.explore.forceFullExplore = true;
+  }
+  get exploreDeclareStats(): { calls: number; chains: number; gapIter: number } {
+    return this.explore.declareStats;
+  }
+  get filletRebuildCount(): number {
+    return this.joinery.filletRebuildCount;
+  }
+
   // setExplore: ribbon/explore_gaps.ts (K5 R2); the fabric, restoreScene and
   // the probes call it here.
   setExplore(
@@ -2422,8 +2436,8 @@ export class RibbonRenderer {
 
   // applyExploreGaps: ribbon/explore_gaps.ts (K5 R2). update() and
   // setExplore call it here, so a probe's patch sees every gate.
-  /** @internal ribbon */ applyExploreGaps(): boolean {
-    return this.explore.applyExploreGaps();
+  /** @internal ribbon */ applyExploreGaps(touched: Set<number> | null = null): boolean {
+    return this.explore.applyExploreGaps(touched);
   }
 
   // exploreCutAt: ribbon/explore_gaps.ts (K5 R2); applyExploreGaps and the
