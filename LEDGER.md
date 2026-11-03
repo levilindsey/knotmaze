@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1118.
+Next free ID: K1119.
 
 ## Waiting on Levi
 
@@ -290,6 +290,8 @@ Next free ID: K1118.
 - **K1111** · In the settings panel, drag Backdrop intensity, Pulse reach, Settle budget and Load settle: do
   the sliders still feel right? (They now move in finer steps; Reset to defaults now lands on the exact
   default.) (K130, 5f28e0b1)
+- **K1118** · With the game open in two browser tabs, change Motion in one: does the other tab follow at once,
+  with no reload? (K112, 3ff7144a)
 
 ## In progress
 
@@ -492,9 +494,9 @@ Next free ID: K1118.
   D K787 + K584, E K112, F K403 + K263 + K600 + K609 + K462; no junction or cursive work. Runs 6A-6F chained
   from 2026-11-02.
   - owner: muse runs 6A-6F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 20:20
-  - branch: mainline; last commit: `1a4e3a47`
+  - branch: mainline; last commit: `3ff7144a`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 6A-6F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run E (K112)
+  - next: Run F (K403, K263, K600, K609, K462)
   - brief: `docs/design/K1107_muse_batch6.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 - **K1108** · Muse batch 7 (`docs/design/K1108_muse_batch7.md`): A K368, B K1100, C K748, D K1109 + K1099,
@@ -1036,9 +1038,6 @@ Every other item below waits on the trigger it names.
 - **K107** · A dark "X" at the center of big knot-mode attack-lobe blurs,
   also present with the collapse off:
   `.claude/probes/K77/out/abknot/sheet_zoomL.png`.
-- **K112** · Motion setting residuals (K79, 9ffda8a): no cross-tab sync (another tab picks a change
-  up on reload; `src/ui/motion.ts`), and the camera's reduced-motion jump on an edge-indicator tap
-  was code-reviewed, not probed.
 - **K133** · Crossed join bridges: plans built before K110 can hold two crossing join bridges (108
   plans, 20 dailies); K110's joins skip such a splice, older code doesn't. Fixing moves those plans;
   first see whether a crossing reads wrong (`.claude/probes/K110/verify_run3.txt`).
@@ -2029,6 +2028,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K112** · cross-tab sync only; the camera half is K1109. Done in 3ff7144a (2026-11-02).
 - **K584** · already guarded: SCENE_FIELDS Record<keyof SceneParams> fails tsc TS2741 on optional field; name-build tests round-trip. Done in 1a4e3a47 (2026-11-02).
 - **K787** · whole-game beat test lands catches (respawn+restAt+refuse), asserts every turn result, sees K774 (b). Done in 1a4e3a47 (2026-11-02).
 - **K490** · explained, not reproduced: no 404 on master dev or preview build across the brief's links, a K466-style xp=threads load or a panel open; every file index.html/manifest names serves 200, and K466's log never recorded the URL. Done in 07802509 (2026-11-02).
