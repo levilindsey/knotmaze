@@ -195,4 +195,116 @@ matter most.
 
 ## Findings
 
+### F0. The baseline: S3's pass on S1g's form B (21:33-21:35)
+
+Census at every pixel centre, dpr 2, 2480x1800 (4,464,000 px a scene),
+under the perf lock (21:33:28-21:34:56; `out/verdict_summary_s1g.md`,
+errors 0):
+
+| scene | agree | boundary | fade | DEFECT | groups | fills |
+|---|---|---|---|---|---|---|
+| muse_hash | 4463084 | 916 | 0 | 0 | 117 | 145 |
+| muse_default_tw | 4463615 | 383 | 1 | 1 | 117 | 305 |
+| def | 4463591 | 407 | 0 | 2 | 125 | 332 |
+| fat | 4463779 | 221 | 0 | 0 | 0 | 0 |
+| ring | 4463905 | 95 | 0 | 0 | 16 | 41 |
+| user_tw42.lightpaper | 4463264 | 611 | 79 | 46 | 47 | 143 |
+| g41_def_tw42 | 4462418 | 1484 | 57 | 41 | 125 | 380 |
+| g41_def_tw64 | 4463502 | 498 | 0 | 0 | 125 | 261 |
+| g41_ring_tw42 | 4463534 | 464 | 0 | 2 | 16 | 51 |
+| g41_ring_tw64 | 4463904 | 96 | 0 | 0 | 16 | 38 |
+| g41_user_tw42 | 4463270 | 606 | 79 | 45 | 47 | 143 |
+| g41_user_tw64 | 4463674 | 326 | 0 | 0 | 47 | 110 |
+
+137 DEFECT, all class B (`lower` and `lower-gfill`: the same group, another
+chain, the GPU's key below the reference's), the same count as S3's. S1g
+moved only boundaries and fills against S3's census (muse_hash fills 149 to
+145 and 33 px agree to boundary; g41_user_tw64 fills 104 to 110, boundary
+342 to 326; user_tw42 and g41_user_tw42 11 px boundary to agree;
+muse_default_tw 1 px).
+
+Desktop timing by timer query, 61 draws a scene, under the perf lock
+(21:34:56-21:35:12; `out/time_summary_s1g.md`); upload 0.0-0.1 ms on every
+scene:
+
+| scene | GPU p50 / p95 ms | sync p50 / p95 ms | upload B | prep ms |
+|---|---|---|---|---|
+| muse_hash | 10.199 / 10.441 | 11.2 / 13.4 | 802816 | 96.9 |
+| muse_default_tw | 4.126 / 4.309 | 5.2 / 5.8 | 851968 | 66.0 |
+| def | 4.546 / 4.695 | 5.6 / 6.0 | 884736 | 66.8 |
+| fat | 2.363 / 2.390 | 3.3 / 4.9 | 606208 | 34.0 |
+| ring | 1.964 / 2.024 | 2.9 / 3.2 | 212992 | 9.8 |
+| user_tw42.lightpaper | 2.395 / 2.433 | 3.4 / 4.2 | 409600 | 24.2 |
+| g41_def_tw42 | 3.280 / 3.701 | 4.5 / 4.9 | 901120 | 65.7 |
+| g41_def_tw64 | 6.579 / 6.919 | 7.7 / 9.0 | 851968 | 105.2 |
+| g41_ring_tw42 | 1.230 / 1.254 | 2.2 / 2.5 | 212992 | 11.6 |
+| g41_ring_tw64 | 2.373 / 2.411 | 3.4 / 5.0 | 212992 | 15.5 |
+| g41_user_tw42 | 2.391 / 2.428 | 3.4 / 3.7 | 409600 | 41.1 |
+| g41_user_tw64 | 5.206 / 5.264 | 6.3 / 8.1 | 409600 | 45.4 |
+
+### F1. Definition change: form B names a surface by its covering pieces only (21:40-21:45)
+
+`evalLayers` keeps two keys per surface. The **reach key** (the max cone
+key over its pieces within h + aa and its fills within their aa shell)
+orders the ink's composite and its tie mix, as before. The **cover key**
+(the max over its covering pieces, d < h with fold weight >= 1/2, and the
+fills whose `inFill` holds at the pixel) picks the label's top among the
+covering surfaces and gives its chain, s, z and key, and the runner-up's
+`dz` and `dkey`. So the name switches at d = h, and a piece that does not
+cover can neither name its surface nor lift it above another covering
+surface. Among equal cover keys the first in the composite order wins.
+`labelBy: "reach"` (FormBParams) keeps S1g's rule for A/Bs; `"cover"` is
+the default.
+
+- **The pass already followed it**, so `labelAt` and the shaders do not
+  change: the capsules discard d >= h, the merge scan discards a fragment
+  at |ds| < foldR = 1.5 sigma, the midpoint of the fold weight's ramp
+  ss(sigma, 2 sigma), and a fill writes only where `inFill` holds (up to
+  Rp).
+- **The ink does not change.** ink, its fade bits and `nSurf` are equal
+  under both rules at every point of the pin's grid (test), and every
+  scene's covered count is the same before and after (F2).
+- **The pin** (`test/render/field/label_b.test.ts`, `raisedTee`): a tee
+  whose end arm rises toward an over-crossing at s = 4 (depthWindow 6).
+  At (1.02, 0.5), 0.5 from the through and 1.02 from the end arm, the end
+  arm's piece is a full member of the group (ramp 1) with key 0.315 against
+  the through's covering -0.05. The reach rule named the group by the end
+  arm (chain 1, s 0.5) and its census has 60 DEFECT (59 `lower`, 1
+  `lower-gfill`); the cover rule names it by the through (chain 0, s
+  11.02), as `labelAt` does, and its census agrees everywhere. The fixture
+  also joins the census list (0 DEFECT).
+- **Every other pin keeps its expected value:** form_b.test.ts, k883,
+  field_core, label_b's 9 other fixtures and the whole suite (`npm test`: 192
+  files, 2617 tests passed).
+
+### F2. The census after F1: 0 DEFECT on the 12 scenes (21:45:27-21:47:34)
+
+Under the perf lock (`out/verdict_summary_a.md`, errors 0;
+`defects.mjs` lists none):
+
+| scene | agree | boundary | fade | DEFECT | from F0 |
+|---|---|---|---|---|---|
+| muse_hash | 4463085 | 915 | 0 | 0 | +1 agree |
+| muse_default_tw | 4463673 | 327 | 0 | 0 | +58 |
+| def | 4463612 | 388 | 0 | 0 | +21 |
+| fat | 4463779 | 221 | 0 | 0 | = |
+| ring | 4463905 | 95 | 0 | 0 | = |
+| user_tw42.lightpaper | 4463790 | 210 | 0 | 0 | +526 |
+| g41_def_tw42 | 4463698 | 302 | 0 | 0 | +1280 |
+| g41_def_tw64 | 4463509 | 491 | 0 | 0 | +7 |
+| g41_ring_tw42 | 4463928 | 72 | 0 | 0 | +394 |
+| g41_ring_tw64 | 4463904 | 96 | 0 | 0 | = |
+| g41_user_tw42 | 4463795 | 205 | 0 | 0 | +525 |
+| g41_user_tw64 | 4463683 | 317 | 0 | 0 | +9 |
+
+The gate is met: **0 DEFECT, so K1033 (muse_hash) can close** (the
+coordinator closes it). Every covered count (reference and GPU) is the one
+F0 had. The fade class went to 0 too: its 216 pixels were class-B sites
+that carried a fade bit (`lower[cap,tie]`, `lower[cap]`, `lower[merge]`).
+Most of the boundaries that went were MERGE (g41_def_tw42 1455 to 274,
+g41_ring_tw42 457 to 65, g41_user_tw42 592 to 192): there the reference
+had named a non-covering second minimum of the same chain within sigma in
+s, and the GPU the covering one. What is left is MERGE, DEPTH=, DEPTH and
+EDGE only.
+
 ## Handoff
