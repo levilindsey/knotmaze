@@ -46,6 +46,13 @@ export const FIT_EASE = 0.08;
 export function fitEase(reduced: boolean): number {
   return reduced ? 1 : FIT_EASE;
 }
+// K1099: the double-click reset's homing ease (camera.ts's updateCamera:
+// the share of the way home per frame). Under Reduced motion the reset
+// lands on the home view on the next frame, like the fit's snap.
+export const HOME_EASE = 0.15;
+export function homeEase(reduced: boolean): number {
+  return reduced ? 1 : HOME_EASE;
+}
 // K1085, case d: under reduced motion the fit snaps only on a jump (a
 // panel toggle, a resize), not on the settle drift, whose steps the snap
 // would follow unsmoothed. Read off the probe table
