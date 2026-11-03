@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1119.
+Next free ID: K1124.
 
 ## Waiting on Levi
 
@@ -292,16 +292,20 @@ Next free ID: K1119.
   default.) (K130, 5f28e0b1)
 - **K1118** · With the game open in two browser tabs, change Motion in one: does the other tab follow at once,
   with no reload? (K112, 3ff7144a)
+- **K1119** · Cursive v6.9 (J3f): do the joins out of b, v and w now leave less down and more out, including
+  the straight climbs into b, f, h, k and l (Drive K863/ `b_v69.svg`, `v_v69.svg`, `w_v69.svg`)? And the six
+  a/q joins, now straight without v6.6's dip: fine, or keep v6.6's (`aq_joins_v69.svg`; if v6.6's, J3f's next
+  is a's and q's entry angle)? Sent as pictures 2026-11-02 (`K1113_cursive_j3f.md` ## Handoff).
 
 ## In progress
 
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
-  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: 44ce69a1); S3 (K1097) merged short of its gate; S1g merged (52945e6e); S3b (K1097) running (2026-11-02).
+  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: 44ce69a1); S3 (K1097) merged short of its gate; S1g merged (52945e6e); S3b (K1097) merged (c4863a50, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
   - owner: nobody since 2026-11-02 21:18 (merged)
   - branch: mainline; last commit: `52945e6e`
   - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1), `s1/out/s1b/` and `s1/out/s1c/`, S1d's runs in `s1/out/s1d/`, S1e's in `s1/out/s1e/` (gate `s1/run_s1e_gate.ps1`, table `s1/gate_table.ps1`; probes `b_rate.ts`, `bend_s1e.ts`, `attr_f4f5.ts`, `lcut_far.ts`, `attr_c2.ts`, `arms_c3.ts`; commands in its Handoff)); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: S3b (K1097) running; then S1h: S1g's Handoff Next 1-2 (a robust V solve from the roots out plus a continuous wedge weight for the 704 test; V's foot blended over its candidate feet) and the crops of S1g's at-rest changes (K1114); then S1f's Later work (the 14 pops, the 3 junction pops, j129's corner)
+  - next: S3c (K1097), the label for the Pixel's GPU; then S1h: S1g's Handoff Next 1-2 (a robust V solve from the roots out plus a continuous wedge weight for the 704 test; V's foot blended over its candidate feet) and the crops of S1g's at-rest changes (K1114); then S1f's Later work (the 14 pops, the 3 junction pops, j129's corner)
   - brief: `docs/design/K1040_s1g_gates.md` ## Handoff; S1f's Handoff in `docs/design/K1040_s1f_reach.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
@@ -309,9 +313,9 @@ Next free ID: K1119.
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
   - owner: nobody since 2026-11-02 23:06 (merged; agent `a6420b23c491748f8` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
   - branch: mainline; last commit: `ba9c38b3`
-  - evidence: `.claude/probes/K863/trace/` (`NOTES.md` has every version's files and rerun commands; J3f: `work29/`, `out29/`, `work29/dbg/*_k1113.*`, NOTES `## K1113`; J3e: `work28/`, `out28/`, NOTES `## K990e`); Drive `K863/`; Levi's file to edit: `out25/cursive_template.svg`; the full file list as of v6.6: `docs/ledger_notes.md` `## K863`
-  - next: Levi's v6.9 look (Waiting on Levi); then K1112's next letter, c, one stage (K1113_cursive_j3f.md ## Handoff, Next)
-  - brief: docs/design/K1113_cursive_j3f.md on the agent's branch; J3e's Handoff in `docs/design/K990_cursive_j3e.md`
+  - evidence: .claude/probes/K863/trace/ (`NOTES.md` has every version's files and rerun commands; J3f: `work29/`, `out29/`, `work29/dbg/*_k1113.*`, NOTES `## K1113`; J3e: `work28/`, `out28/`, NOTES `## K990e`); Drive `K863/` (v6.9: `*_v69.svg`); Levi's file to edit: `out25/cursive_template.svg`; the full file list as of v6.6: `docs/ledger_notes.md` `## K863`
+  - next: Levi's v6.9 look (K1119); then K1112's next letter, c, one stage (`K1113_cursive_j3f.md` ## Handoff, Next)
+  - brief: `docs/design/K1113_cursive_j3f.md` (## Handoff); J3e's Handoff in `docs/design/K990_cursive_j3e.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -486,9 +490,9 @@ Next free ID: K1119.
   Pixel's 2 ms.
   - owner: nobody since 2026-11-02 23:08 (merged; agent `a99cc3250b93f7bc0` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
   - branch: mainline; last commit: `c4863a50`
-  - evidence: `.claude/probes/K1040/s3/` (`out/`, the verdict table; commands in the brief's Handoff); oracle30 and the recordings: worktree `k868-s3a` (`.claude/probes/S3a/seq13/`)
+  - evidence: `.claude/probes/K1040/s3/` (`phone_time.mjs`, `run_phone.ps1`, `phone_table.ps1`, `win_stats.ts`, `time_table.ps1`; `out/`, the summaries tracked; S3b's outputs that share S3's names in the main checkout's `out/s3b/`); oracle30 and the recordings: worktree `k868-s3a` (`.claude/probes/S3a/seq13/`)
   - next: S3c: the label pass without discards for the Pixel's GPU (one shaded fragment per pixel, depth from the vertex shader as K923's label set it), gated on the Pixel's 2 ms; if it misses, the coarser target (K923's lr), a new budget (Levi's) only after both; then step 5: the pops (def_drag, def_flow, muse_drag, muse_flow) and SAMP's upload against label_tables'
-  - brief: docs/design/K1040_s3b_label.md on the agent's branch; S3's Handoff in `docs/design/K1040_s3_label.md`
+  - brief: `docs/design/K1040_s3b_label.md` (F1-F4, ## Handoff); S3's Handoff in `docs/design/K1040_s3_label.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`
 - **K1107** · Muse batch 6 (`docs/design/K1107_muse_batch6.md`): A K343, B K130 + K495, C K128 + K212 + K490,
   D K787 + K584, E K112, F K403 + K263 + K600 + K609 + K462; no junction or cursive work. Runs 6A-6F chained
@@ -749,10 +753,6 @@ Every other item below waits on the trigger it names.
   letter, b, v and w first; then delete J2's presets (join_params `cnct.*`) and the six pins (og, oe, fo, fv,
   fr, fs). No per-pair data: a fix goes into a letter's body or ports. Gates: the census's smoothness and
   locality; font distance reported per letter; Levi judges one sheet per letter.
-- **K1113** · Cursive: b, v and w end in too much of a downward hook/cusp; Levi (2026-11-02): "it should be
-  less down and more out". Their exits are drawn 3-9° steeper than the font's (K948) and their joins are J2's
-  presets: J3f ports the three exits and solves their joins, the first letters of K1112; before picture
-  `out28/aq_joins_v68.svg` (`K990_cursive_j3e.md` ## Handoff, Next 1).
 - **K1114** · Junctions: look at S1g's at-rest changes. F1 empties j36 109-110 (muse_hash) and cuts j62
   189-187 from 2.438h to 1.431h; F2 changes r at 155 corners. S1g made pops crops only: S1h makes at-rest
   before/after crops, Claude looks, and Levi gets a picture if it reads as a change (`K1040_s1g_gates.md` ##
@@ -1675,11 +1675,6 @@ Every other item below waits on the trigger it names.
 - **K1036** · Cursive J3b's census and checks: port-cusp entries at s = 0 (hi, er, es) count as 180° seams; the
   own-ends reference is cut at each build's own attach, so it ranks og's b0 (4.35 u) above v6.4 (7.12 u), which
   looks nearer; the i and u continuity sweeps move nothing (sweep the stem-top node). NOTES `## K1009b` N1, N6, N7.
-- **K1033** · K868 S3a: at a span bound that coincides with a vertex the GPU and the CPU disagree: between the bisector
-  and the next segment's perpendicular the GPU reads span 96 where the CPU reads -1 (muse_hash chain 83, s 21.4652).
-  Older than S3a8b3. `K868_s3a8b4_attribution.md` Q10, on `k868-s3a`.
-  S3 (K1097): every remaining DEFECT is class B, form B naming a group by a non-covering piece within h + aa;
-  decided (a), lands in S3b (`K1040_s3_label.md`, K1040's F7 S3 entry).
 - **K1041** · K992's corner march, the switches stage 7 left: the hop onto a far piece across a deep ridge (feet, footMax,
   extent), the fit's sharp fallback, unfaded Newton refusals, the part walk's start gate, boolean cluster roots, rc's J,
   the restart's steep weight. Input to K1040. `K992_s7_recover.md` F23 and ## Handoff (untraced extras), on `k992-corners`.
@@ -1733,6 +1728,19 @@ Every other item below waits on the trigger it names.
 - **K1117** · Junctions S1g (form B's gates): the d-edge's span step at d = 0; the jj30 probe's 0.51 step; q4
   AA misses up to 0.84; S1f's r step of 0.0065; q5holes exits 1 in a worktree and misclassifies an eye whose
   rim is a chain's own surface; the rb05 tag clash (`K1040_s1g_gates.md` ## Handoff).
+- **K1120** · Cursive v6.9 joins out of b, v and w (J3f): into b, f, h, k and l a straight climb to the 100 u
+  attach limit, 53-57 u from the font (next: an entry rule after high exits); br, vr and wr meet r's cusp in a
+  V; be and we show small repeated spikes; e after b/v/w has its own rule, landing up to 60 u into e (keep it,
+  or fold it into K948's e-after-o rule, which moves oe) (`K1113_cursive_j3f.md` ## Handoff).
+- **K1121** · Cursive v6.9 gates (J3f): locality fails, 157 of 1448 untouched pieces moved by up to 0.33 u
+  (b's, v's and w's whole strokes were refitted; next: refit only the exit's stretch); seven rows newly fail
+  rough (bt, vt, wt, ba, wa, and the ba and wa in bad and wave); 41 of the 78 joins sit at a bound; b/v/w font
+  distance about 24 u (was about 3) (`K1113_cursive_j3f.md` ## Handoff).
+- **K1122** · Junction label pass (S3b): the scan's remaining cost (desktop muse_hash 2.08 of 3.87 ms; the
+  Pixel about half of muse_hash's 41 ms) and the span walk, never timed alone; `buildLabelB`'s prep takes
+  9-128 ms on the desktop and 11-104 ms on the Pixel (S5's `nbWindows`) (`K1040_s3b_label.md` ## Handoff).
+- **K1123** · `s3.mjs` and `phone_time.mjs` (`.claude/probes/K1040/s3/`) append to their summary files on
+  every run, so the tracked `phone_time_summary.md` grows with each rerun (S3b's Handoff).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2028,6 +2036,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1033** · form B names a surface by its covering pieces only (`labelBy: "cover"`, S3b F1-F2): the census reads 0 DEFECT and 0 fade on all 12 scenes (was 137 and 216). Done in 07b4a6ac (2026-11-02).
+- **K1113** · Cursive b, v and w (J3f, v6.9): ends rounded out (about -8°; the font's -12 to -16°), exit ports, every join out of them solved, their presets deleted; out of b/v/w hooks 43→0, spikes 49→3, rough 47→27. Levi's look: K1119. Done in ba9c38b3 (2026-11-02).
 - **K112** · cross-tab sync only; the camera half is K1109. Done in 3ff7144a (2026-11-02).
 - **K584** · already guarded: SCENE_FIELDS Record<keyof SceneParams> fails tsc TS2741 on optional field; name-build tests round-trip. Done in 1a4e3a47 (2026-11-02).
 - **K787** · whole-game beat test lands catches (respawn+restAt+refuse), asserts every turn result, sees K774 (b). Done in 1a4e3a47 (2026-11-02).

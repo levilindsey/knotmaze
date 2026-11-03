@@ -28,8 +28,9 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   throwing or full: the page boots following the system and a choice
   lasts the session. NOT gated by Motion: the flow (the Reduced motion
   checkbox stills it, K111 below), the intros and the pulses (Levi,
-  2026-10-13: reduced motion is not the intro and not the pulses). No
-  cross-tab sync; K84 sorts it with the other viewer prefs.
+  2026-10-13: reduced motion is not the intro and not the pulses).
+  Another tab's change follows at once (K112, 3ff7144a: a `storage`
+  event on MOTION_KEY reparses and runs changed(), writing nothing).
   Probe: `.claude/probes/K79/k79_motion.mjs` (38 checks; K180 rewrote
   its four pluck checks for K104's still plucks: full motion moves,
   reduced stays still, attack and ghost only at full motion, the same
