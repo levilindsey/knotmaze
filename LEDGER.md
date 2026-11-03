@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1128.
+Next free ID: K1129.
 
 ## Waiting on Levi
 
@@ -502,9 +502,9 @@ Next free ID: K1128.
 - **K1108** · Muse batch 7 (`docs/design/K1108_muse_batch7.md`): A K368, B K1100, C K748, D K1109 + K1099,
   E K1101, F K426 + K437; no junction or cursive work. Runs 7A-7F chained after batch 6.
   - owner: muse runs 7A-7F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 00:28
-  - branch: mainline; last commit: `a0546b30`
+  - branch: mainline; last commit: `5323a521`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 7A-7F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run C (K748)
+  - next: Run D (K1109 + K1099)
   - brief: `docs/design/K1108_muse_batch7.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
@@ -1520,9 +1520,6 @@ Every other item below waits on the trigger it names.
   - Real phone (K749): the patches show at real size at nearly every junction in both rules (dark
     magenta among pink, dark teal among olive); a backtrack undoing a 3-run slide passed. Next:
     trace each patch to its run, or hide the web meshes. `.claude/probes/K749/out/rules/`
-- **K748** · Sprint polish (K137 s3c): a focus outline lingers on the sprint button after F; no real
-  phone pass yet (emulated 411x753). The s3a fragile page check is weak on the hunter and the fire
-  side is unit-tested only
 - **K750** · Lives on the phone (K749): one read gave hearts {left:3, of:3} beside catches 1 while
   the toast said 2 hearts left; a lagging hearts state or the probe read timing; the HUD hearts row
   after a catch was not checked (`.claude/probes/K749/notes.md`)
@@ -1722,6 +1719,8 @@ Every other item below waits on the trigger it names.
   9-128 ms on the desktop and 11-104 ms on the Pixel (S5's `nbWindows`) (`K1040_s3b_label.md` ## Handoff).
 - **K1123** · `s3.mjs` and `phone_time.mjs` (`.claude/probes/K1040/s3/`) append to their summary files on
   every run, so the tracked `phone_time_summary.md` grows with each rerun (S3b's Handoff).
+- **K1128** · Sprint: no real phone pass yet (emulated 411x753); the s3a fragile page check is weak on the
+  hunter, and the fire side is unit-tested only (split from K748)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2017,6 +2016,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K748** · no focus ring after a pointer click; phone pass and fragile check split out. Done in 5323a521 (2026-11-03).
 - **K1100** · non-breaking joins in the hidden row. Done in a0546b30 (2026-11-03).
 - **K368** · High contrast wears the ring. Done in 71250dca (2026-11-03).
 - **K1107** · Muse batch 6: runs A-F passed their gates (2026-11-02 20:20 to 2026-11-03 00:28) and closed all 14 items (K343, K130, K495, K128, K212, K490, K787, K584, K112, K403, K263, K600, K609, K462); Levi checks K1110, K1111 and K1118. Done in c647e223 (2026-11-03).
