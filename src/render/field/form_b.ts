@@ -81,17 +81,33 @@ export interface FormBParams {
   /** D1's merge blend width δ (S1e, default 2 aa); 0 keeps the discrete pick (S1d). */
   merge?: number;
   /**
+   * S1f: a crossing's reach back along an arm (the Lcut loop). "straight":
+   * the straight model's r0 = h·cot(θ/2) (S1d, S1e's final). "walk": S1e
+   * F4's walked e_c (candidates 2 and 3, not continuous). "quad": S1f's
+   * quadratic reach (quadReachOf). Default "quad" (S1f F1).
+   */
+  reach?: "straight" | "walk" | "quad";
+  /**
    * S1e F4: a crossing's reach along an arm, measured on the curved threads
-   * when true. Off by default (the straight model's h·cot(θ/2), S1d): S1e's
-   * gate found candidate 3 (true, curvedFrom 4) two #1 sites worse.
+   * when true; kept for S1e's probes: true is reach "walk", false
+   * "straight". Ignored when reach is given.
    */
   curvedReach?: boolean;
   /**
    * S1e F4: the straight reach h·cot(θ/2) holds up to this many h (default
    * 4, crossings steeper than 2·atan(1/4) ≈ 28°); a longer one is measured
-   * on the curved threads, never below it.
+   * on the curved threads, never below it. The floor F of "walk" and "quad"
+   * (clamped to at least 1 h for "quad", see quadReachOf).
    */
   curvedFrom?: number;
+  /** S1f: the quadratic reach's number of fits (default 2), each at the last one's reach. */
+  reachSteps?: number;
+  /**
+   * S1f: the separation the quadratic reach fits: the chord between the two
+   * threads at matched arc length (default), or the distance from the arm's
+   * point to the partner's tangent line at its matched point.
+   */
+  reachSep?: "chord" | "line";
   /** Depth window, arc length (default look.depthWindow · (look.ctrlArc ?? 1)). */
   depthWindow?: number;
   /**
@@ -318,10 +334,13 @@ export class FormB {
   readonly fold: boolean;
   /** D1's merge blend width δ (S1e). */
   readonly delta: number;
-  /** S1e F4: the crossing reach measured on the curved threads. */
-  readonly curved: boolean;
+  /** S1f: the crossing reach's model (FormBParams.reach). */
+  readonly reach: "straight" | "walk" | "quad";
   /** S1e F4: the reach, in h, up to which the straight model holds. */
   readonly curvedFrom: number;
+  /** S1f: the quadratic reach's fits and separation. */
+  readonly reachSteps: number;
+  readonly reachSep: "chord" | "line";
   readonly force: NonNullable<FormBParams["force"]>;
   readonly fillKey: "nearer" | "a" | "b";
   readonly polys: Poly[];
@@ -359,8 +378,10 @@ export class FormB {
     this.cr = params.cr ?? look.cuspRadius ?? 3;
     this.fold = params.fold ?? true;
     this.delta = params.merge ?? 2 * this.aa;
-    this.curved = params.curvedReach ?? false;
+    this.reach = params.reach ?? (params.curvedReach === undefined ? "quad" : params.curvedReach ? "walk" : "straight");
     this.curvedFrom = params.curvedFrom ?? 4;
+    this.reachSteps = params.reachSteps ?? 2;
+    this.reachSep = params.reachSep ?? "chord";
     this.force = params.force ?? {};
     this.fillKey = params.fillKey ?? "nearer";
 
@@ -493,7 +514,7 @@ export class FormB {
 
     // Arms and their spans: L = min(chain end, next root, each crossing cut
     // d_c − reach_c − h), reach_c = h·cot(θ_c/2) on straight threads
-    // (curvedReachOf when params.curvedReach, S1e F4).
+    // (curvedReachOf for reach "walk", S1e F4; quadReachOf for "quad", S1f).
     this.armsOf = this.polys.map(() => []);
     scene.junctions.forEach((j, ji) => {
       j.arms.forEach((arm, ei) => {
@@ -525,7 +546,13 @@ export class FormB {
           // curved threads (never below curvedFrom·h) wherever it would cut
           // short of L. max(R, min(r0, e_c)) is continuous in θ.
           const reachMin = this.curvedFrom * h;
-          if (this.curved && reach > reachMin && d - reach - h < L) reach = Math.max(reachMin, this.curvedReachOf(pi, x, dir, reach, h));
+          if (this.reach === "walk" && reach > reachMin && d - reach - h < L) reach = Math.max(reachMin, this.curvedReachOf(pi, x, dir, reach, h));
+          // S1f: reach = min(r0, max(F, e*)), one expression with no gate:
+          // r0 wherever r0 ≤ F, and e* ≤ r0 is continuous in the geometry.
+          else if (this.reach === "quad") {
+            const fl = Math.max(1, this.curvedFrom) * h;
+            if (reach > fl) reach = Math.min(reach, Math.max(fl, this.quadReachOf(pi, x, dir, h, fl)));
+          }
           const c = d - reach - h;
           if (c < Lcut) Lcut = c;
         }
@@ -1165,6 +1192,62 @@ export class FormB {
       dLast = ft.d;
     }
     return r0;
+  }
+
+  /**
+   * S1f: a crossing's reach on the curved threads, continuous by
+   * construction. Behind pass x (toward the arm's root, s − dir·e) the two
+   * threads' separation is modelled as g(e) = a·e + ½κe², κ ≥ 0, with a and
+   * the target T from the straight model, so that T/a = r0 = h·cot(θ/2):
+   *   chord (default): g = |c_a(s − dir·e) − c_b(s_q + σe)|, the chord at
+   *     matched arc length, a = 2 sin(θ/2), T = 2h cos(θ/2);
+   *   line: g = the distance from c_a(s − dir·e) to the partner's tangent
+   *     line at c_b(s_q + σe), a = sin θ, T = h(1 + cos θ).
+   * κ is fitted to g measured at one sample e_k, κ = max(0, 2(g − a·e_k)/e_k²),
+   * and the model's reach e* = 2T/(a + √(a² + 2κT)) solves g(e*) = T in
+   * closed form: r0 where κ = 0 (straight threads, or threads that close
+   * in), never above r0, finite at θ = 0. reachSteps fits, the first at
+   * e = fl and each next one at max(fl, e*), every sample clamped to the
+   * arc behind the pass (an open chain's end; half a closed chain). Each
+   * step is a closed form of the geometry (two pointAt, no search, no first
+   * crossing), so e* is continuous in it: where the partner comes back (an
+   * eye), the fit's κ shrinks and e* grows smoothly toward r0.
+   *
+   * σ picks the partner's half that runs back with the arm (the acute side,
+   * the sign of −dir·t_a·t_b). It flips only at θ = π/2, where r0 = h ≤ fl
+   * and the caller's min(r0, max(fl, e*)) never reads e*.
+   */
+  quadReachOf(pi: number, x: Pass, dir: number, hw: number, fl: number): number {
+    const pa = this.polys[pi];
+    const pq = this.polys[x.qi];
+    const ta = tanAt(pa, x.s);
+    const tb = tanAt(pq, x.sq);
+    const sb = -dir * (ta.tx * tb.tx + ta.ty * tb.ty) >= 0 ? 1 : -1;
+    const line = this.reachSep === "line";
+    const a = line ? Math.sin(x.theta) : 2 * Math.sin(x.theta / 2);
+    const T = line ? hw * (1 + Math.cos(x.theta)) : 2 * hw * Math.cos(x.theta / 2);
+    const eA = pa.closed ? pa.len / 2 : dir > 0 ? x.s - pa.s0 : pa.s0 + pa.len - x.s;
+    let r = a > 0 ? T / a : Infinity;
+    let e = fl;
+    for (let k = 0; k < this.reachSteps; k++) {
+      // A pass within reach of an open chain's end: the sample shrinks with
+      // the arc (continuous; every arm root that way lies within it).
+      const ek = Math.max(1e-6, Math.min(e, eA));
+      const A = pointAt(pa, x.s - dir * ek);
+      const sB = x.sq + sb * ek;
+      const B = pointAt(pq, sB);
+      const dx = A.x - B.x;
+      const dy = A.y - B.y;
+      let g: number;
+      if (line) {
+        const tq = tanAt(pq, sB);
+        g = Math.abs(dx * tq.ty - dy * tq.tx);
+      } else g = Math.sqrt(dx * dx + dy * dy);
+      const kap = Math.max(0, (2 * (g - a * ek)) / (ek * ek));
+      r = (2 * T) / (a + Math.sqrt(a * a + 2 * kap * T));
+      e = Math.max(fl, r);
+    }
+    return r;
   }
 
   /**
