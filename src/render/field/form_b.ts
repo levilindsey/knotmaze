@@ -36,6 +36,9 @@
 //   lies over the group or under it. F_CAP marks where the
 //   configurations' inks differ.
 // - D1, the fold: one chain's minima within σ merge (the nearer is kept).
+//   A dropped minimum keeps its foot term at a blend weight β (S1e): 1
+//   where it ties the kept one, 0 where it is born, δ farther or σ away,
+//   so the pick's switch moves no ink.
 //   Of two kept minima of one chain within 2σ, the farther one's own terms
 //   and its burial of others are weighted ss(σ, 2σ, Δs), so a minimum
 //   enters at weight 0 where the merge lets it go.
@@ -75,6 +78,8 @@ export interface FormBParams {
   cr?: number;
   /** D1: the fold fade (default true). */
   fold?: boolean;
+  /** D1's merge blend width δ (S1e, default 2 aa); 0 keeps the discrete pick (S1d). */
+  merge?: number;
   /** Depth window, arc length (default look.depthWindow · (look.ctrlArc ?? 1)). */
   depthWindow?: number;
   /**
@@ -101,6 +106,8 @@ export const F_FOLD = 1;
 export const F_CAP = 2;
 export const F_TIE = 4;
 export const F_OMEGA = 8;
+/** S1e: D1's merge blend, a dropped minimum's foot term at weight β strictly inside 0..1. */
+export const F_MERGE = 16;
 
 export interface Arm {
   j: number;
@@ -177,6 +184,18 @@ export interface Piece {
   ramp: number;
   /** D1: this piece's own weight and its burial weight (the farther of a fold pair). */
   selfW: number;
+  /**
+   * D1's merge blend (S1e): the minima of this chain that the merge dropped
+   * into this piece, each at its weight β > 0. Each is a copy of the piece
+   * with the dropped minimum's s, d, foot, segment and vertex, and adds a
+   * foot term only (no cover, burial, label or surface of its own).
+   */
+  alts: Alt[];
+}
+
+/** A minimum that D1's merge dropped (S1e), with its blend weight β. */
+export interface Alt extends Piece {
+  beta: number;
 }
 
 export interface Term {
@@ -224,6 +243,7 @@ interface SurfEntry {
 }
 
 const EMPTY: Cand[] = [];
+const NO_ALTS: Alt[] = [];
 
 /**
  * The unit tangent at arc s, interpolated along the segment between its two
@@ -276,6 +296,8 @@ export class FormB {
   readonly ovw: number;
   readonly cr: number;
   readonly fold: boolean;
+  /** D1's merge blend width δ (S1e). */
+  readonly delta: number;
   readonly force: NonNullable<FormBParams["force"]>;
   readonly fillKey: "nearer" | "a" | "b";
   readonly polys: Poly[];
@@ -312,6 +334,7 @@ export class FormB {
     this.ovw = params.ovw ?? 0.05 * h;
     this.cr = params.cr ?? look.cuspRadius ?? 3;
     this.fold = params.fold ?? true;
+    this.delta = params.merge ?? 2 * this.aa;
     this.force = params.force ?? {};
     this.fillKey = params.fillKey ?? "nearer";
 
@@ -997,17 +1020,26 @@ export class FormB {
     const cs = this.cbuf.length ? this.cbuf.slice().sort((u, v) => u.d - v.d) : EMPTY;
     let fade = 0;
     const kept: Cand[] = [];
+    // D1's merge blend (S1e): the minima each kept one dropped.
+    const drop: Cand[][] = [];
     for (const c of cs) {
       const p = this.polys[c.chain];
-      let merged = false;
-      for (const q of kept)
+      let into = -1;
+      for (let i = 0; i < kept.length; i++) {
+        const q = kept[i];
         if (q.chain === c.chain && Math.abs(dS(p, q.s, c.s)) <= this.sigma) {
-          merged = true;
+          into = i;
           break;
         }
-      // A merge is no fade (S1b F2): the dropped minimum would enter at weight 0.
-      if (merged) continue;
+      }
+      // A merge is no fade (S1b F2): the dropped minimum would enter at weight
+      // 0. It keeps a foot term at its blend weight instead (S1e).
+      if (into >= 0) {
+        drop[into].push(c);
+        continue;
+      }
       kept.push(c);
+      drop.push([]);
     }
     for (const c of kept) {
       const p = this.polys[c.chain];
@@ -1032,6 +1064,7 @@ export class FormB {
         surf: m.g >= 0 ? m.g : OWN + out.length,
         ramp: m.ramp,
         selfW: 1,
+        alts: NO_ALTS,
       });
     }
     if (this.fold)
@@ -1046,7 +1079,60 @@ export class FormB {
           const far = A.d >= B.d ? A : B;
           far.selfW = Math.min(far.selfW, this.force.fold ?? ss(this.sigma, 2 * this.sigma, ds));
         }
+    if (this.delta > 0)
+      for (let i = 0; i < out.length; i++) {
+        const A = out[i];
+        const p = this.polys[A.chain];
+        let alts: Alt[] | null = null;
+        for (const c of drop[i]) {
+          const beta = this.mergeW(p, kept[i], c, x, y);
+          if (!(beta > 0)) continue;
+          const sg = segOfS(p, c.s);
+          const vtx = sg.t < 1e-9 ? sg.k : sg.t > 1 - 1e-9 ? segB(p, sg.k) : -1;
+          (alts ??= []).push({ ...A, s: c.s, d: c.d, fx: c.fx, fy: c.fy, k: sg.k, vtx, alts: NO_ALTS, beta });
+        }
+        if (alts) A.alts = alts;
+      }
     return fade;
+  }
+
+  /**
+   * D1's merge blend (S1e): the weight of a minimum X that the merge drops
+   * into the nearer A of its chain,
+   *   β = ss(1, 0, u) · ss(δ, 0, d_X − d_A) · ss(σ, σ/2, |Δs|),
+   * u = (d_X − d_A)/(m − d_A), m the largest distance from (x, y) along the
+   * chain between the two (the barrier; distance along a segment is convex,
+   * so m sits at a vertex between them, or at A or X). β is 1 where X ties
+   * A, so the pick switches with both feet at full weight on both sides; 0
+   * where X is born (m = d_X), δ farther than A, or σ away along the chain,
+   * where the fold's far piece enters at weight 0. Each factor is
+   * continuous in the geometry: m gains or loses a vertex only where a
+   * minimum passes it, at that minimum's distance.
+   */
+  mergeW(p: Poly, A: Cand, X: Cand, x: number, y: number): number {
+    const gap = X.d - A.d;
+    if (!(gap < this.delta)) return 0;
+    const ds = dS(p, A.s, X.s);
+    const fs = ss(this.sigma, this.sigma / 2, Math.abs(ds));
+    if (!(fs > 0)) return 0;
+    let m = Math.max(A.d, X.d);
+    const a = segOfS(p, A.s);
+    const b = segOfS(p, X.s);
+    if (a.k !== b.k) {
+      const fwd = ds > 0;
+      let i = fwd ? segB(p, a.k) : a.k;
+      const end = fwd ? b.k : segB(p, b.k);
+      for (let guard = 0; guard <= p.n; guard++) {
+        m = Math.max(m, Math.hypot(x - p.x[i], y - p.y[i]));
+        if (i === end) break;
+        if (fwd) i = i + 1 < p.n ? i + 1 : p.closed ? 0 : -1;
+        else i = i > 0 ? i - 1 : p.closed ? p.n - 1 : -1;
+        if (i < 0) break;
+      }
+    }
+    const den = m - A.d;
+    const u = den > 1e-15 ? Math.min(1, gap / den) : 0;
+    return ss(1, 0, u) * ss(this.delta, 0, gap) * fs;
   }
 
   /** Is (x, y) within h of B's chain, read from ±3 segments around B's nearest segment? */
@@ -1139,11 +1225,14 @@ export class FormB {
         term = t;
       }
     };
-    for (const A of P) {
-      if (A.surf !== S) continue;
-      if (!(A.d < h + aa && A.d > h - W - aa && A.d > 1e-12)) continue;
-      const fx = A.fx + (h * (x - A.fx)) / A.d;
-      const fy = A.fy + (h * (y - A.fy)) / A.d;
+    // One foot term: piece A's own (X = A, β = 1), or a minimum X that D1's
+    // merge dropped into A, at its blend weight β (S1e). X is buried as A
+    // would be, by the pieces other than A (one chain's minima within σ never
+    // bury each other), and the corner rules read X's own s.
+    const foot = (A: Piece, X: Piece, beta: number) => {
+      if (!(X.d < h + aa && X.d > h - W - aa && X.d > 1e-12)) return;
+      const fx = X.fx + (h * (x - X.fx)) / X.d;
+      const fy = X.fy + (h * (y - X.fy)) / X.d;
       let bur = 0;
       let burBit = 0;
       for (const B of P) {
@@ -1165,8 +1254,8 @@ export class FormB {
       for (const ci of near) {
         if (bur >= 1) break;
         const c = this.corners[ci];
-        if (c.g !== S || this.arms[c.a].pi !== A.chain || this.arms[c.b].pi !== A.chain) continue;
-        const other = this.onArm(c.a, A) ? c.b : this.onArm(c.b, A) ? c.a : -1;
+        if (c.g !== S || this.arms[c.a].pi !== X.chain || this.arms[c.b].pi !== X.chain) continue;
+        const other = this.onArm(c.a, X) ? c.b : this.onArm(c.b, X) ? c.a : -1;
         if (other < 0) continue;
         const span = other === c.a ? Math.max(c.dVa, c.dA) : Math.max(c.dVb, c.dB);
         const wt = 1 - ss(h - 2 * aa, h, this.footArm(other, fx, fy, 0, span + 2 * h).d);
@@ -1182,7 +1271,7 @@ export class FormB {
       for (const ci of near) {
         const c = this.corners[ci];
         if (c.g !== S || !(c.omega > 0) || (c.omega >= 1 && bur >= 1)) continue;
-        if (!this.inFill(c, fx, fy, A)) continue;
+        if (!this.inFill(c, fx, fy, X)) continue;
         if (c.omega > bur) {
           bur = c.omega;
           burBit = F_OMEGA;
@@ -1192,16 +1281,23 @@ export class FormB {
         // burial passes ω.
         if (c.omega < 1) arc = Math.max(arc, c.omega * this.band2(Math.hypot(x - c.qx, y - c.qy) - c.r));
       }
-      const w = (1 - bur) * A.selfW;
-      const D = h - A.d;
+      const w = (1 - bur) * A.selfW * beta;
+      const D = h - X.d;
       const b2 = this.band2(D);
       if (b2 > 0) {
         if (bur > 0 && bur < 1) fade |= burBit;
         if (A.selfW < 1) fade |= F_FOLD;
+        if (beta < 1 && bur < 1) fade |= F_MERGE;
       }
       if (arc > 0) fade |= F_OMEGA;
       if (w >= 0.5) Dexp = Math.min(Dexp, D);
-      take(w * b2 + arc, { kind: T_FOOT, surf: S, chain: A.chain, s: A.s, k: A.k, vtx: A.vtx, corner: -1, D, w, v: w * b2 + arc });
+      const val = w * b2 + beta * arc;
+      take(val, { kind: T_FOOT, surf: S, chain: X.chain, s: X.s, k: X.k, vtx: X.vtx, corner: -1, D, w, v: val });
+    };
+    for (const A of P) {
+      if (A.surf !== S) continue;
+      foot(A, A, 1);
+      for (const X of A.alts) foot(A, X, X.beta);
     }
     for (const ci of near) {
       const c = this.corners[ci];
