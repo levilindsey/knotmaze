@@ -151,10 +151,6 @@ Next free ID: K1088.
 - **K667** · K324 s3's real-time defaults: stalker accuracy 0.45, guard sight 20 / 30 u, guard
   accuracy 0.4 (the turn clock's: 0.3, 30 / 40, 0.3). Rec: keep; greedy catches then match the
   hunter's, 2.5-2.7 a game (sim table: `docs/design/K324_s3.md` Handoff).
-- **K671** · Remove 16 merged, clean agent worktrees (a035f2e7 a3a9d69f a57e1aa8 a5b99d86 a5c384f5
-  a90a739a aa8bfad6 ab57cd38 ab96ea9e ac1c3e02 ac645b91 ac64a844 adaaf5d4 adfeea92 ae12adbf
-  ae18c5a4) with `.claude/probes/K161/cleanup.ps1` (DryRun first; copies probes, keeps branches).
-  Rec: yes.
 - **K680** · Streamer coverage: on desk the K336 streamers cover a fair part of the knot at 2-3 s
   (K653 sheets; the Pixel's at 0.35 and 0.85 s: `.claude/probes/K662/out/sheet_conf.png`). Keep, or
   thin them? Rec: keep; on the Pixel the cost is flat in the amount, so thinning buys no frames.
@@ -193,12 +189,6 @@ Next free ID: K1088.
   Phone (K726, Pixel real size): the J bite shows only on ai xh2 tapered (~7 device px); the notaper
   disc is a faint ellipse at xh2; waist spikes 1-4 device px, invisible at 1x; aland at a xh3 has a
   2 px tooth, a hairline arc seam and a 1-3 px waist ledge. Sheets: `.claude/probes/K726/out/glyph/`
-- **K715** · adb deaths: a Muse hopnbop session ran headless Godot 4.7.2 (--import, GUT); an editor
-  exit runs adb kill-server (shutdown_adb_on_exit, default true; editor settings written at death 2,
-  23:50:21; a Godot crash 23:31:56 before death 1). Set it false (claude-config Setup-GodotAndroid.ps1)?
-  No deaths during K726 (2026-10-21 02:16-03:02). Confirmed 2026-10-31: a headless 4.7.2 `--editor
-  --quit` kills the server only when the project has a runnable Android preset; 13 kills 23:15-00:20
-  on 10-30 (TEMP adb.log, "killed by remote request"). Any hopnbop Godot run can cut a phone pass.
 - **K721** · K137 sword calls (s3a calls 3, 4), built as recommended: in real time the flee counts
   runs walked (alt: seconds); while it flees the telegraph turns pale blue 0x8fd0ff (alt: no
   telegraph, the glow alone). `K137_s3b.md` Handoff, The calls
@@ -293,7 +283,6 @@ Next free ID: K1088.
 - **K1049** · Through-pass bends, by look at K1040 S4b: where a thread passes through a junction and bends, form B
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops). Nothing to look at before S4b.
-- **K1051** · Turn on Dependabot for knotmaze (GitHub setting; K994 follow-up, audit clean 732ab944).
 - **K1075** · K137 sounds unchecked: the snap pluck and the strand glissando need an ear (left by K658; K658
   doc Findings filed).
 - **K1078** · Hand K1040's gated stages to Muse, one per run: S3 (label pass) now, as S1e changes only band
@@ -768,6 +757,10 @@ Every other item below waits on the trigger it names.
 - **K1084** · K412: hashed assets are max-age=0 on Pages: pages.dev revalidates the worker fetch (304, 300 B), and
   levi.dev's proxy edge REVALIDATEs the chunk (fresh hello 941 ms vs 466 direct; that this is the cause is inferred).
   Long max-age on /assets/* (_headers), then re-run `.claude/probes/K412/k412_run.mjs` on both. `K412_preload_network.md`.
+- **K671** · Remove 16 merged, clean agent worktrees (a035f2e7 a3a9d69f a57e1aa8 a5b99d86 a5c384f5
+  a90a739a aa8bfad6 ab57cd38 ab96ea9e ac1c3e02 ac645b91 ac64a844 adaaf5d4 adfeea92 ae12adbf
+  ae18c5a4) with `.claude/probes/K161/cleanup.ps1` (DryRun first; copies probes, keeps branches).
+  Levi: yes (2026-11-02); run it after the K156 round.
 
 ## Residuals (known, not fixed)
 
@@ -2057,6 +2050,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1051** · Turn on Dependabot for knotmaze. Dropped: already on: Dependabot alerts and security updates (checked 2026-11-02) (2026-11-02).
+- **K715** · adb deaths: Godot's shutdown_adb_on_exit is now false (claude-config Setup-GodotAndroid.ps1 step 5; applied on the desktop). Done in claude-config f914c3a4 (2026-11-02).
 - **K1087** · The phone's network path off USB (5555 over Tailscale closes on every reboot). Dropped: decided 2026-11-02: re-arm 5555 over USB after each phone reboot, automated; the job is claude-config CC132 (2026-11-02).
 - **K1079** · Muse batch 4: A K331+K330 bc5f0043, B K549 f578b6ee, C K486 20afc256, D K1077 51f97bbc, E K412 19cfdd67; all passed review (K1081, K1083, K1084 amended; residuals K1085, K1086 filed). Done in 19cfdd67 (2026-10-30).
 - **K412** · preload verified on real network: through levi.dev proxy chunk downloads once, worker fetch transfer 0 (5 fresh + 5 warm per origin, desktop Chrome); pages.dev revalidates (max-age=0), fix filed K1084. Done in 19cfdd67 (2026-10-30).
