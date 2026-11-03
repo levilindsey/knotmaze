@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1130.
+Next free ID: K1131.
 
 ## Waiting on Levi
 
@@ -387,10 +387,10 @@ Next free ID: K1130.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c
   merged e6c6034..aa3cdd1).
-  - owner: muse session 01a1a11c-476a-7a13-9f54-9eb3140cde68 (chain run 8P), coordinated by claude session 7301c55b
-  - branch: mainline; last commit: `4f3faba5`
+  - owner: nobody since 2026-11-03 03:38 (round 2026-11-03 ended: K1124, K1125 closed)
+  - branch: mainline; last commit: `feb565c5`
   - evidence: .claude/probes/rounds/2026-11-03/ (untracked)
-  - next: round 2026-11-03: K1124 installer finish refusal, then portrait A/A at -Moves 0,7,11 and install; K1125 K309 control from failing (k, n) pairs and rimSeam difference
+  - next: K1130 (first-shot probe capture); a later window starts with a fresh idle wait and -Phase check
   - brief: docs/design/K156.md, "Round 2026-11-03"
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
@@ -747,14 +747,10 @@ Every other item below waits on the trigger it names.
 - **K1115** · Panel: after Reset, 107 stepped rows land one step below their default when a link held an
   off-grid value (the list: 5f28e0b1's message; 6B fixed four rows, K130/K495, by dropping `step`). Wants one
   general fix, not per row (Claude's call).
-- **K1124** · K895 (b): retake portrait A/A at -Moves 0,7,11 (13 hits the finish; K156 round 2026-11-02)
-  and install; make install_floor.mjs refuse finish samples. (a)(c)(d) done (8d4d0617, 33fa558b).
-- **K1125** · K309 control unproven: 7a87cae 0 px (rim+span, chain 4 n 28); pick case from failing (k, n)
-  pairs; explain rimSeam full-frame diff (K156 round 2026-11-02).
-  .claude/probes/rounds/2026-11-02/k309/rim_head/).
 
 ## Residuals (known, not fixed)
 
+- **K1130** · K309 inject probes: a run's first normal screenshot can come back dark and nearly blank (round 2026-11-02 rimSeam, 3848 bytes against 628314; round 2026-11-03 handoff step 3b). Take a throwaway first shot, or shoot each state twice and diff the repeat, before believing a pair.
 - **K1048** · K1040's probe gaps (`docs/design/K1040_s1c_handoff_pops.md` F5; `K1040_s1d_corner.md` F1, Handoff 5):
   q5holes skips a hole with a partly OWN rim; q4's g41 crop holds no ink on the g41 rings; the free ends' oracle
   column is K900's census (fe_own.ts is like for like); omega_rate.ts, corner_ab.ts, omega_census.ts import stale form Bs.
@@ -2008,6 +2004,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K368** · High contrast wears the ring. Done in 71250dca (2026-11-03).
 - **K1107** · Muse batch 6: runs A-F passed their gates (2026-11-02 20:20 to 2026-11-03 00:28) and closed all 14 items (K343, K130, K495, K128, K212, K490, K787, K584, K112, K403, K263, K600, K609, K462); Levi checks K1110, K1111 and K1118. Done in c647e223 (2026-11-03).
 - **K895** · phone_pass kit (K156 round 2026-11-02): (a) the median averages at even n and (d) a phase refuses once its pass has `state/watchdog.trip` (8d4d0617, test `test/phone_pass/k895.test.ts`); (c) servers and watchdog start detached through WMI (33fa558b). (b), the A/A floor, continues as K1124. Done in 33fa558b (2026-11-03).
+- **K1124** · K895 (b): installer refuses finish samples (b7eea7f4, test test/phone_pass/install_floor.test.ts); portrait A/A retaken at -Moves 0,7,11 and installed as scripts/phone_pass/noise.json (86b9ed40). Done in 86b9ed40 (2026-11-03).
+- **K1125** · K309 control from failing (k, n) pairs (seed 4 chain 7 n 82: pre-fix 359-389 px, master 0 px) and rimSeam whole-frame diff explained as a first-capture blank frame (K156 round 2026-11-03). Done in feb565c5 (2026-11-03).
 - **K462** · K323 table and undo list updated to shipped burn rows (2026-11). Done in a0bafbb7 (2026-11-03).
 - **K609** · pluck docs point at chain 2 key 427, rechecked live on 5585. Done in c647e223 (2026-11-03).
 - **K600** · gameplay-links.md gains gm key and K534 entry. Done in 54433e6e (2026-11-03).
