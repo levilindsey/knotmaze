@@ -6,8 +6,10 @@
 // Reads <aaDir>/noise.json and <aaDir>/bench.jsonl. The sample counts come from the bench rows (a base and a head row of the
 // same rep and cell make one pair), NOT from noise.json's `reps`, which is the pass's -Reps even when the watchdog stopped
 // it (the 2026-10-14 19:20 A/A said reps 3 with 2 pairs in five cells and 1 in load-slow). It refuses unless every cell has
-// at least --min pairs (default 3), the viewport is 411/412 x 753/755 @2.625 (the pass's -Viewport portrait) and no
-// watchdog.trip exists. --force writes it anyway with `reps` = the smallest pair count, a `samples` map, `partial: true` and
+// at least --min pairs (default 3), the viewport is 411/412 x 753/755 @2.625 (the pass's -Viewport portrait), no
+// watchdog.trip exists, and no fabric sample was taken at the finish (`fab.solved`: stars and confetti in the timing,
+// K1124; round 2026-11-02's `aa` pass sat at the finish in 6 of 6 fabric@13 samples and only the brief's check stopped
+// it). --force writes it anyway with `reps` = the smallest pair count, a `samples` map, `partial: true` and
 // the counts appended to the note.
 // Key order follows the landscape floor: from, reps, viewport, note, emulated, display, rule, cells.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -38,6 +40,7 @@ for (const id of want) {
   if (!aa.cells?.[id] || !Object.keys(aa.cells[id]).length) problems.push(`cell ${id} missing or empty`);
   else if (pairs[id] < MIN) problems.push(`cell ${id}: ${pairs[id]} pair(s) of base+head samples, wanted ${MIN}`);
 }
+if (atFinish > 0) problems.push(`fabric samples taken at the finish: ${atFinish} (stars and confetti in the timing; retake with lower -Moves)`);
 const m = /^(\d+)x(\d+)@([\d.]+)$/.exec(aa.viewport || "");
 if (!m || ![411, 412].includes(+m[1]) || ![753, 755].includes(+m[2]) || +m[3] !== 2.625) problems.push(`viewport ${aa.viewport}, expected 411x753@2.625`);
 const trip = join(aaDir, "state", "watchdog.trip");
