@@ -169,3 +169,48 @@ the leads and tails (K1006); K991 and K948 for the remaining pairs;
 K937, K997, K998; removing the join sets.
 
 ## Handoff
+
+J3d stage agent (coordinator session 7301c55b), 2026-11-02 18:18-19:17. Branch `worktree-agent-ac83c987a53ec3ee7`, worktree
+`.claude/worktrees/agent-ac83c987a53ec3ee7`; nothing pushed, and this brief is the only tracked change. Everything else is in
+the main checkout's untracked `.claude/probes/K863/trace/`: `NOTES.md` `## K1027` (N1-N3, rerun commands), `work27/`, `out27/`,
+tools `work27/dbg/*_k1027.*`.
+
+**What changed** (v6.7 = v6.6 with f's end redrawn, and variant L in `work27/ports_k1027.json`):
+1. **ba va wa bq vq wq solved** (K1027). `gen_k1027.py` reads a pair's own `exit_port` and `entry_port` pins. The six leave b's,
+   v's and w's body end merged G2 and enter a's and q's high fused port at 60 u, whose after-high stretch is [0, 90] u for these
+   six (oa and oq keep [0, 100]). The solver puts the attach at the low end of its range in every try, so the stretch decides
+   where the join meets a and q; 90 u is the closest to the font of 60-130 u (N1; 85 u ties). All six end status 0 with 0
+   crossings. Distance to the font (u, v6.6 preset -> v6.7): ba 7.61 -> 5.19, va 7.56 -> 6.94, wa 7.67 -> 7.00, bq 9.96 -> 5.63,
+   vq 10.15 -> 6.69, wq 10.15 -> 6.74. bq vq wq lose their 160 deg hooks, comb spikes and rough FAIL. oa and oq are unchanged.
+2. **f's end** (K990). `out27/cursive_template.svg` is out26's with `letter-f-s1` redrawn after node 8: the upstroke climbs
+   straight to a designed corner (`c` node) 44.2 u high and 11.7 u right of the stem (the traced f's turn: 44.1 u), and the
+   body runs down and right to 25.4 u, on the font's exit; f's three exit references come from the build. f's body against the
+   font: max 4.30 -> 1.03 u; its end point 4.30 -> 0.20 u from the font's exit.
+3. **f's joins** stay presets on the new exit frame (u, v6.6 -> v6.7): ff 16.58 -> 6.96, fr 13.92 -> 7.90, fi 22.89 -> 14.13,
+   fu 22.68 -> 14.15, fy 22.97 -> 14.16, fe 22.59 -> 15.34, after's ft 20.55 -> 14.05; worse: fo 9.07 -> 13.96 and
+   fa 13.88 -> 17.11; of unchanged (3.83). The eight pairs' mean 18.07 -> 12.96.
+Nothing else moved (N3): 279 of the census's 298 rows are equal in every column; the locality check finds f the only body
+changed, join_params.json byte-identical and the 1144 untouched pieces byte-identical to v6.6's; determinism PASS.
+
+**What Levi should look at** (Drive `K863/`, each a guarded SVG; columns: the font at wght 100, v6.6, v6.7):
+- `aq_joins_v67.svg`: ba va wa bq vq wq, then oa oq, bad and wave. v6.6's joins hooked (bq vq wq) and sagged; do v6.7's read as
+  one stroke out of b, v and w into a and q?
+- `f_v67.svg`: f and its joins. (a) The corner: v6.7 turns at 44 u, where the traced f turns. At wght 100 the font's upstroke
+  and exit look like two lines meeting higher, at about 64 u beside the crossing. Keep 44 u, or move the corner up (variant C,
+  not built: the corner near (225.7, 884.6) in the template, the same end)? (b) fa and fo now sit farther from the font.
+- `cursive_v67_words.svg`: the census words, v6.6 beside v6.7; three differ (quick brown fox, coffee, bad).
+
+**Checks** (`pwsh -NoProfile -File work27\dbg\checks_k1027.ps1 [step]`, from the trace folder; steps template build ctx census_v66
+census_v67 cmp locality solves guard sheet_aq sheet_f sheet_words det): census 298 rows, 19 move (the six joins and the joins out of
+f) and 279 are equal; undesigned seams 10 -> 10, comb spikes 38 -> 35, rough FAIL 62 -> 59; locality PASS (bodies differ in f
+alone, join_params byte-identical, 1144 untouched pieces byte-identical); determinism PASS (25 build files byte-identical, 8
+differ by path, pid or clock; the aq sheet byte-identical); guard ALL CLEAN. Solves:
+`venv\Scripts\python.exe -I work27\dbg\solves_k1027.py work27\solves_v67.txt work27\solves_v67.json ba,va,wa,bq,vq,wq,oa,oq v6.6,v6.7`;
+f's body: `venv\Scripts\python.exe -I work27\dbg\fbody_k1027.py`.
+
+**Next:**
+1. Levi's looks: the six solved joins, and f's corner height (44 u as built, or about 64 u, variant C).
+2. Joins out of f: fe fi fu fy still sit 14-15 u from the font, and fa (17.11) and fo (13.96) farther than v6.6's; they want f's
+   exit port and solved joins (K991, K948).
+3. b's, v's and w's other high exits (later work), then the rest of the later-work list above. The coordinator merges this
+   branch and updates K863's handle.
