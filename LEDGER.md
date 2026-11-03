@@ -492,9 +492,9 @@ Next free ID: K1118.
   D K787 + K584, E K112, F K403 + K263 + K600 + K609 + K462; no junction or cursive work. Runs 6A-6F chained
   from 2026-11-02.
   - owner: muse runs 6A-6F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 20:20
-  - branch: mainline; last commit: `07802509`
+  - branch: mainline; last commit: `1a4e3a47`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 6A-6F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run D (K787 + K584); Claude reviews Run C (K128+K212 done 07802509, K490 explained)
+  - next: Run E (K112)
   - brief: `docs/design/K1107_muse_batch6.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 - **K1108** · Muse batch 7 (`docs/design/K1108_muse_batch7.md`): A K368, B K1100, C K748, D K1109 + K1099,
@@ -1366,8 +1366,6 @@ Every other item below waits on the trigger it names.
 - **K583** · K115 stage 9's glyphs: the i's dot draws as a rotated square; an untraced notch under
   the a's J spur and at the i's fork (`.claude/probes/K115/stage9/shots4/ai_land_xh2.png`); a crotch
   hairline at xh 3 (`LINT.forkMaxLU`).
-- **K584** · An optional SceneParams field silently drops from the worker-name build and loses the
-  worker's fast start; only `worker_host.test.ts` catches it, since tsc skips tests (K393).
 - **K588** · The confetti palette's warm white (0xfff4e0) reads as a foil flash in still frames;
   dropping or tinting it would make the flashes stand out (K337 handoff).
 - **K594** · Phone kit flakes in K573's run: adb died 3x (unexplained), a foreground kit start hangs
@@ -1589,9 +1587,6 @@ Every other item below waits on the trigger it names.
   to travel by length keeps snares that never spring, rings drawn; the follower first step skips the
   snare check; under length a lure clears one hop late (read, untested); untested under clk=beat;
   the ring is a stand-in for a glyph
-- **K787** · `test/game/beat_rider.test.ts` (the turn minotaur, one turn per committed move) ignores
-  what `t.turn(run)` returns: after a catch every later turn rejects and the test still counts it,
-  which is why it missed the K774 bug. Assert the result (K774 Handoff, `docs/design/K774.md`)
 - **K791** · Locks and keys (K138 s4 slice 2, unmerged): ky 2 with the alternate color rule bites on
   only 41 of 50 seeds, taking up to 32 draws; the lock dim covers only a stretch at each end of a
   lock run, not the whole run; the census trap check skips clocked configs (turnstiles)
@@ -2034,6 +2029,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K584** · already guarded: SCENE_FIELDS Record<keyof SceneParams> fails tsc TS2741 on optional field; name-build tests round-trip. Done in 1a4e3a47 (2026-11-02).
+- **K787** · whole-game beat test lands catches (respawn+restAt+refuse), asserts every turn result, sees K774 (b). Done in 1a4e3a47 (2026-11-02).
 - **K490** · explained, not reproduced: no 404 on master dev or preview build across the brief's links, a K466-style xp=threads load or a panel open; every file index.html/manifest names serves 200, and K466's log never recorded the URL. Done in 07802509 (2026-11-02).
 - **K212** · pluck strip split into one geometry per program (blur vs still); all eight attribute warnings (aGap, aGapId, aUV, aEnv, aCol, aClipA/B/F) gone, pictures pixel-identical. Done in 07802509 (2026-11-02).
 - **K128** · marker aUV slot dropped from the geometry and the dead declaration removed; PixiJS aUV warning gone (probe .claude/probes/K212/). Done in 07802509 (2026-11-02).
