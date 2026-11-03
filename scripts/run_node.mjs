@@ -54,7 +54,7 @@ const defaults = {
   appType: "custom",
   // No HMR socket and no file watcher: parallel slices otherwise collide
   // on the HMR port and drown each other's SSR transport (60 s timeouts).
-  server: { middlewareMode: true, hmr: false, watch: null },
+  server: { middlewareMode: true, hmr: false, ws: false, watch: null },
 };
 let serverConfig = defaults;
 if (configPath) {
