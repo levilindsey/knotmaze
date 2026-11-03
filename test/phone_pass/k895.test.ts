@@ -42,6 +42,10 @@ function runPass(phase: string, out: string): { code: number; text: string } {
   }
 }
 
+// The phase tests drive the Windows kit (pwsh, CIM, adb paths): they run
+// on the Windows dev machines and skip on the Linux deploy runner.
+const onWindows = process.platform === "win32";
+
 describe("K895 phone_pass kit", () => {
   it("median averages the two middle values at even n", () => {
     const out = fakeOut(false);
@@ -53,25 +57,25 @@ describe("K895 phone_pass kit", () => {
     expect(JSON.parse(text.trim())).toEqual([null, 5, 2, 15, 2.5]);
   });
 
-  it("looks refuses with exit 5 once the pass has tripped", () => {
+  it.skipIf(!onWindows)("looks refuses with exit 5 once the pass has tripped", () => {
     const r = runPass("looks", fakeOut(true));
     expect(r.code).toBe(5);
     expect(r.text).toContain("WATCHDOG TRIPPED: phase 'looks' refuses to run");
   });
 
-  it("frames refuses with exit 5 once the pass has tripped", () => {
+  it.skipIf(!onWindows)("frames refuses with exit 5 once the pass has tripped", () => {
     const r = runPass("frames", fakeOut(true));
     expect(r.code).toBe(5);
     expect(r.text).toContain("WATCHDOG TRIPPED: phase 'frames' refuses to run");
   });
 
-  it("looks without a trip runs (skips with no -Looks) with exit 0", () => {
+  it.skipIf(!onWindows)("looks without a trip runs (skips with no -Looks) with exit 0", () => {
     const r = runPass("looks", fakeOut(false));
     expect(r.code).toBe(0);
     expect(r.text).toContain("no -Looks file; skipped");
   });
 
-  it("summary and cleanup still run on a tripped pass (exit 2, not 5)", () => {
+  it.skipIf(!onWindows)("summary and cleanup still run on a tripped pass (exit 2, not 5)", () => {
     const outS = fakeOut(true);
     const s = runPass("summary", outS);
     expect(s.code).toBe(2);
