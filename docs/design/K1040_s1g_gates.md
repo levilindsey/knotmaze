@@ -4,7 +4,7 @@ Ledger K1040, stage S1g: S1f continued, before S2. One stage: Opus, 2 h
 cap. Branch `worktree-agent-a8056cde26bf07a6a`, worktree
 `C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-a8056cde26bf07a6a`
 (node_modules joined to the main checkout's). Work only there. Based on
-46f2ed57, S1f's tip before its merge: S1f is finished but not merged, and
+44ce69a1, S1f's tip before its merge: S1f is finished but not merged, and
 its merge rebases it, so its commits are cited here by subject as well as
 SHA. Brief written 2026-11-02 by the stage agent, from S1f's Handoff
 (Next 1-2) and F6, at the coordinating session's request (session
@@ -14,10 +14,10 @@ SHA. Brief written 2026-11-02 by the stage agent, from S1f's Handoff
 
 S1f (branch `worktree-agent-a43dac8f0673db4df`) made a crossing's reach
 continuous by construction: the quadratic reach, now the default (its F1;
-bd3f32ae "K1040 S1f WIP: the quadratic reach (default), its candidates
-probe, the eye sweep and the gate on it"). Its F6 (46f2ed57 "K1040 S1f:
+b400a081 "K1040 S1f WIP: the quadratic reach (default), its candidates
+probe, the eye sweep and the gate on it"). Its F6 (44ce69a1 "K1040 S1f:
 F5 (the pins), F6 (which gates a corner with fill reaches) and the
-Handoff"; the census and sweeps in 4cde68fc "K1040 S1f WIP: item 2, which
+Handoff"; the census and sweeps in 0b106e15 "K1040 S1f WIP: item 2, which
 gates a corner with fill reaches") swept the corner solve's discrete
 edges. Two are reached with fill, so they pop:
 
@@ -159,7 +159,7 @@ final definition and leave the rest to the Handoff.
     `out/s1g/`, toplevel check on this worktree), `gate_table.ps1`;
   - S1f's item-2 probes `dedge.ts`, `gates.ts`, `gates_census.ts`,
     `gate699.ts`;
-  - the frozen copy `form_b_s1f_q.ts` (S1f's final form_b.ts, 46f2ed57)
+  - the frozen copy `form_b_s1f_q.ts` (S1f's final form_b.ts, 44ce69a1)
     for before/after probes.
 - **Outputs:**
   - this stage's runs go under `s1/out/s1g/`; `out/s1f/` is the baseline
@@ -548,11 +548,11 @@ not merged):
 
 | commit | subject (short) |
 |---|---|
-| `90c0968f` | K1040 S1g: the brief, the frozen S1f final form B and the S1g gate runner |
-| `82f6efd0` | WIP: the d-edge behind a param, `dedge_s1g.ts` census and sweeps |
-| `3e50511b` | WIP: F1 and F2 (defaults `dEdge: "near"`, `rootBand: 0.5`), `gate699_s1g.ts`, `gate694_s1g.ts` |
-| `79897ecb` | WIP: F3, F4, F5 (no definition change) |
-| `d3846800` | F6: the gate against S1f's final |
+| `0f7d230e` | K1040 S1g: the brief, the frozen S1f final form B and the S1g gate runner |
+| `d06cdd8e` | WIP: the d-edge behind a param, `dedge_s1g.ts` census and sweeps |
+| `310ee6eb` | WIP: F1 and F2 (defaults `dEdge: "near"`, `rootBand: 0.5`), `gate699_s1g.ts`, `gate694_s1g.ts` |
+| `740893a3` | WIP: F3, F4, F5 (no definition change) |
+| `91e00df6` | F6: the gate against S1f's final |
 
 `new FormB(scene, {dEdge: "skip", rootBand: 0})` reproduces S1f's final.
 
