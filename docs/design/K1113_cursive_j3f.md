@@ -234,3 +234,119 @@ J3e's `## Rules` hold, with these changes:
 - K1014, K1035, K1036, K1044, K1090, K937, K997 and K998.
 
 ## Handoff
+
+J3f, 2026-11-02 21:30:06 to 22:53 (cap 23:30:06), stage agent of coordinator session 7301c55b. The record is `NOTES.md`
+`## K1113` in the main checkout's `.claude/probes/K863/trace/` (paths below are under that folder); this is its summary.
+
+**Done: b, v and w (K1113), v6.9.** Their ends are rounded out in the template (no point, no overstroke), every join out of
+them is solved from an exit port (a merge at the body's end, stretch [0, 2] u, as f and o), and their presets are gone. a's
+and q's entries after them fuse at v6.6's attach point; e's entry after them merges within 60 u of e's start.
+**Not reached: K1112's c, g, j, k, l, m, p, q, r, s, t, u, x, y and z** (the cap). They keep their presets; nothing about
+them was tried.
+
+### The variants
+
+Every pair out of b, v and w plus the census words holding one (315 pieces, `work29/logs/vwords.txt`). Exit: the body's end
+tangent, b / v / w, deg (the solved joins leave along it). Counts on the 98 joins out of b, v and w; font distance dmax
+mean (max) per letter, u.
+
+| variant | exit | hooks | spikes | rough | seams | b | v | w |
+|---|---|---|---|---|---|---|---|---|
+| A-M (v6.8) | -22 / -17 / -20.5, presets | 43 | 49 | 47 | 0 | 3.03 (9.96 bq) | 3.16 (10.15 vq) | 3.09 (10.15 wq) |
+| A-N: v6.8's ends, exit ports | -22 / -17 / -20.5 | 0 | 0 | 4 | 0 | 13.45 (40.14 bs) | 14.30 (41.67 vs) | 14.67 (41.99 ws) |
+| F-N: the font's exit angle | -15.6 / -15.6 / -12.0 | 0 | 0 | 4 | 0 | 16.58 (43.91 bs) | 15.08 (42.58 vs) | 18.74 (46.66 ws) |
+| H-N: point kept, overstroke cut | -8 after a -40 corner | 0 | 0 | 20 | 0 | 24.41 (53.05 bh) | 24.29 (53.33 vh) | 24.41 (53.02 wh) |
+| **S-N: rounded out (v6.9)** | -8, smooth | 0 | 4 | 21 | 0 | 24.94 (56.79 bh) | 23.56 (55.51 vh) | 24.49 (56.17 wh) |
+| A-Nl: v6.8's ends, exit stretch [0, 20] u | -76 to -84 (the join's: it leaves 1-4 u under the point, down the overstroke) | 0 | 0 | 0 | 1 | 12.45 (18.63 bq) | 11.60 (21.10 vs) | 12.14 (20.05 ws) |
+| S-Nl: S's ends, exit stretch [0, 20] u | -7 to -9; be, br, vi, vo +13 to +39 (leaving 8.4-8.7 u back, kmax 0.50) | 0 | 18 | 26 | 0 | 24.46 (56.92 bh) | 22.45 (55.82 vh) | 23.93 (56.02 wh) |
+
+Chosen: S. The census sees only the joins; A and F keep the letter's own point and the downward cubic under it (the hook
+Levi named), and H's corner turns into an S-wave into a and q. S is the only variant with no point and no new hook. Its
+rough FAILs are mild facet/wobble; its font distance is the largest, led by the joins into ascenders (reported, not chased).
+The longer exit stretch (Nl, the brief's port-level lever; `pwsh -NoProfile -File work29\dbg\variants_k1113.ps1 nl`) is not
+kept. On A's ends it is the smoothest variant and the closest to the font (its joins into ascenders stay inside their
+bound, bh at 42 u), but the solve cuts back to the bound, just under the point: every join leaves down the overstroke at -76
+to -84 deg and dips 15-18 u under the top before going out (v6.8 23, v6.9 2), so the point stays and the join goes down
+before out. On S's ends it takes be, br, vi and vo from the rising side of the rounded top, upward bumps (spikes 4 -> 18).
+N's [0, 2] u stays; A-Nl is the measured fallback if Levi wants the font's shape back.
+
+### Per letter (v6.8 -> v6.9)
+
+| letter | exit, deg: font / v6.8 / v6.9 (mean [min, max]) | join's drop below the top, u | joins out of it in every word: hooks, spikes, rough, seams | font distance, dmax mean (max), u |
+|---|---|---|---|---|
+| b | -15.6 / -21.1 / -7.9 [-9.7, -6.5] | 22.7 -> 2.0 (max 6.8, br) | 13, 15, 14, 0 -> 0, 2, 11, 0 (33 pieces) | 3.03 (9.96 bq) -> 24.10 (56.79 bh) |
+| v | -15.6 / -16.3 / -6.7 [-8.3, -6.3] | 23.0 -> 1.8 (max 7.1, vr) | 17, 19, 19, 0 -> 0, 0, 9, 0 (33) | 3.16 (10.15 vq) -> 22.84 (55.51 vh) |
+| w | -12.0 / -19.6 / -8.0 [-8.7, -7.4] | 22.7 -> 1.9 (max 6.9, wr) | 13, 15, 14, 0 -> 0, 1, 7, 0 (32) | 3.09 (10.15 wq) -> 23.68 (56.17 wh) |
+
+Whole census (524 pieces): hooks 74 -> 31, spikes 97 -> 51, rough 125 -> 105, undesigned seams 11 -> 11; every count off
+the joins out of b, v and w is unchanged. Seven rows newly fail rough, all mild (facet 0.0054-0.0114 against 0.0053, wobble
+to 0.0216 against 0.016): bt, vt, wt, ba, bad's ba, wa, wave's wa. All 78 solves converge; 41 sit on a stretch bound (the
+joins into b, f, h, k and l merge at 100 u, the top of the ascender's stretch, so they climb straight into the stem partway
+up; be, ve and we at e's 60 u; m, n, v, x and z on their merge's 1.6-3.5 u).
+
+### The six a/q joins against v6.6's (`work29/aqcmp_k1113.txt`)
+
+| pair | v6.6 (= v6.8): exit, drop, lowest, meet turn | v6.9 | end vs v6.6 | last half vs v6.6 |
+|---|---|---|---|---|
+| ba | -21.4, 20.1, 99.0, 1.2 | -9.6, 3.2, 103.8, 5.5 | 0.00 | 11.94 |
+| va | -16.3, 19.7, 99.3, 1.2 | -7.7, 3.0, 103.2, 3.8 | 0.00 | 10.40 |
+| wa | -19.6, 19.6, 99.2, 1.2 | -8.7, 2.9, 103.5, 4.5 | 0.00 | 11.20 |
+| bq | -22.0, 25.1, 92.6, 1.3 | -9.6, 3.3, 102.1, 6.0 | 0.00 | 17.90 |
+| vq | -17.1, 25.9, 92.2, 1.3 | -7.2, 2.8, 101.4, 4.1 | 0.00 | 17.21 |
+| wq | -20.5, 25.3, 92.3, 1.3 | -8.7, 3.0, 101.7, 4.9 | 0.00 | 17.89 |
+
+(deg, u, u, deg; u, u.) Each ends exactly on v6.6's point (a's after_high record, fused at s 72.38 u on a and 74.03 u on q,
+after b, v and w only; oa and oq unchanged), but arrives from above: no dip under a's top (lowest 101-104 u against 92-99),
+a 3.8-6.0 deg meet against 1.2-1.3, the last half 10-18 u off v6.6's. Free, they fused at s 34.33 u; earlier points (6 and
+12 u) lift them further. This keeps v6.6's attach, not its whole curve. Inferred, not tested: the dip came from the dropping
+exit K1113 removes, so the next lever is a's and q's arrival tangent (their entry), not a preset (Next 1).
+
+### e after b, v and w: a decision for Levi
+
+From a flat exit, e's after_high record (merge within [0, 90] u, written for o) closes e's eye under the x-height. v6.9 adds
+a record for e after b, v and w within [0, 60] u (30 and 45 make a V at the eye's foot, 75 still flattens it;
+`work29/sheets/try_e.svg`, `try_e2.svg`). It overlaps K948 (the e after o): folding both into one e rule would move oe. be,
+ve and we still fail rough (no hooks; be and we keep comb spikes). Keep the separate record, or one e rule?
+
+### The pins: all six stay (`work29/pins_k1113.txt`)
+
+Unpinned, og, oe, fo, fr and fs are byte-identical in v6.8 and v6.9 (fv differs by 0.0004 u, float-level), and each pin
+still moves its join (pinned against unpinned): og 6.98 u (needs o's cusp exit), oe 7.83 (xl_skip 45), fo 7.42 (exit
+[0, 12]), fv 5.50 (exit [0, 6]), fr 3.22 and fs 2.39 (entry [2, 20]: free, they meet the stroke start reversed, an
+undesigned 180 deg seam).
+
+### The checks (from the trace folder; `K926_FINAL_E=shear`, `K1009_PINS` cleared by the scripts)
+
+- Everything: `pwsh -NoProfile -File work29\dbg\checks_k1113.ps1 [step ...]` (template, build, ctx, census_v68,
+  census_v69, cmp, locality, solves, guard, sheet_aq, sheet_b, sheet_v, sheet_w, sheet_words, det; logs in
+  `work29\checks_logs`). The variants: `pwsh -NoProfile -File work29\dbg\variants_k1113.ps1`; the stretch trial:
+  `pwsh -NoProfile -File work29\dbg\variants_k1113.ps1 nl`. The tables:
+  `venv\Scripts\python.exe -I work29\dbg\aqcmp_k1113.py work29\aqcmp_k1113.txt` and `... pins_k1113.py work29\pins_k1113.txt`.
+- Census: the counts above; nothing rose. Font distance rose (reported).
+- Locality: bodies.json differs on b, v and w only; join_params.json identical. Strict FAIL: 157 of 1448 untouched
+  pieces moved (80 joins into b, v or w up to 0.33 u, 18 strokes cut by them up to 0.33 u, 59 lead-ins of b and v up to
+  4e-07 u); the other 1291 are byte-identical. Observed: the build re-fits b's, v's and w's whole strokes, moving their
+  entry points by up to 1.7e-05 fu; inferred: the joins' solves amplify it.
+- Solves: 78 of 78 converge (`work29/solves_v69.txt`).
+- Determinism: a second build matches in 24 of 33 files, bodies.json and join_params.json included (the 9 others are logs,
+  report paths and the reference-layer list of a build without ctx); the redrawn aq sheet is byte-identical.
+- Guard (`work20\dbg\check_out_k990.py`): ALL CLEAN on out29 and on the five upload copies, 22:31.
+
+### Drive (K863/, uploaded 22:32, verified by size and `rclone check`)
+
+- `b_v69.svg` (font | v6.8 | v6.9, b alone and every pair out of it): do b's joins now leave less down and more out the way
+  you wanted, including the straight climbs into b, f, h, k and l?
+- `v_v69.svg`: the same for v; is the V where vr meets r's top acceptable?
+- `w_v69.svg`: the same for w: do its joins leave less down and more out the way you wanted?
+- `aq_joins_v69.svg` (font | v6.6 | v6.8 | v6.9: the six, oa, oq, bad, wave): is "the right end point, no dip" close enough to
+  v6.6's six, or should the joins dip into a and q as v6.6's do?
+- `cursive_v69_words.svg` (v6.8 | v6.9): do the words with b, v or w read better with the flatter exits?
+
+### Next
+
+1. Levi's answers on the five sheets, then a's and q's arrival (their entry tangent) if the six should dip like v6.6's. If he
+   prefers the font's shape to the flat exits, A-Nl is the fallback (v6.8's ends, exit stretch [0, 20] u; no sheet yet).
+2. K1112's next exits, in order c, g, j, k, l, m, p, q, r, s, t, u, x, y, z, one stage each, from the same exit-port rule
+   (`mk_ports_k1113.py`'s N is the pattern).
+3. The entries after high exits: the ascenders (b, f, h, k, l on their 100 u bound) and r's cusp (br, vr, wr's V), as entry
+   records, not presets.
