@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1107.
+Next free ID: K1110.
 
 ## Waiting on Levi
 
@@ -486,6 +486,22 @@ Next free ID: K1107.
   - next: S3b: the class-B rule decided (a) (coordinator, 2026-11-02, by the checks): form B names a surface by its covering pieces only, a Definition change with its own Finding in form_b.ts after S1g merges; then the census (expect the 137 class-B DEFECTs gone, closing K1033), the scan's cost (clip each capsule to its segment's slab, tighten the windows) and the Pixel timing (K923's harness, both locks); then step 5 (the pops over the four recordings, the point-table upload) and S5's nbWindows prep (`docs/design/K1040_s3_label.md` ## Handoff)
   - brief: `docs/design/K1040_s3_label.md` ## Handoff; the class-B decision in K1040's F7 S3 entry (`docs/design/K1040_junction_field.md`)
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`
+- **K1107** · Muse batch 6 (`docs/design/K1107_muse_batch6.md`): A K343, B K130 + K495, C K128 + K212 + K490,
+  D K787 + K584, E K112, F K403 + K263 + K600 + K609 + K462; no junction or cursive work. Runs 6A-6F chained
+  from 2026-11-02.
+  - owner: muse runs 6A-6F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 20:20
+  - branch: mainline; last commit: `0135271a`
+  - evidence: `.claude/probes/K1053/` (queue.txt lines 6A-6F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
+  - next: the chain runs 6A-6F; Claude reviews each run on master as it lands; the chain pauses (pending lines commented out) for the K1040 S1g and K863 J3e merges
+  - brief: `docs/design/K1107_muse_batch6.md`
+  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
+- **K1108** · Muse batch 7 (`docs/design/K1108_muse_batch7.md`): A K368, B K1100, C K748, D K1109 + K1099,
+  E K1101, F K426 + K437; no junction or cursive work. Runs 7A-7F chained after batch 6.
+  - owner: nobody since 2026-11-02 20:20 (queued behind K1107; no run started)
+  - branch: mainline; last commit: `0135271a`
+  - evidence: `.claude/probes/K1053/` once lines 7A-7F are queued
+  - next: once batch 6 is reviewed, append 7A-7F to `.claude/probes/K1053/queue.txt` in batch 5's line form and restart the chain if it stopped
+  - brief: `docs/design/K1108_muse_batch7.md`
 
 ## Next, in order
 
@@ -1717,6 +1733,8 @@ Every other item below waits on the trigger it names.
   (`K1027_cursive_j3d.md` ## Handoff).
 - **K1105** · Junction S3: form B merges a piece only into kept candidates, while the label scan drops a
   fragment against any nearer candidate; the two could disagree, not seen in the census (`K1040_s3_label.md`).
+- **K1109** · The camera's reduced-motion jump on an edge-indicator tap was code-reviewed, not probed
+  (`src/app/camera.ts`; split from K112 2026-11-02; Muse batch 7 Run D, `docs/design/K1108_muse_batch7.md`)
 
 ## Approved, to schedule (2026-10-11)
 
