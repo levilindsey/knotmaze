@@ -1258,3 +1258,42 @@ before P4 unless the user asks):
   controls by `1 - settle`), so early frames render angular 45° zigzags that
   visibly soften. Touch points: `RibbonRenderer.update()` +
   `ParticleSystem` (expose settle progress).
+
+## Coordinator queue, 2026-10-15 to 2026-10-19
+
+Moved verbatim from LEDGER.md's Next section by K1094 (2026-11-02).
+
+The queue (coordinator, overnight 2026-10-15/16):
+1. Overnight run 2 done (2026-10-16): K507 (7c5daa9), K502+K505 (66fe538), K499 gamepad (9a6f63d, close dde7b83), K510/M6 (c268a9b, close 8808a15), K6-2 with K509 measured 0 px (926fdfe); phone pass: K500 targetAt measured (no budget problem), K156 frames blocked as K513 (fixed 2026-10-16, see Done). Waiting-on-Levi untouched.
+2. K480 stage 2 done (2026-10-16, the light: pulses + hover branching to the reach, shader + CPU mirror; `docs/design/K480.md` Stage 2 handoff; look call K515). Next: K481 stage 2 (param/row, animation, telegraph) plus the K501 difficulty call for Levi.
+
+3. K6-3 (= K24) done in 1654ef0 (2026-10-16; phone check K516); G3-1 waits on K399. Overnight residuals wait in their sections; K513 fixed the gate; the K156 frames spot check ran 2026-10-16 (A/A 65a7787, all within noise).
+
+4. Overnight run 3 done (2026-10-16): K513 (6eb0a84), K480 stage 2 (6aaed30), K6-3 (1654ef0, close 7c952cd) all on master; K307 stage 3 probes point Levi at branch (b) late enable (K517); K397's census runs but its dots-cut PROOF stays vacuous and its probe needs a frame-flag port (K518). K481 stage 2 still waits on Levi's K501 difficulty call; G3-1 on K399; K74 stage 3 (K402) and the thread-reveal chain (K76 2c, K268 stage 2, K290, K76 2d) remain queued. Waiting-on-Levi untouched.
+5. Overnight run 4 done (2026-10-16): K518 (8215349; residuals K519), K514+K516 (11309be; residual K520), K76 criterion 2 (5da3f5c), K74 stage 3 (9ccf360; residual K521, K284/K402/K278(a) closed). What remains needs Levi first: K501 (K481 stage 2 after it), K517, K515, K399 (G3-1 after it) and the other Waiting calls; then K521's measurement or K74 stage 4, and K397's phone pass + Levi's link (K519).
+6. Overnight run 5 done (2026-10-16): K519 (9926525; residuals K522, K523), K521 (4098946; the greedy bar fails on dailies 1-240, owned by K527), K80 turns 3b (dcdfaf4; K270 done, residuals K524-K526), the K397 phone pass (no commit; K397 advanced, K477 narrowed) and K74 stage 4's sim-first half (49efe76; build half K527). Next queue: Levi first - K515 (K480's look), K525 (K80 3b's look), K399 (G3-1 after it) and the rest of Waiting on Levi; then ungated, in order: K527 once its brief's six calls land, K524 in the next phone window (K522/K523 done, Stage 6 handoff in `docs/design/K397.md`).
+
+7. Overnight run 6 done (2026-10-16, final run): K522+K523 (5558669; census2d flicker floor + attributedUW/lifted-exit port, m10 30/30) and K524 (real-Pixel sheet, no commit). Residual K528 (census2d first-frame drift, localize only if it grows). Next queue: Levi first - K515 (K480's look), K525 (K80 3b's look, real sheet now in), K399 (G3-1 after it), K527's six calls, and the rest of Waiting on Levi; then ungated work in their sections.
+8. Batch close (2026-10-16): fixes ea2e468 (K398/K346/K436/K454/K469/K314/K373/K526/K461/K500; residual K529), K481 stage 2 a69b5cb (stage 3 = K530), K307 stage 3 e83f203 (K366 measured/attributed, fix = K535; K386 narrowed), G3-1 3465090 (browser verification = K536), K430 ramp 377bc41 (K268 stays In progress; residuals K537, K538; K431 narrowed). Levi answered K210 (-> K531, folds K82), K527 in full (-> K532) and K339/K323 (-> K534, Stage A unlocked); backend dailies filed as K533. Refreshed queue by value - Levi gates first: K515 (K480's look), K525 (K80 3b's look, real sheet in), then the rest of Waiting on Levi; then ungated, in order: K530 (K481 stage 3), K534 (panel Stage A), K527's build half (after the render lane), K536 (G3-1 browser verification), K268's remaining item-2 parts, then work in their sections.
+9. Batch 2 close (2026-10-16): K481 stage 3 31b2238 (K530/K481 done; look call K545), panel Stage A1 35f3ec2 (K534 done; A2 = K541), K74 stage 4 build 7d794b5 (K527/K532 done; sheet K543, phone timing K544), G3-1 verified (K536 done in c946ae2; residuals K539, K540), K268 PROTECT 1fc9458 (far-branch smooth-min remains). Queue by value - Levi gates first: K515 (K480's look), K525 (K80 3b's look, real sheet in), K545 (K481 stage 3's look), then the rest of Waiting on Levi; K531 (daily determinism) lands at launch prep and K533 (backend dailies) with the backend/accounts work; then ungated: K268's far-branch smooth-min, K543/K544 when wanted / in K156's next phone window, then work in their sections.
+10. New week (2026-10-19): Levi's calls - final ς gets its own glyph; dailies draw no title thread unless a flag asks (K552, maze topology the same either way); the cursive is redesigned before any mass generation (K115: crossings only, later-over-earlier in pen order with a reverse checkbox, smooth paths). K551 done (f18dd07, gaps back live). Next: K552 and K115's redesign stage 1 (agents), claude-config's dedupe fix (CC81); K161 done. Later: K553, then K550.
+
+Levi's order of 2026-10-14 23:00-23:55, kept as history (most of it has
+merged):
+1. K7 stages 3-5, the physics worker.
+2. The thread-reveal chain, one at a time: K76 2c, K268 stage 2, K290,
+   K76 2d.
+3. K8 (G3): stage 1 re-bases its design doc (docs only), then G3-0 at
+   the next free code slot.
+4. K5 and K6, as soon as K7 stage 5 merges.
+5. K9 (G4) after G3-0; K345 and probably K328 fold into its G4-1.
+6. K279 stage 2 (K288's picks), checked against K344's fix.
+7. K321.
+8. K307's warm-up, then K313.
+9. K331 with K330.
+10. K111 stage 5 with K265.
+11. K332.
+12. K323's Stage A (with K339's rebuild; codec 7), then K324 stage 1.
+13. K326 A.
+14. K318, K336, K337.
+
