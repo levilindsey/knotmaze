@@ -373,12 +373,12 @@ Next free ID: K1118.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c
   merged e6c6034..aa3cdd1).
-  - owner: nobody since 2026-11-02 16:52 (round 2026-10-30 ended: the watchdog tripped on a physical touch at 16:45)
+  - owner: muse run 6P, chained by `.claude/probes/K1053/chain.ps1` (queue tag 6P, after 6E), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, queued 2026-11-02 22:55
   - branch: mainline; last commit: `9f5b77f1`
-  - evidence: .claude/probes/rounds/2026-10-30/ (untracked)
-  - next: K895 (median, portrait A/A floor at -Moves 0,7,11,13, WMI detached start) and round step 6 (K309 pre-fix control p3, k539_g31/pixdiff_g31 trial) in a fresh phone window
-  - brief: docs/design/K156.md, "Round 2026-10-30"
-  - env: the phone on the desktop's USB (2026-11-02; 5555 over Tailscale re-armed 16:21 as a fallback); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
+  - evidence: .claude/probes/rounds/2026-11-02/ (untracked; round 2026-10-30's in .claude/probes/rounds/2026-10-30/)
+  - next: round 2026-11-02: K895 (a) median, (b) the portrait A/A floor, (c) the WMI detached start, (d) phases refuse after a watchdog trip; then step 6 (K309's pre-fix control p3, k539_g31/pixdiff_g31)
+  - brief: docs/design/K156.md, "Round 2026-11-02" (steps from "Round 2026-10-30")
+  - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
   dead ends. Stages 1-2 merged (stage 2: 189b024..f799991; MAX fixed, joints fade).
