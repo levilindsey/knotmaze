@@ -216,9 +216,13 @@ export function rafWindow(page, ms = 4000) {
   }, ms);
 }
 
+// The median: at even n the mean of the two middle values (a two-rep
+// summary averages its reps; it does not take the lower one).
 export const median = (a) => {
   const s = a.filter((v) => typeof v === "number").sort((x, y) => x - y);
-  return s.length ? s[Math.floor((s.length - 1) / 2)] : null;
+  if (!s.length) return null;
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 };
 
 // The phone's thermal state (adb; null on a dry run): status + skin temps.

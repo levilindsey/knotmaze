@@ -109,7 +109,8 @@
 # perf lock: the phone's timings don't depend on the desktop's load.
 #
 # Exit code: 0 clean, 1 failed, 2 the watchdog tripped, 3 the phone was not
-# ready (asleep, locked, gone).
+# ready (asleep, locked, gone), 5 a phase refused because the pass had
+# already tripped (run -Phase cleanup, then a fresh -Phase start).
 param(
   [ValidateSet("all", "start", "frames", "looks", "cleanup", "summary", "check")][string]$Phase = "all",
   [string]$Base = "",
@@ -268,6 +269,10 @@ $logsDir = if ($Out) { Join-Path $Out "logs" } else { "" }
 function Load-Cfg { if ($Out -and (Test-Path $cfgFile)) { Get-Content $cfgFile -Raw | ConvertFrom-Json -AsHashtable } else { $null } }
 function Save-Cfg($c) { [IO.File]::WriteAllText($cfgFile, ($c | ConvertTo-Json -Depth 6), [Text.UTF8Encoding]::new($false)) }
 function Tripped { if (-not $stateDir) { return $null }; $f = Join-Path $stateDir "watchdog.trip"; if (Test-Path $f) { (Get-Content $f -Raw).Trim() } else { $null } }
+# K895 (d): once a pass has tripped, its measuring phases refuse (exit 5)
+# instead of running unseen after the trip; cleanup and summary close a
+# tripped pass and never refuse, and start begins a new pass.
+function Assert-NotTripped([string]$phaseName) { $t = Tripped; if ($t) { throw "WATCHDOG TRIPPED: phase '$phaseName' refuses to run; pass $Out tripped ($t); run -Phase cleanup, then a fresh -Phase start in a new -Out" } }
 function Apply-Params($c) {
   if ($bound.ContainsKey("Reps")) { $c.reps = $Reps }
   if ($bound.ContainsKey("Moves")) { $c.moves = @(Parse-Moves) }
@@ -481,7 +486,7 @@ function Do-Start {
 function Do-Frames {
   $c = Load-Cfg
   if (-not $c) { throw "no config.json in $Out; run -Phase start first" }
-  if (Tripped) { Say "frames: skipped, the watchdog tripped: $(Tripped)"; return }
+  Assert-NotTripped "frames"
   if (-not $c.dry) {
     $alive = $c.watchdogPid -and (Get-Process -Id $c.watchdogPid -ErrorAction SilentlyContinue)
     if (-not $alive) { throw "the watchdog is not running; refusing to measure on the phone without it" }
@@ -506,7 +511,7 @@ function Do-Frames {
 function Do-Looks {
   $c = Load-Cfg
   if (-not $c) { throw "no config.json in $Out; run -Phase start first" }
-  if (Tripped) { Say "looks: skipped, the watchdog tripped: $(Tripped)"; return }
+  Assert-NotTripped "looks"
   if (-not (Test-Path (Join-Path $passDir "looks.mjs"))) { Say "looks: scripts/phone_pass/looks.mjs does not exist yet; skipped"; return }
   Apply-Params $c
   Save-Cfg $c
@@ -600,7 +605,8 @@ try {
   Say "FAILED in $Phase : $($_.Exception.Message)"
 }
 $exitCode = 0
-if ($Out -and (Tripped)) { $exitCode = 2 }
+if ($problem -and $problem.Exception.Message -like "WATCHDOG TRIPPED:*" -and $Phase -ne "all") { $exitCode = 5 }
+elseif ($Out -and (Tripped)) { $exitCode = 2 }
 elseif ($problem) { $exitCode = if ($problem.Exception.Message -like "PHONE NOT READY*") { 3 } else { 1 } }
 Say "phone pass ($Phase) exit $exitCode$(if ($Out -and $Phase -in 'all', 'summary') { '; out ' + $Out })"
 exit $exitCode
