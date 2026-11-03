@@ -309,10 +309,10 @@ Next free ID: K1112.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
-  - owner: agent `a70bc9c2ddf155015` (J3e) of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 19:44
-  - branch: `worktree-agent-a70bc9c2ddf155015`, worktree `.claude/worktrees/agent-a70bc9c2ddf155015`; last commit: `c41f8b89`
+  - owner: nobody since 2026-11-02 21:23 (merged)
+  - branch: mainline; last commit: `d505cbbf`
   - evidence: `.claude/probes/K863/trace/` (`NOTES.md` has every version's files and rerun commands; J3e: `work28/`, `out28/`, `tools/*_k990e.*`, NOTES `## K990e`; J3d: `work27/`, `out27/`, NOTES `## K1027`); Drive `K863/` (v6.7 sheets `*_v67*.svg`); Levi's file to edit: `out25/cursive_template.svg`; the full file list as of v6.6: `docs/ledger_notes.md` `## K863`
-  - next: J3e (running since 2026-11-02 19:44): f's corner (variant C at ~64 u vs the built 44 u, by the checks), then f's exit port and the solved joins out of f (K991, K948); v6.8 in `.claude/probes/K863/trace/` work28/, out28/ (`docs/design/K990_cursive_j3e.md` on its branch; J3d's Handoff in `docs/design/K1027_cursive_j3d.md`)
+  - next: J3f: the join sweep's first stage (b, v and w exits less down and more out, then the remaining exits; no per-pair data), launching after this merge
   - brief: `docs/design/K990_cursive_j3e.md` on the agent's branch; J3d's Handoff in `docs/design/K1027_cursive_j3d.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
