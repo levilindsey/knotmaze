@@ -212,7 +212,11 @@ muse_hash at 0 DEFECT 19:18:48; the 12-scene census 19:18:55-19:20:40;
 resumed after a second compaction about 19:24; the verdict's tie
 margin, census again 19:28:10-19:29:31; desktop timing
 19:29:31-19:29:47, without the scan 19:31:33-19:31:49; suite green
-19:35; stopped about 19:45 with the gate not met (class B below).
+19:35; final commit 19:38 (304f6128), outputs copied back 19:39;
+stopped 19:40, 38 min before the cap, with the gate not met: the
+remaining DEFECTs wait on a label-rule decision (class B below), and a
+first phone run under both locks, or the pops harness, would not have
+finished in the time left.
 
 **The pass.** `label_b.ts` (tables, `labelAt`, the float64 mirror of
 the fragment rule), `label_b_glsl.ts` (capsule and fill shaders),
@@ -327,7 +331,7 @@ muse_hash). The gate's 2 ms is the Pixel's at its own viewport (about
 1.24 Mpx against these 4.46 Mpx), so these do not convert, but the
 scan's share is the first cost to cut.
 
-**Not run (the cap):** the Pixel's render-sync timing, the label's pops
+**Not run (time):** the Pixel's render-sync timing, the label's pops
 over the recordings, the point-table upload comparison (SAMP against
 the label tables).
 
