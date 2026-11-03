@@ -24,7 +24,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   badge, hamburger, banner, stats stamp; the open panel through
   `env.panel`, see PANEL SLIDE) and of the targets placed before it
   (layoutIndicators, pure and tested), the DOM and the per-frame update -
-  main.ts calls indicators.update(camDt) in fabricTick after the camera
+  src/app/frame_loop.ts calls indicators.update(camDt) in fabricTick after the camera
   step (the camera's dt, for the head's show delay), so in every ticker
   branch. THE FINISH is the
   first client (main.ts; the minotaur is the second, see REAL-TIME

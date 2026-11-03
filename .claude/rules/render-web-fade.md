@@ -35,7 +35,7 @@ only with the files it is about; `render.md` lists the area's other files.
   full on the FIRST declaration after a
   scene is built (a saved attempt restored on load) shows full without a
   fade. `FabricMazeRenderer.webFading` feeds the frame loop's PAINT poll
-  (`fabric.needsFrame()`, `render-loop.md`; main.ts's sceneAnimating()
+  (`fabric.needsFrame()`, `render-loop.md`; src/app/frame_loop.ts's sceneAnimating()
   before K6-1). REDUCED MOTION keeps the fade: it moves
   nothing, it is a 0.25 s crossfade of colors, and ui/motion.ts gates
   movement (the background's drift, the plucks, the camera ease), not fades

@@ -135,7 +135,11 @@ of those hooks, open its rules file:
   Ambient-only needs (FLOW, PAINT_AMBIENT, BACKGROUND) run the whole tick
   at 30 fps with the accumulated dt (the cadence replaces restFrame's
   flowParity: the flow pass runs on every cadence tick), and off-cadence
-  rAFs return without counting a frame. Two workless frames in a row (no
+  rAFs return without counting a frame. `flowParity`
+  (`src/app/frame_loop.ts`, in restFrame) is the half rate itself: it
+  flips each rest tick and the flow re-render runs only on the true
+  ticks (a forced, revealing or FX frame aside), so the sway is
+  re-solved every other frame. Two workless frames in a row (no
   VISUAL, no AUDIO - an audio-only frame must still tick the auto sound's
   wall clock) stop the ticker; the last change is drawn by then. Any
   `flags.push` restarts it (`LoopFlags.onPush`, installed by the loop:

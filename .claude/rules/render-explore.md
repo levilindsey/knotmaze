@@ -374,7 +374,7 @@ blend. Item 2 (ramp, PROTECT, far-branch) is complete with this.
 Brief and handoff: `docs/design/K76.md`, "Stage 2c". Params and codec:
 gameplay-links.md's EXPLORATION PARAMS.
 
-- PARAMS TO RENDERER: main.ts `syncExploration` runs every tick:
+- PARAMS TO RENDERER: `syncExploration` (main.ts) runs every tick from src/app/frame_loop.ts's fabricTick:
   `exploration` fog sets `fogOfWar`, threads sets `explore.on` (the two
   never coexist), `explore.fade` = min(revealFade, revealDistance).
 - THE MODEL IS FED BY MOVE EVENTS (fabric `exploreArrive`, stopMove),
@@ -403,7 +403,7 @@ gameplay-links.md's EXPLORATION PARAMS.
   K465's `revealFinish`). pickThread skips hidden
   samples, and fabric `shownAt` gates edgeAt and runDistance, so hover,
   the cursor, taps, presses and tugs all see empty space there: a drag
-  pans, a double-tap resets, and main.ts `grabAt` grabs through
+  pans, a double-tap resets, and src/app/input_pointer.ts `grabAt` grabs through
   pickThread (the particle at the rounded ctrl). `onThread` asks only
   pickThread under the reveal (ps.nearest knows nothing of visibility).
   A PLUCK clips its unit to the shown interval (`exploreShownSpan`,
@@ -460,7 +460,7 @@ gameplay-links.md's EXPLORATION PARAMS.
 - THE HALO BREATHES between 0.6 and 0.85 over 2.5 s (`styleHalos`, every
   frame from tickExplore); Reduced motion holds 0.8; High contrast draws
   it at 1 in pure white (`exploreStill`, `exploreContrast`, set by
-  main.ts each fabric tick).
+  src/app/frame_loop.ts each fabric tick).
 - HIGH CONTRAST DOTS (K76 stage 2d, 2026-10-15, 0ac54dc): under High
   contrast `setExplore` writes uKExplore.x = 2 instead of 1 (every other
   test of it reads > 0.5); the fabric's `exploreContrast` setter forwards
