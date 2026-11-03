@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1126.
+Next free ID: K1127.
 
 ## Waiting on Levi
 
@@ -296,6 +296,9 @@ Next free ID: K1126.
   the straight climbs into b, f, h, k and l (Drive K863/ `b_v69.svg`, `v_v69.svg`, `w_v69.svg`)? And the six
   a/q joins, now straight without v6.6's dip: fine, or keep v6.6's (`aq_joins_v69.svg`; if v6.6's, J3f's next
   is a's and q's entry angle)? Sent as pictures 2026-11-02 (`K1113_cursive_j3f.md` ## Handoff).
+- **K1126** · With High contrast on, a plucked thread now shows the ring ripple whatever ripple you picked
+  (unless it is off). Does it read well on the light threads over black? Pictures: .claude/probes/K368/shots/
+  (K368, 71250dca)
 
 ## In progress
 
@@ -497,9 +500,9 @@ Next free ID: K1126.
 - **K1108** · Muse batch 7 (`docs/design/K1108_muse_batch7.md`): A K368, B K1100, C K748, D K1109 + K1099,
   E K1101, F K426 + K437; no junction or cursive work. Runs 7A-7F chained after batch 6.
   - owner: muse runs 7A-7F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 00:28
-  - branch: mainline; last commit: `714e3f28`
+  - branch: mainline; last commit: `71250dca`
   - evidence: `.claude/probes/K1053/` (queue.txt lines 7A-7F, chain.log, chain.out.txt, done.txt; each run's report: `paseo logs <agentId> --filter text --tail 2`)
-  - next: Run A (K368)
+  - next: Run B (K1100)
   - brief: `docs/design/K1108_muse_batch7.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` restarts the chain; it resumes at the first queue tag not in done.txt
 
@@ -621,8 +624,6 @@ Every other item below waits on the trigger it names.
 - **K376** · Look at the reveal's intro close-in, joints now fading with their
   arms (K268 s2, desktop only so far), on the desktop and the phone; fix any of
   the stage's four small residuals that show (`docs/design/K268.md`, "Stage 2 handoff").
-- **K368** · A ring for the ripple under High contrast (K289 e; Levi, 2026-10-15: yes):
-  `HIGH_CONTRAST_OVERRIDES` (`src/ui/accessibility.ts`); the glint has little room on light threads over black (inferred, not shot; fallback a stronger glint). Small: a unit test and a screenshot.
 - **K543** · K74 stage 4's before/after sheet of three finishes (searched vs shipped, dailies 1-3) was not made in the build stage; make it from `.claude/probes/K74/stage4/build_measure.ts` output or a diag_screenshot pair when Levi wants the look check. Sheet: `.claude/probes/K74/stage4/sheet/contact_sheet.png` (`notes.md` beside it).
 
 - **K548** · Overnight runner has no usage gate: the 92% weekly pause (Next binding rule) is checked by hand only; 2026-10-15/16 runs 1-6 launched at 88% (under the line, audit 2026-10-18) but nothing stops a launch over it. Add a /usage check to the runner before each batch, or a ledger-stamped usage line per run close.
@@ -2017,6 +2018,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K368** · High contrast wears the ring. Done in 71250dca (2026-11-03).
 - **K1107** · Muse batch 6: runs A-F passed their gates (2026-11-02 20:20 to 2026-11-03 00:28) and closed all 14 items (K343, K130, K495, K128, K212, K490, K787, K584, K112, K403, K263, K600, K609, K462); Levi checks K1110, K1111 and K1118. Done in c647e223 (2026-11-03).
 - **K895** · phone_pass kit (K156 round 2026-11-02): (a) the median averages at even n and (d) a phase refuses once its pass has `state/watchdog.trip` (8d4d0617, test `test/phone_pass/k895.test.ts`); (c) servers and watchdog start detached through WMI (33fa558b). (b), the A/A floor, continues as K1124. Done in 33fa558b (2026-11-03).
 - **K462** · K323 table and undo list updated to shipped burn rows (2026-11). Done in a0bafbb7 (2026-11-03).
