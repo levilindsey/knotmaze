@@ -20,15 +20,12 @@
 # Run `all` in the background (about 10-15 min with the default 3 reps); it
 # logs to <Out>\logs\run.log and ends with the exit code below.
 #
-# A piped or captured `-Phase start` caller HANGS: the vite preview servers and
-# the watchdog that `start` leaves running inherit the pipe's write end, so
-# the caller never sees the output end. Never run `start` alone through a
-# pipe, `Tee-Object`, `$x = & ...` or a tool call that captures output. Start it
-# with Start-Process (or spawnSync) with stdout and stderr redirected to files,
-# without waiting for it, and poll <Out>\logs\run.log for "phone pass (start)
-# exit 0" (scripts/phone_pass/run_pass.ps1 and bisect2.mjs do). The other
-# phases, `check` and `cleanup` included, leave no child behind and may be
-# captured.
+# The vite preview servers and the watchdog that `start` leaves running are
+# started detached through WMI (Win32_Process.Create, K895 (c)), so they
+# inherit nothing from the caller: a piped or captured `-Phase start`
+# returns by itself. Still run `all` in the background (it takes minutes)
+# and poll <Out>\logs\run.log; the other phases leave no child behind and
+# may be captured.
 #
 # Phases (-Phase, default all):
 #   all      start, frames, looks, then cleanup and summary EVEN AFTER a trip or
@@ -95,7 +92,7 @@
 #
 # Files in <Out>: config.json (every node script takes it as argv[2]; the
 # watchdog kills only node processes carrying that path), builds\, logs\
-# (run.log, bench.out.txt, server_<port>.log ...), state\ (watchdog.trip exists
+# (run.log, bench.out.txt ...), state\ (watchdog.trip exists
 # only after a trip and holds the verdict; watchdog.log, getevent.out,
 # expect.txt), bench.jsonl, looks_report.json, summary.md.
 #
@@ -305,6 +302,16 @@ function Stop-Mine([int]$procId, [string]$what) {
   Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
   Say "${what} pid ${procId}: stopped"
 }
+# K895 (c): starts a long-lived child (a preview server, the watchdog) so it
+# inherits NOTHING from the caller (WMI Win32_Process.Create, K1053's
+# pattern): a captured -Phase start then returns instead of hanging on a
+# pipe the child holds open. Returns the new process id.
+function Start-Detached([string]$commandLine) {
+  $si = New-CimInstance -ClassName Win32_ProcessStartup -ClientOnly -Property @{ ShowWindow = [uint16]0 }
+  $r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = $commandLine; CurrentDirectory = $repo; ProcessStartupInformation = $si }
+  if ($r.ReturnValue) { throw "Win32_Process.Create returned $($r.ReturnValue) for: $commandLine" }
+  return [int]$r.ProcessId
+}
 # Runs scripts/phone_pass/<script> <config.json> with a timeout; stderr is
 # appended to the log. Returns the exit code (124 = timed out and killed).
 function Run-Node([string]$script, [string]$logName, [int]$timeoutS) {
@@ -401,20 +408,21 @@ function Do-Start {
   $vite = Join-Path $repo "node_modules\vite\bin\vite.js"
   foreach ($pair in @(@($portA, $cfg.buildA), @($portB, $cfg.buildB))) {
     $port = $pair[0]; $dir = $pair[1]
-    $p = Start-Process $node -ArgumentList @((Q $vite), "preview", "--outDir", (Q $dir), "--port", "$port", "--strictPort", "--host", "127.0.0.1") `
-      -WorkingDirectory $repo -WindowStyle Hidden -PassThru `
-      -RedirectStandardOutput (Join-Path $logsDir "server_$port.log") -RedirectStandardError (Join-Path $logsDir "server_$port.err")
-    $null = $p.Handle
-    $cfg.serverPids = @($cfg.serverPids) + $p.Id
+    # WMI-detached (K895 (c)): no shell, so no server log file; readiness is the HTTP probe below.
+    $srvPid = Start-Detached ('"' + $node + '" "' + $vite + '" preview --outDir "' + $dir + '" --port ' + $port + ' --strictPort --host 127.0.0.1')
+    Start-Sleep -Milliseconds 200
+    if (-not (Get-Process -Id $srvPid -ErrorAction SilentlyContinue)) { throw "preview server on $port exited at once" }
+    # (the launch above already threw if the server died at once)
+    $cfg.serverPids = @($cfg.serverPids) + $srvPid
     Save-Cfg $cfg
     $up = $false
     for ($i = 0; $i -lt 60 -and -not $up; $i++) {
       Start-Sleep -Milliseconds 500
-      if ($p.HasExited) { throw "preview server on $port exited ($($p.ExitCode)); see logs\server_$port.err" }
+      if (-not (Get-Process -Id $srvPid -ErrorAction SilentlyContinue)) { throw "preview server on $port exited" }
       try { $up = ((Invoke-WebRequest "http://127.0.0.1:$port/" -UseBasicParsing -TimeoutSec 3).StatusCode -eq 200) } catch { }
     }
     if (-not $up) { throw "preview server on $port did not answer" }
-    Say "server $port -> pid $($p.Id) ($dir)"
+    Say "server $port -> pid $srvPid ($dir)"
   }
 
   if ($Dry) {
@@ -474,13 +482,14 @@ function Do-Start {
   Say "pass tab $($tab.id) $($tab.url)"
 
   # 6. the watchdog
-  $wd = Start-Process pwsh -ArgumentList @("-NoProfile", "-File", (Q (Join-Path $passDir "watchdog.ps1")), "-Out", (Q $Out)) -WindowStyle Hidden -PassThru
-  $cfg.watchdogPid = $wd.Id
+  $pwshExe = Join-Path $PSHOME "pwsh.exe"
+  $wdPid = Start-Detached ('"' + $pwshExe + '" -NoProfile -File "' + (Join-Path $passDir "watchdog.ps1") + '" -Out "' + $Out + '"')
+  $cfg.watchdogPid = $wdPid
   Save-Cfg $cfg
   Start-Sleep -Seconds 6
-  if ($wd.HasExited) { throw "the watchdog exited at start (see state\watchdog.log); no safety, so the pass stops" }
+  if (-not (Get-Process -Id $wdPid -ErrorAction SilentlyContinue)) { throw "the watchdog exited at start (see state\watchdog.log); no safety, so the pass stops" }
   if (Tripped) { throw "watchdog tripped at start: $(Tripped)" }
-  Say "watchdog armed (pid $($wd.Id))"
+  Say "watchdog armed (pid $wdPid)"
 }
 
 function Do-Frames {
