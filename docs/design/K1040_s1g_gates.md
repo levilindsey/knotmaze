@@ -268,7 +268,7 @@ breaches (4 sites' maxima moved by at most 0.08/px); the pins pass.
 Reproduce: `$env:PARAMS='{"dEdge":"near"}'; $env:TAG='near'; npx vite-node
 .claude/probes/K1040/s1/dedge_s1g.ts` (→ `out/s1g/dedge_near.txt`).
 
-### F2. Definition change: the root gate, r goes to 0 as a foot reaches its root (`rootBand: 0.5`, 20:08)
+### F2. Definition change: the root gate, r goes to 0 as a foot reaches its root (`rootBand: 0.5`, 20:04)
 
 699's low side: V is solved in the window [0, L], so a foot behind its
 root clamps to the root (dV = 0) and the window test nulls the corner with
@@ -313,3 +313,125 @@ every shared check unchanged), b_rate identical to F1's at all 161 sites
 `$env:PARAMS='{"rootBand":0.5}'; $env:TAG='rb05'; npx vite-node
 .claude/probes/K1040/s1/gate699_s1g.ts` (→ `out/s1g/gate699_rb05.txt`;
 `rb005` for 0.05h).
+
+### F3. 694 (no V): a seed failure, reached with fill at 2 corners at rest; no definition change (20:12)
+
+694 nulls a corner when solveEq, seeded at the straight-arm V
+(c + bisector·h/sin(θ0/2)), does not converge. At g41_user_tw64 jj30
+(h 0.320, θ 0.984; arm 93 through, L 3.265h; arm 91 END, L 4.032h) the
+straight seed fails at rest, but a seed at half the distance from the
+roots' midpoint converges to a true V, (7.503, 3.122), dV 1.035h/1.056h:
+a corner of r 0.158h, ω 1, which the code draws as null
+(`gate694r_s1g.ts`, section R). So 694 there is not a gate in the
+geometry but the solve's basin, and the null is reached with fill. A
+probe-side retry (from the roots' midpoint + k·(seed − midpoint): k 0.5,
+then the seed rotated ±0.3) finds two such corners in the 12 scenes
+(R2), both with fill:
+
+| scene | junction, corner | θ | dV | r with the retry |
+|---|---|---|---|---|
+| g41_user_tw64 | j30, 93-91 | 0.984 | 1.035h | 0.158h |
+| muse_hash | j156, 475-473 | 0.950 | 1.160h | 0.123h |
+
+muse_hash j156 475-473 is one of F1's "lost fill" corners, so that loss is
+this seed failure, not the d-edge. No definition change, because a retry
+is itself a discrete choice. Along gate694's sweep (chain 30 moved t·h
+across the bisector, R1) the retry turns the null into fill (r up to
+0.558h) that then meets 704 at t 0.875 (F4). In the code as is, the fine
+sweep (F, t step 0.001h) switches at t −0.528 to a spurious V (dV 2.54h,
+r 0.0006h, no ink step) whose flickers keep r ≤ 0.0126h; one probe point,
+(7.35, 3.1), still steps 0.51 at t −0.474 and 0.26 at −0.469 (not
+attributed). The continuous form is a V solve that cannot pick a basin
+(the first equidistant point, by continuation from the roots) together
+with F4's wedge weight: Next 1. Reproduce: `npx vite-node
+.claude/probes/K1040/s1/gate694r_s1g.ts` (→ `out/s1g/gate694r.txt`);
+`gate694a_s1g.ts` (→ `gate694a.txt`) prints each exit per t, with the
+code's seed and with the retry.
+
+### F4. 704 (V outside the wedge): not reached on a bend, reached with fill only behind F3's retry; no change (20:22)
+
+The wedge test (crossA·sgn > 0 and crossB·sgn < 0, on each arm's 2h chord
+from c) fails only where the chord misrepresents the arm near V.
+`gate704_s1g.ts` bends arm 0 of a Y (h 1, three ENDs) away from arm 1 on
+a circular arc of curvature κ (0 to 1.5 in 0.005 steps) at θ 0.5, 0.7,
+1.0 and 1.4. Corner 0-1 is never null (no V failure, no window, no
+wedge): crossA·sgn ≥ 0.863 (θ 0.5, κ 0.15), −crossB·sgn = 1.000
+throughout. V moves toward c as the corner opens (θ 0.5: (3.92, 1.00) at
+κ 0, (1.62, −0.26) at κ 1.5) and r grows smoothly: θ 0.5 0.383h →
+1.674h; θ 0.7 0.548h → 2h; θ 1.0 0.820h → 2h by κ 0.9; θ 1.4 1.263h → 2h
+by κ 0.6. The one place 704 was reached is jj30 behind F3's retry: wedge N
+from t 0.875, after r 0.558h at t 0.85 (`gate694a.txt`). In the code as
+is, 694 nulls that corner first. So no change this stage: a continuous
+wedge weight belongs with the robust V solve (Next 1), the only thing
+that reaches a V where the wedge can fail.
+
+The sweep found a pop of a different corner, with fill and ω 1: corner
+2-0, the side that arm 0 bends INTO. Where arm 0's radius of curvature
+nears h + |V − its centre| (θ 0.7 at κ 0.88, a radius of 1.13h; θ 1.0 at
+κ 0.79-0.85; θ 1.4 at κ 0.755-0.78), corner 2-0's r jumps 0.05-0.2h per
+0.005 κ, and points on arm 0's inner edge by V step 1.0 (seven grid
+steps). The fine sweep at θ 0.7 (`gate704f_s1g.ts`, κ step 0.0005):
+
+| κ | r | V | dVb (V's foot on arm 0) | ink at (0.07, −1) |
+|---|---|---|---|---|
+| 0.8800 | 0.470h | (0.087, −1.033) | 0.755h | 1.000 |
+| 0.8815 | 0.606h | (0.087, −1.033) | 0.844h | 0.001 |
+| 0.8825 | 0.053h (room 8.53) | (0.086, −1.033) | 0.845h | 0.981 |
+| 0.8830 | 0.610h | (0.086, −1.033) | 0.845h | 0.000 |
+| 0.8950 → 0.9000 | 0.647h → 0.844h | (0.082, −1.035) → (0.080, −1.035) | 0.852h → 0.945h | 0.000 ((−0.26, −1): 0.985 → 0) |
+
+Observed: r and V's foot on arm 0 jump together while V stands still.
+Inferred, not tested: V sits 0.135h from the arc's centre of curvature,
+so its distance to arm 0 varies by only 0.035h along the arc (1.001h to
+1.036h) and its foot there is ill-conditioned, the same class as F5's
+foot switch (Next 2). Reproduce: `npx vite-node
+.claude/probes/K1040/s1/gate704_s1g.ts` (→ `out/s1g/gate704.txt`, STEP
+rows print every corner); `$env:TH='0.7'; npx vite-node
+.claude/probes/K1040/s1/gate704f_s1g.ts` (→ `gate704f_0.7.txt`; env K0,
+K1, N).
+
+### F5. ω's ±0.5h exclusion: never deciding, no change; a kink by the foot pops V's foot with fill (20:18)
+
+`gateomega_s1g.ts` slides a bump (a cos² of half-width 0.4h, height H)
+along arm 0 of the same Y, xk 0.2h → 4.2h in 0.02h steps, across corner
+0-1's foot and its ±0.5h window, at θ 2.0 and 1.2 and H 0.15, 0.3 and
+0.6h. It computes ω's overlap as the code does and the skipped
+candidates' largest R − d (ovEx, as S1f's gates.ts D). In all six slides
+ω = 1 at every step. The largest ovEx is 0.0255h (H 0.15h: θ 2.0 at xk
+1.32, θ 1.2 at 2.26), and 0.0000h at H 0.3 and 0.6h, against ω's band
+starting at 0.05h. So the exclusion never decides, here or at rest (S1f
+F6: no change over 1953 corners, the largest skipped 0.025h), and needs
+no change: the margin gate keeps the candidates in the window ≥ R − 0.05h
+at q by construction.
+
+The slides found a pop of their own, with fill and ω 1 (the largest |Δr|
+per 0.02h of bump travel):
+
+| θ | H | largest \|Δr\| | at xk |
+|---|---|---|---|
+| 2.0 | 0.15h | 1.93h | 1.24 |
+| 2.0 | 0.3h | 1.95h | 1.42 |
+| 2.0 | 0.6h | 1.62h | 1.62 |
+| 1.2 | 0.15h | 0.97h | 0.88 |
+| 1.2 | 0.3h | 0.99h | 0.70 |
+| 1.2 | 0.6h | 1.01h | 2.44 |
+
+`gateomegaf_s1g.ts` at 0.0005h steps: at θ 2.0, H 0.15h, xk 1.2360 →
+1.2365, r 2.0h → 0.0675h with V unmoved ((0.642, 1.001) → (0.642,
+1.000)) and its foot on arm 0 jumping from the bump's rising flank (dVa
+1.126h, foot x 1.300) to the flat before it (dVa 0.642h, foot x 0.685);
+room 7.60 → 8.86; the ink at (0.9, 1.15) steps 0.997. At θ 1.2, H 0.6h,
+xk 2.4300 → 2.4330: r 1.026h → 0.016h, dVa 2.636h → 1.462h, ink 0 → 1.0
+at (1.6, 1.9). At θ 2.0, H 0.3h: |Δr| 1.961h at xk 1.4110, ink 0.176.
+Observed: at the switch V is equidistant from two places on arm 0 (an
+event of the arm's medial axis) and V's nearest-point foot jumps between
+them. Inferred: the ball's tracked feet start at V's, so from the flat
+foot the ball meets the bump and the margin gate stops r at 0.02-0.07h,
+while from the flank foot it rides past to r0. Not one of this stage's
+gates; the continuous form blends the corner over V's candidate feet with
+weights continuous in the geometry (Next 2). Reproduce: `npx vite-node
+.claude/probes/K1040/s1/gateomega_s1g.ts` (→ `out/s1g/gateomega.txt`);
+`$env:TH='2'; $env:H='0.15'; $env:X0='1.2'; $env:X1='1.26'; npx
+vite-node .claude/probes/K1040/s1/gateomegaf_s1g.ts` (→
+`gateomegaf_2_0.15.txt`; the other two: TH 1.2, H 0.6, X 2.42-2.46 and
+TH 2, H 0.3, X 1.40-1.44).

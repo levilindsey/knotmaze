@@ -1,0 +1,20 @@
+t; then per seed (code | retry): V ok, V, dVa/h dVb/h (L/h), window, wedge, corner
+  t -1.000 L 3.27/3.36  code: FAIL (7.258, 3.061) dV 2.30/2.17 win y wedge y | retry: ok (7.914, 3.007) dV 0.00/0.76 win N wedge N  | code's corner null
+  t -0.750 L 3.27/3.43  code: FAIL (7.275, 3.139) dV 2.13/2.09 win y wedge y | retry: ok (7.991, 3.021) dV 0.00/0.67 win N wedge N  | code's corner null
+  t -0.600 L 3.27/3.55  code: FAIL (7.125, 3.134) dV 2.88/2.83 win y wedge y | retry: FAIL (7.125, 3.134) dV 2.88/2.83 win y wedge y  | code's corner null
+  t -0.528 L 3.27/3.61  code: ok (7.203, 3.137) dV 2.55/2.54 win y wedge y | retry: ok (7.203, 3.137) dV 2.55/2.54 win y wedge y  | code's corner r 0.0006h ω 1.000
+  t -0.500 L 3.27/3.63  code: ok (7.141, 3.115) dV 2.86/2.82 win y wedge y | retry: ok (7.141, 3.115) dV 2.86/2.82 win y wedge y  | code's corner r 0.0000h ω 1.000
+  t -0.474 L 3.27/3.65  code: ok (7.316, 3.153) dV 1.84/2.10 win y wedge y | retry: ok (7.316, 3.153) dV 1.84/2.10 win y wedge y  | code's corner r 0.0125h ω 1.000
+  t -0.450 L 3.27/3.67  code: ok (6.789, 3.049) dV 3.27/3.67 win N wedge y | retry: ok (6.789, 3.049) dV 3.27/3.67 win N wedge y  | code's corner null
+  t -0.400 L 3.27/3.71  code: ok (6.810, 3.042) dV 3.27/3.71 win N wedge y | retry: ok (6.810, 3.042) dV 3.27/3.71 win N wedge y  | code's corner null
+  t -0.300 L 3.27/3.79  code: ok (6.870, 3.032) dV 3.27/3.79 win N wedge y | retry: ok (6.870, 3.032) dV 3.27/3.79 win N wedge y  | code's corner null
+  t -0.250 L 3.27/3.83  code: FAIL (6.903, 3.027) dV 3.27/3.83 win N wedge y | retry: ok (7.442, 3.136) dV 1.26/1.58 win y wedge y  | code's corner null
+  t -0.100 L 3.27/3.95  code: FAIL (7.233, 3.027) dV 2.57/2.88 win y wedge y | retry: ok (7.483, 3.127) dV 1.10/1.16 win y wedge y  | code's corner null
+  t  0.000 L 3.27/4.03  code: FAIL (7.244, 2.978) dV 2.59/2.96 win y wedge y | retry: ok (7.503, 3.122) dV 1.04/1.06 win y wedge y  | code's corner null
+  t  0.250 L 3.27/4.22  code: FAIL (7.268, 2.870) dV 2.62/3.17 win y wedge y | retry: ok (7.548, 3.110) dV 0.86/0.97 win y wedge y  | code's corner null
+  t  0.500 L 3.27/4.40  code: FAIL (7.285, 2.793) dV 2.75/3.36 win y wedge y | retry: ok (7.595, 3.095) dV 0.69/1.11 win y wedge y  | code's corner null
+  t  0.750 L 3.27/4.58  code: FAIL (7.278, 2.809) dV 2.76/3.61 win y wedge y | retry: ok (7.652, 3.077) dV 0.46/1.13 win y wedge y  | code's corner null
+  t  0.850 L 3.27/4.65  code: FAIL (7.282, 2.787) dV 2.77/3.69 win y wedge y | retry: ok (7.675, 3.069) dV 0.39/1.11 win y wedge y  | code's corner null
+  t  0.875 L 3.27/4.66  code: FAIL (7.284, 2.782) dV 2.77/3.70 win y wedge y | retry: ok (7.680, 3.067) dV 0.37/1.11 win y wedge N  | code's corner null
+  t  0.900 L 3.27/4.68  code: FAIL (7.285, 2.776) dV 2.77/3.72 win y wedge y | retry: ok (7.686, 3.065) dV 0.33/1.11 win y wedge N  | code's corner null
+  t  1.000 L 3.27/4.75  code: FAIL (7.293, 2.743) dV 2.90/3.79 win y wedge y | retry: ok (7.710, 3.056) dV 0.25/1.10 win y wedge N  | code's corner null
