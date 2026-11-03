@@ -8,7 +8,12 @@ import {
   parseMotionPref,
   whenReduced,
 } from "../../src/ui/motion";
-import type { MotionQueryLike, MotionRootLike } from "../../src/ui/motion";
+import type {
+  MotionEventsLike,
+  MotionQueryLike,
+  MotionRootLike,
+  MotionStorageEvent,
+} from "../../src/ui/motion";
 import type { StorageLike } from "../../src/game/daily_store";
 
 // An in-memory Storage that can refuse reads and/or writes.
@@ -47,6 +52,20 @@ class FakeQuery implements MotionQueryLike {
   flip(matches: boolean): void {
     this.matches = matches;
     for (const fn of this.fns) fn({ matches });
+  }
+}
+
+// Another tab's storage writes, fired by hand (K112).
+class FakeEvents implements MotionEventsLike {
+  private fns: Array<(e: MotionStorageEvent) => void> = [];
+  addEventListener(
+    _type: "storage",
+    fn: (e: MotionStorageEvent) => void
+  ): void {
+    this.fns.push(fn);
+  }
+  fire(e: MotionStorageEvent): void {
+    for (const fn of this.fns) fn(e);
   }
 }
 
@@ -169,6 +188,86 @@ describe("MotionSetting", () => {
     };
     const m = new MotionSetting(null, q, null);
     expect(m.reduced).toBe(true);
+  });
+
+  // K112: cross-tab sync (the storage event another tab's write fires).
+  it("follows another tab's Motion choice, live", () => {
+    const ev = new FakeEvents();
+    const s = new FakeStorage();
+    const r = root();
+    const m = new MotionSetting(s, new FakeQuery(false), r, ev);
+    let calls = 0;
+    m.subscribe(() => calls++);
+    ev.fire({ key: MOTION_KEY, newValue: "reduced" });
+    expect(m.pref).toBe("reduced");
+    expect(m.reduced).toBe(true);
+    expect(r.dataset.motion).toBe("reduced");
+    expect(calls).toBe(1);
+    // The other tab already wrote it: following must not write again.
+    expect(s.map.has(MOTION_KEY)).toBe(false);
+    // The same value again: no second notice.
+    ev.fire({ key: MOTION_KEY, newValue: "reduced" });
+    expect(calls).toBe(1);
+    // A damaged value reads as follow system, like a stored one.
+    ev.fire({ key: MOTION_KEY, newValue: "garbage" });
+    expect(m.pref).toBe("system");
+    expect(m.reduced).toBe(false);
+    expect(r.dataset.motion).toBe("full");
+    expect(calls).toBe(2);
+  });
+
+  it("ignores storage events for other keys; a clear returns to system", () => {
+    const ev = new FakeEvents();
+    const r = root();
+    const m = new MotionSetting(new FakeStorage(), new FakeQuery(false), r, ev);
+    let calls = 0;
+    m.subscribe(() => calls++);
+    ev.fire({ key: MOTION_KEY, newValue: "reduced" });
+    expect(calls).toBe(1);
+    ev.fire({ key: "knotmaze.contrast", newValue: "full" });
+    ev.fire({ key: "knotmaze.panelOpen", newValue: "full" });
+    expect(m.pref).toBe("reduced");
+    expect(calls).toBe(1);
+    // The other tab cleared storage (key null): back to follow system.
+    ev.fire({ key: null, newValue: null });
+    expect(m.pref).toBe("system");
+    expect(m.reduced).toBe(false);
+    expect(r.dataset.motion).toBe("full");
+    expect(calls).toBe(2);
+  });
+
+  it("works with no events object at all", () => {
+    const m = new MotionSetting(new FakeStorage(), new FakeQuery(false), null, null);
+    expect(m.pref).toBe("system");
+    m.setPref("reduced");
+    expect(m.reduced).toBe(true);
+  });
+
+  it("survives an events object whose registration throws", () => {
+    const ev: MotionEventsLike = {
+      addEventListener: () => {
+        throw new Error("no");
+      },
+    };
+    const m = new MotionSetting(null, null, null, ev);
+    expect(m.pref).toBe("system");
+    m.setPref("reduced");
+    expect(m.reduced).toBe(true);
+  });
+
+  it("a listener that throws does not stop the others", () => {
+    const ev = new FakeEvents();
+    const m = new MotionSetting(new FakeStorage(), new FakeQuery(false), null, ev);
+    m.subscribe(() => {
+      throw new Error("boom");
+    });
+    let calls = 0;
+    m.subscribe(() => calls++);
+    m.setPref("reduced");
+    expect(calls).toBe(1);
+    ev.fire({ key: MOTION_KEY, newValue: "full" });
+    expect(m.pref).toBe("full");
+    expect(calls).toBe(2);
   });
 
   it("finds no media query outside a browser", () => {
