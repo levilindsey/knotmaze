@@ -1946,6 +1946,10 @@ async function main(): Promise<void> {
       closestCall: c.fire ? c.fireClosest : null,
       rating,
       collapse,
+      // K657: the snapped and par rows, as the HUD shows them.
+      snapped: ruleRows.snapped,
+      parLeft: ruleRows.parLeft,
+      parStrokes: ruleRows.parStrokes,
       cuts: c.cutOn ? c.cutCount : null, // K114
       hearts: heartsShown(), // K137 stage 3a
       walker: walkerScore, // K114 walker
@@ -2073,6 +2077,9 @@ async function main(): Promise<void> {
       restarts: s?.restarts ?? null,
       closestCall: s?.closestCall ?? null,
       hearts: s?.hearts ?? null,
+      snapped: s?.snapped ?? null,
+      parLeft: s?.parLeft ?? null,
+      parStrokes: s?.parStrokes ?? null,
       spoolUsed: s?.spoolUsed ?? null,
       hintsUsed: s?.hintsUsed ?? null,
       rules: s?.rules ?? null,
