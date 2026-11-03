@@ -538,7 +538,7 @@ Reproduce:
 
 ## Handoff
 
-Stopped at 20:51 (start 19:27:41, cap 21:27:41) with Order steps 1-5
+Stopped at 20:50 (start 19:27:41, cap 21:27:41) with Order steps 1-5
 done. Step 6 (S1f's Later work) was not started: a definition change
 there needs its own sweep, census and gate, and the gate alone took 20
 min. Levi has not looked at anything from this stage.
