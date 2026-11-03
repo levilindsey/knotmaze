@@ -148,7 +148,8 @@ describe("K1115: one general Reset fix in row/doReset", () => {
     expect(end).toBeGreaterThan(start);
     const rowSrc = PANEL.slice(start, end);
     expect(rowSrc).toContain("const reanchorStep");
-    expect(rowSrc).toContain("sc.origin = def");
+    expect(rowSrc).toContain("reanchorStepBinding(api, opts?.step, def)");
+    expect(PANEL).toContain("sc.origin = def");
     expect(rowSrc).toContain("reanchor: reanchorStep");
   });
 
