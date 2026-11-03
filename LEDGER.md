@@ -301,9 +301,6 @@ Next free ID: K1088.
   (docs/design/K1040_junction_field.md F7).
 - **K1080** · On the phone, zoom in and out and tap threads and junction choices: do the tap targets feel
   right? They now stay the same finger size at every zoom (K331, bc5f0043).
-- **K1087** · Off USB the kit reaches the phone only by adb on 5555 over Tailscale (`scripts/phone.ps1 -Wireless`), and
-  every phone reboot closes it (refused since 10-23 02:42). Levi's call: re-arm it over USB after a reboot (automatable
-  when Windows sees the Pixel), or pair Wireless debugging (its port changes; undiscoverable here). Blocks K156's round.
 
 ## In progress
 
@@ -387,12 +384,12 @@ Next free ID: K1088.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c
   merged e6c6034..aa3cdd1).
-  - owner: nobody since 2026-10-31 07:27 (round 2026-10-30 briefed, never launched: on 10-30's evening the phone was on a charger off the desktop's USB, and 5555 over Tailscale has been closed since the 10-23 reboot, K1087; the phone is away most of 10-31)
+  - owner: muse via paseo, run 'knotmaze K156 round 2026-10-30' (id: paseo ls), launched 2026-11-02 16:27 by claude 7301c55b
   - branch: mainline; last commit: `2de5b991`
   - evidence: .claude/probes/rounds/2026-10-30/ (main checkout, untracked); the kit is scripts/phone_pass/
-  - next: when Levi says the phone is on its charger and K1087 has given it a path: `scripts/phone_pass.ps1 -Phase check` exits 0 and usage is under 95%, then launch Muse on the brief's section with a status watcher
+  - next: Muse runs the round per the brief and reports; then Claude reviews the report and its commits and updates this handle
   - brief: docs/design/K156.md, "Round 2026-10-30"
-  - env: the phone reachable by adb: on the desktop's USB, or over Tailscale after `scripts/phone.ps1 -Wireless` (one USB run per phone reboot, K1087); the pass builds and serves both builds itself (ports 5480-5489); check nobody is using the phone first (K234)
+  - env: the phone on the desktop's USB (2026-11-02; 5555 over Tailscale re-armed 16:21 as a fallback); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
   dead ends. Stages 1-2 merged (stage 2: 189b024..f799991; MAX fixed, joints fade).
@@ -2060,6 +2057,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1087** · The phone's network path off USB (5555 over Tailscale closes on every reboot). Dropped: decided 2026-11-02: re-arm 5555 over USB after each phone reboot, automated; the job is claude-config CC132 (2026-11-02).
 - **K1079** · Muse batch 4: A K331+K330 bc5f0043, B K549 f578b6ee, C K486 20afc256, D K1077 51f97bbc, E K412 19cfdd67; all passed review (K1081, K1083, K1084 amended; residuals K1085, K1086 filed). Done in 19cfdd67 (2026-10-30).
 - **K412** · preload verified on real network: through levi.dev proxy chunk downloads once, worker fetch transfer 0 (5 fresh + 5 warm per origin, desktop Chrome); pages.dev revalidates (max-age=0), fix filed K1084. Done in 19cfdd67 (2026-10-30).
 - **K1077** · prof5-prof8 attribute the residual: 82% of +4.24 x1, 87% of +13.16 x4; three clusters (button-tick rects, fillet rebuild, gap-slot pass) filed as K1081-K1083. Done in 51f97bbc (2026-10-30).
