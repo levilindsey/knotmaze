@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1095.
+Next free ID: K1097.
 
 ## Waiting on Levi
 
@@ -294,6 +294,9 @@ Next free ID: K1095.
   `cursive_v66_words.svg`): oe, b0's near-font S or the converged straighter one; ot's dip under the x-height
   (19.5 u; more air costs a deeper dip, `side_clear`'s C); the deeper dips into m n v x z; the corner entries
   into i j p s u w y. `docs/design/K1009_cursive_j3c.md` Handoff.
+- **K1096** · On the phone, with the stat rows on, play a maze with hidden runs and the sword: does the
+  top-left readout stay whole, and clear of the Free play pill and the menu button, as its numbers grow? (K775,
+  K738, 5b8522a5)
 
 ## In progress
 
@@ -487,9 +490,9 @@ Next free ID: K1095.
   D K1084 (K1086 report only), E K1063 + K593; no junction or cursive work. Runs 5A-5E chained from
   2026-11-02.
   - owner: muse runs 5A-5E chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-02 18:00
-  - branch: mainline; last commit: `b61c368a` (the brief)
+  - branch: mainline; last commit: `5b8522a5`
   - evidence: `.claude/probes/K1053/` (`queue.txt` lines 5A-5E, `chain.log`, `chain.out.txt`, `done.txt`)
-  - next: runs 5A-5E in order; Claude reviews each on master, files what each reports (B: camera motions with no reduced path; D: any levi.dev proxy cache residual), then closes K1091
+  - next: Run B (K1085); Run A partial: fixes in 5b8522a5, residual K1095, Waiting K1096, K775/K738 left open for Claude review
   - brief: `docs/design/K1091_muse_batch5.md`
 
 ## Next, in order
@@ -1777,6 +1780,9 @@ Every other item below waits on the trigger it names.
 - **K1093** · Junction form B, c1's merge blend leftovers: a partial blend at |Δs| in (σ/2, σ); the fold's
   far-piece weight at |Δs| in (σ, 2σ) is S1b's; a steep u ramp at shallow barriers; S4a's foot strips need d_A
   and the barrier m, neither local (`K1040_s1e_bends.md` F1, Residuals).
+- **K1095** · K775/K738 residual (5b8522a5): at 320x640, stats on, sword slain / all-grown, the HUD value
+  column extends 17.8 px past the box [10,10,246,286.2] (badge clear, gap 22). Layout call for Levi. Probe
+  .claude/probes/K775 (hud775.mjs, out/before|after).
 
 ## Approved, to schedule (2026-10-11)
 
