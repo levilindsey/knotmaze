@@ -27,6 +27,18 @@
 // it, and only the rows of the used texels that differ from the last upload
 // (a still fabric uploads nothing; probeAllDirty uploads every used row, what
 // a frame pays while the fabric moves).
+// GL state (K1040 S3f, K1158): the pass queries no GL state. It sets what it
+// draws with (framebuffer, viewport, blend, scissor, cull, polygon offset,
+// color mask, depth, the unpack flags its uploads need) and leaves the rest
+// alone; after draw() (or release(), when upload() ran without a draw) the
+// HOST, the renderer sharing the context, takes the state back:
+// label_b_host.ts's Pixi host restores the viewport Pixi believes is set and
+// resets Pixi's caches, so its next draw rebinds. With no host the caller owns
+// the state. sync() reads through READ_FRAMEBUFFER and leaves it bound: Pixi
+// binds FRAMEBUFFER (both points) at every render pass. probeQuery is S3e's
+// handling, for the probes: draw() saves 17 bindings and flags by query and
+// restores them, upload(), resize() and sync() restore their bindings by
+// query, the timer query runs, and every draw looks its uniforms up again.
 
 import type { LabelBTables } from "./label_b";
 import { FILL_TEXELS, TEX_W } from "./label_b";
@@ -70,6 +82,19 @@ interface Tex {
 }
 
 type TabKey = "pts" | "chain" | "span" | "fill" | "nb" | "ps";
+
+/**
+ * The renderer that shares the pass's context (K1158). restore() runs after
+ * the pass changed GL state: it makes the host's tracked state true again
+ * (Pixi: label_b_host.ts).
+ */
+export interface LabelBHost {
+  restore(): void;
+}
+
+const TAB_KEYS = ["pts", "chain", "span", "fill", "nb", "ps"] as const;
+const TAB_NAMES = ["uPts", "uChain", "uSpan", "uFill", "uNb", "uPs"] as const;
+const U_NAMES = ["uM0", "uM1", "uI0", "uI1", "uView", "uH", "uInvK", "uKeyScale", "uPad", "uFold", "uFacetK"] as const;
 
 export class LabelBPass {
   readonly gl: WebGL2RenderingContext;
@@ -124,27 +149,41 @@ export class LabelBPass {
   probeDepth24 = false;
   /** Lean probe knob (S3e): upload every used row, the moving fabric's frame (no diff). */
   probeAllDirty = false;
-  /** Probe knob (S3e): draw() skips its GL state save and restore (and the timer query). */
+  /** Probe knob (S3e, with probeQuery): draw() skips its GL state save and restore (and the timer query). */
   probeNoSave = false;
+  /** Probe knob (S3f): S3e's state handling by query (header), the control for K1158. */
+  probeQuery = false;
+  /** Probe knob (S3f): the timer query without probeQuery (the desktop's GPU column). */
+  probeTimer = false;
+  /** Probe knob (S3f): drawTent binds each draw (program, uniforms, tables, VAO) and issues no draw call. */
+  probeNoDrawCalls = false;
   /** Bytes the last upload() sent (texImage2D and texSubImage2D data). */
   uploadBytes = 0;
   private segVerts = TENT_SEG_VERTS;
+  private readonly host: LabelBHost | null;
+  /** GL state changed since the host last took it back (release()). */
+  private stale = false;
+  /** Uniform locations per program, and the programs whose samplers are set (not probeQuery). */
+  private locs = new Map<WebGLProgram, (WebGLUniformLocation | null)[]>();
+  private readonly px1 = new Uint32Array(4);
 
   /**
-   * opts.lean: S3e's lean fixed part (header). The rest are probe knobs: the
-   * tent's sources and segment strip length, replaced (K1040 S3d's cost split only).
+   * opts.lean: S3e's lean fixed part (header); opts.host: the renderer sharing
+   * the context (header, K1158). The rest are probe knobs: the tent's sources
+   * and segment strip length, replaced (K1040 S3d's cost split only).
    */
   constructor(
     gl: WebGL2RenderingContext,
     debug = false,
     mode: LabelBMode = "capsule",
-    opts: { lean?: boolean; tentSources?: LabelBTentSources; tentVSources?: LabelBTentVSources; segVerts?: number } = {},
+    opts: { lean?: boolean; host?: LabelBHost | null; tentSources?: LabelBTentSources; tentVSources?: LabelBTentVSources; segVerts?: number } = {},
   ) {
     const probe = opts;
     this.gl = gl;
     this.debug = debug;
     this.mode = mode;
     this.lean = !!opts.lean;
+    this.host = opts.host ?? null;
     if (debug && !gl.getExtension("EXT_color_buffer_float")) throw new Error("label_b debug: no EXT_color_buffer_float");
     const src = labelBSources(debug);
     this.capsule = compile(gl, src.capsuleVs, src.capsuleFs);
@@ -186,8 +225,10 @@ export class LabelBPass {
   resize(w: number, h: number): void {
     if (w === this.width && h === this.height) return;
     const gl = this.gl;
-    const prevTex = gl.getParameter(gl.TEXTURE_BINDING_2D);
-    const prevFb = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+    const query = this.probeQuery;
+    const prevTex = query ? gl.getParameter(gl.TEXTURE_BINDING_2D) : null;
+    const prevFb = query ? gl.getParameter(gl.FRAMEBUFFER_BINDING) : null;
+    this.stale = true;
     for (const t of [this.L, this.D, this.G]) if (t) gl.deleteTexture(t);
     if (this.Drb) gl.deleteRenderbuffer(this.Drb);
     this.Drb = null;
@@ -204,7 +245,8 @@ export class LabelBPass {
       gl.texStorage2D(gl.TEXTURE_2D, 1, gl.R32UI, w, h);
       this.L = L;
       this.D = null;
-      const prevRb = gl.getParameter(gl.RENDERBUFFER_BINDING);
+      // Pixi binds no renderbuffer outside its own setup (which binds first).
+      const prevRb = query ? gl.getParameter(gl.RENDERBUFFER_BINDING) : null;
       this.Drb = gl.createRenderbuffer() as WebGLRenderbuffer;
       gl.bindRenderbuffer(gl.RENDERBUFFER, this.Drb);
       gl.renderbufferStorage(gl.RENDERBUFFER, this.probeDepth24 ? gl.DEPTH_COMPONENT24 : gl.DEPTH_COMPONENT32F, w, h);
@@ -221,9 +263,36 @@ export class LabelBPass {
     if (this.G) gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, this.G, 0);
     gl.drawBuffers(this.G ? [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1] : [gl.COLOR_ATTACHMENT0]);
     const st = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, prevFb);
-    gl.bindTexture(gl.TEXTURE_2D, prevTex);
+    if (query) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, prevFb);
+      gl.bindTexture(gl.TEXTURE_2D, prevTex);
+    } else this.release();
     if (st !== gl.FRAMEBUFFER_COMPLETE) throw new Error(`label_b framebuffer incomplete: 0x${st.toString(16)}`);
+  }
+
+  /**
+   * Hands GL state back to the host (header): draw() ends with it; a caller
+   * that uploads without drawing calls it before the host draws again.
+   */
+  release(): void {
+    if (!this.stale || this.probeQuery) return;
+    this.stale = false;
+    this.host?.restore();
+  }
+
+  /**
+   * Binds a table for its upload. Not probeQuery: the frame's first change
+   * also clears the unpack flags a float table must not go through (Pixi's
+   * texture system leaves premultiply set after a premultiplied upload).
+   */
+  private bindTab(t: Tex): void {
+    const gl = this.gl;
+    if (!this.probeQuery && !this.stale) {
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    }
+    this.stale = true;
+    gl.bindTexture(gl.TEXTURE_2D, t.tex);
   }
 
   get label(): WebGLTexture | null {
@@ -237,7 +306,7 @@ export class LabelBPass {
 
   private uploadTab(t: Tex, data: Float32Array, rows: number): void {
     const gl = this.gl;
-    gl.bindTexture(gl.TEXTURE_2D, t.tex);
+    this.bindTab(t);
     if (t.rows !== rows) {
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, TEX_W, rows, 0, gl.RGBA, gl.FLOAT, data);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -258,8 +327,8 @@ export class LabelBPass {
     const gl = this.gl;
     const t = this.tabs[key];
     const cur = new Uint32Array(data.buffer, data.byteOffset, data.length);
-    gl.bindTexture(gl.TEXTURE_2D, t.tex);
     if (t.rows !== rows) {
+      this.bindTab(t);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, TEX_W, rows, 0, gl.RGBA, gl.FLOAT, data);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
@@ -271,7 +340,11 @@ export class LabelBPass {
     const last = this.last[key] as Uint32Array;
     const RW = TEX_W * 4;
     const usedRows = Math.min(rows, Math.ceil(used / TEX_W));
+    // Bound at the first run sent: a still table binds nothing.
+    let bound = false;
     const send = (r0: number, r1: number) => {
+      if (!bound) this.bindTab(t);
+      bound = true;
       gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, r0, TEX_W, r1 - r0, gl.RGBA, gl.FLOAT, data, r0 * RW);
       this.uploadBytes += TEX_W * (r1 - r0) * 16;
       last.set(cur.subarray(r0 * RW, r1 * RW), r0 * RW);
@@ -302,9 +375,11 @@ export class LabelBPass {
    */
   upload(T: LabelBTables): void {
     const gl = this.gl;
-    const prevTex = gl.getParameter(gl.TEXTURE_BINDING_2D);
-    const prevBuf = gl.getParameter(gl.ARRAY_BUFFER_BINDING);
-    const prevVao = gl.getParameter(gl.VERTEX_ARRAY_BINDING);
+    // Not probeQuery: the bindings stay changed until draw() or release() (header).
+    const query = this.probeQuery;
+    const prevTex = query ? gl.getParameter(gl.TEXTURE_BINDING_2D) : null;
+    const prevBuf = query ? gl.getParameter(gl.ARRAY_BUFFER_BINDING) : null;
+    const prevVao = query ? gl.getParameter(gl.VERTEX_ARRAY_BINDING) : null;
     this.uploadBytes = 0;
     if (this.lean) {
       const lc = 8 * (T.nChains - 1);
@@ -329,6 +404,7 @@ export class LabelBPass {
       } else this.uploadTab(this.tabs.nb, T.nb, T.ptsRows);
     }
     if (T.layoutKey !== this.layoutKey) {
+      this.stale = true;
       gl.bindVertexArray(this.vao);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.instBuf);
       gl.bufferData(gl.ARRAY_BUFFER, T.inst, gl.STATIC_DRAW);
@@ -347,6 +423,7 @@ export class LabelBPass {
       if (key !== this.capKey) {
         const caps: number[] = [];
         for (let ci = 0; ci < T.nChains; ci++) if (T.chain[8 * ci + 3] <= 0.5 && T.chain[8 * ci + 2] > 0) caps.push(ci, 0, ci, 1);
+        this.stale = true;
         gl.bindVertexArray(this.tent.capVao);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.tent.capBuf);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(caps.length ? caps : [0, 0]), gl.STATIC_DRAW);
@@ -362,6 +439,7 @@ export class LabelBPass {
     this.invK = T.invK;
     this.keyScale = T.keyScale;
     this.foldR = T.foldR;
+    if (!query) return;
     gl.bindVertexArray(prevVao);
     gl.bindBuffer(gl.ARRAY_BUFFER, prevBuf);
     gl.bindTexture(gl.TEXTURE_2D, prevTex);
@@ -378,31 +456,48 @@ export class LabelBPass {
     const id = a / det;
     const ie = -(ia * e + ic * f);
     const iff = -(ib * e + id * f);
-    const u = (n: string) => gl.getUniformLocation(pr, n);
-    gl.uniform4f(u("uM0"), a, b, c, d);
-    gl.uniform2f(u("uM1"), e, f);
-    gl.uniform4f(u("uI0"), ia, ib, ic, id);
-    gl.uniform2f(u("uI1"), ie, iff);
-    gl.uniform2f(u("uView"), this.width, this.height);
-    gl.uniform1f(u("uH"), this.h);
-    gl.uniform1f(u("uInvK"), this.invK);
-    gl.uniform1f(u("uKeyScale"), this.keyScale);
-    gl.uniform1f(u("uPad"), pad);
-    gl.uniform1f(u("uFold"), this.foldR);
-    const names = ["uPts", "uChain", "uSpan", "uFill", "uNb", "uPs"] as const;
-    const keys = ["pts", "chain", "span", "fill", "nb", "ps"] as const;
+    // probeQuery looks every uniform up per draw (S3e); otherwise once per
+    // program, its samplers' units set at the same time (they never change).
+    const L = this.probeQuery ? null : (this.locs.get(pr) ?? this.cacheLocs(pr));
+    const u = (i: number) => (L ? L[i] : gl.getUniformLocation(pr, U_NAMES[i]));
+    gl.uniform4f(u(0), a, b, c, d);
+    gl.uniform2f(u(1), e, f);
+    gl.uniform4f(u(2), ia, ib, ic, id);
+    gl.uniform2f(u(3), ie, iff);
+    gl.uniform2f(u(4), this.width, this.height);
+    gl.uniform1f(u(5), this.h);
+    gl.uniform1f(u(6), this.invK);
+    gl.uniform1f(u(7), this.keyScale);
+    gl.uniform1f(u(8), pad);
+    gl.uniform1f(u(9), this.foldR);
     for (let i = 0; i < this.nTex; i++) {
       gl.activeTexture(gl.TEXTURE0 + i);
-      gl.bindTexture(gl.TEXTURE_2D, this.tabs[keys[i]].tex);
-      gl.uniform1i(u(names[i]), i);
+      gl.bindTexture(gl.TEXTURE_2D, this.tabs[TAB_KEYS[i]].tex);
+      if (!L) gl.uniform1i(gl.getUniformLocation(pr, TAB_NAMES[i]), i);
     }
   }
 
-  /** Draws the label for camera M (world -> device px). Restores the caller's state. */
+  /** Looks pr's uniforms up once and sets its samplers' units (pr is current). */
+  private cacheLocs(pr: WebGLProgram): (WebGLUniformLocation | null)[] {
+    const gl = this.gl;
+    const L = [...U_NAMES, ...TAB_NAMES].map((n) => gl.getUniformLocation(pr, n));
+    this.locs.set(pr, L);
+    for (let i = 0; i < this.nTex; i++) gl.uniform1i(L[U_NAMES.length + i], i);
+    return L;
+  }
+
+  /** uFacetK's location (tent programs): cached unless probeQuery. */
+  private facetLoc(pr: WebGLProgram): WebGLUniformLocation | null {
+    const L = this.probeQuery ? null : this.locs.get(pr);
+    return L ? L[10] : this.gl.getUniformLocation(pr, "uFacetK");
+  }
+
+  /** Draws the label for camera M (world -> device px), then hands the state back (header). */
   draw(M: Affine): void {
     const gl = this.gl;
-    // probeNoSave: no state queries, no restore, no timer query (the caller owns the state).
-    const save = this.probeNoSave ? null : {
+    const query = this.probeQuery;
+    // probeQuery + probeNoSave: no state queries, no restore, no timer query (the caller owns the state).
+    const save = !query || this.probeNoSave ? null : {
       fb: gl.getParameter(gl.FRAMEBUFFER_BINDING),
       vp: gl.getParameter(gl.VIEWPORT) as Int32Array,
       prog: gl.getParameter(gl.CURRENT_PROGRAM),
@@ -419,13 +514,20 @@ export class LabelBPass {
         return gl.getParameter(gl.TEXTURE_BINDING_2D);
       }),
     };
-    const q = this.tq && save ? gl.createQuery() : null;
+    const q = this.tq && (save || (!query && this.probeTimer)) ? gl.createQuery() : null;
     if (q && this.tq) gl.beginQuery(this.tq.TIME_ELAPSED_EXT, q);
+    this.stale = true;
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
     gl.viewport(0, 0, this.width, this.height);
     gl.disable(gl.BLEND);
     gl.disable(gl.SCISSOR_TEST);
     gl.disable(gl.CULL_FACE);
+    if (!query) {
+      // Unqueried, so set: Pixi's frame ends with these (colorMask 0xF, no
+      // offset); S3e's pass took them as given.
+      gl.disable(gl.POLYGON_OFFSET_FILL);
+      gl.colorMask(true, true, true, true);
+    }
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LESS);
     gl.depthMask(true);
@@ -450,6 +552,10 @@ export class LabelBPass {
     if (q && this.tq) {
       gl.endQuery(this.tq.TIME_ELAPSED_EXT);
       this.pending.push(q);
+    }
+    if (!query) {
+      this.release();
+      return;
     }
     if (!save) return;
     gl.bindFramebuffer(gl.FRAMEBUFFER, save.fb);
@@ -479,30 +585,30 @@ export class LabelBPass {
     const use = (pr: WebGLProgram) => {
       gl.useProgram(pr);
       this.uniforms(pr, M, 0);
-      gl.uniform1f(gl.getUniformLocation(pr, "uFacetK"), facetK);
+      gl.uniform1f(this.facetLoc(pr), facetK);
     };
     gl.bindVertexArray(this.vao);
     const nSeg = this.probeSegFrac === 1 ? this.nInst : Math.round(this.nInst * this.probeSegFrac);
     if (nSeg > 0) {
       use(t.seg);
-      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, this.segVerts, nSeg);
+      if (!this.probeNoDrawCalls) gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, this.segVerts, nSeg);
     }
     if (this.nCaps > 0) {
       gl.bindVertexArray(t.capVao);
       use(t.cap);
-      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, TENT_CAP_VERTS, this.nCaps);
+      if (!this.probeNoDrawCalls) gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, TENT_CAP_VERTS, this.nCaps);
     }
     if (this.nFills > 0) {
       gl.bindVertexArray(this.vao);
       use(t.fill);
-      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, TENT_FILL_VERTS, this.nFills);
+      if (!this.probeNoDrawCalls) gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, TENT_FILL_VERTS, this.nFills);
     }
   }
 
   /** Collects finished timer queries into times; returns how many are still pending. */
   poll(): number {
     const gl = this.gl;
-    if (!this.tq) return 0;
+    if (!this.tq || !this.pending.length) return 0;
     const disjoint = gl.getParameter(this.tq.GPU_DISJOINT_EXT);
     while (this.pending.length) {
       const q = this.pending[0];
@@ -546,9 +652,18 @@ export class LabelBPass {
     return { word, dbg };
   }
 
-  /** One pixel read through the label's framebuffer (render sync, K923). */
+  /**
+   * One pixel read through the label's framebuffer (render sync, K923). Not
+   * probeQuery: READ_FRAMEBUFFER stays bound to the label's (header).
+   */
   sync(): void {
     const gl = this.gl;
+    if (!this.probeQuery) {
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.fbo);
+      gl.readBuffer(gl.COLOR_ATTACHMENT0);
+      gl.readPixels(0, 0, 1, 1, gl.RGBA_INTEGER, gl.UNSIGNED_INT, this.px1);
+      return;
+    }
     const prevFb = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING);
     gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.fbo);
     gl.readBuffer(gl.COLOR_ATTACHMENT0);
