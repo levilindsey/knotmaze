@@ -324,9 +324,9 @@ Next free ID: K1178.
   K778 (the Undo button, its 0-5 slider), run C K1162 (the doc errata). Claude reviews each run against the
   primary record, then closes K1169.
   - owner: Muse through the chain (`.claude/probes/K1053/`), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `82537593`
+  - branch: mainline; last commit: `b2ca45af`
   - evidence: `.claude/probes/K1053/` (queue.txt, done.txt, chain.log; each run's Paseo report)
-  - next: Run B done; next Run C
+  - next: Run C done; batch 15 complete, Claude reviews and closes K1169
   - brief: `docs/design/K1169_muse_batch15.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
