@@ -53,6 +53,7 @@ import {
   linkLookActive,
   mergeDailyPrefs,
   parseLaunch,
+  rolloverDaily,
   sceneTitle,
 } from "./ui/daily_link";
 import { formatDayDate, todayNumber } from "./game/daily_calendar";
@@ -1747,6 +1748,10 @@ async function main(): Promise<void> {
       savePrefsNow();
     } else {
       adoptOtherTab();
+      // K202: a day that turned while this tab was hidden rolls an
+      // unstarted floating daily now it is seen again (never while hidden;
+      // after the adopt, so an attempt another tab began counts as begun).
+      checkDailyRollover();
       // Another tab may have finished this daily meanwhile: the mode badge
       // then reads "replay".
       updateHud();
@@ -3023,6 +3028,24 @@ async function main(): Promise<void> {
     wake();
   };
 
+  // K202: roll an unstarted floating daily to the new day. "Begun" is any
+  // of: the solve clock has started, the controller's taps are non-empty, a
+  // saved attempt for that daily exists in the store, or this tab restored
+  // one (attemptDaily is that daily) - a solved daily is begun by the first
+  // two. Runs at midnight (the interval below) and when the page comes back
+  // into view (the visibilitychange handler above); never while hidden.
+  // playDaily's own feedback stands - no toast of its own here.
+  function checkDailyRollover(): void {
+    if (document.hidden || dailyN === null) return;
+    const begun =
+      clock.started ||
+      (scene.fabricController?.taps.length ?? 0) > 0 ||
+      dailyStore.attempt(dailyN) !== undefined ||
+      attemptDaily === dailyN;
+    const target = rolloverDaily(dailyN, dailyFloating, todayNumber(), begun);
+    if (target !== null) playDaily(target, true);
+  }
+
   // K92: put design `s` back as loading its link would (an undo or redo):
   // the address bar, the maze, and a daily with its saved attempt (K47). A
   // daily on screen is left first, as any change that leaves it is (its
@@ -3132,8 +3155,10 @@ async function main(): Promise<void> {
     }
     if (todayNumber() !== labelDay) {
       updateDailyLabel();
-      // A daily on screen gains its date once it isn't today's (its badge),
-      // and one not begun yet would now begin as practice.
+      // A daily on screen gains its date once it isn't today's (its badge).
+      // K202: an unstarted floating daily rolls to the new day instead of
+      // beginning yesterday's as practice.
+      checkDailyRollover();
       updateHud();
     }
   }, 250);

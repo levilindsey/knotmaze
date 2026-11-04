@@ -391,6 +391,25 @@ export interface Launch {
   floating: boolean;
 }
 
+// K202: the day an unstarted floating daily should roll to at midnight,
+// or null when it should stay. A floating daily (the bare address, `?daily`)
+// means "today's daily", so left open across midnight unbegun it should
+// open the new today instead of beginning yesterday's maze as practice
+// (begunLate, K146). A numbered daily names its day on purpose, an ordinary
+// design is no daily, a begun attempt (however main.ts reads "begun": the
+// solve clock, the controller's taps, a saved attempt, a restored one - a
+// solved daily is begun by the first two) keeps its day, and a daily
+// already showing today (or ahead of it, a clock set back) stays.
+export function rolloverDaily(
+  daily: number | null,
+  floating: boolean,
+  today: number,
+  begun: boolean
+): number | null {
+  if (daily === null || !floating || begun) return null;
+  return daily < today ? today : null;
+}
+
 // What a page load shows (K56): no query = today's daily; a daily link
 // (`?daily...`, first in the query); else whatever parseParams reads.
 // `today` = todayNumber(); a daily number outside [1, today +

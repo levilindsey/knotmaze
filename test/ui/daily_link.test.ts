@@ -16,6 +16,7 @@ import {
   mazeKey,
   mergeDailyPrefs,
   parseLaunch,
+  rolloverDaily,
   sameMaze,
 } from "../../src/ui/daily_link";
 import {
@@ -339,6 +340,47 @@ describe("the front door (K56)", () => {
     const url = new URL("https://levi.dev/knotmaze/?daily=6");
     url.searchParams.append("ref", "x");
     expect(parseLaunch(url.search, today).daily).toBe(6);
+  });
+});
+
+describe("the midnight rollover (K202)", () => {
+  const D = 20;
+
+  it("rolls an unstarted floating daily to the new day", () => {
+    const launch = parseLaunch("", D);
+    expect([launch.daily, launch.floating]).toEqual([D, true]);
+    expect(rolloverDaily(launch.daily, launch.floating, D + 1, false)).toBe(D + 1);
+    // The new day itself: nothing to roll (and a clock set back stays too).
+    expect(rolloverDaily(D + 1, true, D + 1, false)).toBeNull();
+    expect(rolloverDaily(D + 1, true, D, false)).toBeNull();
+  });
+
+  it("leaves a numbered daily on its named day", () => {
+    const launch = parseLaunch(`?daily=${D}`, D);
+    expect([launch.daily, launch.floating]).toEqual([D, false]);
+    expect(rolloverDaily(launch.daily, launch.floating, D + 1, false)).toBeNull();
+  });
+
+  it("leaves a begun floating daily on its day (begun on D, finished D+1)", () => {
+    // Begun = the solve clock started / taps non-empty (main.ts reads both).
+    expect(rolloverDaily(D, true, D + 1, true)).toBeNull();
+  });
+
+  it("leaves a restored floating daily on its day", () => {
+    // Restored = attemptDaily is that daily (and its clock/taps read begun).
+    expect(rolloverDaily(D, true, D + 1, true)).toBeNull();
+  });
+
+  it("leaves a solved floating daily on its day", () => {
+    // Solved = clock started (stopped, still started) and taps non-empty.
+    expect(rolloverDaily(D, true, D + 1, true)).toBeNull();
+  });
+
+  it("leaves an ordinary design alone", () => {
+    const launch = parseLaunch("?1471kin", D);
+    expect(launch.daily).toBeNull();
+    expect(rolloverDaily(launch.daily, launch.floating, D + 1, false)).toBeNull();
+    expect(rolloverDaily(null, true, D + 1, false)).toBeNull();
   });
 });
 
