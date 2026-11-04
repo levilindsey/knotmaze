@@ -262,7 +262,7 @@ Report: the before and after tables (places and matches, no real
 name), and the parse result.
 
 File the other copy, as written:
-`ledger.mjs add --section Residuals --text "scripts/phone_pass.ps1 carries the phone's tailnet machine name in three places (its $tailscaleHost, the match comment and the -Serial help); find the phone the way K1155 finds it in scripts/phone.ps1, or pass the name in (split from K1155)"`,
+`ledger.mjs add --section Residuals --text "scripts/phone_pass.ps1 carries the phone's tailnet machine name in three places (its tailscaleHost variable, the match comment and the -Serial help); find the phone the way K1155 finds it in scripts/phone.ps1, or pass the name in (split from K1155)"`,
 then close:
 `ledger.mjs done K1155 --commit <sha8> --what "scripts/phone.ps1 finds the phone among online android peers; -TailscaleHost is the override, default empty"`.
 Suggested ports: 5510-5519 (unused).
@@ -311,9 +311,10 @@ the pre-settle and the budget, and false of this load.
 
 Tasks, in order (ports 5520-5529, only if a read needs a server):
 
-1. The before table, as a failing test first. In
-   `test/physics/physics_host.test.ts`'s manner, drive an
-   in-thread physics-off load (`?7&gs=6`, as the existing load
+1. The before table, as a failing test first, in a new file
+   (`test/physics/load_clock.test.ts`), so that
+   `test/physics/physics_host.test.ts` stays byte-unchanged. In
+   that file's manner, drive an in-thread physics-off load (`?7&gs=6`, as the existing load
    case does) with `performance.now` stubbed: a fake that advances
    a few ms a call, and one jump of an hour between `beginLoad`
    and the first `loadFrame`. The before table: the first
@@ -514,13 +515,14 @@ Done:
 
 Report: the before and after pairs, and the negatives.
 
-Close nothing outright. The long-lines half is still open, so
-rewrite K392's line in the same LEDGER commit, dropping the seam
-half (state the long-line count your run measured):
-`**K392** · K5 M1's code residual: <N> lines of `src/app/probe_hooks.ts` pass 80 columns (the host seam's nested and element-access blind spots are closed)`,
-and if the new shapes cannot be seen without false positives on
-the real tree, stop under K1050's stop rule 1 and record it in
-K392's text instead.
+Close nothing: the long-lines half is still open. `ledger.mjs`
+has no command that rewrites an item's text, so don't edit K392 by
+hand: give its new line in your report, with the long-line count
+your run measured, and Claude applies it after the batch:
+`**K392** · K5 M1's code residual: <N> lines of src/app/probe_hooks.ts pass 80 columns (the host seam's nested and element-access blind spots closed in <sha8>)`.
+If the new shapes cannot be seen without false positives on the
+real tree, stop under K1050's stop rule 1 and say so in the report
+instead.
 Suggested ports: 5540-5544 (if any).
 
 ## Run G · K685: a respawn into a rule loss shows its banner at once
