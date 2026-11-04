@@ -18,7 +18,7 @@ import type { LabelBTables } from "./label_b";
 import { TEX_W } from "./label_b";
 import { labelBSources } from "./label_b_glsl";
 import { tentFacetK } from "./label_b_tent";
-import { labelBTentSources, TENT_CAP_VERTS, TENT_FILL_VERTS, TENT_SEG_VERTS } from "./label_b_tent_glsl";
+import { labelBTentSources, TENT_CAP_VERTS, TENT_FILL_VERTS, TENT_SEG_VERTS, type LabelBTentSources } from "./label_b_tent_glsl";
 
 export type LabelBMode = "capsule" | "tent";
 
@@ -80,8 +80,13 @@ export class LabelBPass {
   private tent: { seg: WebGLProgram; cap: WebGLProgram; fill: WebGLProgram; capVao: WebGLVertexArrayObject; capBuf: WebGLBuffer } | null = null;
   private capKey = "";
   private nCaps = 0;
+  /** Probe knobs (K1040 S3d's cost split): tent mode draws nothing, or a fraction of its segment strips. */
+  probeDraw = true;
+  probeSegFrac = 1;
+  private segVerts = TENT_SEG_VERTS;
 
-  constructor(gl: WebGL2RenderingContext, debug = false, mode: LabelBMode = "capsule") {
+  /** probe: the tent's sources and segment strip length, replaced (K1040 S3d's cost split only). */
+  constructor(gl: WebGL2RenderingContext, debug = false, mode: LabelBMode = "capsule", probe: { tentSources?: LabelBTentSources; segVerts?: number } = {}) {
     this.gl = gl;
     this.debug = debug;
     this.mode = mode;
@@ -89,8 +94,9 @@ export class LabelBPass {
     const src = labelBSources(debug);
     this.capsule = compile(gl, src.capsuleVs, src.capsuleFs);
     this.fillPr = compile(gl, src.fillVs, src.fillFs);
+    if (probe.segVerts) this.segVerts = probe.segVerts;
     if (mode === "tent") {
-      const ts = labelBTentSources(debug);
+      const ts = probe.tentSources ?? labelBTentSources(debug);
       this.tent = {
         seg: compile(gl, ts.segVs, ts.fs),
         cap: compile(gl, ts.capVs, ts.fs),
@@ -313,7 +319,7 @@ export class LabelBPass {
   private drawTent(M: Affine, ppd: number): void {
     const gl = this.gl;
     const t = this.tent;
-    if (!t) return;
+    if (!t || !this.probeDraw) return;
     const eps = this.tentEpsPx / Math.max(ppd, 1e-9);
     const facetK = tentFacetK(eps);
     const use = (pr: WebGLProgram) => {
@@ -322,9 +328,10 @@ export class LabelBPass {
       gl.uniform1f(gl.getUniformLocation(pr, "uFacetK"), facetK);
     };
     gl.bindVertexArray(this.vao);
-    if (this.nInst > 0) {
+    const nSeg = this.probeSegFrac === 1 ? this.nInst : Math.round(this.nInst * this.probeSegFrac);
+    if (nSeg > 0) {
       use(t.seg);
-      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, TENT_SEG_VERTS, this.nInst);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, this.segVerts, nSeg);
     }
     if (this.nCaps > 0) {
       gl.bindVertexArray(t.capVao);

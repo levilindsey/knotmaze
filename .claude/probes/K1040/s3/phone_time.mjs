@@ -44,6 +44,10 @@ const fit = fitArg ? fitArg.split("x").map(Number) : undefined;
 const b2b = args.includes("--b2b"), floor = args.includes("--floor"), noscan = args.includes("--noscan");
 // K1040 S3c: --tent the tent pass (no discard), --lr n its coarser target.
 const tent = args.includes("--tent"), lr = Number(val("--lr", 1));
+// K1040 S3d: --variants a,b,... page.ts timeMany()'s cost split (tent pass
+// variants interleaved in --rounds rounds on each scene); each variant's
+// outputs are named <label><variant>, so phone_table.ps1 reads them.
+const variantsArg = val("--variants", null), rounds = Number(val("--rounds", 3));
 // --glsl <file>: bundle that file in place of src/render/field/label_b_glsl.ts
 // (an older pass on the same page, e.g. `git show <sha>:<path>`); --label
 // names its outputs.
@@ -170,6 +174,22 @@ try {
     const scene = JSON.parse(readFileSync(join(SCENE_DIR, `${name}.json`), "utf8"));
     scene.name = name;
     const t0 = Date.now();
+    if (variantsArg) {
+      const variants = variantsArg.split(",");
+      const many = await within(page.evaluate((s, o) => window.s3.timeMany(s, o), scene, { variants, scale, frames, rounds, fit }), 300000, name);
+      const wallMs = Date.now() - t0;
+      const cells = [];
+      for (const v of variants) {
+        const r = many.variants[v];
+        const one = { scene: name, variant: v, lost: many.lost, renderer: many.renderer, W: many.W, H: many.H, segs: many.segs, fills: many.fills, groups: many.groups, prepMs: many.prepMs, rounds: many.rounds, frames: many.frames, sync: r.sync, upload: { ...r.upload, bytes: many.bytes }, wallMs, phone: st, touchedDuring: touched };
+        writeFileSync(join(outDir, `phone_time_${runLabel}${v}_${name}.json`), JSON.stringify(one, null, 1));
+        cells.push(`${v} ${r.sync.p50.toFixed(1)}/${r.sync.p95.toFixed(1)}`);
+      }
+      const line = `- ${name}: ${many.W}x${many.H}, sync p50/p95 ms (n ${many.frames} in ${many.rounds} rounds): ${cells.join(", ")}; prep ${many.prepMs.toFixed(1)} ms; segs ${many.segs}, fills ${many.fills}; lost ${many.lost}; before it: thermal ${st.thermal}, battery ${st.battery} C, media ${st.media}; ${wallMs} ms${touched ? " (INPUT EVENT during it: void)" : ""}`;
+      summary.push(line);
+      log(line);
+      continue;
+    }
     const res = await within(page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, fit, b2b, floor, noscan, tent, lr }), 180000, name);
     res.scene = name;
     res.wallMs = Date.now() - t0;

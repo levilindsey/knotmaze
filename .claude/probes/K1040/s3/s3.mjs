@@ -31,7 +31,7 @@ const SCENES = [
 const SCENE_DIR = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes";
 const args = process.argv.slice(2);
 const mode = args[0];
-if (mode !== "verdict" && mode !== "time") {
+if (mode !== "verdict" && mode !== "time" && mode !== "many") {
   console.error("usage: node s3.mjs verdict|time [scene,...] [--stride n] [--scale s] [--frames n]");
   process.exit(2);
 }
@@ -47,6 +47,8 @@ const tent = val("--tent", "0") === "1";
 const lr = Number(val("--lr", 1));
 const tag = val("--tag", "");
 const pre = tag ? `${mode}_${tag}` : mode;
+// K1040 S3d: many --variants a,b,...: page.ts timeMany()'s cost split (render sync only).
+const variants = val("--variants", "tent,empty,floor").split(",");
 const outDir = join(here, "out");
 mkdirSync(outDir, { recursive: true });
 
@@ -99,6 +101,14 @@ try {
     const scene = JSON.parse(readFileSync(join(SCENE_DIR, `${name}.json`), "utf8"));
     scene.name = name;
     const t0 = Date.now();
+    if (mode === "many") {
+      const many = await page.evaluate((s, o) => window.s3.timeMany(s, o), scene, { variants, scale, frames });
+      writeFileSync(join(outDir, `${pre}_${name}.json`), JSON.stringify(many, null, 1));
+      const line = `- ${name}: ${many.W}x${many.H}, sync p50/p95 ms: ${variants.map((v) => `${v} ${many.variants[v].sync.p50.toFixed(3)}/${many.variants[v].sync.p95.toFixed(3)}`).join(", ")}; segs ${many.segs}; lost ${many.lost}; ${Date.now() - t0} ms`;
+      summary.push(line);
+      console.log(line);
+      continue;
+    }
     const res =
       mode === "verdict"
         ? await page.evaluate((s, o) => window.s3.verdict(s, o), scene, { scale, stride, tent, lr })

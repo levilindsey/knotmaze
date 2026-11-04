@@ -9,6 +9,7 @@ import { FormB } from "../../../../src/render/field/form_b";
 import type { FieldScene } from "../../../../src/render/field/scene";
 import { buildLabelB, labelAt, type LabelBTables } from "../../../../src/render/field/label_b";
 import { LabelBPass, type Affine } from "../../../../src/render/field/label_b_pass";
+import { labelBTentSources, TENT_NW, type LabelBTentSources } from "../../../../src/render/field/label_b_tent_glsl";
 import { labelVerdict, sampleOf, type LabelSample } from "../../../../src/render/field/label_b_verdict";
 
 const canvas = document.createElement("canvas");
@@ -246,4 +247,105 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
   };
 }
 
-(window as unknown as { s3: unknown }).s3 = { verdict, time, renderer };
+// K1040 S3d step 1: the tent pass's cost split by K923's render sync, the
+// variants interleaved in rounds on one scene (one pass per variant, kept for
+// the page's life; 5 warm-ups a variant a round):
+//   tent     the control (S3c's tent)
+//   empty    the upload and the clears, no draws
+//   noup     no per-frame upload (the tables from the round's start)
+//   degen    every vertex clipped (z = 2): the vertex shaders and primitive
+//            assembly, no binning and no fragments
+//   fs0      a fragment shader that only sums the flats (the varyings live)
+//   fsconst  a constant word (the flats dead: the linker may drop them and
+//            the vertex work that feeds them)
+//   half     half the segment strips
+//   nw1      one-facet wedges: 8 vertices a strip instead of 12
+//   floor    the 1-px readback alone
+const VARIANTS = ["tent", "empty", "noup", "degen", "fs0", "fsconst", "half", "nw1", "floor"];
+const vpasses = new Map<string, LabelBPass>();
+function variantPass(v: string): LabelBPass {
+  const have = vpasses.get(v);
+  if (have) return have;
+  const src = labelBTentSources(false);
+  const swap = (s: string, a: string, b: string) => {
+    if (s.split(a).length !== 2) throw new Error(`variant ${v}: ${JSON.stringify(a.slice(0, 40))} not found once`);
+    return s.replace(a, b);
+  };
+  const GLPOS = "-2.0 * key * uKeyScale, 1.0);\n";
+  const FSMAIN = "void main() {\n  vec2 dev = vec2(gl_FragCoord.x";
+  const FSREST = "\n  return;\n  vec2 dev = vec2(gl_FragCoord.x";
+  let probe: { tentSources?: LabelBTentSources; segVerts?: number } = {};
+  if (v === "degen") {
+    const d = (s: string) => swap(s, GLPOS, GLPOS + "  gl_Position.z = 2.0;\n");
+    probe = { tentSources: { ...src, segVs: d(src.segVs), capVs: d(src.capVs), fillVs: d(src.fillVs) } };
+  } else if (v === "fs0") {
+    const body = "void main() {\n  oWord = floatBitsToUint(dot(vAB, vec4(1.0)) + dot(vS, vec4(1.0)) + dot(vSp, vec3(1.0))) ^ uint(vI.x + vI.y + vI.z + vI.w);";
+    probe = { tentSources: { ...src, fs: swap(src.fs, FSMAIN, body + FSREST) } };
+  } else if (v === "fsconst") {
+    probe = { tentSources: { ...src, fs: swap(src.fs, FSMAIN, "void main() {\n  oWord = 1u;" + FSREST) } };
+  } else if (v === "nw1") {
+    const n = (s: string) => swap(s, `#define NW ${TENT_NW}\n`, "#define NW 1\n");
+    probe = { tentSources: { segVs: n(src.segVs), capVs: n(src.capVs), fillVs: n(src.fillVs), fs: n(src.fs) }, segVerts: 8 };
+  } else if (!["tent", "empty", "noup", "half", "floor"].includes(v)) throw new Error(`no variant ${v}`);
+  const pass = new LabelBPass(gl, false, "tent", probe);
+  if (v === "empty") pass.probeDraw = false;
+  if (v === "half") pass.probeSegFrac = 0.5;
+  vpasses.set(v, pass);
+  return pass;
+}
+
+async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: number; frames?: number; rounds?: number; fit?: [number, number] } = {}) {
+  const scale = opts.scale ?? 2;
+  const frames = opts.frames ?? 60;
+  const rounds = opts.rounds ?? 3;
+  const vs = opts.variants ?? VARIANTS;
+  scene.look.ctrlArc ??= 0.47;
+  const fb = new FormB(scene, { dpr: scale });
+  const tp0 = performance.now();
+  const T: LabelBTables = buildLabelB(fb);
+  const prepMs = performance.now() - tp0;
+  const dev = opts.fit ? fitCamera(scene, fb.h, opts.fit, scale) : camera(scene, scale);
+  const { M, W, H } = coarse(dev.M, dev.W, dev.H, 1);
+  const per = Math.ceil(frames / rounds);
+  const acc: Record<string, { up: number[]; sync: number[] }> = {};
+  for (const v of vs) acc[v] = { up: [], sync: [] };
+  for (let r = 0; r < rounds; r++) {
+    for (const v of vs) {
+      const pass = variantPass(v);
+      if (pass.width !== W || pass.height !== H) pass.resize(W, H);
+      pass.upload(T);
+      for (let k = 0; k < 5; k++) {
+        pass.draw(M);
+        pass.sync();
+      }
+      for (let k = 0; k < per; k++) {
+        const u0 = performance.now();
+        if (v !== "noup" && v !== "floor") pass.upload(T);
+        const u1 = performance.now();
+        if (v !== "floor") pass.draw(M);
+        pass.sync();
+        const u2 = performance.now();
+        acc[v].up.push(u1 - u0);
+        acc[v].sync.push(u2 - u1);
+      }
+    }
+  }
+  const variants: Record<string, { sync: { p50: number; p95: number }; upload: { p50: number; p95: number } }> = {};
+  for (const v of vs) variants[v] = { sync: { p50: pct(acc[v].sync, 0.5), p95: pct(acc[v].sync, 0.95) }, upload: { p50: pct(acc[v].up, 0.5), p95: pct(acc[v].up, 0.95) } };
+  return {
+    lost,
+    renderer: renderer(),
+    W,
+    H,
+    segs: T.nInst,
+    fills: T.nFills,
+    groups: T.nGroups,
+    prepMs,
+    rounds,
+    frames: per * rounds,
+    bytes: (T.pts.length + T.chain.length + T.span.length + T.fill.length + T.nb.length) * 4,
+    variants,
+  };
+}
+
+(window as unknown as { s3: unknown }).s3 = { verdict, time, timeMany, renderer };
