@@ -62,13 +62,17 @@
 #   -Out <dir>        default <repo>\.claude\probes\rounds\<yyyy-MM-dd>-<head sha>
 #                     (untracked). Later phases without -Out use that default,
 #                     else the newest folder under rounds\ that has a config.json
-#   -WaitReady <min>  (check, start, all) K171 (b): wait for the phone instead of
-#                     stopping at once. Every 3 minutes it runs the read-only check
-#                     (dumpsys reads only: it never wakes, unlocks or touches the
-#                     phone) and goes on after TWO ready checks in a row (a phone
-#                     that stays awake and unlocked for 3 quiet minutes was set
-#                     down, not picked up). Exit 3 at the deadline. Default 0 = no
-#                     wait (a phone that is not ready stops the pass at once)
+#   -WaitReady <min>  (check, start, all) wait for the phone instead of stopping
+#                     at once: scripts/phone_pass/phone_ready.mjs (K1142) re-checks
+#                     with backoff for up to this long, read-only (dumpsys and
+#                     getevent: it never wakes, unlocks, launches or touches the
+#                     phone). Exit 3 at the deadline. Default 0 = no wait (a phone
+#                     that is not ready stops the pass at once)
+#   -QuietS <s>       the quiet window the shared check demands: nobody touched the
+#                     phone for this long (default 120; phone_quiet.mjs's)
+#   -AllowChrome      Chrome in front counts as ready. For a pass that follows
+#                     another of the kit's own (a cleanup leaves Chrome in front);
+#                     by default Chrome in front is a person's, like any app
 #   -Serial <serial>  the phone; default: a host:port (Tailscale) device, else the
 #                     USB one, else `adb connect` to the 'pixel-11' Tailscale peer
 #   -Noise <json>     the A/A noise floor summary.mjs reads (default
@@ -96,8 +100,11 @@
 # only after a trip and holds the verdict; watchdog.log, getevent.out,
 # expect.txt), bench.jsonl, looks_report.json, summary.md.
 #
-# Safety, as in K81's kit: the phone must be awake and unlocked at the start;
-# the pass never unlocks it and never sends it a key event. It never touches
+# Safety, as in K81's kit: the phone must be READY at the start (K1142: screen on,
+# unlocked, the launcher in front and nobody touching it for -QuietS seconds,
+# scripts/phone_pass/phone_ready.mjs: before 2026-11-03 an awake, unlocked phone
+# with an app in front passed, and the pass opened Chrome over it); the pass
+# never unlocks it and never sends it a key event. It never touches
 # Levi's tabs (K123): it opens one tab of its own and closes only that one,
 # while Chrome is still in front. Other owners' tunnels and the 9222 forward
 # stay untouched. The watchdog (state\watchdog.trip) stops the pass on a touch,
@@ -106,7 +113,7 @@
 # perf lock: the phone's timings don't depend on the desktop's load.
 #
 # Exit code: 0 clean, 1 failed, 2 the watchdog tripped, 3 the phone was not
-# ready (asleep, locked, gone), 5 a phase refused because the pass had
+# ready (asleep, locked, an app in front, touched, gone), 5 a phase refused because the pass had
 # already tripped (run -Phase cleanup, then a fresh -Phase start).
 param(
   [ValidateSet("all", "start", "frames", "looks", "cleanup", "summary", "check")][string]$Phase = "all",
@@ -118,6 +125,8 @@ param(
   [string]$Moves = "0,7,13",
   [int]$LoadSeconds = 30,
   [int]$WaitReady = 0,
+  [int]$QuietS = 120,
+  [switch]$AllowChrome,
   [string]$Serial = "",
   [string]$Noise = "",
   [ValidateSet("portrait", "native")][string]$Viewport = "portrait",
@@ -201,42 +210,23 @@ function Phone-State([string]$adb, [string]$ser) {
     Top = $(if ($o -match "topResumedActivity=ActivityRecord\{\S+ \S+ ([\w\.]+)/") { $Matches[1] } else { "?" })
   }
 }
-# Throws "PHONE NOT READY: ..." at once (never waits, never wakes, never unlocks).
-function Assert-PhoneReady([string]$adb, [string]$ser) {
-  $s = Phone-State $adb $ser
-  Say "phone ${ser}: reached=$($s.Reached) awake=$($s.Awake) locked=$($s.Locked) top=$($s.Top) display=$($s.Display)"
-  if (-not $s.Reached) { throw "PHONE NOT READY: $ser gave no state (offline?)." }
-  if (-not $s.Awake -or $s.Locked) { throw "PHONE NOT READY: the phone is asleep or locked; a person must wake and unlock it first (the pass never does)." }
+# K1142: THE readiness check, scripts/phone_pass/phone_ready.mjs (one module for every
+# runner): screen on, unlocked, the launcher in front (Chrome too with -AllowChrome) and
+# no touch for $quietS seconds (0 = the state only). Read-only: it never wakes, unlocks,
+# launches or touches the phone. It waits, with backoff, for what is left of -WaitReady
+# (one deadline for the whole start, set at the first call; a window is always allowed
+# for), then this throws "PHONE NOT READY: <the check's one line>" (exit 3).
+$script:readyDeadline = $null
+function Assert-PhoneQuiet([string]$adb, [string]$ser, [int]$quietS = $QuietS) {
+  if (-not $script:readyDeadline) { $script:readyDeadline = (Get-Date).AddMinutes($WaitReady) }
+  $left = [Math]::Max(0, ($script:readyDeadline - (Get-Date)).TotalMinutes)
+  $a = @((Join-Path $passDir "phone_ready.mjs"), "--adb", $adb, "--serial", $ser, "--quiet-s", $quietS, "--timeout-min", $left.ToString("0.###", [cultureinfo]::InvariantCulture), "--progress")
+  if ($AllowChrome) { $a += "--allow-chrome" }
+  if ($quietS -gt 0) { Say "phone: checking it is ready (launcher in front, no touch for $quietS s$(if ($left -gt 0) { ", waiting up to $($left.ToString('0.#', [cultureinfo]::InvariantCulture)) min" }))" }
+  $verdict = ""
+  & $node @a 2>&1 | ForEach-Object { $verdict = "$_"; Say $verdict }
+  if ($LASTEXITCODE -ne 0) { throw "PHONE NOT READY: $($verdict -replace '^phone not ready:\s*', '')" }
 }
-
-# K171 (b): the read-only wait. Every 3 minutes, up to -WaitReady minutes, the
-# same check as -Phase check (dumpsys reads: no wake, no unlock, no touch). It
-# returns after TWO ready checks in a row, and throws "PHONE NOT READY" (exit
-# 3) at the deadline. retry_quiet.ps1 reaches it through `-Phase check -WaitReady`.
-function Wait-PhoneReady {
-  if ($Out) { New-Item $logsDir -ItemType Directory -Force | Out-Null }
-  $deadline = (Get-Date).AddMinutes($WaitReady)
-  Say "waiting up to $WaitReady min for the phone (read-only check every 3 min; two ready checks in a row start the pass; deadline $($deadline.ToString('HH:mm')))"
-  $ready = 0
-  while ($true) {
-    $note = ""
-    try {
-      $adb = Find-Adb
-      $ser = Find-Serial $adb $Serial
-      $s = Phone-State $adb $ser
-      $ok = ($s.Reached -and $s.Awake -and -not $s.Locked)
-      $note = "$ser awake=$($s.Awake) locked=$($s.Locked) top=$($s.Top)"
-    } catch { $ok = $false; $note = $_.Exception.Message }
-    $ready = if ($ok) { $ready + 1 } else { 0 }
-    Say "wait: $(if ($ok) { "ready ($ready of 2)" } else { 'not ready' }): $note"
-    if ($ready -ge 2) { Say "wait: two ready checks in a row; the phone was set down, not picked up. Going on."; return }
-    $left = [int]($deadline - (Get-Date)).TotalSeconds
-    if ($left -le 0) { break }
-    Start-Sleep -Seconds ([Math]::Min(180, $left))
-  }
-  throw "PHONE NOT READY: no two ready checks in a row within $WaitReady min (never woken or unlocked by the pass)."
-}
-
 function Get-FreePorts([int]$n) {
   if ($PortRange -match '^(\d+)-(\d+)$') { $lo = [int]$Matches[1]; $hi = [int]$Matches[2] }
   else { throw "-PortRange must look like 5480-5489" }
@@ -338,7 +328,9 @@ function Run-Node([string]$script, [string]$logName, [int]$timeoutS) {
 function Do-Check {
   $adb = Find-Adb
   $ser = Find-Serial $adb $Serial
-  Assert-PhoneReady $adb $ser
+  $st = Phone-State $adb $ser
+  Say "phone ${ser}: display=$($st.Display)"
+  Assert-PhoneQuiet $adb $ser
   Say "tunnels already there (left alone): $((& $adb -s $ser reverse --list) -join '; ')"
   Say "forwards: $((& $adb forward --list) -join '; ')"
   Say "phone is ready ($ser, adb $adb)"
@@ -361,7 +353,7 @@ function Do-Start {
   if (-not $Dry) {
     $adb = Find-Adb
     $ser = Find-Serial $adb $Serial
-    Assert-PhoneReady $adb $ser
+    Assert-PhoneQuiet $adb $ser 0   # K1142: the state first (fail before the builds); the quiet window is demanded at step 4, just before the pass opens anything
     $display = (Phone-State $adb $ser).Display   # K193: the display as the phone sits, recorded beside the viewport the pass measures at
     Say "others' tunnels (left alone): $((& $adb -s $ser reverse --list) -join '; ')"
   }
@@ -446,8 +438,10 @@ function Do-Start {
     return
   }
 
-  # 4. tunnels: only the pass's two ports; the 9222 forward only if it is missing
-  Assert-PhoneReady $adb $ser
+  # 4. tunnels: only the pass's two ports; the 9222 forward only if it is missing.
+  # K1142: first the whole readiness check (the builds took minutes: the launcher in
+  # front and a quiet window NOW), because step 5 opens Chrome over whatever is there.
+  Assert-PhoneQuiet $adb $ser
   foreach ($port in $portA, $portB) {
     & $adb -s $ser reverse "tcp:$port" "tcp:$port" | Out-Null
     $cfg.tunnels = @($cfg.tunnels) + $port
@@ -597,7 +591,7 @@ function Do-Cleanup {
 # --------------------------------------------------------------- dispatch
 $problem = $null
 try {
-  if ($WaitReady -gt 0 -and -not $Dry -and $Phase -in "check", "start", "all") { Wait-PhoneReady }
+
   if ($Phase -eq "check") { Do-Check }
   elseif ($Phase -eq "start") { Do-Start }
   elseif ($Phase -eq "frames") { Do-Frames }

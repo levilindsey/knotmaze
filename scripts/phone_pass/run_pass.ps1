@@ -3,12 +3,17 @@
 # use this for a one-off pass (a scan step, a spot check). It does NOT clean up the pass it starts: call it again with
 # -Cleanup <that pass> or run `phone_pass.ps1 -Phase cleanup -Out <round>\<pass>`.
 #
-# Call (from anywhere; the phone must be awake and unlocked, the idle wait and the phone lock are the caller's):
-#   pwsh -NoProfile -File scripts/phone_pass/run_pass.ps1 -Round <round dir> -Name <pass> -Base <sha8> -Head <sha8> [-Cleanup <earlier pass>]
+# Call (from anywhere; the phone must be ready - awake, unlocked, the home screen in front - and the idle wait and the phone lock
+# are the caller's):
+#   pwsh -NoProfile -File scripts/phone_pass/run_pass.ps1 -Round <round dir> -Name <pass> -Base <sha8> -Head <sha8> [-Cleanup <earlier pass>] [-AllowChrome] [-QuietS <s>]
 #   -Round    the round folder (untracked, .claude/probes/rounds/<name>; round.mjs): its pool\<sha8> holds the builds
 #             (a missing one is built by build_pool.ps1 first) and the pass gets the folder <Round>\<Name>
 #   -Base / -Head   the two builds, 8-character shas (the pool's folder names); base and head are the labels scan.mjs plans use
 #   -Cleanup  a pass folder of this round to clean up first (phone_pass.ps1 -Phase cleanup)
+#   -AllowChrome / -QuietS   K1142's guard: the start runs the kit's shared readiness check (phone_ready.mjs) before it opens
+#             anything on the phone, so it needs the launcher in front and no touch for -QuietS seconds (default 120), else it
+#             exits 3 ("phone not ready: <what failed>", in logs\start.txt) and this script exits 2. A pass cleaned up just before
+#             leaves Chrome in front, so with -Cleanup Chrome is allowed and the window is 30 s; -AllowChrome / -QuietS set them.
 # The start runs through Start-Process with its output in files (<Round>\<Name>\logs\start.txt, start.err) and this script polls
 # logs\run.log for "phone pass (start) exit 0": a piped or captured `-Phase start` hangs its caller, because the servers and the
 # watchdog it leaves running inherit the pipe. So does a caller of THIS script (tested 2026-10-27c): a call whose output goes through
@@ -23,7 +28,9 @@ param(
   [Parameter(Mandatory)][string]$Name,
   [Parameter(Mandatory)][string]$Base,
   [Parameter(Mandatory)][string]$Head,
-  [string]$Cleanup = ""
+  [string]$Cleanup = "",
+  [switch]$AllowChrome,
+  [int]$QuietS = -1
 )
 $repo = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $r = (Resolve-Path $Round).Path
@@ -46,8 +53,13 @@ foreach ($s in @($Base, $Head)) {
     Copy-Item -Recurse -Force "$r\pool\$s" $dst
   }
 }
-Start-Process -FilePath pwsh -ArgumentList @('-NoProfile', '-File', $phonePass, '-Phase', 'start', '-Base', $Base, '-Head', $Head, '-Out', "$r\$Name", '-Reps', '1') -RedirectStandardOutput "$r\$Name\logs\start.txt" -RedirectStandardError "$r\$Name\logs\start.err" -WindowStyle Hidden | Out-Null
-$deadline = (Get-Date).AddSeconds(100); $ok = $false
+# K1142: the start's readiness check watches a quiet window before it opens anything, so the poll allows for it.
+$chrome = $AllowChrome -or [bool]$Cleanup
+$quiet = if ($QuietS -ge 0) { $QuietS } elseif ($Cleanup) { 30 } else { 120 }
+$startArgs = @('-NoProfile', '-File', $phonePass, '-Phase', 'start', '-Base', $Base, '-Head', $Head, '-Out', "$r\$Name", '-Reps', '1', '-QuietS', $quiet)
+if ($chrome) { $startArgs += '-AllowChrome' }
+Start-Process -FilePath pwsh -ArgumentList $startArgs -RedirectStandardOutput "$r\$Name\logs\start.txt" -RedirectStandardError "$r\$Name\logs\start.err" -WindowStyle Hidden | Out-Null
+$deadline = (Get-Date).AddSeconds(100 + $quiet); $ok = $false
 while ((Get-Date) -lt $deadline) {
   if (Test-Path "$r\$Name\logs\run.log") {
     $t = Get-Content "$r\$Name\logs\run.log" -Raw

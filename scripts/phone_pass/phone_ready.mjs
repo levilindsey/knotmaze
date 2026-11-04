@@ -30,7 +30,7 @@
 //        [--allow-chrome] [--progress] [--log <file>]
 //   --quiet-s       the window in seconds; 0 = a state-only read (screen, lock, front), no input watch
 //   --timeout-min   how long to keep re-checking, from the start (default 0: one quiet window, no more patience)
-//   --progress      print a timestamped line when the state changes (a long wait; idle_wait.ps1 uses it)
+//   --progress      print a line when the state changes, on a touch and once a minute (a long wait); the callers stamp each line
 //   --serial        default: the one device `adb devices` lists in state "device" (none or several: exit 6)
 //   --adb           default: the running adb server's own binary, $env:ADB, adb on PATH, the SDK, the winget platform-tools
 // Exit: 0 ready, 3 the phone's state (screen off, locked, an app or Chrome in front, gone), 4 touched (never quiet for the
@@ -302,8 +302,7 @@ async function main(argv) {
   let o;
   try { o = parseArgs(argv); } catch (e) { console.log(`phone not ready: ${e.message}`); return EXIT.NO_PHONE; }
   const out = (line) => { console.log(line); if (o.log) appendFileSync(o.log, `${line}\n`); };
-  const stamp = () => new Date().toTimeString().slice(0, 8);
-  const say = o.progress ? (m) => out(`${stamp()} ready-check: ${m}`) : undefined;
+  const say = o.progress ? (m) => out(`ready-check: ${m}`) : undefined; // unstamped: every caller's Say stamps its lines
   try {
     const r = await ensurePhoneReady({ ...o, say });
     out(r.line);

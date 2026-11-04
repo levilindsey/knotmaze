@@ -5,25 +5,27 @@
 #   2. moves the tripped run's results into <Out>\tripped\ (bench.jsonl,
 #      looks_report.json, summary.md; copies the watchdog's log, getevent.out
 #      and the trip verdict) and deletes the trip file;
-#   3. waits until the touchscreen has been quiet for -QuietMin minutes (a
-#      touch restarts the wait; gives up after -GiveUpMin);
-#   4. needs the phone STILL awake and unlocked: it never wakes it (no key
-#      events) and never unlocks it. If it is asleep or locked it waits for a
-#      person, read-only, like `phone_pass.ps1 -WaitReady` (a check every 3
-#      minutes, two ready in a row, up to -WaitReadyMin, default 240), and
-#      stops and reports (exit 3) only at that deadline;
-#   5. reruns `phone_pass.ps1 -Phase all` on the same -Out with the parameters
+#   3. waits, read-only, until the phone is READY and quiet (K1142: ONE call to
+#      the kit's shared check, phone_ready.mjs): screen on, unlocked, the
+#      launcher in front (-AllowChrome: Chrome too) and no touch on the
+#      touchscreen or a button for -QuietMin minutes. A touch restarts the
+#      wait. It never wakes or unlocks the phone (no key events): an asleep or
+#      locked one waits for a person. Gives up after -GiveUpMin + -WaitReadyMin
+#      (exit 2 if it was touched, 3 if the state never came right);
+#   4. reruns `phone_pass.ps1 -Phase all` on the same -Out with the parameters
 #      stored in <Out>\config.json.
 # Run it in the background: it can take -GiveUpMin + the pass's own time.
 # Exit codes: 0 the rerun finished clean, 1 no trip to retry or bad config,
-# 3 phone not awake/unlocked, 4 already retried once, 5 no touchscreen found,
-# 2 gave up waiting; else the rerun's own code (2 = tripped again).
-# Usage: pwsh -NoProfile -File retry_quiet.ps1 -Out <pass folder> [-QuietMin 15] [-GiveUpMin 90] [-WaitReadyMin 240] [-NoRun]
+# 3 phone not ready (asleep, locked, an app in front, gone), 4 already retried
+# once, 5 no touchscreen found, 2 gave up waiting (touched); else the rerun's own
+# code (2 = tripped again).
+# Usage: pwsh -NoProfile -File retry_quiet.ps1 -Out <pass folder> [-QuietMin 15] [-GiveUpMin 90] [-WaitReadyMin 240] [-AllowChrome] [-NoRun]
 param(
   [Parameter(Mandatory)][string]$Out,
   [int]$QuietMin = 15,
   [int]$GiveUpMin = 90,
-  [int]$WaitReadyMin = 240,   # K171 (b): how long to wait for an asleep or locked phone after the quiet wait (0 = exit 3 at once)
+  [int]$WaitReadyMin = 240,   # K171 (b): extra minutes on top of -GiveUpMin for a phone that is asleep, locked or not on the home screen
+  [switch]$AllowChrome,       # K1142: Chrome in front counts as ready (a docked phone that stays awake after the cleanup leaves it there)
   [switch]$NoRun   # a harness check: do everything but the rerun, which is only printed
 )
 $ErrorActionPreference = "Stop"
@@ -59,50 +61,21 @@ foreach ($f in "state\watchdog.log", "state\getevent.out", "state\watchdog.trip"
 Say "retry: tripped run set aside in $aside ($((Get-Content (Join-Path $aside 'watchdog.trip') -Raw).Trim()))"
 Remove-Item (Join-Path $state "watchdog.trip") -Force
 
-# The touchscreen, from `getevent -p` (the first device whose name has "touch").
-$touch = $null
-$cur = $null
-foreach ($l in (& $adb -s $dev shell "getevent -p" 2>&1)) {
-  if ($l -match '^add device \d+: (/dev/input/event\d+)') { $cur = $Matches[1] }
-  elseif ($cur -and $l -match 'name:\s+"([^"]+)"') {
-    if (-not $touch -and $Matches[1] -match 'touch') { $touch = $cur }
-    $cur = $null
-  }
-}
-if (-not $touch) { Say "retry: no touchscreen device found in getevent -p; not retrying"; exit 5 }
-
-$giveUp = (Get-Date).AddMinutes($GiveUpMin)
-$quiet = $false
-Say "retry: waiting for $QuietMin min without a touch on $touch (gives up at $($giveUp.ToString('HH:mm')))"
-while ($true) {
-  $secs = [int]($giveUp - (Get-Date)).TotalSeconds
-  if ($secs -lt $QuietMin * 60) { break }
-  $res = & $adb -s $dev shell "timeout $($QuietMin * 60) getevent -l -c 1 $touch; echo EXIT=`$?" 2>&1 | Out-String
-  if ($res -match 'EXIT=124') { $quiet = $true; break }
-  if ($res -match 'EV_') { Say "retry: a touch; the $QuietMin min wait restarts"; continue }
-  Say "retry: getevent ended without a touch: $(($res -replace '\s+', ' ').Trim())"
-  Start-Sleep -Seconds 60
-}
-if (-not $quiet) { Say "retry: no $QuietMin quiet minutes before $($giveUp.ToString('HH:mm')); not retrying"; exit 2 }
-
-# Never wake it and never unlock it: an asleep or locked phone is a person's
-# call. K171 (b): instead of giving up at once, wait the way phone_pass.ps1
-# -WaitReady does (a read-only check every 3 minutes, two ready checks in a
-# row, up to -WaitReadyMin), and exit 3 only at that deadline.
-$o = & $adb -s $dev shell "dumpsys power | grep -E 'mWakefulness='; dumpsys window | grep -E 'isKeyguardShowing'" 2>&1 | Out-String
-if ($o -notmatch 'mWakefulness=Awake' -or $o -match 'isKeyguardShowing=true') {
-  if ($WaitReadyMin -le 0) {
-    Say "retry: the phone is asleep or locked after the quiet wait; not retrying (it is never woken or unlocked by the pass)"
-    exit 3
-  }
-  Say "retry: the phone is asleep or locked after the quiet wait; waiting up to $WaitReadyMin min for a person to leave it awake and unlocked (read-only checks, never woken)"
-  & pwsh -NoProfile -File $pass -Phase check -WaitReady $WaitReadyMin -Serial $dev | Out-Host
-  if ($LASTEXITCODE -ne 0) {
-    Say "retry: the phone was not ready within $WaitReadyMin min; not retrying"
-    exit 3
-  }
-}
-Say "retry: $QuietMin quiet minutes and the phone is awake; running the pass again (the one retry)"
+# K1142: ONE call to the kit's shared check does the three jobs three loops did here
+# (find the touchscreen, wait for -QuietMin quiet minutes, wait for an asleep or locked
+# phone): ready = screen on, unlocked, the launcher in front (Chrome too with
+# -AllowChrome) and no touch on the touchscreen or a button for -QuietMin minutes.
+# Read-only; it never wakes or unlocks the phone.
+$node = (Get-Command node -ErrorAction Stop).Source
+$readyArgs = @((Join-Path $PSScriptRoot "phone_ready.mjs"), "--adb", $adb, "--serial", $dev, "--quiet-s", ($QuietMin * 60), "--timeout-min", ($GiveUpMin + $WaitReadyMin), "--progress")
+if ($AllowChrome) { $readyArgs += "--allow-chrome" }
+Say "retry: waiting for the phone: launcher in front and $QuietMin min without a touch (gives up at $((Get-Date).AddMinutes($GiveUpMin + $WaitReadyMin).ToString('HH:mm')))"
+& $node @readyArgs 2>&1 | ForEach-Object { Say "retry: $_" }
+$rc = $LASTEXITCODE
+if ($rc -ne 0) {
+  Say "retry: not retrying ($(switch ($rc) { 4 { 'it was touched' } 5 { 'no touchscreen found' } default { 'the phone was not ready' } }); it is never woken or unlocked by the pass)"
+  exit $(switch ($rc) { 4 { 2 } 5 { 5 } default { 3 } })
+}Say "retry: $QuietMin quiet minutes and the phone is ready; running the pass again (the one retry)"
 $argv = @("-NoProfile", "-File", $pass, "-Phase", "all", "-Base", $cfg.refA, "-Head", $cfg.refB, "-Out", $Out,
   "-Reps", [string]$cfg.reps, "-Moves", (@($cfg.moves) -join ","), "-LoadSeconds", [string]$cfg.loadSeconds)
 if ($cfg.portRange) { $argv += @("-PortRange", $cfg.portRange) }
@@ -110,6 +83,8 @@ if ($cfg.looks) { $argv += @("-Looks", $cfg.looks) }
 if ($cfg.noise) { $argv += @("-Noise", $cfg.noise) }
 if ($cfg.viewport) { $argv += @("-Viewport", $cfg.viewport) }
 if ($cfg.serial) { $argv += @("-Serial", $cfg.serial) }
+$argv += @("-QuietS", "30")   # the check above just watched $QuietMin quiet minutes; the pass's own is a short last look
+if ($AllowChrome) { $argv += "-AllowChrome" }
 if ($NoRun) { Say "retry: -NoRun, so the rerun is only printed: pwsh $($argv -join ' ')"; exit 0 }
 & pwsh @argv
 $code = $LASTEXITCODE

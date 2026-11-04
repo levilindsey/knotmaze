@@ -10,7 +10,10 @@
 //   node scripts/phone_pass/bisect2.mjs <round-dir> [--stop hh:mm] [--stop2 hh:mm]
 //   --stop    no bisect pass starts at or after hh:mm (local time; env STOP; default none)
 //   --stop2   no confirm starts at or after hh:mm (env STOP2; default none)
-// The phone must be awake and unlocked, and the idle wait (idle_wait.ps1) and the phone lock belong to the caller.
+// The phone must be ready, and the idle wait (idle_wait.ps1) and the phone lock belong to the caller. K1142: every pass's start
+// runs the kit's readiness check (phone_ready.mjs) before it opens anything: the first needs the launcher in front and 120 s
+// without a touch; a later pass follows this driver's own cleanup, which leaves Chrome in front, so it allows Chrome and needs 30 s.
+// A person on the phone fails a start (exit 3 or 4 in logs/start.txt, "PHONE NOT READY: ..."), which stops the driver as any failed start does.
 //
 // <round-dir>/round.json (base, head and commits: round.mjs):
 //   "steps":    [{ "id": "T1", "link": "dense", "lo": 29, "hi": 59, "thr": 58.05, "up": true, "prio": 0, "firstMid": 40 }]
@@ -55,6 +58,11 @@ function cleanup(name) {
   log("cleanup", name, "exit", st);
   return st;
 }
+let starts = 0; // passes started so far: only the first has no cleanup of ours behind it (K1142)
+// The readiness check's verdict in a failed start's log ("PHONE NOT READY: ..."), or "".
+const notReady = (dir) => {
+  try { return (readFileSync(`${dir}/logs/start.txt`, "utf8").split(/\r?\n/).filter((l) => /PHONE NOT READY/.test(l)).pop() || "").replace(/^.*?(PHONE NOT READY)/, "$1"); } catch { return ""; }
+};
 // One pass: base and head are full shas; plan is scan.mjs's PLAN ([[base|head, link], ...]). Returns the runs, or null on a failure.
 function pass(name, baseSha, headSha, plan) {
   const dir = `${root}/${name}`;
@@ -69,8 +77,9 @@ function pass(name, baseSha, headSha, plan) {
     cpSync(`${root}/pool/${s}`, dst, { recursive: true });
   }
   log("pass", name, "base", shorts[0], "head", shorts[1], "plan", JSON.stringify(plan));
-  const st = run("pwsh", ["-NoProfile", "-File", PHONE_PASS, "-Phase", "start", "-Base", shorts[0], "-Head", shorts[1], "-Out", dir, "-Reps", "1"], `${dir}/logs/start.txt`);
-  if (st !== 0) { log("START FAILED", name, st); cleanup(name); return null; }
+  const guard = starts++ ? ["-AllowChrome", "-QuietS", "30"] : []; // K1142 (see the header)
+  const st = run("pwsh", ["-NoProfile", "-File", PHONE_PASS, "-Phase", "start", "-Base", shorts[0], "-Head", shorts[1], "-Out", dir, "-Reps", "1", ...guard], `${dir}/logs/start.txt`);
+  if (st !== 0) { log("START FAILED", name, st, notReady(dir)); cleanup(name); return null; }
   const sc = run("node", [SCAN, dir + "/config.json"], `${dir}/logs/scan.out.txt`, { DIR: "scan", PLAN: JSON.stringify(plan), ITER: "60" });
   cleanup(name);
   if (sc !== 0) { log("SCAN FAILED", name, sc); return null; }

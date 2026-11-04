@@ -21,13 +21,21 @@ master) are built once each into `<Out>\builds` (`preview.ps1 -Root`,
 K150), served on two ports from 5480-5489, and every sample checks its
 page's stamp SHA (an A/A pass builds once and serves it on both ports).
 Phases: start | frames | looks | cleanup | summary (`all` runs them in
-order). The phone must be awake and unlocked first (the pass never wakes
-it); the watchdog stops the pass on a touch, a key, a lock or another
-app in front, and `retry_quiet.ps1` retries once after 15 quiet minutes.
-`-WaitReady <min>` (K171 b) waits for the phone read-only (a check every
-3 minutes, two ready in a row start the pass, exit 3 at the deadline);
-`retry_quiet.ps1` waits the same way (`-WaitReadyMin`) instead of
-exiting 3, and `-Phase check` is the one-shot read-only check. Never
+order). THE GUARD (K1142, 2026-11-03; `docs/design/K1142_phone_guard.md`):
+every runner that opens anything on the phone first calls the kit's ONE
+readiness check, `scripts/phone_pass/phone_ready.mjs` (screen on, unlocked,
+the LAUNCHER in front, no touch on the touchscreen or a button for
+`-QuietS` 120 s, observed with `getevent`; Chrome in front is refused
+unless `-AllowChrome`, which a pass chained after a cleanup, bisect2's
+later passes and `run_pass.ps1 -Cleanup` pass with a 30 s window; read-only,
+never wakes, unlocks or sends a key; not ready = `-Phase check|start`
+exit 3 with one line, `phone not ready: <what failed>`). `idle_wait.ps1`,
+`retry_quiet.ps1` and `-WaitReady <min>` (re-checks with backoff for that
+long) are callers of it. The phone is never woken (the pass
+needs it ready first); the watchdog stops the pass on a touch, a key, a
+lock or another app in front, and `retry_quiet.ps1` retries once after 15
+quiet minutes (`-WaitReadyMin` more for a phone not ready); `-Phase
+check` is the one-shot read-only check. Never
 pipe a `-Dry -Phase start` run (its Chrome child inherits the pipe and
 the command never returns): redirect it to a file. Nor let a background
 or piped task be the one that starts the adb server: the server is the
@@ -123,10 +131,11 @@ aspect; the looks report counts both in `shotStats`). `emulation_unclipped.png`
 keeps one bare capture as the evidence. A `-Dry` run captures at the
 desktop's display scale (2), so the clip is only exercised for real on the
 phone. THE CAPTURE TILES WHEN THE PHONE SITS IN LANDSCAPE (K513, 2026-10-16): the physical capture surface is then 2125x1017 device px, shorter than the 1977-device-px portrait capture, and Android Chrome repeats that surface down the request (period 1017 rows; each tile paints only the native-height top, 872 rows, leaving flat 250,250,248 bands - the last tile's tail reads as an 88-row blank strip at the clipped shot's bottom). The page is not blank: it reports 411x753 with canvas backing 822x1506, and a capture of the same CSS viewport at dpr 1 on the capture's own CDP session (411x753, fits the surface, cannot tile) shows the full page with 0 flat rows. `emulation.mjs` therefore re-checks any flat strip at dpr 1 (`emulation_lowdpr.png`) and fails `noBlankStrip` only when the strip survives there. K514 (2026-10-16): `shotViewport` now captures phone shots at a surface-fitting scale (CDP `Page.captureScreenshot` on the page's own emulation session, clip scale so height x dpr x scale <= 850 rows fits one tile; `shotStats.scaled` counts them) - clip-offset bands tile too, since the surface itself only paints its top ~872 rows. Looks shots are therefore 464x850 for the 411x753 viewport, full page, no repetition (verified `.claude/probes/K514/pass/`: emulation REAL, looks ok, sheet diff 0 px A/A); dry/desktop keeps the native-scale capture. THE WATCHDOG TRIPS WHEN A PERSON USES THE PHONE: `-Phase check`
-calls an awake, unlocked phone ready even with another app in front
-(sh.paseo, the Claude app), and the start then trips at once ("top
+called an awake, unlocked phone ready even with another app in front
+(sh.paseo, the Claude app), and the start then tripped at once ("top
 activity is sh.paseo, expected com.android.chrome"; K193, 13:21) after a
-clean cleanup. `retry_quiet.ps1` then waits 15 quiet minutes and every touch
+clean cleanup (that was before K1142's shared check: now an app in front is
+"not ready" and nothing opens). `retry_quiet.ps1` then waits 15 quiet minutes and every touch
 (dozens of events a second while a finger moves) restarts the wait; it
 gives up at `-GiveUpMin`. THE PORTRAIT FLOOR (K253, 2026-10-14):
 `scripts/phone_pass/noise.json` is a 3-rep A/A on master 9a5eaa8 (20:37-21:02,
