@@ -384,3 +384,99 @@ end 11:12:54: thermal 0, battery 27.3 C, media none playing, in front Chrome
 input events: none
 errors: 0
 
+# phone time 2026-11-03T19:32:56.392Z (s3dtentv)
+
+scale 2, frames 60, fit 411x753 (K923's bbox fit), back to back after 10 warm-ups (K923), mode tentv, render sync (no timer query); label_b_glsl.ts: the worktree's
+start 11:32:57: thermal 0, battery 26.6 C, media none playing, in front the launcher
+renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
+
+- muse_hash: 822x1506, sync p50 9.3 p95 11.8 ms (n 60, timer false); upload p50 4.5 ms (802816 B); prep 129.1 ms; segs 23349, fills 145, groups 117; lost 0; before it: thermal 0, battery 26.6 C, media none playing; 11567 ms
+- muse_default_tw: 822x1506, sync p50 9.4 p95 12.7 ms (n 60, timer false); upload p50 4.7 ms (851968 B); prep 76.4 ms; segs 23642, fills 305, groups 117; lost 0; before it: thermal 0, battery 26.6 C, media none playing; 6000 ms
+- def: 822x1506, sync p50 10.3 p95 14.9 ms (n 60, timer false); upload p50 5.3 ms (884736 B); prep 78.8 ms; segs 24518, fills 332, groups 125; lost 0; before it: thermal 0, battery 26.6 C, media none playing; 6164 ms
+- fat: 822x1506, sync p50 7.8 p95 10.1 ms (n 60, timer false); upload p50 1.6 ms (606208 B); prep 51.3 ms; segs 17325, fills 0, groups 0; lost 0; before it: thermal 0, battery 26.6 C, media none playing; 4549 ms
+- ring: 822x1506, sync p50 6.7 p95 9.8 ms (n 60, timer false); upload p50 1.1 ms (212992 B); prep 17.1 ms; segs 4564, fills 41, groups 16; lost 0; before it: thermal 0, battery 26.6 C, media none playing; 1950 ms
+- user_tw42.lightpaper: 822x1506, sync p50 7.7 p95 9.9 ms (n 60, timer false); upload p50 2.2 ms (409600 B); prep 30.4 ms; segs 10645, fills 143, groups 47; lost 0; before it: thermal 0, battery 26.6 C, media none playing; 3251 ms
+- g41_def_tw42: 822x1506, sync p50 10.4 p95 12.8 ms (n 60, timer false); upload p50 5.2 ms (901120 B); prep 91.4 ms; segs 24660, fills 380, groups 125; lost 0; before it: thermal 0, battery 26.6 C, media none playing; 13882 ms
+- g41_def_tw64: 822x1506, sync p50 9.4 p95 13.5 ms (n 60, timer false); upload p50 5.2 ms (851968 B); prep 92.5 ms; segs 24353, fills 261, groups 125; lost 0; before it: thermal 0, battery 26.9 C, media none playing; 6441 ms
+- g41_ring_tw42: 822x1506, sync p50 6.7 p95 9.3 ms (n 60, timer false); upload p50 1.1 ms (212992 B); prep 15.3 ms; segs 4606, fills 51, groups 16; lost 0; before it: thermal 0, battery 26.9 C, media none playing; 1436 ms
+- g41_ring_tw64: 822x1506, sync p50 6.7 p95 10.0 ms (n 60, timer false); upload p50 1.1 ms (212992 B); prep 23.5 ms; segs 4554, fills 38, groups 16; lost 0; before it: thermal 0, battery 26.9 C, media none playing; 1577 ms
+- g41_user_tw42: 822x1506, sync p50 7.4 p95 10.8 ms (n 60, timer false); upload p50 2.1 ms (409600 B); prep 36.2 ms; segs 10645, fills 143, groups 47; lost 0; before it: thermal 0, battery 26.9 C, media none playing; 2500 ms
+- g41_user_tw64: 822x1506, sync p50 7.7 p95 10.6 ms (n 60, timer false); upload p50 2.1 ms (409600 B); prep 43.4 ms; segs 10547, fills 110, groups 47; lost 0; before it: thermal 0, battery 26.9 C, media none playing; 4089 ms
+
+end 11:34:14: thermal 0, battery 26.9 C, media none playing, in front Chrome
+
+input events: none
+errors: 0
+
+# phone time 2026-11-03T19:34:38.913Z (s3dfloorall)
+
+scale 2, frames 60, fit 411x753 (K923's bbox fit), back to back after 10 warm-ups (K923), FLOOR (readback only), render sync (no timer query); label_b_glsl.ts: the worktree's
+start 11:34:39: thermal 0, battery 26.9 C, media none playing, in front the launcher
+renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
+
+- muse_hash: 822x1506, sync p50 2.3 p95 4.6 ms (n 60, timer false); upload p50 0.0 ms (802816 B); prep 126.7 ms; segs 23349, fills 145, groups 117; lost 0; before it: thermal 0, battery 26.9 C, media none playing; 15750 ms
+- muse_default_tw: 822x1506, sync p50 2.3 p95 3.5 ms (n 60, timer false); upload p50 0.0 ms (851968 B); prep 75.2 ms; segs 23642, fills 305, groups 117; lost 0; before it: thermal 0, battery 27.3 C, media none playing; 12392 ms
+- def: 822x1506, sync p50 1.8 p95 4.2 ms (n 60, timer false); upload p50 0.0 ms (884736 B); prep 78.4 ms; segs 24518, fills 332, groups 125; lost 0; before it: thermal 0, battery 27.3 C, media none playing; 5926 ms
+- fat: 822x1506, sync p50 2.1 p95 4.4 ms (n 60, timer false); upload p50 0.0 ms (606208 B); prep 46.6 ms; segs 17325, fills 0, groups 0; lost 0; before it: thermal 0, battery 27.3 C, media none playing; 2271 ms
+- ring: 822x1506, sync p50 2.1 p95 3.1 ms (n 60, timer false); upload p50 0.0 ms (212992 B); prep 17.0 ms; segs 4564, fills 41, groups 16; lost 0; before it: thermal 0, battery 27.3 C, media none playing; 1074 ms
+- user_tw42.lightpaper: 822x1506, sync p50 2.1 p95 3.5 ms (n 60, timer false); upload p50 0.0 ms (409600 B); prep 32.0 ms; segs 10645, fills 143, groups 47; lost 0; before it: thermal 0, battery 27.3 C, media none playing; 2099 ms
+- g41_def_tw42: 822x1506, sync p50 1.0 p95 2.5 ms (n 60, timer false); upload p50 0.0 ms (901120 B); prep 68.1 ms; segs 24660, fills 380, groups 125; lost 0; before it: thermal 0, battery 27.3 C, media none playing; 5999 ms
+- g41_def_tw64: 822x1506, sync p50 2.0 p95 3.4 ms (n 60, timer false); upload p50 0.0 ms (851968 B); prep 95.8 ms; segs 24353, fills 261, groups 125; lost 0; before it: thermal 0, battery 27.3 C, media none playing; 4006 ms
+- g41_ring_tw42: 822x1506, sync p50 1.9 p95 3.2 ms (n 60, timer false); upload p50 0.0 ms (212992 B); prep 12.5 ms; segs 4606, fills 51, groups 16; lost 0; before it: thermal 0, battery 27.3 C, media none playing; 874 ms
+- g41_ring_tw64: 822x1506, sync p50 2.6 p95 4.3 ms (n 60, timer false); upload p50 0.0 ms (212992 B); prep 17.5 ms; segs 4554, fills 38, groups 16; lost 0; before it: thermal 0, battery 27.3 C, media none playing; 1335 ms
+- g41_user_tw42: 822x1506, sync p50 2.7 p95 4.4 ms (n 60, timer false); upload p50 0.0 ms (409600 B); prep 29.7 ms; segs 10645, fills 143, groups 47; lost 0; before it: thermal 0, battery 27.3 C, media none playing; 2258 ms
+- g41_user_tw64: 822x1506, sync p50 1.9 p95 3.9 ms (n 60, timer false); upload p50 0.0 ms (409600 B); prep 48.3 ms; segs 10547, fills 110, groups 47; lost 0; before it: thermal 0, battery 27.3 C, media none playing; 1768 ms
+
+end 11:35:51: thermal 0, battery 27.3 C, media none playing, in front Chrome
+
+input events: none
+errors: 0
+
+# phone time 2026-11-03T19:36:15.095Z (s3d3)
+
+scale 2, frames 60, fit 411x753 (K923's bbox fit), one a rAF, render sync (no timer query); label_b_glsl.ts: the worktree's
+start 11:36:16: thermal 0, battery 27.5 C, media none playing, in front the launcher
+renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
+
+- muse_hash: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): kick 2.2/3.2, emptynoup 4.5/6.6, empty 5.6/10.3, tentv 9.3/12.4, floor 2.1/3.5; prep 131.4 ms; segs 23349, fills 145; lost 0; before it: thermal 0, battery 27.5 C, media none playing; 6911 ms
+- muse_default_tw: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): kick 2.0/3.4, emptynoup 4.0/5.3, empty 5.1/6.3, tentv 9.5/13.6, floor 3.1/4.6; prep 76.5 ms; segs 23642, fills 305; lost 0; before it: thermal 0, battery 27.5 C, media none playing; 6957 ms
+- def: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): kick 1.6/3.3, emptynoup 4.0/5.7, empty 5.5/8.9, tentv 9.6/11.9, floor 1.9/3.7; prep 78.1 ms; segs 24518, fills 332; lost 0; before it: thermal 0, battery 27.5 C, media none playing; 6513 ms
+- fat: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): kick 2.2/3.9, emptynoup 4.1/5.8, empty 5.1/8.1, tentv 7.8/15.2, floor 2.0/3.3; prep 51.2 ms; segs 17325, fills 0; lost 0; before it: thermal 0, battery 27.5 C, media none playing; 5560 ms
+- ring: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): kick 2.5/4.3, emptynoup 3.8/5.3, empty 4.6/5.7, tentv 6.7/8.1, floor 2.3/3.9; prep 17.7 ms; segs 4564, fills 41; lost 0; before it: thermal 0, battery 27.5 C, media none playing; 2561 ms
+- user_tw42.lightpaper: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): kick 2.1/4.4, emptynoup 4.0/6.7, empty 4.9/8.1, tentv 7.6/10.1, floor 2.2/4.0; prep 31.6 ms; segs 10645, fills 143; lost 0; before it: thermal 0, battery 27.5 C, media none playing; 4285 ms
+- g41_def_tw42: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): kick 1.6/3.1, emptynoup 3.9/5.2, empty 5.2/7.0, tentv 9.5/11.8, floor 2.3/4.2; prep 70.2 ms; segs 24660, fills 380; lost 0; before it: thermal 0, battery 27.1 C, media none playing; 6273 ms
+- g41_def_tw64: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): kick 1.5/3.8, emptynoup 4.6/6.5, empty 5.7/8.3, tentv 9.5/15.9, floor 2.5/4.1; prep 103.8 ms; segs 24353, fills 261; lost 0; before it: thermal 0, battery 27.1 C, media none playing; 7745 ms
+- g41_ring_tw42: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): kick 2.2/3.5, emptynoup 4.3/6.1, empty 5.1/7.6, tentv 6.4/9.1, floor 1.5/3.0; prep 17.0 ms; segs 4606, fills 51; lost 0; before it: thermal 0, battery 27.1 C, media none playing; 2794 ms
+- g41_ring_tw64: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): kick 2.2/3.4, emptynoup 3.9/5.3, empty 4.4/5.8, tentv 6.5/9.7, floor 1.9/3.1; prep 18.5 ms; segs 4554, fills 38; lost 0; before it: thermal 0, battery 27.1 C, media none playing; 2603 ms
+- g41_user_tw42: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): kick 1.5/3.1, emptynoup 4.0/6.6, empty 5.0/6.5, tentv 7.8/9.7, floor 2.4/4.3; prep 30.1 ms; segs 10645, fills 143; lost 0; before it: thermal 0, battery 27.1 C, media none playing; 3446 ms
+- g41_user_tw64: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): kick 2.0/3.1, emptynoup 3.7/5.3, empty 4.8/6.5, tentv 7.3/9.4, floor 2.1/3.4; prep 44.9 ms; segs 10547, fills 110; lost 0; before it: thermal 0, battery 27.1 C, media none playing; 4071 ms
+
+end 11:37:29: thermal 0, battery 27.1 C, media none playing, in front Chrome
+
+input events: none
+errors: 0
+
+# phone time 2026-11-03T19:38:41.594Z (s3d2)
+
+scale 2, frames 60, fit 411x753 (K923's bbox fit), one a rAF, render sync (no timer query); label_b_glsl.ts: the worktree's
+start 11:38:42: thermal 0, battery 27.2 C, media none playing, in front the launcher
+renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
+
+- muse_hash: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tentv 9.3/11.4, tentvdegen 8.0/11.0, tentvinv 40.7/45.9, tent 12.6/15.8, empty 6.0/8.7, emptynoup 3.8/5.8, emptyinv 36.9/44.1, uponly 3.0/5.1, floor 2.1/3.6; prep 122.2 ms; segs 23349, fills 145; lost 0; before it: thermal 0, battery 27.2 C, media none playing; 19700 ms
+- muse_default_tw: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tentv 9.2/10.9, tentvdegen 8.3/11.2, tentvinv 43.2/49.4, tent 12.2/16.5, empty 6.1/10.7, emptynoup 4.2/5.9, emptyinv 40.3/47.4, uponly 3.7/5.0, floor 2.2/3.7; prep 74.8 ms; segs 23642, fills 305; lost 0; before it: thermal 0, battery 27.1 C, media none playing; 15565 ms
+- def: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tentv 9.3/13.3, tentvdegen 8.5/11.2, tentvinv 43.5/48.5, tent 13.0/19.0, empty 5.8/7.4, emptynoup 4.1/6.3, emptyinv 37.4/45.9, uponly 3.2/5.0, floor 1.3/2.9; prep 80.6 ms; segs 24518, fills 332; lost 0; before it: thermal 0, battery 27.1 C, media none playing; 13932 ms
+- fat: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tentv 8.1/11.2, tentvdegen 7.1/10.6, tentvinv 38.3/45.4, tent 8.5/10.2, empty 5.0/10.4, emptynoup 4.1/5.2, emptyinv 37.7/43.9, uponly 3.3/5.2, floor 1.2/3.2; prep 45.5 ms; segs 17325, fills 0; lost 0; before it: thermal 0, battery 27.1 C, media none playing; 12830 ms
+- ring: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tentv 6.1/7.8, tentvdegen 6.4/8.2, tentvinv 34.5/42.2, tent 7.4/10.7, empty 4.2/10.3, emptynoup 3.6/4.6, emptyinv 37.7/44.0, uponly 2.4/3.4, floor 1.2/2.5; prep 22.7 ms; segs 4564, fills 41; lost 0; before it: thermal 0, battery 27.1 C, media none playing; 8996 ms
+- user_tw42.lightpaper: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tentv 7.4/11.7, tentvdegen 7.1/8.7, tentvinv 39.9/45.0, tent 8.8/12.1, empty 5.0/6.6, emptynoup 4.1/6.5, emptyinv 37.9/42.2, uponly 3.6/6.1, floor 1.4/3.0; prep 35.2 ms; segs 10645, fills 143; lost 0; before it: thermal 0, battery 27.2 C, media none playing; 13082 ms
+- g41_def_tw42: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tentv 9.2/12.1, tentvdegen 8.8/13.9, tentvinv 42.2/49.0, tent 12.2/14.1, empty 6.2/7.8, emptynoup 4.8/7.0, emptyinv 38.4/42.3, uponly 3.3/5.7, floor 1.5/3.2; prep 68.8 ms; segs 24660, fills 380; lost 0; before it: thermal 0, battery 27.2 C, media none playing; 16213 ms
+- g41_def_tw64: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tentv 9.4/11.2, tentvdegen 8.4/10.6, tentvinv 40.7/50.3, tent 12.5/15.2, empty 6.2/11.0, emptynoup 4.7/6.9, emptyinv 38.3/50.3, uponly 3.7/6.0, floor 2.1/3.9; prep 92.9 ms; segs 24353, fills 261; lost 0; before it: thermal 0, battery 27.2 C, media none playing; 15368 ms
+- g41_ring_tw42: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tentv 6.1/7.3, tentvdegen 6.4/9.4, tentvinv 39.1/45.5, tent 7.4/11.6, empty 4.7/9.7, emptynoup 4.5/5.6, emptyinv 36.8/43.2, uponly 1.8/3.2, floor 1.1/2.8; prep 14.7 ms; segs 4606, fills 51; lost 0; before it: thermal 0, battery 27.2 C, media none playing; 10300 ms
+- g41_ring_tw64: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tentv 6.3/8.0, tentvdegen 6.4/8.3, tentvinv 38.1/44.8, tent 6.8/9.7, empty 5.1/7.4, emptynoup 4.3/6.9, emptyinv 36.8/45.1, uponly 2.1/3.5, floor 0.9/2.6; prep 22.6 ms; segs 4554, fills 38; lost 0; before it: thermal 0, battery 27.7 C, media none playing; 9036 ms
+- g41_user_tw42: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tentv 7.3/12.4, tentvdegen 6.9/12.3, tentvinv 40.2/48.5, tent 8.3/12.9, empty 5.0/8.6, emptynoup 3.9/4.9, emptyinv 37.6/45.1, uponly 3.0/5.0, floor 1.2/3.4; prep 33.2 ms; segs 10645, fills 143; lost 0; before it: thermal 0, battery 27.7 C, media none playing; 11559 ms
+- g41_user_tw64: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tentv 7.2/9.2, tentvdegen 7.0/8.8, tentvinv 38.3/46.5, tent 8.8/11.3, empty 5.1/7.4, emptynoup 4.7/7.6, emptyinv 36.9/44.2, uponly 2.5/3.8, floor 1.2/3.2; prep 43.7 ms; segs 10547, fills 110; lost 0; before it: thermal 0, battery 27.7 C, media none playing; 10895 ms
+
+end 11:41:34: thermal 0, battery 27.7 C, media none playing, in front Chrome
+
+input events: none
+errors: 0
+
