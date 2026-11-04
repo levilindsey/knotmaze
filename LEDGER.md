@@ -519,10 +519,10 @@ Next free ID: K1176.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-03 21:04 (agent `a8112b33d998f9629` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, stopped at its cap; the Pixel gate waits on the phone)
-  - branch: `worktree-agent-a8112b33d998f9629`, worktree `.claude/worktrees/agent-a8112b33d998f9629`; last commit: 19889dd8 (WIP, unpushed)
+  - owner: nobody since 2026-11-03 22:43 (merged; agent `a8112b33d998f9629` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `01f69cd0`
   - evidence: `.claude/probes/K1040/s3/` on the branch (s3f_gate.ps1, span_bench.ts, vert_count.ts, out/); S3e's phone table only in the main checkout (`out/phone_table_s3e.md`)
-  - next: with the phone awake on the launcher, run `& .claude\probes\K1040\s3\s3f_gate.ps1 -SkipDesktop` from the worktree (K1158 and the span walk on the Pixel, plus step 2's s3f1 split); then the upload levers (K1157) and the reach and strips levers (the Handoff's Next). The census bar is now 807 DEFECT / 515 at 0.03 px, today's tentv (the coordinator's call; the brief's 794 / 504 predates K1114 S1i F2/F3)
+  - next: Muse chain run 15I: S3f2, the upload and the fixed part, timed on the Pixel (`docs/design/K1040_s3f2_levers.md`)
   - brief: `docs/design/K1040_s3f_draw.md`
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
