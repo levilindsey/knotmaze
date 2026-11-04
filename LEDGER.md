@@ -526,12 +526,12 @@ Next free ID: K1159.
 - **K1156** · Muse batch 13: its Run A drafts the batch's brief from the ledger
   (`docs/design/K1156_muse_batch13_run_a.md`) as `docs/design/K1156_muse_batch13.md`, runs B to G; Claude
   reviews it and queues them (ports 5500-5549).
-  - owner: muse run 13A, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 13:57
-  - branch: mainline; last commit: `b08347ce`
+  - owner: muse runs 13B-13G, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 14:40
+  - branch: mainline; last commit: `ff429e2a`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); the run's commit report
-  - next: Run A done; Claude reviews the draft
-  - brief: `docs/design/K1156_muse_batch13_run_a.md`
-  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, line 13A); a `hold.txt` beside it holds the chain before its next run
+  - next: Runs B to G queued (13B-13G); Claude reviews each run's commits on master
+  - brief: `docs/design/K1156_muse_batch13.md` (Run A's: `docs/design/K1156_muse_batch13_run_a.md`)
+  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 13B-13G); a `hold.txt` beside it holds the chain before its next run
 - **K1114** · Junctions: look at S1g's at-rest changes. F1 empties j36 109-110 (muse_hash) and cuts j62
   189-187 from 2.438h to 1.431h; F2 changes r at 155 corners. S1g made pops crops only: S1h makes at-rest
   before/after crops, Claude looks, and Levi gets a picture if it reads as a change (`K1040_s1g_gates.md` ##
