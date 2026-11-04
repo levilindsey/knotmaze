@@ -23,6 +23,9 @@ Next free ID: K1161.
 
 ## Waiting on Levi
 
+- **K1114** · Junctions at rest, old or new: S1h's picture (sent 2026-11-03) shows three muse_hash corners F1
+  reshaped (j36 109-110 loses its rounded web, j131 397-398's arc gains a bump, j99 301-299's curve turns an
+  elbow). Keep the new, or a stage restores the old and keeps F1's pop fix (`docs/design/K1114_s1h_crops.md`).
 - **K1001** · Corners, sharp or round: where two threads split, the corner is a sharp point (K1040 F1 row 8: r goes to 0
   as the room closes); stage 1's b16 rounded it into a small arch (not landed). Levi sees it in motion at K1040 S4b,
   behind its flag; there is nothing to look at before then.
@@ -526,21 +529,12 @@ Next free ID: K1161.
 - **K1156** · Muse batch 13: its Run A drafts the batch's brief from the ledger
   (`docs/design/K1156_muse_batch13_run_a.md`) as `docs/design/K1156_muse_batch13.md`, runs B to G; Claude
   reviews it and queues them (ports 5500-5549).
-  - owner: muse runs 13B-13G, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 14:40
+  - owner: muse runs 13B-13G, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 14:25
   - branch: mainline; last commit: `cbaca79f`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); the run's commit report
   - next: Run C done; next Run D
   - brief: `docs/design/K1156_muse_batch13.md` (Run A's: `docs/design/K1156_muse_batch13_run_a.md`)
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 13B-13G); a `hold.txt` beside it holds the chain before its next run
-- **K1114** · Junctions: look at S1g's at-rest changes. F1 empties j36 109-110 (muse_hash) and cuts j62
-  189-187 from 2.438h to 1.431h; F2 changes r at 155 corners. S1g made pops crops only: S1h makes at-rest
-  before/after crops, Claude looks, and Levi gets a picture if it reads as a change (`K1040_s1g_gates.md` ##
-  Handoff).
-  - owner: nobody since 2026-11-03 14:59 (merged; agent `ae83ec07a4b4a228c` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `a3c54463`
-  - evidence: `.claude/probes/K1040/s1/out/s1h/` (`sheet.png`, `index.md`); S1g's census `out/s1g/dedge_near.txt`, `out/s1g/gate699_rb05.txt`
-  - next: Levi looks at the S1h picture (sites 02, 16 and 17 at zoom 4, old against new, sent 2026-11-03): keep the new shapes, or a stage that restores the old ones and keeps F1's pop fix
-  - brief: `docs/design/K1114_s1h_crops.md`
 
 ## Next, in order
 

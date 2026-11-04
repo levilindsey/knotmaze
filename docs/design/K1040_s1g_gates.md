@@ -304,7 +304,11 @@ at most 0.221h (muse_hash j124 375-376, the census's nearest: θ 2.218,
 dV 0.071h, r 1.967h → 0.078h), then 0.101h (muse_default_tw j164
 499-497), every other at most 0.077h, 16 more than 0.05h. The other
 nearest, g41_user_tw64 j12 36-37 (θ 3.012, dV 0.036h): r 2.000h → 0.028h,
-a tip move of 0.004h.
+a tip move of 0.004h. [S1h (K1114, 2026-11-03): the formula assumes straight
+arms. Measured from each corner's own V, q and r, j124's tip moves 0.087h
+and the ten largest F2 moves 0.036-0.096h; F1's at-rest tip moves are
+larger, 0.34-0.75h at three corners no gate cropped
+(`docs/design/K1114_s1h_crops.md`, Handoff).]
 
 The gate, with F1 (`run_s1g_gate.ps1 -Tag rb05 -What scenes,rate,pins`):
 the same as F1's in every count (#1 158 → 154, free ends 110 → 102,
@@ -574,7 +578,8 @@ not merged):
   - On gate699's Y, r's coarse step goes 2.000 → 0.030. The largest
     coarse ink step goes 1.000 → 0.125, and the fine one goes to 0.0006.
   - At rest it moves 155 corners' r and loses no fill. The largest tip
-    move is 0.221h (muse_hash j124 375-376).
+    move is 0.221h (muse_hash j124 375-376) by the straight-arm formula,
+    0.087h measured from the corner (S1h, K1114).
 - **No change, each by its sweep:**
   - 694 (F3) is a seed failure of solveEq. It is reached with fill at 2
     corners at rest: g41_user_tw64 j30 93-91 and muse_hash j156 475-473.
