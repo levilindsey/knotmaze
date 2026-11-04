@@ -250,14 +250,14 @@ describe("animation speed (K79)", () => {
       expect(backgroundDrift(id, 1)).toBe(d);
       expect(backgroundDrift(id, 2)).toBe(2 * d);
       expect(backgroundDrift(id, 0.25)).toBe(0.25 * d);
-      // Up to the slider's max (8x, Levi 2026-10-13), clamped above it.
-      expect(backgroundDrift(id, 8)).toBe(8 * d);
-      expect(backgroundDrift(id, 10)).toBe(BACKGROUND_SPEED_MAX * d);
-      expect(backgroundDrift(id, 1e9)).toBe(8 * d);
+      // Up to the slider's max (16x, K1138, Levi 2026-11-03), clamped above it.
+      expect(backgroundDrift(id, 16)).toBe(16 * d);
+      expect(backgroundDrift(id, 20)).toBe(BACKGROUND_SPEED_MAX * d);
+      expect(backgroundDrift(id, 1e9)).toBe(16 * d);
     }
-    expect(BACKGROUND_SPEED_MAX).toBe(8);
+    expect(BACKGROUND_SPEED_MAX).toBe(16);
     expect(effectiveSpeed("mist", 8)).toBe(8);
-    expect(effectiveSpeed("mist", 8.5)).toBe(8);
+    expect(effectiveSpeed("mist", 16.5)).toBe(16);
     // 0 stays static and a negative value stays auto, at any max.
     expect(effectiveSpeed("mist", 0)).toBe(0);
     expect(effectiveSpeed("mist", -3)).toBe(1);

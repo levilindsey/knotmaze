@@ -2833,7 +2833,7 @@ export function buildPanel(
       pointerScale: 0.01,
       format: (v: number) => v.toFixed(2),
     },
-    "How fast the backdrop moves: 0 = still, 1 = the effect's own pace, up to 8x. Vellum is still until you give it a speed (then its mottling drifts and its light wanders; the grain stays put). The reset glyph returns to each effect's own pace. Reduced motion (Accessibility) keeps every backdrop still. Applies live.",
+    "How fast the backdrop moves: 0 = still, 1 = the effect's own pace, up to 16x. Vellum is still until you give it a speed (then its mottling drifts and its light wanders; the grain stays put). The reset glyph returns to each effect's own pace. Reduced motion (Accessibility) keeps every backdrop still. Applies live.",
     0, () => {
       const v = bgView.backgroundSpeed as number;
       if (Math.abs(v - shownSpeed()) > 1e-9) {

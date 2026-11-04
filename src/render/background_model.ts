@@ -92,10 +92,10 @@ export const BACKGROUND_PROFILES: Record<
 // drift every link had before the param existed. 0 = static, any other
 // value a multiple of the designed drift, up to BACKGROUND_SPEED_MAX (the
 // slider's max, the link parser's clamp and effectiveSpeed's clamp all read
-// it; 8 since Levi's 2026-10-13 "Max backgroundSpeed should be like x8",
+// it; 16 since Levi's 2026-11-03 K1138 call, 8 from 2026-10-13's "x8",
 // stage A shipped 3). The re-render rate (fps) does not scale with it.
 export const BACKGROUND_SPEED_AUTO = -1;
-export const BACKGROUND_SPEED_MAX = 8;
+export const BACKGROUND_SPEED_MAX = 16;
 
 // Whether a backgroundSpeed value means AUTO (NaN does too).
 export function isAutoSpeed(speed: number): boolean {
