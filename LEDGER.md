@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1146.
+Next free ID: K1147.
 
 ## Waiting on Levi
 
@@ -489,10 +489,10 @@ Next free ID: K1146.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-03 08:41 (agent `aaf87e9d3775b20e4` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, stopped: S3c done, its gate not met)
-  - branch: `worktree-agent-aaf87e9d3775b20e4`, worktree `.claude/worktrees/agent-aaf87e9d3775b20e4`; last commit: `08f287fa`
-  - evidence: .claude/probes/K1040/s3/ (in the worktree: run_locked.ps1, phone_quiet.mjs, run_phone.ps1, phone_table.ps1; out/); oracle30 and the recordings: worktree k868-s3a (.claude/probes/S3a/seq13/)
-  - next: S3c: tent pass 1.9-4.4x faster on the desktop, but 794 DEFECT (every one of 0.03 px or more a merge site; NW 32 too slow, TENT_NW stays 3). Decide F4 by a final-composite A/B at the merge sites (the max-key census if the max-key spots match the control, else the small discard draw), then F8 (the sharp joints drawn apart), then the Pixel's 2 ms gate (F11) once K1142's guard is in
+  - owner: nobody since 2026-11-03 09:49 (the coordinator's F11 phone run, claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, done; the S3c agent `aaf87e9d3775b20e4` stopped at 08:41)
+  - branch: `worktree-agent-aaf87e9d3775b20e4`, worktree `.claude/worktrees/agent-aaf87e9d3775b20e4`; last commit: `15481bde`
+  - evidence: .claude/probes/K1040/s3/ (in the worktree: run_locked.ps1, phone_quiet.mjs, run_phone.ps1, phone_table.ps1, f11_run.ps1; out/phone_table_f11.md, out/f11_*.log); oracle30 and the recordings: worktree k868-s3a (.claude/probes/S3a/seq13/)
+  - next: S3d. F11 (2026-11-03 09:42-09:49) MISSED the Pixel's 2 ms gate: label cost (p50 - floor) tent 4.7-11.2 ms, tent lr 2 4.1-10.2 ms, control 9.8-40.6 ms; lr 2 saves 0-1.5 ms, as F10's vertex-bound inference said. Both of K1097's targets missed, so the doc's next is a new budget (Levi's), or a vertex-light tent first; then F4 and F8. On rebase, adopt K1142's shared phone check (the four changes in `docs/design/K1142_phone_guard.md`'s Handoff)
   - brief: docs/design/K1040_s3c_label.md (its branch: F1-F12 and the Handoff)
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`; timing through `.claude/probes/K1040/s3/run_locked.ps1`; phone: `phone_quiet.mjs`, then `run_phone.ps1`
 - **K1119** · Cursive J3g (v7.0), Levi's answers to v6.9 (2026-11-03): b, v and w exit between v6.8 and
@@ -503,15 +503,6 @@ Next free ID: K1146.
   - evidence: .claude/probes/K863/trace/ (work30/, out30/, NOTES ## K1119)
   - next: Levi looks at the v7.0 sheets (b/v/w exits, the a/q dip, be/ve/we: v7.0 or e60, the br dip), then the c stage (K1112's next letter)
   - brief: docs/design/K1119_cursive_j3g.md (its Handoff); J3f's in docs/design/K1113_cursive_j3f.md
-- **K1141** · Muse batch 10 (`docs/design/K1141_muse_batch10.md`): A, K1138's backdrop tuning (five of six
-  clauses; the speed slider's top waits on Levi); B, batch 11's brief drafted from the Approved list, the
-  Residuals in order and two design-doc stages (K144, K688).
-  - owner: muse runs 10A-10B, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 08:51
-  - branch: mainline; last commit: `77d02919`
-  - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K1138/`
-  - next: Run B done; batch 10 complete, Claude reviews and closes K1141
-  - brief: `docs/design/K1141_muse_batch10.md`
-  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 10A-10B)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"; plan the look, the checks and the build first). S1, Claude Opus, planning only: the design doc,
   pictures of today's pulses, a route pulse for K1140. Full text: `docs/ledger_notes.md`.
@@ -520,6 +511,15 @@ Next free ID: K1146.
   - evidence: .claude/probes/K1139/ (its worktree)
   - next: S1: the design doc (today's junction pulses in frame strips, the look with mock-ups, a route pulse for K1140, the checks, staged plan, questions for Levi)
   - brief: docs/design/K1139_s1_brief.md (its branch)
+- **K1146** · Muse batch 11 (`docs/design/K1146_muse_batch11.md`), queued C, E, A, D, F: K252 (a), the pan
+  range's ease by time; K144's accounts doc; K804's beat indicator (pulse, ring or off); K207's fog stamp
+  dedupe; K688's healing-cuts doc. Run B (K1130) was dropped: it stays with K156's next phone round.
+  - owner: muse runs 11C, 11E, 11A, 11D, 11F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 09:55
+  - branch: mainline; last commit: `4d90398c`
+  - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K252/`, `K804/`, `K207/`
+  - next: Run C (K252 a) first; then E, A, D, F
+  - brief: `docs/design/K1146_muse_batch11.md`
+  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 11C-11F); a `hold.txt` beside it holds the chain before its next run
 
 ## Next, in order
 
@@ -2016,6 +2016,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1141** · Muse batch 10: A, K1138's backdrop tuning (27cb9202; the slider's top waits on Levi); B, batch 11's draft, reviewed into K1146 with its Run B dropped. Done in 77d02919 (2026-11-03).
 - **K1137** · Muse batch 9: A, K1132's key-hint pictures; B, K1083 closed and K1133 kept open on the flow-on retrace; C, K1135's Reset test; D, batch 10's draft (K1141). Done in 5f769558 (2026-11-03).
 - **K1129** · With Reduced motion on and the camera following the player, the view still glides after every move. Dropped: Levi 2026-11-03: "camera glide with reduced motion is fine", so the view keeps gliding (2026-11-03).
 - **K1118** · Levi 2026-11-03: Motion follows across tabs without a reload. Done in 3ff7144a (2026-11-03).
