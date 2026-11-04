@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { STATS, explainedStats, efficiencyOf, efficiencyPercent } from "../../src/game/maze_stats";
 import { rateRun, walkedOf } from "../../src/game/star_rating";
 import {
+  UndoCount,
   gameEntries,
   gameRows,
   hiddenValue,
@@ -13,6 +14,7 @@ import {
   ruleLossEntries,
   statEntries,
   statRows,
+  undoButtonLeft,
 } from "../../src/ui/maze_hud";
 import type { StatEntry } from "../../src/ui/maze_hud";
 import type { SwordPhase } from "../../src/game/sword";
@@ -506,6 +508,37 @@ describe("K1100 non-breaking joins in the hidden row", () => {
       `\u2014${NB}with${NB}them`,
     ]);
     expect(v.replaceAll(NB, " ")).toBe("0 / 0 found \u00B7 fewest 9, \u2014 with them");
+  });
+});
+
+describe("K778 Undo button", () => {
+  const ON = { extraRuleOn: true, undos: 1, left: 1, hasMove: true, canUndo: true };
+  it("shows with the count left while every condition holds", () => {
+    expect(undoButtonLeft(ON)).toBe(1);
+    expect(undoButtonLeft({ ...ON, undos: 5, left: 3 })).toBe(3);
+  });
+  it("hides on each condition of its own", () => {
+    expect(undoButtonLeft({ ...ON, extraRuleOn: false })).toBeNull();
+    expect(undoButtonLeft({ ...ON, undos: 0 })).toBeNull(); // 0 hides the button
+    expect(undoButtonLeft({ ...ON, left: 0 })).toBeNull(); // all spent
+    expect(undoButtonLeft({ ...ON, hasMove: false })).toBeNull(); // nothing to undo
+    expect(undoButtonLeft({ ...ON, canUndo: false })).toBeNull(); // taps don't hold the state
+  });
+  it("spends down to none and refills for a fresh run, held to 0..5", () => {
+    const c = new UndoCount();
+    expect(c.left).toBe(0);
+    c.refill(1);
+    expect(c.spend()).toBe(true);
+    expect(c.left).toBe(0);
+    expect(c.spend()).toBe(false); // nothing left to spend
+    c.refill(3); // a restart, a new maze or a new design
+    expect(c.left).toBe(3);
+    c.refill(9);
+    expect(c.left).toBe(5);
+    c.refill(-1);
+    expect(c.left).toBe(0);
+    c.refill(2.7);
+    expect(c.left).toBe(2);
   });
 });
 

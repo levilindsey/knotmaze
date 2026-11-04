@@ -87,7 +87,7 @@ import { KEY_COLOR_NAMES, KEY_COLORS, lockGateColor } from "./game/locks"; // K1
 import { lureRangeOf } from "./game/lures"; // K795: the tooltips' range
 import type { SwordShown } from "./ui/maze_hud";
 import { rateCuts, rateRun, ratingForResult, walkedOf } from "./game/star_rating";
-import { LossBanner, MazeHud, WinBanner } from "./ui/maze_hud";
+import { LossBanner, MazeHud, UndoCount, undoButtonLeft, WinBanner } from "./ui/maze_hud";
 import type { HudSnapshot } from "./ui/maze_hud";
 import { ModeBadge, modeBadgeFor } from "./ui/mode_badge";
 import { LookChip } from "./ui/look_chip";
@@ -1006,6 +1006,15 @@ async function main(): Promise<void> {
     return begunLate(dailyN, began);
   };
 
+  // K778: the HUD Undo button's count for this run (UndoCount in
+  // ui/maze_hud.ts: refilled by resetAttempt, spent by the button's tap;
+  // never saved - see the count's comment there).
+  const undoCount = new UndoCount();
+  // Undo is safe only while the taps hold the whole state: no minotaur
+  // (either clock), no fire and no beat. The Stranded banner's Undo and
+  // the HUD's button share this test.
+  const canUndoNow = (): boolean =>
+    !scene.chase && !scene.turnMino && !scene.fabricController?.fire && !beatOn();
   const hud = new MazeHud();
   const banner = new WinBanner(
     () => void shareResult(lastWin),
@@ -1049,8 +1058,7 @@ async function main(): Promise<void> {
     },
     timeMs: () => clock.elapsed(performance.now()),
     // The taps hold the whole state only without a minotaur or a fire.
-    canUndo: () =>
-      !scene.chase && !scene.turnMino && !scene.fabricController?.fire && !beatOn(),
+    canUndo: () => canUndoNow(),
     undo: () => undoMove(),
     restart: () => {
       restartSolve();
@@ -1556,6 +1564,24 @@ async function main(): Promise<void> {
       closestCall: c.fire && (c.solved || c.fireLost) ? c.fireClosest : null,
       // K137: snapped, par and strokes (null while their rule is off).
       ...ruleFields(c),
+      // K778: the Undo button beside the rules row (null: it must not
+      // show). An extra rule is a K138 rule the controller has on.
+      undo: ((): { left: number } | null => {
+        const left = undoButtonLeft({
+          extraRuleOn:
+            c.iceShare > 0 ||
+            c.colorMode !== "off" ||
+            c.turnstileCount > 0 ||
+            c.hiddenCount > 0 ||
+            c.oneWayShare > 0 ||
+            c.keyCount > 0,
+          undos: params.ruleUndos,
+          left: undoCount.left,
+          hasMove: (c.replaysActions ? c.actions.length : c.taps.length) > 0,
+          canUndo: canUndoNow(),
+        });
+        return left === null ? null : { left };
+      })(),
       // K137 stage 3a: the hearts left (null: lives off or no minotaur).
       hearts: heartsShown(),
       // K114 walker: Lead's par, Delay's walk and the walk it wanted.
@@ -1590,6 +1616,9 @@ async function main(): Promise<void> {
   // A fresh attempt (rebuild, Reset path): clock idle, nothing recorded.
   const resetAttempt = (): void => {
     clock.reset();
+    // K778: a restart, a new maze and a new design all arrive here, so
+    // the run's undos refill here (the count itself is never saved).
+    undoCount.refill(params.ruleUndos);
     attemptDaily = null;
     attemptRecord = null;
     pendingExplored = null;
@@ -2405,6 +2434,14 @@ async function main(): Promise<void> {
     saveAttempt();
     updateHud();
     wake();
+  };
+  // K778: the HUD button's tap spends one of the run's undos, then does
+  // exactly what the Stranded banner's Undo does (undoMove above). The
+  // banner's own Undo and the cut keys call undoMove directly, so they
+  // spend nothing.
+  hud.onUndo = (): void => {
+    if (!undoCount.spend()) return;
+    undoMove();
   };
   // K137: the frame loop's loss slot: the Burnt banner, or a rule's.
   const showLoss = (): void => {

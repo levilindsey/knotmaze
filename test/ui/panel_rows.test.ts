@@ -167,9 +167,9 @@ describe("K1115: one general Reset fix in row/doReset", () => {
   });
 
   it("gains or loses no row's step for the fix", () => {
-    // 135 stepped bindings today (K130's sweep surface); a new stepped
+    // 136 stepped bindings today (K130's sweep surface); a new stepped
     // row updates this pin on purpose, like the codec's key order.
-    expect(PANEL.match(/step:/g)).toHaveLength(135);
+    expect(PANEL.match(/step:/g)).toHaveLength(136); // K778: + ruleUndos
     for (const k of ["backgroundIntensity", "pulseReach", "settleBudget", "loadSettle"]) {
       const i = PANEL.indexOf(`"${k}"`);
       expect(PANEL.slice(i, PANEL.indexOf("\n  );", i)), k).not.toContain("step:");

@@ -97,6 +97,9 @@ export interface HudSnapshot {
   keys?: { held: number; of: number } | null;
   // K137 s5: the muddy runs laid (absent or null: mud off).
   muddy?: number | null;
+  // K778: the Undo button beside the rules row (the count left in this
+  // run), or null/absent when it must not show (undoButtonLeft decides).
+  undo?: { left: number } | null;
   // K114 remainder: the beat tempo while the beat is the clock (never
   // on a banner: the win snapshot has no such field).
   tempo?: string | null;
@@ -118,6 +121,41 @@ export interface HiddenShown {
 export function hiddenValue(h: HiddenShown): string {
   const NB = "\u00A0";
   return `${h.found}${NB}/${NB}${h.of} found \u00B7${NB}fewest${NB}${fmtPar(h.fewest)}, ${fmtPar(h.withAll)}${NB}with${NB}them`;
+}
+
+// K778: the HUD Undo button's count for one run. It belongs to the run:
+// main refills it on a restart, a new maze and a new design, and it is
+// never saved (the daily's saved attempt holds no count; a daily runs on
+// today's defaults, where every extra rule is off, so no button shows).
+export class UndoCount {
+  left = 0;
+  // A fresh run gets `total` undos, held to the slider's 0..5.
+  refill(total: number): void {
+    this.left = Number.isFinite(total) ? Math.max(0, Math.min(5, Math.floor(total))) : 0;
+  }
+  // Spend one undo; false (nothing spent) when none are left.
+  spend(): boolean {
+    if (this.left <= 0) return false;
+    this.left--;
+    return true;
+  }
+}
+
+// K778: what the Undo button shows, or null when it must not show. It
+// shows only while an extra rule is on, the run's undos setting is above
+// 0, undos are left in this run, there is a move to undo, and the taps
+// hold the whole state (canUndo: no minotaur, fire or beat).
+export function undoButtonLeft(s: {
+  extraRuleOn: boolean;
+  undos: number;
+  left: number;
+  hasMove: boolean;
+  canUndo: boolean;
+}): number | null {
+  if (!s.extraRuleOn || !s.hasMove || !s.canUndo) return null;
+  if (!Number.isFinite(s.undos) || s.undos <= 0) return null;
+  if (!Number.isFinite(s.left) || s.left <= 0) return null;
+  return Math.min(Math.floor(s.left), Math.floor(s.undos));
 }
 
 // K137 stage 3b: what the sword row reads (game/sword.ts SwordState).
@@ -248,6 +286,10 @@ export function ensureHudStyles(): void {
     "font-variant-numeric:tabular-nums}" +
     // K775: only the hidden runs row wraps (its value cell carries km-wrap).
     ".km-hud .v.km-wrap{white-space:normal}" +
+    // K778: the Undo button in the rules row - the banner button (.km-btn),
+    // smaller, and the HUD's only pointer target (the HUD lets taps through).
+    ".km-hud .km-hud-undo{pointer-events:auto;margin-left:8px;min-height:26px;" +
+    "padding:0 9px;font-size:11px;vertical-align:middle}" +
     // K137 stage 2: the spool gauge's flash on a refused move.
     "@keyframes km-flash{0%,40%{color:#ff8a7a;text-shadow:0 0 6px #ff5a40}" +
     "100%{color:#e4ecf8;text-shadow:none}}" +
@@ -456,6 +498,8 @@ function rowsEl(rows: readonly StatEntry[]): HTMLDivElement {
 
 export class MazeHud {
   readonly el: HTMLDivElement;
+  // K778: a tap on the Undo button (main spends one undo and undoes).
+  onUndo: (() => void) | null = null;
   private timeCell: HTMLElement | null = null;
   // K114 stage 2: the fire's lead row, which the real-time fire counts
   // down every frame (setFireLead).
@@ -479,13 +523,16 @@ export class MazeHud {
     // K80: the real-time mode's catch count is part of the game, not a
     // stat: its row shows with the stat rows off too (K114: and the fire's).
     const game = s ? gameEntries(s) : [];
-    if (!s || (!s.showStats && game.length === 0)) {
+    if (!s || (!s.showStats && game.length === 0 && !s.undo)) {
       this.el.hidden = true;
       this.lastSig = "";
       return;
     }
     const rows: StatEntry[] = s.showStats ? statEntries(s) : game;
-    const sig = JSON.stringify(rows.map((r) => [r.label, r.value, r.wrap ?? false]));
+    const sig = JSON.stringify([
+      rows.map((r) => [r.label, r.value, r.wrap ?? false]),
+      s.undo?.left ?? null,
+    ]);
     this.el.hidden = false;
     if (sig === this.lastSig) return;
     this.lastSig = sig;
@@ -503,8 +550,26 @@ export class MazeHud {
       if (r.id === "time") this.timeCell = vEl;
       if (r.id === "fireLead") this.leadCell = vEl;
       if (r.id === "spool") this.spoolCell = vEl;
+      // K778: the Undo button beside the rules text, with the count left.
+      if (r.id === "rules" && s.undo) vEl.append(" ", this.undoButton(s.undo.left));
       this.el.append(kEl, vEl);
     }
+    // No rules row to sit beside (an extra rule with no row of its own):
+    // the button still shows, on its own line.
+    if (s.undo && !rows.some((r) => r.id === "rules")) {
+      this.el.append(this.undoButton(s.undo.left));
+    }
+  }
+
+  // K778: the banner button's build, at HUD size.
+  private undoButton(left: number): HTMLButtonElement {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "km-btn km-hud-undo";
+    btn.textContent = `Undo \u00B7 ${left}`;
+    btn.setAttribute("aria-label", `Undo last move (${left} left)`);
+    btn.addEventListener("click", () => this.onUndo?.());
+    return btn;
   }
 
   // K137 stage 2: a refused move flashes the spool gauge (the animation

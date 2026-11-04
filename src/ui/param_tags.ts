@@ -155,6 +155,7 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   mud: ["mud", "muddy", "slow runs", "two moves", "thick", "sticky", "crossing cost", "minotaur"],
   keys: ["ky", "locks", "padlock", "locked exit", "key beads", "collect", "pick up", "unlock", "doors"],
   lockMode: ["lkm", "lock", "padlock", "locked exit", "which runs", "unlock", "keys open", "doors"],
+  ruleUndos: ["rud", "undo", "take back", "last move", "undos", "extra rules", "mistake", "go back"], // K778
   // Minotaur
   minotaur: ["mt", "minotaur", "monster", "bull", "chaser", "enemy", "ai", "personality", "chase style", "lair"],
   minoSpeed: ["msp", "minotaur", "monster", "bull", "chaser", "enemy", "speed", "moves per turn", "turn clock"],

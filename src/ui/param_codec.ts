@@ -463,6 +463,7 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("routeWeight"),
   num("touchPickMargin"), // K331: touch's pick margin (CSS px past the edge)
   choice("beatIndicator", ["pulse", "ring", "off"]), // K804: the beat indicator at the dot
+  num("ruleUndos"), // K778: undos a run while an extra rule is on (0..5)
 ]);
 
 // The format version a blob names first. Bump it for anything but an
@@ -654,6 +655,7 @@ export const PARAM_RANGES: Readonly<
   lures: [0, 5], // K137 stage 4 (LURES_MAX)
   snares: [0, 3], // K137 stage 4 (SNARES_MAX)
   keys: [0, 3], // K138 stage 4 (KEYS_MAX)
+  ruleUndos: [0, 5], // K778
   snareHold: [1, 8], // K795 (SNARE_HOLD_MIN..MAX)
   lureRange: [1, 12], // K795 (LURE_RANGE_MIN..MAX)
   hiddenReveal: [1, 8], // K795 (REVEAL_RUNS_MIN..MAX)

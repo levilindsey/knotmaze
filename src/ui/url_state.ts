@@ -958,6 +958,10 @@ export interface UrlParams extends ShapeInjectionParams {
   // exit). The classic game only.
   keys: number;
   lockMode: LockMode;
+  // K778: the undos a run gets while a K138 extra rule is on (0 hides the
+  // HUD's Undo button, 1..5, default 1). A design param: it travels in the
+  // link and is not a daily-exempt playback preference.
+  ruleUndos: number;
   // K795: tunables that were constants, each defaulting to its constant so
   // no design moves: the turns a sprung snare holds a monster (snareHold,
   // 1..8, SNARE_HOLD 3), the runs within which a lure is heard (lureRange,
@@ -1382,6 +1386,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   labelInk: false, // K868 S3a
   labelGpu: false, // K868 S3a7
   beatIndicator: "pulse", // K804: today's look (the pulse) by default
+  ruleUndos: 1, // K778: one undo a run while an extra rule is on
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -2270,6 +2275,8 @@ function readLegacy(
     // the count to 0..3).
     keys: readNumber(query, "ky", D.keys),
     lockMode: readChoice(query, "lkm", LOCK_MODES, D.lockMode),
+    // K778's undos a run (`&rud=3`; PARAM_RANGES clamps to 0..5).
+    ruleUndos: readNumber(query, "rud", D.ruleUndos),
     // K795's tunables (`&snh=5&lrg=9&hrv=5`; PARAM_RANGES clamps them
     // to 1..8, 1..12 and 1..8; the hint's `hns` left with K838).
     snareHold: readNumber(query, "snh", D.snareHold),

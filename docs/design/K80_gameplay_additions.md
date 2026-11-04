@@ -67,7 +67,12 @@ with a cycle rank of about 100. Section 2.1 has the tables.
 3. **What a catch does.** Recommended: back to the entrance, counted
    (Celeste-style), so a daily always finishes. The alternative ends the
    attempt, like a failed Wordle. Section 2.8.
-4. **Undo.** Recommended: in free play only, counted in the stats.
+4. **Undo.** Done (K778): an Undo button in the HUD's rules row, in
+   free play while an extra rule is on; `ruleUndos` (0 to 5, default 1)
+   sets how many a run gets, and a tap replays the moves minus the
+   last, as the Stranded banner's Undo does. Undos used are not
+   counted in the stats (the clock runs on; the walked distance and
+   the stars are rebuilt from the moves that remain).
 5. **A wait action** (tap your own junction to let a turn pass)?
    Recommended: not for the hunter, which never needs it. Yes for Abbott
    and sentry puzzles, where waiting is part of the design (section 2.4).

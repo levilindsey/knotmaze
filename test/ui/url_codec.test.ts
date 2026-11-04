@@ -162,6 +162,7 @@ describe("links", () => {
       swordRingMin: 4, swordRingMax: 8, sleeperRingMin: 1, sleeperRingMax: 3,
       nearHops: 2, routeWeight: 4,
       beatTiming: "even", beatPerRun: 1, beatIndicator: "pulse", // K795 beat timing; K804 indicator
+      ruleUndos: 1, // K778
       mud: 0, // K137 s5
       threadLook: "fill", // K797b
       goldWidth: 1, goldTexture: "solid", // K799
@@ -718,6 +719,22 @@ describe("links", () => {
     );
   });
 
+  // K778: the undos a run gets travel in the link (token and the rud
+  // override), clamp to 0..5, and stay out of the link at the default (1).
+  it("carries ruleUndos in the link and leaves the default out", () => {
+    expect(parseParams("?7").ruleUndos).toBe(1);
+    for (const v of [0, 2, 5]) {
+      const p = parseParams(`?7&rud=${v}`);
+      expect(p.ruleUndos).toBe(v);
+      expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+    }
+    expect(parseParams("?7&rud=9").ruleUndos).toBe(5);
+    expect(parseParams("?7&rud=-2").ruleUndos).toBe(0);
+    // The default stays out of the token: a bare seed, as at any default.
+    expect(encodeParams(parseParams("?7&rud=1"))).toBe("7");
+    expect(encodeParams(parseParams("?7"))).toBe("7");
+  });
+
   // K324: the link keeps both stop lengths as written; the chase reads the
   // max held at least the min. Every new knob clamps to its range.
   it("orders the junction stop pair and clamps K324's knobs", () => {
@@ -1047,7 +1064,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   lures: "lur", snares: "snr", // K137 stage 4
   keys: "ky", lockMode: "lkm", // K138 stage 4
   snareHold: "snh", lureRange: "lrg", hiddenReveal: "hrv", // K795
-  beatTiming: "btm", beatPerRun: "btr", beatIndicator: "bin", // K795 beat timing; K804 indicator
+  beatTiming: "btm", beatPerRun: "btr", beatIndicator: "bin", ruleUndos: "rud", // K795 beat timing; K804 indicator; K778 undos
   mud: "mud", // K137 s5
   followDelayMin: "fdm", followDelayMax: "fdx", followShortcut: "fsc", // K807
   swordRingMin: "srm", swordRingMax: "srx", sleeperRingMin: "zrm", sleeperRingMax: "zrx",

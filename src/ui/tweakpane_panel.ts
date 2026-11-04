@@ -2228,6 +2228,14 @@ export function buildPanel(
     "Keys (0: none). Key beads lie on junctions a few runs off the way out; walk onto one to take it. The runs into the exit stay locked until you hold every key, and a tap on a lock is refused. Going back over the move that took a key drops it again. The fewest moves and par count the keys. Classic game only; off while Fragile runs, Collapse, Cut or the spool is on. Restarts the solve.",
     D.keys, () => callbacks.onClockChange()
   );
+  // K778: the undos a run gets while an extra rule is on (its button sits
+  // beside the rules in the HUD). Restarts the solve, as the rules do.
+  const ruleUndosRow = row(
+    fRules, p, "ruleUndos",
+    { min: 0, max: 5, step: 1, label: "Undos" },
+    "Undos a run gets while an extra rule is on (ice, colors, turnstiles, hidden runs, one-way runs or keys): the Undo button beside the rules in the top-left readout takes back your last move, that many times in a run. 0 hides the button. A restart, a new maze or a new design gives them back. Restarts the solve.",
+    D.ruleUndos, () => callbacks.onClockChange()
+  );
   const lockModeRow = row(
     fRules, p, "lockMode",
     { options: { "the exit": "exit", shortcuts: "shortcut", colors: "colors" }, label: "Lock" },
@@ -3789,6 +3797,7 @@ export function buildPanel(
     routeWeightRow.hidden = oneWayRow.hidden || params.oneWay <= 0; // K807
     keysRow.hidden = !fab || params.gameMode !== "classic"; // K138 stage 4
     lockModeRow.hidden = keysRow.hidden || params.keys <= 0;
+    ruleUndosRow.hidden = !fab || params.gameMode !== "classic"; // K778
     // Under the thread reveal too (K76 stage 2c: the same two settings).
     minoFogRow.hidden = !minoOn || !(fog || threads);
     // K137 stage 3a: lives replace the level row while on (game/lives.ts).
