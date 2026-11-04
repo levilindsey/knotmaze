@@ -133,7 +133,7 @@ try {
   await sleep(1500);
   if (touched) throw new Error("input events before the run");
 
-  const url = `http://localhost:${port}/phone.html?k1097=${Date.now()}`;
+  const url = `http://localhost:${port}/phone.html?k1097=${Date.now()}&snd=none`;
   sh(`am start -a android.intent.action.VIEW -d '${url}' com.android.chrome`);
   log("page opened with am start");
   let ok = false;

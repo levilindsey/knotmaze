@@ -17,6 +17,7 @@
 import type { LabelBTables } from "./label_b";
 import { TEX_W } from "./label_b";
 import { labelBSources } from "./label_b_glsl";
+import { tentFacetK } from "./label_b_tent";
 import { labelBTentSources, TENT_CAP_VERTS, TENT_FILL_VERTS, TENT_SEG_VERTS } from "./label_b_tent_glsl";
 
 export type LabelBMode = "capsule" | "tent";
@@ -314,10 +315,11 @@ export class LabelBPass {
     const t = this.tent;
     if (!t) return;
     const eps = this.tentEpsPx / Math.max(ppd, 1e-9);
+    const facetK = tentFacetK(eps);
     const use = (pr: WebGLProgram) => {
       gl.useProgram(pr);
       this.uniforms(pr, M, 0);
-      gl.uniform1f(gl.getUniformLocation(pr, "uEps"), eps);
+      gl.uniform1f(gl.getUniformLocation(pr, "uFacetK"), facetK);
     };
     gl.bindVertexArray(this.vao);
     if (this.nInst > 0) {

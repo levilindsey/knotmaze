@@ -62,8 +62,8 @@ uniform vec2 uView;
 uniform float uH;
 uniform float uInvK;
 uniform float uKeyScale;
-// the facets' chord error target, world units
-uniform float uEps;
+// 0.25 / sqrt(eps), eps the facets' chord error target in world units
+uniform float uFacetK;
 vec4 fetch(sampler2D t, int i) {
   return texelFetch(t, ivec2(i % TEX_W, i / TEX_W), 0);
 }
@@ -102,10 +102,14 @@ vec2 nrm(vec2 a, vec2 b) {
   return vec2(-u.y, u.x);
 }
 // Facets for an arc of angle ang at radius rad: the balanced chord's error
-// rad (1 - cos(d / 2)) / 2 ~ rad d^2 / 16 stays under uEps, at most nmax.
+// rad (1 - cos(d / 2)) / 2 ~ rad d^2 / 16 stays under eps, so d = 4
+// sqrt(eps / rad) and the count is ang / d = ang sqrt(rad) uFacetK, at most
+// nmax (clamped as a float: int() of a huge float is undefined). Written as
+// a product, not a rounded quotient (K299): a count one off at an exact
+// multiple would only move the chord error by a facet, and every vertex of
+// an instance computes the same count from the same inputs.
 int facets(float ang, float rad, int nmax) {
-  float d = 4.0 * sqrt(uEps / max(rad, 1e-30));
-  return clamp(int(ceil(ang / max(d, 1e-6))), 1, nmax);
+  return int(clamp(ceil(ang * sqrt(max(rad, 0.0)) * uFacetK), 1.0, float(nmax)));
 }
 // The balanced radius of an arc's inner vertices, facet angle d.
 float balanced(float rad, float d) {

@@ -8,15 +8,15 @@
 param([string[]]$RunArgs = @(), [int]$MaxWaitMin = 5)
 $worktree = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
 $probes = 'C:\Users\lsl\Repositories\knotmaze\.claude\probes\agents'
-$phoneOwner = 'K1097 S3b'
-$perfOwner = 'K1040-S3b'
+$phoneOwner = 'K1097 S3c'
+$perfOwner = 'K1040-S3c'
 $chk = (pwsh -NoProfile -File (Join-Path $worktree 'scripts\phone_pass.ps1') -Phase check 2>&1) -join "`n"
 $fields = if ($chk -match 'awake=(\w+) locked=(\w+) top=(\S+)') { "awake=$($Matches[1]) locked=$($Matches[2]) top=$($Matches[3])" } else { 'no state' }
 $ready = $chk -match 'phone is ready'
 Write-Host "$(Get-Date -Format HH:mm:ss) phone check: ready=$ready $fields"
 if (-not $ready) { Write-Host 'phone not ready: stopping'; exit 2 }
 
-$took = & (Join-Path $probes 'phone_lock_take.ps1') -Owner $phoneOwner -What 'K1040 S3b label pass render sync (.claude/probes/K1040/s3)' -MaxWaitMin $MaxWaitMin
+$took = & (Join-Path $probes 'phone_lock_take.ps1') -Owner $phoneOwner -What 'K1040 S3c label pass render sync (.claude/probes/K1040/s3)' -MaxWaitMin $MaxWaitMin
 Write-Host "$(Get-Date -Format HH:mm:ss) $($took -join ' / ')"
 if ($LASTEXITCODE -ne 0 -or -not ($took -match 'phone lock taken')) { Write-Host 'no phone lock: stopping'; exit 3 }
 $lock = Join-Path $env:TEMP 'claude-perf.lock'
