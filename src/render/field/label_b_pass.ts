@@ -27,6 +27,12 @@
 // it, and only the rows of the used texels that differ from the last upload
 // (a still fabric uploads nothing; probeAllDirty uploads every used row, what
 // a frame pays while the fabric moves).
+// At rest (K1040 S3f2): upload(T, true) asserts nothing the pass reads has
+// changed since the last upload (the caller knows from the physics' sleep
+// state or a position counter; the pass does not scan to find out). It then
+// skips the span record and the row diff entirely: no GL call, no bytes. The
+// first upload of a pass never skips. uploadCalls counts the last upload's
+// texImage2D/texSubImage2D calls, beside uploadBytes (K1157's per-call cost).
 // GL state (K1040 S3f, K1158): the pass queries no GL state. It sets what it
 // draws with (framebuffer, viewport, blend, scissor, cull, polygon offset,
 // color mask, depth, the unpack flags its uploads need) and leaves the rest
@@ -159,6 +165,14 @@ export class LabelBPass {
   probeNoDrawCalls = false;
   /** Bytes the last upload() sent (texImage2D and texSubImage2D data). */
   uploadBytes = 0;
+  /** GL upload calls the last upload() made (K1040 S3f2, K1157). */
+  uploadCalls = 0;
+  /** Probe knob (S3f2): draw() binds the target and sets the viewport, then stops (the fixed part's bind split). */
+  probeBindOnly = false;
+  /** Probe knob (S3f2): draw() skips its clears (the fixed part's clear split). */
+  probeNoClear = false;
+  /** A full upload has landed, so upload(T, true) may skip (header). */
+  private hasUploaded = false;
   private segVerts = TENT_SEG_VERTS;
   private readonly host: LabelBHost | null;
   /** GL state changed since the host last took it back (release()). */
@@ -314,6 +328,7 @@ export class LabelBPass {
       t.rows = rows;
     } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, TEX_W, rows, gl.RGBA, gl.FLOAT, data);
     this.uploadBytes += TEX_W * rows * 16;
+    this.uploadCalls++;
   }
 
   /**
@@ -333,6 +348,7 @@ export class LabelBPass {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
       t.rows = rows;
+      this.uploadCalls++;
       this.last[key] = cur.slice();
       this.uploadBytes += TEX_W * rows * 16;
       return;
@@ -347,6 +363,7 @@ export class LabelBPass {
       bound = true;
       gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, r0, TEX_W, r1 - r0, gl.RGBA, gl.FLOAT, data, r0 * RW);
       this.uploadBytes += TEX_W * (r1 - r0) * 16;
+      this.uploadCalls++;
       last.set(cur.subarray(r0 * RW, r1 * RW), r0 * RW);
     };
     let run = -1;
@@ -373,12 +390,25 @@ export class LabelBPass {
    * Uploads a frame's tables; rebuilds the instances only on a layout change
    * (K985). Lean: only the changed rows of the tables the mode reads (header).
    */
-  upload(T: LabelBTables): void {
+  upload(T: LabelBTables, unchanged = false): void {
+    // S3f2 at rest (header): the caller asserts nothing changed; skip the
+    // span record and the row diff. Never the first upload.
+    if (unchanged && this.hasUploaded) {
+      this.uploadBytes = 0;
+      this.uploadCalls = 0;
+      this.nFills = T.nFills;
+      this.h = T.h;
+      this.invK = T.invK;
+      this.keyScale = T.keyScale;
+      this.foldR = T.foldR;
+      return;
+    }
     const gl = this.gl;
     // Not probeQuery: the bindings stay changed until draw() or release() (header).
     const query = this.probeQuery;
     const prevTex = query ? gl.getParameter(gl.TEXTURE_BINDING_2D) : null;
     const prevBuf = query ? gl.getParameter(gl.ARRAY_BUFFER_BINDING) : null;
+    this.uploadCalls = 0;
     const prevVao = query ? gl.getParameter(gl.VERTEX_ARRAY_BINDING) : null;
     this.uploadBytes = 0;
     if (this.lean) {
@@ -439,6 +469,7 @@ export class LabelBPass {
     this.invK = T.invK;
     this.keyScale = T.keyScale;
     this.foldR = T.foldR;
+    this.hasUploaded = true;
     if (!query) return;
     gl.bindVertexArray(prevVao);
     gl.bindBuffer(gl.ARRAY_BUFFER, prevBuf);
@@ -519,6 +550,7 @@ export class LabelBPass {
     this.stale = true;
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
     gl.viewport(0, 0, this.width, this.height);
+    if (this.probeBindOnly) { if (!query) this.release(); return; }
     gl.disable(gl.BLEND);
     gl.disable(gl.SCISSOR_TEST);
     gl.disable(gl.CULL_FACE);
@@ -531,9 +563,9 @@ export class LabelBPass {
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LESS);
     gl.depthMask(true);
-    gl.clearBufferuiv(gl.COLOR, 0, [0, 0, 0, 0]);
-    if (this.G) gl.clearBufferfv(gl.COLOR, 1, [-1e30, 0, 0, 0]);
-    gl.clearBufferfv(gl.DEPTH, 0, [1]);
+    if (!this.probeNoClear) gl.clearBufferuiv(gl.COLOR, 0, [0, 0, 0, 0]);
+    if (this.G && !this.probeNoClear) gl.clearBufferfv(gl.COLOR, 1, [-1e30, 0, 0, 0]);
+    if (!this.probeNoClear) gl.clearBufferfv(gl.DEPTH, 0, [1]);
     const ppd = Math.sqrt(Math.abs(M[0] * M[3] - M[1] * M[2]));
     const pad = 2 / Math.max(ppd, 1e-9);
     if (this.tent) this.drawTent(M, ppd);
