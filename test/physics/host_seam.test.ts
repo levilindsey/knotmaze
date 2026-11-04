@@ -27,8 +27,13 @@ import ts from "typescript";
 // src/app/, and collects the fields annotated with ParticleSystem or a host
 // type across all of them: an access to such a field, or a destructured
 // copy of one (`const { host } = deps`), names the system or the host in
-// every scanned file. Fields match by name, so an unrelated `.ps` or
-// `.host` counts too; nothing writes through one today.
+// every scanned file. A nested pattern binds what its leaves' keys name,
+// at any depth (`const { scene: { ps } } = ctx`, renamed or not, in a
+// declaration or a parameter), and a literal element access reads as
+// the property access it is (`deps["host"]`, `host["view"]`,
+// `ctx["scene"].ps`), at a chain's root as well as past it. Fields match
+// by name, so an unrelated `.ps` or `.host` counts too; nothing writes
+// through one today.
 
 const SRC = fileURLToPath(new URL("../../src/", import.meta.url));
 const MAIN = join(SRC, "main.ts");
@@ -167,10 +172,25 @@ function seamViolations(
   const systems = new Set<string>();
   const hosts = new Set<string>();
 
+  // A member's key: `a.ps` and `a["ps"]` name the same field; a computed
+  // key names nothing the scan can see.
+  const memberKey = (s: ts.Expression): string | null => {
+    if (ts.isPropertyAccessExpression(s)) return s.name.text;
+    if (
+      ts.isElementAccessExpression(s) &&
+      ts.isStringLiteralLike(s.argumentExpression)
+    ) {
+      return s.argumentExpression.text;
+    }
+    return null;
+  };
   const isHost = (e: ts.Expression): boolean => {
     const s = strip(e);
     if (ts.isIdentifier(s)) return hosts.has(s.text);
-    if (ts.isPropertyAccessExpression(s)) return fields.hosts.has(s.name.text);
+    if (ts.isPropertyAccessExpression(s) || ts.isElementAccessExpression(s)) {
+      const key = memberKey(s);
+      return key !== null && fields.hosts.has(key);
+    }
     if (ts.isNewExpression(s)) {
       const c = strip(s.expression);
       return ts.isIdentifier(c) && HOST_TYPE.test(c.text);
@@ -180,10 +200,11 @@ function seamViolations(
   const isSystem = (e: ts.Expression): boolean => {
     const s = strip(e);
     if (ts.isIdentifier(s)) return systems.has(s.text);
-    if (ts.isPropertyAccessExpression(s)) {
+    if (ts.isPropertyAccessExpression(s) || ts.isElementAccessExpression(s)) {
+      const key = memberKey(s);
       return (
-        fields.systems.has(s.name.text) ||
-        (s.name.text === "view" && isHost(s.expression))
+        key !== null &&
+        (fields.systems.has(key) || (key === "view" && isHost(s.expression)))
       );
     }
     if (ts.isCallExpression(s)) {
@@ -231,6 +252,33 @@ function seamViolations(
       changed = true;
     }
   };
+  // What a binding pattern binds, at any depth: a leaf whose key names a
+  // system or host field binds that kind under its own (renamed) name,
+  // and `view` bound from a host binds the system. A nested pattern's
+  // object is a host when its own key names a host field.
+  const collectPattern = (pattern: ts.BindingName, fromHost: boolean): void => {
+    if (ts.isIdentifier(pattern)) return;
+    for (const el of pattern.elements) {
+      if (!ts.isBindingElement(el)) continue;
+      const keyNode =
+        el.propertyName ?? (ts.isIdentifier(el.name) ? el.name : null);
+      const key =
+        keyNode && (ts.isIdentifier(keyNode) || ts.isStringLiteral(keyNode))
+          ? keyNode.text
+          : null;
+      if (ts.isIdentifier(el.name)) {
+        if (
+          key !== null &&
+          ((fromHost && key === "view") || fields.systems.has(key))
+        ) {
+          add(systems, el.name.text);
+        }
+        if (key !== null && fields.hosts.has(key)) add(hosts, el.name.text);
+      } else {
+        collectPattern(el.name, key !== null && fields.hosts.has(key));
+      }
+    }
+  };
   while (changed) {
     changed = false;
     walk(sf, (n) => {
@@ -247,18 +295,15 @@ function seamViolations(
           if (HOST_TYPE.test(type) || (n.initializer && isHost(n.initializer))) {
             add(hosts, n.name.text);
           }
-        } else if (ts.isObjectBindingPattern(n.name)) {
+        } else if (
+          ts.isObjectBindingPattern(n.name) ||
+          ts.isArrayBindingPattern(n.name)
+        ) {
           // `const { view } = host`, and a destructured field:
-          // `const { ps } = scene`, `const { host } = deps`, `({ ps }: SceneRef)`.
+          // `const { ps } = scene`, `const { host } = deps`, `({ ps }: SceneRef)`,
+          // at any depth (`const { scene: { ps } } = ctx`).
           const fromHost = n.initializer !== undefined && isHost(n.initializer);
-          for (const el of n.name.elements) {
-            const key = el.propertyName ?? el.name;
-            if (!ts.isIdentifier(key) || !ts.isIdentifier(el.name)) continue;
-            if ((fromHost && key.text === "view") || fields.systems.has(key.text)) {
-              add(systems, el.name.text);
-            }
-            if (fields.hosts.has(key.text)) add(hosts, el.name.text);
-          }
+          collectPattern(n.name, fromHost);
         }
       }
       if (
@@ -448,6 +493,142 @@ describe("K7 host seam: main.ts and src/app write the physics only through the h
       "ctx.host.reset(); ctx.host.release(); ctx.host.tug(0, 0, 1, 0, 1, 1);\n" +
       "const { host } = deps; host.grab(1, 2, 3); const k = host.stats().host;\n";
     expect(seamViolations(ok, fields)).toEqual([]);
+  });
+
+  it("reports writes through a nested binding pattern", () => {
+    const fields = annotatedFields([
+      'import type { ParticleSystem } from "../physics/particle_system";\n' +
+        'import type { PhysicsHost } from "../physics/physics_host";\n' +
+        "export interface SceneRef { readonly ps: ParticleSystem | null; }\n" +
+        "export interface ProbeCtx {\n" +
+        "  ps: ParticleSystem;\n" +
+        "  host: PhysicsHost;\n" +
+        "  scene: SceneRef;\n" +
+        "}\n",
+    ]);
+    // Each pair: the nested shape, then its flat-binding twin. Both read 1.
+    const pairs: [string, string][] = [
+      [
+        "const { scene: { ps } } = ctx; ps!.step(1);",
+        "const { ps } = ctx; ps!.step(1);",
+      ],
+      [
+        "const { scene: { ps } } = ctx; ps!.positions.set(other);",
+        "const { ps } = ctx; ps!.positions.set(other);",
+      ],
+      [
+        "const { scene: { ps } } = ctx; ps!.positions[0] = 1;",
+        "const { ps } = ctx; ps!.positions[0] = 1;",
+      ],
+      [
+        "const { scene: { ps: sys } } = ctx; sys.step(1);",
+        "const { ps: sys } = ctx; sys.step(1);",
+      ],
+      [
+        "function fp({ scene: { ps } }: ProbeCtx) { ps!.step(1); }",
+        "function fp({ ps }: ProbeCtx) { ps!.step(1); }",
+      ],
+      [
+        "const { holder: { host } } = deps; host.view!.step(1);",
+        "const { host } = deps; host.view!.step(1);",
+      ],
+      [
+        "const { scene: { ps: sys } } = ctx; const s2 = sys; s2.step(1);",
+        "const { ps: sys } = ctx; const s2 = sys; s2.step(1);",
+      ],
+    ];
+    for (const [nested, twin] of pairs) {
+      for (const line of [nested, twin]) {
+        const source =
+          'import type { ProbeCtx } from "./probe_hooks";\n' +
+          'import type { SceneRef } from "./scene_ref";\n' +
+          "export function hooks(ctx: ProbeCtx, scene: SceneRef): void {\n" +
+          `  ${line}\n` +
+          "}\n";
+        expect(seamViolations(source, fields).length, line).toBe(1);
+      }
+    }
+  });
+
+  it("reports writes through an element-access root", () => {
+    const fields = annotatedFields([
+      'import type { ParticleSystem } from "../physics/particle_system";\n' +
+        'import type { PhysicsHost } from "../physics/physics_host";\n' +
+        "export interface SceneRef { readonly ps: ParticleSystem | null; }\n" +
+        "export interface ProbeCtx {\n" +
+        "  ps: ParticleSystem;\n" +
+        "  host: PhysicsHost;\n" +
+        "  scene: SceneRef;\n" +
+        "}\n",
+    ]);
+    // Each pair: the element-access shape, then its property-access twin.
+    const pairs: [string, string][] = [
+      [
+        'deps["host"].view!.grab(1, 2);',
+        "deps.host.view!.grab(1, 2);",
+      ],
+      [
+        'const host = ctx.host; host["view"]!.grab(1, 2);',
+        "const host = ctx.host; host.view!.grab(1, 2);",
+      ],
+      [
+        'ctx["scene"]["ps"]!.step(1);',
+        "ctx.scene.ps!.step(1);",
+      ],
+      [
+        'const host = ctx.host; host["view"]!.positions.set(other);',
+        "const host = ctx.host; host.view!.positions.set(other);",
+      ],
+      [
+        'const host = ctx.host; host["view"]!.positions[0] = 1;',
+        "const host = ctx.host; host.view!.positions[0] = 1;",
+      ],
+      [
+        'const h = deps["host"]; h.view!.step(1);',
+        "const h = deps.host; h.view!.step(1);",
+      ],
+    ];
+    for (const [element, twin] of pairs) {
+      for (const line of [element, twin]) {
+        const source =
+          'import type { ProbeCtx } from "./probe_hooks";\n' +
+          'import type { SceneRef } from "./scene_ref";\n' +
+          "export function hooks(ctx: ProbeCtx, scene: SceneRef): void {\n" +
+          `  ${line}\n` +
+          "}\n";
+        expect(seamViolations(source, fields).length, line).toBe(1);
+      }
+    }
+  });
+
+  it("lets nested and element-access reads and unrelated names through", () => {
+    const fields = annotatedFields([
+      'import type { ParticleSystem } from "../physics/particle_system";\n' +
+        'import type { PhysicsHost } from "../physics/physics_host";\n' +
+        "export interface SceneRef { readonly ps: ParticleSystem | null; }\n" +
+        "export interface ProbeCtx {\n" +
+        "  ps: ParticleSystem;\n" +
+        "  host: PhysicsHost;\n" +
+        "  scene: SceneRef;\n" +
+        "}\n",
+    ]);
+    const ok =
+      "const { a: { b } } = other; b.step(1); b.positions.set(other);\n" +
+      "b.positions[0] = 1;\n" +
+      "const { scene: { renderer } } = ctx; renderer.step(1);\n" +
+      'other["data"].step(1); other["items"].set(other);\n' +
+      "const { scene: { ps } } = ctx; const t = ps!.simTime;\n" +
+      "const n = ps!.chains.length;\n" +
+      'const h = deps["host"]; const t2 = h.view.simTime;\n' +
+      'const v = ctx.host["view"]; const t3 = v.simTime;\n' +
+      'const t4 = ctx["scene"].ps!.simTime;\n';
+    const source =
+      'import type { ProbeCtx } from "./probe_hooks";\n' +
+      'import type { SceneRef } from "./scene_ref";\n' +
+      "export function hooks(ctx: ProbeCtx, scene: SceneRef): void {\n" +
+      ok +
+      "}\n";
+    expect(seamViolations(source, fields)).toEqual([]);
   });
 
   it("reports each kind of write", () => {
