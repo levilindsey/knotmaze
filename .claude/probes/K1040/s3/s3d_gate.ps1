@@ -9,6 +9,9 @@ param([string]$Mode = 'tentv', [int]$MaxWaitMin = 5)
   '--fit 411x753 --label s3dfit --b2b',
   '--fit 411x753 --label s3dtent --b2b --tent',
   "--fit 411x753 --label s3d$Mode --b2b --mode $Mode",
-  '--fit 411x753 --label s3dfloorall --b2b --floor'
+  '--fit 411x753 --label s3dfloorall --b2b --floor',
+  # step 2's split (split.mjs s3d2 out/split_s3d2.md s3d2): the new mode's
+  # vertex and raster parts and the fixed part's (upload, empty pass, D's store)
+  '--fit 411x753 --label s3d2 --variants tentv,tentvdegen,tentvinv,tent,empty,emptynoup,emptyinv,uponly,floor'
 ) -Tables @("s3d$Mode s3dtent s3dfit s3dfloorall -Floor s3dfloorall", "s3dtent s3d$Mode s3dfit s3dfloorall -Floor s3dfloorall")
 exit $LASTEXITCODE

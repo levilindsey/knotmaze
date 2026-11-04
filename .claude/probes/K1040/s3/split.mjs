@@ -4,7 +4,17 @@
 //   upload = tent - noup, VS = degen - empty (every primitive clipped),
 //   raster = tent - degen (binning, parameter buffer, raster, HSR, FS),
 //   FS = tent - fs0, varyings = fs0 - fsconst, half = tent - half, nw1 = tent - nw1.
-// Usage: node split.mjs <label> [out.md]   (reads out/phone_time_<label><variant>_<scene>.json)
+// Step 2's set (s3d2: the vertex-light tent, mode tentv, and the fixed part):
+//   tentv = tentv - floor, tent = tent - floor, tent - tentv,
+//   VS(v) = tentvdegen - empty, raster(v) = tentv - tentvdegen,
+//   upload = empty - emptynoup (and uponly - floor: an upload no draw uses),
+//   empty pass = emptynoup - floor (clears, D's store, the submit),
+//   D store = empty - emptyinv, tentv D = tentv - tentvinv, tentvinv = tentvinv - floor.
+// The kick set (s3d3: variants kick,emptynoup,empty,tentv,floor): kick = kick - floor
+//   (a 1x1 target cleared and read: one submit and its wait, no store to speak of),
+//   store = emptynoup - kick (the full-size clears and stores beyond that), upload =
+//   empty - emptynoup, tentv = tentv - floor, tentv - kick (the label cost past one round trip).
+// Usage: node split.mjs <label> [out.md] [s3d1|s3d2|s3d3]   (reads out/phone_time_<label><variant>_<scene>.json)
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,7 +29,23 @@ const p50 = (v, s) => {
   const f = join(here, "out", `phone_time_${label}${v}_${s}.json`);
   return existsSync(f) ? JSON.parse(readFileSync(f, "utf8")).sync.p50 : NaN;
 };
-const cols = [
+const set = process.argv[4] ?? "s3d1";
+const cols2 = [
+  ["tentv", (g) => g("tentv") - g("floor")],
+  ["tent", (g) => g("tent") - g("floor")],
+  ["tent - tentv", (g) => g("tent") - g("tentv")],
+  ["fixed", (g) => g("empty") - g("floor")],
+  ["tentv - empty", (g) => g("tentv") - g("empty")],
+  ["VS(v)", (g) => g("tentvdegen") - g("empty")],
+  ["raster(v)", (g) => g("tentv") - g("tentvdegen")],
+  ["upload", (g) => g("empty") - g("emptynoup")],
+  ["uponly", (g) => g("uponly") - g("floor")],
+  ["empty pass", (g) => g("emptynoup") - g("floor")],
+  ["D store", (g) => g("empty") - g("emptyinv")],
+  ["tentv D", (g) => g("tentv") - g("tentvinv")],
+  ["tentvinv", (g) => g("tentvinv") - g("floor")],
+];
+const cols1 = [
   ["label cost", (g) => g("tent") - g("floor")],
   ["fixed", (g) => g("empty") - g("floor")],
   ["tent - empty", (g) => g("tent") - g("empty")],
@@ -31,6 +57,16 @@ const cols = [
   ["half segs", (g) => g("tent") - g("half")],
   ["nw1", (g) => g("tent") - g("nw1")],
 ];
+const cols3 = [
+  ["tentv", (g) => g("tentv") - g("floor")],
+  ["kick", (g) => g("kick") - g("floor")],
+  ["store", (g) => g("emptynoup") - g("kick")],
+  ["empty pass", (g) => g("emptynoup") - g("floor")],
+  ["upload", (g) => g("empty") - g("emptynoup")],
+  ["tentv - kick", (g) => g("tentv") - g("kick")],
+  ["tentv - empty", (g) => g("tentv") - g("empty")],
+];
+const cols = set === "s3d3" ? cols3 : set === "s3d2" ? cols2 : cols1;
 const f1 = (x) => (Number.isFinite(x) ? x.toFixed(1) : "-");
 const rows = [`| scene | ${cols.map((c) => c[0]).join(" | ")} |`, `|---|${cols.map(() => "---").join("|")}|`];
 const sums = cols.map(() => []);
@@ -42,6 +78,7 @@ for (const s of SCENES) {
 }
 const med = (a) => { const b = [...a].sort((x, y) => x - y); return b.length ? b[b.length >> 1] : NaN; };
 rows.push(`| median | ${sums.map((a) => f1(med(a))).join(" | ")} |`);
-const text = `# ${label}: the tent pass's cost split (Pixel, render-sync p50 ms, differences on one page)\n\n${rows.join("\n")}\n`;
+const what = set === "s3d3" ? "the fixed part against one GPU round trip (kick)" : set === "s3d2" ? "the vertex-light tent's and the fixed part's split" : "the tent pass's cost split";
+const text = `# ${label}: ${what} (Pixel, render-sync p50 ms, differences on one page)\n\n${rows.join("\n")}\n`;
 console.log(text);
 if (process.argv[3]) writeFileSync(process.argv[3], text);

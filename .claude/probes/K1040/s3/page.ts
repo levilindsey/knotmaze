@@ -272,7 +272,38 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
 //   emptynoup  the empty pass without the upload (clears, stores, submit)
 //   emptyinv   the empty pass with D invalidated
 //   uponly     the upload and the readback, no pass at all
+//   kick       no upload, no pass: a 1x1 target (R32UI + DEPTH32F) cleared and
+//              read back, the cost of a submit and its wait with no store to speak of
 const VARIANTS = ["tent", "empty", "noup", "degen", "fs0", "fsconst", "half", "nw1", "floor"];
+let kickFb: WebGLFramebuffer | null = null;
+const kickPx = new Uint32Array(4);
+function kickSync(): void {
+  const prevFb = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+  if (!kickFb) {
+    const prevTex = gl.getParameter(gl.TEXTURE_BINDING_2D);
+    const mk = (internal: number, format: number, type: number) => {
+      const t = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texImage2D(gl.TEXTURE_2D, 0, internal, 1, 1, 0, format, type, null);
+      return t;
+    };
+    const c = mk(gl.R32UI, gl.RED_INTEGER, gl.UNSIGNED_INT);
+    const d = mk(gl.DEPTH_COMPONENT32F, gl.DEPTH_COMPONENT, gl.FLOAT);
+    gl.bindTexture(gl.TEXTURE_2D, prevTex);
+    kickFb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, kickFb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, c, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, d, 0);
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, kickFb);
+  gl.clearBufferuiv(gl.COLOR, 0, [0, 0, 0, 0]);
+  gl.clearBufferfv(gl.DEPTH, 0, [1]);
+  gl.readBuffer(gl.COLOR_ATTACHMENT0);
+  gl.readPixels(0, 0, 1, 1, gl.RGBA_INTEGER, gl.UNSIGNED_INT, kickPx);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, prevFb);
+}
 const vpasses = new Map<string, LabelBPass>();
 function variantPass(v: string): LabelBPass {
   const have = vpasses.get(v);
@@ -285,7 +316,7 @@ function variantPass(v: string): LabelBPass {
   const GLPOS = "-2.0 * key * uKeyScale, 1.0);\n";
   const FSMAIN = "void main() {\n  vec2 dev = vec2(gl_FragCoord.x";
   const FSREST = "\n  return;\n  vec2 dev = vec2(gl_FragCoord.x";
-  let probe: { tentSources?: LabelBTentSources; segVerts?: number } = {};
+  let probe: { tentSources?: LabelBTentSources; tentVSources?: LabelBTentVSources; segVerts?: number } = {};
   if (v === "degen") {
     const d = (s: string) => swap(s, GLPOS, GLPOS + "  gl_Position.z = 2.0;\n");
     probe = { tentSources: { ...src, segVs: d(src.segVs), capVs: d(src.capVs), fillVs: d(src.fillVs) } };
@@ -301,7 +332,7 @@ function variantPass(v: string): LabelBPass {
     const sv = labelBTentVSources(false);
     const d = (s: string) => swap(s, GLPOS, GLPOS + "  gl_Position.z = 2.0;\n");
     probe = { tentSources: { ...src, fillVs: d(src.fillVs) }, tentVSources: { ...sv, segVs: d(sv.segVs), capVs: d(sv.capVs) } };
-  } else if (!["tent", "empty", "noup", "half", "floor", "tentv", "tentvinv", "emptynoup", "emptyinv", "uponly"].includes(v)) throw new Error(`no variant ${v}`);
+  } else if (!["tent", "empty", "noup", "half", "floor", "tentv", "tentvinv", "emptynoup", "emptyinv", "uponly", "kick"].includes(v)) throw new Error(`no variant ${v}`);
   const pass = new LabelBPass(gl, false, v.startsWith("tentv") ? "tentv" : "tent", probe);
   if (v === "empty" || v === "emptynoup" || v === "emptyinv") pass.probeDraw = false;
   if (v === "emptyinv" || v === "tentvinv") pass.probeInvalidateDepth = true;
@@ -333,13 +364,15 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
       for (let k = 0; k < 5; k++) {
         pass.draw(M);
         pass.sync();
+        if (v === "kick") kickSync();
       }
       for (let k = 0; k < per; k++) {
         const u0 = performance.now();
-        if (v !== "noup" && v !== "floor" && v !== "emptynoup") pass.upload(T);
+        if (v !== "noup" && v !== "floor" && v !== "emptynoup" && v !== "kick") pass.upload(T);
         const u1 = performance.now();
-        if (v !== "floor" && v !== "uponly") pass.draw(M);
-        pass.sync();
+        if (v !== "floor" && v !== "uponly" && v !== "kick") pass.draw(M);
+        if (v === "kick") kickSync();
+        else pass.sync();
         const u2 = performance.now();
         acc[v].up.push(u1 - u0);
         acc[v].sync.push(u2 - u1);
