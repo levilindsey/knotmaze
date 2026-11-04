@@ -30,7 +30,6 @@ import type {
   Departure,
   Diagonal,
   KeyDir,
-  KeyHintPlace,
   LastPress,
   WaitingMove,
 } from "../ui/key_moves";
@@ -101,11 +100,11 @@ export interface KeyInputDeps {
   toolKey?: (k: ToolKind) => boolean;
 }
 
-// K1132: `held` - the run is shorter than the placement's arc
-// distance, so the disc sits at the run's end.
+// K1132: `held` - the run is shorter than the hint's arc distance
+// (past the head marker), so the disc sits at the run's end.
 // K332: one arrow-key hint at the player's junction: the run it takes,
 // the direction (a cardinal, or a diagonal with `chord`), the world
-// point KEY_REACH of arc along the run, and the direction's angle
+// point at the hint's arc distance along the run, and the direction's angle
 // (atan2 of its vector, y down) for the disc's rotation.
 export interface KeyHint {
   edge: number;
@@ -189,11 +188,9 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
   let hintCacheVertex: string | null = null;
   let hintCacheStamp: KeyStamp | null = null;
   let hintCache: KeyHint[] = [];
-  // K1132: the hints' placement ("reach" is today's and the default;
-  // the probe hook __knotKeyHintPlace sets it) and the head radius the
-  // cached "out" points were placed with.
-  let keyHintPlace: KeyHintPlace = "reach";
-  let hintCachePlace: KeyHintPlace = "reach";
+  // K1132: the head radius the cached hint points were placed with
+  // (their arc distance follows it), so a marker resize re-places
+  // the discs on the next frame.
   let hintCacheHeadR = -1;
   // K333/K334: the move not taken yet (ui/key_moves.ts MoveWait), and the
   // solve it was made in (keyStep drops it when that changes).
@@ -239,7 +236,7 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
       reach
     );
   };
-  // K1132: the point at the placement's arc distance along its run,
+  // K1132: the point at the hint's arc distance along its run,
   // from the end whose arc chord best matches the hint direction's
   // vector (a self-loop leaves twice), and whether the run was
   // shorter than that distance (arcPoint's held).
@@ -280,20 +277,17 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
     const v = keyVertex();
     if (v === null) return [];
     const stamp = keyStamp();
-    // K1132: the cache is keyed on the placement too, and in "out" on
-    // the head radius (the distance follows the marker size and the
-    // thread width), so the probe hook's switch and a marker resize
-    // re-place the discs on the next frame.
-    const place = keyHintPlace;
+    // K1132: the cache is keyed on the head radius too (the hint's arc
+    // distance follows the marker size and the thread width), so a
+    // marker resize re-places the discs on the next frame.
     const headR = scene.fabric?.markerRadius() ?? 0;
     const dist =
-      headR > 0 ? hintArcDistance(place, headR, headR * CHEVRON_SCALE) : KEY_REACH;
+      headR > 0 ? hintArcDistance(headR, headR * CHEVRON_SCALE) : KEY_REACH;
     if (
       hintCacheVertex === v &&
       hintCacheStamp !== null &&
       sameStamp(hintCacheStamp, stamp) &&
-      hintCachePlace === place &&
-      (place !== "out" || hintCacheHeadR === headR)
+      hintCacheHeadR === headR
     ) {
       return hintCache;
     }
@@ -308,7 +302,6 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
     }
     hintCacheVertex = v;
     hintCacheStamp = stamp;
-    hintCachePlace = place;
     hintCacheHeadR = headR;
     hintCache = out;
     return out;
@@ -760,13 +753,6 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
     inputWait,
     // K456: a lost WebGL context drops every held key, as blur does.
     dropKeys,
-    // K1132: the probe hook's hint placement (probe_hooks.ts).
-    get keyHintPlace() {
-      return keyHintPlace;
-    },
-    set keyHintPlace(v: KeyHintPlace) {
-      keyHintPlace = v;
-    },
     get keyHold() {
       return keyHold;
     },

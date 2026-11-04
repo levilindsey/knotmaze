@@ -294,7 +294,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   HeldKeys/MoveWait/queuedPressHeld). Unprobed on real hardware -
   first pad check rides the next phone/desktop play pass.
 
-- KEY HINTS (K332, 698a2924, 2026-11-03; ui/key_moves.ts hintMap,
+- KEY HINTS (K332, 698a2924; K1170's d-pad rule and K1132's
+  out-only placement, 2026-11-03; ui/key_moves.ts hintMap,
   app/input_keys.ts keyHints, render/fabric_maze_renderer.ts
   drawKeyHints): after the page's first direction press (keys, the
   move pad or a gamepad set `keyHintsSeen`; nothing is stored), each
@@ -307,14 +308,23 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   direction takes (a tie, nothing within tolerance) gets none.
   `keyHints()` is [] until the first press and caches per vertex and
   stamp; main.ts hands it to `fabric.setKeyHints` every frame. A disc
-  sits KEY_REACH (0.5) of arc along its run, a MarkerMesh `arrow`
-  glyph at r x CHEVRON_SCALE (r the marker radius, 0.52 at the
-  defaults, so 0.286), inserted below the head marker in
+  sits past the head marker along its run (K1132: Levi chose "out" on
+  2026-11-03): its arc distance is the head disc's radius plus 1.25
+  hint radii (`hintArcDistance`, `HINT_CLEAR` in ui/key_moves.ts;
+  0.8775 at the defaults, head 0.52, hint r 0.286), so it follows
+  thread width and marker size (`markerRadiusFor`); the picker and
+  `hintMap` keep KEY_REACH (0.5) - only the drawn disc sits out, and
+  a run shorter than the distance keeps its disc at its end (`held`,
+  `KeyHint.held`). It is a MarkerMesh `arrow` glyph at r x
+  CHEVRON_SCALE, inserted below the head marker in
   overContainer, and hidden while the dot moves, once solved, or with
   an empty list. No new shader program (the marker's). Probe:
   `.claude/probes/K332/hints.mjs`; hook
   `__knotFabricRenderer().keyHintMarkers` (layer-local x, y, r, dir,
-  edge, chord). OPEN LOOK (K1132): at the defaults the discs sit
-  mostly under the head marker and only their tips show; KEY_REACH is
-  a fixed arc length, while the marker radius follows thread width
-  and marker size (markerRadiusFor).
+  edge, chord, held). The old KEY_REACH placement (at the defaults
+  the discs sat mostly under the head marker, only their tips
+  showing) and the `__knotKeyHintPlace` probe hook that switched
+  between placements are gone: "out" is the only placement.
+  Final sheets (out only, desk and phone size, desktop Chrome):
+  `.claude/probes/K1132/shots/sheet_desk.png`,
+  `.claude/probes/K1132/shots/sheet_phone.png`.

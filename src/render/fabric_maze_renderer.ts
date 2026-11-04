@@ -622,8 +622,9 @@ interface TrailPaint {
 
 // K332: one arrow-key hint as main.ts feeds it (input_keys.ts KeyHint):
 // the run, the direction that takes it, its world point and its angle.
-// K1132: `held` says the run was shorter than the placement's arc
-// distance, so the disc sits at the run's end (the probes count them).
+// K1132: `held` says the run was shorter than the hint's arc distance
+// (past the head marker), so the disc sits at the run's end (the probes
+// count them).
 export interface KeyHintDisc {
   readonly edge: number;
   readonly dir: KeyDir | Diagonal;
@@ -4801,7 +4802,7 @@ export class FabricMazeRenderer {
     }
     return out;
   }
-  // K332: one arrow disc per hint at its reach point, turned to its
+  // K332: one arrow disc per hint at its hint point, turned to its
   // direction. Hidden while the dot travels, once the solve is over,
   // and while the list is empty.
   private drawKeyHints(controller: FabricMazeController, moving: boolean, r: number): void {

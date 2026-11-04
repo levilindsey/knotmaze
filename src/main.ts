@@ -4634,13 +4634,6 @@ async function main(): Promise<void> {
     set tapsWait(v) {
       keyInput.tapsWait = v;
     },
-    // K1132: the probe hook's hint placement, through to keyInput.
-    get keyHintPlace() {
-      return keyInput.keyHintPlace;
-    },
-    set keyHintPlace(v) {
-      keyInput.keyHintPlace = v;
-    },
     invalidate,
   });
 

@@ -33,7 +33,7 @@ import {
   pickDeparture,
   pickHold,
 } from "../ui/key_moves";
-import type { Departure, HeldKeys, KeyDir, KeyHintPlace, MoveWait } from "../ui/key_moves";
+import type { Departure, HeldKeys, KeyDir, MoveWait } from "../ui/key_moves";
 import type { LossBanner } from "../ui/maze_hud";
 import type { ModeBadge } from "../ui/mode_badge";
 import type { MotionSetting } from "../ui/motion";
@@ -229,8 +229,6 @@ export interface ProbeCtx {
   chaseRunning: boolean;
   hcLookChoice: number;
   tapsWait: boolean;
-  // K1132: the key hints' placement, set by __knotKeyHintPlace.
-  keyHintPlace: KeyHintPlace;
   // `renderDirty = true` (the frame loop's flag, written by several regions).
   invalidate(): void;
 }
@@ -637,17 +635,6 @@ export function installProbeHooks(ctx: ProbeCtx): void {
   (window as unknown as Record<string, unknown>).__knotTurnMove = (
     edge: number
   ): boolean => ctx.moveAlong(edge);
-  // K1132: the key hints' placement for Levi's pictures (no link param,
-  // no panel row, no stored setting): "reach" is today's placement and
-  // the default, "out" puts the discs past the head marker. Called
-  // with a placement it sets it; it returns the placement in force,
-  // and the next frame draws the new points.
-  (window as unknown as Record<string, unknown>).__knotKeyHintPlace = (
-    place?: string
-  ): KeyHintPlace => {
-    if (place === "reach" || place === "out") ctx.keyHintPlace = place;
-    return ctx.keyHintPlace;
-  };
   (window as unknown as Record<string, unknown>).__knotTurnWait = (): boolean =>
     ctx.waitTurn();
   // K137 stage 3c: press sprint as its button or F would (either clock).

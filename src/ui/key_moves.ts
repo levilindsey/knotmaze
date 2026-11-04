@@ -484,25 +484,20 @@ export function chordMap(
   return dirMap(deps, DIAGONALS, DIAGONAL_VECTORS, o);
 }
 
-// K1132: where a hint disc sits along its run. "reach" is today's
-// placement (KEY_REACH of arc, under the head marker at the defaults);
-// "out" puts the disc past the head marker: its arc distance is the
-// head disc's radius plus HINT_CLEAR hint radii, so it follows the
-// marker size and the thread width. The picker and hintMap keep
-// KEY_REACH either way - only the drawn disc moves.
-export type KeyHintPlace = "reach" | "out";
-// The "out" clearance past the head disc's rim, in hint radii.
+// K1132: where a hint disc sits along its run. Levi chose "out"
+// (2026-11-03): the disc sits past the head marker, its arc distance
+// the head disc's radius plus HINT_CLEAR hint radii, so it follows
+// the marker size and the thread width. The picker and hintMap keep
+// KEY_REACH - only the drawn disc sits out. (The "reach" placement,
+// KEY_REACH of arc under the head marker at the defaults, and the
+// __knotKeyHintPlace probe hook that switched to it, are gone.)
+// The clearance past the head disc's rim, in hint radii.
 export const HINT_CLEAR = 1.25;
 
-// The arc distance (world units along the run) a hint disc sits at
-// under `place`, for a head disc of radius `headR` and a hint disc of
-// radius `hintR`.
-export function hintArcDistance(
-  place: KeyHintPlace,
-  headR: number,
-  hintR: number
-): number {
-  return place === "out" ? headR + HINT_CLEAR * hintR : KEY_REACH;
+// The arc distance (world units along the run) a hint disc sits at,
+// for a head disc of radius `headR` and a hint disc of radius `hintR`.
+export function hintArcDistance(headR: number, hintR: number): number {
+  return headR + HINT_CLEAR * hintR;
 }
 
 // The point `dist` world units of arc along run `e` from one end (the
