@@ -12,6 +12,7 @@ import {
 } from "../../src/game/minotaur";
 import type { ChaseEvent, ChaseParams, ChasePlan } from "../../src/game/minotaur";
 import { resetPathAction } from "../../src/game/daily_attempt";
+import { newSword } from "../../src/game/sword";
 import { SeededRNG } from "../../src/util/random";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEAD_END_DENSITY_ON, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
@@ -286,6 +287,97 @@ describe("MinotaurChase: the approach and the catch", () => {
     // Everything else is a fresh chase.
     expect(next.tick).toBe(0);
     expect(next.mode).toBe("lair");
+  });
+});
+
+describe("K710: contact without broken runs", () => {
+  // Frozen: neither entity moves in a tick, so one step reads contact
+  // where they were placed. Run 1 (A-B) is the broken run below.
+  const frozen = P({ playerPace: 0, approachPace: 0, wanderPace: 0, detectStart: 15, detectEnd: 20, catchDist: 1 });
+
+  it("measures contact around a broken run, the tails still counted", () => {
+    const g = new ChaseGraph(G1);
+    const A = g.index.get("A")!;
+    const B = g.index.get("B")!;
+    expect(g.from(B, "nobroken")[A]).toBe(10);
+    expect(g.block(1)).toBe(true);
+    expect(g.from(B, false)[A]).toBe(10);
+    expect(g.from(B, "nobroken")[A]).toBe(40);
+    expect(g.from(A, "nobroken")[B]).toBe(40);
+    expect(g.from(A, "nobroken")[g.start]).toBe(5);
+    expect(g.from(A, true)[g.start]).toBe(Infinity);
+    const atA = { edge: -1, pos: 0, dir: 1 as const, vertex: A };
+    const atB = { edge: -1, pos: 0, dir: 1 as const, vertex: B };
+    const onRun = { edge: 1, pos: 0.5, dir: 1 as const, vertex: -1 };
+    expect(g.spotToSpot(atA, onRun, false)).toBe(0.5);
+    expect(g.spotToSpot(atA, onRun, "nobroken")).toBe(49.5);
+    expect(g.spotToSpot(atB, atA, "nobroken")).toBe(40);
+    const m = { edge: 1, pos: 5, dir: 1 as const, vertex: -1 };
+    const p = { edge: 1, pos: 5.4, dir: 1 as const, vertex: -1 };
+    expect(g.spotToSpot(m, p, "nobroken")).toBeCloseTo(0.4, 12);
+  });
+
+  it("no catch through a blocked run; the sanctuary still reads 0.2", () => {
+    const sim = new MinotaurChase(G1, frozen, 1);
+    sim.g.block(1);
+    sim.place("minotaur", "A", "pause", 100);
+    sim.place("player", { edge: 1, pos: 0.5, dir: 1 });
+    expect(sim.contactDistance()).toBe(49.5);
+    expect(sim.huntDistance()).toBe(49.5);
+    expect(sim.step()).toEqual([]);
+    expect(sim.catches).toBe(0);
+    const safe = new MinotaurChase(G1, frozen, 1);
+    safe.g.block(1);
+    safe.place("minotaur", "A", "pause", 100);
+    safe.place("player", { edge: 0, pos: 4.8, dir: 1 });
+    expect(safe.contactDistance()).toBeCloseTo(0.2, 12);
+    expect(safe.step()).toEqual([]);
+    expect(safe.catches).toBe(0);
+  });
+
+  it("catches on the same blocked run", () => {
+    const sim = new MinotaurChase(G1, frozen, 1);
+    sim.g.block(1);
+    sim.place("minotaur", { edge: 1, pos: 5, dir: 1 }, "pause", 100);
+    sim.place("player", { edge: 1, pos: 5.4, dir: 1 });
+    expect(sim.contactDistance()).toBeCloseTo(0.4, 12);
+    const evs = sim.step();
+    expect(evs.some((e) => e.kind === "caught")).toBe(true);
+    expect(sim.catches).toBe(1);
+  });
+
+  it("catches on the unbroken detour when it is within catchDist", () => {
+    const sim = new MinotaurChase(G1, frozen, 1);
+    sim.g.block(1);
+    sim.place("minotaur", { edge: 2, pos: 9.7, dir: 1 }, "pause", 100);
+    sim.place("player", { edge: 5, pos: 29.7, dir: 1 });
+    expect(sim.contactDistance()).toBeCloseTo(0.6, 12);
+    const evs = sim.step();
+    expect(evs.some((e) => e.kind === "caught")).toBe(true);
+    expect(sim.catches).toBe(1);
+  });
+
+  it("an extra does not catch through a blocked run", () => {
+    const sim = new MinotaurChase(G1, frozen, 1);
+    sim.g.block(1);
+    sim.setExtras([sim.g.index.get("A")!]);
+    sim.place("player", { edge: 1, pos: 0.5, dir: 1 });
+    expect(sim.step()).toEqual([]);
+    expect(sim.catches).toBe(0);
+  });
+
+  it("the sword's touch does not land through a blocked run", () => {
+    const sim = new MinotaurChase(G1, frozen, 1);
+    sim.g.block(1);
+    const sw = newSword(sim.g.index.get("A")!, "timed", 8);
+    sw.phase = "fleeing";
+    sw.left = 8;
+    sim.setSword(sw);
+    sim.place("minotaur", "A", "wander");
+    sim.place("player", { edge: 1, pos: 0.5, dir: 1 });
+    expect(sim.step().filter((e) => e.kind === "sword")).toEqual([]);
+    expect(sim.sword!.phase).toBe("fleeing");
+    expect(sim.catches).toBe(0);
   });
 });
 

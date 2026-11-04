@@ -378,8 +378,9 @@ class MinHeap {
 }
 
 // The walk graph as index arrays, plus lazily cached single-source
-// distances over the whole graph (catches) and over the graph without the
-// two tails (the minotaur's world: pathing and detection).
+// distances over the whole graph, over the graph without the two tails
+// (the minotaur's world: pathing and detection) and over the graph
+// without the broken runs (K710: contact, the tails still counted).
 export class ChaseGraph {
   readonly walk: WalkGraph;
   readonly ids: string[] = [];
@@ -392,12 +393,16 @@ export class ChaseGraph {
   readonly barred: Uint8Array; // 1 = the entrance or exit tail.
   // K137-b: 1 = a run that broke behind the player (fragile, collapse):
   // gone for the minotaur's pathing (the restricted distances), as the
-  // tails are; contact still measures the whole graph. block() sets it.
+  // tails are, and for contact too (K710). block() sets it.
   readonly blocked: Uint8Array;
   blockedCount = 0;
   readonly start: number;
   readonly exit: number;
-  private cache = [new Map<number, Float64Array>(), new Map<number, Float64Array>()];
+  private cache = [
+    new Map<number, Float64Array>(),
+    new Map<number, Float64Array>(),
+    new Map<number, Float64Array>(),
+  ];
 
   constructor(walk: WalkGraph) {
     this.walk = walk;
@@ -431,9 +436,11 @@ export class ChaseGraph {
   }
 
   // Shortest thread distances from vertex `src` to every vertex; restricted
-  // = without the barred tails.
-  from(src: number, restricted: boolean): Float64Array {
-    const c = this.cache[restricted ? 1 : 0];
+  // = without the barred tails (and without the broken runs);
+  // "nobroken" = without the broken runs only (K710: contact still
+  // counts the tails).
+  from(src: number, restricted: boolean | "nobroken"): Float64Array {
+    const c = this.cache[restricted === "nobroken" ? 2 : restricted ? 1 : 0];
     const hit = c.get(src);
     if (hit) return hit;
     const dist = new Float64Array(this.ids.length).fill(Infinity);
@@ -446,7 +453,8 @@ export class ChaseGraph {
       if (done[u]) continue;
       done[u] = 1;
       for (const eid of this.adj[u]) {
-        if (restricted && (this.barred[eid] || this.blocked[eid])) continue;
+        if (restricted === true && (this.barred[eid] || this.blocked[eid])) continue;
+        if (restricted === "nobroken" && this.blocked[eid]) continue;
         const w = this.ea[eid] === u ? this.eb[eid] : this.ea[eid];
         const nd = d + this.len[eid];
         if (nd < dist[w]) {
@@ -465,6 +473,7 @@ export class ChaseGraph {
     this.blocked[eid] = 1;
     this.blockedCount++;
     this.cache[1].clear();
+    this.cache[2].clear();
     return true;
   }
 
@@ -494,13 +503,13 @@ export class ChaseGraph {
   }
 
   // Distance from a spot to vertex x. K137-b: on a run that broke, only
-  // the end the spot heads to leads on (restricted).
-  spotToVertex(s: Spot, x: number, restricted: boolean): number {
+  // the end the spot heads to leads on (restricted, and "nobroken" alike).
+  spotToVertex(s: Spot, x: number, restricted: boolean | "nobroken"): number {
     if (s.edge < 0) return this.from(s.vertex, restricted)[x];
-    if (restricted && this.blocked[s.edge]) {
+    if (restricted !== false && this.blocked[s.edge]) {
       return s.dir > 0
-        ? this.len[s.edge] - s.pos + this.from(this.eb[s.edge], true)[x]
-        : s.pos + this.from(this.ea[s.edge], true)[x];
+        ? this.len[s.edge] - s.pos + this.from(this.eb[s.edge], restricted)[x]
+        : s.pos + this.from(this.ea[s.edge], restricted)[x];
     }
     const a = this.from(this.ea[s.edge], restricted)[x];
     const b = this.from(this.eb[s.edge], restricted)[x];
@@ -508,13 +517,13 @@ export class ChaseGraph {
   }
 
   // Distance between two spots along the threads.
-  spotToSpot(m: Spot, p: Spot, restricted: boolean): number {
+  spotToSpot(m: Spot, p: Spot, restricted: boolean | "nobroken"): number {
     if (m.edge < 0) return this.spotToVertex(p, m.vertex, restricted);
     let d =
-      restricted && this.blocked[m.edge]
+      restricted !== false && this.blocked[m.edge]
         ? m.dir > 0
-          ? this.len[m.edge] - m.pos + this.spotToVertex(p, this.eb[m.edge], true)
-          : m.pos + this.spotToVertex(p, this.ea[m.edge], true)
+          ? this.len[m.edge] - m.pos + this.spotToVertex(p, this.eb[m.edge], restricted)
+          : m.pos + this.spotToVertex(p, this.ea[m.edge], restricted)
         : Math.min(
             m.pos + this.spotToVertex(p, this.ea[m.edge], restricted),
             this.len[m.edge] - m.pos + this.spotToVertex(p, this.eb[m.edge], restricted)
@@ -990,14 +999,15 @@ export class MinotaurChase {
   }
 
   // Thread distance as the minotaur sees it (Infinity: the player is on a
-  // tail, invisible) and as contact measures it (the whole graph).
+  // tail, invisible) and as contact measures it (K710: every run but the
+  // broken ones; the tails still count).
   huntDistance(): number {
     if (this.invisible()) return Infinity;
     return this.g.spotToSpot(this.mino, this.player, true);
   }
 
   contactDistance(): number {
-    return this.g.spotToSpot(this.mino, this.player, false);
+    return this.g.spotToSpot(this.mino, this.player, "nobroken");
   }
 
   // A tap on run `edge`: queued to leave from the decision vertex (at once
@@ -1092,7 +1102,7 @@ export class MinotaurChase {
       for (const x of this.extras) {
         if (
           !this.invisible() &&
-          this.g.spotToSpot(x.spot, this.player, false) <= this.params.catchDist
+          this.g.spotToSpot(x.spot, this.player, "nobroken") <= this.params.catchDist
         ) {
           this.catches++;
           out.push({ kind: "caught", player: { ...this.player }, mino: { ...x.spot } });
