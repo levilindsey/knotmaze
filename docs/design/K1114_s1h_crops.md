@@ -76,3 +76,66 @@ coordinator.
   - Then report: the sheet's and the index's paths, one line per site,
     a `Ledger items` list, and K1114's handle fields (owner, branch and
     last commit, evidence, next, brief).
+
+## Handoff (S1h agent, 2026-11-03, stopped 14:45, stage done; cap was 15:06)
+
+The stage is done: 18 sites, each with a before/after pair at play size
+(zoom 1, dpr 2) and at zoom 4, one contact sheet and an index. Nothing is
+pushed. Branch `worktree-agent-ae83ec07a4b4a228c` (worktree
+`.claude/worktrees/agent-ae83ec07a4b4a228c`). The coordinator's verdict on
+the pictures is all that is left; no judgment on the looks is made here.
+
+### What landed, by commit
+- `adb27a13` the site list (`s1h_sites.ts`: builds the S1f-final, the
+  defaults, F1-only and F2-only forms per scene, picks the sites, writes
+  `out/s1h/sites.json` and `sites.txt`) and the pair probe
+  (`s1h_pair.ts`), WIP.
+- `8052a5ad` the 36 pair PNGs, `sheet.png`, `index.md`, `pairs.txt` (WIP).
+- `5eca305e` the diff panel made signed (after minus before: red = more ink
+  after, blue = less), one `seen` line per site (what differs, no verdict)
+  in the pictures, `pairs.txt`, the sheet and `index.md`; the figures of
+  sites 05, 16, 17, 18 re-measured along rows or columns of the forms' ink
+  (WIP).
+- `ccf5f785` site 17's elbow in its `seen` line; `s1h_runs.ts` (ink
+  runs along rows or columns) and `s1h_zoom.ts` (zoom 6-10 crops, before |
+  after | signed diff) kept (WIP).
+- the commit holding this Handoff.
+
+### The sites (`out/s1h/index.md`: one row each; `sites.txt`: the numbers)
+- 01-04: F1's four emptied corners, all muse_hash: j0 0-1, j36 109-110, j155
+  471-472, j156 475-473 (03 and 04 are the two ends of one small eye).
+- 05: muse_hash j62 189-187 (F1, r 2.438h -> 1.431h).
+- 06-15: F2's ten largest at-rest r moves (by delta r / h): muse_default_tw
+  j57 172-173, muse_hash j23 72-70, muse_hash j110 335-333, muse_default_tw
+  j110 335-333, muse_default_tw j164 499-497, muse_hash j57 172-173,
+  g41_user_tw64 j12 36-37, user_tw42.lightpaper j49 151-152, g41_user_tw42 j49
+  151-152 (13 and 14 are one corner in two scene files), muse_hash j124 375-376.
+- 16-18: not in the brief. The three largest tip moves among corners the
+  list does not hold, all F1's: muse_hash j131 397-398, j99 301-299, j73 222-220.
+- 18 pairs hold 16 distinct changes.
+
+### Commands (from the worktree; it has no node_modules, Node finds the main checkout's)
+- `npx.cmd vite-node .claude/probes/K1040/s1/s1h_sites.ts` (about 30 s): the site list.
+- `npx.cmd vite-node .claude/probes/K1040/s1/s1h_pair.ts` (about 35 s): the pictures, `sheet.png`,
+  `index.md`, `pairs.txt`. The one-line `seen` texts are the `SEEN` map in `s1h_pair.ts`, keyed by site
+  id (a missing key prints "(not described)").
+- `s1h_runs.ts` and `s1h_zoom.ts`: usage in their headers (`ARGS` env).
+- Scenes are read in place from the main checkout's `.claude/probes/K868/scenes`.
+
+### Findings worth keeping
+- `FormB({dEdge: "skip", rootBand: 0})` reproduces the frozen S1f ink exactly at all 18 sites (0 px differ,
+  both windows), so before = S1f's final and the only difference to after is F1 and F2.
+- F1's four emptied corners: the old fills at j0, j155, j156 are r 0.04-0.13h (under 2 device px), so what
+  differs there is at the thread ends and the eye; j36's old fill was r 2.721h. The defaults build no corner at
+  j0 and j156; j36 and j155 keep one with r = 0.
+- S1g's "tip moves at most 0.221h (j124)" is the straight-arm formula
+  (`docs/design/K1040_s1g_gates.md`, lines 303 and 577). Measured from the corners' own V, q, r (the arc point nearest V),
+  j124 moves 0.087h and the ten F2 sites 0.036-0.096h. The F1-driven tip moves are larger: 0.34-0.75h at sites 16-18
+  (F2 0.000h there).
+- A play-size window can hold other corners' changes: site 04 144 px against 112 in the zoom 4 window, site 08 230
+  against 36 (F1 elsewhere), site 09 83 (F2 elsewhere).
+- The sheet holds before | after only (the brief's ask); the signed diff is in each site's own pictures.
+
+### Left
+Nothing technical. The coordinator looks at `out/s1h/sheet.png` and the per-site pictures and decides whether
+any of it reads as a change worth showing Levi (K1114).
