@@ -50,6 +50,10 @@ const passMode = val("--mode", null) ?? undefined;
 // --rest its row diff on a still fabric (no upload after the first), not the
 // moving case (every used row each frame, what the gate times).
 const lean = args.includes("--lean"), rest = args.includes("--rest");
+// K1040 S3f: --state host the live pass with no state queries and a Pixi host
+// on the page's context (K1158; page.ts probeHost()); default S3e's query and
+// restore. With --floor it is the new sync alone (the host floor).
+const state = val("--state", "");
 // K1040 S3d: --variants a,b,... page.ts timeMany()'s cost split (tent pass
 // variants interleaved in --rounds rounds on each scene); each variant's
 // outputs are named <label><variant>, so phone_table.ps1 reads them.
@@ -103,7 +107,7 @@ const plugins = glslSwap
   ? [{ name: "glsl-swap", load(id) { if (id.replace(/\\/g, "/").endsWith("src/render/field/label_b_glsl.ts")) { swapped++; return readFileSync(glslSwap, "utf8"); } } }]
   : [];
 const bundle = await rolldown({ input: join(here, "page.ts"), platform: "browser", logLevel: "warn", plugins });
-await bundle.write({ file: join(outDir, "phone.js"), format: "iife" });
+await bundle.write({ file: join(outDir, "phone.js"), format: "iife", inlineDynamicImports: true });
 await bundle.close();
 if (glslSwap && swapped !== 1) { log(`refusing: the GLSL swap matched ${swapped} modules`); process.exit(5); }
 const html =
@@ -196,13 +200,13 @@ try {
       log(line);
       continue;
     }
-    const res = await within(page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, fit, b2b, floor, noscan, tent, mode: passMode, lr, lean, rest }), 180000, name);
+    const res = await within(page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, fit, b2b, floor, noscan, tent, mode: passMode, lr, lean, rest, state }), 180000, name);
     res.scene = name;
     res.wallMs = Date.now() - t0;
     res.phone = st;
     res.touchedDuring = touched;
     writeFileSync(join(outDir, `phone_time_${runLabel ? runLabel + "_" : ""}${name}.json`), JSON.stringify(res, null, 1));
-    const line = `- ${name}: ${res.W}x${res.H}, sync p50 ${res.sync.p50.toFixed(1)} p95 ${res.sync.p95.toFixed(1)} ms (n ${frames}, timer ${res.timer}); upload p50 ${res.upload.p50.toFixed(1)} ms (${res.upload.bytes} B); prep ${res.prepMs.toFixed(1)} ms; segs ${res.segs}, fills ${res.fills}, groups ${res.groups}; lost ${res.lost}; before it: thermal ${st.thermal}, battery ${st.battery} C, media ${st.media}; ${res.wallMs} ms${touched ? " (INPUT EVENT during it: void)" : ""}`;
+    const line = `- ${name}: ${res.W}x${res.H}, sync p50 ${res.sync.p50.toFixed(1)} p95 ${res.sync.p95.toFixed(1)} ms (n ${frames}, timer ${res.timer}, state ${res.state}); upload p50 ${res.upload.p50.toFixed(1)} ms (${res.upload.bytes} B); prep ${res.prepMs.toFixed(1)} ms; segs ${res.segs}, fills ${res.fills}, groups ${res.groups}; lost ${res.lost}; before it: thermal ${st.thermal}, battery ${st.battery} C, media ${st.media}; ${res.wallMs} ms${touched ? " (INPUT EVENT during it: void)" : ""}`;
     summary.push(line);
     log(line);
   }

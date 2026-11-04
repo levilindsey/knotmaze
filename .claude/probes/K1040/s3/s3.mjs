@@ -31,8 +31,8 @@ const SCENES = [
 const SCENE_DIR = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes";
 const args = process.argv.slice(2);
 const mode = args[0];
-if (mode !== "verdict" && mode !== "time" && mode !== "many") {
-  console.error("usage: node s3.mjs verdict|time [scene,...] [--stride n] [--scale s] [--frames n]");
+if (mode !== "verdict" && mode !== "time" && mode !== "many" && mode !== "ab") {
+  console.error("usage: node s3.mjs verdict|time|many|ab [scene,...] [--stride n] [--scale s] [--frames n] [--state new|host]");
   process.exit(2);
 }
 const val = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
@@ -52,6 +52,10 @@ const passMode = val("--mode", "") || undefined;
 const lean = val("--lean", "0") === "1", rest = val("--rest", "0") === "1";
 // --d24 1 (verdict, with --lean 1): D as a DEPTH_COMPONENT24 renderbuffer (probeDepth24).
 const d24 = val("--d24", "0") === "1";
+// K1040 S3f --state new|host: the live pass with no state queries (K1158;
+// verdict: new; time: host, a Pixi host on the page's context). Default: S3e's
+// query and restore. ab: the same-state A/B of the two (page.ts ab()).
+const state = val("--state", "");
 const tag = val("--tag", "");
 const pre = tag ? `${mode}_${tag}` : mode;
 // K1040 S3d: many --variants a,b,...: page.ts timeMany()'s cost split (render sync only).
@@ -61,7 +65,7 @@ mkdirSync(outDir, { recursive: true });
 
 // Bundle the page.
 const bundle = await rolldown({ input: join(here, "page.ts"), platform: "browser", logLevel: "warn" });
-await bundle.write({ file: join(outDir, "page.js"), format: "iife" });
+await bundle.write({ file: join(outDir, "page.js"), format: "iife", inlineDynamicImports: true });
 await bundle.close();
 writeFileSync(
   join(outDir, "page.html"),
@@ -86,7 +90,7 @@ const errors = [];
 let favicon = 0;
 const isFav = (u) => /favicon/i.test(u ?? "");
 const stamp = new Date().toISOString();
-const summary = [`# ${pre} ${stamp}`, "", `stride ${stride}, scale ${scale}, ${passMode ? `mode ${passMode}` : tent ? "TENT" : "capsule"} pass${lean ? `, LEAN fixed part${d24 ? ", D24" : ""}${mode === "time" ? (rest ? " (at rest)" : " (moving: every used row)") : ""}` : ""}, lr ${lr}${mode === "time" ? `, frames ${frames}${noscan ? ", NO merge scan" : ""}` : ""}`, ""];
+const summary = [`# ${pre} ${stamp}`, "", `stride ${stride}, scale ${scale}, ${passMode ? `mode ${passMode}` : tent ? "TENT" : "capsule"} pass${lean ? `, LEAN fixed part${d24 ? ", D24" : ""}${mode === "time" ? (rest ? " (at rest)" : " (moving: every used row)") : ""}` : ""}, lr ${lr}${mode === "time" ? `, frames ${frames}${noscan ? ", NO merge scan" : ""}` : ""}${state ? `, state ${state}` : ""}`, ""];
 try {
   const page = await browser.newPage();
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
@@ -116,10 +120,18 @@ try {
       console.log(line);
       continue;
     }
+    if (mode === "ab") {
+      const r = await page.evaluate((s, o) => window.s3.ab(s, o), scene, { scale });
+      writeFileSync(join(outDir, `${pre}_${name}.json`), JSON.stringify(r, null, 1));
+      const line = `- ${name}: label ${r.W}x${r.H}, canvas ${r.canvas.join("x")}, stage drew ${r.drawn} px; setup gl error ${r.setupErr}; px differing from control (max diff, gl error[, error left before the arm]): ${Object.entries(r.arms).map(([a, d]) => `${a} ${d.px} (${d.max}, ${d.err}${d.pre ? `, pre ${d.pre}` : ""})`).join(", ")}; lost ${r.lost}; ${Date.now() - t0} ms`;
+      summary.push(line);
+      console.log(line);
+      continue;
+    }
     const res =
       mode === "verdict"
-        ? await page.evaluate((s, o) => window.s3.verdict(s, o), scene, { scale, stride, tent, mode: passMode, lr, lean, d24 })
-        : await page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, noscan, tent, mode: passMode, lr, lean, rest });
+        ? await page.evaluate((s, o) => window.s3.verdict(s, o), scene, { scale, stride, tent, mode: passMode, lr, lean, d24, state })
+        : await page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, noscan, tent, mode: passMode, lr, lean, rest, state });
     res.scene = name;
     res.wallMs = Date.now() - t0;
     writeFileSync(join(outDir, `${pre}_${name}.json`), JSON.stringify(res, null, 1));

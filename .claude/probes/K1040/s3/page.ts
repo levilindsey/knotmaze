@@ -8,7 +8,9 @@
 import { FormB } from "../../../../src/render/field/form_b";
 import type { FieldScene } from "../../../../src/render/field/scene";
 import { buildLabelB, labelAt, type LabelBTables } from "../../../../src/render/field/label_b";
-import { LabelBPass, type Affine, type LabelBMode } from "../../../../src/render/field/label_b_pass";
+import { LabelBPass, type Affine, type LabelBHost, type LabelBMode } from "../../../../src/render/field/label_b_pass";
+import { pixiLabelHost } from "../../../../src/render/field/label_b_host";
+import { autoDetectRenderer, BlurFilter, Container, Graphics, Mesh, MeshGeometry, Shader, Sprite, Text, Texture, type WebGLRenderer } from "pixi.js";
 import { labelBTentSources, labelBTentVSources, TENT_NW, type LabelBTentSources, type LabelBTentVSources } from "../../../../src/render/field/label_b_tent_glsl";
 
 // K1040 S3d: opts.mode names the pass's mode (capsule | tent | tentv); opts.tent
@@ -60,7 +62,17 @@ function coarse(M: Affine, W: number, H: number, lr: number): { M: Affine; W: nu
   return { M: M.map((v) => v / lr) as unknown as Affine, W: Math.ceil(W / lr), H: Math.ceil(H / lr) };
 }
 
-function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; stride?: number; tent?: boolean; mode?: string; lr?: number; lean?: boolean; d24?: boolean } = {}) {
+// K1040 S3f (K1158): opts.state picks the pass's GL state handling. "new" is
+// the live pass (no queries; verdict runs it with no host), "host" the live
+// pass with a Pixi host on the page's context (time only); anything else is
+// S3e's query and restore (probeQuery), today's tentv.
+let hostP: Promise<LabelBHost> | null = null;
+function probeHost(): Promise<LabelBHost> {
+  hostP ??= autoDetectRenderer({ preference: "webgl", context: gl, canvas, width: 4, height: 4, antialias: false, resolution: 1 }).then((r) => pixiLabelHost(r as WebGLRenderer));
+  return hostP;
+}
+
+function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; stride?: number; tent?: boolean; mode?: string; lr?: number; lean?: boolean; d24?: boolean; state?: string } = {}) {
   const scale = opts.scale ?? 2;
   const stride = opts.stride ?? 1;
   const lr = opts.lr ?? 1;
@@ -73,6 +85,7 @@ function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; s
   const dev = camera(scene, scale);
   const { M: Mc, W, H } = coarse(dev.M, dev.W, dev.H, lr);
   const pass = new LabelBPass(gl, true, modeOf(opts), { lean: !!opts.lean });
+  pass.probeQuery = opts.state !== "new";
   pass.probeDepth24 = !!opts.d24;
   pass.tentEpsPx /= lr;
   pass.resize(W, H);
@@ -199,7 +212,7 @@ function fitCamera(scene: FieldScene, h: number, fit: [number, number], scale: n
 // timed lean frame uploads every used row (probeAllDirty: the moving fabric's
 // frame, what the gate times) unless opts.rest (the row diff: a still scene
 // uploads nothing after the first frame).
-async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean; fit?: [number, number]; b2b?: boolean; floor?: boolean; tent?: boolean; mode?: string; lr?: number; lean?: boolean; rest?: boolean } = {}) {
+async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean; fit?: [number, number]; b2b?: boolean; floor?: boolean; tent?: boolean; mode?: string; lr?: number; lean?: boolean; rest?: boolean; state?: string } = {}) {
   const scale = opts.scale ?? 2;
   const frames = opts.frames ?? 60;
   const lr = opts.lr ?? 1;
@@ -211,7 +224,13 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
   const prepMs = performance.now() - tp0;
   const dev = opts.fit ? fitCamera(scene, fb.h, opts.fit, scale) : camera(scene, scale);
   const { M, W, H } = coarse(dev.M, dev.W, dev.H, lr);
-  const pass = new LabelBPass(gl, false, modeOf(opts), { lean: !!opts.lean });
+  const live = opts.state === "host" || opts.state === "new";
+  const host = opts.state === "host" ? await probeHost() : null;
+  const pass = new LabelBPass(gl, false, modeOf(opts), { lean: !!opts.lean, host });
+  // The live pass times the GPU with its own timer (probeTimer); S3e's pass
+  // with the query and restore (probeQuery) as before.
+  if (live) pass.probeTimer = true;
+  else pass.probeQuery = true;
   pass.probeAllDirty = !opts.rest;
   pass.tentEpsPx /= lr;
   pass.resize(W, H);
@@ -248,6 +267,7 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
     mode: pass.mode,
     lean: pass.lean,
     rest: !!opts.rest,
+    state: live ? opts.state : "query",
     sentBytes: sent,
     lr,
     segs: T.nInst,
@@ -300,6 +320,19 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
 //                  restore; the ideal has neither)
 //   leanemptynoupns leanemptynoup without them (the ideal's own work, in the pass)
 const LEAN = ["leanempty", "leanemptynoup", "leantentv", "leantentvrest", "leantentvst", "leanempty24", "leantentv24", "leanemptyns", "leanemptynoupns"];
+// K1040 S3f (K1158): the live pass (no state queries; lean tentv, every used
+// row uploaded; a Pixi host on the page's context restores after draw()):
+//   ftentv        the new pass
+//   ftentvrest    at rest (the row diff: a still scene uploads nothing)
+//   ftentvsetup   every bind and uniform of the draws, no draw calls
+//                 (probeNoDrawCalls): ftentv - ftentvsetup = the draw calls
+//   fempty        the new empty pass (upload, clears, D invalidated, the host)
+//   femptynoup    fempty without the upload
+//   femptynouph0  femptynoup with no host: femptynoup - femptynouph0 = the
+//                 host's restore (the viewport and Pixi's resetState())
+//   ffloor        the new sync alone (no query): the host floor
+// Every older variant runs S3e's query and restore (probeQuery).
+const FNEW = ["ftentv", "ftentvrest", "ftentvsetup", "fempty", "femptynoup", "femptynouph0", "ffloor"];
 const VARIANTS = ["tent", "empty", "noup", "degen", "fs0", "fsconst", "half", "nw1", "floor"];
 let kickFb: WebGLFramebuffer | null = null;
 const kickPx = new Uint32Array(4);
@@ -349,7 +382,14 @@ function kickSync(): void {
 //              idealpt - idealnoclr = what the clears cost over no load at all
 //   idealfsq   the color cleared by a full-screen draw instead (DONT_CARE
 //              load, depth still cleared and invalidated): a clear as a draw
-const IDEAL = new Set(["ideal", "idealnoinv", "idealnod", "ideal8", "ideal32f", "idealpt", "idealpt32f", "idealnoclr", "idealfsq"]);
+// K1040 S3f step 2, ideal32f split (each its own D32F target):
+//   ideal32fz  ideal32f with no FRAMEBUFFER_BINDING query (binds null after)
+//   ideal32fk  no query and its framebuffer left bound (the live pass's way)
+//   ideal32fd  ideal32fk with DEPTH_TEST on, LESS and the depth mask set before
+//              the clears, as the pass's draw() sets them (left on)
+//   ideal32fr  ideal32fk with S3e's sync: READ_FRAMEBUFFER queried, a new
+//              4-word array, the binding restored
+const IDEAL = new Set(["ideal", "idealnoinv", "idealnod", "ideal8", "ideal32f", "idealpt", "idealpt32f", "idealnoclr", "idealfsq", "ideal32fz", "ideal32fk", "ideal32fd", "ideal32fr"]);
 type IdealTarget = { fb: WebGLFramebuffer; w: number; h: number; depth: boolean; color: WebGLTexture; rb: WebGLRenderbuffer | null };
 const idealTargets = new Map<string, IdealTarget>();
 let idealProg: WebGLProgram | null = null;
@@ -398,7 +438,7 @@ function idealTarget(v: string, w: number, h: number): IdealTarget {
   if (v !== "idealnod") {
     rb = gl.createRenderbuffer()!;
     gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
-    gl.renderbufferStorage(gl.RENDERBUFFER, v === "ideal32f" || v === "idealpt32f" ? gl.DEPTH_COMPONENT32F : gl.DEPTH_COMPONENT24, w, h);
+    gl.renderbufferStorage(gl.RENDERBUFFER, v.startsWith("ideal32f") || v === "idealpt32f" ? gl.DEPTH_COMPONENT32F : gl.DEPTH_COMPONENT24, w, h);
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rb);
   }
@@ -410,8 +450,14 @@ function idealTarget(v: string, w: number, h: number): IdealTarget {
 }
 function idealFrame(v: string, w: number, h: number): void {
   const t = idealTarget(v, w, h);
-  const prevFb = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+  const split = v.length > 8 && v.startsWith("ideal32f");
+  const prevFb = split ? null : gl.getParameter(gl.FRAMEBUFFER_BINDING);
   gl.bindFramebuffer(gl.FRAMEBUFFER, t.fb);
+  if (v === "ideal32fd") {
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LESS);
+    gl.depthMask(true);
+  }
   gl.viewport(0, 0, w, h);
   gl.disable(gl.SCISSOR_TEST);
   gl.disable(gl.BLEND);
@@ -442,14 +488,32 @@ function idealFrame(v: string, w: number, h: number): void {
     }
   }
   if (t.depth && v !== "idealnoinv") gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.DEPTH_ATTACHMENT]);
-  gl.readBuffer(gl.COLOR_ATTACHMENT0);
-  gl.readPixels(0, 0, 1, 1, gl.RGBA_INTEGER, gl.UNSIGNED_INT, idealPx);
-  gl.bindFramebuffer(gl.FRAMEBUFFER, prevFb);
+  if (v === "ideal32fr") {
+    const prevRead = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING);
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, t.fb);
+    gl.readBuffer(gl.COLOR_ATTACHMENT0);
+    const px = new Uint32Array(4);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA_INTEGER, gl.UNSIGNED_INT, px);
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, prevRead);
+  } else {
+    gl.readBuffer(gl.COLOR_ATTACHMENT0);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA_INTEGER, gl.UNSIGNED_INT, idealPx);
+  }
+  if (!split) gl.bindFramebuffer(gl.FRAMEBUFFER, prevFb);
+  else if (v === "ideal32fz") gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 }
 const vpasses = new Map<string, LabelBPass>();
-function variantPass(v: string): LabelBPass {
+function variantPass(v: string, host: LabelBHost | null = null): LabelBPass {
   const have = vpasses.get(v);
   if (have) return have;
+  if (FNEW.includes(v)) {
+    const p = new LabelBPass(gl, false, "tentv", { lean: true, host: v === "femptynouph0" ? null : host });
+    p.probeAllDirty = v !== "ftentvrest";
+    if (v.startsWith("fempty")) p.probeDraw = false;
+    p.probeNoDrawCalls = v === "ftentvsetup";
+    vpasses.set(v, p);
+    return p;
+  }
   const src = labelBTentSources(false);
   const swap = (s: string, a: string, b: string) => {
     if (s.split(a).length !== 2) throw new Error(`variant ${v}: ${JSON.stringify(a.slice(0, 40))} not found once`);
@@ -477,6 +541,7 @@ function variantPass(v: string): LabelBPass {
   } else if (!["tent", "empty", "noup", "half", "floor", "tentv", "tentvinv", "emptynoup", "emptyinv", "uponly", "kick", ...LEAN].includes(v)) throw new Error(`no variant ${v}`);
   const lean = LEAN.includes(v);
   const pass = new LabelBPass(gl, false, v.startsWith("tentv") || lean ? "tentv" : "tent", { ...probe, lean });
+  pass.probeQuery = true;
   if (lean) {
     pass.probeAllDirty = v !== "leantentvrest";
     pass.leanStoreDepth = v === "leantentvst";
@@ -504,6 +569,7 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
   const dev = opts.fit ? fitCamera(scene, fb.h, opts.fit, scale) : camera(scene, scale);
   const { M, W, H } = coarse(dev.M, dev.W, dev.H, 1);
   const per = Math.ceil(frames / rounds);
+  const host = vs.some((v) => FNEW.includes(v)) ? await probeHost() : null;
   const acc: Record<string, { up: number[]; sync: number[]; sent: number }> = {};
   for (const v of vs) acc[v] = { up: [], sync: [], sent: 0 };
   for (let r = 0; r < rounds; r++) {
@@ -519,7 +585,7 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
         }
         continue;
       }
-      const pass = variantPass(v);
+      const pass = variantPass(v, host);
       if (pass.width !== W || pass.height !== H) pass.resize(W, H);
       pass.upload(T);
       for (let k = 0; k < 5; k++) {
@@ -529,11 +595,11 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
       }
       for (let k = 0; k < per; k++) {
         const u0 = performance.now();
-        const doUp = v !== "noup" && v !== "floor" && v !== "emptynoup" && v !== "leanemptynoup" && v !== "leanemptynoupns" && v !== "kick";
+        const doUp = !["noup", "floor", "emptynoup", "leanemptynoup", "leanemptynoupns", "kick", "femptynoup", "femptynouph0", "ffloor"].includes(v);
         if (doUp) pass.upload(T);
         acc[v].sent = doUp ? pass.uploadBytes : 0;
         const u1 = performance.now();
-        if (v !== "floor" && v !== "uponly" && v !== "kick") pass.draw(M);
+        if (v !== "floor" && v !== "uponly" && v !== "kick" && v !== "ffloor") pass.draw(M);
         if (v === "kick") kickSync();
         else pass.sync();
         const u2 = performance.now();
@@ -566,4 +632,163 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
   };
 }
 
-(window as unknown as { s3: unknown }).s3 = { verdict, time, timeMany, renderer };
+// K1040 S3f step 1 (K1158): the same-state A/B of the pass's GL state handling.
+// Its own Pixi renderer on its own canvas (640x480, preserveDrawingBuffer)
+// draws a stage that uses what the game's frames use: batched graphics and
+// sprites over six texture units, a custom-shader mesh (the ribbons' path), an
+// additive render-texture sprite, a blur filter's render targets and a text
+// texture re-uploaded after the pass. Between the stage's two renders a label
+// pass on the same context uploads every row, draws and syncs. Every arm starts
+// from a full reset (Pixi's caches, its viewport cache, the default
+// framebuffer) and its canvas is compared with the control's (no pass):
+//   control, control2  no pass (control2 is the A/B's own noise)
+//   query     S3e's pass: query and restore (probeQuery)
+//   host      the new pass: no queries, pixiLabelHost restores
+//   hostnovp  the new pass, a host that only calls resetState()
+//   nohost    the new pass with no host (nothing restored)
+// query, host and control2 must read 0 px; hostnovp and nohost must not (the
+// A/B sees a stale state). The label itself is offscreen, so "outside the
+// label" is the whole canvas.
+let abR: WebGLRenderer | null = null;
+async function abRenderer(): Promise<WebGLRenderer> {
+  if (abR) return abR;
+  const c = document.createElement("canvas");
+  c.width = 640;
+  c.height = 480;
+  document.body.appendChild(c);
+  abR = (await autoDetectRenderer({ preference: "webgl", canvas: c, width: 640, height: 480, resolution: 1, antialias: false, preserveDrawingBuffer: true, background: 0x202830 })) as WebGLRenderer;
+  return abR;
+}
+function abTexture(i: number): Texture {
+  const c = document.createElement("canvas");
+  c.width = 32;
+  c.height = 32;
+  const x = c.getContext("2d")!;
+  x.fillStyle = `hsl(${i * 60}, 70%, 55%)`;
+  x.fillRect(0, 0, 32, 32);
+  x.fillStyle = "#ffffff";
+  x.fillRect(3 + i * 4, 4, 6, 24);
+  return Texture.from(c);
+}
+async function ab(scene: FieldScene, opts: { scale?: number } = {}) {
+  const scale = opts.scale ?? 2;
+  scene.look.ctrlArc ??= 0.47;
+  const r = await abRenderer();
+  const g = r.gl as WebGL2RenderingContext;
+  const fb = new FormB(scene, { dpr: scale });
+  const T = buildLabelB(fb);
+  const dev = camera(scene, scale);
+  const cw = 640;
+  const ch = 480;
+  const stage = new Container();
+  stage.addChild(new Graphics().rect(0, 0, cw, ch).fill(0x30343c));
+  const lines = new Graphics();
+  for (let i = 0; i < 12; i++) lines.moveTo(20 + i * 18, 200).bezierCurveTo(80 + i * 9, 120, 160 - i * 5, 300, 300 + i * 12, 220);
+  lines.stroke({ width: 3, color: 0xd4a017 });
+  stage.addChild(lines);
+  const texs = [0, 1, 2, 3, 4, 5].map(abTexture);
+  texs.forEach((t, i) => {
+    const s = new Sprite(t);
+    s.position.set(20 + i * 50, 80);
+    s.scale.set(1.4);
+    stage.addChild(s);
+  });
+  const shader = Shader.from({
+    gl: {
+      vertex: "in vec2 aPosition;\nin vec2 aUV;\nout vec2 vUV;\nuniform mat3 uProjectionMatrix;\nuniform mat3 uWorldTransformMatrix;\nuniform mat3 uTransformMatrix;\nvoid main() {\n  mat3 m = uProjectionMatrix * uWorldTransformMatrix * uTransformMatrix;\n  gl_Position = vec4((m * vec3(aPosition, 1.0)).xy, 0.0, 1.0);\n  vUV = aUV;\n}\n",
+      fragment: "in vec2 vUV;\nuniform sampler2D uTex;\nuniform float uMix;\nout vec4 finalColor;\nvoid main() { finalColor = texture(uTex, vUV) * uMix + vec4(vUV, 0.0, 0.0) * (1.0 - uMix); }\n",
+    },
+    resources: { uTex: texs[2].source, abUniforms: { uMix: { value: 0.75, type: "f32" } } },
+  });
+  const geometry = new MeshGeometry({ positions: new Float32Array([40, 300, 260, 300, 260, 460, 40, 460]), uvs: new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]), indices: new Uint32Array([0, 1, 2, 0, 2, 3]) });
+  stage.addChild(new Mesh({ geometry, shader }));
+  const rt = r.generateTexture(new Graphics().circle(32, 32, 28).fill(0xffaa33));
+  const add = new Sprite(rt);
+  add.blendMode = "add";
+  add.position.set(300, 40);
+  add.scale.set(2);
+  stage.addChild(add);
+  const blurred = new Graphics().roundRect(380, 200, 200, 120, 24).fill(0x88ccff);
+  blurred.filters = [new BlurFilter({ strength: 6 })];
+  stage.addChild(blurred);
+  const text = new Text({ text: "K1158 A", style: { fill: 0xffffff, fontSize: 28, fontFamily: "monospace" } });
+  text.position.set(20, 20);
+  stage.addChild(text);
+  const adaptor = (r.renderTarget as unknown as { adaptor: { _viewPortCache: { x: number } } }).adaptor;
+  const fullReset = () => {
+    r.resetState();
+    adaptor._viewPortCache.x = -1;
+    g.bindFramebuffer(g.FRAMEBUFFER, null);
+  };
+  const mk = (host: LabelBHost | null, query: boolean) => {
+    const p = new LabelBPass(g, false, "tentv", { lean: true, host });
+    p.probeQuery = query;
+    p.probeAllDirty = true;
+    p.resize(dev.W, dev.H);
+    p.upload(T);
+    p.draw(dev.M);
+    p.sync();
+    return p;
+  };
+  const passes: Record<string, LabelBPass | null> = {
+    control: null,
+    query: mk(null, true),
+    host: mk(pixiLabelHost(r), false),
+    control2: null,
+    hostnovp: mk({ restore: () => r.resetState() }, false),
+    nohost: mk(null, false),
+  };
+  const shots: Record<string, Uint8Array> = {};
+  const errs: Record<string, number> = {};
+  // Every error flag set (WebGL keeps one per code): the first, so each arm
+  // reports its own and the setup's (the passes' warm-up) is reported apart.
+  const drain = (): number => {
+    let first = 0;
+    for (let e = g.getError(), k = 0; e !== g.NO_ERROR && k < 8; e = g.getError(), k++) first = first || e;
+    return first;
+  };
+  const pre: Record<string, number> = { setup: drain() };
+  for (const a of Object.keys(passes)) {
+    pre[a] = drain();
+    fullReset();
+    text.text = "K1158 A";
+    r.render(stage);
+    const p = passes[a];
+    if (p) {
+      p.upload(T);
+      p.draw(dev.M);
+      p.sync();
+    }
+    text.text = "K1158 B";
+    r.render(stage);
+    g.bindFramebuffer(g.FRAMEBUFFER, null);
+    const px = new Uint8Array(cw * ch * 4);
+    g.readPixels(0, 0, cw, ch, g.RGBA, g.UNSIGNED_BYTE, px);
+    shots[a] = px;
+    errs[a] = drain();
+  }
+  fullReset();
+  const res: Record<string, { px: number; max: number; err: number; pre: number }> = {};
+  const base = shots.control;
+  for (const a of Object.keys(shots)) {
+    const s = shots[a];
+    let n = 0;
+    let max = 0;
+    for (let i = 0; i < s.length; i += 4) {
+      const d = Math.max(Math.abs(s[i] - base[i]), Math.abs(s[i + 1] - base[i + 1]), Math.abs(s[i + 2] - base[i + 2]), Math.abs(s[i + 3] - base[i + 3]));
+      if (d) {
+        n++;
+        if (d > max) max = d;
+      }
+    }
+    res[a] = { px: n, max, err: errs[a], pre: pre[a] };
+  }
+  // The stage drew: pixels that are not the background rect's colour.
+  let drawn = 0;
+  for (let i = 0; i < base.length; i += 4) if (base[i] !== 0x30 || base[i + 1] !== 0x34 || base[i + 2] !== 0x3c) drawn++;
+  for (const p of Object.values(passes)) p?.dispose();
+  stage.destroy({ children: true });
+  return { lost, renderer: renderer(), W: dev.W, H: dev.H, canvas: [cw, ch], drawn, setupErr: pre.setup, arms: res };
+}
+
+(window as unknown as { s3: unknown }).s3 = { verdict, time, timeMany, ab, renderer };
