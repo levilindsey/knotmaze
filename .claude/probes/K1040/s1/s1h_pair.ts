@@ -211,16 +211,11 @@ function windowOf(fm: Forms, X: number, Y: number, kind: "z1" | "z4"): Win {
   const y0 = Math.round(Y * fm.ppu - n / 2) / fm.ppu;
   return { n, zoom: kind === "z1" ? 1 : 4, x0, y0, px: 1 / fm.ppu, vx: (X - x0) * fm.ppu, vy: (Y - y0) * fm.ppu };
 }
-function inkOf(form: Ev, w: Win): { ink: Float32Array; topNeg: number } {
+function inkOf(form: Ev, w: Win): { ink: Float32Array } {
   const ink = new Float32Array(w.n * w.n);
-  let topNeg = 0;
   for (let j = 0; j < w.n; j++)
-    for (let i = 0; i < w.n; i++) {
-      const r = form.evalPoint(w.x0 + (i + 0.5) * w.px, w.y0 + (j + 0.5) * w.px);
-      ink[j * w.n + i] = r.ink;
-      if (r.top < 0 && r.ink > 0.02) topNeg++;
-    }
-  return { ink, topNeg };
+    for (let i = 0; i < w.n; i++) ink[j * w.n + i] = form.evalPoint(w.x0 + (i + 0.5) * w.px, w.y0 + (j + 0.5) * w.px).ink;
+  return { ink };
 }
 
 // ---------------------------------------------------------------- panels
@@ -246,10 +241,18 @@ function blitDiff(cv: Canvas, a: Float32Array, b: Float32Array, w: Win, ox: numb
     }
 }
 /** The marker ticks in the margins: V's x above the panel and V's y left of it. */
-function ticks(cv: Canvas, w: Win, ox: number, oy: number) {
+function ticks(cv: Canvas, w: Win, ox: number, oy: number, t = 1) {
   const red: [number, number, number] = [230, 0, 0];
-  rect(cv, ox + Math.round(w.vx * w.zoom) - 1, oy - 7, 2, 6, red);
-  rect(cv, ox - 7, oy + Math.round(w.vy * w.zoom) - 1, 6, 2, red);
+  rect(cv, ox + Math.round(w.vx * w.zoom) - t, oy - 6 * t - 3, 2 * t, 6 * t, red);
+  rect(cv, ox - 6 * t - 3, oy + Math.round(w.vy * w.zoom) - t, 6 * t, 2 * t, red);
+}
+/** A 1 px grey frame just outside the panel, so the window's edge shows against the paper. */
+function frame(cv: Canvas, ox: number, oy: number, P: number) {
+  const g: [number, number, number] = [150, 150, 150];
+  rect(cv, ox - 1, oy - 1, P + 2, 1, g);
+  rect(cv, ox - 1, oy + P, P + 2, 1, g);
+  rect(cv, ox - 1, oy, 1, P, g);
+  rect(cv, ox + P, oy, 1, P, g);
 }
 
 // ---------------------------------------------------------------- stats
@@ -263,9 +266,8 @@ interface Stats {
   f2: number;
   bbox: [number, number, number, number] | null;
   eqBad: number;
-  topNeg: number;
 }
-function statsOf(o: Float32Array, nn: Float32Array, n0: Float32Array, s: Float32Array, w: Win, h: number, ppu: number, topNeg: number): Stats {
+function statsOf(o: Float32Array, nn: Float32Array, n0: Float32Array, s: Float32Array, w: Win, h: number, ppu: number): Stats {
   let differ = 0;
   let lost = 0;
   let gained = 0;
@@ -297,7 +299,7 @@ function statsOf(o: Float32Array, nn: Float32Array, n0: Float32Array, s: Float32
         y1 = Math.max(y1, dy);
       }
     }
-  return { n: w.n, differ, lost, gained, area, f1, f2, bbox: differ ? [x0, x1, y0, y1] : null, eqBad, topNeg };
+  return { n: w.n, differ, lost, gained, area, f1, f2, bbox: differ ? [x0, x1, y0, y1] : null, eqBad };
 }
 const bboxText = (b: Stats["bbox"]) => (b ? `x ${f(b[0], 2)}..${f(b[1], 2)}h, y ${f(b[2], 2)}..${f(b[3], 2)}h` : "none");
 
@@ -350,7 +352,7 @@ for (const s of sites) {
     const N = inkOf(fm.N, w);
     const N0 = inkOf(fm.N0, w);
     const S = inkOf(fm.S, w);
-    const st = statsOf(O.ink, N.ink, N0.ink, S.ink, w, fm.h, fm.ppu, O.topNeg + N.topNeg);
+    const st = statsOf(O.ink, N.ink, N0.ink, S.ink, w, fm.h, fm.ppu);
     stats[kind] = st;
     // The picture: a header (title, change, window), captions, three panels.
     const P = w.n * w.zoom;
@@ -376,6 +378,7 @@ for (const s of sites) {
       if (p === 0) blitGrey(cv, O.ink, w, px, py);
       else if (p === 1) blitGrey(cv, N.ink, w, px, py);
       else blitDiff(cv, O.ink, N.ink, w, px, py);
+      frame(cv, px, py, P);
       ticks(cv, w, px, py);
     }
     const file = `${base}_${kind}.png`;
@@ -393,52 +396,72 @@ for (const s of sites) {
     `${nn2(idx)} [${s.group}] ${s.id}: ${change}` +
       `\n     zoom 4 window (${stats.z4.n} px): ${stats.z4.differ} px differ (|d ink| > 0.02; ink lost ${stats.z4.lost}, gained ${stats.z4.gained}, area ${f(stats.z4.area, 1)} px; F1 share ${stats.z4.f1}, F2 share ${stats.z4.f2}); bbox ${bboxText(stats.z4.bbox)}` +
       `\n     play window (${stats.z1.n} px): ${stats.z1.differ} px differ (lost ${stats.z1.lost}, gained ${stats.z1.gained}, area ${f(stats.z1.area, 1)} px; F1 share ${stats.z1.f1}, F2 share ${stats.z1.f2}); bbox ${bboxText(stats.z1.bbox)}` +
-      `\n     checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: ${stats.z1.eqBad + stats.z4.eqBad} px differ; ink with top < 0: ${stats.z1.topNeg + stats.z4.topNeg} px`,
+      `\n     checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: ${stats.z1.eqBad + stats.z4.eqBad} px differ`,
   );
 }
 
 // ---------------------------------------------------------------- the sheet
 {
-  const P = Math.max(...done.map((d) => d.w4.n)) * 4;
-  const cols = 2;
-  const gapIn = 16;
+  const Pmax = Math.max(...done.map((d) => d.w4.n)) * 4;
+  const cols = 3;
+  const gapIn = 20;
+  const pad = 14;
+  const gapCell = 28;
   const M = 24;
-  const cellW = 2 * P + gapIn + 2 * 12;
-  const maxChars = Math.floor((cellW - 8) / (CW * 2));
-  const heads = done.map((d) => [...wrap(ascii(`${d.title}`), maxChars), ...wrap(ascii(d.change), maxChars)]);
-  const headLines = Math.max(...heads.map((x) => x.length));
-  const headH = headLines * LH * 2 + 4;
-  const capH = LH * 2 + 6;
-  const cellH = headH + capH + P + 28;
+  const cellW = 2 * Pmax + gapIn + 2 * pad;
+  const maxT = Math.floor((cellW - 8) / (CW * 3));
+  const maxC = Math.floor((cellW - 8) / (CW * 2));
+  const blocks = done.map((d) => {
+    const st = d.z4;
+    const diff = st.differ === 0 ? "no pixel differs" : `${st.differ} px differ (ink lost ${st.lost}, gained ${st.gained}); bbox ${bboxText(st.bbox)}`;
+    return { title: wrap(ascii(d.title), maxT), change: wrap(ascii(d.change), maxC), diff: wrap(ascii(diff), maxC) };
+  });
+  const headH = Math.max(...blocks.map((b) => b.title.length * LH * 3 + (b.change.length + b.diff.length) * LH * 2)) + 10;
+  const capH = LH * 3 + 6;
+  const cellH = headH + capH + Pmax + 2 + gapCell;
   const rows = Math.ceil(done.length / cols);
   const topLines = [
-    "K1040 S1h (K1114): S1g's at-rest changes (F1 dEdge near, F2 rootBand 0.5), form B ink, before and after, zoom 4, dpr 2",
-    "before = S1f final (form_b_s1f_q.ts, frozen); after = today's defaults; same scene, centre (the corner's V) and scale; red tick = V; sites in sheet order = index.md",
+    "K1040 S1h (K1114): form B ink, before and after S1g's at-rest changes (F1 dEdge near, F2 rootBand 0.5), zoom 4, dpr 2",
+    "before = S1f final (form_b_s1f_q.ts, frozen); after = today's defaults (form_b.ts); same scene, centre (the corner's V) and scale; red tick = V; cells in index.md order",
   ];
-  const topH = 44 + topLines.length * LH * 2 + 8;
-  const W = M + cols * cellW + (cols - 1) * 24 + M;
+  const topH = 20 + LH * 3 + LH * 2 + 20;
+  const W = M + cols * cellW + (cols - 1) * gapCell + M;
   const H = topH + rows * cellH + M;
   const cv = canvas(W, H);
-  drawText(cv, ascii(topLines[0]), M, 12, 2);
-  drawText(cv, ascii(topLines[1]), M, 12 + LH * 2 + 4, 1);
+  drawText(cv, ascii(topLines[0]), M, 12, 3);
+  drawText(cv, ascii(topLines[1]), M, 12 + LH * 3 + 4, 2);
   done.forEach((d, i) => {
-    const cx = M + (i % cols) * (cellW + 24);
+    const cx = M + (i % cols) * (cellW + gapCell);
     const cy = topH + Math.floor(i / cols) * cellH;
-    rect(cv, cx, cy, cellW, 2, [120, 120, 120]);
-    heads[i].forEach((ln, k) => drawText(cv, ln, cx + 4, cy + 6 + k * LH * 2, 2, k < wrap(ascii(d.title), maxChars).length ? [0, 0, 0] : [40, 40, 140]));
-    const py = cy + headH + capH + 6;
-    for (let p = 0; p < 2; p++) {
-      const ox = cx + 12 + p * (P + gapIn) + Math.floor((P - d.w4.n * 4) / 2);
-      const oy = py + Math.floor((P - d.w4.n * 4) / 2);
-      drawText(cv, p === 0 ? "before" : "after", cx + 12 + p * (P + gapIn), cy + headH + 4, 2);
-      blitGrey(cv, p === 0 ? d.inks4.o : d.inks4.n, d.w4, ox, oy);
-      ticks(cv, d.w4, ox, oy);
+    const bl = blocks[i];
+    rect(cv, cx, cy, cellW, 3, [120, 120, 120]);
+    let ty = cy + 8;
+    for (const ln of bl.title) {
+      drawText(cv, ln, cx + 4, ty, 3);
+      ty += LH * 3;
+    }
+    for (const ln of bl.change) {
+      drawText(cv, ln, cx + 4, ty, 2, [40, 40, 140]);
+      ty += LH * 2;
+    }
+    for (const ln of bl.diff) {
+      drawText(cv, ln, cx + 4, ty, 2, [20, 100, 40]);
+      ty += LH * 2;
+    }
+    const n4 = d.w4.n * 4;
+    for (let q = 0; q < 2; q++) {
+      const colX = cx + pad + q * (Pmax + gapIn);
+      drawText(cv, q === 0 ? "before" : "after", colX, cy + headH, 3);
+      const ox = colX + Math.floor((Pmax - n4) / 2);
+      const oy = cy + headH + capH + 2 + Math.floor((Pmax - n4) / 2);
+      blitGrey(cv, q === 0 ? d.inks4.o : d.inks4.n, d.w4, ox, oy);
+      frame(cv, ox, oy, n4);
+      ticks(cv, d.w4, ox, oy, 2);
     }
   });
   writeFileSync(join(outDir, "sheet.png"), encodePng(W, H, cv.d));
-  lines.push(`sheet.png: ${W} x ${H}, ${done.length} pairs, ${cols} columns, panels ${P} px`);
+  lines.push(`sheet.png: ${W} x ${H}, ${done.length} pairs, ${cols} columns, panels up to ${Pmax} px`);
 }
-
 // ---------------------------------------------------------------- the index
 {
   const L: string[] = [];
