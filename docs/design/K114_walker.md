@@ -55,7 +55,7 @@ remainder.
 
   Reuse the minotaur's telegraph item (`setTelegraph`, K324) in the
   walker's colour. Make it dotted only if the item supports that cheaply.
-  K324 stage 2 merged (031e09a): the real-time lead, whole runs and ring,
+  K324 stage 2 merged (af0f823): the real-time lead, whole runs and ring,
   and the `uKTeleAt` uniform. Read REAL-TIME TELEGRAPH in
   `.claude/rules/gameplay-minotaur.md` before you reuse the item.
 
@@ -330,7 +330,7 @@ coordinator). Started 2026-10-20 22:23 PT; the 2 h cap is 00:23.
 Stopped 2026-10-21 at about 00:01 PT, inside the cap. All four items are
 built and verified, and so are Lead's stars (call 4). Rebased again on
 2026-10-21 at about 00:10, at the coordinator's request, onto
-origin/master `fe944a1`, which holds K137 stage 3a (`4541a9d`: `lives`,
+origin/master `a8de0a8`, which holds K137 stage 3a (`3ed920f`: `lives`,
 its hearts rows in the HUD, the banner and the share). Every conflict
 kept both sides: `cut`'s options gain `lead` and `delay` in place and
 `lives` stays at 192 after it (CODEC_VERSION stays 8), and the hearts
@@ -560,7 +560,7 @@ Stills are in `.claude/probes/K114/walker/shots/`, named
 - branch: `worktree-agent-a0437651435d16c14`, worktree
   `.claude/worktrees/agent-a0437651435d16c14`. Last commit: this
   Handoff's rebase note, on top of the Handoff and `d07a428` (unpushed;
-  rebased onto `fe944a1`, so the merge is a fast-forward).
+  rebased onto `a8de0a8`, so the merge is a fast-forward).
 - evidence: `.claude/probes/K114/walker/` in the worktree (untracked):
   - `par_census.md`, `balance.md`;
   - `page/walker_page.mjs`, `page/lives_smoke.mjs`, `page/out/`,

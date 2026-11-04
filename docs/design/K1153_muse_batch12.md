@@ -5,7 +5,7 @@ Claude starts these runs through Paseo, one run at a time, after batch
 closed. Each run is a fresh Muse agent that reads this brief, does its
 run's tasks, and stops. Claude reviews each run on master afterwards
 and closes K1153. Run A was the drafting run
-(`docs/design/K1153_muse_batch12_run_a.md`, aca74311), so the runs
+(`docs/design/K1153_muse_batch12_run_a.md`, 59d0ff74), so the runs
 here are B to G; Claude reviewed the draft and relabeled them.
 
 Where the runs came from (the drafting run's order, from

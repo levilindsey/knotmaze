@@ -4,7 +4,7 @@ Coordinator, 2026-10-27 09:50. One stage, opus, 2 h cap.
 
 ## Why
 
-K883 (merged `5048670e`; its handoff closes
+K883 (merged `972228b5`; its handoff closes
 `docs/design/K883_oracle_borders.md`) cut the missing border samples over
 the 12 real scenes from 1540 to 208 and every named cause to 0. The CPU
 oracle is the reference K868's S3 (the WebGL2 renderer) will be checked
@@ -73,7 +73,7 @@ coordinator folds them in later.
 5. **Sheet F's artifacts.** Diagnose the spur, the hairlines, the seam
    and the speck; fix them if they share a mechanism with steps 2-4,
    otherwise note them.
-6. **Sheets**: `B3_muse_hash.png` in B2's layout (before = `5048670e`'s
+6. **Sheets**: `B3_muse_hash.png` in B2's layout (before = `972228b5`'s
    oracle, after = this stage's; red for restored stretches, blue for
    ones still missing) and `F2_corner_reach.png` if step 5 changed F. Add
    a line for each to `.claude/probes/K868/sheets/README.md`.
@@ -82,10 +82,10 @@ Update `K868_field_border.md` wherever the rule changes.
 
 ## Checks (report the numbers)
 
-- The census per scene and class, before (`5048670e`) and after, missing
+- The census per scene and class, before (`972228b5`) and after, missing
   and extra ink.
 - muse_hash #2, #11, #14, #15 and #16; #15 and #16 on every real scene;
-  the synthetic total (86/86 at `5048670e`).
+  the synthetic total (86/86 at `972228b5`).
 - Corner solves per scene.
 - The full suite in the worktree (`npx vitest run`).
 
@@ -134,7 +134,7 @@ Built:
   (`.claude/probes/K868/sheets/B3_muse_hash.png`) marks census, geo and
   free ends each in its own style.
 
-Numbers, 12 real scenes (5048670e -> 7c972033):
+Numbers, 12 real scenes (972228b5 -> 7c972033):
 - Census missing 208 in 93 stretches -> 148 in 66; extra ink 54 -> 71.
 - Geo missing 8519 in 4377 -> 8283 in 4312; free ends 281 -> 228 (seen
   by the census 85 -> 54, by geo 257 -> 210, by neither 24 -> 18).

@@ -155,7 +155,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   thread you have not explored shows (the halo and beacon ends): soft or
   bright (larger and brighter). Applies live." The glow row shows only
   for the halo and beacon looks, the two that draw a halo (K130/K495,
-  5f28e0b1).
+  9e617d7a).
 
 - BURNT ROW (K290 stage 3a, 2026-10-15): "burnt" (gone / char) in the
   Burn race folder, last since K440, hidden while the fire is off like
@@ -621,7 +621,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   the sheet" and passes 9/9 on phone and 27/27 on desktop. K198's
   `stage2/pan.mjs` phone: gameplay-camera.md's SHEET note (3 of 16 checks
   expect a panel edge and fail by design). DESKTOP 1400x900, panel open and
-  closed, master `803fbe9` against the branch `e26e05a`: 0 px, and the
+  closed, master `c540651` against the branch `e26e05a`: 0 px, and the
   master-vs-master control 0 px too (`.claude/probes/K467/desktop_ab.mjs`,
   K83's pins; the build stamp and the panel's version span hidden, they
   differ per build). Gotchas: a probe taps a wrapped

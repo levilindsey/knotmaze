@@ -11,7 +11,7 @@ Read the rest only as needed.
 
 ## Why
 
-Stage 4 landed c23w on master (9b549d30): S at each fixed node is the
+Stage 4 landed c23w on master (27a183b9): S at each fixed node is the
 certified minimum of wAt over [h, node]. The census passes everywhere
 against the old master: the ten windows have 3236 pops / 132921 px
 (old master 4325 / 1065307), zoom 1 has 101 / 1073 (376 / 10078). The

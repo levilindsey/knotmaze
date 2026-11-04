@@ -60,7 +60,7 @@ read K1107 (`ledger.mjs handle K1107 ...`). Batch 3's, batch 4's and batch
    you didn't make.
 10. Write commit-message files as UTF-8 without a byte-order mark:
     `[IO.File]::WriteAllText(<absolute path>, <text>, (New-Object Text.UTF8Encoding $false))`
-    or `Set-Content -Encoding utf8NoBOM`. Batch 5's `fc9b0eec` carries a
+    or `Set-Content -Encoding utf8NoBOM`. Batch 5's `a4cc20ee` carries a
     BOM at the start of its subject.
 
 Muse doesn't load `.claude/rules/` by itself. Each run names the rules
@@ -440,7 +440,7 @@ and counts the catch, but nothing in this test respawns the controller
 `c` (in main.ts a pending catch lands before the next move and respawns
 it). So after the first catch every `t.turn` rejects while `c.tapEdge`
 keeps taking phantom moves, and the counts still agree: that is the
-ledger's "counts it". The fix for the real bug is on master as `e4dda058`
+ledger's "counts it". The fix for the real bug is on master as `8cf68910`
 ("K774 WIP: land a beat catch before the next departure"); K774.md also
 names its pre-rebase twin `02032705`, which is NOT on master. It has
 three parts: (a) main.ts's `moveAlong` lands a pending catch and refuses
@@ -533,7 +533,7 @@ K111) and `src/ui/motion.ts` (whole), `test/ui/motion.test.ts`.
 
 The ledger says:
 
-> **K112** · Motion setting residuals (K79, 9ffda8a): no cross-tab sync (another tab picks a change
+> **K112** · Motion setting residuals (K79, 4a89e63): no cross-tab sync (another tab picks a change
 > up on reload; `src/ui/motion.ts`), and the camera's reduced-motion jump on an edge-indicator tap
 > was code-reviewed, not probed.
 
@@ -642,7 +642,7 @@ The ledger says:
 
 What is there today (read it, don't trust this summary). K263's code is
 done: `undoAllowed` is gone from `src` (the K534 Stage A1 commit,
-`35f3ec28`; `src/game/minotaur.ts` near line 124 and
+`2605bf6b`; `src/game/minotaur.ts` near line 124 and
 `test/game/minotaur.test.ts` near line 316 say so), but the words still
 cite it: `.claude/rules/gameplay-minotaur.md` near lines 37 and 308 say
 "no undo (`undoAllowed(clock)`, which K92 must consult)" and "no move undo
@@ -672,19 +672,19 @@ or one commit per item, your choice):
    114-116 compare each named section of stage 3 with the section list of
    the design doc K74 names (`docs/design/K74_*.md`, search for it) and
    correct the names. The `main.ts` clause ("tapsWait is off (on, 3283)")
-   needs no edit: `c268a9b0` moved the key input out of `main.ts`, and
-   `3b1612fb` made `tapsWait` a readable legacy flag with no effect
+   needs no edit: `1161cd5a` moved the key input out of `main.ts`, and
+   `2bcf7712` made `tapsWait` a readable legacy flag with no effect
    (`src/app/input_keys.ts` near line 168). Search `src/main.ts` for
    `tapsWait` and confirm no comment there says it is off; put what you
    found under `Checked:`. Don't edit `main.ts`.
 2. K263. In `gameplay-minotaur.md` (both places) say there is no move undo
-   and no `undoAllowed` (removed in `35f3ec28`, K263); in `K80_turns.md`
+   and no `undoAllowed` (removed in `2605bf6b`, K263); in `K80_turns.md`
    (both places) add "(removed in K534, K263)" after each mention. Do not
    touch the other design docs.
 3. K600. Add to `gameplay-links.md` the `gm` key: what `gameMode` takes
    ("classic" | "minotaur" | "burn", read `src/ui/url_state.ts`) and that it
    is in `CODEC_PARAMS`, in the file's existing style, plus a K534 entry
-   (read `git show 35f3ec28 --stat` and the commit message). Name params,
+   (read `git show 2605bf6b --stat` and the commit message). Name params,
    not codec indices or today's `CODEC_VERSION`: those drift. Quote no
    number you did not read.
 4. K609. Replace "chain 9's loop" and the `9:133` recipe with K406's

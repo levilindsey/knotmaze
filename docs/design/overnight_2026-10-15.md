@@ -363,7 +363,7 @@ Each has a recommendation. Say "all recommended" to take them all.
   a pickup flags handles that are complete.
 - **The `LEDGERS.md` inbox:** file claude-config's line (your 23:43
   questions, plus the diet above) in claude-config's ledger, and delete
-  knotmaze's line about `preview.ps1`'s junction (fixed in `b70936e`).
+  knotmaze's line about `preview.ps1`'s junction (fixed in `6927566`).
 - **The dev server on port 5173** runs from this session (on the LAN)
   and stops when it closes. It has no repo script yet; `npx vite --host
   0.0.0.0 --port 5173 --strictPort` restarts it, and a `scripts/dev.ps1`

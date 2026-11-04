@@ -1,4 +1,4 @@
-- **K339** · The settings panel's audit (merged dc4a1a7..2ee40a4): four calls, each rec. yes, in `docs/design/K339_panel_audit.md` ("Questions"); subfolder looks `.claude/probes/K339/sheet/K340_sheet.png`. Builds as K323's Stage A.
+- **K339** · The settings panel's audit (merged b81fd25..4d39553): four calls, each rec. yes, in `docs/design/K339_panel_audit.md` ("Questions"); subfolder looks `.claude/probes/K339/sheet/K340_sheet.png`. Builds as K323's Stage A.
 
 - **K260** · The burn race's calls 2-4 (K114), built as rec.: Reset keeps the fire (fuse relit); the fire and the turn minotaur are exclusive; fog stays its own param. `docs/design/K114_burn.md` ("Calls for Levi").
 
@@ -8,7 +8,7 @@
 
 - **K238** · K111 stage 1's four calls, for review: High contrast's look, the Accessibility folder first, "Reduced motion" driving Motion, OS reduced motion stilling the flow. `docs/design/K111.md` ("Stage 1 handoff"); screenshots `.claude/probes/K111/out/`.
 
-- **K90** · Min bend radius (1a-1b merged 6f97b92..feb12a0): ship, tune or stop (rec. stop)? Test `__knotSplineBend(true)`. `docs/design/K90_bend_radius.md`, `docs/design/K90.md`, `.claude/probes/K90/out_1b/`. K213 first, never with K8; G3-2 waits (K361 q13; Levi: not sure).
+- **K90** · Min bend radius (1a-1b merged b6635b4..be9cdba): ship, tune or stop (rec. stop)? Test `__knotSplineBend(true)`. `docs/design/K90_bend_radius.md`, `docs/design/K90.md`, `.claude/probes/K90/out_1b/`. K213 first, never with K8; G3-2 waits (K361 q13; Levi: not sure).
 
 - **K194** · K180's calls: defaults (crossings `through`, glow `off` or `fallback`); (2) moot (K235). If `fallback` ships, time `peakEstimate` on the Pixel. `docs/design/K180.md` ("Stage 1 handoff"); play https://levi.dev/knotmaze/?7&pw=1&pcx=ride&pgl=fallback
 

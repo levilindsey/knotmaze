@@ -150,7 +150,7 @@ Done check:
 
 Read first: `.claude/rules/gameplay-panel.md` (its ROW HELP and "THE (i)
 AND THE LABEL AS A BUTTON" entries, K467), `docs/design/K467.md`, and
-K467's commits `1058e8cf..2c066d4b`.
+K467's commits `0a3fc1af..d973369a`.
 
 K467 shows a row's help text on touch. The panel's buttons don't have
 it yet: Reset path, Replay settle, Reset to defaults, the seed row, the
@@ -176,7 +176,7 @@ Read first: `docs/design/K441_fire_frame.md` ("Owed rerun
 the `prof5` plan), `.claude/rules/probes.md`,
 `.claude/rules/render-loop.md`.
 
-Batch 3's run E (7bf9f07f) found the real-time stand's tick 4.24 ms
+Batch 3's run E (8308ea15) found the real-time stand's tick 4.24 ms
 (1x CPU) and 13.16 ms (4x CPU throttle) over the turn stand, both
 asleep. The fire chain explains about 0.5 ms of it (`setExplore` 0.42).
 This run attributes the rest. It measures only: no fix.
@@ -208,7 +208,7 @@ either way. Each cost worth fixing becomes a Next item
 ## Run E · K412: the worker preload on the real network
 
 Read first: `.claude/rules/physics-worker.md` (the worker chunk's
-preload; since K1055, c70db4fa, an inline head script modulepreloads
+preload; since K1055, 1c8fe970, an inline head script modulepreloads
 the chunk unless `phw=0`), `.claude/rules/probes.md`.
 
 K7's worker-chunk preload was measured on localhost only. K412 asked

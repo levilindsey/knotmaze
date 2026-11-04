@@ -128,7 +128,7 @@ contrast marker-floor clause dropped, see Left).
 | build | pluckGlow (pgl) | markerSize (mks) | fireSpeed (fsp) | minoStalkerAccuracy (msa) |
 |---|---|---|---|---|
 | new, 975175e | fallback | 2 | 0.6 | 0.3 |
-| base, 3a3d937 | off | 1.08 | 0.75 | 0.45 |
+| base, 43adc20 | off | 1.08 | 0.75 | 0.45 |
 
 ### peakEstimate timings (ms per fallback tap)
 
@@ -198,8 +198,8 @@ because it is exact and tiny.
 the crops). Link `?b&am=instant&snd=none&fw=0&phy=0&phw=0` (no defaults
 keys, so each build shows its OWN defaults), physics off, reduced motion
 emulated off, K344's LCG pinned, the same pluck sites in both builds,
-screenshot 110 ms after the tap. The BASE is **3a3d937** (this brief's
-commit, before the four defaults), NOT master f68ee4b, which has moved on:
+screenshot 110 ms after the tap. The BASE is **43adc20** (this brief's
+commit, before the four defaults), NOT master 529d7d4, which has moved on:
 other agents' changes would read as differences.
 
 - Markers at size 2 beside 1.08: `desktop_new_markers.png` /
@@ -222,7 +222,7 @@ other agents' changes would read as differences.
 ### Deviations from the brief
 
 - Builds timed interleaved by round, not strictly before / dedupe / after
-  (above); the stills' base is 3a3d937, not master (above).
+  (above); the stills' base is 43adc20, not master (above).
 - The phone pass ran at the same time as the desktop batch under ONE
   perf-lock hold (the phone's CPU is separate hardware; the stills ran only
   after both ended). The phone pass is 1 round x 32 taps x 60 repeats against

@@ -1,10 +1,10 @@
-> RE-BASED 2026-10-15 on master d741412 by K8 stage 1 (agent `agent-a35a43cee74c92b93`; docs only, nothing measured; brief `docs/design/K8_stage1.md`). Since the snapshot below, G1 (per-pixel gaps), G2 (shader paint), K76 2a/2b (the thread reveal), K268 stage 1 (the shaped cut), K81/K127/K169 (route bands, traveled webs, the web fade), the render-only plucks (K77, K104, K279), K7 stages 1-2 (the physics host, and the worker core in Node; the worker reaches the browser at stage 3) and K307 stage 1 (cold compiles) have landed. What changed here: sections 1-4 describe master d741412 (its line numbers), with the data model re-cut for G2's textures (SAMP packs two samples per RGBA32F texel; AUX and PAINT are gone; per-sample radii get their own texture) and the fragment programs calling G2's paint library; section 5's stages are re-cut, with the reveal chain (K76 2c, K268 stage 2, K290, K76 2d) landing first; section 6 is refreshed for the Pixel 11 on Android Chrome, with a recommendation on every question. The decisions K8 stage 1 made are marked **(K8 s1)**.
+> RE-BASED 2026-10-15 on master 9b4f3e6 by K8 stage 1 (agent `agent-a35a43cee74c92b93`; docs only, nothing measured; brief `docs/design/K8_stage1.md`). Since the snapshot below, G1 (per-pixel gaps), G2 (shader paint), K76 2a/2b (the thread reveal), K268 stage 1 (the shaped cut), K81/K127/K169 (route bands, traveled webs, the web fade), the render-only plucks (K77, K104, K279), K7 stages 1-2 (the physics host, and the worker core in Node; the worker reaches the browser at stage 3) and K307 stage 1 (cold compiles) have landed. What changed here: sections 1-4 describe master 9b4f3e6 (its line numbers), with the data model re-cut for G2's textures (SAMP packs two samples per RGBA32F texel; AUX and PAINT are gone; per-sample radii get their own texture) and the fragment programs calling G2's paint library; section 5's stages are re-cut, with the reveal chain (K76 2c, K268 stage 2, K290, K76 2d) landing first; section 6 is refreshed for the Pixel 11 on Android Chrome, with a recommendation on every question. The decisions K8 stage 1 made are marked **(K8 s1)**.
 >
 > DESIGN SNAPSHOT (2026-10-11), written by a read-only design agent against the G1 branch (per-pixel gaps) as it stood that day; file:line citations referred to that code. What actually lands is recorded in CLAUDE.md and the commit messages; open work is tracked in LEDGER.md.
 
 # G3 + G4 DESIGN: SDF ribbons and SDF junction webs (Knotmaze GPU migration)
 
-**Base.** Master d741412 (2026-10-15), with G1 and G2 landed. All `file:line` citations point at that commit and will drift.
+**Base.** Master 9b4f3e6 (2026-10-15), with G1 and G2 landed. All `file:line` citations point at that commit and will drift.
 
 **Terms.**
 - **sample**: one entry of `chainSamples[c]` (uniform-arc spline resampling).
@@ -50,9 +50,9 @@
 
 ## 1. CURRENT PIPELINE (what G3/G4 replace)
 
-### 1.1 What runs per frame on master d741412
+### 1.1 What runs per frame on master 9b4f3e6
 
-**The physics hand-off (K7).** On master d741412 the physics still runs on the main thread (`InThreadHost`, K7 stage 1), and the renderer reads `ps.positions` directly. K7 stage 2 built the worker core, the snapshot and the mirror in Node (`physics_worker_core.ts`, `snapshot.ts`, `mirror_system.ts`). Stage 3 (running) puts the worker in the browser behind `phw` (off by default); stage 4 adds the diagnostic bridge (`__knotPhysFreeze(on)`); stage 5 was to make the worker the default (stage 6, call F6, did, 2026-10-15). With the worker on, the renderer reads the mirror: the newest snapshot, or the last two interpolated at now − D (D = the median snapshot interval, clamped to 8-50 ms) if stage 3's A/B keeps interpolation; at rest the frame is exact. G3 reads the same positions as today's samples and never talks to the worker.
+**The physics hand-off (K7).** On master 9b4f3e6 the physics still runs on the main thread (`InThreadHost`, K7 stage 1), and the renderer reads `ps.positions` directly. K7 stage 2 built the worker core, the snapshot and the mirror in Node (`physics_worker_core.ts`, `snapshot.ts`, `mirror_system.ts`). Stage 3 (running) puts the worker in the browser behind `phw` (off by default); stage 4 adds the diagnostic bridge (`__knotPhysFreeze(on)`); stage 5 was to make the worker the default (stage 6, call F6, did, 2026-10-15). With the worker on, the renderer reads the mirror: the newest snapshot, or the last two interpolated at now − D (D = the median snapshot interval, clamped to 8-50 ms) if stage 3's A/B keeps interpolation; at rest the frame is exact. G3 reads the same positions as today's samples and never talks to the worker.
 
 **`RibbonRenderer.update()`** (`ribbon_renderer.ts:2449-2607`). Setup: `kData()`, `geomRev++`, `underWindows` cleared, the reveal lifecycle (`finishReveal`), and K90's `splineBend.halfWidth` (off unless `__knotSplineBend(true)`). Then per chain, in order:
 - Copy the controls from `ps.positions`.
@@ -648,7 +648,7 @@ G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
     - A bare URL is today's daily, with a saved attempt, so probes pass a query (`?<seed>&am=instant&snd=none`).
     - Hold the perf lock for every pixel-exact GPU probe, not only for timings, and record `webglcontextlost`.
 20. **The physics moves into K7's worker (new since the snapshot; stages 3-5, section 1.1).**
-    - With the worker on, the renderer reads the mirror: exact at rest. While awake, K7 stage 3 (landed after d741412) renders at now − D, D the median snapshot interval clamped to 8-50 ms, lerping positions between the two newest snapshots; `__knotHostOpts = { interpolate: false }` switches that off for an A/B.
+    - With the worker on, the renderer reads the mirror: exact at rest. While awake, K7 stage 3 (landed after 9b4f3e6) renders at now − D, D the median snapshot interval clamped to 8-50 ms, lerping positions between the two newest snapshots; `__knotHostOpts = { interpolate: false }` switches that off for an A/B.
     - A same-state A/B therefore freezes the physics. Under the worker (the default since K7 stage 6): `__knotPhysFreeze(on)` (K7 stage 4), which resolves once a snapshot shows the freeze. In-thread (`&phw=0`): the freeze patch `__knotPS().step = function () {}`, which `__knotPhysFreeze(true)` also is there, so the hook alone serves both hosts. `&phy=0` turns physics off for a deterministic layout.
     - Neither G3 nor G4 touches `src/physics/`.
 21. **Dependents of the strip (K8 s1).** Each needs its replacement before the strip goes at G3-3.
@@ -662,7 +662,7 @@ G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
 
 ## 5. STAGED PLAN (each stage lands end-to-end working on master)
 
-**Re-cut by K8 s1 for master d741412.** Each stage names its files, what it stays out of, its tests and A/Bs, and its acceptance numbers. While K7's stages 3 and 4 own `main.ts`, no stage needs a line there: every hook hangs off `__knotRenderer()` (main.ts ~4829).
+**Re-cut by K8 s1 for master 9b4f3e6.** Each stage names its files, what it stays out of, its tests and A/Bs, and its acceptance numbers. While K7's stages 3 and 4 own `main.ts`, no stage needs a line there: every hook hangs off `__knotRenderer()` (main.ts ~4829).
 
 ### 5.0 Common recipe pieces
 
@@ -896,7 +896,7 @@ Refreshed by K8 s1 for the Pixel 11 on Android Chrome. Each question for Levi ca
 12. **Shader-text conflicts with the reveal chain.** K76 2c, K268 stage 2, K290 and K76 2d edit the strip shader, the gap search, the fans and the explore anchors, which G3-1 and G3-2 rewrite. **Recommendation:** the order in 5.10; never run G3-1 or G3-2 beside a reveal-chain stage.
 13. **K90's boundBend** (off unless `__knotSplineBend(true)`; Levi is testing it live) changes the samples G3 packs and would make fold windows rare. **Recommendation:** decide K90 (keep or drop) and stop it before G3-2; never alongside a K8 stage.
 14. **K307's warm-up and registry.** Once K307 stage 2 lands, `program_registry.test.ts` fails on any unlisted program site, so each new program lands with its entry: ribbon-sdf and ribbon-sdf-explore (G3-2), yarn (G3-5), joint-sdf (G4-1). The warm-up must compile ribbon-sdf (and its explore variant on a reveal link) and, on fabric, joint-sdf before the intro's first frame. The `rp`/`jp` hatches compile on demand and stay out of it. Cold FXC today: section-rgb 2.8 s, arm-strip 1.7 s, junction-field 0.4 s, pluck-still about 340 ms. **Recommendation:** a cold-link acceptance in every stage that adds a program (5.3, 5.8).
-15. **`pluck_overlay.ts` is busy:** K344 merged at 93d0e4d (the pluck host's nodes carry `selfArc` now) and K279 stage 2 runs there. G3-1 rebinds the still pluck's gap and G3-2 moves `setCollapse` to RADII rows. **Recommendation:** land both after K279 stage 2, keeping the pluck host's interface (invariant 21).
+15. **`pluck_overlay.ts` is busy:** K344 merged at c76a367 (the pluck host's nodes carry `selfArc` now) and K279 stage 2 runs there. G3-1 rebinds the still pluck's gap and G3-2 moves `setCollapse` to RADII rows. **Recommendation:** land both after K279 stage 2, keeping the pluck host's interface (invariant 21).
 
 ### Critical files for implementation
 

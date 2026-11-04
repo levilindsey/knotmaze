@@ -143,7 +143,7 @@ two checks not run (below). All probes and results are untracked under
 
 - (a) `sheet_k336.mjs` (K336's `sheet.mjs` with the perf lock bypassed,
   `knotmaze.panelOpen` "0" and per-frame counts added) against static
-  builds on 5654 (635ae58, before K336) and 5655 (25a19d6, K336's
+  builds on 5654 (89ac1ff, before K336) and 5655 (244bbb3, K336's
   streamers commit); both build stamps checked. All four runs (1400x900
   and 411x753, master and branch): 0 context losses, 0 errors, idle 6.3-7.3 s
   after the two bursts. Plans: master `rain 865 + spray 320` (phone 420 +
@@ -197,12 +197,12 @@ two checks not run (below). All probes and results are untracked under
 
 Run F of `docs/design/K1062_muse_batch3.md` (K336's last unrun check, item
 (b) above). Measurement only; no default changed. One build of master
-`5406c4e6`, served by `scripts/preview.ps1 -Port 5550` and compared across
+`72bff312`, served by `scripts/preview.ps1 -Port 5550` and compared across
 links on that one base. The harness is K140's, copied to
 `.claude/probes/K645/` (`k140_ab.mjs`, `run_ab.ps1`; K140's copies
 untouched): `LINK` is `?7&am=instant&ms=4`, four tabs on the one base (no
 extra keys, `&cfa=3`, `&cfc=0`, `&cfa=3&cfc=0`), each tab's build stamp
-checked against `5406c4e6` and its live params read back
+checked against `72bff312` and its live params read back
 (`__knotParams()`: cfa 1/3, cfc true/false as labelled). Five scenarios,
 5 reps each, the rep order rotating: N (the cannons-on tab, no burst, the
 control), C1/C3 (a burst with the cannons on, amounts 1 and 3) and O1/O3

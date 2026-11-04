@@ -394,10 +394,10 @@ The tree, top to bottom; `[...]` is when a row shows.
    - Change to K323's question 3: the exploration rows move into Game
      in this build, right under Game mode, not in a later stage. K76 2c
      (running since 23:39; its brief is `docs/design/K76.md`, step 3, on
-     master since 79c5a97) replaces the fog checkbox in place, in Maze,
+     master since a7eb4a5) replaces the fog checkbox in place, in Maze,
      with one `exploration` dropdown (off, fog, threads) and the reveal
      rows shown under threads, and bumps the codec from 5 to 6. Levi's
-     23:00 order (ledger commit 2ae3180) runs 2c long before K323 stage
+     23:00 order (ledger commit 22d98b1) runs 2c long before K323 stage
      1, so 2c merges first: Stage A moves its rows from Maze to Game and
      takes v7. If 2c hasn't merged when Stage A starts, Stage A moves the
      fog rows and 2c replaces them in place, in Game.
@@ -497,7 +497,7 @@ own unless the two land in one push.
 | Merge `deadEnds` into `deadEndDensity` | `deadEnds` (`de`, 46, default on) goes. `deadEndDensity` (`ded`, 43) widens from [0.05, 1] to [0, 1]: 0 is braided, as `maze_plan.ts:17` defines it. `deadEndLength` hides at 0 | Links only; a v5 link reads as its seed anyway | Delete 46; the range change is free |
 | K323's own | `mazeFabric`'s entry (45), `fire` (118), minotaur's `off`, `minoToward` to `minoPull`, `gameMode` appended | K323 2.5 | K323 |
 
-Code the dead-end merge touches (lines at `7effaae`; on master K329
+Code the dead-end merge touches (lines at `bd7c146`; on master K329
 moved `main.ts`'s down by 9):
 - `main.ts` 2330 and 2564, `params.deadEnds ? c.deadEndTips.size :
   null`, the dead-end stat: test `deadEndDensity > 0` instead.
@@ -643,7 +643,7 @@ and finding 7 is that review's input.
   stage 1 plus the merges), A2 the moves, the labels and the width.
   Never two agents on the panel at once.
 - **The order against the work in flight.** Levi's 23:00 order (ledger
-  2ae3180) puts K323 stage 1 with this rebuild after the worker, the
+  22d98b1) puts K323 stage 1 with this rebuild after the worker, the
   thread reveal and the night's other items.
   - Stage A waits for Levi's answers: K323's and these.
   - It edits `main.ts`, `url_state.ts`, `param_codec.ts` and the panel,
@@ -701,7 +701,7 @@ still mark design rows under "All settings".
 
 ## Verification notes
 
-- The inventory script ran clean at `7effaae`. A spot check of the
+- The inventory script ran clean at `bd7c146`. A spot check of the
   Design and Maze rows (labels, values, hidden state) against the live
   panel matched (`.claude/probes/K339/spot_rows.json`,
   `spot_desktop_top.png`, `spot_desktop_maze.png`).
@@ -712,12 +712,12 @@ still mark design rows under "All settings".
 - After a context compaction, every number in this section was checked
   again against the inventory, `labels.json`, `computed.json` and the
   sources; the corrections are in `81e7e14`.
-- Line numbers are at `7effaae`. On master (2c81a92, 23:38) the
+- Line numbers are at `bd7c146`. On master (2014dd0, 23:38) the
   panel's own files (`tweakpane_panel.ts`, `url_state.ts`,
   `param_codec.ts`, `daily_link.ts`, `undo_stack.ts`) are unchanged
   since then; only `main.ts` moved (K329's key moves, no rows), so the
   inventory is still current.
-- Only `docs/` and `scripts/` changed (`git diff --stat 7effaae`), so
+- Only `docs/` and `scripts/` changed (`git diff --stat bd7c146`), so
   `npm test` was not run.
 
 ## Stage 1 handoff (2026-10-14, 23:45)
@@ -728,7 +728,7 @@ Nothing under `src/` changed, and nothing was pushed.
 - owner: nobody since 23:45 (agent of claude session d8031183, stage
   done).
 - branch: `worktree-agent-a2f8f74cd5425c4ef`, worktree
-  `.claude/worktrees/agent-a2f8f74cd5425c4ef`, from master `7effaae`.
+  `.claude/worktrees/agent-a2f8f74cd5425c4ef`, from master `bd7c146`.
   Commits: `9aeb7bb` (the inventory script and table), `81e7e14` (the
   results above), then this handoff.
 - evidence, tracked: `scripts/panel_inventory.ts`,

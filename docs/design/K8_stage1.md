@@ -118,7 +118,7 @@ claude session d8031183. **Done**, inside the cap (it started at 00:13).
 Docs only: nothing was built, served or measured.
 
 **What changed.** `docs/design/G3G4_sdf_geometry.md` is re-based on
-master d741412, one section per commit:
+master 9b4f3e6, one section per commit:
 - a dated note at the top and "Decisions at a glance": 5bfdc6a;
 - section 1, the per-frame pipeline: 5bfdc6a;
 - section 2, the data model: 68bb211;
@@ -146,10 +146,10 @@ stages, and the doc gives each one an owner:
 - K90 (keep or drop) before G3-2.
 
 **Stage 2's brief:** ready, below (db4b698). It starts from current master. K7
-stage 3 (63603bd..7f4c1bd) and K344 (93d0e4d) landed after d741412, so
+stage 3 (7e0cdcb..6f1a519) and K344 (c76a367) landed after 9b4f3e6, so
 the doc's line numbers for `main.ts`, `ribbon_renderer.ts` and
 `pluck_overlay.ts` drift. This branch changes only the two design docs,
-and master hasn't touched either since d741412.
+and master hasn't touched either since 9b4f3e6.
 
 ## Stage 2 (G3-0)
 
@@ -162,7 +162,7 @@ G3-2 will read them. G3-0 also adds the two tools later stages measure
 with: a same-state capture/restore hook and a frame bench for the phone.
 
 One opus agent, code. Ports: as the coordinator assigns. Start from
-current master, not d741412: K7 stage 3 (the worker host behind `phw`)
+current master, not 9b4f3e6: K7 stage 3 (the worker host behind `phw`)
 and K344 (`selfArc` in the pluck host) landed after the re-base, so the
 doc's line numbers drift.
 
@@ -349,7 +349,7 @@ outlives your worktree, and anything reusable in tracked `scripts/`.
 By the stage 2 agent (af653fa7f942f2f1e of claude session d8031183),
 who stopped at 03:50, before the 04:04 cap, with the stage done.
 Branch `worktree-agent-af653fa7f942f2f1e`, worktree
-`.claude/worktrees/agent-af653fa7f942f2f1e`, from master `fa7f9dc`,
+`.claude/worktrees/agent-af653fa7f942f2f1e`, from master `028b1d4`,
 unpushed. Probes and results: `.claude/probes/K8/stage2/`, copied to the
 main checkout (`notes.md` is the timeline, the batch scripts the recipes).
 
@@ -382,7 +382,7 @@ the A/Bs and the round trips ran on the desktop only.
   on for all 92 chains). Default: 91 chains, 12554 SAMP texels, 357 range
   entries, rows [13, 7, 1, 1]. Dense: 186 chains, 25919 texels, 730
   entries, rows [26, 13, 1, 1].
-- Cross-build A/B, master `fa7f9dc` against the branch, `phy=0`, clocks
+- Cross-build A/B, master `028b1d4` against the branch, `phy=0`, clocks
   pinned: 0 px on six links (daily 4 as `?daily=4&snd=none&phy=0` with
   the flow pinned at runtime, its seed as an ordinary design, fat, dense,
   b, knot). The thread reveal differed by 22050 px until the fabric's

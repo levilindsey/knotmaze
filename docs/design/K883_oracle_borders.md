@@ -180,7 +180,7 @@ crossing. The proposed rule follows; the census may refine it.
 
 (Agent a9e0698a57556c168 of claude session bf876705, opus. Steps 1-5
 were done inside the cap; the full suite passed at `d08820be` (178
-files, 2363 tests). Its branch `k883-borders` merged as `5048670e`.)
+files, 2363 tests). Its branch `k883-borders` merged as `972228b5`.)
 
 **Built.** `borderCensus` (a thread side is missing when it should show
 and is not inked; it should show unless an over pass covers it or its

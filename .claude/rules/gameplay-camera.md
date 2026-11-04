@@ -53,7 +53,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   so it never moves the view. A resize or fit drift (the edge creeps a
   few px while the knot settles) EASES the view back: `easeIntoRange`
   keeps a per-side allowance of 0.85 of how far it is out each 1/60 s
-  (RANGE_EASE 0.15, the reset's rate; by time since K252(a), 7f929ae3:
+  (RANGE_EASE 0.15, the reset's rate; by time since K252(a), 0bbdc36b:
   `rangeShare(dt)` = 1 - 0.85^(dt * 60), dt clamped to RANGE_MAX_DT 1 s,
   so a drift settles in the same 0.58-0.60 s at 30, 60 and 120 Hz), and gestures
   clamp to range + allowance, so nothing snaps. MEASURED

@@ -8,7 +8,7 @@
 //   S1f      = FormB({dEdge: "skip", rootBand: 0}): S1f's final (checked here
 //              against the frozen form_b_s1f_q.ts);
 //   today    = FormB({dEdgeTip: 0}): S1g's final, master's defaults before S1i
-//              (checked against the frozen form_b_s1g_q.ts, 53974fbe);
+//              (checked against the frozen form_b_s1g_q.ts, 0ad5634c);
 //   restored = FormB({}): S1i's defaults (dEdgeTip 1, F3 of the brief).
 // Per-site pictures: S1f | today | restored | restored - S1f | restored -
 // today; a diff panel is red where the later form has more ink, blue where it
@@ -317,7 +317,7 @@ for (const no of ORDER) {
   const rows = Math.ceil(done.length / cols);
   const topLines = [
     "K1040 S1i (K1114): form B ink at S1h's sites, S1f's final | today | restored, zoom 4 (+-3.5h around V), dpr 2",
-    "S1f = FormB(dEdge skip, rootBand 0); today = S1g's final (master 53974fbe; FormB(dEdgeTip 0)); restored = S1i's defaults (dEdgeTip 1)",
+    "S1f = FormB(dEdge skip, rootBand 0); today = S1g's final (master 0ad5634c; FormB(dEdgeTip 0)); restored = S1i's defaults (dEdgeTip 1)",
     "same scene, centre (the corner's V) and scale; red tick = V; S1h's site numbers; sites 02, 16, 17 first, then the other F1 sites, then F2's",
   ];
   const topH = 20 + LH * 3 + 2 * LH * 2 + 24;
@@ -371,7 +371,7 @@ for (const no of ORDER) {
   L.push("corner's V) and scale, dpr 2, greyscale `255 (1 - ink)`, `look.ctrlArc ??= 0.47`:");
   L.push("");
   L.push("- **S1f** = `FormB({dEdge: \"skip\", rootBand: 0})`, S1f's final (equal to the frozen `form_b_s1f_q.ts` at every site: `pairs.txt`);");
-  L.push("- **today** = S1g's final, master's defaults before S1i (`53974fbe`), = `FormB({dEdgeTip: 0})` (equal to the frozen `form_b_s1g_q.ts`);");
+  L.push("- **today** = S1g's final, master's defaults before S1i (`0ad5634c`), = `FormB({dEdgeTip: 0})` (equal to the frozen `form_b_s1g_q.ts`);");
   L.push("- **restored** = S1i's defaults (`dEdgeTip: 1`, the brief's F3: near's behind cut `c = k·u` with `k` from the arm's corners).");
   L.push("");
   L.push("- `sheet.png`: every triple S1f | today | restored at zoom 4 (each device px a 4 x 4 block), +-3.5h around V (the window is clamped to");

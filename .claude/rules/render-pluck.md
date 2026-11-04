@@ -74,7 +74,7 @@ only with the files it is about; `render.md` lists the area's other files.
   to 128 of 10463 (knot), every other weave check unchanged. The overlay
   never reads the mask, so the hook blurs of the rejected-cap cases are
   untouched by construction.
-- AMPLITUDE FLOOR (44885f3 raised tapAmplitude's floor from 0.45 h to
+- AMPLITUDE FLOOR (ac833a4 raised tapAmplitude's floor from 0.45 h to
   0.65 h): it did not create the wedges (raw worst -3.45..-4.15 already at
   0.45 h) but deepened them by up to about 1.4x at floor-bound taps,
   through the SYMPATHETIC lobes. They scale from the pre-cap aTap, while
@@ -90,7 +90,7 @@ only with the files it is about; `render.md` lists the area's other files.
 
 - COST (K104 stage 1c, 2026-10-14; the mechanism is render-gaps.md's G1
   entry, the numbers are docs/design/K104.md's stage 1c handoff). Master
-  cb532d5 vs 8e21538 at 3200x1800 (RX 6800 XT, ANGLE D3D11), fabric
+  710487a vs 8e21538 at 3200x1800 (RX 6800 XT, ANGLE D3D11), fabric
   `?b.J&am=instant&snd=none&fw=0`, 3 interleaved rounds of 5 strums of 12
   plucks per phase, other agents' probes running. FULL MOTION is unchanged
   within noise (GPU 2.62 -> 2.59 ms/f, pluck-blur 0.024 -> 0.035, layout
@@ -201,7 +201,7 @@ only with the files it is about; `render.md` lists the area's other files.
   33.2 / 0% phone). Ride caps the sum near 1 h, and the phone's dense h
   is 1.73 px, under the 2 px line; pinch takes W from short lobes (the
   knot's, the dense design's). Through, the default, reads best.
-- VERIFIED: same-state A/B against master ca7d3e6 (`k180_ab.mjs`, 20
+- VERIFIED: same-state A/B against master 6b25b50 (`k180_ab.mjs`, 20
   frames, 6 plucks each): 0 px in all 8 cases (fabric desktop and phone,
   knot, explicit defaults `&pw=0.5&pcx=through&pgl=off` in fabric and
   knot, reduced motion, reduced with pw 1.5 + pinch + with, pluckSize 3).
@@ -248,7 +248,7 @@ only with the files it is about; `render.md` lists the area's other files.
   two crossing nodes, the synth's own pluck counter `__knotSynth().plucks`,
   `&am=instant&snd=manual&fw=0&pgh=0`; fabric `?b.J`, dense `?b.J&gs=24&
   wd=0.6&brd=0.6`, knot `?7k.J&mf=0`). Taps (maze moves, plucks, core) and
-  synth sounds, master f5207d1 -> K235: fabric 1400x900 1124 (138, 965,
+  synth sounds, master d338656 -> K235: fabric 1400x900 1124 (138, 965,
   21) 986 -> 965; dense 2336 (381, 1904, 51) 1955 -> 1904; fabric phone
   411x753 1124 (166, 937, 21) 958 -> 937; dense phone 2336 (3, 2281, 52)
   2333 -> 2281; knot 832 (0, 832, 0) 832 -> 832. Core taps 1 -> 0 sounds,
@@ -329,15 +329,15 @@ only with the files it is about; `render.md` lists the area's other files.
   home and the knot sleeps again. Live physics only, never under Reduced
   motion; ptg 0 touches no physics (bitwise). `test/physics/tug.test.ts`
   pins the motion. THE FOOTPRINT BUG (fixed before stage 1 landed as
-  50c1aab): the first tugSpan stopped at the nodes' pluck FOOTPRINTS,
+  2600523): the first tugSpan stopped at the nodes' pluck FOOTPRINTS,
   the stretch the overlay may swing, which leaves most spans no particle
   inside. Before the fix only spans of L 2.6 and longer tugged (fabric 1 of 4 sites,
   dense 2 of 4, knot 1 of 4; spans of L 1.2-2.1 never did). The
   footprint bounds what the overlay draws; a kick of the material may
   run up to the nodes, where the sine bump falls to 0.
 - MEASURED (desktop RX 6800 XT, ANGLE D3D11; `.claude/probes/K279/`).
-  NEUTRAL A/B (k279_ab.mjs, same state, master 8ab25d0 vs stage 1
-  (50c1aab), 20
+  NEUTRAL A/B (k279_ab.mjs, same state, master 160b0ad vs stage 1
+  (2600523), 20
   frames and 6 plucks per case): 0 differing px and 0 moved positions
   in all six cases (fabric desktop, knot, fabric on the phone viewport,
   ghost .35, reduced motion, pluckSize 3; `ab2.log`), every pluck
@@ -353,7 +353,7 @@ only with the files it is about; `render.md` lists the area's other files.
   worst frame was 10.3 ms against 5.3-5.9 (not attributed: stage 2's
   bursts saw 9.5-10.7 ms against 4.2-5.1 in every ripple phase on both
   builds, warm-up or not). SLEEP after a tugged pluck: every span tugged
-  (`.claude/probes/K279/k279_live.mjs` on 50c1aab: four scripted taps per
+  (`.claude/probes/K279/k279_live.mjs` on 2600523: four scripted taps per
   design at spans of L 1.2-2.7 ctrl, then one real click). At pluckTug 0
   nothing stepped and positions stayed bitwise. At 0.3 the peak shift was
   0.12-0.16 world (0.23-0.30 widths), and the knot slept again after
@@ -372,7 +372,7 @@ only with the files it is about; `render.md` lists the area's other files.
   Before the node-to-node fix only spans of L >= 2.6 tugged
   (`live_sleep.log`).
 - WAKE COST (K279 follow-up, 2026-10-14; the table is in
-  `docs/design/K279.md`, "Wake follow-up"). `k279_wake.mjs` on 50c1aab,
+  `docs/design/K279.md`, "Wake follow-up"). `k279_wake.mjs` on 2600523,
   under the perf lock, in one off-screen window with the occlusion-safe
   flags (1400x900 at DSF 2, CPU idle at 3-5% of 24 cores): from one
   sleeping state per design, a real click (tap at ptg 0.3), a small real
@@ -406,7 +406,7 @@ only with the files it is about; `render.md` lists the area's other files.
   buffer (it holds the backdrop, so glint would lose its content alpha)
   and an overlay (ring only). Kept: the whole screen, plus the CULL
   (`discOnScreen`, 1 px of slack). COST (k279_live.mjs burst, 3200x1800,
-  `?7`, GPU ms/frame, master 9b977d8 vs f41de80, fabric / knot): 8
+  `?7`, GPU ms/frame, master a59c74b vs f41de80, fabric / knot): 8
   plucks 2.69 / 2.28 vs 2.56 / 2.34; with 8 glints 4.06 / 3.73 vs 4.12 /
   3.58; with 8 waves 3.98 / 3.46 vs 4.47 / 3.86; 1 pluck + 1 glint 3.53 /
   3.17 vs 3.66 / 3.20. The ripple pass takes 0.18-0.19 ms for one ripple
@@ -519,7 +519,7 @@ only with the files it is about; `render.md` lists the area's other files.
 
 ## Pluck loop tip (K395)
 
-- REPORT (Levi, 2026-10-15, Pixel 11 Chrome, live 12709e5, Free play):
+- REPORT (Levi, 2026-10-15, Pixel 11 Chrome, live 790b2ce, Free play):
   "Pluck cusps still have a bit of weirdness in loops. It seems like
   there is a bit of discontinuity with the vibration effect at times from
   the middle of the loop tip to an edge, and there is still a bit of
@@ -786,7 +786,7 @@ only with the files it is about; `render.md` lists the area's other files.
   the probe covers it.
 - MEASURED (`.claude/probes/K244/`, untracked: `k244_probe.mjs`,
   `run_k244.mjs`, `summarize.mjs`, results in `out/`; 24 one-Chrome runs
-  on 2026-10-20, base 6e3e913 against K244's 7308442, each a `vite
+  on 2026-10-20, base 59c0f04 against K244's 7308442, each a `vite
   preview` of its own build; K235's three links with `&am=instant&fw=0&
   pgh=0` and `snd=manual` (taps, drags) or `snd=random|music&ss=2`;
   1400x900 at DSF 2, and 411x753 at 2.625 with touch emulated in desktop

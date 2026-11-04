@@ -29,7 +29,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   lasts the session. NOT gated by Motion: the flow (the Reduced motion
   checkbox stills it, K111 below), the intros and the pulses (Levi,
   2026-10-13: reduced motion is not the intro and not the pulses).
-  Another tab's change follows at once (K112, 3ff7144a: a `storage`
+  Another tab's change follows at once (K112, 758dfe1e: a `storage`
   event on MOTION_KEY reparses and runs changed(), writing nothing).
   Probe: `.claude/probes/K79/k79_motion.mjs` (38 checks; K180 rewrote
   its four pluck checks for K104's still plucks: full motion moves,
@@ -80,7 +80,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   cuts), gap max(stored, 0.12) and markerSize max(stored, 1.5) (K225's
   default 2 sits above that floor, so since 2026-10-20 it lifts only a
   stored size under 1.5, not the default; raising it is open), and
-  pluckRipple "ring" unless the stored look is "off" (K368, 71250dca:
+  pluckRipple "ring" unless the stored look is "off" (K368, 89836d3b:
   the glint had little room on light threads over black; a pluck's
   explicit rippleLook still wins; Levi's look: K1126). Its
   choices keep the pulses (stage 3 removed stage 2's "contrast" mode)
@@ -110,7 +110,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   STATIC page (phy=0 and fw=0) drew its first frame with the crossing cuts
   solved at fade 0, because the rest branches called renderer.update()
   BEFORE fabricTick assigned fadeLength. Same-state first frame vs a
-  refreshed one (Reduced motion on, off), master f5207d1 -> K239, at
+  refreshed one (Reduced motion on, off), master d338656 -> K239, at
   1400x900 dsf 1: knot `?7k.J&mf=0` 31070 -> 0 px, fabric `?b.J` 29668 ->
   0, K111's `?k111.J` 28015 -> 0 (phone 411x753: 18570 -> 0), all with
   `&am=instant&snd=none&phy=0&fw=0`; and a link with every renderer input

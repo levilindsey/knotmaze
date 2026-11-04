@@ -6,7 +6,7 @@ One build stage, Opus, two-hour cap. Ports 5950-5959; probes in
 7, 2026-10-14): "Will we have a toggle for turn-aligned vs realtime
 burning? I think we should!"
 
-## What is there (checked on master 21d701e)
+## What is there (checked on master 2a7b625)
 
 - `src/game/fire.ts`: the header (1-30) is the spec; L is an input.
   armSafe 66, fireTrapped 84, runBurnAt 101, fireLead 134.
@@ -160,7 +160,7 @@ Items 1-5, 7, 9 and 10 are done; item 6 is measured, not fixed; item 8 is
 shot at both sizes in Chrome (no phone pass). Evidence:
 `.claude/probes/K114/stage2/` (untracked).
 
-**Commits** (on master 023f780; master's newer 42efe61 is LEDGER.md only):
+**Commits** (on master dac23fc; master's newer cc29d92 is LEDGER.md only):
 
 - 4c6aaac, items 1-2: the controller's `fireL` getter; `fireClock`
   (`fck`, turn | realtime) appended at codec row 146 (CODEC_VERSION stays

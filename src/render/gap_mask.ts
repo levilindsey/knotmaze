@@ -176,7 +176,7 @@ export interface GapSampRef {
   closed: boolean;
 }
 
-// K573 step 2: the walk's error bounds, the pre-G3-1 polyline's (e83f203's
+// K573 step 2: the walk's error bounds, the pre-G3-1 polyline's (a7e199e's
 // adaptive resolution): a chord at most GAP_POLY_SPACING_MAX long whose
 // sagitta (s^2 * curvature / 8) stays under GAP_POLY_SAG_TOL on the
 // tightest bend of the range.
@@ -187,7 +187,7 @@ export const GAP_POLY_SAG_TOL = 0.0015;
 // bounds on the tightest bend of raw samples lo..hi of a chain's flat
 // [x, y, ...] positions (rings wrap; an open chain's two end samples have
 // no bend). The bend is tan(turn) / mean leg - never below the turn
-// angle, so never coarser than e83f203's rule; a turn of 90 degrees or
+// angle, so never coarser than a7e199e's rule; a turn of 90 degrees or
 // more between samples keeps every sample.
 export function gapCurveStride(
   pos: ArrayLike<number>,

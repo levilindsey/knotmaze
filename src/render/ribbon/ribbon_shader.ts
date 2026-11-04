@@ -1,6 +1,6 @@
 // THE SECTION PROGRAM (K5 R1): the shader every ribbon draws with, its K76
 // explore variant, and bindGap. Moved verbatim from ribbon_renderer.ts
-// (9041939: 514-722 and 774-785); only `export` was added. The renderer
+// (5c6dc49: 514-722 and 774-785); only `export` was added. The renderer
 // calls sectionShader, sectionShaderExplore and bindGap; K307's warm-up
 // registry (program_registry.ts) builds sectionProgram. G3-1 extends
 // bindGap and G3-3 deletes the strip program (docs/design/K5_K6_split.md

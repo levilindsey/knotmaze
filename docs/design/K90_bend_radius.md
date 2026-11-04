@@ -51,7 +51,7 @@ gesture's re-sleep), `after` (the rest after the gesture battery), `violent`
 ## The baseline
 
 1a's tables are in K90.md, "Census results" (lines 121-184), measured at
-`66ee658`. This run's base (the bound off) matches 1a exactly on the knot
+`bd1ddff`. This run's base (the bound off) matches 1a exactly on the knot
 sets and the links, but not on the maze sets (w1/w115 summed per set,
 fresh rest and the rest after the gestures; `out_1b/analyze_r2.txt`, first
 section):
@@ -67,10 +67,10 @@ section):
 | ring20 | 171/292 | 133/228 | 49/76 | 40/69 |
 | knot sets, links | | equal | | equal |
 
-Between `66ee658` and this branch, master gained K110 (`3b8495f`,
-`6b03a75`: every piece reachable), K74 (`fbf5b5c`: long dead ends,
-exitClearance 12, the `.J` defaults edited in place) and K147 (`b0a1c49`,
-`1d31ffd`: the load settle). Maze designs moved and knots did not, which
+Between `bd1ddff` and this branch, master gained K110 (`736f8bd`,
+`8783ba9`: every piece reachable), K74 (`8ba8834`: long dead ends,
+exitClearance 12, the `.J` defaults edited in place) and K147 (`23bccd4`,
+`7d92b42`: the load settle). Maze designs moved and knots did not, which
 points at the generation changes; that is inferred from the commit range,
 not attributed. **Every comparison below uses this run's base, not 1a's.**
 

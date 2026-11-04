@@ -297,7 +297,7 @@ same fingerprint method.
 Read first: `.claude/rules/gameplay-panel.md`,
 `.claude/rules/gameplay-links.md`, `.claude/rules/generation-shapes.md`.
 
-This run uses the runner that batch 2's run E fixed (K1061, `011274f9`).
+This run uses the runner that batch 2's run E fixed (K1061, `7f802e12`).
 Check first that this writes the file:
 `node scripts/run_node.mjs --config scripts/panel_inventory.vite.config.mjs scripts/panel_inventory.ts .claude/probes/K814/check.md`.
 If it doesn't, skip this run and report.
@@ -384,7 +384,7 @@ only: no change under `src/`.
    ```
 
    The plan includes turn runs, unlike the Owed section's, because today's
-   master is not the build K441 measured (`f9eb418`, per its
+   master is not the build K441 measured (`e554f1d`, per its
    `results.md`). Both clocks must be measured on the same build. The
    labels `r3` and `r4` match the pool script's file filter
    (`r\d_(turn|rt)_x\d+.json`). Skip the Owed section's `prof5` profile

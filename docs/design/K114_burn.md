@@ -239,7 +239,7 @@ a second path.
      `.claude/probes/K80/`: `lib.ts`, `sim.ts`, `run.ts`) into your
      probes folder. Its dailies build through `dailyParams`, which still
      works. Its other design sets go through `designParams`, which still
-     calls `codecDefaults(3)`, removed by K132 (41e81b5). `run.ts` builds
+     calls `codecDefaults(3)`, removed by K132 (530dfdc). `run.ts` builds
      every set up front, so as it stands it throws before playing
      anything. Drop those sets, or build them as
      `.claude/probes/K174/rt/rt_lib.ts` does:
@@ -481,9 +481,9 @@ handoff says so.
 
 2026-10-14, about 16:40. Agent af79edbe2a4677ff5 of coordinator session
 d8031183, on branch `worktree-agent-af79edbe2a4677ff5` (worktree
-`.claude/worktrees/agent-af79edbe2a4677ff5`), rebased onto master faa9a52
-(K74 stage 2). Master has since gained only docs and the ledger (8ab25d0,
-37446df, 9c04e0c), so the branch merges without another rebase. Stage 1
+`.claude/worktrees/agent-af79edbe2a4677ff5`), rebased onto master 30a949a
+(K74 stage 2). Master has since gained only docs and the ledger (160b0ad,
+ebf064a, a66edd9), so the branch merges without another rebase. Stage 1
 is done: the model, the measurement and the mode are built, verified and
 committed. Nothing is pushed.
 
@@ -840,7 +840,7 @@ to stage 3b). Stage 3b draws unseen fire fronts as nothing, like char.
 
 2026-10-15, about 04:40. Agent adb9f09e19dfd0c55 (K290) of coordinator
 session d8031183, on branch `worktree-agent-adb9f09e19dfd0c55` (worktree
-`.claude/worktrees/agent-adb9f09e19dfd0c55`), based on master f799991.
+`.claude/worktrees/agent-adb9f09e19dfd0c55`), based on master 0fd6282.
 Stage 3a is done: brief items 1-3 and 5 are built and committed, and item
 4 is measured below. Nothing is pushed. Commits: 7d52824 (the param and
 the plan), 2231664 (`subtractBurnt`, `wholePieces`, 8 tests), c7a03e0 (the
@@ -914,7 +914,7 @@ render-explore.md (THE BURN) and render-shaders.md.
 
 Desktop RX 6800 XT, ANGLE on D3D11; every GPU run held the perf lock.
 
-- FIRE OFF, same state, branch c7a03e0 against master f799991
+- FIRE OFF, same state, branch c7a03e0 against master 0fd6282
   (`k290_ab.mjs ab http://localhost:5821/ http://localhost:5820/ <out>
   desktop`, link `k111&am=instant&snd=none&fw=0&phy=0`): 31/31 checks at
   0 px (reveal off at four pulse phases, a hovered choice, reveal on
@@ -1037,7 +1037,7 @@ checkout's `.claude/probes/K290/stage3a/` (`k290_ab.mjs`, `sheet.mjs`,
 Agent a7c0069bafcb78c52 of coordinator session 05e60da0, 2026-10-15
 07:24 to about 09:00, stopped with everything done except the phone half
 of the contact sheet. Branch `worktree-agent-a7c0069bafcb78c52` from
-21d701e, unpushed: ef7f08b (the look, WIP), d64e9c7 (the K299 entry),
+2a7b625, unpushed: ef7f08b (the look, WIP), d64e9c7 (the K299 entry),
 0df3eb3 (lore), f8e7d7d (the lit fuse in world terms) and this handoff.
 No `main.ts` edits. The record of the look is render-explore.md's THE
 BURN, stage 3b, and gameplay-fire.md's THE FIRE.
@@ -1078,7 +1078,7 @@ BURN, stage 3b, and gameplay-fire.md's THE FIRE.
    not traced (see "For the next stage").
 7. **A race's frames (K382).** `burn_page.mjs perf` on seed 7 at
    `fsp=0.95`, measured at rest after the escape (278 runs), under the
-   perf lock, against 21d701e:
+   perf lock, against 2a7b625:
    - The frame interval does not move, fire drawn or not, on both builds:
      on the desktop P50 17.4-17.5 ms and P95 18.1; under 4x CPU
      throttling, 51-52 and 70-71.
@@ -1098,7 +1098,7 @@ BURN, stage 3b, and gameplay-fire.md's THE FIRE.
      fronts with it on (mid #12).
    - A smoldering arm draws as a red centerline (late #13).
 9. **Checks.**
-   - Fire off against 21d701e (3a's `k290_ab.mjs ab`): 31/31 checks,
+   - Fire off against 2a7b625 (3a's `k290_ab.mjs ab`): 31/31 checks,
      every frame 0 px. Run on ef7f08b; f8e7d7d touches only the fire's
      path.
    - `npm test`: 1155 passed, 84 files, 1 skipped; the golden, the K87
@@ -1199,11 +1199,11 @@ Copy it to the main checkout before the worktree is removed.
 
 Agent ab1de7b1a6f3f605a of coordinator session 05e60da0, 2026-10-15
 10:17 to 11:29, a probe stage: no source, test, script or rules
-file changed. Branch `worktree-agent-ab1de7b1a6f3f605a` from e6e1734
-(3b is in it: merged as f7dd57e, with K80's 3a), unpushed; this handoff
-is its only commit. Everything was probed on e6e1734 itself (the page's
-stamp read `P4 v0.4.0 e6e1734 2026-10-15 17:38`). Master has moved on
-(957f04d, 17 commits ahead at 11:25): see "Master moved" under item 6.
+file changed. Branch `worktree-agent-ab1de7b1a6f3f605a` from 43457c1
+(3b is in it: merged as 3ac87f9, with K80's 3a), unpushed; this handoff
+is its only commit. Everything was probed on 43457c1 itself (the page's
+stamp read `P4 v0.4.0 43457c1 2026-10-15 17:38`). Master has moved on
+(24edc3d, 17 commits ahead at 11:25): see "Master moved" under item 6.
 The phone was Levi's, lent until about 11:10; its locks are released and
 my server is stopped. The width call (K409) waits on Levi: this stage
 gives them the facts and decides nothing. The sheets are in the main
@@ -1212,7 +1212,7 @@ checkout's `.claude/probes/K290/stage3c/out/sheets/` (see Evidence).
 ### Done
 
 1. **The phone sheet.** 3b's cells on the phone's own Chrome.
-   - Setup: Levi's Pixel 11 over USB, the production build of e6e1734
+   - Setup: Levi's Pixel 11 over USB, the production build of 43457c1
      served from the desktop on port 5890 through `adb reverse`. Link
      `?7&am=instant&fi=fuse&fsp=0.9&snd=none` (seed 7, the optimal
      route, 14 arrivals, as 3b's desktop sheet). The tab was 411x753 CSS
@@ -1434,7 +1434,7 @@ checkout's `.claude/probes/K290/stage3c/out/sheets/` (see Evidence).
      every frame and `ctxLost` is 0.
 6. **Checks and clean-up.**
    - No source, test, script or rules file was edited: `git diff --stat
-     e6e1734` shows this file only.
+     43457c1` shows this file only.
    - Phone: never woken, unlocked or reconfigured, and no output names
      its address or serial. The one address in the watchdog log is
      masked in place (`<phone>`). Its `adb forward` and `adb reverse`
@@ -1442,15 +1442,15 @@ checkout's `.claude/probes/K290/stage3c/out/sheets/` (see Evidence).
    - Locks and servers: `claude-phone.lock` absent; the perf lock
      released at 11:15:16; the server on port 5890 stopped; the watchdog
      ended.
-   - **Master moved.** At 11:25 master was 957f04d, 17 commits past
-     e6e1734, 3 of them in `src/`: K5 R1's ribbon split (7240953,
-     5a39ff3, 9b468e6): `ribbon/ribbon_shader.ts` (+265) and
+   - **Master moved.** At 11:25 master was 24edc3d, 17 commits past
+     43457c1, 3 of them in `src/`: K5 R1's ribbon split (64b57fd,
+     b6f5d5d, 10b6feb): `ribbon/ribbon_shader.ts` (+265) and
      `ribbon/sampling.ts` (+191) new, `ribbon_renderer.ts` -402, small
      edits to `junction_field.ts`, `pluck_overlay.ts`,
      `background_shaders.ts` and `program_registry.ts` (7 files, +480
      -393). The burn's own files (`src/render/explore_glsl.ts`,
      `fabric_maze_renderer.ts`, `appear_fx.ts`, `src/game/`) are
-     identical there (empty `git diff --stat`). I probed e6e1734 and did
+     identical there (empty `git diff --stat`). I probed 43457c1 and did
      not re-probe master.
 
 ### Not done
@@ -1498,7 +1498,7 @@ checkout, not in this worktree.
     (`-Stop`; port 5890);
   - the desktop: `desk_sheet.mjs` (`--mode fog|sheet|unseen`),
     `width_probe.mjs` (`--origin --out --vp phone|desk --picks 0,12 --xps
-    off,on --expect e6e1734 --deadline HH:mm`), `measure.mjs <dir>
+    off,on --expect 43457c1 --deadline HH:mm`), `measure.mjs <dir>
     [thr]`, `ahead_probe.mjs <dir> <cell> <frontIdx> [from] [to]`,
     `zoomstrip.mjs`, `make_rows.mjs [followDir] [arrivals]`;
   - helpers: `lib.mjs`, `png.mjs`, `zoom.mjs`, `diffbox.mjs`, `pix.mjs`;
@@ -1553,5 +1553,5 @@ checkout, not in this worktree.
   - pickThread under a declared burn;
   - `pieceVis`' ring-unwrap guard;
   - the PixiJS attribute warnings at load (aGap, aGapId, aUV).
-- **Master past e6e1734** (K5 R1's ribbon split) is not re-probed: after
+- **Master past 43457c1** (K5 R1's ribbon split) is not re-probed: after
   the merge, look at one burnt frame.

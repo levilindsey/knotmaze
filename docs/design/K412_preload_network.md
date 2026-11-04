@@ -14,7 +14,7 @@ fresh load (5/5), and the worker's own fetch is served from cache
 
 - URLs: `https://levi.dev/knotmaze/?1471kin&snd=none` and
   `https://knotmaze.pages.dev/?1471kin&snd=none` (a seed link, not the
-  bare daily). Production build stamp on both: `P4 v0.4.0 20afc25`.
+  bare daily). Production build stamp on both: `P4 v0.4.0 4935f76`.
   Chunk: `assets/physics_worker-DIhbM4cq.js`, decoded 191491 B, encoded
   65622–65758 B (the small encoded range differs by origin), same ETag
   (`"5c18bb3b0e47f8d20f2a70db63474374"`) on both origins.
@@ -125,10 +125,10 @@ on Pages, e.g. `_headers`): its cost there is one revalidation round
 trip plus 300 B per fetch (two per warm reload), not a second download.
 K412 closes on the tables above.
 
-## After K1084 (2026-11-02, fc9b0eec)
+## After K1084 (2026-11-02, a4cc20ee)
 
 Same runner and URLs as above, on the build that added `public/_headers`
-(`P4 v0.4.0 fc9b0ee`), under the perf lock (owner `K1091`, 2026-11-02).
+(`P4 v0.4.0 a4cc20e`), under the perf lock (owner `K1091`, 2026-11-02).
 The runner now also records each load's navigation timing (for K1086).
 Chunk headers on the downloaded response, every load, both origins:
 `cache-control: public, max-age=31536000, immutable` (Pages serves the

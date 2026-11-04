@@ -25,7 +25,7 @@ re-declare throttle."
     18.7 and realtime ran L from 25 to 73;
   - no throttle was added, because one "would recover at most drawFire's
     share and would step the front".
-- **K409 has since rebuilt the fire look** (6b9eb8f..3231d59: world-unit
+- **K409 has since rebuilt the fire look** (115eb34..cf70caa: world-unit
   fronts, the Gone ember ahead of the cut, the band kept). Every number
   above predates it, so measure again before deciding anything.
 - **Why realtime pays every frame** (master,
@@ -137,7 +137,7 @@ End your report with the item's handle fields and a `Ledger items` list.
 
 ## Handoff (K441 agent a14002cf1416cdbd8 of claude session 91b19e11-7759-4638-ba60-4705b011b94f, 2026-10-20, stopped at the 1 h cap)
 
-**Result.** No fix built: nothing passes the stage's rule. The fire chain costs 0.23 ms (x1) and 1.85 ms (x4) more a frame on the realtime clock than on turn, about 1% of a frame, and nearly all of it is in `ExploreGaps.setExplore`, outside this stage's zone (written up as K441 s2 below). One correction to my own first reading, and one measurement owed. Build: master f9eb418, no `src/` change. Evidence, in the worktree and untracked: `.claude/probes/K441/` (`results.md` with every table, `out/` with the per-frame rows and the four `.cpuprofile`s, `k441_page.mjs`, `run_k441.ps1`, `k441_pool.mjs`, `k441_prof.mjs`).
+**Result.** No fix built: nothing passes the stage's rule. The fire chain costs 0.23 ms (x1) and 1.85 ms (x4) more a frame on the realtime clock than on turn, about 1% of a frame, and nearly all of it is in `ExploreGaps.setExplore`, outside this stage's zone (written up as K441 s2 below). One correction to my own first reading, and one measurement owed. Build: master e554f1d, no `src/` change. Evidence, in the worktree and untracked: `.claude/probes/K441/` (`results.md` with every table, `out/` with the per-frame rows and the four `.cpuprofile`s, `k441_page.mjs`, `run_k441.ps1`, `k441_pool.mjs`, `k441_prof.mjs`).
 
 **Load labels.** Every number was taken under the perf lock (19:48:35-19:52:07, mine) on a desktop with its usual background load (Godot editors, TGitCache with one 12.9 s spike in the last item, claude, Code, muse; `out/batch2.log` has the per-item lines). Per-call numbers use `performance.now()` coarsened to about 0.1 ms: below 0.05 ms they are noise.
 
@@ -190,7 +190,7 @@ A same-physics-state rerun: the realtime stand AFTER the first sleep (the perf l
 
 ### Verify
 
-No `src/` change (docs only), so nothing moves: no pin, no codec param. `npm run build` not run (nothing to build). `npm test` passed on this branch (master 4529246 plus docs): 120 files passed, 1 skipped; 1714 tests passed, 1 skipped; 111 s, 20:04-20:06 under the perf lock (K580 held it from 19:55:07 and K139 from 20:03:00 until just before). `npm run build` not run: no `src/` change.
+No `src/` change (docs only), so nothing moves: no pin, no codec param. `npm run build` not run (nothing to build). `npm test` passed on this branch (master 71d4694 plus docs): 120 files passed, 1 skipped; 1714 tests passed, 1 skipped; 111 s, 20:04-20:06 under the perf lock (K580 held it from 19:55:07 and K139 from 20:03:00 until just before). `npm run build` not run: no `src/` change.
 
 ### The item's handle
 
@@ -202,7 +202,7 @@ No `src/` change (docs only), so nothing moves: no pin, no codec param. `npm run
 
 ## Owed rerun (2026-10-30)
 
-Build: master `e7b5a5ef0e2dcdcab90a5afadb39a917d18df605` (`P4 v0.4.0 e7b5a5ef`, built by `pwsh scripts/preview.ps1 -Port 5541`; every kept run's stamp reads that build, sim 5.0-5.1 s, `| asleep`). No `src/` change: the harness edits are in the untracked `.claude/probes/K441/` (`k441_page.mjs`, `k441_pool.mjs`, `run_k441.ps1`).
+Build: master `95b5c2d9f6f0eb65340f77288d7ea4fbc72ceb17` (`P4 v0.4.0 95b5c2d9`, built by `pwsh scripts/preview.ps1 -Port 5541`; every kept run's stamp reads that build, sim 5.0-5.1 s, `| asleep`). No `src/` change: the harness edits are in the untracked `.claude/probes/K441/` (`k441_page.mjs`, `k441_pool.mjs`, `run_k441.ps1`).
 
 Method, as the Owed section and K1062 run E prescribe. `k441_page.mjs`'s realtime path now waits, before the throttle and the drive, until `__knotPerf().asleep` is true and `__knotPluckState().active` is empty; the turn path records the same gate after its walk. Every window records `asleep` at its start and end (sampled per frame inside the window, from `__knotPerf().asleep`) and is marked `discarded` if it woke at any stand frame. The batch ran on `http://127.0.0.1:5541/` under the perf lock (owner `K441-rerun-E-muse-batch3`, taken 2026-10-30T01:25:53-07:00; the single rerun below re-took it at 01:31:56) with the plan `r3:realtime:1:0`, `r3:turn:1:0`, `r3:realtime:4:0`, `r3:turn:4:0`, `r4:realtime:1:0`, `r4:turn:1:0`, `r4:realtime:4:0`, `r4:turn:4:0`, run through `pwsh -NoProfile -Command "& ./.claude/probes/K441/run_k441.ps1 ..."`. The first batch's host wrapper timed out after seven items had written kept files; the eighth (`r4:turn:4:0`, not discarded - incomplete) was rerun on its own under the lock, same build and port, and kept. The `prof5` profile run from the Owed recipe was skipped, as K1062 run E directs (it needs an unminified build and attributes cost rather than testing the prediction). Raw rows: `.claude/probes/K441/out_rerun/*.json`; pooled with `node .claude/probes/K441/k441_pool.mjs .claude/probes/K441/out_rerun`. Load label: the lock was this run's for every item, but the desktop carried its usual background load (the batch's per-item `cpu-other` lines list TGitCache at 2.8-14.2 s an item and several editor/agent processes), so read the tick means as desktop-under-load, not quiet-machine numbers.
 
@@ -253,7 +253,7 @@ Observed: with both stands asleep, the tick gap is far below the first stands' c
 
 ## K1077
 
-Build: master `fe7fa774` (no `src/` change; measurement only). Unminified build in `.claude/probes/K1077/build` (`npx vite build --minify false`), served at `http://127.0.0.1:5557/`; `run_k441.ps1`, `k441_page.mjs`, `k441_pool.mjs`, `k441_prof.mjs` and the lock scripts copied to `.claude/probes/K1077/` with both ports on 5557 and `k441_prof.mjs`'s pairs set to this run's labels. Under the perf lock (owner `K1077-muse-batch4-runD`, 2026-10-30 09:20-09:23 -07:00): `prof5:realtime:1:1`, `prof6:turn:1:1`, `prof7:realtime:4:1`, `prof8:turn:4:1`. All four windows kept by the asleep gate (asleep true at both ends, no wake; batch 3's `discarded` flag false throughout). Caller chains and self-under-entry sums: `.claude/probes/K1077/analyze.mjs` over the same profiles. Load label: the desktop carried its usual background load (per-item `cpu-other`: Godot 7.9-8.0 s, TGitCache 3.3-6.1 s, agent processes 12.8-22.2 s on two items), so read the ms as desktop-under-load numbers; the 4x realtime window holds 12 frames and is thin, as batch 3's was.
+Build: master `9f9f3dae` (no `src/` change; measurement only). Unminified build in `.claude/probes/K1077/build` (`npx vite build --minify false`), served at `http://127.0.0.1:5557/`; `run_k441.ps1`, `k441_page.mjs`, `k441_pool.mjs`, `k441_prof.mjs` and the lock scripts copied to `.claude/probes/K1077/` with both ports on 5557 and `k441_prof.mjs`'s pairs set to this run's labels. Under the perf lock (owner `K1077-muse-batch4-runD`, 2026-10-30 09:20-09:23 -07:00): `prof5:realtime:1:1`, `prof6:turn:1:1`, `prof7:realtime:4:1`, `prof8:turn:4:1`. All four windows kept by the asleep gate (asleep true at both ends, no wake; batch 3's `discarded` flag false throughout). Caller chains and self-under-entry sums: `.claude/probes/K1077/analyze.mjs` over the same profiles. Load label: the desktop carried its usual background load (per-item `cpu-other`: Godot 7.9-8.0 s, TGitCache 3.3-6.1 s, agent processes 12.8-22.2 s on two items), so read the ms as desktop-under-load numbers; the 4x realtime window holds 12 frames and is thin, as batch 3's was.
 
 | run | frames | stand L | tick mean (p50) | asleep |
 |---|---|---|---|---|

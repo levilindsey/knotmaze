@@ -7,10 +7,10 @@ Ledger item K550. One Opus agent, two-hour cap.
 - **K320's split** draws the crossing gaps from a mask that a pre-pass
   renders, so the paint compiles faster cold (2b: 29,414 chars /
   1,735 ms against the combined program's 46,361 / 3,217 ms, D3D11
-  medians). It is dark by default (`f18dd07`): only the renderer's
+  medians). It is dark by default (`7b8f068`): only the renderer's
   `setGapSplit` turns it on. Design `docs/design/K320_section_rgb.md`,
   brief `docs/design/K320_stage2.md`.
-- **K553** (`60511ed`) sizes the mask in device pixels
+- **K553** (`be5a079`) sizes the mask in device pixels
   (`ensureGapMaskSize`, `fitGapTarget` and `gapMaskPixelSize` in
   `src/render/gap_prepass.ts`). Before that fix the mask lined up
   only at dsf 1, and every K320 and K550 number was taken at dsf 1.
@@ -191,7 +191,7 @@ All under the perf lock, Chrome headed with hardware GPU, fresh profiles.
 
 - `npm test`, `npx tsc --noEmit` and `npm run build`, green;
 - the A/Bs above, with `splitAssert` holding on every split capture;
-- the split dark by default, unchanged from `f18dd07`.
+- the split dark by default, unchanged from `7b8f068`.
 
 ## Kill criteria
 
@@ -288,11 +288,11 @@ Stage 3 agent, 2026-10-19. Probes, logs, shots and results:
 
 ### Commits
 
-- `92e1c0e` is the three-keep patch, rebased onto K553:
+- `4ab4a3a` is the three-keep patch, rebased onto K553:
   - MASK_UNDER and MASK_DEEP are sized by `fitGapTarget` inside
     `ensureGapMaskSize`, which also calls `bindGapMask`;
   - `gap_split.test.ts` covers their sizing in device pixels.
-- `15dbd39` and `206f3e7` are the try:
+- `864849a` and `926679f` are the try:
   - `src/render/gap_coverage.ts` holds the offsets, the uniform pack,
     the pass order and the GLSL;
   - it is wired through `gap_prepass.ts`, `ribbon_shader.ts`,
@@ -300,19 +300,19 @@ Stage 3 agent, 2026-10-19. Probes, logs, shots and results:
   - coverage is 0 by default, so with the split on the pre-pass still
     draws one instance per mesh;
   - `renderer.setGapCoverage(n, interior)` turns it on for probes.
-- `68b9977` adds `test/render/gap_coverage.test.ts`, 15 pure tests:
+- `8bcfcca` adds `test/render/gap_coverage.test.ts`, 15 pure tests:
   the offsets and their y flip, the pack, the instance order, the NDC
   shift, the varying correction, and the program texts and their
   budgets.
 - The split stays dark by default: `setGapSplit` is unchanged since
-  `f18dd07`.
-- Checks at `68b9977`, under the perf lock:
+  `7b8f068`.
+- Checks at `8bcfcca`, under the perf lock:
   - `npx tsc --noEmit`: clean;
   - `npm test`: 110 files passed and 1 skipped (1,558 tests passed,
     1 skipped);
   - `npm run build`: green.
 
-### Step 2: the re-baseline (`92e1c0e`)
+### Step 2: the re-baseline (`4ab4a3a`)
 
 Same-state A/B, split against combined, 1400x900 viewport,
 `k550_probe.mjs`:
@@ -529,7 +529,7 @@ Medians per render, in ms:
   clean frame saves 0.33 ms, since the split's paint is cheaper than
   combined.
 - **2a's own reading was not found:** not in `K320_stage2.md`,
-  `K320_section_rgb.md`, `ffd3864` or `f485641`. Whether 2a timed a
+  `K320_section_rgb.md`, `46960ef` or `a34bc3b`. Whether 2a timed a
   dirty frame is unknown.
 - **The parts,** at 3200x1800:
   - the three-keep pre-pass: Sd - Sc = 2.10 ms, about 0.7 ms per keep
@@ -549,7 +549,7 @@ programs are byte-identical to master's:
 
 **Chars:**
 
-| program | master | `92e1c0e` | the try (`68b9977`) |
+| program | master | `4ab4a3a` | the try (`8bcfcca`) |
 |---|---:|---:|---:|
 | split paint fragment | 29,433 | 30,293 | 30,293 |
 | split paint explore fragment | 39,552 | 40,412 | 40,412 |
@@ -620,7 +620,7 @@ programs are byte-identical to master's:
      3200x1800 (+0.68 ms at the phone-size canvas, on the desktop GPU).
 3. **What merges.**
    - **On kill:** none of this branch's code, only this Handoff.
-   - **On waive:** `92e1c0e` (the three keeps), without the try's
+   - **On waive:** `4ab4a3a` (the three keeps), without the try's
      commits. At coverage 0 the try is dead weight in the gap programs:
      +678 chars, and an untimed share of the gap program's +35 ms cold
      compile.

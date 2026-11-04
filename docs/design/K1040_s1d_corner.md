@@ -8,7 +8,7 @@ Brief written 2026-10-29 by the coordinating session.
 
 ## Why
 
-S1c (merged at f6ad6990) made form B's per-pixel decisions continuous.
+S1c (merged at 633cd4bd) made form B's per-pixel decisions continuous.
 Its mechanism table (`docs/design/K1040_s1c_handoff_pops.md` F3) found
 no hard switch in the winner, fold, cap, burial or tie. Besides 14
 smooth pops (73 px) and one gate pop (4 px), what is left is the corner
@@ -304,7 +304,7 @@ Definition change. Crops in `out/s1d/crops/`; corner_cmp's listings in
 
 ### F3 · The fillet's centre from the tracked feet and the rule (04:16-04:40)
 
-Definition change, WIP commit 65ff32c9 (04:40). Gate (04:32-04:39):
+Definition change, WIP commit 1f04b816 (04:40). Gate (04:32-04:39):
 `logs/gate_f3.txt`, `table_f2_f3.txt`, `mech_f3_merge.txt`,
 `corner_why_f3.txt`.
 
@@ -331,7 +331,7 @@ Definition change, WIP commit 65ff32c9 (04:40). Gate (04:32-04:39):
 
 ### F4 · ω fades only the overlap past the margin gate's band (04:48)
 
-Definition change, WIP commit b023d85e (with F5). `logs/gate_f4.txt`,
+Definition change, WIP commit a8197f7e (with F5). `logs/gate_f4.txt`,
 `table_f3_f4.txt`, `omega_census_f3.txt`, `omega_census_f4.txt`.
 
 - **Why.** r = ∫S stops the ball where another part of an arm comes up
@@ -354,7 +354,7 @@ Definition change, WIP commit b023d85e (with F5). `logs/gate_f4.txt`,
 
 ### F5 · θ from the interpolated tangent; a pass past L still cuts (04:50)
 
-Definition change, WIP commit b023d85e. Gate (04:49:40-04:55:54):
+Definition change, WIP commit a8197f7e. Gate (04:49:40-04:55:54):
 `logs/gate_f5.txt`, `table_f4_f5.txt`, `table_s1cf5_f5.txt`,
 `mech_f5_merge.txt`; Lcut: `lcut_f5_*.txt`.
 
@@ -385,12 +385,12 @@ Definition change, WIP commit b023d85e. Gate (04:49:40-04:55:54):
 
 ### F6 · A through pass's two arms bury each other: tried, reverted (04:59-05:10)
 
-Definition change, WIP commit d6d53448; reverted at 05:09:49
-(`src/render/field/form_b.ts` is b023d85e's again, F5). Gate
+Definition change, WIP commit 87ccfdd9; reverted at 05:09:49
+(`src/render/field/form_b.ts` is a8197f7e's again, F5). Gate
 (05:03-05:09): `logs/gate_f6.txt`, `gate_f6_mech.txt`,
 `table_f5_f6.txt`, `table_s1cf5_f6.txt`; b_rate: `rate/rate_f6.txt`.
 
-- **Why.** b_rate's breaches start at F2: the base (2dacd08d) breaches
+- **Why.** b_rate's breaches start at F2: the base (8ffd11fa) breaches
   on 0 of 36 sites and F2 on 9 of 36 (`rate/rate_form_b_s1d_base.txt`,
   `rate_form_b_s1d_f2.txt`); F5 breaches on 9 of 161
   (`rate/rate_f5.txt`). F2 dropped the through pass's own corner, and
@@ -431,13 +431,13 @@ Definition change, WIP commit d6d53448; reverted at 05:09:49
 
 Stopped at 05:16 (cap 05:48:35); npm test on the final tree: 2532
 passed (`logs/npm_test_final.txt`). The final definition is F5 (WIP
-commit b023d85e); F6 is reverted.
+commit a8197f7e); F6 is reverted.
 
 **Done:** steps 1-6 of the Order.
-- F1, free ends (7a12e6f9); F2, V off the arm (a2978ed7); F3, the
+- F1, free ends (97c8cddb); F2, V off the arm (ddf825cf); F3, the
   fillet's centre from the tracked feet and the integrated rule
-  (65ff32c9); F4, ω past the margin band, and F5, θ from the
-  interpolated tangent with a pass past L still cutting (b023d85e);
+  (1f04b816); F4, ω past the margin band, and F5, θ from the
+  interpolated tangent with a pass past L still cutting (a8197f7e);
   F6, tried and reverted.
 - The gate on F5 (`logs/gate_f5.txt`, `table_s1cf5_f5.txt`): pins 22
   of 22, npm 2532 passed, q5 0 defects; pops 20 / 191 px (S1c F5 209 /
@@ -450,7 +450,7 @@ commit b023d85e); F6 is reverted.
 1. The rate rule at through-pass bends: 9 of 161 b_rate sites breach
    (`rate/rate_f5.txt`), at the D1 fold's nearer-kept pick (F6's
    residual). Either blend the merged minima with continuous weights,
-   or bury locally and by depth at the bend. F6 (d6d53448) is a start
+   or bury locally and by depth at the bend. F6 (87ccfdd9) is a start
    for the second; it has to leave muse_hash's crossing 71 and the 4
    junction free ends alone.
 2. The discrete edges left in the corner solve: solveCorner's null

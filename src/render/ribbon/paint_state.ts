@@ -2,7 +2,7 @@
 // pulses, the hover rim, the telegraph pieces, the fray), the section
 // runs, the K81 route declarations and the paint clocks, plus K6's
 // paintNeedsFrame poll and the CPU mirror (paintMirror). Moved verbatim
-// from ribbon_renderer.ts (6ce5ced8); a body changed in three ways only:
+// from ribbon_renderer.ts (1c7e3eff); a body changed in three ways only:
 // a renderer member became `this.r.x`, a sampling helper
 // `sampling.x(...)`, and the façade keeps one-line delegations for the
 // names other code calls (setPaint, setRim, setTelegraph, tickPaint,

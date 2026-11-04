@@ -146,7 +146,7 @@ J3f did); the coordinator sends Levi the PNGs.
 
 - Repo `C:\Users\lsl\Repositories\knotmaze`; the branch is
   `worktree-agent-adcba68466fb7684f` (worktree
-  `.claude/worktrees/agent-adcba68466fb7684f`), at master's `236a18a6`.
+  `.claude/worktrees/agent-adcba68466fb7684f`), at master's `94e03522`.
 - The work is untracked, in the main checkout's
   `.claude/probes/K863/trace/`. Python: `venv\Scripts\python.exe -I`;
   the font `font\PlaywriteUSTrad[wght].ttf`. `K926_FINAL_E=shear`,

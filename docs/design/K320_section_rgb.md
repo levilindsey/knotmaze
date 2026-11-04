@@ -1,7 +1,7 @@
 # K320: slim or split section-rgb (design + measurements)
 
 Status: design and measurement only. No `src/` change in this stage.
-Measured at HEAD `bd3933a` by `.claude/probes/K320/measure.ts` (run with
+Measured at HEAD `7bf57ae` by `.claude/probes/K320/measure.ts` (run with
 `node node_modules\vite-node\vite-node.mjs .claude\probes\K320\measure.ts`;
 full output `.claude/probes/K320/results.md`, gitignored like every probe).
 Background: `LEDGER.md` K320, `.claude/rules/render-shaders.md` (K307
@@ -46,8 +46,8 @@ Reconciliation with lore: K307 stage 1 read section-rgb at 46,850
 chars (2.8 s) before G3-1; K540's parent read 47,687 and G3-1
 48,804 from trace captures. Today's 48,737 (+ the ~70-char Pixi
 prefix) matches K540's post-G3-1 number; the growth since K307 is
-G3-1's +1,117 (`3465090`, the only shader-text change to these files
-since, with `1fc9458` explore-only). The daily's wave 1 gates on
+G3-1's +1,117 (`93a231f`, the only shader-text change to these files
+since, with `2c03b57` explore-only). The daily's wave 1 gates on
 section-rgb: it is the longest compile in every mode that draws
 ribbons, which is every intro.
 
@@ -228,7 +228,7 @@ K536 link set, frame-cost check against gap_mask's COST baseline
   compile of that program for every player on the next deploy.
   A GAP_FRAG_LIB touch recompiles 6 programs; a paint-lib touch
   4. Bundle all text changes into one deploy; never ship O2 alone.
-- Tests that pin program text today (all green at `bd3933a`,
+- Tests that pin program text today (all green at `7bf57ae`,
   35 tests in the four files below, run for this doc):
   `test/render/background_shaders.test.ts` holds the only sha256
   pins (7 background programs + QUAD_VERT/BLIT_FRAG/FOG_VERT/

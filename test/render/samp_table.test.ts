@@ -1,6 +1,6 @@
 // K8 G3-0: the SDF ribbons' data plane (src/render/samp_table.ts). Packing,
 // neighbours, RANGES against the renderer's own per-sample slot ids on real
-// scenes (fixtures dumped from fa7f9dc by .claude/probes/K8/stage2/
+// scenes (fixtures dumped from 028b1d4 by .claude/probes/K8/stage2/
 // dump_fixtures.mjs: per chain the frame's slot windows and the
 // renderer's idScratch), and SAMP against the real spline samplers.
 import { readFileSync } from "node:fs";

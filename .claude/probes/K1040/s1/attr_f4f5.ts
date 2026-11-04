@@ -2,7 +2,7 @@
 // site by site. F5 made two changes (S1d F5): theta from the interpolated
 // tangent (tanAt) and the Lcut loop's skip (a pass past L still cuts).
 // Variants: f4 (both reverted), f5a (F4 + tanAt), f5b (F4 + the Lcut loop),
-// f5 (frozen e8944f2f) and src (the working tree).
+// f5 (frozen c6e274a3) and src (the working tree).
 // #1 sites: the union of out/s1d/scenes_f4|f5/<scene>.json check1deep sites;
 // per site and variant: ink (a site counts at ink >= 0.5, as scenes.ts's
 // raster), the winning term and its corner's two arms (L, Lcut).

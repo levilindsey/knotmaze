@@ -101,7 +101,7 @@ commit.
 
 ## Stage 1 handoff (2026-10-15, sonnet agent a18f9a57206d9475d)
 
-Done and committed on `worktree-agent-a18f9a57206d9475d` (from d741412).
+Done and committed on `worktree-agent-a18f9a57206d9475d` (from 9b4f3e6).
 Nothing is pushed and nothing is applied: `LEDGER.md`,
 `docs/ledger_notes.md` and `docs/ledger_done.md` are untouched. Every
 test ran on copies (`.claude/probes/K353/`, untracked).
@@ -116,7 +116,7 @@ test ran on copies (`.claude/probes/K353/`, untracked).
   `2_inprogress`, `3_next`, `4a_residuals`, `4b_residuals`,
   `5_approved_ideas`, `6a_done`, `6b_done`). Rebuild the map with
   `node scripts\ledger_diet.mjs pack <the eight files in that order>
-  --snapshot <d741412's LEDGER.md> --out docs\ledger_diet\map.jsonl`
+  --snapshot <9b4f3e6's LEDGER.md> --out docs\ledger_diet\map.jsonl`
   (shas come from the snapshot; without `--snapshot` it reads
   `LEDGER.md` in the working directory).
 
@@ -148,7 +148,7 @@ test ran on copies (`.claude/probes/K353/`, untracked).
 - `docs/ledger_notes.md`: 18,198 -> 151,906 bytes (158 originals
   appended). `docs/ledger_done.md`: new, 62,753 bytes (101 entries).
   Neither is imported anywhere, so they cost nothing until opened.
-- Against master at 1e7456c (dry run on a copy): 205,187 -> 110,495
+- Against master at fabdf9a (dry run on a copy): 205,187 -> 110,495
   bytes; K279, K8 and K344 are skipped (changed since the snapshot),
   and Next free ID follows master's header (K358).
 
@@ -195,7 +195,7 @@ Items already applied just count as "already applied".
 - In progress: all 11 are rewritten but stay 14-23 lines, because each
   carries its six handle fields (live agent ids, caps, worktrees). Five
   items (K7, K76, K279, K344 and K8) are being edited by running agents;
-  a dry run on master at 1e7456c already skips K279, K8 and K344.
+  a dry run on master at fabdf9a already skips K279, K8 and K344.
 - 152 open items other than In progress are still over three lines
   (49 at four lines, 33 at five, 27 at six, 21 at seven, 22 longer).
   They hold a pointer, a decision, or an (a)(b)(c) list whose parts are
@@ -241,7 +241,7 @@ and this doc.** The coordinator applies your maps to each repo.
    - knotmaze unchanged: `list` on knotmaze's `LEDGER.md` prints the same
      bytes before and after your change, and an apply of
      `docs/ledger_diet/map.jsonl` to a copy of the K353 snapshot
-     (`git show 6c85a38^:LEDGER.md`) gives the same files as before.
+     (`git show a543dd3^:LEDGER.md`) gives the same files as before.
 2. **Per ledger**, in the main checkout's untracked
    `C:\Users\lsl\Repositories\knotmaze\.claude\probes\CC64\<cc|hopnbop|platform>\`:
    - `snapshot.md`, a copy of the ledger, and in `results.md` the repo's
@@ -262,7 +262,7 @@ push). The final report ends with `Ledger items` and the handle fields.
 
 ## CC64 handoff (2026-10-15, sonnet agent ad1cce843de69341e)
 
-Done and committed on `worktree-agent-ad1cce843de69341e` (from 3d78f09).
+Done and committed on `worktree-agent-ad1cce843de69341e` (from f5b5182).
 Nothing is pushed and nothing is applied: no `LEDGER.md` and no
 `docs/ledger_*.md` of claude-config, hopnbop or snoringcat-platform was
 touched, and every run used copies. All output is in the main
@@ -283,11 +283,11 @@ another prefix or cutoff gets a generic header (wrapped at 76 columns).
 `--date` still defaults to the local date.
 
 Knotmaze is unchanged. `.claude/probes/CC64/identity/run_identity.mjs`
-runs a script over the K353 snapshot (`6c85a38^`) in four variants (LF
+runs a script over the K353 snapshot (`a543dd3^`) in four variants (LF
 and CRLF, with and without an existing notes file) through `list`,
 `apply --dry-run`, `apply` and a second `apply`, `verify`, `pointers`
 and `pack` of `docs/ledger_diet/src`; `compare_out.mjs` compares two
-runs. The base script (3d78f09) against this branch's: 51 files,
+runs. The base script (f5b5182) against this branch's: 51 files,
 identical byte for byte except `hashes.txt` (it hashes stdout captures
 that print the output directory's name). Run again on the final script
 at 09:35.

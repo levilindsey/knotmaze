@@ -6,7 +6,7 @@ Stages 1b-6c are in: `buildTextGraph(text)` emits a pinned word
 (`src/core/text_graph.ts:709`), `attachTitle` hangs a derived title on
 a daily's entrance tail (stage 3a), and the standalone `text` scene,
 cartouche and emblems all ride the same builder. Suite 1521 green at
-54612f2. Levi's calls still bind: text pinned; spurs travelable;
+6d317d3. Levi's calls still bind: text pinned; spurs travelable;
 capitals via connectors; one-token links. Decisions this brief makes
 where the design left the mechanism open are marked (picked); the
 genuinely open ones are Calls for Levi at the end, each with a

@@ -472,7 +472,7 @@ maze.
 
 ## Stage 4a handoff (as built, 2026-10-18)
 
-Built on HEAD eac12a3. The E2 landmark cartouche ships as briefed,
+Built on HEAD dd2886d. The E2 landmark cartouche ships as briefed,
 with three measured deviations (below). No no-cartouche pin moved:
 K87, the golden dailies, byte identity and the K74 pins are green
 unrefrozen; the only deliberate pin movements are the codec table's

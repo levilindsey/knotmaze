@@ -45,7 +45,7 @@ only with the files it is about; `render.md` lists the area's other files.
   none&phy=0&fw=0&bg=none`, K81's "twice" plan: the cheapest move, the
   shortest cycle, one move forward, which makes joint 0's fourth arm
   traveled): pinned, the joint's J1.z is 0, 0.145, 0.470, 0.809, 1, 1 at
-  0, 0.06, 0.12, 0.18, 0.25 and 0.4 s. Against the K127 build (ca7d3e6) at
+  0, 0.06, 0.12, 0.18, 0.25 and 0.4 s. Against the K127 build (6b25b50) at
   the same state, at desktop (1400x900) and phone (411x753 at 2.625)
   size: the frames at 0.25 s and later are 0 px different (the whole phone
   frame, the desktop joint's crop; the full desktop frame differs by the
@@ -118,7 +118,7 @@ only with the files it is about; `render.md` lists the area's other files.
   false at the end; a reversal about 80 ms into a real-time fade: 19
   frames, biggest step 0.094, ends full (phone, 95 ms in: 20 frames,
   0.106). Against the
-  stage-1 build (e2f96b8, `bg=none`), desktop 1400x900 and phone 411x753
+  stage-1 build (79f8025, `bg=none`), desktop 1400x900 and phone 411x753
   at 2.625: the frame before the back tap is 0 px different (desktop: the
   build stamp's text only, 189 px) and every frame from 0.25 s on is 0 px
   different (the whole phone frame, the desktop joint's crop); the frames

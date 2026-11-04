@@ -103,7 +103,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   - `autoPluckGain` (`pag`, [0, 1], default 0.5).
 
   They sat at 118-124 on their branch until it rebased onto K114
-  (61c8859), which put them at 121-127 and re-froze the table pin
+  (f9ac1bc), which put them at 121-127 and re-froze the table pin
   (`test/ui/param_codec.test.ts`).
 - All seven are in DAILY_EXEMPT_KEYS, so a daily keeps the player's own.
   The strengths clamp to [0, 2] (RIPPLE_STRENGTH_MAX) and the rest to
@@ -139,8 +139,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   reaches, in half-widths; default 0.85, RIM_EDGE; `clampHoverGlowWidth`
   holds it to [0.3, 1]) is APPENDED to codec v5 at index 130, after K80
   turns stage 2's 128-129. It was 121 on its branch, then 128 after a
-  rebase onto K279 (2409cb9), then 130 after one onto K80 turns stage 2
-  (02194b4); each rebase re-froze the table pin
+  rebase onto K279 (0c060d2), then 130 after one onto K80 turns stage 2
+  (dea013f); each rebase re-froze the table pin
   (`test/ui/param_codec.test.ts`). A DAILY_EXEMPT_KEY (a viewer
   preference: a daily keeps the player's own). `hcl` (High contrast's
   prototype look, gameplay-motion.md) is NOT a codec param: a temporary
@@ -339,8 +339,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   clamped to [0, 1]: PAR_SLACK_MIN / MAX in game/par.ts; the codec's
   clamp table and the panel row read the same range) are APPENDED at
   182-184, after K525's `minoTelegraphLook` (181). They were 171-173 on
-  their branch, 178-180 after the rebase onto b1ec927 (K324 stage 1) and
-  182-184 after the one onto da03e7d (K336's 178-180, K525's 181); each
+  their branch, 178-180 after the rebase onto 9dd013e (K324 stage 1) and
+  182-184 after the one onto 23fced0 (K336's 178-180, K525's 181); each
   renumber re-froze the table pin. K324 stage 3, rebased after it, took
   185-189 (REAL-TIME MODEL PARAMS below).
   CODEC_VERSION does not move (append only). The option lists
@@ -413,8 +413,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `docs/design/K525_telegraph.md`): `minoTelegraphLook` (`mtl`: rims |
   line | both, default rims) is APPENDED at 181, after K324's 171-177
   and K336's 178-180; CODEC_VERSION stays 8. It was 158 on its branch,
-  178 after the rebase onto b1ec927 (K324 stage 1) and 181 after the one
-  onto 62a70c1 (K336); each renumber re-froze the table pin.
+  178 after the rebase onto 9dd013e (K324 stage 1) and 181 after the one
+  onto 9647c8d (K336); each renumber re-froze the table pin.
   url_state reads it with readChoice (`TELEGRAPH_LOOKS`); an unknown
   option reads the default. Neither daily-exempt nor a MAZE key (a daily
   plays without the minotaur). A LIVE_EFFECT under onTurnMinoChange
@@ -456,7 +456,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   minotaur). All five are LIVE_EFFECTS under onChaseChange
   (undo_stack.ts). They were 178-182 on their branch, 182-186 after the
   rebase onto K336 (178-180) and K525 (181), and 185-189 after the one
-  onto 07c0189 (K137); each renumber re-froze the table pin. Pins that
+  onto 2444951 (K137); each renumber re-froze the table pin. Pins that
   moved: the table pin (`test/ui/param_codec.test.ts`), url_codec.test.ts's
   defaults table and OVERRIDE_KEYS, plus its new test "reads the
   real-time guard and stalker". The golden dailies, K87 and K80_DIGESTS
@@ -566,7 +566,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   [0, 8] = TURNSTILES_MAX, default 0 = off) and `hiddenRuns` (`hid`, [0, 4]
   = HIDDEN_MAX, default 0 = off) are APPENDED at 205-206, after K114's beat
   rider (202-204); CODEC_VERSION stays 8. They were 202-203 on their branch
-  until it rebased onto 6e143bbf (the beat rider), which renumbered them and
+  until it rebased onto fa84f376 (the beat rider), which renumbered them and
   re-froze the table pin. Neither daily-exempt nor a MAZE key. LIVE_EFFECTS:
   both under onClockChange (a change restarts the solve and places them
   anew). `fabricRulesOf` passes them in the classic game only. Pins that
@@ -582,8 +582,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   follow | both, SLEEP_KINDS in game/monsters.ts, default wake) are
   APPENDED at 207-208, after K138 stage 2's turnstiles and hidden runs
   (205-206); CODEC_VERSION stays 8. They were 202-203 on their branch,
-  205-206 after the rebase onto db557c31 (K114's beat rider, 202-204) and
-  207-208 after the one onto 40dafa2a (K138 stage 2); each renumber
+  205-206 after the rebase onto 6fb18d78 (K114's beat rider, 202-204) and
+  207-208 after the one onto b080a77f (K138 stage 2); each renumber
   re-froze the table pin. Neither daily-exempt nor a MAZE key. Both under
   onClockChange in undo_stack.ts's LIVE_EFFECTS (a change restarts the
   solve, which lays the monsters anew). Pins that moved: the table pin, url_codec.test.ts's defaults
@@ -597,7 +597,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `docs/design/K138_s3.md`): `oneWay` (`ow`, a number, PARAM_RANGES [0,
   0.6] = ONE_WAY_MAX, default 0 = off; the panel keeps a 0.05 grid) is
   APPENDED at 209, after K137 stage 3d's sleepers (207-208); CODEC_VERSION
-  stays 8. It was 207 on its branch until the rebase onto a71e7409 (K137
+  stays 8. It was 207 on its branch until the rebase onto 30b27143 (K137
   stage 3d), which renumbered it and re-froze the table pin. Neither
   daily-exempt nor a MAZE key. LIVE_EFFECTS: under onClockChange (a change
   restarts the solve and lays the runs anew). `fabricRulesOf` passes it in
@@ -612,7 +612,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   = LURES_MAX, default 2 since K783 (2026-10-29); 0 = off) and `snares` (`snr`, [0, 3] = SNARES_MAX,
   default 1 since K783) are APPENDED at 210-211, after K138 stage 3's `oneWay` (209);
   CODEC_VERSION stays 8. They were 209-210 on their branch until the
-  rebase onto 04c4d9e1 (K138 stage 3, whose `oneWay` took 209), which
+  rebase onto 9b86ffb4 (K138 stage 3, whose `oneWay` took 209), which
   renumbered them and re-froze the table pin.
   Neither daily-exempt nor a MAZE key (free play only: a daily is classic, so no tools show there).
   Both under onClockChange in undo_stack.ts's LIVE_EFFECTS (a change
@@ -675,7 +675,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   default HINT_SECONDS 2 s, game/hints.ts) and `hiddenReveal` (`hrv`, [1,
   8], default REVEAL_RUNS 3 runs, game/hidden_runs.ts), APPENDED at 214-217
   after K138 stage 4's keys and lockMode (212-213; the rebase onto
-  2409e961 renumbered them); CODEC_VERSION stays 8. Each module exports its
+  de2d42eb renumbered them); CODEC_VERSION stays 8. Each module exports its
   MIN/MAX and an `*Of` reader that clamps and rounds to a whole number
   (the hint keeps its fraction). The hold and the range reach the turn
   minotaur through `turnConfig`, which sets them only off their defaults,

@@ -2830,7 +2830,7 @@ async function main(): Promise<void> {
   // when the catch was deferred - the caller then animates the move as
   // usual. A contact at t of 0 or near it defers too, and lands on the
   // next frame with no travel (until K546 it cut at once). Mid-move input
-  // keeps Levi's correction (3b1612f): pointer taps are ignored while the
+  // keeps Levi's correction (2bcf771): pointer taps are ignored while the
   // dot travels and keys/pad/gamepad gate on held-at-arrival, exactly as
   // for any move - the pending catch rides the same animation and the
   // same gates.

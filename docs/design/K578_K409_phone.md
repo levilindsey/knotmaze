@@ -17,21 +17,21 @@ probes and numbers only.
 ## Part 1: K578, the confetti fall (the main question)
 
 K578's still-maze cache (branch `worktree-agent-a129cb0eb5eacb36a`, code
-at `0093049`; the handoff is the end of that branch's
+at `403d204`; the handoff is the end of that branch's
 `docs/design/K578.md`) is used only while the confetti is the frame's
 only visual need. At default settings the flow (fw 0.3) redraws every
 frame, so the cache never runs. The 45 fps fall K572 measured predates
 K573's cut to the gap search, so today's number is unknown.
 
 1. Builds: `pwsh scripts/preview.ps1 -Port 5174` (master) and
-   `pwsh scripts/preview.ps1 -Port 5175 -Ref 0093049` (the cache). Tunnel
+   `pwsh scripts/preview.ps1 -Port 5175 -Ref 403d204` (the cache). Tunnel
    with `pwsh scripts/phone.ps1 -Ports 5174,5175`.
 2. Probe: K572's (`.claude/probes/K572/k572_confetti.mjs`,
    `k572_phone.mjs`); copy what you need into `.claude/probes/K578/phone/`.
    Same design and fall as K572.
 3. On the Pixel 11, the 8 s fall: median frame, fps, frames over 25 ms.
    - a. Master at defaults, 3 runs: today's number against K572's ~45 fps.
-   - b. Master with `fw=0` against `0093049` with `fw=0`, ABBA twice (8
+   - b. Master with `fw=0` against `403d204` with `fw=0`, ABBA twice (8
      runs): what the cache recovers where it is used. Confirm it was used
      (`window.__knotStillCache`, see the handoff).
 4. Report the table and one line: is the fall still slow at defaults, and

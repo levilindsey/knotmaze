@@ -541,7 +541,7 @@ describe("K174: the minotaur's controls", () => {
   const MAZES = [3, 17, 42];
   // The chase at roamPull 0 on mazes 3, 17 and 42 with seeds 1 and 2: ticks
   // / hunts / catches / digest of every tick. On hCutShare 0 mazes these
-  // equalled master's chase before K174 (d644ec5); K80 turns stage 2
+  // equalled master's chase before K174 (824e090); K80 turns stage 2
   // re-froze them on today's H1 mazes. K324 stage 1 re-froze them at its
   // defaults (junction stops, the next leg picked on arrival, the hunt pace
   // 0.9 of yours): no longer K80's chase, even at zero stops, since a rest

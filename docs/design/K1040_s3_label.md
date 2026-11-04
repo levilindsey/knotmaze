@@ -3,7 +3,7 @@
 Ledger K1040, stage S3. One stage: Opus, 2 h cap. Branch
 `worktree-agent-a4d6c4eb46ea384c4`, worktree
 `C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-a4d6c4eb46ea384c4`
-(at 5b8522a5, node_modules joined to the main checkout's). Work only
+(at 1a6823ea, node_modules joined to the main checkout's). Work only
 there. Brief written 2026-11-02 by the stage agent, at the coordinating
 session's (7301c55b) request, from F7 of
 `docs/design/K1040_junction_field.md` (S3's entry, its gate, and the
@@ -37,7 +37,7 @@ What the reference's label is (`FormB.evalPoint` / `evalLayers`):
 ## Calls that bind
 
 - **The reference** is `src/render/field/form_b.ts` as on the base
-  (5b8522a5), default params. S3 does not edit it. A label-rule bug found
+  (1a6823ea), default params. S3 does not edit it. A label-rule bug found
   in it is reported (a Finding and the report), not fixed here.
 - **K1040's calls** (S1 to S1e), where they reach the label:
   - continuous by construction; no fade on a discrete outcome. The label
@@ -205,14 +205,14 @@ Then `## Handoff`. Stop at the cap wherever the Order stands; steps 2 and
 ## Findings
 
 Times (`Get-Date`, 2026-11-02): start 18:18:20; brief written about
-18:25 (af7f79f1); the pass and its pins committed 18:43 (4649c8ca); the
-verdict runner 18:53 (05727f6c, WIP); resumed after a compaction
-19:03:04; the merge scan coded 19:06:55, committed 19:18 (7f32e8e0);
+18:25 (261d83bb); the pass and its pins committed 18:43 (de4b8782); the
+verdict runner 18:53 (15d0ea13, WIP); resumed after a compaction
+19:03:04; the merge scan coded 19:06:55, committed 19:18 (5232a032);
 muse_hash at 0 DEFECT 19:18:48; the 12-scene census 19:18:55-19:20:40;
 resumed after a second compaction about 19:24; the verdict's tie
 margin, census again 19:28:10-19:29:31; desktop timing
 19:29:31-19:29:47, without the scan 19:31:33-19:31:49; suite green
-19:35; final commit 19:38 (dedfaf13), outputs copied back 19:39;
+19:35; final commit 19:38 (d4c5d920), outputs copied back 19:39;
 stopped 19:40, 38 min before the cap, with the gate not met: the
 remaining DEFECTs wait on a label-rule decision (class B below), and a
 first phone run under both locks, or the pops harness, would not have
@@ -342,11 +342,11 @@ favicon requests on all 12 scenes in every run.
 ## Handoff
 
 What landed (branch `worktree-agent-a4d6c4eb46ea384c4`, not pushed):
-af7f79f1 the brief; 4649c8ca the pass (`label_b.ts`, `label_b_glsl.ts`,
+261d83bb the brief; de4b8782 the pass (`label_b.ts`, `label_b_glsl.ts`,
 `label_b_pass.ts`, `label_b_verdict.ts`) and its pins
-(`test/render/field/label_b.test.ts`); 05727f6c the verdict runner
+(`test/render/field/label_b.test.ts`); 15d0ea13 the verdict runner
 (`.claude/probes/K1040/s3/`: `page.ts`, `s3.mjs`, `run_locked.ps1`,
-`count.ts`); 7f32e8e0 the merge scan (CAPSULE_FS and `labelAt`), the
+`count.ts`); 5232a032 the merge scan (CAPSULE_FS and `labelAt`), the
 hairpinX pin, `diag.ts`, `fixdbg.ts`; the last commit: the verdict's tie
 margin, `defects.mjs`, the runner's `--noscan`, the summaries and the
 three traced sites (`out/diag_*.txt`), these Findings. No app hook: the

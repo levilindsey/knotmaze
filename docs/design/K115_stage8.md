@@ -36,7 +36,7 @@ design must EMIT pen order in the form K558 consumes, not redo it.
 The title thread itself becomes opt-in under K552 (default off). The
 cursive still ships in titled dailies, cartouches and the `?txt=` scene.
 
-## Where things stand (master 71ee949)
+## Where things stand (master a0e6523)
 
 - **The builder**, `src/core/text_graph.ts` (`buildTextGraph` at :709):
   - **Glyph sources:** Hershey Script Simplex

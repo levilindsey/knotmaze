@@ -1,7 +1,7 @@
 # K909: K868 oracle, junction groups from geometry (agent brief)
 
 Coordinator, 2026-10-27 11:35. One stage, opus, 2 h cap. Follows K900
-(`K900_oracle_holes.md`, merged `263bc134`).
+(`K900_oracle_holes.md`, merged `cd025b84`).
 
 ## Why
 
@@ -10,7 +10,7 @@ planned is missing some borders", and on sheet B2: "about twice as many as
 you've marked with blue". K900 confirmed the census undercounts and added
 two checks that do not lean on the oracle's groups: truth "geo" in
 `borderCensus`, and free border ends found in 4x renders
-(`.claude/probes/K900/indep.ts`). At `263bc134` the 12 real scenes have
+(`.claude/probes/K900/indep.ts`). At `cd025b84` the 12 real scenes have
 228 free ends (muse_hash 106, g41_def_tw64 51, g41_user_tw64 29, def 16)
 against 148 census-missing samples.
 
@@ -45,8 +45,8 @@ stays inside the junction's union.
 - K900's probes are in the main checkout under `.claude/probes/K900/`
   (`lib.ts`, `census.ts`, `indep.ts`, `b3.ts`, `checks_ab.ts`, `hook.ts`,
   `diag.ts`, `crops.ts`; logs `indep_m1.log` and `census_m1.log` are the
-  numbers at `263bc134`). They import the `k900-oracle` worktree, which
-  sits at `263bc134`, so as they are they give the "before". Don't edit
+  numbers at `cd025b84`). They import the `k900-oracle` worktree, which
+  sits at `cd025b84`, so as they are they give the "before". Don't edit
   that worktree or folder: copy what you use into `.claude/probes/K909/`
   and point the copies at your worktree. S1a's real scenes are in
   `.claude/probes/K868/scenes/`; sheets go in `.claude/probes/K868/sheets/`.
@@ -75,7 +75,7 @@ stays inside the junction's union.
    (116/117) and corner solves do not get worse; otherwise leave it behind
    the switch and say why. Write the rule into §3.4 (and §3.7-§3.8 if the
    corner fit changes).
-3. **Measure and sheet B4.** Before (`263bc134`) and after on the 12
+3. **Measure and sheet B4.** Before (`cd025b84`) and after on the 12
    scenes: free ends by class, census missing and extra ink under both
    truths, muse_hash #2, #11, #14, #15 and #16, #15 and #16 on every
    scene, the synthetic total, corner solves, and the full suite in the
@@ -156,7 +156,7 @@ and step 6 is not started.
      on muse_hash gains a sample (38 to 39).
    - `geoCut`, the per-junction crossing cut, stays off. With it on, free
      ends rose to 235 and census missing to 163.
-3. **Measured.** Before is groups k883, which is 263bc134's oracle; after
+3. **Measured.** Before is groups k883, which is cd025b84's oracle; after
    is groups geo.
    - Free ends: 228 to 227.
 

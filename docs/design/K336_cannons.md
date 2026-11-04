@@ -210,7 +210,7 @@ End your report with the item's handle fields and a `Ledger items` list.
 
 Steps 1-5 and 8 are done, and so is most of 7. Step 6 was tuned from
 the pure-model census, not from frame sheets, and the master-vs-branch
-sheets were never shot. The branch is rebased onto master `635ae58`
+sheets were never shot. The branch is rebased onto master `89ac1ff`
 (after K324 stage 1, K546 stage 1 and K580 stage 2) and was never
 pushed.
 
@@ -260,8 +260,8 @@ The full record is render-confetti.md's "Side cannons and streamers
 
 ### Verification
 
-- **Tests.** `npm test` after the rebase onto `635ae58`: 1658 passed,
-  1 skipped (the same on `b1ec927`).
+- **Tests.** `npm test` after the rebase onto `89ac1ff`: 1658 passed,
+  1 skipped (the same on `9dd013e`).
   `tsc --noEmit` is clean. `npm run build` was green before the rebase
   (a8a2985) and was not re-run after it.
 - **Census** (pure model, 8 seeds):
@@ -330,7 +330,7 @@ The golden dailies, K87 and the knot-mode golden did not move.
    `owner | start | what` lock line, a wait of `MAXWAIT` minutes
    (default 10), no rain chart, and `MASTER` / `BRANCH` env labels. Run
    `node sheet.mjs <masterBase> <branchBase> [outDir]` against two
-   `scripts/preview.ps1` builds: master `4d57c02` against the branch
+   `scripts/preview.ps1` builds: master `42cf194` against the branch
    `a8a2985` (the pre-rebase head), or a fresh pair. It shoots 1400x900
    and 411x753 at 0.1-1.0 s and 1.5-3.0 s. Still to add: a strip of
    streamers curling (2x crops). Re-tune if the arcs or the 0.2 share
@@ -356,7 +356,7 @@ The golden dailies, K87 and the knot-mode golden did not move.
   2 h cap)
 - branch: `worktree-agent-ac1c3e02f6979bc7f`, worktree
   `.claude/worktrees/agent-ac1c3e02f6979bc7f`; last commit: this
-  handoff (on master `635ae58`, unpushed)
+  handoff (on master `89ac1ff`, unpushed)
 - evidence: `.claude/probes/K336/` (untracked): the censuses,
   `flag_check.mjs`, `bench_sim.mjs`, `bench_locked.ps1`,
   `flag_bench_a8a2985.log`, `banners/`, `look.mjs` + `look_locked.ps1`

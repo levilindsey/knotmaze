@@ -142,6 +142,6 @@ only with the files it is about; `probes.md` lists the area's other files.
   -What <what> -Cmds "& .claude/probes/K395/<batch>.ps1"` runs a batch
   under the perf lock (`batch_ab.ps1`, `batch_ab2.ps1`). The dev server
   is `vite.private-cache.config.ts` on 5910; `builds/` holds the pre-K395
-  build (21d701e). GOTCHA: PowerShell variables are case-insensitive: a
+  build (2a7b625). GOTCHA: PowerShell variables are case-insensitive: a
   `foreach ($t ...)` in a batch line clobbered the batch's `$T`. Put a
   batch in its own .ps1 file.

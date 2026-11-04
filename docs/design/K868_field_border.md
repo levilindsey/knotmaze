@@ -2,7 +2,7 @@
 
 Status: approved for prototyping (Levi, 2026-10-26). Prototype only:
 nothing reaches the app until Levi accepts the contact sheets. Supersedes
-K862 and K864-K866, which are parked at 6e12716e (branch
+K862 and K864-K866, which are parked at 060151d7 (branch
 `park/muse-2026-10-26`). Stage briefs: `K868_s1a_scene_export.md`,
 `K868_s1b_oracle.md`.
 
@@ -184,12 +184,12 @@ The margin is h, not h/2 as until K900: the round end of a cut arm clears
 the over pass's border iff cos θ + m·sin θ ≥ 1 for a cut at L + m·h, which
 m = 1/2 fails past θ 53.1° and m = 1 meets for every θ. L + h is also
 check 15's window, so the cut and the check see the same holds.
-`OracleParams.passJoins` ("k883") and `passMargin` (0.5) keep 5048670e's
+`OracleParams.passJoins` ("k883") and `passMargin` (0.5) keep 972228b5's
 rule for A/Bs.
 
 The oracle keeps each cap and its reason (`FieldModel.armCaps`), and the
 round corners are fitted inside the caps (§3.8). Checks 15 and 16 test it.
-Crossing 292 (muse_hash, cr 3; #15 349 of 350 at 5048670e) is j140's END
+Crossing 292 (muse_hash, cr 3; #15 349 of 350 at 972228b5) is j140's END
 (chain 84) hooking back over j140's own through (chain 66) at 47°. Two
 mechanisms put both passes in cluster 68 (j123, j139, j140). The END's
 span ended 2.84h from the over pass, outside the old pad (L + h/2, 2.80h)
@@ -239,7 +239,7 @@ side and comes back farther out, that data misses the far piece: on the
 the largest 5.13h (g41_user_tw64); muse_hash has 57 on 51 arms (median
 0.75h, largest 4.87h), and the synthetic scenes have none.
 
-Result (12 real scenes against `263bc134`): free ends 228 → 227, census
+Result (12 real scenes against `cd025b84`): free ends 228 → 227, census
 missing 148 → 152, extra ink 71 → 71, #15 12 of 12 in both, muse_hash's
 #16 38 → 39 samples, corner solves unchanged, synthetic free ends 4 → 4.
 The geo spans equal K883's on 3589 of 3622 arms (11 longer by more than

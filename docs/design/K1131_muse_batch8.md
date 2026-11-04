@@ -70,7 +70,7 @@ hold too:
    you didn't make.
 10. Write commit-message files as UTF-8 without a byte-order mark:
     `[IO.File]::WriteAllText(<absolute path>, <text>, (New-Object Text.UTF8Encoding $false))`
-    or `Set-Content -Encoding utf8NoBOM`. Batch 5's `fc9b0eec` carries a
+    or `Set-Content -Encoding utf8NoBOM`. Batch 5's `a4cc20ee` carries a
     BOM at the start of its subject.
 
 Muse doesn't load `.claude/rules/` by itself. Each run names the rules
@@ -581,14 +581,14 @@ Suggested ports: 5590-5594.
 Read first: `.claude/rules/gameplay-panel.md` (EVERY PARAM HAS A ROW,
 the Reset), `.claude/rules/probes.md`; then `row`, `doReset` and the
 per-row reset glyph in `src/ui/tweakpane_panel.ts`, the message of
-commit `5f28e0b1` (K130 and K495, with its 107-row sweep), the probe
+commit `9e617d7a` (K130 and K495, with its 107-row sweep), the probe
 it used (`.claude/probes/K130/reset.mjs`, if it is still there), and
 `test/ui/panel_rows.test.ts`.
 
 The ledger says:
 
 > **K1115** · Panel: after Reset, 107 stepped rows land one step below their default when a link held an
-> off-grid value (the list: 5f28e0b1's message; 6B fixed four rows, K130/K495, by dropping `step`). Wants one
+> off-grid value (the list: 9e617d7a's message; 6B fixed four rows, K130/K495, by dropping `step`). Wants one
 > general fix, not per row (Claude's call).
 
 What is there today (read it, don't trust this summary). A stepped
@@ -598,7 +598,7 @@ probe's construction) anchors the grid there, so `doReset` and the
 row's own reset glyph, which write the default and then refresh,
 land one step below it. K130 fixed four rows by dropping their
 `step`; its sweep found 107 more stepped rows failing the same way
-(the list is in `5f28e0b1`'s message), 18 passing (mostly default-0
+(the list is in `9e617d7a`'s message), 18 passing (mostly default-0
 rows the range clamp rescues) and 8 skipped. Rows added since may
 have moved those counts: this run re-derives them. The fix must
 live in one place (`row`, `doReset`, the glyph), not in 107 option
@@ -608,7 +608,7 @@ Tasks, in order:
 
 1. Before sweep. Copy the K130 probe into `.claude/probes/K1115/`
    (a port in 5595-5599; if the original is gone, rebuild it from
-   `5f28e0b1`'s message: batched loads, 16 rows a load, each row's
+   `9e617d7a`'s message: batched loads, 16 rows a load, each row's
    link value 0.63 steps off its default, then Reset, then read the
    params back). Sweep every stepped row the panel binds today.
    The before table: how many fail, and their names (expect about

@@ -9,7 +9,7 @@ handoff" (595-825) and `K74_maze_design.md` 146-163 (decisions 1-2),
 implement each, and have parameters to control which is used and/or to
 what degree?" Build at neutral values first: the pins hold until item 10.
 
-## What is there (checked on master 21d701e)
+## What is there (checked on master 2a7b625)
 
 - `src/core/maze_plan.ts`: MazeParams 69, defaults 119, MazePlan 149 (no
   exit point, radius or corridor; `hCutShare` only when > 0, 171).
@@ -36,7 +36,7 @@ what degree?" Build at neutral values first: the pins hold until item 10.
   share 0); K74_WALKS_DEFAULT 355. The golden dailies
   (`test/ui/daily_link.test.ts` 92-116); maze_solvable, maze_reachable.
 - The prototype (untracked in the main checkout's `.claude/probes/K74/`;
-  copy what you use): `proto_plan_src.ts` is maze_plan at 303d335, before
+  copy what you use): `proto_plan_src.ts` is maze_plan at b09ec73, before
   K87 and K108-K110 (Math.hypot). ProtoOpts 730-767; the flank 910-936
   (the exit trim waits, 838-841; `L = opts.exitCorridor ?? 24` is 0 with
   the corridor at 0); the corridor 938-958, last in the span orders
@@ -75,7 +75,7 @@ what degree?" Build at neutral values first: the pins hold until item 10.
    the neutral values. Check: pins hold; links round-trip.
 7. **Port against the prototype:** B, C1-C3 and the flank recipes on
    dailies 1-80, dead ends off, share 0. Inferred: today's plan is
-   303d335's there unless K109 or K110 fire, and in Node hypot2 has
+   b09ec73's there unless K109 or K110 fire, and in Node hypot2 has
    Math.hypot's bits. Check: 0 mismatches outside a named K109/K110 list.
 8. **Measure** with stage 1's tails and H1 at 1, dailies 1-240: today,
    B, C1-C3, C3 + taper, corridors 16/24/32 (away, near): decision 1's
@@ -197,7 +197,7 @@ full 240-daily measurement were reduced to the checks below; see Residuals).
   tests above verify the finish. The fire-clock property test gained seeds
   23 and 29 to keep its non-vacuity count above 100 on the new mazes.
 
-## K521 measurement: items 7-8 (2026-10-16, master 9926525)
+## K521 measurement: items 7-8 (2026-10-16, master c25280b)
 
 Measurement only, no generation changes; evidence
 `.claude/probes/K74/stage3/out/results_k521.md` (raw scan, port, classify,

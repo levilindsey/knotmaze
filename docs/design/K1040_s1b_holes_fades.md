@@ -9,7 +9,7 @@ Brief written 2026-10-29 by the coordinating session.
 ## Why
 
 S1 built form B's float64 reference, `src/render/field/form_b.ts` (merged
-at 1b7fa02c), and ran its gate. Every part failed except the free-end
+at d7195762), and ran its gate. Every part failed except the free-end
 count, which runs (S1's `## Handoff` in `docs/design/K1040_s1_reference.md`).
 Two of the failures are defects in the definition itself. S2 to S4 build
 on the definition, so these two are fixed first:

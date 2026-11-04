@@ -67,7 +67,7 @@ hold too:
    you didn't make.
 10. Write commit-message files as UTF-8 without a byte-order mark:
     `[IO.File]::WriteAllText(<absolute path>, <text>, (New-Object Text.UTF8Encoding $false))`
-    or `Set-Content -Encoding utf8NoBOM`. Batch 5's `fc9b0eec` carries a
+    or `Set-Content -Encoding utf8NoBOM`. Batch 5's `a4cc20ee` carries a
     BOM at the start of its subject.
 
 Muse doesn't load `.claude/rules/` by itself. Each run names the rules
@@ -218,7 +218,7 @@ Read first: `.claude/rules/gameplay-stars.md` and
 `hiddenValue` and `swordValue` and the HUD's CSS for the value cells, the
 hidden-row cases in `test/ui/maze_hud.test.ts`, the K775 probe
 (`.claude/probes/K775/`: `hud775.mjs`, `out/`, `shots/`) and the message
-of commit `5b8522a5` (K775 and K738, with their tables).
+of commit `1a6823ea` (K775 and K738, with their tables).
 
 The ledger says:
 
@@ -226,7 +226,7 @@ The ledger says:
 > and a dangling '·' line end at 360x740 (`.claude/probes/K775/shots/`): `text-wrap: balance`, or non-breaking
 > joins in '13 with them'. With K1095 in a later Muse batch.
 
-> **K1095** · K775/K738 residual (5b8522a5): at 320x640, stats on, sword slain / all-grown, the HUD value
+> **K1095** · K775/K738 residual (1a6823ea): at 320x640, stats on, sword slain / all-grown, the HUD value
 > column extends 17.8 px past the box [10,10,246,286.2] (badge clear, gap 22). Layout call for Levi. Probe
 > .claude/probes/K775 (hud775.mjs, out/before|after).
 
@@ -390,7 +390,7 @@ Read first: `.claude/rules/gameplay-camera.md`,
 and `.claude/rules/probes.md`; then in `src/app/camera.ts` the functions
 `resetCamera`, `stepCamTween` and `updateCamera`; `src/ui/view_clamp.ts`
 (`FIT_JUMP_PX`, `FIT_JUMP_SCALE`, `fitTargetJumped`, `fitEase`) and
-`test/ui/view_clamp.test.ts`; the message of commit `32603535` (K1085)
+`test/ui/view_clamp.test.ts`; the message of commit `9e7fd3f8` (K1085)
 and its probe `.claude/probes/K1085/` (`reduced.mjs`, `lib.mjs`); and the
 indicator-tap probes `.claude/probes/K73/probe_exit.mjs` and
 `probe_follow.mjs`.
@@ -400,7 +400,7 @@ The ledger says:
 > **K1109** · The camera's reduced-motion jump on an edge-indicator tap was code-reviewed, not probed
 > (`src/app/camera.ts`; split from K112 2026-11-02; Muse batch 7 Run D, `docs/design/K1108_muse_batch7.md`)
 
-> **K1099** · Reduced motion still glides in two camera motions K1085 left (32603535): the reset's viewHoming
+> **K1099** · Reduced motion still glides in two camera motions K1085 left (9e7fd3f8): the reset's viewHoming
 > ease (0.15 a frame, `src/app/camera.ts` updateCamera; a double-click reset) and the follow camera's spring
 > (FOLLOW_W). Inferred, unchecked: FIT_JUMP_PX (20) is absolute, read on the probe's 1000x800 window, so on a
 > larger window the settle drift's steps may pass it and snap unsmoothed; scale it by the view.
@@ -650,7 +650,7 @@ and if task 3 ran and its Done check holds,
 Not for Muse, or not now:
 
 - K403's `main.ts` clause: stale. The tapsWait comment left `main.ts` in
-  c268a9b0 (K5 M6), and 3b1612fb (K480 stage 1) made tapsWait a legacy
+  1161cd5a (K5 M6), and 2bcf7712 (K480 stage 1) made tapsWait a legacy
   no-op (`src/app/input_keys.ts`); batch 6's Run F closes K403 whole.
 - K548 (the overnight runner's usage gate): coordinator and claude-config
   process, not game code.

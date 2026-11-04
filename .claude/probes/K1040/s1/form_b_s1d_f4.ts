@@ -1,5 +1,5 @@
 // K1040 S1e: S1d's F5 (form_b_s1d_f5.ts) with F5's changes reverted for attribution: both (= S1d F4).
-// Frozen copy of src/render/field/form_b.ts at e8944f2f (S1d's final definition, F5), imports pointed at src.
+// Frozen copy of src/render/field/form_b.ts at c6e274a3 (S1d's final definition, F5), imports pointed at src.
 // K1040 S1: form B, the junction look's definition (F2 of
 // docs/design/K1040_junction_field.md), evaluated in float64 on the CPU.
 //

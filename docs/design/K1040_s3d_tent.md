@@ -102,7 +102,7 @@ sharp joints, lr 2's class (F9) and the float64 mirror (F12).
 ## Handoff
 
 Stopped at 11:50, at the end of step 3 and before the cap (about
-12:13). Branch `worktree-agent-aaf87e9d3775b20e4` (base `0385f19d`),
+12:13). Branch `worktree-agent-aaf87e9d3775b20e4` (base `e241dc7f`),
 never pushed; master untouched.
 
 **Verdict: the gate is not met.** The census holds; the Pixel's time
@@ -170,7 +170,7 @@ scenes (`out/split_s3d2.md`, `out/split_s3d3.md`, `out/s3d_table.md`).
 
 **Landed, commit by commit.** S3c's five commits (`af758b10` to
 `b4d9e302`) sit under these on the branch: step 0 rebased them and the
-brief onto `0385f19d`.
+brief onto `e241dc7f`.
 - `210b87c6` this brief (the coordinator's `3ff68698`, rebased).
 - `75821beb` step 0: the S3 phone kit on K1142's shared ready check
   (the four changes of its Handoff; `phone_quiet.mjs` removed);

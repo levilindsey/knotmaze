@@ -190,7 +190,7 @@ gates pass. If a gate fails, the findings say which one and why.
 
 Master's census rerun at zoom 1 (`pops15/floor15/`, `--oracle
 .claude/probes/S3a/oracle_m14.ts`, the same command as `before14`; `src/`
-is unchanged since `c26a9875`), against `pops14/before14/`: the four
+is unchanged since `9a240769`), against `pops14/before14/`: the four
 sequences' `transitions` records (every pop, its pixels, its cause and every
 event) are byte-identical, so the noise floor is 0 pops and 0 px. Only the
 page's build time differs (p50 282 / 299 / 495 / 472 ms against 272 / 389 /

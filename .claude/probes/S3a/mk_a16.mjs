@@ -29,7 +29,7 @@ const rep = (a, b) => {
 };
 if (!SRC)
   rep(
-    "// K868 S3a6: master's oracle (c26a9875), frozen for the before/after runs.",
+    "// K868 S3a6: master's oracle (9a240769), frozen for the before/after runs.",
     `// K992 probe: master's oracle (oracle_m14.ts) with the grown ball and the ${FIT === "tan" ? "closed-form fit" : "fit left out (fold only)"} (mk_a16.mjs).`,
   );
 rep("  rRule?: number;\n", "  rRule?: number;\n  /** K992: the δ at which the ball's branch folded (r stopped there). */\n  fold?: number;\n");

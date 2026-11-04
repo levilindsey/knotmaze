@@ -106,7 +106,7 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   pluck during a burn; not checked), or the first burn freezes the screen
   while they link. Stage 2's warm-up does (THE WARM-UP, the burn rule).
 - **High contrast dots changed all four** (K76 stage 2d, 2026-10-15,
-  0ac54dc): the section's explore variant is 56595 characters,
+  64aec55): the section's explore variant is 56595 characters,
   `arm-strip-explore` 37084 (only EXPLORE_VIS_GLSL's comment, through
   STRIP_EXPLORE_DECL_GLSL), `junction-field-explore` 33270 and
   `pluck-still-explore` 24325 (`kExDot` in kExploreLook); the masters are
@@ -137,7 +137,7 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   37050 (kCharAt's front shapes and world widths);
   `junction-field-explore` 35809, `pluck-still-explore` 28826 and the
   masters (46014, 31049, 26239, 19664) unchanged. The K397 lengths above
-  were already stale at 3a3d937 (changes since went unrecorded). Each
+  were already stale at 43adc20 (changes since went unrecorded). Each
   changed text compiles cold once; SwiftShader compiles all eight
   (`.claude/probes/K409/variants/`). No new program site or variant.
 - **The telegraph rims grew the section's two** (K525, 2026-10-20;

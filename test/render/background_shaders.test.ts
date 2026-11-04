@@ -14,7 +14,7 @@ import type { BackgroundId } from "../../src/render/background_model";
 const sha256 = (text: string): string =>
   createHash("sha256").update(text).digest("hex");
 
-// The shader sources of master 66ee658 (K21 + K79 stage A), re-pinned by
+// The shader sources of master bd1ddff (K21 + K79 stage A), re-pinned by
 // K154 (2026-10-14) for the effects' own integer hash (hash2d.ts replaced
 // PCG2D: the noise differs, the blit, the fog and the quad do not). At their
 // defaults every effect draws its K21 / stage-A program byte for byte:

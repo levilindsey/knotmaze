@@ -1105,14 +1105,14 @@ VERIFICATION (desktop, 3200x1800 unless noted):
   run's headed Chrome was capped at 31 fps by the machine, for all builds
   alike; per-call costs compare.)
 - PHONE (Pixel 11 over Tailscale, `?b.c&am=instant&snd=none`, settled,
-  each run interleaving master e235127 and the candidate):
+  each run interleaving master 0d04ece and the candidate):
   - cool phone, WIP 8840a6b, medians of 2: 59.8 fps with flow / 60.3
     flow-off (p90 16.7 ms) vs master 58.3 / 60.3;
   - dc248d9, medians of 3, the phone by then in LIGHT thermal throttling
     (thermalservice status 1, soc 42.8 C, on its charger): 50.8 / 60.3
     vs master 50.5 / 59.8 - flow at rest is CPU work every other frame,
     so throttling lowers both builds' flow numbers alike;
-  - THE GATE, on the merged code (branch rebased onto master c3ebf11, with
+  - THE GATE, on the merged code (branch rebased onto master 8fe2a72, with
     K63's sim-time sleep gate; phone cooled to status 0 first, its tab
     parked on about:blank between runs), medians of 2: 59.5 / 60.3 vs
     master 59.5 / 59.3, p90 16.7 ms both.
@@ -1128,7 +1128,7 @@ ON_PATH`, set per pulse arm; trail mode read it at the arm's junction end).
 With full-length crest trains, the head's inbound crests ran over the trail
 fade and drew pure gold crest edges over the faded thread: Levi's "yellow
 banding". The mirror reproduced it (steps up to 109/255 between samples),
-and so did master before G2 (c3ebf11, same state). The composition is now
+and so did master before G2 (8fe2a72, same state). The composition is now
 `mix(mix(S, gold, p), white, K_BAND max(v, glow))`: the strip's two bands
 are its p = 0 and p = 1 cases, so gold mode is unchanged (same-state A/B: 0
 px). ON_PATH, `trailGoldAt` and `famB` are retired. Census after the fix:

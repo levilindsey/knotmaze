@@ -531,7 +531,7 @@ never pushed:
   (F4).
 - `fb2614b6`: findings F4-F9. `fc29b95f`: F10 (the first exit) and F6's
   floor check.
-- `cd9a886d`: `oracle.ts` back to master's rules (`c26a9875`). Calls 1-2
+- `cd9a886d`: `oracle.ts` back to master's rules (`9a240769`). Calls 1-2
   as built pop 5.2-9.8x master's pop area (F6), and the first exit
   2.6-4.8x (F10). Call 1 changes the rule only where the data shows a
   better stated one, so master's stands. The two commits stay in history
@@ -588,7 +588,7 @@ never pushed:
   - `cmp14_roots_b.md`, `refit14.md`, `cost14.md`, `floor14_*.txt`,
     `fx14_*.log`, `npmtest14.log` and `npmtest14b.log`.
 - **The probe oracles:**
-  - `oracle_m14.ts`: master at `c26a9875`.
+  - `oracle_m14.ts`: master at `9a240769`.
   - `oracle_f14.ts`: the branch, with a least step of 0.002 h.
   - `oracle_mx14.ts` and `oracle_nx14.ts`: the first exit on master's
     root and on the branch's.

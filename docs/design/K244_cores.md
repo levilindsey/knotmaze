@@ -132,7 +132,7 @@ End your report with the item's handle fields and a `Ledger items` list.
 ## Handoff (2026-10-20, 17:4x, stage done inside the 1 h cap)
 
 Steps 1-7 are done. The branch is `worktree-agent-ae12adbf3756a741a`
-(6e3e913..HEAD, 11 files, +802 -53), never pushed. `src/main.ts` and every
+(59c0f04..HEAD, 11 files, +802 -53), never pushed. `src/main.ts` and every
 file owned by another agent are untouched.
 
 **What changed.**
@@ -169,7 +169,7 @@ file owned by another agent are untouched.
   moved, and there is no new param.
 
 **Before and after** (`.claude/probes/K244/`, untracked: 24 one-Chrome runs
-plus 4 ripple runs on 2026-10-20, base 6e3e913 against 7308442, each a
+plus 4 ripple runs on 2026-10-20, base 59c0f04 against 7308442, each a
 `vite preview` of its own build; desktop Chrome at 1400x900 DSF 2, and
 411x753 at 2.625 with touch emulated, NOT the phone; sound = the synth's
 own `__knotSynth().plucks`, drawn = a spy on `renderer.pluck`).
@@ -228,6 +228,6 @@ own `__knotSynth().plucks`, drawn = a spy on `renderer.pluck`).
   ledger items above; the phone pass waits for Levi's phone
 - brief: `docs/design/K244_cores.md`
 - env: two `vite preview --outDir <build dir> --port 5181|5182` servers
-  (base 6e3e913 and 7308442; rebuild with `scripts/preview.ps1 -Port <p>
+  (base 59c0f04 and 7308442; rebuild with `scripts/preview.ps1 -Port <p>
   -Ref <commit>`), then `node .claude/probes/K244/run_k244.mjs 8` and `node
   .claude/probes/K244/summarize.mjs`; both servers are stopped now

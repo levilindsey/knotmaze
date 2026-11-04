@@ -36,7 +36,7 @@ and stop at six runs that fit:
    - K1160 (`scripts/phone_pass.ps1` names the phone's tailnet machine
      in a public repo). It goes first. Find the phone the way K1155's
      `Select-TailscaleIp` does in `scripts/phone.ps1` (commit
-     `cbaca79f`), or take the name as a parameter with an empty
+     `2e188c47`), or take the name as a parameter with an empty
      default. A test fixture's names are made up: never copy a real
      peer's name, address or key into a tracked file or a commit
      message, never quote the name the file holds today, and don't run

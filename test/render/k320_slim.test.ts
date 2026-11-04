@@ -4,7 +4,7 @@
 // absent from its text, and the fragment sizes stay under budget (a new
 // program-text addition pays a cold recompile for every player, so growth
 // past the budget is a deliberate decision, not drift). Baselines at
-// bd3933a (docs/design/K320_section_rgb.md): section-rgb 48,737,
+// 7bf57ae (docs/design/K320_section_rgb.md): section-rgb 48,737,
 // section-rgb-explore 64,764, arm-strip 33,122, junction-field 29,599,
 // pluck-still 21,075. Program texts are rebuilt from the exported chunks
 // (GlPrograms are never built here: pixi's constructor needs a DOM).

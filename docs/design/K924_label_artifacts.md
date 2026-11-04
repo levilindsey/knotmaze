@@ -152,7 +152,7 @@ extent walk, the hook's look and anything on the phone.
 ## Results
 
 Agent run, 2026-10-27 17:02-19:02, on `k924-label-artifacts` (from
-bec83b02). The probes are untracked in `.claude/probes/K924/`: K922's,
+05ccdb2f). The probes are untracked in `.claude/probes/K924/`: K922's,
 repointed at this worktree, plus `at.ts` (crops and traces at a point),
 `cls.ts` (sorts every item into a mechanism), `chk.ts` (the failing
 checks' sites), `tally.mjs`, `tdiff.mjs`, `run.ps1` and `cls.ps1`. Each

@@ -209,13 +209,13 @@ Stage agent, claude session bf876705 (agent a377492c). Times are
 
 | # | Look | Where decided | The rule that carries it |
 |---|---|---|---|
-| 1 | Paper background, two edge strokes per thread, hollow interior, no fills, no gaps | K868 §1-2; K797 (b6585962) | "ink": a pixel is ink iff it lies in the top surface and within W of that surface's exposed outline |
+| 1 | Paper background, two edge strokes per thread, hollow interior, no fills, no gaps | K868 §1-2; K797 (546e2c73) | "ink": a pixel is ink iff it lies in the top surface and within W of that surface's exposed outline |
 | 2 | Over's edges run through a crossing; the under's stop on the over's outline | K868 §2.2, §3.2 | "top": per pixel, the surface with the greatest z among those that contain it |
-| 3 | A junction is ONE outline: no mouth border, no double strokes, no butts; 3-way and 4-way alike | Levi 10-23 and 10-25; K857 (0c09ef63), K854 (ccae4ffe), K883 | "exposed": distance to the exposed outline (a member side counts only where no other member or fill of the surface covers it), never min over members |
+| 3 | A junction is ONE outline: no mouth border, no double strokes, no butts; 3-way and 4-way alike | Levi 10-23 and 10-25; K857 (91bc9b49), K854 (3a8fde68), K883 | "exposed": distance to the exposed outline (a member side counts only where no other member or fill of the surface covers it), never min over members |
 | 4 | Missing borders are wrong (an arm that loses its side, a group that swallows a passing thread) | K874/K883 sheet B, K909 B2, K910 | "groups" only within junction spans; "cut" at d − (L + h) on a crossing; exposure is per surface |
 | 5 | G1 rolling-ball corners, not a mitre or a smooth-min blob | K881 sheet E; K868 §3.7 | "fillet": term 3, the arc of radius r centred at h + r from both centrelines, plus its tangent points |
 | 6 | The `cr` slider: r(θ) = (cr/3)·min(2h, 1.5h·tan(θ/2)) | K874/K883 sheet C; sheet F approved (K915, K922) | "radius": the same r(θ), then "fit" shrinks it continuously by the room on the arms |
-| 7 | Sharp or round per corner: `crs`, builder pins win | Levi 10-22; K830 (e5fbdff4); K868 §2 goal 4 | per-corner input bit, topology-fixed (F3 D7) |
+| 7 | Sharp or round per corner: `crs`, builder pins win | Levi 10-22; K830 (a89f8203); K868 §2 goal 4 | per-corner input bit, topology-fixed (F3 D7) |
 | 8 | Sharp point where two threads split | K1001: waiting on Levi; b16's arch does not land (K1040 brief) | "fit": r → 0 continuously as the room → 0; the arch is not built; the look stays behind the flag until Levi sees it in motion |
 | 9 | Dead ends: closed hollow caps | Levi 10-22 and 10-25; K868 §3.6 | a dead end is the tube's own semicircular cap, part of its member's outline |
 | 10 | END arms tuck into the through thread | K868 §3.6; K915, K922 (binding) | "end": the END arm extends to c′ on the through's centreline and is capped there; that cap is always buried |

@@ -54,7 +54,7 @@ The ledger says (Waiting on Levi):
 > **K1132** · After you press an arrow key (or WASD) once, small arrows sit at the start of each run at your
 > junction, showing which key takes it. At the default marker size they sit mostly under your own marker,
 > and only their tips show. Move them out past the marker, or keep them as they are? Pictures:
-> `.claude/probes/K332/shots/` (crop_*_5x.png; K332, 3346474f)
+> `.claude/probes/K332/shots/` (crop_*_5x.png; K332, 698a2924)
 
 What is there today (read it, don't trust this summary). A hint disc
 sits `KEY_REACH` (0.5) of arc along its run, radius r x
@@ -148,7 +148,7 @@ update re-solves gap slots. Batch 8's Runs D and E measured stands
 with `fw=0`, which removes the parity trigger: there the gap pass
 stood pat on both clocks. K1077's realtime-over-turn difference was
 measured with the flow on, before K1082's incremental declare
-(afaccf39) landed.
+(e0ec49f3) landed.
 
 Tasks, in order (ports 5510-5519, perf lock, headed real-time Chrome):
 
@@ -206,12 +206,12 @@ their cause.
 
 Read first: `.claude/rules/gameplay-panel.md` (the panel's lore file);
 then `row()`, the `reanchorStep` closure inside it and `doReset` in
-`src/ui/tweakpane_panel.ts`, and K1115's commit 91387212 with its
+`src/ui/tweakpane_panel.ts`, and K1115's commit 0ad79ddc with its
 tests.
 
 The ledger says (Residuals):
 
-> **K1135** · Reset's reanchorStep (K1115, 91387212; `src/ui/tweakpane_panel.ts` row()) reaches Tweakpane
+> **K1135** · Reset's reanchorStep (K1115, 0ad79ddc; `src/ui/tweakpane_panel.ts` row()) reaches Tweakpane
 > internals (`controller.value.value_.constraint_`, a StepConstraint's origin) and silently does nothing if
 > they change; tweakpane is `^4.0.5` and the tests pin source text only. Guard: a behavior test on a real
 > Pane (a happy-dom or jsdom dev dependency) plus a warn-once.

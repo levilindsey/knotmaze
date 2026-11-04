@@ -23,8 +23,8 @@ protrusion on the inside of the loop and a dimple on the outside"
 - Two symptoms: (a) a seam in the blur from the middle of the loop's tip
   to an edge, at times; (b) a pinch at the tip, a point on the inside of
   the loop and a dimple on the outside.
-- The live build at 07:04 was `12709e5` (deployed about 06:23), which
-  holds K344's fix (93d0e4d..810b462). The stamp at the bottom left of
+- The live build at 07:04 was `790b2ce` (deployed about 06:23), which
+  holds K344's fix (c76a367..ec114b4). The stamp at the bottom left of
   Levi's screenshot may confirm it.
 
 ## What is there

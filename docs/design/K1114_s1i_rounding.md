@@ -7,7 +7,7 @@ sites 02 j36, 16 j131 and 17 j99 at zoom 4, S1f's final | today) and said,
 2026-11-03: "I don't like that we've lost corner rounding with the new
 junction changes."
 
-The changes are S1g's (merged at `52945e6e`; `docs/design/K1040_s1g_gates.md`,
+The changes are S1g's (merged at `ca273d04`; `docs/design/K1040_s1g_gates.md`,
 F1 and F2), both in `src/render/field/form_b.ts`:
 - **F1, the d-edge** (`dEdge: "near"`): a pass behind an arm's root cuts
   the arm at its arc distance (c = u), so L is continuous at d = 0. Before

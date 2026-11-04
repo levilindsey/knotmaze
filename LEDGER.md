@@ -27,7 +27,7 @@ Next free ID: K1166.
   as the room closes); stage 1's b16 rounded it into a small arch (not landed). Levi sees it in motion at K1040 S4b,
   behind its flag; there is nothing to look at before then. Levi disliked losing rounding at K1114 (2026-11-03): lean round.
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
-  tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
+  tune. Muse's in-tune voice is parked at 5ae5a1d1, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
 - **K623** · K409's glow covers the dark band under Gone (only a browner tail shows): A as merged, B
   the glow down the middle only, C a faster glow fade, D a longer band (1.0 ctrl) with a dark rim
@@ -93,7 +93,7 @@ Next free ID: K1166.
 
 - **K515** · K480 stage 2's look, built as recommended (Levi may change): a hovered tap's whole route at the hover breath, its tapped run keeping the rim glow, non-route branched arms keeping their trains; plus page-probing the hover route with a real pointer (desktop, and in K500's phone pass). `docs/design/K480.md` ("Stage 2 handoff"). The page probe is partly done: desktop by K500, the touch half in K529.
 
-- **K545** · K481 stage 3's look for Levi (built as recommended in 31b2238): lit tick + moved ring on hover/press, phone bigger ticks with the caught-choice tint at the head (desktop ticks alone); the real-phone sheet is in (round 2026-10-20, `.claude/probes/rounds/2026-10-20-d0406df/k545/sheet_k545.png`: a press lights choice 0, the lit tick subtle on a still) and Levi's call whether the tint should show on desktop too. `docs/design/K481.md` (Stage 3 handoff); `.claude/probes/K481/stage3/`.
+- **K545** · K481 stage 3's look for Levi (built as recommended in 610ef96): lit tick + moved ring on hover/press, phone bigger ticks with the caught-choice tint at the head (desktop ticks alone); the real-phone sheet is in (round 2026-10-20, `.claude/probes/rounds/2026-10-20-d0406df/k545/sheet_k545.png`: a press lights choice 0, the lit tick subtle on a still) and Levi's call whether the tint should show on desktop too. `docs/design/K481.md` (Stage 3 handoff); `.claude/probes/K481/stage3/`.
 - **K571** · The title is part of the maze (Levi 2026-10-20: "a fundamental maze-model-altering
   setting"): `dtt` leaves the daily-exempt set and the saved prefs, turning it on makes an ordinary
   design (fresh progress, no daily credit), and the daily is the plain form. Asked: what a titled
@@ -135,7 +135,7 @@ Next free ID: K1166.
   always draws, at the grabbed site.
 - **K636** · K324 s1's two calls (`docs/design/K324_s1.md`, Handoff): (a) hunt pace 0.9 of yours
   restores the greedy player's catches, the fleers within 4-5 points; rec keep (revert: `git revert
-  fd230f1`); (b) five panel labels cut to 23 characters; rec keep.
+  ce95d40`); (b) five panel labels cut to 23 characters; rec keep.
 - **K647** · Path 8 (K336): Reset path during the winning move throws the confetti and records the
   result, but shows no banner. Rec: show the banner, since the result counts.
   `docs/design/K336_cannons.md` Handoff.
@@ -145,7 +145,7 @@ Next free ID: K1166.
 - **K656** · K137's snap strands 40 of 50 greedy and explorer games (crack: none; the design
   expected about 2 in 3): healing runs, a hard label, or a way out under the chase or fire (no Undo
   there). Rec: the hard label.
-- **K664** · K74 s3's trap-zone finish (9ccf360, K637) lengthens greedy games: 3+ catches 23% to
+- **K664** · K74 s3's trap-zone finish (83d4405, K637) lengthens greedy games: 3+ catches 23% to
   33%, solve p90 181 to 310 s, 6% of no-minotaur greedy walks unfinished at 900 s; the dailies ship
   it. Wanted? Rec: keep (it is the trap).
 - **K667** · K324 s3's real-time defaults: stalker accuracy 0.45, guard sight 20 / 30 u, guard
@@ -261,7 +261,7 @@ Next free ID: K1166.
   backtrack drops a key its move took, so keys sit only at core junctions; an open lock is hidden
   rather than drawn open; the key and padlock glyphs are placeholders for you to replace
   (`docs/design/K138_s4.md`, its Handoff)
-- **K790** · Turnstile dim call (K138 s4 slice 1, live at 3dad5914): arriving at a turnstile by its
+- **K790** · Turnstile dim call (K138 s4 slice 1, live at 91c8d32b): arriving at a turnstile by its
   closed arm leaves the dimmed arm as the only legal move, and the yarn covers the dim. Keep it that
   way? (`docs/design/K138_s4.md`, its Handoff)
 - **K806** · K795 beat timing default: one beat per run as built (your first ask: every run takes
@@ -283,37 +283,37 @@ Next free ID: K1166.
 - **K1075** · K137 sounds unchecked: the snap pluck and the strand glissando need an ear (left by K658; K658
   doc Findings filed).
 - **K1080** · On the phone, zoom in and out and tap threads and junction choices: do the tap targets feel
-  right? They now stay the same finger size at every zoom (K331, bc5f0043).
+  right? They now stay the same finger size at every zoom (K331, 20b66f6e).
 - **K1126** · With High contrast on, a plucked thread now shows the ring ripple whatever ripple you picked
   (unless it is off). Does it read well on the light threads over black? Pictures: .claude/probes/K368/shots/
-  (K368, 71250dca)
+  (K368, 89836d3b)
 - **K1127** · On a narrow phone, the hidden-runs line in the corner panel now wraps in whole phrases (no lone
-  'them', no dot at a line's end). Does it read well? Pictures: .claude/probes/K1100/out/k1127/stills/ (360x740 and 320x640, stats off and on; K1100, a0546b30)
+  'them', no dot at a line's end). Does it read well? Pictures: .claude/probes/K1100/out/k1127/stills/ (360x740 and 320x640, stats off and on; K1100, 22b5ebab)
 - **K1132** · After you press an arrow key (or WASD) once, small arrows sit at the start of each run at your
   junction, showing which key takes it. At the default marker size they sit mostly under your own marker,
   and only their tips show. Move them out past the marker, or keep them as they are? Pictures, sent 2026-11-03:
   `.claude/probes/K1132/shots/` (sheet_desk.png, left now, right out; the out placement is
-  `__knotKeyHintPlace("out")`, 6f23bf20)
+  `__knotKeyHintPlace("out")`, f2c79236)
 - **K1138** · The backdrop speed slider goes up to 8 times each backdrop's own pace. Should its top be
   2 times, or 16 times? (Your other backdrop changes of 2026-11-03 are done: vellum faster, aurora
   faster and taller, contours morphing, paper stronger.)
 - **K144** · Accounts and shared stats, a stretch goal (Levi 10-13). The options doc is done
-  (`docs/design/K144_accounts.md`, 23e3bf79; it recommends Cloudflare Workers + D1). Its Q1-Q5 wait on Levi:
+  (`docs/design/K144_accounts.md`, 61a24a82; it recommends Cloudflare Workers + D1). Its Q1-Q5 wait on Levi:
   the backend, sign-in providers, the sharing switch's words, same-day bands, cross-device resume.
 - **K1150** · Under the beat, a new Beat indicator choice: the pulse you have today, a crisp ring that spreads
   from your marker on each beat, or off. Does the ring read well? Pictures: .claude/probes/K804/shots/ (K804,
-  94e4b59c)
+  4f6ff982)
 - **K688** · Healing cuts against monsters (Levi took R.3.5, decision 6): a cut closes again after a few
-  moves. The design doc is done (`docs/design/K688_healing_cuts.md`, db015d9e). Its five questions wait on
+  moves. The design doc is done (`docs/design/K688_healing_cuts.md`, 182cfc8d). Its five questions wait on
   Levi: the heal count, the charges, the trapdoor, par beside cuts, the fire.
 - **K207** · Fog on a path you walk back over: it used to clear a little more with each pass (crisp edges);
-  since bb7aa6ed it stays as the first walk left it (soft edges, a bit tighter). Keep the new look? Pictures:
+  since 16b1c56f it stays as the first walk left it (soft edges, a bit tighter). Keep the new look? Pictures:
   `.claude/probes/K207/shots/k207_fog_pair.png`.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
-  junctions"; plan the look, the checks and the build first). S1 done (fc175b0f): today's faults a-h (doc 1.3),
+  junctions"; plan the look, the checks and the build first). S1 done (a4dc218a): today's faults a-h (doc 1.3),
   one light field over the lit tree (S2), stages S3-S6. Full text: `docs/ledger_notes.md`.
   - owner: nobody since 2026-11-03 10:05 (merged; agent `af1cda2ec844b5f38` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `fc175b0f`
+  - branch: mainline; last commit: `a4dc218a`
   - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
   - next: Levi answers Q1-Q3 (sent with the pictures 2026-11-03 10:07; clips of the motion offered), then the S2 brief: the light field, folding in the wrong "world arc" comment on `litArms` (`src/game/route_plan.ts`, the length is lattice) and S5 if Q3 says straight through
   - brief: `docs/design/K1139_s1_brief.md` (the plan: `docs/design/K1139_pulse_junctions.md`, stages S2-S6)
@@ -327,11 +327,11 @@ Next free ID: K1166.
   v6.9, closer to v6.8 ("still exit somewhat downward and with a swoosh"); the six a/q joins get v6.6's dip
   back ("We need that dip"); the e after them decided by the checks. One sheet per letter for Levi.
   - owner: nobody since 2026-11-03 08:47 (merged; agent `adcba68466fb7684f` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `a413b284`
+  - branch: mainline; last commit: `6d7dc73f`
   - evidence: .claude/probes/K863/trace/ (work30/, out30/, NOTES ## K1119)
   - next: Levi looks at the v7.0 sheets (b/v/w exits, the a/q dip, be/ve/we: v7.0 or e60, the br dip), then the c stage (K1112's next letter)
   - brief: docs/design/K1119_cursive_j3g.md (its Handoff); J3f's in docs/design/K1113_cursive_j3f.md
-- **K1163** · Corner rounding (K1114, 761ed081): the restore keeps a root-gate guard that leaves ten
+- **K1163** · Corner rounding (K1114, 8b436272): the restore keeps a root-gate guard that leaves ten
   near-straight corners up to 1 px tighter than before the junction rework. Keep it (rec), drop it (the round
   jumps in size in motion again), or design a softer guard? Card: docs/asks/K1163.md.
 
@@ -339,18 +339,18 @@ Next free ID: K1166.
 
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
-  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: 44ce69a1); S3 (K1097) merged short of its gate; S1g merged (52945e6e); S3b (K1097) merged (c4863a50, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
+  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
   - owner: nobody since 2026-11-03 14:04 (K1097 S3e merged); its stages run as K1097 and K1114
-  - branch: mainline; last commit: `761ed081`
+  - branch: mainline; last commit: `8b436272`
   - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1), `s1/out/s1b/` and `s1/out/s1c/`, S1d's runs in `s1/out/s1d/`, S1e's in `s1/out/s1e/` (gate `s1/run_s1e_gate.ps1`, table `s1/gate_table.ps1`; probes `b_rate.ts`, `bend_s1e.ts`, `attr_f4f5.ts`, `lcut_far.ts`, `attr_c2.ts`, `arms_c3.ts`; commands in its Handoff)); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: the S3e phone gate (K1097's next) once Levi leaves the phone unlocked on its charger (card docs/asks/K1040.md), then S3f's brief; S1i (K1114) merged in 761ed081 (its root-gate veto: K1163)
+  - next: the S3e phone gate (K1097's next) once Levi leaves the phone unlocked on its charger (card docs/asks/K1040.md), then S3f's brief; S1i (K1114) merged in 8b436272 (its root-gate veto: K1163)
   - brief: `docs/design/K1040_s3e_lean.md` (S3e's Handoff); `docs/design/K1114_s1i_rounding.md` (S1i)
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
-  Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at 6639009c.
+  Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
   - owner: nobody since 2026-11-02 23:06 (merged; agent `a6420b23c491748f8` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `ba9c38b3`
+  - branch: mainline; last commit: `4d0fc282`
   - evidence: .claude/probes/K863/trace/ (`NOTES.md` has every version's files and rerun commands; J3f: `work29/`, `out29/`, `work29/dbg/*_k1113.*`, NOTES `## K1113`; J3e: `work28/`, `out28/`, NOTES `## K990e`); Drive `K863/` (v6.9: `*_v69.svg`); Levi's file to edit: `out25/cursive_template.svg`; the full file list as of v6.6: `docs/ledger_notes.md` `## K863`
   - next: J3g (K1119): b/v/w exits between v6.8 and v6.9, the a/q dip back; then K1112's next letter, c, one stage
   - brief: `docs/design/K1113_cursive_j3f.md` (## Handoff); J3e's Handoff in `docs/design/K990_cursive_j3e.md`
@@ -361,15 +361,15 @@ Next free ID: K1166.
   swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
   K280, residuals K281).
   - owner: nobody since 2026-10-21 13:04 (merged; agent `a178a00897a4044dc` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `cf41f919`
+  - branch: mainline; last commit: `edcecb94`
   - evidence: `.claude/probes/K114/beat/`
   - next: a real phone pass and Levi feel of tempo/L and the pulse (the spoken-finish-time quirk located 2026-10-21: no speech code exists; a clock switch from any mode restarts the solve, symmetrically - switch_probe.mjs; the While-riding page order passes 12/12 - see the K114_beat.md tail note)
   - brief: `docs/design/K114_beat.md`
 - **K115** · Cursive text (Hershey Script Simplex + Greek; `docs/design/K115_cursive_text.md`). Stages 1b-6c done
-  2026-10-18: 1b cb7d006..bc357c4, walk 354f8ce, title 6625160, cartouche 1e0a2eb, emblems 2c19d10+dc9bbd0,
-  capitals e64f4d6, accents fa1b1ae, Greek 54612f2 (suite 1521 green). Levi (2026-10-19, Daily #8): redesign first.
-  - owner: nobody since 2026-10-20 13:01 (stage 9 merged at b90c5df; waits on Levi's calls, K580)
-  - branch: mainline; last commit: `b90c5df`
+  2026-10-18: 1b cacf586..19c585c, walk 90dd0da, title 1f8cd12, cartouche 879abee, emblems 171f49e+64d27dd,
+  capitals 6351ff3, accents a5d858b, Greek 6d317d3 (suite 1521 green). Levi (2026-10-19, Daily #8): redesign first.
+  - owner: nobody since 2026-10-20 13:01 (stage 9 merged at 55b30d1; waits on Levi's calls, K580)
+  - branch: mainline; last commit: `55b30d1`
   - evidence: .claude/probes/K115/stage9/ (main checkout since the merge: stills shots1-4, the a search, suite_final.log); stage 8's .claude/probes/K115/stage8/
   - next: Levi's calls (K580); then the rest of the set under the lint, the class-pair lint and items 5-7 (reveal, metrics, sheets); then Levi's look, the final ς (K582), stage 7's live dates, K557, K569
   - brief: `docs/design/K115_stage9.md`
@@ -378,35 +378,35 @@ Next free ID: K1166.
   neutral value turns it off. Stage 1 (long-tail dead ends) and stage 2
   (H1, the fused arm cut; calls K261, residuals K278) merged; stage 3 is
   the trap-zone finish, stage 4 the greedy-trap search and K46's bands.
-  - owner: nobody since 2026-10-15 08:31 (stage 3's brief merged in 9f1ada2; docs agent
+  - owner: nobody since 2026-10-15 08:31 (stage 3's brief merged in a0c6879; docs agent
     `ae4714d103b5fd3bf` of claude session 05e60da0, worktree removed 2026-10-19, K161). Stage 2's agent
     a2c61932e9e358104 (session d8031183) finished; worktrees removed by the K161 sweep
     2026-10-15, branches kept
-  - branch: mainline; last commit: `49efe76` (stage 4 sim-first; stage 3 9ccf360, stages 1-2 fbf5b5c..faa9a52)
+  - branch: mainline; last commit: `0fd08e7` (stage 4 sim-first; stage 3 83d4405, stages 1-2 8ba8834..30a949a)
   - evidence: `.claude/probes/K74/` (stage 2 in `stage2/`, sheets in
     `out/`); the design agent's probes, copied from its swept worktree 2026-10-15 (its branch,
     patch-identical with master, deleted 2026-10-19)
-  - next: K521 done in 4098946; stage 4 build half done in 7d794b5 (K527/K532: greedy-trap search behind `greedyTrap`, H1-in-loop only; gF median 2.86 -> 3.38, within-1.5x 20.0% -> 11.7%, both-targets 38.8% -> 59.2%, generation 25 -> 74 ms median; off = byte-identical). Left: the before/after sheet K543 and the phone timing K544.
+  - next: K521 done in c79bb74; stage 4 build half done in b728fbf (K527/K532: greedy-trap search behind `greedyTrap`, H1-in-loop only; gF median 2.86 -> 3.38, within-1.5x 20.0% -> 11.7%, both-targets 38.8% -> 59.2%, generation 25 -> 74 ms median; off = byte-identical). Left: the before/after sheet K543 and the phone timing K544.
     Dead-end branches as deeper traps are out of scope; K80's brief does not settle them
   - brief: `docs/design/K74_stage3.md`; stage 2's handoff: `docs/design/K74.md`; stage 4's brief: `docs/design/K74_stage4.md`
 - **K80** · The minotaur, decided (Levi, 2026-10-13; design
   `docs/design/K80_gameplay_additions.md` section 0, Levi's answers in
   `docs/design/levi_notes_2026-10-13.md`): a telegraphed hunter with
   guard and stalker variants, real time as its own mode, turn-aligned as
-  a modifier. Real time merged (`5fed5c1`); turns stages 1, 2 and 3a merged (3a: the wait on
+  a modifier. Real time merged (`113ae4d`); turns stages 1, 2 and 3a merged (3a: the wait on
   every input, the give-up and roam-min knobs, the turn pull, K294, K293); stalker call K421.
   - owner: nobody since 2026-10-15 10:15 (turns 3a done, merged 10:15; agent `ad4536aff31e4c7ba`
     of claude session 05e60da0, worktree on K161's sweep list). Stage 2's agent a1579d5c460af2d20 of claude
     d8031183 (earlier agents af5995f5900f0f945 and a9c90f15cd6a55710; worktrees removed by the
     K161 sweep 2026-10-15, branches kept)
-  - branch: mainline; last commit: `dcdfaf4` (turns 3b; 3a is 1bd49f8..e6e1734). Merged before: turns
-    0047148..68524e1 and 86d404e..02194b4, K174 ecf2169..6ec8275
+  - branch: mainline; last commit: `6d8bb4a` (turns 3b; 3a is 8b5bd9f..43457c1). Merged before: turns
+    81892d4..0036d03 and 40f74d1..dea013f, K174 52a4e53..f258161
   - evidence: main checkout `.claude/probes/K80/` (`stage3/`: `wait_inputs.mjs`, `banner/`,
     `compare_after.ts`, `sim.ts`, sweeps, `shots/`, `rerun/K120`, `rerun/K329`; `turns2/`,
     `turns/`, `rt/`) and `.claude/probes/K174/rt/`; the research's branch
     `worktree-agent-a25726c24f262b138` (5 commits not on master; worktree swept 2026-10-15)
-  - next: turns 3b done in dcdfaf4 (per-run telegraph alphas, catch feedback with K270 diagnosed and fixed, section 2.10's sounds and fog bleed; the contact sheet `.claude/probes/K80/stage3b/contact_sheet.png` is emulated - the real-phone sheet is K524, Levi's look call K525).
-    Next: the chevrons, once Levi answers K696 (K324 stage 2 merged in 031e09a). Check their main.ts
+  - next: turns 3b done in 6d8bb4a (per-run telegraph alphas, catch feedback with K270 diagnosed and fixed, section 2.10's sounds and fog bleed; the contact sheet `.claude/probes/K80/stage3b/contact_sheet.png` is emulated - the real-phone sheet is K524, Levi's look call K525).
+    Next: the chevrons, once Levi answers K696 (K324 stage 2 merged in af0f823). Check their main.ts
     overlap with the K114 walker before running them together.
     Before a daily pins a minotaur, waits enter `fc.taps` and K47's fingerprint covers its
     params; real time's phone check is K177
@@ -415,94 +415,94 @@ Next free ID: K1166.
 - **K156** · The round phone pass, `scripts/phone_pass.ps1` (K152 (1),
   from K81's gate kit): two builds run interleaved through a frame bench
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
-  (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c
-  merged e6c6034..aa3cdd1).
+  (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
+  merged 772e48a..e1c2a80).
   - owner: nobody since 2026-11-03 03:38 (round 2026-11-03 ended: K1124, K1125 closed)
-  - branch: mainline; last commit: `feb565c5`
+  - branch: mainline; last commit: `e7ebb1c4`
   - evidence: .claude/probes/rounds/2026-11-03/ (untracked)
   - next: K1130 (first-shot probe capture); a later window starts with a fresh idle wait and -Phase check, which since K1142 also needs the launcher in front (`scripts/phone_pass/phone_ready.mjs`)
   - brief: docs/design/K156.md, "Round 2026-11-03"
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
-  dead ends. Stages 1-2 merged (stage 2: 189b024..f799991; MAX fixed, joints fade).
+  dead ends. Stages 1-2 merged (stage 2: 2fb3362..0fd6282; MAX fixed, joints fade).
   - owner: nobody since 2026-10-15 11:22 (stage 3a's agent `a5d9b049e72746ad2` of claude session 05e60da0 finished; merged 11:26, worktree on K161's sweep list). Stage 2's agent `a42c63c2db0401edb` (session d8031183): worktree swept; stage 1's `ab65d913a3b9a3dcb` is left, locked by the live Claude process (K161); branches kept
-  - branch: mainline; last commit: `377bc41` (K430 ramp; G3-1 3465090 before it)
+  - branch: mainline; last commit: `19d97f1` (K430 ramp; G3-1 93a231f before it)
   - evidence: `.claude/probes/K268/stage3a/` (census3a.mjs, 31/31 on master; sheet3a.mjs; the k76_probe.mjs copy with the bit-exact view wait; `out/`); `.claude/probes/K268/stage2/`; stage 1's beside it
-  - next: Stage 2 item 2 is COMPLETE (ramp 377bc41, PROTECT 1fc9458, far-branch this commit: the smooth-min blends vis-weighted cuts, census3a 22/31 = baseline, K537's 9 fails unchanged; evidence `.claude/probes/K268/stage3a/out/census_far1/`). Items 5/6 closed 2026-10-21: item 6 already landed (program_registry.ts registers arm-strip-explore, junction-field-explore, pluck-still-explore); item 5's desktop eye passed (`.claude/probes/K268/intro_eye/` r0/r2: joints emerge with their arms in the close-in, no popping fans). Left: the phone proof, riding K156's next window. Probe fixes: K431 (narrowed), K432; far-branch GPU isolation is K547
+  - next: Stage 2 item 2 is COMPLETE (ramp 19d97f1, PROTECT 2c03b57, far-branch this commit: the smooth-min blends vis-weighted cuts, census3a 22/31 = baseline, K537's 9 fails unchanged; evidence `.claude/probes/K268/stage3a/out/census_far1/`). Items 5/6 closed 2026-10-21: item 6 already landed (program_registry.ts registers arm-strip-explore, junction-field-explore, pluck-still-explore); item 5's desktop eye passed (`.claude/probes/K268/intro_eye/` r0/r2: joints emerge with their arms in the close-in, no popping fans). Left: the phone proof, riding K156's next window. Probe fixes: K431 (narrowed), K432; far-branch GPU isolation is K547
   - brief: `docs/design/K268.md`, Stage 3a handoff (2026-10-15 11:35), For the next stage
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-7 merged: the worker is the default (stage 6, call F6), `&phw=0` runs
-  in-thread. Stage 7 (6cfb416..fdb38ac) builds the first scene from the Worker's name and
+  in-thread. Stage 7 (05ae710..4420d6c) builds the first scene from the Worker's name and
   modulepreloads its chunk: ready 139-165 ms in on the desktop (master 363-396), first visible
   unchanged (K307's compiles set it). The phone (K411's window) still misses the 250 ms gate: the
   worker is ready 311-459 ms after the main chunk (master 454-764); its module alone evaluates at 233-364.
   - owner: nobody since 2026-10-15 10:32 (the phone pass, done in K411's window by claude session 05e60da0; stage 7's agent `a29b026fa5e2829ee` finished 08:57, merged 09:00, worktree on K161's sweep list)
-  - branch: mainline; last commit: `fdb38ac`
+  - branch: mainline; last commit: `4420d6c`
   - evidence: `.claude/probes/K7/stage7/` (`run_s7.ps1`, `phone_run.ps1`, `s7_desktop.txt`, `s7_phone.txt`, `k7_results.jsonl`, `table_s7.mjs`, `spike/`); stages 3-6 beside it
   - next: Levi's F6 review with the phone numbers (above); then K412
   - brief: `docs/design/K7_worker.md`, "Stage 7 handoff" ("Not done", "For the next stage")
   - env: the phone, under the phone lock (`phone_run.ps1` takes it and runs `stage5/phone_setup.ps1`)
 - **K307** · The daily intro's freezes are cold shader compiles (Levi, K302 (8):
-  prioritize). Stage 2 merged (ce5e4d9..14d34b5): a program registry and a warm-up that links
+  prioritize). Stage 2 merged (9b66725..3ca7f56): a program registry and a warm-up that links
   every program blocking (parallel links never reach Chrome's disk cache, K385; call F8).
   - owner: nobody since 2026-10-15 05:39 (stage 2 done; agent `a11d7ce60428b687d` of claude session d8031183, worktree removed by the K161 sweep 2026-10-15, branch kept)
-  - branch: mainline; last commit: `e83f203` (stage 3 late enable)
-  - evidence: `.claude/probes/K307/` (stage 1's tools and traces; `stage2/`: `trace_intro.mjs`, `run_s2.ps1`, batches 1-7, `runs/`, two A/B builds, `k366_firsttap.mjs`); the throwaway branch `k307-proto` (51f7480), never merged; lore `.claude/rules/render-shaders.md` ("THE WARM-UP")
-  - next: stage 3 done in e83f203 (late enable shipped, K517 (b); K385 ships with it - crbug (d) drafted at `.claude/probes/K307/stage3/crbug.md` for Levi to submit; cold first visible 3.27 s, warm restart 0.80 s, suite 1379). Remaining: phone measures only (persistence, Android cache cap, DrDc presents) with K156's next pass. K366 done as measured/attributed in the same commit; its fix is K535
+  - branch: mainline; last commit: `a7e199e` (stage 3 late enable)
+  - evidence: `.claude/probes/K307/` (stage 1's tools and traces; `stage2/`: `trace_intro.mjs`, `run_s2.ps1`, batches 1-7, `runs/`, two A/B builds, `k366_firsttap.mjs`); the throwaway branch `k307-proto` (d1aefae), never merged; lore `.claude/rules/render-shaders.md` ("THE WARM-UP")
+  - next: stage 3 done in a7e199e (late enable shipped, K517 (b); K385 ships with it - crbug (d) drafted at `.claude/probes/K307/stage3/crbug.md` for Levi to submit; cold first visible 3.27 s, warm restart 0.80 s, suite 1379). Remaining: phone measures only (persistence, Android cache cap, DrDc presents) with K156's next pass. K366 done as measured/attributed in the same commit; its fix is K535
   - brief: `docs/design/K307_intro_freezes.md`, "Stage 2 handoff" and "K385" (the mechanism and the plan)
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
-  (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (b3917ca..f6d10e3): the four G3
+  (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (ebdae8c..b11747e): the four G3
   tables, capture/restore, `scripts/bench_frame.mjs`; no visual change.
   - owner: nobody since 2026-10-15 14:18 (the phone agent `a2c95d8bde8feeea8` of claude session 05e60da0 finished its bench; G3-0's `af653fa7f942f2f1e` (session d8031183) finished, its worktree left, locked by the live Claude process (K161))
-  - branch: mainline; last commit: `3465090` (G3-1; G3-0 f6d10e3)
+  - branch: mainline; last commit: `93a231f` (G3-1; G3-0 b11747e)
   - evidence: `.claude/probes/K8/G3-1/` (the brief's texture sizes); `.claude/probes/K8/stage2/` (`notes.md`, `g3_probe.mjs`, `batch3.ps1`-`batch6.ps1`, `phone6.ps1`, results); stage 1's `.claude/probes/K8/stage1/notes.md`
-  - next: G3-1 (`34650901`) stays despite +24.5 to +48.0 ms of phone render sync until K868 settles the gap search (Levi, K892). G3-2 landed (957ba833 seam, K816 855bea23 ribbon_sdf, K825 explore variant, K826 mitered silhouette; the residual A/B diff is uniform and needs the same-state capture). Desktop bench 2026-10-22: SDF frame p50 0.3 ms / 10 draws vs strip 1.1 ms / 102. G3-3 (default flip + strip deletion) waits on Levi's phone look and on a phone render-sync measurement of `?rp=sdf`. Lane: G4-1 is replaced for the border look by K868; never beside an R stage, K268 item 4 or another GPU measurement; may run beside K7. K90 stopped (Levi 2026-10-20)
+  - next: G3-1 (`93a231f0`) stays despite +24.5 to +48.0 ms of phone render sync until K868 settles the gap search (Levi, K892). G3-2 landed (777e19a8 seam, K816 70e2fe12 ribbon_sdf, K825 explore variant, K826 mitered silhouette; the residual A/B diff is uniform and needs the same-state capture). Desktop bench 2026-10-22: SDF frame p50 0.3 ms / 10 draws vs strip 1.1 ms / 102. G3-3 (default flip + strip deletion) waits on Levi's phone look and on a phone render-sync measurement of `?rp=sdf`. Lane: G4-1 is replaced for the border look by K868; never beside an R stage, K268 item 4 or another GPU measurement; may run beside K7. K90 stopped (Levi 2026-10-20)
   - brief: `docs/design/K8_G3-1.md`; G3-0's handoff: `docs/design/K8_stage1.md` ("Stage 2 handoff")
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
-  lifecycle, scene, audio_map; M4 at 9f08bf0): main.ts 5709 → 3725 lines; R1-R2 (`src/render/ribbon/`; R2 at 52faab8): ribbon_renderer.ts 7747 → 5989.
+  lifecycle, scene, audio_map; M4 at 592b12b): main.ts 5709 → 3725 lines; R1-R2 (`src/render/ribbon/`; R2 at b88376c): ribbon_renderer.ts 7747 → 5989.
   - owner: nobody since 2026-10-15 15:00 (merged)
-  - branch: mainline; last commit: `3166d8f` (R5 1c666ec + e53e4d9, M5 3166d8f)
+  - branch: mainline; last commit: `2a688a6` (R5 c6444e6 + e30edb8, M5 2a688a6)
   - evidence: M4's `.claude/probes/K5/M4/` and R2's `.claude/probes/K5/R2/`; M3's `.claude/probes/K5/M3/` (`checks/`, `frames/`, `step2/`, `k7_results.jsonl` and `k7_table.mjs`, `checks_m3.ps1`, `remap_e6e1734.md`), `.claude/probes/K5/R2/brief/` (the R2 brief's maps), `.claude/probes/K5/R1/` (`checks/`, `checks2/`; `checks3.ps1`, the fog B-vs-B control, never run; R2's inventory `parts.md`, `probe_surface.md`, `surface.json`), `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/`; the design's region maps in `.claude/probes/K5/design/`
-  - next: R4 done 2026-10-21 (pluck_host 98d96fa5, strip_pass; Handoff in `docs/design/K5_R4.md`); next in the lane is K8 G3-2, then G4-1 before R5. M4 leftovers K506.
+  - next: R4 done 2026-10-21 (pluck_host 94e409f5, strip_pass; Handoff in `docs/design/K5_R4.md`); next in the lane is K8 G3-2, then G4-1 before R5. M4 leftovers K506.
   - brief: `docs/design/K5_K6_split.md` (Stage M4 brief); the R lane `docs/design/K5_R2.md`
 - **K397** · The thread reveal's stub artifacts (Levi, 2026-10-15 08:01 and 08:06, phone, `?2gozcj.MgaM`):
-  stage 2 fixed issues 1, 2, 4 and 5 (092aca0); left is issue 3, the dark U at a tucked tip's root. At 13:39
+  stage 2 fixed issues 1, 2, 4 and 5 (1039c5d); left is issue 3, the dark U at a tucked tip's root. At 13:39
   (`.claude/probes/K397/levi_1339.png`) truncated dots and issue 3 still show sometimes; the dot vibration is gone.
   - owner: nobody since 2026-10-15 16:17 (merged; agent `a2806c50953dec23d` of claude session 05e60da0)
-  - branch: mainline; last commit: `e0bcad8`
+  - branch: mainline; last commit: `2ea5c01`
   - evidence: `.claude/probes/K397/stage3/`
-  - next: phone pass done (2026-10-16, master dcdfaf4, Pixel 11): issue 3's dark U and the truncated dots not seen on 13 frontiers of Levi's link; the free cap's look is K477's, narrowed there. Nothing else owed; close when K477 lands. Evidence `.claude/probes/K397/stage6/out/`.
+  - next: phone pass done (2026-10-16, master 6d8bb4a, Pixel 11): issue 3's dark U and the truncated dots not seen on 13 frontiers of Levi's link; the free cap's look is K477's, narrowed there. Nothing else owed; close when K477 lands. Evidence `.claude/probes/K397/stage6/out/`.
   - brief: `docs/design/K397.md`
   - env: the phone, only if the desktop can't reproduce: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 - **K459** · A pluck at a stub stops short of its end: Levi wants the vibration on the whole solid
   stub, its rounded cap included (2026-10-15 13:39, `?2gozcj.MgaM`, `.claude/probes/K397/levi_1339.png`).
   With K397's truncated dots and Levi's rule that a pluck sound shows the pluck effect (`docs/design/K459.md`).
   - owner: nobody since 2026-10-15 16:30 (merged; agent `a21ef2f5cb56d9def` of claude session 05e60da0)
-  - branch: mainline; last commit: `3c92598`
+  - branch: mainline; last commit: `8ea62ef`
   - evidence: `.claude/probes/K459/`
-  - next: item 1 CLOSED 2026-10-21 (hypothesis (iii) rejected, 0-px slot-reject diff; no truncation reproduced at 20 moves - see the Handoff's Open list) and item 3's silence landed in cb4f9199. Left: the free cap's checks (K477: base collapse, tip AA, pinned cap) and the phone free-end look, both Wave 5/eye work
+  - next: item 1 CLOSED 2026-10-21 (hypothesis (iii) rejected, 0-px slot-reject diff; no truncation reproduced at 20 moves - see the Handoff's Open list) and item 3's silence landed in 9a32835b. Left: the free cap's checks (K477: base collapse, tip AA, pinned cap) and the phone free-end look, both Wave 5/eye work
   - brief: `docs/design/K459.md`
-- **K370** · Worker input latency, p50 (target 50 ms). Stage 1 merged (8feca6b): raw pointer
-  input on; desktop means daily 118 -> 110 ms, knot 93; phone about 185 (before 0753b3c). 50 ms
+- **K370** · Worker input latency, p50 (target 50 ms). Stage 1 merged (918c824): raw pointer
+  input on; desktop means daily 118 -> 110 ms, knot 93; phone about 185 (before 4c7f4db). 50 ms
   needs fewer or cheaper substeps (K610, K316), main's drag frame under 12 ms (K611), and B.
   - owner: nobody since 2026-10-20 15:55 (merged; agent `aa8bfad6d1cc3d6bf` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `8feca6b`
+  - branch: mainline; last commit: `918c824`
   - evidence: `.claude/probes/K370/`
-  - next: stage 2 briefed (`docs/design/K370_s2.md`); desktop half done 2026-10-21: the worker substep premium does not reproduce (daily +4%, knot +4% per substep; no lever built; Handoff in the brief). Left: the phone half in the Wave 5 window (re-measure post-`0753b3c`, cpu6 clock, paused-render drag)
+  - next: stage 2 briefed (`docs/design/K370_s2.md`); desktop half done 2026-10-21: the worker substep premium does not reproduce (daily +4%, knot +4% per substep; no lever built; Handoff in the brief). Left: the phone half in the Wave 5 window (re-measure post-`4c7f4db`, cpu6 clock, paused-render drag)
   - brief: `docs/design/K370.md`
 - **K580** · The a's J join, Levi's call (2026-10-20): tangent, its shared stretch a TAPERED spur that
   leaves the junction as wide as both merging strokes and narrows to normal where they turn collinear.
   Open calls: K606; the paint stage is K620. `docs/design/K580.md`; stage 9's handoff `docs/design/K115_stage9.md`.
   - owner: nobody since 2026-10-21 00:58 (merged; agent `a01b18429832678fd` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `e92ce80`
+  - branch: mainline; last commit: `c9fb508`
   - evidence: `.claude/probes/K580/s5/`
   - next: Levi calls K718 and K606, then a stage for the chosen fixes; K643 lint upkeep; a phone glyph look
   - brief: `docs/design/K580_s5.md`
-- **K546** · Loss effects (Levi, 2026-10-16): a catch ends early today - animate the player and the minotaur/fire all the way to their meeting point first (contact t is computed in by-length mode; turn and realtime catches leave a visual gap), then a gratuitous contact effect at the meeting point plus a whole-screen loss effect akin to the win confetti. Levi's seeds: an explosion; a flare-up and burn-away; the player indicator ripped in half and falling over. Base to build on: K80 3b's catch feedback (dcdfaf4) and K270's fix; the fire side is K114. Design: `docs/design/K546_loss_effects.md`. Its q8 is answered (K525).
+- **K546** · Loss effects (Levi, 2026-10-16): a catch ends early today - animate the player and the minotaur/fire all the way to their meeting point first (contact t is computed in by-length mode; turn and realtime catches leave a visual gap), then a gratuitous contact effect at the meeting point plus a whole-screen loss effect akin to the win confetti. Levi's seeds: an explosion; a flare-up and burn-away; the player indicator ripped in half and falling over. Base to build on: K80 3b's catch feedback (6d8bb4a) and K270's fix; the fire side is K114. Design: `docs/design/K546_loss_effects.md`. Its q8 is answered (K525).
   - owner: nobody since 2026-10-20 18:25 (merged; agent `a57e1aa8c7ba233b0` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `5a8fa18`
+  - branch: mainline; last commit: `4d1a783`
   - evidence: `.claude/probes/K546/`
   - next: stages 2-3 landed 2026-10-21 (Handoffs in the design doc; contact sheet `.claude/probes/K546/s3/`); stage 4 (ripped in half) waits on Levi's Q1 after seeing the sheet
   - brief: `docs/design/K546_s1.md`
@@ -510,7 +510,7 @@ Next free ID: K1166.
   minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus
   Levi's sleeper variant. `K80_gameplay_additions.md`, stages in `sooner_20261020.md`; M: K138, M-L/L: K141.
   - owner: nobody since 2026-10-21 12:49 (merged; agent `ab3d78ded2f219f62` of claude session 91b19e11-7759-4638-ba60-4705b011b94f)
-  - branch: mainline; last commit: `20b01d7e`
+  - branch: mainline; last commit: `0f4df60b`
   - evidence: `.claude/probes/K137/s4/`
   - next: the s3b sims and the K784 phone batch (all look pieces done 2026-10-21: scent 4.34, the fray, darkness/lantern 4.17, sonar 4.26, tunnels 4.13; Handoffs in docs/design/K137_s6.md); muddy runs done in this merge
   - brief: `docs/design/K137_s4.md`
@@ -518,7 +518,7 @@ Next free ID: K1166.
   after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24,
   4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation. M-L, L: K141. Plan it after K137 s2.
   - owner: nobody since 2026-10-21 10:36 (agent ac3462d3821227d69 of claude session 91b19e11-7759-4638-ba60-4705b011b94f; paused at the end of slice 2 per Levi)
-  - branch: mainline; last commit: `13758f2b`
+  - branch: mainline; last commit: `436286de`
   - evidence: `.claude/probes/K138/s4/` (census/, page/ with locks_page.mjs and out/, the test and build logs)
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
@@ -527,15 +527,15 @@ Next free ID: K1166.
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
   - owner: nobody since 2026-11-03 14:04 (merged; agent `aad38c5538dbcedc8` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `f0a2b33f`
+  - branch: mainline; last commit: `f00a59c1`
   - evidence: `.claude/probes/K1040/s3/` (`s3e_gate.ps1`, `s3e_floor.ps1`, `defects.ps1`, `split.mjs`'s s3e1 and s3e3 sets, `run_locked.ps1`, `phone_batch.ps1` + `run_phone.ps1`; `out/many_s3e*_summary.md`, `out/time_s3e*_summary.md`, `out/verdict_s3e*_summary.md`); oracle30 and the recordings: worktree k868-s3a (`.claude/probes/S3a/seq13/`)
   - next: the S3e phone gate: with the Pixel awake and unlocked, run s3e_gate.ps1, then s3e_floor.ps1, then both split.mjs lines (the Handoff's Next); then S3f's brief from those numbers. S3f's 2 ms gate counts the upload call's main-thread time too (0.1-0.8 ms on the desktop, outside page.ts's timed window)
   - brief: `docs/design/K1040_s3e_lean.md` (its Handoff; S3d's: `docs/design/K1040_s3d_tent.md`)
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (it runs `run_phone.ps1`: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`
-- **K1164** · Rewrite master's history so no old commit carries the device addresses 756f76cb scrubbed from
+- **K1164** · Rewrite master's history so no old commit carries the device addresses 9326cf3f scrubbed from
   the files (Levi approved the force-push 2026-11-03), then remap the SHAs the docs quote.
   - owner: claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `3f6d8aef`
+  - branch: mainline; last commit: `9552711d`
   - evidence: `.claude/probes/K1164/` (the masked scans: `scrubbed.mjs`, `scan.mjs`, `inhead.mjs`, `mkrepl.mjs`, `align.mjs`; raw values never written to the repo)
   - next: mirror backup to `C:\Users\lsl\Backups`, filter-repo `--replace-text` (scan rows F9-F14) on a fresh bare clone, verify (rescan clean, same tree), `--force-with-lease` master, reset the checkouts, remap the docs' SHAs from the commit-map
   - brief: `.claude/probes/K1164/README.md` (the plan; untracked, no values)
@@ -567,16 +567,16 @@ Running agents are listed under In progress, each with its own next step.
 - **K784** · Phone sitting 6 on real touches: one-way runs (K138 s3, ow), lures and snares (K137 s4,
   lur and snr; emulated only so far), the K775 overflow, and a touch press on an unrevealed hidden
   run (the K764 case); plus the beat rider's catch (K774: `.claude/probes/K774/beat_phone.mjs`
-  check B, unrun on the phone); and the turnstile dim on a real phone (K138 s4 slice 1, 3dad5914;
+  check B, unrun on the phone); and the turnstile dim on a real phone (K138 s4 slice 1, 91c8d32b;
   K760)
 - **K579** · GPU confetti: upload each launch once, move the pieces in a vertex shader, no per-frame
   CPU sim or upload. Pays if K318 raises the counts (Levi asked 10-20); needs K307's warm-up;
   streamers need a CPU sim. The phone's fall isn't CPU-bound (K578). K628.
-- **K797** · Paper look, one param per stage (Levi 2026-10-21, `docs/design/levi_notes_2026-10-21.md`; sooner list; sequence `docs/design/pickup_sequence_2026-10-21.md`): stage a (paper backdrop) done in b8473f19, b (fill/border/both prototype) in 8d021628; c (gap 0) done in b6585962, fans/plucks follow the look in e75e7e0d; next d (textures, perf-gated):
+- **K797** · Paper look, one param per stage (Levi 2026-10-21, `docs/design/levi_notes_2026-10-21.md`; sooner list; sequence `docs/design/pickup_sequence_2026-10-21.md`): stage a (paper backdrop) done in 3be91436, b (fill/border/both prototype) in de9ed5e9; c (gap 0) done in 546e2c73, fans/plucks follow the look in d077eb6c; next d (textures, perf-gated):
   a white paper background (from `vellum`); a thread look of fill, border or both (an edge stroke on each side; over,
   under and joins read from the strokes); the Crossing gap row down to 0 (its floor is 0.04; the codec takes 0); solid
   or textured fills and borders (pencil), if fast enough.
-- **K409** · Levi's burn calls 1-3 merged (6b9eb8f..3231d59). Left: step 4, the ember over the smoke
+- **K409** · Levi's burn calls 1-3 merged (115eb34..cf70caa). Left: step 4, the ember over the smoke
   (NOT BUILT in `render-explore.md`), after K525 (paint files) and K623/K624. The phone sheet passed
   (K631 part 1, 10-20). `docs/design/K409.md`.
 
@@ -599,7 +599,7 @@ Every other item below waits on the trigger it names.
   Small; after K238's review.
 - **K46** · Daily variety: no weekly arc; THEMES (constraint sets); per-day overrides later (K82).
   Engine-exact (K108); memory-trail themes: trailLength 5 (K73). `docs/design/K46_daily_variety.md`
-  (8b1eb90), `docs/design/K46.md`, `.claude/probes/K46/`, branch `worktree-agent-a78c73cec4770a14d`.
+  (10edc14), `docs/design/K46.md`, `.claude/probes/K46/`, branch `worktree-agent-a78c73cec4770a14d`.
 - **K78** · The Knotmaze handbook: algorithms, architecture, decisions, a per-param reference,
   figures; written once the churn settles. Public Markdown, later Levi's Blogger devlog: standalone
   figures, no repo links or internal IDs (Levi 10-13). `docs/design/K78_handbook_plan.md`.
@@ -617,7 +617,7 @@ Every other item below waits on the trigger it names.
   follows its integration: the fill look on the same field, the traveled route as the union of the
   traveled pieces (K81), G1's x160 leftover (`.claude/rules/render-gaps.md`), then the fan deletion.
 - **K116** · Pluck instruments, accompaniment, lowest priority (`docs/design/K116_instruments.md`,
-  2e60b00, `docs/design/levi_notes_2026-10-13.md`): skeleton (drone, bass, `pluckVoice` presets),
+  04ebd28, `docs/design/levi_notes_2026-10-13.md`): skeleton (drone, bass, `pluckVoice` presets),
   then marimba, bells; `pvc`, `acc`, `acl` daily-exempt; Pixel audio probe first; loop K125.
 - **K10** · Phone benchmark after every stage (Pixel 11; baseline 2026-10-11: 30 fps at rest, 51
   with `fw=0`; K79 stage A 60). Rerun `scripts/preview.ps1` per ref, `scripts/phone.ps1 -Ports ...`,
@@ -635,7 +635,7 @@ Every other item below waits on the trigger it names.
   done in K824. Left: stage 2's phone measures in K156's next pass, then camera and trail tuning
   with Levi. Full text: `docs/ledger_notes.md`, K313.
 - **K326** · Drop knot mode (`mazeFabric`; `docs/design/K323_game_mode.md` s4-5): A done, the maze
-  golden (057c5173); B deletes (after K323 s1, K307 s2, K329), retargets `scripts/fold_census.*`,
+  golden (e67826e9); B deletes (after K323 s1, K307 s2, K329), retargets `scripts/fold_census.*`,
   `test/physics/byte_identity.test.ts`; optional C: knot paint (after B, K111 s5).
 - **K328** · Hover rim profile (Levi, 10-14): an opaque outer band, then a
   fade from further in; High contrast reuses it at fade 0. Paint library
@@ -679,7 +679,7 @@ Every other item below waits on the trigger it names.
   adb_reconnect*.ps1 and watchdog_reconnect.ps1, on by default) but only its healthy-link no-op is
   tested; lib703 END cannot cross midnight; run_k717 skips a late probe; walker_phone takes 1 candidate
 - **K786** · When K138 makes monsters obey one-way runs (its stage 6), the lure hop matrix and the
-  snare runs (K137 s4, af04d8c7) need the directed graph; today one-way binds only the player
+  snare runs (K137 s4, 0697d9a0) need the directed graph; today one-way binds only the player
   (inferred by the K137 s4 rebase)
 - **K873** · K868 integration needs flow (`fw`) as its own scene input: fw moves the drawn samples,
   so every K868 scene so far is `fw=0`. `docs/design/K868_s1a_notes.md`.
@@ -692,7 +692,7 @@ Every other item below waits on the trigger it names.
   f's exit walk; `--high-exit` by rerun; per-left split overfit. v5 (K904) fixed h's and k's after-o
   entries, og, oq, ng and nq. `docs/design/K902_cursive_frames.md` ## Results.
 - **K919** · K525's TELE paint item costs the phone +11.0 ms on dense (+2.8 max-fabric, +3.1 knot;
-  T1 `a64390b0`, round 2026-10-27c): try a K905-style compile-out (no TELE item on pages that draw
+  T1 `9d23dab1`, round 2026-10-27c): try a K905-style compile-out (no TELE item on pages that draw
   no telegraph; an analogy, unverified) and measure it. `docs/design/K156.md` round 27c.
 - **K931** · Cursive capitals, once the lowercase settles: traced from the same font, entering from
   above or below, or from a direction kept within rules (Levi, 2026-10-27).
@@ -717,8 +717,8 @@ Every other item below waits on the trigger it names.
   in J2's census words (K998). `K926_cursive_e.md`, `K962_cursive_joins.md` ## Handoff.
 - **K1009** · Cursive J3: letters declare ports and each join is solved per pair, replacing the join presets (Levi,
   2026-10-28: "more flexible and procedural and less preconfigured"). J3a built the ports and o's three exits (v6.1,
-  `e45f59b8`); J3b solved o's exit B on all 26 joins and ot at the crossbar (v6.4, `72ef51cb`); J3c gave o b0's joins,
-  all converged, with og from v6.4 and ot's tangent entry (v6.6, `c7cadb2c`; looks K1089, residuals K1090); the rest, K1014.
+  `b59a72b2`); J3b solved o's exit B on all 26 joins and ot at the crossbar (v6.4, `7c382e05`); J3c gave o b0's joins,
+  all converged, with og from v6.4 and ot's tangent entry (v6.6, `6079b195`; looks K1089, residuals K1090); the rest, K1014.
 - **K990** · Cursive bodies, Levi's v5.8 review (2026-10-28): B1 (v6.0) gave a its top corner (its flat top is K1004), k
   the sharper leg and p the shorter end. Left: f still ends its lower loop in a curl below the crossing, not a cusp into
   its exit (fe 22.55 u, ff 16.55, fo 9.07 off the font); J3. `K990_cursive_bodies.md` ## Handoff.
@@ -749,7 +749,7 @@ Every other item below waits on the trigger it names.
   closes the band's end into a point and group ink leaves two loose line ends (#16 "the chain's group on top",
   16/9 in label ink; sheet K h1/h2). Both are wrong (§2 goals 2-3). After S3a, fix in the oracle and the passes.
 - **K1088** · K568's confetti fall costs the Pixel 11 about 15 fps on master (round 2026-10-30 step 2:
-  45.0/45.3 fps, 119-122 of ~360 frames over 25 ms, none over 50, against 65a7787's 60.1/60.3, two runs a
+  45.0/45.3 fps, 119-122 of ~360 frames over 25 ms, none over 50, against 8fe3d20's 60.1/60.3, two runs a
   build in both orders, thermal status 0). Trim the piece counts or per-piece cost, or accept it.
   docs/design/K156.md round 2026-10-30 handoff.
 - **K1112** · Cursive: one join rule for every pair (the answer to Levi's step-back question of 2026-11-02,
@@ -780,7 +780,7 @@ Every other item below waits on the trigger it names.
   one top, R3 sliver fills' bound and evalPoint's rV, R4 the ω fade's width in motion (0.05h approved; S4b),
   R5 #1's unattributed px (156 after S1d, its F5's +9: `K1040_s1d_corner.md` Handoff), R6 q4's outer/none px on def.
 - **K1000** · K868 label: V's folds and live/unsolved flips (class 1) still pop. K1040 carries it (F3's fades) and it
-  closes at K1040 S4b. Stage 1's continuous caps landed with K992 in 9b549d30 (`K1000_continuous_caps.md` ## Handoff).
+  closes at K1040 S4b. Stage 1's continuous caps landed with K992 in 27a183b9 (`K1000_continuous_caps.md` ## Handoff).
 - **K1002** · K868's corner balls are never checked against other threads (master, b16 and c17 alike): a large r can
   enclose a neighbour (j139/2 t23: chains 46/84 sit 0.82-0.88h from q inside b16's 1.80h ring), which shows only once
   the neighbour reaches the fill between the arc and V. `K992_s2_continuous_stops.md` G2 (branch `k992-corners`).
@@ -835,7 +835,7 @@ Every other item below waits on the trigger it names.
   1, unused: desktop cold first frame +0.1 / +4.8 s, phone none; decide `rootPaint` before wave 1.
   K620's probe link is now `7&txt=ai#glyphs2`. `docs/design/K905_root_glsl_gate.md`.
 - **K892** · G3-1 costs the Pixel 11 +24.5 to +48 ms of render sync (K156 round 2026-10-27); K893's hand
-  revert (`k893-g31-revert` d8caafa3, not clean, never merge) wins 14.5 / 15.9 / 11.2 ms. Kept until K868
+  revert (`k893-g31-revert` 197c0a2c, not clean, never merge) wins 14.5 / 15.9 / 11.2 ms. Kept until K868
   settles the gap search (Levi, 2026-10-27), then port the revert or replace G3-1. `docs/design/K156.md`.
 - **K877** · K868 oracle residuals: 1 of muse_hash's 342 corner solves fails (j58/1, no V: K883); #2
   fails acute r=0 corners by ε·cot θ (0.017, 0.027 px); 0.0038h of a −0.0061h clearance unattributed;
@@ -847,7 +847,7 @@ Every other item below waits on the trigger it names.
   what, with no waiter field, so the briefs' "release it between items when K290 or K395 waits"
   never triggers (K7 s7 handoff). Add a waiter line, or drop the rule; claude-config CC62.
 - **K416** · `docs/design/K5_K6_split.md` is stale beyond §2.3 (R1 updates its table): §1.3 ranges
-  (f04aa4b), the strip block, §5.1 pins (`paint_explore.test.ts`, `paint_ring_lap.test.ts`), §5.3
+  (0810b6a), the strip block, §5.1 pins (`paint_explore.test.ts`, `paint_ring_lap.test.ts`), §5.3
   and §6 sequencing, `__knotRenderer`'s move to `src/app/probe_hooks.ts` (K5 R1 brief).
 - **K417** · R lane vs the probes (K5 R1 brief): ~80 probes call the sampling helpers through the
   renderer and break as R moves them; the probes that edit `ribbon_renderer.ts` are K425.
@@ -863,7 +863,7 @@ Every other item below waits on the trigger it names.
 - **K267** · Stale `highlightMode` mentions after K248 in `docs/design/` (K76, K76_reveal_mode,
   K174, K193, K198, levi_notes_2026-10-13), and v4 `.J` probe links in rules files (gameplay-motion,
   probes-phone, render-pluck, probes.md (K80)), play links in K174, K180, K198, brief templates.
-- **K262** · K132 (41e81b5) broke two harnesses: K80's `.claude/probes/K80/lib.ts` (removed
+- **K262** · K132 (530dfdc) broke two harnesses: K80's `.claude/probes/K80/lib.ts` (removed
   `codecDefaults(3)`; see `.claude/probes/K174/rt/rt_lib.ts`) and K100's `vite.fogdaily.config.ts`
   (removed `DAILY_V1`). K114 fixes its copy (`docs/design/K114_burn.md`).
 - **K258** · K76 s2a's residuals: (a) in flight, KPAINT items are redeclared per frame and the
@@ -872,9 +872,9 @@ Every other item below waits on the trigger it names.
 - **K276** · K76 s2b's residuals (a)-(e): a visited END at growth 0 shows nothing at its tip; the
   census may miss a long shallow gap's far end; the mode-off-again failure is unexplained; mode-on
   costs are up slightly. `docs/design/K76.md` ("Stage 2b handoff", "Residuals").
-- **K278** · K74 s2's residuals: (a) done in 9ccf360 (H1 exit guard); (b) generation ~30% slower; (d)
-  heart and ring designs cut no bridges; (e) H1 can shorten the optimal route; (f) 494f2fe says
-  codec 108, it is 117; (c) done 86d404e..02194b4. `docs/design/K74.md` ("Stage 2 handoff").
+- **K278** · K74 s2's residuals: (a) done in 83d4405 (H1 exit guard); (b) generation ~30% slower; (d)
+  heart and ring designs cut no bridges; (e) H1 can shorten the optimal route; (f) ad7f030 says
+  codec 108, it is 117; (c) done 40f74d1..dea013f. `docs/design/K74.md` ("Stage 2 handoff").
 - **K285** · Citation details K277 left out until a record confirms them: Jakobsen's venue, Müller
   et al.'s volume and pages, Jaffe and Smith's pages, the Elias DOI, the editor of Perlin's course
   notes. `docs/design/K274_K277.md` ("Stage 1 handoff").
@@ -893,8 +893,8 @@ Every other item below waits on the trigger it names.
   web restored on load are unit-tested only; the knot and fog A/B against stage 1 was not rerun.
 - **K236** · K145's hover glow, now K248's rim: a pluck's overlay hides it (`pluckColor` has no
   across coordinate; fix: an across varying in the overlay strip and mirror compose). Other gaps
-  settled in 3321592. `docs/design/K111.md` ("Stage 3 handoff"), `docs/design/K93_K145.md`.
-- **K232** · Round 2026-10-14b (K156): the default link's load (`?b.J`, 54a2b43 vs 48da84d) is
+  settled in 46115c6. `docs/design/K111.md` ("Stage 3 handoff"), `docs/design/K93_K145.md`.
+- **K232** · Round 2026-10-14b (K156): the default link's load (`?b.J`, d402ade vs f2fc583) is
   borderline worse: p95 33.4 -> 50.0 ms, first sleep 18.4 -> 19.6 s (2 reps). Rerun with 3 reps once
   the floor matches (K193, K195, K197); pre-worker numbers. `.claude/probes/rounds/2026-10-14-48da84d/pass/summary.md`
 - **K230** · K92 did not check the badge's last fit level (bare icon) with the panel open; its phone
@@ -935,15 +935,15 @@ Every other item below waits on the trigger it names.
 - **K205** · K120's leftovers (`docs/design/K120.md`): the follow camera doesn't keep the dot clear
   of the move pad (K148, K149); small maze at the phone's fit zoom; a 411 px toast can overlap the
   pad; an arrow after clicking the panel's empty area still moves; a hold could loop runs.
-- **K197** · The phone's load settles later over ab6d330..54a2b43 (K156, 2026-10-14): first sleep
-  8.0 -> 19.3 s, p95 33 -> 50 ms; likely K147's settle budget (b0a1c49..97293e7): attribute with the
-  frames phase `-Base b0a1c49~1 -Head 97293e7`. Is 19 s acceptable? Levi's call. Pre-worker numbers: remeasure on the K7 host first.
-- **K190** · Unmeasured costs from K154+K169 (aaa3dda): the new hash adds 37-60% to the drifting
+- **K197** · The phone's load settles later over af88b89..d402ade (K156, 2026-10-14): first sleep
+  8.0 -> 19.3 s, p95 33 -> 50 ms; likely K147's settle budget (23bccd4..b1897da): attribute with the
+  frames phase `-Base 23bccd4~1 -Head b1897da`. Is 19 s acceptable? Levi's call. Pre-worker numbers: remeasure on the K7 host first.
+- **K190** · Unmeasured costs from K154+K169 (e03bbd2): the new hash adds 37-60% to the drifting
   backgrounds on the desktop; the phone and the fan program in a web fade are unmeasured. Measure at
   K79's K52 phone gate, vellum-drift first (`docs/design/K154_K169.md`, "Stage 1 handoff").
 - **K195** · Phone pass gaps (K156 3c, `docs/design/K156.md`, "Stage 3c handoff"): noise floor is
   one 3-rep A/A pass for `-Moves 0,7,13` (rerun if orientation, phone or load changes); knot-mode
-  render swings 7.5-20.5 ms in A/A; K80's indicator look never tapped. Fixed: K193, K253 (459cc11).
+  render swings 7.5-20.5 ms in A/A; K80's indicator look never tapped. Fixed: K193, K253 (54ef27a).
 - **K196** · K180's crossings options at phone scale: `ride` and `pinch` leave most taps unreadable
   in the census (dense `ride` 93.8%, fabric `pinch` 71.1%); `through` reads best
   (`docs/design/K180.md`, "Stage 1 handoff"; `.claude/probes/K180/`).
@@ -1012,13 +1012,13 @@ Every other item below waits on the trigger it names.
   at `fw=0`; pair `phy=0` builds on one side of K63; 4x throttle is for ratios.
 - **K69** · String mode (`pv=string`) on pre-G2.3 builds drew a 1-px diagonal sliver from the start
   to the exit marker (`?b.c&pv=string`, 6 moves); G2.3 doesn't show it, never attributed (G2 doc
-  section 7, Follow-ups). Since K83 (45aac50) that Graphics draws only the win ring.
+  section 7, Follow-ups). Since K83 (21a525e) that Graphics draws only the win ring.
 - **K95** · Below about 340 px wide, the mode badge drops below the
   hamburger and covers the header of an open panel (K73; the fit levels
   are measured in `.claude/rules/gameplay-badge.md`, MODE BADGE).
 - **K103** · Below 10 fps the fit camera, moves, paint clock and pluck overlay still slow down
-  (fixed fit ease; `tickAnim`, paint and `tickPlucks` read Pixi's capped `deltaMS`). K96 (d8b9175)
-  moved only the follow camera. Since K101 (e9e01ae) a note's string trails its sound.
+  (fixed fit ease; `tickAnim`, paint and `tickPlucks` read Pixi's capped `deltaMS`). K96 (a24f104)
+  moved only the follow camera. Since K101 (a913d58) a note's string trails its sound.
 - **K106** · A dark spike inside a hook's tight bend while it rings (the
   ribbon's inner corner). Present with the base collapse off, so not
   K77's: `.claude/probes/K77/out/s2r/s2r_hookspike.png`.
@@ -1028,18 +1028,18 @@ Every other item below waits on the trigger it names.
 - **K133** · Crossed join bridges: plans built before K110 can hold two crossing join bridges (108
   plans, 20 dailies); K110's joins skip such a splice, older code doesn't. Fixing moves those plans;
   first see whether a crossing reads wrong (`.claude/probes/K110/verify_run3.txt`).
-- **K136** · A gs 6 tree maze with dead ends never sleeps (140 s of sim) on 7e41a02 and ade3537
+- **K136** · A gs 6 tree maze with dead ends never sleeps (140 s of sim) on 70dbc6c and ade3537
   alike, so not K110's doing; maybe the K13 attractor. Repro `?12l&gs=6&shp=tree` (K74's agent saw
   it at the new defaults too); `.claude/probes/K110/sheet/results_run1_tree_awake.json`.
 - **K142** · The A/B harness's first case in a fresh browser can read nonzero (1 of 11 runs: K79
   B2b's `none_desk`, specks on thread edges); cause not found (a cold server or GPU cache?). Rerun
   before trusting it; a warm-up case is untested (`docs/design/K79.md`, "The 18/19 run").
 - **K143** · Vellum's fibers read as long crossing hatching near scale
-  2, the slider's max (K129; merged in 58b77cf). A look for K156's phone
+  2, the slider's max (K129; merged in bbd71dc). A look for K156's phone
   pass (sheets in `.claude/probes/K79/out/view/`).
 - **K150** · Probes clash across agents (fix: claude-config `rules/lessons.md`): one Chrome profile
   (`scripts/diag_screenshot.mjs`), TEMP builds unless `-Root` (`scripts/preview.ps1 -Ref`, K156 s1,
-  1f8be97), tmpdir profiles (`scripts/bench_frame.mjs`, `probe_gpudraw.mjs`).
+  46019dd), tmpdir profiles (`scripts/bench_frame.mjs`, `probe_gpudraw.mjs`).
 - **K157** · K79 B's color rows on the phone (B3): accent 3's picker opens 8 px below the viewport
   until the panel scrolls, and a second tap on a swatch doesn't close Tweakpane's popup (check the
   older color rows too). `docs/design/K79.md` ("Stage B3 results").
@@ -1067,7 +1067,7 @@ Every other item below waits on the trigger it names.
 - **K172** · K156's screenshot sheets have no text labels, and its drift
   looks show drift only inside the intro window (3c checked the speed-8
   looks on the phone: they show motion).
-- **K175** · K80's UI gaps (5fed5c1): a queued tap has no visual; the
+- **K175** · K80's UI gaps (113ae4d): a queued tap has no visual; the
   choice pulses go quiet during a move; the bull glyph is a placeholder
   (K98); its off-screen indicator ignores `finishIndicator` (K84).
 - **K176** · K80's entrance-tail trap: after losing a player on the
@@ -1150,7 +1150,7 @@ Every other item below waits on the trigger it names.
   `census.mjs` now does, and find the 192 px by which a mode-off frame differs
   from the frame before it, master too (K268 s2). Rec: a small sonnet probe.
 - **K378** · Main's long task about 0.36 s into the load grew 30-40 ms between
-  `f4c1d5f` and `de22867` (K7 s5, observed; the merge is unknown, K279 s2's ripple
+  `f4c1d5f` and `8d051ae` (K7 s5, observed; the merge is unknown, K279 s2's ripple
   warm-up a guess); on the desktop main hears the worker's `ready` only at ~600 ms. Rec: bisect (K373 nearby).
 - **K379** · No phone cold start on levi.dev yet: K7 s5 skipped it, since `phone_lib`
   clears the origin's storage and would wipe Levi's daily records. Rec: a mode
@@ -1164,10 +1164,10 @@ Every other item below waits on the trigger it names.
 - **K384** · K290 3a's small residuals: picking uses pickThread for the rest of a race
   once anything burns, even under char; `pieceVis`'s ring unwrap is ill-defined past
   n - 2 fade (pre-existing; a guard and a test); 13 Pixi attribute warnings at load (master too).
-- **K385** · K307 s2: links under KHR_parallel_shader_compile skip Chrome's disk cache, so warm-up links block. (b) late enable shipped in e83f203 (K307 s3); crbug (d) drafted at `.claude/probes/K307/stage3/crbug.md` for Levi to submit.
+- **K385** · K307 s2: links under KHR_parallel_shader_compile skip Chrome's disk cache, so warm-up links block. (b) late enable shipped in a7e199e (K307 s3); crbug (d) drafted at `.claude/probes/K307/stage3/crbug.md` for Levi to submit.
 
 
-- **K386** · K307 s2's small residuals (gateOpenAt stamping fixed by the s3 poll path in e83f203; remainder open): 131/212 ms frames after visible (parallel build);
+- **K386** · K307 s2's small residuals (gateOpenAt stamping fixed by the s3 poll path in a7e199e; remainder open): 131/212 ms frames after visible (parallel build);
   Pixi's Graphics program unregistered (<45 ms cold); `report()` stamps the blocking read's
   start; the pre-settle relink (8-26 ms a program); stray cache entries from one run.
 - **K387** · With the flow on, its half-rate `update()` at rest costs about 20 ms a call on
@@ -1183,7 +1183,7 @@ Every other item below waits on the trigger it names.
   capture vs the worker's first sleep (about 9.9 s; recheck); `probe_daily` `front` fails 10/14
   (expects `#maze-hud .km-title`; its `?daily=1.aBMge` and `?1471kin.c` predate K132).
 - **K392** · K5 M1's code residual: 46 lines of `src/app/probe_hooks.ts` pass 80 columns (the host seam's nested
-  and element-access blind spots closed in 48739fda).
+  and element-access blind spots closed in e611bc2e).
 - **K405** · After K395, a "M" at a kink loop's tip: the inner edge turns +31° to +56° (stations
   75-89, `?7` chain 9) as the 5-station circumradius follows the control spacing. Try a smooth
   radius envelope or wider min window. `.claude/rules/render-pluck.md` ("Pluck loop tip (K395)").
@@ -1194,7 +1194,7 @@ Every other item below waits on the trigger it names.
   `#maze-hud .km-title` (gone from src) and expects `?daily=1.aBMge` and `?1471kin.c` to stay tokens (seen in K5 M2 and M3).
 - **K422** · Two K120 probe checks fail on master too (K80 3a): keys.mjs realtime "a held key keeps
   adding inputs" (the seed-7 maze may have changed) and pad.mjs desktop "the stored choice shows it"
-  (the pad hides under the open panel since K224, 86dc0cf). `.claude/probes/K80/stage3/rerun/K120/`.
+  (the pad hides under the open panel since K224, 918c929). `.claude/probes/K80/stage3/rerun/K120/`.
 - **K424** · Thread reveal: some junctions stay hidden while one of their arms turns visible 0.5-1
   ctrl out, so their webs are missing beside thread about to show (junctions 87 and 160 on
   `?2gozcj.MgaM`, K397 stage 1). `docs/design/K397.md`, Stage 1 handoff.
@@ -1207,7 +1207,7 @@ Every other item below waits on the trigger it names.
 - **K428** · Thread-reveal same-state A/Bs don't repeat: captures land 17-67551 px apart (k83_ab
   with K381's explore-clock pin, `k5ab&phy=0&am=instant&fw=0&snd=none&xp=threads`); a clock is
   unpinned, so take several per build (K5 R1 `checks/`, `checks2/pairs_threads3.txt`).
-- **K431** · Probes' three-decimal `viewStill` isn't pixel-still under cam=follow (frames change for 0.6-1 s more; bit-exact stop ~10 s later, K268 3a). Narrowed in 377bc41: the bit-exact wait is ported to census3a's prepare (plus the probes.md lore line); other probes with three-decimal `viewStill` remain.
+- **K431** · Probes' three-decimal `viewStill` isn't pixel-still under cam=follow (frames change for 0.6-1 s more; bit-exact stop ~10 s later, K268 3a). Narrowed in 19d97f1: the bit-exact wait is ported to census3a's prepare (plus the probes.md lore line); other probes with three-decimal `viewStill` remain.
 
 
 - **K432** · A pinned backdrop went black with no `webglcontextlost` in 2 of 3 unlocked k76 sheets
@@ -1220,7 +1220,7 @@ Every other item below waits on the trigger it names.
   char only, but the code does it under both looks (check THE EMBER DRAWS); probes.md: a true FX-off
   frame needs a no-op tickFireFx, fireFx.clear() and two frames (stage3c `width_probe.mjs`).
 - **K439** · The G3-0 probe hooks (g3DataState, g3TableRows, g3Expected, captureScene, restoreScene; ribbon_renderer.ts
-  4924-5182 at 4afb8dc) stay on the renderer's facade through K5 R2; R5 gives them a part, e.g. `ribbon/scene_probe.ts`
+  4924-5182 at 034cec9) stay on the renderer's facade through K5 R2; R5 gives them a part, e.g. `ribbon/scene_probe.ts`
   (`docs/design/K5_R2.md`, Questions 1).
 - **K444** · K408's start-marker fade: the gap slot moves in one frame when the fade starts, and the
   exit marker still hides without a fade (K114 s2; `.claude/rules/render-markers.md`).
@@ -1259,7 +1259,7 @@ Every other item below waits on the trigger it names.
   (`docs/design/K397.md`, Stage 3 handoff).
 - **K476** · `census_fan.mjs` (via g2lib, `.claude/probes/K397/stage3/g2/`) never deletes its Chrome
   profile (K161).
-- **K477** · K459's free cap, narrowed by the phone pass (2026-10-16, dcdfaf4): the free-cap look is seen on the phone (chain 48 fade pluck, lobe keyB -1, blur reaches the cap tip at t 0.06) and a reveal-off pluck draws unfretted on the phone. Still open: the base collapse under a free cap (this stub's swing never engages it; overlay-hidden diff 0 px), a strict reveal-off 0-px A/B against a pre-K459 build, the rounded tip's AA along the strip's end, and a cap a node pins staying still, as in K397
+- **K477** · K459's free cap, narrowed by the phone pass (2026-10-16, 6d8bb4a): the free-cap look is seen on the phone (chain 48 fade pluck, lobe keyB -1, blur reaches the cap tip at t 0.06) and a reveal-off pluck draws unfretted on the phone. Still open: the base collapse under a free cap (this stub's swing never engages it; overlay-hidden diff 0 px), a strict reveal-off 0-px A/B against a pre-K459 build, the rounded tip's AA along the strip's end, and a cap a node pins staying still, as in K397
   (`docs/design/K459.md`, Handoff; phone evidence `.claude/probes/K397/stage6/out/`).
 
 - **K484** · Sheet history entries (K467): a stale entry after a reload or discard with the sheet
@@ -1274,7 +1274,7 @@ Every other item below waits on the trigger it names.
   changes its length and its dots' size; the keep-out cache can go stale after a tug or a settle;
   the pad may count the gap's fade twice (docs/design/K466.md Handoff).
 - **K497** · Tap preference (K479) on touch: a real touch tap and touch hover/tap parity are
-  unverified on a phone (a touch press lights the glow since K330, bc5f0043); a mid-flight tap ahead of
+  unverified on a phone (a touch press lights the glow since K330, 20b66f6e); a mid-flight tap ahead of
   the dot is empty space, and `setGlowRun` may center the glow in that stretch (cosmetic).
   docs/design/K479.md Handoff.
 - **K498** · Tap preference (K479) limits: HEAD_EXCLUDE caps the bias at the dot (28.7% of
@@ -1285,18 +1285,18 @@ Every other item below waits on the trigger it names.
 - **K503** · The G3-0 probe hooks (g3DataState, g3TableRows, g3Expected, captureScene, restoreScene) still sit on the RibbonRenderer facade; R5 left them there because they read reveal/paint state R3/R4 have not homed yet - give them a part (e.g. ribbon/scene_probe.ts) once R3/R4 land.
 - **K504** · K425 - a variant_build.ps1 -Subst naming ribbon_renderer.ts for joinery code (rebuildFillets, cpuJunctionField, the FILLET constants) must now name src/render/ribbon/joinery.ts; normArc likewise lives in ribbon/sampling.ts.
 - **K506** · Stage M4 handoff leftovers not folded into M5 (filed, not done): FrameLoopDeps still reads physState/settleWall0/warmHoldFrom through main.ts getters instead of taking life; ProbeCtx could take life/scene/audioMap whole; stale lore prose in physics-settle.md and render-shaders.md still names main.ts for lifecycle code; the A/B harness physon step should wait for asleep, not frozen.
-- **K512** · The cross-build threads round trip's 0 px expectation only holds across builds whose threads defaults match: K466 (2aea912) added `rve`/`rvg` with new defaults, so c22de79-vs-post-K466 pairings differ by 43,385 px unless the query pins the legacy look (`&rve=under&rvg=soft`, 0 px both ways, K507). Future prescribed pairings spanning 2aea912 must pin both, or expect the frontier diff.
+- **K512** · The cross-build threads round trip's 0 px expectation only holds across builds whose threads defaults match: K466 (2856678) added `rve`/`rvg` with new defaults, so a9e8040-vs-post-K466 pairings differ by 43,385 px unless the query pins the legacy look (`&rve=under&rvg=soft`, 0 px both ways, K507). Future prescribed pairings spanning 2856678 must pin both, or expect the frontier diff.
 - **K508** · K5 R2's checks_r2.ps1/checks_threads.ps1 hardcode the deleted worktree agent-a695f82540244625a and cannot rerun as-is; K463's repo-relative k463_checks.ps1 supersedes them for these two checks.
 - **K520** · K516's legacy timing harnesses not rerun in continuous mode: k7_latency (stage-5 batch setup), K174/K114 perf (rt_page first needs K461's fsr/fdr fix), k96_cam (desktop-Chrome launcher). Continuous-mode frame timings were measured instead (`.claude/probes/K516/results.md`); rerun the harnesses when next needed.
-- **K511** · K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 3b1612f; K348's mid-move wait-tap leftover is now intentional for pointers.
+- **K511** · K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 2bcf771; K348's mid-move wait-tap leftover is now intentional for pointers.
 
 - **K528** · census2d's long-sequence drift against the FIRST mode-off frame (K522): 11,343 exact px (1,077 hard) over the m10 census while visitAll vs the contemporaneous mode-off-again frame is exactly 0 px; candidates are the follow-camera tail and one-level backdrop flicker (K519) - localize only if it grows (`.claude/probes/K76/stage2d/out_k522_m10e/`, `docs/design/K397.md` Stage 6 handoff).
 - **K535** · First-tap residual after K366's attribution (K307 stage 3): fabric tap 1 costs one ~39 ms callback frame (27 ms with glint) and ~50 ms of first pointerup handling on desktop, knot unaffected, ripple program not involved; inferred first-pluck allocation and the fabric paint's first re-declare, not traced to a function. Traced 2026-10-18 (`.claude/probes/K307/stage2/k535_results.md`): ~25 ms first-gesture AudioContext creation in `KnotSynth.ensure()` + ~14 ms first fabric paint re-declare (rebuildFillets/computeGapSlot). Fix candidates listed there; not yet fixed.
-- **K540** · Cold first-visible is ~0.7-0.9 s later on 3465090 than on its parent e83f203 in two interleaved trace_intro pairs (3.36/3.45 s vs 4.10/4.22 s, fresh profiles, phw=0), while section-rgb(-explore) link-status times are equal (43.7-48.3 vs 46.0 ms; explore 61.4 vs 51.7 ms, one run) - unattributed (not the section compile); bisect the load path before calling it a regression. Evidence `.claude/probes/K8/G3-1/` (`k536*` trace runs) and `.claude/probes/K307/runs/k536*/`. Attributed 2026-10-18: real cold-only regression, +0.39 s mean over 8 interleaved pairs (median +0.51, 7/8 positive; K536's pairs overstated it — the parent's own spread is 1.2 s); the wave-1 gate waits on the cold FXC compile of G3-1's enlarged gap-search shaders (section-rgb fs +1,117 chars), warm restart and Vulkan show no gap. Full record `.claude/probes/K8/G3-1/k540_results.md`; fixing (trimming the GAP search's GLSL cost) is the K8 lane's call.
-- **K537** · census3a's 9 pre-existing fails on master (probe sanity 21-23/29 vs 80% bar; solid crossings' mode-on cuts 0-14px vs 109-142 off; slot restore; three 434px attribution restores; visitAll/mode-off-again ~11.3k px lower-half bbox; PROOF vacuous since G3-1) - identical on baseline 3465090 (22/31 with the K430 ramp vs 20/31 without; ramp-specific judgements pass). Next census owner ports census2d's K522/K523 judgements wholesale or retires census3a for census2d; may share K432's backdrop mechanism.
+- **K540** · Cold first-visible is ~0.7-0.9 s later on 93a231f than on its parent a7e199e in two interleaved trace_intro pairs (3.36/3.45 s vs 4.10/4.22 s, fresh profiles, phw=0), while section-rgb(-explore) link-status times are equal (43.7-48.3 vs 46.0 ms; explore 61.4 vs 51.7 ms, one run) - unattributed (not the section compile); bisect the load path before calling it a regression. Evidence `.claude/probes/K8/G3-1/` (`k536*` trace runs) and `.claude/probes/K307/runs/k536*/`. Attributed 2026-10-18: real cold-only regression, +0.39 s mean over 8 interleaved pairs (median +0.51, 7/8 positive; K536's pairs overstated it — the parent's own spread is 1.2 s); the wave-1 gate waits on the cold FXC compile of G3-1's enlarged gap-search shaders (section-rgb fs +1,117 chars), warm restart and Vulkan show no gap. Full record `.claude/probes/K8/G3-1/k540_results.md`; fixing (trimming the GAP search's GLSL cost) is the K8 lane's call.
+- **K537** · census3a's 9 pre-existing fails on master (probe sanity 21-23/29 vs 80% bar; solid crossings' mode-on cuts 0-14px vs 109-142 off; slot restore; three 434px attribution restores; visitAll/mode-off-again ~11.3k px lower-half bbox; PROOF vacuous since G3-1) - identical on baseline 93a231f (22/31 with the K430 ramp vs 20/31 without; ramp-specific judgements pass). Next census owner ports census2d's K522/K523 judgements wholesale or retires census3a for census2d; may share K432's backdrop mechanism.
 - **K538** · Pluck footprints (overHalf/eraseExtent) still step binary at vis 0.5; only underWindows ramp (by design in the K430 stage). Evidence `.claude/probes/K268/stage3a/out/census_ramp6/`.
-- **K547** · The far-branch blend has no isolating GPU census yet: census3a's shaped slots cut 0 px at reach 2.5 in its state (PROOF vacuous since G3-1, K537), so it is proved by the farBlendCut formula tests, shader-text pins and the 22/31 no-regression census, not a pixel diff at a tight over bend with one branch shown and the other hidden. Build that state (a shaped slot whose over polyline bends back within farK, one branch across a frontier) and judge hidden (no dip) vs shown (master's blended cut, weighted). Evidence .claude/probes/K268/stage3a/out/census_far1/. Census attempt 2026-10-18 (build 0f8e277, far_census.mjs, out/far_k547/, results_K547.md): state unbuildable in the walked state - bend-back pairs and 1-vs-0 cover splits exist (0.53-0.83 world), but medial fragments are never mid-fade inside the window (CPU joint count 0; GPU both-shown vs sminK=0 = 0 hard px on 10 candidates, incl. fl=0.3 and over-branch cinch attempts), and every bend candidate's reject control is 0 px (neighbour-covered cuts). No defect found; the blend remains formula/text-pin proved only. Missing: a strong slot whose over chain rides parallel at 0.66-0.75 (e.g. fat-thread adjacent-corridor state or a held tug).
-- **K542** · PROTECT's biting-triangle GPU census is still owed: in walked fabric states at rest the waiver's range is empty (protect intervals overlap slot windows on 137/570 sides, but no on-screen fragment sits in the margin band over B - the triangles are not world-squeezed until a cinch/tug), so the protect stage proved the chain by the CPU census (706 sides, factors = vis(B) exactly, incl. 544 hidden / 22 shown) plus the shader-text unit tests, and a manufactured bite changed 0 px for the same reason. Build a squeezed state (a cinched cyclic triangle under the reveal, e.g. a physics tug on fabric) and judge hidden (on == waiver-off) vs shown (on == waiver-full) there. Evidence .claude/probes/K268/stage3a/out/protect_final/ + census_protect2/ (22/31, the ramp baseline). Census attempt 2026-10-18 (build 0f8e277, protect_bite.mjs, out/protect_k542/, results_K542.md): shown state marginally built - cinching B onto A at off* on slot 3 side 0 (sin ~ 1) yields 6 faithful bite points (first non-zero in this state family); judged on == waiver-full (5 hard px vs 2 A/A churn, correct direction) but on vs waiver-off also only 5 px, below the decisive bar. Hidden state unbuildable here (no on-screen over-shown + A-shown + perpendicular slot with B hidden). No defect found; decisive census still owed - needs a bigger bite (held tug, iterated cinch), a zoomed bite clip and differing A/B section colors.
+- **K547** · The far-branch blend has no isolating GPU census yet: census3a's shaped slots cut 0 px at reach 2.5 in its state (PROOF vacuous since G3-1, K537), so it is proved by the farBlendCut formula tests, shader-text pins and the 22/31 no-regression census, not a pixel diff at a tight over bend with one branch shown and the other hidden. Build that state (a shaped slot whose over polyline bends back within farK, one branch across a frontier) and judge hidden (no dip) vs shown (master's blended cut, weighted). Evidence .claude/probes/K268/stage3a/out/census_far1/. Census attempt 2026-10-18 (build 2a42c8e, far_census.mjs, out/far_k547/, results_K547.md): state unbuildable in the walked state - bend-back pairs and 1-vs-0 cover splits exist (0.53-0.83 world), but medial fragments are never mid-fade inside the window (CPU joint count 0; GPU both-shown vs sminK=0 = 0 hard px on 10 candidates, incl. fl=0.3 and over-branch cinch attempts), and every bend candidate's reject control is 0 px (neighbour-covered cuts). No defect found; the blend remains formula/text-pin proved only. Missing: a strong slot whose over chain rides parallel at 0.66-0.75 (e.g. fat-thread adjacent-corridor state or a held tug).
+- **K542** · PROTECT's biting-triangle GPU census is still owed: in walked fabric states at rest the waiver's range is empty (protect intervals overlap slot windows on 137/570 sides, but no on-screen fragment sits in the margin band over B - the triangles are not world-squeezed until a cinch/tug), so the protect stage proved the chain by the CPU census (706 sides, factors = vis(B) exactly, incl. 544 hidden / 22 shown) plus the shader-text unit tests, and a manufactured bite changed 0 px for the same reason. Build a squeezed state (a cinched cyclic triangle under the reveal, e.g. a physics tug on fabric) and judge hidden (on == waiver-off) vs shown (on == waiver-full) there. Evidence .claude/probes/K268/stage3a/out/protect_final/ + census_protect2/ (22/31, the ramp baseline). Census attempt 2026-10-18 (build 2a42c8e, protect_bite.mjs, out/protect_k542/, results_K542.md): shown state marginally built - cinching B onto A at off* on slot 3 side 0 (sin ~ 1) yields 6 faithful bite points (first non-zero in this state family); judged on == waiver-full (5 hard px vs 2 A/A churn, correct direction) but on vs waiver-off also only 5 px, below the decisive bar. Hidden state unbuildable here (no on-screen over-shown + A-shown + perpendicular slot with B hidden). No defect found; decisive census still owed - needs a bigger bite (held tug, iterated cinch), a zoomed bite clip and differing A/B section colors.
 - **K555** · K115 residuals its redesign must absorb or re-check: the joins λγ λη λθ λψ τυ meet a glyph stroke
   (`docs/design/K115_stage6.md` 971-975), 6a's five CAPITAL_OVERRIDES (800-809), the digit-6 conflict
   (`docs/design/K115_stage3.md` 376-381), and 1b's same-slash crossings that rely on overFirst alone. K558 adds (c) a connector touching
@@ -1319,9 +1319,9 @@ Every other item below waits on the trigger it names.
   minotaur and fog start from the word (read from code, not exercised; stage 3a, K552 Handoff).
   K552's row tooltip ("your attempt is kept") also overstates: a move on the other form drops the
   raw loop walk (C4).
-- **K574** · K320 stage 1 (`6c592e6`) costs about 4 ms of phone render sync (ABBA 69.9 vs 74.1 ms,
+- **K574** · K320 stage 1 (`211cc24`) costs about 4 ms of phone render sync (ABBA 69.9 vs 74.1 ms,
   same sign in both pairs, inside one p10-p90 band; K572).
-- **K575** · `0733182` (K115 1b-B) does not build, a hazard for any bisect across it (K572; not
+- **K575** · `f25defa` (K115 1b-B) does not build, a hazard for any bisect across it (K572; not
   diagnosed).
 - **K576** · On the worker host (K7) two loads of one link freeze at different sim times (4.967-5.017
   s), so their rest states differ; in-thread they match, so probes pin `&phw=0` or `&phy=0`. Fix
@@ -1382,7 +1382,7 @@ Every other item below waits on the trigger it names.
 - **K638** · K324 s1: the queued fleer escapes 76-83% of hunts against 75% at baseline, at every
   hunt pace tried up to 1.0 (`docs/design/K324_s1.md`, Handoff).
 - **K639** · The main checkout's `.claude/probes/{K80,K174,K155}/rt/rt_lib.ts` (line 42) read
-  `deadEnds`, removed in 35f3ec2, so re-runs build mazes with no dead ends (K637: 4.16 catches
+  `deadEnds`, removed in 2605bf6, so re-runs build mazes with no dead ends (K637: 4.16 catches
   against 2.50). Make them fail loudly, or build through `buildSceneGraph` as K324's copy does.
 - **K640** · K546 s1's travel window: while a runs catch travels, the HUD's mode, the head's glow
   and the close-calls and seen rows already show the after-catch state (only caught waits), and a
@@ -1424,7 +1424,7 @@ Every other item below waits on the trigger it names.
 - **K678** · A K81 cover strip with fewer than 9 pairs of room drops a round join arc (falls back to
   the sample pair); no A/B scene reaches it (`RibbonMesh.coverPairs`, the joinery.ts cover loop;
   K580 s3).
-- **K679** · K653 fix (987d98f) has no still pair, pixel A/B or test: nothing in test/ reaches
+- **K679** · K653 fix (eb7e471) has no still pair, pixel A/B or test: nothing in test/ reaches
   syncMinotaur and the frozen-scene probe never shows the glow; a headed real-GPU real-chase probe
   at mfg=never would (`docs/design/K653_checks.md` Handoff).
 - **K682** · Collapse par always reads with >=: the 20k-step longest-trail search (and 200k) runs
@@ -1454,10 +1454,10 @@ Every other item below waits on the trigger it names.
 - **K711** · K137-b edges (K137_s3a.md Residuals b, d-f): runBurnAt may draw a burnt broken run as
   burning; refire is O(V^2) per breaking move; __knotChaseTap ignores broken runs; broken-run counts
   need main.ts to report every accepted run (safeArms and fireTrapped count broken arms gone since
-  3721a57f)
+  c7e6329a)
 - **K712** · Lives (K137 s3a): hearts are in neither Undo nor saved attempts, and default 3 when
   switched on is tooltip advice only (a toggle or a 0-to-3 snap would make it real; K137_s3a.md
-  Residuals g). First half checked cb73089e: no Undo or saved attempt can hold hearts today.
+  Residuals g). First half checked bfa3a639: no Undo or saved attempt can hold hearts today.
 - **K714** · K114 balance probe: its cutter keeps cutting once the walker is inside the fence;
   dailies 1, 12, 23, 28 and 29 have a one-run fence at radius 1, so Keep it in is trivial there
 - **K719** · K580 s5 leftovers: an unidentified gap-mask slot bites the a bowl in ai at xh 2 (0.059
@@ -1472,9 +1472,9 @@ Every other item below waits on the trigger it names.
   (docs/design/K708.md, Left over)
 - **K732** · K720 residuals, iOS only: a context created outside a tap waits for the next tap, and a
   suspended context keeps the song on the wall clock and skips the 1.2 s lead-in, both unverified
-  on iOS (docs/design/K720.md Handoff). The snore's offline decode landed with K343 (933571af); the
-  snore and fabric read silent under snd=none in a desktop browser (b5e1c021's message).
-- **K734** · K643: a hairline seam inside the i fork junction at xh 3, in the build at 6278cf8b,
+  on iOS (docs/design/K720.md Handoff). The snore's offline decode landed with K343 (2b539fc8); the
+  snore and fabric read silent under snd=none in a desktop browser (7274aae4's message).
+- **K734** · K643: a hairline seam inside the i fork junction at xh 3, in the build at adc6535b,
   cause unknown (docs/design/K643.md Handoff)
 - **K737** · K137 s2 (K137_s2.md Handoff): with fragile runs or collapse the spool can leave no
   legal move at its limit (Undo or restart gets out); a lit hint hides the minotaur warning up to 2
@@ -1484,7 +1484,7 @@ Every other item below waits on the trigger it names.
 - **K740** · Toast placement gaps (K698 Handoff): the panel and the phone settings sheet are not
   avoided; the aids group is found by its class, not the indicators avoid list; No hints left is
   unreachable by tap (Hint disables at 0). A showing toast re-places when a control appears or
-  leaves since c59c4990.
+  leaves since 742078db.
   - K749: after a walked pickup on the real phone, all three sword toasts clear the pad
 - **K744** · K138 s1 page gaps: blips of other colors at some junctions under the rule colors (cause
   unverified, maybe the junction webs); not page-checked: a backtrack undoing a slide, ice with
@@ -1568,7 +1568,7 @@ Every other item below waits on the trigger it names.
 - **K894** · Max-fabric (`b&gs=24&wd=1&brd=1&ded=1&del=40&jsp=.5`) never sleeps on the Pixel 11: 87
   s at 6 fps with a 600 ms frame (rounds 2026-10-20 and 10-27). `docs/design/K156.md`, round
   2026-10-27 handoff, step 4.
-- **K897** · Load on the Pixel 11 at head: -7.4 fps (default) and -11.8 (slow) against `d0406df` in
+- **K897** · Load on the Pixel 11 at head: -7.4 fps (default) and -11.8 (slow) against `d96de6e` in
   both orders, 2-3x the frames over 50 ms, first frame 130 ms sooner; the same gap as round
   2026-10-20 (-7.6, -15.3). `docs/design/K156.md`, round 2026-10-27 handoff, step 3.
 - **K898** · K883 oracle: extra ink rose (muse_hash 13 to 22, g41_user_tw64 2 to 14; the census
@@ -1584,12 +1584,12 @@ Every other item below waits on the trigger it names.
   master vs master: desktop 2080, phone 1093 px), so its pixel diffs need another control.
   `docs/design/K156.md`, round 2026-10-27b handoff.
 - **K911** · Sheet A's field-vs-EDT check fails on curved (6.751 px) and j_hook_cross (6.805 px)
-  since its K900 regeneration (`7c972033`); not run at `5048670e`, so it may predate K900.
+  since its K900 regeneration (`7c972033`); not run at `972228b5`, so it may predate K900.
   `.claude/probes/K868/oracle/checks_synthetic.md`.
 - **K913** · Cursive v4: a's fused junction at the font's 47.5 u (frame in the kink, 30.2 vs 52.6
   deg); the a body includes the up pass; d's after-o retrace frame at 36.3 deg; v3's rerun checker
   runs v4's commands; `--guides centreline` unrun. `.claude/probes/K863/trace/NOTES.md` ## v4.
-- **K920** · K620's `fa0c61de` costs the phone +5.2 ms on max-fabric (about 2 ms of K905's gap;
+- **K920** · K620's `df8b80c3` costs the phone +5.2 ms on max-fabric (about 2 ms of K905's gap;
   round 2026-10-27c). `docs/design/K156.md` round 27c.
 - **K927** · Cursive fits stop at nfev 600 for 16 of 26 letters (since v5.2 q does and a no longer
   does); in v5.1 a and q ended 5.0 and 4.0 u off the trace. `K916_cursive_v51.md` Handoff, Open 5.
@@ -1651,7 +1651,7 @@ Every other item below waits on the trigger it names.
 - **K1093** · Junction form B, c1's merge blend leftovers: a partial blend at |Δs| in (σ/2, σ); the fold's
   far-piece weight at |Δs| in (σ, 2σ) is S1b's; a steep u ramp at shallow barriers; S4a's foot strips need d_A
   and the barrier m, neither local (`K1040_s1e_bends.md` F1, Residuals).
-- **K1095** · K775/K738 residual (5b8522a5): at 320x640, stats on, sword slain / all-grown, the HUD value
+- **K1095** · K775/K738 residual (1a6823ea): at 320x640, stats on, sword slain / all-grown, the HUD value
   column extends 17.8 px past the box [10,10,246,286.2] (badge clear, gap 22). Layout call for Levi. Probe
   .claude/probes/K775 (hud775.mjs, out/before|after). In the shots (`.claude/probes/K775/shots/`) the last
   glyph of each value straddles the painted border (~6 px past it); a fix: let the sword row's value wrap
@@ -1837,7 +1837,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   (Levi; `docs/design/levi_notes_2026-10-14.md` item 13). Open: `settleBudget`, `loadSettle` (K162
   (3)), confetti settings, `markerSize`; stale comment at `daily_link.ts:153` (K237, K264).
 - **K117** · Repo visibility (`docs/design/levi_notes_2026-10-13.md`): private on Levi's word,
-  parked until near launch (rest done in a756ca5: `LICENSE`, `package.json`): `gh repo edit
+  parked until near launch (rest done in d2adf8a: `LICENSE`, `package.json`): `gh repo edit
   --visibility private --accept-visibility-change-consequences` (reversible). K122 needed anyway.
 - **K187** · K155's History rows explain their stars only on hover, which
   phones lack; add a tap to explain (`docs/design/K155.md`, "Stage 1
@@ -1884,7 +1884,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K359** · Replace the pre-settle's spent-prediction shim
   (`presettleFrame`, K7 stage 3) with an explicit "settling in the worker"
   signal from the physics host.
-- **K360** · Ledger diet pass 2 (K353's handoff): CC67 (b5027d8) cut the 165 long open items. Left:
+- **K360** · Ledger diet pass 2 (K353's handoff): CC67 (fc34d0e) cut the 165 long open items. Left:
   long In progress items (`ledger.mjs lint`), Done one-liners to ~160 bytes, the "Approved" heading;
   then drop `docs/ledger_diet/`, keep `scripts/ledger_diet.mjs`.
 - **K371** · Let the worker run ahead of main's frames in the pre-settle, so it settles through
@@ -1985,7 +1985,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1076** · K814 stage 5 (optional): fold SHAPE_FNS (src/core/shapes.ts, line 68) into the SHAPE_REGISTRY
   entries (src/core/shape_injection.ts, line 158), so a pre-defined shape is added in one spot.
 - **K1106** · A build check that every `dist/assets/` file name carries a content hash: `public/_headers`
-  caches `/assets/*` immutable for a year (K1084, fc9b0eec), so a file put in `public/assets/` would stay stale
+  caches `/assets/*` immutable for a year (K1084, a4cc20ee), so a file put in `public/assets/` would stay stale
   in browsers.
 - **K1136** · Phone A/A floor: fabric@0 reads loose (fps ±8.3, frames over 25 ms ±33) from one outlier rep; a
   later A/A may tighten it (`docs/design/K156.md`, Round 2026-11-03 handoff, Left over 2).
@@ -2000,156 +2000,156 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
-- **K1114** · S1i: corner rounding back at the junction roots (rootBand 0.5). Done in 761ed081 (2026-11-03).
-- **K1161** · Muse batch 14: runs B-F landed K1160+K1159, K710, K711 (c), K732's desktop half and K740's first gap. Done in 28d2c81f (2026-11-03).
-- **K710** · a real-time catch (and an extra's, and the sword's touch) cannot land through a broken run; contact counts tails but not broken runs. Done in 5f0b538e (2026-11-03).
-- **K1159** · adb lookup folded into phone_ready.mjs (findAdb picker); phone_pass.ps1 delegates with --find-adb; phone.ps1's own lookup left beside them. Done in 91c3d90f (2026-11-03).
-- **K1160** · scripts/phone_pass.ps1 finds the phone among online android peers; -TailscaleHost is the override, default empty. Done in 91c3d90f (2026-11-03).
-- **K1156** · Muse batch 13: B K1152+K1148 (ce485d87), C K1155 (cbaca79f), D K1154 (f809a275), E K351 (88efd034), F K392's seam half (48739fda), G K685 (410fd8c9); all reviewed. Done in f363a939 (2026-11-03).
-- **K685** · a respawn into stranded or out of strokes shows its banner without a tap. Done in 410fd8c9 (2026-11-03).
-- **K351** · the panel inventory's Read by follows url_state's *Of builders. Done in 88efd034 (2026-11-03).
-- **K1154** · the physics-off load's wall cap and reported time count visible time (both hosts). Done in f809a275 (2026-11-03).
-- **K1155** · scripts/phone.ps1 finds the phone among online android peers; -TailscaleHost is the override, default empty. Done in cbaca79f (2026-11-03).
-- **K1148** · --ready guards bench_frame --cdp, k923 sync --target phone and close_tabs; the adb fold split out. Done in ce485d87 (2026-11-03).
-- **K1152** · phone_ready.mjs states its check in its own words (no deleted file, no rebased hash). Done in ce485d87 (2026-11-03).
-- **K1153** · Muse batch 12: K202's midnight rollover (7f03c0a6); K201's Played chip (e0ceba44); K125's whole bars (cbc02ded); K165 (a)'s HALTED stamp (1692f502, K1154 split off); K170's opt-in wake (8e6034a5); K308's exact fifth contour (b5082d44). Done in d3b337aa (2026-11-03).
-- **K308** · the contours' fifth line counts exactly (integer-corrected). Done in b5082d44 (2026-11-03).
-- **K170** · scripts/phone.ps1 wakes the phone only under -Wake. Done in 8e6034a5 (2026-11-03).
-- **K165** · a halted load keeps its HALTED stamp; the load wall clock split out. Done in 1692f502 (2026-11-03).
-- **K125** · Scarborough Fair loops on whole bars (closing rest 3). Done in cbc02ded (2026-11-03).
-- **K201** · the Played chip counts the tile's days; a practice row shows its count. Done in e0ceba44 (2026-11-03).
-- **K202** · an unstarted floating daily rolls to the new day at midnight. Done in 7f03c0a6 (2026-11-03).
-- **K1146** · Muse batch 11: K252 (a), the pan range's ease by time (7f929ae3); K144's accounts doc (23e3bf79); K804's beat ring (94e4b59c); K207's fog dedupe, partial (bb7aa6ed); K688's healing-cuts doc (db015d9e). Done in da73b598 (2026-11-03).
-- **K804** · beat indicator dropdown: pulse and ring at the dot; dots split out. Done in 94e4b59c (2026-11-03).
-- **K234** · `scripts/phone_pass.ps1`'s `-Phase check` and `-WaitReady` called a phone in use ready: K1142's shared check (`scripts/phone_pass/phone_ready.mjs`) now needs the launcher in front and 120 s without a touch. Done in 2887abc5 (2026-11-03).
-- **K1142** · Phone kit guard: one shared read-only readiness check (`scripts/phone_pass/phone_ready.mjs`: screen on, unlocked, the launcher in front, 120 s without a touch) that every tracked phone runner calls before opening anything. Done in 2887abc5 (2026-11-03).
-- **K1141** · Muse batch 10: A, K1138's backdrop tuning (27cb9202; the slider's top waits on Levi); B, batch 11's draft, reviewed into K1146 with its Run B dropped. Done in 77d02919 (2026-11-03).
-- **K1137** · Muse batch 9: A, K1132's key-hint pictures; B, K1083 closed and K1133 kept open on the flow-on retrace; C, K1135's Reset test; D, batch 10's draft (K1141). Done in 5f769558 (2026-11-03).
+- **K1114** · S1i: corner rounding back at the junction roots (rootBand 0.5). Done in 8b436272 (2026-11-03).
+- **K1161** · Muse batch 14: runs B-F landed K1160+K1159, K710, K711 (c), K732's desktop half and K740's first gap. Done in e11beadd (2026-11-03).
+- **K710** · a real-time catch (and an extra's, and the sword's touch) cannot land through a broken run; contact counts tails but not broken runs. Done in 4b347cad (2026-11-03).
+- **K1159** · adb lookup folded into phone_ready.mjs (findAdb picker); phone_pass.ps1 delegates with --find-adb; phone.ps1's own lookup left beside them. Done in 0904b7ce (2026-11-03).
+- **K1160** · scripts/phone_pass.ps1 finds the phone among online android peers; -TailscaleHost is the override, default empty. Done in 0904b7ce (2026-11-03).
+- **K1156** · Muse batch 13: B K1152+K1148 (1bb70ac1), C K1155 (2e188c47), D K1154 (746284a4), E K351 (0a16e218), F K392's seam half (e611bc2e), G K685 (630da3c0); all reviewed. Done in b3ca3046 (2026-11-03).
+- **K685** · a respawn into stranded or out of strokes shows its banner without a tap. Done in 630da3c0 (2026-11-03).
+- **K351** · the panel inventory's Read by follows url_state's *Of builders. Done in 0a16e218 (2026-11-03).
+- **K1154** · the physics-off load's wall cap and reported time count visible time (both hosts). Done in 746284a4 (2026-11-03).
+- **K1155** · scripts/phone.ps1 finds the phone among online android peers; -TailscaleHost is the override, default empty. Done in 2e188c47 (2026-11-03).
+- **K1148** · --ready guards bench_frame --cdp, k923 sync --target phone and close_tabs; the adb fold split out. Done in 1bb70ac1 (2026-11-03).
+- **K1152** · phone_ready.mjs states its check in its own words (no deleted file, no rebased hash). Done in 1bb70ac1 (2026-11-03).
+- **K1153** · Muse batch 12: K202's midnight rollover (20ee92c0); K201's Played chip (9cf52379); K125's whole bars (26455925); K165 (a)'s HALTED stamp (0efcead7, K1154 split off); K170's opt-in wake (620ddf93); K308's exact fifth contour (cd1f0087). Done in 57b60232 (2026-11-03).
+- **K308** · the contours' fifth line counts exactly (integer-corrected). Done in cd1f0087 (2026-11-03).
+- **K170** · scripts/phone.ps1 wakes the phone only under -Wake. Done in 620ddf93 (2026-11-03).
+- **K165** · a halted load keeps its HALTED stamp; the load wall clock split out. Done in 0efcead7 (2026-11-03).
+- **K125** · Scarborough Fair loops on whole bars (closing rest 3). Done in 26455925 (2026-11-03).
+- **K201** · the Played chip counts the tile's days; a practice row shows its count. Done in 9cf52379 (2026-11-03).
+- **K202** · an unstarted floating daily rolls to the new day at midnight. Done in 20ee92c0 (2026-11-03).
+- **K1146** · Muse batch 11: K252 (a), the pan range's ease by time (0bbdc36b); K144's accounts doc (61a24a82); K804's beat ring (4f6ff982); K207's fog dedupe, partial (16b1c56f); K688's healing-cuts doc (182cfc8d). Done in 55df4231 (2026-11-03).
+- **K804** · beat indicator dropdown: pulse and ring at the dot; dots split out. Done in 4f6ff982 (2026-11-03).
+- **K234** · `scripts/phone_pass.ps1`'s `-Phase check` and `-WaitReady` called a phone in use ready: K1142's shared check (`scripts/phone_pass/phone_ready.mjs`) now needs the launcher in front and 120 s without a touch. Done in d773eb10 (2026-11-03).
+- **K1142** · Phone kit guard: one shared read-only readiness check (`scripts/phone_pass/phone_ready.mjs`: screen on, unlocked, the launcher in front, 120 s without a touch) that every tracked phone runner calls before opening anything. Done in d773eb10 (2026-11-03).
+- **K1141** · Muse batch 10: A, K1138's backdrop tuning (6aa02f19; the slider's top waits on Levi); B, batch 11's draft, reviewed into K1146 with its Run B dropped. Done in 39d47cce (2026-11-03).
+- **K1137** · Muse batch 9: A, K1132's key-hint pictures; B, K1083 closed and K1133 kept open on the flow-on retrace; C, K1135's Reset test; D, batch 10's draft (K1141). Done in ff87d810 (2026-11-03).
 - **K1129** · With Reduced motion on and the camera following the player, the view still glides after every move. Dropped: Levi 2026-11-03: "camera glide with reduced motion is fine", so the view keeps gliding (2026-11-03).
-- **K1118** · Levi 2026-11-03: Motion follows across tabs without a reload. Done in 3ff7144a (2026-11-03).
-- **K1111** · Levi 2026-11-03: the finer-step sliders feel right ("Pulse reach is good"; "Settle params are probably good for now"). Done in 5f28e0b1 (2026-11-03).
-- **K1135** · behavior test on a real Pane, plus a warn-once. Done in 2cbddb87 (2026-11-03).
-- **K1083** · retraced with the flow on: no realtime extra. Done in 257db545 (2026-11-03).
-- **K1110** · Levi heard the snore on the phone's first touch (2026-11-03: 'The snore sound is good'). Done in 933571af (2026-11-03).
+- **K1118** · Levi 2026-11-03: Motion follows across tabs without a reload. Done in 758dfe1e (2026-11-03).
+- **K1111** · Levi 2026-11-03: the finer-step sliders feel right ("Pulse reach is good"; "Settle params are probably good for now"). Done in 9e617d7a (2026-11-03).
+- **K1135** · behavior test on a real Pane, plus a warn-once. Done in d18d0be3 (2026-11-03).
+- **K1083** · retraced with the flow on: no realtime extra. Done in 0451032c (2026-11-03).
+- **K1110** · Levi heard the snore on the phone's first touch (2026-11-03: 'The snore sound is good'). Done in 2b539fc8 (2026-11-03).
 - **K1134** · Gap slots stand pat on the K1083 burn stands (cause none on 120/120 frames; 0 updates and 0 gap solves a frame, realtime and turn, on master and pre-K1082 alike), so K1077 cluster 3 does not reproduce there; solves still run per awake update (drag 287/frame) (split from K1083). Dropped: its stands were `fw=0`, which removes K1077's flow trigger; folded into K1083's retrace (the drag stand's re-solve per awake update is expected: the geometry moves) (2026-11-03).
-- **K1131** · Muse batch 8: K332, K657, K1081 and K1115 done, K1082's declare half; K1083 and K1133 were measured with `fw=0`, not on K1077's flow-on stand (the brief's error), so both retrace. Done in 91387212 (2026-11-03).
-- **K1115** · one general Reset fix in row/doReset. Done in 91387212 (2026-11-03).
-- **K1082** · incremental burn declare; fillets split out. Done in afaccf39 (2026-11-03).
-- **K1081** · one panel rect read a frame (camera cache). Done in efe7faa3 (2026-11-03).
-- **K657** · win banner shows snapped and par rows. Done in 2592be6c (2026-11-03).
-- **K332** · key hints after the first direction press. Done in 3346474f (2026-11-03).
-- **K1108** · Muse batch 7: runs A-F passed their gates (2026-11-03 00:29 to 03:06) and closed K368, K1100, K748, K1109, K1099, K1101, K426, K437; filed K1126, K1127, K1129 (Levi) and K1128. Done in 8ab9e8e9 (2026-11-03).
-- **K437** · rules name frame_loop.ts; half rate added. Done in 8ab9e8e9 (2026-11-03).
-- **K426** · index rows complete; scripts/lore_index_check.mjs. Done in 8ab9e8e9 (2026-11-03).
-- **K1101** · 119 pairs merged under one heading. Done in b5743a42 (2026-11-03).
-- **K1099** · reset snaps; jump threshold checked; follow spring to Levi. Done in 05724e27 (2026-11-03).
-- **K1109** · probed: the taps jump. Done in 05724e27 (2026-11-03).
-- **K748** · no focus ring after a pointer click; phone pass and fragile check split out. Done in 5323a521 (2026-11-03).
-- **K1100** · non-breaking joins in the hidden row. Done in a0546b30 (2026-11-03).
-- **K368** · High contrast wears the ring. Done in 71250dca (2026-11-03).
-- **K1107** · Muse batch 6: runs A-F passed their gates (2026-11-02 20:20 to 2026-11-03 00:28) and closed all 14 items (K343, K130, K495, K128, K212, K490, K787, K584, K112, K403, K263, K600, K609, K462); Levi checks K1110, K1111 and K1118. Done in c647e223 (2026-11-03).
-- **K895** · phone_pass kit (K156 round 2026-11-02): (a) the median averages at even n and (d) a phase refuses once its pass has `state/watchdog.trip` (8d4d0617, test `test/phone_pass/k895.test.ts`); (c) servers and watchdog start detached through WMI (33fa558b). (b), the A/A floor, continues as K1124. Done in 33fa558b (2026-11-03).
-- **K1124** · K895 (b): installer refuses finish samples (b7eea7f4, test test/phone_pass/install_floor.test.ts); portrait A/A retaken at -Moves 0,7,11 and installed as scripts/phone_pass/noise.json (86b9ed40). Done in 86b9ed40 (2026-11-03).
-- **K1125** · K309 control from failing (k, n) pairs (seed 4 chain 7 n 82: pre-fix 359-389 px, master 0 px) and rimSeam whole-frame diff explained as a first-capture blank frame (K156 round 2026-11-03). Done in feb565c5 (2026-11-03).
-- **K462** · K323 table and undo list updated to shipped burn rows (2026-11). Done in a0bafbb7 (2026-11-03).
-- **K609** · pluck docs point at chain 2 key 427, rechecked live on 5585. Done in c647e223 (2026-11-03).
-- **K600** · gameplay-links.md gains gm key and K534 entry. Done in 54433e6e (2026-11-03).
-- **K263** · lore and K80 brief no longer cite undoAllowed (removed 35f3ec28/K534). Done in 2f4bcfbe (2026-11-03).
-- **K403** · abbott comment stage 4, codec citation by name, K74 stage 3 sections 4.2-4.3 and handoff files. Done in bbe69373 (2026-11-03).
-- **K1033** · form B names a surface by its covering pieces only (`labelBy: "cover"`, S3b F1-F2): the census reads 0 DEFECT and 0 fade on all 12 scenes (was 137 and 216). Done in 07b4a6ac (2026-11-02).
-- **K1113** · Cursive b, v and w (J3f, v6.9): ends rounded out (about -8°; the font's -12 to -16°), exit ports, every join out of them solved, their presets deleted; out of b/v/w hooks 43→0, spikes 49→3, rough 47→27. Levi's look: K1119. Done in ba9c38b3 (2026-11-02).
-- **K112** · cross-tab sync only; the camera half is K1109. Done in 3ff7144a (2026-11-02).
-- **K584** · already guarded: SCENE_FIELDS Record<keyof SceneParams> fails tsc TS2741 on optional field; name-build tests round-trip. Done in 1a4e3a47 (2026-11-02).
-- **K787** · whole-game beat test lands catches (respawn+restAt+refuse), asserts every turn result, sees K774 (b). Done in 1a4e3a47 (2026-11-02).
-- **K490** · explained, not reproduced: no 404 on master dev or preview build across the brief's links, a K466-style xp=threads load or a panel open; every file index.html/manifest names serves 200, and K466's log never recorded the URL. Done in 07802509 (2026-11-02).
-- **K212** · pluck strip split into one geometry per program (blur vs still); all eight attribute warnings (aGap, aGapId, aUV, aEnv, aCol, aClipA/B/F) gone, pictures pixel-identical. Done in 07802509 (2026-11-02).
-- **K128** · marker aUV slot dropped from the geometry and the dead declaration removed; PixiJS aUV warning gone (probe .claude/probes/K212/). Done in 07802509 (2026-11-02).
+- **K1131** · Muse batch 8: K332, K657, K1081 and K1115 done, K1082's declare half; K1083 and K1133 were measured with `fw=0`, not on K1077's flow-on stand (the brief's error), so both retrace. Done in 0ad79ddc (2026-11-03).
+- **K1115** · one general Reset fix in row/doReset. Done in 0ad79ddc (2026-11-03).
+- **K1082** · incremental burn declare; fillets split out. Done in e0ec49f3 (2026-11-03).
+- **K1081** · one panel rect read a frame (camera cache). Done in ac42b67a (2026-11-03).
+- **K657** · win banner shows snapped and par rows. Done in 85decf22 (2026-11-03).
+- **K332** · key hints after the first direction press. Done in 698a2924 (2026-11-03).
+- **K1108** · Muse batch 7: runs A-F passed their gates (2026-11-03 00:29 to 03:06) and closed K368, K1100, K748, K1109, K1099, K1101, K426, K437; filed K1126, K1127, K1129 (Levi) and K1128. Done in 13906317 (2026-11-03).
+- **K437** · rules name frame_loop.ts; half rate added. Done in 13906317 (2026-11-03).
+- **K426** · index rows complete; scripts/lore_index_check.mjs. Done in 13906317 (2026-11-03).
+- **K1101** · 119 pairs merged under one heading. Done in e5996c10 (2026-11-03).
+- **K1099** · reset snaps; jump threshold checked; follow spring to Levi. Done in 977ad2f8 (2026-11-03).
+- **K1109** · probed: the taps jump. Done in 977ad2f8 (2026-11-03).
+- **K748** · no focus ring after a pointer click; phone pass and fragile check split out. Done in 70a1a43b (2026-11-03).
+- **K1100** · non-breaking joins in the hidden row. Done in 22b5ebab (2026-11-03).
+- **K368** · High contrast wears the ring. Done in 89836d3b (2026-11-03).
+- **K1107** · Muse batch 6: runs A-F passed their gates (2026-11-02 20:20 to 2026-11-03 00:28) and closed all 14 items (K343, K130, K495, K128, K212, K490, K787, K584, K112, K403, K263, K600, K609, K462); Levi checks K1110, K1111 and K1118. Done in b4d15403 (2026-11-03).
+- **K895** · phone_pass kit (K156 round 2026-11-02): (a) the median averages at even n and (d) a phase refuses once its pass has `state/watchdog.trip` (452cf61b, test `test/phone_pass/k895.test.ts`); (c) servers and watchdog start detached through WMI (f8c7669e). (b), the A/A floor, continues as K1124. Done in f8c7669e (2026-11-03).
+- **K1124** · K895 (b): installer refuses finish samples (fa39d0bd, test test/phone_pass/install_floor.test.ts); portrait A/A retaken at -Moves 0,7,11 and installed as scripts/phone_pass/noise.json (d4c1dc41). Done in d4c1dc41 (2026-11-03).
+- **K1125** · K309 control from failing (k, n) pairs (seed 4 chain 7 n 82: pre-fix 359-389 px, master 0 px) and rimSeam whole-frame diff explained as a first-capture blank frame (K156 round 2026-11-03). Done in e7ebb1c4 (2026-11-03).
+- **K462** · K323 table and undo list updated to shipped burn rows (2026-11). Done in 7760bf01 (2026-11-03).
+- **K609** · pluck docs point at chain 2 key 427, rechecked live on 5585. Done in b4d15403 (2026-11-03).
+- **K600** · gameplay-links.md gains gm key and K534 entry. Done in 6ef60f05 (2026-11-03).
+- **K263** · lore and K80 brief no longer cite undoAllowed (removed 2605bf6b/K534). Done in 5316c39a (2026-11-03).
+- **K403** · abbott comment stage 4, codec citation by name, K74 stage 3 sections 4.2-4.3 and handoff files. Done in cb9e6fdb (2026-11-03).
+- **K1033** · form B names a surface by its covering pieces only (`labelBy: "cover"`, S3b F1-F2): the census reads 0 DEFECT and 0 fade on all 12 scenes (was 137 and 216). Done in 239fba3f (2026-11-02).
+- **K1113** · Cursive b, v and w (J3f, v6.9): ends rounded out (about -8°; the font's -12 to -16°), exit ports, every join out of them solved, their presets deleted; out of b/v/w hooks 43→0, spikes 49→3, rough 47→27. Levi's look: K1119. Done in 4d0fc282 (2026-11-02).
+- **K112** · cross-tab sync only; the camera half is K1109. Done in 758dfe1e (2026-11-02).
+- **K584** · already guarded: SCENE_FIELDS Record<keyof SceneParams> fails tsc TS2741 on optional field; name-build tests round-trip. Done in be6e15a3 (2026-11-02).
+- **K787** · whole-game beat test lands catches (respawn+restAt+refuse), asserts every turn result, sees K774 (b). Done in be6e15a3 (2026-11-02).
+- **K490** · explained, not reproduced: no 404 on master dev or preview build across the brief's links, a K466-style xp=threads load or a panel open; every file index.html/manifest names serves 200, and K466's log never recorded the URL. Done in ae6316fe (2026-11-02).
+- **K212** · pluck strip split into one geometry per program (blur vs still); all eight attribute warnings (aGap, aGapId, aUV, aEnv, aCol, aClipA/B/F) gone, pictures pixel-identical. Done in ae6316fe (2026-11-02).
+- **K128** · marker aUV slot dropped from the geometry and the dead declaration removed; PixiJS aUV warning gone (probe .claude/probes/K212/). Done in ae6316fe (2026-11-02).
 - **K1104** · Cursive v6.7 (J3d): the joins into a and q attach on their lower bounds; the after-high stretch's [0, 90] was picked by a sweep with 85 tying; b's, v's and w's other high exits are still presets (`K1027_cursive_j3d.md` ## Handoff). Dropped: folded into K1113: the six are v6.6's presets again (K1102), so their attach bounds and the sweep's stretch are moot, and b's, v's and w's other high exits are K1113's scope (2026-11-02).
-- **K1102** · Cursive a/q joins: Levi chose v6.6's ("aq: definitely 6.6", 2026-11-02); J3e restored them exactly for ba, va, wa, bq, vq and wq. Done in d505cbbf (2026-11-02).
-- **K495** · End glow row shows only under thread reveal with the halo or beacon look. Done in 5f28e0b1 (2026-11-02).
-- **K130** · Reset to defaults writes the exact default for backgroundIntensity, pulseReach, settleBudget and loadSettle (step removed, edits keep 2 decimals / whole numbers). Done in 5f28e0b1 (2026-11-02).
-- **K343** · Snore decoded on OfflineAudioContext before the gate (KnotSynth.decodeOffline, SnoreSfx falls back to context decode); first touch plays it. Probe .claude/probes/K343/snore.mjs: decodes 1 before input, one tap plays 1, never stacked. Done in 933571af (2026-11-02).
-- **K1091** · Muse batch 5, runs 5A-5E (5b8522a5..7bf0fbf4), reviewed; Claude fixed K442's fire-lead line (6e617fec); K1086, K1095 and K1099-K1101 stay open. Done in 7bf0fbf4 (2026-11-02).
-- **K1039** · K868's gate-tool leftovers: S3's verdict runner requests no favicon (a data: URL) and drops any favicon request from its error count; same24, same28 and raster26 are K868's, superseded by K1040. Done in 05727f6c (2026-11-02).
-- **K1027** · Cursive: the six high joins of b, v and w into a and q solved in v6.7 (J3d), replacing the presets; the look call is K1102. Done in 94f751ee (2026-11-02).
-- **K1092** · Form B's Lcut reach: S1f's quadratic reach (the default) is continuous by construction, ending the phantom reach at near-tangent passes (`K1040_s1f_reach.md` F1). Done in b400a081 (2026-11-02).
-- **K1094** · Ledger hygiene from the K1091 planner: K443, K404, K801 dropped, K497 reworded, the Next narrative moved to docs/history.md; K604 stays (still true: `mf` is outside the codec until K326 drops knot mode) and K1081-K1083 keep K1077 as their origin (their pointers hold). Done in 2ba1fcf7 (2026-11-02).
+- **K1102** · Cursive a/q joins: Levi chose v6.6's ("aq: definitely 6.6", 2026-11-02); J3e restored them exactly for ba, va, wa, bq, vq and wq. Done in 636bd685 (2026-11-02).
+- **K495** · End glow row shows only under thread reveal with the halo or beacon look. Done in 9e617d7a (2026-11-02).
+- **K130** · Reset to defaults writes the exact default for backgroundIntensity, pulseReach, settleBudget and loadSettle (step removed, edits keep 2 decimals / whole numbers). Done in 9e617d7a (2026-11-02).
+- **K343** · Snore decoded on OfflineAudioContext before the gate (KnotSynth.decodeOffline, SnoreSfx falls back to context decode); first touch plays it. Probe .claude/probes/K343/snore.mjs: decodes 1 before input, one tap plays 1, never stacked. Done in 2b539fc8 (2026-11-02).
+- **K1091** · Muse batch 5, runs 5A-5E (1a6823ea..a1a7e12a), reviewed; Claude fixed K442's fire-lead line (91b54050); K1086, K1095 and K1099-K1101 stay open. Done in a1a7e12a (2026-11-02).
+- **K1039** · K868's gate-tool leftovers: S3's verdict runner requests no favicon (a data: URL) and drops any favicon request from its error count; same24, same28 and raster26 are K868's, superseded by K1040. Done in 15d0ea13 (2026-11-02).
+- **K1027** · Cursive: the six high joins of b, v and w into a and q solved in v6.7 (J3d), replacing the presets; the look call is K1102. Done in 4e88a54f (2026-11-02).
+- **K1092** · Form B's Lcut reach: S1f's quadratic reach (the default) is continuous by construction, ending the phantom reach at near-tangent passes (`K1040_s1f_reach.md` F1). Done in b4b036e7 (2026-11-02).
+- **K1094** · Ledger hygiene from the K1091 planner: K443, K404, K801 dropped, K497 reworded, the Next narrative moved to docs/history.md; K604 stays (still true: `mf` is outside the codec until K326 drops knot mode) and K1081-K1083 keep K1077 as their origin (their pointers hold). Done in 4e26f8a0 (2026-11-02).
 - **K1098** · Look check: reduced motion's panel and resize snap. Dropped: nothing to see on a maze: there a panel toggle or a resize does not move the fit at all (K1085's probe, cases a and c, the same before and after); the text-scene toggle measured 89 -> 2 frames under reduce (`.claude/probes/K1085/`) (2026-11-02).
-- **K592** · Gap search rounded a negative kStart the wrong way: kStart can go negative (ring seam crossings, pinned in gap_mask.test.ts), and its three decodes use floor(x + 0.5) now (K817). Done in 52aa617a (2026-10-22).
+- **K592** · Gap search rounded a negative kStart the wrong way: kStart can go negative (ring seam crossings, pinned in gap_mask.test.ts), and its three decodes use floor(x + 0.5) now (K817). Done in 7dc79767 (2026-10-22).
 - **K801** · K138 s4 slice 2 calls (keys at core junctions, placeholder icons). Dropped: duplicate of K789 (K1094) (2026-11-02).
-- **K404** · Inferred: the hover path ignores onHead. Dropped: hover and click both gate on inWaitZone (input_pointer.ts:766, main.ts:3277, aaede235; K1094) (2026-11-02).
+- **K404** · Inferred: the hover path ignores onHead. Dropped: hover and click both gate on inWaitZone (input_pointer.ts:766, main.ts:3277, 6b5b88df; K1094) (2026-11-02).
 - **K443** · Two panel rows labelled `clock`. Dropped: the rows already read Clock and Fire clock (tweakpane_panel.ts 1270, 1276, 1917; K1094) (2026-11-02).
-- **K1096** · Levi checked the HUD's before/after sheet in place of the phone check: fine (`.claude/probes/K775/shots/sheet.png`). Done in 5b8522a5 (2026-11-02).
-- **K738** · Free play badge re-fits (icon only, beside or below the menu button) when the HUD grows; clear of the HUD in all 8 shot states (`.claude/probes/K775/shots/`). Done in 5b8522a5 (2026-11-02).
-- **K775** · HUD's hidden-runs row wraps inside the box (shots at 411x753, 360x740 and 320x640 matched the rects: `.claude/probes/K775/shots/sheet.png`). Done in 5b8522a5 (2026-11-02).
-- **K593** · preview.ps1 junctions main node_modules into bare worktrees or fails naming npm ci. Done in edb4b4ac (2026-11-02).
-- **K1063** · run_node.mjs server.ws false; parallel probes no longer print Port 24678 error. Done in 68a1c57a (2026-11-02).
-- **K1084** · hashed /assets/* now max-age=31536000 immutable on Pages; worker fetch cache-served 10/10, levi fresh hello 941->347 ms. Done in fc9b0eec (2026-11-02).
-- **K741** · cutRules(upper) drops 'fewest cuts' for upper-bound par; exact-par pinned. Done in 04e2c1f4 (2026-11-02).
-- **K442** · walked/fire lead lines true under both fire clocks; tests pin old phrases gone. Done in 3c57bd37 and 6e617fec (2026-11-02).
-- **K228** · pointerleave clears the choice hover too (probe K228 before 0 stays, after -1; guard held). Done in 65b0d43c (2026-11-02).
-- **K1085** · Reduced motion snaps the camera's fit on a jump and its range ease (32603535). Done in 32603535 (2026-11-02).
+- **K1096** · Levi checked the HUD's before/after sheet in place of the phone check: fine (`.claude/probes/K775/shots/sheet.png`). Done in 1a6823ea (2026-11-02).
+- **K738** · Free play badge re-fits (icon only, beside or below the menu button) when the HUD grows; clear of the HUD in all 8 shot states (`.claude/probes/K775/shots/`). Done in 1a6823ea (2026-11-02).
+- **K775** · HUD's hidden-runs row wraps inside the box (shots at 411x753, 360x740 and 320x640 matched the rects: `.claude/probes/K775/shots/sheet.png`). Done in 1a6823ea (2026-11-02).
+- **K593** · preview.ps1 junctions main node_modules into bare worktrees or fails naming npm ci. Done in f0a871a9 (2026-11-02).
+- **K1063** · run_node.mjs server.ws false; parallel probes no longer print Port 24678 error. Done in a869f4a6 (2026-11-02).
+- **K1084** · hashed /assets/* now max-age=31536000 immutable on Pages; worker fetch cache-served 10/10, levi fresh hello 941->347 ms. Done in a4cc20ee (2026-11-02).
+- **K741** · cutRules(upper) drops 'fewest cuts' for upper-bound par; exact-par pinned. Done in 221b5ad5 (2026-11-02).
+- **K442** · walked/fire lead lines true under both fire clocks; tests pin old phrases gone. Done in 715049f5 and 91b54050 (2026-11-02).
+- **K228** · pointerleave clears the choice hover too (probe K228 before 0 stays, after -1; guard held). Done in e5408241 (2026-11-02).
+- **K1085** · Reduced motion snaps the camera's fit on a jump and its range ease (9e7fd3f8). Done in 9e7fd3f8 (2026-11-02).
 - **K1078** · Hand K1040's gated stages to Muse. Dropped: Levi (2026-11-02) left Claude agents or Muse to the coordinator per task; the junction stages stay with Claude agents (S3 runs as K1097's agent) (2026-11-02).
-- **K1089** · Cursive J3c's look calls: Levi kept v6.6 on all four (oe, ot's dip, the dips into m n v x z, the entries into i j p s u w y; `K863_trace.md` Levi's calls). Done in b283c1e7 (2026-11-02).
+- **K1089** · Cursive J3c's look calls: Levi kept v6.6 on all four (oe, ot's dip, the dips into m n v x z, the entries into i j p s u w y; `K863_trace.md` Levi's calls). Done in 54900768 (2026-11-02).
 - **K671** · Remove 16 merged, clean agent worktrees with K161's cleanup.ps1. Dropped: already gone: removed after 10-27 without a K161 run (inferred: Claude Code's sweep of old clean worktrees); branches kept, all merged; the open items' probes were copied at merge (2026-11-02).
-- **K485** · Pixel sheet pass on the phone: 34/34 portrait checks ok on master (keys, landscape, live skipped). Done in 9f5b77f1 (2026-11-02).
-- **K309** · K299 ring-lap fix on the PowerVR: 319/16384 division misses (all k-1); every seam case 0 px on master. Done in 9f5b77f1 (2026-11-02).
-- **K896** · Confetti recheck on the phone (round 2026-10-30): master 45.0/45.3 fps vs 65a7787 60.1/60.3 over the 8 s fall, both orders; cost reproduced. Done in 9f5b77f1 (2026-11-02).
+- **K485** · Pixel sheet pass on the phone: 34/34 portrait checks ok on master (keys, landscape, live skipped). Done in 7ef119c5 (2026-11-02).
+- **K309** · K299 ring-lap fix on the PowerVR: 319/16384 division misses (all k-1); every seam case 0 px on master. Done in 7ef119c5 (2026-11-02).
+- **K896** · Confetti recheck on the phone (round 2026-10-30): master 45.0/45.3 fps vs 8fe3d20 60.1/60.3 over the 8 s fall, both orders; cost reproduced. Done in 7ef119c5 (2026-11-02).
 - **K1051** · Turn on Dependabot for knotmaze. Done by Levi in the repo settings: alerts and security updates on (2026-11-02).
 - **K715** · adb deaths: Godot's shutdown_adb_on_exit is now false (claude-config Setup-GodotAndroid.ps1 step 5; applied on the desktop). Done in claude-config f914c3a4 (2026-11-02).
 - **K1087** · The phone's network path off USB (5555 over Tailscale closes on every reboot). Dropped: decided 2026-11-02: re-arm 5555 over USB after each phone reboot, automated; the job is claude-config CC132 (2026-11-02).
-- **K1079** · Muse batch 4: A K331+K330 bc5f0043, B K549 f578b6ee, C K486 20afc256, D K1077 51f97bbc, E K412 19cfdd67; all passed review (K1081, K1083, K1084 amended; residuals K1085, K1086 filed). Done in 19cfdd67 (2026-10-30).
-- **K412** · preload verified on real network: through levi.dev proxy chunk downloads once, worker fetch transfer 0 (5 fresh + 5 warm per origin, desktop Chrome); pages.dev revalidates (max-age=0), fix filed K1084. Done in 19cfdd67 (2026-10-30).
-- **K1077** · prof5-prof8 attribute the residual: 82% of +4.24 x1, 87% of +13.16 x4; three clusters (button-tick rects, fillet rebuild, gap-slot pass) filed as K1081-K1083. Done in 51f97bbc (2026-10-30).
-- **K486** · Touch help for the panel's nine buttons (K467's mechanism on buttons); probe .claude/probes/K486/. Done in 20afc256 (2026-10-30).
-- **K549** · Text scenes fit beside the open panel (fitArea/fitPlacement in view_clamp, camera reads panel only for params.text); probe .claude/probes/K549/. Done in f578b6ee (2026-10-30).
-- **K330** · touch press on a choice lights its hover glow at once. Done in bc5f0043 (2026-10-30).
-- **K331** · touch picks in pixels (touchPickMargin); with K330 glow on press. Done in bc5f0043 (2026-10-30).
-- **K327** · Labels that say what they size: 'Off-screen arrow size' and 'Maze marker size' (K534, 35f3ec28), word labels for the rest (K541); the panel inventory at HEAD shows no row labelled with its key. Done in 2c351ae4 (2026-10-30).
-- **K785** · Lore attach cost: the hubs now attach only their own lore (re-measured 2026-10-30: frame_loop.ts 2 rules files, 3k tokens, was 11 / 28k; K774's five files 7, 30k, was about 60k, 16k of it the minotaur lore for minotaur_turns.ts). Done in 2dc2af1d (2026-10-30).
+- **K1079** · Muse batch 4: A K331+K330 20b66f6e, B K549 48cf34fa, C K486 4935f769, D K1077 d21a05d2, E K412 c24d5801; all passed review (K1081, K1083, K1084 amended; residuals K1085, K1086 filed). Done in c24d5801 (2026-10-30).
+- **K412** · preload verified on real network: through levi.dev proxy chunk downloads once, worker fetch transfer 0 (5 fresh + 5 warm per origin, desktop Chrome); pages.dev revalidates (max-age=0), fix filed K1084. Done in c24d5801 (2026-10-30).
+- **K1077** · prof5-prof8 attribute the residual: 82% of +4.24 x1, 87% of +13.16 x4; three clusters (button-tick rects, fillet rebuild, gap-slot pass) filed as K1081-K1083. Done in d21a05d2 (2026-10-30).
+- **K486** · Touch help for the panel's nine buttons (K467's mechanism on buttons); probe .claude/probes/K486/. Done in 4935f769 (2026-10-30).
+- **K549** · Text scenes fit beside the open panel (fitArea/fitPlacement in view_clamp, camera reads panel only for params.text); probe .claude/probes/K549/. Done in 48cf34fa (2026-10-30).
+- **K330** · touch press on a choice lights its hover glow at once. Done in 20b66f6e (2026-10-30).
+- **K331** · touch picks in pixels (touchPickMargin); with K330 glow on press. Done in 20b66f6e (2026-10-30).
+- **K327** · Labels that say what they size: 'Off-screen arrow size' and 'Maze marker size' (K534, 2605bf6b), word labels for the rest (K541); the panel inventory at HEAD shows no row labelled with its key. Done in e77c9746 (2026-10-30).
+- **K785** · Lore attach cost: the hubs now attach only their own lore (re-measured 2026-10-30: frame_loop.ts 2 rules files, 3k tokens, was 11 / 28k; K774's five files 7, 30k, was about 60k, 16k of it the minotaur lore for minotaur_turns.ts). Done in 65c4e1bd (2026-10-30).
 - **K1074** · K658 check: c4 stub. Dropped: stale check, K840 leaves snap no exempt stub; c5 covers snap (K658_page_checks.md) (2026-10-30).
 - **K1073** · K658 check: real-time Undo. Dropped: by design, the real-time Stranded banner offers Restart only (K658_page_checks.md) (2026-10-30).
 - **K1072** · K658 check: real-time Undo. Dropped: by design, the real-time Stranded banner offers Restart only (K658_page_checks.md) (2026-10-30).
 - **K1071** · K658 check: real-time Undo. Dropped: by design, the real-time Stranded banner offers Restart only (K658_page_checks.md) (2026-10-30).
 - **K1070** · K658 check: real-time Undo. Dropped: by design, the real-time Stranded banner offers Restart only (K658_page_checks.md) (2026-10-30).
 - **K1065** · K658 check: fog IoU 0.9613 after Undo. Dropped: inside K137's 0.956-0.981 spread, the 0.97 line is too tight (K658_page_checks.md) (2026-10-30).
-- **K1069** · K658 check: exempt tail crossing. Dropped: stale check, K840 (4507a632) breaks run ends too (K658_page_checks.md) (2026-10-30).
-- **K1068** · K658 check: exempt tail crossing. Dropped: stale check, K840 (4507a632) breaks run ends too (K658_page_checks.md) (2026-10-30).
-- **K1067** · K658 check: exempt tail crossing. Dropped: stale check, K840 (4507a632) breaks run ends too (K658_page_checks.md) (2026-10-30).
-- **K1066** · K658 check: exempt tail crossing. Dropped: stale check, K840 (4507a632) breaks run ends too (K658_page_checks.md) (2026-10-30).
-- **K1064** · K658 check: exempt tail crossing. Dropped: stale check, K840 (4507a632) breaks run ends too (K658_page_checks.md) (2026-10-30).
-- **K1062** · Muse batch 3, runs G and A-F, reviewed on master. Done in 687e956b (2026-10-30).
-- **K645** · K140 frame A/B on one build 5406c4e6: cannons cost unresolved at 1x, +3.2/+5.6 ms at 4x (K653_checks.md). Done in e9e5cc15 (2026-10-30).
-- **K441** · Owed same-state rerun done: 8/8 stands asleep at both ends, tick gap +4.24 ms (1x) / +13.16 ms (4x) vs +0.23/+1.85 prediction in docs/design/K441_fire_frame.md. Done in 7bf9f07f (2026-10-30).
-- **K814** · Text & emblem rows built from SHAPE_INJECTION_PARAMS. Done in 3fc7b612 (2026-10-30).
-- **K658** · K137 page gaps checked: 155 checks in docs/design/K658_page_checks.md, FAILs K1064-K1074, sounds K1075. Done in b51bc22b (2026-10-30).
-- **K321** · Credits page: licenses.html became credits.html, Levi header first, Scarborough Fair in Music and sound, Built with Claude Code below art/music. Done in bc18a40f (2026-10-30).
-- **K1056** · Real-time lure lasts until the target (run G, K1062): detect() no longer re-spots a lured monster, both clocks suggest the shipped 2 lures / 1 snare. Done in b65bf3fb (2026-10-30).
-- **K654** · the moving lead rides uKTeleAt, no texel rewrite (K324 s2). Done in ea3e63b8 (2026-10-29).
-- **K650** · the TELE census, GPU vs mirror with the riding lead (K324 s2). Done in a90a1ceb (2026-10-29).
-- **K1053** · Muse batch 2, runs A-F, reviewed on master. Done in b849de95 (2026-10-29).
-- **K396** · scripts/dev.ps1 LAN dev server, checks verified on 5531. Done in 7b174bec (2026-10-29).
-- **K1061** · run_node --config; last vite-node recipes pointed at it, panel/fold runs pass. Done in 011274f9 (2026-10-29).
-- **K1060** · workerPreloadScript moved to src/loader/worker_preload.ts (default derived from PARAM_DEFAULTS.physicsWorker); test/loader/worker_preload.test.ts pins its decision against parseParams (probe forms, seeded writer links, overrides, other version, garbage). Done in 528af3ba (2026-10-29).
-- **K1057** · scripts/run_node.mjs tracked (was .claude/probes/K708/run_node.mjs); rules recipes rewritten to it, no vite-node left in rules; burn_sim and par_census run through it. Done in d4d83422 (2026-10-29).
-- **K783** · a chase starts with 2 lures and 1 snare (PARAM_DEFAULTS; sliders already existed); url_codec defaults pin 0/0 -> 2/1 only, page checks in .claude/probes/K783/ passed. Done in 7128df43 (2026-10-29).
-- **K1059** · K1055's request count. Dropped: decided by Claude: count network downloads. The worker fetch is served from the HTTP cache, so K1055's check holds (c70db4fa) (2026-10-29).
-- **K1055** · Worker preload back for worker pages: an inline head script modulepreloads the worker chunk unless phw=0 (hello about 26 ms sooner on first loads). Done in c70db4fa (2026-10-29).
-- **K1054** · no K138 rule can be on in a realtime chase (fabricRulesOf zeroes them outside classic; chase needs minotaur), so handleChaseTap needs no ruled twin; gate pinned in url_codec.test.ts. Done in 0a58f52f (2026-10-29).
-- **K1052** · test type errors fixed 92 -> 0 in 4 batches; tsconfig.tests.json folded into npm run typecheck. Done in 99c4aff7 (2026-10-29).
-- **K728** · real-time seeker measured: taken 99.9-100%, slew/banish 4.4-8.9% vs blind 0.2-0.7% (docs/design/K708.md). Done in 9d673405 (2026-10-29).
-- **K932** · bench_frame readPixels sync; K923 runner folded to scripts/k923 (.claude/probes/K932/results.md). Done in b6d0e1b2 (2026-10-29).
-- **K414** · static worker preload dropped; phw=0 downloads no worker chunk, and default pages lost K7 s7's head start (back in K1055). Done in 2525712c (2026-10-29).
-- **K1050** · Muse batch 1 (d504b686..24940b10), reviewed: K994, K788, K743/K762/K763, K747, K807, K810, K393, K414 and K932 landed; K783/K728 reopened (cea08eb5 measured other things); left K1052, K1054 (K743's chase tap), K1055 (K414's preload); batch 2 is K1053. Done in 24940b10 (2026-10-29).
-- **K393** · Option B: probe:types groundwork shipped (92 errors/32 files), gates unchanged. Done in f79831c0 (2026-10-29).
-- **K810** · shipped 44/44, Fuse 35, uFuzzy 31, fuzzysort 34 (.claude/probes/K810/results.md). Done in 443ebdda (2026-10-29).
-- **K807** · nine constants to panel rows (follow, sword/sleeper rings, nearHops, routeWeight). Done in d8aaf37e (2026-10-29).
-- **K747** · sword takenAt/slainAt count player moves (inputs.length). Done in cb73089e (2026-10-29).
-- **K763** · hidden counter only when a hidden run was placed. Done in 40de45c1 (2026-10-29).
-- **K762** · backtrack remembers retraced run; turnstile re-entry allowed. Done in 0e73c399 (2026-10-29).
-- **K743** · planRouteRuled plans ruled taps; renderer targetAt uses it; the real-time chase's tap does not yet (K1054). Done in f61eff23 (2026-10-29).
-- **K788** · placement rejects trapping one-way draws (ruleHasTrap); census 42/50+44/50 -> 0/50. Done in cff5a0d7 (2026-10-29).
-- **K994** · audit clean: vitest ^4.1.12, @xmldom 0.8.15 (npm audit fix). Done in 732ab944 (2026-10-29).
+- **K1069** · K658 check: exempt tail crossing. Dropped: stale check, K840 (0484e32f) breaks run ends too (K658_page_checks.md) (2026-10-30).
+- **K1068** · K658 check: exempt tail crossing. Dropped: stale check, K840 (0484e32f) breaks run ends too (K658_page_checks.md) (2026-10-30).
+- **K1067** · K658 check: exempt tail crossing. Dropped: stale check, K840 (0484e32f) breaks run ends too (K658_page_checks.md) (2026-10-30).
+- **K1066** · K658 check: exempt tail crossing. Dropped: stale check, K840 (0484e32f) breaks run ends too (K658_page_checks.md) (2026-10-30).
+- **K1064** · K658 check: exempt tail crossing. Dropped: stale check, K840 (0484e32f) breaks run ends too (K658_page_checks.md) (2026-10-30).
+- **K1062** · Muse batch 3, runs G and A-F, reviewed on master. Done in 5debde5a (2026-10-30).
+- **K645** · K140 frame A/B on one build 72bff312: cannons cost unresolved at 1x, +3.2/+5.6 ms at 4x (K653_checks.md). Done in 295d28c4 (2026-10-30).
+- **K441** · Owed same-state rerun done: 8/8 stands asleep at both ends, tick gap +4.24 ms (1x) / +13.16 ms (4x) vs +0.23/+1.85 prediction in docs/design/K441_fire_frame.md. Done in 8308ea15 (2026-10-30).
+- **K814** · Text & emblem rows built from SHAPE_INJECTION_PARAMS. Done in 82dd37a5 (2026-10-30).
+- **K658** · K137 page gaps checked: 155 checks in docs/design/K658_page_checks.md, FAILs K1064-K1074, sounds K1075. Done in 7d00fc06 (2026-10-30).
+- **K321** · Credits page: licenses.html became credits.html, Levi header first, Scarborough Fair in Music and sound, Built with Claude Code below art/music. Done in 9de9d25e (2026-10-30).
+- **K1056** · Real-time lure lasts until the target (run G, K1062): detect() no longer re-spots a lured monster, both clocks suggest the shipped 2 lures / 1 snare. Done in ab055498 (2026-10-30).
+- **K654** · the moving lead rides uKTeleAt, no texel rewrite (K324 s2). Done in 754f06a8 (2026-10-29).
+- **K650** · the TELE census, GPU vs mirror with the riding lead (K324 s2). Done in 9cfe77af (2026-10-29).
+- **K1053** · Muse batch 2, runs A-F, reviewed on master. Done in 9b9ea6be (2026-10-29).
+- **K396** · scripts/dev.ps1 LAN dev server, checks verified on 5531. Done in 179ecd64 (2026-10-29).
+- **K1061** · run_node --config; last vite-node recipes pointed at it, panel/fold runs pass. Done in 7f802e12 (2026-10-29).
+- **K1060** · workerPreloadScript moved to src/loader/worker_preload.ts (default derived from PARAM_DEFAULTS.physicsWorker); test/loader/worker_preload.test.ts pins its decision against parseParams (probe forms, seeded writer links, overrides, other version, garbage). Done in 2a347a53 (2026-10-29).
+- **K1057** · scripts/run_node.mjs tracked (was .claude/probes/K708/run_node.mjs); rules recipes rewritten to it, no vite-node left in rules; burn_sim and par_census run through it. Done in 00a7bc0e (2026-10-29).
+- **K783** · a chase starts with 2 lures and 1 snare (PARAM_DEFAULTS; sliders already existed); url_codec defaults pin 0/0 -> 2/1 only, page checks in .claude/probes/K783/ passed. Done in 3e42d9cf (2026-10-29).
+- **K1059** · K1055's request count. Dropped: decided by Claude: count network downloads. The worker fetch is served from the HTTP cache, so K1055's check holds (1c8fe970) (2026-10-29).
+- **K1055** · Worker preload back for worker pages: an inline head script modulepreloads the worker chunk unless phw=0 (hello about 26 ms sooner on first loads). Done in 1c8fe970 (2026-10-29).
+- **K1054** · no K138 rule can be on in a realtime chase (fabricRulesOf zeroes them outside classic; chase needs minotaur), so handleChaseTap needs no ruled twin; gate pinned in url_codec.test.ts. Done in df40887c (2026-10-29).
+- **K1052** · test type errors fixed 92 -> 0 in 4 batches; tsconfig.tests.json folded into npm run typecheck. Done in ce1961e2 (2026-10-29).
+- **K728** · real-time seeker measured: taken 99.9-100%, slew/banish 4.4-8.9% vs blind 0.2-0.7% (docs/design/K708.md). Done in 80d5c354 (2026-10-29).
+- **K932** · bench_frame readPixels sync; K923 runner folded to scripts/k923 (.claude/probes/K932/results.md). Done in f7839f4e (2026-10-29).
+- **K414** · static worker preload dropped; phw=0 downloads no worker chunk, and default pages lost K7 s7's head start (back in K1055). Done in b6cd031d (2026-10-29).
+- **K1050** · Muse batch 1 (8828b9e2..3f68b7c5), reviewed: K994, K788, K743/K762/K763, K747, K807, K810, K393, K414 and K932 landed; K783/K728 reopened (42a1e8ed measured other things); left K1052, K1054 (K743's chase tap), K1055 (K414's preload); batch 2 is K1053. Done in 3f68b7c5 (2026-10-29).
+- **K393** · Option B: probe:types groundwork shipped (92 errors/32 files), gates unchanged. Done in 9a8a6e7a (2026-10-29).
+- **K810** · shipped 44/44, Fuse 35, uFuzzy 31, fuzzysort 34 (.claude/probes/K810/results.md). Done in 5add2671 (2026-10-29).
+- **K807** · nine constants to panel rows (follow, sword/sleeper rings, nearHops, routeWeight). Done in f641fc0a (2026-10-29).
+- **K747** · sword takenAt/slainAt count player moves (inputs.length). Done in bfa3a639 (2026-10-29).
+- **K763** · hidden counter only when a hidden run was placed. Done in 6e27a088 (2026-10-29).
+- **K762** · backtrack remembers retraced run; turnstile re-entry allowed. Done in ba8aaccc (2026-10-29).
+- **K743** · planRouteRuled plans ruled taps; renderer targetAt uses it; the real-time chase's tap does not yet (K1054). Done in 34c31872 (2026-10-29).
+- **K788** · placement rejects trapping one-way draws (ruleHasTrap); census 42/50+44/50 -> 0/50. Done in f35f6725 (2026-10-29).
+- **K994** · audit clean: vitest ^4.1.12, @xmldom 0.8.15 (npm audit fix). Done in 5982aa16 (2026-10-29).
 - **K1029** · Cursive v6.5's a and q tops (B4): approved by Levi's look, with g's, 2026-10-29 (untracked `K863/trace/work25/base`, no commit).
 - **K1038** · K992's F19 landing-bound residual. Dropped: moot, the march goes (K1040) (2026-10-28).
 - **K1031** · K992 stage 5's branch rule leftovers. Dropped: moot, the march goes (K1040) (2026-10-28).
@@ -2166,81 +2166,81 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1015** · K868 label: passReach steps by h/8. Dropped: moot, K1040's depth needs no passReach walk (F6) (2026-10-28).
 - **K1010** · K868 S3a8d, the switch lines found on the GPU. Dropped: moot, K1040's label has no switch lines (F6) (2026-10-28).
 - **K1007** · K868 S3a8c, S3a8a's leftovers (window range records, the near test, the p95 spread). Dropped: moot, K1040 replaces the CPU label path they measure (F6) (2026-10-28).
-- **K992** · K868 corner rules continuous in the geometry: the corner march (stage 4's c23w landed in 9b549d30). Dropped: superseded by K1040, whose corners are closed form (F2, F6); worktree `k992-corners` kept (the census kit) (2026-10-28).
+- **K992** · K868 corner rules continuous in the geometry: the corner march (stage 4's c23w landed in 27a183b9). Dropped: superseded by K1040, whose corners are closed form (F2, F6); worktree `k992-corners` kept (the census kit) (2026-10-28).
 - **K868** · Border look, junctions done right: one field renderer with exact G1 fillets, checked against a CPU oracle (`K868_field_border.md`). Dropped: superseded by K1040, which carries its goals (F1, F6, F7); worktree `k868-s3a` kept (oracle30, the recordings) (2026-10-28).
-- **K1034** · Cursive v6.4 looks: Levi picked b0's joins out of o, ot's tangent entry (Ht) and v6.4's og. Done in 67e1bf84 (2026-10-28).
-- **K1030** · Cursive og: Levi kept v6.4's (o meets g's left shoulder at 50.5 u). Done in 67e1bf84 (2026-10-28).
-- **K1028** · Cursive tools for J3b: own-ends census and sheets, the run-on font reference, bg/wg/vg census words; b0 built through B3's reader (`work24/b0_build.log`). Done in 72ef51cb (2026-10-28).
-- **K1026** · Cursive joins into g after B3's refit: Levi likes bg and vg where v6.3 lands them (2026-10-28); J3c keeps that attach, wg's with them. Done in 3b03127c (2026-10-28).
-- **K1025** · Cursive v6.3, by look: Levi likes g's new top (2026-10-28); a's and q's tops follow (K1029), the joins into g go to J3c (K1026). Done in cbd489be (2026-10-28).
-- **K1020** · Cursive g's top refit to curve evenly from the corner, like a's and q's (B3, v6.3; largest |dk/ds| 6.66e-3 -> 7.07e-4 /u^2); the joins into g it moved are K1026. Done in f2c2db5b (2026-10-28).
-- **K1019** · Cursive reader: frames carried by true arclength (B3's `asdrawn_k1019.py`): ba, va, wa 6.8-7.0 -> 2.5-2.6 u, bq, vq, wq 22.9-23.3 -> 5.0-5.4 u; the census measures a solved join at its own ends (K1028). Done in f2c2db5b (2026-10-28).
-- **K1013** · Cursive o's join, by look: Levi picked B (a point at o's top, then a short run back: "B for o's exit"); J3b builds it and fixes its dips and the oe crossing (K1009). Recorded in 15323c08 (2026-10-28).
-- **K1012** · Cursive B2: g and q take a's top-right corner, one point with two tangents (v6.2; Levi's request); g's top is K1020. Done in ca7d2da3 (2026-10-28).
+- **K1034** · Cursive v6.4 looks: Levi picked b0's joins out of o, ot's tangent entry (Ht) and v6.4's og. Done in 0f532318 (2026-10-28).
+- **K1030** · Cursive og: Levi kept v6.4's (o meets g's left shoulder at 50.5 u). Done in 0f532318 (2026-10-28).
+- **K1028** · Cursive tools for J3b: own-ends census and sheets, the run-on font reference, bg/wg/vg census words; b0 built through B3's reader (`work24/b0_build.log`). Done in 7c382e05 (2026-10-28).
+- **K1026** · Cursive joins into g after B3's refit: Levi likes bg and vg where v6.3 lands them (2026-10-28); J3c keeps that attach, wg's with them. Done in 4d082218 (2026-10-28).
+- **K1025** · Cursive v6.3, by look: Levi likes g's new top (2026-10-28); a's and q's tops follow (K1029), the joins into g go to J3c (K1026). Done in 2bcbf84a (2026-10-28).
+- **K1020** · Cursive g's top refit to curve evenly from the corner, like a's and q's (B3, v6.3; largest |dk/ds| 6.66e-3 -> 7.07e-4 /u^2); the joins into g it moved are K1026. Done in e3d89333 (2026-10-28).
+- **K1019** · Cursive reader: frames carried by true arclength (B3's `asdrawn_k1019.py`): ba, va, wa 6.8-7.0 -> 2.5-2.6 u, bq, vq, wq 22.9-23.3 -> 5.0-5.4 u; the census measures a solved join at its own ends (K1028). Done in e3d89333 (2026-10-28).
+- **K1013** · Cursive o's join, by look: Levi picked B (a point at o's top, then a short run back: "B for o's exit"); J3b builds it and fixes its dips and the oe crossing (K1009). Recorded in 3f2fd5c5 (2026-10-28).
+- **K1012** · Cursive B2: g and q take a's top-right corner, one point with two tangents (v6.2; Levi's request); g's top is K1020. Done in 5b084d1a (2026-10-28).
 - **K1004** · Cursive o and a after B1: Levi likes a's top corner; o's exits are bad, and J3 takes them (K1009). Answered 2026-10-28.
 - **K1005** · Cursive joins out of B1's o start low. Dropped: superseded by K1009 (solved joins replace the re-fit).
-- **K976** · Cursive o's exit as an abrupt cusp, then a slight overstroke (Levi): built in B1 (v6.0); whether it looks right is K1004. Done in 86a2fca8 (2026-10-28).
-- **K995** · Cursive b's lead-in as one even curve: B1 took out the knee (score 0.0357 to 0.0004; 3.20 u off the font's lead). Done in 86a2fca8 (2026-10-28).
-- **K996** · Cursive body edits J2 measured: p's end and h's start done in B1; f's loop end continues as K990, the b, v and w exits as K948. Done in 86a2fca8 (2026-10-28).
-- **K962** · Cursive joins J2: one frozen setting per key, nothing fitted at build time; hooks 28 to 10, comb spikes 62 to 16; minimum's m tail, hippo's po, ma and la smooth (fo's burst is f's body, K996; h's entry K991). Done in b1023618 (2026-10-28).
-- **K946** · Cursive generator hooks: d's entry fixed in J2 (nd and lead d, no hooks); b's lead spike gone (its knee is K995); the hippo lead-in is K991, na and nq (unmeasured) K998. Done in b1023618 (2026-10-28).
-- **K988** · Cursive: maze's z exit hook (the capped comb spike) gone in J2, ze 2.28 u; a seam micro-hook, like the J1-kept sets still at the floor (K948). Done in b1023618 (2026-10-28).
+- **K976** · Cursive o's exit as an abrupt cusp, then a slight overstroke (Levi): built in B1 (v6.0); whether it looks right is K1004. Done in 1522a265 (2026-10-28).
+- **K995** · Cursive b's lead-in as one even curve: B1 took out the knee (score 0.0357 to 0.0004; 3.20 u off the font's lead). Done in 1522a265 (2026-10-28).
+- **K996** · Cursive body edits J2 measured: p's end and h's start done in B1; f's loop end continues as K990, the b, v and w exits as K948. Done in 1522a265 (2026-10-28).
+- **K962** · Cursive joins J2: one frozen setting per key, nothing fitted at build time; hooks 28 to 10, comb spikes 62 to 16; minimum's m tail, hippo's po, ma and la smooth (fo's burst is f's body, K996; h's entry K991). Done in 0a5712e7 (2026-10-28).
+- **K946** · Cursive generator hooks: d's entry fixed in J2 (nd and lead d, no hooks); b's lead spike gone (its knee is K995); the hippo lead-in is K991, na and nq (unmeasured) K998. Done in 0a5712e7 (2026-10-28).
+- **K988** · Cursive: maze's z exit hook (the capped comb spike) gone in J2, ze 2.28 u; a seam micro-hook, like the J1-kept sets still at the floor (K948). Done in 0a5712e7 (2026-10-28).
 - **K975** · Cursive v5.8, Levi's review: another pass before the hand edits: o's exit (K976), the a k p f bodies (K990), the b h t p entries (K991). Answered 2026-10-28.
-- **K950** · Cursive word-final e tail: long (Levi, 2026-10-28: "Long tail on e seems goood"), already the default of J1's `build_from_svg.ps1` (c23c6980). Done (2026-10-28).
-- **K980** · Cursive J1: every derived piece local (v5.8's shared fits frozen in the map), the e variants a continuous fit; K944's nine edits pass with untouched pieces at 0 u (baseline up to 5.12 u). Done in c23c6980 (2026-10-28).
-- **K981** · Cursive retrace rule: a smooth fork's departing handle stays collinear, so n's far fork no longer turns (G1 only: K987; rough still fails n: K986). Done in c23c6980 (2026-10-28).
-- **K983** · The docs name Levi instead of the old pronouns: 211 of 225 hits fixed in 66 files under `docs/` and `.claude/rules/`; the 14 left are quotes, named other people, game characters and one letter pair. Done in d285ce71 (2026-10-28).
-- **K944** · Cursive `--from-svg` reads Levi's edits as drawn: an Inkscape save reads back within 6.05e-7 u, the build from it matches v5.8's byte for byte, nine scripted edits read back exactly (`work17/dbg/build_from_svg.ps1`). Done in 3cad6ab8 (2026-10-28).
-- **K970** · Cursive tools: `eye`, `fid_cmp`, `nodes_pairs`, fewnode's G2 tally and the `--end-budget` header, fixed in the `_k969` copies. Done in 4a178950 (2026-10-28).
-- **K969** · Cursive v5.7's small comb bumps: a's, k's crotch ripple, y's exit corner and b's spike gone in v5.8; o's exit is K976, the rest K977. Done in 4a178950 (2026-10-28).
-- **K968** · Cursive's checker read one-cubic strokes as 0: `rough_k969` reads x 1.40, x2 0.17, t2 0.26; v5.7's one-curve x kept. Done in 4a178950 (2026-10-28).
-- **K963** · Cursive f's hook: v5.8's new fair peaks 3.85 (v5.7 5.21), its S and the bottom-loop lobe gone; three close nodes stay (K977). Done in 4a178950 (2026-10-28).
-- **K965** · Cursive v5.6's peaks and ceilings: in v5.7 every stroke is at or below its v5.6 peak (x2 0.13 -> 0.16 aside), k, q, r, y and i under v5.4's, q and r under the ceilings; f's hook stays in K963, o's exit in K969. `K965_cursive_v57.md` ## Handoff. Done in 6942d35c (2026-10-28).
-- **K960** · Cursive v5.6's eye flags over 3 (r@669, w@618, k@2136): gone in v5.7, none new; the looser band clears w and k, the junction stretches r. Done in 6942d35c (2026-10-28).
-- **K959** · Cursive v5.6's exit ends: each body faired 40 fu past its smooth cuts, its end frames re-taken from the faired centreline; o's hook and e's flick gone. `K959_cursive_v56.md` ## Handoff. Done in ef4232ca (2026-10-28).
-- **K945** · Cursive v5.5: the centreline is the medial axis of the font's thinnest outline (on the font's axis, 0.00-0.57 u in the moved runs; v5.4 0.4-2.8 u), fair is the default, the roughness ceilings tightened; leftovers K959-K963. `K945_cursive_v55.md` ## Handoff. Done in 50183203 (2026-10-27).
-- **K939** · Cursive: the a/g/q stem tops are corners at the font's V (0.13, 0.26 and 0.00 u from it; d starts at its cusp), no U. `work13/vtops/vtops.png`. Done in 50183203 (2026-10-27).
-- **K928** · Cursive: `--split fair` is the default (v5.5); reading Levi's edited template as drawn is K944. Done in 50183203 (2026-10-27).
-- **K942** · Label ink's settled rules are the oracle's defaults (the crossed yield order, unit-tested; labTie "surface"); its other switches removed. Done in e2926d0e (2026-10-27).
-- **K934** · K868 re-count: the free-end check counts runs of ink (31 free ends, not 83); the settled rules are the oracle defaults (K942); extent part; sheet K at play size. Done in e2926d0e (2026-10-27).
-- **K940** · Label ink rule fixes behind switches, all off (`labFill: "yieldOrder"` with `labYieldChain`, `labCapReach`): the crossed yield form is right where plain yield was 82% wrong; change 2 hides crossing lines. Sheet J and S's crops. `K940_label_fixes.md` ## Results. Done in 4e0ce01d (2026-10-27).
-- **K926** · Cursive v5.4: e's two high entries from the font (o entry after b o v w, g entry after c g j y z; be 31.17 to 2.89 u off the font's connector, ve 31.17 to 3.46, ze 12.45 to 2.05), en 7.08 to 1.15 u, er 8.35 to 2.36. `K926_cursive_e.md` ## Handoff. Done in a99b2d64 (2026-10-27).
-- **K929** · Cursive: a word-final e draws its exit, cut where it has risen as far as the m/n/y/d tails (51.1 u, ending 1.46 u from the font's exit; the cut rule is K950). Done in a99b2d64 (2026-10-27).
-- **K930** · Cursive v5.3: few-node G2 strokes (m 157 to 26 nodes, a 109 to 19; bodies a median 13 nodes, within 0.94 u of v5.2); the `--from-svg` hold is prototyped, not wired (K944). `K930_cursive_smooth.md` ## Handoff. Done in fa7efad8 (2026-10-27).
-- **K924** · Label ink artifacts traced to their rules (M1 cap cut, M2 fill over a foreign tube, M6 fill z, M3 tie; S, a crossing inside a cluster, is a K868 design call); five diagnostic flips in OracleParams, off by default; rule changes ranked. `K924_label_artifacts.md` ## Results, ## Handoff. Done in 1a75731f (2026-10-27).
-- **K925** · Cursive v5.2: the a/c/d/g/q dip fixed (eye check a 9.27 to 1.91, q 8.09 to 1.92), one eye scale, o's junction at 86 u (its joins stay inside the font's fill). `K925_cursive_v52.md` ## Handoff. Done in bec83b02 (2026-10-27).
-- **K922** · K868 stage: depth over the whole overlap, endSnap (a float bug; real free ends 105 to 83) and extent part, behind switches that default off; sheet I. Brief ## Results, ## Handoff. Done in 4e8b1c7c (2026-10-27).
-- **K923** · S3's Pixel bench (K868): as specified 4.8-5.5 ms at fit and 2x, over the 4 ms budget; with a screen-space LOD and a packed 32-bit label 1.6-2.7 ms at every zoom (p95 at most 3.43); a disc search 4.5-6.75 ms against G3-1's 24.5-48. `K923_s3_bench.md` ## Handoff. Done in b5fff04b (2026-10-27).
-- **K917** · Cursive junction heights. Answered by Levi (2026-10-27): "sgtm"; 60 u for a, c, d, g and q; o at 86 u, chosen on the sheet ("Seems better than the other two sets"). `K863_trace.md` ## Levi's calls. Done in 95ef67d6 (2026-10-27).
-- **K916** · Cursive v5.1: whole-stroke fairing (`--split fair`), leads into a/c/d/g/o/q from the left, the join refit, the K917 sheet; leftovers in K925-K928 and K917. Done in e1daa76f (2026-10-27).
+- **K950** · Cursive word-final e tail: long (Levi, 2026-10-28: "Long tail on e seems goood"), already the default of J1's `build_from_svg.ps1` (7c7248dc). Done (2026-10-28).
+- **K980** · Cursive J1: every derived piece local (v5.8's shared fits frozen in the map), the e variants a continuous fit; K944's nine edits pass with untouched pieces at 0 u (baseline up to 5.12 u). Done in 7c7248dc (2026-10-28).
+- **K981** · Cursive retrace rule: a smooth fork's departing handle stays collinear, so n's far fork no longer turns (G1 only: K987; rough still fails n: K986). Done in 7c7248dc (2026-10-28).
+- **K983** · The docs name Levi instead of the old pronouns: 211 of 225 hits fixed in 66 files under `docs/` and `.claude/rules/`; the 14 left are quotes, named other people, game characters and one letter pair. Done in 3698078a (2026-10-28).
+- **K944** · Cursive `--from-svg` reads Levi's edits as drawn: an Inkscape save reads back within 6.05e-7 u, the build from it matches v5.8's byte for byte, nine scripted edits read back exactly (`work17/dbg/build_from_svg.ps1`). Done in e347eb16 (2026-10-28).
+- **K970** · Cursive tools: `eye`, `fid_cmp`, `nodes_pairs`, fewnode's G2 tally and the `--end-budget` header, fixed in the `_k969` copies. Done in 17ff48ef (2026-10-28).
+- **K969** · Cursive v5.7's small comb bumps: a's, k's crotch ripple, y's exit corner and b's spike gone in v5.8; o's exit is K976, the rest K977. Done in 17ff48ef (2026-10-28).
+- **K968** · Cursive's checker read one-cubic strokes as 0: `rough_k969` reads x 1.40, x2 0.17, t2 0.26; v5.7's one-curve x kept. Done in 17ff48ef (2026-10-28).
+- **K963** · Cursive f's hook: v5.8's new fair peaks 3.85 (v5.7 5.21), its S and the bottom-loop lobe gone; three close nodes stay (K977). Done in 17ff48ef (2026-10-28).
+- **K965** · Cursive v5.6's peaks and ceilings: in v5.7 every stroke is at or below its v5.6 peak (x2 0.13 -> 0.16 aside), k, q, r, y and i under v5.4's, q and r under the ceilings; f's hook stays in K963, o's exit in K969. `K965_cursive_v57.md` ## Handoff. Done in 5af5ed72 (2026-10-28).
+- **K960** · Cursive v5.6's eye flags over 3 (r@669, w@618, k@2136): gone in v5.7, none new; the looser band clears w and k, the junction stretches r. Done in 5af5ed72 (2026-10-28).
+- **K959** · Cursive v5.6's exit ends: each body faired 40 fu past its smooth cuts, its end frames re-taken from the faired centreline; o's hook and e's flick gone. `K959_cursive_v56.md` ## Handoff. Done in c011bc49 (2026-10-28).
+- **K945** · Cursive v5.5: the centreline is the medial axis of the font's thinnest outline (on the font's axis, 0.00-0.57 u in the moved runs; v5.4 0.4-2.8 u), fair is the default, the roughness ceilings tightened; leftovers K959-K963. `K945_cursive_v55.md` ## Handoff. Done in d8e369a8 (2026-10-27).
+- **K939** · Cursive: the a/g/q stem tops are corners at the font's V (0.13, 0.26 and 0.00 u from it; d starts at its cusp), no U. `work13/vtops/vtops.png`. Done in d8e369a8 (2026-10-27).
+- **K928** · Cursive: `--split fair` is the default (v5.5); reading Levi's edited template as drawn is K944. Done in d8e369a8 (2026-10-27).
+- **K942** · Label ink's settled rules are the oracle's defaults (the crossed yield order, unit-tested; labTie "surface"); its other switches removed. Done in 5bbe3790 (2026-10-27).
+- **K934** · K868 re-count: the free-end check counts runs of ink (31 free ends, not 83); the settled rules are the oracle defaults (K942); extent part; sheet K at play size. Done in 5bbe3790 (2026-10-27).
+- **K940** · Label ink rule fixes behind switches, all off (`labFill: "yieldOrder"` with `labYieldChain`, `labCapReach`): the crossed yield form is right where plain yield was 82% wrong; change 2 hides crossing lines. Sheet J and S's crops. `K940_label_fixes.md` ## Results. Done in c8e9f622 (2026-10-27).
+- **K926** · Cursive v5.4: e's two high entries from the font (o entry after b o v w, g entry after c g j y z; be 31.17 to 2.89 u off the font's connector, ve 31.17 to 3.46, ze 12.45 to 2.05), en 7.08 to 1.15 u, er 8.35 to 2.36. `K926_cursive_e.md` ## Handoff. Done in e1c9ad64 (2026-10-27).
+- **K929** · Cursive: a word-final e draws its exit, cut where it has risen as far as the m/n/y/d tails (51.1 u, ending 1.46 u from the font's exit; the cut rule is K950). Done in e1c9ad64 (2026-10-27).
+- **K930** · Cursive v5.3: few-node G2 strokes (m 157 to 26 nodes, a 109 to 19; bodies a median 13 nodes, within 0.94 u of v5.2); the `--from-svg` hold is prototyped, not wired (K944). `K930_cursive_smooth.md` ## Handoff. Done in 8d5cb66e (2026-10-27).
+- **K924** · Label ink artifacts traced to their rules (M1 cap cut, M2 fill over a foreign tube, M6 fill z, M3 tie; S, a crossing inside a cluster, is a K868 design call); five diagnostic flips in OracleParams, off by default; rule changes ranked. `K924_label_artifacts.md` ## Results, ## Handoff. Done in 1f48441b (2026-10-27).
+- **K925** · Cursive v5.2: the a/c/d/g/q dip fixed (eye check a 9.27 to 1.91, q 8.09 to 1.92), one eye scale, o's junction at 86 u (its joins stay inside the font's fill). `K925_cursive_v52.md` ## Handoff. Done in 05ccdb2f (2026-10-27).
+- **K922** · K868 stage: depth over the whole overlap, endSnap (a float bug; real free ends 105 to 83) and extent part, behind switches that default off; sheet I. Brief ## Results, ## Handoff. Done in f8881166 (2026-10-27).
+- **K923** · S3's Pixel bench (K868): as specified 4.8-5.5 ms at fit and 2x, over the 4 ms budget; with a screen-space LOD and a packed 32-bit label 1.6-2.7 ms at every zoom (p95 at most 3.43); a disc search 4.5-6.75 ms against G3-1's 24.5-48. `K923_s3_bench.md` ## Handoff. Done in 4dbd9e98 (2026-10-27).
+- **K917** · Cursive junction heights. Answered by Levi (2026-10-27): "sgtm"; 60 u for a, c, d, g and q; o at 86 u, chosen on the sheet ("Seems better than the other two sets"). `K863_trace.md` ## Levi's calls. Done in eae3a581 (2026-10-27).
+- **K916** · Cursive v5.1: whole-stroke fairing (`--split fair`), leads into a/c/d/g/o/q from the left, the join refit, the K917 sheet; leftovers in K925-K928 and K917. Done in fc44d084 (2026-10-27).
 - **K918** · K909's oracle leftovers (extra ink, #16's group on top, sheet F's spur, hairlines, seam and speck, S3's far pieces, geo's shorter spans). Dropped: superseded by K924: K915's label ink removes S3's far pieces and most group-on-top ends; the rest moved to K924 (2026-10-27).
-- **K915** · Borders from the visible surface: oracle `ink` surface and label (free ends 228 to 100 on the real scenes, extra ink 71 to 94; d1-d4 close with angular cuts), `hookLook` seam, form B rejected, S3 as two passes, sheet H; verdict adapt; follow-ups under K868. Done in 69e304ed (2026-10-27).
-- **K901** · Cursive: r after a high exit dips, as the font's does (Levi: "dip"); `docs/design/K863_trace.md` ## Levi's calls. Done in c1f25160 (2026-10-27).
-- **K904** · Cursive v5: a, c, d, g, o and q fused at 60 u, the high entry mode, every split a G2 blend (peak curvature ratio max 120.5 -> 4.8), r after a high exit both ways; steps 4-5 moved to K916. Done in 1f5818eb (2026-10-27).
-- **K906** · Phone round 2026-10-27c: T1 = K525's TELE paint item (`a64390b0`, dense +11.0 ms), T2 = K137's fray (`24ea1b3b`, dense -13.1 ms); `docs/design/K156.md` round 27c. Done in a9c4dfec (2026-10-27).
-- **K907** · The phone kit tracked: scripts/phone_pass/ (12 files with headers), tested on the phone in round 2026-10-27c; k539_g31.mjs and pixdiff_g31.mjs only parse-checked. Done in a9c4dfec (2026-10-27).
-- **K909** · Geometric junction groups behind groups: "geo" (free ends 228 to 227, so k883 stays the default), truth geo's crossing order, the hookLook switch and sheet G; leftovers in its handoff. Done in 33d3a12b (2026-10-27).
-- **K905** · Root paint GLSL compiled out unless a root is drawn (K_ROOT): phone render sync -18.9 dense, -25.7 max-fabric, -12.3 ms knot; pixels unchanged. Done in c8814902 (2026-10-27).
+- **K915** · Borders from the visible surface: oracle `ink` surface and label (free ends 228 to 100 on the real scenes, extra ink 71 to 94; d1-d4 close with angular cuts), `hookLook` seam, form B rejected, S3 as two passes, sheet H; verdict adapt; follow-ups under K868. Done in 150ac009 (2026-10-27).
+- **K901** · Cursive: r after a high exit dips, as the font's does (Levi: "dip"); `docs/design/K863_trace.md` ## Levi's calls. Done in ebf1fef2 (2026-10-27).
+- **K904** · Cursive v5: a, c, d, g, o and q fused at 60 u, the high entry mode, every split a G2 blend (peak curvature ratio max 120.5 -> 4.8), r after a high exit both ways; steps 4-5 moved to K916. Done in 0d0e8797 (2026-10-27).
+- **K906** · Phone round 2026-10-27c: T1 = K525's TELE paint item (`9d23dab1`, dense +11.0 ms), T2 = K137's fray (`d8675df1`, dense -13.1 ms); `docs/design/K156.md` round 27c. Done in 9383defc (2026-10-27).
+- **K907** · The phone kit tracked: scripts/phone_pass/ (12 files with headers), tested on the phone in round 2026-10-27c; k539_g31.mjs and pixdiff_g31.mjs only parse-checked. Done in 9383defc (2026-10-27).
+- **K909** · Geometric junction groups behind groups: "geo" (free ends 228 to 227, so k883 stays the default), truth geo's crossing order, the hookLook switch and sheet G; leftovers in its handoff. Done in 5d85a213 (2026-10-27).
+- **K905** · Root paint GLSL compiled out unless a root is drawn (K_ROOT): phone render sync -18.9 dense, -25.7 max-fabric, -12.3 ms knot; pixels unchanged. Done in e2d379ca (2026-10-27).
 - **K910** · K900's sheet B3: do the magenta free border ends cover every missing border on muse_hash? Answered by Levi (2026-10-27): "Yes, I think so"; the free-end image check judges K909.
-- **K902** · Cursive v4 (probe-only, untracked `.claude/probes/K863/trace/` `out7/`): join frames by a walk to the font's connector (smooth-end angle mean 22.1 -> 4.7 deg), calibration mean 3.218 -> 2.175 u, test-word pairs over 4 u 22 -> 10, a's fused entry (0.3 u); r after high exits and the variants measured; two-mode design in its brief's ## Results. Done in cece1bb (2026-10-27).
-- **K900** · Oracle holes: crossing 292 fixed (same-chain joins refused, crossing cut at L + h), census positions, two independent checks (geometric truth, image free ends), sheet B3; handoff in its brief. Done in 263bc134 (2026-10-27).
-- **K893** · Phone round 2026-10-27b: G3-1 undone at head by hand wins 14.5 / 15.9 / 11.2 ms (dense / max-fabric / knot) but is not clean; the week's steps are K573 1b (knot -21.4), K620's root GLSL (+22.6 max-fabric) and K854's outline (+15.3). Done in 69ac4e03 (2026-10-27).
+- **K902** · Cursive v4 (probe-only, untracked `.claude/probes/K863/trace/` `out7/`): join frames by a walk to the font's connector (smooth-end angle mean 22.1 -> 4.7 deg), calibration mean 3.218 -> 2.175 u, test-word pairs over 4 u 22 -> 10, a's fused entry (0.3 u); r after high exits and the variants measured; two-mode design in its brief's ## Results. Done in 482f259 (2026-10-27).
+- **K900** · Oracle holes: crossing 292 fixed (same-chain joins refused, crossing cut at L + h), census positions, two independent checks (geometric truth, image free ends), sheet B3; handoff in its brief. Done in cd025b84 (2026-10-27).
+- **K893** · Phone round 2026-10-27b: G3-1 undone at head by hand wins 14.5 / 15.9 / 11.2 ms (dense / max-fabric / knot) but is not clean; the week's steps are K573 1b (knot -21.4), K620's root GLSL (+22.6 max-fabric) and K854's outline (+15.3). Done in 6319be72 (2026-10-27).
 - **K891** · K883's sheets B2 / F / worst12. Answered 2026-10-27: B2 shows about twice the blue-marked misses (census undercounts; K900 redirected), F lgtm (cr 0-6, default 3).
 - **K886** · K863 cursive v3: letter bodies with join frames, G2 connectors per letter pair, template and word sheet. Done 2026-10-27 (no commit; outputs in `.claude/probes/K863/trace/out6/`, template on Drive `K863/`; follow-ups K901-K903).
-- **K883** · K868 oracle: the K883 span rule (no group holds both passes of a crossing) and the `cr` mapping; missing border samples 1540 to 208; follow-ups K891, K898-K900. Done in 5048670e (2026-10-27).
+- **K883** · K868 oracle: the K883 span rule (no group holds both passes of a crossing) and the `cr` mapping; missing border samples 1540 to 208; follow-ups K891, K898-K900. Done in 972228b5 (2026-10-27).
 - **K881** · K868 sheet E: G2 corners against G1's rolling-ball arcs. Answered by Levi (2026-10-27): "In sheet E, I don't see any difference with G1 vs the others"; G1 stays, K882 dropped.
 - **K878** · Cursive trace v2's three questions. Answered by Levi (2026-10-27): ss02's `p.jmc` (the retraced stem, with an exit and no pen lift), joins generated per letter pair, the font's proportions at x-height 120; K886 builds v3.
 - **K874** · K868 S1b sheets B and C. Answered by Levi (2026-10-27): B, the oracle's look is right but misses some borders; C, the corner rule is taken and the `cr` slider stays, now scaling the approved corner. Both go to K883.
 - **K879** · K863 tracer v2: crossing repair where a letter crosses itself, and the eight answer combinations for K878. Dropped: superseded by K886; v2 was delivered untracked (`.claude/probes/K863/trace/out5*`, all 13 crossings true X) and never uploaded (2026-10-27).
 - **K882** · K868 S2b, only if K881 picked G2: why both G2 curves cross a side at acute corners. Dropped: K881 kept G1 (2026-10-27).
-- **K870** · K868 S1b: the CPU oracle (`src/render/field/geom.ts`, `oracle.ts`, `checks.ts`), checks 1-9 and 11, 12 synthetic scenes, contact sheets A-D. Done in 2b798a93 (2026-10-26).
-- **K869** · K868 S1a: the scene exporter (`__knotSceneExport`, `scripts/export_scene.mjs`) and 21 real scenes (65 variants) for S1b. Done in a3e915cb (2026-10-26).
-- **K858** · Research adoption round: curves 3.2 became K859, cursive K860/K861; curves 3.3 (one field-shaded border) is now K868. Done in ec3a8b30 (K859) and f86068be (K860) (2026-10-26).
-- **K861** · Fair re-authoring of a/i against K860's targets. Dropped: rejected by Levi ('they are bad'), superseded by K863's clean slate; its re-fit (b2c53c30) stays the live a/i data until K863 lands (2026-10-26).
-- **K866** · Global union-field border, ?fbd=1. Dropped: superseded by K868 (its global union fused crossings too, then un-fused them with gates); never committed, code parked at 6e12716e (branch park/muse-2026-10-26) (2026-10-26).
-- **K865** · SDF union-field junction border, ?sfb=1. Dropped: superseded by K868; never committed, code parked at 6e12716e (branch park/muse-2026-10-26) (2026-10-26).
-- **K864** · K862 follow-up: cosine-warped rim samples, per-side side-cut windows. Dropped: never committed; parked at 6e12716e (`park/muse-2026-10-26`), superseded by K868 (2026-10-26).
-- **K862** · G1 fillet rims (two Hermite halves through the old rim's midpoint). Dropped: never committed; parked at 6e12716e (`park/muse-2026-10-26`), superseded by K868 (2026-10-26).
+- **K870** · K868 S1b: the CPU oracle (`src/render/field/geom.ts`, `oracle.ts`, `checks.ts`), checks 1-9 and 11, 12 synthetic scenes, contact sheets A-D. Done in 7b278662 (2026-10-26).
+- **K869** · K868 S1a: the scene exporter (`__knotSceneExport`, `scripts/export_scene.mjs`) and 21 real scenes (65 variants) for S1b. Done in 329324f3 (2026-10-26).
+- **K858** · Research adoption round: curves 3.2 became K859, cursive K860/K861; curves 3.3 (one field-shaded border) is now K868. Done in badb6bd9 (K859) and a00fb6d5 (K860) (2026-10-26).
+- **K861** · Fair re-authoring of a/i against K860's targets. Dropped: rejected by Levi ('they are bad'), superseded by K863's clean slate; its re-fit (c6e1c326) stays the live a/i data until K863 lands (2026-10-26).
+- **K866** · Global union-field border, ?fbd=1. Dropped: superseded by K868 (its global union fused crossings too, then un-fused them with gates); never committed, code parked at 060151d7 (branch park/muse-2026-10-26) (2026-10-26).
+- **K865** · SDF union-field junction border, ?sfb=1. Dropped: superseded by K868; never committed, code parked at 060151d7 (branch park/muse-2026-10-26) (2026-10-26).
+- **K864** · K862 follow-up: cosine-warped rim samples, per-side side-cut windows. Dropped: never committed; parked at 060151d7 (`park/muse-2026-10-26`), superseded by K868 (2026-10-26).
+- **K862** · G1 fillet rims (two Hermite halves through the old rim's midpoint). Dropped: never committed; parked at 060151d7 (`park/muse-2026-10-26`), superseded by K868 (2026-10-26).
 - **K851** · Permanent-loader escape, fixed properly (`.claude/probes/K851/`): the open settings panel was invisible over the kept loader because the desktop `.tp-dfwv` had z-index auto (its 28 lived only in the sheet media query) under the opaque loader overlay (z 15) — the base rule now carries z-index 28; and any page refresh (soft or hard — the page cannot tell them apart) forgets `knotmaze.loaderStays` and lets the intro finish, which the checkbox help now says. The loader's head glyph also dives at under crossings (loader_geometry `underGapAt`: the strand's gap window extended by the glyph's world radius, both motion modes), verified by frame sampling (glyph absent in the 3 dive frames per lap).
 - **K850** · Cursive a/i measured rework (`.claude/probes/K850/measure.mts` + the lint as oracle, iterating endpoint curvature cross/handle³): the a's topmost point moved from x=49 (flat top, bowl 28..80) to x≈60-66 at y 75-77 with a one-way heading turn from L through the apex (soft, R ≥ 11 GU by lint) and a steep right descent to R; the spur lands at L within ~5° of the body tangent with monotone heading (no hook) and leaves R colinear with the descent; flares shortened to the arcs they dress (40/34). The i's entry control points climb monotonically into J (colinear with the stem by construction), the bottom sweeps one wide arc (was R ≈ 5 GU), the stem flare now reaches plain width at the tip, and the dot is the clean ellipse. Glyph lint clean at xh 2/3; stills `.claude/probes/K850/after/ai2.png`, `ai3.png`. AWAITING Levi's look verdict (K847's was rejected). Residual: pale seam discs inside the a at L and R (taper-root/joinery machinery, not the centerline), and a small notch at the i stem base.
 - **K848** · Link-look chip docks against the mode badge on the shared (dropped-badge) row — right-aligned with an 8 px gap, re-laid-out on every badge re-fit (open/close, resize, label change) plus deferred re-fits at load, when the panel starts open; the sheet keeps its top-bar layout. Revises K844's screen-left placement (Levi: not against the screen's left edge; butt it against the row's other chip). Probe `.claude/probes/K848/`.

@@ -28,7 +28,7 @@ this plan.
   `levi_notes_2026-10-14.md` if it touches the set). Levi's direction:
   prototype each mechanism in free play behind its own toggle.
 - What K137 built, from the Handoffs of `K137_s1.md` and `K137_s3a.md`
-  (and K139's collapse mode, commit 961cd53),
+  (and K139's collapse mode, commit a76071a),
   and what s3b is building: `git show
   worktree-agent-af34a0e5755494326:docs/design/K137_s3b.md` (its
   Design section; the branch moves while it runs). s3b adds more than
@@ -83,7 +83,7 @@ with the item's handle fields and a `Ledger items` list.
 
 ## Plan
 
-Written by the K138 planner on 2026-10-21, against master at `3103ed4`.
+Written by the K138 planner on 2026-10-21, against master at `3b05cd4`.
 K137 s3b merged with the sword alone (codec 193-194). K137 s2 (the aids)
 and K708 (the sims) were building at 01:20. Sprint and the monster list
 are K137 s3c, after s2.
@@ -519,7 +519,7 @@ Written (2026-10-21, 01:09-01:45):
 Left:
 - Launch s1. A worktree agent branches from `origin/master`, so the two
   K138 docs must be on master first (this branch fast-forwards from
-  3103ed4; it touches only `docs/design/K138_*.md`).
+  3b05cd4; it touches only `docs/design/K138_*.md`).
 - The s2-s8 briefs, each written when its stage is next (the "Waits on"
   column).
 - Levi's six questions above. s1 builds on the recs of 2, 3 and 4.

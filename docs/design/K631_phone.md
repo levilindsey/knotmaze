@@ -25,17 +25,17 @@ probes, screenshots and counts only.
 ## Part 1: K409's phone sheet
 
 K409 (the fire's widths in world units, the Gone ember ahead of the cut,
-the band kept) merged at `3231d59`. Its pass is ready: take the lock as
+the band kept) merged at `cf70caa`. Its pass is ready: take the lock as
 exactly `K409 a5c384f` (the script releases only that owner), then run
 `.claude/probes/K409/phone/run_phone.ps1 -Deadline <HH:mm, about 50 min
 ahead>` from the main checkout. Its defaults point at the built
-`3231d59` on port 5898. Sheets land in
+`cf70caa` on port 5898. Sheets land in
 `.claude/probes/K409/phone/out/sheet/`. Report their paths and anything
 that looks wrong at phone scale.
 
 ## Part 2: K244 on the phone
 
-K244 (merged at `ff67e4d`): auto plucks pick only sites that draw, and a
+K244 (merged at `56b8ebc`): auto plucks pick only sites that draw, and a
 drag released in a junction core is silent. Its desktop probes are in
 `.claude/probes/K244/` (`k244_probe.mjs`, `run_k244.mjs`,
 `summarize.mjs`); the handoff in `docs/design/K244_cores.md` has the

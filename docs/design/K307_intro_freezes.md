@@ -16,7 +16,7 @@ ID now, and it runs ahead of the rest of the GPU pipeline.
 ## What is known
 
 All of it is from K7's design (`docs/design/K7_worker.md`, "The answer to
-Levi's question", Design 5 and "10. Acceptance"), measured on 0d88091 on
+Levi's question", Design 5 and "10. Acceptance"), measured on 4039f70 on
 the desktop (RX 6800 XT, Chrome with `--use-angle=d3d11`, 1600x900 at
 DPR 1.5), each load in a fresh Chrome profile:
 
@@ -160,7 +160,7 @@ warm-up after them.
 
 ### Setup
 
-- **Your branch starts from master** at e5acafb or later. Run
+- **Your branch starts from master** at 34031a4 or later. Run
   `git log -1 --oneline` first. If this file is missing, run
   `git merge --ff-only origin/master`.
 - **`node_modules`:** link it to the main checkout's with a junction
@@ -210,7 +210,7 @@ warm-up after them.
 
 ## Stage 1 results (2026-10-14, the K307 agent)
 
-All on master 3e86fb5, on the desktop: RX 6800 XT, Chrome's renderer
+All on master 35075aa, on the desktop: RX 6800 XT, Chrome's renderer
 "ANGLE (AMD, AMD Radeon RX 6800 XT (0x000073BF) Direct3D11 vs_5_0 ps_5_0,
 D3D11)", 1600x900 at DPR 1.5, a fresh Chrome profile per load unless
 noted, under the perf lock. The bare URL was Daily #3. Every run is in
@@ -360,7 +360,7 @@ On warm loads the status reads cost: section-rgb 20-24 ms, arm-strip
 
 ### 5. The throwaway warm-ups
 
-Branch `k307-proto`, commit 51f7480, never merged or pushed. The patch is
+Branch `k307-proto`, commit d1aefae, never merged or pushed. The patch is
 `.claude/probes/K307/k307-proto.patch`. `VITE_K307=block|par` picks the
 variant at build time, and `#seq` in the URL makes the block variant
 link in Pixi's order. Builds are in `builds/proto-block` and
@@ -678,7 +678,7 @@ main thread. Then let Pixi link the same sources as cache hits.
 ## Stage 1 handoff (2026-10-14, the K307 agent)
 
 **Done:** stage 1's items 1-7 and K313's compositor question, all in
-"Stage 1 results" above, on master 3e86fb5 with no tracked `src/`
+"Stage 1 results" above, on master 35075aa with no tracked `src/`
 change:
 
 - the harness, and the attribution of the daily's three freezes and of
@@ -686,7 +686,7 @@ change:
 - cold and warm caches (a restart included), and the default, D3D11 and
   Vulkan backends;
 - the throwaway warm-ups: (a) blocking, (a') blocking in Pixi's order,
-  and (b) parallel. They live on the branch `k307-proto` (51f7480; never
+  and (b) parallel. They live on the branch `k307-proto` (d1aefae; never
   merge or push it);
 - the compositor during freezes, with the off-main spinner test;
 - the stage 2 design above;
@@ -765,7 +765,7 @@ What changed since the design above, and what rides this stage:
 ## Stage 2 handoff (2026-10-15, the K307 stage 2 agent)
 
 **Done** on branch `worktree-agent-a11d7ce60428b687d` (worktree
-`.claude/worktrees/agent-a11d7ce60428b687d`), rebased on master 326eabb:
+`.claude/worktrees/agent-a11d7ce60428b687d`), rebased on master 51a6d70:
 - `c46d152`: the registry (`src/render/program_registry.ts`: every
   program site, `PROGRAM_SITES`, the wave-1 rules), factory exports in
   the seven site files (no shader edits), the warm-up
@@ -812,7 +812,7 @@ with `--restart` for the warm load (the same profile).
 
 | Build | Cold: first visible | Cold: that frame's callback, then the worst after | Warm restart: first visible | Warm: first sleep |
 |---|---|---|---|---|
-| master 97d7c31 | 1.04 s | 2906 ms, then 2204 ms at 3.93 s | 0.806 s | 6.93 s |
+| master 4dee252 | 1.04 s | 2906 ms, then 2204 ms at 3.93 s | 0.806 s | 6.93 s |
 | parallel path (7fa6305, c46d152 before the rebase) | 3.30-3.43 s, trefoil turning | 86-92 ms, then 84-86 ms | 3.0-3.5 s: cold again | - |
 | blocking, shipped (4a1e474) | 3.69 s; frozen 0.40-3.19 s, no trefoil until 3.41 s | 65 ms, then 64 ms | 0.826 s (trefoil 0.54-0.81 s) | 6.89 s |
 
@@ -943,7 +943,7 @@ ANGLE: `src/libANGLE/` (`Context.cpp`, `State.cpp`, `Program.cpp`,
 ## Stage 3 handoff (2026-10-16, the K307 stage 3 agent)
 
 **Done**, on master (this commit): branch (b) LATE ENABLE shipped, as
-Levi answered in K517 (68535b6).
+Levi answered in K517 (cd99ffe).
 
 - `src/render/shader_warmup.ts`: `submit()` issues every link first and
   only then enables `KHR_parallel_shader_compile` (once,

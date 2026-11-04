@@ -15,7 +15,7 @@ In parallel, K992 (`docs/design/K992_s2_continuous_stops.md`, branch
 ## Why
 
 S3a7 moved the label's pieces to the GPU behind `lbp` (merged on master at
-`dd107cde`). With the flag on, `buildLabelPiecesGpu` still spends 39-57 ms a
+`f9effe85`). With the flag on, `buildLabelPiecesGpu` still spends 39-57 ms a
 frame on the CPU (Node, under load), and `buildLabelFills` is most of it:
 23-38 ms p50 and 39-59 ms p95, clean. Its `windowOf` scans every segment of
 a poly for each window, and the corner fills test every drawn corner against

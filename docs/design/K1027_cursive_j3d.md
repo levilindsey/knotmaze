@@ -138,7 +138,7 @@ go to Drive `K863/` with `v67` in their names, as J3c's did.
 
 - Repo `C:\Users\lsl\Repositories\knotmaze`; the branch is
   `worktree-agent-ac83c987a53ec3ee7` (worktree
-  `.claude/worktrees/agent-ac83c987a53ec3ee7`), from `5b8522a5`.
+  `.claude/worktrees/agent-ac83c987a53ec3ee7`), from `1a6823ea`.
 - The work is untracked, in the main checkout's
   `.claude/probes/K863/trace/`. Python:
   `venv\Scripts\python.exe -I`; the font

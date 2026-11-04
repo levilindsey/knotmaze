@@ -5,7 +5,7 @@ One build stage, Opus, two-hour cap. Ports 5940-5949; probes in
 (44-52) and its "Stage 2 handoff" (from 568: Calls 649-665, the table
 667-693, "For stage 3" 736-754). Stage 3's first half (question 1).
 
-## What is there (checked on master 21d701e)
+## What is there (checked on master 2a7b625)
 
 - `src/game/minotaur_turns.ts`: the header (1-36) is the spec (41-42 say
   stage 3 adds abbott; `K80_turns.md` says 4). DEFAULT_TURN_MINO 77 (one
@@ -158,7 +158,7 @@ One build stage, Opus, two-hour cap. Ports 5940-5949; probes in
 
 Agent `ad4536aff31e4c7ba` of claude session 05e60da0, 08:50 to 10:15:
 stopped with items 1-10 done and verified, inside the cap. Branch
-`worktree-agent-ad4536aff31e4c7ba`, rebased onto master d1281ba (K5 M2's
+`worktree-agent-ad4536aff31e4c7ba`, rebased onto master 858e24d (K5 M2's
 camera move) with no conflicts: 50bd32b (item 1), 7e28e8b (2-5), 2536192
 (6-7), cb1abcc (8), 49ab6b1 (9), 4535f92 (lore), then this handoff. Not
 pushed. Probes, logs and shots: the worktree's untracked
@@ -300,13 +300,13 @@ dailies' 80% and fog-4 cells (27.9 and 28.5 against 20 and 12). Stage
 - **K120 regressions on the branch build:**
   - keys.mjs: solve 8/8, hold 7/7, guards 11/11, realtime 7/8.
   - pad.mjs: phone 13/13, pref 6/6, desktop 3/5.
-  - Both failures fail the same way on master d1281ba, so this stage did
+  - Both failures fail the same way on master 858e24d, so this stage did
     not cause them:
     - realtime's "a held key keeps adding inputs" reads 2->3, twice on
       each build. Inferred, untested: seed 7's maze changed under the
       probe.
     - desktop's "the stored choice shows it" gets no pad rect. K224
-      (86dc0cf) hides the pad under the open panel, and a wide desktop
+      (918c929) hides the pad under the open panel, and a wide desktop
       opens the panel by default. The probe needs
       `knotmaze.panelOpen` stored as "0", as `wait_inputs.mjs` does.
 - **Shots** (`shots/`): hover_cue_1400x900(_zoom).png,

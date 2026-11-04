@@ -1,4 +1,4 @@
-// Frozen copy of src/render/field/form_b.ts at e8944f2f (S1d's final definition, F5), imports pointed at src.
+// Frozen copy of src/render/field/form_b.ts at c6e274a3 (S1d's final definition, F5), imports pointed at src.
 // K1040 S1: form B, the junction look's definition (F2 of
 // docs/design/K1040_junction_field.md), evaluated in float64 on the CPU.
 //

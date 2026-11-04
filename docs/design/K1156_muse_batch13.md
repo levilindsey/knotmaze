@@ -185,7 +185,7 @@ Windows-only pwsh test shape in `test/phone_pass/k895.test.ts` (its
 
 The ledger says (Residuals):
 
-> **K1155** · `scripts/phone.ps1`'s `-TailscaleHost` default (8320cde2) is the phone's tailnet machine name,
+> **K1155** · `scripts/phone.ps1`'s `-TailscaleHost` default (034f57a5) is the phone's tailnet machine name,
 > in a public repo. Find the phone among `tailscale status --json`'s online peers instead, the param kept as
 > the override; a fixture with made-up names tests it.
 

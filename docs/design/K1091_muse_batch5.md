@@ -184,13 +184,13 @@ Motion setting), `.claude/rules/probes.md`, and `## K1085` in
 The ledger says:
 
 > **K1085** · Reduced motion doesn't snap the camera's fit: updateCamera's 0.08/frame ease (`src/app/camera.ts:436`)
-> and easeView's range ease (:257) have no reduced path, unlike K198's panel tween (:229). K549 (f578b6ee) makes a
+> and easeView's range ease (:257) have no reduced path, unlike K198's panel tween (:229). K549 (48cf34fa) makes a
 > panel toggle re-fit a text scene. Fix: snap both when reduced. Full text: `docs/ledger_notes.md`.
 
 The full note: "Under reduced motion the camera's fit still eases (about
 1 s) where K198's panel tween snaps: updateCamera's 0.08/frame ease
 (`src/app/camera.ts:436-438`) and easeView's range ease (:257) have no
-reduced path; only stepPanel (:229) has one. K549 (f578b6ee) adds a
+reduced path; only stepPanel (:229) has one. K549 (48cf34fa) adds a
 trigger: a panel toggle now re-fits a text scene. Fix: snap both when
 reduced (resize and reset then snap too)."
 
@@ -465,7 +465,7 @@ result. No rules file applies.
 The ledger says:
 
 > **K1063** · `scripts/run_node.mjs` still opens Vite's WebSocket server, so parallel runs print 'WebSocket
-> server error: Port 24678' (harmless); `server.ws: false` should stop it (K1061, 011274f9).
+> server error: Port 24678' (harmless); `server.ws: false` should stop it (K1061, 7f802e12).
 >
 > **K593** · `scripts/preview.ps1` fails in an agent worktree that has no `node_modules` junction
 > (K573's run). Make it find or make the junction, or fail with that message.

@@ -195,20 +195,20 @@ attribution, same-state proofs) is in `probes-census.md` and
   AS-IS (K268 item 4 lands after). The marker disc is nPts 0 (the
   center in texel 5). Tests: `test/render/gap_mask.test.ts`.
 - **The phone pays for it (K572, 2026-10-20).** The SAMP search costs 57
-  ms of phone render sync (Pixel 11, knot gs24; 10 ms before `3465090`)
+  ms of phone render sync (Pixel 11, knot gs24; 10 ms before `93a231f`)
   where the desktop showed +0.6 ms: two dependent `sampAt` fetches per
   segment, each with an int `%` and conversions, at 0.09 world spacing
   where the old row read one texel at up to 0.3. Gate any change to the
   search or its SAMP reads on the phone (`.claude/probes/K572/
   k572_gapoff.mjs`: gap on vs off in one page, ABBA), never on a desktop
   timing. The fix is K573.
-- **K573 step 1 (2026-10-20, `3e2b6cf`).** One `sampAt` per segment (the
+- **K573 step 1 (2026-10-20, `cec6d6a`).** One `sampAt` per segment (the
   previous end point carried), the SAMP index walked without int `%` or
   float-int conversions, and one range walk (`gapRange`, `gapAt`,
   `gapNext`) shared by the over and protect loops, which is what keeps
   1a+1b inside K320's budgets. 0 px in all 8 same-state cells; phone
   search knot gs24 60.7 -> 27.7 ms (pre-G3-1 9.7), dense 36.0 -> 31.3
-  (16.7). Step 2, a per-slot curvature stride (`7db3fd9`), waits on
+  (16.7). Step 2, a per-slot curvature stride (`97b3517`), waits on
   Levi (K573). Probe gotchas: Pixi v8's `shader.resources` accessors
   are not enumerable, so a `for...in` uniform readback reads nothing
   (hook `gl.uniform4f` on the uniform's location instead,

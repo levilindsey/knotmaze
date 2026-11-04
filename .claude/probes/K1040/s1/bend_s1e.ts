@@ -1,5 +1,5 @@
 // K1040 S1e: a through pass's bend along a short line, S1d F5 (frozen
-// form_b_s1d_f5.ts, e8944f2f) against the working tree. Per line: the
+// form_b_s1d_f5.ts, c6e274a3) against the working tree. Per line: the
 // steepest step of ink in /px, then every step where the winning term
 // changes (kind, chain, s) or the ink moves by more than 0.02, with the
 // term's D, w and the fade bits on both sides; for the working tree also

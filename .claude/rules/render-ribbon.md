@@ -241,7 +241,7 @@ certifies (the P3.24 probe rule again, render edition).
     and the cap cover's record search skips it. At xh 3 the record
     branch draws it. The first cut (stadium in the record branch only)
     closed every xh 3 waist and changed nothing at xh 2.
-  - **Measured** with real.mjs, master 0f3b31f against the branch
+  - **Measured** with real.mjs, master b5a6d05 against the branch
     (`table_s5b.txt`). Against U every waist closes:
     - the stem foot, 0.028-0.030 / 0.014-0.018 (xh 2 / 3) -> none;
     - the i's joint, 0.027 / 0.018 -> none / 0.002;

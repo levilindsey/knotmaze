@@ -2,7 +2,7 @@
 // masks and frontier glow, the G2.1 gate clocks (a crossing's or joint's
 // show time and the caches that keep it cheap), and the Stage 26
 // appearance particles. Moved verbatim from ribbon_renderer.ts
-// (4c860ce9); a body changed in three ways only: a renderer member became
+// (6cebd499); a body changed in three ways only: a renderer member became
 // `this.r.x`, a sampling helper `sampling.x(...)`, and the façade keeps
 // one-line delegations for the names other code calls (beginReveal,
 // revealMulAtCtrl, appearFxAlive, revealPin, gateStrength, jointGate,

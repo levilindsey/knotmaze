@@ -2,7 +2,7 @@
 # at fixed nodes), each run under the perf lock (locked23.ps1).
 #   pwsh .claude/probes/S3a/census23.ps1 [-Only c23w,c23wz]
 # m21/m21z: master's oracle (oracle_m14.ts) on this tree, to check that
-# pops16/before16 still stands for master after the rebase onto 6b5c082a.
+# pops16/before16 still stands for master after the rebase onto 0a8e78d9.
 param([string]$Only = "c23w,c23wz")
 $wt = "C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\k992-corners"
 Set-Location $wt

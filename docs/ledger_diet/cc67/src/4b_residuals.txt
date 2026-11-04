@@ -8,7 +8,7 @@
 
 - **K308** · `mod(floor(v + 0.5), 5.0)` in the background contours is a float quotient like K299's, allowlisted in `ROUNDED_QUOTIENTS` (`test/render/paint_ring_lap.test.ts`); fix it when the sha256-pinned programs are next re-pinned. `docs/design/K299_choice_pulse_bug.md` ("Residuals").
 
-- **K314** · `src/main.ts`: the non-finite watchdog's comment (about line 4274 at 459cc11) and stamp say `halted` is cleared on regenerate, but nothing sets it false again. Noted by K7 s1.
+- **K314** · `src/main.ts`: the non-finite watchdog's comment (about line 4274 at 54ef27a) and stamp say `halted` is cleared on regenerate, but nothing sets it false again. Noted by K7 s1.
 
 - **K315** · `__knotPhys` calls `sys.readSlideStats()`, which resets the counters it reads; under K7's mirror it needs the diagnostic bridge or a worker-side count (decide in K7 s2 or s4). `docs/design/K7_worker.md` ("Stage 1 handoff", "For stage 2").
 
@@ -38,7 +38,7 @@
 
 - **K405** · After K395, a "M" at a kink loop's tip: the inner edge turns +31° to +56° (stations 75-89, `?7` chain 9) as the 5-station circumradius follows the control spacing. Try a smooth radius envelope or wider min window. `.claude/rules/render-pluck.md` ("Pluck loop tip (K395)").
 
-- **K422** · Two K120 probe checks fail on master too (K80 3a): keys.mjs realtime "a held key keeps adding inputs" (the seed-7 maze may have changed) and pad.mjs desktop "the stored choice shows it" (the pad hides under the open panel since K224, 86dc0cf). `.claude/probes/K80/stage3/rerun/K120/`.
+- **K422** · Two K120 probe checks fail on master too (K80 3a): keys.mjs realtime "a held key keeps adding inputs" (the seed-7 maze may have changed) and pad.mjs desktop "the stored choice shows it" (the pad hides under the open panel since K224, 918c929). `.claude/probes/K80/stage3/rerun/K120/`.
 
 - **K425** · Probes editing `ribbon_renderer.ts`: `K290/stage3b/dump_variants.ts` + copies (K76 2d, K290 3a), `variant_build.ps1` (`g2/`, `K4/`), `K154_K169/edit_rr2.ps1`, `edit_rr3.ps1`. Repoint to `src/render/ribbon/ribbon_shader.ts` (R1's copy `.claude/probes/K5/R1/dump_variants.ts`).
 

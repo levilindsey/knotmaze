@@ -218,8 +218,8 @@ glow's rows sit under "Hover glow"; item 5 says where the margins go.
 The stage is done and verified, inside the cap (started 20:49).
 
 **Done: items 1-9.**
-SHAs are the rebased ones (on master `b72d5dd`; see Next).
-- `44b19a3`, items 1-4 and 6. `hoverGlowLength` (`hgl=`, codec 131,
+SHAs are the rebased ones (on master `86a4f0f`; see Next).
+- `55c7a16`, items 1-4 and 6. `hoverGlowLength` (`hgl=`, codec 131,
   default 3, [0.5, 15] world) replaces `pulseReach` in ALONG.
   `hoverGlowFade` (`hgf=`, 132, default 0.2, [0, 1.5] world) replaces
   `RIM_END_FADE` (0.75, removed); `RIM_END_SHARE` stays as the short-run
@@ -230,14 +230,14 @@ SHAs are the rebased ones (on master `b72d5dd`; see Next).
   `kComposePaintAcross` (GLSL and mirror), because master's max with the
   breath band hid a 0.4 glow at most phases. Parity tests in
   `paint_gameplay.test.ts`.
-- `cacbbb4`, item 5. `pickMargin` (`pkm=`, 133, default 4 CSS px past the
+- `a50f378`, item 5. `pickMargin` (`pkm=`, 133, default 4 CSS px past the
   drawn edge, [0, 20]) and `pickChoiceRatio` (`pkr=`, 134, default 1.5,
   [1, 4]), mouse and pen only. Touch keeps 0.7 and `max(0.9, 1.6 tw)`
   exactly. In `main.ts`, `pickRadius(pointerType, choice)` feeds every
   pick site, `onThread` = `ps.nearest` or `renderer.pickThread`, and
   `grabRadius` keeps an accepted press grabbing; `edgeAt` takes its
   radius from the caller.
-- `3b67ee3`, lore: render-paint.md (HOVER GLOW, K298), gameplay-links.md
+- `0f0f692`, lore: render-paint.md (HOVER GLOW, K298), gameplay-links.md
   (131-134), gameplay-camera.md (PICK MARGINS), gameplay-panel.md (K298
   ROWS), probes.md (the pick probe).
 - Items 7-9: the evidence below.
@@ -312,7 +312,7 @@ SHAs are the rebased ones (on master `b72d5dd`; see Next).
 `lock_take.ps1` / `lock_release.ps1`.
 
 **Next.** Coordinator review and merge. The branch was rebased onto
-master `b72d5dd` (K7 stage 1 and K307 stage 1) at 22:13. Two conflicts,
+master `86a4f0f` (K7 stage 1 and K307 stage 1) at 22:13. Two conflicts,
 both resolved:
 - `main.ts`'s drag commit now reads `host.grab(ps.nearest(pp.x, pp.y,
   grabRadius(pp.pt)), pp.x, pp.y)`: K7's host call with K298's radius.

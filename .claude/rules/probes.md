@@ -191,7 +191,7 @@ for a flow-on retrace).
   spring never advances between polls and the wait passes early):
   census3a's prepare does this (10 identical full-precision views, frames
   forced); sheet3a's EXACT=1 is the same wait.
-  Builds before K96 (d8b9175) ease even slower while the knot settles
+  Builds before K96 (a24f104) ease even slower while the knot settles
   (at most 0.05 s of spring per frame). `.claude/probes/K96/k96_cam.mjs`
   slows frames with a busy-wait in every rAF: CPU throttling barely
   slows a frozen layout.
@@ -290,7 +290,7 @@ for a flow-on retrace).
   FOG OFF, so the daily modes need `vite.fogdaily.config.ts`: the
   checkout's own config plus an in-memory transform that adds
   `fogOfWar: true` to DAILY_V1 (the source on disk is untouched). K132
-  (41e81b5) removed DAILY_V1, so the transform is BROKEN until it
+  (530dfdc) removed DAILY_V1, so the transform is BROKEN until it
   targets `PARAM_DEFAULTS`' `exploration` (`"fog"`; the param was
   `fogOfWar` until K76 stage 2c) (K262). Its env
   `K100_DAILY_EXTRA` appends more overrides (`flowStrength: 0,`

@@ -8,19 +8,19 @@
 
 - **K44** · Probe tooling quirks: the gap census's totals drift between captures of one frozen state and it ends a crossing's ideal at 0.5 of the neighbor gap (the renderer uses 0.8); a hold probe must first move past the 4 CSS px tug threshold (df373b5; `.claude/probes/K41/` moves 12 px); with flow on, A/B at `fw=0`; pair `phy=0` builds on one side of K63; a 4x CPU throttle is for ratios only.
 
-- **K69** · String mode (`pv=string`) on pre-G2.3 builds drew a 1-px diagonal sliver from the start to the exit marker after a few moves (`?b.c&pv=string`, 6 moves). G2.3 does not show it but it was never attributed; look again if it returns (G2 doc section 7, Follow-ups). Since K83 (45aac50) that Graphics draws only the win ring.
+- **K69** · String mode (`pv=string`) on pre-G2.3 builds drew a 1-px diagonal sliver from the start to the exit marker after a few moves (`?b.c&pv=string`, 6 moves). G2.3 does not show it but it was never attributed; look again if it returns (G2 doc section 7, Follow-ups). Since K83 (21a525e) that Graphics draws only the win ring.
 
-- **K103** · Below 10 fps the fit camera, the move animation, the paint clock and the pluck overlay still slow down: the fit eases by a fixed fraction per frame, and `tickAnim`, the paint and `tickPlucks` read Pixi's `deltaMS` (capped at 100 ms). K96 (d8b9175) moved only the follow camera onto real time; a time-based fit ease would change its feel at the refresh rate it was tuned on. Since K101 (e9e01ae) a music note's string motion trails its sound below 10 fps.
+- **K103** · Below 10 fps the fit camera, the move animation, the paint clock and the pluck overlay still slow down: the fit eases by a fixed fraction per frame, and `tickAnim`, the paint and `tickPlucks` read Pixi's `deltaMS` (capped at 100 ms). K96 (a24f104) moved only the follow camera onto real time; a time-based fit ease would change its feel at the refresh rate it was tuned on. Since K101 (a913d58) a music note's string motion trails its sound below 10 fps.
 
 - **K133** · Crossed join bridges: plans built before K110 can hold two join bridges that cross (the diagonals of one cell; 108 plans, 20 of them dailies). K110's joins skip such a splice, the older join code has no check. Fixing it moves those plans, which the pre-launch policy allows; first look at whether a crossing reads wrong (`.claude/probes/K110/verify_run3.txt`).
 
-- **K136** · A gs 6 tree maze with dead ends never sleeps (140 s of sim, still moving), on 7e41a02 and ade3537 alike, so not K110's doing; maybe the K13 attractor. Repro `?12l&gs=6&shp=tree` (K74's agent saw it at the new defaults and the old placement too); `.claude/probes/K110/sheet/results_run1_tree_awake.json`.
+- **K136** · A gs 6 tree maze with dead ends never sleeps (140 s of sim, still moving), on 70dbc6c and ade3537 alike, so not K110's doing; maybe the K13 attractor. Repro `?12l&gs=6&shp=tree` (K74's agent saw it at the new defaults and the old placement too); `.claude/probes/K110/sheet/results_run1_tree_awake.json`.
 
 - **K142** · The A/B harness's first case in a fresh browser can read nonzero (1 of 11 runs: K79 B2b's `none_desk`, specks on thread edges); cause not found (a cold server or GPU cache?). Rerun before trusting it; a warm-up case is untested (`docs/design/K79.md`, "The 18/19 run").
 
-- **K143** · Vellum's fibers read as long crossing hatching near scale 2, the slider's max (K129; merged in 58b77cf). A look for K156's phone pass (sheets in `.claude/probes/K79/out/view/`).
+- **K143** · Vellum's fibers read as long crossing hatching near scale 2, the slider's max (K129; merged in bbd71dc). A look for K156's phone pass (sheets in `.claude/probes/K79/out/view/`).
 
-- **K150** · Probe tooling isn't safe for concurrent agents: `scripts/diag_screenshot.mjs` uses one fixed Chrome profile and an on-screen window, and `scripts/preview.ps1 -Ref` builds into fixed TEMP folders unless given `-Root <dir>` (K156 stage 1, 1f8be97). Fix: per-run profiles, off-screen windows (claude-config `rules/lessons.md`). Give each agent a disjoint port range, and a probe must not release the perf lock between samples (gaps let another agent's builds land).
+- **K150** · Probe tooling isn't safe for concurrent agents: `scripts/diag_screenshot.mjs` uses one fixed Chrome profile and an on-screen window, and `scripts/preview.ps1 -Ref` builds into fixed TEMP folders unless given `-Root <dir>` (K156 stage 1, 46019dd). Fix: per-run profiles, off-screen windows (claude-config `rules/lessons.md`). Give each agent a disjoint port range, and a probe must not release the perf lock between samples (gaps let another agent's builds land).
 
 - **K168** · K81's untested ranges: more than 20 routed records, zoomed in, and a full web on the phone (the gate walks the cheapest route, so a full web was certified on the desktop only). K156's looks can cover some.
 
@@ -28,7 +28,7 @@
 
 - **K172** · K156's screenshot sheets have no text labels, and its drift looks show drift only inside the intro window (3c checked the speed-8 looks on the phone: they show motion).
 
-- **K175** · K80's UI gaps (5fed5c1): a queued tap has no visual; the choice pulses go quiet during a move; the bull glyph is a placeholder (K98); its off-screen indicator ignores `finishIndicator` (K84).
+- **K175** · K80's UI gaps (113ae4d): a queued tap has no visual; the choice pulses go quiet during a move; the bull glyph is a placeholder (K98); its off-screen indicator ignores `finishIndicator` (K84).
 
 - **K177** · K80's last unrun check: the minotaur's indicator on the phone itself (K174 checked it on the desktop in 411x753 emulation); the next phone pass shows it. Chases are not saved or replayable (`replayChase` exists; the dailies stay turn-based).
 
@@ -38,11 +38,11 @@
 
 - **K287** · K268 stage 1's residuals: (a) the brief's full proof sweep (reach steps over perpendicular, shallow and kink-eye crossings, growth 0.1-0.9, over-thread tips) is not run (the proof ran 11 configurations on one state); (b) the two-piece (MAX) case and (c) an over thread's own tip inside a footprint have no GPU check; (d) the contact sheet is the proof's crops only; (e) fray's cut flickers along its center fiber's sine; (f) the mode-off A/B was not re-run after the rebase onto K114 (coordinator's call); (g) the per-slot cut proof on the phone needs `__knotExplore` to expose slot positions (the K156 2026-10-14c phone census itself passed). `docs/design/K268.md` ("Not done in stage 1", Calls).
 
-- **K289** · K279 stage 1's open residuals: (a, i) the first ripple costs a 10 ms spike and the first tap's first frame 30-36 ms more on the desktop (likely the ripple filter's compile: warm it at load; no stall on the phone); (c) the ripple filter covers the whole root (bound its filterArea to the live discs, most of all for phones); (d) the ripple is sized in world units, so it shrinks on a phone (a CSS-px floor?); (e) no High contrast tie-in (ring off, or glint only?); (g) no webm clips; (j) `render-pluck.md` and K279.md cite pre-rebase SHAs (0f08f68, 2d905d0, da1333a, 4eb20a7) that exist only on the local branch `k279-stage1-prerebase`: re-cite them as 50c1aab; (k) `k279_phone.mjs` reads `ripples` 1.9 s after the tap, so always 0. `docs/design/K279.md` ("Stage 1 handoff", "Wake follow-up").
+- **K289** · K279 stage 1's open residuals: (a, i) the first ripple costs a 10 ms spike and the first tap's first frame 30-36 ms more on the desktop (likely the ripple filter's compile: warm it at load; no stall on the phone); (c) the ripple filter covers the whole root (bound its filterArea to the live discs, most of all for phones); (d) the ripple is sized in world units, so it shrinks on a phone (a CSS-px floor?); (e) no High contrast tie-in (ring off, or glint only?); (g) no webm clips; (j) `render-pluck.md` and K279.md cite pre-rebase SHAs (b44a7d9, 89383c3, ac27a56, 255a287) that exist only on the local branch `k279-stage1-prerebase`: re-cite them as 2600523; (k) `k279_phone.mjs` reads `ripples` 1.9 s after the tap, so always 0. `docs/design/K279.md` ("Stage 1 handoff", "Wake follow-up").
 
-- **K291** · CI: the deploy run of ad2618a carried two annotations: checkout@v4, setup-node@v4 and wrangler-action@v3 target Node 20 (forced on Node 24), and `ubuntu-latest` moves to Ubuntu 26 on 2026-10-19. Bump each action to a Node 24 release; if the first deploy after the 19th fails, pin `ubuntu-24.04` (a red run leaves the previous deployment live). `.github/workflows/deploy.yml`.
+- **K291** · CI: the deploy run of c6f15f9 carried two annotations: checkout@v4, setup-node@v4 and wrangler-action@v3 target Node 20 (forced on Node 24), and `ubuntu-latest` moves to Ubuntu 26 on 2026-10-19. Bump each action to a Node 24 release; if the first deploy after the 19th fails, pin `ubuntu-24.04` (a red run leaves the previous deployment live). `.github/workflows/deploy.yml`.
 
-- **K293** · K80 turns stage 2's residuals, for stage 3: (a) under minoRestart the stars rate only the last life, while the popover says the walk before it counts; (b) the ox emoji shows only in the share grid, never under minoRestart; (c) markCaught on an empty move log pushes `x`, so the moves read 1; (d) with minoLair off the minotaur can camp the first junction past the entrance; (e) the minoSleep tooltip is wrong with minoLair off; (f) a Reset path restart shows no toast; (g) real time has no close-call or seen stats; (h) the messages of c021177 and e571894 say codec 121-122, the rows are 128-129. `docs/design/K80_turns.md` ("Stage 2 handoff", "For stage 3").
+- **K293** · K80 turns stage 2's residuals, for stage 3: (a) under minoRestart the stars rate only the last life, while the popover says the walk before it counts; (b) the ox emoji shows only in the share grid, never under minoRestart; (c) markCaught on an empty move log pushes `x`, so the moves read 1; (d) with minoLair off the minotaur can camp the first junction past the entrance; (e) the minoSleep tooltip is wrong with minoLair off; (f) a Reset path restart shows no toast; (g) real time has no close-call or seen stats; (h) the messages of 3ef237e and 4a51942 say codec 121-122, the rows are 128-129. `docs/design/K80_turns.md` ("Stage 2 handoff", "For stage 3").
 
 - **K295** · `.claude/probes/K155/probe_stars.mjs` is stale in two checks: it expects 4 rules lines in the stars popover (stat lines follow them since K274) and today among the History rows (own row since K146). Only the copy `.claude/probes/K80/turns2/banner/probe_stars.mjs` is fixed.
 
@@ -52,7 +52,7 @@
 
 - **K311** · PixiJS warns at load that attributes aGap / aGapId / aUV are not present in the shader (Levi's console, 2026-10-14). Find which mesh binds attributes its program does not declare and tidy it (`docs/design/K299_choice_pulse_bug.md`).
 
-- **K314** · `src/main.ts`: the non-finite watchdog's comment (about line 4274 at 459cc11) and stamp say `halted` is cleared on regenerate, but nothing sets it back to false (its only `= false` is the declaration). Noted by K7's stage 1.
+- **K314** · `src/main.ts`: the non-finite watchdog's comment (about line 4274 at 54ef27a) and stamp say `halted` is cleared on regenerate, but nothing sets it back to false (its only `= false` is the declaration). Noted by K7's stage 1.
 
 - **K315** · `__knotPhys` calls `sys.readSlideStats()`, which resets the slide counters it reads. Under K7's mirror it needs the diagnostic bridge or a worker-side count; decide in K7's stage 2 or 4 (`docs/design/K7_worker.md`, "Stage 1 handoff", "For stage 2", on K7's branch until it merges).
 

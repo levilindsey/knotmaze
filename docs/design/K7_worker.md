@@ -213,7 +213,7 @@ branch.
 
 ## Design
 
-Measured 2026-10-14 on master `0d88091`: the desktop (Ryzen 9 5900X, 24
+Measured 2026-10-14 on master `4039f70`: the desktop (Ryzen 9 5900X, 24
 threads; RX 6800 XT; Chrome 155), a 1600x900 window at dsf 1.5 (a
 2400x1350 canvas), under the perf lock. The probes, raw results and the
 spike are in `.claude/probes/K7/design/` (`node summarize.mjs daily`
@@ -1057,7 +1057,7 @@ Stage 0 ended 2026-10-14 at about 20:10, inside its cap. The branch is
 
 ### What was measured
 
-- **Baselines** on master `0d88091` under the perf lock (`k7_frames.mjs`
+- **Baselines** on master `4039f70` under the perf lock (`k7_frames.mjs`
   through `run_k7.ps1`; `k7_results.jsonl`, `frames/*.json`,
   `summarize.mjs`): the daily's front door twice, the daily with physics
   paused twice, gs 18, the knot, the fabric and dense, each with a drag
@@ -1132,7 +1132,7 @@ Stage 1 needs none of these answered; stage 2 assumes 5 and 10.
 
 ### For stage 1
 
-- The boundary table's line numbers are from `0d88091`; search for
+- The boundary table's line numbers are from `4039f70`; search for
   `ps.` after other merges.
 - `ps.grabbedParticle` is read at about 1361 (K147's budget), 3662,
   3783 and 3963; the host must keep it current on the mirror later, so
@@ -1144,9 +1144,9 @@ Stage 1 needs none of these answered; stage 2 assumes 5 and 10.
 
 Stage 1 ended 2026-10-14 at 21:10, inside its two-hour cap (it started
 at 20:12). The branch is `worktree-agent-a3b1bdbb421b88478`, from master
-`bf7f7e9`: the code is `be9f5bd`, the lore `c9fc1c3`, this handoff the
-commit after. No master commit since `bf7f7e9` touches `src/main.ts`,
-`src/physics/`, `src/core/` or `test/physics/` (master `3ecae28` at
+`317a025`: the code is `be9f5bd`, the lore `c9fc1c3`, this handoff the
+commit after. No master commit since `317a025` touches `src/main.ts`,
+`src/physics/`, `src/core/` or `test/physics/` (master `3c67780` at
 21:01), and a trial merge onto it is clean. The evidence is in
 `.claude/probes/K7/stage1/` (untracked, for the coordinator to copy).
 
@@ -1231,7 +1231,7 @@ Every work item, and the lore line.
   hold.
 - **k7_frames** under the perf lock (`run_k7.ps1 -Batch batch_ab.txt`;
   `k7_results.jsonl`, `frames/`, `summarize.mjs`, `batch_ab.log`): master
-  `bf7f7e9` on 5810 against the branch `be9f5bd` on 5811, built and
+  `317a025` on 5810 against the branch `be9f5bd` on 5811, built and
   served by `serve_ab.ps1` (`scripts/preview.ps1 -BuildOnly`, then `vite
   preview`), interleaved, each run with a drag and a wake, stamps
   checked. The daily is the bare URL; the knot is
@@ -1323,9 +1323,9 @@ Every work item, and the lore line.
 
 Stage 2 ended 2026-10-14 at 23:18, inside its two-hour cap (it started at
 22:15). The branch is `worktree-agent-ad436f128119f6c81`, from master
-`b72d5dd`: nine commits, `3d58fc9` to `712d07c`, and this handoff the
-commit after. Master (`7effaae`, 22:53) has changed nothing under
-`src/physics/`, `src/core/` or `test/physics/` since `b72d5dd`, and a
+`86a4f0f`: nine commits, `3d58fc9` to `712d07c`, and this handoff the
+commit after. Master (`bd7c146`, 22:53) has changed nothing under
+`src/physics/`, `src/core/` or `test/physics/` since `86a4f0f`, and a
 trial merge (`git merge-tree`) finds no file changed on both sides. The
 evidence is in `.claude/probes/K7/stage2/` (untracked, for the
 coordinator to copy). Everything is built and tested on fabric (maze)
@@ -1545,9 +1545,9 @@ Every work item.
 
 Stage 3 ended 2026-10-15 at 00:43, inside its two-hour cap (it started
 2026-10-14 at 23:22). The branch is `worktree-agent-a9f593eca9038e6d3`,
-from `472ef83` (stage 2's handoff): three commits, `5fcee42` to
-`6bbd300`, and this handoff after them. Master (`1e7456c`) has
-changed `src/main.ts` since (`2c81a92`, K329/K333/K334's key moves); a
+from `68b2fdf` (stage 2's handoff): three commits, `5fcee42` to
+`6bbd300`, and this handoff after them. Master (`fabdf9a`) has
+changed `src/main.ts` since (`2014dd0`, K329/K333/K334's key moves); a
 trial merge (`git merge-tree`) combines the two without a conflict, and
 no other file changed on both sides. The evidence is in
 `.claude/probes/K7/stage3/` (untracked, for the coordinator to copy).
@@ -1786,10 +1786,10 @@ in this stage), fabric designs.
 
 Stage 4 ended 2026-10-15 at 02:27, inside its two-hour cap (it started
 at 00:48). The branch is `worktree-agent-abee0faca59fb8636`, from
-`7f4c1bd` (stage 3's handoff): `681cd3d` (the bridge), `02357d4` (the
+`6f1a519` (stage 3's handoff): `681cd3d` (the bridge), `02357d4` (the
 two tracked ports), `d4fbf26` (the lore and a first draft of this
 handoff), `70f345b` (more of it), `0b16814` (the awaited tug's fix, see
-Verification) and this handoff. Master (`df30e03`) has changed
+Verification) and this handoff. Master (`ae1d3fe`) has changed
 `src/main.ts` and `.claude/rules/probes.md` since (K76 stage 2c, K279
 stage 2); a trial merge (`git merge-tree`) combines both without a
 conflict, and no other file changed on both sides. The evidence is in `.claude/probes/K7/stage4/`
@@ -1900,7 +1900,7 @@ Every work item. The targets are under 3.
        `ParticleSystem` (25 files), and the historic `main.ts`
        snapshots under `K41/`.
 3. **Acceptance** under the perf lock, builds of `681cd3d` (s4a) and of
-   master `7f4c1bd` (its default path, in-thread), 1600x900 at dsf 1.5,
+   master `6f1a519` (its default path, in-thread), 1600x900 at dsf 1.5,
    a fresh profile per load, the drag a fixed 5 s wall-time circle. "Between
    freezes" is the intro after its last callback over 300 ms (the shader
    compiles, K307) to the intro's end, as design 10 took it.
@@ -2011,7 +2011,7 @@ Every work item. The targets are under 3.
      on the daily) is that estimate plus a frame's JS and the queue.
 5. **K307's unattributed main-thread JS** (a sonnet helper, `k307/`:
    V8's CPU sampler inside a Chrome trace with K307's WebGL wrapper, an
-   unminified source-mapped build of `7f4c1bd`, `?daily&phw=0` and
+   unminified source-mapped build of `6f1a519`, `?daily&phw=0` and
    `&phw=1`, two cold loads each, under the lock; profiling makes JS
    15-30% slower, so its 97-108 ms reads as the doc's 86). Each window
    splits into GL wait, JS and GC, and adds up to its wall time.
@@ -2037,12 +2037,12 @@ Every work item. The targets are under 3.
      the section-rgb compile either way (2913 / 2914 against 2964 / 3043
      ms, inside the GPU noise of other agents' runs).
    - **The 80-96 ms frame at about 6.1 s: not reproduced at
-     `7f4c1bd`.** In the helper's four traces the first frame after
+     `6f1a519`.** In the helper's four traces the first frame after
      freeze 3 is a 24-36 ms task, and in the acceptance runs (minified,
      no profiler) a 29-31 ms callback in-thread and 19 ms with the
      worker; K147's budget takes ONE substep in it, then frames of 21-29
      ms (in-thread) or 11-19 ms (worker). The doc traced master
-     `3e86fb5`. Nothing to fix here.
+     `35075aa`. Nothing to fix here.
    - **Freeze 3 (about 2.2 s):** 48 ms of JS (paint palette, fillets,
      width profiles, spline sampling, one physics frame of 12 ms) inside
      the arm-strip and junction-field compiles; the worker removes the
@@ -2201,10 +2201,10 @@ Observed unless marked inferred. Desktop only.
 
 Stage 5 ended 2026-10-15 at 03:29, inside its two-hour cap (it
 started at 02:34). The branch is `worktree-agent-adf244f47f53e8230`, from
-`de22867` (master with stage 4 merged): `14424e1` (the start gate),
+`8d051ae` (master with stage 4 merged): `14424e1` (the start gate),
 `c0f1622` (the stamp and the lore drafts), `19ca8a4` (the verdict in the
 lore) and this handoff, with the phone probes' lore. Master has moved to
-`08b6064` since (K268 stage 2, the K5 + K6 design, ledgers); no file
+`f4a926f` since (K268 stage 2, the K5 + K6 design, ledgers); no file
 changed on both sides. The evidence is in `.claude/probes/K7/stage5/`
 (untracked, for the coordinator to copy): the probes (`k7_frames.mjs` and
 `k7_latency.mjs`, stage 4's with a `--phone` path; `phone_lib.mjs`,
@@ -2256,7 +2256,7 @@ and no pin moved.
 ### The start gate on the desktop
 
 The clean A/B (`s5_ab.txt`, 03:18-03:21 under the perf lock): s5a
-(`c0f1622`) against s5base (`de22867`, this branch's base), today's daily,
+(`c0f1622`) against s5base (`8d051ae`, this branch's base), today's daily,
 alternating. Gate times are ms after `mainEnd`.
 
 | | s5a | s5base |
@@ -2276,7 +2276,7 @@ sooner; `phw=0` is unchanged within noise. On the desktop main hears
 `ready` 276-320 ms after the worker sends it, which lines up with the end
 of main's own long task at about 0.36 s (305-337 ms, both builds, both
 hosts). That task was 280-287 ms on stage 4's `f4c1d5f` (`s5_gate.txt`),
-so its growth came with master's merges between `f4c1d5f` and `de22867`
+so its growth came with master's merges between `f4c1d5f` and `8d051ae`
 (observed), not with stage 5; which merge is not known. Against s4b
 (`s5_gate.txt`, 03:05) the gate reads the same: `phw=1` first visible
 1.10-1.11 against 1.16-1.19 s, the pre-settle done at 788-801 against
@@ -2352,8 +2352,8 @@ little off spawn-to-`hello` (55-87 ms on the phone).
 - **The pass ran on s5a**, stage 4's code plus the start gate and the
   stamp, not on stage 4's build: the coordinator asked for the gate first.
   Stage 4's build (s4b) ran twice for comparison. s4b predates master's
-  merges into `de22867` (K279 stage 2, K76 2c, K8 stage 1, K353), so the
-  clean desktop baseline is `de22867` (s5base), not s4b.
+  merges into `8d051ae` (K279 stage 2, K76 2c, K8 stage 1, K353), so the
+  clean desktop baseline is `8d051ae` (s5base), not s4b.
 - **`k7_frames.mjs` and `k7_latency.mjs` with a phone path** instead of
   `scripts/phone_pass/`. They record design 10's cells (intro fps and p95,
   first sleep, sim/wall, drag and wake fps, errors) plus each host's cost
@@ -2407,7 +2407,7 @@ Observed unless marked inferred.
 - **Touch latency on the phone** (231 ms p50 with the worker; the first
   motion at 173 ms p50) belongs to K370.
 - **Main's long task at about 0.36 s** grew by 30-40 ms between `f4c1d5f`
-  and `de22867` (observed); on the desktop it holds main's `ready` back to
+  and `8d051ae` (observed); on the desktop it holds main's `ready` back to
   about 600 ms. Which merge grew it is not known (K279 stage 2's ripple
   warm-up is a guess).
 
@@ -2424,7 +2424,7 @@ stage". The lever, the phone pass again and the spike page become stage
 One stage: sonnet, 1 h cap, ports 5850-5859.
 
 1. **The flip.** `src/ui/url_state.ts`: `physicsWorker: true` (line 679
-   at `988be6a`). Re-freeze the pins it moves
+   at `35542e7`). Re-freeze the pins it moves
    (`test/ui/url_codec.test.ts:89`, and any other that pins the
    default), and name each in the commit. `phw` must not change the
    maze: the K87 pin, the golden dailies and the byte-identity golden
@@ -2464,8 +2464,8 @@ Commit WIP after each item. The handoff goes at the end of this file as
 ## Stage 6 handoff
 
 Written 2026-10-15 by the stage 6 agent (sonnet, 1 h cap, started 03:48:50)
-on `worktree-agent-a6023a3244ff623cc`, forked from master `8b3b401`. Master
-has moved (`8bcfb9f` at 04:35; K8 stage 2 and others touched `probes.md`,
+on `worktree-agent-a6023a3244ff623cc`, forked from master `9882a38`. Master
+has moved (`9b4a0e0` at 04:35; K8 stage 2 and others touched `probes.md`,
 `CLAUDE.md`, `LEDGER.md`, `render-ribbon.md`, `docs/lore_index.md` and
 `src/render/*`). This branch was not rebased; see "The merge".
 
@@ -2529,7 +2529,7 @@ has moved (`8bcfb9f` at 04:35; K8 stage 2 and others touched `probes.md`,
   three prober instructions and line 55 of `G3G4_sdf_geometry.md`.
 - **`probes.md`'s K7 stage 4 entry keeps its last line byte for byte**
   ("`__knotSettle().phase` reads `off`: K147's budget runs only in-thread.").
-  Master's K8 stage 2 commit (`f6d10e3`) appended a bullet right after it, so
+  Master's K8 stage 2 commit (`b11747e`) appended a bullet right after it, so
   an unchanged last line is what lets the two edits merge without a conflict.
 - **Item 3 also made each callback `async`,** which the brief's "change only
   the freeze lines" does not name; `await` needs it. Every file carries the
@@ -2614,12 +2614,12 @@ has moved (`8bcfb9f` at 04:35; K8 stage 2 and others touched `probes.md`,
 
 **Observed:** a trial merge by `git merge-tree` (git 2.33's three-argument
 form, which touches no worktree) of this branch at `13f051d` with master
-`8bcfb9f`. The only files changed on both sides are `.claude/rules/probes.md`
+`9b4a0e0`. The only files changed on both sides are `.claude/rules/probes.md`
 and `CLAUDE.md`, and the output holds no conflict marker. This handoff
-changes only this file, which master has not touched since `8b3b401`.
+changes only this file, which master has not touched since `9882a38`.
 **Not run:** the suite on a merged tree. My code edits (`url_state.ts`,
 `worker_host.ts`, `mirror_system.ts`, `vite.config.ts`, two scripts, two
-tests) share no file with master's changes since `8b3b401`.
+tests) share no file with master's changes since `9882a38`.
 
 ### Not done
 
@@ -2659,7 +2659,7 @@ tests) share no file with master's changes since `8b3b401`.
 One stage: opus, 2 h cap, ports 5920-5929, probes in
 `.claude/probes/K7/stage7/`. "Every build stage: setup and process"
 applies. Written 2026-10-15 about 07:30 by coordinator session 05e60da0.
-K5 M1 has merged (`12709e5`), so `main.ts`'s boot is free.
+K5 M1 has merged (`790b2ce`), so `main.ts`'s boot is free.
 
 1. **The lever,** as "The lever (not built)" in the Stage 5 handoff
    describes it: the scene params and the tuning travel in the Worker's
@@ -2711,8 +2711,8 @@ The handoff goes at the end of this file as "## Stage 7 handoff".
 ## Stage 7 handoff
 
 Written 2026-10-15 by the stage 7 agent (opus, 2 h cap, started 07:24:07)
-on `worktree-agent-a29b026fa5e2829ee`, forked from master `21d701e`. Master
-has since moved by `cb4999e` (LEDGER.md only). Evidence:
+on `worktree-agent-a29b026fa5e2829ee`, forked from master `2a7b625`. Master
+has since moved by `7fe6d94` (LEDGER.md only). Evidence:
 `.claude/probes/K7/stage7/` (untracked; the merge copies it): the batches
 (`s7_desktop.txt`, `s7_phone.txt`), their runners (`run_s7.ps1`,
 `phone_run.ps1`), logs (`run_s7_desktop.log`, `run_s7_phone.log`), results
@@ -2811,7 +2811,7 @@ Observed unless marked inferred. Times are ms after the main chunk's
   lock, the daily and gs 18 alternating, three loads a build each, a fresh
   Chrome profile a load, so every load pays K307's cold compiles):
 
-  | | lever `4b51e5c` | master `21d701e` |
+  | | lever `4b51e5c` | master `2a7b625` |
   |---|---|---|
   | worker `hello` | 94-121 | 94-122 |
   | worker `ready` | **139-165** (6 of 6 built from the name and adopted) | 363-396 |

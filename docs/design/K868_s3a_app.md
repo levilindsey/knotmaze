@@ -6,7 +6,7 @@ Stage brief (coordinator, 2026-10-27). Parent: K868
 ## Why
 
 The oracle's rules are settled and are its defaults (K934, merged
-e2926d0e): label ink, depth "overlap", endSnap, the crossed yield order,
+5bbe3790): label ink, depth "overlap", endSnap, the crossed yield order,
 labTie "surface", extent "part". At play size, label ink leaves far less
 than today's app does (sheet K, `.claude/probes/K934/K_recount.png`;
 `docs/design/K934_recount.md` ## Results, step 5). More oracle rounds now

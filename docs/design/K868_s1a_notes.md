@@ -2,7 +2,7 @@
 
 Working notes for the S1a agent (brief: `K868_s1a_scene_export.md`).
 Re-read this file and the brief after a compaction, not the sources.
-Line numbers are at e3190f77.
+Line numbers are at d73b76ec.
 
 ## Centreline source
 

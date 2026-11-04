@@ -35,7 +35,7 @@ banner expected) and 3 (replay: finish again), and default confetti frame
 times with the audiobook paused at thermal status 0.
 
 1. Run `pwsh -NoProfile -File C:\Users\lsl\Repositories\knotmaze\.claude\probes\K662\run_daily2.ps1 -End <HH:mm, 20 min ahead>`.
-   It serves K662's build (`ea22989`, port 5662) and handles its own lock,
+   It serves K662's build (`c9de592`, port 5662) and handles its own lock,
    gate, watchdog and teardown. Log: `.claude/probes/K662/logs/daily2.log`.
 2. The quiet frame rerun: the default-confetti frame cells only, as
    K662's part 2 took them (`.claude/probes/K662/results.md` says how;
@@ -48,7 +48,7 @@ times with the audiobook paused at thermal status 0.
 
 As K662_phone.md's "Setup for parts 2-4", with these values: build
 origin/master (`git rev-parse --short origin/master` after a fetch; at
-writing, it holds K114 cut `5bb8b6f` and K324 stage 2 `031e09a`) into
+writing, it holds K114 cut `bd8a33d` and K324 stage 2 `af0f823`) into
 `.claude/probes/K703/builds`, serve it on port 5703, take the lock as
 `K703`, gate on idle, `phone_setup.ps1 -Port 5703 -Sha <sha>`, drive the
 ONE tab with puppeteer-core (`defaultViewport: null`; emulate nothing).

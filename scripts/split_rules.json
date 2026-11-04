@@ -1462,7 +1462,7 @@
     },
     {
       "source": "render.md",
-      "anchor": "- AMPLITUDE FLOOR (44885f3 raised tapAmplitude's",
+      "anchor": "- AMPLITUDE FLOOR (ac833a4 raised tapAmplitude's",
       "to": "render-pluck.md"
     },
     {
@@ -1522,7 +1522,7 @@
     },
     {
       "source": "render.md",
-      "anchor": "- VERIFIED: same-state A/B against master ca7d3e6",
+      "anchor": "- VERIFIED: same-state A/B against master 6b25b50",
       "to": "render-pluck.md"
     },
     {

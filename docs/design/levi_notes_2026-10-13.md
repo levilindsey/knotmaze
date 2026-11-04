@@ -82,7 +82,7 @@ We should definitely add support for a faster smoother input control, like press
 
 Levi's answers to the items waiting on Levi, verbatim below. A message
 on the repo's visibility and license is recorded as LEDGER K117 (the
-GitHub link is gone and the code is all rights reserved, a756ca5).
+GitHub link is gone and the code is all rights reserved, d2adf8a).
 
 | Item | Decision | Ledger |
 |---|---|---|
@@ -175,7 +175,7 @@ Network: I've been running RDP to this machine occasionally throughout the day (
 
 Filed (2026-10-13): K74 (four stages) and K127 to In progress; K76, K93
 and K116 to Next; K121 dropped, K129 done and K86 folded into K74; the
-no-back-compat policy in CLAUDE.md and K132; the copyright in 7a63ec4
+no-back-compat policy in CLAUDE.md and K132; the copyright in f063f60
 (K117). Traversal speed was already a slider (`moveSpeed`, Maze folder).
 
 ## Later answers (verbatim)

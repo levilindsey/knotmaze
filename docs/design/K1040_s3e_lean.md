@@ -3,7 +3,7 @@
 The coordinator's brief, 2026-11-03. One stage. Branch
 `worktree-agent-aaf87e9d3775b20e4`, worktree
 `.claude/worktrees/agent-aaf87e9d3775b20e4`, never pushed. S3c and S3d
-are on master (`dbf129b2`).
+are on master (`d28d2e2c`).
 
 ## Where S3d left it
 
@@ -143,7 +143,7 @@ list (K1143).
 ## Handoff
 
 S3e's agent, stopped 2026-11-03 at 13:58 (cap 14:13). Branch
-`worktree-agent-aaf87e9d3775b20e4` on `19e3f5ff`, never pushed.
+`worktree-agent-aaf87e9d3775b20e4` on `14e41512`, never pushed.
 
 **The gate: undecided.** Its second and third conditions hold on the
 desktop. The first, and step 1's ideal floor, need the Pixel, which was

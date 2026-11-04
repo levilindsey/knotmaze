@@ -2,8 +2,8 @@
 
 Stage 1 (design and prototype), 2026-10-12. Brief: `docs/design/K76.md`
 (Levi's request, verbatim). Nothing merges from this stage: the prototype
-lives on `worktree-agent-aea102de995e1ce30` (WIP commits 1fbc0d2 and
-23907a5). The implementation is stage 2, after K73 (codec v4, UI files)
+lives on `worktree-agent-aea102de995e1ce30` (WIP commits 9fd1e80 and
+82dbdb1). The implementation is stage 2, after K73 (codec v4, UI files)
 and K75 (paint shader, pulse reach) merge.
 
 Contact sheet: `.claude/probes/K76/out/contact.html` (open it locally),
@@ -561,13 +561,13 @@ Probes, in `.claude/probes/K76/`:
 
 **Mode off costs GPU in the prototype** (`out/gpu_ab_master.json`): the
 same state, interleaved, two rounds, perf lock held, the same probe.
-Master is 009d508, a production build served by `scripts/preview.ps1`
+Master is b260135, a production build served by `scripts/preview.ps1`
 on 5277; the prototype is the worktree's dev server. The shader strings
 differ only by the change, and the timer query measures the GPU alone.
 
 | Build | GPU draw ms / frame, mode off |
 |---|---|
-| master 009d508 | 2.35, 2.38, 2.32, 2.37 |
+| master b260135 | 2.35, 2.38, 2.32, 2.37 |
 | prototype | 2.62, 2.78, 2.72, 2.80 |
 
 That is +0.3 to 0.45 ms (+13 to 19%) for code that never runs: the
@@ -586,12 +586,12 @@ master at 0 px and the same GPU ms.
   Tailscale;
 - GPU per program (`gpu_by_program.mjs`) with the variant in place;
 - the two census probes of section 7.
-## 10. Re-based on 5438a60, 2026-10-14
+## 10. Re-based on a2b2f1a, 2026-10-14
 
-Master is 320 commits past the prototype's base (044abfb). Section 6's
+Master is 320 commits past the prototype's base (a1ce123). Section 6's
 rows for K75, K81, K73's v4 and K80 are merged facts now. Per area: what
 landed, then what it changes for stages 2a-2d. Line numbers are at
-5438a60.
+a2b2f1a.
 
 **K75, K93 (pulses, trail).** Pulses brighten the thread's own paint
 (kComposePaint; the band-family flag is gone). pulseReach (pr, default
@@ -645,7 +645,7 @@ mode, and no parity test covers the modes. 2a: the variant multiplies
 alpha after the composition, so every mode fades with the thread; the
 mode-off program is master's. 2b: rims leave webs unlit and contrast
 makes them flat white, so both flat compositions carry the strip alpha.
-2d: section 9's baseline (009d508, 2.35 ms) predates K75 to K111; take a
+2d: section 9's baseline (b260135, 2.35 ms) predates K75 to K111; take a
 fresh same-state A/B against master.
 
 **K174, K80 (the minotaur).** `minoRefog` (mrf, index 107, default on):

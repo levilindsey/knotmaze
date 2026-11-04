@@ -1,6 +1,6 @@
 # K115 Stage 2 brief: the standalone word is walkable
 
-Stage 1b (cb7d006..bc357c4) renders a pinned cursive word as a knot-mode
+Stage 1b (cacf586..19c585c) renders a pinned cursive word as a knot-mode
 scene (`?txt=Welcome`, panel Text row, codec v8 `text`). It cannot be
 played: scene.ts gates the walk graph and fabric controller off for text
 scenes. This stage makes the standalone scene playable as designed

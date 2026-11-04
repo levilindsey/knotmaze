@@ -34,7 +34,7 @@
 
 - **K57** · Confirm the daily's exempt settings (`DAILY_EXEMPT_KEYS` in `src/ui/daily_link.ts`): the ones a player may change without leaving the daily. Parked for the late-stage review with K46 and K84 (Levi, 2026-10-14; `docs/design/levi_notes_2026-10-14.md` item 13). Still open: `settleBudget`, `loadSettle` (K162 (3)), the two confetti settings and `markerSize`. The comment at `daily_link.ts:153` still calls `hoverGlow` proposed, though K237 and K264 answered it.
 
-- **K117** · Repo visibility (`docs/design/levi_notes_2026-10-13.md`): private later, on Levi's word, parked until near launch to save CI churn cost (2026-10-14). Done in a756ca5: the panel's GitHub link is gone, `LICENSE` says all rights reserved (Snoring Cat LLC.), package.json says UNLICENSED, doc-only pushes skip the deploy. No bundle obfuscation. On his word: `gh repo edit --visibility private --accept-visibility-change-consequences` (reversible; the Pages deploy keeps working). K122 is needed either way.
+- **K117** · Repo visibility (`docs/design/levi_notes_2026-10-13.md`): private later, on Levi's word, parked until near launch to save CI churn cost (2026-10-14). Done in d2adf8a: the panel's GitHub link is gone, `LICENSE` says all rights reserved (Snoring Cat LLC.), package.json says UNLICENSED, doc-only pushes skip the deploy. No bundle obfuscation. On his word: `gh repo edit --visibility private --accept-visibility-change-consequences` (reversible; the Pages deploy keeps working). K122 is needed either way.
 
 - **K310** · K299's leftover shots: its seam sheet shows two pulse phases, not three or four, and its rim was injected rather than a real hovered choice (K298 builds that). `.claude/probes/K299/sheet/`.
 

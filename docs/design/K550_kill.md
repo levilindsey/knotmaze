@@ -3,35 +3,35 @@
 Ledger item K550. Levi (2026-10-20): "K550: Go with your kill rec." The
 recommendation is `docs/design/K550_stage3.md`, Recommendation, item 2:
 kill the split, keep Stage 1, revert 2a and 2b. The split has been dark
-on master since K551 (`f18dd07`): no shipped frame draws through it.
+on master since K551 (`7b8f068`): no shipped frame draws through it.
 Removing it should change no pixel, and this stage proves that.
 
 ## What to revert
 
 Six code commits, newest first. No later commit touches their files
-(checked 2026-10-20 at `020d29d`), so the revert should apply cleanly:
+(checked 2026-10-20 at `f568673`), so the revert should apply cleanly:
 
 | Commit | What it did |
 |---|---|
-| `a688909` | K553 WIP: `fitGapTarget`, the mask's sizing rule |
-| `4b5085d` | K553 WIP: the gap mask in device pixels |
-| `f18dd07` | K551: the split stays dark; the warm-up follows the draw flag |
-| `5bfba38` | K320 2b: the split off by default |
-| `f485641` | K320 stage 2b: the paint samples the gap mask |
-| `ffd3864` | K320 stage 2a: the gap pre-pass data plane |
+| `f6b81cc` | K553 WIP: `fitGapTarget`, the mask's sizing rule |
+| `48eda75` | K553 WIP: the gap mask in device pixels |
+| `7b8f068` | K551: the split stays dark; the warm-up follows the draw flag |
+| `421f261` | K320 2b: the split off by default |
+| `a34bc3b` | K320 stage 2b: the paint samples the gap mask |
+| `46960ef` | K320 stage 2a: the gap pre-pass data plane |
 
 ```
-git revert --no-commit a688909 4b5085d f18dd07 5bfba38 f485641 ffd3864
+git revert --no-commit f6b81cc 48eda75 7b8f068 421f261 a34bc3b 46960ef
 git checkout HEAD -- LEDGER.md
 ```
 
 **Keep:**
-- Stage 1 (`6c592e6`, the slim) and its guard
+- Stage 1 (`211cc24`, the slim) and its guard
   `test/render/k320_slim.test.ts`. The revert puts the guard back to its
   Stage 1 form; check that its budgets still hold.
-- Every doc: `docs/design/K553.md` (`60511ed` is docs only; do not
+- Every doc: `docs/design/K553.md` (`be5a079` is docs only; do not
   revert it), `K320_stage2.md`, `K550_stage3.md`. They are the record.
-- `LEDGER.md` exactly as HEAD has it (`f485641` touched it). Do not edit
+- `LEDGER.md` exactly as HEAD has it (`a34bc3b` touched it). Do not edit
   the ledger.
 
 **Then remove what still refers to the split:**
@@ -48,11 +48,11 @@ git checkout HEAD -- LEDGER.md
 ## Verify
 
 1. **The suite:** `npm test` and `npm run build`, both green. The suite
-   was 1554 passed and 1 skipped at `020d29d`; report the new count and
+   was 1554 passed and 1 skipped at `f568673`; report the new count and
    which tests left with the split (`gap_split.test.ts` and any others).
 2. **Shader sources:** dump the GLSL the renderer compiles on the default
    path (every program `program_registry.ts` builds, vertex and
-   fragment), before (`020d29d`) and after, with a Node script that
+   fragment), before (`f568673`) and after, with a Node script that
    imports the modules, and diff them. Byte-identical sources prove the
    pixels on their own; report any difference with its lines.
 3. **Pixels:** a same-state A/B of the two builds, headed, on the real
@@ -74,7 +74,7 @@ git checkout HEAD -- LEDGER.md
 ## Out of scope
 
 - The stage 3 branch's code (the try and the three keeps): none of it
-  merges. Its Handoff is already on master (`9e2dd4a`).
+  merges. Its Handoff is already on master (`f764df2`).
 - K567 (a future revival) and K561 (2c's pre-flip checks): the
   coordinator drops or keeps them in the ledger.
 
@@ -122,16 +122,16 @@ untracked, in the worktree): `.claude/probes/K550/kill/`.
 ### Done
 
 - **The revert is one commit, `9c17bde`** (13 files, +66/-1280). It undoes the
-  six code commits `a688909 4b5085d f18dd07 5bfba38 f485641 ffd3864`
+  six code commits `f6b81cc 48eda75 7b8f068 421f261 a34bc3b 46960ef`
   (stage 2a, 2b and the K551/K553 follow-ups): it deletes
   `src/render/gap_prepass.ts` and `test/render/gap_split.test.ts` and takes
   the split out of `explore_glsl.ts`, `fabric_sdf.ts`, `gap_mask.ts`,
   `program_registry.ts`, `ribbon/ribbon_shader.ts`, `ribbon_renderer.ts`,
   `shader_warmup.ts` and the tests `k320_slim`, `paint_explore`,
   `program_registry`, `shader_warmup`.
-- **Kept as `c6a0d7e` had them:** Stage 1 (`6c592e6`, the slim) and its guard
+- **Kept as `e96a1c0` had them:** Stage 1 (`211cc24`, the slim) and its guard
   `test/render/k320_slim.test.ts` (its budgets still pass), every doc and
-  `LEDGER.md` (`git diff c6a0d7e 9c17bde -- LEDGER.md docs` is empty).
+  `LEDGER.md` (`git diff e96a1c0 9c17bde -- LEDGER.md docs` is empty).
 - **Leftover sweep: nothing to remove, so there is no cleanup commit and no
   lore edit.** A case-insensitive grep of `src test scripts notices
   .claude/rules` for `gap_prepass`, `GAP_SPLIT`, `gapSplit`, `gap_split`,
@@ -154,7 +154,7 @@ untracked, in the worktree): `.claude/probes/K550/kill/`.
   while the split is on" from `shader_warmup.test.ts` (14 to 13).
   `program_registry.test.ts` was edited and its count is unchanged (6).
   `npm run build` is green (565 ms, the usual chunk-size warning only).
-- **(b) Shader sources of every program on the default path, `020d29d`
+- **(b) Shader sources of every program on the default path, `f568673`
   against `9c17bde`** (`shaders_before/`, `shaders_after/`, `dump_programs.ts`
   with `vite.node.config.mjs`; 29 programs in each of eight contexts: daily,
   knot, reveal, burn, burnKnot, fog, reduced, reducedReveal): 27 of the 29
@@ -168,14 +168,14 @@ untracked, in the worktree): `.claude/probes/K550/kill/`.
   `section-rgb` or `section-rgb-explore` rows), `index.tsv` also loses
   `section-rgb-gap` and `section-rgb-gap-explore` (the split's programs; no
   context listed them on the default path), and `waves.txt` loses its one
-  `gapSplitActive default: false` line. `020d29d` is code-identical to
-  `c6a0d7e` (no path under src, test, scripts, notices, package files or the
+  `gapSplitActive default: false` line. `f568673` is code-identical to
+  `e96a1c0` (no path under src, test, scripts, notices, package files or the
   vite config differs).
 - **(c) Same-state headed pixel A/B: all eight cells are 0 px, with a 0 px
   control.** Scenes knot (`mf=0`), maze, thread reveal (`xp=threads`) and
   burn (`fi=fuse&fsp=0.9&fdl=0`), each at device scale 1 and 2 (1400x900 and
   2800x1800 frames), seed 7, `am=instant&fw=0&snd=manual&phy=0`. Each cell
-  loads A (`020d29d`), B (`9c17bde`) and A again and diffs A1~A2 (the
+  loads A (`f568673`), B (`9c17bde`) and A again and diffs A1~A2 (the
   control), A1~B and A2~B. Results are px differing, control | A1~B | A2~B:
   - knot dsf 1: 0 | 0 | 0, 18/18 checks (`out_f4/`, `knot1_run.log`)
   - knot dsf 2: 0 | 0 | 0, 18/18 (`out_f1/`, `final_run.log`)
@@ -249,6 +249,6 @@ cold). No other program's source changed. A push touching `src/` deploys
 ### Next
 
 The coordinator merges `9c17bde` and this Handoff to `master` (the branch
-stands on `c6a0d7e`; rebase if master moved) and pushes, then closes K550
+stands on `e96a1c0`; rebase if master moved) and pushes, then closes K550
 with the resolving commit. K567 and K561 are the coordinator's call; this
 agent did not touch them.

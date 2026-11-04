@@ -8,7 +8,7 @@ closes K1141. Two runs: A, K1138, the only one of the 69 items in
 `LEDGER.md`'s Next, in order, that fits this batch (see "Left out on
 purpose" at the end); B, batch 11's brief, drafted from the ledger
 lists this batch did not read. K1137's Run D drafted this brief
-(5f769558); Claude added rule 12 and Run B.
+(ff87d810); Claude added rule 12 and Run B.
 
 Every task here is decided by a unit test, a desktop probe or a
 measurement table. None needs the phone or Levi. Run A changes
@@ -34,7 +34,7 @@ afterwards, and a security fix is taken even when it was published
 less than two weeks ago (batch 9's two-week age rule gives way to
 it); the commit says so. Batch 9's Run C pinned happy-dom 21.0.3 by
 the age rule while 21.0.4 fixed a high advisory (Claude bumped it in
-e857c810).
+d3ecf45d).
 
 After each run, update K1141's handle:
 - Run A: `ledger.mjs handle K1141 --last-commit <sha8> --next "Run A done; Run B next"`

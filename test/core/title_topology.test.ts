@@ -27,7 +27,7 @@ import { walkFingerprint } from "../../src/game/daily_attempt";
 //   the one K47 computed, so saved untitled attempts keep restoring.
 // The game/ side (attempts, stats, share text) is title_attempt.test.ts.
 
-// K47's walkFingerprint, verbatim (master c24cc97), the byte-identity
+// K47's walkFingerprint, verbatim (master cb727ec), the byte-identity
 // reference for untitled walks.
 function k47Fingerprint(walk: WalkGraph): string {
   let h = 0x811c9dc5;

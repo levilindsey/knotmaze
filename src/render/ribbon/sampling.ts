@@ -1,5 +1,5 @@
 // THE SAMPLING HELPERS (K5 R1): the renderer's pure arc and sample math,
-// moved verbatim from ribbon_renderer.ts (9041939 lines below). Only
+// moved verbatim from ribbon_renderer.ts (5c6dc49 lines below). Only
 // `export` was added, the class indent dropped and `this.` dropped from
 // their calls to each other. None reads a renderer field, so none takes the
 // renderer (docs/design/K5_K6_split.md 2.3; render-ribbon.md, THE PARTS).

@@ -5,7 +5,7 @@ lines each; the convention (claude-config `rules/ledger.md`) allows one to
 three. CC67 shortens them with `scripts/ledger_diet.mjs` (K353, generalized
 by CC64) and writes a map that the coordinator applies at the merge.
 
-Snapshot: `LEDGER.md` at commit 023f780 (master, the worktree's base),
+Snapshot: `LEDGER.md` at commit dac23fc (master, the worktree's base),
 copied to `docs/ledger_diet/cc67/snapshot.md`. `apply` skips any item that
 changed after the snapshot, so a later edit is never overwritten.
 

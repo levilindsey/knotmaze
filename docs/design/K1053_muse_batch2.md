@@ -37,7 +37,7 @@ End the run with a short report: one line per task with its status and commit.
 Read `.claude/rules/gameplay-minotaur.md`, `.claude/rules/gameplay-mechanisms.md` and
 `.claude/rules/probes.md`.
 
-Batch 1's cea08eb5 closed both items on other numbers (load-to-asleep timings and a 60-second
+Batch 1's 42a1e8ed closed both items on other numbers (load-to-asleep timings and a 60-second
 deviation, in `.claude/probes/K783/` and `.claude/probes/K728/`). Leave those files alone; they
 are not this work. Both tasks use the K708 lives-and-sword simulations: `docs/design/K708.md`
 explains them, and the harness is in `.claude/probes/K708/` (untracked; it exists on this
@@ -64,7 +64,7 @@ Put the new harness files in `.claude/probes/K708/` too.
 ## Run B · K1052: `npm test` type-checks the tests
 
 K393's goal was a type-check of `test/` inside `npm test`. Batch 1 added `tsconfig.tests.json`
-and `npm run probe:types` (f79831c0); the probe reports 92 errors in 32 test files
+and `npm run probe:types` (9a8a6e7a); the probe reports 92 errors in 32 test files
 (`docs/design/K393_probe.md`).
 
 - Fix the errors in the test files a few files per commit: each commit under about 300 changed
@@ -84,7 +84,7 @@ and `npm run probe:types` (f79831c0); the probe reports 92 errors in 32 test fil
 Read `.claude/rules/gameplay-minotaur.md`, `.claude/rules/gameplay-moves.md` and
 `.claude/rules/gameplay-mechanisms.md`.
 
-K743 (f61eff23) switched the renderer's tap planning (`targetAt` in
+K743 (34c31872) switched the renderer's tap planning (`targetAt` in
 `src/render/fabric_maze_renderer.ts`) to `planRouteRuled`. The real-time chase plans its own
 route in `src/main.ts` (`handleChaseTap`, which calls `planRoute`), so in a chase with a rule on,
 a tap past the choices can still stop at its first refused run.
@@ -104,7 +104,7 @@ a tap past the choices can still stop at its first refused run.
 
 Read `.claude/rules/physics-worker.md`.
 
-K414 (2525712c) removed the worker chunk's modulepreload from the HTML for every page, because a
+K414 (b6cd031d) removed the worker chunk's modulepreload from the HTML for every page, because a
 `phw=0` page never runs the worker. That also took K7 stage 7's head start away from worker
 pages, which are the default (its commit: hello 35-55 ms sooner at 40 ms an asset). Get both:
 
@@ -123,7 +123,7 @@ pages, which are the default (its commit: hello 35-55 ms sooner at 40 ms an asse
 
 ### K810's table
 
-K810 (443ebdda) left its numbers in `.claude/probes/K810/results.md` and in its Done line, but
+K810 (5add2671) left its numbers in `.claude/probes/K810/results.md` and in its Done line, but
 the item asked for them in `docs/design/K793.md`'s Handoff. Add them there as a short subsection:
 the table, the query file, the date and the commit. Docs only.
 
@@ -187,7 +187,7 @@ Done when no rules file names vite-node except as history, two recipes run throu
 
 ### K1060 · Pin the worker preload's phw reader
 
-K1055 (c70db4fa) put an inline script in index.html's head that modulepreloads the physics
+K1055 (1c8fe970) put an inline script in index.html's head that modulepreloads the physics
 worker's chunk unless the page will run in-thread. To decide before the app loads, it reads `phw`
 with its own copy of the link codec's walk (`vite.config.ts`, `workerPreloadScript`), and it
 assumes `physicsWorker` defaults on (a phw entry in the blob reads as off). Only a probe checks it
@@ -218,7 +218,7 @@ Done when the test passes, `npm test` passes and the push's deploy is green.
 
 ### K1061 · The last vite-node recipes
 
-K1057 (d4d83422) tracked `scripts/run_node.mjs` and pointed probes.md's recipes at it, but these
+K1057 (00a7bc0e) tracked `scripts/run_node.mjs` and pointed probes.md's recipes at it, but these
 files still run `node_modules\vite-node\vite-node.mjs`, which left with vitest 4: the command
 `scripts/fold_census.ps1` spawns for each job, and the run comments of `scripts/fold_census.ts`,
 `scripts/label_pops.ts`, `scripts/panel_inventory.ts`, `test/render/field/scenes/gen.ts` and

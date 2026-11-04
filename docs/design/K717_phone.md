@@ -70,7 +70,7 @@ kit, `.claude/probes/K703/run_parts.ps1` with the K578 phone kit.
 
 Build origin/master (after a fetch) into `.claude/probes/K717/builds`,
 serve it on 5717, and run `phone_setup.ps1` as K703 did. Lives and K137-b
-merged at `4541a9d`. Read "What landed" and "The page results" in
+merged at `3ed920f`. Read "What landed" and "The page results" in
 `docs/design/K137_s3a.md`'s Handoff. The desktop driver is
 `.claude/probes/K137/s3a/lives_page.mjs`; look in the main checkout, and
 if it's not there, in `.claude/worktrees/agent-a52e4207fa7a36be7/`.
@@ -125,7 +125,7 @@ Give it a fresh tag. K703's build `K703\builds\f02f075` is kept. Add
 
 These are the default-confetti frame cells only, taken as K662's part 2
 took them: `.claude/probes/K662/results.md` says how, and the probe is
-`phone_conf.mjs`. Use K662's build (`ea22989`, port 5662), now with
+`phone_conf.mjs`. Use K662's build (`c9de592`, port 5662), now with
 `snd=none`, so the numbers compare.
 
 Record thermal status and the media state beside each cell

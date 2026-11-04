@@ -315,7 +315,7 @@ last commit, evidence, next).
 
 Branch `worktree-agent-adaaf5d46393d3aeb` (worktree
 `.claude/worktrees/agent-adaaf5d46393d3aeb`), five WIP commits on
-`c6a0d7e` plus this handoff, unpushed. Items 1-4 are done in part; 5-7
+`e96a1c0` plus this handoff, unpushed. Items 1-4 are done in part; 5-7
 are not begun. I stopped 24 minutes short of the cap: what remains does
 not fit in it.
 

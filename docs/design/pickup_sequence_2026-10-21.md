@@ -5,9 +5,9 @@ In progress handles in `LEDGER.md` plus the sooner list
 (`sooner_20261020.md`, and K797-K800/K804/K805 from
 `levi_notes_2026-10-21.md`, which Levi placed after all other sooner
 items). Recent Claude Code work (session 91b19e11) merged K114
-(cf41f919), K137 s5 (20b01d7e), K794 (fb110a3e), K795 (a1b1bdde); their
+(edcecb94), K137 s5 (0f4df60b), K794 (d508d6d3), K795 (d338bab4); their
 worktrees (k114, k137s5, k794, k138-s4-slice1) are all merged, so pickup
-continues from each handle's `next:` on master (54563d7d), not from a
+continues from each handle's `next:` on master (7c305873), not from a
 branch.
 
 ## Rules (from the ledger's Next binding + sooner plan)
@@ -103,14 +103,14 @@ budget (Levi's words), so they close this sequence, not this round.
 ## Status
 
 - 2026-10-21 evening: items 12-18 done or closed as far as desktop
-  work reaches. Landed since: K114 desktop remainder (`9aa6fe45`),
-  K546 stages 2-3 (`3659d965`, `4c860ce9`), K5 R3 (`6ce5ced8`,
-  `5de8328d`) and R4 (`98d96fa5`, `0ee562bc`), K8 G3-2's brief + seam
-  (`a8ea5b4e`, `957ba833`; the SDF pass itself is the brief's steps
-  2-3, still to build), K370 stage 2's desktop half (`3d0102f3`: the
+  work reaches. Landed since: K114 desktop remainder (`caa9ff79`),
+  K546 stages 2-3 (`dab29e58`, `6cebd499`), K5 R3 (`1c7e3eff`,
+  `a27883ba`) and R4 (`94e409f5`, `52d0ba31`), K8 G3-2's brief + seam
+  (`d5d5b785`, `777e19a8`; the SDF pass itself is the brief's steps
+  2-3, still to build), K370 stage 2's desktop half (`75b13e8b`: the
   worker substep premium does not reproduce), K459 item 1 closed
-  (`a6450bc3`), K268 items 5/6 closed (`07100291`). Suite 2249
-  passed at `07100291`.
+  (`66d251d4`), K268 items 5/6 closed (`5ff7f646`). Suite 2249
+  passed at `5ff7f646`.
 - Still gated exactly as listed under Gates, plus Wave 5 (item 19,
   one phone window: K370's phone half, K477/K397 free-cap checks,
   K268's phone proof, K114/K137/K138 feel items) and K546 stage 4

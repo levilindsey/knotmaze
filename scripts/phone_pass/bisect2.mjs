@@ -22,7 +22,7 @@
 //               the two scan values); a probe is one run, a value that cannot be read stops the driver; "prio" orders open steps
 //               (higher first), "firstMid" overrides the first midpoint. Two open steps share a pass (one build and one cell each);
 //               one open step probes two builds a pass, at thirds.
-//   "confirms": [{ "step": "T1" }, { "id": "S3", "lo": "fddb71b5", "hi": "ccae4ffe", "links": ["dense", "knot24"] }]
+//   "confirms": [{ "step": "T1" }, { "id": "S3", "lo": "8e8199a3", "hi": "3a8fde68", "links": ["dense", "knot24"] }]
 //               in this order, after the bisect: ABBA, two runs a build, on each link (default "confirmLinks"). {"step": id}
 //               confirms that step's resolved pair (skipped while its interval is open); lo and hi are a list index or a ref. Without
 //               "confirms", every resolved step is confirmed, in step order.

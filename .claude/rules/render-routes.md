@@ -85,17 +85,17 @@ only with the files it is about; `render.md` lists the area's other files.
 - MEASURED. SMOKE: no shader compile or link error; the console's 404s
   are favicon.ico, and the three "Attribute aUV is not present in the
   shader" warnings are K83's (marker_mesh.ts declares `in vec2 aUV;` and
-  never reads it; 4deeda1 logs them too). CENSUS (GPU vs the mirror,
+  never reads it; f00e360 logs them too). CENSUS (GPU vs the mirror,
   `census_k81.mjs`; fans on a 5 px grid, cover strips on a 2 px grid):
   0 points over 2/255 in gold (5 moves), trail (`pv=trail&trl=5`, 8
   moves), passed twice and in flight; max 0.0056-0.0065 (routed fans /
   unrouted fans / strips; K75's fan baseline 0.0062). SAME-STATE A/B vs
-  4deeda1 (`k81_ab.mjs`, every clock pinned, A/A 0 px): 2004-4222 changed
+  f00e360 (`k81_ab.mjs`, every clock pinned, A/A 0 px): 2004-4222 changed
   px per scenario (max delta 137-138/255, trail 50), 0 beyond a routed
   joint's footprint + 2 px, untraveled joints 0 px. GPU (3200x1800, the
   5-move state with 5 routed records, 8 interleaved runs per side under
   the perf lock, machine quiet: CPU ~5%, 3D GPU ~1% before each run;
-  master d9a7d47 vs the rebased branch, `gpu_k81.ps1` + `gpu_sum.mjs`):
+  master 3bfa99c vs the rebased branch, `gpu_k81.ps1` + `gpu_sum.mjs`):
   FAN 0.577 +-0.010 -> 0.778 +-0.019 ms (+0.20, ranges do not overlap),
   strip pass 0.070 -> 0.071, ribbons 1.707 -> 1.641 (noise), total 2.66
   -> 2.79 ms, same draw counts. The fan growth is the 5 routed webs plus

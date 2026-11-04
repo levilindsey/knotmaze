@@ -1,8 +1,8 @@
 {
-  "from": "2026-11-03T11:38Z, b7eea7f4",
+  "from": "2026-11-03T11:38Z, fa39d0bd",
   "reps": 3,
   "viewport": "411x753@2.625",
-  "note": "3 reps of an A/A pass on master b7eea7f4 (K1124, K156 round 2026-11-03, 2026-11-03 03:24-03:38 PST), -Moves 0,7,11 (every fabric row made its moves, none solved, so no fabric sample sat at the finish), the phone on its charger reached over Tailscale as it sat (1080x2424 portrait) and the page emulated over CDP at 411x753 CSS px, dpr 2.625 (36 of 36 samples read it from the page). Thermal status 0 throughout, skin 31.4 C at the start and 38.7 C at the end. fabric@0's fps/p95/over-25 floors carry one outlier rep (read them as loose). Rerun an A/A pass when the viewport, the phone or the app's load changes.",
+  "note": "3 reps of an A/A pass on master fa39d0bd (K1124, K156 round 2026-11-03, 2026-11-03 03:24-03:38 PST), -Moves 0,7,11 (every fabric row made its moves, none solved, so no fabric sample sat at the finish), the phone on its charger reached over Tailscale as it sat (1080x2424 portrait) and the page emulated over CDP at 411x753 CSS px, dpr 2.625 (36 of 36 samples read it from the page). Thermal status 0 throughout, skin 31.4 C at the start and 38.7 C at the end. fabric@0's fps/p95/over-25 floors carry one outlier rep (read them as loose). Rerun an A/A pass when the viewport, the phone or the app's load changes.",
   "emulated": true,
   "display": "1080x2424 portrait",
   "rule": "max(|median head - median base|, largest per-rep |head - base|, one unit of the printed digit)",

@@ -6,15 +6,15 @@ Coordinator, 2026-10-27 11:20. One stage, opus, 2 h cap.
 
 K893's phone round (`docs/design/K156.md`, "## Round 2026-10-27b
 handoff", S2) found the week's largest fabric loss in K620's root paint.
-`6fd77ab3` ("the root paint's GLSL (vertex root block, ROOT_FRAG_GLSL,
+`b253ea08` ("the root paint's GLSL (vertex root block, ROOT_FRAG_GLSL,
 SECTION_FRAG wiring)") costs max-fabric +22.6 ms of render sync on the
-Pixel 11 (ABBA), and `fa0c61de` ("the root paint is a section blend") a
+Pixel 11 (ABBA), and `df8b80c3` ("the root paint is a section blend") a
 further +6.1 ms (single run). Over the same commit interval dense rose
 +20.5 ms and knot gs24 +9.7 ms, not measured at the pair. None of these
 cells paints a root, so the cost is probably GLSL the section shader
 always compiles and runs. That is K893's inference; nobody has checked it.
 
-K620 (Done in `d54c09b`) paints a glyph's root as a blend of the stroke
+K620 (Done in `0594ace`) paints a glyph's root as a blend of the stroke
 section colours from R to the spur at J. If the inference holds, the fix
 is a shader variant: a scene that draws no root gets programs without the
 root code. That frees phone budget for K868's S3, which is gated on it
@@ -27,8 +27,8 @@ root code. That frees phone budget for K868's S3, which is gated on it
   checkout, which must stay clean: use absolute paths and
   `git -C <worktree>`. node_modules is a junction to the main checkout's.
 - Read first: K156.md's round 2026-10-27b handoff (the cells, the links,
-  the kit and how each pass ran), then K620's commits (`566e139a` data
-  plumbing, `6fd77ab3`, `fa0c61de`, and the rest of K620 up to `d54c09b`).
+  the kit and how each pass ran), then K620's commits (`16b085a1` data
+  plumbing, `b253ea08`, `df8b80c3`, and the rest of K620 up to `0594ace`).
 - Code: `src/render/paint_glsl.ts`, `paint_math.ts` (its CPU mirror),
   `paint_model.ts`, `ribbon/ribbon_shader.ts`, and the gameplay and
   explore programs that include the section code. Tests:
@@ -66,7 +66,7 @@ root code. That frees phone budget for K868's S3, which is gated on it
    branch, on all three links. If any of those conditions fails, stop at
    step 3 and say which one; K906's phone window measures it later.
 5. **If the gate wins less than K893 measured**, find out where the rest
-   goes (the data plumbing `566e139a`, the vertex block, a second program).
+   goes (the data plumbing `16b085a1`, the vertex block, a second program).
    Report it; don't widen the stage.
 
 ## Checks (report the numbers)
@@ -112,7 +112,7 @@ root code. That frees phone budget for K868's S3, which is gated on it
 
 ## Step 1: the cause (agent, 2026-10-27 11:25)
 
-Where the root code enters (K620, `6fd77ab3` then `fa0c61de`), all of it
+Where the root code enters (K620, `b253ea08` then `df8b80c3`), all of it
 in `paint_glsl.ts` pieces that every section program includes:
 
 - **Vertex** (`PAINT_VERT_DECL`, `PAINT_VERT_MAIN`): four more outputs,
@@ -137,7 +137,7 @@ varying components every vertex writes and, on a tile-based GPU like the
 phone's, stores to the parameter buffer and the fragment stage reads and
 interpolates (two smooth vec3s), (b) the never-taken vertex block's code
 and registers (three inlined section evaluations), and (c) the fragment
-branch and its inlined function. `fa0c61de` shrank the fragment side
+branch and its inlined function. `df8b80c3` shrank the fragment side
 (three inlined `kFxColor` calls out) yet measured +6.1 ms more (one run),
 which points away from fragment code size and toward (a) and (b); the
 phone pass of the gate is what tests it.
@@ -187,7 +187,7 @@ default page can draw a root, and the three K539 cells never do.
 
 K539's frozen cell on the desktop (private Chrome, 411x753 @ 2.625,
 `.claude/probes/K905/k905_cell.mjs`, runs `desk/desk1`, `desk/desk2`),
-base = master `156c1eef`, head = `97aa65ba`, ABBA:
+base = master `b6d4c395`, head = `97aa65ba`, ABBA:
 
 | Link | base vs head (both pairs) | base vs base | head vs head |
 |---|---|---|---|
@@ -213,7 +213,7 @@ All conditions held: `adb devices` listed the Pixel 11, the perf lock was
 free, K893's idle wait passed and `phone_pass.ps1 -Phase check` passed.
 Pass `p1` (`.claude/probes/K905/run_k905.ps1`, the round's `run_pass.ps1`
 with K905 paths): K539 frozen render-sync cell, renderLoop(60) medians,
-ABBA, base = master `156c1eef`, head = `97aa65ba`, 411x753 @ 2.625. No
+ABBA, base = master `b6d4c395`, head = `97aa65ba`, 411x753 @ 2.625. No
 page or GL errors, no context loss, the watchdog `ok` throughout, the
 cleanup exit 0. Thermal: skin 27.6 -> 36.8 C, soc 31.7 -> 43.0 C.
 
@@ -262,13 +262,13 @@ phone's wave 1 took the same time with 11).
 ## Step 5: does the gate win what K893 measured? (agent)
 
 Yes, within the noise. On max-fabric the gate wins 25.65 ms, more than
-the ABBA-confirmed +22.6 at `6fd77ab3` and about 3 ms short of 22.6 plus
-`fa0c61de`'s +6.1, which was one run (K893's two e2 head runs of one
-build differed by 2.8 ms; `fa0c61de` also made the fragment smaller).
+the ABBA-confirmed +22.6 at `b253ea08` and about 3 ms short of 22.6 plus
+`df8b80c3`'s +6.1, which was one run (K893's two e2 head runs of one
+build differed by 2.8 ms; `df8b80c3` also made the fragment smaller).
 Dense wins 18.85 against the 59..88 interval's +20.5 and knot 12.25
 against +9.7, and those intervals hold every commit in them, not only
 K620. The places the brief names hold nothing more: the data plumbing
-`566e139a` measured 85.0 against 85.9 before it, and without `K_ROOT` a
+`16b085a1` measured 85.0 against 85.9 before it, and without `K_ROOT` a
 program holds no vertex block, varying or fragment root code (the text
 scan in step 2), so no second program or leftover block carries any. The
 gate removes the varyings, the vertex block and the fragment branch

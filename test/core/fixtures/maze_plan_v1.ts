@@ -1,4 +1,4 @@
-// FROZEN pre-K87 maze plan (src/core/maze_plan.ts at 7a227bb, verbatim but
+// FROZEN pre-K87 maze plan (src/core/maze_plan.ts at ee34f1b, verbatim but
 // for the import paths): the reference K87's faster pickFarthest is checked
 // against, plan for plan (test/core/maze_plan_identity.test.ts). Do not edit -
 // it pins the mazes every link and daily was built with.

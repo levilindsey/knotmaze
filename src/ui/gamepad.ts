@@ -8,7 +8,7 @@
 // as a key - a direction tapped mid-move and released before the
 // arrival is discarded, one still held continues (queuedPressHeld
 // reads HeldKeys, where the pad's directions live beside the keys').
-// A/confirm is the tap-class input (Levi's correction, 3b1612f): an
+// A/confirm is the tap-class input (Levi's correction, 2bcf771): an
 // edge with no mid-move queue - pressed while the dot travels it is
 // discarded, at rest it takes one step along the held direction and
 // starts no hold of its own. Gameplay movement only: no panel

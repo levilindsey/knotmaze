@@ -37,7 +37,7 @@ are pinned authored shapes, not simulated strands).
 
 ## The changes, in order
 
-### K831 (3b5c520f, 2026-10-22): the a/i redesign
+### K831 (1c6eb062, 2026-10-22): the a/i redesign
 
 First deliberate redesign of the two letters. The `a` got a low,
 tangential bottom-left (BL) join - the entry strand meets the bowl
@@ -47,7 +47,7 @@ the right stem), and a "landing spur": the exit strand leaves the
 right side from a point partway up, with flare dressing. The `i`
 entry/junction/stem were made colinear at the junction point J, and
 the dot stopped pretending to be a normal segment: it got a dedicated
-dot-drawing path (`061b7af1`: a clean skewed ellipse - the ring is
+dot-drawing path (`e6b5f96e`: a clean skewed ellipse - the ring is
 engine-exact) after Levi pointed out the drawn dot was irregular and
 nobbly. The dot is a separate closed loop, slightly skewed to match
 the `i`'s lean, never part of the walk graph.
@@ -56,7 +56,7 @@ Why: the letters before K831 were the raw Hershey-derived skeletons
 with junctions wherever the stroke data happened to cross; they read
 as tubes colliding, not as written letters.
 
-### K831 follow-up (8072a2ee, 2026-10-22): junction tangents corrected
+### K831 follow-up (694b74cd, 2026-10-22): junction tangents corrected
 
 Levi's review of K831: the bottom corners had been rounded into a
 "rectangle with rounded corners" - fundamentally wrong. The fix
@@ -70,7 +70,7 @@ smooth on both sides. Flares ("spur-line" fattening) dress the strand
 above both junctions. The `i`'s entry bump (it curved up, then right,
 then up into the stem) was flattened toward colinearity at J.
 
-### K836 (761003ab, 2026-10-22): tangent attachments on the undisturbed oval
+### K836 (791a4f4b, 2026-10-22): tangent attachments on the undisturbed oval
 
 The principle from the follow-up, stated as a rule and applied
 cleanly: a junction is a tangent attachment to an otherwise
@@ -79,7 +79,7 @@ skeleton whether or not strands attach; attachments land on it
 tangent (`landTangent`), and the inside curve through the junction
 must be the curve the letter would have had anyway.
 
-### K843 (df80e1f6, 2026-10-22): junction flares as shared machinery
+### K843 (387c373a, 2026-10-22): junction flares as shared machinery
 
 Flare support generalised out of the a/i special cases: any junction
 can carry a flare spec (fat at the junction, cosine taper to normal
@@ -89,7 +89,7 @@ the `a`, 34->50 on the `i` at various points - flare reach was a
 recurring complaint: "the flares end way too early - both for the a
 and the i").
 
-### K847 (ca08eb7a, 2026-10-23): the "rethink"
+### K847 (0f6c3d93, 2026-10-23): the "rethink"
 
 After Levi judged the K836 stills fundamentally wrong ("the overall
 body of the a is very lumpy/knobbly/irregular... there is no point in
@@ -100,7 +100,7 @@ became one sweep into J; flares lengthened. Levi's verdict on the
 stills (`.claude/probes/K847/after`): "I see no difference. Still
 fundamentally wrong."
 
-### K850 (20687641, 2026-10-23): measured rework against the lint
+### K850 (a8d42a73, 2026-10-23): measured rework against the lint
 
 The final attempt changed method rather than shapes: author against
 the numbers. Endpoint curvature from the cubic cross/handle^3
@@ -163,5 +163,5 @@ for exactly that reason).
 - K850's stills and measure script stay in `.claude/probes/K850/` as
   the review packet whenever Levi wants to give the verdict.
 - No letter data was reverted: K850 is what ships. If Levi later
-  judges it wrong, the revert target is K847 (ca08eb7a) or K836
-  (761003ab) - both named here so nobody has to archaeology them.
+  judges it wrong, the revert target is K847 (0f6c3d93) or K836
+  (791a4f4b) - both named here so nobody has to archaeology them.

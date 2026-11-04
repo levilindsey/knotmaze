@@ -1,4 +1,4 @@
-// K1040 S1f: S1e's final form_b.ts (c1, at 96de6db3), frozen for before/after probes; imports point at src/render/field.
+// K1040 S1f: S1e's final form_b.ts (c1, at e5d8e7c4), frozen for before/after probes; imports point at src/render/field.
 // K1040 S1: form B, the junction look's definition (F2 of
 // docs/design/K1040_junction_field.md), evaluated in float64 on the CPU.
 //

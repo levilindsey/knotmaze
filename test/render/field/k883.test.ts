@@ -133,7 +133,7 @@ describe("§3.4 on j_hook_cross: an END that hooks back over its own through (mu
   it("needs both K900 rules: the cut at L + h and the refused same-chain joins", () => {
     const head = r15(mapped(h, 3));
     expect(head.status, head.details?.join("; ")).toBe("pass");
-    // 5048670e's rule, and each fix alone, leave one group holding both passes.
+    // 972228b5's rule, and each fix alone, leave one group holding both passes.
     for (const p of [
       { ...mapped(h, 3), passJoins: "k883" as const, passMargin: 0.5 },
       { ...mapped(h, 3), passJoins: "k883" as const },

@@ -1,6 +1,6 @@
 // THE STRIP PASS (K5 R4): the fill meshes and their extrusion -
 // ThreadPass, G3-2's seam (G3-3 will delete this file). Moved verbatim
-// from ribbon_renderer.ts (98d96fa5); a body changed in three ways only:
+// from ribbon_renderer.ts (94e409f5); a body changed in three ways only:
 // a renderer member became `this.r.x`, a sampling helper
 // `sampling.x(...)`, and the façade keeps the names other code calls
 // (fills, reextrude behind the pluck host's collapse install). See

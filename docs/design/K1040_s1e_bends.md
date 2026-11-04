@@ -3,15 +3,15 @@
 Ledger K1040, stage S1e: S1d continued, before S2. One stage: Opus, 2 h
 cap. Branch `worktree-agent-a7035825805c31d73`, worktree
 `C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-a7035825805c31d73`
-(at d4bd97c2, node_modules joined to the main checkout's). Work only
+(at 6d210fc5, node_modules joined to the main checkout's). Work only
 there. Brief written 2026-11-02 by the stage agent, from S1d's Handoff
 (Next 1-3) and the design's F5-F7, at the coordinating session's
 request.
 
 ## Why
 
-S1d (merged at e8944f2f) made the corner solve continuous. Its final
-definition (F5, b023d85e) has no corner switch left on the four
+S1d (merged at c6e274a3) made the corner solve continuous. Its final
+definition (F5, a8197f7e) has no corner switch left on the four
 recordings: pops 20 / 191 px (S1c F5: 209 / 3875), #1 156 px (861),
 free ends 114 (169). What is still open from its Handoff:
 
@@ -28,7 +28,7 @@ free ends 114 (169). What is still open from its Handoff:
      s 23.316 to s 23.368 and the ink from 0.993 to 0.675. The distance
      d is continuous there; the foot's burial weight w is not, because
      the two feet sit in different places.
-   - S1d F6 tried a burial over the whole partner arm (d6d53448). It cut
+   - S1d F6 tried a burial over the whole partner arm (87ccfdd9). It cut
      the breaches 9 -> 6, but cost muse_hash #6 (9.942 -> 12.877 px at
      crossing 71) and 4 junction free ends, and was reverted.
 2. **The corner solve's last discrete edges**: solveCorner's null gates
@@ -158,8 +158,8 @@ Handoff.
     under `out/s1e/`;
   - `b_rate.ts`, `bend_why.ts`, `gate_table.ps1`, `pops_mech.ts`,
     `corner_why.ts`, `corner_cmp.ts`, `fe_own.ts`;
-  - the frozen copies `form_b_s1d_base.ts` (2dacd08d) and
-    `form_b_s1d_f2.ts` (a2978ed7); add `form_b_s1d_f5.ts` (e8944f2f's
+  - the frozen copies `form_b_s1d_base.ts` (8ffd11fa) and
+    `form_b_s1d_f2.ts` (ddf825cf); add `form_b_s1d_f5.ts` (c6e274a3's
     form_b.ts) for before/after probes.
 - **Outputs:**
   - S1e's runs go under `s1/out/s1e/`; `out/s1d/` is the baseline
@@ -297,7 +297,7 @@ Residuals:
 `attr_f4f5.ts` (output `out/s1e/attr_f4f5.txt`) rebuilds four frozen
 variants: f4 (both of S1d F5's changes reverted), f5a (F4 + θ from
 `tanAt`), f5b (F4 + the Lcut loop's skip only behind the root) and f5
-(e8944f2f). For each #1 site and free end in only one of S1d's F4 and
+(c6e274a3). For each #1 site and free end in only one of S1d's F4 and
 F5 lists (scenes.ts's check1deep lists keep at most 12 sites a scene;
 free ends keyed by chain, s to 0.1 and side) it prints every variant's
 ink, winning term and corner, and the arm whose L moved with its

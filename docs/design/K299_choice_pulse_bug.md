@@ -18,14 +18,14 @@ dev server, which serves the main checkout's working tree). Locally:
 ## What is known
 
 - **Levi's console:**
-  - `KnotMaze P4 v0.4.0 0e865bf 2026-10-15 01:43 | dpr 1.5 | gpu WebKit WebGL`
+  - `KnotMaze P4 v0.4.0 e2bfee7 2026-10-15 01:43 | dpr 1.5 | gpu WebKit WebGL`
     (desktop Chrome at dpr 1.5);
   - `KnotMaze: seed 1613290376, 299 nodes, 427 edges, 23 strands.`
 - **The code Levi ran.** The stamp is the dev server's start (18:43). The
-  server serves the working tree, so Levi's page most likely ran `f294247`:
+  server serves the working tree, so Levi's page most likely ran `169835a`:
   K111 stage 4 merged at 19:11 and touched the paint shaders (High
   contrast's looks, the rim width `hgw`). That is not established. If
-  the cause isn't obvious, build the commit before K111 stage 4 (`a47642d^`)
+  the cause isn't obvious, build the commit before K111 stage 4 (`80042d9^`)
   with `scripts/preview.ps1 -Ref` and compare.
 - **Also in Levi's console:**
   - PixiJS warnings at load ("Attribute aGap / aGapId / aUV is not
@@ -161,7 +161,7 @@ dev server, which serves the main checkout's working tree). Locally:
 **Status: fixed and verified, ready to merge.** Branch
 `worktree-agent-a6d727eb21ef341d5`: `70c6385` (the fix), `a2c8b5e` (the
 tests), `4d2b2d5` (lore), then this handoff. Its files don't overlap
-master's since `7a87cae` (checked against `9a5eaa8`). Evidence, probes
+master's since `c155d7f` (checked against `f3ab684`). Evidence, probes
 and notes: `.claude/probes/K299/` (`notes.md` is the running record).
 
 ### Root cause
@@ -175,7 +175,7 @@ OBSERVED:
   node_2. e18's pulse is declared from cJunction 28. After the move down
   e18 the trail holds the span (4, 22..28) and a cap at (4, 28).
 - **The mechanism.** Master's `kArcOfCtrl` (`paint_glsl.ts`, since G2.0
-  `72041df`, 2026-10-12, so not a K111 stage 4 regression) wraps a
+  `bfa17d8`, 2026-10-12, so not a K111 stage 4 regression) wraps a
   closed chain's ctrl with `i0 = int(fl - n * floor(fl / n))`. GPU float
   division is approximate: a WebGL2 test on this GPU (ANGLE D3D11, RX
   6800 XT) gave floor(float(k n) / float(n)) = k - 1 in 3275 of 16384
@@ -248,7 +248,7 @@ INFERRED, not tested:
 ### Same-state A/Bs
 
 Desktop RX 6800 XT, dsf 1.5, under the perf lock, plucks 0, no context
-loss. Each case against the same points one lap down. Master `7a87cae`
+loss. Each case against the same points one lap down. Master `c155d7f`
 was served by `scripts/preview.ps1 -Ref`.
 
 | case | master | fix |

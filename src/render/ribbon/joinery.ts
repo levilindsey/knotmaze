@@ -3,7 +3,7 @@
 // cpuStripAt, cpuJunctionField), the section color at an arc (sectionAtArc,
 // colorAtArc, armCtrlSlope) and rebuildFillets, which builds the junction
 // records, fans, discs and K81 cover strips. Moved verbatim from
-// ribbon_renderer.ts (48fc9ee lines below). A body changed in three ways
+// ribbon_renderer.ts (b8d28ca lines below). A body changed in three ways
 // only: a renderer member became `this.r.x`, a sampling helper
 // `sampling.x(...)` (normArc joined them, from the facade's module level),
 // and cpuJunctionField calls cpuStripAt through the renderer, so a probe's

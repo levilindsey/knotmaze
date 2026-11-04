@@ -5,7 +5,7 @@ thirteen themes and every layer as prototypes, each behind panel rows,
 with the runner replaying the whole walk; the order and the default are
 the coordinator's pick ("Levi's answers", "Decisions" and "Build stages"
 at the end). Nothing is built yet. The confetti half of Levi's first
-message shipped separately as K317 (ab8b78f).
+message shipped separately as K317 (46d9cf4).
 
 ## The request
 

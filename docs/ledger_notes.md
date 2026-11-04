@@ -74,48 +74,48 @@ turns stage 1 at 15:19, K76 stage 2b at 16:04, K74 stage 2 at 16:13,
 the burn race's stage 1 at 16:35, K274 with K277 at 17:37, K268
 stage 1 at 17:50 and K279 stage 1 at 18:20; the coordinator carries the running agents' rules edits into the topic
 files at their merges. Then, as code slots free up:
-1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
+1. The round's phone pass (K156): the 01:53 pass on head f054bbb (K79 B,
    K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154, K169
-   and K180 against base ab6d330) is done (K197 filed), and so is round
-   2026-10-14b's (10:12-10:42, head 48da84d, with looks for K146, K151,
+   and K180 against base af88b89) is done (K197 filed), and so is round
+   2026-10-14b's (10:12-10:42, head f2fc583, with looks for K146, K151,
    K148, K198, K100, K93 and K120; K232-K234 filed), and so is round
-   2026-10-14c's (18:53-19:37, head 02194b4: K279, K268 and k140 looks;
+   2026-10-14c's (18:53-19:37, head dea013f: K279, K268 and k140 looks;
    merged at 19:48). The next window covers K98 and K92 and the frames,
-   on the portrait floor K253 installed at 21:24 (459cc11).
+   on the portrait floor K253 installed at 21:24 (54ef27a).
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 merged in
-   5fed5c1, and its controls (K174, Levi's answers of 2026-10-14 about
-   11:10) in ecf2169..6ec8275 (12:53); roamPull's strength is K245.
+   113ae4d, and its controls (K174, Levi's answers of 2026-10-14 about
+   11:10) in 52a4e53..f258161 (12:53); roamPull's strength is K245.
    K324 (2026-10-14 22:05) adds a telegraph, pauses at every junction
    and more controls.
-3. K146 + K151 and K148 + K149: merged 2026-10-14 (b9cf882, fcc402b).
-4. K120: merged 2026-10-14 (0acbce0).
-5. K90 stage 1b: merged 2026-10-14 (feb12a0, flag off); Levi's call
+3. K146 + K151 and K148 + K149: merged 2026-10-14 (a8bbb5f, 18b76be).
+4. K120: merged 2026-10-14 (47d9223).
+5. K90 stage 1b: merged 2026-10-14 (be9cdba, flag off); Levi's call
    (ship, tune or stop) is in Waiting on Levi.
-6. K132 and K100: merged 2026-10-14 (402eb4b, 458e1e5).
-7. K93 + K145 (`docs/design/K93_K145.md`): merged 2026-10-14 (ed8f284,
-   06edef4..56b6f2d).
-8. K92 + K224: merged 2026-10-14 (e78ddcc). K111 stage 1 (the panel):
-   merged 2026-10-14 (0e5a138..9c6cab3), and its stage 2, the highlight
-   modes, at 13:03 (36d280a..5438a60); Levi picked at about 13:28, and
-   stage 3 built the pick (K248), merged at 14:58 (365bc45..6588ec0).
+6. K132 and K100: merged 2026-10-14 (cf5bcde, 354fadc).
+7. K93 + K145 (`docs/design/K93_K145.md`): merged 2026-10-14 (c2eefd5,
+   d0503b9..c795b42).
+8. K92 + K224: merged 2026-10-14 (525819d). K111 stage 1 (the panel):
+   merged 2026-10-14 (698aba5..1da3cbc), and its stage 2, the highlight
+   modes, at 13:03 (ce66042..a2b2f1a); Levi picked at about 13:28, and
+   stage 3 built the pick (K248), merged at 14:58 (d199033..3de7cdb).
    Levi answered its calls at 15:46: K237 as built, and stage 4 (K264's
    width slider, K265's High contrast prototypes) runs from 17:53
-   (`docs/design/K111.md`, 0faad0e; K264's handle).
-9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
+   (`docs/design/K111.md`, c233d09; K264's handle).
+9. K98: merged 2026-10-14 (c9df8c9); its default size waits on Levi (K225).
 10. Levi's answers of 2026-10-14 about 11:10 (placed here by the
     coordinator; Levi may reorder): K174's controls (merged 2026-10-14
-    12:53, ecf2169..6ec8275), K198 stage 2 (merged 2026-10-14 14:03,
-    96fa13a..af0f054), K191's
-    fade-out (merged 2026-10-14 12:04, fafa340..3467117), K235 with K239
-    (merged 2026-10-14 12:44, 08d1383..05e6d4d), and K193's portrait
-    emulation (merged 2026-10-14 14:10, c36b57c..763067a; its portrait
-    floor installed at 21:24 in 459cc11, K253).
-11. K76 stage 2, in four stages (`docs/design/K76.md`, bcb969e): 2a (the
+    12:53, 52a4e53..f258161), K198 stage 2 (merged 2026-10-14 14:03,
+    cf7010f..36f9ea7), K191's
+    fade-out (merged 2026-10-14 12:04, 07bb21b..72faa82), K235 with K239
+    (merged 2026-10-14 12:44, f0268b2..8960c18), and K193's portrait
+    emulation (merged 2026-10-14 14:10, d0bbfad..7b17da5; its portrait
+    floor installed at 21:24 in 54ef27a, K253).
+11. K76 stage 2, in four stages (`docs/design/K76.md`, 7538ac9): 2a (the
     re-base, the model, the paint variant) merged at 14:15 and 2b
-    (crossing gaps and junction joints) at 16:04 (3ffed34..8d671ba).
+    (crossing gaps and junction joints) at 16:04 (a2bd3ca..59a107f).
     K268 stage 1, the shaped gaps Levi asked for at 15:16, merged at
-    17:50 (1e55365..61c8859; `docs/design/K268.md`). 2c and K268 stage 2
+    17:50 (2e341b0..f9ac1bc; `docs/design/K268.md`). 2c and K268 stage 2
     come after the physics worker (K7, below this list), one at a time
     and never alongside K298, K299 or K111 stage 5 (K265), since all of
     them change the paint shaders (K111 stage 4 merged at 19:11 and took `uKBase.y` and
@@ -124,8 +124,8 @@ files at their merges. Then, as code slots free up:
     K111 stage 3 took 5 (the codec note in
     `docs/design/K76_reveal_mode.md` still says 5).
 12. K80's turn-aligned hunter, a modifier of the normal maze, in four
-    stages (`docs/design/K80_turns.md`, 7699995; four since 67c8cb0):
-    stage 1 (the model and the mode) merged at 15:19 (0047148..68524e1);
+    stages (`docs/design/K80_turns.md`, c6514ae; four since dfd0996):
+    stage 1 (the model and the mode) merged at 15:19 (81892d4..0036d03);
     stage 2 (K269's retune, K278 (c), K273's catch resets, K272, section
     2.9's stats with a `STATS` line each, K283's banner check) running
     from 17:40; then stage 3 (the final telegraph, the catch feedback
@@ -136,13 +136,13 @@ files at their merges. Then, as code slots free up:
     minotaur's rows move into the Game folder).
 13. K114's round 2, free play first: the burn race in four stages
     (`docs/design/K114_burn.md`). Stage 1 merged at 16:35
-    (801c22b..ba6d574); stages 2 (real-time burning), 3 (the look, with
+    (ed6ea5c..e5cc612); stages 2 (real-time burning), 3 (the look, with
     K290's burnt toggle, after K76 2c and K268 stage 2) and 4 (the daily)
     follow, each from the handoff before it and never
     alongside another agent changing how a tap becomes a turn. Then the
     spider (its own enemy; Levi, 2026-10-14 about 11:10).
 14. K74 stages 3 and 4, each after the one before. Stage 2 merged at
-    16:13 (4d3efe6..faa9a52); stage 3's brief comes from its handoff
+    16:13 (4dee276..30a949a); stage 3's brief comes from its handoff
     (`docs/design/K74.md`).
 15. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
     K42. K90's spline fix touches K8: never run the two at once.
@@ -209,7 +209,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     from 22:54 (cap 00:54; ports 5880-5889; docs and scripts only),
     with a sonnet helper.
   - branch: `worktree-agent-a2f8f74cd5425c4ef`
-    (`.claude/worktrees/agent-a2f8f74cd5425c4ef`, from 7effaae); last
+    (`.claude/worktrees/agent-a2f8f74cd5425c4ef`, from bd7c146); last
     commit: `9aeb7bb` (WIP: the inventory script and table).
   - evidence: `.claude/probes/K339/` in its worktree (the looks' sheet
     in `sheet/`).
@@ -274,7 +274,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - owner: nobody since 2026-10-14 18:20 (stage 1 merged; stage 2 waits on
     Levi's picks, K288). Its agent abf68d906aaae3609 of session d8031183
     finished; its worktree is kept, and the pre-rebase history is the
-    local branch `k279-stage1-prerebase` (88ae781).
+    local branch `k279-stage1-prerebase` (4da36d5).
   - next: Levi's picks (K288), then stage 2 builds them. The phone pass
     ran in round 2026-10-14c (K289 (h) closed): every look holds 60 fps,
     and `ptg=0.3` stutters 3-5 s at 5-12 fps, so the tug stays off.
@@ -319,8 +319,8 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - owner: agent a67c6d4d11a9ea6b4 (opus) of claude session d8031183,
     from 23:30 (cap 01:30; ports 5890-5899).
   - branch: `worktree-agent-a67c6d4d11a9ea6b4`
-    (`.claude/worktrees/agent-a67c6d4d11a9ea6b4`, from 79c5a97); last
-    commit: `79c5a97` (master; none of its own yet).
+    (`.claude/worktrees/agent-a67c6d4d11a9ea6b4`, from a7eb4a5); last
+    commit: `a7eb4a5` (master; none of its own yet).
   - evidence: `.claude/probes/K344/` in its worktree.
   - next: reproduce on Levi's link at 1400x900, measure the cusp's
     geometry, fix the general case with a test that fails first, the
@@ -345,14 +345,14 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   behind ten daily-exempt params (seven codec appends; the vibration
   defaults rose to `psz` 2, `pgh` .5, `pw` .75) and the sheet, sent to
   Levi at 17:52 (their picks are K288, the residuals K289). Merged
-  2026-10-14 18:20 (50c1aab..ad2618a, 925 tests; codec rows 121-127) with the
+  2026-10-14 18:20 (2600523..c6f15f9, 925 tests; codec rows 121-127) with the
   tug off by default (`ptg` 0; `&ptg=0.3` is the built strength): the
   follow-up timed a tap with the tug, a drag and a bare wake at the same
   7-9 fps on an idle desktop, the physics' own wake cost (K16), with no
   wake-path bug.
   - owner: nobody since 2026-10-14 23:55; stage 2 is ready to launch
     (K288 picked). Stage 1's worktree (agent abf68d906aaae3609) is kept.
-  - branch: mainline; last commit: `ad2618a`.
+  - branch: mainline; last commit: `c6f15f9`.
   - evidence: `.claude/probes/K279/` (copied at the merge): the sheet in
     `sheet2/`, the wake probe `k279_wake.mjs` with `wake.log` and
     `wake/wake_1400x900x2.json`, `test_run5.txt`; stage 1's neutral A/B
@@ -374,8 +374,8 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   ("1. Yes."), ahead of K76 2c and K268 stage 2, and asked at about 19:01
   whether the intro will then run at normal frame rates; the design
   answers that with numbers.
-  - The design (merged 2026-10-14 20:10, 0c3c694..eab4287; desktop,
-    measured on 0d88091): the daily's intro at about 56 fps instead of
+  - The design (merged 2026-10-14 20:10, 319fe52..7848dd8; desktop,
+    measured on 4039f70): the daily's intro at about 56 fps instead of
     22.7, smooth but not a locked 60; its two freezes (2.7 s at 1.1 s,
     2.0 s at 3.8 s) stay, since they happen with physics paused too
     (cold shader compiles, traced by K307); the first sleep at about 12 s
@@ -385,7 +385,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     COOP/COEP), a mirror ParticleSystem on main, fallbacks on error or a
     3 s timeout. Levi's 11 calls: K302, all yes (2026-10-14 21:18).
   - stage 1 (the in-thread physics host) merged at 22:04
-    (67c0604..e0980b5, deployed): `PhysicsHost`, `PhysicsCore` and
+    (0db7473..dc7d3fd, deployed): `PhysicsHost`, `PhysicsCore` and
     `InThreadHost` in
     `src/physics/physics_host.ts`, `grabAt`, `buildSceneGraph` in
     `src/core/scene_graph.ts`, every physics write in `main.ts` through
@@ -395,7 +395,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     the daily's first sleep 20.96/20.68 s against master's 20.68/20.66,
     drags 7.0 fps on both, the knot's first sleep 16.69 s against 16.56.
     Residuals K314 and K315.
-  - stage 2 (the worker core, in Node) merged at 23:21 (86708b4..472ef83): the
+  - stage 2 (the worker core, in Node) merged at 23:21 (079e5ac..68b2fdf): the
     step split into `beginFrame` and `runSubstep` (identical bits, the
     same speed within noise), `src/physics/snapshot.ts` (40,936 bytes at
     `?7`), `MirrorSystem` (`src/physics/mirror_system.ts`) and
@@ -407,8 +407,8 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - owner: agent a9f593eca9038e6d3 (opus) of claude session d8031183, stage 3
     from 23:22 (cap 01:22; ports 5792-5795).
   - branch: `worktree-agent-a9f593eca9038e6d3`
-    (`.claude/worktrees/agent-a9f593eca9038e6d3`, from 472ef83); last
-    commit: `472ef83` (master) until its first WIP commit.
+    (`.claude/worktrees/agent-a9f593eca9038e6d3`, from 68b2fdf); last
+    commit: `68b2fdf` (master) until its first WIP commit.
   - evidence: the design's `.claude/probes/K7/design/`
     (`k7_results.jsonl`, `frames/`, `summarize.mjs`, `run_k7.ps1`,
     `k7_frames.mjs`, `transport/`, `spike/`); stage 1's
@@ -429,7 +429,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 
 ## K339 (2026-10-15, shortened by the diet)
 
-- **K339** · The settings panel's audit, merged in dc4a1a7..2ee40a4:
+- **K339** · The settings panel's audit, merged in b81fd25..4d39553:
   four calls, each recommended yes (sent 2026-10-15 00:06), listed in
   `docs/design/K339_panel_audit.md` ("Questions"); the subfolder looks
   are in `.claude/probes/K339/sheet/K340_sheet.png`. They build as
@@ -587,9 +587,9 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   sleep battery, the kink-eye censuses, the gesture battery, and the
   knot-mode golden (byte-identical with the flag off). Same-chain
   collision skips +-2 ctrl, so it cannot catch folds that short.
-  - stage 1a MERGED in 6f97b92..ac5b880 (2026-10-14 07:32; no behavior
+  - stage 1a MERGED in b6635b4..927a789 (2026-10-14 07:32; no behavior
     change).
-  - stage 1b MERGED in 10ddcac..feb12a0 (2026-10-14 09:03; flag off, no
+  - stage 1b MERGED in a8f269e..be9cdba (2026-10-14 09:03; flag off, no
     behavior change; 689 tests). The folds are the Catmull-Rom's own
     overshoot at the particle polyline's corners. A render-side bend
     bound (`boundBend`, `src/geometry/spline_generator.ts`: 1.2 h, each
@@ -694,7 +694,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   classic/minotaur/..., and then with a additional conditionally-shown
   mode-specific controls like a realtime checkbox... Probably "Game" or
   "Gameplay" or "Game mode" should be a separate group."). Designed
-  22:14-22:44 (`docs/design/K323_game_mode.md`, merged as 091e4dc): a
+  22:14-22:44 (`docs/design/K323_game_mode.md`, merged as 3841332): a
   `gameMode` param (`gm`: classic, minotaur, burn) heads a new Game
   folder after Design, each mode's rows shown only under it; `clk` is
   read through `clockOf(p)`; one codec bump, 5 -> 6 (7 if K76 2c bumps
@@ -719,7 +719,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 ## K114 (2026-10-15, shortened by the diet)
 
 - **K114** · Gameplay round 2 (Levi's notes, 2026-10-13) is designed
-  in section R of `docs/design/K80_gameplay_additions.md` (9f0a9c3).
+  in section R of `docs/design/K80_gameplay_additions.md` (ff1a314).
   Shortlist: the burn race (turn-based), the cut verb with an
   auto-walker ("Lead the walker" first), the beat rider, the spider, a
   Pluck Hero MVP. Ten calls in R.0: the first prototype (burn race), a
@@ -748,7 +748,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     have a toggle in settings for no spiders, and then swap the icon to
     something else that makes sense" (an arachnophobia setting swaps its
     icon; the brief designs both icons).
-  - the burn race's stage 1 MERGED in 801c22b..ba6d574 (2026-10-14
+  - the burn race's stage 1 MERGED in ed6ea5c..e5cc612 (2026-10-14
     16:35; 898 tests; deployed, run 38655008470): the turn-clock fuse in
     `src/game/fire.ts` behind `fire` (`fi`: off | fuse), `fireSpeed` 0.75
     and `fireDelay` 0 (codec v5 118-120) in a Burn race folder;
@@ -760,7 +760,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - owner: nobody since 2026-10-14 16:35 (stage 1 merged). Its agent
     af79edbe2a4677ff5 of session d8031183 finished; its worktree
     `.claude/worktrees/agent-af79edbe2a4677ff5` is kept.
-  - branch: mainline; last commit: `ba6d574` (stage 1's handoff).
+  - branch: mainline; last commit: `e5cc612` (stage 1's handoff).
   - evidence: the main checkout's `.claude/probes/K114/burn/` (copied at
     the merge: `results_rebased.md`, `results_tuning_rebased.md`,
     `shots_rebased/`, `burn_sim.ts`, `burn_page.mjs`).
@@ -780,10 +780,10 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 - **K74** · Maze design, decided (Levi, 2026-10-13 13:17; their answers
   verbatim in `docs/design/levi_notes_2026-10-13.md`): every mechanism
   gets params whose neutral value turns it off, so difficulty and feel
-  stay adjustable. Design: `docs/design/K74_maze_design.md` (dad40f8).
+  stay adjustable. Design: `docs/design/K74_maze_design.md` (9fb419a).
   Four stages from `docs/design/K74.md`, each re-freezing the pins it
   moves and running the K63 sleep checks:
-  - stage 1 MERGED in fbf5b5c..8ba0c32 (2026-10-13 about 16:25; it
+  - stage 1 MERGED in 8ba8834..ad5995a (2026-10-13 about 16:25; it
     deploys): `exitClearance` 12; long-tail dead ends (`deadEndLength`
     20, codec v4 index 71; 0 = the old placement, byte for byte), on at
     density 0.5 for links and the daily. Greedy median 1.96x -> 3.12x
@@ -791,7 +791,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     and pins: the brief's "Stage 1 handoff"; the delegated pick, for
     Levi to review if they want:
     `.claude/probes/K74/out/K74_stage1_before_after.png`;
-  - stage 2 MERGED in 4d3efe6..faa9a52 (2026-10-14 16:13; it deploys):
+  - stage 2 MERGED in 4dee276..30a949a (2026-10-14 16:13; it deploys):
     H1, the fused arm cut (decision 4), on at `hCutShare` 1 (codec index
     117, not daily-exempt). On dailies 1-80, taps per solve 4.76 -> 1.31
     and the greedy median 3.12x -> 2.65x optimal, 15.0% within 1.5x
@@ -810,7 +810,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - owner: nobody since 2026-10-14 16:13 (stage 2 merged). Its agent
     a2c61932e9e358104 of session d8031183 finished; its worktree is
     kept, as is stage 1's (`afe7e8d13a4b8112b`).
-  - branch: mainline; last commit: `faa9a52`.
+  - branch: mainline; last commit: `30a949a`.
   - evidence: `.claude/probes/K74/` (stage 1: `out/analyze_stage1.txt`,
     `out/phys1.jsonl`, `out/verify_*.txt`, `out/k47_refuse.txt`, the
     sheet; the design's `out/scan_final.jsonl` and the hooked plan copy
@@ -834,7 +834,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 
 - **K80** · The minotaur, decided (Levi, 2026-10-13 14:31, verbatim in
   `docs/design/levi_notes_2026-10-13.md`; design
-  `docs/design/K80_gameplay_additions.md` section 0, 17b729b). The
+  `docs/design/K80_gameplay_additions.md` section 0, 2803a0b). The
   telegraphed hunter, with the guard and stalker variants, and Abbott's
   rule as a puzzle mode (call 1); the telegraph on by default, as a
   param (call 2). Turn-aligned and real-time movement (call 3). In real
@@ -852,7 +852,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   prototype. Maybe it's not a modifier of another gameplay mode, but
   rather a dedicated mode itself. Do implement it."); the turn-aligned
   hunter stays a modifier of the normal maze, later.
-  - stage 1 MERGED in ae49553..5fed5c1 (2026-10-13 23:11; deployed): the
+  - stage 1 MERGED in 63a4d42..113ae4d (2026-10-13 23:11; deployed): the
     `clk=realtime` mode and `src/game/minotaur.ts` (a 120 Hz fixed step,
     exact math, `replayChase`, `undoAllowed(clock)`; 15 tests); codec v4
     appends 84-98 (clock, playerPace, minoWanderPace, minoHuntPace,
@@ -863,7 +863,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     "Minotaur" folder, the HUD's caught row, a toast and an off-screen
     indicator; approachPace 8 -> 7 from the simulation. `clock` is not
     daily-exempt, so the dailies stay turn-based.
-  - turns stage 1 MERGED in 0047148..68524e1 (2026-10-14 15:19;
+  - turns stage 1 MERGED in 81892d4..0036d03 (2026-10-14 15:19;
     deployed): the turn-aligned minotaur behind `minotaur` (`mt`: off |
     hunter | guard | stalker; off by default) and eight tuning params
     (`msp mtg msi mro mtr mac mpa msl`; codec v5 108-116), in
@@ -873,7 +873,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     there is no undo (Reset path restarts), and a first-look telegraph
     draws a red line and a ring (`drawTelegraph`). 865 tests. Its catch
     rates on today's mazes are K269, its residuals K270-K272.
-  - turns stage 2 MERGED in 86d404e..02194b4 (2026-10-14 18:50;
+  - turns stage 2 MERGED in 40f74d1..dea013f (2026-10-14 18:50;
     deployed): the retune (K269: sight 4 -> 2 and accuracy 0.9 -> 0.3
     take the hunter from 18% / 36% of today's dailies, for an attentive
     explorer and one at 80%, to 1.0% / 13.1%); K174's real-time tests on
@@ -889,10 +889,10 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     d8031183-cd9e-4b70-9968-661d70634c84, worktree kept). Turns stage 1
     was agent af5995f5900f0f945 and real time a9c90f15cd6a55710; both
     worktrees are kept.
-  - branch: mainline; last commit: `02194b4` (turns stage 2 is
-    86d404e..02194b4; its worktree
+  - branch: mainline; last commit: `dea013f` (turns stage 2 is
+    40f74d1..dea013f; its worktree
     `.claude/worktrees/agent-a1579d5c460af2d20` is kept). Turns stage 1
-    is 0047148..68524e1, real time `5fed5c1`, K174 ecf2169..6ec8275.
+    is 81892d4..0036d03, real time `113ae4d`, K174 52a4e53..f258161.
   - evidence: stage 2's `.claude/probes/K80/turns2/` in the main checkout
     (the retune's sweeps and `compare_after.md`, real time's `rt/`, the
     banner check's `banner/`); stage 1's
@@ -922,24 +922,24 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   interleaved through a frame bench (knot, fabric at 0, 10 and 21 moves,
   and a load scenario for K147), then looks from a JSON list, into a
   summary table and screenshot sheets.
-  - 3a and 3b MERGED in 6521bb2..ae49553 (2026-10-13 about 21:50; sonnet
+  - 3a and 3b MERGED in 737ac58..63a4d42 (2026-10-13 about 21:50; sonnet
     agents a262df65dcc1489a7 and a957f7f1407f5df9f, desktop dry runs
-    only). 3c MERGED in 74ce373..de5f39e (2026-10-14 01:46; sonnet agent
+    only). 3c MERGED in d9f3f0b..9ab8a01 (2026-10-14 01:46; sonnet agent
     a595ec530724dbba1, on the phone): the A/A smoke test, `-WaitReady`
     (K171 b: a read-only check every 3 min, two ready in a row start the
     pass; `retry_quiet.ps1` waits up to 240 min), the tracked noise floor
     (landscape then, now `noise.landscape.json` beside K253's portrait
     floor), defaults `-Moves 0,7,13` and `-LoadSeconds 30`, clean-origin
     looks, and the round's new looks. Its worktree is kept.
-  - the round pass of 2026-10-14 01:55-02:20 (base ab6d330, head
-    54a2b43 = 81d31a5's code; 3 reps, landscape, no watchdog trip):
+  - the round pass of 2026-10-14 01:55-02:20 (base af88b89, head
+    d402ade = f054bbb's code; 3 reps, landscape, no watchdog trip):
     every at-rest cell (fabric at 0, 7 and 13 moves, knot) is within
     noise. Load: the longest frame fell 684 -> 167 ms (`?b.J`) and
     667 -> 150 ms (`gs=18`); first sleep rose 8.0 -> 19.3 s and
     9.3 -> 22.5 s, fps fell 46 -> 41 and 44 -> 35, p95 33 -> 50 ms, and
     `gs=18`'s frames over 50 ms 48 -> 84 (K197). Looks: all 18 ran on
     head (base lacks the new features).
-  - round 2026-10-14b's pass, 10:12-10:42 (base 54a2b43, head 48da84d,
+  - round 2026-10-14b's pass, 10:12-10:42 (base d402ade, head f2fc583,
     master at 09:37; 2 reps, in PORTRAIT 411x753 against the landscape
     floor, on a hot phone; stopped at its deadline before k140-confetti):
     fabric fps holds about 59.5 on head where base falls 57.3 -> 49.0
@@ -950,10 +950,10 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     12 looks ran clean, 8 of them new (K151 free play and a daily's
     replay, K146 practice, K148, K198, K100, K93, K120's pad); the
     coordinator checked the K198, K100 and K151 sheets. The looks'
-    `storage` field and the walk's `pick` option merged in 8d672ee..b72b3e9
+    `storage` field and the walk's `pick` option merged in c427d7c..ab66f7d
     (10:50).
-  - round 2026-10-14c's pass, 18:53-19:37 (base 48da84d, head 02194b4,
-    portrait; merged e6c6034..aa3cdd1 at 19:48): K279's looks hold 60 fps
+  - round 2026-10-14c's pass, 18:53-19:37 (base f2fc583, head dea013f,
+    portrait; merged 772e48a..e1c2a80 at 19:48): K279's looks hold 60 fps
     through a tap, with no first-tap stall and under 1% of the frame
     flashing (K289), and `ptg=0.3` wakes the knot for 3-5 s at 5-12 fps
     (K279); K268's shaped-gaps census shows 0 mismatches on the PowerVR
@@ -961,11 +961,11 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     builds made different mazes from `?b.J`). Frames, K98 and K92 (K230)
     and the 14 dropped looks did not run: the window went to K253's A/A,
     which tripped at 19:37:05 on Levi's touch. `summary.mjs` now records
-    each cell's pairs and marks a stopped A/A partial (b43ad29).
+    each cell's pairs and marks a stopped A/A partial (97c93df).
   - owner: nobody since 2026-10-14 19:45 (round 2026-10-14c's agent
     a04122e6bc4e56b02 (sonnet) finished; worktree kept). Round
     2026-10-14b's agent ad24cee1cd83ebe88 ended 10:47; worktree kept.
-  - branch: mainline; last commit: `aa3cdd1`.
+  - branch: mainline; last commit: `e1c2a80`.
   - evidence: round c's `.claude/probes/rounds/2026-10-14c-0e865bf/`
     (`k279_tables.txt`, `k279_shots*/`, `sheets/`, `install_floor.mjs`)
     and its A/A's `.claude/probes/K253/aa3/`; round b's
@@ -985,7 +985,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     worktrees (`.claude/worktrees/agent-a262df65dcc1489a7`,
     `.claude/worktrees/agent-a957f7f1407f5df9f`) with
     `.claude/probes/K161/cleanup.ps1` (`-DryRun` first).
-  - brief: `docs/design/K156.md`, "Round 2026-10-14c handoff" (aa3cdd1);
+  - brief: `docs/design/K156.md`, "Round 2026-10-14c handoff" (e1c2a80);
     the next round gets its own section.
   - K7's stage 5 brings its own phone plan (`docs/design/K7_worker.md`,
     Design 10): the worker's frame rates and its substep cost on the
@@ -1022,14 +1022,14 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   until the exit is seen); and, at Levi's suggestion, fog and the reveal
   are the options of one `exploration` dropdown (off | fog | threads),
   which replaces the fog toggle in place (pre-launch, no back-compat).
-  Design: `docs/design/K76_reveal_mode.md` (0474300); contact sheet
+  Design: `docs/design/K76_reveal_mode.md` (714d724); contact sheet
   `.claude/probes/K76/out/contact.html`. After K81. It must build the
   mode as a separate shader variant: compiled in, it costs mode-off
   frames 2.3 -> 2.8 ms on the desktop (measured while two of K74's CPU
   scans ran; re-time).
   Stage 2 runs in four stages, 2a to 2d, each from the handoff before it
-  (`docs/design/K76.md`, bcb969e).
-  Stage 2a merged 2026-10-14 14:15 (`5fe6fe1..4e384fc`, 835 tests):
+  (`docs/design/K76.md`, 7538ac9).
+  Stage 2a merged 2026-10-14 14:15 (`fc81a66..1b8d49f`, 835 tests):
   the model (`src/game/explore_view.ts`), the paint variant
   (`src/render/explore_glsl.ts`: `withExplore` splices four anchors
   into SECTION_FRAG for a lazily built second program,
@@ -1040,7 +1040,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   `render-explore.md`; handoff `docs/design/K76.md` ("Stage 2a
   handoff"). Section 10's questions are K257, 2a's residuals K258. 2c
   also gates input: hidden thread still takes taps, tugs and hover.
-  Stage 2b merged 2026-10-14 16:04 (`3ffed34..8d671ba`, 880 tests): the
+  Stage 2b merged 2026-10-14 16:04 (`a2bd3ca..59a107f`, 880 tests): the
   gap gate (one strength per gap slot: vis(over) at the over pass),
   markers that show once their point is solid (vis 0.98) and the joint
   gate (unvisited junctions hide); no shader change, so mode off is
@@ -1051,16 +1051,16 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - owner: agent a58040d5b7b031c80 (opus) of claude session d8031183, stage 2c from
     23:39 (cap 01:39; ports 5810-5819). Earlier stages' worktrees are kept:
     2b's (ac6e354b85922e7aa), 2a's (a5d63452980ed9fa3) and stage 1's
-    (aea102de995e1ce30; its prototype WIP is 1fbc0d2 and 23907a5).
+    (aea102de995e1ce30; its prototype WIP is 9fd1e80 and 82dbdb1).
   - branch: `worktree-agent-a58040d5b7b031c80` (`.claude/worktrees/agent-a58040d5b7b031c80`, from
-    2c81a92); last commit: `2c81a92` (master) until its first WIP commit.
+    2014dd0); last commit: `2014dd0` (master) until its first WIP commit.
   - evidence: `.claude/probes/K76/stage2c/` in its worktree; 2a's and
     2b's in the main checkout's `.claude/probes/K76/`.
   - next: stage 2c (the move-event feed, input and the camera, the
     `exploration` dropdown with codec 6, the K73 indicator, the intro,
     K257's and K286's recommendations, a census walk), its handoff, the
     merge; then K268 stage 2, K290 and 2d in turn.
-  - brief: `docs/design/K76.md` ("Stage 2c", 79c5a97), then
+  - brief: `docs/design/K76.md` ("Stage 2c", a7eb4a5), then
     `docs/design/K76_reveal_mode.md`.
 
 ## K268 (2026-10-15, shortened by the diet)
@@ -1085,14 +1085,14 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   cuts each under-thread pixel by the over thread's drawn coverage at
   its projection onto the over pass. Stage 1 builds the ribbon's shaped
   cut with its proof and a desktop sheet (merged 2026-10-14 17:50,
-  1e55365..61c8859); stage 2 the fans, pluck-still, protect, the
+  2e341b0..f9ac1bc); stage 2 the fans, pluck-still, protect, the
   smooth-min, the underWindows and the caps (fading with their thread,
   K275).
   - owner: nobody since 2026-10-14 17:50 (stage 1 merged). Its agent
     ab65d913a3b9a3dcb's worktree `.claude/worktrees/agent-ab65d913a3b9a3dcb`
     is kept.
-  - branch: mainline; last commit: `61c8859` (stage 1 is
-    1e55365..61c8859, rebased from 36fe894 on 4d3efe6; 921 tests).
+  - branch: mainline; last commit: `f9ac1bc` (stage 1 is
+    2e341b0..f9ac1bc, rebased from 36fe894 on 4dee276; 921 tests).
   - evidence: `.claude/probes/K268/` (copied to the main checkout at the
     merge, 171 files): the proof (0 ghosts, 0 under-cuts, max error
     0.016), the census (hidden 405, solid 5, shaped 2), the GPU timings
@@ -1127,9 +1127,9 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   "Let's prioritize this too." Split from K9.
   - owner: nobody since 2026-10-14 21:39 (agent a119ffbc187f24aad (opus)
     of claude session d8031183 finished stage 1, merged at 22:06 in
-    b72d5dd, docs and lore only); stage 2 waits for a code slot.
-  - branch: mainline; last commit: `b72d5dd`. The local `k307-proto`
-    (51f7480) holds the throwaway prototypes and is never merged.
+    86a4f0f, docs and lore only); stage 2 waits for a code slot.
+  - branch: mainline; last commit: `86a4f0f`. The local `k307-proto`
+    (d1aefae) holds the throwaway prototypes and is never merged.
   - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, the traces,
     `builds/`, patches); lore `.claude/rules/render-shaders.md`.
   - next: stage 2, the warm-up (`src/render/program_registry.ts`,
@@ -1261,7 +1261,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   2026-10-12): no weekly or regular arc; THEMES, each a set of parameter
   constraints; manual per-day overrides later (K82). The measured
   proposal, with Levi's direction at the top, is
-  `docs/design/K46_daily_variety.md` (8b1eb90). Its probes are in
+  `docs/design/K46_daily_variety.md` (10edc14). Its probes are in
   `.claude/probes/K46/`, and the proposal agent's worktree
   (`.claude/worktrees/agent-a78c73cec4770a14d`) is kept. Pre-launch,
   the daily changes in place, with no `DAILY_V2` or `fromDay` (K132).
@@ -1343,7 +1343,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 
 - **K115** · Cursive text and shapes, decided (Levi, 2026-10-13 14:32,
   verbatim in `docs/design/levi_notes_2026-10-13.md`; design
-  `docs/design/K115_cursive_text.md`, ded57f7). Its staged plan goes
+  `docs/design/K115_cursive_text.md`, 7e0fbf0). Its staged plan goes
   ahead without stage 1a's legibility test (Levi, about 15:30: "We can
   assume that text reads at phone zoom. You don't need to test that."):
   the text builder and a standalone welcome/credits scene, the title
@@ -1382,7 +1382,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 - **K116** · Alternate pluck instruments and accompaniment, lowest
   priority (Levi, 2026-10-13 13:30; their calls at 14:39 are verbatim in
   `docs/design/levi_notes_2026-10-13.md`; design
-  `docs/design/K116_instruments.md`, 2e60b00). First the band skeleton
+  `docs/design/K116_instruments.md`, 04ebd28). First the band skeleton
   (buses, ducking, a limiter, one clock), a drone and bass, and four
   `pluckVoice` presets: harp, koto-like, muted pizzicato and a bright
   12-string-like voice (3-4 days; calls 1-2); then marimba and bells on
@@ -1432,15 +1432,15 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - G2 about 44 with flow on or off (K4);
   - G2 with the fan fix, on K63 (merged): 59.5 with flow, 60.3 flow off
     (master 59.5 / 59.3).
-  - K75 + K73 (ce331bc) vs 182b2cf, 2026-10-13: 58.3-60.5 vs 58.3-60.5
+  - K75 + K73 (7a6bba2) vs 8b703a9, 2026-10-13: 58.3-60.5 vs 58.3-60.5
     with flow, 60.3 vs 60.3 flow off, 59.3 vs 60.3 with `pv=trail`; both
     sleep at sim 5.0 s (wall 9-20 s is load noise)
     (`bench_2026-10-13_K75K73*.txt`). The bench now records a sample
     from a hidden tab (screen timed out) as null instead of crashing.
-  - K83 (5592f8c) vs ce331bc, 2026-10-13: 60.3 vs 60 with flow, 60.3 vs
+  - K83 (2c4c603) vs 7a6bba2, 2026-10-13: 60.3 vs 60 with flow, 60.3 vs
     60.3 flow off, 60.5 vs 60.5 with `pv=trail`, p90 16.7 ms everywhere;
     every run asleep by sim 5.0 s on both (`bench_2026-10-13_K83.txt`).
-  - K79 stage A (7225930 vs e25d202, 2026-10-13 11:06-12:03, wireless
+  - K79 stage A (ac18b5b vs ce59840, 2026-10-13 11:06-12:03, wireless
     adb): PASS. 60.0-60.5 fps, p50 16.7 ms, on both builds at default,
     `fw=0` and `pv=trail`, all 36 runs asleep; frames 0 px in fabric,
     knot, mist and none; vellum at `bgs=1` costs less than the phone
@@ -1478,7 +1478,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 
 - **K265** · High contrast's own highlight, built by K111 stage 5
   (Levi, 2026-10-14 about 15:46: "Maybe the high contrast highlights
-  should get new treatment"). K111 stage 4 (a47642d..f294247, merged at
+  should get new treatment"). K111 stage 4 (80042d9..169835a, merged at
   19:11) built three looks behind a probe param (sheets
   `.claude/probes/K111/stage4/sheet/`). Levi's pick, about 20:25,
   verbatim: "Let's not do the black center. Instead, let's do a bit
@@ -1531,7 +1531,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   (`DEFAULT_CHASE_PARAMS` in `src/game/minotaur.ts`; `mpc`, `mpn`,
   `mpx`); it has no real-time telegraph. Relates to K80 turns stage 3
   (K293, K294, K270), K245, K247 and K296. Designed with K323's
-  (`docs/design/K324_realtime_minotaur.md`, merged as 091e4dc): a
+  (`docs/design/K324_realtime_minotaur.md`, merged as 3841332): a
   read-only `MinotaurChase.plan(reach)` drives a live telegraph (the
   current run plus `minoTelegraphRuns`, faint roaming, bright hunting);
   junction stops of 0.2-0.6 s roaming and half that hunting, from their
@@ -1725,7 +1725,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 
 ## K262 (2026-10-15, shortened by the diet)
 
-- **K262** · Two probe harnesses K132 (41e81b5) broke, both untracked in
+- **K262** · Two probe harnesses K132 (530dfdc) broke, both untracked in
   the main checkout: K80's research harness (`.claude/probes/K80/lib.ts`
   `designParams` calls the removed `codecDefaults(3)`, so `run.ts`
   throws before playing; the fix is `paramsFromValues(seed, {...})`, as
@@ -1768,13 +1768,13 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   checked); guard it with stage 3's corridor guard; (b) the pass costs a
   median 8.9 ms (at most 13.5) at gs 18, about +30% on generation:
   per-strand caches and a node -> strand map, checked by the walk pins;
-  (c) done in 86d404e..02194b4 (K80 turns stage 2): K174's test runs on
+  (c) done in 40f74d1..dea013f (K80 turns stage 2): K174's test runs on
   H1 mazes over mazes 100-119 x 6 seeds, and the turn rates were
   re-measured on them; (d) most skipped
   cuts hit a host self-crossing or a same-strand splice, so the dense
   heart and ring designs cut no bridges (a lever for stage 3 or 4); (e)
   H1 can shorten the optimal route (tree `1l6e`, 89.6 -> 78.3); (f)
-  494f2fe's message says codec index 108; it is 117.
+  ad7f030's message says codec index 108; it is 117.
   `docs/design/K74.md` ("Stage 2 handoff").
 
 ## K281 (2026-10-15, shortened by the diet)
@@ -1854,7 +1854,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   overlay strip and an across-aware compose in the mirror). Of its other
   gaps, (b) webs, fans and arm strips never glowing is now the design
   (Levi: "clipped to not show anything outside the segment bounds"), and
-  (c) the short-run fade and (d) view 5 were done in 3321592 (K111 stage
+  (c) the short-run fade and (d) view 5 were done in 46115c6 (K111 stage
   3). `docs/design/K111.md` ("Stage 3 handoff"),
   `docs/design/K93_K145.md`.
 
@@ -1869,8 +1869,8 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 ## K232 (2026-10-15, shortened by the diet)
 
 - **K232** · Round 2026-10-14b's pass (K156) found two borderline worse
-  cells, both in the default link's load (`?b.J`, base 54a2b43 vs head
-  48da84d): p95 33.4 -> 50.0 ms (floor 0.1) and first sleep
+  cells, both in the default link's load (`?b.J`, base d402ade vs head
+  f2fc583): p95 33.4 -> 50.0 ms (floor 0.1) and first sleep
   18.4 -> 19.6 s (floor 1.2). Two reps, late in the pass on a hot phone
   (skin 31 -> 39 C), in portrait against the landscape floor; `gs=18`
   and the fabric cells don't echo them. Rerun with 3 reps once the floor
@@ -1933,18 +1933,18 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 
 ## K197 (2026-10-15, shortened by the diet)
 
-- **K197** · The phone's load settles later over ab6d330..54a2b43
+- **K197** · The phone's load settles later over af88b89..d402ade
   (K156's round pass of 2026-10-14): first sleep 8.0 -> 19.3 s, and
   over the first 30 s fps 46 -> 41 and p95 33 -> 50 ms, while the
-  longest frame fell 684 -> 167 ms. K147's settle budget (b0a1c49..97293e7)
+  longest frame fell 684 -> 167 ms. K147's settle budget (23bccd4..b1897da)
   is in the range and trades frame time for settle time (its own phone
   measure: first sleep about 17.5 s); the likely cause, unconfirmed.
-  To attribute: the pass's frames phase with `-Base b0a1c49~1 -Head
-  97293e7`; then whether 19 s is acceptable is Levi's call.
+  To attribute: the pass's frames phase with `-Base 23bccd4~1 -Head
+  b1897da`; then whether 19 s is acceptable is Levi's call.
 
 ## K190 (2026-10-15, shortened by the diet)
 
-- **K190** · Unmeasured costs from K154+K169 (aaa3dda). The new hash
+- **K190** · Unmeasured costs from K154+K169 (e03bbd2). The new hash
   costs the drifting backgrounds' programs 37-60% more on the desktop
   (vellum-drift 0.352 -> 0.50 ms a frame at 3200x1800; static vellum
   pays nothing); the phone, and the junction fan program during a web
@@ -1963,9 +1963,9 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   bottom (the screenshot is 387 CSS px high, the page 331); knot-mode
   render ms swings 7.5-20.5 ms in A/A, no use at rest; K80's indicator
   look shows the indicator but never taps it.
-  - 2026-10-14: the white strip is fixed by K193 (c36b57c..763067a: screenshots
+  - 2026-10-14: the white strip is fixed by K193 (d0bbfad..7b17da5: screenshots
     clip to the viewport). The portrait floor was taken by K253
-    (installed 2026-10-14 21:24 in 459cc11).
+    (installed 2026-10-14 21:24 in 54ef27a).
   - 2026-10-14 19:37: the watchdog's touch trip works. Levi's touch
     stopped K253's second A/A after 22 of 36 samples, and the pass's
     cleanup ran clean (K156, "Round 2026-10-14c handoff", Step 7).
@@ -2133,7 +2133,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   Graphics after a few moves (`?b.c&pv=string`, 6 moves; hiding that
   Graphics removes it). G2.3 does not show it, but it was never
   attributed; look again if it comes back (G2 doc section 7, Follow-ups).
-  Since K83 (45aac50) that Graphics draws only the win ring; the markers
+  Since K83 (21a525e) that Graphics draws only the win ring; the markers
   are SDF quads.
 
 ## K103 (2026-10-15, shortened by the diet)
@@ -2141,11 +2141,11 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 - **K103** · Below 10 fps the fit camera, the move animation and the paint
   clock still slow down. The fit camera eases by a fixed fraction per
   frame (0.08 / 0.15), and `tickAnim` and the paint read the ticker's
-  `deltaMS`, which Pixi caps at 100 ms. K96 (d8b9175) moved only the
+  `deltaMS`, which Pixi caps at 100 ms. K96 (a24f104) moved only the
   follow camera onto real elapsed time. Making the fit easing time-based
   would change its feel at the refresh rate it was tuned on. The pluck
   overlay too (`tickPlucks(ticker.deltaMS / 1000)`): since K101
-  (e9e01ae) a music note's string motion waits lead + latency for its
+  (a913d58) a music note's string motion waits lead + latency for its
   scheduled sound, and below 10 fps it trails the sound by (frame /
   100 ms - 1) x that delay, about 0.15 s at 150 ms frames.
   The pluck overlay (`tickPlucks`) still slows down too.
@@ -2164,7 +2164,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 ## K136 (2026-10-15, shortened by the diet)
 
 - **K136** · Tree gs6 1389 with dead ends never sleeps (140 s of sim,
-  still moving), on both 7e41a02 and ade3537, so not K110's doing; maybe
+  still moving), on both 70dbc6c and ade3537, so not K110's doing; maybe
   the K13 attractor. The repro was `?12l.IS3ygt`; since K74 stage 1 it is
   `?12l&gs=6&shp=tree`, and K74's agent saw it at the new defaults and
   with the old placement too. Evidence:
@@ -2182,7 +2182,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 ## K143 (2026-10-15, shortened by the diet)
 
 - **K143** · Vellum's fibers read as long crossing hatching near
-  scale 2, the slider's new max (K129). K79 B merged with it (58b77cf);
+  scale 2, the slider's new max (K129). K79 B merged with it (bbd71dc);
   a look for the round's phone pass (K156; sheets in
   `.claude/probes/K79/out/view/`).
 
@@ -2199,7 +2199,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     releases and re-takes the perf lock between samples leaves gaps
     another agent's builds can land in (K122 saw one in K81 3d's run).
   - 2026-10-13: `scripts/preview.ps1 -Root <dir>` builds into a per-run
-    folder (K156 stage 1, 1f8be97). Callers that omit it still share the
+    folder (K156 stage 1, 46019dd). Callers that omit it still share the
     TEMP folder, and `diag_screenshot.mjs` still uses one fixed profile.
   `scripts/bench_frame.mjs` and `probe_gpudraw.mjs` default their Chrome profile to the OS tmpdir (found writing K8 G3-1's brief), and `scripts/preview.ps1 -Ref` needs `-Root <dir>` for a per-run folder.
 
@@ -2227,7 +2227,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 
 ## K175 (2026-10-15, shortened by the diet)
 
-- **K175** · K80's UI gaps (5fed5c1): a queued tap has no visual; the
+- **K175** · K80's UI gaps (113ae4d): a queued tap has no visual; the
   choice pulses go quiet during a move; the bull glyph is a placeholder
   (K98 has the glyph work); its off-screen indicator ignores
   `finishIndicator` (K84).
@@ -2275,7 +2275,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   only; (e) fray's cut follows its wandering center fiber, so it
   flickers along the fiber's sine; (f) the mode-off A/B was not re-run
   after the rebase onto K114 (the coordinator's call: master's only
-  `src/render` change since 4d3efe6 was K114's 157 lines in
+  `src/render` change since 4dee276 was K114's 157 lines in
   `fabric_maze_renderer.ts`, none on the gaps, and the A/B before the
   rebase was 25/25 at 0 px); (g) the phone check ran (K156 round
   2026-10-14c): the census's mismatch is 0 at every reach and look on
@@ -2296,8 +2296,8 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   per load, the first tap's first frame spends 30-36 ms more in pixi's
   tick on the desktop (likely the ripple filter's compile: warm it at
   load); (j) the pre-rebase SHAs cited in `render-pluck.md` and K279.md
-  (0f08f68, 2d905d0, da1333a, 4eb20a7) exist only on the local branch
-  `k279-stage1-prerebase`: re-cite them as 50c1aab; (k) the phone probe
+  (b44a7d9, 89383c3, ac27a56, 255a287) exist only on the local branch
+  `k279-stage1-prerebase`: re-cite them as 2600523; (k) the phone probe
   `k279_phone.mjs` reads `ripples` 1.9 s after the tap, so always 0. The
   phone pass (K156 round 2026-10-14c) closed (f), flash safety (under 1%
   of the frame changes in every look: no area guard), and (h) (every
@@ -2308,7 +2308,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 
 ## K291 (2026-10-15, shortened by the diet)
 
-- **K291** · CI: the deploy run of ad2618a (2026-10-14) carried two
+- **K291** · CI: the deploy run of c6f15f9 (2026-10-14) carried two
   annotations. Its actions (checkout@v4, setup-node@v4,
   wrangler-action@v3) target Node 20 and run forced on Node 24, and
   `ubuntu-latest` moves to Ubuntu 26 from 2026-10-19. Bump each action
@@ -2327,8 +2327,8 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   1; (d) with minoLair off the minotaur can camp the first junction past
   the entrance (the start is a sanctuary); (e) the minoSleep tooltip is
   wrong with minoLair off; (f) a Reset path restart shows no toast; (g)
-  real time has no close-call or seen stats; (h) the messages of c021177
-  and e571894 say codec 121-122; the rows are 128-129.
+  real time has no close-call or seen stats; (h) the messages of 3ef237e
+  and 4a51942 say codec 121-122; the rows are 128-129.
   `docs/design/K80_turns.md` ("Stage 2 handoff", "For stage 3").
 
 ## K295 (2026-10-15, shortened by the diet)
@@ -2371,7 +2371,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 ## K314 (2026-10-15, shortened by the diet)
 
 - **K314** · `src/main.ts`: the non-finite watchdog's comment (about line
-  4274 at 459cc11) says `halted` is "Cleared on regenerate", and the
+  4274 at 54ef27a) says `halted` is "Cleared on regenerate", and the
   stamp says "(regenerate to reset)", but nothing sets it back to false
   (its only `= false` is the declaration). Noted by K7's stage 1.
 
@@ -2618,9 +2618,9 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 
 - **K117** · Repo visibility (Levi's notes, 2026-10-13;
   `docs/design/levi_notes_2026-10-13.md`). Levi: private later, on their
-  word; they won't share it for a while. Done in a756ca5: the panel's
+  word; they won't share it for a while. Done in d2adf8a: the panel's
   GitHub link is gone, `LICENSE` says all rights reserved (Snoring Cat
-  LLC. holds them: 7a63ec4, Levi 2026-10-13), package.json
+  LLC. holds them: f063f60, Levi 2026-10-13), package.json
   says UNLICENSED, and a push touching only the ledger, docs, `.claude/`,
   README or LICENSE skips the deploy (Actions minutes count against the
   plan once private; deploys used about 330 minutes in the last 7 days,
@@ -2667,7 +2667,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 - **K353** · The ledger diet: shorten every item over three lines and
   archive the originals (`docs/ledger_notes.md`, `docs/ledger_done.md`).
   - owner: agent `a18f9a57206d9475d` (sonnet) of claude session d8031183, from 2026-10-15 00:13 (cap 01:13; scripts and docs only)
-  - branch: `worktree-agent-a18f9a57206d9475d` (`.claude/worktrees/agent-a18f9a57206d9475d`); last commit: none yet (base `d741412`)
+  - branch: `worktree-agent-a18f9a57206d9475d` (`.claude/worktrees/agent-a18f9a57206d9475d`); last commit: none yet (base `9b4f3e6`)
   - evidence: its worktree's `scripts/ledger_diet.mjs`, `docs/ledger_diet/map.jsonl` and `.claude/probes/K353/`
   - next: when it reports, apply the map to master at a quiet point (`apply --dry-run`, then `apply`, then `verify` against the pre-apply copy); tomorrow with Levi, the same diet for claude-config's and the other repos' ledgers, plus the claude-config side (the `rules/ledger.md` convention, a shared `tools/ledger.mjs`, the merge script closing items, a nightly hygiene job), filed in claude-config's ledger (Levi, 2026-10-15 00:05)
   - brief: `docs/design/K353_ledger_diet.md`
@@ -2678,7 +2678,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   (`docs/design/G3G4_sdf_geometry.md`). Decided: flat caps on anchored
   tails, a 2x phone cap, today's fold pinch, and G1's GPU levers fold in.
   - owner: agent `a35a43cee74c92b93` (opus) of claude session d8031183, from 2026-10-15 00:13 (cap 02:13; docs only, ports 5880-5889)
-  - branch: `worktree-agent-a35a43cee74c92b93` (`.claude/worktrees/agent-a35a43cee74c92b93`); last commit: none yet (base `d741412`)
+  - branch: `worktree-agent-a35a43cee74c92b93` (`.claude/worktrees/agent-a35a43cee74c92b93`); last commit: none yet (base `9b4f3e6`)
   - evidence: its worktree's `docs/design/G3G4_sdf_geometry.md` and `docs/design/K8_stage1.md`
   - next: stage 1 re-bases the doc's plan on today's master and writes the "Stage 2 (G3-0)" brief; then G3-0 takes the next free code slot
   - brief: `docs/design/K8_stage1.md`
@@ -2714,15 +2714,15 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     kept (2b `ac6e354b85922e7aa`, 2a `a5d63452980ed9fa3`, stage 1
     `aea102de995e1ce30`)
   - branch: `worktree-agent-a58040d5b7b031c80`
-    (`.claude/worktrees/agent-a58040d5b7b031c80`, from 2c81a92); last
-    commit: `2c81a92` (master) until its first WIP commit
+    (`.claude/worktrees/agent-a58040d5b7b031c80`, from 2014dd0); last
+    commit: `2014dd0` (master) until its first WIP commit
   - evidence: `.claude/probes/K76/stage2c/` in its worktree; 2a's and
     2b's in the main checkout's `.claude/probes/K76/` (sheets
     `stage2a/out/sheet/`, `stage2b/out/`); lore `render-explore.md`
   - next: stage 2c (move-event feed, input gating and camera, the
     `exploration` dropdown with codec 6, K73 indicator, intro, K257's
     and K286's recommendations, a census walk), its handoff, the merge
-  - brief: `docs/design/K76.md` ("Stage 2c", 79c5a97), then
+  - brief: `docs/design/K76.md` ("Stage 2c", a7eb4a5), then
     `docs/design/K76_reveal_mode.md`
 
 ## K268 (2026-10-15, stage 2 started)
@@ -2736,8 +2736,8 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - owner: nobody since 2026-10-14 17:50 (stage 1 merged; agent
     ab65d913a3b9a3dcb, worktree
     `.claude/worktrees/agent-ab65d913a3b9a3dcb` kept)
-  - branch: mainline; last commit: `61c8859` (stage 1 is
-    1e55365..61c8859)
+  - branch: mainline; last commit: `f9ac1bc` (stage 1 is
+    2e341b0..f9ac1bc)
   - evidence: `.claude/probes/K268/` (the proof, the census, GPU
     timings, the partial sheet)
   - next: stage 2 ("For stage 2", with K275's fade), after the physics
@@ -2752,9 +2752,9 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 
 - **K279** · Plucks you can see, feel and hear (Levi, 2026-10-14): a
   ripple at pluck points (glint by default, K288), more vibration, a tug
-  (off: its wake cost is K7's), quieter auto plucks. Stage 1: ad2618a.
+  (off: its wake cost is K7's), quieter auto plucks. Stage 1: c6f15f9.
   - owner: agent `a910830b0197dd699` (opus) of claude session d8031183, from 2026-10-15 00:42 (cap 02:42; ports 5900-5909)
-  - branch: `worktree-agent-a910830b0197dd699` (`.claude/worktrees/agent-a910830b0197dd699`); last commit: none yet (base `9b977d8`)
+  - branch: `worktree-agent-a910830b0197dd699` (`.claude/worktrees/agent-a910830b0197dd699`); last commit: none yet (base `a59c74b`)
   - evidence: `.claude/probes/K279/` (stage 1: `sheet2/`, `k279_wake.mjs`); stage 2's in its worktree's `.claude/probes/K279/stage2/`
   - next: stage 2 makes glint the default `prp`, bounds and warms the ripple filter, checks glint's phone size and K289 (j, k); then the merge and the next phone round
   - brief: `docs/design/K279.md`, "Stage 2: glint by default"
@@ -2769,8 +2769,8 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   the ripple is sized in world units, so it shrinks on a phone (a CSS-px
   floor?); (e) no High contrast tie-in (ring off, or glint only?); (g)
   no webm clips; (j) `render-pluck.md` and K279.md cite pre-rebase SHAs
-  (0f08f68, 2d905d0, da1333a, 4eb20a7) that exist only on the local
-  branch `k279-stage1-prerebase`: re-cite them as 50c1aab; (k)
+  (b44a7d9, 89383c3, ac27a56, 255a287) that exist only on the local
+  branch `k279-stage1-prerebase`: re-cite them as 2600523; (k)
   `k279_phone.mjs` reads `ripples` 1.9 s after the tap, so always 0.
   `docs/design/K279.md` ("Stage 1 handoff", "Wake follow-up").
 
@@ -2778,9 +2778,9 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 
 - **K7** · Physics in a Web Worker with render-side interpolation, so the
   intro runs at full frame rate while physics settles (K28). Levi's calls:
-  K302. Stages 1-3 merged; stage 3 put the worker behind `phw` (63603bd..7f4c1bd).
+  K302. Stages 1-3 merged; stage 3 put the worker behind `phw` (7e0cdcb..6f1a519).
   - owner: agent `abee0faca59fb8636` (opus) of claude session d8031183, from 2026-10-15 00:48 (cap 02:48; ports 5796-5797; owns `main.ts`)
-  - branch: `worktree-agent-abee0faca59fb8636` (`.claude/worktrees/agent-abee0faca59fb8636`); last commit: none yet (base `7f4c1bd`)
+  - branch: `worktree-agent-abee0faca59fb8636` (`.claude/worktrees/agent-abee0faca59fb8636`); last commit: none yet (base `6f1a519`)
   - evidence: `.claude/probes/K7/` (stage 3: `stage3/` with `run_s3.ps1`, `k7_frames.mjs`, the results); stage 4's in its worktree's `.claude/probes/K7/stage4/`
   - next: stage 4, the diagnostic bridge and desktop acceptance under the perf lock, with K307's unexplained main-thread JS; then stage 5 (the phone, the worker by default); then K5 and K6
   - brief: `docs/design/K7_worker.md`, "Stage 4" and the stage 3 handoff's "For stage 4"
@@ -2795,8 +2795,8 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - owner: nobody since 2026-10-14 21:39 (stage 1 merged at 22:06; agent
     a119ffbc187f24aad (opus) of claude d8031183); stage 2 waits for a
     code slot
-  - branch: mainline; last commit: `b72d5dd`; the local `k307-proto`
-    (51f7480) holds throwaway prototypes and is never merged
+  - branch: mainline; last commit: `86a4f0f`; the local `k307-proto`
+    (d1aefae) holds throwaway prototypes and is never merged
   - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces,
     `builds/`, patches); lore `.claude/rules/render-shaders.md`
   - next: stage 2, the warm-up (`src/render/program_registry.ts`,
@@ -2820,7 +2820,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   2026-10-14): no gap until the over thread is seen, and a dynamic gap for
   a stub's overlap and dead ends. Stage 1 merged; stage 2 runs.
   - owner: agent `a42c63c2db0401edb` (opus) of claude session d8031183, stage 2 from 01:15 (cap 03:15; ports 5820-5829); stage 1's worktree `ab65d913a3b9a3dcb` kept
-  - branch: `worktree-agent-a42c63c2db0401edb` (`.claude/worktrees/agent-a42c63c2db0401edb`, from `82c1f23`); last commit: `82c1f23` (master) until its first WIP commit
+  - branch: `worktree-agent-a42c63c2db0401edb` (`.claude/worktrees/agent-a42c63c2db0401edb`, from `a203db4`); last commit: `a203db4` (master) until its first WIP commit
   - evidence: `.claude/probes/K268/` (stage 1's); stage 2's in its worktree's `.claude/probes/K268/stage2/`
   - next: first the MAX defect K76 2c found (crossing 275, both threads walked: the mode on cuts 0 px of gap against 1010 px off, so the threads fuse; `.claude/probes/K76/stage2c/out/census_new2/shaped_c275.png`), then K275's fade, the fans and still pluck, protect, smooth-min, underWindows; never alongside K298, K299 or K111 s5; K290 next in the chain
   - brief: `docs/design/K268.md` ("For stage 2"); `docs/design/K76.md` ("Stage 2c handoff", "For K268 stage 2")
@@ -2840,7 +2840,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   with seams so G3 becomes a module swap; K6 (one frame loop) is designed with
   it. Levi wants both soon (2026-10-14 23:46).
   - owner: agent `aa60ed52201f75682` (opus) of claude session d8031183, the design (docs only) from 02:37 (cap 04:37)
-  - branch: `worktree-agent-aa60ed52201f75682` (`.claude/worktrees/agent-aa60ed52201f75682`, from `f04aa4b`); last commit: `f04aa4b` (master) until its first WIP commit
+  - branch: `worktree-agent-aa60ed52201f75682` (`.claude/worktrees/agent-aa60ed52201f75682`, from `0810b6a`); last commit: `0810b6a` (master) until its first WIP commit
   - evidence: its worktree's `.claude/probes/K5/design/`
   - next: the design and stage 1's brief in `docs/design/K5_K6_split.md`; stage 1 starts after K7 stage 5 merges (about 04:40)
   - brief: this item, K6's and `docs/design/K7_worker.md` (lines 20-35); the design doc once merged
@@ -2862,9 +2862,9 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-4 merged: the worker behind `phw`, the probe bridge and
-  desktop acceptance (4d39a1f..de22867). Stage 5: the phone, then the default.
+  desktop acceptance (eefdbc2..8d051ae). Stage 5: the phone, then the default.
   - owner: agent `adf244f47f53e8230` (opus) of claude session d8031183, stage 5 from 02:35 (cap 04:35; ports 5798-5799; owns `main.ts`; the phone first, under the phone lock); stage 4's worktree `abee0faca59fb8636` kept
-  - branch: `worktree-agent-adf244f47f53e8230` (`.claude/worktrees/agent-adf244f47f53e8230`, from `de22867`); last commit: `de22867` (master) until its first WIP commit
+  - branch: `worktree-agent-adf244f47f53e8230` (`.claude/worktrees/agent-adf244f47f53e8230`, from `8d051ae`); last commit: `8d051ae` (master) until its first WIP commit
   - evidence: `.claude/probes/K7/` (`stage3/`; `stage4/` with `k7_frames.mjs`, `k7_latency.mjs`, `run_s4.ps1`, `table_s4.mjs`, `k307/`, `ports/`); stage 5's in its worktree's `.claude/probes/K7/stage5/`
   - next: stage 5: the worker start gate, the phone pass (Design 10's criteria, plus touch latency), then `phw` on by default if it passes, K147's budget bypass and the lore; then K5 and K6
   - brief: `docs/design/K7_worker.md`, "Stage 5" and the stage 4 handoff's "For stage 5"
@@ -2878,10 +2878,10 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 ## K8 (2026-10-15, G3-0 merged)
 
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
-  (`docs/design/G3G4_sdf_geometry.md`, re-based by stage 1, 05aac8e..cbeb963). G3-1
+  (`docs/design/G3G4_sdf_geometry.md`, re-based by stage 1, 9c927ca..9b1e273). G3-1
   waits for K268 s2 and K290, G3-2 for the reveal chain (K76 2c to 2d).
   - owner: agent `af653fa7f942f2f1e` (opus) of claude session d8031183, stage 2 (G3-0) from 02:04 (cap 04:04; ports 5830-5839); stage 1's docs worktree `a35a43cee74c92b93` kept
-  - branch: `worktree-agent-af653fa7f942f2f1e` (`.claude/worktrees/agent-af653fa7f942f2f1e`, from `fa7f9dc`); last commit: `fa7f9dc` (master) until its first WIP commit
+  - branch: `worktree-agent-af653fa7f942f2f1e` (`.claude/worktrees/agent-af653fa7f942f2f1e`, from `028b1d4`); last commit: `028b1d4` (master) until its first WIP commit
   - evidence: `docs/design/G3G4_sdf_geometry.md`, `docs/design/K8_stage1.md` ("Stage 1 handoff"); stage 1's notes in `.claude/probes/K8/stage1/notes.md`; stage 2's in its worktree's `.claude/probes/K8/stage2/`
   - next: G3-0 (the capture/restore hook, the sample table, the frame bench, the pixel A/B, a phone pass if reachable), never alongside K90; Levi's calls are K361 (none blocks G3-0)
   - brief: `docs/design/K8_stage1.md`, "Stage 2 (G3-0)"
@@ -2892,7 +2892,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   prioritize). K7 s4's trace: GPU compile waits (bg-vellum's 190 ms queued behind
   12-15 small links); the worker can't hide them; its 6.1 s frame is gone.
   - owner: nobody since 2026-10-14 21:39 (stage 1 merged at 22:06; agent a119ffbc187f24aad (opus) of claude d8031183); stage 2 waits for a code slot
-  - branch: mainline; last commit: `b72d5dd`; the local `k307-proto` (51f7480) holds throwaway prototypes and is never merged
+  - branch: mainline; last commit: `86a4f0f`; the local `k307-proto` (d1aefae) holds throwaway prototypes and is never merged
   - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces, `builds/`, patches); K7 s4's traces in `.claude/probes/K7/stage4/k307/`; lore `.claude/rules/render-shaders.md`
   - next: stage 2, the warm-up (`program_registry.ts`, `shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on `finishPresettle`, wave 1 then wave 2), not alongside K7 s5 (both edit `main.ts`); K366 rides it, and so do K268 s2's three explore variants (`render-shaders.md`); the phone's measures ride K156's next pass
   - brief: `docs/design/K307_intro_freezes.md` ("Stage 1 handoff", "Stage 2: the warm-up"); K7's in `docs/design/K7_worker.md` ("Stage 4 handoff")
@@ -2903,7 +2903,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   gone (default: not drawn, under threads' gaps close, fans drop the arm) or
   char (a burnt coloring in the shader). Burn stage 3a; 3b is the front's FX.
   - owner: agent `adb9f09e19dfd0c55` (opus) of claude session d8031183, stage 3a from 03:27 (cap 05:27; ports 5820-5829)
-  - branch: `worktree-agent-adb9f09e19dfd0c55` (`.claude/worktrees/agent-adb9f09e19dfd0c55`, from `f799991`); last commit: `f799991` (master) until its first WIP commit
+  - branch: `worktree-agent-adb9f09e19dfd0c55` (`.claude/worktrees/agent-adb9f09e19dfd0c55`, from `0fd6282`); last commit: `0fd6282` (master) until its first WIP commit
   - evidence: its worktree's `.claude/probes/K290/stage3a/`; burn stage 1's `.claude/probes/K114/`
   - next: stage 3a: the param, gone through the explore VIS machinery reversed, char in the shader, a desktop sheet of both looks; then 3b (the front's char band and embers, the `burn` FX on `tipsAt`, the fuse, the fire's light under fog, the phone sheet)
   - brief: `docs/design/K114_burn.md`, "The stages" (Stage 3) and "Stage 1 handoff"; the stage 3a handoff once written
@@ -2914,7 +2914,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   (off | fog | threads) and an end look, a separate shader variant. 2a-2c
   merged, so the mode is in the panel (off by default); 2d after K268 s2, K290.
   - owner: nobody since 2026-10-15 01:08 (stage 2c done; agent `a58040d5b7b031c80` of claude session d8031183; worktrees kept: 2c's, 2b `ac6e354b85922e7aa`, 2a `a5d63452980ed9fa3`, stage 1 `aea102de995e1ce30`)
-  - branch: mainline; last commit: `82c1f23` (2c is `e6e151d..82c1f23`)
+  - branch: mainline; last commit: `a203db4` (2c is `fe4994a..a203db4`)
   - evidence: `.claude/probes/K76/stage2c/` (2a's and 2b's beside it); lore `render-explore.md`
   - next: stage 2d ("For stage 2d": High contrast dots, the census on K268's shaped slots, the held frame, step 8's phone gate and GPU, the final sheets) after K268 s2 and K290; Levi's calls are K362
   - brief: `docs/design/K76.md`, "Stage 2c handoff"; design `docs/design/K76_reveal_mode.md`
@@ -2922,10 +2922,10 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 ## K7 (2026-10-15, stage 6 merged)
 
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
-  calls K302). Stages 1-5 merged (stage 5: 3e6b7c5..988be6a, the start gate and the phone
+  calls K302). Stages 1-5 merged (stage 5: 5913b95..35542e7, the start gate and the phone
   pass, which missed only the 250 ms gate). Call F6: the default anyway.
   - owner: agent `a6023a3244ff623cc` (sonnet) of claude session d8031183, stage 6 (the flip) from 03:49 (cap 04:49; ports 5850-5859); stage 5's worktree `adf244f47f53e8230` kept
-  - branch: `worktree-agent-a6023a3244ff623cc` (`.claude/worktrees/agent-a6023a3244ff623cc`, from `8b3b401`); last commit: `8b3b401` (master) until its first WIP commit
+  - branch: `worktree-agent-a6023a3244ff623cc` (`.claude/worktrees/agent-a6023a3244ff623cc`, from `9882a38`); last commit: `9882a38` (master) until its first WIP commit
   - evidence: `.claude/probes/K7/` (`stage5/`: the phone tooling, `s5_gate.txt`, `run_s5.ps1`, `table_s5.mjs`; `stage4/`, `stage3/`)
   - next: stage 6 (sonnet): `phw` on by default, its pins and lore, the 21 shared probe libraries ported (K374); then K5 M1; then stage 7 (opus; after M1, since both edit main.ts's boot): the start-gate lever (params and tuning in the Worker's `name`, main adopts gen 0), the phone pass again and the spike page `?d=gs18`
   - brief: `docs/design/K7_worker.md`, "Stage 6 brief: the flip (call F6)"; stage 7 from "Stage 5 handoff" ("For the next stage")
@@ -2949,7 +2949,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   with seams so G3 becomes a module swap; K6 rides it. Design merged:
   `docs/design/K5_K6_split.md` (its calls: K377).
   - owner: nobody since 2026-10-15 03:14 (design done and merged; agent `aa60ed52201f75682` of claude session d8031183, worktree kept)
-  - branch: mainline; last commit: `4931204`
+  - branch: mainline; last commit: `fd5c6be`
   - evidence: `.claude/probes/K5/design/` (eight region maps of main.ts and ribbon_renderer.ts)
   - next: stage M1 once K7 stage 5 merges (re-map main.ts first), then section 5's stages: M1-M8, and R1-R5 (R1 after G3-0 merges); section 6 orders them against the queue
   - brief: `docs/design/K5_K6_split.md`, "7. Stage 1 brief"
@@ -2960,8 +2960,8 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   prioritize). K7 s4's trace: GPU compile waits (bg-vellum's 190 ms queued behind
   12-15 small links); the worker can't hide them. Stage 2: the warm-up.
   - owner: agent `a11d7ce60428b687d` (opus) of claude session d8031183, stage 2 from 03:55 (cap 05:55; ports 5830-5839)
-  - branch: `worktree-agent-a11d7ce60428b687d` (`.claude/worktrees/agent-a11d7ce60428b687d`, from `97d7c31`); last commit: `97d7c31` (master) until its first WIP commit
-  - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces, `builds/`, patches; the local branch `k307-proto` (51f7480) holds throwaway prototypes, never merged); K7 s4's traces in `.claude/probes/K7/stage4/k307/`; lore `.claude/rules/render-shaders.md`; stage 2's in its worktree's `.claude/probes/K307/stage2/`
+  - branch: `worktree-agent-a11d7ce60428b687d` (`.claude/worktrees/agent-a11d7ce60428b687d`, from `4dee252`); last commit: `4dee252` (master) until its first WIP commit
+  - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces, `builds/`, patches; the local branch `k307-proto` (d1aefae) holds throwaway prototypes, never merged); K7 s4's traces in `.claude/probes/K7/stage4/k307/`; lore `.claude/rules/render-shaders.md`; stage 2's in its worktree's `.claude/probes/K307/stage2/`
   - next: stage 2: `program_registry.ts`, `shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on `finishPresettle`, wave 1 then wave 2; K366, K268 s2's three explore variants and a fire race's first burn (K290: it moves every chain onto the explore programs) ride it; the phone's measures ride K156's next pass
   - brief: `docs/design/K307_intro_freezes.md` ("Stage 2: the warm-up", "Stage 1 handoff", "Stage 2 launch notes")
 
@@ -2983,7 +2983,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   (off | fog | threads) and an end look, a separate shader variant. 2a-2c
   merged, so the mode is in the panel (off by default); 2d running.
   - owner: agent `adbaac6a024e6d144` (opus) of claude session d8031183, stage 2d from 04:41 (cap 06:41; ports 5820-5829)
-  - branch: `worktree-agent-adbaac6a024e6d144` (`.claude/worktrees/agent-adbaac6a024e6d144`, from `e7951cd`); last commit: `e7951cd` (master) until its first WIP commit
+  - branch: `worktree-agent-adbaac6a024e6d144` (`.claude/worktrees/agent-adbaac6a024e6d144`, from `7e3881d`); last commit: `7e3881d` (master) until its first WIP commit
   - evidence: `.claude/probes/K76/stage2c/` (2a's and 2b's beside it); stage 2d's in its worktree's `.claude/probes/K76/stage2d/`; lore `render-explore.md`
   - next: stage 2d: High contrast dots, step 8 (the phone gate, GPU per program, the final sheets), the census on K268's shaped slots, the held frame; the start zoom stays Levi's (K362)
   - brief: `docs/design/K76.md`, "Stage 2c handoff" ("For stage 2d") and "Stage 2d launch notes"; design `docs/design/K76_reveal_mode.md`
@@ -2995,7 +2995,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   with seams so G3 becomes a module swap; K6 rides it. Design merged:
   `docs/design/K5_K6_split.md` (its calls: K377). Stage M1 running.
   - owner: agent `a871cd9d98d4f1bf0` (opus) of claude session d8031183, stage M1 from 04:46 (cap 06:46; ports 5840-5849); the design's worktree `aa60ed52201f75682` kept
-  - branch: `worktree-agent-a871cd9d98d4f1bf0` (`.claude/worktrees/agent-a871cd9d98d4f1bf0`, from `1646491`); last commit: `1646491` (master) until its first WIP commit
+  - branch: `worktree-agent-a871cd9d98d4f1bf0` (`.claude/worktrees/agent-a871cd9d98d4f1bf0`, from `03dcfdf`); last commit: `03dcfdf` (master) until its first WIP commit
   - evidence: `.claude/probes/K5/stage1/` (in the main checkout, as the brief says); the design's region maps in `.claude/probes/K5/design/`
   - next: stage M1: the re-map, `src/app/scene_ref.ts`, the loader, stamp and probe hooks moved, host_seam over `src/app/**`, the lore paths; then section 5's stages (M2-M8, R1-R5; section 6 orders them)
   - brief: `docs/design/K5_K6_split.md`, "7. Stage 1 brief" and "Stage 1 launch notes"
@@ -3092,7 +3092,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 ## K416 (2026-10-15, shortened by the diet)
 
 - **K416** · `docs/design/K5_K6_split.md` is stale beyond §2.3 (R1 updates its table): §1.3's
-  line ranges are from f04aa4b; the strip block gained `sectionProgram`, `sameBurn`, `sameSpans`;
+  line ranges are from 0810b6a; the strip block gained `sectionProgram`, `sameBurn`, `sameSpans`;
   §5.1 misses pins (PROGRAM_SITES/RIBBON, `paint_explore.test.ts` reading the source,
   `paint_ring_lap.test.ts`'s non-recursive scan); the sequencing text (§5.3, §6) is stale;
   `__knotRenderer` now lives in `src/app/probe_hooks.ts` (K5 R1 brief).
@@ -3191,7 +3191,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 
 ## K112 (2026-10-15, shortened by the diet)
 
-- **K112** · Motion setting residuals (K79, 9ffda8a): no cross-tab sync
+- **K112** · Motion setting residuals (K79, 4a89e63): no cross-tab sync
   (another tab picks a change up on reload; `src/ui/motion.ts`), and the
   camera's reduced-motion jump on an edge-indicator tap was
   code-reviewed, not probed.
@@ -3302,7 +3302,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 - **K422** · Two K120 regression probe checks fail on master too (seen by K80 3a): keys.mjs realtime
   "a held key keeps adding inputs" (2 → 3; untested guess: the seed-7 maze changed under it) and
   pad.mjs desktop "the stored choice shows it" (the pad hides under the open panel since K224,
-  86dc0cf; store `knotmaze.panelOpen` "0"). `.claude/probes/K80/stage3/rerun/K120/`.
+  918c929; store `knotmaze.panelOpen` "0"). `.claude/probes/K80/stage3/rerun/K120/`.
 
 ## K425 (2026-10-15, shortened by the diet)
 
@@ -3311,7 +3311,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   copies), `g2/` and `K4/` `variant_build.ps1`, `K154_K169/edit_rr2.ps1` and
   `edit_rr3.ps1`. Repoint them at `src/render/ribbon/ribbon_shader.ts` when next used
   (R1's copy: `.claude/probes/K5/R1/dump_variants.ts`). A `variant_build.ps1 -Subst` on moved
-  text must name the new file. K5 R2 (52faab8) moved the crossing and explore gaps to
+  text must name the new file. K5 R2 (b88376c) moved the crossing and explore gaps to
   `src/render/ribbon/crossing_gaps.ts` and `explore_gaps.ts`; a `-Subst` on that text names them.
 
 ## K428 (2026-10-15, shortened by the diet)
@@ -3397,7 +3397,7 @@ would.
 
 ## K550 (2026-10-19, shortened at stage 3's launch)
 
-K320 2b parity blocker: split stays dark; 2c must not start until the A/B is 0px (or K433 one-level). Diagnosis .claude/probes/K320/k550_diagnosis.md (probes `k550_*.mjs`). Session 1: the shipped mask row is off by one (`- 2 -` -> `- 1 -` = the `gapMaskTexel` twin; def 40,829 -> 12,353). Session 2 (finisher): the row fix + a three-keep mask (owner / under / deep gap passes, chain+arc-turn fragment identity in mask B) solves the stacking AND the dominant same-chain double-coverage term (def 12,353 -> 5,603, darker 6,246 -> 714; fat 6,789, user 3,051, knot 6,773; explore unmeasured - its single-capture control is 36,252, needs the K428 multi-capture form). WIP preserved uncommitted in `.claude/probes/K320/k550_two_keep.patch` (`git apply`-verified on ca60b72; tree left at HEAD). BLOCKER for the flip: MSAA sample coverage - canvas edge fragments (`>=` 1 sample, center-extrapolated varyings) are never recorded by the center-rule mask and paint at 1.0; temp `antialias: false` collapses def to 2,020 / gt1 343, and even that floor fails the brief's gt1 = 0 gate. No exact fix exists in this architecture (WebGL2 cannot sample an unresolved MSAA target; expansion/SSAA measured worse). Levi's call: waive the gate for 1-px edge diffs via the brief's contact sheets, or kill the split and keep Stage 1.
+K320 2b parity blocker: split stays dark; 2c must not start until the A/B is 0px (or K433 one-level). Diagnosis .claude/probes/K320/k550_diagnosis.md (probes `k550_*.mjs`). Session 1: the shipped mask row is off by one (`- 2 -` -> `- 1 -` = the `gapMaskTexel` twin; def 40,829 -> 12,353). Session 2 (finisher): the row fix + a three-keep mask (owner / under / deep gap passes, chain+arc-turn fragment identity in mask B) solves the stacking AND the dominant same-chain double-coverage term (def 12,353 -> 5,603, darker 6,246 -> 714; fat 6,789, user 3,051, knot 6,773; explore unmeasured - its single-capture control is 36,252, needs the K428 multi-capture form). WIP preserved uncommitted in `.claude/probes/K320/k550_two_keep.patch` (`git apply`-verified on c381a81; tree left at HEAD). BLOCKER for the flip: MSAA sample coverage - canvas edge fragments (`>=` 1 sample, center-extrapolated varyings) are never recorded by the center-rule mask and paint at 1.0; temp `antialias: false` collapses def to 2,020 / gt1 343, and even that floor fails the brief's gt1 = 0 gate. No exact fix exists in this architecture (WebGL2 cannot sample an unresolved MSAA target; expansion/SSAA measured worse). Levi's call: waive the gate for 1-px edge diffs via the brief's contact sheets, or kill the split and keep Stage 1.
 
 ## K567 (2026-10-19)
 
@@ -3443,7 +3443,7 @@ hunt 0.95); K546's first phone sheet shows roam, a catch and the fog glow togeth
 
 The history that had accumulated after the ID on the ledger's Next free ID line, verbatim:
 
-(K865 = SDF union-field border prototype (option C scoped to junctions, behind ?rp=sdf&sfb=1) - brief docs/design/K865_sdf_field_border.md; K864 = K862 follow-up: cosine-warped rim sampling (rendered tip chord sin p90 0.161 -> 0.024) + per-side junction side-cut windows (merged window cut the lesser side past its tip); K862 = G1 fillet rims at the flank tips, split through the old corner midpoint; K863 = cursive clean slate, pen-order strokes.) (K857 = borders still crossing junctions, across the joining thread's end - Levi, by 2026-10-23, after K854; in In progress.) (K854 border-mode junction outline, measured: side-cut window now reaches the flank tips, rims solid and straddling; interior strokes at the three probed 4-arm junctions -36/-32/-46%, SDF path also improved - see Done. Residuals there.) (K853 loader spin mode + speed cap: codec-appended loaderMove "spin" (centroid pinned at screen centre, knot turns around it, marker directly below it); loading-speed max 3 -> 9 (Levi: x3) - see Done.) (K852 loader motion + loader-only params: codec-appended loaderMove "above" + loaderGap/loaderThreadWidth/loaderThreadColor/loaderBgColor/loaderIndicatorSize/loaderFill/loaderTrail; the loader's look no longer borrows the maze's gap/threadWidth/pathColor/backgroundBase; defaults reproduce the pre-K852 drawing bit-for-bit - see Done.) (2026-10-23: K847 cursive rethink: a re-silhouetted as a single-story cursive a (apex top-right, proven shipped segment proportions, integer tangents, lint-clean), i entry one sweep (arrival hin 4->3, entry hout 1.5->1.6 of LOW), flares longer (a 30->46, i 34->50 GU) with cosine falloff; stills .claude/probes/K847/after. K846 border junctions: junction side cut (ribbon edges hand over to wedge rims at every junction arm, both ribbon programs; entries from the joinery's drawn wedges via RANGES segment space) + tangent-continuous cubic fillet rims; glyph junctions keep one joinery arm each so they are unchanged there (taper/cap machinery, K847+). K844 look-chip same row as dropped badge, left vs right (76832a4f, revises K837); K845 hint draws a set distance (HINT_DISTANCE 6) along the route, spilling past short runs.) (2026-10-23 night batch: K836 cursive-a tangent attachments + landTangent (761003ab); K837 look-chip offset (e3792ec8); K838 hint lasts until the move + one at a time, codec v9 (39fe558c); K839 Show-shortest-path checkbox (d7028231); K840 fragile ends break (4507a632); K841 loader follow unwraps continuously (897a9d11, 5f4297ba); K842 overlays dive under crossings (fc6d1a9e); K843 junction flares (df80e1f6). (K828 loader params + keep-loading preview; K829 taper lean (K718 call 1); K830 corner share slider; K831 a/i letterform redesign; K832 SDF/junction residuals; K833 border junction disc rims + semicircle dead-end caps (7e98a5bc); K834 intro chrome gating on loader persistence + reset confirmation (4aa7fc37); K835 path irregularity + excursion sliders (a437893f); K831 dot ellipse (061b7af1).) (K812 preview effect buttons; K813 border-look highlights; K814 shape-injection param collection; K815 junction border fans; K816 SDF ribbons; K817 gap kStart rounding (K592); K818 shape-injection collection (K814 stages 1-3); K819 cannonSpread param + LOOK_KEYS backdrop/path colors; K820 borderWidth/borderColor/goldTextureStrength params (uKBorder, uKLook.w, uKHlPulse.w); K821-K822 panel restructure (Maze before Game; End effects, Text & emblem, Exit traps, Exploration, Burn race, Classic rules subfolders; Thread look above its rows; Path color beside the gold rows).)
+(K865 = SDF union-field border prototype (option C scoped to junctions, behind ?rp=sdf&sfb=1) - brief docs/design/K865_sdf_field_border.md; K864 = K862 follow-up: cosine-warped rim sampling (rendered tip chord sin p90 0.161 -> 0.024) + per-side junction side-cut windows (merged window cut the lesser side past its tip); K862 = G1 fillet rims at the flank tips, split through the old corner midpoint; K863 = cursive clean slate, pen-order strokes.) (K857 = borders still crossing junctions, across the joining thread's end - Levi, by 2026-10-23, after K854; in In progress.) (K854 border-mode junction outline, measured: side-cut window now reaches the flank tips, rims solid and straddling; interior strokes at the three probed 4-arm junctions -36/-32/-46%, SDF path also improved - see Done. Residuals there.) (K853 loader spin mode + speed cap: codec-appended loaderMove "spin" (centroid pinned at screen centre, knot turns around it, marker directly below it); loading-speed max 3 -> 9 (Levi: x3) - see Done.) (K852 loader motion + loader-only params: codec-appended loaderMove "above" + loaderGap/loaderThreadWidth/loaderThreadColor/loaderBgColor/loaderIndicatorSize/loaderFill/loaderTrail; the loader's look no longer borrows the maze's gap/threadWidth/pathColor/backgroundBase; defaults reproduce the pre-K852 drawing bit-for-bit - see Done.) (2026-10-23: K847 cursive rethink: a re-silhouetted as a single-story cursive a (apex top-right, proven shipped segment proportions, integer tangents, lint-clean), i entry one sweep (arrival hin 4->3, entry hout 1.5->1.6 of LOW), flares longer (a 30->46, i 34->50 GU) with cosine falloff; stills .claude/probes/K847/after. K846 border junctions: junction side cut (ribbon edges hand over to wedge rims at every junction arm, both ribbon programs; entries from the joinery's drawn wedges via RANGES segment space) + tangent-continuous cubic fillet rims; glyph junctions keep one joinery arm each so they are unchanged there (taper/cap machinery, K847+). K844 look-chip same row as dropped badge, left vs right (5bb339e3, revises K837); K845 hint draws a set distance (HINT_DISTANCE 6) along the route, spilling past short runs.) (2026-10-23 night batch: K836 cursive-a tangent attachments + landTangent (791a4f4b); K837 look-chip offset (9477616a); K838 hint lasts until the move + one at a time, codec v9 (7f683b43); K839 Show-shortest-path checkbox (3199c9af); K840 fragile ends break (0484e32f); K841 loader follow unwraps continuously (952e37b9, c62ea5f0); K842 overlays dive under crossings (8c82ff73); K843 junction flares (387c373a). (K828 loader params + keep-loading preview; K829 taper lean (K718 call 1); K830 corner share slider; K831 a/i letterform redesign; K832 SDF/junction residuals; K833 border junction disc rims + semicircle dead-end caps (f99d4693); K834 intro chrome gating on loader persistence + reset confirmation (d5aefd25); K835 path irregularity + excursion sliders (16689838); K831 dot ellipse (e6b5f96e).) (K812 preview effect buttons; K813 border-look highlights; K814 shape-injection param collection; K815 junction border fans; K816 SDF ribbons; K817 gap kStart rounding (K592); K818 shape-injection collection (K814 stages 1-3); K819 cannonSpread param + LOOK_KEYS backdrop/path colors; K820 borderWidth/borderColor/goldTextureStrength params (uKBorder, uKLook.w, uKHlPulse.w); K821-K822 panel restructure (Maze before Game; End effects, Text & emblem, Exit traps, Exploration, Burn race, Classic rules subfolders; Thread look above its rows; Path color beside the gold rows).)
 
 ## K867 (2026-10-26, shortened)
 
@@ -3451,7 +3451,7 @@ The history that had accumulated after the ID on the ledger's Next free ID line,
   - owner: agent (2026-10-26)
   - status 2026-10-26 (later): (b) DONE (Levi picked b). pluckLegacy is now an in-tune oscillator course: two PeriodicWave oscillators (Jaffe-Smith pick-position comb spectrum) detuned by the shimmer amount, sweeping lowpass, the harp T60 curve, same buses/pan/future teardown. Verified: unit pin (oscillators created at the exact pluck freq, +-1.2 cents course; test/audio/knot_synth.test.ts, 17 green) and offline-render measurement in Chrome (.claude/probes/K862/legacy_pitch.mjs + probe_legacy.html): fundamentals within +-1 cent at 110/164.81/220/261.63/440/659.25/880 Hz (the KS loop measured up to ~-1600). Notices research mark kept (the comb is still Jaffe-Smith). Full suite green after the mark fix. NOT committed.
   - next: Levi pick: (a) accept (test with localhost links / phone tunnel); (b) harden pluckLegacy into an in-tune oscillator voice so insecure contexts degrade in timbre, not pitch (verify via the offline render harness, knot_synth.ts diag). NOT committed.
-  - status 2026-10-26 (Claude coordinator): parked as 69e079eb on the desktop-only branch `park/muse-2026-10-26`. The 5319 server that served Muse's build stopped with all of Muse's processes (Levi's request). To judge the timbre, run `pwsh scripts/preview.ps1 -Port <p> -Ref 69e079eb` and open it from the laptop or phone over plain HTTP (a Tailscale or LAN address, not localhost), so the fallback voice plays.
+  - status 2026-10-26 (Claude coordinator): parked as 5ae5a1d1 on the desktop-only branch `park/muse-2026-10-26`. The 5319 server that served Muse's build stopped with all of Muse's processes (Levi's request). To judge the timbre, run `pwsh scripts/preview.ps1 -Port <p> -Ref 5ae5a1d1` and open it from the laptop or phone over plain HTTP (a Tailscale or LAN address, not localhost), so the fallback voice plays.
 
 ## K866 (2026-10-26, shortened)
 
@@ -3536,19 +3536,19 @@ Shortened in LEDGER.md 2026-10-27 (malformed: no `·`, code in backslashes or Do
 
 Shortened in LEDGER.md 2026-10-27 (malformed: no `·`, code in backslashes or Done text left open). Full text:
 
-- **K830** Junction corner style (Levi, 2026-10-22). Done in e5fbdff4 (2026-10-23); stills `.claude/probes/K830/`. One `cornerRoundShare` slider (codec 245, `crs`, LOOK_KEYS; default 1 = today's rounded wedges, 0 = every wedge's flanks meet at the clamped miter). Intermediate shares rank wedges once from construction geometry: broad gaps round first, narrow points stay sharp, addressed by directed arm pair so settling cannot flip a corner. Builders pin where authorable (`Node.cornerPin`; glyph spur root/landing pins) through `ParticleSystem.fusedJunctionPins`; emergent mask junctions follow the global share.
+- **K830** Junction corner style (Levi, 2026-10-22). Done in a89f8203 (2026-10-23); stills `.claude/probes/K830/`. One `cornerRoundShare` slider (codec 245, `crs`, LOOK_KEYS; default 1 = today's rounded wedges, 0 = every wedge's flanks meet at the clamped miter). Intermediate shares rank wedges once from construction geometry: broad gaps round first, narrow points stay sharp, addressed by directed arm pair so settling cannot flip a corner. Builders pin where authorable (`Node.cornerPin`; glyph spur root/landing pins) through `ParticleSystem.fusedJunctionPins`; emergent mask junctions follow the global share.
 
 ## K831
 
 Shortened in LEDGER.md 2026-10-27 (malformed: no `·`, code in backslashes or Done text left open). Full text:
 
-- **K831** Cursive a/i redesign (Levi, 2026-10-22). Done in 3b5c520f (2026-10-23); design: `docs/design/K831.md`, stills `.claude/probes/K831/`. FOLLOW-UP (Levi rejected the first stills, 2026-10-23): entry moved low to (14, 8) so it rises north-east tangentially into BL; a's top levelled into the corner; tail is one segment from a second declared corner at BR (two-segment tails floor at R 10.8 GU); the i's shipped form is the exact tangent join (fork 0, all three arms collinear on (1, 3), J raised to (22, 50) so the folded arms part); the tittle is a dedicated closed dot loop (`dotLoop`, `Glyph.dots`), not a segment; landing-spur tips no longer strand a degree-2 END node. Stills `.claude/probes/K831/followup2/`; lint pins moved in `test/core/glyph_lint.test.ts`. The a is one strand: entry joins LOW at the oval's bottom-left (BL) collinear with the bottom arc, body forks up the left side, declared corner (`Glyph.corners`) turns down the stem, bottom arc lands on the stem at BR (`SpurDef.land`), exit tangential; zero crossings. i's entry fork is the default 15 degrees at a lower J. Deviation from the brief as first recorded: BL draws as a fork, not a K580 tapered root — the root's width grew 0.022-0.033 LU toward J in every searched variant (bound 0.01, K643-calibrated); the pre-K831 tangent a survives as `A_TANGENT` (`#glyphs2=atangent`) carrying the K580/K643 tests. General letter rule stands: skeleton corners join as cusp corners, stroke overlaps stay crossings, stroke landings stay tangent/fork merges. K718 calls 2/3 still open.
+- **K831** Cursive a/i redesign (Levi, 2026-10-22). Done in 1c6eb062 (2026-10-23); design: `docs/design/K831.md`, stills `.claude/probes/K831/`. FOLLOW-UP (Levi rejected the first stills, 2026-10-23): entry moved low to (14, 8) so it rises north-east tangentially into BL; a's top levelled into the corner; tail is one segment from a second declared corner at BR (two-segment tails floor at R 10.8 GU); the i's shipped form is the exact tangent join (fork 0, all three arms collinear on (1, 3), J raised to (22, 50) so the folded arms part); the tittle is a dedicated closed dot loop (`dotLoop`, `Glyph.dots`), not a segment; landing-spur tips no longer strand a degree-2 END node. Stills `.claude/probes/K831/followup2/`; lint pins moved in `test/core/glyph_lint.test.ts`. The a is one strand: entry joins LOW at the oval's bottom-left (BL) collinear with the bottom arc, body forks up the left side, declared corner (`Glyph.corners`) turns down the stem, bottom arc lands on the stem at BR (`SpurDef.land`), exit tangential; zero crossings. i's entry fork is the default 15 degrees at a lower J. Deviation from the brief as first recorded: BL draws as a fork, not a K580 tapered root — the root's width grew 0.022-0.033 LU toward J in every searched variant (bound 0.01, K643-calibrated); the pre-K831 tangent a survives as `A_TANGENT` (`#glyphs2=atangent`) carrying the K580/K643 tests. General letter rule stands: skeleton corners join as cusp corners, stroke overlaps stay crossings, stroke landings stay tangent/fork merges. K718 calls 2/3 still open.
 
 ## K832
 
 Shortened in LEDGER.md 2026-10-27 (malformed: no `·`, code in backslashes or Done text left open). Full text:
 
-- **K832** SDF + border residuals (Levi, 2026-10-22). Done in faa56bce (2026-10-23). (a) SDF gaps: bindGap points fabric_sdf's gapSource at the scene's gap table (SDF shaders bind/re-point from it), and `CrossingGaps.assignGapIds` now packs G3 RANGES per chain instead of per strip fill (SdfPass has no fills, so it wrote zero entries; live probe after: 365 windows / 52 chains in rp=sdf, matching strip; regression test in `test/render/sdf_gap_bind.test.ts`). (b) Junction interiors: fans draw rim only in border; ribbons cut within the joinery wedge reach of fused ends (`kJunctionCut`; caps carry +4 at fused ends via `capWithFused`) in both passes; highlights still draw inside. (c) SDF border darkness/aliasing: the across coordinate comes from the winning cone (`side01`). Stills `.claude/probes/K832/`; G3-3 SDF-by-default flip still gated on Levi's phone look.
+- **K832** SDF + border residuals (Levi, 2026-10-22). Done in 4b02e2dc (2026-10-23). (a) SDF gaps: bindGap points fabric_sdf's gapSource at the scene's gap table (SDF shaders bind/re-point from it), and `CrossingGaps.assignGapIds` now packs G3 RANGES per chain instead of per strip fill (SdfPass has no fills, so it wrote zero entries; live probe after: 365 windows / 52 chains in rp=sdf, matching strip; regression test in `test/render/sdf_gap_bind.test.ts`). (b) Junction interiors: fans draw rim only in border; ribbons cut within the joinery wedge reach of fused ends (`kJunctionCut`; caps carry +4 at fused ends via `capWithFused`) in both passes; highlights still draw inside. (c) SDF border darkness/aliasing: the across coordinate comes from the winning cone (`side01`). Stills `.claude/probes/K832/`; G3-3 SDF-by-default flip still gated on Levi's phone look.
 
 ## K962
 
@@ -3564,7 +3564,7 @@ Shortened in LEDGER.md 2026-10-30 (over three lines). Full text:
 
 - **K1085** · Under reduced motion the camera's fit still eases (about 1 s) where K198's panel tween snaps:
   updateCamera's 0.08/frame ease (`src/app/camera.ts:436-438`) and easeView's range ease (:257) have no
-  reduced path; only stepPanel (:229) has one. K549 (f578b6ee) adds a trigger: a panel toggle now re-fits a
+  reduced path; only stepPanel (:229) has one. K549 (48cf34fa) adds a trigger: a panel toggle now re-fits a
   text scene. Fix: snap both when reduced (resize and reset then snap too).
 
 ## K1086
@@ -3607,14 +3607,14 @@ Choice pulses across junctions. Levi 2026-11-03: "Pulse reach is good. BUT, we h
 ## K1162
 
 Found by the six ask-card agents on 2026-11-03 (their cards are in `docs/asks/`); not re-checked by Claude:
-- K636 cites `6d79a79`; the hunt-pace change is `fd230f17`, which its card cites.
+- K636 cites `6d79a79`; the hunt-pace change is `ce95d403`, which its card cites.
 - `docs/design/K324_s3.md` gives the turn stalker's accuracy as 0.45; the code (K421) and K667's text have 0.3.
 - K400's text says the fire speed default is 0.75; it is 0.6.
 - K545's wording in `docs/ledger_done.md` is off.
 - K626's pointer "K525's sheet shows white too" does not resolve: the sheet is red only, and K525's handoff lists white rims as undone.
-- K1128 says sprint has no real phone pass yet; K749's Done entry (`4a1dd4d5`) says it passed on both clocks on the real phone.
+- K1128 says sprint has no real phone pass yet; K749's Done entry (`cdd3ed53`) says it passed on both clocks on the real phone.
 - K777's handoff dates report v7 2026-10-21 09:27; K887 says 2026-10-22 09:27.
-- Two SHAs do not resolve on master (rewritten at merge): `0f7d230e` (`docs/design/K1040_s1g_gates.md` line 555) and `adb27a13` (`docs/design/K1114_s1h_crops.md` line 89). The merged ones are among c9b6de32, a3f995a4, 15fc456c, bbf10649 and a3c54463.
+- Two SHAs do not resolve on master (rewritten at merge): `4c682fbf` (`docs/design/K1040_s1g_gates.md` line 555) and `adb27a13` (`docs/design/K1114_s1h_crops.md` line 89). The merged ones are among 6ed0fd55, aa049a13, e73a0317, f58553ac and 523c91a8.
 - K656's "40 of 50" strand figure predates K840 (Snap made harsher), and the K137 lore repeats it; not re-measured.
 - K207's `docs/ledger_notes.md` text no longer matches the look question the item asks now.
 - K610: the `gcr` key lives in `src/main.ts`, not `url_state.ts`, and is not a codec param.

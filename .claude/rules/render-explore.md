@@ -13,7 +13,7 @@ paths:
 
 The exploration mode that shows only what the player has seen. Design:
 `docs/design/K76_reveal_mode.md` (section 10: what the re-base onto
-5438a60 changed, and Levi's open questions); stages and handoffs:
+a2b2f1a changed, and Levi's open questions); stages and handoffs:
 `docs/design/K76.md`. General render lore: `render.md`; the paint
 declaration it rides: `render-paint.md`.
 
@@ -161,7 +161,7 @@ modes and the mode off is master's frame by construction.
   moves and ten: a junction is hidden exactly when its walk vertex is
   unvisited, CPU only).
 - MEASURED (desktop, `.claude/probes/K76/stage2b/`): mode off against
-  master 6588ec0 is 0 px at four pulse phases, a hovered choice and on
+  master 3de7cdb is 0 px at four pulse phases, a hovered choice and on
   then off again (`k76_probe.mjs ab`); `visitAll` at reach 1000 matches
   the mode-off frame at 0 px. THE CENSUS (`census.mjs <base> <out>
   <moves>`: each crossing's cut = the frame minus the frame with its slot
@@ -461,7 +461,7 @@ gameplay-links.md's EXPLORATION PARAMS.
   frame from tickExplore); Reduced motion holds 0.8; High contrast draws
   it at 1 in pure white (`exploreStill`, `exploreContrast`, set by
   src/app/frame_loop.ts each fabric tick).
-- HIGH CONTRAST DOTS (K76 stage 2d, 2026-10-15, 0ac54dc): under High
+- HIGH CONTRAST DOTS (K76 stage 2d, 2026-10-15, 64aec55): under High
   contrast `setExplore` writes uKExplore.x = 2 instead of 1 (every other
   test of it reads > 0.5); the fabric's `exploreContrast` setter forwards
   to `ribbons.setExploreContrast`, which also rewrites a live 1/2 (a
@@ -478,7 +478,7 @@ gameplay-links.md's EXPLORATION PARAMS.
 - KEPT AS 2b BUILT, calls for Levi: K268's draw order (K286). (The
   joints' binary pop at 0.98 became THE JOINT FADE in K268 stage 2.)
 - MEASURED (2026-10-15, 53a161f, `.claude/probes/K76/stage2c/`;
-  desktop 1400x900, phone 411x753). Mode off: master 2c81a92 and the
+  desktop 1400x900, phone 411x753). Mode off: master 2014dd0 and the
   branch drew 0 px apart in the same state (pulse phases 0-3, after an
   on/off round trip, with a hovered choice; A/A 0 px); the mode on
   changed 382,333 px. Fit at the start: s 90 (the cap) against 21.9 off
@@ -495,7 +495,7 @@ gameplay-links.md's EXPLORATION PARAMS.
   1.1 s after the hold starts and zooms straight in during the close-in;
   master's fog intro opens and pulls out the same way, but its close-in
   first zooms OUT to s 11.7 for about a second (`introcam.mjs`).
-- MEASURED, STAGE 2d (2026-10-15, 1ba0c8c against master ce359aa;
+- MEASURED, STAGE 2d (2026-10-15, 1ba0c8c against master 75c3caf;
   `.claude/probes/K76/stage2d/`, every desktop run under the perf lock).
   GPU PER PROGRAM (RX 6800 XT, 3200x1800, `k111.L` phy=0, 2 moves,
   `k268s2/gpu_by_program.mjs`: TIME_ELAPSED from the first draw, ms a
@@ -621,7 +621,7 @@ through this mode's programs. Brief and record: `docs/design/K114_burn.md`,
   sheet.mjs` sums them into the burnt share).
 - MEASURED (desktop RX 6800 XT, D3D11, under the perf lock;
   `.claude/probes/K290/stage3a/`): fire off, branch c7a03e0 against master
-  f799991 (`k290_ab.mjs ab`, link `k111&am=instant&snd=none&fw=0&phy=0`):
+  0fd6282 (`k290_ab.mjs ab`, link `k111&am=instant&snd=none&fw=0&phy=0`):
   reveal off 0 px at four pulse phases, a hovered choice 0 px, reveal on
   (beacon) 0 px at two phases, on-then-off 0 px, A/A floors 0. The probe's
   PIN must hold the halo breath (`exploreClock = 1000`, tickExplore with
@@ -706,7 +706,7 @@ plus the `burn` FX. Brief and record: `docs/design/K114_burn.md`, "Stage
   have hidden the earlier injections, not re-run.
 - MEASURED (desktop RX 6800 XT, D3D11, under the perf lock;
   `.claude/probes/K290/stage3b/`): fire off, branch ef7f08b against
-  21d701e (master's src; 3a's `k290_ab.mjs ab`, same link and pins):
+  2a7b625 (master's src; 3a's `k290_ab.mjs ab`, same link and pins):
   31/31 checks, every frame 0 px (reveal off at four pulse phases, a
   hovered choice, reveal on at two phases, on-then-off, A/A floors 0).
   Variant lengths: section explore 56595 -> 58529, arm-strip-explore
@@ -715,7 +715,7 @@ plus the `burn` FX. Brief and record: `docs/design/K114_burn.md`, "Stage
   (`__knotWarmup()`), no shader errors, no context loss.
 - A RACE'S FRAMES (K382; `burn_page.mjs perf`, seed 7 `fsp=0.95`, at
   rest after the escape, 278 runs, under the perf lock; the branch at
-  0df3eb3+ against 21d701e): the frame interval does not move (desktop
+  0df3eb3+ against 2a7b625): the frame interval does not move (desktop
   P50 17.4-17.5 ms and P95 18.1, fire drawn or not, both builds; under
   4x CPU throttling 51-52 and 70-71). The fire's own CPU a frame:
   drawFire, which spawns the FX, 0.18-0.21 ms, and about 0.2 ms more
@@ -765,7 +765,7 @@ gone (K599); the ember draws over the smoke (not built, below).
   program text past the mode branch, so one cold compile. Residuals to
   check: the AA edge fringe where the two passes meet, and fans near
   junctions (the overlay covers ribbons only).
-- MEASURED (desktop RX 6800 XT, D3D11, under the perf lock; 3a3d937
+- MEASURED (desktop RX 6800 XT, D3D11, under the perf lock; 43adc20
   against fded8c6 as `vite preview` builds; `.claude/probes/K409/`, the
   handoff has every number). The width probe (`run_width.ps1`: daily #12
   at the fit and zoomed, and the lit fuse, desk 1400x900 and the phone's
@@ -978,11 +978,11 @@ rows: gameplay-panel.md's EXPLORATION ROWS.
   1x2y3z f0 moved 3.27 ctrl and the survey still flags its cap and dots
   under a visible over: either the survey's test is wider than the
   padded stretch or chain 19's stretches miss that crossing; not
-  checked. key.txt's stamp reads d55b335: a dev server's stamp is the
+  checked. key.txt's stamp reads 2de389e: a dev server's stamp is the
   SHA at its start (vite.config.ts defines it at config load), not the
   source it serves.
 - MODE OFF, THE A/B (K290's `k290_ab.mjs` same-state A/B, desktop
-  1400x900, master d3fc17d against 001e8ca as two `vite preview` builds,
+  1400x900, master 33d87c3 against 001e8ca as two `vite preview` builds,
   link `k111&am=instant&snd=none&fw=0&phy=0`, under the perf lock;
   `.claude/probes/K466/out_ab_soft.log`, `out_ab_default.log`, `ab/`).
   With `&rvg=soft`, 31 of 31 at 0 px: mode off at four pulse phases, mode

@@ -179,7 +179,7 @@ more-complex celebratory effects to after other tasks"), so this stage
 built item 1 (K335) alone, with its tests, sheets and lore. Items 2-6
 were not built; item 7 holds for the rain.
 
-**Shipped** on `worktree-agent-a5a499658319bedf9`, from master `7effaae`:
+**Shipped** on `worktree-agent-a5a499658319bedf9`, from master `bd7c146`:
 - `70854ee`: `src/render/confetti_model.ts`. The rain releases over
   `RAIN_WINDOW` 2.2 s (was 1.1) at a rate of (m+1)/W·(1 - t/W)^m with
   `RAIN_TAPER` m = 4, high at the start and zero, with zero slope, at
@@ -210,7 +210,7 @@ were not built; item 7 holds for the rain.
 - Sheets, `sheet/`: `sheet_{desk,phone}_opening.png` (0.1, 0.3, 0.6 and
   1.0 s) and `sheet_{desk,phone}_top_edge.png` (1.5, 2.0, 2.5 and 3.0 s,
   plus the census's density chart). Knot mode, 1400x900 and 411x753,
-  master above, branch below; stamps 7effaae and 70854ee; no context
+  master above, branch below; stamps bd7c146 and 70854ee; no context
   loss, no page errors. Page run-outs: 1400x900 master 5.75/5.58 s,
   branch 6.47/6.24; 411x753 master 5.67/5.56, branch 5.85/5.92.
 - Sim cost (`bench_sim.mjs`, 1400x900, two interleaved runs): amount 1

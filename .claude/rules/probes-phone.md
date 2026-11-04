@@ -138,7 +138,7 @@ clean cleanup (that was before K1142's shared check: now an app in front is
 "not ready" and nothing opens). `retry_quiet.ps1` then waits 15 quiet minutes and every touch
 (dozens of events a second while a finger moves) restarts the wait; it
 gives up at `-GiveUpMin`. THE PORTRAIT FLOOR (K253, 2026-10-14):
-`scripts/phone_pass/noise.json` is a 3-rep A/A on master 9a5eaa8 (20:37-21:02,
+`scripts/phone_pass/noise.json` is a 3-rep A/A on master f3ab684 (20:37-21:02,
 `.claude/probes/K253/aa4/`), emulated 411x753 @2.625 (36 of 36 samples read
 it from the page); its `note` says how it was taken. The docked phone's
 landscape floor (810x331 @2.625, K156 3c) is kept beside it as

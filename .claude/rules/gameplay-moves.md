@@ -95,7 +95,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   claims. At an X (arms there at -50, 42, 147 and -138 degrees, y down)
   every key ties between the two arms beside it, so nothing is ever
   claimed and every key returned `tie`: none of the 8 keys (arrows and
-  WASD) moved, on the dev build and on 00789b3, before K7 stage 1 (the
+  WASD) moved, on the dev build and on 091a22a, before K7 stage 1 (the
   physics worker is not involved). It was the one such junction of 45 on
   that maze (6 of degree 4). FIX (K329): ambiguous keys whose free runs
   pair up one to one get one each. At an X each key takes the arm
@@ -294,7 +294,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   HeldKeys/MoveWait/queuedPressHeld). Unprobed on real hardware -
   first pad check rides the next phone/desktop play pass.
 
-- KEY HINTS (K332, 3346474f, 2026-11-03; ui/key_moves.ts hintMap,
+- KEY HINTS (K332, 698a2924, 2026-11-03; ui/key_moves.ts hintMap,
   app/input_keys.ts keyHints, render/fabric_maze_renderer.ts
   drawKeyHints): after the page's first direction press (keys, the
   move pad or a gamepad set `keyHintsSeen`; nothing is stored), each

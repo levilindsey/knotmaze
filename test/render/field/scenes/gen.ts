@@ -236,7 +236,7 @@ function endFrom(c: [number, number], deg: number, len = L): PathB {
  * the under pass to the next junction). j0's END hooks back over the
  * through: it crosses it at 47° (heading 133°), runs `a` on, turns left
  * 137° at radius `R` and comes down onto j0. Both of 292's mechanisms show.
- * With the cut at L + h/2 (5048670e), the END's span ends inside check 15's
+ * With the cut at L + h/2 (972228b5), the END's span ends inside check 15's
  * window (L + h) of the over pass while j0's span on the through holds the
  * under pass. With the cut at L + h, the hook's own candidates still σ-join
  * the cluster unless a join into a group holding the crossing's other pass

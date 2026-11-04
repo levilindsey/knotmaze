@@ -386,8 +386,8 @@ Fabric mode, `phw=0&fw=0`, seed b, under the perf lock, read 20, 40 and
 - Flag off against master (`ab/s3a3_off/`, `ab_shot.mjs`):
   - 0 px on def and muse_hash against master's shots (`ab/m3`), with the
     same physics hashes (def 910ff135, muse_hash 733ee14a).
-  - src/ is unchanged from m3's base (`d4aa241e`) through the merge base
-    (`efb3f4d7`) to master (`af356df4`).
+  - src/ is unchanged from m3's base (`8077522b`) through the merge base
+    (`ebd7059e`) to master (`95e9cb75`).
   - The `ab/master` muse_hash shot is stale (64878 px), as S3a2 noted.
 - K320's shader budgets hold for the programs they cover (the ribbon
   and fan programs). The label and band programs have no budget (R10).

@@ -1003,7 +1003,7 @@ To rerun a scan:
 2. `.\run_scan.ps1 -Jobs out/jobs.json -Out out/scan.jsonl`
 3. `node analyze.mjs out/scan.jsonl core walkers h dead`
 
-The generation code measured is master 303d335's. Master has since
+The generation code measured is master b09ec73's. Master has since
 added a circle shape; nothing measured here changed. While a scan runs
 on more than two processes it holds the machine-wide perf lock, and it
 drops to two processes when another agent holds the lock.

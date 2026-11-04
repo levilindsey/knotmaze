@@ -1,6 +1,6 @@
 # K323: the Game folder, the game-mode dropdown and knot mode's removal
 
-Design only (2026-10-14, no code). Written against master `b72d5dd`; line
+Design only (2026-10-14, no code). Written against master `86a4f0f`; line
 numbers below are from that commit. Companion: `K324_realtime_minotaur.md`
 (the real-time minotaur's telegraph, junction pauses and controls). Knot
 mode's removal is K326; its design is section 4 here.
@@ -465,7 +465,7 @@ K140, K145, K45 and g1. Many are copies of `g2lib.mjs`. After K326 an
   `handleFabricTap`", `:356` "knot (`?7k&mf=0`, 2592 particles)";
   `render-web-fade.md:58` "in knot mode".
 
-Line numbers are master `b72d5dd`'s; search the quoted first words.
+Line numbers are master `86a4f0f`'s; search the quoted first words.
 
 ## 5. Stages (one agent each)
 

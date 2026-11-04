@@ -1,4 +1,4 @@
-- **K339** · The settings panel's audit (merged dc4a1a7..2ee40a4): four calls, each recommended yes, in `docs/design/K339_panel_audit.md` ("Questions"; subfolder looks `.claude/probes/K339/sheet/K340_sheet.png`). Builds as K323's Stage A.
+- **K339** · The settings panel's audit (merged b81fd25..4d39553): four calls, each recommended yes, in `docs/design/K339_panel_audit.md` ("Questions"; subfolder looks `.claude/probes/K339/sheet/K340_sheet.png`). Builds as K323's Stage A.
 
 - **K261** · K74 stage 2's two calls, built as recommended (Levi may change either): the H-cut share is 1; a partial share cuts an even stride. `docs/design/K74.md` ("Calls for Levi").
 
@@ -22,7 +22,7 @@
 
 - **K225** · The markers' default size (K98): `markerSize` 1.08 is about 5 CSS px on the phone and barely reads. Keep it, raise it, or add a minimum on-screen size? `.claude/probes/K98/sheet_k98.png`.
 
-- **K90** · A physical minimum bend radius; stages 1a and 1b merged (6f97b92..feb12a0), flag off. Ship, tune or stop? Levi tests it live (`__knotSplineBend(true)`); rec.: stop. Record `docs/design/K90_bend_radius.md`, handoff `docs/design/K90.md`, sheet `.claude/probes/K90/out_1b/`; K213 first, never with K8.
+- **K90** · A physical minimum bend radius; stages 1a and 1b merged (b6635b4..be9cdba), flag off. Ship, tune or stop? Levi tests it live (`__knotSplineBend(true)`); rec.: stop. Record `docs/design/K90_bend_radius.md`, handoff `docs/design/K90.md`, sheet `.claude/probes/K90/out_1b/`; K213 first, never with K8.
 
 - **K210** · Near launch: a daily is today's `PARAM_DEFAULTS` (K132), so a default change moves that day's maze. Re-pin the daily at launch, or accept it? `docs/design/K132.md`.
 

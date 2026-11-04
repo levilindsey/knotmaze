@@ -108,7 +108,7 @@ Stage 5's `## Rules` hold, with these changes:
   18:50. Wait for it inside one blocking command, never by checking
   again on later turns.
 - **The branch:** `k992-corners`, at stage 5's last commit with this
-  brief cherry-picked on top. Its base stays stage 5's (`952cf681`):
+  brief cherry-picked on top. Its base stays stage 5's (`31a4489d`):
   don't rebase or merge.
 - **Findings and handoff:** continue from F18, in a `## Findings`
   section of this brief; append `## Handoff` when you stop.

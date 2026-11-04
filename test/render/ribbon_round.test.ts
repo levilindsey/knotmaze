@@ -178,7 +178,7 @@ function score(
   return { outside, bare };
 }
 
-// Master's RibbonMesh.update() loop (4acbe0f..da03e7d), verbatim but for
+// Master's RibbonMesh.update() loop (493de64..23fced0), verbatim but for
 // `this`: the reference the identity below the threshold is pinned to.
 function masterExtrude(
   out: Float32Array,

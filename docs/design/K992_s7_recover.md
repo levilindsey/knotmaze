@@ -162,7 +162,7 @@ Stage 6's `## Rules` hold, with these changes:
   for it inside one blocking command, never by checking again on later
   turns.
 - **The branch:** `k992-corners`, at stage 6's last commit with this
-  brief cherry-picked on top. Its base stays `952cf681`: don't rebase or
+  brief cherry-picked on top. Its base stays `31a4489d`: don't rebase or
   merge.
 - **Reading code:** through the shell (`Select-String` to find lines,
   `Get-Content <file> | Select-Object -Skip <n> -First <m>` to read

@@ -94,7 +94,7 @@ only with the files it is about; `render.md` lists the area's other files.
   page probe checks a banner hit-test over the confetti and a ctrl+wheel
   zoom mid-rain.
 - COST (2026-10-14, K140's counts, desktop at 1400x900 dpr 1, K104 and K155 agents
-  busy; master cb532d5 vs 42f047d, interleaved, 5 reps of 6 s from the
+  busy; master 710487a vs 42f047d, interleaved, 5 reps of 6 s from the
   burst, medians of the rep means). Below the noise floor. At 1x every
   case holds 60 fps (16.67 ms intervals) with frame JS of 9.8 (master),
   10.6 (branch, no burst), 9.7 (amount 1, 288+40 pieces) and 9.9 ms

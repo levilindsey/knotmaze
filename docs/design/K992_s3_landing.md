@@ -133,7 +133,7 @@ K1000's `## Rules` hold, with these changes:
   - The rest of `npm test` stays green.
   - Commit WIP at every milestone, and never push.
 - **The branch:** the coordinator rebased `k992-corners` onto master at
-  `6b5c082a`. 55bfdbce was dropped, since master has it as a41af955, so
+  `0a8e78d9`. 55bfdbce was dropped, since master has it as 8c1789bc, so
   `scripts/label_pops.ts` is master's. S3a8b is running on `k868-s3a`
   (the label's strips and switch lines, port 5381) and will merge
   first. Don't rebase or merge.

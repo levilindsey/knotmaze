@@ -4,7 +4,7 @@ Form B's ink at S1h's 18 sites (S1h's numbers and order of `out/s1h/sites.json`)
 corner's V) and scale, dpr 2, greyscale `255 (1 - ink)`, `look.ctrlArc ??= 0.47`:
 
 - **S1f** = `FormB({dEdge: "skip", rootBand: 0})`, S1f's final (equal to the frozen `form_b_s1f_q.ts` at every site: `pairs.txt`);
-- **today** = S1g's final, master's defaults before S1i (`53974fbe`), = `FormB({dEdgeTip: 0})` (equal to the frozen `form_b_s1g_q.ts`);
+- **today** = S1g's final, master's defaults before S1i (`0ad5634c`), = `FormB({dEdgeTip: 0})` (equal to the frozen `form_b_s1g_q.ts`);
 - **restored** = S1i's defaults (`dEdgeTip: 1`, the brief's F3: near's behind cut `c = k·u` with `k` from the arm's corners).
 
 - `sheet.png`: every triple S1f | today | restored at zoom 4 (each device px a 4 x 4 block), +-3.5h around V (the window is clamped to

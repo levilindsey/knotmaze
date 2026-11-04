@@ -147,7 +147,7 @@ unchanged.
   - Music mode times its notes with `performance.now()`, polled in the
     render tick (`autoAudioTick`). Onsets jitter by up to a frame: 16 ms
     at 60 fps, up to 100 ms during a gs-18 settle.
-  - [Stale since K101 (e9e01ae), which landed while this was written:
+  - [Stale since K101 (a913d58), which landed while this was written:
     `pluck` takes a start time and music mode schedules ahead on the
     audio clock. See R.2.]
 
@@ -693,7 +693,7 @@ and more dissonant when out of rhythm.
   - A lookahead scheduler (25 ms tick, 100 ms horizon) on
     `currentTime` replaces `autoAudioTick`'s `performance.now()`
     polling. That also fixes music mode's frame jitter today.
-  - [Built since by K101 (e9e01ae), in a different shape: a 0.3 s
+  - [Built since by K101 (a913d58), in a different shape: a 0.3 s
     lookahead polled from the render tick, with sample-accurate starts
     in the worklet. See R.2.]
 - Missing piece 2: **the input clock.**
@@ -1545,7 +1545,7 @@ From the code on 2026-10-13, beyond section 1:
 - **Strands and notes are indexed.** Every run lives on one chain
   (`WalkEdge.chain`), main.ts's `audioRuns` maps a chain to its runs, and
   every run owns one pitch (`audioAssign.segFreq`).
-- **The beat clock exists (K101, e9e01ae).** Music mode schedules its
+- **The beat clock exists (K101, a913d58).** Music mode schedules its
   notes 0.3 s ahead on the AudioContext clock (`song_scheduler.ts`,
   `MUSIC_LOOKAHEAD` in main.ts), and the worklet starts each one
   sample-accurately (`startFrame`). `autoAudioTick` still polls in the
@@ -2169,7 +2169,7 @@ Round 1's sources are in section 8.
 7. The melody path (3.3 C): M.
 8. Validated sentries (4.8): M-L, with the time-expanded solver.
 
-(Item 3's scheduled plucks are done: K101, e9e01ae.)
+(Item 3's scheduled plucks are done: K101, a913d58.)
 
 **Round 2** (section R) has its own ranked shortlist (R.0). The burn race
 and the cut verb need no minotaur, so they can run beside this order; the

@@ -61,7 +61,7 @@ order B to F:
 
 Read first: `.claude/rules/probes-phone.md`; then
 `Select-TailscaleIp`, `Find-TailscaleIp` and the param block in
-`scripts/phone.ps1` (K1155, cbaca79f, is the model; its comment gives
+`scripts/phone.ps1` (K1155, 2e188c47, is the model; its comment gives
 a made-up name as its example), `scripts/phone_pass.ps1` whole (param
 block, the script-level tailnet variable, `Find-Adb`,
 `Find-TailscaleIp`, `Find-Serial`, `Assert-PhoneQuiet` and the phases
@@ -412,7 +412,7 @@ gate, THE SNORING CAT LINK), `.claude/rules/probes.md`; then
 `decodeOffline` in `src/audio/knot_synth.ts`, `decodeWhenPossible`,
 `preload` and `play` in `src/audio/snore_sfx.ts`, the "K343" cases
 in `test/audio/snore_sfx.test.ts`, Residuals 3, 6, 7 and 8 in the
-Handoff of `docs/design/K720.md`, the K343 commit (933571af: what
+Handoff of `docs/design/K720.md`, the K343 commit (2b539fc8: what
 it changed and what its probe read), and the `__knotSnore` and
 `__knotSynth` hooks (`src/app/probe_hooks.ts` and `knot_synth.ts`).
 This run takes the two desktop clauses of K732 only: the
@@ -431,7 +431,7 @@ The ledger says (Residuals):
 
 What is there today (read it, don't trust this summary). The snore
 clause's fix already landed, after the item was filed: K343
-(933571af, 2026-11-02) gave `KnotSynth` a `decodeOffline`
+(2b539fc8, 2026-11-02) gave `KnotSynth` a `decodeOffline`
 (an `OfflineAudioContext` decode with no live context) and taught
 `SnoreSfx.decodeWhenPossible` to try it first and fall back to the
 context decode, so the buffer is ready before the autoplay gate
@@ -496,7 +496,7 @@ Close nothing outright: the iOS clauses are still open.
 `ledger.mjs` has no command that rewrites an item's text, so don't
 edit K732 by hand: give its new line in your report, and Claude
 applies it after the batch:
-`**K732** · K720 residual, iOS only: a context created outside a tap waits for the next tap, and a suspended context keeps the song on the wall clock and skips the 1.2 s lead-in — both unverified on iOS (the snore's offline decode landed with K343, 933571af; the snore and fabric under snd=none read silent in a desktop browser, <sha8>) (docs/design/K720.md Handoff)`.
+`**K732** · K720 residual, iOS only: a context created outside a tap waits for the next tap, and a suspended context keeps the song on the wall clock and skips the 1.2 s lead-in — both unverified on iOS (the snore's offline decode landed with K343, 2b539fc8; the snore and fabric under snd=none read silent in a desktop browser, <sha8>) (docs/design/K720.md Handoff)`.
 Suggested ports: 5580-5589.
 
 ## Run F · K740 (the first gap): a showing toast re-places when a control appears
@@ -686,7 +686,7 @@ last residual in the section; batch 15's draft starts after it):
 - K712 (lives: hearts in Undo and saved attempts, and the default
   of 3): its first half is settled — no Undo is offered with a
   minotaur, and saved attempts are daily-only while lives are
-  free-play-only (cb73089e, quoted in the item) — and what
+  free-play-only (bfa3a639, quoted in the item) — and what
   remains (a toggle, or a snap from 0 to 3 when switched on) is a
   panel call for Levi.
 - K714 (the K114 balance probe's cutter, and the one-run fences):
@@ -748,7 +748,7 @@ last residual in the section; batch 15's draft starts after it):
   middle three are looks and new state, and the rest are untested
   bundles and an untracked probe — no one decided fix.
 - K780 (one-way traps past the census's start check): its start
-  half is closed — K788 (cff5a0d7) made placement reject a layout
+  half is closed — K788 (f35f6725) made placement reject a layout
   that can trap (`placeRule`'s accept reads `ruleHasTrap` in
   `src/game/one_way.ts`), whose forward search already judges
   every reached node, not only the start. What remains (a

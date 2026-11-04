@@ -61,7 +61,7 @@ only with the files it is about; `render.md` lists the area's other files.
   kept that. Full-length crest trains run the arrival run into the trail's
   fade, so every crest edge drew pure gold over the faded thread: the
   mirror stepped up to 109/255 between samples and the GPU matched it (a
-  model bug, not a shader divergence). Pre-G2 too (c3ebf11, same state:
+  model bug, not a shader divergence). Pre-G2 too (8fe2a72, same state:
   gold crests over the base-colored far end). K4's linear fade widened it,
   because a span's p is linear between its two ends, so the run holding
   the fade start fades from the head junction. K93 (2026-10-14) split

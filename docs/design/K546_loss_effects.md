@@ -9,11 +9,11 @@ stage. Ledger item: K546 (2026-10-16), reproduced in the ledger as:
 > gratuitous contact effect at the meeting point plus a whole-screen
 > loss effect akin to the win confetti. Levi's seeds: an explosion; a
 > flare-up and burn-away; the player indicator ripped in half and
-> falling over. Base to build on: K80 3b's catch feedback (dcdfaf4) and
+> falling over. Base to build on: K80 3b's catch feedback (6d8bb4a) and
 > K270's fix; the fire side is K114. A design doc with options and a
 > recommendation comes before any build.
 
-Base it builds on: K80 turns stage 3b's catch feedback (dcdfaf4; read
+Base it builds on: K80 turns stage 3b's catch feedback (6d8bb4a; read
 `docs/design/K80_gameplay_additions.md` sections 2.7 (line 482), 2.8
 (501) and 2.10 (547), and `docs/design/K80_turns_stage3.md` lines 84-90
 for its 3a/3b split), K270's stale-frame fix
@@ -42,7 +42,7 @@ the page deferring the visible catch (`pendingTurnCatch`,
 `src/main.ts:361-363`) until the move animation reaches the contact
 fraction.
 
-## Today (checked on c391e19)
+## Today (checked on d5fc343)
 
 Where a catch is decided, and where the screen cuts the journey short:
 

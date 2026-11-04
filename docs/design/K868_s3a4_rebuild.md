@@ -9,7 +9,7 @@ R10 and How to rerun. Ledger items: K971 (this stage) and K974 (R10).
 ## Why
 
 S3a3 put the band pass's ink behind `lbi` and merged flag-off
-(`bbe112df`). With the flag on in fabric mode, a frame that rebuilds the
+(`1fafa405`). With the flag on in fabric mode, a frame that rebuilds the
 label costs about 2 s by the app's own counter (`__knotPerf()`):
 
 - in-thread, p95 2161 ms against 1.5 ms with the flag off, so the knot
@@ -613,7 +613,7 @@ They compile only with the flag on.
   on def and muse_hash against master's shots (`ab/m3`), with the same
   physics hashes (def 910ff135, muse_hash 733ee14a). The `ab/master`
   muse_hash shot is the stale one (64878 px), as S3a2 and S3a3 noted.
-  Since m3's base (`d4aa241e`), every commit to src/ and test/ is
+  Since m3's base (`8077522b`), every commit to src/ and test/ is
   K868's, and nothing else outside docs/, `.claude/` and the ledger
   changed.
 - **The 12 scenes' ink against the oracle** (`label_run9.mjs` ->

@@ -4,7 +4,7 @@
 // composed colour at an arc; the per-chain collapse the overlay
 // installs, composed into the width multiplier - plus the calls that
 // start and tick plucks. Moved verbatim from ribbon_renderer.ts
-// (2ba92123); a body changed in three ways only: a renderer member
+// (5dfba8eb); a body changed in three ways only: a renderer member
 // became `this.r.x`, a sampling helper `sampling.x(...)`, and the
 // façade keeps delegations for the called names (pluck, pluckPoint,
 // tugSpan, tickPlucks, the plucks overlay itself) - see

@@ -112,7 +112,7 @@ When you stop:
 ## Handoff (2026-10-21, 03:30)
 
 The stage is done, inside the cap (start 02:31). Seven WIP commits on
-`worktree-agent-aef1574433a327ce7`, rebased onto origin/master `af225069`
+`worktree-agent-aef1574433a327ce7`, rebased onto origin/master `94008c3a`
 (only docs and the ledger came in), then this handoff.
 
 ### What landed

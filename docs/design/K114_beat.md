@@ -325,7 +325,7 @@ in headed Chrome off-screen, a fresh profile per run, links
 - owner: nobody since 2026-10-21 05:2x (claude agent a178a00897a4044dc
   of the coordinator's session, stopped at the stage's 2 h cap)
 - branch: `worktree-agent-a178a00897a4044dc`, worktree
-  `.claude/worktrees/agent-a178a00897a4044dc`, rebased onto 95be99e8;
+  `.claude/worktrees/agent-a178a00897a4044dc`, rebased onto 73025439;
   last commit: the commit that adds these fields (code: 65c4f78a), WIP,
   unpushed
 - evidence: `.claude/probes/K114/beat/` (`beat_page.mjs`, `corner.mjs`,

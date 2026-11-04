@@ -1,8 +1,8 @@
 # K80 turns: the turn-aligned minotaur
 
 K80's minotaur exists today only as its own real-time mode
-(`clk=realtime`, stage 1 in 5fed5c1, K174's controls in
-ecf2169..6ec8275). Levi also wants it as a modifier of the normal,
+(`clk=realtime`, stage 1 in 113ae4d, K174's controls in
+52a4e53..f258161). Levi also wants it as a modifier of the normal,
 turn-based maze: it moves when you move. This brief plans that build in
 four stages, one agent each, and details stages 1 and 2.
 
@@ -104,7 +104,7 @@ handoff of the stage before it.
      wide). Use what the renderer can already draw cheaply; stage 2
      builds the final look.
 3. **Params** (section 2.11), appended to the codec table after the
-   last index on master when you start (108 at 5438a60, so yours start
+   last index on master when you start (108 at a2b2f1a, so yours start
    at 109; the second branch to merge renumbers its appends):
    - `minotaur` (off | hunter | guard | stalker; `abbott` waits for
      stage 3), `minoSpeed`, `minoTelegraph`, and the hunter's behavior
@@ -219,7 +219,7 @@ handoff of the stage before it.
 
 2026-10-14, the K80 turns agent; branch
 `worktree-agent-af5995f5900f0f945` (d17a0ec, 4fdacf8, 0ad8931, 1e4c02b,
-056dae8 and this commit), rebased onto master 6588ec0, never pushed. The
+056dae8 and this commit), rebased onto master 3de7cdb, never pushed. The
 stage is done.
 
 Done:
@@ -268,7 +268,7 @@ Done:
   | `minoPause` | `mpa` | 0.1 | 1 |
   | `minoSleep` (turns) | `msl` | 0 | 99 |
 
-- The codec renumbering: K111 stage 3 (6588ec0) removed highlightMode
+- The codec renumbering: K111 stage 3 (3de7cdb) removed highlightMode
   (108) and made the codec v5, so after the rebase the nine appends sit
   at 108-116 instead of 109-117. The table pin is re-frozen in 4fdacf8,
   and the lore line follows in 056dae8.
@@ -568,7 +568,7 @@ contact sheet moved to stage 3 ("The stages").
 
 2026-10-14, the K80 turns stage 2 agent; branch
 `worktree-agent-a1579d5c460af2d20` (c9529c6, c540aef, 496c64d, 60e60ae,
-bbc333e and this commit), rebased onto master 2409cb9, never pushed. The
+bbc333e and this commit), rebased onto master 0c060d2, never pushed. The
 stage is done: items 1-6.
 
 Done:
@@ -640,7 +640,7 @@ Done:
 - Lore: `gameplay-minotaur.md` (STAGE 2'S RETUNE, RE-MEASURED ON H1,
   CATCH RESETS), `gameplay-links.md` (CATCH RESET PARAMS),
   `gameplay-stars.md`, `gameplay-daily.md` and `probes.md`.
-- The codec: the rows were 121-122 until the rebase onto K279 (2409cb9),
+- The codec: the rows were 121-122 until the rebase onto K279 (0c060d2),
   which appended 121-127 first. The messages of 496c64d and 60e60ae
   still say 121-122. The table pin is re-frozen at 128-129. K111 stage 4
   also appends from 128, so whichever branch merges second renumbers.
@@ -692,7 +692,7 @@ Verification (on the rebased branch):
   | stalker/T | deadends | - / 16 / 1 | - / 36 / 18 | - / 36 / 17 |
 
 - Real time on the mazes of 2026-10-14, before K74 stage 3's
-  trap-zone finish (9ccf360). K637 (2026-10-20) measured that finish
+  trap-zone finish (83d4405). K637 (2026-10-20) measured that finish
   raising the greedy catches to 2.19 / 2.38 / 2.50 / 2.93 / 3.25, with
   fleers escaping 50-55% and 75-78% queued
   (`.claude/probes/K637/results.md`). The 2026-10-14 numbers (K174's

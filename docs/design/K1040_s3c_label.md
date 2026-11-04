@@ -3,7 +3,7 @@
 Ledger K1040, stage S3c, item K1097. One stage: Opus, 2 h cap. Branch
 `worktree-agent-aaf87e9d3775b20e4`, worktree
 `C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-aaf87e9d3775b20e4`
-(cut at master 236a18a6, which holds S3b's merge c4863a50; node_modules
+(cut at master 94e03522, which holds S3b's merge 587b7e80; node_modules
 joined to the main checkout's). Work only there. Brief written 2026-11-03
 by the stage agent, at the coordinating session's (7301c55b) request, from
 S3b's brief (`docs/design/K1040_s3b_label.md`: Calls that bind, Rules, F3,

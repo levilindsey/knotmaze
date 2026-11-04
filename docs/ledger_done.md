@@ -34,7 +34,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   chord window, and a lone press waiting only when a chord would pick
   another run. `src/ui/key_moves.ts`, `src/main.ts`; lore: TIE CYCLES,
   CHORDS AND THE MOVE WAIT in `gameplay-moves.md`; probes
-  `.claude/probes/K329/`. Leftovers: K348-K350. Done in 56ddd6a..2c81a92 (2026-10-14
+  `.claude/probes/K329/`. Leftovers: K348-K350. Done in 97f2840..2014dd0 (2026-10-14
   23:38).
 
 ## K333 (Done 2026-10-14)
@@ -42,7 +42,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 - **K333** · Diagonal chords (Levi, 2026-10-14 about 22:20): two
   adjacent keys within 80 ms pick from the four diagonals, a held chord
   holds, opposite keys never chord, and the move pad chords the same
-  way. Built with K329. Done in 56ddd6a..2c81a92 (2026-10-14 23:38).
+  way. Built with K329. Done in 97f2840..2014dd0 (2026-10-14 23:38).
 
 ## K334 (Done 2026-10-14)
 
@@ -52,7 +52,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   the arrival frame, and a held arrow chains at the next junction with no
   gap. The real-time chase keeps its own queue;
   `__knotKeyMoves().setTapsWait(false)` restores the snap for A/Bs.
-  Built with K329. Done in 56ddd6a..2c81a92 (2026-10-14 23:38).
+  Built with K329. Done in 97f2840..2014dd0 (2026-10-14 23:38).
 
 ## K335 (Done 2026-10-14)
 
@@ -66,7 +66,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   (median; 0.9 s at most), by design. `src/render/confetti_model.ts`;
   lore: "The rain's taper (K335)" in `render-confetti.md`; sheets in
   `.claude/probes/K335/sheet/`. K336 and K337 stay deferred. Done in
-  79c5a97..c7dacce (2026-10-14 23:32).
+  a7eb4a5..38b81d5 (2026-10-14 23:32).
 
 ## K325 (Done 2026-10-14)
 
@@ -77,7 +77,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   holds the link open briefly so it can play (desktop Chrome needs no
   delay). `src/audio/snore_sfx.ts`, `src/ui/snore_link.ts`; lore: THE
   SNORING CAT LINK in `gameplay-audio.md`. Leftovers: K342, K343. Done
-  in b8ee851..33f7a38 (2026-10-14 22:53).
+  in 3adc864..e02bcc7 (2026-10-14 22:53).
 
 ## K298 (Done 2026-10-14)
 
@@ -92,7 +92,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   hovered choice and the end fade moved; GPU time within noise. Left
   over: K327 (labels), K328 (the rows at strength 0), K330 and K331.
   `docs/design/K298_hover_glow.md` ("Stage 1 handoff"). Done in
-  44b19a3..813e098 (2026-10-14 22:20).
+  55c7a16..526b16b (2026-10-14 22:20).
 
 ## K317 (Done 2026-10-14)
 
@@ -100,20 +100,20 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   show more confetti by default, both from the top, but especially from
   the finish marker."): the rain per amount 140 -> 280 and the finish's
   spray 40 -> 160; reduced motion keeps its 16 pieces. The phone's frame
-  rate at the finish rides K156's next pass. Done in ab8b78f (2026-10-14
+  rate at the finish rides K156's next pass. Done in 46d9cf4 (2026-10-14
   21:53).
 
 ## K253 (Done 2026-10-14)
 
 - **K253** · K193's portrait A/A floor, taken on a quiet phone (Levi lent
   it at about 20:33: "The phone will be untouched for 40 minutes"):
-  `aa4`, master 9a5eaa8 against itself, 20:37-21:02, 3 reps, no trip, 36
+  `aa4`, master f3ab684 against itself, 20:37-21:02, 3 reps, no trip, 36
   of 36 samples at the emulated 411x753 @2.625. Installed as
   `scripts/phone_pass/noise.json` by `scripts/phone_pass/install_floor.mjs`;
   the landscape floor is kept as `noise.landscape.json`. The phone warmed
   from 29.4 to 40.0 C (skin), so the load floors are mostly heat;
   fabric@13 sat on the finish (K300). Lore: `probes-phone.md` ("THE
-  PORTRAIT FLOOR"); evidence `.claude/probes/K253/aa4/`. Done in 459cc11
+  PORTRAIT FLOOR"); evidence `.claude/probes/K253/aa4/`. Done in 54ef27a
   (2026-10-14 21:24).
 
 ## K193 (Done 2026-10-14)
@@ -121,11 +121,11 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 - **K193** · The phone pass's orientation (Levi, 2026-10-14 about 11:10,
   email 4.1: "b seems best"): the pass emulates a 411x753 portrait
   viewport over CDP and leaves the phone as it sits. Stage 1 merged in
-  c36b57c..763067a (14:10): `-Viewport portrait|native`, the proof
+  d0bbfad..7b17da5 (14:10): `-Viewport portrait|native`, the proof
   (`scripts/phone_pass/emulation.mjs`) and viewport-clipped screenshots,
   which fixed K195's strip. Its A/A tripped on a touch twice (13:59,
   19:37); K253 took the portrait floor. Left over: K300 and K254-K256.
-  `docs/design/K193.md` ("Stage 1 handoff"). Done in 459cc11 (2026-10-14
+  `docs/design/K193.md` ("Stage 1 handoff"). Done in 54ef27a (2026-10-14
   21:24).
 
 ## K302 (Done 2026-10-14)
@@ -163,7 +163,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   (a source scan with a `ROUNDED_QUOTIENTS` allowlist). Named change: a
   full-lap run's choice pulse now draws (such runs are in 49 of dailies
   1-300). Levi's link's A/B went from 6967 px off to 42 (all at 1/255).
-  Done in 74ad307..e5acafb (merged 2026-10-14 20:45). Lore:
+  Done in e452556..34031a4 (merged 2026-10-14 20:45). Lore:
   `render-paint.md` ("RING LAPS"); sheets `.claude/probes/K299/sheet/`;
   `docs/design/K299_choice_pulse_bug.md` ("Stage 1 handoff").
 
@@ -172,7 +172,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 - **K264** · The hover rim's width becomes a slider (Levi, 2026-10-14
   about 15:46, verbatim: "Rim width,0.4 is good, make it a slider., and
   personal setting."; read as a width slider, `hoverGlow` staying 0.4,
-  both personal). Done in a47642d..f294247 (2026-10-14, K111 stage 4):
+  both personal). Done in 80042d9..169835a (2026-10-14, K111 stage 4):
   `hoverGlowWidth` (`hgw`, codec v5 index 130, daily-exempt), default
   0.85, range 0.3-1 in steps of 0.05, the "Hover glow width" row under
   "Hover glow". `docs/design/K111.md` ("Stage 4 handoff"). Levi's 19:13
@@ -184,7 +184,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 - **K273** · What a minotaur catch resets (Levi, 2026-10-14 about
   15:46, verbatim: "We should also have a toggle to conditionally reset
   the level/Minotaur/fog when dying to the Minotaur."). Done in
-  86d404e..02194b4 (2026-10-14), on both clocks: `minoRestart` (`mrs`,
+  40f74d1..dea013f (2026-10-14), on both clocks: `minoRestart` (`mrs`,
   off) restarts the level on a catch (the path, fog, fuse and clock; the
   tallies carry over), `minoLair` (`mlr`, on) off leaves the minotaur
   where it caught you, and `minoRefog` stays the fog's toggle (minoLair
@@ -195,14 +195,14 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 - **K272** · The turn minotaur's sliders at 0: roam 0 stood still while
   roaming, and territory 0 was a random walk (K80 turns stage 1). Done in
-  86d404e..02194b4 (2026-10-14): both start at 1 (`MINO_RUNS_MIN`,
+  40f74d1..dea013f (2026-10-14): both start at 1 (`MINO_RUNS_MIN`,
   `src/ui/url_state.ts`) in the panel, the codec reader and the
   key=value readers. Roam 0 as a sentry is K296.
 
 ## K283 (Done 2026-10-14)
 
 - **K283** · The real game's end banners after K274, from a live solve.
-  Done in K80 turns stage 2 (86d404e..02194b4, 2026-10-14): its copy of
+  Done in K80 turns stage 2 (40f74d1..dea013f, 2026-10-14): its copy of
   `probe_stars.mjs` passed every run in a headed, hardware-GPU Chrome
   with real taps (checks by run: design 16, design at 411x753 touch 16,
   daily 32, caught 18, realtime 17, turnmino 21, turnmino with `&mrs=1`
@@ -212,7 +212,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K274 (Done 2026-10-14)
 
 - **K274** · Explain each stat behind the win banner's info button (Levi,
-  2026-10-14 about 16:01). Done in 71a7c25..79805af (2026-10-14): a `STATS`
+  2026-10-14 about 16:01). Done in 63a72c6..1c42943 (2026-10-14): a `STATS`
   table in `src/game/maze_stats.ts` (one plain line per row id; a test
   fails on a row without its line or a line without its row), the end
   banners' "What the numbers mean" list (the Burnt banner and an unrated
@@ -223,7 +223,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K277 (Done 2026-10-14)
 
 - **K277** · Credit the research and techniques on the credits page
-  (Levi, 2026-10-14 about 16:07). Done in 71a7c25..79805af (2026-10-14): eleven
+  (Levi, 2026-10-14 about 16:07). Done in 63a72c6..1c42943 (2026-10-14): eleven
   `RESEARCH` entries in `notices/credits.ts`, shown in the page's
   "Research and techniques" section, each with its citation, its use and
   the files that carry its mark (tested), worded as use, never as
@@ -242,14 +242,14 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 - **K237** · The hover rim's strength: Levi, 2026-10-14 about 15:46:
   "0.4 is good ... and personal setting." `hoverGlow` stays 0.4 and
-  daily-exempt (K57), as built in 6588ec0.
+  daily-exempt (K57), as built in 3de7cdb.
 
 ## K269 (Done 2026-10-14)
 
 - **K269** · The turn hunter's catch rates on today's mazes (K80 turns
   stage 1: 14% of dailies for an attentive explorer, 32% at 80%, against
   the research's 1% and 13%). Levi, 2026-10-14 about 15:34: "Retune."
-  Done in 86d404e..02194b4 (2026-10-14): sight 4 -> 2 and accuracy 0.9 ->
+  Done in 40f74d1..dea013f (2026-10-14): sight 4 -> 2 and accuracy 0.9 ->
   0.3 take the hunter from 18% / 36% on today's H1 mazes to 1.0% / 13.1%
   (64 reps). The stalker and the treelike and dead-end sets paid for it:
   K294.
@@ -262,7 +262,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   index 108 `hm` removed, CODEC_VERSION 5); a hover away from the
   choices gets K145's rim reshaped, brightest at the thread's edge and
   fading toward its center (`RIM_EDGE` 0.85), with K236's (c) short-run
-  fade and (d) view 5. Done in 365bc45..6588ec0 (2026-10-14 14:58, K111
+  fade and (d) view 5. Done in d199033..3de7cdb (2026-10-14 14:58, K111
   stage 3; 835 tests, same-state A/B 0 px, census max 0.61/255, no GPU
   cost). Its calls are K264 (width), K265 (High contrast) and K237
   (strength). Lore `render-paint.md` (HOVER GLOW); brief
@@ -273,13 +273,13 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K249 (Done 2026-10-14)
 
 - **K249** · K111's rims and contrast modes stopped hard at junction
-  webs and fans. Dropped 2026-10-14: the modes were removed in 365bc45
+  webs and fans. Dropped 2026-10-14: the modes were removed in d199033
   (K111 stage 3), and the rim stays inside its run by design (K248).
 
 ## K250 (Done 2026-10-14)
 
 - **K250** · An idle-render skip for the steady highlight modes.
-  Dropped 2026-10-14: the modes were removed in 365bc45 (K111 stage 3).
+  Dropped 2026-10-14: the modes were removed in d199033 (K111 stage 3).
 
 ## K198 (Done 2026-10-14)
 
@@ -304,7 +304,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   THE HEAD and `gameplay-camera.md` FIT CAMERA PAN RANGE. Since K98
   (merged 2026-10-14) `markerSize` sizes the in-game markers; the edge
   indicators keep their own sizes until part (3).
-  - stage 1 MERGED in 5f6ceb9..d7373a4 (2026-10-14 09:31): the pan range
+  - stage 1 MERGED in 6d3774a..2f5c3fb (2026-10-14 09:31): the pan range
     (`src/ui/view_clamp.ts`: `panRange`, `clampFitView`,
     `easeIntoRange`; 16 tests). With the panel open, the maze's right
     edge (its threads, or a shown start, head or exit disc) may reach
@@ -324,11 +324,11 @@ ledger keeps as a one-line entry. New entries go at the bottom.
     view back into range at 0.15 a frame when the panel closes; whether
     the range itself follows the panel's slide is for the brief to
     check.) The reading of part (1) stands: Levi corrected nothing.
-  - stage 2 brief: `docs/design/K198.md` ("Stage 2", f06dfd9): a
+  - stage 2 brief: `docs/design/K198.md` ("Stage 2", fa656e3): a
     show/hide switch for the head and minotaur indicators beside the
     finish's, one size slider for all three, the head's delay, and
     time-based tweens for the panel limit and the displaced indicators.
-  - Done in 96fa13a..af0f054 (2026-10-14 14:03): stage 2. The panel's edge
+  - Done in cf7010f..36f9ea7 (2026-10-14 14:03): stage 2. The panel's edge
     of the pan range tweens over 0.25 s (`PANEL_TWEEN_S`, smoothstep;
     `stepRange` eases against last frame's openness and clamps to this
     frame's, so a view at the limit rides the panel's edge), and a
@@ -357,14 +357,14 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   which also serves high contrast. An Accessibility group near the top of
   the panel holds "High contrast" and "Reduced motion" master checkboxes
   that override every relevant setting (today's Motion setting is
-  `src/ui/motion.ts`, K79). Brief `docs/design/K111.md` (3f011fa): stage
+  `src/ui/motion.ts`, K79). Brief `docs/design/K111.md` (37cc4b0): stage
   1 is the group, reduced motion and high contrast as far as today's
-  settings reach (merged 2026-10-14 11:58, 0e5a138..9c6cab3:
+  settings reach (merged 2026-10-14 11:58, 698aba5..1da3cbc:
   `src/ui/accessibility.ts`, the Accessibility folder first in the
   panel; lore `gameplay-motion.md` ACCESSIBILITY GROUP and
   `gameplay-panel.md` ACCESSIBILITY FOLDER; Levi's review is K238).
-  Stage 2, the highlight modes, ran 12:02-12:52 (brief b6c3832).
-  - Done in 36d280a..5438a60 (2026-10-14 13:03): stage 2, the highlight
+  Stage 2, the highlight modes, ran 12:02-12:52 (brief 5df62e6).
+  - Done in ce66042..a2b2f1a (2026-10-14 13:03): stage 2, the highlight
     modes. `highlightMode` (`hm`, codec index 108) is a dropdown of
     pulses (today's look), glow (0.75, a steady whitening of the
     thread's color), rims (a white edge band) and contrast (pure white
@@ -392,8 +392,8 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   the fog dropdown exist (the Minotaur folder). The work: the paces as
   fractions of `playerPace` (hunt 0.7, wander 0.5), a re-fog-on-catch
   checkbox (on) and a roam-toward checkbox (on) tuned on the K80 sim,
-  plus K177's open checks. Brief `docs/design/K174.md` (d644ec5).
-  - Done in ecf2169..6ec8275 (2026-10-14 12:53): the paces are
+  plus K177's open checks. Brief `docs/design/K174.md` (824e090).
+  - Done in 52a4e53..f258161 (2026-10-14 12:53): the paces are
     fractions of `playerPace` (`mwp` wander 0.5, `mhp` hunt 0.7; panel
     sliders 0-2, "(x your pace)"); `minoToward` (`mtw`, on) roams toward
     the player (roamPull 0.5 and a "nearer" roam pick); `minoRefog`
@@ -410,7 +410,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 - **K235** · Taps inside junction cores make no sound (Levi, 2026-10-14
   about 11:10, on K194's 5.2: "Probably shouldn't.").
-  - Done in 08d1383..05e6d4d (2026-10-14 12:44): `tapLobes()`
+  - Done in f0268b2..8960c18 (2026-10-14 12:44): `tapLobes()`
     (`pluck_model.ts`) finds the tapped lobe; a core tap (its vibrating
     span under `LOBE_MIN_LEN`) draws nothing and `tapPluck` returns
     before the synth. Real mouse and touch taps, master vs branch: every
@@ -424,7 +424,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 - **K239** · A fresh static page drew its first frame before the
   renderer had its fade and flow (about 28k px off a refreshed frame;
   found by K111 stage 1).
-  - Done in 08d1383..05e6d4d (2026-10-14 12:44): `handRendererLook()`
+  - Done in f0268b2..8960c18 (2026-10-14 12:44): `handRendererLook()`
     (main.ts) hands the renderer every look param `update()` reads
     (fade, flow, cusp radius, the pulse and glow params, the FX style)
     before every `renderer.update()`. Static first frames now match a
@@ -439,7 +439,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   email 3.x): 3.1 "fade out": a web that stops being full fades its gold
   out over the same 0.25 s instead of losing it at once; 3.2 "yes":
   reduced Motion keeps the fade (as built).
-  - Done in fafa340..3467117 (2026-10-14 12:04): `web_fade.ts` keeps a
+  - Done in 07bb21b..72faa82 (2026-10-14 12:04): `web_fade.ts` keeps a
     ramp per junction (fade-out levels 1 / 0.53 / 0 at 0 / 0.12 / 0.25
     s; a reversal continues from the current level and takes the full
     0.25 s); no shader or mirror change; frames from 0.25 s on match
@@ -466,8 +466,8 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   mirror (the hovered run and the hover point's arc position), measured
   along the thread like the pulses; a strength param (0 = off), proposed
   daily-exempt (K57). Stage 2 of `docs/design/K93_K145.md` (K93's stage 1
-  merged in ed8f284).
-  - Done in 06edef4..56b6f2d (2026-10-14 11:55): `hoverGlow` (`hg`,
+  merged in c2eefd5).
+  - Done in d0503b9..c795b42 (2026-10-14 11:55): `hoverGlow` (`hg`,
     codec index 105, default 0.4, daily-exempt), a G2 rim term with its
     `paint_math` mirror (the GPU within 0.6/255 of it); with no hover, or
     at strength 0, frames equal master's; GPU +0.04-0.05 ms. Lore
@@ -499,8 +499,8 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   `src/main.ts`, `src/ui/mode_badge.ts`, `src/ui/url_state.ts`;
   `.claude/rules/gameplay-badge.md` (MODE BADGE). Brief
   `docs/design/K92.md` (one stage), plus K224 (the move pad over the open panel).
-  - K80 (5fed5c1): real time has no move undo (`undoAllowed(clock)`); if K92's buttons ever reach maze moves, they consult it.
-  - Done in d707bc1..e78ddcc (2026-10-14 10:08), with K224: a 100-step in-memory
+  - K80 (113ae4d): real time has no move undo (`undoAllowed(clock)`); if K92's buttons ever reach maze moves, they consult it.
+  - Done in 4e61570..525819d (2026-10-14 10:08), with K224: a 100-step in-memory
     history (`src/ui/undo_stack.ts`), the buttons on the hamburger's row
     (`src/ui/undo_buttons.ts`), the badge on its own row below them, and
     the move pad hidden while the panel is open. Lore:
@@ -513,7 +513,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 - **K224** · On the phone (411x753) the K120 move pad drew over the open
   panel. K92 hides the pad while the panel is open (the keyboard still
-  moves the player). Done in d707bc1..e78ddcc (2026-10-14 10:08).
+  moves the player). Done in 4e61570..525819d (2026-10-14 10:08).
 
 ## K98 (Done 2026-10-14)
 
@@ -525,7 +525,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   start and finish (radius max(0.95 tw, r + 0.41 tw)); a horns glyph for
   the minotaur, and a spider glyph with no mesh yet (K226). Lore:
   `render-markers.md`; handoff: `docs/design/K98.md`; sheet:
-  `.claude/probes/K98/sheet_k98.png`. Done in 68a9622..f5982cd
+  `.claude/probes/K98/sheet_k98.png`. Done in f036998..c9df8c9
   (2026-10-14 10:03); the default size is K225.
 
 ## K93 (Done 2026-10-14)
@@ -539,7 +539,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   path mode (kPulseV's `kReachWin`, mirrored in `paint_math.ts`).
   Handoff `docs/design/K93_K145.md` ("Stage 1 handoff"); probes and the
   sheets sent to Levi in `.claude/probes/K93/`; follow-ups K217-K220;
-  stage 2 is K145. Done in 82ca7d9..ed8f284 (2026-10-14).
+  stage 2 is K145. Done in 2577ae2..c2eefd5 (2026-10-14).
 
 ## K173 (Done 2026-10-14)
 
@@ -550,7 +550,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   (`scripts/split_rules.mjs`), indexed in `docs/lore_index.md`. Lore
   attached per read: median 37.3 KB before, 5.8 after. Brief and handoff
   `docs/design/K173.md`, probes `.claude/probes/K173/`; follow-ups K214
-  and K216, idea K215. Done in 62e7d5b..1fe468d (2026-10-14).
+  and K216, idea K215. Done in 484ecd6..0f9c8fe (2026-10-14).
 
 ## K132 (Done 2026-10-14)
 
@@ -565,7 +565,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   links sent to Levi (`?7.J` now rewrites to `?7`). No pin moved: DAILY_V1
   differed from today's defaults only in trailLength (render-only). Brief
   and handoff `docs/design/K132.md`, probes `.claude/probes/K132/`;
-  follow-ups K210-K212. Done in 402eb4b (2026-10-14).
+  follow-ups K210-K212. Done in cf5bcde (2026-10-14).
 
 ## K100 (Done 2026-10-14)
 
@@ -577,12 +577,12 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   (exact on a static daily; IoU 0.977 with physics). After a backtrack
   the fog-fit camera keeps framing the explored area. Brief and handoff
   `docs/design/K100.md`, probes `.claude/probes/K100/`; follow-ups
-  K206-K209. Done in 458e1e5 (2026-10-14).
+  K206-K209. Done in 354fadc (2026-10-14).
 
 ## K61 (Done 2026-10-14)
 
 - **K61** · `encodeDelta` (the old `?daily=N.<delta>` writer), used only
-  by tests. Done in 402eb4b (2026-10-14): K132 removed it and the delta
+  by tests. Done in cf5bcde (2026-10-14): K132 removed it and the delta
   reader.
 
 ## K203 (Done 2026-10-14)
@@ -590,7 +590,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 - **K203** · K120's calls (`docs/design/K120.md`): the move pad on by
   default on coarse pointers, bottom right at 132 px, the 15 deg tie rule
   and the 200 ms hold, confirmed by Levi ("ok", 2026-10-14 about 07:53).
-  Nothing to change (K120 merged in 0acbce0).
+  Nothing to change (K120 merged in 47d9223).
 
 ## K200 (Done 2026-10-14)
 
@@ -598,7 +598,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   play's X always shows, on the desktop too; (2) the practice banner and
   share text, the daily badge's tap, the labels' daily numbers,
   History's rows and v2's late results, confirmed by Levi ("ok",
-  2026-10-14 about 07:53). Done in 7950c7f (2026-10-14).
+  2026-10-14 about 07:53). Done in 35bf7e1 (2026-10-14).
 (items move here with the commit that resolved them)
 
 ## K120 (Done 2026-10-14)
@@ -606,7 +606,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 - **K120** · Faster, smoother input (Levi, 2026-10-13): hold an arrow
   key to keep advancing, taking the branch that matches the key at each
   junction, and a quick control on phones.
-  - Done in ba8b198..0acbce0 (2026-10-14): arrow keys and WASD move by
+  - Done in 26a2319..47d9223 (2026-10-14): arrow keys and WASD move by
     direction (`src/ui/key_moves.ts`: a key matches a run within 70 deg,
     runs within 15 deg of each other tie, a hold goes on 200 ms after each
     arrival; thresholds from a census of 4259 junctions) and the move pad
@@ -624,7 +624,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   about 16:15 and 16:25: "There should be some way to play previous
   dailys, but not get credit for them." / "Stats view is enough of a way
   in."). One agent with K151.
-  - Done in df8929c..b9cf882 (2026-10-14): daily store v3 (an attempt
+  - Done in 5a51164..a8bbb5f (2026-10-14): daily store v3 (an attempt
     begun after its day finishes as practice, outside every aggregate);
     History lists every past daily, unplayed ones included (month
     headers, All / Played / Not played chips past 10 rows); a practice
@@ -638,7 +638,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 - **K151** · The mode badge (Levi, 2026-10-13 about 16:30, verbatim in
   `docs/design/levi_notes_2026-10-13.md`).
-  - Done in df8929c..b9cf882 (2026-10-14, with K146): one badge always
+  - Done in 5a51164..a8bbb5f (2026-10-14, with K146): one badge always
     shows (`src/ui/mode_badge.ts`: Free play, Daily #N, replay,
     practice), the HUD's title row is gone, and free play's X fades in on
     hover and always shows on coarse pointers (`MODE_BADGE_X_ON_COARSE`).
@@ -649,7 +649,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 - **K148** · An off-screen indicator for the player (Levi, 2026-10-13
   about 16:25: "When panning away from the current position, we should
   also show an offscreen indicator for it."). One agent with K149.
-  - Done in 2afca1d..fcc402b (2026-10-14): the head is K73's third
+  - Done in 818ad90..18b76be (2026-10-14): the head is K73's third
     indicator client (`src/ui/head_indicator.ts`; K83's head glyph; a tap
     returns the camera to the head), and indicator glyph dots no longer
     inherit the icon's stroke (the head's dot and the minotaur's eyes had
@@ -663,7 +663,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 - **K149** · Room to pan the maze partly off screen at the fit zoom
   (Levi, 2026-10-13 about 16:25).
-  - Done in 2afca1d..fcc402b (2026-10-14, with K148):
+  - Done in 818ad90..18b76be (2026-10-14, with K148):
     `src/ui/view_clamp.ts` (`PAN_SLACK`, 0.3 of the screen per side at
     every zoom); a reset from a slack-panned view eases instead of
     snapping. Calls: K198 (the phone's open panel).
@@ -674,7 +674,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   playing: pluckWhole (`pw`, 0-1.5, default 0.5), pluckCrossings (`pcx`:
   through | ride | pinch) and pluckGlow (`pgl`: off | instead | with |
   fallback); codec v4 appends 101-103, daily-exempt.
-  - Done in 048e06c..0250564 (2026-10-14): 0 px against master at the
+  - Done in d6795ca..85541bc (2026-10-14): 0 px against master at the
     defaults in 8 A/B cases; 605 tests. Probes `.claude/probes/K180/`
     (sheets `sheet/sheet_desktop.png`, `sheet_phone.png`); worktree
     `.claude/worktrees/agent-a5a195592e9da8700` kept. Calls: K194;
@@ -683,7 +683,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K192 (Done, undated)
 
 - **K192** · Probes that pin `paintClock` saw K169's gold web at fade
-  level 0. Done in 81d31a5 (`scripts/phone_pass/walk.mjs` `pinAll()` sets
+  level 0. Done in f054bbb (`scripts/phone_pass/walk.mjs` `pinAll()` sets
   `webFade.seconds = 0`; K81's untracked kits `g2lib.mjs`, `k83_ab.mjs`
   and `phone/k81phone.mjs` got the same line).
 
@@ -693,7 +693,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   2026-10-14 about 00:22, `docs/design/levi_notes_2026-10-14.md` item 10:
   "a, yes. b, swap in our own. c, none."): the Perlin and Scarborough Fair
   credits stay, and no technique gets a line. One agent with K169.
-  - Done in 64d3296..aaa3dda (2026-10-14): `src/render/hash2d.ts` (a
+  - Done in acdd1f9..e03bbd2 (2026-10-14): `src/render/hash2d.ts` (a
     multiply-add per lane, then three multiply and xorshift rounds, its
     constants from a seeded search) replaces PCG2D, and the `pcg2d-hash`
     credit is gone. Avalanche, uniformity, lag, bijection and spectral
@@ -709,7 +709,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   turning it gold in one frame (Levi, 2026-10-14 about 00:22,
   `docs/design/levi_notes_2026-10-14.md` item 9: "Fade.";
   `docs/design/K81.md`, "Stage 3d results"). One agent with K154.
-  - Done in 64d3296..aaa3dda (2026-10-14): `src/render/web_fade.ts`, a
+  - Done in acdd1f9..e03bbd2 (2026-10-14): `src/render/web_fade.ts`, a
     0.25 s smoothstep from the untraveled base to the gold one (written
     into the junction record, no fillet rebuild); from 0.25 s on, 0 px
     against K127. Its two calls: K191; probes that pin `paintClock`:
@@ -727,7 +727,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   reduced (`src/ui/motion.ts`), a small burst or none. Params: on/off
   and amount, proposed daily-exempt (K57). The phone gate checks fps
   during the effect. Small; Opus. After K80's real-time mode.
-  - Done in 99b7161..bb55c9a (2026-10-14; deployed with ca7d3e6): a rain
+  - Done in 8b18498..9df308a (2026-10-14; deployed with 6b25b50): a rain
     from the top plus a spray from the finish, render-only; `cf` and
     `cfa` at codec 99-100, daily-exempt; 574 tests. Desktop frame cost
     within noise (amount 1: 9.71 ms of JS a frame, master 9.79); the
@@ -750,7 +750,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   hover), and in the daily share text (K20; Levi, 2026-10-13 about 21:15:
   "Stars appearing in the share text makes sense."). With K140 (the same
   finish screen).
-  - Done in 18c9a2e..edfb65f (2026-10-14): stars from the distance walked
+  - Done in 32df850..5d5b549 (2026-10-14): stars from the distance walked
     over the shortest route: three at 1.5x or less and never caught, two
     at 4x or less, one for any finish. 551 tests. Probes in
     `.claude/probes/K155/`; worktree
@@ -766,8 +766,8 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   `COLLAPSE_ROUND`'s 1 h ("better, but still a bit too acute"; K77's
   A/B: 0.5 h left shoulders, 2 h erased most of the thinning); its own
   reduced-motion version (K79's Motion setting). K105 folds in (goal 4).
-  - Done in 5d672ec (2026-10-14): stage 1c merged as c3dbe0c..5d672ec on
-    788bd85 (539 tests). Probes in `.claude/probes/K104/` (3595 files);
+  - Done in 77225b0 (2026-10-14): stage 1c merged as 8bcd032..77225b0 on
+    54ce560 (539 tests). Probes in `.claude/probes/K104/` (3595 files);
     worktree `.claude/worktrees/agent-a33278775816855b8` kept for
     follow-ups. The tuning calls went to K180 (with the `k79_motion.mjs`
     checks), the still pluck's cold-link stall to K185, its residuals to
@@ -821,13 +821,13 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   (K156) takes over its frame check and looks. At j62, where two routes
   share an arm, the band's shade differs from master by up to 19, by
   design. Record: `docs/design/K81.md`; probes in `.claude/probes/K81/`.
-  Residuals K166-K168, Levi's call K169. Done in 3c8433a (2026-10-13).
+  Residuals K166-K168, Levi's call K169. Done in fd05619 (2026-10-13).
 
 ## K127 (Done 2026-10-13)
 
 - **K127** · Fill a web with gold when every arm is traveled (K81's
-  decision 4): built in K81's stage 3d. Done in 5d3170d (2026-10-13), with
-  K81 (3c8433a).
+  decision 4): built in K81's stage 3d. Done in 8133bdf (2026-10-13), with
+  K81 (fd05619).
 
 ## K147 (Done 2026-10-13)
 
@@ -846,7 +846,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   run; the round pass's load scenario covers it (K156). Levi's calls
   K162; residuals K163-K165; its two stepped panel rows join K130.
   Record: `docs/design/K147.md`; probes in `.claude/probes/K147/`. Done in
-  97293e7 (2026-10-13).
+  b1897da (2026-10-13).
 
 ## K122 (Done 2026-10-13)
 
@@ -860,12 +860,12 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   to `/knotmaze/licenses` (200, with the V8 credit). The panel link and
   the page get a look in the round's phone pass (K156). Record:
   `docs/design/K122.md`, `.claude/rules/notices.md`; probes in
-  `.claude/probes/K122/`. Done in f0ef0e4 (2026-10-13).
+  `.claude/probes/K122/`. Done in 75d6fed (2026-10-13).
 
 ## K79 (Done 2026-10-13)
 
 - **K79** · Backgrounds: speed, params, colors, Motion. Stage A
-  (9ffda8a, 2026-10-13 07:15): `backgroundSpeed` (codec v4 index 70,
+  (4a89e63, 2026-10-13 07:15): `backgroundSpeed` (codec v4 index 70,
   `bgs=`; -1 = auto, each effect's pre-K79 pace; 0 = static), vellum
   drift through its own lazily built program, and the Motion setting
   (`src/ui/motion.ts`, K53). Stage B: per-effect params and custom colors
@@ -877,7 +877,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   probes, and B3's phone gate (59.5-60.5 fps; the -x programs cost at
   most 0.28 ms a frame). Record: `docs/design/K79.md`; probes in
   `.claude/probes/K79/` (`_b` suffixes on the stage B copies that
-  clashed). Residuals K157-K159, idea K160. Done in 58b77cf (2026-10-13).
+  clashed). Residuals K157-K159, idea K160. Done in bbd71dc (2026-10-13).
 
 ## K110 (Done 2026-10-13)
 
@@ -889,7 +889,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   default-anchor rect moved, and every other plan is byte-identical. The
   K87 pin is re-frozen and its commit names the moved designs. Probes
   copied to `.claude/probes/K110/`; worktree
-  `.claude/worktrees/agent-aaf7c3f05e4b74d9c` kept. Done in b9038c7
+  `.claude/worktrees/agent-aaf7c3f05e4b74d9c` kept. Done in 98c4023
   (2026-10-13).
 
 ## K129 (Done 2026-10-13)
@@ -900,8 +900,8 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   #cdb17a, #aa7acd). Vellum keeps its fiber floor (shrinking the fibers
   would alias), and the scale's max drops from 3 to 2: at 3 the wash and
   contours are nearly empty and the fibers read as long hatching (sheets
-  in `.claude/probes/K79/out/view/`). Done in 281b22b and b2ccfaf
-  (2026-10-13), with K79 stage B (58b77cf).
+  in `.claude/probes/K79/out/view/`). Done in 28a5a64 and e936e48
+  (2026-10-13), with K79 stage B (bbd71dc).
 
 ## K121 (Done 2026-10-13)
 
@@ -928,7 +928,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   which opened every eye but widened the whole population instead of
   closing the tail (`.claude/probes/K49/`). Decided 2026-10-13, no
   change; the 2.8 one-liner stays on branch
-  `worktree-agent-ac664e8a9e271757a` (4fa22e2), its worktree removed.
+  `worktree-agent-ac664e8a9e271757a` (3b97e25), its worktree removed.
 
 ## K52 (Done 2026-10-13)
 
@@ -955,7 +955,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   solvable link), any other is rebuilt with `repairTailRoute` after
   spanning. 1110 designs: model = walk graph on all, 0 solvable plans
   moved, 20/20 repaired with one splice. Test:
-  `test/core/maze_solvable.test.ts`. Done in b722a12 (2026-10-13;
+  `test/core/maze_solvable.test.ts`. Done in fcad57d (2026-10-13;
   `.claude/probes/K109/`). Follow-up K110.
 
 ## K108 (Done 2026-10-13)
@@ -968,7 +968,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   Chrome vs Firefox: 0 of 144 designs differ). The star mask folds by
   reflections. Guards: `test/core/deterministic_math.test.ts`,
   `test/util/det_math.test.ts`. The codec's integer `2 **` powers stay
-  (exact in practice). Done in b62cea3 (2026-10-13;
+  (exact in practice). Done in 5402a45 (2026-10-13;
   `.claude/probes/K108/`). Follow-up K109.
 
 ## K87 (Done 2026-10-13)
@@ -980,7 +980,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   `test/core/maze_plan_identity.test.ts` against the frozen pre-K87
   module. Plan build at gs 24 defaults 174 -> 6.9 ms median (1.4 s ->
   30 ms worst), dense maps 1.7 s -> 25 ms (15.4 s -> 104 ms worst). Done
-  in 62dd16d (2026-10-13). Follow-up K108.
+  in d4564a4 (2026-10-13). Follow-up K108.
 
 ## K77 (Done 2026-10-13)
 
@@ -991,7 +991,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   second difference -5.7 -> -0.98 (bound -1). Cost per pluck layout
   (desktop, `.claude/probes/K77/k77_cost.ts`): 0.02-0.3 ms; a whole chain
   at full depth costs n x h/per (1 ms at n 2000, h/per 8). Done in
-  eec4854 + 6e3f124 (2026-10-13; `.claude/probes/K77/`). Follow-ups
+  5091ff3 + 4c9eba4 (2026-10-13; `.claude/probes/K77/`). Follow-ups
   K104-K107.
 
 ## K101 (Done 2026-10-13)
@@ -1001,7 +1001,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   stretched (1.8% at 60 fps, 13.4% with 150 ms frames). Notes are now
   scheduled 0.3 s ahead on the audio clock and start sample-accurately
   in the worklet; measured at 60 fps and 150 ms frames, the interval
-  error is at most 0.02 ms and the stretch is 0. Done in e9e01ae
+  error is at most 0.02 ms and the stretch is 0. Done in a913d58
   (2026-10-13; `.claude/probes/K101/`). Residual in K103.
 
 ## K83 (Done 2026-10-13)
@@ -1009,7 +1009,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 - **K83** · Placeholder marker icons (Levi): black discs with white
   stroked glyphs for the start, finish and head; the finish's off-screen
   indicator wears the same glyph. Phone gate passed (K10, 2026-10-13).
-  Done in 45aac50 + 5592f8c (2026-10-13; `.claude/probes/K83/`).
+  Done in 21a525e + 2c4c603 (2026-10-13; `.claude/probes/K83/`).
   Follow-ups K98, K99.
 
 ## K96 (Done 2026-10-13)
@@ -1017,28 +1017,28 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 - **K96** · The follow camera reaches the head at the same real speed at
   any frame rate: it steps by real elapsed time in substeps of at most
   0.05 s. t95 at 151 ms frames went 8.6 s -> 4.4 s; 60 Hz is unchanged.
-  Done in d8b9175 (2026-10-13; `.claude/probes/K96/`). Follow-up K103.
+  Done in a24f104 (2026-10-13; `.claude/probes/K96/`). Follow-up K103.
 
 ## K99 (Done 2026-10-13)
 
 - **K99** · The fog of war lifts at fixed stations along a move's run,
-  the same at any frame rate, move speed or mid-flight tap (0097801,
+  the same at any frame rate, move speed or mid-flight tap (ff33b24,
   2026-10-13; `.claude/probes/K99/`). Follow-up K100.
 
 ## K73 (Done 2026-10-13)
 
 - **K73** · Levi's UI batch: pathViz labels read fullPath / recentPath
-  (f917282); codec v4, recentPath lights twice as far, trailLength
-  5 -> 10, dailies keep 5 (a99967e); the mode badge, "Free play" off the
-  daily and "Replay · not scored" (0772f63); off-screen indicators, the
-  finish points the way (ce331bc). Done 2026-10-13; follow-ups K92, K94,
+  (0a9e57b); codec v4, recentPath lights twice as far, trailLength
+  5 -> 10, dailies keep 5 (f136d42); the mode badge, "Free play" off the
+  daily and "Replay · not scored" (1cc7896); off-screen indicators, the
+  finish points the way (7a6bba2). Done 2026-10-13; follow-ups K92, K94,
   K95, K96.
 
 ## K75 (Done 2026-10-13)
 
 - **K75** · recentPath's yellow pulse banding: pulses now brighten the
-  thread's own paint (8b1ae7c); `pulseReach` ends the junction's pulse
-  trains a set distance out, default 3 (59cba84). Done 2026-10-13; phone
+  thread's own paint (a1e1cc1); `pulseReach` ends the junction's pulse
+  trains a set distance out, default 3 (ecd6b22). Done 2026-10-13; phone
   gate in K10; follow-up K93.
 
 ## K67 (Done 2026-10-13)
@@ -1076,7 +1076,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   render, render-gaps, gameplay, generation, probes; the largest about
   7.6k tokens), which load only when matching files are touched.
   `.claude/rules/` is tracked; the rest of `.claude/` is ignored. Done in
-  436eb37 and 6866d4b (2026-10-12).
+  77e1aad and 73d2365 (2026-10-12).
   - 717 of 720 old sentences sit in exactly one new file; the other 3
     are pointer rewrites (`.claude/probes/K45/verify.py`).
   - Rules load checked in a `claude -p` transcript; vitest 315.
@@ -1087,7 +1087,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
   the reveal and its FX, and gameplay paint are evaluated per pixel from
   data textures (CPU mirror: `src/render/paint_math.ts`), and junction
   fans read per-arm material strips rendered once per frame
-  (`src/render/arm_strip.ts`). Done in 72041df..a001b34 (2026-10-12).
+  (`src/render/arm_strip.ts`). Done in bfa17d8..77a1e8f (2026-10-12).
   - Phone (Pixel 11, on K63): 59.5 fps with flow, 60.3 flow off (master
     59.5 / 59.3). Without the strips the fans had cost 60 -> 44 fps.
   - Desktop GPU (3200x1800, 5 moves): draw phase 2.07 (master) -> 2.14
@@ -1103,8 +1103,8 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 - **K63** · The sleep gate counted 45 still FRAMES, so every real settle
   (physics-bound under 10 fps, frames capped at 0.1 s) slept at exactly
   sim 7.0. It now counts 2.5 SIMULATED seconds of quiet
-  (`src/physics/sleep_gate.ts`), on every device. Done in 66b4db5,
-  ed53344 and 7f75e8f (2026-10-12).
+  (`src/physics/sleep_gate.ts`), on every device. Done in f308bb9,
+  01b5c26 and fdc7772 (2026-10-12).
   - Sleep at about 5.0 sim-s on every set (8 seeds x default, fat, tw
     .64, and the five shapes at their daily sizes); desktop wall 12.3 ->
     8.9 s at the default; phone 13.0 -> 8.8 s.
@@ -1226,7 +1226,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K47 + K56 (Done 2026-10-12)
 
 - **K47 + K56** · Saved daily attempts, and the daily as the front door.
-  Done in ba908bb and a72d91d (2026-10-12).
+  Done in 359b458 and b3f96c9 (2026-10-12).
   - A bare URL opens today's daily; any other query, or a non-exempt
     panel edit, leaves it with a "your attempt is saved" toast.
   - The attempt (its taps, fingerprinted) is saved on every move and on
@@ -1239,15 +1239,15 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K63 (Done 2026-10-12)
 
-- **K63** · The sleep gate counted 45 still frames, so every real settle slept at exactly sim 7.0; it now counts 2.5 simulated seconds of quiet (`src/physics/sleep_gate.ts`), on every device. K64 is the speed trade. Done in 66b4db5, ed53344 and 7f75e8f (2026-10-12).
+- **K63** · The sleep gate counted 45 still frames, so every real settle slept at exactly sim 7.0; it now counts 2.5 simulated seconds of quiet (`src/physics/sleep_gate.ts`), on every device. K64 is the speed trade. Done in f308bb9, 01b5c26 and fdc7772 (2026-10-12).
 
 ## K4 (Done 2026-10-12)
 
-- **K4** · G2: per-sample color work runs in the shaders. Section colors, the reveal and its FX, and gameplay paint are evaluated per pixel from data textures (CPU mirror `src/render/paint_math.ts`), and junction fans read per-arm material strips (`src/render/arm_strip.ts`); record `docs/design/G2_shader_paint.md` section 7. Sign-off K67; G2.4 (GPU particles) is K23. Done in 72041df..a001b34 (2026-10-12).
+- **K4** · G2: per-sample color work runs in the shaders. Section colors, the reveal and its FX, and gameplay paint are evaluated per pixel from data textures (CPU mirror `src/render/paint_math.ts`), and junction fans read per-arm material strips (`src/render/arm_strip.ts`); record `docs/design/G2_shader_paint.md` section 7. Sign-off K67; G2.4 (GPU particles) is K23. Done in bfa17d8..77a1e8f (2026-10-12).
 
 ## K45 (Done 2026-10-12)
 
-- **K45** · CLAUDE.md slimmed from 2,250 lines (about 39k tokens) to about 240 (about 5k): history moved verbatim to `docs/history.md`, subsystem lore to path-scoped `.claude/rules/` files. Done in 436eb37 and 6866d4b (2026-10-12).
+- **K45** · CLAUDE.md slimmed from 2,250 lines (about 39k tokens) to about 240 (about 5k): history moved verbatim to `docs/history.md`, subsystem lore to path-scoped `.claude/rules/` files. Done in 77e1aad and 73d2365 (2026-10-12).
 
 ## K53 (Done 2026-10-13)
 
@@ -1271,43 +1271,43 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K75 (Done 2026-10-13)
 
-- **K75** · recentPath's yellow pulse banding: pulses now brighten the thread's own paint, and `pulseReach` ends the junction's pulse trains a set distance out (default 3). Follow-up K93. Done in 8b1ae7c and 59cba84 (2026-10-13).
+- **K75** · recentPath's yellow pulse banding: pulses now brighten the thread's own paint, and `pulseReach` ends the junction's pulse trains a set distance out (default 3). Follow-up K93. Done in a1e1cc1 and ecd6b22 (2026-10-13).
 
 ## K73 (Done 2026-10-13)
 
-- **K73** · Levi's UI batch: pathViz labels, codec v4 (recentPath lights twice as far, trailLength 5 -> 10, dailies keep 5), the mode badge, and off-screen indicators (the finish points the way). Follow-ups K92, K94, K95, K96. Done in f917282, a99967e, 0772f63 and ce331bc (2026-10-13).
+- **K73** · Levi's UI batch: pathViz labels, codec v4 (recentPath lights twice as far, trailLength 5 -> 10, dailies keep 5), the mode badge, and off-screen indicators (the finish points the way). Follow-ups K92, K94, K95, K96. Done in 0a9e57b, f136d42, 1cc7896 and 7a6bba2 (2026-10-13).
 
 ## K99 (Done 2026-10-13)
 
-- **K99** · The fog of war lifts at fixed stations along a move's run, the same at any frame rate, move speed or mid-flight tap. Follow-up K100. Done in 0097801 (2026-10-13).
+- **K99** · The fog of war lifts at fixed stations along a move's run, the same at any frame rate, move speed or mid-flight tap. Follow-up K100. Done in ff33b24 (2026-10-13).
 
 ## K96 (Done 2026-10-13)
 
-- **K96** · The follow camera reaches the head at the same real speed at any frame rate (real elapsed time, substeps of at most 0.05 s). Follow-up K103. Done in d8b9175 (2026-10-13).
+- **K96** · The follow camera reaches the head at the same real speed at any frame rate (real elapsed time, substeps of at most 0.05 s). Follow-up K103. Done in a24f104 (2026-10-13).
 
 ## K83 (Done 2026-10-13)
 
-- **K83** · Placeholder marker icons: black discs with white stroked glyphs for the start, finish and head; the finish's off-screen indicator wears the same glyph. Follow-ups K98, K99. Done in 45aac50 + 5592f8c (2026-10-13).
+- **K83** · Placeholder marker icons: black discs with white stroked glyphs for the start, finish and head; the finish's off-screen indicator wears the same glyph. Follow-ups K98, K99. Done in 21a525e + 2c4c603 (2026-10-13).
 
 ## K101 (Done 2026-10-13)
 
-- **K101** · Music mode timed its notes from the render tick, so onsets landed up to a frame late and the tempo stretched; notes are now scheduled 0.3 s ahead on the audio clock. Residual in K103. Done in e9e01ae (2026-10-13).
+- **K101** · Music mode timed its notes from the render tick, so onsets landed up to a frame late and the tempo stretched; notes are now scheduled 0.3 s ahead on the audio clock. Residual in K103. Done in a913d58 (2026-10-13).
 
 ## K77 (Done 2026-10-13)
 
-- **K77** · Plucks showed sharp, wedge-like depressions: `roundCollapse` now opens the collapse depth with raised-cosine bumps, so the narrowed edge bends no tighter than 1 h. Follow-ups K104-K107. Done in eec4854 + 6e3f124 (2026-10-13).
+- **K77** · Plucks showed sharp, wedge-like depressions: `roundCollapse` now opens the collapse depth with raised-cosine bumps, so the narrowed edge bends no tighter than 1 h. Follow-ups K104-K107. Done in 5091ff3 + 4c9eba4 (2026-10-13).
 
 ## K87 (Done 2026-10-13)
 
-- **K87** · The maze plan's `pickFarthest` rescanned every candidate against every placed point; it now keeps a running minimum per candidate, pick-for-pick identical (CI pin `test/core/maze_plan_identity.test.ts`). Follow-up K108. Done in 62dd16d (2026-10-13).
+- **K87** · The maze plan's `pickFarthest` rescanned every candidate against every placed point; it now keeps a running minimum per candidate, pick-for-pick identical (CI pin `test/core/maze_plan_identity.test.ts`). Follow-up K108. Done in d4564a4 (2026-10-13).
 
 ## K108 (Done 2026-10-13)
 
-- **K108** · Generation builds the same maze in every browser: only spec-exact operations plus `src/util/det_math.ts` (`hypot2` = V8's Math.hypot), guarded by `test/core/deterministic_math.test.ts` and `test/util/det_math.test.ts`. Follow-up K109. Done in b62cea3 (2026-10-13).
+- **K108** · Generation builds the same maze in every browser: only spec-exact operations plus `src/util/det_math.ts` (`hypot2` = V8's Math.hypot), guarded by `test/core/deterministic_math.test.ts` and `test/util/det_math.test.ts`. Follow-up K109. Done in 5402a45 (2026-10-13).
 
 ## K109 (Done 2026-10-13)
 
-- **K109** · Every maze has a route from the start to the exit: a piece model (`planTailsJoined`) predicts the walk graph's verdict before surgery, and a plan whose tails do not meet is rebuilt with `repairTailRoute` (`test/core/maze_solvable.test.ts`). Follow-up K110. Done in b722a12 (2026-10-13).
+- **K109** · Every maze has a route from the start to the exit: a piece model (`planTailsJoined`) predicts the walk graph's verdict before surgery, and a plan whose tails do not meet is rebuilt with `repairTailRoute` (`test/core/maze_solvable.test.ts`). Follow-up K110. Done in fcad57d (2026-10-13).
 
 ## K94 (Done 2026-10-13)
 
@@ -1319,7 +1319,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K49 (Done 2026-10-13)
 
-- **K49** · Kink eye size: Levi kept 2.6 widths over 2.8 (`.claude/probes/K49/`); the 2.8 one-liner stays on branch `worktree-agent-ac664e8a9e271757a` (4fa22e2). Decided, no change (2026-10-13).
+- **K49** · Kink eye size: Levi kept 2.6 widths over 2.8 (`.claude/probes/K49/`); the 2.8 one-liner stays on branch `worktree-agent-ac664e8a9e271757a` (3b97e25). Decided, no change (2026-10-13).
 
 ## K105 (Done 2026-10-13)
 
@@ -1335,31 +1335,31 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K129 (Done 2026-10-13)
 
-- **K129** · K79 stage B's two calls: the custom colors keep their proposed defaults, and the vellum scale's max drops from 3 to 2 (the fiber floor stays). Done in 281b22b and b2ccfaf (2026-10-13), with K79 stage B (58b77cf).
+- **K129** · K79 stage B's two calls: the custom colors keep their proposed defaults, and the vellum scale's max drops from 3 to 2 (the fiber floor stays). Done in 28a5a64 and e936e48 (2026-10-13), with K79 stage B (bbd71dc).
 
 ## K110 (Done 2026-10-13)
 
-- **K110** · Join every piece of the maze to the start: one join per unreachable piece (a splice or a merge), else the exit moves to the next-nearest edge; the K87 pin was re-frozen. Done in b9038c7 (2026-10-13).
+- **K110** · Join every piece of the maze to the start: one join per unreachable piece (a splice or a merge), else the exit moves to the next-nearest edge; the K87 pin was re-frozen. Done in 98c4023 (2026-10-13).
 
 ## K79 (Done 2026-10-13)
 
-- **K79** · Backgrounds: `backgroundSpeed` (`bgs`, max 8), vellum drift, the Motion setting (`src/ui/motion.ts`, K53), and per-effect params and custom colors as codec v4 appends 72-81 (`docs/design/K79.md`). Residuals K157-K159, idea K160. Done in 58b77cf (2026-10-13).
+- **K79** · Backgrounds: `backgroundSpeed` (`bgs`, max 8), vellum drift, the Motion setting (`src/ui/motion.ts`, K53), and per-effect params and custom colors as codec v4 appends 72-81 (`docs/design/K79.md`). Residuals K157-K159, idea K160. Done in bbd71dc (2026-10-13).
 
 ## K122 (Done 2026-10-13)
 
-- **K122** · Third-party license notices (K117): the build emits `licenses.html` from the packages the bundle really contains, the panel's credit line links to it, and the build and `npm test` fail on an unlicensed package; hand-written credits live in `notices/credits.ts` (`docs/design/K122.md`, `.claude/rules/notices.md`). Levi's calls on them: K154. Done in f0ef0e4 (2026-10-13).
+- **K122** · Third-party license notices (K117): the build emits `licenses.html` from the packages the bundle really contains, the panel's credit line links to it, and the build and `npm test` fail on an unlicensed package; hand-written credits live in `notices/credits.ts` (`docs/design/K122.md`, `.claude/rules/notices.md`). Levi's calls on them: K154. Done in 75d6fed (2026-10-13).
 
 ## K147 (Done 2026-10-13)
 
-- **K147** · A smooth intro on load: a per-frame physics budget (`src/physics/settle_budget.ts`) from the first visible frame to the first sleep, and the hidden pre-settle in chunks behind the loader (`stb`, `lds`; `docs/design/K147.md`). Calls K162; residuals K163-K165. Done in 97293e7 (2026-10-13).
+- **K147** · A smooth intro on load: a per-frame physics budget (`src/physics/settle_budget.ts`) from the first visible frame to the first sleep, and the hidden pre-settle in chunks behind the loader (`stb`, `lds`; `docs/design/K147.md`). Calls K162; residuals K163-K165. Done in b1897da (2026-10-13).
 
 ## K127 (Done 2026-10-13)
 
-- **K127** · Fill a web with gold when every arm is traveled (K81's decision 4), built in K81's stage 3d. Done in 5d3170d (2026-10-13), with K81 (3c8433a).
+- **K127** · Fill a web with gold when every arm is traveled (K81's decision 4), built in K81's stage 3d. Done in 8133bdf (2026-10-13), with K81 (fd05619).
 
 ## K81 (Done 2026-10-13)
 
-- **K81** · The traveled highlight at junctions: a smooth gold arc from the arrival arm to the departure arm (`src/render/junction_routes.ts`) and K127's fully traveled web (`docs/design/K81.md`). Residuals K166-K168, call K169. Done in 3c8433a (2026-10-13).
+- **K81** · The traveled highlight at junctions: a smooth gold arc from the arrival arm to the departure arm (`src/render/junction_routes.ts`) and K127's fully traveled web (`docs/design/K81.md`). Residuals K166-K168, call K169. Done in fd05619 (2026-10-13).
 
 ## K171 (Done 2026-10-14)
 
@@ -1375,51 +1375,51 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K104 (Done 2026-10-14)
 
-- **K104** · Plucks you can see at a glance: a set-amount vibration of the whole segment with today's local lobes on top, a gentler collapse and its own reduced-motion version. Tuning calls went to K180, the cold-link stall to K185, residuals to K181. Done in 5d672ec (2026-10-14).
+- **K104** · Plucks you can see at a glance: a set-amount vibration of the whole segment with today's local lobes on top, a gentler collapse and its own reduced-motion version. Tuning calls went to K180, the cold-link stall to K185, residuals to K181. Done in 77225b0 (2026-10-14).
 
 ## K155 (Done 2026-10-14)
 
-- **K155** · A star rating for each finish: stars from the distance walked over the shortest route (three at 1.5x or less and never caught, two at 4x or less, one for any finish). Calls K184; the History rows' hover-only explanation K187. Done in 18c9a2e..edfb65f (2026-10-14).
+- **K155** · A star rating for each finish: stars from the distance walked over the shortest route (three at 1.5x or less and never caught, two at 4x or less, one for any finish). Calls K184; the History rows' hover-only explanation K187. Done in 32df850..5d5b549 (2026-10-14).
 
 ## K140 (Done 2026-10-14)
 
-- **K140** · Finish confetti: a rain from the top plus a spray from the finish, render-only; `cf` and `cfa` at codec 99-100, daily-exempt. Calls K186; residuals K188, K189. Done in 99b7161..bb55c9a (2026-10-14).
+- **K140** · Finish confetti: a rain from the top plus a spray from the finish, render-only; `cf` and `cfa` at codec 99-100, daily-exempt. Calls K186; residuals K188, K189. Done in 8b18498..9df308a (2026-10-14).
 
 ## K169 (Done 2026-10-14)
 
-- **K169** · Fade K127's gold web in over about 0.25 s: `src/render/web_fade.ts`, a smoothstep from the untraveled base to the gold one. Calls K191; probes that pin `paintClock`: K192. Done in 64d3296..aaa3dda (2026-10-14).
+- **K169** · Fade K127's gold web in over about 0.25 s: `src/render/web_fade.ts`, a smoothstep from the untraveled base to the gold one. Calls K191; probes that pin `paintClock`: K192. Done in acdd1f9..e03bbd2 (2026-10-14).
 
 ## K154 (Done 2026-10-14)
 
-- **K154** · Our own hash in place of PCG2D, whose credit goes: `src/render/hash2d.ts` (tests in `test/render/hash2d.test.ts`; GPU parity 0 of 524288 words off). The desktop cost is K190. Done in 64d3296..aaa3dda (2026-10-14).
+- **K154** · Our own hash in place of PCG2D, whose credit goes: `src/render/hash2d.ts` (tests in `test/render/hash2d.test.ts`; GPU parity 0 of 524288 words off). The desktop cost is K190. Done in acdd1f9..e03bbd2 (2026-10-14).
 
 ## K180 (Done 2026-10-14)
 
-- **K180** · K104's tuning calls as params: pluckWhole (`pw`), pluckCrossings (`pcx`) and pluckGlow (`pgl`), codec v4 indices 101-103, daily-exempt; 0 px against master at the defaults. Calls K194; residual K196. Done in 048e06c..0250564 (2026-10-14).
+- **K180** · K104's tuning calls as params: pluckWhole (`pw`), pluckCrossings (`pcx`) and pluckGlow (`pgl`), codec v4 indices 101-103, daily-exempt; 0 px against master at the defaults. Calls K194; residual K196. Done in d6795ca..85541bc (2026-10-14).
 
 ## K149 (Done 2026-10-14)
 
-- **K149** · Room to pan the maze partly off screen at the fit zoom (`src/ui/view_clamp.ts`, `PAN_SLACK`). Calls K198. Done in 2afca1d..fcc402b (2026-10-14, with K148).
+- **K149** · Room to pan the maze partly off screen at the fit zoom (`src/ui/view_clamp.ts`, `PAN_SLACK`). Calls K198. Done in 818ad90..18b76be (2026-10-14, with K148).
 
 ## K148 (Done 2026-10-14)
 
-- **K148** · An off-screen indicator for the player: the head is K73's third indicator client (`src/ui/head_indicator.ts`; a tap returns the camera to the head). Calls K198; idea K199. Done in 2afca1d..fcc402b (2026-10-14).
+- **K148** · An off-screen indicator for the player: the head is K73's third indicator client (`src/ui/head_indicator.ts`; a tap returns the camera to the head). Calls K198; idea K199. Done in 818ad90..18b76be (2026-10-14).
 
 ## K151 (Done 2026-10-14)
 
-- **K151** · The mode badge: one badge always shows (`src/ui/mode_badge.ts`: Free play, Daily #N, replay, practice) and free play's X fades in on hover. Calls K200. Done in df8929c..b9cf882 (2026-10-14, with K146).
+- **K151** · The mode badge: one badge always shows (`src/ui/mode_badge.ts`: Free play, Daily #N, replay, practice) and free play's X fades in on hover. Calls K200. Done in 5a51164..a8bbb5f (2026-10-14, with K146).
 
 ## K146 (Done 2026-10-14)
 
-- **K146** · Past dailies, playable without credit: daily store v3 (a late attempt finishes as practice, outside every aggregate), a History listing every past daily, a practice banner and share title. Calls K200; residuals K201, K202. Done in df8929c..b9cf882 (2026-10-14).
+- **K146** · Past dailies, playable without credit: daily store v3 (a late attempt finishes as practice, outside every aggregate), a History listing every past daily, a practice banner and share title. Calls K200; residuals K201, K202. Done in 5a51164..a8bbb5f (2026-10-14).
 
 ## K120 (Done 2026-10-14)
 
-- **K120** · Faster, smoother input: arrow keys and WASD move by direction (`src/ui/key_moves.ts`: 70 deg match, 15 deg tie, 200 ms hold) and a touch move pad (`src/ui/move_pad.ts`). Calls K203; idea K204; residuals K205. Done in ba8b198..0acbce0 (2026-10-14).
+- **K120** · Faster, smoother input: arrow keys and WASD move by direction (`src/ui/key_moves.ts`: 70 deg match, 15 deg tie, 200 ms hold) and a touch move pad (`src/ui/move_pad.ts`). Calls K203; idea K204; residuals K205. Done in 26a2319..47d9223 (2026-10-14).
 
 ## K200 (Done 2026-10-14)
 
-- **K200** · K146 + K151's calls (`docs/design/K146_K151.md`): free play's X always shows, and the practice banner, share text, badge tap, labels' daily numbers, History's rows and v2's late results; Levi confirmed ("ok"). Done in 7950c7f (2026-10-14).
+- **K200** · K146 + K151's calls (`docs/design/K146_K151.md`): free play's X always shows, and the practice banner, share text, badge tap, labels' daily numbers, History's rows and v2's late results; Levi confirmed ("ok"). Done in 35bf7e1 (2026-10-14).
 
 ## K203 (Done 2026-10-14)
 
@@ -1427,35 +1427,35 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K61 (Done 2026-10-14)
 
-- **K61** · `encodeDelta` (the old `?daily=N.<delta>` writer), used only by tests. Done in 402eb4b (2026-10-14): K132 removed it and the delta reader.
+- **K61** · `encodeDelta` (the old `?daily=N.<delta>` writer), used only by tests. Done in cf5bcde (2026-10-14): K132 removed it and the delta reader.
 
 ## K100 (Done 2026-10-14)
 
-- **K100** · The fog of war resets on a restart only (walking back, a daily's Reset path and a K80 catch keep it): the controller counts restarts and the renderer clears the stamps when the count moves (`docs/design/K100.md`). Follow-ups K206-K209. Done in 458e1e5 (2026-10-14).
+- **K100** · The fog of war resets on a restart only (walking back, a daily's Reset path and a K80 catch keep it): the controller counts restarts and the renderer clears the stamps when the count moves (`docs/design/K100.md`). Follow-ups K206-K209. Done in 354fadc (2026-10-14).
 
 ## K132 (Done 2026-10-14)
 
-- **K132** · Drop link and daily back-compat: one live codec table (`CODEC_PARAMS`), CODEC_V1-V4, the delta blobs and DAILY_V1 removed, an all-default design writes `?<seed>`; no pin moved (`docs/design/K132.md`). Follow-ups K210-K212. Done in 402eb4b (2026-10-14).
+- **K132** · Drop link and daily back-compat: one live codec table (`CODEC_PARAMS`), CODEC_V1-V4, the delta blobs and DAILY_V1 removed, an all-default design writes `?<seed>`; no pin moved (`docs/design/K132.md`). Follow-ups K210-K212. Done in cf5bcde (2026-10-14).
 
 ## K173 (Done 2026-10-14)
 
-- **K173** · Split the `.claude/rules/` lore by topic: 32 new topic files with narrow `paths:`, moved verbatim by `scripts/split_rules.mjs` and indexed in `docs/lore_index.md` (`docs/design/K173.md`). Follow-ups K214, K216; idea K215. Done in 62e7d5b..1fe468d (2026-10-14).
+- **K173** · Split the `.claude/rules/` lore by topic: 32 new topic files with narrow `paths:`, moved verbatim by `scripts/split_rules.mjs` and indexed in `docs/lore_index.md` (`docs/design/K173.md`). Follow-ups K214, K216; idea K215. Done in 484ecd6..0f9c8fe (2026-10-14).
 
 ## K93 (Done 2026-10-14)
 
-- **K93** · Trail fade and hover reach: the trail piece holding the fade start splits in two (`src/render/trail_paint.ts`), and the choice hover stops at `pulseReach` and fades in every path mode (`docs/design/K93_K145.md`). Follow-ups K217-K220; stage 2 is K145. Done in 82ca7d9..ed8f284 (2026-10-14).
+- **K93** · Trail fade and hover reach: the trail piece holding the fade start splits in two (`src/render/trail_paint.ts`), and the choice hover stops at `pulseReach` and fades in every path mode (`docs/design/K93_K145.md`). Follow-ups K217-K220; stage 2 is K145. Done in 2577ae2..c2eefd5 (2026-10-14).
 
 ## K98 (Done 2026-10-14)
 
-- **K98** · Marker sizes and two new glyphs: a `markerSize` slider (`mks`, codec 104, daily-exempt, default 1.08), colored dots back at the start and finish, a horns glyph for the minotaur (lore `render-markers.md`; `docs/design/K98.md`). The spider glyph is K226, the default size K225. Done in 68a9622..f5982cd (2026-10-14).
+- **K98** · Marker sizes and two new glyphs: a `markerSize` slider (`mks`, codec 104, daily-exempt, default 1.08), colored dots back at the start and finish, a horns glyph for the minotaur (lore `render-markers.md`; `docs/design/K98.md`). The spider glyph is K226, the default size K225. Done in f036998..c9df8c9 (2026-10-14).
 
 ## K224 (Done 2026-10-14)
 
-- **K224** · The K120 move pad drew over the open panel on the phone; K92 hides the pad while the panel is open. Done in d707bc1..e78ddcc (2026-10-14).
+- **K224** · The K120 move pad drew over the open panel on the phone; K92 hides the pad while the panel is open. Done in 4e61570..525819d (2026-10-14).
 
 ## K92 (Done 2026-10-14)
 
-- **K92** · Undo and redo for design changes: a 100-step history (`src/ui/undo_stack.ts`), buttons beside the panel button (`src/ui/undo_buttons.ts`), the badge on its own row (lore `gameplay-panel.md`, `gameplay-badge.md`; `docs/design/K92.md`). The panel's lower top is K229. Done in d707bc1..e78ddcc (2026-10-14).
+- **K92** · Undo and redo for design changes: a 100-step history (`src/ui/undo_stack.ts`), buttons beside the panel button (`src/ui/undo_buttons.ts`), the badge on its own row (lore `gameplay-panel.md`, `gameplay-badge.md`; `docs/design/K92.md`). The panel's lower top is K229. Done in 4e61570..525819d (2026-10-14).
 
 ## K219 (Done 2026-10-14)
 
@@ -1463,51 +1463,51 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K145 (Done 2026-10-14)
 
-- **K145** · A subtle hover glow on runs that aren't choices: `hoverGlow` (`hg`, codec 105, default 0.4, daily-exempt), a G2 rim term with its `paint_math` mirror (lore `render-paint.md`, HOVER GLOW; `docs/design/K93_K145.md`). Residuals K236; the default and exemption K237. Done in 06edef4..56b6f2d (2026-10-14).
+- **K145** · A subtle hover glow on runs that aren't choices: `hoverGlow` (`hg`, codec 105, default 0.4, daily-exempt), a G2 rim term with its `paint_math` mirror (lore `render-paint.md`, HOVER GLOW; `docs/design/K93_K145.md`). Residuals K236; the default and exemption K237. Done in d0503b9..c795b42 (2026-10-14).
 
 ## K191 (Done 2026-10-14)
 
-- **K191** · K169's two calls: a web that stops being full fades its gold out over the same 0.25 s, and reduced Motion keeps the fade (`web_fade.ts`; lore `render-web-fade.md`; `docs/design/K154_K169.md`). Done in fafa340..3467117 (2026-10-14).
+- **K191** · K169's two calls: a web that stops being full fades its gold out over the same 0.25 s, and reduced Motion keeps the fade (`web_fade.ts`; lore `render-web-fade.md`; `docs/design/K154_K169.md`). Done in 07bb21b..72faa82 (2026-10-14).
 
 ## K239 (Done 2026-10-14)
 
-- **K239** · A fresh static page drew its first frame before the renderer had its fade and flow: `handRendererLook()` in `main.ts` now hands the renderer every look param before each `update()` (lore `gameplay-motion.md`). A paused page with the instant intro is K243. Done in 08d1383..05e6d4d (2026-10-14).
+- **K239** · A fresh static page drew its first frame before the renderer had its fade and flow: `handRendererLook()` in `main.ts` now hands the renderer every look param before each `update()` (lore `gameplay-motion.md`). A paused page with the instant intro is K243. Done in f0268b2..8960c18 (2026-10-14).
 
 ## K235 (Done 2026-10-14)
 
-- **K235** · Taps inside junction cores make no sound (`tapLobes()` in `pluck_model.ts`; lore `render-pluck.md`; `docs/design/K235_K239.md`). Done in 08d1383..05e6d4d (2026-10-14).
+- **K235** · Taps inside junction cores make no sound (`tapLobes()` in `pluck_model.ts`; lore `render-pluck.md`; `docs/design/K235_K239.md`). Done in f0268b2..8960c18 (2026-10-14).
 
 ## K174 (Done 2026-10-14)
 
-- **K174** · The minotaur's controls (Levi's K80 stage 1 calls): the paces as fractions of `playerPace` (`mwp` 0.5, `mhp` 0.7), and `minoToward` (`mtw`) and `minoRefog` (`mrf`) checkboxes, tuned on the K80 sim (lore `gameplay-minotaur.md`; `docs/design/K174.md`). Follow-ups K245-K247. Done in ecf2169..6ec8275 (2026-10-14).
+- **K174** · The minotaur's controls (Levi's K80 stage 1 calls): the paces as fractions of `playerPace` (`mwp` 0.5, `mhp` 0.7), and `minoToward` (`mtw`) and `minoRefog` (`mrf`) checkboxes, tuned on the K80 sim (lore `gameplay-minotaur.md`; `docs/design/K174.md`). Follow-ups K245-K247. Done in 52a4e53..f258161 (2026-10-14).
 
 ## K111 (Done 2026-10-14)
 
-- **K111** · Accessibility: an Accessibility folder first in the panel with High contrast and Reduced motion master checkboxes (`src/ui/accessibility.ts`; stage 1 0e5a138..9c6cab3, review K238); stage 2's highlight modes were later removed (K248). Done in 36d280a..5438a60 (2026-10-14).
+- **K111** · Accessibility: an Accessibility folder first in the panel with High contrast and Reduced motion master checkboxes (`src/ui/accessibility.ts`; stage 1 698aba5..1da3cbc, review K238); stage 2's highlight modes were later removed (K248). Done in ce66042..a2b2f1a (2026-10-14).
 
 ## K198 (Done 2026-10-14)
 
-- **K198** · The fit camera's pan and the off-screen indicators: the pan range lets the maze's edge reach the open panel's edge (`src/ui/view_clamp.ts`), the finish, head and minotaur indicators get show/hide switches and one size slider, the head's disc waits 0.45 s off screen, and the panel limit and displaced indicators tween (lore `gameplay-camera.md`, `gameplay-indicators.md`; `docs/design/K198.md`). The disc's slide across the panel is K251, residuals K252. Stage 1 5f6ceb9..d7373a4. Done in 96fa13a..af0f054 (2026-10-14).
+- **K198** · The fit camera's pan and the off-screen indicators: the pan range lets the maze's edge reach the open panel's edge (`src/ui/view_clamp.ts`), the finish, head and minotaur indicators get show/hide switches and one size slider, the head's disc waits 0.45 s off screen, and the panel limit and displaced indicators tween (lore `gameplay-camera.md`, `gameplay-indicators.md`; `docs/design/K198.md`). The disc's slide across the panel is K251, residuals K252. Stage 1 6d3774a..2f5c3fb. Done in cf7010f..36f9ea7 (2026-10-14).
 
 ## K250 (Done 2026-10-14)
 
-- **K250** · An idle-render skip for the steady highlight modes. Dropped: the modes were removed in 365bc45 (2026-10-14).
+- **K250** · An idle-render skip for the steady highlight modes. Dropped: the modes were removed in d199033 (2026-10-14).
 
 ## K249 (Done 2026-10-14)
 
-- **K249** · K111's rims and contrast modes stopped hard at junction webs and fans. Dropped: the modes were removed in 365bc45 (2026-10-14).
+- **K249** · K111's rims and contrast modes stopped hard at junction webs and fans. Dropped: the modes were removed in d199033 (2026-10-14).
 
 ## K248 (Done 2026-10-14)
 
-- **K248** · Levi's highlight pick: the choices keep the pulses and a hovered choice keeps today's look; `highlightMode` and its modes went (CODEC_VERSION 5), and a hover off the choices gets K145's rim reshaped (lore `render-paint.md`, HOVER GLOW; `docs/design/K111.md`, "Stage 3 handoff"). Calls: K264, K265, K237. Done in 365bc45..6588ec0 (2026-10-14).
+- **K248** · Levi's highlight pick: the choices keep the pulses and a hovered choice keeps today's look; `highlightMode` and its modes went (CODEC_VERSION 5), and a hover off the choices gets K145's rim reshaped (lore `render-paint.md`, HOVER GLOW; `docs/design/K111.md`, "Stage 3 handoff"). Calls: K264, K265, K237. Done in d199033..3de7cdb (2026-10-14).
 
 ## K269 (Done 2026-10-14)
 
-- **K269** · The turn hunter's catch rates on today's mazes: Levi said retune; sight 4 -> 2 and accuracy 0.9 -> 0.3 take the hunter to 1.0% / 13.1% on H1 mazes. The stalker and the treelike sets paid for it: K294. Done in 86d404e..02194b4 (2026-10-14).
+- **K269** · The turn hunter's catch rates on today's mazes: Levi said retune; sight 4 -> 2 and accuracy 0.9 -> 0.3 take the hunter to 1.0% / 13.1% on H1 mazes. The stalker and the treelike sets paid for it: K294. Done in 40f74d1..dea013f (2026-10-14).
 
 ## K237 (Done 2026-10-14)
 
-- **K237** · The hover rim's strength: `hoverGlow` stays 0.4 and daily-exempt (K57), as built. Done in 6588ec0 (2026-10-14).
+- **K237** · The hover rim's strength: `hoverGlow` stays 0.4 and daily-exempt (K57), as built. Done in 3de7cdb (2026-10-14).
 
 ## K275 (Done 2026-10-14)
 
@@ -1515,31 +1515,31 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K277 (Done 2026-10-14)
 
-- **K277** · Credit the research and techniques on the credits page: eleven `RESEARCH` entries in `notices/credits.ts`, worded as use, never endorsement. Follow-ups K284, K285. Done in 71a7c25..79805af (2026-10-14).
+- **K277** · Credit the research and techniques on the credits page: eleven `RESEARCH` entries in `notices/credits.ts`, worded as use, never endorsement. Follow-ups K284, K285. Done in 63a72c6..1c42943 (2026-10-14).
 
 ## K274 (Done 2026-10-14)
 
-- **K274** · Explain each stat behind the win banner's info button: a `STATS` table in `src/game/maze_stats.ts`, the banners' "What the numbers mean" list and the stats view's legend (`docs/design/K274_K277.md`). Follow-ups K282, K283. Done in 71a7c25..79805af (2026-10-14).
+- **K274** · Explain each stat behind the win banner's info button: a `STATS` table in `src/game/maze_stats.ts`, the banners' "What the numbers mean" list and the stats view's legend (`docs/design/K274_K277.md`). Follow-ups K282, K283. Done in 63a72c6..1c42943 (2026-10-14).
 
 ## K283 (Done 2026-10-14)
 
-- **K283** · The real game's end banners after K274, checked from a live solve (`.claude/probes/K80/turns2/banner/`; the original probe's two stale checks are K295). Done in 86d404e..02194b4 (2026-10-14).
+- **K283** · The real game's end banners after K274, checked from a live solve (`.claude/probes/K80/turns2/banner/`; the original probe's two stale checks are K295). Done in 40f74d1..dea013f (2026-10-14).
 
 ## K272 (Done 2026-10-14)
 
-- **K272** · The turn minotaur's sliders at 0 (roam 0 stood still, territory 0 was a random walk): both now start at 1 (`MINO_RUNS_MIN`); roam 0 as a sentry is K296. Done in 86d404e..02194b4 (2026-10-14).
+- **K272** · The turn minotaur's sliders at 0 (roam 0 stood still, territory 0 was a random walk): both now start at 1 (`MINO_RUNS_MIN`); roam 0 as a sentry is K296. Done in 40f74d1..dea013f (2026-10-14).
 
 ## K273 (Done 2026-10-14)
 
-- **K273** · What a minotaur catch resets: `minoRestart` (`mrs`, off) restarts the level, `minoLair` (`mlr`, on) off leaves the minotaur where it caught you, `minoRefog` stays the fog's toggle (`docs/design/K80_turns.md`, "Stage 2 handoff"). Done in 86d404e..02194b4 (2026-10-14).
+- **K273** · What a minotaur catch resets: `minoRestart` (`mrs`, off) restarts the level, `minoLair` (`mlr`, on) off leaves the minotaur where it caught you, `minoRefog` stays the fog's toggle (`docs/design/K80_turns.md`, "Stage 2 handoff"). Done in 40f74d1..dea013f (2026-10-14).
 
 ## K264 (Done 2026-10-14)
 
-- **K264** · The hover rim's width becomes a slider: `hoverGlowWidth` (`hgw`, codec 130, daily-exempt, default 0.85); Levi's follow-up is K298 (`docs/design/K111.md`, "Stage 4 handoff"). Done in a47642d..f294247 (2026-10-14).
+- **K264** · The hover rim's width becomes a slider: `hoverGlowWidth` (`hgw`, codec 130, daily-exempt, default 0.85); Levi's follow-up is K298 (`docs/design/K111.md`, "Stage 4 handoff"). Done in 80042d9..169835a (2026-10-14).
 
 ## K299 (Done 2026-10-14)
 
-- **K299** · The choice pulses and the trail misdrawn at one junction: `kArcOfCtrl` wrapped a closed chain's ctrl through a float division the GPU rounds; fixed with integer-corrected laps (`kLapOf`, `kWrap`; lore `render-paint.md`, RING LAPS; `docs/design/K299_choice_pulse_bug.md`). Done in 74ad307..e5acafb (2026-10-14).
+- **K299** · The choice pulses and the trail misdrawn at one junction: `kArcOfCtrl` wrapped a closed chain's ctrl through a float division the GPU rounds; fixed with integer-corrected laps (`kLapOf`, `kWrap`; lore `render-paint.md`, RING LAPS; `docs/design/K299_choice_pulse_bug.md`). Done in e452556..34031a4 (2026-10-14).
 
 ## K302 (Done 2026-10-14)
 
@@ -1547,39 +1547,39 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K193 (Done 2026-10-14)
 
-- **K193** · The phone pass's orientation: it emulates a 411x753 portrait viewport over CDP (`-Viewport portrait|native`, `scripts/phone_pass/emulation.mjs`; stage 1 c36b57c..763067a); K253 took the portrait floor. Left over: K300, K254-K256; `docs/design/K193.md`. Done in 459cc11 (2026-10-14).
+- **K193** · The phone pass's orientation: it emulates a 411x753 portrait viewport over CDP (`-Viewport portrait|native`, `scripts/phone_pass/emulation.mjs`; stage 1 d0bbfad..7b17da5); K253 took the portrait floor. Left over: K300, K254-K256; `docs/design/K193.md`. Done in 54ef27a (2026-10-14).
 
 ## K253 (Done 2026-10-14)
 
-- **K253** · K193's portrait A/A floor, taken on a quiet phone (`aa4`, 36 of 36 samples at 411x753), installed as `scripts/phone_pass/noise.json` (lore `probes-phone.md`, THE PORTRAIT FLOOR; evidence `.claude/probes/K253/aa4/`). Done in 459cc11 (2026-10-14).
+- **K253** · K193's portrait A/A floor, taken on a quiet phone (`aa4`, 36 of 36 samples at 411x753), installed as `scripts/phone_pass/noise.json` (lore `probes-phone.md`, THE PORTRAIT FLOOR; evidence `.claude/probes/K253/aa4/`). Done in 54ef27a (2026-10-14).
 
 ## K317 (Done 2026-10-14)
 
-- **K317** · More confetti by default (the rain per amount 140 -> 280, the finish's spray 40 -> 160; reduced motion keeps its 16 pieces); the phone's frame rate rides K156's next pass. Done in ab8b78f (2026-10-14).
+- **K317** · More confetti by default (the rain per amount 140 -> 280, the finish's spray 40 -> 160; reduced motion keeps its 16 pieces); the phone's frame rate rides K156's next pass. Done in 46d9cf4 (2026-10-14).
 
 ## K298 (Done 2026-10-14)
 
-- **K298** · The hover glow, its own stage: `hoverGlowLength` (`hgl`), `hoverGlowFade` (`hgf`), the glow also on a hovered choice, and mouse pick margins in screen px (`pickMargin` `pkm`, `pickChoiceRatio` `pkr`; touch keeps today's, K331). Left over: K327, K328, K330, K331; `docs/design/K298_hover_glow.md`. Done in 44b19a3..813e098 (2026-10-14).
+- **K298** · The hover glow, its own stage: `hoverGlowLength` (`hgl`), `hoverGlowFade` (`hgf`), the glow also on a hovered choice, and mouse pick margins in screen px (`pickMargin` `pkm`, `pickChoiceRatio` `pkr`; touch keeps today's, K331). Left over: K327, K328, K330, K331; `docs/design/K298_hover_glow.md`. Done in 55c7a16..526b16b (2026-10-14).
 
 ## K325 (Done 2026-10-14)
 
-- **K325** · The snoring cat on the panel's credit link: Levi's own recording plays on hover and touch-down (`src/audio/snore_sfx.ts`, `src/ui/snore_link.ts`; lore `gameplay-audio.md`, THE SNORING CAT LINK). Leftovers K342, K343. Done in b8ee851..33f7a38 (2026-10-14).
+- **K325** · The snoring cat on the panel's credit link: Levi's own recording plays on hover and touch-down (`src/audio/snore_sfx.ts`, `src/ui/snore_link.ts`; lore `gameplay-audio.md`, THE SNORING CAT LINK). Leftovers K342, K343. Done in 3adc864..e02bcc7 (2026-10-14).
 
 ## K335 (Done 2026-10-14)
 
-- **K335** · The confetti rain's top edge: the rain's releases taper over 2.2 s and a later piece starts up to 0.12 screen heights higher, so the wave thins out raggedly (`src/render/confetti_model.ts`; lore `render-confetti.md`). K336 and K337 stay deferred. Done in 79c5a97..c7dacce (2026-10-14).
+- **K335** · The confetti rain's top edge: the rain's releases taper over 2.2 s and a later piece starts up to 0.12 screen heights higher, so the wave thins out raggedly (`src/render/confetti_model.ts`; lore `render-confetti.md`). K336 and K337 stay deferred. Done in a7eb4a5..38b81d5 (2026-10-14).
 
 ## K334 (Done 2026-10-14)
 
-- **K334** · No snap on a second press: a key, pad press, tap or click during a move waits (`MoveWait`, the latest wins) and is taken on the arrival frame; built with K329. Done in 56ddd6a..2c81a92 (2026-10-14).
+- **K334** · No snap on a second press: a key, pad press, tap or click during a move waits (`MoveWait`, the latest wins) and is taken on the arrival frame; built with K329. Done in 97f2840..2014dd0 (2026-10-14).
 
 ## K333 (Done 2026-10-14)
 
-- **K333** · Diagonal chords: two adjacent keys within 80 ms pick from the four diagonals, opposite keys never chord, and the move pad chords the same way; built with K329. Done in 56ddd6a..2c81a92 (2026-10-14).
+- **K333** · Diagonal chords: two adjacent keys within 80 ms pick from the four diagonals, opposite keys never chord, and the move pad chords the same way; built with K329. Done in 97f2840..2014dd0 (2026-10-14).
 
 ## K329 (Done 2026-10-14)
 
-- **K329** · The arrow keys at a 4-way junction: each run now gets at most one key (at an X, the diagonal arm clockwise of the key; differences under KEY_TIE ignored), in `src/ui/key_moves.ts` (lore `gameplay-moves.md`, TIE CYCLES, CHORDS AND THE MOVE WAIT). Leftovers K348-K350. Done in 56ddd6a..2c81a92 (2026-10-14).
+- **K329** · The arrow keys at a 4-way junction: each run now gets at most one key (at an X, the diagonal arm clockwise of the key; differences under KEY_TIE ignored), in `src/ui/key_moves.ts` (lore `gameplay-moves.md`, TIE CYCLES, CHORDS AND THE MOVE WAIT). Leftovers K348-K350. Done in 97f2840..2014dd0 (2026-10-14).
 
 ## K288 (Done 2026-10-14)
 
@@ -1595,15 +1595,15 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K344 (Done 2026-10-15)
 
-- **K344** · The pluck blur's sharp cusp in a self-crossing loop: an under node's clip now stops short of the loop's own over pass. Done in 93d0e4d..810b462 (2026-10-15).
+- **K344** · The pluck blur's sharp cusp in a self-crossing loop: an under node's clip now stops short of the loop's own over pass. Done in c76a367..ec114b4 (2026-10-15).
 
 ## K353 (Done 2026-10-15)
 
-- **K353** · The ledger diet: `scripts/ledger_diet.mjs` shortened the open items and made Done one-liners; the originals are in `docs/ledger_notes.md` and `docs/ledger_done.md`. Done in 300c995..c4a0280, applied in 6c85a38 (2026-10-15).
+- **K353** · The ledger diet: `scripts/ledger_diet.mjs` shortened the open items and made Done one-liners; the originals are in `docs/ledger_notes.md` and `docs/ledger_done.md`. Done in 82d31e7..477e48f, applied in a543dd3 (2026-10-15).
 
 ## K279 (Done 2026-10-15)
 
-- **K279** · Plucks you can see, feel and hear: the ripple (glint by default), vibration, an optional tug, quieter auto plucks. Done in 50c1aab, ad2618a and b1524de..810af10 (2026-10-15); follow-ups K365-K369.
+- **K279** · Plucks you can see, feel and hear: the ripple (glint by default), vibration, an optional tug, quieter auto plucks. Done in 2600523, c6f15f9 and 823f44e..faaa5e2 (2026-10-15); follow-ups K365-K369.
 
 ## K24 (Done 2026-10-15)
 
@@ -1611,7 +1611,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K381 (Done 2026-10-15)
 
-- **K381** · The K83 PIN recipe (`probes.md`) and `k83_ab` pin the fabric's explore clock. Done in 7a17355 (2026-10-15).
+- **K381** · The K83 PIN recipe (`probes.md`) and `k83_ab` pin the fabric's explore clock. Done in 2012623 (2026-10-15).
 
 ## K357 (Done 2026-10-15)
 
@@ -1639,11 +1639,11 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K293 (Done 2026-10-15)
 
-- **K293** · K80 turns stage 2's residuals: (a), (c), (e) fixed in 8df33a2; (b), (g), (h) needed no code; (d), (f) kept by design and written into lore. Done in e6e1734 (2026-10-15).
+- **K293** · K80 turns stage 2's residuals: (a), (c), (e) fixed in 40d947d; (b), (g), (h) needed no code; (d), (f) kept by design and written into lore. Done in 43457c1 (2026-10-15).
 
 ## K294 (Done 2026-10-15)
 
-- **K294** · Per-model minotaur defaults: guard sight 4, accuracy 0.3; stalker accuracy 0.45; the hunter keeps 2 and 0.3 (stalker call K421). Done in c2ebabc (2026-10-15).
+- **K294** · Per-model minotaur defaults: guard sight 4, accuracy 0.3; stalker accuracy 0.45; the hunter keeps 2 and 0.3 (stalker call K421). Done in 875b05a (2026-10-15).
 
 ## K418 (Done 2026-10-15)
 
@@ -1651,7 +1651,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K423 (Done 2026-10-15)
 
-- **K423** · Levi: dots (c), always two sized to fit; the vibration stops at the stub's solid end. Done in 2254b50 (2026-10-15).
+- **K423** · Levi: dots (c), always two sized to fit; the vibration stops at the stub's solid end. Done in 556b8ee (2026-10-15).
 
 ## K430 (Done 2026-10-15)
 
@@ -1659,7 +1659,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K408 (Done 2026-10-15)
 
-- **K408** · The start marker fades out once the fire passes its thread point (K114 s2). Done in 7d29319 (2026-10-15).
+- **K408** · The start marker fades out once the fire passes its thread point (K114 s2). Done in e60821a (2026-10-15).
 
 ## K411 (Done 2026-10-15)
 
@@ -1667,103 +1667,103 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K449 (Done 2026-10-15)
 
-- **K449** · K397 stage 2's looks: Levi keeps the cap and two dots, and the fade tap's pluck ("If we make a pluck sound, then we should show the pluck effect"); their 13:39 report is K397's and K459. Done in 092aca0 (2026-10-15).
+- **K449** · K397 stage 2's looks: Levi keeps the cap and two dots, and the fade tap's pluck ("If we make a pluck sound, then we should show the pluck effect"); their 13:39 report is K397's and K459. Done in 1039c5d (2026-10-15).
 
 ## K395 (Done 2026-10-15)
 
-- **K395** · Pluck blur seam and heart pinch at a kink loop's tip; the phone check passed on live 8f81faf. Done in cd62db6 (2026-10-15).
+- **K395** · Pluck blur seam and heart pinch at a kink loop's tip; the phone check passed on live 3e5717c. Done in 4c730f0 (2026-10-15).
 
 ## K440 (Done 2026-10-15)
 
-- **K440** · Real-time fire defaults: real time plays its own pair, 0.2 / 20 (`fsr`, `fdr`); turn keeps 0.75 / 0; speed floor 0.1. Done in bb40ae2 (2026-10-15).
+- **K440** · Real-time fire defaults: real time plays its own pair, 0.2 / 20 (`fsr`, `fdr`); turn keeps 0.75 / 0; speed floor 0.1. Done in 395756b (2026-10-15).
 
 ## K448 (Done 2026-10-15)
 
-- **K448** · Real-time fire tooltips give seconds: the delay its head start (20 is about 1.7 s, 40 about 3.3 s), the speed its units a second (K440). Done in bb40ae2 (2026-10-15).
+- **K448** · Real-time fire tooltips give seconds: the delay its head start (20 is about 1.7 s, 40 about 3.3 s), the speed its units a second (K440). Done in 395756b (2026-10-15).
 
 ## K467 (Done 2026-10-15)
 
-- **K467** · Mobile row help: show each row's tooltip text on touch (Levi 2026-10-15 ~15:58). Done in 2c066d4 (2026-10-15).
+- **K467** · Mobile row help: show each row's tooltip text on touch (Levi 2026-10-15 ~15:58). Done in d973369 (2026-10-15).
 
 ## K468 (Done 2026-10-15)
 
-- **K468** · Settings menu full screen on mobile (Levi 2026-10-15 ~15:58): a top bar with close, undo and redo; Android back closes it; phones in landscape too. Done in 2c066d4 (2026-10-15).
+- **K468** · Settings menu full screen on mobile (Levi 2026-10-15 ~15:58): a top bar with close, undo and redo; Android back closes it; phones in landscape too. Done in d973369 (2026-10-15).
 
 ## K465 (Done 2026-10-15)
 
-- **K465** · Thread reveal: show the finish marker and its off-screen indicator by default (Levi 2026-10-15 15:49); K76 decision 6 hides both until the exit's thread is seen (drawMarkers, main.ts finishIndicator, EXPLORE_MARKER_VIS). Done in 76fb5ea (2026-10-15).
+- **K465** · Thread reveal: show the finish marker and its off-screen indicator by default (Levi 2026-10-15 15:49); K76 decision 6 hides both until the exit's thread is seen (drawMarkers, main.ts finishIndicator, EXPLORE_MARKER_VIS). Done in 1159902 (2026-10-15).
 
 ## K466 (Done 2026-10-15)
 
-- **K466** · Thread reveal: emphasize unexplored thread ends more, especially ends that lie under a crossing (Levi 2026-10-15 15:49). Done in 554f2af (2026-10-15).
+- **K466** · Thread reveal: emphasize unexplored thread ends more, especially ends that lie under a crossing (Levi 2026-10-15 15:49). Done in dc96a82 (2026-10-15).
 
 ## K479 (Done 2026-10-15)
 
-- **K479** · Taps prefer the outgoing runs (Levi 2026-10-15: taps meant for the next run take the arrival run): in `edgeAt` the arrival run should win only by a clear margin, and the hover must pick what a tap takes. Done in 796e158 (2026-10-15).
+- **K479** · Taps prefer the outgoing runs (Levi 2026-10-15: taps meant for the next run take the arrival run): in `edgeAt` the arrival run should win only by a clear margin, and the hover must pick what a tap takes. Done in 8651d59 (2026-10-15).
 
 ## K492 (Done 2026-10-15)
 
-- **K492** · Thread reveal ends (K466): Levi kept A (`rvg=bright`, `rve=under`) as the default; B stays opt-in (K494). Done in 554f2af (2026-10-15).
+- **K492** · Thread reveal ends (K466): Levi kept A (`rvg=bright`, `rve=under`) as the default; B stays opt-in (K494). Done in dc96a82 (2026-10-15).
 
 ## K496 (Done 2026-10-15)
 
-- **K496** · Tap preference (K479): Levi kept all three calls as built (the retraced run stays an ordinary choice, a tap inside both ribbons at a crossing goes outgoing, ARRIVAL_BIAS 1.5 for both pointers). Done in 796e158 (2026-10-15).
+- **K496** · Tap preference (K479): Levi kept all three calls as built (the retraced run stays an ordinary choice, a tap inside both ribbons at a crossing goes outgoing, ARRIVAL_BIAS 1.5 for both pointers). Done in 8651d59 (2026-10-15).
 
 ## K488 (Done 2026-10-15)
 
-- **K488** · The finish indicator's tap became a peek: zoom out to frame the exit, hold 2.5 s, ease back; the label says so. Done in be36622 (2026-10-15).
+- **K488** · The finish indicator's tap became a peek: zoom out to frame the exit, hold 2.5 s, ease back; the label says so. Done in 4454643 (2026-10-15).
 
 ## K483 (Done 2026-10-15)
 
-- **K483** · Phone sheet font 13 px under SHEET_QUERY only (the side panel stays at 11). Done in 3c509ec (2026-10-15).
+- **K483** · Phone sheet font 13 px under SHEET_QUERY only (the side panel stays at 11). Done in 41d6d67 (2026-10-15).
 
 ## K482 (Done 2026-10-15)
 
-- **K482** · Desktop panel: row-help labels are buttons only on coarse pointers and in the sheet (the desktop keeps the title tooltip, one Tab stop per row). Done in 3c509ec (2026-10-15).
+- **K482** · Desktop panel: row-help labels are buttons only on coarse pointers and in the sheet (the desktop keeps the title tooltip, one Tab stop per row). Done in 41d6d67 (2026-10-15).
 
 ## K463 (Done 2026-10-15)
 
-- **K463** · K5 R2's unrun checks under the perf lock (c22de79 vs 3166d8f): fog phw=0 PASS (same-state cross-build 0 px; branch spread was capture noise, K390); cross-build threads round trip FAIL filed as K507 (capture transfer faithful, render differs). Done (probes only, HEAD 3166d8f, 2026-10-15).
+- **K463** · K5 R2's unrun checks under the perf lock (a9e8040 vs 2a688a6): fog phw=0 PASS (same-state cross-build 0 px; branch spread was capture noise, K390); cross-build threads round trip FAIL filed as K507 (capture transfer faithful, render differs). Done (probes only, HEAD 2a688a6, 2026-10-15).
 
 ## K471 (Done 2026-10-15)
 
-- **K471** · K6-1's unrun checks: &phw=0 PHYS clear at rest on both hosts; the fabric/chase/reduced non-tug was a loop_shadow probe bug (pressed the entrance choice run), fixed in the probe; m2_input_ab's pins fixed (pluck clock, syncExplore, fogTime, waitStill) - controls now 0 px. Done in fb54535 (2026-10-15).
+- **K471** · K6-1's unrun checks: &phw=0 PHYS clear at rest on both hosts; the fabric/chase/reduced non-tug was a loop_shadow probe bug (pressed the entrance choice run), fixed in the probe; m2_input_ab's pins fixed (pluck clock, syncExplore, fogTime, waitStill) - controls now 0 px. Done in ced002e (2026-10-15).
 
 ## K507 (Done 2026-10-16)
 
-- **K507** · K507 isolated: c22de79-vs-52faab8 round trip 0 px both ways (R2 cleared); the 43,385 px vs 3166d8f bisects to K466's 2aea912 (new `rve`/`rvg` defaults), and pins to 0 px with `&rve=under&rvg=soft` - intentional, not a code-move regression; follow-up K512. Done (probes only, this commit, 2026-10-16; evidence `.claude/probes/K5/R2/checks/k507/`, original pairing preserved in `checks/k463_c22_3166/`).
+- **K507** · K507 isolated: a9e8040-vs-b88376c round trip 0 px both ways (R2 cleared); the 43,385 px vs 2a688a6 bisects to K466's 2856678 (new `rve`/`rvg` defaults), and pins to 0 px with `&rve=under&rvg=soft` - intentional, not a code-move regression; follow-up K512. Done (probes only, this commit, 2026-10-16; evidence `.claude/probes/K5/R2/checks/k507/`, original pairing preserved in `checks/k463_c22_3166/`).
 
 ## K505 (Done 2026-10-16)
 
-- **K505** · K5 M5 same-state pixel proof (e53e4d9 vs 3166d8f, perf lock, scripted input): knot 0 px, fabric 0 px, fog 43 px vs 8,555 px control, threads load-state 0 px (post-move divergence in the same-build control's range); hook inventory identical (50 `__knot*` hooks, renderer prototype/own surface, 153 params, panel labels). No regression. Done (probes only, 2026-10-16; evidence `.claude/probes/K5/K502K505/`).
+- **K505** · K5 M5 same-state pixel proof (e30edb8 vs 2a688a6, perf lock, scripted input): knot 0 px, fabric 0 px, fog 43 px vs 8,555 px control, threads load-state 0 px (post-move divergence in the same-build control's range); hook inventory identical (50 `__knot*` hooks, renderer prototype/own surface, 153 params, panel labels). No regression. Done (probes only, 2026-10-16; evidence `.claude/probes/K5/K502K505/`).
 
 ## K502 (Done 2026-10-16)
 
-- **K502** · K5 R5 same-state pixel proof (48fc9ee vs 1c666ec, perf lock, &phw=0): knot 0 px, fabric 0 px, fog 258 px vs 283 px same-build control, threads load-state 0 px (post-move divergence 572,889 px below its 604,864 px control - follow-camera non-repeatability, K428); rebuildFillets(true) on fabric 4.23 -> 4.30 ms mean (+1.6%), median 4.355 = 4.355 ms. No regression. Done (probes only, 2026-10-16; evidence `.claude/probes/K5/K502K505/`).
+- **K502** · K5 R5 same-state pixel proof (b8d28ca vs c6444e6, perf lock, &phw=0): knot 0 px, fabric 0 px, fog 258 px vs 283 px same-build control, threads load-state 0 px (post-move divergence 572,889 px below its 604,864 px control - follow-camera non-repeatability, K428); rebuildFillets(true) on fabric 4.23 -> 4.30 ms mean (+1.6%), median 4.355 = 4.355 ms. No regression. Done (probes only, 2026-10-16; evidence `.claude/probes/K5/K502K505/`).
 
 ## K499 (Done 2026-10-16)
 
-- **K499** · Gamepad support: d-pad + left stick (deadzone, eight sectors) feed the key picker as held keys, held-at-arrival like keys; A/confirm is a tap-class step (no mid-move queue). Pure mapping `src/ui/gamepad.ts`, lore GAMEPAD in `gameplay-moves.md`; unprobed on real hardware. Done in 9a6f63d (2026-10-16).
+- **K499** · Gamepad support: d-pad + left stick (deadzone, eight sectors) feed the key picker as held keys, held-at-arrival like keys; A/confirm is a tap-class step (no mid-move queue). Pure mapping `src/ui/gamepad.ts`, lore GAMEPAD in `gameplay-moves.md`; unprobed on real hardware. Done in 15f1a00 (2026-10-16).
 
 ## K510 (Done 2026-10-16)
 
-- **K510** · K5 M6: pointer input, auto audio and keys moved to `src/app/input_pointer.ts`, `auto_audio.ts`, `input_keys.ts` (pure move; tsc clean, 1333 tests, scripted-input A/B knot/fabric 0 px, fog/threads within same-build controls, k7_frames rest+drag within noise on both hosts). Done in c268a9b (2026-10-16).
+- **K510** · K5 M6: pointer input, auto audio and keys moved to `src/app/input_pointer.ts`, `auto_audio.ts`, `input_keys.ts` (pure move; tsc clean, 1333 tests, scripted-input A/B knot/fabric 0 px, fog/threads within same-build controls, k7_frames rest+drag within noise on both hosts). Done in 1161cd5 (2026-10-16).
 
 ## K509 (Done 2026-10-16)
 
-- **K509** · K6-1 Q2 sleep-trip GEOM miss measured 0 px (knot fw=0 with worker, first-sleep shot vs after invalidate(), controls 0 px, before and after K6-2) - GEOM gating loses nothing. Done in 926fdfe (2026-10-16; evidence `.claude/probes/K6/K6-2/`).
+- **K509** · K6-1 Q2 sleep-trip GEOM miss measured 0 px (knot fw=0 with worker, first-sleep shot vs after invalidate(), controls 0 px, before and after K6-2) - GEOM gating loses nothing. Done in 4e3781e (2026-10-16; evidence `.claude/probes/K6/K6-2/`).
 
 ## K513 (Done 2026-10-16)
 
-- **K513** · Phone-pass frames gate: the 88-row flat strip was Android capture tiling (landscape surface 2125x1017 repeated every 1017 rows), not a blank render; `emulation.mjs` re-checks a strip at dpr 1 and frames then ran A/A 2 reps on 65a7787 within noise. Done (this commit, 2026-10-16; evidence `.claude/probes/K513/`, `.claude/probes/rounds/2026-10-16-65a7787/`).
+- **K513** · Phone-pass frames gate: the 88-row flat strip was Android capture tiling (landscape surface 2125x1017 repeated every 1017 rows), not a blank render; `emulation.mjs` re-checks a strip at dpr 1 and frames then ran A/A 2 reps on 8fe3d20 within noise. Done (this commit, 2026-10-16; evidence `.claude/probes/K513/`, `.claude/probes/rounds/2026-10-16-65a7787/`).
 
 ## K480 (Done 2026-10-16)
 
-- **K480** · Multi-run taps (Levi 2026-10-15): stage 2, the light - pulses and hover branch through short runs to `pulseReach` (`litArms` in route_plan.ts; `kPulseV` phases by global distance in shader + CPU mirror), and a hover lights the whole route its tap would take. Done (stage 2, this commit, 2026-10-16; stage 1 in 3b1612f; evidence `.claude/probes/K480/stage2/`). Residuals K500, look K515.
+- **K480** · Multi-run taps (Levi 2026-10-15): stage 2, the light - pulses and hover branch through short runs to `pulseReach` (`litArms` in route_plan.ts; `kPulseV` phases by global distance in shader + CPU mirror), and a hover lights the whole route its tap would take. Done (stage 2, this commit, 2026-10-16; stage 1 in 2bcf771; evidence `.claude/probes/K480/stage2/`). Residuals K500, look K515.
 
 ## K6 (Done 2026-10-16)
 
-- **K6** · One frame loop driven by what-changed flags: K6-1 shadow flags, K6-2 skip-CPU (926fdfe), K6-3 (= K24) skip-draw/stop-ticker/30 fps rest cadence, screen-aware CAMERA scale bound, continuous `__knotLoop` + pre-load global, idle stamp refresh, diag `idle`. Done in 1654ef0 (2026-10-16; evidence `.claude/probes/K6/K6-3/`). Residual K516.
+- **K6** · One frame loop driven by what-changed flags: K6-1 shadow flags, K6-2 skip-CPU (4e3781e), K6-3 (= K24) skip-draw/stop-ticker/30 fps rest cadence, screen-aware CAMERA scale bound, continuous `__knotLoop` + pre-load global, idle stamp refresh, diag `idle`. Done in c8156fe (2026-10-16; evidence `.claude/probes/K6/K6-3/`). Residual K516.
 
 ## K523 (Done 2026-10-16)
 
@@ -1795,7 +1795,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K516 (Done 2026-10-16)
 
-- **K516** · K6-3 phone cadence check: knot fw=0 draws 0/s at rest (ticker stopped), fabric ambient cadence 23.8 drawn/s (rAF p95 16.9 ms, smooth), continuous mode 60.2 / 44.0 drawn/s; load first sleep 10.5-12.9 s. Done in 11309be (2026-10-16; `.claude/probes/K516/results.md`). Residual K520.
+- **K516** · K6-3 phone cadence check: knot fw=0 draws 0/s at rest (ticker stopped), fabric ambient cadence 23.8 drawn/s (rAF p95 16.9 ms, smooth), continuous mode 60.2 / 44.0 drawn/s; load first sleep 10.5-12.9 s. Done in 5accab1 (2026-10-16; `.claude/probes/K516/results.md`). Residual K520.
 
 ## K514 (Done 2026-10-16)
 
@@ -1803,27 +1803,27 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K76 (Done 2026-10-16)
 
-- **K76** · Thread-reveal mode, stage 2: criterion 2 fixed (applyExploreGaps re-derives underWindows/pluck footprints from the last solve ungated slot data, no update() per move; phone gate2 fw=0: 0 updates/move, was 1-5), K362 start view widened to 2x(revealDistance+2), HC phone shot taken (capture tiles, K513 path). Done in 5da3f5c (2026-10-16; evidence .claude/probes/K76/stage2e/).
+- **K76** · Thread-reveal mode, stage 2: criterion 2 fixed (applyExploreGaps re-derives underWindows/pluck footprints from the last solve ungated slot data, no update() per move; phone gate2 fw=0: 0 updates/move, was 1-5), K362 start view widened to 2x(revealDistance+2), HC phone shot taken (capture tiles, K513 path). Done in 28f4c2f (2026-10-16; evidence .claude/probes/K76/stage2e/).
 
 ## K284 (Done 2026-10-16)
 
-- **K284** · K74's sources credited (Pullen; Zhao and Marquez 2013) in `src/` and RESEARCH. Done in 9ccf360 (2026-10-16).
+- **K284** · K74's sources credited (Pullen; Zhao and Marquez 2013) in `src/` and RESEARCH. Done in 83d4405 (2026-10-16).
 
 ## K402 (Done 2026-10-16)
 
-- **K402** · K74 stage 3's questions, built as recommended (corridor 24, away flank, exit taper off; codec 152-155, never daily-exempt). Done in 9ccf360 (2026-10-16).
+- **K402** · K74 stage 3's questions, built as recommended (corridor 24, away flank, exit taper off; codec 152-155, never daily-exempt). Done in 83d4405 (2026-10-16).
 
 ## K270 (Done 2026-10-16)
 
-- **K270** · K80 turns 3b diagnosed the lavender band: a stale pre-catch telegraph/glow frame at the catch site; turnCaught now re-syncs the minotaur in the same call. Done in dcdfaf4 (2026-10-16).
+- **K270** · K80 turns 3b diagnosed the lavender band: a stale pre-catch telegraph/glow frame at the catch site; turnCaught now re-syncs the minotaur in the same call. Done in 6d8bb4a (2026-10-16).
 
 ## K521 (Done 2026-10-16)
 
-- **K521** · K74 stage 3 items 7-8 measured: prototype port byte-identical 640/640 (K109/K110 exception list empty); greedy bar fails on dailies 1-240 (gF median 2.86x, 20.0% within 1.5x vs the 15% bar) - owned by stage 4's search (K527), not a stage-3 retune. Done in 4098946 (2026-10-16; evidence `.claude/probes/K74/stage3/out/results_k521.md`).
+- **K521** · K74 stage 3 items 7-8 measured: prototype port byte-identical 640/640 (K109/K110 exception list empty); greedy bar fails on dailies 1-240 (gF median 2.86x, 20.0% within 1.5x vs the 15% bar) - owned by stage 4's search (K527), not a stage-3 retune. Done in c79bb74 (2026-10-16; evidence `.claude/probes/K74/stage3/out/results_k521.md`).
 
 ## K524 (Done 2026-10-16)
 
-- **K524** · K80 turns 3b's real-phone contact sheet: shot 2026-10-16 on the real Pixel 11 at 411x753 (master 5558669, PowerVR Vulkan; roam turn 2, hunt turn 47, caught turn 48, all checks pass). `.claude/probes/K80/stage3b/contact_sheet_real.png` beside the emulated sheet; frames + look notes in `shots/phone_real/` (probe `turns_phone_real.mjs`). Done 2026-10-16 (probe evidence only, no commit).
+- **K524** · K80 turns 3b's real-phone contact sheet: shot 2026-10-16 on the real Pixel 11 at 411x753 (master bc1b4f9, PowerVR Vulkan; roam turn 2, hunt turn 47, caught turn 48, all checks pass). `.claude/probes/K80/stage3b/contact_sheet_real.png` beside the emulated sheet; frames + look notes in `shots/phone_real/` (probe `turns_phone_real.mjs`). Done 2026-10-16 (probe evidence only, no commit).
 
 ## K398 (Done 2026-10-16)
 
@@ -1863,7 +1863,7 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K500 (Done 2026-10-16)
 
-- **K500** · The realtime chase's multi-run tap is page-probed: real clicks walk the whole route in order, uncaught, with the hover glow on the tapped beyond run (desktop; build 5011adf). Done 2026-10-16 (probe only, .claude/probes/K500/; no commit). Touch-press half is K529.
+- **K500** · The realtime chase's multi-run tap is page-probed: real clicks walk the whole route in order, uncaught, with the hover glow on the tapped beyond run (desktop; build 1bc13b4). Done 2026-10-16 (probe only, .claude/probes/K500/; no commit). Touch-press half is K529.
 
 ## K82 (Done 2026-10-16)
 
@@ -1883,11 +1883,11 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K366 (Done 2026-10-16)
 
-- **K366** · The first-tap residual measured and attributed on the shipped K307 stage 3 build (e83f203): the 35-54 ms frame reproduces only on fabric (39 ms, ripple off; ~50 ms first pointerup handling), so it is not a shader link (inferred first-pluck allocation / paint re-declare; no fix this stage). Done in e83f203 (2026-10-16); the fix is K535.
+- **K366** · The first-tap residual measured and attributed on the shipped K307 stage 3 build (a7e199e): the 35-54 ms frame reproduces only on fabric (39 ms, ripple off; ~50 ms first pointerup handling), so it is not a shader link (inferred first-pluck allocation / paint re-declare; no fix this stage). Done in a7e199e (2026-10-16); the fix is K535.
 
 ## K536 (Done 2026-10-16)
 
-- **K536** · G3-1's browser verification: brute vs pruned 0 px on all 10 G1 links (phw=0) and on def/user/ring on the worker host; G1 census unchanged parent vs 3465090 (naked 0 on the clean set, overcut within ~1%); census2d 23/30 parent vs 24/30 G3-1 (same fail families, PROOF passes only on G3-1), census3a 21/30 on G3-1 within K537's pre-existing set; held still pluck (still:true) and routed web (6 moves) brute 0 px on both builds, cross-build diffs single-level casing edges (gt8 = 4 px); GAP GL readback GPU == CPU mirror exactly (25-texel rows, 4 links x worker + phw=0, gl.getError 0, no lost context); frame bench at rest unchanged (default p50 0.2 ms both, dense mean 5.32 vs 5.24 ms). Section cold compiles equal; the cold first-visible gap is K540 and the phone half is K539. Done 2026-10-16 (verification only, no code commit; evidence `.claude/probes/K8/G3-1/`).
+- **K536** · G3-1's browser verification: brute vs pruned 0 px on all 10 G1 links (phw=0) and on def/user/ring on the worker host; G1 census unchanged parent vs 93a231f (naked 0 on the clean set, overcut within ~1%); census2d 23/30 parent vs 24/30 G3-1 (same fail families, PROOF passes only on G3-1), census3a 21/30 on G3-1 within K537's pre-existing set; held still pluck (still:true) and routed web (6 moves) brute 0 px on both builds, cross-build diffs single-level casing edges (gt8 = 4 px); GAP GL readback GPU == CPU mirror exactly (25-texel rows, 4 links x worker + phw=0, gl.getError 0, no lost context); frame bench at rest unchanged (default p50 0.2 ms both, dense mean 5.32 vs 5.24 ms). Section cold compiles equal; the cold first-visible gap is K540 and the phone half is K539. Done 2026-10-16 (verification only, no code commit; evidence `.claude/probes/K8/G3-1/`).
 
 ## K534 (Done 2026-10-16)
 
@@ -1895,35 +1895,35 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K532 (Done 2026-10-16)
 
-- **K532** · K527 answered in full by Levi (2026-10-16): all calls taken, every threshold a slider beside `greedyTrap`. Done in 7d794b5 (2026-10-16).
+- **K532** · K527 answered in full by Levi (2026-10-16): all calls taken, every threshold a slider beside `greedyTrap`. Done in b728fbf (2026-10-16).
 
 ## K527 (Done 2026-10-16)
 
-- **K527** · K74 stage 4 build half (`docs/design/K74_stage4.md`): greedy-trap search shipped H1-in-loop only behind `greedyTrap`. Done in 7d794b5 (2026-10-16).
+- **K527** · K74 stage 4 build half (`docs/design/K74_stage4.md`): greedy-trap search shipped H1-in-loop only behind `greedyTrap`. Done in b728fbf (2026-10-16).
 
 ## K481 (Done 2026-10-16)
 
-- **K481** · Turns by length (toggle `minoByLength`, stages 1-3): stage 3 done in 31b2238 (K530); item complete - close or keep only the K545 look call. Done in 31b2238 (2026-10-16).
+- **K481** · Turns by length (toggle `minoByLength`, stages 1-3): stage 3 done in 610ef96 (K530); item complete - close or keep only the K545 look call. Done in 610ef96 (2026-10-16).
 
 ## K530 (Done 2026-10-16)
 
-- **K530** · K481 stage 3: telegraph hover/press + wait tick, phone ticks/tint, toggle-off A/Bs. Done in 31b2238 (2026-10-16).
+- **K530** · K481 stage 3: telegraph hover/press + wait tick, phone ticks/tint, toggle-off A/Bs. Done in 610ef96 (2026-10-16).
 
 ## K541 (Done 2026-10-16)
 
-- **K541** · Panel Stage A2: remaining moves, word labels (at most 23 chars) on every row, desktop width 320 px, inventory rerun. Done in 2c351ae (2026-10-16).
+- **K541** · Panel Stage A2: remaining moves, word labels (at most 23 chars) on every row, desktop width 320 px, inventory rerun. Done in e77c974 (2026-10-16).
 
 ## K369 (Done 2026-10-18)
 
-- **K369** · Favicon linked relatively (./favicon.svg) in index.html. Done in 0f8e277 (2026-10-18).
+- **K369** · Favicon linked relatively (./favicon.svg) in index.html. Done in 2a42c8e (2026-10-18).
 
 ## K489 (Done 2026-10-18)
 
-- **K489** · Dead finishIndicator.gate() hook removed (visible() composes the hold; never wired). Done in 0f8e277 (2026-10-18).
+- **K489** · Dead finishIndicator.gate() hook removed (visible() composes the hold; never wired). Done in 2a42c8e (2026-10-18).
 
 ## K243 (Done 2026-10-18)
 
-- **K243** · Paused instant intro draws no threads: beginSettle instant branch now draws its first frame. Done in 0f8e277 (2026-10-18).
+- **K243** · Paused instant intro draws no threads: beginSettle instant branch now draws its first frame. Done in 2a42c8e (2026-10-18).
 
 ## K161 (Done 2026-10-19)
 
@@ -1931,141 +1931,141 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K551 (Done 2026-10-19)
 
-- **K551** · Crossing gaps gone on every half-float GPU since 2026-10-18 (K320's split turned on by capability and drew no gaps on D3D11): the split stays dark, the warm-up follows the draw flag. Done in f18dd07 (2026-10-19).
+- **K551** · Crossing gaps gone on every half-float GPU since 2026-10-18 (K320's split turned on by capability and drew no gaps on D3D11): the split stays dark, the warm-up follows the draw flag. Done in 7b8f068 (2026-10-19).
 
 ## K553 (Done 2026-10-19)
 
-- **K553** · K320's split drew no gaps off dsf 1: the gap mask was sized in CSS px but read by gl_FragCoord in device px; gap_prepass sizes it in device px (fitGapTarget), guarded by gap_split.test.ts and k553_probe.mjs splitAssert. Done in 60511ed (2026-10-19).
+- **K553** · K320's split drew no gaps off dsf 1: the gap mask was sized in CSS px but read by gl_FragCoord in device px; gap_prepass sizes it in device px (fitGapTarget), guarded by gap_split.test.ts and k553_probe.mjs splitAssert. Done in be5a079 (2026-10-19).
 
 ## K558 (Done 2026-10-19)
 
-- **K558** · Text crossings follow pen order (the later stroke over; penReverse, pnr=1, reverses it); maze and emblem crossings keep alternation. Done in 0b4c5db (2026-10-19).
+- **K558** · Text crossings follow pen order (the later stroke over; penReverse, pnr=1, reverses it); maze and emblem crossings keep alternation. Done in 05c935b (2026-10-19).
 
 ## K552 (Done 2026-10-19)
 
-- **K552** · Dailies draw no title thread by default; dailyTitleThread (dtt=1) draws it over the same maze (maze-form attempts, title moves off the share grid, the row disabled off a daily). Done in 06ed74d (2026-10-19).
+- **K552** · Dailies draw no title thread by default; dailyTitleThread (dtt=1) draws it over the same maze (maze-form attempts, title moves off the share grid, the row disabled off a daily). Done in aa3106c (2026-10-19).
 
 <!-- K812, K813, K815-K827, K833-K843: recovered 2026-10-27 from their commits; no ledger line ever parsed for them (LEDGERS.md inbox, 2026-10-23). -->
 
 ## K812 (Done 2026-10-22)
 
-- **K812** · Preview win/loss effect buttons in the panel; threadLook hides fill-only Look rows. Done in 721116d2 (2026-10-22).
+- **K812** · Preview win/loss effect buttons in the panel; threadLook hides fill-only Look rows. Done in 704e26bd (2026-10-22).
 
 ## K813 (Done 2026-10-22)
 
-- **K813** · Border look keeps fill-area highlights; highlight colors/widths as params. Done in 7aa778fb (2026-10-22).
+- **K813** · Border look keeps fill-area highlights; highlight colors/widths as params. Done in 0fdbafb3 (2026-10-22).
 
 ## K815 (Done 2026-10-22)
 
-- **K815** · Junction fans draw outline only in border look (rim + flanks, seal silent). Done in 01f4efad (2026-10-22).
+- **K815** · Junction fans draw outline only in border look (rim + flanks, seal silent). Done in e438bae6 (2026-10-22).
 
 ## K816 (Done 2026-10-22)
 
-- **K816** · SDF ribbons behind rp=sdf (G3-2 steps 2-3). Done in 855bea23 (2026-10-22).
+- **K816** · SDF ribbons behind rp=sdf (G3-2 steps 2-3). Done in 70e2fe12 (2026-10-22).
 
 ## K817 (Done 2026-10-22)
 
-- **K817** · Gap search rounds negative kStart half up (K592). Done in 52aa617a (2026-10-22).
+- **K817** · Gap search rounds negative kStart half up (K592). Done in 7dc79767 (2026-10-22).
 
 ## K818 (Done 2026-10-22)
 
-- **K818** · Shape-injection param collection (K814 stages 1-3). Done in ffc3d4d7 (2026-10-22).
+- **K818** · Shape-injection param collection (K814 stages 1-3). Done in 43f0c443 (2026-10-22).
 
 ## K819 (Done 2026-10-22)
 
-- **K819** · CannonSpread param (wider side-cannon fan) + backdrop/path colors join LOOK_KEYS. Done in e7a6bb5c (2026-10-22).
+- **K819** · CannonSpread param (wider side-cannon fan) + backdrop/path colors join LOOK_KEYS. Done in d2ce8e94 (2026-10-22).
 
 ## K820 (Done 2026-10-22)
 
-- **K820** · BorderWidth/borderColor/goldTextureStrength params. Done in 88cdd06c (2026-10-22).
+- **K820** · BorderWidth/borderColor/goldTextureStrength params. Done in 9aa64b6a (2026-10-22).
 
 ## K821 (Done 2026-10-22)
 
-- **K821** · Panel order Maze before Game; End effects subfolder; Thread look above its rows; Path color beside the gold rows. Done in b224bb21 (2026-10-22).
+- **K821** · Panel order Maze before Game; End effects subfolder; Thread look above its rows; Path color beside the gold rows. Done in 1c161acc (2026-10-22).
 
 ## K822 (Done 2026-10-22)
 
-- **K822** · Panel subfolders Text & emblem, Exit traps, Exploration, Burn race, Classic rules. Done in 837b16af (2026-10-22).
+- **K822** · Panel subfolders Text & emblem, Exit traps, Exploration, Burn race, Classic rules. Done in af3e6310 (2026-10-22).
 
 ## K823 (Done 2026-10-22)
 
-- **K823** · Bespoke trefoil favicon/icon set + web app manifest (K36). Done in c46d3cc9 (2026-10-22).
+- **K823** · Bespoke trefoil favicon/icon set + web app manifest (K36). Done in 8f1cc74b (2026-10-22).
 
 ## K824 (Done 2026-10-22)
 
-- **K824** · Bespoke inline trefoil loader (K313 stage 1). Done in 4a072983 (2026-10-22).
+- **K824** · Bespoke inline trefoil loader (K313 stage 1). Done in 63e70d45 (2026-10-22).
 
 ## K825 (Done 2026-10-22)
 
-- **K825** · SDF ribbons get the thread-reveal explore variant. Done in 9a0cca7b (2026-10-22).
+- **K825** · SDF ribbons get the thread-reveal explore variant. Done in 184127ef (2026-10-22).
 
 ## K826 (Done 2026-10-22)
 
-- **K826** · SDF mitered silhouette at joints (sdMiterQuad). Done in 1868d7e0 (2026-10-22).
+- **K826** · SDF mitered silhouette at joints (sdMiterQuad). Done in 2f6d0ceb (2026-10-22).
 
 ## K827 (Done 2026-10-22)
 
-- **K827** · Grab chase rate try key (gcr, K792) and the cap raised 0.6 -> 0.8 (K610). Done in da1d64cc (2026-10-22).
+- **K827** · Grab chase rate try key (gcr, K792) and the cap raised 0.6 -> 0.8 (K610). Done in 1db9f2dd (2026-10-22).
 
 ## K833 (Done 2026-10-22)
 
-- **K833** · No disc rims inside border junctions; semicircle dead-end caps. Done in 7e98a5bc (2026-10-22).
+- **K833** · No disc rims inside border junctions; semicircle dead-end caps. Done in f99d4693 (2026-10-22).
 
 ## K834 (Done 2026-10-22)
 
-- **K834** · Intro chrome gating on loader persistence + reset confirmation. Done in 4aa7fc37 (2026-10-22).
+- **K834** · Intro chrome gating on loader persistence + reset confirmation. Done in d5aefd25 (2026-10-22).
 
 ## K835 (Done 2026-10-22)
 
-- **K835** · Path irregularity + excursion sliders (string sag, hand-drawn fills). Done in a437893f (2026-10-22).
+- **K835** · Path irregularity + excursion sliders (string sag, hand-drawn fills). Done in 16689838 (2026-10-22).
 
 ## K836 (Done 2026-10-22)
 
-- **K836** · The cursive a as tangent attachments on the undisturbed oval. Done in 761003ab (2026-10-22).
+- **K836** · The cursive a as tangent attachments on the undisturbed oval. Done in 791a4f4b (2026-10-22).
 
 ## K837 (Done 2026-10-22)
 
-- **K837** · Offset link-look chip below dropped mode badge. Done in e3792ec8 (2026-10-22).
+- **K837** · Offset link-look chip below dropped mode badge. Done in 9477616a (2026-10-22).
 
 ## K838 (Done 2026-10-22)
 
-- **K838** · A hint lasts until the next move; one hint at a time. Done in 39fe558c (2026-10-22).
+- **K838** · A hint lasts until the next move; one hint at a time. Done in 7f683b43 (2026-10-22).
 
 ## K839 (Done 2026-10-22)
 
-- **K839** · 'Show shortest path' checkbox draws the whole route. Done in d7028231 (2026-10-22).
+- **K839** · 'Show shortest path' checkbox draws the whole route. Done in 3199c9af (2026-10-22).
 
 ## K840 (Done 2026-10-22)
 
-- **K840** · Fragile runs break at the ends too. Done in 4507a632 (2026-10-22).
+- **K840** · Fragile runs break at the ends too. Done in 0484e32f (2026-10-22).
 
 ## K841 (Done 2026-10-22)
 
-- **K841** · The loader's followed rotation turns one way only. Done in 897a9d11, 5f4297ba (2026-10-22).
+- **K841** · The loader's followed rotation turns one way only. Done in 952e37b9, c62ea5f0 (2026-10-22).
 
 ## K842 (Done 2026-10-22)
 
-- **K842** · Overlays dive where their thread passes under. Done in fc6d1a9e (2026-10-22).
+- **K842** · Overlays dive where their thread passes under. Done in 8c82ff73 (2026-10-22).
 
 ## K843 (Done 2026-10-22)
 
-- **K843** · Junction flares - fat at the junction, tapering away. Done in df80e1f6 (2026-10-22).
+- **K843** · Junction flares - fat at the junction, tapering away. Done in 387c373a (2026-10-22).
 
 ## K568 (Done 2026-10-20)
 
-- **K568** · Confetti retune (Levi, 2026-10-20): the rain from the top lasts a bit longer; the finish spray gets smaller pieces, twice the top speed, a wider speed spread and twice the pieces. Done in 6fd8e70 (2026-10-20).
+- **K568** · Confetti retune (Levi, 2026-10-20): the rain from the top lasts a bit longer; the finish spray gets smaller pieces, twice the top speed, a wider speed spread and twice the pieces. Done in 2550d4e (2026-10-20).
 
 ## K563 (Done 2026-10-20)
 
-- **K563** · K552's C4, the title-loop walk: Levi (2026-10-20) took (a) as built and (d), a tree title, with K115's redesign (now in `docs/design/K115_stage9.md`, "No title loops"). Done in 06ed74d (2026-10-20).
+- **K563** · K552's C4, the title-loop walk: Levi (2026-10-20) took (a) as built and (d), a tree title, with K115's redesign (now in `docs/design/K115_stage9.md`, "No title loops"). Done in aa3106c (2026-10-20).
 
 ## K570 (Done 2026-10-20)
 
-- **K570** · Spray gravity: the finish spray falls under gravity (Levi, 2026-10-20). Done in 1768283 (2026-10-20).
+- **K570** · Spray gravity: the finish spray falls under gravity (Levi, 2026-10-20). Done in d63a45e (2026-10-20).
 
 ## K559 (Done 2026-10-20)
 
-- **K559** · K115's glyph call 3: Levi took the looped hand with no spread turns, a junction and a dead-end spur where one would go (K115_glyphs.md section 11). Done in e8a0154 (2026-10-20).
+- **K559** · K115's glyph call 3: Levi took the looped hand with no spread turns, a junction and a dead-end spur where one would go (K115_glyphs.md section 11). Done in b7b8fa1 (2026-10-20).
 
 ## K561 (Done 2026-10-20)
 
@@ -2073,35 +2073,35 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K544 (Done 2026-10-20)
 
-- **K544** · Phone timing for searched designs (round 2026-10-20): median 125 ms, p90 260, max 364 with greedyTrap on vs 67 ms off, 1.7x the desktop's median. Done in 071aa32 (2026-10-20).
+- **K544** · Phone timing for searched designs (round 2026-10-20): median 125 ms, p90 260, max 364 with greedyTrap on vs 67 ms off, 1.7x the desktop's median. Done in 4bd5bd4 (2026-10-20).
 
 ## K539 (Done 2026-10-20)
 
-- **K539** · G3-1's phone half (round 2026-10-20): pruned = brute at 0 px, GL clean, no context loss; the head's 1.5-3.7x render cost went to K572. Done in 071aa32 (2026-10-20).
+- **K539** · G3-1's phone half (round 2026-10-20): pruned = brute at 0 px, GL clean, no context loss; the head's 1.5-3.7x render cost went to K572. Done in 4bd5bd4 (2026-10-20).
 
 ## K447 (Done 2026-10-20)
 
-- **K447** · The real-time fire on the phone (round 2026-10-20): escaped, 3 stars, 47.6 fps in the race vs 49.5 at rest; the burn costs about 2 fps (0.23 ms a frame). Done in 071aa32 (2026-10-20).
+- **K447** · The real-time fire on the phone (round 2026-10-20): escaped, 3 stars, 47.6 fps in the race vs 49.5 at rest; the burn costs about 2 fps (0.23 ms a frame). Done in 4bd5bd4 (2026-10-20).
 
 ## K572 (Done 2026-10-20)
 
-- **K572** · The phone's render regression is G3-1's gap search (`3465090`): 57 ms a frame on the phone where the old search cost 10; K320 stage 1 adds about 4 ms; K568's own confetti costs about 2 fps. Done in f1f2b01 (2026-10-20).
+- **K572** · The phone's render regression is G3-1's gap search (`93a231f`): 57 ms a frame on the phone where the old search cost 10; K320 stage 1 adds about 4 ms; K568's own confetti costs about 2 fps. Done in 71d4b6f (2026-10-20).
 
 ## K550 (Done 2026-10-20)
 
-- **K550** · K320's gap split killed: its six code commits reverted, Stage 1 kept (6c592e6); 0 px in 8 A/B cells, 27 of 29 programs byte-identical (two vertex shaders lose a dead vChain). Done in d732a47 (2026-10-20).
+- **K550** · K320's gap split killed: its six code commits reverted, Stage 1 kept (211cc24); 0 px in 8 A/B cells, 27 of 29 programs byte-identical (two vertex shaders lose a dead vChain). Done in 38cedd0 (2026-10-20).
 
 ## K320 (Done 2026-10-20)
 
-- **K320** · Split section-rgb: killed by K550 (revert 08d9db5); Stage 1's slim kept (6c592e6). Done in 08d9db5 (2026-10-20).
+- **K320** · Split section-rgb: killed by K550 (revert 24ea5cb); Stage 1's slim kept (211cc24). Done in 24ea5cb (2026-10-20).
 
 ## K291 (Done 2026-10-20)
 
-- **K291** · CI's actions moved to their Node 24 releases (checkout v7, setup-node v7, wrangler-action v4); the deploy passed on `ubuntu-latest` with no Node 20 warning, so no runner pin. Done in f2303c0 (2026-10-20).
+- **K291** · CI's actions moved to their Node 24 releases (checkout v7, setup-node v7, wrangler-action v4); the deploy passed on `ubuntu-latest` with no Node 20 warning, so no runner pin. Done in 776055c (2026-10-20).
 
 ## K337 (Done 2026-10-20)
 
-- **K337** · Confetti shine: one light from the upper left; foil pieces flash, paper ones sheen (`cfh` strength 1, `cff` foil share 0.3); strength call K586. Done in 9538392 (2026-10-20).
+- **K337** · Confetti shine: one light from the upper left; foil pieces flash, paper ones sheen (`cfh` strength 1, `cff` foil share 0.3); strength call K586. Done in aaff92b (2026-10-20).
 
 ## K470 (Done 2026-10-20)
 
@@ -2109,23 +2109,23 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K372 (Done 2026-10-20)
 
-- **K372** · Fabric ?b's after-drag non-sleep is a same-chain collision limit cycle (fix K595, residual K596). Done in 86c472b (2026-10-20).
+- **K372** · Fabric ?b's after-drag non-sleep is a same-chain collision limit cycle (fix K595, residual K596). Done in 061735b (2026-10-20).
 
 ## K456 (Done 2026-10-20)
 
-- **K456** · A lost WebGL context: the loop suspends, a cover (message + Reload after 3 s) blocks input, the restore redraws exactly. Done in f01ac12 (2026-10-20).
+- **K456** · A lost WebGL context: the loop suspends, a cover (message + Reload after 3 s) blocks input, the restore redraws exactly. Done in 88ecf93 (2026-10-20).
 
 ## K573 (Done 2026-10-20)
 
-- **K573** · G3-1's phone gap search: step 1 (3e2b6cf) plus step 2, a per-slot curvature stride (knot gs24 search 60.7 -> 19.3 ms on the phone; fixes K591). Done in 0753b3c (2026-10-20).
+- **K573** · G3-1's phone gap search: step 1 (cec6d6a) plus step 2, a per-slot curvature stride (knot gs24 search 60.7 -> 19.3 ms on the phone; fixes K591). Done in 4c7f4db (2026-10-20).
 
 ## K591 (Done 2026-10-20)
 
-- **K591** · The gap search dropped a gap run's tail past 65 SAMP points: fixed by K573 step 2. Done in 0753b3c (2026-10-20).
+- **K591** · The gap search dropped a gap run's tail past 65 SAMP points: fixed by K573 step 2. Done in 4c7f4db (2026-10-20).
 
 ## K90 (Done 2026-10-20)
 
-- **K90** · Min bend radius (1a-1b merged 6f97b92..feb12a0): ship, tune or stop (rec. stop; the design doc says tune, then ship)? Dropped: Levi 2026-10-20 (report card): stop. The bound stays parked, off and console-only; G3-2 builds on today's points (2026-10-20).
+- **K90** · Min bend radius (1a-1b merged b6635b4..be9cdba): ship, tune or stop (rec. stop; the design doc says tune, then ship)? Dropped: Levi 2026-10-20 (report card): stop. The bound stays parked, off and console-only; G3-2 builds on today's points (2026-10-20).
 
 ## K213 (Done 2026-10-20)
 
@@ -2137,35 +2137,35 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K194 (Done 2026-10-20)
 
-- **K194** · four defaults (pluck glow fallback, marker size 2, fire speed 0.6, stalker accuracy 0.3) and peakEstimate deduped (0.11-0.16 ms a tap). Done in ab73daa (2026-10-20).
+- **K194** · four defaults (pluck glow fallback, marker size 2, fire speed 0.6, stalker accuracy 0.3) and peakEstimate deduped (0.11-0.16 ms a tap). Done in e5ec489 (2026-10-20).
 
 ## K225 (Done 2026-10-20)
 
-- **K225** · Levi 2026-10-20: the markers' default size (`markerSize`) goes 1.08 -> 2 (1.08 is about 5 CSS px on the phone). Done in ab73daa (2026-10-20).
+- **K225** · Levi 2026-10-20: the markers' default size (`markerSize`) goes 1.08 -> 2 (1.08 is about 5 CSS px on the phone). Done in e5ec489 (2026-10-20).
 
 ## K280 (Done 2026-10-20)
 
-- **K280** · Levi 2026-10-20: the turn clock's burn race cools, `fireSpeed` 0.75 -> 0.6 with `fireDelay` 0 (real time keeps `fsr`/`fdr`). Done in ab73daa (2026-10-20).
+- **K280** · Levi 2026-10-20: the turn clock's burn race cools, `fireSpeed` 0.75 -> 0.6 with `fireDelay` 0 (real time keeps `fsr`/`fdr`). Done in e5ec489 (2026-10-20).
 
 ## K421 (Done 2026-10-20)
 
-- **K421** · Levi 2026-10-20: the stalker's accuracy default (`minoStalkerAccuracy`) goes 0.45 -> 0.3 (0.45 caught 27.9% at 80% against a 20% target). Done in ab73daa (2026-10-20).
+- **K421** · Levi 2026-10-20: the stalker's accuracy default (`minoStalkerAccuracy`) goes 0.45 -> 0.3 (0.45 caught 27.9% at 80% against a 20% target). Done in e5ec489 (2026-10-20).
 
 ## K603 (Done 2026-10-20)
 
-- **K603** · `src/app/frame_loop.ts` (about line 307): `stepUnflagged = false;` sits after a `return`, so K6-1's observer flag never resets once set (predates K456). Done in 3b8b845 (2026-10-20).
+- **K603** · `src/app/frame_loop.ts` (about line 307): `stepUnflagged = false;` sits after a `return`, so K6-1's observer flag never resets once set (predates K456). Done in e012cfe (2026-10-20).
 
 ## K410 (Done 2026-10-20)
 
-- **K410** · The fire's FRONT and SMOLDER paint items into `paint_math`'s mirror and the parity tests, once K409 settles the look (K152 item 3; `K114_burn.md` 3b handoff). Done in 3231d59 (2026-10-20).
+- **K410** · The fire's FRONT and SMOLDER paint items into `paint_math`'s mirror and the parity tests, once K409 settles the look (K152 item 3; `K114_burn.md` 3b handoff). Done in cf70caa (2026-10-20).
 
 ## K599 (Done 2026-10-20)
 
-- **K599** · `.claude/rules/render-explore.md` THE BURN (and a test comment) says the dark band draws under Char only; it draws under Gone too (K409's card). Done in 3231d59 (2026-10-20).
+- **K599** · `.claude/rules/render-explore.md` THE BURN (and a test comment) says the dark band draws under Char only; it draws under Gone too (K409's card). Done in cf70caa (2026-10-20).
 
 ## K290 (Done 2026-10-20)
 
-- **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or char (CHAR items in the explore programs). Done in 3231d59 (2026-10-20).
+- **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or char (CHAR items in the explore programs). Done in cf70caa (2026-10-20).
 
 ## K578 (Done 2026-10-20)
 
@@ -2173,127 +2173,127 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K244 (Done 2026-10-20)
 
-- **K244** · No junction-core plucks: auto plucks pick only drawn sites and a release in a core is silent (0 of 844 notes undrawn). Done in ff67e4d (2026-10-20).
+- **K244** · No junction-core plucks: auto plucks pick only drawn sites and a release in a core is silent (0 of 844 notes undrawn). Done in 56b8ebc (2026-10-20).
 
 ## K336 (Done 2026-10-20)
 
-- **K336** · Side cannons and streamers (codec 178-180), with K186 (none under reduced motion, every banner throws). Done in e7affd6 (2026-10-20).
+- **K336** · Side cannons and streamers (codec 178-180), with K186 (none under reduced motion, every banner throws). Done in afc47fc (2026-10-20).
 
 ## K186 (Done 2026-10-20)
 
-- **K186** · K140's confetti calls: none under reduced motion, every win banner throws. Done in e7affd6 (2026-10-20).
+- **K186** · K140's confetti calls: none under reduced motion, every win banner throws. Done in afc47fc (2026-10-20).
 
 ## K525 (Done 2026-10-20)
 
-- **K525** · The telegraph lights the route's rims by default (mtl at codec 181; the line stays an option); follow-ups K649-K654. Done in 5e88352 (2026-10-20).
+- **K525** · The telegraph lights the route's rims by default (mtl at codec 181; the line stays an option); follow-ups K649-K654. Done in 629c242 (2026-10-20).
 
 ## K637 (Done 2026-10-20)
 
-- **K637** · The minotaur sim's 1.66 to 2.50 greedy catches is 9ccf360 (K74 s3's trap-zone finish), intended; harness ruled out; 2.50 is the baseline (`.claude/probes/K637/`). Done in 41fa173 (2026-10-20).
+- **K637** · The minotaur sim's 1.66 to 2.50 greedy catches is 83d4405 (K74 s3's trap-zone finish), intended; harness ruled out; 2.50 is the baseline (`.claude/probes/K637/`). Done in d25327b (2026-10-20).
 
 ## K653 (Done 2026-10-20)
 
-- **K653** · syncMinotaur fog-bleed layer flip fixed (no lift-back while it bleeds): 0 moves in 208 syncs, was 209 of 209; K650 b and K645 a done (K653_checks.md Handoff). Done in 4ae42ee (2026-10-20).
+- **K653** · syncMinotaur fog-bleed layer flip fixed (no lift-back while it bleeds): 0 moves in 208 syncs, was 209 of 209; K650 b and K645 a done (K653_checks.md Handoff). Done in 032e4e7 (2026-10-20).
 
 ## K139 (Done 2026-10-20)
 
-- **K139** · collapse mode (cl, codec 190): every run collapses once crossed; finish and free; score = share collapsed against a 20k-step par; calls K681, residuals K682-K685. Done in 961cd53 (2026-10-20).
+- **K139** · collapse mode (cl, codec 190): every run collapses once crossed; finish and free; score = share collapsed against a 20k-step par; calls K681, residuals K682-K685. Done in a76071a (2026-10-20).
 
 ## K587 (Done 2026-10-20)
 
-- **K587** · Confetti shine on the Pixel (round 2026-10-20): shine 0 vs 2 both 24% of frames over 25 ms, no measurable cost (`.claude/probes/K662/results.md`). Done in 9cca8b5 (2026-10-20).
+- **K587** · Confetti shine on the Pixel (round 2026-10-20): shine 0 vs 2 both 24% of frames over 25 ms, no measurable cost (`.claude/probes/K662/results.md`). Done in 5a0a7b4 (2026-10-20).
 
 ## K651 (Done 2026-10-20)
 
-- **K651** · Pixel sheet for K525 rims (round 2026-10-20): red edges and the destination circle read well; the fog glow is a dim dot (K649). Done in 9cca8b5 (2026-10-20).
+- **K651** · Pixel sheet for K525 rims (round 2026-10-20): red edges and the destination circle read well; the fog glow is a dim dot (K649). Done in 5a0a7b4 (2026-10-20).
 
 ## K644 (Done 2026-10-20)
 
-- **K644** · Phone pass for K580 glyphs (round 2026-10-20): 16 stills at xh 2 and 3, all asleep by 5.9 s; the J smooth, no s2 regression; the a stem notch is K676. Done in 9cca8b5 (2026-10-20).
+- **K644** · Phone pass for K580 glyphs (round 2026-10-20): 16 stills at xh 2 and 3, all asleep by 5.9 s; the J smooth, no s2 regression; the a stem notch is K676. Done in 5a0a7b4 (2026-10-20).
 
 ## K646 (Done 2026-10-20)
 
-- **K646** · Phone pass for K336 + K186 (round 2026-10-20): six banner paths show 1 burst each; frames flat in amount (23-26% over 25 ms, max 34 ms, hot and with audio on); daily paths 2b/3 and a quiet rerun in K687. Done in 9cca8b5 (2026-10-20).
+- **K646** · Phone pass for K336 + K186 (round 2026-10-20): six banner paths show 1 burst each; frames flat in amount (23-26% over 25 ms, max 34 ms, hot and with audio on); daily paths 2b/3 and a quiet rerun in K687. Done in 5a0a7b4 (2026-10-20).
 
 ## K631 (Done 2026-10-20)
 
-- **K631** · K244 on the phone (round 2026-10-20): auto plucks with nothing drawn 0 of 372 on the K244 builds (base 8 of 186); drawn releases 47 of 47; taps alike on both builds. Done in 9cca8b5 (2026-10-20).
+- **K631** · K244 on the phone (round 2026-10-20): auto plucks with nothing drawn 0 of 372 on the K244 builds (base 8 of 186); drawn releases 47 of 47; taps alike on both builds. Done in 5a0a7b4 (2026-10-20).
 
 ## K662 (Done 2026-10-20)
 
-- **K662** · The phone sitting (2026-10-20, 20:06-20:50): parts 1-4 ran (K631, K646, K587, K651, K644 closed); Levi took the phone back before the daily paths (K687). Done in 9cca8b5 (2026-10-20).
+- **K662** · The phone sitting (2026-10-20, 20:06-20:50): parts 1-4 ran (K631, K646, K587, K651, K644 closed); Levi took the phone back before the daily paths (K687). Done in 5a0a7b4 (2026-10-20).
 
 ## K620 (Done 2026-10-20)
 
-- **K620** · the glyph root paints as a blend of the stroke section colours from R to the spur at J (CPU mirror, KGEOM and KSTATIC data, GLSL); maze and burn moved 3-5 px of one level (the vertex block). Done in d54c09b (2026-10-20).
+- **K620** · the glyph root paints as a blend of the stroke section colours from R to the spur at J (CPU mirror, KGEOM and KSTATIC data, GLSL); maze and burn moved 3-5 px of one level (the vertex block). Done in 0594ace (2026-10-20).
 
 ## K324 (Done 2026-10-20)
 
-- **K324** · the real-time telegraph: lead, whole runs, ring on the real-time clock; uKTeleAt (K654); no line look over hidden thread (K652, K271); panel rows on both clocks. Done in 031e09a (2026-10-20).
+- **K324** · the real-time telegraph: lead, whole runs, ring on the real-time clock; uKTeleAt (K654); no line look over hidden thread (K652, K271); panel rows on both clocks. Done in af0f823 (2026-10-20).
 
 ## K697 (Done 2026-10-20)
 
-- **K697** · maze_plan_identity and the physics_host lockstep test run near the 30 s timeout under parallel agent load (45 and 60 s a file loaded, 11 and 24 s clean): raise their timeouts before they flake an agent merge or CI (K324 s2 report). Done in 9992d71 (2026-10-20).
+- **K697** · maze_plan_identity and the physics_host lockstep test run near the 30 s timeout under parallel agent load (45 and 60 s a file loaded, 11 and 24 s clean): raise their timeouts before they flake an agent merge or CI (K324 s2 report). Done in d31ecd9 (2026-10-20).
 
 ## K675 (Done 2026-10-20)
 
-- **K675** · K580 s3 partial round blends: the a J2 at xh 2 (113.5 deg) is only partly round (1.824 h to 1.389 h), the i joint sample at xh 3 (110.8 deg) barely. Done in e2adfd9 (2026-10-20).
+- **K675** · K580 s3 partial round blends: the a J2 at xh 2 (113.5 deg) is only partly round (1.824 h to 1.389 h), the i joint sample at xh 3 (110.8 deg) barely. Done in 789c13b (2026-10-20).
 
 ## K676 (Done 2026-10-20)
 
-- **K676** · Open-end crescents beside spur tips (the a stem bite, the notaper J bites, about 0.1 LU) in the K580 s3 fills-only raster; the Pixel shows the a stem notch by its foot disc too (K662). Done in ad3e715 (2026-10-20).
+- **K676** · Open-end crescents beside spur tips (the a stem bite, the notaper J bites, about 0.1 LU) in the K580 s3 fills-only raster; the Pixel shows the a stem notch by its foot disc too (K662). Done in b52cd63 (2026-10-20).
 
 ## K703 (Done 2026-10-21)
 
-- **K703** · Overnight phone sitting 1: K687 paths 2b and 3 pass, K114 cut 15 of 15, the K324 s2 telegraph sheet (K695), K698 confirmed; Part 4 (K177) lost to an adb death. Done in 57a4827 (2026-10-21).
+- **K703** · Overnight phone sitting 1: K687 paths 2b and 3 pass, K114 cut 15 of 15, the K324 s2 telegraph sheet (K695), K698 confirmed; Part 4 (K177) lost to an adb death. Done in 55b3efb (2026-10-21).
 
 ## K717 (Done 2026-10-21)
 
-- **K717** · Phone sitting 2 (2026-10-21 00:04-00:55): kit silenced (K704), adb reconnect built (K709), lives, the walker, K177 and K687 ran; findings in K698, K715, K720. Done in cdaaff1 (2026-10-21).
+- **K717** · Phone sitting 2 (2026-10-21 00:04-00:55): kit silenced (K704), adb reconnect built (K709), lives, the walker, K177 and K687 ran; findings in K698, K715, K720. Done in 080d1ad (2026-10-21).
 
 ## K704 (Done 2026-10-21)
 
-- **K704** · Phone kit links all carry snd=none (K578 kit, phone_conf, k578_confetti, lib717; K717) plus the GOTCHA in probes-phone.md; the app side is K720. Done in 47fe24d (2026-10-21).
+- **K704** · Phone kit links all carry snd=none (K578 kit, phone_conf, k578_confetti, lib717; K717) plus the GOTCHA in probes-phone.md; the app side is K720. Done in 43b8b66 (2026-10-21).
 
 ## K177 (Done 2026-10-21)
 
-- **K177** · Minotaur indicator on the Pixel (K717): shown at the edge; a real tap frames the minotaur (scale 31.6 to 7.5 in 0.9 s), holds past 3 s, and the follow camera eases back by 5 s. Done in cdaaff1 (2026-10-21).
+- **K177** · Minotaur indicator on the Pixel (K717): shown at the edge; a real tap frames the minotaur (scale 31.6 to 7.5 in 0.9 s), holds past 3 s, and the follow camera eases back by 5 s. Done in 080d1ad (2026-10-21).
 
 ## K687 (Done 2026-10-21)
 
-- **K687** · Quiet confetti cell (K717, build ea22989, thermal 0, audiobook paused): 97 of 308 frames over 25 ms (31%, none over 34) vs 23% hot and playing (K662), so neither explains the misses; the cost is K645. Done in cdaaff1 (2026-10-21).
+- **K687** · Quiet confetti cell (K717, build c9de592, thermal 0, audiobook paused): 97 of 308 frames over 25 ms (31%, none over 34) vs 23% hot and playing (K662), so neither explains the misses; the cost is K645. Done in 080d1ad (2026-10-21).
 
 ## K708 (Done 2026-10-21)
 
-- **K708** · lives and sword sims: 3 hearts bite only blind real-time play; at swordMoves 8 the sword is a breather (slays in 0.5% even for a seeker); K708.md Handoff. Done in 7d1b41ce (2026-10-21).
+- **K708** · lives and sword sims: 3 hearts bite only blind real-time play; at swordMoves 8 the sword is a breather (slays in 0.5% even for a seeker); K708.md Handoff. Done in c7bcf22b (2026-10-21).
 
 ## K720 (Done 2026-10-21)
 
-- **K720** · sound off opens no audio: no AudioContext until sound is on and something plays (plucks, song, snore; the minotaur sounds now obey Muted and none too); switching sound on works without a reload; K720.md Handoff. Done in 72270da2 (2026-10-21).
+- **K720** · sound off opens no audio: no AudioContext until sound is on and something plays (plucks, song, snore; the minotaur sounds now obey Muted and none too); switching sound on works without a reload; K720.md Handoff. Done in 389a8ce1 (2026-10-21).
 
 ## K643 (Done 2026-10-21)
 
-- **K643** · lintGlyph takes the taper part; bulge and crotch probe flags; both bounds kept (taperBulgeLU 0.01; forkMaxLU 1.2, crotches proven to 0.79 LU). Done in 6278cf8b (2026-10-21).
+- **K643** · lintGlyph takes the taper part; bulge and crotch probe flags; both bounds kept (taperBulgeLU 0.01; forkMaxLU 1.2, crotches proven to 0.79 LU). Done in adc6535b (2026-10-21).
 
 ## K726 (Done 2026-10-21)
 
-- **K726** · Phone sitting 3 (02:16-03:02, tested build 65ee13a6): the K718 glyph pages and sheets, the sword on real touches on both clocks (0 failures), K720 silence verified (0 AudioContexts); sword toasts over the pad went to K698; `.claude/probes/K726/out/`. Done in 65ee13a6 (2026-10-21).
+- **K726** · Phone sitting 3 (02:16-03:02, tested build dbd95f5b): the K718 glyph pages and sheets, the sword on real touches on both clocks (0 failures), K720 silence verified (0 AudioContexts); sword toasts over the pad went to K698; `.claude/probes/K726/out/`. Done in dbd95f5b (2026-10-21).
 
 ## K698 (Done 2026-10-21)
 
-- **K698** · Toasts clear the bottom controls (src/ui/toast_place.ts: 10 px above the highest control in their column, re-placed on resize; controls found by class km-control and the known control classes); with K713: the walker glow, no move pad in Lead or Delay, par at most P for an upper-bound Lead par. Done in e558c7ef (2026-10-21).
+- **K698** · Toasts clear the bottom controls (src/ui/toast_place.ts: 10 px above the highest control in their column, re-placed on resize; controls found by class km-control and the known control classes); with K713: the walker glow, no move pad in Lead or Delay, par at most P for an upper-bound Lead par. Done in 2f8f8346 (2026-10-21).
 
 ## K713 (Done 2026-10-21)
 
-- **K713** · K114 walker leftovers: the walker glow (K739 asks Levi about its size), no move pad in Lead or Delay, par at most P for an upper-bound par; in K698. Done in e558c7ef (2026-10-21).
+- **K713** · K114 walker leftovers: the walker glow (K739 asks Levi about its size), no move pad in Lead or Delay, par at most P for an upper-bound par; in K698. Done in 2f8f8346 (2026-10-21).
 
 ## K749 (Done 2026-10-21)
 
-- **K749** · Phone sitting 4 (04:23-04:41, tested build 4a1dd4d5): K698 toasts clear every control on real touches (settled gap 9.9 css px, none cut off); ice slides and both color rules pass with backtracks; sprint passes on both clocks; K738 confirmed as a real overlap and K744 blips seen at real size; `.claude/probes/K749/out/`. Done in 4a1dd4d5 (2026-10-21).
+- **K749** · Phone sitting 4 (04:23-04:41, tested build cdd3ed53): K698 toasts clear every control on real touches (settled gap 9.9 css px, none cut off); ice slides and both color rules pass with backtracks; sprint passes on both clocks; K738 confirmed as a real overlap and K744 blips seen at real size; `.claude/probes/K749/out/`. Done in cdd3ed53 (2026-10-21).
 
 ## K767 (Done 2026-10-21)
 
-- **K767** · Phone sitting 5 on real touches (turnstiles, hidden runs, the beat rider): all three play; found the beat-plus-hunter catch bug (K774) and the hidden runs HUD overflow (K775); K764 unsettled; sheets in .claude/probes/K767/out/. Done in caa4f8ea (2026-10-21).
+- **K767** · Phone sitting 5 on real touches (turnstiles, hidden runs, the beat rider): all three play; found the beat-plus-hunter catch bug (K774) and the hidden runs HUD overflow (K775); K764 unsettled; sheets in .claude/probes/K767/out/. Done in 045ec6cb (2026-10-21).
 
 ## K764 (Done 2026-10-21)
 
@@ -2301,96 +2301,96 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K774 (Done 2026-10-21)
 
-- **K774** · Beat rider catches land exactly once (moveAlong lands a pending catch before the next departure; test/app/beat_catch.test.ts). Done in 8a9fe90c (2026-10-21).
+- **K774** · Beat rider catches land exactly once (moveAlong lands a pending catch before the next departure; test/app/beat_catch.test.ts). Done in 2d0ffd69 (2026-10-21).
 
 ## K777 (Done 2026-10-21)
 
-- **K777** · Refreshed the open-work report (K585) to v7: 68 decision cards (41 confirm, 25 open), 18 tests to mark and a What changed block, built from the ledger at 37382172; pipeline and gaps in the `docs/design/K777.md` Handoff. Done in 1396ea06 (2026-10-21).
+- **K777** · Refreshed the open-work report (K585) to v7: 68 decision cards (41 confirm, 25 open), 18 tests to mark and a What changed block, built from the ledger at c6d2a3d8; pipeline and gaps in the `docs/design/K777.md` Handoff. Done in 025ecce8 (2026-10-21).
 
 ## K793 (Done 2026-10-21)
 
-- **K793** · Settings panel search (fuzzy over row names, tags, folders and options) with collapse and expand all. Done in a60a2cc7 (2026-10-21).
+- **K793** · Settings panel search (fuzzy over row names, tags, folders and options) with collapse and expand all. Done in 9b2a4ea7 (2026-10-21).
 
 ## K795 (Done 2026-10-21)
 
-- **K795** · Panel rows for every param, the beat timing toggle and four tunables. Done in a1b1bdde (2026-10-21).
+- **K795** · Panel rows for every param, the beat timing toggle and four tunables. Done in d338bab4 (2026-10-21).
 
 ## K794 (Done 2026-10-21)
 
-- **K794** · Walked gold stays gold (the gold derives from the taps). Done in fb110a3e (2026-10-21).
+- **K794** · Walked gold stays gold (the gold derives from the taps). Done in d508d6d3 (2026-10-21).
 
 ## K796 (Done 2026-10-21)
 
-- **K796** · String burns away with its thread in the burn race (burntAt in explore_view.ts; drawYarn hides burnt stations). Done in 5f9f3a45 (2026-10-21).
+- **K796** · String burns away with its thread in the burn race (burntAt in explore_view.ts; drawYarn hides burnt stations). Done in 48468919 (2026-10-21).
 
 ## K798 (Done 2026-10-21)
 
-- **K798** · Border-at-a-time intros (edges / edgesAll sequences). Done in 3da2cf59 (2026-10-21).
+- **K798** · Border-at-a-time intros (edges / edgesAll sequences). Done in 903d7cbb (2026-10-21).
 
 ## K799 (Done 2026-10-21)
 
-- **K799** · The traveled path's look (goldWidth + goldTexture). Done in bea90d9b (2026-10-21).
+- **K799** · The traveled path's look (goldWidth + goldTexture). Done in c26d5cf4 (2026-10-21).
 
 ## K800 (Done 2026-10-21)
 
-- **K800** · Looks set by the link (LOOK_KEYS exempt; Link look chip). Done in 879d190e (2026-10-21).
+- **K800** · Looks set by the link (LOOK_KEYS exempt; Link look chip). Done in 7e97bc4b (2026-10-21).
 
 ## K828 (Done 2026-10-22)
 
-- **K828** Loader params: loaderSpeed/loaderMove (codec 243-244, LOOK_KEYS), gap/threadWidth/pathColor/backgroundBase drive the loading trefoil, keep-loading-animation preview switch. Done in 9bd67c8e (2026-10-22).
+- **K828** Loader params: loaderSpeed/loaderMove (codec 243-244, LOOK_KEYS), gap/threadWidth/pathColor/backgroundBase drive the loading trefoil, keep-loading-animation preview switch. Done in 32bc3d67 (2026-10-22).
 
 ## K829 (Done 2026-10-22)
 
-- **K829** The tapered glyph root leans onto its swept-disc envelope (K718 call 1: the a's-J 0.031-0.059 LU scoop; `gln=0` keeps the square offset for A/B). Done in 2fbaf8a3 (2026-10-22).
+- **K829** The tapered glyph root leans onto its swept-disc envelope (K718 call 1: the a's-J 0.031-0.059 LU scoop; `gln=0` keeps the square offset for A/B). Done in 238a78a3 (2026-10-22).
 
 ## K792 (Done 2026-10-22)
 
-- **K792** · A try key for the K610 grab chase rate: `?gcr=` (0, 2] sets PhysicsTuning.grabChase (default in MAX_SLIDE_GRABBED). Done in da1d64cc (K827) (2026-10-22).
+- **K792** · A try key for the K610 grab chase rate: `?gcr=` (0, 2] sets PhysicsTuning.grabChase (default in MAX_SLIDE_GRABBED). Done in 1db9f2dd (K827) (2026-10-22).
 
 ## K36 (Done 2026-10-22)
 
-- **K36** · Add to home screen: a trefoil icon set from the loader's geometry (favicon.svg, icon-192/512, apple-touch-icon, manifest.webmanifest); template leftovers deleted. Done in c46d3cc9 (K823) (2026-10-22).
+- **K36** · Add to home screen: a trefoil icon set from the loader's geometry (favicon.svg, icon-192/512, apple-touch-icon, manifest.webmanifest); template leftovers deleted. Done in 8f1cc74b (K823) (2026-10-22).
 
 ## K852 (Done 2026-10-23)
 
-- **K852** · Loader motion dropdown + loader-only look params (Levi, by 2026-10-23: the move param becomes a 3-way dropdown and the loader gets its own gap/thread-size/colors/fill/marker params, separate from the maze's): `loaderMove` gains `"above"` (codec-appended option; old links unaffected) - the threads still move around the centered marker, but the knot turns so its strand centroid (arc-weighted, `shapeCentroid`) stays directly above the marker every frame (exact angle per frame via `rotationForCentroidAbove`, accumulated continuously, no following lag). New codec-appended params (defaults reproduce the pre-K852 drawing exactly): `loaderGap` 0.6, `loaderThreadWidth` 0.42, `loaderThreadColor` #eccc41, `loaderBgColor` #151b28, `loaderIndicatorSize` 1, `loaderFill` solid/outline/flat, `loaderTrail` 2.6 - `loaderCfgFromParams` no longer reads the maze's gap/threadWidth/pathColor/backgroundBase, so tuning the maze's look no longer dresses the loader (the pre-K852 loader on an old link with a non-default maze look now shows the loader defaults instead; accepted, recorded here). Marker size scales the head glyph and its K851 dive margin in both moving modes and head mode. Verified: full suite 2306 passed; probe `.claude/probes/K852/` - pixel centroid in `above` mode x≈320-324 vs marker 319.4 in every frame (maze control wanders ±130 px), marker still dives 2/8 frames, flat/outline/pink stills + Loading rows in the DOM. Done in 06ea6405 (2026-10-23).
+- **K852** · Loader motion dropdown + loader-only look params (Levi, by 2026-10-23: the move param becomes a 3-way dropdown and the loader gets its own gap/thread-size/colors/fill/marker params, separate from the maze's): `loaderMove` gains `"above"` (codec-appended option; old links unaffected) - the threads still move around the centered marker, but the knot turns so its strand centroid (arc-weighted, `shapeCentroid`) stays directly above the marker every frame (exact angle per frame via `rotationForCentroidAbove`, accumulated continuously, no following lag). New codec-appended params (defaults reproduce the pre-K852 drawing exactly): `loaderGap` 0.6, `loaderThreadWidth` 0.42, `loaderThreadColor` #eccc41, `loaderBgColor` #151b28, `loaderIndicatorSize` 1, `loaderFill` solid/outline/flat, `loaderTrail` 2.6 - `loaderCfgFromParams` no longer reads the maze's gap/threadWidth/pathColor/backgroundBase, so tuning the maze's look no longer dresses the loader (the pre-K852 loader on an old link with a non-default maze look now shows the loader defaults instead; accepted, recorded here). Marker size scales the head glyph and its K851 dive margin in both moving modes and head mode. Verified: full suite 2306 passed; probe `.claude/probes/K852/` - pixel centroid in `above` mode x≈320-324 vs marker 319.4 in every frame (maze control wanders ±130 px), marker still dives 2/8 frames, flat/outline/pink stills + Loading rows in the DOM. Done in 405320d3 (2026-10-23).
 
 ## K853 (Done 2026-10-23)
 
-- **K853** · Loader fourth motion + speed cap (Levi, by 2026-10-23): `loaderMove` gains `"spin"` (codec-appended) - the knot's centroid stays pinned at the screen centre, the knot spins around it (exact rotation per frame via `rotationForHeadBelowCentroid`, accumulated continuously), and the marker stays directly below the centroid at the head's own distance, diving at under crossings as in the other modes. Loading-speed range max 3 -> 9 (x3, Levi). Verified: geometry tests (below-centroid rotation + duality with the above mode), full suite 2307 passed; probe `.claude/probes/K852/check_spin.mjs` - pixel centroid pinned ~(322, 307) of 640 across 8 frames, marker x≈319.5 riding y 378-490 below centre. (Headless probes must seed `knotmaze.motion=full`: headless Chrome reports reduced motion and the boot then never spawns the loader worker.) Done in fddb71b5 (2026-10-23).
+- **K853** · Loader fourth motion + speed cap (Levi, by 2026-10-23): `loaderMove` gains `"spin"` (codec-appended) - the knot's centroid stays pinned at the screen centre, the knot spins around it (exact rotation per frame via `rotationForHeadBelowCentroid`, accumulated continuously), and the marker stays directly below the centroid at the head's own distance, diving at under crossings as in the other modes. Loading-speed range max 3 -> 9 (x3, Levi). Verified: geometry tests (below-centroid rotation + duality with the above mode), full suite 2307 passed; probe `.claude/probes/K852/check_spin.mjs` - pixel centroid pinned ~(322, 307) of 640 across 8 frames, marker x≈319.5 riding y 378-490 below centre. (Headless probes must seed `knotmaze.motion=full`: headless Chrome reports reduced motion and the boot then never spawns the loader worker.) Done in 8e8199a3 (2026-10-23).
 
 ## K854 (Done 2026-10-23)
 
-- **K854** · Border-mode junction outline, fixed as measured (Levi, by 2026-10-23: borders still ran across junctions and around them "awful"; probes `.claude/probes/K854/`, classifier = K849's silhouette judge upgraded to joinery's exact armReach + cubic rim, physics frozen `phy=0` so geometry can't drift mid-measurement): (1) the ribbon side-cut window now reaches the FLANK TIP (`max(capsule-exit, armReach - 0.05)` in joinery's entries; K849's capsule-exit alone was 0.39 world vs the 0.97 tip at cr 3 - the border redrew beside every rim: double strokes + interior spokes; the -0.05 overlaps the rim's tangent departure so the two solid strokes merge); (2) the fan rim band is SOLID (it was a `smoothstep(0.05, 0.95)` gradient across the whole band = pale crescents beside the ribbons' solid strokes), as wide as the ribbons' band (`borderWidth x casingHalf`), inset PERPENDICULAR to the rim (the apex-ward inset collapsed the band to a point at tips), with an outer ring so the band straddles the rim line like the ribbons' band straddles their edge (drawn only in border look; `vLook 2`, discarded otherwise - knot-mode byte identity stays green); (3) rim tips carry the arc's own flank value (0.75) and the flank fade steps in ~1px at 0.79, so arcs land on the borders instead of fading short or tonguing where the rim doubles back along the edge. Numbers (seed 3, core = junction disc, "interior" = stroke >0.05 world inside the union silhouette): ji96 937->620, ji100 833->566 (strip, upgraded oracle; fan-owned share at ji100 89->49), ji144 590->359; SDF path 1562/1589/1110 -> 1226/1259/719 (still worse than strip - pre-existing: SDF ribbons draw wider than the strip silhouette; the flip stays Levi-gated). Full suite 2307 passed incl. byte identity; K320 junction-frag budget raised 29,940 -> 30,650 with the measured note. RESIDUALS: deep strokes owned by ribbons at CROSSINGS just outside the junction core (crossing gap windows, the K849 class - not the junction outline; visible in classifier deep counts ji100 170), and ~0.03-world tip notches at 300px/world inspection zoom (subpixel at playing zoom). Border islands between a junction cut and a nearby dive gap remain by design (they are silhouette there) and now connect at both ends. Done in ccae4ffe (2026-10-23).
+- **K854** · Border-mode junction outline, fixed as measured (Levi, by 2026-10-23: borders still ran across junctions and around them "awful"; probes `.claude/probes/K854/`, classifier = K849's silhouette judge upgraded to joinery's exact armReach + cubic rim, physics frozen `phy=0` so geometry can't drift mid-measurement): (1) the ribbon side-cut window now reaches the FLANK TIP (`max(capsule-exit, armReach - 0.05)` in joinery's entries; K849's capsule-exit alone was 0.39 world vs the 0.97 tip at cr 3 - the border redrew beside every rim: double strokes + interior spokes; the -0.05 overlaps the rim's tangent departure so the two solid strokes merge); (2) the fan rim band is SOLID (it was a `smoothstep(0.05, 0.95)` gradient across the whole band = pale crescents beside the ribbons' solid strokes), as wide as the ribbons' band (`borderWidth x casingHalf`), inset PERPENDICULAR to the rim (the apex-ward inset collapsed the band to a point at tips), with an outer ring so the band straddles the rim line like the ribbons' band straddles their edge (drawn only in border look; `vLook 2`, discarded otherwise - knot-mode byte identity stays green); (3) rim tips carry the arc's own flank value (0.75) and the flank fade steps in ~1px at 0.79, so arcs land on the borders instead of fading short or tonguing where the rim doubles back along the edge. Numbers (seed 3, core = junction disc, "interior" = stroke >0.05 world inside the union silhouette): ji96 937->620, ji100 833->566 (strip, upgraded oracle; fan-owned share at ji100 89->49), ji144 590->359; SDF path 1562/1589/1110 -> 1226/1259/719 (still worse than strip - pre-existing: SDF ribbons draw wider than the strip silhouette; the flip stays Levi-gated). Full suite 2307 passed incl. byte identity; K320 junction-frag budget raised 29,940 -> 30,650 with the measured note. RESIDUALS: deep strokes owned by ribbons at CROSSINGS just outside the junction core (crossing gap windows, the K849 class - not the junction outline; visible in classifier deep counts ji100 170), and ~0.03-world tip notches at 300px/world inspection zoom (subpixel at playing zoom). Border islands between a junction cut and a nearby dive gap remain by design (they are silhouette there) and now connect at both ends. Done in 3a8fde68 (2026-10-23).
 
 ## K855 (Done 2026-10-23)
 
-- **K855** · Loader marker clips partially at crossings (Levi, by 2026-10-23: only the portion overlapping the thread/gap clips; the rest keeps rendering): K851's whole-glyph dive (hide while inside gap + radius) replaced by an even-odd canvas clip: the band along the OVER pass's line through the crossing, half-width casing/2 + gapSamples x sin(crossing angle), cut out of the glyph in all four motion modes (device px in the moving modes, world units inside the head-mode transform). New pure geometry: `TrefoilShape.crossings` (under pass's arc/point + both headings) and `nearestUnderCrossing`, both tested. Verified: frame bursts in maze mode now show marker white counts between full (1844) and 0 (355..1765, 10 partial frames of 60) instead of binary full/gone, stills `.claude/probes/K854/clip/`; full suite 2309 passed. (At the exact crossing centre the band is wider than the glyph, so it still fully covers there - that IS the overlap.) Done in d0a279f0 (2026-10-23).
+- **K855** · Loader marker clips partially at crossings (Levi, by 2026-10-23: only the portion overlapping the thread/gap clips; the rest keeps rendering): K851's whole-glyph dive (hide while inside gap + radius) replaced by an even-odd canvas clip: the band along the OVER pass's line through the crossing, half-width casing/2 + gapSamples x sin(crossing angle), cut out of the glyph in all four motion modes (device px in the moving modes, world units inside the head-mode transform). New pure geometry: `TrefoilShape.crossings` (under pass's arc/point + both headings) and `nearestUnderCrossing`, both tested. Verified: frame bursts in maze mode now show marker white counts between full (1844) and 0 (355..1765, 10 partial frames of 60) instead of binary full/gone, stills `.claude/probes/K854/clip/`; full suite 2309 passed. (At the exact crossing centre the band is wider than the glyph, so it still fully covers there - that IS the overlap.) Done in df32e1d2 (2026-10-23).
 
 ## K856 (Done 2026-10-23)
 
-- **K856** · In-game markers clip partially at crossings, same rule as the loader's K855 (Levi, by 2026-10-23: "and the in-game markers should behave the same"): the head's and minotaur's MarkerMesh discs are cut by a band along the over pass (only the overlapping slice; the K842 whole-marker alpha dip is retired for these two). `RibbonRenderer.underClipBand(chain, arc, rWorld)` measures the strip (over casing/2 + gap x sin(crossing angle), the K855 form) at the under crossing nearest the marker's arc; `MarkerMesh.setClipBand` converts it to the disc frame (`src/render/clip_band.ts`, pure + tested) and MARKER_FRAG discards inside it. The band's shader half length covers every disc fragment so the across test alone decides (a fixed length let fragments escape at shallow angles). Station markers (start/exit/sword/extras/ticks) sit at vertices and keep the old rule. Verified: `test/render/clip_band.test.ts` (7 tests), full suite 2316 passed; probes `.claude/probes/K856/` - head: 865 band frames in bounded runs while walking seed 7's solution, white-core counts 39 (deepest) / 209-270 (partial) / ~520 (whole); burst21 shows the head sliced along the over thread with the rest rendering; minotaur (turn clock): 1707 band frames, mino_burst2/6 show the disc cut along the pink over thread. Done in 3be655ed (2026-10-23).
+- **K856** · In-game markers clip partially at crossings, same rule as the loader's K855 (Levi, by 2026-10-23: "and the in-game markers should behave the same"): the head's and minotaur's MarkerMesh discs are cut by a band along the over pass (only the overlapping slice; the K842 whole-marker alpha dip is retired for these two). `RibbonRenderer.underClipBand(chain, arc, rWorld)` measures the strip (over casing/2 + gap x sin(crossing angle), the K855 form) at the under crossing nearest the marker's arc; `MarkerMesh.setClipBand` converts it to the disc frame (`src/render/clip_band.ts`, pure + tested) and MARKER_FRAG discards inside it. The band's shader half length covers every disc fragment so the across test alone decides (a fixed length let fragments escape at shallow angles). Station markers (start/exit/sword/extras/ticks) sit at vertices and keep the old rule. Verified: `test/render/clip_band.test.ts` (7 tests), full suite 2316 passed; probes `.claude/probes/K856/` - head: 865 band frames in bounded runs while walking seed 7's solution, white-core counts 39 (deepest) / 209-270 (partial) / ~520 (whole); burst21 shows the head sliced along the over thread with the rest rendering; minotaur (turn clock): 1707 band frames, mino_burst2/6 show the disc cut along the pink over thread. Done in 54556322 (2026-10-23).
 
 ## K857 (Done 2026-10-23)
 
-- **K857** · Borders running across junctions (across the joining thread's end), fixed (Levi, by 2026-10-23, after K854): ROOT CAUSE - joinery skipped every wedge flatter than FILLET_MAX_WEDGE (2.6 rad ≈ 149°): no rim AND no side-cut. That skip is only correct between one chain's own two arms (the near-straight pass-through side, whose ribbon already draws both edges through). A wide wedge between DIFFERENT chains is a real outline corner: skipping it left both facing ribbon edges uncut, so the through thread's border ran straight across the joining arm's mouth. Audit (`.claude/probes/K857/audit.mjs`, frozen seed 3): 5 such junctions of 166 (gaps 150-163°). Fix: the skip now requires `A.chain === B.chain`; wide different-chain wedges get flanks, rim and cuts like any other wedge (one line in `src/render/ribbon/joinery.ts` + comments). Verified: cut entries at j164 flip to left/right true on the previously uncut flanks; the before/after pixel diff at j164 (792 px) is exactly the removed cross-mouth stroke with the rim completing the outline (`.claude/probes/K857/out/j164_diff_crop.png`); same class fixed at a neighbour junction in j110's frame. Classifier (K854 oracle upgraded to mirror the new skip rule, baseline rebuilt via stash): j164 boundary 1048 -> 1250 (outline completed), interior 598 -> 557; j110 interior unchanged (its deep pixels are the crossing-window class). No regression at the K854 trio: interior 620/566/359, identical to K854. Full suite 2316 passed; fill look at j164 shows no fan bulge. The K854 residuals stand (crossing-gap-window strokes near junctions; SDF path still denser, gated). Done in 0c09ef63 (2026-10-23).
+- **K857** · Borders running across junctions (across the joining thread's end), fixed (Levi, by 2026-10-23, after K854): ROOT CAUSE - joinery skipped every wedge flatter than FILLET_MAX_WEDGE (2.6 rad ≈ 149°): no rim AND no side-cut. That skip is only correct between one chain's own two arms (the near-straight pass-through side, whose ribbon already draws both edges through). A wide wedge between DIFFERENT chains is a real outline corner: skipping it left both facing ribbon edges uncut, so the through thread's border ran straight across the joining arm's mouth. Audit (`.claude/probes/K857/audit.mjs`, frozen seed 3): 5 such junctions of 166 (gaps 150-163°). Fix: the skip now requires `A.chain === B.chain`; wide different-chain wedges get flanks, rim and cuts like any other wedge (one line in `src/render/ribbon/joinery.ts` + comments). Verified: cut entries at j164 flip to left/right true on the previously uncut flanks; the before/after pixel diff at j164 (792 px) is exactly the removed cross-mouth stroke with the rim completing the outline (`.claude/probes/K857/out/j164_diff_crop.png`); same class fixed at a neighbour junction in j110's frame. Classifier (K854 oracle upgraded to mirror the new skip rule, baseline rebuilt via stash): j164 boundary 1048 -> 1250 (outline completed), interior 598 -> 557; j110 interior unchanged (its deep pixels are the crossing-window class). No regression at the K854 trio: interior 620/566/359, identical to K854. Full suite 2316 passed; fill look at j164 shows no fan bulge. The K854 residuals stand (crossing-gap-window strokes near junctions; SDF path still denser, gated). Done in 91bc9b49 (2026-10-23).
 
 ## K859 (Done 2026-10-23)
 
-- **K859** · Rim curve extracted and measured; the research's premise corrected (curves research §3.2): the wedge rim's math moved verbatim into pure `src/render/ribbon/rim_curve.ts` (pinned by `test/render/rim_curve.test.ts`, frozen-maze diff vs the pre-extraction build = 0 px). Measurement overturned the plan: the corner-projection cubic (K846, "tangent rims") fires only when the edge-line corner lies beyond BOTH flank tips along their tangents - at cuspRadius 3 that needs wedges under ~29°, and on the frozen seed-3 maze the projection is negative on at least one side at 392/392 wedges (`.claude/probes/K859/fallback_count.mjs`, spot-checked ji0: tips ~0.59 out, corner ~0.25). The de-facto rim is the quadratic through the corner (union-outline-exact; G0 joins softened by K854's straddling band). A tangent-Hermite replacement (arc-fit lengths, G1 by construction) was implemented, unit-tested, and measured WORSE - outward bulge overshooting into neighbouring threads at tight junctions, 163k px churn on the frozen maze (`.claude/probes/K857/out/old_site1.png` vs `k859_site1.png`) - so it stays out and `rim_curve.ts` documents why. `rimCurvePoints` is the seam for the next candidate (a biarc through the corner region). Curves §3.1 was already shipped semantics (K854/K857); §3.3 (field-shaded border band) remains deferred insurance. Full suite 2320 passed. Done in ec3a8b30 (2026-10-23).
+- **K859** · Rim curve extracted and measured; the research's premise corrected (curves research §3.2): the wedge rim's math moved verbatim into pure `src/render/ribbon/rim_curve.ts` (pinned by `test/render/rim_curve.test.ts`, frozen-maze diff vs the pre-extraction build = 0 px). Measurement overturned the plan: the corner-projection cubic (K846, "tangent rims") fires only when the edge-line corner lies beyond BOTH flank tips along their tangents - at cuspRadius 3 that needs wedges under ~29°, and on the frozen seed-3 maze the projection is negative on at least one side at 392/392 wedges (`.claude/probes/K859/fallback_count.mjs`, spot-checked ji0: tips ~0.59 out, corner ~0.25). The de-facto rim is the quadratic through the corner (union-outline-exact; G0 joins softened by K854's straddling band). A tangent-Hermite replacement (arc-fit lengths, G1 by construction) was implemented, unit-tested, and measured WORSE - outward bulge overshooting into neighbouring threads at tight junctions, 163k px churn on the frozen maze (`.claude/probes/K857/out/old_site1.png` vs `k859_site1.png`) - so it stays out and `rim_curve.ts` documents why. `rimCurvePoints` is the seam for the next candidate (a biarc through the corner region). Curves §3.1 was already shipped semantics (K854/K857); §3.3 (field-shaded border band) remains deferred insurance. Full suite 2320 passed. Done in badb6bd9 (2026-10-23).
 
 ## K860 (Done 2026-10-23)
 
-- **K860** · Cursive fairness measurement (cursive research shortlist 1, measurement half): new pure `src/core/glyphs/glyph_fairness.ts` (K108-exact: densePath's signed curvature only) reports per path: min radius, curvature sign flips (deadbanded), monotone-κ pieces (swing-split), total κ variation, excess variation (ripple the piece skeleton cannot explain), max |dκ/ds|; `FAIR` targets (0 flips / ≤3 pieces / ≤0.004 excess) as a report, not a lint gate; synthetic tests (straight/arc/S/wiggle/jittered arc) in `test/core/glyph_fairness.test.ts`. Measured on the shipped K850 data (`.claude/probes/K860/measure.mts`): lint-clean (0 errors xh 2/3) but measurably unfair - a body: 5 sign flips, 10 pieces, excess 0.0339, minR 11.2 GU; a spur: 4 flips, 8 pieces; i body: 4 flips, 6 pieces, excess 0.0085; i stem spur clean (1 deadband flip). Intrinsic flips (entry blend, exit/bottom sweeps) account for ~2 of the body's - the rest is the lumpiness Levi rejected, now a number. Re-authoring registered as K861 with per-path targets pre-registered from this measurement. Done in f86068be (2026-10-23).
+- **K860** · Cursive fairness measurement (cursive research shortlist 1, measurement half): new pure `src/core/glyphs/glyph_fairness.ts` (K108-exact: densePath's signed curvature only) reports per path: min radius, curvature sign flips (deadbanded), monotone-κ pieces (swing-split), total κ variation, excess variation (ripple the piece skeleton cannot explain), max |dκ/ds|; `FAIR` targets (0 flips / ≤3 pieces / ≤0.004 excess) as a report, not a lint gate; synthetic tests (straight/arc/S/wiggle/jittered arc) in `test/core/glyph_fairness.test.ts`. Measured on the shipped K850 data (`.claude/probes/K860/measure.mts`): lint-clean (0 errors xh 2/3) but measurably unfair - a body: 5 sign flips, 10 pieces, excess 0.0339, minR 11.2 GU; a spur: 4 flips, 8 pieces; i body: 4 flips, 6 pieces, excess 0.0085; i stem spur clean (1 deadband flip). Intrinsic flips (entry blend, exit/bottom sweeps) account for ~2 of the body's - the rest is the lumpiness Levi rejected, now a number. Re-authoring registered as K861 with per-path targets pre-registered from this measurement. Done in a00fb6d5 (2026-10-23).
 
 ## K830 (Done 2026-10-23)
 
-- **K830** · Junction corner style (Levi, 2026-10-22): one `cornerRoundShare` slider (`crs`) that rounds broad gaps first and keeps narrow points sharp; stills `.claude/probes/K830/`. Done in e5fbdff4 (2026-10-23).
+- **K830** · Junction corner style (Levi, 2026-10-22): one `cornerRoundShare` slider (`crs`) that rounds broad gaps first and keeps narrow points sharp; stills `.claude/probes/K830/`. Done in a89f8203 (2026-10-23).
 
 ## K831 (Done 2026-10-23)
 
-- **K831** · Cursive a/i redesign (Levi, 2026-10-22), with its follow-up after Levi rejected the first stills (`docs/design/K831.md`). Done in 3b5c520f (2026-10-23).
+- **K831** · Cursive a/i redesign (Levi, 2026-10-22), with its follow-up after Levi rejected the first stills (`docs/design/K831.md`). Done in 1c6eb062 (2026-10-23).
 
 ## K832 (Done 2026-10-23)
 
-- **K832** · SDF + border residuals (Levi, 2026-10-22): SDF gaps bound to the scene's gap table, junction interiors cut in the border look, SDF border darkness; the G3-3 SDF-by-default flip stays gated on Levi's phone look. Done in faa56bce (2026-10-23).
+- **K832** · SDF + border residuals (Levi, 2026-10-22): SDF gaps bound to the scene's gap table, junction interiors cut in the border look, SDF border darkness; the G3-3 SDF-by-default flip stays gated on Levi's phone look. Done in 4b02e2dc (2026-10-23).

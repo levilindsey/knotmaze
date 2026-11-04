@@ -34,7 +34,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   params, seedMix(seed) and the player's inputs (replayChase), and the
   module uses only exact math (K108). THE PLAYER: one run per tap at
   playerPace; a tap while moving QUEUES (the latest wins, it leaves on
-  arrival); no move undo (there is no `undoAllowed`; removed in 35f3ec28, K263) and no
+  arrival); no move undo (there is no `undoAllowed`; removed in 2605bf6b, K263) and no
   wait move. THE MINOTAUR: waits `wake` s in its lair at the exit end,
   then wanders (shortest route to a junction roamRange/4..roamRange away,
   or with chance deadEndBias a dead-end tip, since K174 leaning toward
@@ -114,12 +114,12 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   the fleers' escape rates do not move (53%, 76% with queued taps). Pull
   1 reaches 66% for 1.94 catches: most of the gain comes by 0.5, so one
   strength and no slider. RE-MEASURED ON H1 MAZES (K278 (c), K80 turns
-  stage 2; `.claude/probes/K80/turns2/rt/`), and again at 9ccf360 (K637;
+  stage 2; `.claude/probes/K80/turns2/rt/`), and again at 83d4405 (K637;
   the main checkout's `.claude/probes/K637/results.md`): pull 0 / 0.25 /
   0.5 / 0.75 / 1 gives a greedy player 2.19 / 2.38 / 2.50 / 2.93 / 3.25
   catches; the fleers escape 50-55% (75-78% with queued taps), so 0.5
   still holds. The rise from 1.66 at pull 0.5 is K74 stage 3's trap-zone
-  finish (9ccf360: the exit corridor about +0.62, the away flank +0.22,
+  finish (83d4405: the exit corridor about +0.62, the away flank +0.22,
   the H1 guard +0.13), intended; the harness is ruled out. minotaur.test.ts's
   still-player test now runs on H1 mazes (no `hCutShare: 0`), averaged
   over mazes 100-119 x 6 seeds: 65.6 s to reach a still player at pull
@@ -172,7 +172,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   it is inert until then. HUNT PACE 0.7 -> 0.9 (q3: keep the catch rates
   the stops cost). MEASURED on K80's real-time sim (copied, fixed, to
   `.claude/probes/K324/rt/`; 288 H1 mazes x 3 reps, pull 0.5; catches a
-  game / % of hunts escaped): baseline bcd907c (no stops, 0.7) greedy
+  game / % of hunts escaped): baseline 4e0d83c (no stops, 0.7) greedy
   2.50 / 6%, fleer 0.86 / 50%, queued fleer 0.51 / 75%; with stops, hunt
   pace 0.7 / 0.8 / 0.9 / 1.0: greedy 1.95 / 2.20 / 2.61 / 2.68, fleer
   0.43 / 0.51 / 0.72 / 1.28 (escapes 79 / 73 / 55 / 29%), queued fleer
@@ -253,7 +253,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
 
 - TURN-ALIGNED MINOTAUR (K80 turns stage 1, 2026-10-14;
   game/minotaur_turns.ts, brief docs/design/K80_turns.md). `minotaur`
-  (`mt`) = hunter (the default since 35f3ec2, K534) | guard | stalker
+  (`mt`) = hunter (the default since 2605bf6, K534) | guard | stalker
   (K323 removed off); `gameMode` decides whether a minotaur plays at
   all. Stage 1 read it on the turn clock only; since K324 stage 3 real
   time plays the same three models with its own rows (REAL-TIME GUARD
@@ -305,7 +305,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   chances); SHARED: minoFog, minoRefog and the minotaurIndicator setting.
   Not daily-exempt. UNDO: `minotaur` restarts the solve (onClockChange
   covers clock and minotaur), the tuning rows are live (onTurnMinoChange
-  -> setConfig); no move undo (there is no `undoAllowed`; removed in 35f3ec28, K263). THE WAIT
+  -> setConfig); no move undo (there is no `undoAllowed`; removed in 2605bf6b, K263). THE WAIT
   TAP: within max(1.5 head discs, 0.9) world of your junction AND nearer
   it than any run's tappable part (renderer `runDistance`, every run's
   HEAD_EXCLUDE neighborhood excluded), checked before run hit-testing.
@@ -434,7 +434,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   distance); the game state catches at the tap, the page defers the
   burst (on the contact spot), the fog lift (`stopMove`) and the
   respawn until the move or wait animation reaches that fraction, on
-  the same mid-move input gates as a runs move (Levi's 3b1612f
+  the same mid-move input gates as a runs move (Levi's 2bcf771
   correction). BY RUNS TOO since K546 stage 1 (2026-10-20, brief and
   handoff docs/design/K546_s1.md): `runsContact` gives a runs catch its
   `lastContact` (`lengthContactFraction` along the minotaur's path at
@@ -455,7 +455,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `?7&am=instant&snd=none&fw=0&phy=0&mt=stalker&msa=1&ms=0.35`, the
   four cases found by headless clones of the page's TurnMinotaur,
   replayed with a rAF sampler and in-page frame copies; JSON and stills
-  in `out/runs/` and `out/length/` there): before (21e83cb) the burst fired on the tap's
+  in `out/runs/` and `out/length/` there): before (a4c2431) the burst fired on the tap's
   frame with the two markers 3.3-11.8 touching distances (2 radii)
   apart, 75-271 CSS px at 1400x900 and 30-109 at 411x753; now they meet
   first in all four cases at both sizes, 0-0.08 of a touching distance

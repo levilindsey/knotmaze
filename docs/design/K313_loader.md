@@ -77,7 +77,7 @@ pre-settle and the trefoil stay, moved into the worker"), verbatim:
 
 ## Facts to start from
 
-- `src/main.ts` (at 459cc11): `LOADER_DELAY_MS = 300` (line 228),
+- `src/main.ts` (at 54ef27a): `LOADER_DELAY_MS = 300` (line 228),
   `LOADER_MIN_MS = 400` (line 229), and `createLoader()` (line 282),
   today's trefoil, turned by CSS transforms. main.ts creates it, so it
   cannot appear until the bundle has downloaded and run. K7's stage 1

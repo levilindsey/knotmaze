@@ -1,7 +1,7 @@
 # K320 Stage 2: split the gap search out of section-rgb (brief)
 
 Status: brief only. No `src/` change in this document's commit.
-Base: HEAD `6c592e6` (Stage 1 slim done). Stage 0 verdict PASS
+Base: HEAD `211cc24` (Stage 1 slim done). Stage 0 verdict PASS
 (`.claude/probes/K320/stage0_results.md`): splitting saves ~1.84 s of
 cold gate, 3.7x the 0.5 s kill threshold in
 [the Stage 0/1 design](K320_section_rgb.md). This brief is the
@@ -17,9 +17,9 @@ pixel parity at gap edges and frame cost, both gated in section 8.
 
 ## 1. Where Stage 1 left the programs
 
-Chars handed to `GlProgram.from`, at `6c592e6`
+Chars handed to `GlProgram.from`, at `211cc24`
 (`.claude/probes/K320/results.md`; Stage 0's control was the pre-slim
-text at `bd3933a`):
+text at `7bf57ae`):
 
 | program | frag (pre-slim) | frag (today) | wave 1 |
 |---|---:|---:|---|

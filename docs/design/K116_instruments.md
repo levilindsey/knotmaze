@@ -8,7 +8,7 @@ verbatim:
 > instrument parts, to enrich the music. The main pluck instrument would
 > still be made more prominent.
 
-Markers: **Code** means read from the source at `7225930`, or computed
+Markers: **Code** means read from the source at `ac18b5b`, or computed
 from it (nothing was measured for this doc; estimates say so). **Research** means outside
 knowledge, from memory and not re-checked in this session: verify before
 quoting. **Opinion** marks a design judgment of mine.

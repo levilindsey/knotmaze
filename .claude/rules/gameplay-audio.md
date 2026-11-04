@@ -45,7 +45,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   still-armed listeners resume it at the next input (unverified on iOS).
   MEASURED (`.claude/probes/K720/k720_probe.mjs`, `results.md`; knot
   links, headed Chrome off-screen, contexts counted by an AudioContext
-  subclass, base 6c2068d0 against K720): `snd=none`, a click, a touch, a
+  subclass, base 062a38d3 against K720): `snd=none`, a click, a touch, a
   drag pluck and tap plucks made 0 contexts (base: 1, in the first
   click's pointerdown); the panel's switch to music made 1, running, at
   the first tick, its song on the audio clock with the 1.2 s lead-in;

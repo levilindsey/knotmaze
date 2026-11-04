@@ -1,7 +1,7 @@
 # K324: the real-time minotaur's telegraph, junction stops and controls
 
 Design only (2026-10-14, design agent of claude session d8031183). Base:
-master `b72d5dd`; every line number below is from that commit.
+master `86a4f0f`; every line number below is from that commit.
 Companion: `K323_game_mode.md` (the Game folder, `gameMode`, the panel
 labels and the codec bump this design appends after). Lore it builds on:
 `.claude/rules/gameplay-minotaur.md` (K80 real time, K174 controls, the
@@ -278,10 +278,10 @@ keep today's catch rates (section 7, question 3) by re-tuning on the
 K80 sim harness on H1 mazes (`.claude/probes/K80/turns2/rt/`): stop
 ranges 0 vs the proposal, hunt pace 0.7 to 0.9 of yours, against
 today's greedy player (2.50 catches a game at pull 0.5; this section
-first said 1.66, measured on mazes before 9ccf360, K74 stage 3's
+first said 1.66, measured on mazes before 83d4405, K74 stage 3's
 trap-zone finish, which K637 found raised the rate as intended), the
 fleers' escapes (50-55%, 75-78% with queued taps; 54-58% and 75-77%
-before 9ccf360) and the still-player test
+before 83d4405) and the still-player test
 (minotaur.test.ts: ratio 0.67, bound 0.8). The chosen defaults and the
 table go into `gameplay-minotaur.md`.
 
@@ -295,7 +295,7 @@ shows the move.
 folder. Real-time rows show only with Real time on, turn rows only with
 it off (K323 3.1). Ranges are today's panel ranges for the existing
 params. Keys marked new were checked unused in `src` and `test` at
-`b72d5dd`.
+`86a4f0f`.
 
 ### 4.1 Real time: existing params (labels from K323)
 

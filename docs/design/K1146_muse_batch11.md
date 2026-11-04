@@ -6,7 +6,7 @@ closed. Each run is a fresh Muse agent that reads this brief, does its
 run's tasks, and stops. Claude reviews each run on master afterwards
 and closes K1146. Five runs, queued in the order C, E, A, D, F: Run B
 was dropped in review (its section says why). K1141's Run B drafted
-this brief (77d02919); Claude renamed it and dropped Run B.
+this brief (39d47cce); Claude renamed it and dropped Run B.
 
 Where the runs came from (K1141 Run B's order): batch 10 used up this
 batch's `Next` list, so candidates came from (1) `## Approved, to

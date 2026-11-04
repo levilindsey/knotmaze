@@ -139,8 +139,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   the column leaves the toast at the floor (the desktop's pad, far right).
   The toast takes no touch (pointer-events none). Before K698 every toast
   sat at the floor and met the scissors' row and the walker's buttons on
-  the phone, the aids group, and the move pad (K726, build 65ee13a6: the
-  sword's three toasts by 13-38 px). Since K740 (c59c4990) a showing toast
+  the phone, the aids group, and the move pad (K726, build dbd95f5b: the
+  sword's three toasts by 13-38 px). Since K740 (742078db) a showing toast
   re-places every 250 ms (`TOAST_REFLOW_MS`), so a control that appears or
   leaves under it moves it. Not avoided: the open panel and the phone sheet.
   Probe: `.claude/probes/K698/k698.mjs

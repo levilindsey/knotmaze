@@ -3,7 +3,7 @@
 // intervals and the junction clearances (computeGapSlot); the emergent pool
 // (renderEmergent), the marker discs (renderMarkerGaps), and the vertex slot
 // ids with G3-0's RANGES (assignGapIds). Moved verbatim from
-// ribbon_renderer.ts (c22de79 lines below). A body changed in three ways
+// ribbon_renderer.ts (a9e8040 lines below). A body changed in three ways
 // only: a renderer member became `this.r.x`, a sampling helper
 // `sampling.x(...)`, and renderEmergent calls computeGapSlot through the
 // renderer, so a probe's patch of it still sees every solve. The two module
@@ -18,7 +18,7 @@
 // keep one-line delegations there, which the class and the probes call;
 // smoothMin, protect, gapMode and gapOverflow are accessors onto these
 // (docs/design/K5_K6_split.md 2.3; render-ribbon.md, THE PARTS).
-// Added since the move (not in c22de79): JOINT_PAIR_REACH and isJointPair
+// Added since the move (not in a9e8040): JOINT_PAIR_REACH and isJointPair
 // below EMERGENT_POOL, the skipJointPairs toggle (a façade accessor too)
 // and its chainLen / chainClosed readers, and renderEmergent's joint skip
 // (K397 stage 3).
