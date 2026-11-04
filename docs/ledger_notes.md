@@ -3622,3 +3622,15 @@ Found by the six ask-card agents on 2026-11-03 (their cards are in `docs/asks/`)
 - K693: the ledger's load times (45-54 s against 27-33 s) and K620's handoff baseline (20-30 s) disagree.
 - No phone doc says the phone must stay on its charger, unlocked and awake, through the guard's 120 s quiet window, which is why 31 tries failed; say it in `docs/design/K1142_phone_guard.md`.
 - `.claude/probes/K804/shots/k804_pulse_vs_ring.png` has no script that makes it; `.claude/probes/K1100/out/k1127/stills/zz_throwaway.png` is a stray.
+
+## K1132
+
+After you press an arrow key (or WASD) once, small arrows sit at the start of each run at your junction, showing which key takes it. At the default marker size they sit mostly under your own marker, and only their tips show. Move them out past the marker, or keep them as they are? Pictures, sent 2026-11-03: `.claude/probes/K1132/shots/` (sheet_desk.png, left now, right out; the out placement is `__knotKeyHintPlace("out")`, f2c79236). On hold until K1170 (Muse run 15D) lands: the hints become the d-pad's four directions, and its sheets (`.claude/probes/K1170/shots/`) replace these pictures.
+
+## K1171
+
+One Rules dropdown for Fragile runs and Collapse: off, crack, snap, collapse, collapse (free); one link param; the Par rows greyed under the collapse options (Levi 2026-11-03: “Seems like we should maybe combine these two param drop downs?”). Muse chain run 15E, after 15B (K778 edits the same folder and the codec).
+
+## K1172
+
+Walker modes, Levi's brainstorm (2026-11-03, four messages): guide it, program it (board-game command cards), a flock (Lemmings-like; under snap its par is a max flow), stop them (several walkers, a third knob for K707), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`)

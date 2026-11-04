@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1175.
+Next free ID: K1176.
 
 ## Waiting on Levi
 
@@ -282,11 +282,9 @@ Next free ID: K1175.
   (K368, 89836d3b)
 - **K1127** · On a narrow phone, the hidden-runs line in the corner panel now wraps in whole phrases (no lone
   'them', no dot at a line's end). Does it read well? Pictures: .claude/probes/K1100/out/k1127/stills/ (360x740 and 320x640, stats off and on; K1100, 22b5ebab)
-- **K1132** · After you press an arrow key (or WASD) once, small arrows sit at the start of each run at your
-  junction, showing which key takes it. At the default marker size they sit mostly under your own marker,
-  and only their tips show. Move them out past the marker, or keep them as they are? Pictures, sent 2026-11-03:
-  `.claude/probes/K1132/shots/` (sheet_desk.png, left now, right out; the out placement is
-  `__knotKeyHintPlace("out")`, f2c79236). On hold until K1170 (Muse run 15D) lands: the hints become the d-pad's four directions, and its sheets (`.claude/probes/K1170/shots/`) replace these pictures.
+- **K1132** · Key hints (the d-pad button that takes each run, K1170) sit mostly under your marker at the
+  default size: move them out past it? Sheets sent 2026-11-03, left now and right out (`__knotKeyHintPlace("out")`,
+  f2c79236): `.claude/probes/K1170/shots/sheet_desk.png`, `sheet_phone.png`. Full text: `docs/ledger_notes.md`.
 - **K144** · Accounts and shared stats, a stretch goal (Levi 10-13). The options doc is done
   (`docs/design/K144_accounts.md`, 61a24a82). Levi 2026-11-03: Workers + D1, Google sign-in first, results
   synced first (Q1, Q2; stage 1 is K1168). Q3-Q5 still wait: the sharing switch's words, same-day bands, resume.
@@ -319,10 +317,8 @@ Next free ID: K1175.
 - **K1166** · After the history rewrite (K1164), two things only you can do: send GitHub Support the drafted
   request so closed PR #1 stops serving the old commits, and reset the laptop's knotmaze copy before its next
   use. Card: `docs/asks/K1166.md`.
-- **K1172** · Walker modes, Levi's brainstorm (2026-11-03, four messages): guide it, program it (board-game
-  command cards), a flock (Lemmings-like; under snap its par is a max flow), stop them (several walkers, a
-  third knob for K707), steer it live, bend and tilt. Which family first?
-  (`docs/design/K1172_walker_modes.md`)
+- **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them, steer it
+  live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text: `docs/ledger_notes.md`)
 
 ## In progress
 
@@ -530,24 +526,16 @@ Next free ID: K1175.
   - brief: `docs/design/K1040_s3f_draw.md`
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
-  junctions"). S1 done (a4dc218a). Answers (Levi 2026-11-03): the light splits at a fork (A), runs toward you
-  behind you, straight through your junction with no dim moment. S2-S6 next. Full text: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-03 21:20 (S2 done in Muse batch 15 run A)
+  junctions"). S1, S2 done (a4dc218a, 16246c90). Answers: the light splits at a fork (A), runs toward you behind
+  you, straight through your junction with no dim moment. S3a-S6 next. Full text: `docs/ledger_notes.md`.
+  - owner: nobody since 2026-11-03 22:06 (queued as Muse chain run 15G, `.claude/probes/K1053/queue.txt`; claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c coordinates)
   - branch: mainline; last commit: `cb9c3529`
-  - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
-  - next: S3a: pulse bands, CPU side (the plan's section 5); S2's record in .claude/probes/K1139/out/s2/
-  - brief: docs/design/K1169_muse_batch15.md (Run A); the plan: docs/design/K1139_pulse_junctions.md
-- **K1170** · The key hints show the d-pad button that takes each run (Levi 2026-11-03: the arrows point along
-  the runs, mostly diagonals no pad button presses; `hintMap` picks the smallest err). Muse chain run 15D.
-  - owner: nobody since 2026-11-03 21:31 (queued as Muse chain run 15D, `.claude/probes/K1053/queue.txt`; claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c coordinates)
-  - branch: mainline; last commit: `81081ab9`
-  - evidence: `.claude/probes/K1170/` (shots/sheet_desk.png, sheet_phone.png)
-  - next: Run 15D done; Claude reviews the pictures, then K1132's placement goes back to Levi
-  - brief: `docs/design/K1170_dpad_hints.md`
-- **K1171** · One Rules dropdown for Fragile runs and Collapse: off, crack, snap, collapse, collapse (free);
-  one link param; the Par rows greyed under the collapse options (Levi 2026-11-03: “Seems like we should maybe
-  combine these two param drop downs?”). Muse chain run 15E, after 15B (K778 edits the same folder and the
-  codec).
+  - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked, S2's record in `out/s2/`; the doc's appendix lists the commands)
+  - next: Muse run 15G (S3a, CPU side); then Claude reviews the band table and the A/B
+  - brief: `docs/design/K1139_s3a.md`; the plan: `docs/design/K1139_pulse_junctions.md`
+- **K1171** · One Rules dropdown for Fragile runs and Collapse (Levi 2026-11-03): off, crack, snap, collapse,
+  collapse (free); one link param; the Par rows greyed under the collapse options. Muse chain run 15E, after 15B
+  (K778 edits the same folder and the codec). Full text: `docs/ledger_notes.md`.
   - owner: nobody since 2026-11-03 21:31 (queued as Muse chain run 15E, `.claude/probes/K1053/queue.txt`; claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c coordinates)
   - branch: mainline; last commit: `c3e20f17`
   - evidence: `.claude/probes/K1171/` (shots/)
@@ -1732,6 +1720,9 @@ Every other item below waits on the trigger it names.
 - **K1174** · `run_locked.ps1` (the K1040 s3 kit) releases the perf lock in its `finally` but leaves node
   running, so a pipeline stopped early (`Select-Object -First n`) times unlocked; S3f did it twice, 2026-11-03
   20:34-20:36. Kill the child in the `finally` (`docs/design/K1040_s3f_draw.md`, Handoff, Commands).
+- **K1175** · Key hints can go stale under flow: the discs cache per vertex and stamp, and on a bisector run
+  the fresh map can disagree (K1170's probe: mnode_109's run 221 showed up, read left;
+  `.claude/probes/K332/out/after_k1170.json`). Check what a press of the shown key takes.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2033,6 +2024,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1170** · The key hints show the d-pad button that takes each run (Levi 2026-11-03: the arrows point along the runs, mostly diagonals no pad button presses; `hintMap` picks the smallest err). Done in 81081ab9 (2026-11-03).
 - **K1164** · Master's history rewritten without the device addresses (force-pushed 2026-11-03; 2,456 commits from 7645fe67 on) and 3,823 quoted SHAs remapped; the old history is mirrored in ~/Backups, the map is `.claude/probes/K1164/commit-map`; leftovers K1166, K1167. Done in 82aa5072 (2026-11-03).
 - **K628** · Confetti (Levi 2026-11-03): the finish spray throws no streamers (as built); GPU confetti (K579) goes after K318 stage 1, where it is queued. Done in this commit (2026-11-03).
 - **K1138** · The backdrop speed slider tops out at 16x (Levi's call, 2026-11-03). Done in 56e6262f (2026-11-03).
