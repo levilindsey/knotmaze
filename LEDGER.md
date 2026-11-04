@@ -511,7 +511,7 @@ Next free ID: K1179.
   Pixel's 2 ms.
   - owner: nobody since 2026-11-04 03:16 (S3f4 done in Muse run 16J)
   - branch: mainline; last commit: `b3dab0c9`
-  - evidence: `.claude/probes/K1040/s3/` (s3f3_gate.ps1, split.mjs, vert_count.ts; out/split_s3f2.md, out/split_s3d2.md, out/vert_count_s3f3.md)
+  - evidence: .claude/probes/K1040/s3/ (s3f4_gate.ps1, split.mjs, vert_count.ts; out/split_s3f4_desktop.md, out/vert_count_s3f4.md, out/check_s3f4chk_summary.md, out/ab_s3f4ab_summary.md; earlier splits out/split_s3f2.md, out/split_s3d2.md)
   - next: Pixel batch (coordinator): s3f4_gate.ps1 -SkipDesktop fills out/split_s3f4.md + out/phone_table_s3f4.md; read it by the Handoff's rule (pass-that-draws -> attachments/stores, instancing -> ftentvvid's draw, vertex side -> cheaper vertices, fragment side -> fewer covered pixels)
   - brief: `docs/design/K1040_s3f4_bound.md`
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
@@ -525,11 +525,11 @@ Next free ID: K1179.
   - brief: docs/design/K1139_s3a.md; the plan: docs/design/K1139_pulse_junctions.md
 - **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-G from
   the draft, after 16J.
-  - owner: nobody since 2026-11-04 02:43 (queued as Muse chain run 16A, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `4447fa15`
+  - owner: nobody since 2026-11-04 03:22 (runs B-G queued as Muse chain runs 16B-16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `08e2165e`
   - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run A done; Claude reviews the draft
-  - brief: `docs/design/K1178_muse_batch16_run_a.md`
+  - next: Claude reviews each run on master as the chain lands it, and looks at Run B's sheets (.claude/probes/K1139/out/doc/s3b_*.png) before Levi sees them
+  - brief: `docs/design/K1178_muse_batch16.md`
 
 ## Next, in order
 
@@ -1004,9 +1004,6 @@ Every other item below waits on the trigger it names.
 - **K44** · Probe tooling quirks: the gap census drifts between captures of one frozen state; a hold
   probe must move past the 4 CSS px tug threshold (df373b5; `.claude/probes/K41/` moves 12 px); A/B
   at `fw=0`; pair `phy=0` builds on one side of K63; 4x throttle is for ratios.
-- **K69** · String mode (`pv=string`) on pre-G2.3 builds drew a 1-px diagonal sliver from the start
-  to the exit marker (`?b.c&pv=string`, 6 moves); G2.3 doesn't show it, never attributed (G2 doc
-  section 7, Follow-ups). Since K83 (21a525e) that Graphics draws only the win ring.
 - **K95** · Below about 340 px wide, the mode badge drops below the
   hamburger and covers the header of an open panel (K73; the fit levels
   are measured in `.claude/rules/gameplay-badge.md`, MODE BADGE).
@@ -1170,9 +1167,6 @@ Every other item below waits on the trigger it names.
 - **K388** · K76 2d's probe residuals: gate2's in-page `arriveS` races the tap (use CDP
   arrivals; rAF stamps can hide a late Android frame); census2d says PROOF FAILED when off; k290_ab
   compares stamps, not SHAs; k111.L's shaped-slot count varied; `restoreScene` may keep HC's x = 2.
-- **K390** · Fog A/B recipe (`probes.md`'s K83 recipe, `k83_ab`) isn't deterministic: K5 M1's
-  same-build controls differ by 4054-7979 px (start marker flips states). `&phw=0` cuts it to ~700
-  px (K5 R1 `checks2/pairs_fog3.txt`): pass it in the recipe. `.claude/probes/K5/stage1/fogbisect/`
 - **K391** · K5 M1's probe residuals: `k83_ab` has no knot-mode path (exits 1 at :149); diag's 12 s
   capture vs the worker's first sleep (about 9.9 s; recheck); `probe_daily` `front` fails 10/14
   (expects `#maze-hud .km-title`; its `?daily=1.aBMge` and `?1471kin.c` predate K132).
@@ -1210,9 +1204,6 @@ Every other item below waits on the trigger it names.
 - **K433** · Master's compositing isn't monotone in a gap's strength by one 8-bit level
   at some AA pixels (crossing 100; 84 px in census3a's KSWEEP=100 clip; K268 3a).
   census3a allows one level; which layer rounds is unattributed.
-- **K435** · Lore (K290 3c): render-explore.md THE BURN says the band darkens the unburnt side under
-  char only, but the code does it under both looks (check THE EMBER DRAWS); probes.md: a true FX-off
-  frame needs a no-op tickFireFx, fireFx.clear() and two frames (stage3c `width_probe.mjs`).
 - **K439** · The G3-0 probe hooks (g3DataState, g3TableRows, g3Expected, captureScene, restoreScene; ribbon_renderer.ts
   4924-5182 at 034cec9) stay on the renderer's facade through K5 R2; R5 gives them a part, e.g. `ribbon/scene_probe.ts`
   (`docs/design/K5_R2.md`, Questions 1).
@@ -1282,7 +1273,6 @@ Every other item below waits on the trigger it names.
 - **K512** · The cross-build threads round trip's 0 px expectation only holds across builds whose threads defaults match: K466 (2856678) added `rve`/`rvg` with new defaults, so a9e8040-vs-post-K466 pairings differ by 43,385 px unless the query pins the legacy look (`&rve=under&rvg=soft`, 0 px both ways, K507). Future prescribed pairings spanning 2856678 must pin both, or expect the frontier diff.
 - **K508** · K5 R2's checks_r2.ps1/checks_threads.ps1 hardcode the deleted worktree agent-a695f82540244625a and cannot rerun as-is; K463's repo-relative k463_checks.ps1 supersedes them for these two checks.
 - **K520** · K516's legacy timing harnesses not rerun in continuous mode: k7_latency (stage-5 batch setup), K174/K114 perf (rt_page first needs K461's fsr/fdr fix), k96_cam (desktop-Chrome launcher). Continuous-mode frame timings were measured instead (`.claude/probes/K516/results.md`); rerun the harnesses when next needed.
-- **K511** · K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 2bcf771; K348's mid-move wait-tap leftover is now intentional for pointers.
 
 - **K528** · census2d's long-sequence drift against the FIRST mode-off frame (K522): 11,343 exact px (1,077 hard) over the m10 census while visitAll vs the contemporaneous mode-off-again frame is exactly 0 px; candidates are the follow-camera tail and one-level backdrop flicker (K519) - localize only if it grows (`.claude/probes/K76/stage2d/out_k522_m10e/`, `docs/design/K397.md` Stage 6 handoff).
 - **K535** · First-tap residual after K366's attribution (K307 stage 3): fabric tap 1 costs one ~39 ms callback frame (27 ms with glint) and ~50 ms of first pointerup handling on desktop, knot unaffected, ripple program not involved; inferred first-pluck allocation and the fabric paint's first re-declare, not traced to a function. Traced 2026-10-18 (`.claude/probes/K307/stage2/k535_results.md`): ~25 ms first-gesture AudioContext creation in `KnotSynth.ensure()` + ~14 ms first fabric paint re-declare (rebuildFillets/computeGapSlot). Fix candidates listed there; not yet fixed.
@@ -1443,8 +1433,6 @@ Every other item below waits on the trigger it names.
 - **K700** · K324 s2 GPU census skips the non-riding lead and the hunt strength (the CPU parity test
   covers both); a ride filter in tapAndFind would add them
   (`.claude/probes/K324/census/census_tele.mjs`)
-- **K701** · Section shader lengths rose again, limits now 47,750 / 64,150 characters (K324 s2: +85
-  each; `test/render/k320_slim.test.ts`)
 - **K711** · K137-b edges (K137_s3a.md Residuals b, d-f): runBurnAt may draw a burnt broken run as
   burning; refire is O(V^2) per breaking move; __knotChaseTap ignores broken runs; broken-run counts
   need main.ts to report every accepted run (safeArms and fireTrapped count broken arms gone since
@@ -2002,6 +1990,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K701** · Section shader lengths rose again, limits now 47,750 / 64,150 characters (K324 s2: +85 each; `test/render/k320_slim.test.ts`). Dropped: a record, not open work: k320_slim.test.ts pins the section shader limits (57,430 and 73,850 today) (2026-11-04).
+- **K511** · K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 2bcf771; K348's mid-move wait-tap leftover is now intentional for pointers. Dropped: a note, not open work: K334's queueing was superseded by 2bcf771 and K348's leftover is intentional (2026-11-04).
+- **K69** · String mode (`pv=string`) on pre-G2.3 builds drew a 1-px diagonal sliver from the start to the exit marker (`?b.c&pv=string`, 6 moves); G2.3 doesn't show it, never attributed (G2 doc section 7, Follow-ups). Dropped: moot: G2.3 and later never showed the sliver, and since K83 (21a525e) that Graphics draws only the win ring (2026-11-04).
+- **K390** · probes.md's fog A/B recipe passes &phw=0 (same-build controls about 700 px instead of 4054-7979); the start marker's two states stay unexplained, and the recipe says so. Done in 08e2165e (2026-11-04).
+- **K435** · probes.md's FX-off burn pin waits two frames and says container.visible = false does not stop the burn FX; THE BURN's under-both-looks line was already corrected by K599. Done in 08e2165e (2026-11-04).
 - **K1173** · A Tug threads checkbox in Touch & feel (per browser, on by default, never in a link): off, a drag pans wherever it starts and a tap still plucks (Muse run 15F). Done in d41a02c9 (2026-11-04).
 - **K1171** · One Rules dropdown, Fragile runs: off, crack, snap, collapse, collapse (free); one link param (codec v10, `&cl=` gone); the Par rows disabled under the collapse options (Muse run 15E; shots checked). Done in 9a655597 (2026-11-04).
 - **K1169** · Muse batch 15 (`docs/design/K1169_muse_batch15.md`): runs A (K1139 S2), B (K778) and C (K1162) done, each reviewed against its report and CI. Done in 95f8f0b0 (2026-11-04).
