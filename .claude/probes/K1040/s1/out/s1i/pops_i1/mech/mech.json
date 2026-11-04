@@ -1,0 +1,229 @@
+{
+ "merge": {
+  "pops": 16,
+  "px": 168,
+  "mergedPx": 30,
+  "popsLeft": 14,
+  "pxLeft": 126,
+  "whollyMerged": 0
+ },
+ "units": {
+  "0": 129,
+  "1": 38,
+  "2": 1
+ },
+ "table": {
+  "smooth fade none": {
+   "crossing60+": {
+    "pops": 1,
+    "px": 4,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 1,
+      "to": 2,
+      "at": [
+       19.335,
+       15.027
+      ],
+      "px": 4,
+      "mix": {
+       "gate foot": 1,
+       "winner foot>foot/top": 3
+      },
+      "sw": {
+       "at": [
+        19.358,
+        15.003
+       ],
+       "total": 0.943,
+       "maxStep": 0.23,
+       "fadeMid": 16
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-af4c9ecd37b7bc266\\.claude\\probes\\K1040\\s1\\out\\s1i\\pops_i1\\mech_muse_drag\\crops\\muse_drag_smooth-fade-none_crossing60+_1.png"
+     }
+    ]
+   }
+  },
+  "smooth motion": {
+   "junction": {
+    "pops": 2,
+    "px": 18,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 26,
+      "to": 27,
+      "at": [
+       15.452,
+       17.515
+      ],
+      "px": 10,
+      "mix": {
+       "winner arc>none": 6,
+       "winner tA>arc": 1,
+       "winner tA>none": 1,
+       "winner tB>arc": 1,
+       "winner tB>none": 1
+      },
+      "sw": {
+       "at": [
+        15.462,
+        17.492
+       ],
+       "total": 1,
+       "maxStep": 0.31,
+       "fadeMid": 0
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-af4c9ecd37b7bc266\\.claude\\probes\\K1040\\s1\\out\\s1i\\pops_i1\\mech_muse_drag\\crops\\muse_drag_smooth-motion_junction_26.png"
+     }
+    ]
+   },
+   "elsewhere": {
+    "pops": 2,
+    "px": 10,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 26,
+      "to": 27,
+      "at": [
+       16.017,
+       19.534
+      ],
+      "px": 6,
+      "mix": {
+       "merge": 4,
+       "winner foot>foot/top": 2
+      },
+      "sw": {
+       "at": [
+        15.931,
+        19.416
+       ],
+       "total": 0.962,
+       "maxStep": 0.173,
+       "fadeMid": 0
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-af4c9ecd37b7bc266\\.claude\\probes\\K1040\\s1\\out\\s1i\\pops_i1\\mech_muse_drag\\crops\\muse_drag_smooth-motion_elsewhere_26.png"
+     }
+    ]
+   },
+   "crossing60+": {
+    "pops": 6,
+    "px": 24,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 0,
+      "to": 1,
+      "at": [
+       19.053,
+       32.654
+      ],
+      "px": 4,
+      "mix": {
+       "winner foot>foot/top": 2,
+       "gate foot": 2
+      },
+      "sw": {
+       "at": [
+        19.077,
+        32.654
+       ],
+       "total": 0.927,
+       "maxStep": 0.155,
+       "fadeMid": 0
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-af4c9ecd37b7bc266\\.claude\\probes\\K1040\\s1\\out\\s1i\\pops_i1\\mech_muse_flow\\crops\\muse_flow_smooth-motion_crossing60+_0.png"
+     }
+    ]
+   }
+  },
+  "scene junction arms": {
+   "junction": {
+    "pops": 1,
+    "px": 4,
+    "worst": [
+     {
+      "seq": "muse_drag",
+      "from": 27,
+      "to": 28,
+      "at": [
+       15.673,
+       17.445
+      ],
+      "px": 4,
+      "mix": {
+       "winner none>arc": 1,
+       "winner none>arc/top": 1,
+       "gate arc": 2
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-af4c9ecd37b7bc266\\.claude\\probes\\K1040\\s1\\out\\s1i\\pops_i1\\mech_muse_drag\\crops\\muse_drag_scene-junction-arms_junction_27.png"
+     }
+    ]
+   }
+  },
+  "scene chain samples": {
+   "crossing60+": {
+    "pops": 1,
+    "px": 4,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 1,
+      "to": 2,
+      "at": [
+       16.19,
+       4.746
+      ],
+      "px": 4,
+      "mix": {
+       "motion foot": 2,
+       "gate foot": 2
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-af4c9ecd37b7bc266\\.claude\\probes\\K1040\\s1\\out\\s1i\\pops_i1\\mech_muse_flow\\crops\\muse_flow_scene-chain-samples_crossing60+_1.png"
+     }
+    ]
+   },
+   "junction": {
+    "pops": 3,
+    "px": 104,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 7,
+      "to": 8,
+      "at": [
+       8.177,
+       22.757
+      ],
+      "px": 80,
+      "mix": {
+       "merge": 14,
+       "winner arc>foot": 2,
+       "winner arc>tA": 3,
+       "winner arc>none/top": 17,
+       "winner arc>none": 4,
+       "winner arc>tB/top": 1,
+       "gate arc": 5,
+       "motion arc": 5,
+       "winner none>arc": 26,
+       "winner arc>tA/top": 1,
+       "winner arc>foot/top": 1,
+       "winner none>tA": 1
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-af4c9ecd37b7bc266\\.claude\\probes\\K1040\\s1\\out\\s1i\\pops_i1\\mech_muse_flow\\crops\\muse_flow_scene-chain-samples_junction_7.png"
+     }
+    ]
+   }
+  }
+ },
+ "all": [],
+ "lines": [
+  "def_drag: by mechanism {}",
+  "def_flow: by mechanism {}",
+  "muse_drag: by mechanism {\"smooth fade none\":1,\"smooth motion\":4,\"scene junction arms\":1}",
+  "muse_flow: by mechanism {\"smooth motion\":6,\"scene chain samples\":4}"
+ ]
+}

@@ -8,6 +8,7 @@
 // hooks); checks first that it reproduces form_b.ts's corners exactly.
 // Run: node .claude/probes/K1040/s1/s1i_mk_tr.mjs; npx.cmd vite-node .claude/probes/K1040/s1/s1i_room.ts
 //   (writes out/s1i/room.txt). ARGS='scene:j:a:b,...' picks other corners.
+//   RESTORED=1 adds S1i's defaults as a fourth form (writes room_restored.txt).
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,11 +26,15 @@ const targets = (process.env.ARGS ?? "muse_hash:36:109:110,muse_hash:131:397:398
   const [scene, j, a, b] = t.split(":");
   return { scene, j: +j, a: +a, b: +b };
 });
+// Pinned since S1i's default change (dEdgeTip 1): step 1's room.txt ran the
+// first three as {rootBand: 0} and {}, when those meant dEdgeTip 0.
 const FORMS: [string, FormBParams][] = [
   ["S1f (skip, rb 0)", { dEdge: "skip", rootBand: 0 }],
-  ["near, rb 0", { rootBand: 0 }],
-  ["today (near, rb 0.5)", {}],
+  ["near, rb 0", { dEdgeTip: 0, rootBand: 0 }],
+  ["today (near, rb 0.5)", { dEdgeTip: 0 }],
+  ...(process.env.RESTORED === "1" ? ([["restored (S1i: dEdgeTip 1)", {}]] as [string, FormBParams][]) : []),
 ];
+const OUTF = process.env.RESTORED === "1" ? "room_restored.txt" : "room.txt";
 const out: string[] = [];
 const sceneOf = (name: string): FieldScene => {
   const sc = JSON.parse(readFileSync(`${SCENES}/${name}.json`, "utf8")) as FieldScene;
@@ -66,9 +71,11 @@ for (const t of targets) {
     G.__s1i = (ji: number, a: number, b: number) => (ji === t.j && a === t.a && b === t.b ? (o: any) => ev.push(o) : undefined);
     G.__s1iArm = (ji: number, ai: number) => {
       if (ji !== t.j || (ai !== t.a && ai !== t.b)) return undefined;
-      const l: any[] = [];
-      armEv.set(ai, l);
-      return (o: any) => l.push(o);
+      // Appends: the tip post-pass (dEdgeTip) asks for the same arm's logger again.
+      let l = armEv.get(ai);
+      if (!l) armEv.set(ai, (l = []));
+      const ll = l;
+      return (o: any) => ll.push(o);
     };
     const fb = new FormBT(sc, { dpr: 2, ...P }) as any;
     G.__s1i = undefined;
@@ -80,6 +87,9 @@ for (const t of targets) {
       const l = armEv.get(ai) ?? [];
       const L = l.find((o) => o.ev === "L");
       out.push(`  arm ${ai}: L0 ${f(L?.L0 / h)}h (chain end / next root), Lcut ${f(L?.Lcut / h)}h, L ${f(L?.L / h)}h; chain ${L?.pi} ${L?.closed ? "closed" : "open"} len ${f(L?.len / h, 1)}h`);
+      // Under dEdgeTip the "L" event is the span before the tip cut; "Ltip" is the final one.
+      const T = l.find((o) => o.ev === "Ltip");
+      if (T) out.push(`    tip cut: uB ${f(T.uB / h)}h, g ${f(T.gMax)}, k ${f(T.k)}, cut ${f(T.c / h)}h; final Lcut ${f(T.Lcut / h)}h, L ${f(T.L / h)}h`);
       // The cuts that come within 3h of the min.
       const cuts = l.filter((o) => o.ev === "behind" || o.ev === "front").sort((x, y) => x.c - y.c);
       for (const o of cuts.slice(0, 4))
@@ -115,5 +125,5 @@ for (const t of targets) {
   }
   out.push("");
 }
-writeFileSync(join(outDir, "room.txt"), out.join("\n") + "\n");
+writeFileSync(join(outDir, OUTF), out.join("\n") + "\n");
 console.log(out.join("\n"));

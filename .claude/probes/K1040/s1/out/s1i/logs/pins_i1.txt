@@ -1,0 +1,9 @@
+
+ RUN  v4.1.12 C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/agent-af4c9ecd37b7bc266
+
+
+ Test Files  1 passed (1)
+      Tests  25 passed (25)
+   Start at  16:47:48
+   Duration  15.50s (transform 322ms, setup 0ms, import 400ms, tests 14.83s, environment 0ms)
+

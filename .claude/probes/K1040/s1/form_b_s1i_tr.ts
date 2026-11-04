@@ -124,23 +124,25 @@ export interface FormBParams {
    */
   dEdge?: "skip" | "mirror" | "near";
   /**
-   * S1i: the slope k of "near"'s cut, c = k·u (default 1, S1g F1). L still
-   * meets 0 at u = 0; above 1 the span's end sweeps k times as fast as the
-   * pass while that cut binds, and an arm whose pass sits close behind its
-   * root keeps more of its span (S1i F2).
+   * S1i: a uniform slope k for "near"'s cut, c = k·u, read only with
+   * dEdgeTip 0 (1 there is S1g's F1). L still meets 0 at u = 0; above 1
+   * the span's end sweeps k times as fast as the pass while that cut binds,
+   * and an arm whose pass sits close behind its root keeps more of its span.
+   * No one k does both (S1i F2): 2 leaves j36 short, 3 raises the sweeps.
    */
   dEdgeK?: number;
   /**
-   * S1i: "near"'s slope from the arm's corners (0: off, the uniform dEdgeK).
+   * S1i: "near"'s slope from the arm's corners (0: the uniform dEdgeK).
    * Where the cap gate holds a corner's r, its arc's tip moves
    * g = tan((π − θ)/4) per unit of L (θ the corner's angle: 1 at 0, 0 at π),
    * so the cut c = k·u with k = clamp(dEdgeTip / g, 1, dEdgeKMax), g the
    * larger over the arm's corners, moves no fillet faster than dEdgeTip
    * times the pass. g is continuous in the arms' angles, also as two arms
-   * swap order (g = 1 at θ = 0 on both sides).
+   * swap order (g = 1 at θ = 0 on both sides). Default 1 (S1i F3): at rest
+   * the corners S1g's near emptied or shrank get S1f's span back.
    */
   dEdgeTip?: number;
-  /** S1i: dEdgeTip's largest k (an arm with no corner, g = 0, gets it). */
+  /** S1i: dEdgeTip's largest k (an arm with no corner, g = 0, gets it). Default 4. */
   dEdgeKMax?: number;
   /**
    * S1g: the root gate's band, in h (0: off, S1f's final; default 0.5, S1g
@@ -454,7 +456,7 @@ export class FormB {
     this.reachSep = params.reachSep ?? "chord";
     this.dEdge = params.dEdge ?? "near";
     this.dEdgeK = params.dEdgeK ?? 1;
-    this.dEdgeTip = params.dEdgeTip ?? 0;
+    this.dEdgeTip = params.dEdgeTip ?? 1;
     this.dEdgeKMax = params.dEdgeKMax ?? 4;
     this.rootBand = params.rootBand ?? 0.5;
     this.labelBy = params.labelBy ?? "cover";
@@ -711,6 +713,7 @@ export class FormB {
       const c = k * uB;
       if (c < A.Lcut) A.Lcut = c;
       A.L = Math.max(0, Math.min(L0, A.Lcut));
+      ((globalThis as any).__s1iArm?.(A.j, ai) as ((o: any) => void) | undefined)?.({ ev: "Ltip", gMax, k, uB, c, Lcut: A.Lcut, L: A.L });
     }
 
     // 4. Corners: one per cyclically adjacent arm pair.

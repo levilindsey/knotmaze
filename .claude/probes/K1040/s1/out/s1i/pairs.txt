@@ -1,0 +1,77 @@
+02 [F1-lost] muse_hash/j36/109-110: r: S1f 2.721h, today 0.000h (empty), restored 2.721h
+     zoom 4 (119 px): differ from S1f: today 392 px (lost 156, gained 95; max 6 px from S1f's edge, 33 beyond 3 px), restored 0 px; restored vs today 392 px (lost 95, gained 156); bbox (restored vs S1f) none
+     play size: differ from S1f: today 392 px (lost 156, gained 95; max 6 px from S1f's edge, 33 beyond 3 px), restored 0 px; restored vs today 392 px (lost 95, gained 156); bbox (restored vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+16 [extra-tip] muse_hash/j131/397-398: r: S1f 3.183h, today 0.392h, restored 3.183h
+     zoom 4 (119 px): differ from S1f: today 549 px (lost 184, gained 273; max 13 px from S1f's edge, 191 beyond 3 px), restored 0 px; restored vs today 549 px (lost 273, gained 184); bbox (restored vs S1f) none
+     play size: differ from S1f: today 549 px (lost 184, gained 273; max 13 px from S1f's edge, 191 beyond 3 px), restored 0 px; restored vs today 549 px (lost 273, gained 184); bbox (restored vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+17 [extra-tip] muse_hash/j99/301-299: r: S1f 2.518h, today 0.350h, restored 2.518h
+     zoom 4 (119 px): differ from S1f: today 318 px (lost 109, gained 106; max 5 px from S1f's edge, 9 beyond 3 px), restored 0 px; restored vs today 318 px (lost 106, gained 109); bbox (restored vs S1f) none
+     play size: differ from S1f: today 318 px (lost 109, gained 106; max 5 px from S1f's edge, 9 beyond 3 px), restored 0 px; restored vs today 318 px (lost 106, gained 109); bbox (restored vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+01 [F1-lost] muse_hash/j0/0-1: r: S1f 0.043h, today none, restored 0.043h
+     zoom 4 (119 px): differ from S1f: today 46 px (lost 10, gained 8; max 3 px from S1f's edge, 0 beyond 3 px), restored 0 px; restored vs today 46 px (lost 8, gained 10); bbox (restored vs S1f) none
+     play size: differ from S1f: today 46 px (lost 10, gained 8; max 3 px from S1f's edge, 0 beyond 3 px), restored 0 px; restored vs today 46 px (lost 8, gained 10); bbox (restored vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+03 [F1-lost] muse_hash/j155/471-472: r: S1f 0.120h, today 0.000h (empty), restored 0.120h
+     zoom 4 (119 px): differ from S1f: today 112 px (lost 17, gained 37; max 3 px from S1f's edge, 0 beyond 3 px), restored 2 px (lost 0, gained 0; max 0 px from S1f's edge, 0 beyond 3 px); restored vs today 110 px (lost 37, gained 17); bbox (restored vs S1f) x -1.36..-1.30h, y -3.36..-3.36h
+     play size: differ from S1f: today 115 px (lost 17, gained 37; max 3 px from S1f's edge, 0 beyond 3 px), restored 5 px (lost 0, gained 0; max 0 px from S1f's edge, 0 beyond 3 px); restored vs today 110 px (lost 37, gained 17); bbox (restored vs S1f) x -1.36..-1.19h, y -3.72..-3.36h
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+04 [F1-lost] muse_hash/j156/475-473: r: S1f 0.125h, today none, restored 0.125h
+     zoom 4 (119 px): differ from S1f: today 112 px (lost 17, gained 37; max 3 px from S1f's edge, 0 beyond 3 px), restored 2 px (lost 0, gained 0; max 0 px from S1f's edge, 0 beyond 3 px); restored vs today 110 px (lost 37, gained 17); bbox (restored vs S1f) x 0.21..0.27h, y -3.15..-3.15h
+     play size: differ from S1f: today 144 px (lost 17, gained 37; max 3 px from S1f's edge, 0 beyond 3 px), restored 5 px (lost 0, gained 0; max 0 px from S1f's edge, 0 beyond 3 px); restored vs today 139 px (lost 37, gained 17); bbox (restored vs S1f) x 0.21..0.39h, y -3.50..-3.15h
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+05 [F1-j62] muse_hash/j62/189-187: r: S1f 2.438h, today 1.431h, restored 2.438h
+     zoom 4 (119 px): differ from S1f: today 209 px (lost 59, gained 72; max 3 px from S1f's edge, 0 beyond 3 px), restored 0 px; restored vs today 209 px (lost 72, gained 59); bbox (restored vs S1f) none
+     play size: differ from S1f: today 209 px (lost 59, gained 72; max 3 px from S1f's edge, 0 beyond 3 px), restored 0 px; restored vs today 209 px (lost 72, gained 59); bbox (restored vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+18 [extra-tip] muse_hash/j73/222-220: r: S1f 0.297h, today 0.460h, restored 0.297h
+     zoom 4 (119 px): differ from S1f: today 166 px (lost 32, gained 60; max 3 px from S1f's edge, 0 beyond 3 px), restored 0 px; restored vs today 166 px (lost 60, gained 32); bbox (restored vs S1f) none
+     play size: differ from S1f: today 166 px (lost 32, gained 60; max 3 px from S1f's edge, 0 beyond 3 px), restored 0 px; restored vs today 166 px (lost 60, gained 32); bbox (restored vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+06 [F2-r] muse_default_tw/j57/172-173: r: S1f 4.000h, today 0.678h, restored 0.678h
+     zoom 4 (81 px): differ from S1f: today 31 px (lost 4, gained 5; max 1 px from S1f's edge, 0 beyond 3 px), restored 31 px (lost 4, gained 5; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.54..0.41h, y -0.46..0.49h
+     play size: differ from S1f: today 31 px (lost 4, gained 5; max 1 px from S1f's edge, 0 beyond 3 px), restored 31 px (lost 4, gained 5; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.54..0.41h, y -0.46..0.49h
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+07 [F2-r] muse_hash/j23/72-70: r: S1f 4.000h, today 1.252h, restored 1.252h
+     zoom 4 (119 px): differ from S1f: today 58 px (lost 8, gained 11; max 1 px from S1f's edge, 0 beyond 3 px), restored 58 px (lost 8, gained 11; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.50..0.68h, y -0.46..0.48h
+     play size: differ from S1f: today 58 px (lost 8, gained 11; max 1 px from S1f's edge, 0 beyond 3 px), restored 58 px (lost 8, gained 11; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.50..0.68h, y -0.46..0.48h
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+08 [F2-r] muse_hash/j110/335-333: r: S1f 4.000h, today 1.283h, restored 1.283h
+     zoom 4 (119 px): differ from S1f: today 36 px (lost 4, gained 0; max 1 px from S1f's edge, 0 beyond 3 px), restored 36 px (lost 4, gained 0; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.53..0.65h, y -0.30..0.29h
+     play size: differ from S1f: today 230 px (lost 62, gained 67; max 2 px from S1f's edge, 0 beyond 3 px), restored 104 px (lost 4, gained 0; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 188 px (lost 60, gained 56); bbox (restored vs S1f) x -7.98..0.65h, y -0.30..5.57h
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+09 [F2-r] muse_default_tw/j110/335-333: r: S1f 4.000h, today 1.362h, restored 1.362h
+     zoom 4 (81 px): differ from S1f: today 34 px (lost 4, gained 3; max 0 px from S1f's edge, 0 beyond 3 px), restored 34 px (lost 4, gained 3; max 0 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.53..0.68h, y -0.37..0.41h
+     play size: differ from S1f: today 83 px (lost 4, gained 3; max 0 px from S1f's edge, 0 beyond 3 px), restored 83 px (lost 4, gained 3; max 0 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.53..3.62h, y -6.33..0.41h
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+10 [F2-r] muse_default_tw/j164/499-497: r: S1f 3.993h, today 1.683h, restored 1.683h
+     zoom 4 (81 px): differ from S1f: today 76 px (lost 14, gained 14; max 1 px from S1f's edge, 0 beyond 3 px), restored 76 px (lost 14, gained 14; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.70..0.60h, y -1.20..0.87h
+     play size: differ from S1f: today 76 px (lost 14, gained 14; max 1 px from S1f's edge, 0 beyond 3 px), restored 76 px (lost 14, gained 14; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.70..0.60h, y -1.20..0.87h
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+11 [F2-r] muse_hash/j57/172-173: r: S1f 4.000h, today 1.716h, restored 1.716h
+     zoom 4 (119 px): differ from S1f: today 45 px (lost 6, gained 6; max 1 px from S1f's edge, 0 beyond 3 px), restored 45 px (lost 6, gained 6; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.57..0.42h, y -0.51..0.60h
+     play size: differ from S1f: today 45 px (lost 6, gained 6; max 1 px from S1f's edge, 0 beyond 3 px), restored 45 px (lost 6, gained 6; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.57..0.42h, y -0.51..0.60h
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+12 [F2-r] g41_user_tw64/j12/36-37: r: S1f 2.000h, today 0.028h, restored 0.028h
+     zoom 4 (147 px): differ from S1f: today 43 px (lost 5, gained 10; max 1 px from S1f's edge, 0 beyond 3 px), restored 43 px (lost 5, gained 10; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.36..0.31h, y -0.10..0.38h
+     play size: differ from S1f: today 43 px (lost 5, gained 10; max 1 px from S1f's edge, 0 beyond 3 px), restored 43 px (lost 5, gained 10; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.36..0.31h, y -0.10..0.38h
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+13 [F2-r] user_tw42.lightpaper/j49/151-152: r: S1f 2.000h, today 0.037h, restored 0.037h
+     zoom 4 (100 px): differ from S1f: today 24 px (lost 2, gained 5; max 1 px from S1f's edge, 0 beyond 3 px), restored 24 px (lost 2, gained 5; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.40..0.10h, y -0.29..0.34h
+     play size: differ from S1f: today 24 px (lost 2, gained 5; max 1 px from S1f's edge, 0 beyond 3 px), restored 24 px (lost 2, gained 5; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.40..0.10h, y -0.29..0.34h
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+14 [F2-r] g41_user_tw42/j49/151-152: r: S1f 2.000h, today 0.037h, restored 0.037h
+     zoom 4 (100 px): differ from S1f: today 24 px (lost 2, gained 5; max 1 px from S1f's edge, 0 beyond 3 px), restored 24 px (lost 2, gained 5; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.39..0.10h, y -0.29..0.34h
+     play size: differ from S1f: today 24 px (lost 2, gained 5; max 1 px from S1f's edge, 0 beyond 3 px), restored 24 px (lost 2, gained 5; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.39..0.10h, y -0.29..0.34h
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+15 [F2-r] muse_hash/j124/375-376: r: S1f 1.967h, today 0.078h, restored 0.078h
+     zoom 4 (119 px): differ from S1f: today 48 px (lost 9, gained 11; max 1 px from S1f's edge, 0 beyond 3 px), restored 48 px (lost 9, gained 11; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.34..0.19h, y -0.56..0.32h
+     play size: differ from S1f: today 48 px (lost 9, gained 11; max 1 px from S1f's edge, 0 beyond 3 px), restored 48 px (lost 9, gained 11; max 1 px from S1f's edge, 0 beyond 3 px); restored vs today 0 px; bbox (restored vs S1f) x -0.34..0.19h, y -0.56..0.32h
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; today vs frozen form_b_s1g_q.ts 0
+all: zoom 4: differ from S1f today 2323 (beyond 3 px 233), restored 423 (beyond 3 px 0); restored vs today 1900
+     play size: differ from S1f today 2601 (beyond 3 px 233), restored 546 (beyond 3 px 0); restored vs today 2117
+     checks: 0 px off between the forms and their frozen copies
+sheet.png: 5600 x 4662, 18 triples, 3 columns, panels up to 588 px
+(41.0 s)

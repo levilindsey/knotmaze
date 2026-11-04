@@ -1,0 +1,281 @@
+{
+ "merge": {
+  "pops": 10,
+  "px": 132,
+  "mergedPx": 24,
+  "popsLeft": 10,
+  "pxLeft": 100,
+  "whollyMerged": 0
+ },
+ "units": {
+  "0": 109,
+  "1": 23
+ },
+ "table": {
+  "smooth motion": {
+   "crossing60+": {
+    "pops": 6,
+    "px": 24,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 0,
+      "to": 1,
+      "at": [
+       19.053,
+       32.654
+      ],
+      "px": 4,
+      "mix": {
+       "winner foot>foot/top": 2,
+       "gate foot": 2
+      },
+      "sw": {
+       "at": [
+        19.077,
+        32.654
+       ],
+       "total": 0.927,
+       "maxStep": 0.155,
+       "fadeMid": 0
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-af4c9ecd37b7bc266\\.claude\\probes\\K1040\\s1\\out\\s1i\\pops_i1\\mech_muse_flow\\crops\\muse_flow_smooth-motion_crossing60+_0.png"
+     }
+    ]
+   }
+  },
+  "scene chain samples": {
+   "crossing60+": {
+    "pops": 1,
+    "px": 4,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 1,
+      "to": 2,
+      "at": [
+       16.19,
+       4.746
+      ],
+      "px": 4,
+      "mix": {
+       "motion foot": 2,
+       "gate foot": 2
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-af4c9ecd37b7bc266\\.claude\\probes\\K1040\\s1\\out\\s1i\\pops_i1\\mech_muse_flow\\crops\\muse_flow_scene-chain-samples_crossing60+_1.png"
+     }
+    ]
+   },
+   "junction": {
+    "pops": 3,
+    "px": 104,
+    "worst": [
+     {
+      "seq": "muse_flow",
+      "from": 7,
+      "to": 8,
+      "at": [
+       8.177,
+       22.757
+      ],
+      "px": 80,
+      "mix": {
+       "merge": 14,
+       "winner arc>foot": 2,
+       "winner arc>tA": 3,
+       "winner arc>none/top": 17,
+       "winner arc>none": 4,
+       "winner arc>tB/top": 1,
+       "gate arc": 5,
+       "motion arc": 5,
+       "winner none>arc": 26,
+       "winner arc>tA/top": 1,
+       "winner arc>foot/top": 1,
+       "winner none>tA": 1
+      },
+      "crop": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-af4c9ecd37b7bc266\\.claude\\probes\\K1040\\s1\\out\\s1i\\pops_i1\\mech_muse_flow\\crops\\muse_flow_scene-chain-samples_junction_7.png"
+     }
+    ]
+   }
+  }
+ },
+ "all": [
+  {
+   "seq": "muse_flow",
+   "from": 0,
+   "to": 1,
+   "at": [
+    19.053,
+    32.654
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     19.077,
+     32.654
+    ],
+    "total": 0.927,
+    "maxStep": 0.155,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 1,
+   "to": 2,
+   "at": [
+    16.19,
+    4.746
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 1,
+   "to": 2,
+   "at": [
+    11.598,
+    17.306
+   ],
+   "px": 16,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 1,
+   "to": 2,
+   "at": [
+    11.431,
+    17.392
+   ],
+   "px": 8,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 3,
+   "to": 4,
+   "at": [
+    16.143,
+    4.699
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     16.166,
+     4.722
+    ],
+    "total": 0.245,
+    "maxStep": 0.031,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 7,
+   "to": 8,
+   "at": [
+    8.177,
+    22.757
+   ],
+   "px": 80,
+   "place": "junction",
+   "top": "scene chain samples"
+  },
+  {
+   "seq": "muse_flow",
+   "from": 11,
+   "to": 12,
+   "at": [
+    22.95,
+    6.06
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     22.973,
+     6.037
+    ],
+    "total": 0.207,
+    "maxStep": 0.026,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 18,
+   "to": 19,
+   "at": [
+    11.495,
+    31.833
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     11.472,
+     31.856
+    ],
+    "total": 0.195,
+    "maxStep": 0.026,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 32,
+   "to": 33,
+   "at": [
+    22.997,
+    23.758
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     22.926,
+     23.829
+    ],
+    "total": 0.414,
+    "maxStep": 0.059,
+    "fadeMid": 0
+   }
+  },
+  {
+   "seq": "muse_flow",
+   "from": 38,
+   "to": 39,
+   "at": [
+    22.292,
+    10.849
+   ],
+   "px": 4,
+   "place": "crossing60+",
+   "top": "smooth motion",
+   "sw": {
+    "at": [
+     22.316,
+     10.872
+    ],
+    "total": 0.329,
+    "maxStep": 0.043,
+    "fadeMid": 0
+   }
+  }
+ ],
+ "lines": [
+  "muse_flow: by mechanism {\"smooth motion\":6,\"scene chain samples\":4}"
+ ]
+}

@@ -35,6 +35,11 @@ rep(
   "        L = Math.max(0, Math.min(L, Lcut));\n",
   "        TRA?.({ ev: \"L\", L0: L, Lcut, L: Math.max(0, Math.min(L, Lcut)), sR, dir, pi, closed: p.closed, len: p.len });\n        L = Math.max(0, Math.min(L, Lcut));\n",
 );
+// The dEdgeTip post-pass: under it, "L" above is the span before the tip cut and "Ltip" the final span.
+rep(
+  "      A.L = Math.max(0, Math.min(L0, A.Lcut));\n",
+  "      A.L = Math.max(0, Math.min(L0, A.Lcut));\n      ((globalThis as any).__s1iArm?.(A.j, ai) as ((o: any) => void) | undefined)?.({ ev: \"Ltip\", gMax, k, uB, c, Lcut: A.Lcut, L: A.L });\n",
+);
 
 // The corner solve.
 rep(
