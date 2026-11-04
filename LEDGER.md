@@ -326,9 +326,9 @@ Next free ID: K1170.
   K778 (the Undo button, its 0-5 slider), run C K1162 (the doc errata). Claude reviews each run against the
   primary record, then closes K1169.
   - owner: Muse through the chain (`.claude/probes/K1053/`), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `cd5dd277`
+  - branch: mainline; last commit: `cb9c3529`
   - evidence: `.claude/probes/K1053/` (queue.txt, done.txt, chain.log; each run's Paseo report)
-  - next: Run A (K1139 S2) starts with the chain
+  - next: Run A done; next Run B
   - brief: `docs/design/K1169_muse_batch15.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
@@ -528,11 +528,11 @@ Next free ID: K1170.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1 done (a4dc218a). Answers (Levi 2026-11-03): the light splits at a fork (A), runs toward you
   behind you, straight through your junction with no dim moment. S2-S6 next. Full text: `docs/ledger_notes.md`.
-  - owner: Muse batch 15 run A (K1169), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `a4dc218a`
+  - owner: nobody since 2026-11-03 21:20 (S2 done in Muse batch 15 run A)
+  - branch: mainline; last commit: `cb9c3529`
   - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
-  - next: S2 runs as Muse batch 15 run A (K1169); then S3a-S6 as the plan's section 5 orders them, S5 included
-  - brief: docs/design/K1169_muse_batch15.md (Run A); the plan: docs/design/K1139_pulse_junctions.md; S1: docs/design/K1139_s1_brief.md
+  - next: S3a: pulse bands, CPU side (the plan's section 5); S2's record in .claude/probes/K1139/out/s2/
+  - brief: docs/design/K1169_muse_batch15.md (Run A); the plan: docs/design/K1139_pulse_junctions.md
 
 ## Next, in order
 
