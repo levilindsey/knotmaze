@@ -72,7 +72,18 @@ function probeHost(): Promise<LabelBHost> {
   return hostP;
 }
 
-function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; stride?: number; tent?: boolean; mode?: string; lr?: number; lean?: boolean; d24?: boolean; state?: string } = {}) {
+// K1040 S3f step 3 (fewer facets): opts.nw sets tentv's segment wedge facets
+// (the shader's NW, today TENT_NW) and the strip's vertex count to match
+// (2 NW + 6: TENT_SEG_VERTS at NW = TENT_NW); the caps and fills keep theirs.
+function nwOpts(nw: number | undefined, debugOut: boolean): { tentVSources?: LabelBTentVSources; segVerts?: number } {
+  if (nw === undefined || nw === TENT_NW) return {};
+  const sv = labelBTentVSources(debugOut);
+  const a = `#define NW ${TENT_NW}\n`;
+  if (sv.segVs.split(a).length !== 2) throw new Error(`nw: ${JSON.stringify(a)} not found once in tentv's segVs`);
+  return { tentVSources: { ...sv, segVs: sv.segVs.replace(a, `#define NW ${nw}\n`) }, segVerts: 2 * nw + 6 };
+}
+
+function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; stride?: number; tent?: boolean; mode?: string; lr?: number; lean?: boolean; d24?: boolean; state?: string; nw?: number } = {}) {
   const scale = opts.scale ?? 2;
   const stride = opts.stride ?? 1;
   const lr = opts.lr ?? 1;
@@ -84,7 +95,7 @@ function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; s
   const t2 = performance.now();
   const dev = camera(scene, scale);
   const { M: Mc, W, H } = coarse(dev.M, dev.W, dev.H, lr);
-  const pass = new LabelBPass(gl, true, modeOf(opts), { lean: !!opts.lean });
+  const pass = new LabelBPass(gl, true, modeOf(opts), { lean: !!opts.lean, ...nwOpts(opts.nw, true) });
   pass.probeQuery = opts.state !== "new";
   pass.probeDepth24 = !!opts.d24;
   pass.tentEpsPx /= lr;
@@ -212,7 +223,7 @@ function fitCamera(scene: FieldScene, h: number, fit: [number, number], scale: n
 // timed lean frame uploads every used row (probeAllDirty: the moving fabric's
 // frame, what the gate times) unless opts.rest (the row diff: a still scene
 // uploads nothing after the first frame).
-async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean; fit?: [number, number]; b2b?: boolean; floor?: boolean; tent?: boolean; mode?: string; lr?: number; lean?: boolean; rest?: boolean; state?: string } = {}) {
+async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean; fit?: [number, number]; b2b?: boolean; floor?: boolean; tent?: boolean; mode?: string; lr?: number; lean?: boolean; rest?: boolean; state?: string; nw?: number } = {}) {
   const scale = opts.scale ?? 2;
   const frames = opts.frames ?? 60;
   const lr = opts.lr ?? 1;
@@ -226,7 +237,7 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
   const { M, W, H } = coarse(dev.M, dev.W, dev.H, lr);
   const live = opts.state === "host" || opts.state === "new";
   const host = opts.state === "host" ? await probeHost() : null;
-  const pass = new LabelBPass(gl, false, modeOf(opts), { lean: !!opts.lean, host });
+  const pass = new LabelBPass(gl, false, modeOf(opts), { lean: !!opts.lean, host, ...nwOpts(opts.nw, false) });
   // The live pass times the GPU with its own timer (probeTimer); S3e's pass
   // with the query and restore (probeQuery) as before.
   if (live) pass.probeTimer = true;
