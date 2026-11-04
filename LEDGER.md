@@ -541,9 +541,9 @@ Next free ID: K1163.
   (`docs/design/K1161_muse_batch14_run_a.md`) as `docs/design/K1161_muse_batch14.md`, runs B to G; Claude
   reviews it and queues them (ports 5550-5599).
   - owner: muse run 14A, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 16:40
-  - branch: mainline; last commit: `91c3d90f`
+  - branch: mainline; last commit: `5f0b538e`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); the run's commit report
-  - next: Run B done; next Run C
+  - next: Run C done; next Run D
   - brief: `docs/design/K1161_muse_batch14_run_a.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, line 14A); a `hold.txt` beside it holds the chain before its next run
 
@@ -1458,8 +1458,6 @@ Every other item below waits on the trigger it names.
   (`.claude/probes/K324/census/census_tele.mjs`)
 - **K701** · Section shader lengths rose again, limits now 47,750 / 64,150 characters (K324 s2: +85
   each; `test/render/k320_slim.test.ts`)
-- **K710** · K137-b: in real time a catch can still land through a broken run, since contact uses
-  the plain thread distance (docs/design/K137_s3a.md, Residuals a)
 - **K711** · K137-b edges (K137_s3a.md Residuals b-f): runBurnAt may draw a burnt broken run as
   burning; safeArms and fireTrapped count broken arms safe; refire is O(V^2) per breaking move;
   __knotChaseTap ignores broken runs; broken-run counts need main.ts to report every accepted run
@@ -2006,6 +2004,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K710** · a real-time catch (and an extra's, and the sword's touch) cannot land through a broken run; contact counts tails but not broken runs. Done in 5f0b538e (2026-11-03).
 - **K1159** · adb lookup folded into phone_ready.mjs (findAdb picker); phone_pass.ps1 delegates with --find-adb; phone.ps1's own lookup left beside them. Done in 91c3d90f (2026-11-03).
 - **K1160** · scripts/phone_pass.ps1 finds the phone among online android peers; -TailscaleHost is the override, default empty. Done in 91c3d90f (2026-11-03).
 - **K1156** · Muse batch 13: B K1152+K1148 (ce485d87), C K1155 (cbaca79f), D K1154 (f809a275), E K351 (88efd034), F K392's seam half (48739fda), G K685 (410fd8c9); all reviewed. Done in f363a939 (2026-11-03).
