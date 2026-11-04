@@ -204,3 +204,15 @@ end 22:49:02: thermal 0, battery 23.0 C, media none playing, in front com.androi
 input events: none
 errors: 0
 
+# phone time 2026-11-03T16:04:36.086Z (fit)
+
+scale 2, frames 60, fit 411x753 (K923's bbox fit), back to back after 10 warm-ups (K923), render sync (no timer query); label_b_glsl.ts: the worktree's
+start 08:04:36: thermal 0, battery 27.9 C, media none playing, in front an app
+renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
+
+
+end 08:04:40: thermal 0, battery 27.9 C, media none playing, in front com.google.android.apps.nexuslauncher
+
+input events: one at 08:04:39, run stopped
+errors: 0
+

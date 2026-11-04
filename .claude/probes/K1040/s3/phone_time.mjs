@@ -81,7 +81,9 @@ function phoneState() {
     topPkg: (top.match(/u0 ([\w.]+)\//) ?? [])[1] ?? "?",
   };
 }
-const fmtState = (s) => `thermal ${s.thermal}, battery ${s.battery} C, media ${s.media}, in front ${s.topPkg}`;
+// What is in front, by kind only: an app's package name says what a person was doing (S3c).
+const front = (p) => (/launcher/.test(p) ? "the launcher" : /^com\.android\.chrome$/.test(p) ? "Chrome" : p === "?" ? "?" : "an app");
+const fmtState = (s) => `thermal ${s.thermal}, battery ${s.battery} C, media ${s.media}, in front ${front(s.topPkg)}`;
 const within = (p, ms, what) => Promise.race([p, sleep(ms).then(() => { throw new Error(`${what} timed out (${ms / 1000} s)`); })]);
 
 // The page.
@@ -126,6 +128,9 @@ try {
   s0 = phoneState();
   log(`phone at start: ${fmtState(s0)}`);
   summary.push(`start ${hms()}: ${fmtState(s0)}`);
+  // K1040 S3c: an app in front may be in a hand (S3c's first run, 08:04, opened
+  // the page over one a second before a touch): only from the launcher.
+  if (!/launcher/.test(s0.topPkg)) throw new Error(`${front(s0.topPkg)} in front, not the launcher: a person may be using the phone`);
 
   // The input watch: any event line means a person is handling the phone.
   ge = spawn(ADB, ["-s", dev, "shell", "getevent", "-q", "-l"], { stdio: ["ignore", "pipe", "ignore"] });
