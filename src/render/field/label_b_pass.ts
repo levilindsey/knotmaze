@@ -13,14 +13,26 @@
 // uniforms, drawn as geometry whose vertex depth is the cone key - segments
 // (slab and joint wedge), free-end caps, fills - with no discard and no
 // gl_FragDepth. The cap instances (chain, end) are rebuilt with the layout.
+// Mode "tentv" (K1040 S3d, the vertex-light tent): tent's geometry, with the
+// span search moved from every vertex to the CPU (tentSpanRecord, uploaded as
+// table ps on unit 5 in nb's place: nb is the capsule's merge scan, no tent
+// reads it) and one flat ivec3 for the fragment shader to fetch from.
 
 import type { LabelBTables } from "./label_b";
 import { TEX_W } from "./label_b";
 import { labelBSources } from "./label_b_glsl";
-import { tentFacetK } from "./label_b_tent";
-import { labelBTentSources, TENT_CAP_VERTS, TENT_FILL_VERTS, TENT_SEG_VERTS, type LabelBTentSources } from "./label_b_tent_glsl";
+import { tentFacetK, tentSpanRecord } from "./label_b_tent";
+import {
+  labelBTentSources,
+  labelBTentVSources,
+  TENT_CAP_VERTS,
+  TENT_FILL_VERTS,
+  TENT_SEG_VERTS,
+  type LabelBTentSources,
+  type LabelBTentVSources,
+} from "./label_b_tent_glsl";
 
-export type LabelBMode = "capsule" | "tent";
+export type LabelBMode = "capsule" | "tent" | "tentv";
 
 /** World -> device px: u = a x + c y + e, v = b x + d y + f (FieldScene's worldToCss times dpr). */
 export type Affine = [number, number, number, number, number, number];
@@ -61,7 +73,10 @@ export class LabelBPass {
   private L: WebGLTexture | null = null;
   private D: WebGLTexture | null = null;
   private G: WebGLTexture | null = null;
-  private tabs: Record<"pts" | "chain" | "span" | "fill" | "nb", Tex>;
+  private tabs: Record<"pts" | "chain" | "span" | "fill" | "nb" | "ps", Tex>;
+  /** Texture units the draws bind: 5, or 6 in tentv (ps on unit 5). */
+  private readonly nTex: number;
+  private psBuf: Float32Array | undefined;
   private h = 0;
   private invK = 0;
   private keyScale = 1;
@@ -83,10 +98,17 @@ export class LabelBPass {
   /** Probe knobs (K1040 S3d's cost split): tent mode draws nothing, or a fraction of its segment strips. */
   probeDraw = true;
   probeSegFrac = 1;
+  /** Probe knob (S3d): invalidate D after the draws (its store skipped; only when nothing reads D). */
+  probeInvalidateDepth = false;
   private segVerts = TENT_SEG_VERTS;
 
   /** probe: the tent's sources and segment strip length, replaced (K1040 S3d's cost split only). */
-  constructor(gl: WebGL2RenderingContext, debug = false, mode: LabelBMode = "capsule", probe: { tentSources?: LabelBTentSources; segVerts?: number } = {}) {
+  constructor(
+    gl: WebGL2RenderingContext,
+    debug = false,
+    mode: LabelBMode = "capsule",
+    probe: { tentSources?: LabelBTentSources; tentVSources?: LabelBTentVSources; segVerts?: number } = {},
+  ) {
     this.gl = gl;
     this.debug = debug;
     this.mode = mode;
@@ -95,21 +117,24 @@ export class LabelBPass {
     this.capsule = compile(gl, src.capsuleVs, src.capsuleFs);
     this.fillPr = compile(gl, src.fillVs, src.fillFs);
     if (probe.segVerts) this.segVerts = probe.segVerts;
-    if (mode === "tent") {
+    if (mode === "tent" || mode === "tentv") {
       const ts = probe.tentSources ?? labelBTentSources(debug);
+      // tentv: the vertex-light segments and caps; the fills are tent's.
+      const tv = mode === "tentv" ? (probe.tentVSources ?? labelBTentVSources(debug)) : null;
       this.tent = {
-        seg: compile(gl, ts.segVs, ts.fs),
-        cap: compile(gl, ts.capVs, ts.fs),
+        seg: tv ? compile(gl, tv.segVs, tv.fs) : compile(gl, ts.segVs, ts.fs),
+        cap: tv ? compile(gl, tv.capVs, tv.fs) : compile(gl, ts.capVs, ts.fs),
         fill: compile(gl, ts.fillVs, ts.fs),
         capVao: gl.createVertexArray() as WebGLVertexArrayObject,
         capBuf: gl.createBuffer() as WebGLBuffer,
       };
     }
+    this.nTex = mode === "tentv" ? 6 : 5;
     this.vao = gl.createVertexArray() as WebGLVertexArrayObject;
     this.instBuf = gl.createBuffer() as WebGLBuffer;
     this.fbo = gl.createFramebuffer() as WebGLFramebuffer;
     const mkTab = (): Tex => ({ tex: gl.createTexture() as WebGLTexture, rows: 0 });
-    this.tabs = { pts: mkTab(), chain: mkTab(), span: mkTab(), fill: mkTab(), nb: mkTab() };
+    this.tabs = { pts: mkTab(), chain: mkTab(), span: mkTab(), fill: mkTab(), nb: mkTab(), ps: mkTab() };
     this.tq = gl.getExtension("EXT_disjoint_timer_query_webgl2");
   }
 
@@ -176,7 +201,10 @@ export class LabelBPass {
     this.uploadTab(this.tabs.chain, T.chain, T.chainRows);
     this.uploadTab(this.tabs.span, T.span, T.spanRows);
     this.uploadTab(this.tabs.fill, T.fill, T.fillRows);
-    this.uploadTab(this.tabs.nb, T.nb, T.ptsRows);
+    if (this.mode === "tentv") {
+      this.psBuf = tentSpanRecord(T, this.psBuf);
+      this.uploadTab(this.tabs.ps, this.psBuf, T.ptsRows);
+    } else this.uploadTab(this.tabs.nb, T.nb, T.ptsRows);
     if (T.layoutKey !== this.layoutKey) {
       gl.bindVertexArray(this.vao);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.instBuf);
@@ -238,13 +266,13 @@ export class LabelBPass {
     gl.uniform1f(u("uKeyScale"), this.keyScale);
     gl.uniform1f(u("uPad"), pad);
     gl.uniform1f(u("uFold"), this.foldR);
-    const names = ["uPts", "uChain", "uSpan", "uFill", "uNb"] as const;
-    const keys = ["pts", "chain", "span", "fill", "nb"] as const;
-    names.forEach((n, i) => {
+    const names = ["uPts", "uChain", "uSpan", "uFill", "uNb", "uPs"] as const;
+    const keys = ["pts", "chain", "span", "fill", "nb", "ps"] as const;
+    for (let i = 0; i < this.nTex; i++) {
       gl.activeTexture(gl.TEXTURE0 + i);
       gl.bindTexture(gl.TEXTURE_2D, this.tabs[keys[i]].tex);
-      gl.uniform1i(u(n), i);
-    });
+      gl.uniform1i(u(names[i]), i);
+    }
   }
 
   /** Draws the label for camera M (world -> device px). Restores the caller's state. */
@@ -262,7 +290,7 @@ export class LabelBPass {
       scissor: gl.isEnabled(gl.SCISSOR_TEST),
       cull: gl.isEnabled(gl.CULL_FACE),
       active: gl.getParameter(gl.ACTIVE_TEXTURE),
-      tex: [0, 1, 2, 3, 4].map((i) => {
+      tex: Array.from({ length: this.nTex }, (_, i) => {
         gl.activeTexture(gl.TEXTURE0 + i);
         return gl.getParameter(gl.TEXTURE_BINDING_2D);
       }),
@@ -294,6 +322,7 @@ export class LabelBPass {
         gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.nFills);
       }
     }
+    if (this.probeInvalidateDepth) gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.DEPTH_ATTACHMENT]);
     if (q && this.tq) {
       gl.endQuery(this.tq.TIME_ELAPSED_EXT);
       this.pending.push(q);

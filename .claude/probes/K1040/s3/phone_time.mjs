@@ -44,6 +44,8 @@ const fit = fitArg ? fitArg.split("x").map(Number) : undefined;
 const b2b = args.includes("--b2b"), floor = args.includes("--floor"), noscan = args.includes("--noscan");
 // K1040 S3c: --tent the tent pass (no discard), --lr n its coarser target.
 const tent = args.includes("--tent"), lr = Number(val("--lr", 1));
+// K1040 S3d: --mode <name> a LabelBMode by name (tentv: the vertex-light tent); overrides --tent.
+const passMode = val("--mode", null) ?? undefined;
 // K1040 S3d: --variants a,b,... page.ts timeMany()'s cost split (tent pass
 // variants interleaved in --rounds rounds on each scene); each variant's
 // outputs are named <label><variant>, so phone_table.ps1 reads them.
@@ -121,7 +123,7 @@ await new Promise((ok, no) => { server.once("error", no); server.listen(port, "1
 log(`serving out/phone.html on 127.0.0.1:${port}`);
 
 const stamp = new Date().toISOString();
-const summary = [`# phone time ${stamp}${runLabel ? ` (${runLabel})` : ""}`, "", `scale ${scale}, frames ${frames}${fit ? `, fit ${fit.join("x")} (K923's bbox fit)` : ", the scene's camera"}${b2b ? ", back to back after 10 warm-ups (K923)" : ", one a rAF"}${floor ? ", FLOOR (readback only)" : ""}${noscan ? ", the scan OFF" : ""}${tent ? ", TENT pass" : ""}${lr !== 1 ? `, lr ${lr}` : ""}, render sync (no timer query); label_b_glsl.ts: ${glslSwap ? `swapped for ${glslSwap.replace(/\\/g, "/").split("/").pop()}` : "the worktree's"}`];
+const summary = [`# phone time ${stamp}${runLabel ? ` (${runLabel})` : ""}`, "", `scale ${scale}, frames ${frames}${fit ? `, fit ${fit.join("x")} (K923's bbox fit)` : ", the scene's camera"}${b2b ? ", back to back after 10 warm-ups (K923)" : ", one a rAF"}${floor ? ", FLOOR (readback only)" : ""}${noscan ? ", the scan OFF" : ""}${tent ? ", TENT pass" : ""}${passMode ? `, mode ${passMode}` : ""}${lr !== 1 ? `, lr ${lr}` : ""}, render sync (no timer query); label_b_glsl.ts: ${glslSwap ? `swapped for ${glslSwap.replace(/\\/g, "/").split("/").pop()}` : "the worktree's"}`];
 const errors = [];
 let addedRev = false, addedFwd = false, touched = null, browser = null, page = null, ge = null, s0 = null;
 try {
@@ -190,7 +192,7 @@ try {
       log(line);
       continue;
     }
-    const res = await within(page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, fit, b2b, floor, noscan, tent, lr }), 180000, name);
+    const res = await within(page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, fit, b2b, floor, noscan, tent, mode: passMode, lr }), 180000, name);
     res.scene = name;
     res.wallMs = Date.now() - t0;
     res.phone = st;

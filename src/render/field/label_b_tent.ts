@@ -26,3 +26,47 @@ export function tentFacets(ang: number, rad: number, facetK: number, nmax: numbe
 export function tentBalanced(rad: number, d: number): number {
   return (2 * rad) / (1 + Math.cos(0.5 * d));
 }
+
+/** The tables tentSpanRecord reads (label_b.ts's LabelBTables). */
+export interface TentSpanTables {
+  nChains: number;
+  pts: Float32Array;
+  chain: Float32Array;
+  span: Float32Array;
+}
+
+/**
+ * K1040 S3d, the vertex-light tent's table "ps": per point j (pts' texel j)
+ * the span holding its s, found as S3c's vertex shader's spanAt finds it
+ * (label_b_tent_glsl.ts: at most 16 halvings over the chain's spans, sorted
+ * by lo, the comparison lo <= s on the same float32 values), as (index, code,
+ * the next span's lo or fround(1e30), 0). A span texel past the table reads 0
+ * here; the GPU's out-of-range texelFetch is undefined (no chain has 0 spans).
+ */
+export function tentSpanRecord(T: TentSpanTables, out?: Float32Array): Float32Array {
+  const ps = out && out.length === T.pts.length ? out : new Float32Array(T.pts.length);
+  const { pts, chain, span } = T;
+  const at = (i: number) => (i < span.length ? span[i] : 0);
+  for (let ci = 0; ci < T.nChains; ci++) {
+    const off = chain[8 * ci];
+    const n = chain[8 * ci + 1];
+    const so = chain[8 * ci + 6];
+    const ns = chain[8 * ci + 7];
+    for (let j = off; j < off + n; j++) {
+      const s = pts[4 * j + 2];
+      let lo = 0;
+      let hi = ns - 1;
+      for (let it = 0; it < 16; it++) {
+        if (lo >= hi) break;
+        const mid = (lo + hi + 1) >> 1;
+        if (at(4 * (so + mid)) <= s) lo = mid;
+        else hi = mid - 1;
+      }
+      ps[4 * j] = lo;
+      ps[4 * j + 1] = Math.trunc(at(4 * (so + lo) + 1));
+      ps[4 * j + 2] = lo + 1 < ns ? at(4 * (so + lo + 1)) : 1e30;
+      ps[4 * j + 3] = 0;
+    }
+  }
+  return ps;
+}

@@ -8,8 +8,12 @@
 import { FormB } from "../../../../src/render/field/form_b";
 import type { FieldScene } from "../../../../src/render/field/scene";
 import { buildLabelB, labelAt, type LabelBTables } from "../../../../src/render/field/label_b";
-import { LabelBPass, type Affine } from "../../../../src/render/field/label_b_pass";
-import { labelBTentSources, TENT_NW, type LabelBTentSources } from "../../../../src/render/field/label_b_tent_glsl";
+import { LabelBPass, type Affine, type LabelBMode } from "../../../../src/render/field/label_b_pass";
+import { labelBTentSources, labelBTentVSources, TENT_NW, type LabelBTentSources, type LabelBTentVSources } from "../../../../src/render/field/label_b_tent_glsl";
+
+// K1040 S3d: opts.mode names the pass's mode (capsule | tent | tentv); opts.tent
+// is S3c's flag for "tent".
+const modeOf = (o: { tent?: boolean; mode?: string }): LabelBMode => (o.mode ?? (o.tent ? "tent" : "capsule")) as LabelBMode;
 import { labelVerdict, sampleOf, type LabelSample } from "../../../../src/render/field/label_b_verdict";
 
 const canvas = document.createElement("canvas");
@@ -56,7 +60,7 @@ function coarse(M: Affine, W: number, H: number, lr: number): { M: Affine; W: nu
   return { M: M.map((v) => v / lr) as unknown as Affine, W: Math.ceil(W / lr), H: Math.ceil(H / lr) };
 }
 
-function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; stride?: number; tent?: boolean; lr?: number } = {}) {
+function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; stride?: number; tent?: boolean; mode?: string; lr?: number } = {}) {
   const scale = opts.scale ?? 2;
   const stride = opts.stride ?? 1;
   const lr = opts.lr ?? 1;
@@ -68,7 +72,7 @@ function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; s
   const t2 = performance.now();
   const dev = camera(scene, scale);
   const { M: Mc, W, H } = coarse(dev.M, dev.W, dev.H, lr);
-  const pass = new LabelBPass(gl, true, opts.tent ? "tent" : "capsule");
+  const pass = new LabelBPass(gl, true, modeOf(opts));
   pass.tentEpsPx /= lr;
   pass.resize(W, H);
   pass.upload(T);
@@ -189,7 +193,7 @@ function fitCamera(scene: FieldScene, h: number, fit: [number, number], scale: n
 // opts.b2b: K923's render sync, the frames back to back in one task after
 // 10 warm-up renders (else one a frame, after a rAF); opts.floor: no upload
 // and no draw, only the 1-px readback (K923's floor).
-async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean; fit?: [number, number]; b2b?: boolean; floor?: boolean; tent?: boolean; lr?: number } = {}) {
+async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean; fit?: [number, number]; b2b?: boolean; floor?: boolean; tent?: boolean; mode?: string; lr?: number } = {}) {
   const scale = opts.scale ?? 2;
   const frames = opts.frames ?? 60;
   const lr = opts.lr ?? 1;
@@ -201,7 +205,7 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
   const prepMs = performance.now() - tp0;
   const dev = opts.fit ? fitCamera(scene, fb.h, opts.fit, scale) : camera(scene, scale);
   const { M, W, H } = coarse(dev.M, dev.W, dev.H, lr);
-  const pass = new LabelBPass(gl, false, opts.tent ? "tent" : "capsule");
+  const pass = new LabelBPass(gl, false, modeOf(opts));
   pass.tentEpsPx /= lr;
   pass.resize(W, H);
   pass.upload(T);
@@ -261,6 +265,13 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
 //   half     half the segment strips
 //   nw1      one-facet wedges: 8 vertices a strip instead of 12
 //   floor    the 1-px readback alone
+// Step 2's (the vertex-light tent, mode tentv, and the fixed part's split):
+//   tentv      the vertex-light tent
+//   tentvdegen tentv with every vertex clipped (its VS, as degen)
+//   tentvinv   tentv, D invalidated after the draws (no depth store)
+//   emptynoup  the empty pass without the upload (clears, stores, submit)
+//   emptyinv   the empty pass with D invalidated
+//   uponly     the upload and the readback, no pass at all
 const VARIANTS = ["tent", "empty", "noup", "degen", "fs0", "fsconst", "half", "nw1", "floor"];
 const vpasses = new Map<string, LabelBPass>();
 function variantPass(v: string): LabelBPass {
@@ -286,9 +297,14 @@ function variantPass(v: string): LabelBPass {
   } else if (v === "nw1") {
     const n = (s: string) => swap(s, `#define NW ${TENT_NW}\n`, "#define NW 1\n");
     probe = { tentSources: { segVs: n(src.segVs), capVs: n(src.capVs), fillVs: n(src.fillVs), fs: n(src.fs) }, segVerts: 8 };
-  } else if (!["tent", "empty", "noup", "half", "floor"].includes(v)) throw new Error(`no variant ${v}`);
-  const pass = new LabelBPass(gl, false, "tent", probe);
-  if (v === "empty") pass.probeDraw = false;
+  } else if (v === "tentvdegen") {
+    const sv = labelBTentVSources(false);
+    const d = (s: string) => swap(s, GLPOS, GLPOS + "  gl_Position.z = 2.0;\n");
+    probe = { tentSources: { ...src, fillVs: d(src.fillVs) }, tentVSources: { ...sv, segVs: d(sv.segVs), capVs: d(sv.capVs) } };
+  } else if (!["tent", "empty", "noup", "half", "floor", "tentv", "tentvinv", "emptynoup", "emptyinv", "uponly"].includes(v)) throw new Error(`no variant ${v}`);
+  const pass = new LabelBPass(gl, false, v.startsWith("tentv") ? "tentv" : "tent", probe);
+  if (v === "empty" || v === "emptynoup" || v === "emptyinv") pass.probeDraw = false;
+  if (v === "emptyinv" || v === "tentvinv") pass.probeInvalidateDepth = true;
   if (v === "half") pass.probeSegFrac = 0.5;
   vpasses.set(v, pass);
   return pass;
@@ -320,9 +336,9 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
       }
       for (let k = 0; k < per; k++) {
         const u0 = performance.now();
-        if (v !== "noup" && v !== "floor") pass.upload(T);
+        if (v !== "noup" && v !== "floor" && v !== "emptynoup") pass.upload(T);
         const u1 = performance.now();
-        if (v !== "floor") pass.draw(M);
+        if (v !== "floor" && v !== "uponly") pass.draw(M);
         pass.sync();
         const u2 = performance.now();
         acc[v].up.push(u1 - u0);

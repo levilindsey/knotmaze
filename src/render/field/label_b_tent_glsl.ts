@@ -69,7 +69,10 @@ vec4 fetch(sampler2D t, int i) {
 }
 `;
 
-const VS_LIB = `
+// S3c's flats (VS_FLATS), the geometry (VS_GEOM) and the span search
+// (VS_SPAN): VS_LIB is the three, the vertex-light tent's (VS_LIB_V) the
+// geometry alone with one flat ivec3 (K1040 S3d).
+const VS_FLATS = `
 invariant gl_Position;
 // The segment's a and b (a cap's or fill's point twice): the fragment's t is
 // segT(p, a, b) from gl_FragCoord, exact as S3b's (an interpolated t carried
@@ -81,7 +84,9 @@ flat out vec4 vS;
 flat out ivec4 vI;
 // (the next span's lo, 1e30 = none; the chain's span offset, span count)
 flat out vec3 vSp;
-#ifdef DEBUG_OUT
+`;
+
+const VS_GEOM = `#ifdef DEBUG_OUT
 out float vD;
 #endif
 // The one place a vertex is made: a corner two primitives share is P + N * o
@@ -119,7 +124,9 @@ float balanced(float rad, float d) {
 vec2 slerp2(vec2 v0, vec2 v1, float ang, float f) {
   return (sin((1.0 - f) * ang) * v0 + sin(f * ang) * v1) / sin(ang);
 }
-// The chain's span holding s (spans sorted by lo, the first at s0): its
+`;
+
+const VS_SPAN = `// The chain's span holding s (spans sorted by lo, the first at s0): its
 // index and code, and the next span's lo (1e30 if none).
 void spanAt(vec4 c1, float s, out int idx, out int code, out float nextLo) {
   int so = int(c1.z);
@@ -147,8 +154,11 @@ void flats(int ci, int flags, float sA, float sB, vec4 c1, float sCode) {
 }
 `;
 
-const SEG_VS = `${HEAD}${VS_LIB}
-in vec2 aSeg;
+const VS_LIB = VS_FLATS + VS_GEOM + VS_SPAN;
+
+// The segment's and the cap's main() up to the emit; each tent closes it with
+// its own flats.
+const SEG_MAIN = `in vec2 aSeg;
 void main() {
   int ci = int(aSeg.x);
   int k = int(aSeg.y);
@@ -205,14 +215,16 @@ void main() {
     o = q < 2 ? side * uH : q < 4 ? 0.0 : -side * uH;
   }
   emit(P, N, o, z - abs(o) * uInvK);
-  vAB = vec4(A.xy, B.xy);
+`;
+
+const SEG_VS = `${HEAD}${VS_LIB}
+${SEG_MAIN}  vAB = vec4(A.xy, B.xy);
   float sB = kb == 0 ? c1.x + c1.y : B.z;
   flats(ci, closed ? 4 : 0, A.z, sB, c1, A.z);
 }
 `;
 
-const CAP_VS = `${HEAD}${VS_LIB}
-// (chain, end): 0 the start of an open chain, 1 its end.
+const CAP_MAIN = `// (chain, end): 0 the start of an open chain, 1 its end.
 in vec2 aSeg;
 void main() {
   int ci = int(aSeg.x);
@@ -249,7 +261,10 @@ void main() {
     }
   }
   emit(C.xy, N, o, C.w - abs(o) * uInvK);
-  vAB = vec4(C.xy, C.xy);
+`;
+
+const CAP_VS = `${HEAD}${VS_LIB}
+${CAP_MAIN}  vAB = vec4(C.xy, C.xy);
   flats(ci, 2, C.z, C.z, c1, C.z);
 }
 `;
@@ -348,6 +363,91 @@ void main() {
 }
 `;
 
+// K1040 S3d: the vertex-light tent (mode "tentv"). S3c's segment and cap
+// vertex shaders found the span at the segment's start with a binary search
+// per VERTEX (spanAt: up to 18 dependent fetches) and wrote 15 flat
+// components; on the Pixel, S3d's step 1 priced the two at 2.8 ms (VS) and
+// 2.2 ms (varyings), medians of the 12 scenes. Here the CPU finds each
+// point's span once (tentSpanRecord, label_b_tent.ts: the same search on the
+// same floats; table "ps", one texel per point, in nb's place), the vertex
+// shaders write one flat ivec3 (the two points' indices; chain | flags << 8,
+// flags 2 cap, 4 closed, 8 the closing segment, whose sB is s0 + len), and
+// the fragment shader fetches what S3c's flats carried: the two points, the
+// chain's c1 and the record at the first point. The geometry is S3c's
+// (SEG_MAIN, CAP_MAIN: the same emit lines), the word S3c's arithmetic on the
+// same values. Fills keep S3c's programs (their flats were already
+// fetch-free).
+const VS_LIB_V = `
+invariant gl_Position;
+// (the first point's index, the second's: a cap's point twice; chain | flags << 8)
+flat out ivec3 vQ;
+${VS_GEOM}`;
+
+const SEG_VS_V = `${HEAD}${VS_LIB_V}
+${SEG_MAIN}  vQ = ivec3(off + k, off + kb, ci | (((closed ? 4 : 0) | (kb == 0 ? 8 : 0)) << 8));
+}
+`;
+
+const CAP_VS_V = `${HEAD}${VS_LIB_V}
+${CAP_MAIN}  int ic = off + (atEnd ? k + 1 : k);
+  vQ = ivec3(ic, ic, ci | (2 << 8));
+}
+`;
+
+const FS_V = `${HEAD}
+// Per point (the span index at its s, that span's code, the next span's lo
+// (1e30 = none), 0).
+uniform sampler2D uPs;
+flat in ivec3 vQ;
+#ifdef DEBUG_OUT
+in float vD;
+#endif
+layout(location = 0) out uint oWord;
+#ifdef DEBUG_OUT
+layout(location = 1) out vec4 oDbg;
+#endif
+void main() {
+  vec4 A = fetch(uPts, vQ.x);
+  vec4 B = fetch(uPts, vQ.y);
+  int ci = vQ.z & 255;
+  int fl = vQ.z >> 8;
+  vec4 c1 = fetch(uChain, 2 * ci + 1);
+  vec4 sp = fetch(uPs, vQ.x);
+  float sB = (fl & 8) != 0 ? c1.x + c1.y : B.z;
+  vec2 dev = vec2(gl_FragCoord.x, uView.y - gl_FragCoord.y);
+  vec2 p = vec2(uI0.x * dev.x + uI0.z * dev.y + uI1.x, uI0.y * dev.x + uI0.w * dev.y + uI1.y);
+  vec2 ab = B.xy - A.xy;
+  float l2 = dot(ab, ab);
+  float t = l2 > 0.0 ? clamp(dot(p - A.xy, ab) / l2, 0.0, 1.0) : 0.0;
+  float s = A.z + t * (sB - A.z);
+  int code = int(sp.y);
+  bool closed = (fl & 4) != 0;
+  // Past the segment's span switch (or a closed chain's wrap): walk the spans.
+  int i0 = -1;
+  if (closed && s >= c1.x + c1.y) {
+    s -= c1.y;
+    i0 = 0;
+  } else if (s >= sp.z) i0 = int(sp.x) + 1;
+  if (i0 >= 0) {
+    int so = int(c1.z);
+    int ns = int(c1.w);
+    if (i0 == 0) code = int(fetch(uSpan, so).y);
+    for (int i = max(i0, 1); i < 256; i++) {
+      if (i >= ns) break;
+      vec4 e = fetch(uSpan, so + i);
+      if (e.x <= s) code = int(e.y);
+      else break;
+    }
+  }
+  uint s11 = uint(clamp((s - c1.x) / c1.y, 0.0, 1.0) * 2047.0 + 0.5);
+  uint f = uint(fl & 7);
+  oWord = uint(ci + 1) | (s11 << 8) | (uint(code) << 19) | ((f & 1u) << 27) | (((f >> 1) & 1u) << 28) | (((f >> 2) & 1u) << 29);
+#ifdef DEBUG_OUT
+  oDbg = vec4((0.5 - gl_FragCoord.z) / uKeyScale, s, vD, float(f & 1u));
+#endif
+}
+`;
+
 export interface LabelBTentSources {
   segVs: string;
   capVs: string;
@@ -358,4 +458,16 @@ export interface LabelBTentSources {
 export function labelBTentSources(debugOut: boolean): LabelBTentSources {
   const def = (s: string) => (debugOut ? s.replace("#version 300 es\n", "#version 300 es\n#define DEBUG_OUT 1\n") : s);
   return { segVs: def(SEG_VS), capVs: def(CAP_VS), fillVs: def(FILL_VS), fs: def(FS) };
+}
+
+/** The vertex-light tent's segment and cap programs (K1040 S3d; its fills are labelBTentSources'). */
+export interface LabelBTentVSources {
+  segVs: string;
+  capVs: string;
+  fs: string;
+}
+
+export function labelBTentVSources(debugOut: boolean): LabelBTentVSources {
+  const def = (s: string) => (debugOut ? s.replace("#version 300 es\n", "#version 300 es\n#define DEBUG_OUT 1\n") : s);
+  return { segVs: def(SEG_VS_V), capVs: def(CAP_VS_V), fs: def(FS_V) };
 }

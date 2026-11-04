@@ -45,6 +45,8 @@ const noscan = val("--noscan", "0") === "1";
 // --tag name: outputs out/<mode>_<tag>_<scene>.json, out/<mode>_<tag>_summary.md.
 const tent = val("--tent", "0") === "1";
 const lr = Number(val("--lr", 1));
+// K1040 S3d: --mode <name> a LabelBMode by name (tentv: the vertex-light tent); overrides --tent.
+const passMode = val("--mode", "") || undefined;
 const tag = val("--tag", "");
 const pre = tag ? `${mode}_${tag}` : mode;
 // K1040 S3d: many --variants a,b,...: page.ts timeMany()'s cost split (render sync only).
@@ -79,7 +81,7 @@ const errors = [];
 let favicon = 0;
 const isFav = (u) => /favicon/i.test(u ?? "");
 const stamp = new Date().toISOString();
-const summary = [`# ${pre} ${stamp}`, "", `stride ${stride}, scale ${scale}, ${tent ? "TENT" : "capsule"} pass, lr ${lr}${mode === "time" ? `, frames ${frames}${noscan ? ", NO merge scan" : ""}` : ""}`, ""];
+const summary = [`# ${pre} ${stamp}`, "", `stride ${stride}, scale ${scale}, ${passMode ? `mode ${passMode}` : tent ? "TENT" : "capsule"} pass, lr ${lr}${mode === "time" ? `, frames ${frames}${noscan ? ", NO merge scan" : ""}` : ""}`, ""];
 try {
   const page = await browser.newPage();
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
@@ -111,8 +113,8 @@ try {
     }
     const res =
       mode === "verdict"
-        ? await page.evaluate((s, o) => window.s3.verdict(s, o), scene, { scale, stride, tent, lr })
-        : await page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, noscan, tent, lr });
+        ? await page.evaluate((s, o) => window.s3.verdict(s, o), scene, { scale, stride, tent, mode: passMode, lr })
+        : await page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, noscan, tent, mode: passMode, lr });
     res.scene = name;
     res.wallMs = Date.now() - t0;
     writeFileSync(join(outDir, `${pre}_${name}.json`), JSON.stringify(res, null, 1));
