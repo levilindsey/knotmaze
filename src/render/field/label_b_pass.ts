@@ -19,10 +19,12 @@
 // reads it) and one flat ivec3 for the fragment shader to fetch from.
 // Option lean (K1040 S3e, any mode; the default pass is unchanged, as the
 // control): the fixed part at its floor. L is immutable storage (texStorage2D,
-// as K923's floor); D is a DEPTH_COMPONENT32F RENDERBUFFER invalidated after
-// the draws, so its store is skipped (nothing samples D: S4 takes both passes'
+// as K923's floor); D is a DEPTH_COMPONENT32F RENDERBUFFER (nothing samples
+// D: S4 takes both passes'
 // z from the CPU, docs/design/K1040_s3e_lean.md's Handoff; `depth` reads null;
-// leanStoreDepth keeps the store, as a control). D32F, not D24: the same keys
+// its store is kept: S3f2 dropped the invalidate after the draws,
+// which costs on the Pixel and buys nothing, as nothing samples D). D32F,
+// not D24: the same keys
 // as the texture, so the same label. Uploads: no nb unless the capsule reads
 // it, and only the rows of the used texels that differ from the last upload
 // (a still fabric uploads nothing; probeAllDirty uploads every used row, what
@@ -149,7 +151,7 @@ export class LabelBPass {
   probeInvalidateDepth = false;
   /** Lean (S3e): the lean fixed part (header). */
   readonly lean: boolean;
-  /** Lean control (S3e): keep D's store (D not invalidated). */
+  /** Lean control (S3e): keep D's store. Since S3f2 that is the only lean way; the field is kept for the probes. */
   leanStoreDepth = false;
   /** Lean probe knob (S3e): D as DEPTH_COMPONENT24 (K923's renderbuffer), set before resize(). */
   probeDepth24 = false;
@@ -580,7 +582,11 @@ export class LabelBPass {
         gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.nFills);
       }
     }
-    if (this.probeInvalidateDepth || (this.lean && !this.leanStoreDepth)) gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.DEPTH_ATTACHMENT]);
+    // S3f2: lean no longer invalidates D. Nothing samples it, and on the
+    // Pixel the invalidate costs ~0.6 ms on the empty pass (split_s3f2.md:
+    // femptynoupst - femptynoup, all 12 scenes negative); S3e's D store
+    // column read the same way. probeInvalidateDepth keeps the old way.
+    if (this.probeInvalidateDepth) gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.DEPTH_ATTACHMENT]);
     if (q && this.tq) {
       gl.endQuery(this.tq.TIME_ELAPSED_EXT);
       this.pending.push(q);
