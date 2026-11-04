@@ -173,6 +173,14 @@ export class LabelBPass {
   probeBindOnly = false;
   /** Probe knob (S3f2): draw() skips its clears (the fixed part's clear split). */
   probeNoClear = false;
+  /**
+   * S3f3 lever 1 (tents only within the junctions' reach): when set, the
+   * segment instances upload() keeps are those this returns true for
+   * (chain, segment); caps and fills always draw. Beside today's pass:
+   * null keeps every segment, and the label outside the reach is then
+   * whatever the kept tents say (the census judges it).
+   */
+  probeReachKeep: ((ci: number, k: number) => boolean) | null = null;
   /** A full upload has landed, so upload(T, true) may skip (header). */
   private hasUploaded = false;
   private segVerts = TENT_SEG_VERTS;
@@ -439,12 +447,22 @@ export class LabelBPass {
       this.stale = true;
       gl.bindVertexArray(this.vao);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.instBuf);
-      gl.bufferData(gl.ARRAY_BUFFER, T.inst, gl.STATIC_DRAW);
+      // S3f3 lever 1: probeReachKeep drops the segment tents no reader
+      // reaches (the instance pairs are (chain, k), T.inst's layout).
+      let inst = T.inst;
+      let nInst = T.nInst;
+      if (this.probeReachKeep && this.tent) {
+        const kept: number[] = [];
+        for (let i = 0; i < T.nInst; i++) if (this.probeReachKeep(T.inst[2 * i], T.inst[2 * i + 1])) kept.push(T.inst[2 * i], T.inst[2 * i + 1]);
+        inst = new Float32Array(kept);
+        nInst = kept.length / 2;
+      }
+      gl.bufferData(gl.ARRAY_BUFFER, inst, gl.STATIC_DRAW);
       gl.enableVertexAttribArray(0);
       gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
       gl.vertexAttribDivisor(0, 1);
       this.layoutKey = T.layoutKey;
-      this.nInst = T.nInst;
+      this.nInst = nInst;
       this.instanceBuilds++;
     }
     if (this.tent) {

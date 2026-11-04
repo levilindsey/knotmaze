@@ -12,6 +12,7 @@ import { LabelBPass, type Affine, type LabelBHost, type LabelBMode } from "../..
 import { pixiLabelHost } from "../../../../src/render/field/label_b_host";
 import { autoDetectRenderer, BlurFilter, Container, Graphics, Mesh, MeshGeometry, Shader, Sprite, Text, Texture, type WebGLRenderer } from "pixi.js";
 import { labelBTentSources, labelBTentVSources, TENT_NW, type LabelBTentSources, type LabelBTentVSources } from "../../../../src/render/field/label_b_tent_glsl";
+import { pointAt } from "../../../../src/render/field/geom";
 
 // K1040 S3d: opts.mode names the pass's mode (capsule | tent | tentv); opts.tent
 // is S3c's flag for "tent".
@@ -83,7 +84,51 @@ function nwOpts(nw: number | undefined, debugOut: boolean): { tentVSources?: Lab
   return { tentVSources: { ...sv, segVs: sv.segVs.replace(a, `#define NW ${nw}\n`) }, segVerts: 2 * nw + 6 };
 }
 
-function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; stride?: number; tent?: boolean; mode?: string; lr?: number; lean?: boolean; d24?: boolean; state?: string; nw?: number } = {}) {
+// K1040 S3f3 lever 1: the junctions' reach, as vert_count.ts counts it.
+// The reader region is the tube of radius h + W + aa about every FormB
+// arm's polyline (sampled every h/2); a segment tent is kept when its
+// capsule (radius h about the segment) touches it, i.e. the segment
+// comes within 2h + W + aa of an arm sample.
+function reachKeep(fb: FormB, T: LabelBTables): (ci: number, k: number) => boolean {
+  const h = fb.h;
+  const reachR = 2 * h + fb.W + fb.aa;
+  const cell = Math.max(reachR, 1e-6);
+  const grid = new Map<string, [number, number][]>();
+  for (const arm of fb.arms) {
+    const poly = fb.polys[arm.pi];
+    if (!poly || arm.L <= 0) continue;
+    const steps = Math.max(1, Math.ceil(arm.L / (h / 2)));
+    for (let i = 0; i <= steps; i++) {
+      const p = pointAt(poly, arm.sR + arm.dir * arm.L * (i / steps));
+      const key = `${Math.floor(p.x / cell)},${Math.floor(p.y / cell)}`;
+      const arr = grid.get(key) ?? [];
+      arr.push([p.x, p.y]);
+      grid.set(key, arr);
+    }
+  }
+  const segPt = (ax: number, ay: number, bx: number, by: number, px: number, py: number): number => {
+    const dx = bx - ax, dy = by - ay;
+    const l2 = dx * dx + dy * dy;
+    const t = l2 > 0 ? Math.min(1, Math.max(0, ((px - ax) * dx + (py - ay) * dy) / l2)) : 0;
+    const ex = ax + t * dx - px, ey = ay + t * dy - py;
+    return Math.sqrt(ex * ex + ey * ey);
+  };
+  return (ci: number, k: number): boolean => {
+    const off = T.chain[8 * ci], n = T.chain[8 * ci + 1];
+    const a = off + k, b = off + (k + 1 === n ? 0 : k + 1);
+    const ax = T.pts[4 * a], ay = T.pts[4 * a + 1], bx = T.pts[4 * b], by = T.pts[4 * b + 1];
+    const gx0 = Math.floor((Math.min(ax, bx) - reachR) / cell), gx1 = Math.floor((Math.max(ax, bx) + reachR) / cell);
+    const gy0 = Math.floor((Math.min(ay, by) - reachR) / cell), gy1 = Math.floor((Math.max(ay, by) + reachR) / cell);
+    for (let gx = gx0; gx <= gx1; gx++) for (let gy = gy0; gy <= gy1; gy++) {
+      const arr = grid.get(`${gx},${gy}`);
+      if (!arr) continue;
+      for (const [px, py] of arr) if (segPt(ax, ay, bx, by, px, py) <= reachR) return true;
+    }
+    return false;
+  };
+}
+
+function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; stride?: number; tent?: boolean; mode?: string; lr?: number; lean?: boolean; d24?: boolean; state?: string; nw?: number; reach?: boolean } = {}) {
   const scale = opts.scale ?? 2;
   const stride = opts.stride ?? 1;
   const lr = opts.lr ?? 1;
@@ -96,6 +141,7 @@ function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; s
   const dev = camera(scene, scale);
   const { M: Mc, W, H } = coarse(dev.M, dev.W, dev.H, lr);
   const pass = new LabelBPass(gl, true, modeOf(opts), { lean: !!opts.lean, ...nwOpts(opts.nw, true) });
+  if (opts.reach) pass.probeReachKeep = reachKeep(fb, T);
   pass.probeQuery = opts.state !== "new";
   pass.probeDepth24 = !!opts.d24;
   pass.tentEpsPx /= lr;
@@ -223,7 +269,7 @@ function fitCamera(scene: FieldScene, h: number, fit: [number, number], scale: n
 // timed lean frame uploads every used row (probeAllDirty: the moving fabric's
 // frame, what the gate times) unless opts.rest (the row diff: a still scene
 // uploads nothing after the first frame).
-async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean; fit?: [number, number]; b2b?: boolean; floor?: boolean; tent?: boolean; mode?: string; lr?: number; lean?: boolean; rest?: boolean; state?: string; nw?: number } = {}) {
+async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean; fit?: [number, number]; b2b?: boolean; floor?: boolean; tent?: boolean; mode?: string; lr?: number; lean?: boolean; rest?: boolean; state?: string; nw?: number; reach?: boolean } = {}) {
   const scale = opts.scale ?? 2;
   const frames = opts.frames ?? 60;
   const lr = opts.lr ?? 1;
@@ -238,6 +284,7 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
   const live = opts.state === "host" || opts.state === "new";
   const host = opts.state === "host" ? await probeHost() : null;
   const pass = new LabelBPass(gl, false, modeOf(opts), { lean: !!opts.lean, host, ...nwOpts(opts.nw, false) });
+  if (opts.reach) pass.probeReachKeep = reachKeep(fb, T);
   // The live pass times the GPU with its own timer (probeTimer); S3e's pass
   // with the query and restore (probeQuery) as before.
   if (live) pass.probeTimer = true;
