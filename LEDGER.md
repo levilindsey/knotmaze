@@ -507,9 +507,9 @@ Next free ID: K1149.
   range's ease by time; K144's accounts doc; K804's beat indicator (pulse, ring or off); K207's fog stamp
   dedupe; K688's healing-cuts doc. Run B (K1130) was dropped: it stays with K156's next phone round.
   - owner: muse runs 11C, 11E, 11A, 11D, 11F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 09:55
-  - branch: mainline; last commit: `4d90398c`
+  - branch: mainline; last commit: `7f929ae3`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K252/`, `K804/`, `K207/`
-  - next: Run C (K252 a) first; then E, A, D, F
+  - next: Run C done; next Run E
   - brief: `docs/design/K1146_muse_batch11.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 11C-11F); a `hold.txt` beside it holds the chain before its next run
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
@@ -866,9 +866,7 @@ Every other item below waits on the trigger it names.
 - **K254** · K193 s1's phone-pass residuals (`docs/design/K193.md`, "Stage 1 handoff"): (a) desktop
   `-Dry -Looks scripts/phone_pass/looks.example.json` unrun, check `looks_report.json`; (b) docked
   landscape unverified (`-Viewport portrait`); (c) is K234.
-- **K252** · K198 s2's residuals: (a) `RANGE_EASE` is a per-frame ease (0.15), so resize and fit
-  drift settle faster at higher fps; (b) the head's 0.45 s show delay rests on five blips (longest
-  0.33 s): K156's next phone pass can check more. `docs/design/K198.md` ("Stage 2 handoff").
+- **K252** · K198 s2's residual: the head's 0.45 s show delay rests on five blips (longest 0.33 s): K156's next phone pass can check more. (`docs/design/K198.md`, "Stage 2 handoff").
 - **K246** · K174's residuals (`docs/design/K174.md`, "Stage 1 handoff"): pace links unclamped (old
   `mhp=25` = 25x pace); K80 rt probes (`.claude/probes/K80/rt/`) lack K132's `rt_lib.ts` fix;
   `rt_chase.mjs` uses OS temp (fixed in `.claude/probes/K174/rt/`); panel labels clip `mino*` keys.
