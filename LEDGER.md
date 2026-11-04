@@ -501,10 +501,10 @@ Next free ID: K1153.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-03 11:50 (S3d stopped at its end, gate missed; agent `aeaeb7068fdeb974f` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: `worktree-agent-aaf87e9d3775b20e4`, worktree `.claude/worktrees/agent-aaf87e9d3775b20e4`; last commit: `27fbf734`
+  - owner: nobody since 2026-11-03 12:07 (merged; agent `aeaeb7068fdeb974f` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `dbf129b2`
   - evidence: `.claude/probes/K1040/s3/` (`run_locked.ps1`, `phone_batch.ps1` + `run_phone.ps1`, `s3d_gate.ps1`, `s3d_kick.ps1`, `split.mjs`, `s3d_table.mjs`; `out/s3d_table.md`, `out/split_s3d2.md`, `out/split_s3d3.md`, `out/defects_s3d.md`); oracle30 and the recordings: worktree k868-s3a (`.claude/probes/S3a/seq13/`)
-  - next: merge S3c + S3d to master, then S3e (`docs/design/K1040_s3e_lean.md`): cut the pass's fixed part (the per-pass upload, L's and D's clears and stores), then its vertex count, against the 2 ms gate as written (the coordinator's call)
+  - next: S3e (`docs/design/K1040_s3e_lean.md`): cut the pass's fixed part to its floor (the per-pass upload, L's and D's clears and stores) against the 2 ms gate as written (the coordinator's call); S3f the drawing, S3g K1143
   - brief: `docs/design/K1040_s3d_tent.md` (its Handoff; S3c's: `docs/design/K1040_s3c_label.md`)
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`; desktop timing through `.claude/probes/K1040/s3/run_locked.ps1`; the phone through `phone_batch.ps1` (it runs `run_phone.ps1`: both locks, then K1142's ready check)
 - **K1119** · Cursive J3g (v7.0), Levi's answers to v6.9 (2026-11-03): b, v and w exit between v6.8 and
