@@ -1,0 +1,58 @@
+20:51:31 poll: s3f_gate.ps1 -SkipDesktop -PhoneRuns 3 -MaxWaitMin 3, every 120 s, last start 21:05
+20:51:31 try 1
+20:51:31 run (ready check: no touch for 120 s): --fit 411x753 --label s3fnew --b2b --mode tentv --lean --state host
+20:51:33   20:51:33 phone state check: ready=False awake=True locked=False top=chrome
+20:51:33   20:51:33 phone not ready: Chrome is in front (not the launcher; a person may be reading there)
+20:51:33   phone not ready: stopping
+20:51:33 STOP: run_phone exit 2
+20:51:33 phone batch exit 11
+20:51:33 try 1 exit 11
+20:53:33 try 2
+20:53:33 run (ready check: no touch for 120 s): --fit 411x753 --label s3fnew --b2b --mode tentv --lean --state host
+20:53:34   20:53:34 phone state check: ready=False awake=True locked=False top=chrome
+20:53:34   20:53:34 phone not ready: Chrome is in front (not the launcher; a person may be reading there)
+20:53:34   phone not ready: stopping
+20:53:34 STOP: run_phone exit 2
+20:53:34 phone batch exit 11
+20:53:34 try 2 exit 11
+20:55:34 try 3
+20:55:34 run (ready check: no touch for 120 s): --fit 411x753 --label s3fnew --b2b --mode tentv --lean --state host
+20:55:36   20:55:36 phone state check: ready=False awake=True locked=False top=app
+20:55:36   20:55:36 phone not ready: an app is in front (not the launcher)
+20:55:36   phone not ready: stopping
+20:55:36 STOP: run_phone exit 2
+20:55:36 phone batch exit 11
+20:55:36 try 3 exit 11
+20:57:36 try 4
+20:57:36 run (ready check: no touch for 120 s): --fit 411x753 --label s3fnew --b2b --mode tentv --lean --state host
+20:57:38   20:57:38 phone state check: ready=False awake=True locked=False top=chrome
+20:57:38   20:57:38 phone not ready: Chrome is in front (not the launcher; a person may be reading there)
+20:57:38   phone not ready: stopping
+20:57:38 STOP: run_phone exit 2
+20:57:38 phone batch exit 11
+20:57:38 try 4 exit 11
+20:59:38 try 5
+20:59:38 run (ready check: no touch for 120 s): --fit 411x753 --label s3fnew --b2b --mode tentv --lean --state host
+20:59:39   20:59:39 phone state check: ready=False awake=True locked=False top=chrome
+20:59:39   20:59:39 phone not ready: Chrome is in front (not the launcher; a person may be reading there)
+20:59:39   phone not ready: stopping
+20:59:39 STOP: run_phone exit 2
+20:59:39 phone batch exit 11
+20:59:39 try 5 exit 11
+21:01:39 try 6
+21:01:39 run (ready check: no touch for 120 s): --fit 411x753 --label s3fnew --b2b --mode tentv --lean --state host
+21:01:41   21:01:41 phone state check: ready=False awake=True locked=False top=chrome
+21:01:41   21:01:41 phone not ready: Chrome is in front (not the launcher; a person may be reading there)
+21:01:41   phone not ready: stopping
+21:01:41 STOP: run_phone exit 2
+21:01:41 phone batch exit 11
+21:01:41 try 6 exit 11
+21:03:41 try 7
+21:03:41 run (ready check: no touch for 120 s): --fit 411x753 --label s3fnew --b2b --mode tentv --lean --state host
+21:03:43   21:03:43 phone state check: ready=False awake=True locked=False top=chrome
+21:03:43   21:03:43 phone not ready: Chrome is in front (not the launcher; a person may be reading there)
+21:03:43   phone not ready: stopping
+21:03:43 STOP: run_phone exit 2
+21:03:43 phone batch exit 11
+21:03:43 try 7 exit 11
+21:03:43 GAVE UP: not ready by the last start

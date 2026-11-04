@@ -136,11 +136,14 @@ The S3f agent, 2026-11-03, 19:20 to 21:20 (the cap). Branch
 on it, and the last one adds this Handoff.
 
 **The gate is undecided: nothing of S3f ran on the Pixel.** K1142's
-ready check stopped the gate batch both times it was tried:
+ready check stopped the gate batch every time it was tried:
 - at 20:28, because the phone's screen was off
   (`out/gate_s3f_20261103_2028.log`);
 - at 20:46, with `-PhoneRuns 3`, because an app was in front of the
-  launcher (`out/gate_s3f_20261103_2046.log`).
+  launcher (`out/gate_s3f_20261103_2046.log`);
+- 7 more tries, every 2 minutes from 20:51 to 21:03, with the phone
+  awake and unlocked but Chrome (6 tries) or another app (1) in front
+  (`out/gate_s3f_poll_20261103_2051.log`). Nothing ran on the phone.
 
 The desktop half ran.
 - Steps 1 and 4 are done.
