@@ -527,9 +527,9 @@ Next free ID: K1159.
   (`docs/design/K1156_muse_batch13_run_a.md`) as `docs/design/K1156_muse_batch13.md`, runs B to G; Claude
   reviews it and queues them (ports 5500-5549).
   - owner: muse run 13A, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 13:57
-  - branch: mainline; last commit: `ecfd0426`
+  - branch: mainline; last commit: `b08347ce`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); the run's commit report
-  - next: Run A drafts the brief; Claude reviews it and queues runs B to G
+  - next: Run A done; Claude reviews the draft
   - brief: `docs/design/K1156_muse_batch13_run_a.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, line 13A); a `hold.txt` beside it holds the chain before its next run
 - **K1114** · Junctions: look at S1g's at-rest changes. F1 empties j36 109-110 (muse_hash) and cuts j62
