@@ -27,7 +27,23 @@ const SCENES = [
 ];
 const p50 = (v, s) => {
   const f = join(here, "out", `phone_time_${label}${v}_${s}.json`);
-  return existsSync(f) ? JSON.parse(readFileSync(f, "utf8")).sync.p50 : NaN;
+  if (existsSync(f)) return JSON.parse(readFileSync(f, "utf8")).sync.p50;
+  // Desktop (s3.mjs many): one file a scene, the variants inside it.
+  const m = join(here, "out", `many_${label}_${s}.json`);
+  return existsSync(m) ? JSON.parse(readFileSync(m, "utf8")).variants[v].sync.p50 : NaN;
+};
+const p50b = (v, s) => {
+  if (!label2) return NaN;
+  const f = join(here, "out", `phone_time_${label2}${v}_${s}.json`);
+  if (existsSync(f)) return JSON.parse(readFileSync(f, "utf8")).sync.p50;
+  const m = join(here, "out", `many_${label2}_${s}.json`);
+  return existsSync(m) ? JSON.parse(readFileSync(m, "utf8")).variants[v].sync.p50 : NaN;
+};
+const segsOf = (s) => {
+  const f = join(here, "out", `phone_time_${label}ftentv_${s}.json`);
+  if (existsSync(f)) return JSON.parse(readFileSync(f, "utf8")).segs;
+  const m = join(here, "out", `many_${label}_${s}.json`);
+  return existsSync(m) ? JSON.parse(readFileSync(m, "utf8")).segs : NaN;
 };
 // K1040 S3f: the variant's upload p50 (its main-thread time in the upload calls, outside the sync).
 const up50 = (v, s) => {
@@ -35,6 +51,7 @@ const up50 = (v, s) => {
   return existsSync(f) ? JSON.parse(readFileSync(f, "utf8")).upload?.p50 ?? NaN : NaN;
 };
 const set = process.argv[4] ?? "s3d1";
+const label2 = process.argv[5] ?? "";
 const cols2 = [
   ["tentv", (g) => g("tentv") - g("floor")],
   ["tent", (g) => g("tent") - g("floor")],
@@ -181,20 +198,58 @@ const cols7 = [
   ["ftentv up", (g, u) => u("ftentv")],
   ["ftentv + up", (g, u) => g("ftentv") - g("ffloor") + u("ftentv")],
 ];
-const cols = set === "s3f2" ? cols7 : set === "s3f1" ? cols6 : set === "s3e3" ? cols5 : set === "s3e1" ? cols4 : set === "s3d3" ? cols3 : set === "s3d2" ? cols2 : cols1;
+// K1040 S3f4 (the drawing's bound, on the split page: ftentv beside
+// ftentvsetup, fempty and ffloor and the six S3f4 variants; vertex
+// counts from out/vert_count_s3f4.md). Per scene and run, from each
+// variant's sync p50; with a second run's label (argv 5) every column
+// gets its two runs' difference beside it, and a reading smaller than
+// that spread decides nothing:
+//   drawing          ftentv - ftentvsetup (S3f2's column)
+//   a pass that draws ftentvone - ftentvsetup (one segment, no caps/fills)
+//   segments         2 * (ftentv - ftentvhalf)
+//   caps/fills/rest  drawing - a pass that draws - segments
+//   vertex side      ftentvclip - ftentvone (vertex work + primitive
+//                    assembly past one segment, no fragments)
+//   fragment side    ftentv - ftentvclip
+//   shading          ftentv - ftentvflat (the label arithmetic's share)
+//   vertex slope     (ftentv - ftentvnw1c) per 100k segment vertices
+//                    it saves (4 a segment: 12 -> 8; slightly more covered)
+//   instancing       ftentv - ftentvvid (the instanced draw against the
+//                    same strips in one non-instanced draw)
+const cols8 = [
+  ["drawing", (g) => g("ftentv") - g("ftentvsetup")],
+  ["a pass that draws", (g) => g("ftentvone") - g("ftentvsetup")],
+  ["segments", (g) => 2 * (g("ftentv") - g("ftentvhalf"))],
+  ["caps/fills/rest", (g) => g("ftentv") - g("ftentvsetup") - (g("ftentvone") - g("ftentvsetup")) - 2 * (g("ftentv") - g("ftentvhalf"))],
+  ["vertex side", (g) => g("ftentvclip") - g("ftentvone")],
+  ["fragment side", (g) => g("ftentv") - g("ftentvclip")],
+  ["shading", (g) => g("ftentv") - g("ftentvflat")],
+  ["vertex slope /100k", (g, u, segs) => (g("ftentv") - g("ftentvnw1c")) / (4 * segs / 100000)],
+  ["instancing", (g) => g("ftentv") - g("ftentvvid")],
+];
+const cols = set === "s3f4" ? cols8 : set === "s3f2" ? cols7 : set === "s3f1" ? cols6 : set === "s3e3" ? cols5 : set === "s3e1" ? cols4 : set === "s3d3" ? cols3 : set === "s3d2" ? cols2 : cols1;
 const f1 = (x) => (Number.isFinite(x) ? x.toFixed(set.startsWith("s3e") || set.startsWith("s3f") ? 2 : 1) : "-");
-const rows = [`| scene | ${cols.map((c) => c[0]).join(" | ")} |`, `|---|${cols.map(() => "---").join("|")}|`];
+const two = set === "s3f4" && !!label2;
+const head = two ? cols.flatMap((c) => [c[0], `${c[0]} d`]) : cols.map((c) => c[0]);
+const rows = [`| scene | ${head.join(" | ")} |`, `|---|${head.map(() => "---").join("|")}|`];
 const sums = cols.map(() => []);
+const sumsD = cols.map(() => []);
 for (const s of SCENES) {
   const g = (v) => p50(v, s);
   const u = (v) => up50(v, s);
-  const vals = cols.map((c) => c[1](g, u));
+  const sg = segsOf(s);
+  const vals = cols.map((c) => c[1](g, u, sg));
   vals.forEach((x, i) => Number.isFinite(x) && sums[i].push(x));
-  rows.push(`| ${s} | ${vals.map(f1).join(" | ")} |`);
+  if (!two) { rows.push(`| ${s} | ${vals.map(f1).join(" | ")} |`); continue; }
+  const g2 = (v) => p50b(v, s);
+  const vals2 = cols.map((c) => c[1](g2, u, sg));
+  const cells = [];
+  vals.forEach((x, i) => { const d = vals2[i] - x; if (Number.isFinite(d)) sumsD[i].push(d); cells.push(f1(x), f1(d)); });
+  rows.push(`| ${s} | ${cells.join(" | ")} |`);
 }
 const med = (a) => { const b = [...a].sort((x, y) => x - y); return b.length ? b[b.length >> 1] : NaN; };
-rows.push(`| median | ${sums.map((a) => f1(med(a))).join(" | ")} |`);
-const what = set === "s3f2" ? "the new pass's fixed part and rest upload (S3f2)" : set === "s3f1" ? "the new pass (K1158) against S3e's and the ideal" : set === "s3e1" ? "the floor before building (the ideal family)" : set === "s3e3" ? "the lean empty pass against the ideal floor" : set === "s3d3" ? "the fixed part against one GPU round trip (kick)" : set === "s3d2" ? "the vertex-light tent's and the fixed part's split" : "the tent pass's cost split";
-const text = `# ${label}: ${what} (Pixel, render-sync p50 ms, differences on one page)\n\n${rows.join("\n")}\n`;
+rows.push(two ? `| median | ${cols.flatMap((c, i) => [f1(med(sums[i])), f1(med(sumsD[i]))]).join(" | ")} |` : `| median | ${sums.map((a) => f1(med(a))).join(" | ")} |`);
+const what = set === "s3f4" ? "what bounds the label drawing (S3f4; d = run 2 - run 1)" : set === "s3f2" ? "the new pass's fixed part and rest upload (S3f2)" : set === "s3f1" ? "the new pass (K1158) against S3e's and the ideal" : set === "s3e1" ? "the floor before building (the ideal family)" : set === "s3e3" ? "the lean empty pass against the ideal floor" : set === "s3d3" ? "the fixed part against one GPU round trip (kick)" : set === "s3d2" ? "the vertex-light tent's and the fixed part's split" : "the tent pass's cost split";
+const text = `# ${label}${label2 ? ` + ${label2}` : ""}: ${what} (render-sync p50 ms, differences on one page)\n\n${rows.join("\n")}\n`;
 console.log(text);
 if (process.argv[3]) writeFileSync(process.argv[3], text);
