@@ -552,7 +552,14 @@ stage that makes the change would show it to you first.
   `batch_*.txt` are the batches run.
 - `kymo.mjs`, `table.mjs`, `mock.mjs`, `crop.mjs`, `sheet.mjs`,
   `png.mjs`: kymographs, the boundary table, the A/C mock-ups, crops,
-  sheets.
+  sheets. The mock-ups: `K1139_R=0.55 node mock.mjs <A|C> out/fixed
+  cross 150 21,151 277 254 160 out/mock/<A|C>` (the gain defaults to
+  K_BAND; `K1139_G` overrides it, `debug` draws the web, bands and R);
+  `q1_fork` is those and the S2 crops (`crop.mjs` at 277,254, 160 CSS)
+  zoomed 2x (`crop.mjs ... 118 124 124 124 2 1`), frames 3-6;
+  `q2_behind` / `q3_head` crop `out/{today,fixed}/src_t<k>_n.png` and
+  `out/{fixed,lead0}/cross_t<k>_n.png` at 363,165 (160 CSS), then 1.6x
+  (`112 128 150 150 1.6 1`), frames 0-7.
 - Observed once: in the first x4 S2 run, frames 1-7 came out recentred
   on you with an empty background (no reload, no context loss logged);
   the re-run (`out/fixed8b`, used here) was normal. Cause not found.

@@ -42,3 +42,31 @@ End your final message with:
 - the stage plan, one line per stage;
 - a `Ledger items` list: new follow-ups, residuals and decisions;
 - K1139's handle fields: owner, branch and last commit, evidence, next, brief.
+
+## Handoff
+
+2026-11-03 10:02, stage 1 done (started 08:45; stopped because the
+design document is done, before the 2-hour cap).
+
+- **Where things stand.** `docs/design/K1139_pulse_junctions.md` is
+  complete: today's mechanism and its eight faults (1.3, a-h), the
+  boundary table measured on the CPU mirror (1.4), frame strips and
+  kymographs (1.5), the three looks with real frames (B) and mock-ups
+  (A, C) (2.2-2.4), the recommendation (A, on top of S2's light field),
+  the route pulse for K1140 (3), the checks (4: the pure `pulse_path`
+  model's tests T1-T10, probe tables P1-P10, sheets, stands), the stage
+  plan S2-S6 (5) and three questions for Levi with pictures (6). No
+  `src/` change and no prototype commit: the S2 look was shown by
+  injecting its declaration into the live renderer from the probe
+  (`strips.mjs`, `K1139_INJECT=fixed`).
+- **Evidence.** `.claude/probes/K1139/` (untracked except the scripts and
+  the pictures the doc shows, added with `-f`): `strips.mjs` (frame
+  strips and stand JSON, pinned clocks, under the perf lock),
+  `kymo.mjs`, `table.mjs`, `mock.mjs`, `crop.mjs`, `sheet.mjs`, the
+  batch files, and `out/doc/` (the doc's pictures). The appendix of the
+  design document lists the commands.
+- **What is next.** Levi answers Q1-Q3 (looks only). Then the S2 brief:
+  the light field (no phone), with S5 folded in if Q3 says straight
+  through. S3a/S3b (the bands; S3b needs the phone) only if Q1 says A.
+- **Open notes for the coordinator's ledger:** see the final report's
+  `Ledger items`.
