@@ -541,9 +541,9 @@ Next free ID: K1163.
   (`docs/design/K1161_muse_batch14_run_a.md`) as `docs/design/K1161_muse_batch14.md`, runs B to G; Claude
   reviews it and queues them (ports 5550-5599).
   - owner: muse run 14A, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 16:40
-  - branch: mainline; last commit: `af52b126`
+  - branch: mainline; last commit: `91c3d90f`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); the run's commit report
-  - next: Run A done; Claude reviews the draft
+  - next: Run B done; next Run C
   - brief: `docs/design/K1161_muse_batch14_run_a.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, line 14A); a `hold.txt` beside it holds the chain before its next run
 
@@ -1705,12 +1705,6 @@ Every other item below waits on the trigger it names.
 - **K1151** · Invalidating the S3 label pass's sampled D32F depth after its draws adds 31-34 ms a pass on the
   Pixel (s3d2), where K923's invalidated D24 renderbuffer cost nothing; the mechanism is untested
   (`docs/design/K1040_s3d_tent.md`, Handoff). S3e tries the renderbuffer (K1097).
-- **K1159** · Two adb lookups: scripts/phone_pass.ps1's Find-Adb and scripts/phone_pass/phone_ready.mjs's
-  findAdb are copies (the pass hands its path over with --adb); fold them when either changes (K1142 Handoff,
-  split from K1148). scripts/phone.ps1's own Find-Adb reads in a third order beside them.
-- **K1160** · scripts/phone_pass.ps1 carries the phone's tailnet machine name in three places (its
-  tailscaleHost variable, the match comment and the -Serial help); find the phone the way K1155 finds it in
-  scripts/phone.ps1, or pass the name in (split from K1155)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2012,6 +2006,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1159** · adb lookup folded into phone_ready.mjs (findAdb picker); phone_pass.ps1 delegates with --find-adb; phone.ps1's own lookup left beside them. Done in 91c3d90f (2026-11-03).
+- **K1160** · scripts/phone_pass.ps1 finds the phone among online android peers; -TailscaleHost is the override, default empty. Done in 91c3d90f (2026-11-03).
 - **K1156** · Muse batch 13: B K1152+K1148 (ce485d87), C K1155 (cbaca79f), D K1154 (f809a275), E K351 (88efd034), F K392's seam half (48739fda), G K685 (410fd8c9); all reviewed. Done in f363a939 (2026-11-03).
 - **K685** · a respawn into stranded or out of strokes shows its banner without a tap. Done in 410fd8c9 (2026-11-03).
 - **K351** · the panel inventory's Read by follows url_state's *Of builders. Done in 88efd034 (2026-11-03).
