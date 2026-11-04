@@ -1,0 +1,5 @@
+# K1139 S1: today's frame strips (one period, 8 frames, normal + debug 5)
+node strips.mjs fork out/today 8 60
+node strips.mjs cross out/today 8 60
+node strips.mjs pre4 out/today 8 60
+node strips.mjs four out/today 8 60

@@ -1,0 +1,8 @@
+# K1139 S1: option B ("ripple", the S2 model injected) against today, same states
+$env:K1139_INJECT = $null; node strips.mjs src out/today 8 60
+$env:K1139_INJECT = $null; node strips.mjs pre4 out/today8 8 60 "&pr=8"
+$env:K1139_INJECT = "fixed"; node strips.mjs cross out/fixed 8 60
+$env:K1139_INJECT = "fixed"; node strips.mjs src out/fixed 8 60
+$env:K1139_INJECT = "fixed"; node strips.mjs pre4 out/fixed8 8 60 "&pr=8"
+$env:K1139_INJECT = "fixed"; node strips.mjs four out/fixed 8 60
+$env:K1139_INJECT = $null; node strips.mjs cross out/today 8 60
