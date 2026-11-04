@@ -517,11 +517,11 @@ Next free ID: K1176.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-03 22:51 (queued as Muse chain run 15I, `.claude/probes/K1053/queue.txt`; claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c coordinates)
-  - branch: mainline; last commit: `01f69cd0`
+  - owner: nobody since 2026-11-03 23:43 (S3f2 done in Muse run 15I)
+  - branch: mainline; last commit: `b68ecc24`
   - evidence: `.claude/probes/K1040/s3/` (s3f_gate.ps1, span_bench.ts, vert_count.ts; out/phone_table_s3f.md, out/split_s3f1.md, out/phone_table_s3e.md)
-  - next: Muse chain run 15I: S3f2, the upload and the fixed part, timed on the Pixel (`docs/design/K1040_s3f2_levers.md`)
-  - brief: `docs/design/K1040_s3f2_levers.md` (S3f: `docs/design/K1040_s3f_draw.md`)
+  - next: S3f3: the drawing - tents only within the junctions' reach, then continuous strips per chain run (Handoff in docs/design/K1040_s3f2_levers.md)
+  - brief: `docs/design/K1040_s3f2_levers.md`
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1, S2 done (a4dc218a, 16246c90). Answers: the light splits at a fork (A), runs toward you behind
