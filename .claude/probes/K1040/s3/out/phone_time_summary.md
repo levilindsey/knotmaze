@@ -312,3 +312,27 @@ end 09:48:49: thermal 0, battery 28.7 C, media none playing, in front Chrome
 input events: none
 errors: 0
 
+# phone time 2026-11-03T18:40:06.938Z (s3d1)
+
+scale 2, frames 60, fit 411x753 (K923's bbox fit), back to back after 10 warm-ups (K923), render sync (no timer query); label_b_glsl.ts: the worktree's
+start 10:40:07: thermal 0, battery 27.0 C, media none playing, in front the launcher
+renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
+
+- muse_hash: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tent 12.6/16.4, empty 5.6/9.1, noup 10.7/13.0, degen 10.1/15.1, fs0 13.3/18.1, fsconst 9.2/14.5, half 10.1/15.5, nw1 10.6/15.0, floor 1.8/3.5; prep 128.8 ms; segs 23349, fills 145; lost 0; before it: thermal 0, battery 27.0 C, media none playing; 13632 ms
+- muse_default_tw: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tent 12.1/14.8, empty 6.1/8.8, noup 10.7/13.2, degen 10.6/14.6, fs0 12.3/15.6, fsconst 8.4/16.7, half 9.8/14.2, nw1 11.1/14.6, floor 2.0/3.6; prep 74.9 ms; segs 23642, fills 305; lost 0; before it: thermal 0, battery 27.0 C, media none playing; 10539 ms
+- def: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tent 11.8/14.6, empty 5.8/8.7, noup 10.9/13.8, degen 10.5/16.0, fs0 12.5/14.2, fsconst 9.5/13.3, half 9.9/12.8, nw1 11.4/15.1, floor 2.1/3.8; prep 79.1 ms; segs 24518, fills 332; lost 0; before it: thermal 0, battery 27.0 C, media none playing; 11829 ms
+- fat: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tent 8.7/10.9, empty 5.6/8.7, noup 8.1/9.4, degen 7.8/10.0, fs0 9.1/11.1, fsconst 7.5/14.3, half 7.0/9.9, nw1 8.0/10.8, floor 1.6/3.0; prep 48.5 ms; segs 17325, fills 0; lost 0; before it: thermal 0, battery 27.0 C, media none playing; 10731 ms
+- ring: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tent 7.5/10.3, empty 5.6/8.1, noup 6.6/8.1, degen 6.7/9.1, fs0 7.2/9.7, fsconst 6.8/9.1, half 6.9/9.3, nw1 7.6/11.0, floor 2.2/4.1; prep 18.6 ms; segs 4564, fills 41; lost 0; before it: thermal 0, battery 27.2 C, media none playing; 6393 ms
+- user_tw42.lightpaper: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tent 8.0/9.5, empty 4.8/6.8, noup 7.4/8.7, degen 7.6/10.5, fs0 8.7/12.1, fsconst 7.5/9.9, half 8.0/12.5, nw1 8.5/13.3, floor 1.5/5.1; prep 35.6 ms; segs 10645, fills 143; lost 0; before it: thermal 0, battery 27.2 C, media none playing; 8084 ms
+- g41_def_tw42: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tent 12.4/14.4, empty 5.8/8.6, noup 10.9/12.5, degen 10.9/13.2, fs0 12.4/16.7, fsconst 9.2/13.2, half 9.5/11.7, nw1 11.1/15.2, floor 2.2/3.2; prep 69.2 ms; segs 24660, fills 380; lost 0; before it: thermal 0, battery 27.2 C, media none playing; 12836 ms
+- g41_def_tw64: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tent 12.3/14.3, empty 5.6/8.2, noup 10.8/13.1, degen 9.5/12.2, fs0 12.5/14.9, fsconst 9.4/11.6, half 10.3/15.1, nw1 11.1/14.9, floor 2.0/3.8; prep 92.2 ms; segs 24353, fills 261; lost 0; before it: thermal 0, battery 27.2 C, media none playing; 13400 ms
+- g41_ring_tw42: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tent 6.4/7.6, empty 4.5/6.1, noup 6.2/8.0, degen 6.6/7.7, fs0 7.2/9.8, fsconst 6.2/8.3, half 6.4/8.1, nw1 6.7/8.6, floor 1.2/3.3; prep 18.5 ms; segs 4606, fills 51; lost 0; before it: thermal 0, battery 27.2 C, media none playing; 4984 ms
+- g41_ring_tw64: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tent 7.3/10.2, empty 5.2/7.2, noup 6.5/8.1, degen 7.1/9.6, fs0 7.4/9.1, fsconst 6.9/9.9, half 7.2/10.6, nw1 7.3/9.0, floor 2.0/4.0; prep 19.6 ms; segs 4554, fills 38; lost 0; before it: thermal 0, battery 27.2 C, media none playing; 5297 ms
+- g41_user_tw42: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tent 8.3/12.0, empty 5.2/7.8, noup 8.0/12.4, degen 7.3/9.5, fs0 9.1/13.6, fsconst 7.5/11.6, half 7.8/9.6, nw1 8.3/13.9, floor 2.3/3.9; prep 36.6 ms; segs 10645, fills 143; lost 0; before it: thermal 0, battery 27.3 C, media none playing; 7331 ms
+- g41_user_tw64: 822x1506, sync p50/p95 ms (n 60 in 3 rounds): tent 8.2/11.7, empty 5.5/9.0, noup 8.1/9.9, degen 8.2/10.5, fs0 8.9/13.7, fsconst 6.7/7.9, half 7.8/11.5, nw1 7.8/13.5, floor 1.6/3.1; prep 48.9 ms; segs 10547, fills 110; lost 0; before it: thermal 0, battery 27.3 C, media none playing; 7810 ms
+
+end 10:42:14: thermal 0, battery 27.3 C, media none playing, in front Chrome
+
+input events: none
+errors: 0
+
