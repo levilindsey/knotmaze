@@ -135,10 +135,14 @@ The S3f agent, 2026-11-03, 19:20 to 21:20 (the cap). Branch
 `16246c90` (K1139 S2; still master at 20:45). The stage's commits sit
 on it, and the last one adds this Handoff.
 
-**The gate is undecided: nothing of S3f ran on the Pixel.** The gate
-batch started at 20:28, and K1142's ready check stopped it because the
-phone's screen was off (`out/gate_s3f_20261103_2028.log`). The desktop
-half ran.
+**The gate is undecided: nothing of S3f ran on the Pixel.** K1142's
+ready check stopped the gate batch both times it was tried:
+- at 20:28, because the phone's screen was off
+  (`out/gate_s3f_20261103_2028.log`);
+- at 20:46, with `-PhoneRuns 3`, because an app was in front of the
+  launcher (`out/gate_s3f_20261103_2046.log`).
+
+The desktop half ran.
 - Steps 1 and 4 are done.
 - Step 3 has its count and one lever, the facets, which fail the
   census.

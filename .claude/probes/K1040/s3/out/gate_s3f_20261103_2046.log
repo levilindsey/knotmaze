@@ -1,0 +1,7 @@
+20:46:56 run (ready check: no touch for 120 s): --fit 411x753 --label s3fnew --b2b --mode tentv --lean --state host
+20:46:58   20:46:58 phone state check: ready=False awake=True locked=False top=app
+20:46:58   20:46:58 phone not ready: an app is in front (not the launcher)
+20:46:58   phone not ready: stopping
+20:46:58 STOP: run_phone exit 2
+20:46:58 phone batch exit 11
+exit 11 at 20:46:58
