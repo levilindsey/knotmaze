@@ -74,7 +74,9 @@
 #                     another of the kit's own (a cleanup leaves Chrome in front);
 #                     by default Chrome in front is a person's, like any app
 #   -Serial <serial>  the phone; default: a host:port (Tailscale) device, else the
-#                     USB one, else `adb connect` to the 'pixel-11' Tailscale peer
+#                     USB one, else `adb connect` to the phone the finder picks (the
+#                     one online android peer; -TailscaleHost names another)
+#   -TailscaleHost <name>  the finder's override: a peer's DNS label or HostName
 #   -Noise <json>     the A/A noise floor summary.mjs reads (default
 #                     scripts/phone_pass/noise.json)
 #   -Viewport portrait|native   (K193) what the pass's tab measures at. portrait (the
@@ -128,6 +130,7 @@ param(
   [int]$QuietS = 120,
   [switch]$AllowChrome,
   [string]$Serial = "",
+  [string]$TailscaleHost = "",
   [string]$Noise = "",
   [ValidateSet("portrait", "native")][string]$Viewport = "portrait",
   [string]$PortRange = "5480-5489",
@@ -138,7 +141,6 @@ $bound = $PSBoundParameters
 $repo = Split-Path $PSScriptRoot -Parent
 $passDir = Join-Path $PSScriptRoot "phone_pass"
 $node = (Get-Command node -ErrorAction Stop).Source
-$tailscaleHost = "pixel-11"
 
 # ---------------------------------------------------------------- helpers
 function Full([string]$p) { $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($p) }
@@ -156,28 +158,46 @@ function Short-Sha([string]$ref) {
 }
 
 function Find-Adb {
-  # The running adb server's own binary first: a client of another version
-  # would restart the server and drop everybody's connections and tunnels.
-  $run = Get-Process -Name adb -ErrorAction SilentlyContinue | Where-Object { $_.Path } | Select-Object -First 1
-  if ($run -and (Test-Path $run.Path)) { return $run.Path }
-  if ($env:ADB -and (Test-Path $env:ADB)) { return $env:ADB }
-  $onPath = Get-Command adb -ErrorAction SilentlyContinue
-  if ($onPath) { return $onPath.Source }
-  $cands = @("$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe") + @(Get-ChildItem "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\Google.PlatformTools_*\platform-tools\adb.exe" -ErrorAction SilentlyContinue | ForEach-Object FullName)
-  foreach ($c in $cands) { if (Test-Path $c) { return $c } }
+  $found = @(& $node (Join-Path $passDir "phone_ready.mjs") --find-adb 2>$null)
+  if ($LASTEXITCODE -eq 0 -and $found.Count -gt 0) {
+    $path = "$($found[0])".Trim()
+    if ($path) { return $path }
+  }
   throw "adb not found (install Android platform-tools or the Android SDK)."
 }
+
+# Chooses the phone's Tailscale IPv4 from a parsed `tailscale status
+# --json`, or $null when the choice is not settled. With $hostOverride,
+# the peer whose DNS label (the machine name `tailscale status` prints,
+# e.g. "test-phone") or HostName (the device's own, "Test Phone") equals
+# it wins, its first IPv4, online or not. With no override, the phone is
+# the one online peer whose OS is android; none, or more than one,
+# yields $null.
+function Select-TailscaleIp {
+  param($status, [string]$hostOverride)
+  if (-not $status -or -not $status.Peer) { return $null }
+  $peers = @($status.Peer.PSObject.Properties.Value)
+  if ($hostOverride) {
+    foreach ($peer in $peers) {
+      if (($peer.DNSName -split '\.')[0] -eq $hostOverride -or $peer.HostName -eq $hostOverride) {
+        return @($peer.TailscaleIPs | Where-Object { $_ -match '^\d+\.' })[0]
+      }
+    }
+    return $null
+  }
+  $android = @($peers | Where-Object { $_.Online -and $_.OS -eq "android" })
+  if ($android.Count -ne 1) { return $null }
+  return @($android[0].TailscaleIPs | Where-Object { $_ -match '^\d+\.' })[0]
+}
+
+# The phone's Tailscale IPv4 address, or $null without Tailscale.
 function Find-TailscaleIp {
   $ts = Get-Command tailscale -ErrorAction SilentlyContinue
   if (-not $ts) { return $null }
-  try { $status = (& $ts.Source status --json) -join "`n" | ConvertFrom-Json } catch { return $null }
-  # The DNS label `tailscale status` prints ("pixel-11"); HostName is "Pixel 11".
-  foreach ($peer in $status.Peer.PSObject.Properties.Value) {
-    if (($peer.DNSName -split '\.')[0] -eq $tailscaleHost -or $peer.HostName -eq $tailscaleHost) {
-      return @($peer.TailscaleIPs | Where-Object { $_ -match '^\d+\.' })[0]
-    }
-  }
-  return $null
+  try {
+    $status = (& $ts.Source status --json) -join "`n" | ConvertFrom-Json
+  } catch { return $null }
+  return Select-TailscaleIp $status $TailscaleHost
 }
 function Get-Devices([string]$adb) {
   @(& $adb devices | Select-Object -Skip 1 | Where-Object { $_ -match "\tdevice$" } | ForEach-Object { ($_ -split "\t")[0] })

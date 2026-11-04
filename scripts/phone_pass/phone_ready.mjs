@@ -28,6 +28,7 @@
 //
 //   node scripts/phone_pass/phone_ready.mjs [--adb <adb.exe>] [--serial <serial>] [--quiet-s 120] [--timeout-min 0]
 //        [--allow-chrome] [--progress] [--log <file>]
+//   node scripts/phone_pass/phone_ready.mjs --find-adb   (prints the adb path, or the no-adb verdict; opens nothing)
 //   --quiet-s       the window in seconds; 0 = a state-only read (screen, lock, front), no input watch
 //   --timeout-min   how long to keep re-checking, from the start (default 0: one quiet window, no more patience)
 //   --progress      print a line when the state changes, on a touch and once a minute (a long wait); the callers stamp each line
@@ -201,32 +202,37 @@ function onPath(name) {
   return null;
 }
 
-// phone_pass.ps1's Find-Adb order: the running adb server's own binary first (a client of another version restarts the
+// The one adb lookup (K1159): the running adb server's own binary first (a client of another version restarts the
 // server and drops everybody's connections and tunnels), then $env:ADB, adb on PATH, the SDK, the winget platform-tools.
+// Pure picker: probes = { running, envAdb, pathHit, sdk, winget: [...] }, exists(path) says a probe is really there;
+// the first probe that exists wins, none gives null.
+export function pickAdb(probes, exists) {
+  const order = [probes?.running, probes?.envAdb, probes?.pathHit, probes?.sdk, ...(probes?.winget ?? [])];
+  for (const c of order) { if (c && exists(c)) return c; }
+  return null;
+}
+
 export function findAdb() {
+  let running = null;
   if (process.platform === "win32") {
     try {
       const p = execFileSync("pwsh", ["-NoProfile", "-Command", "(Get-Process -Name adb -ErrorAction SilentlyContinue | Where-Object { $_.Path } | Select-Object -First 1).Path"], { encoding: "utf8", timeout: 15000, windowsHide: true }).trim();
-      if (p && existsSync(p)) return p;
+      if (p) running = p;
     } catch { /* no pwsh or no running server */ }
   }
-  if (process.env.ADB && existsSync(process.env.ADB)) return process.env.ADB;
-  const p = onPath("adb");
-  if (p) return p;
   const local = process.env.LOCALAPPDATA;
+  const sdk = local ? join(local, "Android", "Sdk", "platform-tools", "adb.exe") : null;
+  const winget = [];
   if (local) {
-    const sdk = join(local, "Android", "Sdk", "platform-tools", "adb.exe");
-    if (existsSync(sdk)) return sdk;
     const pk = join(local, "Microsoft", "WinGet", "Packages");
     if (existsSync(pk)) {
       for (const d of readdirSync(pk)) {
         if (!d.startsWith("Google.PlatformTools")) continue;
-        const c = join(pk, d, "platform-tools", "adb.exe");
-        if (existsSync(c)) return c;
+        winget.push(join(pk, d, "platform-tools", "adb.exe"));
       }
     }
   }
-  return null;
+  return pickAdb({ running, envAdb: process.env.ADB || null, pathHit: onPath("adb"), sdk, winget }, existsSync);
 }
 
 const adbRun = (adb, args, timeout = 20000) => new Promise((done) => {
@@ -281,7 +287,7 @@ export async function ensurePhoneReady(opts = {}) {
 // ----------------------------------------------------------------- command line
 
 function parseArgs(argv) {
-  const o = { quietS: QUIET_S, timeoutS: 0, allowChrome: false, progress: false };
+  const o = { quietS: QUIET_S, timeoutS: 0, allowChrome: false, progress: false, findAdb: false };
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i];
     const val = () => argv[++i];
@@ -291,6 +297,7 @@ function parseArgs(argv) {
     else if (k === "--timeout-min") o.timeoutS = Number(val()) * 60;
     else if (k === "--allow-chrome") o.allowChrome = true;
     else if (k === "--progress") o.progress = true;
+    else if (k === "--find-adb") o.findAdb = true;
     else if (k === "--log") o.log = val();
     else throw new Error(`unknown argument ${k}`);
   }
@@ -302,6 +309,12 @@ async function main(argv) {
   let o;
   try { o = parseArgs(argv); } catch (e) { console.log(`phone not ready: ${e.message}`); return EXIT.NO_PHONE; }
   const out = (line) => { console.log(line); if (o.log) appendFileSync(o.log, `${line}\n`); };
+  if (o.findAdb) {
+    const adb = findAdb();
+    if (adb) { out(adb); return EXIT.READY; }
+    out("phone not ready: no adb found (set $env:ADB)");
+    return EXIT.NO_PHONE;
+  }
   const say = o.progress ? (m) => out(`ready-check: ${m}`) : undefined; // unstamped: every caller's Say stamps its lines
   try {
     const r = await ensurePhoneReady({ ...o, say });

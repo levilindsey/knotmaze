@@ -1,5 +1,7 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 // @ts-expect-error a plain .mjs module (the phone kit is not part of the type-checked sources)
 import * as ready from "../../scripts/phone_pass/phone_ready.mjs";
@@ -7,7 +9,7 @@ import * as ready from "../../scripts/phone_pass/phone_ready.mjs";
 // K1142: the phone kit's one readiness check. The fixtures are the lines the check parses, captured from a phone and
 // reduced to those lines; every package name but the launcher's and Chrome's is com.example.app.
 const repo = resolve(__dirname, "../..");
-const { parseState, frontKind, decide, parseInputDevices, watchedPaths, isInputLine, parseDevices, waitReady, QUIET_S, WATCH_RE, STATE_CMD } = ready;
+const { parseState, frontKind, decide, parseInputDevices, watchedPaths, isInputLine, parseDevices, waitReady, QUIET_S, WATCH_RE, STATE_CMD, pickAdb } = ready;
 
 const LAUNCHER = "com.google.android.apps.nexuslauncher";
 const CHROME = "com.android.chrome";
@@ -373,5 +375,68 @@ describe("K1152/K1148 phone_ready: its own words and the hand-run guard", () => 
     const src = readFileSync(join(repo, "scripts", "phone_pass.ps1"), "utf8");
     expect(src).not.toContain("phone_quiet");
     expect(src).not.toContain("680651fe");
+  });
+});
+
+
+describe("K1159 phone_ready: the adb picker and the fold", () => {
+  const all = {
+    running: "R:/running/adb.exe",
+    envAdb: "E:/env/adb.exe",
+    pathHit: "P:/path/adb.exe",
+    sdk: "S:/sdk/adb.exe",
+    winget: ["W:/winget-one/adb.exe", "W:/winget-two/adb.exe"],
+  };
+  const existsIn = (set: Set<string>) => (p: string) => set.has(p);
+  const every = new Set([all.running, all.envAdb, all.pathHit, all.sdk, ...all.winget]);
+
+  it("the running server beats $env:ADB, which beats PATH, the SDK and the WinGet candidates", () => {
+    expect(pickAdb(all, existsIn(every))).toBe(all.running);
+    expect(pickAdb({ ...all, running: null }, existsIn(every))).toBe(all.envAdb);
+    expect(pickAdb({ ...all, running: null, envAdb: null }, existsIn(every))).toBe(all.pathHit);
+    expect(pickAdb({ ...all, running: null, envAdb: null, pathHit: null }, existsIn(every))).toBe(all.sdk);
+    expect(pickAdb({ ...all, running: null, envAdb: null, pathHit: null, sdk: null }, existsIn(every))).toBe(all.winget[0]);
+  });
+
+  it("a probe that does not exist is skipped, the WinGet candidates keep their order, and none gives null", () => {
+    const onlySecondWinget = new Set([all.winget[1]]);
+    expect(pickAdb(all, existsIn(onlySecondWinget))).toBe(all.winget[1]);
+    expect(pickAdb(all, existsIn(new Set()))).toBeNull();
+    expect(pickAdb({ running: null, envAdb: null, pathHit: null, sdk: null, winget: [] }, existsIn(every))).toBeNull();
+  });
+
+  it("phone_pass.ps1 delegates with --find-adb and keeps no second copy", () => {
+    const pass = readFileSync(join(repo, "scripts", "phone_pass.ps1"), "utf8");
+    const mod = readFileSync(join(repo, "scripts", "phone_pass", "phone_ready.mjs"), "utf8");
+    expect(pass).toContain("--find-adb");
+    expect(pass).not.toContain("platform-tools\\adb.exe");
+    expect(pass).not.toContain("Google.PlatformTools");
+    expect(pass).not.toContain("WinGet");
+    expect(pass).not.toContain("Get-Process -Name adb");
+    expect(mod).toContain("platform-tools");
+    expect(mod).toContain("Google.PlatformTools");
+    expect(mod).toContain("Get-Process -Name adb");
+  });
+
+  it("phone_ready.mjs parses under node --check", () => {
+    execFileSync(process.execPath, ["--check", join(repo, "scripts", "phone_pass", "phone_ready.mjs")], { encoding: "utf8", timeout: 60000 });
+  });
+
+  // Skipped on Windows while an adb process is running there, since the running server rightly wins over $env:ADB.
+  const adbRunning = (() => {
+    if (process.platform !== "win32") return false;
+    try {
+      return execFileSync("pwsh", ["-NoProfile", "-Command", "(Get-Process -Name adb -ErrorAction SilentlyContinue | Where-Object { $_.Path } | Select-Object -First 1).Path"], { encoding: "utf8", timeout: 15000 }).trim().length > 0;
+    } catch { return false; }
+  })();
+
+  it.skipIf(adbRunning)("the --find-adb dry run prints the $env:ADB file with PATH emptied", () => {
+    const dir = mkdtempSync(join(tmpdir(), "k1159-"));
+    const fake = join(dir, "adb.exe");
+    writeFileSync(fake, "");
+    const out = execFileSync(process.execPath, [join(repo, "scripts", "phone_pass", "phone_ready.mjs"), "--find-adb"], {
+      encoding: "utf8", timeout: 60000, env: { ...process.env, ADB: fake, PATH: "" },
+    }).trim();
+    expect(out).toBe(fake);
   });
 });
