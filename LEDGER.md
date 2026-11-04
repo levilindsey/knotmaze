@@ -489,11 +489,11 @@ Next free ID: K1149.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-03 09:49 (the coordinator's F11 phone run, claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, done; the S3c agent `aaf87e9d3775b20e4` stopped at 08:41)
-  - branch: `worktree-agent-aaf87e9d3775b20e4`, worktree `.claude/worktrees/agent-aaf87e9d3775b20e4`; last commit: `15481bde`
+  - owner: agent `aeaeb7068fdeb974f` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 10:14 (S3d)
+  - branch: `worktree-agent-aaf87e9d3775b20e4`, worktree `.claude/worktrees/agent-aaf87e9d3775b20e4`; last commit: `3ff68698`
   - evidence: .claude/probes/K1040/s3/ (in the worktree: run_locked.ps1, phone_quiet.mjs, run_phone.ps1, phone_table.ps1, f11_run.ps1; out/phone_table_f11.md, out/f11_*.log); oracle30 and the recordings: worktree k868-s3a (.claude/probes/S3a/seq13/)
-  - next: S3d. F11 (2026-11-03 09:42-09:49) MISSED the Pixel's 2 ms gate: label cost (p50 - floor) tent 4.7-11.2 ms, tent lr 2 4.1-10.2 ms, control 9.8-40.6 ms; lr 2 saves 0-1.5 ms, as F10's vertex-bound inference said. Both of K1097's targets missed, so the doc's next is a new budget (Levi's), or a vertex-light tent first; then F4 and F8. On rebase, adopt K1142's shared phone check (the four changes in `docs/design/K1142_phone_guard.md`'s Handoff)
-  - brief: docs/design/K1040_s3c_label.md (its branch: F1-F12 and the Handoff)
+  - next: S3d (`docs/design/K1040_s3d_tent.md`): measure what bounds the tents on the Pixel, then a vertex-light tent mode against the 2 ms gate (F4, F6, F8, F9 and F12 are S3e's); if no tent gets there, Levi's call on a new budget
+  - brief: `docs/design/K1040_s3d_tent.md` (on the branch; S3c's: `docs/design/K1040_s3c_label.md`)
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`; timing through `.claude/probes/K1040/s3/run_locked.ps1`; phone: `phone_quiet.mjs`, then `run_phone.ps1`
 - **K1119** · Cursive J3g (v7.0), Levi's answers to v6.9 (2026-11-03): b, v and w exit between v6.8 and
   v6.9, closer to v6.8 ("still exit somewhat downward and with a swoosh"); the six a/q joins get v6.6's dip

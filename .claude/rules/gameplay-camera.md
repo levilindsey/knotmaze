@@ -52,8 +52,10 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   edge home in 0.25 s at any frame rate. Opening only widens the range,
   so it never moves the view. A resize or fit drift (the edge creeps a
   few px while the knot settles) EASES the view back: `easeIntoRange`
-  keeps a per-side allowance of 0.85 of how far it is out (RANGE_EASE
-  0.15 a frame, the reset's rate, so frame-rate dependent), and gestures
+  keeps a per-side allowance of 0.85 of how far it is out each 1/60 s
+  (RANGE_EASE 0.15, the reset's rate; by time since K252(a), 7f929ae3:
+  `rangeShare(dt)` = 1 - 0.85^(dt * 60), dt clamped to RANGE_MAX_DT 1 s,
+  so a drift settles in the same 0.58-0.60 s at 30, 60 and 120 Hz), and gestures
   clamp to range + allowance, so nothing snaps. MEASURED
   (`.claude/probes/K198/pan.mjs <base> <out>
   1000x800|800x700|1400x900|phone`): the zoom-1 left
