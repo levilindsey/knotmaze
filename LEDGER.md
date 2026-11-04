@@ -527,9 +527,9 @@ Next free ID: K1155.
   K202's midnight rollover, K201's Played chip, K125's whole bars, K165 (a)'s HALTED stamp, K170's opt-in
   wake, K308's exact fifth contour.
   - owner: muse runs 12B-12G, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 12:29
-  - branch: mainline; last commit: `1692f502`
+  - branch: mainline; last commit: `8e6034a5`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K202/`, `K201/`, `K125/`, `K165/`, `K308/`
-  - next: Run E done; next Run F
+  - next: Run F done; next Run G
   - brief: `docs/design/K1153_muse_batch12.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 12B-12G); a `hold.txt` beside it holds the chain before its next run
 
@@ -1058,9 +1058,6 @@ Every other item below waits on the trigger it names.
 - **K168** · K81's untested ranges: more than 20 routed records, zoomed in, and a full web on the
   phone (the gate walks the cheapest route, so a full web was certified on the desktop only). K156's
   looks can cover some.
-- **K170** · `scripts/phone.ps1` sends KEYCODE_WAKEUP, against the phone rule (no key events; the
-  phone stays awake on its charger). Proposed: no wake by default and a `-Wake` switch to opt in
-  (K156 3a proposed a `-NoWake` switch instead; `retry_quiet.ps1` already drops its copy).
 - **K172** · K156's screenshot sheets have no text labels, and its drift
   looks show drift only inside the intro window (3c checked the speed-8
   looks on the phone: they show motion).
@@ -2013,6 +2010,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K170** · scripts/phone.ps1 wakes the phone only under -Wake. Done in 8e6034a5 (2026-11-03).
 - **K165** · a halted load keeps its HALTED stamp; the load wall clock split out. Done in 1692f502 (2026-11-03).
 - **K125** · Scarborough Fair loops on whole bars (closing rest 3). Done in cbc02ded (2026-11-03).
 - **K201** · the Played chip counts the tile's days; a practice row shows its count. Done in e0ceba44 (2026-11-03).
