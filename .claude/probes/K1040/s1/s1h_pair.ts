@@ -226,16 +226,19 @@ function blitGrey(cv: Canvas, ink: Float32Array, w: Win, ox: number, oy: number)
       rect(cv, ox + i * w.zoom, oy + j * w.zoom, w.zoom, w.zoom, [g, g, g]);
     }
 }
+/** The signed difference, after minus before: red where the after has more ink, blue where it has less,
+ * over a faint grey of the larger of the two inks (nothing differs by more than 0.004 in the grey). */
 function blitDiff(cv: Canvas, a: Float32Array, b: Float32Array, w: Win, ox: number, oy: number) {
   for (let j = 0; j < w.n; j++)
     for (let i = 0; i < w.n; i++) {
       const k = j * w.n + i;
-      const d = Math.abs(a[k] - b[k]);
+      const d = b[k] - a[k];
       const base = 255 - Math.round(60 * Math.max(a[k], b[k]));
       let c: [number, number, number] = [base, base, base];
-      if (d > 0.004) {
-        const t = Math.min(1, d * 1.5);
-        c = [255, Math.round(base * (1 - t)), Math.round(base * (1 - t))];
+      if (Math.abs(d) > 0.004) {
+        const t = Math.min(1, Math.abs(d) * 1.5);
+        const lo = Math.round(base * (1 - t));
+        c = d > 0 ? [255, lo, lo] : [lo, lo, 255];
       }
       rect(cv, ox + i * w.zoom, oy + j * w.zoom, w.zoom, w.zoom, c);
     }
@@ -311,6 +314,46 @@ const GROUPS: Record<string, string> = {
   "F2-r": "F2: a largest r move",
   "extra-tip": "extra: a largest tip move",
 };
+/** One line per site: what differs between the before and the after in the zoom 4 window, written from looking at
+ * the pictures (the zoom 4 pictures, plus zoom 6-8 crops of the same windows). It describes, it does not judge. */
+const SEEN: Record<string, string> = {
+  "muse_hash/j0/0-1":
+    "46 px, all at the end of the thread whose tip sits at V: a rounded cap with a one-pixel spur before, a slanted flat cut after (red above it, blue at its left). The grey wedge left of V is identical.",
+  "muse_hash/j36/109-110":
+    "Before, the thread arriving from the upper right turns into the left-going thread through a large rounded black web (blue wedge). After, it runs straight down-left and meets the left-going thread at an acute angle (red wedge on its lower-right side), and paper fills the web's place.",
+  "muse_hash/j155/471-472":
+    "A small closed eye (site 04 is the same eye): its left end gets a nick after (a notch with a slanted flat cut), and its right end's outer edge moves out 1 to 3 px (red crescent).",
+  "muse_hash/j156/475-473":
+    "The same eye as site 03 (the same 112 px in the zoom 4 window): a nick at its left end, its right end's outer edge moved out 1 to 3 px. The play-size window adds F1 changes at other corners (144 px in all).",
+  "muse_hash/j62/189-187":
+    "One thread's curved run just below V (about 1.7h long) moves up by 1 to 3 px, mostly 2 to 3 (measured along columns): ink gained along its upper edge (red), lost along its lower edge (blue). Its width does not change.",
+  "muse_default_tw/j57/172-173":
+    "A crescent 1 px wide and about 1h long at the thread's bend at V: ink lost along the upper-right edge, gained along the lower-left edge (the bend moves about 1 px toward the lower left).",
+  "muse_hash/j23/72-70":
+    "A crescent 1 to 2 px wide and about 1.3h long at the thread's bend at V: ink gained along the upper-right edge, lost along the lower-left edge (the bend moves about 1 to 2 px toward the upper right).",
+  "muse_hash/j110/335-333":
+    "A crescent about 1h long at the thread's bend at V: ink lost along its upper edge, gained along its lower edge (the outline moves about 1 px down). The play-size window adds 190 px of F1 changes at other corners (230 px in all).",
+  "muse_default_tw/j110/335-333":
+    "A crescent about 1h long at the thread's bend at V: ink lost along its upper edge, gained along its lower edge (the outline moves about 1 px down). The play-size window adds F2 changes at other corners (83 px in all).",
+  "muse_default_tw/j164/499-497":
+    "A crescent about 1.2h long along the thread's bend at V: ink lost along its left edge, gained along its right edge (the bend moves about 1 to 2 px to the right).",
+  "muse_hash/j57/172-173":
+    "A crescent about 1h long at the thread's bend at V: ink lost along the upper-right edge, gained along the lower-left edge (the bend moves about 1 px toward the lower left).",
+  "g41_user_tw64/j12/36-37":
+    "A short jog in the thread at V, which is smooth before: after, the outline steps by 1 to 2 px over about 0.5h (ink lost on the upper edge, gained on the lower edge).",
+  "user_tw42.lightpaper/j49/151-152":
+    "A short jog in the thread at V, which is smooth before: after, the outline steps sideways by about 1 px over about 0.5h (ink gained on the left edge, lost on the right edge).",
+  "g41_user_tw42/j49/151-152":
+    "The same corner as site 13 with the same numbers (24 px, the same window), in another scene file.",
+  "muse_hash/j124/375-376":
+    "A short jog in the thread's left outline at V, which is smooth before: after, a notch of about 2 px over about 0.5h (ink gained on the left edge, lost on the right edge).",
+  "muse_hash/j131/397-398":
+    "The thread below V: before, a wide smooth arc with clear paper between it and V's fillet tip; after, it rises into a hump about 2.6h wide that peaks at V's tip (red, up to 13 px or 0.8h higher, measured along columns) and the old arc under the hump is gone (blue). The largest change of the 18.",
+  "muse_hash/j99/301-299":
+    "A thread's run at V's left, about 2h long, moves right by 1 to 7 px, most (0.4h) at V's row (measured along rows): blue wedge at its old place, red wedge at its new one. The dark wedge that hugs the thread at V in the before is a light grey fade in the after.",
+  "muse_hash/j73/222-220":
+    "Two places. The small eye just below V: its right end, pointed with a slit through the outline before, is closed and rounded after (red in the slit and above the end, blue along its right and lower-right edge). About 2.7h above V: a thread tip's outer edge gains 1 to 2 px (a small red crescent about 8 px across).",
+};
 const filledOf = (c: { r: number; omega: number }) => c.r > 1e-9 && c.omega > 1e-9;
 const noInf = (s: string) => s.replace(/Infinityh/g, "inf");
 function changeText(s: Site): string {
@@ -334,6 +377,7 @@ interface Done {
   files: { z1: string; z4: string };
   change: string;
   title: string;
+  seen: string;
 }
 const done: Done[] = [];
 const lines: string[] = [];
@@ -343,8 +387,9 @@ for (const s of sites) {
   const fm = formsOf(s.scene);
   const base = `${nn2(idx)}_${s.group}_${s.scene}_${s.jid}_${s.a}-${s.b}`;
   const change = changeText(s);
+  const seen = SEEN[s.id] ?? "(not described)";
   const title = `${nn2(idx)} ${s.group} ${s.scene} ${s.jid} ${s.a}-${s.b}  V (${f(s.x, 3)}, ${f(s.y, 3)})`;
-  const pack: Partial<Done> = { s, idx, change, title };
+  const pack: Partial<Done> = { s, idx, change, title, seen };
   const stats: Record<string, Stats> = {};
   for (const kind of ["z1", "z4"] as const) {
     const w = windowOf(fm, s.x, s.y, kind);
@@ -363,7 +408,8 @@ for (const s of sites) {
     const head = [
       ...wrap(ascii(title), maxChars),
       ...wrap(ascii(`change: ${change}`), maxChars),
-      ...wrap(ascii(`${GROUPS[s.group]}; window +-${f((w.n / 2) / fm.hdev, 1)}h = ${w.n} px at dpr ${DPR}, ${kind === "z1" ? "play size (zoom 1)" : "zoom 4"}; h = ${f(fm.h, 3)} world = ${f(fm.hdev, 2)} px; ticks mark V`), maxChars),
+      ...wrap(ascii(`seen (zoom 4 window): ${seen}`), maxChars),
+      ...wrap(ascii(`${GROUPS[s.group]}; window +-${f((w.n / 2) / fm.hdev, 1)}h = ${w.n} px at dpr ${DPR}, ${kind === "z1" ? "play size (zoom 1)" : "zoom 4"}; h = ${f(fm.h, 3)} world = ${f(fm.hdev, 2)} px; ticks mark V; diff: red = more ink after, blue = less ink after`), maxChars),
     ];
     const headH = head.length * LH * 2 + 6;
     const capH = LH * 2 + 4;
@@ -371,7 +417,7 @@ for (const s of sites) {
     const cv = canvas(W, H);
     head.forEach((ln, i) => drawText(cv, ln, M, M + i * LH * 2, 2));
     const py = M + headH + capH + 8;
-    const caps = ["before: S1f final", "after: defaults", "diff |d ink|"];
+    const caps = ["before", "after", "diff"];
     for (let p = 0; p < 3; p++) {
       const px = M + p * (P + gap);
       drawText(cv, ascii(caps[p]), px, M + headH, 2);
@@ -394,6 +440,7 @@ for (const s of sites) {
   done.push(pack as Done);
   lines.push(
     `${nn2(idx)} [${s.group}] ${s.id}: ${change}` +
+      `\n     seen (zoom 4 window): ${seen}` +
       `\n     zoom 4 window (${stats.z4.n} px): ${stats.z4.differ} px differ (|d ink| > 0.02; ink lost ${stats.z4.lost}, gained ${stats.z4.gained}, area ${f(stats.z4.area, 1)} px; F1 share ${stats.z4.f1}, F2 share ${stats.z4.f2}); bbox ${bboxText(stats.z4.bbox)}` +
       `\n     play window (${stats.z1.n} px): ${stats.z1.differ} px differ (lost ${stats.z1.lost}, gained ${stats.z1.gained}, area ${f(stats.z1.area, 1)} px; F1 share ${stats.z1.f1}, F2 share ${stats.z1.f2}); bbox ${bboxText(stats.z1.bbox)}` +
       `\n     checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: ${stats.z1.eqBad + stats.z4.eqBad} px differ`,
@@ -414,9 +461,9 @@ for (const s of sites) {
   const blocks = done.map((d) => {
     const st = d.z4;
     const diff = st.differ === 0 ? "no pixel differs" : `${st.differ} px differ (ink lost ${st.lost}, gained ${st.gained}); bbox ${bboxText(st.bbox)}`;
-    return { title: wrap(ascii(d.title), maxT), change: wrap(ascii(d.change), maxC), diff: wrap(ascii(diff), maxC) };
+    return { title: wrap(ascii(d.title), maxT), change: wrap(ascii(d.change), maxC), diff: wrap(ascii(diff), maxC), seen: wrap(ascii(`seen: ${d.seen}`), maxC) };
   });
-  const headH = Math.max(...blocks.map((b) => b.title.length * LH * 3 + (b.change.length + b.diff.length) * LH * 2)) + 10;
+  const headH = Math.max(...blocks.map((b) => b.title.length * LH * 3 + (b.change.length + b.diff.length + b.seen.length) * LH * 2)) + 10;
   const capH = LH * 3 + 6;
   const cellH = headH + capH + Pmax + 2 + gapCell;
   const rows = Math.ceil(done.length / cols);
@@ -448,6 +495,10 @@ for (const s of sites) {
       drawText(cv, ln, cx + 4, ty, 2, [20, 100, 40]);
       ty += LH * 2;
     }
+    for (const ln of bl.seen) {
+      drawText(cv, ln, cx + 4, ty, 2, [140, 60, 0]);
+      ty += LH * 2;
+    }
     const n4 = d.w4.n * 4;
     for (let q = 0; q < 2; q++) {
       const colX = cx + pad + q * (Pmax + gapIn);
@@ -474,25 +525,47 @@ for (const s of sites) {
   L.push("");
   L.push("- `sheet.png`: every pair at zoom 4 (each device px a 4 x 4 block), +-3.5h around V (the window is clamped to 80..160 px).");
   L.push("- `<n>_<group>_<scene>_<j>_<a>-<b>_z1.png`: play size (zoom 1, +-8h): before | after | diff.");
-  L.push("- `<n>_<group>_<scene>_<j>_<a>-<b>_z4.png`: zoom 4: before | after | diff. The diff panel is |d ink| in red over a faint grey of the larger ink.");
-  L.push("- `sites.txt` / `sites.json`: the site list and its numbers; `pairs.txt`: the per-site pixel numbers.");
+  L.push("- `<n>_<group>_<scene>_<j>_<a>-<b>_z4.png`: zoom 4: before | after | diff. The diff panel is the signed difference, after minus before:");
+  L.push("  red where the after has more ink, blue where it has less, over a faint grey of the larger of the two inks.");
+  L.push("- `sites.txt` / `sites.json`: the site list and its numbers; `pairs.txt`: the per-site pixel numbers and the `seen` lines.");
   L.push("");
   L.push("Rows: group, scene, site (junction id, arms a-b, V in world units), what changed (r and tip from the forms'");
   L.push("corner data; `tip move` is the distance the fillet's nearest-to-V point moves, F1/F2 its split between the d-edge and the root gate;");
   L.push("`no corner` = the defaults build no corner there, r counts 0), what differs in the pictures (pixels whose ink differs by > 0.02 in");
-  L.push("the zoom 4 window; `lost`/`gained` = ink falls/rises by > 0.5; bbox in h from V, +x right, +y down), and the files.");
+  L.push("the zoom 4 window; `lost`/`gained` = ink falls/rises by > 0.5; bbox in h from V, +x right, +y down), `seen` (one line per site,");
+  L.push("written from looking at the zoom 4 pictures and zoom 6-8 crops of the same windows: what differs, no verdict), and the files.");
   L.push("");
-  L.push("| # | group | scene | site | what changed | what differs (zoom 4 window) | files |");
-  L.push("|---|---|---|---|---|---|---|");
+  L.push("| # | group | scene | site | what changed | what differs (zoom 4 window) | seen | files |");
+  L.push("|---|---|---|---|---|---|---|---|");
   for (const d of done) {
     const s = d.s;
     const st = d.z4;
     const beyond = d.z1.differ > st.differ ? ` (play window: ${d.z1.differ} px, bbox ${bboxText(d.z1.bbox)})` : "";
     const what = st.differ === 0 ? "no pixel differs" : `${st.differ} px differ (lost ${st.lost}, gained ${st.gained}; area ${f(st.area, 1)} px); bbox ${bboxText(st.bbox)}${beyond}`;
     L.push(
-      `| ${nn2(d.idx)} | ${s.group} | ${s.scene} | ${s.jid} ${s.a}-${s.b} (θ ${f(s.theta, 3)}), V (${f(s.x, 3)}, ${f(s.y, 3)}) | ${d.change} | ${what} | [z1](${d.files.z1}) [z4](${d.files.z4}) |`,
+      `| ${nn2(d.idx)} | ${s.group} | ${s.scene} | ${s.jid} ${s.a}-${s.b} (θ ${f(s.theta, 3)}), V (${f(s.x, 3)}, ${f(s.y, 3)}) | ${d.change} | ${what} | ${d.seen} | [z1](${d.files.z1}) [z4](${d.files.z4}) |`,
     );
   }
+  L.push("");
+  L.push("## Reading the rows");
+  L.push("");
+  L.push("- The `arm N L a -> b, Lcut c -> d` text in \"what changed\" is F1's near-d-edge cut of that corner's arm (L = the arm's length, Lcut = its");
+  L.push("  cut length from a pass behind its root). F2 rows carry such lines too, because the same arm moved under F1, not because F2 moved it:");
+  L.push("  F2 changes r only (the `tip move (F1 .., F2 ..)` split says which of the two moved the tip). Many arm moves leave the ink unchanged,");
+  L.push("  because the thread covers the arm's extent.");
+  L.push("- Sites 03 and 04 are the two ends of one small eye (the same 112 px differ in both zoom 4 windows). Sites 13 and 14 are one corner");
+  L.push("  (j49 151-152, the same numbers) in two scene files. The 18 pairs hold 16 distinct changes.");
+  L.push("- A play-size window (+-8h) can hold other corners' F1 changes beside the site's own; the table marks it with `(play window: ..)`");
+  L.push("  (site 08: 230 px in the play window, 36 in the zoom 4 window).");
+  L.push("- j0 0-1 and j156 475-473: the defaults build no corner there (F1's near d-edge removes it); j36 109-110 and j155 471-472 keep a corner");
+  L.push("  with r = 0. The old fills at j0, j155 and j156 are r 0.04-0.13h (0.7 to 2 device px), so the visible change at those three is at the");
+  L.push("  thread ends and the eye, not in a fill.");
+  L.push("- Sites 16-18 are not in the brief's list: they are the three largest tip moves among the corners the list does not already hold. All three are");
+  L.push("  F1's (0.34 to 0.75h, F2 0.000h), against 0.10h for the largest F2 tip move among the ten F2 sites.");
+  L.push("- Check: `FormB({dEdge: \"skip\", rootBand: 0})` reproduces the frozen S1f ink exactly at all 18 sites (0 px differ; `pairs.txt`), so \"before\"");
+  L.push("  is S1f's final and the only difference to \"after\" is F1 and F2.");
+  L.push("- Regenerate: `npx.cmd vite-node .claude/probes/K1040/s1/s1h_sites.ts`, then `.../s1h_pair.ts` (about 30 s each; scenes are read in place");
+  L.push("  from the main checkout's `.claude/probes/K868/scenes`).");
   L.push("");
   writeFileSync(join(outDir, "index.md"), L.join("\n"));
 }

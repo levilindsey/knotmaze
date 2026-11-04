@@ -1,73 +1,91 @@
 01 [F1-lost] muse_hash/j0/0-1: fill emptied: r 0.043h -> 0 (no corner in the defaults); tip move 0.185h (F1 0.185h, F2 0.000h); arm 0 L 3.652h -> 2.116h, Lcut 9.517h -> 2.116h
+     seen (zoom 4 window): 46 px, all at the end of the thread whose tip sits at V: a rounded cap with a one-pixel spur before, a slanted flat cut after (red above it, blue at its left). The grey wedge left of V is identical.
      zoom 4 window (119 px): 46 px differ (|d ink| > 0.02; ink lost 10, gained 8, area -5.3 px; F1 share 46, F2 share 0); bbox x -0.27..0.32h, y -0.38..0.38h
      play window (273 px): 46 px differ (lost 10, gained 8, area -5.3 px; F1 share 46, F2 share 0); bbox x -0.27..0.32h, y -0.38..0.38h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 02 [F1-lost] muse_hash/j36/109-110: fill emptied: r 2.721h -> 0; tip move 0.656h (F1 0.656h, F2 0.000h); arm 109 L 2.950h -> 1.112h, Lcut 2.950h -> 1.112h
+     seen (zoom 4 window): Before, the thread arriving from the upper right turns into the left-going thread through a large rounded black web (blue wedge). After, it runs straight down-left and meets the left-going thread at an acute angle (red wedge on its lower-right side), and paper fills the web's place.
      zoom 4 window (119 px): 392 px differ (|d ink| > 0.02; ink lost 156, gained 95, area -40.5 px; F1 share 392, F2 share 0); bbox x -1.55..1.10h, y -1.30..0.23h
      play window (273 px): 392 px differ (lost 156, gained 95, area -40.5 px; F1 share 392, F2 share 0); bbox x -1.55..1.10h, y -1.30..0.23h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 03 [F1-lost] muse_hash/j155/471-472: fill emptied: r 0.120h -> 0; tip move 0.154h (F1 0.154h, F2 0.000h); arm 472 L 5.304h -> 4.234h, Lcut inf -> 4.234h
+     seen (zoom 4 window): A small closed eye (site 04 is the same eye): its left end gets a nick after (a notch with a slanted flat cut), and its right end's outer edge moves out 1 to 3 px (red crescent).
      zoom 4 window (119 px): 112 px differ (|d ink| > 0.02; ink lost 17, gained 37, area 20.4 px; F1 share 110, F2 share 2); bbox x -1.83..0.40h, y -3.36..0.45h
      play window (273 px): 115 px differ (lost 17, gained 37, area 20.6 px; F1 share 110, F2 share 5); bbox x -1.83..0.40h, y -3.72..0.45h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 04 [F1-lost] muse_hash/j156/475-473: fill emptied: r 0.125h -> 0 (no corner in the defaults); tip move 0.185h (F1 0.185h, F2 0.000h); arm 473 L 5.401h -> 3.058h, Lcut inf -> 3.058h
+     seen (zoom 4 window): The same eye as site 03 (the same 112 px in the zoom 4 window): a nick at its left end, its right end's outer edge moved out 1 to 3 px. The play-size window adds F1 changes at other corners (144 px in all).
      zoom 4 window (119 px): 112 px differ (|d ink| > 0.02; ink lost 17, gained 37, area 20.4 px; F1 share 110, F2 share 2); bbox x -0.26..1.97h, y -3.15..0.67h
      play window (273 px): 144 px differ (lost 17, gained 37, area 20.7 px; F1 share 139, F2 share 5); bbox x -8.01..1.97h, y -3.50..0.67h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 05 [F1-j62] muse_hash/j62/189-187: r 2.438h -> 1.431h; tip move 0.159h (F1 0.159h, F2 0.000h); arm 187 L 2.440h -> 2.165h, Lcut 2.440h -> 2.165h
+     seen (zoom 4 window): One thread's curved run just below V (about 1.7h long) moves up by 1 to 3 px, mostly 2 to 3 (measured along columns): ink gained along its upper edge (red), lost along its lower edge (blue). Its width does not change.
      zoom 4 window (119 px): 209 px differ (|d ink| > 0.02; ink lost 59, gained 72, area 9.8 px; F1 share 209, F2 share 0); bbox x -1.21..0.90h, y -0.35..1.11h
      play window (273 px): 209 px differ (lost 59, gained 72, area 9.8 px; F1 share 209, F2 share 0); bbox x -1.21..0.90h, y -0.35..1.11h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 06 [F2-r] muse_default_tw/j57/172-173: r 4.000h -> 0.678h; tip move 0.068h (F1 0.000h, F2 0.068h); arm 173 L 5.402h -> 4.077h, Lcut 5.402h -> 4.077h
+     seen (zoom 4 window): A crescent 1 px wide and about 1h long at the thread's bend at V: ink lost along the upper-right edge, gained along the lower-left edge (the bend moves about 1 px toward the lower left).
      zoom 4 window (81 px): 31 px differ (|d ink| > 0.02; ink lost 4, gained 5, area 1.0 px; F1 share 0, F2 share 31); bbox x -0.54..0.41h, y -0.46..0.49h
      play window (185 px): 31 px differ (lost 4, gained 5, area 1.0 px; F1 share 0, F2 share 31); bbox x -0.54..0.41h, y -0.46..0.49h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 07 [F2-r] muse_hash/j23/72-70: r 4.000h -> 1.252h; tip move 0.052h (F1 0.000h, F2 0.052h)
+     seen (zoom 4 window): A crescent 1 to 2 px wide and about 1.3h long at the thread's bend at V: ink gained along the upper-right edge, lost along the lower-left edge (the bend moves about 1 to 2 px toward the upper right).
      zoom 4 window (119 px): 58 px differ (|d ink| > 0.02; ink lost 8, gained 11, area 1.5 px; F1 share 0, F2 share 58); bbox x -0.50..0.68h, y -0.46..0.48h
      play window (273 px): 58 px differ (lost 8, gained 11, area 1.5 px; F1 share 0, F2 share 58); bbox x -0.50..0.68h, y -0.46..0.48h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 08 [F2-r] muse_hash/j110/335-333: r 4.000h -> 1.283h; tip move 0.042h (F1 0.000h, F2 0.042h); arm 335 L 2.408h -> 1.748h, Lcut 2.408h -> 1.748h
+     seen (zoom 4 window): A crescent about 1h long at the thread's bend at V: ink lost along its upper edge, gained along its lower edge (the outline moves about 1 px down). The play-size window adds 190 px of F1 changes at other corners (230 px in all).
      zoom 4 window (119 px): 36 px differ (|d ink| > 0.02; ink lost 4, gained 0, area -4.8 px; F1 share 0, F2 share 36); bbox x -0.53..0.65h, y -0.30..0.29h
      play window (273 px): 230 px differ (lost 62, gained 67, area -4.6 px; F1 share 190, F2 share 94); bbox x -7.98..0.65h, y -0.30..5.63h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 09 [F2-r] muse_default_tw/j110/335-333: r 4.000h -> 1.362h; tip move 0.049h (F1 0.000h, F2 0.049h); arm 335 L 3.720h -> 2.680h, Lcut 3.720h -> 2.680h
+     seen (zoom 4 window): A crescent about 1h long at the thread's bend at V: ink lost along its upper edge, gained along its lower edge (the outline moves about 1 px down). The play-size window adds F2 changes at other corners (83 px in all).
      zoom 4 window (81 px): 34 px differ (|d ink| > 0.02; ink lost 4, gained 3, area 0.2 px; F1 share 0, F2 share 34); bbox x -0.53..0.68h, y -0.37..0.41h
      play window (185 px): 83 px differ (lost 4, gained 3, area 1.3 px; F1 share 0, F2 share 83); bbox x -0.53..3.62h, y -6.33..0.41h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 10 [F2-r] muse_default_tw/j164/499-497: r 3.993h -> 1.683h; tip move 0.096h (F1 0.000h, F2 0.096h); arm 497 L 4.248h -> 4.225h, Lcut 4.248h -> 4.225h
+     seen (zoom 4 window): A crescent about 1.2h long along the thread's bend at V: ink lost along its left edge, gained along its right edge (the bend moves about 1 to 2 px to the right).
      zoom 4 window (81 px): 76 px differ (|d ink| > 0.02; ink lost 14, gained 14, area 1.9 px; F1 share 0, F2 share 76); bbox x -0.70..0.60h, y -1.20..0.87h
      play window (185 px): 76 px differ (lost 14, gained 14, area 1.9 px; F1 share 0, F2 share 76); bbox x -0.70..0.60h, y -1.20..0.87h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 11 [F2-r] muse_hash/j57/172-173: r 4.000h -> 1.716h; tip move 0.036h (F1 0.000h, F2 0.036h); arm 173 L 3.006h -> 2.769h, Lcut 3.006h -> 2.769h
+     seen (zoom 4 window): A crescent about 1h long at the thread's bend at V: ink lost along the upper-right edge, gained along the lower-left edge (the bend moves about 1 px toward the lower left).
      zoom 4 window (119 px): 45 px differ (|d ink| > 0.02; ink lost 6, gained 6, area 0.4 px; F1 share 0, F2 share 45); bbox x -0.57..0.42h, y -0.51..0.60h
      play window (273 px): 45 px differ (lost 6, gained 6, area 0.4 px; F1 share 0, F2 share 45); bbox x -0.57..0.42h, y -0.51..0.60h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 12 [F2-r] g41_user_tw64/j12/36-37: r 2.000h -> 0.028h; tip move 0.067h (F1 0.000h, F2 0.067h)
+     seen (zoom 4 window): A short jog in the thread at V, which is smooth before: after, the outline steps by 1 to 2 px over about 0.5h (ink lost on the upper edge, gained on the lower edge).
      zoom 4 window (147 px): 43 px differ (|d ink| > 0.02; ink lost 5, gained 10, area 4.2 px; F1 share 0, F2 share 43); bbox x -0.36..0.31h, y -0.10..0.38h
      play window (337 px): 43 px differ (lost 5, gained 10, area 4.2 px; F1 share 0, F2 share 43); bbox x -0.36..0.31h, y -0.10..0.38h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 13 [F2-r] user_tw42.lightpaper/j49/151-152: r 2.000h -> 0.037h; tip move 0.074h (F1 0.000h, F2 0.074h)
+     seen (zoom 4 window): A short jog in the thread at V, which is smooth before: after, the outline steps sideways by about 1 px over about 0.5h (ink gained on the left edge, lost on the right edge).
      zoom 4 window (100 px): 24 px differ (|d ink| > 0.02; ink lost 2, gained 5, area 2.7 px; F1 share 0, F2 share 24); bbox x -0.40..0.10h, y -0.29..0.34h
      play window (228 px): 24 px differ (lost 2, gained 5, area 2.7 px; F1 share 0, F2 share 24); bbox x -0.40..0.10h, y -0.29..0.34h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 14 [F2-r] g41_user_tw42/j49/151-152: r 2.000h -> 0.037h; tip move 0.074h (F1 0.000h, F2 0.074h)
+     seen (zoom 4 window): The same corner as site 13 with the same numbers (24 px, the same window), in another scene file.
      zoom 4 window (100 px): 24 px differ (|d ink| > 0.02; ink lost 2, gained 5, area 2.7 px; F1 share 0, F2 share 24); bbox x -0.39..0.10h, y -0.29..0.34h
      play window (228 px): 24 px differ (lost 2, gained 5, area 2.7 px; F1 share 0, F2 share 24); bbox x -0.39..0.10h, y -0.29..0.34h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 15 [F2-r] muse_hash/j124/375-376: r 1.967h -> 0.078h; tip move 0.087h (F1 0.000h, F2 0.087h)
+     seen (zoom 4 window): A short jog in the thread's left outline at V, which is smooth before: after, a notch of about 2 px over about 0.5h (ink gained on the left edge, lost on the right edge).
      zoom 4 window (119 px): 48 px differ (|d ink| > 0.02; ink lost 9, gained 11, area 3.3 px; F1 share 0, F2 share 48); bbox x -0.34..0.19h, y -0.56..0.32h
      play window (273 px): 48 px differ (lost 9, gained 11, area 3.3 px; F1 share 0, F2 share 48); bbox x -0.34..0.19h, y -0.56..0.32h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 16 [extra-tip] muse_hash/j131/397-398: r 3.183h -> 0.392h; tip move 0.748h (F1 0.748h, F2 0.000h); arm 397 L 3.208h -> 2.135h, Lcut 3.208h -> 2.135h
+     seen (zoom 4 window): The thread below V: before, a wide smooth arc with clear paper between it and V's fillet tip; after, it rises into a hump about 2.6h wide that peaks at V's tip (red, up to 13 px or 0.8h higher, measured along columns) and the old arc under the hump is gone (blue). The largest change of the 18.
      zoom 4 window (119 px): 549 px differ (|d ink| > 0.02; ink lost 184, gained 273, area 77.2 px; F1 share 549, F2 share 0); bbox x -1.55..1.44h, y -0.21..1.66h
      play window (273 px): 549 px differ (lost 184, gained 273, area 77.2 px; F1 share 549, F2 share 0); bbox x -1.55..1.44h, y -0.21..1.66h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 17 [extra-tip] muse_hash/j99/301-299: r 2.518h -> 0.350h; tip move 0.403h (F1 0.403h, F2 0.000h); arm 301 L 2.569h -> 1.598h, Lcut 2.569h -> 1.598h
+     seen (zoom 4 window): A thread's run at V's left, about 2h long, moves right by 1 to 7 px, most (0.4h) at V's row (measured along rows): blue wedge at its old place, red wedge at its new one. The dark wedge that hugs the thread at V in the before is a light grey fade in the after.
      zoom 4 window (119 px): 318 px differ (|d ink| > 0.02; ink lost 109, gained 106, area -9.6 px; F1 share 318, F2 share 0); bbox x -0.96..0.34h, y -1.06..1.29h
      play window (273 px): 318 px differ (lost 109, gained 106, area -9.6 px; F1 share 318, F2 share 0); bbox x -0.96..0.34h, y -1.06..1.29h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 18 [extra-tip] muse_hash/j73/222-220: r 0.297h -> 0.460h; tip move 0.337h (F1 0.337h, F2 0.000h); arm 222 L 6.958h -> 4.229h, Lcut inf -> 4.229h
+     seen (zoom 4 window): Two places. The small eye just below V: its right end, pointed with a slit through the outline before, is closed and rounded after (red in the slit and above the end, blue along its right and lower-right edge). About 2.7h above V: a thread tip's outer edge gains 1 to 2 px (a small red crescent about 8 px across).
      zoom 4 window (119 px): 166 px differ (|d ink| > 0.02; ink lost 32, gained 60, area 22.3 px; F1 share 166, F2 share 0); bbox x -1.09..0.79h, y -3.07..1.16h
      play window (273 px): 166 px differ (lost 32, gained 60, area 22.3 px; F1 share 166, F2 share 0); bbox x -1.09..0.79h, y -3.07..1.16h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
-sheet.png: 3776 x 4638, 18 pairs, 3 columns, panels up to 588 px
+sheet.png: 3776 x 5118, 18 pairs, 3 columns, panels up to 588 px
