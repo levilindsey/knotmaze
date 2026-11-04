@@ -527,9 +527,9 @@ Next free ID: K1154.
   (`docs/design/K1153_muse_batch12_run_a.md`); Claude reviews the draft, renames it
   `docs/design/K1153_muse_batch12.md` and queues its runs (ports 5550-5599).
   - owner: muse run 12A, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 12:14
-  - branch: mainline; last commit: `19e3f5ff`
+  - branch: mainline; last commit: `aca74311`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); the draft `docs/design/K1153_batch12_draft.md`; Run A's commit report
-  - next: Run A drafts batch 12's brief; Claude reviews it, renames it to `docs/design/K1153_muse_batch12.md` and queues its runs
+  - next: Run A done; Claude reviews the draft
   - brief: `docs/design/K1153_muse_batch12_run_a.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, line 12A); a `hold.txt` beside it holds the chain before its next run
 
