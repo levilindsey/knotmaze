@@ -3604,3 +3604,21 @@ The K1091 planner's ledger-hygiene list (2026-11-02), unverified by the coordina
 ## K1139
 
 Choice pulses across junctions. Levi 2026-11-03: "Pulse reach is good. BUT, we have to make pulses animate correctly across junctions. This will be important to get right, so take some time to properly plan what this should look like, how to verify it, and how to implement it." Stage 1 (Claude Opus, planning only): a design doc with the look, the checks and the implementation plan, plus pictures of today's behavior. Pointers: `docs/design/K299_choice_pulse_bug.md`, K175, K189, `src/render/junction_field.ts`, `junction_routes.ts`. Cover a route pulse (one path through several junctions) for K1140. Launch when the S3c agent ends (pacing: 19% of the week used at day 1).
+## K1162
+
+Found by the six ask-card agents on 2026-11-03 (their cards are in `docs/asks/`); not re-checked by Claude:
+- K636 cites `6d79a79`; the hunt-pace change is `fd230f17`, which its card cites.
+- `docs/design/K324_s3.md` gives the turn stalker's accuracy as 0.45; the code (K421) and K667's text have 0.3.
+- K400's text says the fire speed default is 0.75; it is 0.6.
+- K545's wording in `docs/ledger_done.md` is off.
+- K626's pointer "K525's sheet shows white too" does not resolve: the sheet is red only, and K525's handoff lists white rims as undone.
+- K1128 says sprint has no real phone pass yet; K749's Done entry (`4a1dd4d5`) says it passed on both clocks on the real phone.
+- K777's handoff dates report v7 2026-10-21 09:27; K887 says 2026-10-22 09:27.
+- Two SHAs do not resolve on master (rewritten at merge): `0f7d230e` (`docs/design/K1040_s1g_gates.md` line 555) and `adb27a13` (`docs/design/K1114_s1h_crops.md` line 89). The merged ones are among c9b6de32, a3f995a4, 15fc456c, bbf10649 and a3c54463.
+- K656's "40 of 50" strand figure predates K840 (Snap made harsher), and the K137 lore repeats it; not re-measured.
+- K207's `docs/ledger_notes.md` text no longer matches the look question the item asks now.
+- K610: the `gcr` key lives in `src/main.ts`, not `url_state.ts`, and is not a codec param.
+- K606: `docs/design/K580.md`'s "Where it stands" predates the taper build.
+- K693: the ledger's load times (45-54 s against 27-33 s) and K620's handoff baseline (20-30 s) disagree.
+- No phone doc says the phone must stay on its charger, unlocked and awake, through the guard's 120 s quiet window, which is why 31 tries failed; say it in `docs/design/K1142_phone_guard.md`.
+- `.claude/probes/K804/shots/k804_pulse_vs_ring.png` has no script that makes it; `.claude/probes/K1100/out/k1127/stills/zz_throwaway.png` is a stray.

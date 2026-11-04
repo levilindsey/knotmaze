@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1162.
+Next free ID: K1163.
 
 ## Waiting on Levi
 
@@ -309,6 +309,28 @@ Next free ID: K1162.
 - **K207** · Fog on a path you walk back over: it used to clear a little more with each pass (crisp edges);
   since bb7aa6ed it stays as the first walk left it (soft edges, a bit tighter). Keep the new look? Pictures:
   `.claude/probes/K207/shots/k207_fog_pair.png`.
+- **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
+  junctions"; plan the look, the checks and the build first). S1 done (fc175b0f): today's faults a-h (doc 1.3),
+  one light field over the lit tree (S2), stages S3-S6. Full text: `docs/ledger_notes.md`.
+  - owner: nobody since 2026-11-03 10:05 (merged; agent `af1cda2ec844b5f38` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `fc175b0f`
+  - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
+  - next: Levi answers Q1-Q3 (sent with the pictures 2026-11-03 10:07; clips of the motion offered), then the S2 brief: the light field, folding in the wrong "world arc" comment on `litArms` (`src/game/route_plan.ts`, the length is lattice) and S5 if Q3 says straight through
+  - brief: `docs/design/K1139_s1_brief.md` (the plan: `docs/design/K1139_pulse_junctions.md`, stages S2-S6)
+- **K1140** · Memory modes, brainstormed 2026-11-03 at Levi's request (show the route, hide it, walk it):
+  Glimpse (the base; a wrong move is one that does not shorten distToExit), Shuffle (a shake re-settles the
+  knot after the glimpse; check it moves enough, else rotate or mirror the view), the myth (K80 4.23) plus a
+  Retrace encore, Echo (Simon by pitch; needs K1139's route pulse), Beacons (K80 4.17 plus route beacons),
+  memory hints (`hints.ts`: the next 3-4 runs, then fade). Rec: Glimpse first, with Shuffle as its hard
+  setting. Levi's picks pending.
+- **K1119** · Cursive J3g (v7.0), Levi's answers to v6.9 (2026-11-03): b, v and w exit between v6.8 and
+  v6.9, closer to v6.8 ("still exit somewhat downward and with a swoosh"); the six a/q joins get v6.6's dip
+  back ("We need that dip"); the e after them decided by the checks. One sheet per letter for Levi.
+  - owner: nobody since 2026-11-03 08:47 (merged; agent `adcba68466fb7684f` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `a413b284`
+  - evidence: .claude/probes/K863/trace/ (work30/, out30/, NOTES ## K1119)
+  - next: Levi looks at the v7.0 sheets (b/v/w exits, the a/q dip, be/ve/we: v7.0 or e60, the br dip), then the c stage (K1112's next letter)
+  - brief: docs/design/K1119_cursive_j3g.md (its Handoff); J3f's in docs/design/K1113_cursive_j3f.md
 
 ## In progress
 
@@ -323,11 +345,11 @@ Next free ID: K1162.
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: 44ce69a1); S3 (K1097) merged short of its gate; S1g merged (52945e6e); S3b (K1097) merged (c4863a50, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
-  - owner: nobody since 2026-11-02 21:18 (merged)
-  - branch: mainline; last commit: `52945e6e`
+  - owner: nobody since 2026-11-03 14:04 (K1097 S3e merged); its stages run as K1097 and K1114
+  - branch: mainline; last commit: `a3c54463`
   - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1), `s1/out/s1b/` and `s1/out/s1c/`, S1d's runs in `s1/out/s1d/`, S1e's in `s1/out/s1e/` (gate `s1/run_s1e_gate.ps1`, table `s1/gate_table.ps1`; probes `b_rate.ts`, `bend_s1e.ts`, `attr_f4f5.ts`, `lcut_far.ts`, `attr_c2.ts`, `arms_c3.ts`; commands in its Handoff)); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: S3c (K1097), the label for the Pixel's GPU; then S1h: S1g's Handoff Next 1-2 (a robust V solve from the roots out plus a continuous wedge weight for the 704 test; V's foot blended over its candidate feet) and the crops of S1g's at-rest changes (K1114); then S1f's Later work (the 14 pops, the 3 junction pops, j129's corner)
-  - brief: `docs/design/K1040_s1g_gates.md` ## Handoff; S1f's Handoff in `docs/design/K1040_s1f_reach.md`
+  - next: the S3e phone gate (K1097's next) once Levi leaves the phone unlocked on its charger (card docs/asks/K1040.md), then S3f's brief; S1i (K1114) is restoring S1g's corner rounding, in flight
+  - brief: `docs/design/K1040_s3e_lean.md` (S3e's Handoff); `docs/design/K1114_s1i_rounding.md` (S1i)
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -515,22 +537,6 @@ Next free ID: K1162.
   - next: the S3e phone gate: with the Pixel awake and unlocked, run s3e_gate.ps1, then s3e_floor.ps1, then both split.mjs lines (the Handoff's Next); then S3f's brief from those numbers. S3f's 2 ms gate counts the upload call's main-thread time too (0.1-0.8 ms on the desktop, outside page.ts's timed window)
   - brief: `docs/design/K1040_s3e_lean.md` (its Handoff; S3d's: `docs/design/K1040_s3d_tent.md`)
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (it runs `run_phone.ps1`: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`
-- **K1119** · Cursive J3g (v7.0), Levi's answers to v6.9 (2026-11-03): b, v and w exit between v6.8 and
-  v6.9, closer to v6.8 ("still exit somewhat downward and with a swoosh"); the six a/q joins get v6.6's dip
-  back ("We need that dip"); the e after them decided by the checks. One sheet per letter for Levi.
-  - owner: nobody since 2026-11-03 08:47 (merged; agent `adcba68466fb7684f` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `a413b284`
-  - evidence: .claude/probes/K863/trace/ (work30/, out30/, NOTES ## K1119)
-  - next: Levi looks at the v7.0 sheets (b/v/w exits, the a/q dip, be/ve/we: v7.0 or e60, the br dip), then the c stage (K1112's next letter)
-  - brief: docs/design/K1119_cursive_j3g.md (its Handoff); J3f's in docs/design/K1113_cursive_j3f.md
-- **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
-  junctions"; plan the look, the checks and the build first). S1 done (fc175b0f): today's faults a-h (doc 1.3),
-  one light field over the lit tree (S2), stages S3-S6. Full text: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-03 10:05 (merged; agent `af1cda2ec844b5f38` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `fc175b0f`
-  - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
-  - next: Levi answers Q1-Q3 (sent with the pictures 2026-11-03 10:07; clips of the motion offered), then the S2 brief: the light field, folding in the wrong "world arc" comment on `litArms` (`src/game/route_plan.ts`, the length is lattice) and S5 if Q3 says straight through
-  - brief: `docs/design/K1139_s1_brief.md` (the plan: `docs/design/K1139_pulse_junctions.md`, stages S2-S6)
 - **K1161** · Muse batch 14: its Run A drafts the batch's brief from the ledger
   (`docs/design/K1161_muse_batch14_run_a.md`) as `docs/design/K1161_muse_batch14.md`, runs B to G; Claude
   reviews it and queues them (ports 5550-5599).
@@ -767,6 +773,9 @@ Every other item below waits on the trigger it names.
 
 ## Residuals (known, not fixed)
 
+- **K1162** · Doc and item-text errata the ask-card pass found (2026-11-03): stale SHAs, pointers and figures
+  in a dozen docs and items, and a phone-readiness rule no doc states. Full list: `docs/ledger_notes.md` ##
+  K1162. Docs-only; a Muse task (item texts: Muse gives the lines, Claude applies).
 - **K1130** · K309 inject probes: a run's first normal screenshot can come back dark and nearly blank (round 2026-11-02 rimSeam, 3848 bytes against 628314; round 2026-11-03 handoff step 3b). Take a throwaway first shot, or shoot each state twice and diff the repeat, before believing a pair.
 - **K1048** · K1040's probe gaps (`docs/design/K1040_s1c_handoff_pops.md` F5; `K1040_s1d_corner.md` F1, Handoff 5):
   q5holes skips a hole with a partly OWN rim; q4's g41 crop holds no ink on the g41 rings; the free ends' oracle
@@ -1992,12 +2001,6 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   in browsers.
 - **K1136** · Phone A/A floor: fabric@0 reads loose (fps ±8.3, frames over 25 ms ±33) from one outlier rep; a
   later A/A may tighten it (`docs/design/K156.md`, Round 2026-11-03 handoff, Left over 2).
-- **K1140** · Memory modes, brainstormed 2026-11-03 at Levi's request (show the route, hide it, walk it):
-  Glimpse (the base; a wrong move is one that does not shorten distToExit), Shuffle (a shake re-settles the
-  knot after the glimpse; check it moves enough, else rotate or mirror the view), the myth (K80 4.23) plus a
-  Retrace encore, Echo (Simon by pitch; needs K1139's route pulse), Beacons (K80 4.17 plus route beacons),
-  memory hints (`hints.ts`: the next 3-4 runs, then fade). Rec: Glimpse first, with Shuffle as its hard
-  setting. Levi's picks pending.
 - **K1145** · Cursive x5 (`R_DX=22 R_A1=-15 R_L1=10`): a steeper b, v and w exit (about -22 deg), if Levi
   wants v7.0's exits further down (K1119's Handoff).
 - **K1157** · K1040 label pass, upload levers for the Pixel's gate numbers to choose: x,y from K8's SAMP (a
