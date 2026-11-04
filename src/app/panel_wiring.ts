@@ -23,6 +23,7 @@ import {
 } from "../ui/accessibility";
 import type { MotionSetting } from "../ui/motion";
 import { MOVE_PAD_KEY } from "../ui/move_pad";
+import { writeTugThreadsPref } from "../ui/tug_threads";
 import { CHALK_KEY } from "../ui/aid_buttons";
 import {
   HEAD_INDICATOR_KEY,
@@ -206,6 +207,8 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
         // Storage unavailable: the choice just doesn't persist.
       }
     },
+    // K1173: the drag routing reads the setting at the next press.
+    onTugThreadsToggle: (on) => writeTugThreadsPref(localStorage, on),
     // K120: the next frame shows or hides the move pad.
     onMovePadToggle: (on) => {
       try {

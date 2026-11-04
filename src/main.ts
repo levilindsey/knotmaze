@@ -17,6 +17,7 @@ import { FireClock } from "./game/fire_clock";
 import type { Fire } from "./game/fire";
 import { tapWhileMoving } from "./ui/key_moves";
 import { MOVE_PAD_KEY, movePadPref } from "./ui/move_pad";
+import { readTugThreadsPref } from "./ui/tug_threads";
 
 import { MinotaurChase, spotCtrl } from "./game/minotaur";
 import type { ChaseEvent } from "./game/minotaur";
@@ -332,10 +333,12 @@ async function main(): Promise<void> {
   // K120: the move pad, on by default for coarse pointers.
   const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
   let movePadOn = movePadPref(null, coarsePointer);
+  let tugThreadsOn = true; // K1173: on by default.
   let chalkOn = false; // K137 stage 2: the chalk viewer preference.
   let loaderStaysOn = false; // K828: keep the loading trefoil up.
   try {
     movePadOn = movePadPref(localStorage.getItem(MOVE_PAD_KEY), coarsePointer);
+    tugThreadsOn = readTugThreadsPref(localStorage);
     chalkOn = chalkPref(localStorage.getItem(CHALK_KEY));
     statsShown = localStorage.getItem(STATS_KEY) === "1";
     // Opt-in since 2026-10-12 (Levi: the win banner carries the stats).
@@ -370,6 +373,7 @@ async function main(): Promise<void> {
     indicatorSize: indPrefs.scale,
     tapToPan,
     movePad: movePadOn,
+    tugThreads: tugThreadsOn,
     chalk: chalkOn,
     motion: motion.pref,
     reducedMotion: motion.reduced,

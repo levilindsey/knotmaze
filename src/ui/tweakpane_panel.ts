@@ -117,6 +117,10 @@ export interface PanelSettings {
   // K120 viewer preference (persisted per browser; ui/move_pad.ts): the
   // four-way move pad, on by default for coarse pointers.
   movePad: boolean;
+  // K1173 viewer preference (persisted per browser; ui/tug_threads.ts):
+  // drags tug threads with physics, on by default. Off: a drag pans
+  // wherever it starts; taps still pluck.
+  tugThreads: boolean;
   // K137 stage 2 viewer preference (persisted per browser; ui/aid_buttons.ts):
   // chalk marks, off by default.
   chalk: boolean;
@@ -153,6 +157,7 @@ const SETTINGS_DEFAULTS: PanelSettings = {
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
     window.matchMedia("(pointer: coarse)").matches,
+  tugThreads: true,
   chalk: false,
   motion: "system",
   reducedMotion: false,
@@ -178,6 +183,8 @@ export interface PanelCallbacks {
   onIndicatorSizeChange: (scale: number) => void;
   onTapToPanToggle: (on: boolean) => void;
   onMovePadToggle: (on: boolean) => void;
+  // K1173: the Tug threads preference flipped (persisted per browser).
+  onTugThreadsToggle: (on: boolean) => void;
   // K137 stage 2: the chalk preference; the compass (a design param that
   // restarts nothing).
   onChalkToggle: (on: boolean) => void;
@@ -3352,6 +3359,13 @@ export function buildPanel(
       callbacks.onSlackChange();
     }
   );
+  // K1173: a viewer preference, not a design param (never in a link).
+  const tugThreadsRow = row(
+    fFeel, s, "tugThreads", { label: "Tug threads" },
+    "Dragging a thread tugs it with physics (taps pluck instead). Off: a drag pans the view wherever it starts, even on a thread, and the physics never sees a grab; taps still pluck (and move, in maze play). A change applies from the next press. Remembered per browser.",
+    SETTINGS_DEFAULTS.tugThreads,
+    () => callbacks.onTugThreadsToggle(settings.tugThreads === true)
+  );
   const tugLimitRow = row(
     fFeel, p, "tugLimit", { min: 0.5, max: 6, step: 0.1, label: "Tug limit" },
     "Dragging a thread tugs it (taps pluck instead). How far a thread can be tugged, in thread widths; the stretch resists more as it nears the limit (drag further, move less). Applies live.",
@@ -3874,6 +3888,7 @@ export function buildPanel(
     // Tugs (and their release controls), agitation and the sim speed exist
     // only while the physics runs.
     const live = params.physics;
+    tugThreadsRow.hidden = !live;
     tugLimitRow.hidden = !live;
     pluckStyleRow.hidden = !live;
     snapBackRow.hidden = !live || params.pluckStyle !== "soft";

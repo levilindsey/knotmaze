@@ -401,7 +401,9 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
   let dragPan: { id: number; x: number; y: number; moved: number } | null =
     null;
   // A press on a thread, undecided until it moves past the slop (a tug -
-  // or a pan with physics off) or lifts (a render-only tap-pluck).
+  // or a pan with physics off, or with Tug threads off, K1173) or lifts
+  // (a render-only tap-pluck). `tug` is the Tug threads preference as it
+  // stood at THIS press: a change mid-press applies from the next press.
   let pendingPluck: {
     id: number;
     // The pointer type: its pick and grab radii (K298).
@@ -411,6 +413,7 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
     sy: number;
     x: number;
     y: number;
+    tug: boolean;
   } | null = null;
   let lastEmptyTap = -1e9;
   const TAP_SLOP = 10; // CSS px a tap may wander and still count.
@@ -457,7 +460,8 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
   };
   // Over a thread: grab where it can be tugged, a plain pointer where it
   // can only be plucked (physics off).
-  const threadCursor = (): string => (physicsLive() ? "grab" : "pointer");
+  const threadCursor = (): string =>
+    physicsLive() && settings.tugThreads !== false ? "grab" : "pointer";
   // Nothing to tap or tug at this lattice point (where empty-space
   // gestures - pan, double-tap reset - may take over), for pointer `pt`.
   const emptyAt = (x: number, y: number, pt: string): boolean =>
@@ -612,6 +616,7 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
         sy: e.clientY,
         x,
         y,
+        tug: settings.tugThreads !== false,
       };
       app.canvas.setPointerCapture(e.pointerId);
       // The press shows the hover glow (a touch has no hover before it).
@@ -627,14 +632,15 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
 
   // A pending press moved past its slop: commit a TUG (grab at the PRESSED
   // point - the bounded target then catches up to the pointer smoothly), or
-  // with physics off, a camera PAN from the press point.
+  // with physics off, or with Tug threads off (K1173), a camera PAN from
+  // the press point (the host never sees a grab).
   const commitPendingDrag = (e: PointerEvent): void => {
     const pp = pendingPluck;
     pendingPluck = null;
     if (!pp || !scene.ps) return;
     // A tug or a pan is not a hover: the glow goes (K145).
     clearGlow();
-    if (!physicsLive()) {
+    if (!physicsLive() || !pp.tug) {
       dragPan = { id: pp.id, x: pp.sx, y: pp.sy, moved: pp.slop + 1 };
       return;
     }

@@ -106,6 +106,7 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   indicatorSize: ["arrow size", "edge marker", "bigger arrows", "smaller arrows", "scale", "off screen", "pointer size"],
   tapToPan: ["jump to", "click arrow", "edge marker", "bring into view", "navigate", "touch", "camera move", "recenter"],
   movePad: ["d pad", "dpad", "touch controls", "on screen buttons", "arrow keys", "mobile", "phone", "directional"],
+  tugThreads: ["tug", "drag", "drag threads", "pull", "pan", "grab", "physics", "turn off tugging"],
   chalk: ["tick", "bookmark", "remember", "visited", "waypoint", "junction marks", "annotate", "breadcrumbs"],
   confettiAmount: ["cfa", "celebration", "party", "victory", "finish effect", "particles", "turn off", "win animation"],
   lossAmount: ["lam", "loss", "caught", "burnt", "explosion", "ash", "defeat effect", "particles", "turn off"], // K546 stage 3
