@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createLifecycle } from "../../src/app/lifecycle";
 import type { LifecycleDeps } from "../../src/app/lifecycle";
 import type { SceneRef } from "../../src/app/scene_ref";
@@ -23,6 +23,7 @@ function fakes() {
     disarm: () => {},
     beginPresettle: () => {},
     beginLoad: () => {},
+    loadFrame: () => "halted" as const,
     armBudget: () => {},
     wake: () => {},
   };
@@ -67,6 +68,24 @@ describe("lifecycle regenerate (K436)", () => {
     const life = createLifecycle(deps, scene);
     life.beginLoading();
     expect(loop.halted).toBe(false);
+  });
+
+  it("a halted physics-off load leaves loading and keeps its HALTED line (K165)", () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const { deps, loop, scene } = fakes();
+      const life = createLifecycle(deps, scene);
+      life.beginLoading();
+      expect(life.state).toBe("loading");
+      life.loadingTick();
+      expect(life.state).toBe("live");
+      expect(loop.halted).toBe(true);
+      expect(deps.perfLine).toContain("HALTED");
+      life.beginLoading(); // A regenerate still clears the halt (K436).
+      expect(loop.halted).toBe(false);
+    } finally {
+      err.mockRestore();
+    }
   });
 
   it("releases the warm-up's blocking hold with the trefoil (K307 stage 3)", () => {

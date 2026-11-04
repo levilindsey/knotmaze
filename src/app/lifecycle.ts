@@ -171,6 +171,7 @@ export function createLifecycle(deps: LifecycleDeps, scene: SceneRef) {
     const status = host.loadFrame(physicsTuning());
     if (status === "halted") {
       deps.loop.halted = true;
+      physState = "live"; // Keeps the HALTED line on the stamp.
       loader.hide();
       root.visible = true;
       deps.perfLine = " | HALTED: physics went non-finite (regenerate to reset)";
