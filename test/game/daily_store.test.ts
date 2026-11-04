@@ -669,6 +669,35 @@ describe("history (K146)", () => {
     expect(by.get(3)).toMatchObject({ practice: true });
   });
 
+  it("counts a day the way the played tile does (K201)", () => {
+    // The crafted store of .claude/probes/K201/before.ts: an official
+    // day, a played-only day, a practice-only day with two finishes, a
+    // late-begun resume and an unplayed day; today (Daily #10) holds no
+    // record.
+    const data: DailyData = {
+      v: 3,
+      days: {
+        "8": { played: 1000, official: result({ day: 8 }), replays: [] },
+        "7": { played: 1000, replays: [] },
+        "6": {
+          replays: [],
+          practice: [result({ day: 9, timeMs: 5000 }), result({ day: 9, timeMs: 4000 })],
+        },
+        "5": { replays: [], attempt: attempt({ day: 9 }) },
+      },
+      prefs: {},
+    };
+    const h = dailyHistory(data, 10);
+    const by = new Map(h.map((e) => [e.n, e]));
+    expect(by.get(8)).toMatchObject({ status: "official", counted: true });
+    expect(by.get(7)).toMatchObject({ status: "played", counted: true });
+    expect(by.get(6)).toMatchObject({ status: "practice", counted: false, more: 1 });
+    expect(by.get(5)).toMatchObject({ status: "resume", counted: false });
+    expect(by.get(4)).toMatchObject({ status: "unplayed", counted: false });
+    expect(h.filter((e) => e.counted).length).toBe(dailyAggregates(data, 10).played);
+    expect(dailyAggregates(data, 10).played).toBe(2);
+  });
+
   it("flags an official result from before K146 that began late", () => {
     const parsed = parseDailyData(
       JSON.stringify({ v: 2, days: { "2": { played: 1, official: result({ day: 4 }), replays: [] } }, prefs: {} })

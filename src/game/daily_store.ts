@@ -635,6 +635,11 @@ export interface HistoryEntry {
   // Playing the day now is practice: a past day with no official result
   // and no saved attempt begun on its day.
   practice: boolean;
+  // K201: the played tile's answer for this day - an official result or
+  // a played mark (dailyAggregates' played test, off this day's record).
+  // The History's Played chip counts and filters on this, never on
+  // status, so the chip, its filter and the tile cannot split.
+  counted: boolean;
 }
 
 export function dailyHistory(data: DailyData, today: number): HistoryEntry[] {
@@ -664,6 +669,7 @@ function historyEntry(
     more: 0,
     attempt,
     practice: d?.official === undefined && !counts && n < today,
+    counted: d?.played !== undefined || d?.official !== undefined,
   };
   const practice = d?.practice ?? [];
   if (d?.official) {

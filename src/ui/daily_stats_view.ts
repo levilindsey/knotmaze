@@ -184,7 +184,7 @@ function historyRow(e: HistoryEntry, play: () => void): HTMLLIElement {
     }
     cell(`${efficiencyPercent(r.efficiency)}%`, `r e${pr}`);
     if (pr) {
-      cell("practice", "s pr");
+      cell(e.more > 0 ? `practice ×${e.more + 1}` : "practice", "s pr");
     } else {
       const late = e.late ? " late" : "";
       const extra = e.more > 0 ? ` +${e.more}` : "";
@@ -424,7 +424,7 @@ export function openDailyStats(o: DailyStatsOptions): void {
         o.onPlay(e.n, false);
       });
       list.appendChild(li);
-      rows.push({ li, played: e.status !== "unplayed", month });
+      rows.push({ li, played: e.counted, month });
     }
     // A long history (a year of dailies) gets All / Played / Not played.
     if (rows.length > HISTORY_CHIPS_AFTER) {
