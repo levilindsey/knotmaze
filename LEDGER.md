@@ -513,9 +513,9 @@ Next free ID: K1151.
   range's ease by time; K144's accounts doc; K804's beat indicator (pulse, ring or off); K207's fog stamp
   dedupe; K688's healing-cuts doc. Run B (K1130) was dropped: it stays with K156's next phone round.
   - owner: muse runs 11C, 11E, 11A, 11D, 11F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 09:55
-  - branch: mainline; last commit: `94e4b59c`
+  - branch: mainline; last commit: `bb7aa6ed`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K252/`, `K804/`, `K207/`
-  - next: Run A done; next Run D
+  - next: Run D done; next Run F
   - brief: `docs/design/K1146_muse_batch11.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 11C-11F); a `hold.txt` beside it holds the chain before its next run
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
@@ -917,9 +917,9 @@ Every other item below waits on the trigger it names.
 - **K208** · `restoreYarn` keeps its own copy of the travel-direction
   rule; it could share `travelOrder` / `moveEnds` (`src/render/fog_arc.ts`,
   K100).
-- **K207** · Fog stamps grow without bound within a solve: the spacing filter checks only the last
-  stamp, and `renderFog` redraws every stamp. A spatial dedupe fixes both
-  (`src/render/fabric_maze_renderer.ts`; `docs/design/K100.md`, Stage 1 handoff).
+- **K207** · Fog stamp dedupe shipped partial (bb7aa6ed): the list stops growing within a solve, but
+  the pair stopped under K1050 rule 2 - the deduped fog reveals tighter on revisited ground (field
+  IoU 0.885, area 203.9 -> 180.4; `.claude/probes/K207/`). Left: accept it, or change the fog's drawing.
 - **K206** · A restored attempt stamps its fog right after the intro, while the threads re-settle,
   so with physics it differs from the live fog (IoU ~0.96). Option: stamp after the first sleep
   (`docs/design/K100.md`, Stage 1 handoff).
