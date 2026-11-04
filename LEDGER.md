@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1169.
+Next free ID: K1170.
 
 ## Waiting on Levi
 
@@ -322,14 +322,22 @@ Next free ID: K1169.
 
 ## In progress
 
+- **K1169** · Muse batch 15 (`docs/design/K1169_muse_batch15.md`): run A K1139 S2 (the light field), run B
+  K778 (the Undo button, its 0-5 slider), run C K1162 (the doc errata). Claude reviews each run against the
+  primary record, then closes K1169.
+  - owner: Muse through the chain (`.claude/probes/K1053/`), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - branch: mainline; last commit: `cd5dd277`
+  - evidence: `.claude/probes/K1053/` (queue.txt, done.txt, chain.log; each run's Paseo report)
+  - next: Run A (K1139 S2) starts with the chain
+  - brief: `docs/design/K1169_muse_batch15.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
-  - owner: nobody since 2026-11-03 18:54 (the S3e phone gate ran: the label missed 2 ms; S3f's brief next)
+  - owner: nobody since 2026-11-03 19:20 (S3f runs under K1097)
   - branch: mainline; last commit: `8b436272`
   - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1), `s1/out/s1b/` and `s1/out/s1c/`, S1d's runs in `s1/out/s1d/`, S1e's in `s1/out/s1e/` (gate `s1/run_s1e_gate.ps1`, table `s1/gate_table.ps1`; probes `b_rate.ts`, `bend_s1e.ts`, `attr_f4f5.ts`, `lcut_far.ts`, `attr_c2.ts`, `arms_c3.ts`; commands in its Handoff)); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: S3f's brief from the S3e phone gate (K1097's next; `docs/design/K1040_s3e_lean.md` Step 3): the label 4.5-9.9 ms against 2, no better than today's part; S1i (K1114) merged in 8b436272 (its root-gate veto: K1163)
-  - brief: `docs/design/K1040_s3e_lean.md` (S3e's Handoff); `docs/design/K1114_s1i_rounding.md` (S1i)
+  - next: S3f (K1097; docs/design/K1040_s3f_draw.md) runs: the label pass under 2 ms on the Pixel; S1i (K1114) merged in 8b436272 (its root-gate veto: K1163)
+  - brief: docs/design/K1040_s3f_draw.md (S3f); docs/design/K1040_s3e_lean.md (S3e's Handoff); docs/design/K1114_s1i_rounding.md (S1i)
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -511,20 +519,20 @@ Next free ID: K1169.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-03 14:04 (merged; agent `aad38c5538dbcedc8` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `f00a59c1`
-  - evidence: `.claude/probes/K1040/s3/` (`s3e_gate.ps1`, `s3e_floor.ps1`, `defects.ps1`, `split.mjs`'s s3e1 and s3e3 sets, `run_locked.ps1`, `phone_batch.ps1` + `run_phone.ps1`; `out/many_s3e*_summary.md`, `out/time_s3e*_summary.md`, `out/verdict_s3e*_summary.md`); oracle30 and the recordings: worktree k868-s3a (`.claude/probes/S3a/seq13/`)
-  - next: S3f's brief. The S3e phone gate (2026-11-03; `out/split_s3e3.md`, `out/split_s3e1.md`, `out/phone_table_s3e.md`; the Handoff's Step 3) missed: leanempty - ideal 2.3-3.6 ms, mostly draw()'s state queries (save 1.9; the upload about 0.2; D32F's store free, D24 worse); the ideal floor 0.5; the label 4.5-9.9 against 2, no better than today's 4.1-9.6. S3f's 2 ms counts the upload call's main-thread time too (0.1-0.8 ms on the desktop)
-  - brief: `docs/design/K1040_s3e_lean.md` (its Handoff; S3d's: `docs/design/K1040_s3d_tent.md`)
+  - owner: agent `a8112b33d998f9629` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-03 19:22, 2 h cap ~21:22)
+  - branch: `worktree-agent-a8112b33d998f9629`, worktree `.claude/worktrees/agent-a8112b33d998f9629`; last commit: `cd5dd277`
+  - evidence: .claude/probes/K1040/s3/ (the S3e kit; S3f adds s3f_gate.ps1 and its out/ sets)
+  - next: S3f running: K1158 (no GL state queries), the unexplained 0.6 ms, the drawing toward 1 ms, then s3f_gate.ps1 on the Pixel
+  - brief: `docs/design/K1040_s3f_draw.md`
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (it runs `run_phone.ps1`: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1 done (a4dc218a). Answers (Levi 2026-11-03): the light splits at a fork (A), runs toward you
   behind you, straight through your junction with no dim moment. S2-S6 next. Full text: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-03 10:05 (merged; agent `af1cda2ec844b5f38` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - owner: Muse batch 15 run A (K1169), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `a4dc218a`
   - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
-  - next: write the S2 brief (one light field over the lit tree, running toward you; fold in the wrong "world arc" comment on `litArms` in `src/game/route_plan.ts`, whose length is lattice) and launch it; then S3a-S6 as the plan's section 5 orders them, S5 included
-  - brief: `docs/design/K1139_s1_brief.md` (the plan: `docs/design/K1139_pulse_junctions.md`, stages S2-S6)
+  - next: S2 runs as Muse batch 15 run A (K1169); then S3a-S6 as the plan's section 5 orders them, S5 included
+  - brief: docs/design/K1169_muse_batch15.md (Run A); the plan: docs/design/K1139_pulse_junctions.md; S1: docs/design/K1139_s1_brief.md
 
 ## Next, in order
 
@@ -546,7 +554,7 @@ Binding for every stage:
 Running agents are listed under In progress, each with its own next step.
 - **K778** · K138 s3: an Undo button beside the extra rules (Levi 2026-11-03), and a new slider param for the
   undos a run gets under them, 0 to 5 (default 1, my call; 0 hides the button). It replays your moves minus the
-  last, as the Stranded banner's Undo does. Brief to write (`docs/design/K778_undo.md`); a Muse candidate.
+  last, as the Stranded banner's Undo does. Muse batch 15 run B (K1169; `docs/design/K1169_muse_batch15.md`).
 - **K875** · K868 S1b, master's side: on Muse's link master registers only 58-80% with the oracle at
   j49/j123 and #6 finds every band end off (18/18, 19/19; cause untested: gaps or a reveal/fog state);
   its sdf and strip silhouettes differ in width; joinery.ts:1469-1471's comment is stale. s1b_oracle.md.
@@ -760,7 +768,7 @@ Every other item below waits on the trigger it names.
 
 - **K1162** · Doc and item-text errata the ask-card pass found (2026-11-03): stale SHAs, pointers and figures
   in a dozen docs and items, and a phone-readiness rule no doc states. Full list: `docs/ledger_notes.md` ##
-  K1162. Docs-only; a Muse task (item texts: Muse gives the lines, Claude applies).
+  K1162. Docs-only; Muse batch 15 run C (K1169; item texts: Muse gives the lines, Claude applies).
 - **K1130** · K309 inject probes: a run's first normal screenshot can come back dark and nearly blank (round 2026-11-02 rimSeam, 3848 bytes against 628314; round 2026-11-03 handoff step 3b). Take a throwaway first shot, or shoot each state twice and diff the repeat, before believing a pair.
 - **K1048** · K1040's probe gaps (`docs/design/K1040_s1c_handoff_pops.md` F5; `K1040_s1d_corner.md` F1, Handoff 5):
   q5holes skips a hole with a partly OWN rim; q4's g41 crop holds no ink on the g41 rings; the free ends' oracle
