@@ -540,9 +540,9 @@ Next free ID: K1175.
 - **K1170** · The key hints show the d-pad button that takes each run (Levi 2026-11-03: the arrows point along
   the runs, mostly diagonals no pad button presses; `hintMap` picks the smallest err). Muse chain run 15D.
   - owner: nobody since 2026-11-03 21:31 (queued as Muse chain run 15D, `.claude/probes/K1053/queue.txt`; claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c coordinates)
-  - branch: mainline; last commit: `c3e20f17`
+  - branch: mainline; last commit: `81081ab9`
   - evidence: `.claude/probes/K1170/` (shots/sheet_desk.png, sheet_phone.png)
-  - next: Muse run 15D; then Claude reviews the sheets, and K1132 goes back to Levi
+  - next: Run 15D done; Claude reviews the pictures, then K1132's placement goes back to Levi
   - brief: `docs/design/K1170_dpad_hints.md`
 - **K1171** · One Rules dropdown for Fragile runs and Collapse: off, crack, snap, collapse, collapse (free);
   one link param; the Par rows greyed under the collapse options (Levi 2026-11-03: “Seems like we should maybe
