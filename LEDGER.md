@@ -506,10 +506,10 @@ Next free ID: K1149.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"; plan the look, the checks and the build first). S1, Claude Opus, planning only: the design doc,
   pictures of today's pulses, a route pulse for K1140. Full text: `docs/ledger_notes.md`.
-  - owner: agent `af1cda2ec844b5f38` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-03 08:51, 2 h cap ~10:51)
-  - branch: `worktree-agent-af1cda2ec844b5f38`, worktree `.claude/worktrees/agent-af1cda2ec844b5f38`; last commit: `5591a6c1`
+  - owner: nobody since 2026-11-03 10:05 (merged; agent `af1cda2ec844b5f38` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `fc175b0f`
   - evidence: .claude/probes/K1139/ (its worktree)
-  - next: S1: the design doc (today's junction pulses in frame strips, the look with mock-ups, a route pulse for K1140, the checks, staged plan, questions for Levi)
+  - next: Levi answers Q1-Q3 (`docs/design/K1139_pulse_junctions.md` section 6, one picture each in `.claude/probes/K1139/out/doc/`), then the S2 brief
   - brief: docs/design/K1139_s1_brief.md (its branch)
 - **K1146** · Muse batch 11 (`docs/design/K1146_muse_batch11.md`), queued C, E, A, D, F: K252 (a), the pan
   range's ease by time; K144's accounts doc; K804's beat indicator (pulse, ring or off); K207's fog stamp
