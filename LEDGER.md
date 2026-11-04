@@ -303,6 +303,9 @@ Next free ID: K1151.
 - **K1150** · Under the beat, a new Beat indicator choice: the pulse you have today, a crisp ring that spreads
   from your marker on each beat, or off. Does the ring read well? Pictures: .claude/probes/K804/shots/ (K804,
   94e4b59c)
+- **K688** · Healing cuts against monsters (Levi took R.3.5, decision 6): a cut closes again after a
+  few moves; cut with the minotaur or the fire. After the K114 walker stage
+  (`docs/design/K80_gameplay_additions.md` R.3.5).
 
 ## In progress
 
@@ -513,9 +516,9 @@ Next free ID: K1151.
   range's ease by time; K144's accounts doc; K804's beat indicator (pulse, ring or off); K207's fog stamp
   dedupe; K688's healing-cuts doc. Run B (K1130) was dropped: it stays with K156's next phone round.
   - owner: muse runs 11C, 11E, 11A, 11D, 11F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 09:55
-  - branch: mainline; last commit: `bb7aa6ed`
+  - branch: mainline; last commit: `db015d9e`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K252/`, `K804/`, `K207/`
-  - next: Run D done; next Run F
+  - next: Run F done; batch 11 complete, Claude reviews and closes K1146
   - brief: `docs/design/K1146_muse_batch11.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 11C-11F); a `hold.txt` beside it holds the chain before its next run
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
@@ -659,9 +662,6 @@ Every other item below waits on the trigger it names.
 - **K649** · K525's tuning: rim strengths 0.6/0.8/1 and fades 0.2/0.3; junction-end gaps (runs under
   1.95 world get no rims; try gap 0 at interior junctions); the ticks' touch alphas vs the line's
   0.7; the fog glow (a dim dot on the Pixel, K662); the sheet extras. `docs/design/K525_telegraph.md` Handoff.
-- **K688** · Healing cuts against monsters (Levi took R.3.5, decision 6): a cut closes again after a
-  few moves; cut with the minotaur or the fire. After the K114 walker stage
-  (`docs/design/K80_gameplay_additions.md` R.3.5).
 - **K690** · K620 checks not run: the root-pixel census (GPU against the CPU mirror), CPU-mirror
   tests on the real a (xh 2 and 3, tp52 and tp60), a cold-compile time with `trace_intro.mjs`
   (`docs/design/K620.md`)
