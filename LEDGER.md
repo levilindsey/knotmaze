@@ -532,6 +532,15 @@ Next free ID: K1159.
   - next: Run A drafts the brief; Claude reviews it and queues runs B to G
   - brief: `docs/design/K1156_muse_batch13_run_a.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, line 13A); a `hold.txt` beside it holds the chain before its next run
+- **K1114** · Junctions: look at S1g's at-rest changes. F1 empties j36 109-110 (muse_hash) and cuts j62
+  189-187 from 2.438h to 1.431h; F2 changes r at 155 corners. S1g made pops crops only: S1h makes at-rest
+  before/after crops, Claude looks, and Levi gets a picture if it reads as a change (`K1040_s1g_gates.md` ##
+  Handoff).
+  - owner: agent `ae83ec07a4b4a228c` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (sonnet, started 2026-11-03 14:06, 1 h cap ~15:06)
+  - branch: `worktree-agent-ae83ec07a4b4a228c`, worktree `.claude/worktrees/agent-ae83ec07a4b4a228c`; last commit: `85e9a5fd`
+  - evidence: `.claude/probes/K1040/s1/out/s1h/` (`sheet.png`, `index.md`); S1g's census `out/s1g/dedge_near.txt`, `out/s1g/gate699_rb05.txt`
+  - next: S1h makes the before/after pairs and the sheet; then Claude looks, and Levi gets a picture only if it reads as a change
+  - brief: `docs/design/K1114_s1h_crops.md`
 
 ## Next, in order
 
@@ -750,10 +759,6 @@ Every other item below waits on the trigger it names.
   letter, b, v and w first; then delete J2's presets (join_params `cnct.*`) and the six pins (og, oe, fo, fv,
   fr, fs). No per-pair data: a fix goes into a letter's body or ports. Gates: the census's smoothness and
   locality; font distance reported per letter; Levi judges one sheet per letter.
-- **K1114** · Junctions: look at S1g's at-rest changes. F1 empties j36 109-110 (muse_hash) and cuts j62
-  189-187 from 2.438h to 1.431h; F2 changes r at 155 corners. S1g made pops crops only: S1h makes at-rest
-  before/after crops, Claude looks, and Levi gets a picture if it reads as a change (`K1040_s1g_gates.md` ##
-  Handoff).
 - **K1149** · Beat dots: dots at the beat points inside multi-beat runs, along threads and at junctions, that
   pop with a ring when the dot eats them; the dropdown and the pulse and ring at the dot are done (split from
   K804). Builds toward K805.
