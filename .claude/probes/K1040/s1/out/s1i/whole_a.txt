@@ -1,0 +1,32 @@
+form B's ink over each whole scene at dpr 2, against S1f's final {"dEdge":"skip","rootBand":0}; differ = |Δink| > 0.02, lost / gained = by more than 0.5
+== def: 1683 x 1638 px, h 0.260 world = 11.62 px
+  today (dEdgeTip 0)     differ   1278 (lost 142, gained 194); 4h cells: (0.73, 8.51) 101, (25.69, 4.35) 97, (29.85, 12.67) 97, (1.77, 25.15) 79, (0.73, 30.35) 64
+  restored (S1i)         differ    353 (lost 2, gained 3); 4h cells: (25.69, 12.67) 41, (18.41, 18.91) 34, (21.53, 13.71) 29, (6.97, 32.43) 29, (2.81, 10.59) 28
+  restored, rootBand 0   differ      0 (lost 0, gained 0)
+  (43.3 s)
+== fat: 1668 x 1639 px, h 0.260 world = 11.83 px
+  today (dEdgeTip 0)     differ      0 (lost 0, gained 0)
+  restored (S1i)         differ      0 (lost 0, gained 0)
+  restored, rootBand 0   differ      0 (lost 0, gained 0)
+  (32.3 s)
+== ring: 1658 x 1639 px, h 0.290 world = 19.31 px
+  today (dEdgeTip 0)     differ    349 (lost 11, gained 19); 4h cells: (21.08, 18.85) 115, (1.36, 15.37) 61, (7.16, 20.01) 54, (21.08, 4.93) 52, (21.08, 3.77) 34
+  restored (S1i)         differ    234 (lost 7, gained 16); 4h cells: (1.36, 15.37) 61, (7.16, 20.01) 54, (21.08, 4.93) 52, (21.08, 3.77) 34, (7.16, 7.25) 30
+  restored, rootBand 0   differ      0 (lost 0, gained 0)
+  (23.8 s)
+== user_tw42.lightpaper: 1820 x 1628 px, h 0.210 world = 14.27 px
+  today (dEdgeTip 0)     differ   1457 (lost 233, gained 310); 4h cells: (19.37, 11.36) 211, (9.29, 19.76) 172, (-0.79, 18.08) 113, (21.89, 13.88) 92, (6.77, 13.88) 61
+  restored (S1i)         differ    571 (lost 29, gained 39); 4h cells: (11.81, 12.20) 56, (9.29, 16.40) 55, (9.29, 7.16) 48, (5.93, 1.28) 40, (6.77, 8.00) 40
+  restored, rootBand 0   differ      0 (lost 0, gained 0)
+  (30.8 s)
+== g41_def_tw42: 1684 x 1632 px, h 0.210 world = 9.44 px
+  today (dEdgeTip 0)     differ    319 (lost 14, gained 27); 4h cells: (28.25, 21.28) 58, (11.45, 8.68) 33, (18.17, 18.76) 32, (13.97, 31.36) 27, (12.29, 15.40) 23
+  restored (S1i)         differ    207 (lost 1, gained 2); 4h cells: (18.17, 18.76) 32, (13.97, 31.36) 27, (12.29, 15.40) 23, (33.29, 5.32) 22, (3.05, 10.36) 21
+  restored, rootBand 0   differ      0 (lost 0, gained 0)
+  (31.2 s)
+== g41_def_tw64: 1683 x 1644 px, h 0.320 world = 14.21 px
+  today (dEdgeTip 0)     differ   1670 (lost 258, gained 387); 4h cells: (22.73, 12.93) 127, (25.29, 5.25) 102, (2.25, 12.93) 93, (0.97, 9.09) 87, (0.97, 30.85) 86
+  restored (S1i)         differ    320 (lost 7, gained 8); 4h cells: (17.61, 19.33) 41, (18.89, 18.05) 39, (12.49, 15.49) 38, (12.49, 6.53) 24, (34.25, 18.05) 23
+  restored, rootBand 0   differ      0 (lost 0, gained 0)
+  (56.7 s)
+== all: today (dEdgeTip 0) differ 5073 (lost 658, gained 937); restored (S1i) differ 1685 (lost 46, gained 68); restored, rootBand 0 differ 0 (lost 0, gained 0)

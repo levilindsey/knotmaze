@@ -1,0 +1,26 @@
+form B's ink over each whole scene at dpr 2, against S1f's final {"dEdge":"skip","rootBand":0}; differ = |Δink| > 0.02, lost / gained = by more than 0.5
+== muse_hash: 1635 x 1651 px, h 0.400 world = 17.04 px
+  today (dEdgeTip 0)     differ   4571 (lost 1325, gained 1440; max 13 px from S1f's contour, 305 beyond 3 px); 4h cells: (33.19, 10.57) 470, (29.99, 20.17) 385, (21.99, 2.57) 325, (28.39, 10.57) 293, (2.79, 29.77) 262
+  restored (S1i)         differ    633 (lost 68, gained 56; max 3 px from S1f's contour, 0 beyond 3 px); 4h cells: (34.79, 10.57) 85, (2.79, 5.77) 78, (4.39, 0.97) 77, (21.99, 34.57) 69, (34.79, 18.57) 45
+  (57.4 s)
+== muse_default_tw: 1676 x 1637 px, h 0.260 world = 11.57 px
+  today (dEdgeTip 0)     differ   2665 (lost 495, gained 589; max 5 px from S1f's contour, 17 beyond 3 px); 4h cells: (14.25, 14.69) 247, (13.21, 1.17) 175, (15.29, 23.01) 165, (16.33, 16.77) 128, (29.85, 19.89) 127
+  restored (S1i)         differ    920 (lost 48, gained 66; max 1 px from S1f's contour, 0 beyond 3 px); 4h cells: (22.57, 5.33) 76, (22.57, 23.01) 72, (13.21, 5.33) 68, (35.05, 10.53) 55, (3.85, 1.17) 51
+  (29.9 s)
+== g41_ring_tw42: 1627 x 1630 px, h 0.210 world = 14.05 px
+  today (dEdgeTip 0)     differ    252 (lost 15, gained 10; max 1 px from S1f's contour, 0 beyond 3 px); 4h cells: (12.03, 1.14) 89, (6.99, 7.86) 40, (6.99, 19.62) 36, (19.59, 2.82) 33, (1.11, 15.42) 26
+  restored (S1i)         differ    159 (lost 6, gained 7; max 1 px from S1f's contour, 0 beyond 3 px); 4h cells: (6.99, 7.86) 40, (6.99, 19.62) 36, (19.59, 2.82) 33, (1.11, 15.42) 26, (2.79, 16.26) 24
+  (12.6 s)
+== g41_ring_tw64: 1664 x 1644 px, h 0.320 world = 21.24 px
+  today (dEdgeTip 0)     differ    414 (lost 56, gained 66; max 3 px from S1f's contour, 0 beyond 3 px); 4h cells: (16.87, 1.51) 109, (6.63, 19.43) 66, (16.87, 2.79) 58, (6.63, 7.91) 48, (1.51, 15.59) 45
+  restored (S1i)         differ    210 (lost 16, gained 18; max 2 px from S1f's contour, 0 beyond 3 px); 4h cells: (6.63, 19.43) 66, (6.63, 7.91) 48, (1.51, 15.59) 45, (9.19, 1.51) 25, (10.47, 1.51) 16
+  (20.1 s)
+== g41_user_tw42: 1820 x 1628 px, h 0.210 world = 14.27 px
+  today (dEdgeTip 0)     differ   1457 (lost 229, gained 311; max 4 px from S1f's contour, 9 beyond 3 px); 4h cells: (19.37, 11.36) 210, (9.29, 19.76) 172, (-0.79, 18.08) 113, (21.89, 13.88) 92, (6.77, 13.88) 61
+  restored (S1i)         differ    573 (lost 28, gained 39; max 1 px from S1f's contour, 0 beyond 3 px); 4h cells: (11.81, 12.20) 56, (9.29, 16.40) 55, (9.29, 7.16) 49, (5.93, 1.28) 40, (6.77, 8.00) 39
+  (21.6 s)
+== g41_user_tw64: 1704 x 1645 px, h 0.320 world = 21.05 px
+  today (dEdgeTip 0)     differ   1669 (lost 318, gained 438; max 7 px from S1f's contour, 61 beyond 3 px); 4h cells: (6.09, 14.50) 283, (16.33, 5.54) 225, (16.33, 4.26) 210, (6.09, 8.10) 92, (7.37, 18.34) 91
+  restored (S1i)         differ    856 (lost 63, gained 89; max 2 px from S1f's contour, 0 beyond 3 px); 4h cells: (6.09, 8.10) 92, (7.37, 18.34) 91, (2.25, 17.06) 83, (12.49, 1.70) 78, (6.09, 0.42) 59
+  (33.9 s)
+== all: today (dEdgeTip 0) differ 11028 (lost 2438, gained 2854; max 13 px, 392 beyond 3 px); restored (S1i) differ 3351 (lost 229, gained 275; max 3 px, 0 beyond 3 px)
