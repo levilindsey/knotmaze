@@ -504,9 +504,9 @@ Next free ID: K1138.
   past the head marker, behind a probe hook); B, K1083 and K1133 retraced on K1077's flow-on stand; C, K1135's
   behavior test; D, batch 10's brief drafted.
   - owner: muse runs 9A-9D, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 06:52
-  - branch: mainline; last commit: `610408d3`
+  - branch: mainline; last commit: `2cbddb87`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K1132/`, `.claude/probes/K1083/flow/`
-  - next: Run B done; next Run C
+  - next: Run C done; next Run D
   - brief: `docs/design/K1137_muse_batch9.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 9A-9D)
 - **K1119** · Cursive J3g (v7.0), Levi's answers to v6.9 (2026-11-03): b, v and w exit between v6.8 and
@@ -1699,10 +1699,6 @@ Every other item below waits on the trigger it names.
 - **K1133** · Burn re-declare: fillet rebuilds on front-crossing frames, retraced with the flow on
   (K1137 Run B, K1077 stand): realtime 71/119 vs turn 59/119 (burn cross-check 0.56 vs 0.50 a frame); the
   12 without an update split uwRev 8, joint-key 4; a fix needs incremental fillets (joinery), not the declare.
-- **K1135** · Reset's reanchorStep (K1115, 91387212; `src/ui/tweakpane_panel.ts` row()) reaches Tweakpane
-  internals (`controller.value.value_.constraint_`, a StepConstraint's origin) and silently does nothing if
-  they change; tweakpane is `^4.0.5` and the tests pin source text only. Guard: a behavior test on a real Pane
-  (a happy-dom or jsdom dev dependency) plus a warn-once.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2000,6 +1996,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1135** · behavior test on a real Pane, plus a warn-once. Done in 2cbddb87 (2026-11-03).
 - **K1083** · retraced with the flow on: no realtime extra. Done in 257db545 (2026-11-03).
 - **K1110** · Levi heard the snore on the phone's first touch (2026-11-03: 'The snore sound is good'). Done in 933571af (2026-11-03).
 - **K1134** · Gap slots stand pat on the K1083 burn stands (cause none on 120/120 frames; 0 updates and 0 gap solves a frame, realtime and turn, on master and pre-K1082 alike), so K1077 cluster 3 does not reproduce there; solves still run per awake update (drag 287/frame) (split from K1083). Dropped: its stands were `fw=0`, which removes K1077's flow trigger; folded into K1083's retrace (the drag stand's re-solve per awake update is expected: the geometry moves) (2026-11-03).
