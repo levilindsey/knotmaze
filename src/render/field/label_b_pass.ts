@@ -54,6 +54,7 @@ import { labelBSources } from "./label_b_glsl";
 import { tentFacetK, tentSpanRecord } from "./label_b_tent";
 import {
   labelBTentSources,
+  labelBTentStripSources,
   labelBTentVSources,
   TENT_CAP_VERTS,
   TENT_FILL_VERTS,
@@ -141,7 +142,9 @@ export class LabelBPass {
   readonly mode: LabelBMode;
   /** Tent mode: the facets' chord error target, in the target's px. */
   tentEpsPx = 0.002;
-  private tent: { seg: WebGLProgram; cap: WebGLProgram; fill: WebGLProgram; capVao: WebGLVertexArrayObject; capBuf: WebGLBuffer } | null = null;
+  private tent: { seg: WebGLProgram; cap: WebGLProgram; fill: WebGLProgram; capVao: WebGLVertexArrayObject; capBuf: WebGLBuffer; strip: WebGLProgram | null; stripVao: WebGLVertexArrayObject; stripBuf: WebGLBuffer } | null = null;
+  /** S3f3 lever 2: the strip vertex count (0 = the instanced segments draw). */
+  private stripCount = 0;
   private capKey = "";
   private nCaps = 0;
   /** Probe knobs (K1040 S3d's cost split): tent mode draws nothing, or a fraction of its segment strips. */
@@ -181,6 +184,13 @@ export class LabelBPass {
    * whatever the kept tents say (the census judges it).
    */
   probeReachKeep: ((ci: number, k: number) => boolean) | null = null;
+  /**
+   * S3f3 lever 2 (continuous strips per chain run): tentv draws its
+   * segments as one triangle strip a chain instead of one instance a
+   * segment (label_b_tent_glsl.ts, labelBTentStripSources). An option
+   * beside today's instanced draw; caps and fills are unchanged.
+   */
+  probeStrip = false;
   /** A full upload has landed, so upload(T, true) may skip (header). */
   private hasUploaded = false;
   private segVerts = TENT_SEG_VERTS;
@@ -223,6 +233,9 @@ export class LabelBPass {
         fill: compile(gl, ts.fillVs, ts.fs),
         capVao: gl.createVertexArray() as WebGLVertexArrayObject,
         capBuf: gl.createBuffer() as WebGLBuffer,
+        strip: tv ? compile(gl, labelBTentStripSources(debug).segVs, tv.fs) : null,
+        stripVao: gl.createVertexArray() as WebGLVertexArrayObject,
+        stripBuf: gl.createBuffer() as WebGLBuffer,
       };
     }
     this.nTex = mode === "tentv" ? 6 : 5;
@@ -464,6 +477,39 @@ export class LabelBPass {
       this.layoutKey = T.layoutKey;
       this.nInst = nInst;
       this.instanceBuilds++;
+      // S3f3 lever 2: the strip vertices (aSeg = self, prev, next point
+      // texels and side; aInfo = tentv's vQ and 0), built with the layout.
+      if (this.probeStrip && this.tent?.strip) {
+        const verts: number[] = [];
+        const pair = (self: number, prev: number, next: number, A: number, B: number, cif: number) => {
+          verts.push(self, prev, next, 1, A, B, cif, 0, self, prev, next, -1, A, B, cif, 0);
+        };
+        for (let ci = 0; ci < T.nChains; ci++) {
+          const off = T.chain[8 * ci], n = T.chain[8 * ci + 1], nseg = T.chain[8 * ci + 2], closed = T.chain[8 * ci + 3] > 0.5;
+          if (nseg <= 0 || n < 2) continue;
+          const at = (j: number) => off + (closed ? ((j % n) + n) % n : j);
+          const cif = (closing: boolean) => ci | (((closed ? 4 : 0) | (closing ? 8 : 0)) << 8);
+          if (verts.length > 0) verts.push(...verts.slice(verts.length - 8));
+          for (let j = 0; j < n; j++) {
+            const self = at(j), prev = j === 0 && !closed ? self : at(j - 1), next = j === n - 1 && !closed ? self : at(j + 1);
+            if (closed || j > 0) pair(self, prev, next, at(j - 1), self, cif(closed && j === 0));
+            if (closed || j < n - 1) pair(self, prev, next, self, at(j + 1), cif(closed && j === n - 1));
+          }
+          if (closed) pair(at(0), at(-1), at(1), at(-1), at(0), cif(true));
+        }
+        this.stale = true;
+        gl.bindVertexArray(this.tent.stripVao);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.tent.stripBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 32, 0);
+        const infoLoc = gl.getAttribLocation(this.tent.strip, "aInfo");
+        if (infoLoc >= 0) {
+          gl.enableVertexAttribArray(infoLoc);
+          gl.vertexAttribPointer(infoLoc, 4, gl.FLOAT, false, 32, 16);
+        }
+        this.stripCount = verts.length / 8;
+      }
     }
     if (this.tent) {
       // The free ends: (chain, 0) and (chain, 1) per open chain with a segment.
@@ -643,8 +689,13 @@ export class LabelBPass {
       this.uniforms(pr, M, 0);
       gl.uniform1f(this.facetLoc(pr), facetK);
     };
+    if (this.probeStrip && t.strip && this.stripCount > 0) {
+      gl.bindVertexArray(t.stripVao);
+      use(t.strip);
+      if (!this.probeNoDrawCalls) gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.stripCount);
+    }
     gl.bindVertexArray(this.vao);
-    const nSeg = this.probeSegFrac === 1 ? this.nInst : Math.round(this.nInst * this.probeSegFrac);
+    const nSeg = this.probeStrip && t.strip ? 0 : this.probeSegFrac === 1 ? this.nInst : Math.round(this.nInst * this.probeSegFrac);
     if (nSeg > 0) {
       use(t.seg);
       if (!this.probeNoDrawCalls) gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, this.segVerts, nSeg);
@@ -742,6 +793,9 @@ export class LabelBPass {
       gl.deleteProgram(this.tent.seg);
       gl.deleteProgram(this.tent.cap);
       gl.deleteProgram(this.tent.fill);
+      if (this.tent.strip) gl.deleteProgram(this.tent.strip);
+      gl.deleteVertexArray(this.tent.stripVao);
+      gl.deleteBuffer(this.tent.stripBuf);
       gl.deleteVertexArray(this.tent.capVao);
       gl.deleteBuffer(this.tent.capBuf);
     }

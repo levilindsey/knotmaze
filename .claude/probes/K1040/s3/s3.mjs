@@ -59,6 +59,8 @@ const d24 = val("--d24", "0") === "1";
 const reach = val("--reach", "0") === "1";
 // K1040 S3f3 lever 3: --circ 1 the circumscribed wedge (page.ts facetOpts).
 const circ = val("--circ", "0") === "1";
+// K1040 S3f3 lever 2: --strip 1 continuous strips per chain run (page.ts).
+const strip = val("--strip", "0") === "1";
 const nwArg = val("--nw", "");
 const nw = nwArg === "" ? undefined : Number(nwArg);
 // K1040 S3f --state new|host: the live pass with no state queries (K1158;
@@ -99,7 +101,7 @@ const errors = [];
 let favicon = 0;
 const isFav = (u) => /favicon/i.test(u ?? "");
 const stamp = new Date().toISOString();
-const summary = [`# ${pre} ${stamp}`, "", `stride ${stride}, scale ${scale}, ${passMode ? `mode ${passMode}` : tent ? "TENT" : "capsule"} pass${lean ? `, LEAN fixed part${d24 ? ", D24" : ""}${mode === "time" ? (rest ? " (at rest)" : " (moving: every used row)") : ""}` : ""}, lr ${lr}${mode === "time" ? `, frames ${frames}${noscan ? ", NO merge scan" : ""}` : ""}${state ? `, state ${state}` : ""}${nw !== undefined ? `, NW ${nw}` : ""}${reach ? ", REACH" : ""}${circ ? ", CIRC" : ""}`, ""];
+const summary = [`# ${pre} ${stamp}`, "", `stride ${stride}, scale ${scale}, ${passMode ? `mode ${passMode}` : tent ? "TENT" : "capsule"} pass${lean ? `, LEAN fixed part${d24 ? ", D24" : ""}${mode === "time" ? (rest ? " (at rest)" : " (moving: every used row)") : ""}` : ""}, lr ${lr}${mode === "time" ? `, frames ${frames}${noscan ? ", NO merge scan" : ""}` : ""}${state ? `, state ${state}` : ""}${nw !== undefined ? `, NW ${nw}` : ""}${reach ? ", REACH" : ""}${circ ? ", CIRC" : ""}${strip ? ", STRIP" : ""}`, ""];
 try {
   const page = await browser.newPage();
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
@@ -139,8 +141,8 @@ try {
     }
     const res =
       mode === "verdict"
-        ? await page.evaluate((s, o) => window.s3.verdict(s, o), scene, { scale, stride, tent, mode: passMode, lr, lean, d24, state, nw, reach, circ })
-        : await page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, noscan, tent, mode: passMode, lr, lean, rest, state, nw, reach, circ });
+        ? await page.evaluate((s, o) => window.s3.verdict(s, o), scene, { scale, stride, tent, mode: passMode, lr, lean, d24, state, nw, reach, circ, strip })
+        : await page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, noscan, tent, mode: passMode, lr, lean, rest, state, nw, reach, circ, strip });
     res.scene = name;
     res.wallMs = Date.now() - t0;
     writeFileSync(join(outDir, `${pre}_${name}.json`), JSON.stringify(res, null, 1));

@@ -467,6 +467,50 @@ export interface LabelBTentVSources {
   fs: string;
 }
 
+// K1040 S3f3 lever 2: one continuous strip per chain run, drawn
+// non-instanced (label_b_pass.ts builds the vertex buffer on layout
+// changes). Each chain point contributes its cross-section twice, once
+// closing the previous segment's quad and once opening the next one's,
+// because tentv's fragment shader takes its segment from a flat vQ and
+// a strip triangle's provoking vertex is its last: both of a quad's
+// triangles provoke on the closing pair, which carries that segment's
+// (A, B, chain|flags). The duplicates and the two vertices joining
+// chains are degenerate. The cross-section's corner is the two
+// segments' mitre (the bisector at h / cos(phi/2), clamped), where
+// today's per-segment tents put a wedge arc on the convex side and the
+// quad corner on the concave: the strip's outline is the mitred
+// polygon through the same centre points, keyed z - |o| / K at the
+// corner as today's emit keys its corners. The fragment shader is
+// tentv's (FS_V above), unchanged.
+const STRIP_VS = `${HEAD}${VS_LIB_V}
+in vec4 aSeg;
+in vec4 aInfo;
+void main() {
+  int self = int(aSeg.x);
+  int prev = int(aSeg.y);
+  int next = int(aSeg.z);
+  float side = aSeg.w;
+  vec4 A = fetch(uPts, self);
+  vec4 Pp = fetch(uPts, prev);
+  vec4 Pn = fetch(uPts, next);
+  vec2 np = prev == self ? nrm(A.xy, Pn.xy) : nrm(Pp.xy, A.xy);
+  vec2 nr = next == self ? np : nrm(A.xy, Pn.xy);
+  vec2 bis = np + nr;
+  float bl = length(bis);
+  bis = bl > 1e-6 ? bis / bl : np;
+  float cosHalf = clamp(sqrt(max(0.5 * (1.0 + dot(np, nr)), 0.0)), 0.25, 1.0);
+  float o = side * uH / cosHalf;
+  emit(A.xy, bis, o, A.w - abs(o) * uInvK);
+  vQ = ivec3(int(aInfo.x), int(aInfo.y), int(aInfo.z));
+}
+`;
+
+/** The strip segment program for lever 2 (its fragment shader is labelBTentVSources'). */
+export function labelBTentStripSources(debugOut: boolean): { segVs: string } {
+  const def = (s: string) => (debugOut ? s.replace("#version 300 es\n", "#version 300 es\n#define DEBUG_OUT 1\n") : s);
+  return { segVs: def(STRIP_VS) };
+}
+
 export function labelBTentVSources(debugOut: boolean): LabelBTentVSources {
   const def = (s: string) => (debugOut ? s.replace("#version 300 es\n", "#version 300 es\n#define DEBUG_OUT 1\n") : s);
   return { segVs: def(SEG_VS_V), capVs: def(CAP_VS_V), fs: def(FS_V) };
