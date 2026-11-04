@@ -530,9 +530,9 @@ Next free ID: K1161.
   (`docs/design/K1156_muse_batch13_run_a.md`) as `docs/design/K1156_muse_batch13.md`, runs B to G; Claude
   reviews it and queues them (ports 5500-5549).
   - owner: muse runs 13B-13G, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 14:25
-  - branch: mainline; last commit: `48739fda`
+  - branch: mainline; last commit: `410fd8c9`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); the run's commit report
-  - next: Run F done; next Run G
+  - next: Run G done; batch 13 complete, Claude reviews and closes K1156
   - brief: `docs/design/K1156_muse_batch13.md` (Run A's: `docs/design/K1156_muse_batch13_run_a.md`)
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 13B-13G); a `hold.txt` beside it holds the chain before its next run
 
@@ -1429,8 +1429,6 @@ Every other item below waits on the trigger it names.
 - **K684** · Collapse par runs synchronously on the main thread at its first read: desk at most 38
   ms, phone estimated near 190 ms (unmeasured; next phone pass). A worker or idle-time slice would
   hide it (K139).
-- **K685** · K137: with collapse off, a respawn into stranded (fragile) or out of strokes (strict
-  par) shows no banner until the next tap (found by K139).
 - **K689** · Since K620, the root vertex block moves maze and burn 3-5 px of one level (no root
   pixels; guess: compiler rounding). Test a constants-only block, or accept (`docs/design/K620.md`
   Handoff)
@@ -2006,6 +2004,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K685** · a respawn into stranded or out of strokes shows its banner without a tap. Done in 410fd8c9 (2026-11-03).
 - **K351** · the panel inventory's Read by follows url_state's *Of builders. Done in 88efd034 (2026-11-03).
 - **K1154** · the physics-off load's wall cap and reported time count visible time (both hosts). Done in f809a275 (2026-11-03).
 - **K1155** · scripts/phone.ps1 finds the phone among online android peers; -TailscaleHost is the override, default empty. Done in cbaca79f (2026-11-03).
