@@ -409,6 +409,30 @@ lock, and a wait until 08:30 at the latest.
   phone run: **the Pixel's 2 ms gate is unmeasured** for both variants.
   The commands are in the Handoff.
 
+### F11, measured (2026-11-03 09:42-09:49, the coordinator)
+
+The coordinator ran the Handoff's four phone commands in order through
+`.claude/probes/K1040/s3/f11_run.ps1`, each after a `phone_quiet.mjs`
+wait (the launcher in front and no touch for 120 s before the first
+run, 20 s before each later one). Every wait passed; every run reads
+thermal 0, no input event, no lost context, no error
+(`out/phone_time_summary.md`). Tables: `out/phone_table_f11.md`. Over
+the 12 scenes, sync ms:
+
+| pass | p50 | label cost (p50 - floor) |
+|---|---|---|
+| fit (S3b's pass, the control) | 11.3-42.0 | 9.8-40.6 |
+| tent | 7.0-12.6 | 4.7-11.2 |
+| tent, lr 2 | 6.3-12.1 | 4.1-10.2 |
+| floorall (the readback floor) | 1.4-2.5 | - |
+
+**Both variants miss the Pixel's 2 ms gate**, by 2-5x. The tent cuts
+the control's label cost 1.6-3.8x per scene (the control's 9.8-40.6
+repeats S3b's 10.6-39.6). lr 2 saves 0-1.5 ms more, within run-to-run
+noise on some scenes, as F10's vertex-bound inference expected. The
+stage's rule ("if it misses, the coarser target (K923's lr), a new
+budget (Levi's) only after both") has now run out of targets.
+
 ### F12. The pins as they stand
 
 `test/render/field/label_b_tent.test.ts`, 7 tests: for both debugOut
