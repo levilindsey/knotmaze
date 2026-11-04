@@ -689,3 +689,54 @@ describe("form B: a crossing's reach (S1f, K1092)", () => {
     console.log(`[form_b] eye sweep, largest |ΔL| per ${step} of w: quad ${stepOf.quad.toFixed(4)}, walk ${stepOf.walk.toFixed(4)}; quad L ${lo.toFixed(3)}..${hi.toFixed(3)}`);
   });
 });
+
+describe("form B: a pass behind the root (S1g F1, S1i F3)", () => {
+  // Chain 0 along y = 0 (s = x + 10) through a junction at the origin, a stem
+  // (chain 1) leaving it at `deg`, and a pass at x = u > 0, u behind the
+  // root of chain 0's dir −1 arm. The partner (chain 2) runs parallel to the
+  // stem, so it meets no other thread.
+  const arms: SceneArm[] = [
+    { chain: 0, s: 10, dir: 1, kind: "through" },
+    { chain: 1, s: 0, dir: 1, kind: "end" },
+    { chain: 0, s: 10, dir: -1, kind: "through" },
+  ];
+  const behind = (deg: number, u: number) => {
+    const a = (deg * Math.PI) / 180;
+    const partner = line(u - 6 * Math.cos(a), -6 * Math.sin(a), u + 6 * Math.cos(a), 6 * Math.sin(a));
+    return scene([line(-10, 0, 10, 0), ray(0, 0, deg, 0, 10), partner], [junction([0, 0], arms)], [{ a: { chain: 0, s: 10 + u }, b: { chain: 2, s: 6 }, over: "a" }]);
+  };
+  const back = (fb: FormB) => fb.arms.find((x) => x.pi === 0 && x.dir === -1)!;
+
+  it("the cut is k·u, k = clamp(1/tan((π − θ)/4), 1, 4) over the arm's corners; S1g's (dEdgeTip 0) is u", () => {
+    // The dir −1 arm's one corner is with the stem (the other neighbour is
+    // its own through pass): θ = 180° − deg. tan((π − θ)/4) is how fast a
+    // cap-held fillet's tip moves per unit of L. A stem at 30° (θ 150°) has
+    // 1/g = 7.6, clamped to 4; at 150° (θ 30°), k = 1.303.
+    for (const deg of [150, 90, 30]) {
+      const th = Math.PI - (deg * Math.PI) / 180;
+      const k = Math.min(4, Math.max(1, 1 / Math.tan((Math.PI - th) / 4)));
+      for (const u of [0.1, 0.5, 1, 2]) {
+        const sc = behind(deg, u);
+        expect(back(new FormB(sc, { dEdgeTip: 0 })).L, `${deg}°, u ${u}`).toBeCloseTo(u, 9);
+        const A = back(new FormB(sc));
+        expect(A.L, `${deg}°, u ${u}`).toBeCloseTo(k * u, 9);
+        expect(A.Lcut, `${deg}°, u ${u}`).toBeCloseTo(k * u, 9);
+      }
+    }
+    // The stem at 90°: k = cot(π/8) = 1 + √2.
+    expect(back(new FormB(behind(90, 1))).L).toBeCloseTo(1 + Math.SQRT2, 9);
+  });
+
+  it("L is continuous as the pass slides off the root, at the slope k", () => {
+    let prev = -1;
+    let worst = 0;
+    const step = 0.01;
+    for (let i = 1; i <= 100; i++) {
+      const L = back(new FormB(behind(90, i * step))).L;
+      if (prev >= 0) worst = Math.max(worst, Math.abs(L - prev));
+      prev = L;
+    }
+    expect(worst).toBeLessThan((1 + Math.SQRT2) * step + 1e-9);
+    expect(back(new FormB(behind(90, 1e-6))).L).toBeLessThan(1e-5);
+  });
+});
