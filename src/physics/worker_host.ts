@@ -322,7 +322,9 @@ export class WorkerHost implements PhysicsHost {
   private settleWall0 = 0;
   private readonly settleClock = new VisibleClock();
   private presettleFlag = false;
-  private loadInfo = { ms: 0, wall0: 0 };
+  // K1154: the physics-off load's visible clock, beside the pre-settle's.
+  private readonly loadClock = new VisibleClock();
+  private loadInfo = { ms: 0 };
   // First sleep after the scene goes live (the budget's record in-thread).
   private liveWall0 = -1;
   private readonly settleInfo: SettleInfo = {
@@ -621,12 +623,13 @@ export class WorkerHost implements PhysicsHost {
     }
     this.disarm();
     this.beginSettleJob("load");
-    this.loadInfo.wall0 = performance.now();
+    this.loadClock.start(performance.now());
   }
   loadFrame(tuning: PhysicsTuning): LoadStatus {
     if (this.inThread) return this.inThread.loadFrame(tuning);
     if (!this.mirror) return "running";
     // As in-thread: physics off never agitates.
+    this.loadClock.tick(performance.now());
     tuning.temperature = 0;
     if (!this.settlePosted) this.postSettle(tuning, { type: "settle", gen: this.genN, kind: "load" });
     this.applyHeld(Infinity, false);
@@ -638,7 +641,7 @@ export class WorkerHost implements PhysicsHost {
       this.inThread.endLoad();
       return;
     }
-    this.loadInfo.ms = performance.now() - this.loadInfo.wall0;
+    this.loadInfo.ms = this.loadClock.tick(performance.now());
     this.settleKind = "";
   }
 

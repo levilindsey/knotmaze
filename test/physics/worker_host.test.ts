@@ -19,7 +19,7 @@ import {
 } from "../../src/physics/physics_worker_core";
 import type { MainToWorker, WorkerToMain } from "../../src/physics/physics_worker_core";
 import { MirrorSystem } from "../../src/physics/mirror_system";
-import { InThreadHost } from "../../src/physics/physics_host";
+import { InThreadHost, LOAD_WALL_CAP_MS } from "../../src/physics/physics_host";
 import type { FreezeInfo } from "../../src/physics/physics_host";
 import { hashDump } from "../../src/physics/probe_dump";
 import { fabricScene, fabricGraph } from "./fabric_scene";
@@ -223,6 +223,42 @@ describe("WorkerHost on a fake worker", () => {
 
 // K7 stage 7, THE LEVER: the Worker's name carries the first scene, and the
 // worker builds it at start (physics_worker.ts calls core.start(self.name)).
+// K1154: the worker path's reported loadMs counts visible time, as
+// the in-thread load's does (load_clock.test.ts). The fake worker
+// runs the load synchronously on the settle post; settled reaches
+// the host on deliver(), so loadFrame is driven with deliver()
+// between calls. performance.now is stubbed with an hour's jump
+// between beginLoad and the first loadFrame (the hidden tab).
+describe("WorkerHost physics-off load clock (K1154)", () => {
+  it("counts visible time: a hidden hour mid-load ends nothing", () => {
+    const port = new FakePort();
+    const { host } = makeHost(() => port);
+    build(host);
+    port.deliver();
+    let now = 10_000;
+    vi.spyOn(performance, "now").mockImplementation(() => {
+      const v = now;
+      now += 2;
+      return v;
+    });
+    host.beginLoad();
+    now += 3_600_000;
+    let st = host.loadFrame({ ...scene.tuning });
+    for (let k = 0; k < 1000 && st === "running"; k++) {
+      port.deliver();
+      st = host.loadFrame({ ...scene.tuning });
+    }
+    port.deliver();
+    host.endLoad();
+    expect(st).toBe("done");
+    expect(port.core.ps!.simTime).toBeGreaterThan(0);
+    const loadMs = host.stats().loadMs;
+    // The load ends by the sleep gate, at the in-thread load's sim.
+    expect(loadMs).toBeLessThan(3_600_000);
+    expect(loadMs).toBeLessThan(LOAD_WALL_CAP_MS);
+  });
+});
+
 describe("the name build (K7 stage 7)", () => {
   // A spawn that starts the fake as physics_worker.ts does; `read` is the
   // name the worker sees (a browser could lose or mangle it).

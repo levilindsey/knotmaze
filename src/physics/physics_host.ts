@@ -80,7 +80,8 @@ const STEP_LIMITS: StepLimits = {
 // never trips the gate (the rare loud attractor) freezes anyway after
 // LOAD_SIM_CAP simulated seconds - a SIMULATED cap, so a slow phone still
 // gets a settled layout (a 9 s wall cap froze one at 1.1 sim-s under 4x
-// CPU throttle, mid-relaxation) - and LOAD_WALL_CAP_MS is only the last
+// CPU throttle, mid-relaxation) - and LOAD_WALL_CAP_MS (visible time,
+// K1154) is only the last
 // resort. (A later visible re-settle gives up after main.ts's
 // SETTLE_WALL_CAP_MS.)
 export const SETTLE_CHUNK_MS = 22;
@@ -254,7 +255,8 @@ export class PhysicsCore {
   // shared by the live ticker, the visible settle and the hidden loads.
   private readonly gate = new SleepGate();
   private stepCount = 0;
-  private loadWall0 = 0;
+  // K1154: the physics-off load's visible clock, beside the pre-settle's.
+  private readonly loadClock = new VisibleClock();
   private loadMs = 0;
   private loadStepMs = 0;
   private loadSteps = 0;
@@ -471,7 +473,7 @@ export class PhysicsCore {
 
   beginLoad(): void {
     this.disarm();
-    this.loadWall0 = performance.now();
+    this.loadClock.start(performance.now());
     this.gate.reset();
     this.loadStepMs = 0;
     this.loadSteps = 0;
@@ -497,7 +499,7 @@ export class PhysicsCore {
       if (this.gate.frame(physicsQuiet(ps), ps.simTime - sim0)) return "done";
       if (
         ps.simTime > LOAD_SIM_CAP ||
-        performance.now() - this.loadWall0 > LOAD_WALL_CAP_MS
+        this.loadClock.tick(performance.now()) > LOAD_WALL_CAP_MS
       ) {
         return "done";
       }
@@ -505,7 +507,7 @@ export class PhysicsCore {
     return "running";
   }
   endLoad(): void {
-    this.loadMs = performance.now() - this.loadWall0;
+    this.loadMs = this.loadClock.tick(performance.now());
   }
 
   beginPresettle(): void {
