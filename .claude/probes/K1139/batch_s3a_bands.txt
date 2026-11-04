@@ -1,0 +1,9 @@
+# K1139 S3a stand record: band dumps on the build (5620) + offline kymographs
+$env:K1139_HOST = "http://127.0.0.1:5620"
+node bands.mjs fork out/s3a
+node bands.mjs cross out/s3a
+node bands.mjs src out/s3a
+node bands.mjs four out/s3a
+node bands.mjs x4 out/s3a
+node bandkymo.mjs out/s3a out/s3a/fork_bands.json out/s3a/cross_bands.json out/s3a/src_bands.json out/s3a/four_bands.json out/s3a/x4_bands.json
+$env:K1139_HOST = $null

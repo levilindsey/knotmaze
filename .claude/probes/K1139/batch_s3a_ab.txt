@@ -1,0 +1,4 @@
+# K1139 S3a A/B remainder: x4 stand + the cross A/A control (master 5630 vs build 5620)
+$env:K1139_HOST = "http://127.0.0.1:5620"
+node ab.mjs http://127.0.0.1:5630 out/s3a/ab x4
+$env:K1139_HOST = $null

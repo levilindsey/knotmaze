@@ -14,6 +14,7 @@ import {
   kChain,
   kComposePaint,
   kPaintAt,
+  kPulseBandV,
   kPulseV,
   kReachWin,
   kRimAcross,
@@ -1272,6 +1273,35 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
   });
 });
 
+// K1139 S3a: the band crest is the arm crest at dG = distJ + tau: at a
+// band's ends it equals the two arms' own values there (the parent arm
+// carrying through, the child at its junction end), at every clock.
+describe("kPulseBandV (K1139 S3a)", () => {
+  it("meets both arms at the band's ends, inward and outward", () => {
+    for (const clock of [100, 100.31, 100.77, 101.2]) {
+      const U = uniforms({ clock, pulseBorn: 0, spacing: 2.5 });
+      for (const inward of [false, true]) {
+        const distJ = 2.2;
+        const parentSpan = 2.07;
+        for (const tau of [-0.55, -0.2, 0, 0.2, 0.55]) {
+          expect(kPulseBandV(U, distJ, tau, inward)).toBeCloseTo(
+            kPulseV(U, parentSpan + tau, parentSpan + 1.1, inward, false, distJ - parentSpan, true),
+            12
+          );
+        }
+        // The ends exactly: 0.55 along each arm from the joint.
+        expect(kPulseBandV(U, distJ, -0.55, inward)).toBeCloseTo(
+          kPulseV(U, parentSpan - 0.55, parentSpan, inward, false, distJ - parentSpan, true),
+          12
+        );
+        expect(kPulseBandV(U, distJ, 0.55, inward)).toBeCloseTo(
+          kPulseV(U, 0.55, 1.1, inward, false, distJ, true),
+          12
+        );
+      }
+    }
+  });
+});
 // The mirror's smoothstep on [0, 1] (3x^2 - 2x^3, clamped).
 function smoothstep(x: number): number {
   const t = Math.min(1, Math.max(0, x));

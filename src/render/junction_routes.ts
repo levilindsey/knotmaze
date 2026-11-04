@@ -106,6 +106,90 @@ export function edgeArm(e: RouteEdge, atA: boolean): RouteArm {
     : { chain: e.chain, ctrl: e.ctrlB, dir: -1 };
 }
 
+// K1139 S3a PULSE BANDS (plan 2.2, T10): at each lit junction the crest
+// splits along the paths, on the same curves the gold bands draw. A
+// pulse band spec (pulse_path.ts PulseBandSpec: head-side edge aEdge,
+// far-side edge bEdge at one vertex) becomes a PaintRoute over the two
+// arms it joins, exactly a gold band's shape, and the bands SHARE the
+// record's slots with the gold (and turnstile) bands already there:
+// a pulse band over the same pair of arms as an existing band is that
+// band (behind you, the band the path took is the gold band itself).
+// Slot count mirrors junction_field.ts MAX_ROUTES (kept here so this
+// pure module needs no pixi import; the two must move together).
+export const MAX_BAND_SLOTS = 4;
+
+// A band spec's two arms as one route: arm A leaves the junction by the
+// head-side edge, arm B by the far-side edge (edgeArm at the vertex).
+export function pulseBandRoute(
+  a: RouteEdge,
+  b: RouteEdge,
+  vertex: string
+): PaintRoute {
+  const A = edgeArm(a, a.va === vertex);
+  const B = edgeArm(b, b.va === vertex);
+  return {
+    chain: A.chain,
+    ctrl: A.ctrl,
+    dir: A.dir,
+    outChain: B.chain,
+    outCtrl: B.ctrl,
+    outDir: B.dir,
+  };
+}
+
+// The slot key of a band: its pair of arms, in either order (a one-arm
+// band keys on its arm alone).
+export function bandPairKey(r: PaintRoute): string {
+  const a = `${r.chain}:${r.ctrl}:${r.dir}`;
+  if (r.outChain === undefined) return a;
+  const b = `${r.outChain}:${r.outCtrl}:${r.outDir}`;
+  return a < b ? `${a}|${b}` : `${b}|${a}`;
+}
+
+export interface PulseBandSlot {
+  route: PaintRoute;
+  // The record slot this band reads its crest on (an existing band's
+  // slot when shared).
+  slot: number;
+  shared: boolean;
+}
+
+// Share one junction record's band slots between the bands already
+// there (gold, turnstiles, oldest first - they keep their slots, deduped
+// by arm pair as the renderer's pickRoutes keeps them) and the pulse
+// bands wanted there, in spec order. A record holds at most `max`
+// distinct arm pairs: a pulse band whose pair is already there shares
+// its slot; the rest take the free slots in order. When the distinct
+// pairs would exceed `max`, the junction's pulse bands fall back to
+// option B (the fan keeps its bars there; S3b draws no band) and the
+// result says so - the existing bands are untouched either way.
+export function assignPulseSlots(
+  existing: readonly PaintRoute[],
+  pulse: readonly PaintRoute[],
+  max: number = MAX_BAND_SLOTS
+): { slots: PulseBandSlot[]; used: number; fallback: boolean } {
+  const slotOf = new Map<string, number>();
+  for (const r of existing) {
+    const k = bandPairKey(r);
+    if (!slotOf.has(k)) slotOf.set(k, slotOf.size);
+  }
+  const all = new Set(slotOf.keys());
+  for (const r of pulse) all.add(bandPairKey(r));
+  const used = all.size;
+  if (used > max) return { slots: [], used: slotOf.size, fallback: true };
+  const slots: PulseBandSlot[] = [];
+  for (const r of pulse) {
+    const k = bandPairKey(r);
+    let s = slotOf.get(k);
+    if (s === undefined) {
+      s = slotOf.size;
+      slotOf.set(k, s);
+    }
+    slots.push({ route: r, slot: s, shared: existing.some((e) => bandPairKey(e) === k) });
+  }
+  return { slots, used, fallback: false };
+}
+
 // K138 s2 TURNSTILES: each pair of runs a junction lets through as one band
 // across it (arm `a` in, arm `b` out), so a turnstile's open pair reads as
 // one thread through the joint and its third arm meets the band. The

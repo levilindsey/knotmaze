@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  assignPulseSlots,
+  bandPairKey,
   edgeArm,
   legRoutes,
   pathLegs,
   pickRoutes,
+  pulseBandRoute,
   routeCorner,
   routeCubic,
   traveledRoutes,
@@ -347,5 +350,109 @@ describe("routeCubic", () => {
     routeCubic(0, 0, 1, 0, 0, 0, -1, 0, 0, 1, out);
     expect(out.length).toBe(6);
     for (const v of out) expect(v).toBeCloseTo(0, 12);
+  });
+});
+
+describe("pulse bands (K1139 S3a, T10)", () => {
+  it("turns a band spec into the two arms' route at its vertex", () => {
+    // At J1: e0's B end (in from S) into e1's B end (on to J2).
+    expect(pulseBandRoute(E[0], E[1], "J1")).toEqual(
+      route(0, 10, -1, [1, 30, -1])
+    );
+  });
+
+  it("keys an arm pair in either order as one band", () => {
+    const fwd = route(0, 10, -1, [1, 30, -1]);
+    const rev = route(1, 30, -1, [0, 10, -1]);
+    expect(bandPairKey(rev)).toBe(bandPairKey(fwd));
+    expect(bandPairKey(route(0, 10, -1))).not.toBe(bandPairKey(fwd));
+  });
+
+  it("gives pulse bands the free slots when the record is empty", () => {
+    const p = [route(0, 10, -1, [1, 30, -1]), route(0, 10, -1, [5, 12, 1])];
+    const a = assignPulseSlots([], p);
+    expect(a.fallback).toBe(false);
+    expect(a.used).toBe(2);
+    expect(a.slots.map((s) => [s.slot, s.shared])).toEqual([
+      [0, false],
+      [1, false],
+    ]);
+  });
+
+  it("shares the gold band's slot on the same arm pair (either order)", () => {
+    const gold = route(1, 30, -1, [0, 10, -1]); // The same pair, reversed.
+    const p = [route(0, 10, -1, [1, 30, -1]), route(0, 10, -1, [5, 12, 1])];
+    const a = assignPulseSlots([gold], p);
+    expect(a.fallback).toBe(false);
+    expect(a.used).toBe(2);
+    expect(a.slots.map((s) => [s.slot, s.shared])).toEqual([
+      [0, true],
+      [1, false],
+    ]);
+  });
+
+  it("behind you on a 4-arm junction: 3 bands, the gold sharing one", () => {
+    // The path took e0 -> e1 here; the pulse also bands e0 -> e2, e0 -> e5.
+    const gold = route(0, 10, -1, [1, 30, -1]);
+    const p = [
+      route(0, 10, -1, [1, 30, -1]),
+      route(0, 10, -1, [1, 20, 1]),
+      route(0, 10, -1, [5, 12, 1]),
+    ];
+    const a = assignPulseSlots([gold], p);
+    expect(a.fallback).toBe(false);
+    expect(a.used).toBe(3);
+    expect(a.slots.filter((s) => s.shared).length).toBe(1);
+    expect(Math.max(...a.slots.map((s) => s.slot))).toBeLessThan(4);
+  });
+
+  it("falls back to option B, saying so, when the pairs exceed the slots", () => {
+    const existing = [
+      route(0, 10, -1, [1, 30, -1]),
+      route(1, 20, 1, [2, 3, 1]),
+      route(2, 9, -1, [4, 0, 1]),
+    ];
+    const p = [route(0, 10, -1, [5, 12, 1]), route(1, 30, -1, [5, 12, 1])];
+    const a = assignPulseSlots(existing, p);
+    expect(a.fallback).toBe(true);
+    expect(a.slots).toEqual([]);
+    expect(a.used).toBe(3); // The existing bands keep their slots.
+  });
+
+  it("counts a repeated existing pass once, and never shares a one-arm band", () => {
+    const gold = route(0, 10, -1, [1, 30, -1]);
+    const a = assignPulseSlots([gold, route(1, 30, -1, [0, 10, -1])], []);
+    expect(a.used).toBe(1);
+    const one = assignPulseSlots([route(2, 9, -1)], [route(0, 10, -1, [1, 30, -1])]);
+    expect(one.slots[0].shared).toBe(false);
+    expect(one.used).toBe(2);
+  });
+
+  it("keeps every slot within MAX_BAND_SLOTS at a full 4-arm junction", () => {
+    const p = [
+      route(0, 10, -1, [1, 30, -1]),
+      route(0, 10, -1, [1, 20, 1]),
+      route(0, 10, -1, [5, 12, 1]),
+    ];
+    const a = assignPulseSlots([route(4, 8, -1, [5, 12, 1])], p);
+    expect(a.used).toBeLessThanOrEqual(4);
+    for (const s of a.slots) expect(s.slot).toBeLessThan(4);
+  });
+
+  it("draws its corner with routeCorner/routeCubic, tau -d..+d", () => {
+    // A right-angle band: the cubic's arc runs long against its tau span
+    // (about 0.79 at 90 deg), the ratio S3b's tau rescale must absorb so
+    // the crest's band speed stays within P3's 10 percent.
+    const d = routeCorner(Math.PI / 2, 0.5, 0.3, 10, 10).d;
+    const out: number[] = [];
+    routeCubic(0.5, 0, 1, 0, 0, 0.5, 0, 1, d, 64, out);
+    let arc = 0;
+    for (let i = 3; i < out.length; i += 3) {
+      arc += Math.hypot(out[i] - out[i - 3], out[i + 1] - out[i - 2]);
+    }
+    expect(out[2]).toBeCloseTo(-d, 12);
+    expect(out[out.length - 1]).toBeCloseTo(d, 12);
+    expect(arc / (2 * d)).toBeGreaterThan(0.7);
+    expect(arc / (2 * d)).toBeLessThan(0.85);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { WalkEdge, WalkGraph, WalkVertex } from "../../src/core/walk_graph";
-import { pulsePath } from "../../src/render/pulse_path";
+import { pulsePath, pulseTree } from "../../src/render/pulse_path";
 
 // K1139 S2 (plan 4.1): the pure lit-tree model on small invented graphs.
 // T6 (cycles' two-ended form) and T7 (self-loops) are S4's; here a cycle
@@ -165,5 +165,71 @@ describe("pulsePath (K1139 S2, T1-T5/T8/T9)", () => {
     const blocked = pulsePath(TREE, "H", -1, 10, spansOf(TREE_SPANS), undefined, (eid) => eid === 0);
     expect(blocked.map((i) => i.edge)).toEqual([3]);
     expect(pulsePath(TREE, "nowhere", -1, 10, spansOf(TREE_SPANS))).toEqual([]);
+  });
+});
+
+describe("pulseTree bands (K1139 S3a, T10)", () => {
+  it("T10 bands: one band from the parent arm into each tree child", () => {
+    const { bands } = pulseTree(TREE, "H", -1, 10, spansOf(TREE_SPANS));
+    const at = (v: string) => bands.filter((b) => b.vertex === v);
+    // The 4-arm junction J: e0 in, e1/e2/e4 on (3 bands); K: e4 in, e5 on.
+    expect(at("J").map((b) => [b.aEdge, b.bEdge, b.inward])).toEqual([
+      [0, 1, false],
+      [0, 2, false],
+      [0, 4, false],
+    ]);
+    expect(at("K")).toEqual([
+      { vertex: "K", aEdge: 4, bEdge: 5, distJ: 3.5, inward: false },
+    ]);
+    // distJ is where the parent arm ended (its dist0 + span), quantized.
+    for (const b of at("J")) expect(b.distJ).toBeCloseTo(2.2, 9);
+    // Your own junction gets no band (its hand-off is S5's).
+    expect(at("H")).toEqual([]);
+  });
+
+  it("T10 behind you: the bands run from each back arm into the arrival-side arm", () => {
+    const G = graph([
+      ["P", "H", 2],
+      ["P", "Q", 1],
+      ["P", "R", 1],
+      ["H", "X", 1],
+      ["Q", "S", 1],
+    ]);
+    const { bands } = pulseTree(G, "H", 0, 10, () => 1);
+    const at = (v: string) => bands.filter((b) => b.vertex === v);
+    // At P the head-side arm is the arrival e0; both back arms band into it.
+    expect(at("P").map((b) => [b.aEdge, b.bEdge, b.inward, b.distJ])).toEqual([
+      [0, 1, true, 1],
+      [0, 2, true, 1],
+    ]);
+    // One junction further back the same rule: e4 bands into e1.
+    expect(at("Q")).toEqual([
+      { vertex: "Q", aEdge: 1, bEdge: 4, distJ: 2, inward: true },
+    ]);
+    expect(at("H")).toEqual([]);
+  });
+
+  it("T10 reach: a junction whose children the reach cuts holds no band", () => {
+    const cut = pulseTree(TREE, "H", -1, 1.5, spansOf(TREE_SPANS));
+    expect(cut.bands).toEqual([]); // J's arms are not lit at reach 1.5.
+    const mid = pulseTree(TREE, "H", -1, 2.5, spansOf(TREE_SPANS));
+    expect(mid.bands.filter((b) => b.vertex === "J").length).toBe(3);
+    expect(mid.bands.filter((b) => b.vertex === "K")).toEqual([]); // e5 unlit.
+  });
+
+  it("T10 cycles: a non-tree arm gets no band (the two-ended form is S4's)", () => {
+    const G = graph([
+      ["H", "A", 1],
+      ["A", "B", 1],
+      ["B", "H", 1.5],
+    ]);
+    const { bands } = pulseTree(G, "H", -1, 10, () => 1);
+    expect(bands).toEqual([]);
+  });
+
+  it("pulsePath still returns exactly pulseTree's items", () => {
+    expect(pulsePath(TREE, "H", -1, 10, spansOf(TREE_SPANS))).toEqual(
+      pulseTree(TREE, "H", -1, 10, spansOf(TREE_SPANS)).items
+    );
   });
 });

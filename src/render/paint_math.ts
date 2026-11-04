@@ -1453,6 +1453,36 @@ export function kReachWin(U: KUniforms, d: number): number {
 // K480 stage 2: a branched arm carries dist0 (arc from the head to its
 // junction) and cont (the light carries past its far end); phase, floor
 // and the reach window read dist0 + d, and a cont arm has no end fade.
+// K1139 S3a: the one crest field every pulse reads, on an arm and on a
+// junction band alike: brightness at global distance dG (drawn arc from
+// you along the lit tree) with the caller's end window (1 on a band and
+// at a carrying arm's junction end). kPulseV is this at an arm point;
+// kPulseBandV is this at a band point (dG = distJ + tau). Extracted
+// without moving a value: test/render/paint_gameplay.test.ts pins
+// kPulseV, and the S3b fan shader's twin must call the same shape.
+export function kPulseCrest(
+  U: KUniforms,
+  dG: number,
+  inward: boolean,
+  hovered: boolean,
+  endWin: number
+): number {
+  const C = PAINT_CONST;
+  if (hovered) return endWin * U.uKPaint[3] * kReachWin(U, dG);
+  const s = U.uKPulse[2];
+  const raw = inward ? dG + U.uKPulse[0] : dG - U.uKPulse[1];
+  const ph = raw - s * Math.floor(raw / s);
+  const dist = Math.min(ph, s - ph);
+  const dC = Math.max(0, dG - (ph <= s - ph ? ph : ph - s));
+  const bump = Math.max(0, 1 - dist / C.CREST_WIDTH) * Math.min(1, dC / C.CREST_RAMP);
+  const floor =
+    (C.PULSE_FLOOR + C.PULSE_CORE_BOOST * Math.max(0, 1 - dG / C.PULSE_CORE_RADIUS)) *
+    Math.max(0, 1 - dG / C.PULSE_FLOOR_REACH);
+  return Math.min(1, (floor + bump * 0.9) * endWin) * U.uKPulse[3] * kReachWin(U, dG);
+}
+
+// kPulseV (GLSL twin in paint_glsl.ts): the field at distance d along
+// an arm; see the K480 note above kPulseCrest.
 export function kPulseV(
   U: KUniforms,
   d: number,
@@ -1466,17 +1496,24 @@ export function kPulseV(
   if (d < 0 || d > span) return 0;
   const dG = dist0 + d;
   const endWin = cont ? 1 : Math.min(1, Math.max(0, (span - d) / C.PULSE_END_WINDOW));
-  if (hovered) return endWin * U.uKPaint[3] * kReachWin(U, dG);
-  const s = U.uKPulse[2];
-  const raw = inward ? dG + U.uKPulse[0] : dG - U.uKPulse[1];
-  const ph = raw - s * Math.floor(raw / s);
-  const dist = Math.min(ph, s - ph);
-  const dC = Math.max(0, dG - (ph <= s - ph ? ph : ph - s));
-  const bump = Math.max(0, 1 - dist / C.CREST_WIDTH) * Math.min(1, dC / C.CREST_RAMP);
-  const floor =
-    (C.PULSE_FLOOR + C.PULSE_CORE_BOOST * Math.max(0, 1 - dG / C.PULSE_CORE_RADIUS)) *
-    Math.max(0, 1 - dG / C.PULSE_FLOOR_REACH);
-  return Math.min(1, (floor + bump * 0.9) * endWin) * U.uKPulse[3] * kReachWin(U, dG);
+  return kPulseCrest(U, dG, inward, hovered, endWin);
+}
+
+// K1139 S3a: the crest on a pulse band through a junction fan, at signed
+// band arc tau from the joint (negative on the head-side arm, positive
+// on the far-side arm; pulse_path.ts PulseBandSpec). The band carries
+// no end window: at tau's ends it meets the arms where their own value
+// has window 1 (the parent arm carries through, the child's window at
+// its junction end), so the field is continuous across the fan by
+// construction. CPU mirror only until S3b's fan shader calls its twin.
+export function kPulseBandV(
+  U: KUniforms,
+  distJ: number,
+  tau: number,
+  inward: boolean,
+  hovered = false
+): number {
+  return kPulseCrest(U, distJ + tau, inward, hovered, 1);
 }
 
 // Paint state at a point: the gold ramp amount p (the thread's own paint),

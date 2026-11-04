@@ -43,17 +43,41 @@ export interface PulseItem {
   parent: number;
 }
 
+// K1139 S3a: one pulse band through a lit junction (plan 2.2, T10): the
+// crest leaves the head-side arm `aEdge` and runs on along the far-side
+// arm `bEdge`, on the K81 curve between them (junction_routes.ts turns
+// this into arms and slots). One band per tree child, so a 3-arm
+// junction holds 2 and a 4-arm junction 3. Ahead of you the head-side
+// arm is the tree parent (the light arrives by it and splits into each
+// child); behind you it is the arrival-side arm (each back arm's light
+// gathers into the arm toward you), so the geometry is the same and
+// `inward` alone says which way the crest travels. `distJ` is the
+// junction's drawn distance from you (the child's dist0, quantized as
+// the items are): the band's crest reads dG = distJ + tau, tau signed
+// along the band, negative on the aEdge side. Your own junction gets no
+// band (its hand-off is S5's), and neither does a non-tree arm lit from
+// its nearer end (a cycle arm keeps its one parent until S4).
+export interface PulseBandSpec {
+  vertex: string;
+  aEdge: number;
+  bEdge: number;
+  distJ: number;
+  inward: boolean;
+}
+
 const q3 = (x: number): number => Math.round(x * 1000) / 1000;
 
-// The lit tree from `head` (your junction) out to `reach`, as pulse
-// items in Dijkstra order (your arms first). `arrival` is the walk edge
-// you came by (-1 before the first move): it and everything the tree
-// reaches through it are inward. `spanOf(eid)` is an edge's live drawn
-// length. `gate(eid, atA)` may veto a beyond-head arm and `blocked(eid)`
-// any arm (K137 broken / K114 cut runs): a vetoed arm neither lights
-// nor carries light through, exactly as route_plan's litArms had it -
-// head arms are never gated, blocked arms are barred at the head too.
-export function pulsePath(
+// The lit tree from `head` (your junction) out to `reach`: its pulse
+// items in Dijkstra order (your arms first) and, per lit junction the
+// light passes through, its pulse band specs (S3a). `arrival` is the
+// walk edge you came by (-1 before the first move): it and everything
+// the tree reaches through it are inward. `spanOf(eid)` is an edge's
+// live drawn length. `gate(eid, atA)` may veto a beyond-head arm and
+// `blocked(eid)` any arm (K137 broken / K114 cut runs): a vetoed arm
+// neither lights nor carries light through, exactly as route_plan's
+// litArms had it - head arms are never gated, blocked arms are barred
+// at the head too.
+export function pulseTree(
   walk: WalkGraph,
   head: string,
   arrival: number,
@@ -61,9 +85,10 @@ export function pulsePath(
   spanOf: (eid: number) => number,
   gate?: (eid: number, atA: boolean) => boolean,
   blocked?: (eid: number) => boolean
-): PulseItem[] {
+): { items: PulseItem[]; bands: PulseBandSpec[] } {
   const items: PulseItem[] = [];
-  if (!walk.vertices.has(head)) return items;
+  const bands: PulseBandSpec[] = [];
+  if (!walk.vertices.has(head)) return { items, bands };
 
   // Dijkstra over lattice lengths, with litArms' deterministic scan and
   // tie-breaking (smallest distance, then smallest vertex id; a strict
@@ -164,5 +189,38 @@ export function pulsePath(
       });
     }
   }
-  return items;
+
+  // S3a bands: one per tree child at every lit junction past your own.
+  // A tree child is an item whose edge is its far vertex's parent edge;
+  // a non-tree arm (a cycle's nearer-end emission) and a self-loop get
+  // none. The head-side arm is the child's tree parent, ahead of you
+  // and behind you alike (see PulseBandSpec).
+  const treeEdges = new Set(parentEdge.values());
+  for (const it of items) {
+    if (it.near === head || it.parent < 0 || !treeEdges.has(it.edge)) continue;
+    const e = walk.edges[it.edge];
+    if (e.va === e.vb) continue;
+    bands.push({
+      vertex: it.near,
+      aEdge: it.parent,
+      bEdge: it.edge,
+      distJ: it.dist0,
+      inward: it.inward,
+    });
+  }
+  return { items, bands };
+}
+
+// The lit tree's pulse items alone (S2's entry point; pulseTree also
+// returns the band specs).
+export function pulsePath(
+  walk: WalkGraph,
+  head: string,
+  arrival: number,
+  reach: number,
+  spanOf: (eid: number) => number,
+  gate?: (eid: number, atA: boolean) => boolean,
+  blocked?: (eid: number) => boolean
+): PulseItem[] {
+  return pulseTree(walk, head, arrival, reach, spanOf, gate, blocked).items;
 }
