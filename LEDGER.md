@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1151.
+Next free ID: K1153.
 
 ## Waiting on Levi
 
@@ -297,15 +297,18 @@ Next free ID: K1151.
 - **K1138** · The backdrop speed slider goes up to 8 times each backdrop's own pace. Should its top be
   2 times, or 16 times? (Your other backdrop changes of 2026-11-03 are done: vellum faster, aurora
   faster and taller, contours morphing, paper stronger.)
-- **K144** · Accounts and shared stats, a stretch goal (Levi 10-13): OAuth, cross-device stats,
-  opt-in sharing, percentile bands, replay anti-cheat (K108, K47). Backends: Cloudflare Workers + D1
-  or the SnoringCat platform (Nakama). Next: design doc. `docs/design/levi_notes_2026-10-13.md`.
+- **K144** · Accounts and shared stats, a stretch goal (Levi 10-13). The options doc is done
+  (`docs/design/K144_accounts.md`, 23e3bf79; it recommends Cloudflare Workers + D1). Its Q1-Q5 wait on Levi:
+  the backend, sign-in providers, the sharing switch's words, same-day bands, cross-device resume.
 - **K1150** · Under the beat, a new Beat indicator choice: the pulse you have today, a crisp ring that spreads
   from your marker on each beat, or off. Does the ring read well? Pictures: .claude/probes/K804/shots/ (K804,
   94e4b59c)
-- **K688** · Healing cuts against monsters (Levi took R.3.5, decision 6): a cut closes again after a
-  few moves; cut with the minotaur or the fire. After the K114 walker stage
-  (`docs/design/K80_gameplay_additions.md` R.3.5).
+- **K688** · Healing cuts against monsters (Levi took R.3.5, decision 6): a cut closes again after a few
+  moves. The design doc is done (`docs/design/K688_healing_cuts.md`, db015d9e). Its five questions wait on
+  Levi: the heal count, the charges, the trapdoor, par beside cuts, the fire.
+- **K207** · Fog on a path you walk back over: it used to clear a little more with each pass (crisp edges);
+  since bb7aa6ed it stays as the first walk left it (soft edges, a bit tighter). Keep the new look? Pictures:
+  `.claude/probes/K207/shots/k207_fog_pair.png`.
 
 ## In progress
 
@@ -498,12 +501,12 @@ Next free ID: K1151.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: agent `aeaeb7068fdeb974f` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 10:14 (S3d)
-  - branch: `worktree-agent-aaf87e9d3775b20e4`, worktree `.claude/worktrees/agent-aaf87e9d3775b20e4`; last commit: `3ff68698`
-  - evidence: .claude/probes/K1040/s3/ (in the worktree: run_locked.ps1, phone_quiet.mjs, run_phone.ps1, phone_table.ps1, f11_run.ps1; out/phone_table_f11.md, out/f11_*.log); oracle30 and the recordings: worktree k868-s3a (.claude/probes/S3a/seq13/)
-  - next: S3d (`docs/design/K1040_s3d_tent.md`): measure what bounds the tents on the Pixel, then a vertex-light tent mode against the 2 ms gate (F4, F6, F8, F9 and F12 are S3e's); if no tent gets there, Levi's call on a new budget
-  - brief: `docs/design/K1040_s3d_tent.md` (on the branch; S3c's: `docs/design/K1040_s3c_label.md`)
-  - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`; timing through `.claude/probes/K1040/s3/run_locked.ps1`; phone: `phone_quiet.mjs`, then `run_phone.ps1`
+  - owner: nobody since 2026-11-03 11:50 (S3d stopped at its end, gate missed; agent `aeaeb7068fdeb974f` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: `worktree-agent-aaf87e9d3775b20e4`, worktree `.claude/worktrees/agent-aaf87e9d3775b20e4`; last commit: `27fbf734`
+  - evidence: `.claude/probes/K1040/s3/` (`run_locked.ps1`, `phone_batch.ps1` + `run_phone.ps1`, `s3d_gate.ps1`, `s3d_kick.ps1`, `split.mjs`, `s3d_table.mjs`; `out/s3d_table.md`, `out/split_s3d2.md`, `out/split_s3d3.md`, `out/defects_s3d.md`); oracle30 and the recordings: worktree k868-s3a (`.claude/probes/S3a/seq13/`)
+  - next: merge S3c + S3d to master, then S3e (`docs/design/K1040_s3e_lean.md`): cut the pass's fixed part (the per-pass upload, L's and D's clears and stores), then its vertex count, against the 2 ms gate as written (the coordinator's call)
+  - brief: `docs/design/K1040_s3d_tent.md` (its Handoff; S3c's: `docs/design/K1040_s3c_label.md`)
+  - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`; desktop timing through `.claude/probes/K1040/s3/run_locked.ps1`; the phone through `phone_batch.ps1` (it runs `run_phone.ps1`: both locks, then K1142's ready check)
 - **K1119** · Cursive J3g (v7.0), Levi's answers to v6.9 (2026-11-03): b, v and w exit between v6.8 and
   v6.9, closer to v6.8 ("still exit somewhat downward and with a swoosh"); the six a/q joins get v6.6's dip
   back ("We need that dip"); the e after them decided by the checks. One sheet per letter for Levi.
@@ -512,15 +515,6 @@ Next free ID: K1151.
   - evidence: .claude/probes/K863/trace/ (work30/, out30/, NOTES ## K1119)
   - next: Levi looks at the v7.0 sheets (b/v/w exits, the a/q dip, be/ve/we: v7.0 or e60, the br dip), then the c stage (K1112's next letter)
   - brief: docs/design/K1119_cursive_j3g.md (its Handoff); J3f's in docs/design/K1113_cursive_j3f.md
-- **K1146** · Muse batch 11 (`docs/design/K1146_muse_batch11.md`), queued C, E, A, D, F: K252 (a), the pan
-  range's ease by time; K144's accounts doc; K804's beat indicator (pulse, ring or off); K207's fog stamp
-  dedupe; K688's healing-cuts doc. Run B (K1130) was dropped: it stays with K156's next phone round.
-  - owner: muse runs 11C, 11E, 11A, 11D, 11F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 09:55
-  - branch: mainline; last commit: `db015d9e`
-  - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K252/`, `K804/`, `K207/`
-  - next: Run F done; batch 11 complete, Claude reviews and closes K1146
-  - brief: `docs/design/K1146_muse_batch11.md`
-  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 11C-11F); a `hold.txt` beside it holds the chain before its next run
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"; plan the look, the checks and the build first). S1 done (fc175b0f): today's faults a-h (doc 1.3),
   one light field over the lit tree (S2), stages S3-S6. Full text: `docs/ledger_notes.md`.
@@ -754,6 +748,9 @@ Every other item below waits on the trigger it names.
 - **K1149** · Beat dots: dots at the beat points inside multi-beat runs, along threads and at junctions, that
   pop with a ring when the dot eats them; the dropdown and the pulse and ring at the dot are done (split from
   K804). Builds toward K805.
+- **K1143** · K1040 S3f (K1097), after S3e: F4's merge scan; F6's SNAP class (within 0.01 px: accept or
+  tighten eps); F8's sharp joints; F9, lr 2's upsample class (DEFECT, its 1.9x rate unexplained); F12, a
+  float64 mirror pin against labelAt. F10 went to S3d (`docs/design/K1040_s3d_tent.md`).
 
 ## Residuals (known, not fixed)
 
@@ -917,9 +914,6 @@ Every other item below waits on the trigger it names.
 - **K208** · `restoreYarn` keeps its own copy of the travel-direction
   rule; it could share `travelOrder` / `moveEnds` (`src/render/fog_arc.ts`,
   K100).
-- **K207** · Fog stamp dedupe shipped partial (bb7aa6ed): the list stops growing within a solve, but
-  the pair stopped under K1050 rule 2 - the deduped fog reveals tighter on revisited ground (field
-  IoU 0.885, area 203.9 -> 180.4; `.claude/probes/K207/`). Left: accept it, or change the fog's drawing.
 - **K206** · A restored attempt stamps its fog right after the intro, while the threads re-settle,
   so with physics it differs from the live fog (IoU ~0.96). Option: stamp after the first sleep
   (`docs/design/K100.md`, Stage 1 handoff).
@@ -1703,9 +1697,6 @@ Every other item below waits on the trigger it names.
 - **K1133** · Burn re-declare: fillet rebuilds on front-crossing frames, retraced with the flow on
   (K1137 Run B, K1077 stand): realtime 71/119 vs turn 59/119 (burn cross-check 0.56 vs 0.50 a frame); the
   12 without an update split uwRev 8, joint-key 4; a fix needs incremental fillets (joinery), not the declare.
-- **K1143** · S3c's leftovers (K1097; `docs/design/K1040_s3c_label.md`, its branch): F6, the SNAP class (all
-  within 0.01 px): accept or tighten eps; F9, lr 2's upsample class reads DEFECT, its 1.9x rate unexplained;
-  F10, the tents look vertex-bound (test lr 2 on the Pixel); F12, no float64 mirror pin against labelAt yet.
 - **K1144** · Cursive v7.0's leftovers (K1119's Handoff in `docs/design/K1119_cursive_j3g.md`): br, vr and wr dip
   into r as a tighter V (br newly fails roughness); five of six a/q joins fail it; q's low point is 0.4 u above
   the band; be, ve and we sit 40.8-42.0 u from the font (Levi: the v7.0 or the e60 column).
@@ -1715,6 +1706,12 @@ Every other item below waits on the trigger it names.
 - **K1148** · Hand-run phone tools skip K1142's check: `bench_frame.mjs --cdp`, `k923/sync.mjs --target
   phone`, `k923/close_tabs.mjs` (a `--ready` flag calling `ensurePhoneReady({ allowChrome: true })`); and
   `Find-Adb` / `findAdb` duplicate adb discovery (K1142 Handoff).
+- **K1151** · Invalidating the S3 label pass's sampled D32F depth after its draws adds 31-34 ms a pass on the
+  Pixel (s3d2), where K923's invalidated D24 renderbuffer cost nothing; the mechanism is untested
+  (`docs/design/K1040_s3d_tent.md`, Handoff). S3e tries the renderbuffer (K1097).
+- **K1152** · `scripts/phone_pass/phone_ready.mjs` cites `phone_quiet.mjs` of K1097 at 680651fe (lines 10, 14,
+  44, 48, 68): that commit was rebased away and S3d's step 0 deleted the file, so the comments point at
+  nothing on master. Say what the check does in its own words.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2016,6 +2013,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1146** · Muse batch 11: K252 (a), the pan range's ease by time (7f929ae3); K144's accounts doc (23e3bf79); K804's beat ring (94e4b59c); K207's fog dedupe, partial (bb7aa6ed); K688's healing-cuts doc (db015d9e). Done in da73b598 (2026-11-03).
 - **K804** · beat indicator dropdown: pulse and ring at the dot; dots split out. Done in 94e4b59c (2026-11-03).
 - **K234** · `scripts/phone_pass.ps1`'s `-Phase check` and `-WaitReady` called a phone in use ready: K1142's shared check (`scripts/phone_pass/phone_ready.mjs`) now needs the launcher in front and 120 s without a touch. Done in 2887abc5 (2026-11-03).
 - **K1142** · Phone kit guard: one shared read-only readiness check (`scripts/phone_pass/phone_ready.mjs`: screen on, unlocked, the launcher in front, 120 s without a touch) that every tracked phone runner calls before opening anything. Done in 2887abc5 (2026-11-03).
