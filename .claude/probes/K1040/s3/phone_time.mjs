@@ -32,7 +32,10 @@ const SCENES = [
 const args = process.argv.slice(2);
 const val = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 // --b2b and --floor take no value (K923's method: page.ts time()'s opts).
-const BOOL = new Set(["--b2b", "--floor", "--noscan", "--tent", "--lean", "--rest"]);
+const BOOL = new Set(["--b2b", "--floor", "--noscan", "--tent", "--lean", "--rest", "--dry"]);
+// K1040 S3f: --dry bundles the page (to out/phone_dry.js) and prints the run,
+// touching no phone: no adb call at all, no server (s3f_gate.ps1 -DryRun).
+const dry = args.includes("--dry");
 const pos = args.filter((a, i, all) => !a.startsWith("--") && !(i > 0 && all[i - 1].startsWith("--") && !BOOL.has(all[i - 1])));
 const scenes = pos.length ? pos[0].split(",") : SCENES;
 const scale = Number(val("--scale", 2)), frames = Number(val("--frames", 60)), port = Number(val("--port", 5403));
@@ -75,7 +78,7 @@ const log = (m) => console.log(`${hms()} ${maskStr(m)}`);
 const adb = (dev, ...a) =>
   execFileSync(ADB, dev ? ["-s", dev, ...a] : a, { encoding: "utf8", timeout: 30000, stdio: ["ignore", "pipe", "ignore"] });
 
-const online = adb(null, "devices").split(/\r?\n/).filter((l) => /\tdevice$/.test(l)).map((l) => l.split("\t")[0]);
+const online = dry ? ["<dry>"] : adb(null, "devices").split(/\r?\n/).filter((l) => /\tdevice$/.test(l)).map((l) => l.split("\t")[0]);
 if (online.length !== 1) {
   log(`refusing: ${online.length} online adb devices (want exactly one)`);
   process.exit(4);
@@ -107,9 +110,13 @@ const plugins = glslSwap
   ? [{ name: "glsl-swap", load(id) { if (id.replace(/\\/g, "/").endsWith("src/render/field/label_b_glsl.ts")) { swapped++; return readFileSync(glslSwap, "utf8"); } } }]
   : [];
 const bundle = await rolldown({ input: join(here, "page.ts"), platform: "browser", logLevel: "warn", plugins });
-await bundle.write({ file: join(outDir, "phone.js"), format: "iife", inlineDynamicImports: true });
+await bundle.write({ file: join(outDir, dry ? "phone_dry.js" : "phone.js"), format: "iife", inlineDynamicImports: true });
 await bundle.close();
 if (glslSwap && swapped !== 1) { log(`refusing: the GLSL swap matched ${swapped} modules`); process.exit(5); }
+if (dry) {
+  log(`dry run, no phone: bundled out/phone_dry.js; label ${runLabel || "-"}, ${variantsArg ? `variants ${variantsArg} x ${rounds} rounds` : "one run"}, ${scenes.length} scenes, fit ${fit ? fit.join("x") : "none"}${b2b ? ", b2b" : ""}${floor ? ", floor" : ""}${passMode ? `, mode ${passMode}` : ""}${lean ? ", lean" : ""}${rest ? ", rest" : ""}${state ? `, state ${state}` : ""}`);
+  process.exit(0);
+}
 const html =
   '<!doctype html>\n<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">' +
   '<title>K1040 S3b label pass (phone)</title><link rel="icon" href="data:,"></head>\n' +

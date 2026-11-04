@@ -30,10 +30,10 @@ if ($Tables.Count) {
   $t = @()
   foreach ($line in $Tables) {
     $targs = @($line -split '\s+' | Where-Object { $_ })
-    # An array splat binds no "-Floor": take it out by hand.
-    $pos = @(); $fl = ''
-    for ($i = 0; $i -lt $targs.Count; $i++) { if ($targs[$i] -eq '-Floor') { $fl = $targs[++$i] } else { $pos += $targs[$i] } }
-    $t += @(& (Join-Path $s3 'phone_table.ps1') @pos -Floor $fl *>&1) + @('')
+    # An array splat binds no "-Floor" (or "-Upload", S3f): take them out by hand.
+    $pos = @(); $fl = ''; $upl = $false
+    for ($i = 0; $i -lt $targs.Count; $i++) { if ($targs[$i] -eq '-Floor') { $fl = $targs[++$i] } elseif ($targs[$i] -eq '-Upload') { $upl = $true } else { $pos += $targs[$i] } }
+    $t += @(& (Join-Path $s3 'phone_table.ps1') @pos -Floor $fl -Upload:$upl *>&1) + @('')
   }
   $t | Out-File -Encoding utf8 (Join-Path $s3 "out\phone_table_$Name.md")
   $t | ForEach-Object { Say "  $_" }

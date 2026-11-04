@@ -29,6 +29,11 @@ const p50 = (v, s) => {
   const f = join(here, "out", `phone_time_${label}${v}_${s}.json`);
   return existsSync(f) ? JSON.parse(readFileSync(f, "utf8")).sync.p50 : NaN;
 };
+// K1040 S3f: the variant's upload p50 (its main-thread time in the upload calls, outside the sync).
+const up50 = (v, s) => {
+  const f = join(here, "out", `phone_time_${label}${v}_${s}.json`);
+  return existsSync(f) ? JSON.parse(readFileSync(f, "utf8")).upload?.p50 ?? NaN : NaN;
+};
 const set = process.argv[4] ?? "s3d1";
 const cols2 = [
   ["tentv", (g) => g("tentv") - g("floor")],
@@ -117,19 +122,54 @@ const cols5 = [
   ["ns - ideal", (g) => g("leanemptyns") - g("ideal")],
   ["noupns - d32f", (g) => g("leanemptynoupns") - g("ideal32f")],
 ];
-const cols = set === "s3e3" ? cols5 : set === "s3e1" ? cols4 : set === "s3d3" ? cols3 : set === "s3d2" ? cols2 : cols1;
-const f1 = (x) => (Number.isFinite(x) ? x.toFixed(set.startsWith("s3e") ? 2 : 1) : "-");
+// K1040 S3f step 1-2 (s3f1: the new pass, K1158 - no state queries, a Pixi
+// host's restore - beside S3e's lean pass and the ideal family on one page;
+// ffloor is the host floor: the restore and the sync, no pass). The new empty
+// pass against S3e's (saved) and against S3e's without its save (ns - fempty,
+// step 1); the host's restore (femptynoup - femptynouph0); what is left
+// against the ideal (fempty - d32f, fnouph0 - d32f: step 2's 0.6 ms, S3e's
+// noupns - d32f); the ideal family's parts (page.ts IDEAL: k binds nothing
+// back, z binds framebuffer null, d sets depth state, r S3e's readback); the
+// new tentv's setup (binds, no draws) and drawing; tentv's cost, S3e's and
+// the new one's, and the new one's with its upload calls' main-thread time
+// (the gate's cost, phone_table.ps1 -Upload).
+const cols6 = [
+  ["floor - ffloor", (g) => g("floor") - g("ffloor")],
+  ["ideal d32f", (g) => g("ideal32f") - g("floor")],
+  ["fempty", (g) => g("fempty") - g("ffloor")],
+  ["leanempty", (g) => g("leanempty") - g("floor")],
+  ["saved", (g) => g("leanempty") - g("fempty")],
+  ["ns - fempty", (g) => g("leanemptyns") - g("fempty")],
+  ["fempty - d32f", (g) => g("fempty") - g("ideal32f")],
+  ["host restore", (g) => g("femptynoup") - g("femptynouph0")],
+  ["upload", (g) => g("fempty") - g("femptynoup")],
+  ["noupns - d32f", (g) => g("leanemptynoupns") - g("ideal32f")],
+  ["fnouph0 - d32f", (g) => g("femptynouph0") - g("ideal32f")],
+  ["query+restore", (g) => g("ideal32f") - g("ideal32fk")],
+  ["bind null", (g) => g("ideal32fz") - g("ideal32fk")],
+  ["depth state", (g) => g("ideal32fd") - g("ideal32fk")],
+  ["old readback", (g) => g("ideal32fr") - g("ideal32f")],
+  ["setup", (g) => g("ftentvsetup") - g("fempty")],
+  ["drawing", (g) => g("ftentv") - g("ftentvsetup")],
+  ["ftentv", (g) => g("ftentv") - g("ffloor")],
+  ["leantentv", (g) => g("leantentv") - g("floor")],
+  ["ftentv up", (g, u) => u("ftentv")],
+  ["ftentv + up", (g, u) => g("ftentv") - g("ffloor") + u("ftentv")],
+];
+const cols = set === "s3f1" ? cols6 : set === "s3e3" ? cols5 : set === "s3e1" ? cols4 : set === "s3d3" ? cols3 : set === "s3d2" ? cols2 : cols1;
+const f1 = (x) => (Number.isFinite(x) ? x.toFixed(set.startsWith("s3e") || set.startsWith("s3f") ? 2 : 1) : "-");
 const rows = [`| scene | ${cols.map((c) => c[0]).join(" | ")} |`, `|---|${cols.map(() => "---").join("|")}|`];
 const sums = cols.map(() => []);
 for (const s of SCENES) {
   const g = (v) => p50(v, s);
-  const vals = cols.map((c) => c[1](g));
+  const u = (v) => up50(v, s);
+  const vals = cols.map((c) => c[1](g, u));
   vals.forEach((x, i) => Number.isFinite(x) && sums[i].push(x));
   rows.push(`| ${s} | ${vals.map(f1).join(" | ")} |`);
 }
 const med = (a) => { const b = [...a].sort((x, y) => x - y); return b.length ? b[b.length >> 1] : NaN; };
 rows.push(`| median | ${sums.map((a) => f1(med(a))).join(" | ")} |`);
-const what = set === "s3e1" ? "the floor before building (the ideal family)" : set === "s3e3" ? "the lean empty pass against the ideal floor" : set === "s3d3" ? "the fixed part against one GPU round trip (kick)" : set === "s3d2" ? "the vertex-light tent's and the fixed part's split" : "the tent pass's cost split";
+const what = set === "s3f1" ? "the new pass (K1158) against S3e's and the ideal" : set === "s3e1" ? "the floor before building (the ideal family)" : set === "s3e3" ? "the lean empty pass against the ideal floor" : set === "s3d3" ? "the fixed part against one GPU round trip (kick)" : set === "s3d2" ? "the vertex-light tent's and the fixed part's split" : "the tent pass's cost split";
 const text = `# ${label}: ${what} (Pixel, render-sync p50 ms, differences on one page)\n\n${rows.join("\n")}\n`;
 console.log(text);
 if (process.argv[3]) writeFileSync(process.argv[3], text);
