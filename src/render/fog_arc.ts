@@ -72,6 +72,73 @@ export function moveEnds(
   return { from: e.ctrlA, to: e.ctrlB };
 }
 
+// K207: the spatial dedupe's cell and neighbourhood math. Stamps live
+// in grid cells of the stamp spacing itself, so a point within
+// `spacing` of a candidate sits in the candidate's cell or one of the
+// eight around it (cell indices differ by at most one per axis) - a
+// 3x3 check is the whole search. Exactly at the spacing is NOT within
+// (the stamp lands), matching the renderer's spacing filter.
+export function fogCell(
+  x: number,
+  y: number,
+  spacing: number
+): [number, number] {
+  return [Math.floor(x / spacing), Math.floor(y / spacing)];
+}
+
+// The stamps of one solve, indexed by fogCell. Pure: the renderer
+// beside it owns when a stamp is offered (maybeStampFog) and when the
+// list is cleared or compacted (its count check rebuilds then).
+export class FogStampIndex {
+  private cells = new Map<string, number[]>();
+  private n = 0;
+
+  get count(): number {
+    return this.n;
+  }
+
+  clear(): void {
+    this.cells.clear();
+    this.n = 0;
+  }
+
+  rebuild(stamps: readonly number[], spacing: number): void {
+    this.clear();
+    for (let i = 0; i + 1 < stamps.length; i += 2) {
+      this.add(stamps[i], stamps[i + 1], spacing);
+    }
+  }
+
+  hasWithin(x: number, y: number, spacing: number): boolean {
+    const [cx, cy] = fogCell(x, y, spacing);
+    const s2 = spacing * spacing;
+    for (let gx = cx - 1; gx <= cx + 1; gx++) {
+      for (let gy = cy - 1; gy <= cy + 1; gy++) {
+        const pts = this.cells.get(`${gx},${gy}`);
+        if (!pts) continue;
+        for (let i = 0; i + 1 < pts.length; i += 2) {
+          const dx = x - pts[i];
+          const dy = y - pts[i + 1];
+          if (dx * dx + dy * dy < s2) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  add(x: number, y: number, spacing: number): void {
+    const [cx, cy] = fogCell(x, y, spacing);
+    const key = `${cx},${cy}`;
+    let pts = this.cells.get(key);
+    if (!pts) {
+      pts = [];
+      this.cells.set(key, pts);
+    }
+    pts.push(x, y);
+    this.n++;
+  }
+}
+
 // K100: the direction each run of a tap list was traveled, walking from
 // `start`. Every tap, advance or backtrack, moves the head to its run's
 // other end, and the direction is moveEnds', the rule a live move uses.

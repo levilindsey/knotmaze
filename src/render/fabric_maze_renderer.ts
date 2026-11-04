@@ -109,7 +109,7 @@ export interface MinotaurView {
   scent?: readonly { edge: number; a: number }[];
 }
 import { FogBackdrop } from "./background";
-import { fogArcStations, moveEnds, travelOrder } from "./fog_arc";
+import { FogStampIndex, fogArcStations, moveEnds, travelOrder } from "./fog_arc";
 import { MarkerMesh } from "./marker_mesh";
 import type { Diagonal, KeyDir } from "../ui/key_moves";
 import {
@@ -709,6 +709,11 @@ export class FabricMazeRenderer {
   // K137 darkness (4.17): the move each stamp landed in, and the
   // controller's move count as of the last update.
   private fogStampMoves: number[] = [];
+  // K207: the stamps' spatial index (fog_arc.ts FogStampIndex, cells
+  // of FOG_STAMP_SPACING). Rebuilt from the list whenever its count
+  // differs from the list's: the restart clear below and the darkness
+  // prune's in-place compaction in renderFog both show up that way.
+  private fogIndex = new FogStampIndex();
   private fogMoveNow = 0;
   private fogLastMove = -1;
   private fogLanternX = NaN;
@@ -3488,16 +3493,19 @@ export class FabricMazeRenderer {
 
   private maybeStampFog(x: number, y: number): void {
     if (!this.fogOfWar) return;
-    const n = this.fogStamps.length;
-    if (n >= 2) {
-      const dx = x - this.fogStamps[n - 2];
-      const dy = y - this.fogStamps[n - 1];
-      if (dx * dx + dy * dy < FOG_STAMP_SPACING * FOG_STAMP_SPACING) {
-        return;
-      }
+    // K207: a stamp lands only when no earlier stamp of this solve sits
+    // within FOG_STAMP_SPACING of it (the old filter checked only the
+    // last stamp, so re-walking explored ground grew the list without
+    // bound). The index rebuilds first whenever its count differs from
+    // the stamp list's - the restart clear and pruneDarkStamps'
+    // compaction both change the list behind its back.
+    if (this.fogIndex.count !== this.fogStamps.length / 2) {
+      this.fogIndex.rebuild(this.fogStamps, FOG_STAMP_SPACING);
     }
+    if (this.fogIndex.hasWithin(x, y, FOG_STAMP_SPACING)) return;
     this.fogStamps.push(x, y);
     this.fogStampMoves.push(this.fogMoveNow); // K137 darkness (4.17)
+    this.fogIndex.add(x, y, FOG_STAMP_SPACING); // K207
     this.fogDirty = true;
   }
 
@@ -4129,6 +4137,7 @@ export class FabricMazeRenderer {
       this.fogRefogs = controller.refogs;
       this.fogStamps.length = 0;
       this.fogStampMoves.length = 0; // K137 darkness (4.17)
+      this.fogIndex.clear(); // K207
       this.fogDirty = true;
     }
     this.drawMarkers(controller, -1, 0, controller.solved);

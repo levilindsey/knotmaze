@@ -5,7 +5,9 @@ import { describe, it, expect } from "vitest";
 import {
   FOG_ARC_STEP,
   type FogRun,
+  FogStampIndex,
   fogArcStations,
+  fogCell,
   moveEnds,
   travelOrder,
 } from "../../src/render/fog_arc";
@@ -183,5 +185,59 @@ describe("travelOrder (K100)", () => {
     const live = [t.from, ...stationsBy(t.from, t.to, [11.2, 12.9, t.to])];
     expect([t.from, ...fogArcStations(t.from, t.to, t.from, t.to)]).toEqual(live);
     expect(live).toEqual([10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14]);
+  });
+});
+
+// K207: the fog stamps' spatial dedupe (fog_arc.ts FogStampIndex).
+describe("FogStampIndex (K207 dedupe)", () => {
+  const S = 0.8; // FOG_STAMP_SPACING
+
+  it("lets the first stamp of a solve land", () => {
+    const ix = new FogStampIndex();
+    expect(ix.count).toBe(0);
+    expect(ix.hasWithin(3, -2, S)).toBe(false);
+  });
+
+  it("refuses a stamp inside the spacing, in any direction", () => {
+    const ix = new FogStampIndex();
+    ix.add(0, 0, S);
+    expect(ix.hasWithin(0.79, 0, S)).toBe(true);
+    expect(ix.hasWithin(0, -0.4, S)).toBe(true);
+    expect(ix.hasWithin(0.4, 0.4, S)).toBe(true); // ~0.57 away
+    expect(ix.hasWithin(3, 0, S)).toBe(false);
+  });
+
+  it("lets a stamp exactly at the spacing land", () => {
+    const ix = new FogStampIndex();
+    ix.add(0, 0, S);
+    expect(ix.hasWithin(S, 0, S)).toBe(false);
+    expect(ix.hasWithin(-S, 0, S)).toBe(false);
+    expect(ix.hasWithin(0, S, S)).toBe(false);
+  });
+
+  it("finds a neighbour across a cell edge and a cell corner", () => {
+    const ix = new FogStampIndex();
+    ix.add(0.79, 0.1, S); // cell (0, 0)
+    expect(fogCell(0.79, 0.1, S)).toEqual([0, 0]);
+    expect(fogCell(0.81, 0.1, S)).toEqual([1, 0]);
+    expect(ix.hasWithin(0.81, 0.1, S)).toBe(true); // 0.02 away, next cell
+    const ix2 = new FogStampIndex();
+    ix2.add(0.79, 0.79, S); // cell (0, 0); candidate sits in cell (1, 1)
+    expect(ix2.hasWithin(0.81, 0.81, S)).toBe(true);
+    const ix3 = new FogStampIndex();
+    ix3.add(-0.01, 0, S); // cell (-1, 0); candidate in cell (0, 0)
+    expect(ix3.hasWithin(0.01, 0, S)).toBe(true);
+  });
+
+  it("rebuilds from the flat stamp list, and clears", () => {
+    const ix = new FogStampIndex();
+    ix.rebuild([0, 0, 5, 5], S);
+    expect(ix.count).toBe(2);
+    expect(ix.hasWithin(0.2, 0, S)).toBe(true);
+    expect(ix.hasWithin(5, 5.2, S)).toBe(true);
+    expect(ix.hasWithin(2.5, 2.5, S)).toBe(false);
+    ix.clear();
+    expect(ix.count).toBe(0);
+    expect(ix.hasWithin(0.2, 0, S)).toBe(false);
   });
 });
