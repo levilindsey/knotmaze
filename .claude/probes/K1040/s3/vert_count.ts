@@ -73,6 +73,15 @@ const stripRows: string[] = [
   "| scene | strip seg verts | total left | saved |",
   "|---|---|---|---|",
 ];
+const s3f4Rows: string[] = [
+  "",
+  "## S3f4 variants: vertices issued per frame (segments x 12 today; caps x 193, fills x 102 unchanged unless named)",
+  "",
+  "ftentvclip and ftentvflat issue today's vertices (only the shaders change); ftentvvid issues today's segment vertices non-instanced, plus one index per vertex and a restart index per strip after the first (nInst - 1 of them). ftentvone issues one segment and no caps or fills. ftentvhalf rounds nInst / 2 (probeSegFrac, as drawTent rounds). ftentvnw1c is the circ NW 1 column above (segments x 8).",
+  "",
+  "| scene | ftentv (today) | ftentvone | ftentvhalf | ftentvclip | ftentvflat | ftentvnw1c | ftentvvid verts (indices) |",
+  "|---|---|---|---|---|---|---|---|",
+];
 const circRows: string[] = [
   "",
   "## Lever 3, circumscribed wedge: NW 2 and NW 1 segment strips (radii move, counts as shown)",
@@ -170,5 +179,7 @@ for (const name of SCENES) {
   const nw2 = T.nInst * (2 * 2 + 6) + cv + fv;
   const nw1 = T.nInst * (2 * 1 + 6) + cv + fv;
   circRows.push(`| ${name} | ${nw2} | ${nw1} |`);
+  const halfSeg = Math.round(T.nInst * 0.5) * TENT_SEG_VERTS;
+  s3f4Rows.push(`| ${name} | ${tot} | ${TENT_SEG_VERTS} | ${halfSeg + cv + fv} | ${tot} | ${tot} | ${nw1} | ${tot} (${sv + T.nInst - 1} seg indices) |`);
 }
-console.log([...rows, ...reachRows, ...stripRows, ...circRows].join("\n"));
+console.log([...rows, ...reachRows, ...stripRows, ...circRows, ...s3f4Rows].join("\n"));
