@@ -192,7 +192,9 @@ function fitCamera(scene: FieldScene, h: number, fit: [number, number], scale: n
 // opts.fit: K923's fit on that canvas (else the scene's own camera);
 // opts.b2b: K923's render sync, the frames back to back in one task after
 // 10 warm-up renders (else one a frame, after a rAF); opts.floor: no upload
-// and no draw, only the 1-px readback (K923's floor).
+// and no draw, only the 1-px readback of L (not K923's floor, which also
+// cleared the full-size default framebuffer; this page's canvas is never
+// drawn to).
 async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean; fit?: [number, number]; b2b?: boolean; floor?: boolean; tent?: boolean; mode?: string; lr?: number } = {}) {
   const scale = opts.scale ?? 2;
   const frames = opts.frames ?? 60;

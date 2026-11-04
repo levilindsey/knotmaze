@@ -13,8 +13,8 @@
 # Always releases both locks, matched by owner. Prints only the check's
 # awake/locked/top fields and its "not ready" line, masked (never the
 # device serial or an address).
-# Usage: & .claude\probes\K1040\s3\run_phone.ps1 [-RunArgs @('muse_hash,def')] [-QuietS 120] [-MaxWaitMin 5]
-param([string[]]$RunArgs = @(), [int]$MaxWaitMin = 5, [int]$QuietS = 120)
+# Usage: & .claude\probes\K1040\s3\run_phone.ps1 [-RunArgs @('muse_hash,def')] [-QuietS 120] [-MaxWaitMin 15]
+param([string[]]$RunArgs = @(), [int]$MaxWaitMin = 15, [int]$QuietS = 120)
 $worktree = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
 $probes = 'C:\Users\lsl\Repositories\knotmaze\.claude\probes\agents'
 $phoneOwner = 'K1097 S3d'

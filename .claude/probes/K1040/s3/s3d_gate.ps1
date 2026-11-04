@@ -4,7 +4,7 @@
 # touch for 120 s before the first run, 20 s before each later one), stopping
 # at the first non-zero exit; then the tables (out/phone_table_s3d.md).
 # Usage: & .claude\probes\K1040\s3\s3d_gate.ps1 [-Mode tentv]
-param([string]$Mode = 'tentv', [int]$MaxWaitMin = 5)
+param([string]$Mode = 'tentv', [int]$MaxWaitMin = 15)
 & (Join-Path $PSScriptRoot 'phone_batch.ps1') -Name s3d -MaxWaitMin $MaxWaitMin -Runs @(
   '--fit 411x753 --label s3dfit --b2b',
   '--fit 411x753 --label s3dtent --b2b --tent',

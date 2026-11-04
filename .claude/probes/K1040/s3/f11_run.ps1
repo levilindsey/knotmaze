@@ -5,7 +5,7 @@
 # at the first non-zero exit; then both tables (out/phone_table_f11.md).
 # K1040 S3d: rewritten for K1142 (phone_quiet.mjs and its -Until are gone).
 # Usage: & .claude\probes\K1040\s3\f11_run.ps1
-param([int]$MaxWaitMin = 5)
+param([int]$MaxWaitMin = 15)
 & (Join-Path $PSScriptRoot 'phone_batch.ps1') -Name f11 -MaxWaitMin $MaxWaitMin -Runs @(
   '--fit 411x753 --label fit --b2b',
   '--fit 411x753 --label tent --b2b --tent',

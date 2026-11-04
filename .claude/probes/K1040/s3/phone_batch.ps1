@@ -5,7 +5,7 @@
 # each -Tables entry is one phone_table.ps1 argument line, and the tables go
 # to out/phone_table_<Name>.md. Logs to out/batch_<Name>_<stamp>.log.
 # Usage: & .claude\probes\K1040\s3\phone_batch.ps1 -Name f11 -Runs @('--fit 411x753 --label fit --b2b', ...) [-Tables @('tent fit floorall -Floor floorall')]
-param([Parameter(Mandatory)][string]$Name, [Parameter(Mandatory)][string[]]$Runs, [string[]]$Tables = @(), [int]$MaxWaitMin = 5, [int]$FirstQuietS = 120, [int]$QuietS = 20)
+param([Parameter(Mandatory)][string]$Name, [Parameter(Mandatory)][string[]]$Runs, [string[]]$Tables = @(), [int]$MaxWaitMin = 15, [int]$FirstQuietS = 120, [int]$QuietS = 20)
 $s3 = $PSScriptRoot
 $log = Join-Path $s3 ("out\batch_{0}_{1:yyyyMMdd_HHmm}.log" -f $Name, (Get-Date))
 function Say([string]$m) { $l = "$(Get-Date -Format HH:mm:ss) $m"; $l | Out-File -Append -Encoding utf8 $log; $l }
