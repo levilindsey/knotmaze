@@ -526,9 +526,9 @@ Next free ID: K1179.
 - **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-G from
   the draft, after 16J.
   - owner: nobody since 2026-11-04 02:43 (queued as Muse chain run 16A, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `c0df57e3`
+  - branch: mainline; last commit: `4447fa15`
   - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: run 16A drafts docs/design/K1178_muse_batch16.md; Claude reviews it and queues 16B-16G after 16J
+  - next: Run A done; Claude reviews the draft
   - brief: `docs/design/K1178_muse_batch16_run_a.md`
 
 ## Next, in order
