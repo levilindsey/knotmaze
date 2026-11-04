@@ -329,9 +329,9 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("cannonAmount"), // K336: the side cannons' amount
   num("streamerShare"), // K336: the cannons' streamer share
   choice("minoTelegraphLook", ["rims", "line", "both"]), // 181, K525: the telegraph's look
-  // 182-184, K137 stage 1: fragile runs and par (FRAGILE_MODES and
-  // PAR_MODES order, game/fragile.ts and game/par.ts).
-  choice("fragile", ["off", "crack", "snap"]),
+  // 182-184, K137 stage 1 + K1171: fragile runs (one param for fragile
+  // and collapse; FRAGILE_RUNS_MODES order) and par (PAR_MODES order).
+  choice("fragileRuns", ["off", "crack", "snap", "collapse", "collapseFree"]),
   choice("parMode", ["off", "strict", "strokes"]),
   num("parSlack"),
   // K324 stage 3: the real-time guard's territory, sight and accuracy and
@@ -341,8 +341,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("minoGuardLose"),
   num("minoGuardAccuracyRt"),
   num("minoStalkerAccuracyRt"),
-  // 190, K139: collapse (COLLAPSE_MODES order, game/collapse.ts).
-  choice("collapse", ["off", "finish", "free"]),
+  // K1171: K139's collapse entry (old 190) is gone; indices from old 191
+
   // 191, K114: cut (CUT_MODES order, game/cut.ts).
   choice("cut", ["off", "on", "lead", "delay"]), // K114 walker: lead, delay appended
   // 192, K137 stage 3a: lives (0 off, 1..5 hearts; game/lives.ts).
@@ -681,9 +681,10 @@ export function clampParamValue(name: string, value: number): number {
   return Math.min(range[1], Math.max(range[0], value));
 }
 
-// v9 (K838): the hint's seconds left the table (a hint now lasts until
+// v10 (K1171): collapse left the table (fragileRuns at 182 covers it);
+// indices from old 191 shift down one. v9 (K838): the hint's seconds left the table (a hint now lasts until
 // the player's next move); indices after 216 shift down one.
-export const CODEC_VERSION = 9;
+export const CODEC_VERSION = 10;
 
 // The shortest decimal for a number, after rounding to 6 decimals (slider
 // steps leave float noise behind - 1.4500000000000002, or 1.7e-17 for a

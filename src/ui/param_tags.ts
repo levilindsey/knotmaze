@@ -135,10 +135,10 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   fireDelayRt: ["fdr", "burn race", "fuse", "grace period", "delay", "lead", "real time", "fire start"],
   burnt: ["fbt", "burn race", "fire damage", "ash", "charred", "black", "disappear", "burned path"],
   // Game
-  fragile: ["fg", "break", "breakable", "no going back", "stranded", "weak threads", "brittle", "fall apart"],
+  fragileRuns: ["fg", "cl", "fragile", "collapse", "break", "crack", "snap", "no backtracking", "stranded", "walk once"],
   parMode: ["pa", "golf", "move limit", "moves allowed", "move budget", "score", "challenge", "fewest moves"],
   parSlack: ["par", "golf", "extra moves", "move limit", "leeway", "allowance", "easier", "margin"],
-  collapse: ["cl", "crumble", "disappear", "no backtracking", "single use", "destroy paths", "cave in", "walk once"],
+
   cut: ["ct", "scissors", "snip", "sever", "remove runs", "delete", "planning puzzle", "walker"],
   spool: ["sp2", "yarn", "limited yarn", "thread limit", "reel", "ball of thread", "move limit", "limited moves"],
   spoolSlack: ["sps", "yarn", "extra yarn", "yarn length", "extra moves", "leeway", "allowance", "easier"],

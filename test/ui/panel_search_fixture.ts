@@ -14,8 +14,8 @@ export const ROWS: PanelRowEntry[] = [
   { id: "btn:Daily", label: "Daily", folders: ["Design"], tags: ["today", "daily maze", "puzzle of the day"] },
   { id: "gameMode", label: "Game", folders: ["Game"], tags: ["gm", "mode", "chase", "race", "play"], options: ["Classic", "Burn race", "Minotaur"] },
   { id: "minotaur", label: "Behavior", folders: ["Game"], tags: ["mt", "monster", "bull", "chaser", "enemy"], options: ["Hunter", "Guard", "Stalker"] },
-  { id: "fragile", label: "Fragile runs", folders: ["Game"], tags: ["fg", "break", "crack", "snap"], options: ["off", "crack", "snap"] },
-  { id: "collapse", label: "Collapse", folders: ["Game"], tags: ["cl", "shrink", "fall"], options: ["off", "finish", "free"] },
+  { id: "fragileRuns", label: "Fragile runs", folders: ["Game"], tags: ["fg", "cl", "break", "crack", "snap", "collapse"], options: ["off", "crack", "snap", "collapse", "collapse (free)"] },
+
   { id: "cut", label: "Cut", folders: ["Game"], tags: ["ct", "scissors", "snip", "shortcut"], options: ["off", "on", "lead", "delay"] },
   { id: "minoWanderPace", label: "Wander speed", folders: ["Game", "Minotaur tuning"], tags: ["mwp", "roam", "slow", "pace"] },
   { id: "minoHuntPace", label: "Hunt speed", folders: ["Game", "Minotaur tuning"], tags: ["mhp", "chase", "fast", "pace"] },

@@ -18,8 +18,6 @@ import type { FireClock } from "../game/fire";
 import type { FabricRules } from "../game/fabric_controller";
 import type { FragileMode } from "../game/fragile";
 import { FRAGILE_MODES } from "../game/fragile";
-import type { CollapseMode } from "../game/collapse";
-import { COLLAPSE_MODES } from "../game/collapse";
 import type { CutMode } from "../game/cut";
 import { CUT_MODES } from "../game/cut";
 import type { ColorRuleMode } from "../game/color_rule";
@@ -169,6 +167,12 @@ export const BEAT_INDICATORS: BeatIndicator[] = ["pulse", "ring", "off"];
 // burn = the burn race (its clock is `fireClock`).
 export type GameMode = "classic" | "minotaur" | "burn";
 export const GAME_MODES: GameMode[] = ["classic", "minotaur", "burn"];
+// K1171: one param for fragile runs and collapse (the panel's "Fragile
+// runs" row). crack/snap are K137's fragile modes; collapse is K139's
+// finish and collapseFree its free. fabricRulesOf derives the
+// controller's fragile/collapse pair from it.
+export type FragileRunsMode = FragileMode | "collapse" | "collapseFree";
+export const FRAGILE_RUNS_MODES: FragileRunsMode[] = [...FRAGILE_MODES, "collapse", "collapseFree"];
 // The minotaur's model (the `minotaur` param since K323: no off - the
 // mode itself says whether there is one).
 export type MinotaurModel = "hunter" | "guard" | "stalker";
@@ -847,21 +851,18 @@ export interface UrlParams extends ShapeInjectionParams {
   // stays where it caught you), the fog under minoRefog (above).
   minoRestart: boolean;
   minoLair: boolean;
-  // K137 stage 1 (brief docs/design/K137_s1.md): FRAGILE RUNS, off | crack
-  // | snap (game/fragile.ts: a run breaks behind you after 2 or 1
-  // crossings; END runs never), and PAR, off | strict | strokes
-  // (game/par.ts: P = F + round(parSlack x F) runs; strict loses the moment
+  // K1171 (K137 stage 1 + K139): FRAGILE RUNS, off | crack | snap |
+  // collapse | collapseFree: crack breaks a run after 2 crossings, snap
+  // and the collapse options after 1 (they score the share collapsed and
+  // override PAR below). PAR, off | strict | strokes (game/par.ts: P = F
   // no finish fits, strokes only scores). Every change restarts the solve
   // (FabricMazeController.setRules, then reset()). Not daily-exempt.
-  fragile: FragileMode;
+  fragileRuns: FragileRunsMode;
   parMode: ParMode;
   parSlack: number;
-  // K139 (brief docs/design/K139.md): COLLAPSE, off | finish | free
-  // (game/collapse.ts: every run you walk collapses behind you; the score
-  // is the share of the maze collapsed, on the way to the exit or wherever
-  // you end). Overrides fragile and par. Every change restarts the solve.
+
   // Not daily-exempt.
-  collapse: CollapseMode;
+
   // K114 (brief docs/design/K114_cut.md): CUT, off | on (game/cut.ts: the
   // scissors delete whole runs; a junction left with two runs is no longer
   // a decision). The classic game only, with fragile, par and collapse off
@@ -1294,11 +1295,11 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K552: dailies are untitled unless the player turns the thread on.
   dailyTitleThread: false,
   // K137: no fragile runs, no par; the slack is K137's pick (game/par.ts).
-  fragile: "off",
+  fragileRuns: "off",
   parMode: "off",
   parSlack: PAR_SLACK_DEFAULT,
-  // K139: no collapse.
-  collapse: "off",
+
+
   // K114: no scissors.
   cut: "off",
   // K137 stage 3a: no hearts (today's catches).
@@ -1420,14 +1421,16 @@ export function fireSettingsOf(
 // K137: the solve's rules beyond the clock (fragile runs and par, and
 // K139's collapse, K114's cut), as the controller takes them
 // (FabricMazeController's FabricRules). Cutting is the classic game's only:
-// never with a minotaur or the burn race.
+// never with a minotaur or the burn race. K1171: the one fragileRuns
+// param derives the controller's pair (off: both off; crack/snap: that
+// fragile mode; collapse: collapse finish; collapseFree: collapse free).
 export function fabricRulesOf(
   p: Pick<
     UrlParams,
-    | "fragile"
+    | "fragileRuns"
     | "parMode"
     | "parSlack"
-    | "collapse"
+
     | "cut"
     | "gameMode"
     | "spool"
@@ -1447,10 +1450,10 @@ export function fabricRulesOf(
   >
 ): FabricRules {
   return {
-    fragile: p.fragile,
+    fragile: p.fragileRuns === "crack" || p.fragileRuns === "snap" ? p.fragileRuns : "off",
     parMode: p.parMode,
     parSlack: p.parSlack,
-    collapse: p.collapse,
+    collapse: p.fragileRuns === "collapse" ? "finish" : p.fragileRuns === "collapseFree" ? "free" : "off",
     // K114 call 7: the beat rider drops the cut and the walker (cut modes).
     cut: p.gameMode === "classic" && p.clock !== "beat" ? p.cut : "off",
     // K137 stage 2: the spool's slack (null = off) and the hints a solve.
@@ -1678,9 +1681,9 @@ export const ENUM_OPTIONS: {
   revealEndGlow: REVEAL_END_GLOWS,
   emblem: EMBLEM_CHOICES,
   cartoucheShape: EMBLEM_CHOICES,
-  fragile: FRAGILE_MODES,
+  fragileRuns: FRAGILE_RUNS_MODES,
   parMode: PAR_MODES,
-  collapse: COLLAPSE_MODES,
+
   cut: CUT_MODES,
   sword: SWORD_MODES, // K137 stage 3b
   colorRule: COLOR_RULE_MODES, // K138 stage 1
@@ -2219,13 +2222,11 @@ function readLegacy(
     penReverse: readBool(query, "pnr", D.penReverse),
     // K552's daily title thread (`?daily=8&dtt=1`).
     dailyTitleThread: readBool(query, "dtt", D.dailyTitleThread),
-    // K137's fragile runs and par (`&fg=crack&pa=strict&par=0.5`; the
+    // K1171's fragile runs (`&fg=collapseFree&pa=strict&par=0.5`; the
     // slack clamps through PARAM_RANGES).
-    fragile: readChoice(query, "fg", FRAGILE_MODES, D.fragile),
+    fragileRuns: readChoice(query, "fg", FRAGILE_RUNS_MODES, D.fragileRuns),
     parMode: readChoice(query, "pa", PAR_MODES, D.parMode),
     parSlack: readNumber(query, "par", D.parSlack),
-    // K139's collapse (`&cl=finish`, `&cl=free`).
-    collapse: readChoice(query, "cl", COLLAPSE_MODES, D.collapse),
     // K114's cut (`&ct=on`).
     cut: readChoice(query, "ct", CUT_MODES, D.cut),
     // K137 stage 3a's lives (`&mlv=3`; PARAM_RANGES clamps to 0..5).

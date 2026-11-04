@@ -71,8 +71,9 @@
 // K137 FRAGILE RUNS (game/fragile.ts; brief docs/design/K137_s1.md): with
 // `fragile` on, every accepted tap is one crossing of its run (`crossings`,
 // advances and backtracks alike) and a run whose crossings reach its limit
-// (`breakLimits`, from the mode at reset(); Infinity for END and title
-// runs) is BROKEN: choices() leaves it out and a tap on it is a "reject".
+// (`breakLimits`, from the mode at reset(); Infinity for tunnel and title
+// runs; END runs break like any other, K840) is BROKEN: choices() leaves
+// it out and a tap on it is a "reject".
 // After each move, no route over unbroken runs from the head to the exit
 // sets `stranded`: every tap is then a "noop" and choices() is empty
 // (main.ts sings the strand and offers Undo, replay(taps minus the last),

@@ -2052,15 +2052,15 @@ export function buildPanel(
     D.burnt, () => callbacks.onTrailChange()
   );
 
-  // K137 stage 1: fragile runs and par (game/fragile.ts, game/par.ts), in
+  // K1171 (K137 + K139): fragile runs and par (game/fragile.ts, game/par.ts), in
   // every game mode. Every row restarts the solve. The slack slider takes
   // no step (K130) and an edit keeps it on the 0.05 grid.
   const fRules = folder("Classic rules", false, fGame);
-  const fragileRow = row(
-    fRules, p, "fragile",
-    { options: { off: "off", crack: "crack", snap: "snap" }, label: "Fragile runs" },
-    "Runs break behind you. snap: a run breaks once you have crossed it. crack: it cracks the first time and breaks the second. Every run breaks - the entrance's, the exit's and dead-end tails included, so on snap a dead end strands you at its tip. With no unbroken way to the exit left you are stranded: undo the last move or restart. Restarts the solve.",
-    D.fragile, () => callbacks.onClockChange()
+  const fragileRunsRow = row(
+    fRules, p, "fragileRuns",
+    { options: { off: "off", crack: "crack", snap: "snap", collapse: "collapse", "collapse (free)": "collapseFree" }, label: "Fragile runs" },
+    "Runs break behind you. crack: a run cracks the first time you cross it and breaks the second. snap: a run breaks once you have crossed it. Every run breaks - the entrance's, the exit's and dead-end tails included, so on snap a dead end strands you at its tip. collapse: a run you have walked cannot be walked again; collapse as much of the maze as you can and still reach the exit, scoring the share collapsed against its par; with no unbroken way to the exit left you are stranded (undo the last move or restart). collapse (free): the exit is just another run end; the game ends when no unbroken run is left to walk, and scores the share collapsed. The collapse options override Par. With no unbroken way to the exit left you are stranded: undo the last move or restart. Restarts the solve.",
+    D.fragileRuns, () => callbacks.onClockChange()
   );
   // K813: a cracked run's look (the fray): its tint and how much of its
   // middle it keeps. Live, like the other highlight looks.
@@ -2090,14 +2090,10 @@ export function buildPanel(
       callbacks.onClockChange();
     }
   );
-  // K139: collapse (game/collapse.ts). It overrides the three rows above,
-  // which stay visible (call 4 of docs/design/K139.md). Restarts the solve.
-  const collapseRow = row(
-    fRules, p, "collapse",
-    { options: { off: "off", finish: "finish", free: "free" }, label: "Collapse" },
-    "Runs collapse behind you: a run you have walked cannot be walked again. Collapse as much of the maze as you can. finish: and still reach the exit; with no way left to it you are stranded (undo the last move or restart). free: the exit is just another run end; the game ends when no unbroken run is left to walk, and scores the share collapsed. Overrides Fragile runs and Par. Restarts the solve.",
-    D.collapse, () => callbacks.onClockChange()
-  );
+  // K1171: while a collapse option is chosen the Par rows above are
+  // disabled (still shown); their help still shows while disabled.
+  parModeRow.element.classList.add("kp-tip-when-disabled");
+  parSlackRow.element.classList.add("kp-tip-when-disabled");
   // K114: cut (game/cut.ts), the classic game only; off while any row above
   // is on (FabricMazeController.setRules), which stay visible as K139's do.
   // Restarts the solve.
@@ -3735,9 +3731,9 @@ export function buildPanel(
     // K813: the telegraph's color and width go with its look.
     telegraphColorRow.hidden = minoTelegraphLookRow.hidden;
     telegraphWidthRow.hidden = minoTelegraphLookRow.hidden;
-    // K813: the cracked-run look only while fragile runs play.
-    frayColorRow.hidden = params.fragile === "off";
-    frayWidthRow.hidden = params.fragile === "off";
+    // K813 + K1171: the cracked-run look only under crack (limit 2; snap and the collapse options break at 1, so nothing cracks there).
+    frayColorRow.hidden = params.fragileRuns !== "crack";
+    frayWidthRow.hidden = params.fragileRuns !== "crack";
     minoByLengthRow.hidden = !turnMinoOn;
     // K324: the tuning subfolder shows under both clocks; each clock's rows
     // in it hide under the other (real time's K324 rows are in rtRows).
@@ -3773,10 +3769,11 @@ export function buildPanel(
     fireDelayRtRow.hidden = !fireOn || !fireRt;
     burntRow.hidden = !fireOn;
     // K137: fragile runs and par play in every game mode, fabric only.
-    fragileRow.hidden = !fab;
+    fragileRunsRow.hidden = !fab;
     parModeRow.hidden = !fab;
     parSlackRow.hidden = !fab || params.parMode === "off";
-    collapseRow.hidden = !fab; // K139, every game mode too
+    parModeRow.disabled = params.fragileRuns === "collapse" || params.fragileRuns === "collapseFree"; // K1171
+    parSlackRow.disabled = parModeRow.disabled;
     // K114; the beat drops the cut too (fabricRulesOf, K114 call 7).
     cutRow.hidden = !fab || params.gameMode !== "classic" || beat;
     spoolRow.hidden = !fab; // K137 stage 2

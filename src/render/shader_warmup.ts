@@ -420,10 +420,8 @@ export interface WarmParams {
   mazeFabric: boolean;
   exploration: string;
   gameMode: string;
-  // K137: fragile runs (off | crack | snap); absent reads as off.
-  fragile?: string;
-  // K139: collapse (off | finish | free); absent reads as off.
-  collapse?: string;
+  // K1171: fragile runs (off | crack | snap | collapse | collapseFree); absent reads as off.
+  fragileRuns?: string;
   // K114: cut (off | on); absent reads as off.
   cut?: string;
   // K138 s2: hidden runs (0 off); absent reads as off.
@@ -465,8 +463,8 @@ export function warmContextFor(
     burn:
       params.mazeFabric &&
       (params.gameMode === "burn" ||
-        (params.fragile ?? "off") !== "off" ||
-        (params.collapse ?? "off") !== "off" ||
+        (params.fragileRuns ?? "off") !== "off" ||
+
         (params.cut ?? "off") !== "off" ||
         (params.hiddenRuns ?? 0) > 0),
     reduced,

@@ -674,6 +674,7 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       broken: c.brokenRuns(),
       cracked: c.crackedRuns(),
       stranded: c.stranded,
+      fragile: c.fragile,
       parMode: c.parMode,
       par: c.par,
       strokesLeft: c.strokesLeft,

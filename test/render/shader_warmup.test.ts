@@ -403,11 +403,13 @@ describe("shader warm-up (K307)", () => {
     });
     expect(warmContextFor({ ...daily, gameMode: "burn" }, "vellum", false, 16).burn).toBe(true);
     expect(warmContextFor({ ...daily, gameMode: "burn", mazeFabric: false }, "vellum", false, 16).burn).toBe(false);
-    // K137: a fragile game's first snap draws through the explore programs.
-    expect(warmContextFor({ ...daily, fragile: "snap" }, "vellum", false, 16).burn).toBe(true);
-    expect(warmContextFor({ ...daily, fragile: "crack" }, "vellum", false, 16).burn).toBe(true);
-    expect(warmContextFor({ ...daily, fragile: "off" }, "vellum", false, 16).burn).toBe(false);
-    expect(warmContextFor({ ...daily, fragile: "snap", mazeFabric: false }, "vellum", false, 16).burn).toBe(false);
+    // K1171: a fragile game's first snap (or collapse) draws through the explore programs.
+    expect(warmContextFor({ ...daily, fragileRuns: "snap" }, "vellum", false, 16).burn).toBe(true);
+    expect(warmContextFor({ ...daily, fragileRuns: "crack" }, "vellum", false, 16).burn).toBe(true);
+    expect(warmContextFor({ ...daily, fragileRuns: "off" }, "vellum", false, 16).burn).toBe(false);
+    expect(warmContextFor({ ...daily, fragileRuns: "snap", mazeFabric: false }, "vellum", false, 16).burn).toBe(false);
+    expect(warmContextFor({ ...daily, fragileRuns: "collapse" }, "vellum", false, 16).burn).toBe(true);
+    expect(warmContextFor({ ...daily, fragileRuns: "collapseFree" }, "vellum", false, 16).burn).toBe(true);
     expect(warmContextFor({ ...daily, backgroundSpeed: 1 }, "vellum", false, 16).bgIds).toEqual([
       "vellum",
       "vellum-drift",

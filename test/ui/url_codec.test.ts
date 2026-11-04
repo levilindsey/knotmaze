@@ -33,7 +33,7 @@ const withSeed = (seed: number, over: Partial<UrlParams> = {}): UrlParams => ({
 const USER_KEYS =
   "s=1471kin&gs=12&rep=1&bd=1&sm=.25&ga=0&tw=.64&gap=.12&cr=2.4&fl=0&fw=.25&fv=1.15&vol=.18&hs=312&pal=moss&pc=6c644c&as=2.1";
 // ...and as its token (121 -> 56 chars).
-const USER_COMPACT = "1471kin.EhGJeJH4_ol9B-mT9CXoqT4fol-NCvnoY8SYl6JbGRMCBUPg";
+const USER_COMPACT = "1471kin.FBGJeJH4_ol9B-mT9CXoqT4fol-NCvnoY8SYl6JbGRMCBUPg";
 const USER = withSeed(2430477599, {
   gridSize: 12,
   repulsion: 1,
@@ -141,10 +141,10 @@ describe("links", () => {
       dailyTitleThread: false,
       minoStopMin: 0.2, minoStopMax: 0.6, minoHuntStop: 0.5, minoTurnBack: 1.5,
       minoTipReach: 2, minoRoamNear: 0.25, minoTelegraphRuns: 1,
-      fragile: "off", parMode: "off", parSlack: 1,
+      fragileRuns: "off", parMode: "off", parSlack: 1,
       minoGuardRoam: 30, minoGuardDetect: 20, minoGuardLose: 30,
       minoGuardAccuracyRt: 0.4, minoStalkerAccuracyRt: 0.45,
-      collapse: "off",
+
       cut: "off", // K114
       lives: 0, // K137 stage 3a
       sword: "off", swordMoves: 8, // K137 stage 3b
@@ -644,6 +644,28 @@ describe("links", () => {
     expect(classic).toMatchObject({ ice: 0.25, colorRule: "cycle", turnstiles: 3, oneWay: 0.4, keys: 2 });
   });
 
+  // K1171: the one fragileRuns param gives the controller exactly the
+  // rules its old fragile/collapse pair gave, and each option
+  // round-trips through the link (the token and &fg= alike).
+  it("maps each fragileRuns option to its old pair of rules (K1171)", () => {
+    const cases = [
+      ["off", "off", "off"],
+      ["crack", "crack", "off"],
+      ["snap", "snap", "off"],
+      ["collapse", "off", "finish"],
+      ["collapseFree", "off", "free"],
+    ] as const;
+    for (const [fragileRuns, fragile, collapse] of cases) {
+      const p = withSeed(7, { fragileRuns });
+      expect(fabricRulesOf(p)).toMatchObject({ fragile, collapse });
+      expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+      expect(parseParams(`?7&fg=${fragileRuns}`).fragileRuns).toBe(fragileRuns);
+    }
+    // The old collapse key is gone: &cl= no longer reads anything.
+    expect(parseParams("?7&fg=snap&cl=free").fragileRuns).toBe("snap");
+    expect(parseParams("?7&cl=free").fragileRuns).toBe("off");
+  });
+
   it("reads the real-time mode from override keys", () => {
     const p = parseParams(
       "?7&clk=realtime&plp=12&mwp=0.25&mhp=0.75&mpj=0.1&mpc=0.5&mpn=1&mpx=3" +
@@ -800,12 +822,12 @@ describe("links", () => {
 
   it("is the bare seed for an all-default design", () => {
     expect(encodeParams(withSeed(2430477599))).toBe("1471kin");
-    // A sentence period, a URLSearchParams "=", the all-default blob (".Ew")
+    // A sentence period, a URLSearchParams "=", the all-default blob (".FQ")
     // and the ones earlier builds wrote (".N", codec v6, ".L", v5, and
     // ".J", v4: each warns) read the same.
     const warn = warnings();
     for (const q of [
-      "?1471kin", "1471kin", "?1471kin.", "?1471kin=", "?1471kin.Ew", "?1471kin.P", "?1471kin.N", "?1471kin.L", "?1471kin.J",
+      "?1471kin", "1471kin", "?1471kin.", "?1471kin=", "?1471kin.FQ", "?1471kin.P", "?1471kin.N", "?1471kin.L", "?1471kin.J",
     ]) {
       expect(parseParams(q)).toEqual(withSeed(2430477599));
     }
@@ -879,7 +901,7 @@ describe("links", () => {
       hueShift: -15,
     });
     const q = encodeParams(p);
-    expect(q).toBe("1z141z3.EnRhtN8PCtivv_0koKg");
+    expect(q).toBe("1z141z3.FHRhtN8PCtivv_0koKg");
     expect(parseParams("?" + q)).toEqual({ ...p, threadWidth: 0.6 });
   });
 
@@ -897,17 +919,17 @@ describe("links", () => {
       appearFx: "rainbow",
       appearSpeed: 2,
     });
-    expect(encodeParams(preset)).toBe("7.EoGxA");
-    expect(parseParams("?7.EoGxA")).toEqual(preset);
+    expect(encodeParams(preset)).toBe("7.FIGxA");
+    expect(parseParams("?7.FIGxA")).toEqual(preset);
     const instant = withSeed(7, {
       appearMode: "instant",
       appearSequence: "instant",
     });
-    expect(encodeParams(instant)).toBe("7.EoG0");
-    expect(parseParams("?7.EoG0")).toEqual(instant);
+    expect(encodeParams(instant)).toBe("7.FIG0");
+    expect(parseParams("?7.FIG0")).toEqual(instant);
     const custom = withSeed(7, { appearFx: "dust" });
-    expect(encodeParams(custom)).toBe("7.EoHJA");
-    expect(parseParams("?7.EoHJA")).toEqual(custom);
+    expect(encodeParams(custom)).toBe("7.FIHJA");
+    expect(parseParams("?7.FIHJA")).toEqual(custom);
     // Every preset round-trips, values implied.
     for (const id of Object.keys(APPEAR_PRESETS) as AppearPreset[]) {
       const p = withSeed(9, { appearMode: id });
@@ -943,7 +965,7 @@ describe("key=value links", () => {
     expect(parseParams("?s=1471kin")).toEqual(withSeed(2430477599));
     expect(encodeParams(parseParams("?s=1471kin"))).toBe("1471kin");
     expect(encodeParams(parseParams("?" + USER_KEYS))).toBe(USER_COMPACT);
-    expect(encodeParams(parseParams("?s=7&am=trace-rainbow"))).toBe("7.EoGxA");
+    expect(encodeParams(parseParams("?s=7&am=trace-rainbow"))).toBe("7.FIGxA");
     expect(parseParams("?s=7&afx=dust")).toEqual(withSeed(7, { appearFx: "dust" }));
     expect(parseParams("?s=7&pv=trail")).toEqual(withSeed(7, { pathViz: "trail" }));
   });
@@ -956,13 +978,13 @@ describe("key=value links", () => {
     // K323: `de=0` is ignored (dead ends are density 0 now); ded stays.
     const listed = { deadEndDensity: 0.25, trailLength: 5 };
     const token = encodeParams(parseParams(old));
-    expect(token).toBe("1471kin.EsFdEvkXw");
+    expect(token).toBe("1471kin.FMFdEvkXw");
     expect(parseParams("?" + token)).toEqual(withSeed(2430477599, listed));
     const user = parseParams(
       "?seed=2430477599&gs=12&shp=rect&sa=nw&xa=se&wd=0.35&tb=0.7&sl=0.55&sp=5&dr=0.5&rep=1&bd=1&sm=0.25&st=1&ga=0&tw=0.64&gap=0.12&ms=1&cr=2.4&fl=1.734723475976807e-17&fw=0.25&fv=1.1500000000000001&tl=2&sb=4&snd=music&sc=chromatic&oct=3&ss=0.9999999999999996&vol=0.18&rv=0.42&brt=0.5&sus=0.5&shm=0.4&pp=0.4&snpy=0.88&rn=seed&tnc=0.5&psp=2.5&hs=312&arc=130&pal=moss&pc=6c644c&brd=0.35&fwf=0.12&ded=0.25&pk=string&mf=1&de=0&pv=gold&cam=fit&trl=5&tn=0.45&fow=0&fr=4&fwi=0&cs=segments&ap=trace&as=2.1&afx=burn"
     );
     const userToken = encodeParams(user);
-    expect(userToken).toBe("1471kin.EhOJeJH4_ol9B-mT9CXoqT4fol-NCvnoY8SYl6JbGRMdEvkXxJUPg");
+    expect(userToken).toBe("1471kin.FBOJeJH4_ol9B-mT9CXoqT4fol-NCvnoY8SYl6JbGRMdEvkXxJUPg");
     expect(parseParams("?" + userToken)).toEqual({ ...USER, ...listed });
     // Earlier builds' renamed keys (mc=, trm=) are gone: ignored.
     expect(parseParams("?seed=1&mc=1").colorScheme).toBe(PARAM_DEFAULTS.colorScheme);
@@ -1047,10 +1069,10 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   dailyTitleThread: "dtt",
   minoStopMin: "mhn", minoStopMax: "mhx", minoHuntStop: "mhh", minoTurnBack: "mrv",
   minoTipReach: "mdr", minoRoamNear: "mnr", minoTelegraphRuns: "mtn",
-  fragile: "fg", parMode: "pa", parSlack: "par",
+  fragileRuns: "fg", parMode: "pa", parSlack: "par",
   minoGuardRoam: "mgr", minoGuardDetect: "mgd", minoGuardLose: "mgl",
   minoGuardAccuracyRt: "mgx", minoStalkerAccuracyRt: "msx",
-  collapse: "cl",
+
   cut: "ct", // K114
   lives: "mlv", // K137 stage 3a
   sword: "swd", swordMoves: "swm", // K137 stage 3b
@@ -1180,12 +1202,12 @@ describe("token + overrides", () => {
       // K138 stage 4: the lock has one form today (exit), so no other value;
       // the shortcut and colors forms append later.
       if (name === "lockMode") {
-        expect(parseParams("?7.Ew&lkm=exit&ky=2")).toEqual(withSeed(7, { keys: 2 }));
+        expect(parseParams("?7.FQ&lkm=exit&ky=2")).toEqual(withSeed(7, { keys: 2 }));
         continue;
       }
       const value = otherValue(name);
       expect([name, value]).not.toEqual([name, PARAM_DEFAULTS[name]]);
-      const q = `?7.Ew&${OVERRIDE_KEYS[name]}=${linkText(value)}`;
+      const q = `?7.FQ&${OVERRIDE_KEYS[name]}=${linkText(value)}`;
       const p = parseParams(q);
       // The value lands and nothing else moves (in the appearance group the
       // mode follows the values).
@@ -1252,7 +1274,7 @@ describe("token + overrides", () => {
       physics: false,
     });
     const q = encodeParams(p);
-    expect(q).toBe("7.ElB0NL8Pq");
+    expect(q).toBe("7.FFB0NL8Pq");
     expect(parseParams("?" + q)).toEqual(p);
     // A token takes them as overrides (probe URLs: &phy=0).
     expect(parseParams("?7&psz=1.5&pgh=0&prc=lobe&phy=0")).toEqual(p);
@@ -1285,7 +1307,7 @@ describe("token + overrides", () => {
     const p = withSeed(7, { background: "aurora", backgroundIntensity: 0.8 });
     const q = encodeParams(p);
     // v8, 2 entries: background = option 5, backgroundIntensity = ".8".
-    expect(q).toBe("7.EsCCbUe");
+    expect(q).toBe("7.FMCCbUe");
     expect(parseParams("?" + q)).toEqual(p);
     // Every effect round-trips.
     for (const id of ENUM_OPTIONS.background!) {

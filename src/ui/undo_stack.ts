@@ -202,8 +202,8 @@ export const LIVE_EFFECTS = {
   // pair likewise; or K137's fragile runs or par changed).
   onClockChange: [
     "gameMode", "clock", "minotaur", "fireSpeed", "fireDelay", "fireClock",
-    "fireSpeedRt", "fireDelayRt", "fragile", "parMode", "parSlack",
-    "collapse", // K139
+    "fireSpeedRt", "fireDelayRt", "fragileRuns", "parMode", "parSlack",
+
     "cut", // K114
     // K137 stage 3b: the sword (a new chase lays it down, or none).
     "sword", "swordMoves",
