@@ -509,10 +509,10 @@ Next free ID: K1179.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-04 01:55 (S3f3 done; S3f4 queued as Muse chain run 16J, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `c0df57e3`
+  - owner: nobody since 2026-11-04 03:16 (S3f4 done in Muse run 16J)
+  - branch: mainline; last commit: `b3dab0c9`
   - evidence: `.claude/probes/K1040/s3/` (s3f3_gate.ps1, split.mjs, vert_count.ts; out/split_s3f2.md, out/split_s3d2.md, out/vert_count_s3f3.md)
-  - next: S3f4 (Muse run 16J): what bounds the Pixel's label drawing; S3f3's Pixel batch skipped (s3f2b timed today's pass, and S3f3 changed no default pixel)
+  - next: Pixel batch (coordinator): s3f4_gate.ps1 -SkipDesktop fills out/split_s3f4.md + out/phone_table_s3f4.md; read it by the Handoff's rule (pass-that-draws -> attachments/stores, instancing -> ftentvvid's draw, vertex side -> cheaper vertices, fragment side -> fewer covered pixels)
   - brief: `docs/design/K1040_s3f4_bound.md`
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
