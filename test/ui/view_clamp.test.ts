@@ -5,9 +5,10 @@ import {
   PANEL_GAP,
   PANEL_TWEEN_S,
   RANGE_EASE,
+  RANGE_MAX_DT,
   clampFitView,
   easeIntoRange,
-  easePanel, fitArea, fitEase, fitPlacement, fitTargetJumped, homeEase, rangeRate,
+  easePanel, fitArea, fitEase, fitPlacement, fitTargetJumped, homeEase, rangeRate, rangeShare,
   noAllowance,
   panRange,
   stepPanelTween,
@@ -313,6 +314,71 @@ describe("easing back into range", () => {
     expect(easeIntoRange(v, DESK.w, DESK.h, DESK.panel, allow)).toBe(false);
     expect(v).toEqual(view(2, -300, -200));
     expect(allow).toEqual(noAllowance());
+  });
+});
+
+// K252(a): the range ease by time, not by frame. RANGE_EASE is the share
+// per 1/60 s step; rangeShare prices any dt, clamped to RANGE_MAX_DT (1 s,
+// the camera's stall bound CAM_MAX_DT in src/app/camera.ts).
+describe("K252: the range ease by time", () => {
+  it("rangeShare is RANGE_EASE at the 60 Hz step, 0 at no step, clamped at the stall bound", () => {
+    expect(rangeShare(1 / 60)).toBeCloseTo(RANGE_EASE, 12);
+    expect(rangeShare(0)).toBe(0);
+    expect(rangeShare(-1)).toBe(0);
+    expect(RANGE_MAX_DT).toBe(1);
+    expect(rangeShare(1)).toBeCloseTo(1 - Math.pow(1 - RANGE_EASE, 60), 12);
+    expect(rangeShare(5)).toBe(rangeShare(RANGE_MAX_DT));
+  });
+
+  it("30, 60 and 120 Hz reach within 0.5 px at the same wall time (within one 30 Hz frame)", () => {
+    const settle = (hz: number): { frames: number; wall: number } => {
+      const v = view(1, -144, 0);
+      const allow = noAllowance();
+      for (let frames = 1; frames <= 10000; frames++) {
+        stepRange(v, DESK.w, DESK.h, MAX, null, null, allow, undefined, 1 / hz);
+        if (Math.abs(v.panX) <= 0.5) return { frames, wall: frames / hz };
+      }
+      throw new Error("never settled");
+    };
+    const s30 = settle(30);
+    const s60 = settle(60);
+    const s120 = settle(120);
+    // The 60 Hz run is today's per-frame ease: 35 steps, the first moving
+    // RANGE_EASE of the way.
+    expect(s60.frames).toBe(35);
+    const one = view(1, -144, 0);
+    const allowOne = noAllowance();
+    stepRange(one, DESK.w, DESK.h, MAX, null, null, allowOne, undefined, 1 / 60);
+    expect(one.panX).toBeCloseTo(-144 * (1 - RANGE_EASE), 9);
+    // One wall time at every rate, up to a step's rounding: the slowest
+    // step (1/30 s) is the tolerance.
+    const walls = [s30.wall, s60.wall, s120.wall];
+    expect(Math.max(...walls) - Math.min(...walls)).toBeLessThanOrEqual(1 / 30 + 1e-9);
+  });
+
+  it("a 1 s step lands where the bounded step says, and a longer step lands the same", () => {
+    const one = view(1, -10000, 0);
+    const allowOne = noAllowance();
+    stepRange(one, DESK.w, DESK.h, MAX, null, null, allowOne, undefined, 1);
+    expect(one.panX).toBeCloseTo(-10000 * Math.pow(1 - RANGE_EASE, 60), 9);
+    const long = view(1, -10000, 0);
+    const allowLong = noAllowance();
+    stepRange(long, DESK.w, DESK.h, MAX, null, null, allowLong, undefined, 10);
+    expect(long).toEqual(one);
+    expect(allowLong).toEqual(allowOne);
+  });
+
+  it("no step holds by time, and the explicit hold (rate 0) holds over any dt", () => {
+    const still = view(1, -144, 0);
+    const allowStill = noAllowance();
+    expect(easeIntoRange(still, DESK.w, DESK.h, null, allowStill, undefined, 0)).toBe(true);
+    expect(still).toEqual(view(1, -144, 0));
+    expect(allowStill.loX).toBeCloseTo(144, 9);
+    const held = view(1, -144, 0);
+    const allowHeld = noAllowance();
+    expect(easeIntoRange(held, DESK.w, DESK.h, null, allowHeld, 0, 1)).toBe(true);
+    expect(held).toEqual(view(1, -144, 0));
+    expect(allowHeld).toEqual(allowStill);
   });
 });
 

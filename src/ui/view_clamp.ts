@@ -33,9 +33,24 @@
 // The gap between the maze's right edge and the open panel's left edge at
 // the left limit: the panel's own margin from the screen's edge.
 export const PANEL_GAP = 10;
-// The share of the way into range the view moves each frame (the reset's
-// ease, viewHoming in main.ts).
+// The share of the way into range the view moves in one frame at the
+// reference rate (RANGE_FPS): the reset's ease rate (viewHoming in
+// main.ts), read by time through rangeShare (K252a).
 export const RANGE_EASE = 0.15;
+// The reference rate RANGE_EASE is stated at, frames a second.
+export const RANGE_FPS = 60;
+// The longest frame step the range ease prices in one call, seconds: the
+// camera's stall bound (CAM_MAX_DT in src/app/camera.ts, the clamp on
+// ticker time in src/app/frame_loop.ts), so a hidden tab's long step
+// eases by one bounded step, never home in one frame.
+export const RANGE_MAX_DT = 1;
+// The share of the way into range for a frame step of dt seconds:
+// (1 - RANGE_EASE) survives each 1/RANGE_FPS of it. dt is clamped to
+// [0, RANGE_MAX_DT] (the camera's stall bound above).
+export function rangeShare(dt: number): number {
+  const d = Math.min(Math.max(0, dt), RANGE_MAX_DT);
+  return 1 - Math.pow(1 - RANGE_EASE, d * RANGE_FPS);
+}
 
 // K1085: the fit ease's share per frame (camera.ts's updateCamera), and
 // the reduced-motion answers for the fit and the range. An explicit
@@ -174,23 +189,27 @@ export function clampFitView(
   view.panY = clampTo(view.panY, r.loY - a.loY, r.hiY + a.hiY);
 }
 
-// One frame of the ease into range: the allowance becomes (1 - rate) of how
-// far the view lies past each bound (0 under half a px), and the view is
-// clamped to the widened range, so it moves `rate` of the way in. rate 0
-// only records where the view is (nothing moves). Returns whether the view
-// is still out of range.
+// One step of the ease into range: the allowance becomes (1 - share) of
+// how far the view lies past each bound (0 under half a px), and the view
+// is clamped to the widened range, so it moves `share` of the way in. The
+// share is the explicit `rate` when one is given (0 only records where
+// the view is: nothing moves; 1 snaps); with no rate it is the share for
+// the frame step `dt` (rangeShare, default the 1/60 s step, whose share
+// is RANGE_EASE). Returns whether the view is still out of range.
 export function easeIntoRange(
   view: FitView,
   w: number,
   h: number,
   panel: OpenPanel | null,
   allow: PanBounds,
-  rate: number = RANGE_EASE,
+  rate?: number,
+  dt: number = 1 / RANGE_FPS,
   gap: number = PANEL_GAP
 ): boolean {
+  const share = rate !== undefined ? rate : rangeShare(dt);
   const r = panRange(w, h, view.zoom, panel, gap);
   const keep = (out: number): number => {
-    const v = out * (1 - rate);
+    const v = out * (1 - share);
     return v < 0.5 ? 0 : v;
   };
   allow.loX = keep(r.loX - view.panX);
@@ -207,7 +226,8 @@ export function easeIntoRange(
 // panel's previous openness (`before`), then the view is clamped to this
 // frame's (`now`) with that allowance. A view at the limit therefore rides
 // the tweened panel edge exactly (no lag on top of the tween), while a view
-// a resize or the fit's drift left outside still eases in at `rate` a frame.
+// a resize or the fit's drift left outside still eases in by the frame
+// step's share (rangeShare of `dt`, or the explicit `rate`).
 export function stepRange(
   view: FitView,
   w: number,
@@ -216,10 +236,11 @@ export function stepRange(
   before: OpenPanel | null,
   now: OpenPanel | null,
   allow: PanBounds,
-  rate: number = RANGE_EASE,
+  rate?: number,
+  dt: number = 1 / RANGE_FPS,
   gap: number = PANEL_GAP
 ): void {
-  easeIntoRange(view, w, h, before, allow, rate, gap);
+  easeIntoRange(view, w, h, before, allow, rate, dt, gap);
   clampFitView(view, w, h, maxZoom, now, allow, gap);
 }
 

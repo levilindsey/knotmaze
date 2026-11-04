@@ -17,6 +17,7 @@ import {
   stepPanelTween,
   rangeRate,
   stepRange,
+  RANGE_MAX_DT,
   type OpenPanel,
 } from "../ui/view_clamp";
 import { Flag, type LoopFlags } from "./loop_flags";
@@ -47,7 +48,7 @@ const FOLLOW_W = 2.4;
 // stable, so a low frame rate no longer means a slow-motion camera. A
 // stall longer than CAM_MAX_DT (a hidden tab) counts as that long.
 const CAM_STEP = 0.05;
-export const CAM_MAX_DT = 1;
+export const CAM_MAX_DT = RANGE_MAX_DT;
 // K6-1: converged()'s thresholds, the motion left: screen px, and log
 // scale (1e-5 moves a point 1000 px from the origin by 0.01 px).
 const CONVERGED_PX = 0.01;
@@ -321,10 +322,11 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
       panAllow
     );
   };
-  // One frame of the range: the ease back into it (rate 0: hold where it
-  // is), measured at last frame's openness, then the clamp at this one's,
+  // One frame of the range: the ease back into it by the frame step dt
+  // (an explicit rate 0 holds where it is; Reduced motion snaps),
+  // measured at last frame's openness, then the clamp at this one's,
   // so a view at the limit rides the tweened edge (stepRange).
-  const easeView = (rate?: number): void => {
+  const easeView = (dt: number = 1 / 60, rate?: number): void => {
     stepRange(
       view,
       app.screen.width,
@@ -333,7 +335,8 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
       openPanelAt(panelTPrev),
       openPanel(),
       panAllow,
-      rangeRate(rate, motion.reduced)
+      rangeRate(rate, motion.reduced),
+      dt
     );
   };
   const applyView = (): void => {
@@ -533,7 +536,7 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     );
     // K198: a view the range left behind (the panel closed, a resize, the
     // fit drifting) eases back in, every frame, whatever else runs.
-    if (!camFollow) easeView();
+    if (!camFollow) easeView(dt);
     if (camTween) {
       stepCamTween(dt);
       return;
@@ -671,7 +674,7 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     fitCur.y = fitTarget.y;
     // K198: a resize can leave the view out of range: hold it here, and
     // let the next frames ease it in (never a snap).
-    easeView(0);
+    easeView(1 / 60, 0);
     if (camFollow) applyCam();
     else applyView();
   }
