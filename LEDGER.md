@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1178.
+Next free ID: K1179.
 
 ## Waiting on Levi
 
@@ -323,11 +323,11 @@ Next free ID: K1178.
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
-  - owner: nobody since 2026-11-03 19:20 (S3f runs under K1097)
-  - branch: mainline; last commit: `8b436272`
+  - owner: nobody since 2026-11-04 01:55 (S3 runs under K1097)
+  - branch: mainline; last commit: `c0df57e3`
   - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1), `s1/out/s1b/` and `s1/out/s1c/`, S1d's runs in `s1/out/s1d/`, S1e's in `s1/out/s1e/` (gate `s1/run_s1e_gate.ps1`, table `s1/gate_table.ps1`; probes `b_rate.ts`, `bend_s1e.ts`, `attr_f4f5.ts`, `lcut_far.ts`, `attr_c2.ts`, `arms_c3.ts`; commands in its Handoff)); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: S3f (K1097; docs/design/K1040_s3f_draw.md) runs: the label pass under 2 ms on the Pixel; S1i (K1114) merged in 8b436272 (its root-gate veto: K1163)
-  - brief: docs/design/K1040_s3f_draw.md (S3f); docs/design/K1040_s3e_lean.md (S3e's Handoff); docs/design/K1114_s1i_rounding.md (S1i)
+  - next: K1097 S3f4 (docs/design/K1040_s3f4_bound.md): what bounds the Pixel's label drawing, after S3f3's drawing levers all failed their census; S1i (K1114) merged in 8b436272 (its root-gate veto: K1163)
+  - brief: docs/design/K1040_s3f4_bound.md (S3f4); docs/design/K1040_s3f3_draw.md (S3f3); docs/design/K1040_s3f_draw.md (S3f); docs/design/K1040_s3e_lean.md (S3e's Handoff); docs/design/K1114_s1i_rounding.md (S1i)
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -509,11 +509,11 @@ Next free ID: K1178.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-04 01:55 (S3f3 done in Muse run 15J)
-  - branch: mainline; last commit: `95fd087b`
-  - evidence: `.claude/probes/K1040/s3/` (s3f_gate.ps1, span_bench.ts, vert_count.ts; out/phone_table_s3f.md, out/split_s3f1.md, out/phone_table_s3e.md)
-  - next: Coordinator runs the Pixel batch (s3f3_gate.ps1 -SkipDesktop); all drawing levers failed their census, gate waits on S4 fixed part and S5 SAMP upload
-  - brief: `docs/design/K1040_s3f3_draw.md`
+  - owner: nobody since 2026-11-04 01:55 (S3f3 done; S3f4 queued as Muse chain run 16J, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `c0df57e3`
+  - evidence: `.claude/probes/K1040/s3/` (s3f3_gate.ps1, split.mjs, vert_count.ts; out/split_s3f2.md, out/split_s3d2.md, out/vert_count_s3f3.md)
+  - next: S3f4 (Muse run 16J): what bounds the Pixel's label drawing; S3f3's Pixel batch skipped (s3f2b timed today's pass, and S3f3 changed no default pixel)
+  - brief: `docs/design/K1040_s3f4_bound.md`
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1, S2 done (a4dc218a, 16246c90). Answers: the light splits at a fork (A), runs toward you behind
@@ -521,8 +521,15 @@ Next free ID: K1178.
   - owner: nobody since 2026-11-04 01:33 (S3a done in Muse run 15G)
   - branch: mainline; last commit: `4f625916`
   - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked, S2's record in `out/s2/`; the doc's appendix lists the commands)
-  - next: S3b: the fan shader, on the phone with a sheet for Levi (the plan's section 5)
+  - next: S3b, the fan shader, in Muse batch 16 (K1178, drafted by run 16A): its numeric checks and look sheet, then Claude's look check; the Pixel later, with S4 (the plan's section 5)
   - brief: docs/design/K1139_s3a.md; the plan: docs/design/K1139_pulse_junctions.md
+- **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-G from
+  the draft, after 16J.
+  - owner: nobody since 2026-11-04 02:43 (queued as Muse chain run 16A, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `c0df57e3`
+  - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
+  - next: run 16A drafts docs/design/K1178_muse_batch16.md; Claude reviews it and queues 16B-16G after 16J
+  - brief: `docs/design/K1178_muse_batch16_run_a.md`
 
 ## Next, in order
 
