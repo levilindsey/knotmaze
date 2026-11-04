@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1155.
+Next free ID: K1157.
 
 ## Waiting on Levi
 
@@ -523,15 +523,15 @@ Next free ID: K1155.
   - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
   - next: Levi answers Q1-Q3 (sent with the pictures 2026-11-03 10:07; clips of the motion offered), then the S2 brief: the light field, folding in the wrong "world arc" comment on `litArms` (`src/game/route_plan.ts`, the length is lattice) and S5 if Q3 says straight through
   - brief: `docs/design/K1139_s1_brief.md` (the plan: `docs/design/K1139_pulse_junctions.md`, stages S2-S6)
-- **K1153** · Muse batch 12 (`docs/design/K1153_muse_batch12.md`; Run A drafted it, aca74311), queued B to G:
-  K202's midnight rollover, K201's Played chip, K125's whole bars, K165 (a)'s HALTED stamp, K170's opt-in
-  wake, K308's exact fifth contour.
-  - owner: muse runs 12B-12G, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 12:29
-  - branch: mainline; last commit: `b5082d44`
-  - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K202/`, `K201/`, `K125/`, `K165/`, `K308/`
-  - next: Run G done; batch 12 complete, Claude reviews and closes K1153
-  - brief: `docs/design/K1153_muse_batch12.md`
-  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 12B-12G); a `hold.txt` beside it holds the chain before its next run
+- **K1156** · Muse batch 13: its Run A drafts the batch's brief from the ledger
+  (`docs/design/K1156_muse_batch13_run_a.md`) as `docs/design/K1156_muse_batch13.md`, runs B to G; Claude
+  reviews it and queues them (ports 5500-5549).
+  - owner: muse run 13A, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 13:57
+  - branch: mainline; last commit: `ecfd0426`
+  - evidence: `.claude/probes/K1053/` (chain.log, done.txt); the run's commit report
+  - next: Run A drafts the brief; Claude reviews it and queues runs B to G
+  - brief: `docs/design/K1156_muse_batch13_run_a.md`
+  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, line 13A); a `hold.txt` beside it holds the chain before its next run
 
 ## Next, in order
 
@@ -1706,6 +1706,9 @@ Every other item below waits on the trigger it names.
 - **K1154** · Loader clocks: the physics-off load's wall cap counts hidden-tab time (PhysicsCore's loadWall0
   in src/physics/physics_host.ts, and the worker host's loadInfo in src/physics/worker_host.ts beside it — the
   pre-settle already counts visible time with VisibleClock; split from K165)
+- **K1155** · `scripts/phone.ps1`'s `-TailscaleHost` default (8320cde2) is the phone's tailnet machine name,
+  in a public repo. Find the phone among `tailscale status --json`'s online peers instead, the param kept as
+  the override; a fixture with made-up names tests it.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2007,6 +2010,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1153** · Muse batch 12: K202's midnight rollover (7f03c0a6); K201's Played chip (e0ceba44); K125's whole bars (cbc02ded); K165 (a)'s HALTED stamp (1692f502, K1154 split off); K170's opt-in wake (8e6034a5); K308's exact fifth contour (b5082d44). Done in d3b337aa (2026-11-03).
 - **K308** · the contours' fifth line counts exactly (integer-corrected). Done in b5082d44 (2026-11-03).
 - **K170** · scripts/phone.ps1 wakes the phone only under -Wake. Done in 8e6034a5 (2026-11-03).
 - **K165** · a halted load keeps its HALTED stamp; the load wall clock split out. Done in 1692f502 (2026-11-03).
