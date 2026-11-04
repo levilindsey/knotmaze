@@ -536,10 +536,10 @@ Next free ID: K1161.
   189-187 from 2.438h to 1.431h; F2 changes r at 155 corners. S1g made pops crops only: S1h makes at-rest
   before/after crops, Claude looks, and Levi gets a picture if it reads as a change (`K1040_s1g_gates.md` ##
   Handoff).
-  - owner: agent `ae83ec07a4b4a228c` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (sonnet, started 2026-11-03 14:06, 1 h cap ~15:06)
-  - branch: `worktree-agent-ae83ec07a4b4a228c`, worktree `.claude/worktrees/agent-ae83ec07a4b4a228c`; last commit: `85e9a5fd`
+  - owner: nobody since 2026-11-03 14:59 (merged; agent `ae83ec07a4b4a228c` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `a3c54463`
   - evidence: `.claude/probes/K1040/s1/out/s1h/` (`sheet.png`, `index.md`); S1g's census `out/s1g/dedge_near.txt`, `out/s1g/gate699_rb05.txt`
-  - next: S1h makes the before/after pairs and the sheet; then Claude looks, and Levi gets a picture only if it reads as a change
+  - next: Levi looks at the S1h picture (sites 02, 16 and 17 at zoom 4, old against new, sent 2026-11-03): keep the new shapes, or a stage that restores the old ones and keeps F1's pop fix
   - brief: `docs/design/K1114_s1h_crops.md`
 
 ## Next, in order
