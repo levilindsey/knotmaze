@@ -527,9 +527,9 @@ Next free ID: K1154.
   K202's midnight rollover, K201's Played chip, K125's whole bars, K165 (a)'s HALTED stamp, K170's opt-in
   wake, K308's exact fifth contour.
   - owner: muse runs 12B-12G, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 12:29
-  - branch: mainline; last commit: `e0ceba44`
+  - branch: mainline; last commit: `cbc02ded`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K202/`, `K201/`, `K125/`, `K165/`, `K308/`
-  - next: Run C done; next Run D
+  - next: Run D done; next Run E
   - brief: `docs/design/K1153_muse_batch12.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 12B-12G); a `hold.txt` beside it holds the chain before its next run
 
@@ -947,9 +947,6 @@ Every other item below waits on the trigger it names.
 - **K124** · Marker gaps keep their CPU reveal gate, so they still pop
   during the reveal (pre-existing; G2 agent a7d1f998's report,
   2026-10-12 18:43; from the LEDGERS inbox).
-- **K125** · Scarborough Fair's loop is 50 beats (`src/audio/songs.ts`; K116 found it), not whole
-  3/4 bars, so a part that keeps bars would slip each loop. Grow its closing rest from 2 beats to 3
-  before any band part (K116's call 6).
 - **K131** · Phone probe kit (`.claude/probes/K79/phone/`, untracked): `drift.mjs` and `frames.mjs`
   take slow full-size PNG shots (10-25 s; use JPEG or clipped); `bench.mjs`'s `thermal()` reads the
   stale temperatures block (`.claude/probes/K81/phone/lib.mjs` reads the live one).
@@ -2016,6 +2013,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K125** · Scarborough Fair loops on whole bars (closing rest 3). Done in cbc02ded (2026-11-03).
 - **K201** · the Played chip counts the tile's days; a practice row shows its count. Done in e0ceba44 (2026-11-03).
 - **K202** · an unstarted floating daily rolls to the new day at midnight. Done in 7f03c0a6 (2026-11-03).
 - **K1146** · Muse batch 11: K252 (a), the pan range's ease by time (7f929ae3); K144's accounts doc (23e3bf79); K804's beat ring (94e4b59c); K207's fog dedupe, partial (bb7aa6ed); K688's healing-cuts doc (db015d9e). Done in da73b598 (2026-11-03).
