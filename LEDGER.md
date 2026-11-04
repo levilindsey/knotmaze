@@ -523,15 +523,15 @@ Next free ID: K1154.
   - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
   - next: Levi answers Q1-Q3 (sent with the pictures 2026-11-03 10:07; clips of the motion offered), then the S2 brief: the light field, folding in the wrong "world arc" comment on `litArms` (`src/game/route_plan.ts`, the length is lattice) and S5 if Q3 says straight through
   - brief: `docs/design/K1139_s1_brief.md` (the plan: `docs/design/K1139_pulse_junctions.md`, stages S2-S6)
-- **K1153** · Muse batch 12: its Run A drafts the batch's brief from the ledger
-  (`docs/design/K1153_muse_batch12_run_a.md`); Claude reviews the draft, renames it
-  `docs/design/K1153_muse_batch12.md` and queues its runs (ports 5550-5599).
-  - owner: muse run 12A, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 12:14
-  - branch: mainline; last commit: `aca74311`
-  - evidence: `.claude/probes/K1053/` (chain.log, done.txt); the draft `docs/design/K1153_batch12_draft.md`; Run A's commit report
-  - next: Run A done; Claude reviews the draft
-  - brief: `docs/design/K1153_muse_batch12_run_a.md`
-  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, line 12A); a `hold.txt` beside it holds the chain before its next run
+- **K1153** · Muse batch 12 (`docs/design/K1153_muse_batch12.md`; Run A drafted it, aca74311), queued B to G:
+  K202's midnight rollover, K201's Played chip, K125's whole bars, K165 (a)'s HALTED stamp, K170's opt-in
+  wake, K308's exact fifth contour.
+  - owner: muse runs 12B-12G, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 12:29
+  - branch: mainline; last commit: `b00aecc3`
+  - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K202/`, `K201/`, `K125/`, `K165/`, `K308/`
+  - next: Run B (K202) first; then C to G
+  - brief: `docs/design/K1153_muse_batch12.md`
+  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 12B-12G); a `hold.txt` beside it holds the chain before its next run
 
 ## Next, in order
 
