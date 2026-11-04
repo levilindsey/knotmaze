@@ -69,13 +69,14 @@ Remove-Item (Join-Path $state "watchdog.trip") -Force
 $node = (Get-Command node -ErrorAction Stop).Source
 $readyArgs = @((Join-Path $PSScriptRoot "phone_ready.mjs"), "--adb", $adb, "--serial", $dev, "--quiet-s", ($QuietMin * 60), "--timeout-min", ($GiveUpMin + $WaitReadyMin), "--progress")
 if ($AllowChrome) { $readyArgs += "--allow-chrome" }
-Say "retry: waiting for the phone: launcher in front and $QuietMin min without a touch (gives up at $((Get-Date).AddMinutes($GiveUpMin + $WaitReadyMin).ToString('HH:mm')))"
+Say "retry: waiting for the phone: launcher in front and $QuietMin min without a touch (gives up at $((Get-Date).AddMinutes([Math]::Max($GiveUpMin + $WaitReadyMin, $QuietMin)).ToString('HH:mm')))"
 & $node @readyArgs 2>&1 | ForEach-Object { Say "retry: $_" }
 $rc = $LASTEXITCODE
 if ($rc -ne 0) {
   Say "retry: not retrying ($(switch ($rc) { 4 { 'it was touched' } 5 { 'no touchscreen found' } default { 'the phone was not ready' } }); it is never woken or unlocked by the pass)"
   exit $(switch ($rc) { 4 { 2 } 5 { 5 } default { 3 } })
-}Say "retry: $QuietMin quiet minutes and the phone is ready; running the pass again (the one retry)"
+}
+Say "retry: $QuietMin quiet minutes and the phone is ready; running the pass again (the one retry)"
 $argv = @("-NoProfile", "-File", $pass, "-Phase", "all", "-Base", $cfg.refA, "-Head", $cfg.refB, "-Out", $Out,
   "-Reps", [string]$cfg.reps, "-Moves", (@($cfg.moves) -join ","), "-LoadSeconds", [string]$cfg.loadSeconds)
 if ($cfg.portRange) { $argv += @("-PortRange", $cfg.portRange) }
