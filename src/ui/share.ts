@@ -68,10 +68,15 @@ export async function copyText(text: string): Promise<boolean> {
 // A short message near the bottom of the screen that fades by itself
 // after `ms` (longer messages - an explanation - want longer).
 // K698: it sits above the bottom controls in its column (ui/toast_place.ts),
-// placed when it shows and again on a resize while it shows; it never takes
+// placed when it shows, again on a resize while it shows, and on a slow
+// clock while it shows (K740, TOAST_REFLOW_MS below); it never takes
 // a touch (pointer-events none, maze_hud.ts's .km-toast).
 let toastEl: HTMLDivElement | null = null;
 let toastTimer = 0;
+// The re-place clock's cadence (K740): met well inside the shortest
+// message (2.2 s), and a handful of rect reads per message, not per frame.
+export const TOAST_REFLOW_MS = 250;
+let toastReflowTimer = 0;
 // The controls it keeps clear of: anything with class TOAST_AVOID_CLASS, the
 // scissors, the walker's buttons, the aids (K137), the move pad, the banner,
 // the edge indicators, and whatever setToastAvoid names (main.ts: the chrome
@@ -139,8 +144,16 @@ export function showToast(message: string, ms = 2200): void {
   placeToast();
   toastEl.classList.add("km-toast-on");
   window.clearTimeout(toastTimer);
+  window.clearInterval(toastReflowTimer);
+  toastReflowTimer = window.setInterval(() => {
+    if (toastEl?.classList.contains("km-toast-on")) placeToast();
+  }, TOAST_REFLOW_MS);
   toastTimer = window.setTimeout(
-    () => toastEl?.classList.remove("km-toast-on"),
+    () => {
+      toastEl?.classList.remove("km-toast-on");
+      window.clearInterval(toastReflowTimer);
+      toastReflowTimer = 0;
+    },
     ms
   );
 }
