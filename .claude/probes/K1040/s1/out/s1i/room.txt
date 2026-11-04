@@ -1,0 +1,202 @@
+copy check muse_hash S1f (skip, rb 0): corners 192, arms 503, differ 0
+copy check muse_hash near, rb 0: corners 190, arms 503, differ 0
+copy check muse_hash today (near, rb 0.5): corners 190, arms 503, differ 0
+
+==== muse_hash j36 109-110
+-- S1f (skip, rb 0): h 0.400, W 0.380h
+  arm 109: L0 12.179h (chain end / next root), Lcut 2.950h, L 2.950h; chain 11 closed len 36.6h
+    front  pass s 14.562  d 5.050h  reach 1.100h  θ 1.475  cut 2.950h
+    front  pass s 13.348  d 8.086h  reach 1.016h  θ 1.555  cut 6.071h
+    front  pass s 10.001  d 16.453h  reach 1.118h  θ 1.460  cut 14.335h
+    front  pass s 8.821  d 19.403h  reach 1.116h  θ 1.462  cut 17.287h
+  arm 110: L0 20.264h (chain end / next root), Lcut 5.138h, L 5.138h; chain 50 open len 78.9h
+    front  pass s 2.571  d 7.174h  reach 1.036h  θ 1.536  cut 5.138h
+    front  pass s 4.037  d 10.840h  reach 1.035h  θ 1.537  cut 8.806h
+    front  pass s 5.710  d 15.022h  reach 1.140h  θ 1.441  cut 12.883h
+    front  pass s 9.154  d 23.632h  reach 1.074h  θ 1.500  cut 21.559h
+  V (29.742, 20.159): dVa 0.842h, dVb 0.918h; window (0, L) holds; wedge ok
+    k  ρ−h/h   da/h   db/h  margin  steep  slackA/h slackB/h  cap    rootA  rootB   w      S
+    0 -0.000  0.842  0.918  1.000  1.000    1.728    3.840  1.000  1.000  1.000  1.000  1.000
+    1  0.119  0.940  1.009  1.000  1.000    1.630    3.749  1.000  1.000  1.000  1.000  1.000
+    2  0.237  1.038  1.099  1.000  1.000    1.531    3.659  1.000  1.000  1.000  1.000  1.000
+    3  0.356  1.121  1.196  1.000  1.000    1.449    3.562  1.000  1.000  1.000  1.000  1.000
+    4  0.474  1.217  1.279  1.000  1.000    1.353    3.479  1.000  1.000  1.000  1.000  1.000
+    8  0.949  1.669  1.610  1.000  1.000    0.901    3.148  1.000  1.000  1.000  1.000  1.000
+   12  1.423  2.011  1.872  1.000  1.000    0.558    2.886  1.000  1.000  1.000  1.000  1.000
+   16  1.897  2.086  2.087  1.000  1.000    0.484    2.671  0.997  1.000  1.000  0.997  0.997
+   20  2.371  2.338  2.262  1.000  1.000    0.231    2.497  0.444  1.000  1.000  0.444  0.444
+   24  2.846  2.338  2.416  1.000  1.000    0.231    2.342  0.444  1.000  1.000  0.444  0.444
+   28  3.320  2.365  2.567  1.000  1.000    0.205    2.192  0.365  1.000  1.000  0.365  0.365
+   32  3.794  2.591  2.725  1.000  1.000   -0.021    2.034  0.000  1.000  1.000  0.000  0.000
+    the integral: 32 nodes, last ρ reached 3.794h of target 3.794h, S 0.000, ∫ 2.721h
+  r 2.721h (r0 3.794h), room -0.021h, ω 1.000, feet at da 2.338h, db 2.348h
+-- near, rb 0: h 0.400, W 0.380h
+  arm 109: L0 12.179h (chain end / next root), Lcut 1.112h, L 1.112h; chain 11 closed len 36.6h
+    behind pass s 2.390  d 35.481h  u 1.112h  θ 0.300  cut 1.112h
+    front  pass s 14.562  d 5.050h  reach 1.100h  θ 1.475  cut 2.950h
+    front  pass s 13.348  d 8.086h  reach 1.016h  θ 1.555  cut 6.071h
+    behind pass s 7.378  d 23.011h  u 13.583h  θ 0.300  cut 13.583h
+  arm 110: L0 20.264h (chain end / next root), Lcut 5.138h, L 5.138h; chain 50 open len 78.9h
+    front  pass s 2.571  d 7.174h  reach 1.036h  θ 1.536  cut 5.138h
+    front  pass s 4.037  d 10.840h  reach 1.035h  θ 1.537  cut 8.806h
+    front  pass s 5.710  d 15.022h  reach 1.140h  θ 1.441  cut 12.883h
+    front  pass s 9.154  d 23.632h  reach 1.074h  θ 1.500  cut 21.559h
+  V (29.742, 20.159): dVa 0.842h, dVb 0.918h; window (0, L) holds; wedge ok
+    k  ρ−h/h   da/h   db/h  margin  steep  slackA/h slackB/h  cap    rootA  rootB   w      S
+    0 -0.000  0.842  0.918  1.000  1.000   -0.109    3.840  0.000  1.000  1.000  0.000  0.000
+  r 0.000h (r0 3.794h), room -0.109h, ω 1.000, feet at da 0.842h, db 0.918h
+-- today (near, rb 0.5): h 0.400, W 0.380h
+  arm 109: L0 12.179h (chain end / next root), Lcut 1.112h, L 1.112h; chain 11 closed len 36.6h
+    behind pass s 2.390  d 35.481h  u 1.112h  θ 0.300  cut 1.112h
+    front  pass s 14.562  d 5.050h  reach 1.100h  θ 1.475  cut 2.950h
+    front  pass s 13.348  d 8.086h  reach 1.016h  θ 1.555  cut 6.071h
+    behind pass s 7.378  d 23.011h  u 13.583h  θ 0.300  cut 13.583h
+  arm 110: L0 20.264h (chain end / next root), Lcut 5.138h, L 5.138h; chain 50 open len 78.9h
+    front  pass s 2.571  d 7.174h  reach 1.036h  θ 1.536  cut 5.138h
+    front  pass s 4.037  d 10.840h  reach 1.035h  θ 1.537  cut 8.806h
+    front  pass s 5.710  d 15.022h  reach 1.140h  θ 1.441  cut 12.883h
+    front  pass s 9.154  d 23.632h  reach 1.074h  θ 1.500  cut 21.559h
+  V (29.742, 20.159): dVa 0.842h, dVb 0.918h; window (0, L) holds; wedge ok
+    k  ρ−h/h   da/h   db/h  margin  steep  slackA/h slackB/h  cap    rootA  rootB   w      S
+    0 -0.000  0.842  0.918  1.000  1.000   -0.109    3.840  0.000  1.000  1.000  0.000  0.000
+  r 0.000h (r0 3.794h), room -0.109h, ω 1.000, feet at da 0.842h, db 0.918h
+
+==== muse_hash j131 397-398
+-- S1f (skip, rb 0): h 0.400, W 0.380h
+  arm 397: L0 14.934h (chain end / next root), Lcut 3.208h, L 3.208h; chain 58 open len 111.7h
+    front  pass s 39.295  d 5.285h  reach 1.077h  θ 1.496  cut 3.208h
+    front  pass s 37.502  d 9.768h  reach 1.570h  θ 1.134  cut 7.198h
+    front  pass s 34.699  d 16.775h  reach 1.094h  θ 1.481  cut 14.680h
+    front  pass s 33.318  d 20.227h  reach 1.024h  θ 1.548  cut 18.204h
+  arm 398: L0 13.175h (chain end / next root), Lcut 5.599h, L 5.599h; chain 77 open len 43.7h
+    front  pass s 14.132  d 7.623h  reach 1.024h  θ 1.547  cut 5.599h
+    front  pass s 8.669  d 21.280h  reach 1.031h  θ 1.541  cut 19.250h
+    front  pass s 7.454  d 24.319h  reach 1.190h  θ 1.397  cut 22.129h
+    front  pass s 4.357  d 32.060h  reach 1.001h  θ 1.570  cut 30.059h
+  V (28.594, 9.559): dVa 0.985h, dVb 0.945h; window (0, L) holds; wedge ok
+    k  ρ−h/h   da/h   db/h  margin  steep  slackA/h slackB/h  cap    rootA  rootB   w      S
+    0 -0.000  0.985  0.945  1.000  1.000    1.843    4.274  1.000  1.000  1.000  1.000  1.000
+    1  0.099  1.091  1.037  1.000  1.000    1.737    4.182  1.000  1.000  1.000  1.000  1.000
+    2  0.199  1.188  1.134  1.000  1.000    1.640    4.085  1.000  1.000  1.000  1.000  1.000
+    3  0.298  1.303  1.227  1.000  1.000    1.525    3.992  1.000  1.000  1.000  1.000  1.000
+    4  0.398  1.519  1.321  1.000  1.000    1.309    3.898  1.000  1.000  1.000  1.000  1.000
+    8  0.796  1.955  1.732  1.000  1.000    0.873    3.486  1.000  1.000  1.000  1.000  1.000
+   12  1.194  2.143  2.051  1.000  1.000    0.685    3.168  1.000  1.000  1.000  1.000  1.000
+   16  1.592  2.143  2.255  1.000  1.000    0.685    2.963  1.000  1.000  1.000  1.000  1.000
+   20  1.990  2.143  2.445  1.000  1.000    0.685    2.774  1.000  1.000  1.000  1.000  1.000
+   24  2.388  2.280  2.611  1.000  1.000    0.548    2.608  1.000  1.000  1.000  1.000  1.000
+   28  2.785  2.330  2.790  1.000  1.000    0.498    2.429  1.000  1.000  1.000  1.000  1.000
+   32  3.183  2.330  2.951  1.000  1.000    0.498    2.268  1.000  1.000  1.000  1.000  1.000
+    the integral: 32 nodes, last ρ reached 3.183h of target 3.183h, S 1.000, ∫ 3.183h
+  r 3.183h (r0 3.183h), room 0.498h, ω 1.000, feet at da 2.330h, db 2.951h
+-- near, rb 0: h 0.400, W 0.380h
+  arm 397: L0 14.934h (chain end / next root), Lcut 2.135h, L 2.135h; chain 58 open len 111.7h
+    behind pass s 42.263  d -2.135h  u 2.135h  θ 1.386  cut 2.135h
+    front  pass s 39.295  d 5.285h  reach 1.077h  θ 1.496  cut 3.208h
+    behind pass s 43.499  d -5.226h  u 5.226h  θ 1.211  cut 5.226h
+    front  pass s 37.502  d 9.768h  reach 1.570h  θ 1.134  cut 7.198h
+  arm 398: L0 13.175h (chain end / next root), Lcut 5.599h, L 5.599h; chain 77 open len 43.7h
+    front  pass s 14.132  d 7.623h  reach 1.024h  θ 1.547  cut 5.599h
+    front  pass s 8.669  d 21.280h  reach 1.031h  θ 1.541  cut 19.250h
+    front  pass s 7.454  d 24.319h  reach 1.190h  θ 1.397  cut 22.129h
+    front  pass s 4.357  d 32.060h  reach 1.001h  θ 1.570  cut 30.059h
+  V (28.594, 9.559): dVa 0.985h, dVb 0.945h; window (0, L) holds; wedge ok
+    k  ρ−h/h   da/h   db/h  margin  steep  slackA/h slackB/h  cap    rootA  rootB   w      S
+    0 -0.000  0.985  0.945  1.000  1.000    0.770    4.274  1.000  1.000  1.000  1.000  1.000
+    1  0.099  1.091  1.037  1.000  1.000    0.664    4.182  1.000  1.000  1.000  1.000  1.000
+    2  0.199  1.188  1.134  1.000  1.000    0.567    4.085  1.000  1.000  1.000  1.000  1.000
+    3  0.298  1.303  1.227  1.000  1.000    0.452    3.992  0.974  1.000  1.000  0.974  0.974
+    4  0.398  1.519  1.321  1.000  1.000    0.236    3.898  0.459  1.000  1.000  0.459  0.459
+    6  0.597  1.815  1.540  1.000  1.000   -0.060    3.679  0.000  1.000  1.000  0.000  0.000
+    the integral: 6 nodes, last ρ reached 0.597h of target 0.597h, S 0.000, ∫ 0.392h
+  r 0.392h (r0 3.183h), room -0.060h, ω 1.000, feet at da 1.512h, db 1.314h
+-- today (near, rb 0.5): h 0.400, W 0.380h
+  arm 397: L0 14.934h (chain end / next root), Lcut 2.135h, L 2.135h; chain 58 open len 111.7h
+    behind pass s 42.263  d -2.135h  u 2.135h  θ 1.386  cut 2.135h
+    front  pass s 39.295  d 5.285h  reach 1.077h  θ 1.496  cut 3.208h
+    behind pass s 43.499  d -5.226h  u 5.226h  θ 1.211  cut 5.226h
+    front  pass s 37.502  d 9.768h  reach 1.570h  θ 1.134  cut 7.198h
+  arm 398: L0 13.175h (chain end / next root), Lcut 5.599h, L 5.599h; chain 77 open len 43.7h
+    front  pass s 14.132  d 7.623h  reach 1.024h  θ 1.547  cut 5.599h
+    front  pass s 8.669  d 21.280h  reach 1.031h  θ 1.541  cut 19.250h
+    front  pass s 7.454  d 24.319h  reach 1.190h  θ 1.397  cut 22.129h
+    front  pass s 4.357  d 32.060h  reach 1.001h  θ 1.570  cut 30.059h
+  V (28.594, 9.559): dVa 0.985h, dVb 0.945h; window (0, L) holds; wedge ok
+    k  ρ−h/h   da/h   db/h  margin  steep  slackA/h slackB/h  cap    rootA  rootB   w      S
+    0 -0.000  0.985  0.945  1.000  1.000    0.770    4.274  1.000  1.000  1.000  1.000  1.000
+    1  0.099  1.091  1.037  1.000  1.000    0.664    4.182  1.000  1.000  1.000  1.000  1.000
+    2  0.199  1.188  1.134  1.000  1.000    0.567    4.085  1.000  1.000  1.000  1.000  1.000
+    3  0.298  1.303  1.227  1.000  1.000    0.452    3.992  0.974  1.000  1.000  0.974  0.974
+    4  0.398  1.519  1.321  1.000  1.000    0.236    3.898  0.459  1.000  1.000  0.459  0.459
+    6  0.597  1.815  1.540  1.000  1.000   -0.060    3.679  0.000  1.000  1.000  0.000  0.000
+    the integral: 6 nodes, last ρ reached 0.597h of target 0.597h, S 0.000, ∫ 0.392h
+  r 0.392h (r0 3.183h), room -0.060h, ω 1.000, feet at da 1.512h, db 1.314h
+
+==== muse_hash j99 301-299
+-- S1f (skip, rb 0): h 0.400, W 0.380h
+  arm 301: L0 9.688h (chain end / next root), Lcut 2.569h, L 2.569h; chain 46 open len 75.1h
+    front  pass s 1.740  d 4.592h  reach 1.023h  θ 1.548  cut 2.569h
+  arm 299: L0 13.354h (chain end / next root), Lcut 6.704h, L 6.704h; chain 45 open len 65.1h
+    front  pass s 3.390  d 9.227h  reach 1.523h  θ 1.162  cut 6.704h
+    front  pass s 6.276  d 16.443h  reach 1.279h  θ 1.327  cut 14.163h
+    front  pass s 8.346  d 21.616h  reach 1.219h  θ 1.374  cut 19.397h
+    front  pass s 9.644  d 24.861h  reach 1.159h  θ 1.423  cut 22.701h
+  V (14.105, 14.474): dVa 0.752h, dVb 0.805h; window (0, L) holds; wedge ok
+    k  ρ−h/h   da/h   db/h  margin  steep  slackA/h slackB/h  cap    rootA  rootB   w      S
+    0 -0.000  0.752  0.805  1.000  1.000    1.437    5.519  1.000  1.000  1.000  1.000  1.000
+    1  0.125  0.823  0.896  1.000  1.000    1.367    5.428  1.000  1.000  1.000  1.000  1.000
+    2  0.250  0.909  0.970  1.000  1.000    1.280    5.353  1.000  1.000  1.000  1.000  1.000
+    3  0.375  0.983  1.059  1.000  1.000    1.206    5.265  1.000  1.000  1.000  1.000  1.000
+    4  0.500  1.061  1.130  1.000  1.000    1.128    5.193  1.000  1.000  1.000  1.000  1.000
+    8  1.000  1.539  1.415  1.000  1.000    0.650    4.909  1.000  1.000  1.000  1.000  1.000
+   12  1.500  1.774  1.665  1.000  1.000    0.416    4.659  0.924  1.000  1.000  0.924  0.924
+   16  2.000  1.918  1.846  1.000  1.000    0.272    4.477  0.565  1.000  1.000  0.565  0.565
+   20  2.500  1.918  1.953  1.000  1.000    0.272    4.371  0.565  1.000  1.000  0.565  0.565
+   24  3.000  2.061  2.063  1.000  1.000    0.128    4.261  0.163  1.000  1.000  0.163  0.163
+   28  3.500  2.061  2.162  1.000  1.000    0.128    4.162  0.163  1.000  1.000  0.163  0.163
+   32  4.000  2.061  2.258  1.000  1.000    0.128    4.065  0.163  1.000  1.000  0.163  0.163
+    the integral: 32 nodes, last ρ reached 4.000h of target 4.000h, S 0.163, ∫ 2.518h
+  r 2.518h (r0 4.000h), room 0.128h, ω 1.000, feet at da 1.918h, db 1.962h
+-- near, rb 0: h 0.400, W 0.380h
+  arm 301: L0 9.688h (chain end / next root), Lcut 1.598h, L 1.598h; chain 46 open len 75.1h
+    behind pass s 4.217  d -1.598h  u 1.598h  θ 1.425  cut 1.598h
+    front  pass s 1.740  d 4.592h  reach 1.023h  θ 1.548  cut 2.569h
+    behind pass s 5.252  d -4.186h  u 4.186h  θ 1.128  cut 4.186h
+    behind pass s 6.835  d -8.144h  u 8.144h  θ 1.516  cut 8.144h
+  arm 299: L0 13.354h (chain end / next root), Lcut 6.704h, L 6.704h; chain 45 open len 65.1h
+    front  pass s 3.390  d 9.227h  reach 1.523h  θ 1.162  cut 6.704h
+    front  pass s 6.276  d 16.443h  reach 1.279h  θ 1.327  cut 14.163h
+    front  pass s 8.346  d 21.616h  reach 1.219h  θ 1.374  cut 19.397h
+    front  pass s 9.644  d 24.861h  reach 1.159h  θ 1.423  cut 22.701h
+  V (14.105, 14.474): dVa 0.752h, dVb 0.805h; window (0, L) holds; wedge ok
+    k  ρ−h/h   da/h   db/h  margin  steep  slackA/h slackB/h  cap    rootA  rootB   w      S
+    0 -0.000  0.752  0.805  1.000  1.000    0.466    5.519  0.987  1.000  1.000  0.987  0.987
+    1  0.125  0.823  0.896  1.000  1.000    0.396    5.428  0.888  1.000  1.000  0.888  0.888
+    2  0.250  0.909  0.970  1.000  1.000    0.309    5.353  0.674  1.000  1.000  0.674  0.674
+    3  0.375  0.983  1.059  1.000  1.000    0.235    5.265  0.455  1.000  1.000  0.455  0.455
+    4  0.500  1.061  1.130  1.000  1.000    0.157    5.193  0.235  1.000  1.000  0.235  0.235
+    6  0.750  1.236  1.288  1.000  1.000   -0.018    5.035  0.000  1.000  1.000  0.000  0.000
+    the integral: 6 nodes, last ρ reached 0.750h of target 0.750h, S 0.000, ∫ 0.350h
+  r 0.350h (r0 4.000h), room -0.018h, ω 1.000, feet at da 0.966h, db 1.041h
+-- today (near, rb 0.5): h 0.400, W 0.380h
+  arm 301: L0 9.688h (chain end / next root), Lcut 1.598h, L 1.598h; chain 46 open len 75.1h
+    behind pass s 4.217  d -1.598h  u 1.598h  θ 1.425  cut 1.598h
+    front  pass s 1.740  d 4.592h  reach 1.023h  θ 1.548  cut 2.569h
+    behind pass s 5.252  d -4.186h  u 4.186h  θ 1.128  cut 4.186h
+    behind pass s 6.835  d -8.144h  u 8.144h  θ 1.516  cut 8.144h
+  arm 299: L0 13.354h (chain end / next root), Lcut 6.704h, L 6.704h; chain 45 open len 65.1h
+    front  pass s 3.390  d 9.227h  reach 1.523h  θ 1.162  cut 6.704h
+    front  pass s 6.276  d 16.443h  reach 1.279h  θ 1.327  cut 14.163h
+    front  pass s 8.346  d 21.616h  reach 1.219h  θ 1.374  cut 19.397h
+    front  pass s 9.644  d 24.861h  reach 1.159h  θ 1.423  cut 22.701h
+  V (14.105, 14.474): dVa 0.752h, dVb 0.805h; window (0, L) holds; wedge ok
+    k  ρ−h/h   da/h   db/h  margin  steep  slackA/h slackB/h  cap    rootA  rootB   w      S
+    0 -0.000  0.752  0.805  1.000  1.000    0.466    5.519  0.987  1.000  1.000  0.987  0.987
+    1  0.125  0.823  0.896  1.000  1.000    0.396    5.428  0.888  1.000  1.000  0.888  0.888
+    2  0.250  0.909  0.970  1.000  1.000    0.309    5.353  0.674  1.000  1.000  0.674  0.674
+    3  0.375  0.983  1.059  1.000  1.000    0.235    5.265  0.455  1.000  1.000  0.455  0.455
+    4  0.500  1.061  1.130  1.000  1.000    0.157    5.193  0.235  1.000  1.000  0.235  0.235
+    6  0.750  1.236  1.288  1.000  1.000   -0.018    5.035  0.000  1.000  1.000  0.000  0.000
+    the integral: 6 nodes, last ρ reached 0.750h of target 0.750h, S 0.000, ∫ 0.350h
+  r 0.350h (r0 4.000h), room -0.018h, ω 1.000, feet at da 0.966h, db 1.041h
+

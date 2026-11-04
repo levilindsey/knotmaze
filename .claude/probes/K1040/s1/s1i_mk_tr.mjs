@@ -1,0 +1,96 @@
+// K1114 S1i step 1: build form_b_s1i_tr.ts, an instrumented copy of the
+// worktree's src/render/field/form_b.ts. The copy computes exactly what the
+// source does (the hooks only read), and reports through two globals:
+//   globalThis.__s1i(ji, a, b) -> logger | undefined, per corner solve;
+//   globalThis.__s1iArm(ji, ai) -> logger | undefined, per arm span.
+// Run: node .claude/probes/K1040/s1/s1i_mk_tr.mjs (rerun after editing form_b.ts).
+import { readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const here = dirname(fileURLToPath(import.meta.url));
+const root = join(here, "../../../..");
+let src = readFileSync(join(root, "src/render/field/form_b.ts"), "utf8").replace(/\r\n/g, "\n");
+const rep = (a, b) => {
+  const n = src.split(a).length - 1;
+  if (n !== 1) throw new Error(`anchor found ${n} times: ${a.slice(0, 80)}`);
+  src = src.replace(a, b);
+};
+for (const m of ["scene", "geom", "depth"]) src = src.split(`from "./${m}"`).join(`from "../../../../src/render/field/${m}"`);
+
+// Arm spans.
+rep(
+  "        const sR = r.sR;\n",
+  "        const sR = r.sR;\n        const TRA = (globalThis as any).__s1iArm?.(ji, this.arms.length) as ((o: any) => void) | undefined;\n",
+);
+rep(
+  "              const c = this.dEdge === \"near\" ? u : u - reachAt(x, -dir, u) - h;\n",
+  "              const c = this.dEdge === \"near\" ? u : u - reachAt(x, -dir, u) - h;\n              TRA?.({ ev: \"behind\", s: x.s, d, u, c, theta: x.theta });\n",
+);
+rep(
+  "          const c = d - reachAt(x, dir, d) - h;\n          if (c < Lcut) Lcut = c;\n",
+  "          const c = d - reachAt(x, dir, d) - h;\n          TRA?.({ ev: \"front\", s: x.s, d, c, theta: x.theta, reach: d - c - h });\n          if (c < Lcut) Lcut = c;\n",
+);
+rep(
+  "        L = Math.max(0, Math.min(L, Lcut));\n",
+  "        TRA?.({ ev: \"L\", L0: L, Lcut, L: Math.max(0, Math.min(L, Lcut)), sR, dir, pi, closed: p.closed, len: p.len });\n        L = Math.max(0, Math.min(L, Lcut));\n",
+);
+
+// The corner solve.
+rep(
+  "    const B = this.arms[b];\n    if (!(A.L > 1e-9 && B.L > 1e-9)) return null;\n",
+  "    const B = this.arms[b];\n    const TR = (globalThis as any).__s1i?.(ji, a, b) as ((o: any) => void) | undefined;\n    TR?.({ ev: \"arms\", AL: A.L, BL: B.L, ALcut: A.Lcut, BLcut: B.Lcut, W: this.W, h: this.h, th0 });\n    if (!(A.L > 1e-9 && B.L > 1e-9)) return null;\n",
+);
+rep("    if (!V.ok) {\n", "    if (!V.ok) {\n      TR?.({ ev: \"noV\" });\n");
+rep(
+  "    const tol = 1e-9 * h;\n    if (!(dVa > tol",
+  "    const tol = 1e-9 * h;\n    TR?.({ ev: \"V\", x: V.x, y: V.y, dVa, dVb, win: dVa > tol && dVa < A.L - tol && dVb > tol && dVb < B.L - tol });\n    if (!(dVa > tol",
+);
+rep(
+  "    if (!(crossA * sgn > 0 && crossB * sgn < 0)) return null;\n",
+  "    TR?.({ ev: \"wedge\", ok: crossA * sgn > 0 && crossB * sgn < 0 });\n    if (!(crossA * sgn > 0 && crossB * sgn < 0)) return null;\n",
+);
+rep(
+  `    const wOf = (p: Tk): number => {
+      const mA = marginOf(pa, p.x, p.y, p.fa.u, winA, p.fa.d);
+      const mB = marginOf(pb, p.x, p.y, p.fb.u, winB, p.fb.d);
+      const w = ss(0, 1, 1 + Math.min(0, mA, mB) / (0.05 * h)) * ss(0, 1, (denOf(p) / denV - 0.3) / 0.4) * ss(0, 1, slackOf(p) / (0.5 * h));
+      if (!(this.rootBand > 0)) return w;
+      // S1g: the root gate (rootBand), each foot's distance from its root.
+      const rb = this.rootBand * h;
+      return w * ss(0, 1, ((p.fa.u - A.sR) * A.dir) / rb) * ss(0, 1, ((p.fb.u - B.sR) * B.dir) / rb);
+    };
+`,
+  `    const wOf = (p: Tk): number => {
+      const mA = marginOf(pa, p.x, p.y, p.fa.u, winA, p.fa.d);
+      const mB = marginOf(pb, p.x, p.y, p.fb.u, winB, p.fb.d);
+      const gM = ss(0, 1, 1 + Math.min(0, mA, mB) / (0.05 * h));
+      const gS = ss(0, 1, (denOf(p) / denV - 0.3) / 0.4);
+      const gC = ss(0, 1, slackOf(p) / (0.5 * h));
+      const w = gM * gS * gC;
+      const da = (p.fa.u - A.sR) * A.dir;
+      const db = (p.fb.u - B.sR) * B.dir;
+      let gRa = 1;
+      let gRb = 1;
+      if (this.rootBand > 0) {
+        const rb = this.rootBand * h;
+        gRa = ss(0, 1, da / rb);
+        gRb = ss(0, 1, db / rb);
+      }
+      const wo = this.rootBand > 0 ? w * gRa * gRb : w;
+      TR?.({ ev: "w", x: p.x, y: p.y, rho: p.fa.d, da, db, mA, mB, gM, gS, slA: A.L - this.W - da, slB: B.L - this.W - db, gC, gRa, gRb, w: wo });
+      return wo;
+    };
+`,
+);
+rep(
+  "        room = Math.min(room, slackOf(adv.p));\n",
+  "        room = Math.min(room, slackOf(adv.p));\n        TR?.({ ev: \"node\", k, rho0, rhoT: h + k * dN, rho: adv.rho, sK, integ });\n",
+);
+rep(
+  "    const omega = this.force.omega ?? ss(0, 1, 1 - (ov - 0.05 * h) / this.ovw);\n",
+  "    const omega = this.force.omega ?? ss(0, 1, 1 - (ov - 0.05 * h) / this.ovw);\n    TR?.({ ev: \"done\", r, room, r0, theta, ov, omega, qx: q.x, qy: q.y, da: sol.da, db: sol.db });\n",
+);
+src = `// GENERATED by s1i_mk_tr.mjs from src/render/field/form_b.ts: do not edit.\n${src}`;
+writeFileSync(join(here, "form_b_s1i_tr.ts"), src);
+console.log("wrote form_b_s1i_tr.ts");

@@ -102,3 +102,34 @@ a stop, and neither is context size. After a compaction, re-read this brief
 and `git log` before going on. When you stop, commit the WIP, append a
 Handoff to this brief (what landed, by commit; the sites; commands;
 findings; what is left) and report.
+
+## Findings
+
+### F1 (16:27): it is L, through the cap gate; the window and the feet hold
+
+`s1i_room.ts` (on `form_b_s1i_tr.ts`, the worktree's form B with read-only
+hooks, built by `s1i_mk_tr.mjs`; the copy reproduces every corner's r, room
+and ω and every arm's L exactly) traces the three corners' solves under
+S1f's final, near with rootBand 0, and today (`out/s1i/room.txt`):
+
+| site | cut arm | its cutting pass (near) | L S1f -> near | V's feet dVa, dVb | where S stops (near) | r S1f -> near |
+|---|---|---|---|---|---|---|
+| 02 j36 109-110 | 109 (closed chain 11) | 1.112h behind, θ 0.300 | 2.950h -> 1.112h | 0.842h, 0.918h | at V: slack −0.109h | 2.721h -> 0 |
+| 16 j131 397-398 | 397 | 2.135h behind, θ 1.386 | 3.208h -> 2.135h | 0.985h, 0.945h | ρ − h = 0.597h: slack −0.060h | 3.183h -> 0.392h |
+| 17 j99 301-299 | 301 | 1.598h behind, θ 1.425 | 2.569h -> 1.598h | 0.752h, 0.805h | ρ − h = 0.750h: slack −0.018h | 2.518h -> 0.350h |
+
+- **The window holds** at all three: V's feet lie inside (0, L) on both arms
+  under near, and V sits in the wedge.
+- **The feet hold:** the margin and steep gates are 1 at every node, and
+  the root gate (rootBand 0.5) is 1 too, since no foot comes within 0.5h
+  of its root. Today's r equals near-alone's r at all three: F2 plays no
+  part here.
+- **L takes the room, through the cap gate.** The slack, L − W − the foot's
+  distance from the root, is the one factor that falls, on the cut arm. W
+  is 0.380h. Near's L is the behind pass's arc distance u, and S1f's
+  corners end with feet at 2.338h, 2.330h and 1.918h, beyond the cut.
+  At j36, u − W is already short of V's foot, so S is 0 at V.
+- The cut also ends the arm's group membership at L (the cap ramp, then
+  OWN), so restoring r alone would leave the arm's own outline drawn past
+  the cut. That is S1h's red wedge at site 02. Restoring the look at rest
+  means restoring L itself there, not only the corner's room.
