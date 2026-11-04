@@ -19,16 +19,13 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1161.
+Next free ID: K1162.
 
 ## Waiting on Levi
 
-- **K1114** · Junctions at rest, old or new: S1h's picture (sent 2026-11-03) shows three muse_hash corners F1
-  reshaped (j36 109-110 loses its rounded web, j131 397-398's arc gains a bump, j99 301-299's curve turns an
-  elbow). Keep the new, or a stage restores the old and keeps F1's pop fix (`docs/design/K1114_s1h_crops.md`).
 - **K1001** · Corners, sharp or round: where two threads split, the corner is a sharp point (K1040 F1 row 8: r goes to 0
   as the room closes); stage 1's b16 rounded it into a small arch (not landed). Levi sees it in motion at K1040 S4b,
-  behind its flag; there is nothing to look at before then.
+  behind its flag; there is nothing to look at before then. Levi disliked losing rounding at K1114 (2026-11-03): lean round.
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 69e079eb, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -315,6 +312,14 @@ Next free ID: K1161.
 
 ## In progress
 
+- **K1114** · Junction corners at rest: bring back the rounding S1g's F1 took and keep S1g's pop fixes (Levi,
+  2026-11-03, on S1h's old | new picture: "I don't like that we've lost corner rounding with the new junction
+  changes"). S1i restores it and shows S1f | today | restored (`docs/design/K1114_s1i_rounding.md`).
+  - owner: nobody since 2026-11-03 16:35 (S1i launches next, from its brief)
+  - branch: mainline; last commit: `84db41b2`
+  - evidence: `.claude/probes/K1040/s1/out/s1h/` (old_new.png, sheet.png, index.md); S1i's in `out/s1i/`
+  - next: launch S1i on its brief
+  - brief: `docs/design/K1114_s1i_rounding.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: 44ce69a1); S3 (K1097) merged short of its gate; S1g merged (52945e6e); S3b (K1097) merged (c4863a50, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
@@ -526,15 +531,15 @@ Next free ID: K1161.
   - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
   - next: Levi answers Q1-Q3 (sent with the pictures 2026-11-03 10:07; clips of the motion offered), then the S2 brief: the light field, folding in the wrong "world arc" comment on `litArms` (`src/game/route_plan.ts`, the length is lattice) and S5 if Q3 says straight through
   - brief: `docs/design/K1139_s1_brief.md` (the plan: `docs/design/K1139_pulse_junctions.md`, stages S2-S6)
-- **K1156** · Muse batch 13: its Run A drafts the batch's brief from the ledger
-  (`docs/design/K1156_muse_batch13_run_a.md`) as `docs/design/K1156_muse_batch13.md`, runs B to G; Claude
-  reviews it and queues them (ports 5500-5549).
-  - owner: muse runs 13B-13G, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 14:25
-  - branch: mainline; last commit: `410fd8c9`
+- **K1161** · Muse batch 14: its Run A drafts the batch's brief from the ledger
+  (`docs/design/K1161_muse_batch14_run_a.md`) as `docs/design/K1161_muse_batch14.md`, runs B to G; Claude
+  reviews it and queues them (ports 5550-5599).
+  - owner: muse run 14A, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 16:40
+  - branch: mainline; last commit: `f363a939`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); the run's commit report
-  - next: Run G done; batch 13 complete, Claude reviews and closes K1156
-  - brief: `docs/design/K1156_muse_batch13.md` (Run A's: `docs/design/K1156_muse_batch13_run_a.md`)
-  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 13B-13G); a `hold.txt` beside it holds the chain before its next run
+  - next: Run A drafts batch 14's brief; Claude reviews it and queues 14B-14G
+  - brief: `docs/design/K1161_muse_batch14_run_a.md`
+  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, line 14A); a `hold.txt` beside it holds the chain before its next run
 
 ## Next, in order
 
@@ -1175,8 +1180,8 @@ Every other item below waits on the trigger it names.
 - **K391** · K5 M1's probe residuals: `k83_ab` has no knot-mode path (exits 1 at :149); diag's 12 s
   capture vs the worker's first sleep (about 9.9 s; recheck); `probe_daily` `front` fails 10/14
   (expects `#maze-hud .km-title`; its `?daily=1.aBMge` and `?1471kin.c` predate K132).
-- **K392** · K5 M1's code residuals: `host_seam.test.ts` matches names and misses nested
-  binding patterns and element access; 25 lines of `src/app/probe_hooks.ts` pass 80 columns.
+- **K392** · K5 M1's code residual: 46 lines of `src/app/probe_hooks.ts` pass 80 columns (the host seam's nested
+  and element-access blind spots closed in 48739fda).
 - **K405** · After K395, a "M" at a kink loop's tip: the inner edge turns +31° to +56° (stations
   75-89, `?7` chain 9) as the 5-station circumradius follows the control spacing. Try a smooth
   radius envelope or wider min window. `.claude/rules/render-pluck.md` ("Pluck loop tip (K395)").
@@ -2004,6 +2009,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1156** · Muse batch 13: B K1152+K1148 (ce485d87), C K1155 (cbaca79f), D K1154 (f809a275), E K351 (88efd034), F K392's seam half (48739fda), G K685 (410fd8c9); all reviewed. Done in f363a939 (2026-11-03).
 - **K685** · a respawn into stranded or out of strokes shows its banner without a tap. Done in 410fd8c9 (2026-11-03).
 - **K351** · the panel inventory's Read by follows url_state's *Of builders. Done in 88efd034 (2026-11-03).
 - **K1154** · the physics-off load's wall cap and reported time count visible time (both hosts). Done in f809a275 (2026-11-03).
