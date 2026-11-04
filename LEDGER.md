@@ -504,10 +504,10 @@ Next free ID: K1141.
 - **K1119** · Cursive J3g (v7.0), Levi's answers to v6.9 (2026-11-03): b, v and w exit between v6.8 and
   v6.9, closer to v6.8 ("still exit somewhat downward and with a swoosh"); the six a/q joins get v6.6's dip
   back ("We need that dip"); the e after them decided by the checks. One sheet per letter for Levi.
-  - owner: agent `adcba68466fb7684f` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-03 07:17, 2 h cap ~09:17)
-  - branch: `worktree-agent-adcba68466fb7684f`, worktree `.claude/worktrees/agent-adcba68466fb7684f`; last commit: `845437c0`
+  - owner: nobody since 2026-11-03 08:47 (merged; agent `adcba68466fb7684f` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `a413b284`
   - evidence: .claude/probes/K863/trace/ (work30/, out30/, NOTES ## K1119)
-  - next: b/v/w exit rule between v6.8 and v6.9, the a/q dip, the e decision, the gates, sheets and upload
+  - next: Levi looks at the v7.0 sheets (b/v/w exits, the a/q dip, be/ve/we: v7.0 or e60, the br dip), then the c stage (K1112's next letter)
   - brief: docs/design/K1119_cursive_j3g.md (its branch); J3f's Handoff in docs/design/K1113_cursive_j3f.md
 
 ## Next, in order
