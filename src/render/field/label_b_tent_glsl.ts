@@ -515,3 +515,17 @@ export function labelBTentVSources(debugOut: boolean): LabelBTentVSources {
   const def = (s: string) => (debugOut ? s.replace("#version 300 es\n", "#version 300 es\n#define DEBUG_OUT 1\n") : s);
   return { segVs: def(SEG_VS_V), capVs: def(CAP_VS_V), fs: def(FS_V) };
 }
+
+// K1040 S3f4 (ftentvvid): tentv's segment strips as one non-instanced
+// draw. The vertex shader is tentv's, with the corner taken from
+// gl_VertexID modulo the strip length (in the instanced draw
+// gl_VertexID is already the corner, 0..2*NW+5); the pass feeds aSeg
+// per vertex (divisor 0) and separates the strips with an index
+// buffer's primitive restart, so every position is bit-identical to
+// the instanced draw's. Its fragment shader is tentv's (FS_V).
+export function labelBTentVidSources(debugOut: boolean): { segVs: string } {
+  const sv = labelBTentVSources(debugOut);
+  const a = "int v = gl_VertexID;";
+  if (sv.segVs.split(a).length !== 2) throw new Error("vid: gl_VertexID line not found once in tentv's segVs");
+  return { segVs: sv.segVs.replace(a, "int v = gl_VertexID % (2 * NW + 6);") };
+}

@@ -634,6 +634,7 @@ function variantPass(v: string, host: LabelBHost | null = null): LabelBPass {
     p.probeNoDrawCalls = v === "ftentvsetup";
     if (v === "ftentvone") { p.probeSegLimit = 1; p.probeSkipCapsFills = true; }
     if (v === "ftentvhalf") p.probeSegFrac = 0.5;
+    if (v === "ftentvvid") p.probeVid = true;
     vpasses.set(v, p);
     return p;
   }

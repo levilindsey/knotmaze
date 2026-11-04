@@ -56,6 +56,7 @@ import {
   labelBTentSources,
   labelBTentStripSources,
   labelBTentVSources,
+  labelBTentVidSources,
   TENT_CAP_VERTS,
   TENT_FILL_VERTS,
   TENT_SEG_VERTS,
@@ -142,7 +143,9 @@ export class LabelBPass {
   readonly mode: LabelBMode;
   /** Tent mode: the facets' chord error target, in the target's px. */
   tentEpsPx = 0.002;
-  private tent: { seg: WebGLProgram; cap: WebGLProgram; fill: WebGLProgram; capVao: WebGLVertexArrayObject; capBuf: WebGLBuffer; strip: WebGLProgram | null; stripVao: WebGLVertexArrayObject; stripBuf: WebGLBuffer } | null = null;
+  private tent: { seg: WebGLProgram; cap: WebGLProgram; fill: WebGLProgram; capVao: WebGLVertexArrayObject; capBuf: WebGLBuffer; strip: WebGLProgram | null; stripVao: WebGLVertexArrayObject; stripBuf: WebGLBuffer; vid: WebGLProgram | null; vidVao: WebGLVertexArrayObject; vidBuf: WebGLBuffer; vidIdx: WebGLBuffer } | null = null;
+  /** S3f4 (ftentvvid): the non-instanced segment draw's index count (0 = the instanced draw). */
+  private vidIdxCount = 0;
   /** S3f3 lever 2: the strip vertex count (0 = the instanced segments draw). */
   private stripCount = 0;
   private capKey = "";
@@ -195,6 +198,13 @@ export class LabelBPass {
   probeSegLimit = -1;
   /** Probe knob (S3f4, ftentvone): skip the cap and fill draws. */
   probeSkipCapsFills = false;
+  /**
+   * Probe knob (S3f4, ftentvvid): the segment strips as one
+   * non-instanced draw (labelBTentVidSources; an index buffer with
+   * primitive restart, aSeg fed per vertex). Caps and fills keep
+   * today's instanced draws; positions are bit-identical to today's.
+   */
+  probeVid = false;
   /** A full upload has landed, so upload(T, true) may skip (header). */
   private hasUploaded = false;
   private segVerts = TENT_SEG_VERTS;
@@ -238,6 +248,10 @@ export class LabelBPass {
         capVao: gl.createVertexArray() as WebGLVertexArrayObject,
         capBuf: gl.createBuffer() as WebGLBuffer,
         strip: tv ? compile(gl, labelBTentStripSources(debug).segVs, tv.fs) : null,
+        vid: tv ? compile(gl, labelBTentVidSources(debug).segVs, tv.fs) : null,
+        vidVao: gl.createVertexArray() as WebGLVertexArrayObject,
+        vidBuf: gl.createBuffer() as WebGLBuffer,
+        vidIdx: gl.createBuffer() as WebGLBuffer,
         stripVao: gl.createVertexArray() as WebGLVertexArrayObject,
         stripBuf: gl.createBuffer() as WebGLBuffer,
       };
@@ -514,6 +528,31 @@ export class LabelBPass {
         }
         this.stripCount = verts.length / 8;
       }
+      // S3f4 (ftentvvid): the same segment strips non-instanced: aSeg
+      // repeated per vertex (divisor 0), strips separated by the index
+      // buffer's primitive-restart index. Built with the layout, from
+      // the same (possibly reach-filtered) instance pairs as instBuf.
+      if (this.probeVid && this.tent?.vid) {
+        const sv = this.segVerts;
+        const verts = new Float32Array(nInst * sv * 2);
+        for (let i = 0; i < nInst; i++) for (let vI = 0; vI < sv; vI++) verts.set([inst[2 * i], inst[2 * i + 1]], (i * sv + vI) * 2);
+        const idx = new Uint32Array(Math.max(0, nInst * sv + (nInst - 1)));
+        let p = 0;
+        for (let i = 0; i < nInst; i++) {
+          if (i > 0) idx[p++] = 0xffffffff;
+          for (let vI = 0; vI < sv; vI++) idx[p++] = i * sv + vI;
+        }
+        this.stale = true;
+        gl.bindVertexArray(this.tent.vidVao);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.tent.vidBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribDivisor(0, 0);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.tent.vidIdx);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+        this.vidIdxCount = idx.length;
+      }
     }
     if (this.tent) {
       // The free ends: (chain, 0) and (chain, 1) per open chain with a segment.
@@ -693,6 +732,11 @@ export class LabelBPass {
       this.uniforms(pr, M, 0);
       gl.uniform1f(this.facetLoc(pr), facetK);
     };
+    if (this.probeVid && t.vid && this.vidIdxCount > 0) {
+      gl.bindVertexArray(t.vidVao);
+      use(t.vid);
+      if (!this.probeNoDrawCalls) gl.drawElements(gl.TRIANGLE_STRIP, this.vidIdxCount, gl.UNSIGNED_INT, 0);
+    }
     if (this.probeStrip && t.strip && this.stripCount > 0) {
       gl.bindVertexArray(t.stripVao);
       use(t.strip);
@@ -700,6 +744,7 @@ export class LabelBPass {
     }
     gl.bindVertexArray(this.vao);
     let nSeg = this.probeStrip && t.strip ? 0 : this.probeSegFrac === 1 ? this.nInst : Math.round(this.nInst * this.probeSegFrac);
+    if (this.probeVid && t.vid && this.vidIdxCount > 0) nSeg = 0;
     if (this.probeSegLimit >= 0) nSeg = Math.min(nSeg, this.probeSegLimit);
     if (nSeg > 0) {
       use(t.seg);
@@ -799,6 +844,10 @@ export class LabelBPass {
       gl.deleteProgram(this.tent.cap);
       gl.deleteProgram(this.tent.fill);
       if (this.tent.strip) gl.deleteProgram(this.tent.strip);
+      if (this.tent.vid) gl.deleteProgram(this.tent.vid);
+      gl.deleteVertexArray(this.tent.vidVao);
+      gl.deleteBuffer(this.tent.vidBuf);
+      gl.deleteBuffer(this.tent.vidIdx);
       gl.deleteVertexArray(this.tent.stripVao);
       gl.deleteBuffer(this.tent.stripBuf);
       gl.deleteVertexArray(this.tent.capVao);
