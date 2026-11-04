@@ -63,7 +63,7 @@ export const SCARBOROUGH_FAIR: Song = {
     { note: "D4", beats: 1 },
     { note: "C4", beats: 1 },
     { note: "D4", beats: 3 },
-    { note: null, beats: 2 },
+    { note: null, beats: 3 },
   ],
 };
 

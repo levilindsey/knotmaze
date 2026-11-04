@@ -148,6 +148,15 @@ describe("K101 song scheduler", () => {
     expect(top.map((n) => n.row.note)).toEqual(["D4"]);
   });
 
+  it("Scarborough Fair loops on whole 3/4 bars (K125)", () => {
+    const total = SCARBOROUGH_FAIR.notes.reduce((s, n) => s + n.beats, 0);
+    expect(total).toBe(51);
+    expect(total % 3).toBe(0);
+    const last = SCARBOROUGH_FAIR.notes[SCARBOROUGH_FAIR.notes.length - 1];
+    expect(last.note).toBeNull();
+    expect(last.beats).toBe(3);
+  });
+
   it("cannot spin on zero-length notes or an empty song", () => {
     const zero: Song = { name: "z", bpm: 60, notes: [{ note: "A4", beats: 0 }] };
     const s = new SongScheduler();
