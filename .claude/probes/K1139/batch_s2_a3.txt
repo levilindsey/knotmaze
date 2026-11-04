@@ -1,0 +1,8 @@
+# K1139 S2 after 3/3: s2live + P8 (rest) + P9 on the S2 build (5620)
+$env:K1139_HOST = $null
+node s2live.mjs four
+node s2live.mjs x4
+node p8live.mjs src
+node p8live.mjs four
+node p8live.mjs x4
+node p9flow.mjs

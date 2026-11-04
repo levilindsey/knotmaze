@@ -1,0 +1,7 @@
+# K1139 S2 P8 dense-trail rerun: after x4 + src (5620), before x4 (5622)
+$env:K1139_HOST = $null
+node p8live.mjs x4
+node p8live.mjs src
+$env:K1139_HOST = "http://127.0.0.1:5622"
+node p8live.mjs x4
+$env:K1139_HOST = $null

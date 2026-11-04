@@ -1,0 +1,3 @@
+# K1139 S2 P8 dense trail, after x4 only (5620)
+$env:K1139_HOST = $null
+node p8live.mjs x4

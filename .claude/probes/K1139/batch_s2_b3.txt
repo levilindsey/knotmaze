@@ -1,0 +1,6 @@
+# K1139 S2 before live 3/3: P8 rest + P9 on the pre-change build (5622)
+$env:K1139_HOST = "http://127.0.0.1:5622"
+node p8live.mjs four
+node p8live.mjs x4
+node p9flow.mjs
+$env:K1139_HOST = $null

@@ -1,0 +1,12 @@
+# K1139 S2 before record (live half): the pre-change build 2f2c4a2f on 5622
+$env:K1139_HOST = "http://127.0.0.1:5622"
+node s2live.mjs src
+node s2live.mjs four
+node s2live.mjs x4
+node p8live.mjs fork
+node p8live.mjs cross
+node p8live.mjs src
+node p8live.mjs four
+node p8live.mjs x4
+node p9flow.mjs
+$env:K1139_HOST = $null

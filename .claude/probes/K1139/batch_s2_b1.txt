@@ -1,0 +1,6 @@
+# K1139 S2 before live 1/3: s2live on the pre-change build (5622)
+$env:K1139_HOST = "http://127.0.0.1:5622"
+node s2live.mjs src
+node s2live.mjs four
+node s2live.mjs x4
+$env:K1139_HOST = $null

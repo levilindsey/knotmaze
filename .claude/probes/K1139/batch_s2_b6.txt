@@ -1,0 +1,5 @@
+# K1139 S2 P8 x4 both builds: before (5622), then after (5620) again
+$env:K1139_HOST = "http://127.0.0.1:5622"
+node p8live.mjs x4
+$env:K1139_HOST = $null
+node p8live.mjs x4

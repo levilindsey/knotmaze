@@ -1,0 +1,14 @@
+# K1139 S2 after 1/3: strips + kymographs on the S2 build (5620)
+$env:K1139_INJECT = $null
+$env:K1139_HOST = $null
+node strips.mjs fork out/s2/s2/fork 8 60
+node strips.mjs cross out/s2/s2/cross 8 60
+node strips.mjs src out/s2/s2/src 8 60
+node strips.mjs four out/s2/s2/four 8 60
+node strips.mjs pre4 out/s2/s2/x4 8 60 "&pr=8"
+node kymo.mjs out/s2/s2/kymo_cross.png e150,e21 out/s2/s2/cross/cross.json
+node kymo.mjs out/s2/s2/kymo_src.png e198r,e150r,e21 out/s2/s2/src/src.json
+node kymo.mjs out/s2/s2/kymo_four.png e176r,e135,e18 out/s2/s2/four/four.json
+node kymo.mjs out/s2/s2/kymo_x4.png e180r,e176,e135,e18 out/s2/s2/x4/pre4.json
+node table.mjs out/s2/s2/fork/fork.json out/s2/s2/cross/cross.json out/s2/s2/src/src.json out/s2/s2/four/four.json out/s2/s2/x4/pre4.json
+node s2check.mjs out/s2/s2/fork/fork.json out/s2/s2/cross/cross.json out/s2/s2/src/src.json out/s2/s2/four/four.json out/s2/s2/x4/pre4.json

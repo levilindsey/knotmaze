@@ -1,0 +1,7 @@
+# K1139 S2 after 2/3: s2live + P8 (first half) on the S2 build (5620)
+$env:K1139_HOST = $null
+node s2live.mjs fork
+node s2live.mjs cross
+node s2live.mjs src
+node p8live.mjs fork
+node p8live.mjs cross

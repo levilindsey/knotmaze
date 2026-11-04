@@ -1,0 +1,4 @@
+# K1139 S2 before P8, x4 only (its line was cut from the b4 run's output)
+$env:K1139_HOST = "http://127.0.0.1:5622"
+node p8live.mjs x4
+$env:K1139_HOST = $null

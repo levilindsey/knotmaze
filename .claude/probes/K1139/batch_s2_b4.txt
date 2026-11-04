@@ -1,0 +1,8 @@
+# K1139 S2 before P8 (corrected sampler) on the pre-change build (5622)
+$env:K1139_HOST = "http://127.0.0.1:5622"
+node p8live.mjs fork
+node p8live.mjs cross
+node p8live.mjs src
+node p8live.mjs four
+node p8live.mjs x4
+$env:K1139_HOST = $null
