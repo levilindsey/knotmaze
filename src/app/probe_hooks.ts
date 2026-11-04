@@ -425,6 +425,33 @@ export function installProbeHooks(ctx: ProbeCtx): void {
   // Raw renderer access for probe scripting (patch visibility/tinting).
   (window as unknown as Record<string, unknown>).__knotRenderer = () =>
     ctx.scene.renderer;
+  // K1139 S2: the declared pulse items (walk edge, drawn span, dist0,
+  // cont, inward, tree parent), and the clock pin in one call: the
+  // paint clock at t with the fade-in born at 0, advanceClocks a no-op,
+  // the background's drift frozen and the fabric's explore clock held
+  // (the recipe .claude/probes/K1139/lib.mjs's PIN does by hand).
+  (window as unknown as Record<string, unknown>).__knotPulses = () =>
+    ctx.scene.fabric
+      ? ctx.scene.fabric.pulseProbe().map((i) => ({ ...i }))
+      : [];
+  (window as unknown as Record<string, unknown>).__knotPinClocks = (t: number) => {
+    const r = ctx.scene.renderer;
+    if (!r) return false;
+    r.advanceClocks = () => {};
+    r.paintClock = t;
+    r.pulseBorn = 0;
+    const L = ctx.background;
+    L.tick = () => false;
+    L.clock.time = 40;
+    if (L.active) L.renderTexture();
+    const F = ctx.scene.fabric;
+    if (F) {
+      (F as unknown as { exploreClock: number }).exploreClock = 1000;
+      const tick = F.tickExplore.bind(F);
+      F.tickExplore = () => tick(0);
+    }
+    return true;
+  };
   // K80 real-time chase diagnostics (null outside the real-time mode): the
   // chase's state, with the minotaur's SCREEN point while fabric draws it.
   // __knotChaseTap(edge) queues a run as a tap on it would (and starts the

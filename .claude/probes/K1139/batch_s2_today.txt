@@ -1,0 +1,24 @@
+# K1139 S2 before record: today's strips + kymographs on the five stands
+$env:K1139_INJECT = $null
+node strips.mjs fork out/s2/today/fork 8 60
+node strips.mjs cross out/s2/today/cross 8 60
+node strips.mjs src out/s2/today/src 8 60
+node strips.mjs four out/s2/today/four 8 60
+node strips.mjs pre4 out/s2/today/x4 8 60 "&pr=8"
+node kymo.mjs out/s2/today/kymo_cross.png e150,e21 out/s2/today/cross/cross.json
+node kymo.mjs out/s2/today/kymo_src.png e198r,e150r,e21 out/s2/today/src/src.json
+node kymo.mjs out/s2/today/kymo_four.png e176r,e135,e18 out/s2/today/four/four.json
+node kymo.mjs out/s2/today/kymo_x4.png e180r,e176,e135,e18 out/s2/today/x4/pre4.json
+node table.mjs out/s2/today/fork/fork.json out/s2/today/cross/cross.json out/s2/today/src/src.json out/s2/today/four/four.json out/s2/today/x4/pre4.json
+node s2check.mjs out/s2/today/fork/fork.json out/s2/today/cross/cross.json out/s2/today/src/src.json out/s2/today/four/four.json out/s2/today/x4/pre4.json
+node s2live.mjs fork
+node s2live.mjs cross
+node s2live.mjs src
+node s2live.mjs four
+node s2live.mjs x4
+node p8live.mjs fork
+node p8live.mjs cross
+node p8live.mjs src
+node p8live.mjs four
+node p8live.mjs x4
+node p9flow.mjs

@@ -39,7 +39,10 @@ import {
 import type { ParticleSystem } from "../physics/particle_system";
 import type { WalkGraph, WalkEdge } from "../core/walk_graph";
 import { walkDistances } from "../core/walk_graph";
-import { litArms, planRoute, planRouteRuled } from "../game/route_plan";
+import { planRoute, planRouteRuled } from "../game/route_plan";
+import { pulsePath, type PulseItem } from "./pulse_path";
+import { kData } from "./paint_model";
+import { kArcOfCtrl, kArcU, kChain } from "./paint_math";
 import { darknessAlpha, pruneDarkStamps } from "../game/darkness";
 import {
   PATH_IRREGULARITY_DEFAULT,
@@ -656,6 +659,11 @@ export class FabricMazeRenderer {
   // K480 stage 2: the route a hovered tap would walk (its arms light
   // steadily, as a hovered choice does); null = no route hover.
   private hoverRoute: number[] | null = null;
+  // K1139 S2: the lit tree last declared (pulse_path.ts). Kept while
+  // every drawn span and dist0 stays within 1e-3 of it, so the knot's
+  // drift re-declares only on real movement - and pulseBorn, keyed on
+  // the head arm in paint_state, does not restart on a refresh (P9).
+  private pulseDecl: PulseItem[] = [];
   // K145: the run under the pointer (or a touch press) for the hover glow,
   // and the hover point on it (an unwrapped ctrl in its span); a hovered
   // choice's run since K298 (setGlowRun).
@@ -3989,11 +3997,33 @@ export class FabricMazeRenderer {
     this.renderFog();
   }
 
+  // paint its thread wears there - the shader composes it per pixel).
+  // K1139 S2: one walk edge's live drawn span, from main's paint data
+  // (the KGEOM arc table the ribbons are drawn from; under the physics
+  // worker that is the mirror's positions, baked by the ribbon update
+  // that runs before this one). The lattice length stands in until the
+  // paint data exists.
+  private pulseSpan(e: WalkEdge): number {
+    if (e.chain < 0) return e.length;
+    const D = kData();
+    if (D.geom.length === 0) return e.length;
+    const c = kChain(D, e.chain);
+    if (!(c.total > 0)) return e.length;
+    const s = c.closed
+      ? Math.abs(kArcU(D, c, e.ctrlB) - kArcU(D, c, e.ctrlA))
+      : Math.abs(kArcOfCtrl(D, c, e.ctrlB) - kArcOfCtrl(D, c, e.ctrlA));
+    return Number.isFinite(s) && s > 0 ? s : e.length;
+  }
+
+  // K1139 S2: the declared lit tree, for the __knotPulses probe hook.
+  pulseProbe(): PulseItem[] {
+    return this.pulseDecl;
+  }
+
   // Refresh the paint declaration (traveled spans + pulse arms) and redraw
   // the markers. While a move is animating, tickAnim owns the frame. In
   // trail mode the spans/caps come from the trailing suffix instead of the
   // full path; the pulse machinery is identical (a pulse brightens whatever
-  // paint its thread wears there - the shader composes it per pixel).
   update(controller: FabricMazeController): void {
     this.fireDirty = true; // K114: drawFire redraws on the next frame.
     if (this.anim) {
@@ -4035,36 +4065,11 @@ export class FabricMazeRenderer {
         : { routes: gold!.routes, traveled: gold!.traveled };
 
     const pulses: PulseArm[] = [];
-    if (!controller.solved) {
-      const last =
-        controller.pathEdges.length > 0
-          ? controller.pathEdges[controller.pathEdges.length - 1]
-          : -1;
-      for (const eid of controller.choices()) {
-        const e = this.walk.edges[eid];
-        if (e.chain < 0) continue; // K137 tunnels (4.13)
-        const hovered =
-          eid === this.hoverEdge || (this.hoverRoute?.includes(eid) ?? false);
-        const inward = eid === last;
-        const arm = (cJunction: number, cFar: number): void => {
-          pulses.push({ chain: e.chain, cJunction, cFar, inward, hovered });
-        };
-        if (e.va === e.vb) {
-          // A self-loop run returns to the branch point: pulse both ends.
-          arm(e.ctrlA, e.ctrlB);
-          arm(e.ctrlB, e.ctrlA);
-        } else if (e.va === controller.head) {
-          arm(e.ctrlA, e.ctrlB);
-        } else {
-          arm(e.ctrlB, e.ctrlA);
-        }
-      }
-    }
-    // K480 stage 2 (decision 1): beyond the choices, the light branches
-    // through short runs to the reach - every run out of a junction a lit
-    // run ends inside of, until the reach runs out. Arms on hidden or
-    // burnt thread stay dark (decision 3), and a hovered tap's route
-    // arms light steadily (the whole route a tap would take).
+    // K1139 S2: the lit tree (pulse_path.ts) - one light field over the
+    // walk graph, dist0 summed from the drawn spans, behind you inward.
+    // Arms on hidden or burnt thread stay dark (K480 decision 3), and a
+    // broken or cut run neither lights nor carries light (K137/K114).
+    let pulseItems: PulseItem[] = [];
     if (!controller.solved) {
       const gate = (eid: number, atA: boolean): boolean => {
         const e = this.walk.edges[eid];
@@ -4077,26 +4082,90 @@ export class FabricMazeRenderer {
         }
         return true;
       };
-      // K137: a broken run neither lights nor carries the light, the head's
-      // arms included (the gate sees only arms beyond the head).
-      // K114: nor does a cut run.
       const blocked =
         controller.fragileOn || controller.cutOn
           ? (eid: number) => controller.broken(eid)
           : undefined;
-      for (const lit of litArms(this.walk, controller.head, this.ribbons.pulseReach, gate, blocked)) {
-        if (lit.dist0 === 0) continue; // The choices above already lit these.
-        const e = this.walk.edges[lit.edge];
+      const fresh = pulsePath(
+        this.walk,
+        controller.head,
+        controller.arrivalEdge,
+        this.ribbons.pulseReach,
+        (eid) => this.pulseSpan(this.walk.edges[eid]),
+        gate,
+        blocked
+      );
+      // Re-declare only when a span or dist0 drifts past 1e-3 (P9): the
+      // kept declaration leaves setPaint's key - and pulseBorn - alone.
+      const kept =
+        fresh.length === this.pulseDecl.length &&
+        fresh.every((f, i) => {
+          const o = this.pulseDecl[i];
+          return (
+            f.edge === o.edge &&
+            f.near === o.near &&
+            f.cont === o.cont &&
+            f.inward === o.inward &&
+            Math.abs(f.dist0 - o.dist0) <= 1e-3 &&
+            Math.abs(f.span - o.span) <= 1e-3
+          );
+        });
+      if (!kept) this.pulseDecl = fresh;
+      pulseItems = this.pulseDecl;
+    } else {
+      this.pulseDecl = [];
+    }
+    const pulseByEdge = new Map(pulseItems.map((i) => [i.edge, i]));
+    if (!controller.solved) {
+      const last =
+        controller.pathEdges.length > 0
+          ? controller.pathEdges[controller.pathEdges.length - 1]
+          : -1;
+      for (const eid of controller.choices()) {
+        const e = this.walk.edges[eid];
+        if (e.chain < 0) continue; // K137 tunnels (4.13)
+        const hovered =
+          eid === this.hoverEdge || (this.hoverRoute?.includes(eid) ?? false);
+        const inward = eid === last;
+        const arm = (cJunction: number, cFar: number): void => {
+          const item = pulseByEdge.get(eid);
+          pulses.push({
+            chain: e.chain,
+            cJunction,
+            cFar,
+            inward,
+            hovered,
+            dist0: item?.dist0 ?? 0,
+            cont: item?.cont ?? false,
+          });
+        };
+        if (e.va === e.vb) {
+          // A self-loop run returns to the branch point: pulse both ends.
+          arm(e.ctrlA, e.ctrlB);
+          arm(e.ctrlB, e.ctrlA);
+        } else if (e.va === controller.head) {
+          arm(e.ctrlA, e.ctrlB);
+        } else {
+          arm(e.ctrlB, e.ctrlA);
+        }
+      }
+    }
+    // Beyond the choices, the tree's arms (a hovered tap's route arms
+    // light steadily, as a hovered choice does).
+    if (!controller.solved) {
+      for (const item of pulseItems) {
+        if (item.near === controller.head) continue; // The choices above lit these.
+        const e = this.walk.edges[item.edge];
         if (e.chain < 0) continue; // K137 tunnels (4.13)
         pulses.push({
           chain: e.chain,
-          cJunction: lit.atA ? e.ctrlA : e.ctrlB,
-          cFar: lit.atA ? e.ctrlB : e.ctrlA,
-          inward: false,
+          cJunction: item.atA ? e.ctrlA : e.ctrlB,
+          cFar: item.atA ? e.ctrlB : e.ctrlA,
+          inward: item.inward,
           hovered:
-            lit.edge === this.hoverEdge || (this.hoverRoute?.includes(lit.edge) ?? false),
-          dist0: lit.dist0,
-          cont: lit.cont,
+            item.edge === this.hoverEdge || (this.hoverRoute?.includes(item.edge) ?? false),
+          dist0: item.dist0,
+          cont: item.cont,
         });
       }
     }

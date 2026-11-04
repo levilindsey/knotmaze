@@ -7,7 +7,7 @@ import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
 import { buildWalkGraph } from "../../src/core/walk_graph";
 import { FabricMazeController } from "../../src/game/fabric_controller";
 import { buildFire } from "../../src/game/fire";
-import { firstSmolderIndex, litArms, planRoute, planRouteRuled, routeWarning, telegraphTouchesRoute } from "../../src/game/route_plan";
+import { firstSmolderIndex, planRoute, planRouteRuled, routeWarning, telegraphTouchesRoute } from "../../src/game/route_plan";
 import { oneWayRule } from "../../src/game/one_way";
 import { ruleMaze } from "./rule_fixtures";
 import { DEFAULT_TURN_MINO, turnConfig, TurnMinotaur } from "../../src/game/minotaur_turns";
@@ -107,57 +107,6 @@ describe("planRoute (K480 decision 1-2)", () => {
     expect(planRoute(G, "S", { edge: 5, at: 0.5 }, 100, no1)).toEqual([0, 4, 2, 5]);
     // Nothing blocked: the planner as before.
     expect(planRoute(G, "S", { edge: 2, at: 0.5 }, 100, () => false)).toEqual([0, 1, 2]);
-  });
-});
-
-describe("litArms (K480 stage 2, decision 1: the branching light)", () => {
-  it("lights the head's runs, then branches where a lit run ends inside the reach", () => {
-    const arms = litArms(G, "S", 3);
-    expect(arms.map((a) => a.edge)).toEqual([0, 1, 4]);
-    expect(arms.map((a) => a.dist0)).toEqual([0, 2, 2]);
-    // Only the first run ends inside the reach at a junction: it carries on.
-    expect(arms.map((a) => a.cont)).toEqual([true, false, false]);
-  });
-
-  it("carries through each far junction until the reach runs out, each run once from its nearer end", () => {
-    const arms = litArms(G, "S", 10);
-    expect(arms.map((a) => a.edge)).toEqual([0, 1, 4, 2, 5, 3]);
-    expect(arms.find((a) => a.edge === 2)).toEqual({ edge: 2, atA: true, dist0: 3, cont: true });
-    expect(arms.find((a) => a.edge === 3)).toEqual({ edge: 3, atA: true, dist0: 4, cont: false });
-    // The dead end's arm never carries on, and no run lights twice.
-    expect(arms.find((a) => a.edge === 5)!.cont).toBe(false);
-    expect(new Set(arms.map((a) => a.edge)).size).toBe(arms.length);
-  });
-
-  it("a gated beyond-head arm neither lights nor carries light through", () => {
-    const arms = litArms(G, "S", 10, (eid) => eid !== 1);
-    // B is still reached the long way (A-C-B), from C's end.
-    expect(arms.map((a) => a.edge)).toEqual([0, 4, 2, 3, 5]);
-    expect(arms.find((a) => a.edge === 2)).toEqual({ edge: 2, atA: false, dist0: 7, cont: true });
-  });
-
-  it("K137: a blocked (broken) run neither lights nor carries light, at the head too", () => {
-    // The head's only run broken: nothing lights.
-    expect(litArms(G, "S", 10, undefined, (eid) => eid === 0)).toEqual([]);
-    // From A with A-B broken: B is lit the long way round, from C's end.
-    const arms = litArms(G, "A", 10, undefined, (eid) => eid === 1);
-    expect(arms.map((a) => a.edge).sort((x, y) => x - y)).toEqual([0, 2, 3, 4, 5]);
-    expect(arms.find((a) => a.edge === 2)).toEqual({ edge: 2, atA: false, dist0: 5, cont: true });
-    expect(arms.find((a) => a.edge === 5)).toEqual({ edge: 5, atA: true, dist0: 6, cont: false });
-    // The gate (beyond-head arms) still applies beside it.
-    const gated = litArms(G, "A", 10, (eid) => eid !== 2, (eid) => eid === 1);
-    expect(gated.map((a) => a.edge).sort((x, y) => x - y)).toEqual([0, 3, 4]);
-  });
-
-  it("a self-loop at the head lights from both ends, as today's choices do", () => {
-    const L = graph([["S", "S", 1], ["S", "A", 1]], "S", "A");
-    const arms = litArms(L, "S", 5);
-    expect(arms.filter((a) => a.edge === 0).map((a) => a.atA)).toEqual([true, false]);
-    expect(arms.find((a) => a.edge === 1)!.cont).toBe(false);
-  });
-
-  it("lights nothing from a head that is not in the graph", () => {
-    expect(litArms(G, "nowhere", 10)).toEqual([]);
   });
 });
 
