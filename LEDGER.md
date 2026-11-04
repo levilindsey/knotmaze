@@ -297,6 +297,14 @@ Next free ID: K1149.
 - **K1138** · The backdrop speed slider goes up to 8 times each backdrop's own pace. Should its top be
   2 times, or 16 times? (Your other backdrop changes of 2026-11-03 are done: vellum faster, aurora
   faster and taller, contours morphing, paper stronger.)
+- **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
+  junctions"; plan the look, the checks and the build first). S1 done (fc175b0f): today's faults a-h (doc 1.3),
+  one light field over the lit tree (S2), stages S3-S6. Full text: `docs/ledger_notes.md`.
+  - owner: nobody since 2026-11-03 10:05 (merged; agent `af1cda2ec844b5f38` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `fc175b0f`
+  - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
+  - next: Levi answers Q1-Q3 (sent with the pictures 2026-11-03 10:07; clips of the motion offered), then the S2 brief: the light field, folding in the wrong "world arc" comment on `litArms` (`src/game/route_plan.ts`, the length is lattice) and S5 if Q3 says straight through
+  - brief: `docs/design/K1139_s1_brief.md` (the plan: `docs/design/K1139_pulse_junctions.md`, stages S2-S6)
 
 ## In progress
 
@@ -503,14 +511,6 @@ Next free ID: K1149.
   - evidence: .claude/probes/K863/trace/ (work30/, out30/, NOTES ## K1119)
   - next: Levi looks at the v7.0 sheets (b/v/w exits, the a/q dip, be/ve/we: v7.0 or e60, the br dip), then the c stage (K1112's next letter)
   - brief: docs/design/K1119_cursive_j3g.md (its Handoff); J3f's in docs/design/K1113_cursive_j3f.md
-- **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
-  junctions"; plan the look, the checks and the build first). S1, Claude Opus, planning only: the design doc,
-  pictures of today's pulses, a route pulse for K1140. Full text: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-03 10:05 (merged; agent `af1cda2ec844b5f38` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `fc175b0f`
-  - evidence: .claude/probes/K1139/ (its worktree)
-  - next: Levi answers Q1-Q3 (`docs/design/K1139_pulse_junctions.md` section 6, one picture each in `.claude/probes/K1139/out/doc/`), then the S2 brief
-  - brief: docs/design/K1139_s1_brief.md (its branch)
 - **K1146** · Muse batch 11 (`docs/design/K1146_muse_batch11.md`), queued C, E, A, D, F: K252 (a), the pan
   range's ease by time; K144's accounts doc; K804's beat indicator (pulse, ring or off); K207's fog stamp
   dedupe; K688's healing-cuts doc. Run B (K1130) was dropped: it stays with K156's next phone round.
