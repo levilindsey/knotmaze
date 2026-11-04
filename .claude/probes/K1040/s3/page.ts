@@ -306,6 +306,122 @@ function kickSync(): void {
   gl.readPixels(0, 0, 1, 1, gl.RGBA_INTEGER, gl.UNSIGNED_INT, kickPx);
   gl.bindFramebuffer(gl.FRAMEBUFFER, prevFb);
 }
+
+// K1040 S3e step 1: the floor before building. No LabelBPass, no upload: each
+// variant owns a full-size target (the pass's W x H, made once a size), and
+// one "frame" is its clears, its draws (if any) and the 1-px readback:
+//   ideal      K923's setup: a 32-bit target (R32UI, texStorage2D) cleared and
+//              stored; depth a DEPTH_COMPONENT24 renderbuffer, cleared and
+//              invalidated after the (no) draws
+//   idealnoinv ideal, its depth not invalidated (stored)
+//   idealnod   the 32-bit target alone, no depth attachment
+//   ideal8     ideal in K923's own format, RGBA8UI (PVR compression?)
+//   ideal32f   ideal with a DEPTH_COMPONENT32F renderbuffer (the lean D)
+//   idealpt    ideal plus one 1-px point, depth tested, before the
+//              invalidation: depth invalidated inside an open render pass
+//   idealpt32f idealpt with the DEPTH_COMPONENT32F renderbuffer
+//   idealnoclr no clear: both attachments invalidated at the start (a
+//              DONT_CARE load), the 1-px point, depth invalidated after;
+//              idealpt - idealnoclr = what the clears cost over no load at all
+//   idealfsq   the color cleared by a full-screen draw instead (DONT_CARE
+//              load, depth still cleared and invalidated): a clear as a draw
+const IDEAL = new Set(["ideal", "idealnoinv", "idealnod", "ideal8", "ideal32f", "idealpt", "idealpt32f", "idealnoclr", "idealfsq"]);
+type IdealTarget = { fb: WebGLFramebuffer; w: number; h: number; depth: boolean; color: WebGLTexture; rb: WebGLRenderbuffer | null };
+const idealTargets = new Map<string, IdealTarget>();
+let idealProg: WebGLProgram | null = null;
+let idealUMode: WebGLUniformLocation | null = null;
+const idealPx = new Uint32Array(4);
+function idealProgram(): WebGLProgram {
+  if (idealProg) return idealProg;
+  const sh = (type: number, src: string) => {
+    const s = gl.createShader(type)!;
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(`ideal shader: ${gl.getShaderInfoLog(s)}`);
+    return s;
+  };
+  const vs = "#version 300 es\nuniform int uMode;\nvoid main() {\n  if (uMode == 0) { gl_Position = vec4(0.0, 0.0, 0.0, 1.0); gl_PointSize = 1.0; }\n  else { gl_Position = vec4(float((gl_VertexID & 1) << 2) - 1.0, float((gl_VertexID & 2) << 1) - 1.0, 0.0, 1.0); }\n}\n";
+  const fs = "#version 300 es\nprecision highp float;\nprecision highp int;\nuniform int uMode;\nout uvec4 oWord;\nvoid main() { oWord = uvec4(uMode == 0 ? 1u : 0u); }\n";
+  const p = gl.createProgram()!;
+  gl.attachShader(p, sh(gl.VERTEX_SHADER, vs));
+  gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(`ideal program: ${gl.getProgramInfoLog(p)}`);
+  idealProg = p;
+  idealUMode = gl.getUniformLocation(p, "uMode");
+  return p;
+}
+function idealTarget(v: string, w: number, h: number): IdealTarget {
+  const have = idealTargets.get(v);
+  if (have && have.w === w && have.h === h) return have;
+  if (have) {
+    gl.deleteFramebuffer(have.fb);
+    gl.deleteTexture(have.color);
+    if (have.rb) gl.deleteRenderbuffer(have.rb);
+  }
+  const prevTex = gl.getParameter(gl.TEXTURE_BINDING_2D);
+  const prevFb = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+  const color = gl.createTexture()!;
+  gl.bindTexture(gl.TEXTURE_2D, color);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, v === "ideal8" ? gl.RGBA8UI : gl.R32UI, w, h);
+  gl.bindTexture(gl.TEXTURE_2D, prevTex);
+  const fb = gl.createFramebuffer()!;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color, 0);
+  let rb: WebGLRenderbuffer | null = null;
+  if (v !== "idealnod") {
+    rb = gl.createRenderbuffer()!;
+    gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+    gl.renderbufferStorage(gl.RENDERBUFFER, v === "ideal32f" || v === "idealpt32f" ? gl.DEPTH_COMPONENT32F : gl.DEPTH_COMPONENT24, w, h);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rb);
+  }
+  if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) throw new Error(`ideal ${v}: incomplete`);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, prevFb);
+  const t = { fb, w, h, depth: rb !== null, color, rb };
+  idealTargets.set(v, t);
+  return t;
+}
+function idealFrame(v: string, w: number, h: number): void {
+  const t = idealTarget(v, w, h);
+  const prevFb = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, t.fb);
+  gl.viewport(0, 0, w, h);
+  gl.disable(gl.SCISSOR_TEST);
+  gl.disable(gl.BLEND);
+  gl.disable(gl.CULL_FACE);
+  gl.colorMask(true, true, true, true);
+  const draw = v === "idealpt" || v === "idealpt32f" || v === "idealnoclr" || v === "idealfsq";
+  if (v === "idealnoclr") gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.COLOR_ATTACHMENT0, gl.DEPTH_ATTACHMENT]);
+  else if (v === "idealfsq") gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.COLOR_ATTACHMENT0]);
+  else gl.clearBufferuiv(gl.COLOR, 0, [0, 0, 0, 0]);
+  if (t.depth && v !== "idealnoclr") {
+    gl.depthMask(true);
+    gl.clearBufferfv(gl.DEPTH, 0, [1]);
+  }
+  if (draw) {
+    gl.useProgram(idealProgram());
+    gl.bindVertexArray(null);
+    if (v === "idealfsq") {
+      gl.disable(gl.DEPTH_TEST);
+      gl.uniform1i(idealUMode, 1);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    } else {
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LESS);
+      gl.depthMask(true);
+      gl.uniform1i(idealUMode, 0);
+      gl.drawArrays(gl.POINTS, 0, 1);
+      gl.disable(gl.DEPTH_TEST);
+    }
+  }
+  if (t.depth && v !== "idealnoinv") gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.DEPTH_ATTACHMENT]);
+  gl.readBuffer(gl.COLOR_ATTACHMENT0);
+  gl.readPixels(0, 0, 1, 1, gl.RGBA_INTEGER, gl.UNSIGNED_INT, idealPx);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, prevFb);
+}
 const vpasses = new Map<string, LabelBPass>();
 function variantPass(v: string): LabelBPass {
   const have = vpasses.get(v);
@@ -360,6 +476,17 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
   for (const v of vs) acc[v] = { up: [], sync: [] };
   for (let r = 0; r < rounds; r++) {
     for (const v of vs) {
+      if (IDEAL.has(v)) {
+        for (let k = 0; k < 5; k++) idealFrame(v, W, H);
+        for (let k = 0; k < per; k++) {
+          const u1 = performance.now();
+          idealFrame(v, W, H);
+          const u2 = performance.now();
+          acc[v].up.push(0);
+          acc[v].sync.push(u2 - u1);
+        }
+        continue;
+      }
       const pass = variantPass(v);
       if (pass.width !== W || pass.height !== H) pass.resize(W, H);
       pass.upload(T);

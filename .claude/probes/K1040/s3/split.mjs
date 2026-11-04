@@ -66,8 +66,44 @@ const cols3 = [
   ["tentv - kick", (g) => g("tentv") - g("kick")],
   ["tentv - empty", (g) => g("tentv") - g("empty")],
 ];
-const cols = set === "s3d3" ? cols3 : set === "s3d2" ? cols2 : cols1;
-const f1 = (x) => (Number.isFinite(x) ? x.toFixed(1) : "-");
+// K1040 S3e step 1 (s3e1: page.ts's ideal family beside S3d's controls), each
+// minus floor unless named: ideal = K923's floor (a 32-bit target cleared and
+// stored, depth a renderbuffer invalidated); its parts; the depth store
+// (idealnoinv - ideal); the clears over a DONT_CARE load (idealpt -
+// idealnoclr); a clear as a full-screen draw (idealfsq - ideal); today's fixed
+// part over the ideal (empty - ideal, emptynoup - ideal).
+const cols4 = [
+  ["ideal", (g) => g("ideal") - g("floor")],
+  ["noinv", (g) => g("idealnoinv") - g("floor")],
+  ["nod", (g) => g("idealnod") - g("floor")],
+  ["rgba8ui", (g) => g("ideal8") - g("floor")],
+  ["d32f", (g) => g("ideal32f") - g("floor")],
+  ["pt", (g) => g("idealpt") - g("floor")],
+  ["pt d32f", (g) => g("idealpt32f") - g("floor")],
+  ["noclr", (g) => g("idealnoclr") - g("floor")],
+  ["fsq", (g) => g("idealfsq") - g("floor")],
+  ["D store", (g) => g("idealnoinv") - g("ideal")],
+  ["clears", (g) => g("idealpt") - g("idealnoclr")],
+  ["fsq - ideal", (g) => g("idealfsq") - g("ideal")],
+  ["kick", (g) => g("kick") - g("floor")],
+  ["empty pass", (g) => g("emptynoup") - g("floor")],
+  ["fixed", (g) => g("empty") - g("floor")],
+  ["fixed - ideal", (g) => g("empty") - g("ideal")],
+];
+// K1040 S3e step 3 (s3e3: the lean empty pass beside the ideal on one page):
+// the gate's first condition, leanempty - ideal <= 0.3 on every scene.
+const cols5 = [
+  ["ideal", (g) => g("ideal") - g("floor")],
+  ["leanempty", (g) => g("leanempty") - g("floor")],
+  ["leanempty - ideal", (g) => g("leanempty") - g("ideal")],
+  ["leanrest", (g) => g("leanrest") - g("floor")],
+  ["empty", (g) => g("empty") - g("floor")],
+  ["tentv", (g) => g("tentv") - g("floor")],
+  ["leantentv", (g) => g("leantentv") - g("floor")],
+  ["leantentv stored D", (g) => g("leantentvst") - g("floor")],
+];
+const cols = set === "s3e3" ? cols5 : set === "s3e1" ? cols4 : set === "s3d3" ? cols3 : set === "s3d2" ? cols2 : cols1;
+const f1 = (x) => (Number.isFinite(x) ? x.toFixed(set.startsWith("s3e") ? 2 : 1) : "-");
 const rows = [`| scene | ${cols.map((c) => c[0]).join(" | ")} |`, `|---|${cols.map(() => "---").join("|")}|`];
 const sums = cols.map(() => []);
 for (const s of SCENES) {
@@ -78,7 +114,7 @@ for (const s of SCENES) {
 }
 const med = (a) => { const b = [...a].sort((x, y) => x - y); return b.length ? b[b.length >> 1] : NaN; };
 rows.push(`| median | ${sums.map((a) => f1(med(a))).join(" | ")} |`);
-const what = set === "s3d3" ? "the fixed part against one GPU round trip (kick)" : set === "s3d2" ? "the vertex-light tent's and the fixed part's split" : "the tent pass's cost split";
+const what = set === "s3e1" ? "the floor before building (the ideal family)" : set === "s3e3" ? "the lean empty pass against the ideal floor" : set === "s3d3" ? "the fixed part against one GPU round trip (kick)" : set === "s3d2" ? "the vertex-light tent's and the fixed part's split" : "the tent pass's cost split";
 const text = `# ${label}: ${what} (Pixel, render-sync p50 ms, differences on one page)\n\n${rows.join("\n")}\n`;
 console.log(text);
 if (process.argv[3]) writeFileSync(process.argv[3], text);
