@@ -1,7 +1,7 @@
 # phone time 2026-11-03T06:37:55.861Z
 
 scale 2, frames 60, render sync (no timer query)
-start 22:37:56: thermal 0, battery 22.6 C, media none playing, in front com.google.android.apps.nexuslauncher
+start 22:37:56: thermal 0, battery 22.6 C, media none playing, in front the launcher
 renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
 
 - muse_hash: 2480x1800, sync p50 43.6 p95 52.9 ms (n 60, timer false); upload p50 0.3 ms (802816 B); prep 85.5 ms; segs 23349, fills 145, groups 117; lost 0; before it: thermal 0, battery 22.6 C, media none playing; 3654 ms
@@ -17,7 +17,7 @@ renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Techn
 - g41_user_tw42: 2480x1800, sync p50 25.6 p95 28.8 ms (n 60, timer false); upload p50 0.2 ms (409600 B); prep 32.5 ms; segs 10645, fills 143, groups 47; lost 0; before it: thermal 0, battery 23.0 C, media none playing; 2061 ms
 - g41_user_tw64: 2480x1800, sync p50 29.6 p95 35.5 ms (n 60, timer false); upload p50 0.3 ms (409600 B); prep 42.6 ms; segs 10547, fills 110, groups 47; lost 0; before it: thermal 0, battery 23.0 C, media none playing; 2167 ms
 
-end 22:38:32: thermal 0, battery 23.0 C, media none playing, in front com.android.chrome
+end 22:38:32: thermal 0, battery 23.0 C, media none playing, in front Chrome
 
 input events: none
 errors: 0
@@ -25,7 +25,7 @@ errors: 0
 # phone time 2026-11-03T06:39:31.959Z (pre3)
 
 scale 2, frames 60, render sync (no timer query); label_b_glsl.ts: swapped for label_b_glsl_1778fc58.ts
-start 22:39:32: thermal 0, battery 22.8 C, media none playing, in front com.google.android.apps.nexuslauncher
+start 22:39:32: thermal 0, battery 22.8 C, media none playing, in front the launcher
 renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
 
 - muse_hash: 2480x1800, sync p50 82.3 p95 92.9 ms (n 60, timer false); upload p50 0.4 ms (802816 B); prep 86.3 ms; segs 23349, fills 145, groups 117; lost 0; before it: thermal 0, battery 22.8 C, media none playing; 5798 ms
@@ -41,7 +41,7 @@ renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Techn
 - g41_user_tw42: 2480x1800, sync p50 30.2 p95 37.8 ms (n 60, timer false); upload p50 0.3 ms (409600 B); prep 29.5 ms; segs 10645, fills 143, groups 47; lost 0; before it: thermal 0, battery 23.2 C, media none playing; 2202 ms
 - g41_user_tw64: 2480x1800, sync p50 44.1 p95 50.7 ms (n 60, timer false); upload p50 0.3 ms (409600 B); prep 41.9 ms; segs 10547, fills 110, groups 47; lost 0; before it: thermal 0, battery 23.2 C, media none playing; 3190 ms
 
-end 22:40:16: thermal 0, battery 23.2 C, media none playing, in front com.android.chrome
+end 22:40:16: thermal 0, battery 23.2 C, media none playing, in front Chrome
 
 input events: none
 errors: 0
@@ -49,7 +49,7 @@ errors: 0
 # phone time 2026-11-03T06:45:25.138Z (fit)
 
 scale 2, frames 60, fit 411x753 (K923's bbox fit), back to back after 10 warm-ups (K923), render sync (no timer query); label_b_glsl.ts: the worktree's
-start 22:45:25: thermal 0, battery 22.7 C, media none playing, in front com.google.android.apps.nexuslauncher
+start 22:45:25: thermal 0, battery 22.7 C, media none playing, in front the launcher
 renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
 
 - muse_hash: 822x1506, sync p50 41.1 p95 48.8 ms (n 60, timer false); upload p50 0.4 ms (802816 B); prep 87.0 ms; segs 23349, fills 145, groups 117; lost 0; before it: thermal 0, battery 22.7 C, media none playing; 3365 ms
@@ -65,7 +65,7 @@ renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Techn
 - g41_user_tw42: 822x1506, sync p50 17.8 p95 22.3 ms (n 60, timer false); upload p50 0.2 ms (409600 B); prep 30.6 ms; segs 10645, fills 143, groups 47; lost 0; before it: thermal 0, battery 23.1 C, media none playing; 1585 ms
 - g41_user_tw64: 822x1506, sync p50 23.6 p95 32.0 ms (n 60, timer false); upload p50 0.2 ms (409600 B); prep 43.8 ms; segs 10547, fills 110, groups 47; lost 0; before it: thermal 0, battery 23.1 C, media none playing; 1925 ms
 
-end 22:45:58: thermal 0, battery 23.1 C, media none playing, in front com.android.chrome
+end 22:45:58: thermal 0, battery 23.1 C, media none playing, in front Chrome
 
 input events: none
 errors: 0
@@ -73,13 +73,13 @@ errors: 0
 # phone time 2026-11-03T06:46:00.064Z (floor)
 
 scale 2, frames 60, fit 411x753 (K923's bbox fit), back to back after 10 warm-ups (K923), FLOOR (readback only), render sync (no timer query); label_b_glsl.ts: the worktree's
-start 22:46:00: thermal 0, battery 23.1 C, media none playing, in front com.google.android.apps.nexuslauncher
+start 22:46:00: thermal 0, battery 23.1 C, media none playing, in front the launcher
 renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
 
 - ring: 822x1506, sync p50 1.0 p95 2.7 ms (n 60, timer false); upload p50 0.0 ms (212992 B); prep 25.9 ms; segs 4564, fills 41, groups 16; lost 0; before it: thermal 0, battery 23.1 C, media none playing; 436 ms
 - muse_hash: 822x1506, sync p50 2.1 p95 3.3 ms (n 60, timer false); upload p50 0.0 ms (802816 B); prep 78.7 ms; segs 23349, fills 145, groups 117; lost 0; before it: thermal 0, battery 23.1 C, media none playing; 1000 ms
 
-end 22:46:05: thermal 0, battery 23.1 C, media none playing, in front com.android.chrome
+end 22:46:05: thermal 0, battery 23.1 C, media none playing, in front Chrome
 
 input events: none
 errors: 0
@@ -87,7 +87,7 @@ errors: 0
 # phone time 2026-11-03T06:46:07.484Z (pre3fit)
 
 scale 2, frames 60, fit 411x753 (K923's bbox fit), back to back after 10 warm-ups (K923), render sync (no timer query); label_b_glsl.ts: swapped for label_b_glsl_1778fc58.ts
-start 22:46:08: thermal 0, battery 23.1 C, media none playing, in front com.google.android.apps.nexuslauncher
+start 22:46:08: thermal 0, battery 23.1 C, media none playing, in front the launcher
 renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
 
 - muse_hash: 822x1506, sync p50 57.9 p95 66.7 ms (n 60, timer false); upload p50 0.4 ms (802816 B); prep 87.0 ms; segs 23349, fills 145, groups 117; lost 0; before it: thermal 0, battery 23.1 C, media none playing; 4631 ms
@@ -103,7 +103,7 @@ renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Techn
 - g41_user_tw42: 822x1506, sync p50 26.9 p95 30.4 ms (n 60, timer false); upload p50 0.2 ms (409600 B); prep 29.9 ms; segs 10645, fills 143, groups 47; lost 0; before it: thermal 0, battery 23.1 C, media none playing; 2177 ms
 - g41_user_tw64: 822x1506, sync p50 38.0 p95 48.0 ms (n 60, timer false); upload p50 0.3 ms (409600 B); prep 41.9 ms; segs 10547, fills 110, groups 47; lost 0; before it: thermal 0, battery 22.9 C, media none playing; 2974 ms
 
-end 22:46:48: thermal 0, battery 22.9 C, media none playing, in front com.android.chrome
+end 22:46:48: thermal 0, battery 22.9 C, media none playing, in front Chrome
 
 input events: none
 errors: 0
@@ -111,7 +111,7 @@ errors: 0
 # phone time 2026-11-03T06:47:03.603Z (fitnoscan)
 
 scale 2, frames 60, fit 411x753 (K923's bbox fit), back to back after 10 warm-ups (K923), the scan OFF, render sync (no timer query); label_b_glsl.ts: the worktree's
-start 22:47:04: thermal 0, battery 22.9 C, media none playing, in front com.google.android.apps.nexuslauncher
+start 22:47:04: thermal 0, battery 22.9 C, media none playing, in front the launcher
 renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
 
 - muse_hash: 822x1506, sync p50 21.2 p95 24.6 ms (n 60, timer false); upload p50 0.3 ms (802816 B); prep 90.2 ms; segs 23349, fills 145, groups 117; lost 0; before it: thermal 0, battery 22.9 C, media none playing; 2053 ms
@@ -127,7 +127,7 @@ renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Techn
 - g41_user_tw42: 822x1506, sync p50 12.6 p95 17.5 ms (n 60, timer false); upload p50 0.2 ms (409600 B); prep 36.8 ms; segs 10645, fills 143, groups 47; lost 0; before it: thermal 0, battery 22.9 C, media none playing; 1276 ms
 - g41_user_tw64: 822x1506, sync p50 13.6 p95 16.7 ms (n 60, timer false); upload p50 0.2 ms (409600 B); prep 45.9 ms; segs 10547, fills 110, groups 47; lost 0; before it: thermal 0, battery 22.9 C, media none playing; 1286 ms
 
-end 22:47:31: thermal 0, battery 22.9 C, media none playing, in front com.android.chrome
+end 22:47:31: thermal 0, battery 22.9 C, media none playing, in front Chrome
 
 input events: none
 errors: 0
@@ -135,7 +135,7 @@ errors: 0
 # phone time 2026-11-03T06:47:33.244Z (floorall)
 
 scale 2, frames 60, fit 411x753 (K923's bbox fit), back to back after 10 warm-ups (K923), FLOOR (readback only), render sync (no timer query); label_b_glsl.ts: the worktree's
-start 22:47:33: thermal 0, battery 22.9 C, media none playing, in front com.google.android.apps.nexuslauncher
+start 22:47:33: thermal 0, battery 22.9 C, media none playing, in front the launcher
 renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
 
 - muse_hash: 822x1506, sync p50 1.5 p95 3.0 ms (n 60, timer false); upload p50 0.0 ms (802816 B); prep 87.5 ms; segs 23349, fills 145, groups 117; lost 0; before it: thermal 0, battery 22.9 C, media none playing; 1020 ms
@@ -151,7 +151,7 @@ renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Techn
 - g41_user_tw42: 822x1506, sync p50 2.6 p95 4.2 ms (n 60, timer false); upload p50 0.0 ms (409600 B); prep 30.2 ms; segs 10645, fills 143, groups 47; lost 0; before it: thermal 0, battery 23.4 C, media none playing; 587 ms
 - g41_user_tw64: 822x1506, sync p50 2.0 p95 3.7 ms (n 60, timer false); upload p50 0.0 ms (409600 B); prep 41.1 ms; segs 10547, fills 110, groups 47; lost 0; before it: thermal 0, battery 23.4 C, media none playing; 673 ms
 
-end 22:47:51: thermal 0, battery 23.4 C, media none playing, in front com.android.chrome
+end 22:47:51: thermal 0, battery 23.4 C, media none playing, in front Chrome
 
 input events: none
 errors: 0
@@ -159,7 +159,7 @@ errors: 0
 # phone time 2026-11-03T06:48:07.025Z (nofd)
 
 scale 2, frames 60, fit 411x753 (K923's bbox fit), back to back after 10 warm-ups (K923), render sync (no timer query); label_b_glsl.ts: swapped for label_b_glsl_nofd.ts
-start 22:48:07: thermal 0, battery 23.4 C, media none playing, in front com.google.android.apps.nexuslauncher
+start 22:48:07: thermal 0, battery 23.4 C, media none playing, in front the launcher
 renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
 
 - muse_hash: 822x1506, sync p50 36.9 p95 49.0 ms (n 60, timer false); upload p50 0.4 ms (802816 B); prep 86.7 ms; segs 23349, fills 145, groups 117; lost 0; before it: thermal 0, battery 23.4 C, media none playing; 3183 ms
@@ -175,7 +175,7 @@ renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Techn
 - g41_user_tw42: 822x1506, sync p50 17.4 p95 21.9 ms (n 60, timer false); upload p50 0.2 ms (409600 B); prep 29.3 ms; segs 10645, fills 143, groups 47; lost 0; before it: thermal 0, battery 23.4 C, media none playing; 1556 ms
 - g41_user_tw64: 822x1506, sync p50 24.4 p95 31.0 ms (n 60, timer false); upload p50 0.2 ms (409600 B); prep 41.8 ms; segs 10547, fills 110, groups 47; lost 0; before it: thermal 0, battery 23.4 C, media none playing; 1890 ms
 
-end 22:48:40: thermal 0, battery 23.4 C, media none playing, in front com.android.chrome
+end 22:48:40: thermal 0, battery 23.4 C, media none playing, in front Chrome
 
 input events: none
 errors: 0
@@ -183,7 +183,7 @@ errors: 0
 # phone time 2026-11-03T06:48:41.573Z (nofdnd)
 
 scale 2, frames 60, fit 411x753 (K923's bbox fit), back to back after 10 warm-ups (K923), render sync (no timer query); label_b_glsl.ts: swapped for label_b_glsl_nofd_nodiscard.ts
-start 22:48:42: thermal 0, battery 23.4 C, media none playing, in front com.google.android.apps.nexuslauncher
+start 22:48:42: thermal 0, battery 23.4 C, media none playing, in front the launcher
 renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
 
 - muse_hash: 822x1506, sync p50 8.3 p95 14.2 ms (n 60, timer false); upload p50 0.3 ms (802816 B); prep 88.2 ms; segs 23349, fills 145, groups 117; lost 0; before it: thermal 0, battery 23.0 C, media none playing; 1165 ms
@@ -199,7 +199,7 @@ renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Techn
 - g41_user_tw42: 822x1506, sync p50 7.8 p95 10.5 ms (n 60, timer false); upload p50 0.2 ms (409600 B); prep 31.4 ms; segs 10645, fills 143, groups 47; lost 0; before it: thermal 0, battery 23.0 C, media none playing; 895 ms
 - g41_user_tw64: 822x1506, sync p50 7.1 p95 9.9 ms (n 60, timer false); upload p50 0.2 ms (409600 B); prep 42.6 ms; segs 10547, fills 110, groups 47; lost 0; before it: thermal 0, battery 23.0 C, media none playing; 770 ms
 
-end 22:49:02: thermal 0, battery 23.0 C, media none playing, in front com.android.chrome
+end 22:49:02: thermal 0, battery 23.0 C, media none playing, in front Chrome
 
 input events: none
 errors: 0
@@ -211,7 +211,7 @@ start 08:04:36: thermal 0, battery 27.9 C, media none playing, in front an app
 renderer ANGLE (Google Inc. (Imagination Technologies), ANGLE (Imagination Technologies Vulkan 1.4.317 (PowerVR C-Series CXTP-48-1536 MC1 (0x70061042)) PowerVR C-Series Vulkan Driver-1.662.3024), OpenGL ES 3.2); window 411x753 at dpr 2.625 (visible); the pass renders its own 2x target
 
 
-end 08:04:40: thermal 0, battery 27.9 C, media none playing, in front com.google.android.apps.nexuslauncher
+end 08:04:40: thermal 0, battery 27.9 C, media none playing, in front the launcher
 
 input events: one at 08:04:39, run stopped
 errors: 0
