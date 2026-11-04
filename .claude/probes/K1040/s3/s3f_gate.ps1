@@ -20,24 +20,29 @@
 # -DryRun touches no phone and takes no lock: each phone run goes to
 # phone_time.mjs --dry (bundles the page; no adb call), the desktop commands
 # are printed, not run, and the tables are built from the files already in out/.
-# -SkipDesktop / -SkipPhone run one half.
-# Usage: & .claude\probes\K1040\s3\s3f_gate.ps1 [-DryRun] [-SkipDesktop] [-SkipPhone]
-param([int]$MaxWaitMin = 15, [switch]$DryRun, [switch]$SkipDesktop, [switch]$SkipPhone)
+# -SkipDesktop / -SkipPhone run one half. -SkipVerdicts leaves out the desktop
+# censuses (the times only). -PhoneRuns n takes the first n phone runs and the
+# tables whose tags they all measure (3: the new pass, floorall, today's tentv).
+# Usage: & .claude\probes\K1040\s3\s3f_gate.ps1 [-DryRun] [-SkipDesktop] [-SkipPhone] [-SkipVerdicts] [-PhoneRuns n]
+param([int]$MaxWaitMin = 15, [switch]$DryRun, [switch]$SkipDesktop, [switch]$SkipPhone, [switch]$SkipVerdicts, [int]$PhoneRuns = 0)
 $s3 = $PSScriptRoot
 $worktree = (Resolve-Path (Join-Path $s3 '..\..\..\..')).Path
 $outDir = Join-Path $s3 'out'
 function Say([string]$m) { "$(Get-Date -Format HH:mm:ss) $m" }
 
+# The gate's two runs first (the new pass, floorall), the split last: a batch
+# cut short still has the verdict.
 $phone = @(
-  '--fit 411x753 --label s3f1 --variants ideal,ideal32f,ideal32fz,ideal32fk,ideal32fd,ideal32fr,leanempty,leanemptyns,leanemptynoupns,fempty,femptynoup,femptynouph0,ftentvsetup,leantentv,ftentv,floor,ffloor',
   '--fit 411x753 --label s3fnew --b2b --mode tentv --lean --state host',
   '--fit 411x753 --label s3ffloorall --b2b --floor',
-  '--fit 411x753 --label s3ffloorhost --b2b --floor --state host',
   '--fit 411x753 --label s3ftentv --b2b --mode tentv --lean',
   '--fit 411x753 --label s3ffit --b2b',
-  '--fit 411x753 --label s3fnewrest --b2b --mode tentv --lean --rest --state host'
+  '--fit 411x753 --label s3ffloorhost --b2b --floor --state host',
+  '--fit 411x753 --label s3fnewrest --b2b --mode tentv --lean --rest --state host',
+  '--fit 411x753 --label s3f1 --variants ideal,ideal32f,ideal32fz,ideal32fk,ideal32fd,ideal32fr,leanempty,leanemptyns,leanemptynoupns,fempty,femptynoup,femptynouph0,ftentvsetup,leantentv,ftentv,floor,ffloor'
 )
 $tables = @(
+  's3fnew s3ftentv s3ffloorall -Floor s3ffloorall -Upload',
   's3fnew s3ftentv s3fnewrest s3ffit s3ffloorall s3ffloorhost -Floor s3ffloorall -Upload',
   's3fnew s3ffloorhost -Floor s3ffloorhost -Upload',
   's3ftentv s3ffloorall -Floor s3ffloorall -Upload'
@@ -55,6 +60,12 @@ $times = @(
   @('s3ftentvresttime', @('--mode', 'tentv', '--lean', '1', '--rest', '1')),
   @('s3ffittime', @())
 )
+if ($PhoneRuns -gt 0) {
+  $phone = @($phone | Select-Object -First $PhoneRuns)
+  $have = @($phone | ForEach-Object { if ($_ -match '--label (\S+)') { $Matches[1] } })
+  $tables = @($tables | Where-Object { @($_ -split '\s+' | Where-Object { $_ -and $_ -notmatch '^-' } | Where-Object { $have -notcontains $_ }).Count -eq 0 })
+}
+if ($SkipVerdicts) { $verdicts = @() }
 
 function DesktopTable {
   $scenes = 'muse_hash', 'muse_default_tw', 'def', 'fat', 'ring', 'user_tw42.lightpaper', 'g41_def_tw42', 'g41_def_tw64', 'g41_ring_tw42', 'g41_ring_tw64', 'g41_user_tw42', 'g41_user_tw64'
@@ -119,6 +130,8 @@ if (-not $SkipPhone) {
     $code = $LASTEXITCODE
     if ($code -ne 0) { Say "phone batch exit $code"; exit $code }
   }
-  & node (Join-Path $s3 'split.mjs') s3f1 (Join-Path $outDir 'split_s3f1.md') s3f1 | Select-Object -First 3
+  if ($phone | Where-Object { $_ -match '--label s3f1 ' }) {
+    & node (Join-Path $s3 'split.mjs') s3f1 (Join-Path $outDir 'split_s3f1.md') s3f1 | Select-Object -First 3
+  }
 }
 exit 0
