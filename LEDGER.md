@@ -527,9 +527,9 @@ Next free ID: K1154.
   K202's midnight rollover, K201's Played chip, K125's whole bars, K165 (a)'s HALTED stamp, K170's opt-in
   wake, K308's exact fifth contour.
   - owner: muse runs 12B-12G, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 12:29
-  - branch: mainline; last commit: `7f03c0a6`
+  - branch: mainline; last commit: `e0ceba44`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K202/`, `K201/`, `K125/`, `K165/`, `K308/`
-  - next: Run B done; next Run C
+  - next: Run C done; next Run D
   - brief: `docs/design/K1153_muse_batch12.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 12B-12G); a `hold.txt` beside it holds the chain before its next run
 
@@ -929,9 +929,6 @@ Every other item below waits on the trigger it names.
 - **K205** · K120's leftovers (`docs/design/K120.md`): the follow camera doesn't keep the dot clear
   of the move pad (K148, K149); small maze at the phone's fit zoom; a 411 px toast can overlap the
   pad; an arrow after clicking the panel's empty area still moves; a hold could loop runs.
-- **K201** · History's "Played" chip counts any record, practice included, so it can exceed the
-  played tile (24 against 21 in K146's probe); a practice row's count shows only in its tooltip,
-  which phones lack (`src/ui/daily_stats_view.ts`).
 - **K197** · The phone's load settles later over ab6d330..54a2b43 (K156, 2026-10-14): first sleep
   8.0 -> 19.3 s, p95 33 -> 50 ms; likely K147's settle budget (b0a1c49..97293e7): attribute with the
   frames phase `-Base b0a1c49~1 -Head 97293e7`. Is 19 s acceptable? Levi's call. Pre-worker numbers: remeasure on the K7 host first.
@@ -2019,6 +2016,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K201** · the Played chip counts the tile's days; a practice row shows its count. Done in e0ceba44 (2026-11-03).
 - **K202** · an unstarted floating daily rolls to the new day at midnight. Done in 7f03c0a6 (2026-11-03).
 - **K1146** · Muse batch 11: K252 (a), the pan range's ease by time (7f929ae3); K144's accounts doc (23e3bf79); K804's beat ring (94e4b59c); K207's fog dedupe, partial (bb7aa6ed); K688's healing-cuts doc (db015d9e). Done in da73b598 (2026-11-03).
 - **K804** · beat indicator dropdown: pulse and ring at the dot; dots split out. Done in 94e4b59c (2026-11-03).
