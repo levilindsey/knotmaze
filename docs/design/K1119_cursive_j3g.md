@@ -227,7 +227,104 @@ J3f did); the coordinator sends Levi the PNGs.
     from rough FAIL to ok, oe is unchanged and e's eye stays open in the
     crops (smaller than the font's). Pe60 (one 60 u window for all
     four) leaves be/ve/we as they are and moves oe, so it is out.
+- 08:45, v7.0's checks done (census, locality, solves, a/q, guard,
+  determinism), the six sheets drawn, read in crops and uploaded, NOTES
+  `## K1119` N1 to N4 written. The stage is done; the handoff follows.
 
 ## Handoff
 
-(Appended at the stage's end.)
+2026-11-03 08:45: the stage is done inside the cap (started 07:16:57,
+cap 09:16:57). The work is in the main checkout's
+`.claude/probes/K863/trace/` (untracked): `work30/` (builds, ports,
+censuses, logs, crops), `out30/` (the template, the sheets, `png/`),
+the tools `work30/dbg/*_k1119.*` and the record in `NOTES.md` `## K1119`
+(N1 to N4, with the rerun commands).
+
+What moved (v7.0 against v6.9):
+- **b's, v's and w's ends** (the template, variant R of
+  `mk_template_k1119.py`, candidate x6: `R_R=3 R_DX=24 R_DROP=17
+  R_A1=-10 R_L1=11`). From J3f's P_up the stroke rounds over the top on
+  a 3 u cap with no point, then sweeps down and out to an end 15-17 u
+  below the top. The joins leave at -14.9 to -17.5 deg (v6.9 about -8,
+  v6.8's presets -16.3 to -22) and drop 15.5-23.6 u below the letter's
+  top (v6.9 about 3, v6.8 19.6-25.9). That is about 70% of the way from
+  v6.9 to v6.8. One rule for the three letters: no per-pair data, no
+  presets.
+- **a's and q's entry after b, v and w** (the dip, variant Pa of
+  `mk_ports_k1119.py`). The exits alone brought a's dip back (lowest
+  99.3-99.5 u, v6.6 99.0-99.3) but not q's (97.5, v6.6 92.2-92.6). One
+  band on the join's lowest point, [hi - 4, hi] u with hi at v6.6's
+  shallowest (a 99.3, q 92.6), on a's and q's after_high records.
+  v7.0: a 99.3, q 93.0 (v6.9 103.2-103.8 and 101.4-102.1); the meet
+  turn 1.1-1.3 deg (v6.6 1.2-1.3, v6.9 3.8-6.0); the last half 6.3-9.6 u
+  off v6.6's (v6.9 10.4-17.9). oa and oq are unchanged.
+- **e after b, v and w** (the e decision): one e rule. e's own record
+  after b, v and w (60 u) is dropped, so e takes its one high-exit
+  window, o's 90 u, after every high exit (variant Pae90 = v7.0).
+
+The numbers against v6.9 (J3f's census words, 524 pieces;
+`work30/census_cmp_v69_v70.txt`, `work30/census_sum_v69_v70.txt`):
+- All pieces: hooks 31 -> 31, spikes 51 -> 48, rough FAIL 105 -> 88,
+  undesigned seams 11 -> 11, over budget 315 -> 305. No gate rises.
+- The 98 joins out of b, v and w: hooks 0 -> 0, spikes 3 -> 0 (be's and
+  we's), rough 27 -> 10, seams 0 -> 0, over budget 98 -> 88. Font
+  distance (dmax mean over the pairs) b 24.1 -> 14.5, v 22.8 -> 13.9,
+  w 23.7 -> 14.3 u; the largest are now be, ve and we (40.8-42.0 u;
+  v6.9's were bh, vh and wh, 55.5-56.8).
+- Newly rough: the two br joins (facet 0.0038 -> 0.0113, wobble
+  0.016 -> 0.030) and vq (wobble 0.0125 -> 0.018). No longer rough: 20,
+  among them be, ve and we in every word (11).
+- Locality PASS: all 1448 untouched pieces of 346 words are
+  byte-identical (J3f's run was a strict FAIL on 157); bodies.json
+  differs on b, v and w only, join_params.json not at all.
+- Solves: 78 of 78 pairs out of b, v and w, no MAXFEV (max nfev 6481);
+  every side test positive, the smallest bt, vt and wt at 0.010 u.
+- Determinism: a second build is byte-identical in bodies.json,
+  join_params.json and the template (24 of 33 files; the other 9 are
+  logs holding their paths, Inkscape stderr and the as-drawn report of
+  the reference layers); the aq sheet redrawn from it is byte-identical.
+- Guard: ALL CLEAN on out30 and on the upload copies.
+
+The sheets (`out30/`; PNGs in `out30/png/`; Drive `K863/`, the same
+names):
+- `b_v70.svg`, `v_v70.svg`, `w_v70.svg`: font | v6.8 | v7.0 | v6.9, the
+  letter alone and every pair out of it.
+- `aq_joins_v70.svg`: font | v6.6 | v6.9 | v7.0; ba, va, wa, bq, vq, wq,
+  oa, oq, bad, wave.
+- `e_after_bvw_v70.svg`: font | v6.9 | v7.0 | v7.0 with e's own 60 u
+  record; be, ve, we, oe and four words.
+- `cursive_v70_words.svg`: the census words with a b, v or w,
+  v6.9 | v7.0.
+- PNGs (48 dpi): `out30/png/<name>.png`. The crops read for this stage:
+  `work30/sheets/png/zoom_{b,v,w}_0..2.png`, `zoom_aq_0.png`,
+  `zoom_e_0.png`, `strip_words70_0..1.png` (`work30/dbg/strip_k1119.py`).
+- Drive `K863/` (rclone, 08:36, `rclone check` 0 differences):
+  aq_joins_v70.svg, b_v70.svg, v_v70.svg, w_v70.svg,
+  e_after_bvw_v70.svg, cursive_v70_words.svg.
+
+What is left:
+- Levi's look at the v7.0 sheets: b's, v's and w's exits; the depth of
+  the a/q dip; and which e after b, v and w (v7.0's one rule, a gentler
+  wave into a smaller eye, or the e60 column, deeper and closer to the
+  font).
+- br, vr, wr: under the lower exits the dip into r's band is a tighter
+  V (facet 0.011, wobble 0.029, 2-3x v6.9's), and br is newly rough. A
+  follow-up would re-fit r's after_high band to the new exits.
+- Five of the six a/q joins fail rough (ba, wa, bq, vq, wq; va passes):
+  the dip's extra turn, wobble 0.018-0.019 in the q joins (limit 0.016)
+  and the band ratio in ba and wa. In v6.9 they failed on facet; their
+  peak |dk/ds| falls from 0.024-0.038 to 0.008-0.013.
+- q's lowest is 93.0 u, 0.4 u above its band's top (the band is a soft
+  penalty). The a/q joins' last half stays 6.3-9.6 u off v6.6's,
+  because v6.6's preset exits leave 2-5 deg steeper and drop 3-8 u more.
+- be, ve and we sit further from the font (dmax 40.8-42.0 u against
+  v6.9's 29.6-30.3): e's eye is smaller than the font's.
+- vl's and vt's word-end tails count one spike sample more with their
+  shape unchanged (the census's sampling).
+- Not taken: candidate x5 (`R_DX=22 R_A1=-15 R_L1=10`, the rest as x6)
+  leaves at about -22 deg, past v6.8's mean, and counted fewer rough
+  FAILs out of b, v and w on N1's words (7 against x6's 17). It is the
+  option if Levi wants the exits steeper.
+
+Next: Levi looks at the v7.0 sheets (the questions above), then the c
+stage (K1112's next letter). c was not part of this stage.
