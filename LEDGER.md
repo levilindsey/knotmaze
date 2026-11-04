@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1141.
+Next free ID: K1146.
 
 ## Waiting on Levi
 
@@ -486,21 +486,12 @@ Next free ID: K1141.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: agent `aaf87e9d3775b20e4` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-03 07:10, 2 h cap ~09:10)
-  - branch: `worktree-agent-aaf87e9d3775b20e4`, worktree `.claude/worktrees/agent-aaf87e9d3775b20e4`; last commit: `37e82c50`
-  - evidence: .claude/probes/K1040/s3/ (phone_time.mjs, run_phone.ps1, phone_table.ps1, win_stats.ts, time_table.ps1; out/); oracle30 and the recordings: worktree k868-s3a (.claude/probes/S3a/seq13/)
-  - next: S3c's variants without discards, the census, desktop timing, then the phone commands for when the phone is free
-  - brief: docs/design/K1040_s3c_label.md (its branch); S3b's Handoff in docs/design/K1040_s3b_label.md
-  - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`
-- **K1137** · Muse batch 9 (`docs/design/K1137_muse_batch9.md`): A, K1132's pictures (a key-hint placement
-  past the head marker, behind a probe hook); B, K1083 and K1133 retraced on K1077's flow-on stand; C, K1135's
-  behavior test; D, batch 10's brief drafted.
-  - owner: muse runs 9A-9D, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 06:52
-  - branch: mainline; last commit: `5f769558`
-  - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K1132/`, `.claude/probes/K1083/flow/`
-  - next: Run D done; batch 9 complete, Claude reviews and closes K1137
-  - brief: `docs/design/K1137_muse_batch9.md`
-  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 9A-9D)
+  - owner: nobody since 2026-11-03 08:41 (agent `aaf87e9d3775b20e4` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, stopped: S3c done, its gate not met)
+  - branch: `worktree-agent-aaf87e9d3775b20e4`, worktree `.claude/worktrees/agent-aaf87e9d3775b20e4`; last commit: `08f287fa`
+  - evidence: .claude/probes/K1040/s3/ (in the worktree: run_locked.ps1, phone_quiet.mjs, run_phone.ps1, phone_table.ps1; out/); oracle30 and the recordings: worktree k868-s3a (.claude/probes/S3a/seq13/)
+  - next: S3c: tent pass 1.9-4.4x faster on the desktop, but 794 DEFECT (every one of 0.03 px or more a merge site; NW 32 too slow, TENT_NW stays 3). Decide F4 by a final-composite A/B at the merge sites (the max-key census if the max-key spots match the control, else the small discard draw), then F8 (the sharp joints drawn apart), then the Pixel's 2 ms gate (F11) once K1142's guard is in
+  - brief: docs/design/K1040_s3c_label.md (its branch: F1-F12 and the Handoff)
+  - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`; timing through `.claude/probes/K1040/s3/run_locked.ps1`; phone: `phone_quiet.mjs`, then `run_phone.ps1`
 - **K1119** · Cursive J3g (v7.0), Levi's answers to v6.9 (2026-11-03): b, v and w exit between v6.8 and
   v6.9, closer to v6.8 ("still exit somewhat downward and with a swoosh"); the six a/q joins get v6.6's dip
   back ("We need that dip"); the e after them decided by the checks. One sheet per letter for Levi.
@@ -508,7 +499,24 @@ Next free ID: K1141.
   - branch: mainline; last commit: `a413b284`
   - evidence: .claude/probes/K863/trace/ (work30/, out30/, NOTES ## K1119)
   - next: Levi looks at the v7.0 sheets (b/v/w exits, the a/q dip, be/ve/we: v7.0 or e60, the br dip), then the c stage (K1112's next letter)
-  - brief: docs/design/K1119_cursive_j3g.md (its branch); J3f's Handoff in docs/design/K1113_cursive_j3f.md
+  - brief: docs/design/K1119_cursive_j3g.md (its Handoff); J3f's in docs/design/K1113_cursive_j3f.md
+- **K1141** · Muse batch 10 (`docs/design/K1141_muse_batch10.md`): A, K1138's backdrop tuning (five of six
+  clauses; the speed slider's top waits on Levi); B, batch 11's brief drafted from the Approved list, the
+  Residuals in order and two design-doc stages (K144, K688).
+  - owner: muse runs 10A-10B, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 08:51
+  - branch: mainline; last commit: `3e51b9da`
+  - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K1138/`
+  - next: Run A (K1138) running; then Run B
+  - brief: `docs/design/K1141_muse_batch10.md`
+  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 10A-10B)
+- **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
+  junctions"; plan the look, the checks and the build first). S1, Claude Opus, planning only: the design doc,
+  pictures of today's pulses, a route pulse for K1140. Full text: `docs/ledger_notes.md`.
+  - owner: agent `af1cda2ec844b5f38` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-03 08:51, 2 h cap ~10:51)
+  - branch: `worktree-agent-af1cda2ec844b5f38`, worktree `.claude/worktrees/agent-af1cda2ec844b5f38`; last commit: `5591a6c1`
+  - evidence: .claude/probes/K1139/ (its worktree)
+  - next: S1: the design doc (today's junction pulses in frame strips, the look with mock-ups, a route pulse for K1140, the checks, staged plan, questions for Levi)
+  - brief: docs/design/K1139_s1_brief.md (its branch)
 
 ## Next, in order
 
@@ -528,6 +536,9 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
+- **K1142** · Phone kit guard, before the next phone pass: at 08:04 on 2026-11-03 an S3c run opened Chrome over
+  an app on the awake, unlocked phone (stopped a second later by a touch; nothing timed). Fold `680651fe`'s
+  guard (K1097's branch: the launcher in front, the phone quiet; `phone_quiet.mjs`) into every phone runner.
 - **K875** · K868 S1b, master's side: on Muse's link master registers only 58-80% with the oracle at
   j49/j123 and #6 finds every band end off (18/18, 19/19; cause untested: gaps or a reveal/fog state);
   its sdf and strip silhouettes differ in width; joinery.ts:1469-1471's comment is stale. s1b_oracle.md.
@@ -743,13 +754,6 @@ Every other item below waits on the trigger it names.
   should be x4 / The background speed slider max should be x2" (asked: a 2x max, or 16x?). Pointers:
   `src/render/background_model.ts` (profiles), `background_shaders.ts`, the panel's Backdrop speed and
   intensity rows (`src/ui/tweakpane_panel.ts`); K160 is the slider curve. For Muse batch 10.
-- **K1139** · Choice pulses across junctions. Levi 2026-11-03: "Pulse reach is good. BUT, we have to make
-  pulses animate correctly across junctions. This will be important to get right, so take some time to
-  properly plan what this should look like, how to verify it, and how to implement it." Stage 1 (Claude Opus,
-  planning only): a design doc with the look, the checks and the implementation plan, plus pictures of today's
-  behavior. Pointers: `docs/design/K299_choice_pulse_bug.md`, K175, K189, `src/render/junction_field.ts`,
-  `junction_routes.ts`. Cover a route pulse (one path through several junctions) for K1140. Launch when the
-  S3c agent ends (pacing: 19% of the week used at day 1).
 
 ## Residuals (known, not fixed)
 
@@ -1704,6 +1708,12 @@ Every other item below waits on the trigger it names.
 - **K1133** · Burn re-declare: fillet rebuilds on front-crossing frames, retraced with the flow on
   (K1137 Run B, K1077 stand): realtime 71/119 vs turn 59/119 (burn cross-check 0.56 vs 0.50 a frame); the
   12 without an update split uwRev 8, joint-key 4; a fix needs incremental fillets (joinery), not the declare.
+- **K1143** · S3c's leftovers (K1097; `docs/design/K1040_s3c_label.md`, its branch): F6, the SNAP class (all
+  within 0.01 px): accept or tighten eps; F9, lr 2's upsample class reads DEFECT, its 1.9x rate unexplained;
+  F10, the tents look vertex-bound (test lr 2 on the Pixel); F12, no float64 mirror pin against labelAt yet.
+- **K1144** · Cursive v7.0's leftovers (K1119's Handoff in `docs/design/K1119_cursive_j3g.md`): br, vr and wr dip
+  into r as a tighter V (br newly fails roughness); five of six a/q joins fail it; q's low point is 0.4 u above
+  the band; be, ve and we sit 40.8-42.0 u from the font (Levi: the v7.0 or the e60 column).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2004,9 +2014,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   Retrace encore, Echo (Simon by pitch; needs K1139's route pulse), Beacons (K80 4.17 plus route beacons),
   memory hints (`hints.ts`: the next 3-4 runs, then fade). Rec: Glimpse first, with Shuffle as its hard
   setting. Levi's picks pending.
+- **K1145** · Cursive x5 (`R_DX=22 R_A1=-15 R_L1=10`): a steeper b, v and w exit (about -22 deg), if Levi
+  wants v7.0's exits further down (K1119's Handoff).
 
 ## Done
 
+- **K1137** · Muse batch 9: A, K1132's key-hint pictures; B, K1083 closed and K1133 kept open on the flow-on retrace; C, K1135's Reset test; D, batch 10's draft (K1141). Done in 5f769558 (2026-11-03).
 - **K1129** · With Reduced motion on and the camera following the player, the view still glides after every move. Dropped: Levi 2026-11-03: "camera glide with reduced motion is fine", so the view keeps gliding (2026-11-03).
 - **K1118** · Levi 2026-11-03: Motion follows across tabs without a reload. Done in 3ff7144a (2026-11-03).
 - **K1111** · Levi 2026-11-03: the finer-step sliders feel right ("Pulse reach is good"; "Settle params are probably good for now"). Done in 5f28e0b1 (2026-11-03).
