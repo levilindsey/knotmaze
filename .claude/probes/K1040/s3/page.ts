@@ -295,7 +295,11 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
 //   leanempty24    leanempty with D a DEPTH_COMPONENT24 renderbuffer (K923's
 //                  format; probeDepth24), the hedge if D32F's invalidation is punished
 //   leantentv24    leantentv with D24 (its census: s3.mjs verdict --d24 1)
-const LEAN = ["leanempty", "leanemptynoup", "leantentv", "leantentvrest", "leantentvst", "leanempty24", "leantentv24"];
+//   leanemptyns    leanempty without draw()'s GL state save and restore
+//                  (probeNoSave: 17 queries, 6 of them texture bindings, and the
+//                  restore; the ideal has neither)
+//   leanemptynoupns leanemptynoup without them (the ideal's own work, in the pass)
+const LEAN = ["leanempty", "leanemptynoup", "leantentv", "leantentvrest", "leantentvst", "leanempty24", "leantentv24", "leanemptyns", "leanemptynoupns"];
 const VARIANTS = ["tent", "empty", "noup", "degen", "fs0", "fsconst", "half", "nw1", "floor"];
 let kickFb: WebGLFramebuffer | null = null;
 const kickPx = new Uint32Array(4);
@@ -477,7 +481,8 @@ function variantPass(v: string): LabelBPass {
     pass.probeAllDirty = v !== "leantentvrest";
     pass.leanStoreDepth = v === "leantentvst";
     pass.probeDepth24 = v.endsWith("24");
-    if (v === "leanempty" || v === "leanemptynoup" || v === "leanempty24") pass.probeDraw = false;
+    pass.probeNoSave = v.endsWith("ns");
+    if (v.startsWith("leanempty")) pass.probeDraw = false;
   }
   if (v === "empty" || v === "emptynoup" || v === "emptyinv") pass.probeDraw = false;
   if (v === "emptyinv" || v === "tentvinv") pass.probeInvalidateDepth = true;
@@ -524,7 +529,7 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
       }
       for (let k = 0; k < per; k++) {
         const u0 = performance.now();
-        const doUp = v !== "noup" && v !== "floor" && v !== "emptynoup" && v !== "leanemptynoup" && v !== "kick";
+        const doUp = v !== "noup" && v !== "floor" && v !== "emptynoup" && v !== "leanemptynoup" && v !== "leanemptynoupns" && v !== "kick";
         if (doUp) pass.upload(T);
         acc[v].sent = doUp ? pass.uploadBytes : 0;
         const u1 = performance.now();

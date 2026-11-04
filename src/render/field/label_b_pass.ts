@@ -124,6 +124,8 @@ export class LabelBPass {
   probeDepth24 = false;
   /** Lean probe knob (S3e): upload every used row, the moving fabric's frame (no diff). */
   probeAllDirty = false;
+  /** Probe knob (S3e): draw() skips its GL state save and restore (and the timer query). */
+  probeNoSave = false;
   /** Bytes the last upload() sent (texImage2D and texSubImage2D data). */
   uploadBytes = 0;
   private segVerts = TENT_SEG_VERTS;
@@ -399,7 +401,8 @@ export class LabelBPass {
   /** Draws the label for camera M (world -> device px). Restores the caller's state. */
   draw(M: Affine): void {
     const gl = this.gl;
-    const save = {
+    // probeNoSave: no state queries, no restore, no timer query (the caller owns the state).
+    const save = this.probeNoSave ? null : {
       fb: gl.getParameter(gl.FRAMEBUFFER_BINDING),
       vp: gl.getParameter(gl.VIEWPORT) as Int32Array,
       prog: gl.getParameter(gl.CURRENT_PROGRAM),
@@ -416,7 +419,7 @@ export class LabelBPass {
         return gl.getParameter(gl.TEXTURE_BINDING_2D);
       }),
     };
-    const q = this.tq ? gl.createQuery() : null;
+    const q = this.tq && save ? gl.createQuery() : null;
     if (q && this.tq) gl.beginQuery(this.tq.TIME_ELAPSED_EXT, q);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
     gl.viewport(0, 0, this.width, this.height);
@@ -448,6 +451,7 @@ export class LabelBPass {
       gl.endQuery(this.tq.TIME_ELAPSED_EXT);
       this.pending.push(q);
     }
+    if (!save) return;
     gl.bindFramebuffer(gl.FRAMEBUFFER, save.fb);
     gl.viewport(save.vp[0], save.vp[1], save.vp[2], save.vp[3]);
     gl.useProgram(save.prog);

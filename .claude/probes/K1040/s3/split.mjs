@@ -95,7 +95,10 @@ const cols4 = [
 // 0.3 on every scene (and against ideal32f: lean's D is D32F); the at-rest
 // empty pass (leanemptynoup); today's fixed part (empty); tentv with today's
 // and the lean fixed part, moving and at rest; the lean D's store; the D24
-// hedge (leanempty24, leantentv24: D a DEPTH_COMPONENT24 renderbuffer).
+// hedge (leanempty24, leantentv24: D a DEPTH_COMPONENT24 renderbuffer); draw()'s
+// GL state save and restore (leanemptynoup - leanemptynoupns), the lean empty
+// pass without it against the ideal, and what is left once neither uploads nor
+// saves (leanemptynoupns - ideal32f).
 const cols5 = [
   ["ideal", (g) => g("ideal") - g("floor")],
   ["ideal d32f", (g) => g("ideal32f") - g("floor")],
@@ -110,6 +113,9 @@ const cols5 = [
   ["D store", (g) => g("leantentvst") - g("leantentv")],
   ["leanempty24 - ideal", (g) => g("leanempty24") - g("ideal")],
   ["leantentv24", (g) => g("leantentv24") - g("floor")],
+  ["save", (g) => g("leanemptynoup") - g("leanemptynoupns")],
+  ["ns - ideal", (g) => g("leanemptyns") - g("ideal")],
+  ["noupns - d32f", (g) => g("leanemptynoupns") - g("ideal32f")],
 ];
 const cols = set === "s3e3" ? cols5 : set === "s3e1" ? cols4 : set === "s3d3" ? cols3 : set === "s3d2" ? cols2 : cols1;
 const f1 = (x) => (Number.isFinite(x) ? x.toFixed(set.startsWith("s3e") ? 2 : 1) : "-");
