@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1138.
+Next free ID: K1141.
 
 ## Waiting on Levi
 
@@ -284,19 +284,11 @@ Next free ID: K1138.
   doc Findings filed).
 - **K1080** · On the phone, zoom in and out and tap threads and junction choices: do the tap targets feel
   right? They now stay the same finger size at every zoom (K331, bc5f0043).
-- **K1111** · In the settings panel, drag Backdrop intensity, Pulse reach, Settle budget and Load settle: do
-  the sliders still feel right? (They now move in finer steps; Reset to defaults now lands on the exact
-  default.) (K130, 5f28e0b1)
-- **K1118** · With the game open in two browser tabs, change Motion in one: does the other tab follow at once,
-  with no reload? (K112, 3ff7144a)
 - **K1126** · With High contrast on, a plucked thread now shows the ring ripple whatever ripple you picked
   (unless it is off). Does it read well on the light threads over black? Pictures: .claude/probes/K368/shots/
   (K368, 71250dca)
 - **K1127** · On a narrow phone, the hidden-runs line in the corner panel now wraps in whole phrases (no lone
   'them', no dot at a line's end). Does it read well? Pictures: .claude/probes/K1100/out/k1127/stills/ (360x740 and 320x640, stats off and on; K1100, a0546b30)
-- **K1129** · With Reduced motion on and the camera following the player, the view still glides after every
-  move. Should it hold still instead, and jump only when the player gets near the edge of the screen? (K1099,
-  follow camera)
 - **K1132** · After you press an arrow key (or WASD) once, small arrows sit at the start of each run at your
   junction, showing which key takes it. At the default marker size they sit mostly under your own marker,
   and only their tips show. Move them out past the marker, or keep them as they are? Pictures, sent 2026-11-03:
@@ -745,6 +737,19 @@ Every other item below waits on the trigger it names.
   189-187 from 2.438h to 1.431h; F2 changes r at 155 corners. S1g made pops crops only: S1h makes at-rest
   before/after crops, Claude looks, and Levi gets a picture if it reads as a change (`K1040_s1g_gates.md` ##
   Handoff).
+- **K1138** · Backdrop tuning, Levi 2026-11-03: "vellum background speed should be x10 / aurora background
+  speed should be x2 / aurora background should stretch across the screen vertically more / contours
+  background should animate the line shapes rather than just slide the whole thing linearly / paper intensity
+  should be x4 / The background speed slider max should be x2" (asked: a 2x max, or 16x?). Pointers:
+  `src/render/background_model.ts` (profiles), `background_shaders.ts`, the panel's Backdrop speed and
+  intensity rows (`src/ui/tweakpane_panel.ts`); K160 is the slider curve. For Muse batch 10.
+- **K1139** · Choice pulses across junctions. Levi 2026-11-03: "Pulse reach is good. BUT, we have to make
+  pulses animate correctly across junctions. This will be important to get right, so take some time to
+  properly plan what this should look like, how to verify it, and how to implement it." Stage 1 (Claude Opus,
+  planning only): a design doc with the look, the checks and the implementation plan, plus pictures of today's
+  behavior. Pointers: `docs/design/K299_choice_pulse_bug.md`, K175, K189, `src/render/junction_field.ts`,
+  `junction_routes.ts`. Cover a route pulse (one path through several junctions) for K1140. Launch when the
+  S3c agent ends (pacing: 19% of the week used at day 1).
 
 ## Residuals (known, not fixed)
 
@@ -1993,9 +1998,18 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   in browsers.
 - **K1136** · Phone A/A floor: fabric@0 reads loose (fps ±8.3, frames over 25 ms ±33) from one outlier rep; a
   later A/A may tighten it (`docs/design/K156.md`, Round 2026-11-03 handoff, Left over 2).
+- **K1140** · Memory modes, brainstormed 2026-11-03 at Levi's request (show the route, hide it, walk it):
+  Glimpse (the base; a wrong move is one that does not shorten distToExit), Shuffle (a shake re-settles the
+  knot after the glimpse; check it moves enough, else rotate or mirror the view), the myth (K80 4.23) plus a
+  Retrace encore, Echo (Simon by pitch; needs K1139's route pulse), Beacons (K80 4.17 plus route beacons),
+  memory hints (`hints.ts`: the next 3-4 runs, then fade). Rec: Glimpse first, with Shuffle as its hard
+  setting. Levi's picks pending.
 
 ## Done
 
+- **K1129** · With Reduced motion on and the camera following the player, the view still glides after every move. Dropped: Levi 2026-11-03: "camera glide with reduced motion is fine", so the view keeps gliding (2026-11-03).
+- **K1118** · Levi 2026-11-03: Motion follows across tabs without a reload. Done in 3ff7144a (2026-11-03).
+- **K1111** · Levi 2026-11-03: the finer-step sliders feel right ("Pulse reach is good"; "Settle params are probably good for now"). Done in 5f28e0b1 (2026-11-03).
 - **K1135** · behavior test on a real Pane, plus a warn-once. Done in 2cbddb87 (2026-11-03).
 - **K1083** · retraced with the flow on: no realtime extra. Done in 257db545 (2026-11-03).
 - **K1110** · Levi heard the snore on the phone's first touch (2026-11-03: 'The snore sound is good'). Done in 933571af (2026-11-03).
