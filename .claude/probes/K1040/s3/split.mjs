@@ -90,17 +90,23 @@ const cols4 = [
   ["fixed", (g) => g("empty") - g("floor")],
   ["fixed - ideal", (g) => g("empty") - g("ideal")],
 ];
-// K1040 S3e step 3 (s3e3: the lean empty pass beside the ideal on one page):
-// the gate's first condition, leanempty - ideal <= 0.3 on every scene.
+// K1040 S3e step 3 (s3e3: the lean pass beside the ideal on one page), each
+// minus floor unless named: the gate's first condition, leanempty - ideal <=
+// 0.3 on every scene (and against ideal32f: lean's D is D32F); the at-rest
+// empty pass (leanemptynoup); today's fixed part (empty); tentv with today's
+// and the lean fixed part, moving and at rest; the lean D's store.
 const cols5 = [
   ["ideal", (g) => g("ideal") - g("floor")],
+  ["ideal d32f", (g) => g("ideal32f") - g("floor")],
   ["leanempty", (g) => g("leanempty") - g("floor")],
   ["leanempty - ideal", (g) => g("leanempty") - g("ideal")],
-  ["leanrest", (g) => g("leanrest") - g("floor")],
+  ["leanempty - d32f", (g) => g("leanempty") - g("ideal32f")],
+  ["lean noup", (g) => g("leanemptynoup") - g("floor")],
   ["empty", (g) => g("empty") - g("floor")],
   ["tentv", (g) => g("tentv") - g("floor")],
   ["leantentv", (g) => g("leantentv") - g("floor")],
-  ["leantentv stored D", (g) => g("leantentvst") - g("floor")],
+  ["at rest", (g) => g("leantentvrest") - g("floor")],
+  ["D store", (g) => g("leantentvst") - g("leantentv")],
 ];
 const cols = set === "s3e3" ? cols5 : set === "s3e1" ? cols4 : set === "s3d3" ? cols3 : set === "s3d2" ? cols2 : cols1;
 const f1 = (x) => (Number.isFinite(x) ? x.toFixed(set.startsWith("s3e") ? 2 : 1) : "-");

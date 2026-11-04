@@ -60,7 +60,7 @@ function coarse(M: Affine, W: number, H: number, lr: number): { M: Affine; W: nu
   return { M: M.map((v) => v / lr) as unknown as Affine, W: Math.ceil(W / lr), H: Math.ceil(H / lr) };
 }
 
-function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; stride?: number; tent?: boolean; mode?: string; lr?: number } = {}) {
+function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; stride?: number; tent?: boolean; mode?: string; lr?: number; lean?: boolean } = {}) {
   const scale = opts.scale ?? 2;
   const stride = opts.stride ?? 1;
   const lr = opts.lr ?? 1;
@@ -72,7 +72,7 @@ function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; s
   const t2 = performance.now();
   const dev = camera(scene, scale);
   const { M: Mc, W, H } = coarse(dev.M, dev.W, dev.H, lr);
-  const pass = new LabelBPass(gl, true, modeOf(opts));
+  const pass = new LabelBPass(gl, true, modeOf(opts), { lean: !!opts.lean });
   pass.tentEpsPx /= lr;
   pass.resize(W, H);
   pass.upload(T);
@@ -194,8 +194,11 @@ function fitCamera(scene: FieldScene, h: number, fit: [number, number], scale: n
 // 10 warm-up renders (else one a frame, after a rAF); opts.floor: no upload
 // and no draw, only the 1-px readback of L (not K923's floor, which also
 // cleared the full-size default framebuffer; this page's canvas is never
-// drawn to).
-async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean; fit?: [number, number]; b2b?: boolean; floor?: boolean; tent?: boolean; mode?: string; lr?: number } = {}) {
+// drawn to). opts.lean: S3e's lean fixed part (label_b_pass.ts's header); a
+// timed lean frame uploads every used row (probeAllDirty: the moving fabric's
+// frame, what the gate times) unless opts.rest (the row diff: a still scene
+// uploads nothing after the first frame).
+async function time(scene: FieldScene, opts: { scale?: number; frames?: number; noscan?: boolean; fit?: [number, number]; b2b?: boolean; floor?: boolean; tent?: boolean; mode?: string; lr?: number; lean?: boolean; rest?: boolean } = {}) {
   const scale = opts.scale ?? 2;
   const frames = opts.frames ?? 60;
   const lr = opts.lr ?? 1;
@@ -207,7 +210,8 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
   const prepMs = performance.now() - tp0;
   const dev = opts.fit ? fitCamera(scene, fb.h, opts.fit, scale) : camera(scene, scale);
   const { M, W, H } = coarse(dev.M, dev.W, dev.H, lr);
-  const pass = new LabelBPass(gl, false, modeOf(opts));
+  const pass = new LabelBPass(gl, false, modeOf(opts), { lean: !!opts.lean });
+  pass.probeAllDirty = !opts.rest;
   pass.tentEpsPx /= lr;
   pass.resize(W, H);
   pass.upload(T);
@@ -233,6 +237,7 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
   for (let k = 0; k < 120 && pass.poll() > 0; k++) await nextFrame();
   const gpu = pass.times.slice();
   const builds = pass.instanceBuilds;
+  const sent = pass.uploadBytes;
   pass.dispose();
   return {
     lost,
@@ -240,6 +245,9 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
     W,
     H,
     mode: pass.mode,
+    lean: pass.lean,
+    rest: !!opts.rest,
+    sentBytes: sent,
     lr,
     segs: T.nInst,
     fills: T.nFills,
@@ -276,6 +284,14 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
 //   uponly     the upload and the readback, no pass at all
 //   kick       no upload, no pass: a 1x1 target (R32UI + DEPTH32F) cleared and
 //              read back, the cost of a submit and its wait with no store to speak of
+// K1040 S3e step 2 (the lean fixed part, label_b_pass.ts's header; mode tentv):
+//   leanempty      the lean empty pass: every used row uploaded (the moving
+//                  fabric's frame), the clears, D invalidated, no draws
+//   leanemptynoup  leanempty without the upload (the at-rest empty pass)
+//   leantentv      tentv with the lean part, every used row uploaded
+//   leantentvrest  leantentv with the row diff: a still scene uploads nothing
+//   leantentvst    leantentv with D's store kept (leanStoreDepth)
+const LEAN = ["leanempty", "leanemptynoup", "leantentv", "leantentvrest", "leantentvst"];
 const VARIANTS = ["tent", "empty", "noup", "degen", "fs0", "fsconst", "half", "nw1", "floor"];
 let kickFb: WebGLFramebuffer | null = null;
 const kickPx = new Uint32Array(4);
@@ -450,8 +466,14 @@ function variantPass(v: string): LabelBPass {
     const sv = labelBTentVSources(false);
     const d = (s: string) => swap(s, GLPOS, GLPOS + "  gl_Position.z = 2.0;\n");
     probe = { tentSources: { ...src, fillVs: d(src.fillVs) }, tentVSources: { ...sv, segVs: d(sv.segVs), capVs: d(sv.capVs) } };
-  } else if (!["tent", "empty", "noup", "half", "floor", "tentv", "tentvinv", "emptynoup", "emptyinv", "uponly", "kick"].includes(v)) throw new Error(`no variant ${v}`);
-  const pass = new LabelBPass(gl, false, v.startsWith("tentv") ? "tentv" : "tent", probe);
+  } else if (!["tent", "empty", "noup", "half", "floor", "tentv", "tentvinv", "emptynoup", "emptyinv", "uponly", "kick", ...LEAN].includes(v)) throw new Error(`no variant ${v}`);
+  const lean = LEAN.includes(v);
+  const pass = new LabelBPass(gl, false, v.startsWith("tentv") || lean ? "tentv" : "tent", { ...probe, lean });
+  if (lean) {
+    pass.probeAllDirty = v !== "leantentvrest";
+    pass.leanStoreDepth = v === "leantentvst";
+    if (v === "leanempty" || v === "leanemptynoup") pass.probeDraw = false;
+  }
   if (v === "empty" || v === "emptynoup" || v === "emptyinv") pass.probeDraw = false;
   if (v === "emptyinv" || v === "tentvinv") pass.probeInvalidateDepth = true;
   if (v === "half") pass.probeSegFrac = 0.5;
@@ -472,8 +494,8 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
   const dev = opts.fit ? fitCamera(scene, fb.h, opts.fit, scale) : camera(scene, scale);
   const { M, W, H } = coarse(dev.M, dev.W, dev.H, 1);
   const per = Math.ceil(frames / rounds);
-  const acc: Record<string, { up: number[]; sync: number[] }> = {};
-  for (const v of vs) acc[v] = { up: [], sync: [] };
+  const acc: Record<string, { up: number[]; sync: number[]; sent: number }> = {};
+  for (const v of vs) acc[v] = { up: [], sync: [], sent: 0 };
   for (let r = 0; r < rounds; r++) {
     for (const v of vs) {
       if (IDEAL.has(v)) {
@@ -497,7 +519,9 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
       }
       for (let k = 0; k < per; k++) {
         const u0 = performance.now();
-        if (v !== "noup" && v !== "floor" && v !== "emptynoup" && v !== "kick") pass.upload(T);
+        const doUp = v !== "noup" && v !== "floor" && v !== "emptynoup" && v !== "leanemptynoup" && v !== "kick";
+        if (doUp) pass.upload(T);
+        acc[v].sent = doUp ? pass.uploadBytes : 0;
         const u1 = performance.now();
         if (v !== "floor" && v !== "uponly" && v !== "kick") pass.draw(M);
         if (v === "kick") kickSync();
@@ -508,8 +532,14 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
       }
     }
   }
-  const variants: Record<string, { sync: { p50: number; p95: number }; upload: { p50: number; p95: number } }> = {};
-  for (const v of vs) variants[v] = { sync: { p50: pct(acc[v].sync, 0.5), p95: pct(acc[v].sync, 0.95) }, upload: { p50: pct(acc[v].up, 0.5), p95: pct(acc[v].up, 0.95) } };
+  const variants: Record<string, { sync: { p50: number; p95: number }; upload: { p50: number; p95: number }; sent?: number }> = {};
+  for (const v of vs)
+    variants[v] = {
+      sync: { p50: pct(acc[v].sync, 0.5), p95: pct(acc[v].sync, 0.95) },
+      upload: { p50: pct(acc[v].up, 0.5), p95: pct(acc[v].up, 0.95) },
+      // The bytes the variant's last timed upload sent (S3e: the lean row diff).
+      sent: acc[v].sent,
+    };
   return {
     lost,
     renderer: renderer(),

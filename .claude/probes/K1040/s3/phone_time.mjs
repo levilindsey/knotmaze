@@ -32,7 +32,7 @@ const SCENES = [
 const args = process.argv.slice(2);
 const val = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 // --b2b and --floor take no value (K923's method: page.ts time()'s opts).
-const BOOL = new Set(["--b2b", "--floor", "--noscan", "--tent"]);
+const BOOL = new Set(["--b2b", "--floor", "--noscan", "--tent", "--lean", "--rest"]);
 const pos = args.filter((a, i, all) => !a.startsWith("--") && !(i > 0 && all[i - 1].startsWith("--") && !BOOL.has(all[i - 1])));
 const scenes = pos.length ? pos[0].split(",") : SCENES;
 const scale = Number(val("--scale", 2)), frames = Number(val("--frames", 60)), port = Number(val("--port", 5403));
@@ -46,6 +46,10 @@ const b2b = args.includes("--b2b"), floor = args.includes("--floor"), noscan = a
 const tent = args.includes("--tent"), lr = Number(val("--lr", 1));
 // K1040 S3d: --mode <name> a LabelBMode by name (tentv: the vertex-light tent); overrides --tent.
 const passMode = val("--mode", null) ?? undefined;
+// K1040 S3e: --lean the pass's lean fixed part (label_b_pass.ts, option lean);
+// --rest its row diff on a still fabric (no upload after the first), not the
+// moving case (every used row each frame, what the gate times).
+const lean = args.includes("--lean"), rest = args.includes("--rest");
 // K1040 S3d: --variants a,b,... page.ts timeMany()'s cost split (tent pass
 // variants interleaved in --rounds rounds on each scene); each variant's
 // outputs are named <label><variant>, so phone_table.ps1 reads them.
@@ -123,7 +127,7 @@ await new Promise((ok, no) => { server.once("error", no); server.listen(port, "1
 log(`serving out/phone.html on 127.0.0.1:${port}`);
 
 const stamp = new Date().toISOString();
-const summary = [`# phone time ${stamp}${runLabel ? ` (${runLabel})` : ""}`, "", `scale ${scale}, frames ${frames}${fit ? `, fit ${fit.join("x")} (K923's bbox fit)` : ", the scene's camera"}${b2b ? ", back to back after 10 warm-ups (K923)" : ", one a rAF"}${floor ? ", FLOOR (readback only)" : ""}${noscan ? ", the scan OFF" : ""}${tent ? ", TENT pass" : ""}${passMode ? `, mode ${passMode}` : ""}${lr !== 1 ? `, lr ${lr}` : ""}, render sync (no timer query); label_b_glsl.ts: ${glslSwap ? `swapped for ${glslSwap.replace(/\\/g, "/").split("/").pop()}` : "the worktree's"}`];
+const summary = [`# phone time ${stamp}${runLabel ? ` (${runLabel})` : ""}`, "", `scale ${scale}, frames ${frames}${fit ? `, fit ${fit.join("x")} (K923's bbox fit)` : ", the scene's camera"}${b2b ? ", back to back after 10 warm-ups (K923)" : ", one a rAF"}${floor ? ", FLOOR (readback only)" : ""}${noscan ? ", the scan OFF" : ""}${tent ? ", TENT pass" : ""}${passMode ? `, mode ${passMode}` : ""}${lean ? `, LEAN fixed part${rest ? " (at rest)" : " (moving: every used row)"}` : ""}${lr !== 1 ? `, lr ${lr}` : ""}, render sync (no timer query); label_b_glsl.ts: ${glslSwap ? `swapped for ${glslSwap.replace(/\\/g, "/").split("/").pop()}` : "the worktree's"}`];
 const errors = [];
 let addedRev = false, addedFwd = false, touched = null, browser = null, page = null, ge = null, s0 = null;
 try {
@@ -192,7 +196,7 @@ try {
       log(line);
       continue;
     }
-    const res = await within(page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, fit, b2b, floor, noscan, tent, mode: passMode, lr }), 180000, name);
+    const res = await within(page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, fit, b2b, floor, noscan, tent, mode: passMode, lr, lean, rest }), 180000, name);
     res.scene = name;
     res.wallMs = Date.now() - t0;
     res.phone = st;

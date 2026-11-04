@@ -17,9 +17,19 @@
 // span search moved from every vertex to the CPU (tentSpanRecord, uploaded as
 // table ps on unit 5 in nb's place: nb is the capsule's merge scan, no tent
 // reads it) and one flat ivec3 for the fragment shader to fetch from.
+// Option lean (K1040 S3e, any mode; the default pass is unchanged, as the
+// control): the fixed part at its floor. L is immutable storage (texStorage2D,
+// as K923's floor); D is a DEPTH_COMPONENT32F RENDERBUFFER invalidated after
+// the draws, so its store is skipped (nothing samples D: S4 takes both passes'
+// z from the CPU, docs/design/K1040_s3e_lean.md's Handoff; `depth` reads null;
+// leanStoreDepth keeps the store, as a control). D32F, not D24: the same keys
+// as the texture, so the same label. Uploads: no nb unless the capsule reads
+// it, and only the rows of the used texels that differ from the last upload
+// (a still fabric uploads nothing; probeAllDirty uploads every used row, what
+// a frame pays while the fabric moves).
 
 import type { LabelBTables } from "./label_b";
-import { TEX_W } from "./label_b";
+import { FILL_TEXELS, TEX_W } from "./label_b";
 import { labelBSources } from "./label_b_glsl";
 import { tentFacetK, tentSpanRecord } from "./label_b_tent";
 import {
@@ -59,6 +69,8 @@ interface Tex {
   rows: number;
 }
 
+type TabKey = "pts" | "chain" | "span" | "fill" | "nb" | "ps";
+
 export class LabelBPass {
   readonly gl: WebGL2RenderingContext;
   readonly debug: boolean;
@@ -73,7 +85,11 @@ export class LabelBPass {
   private L: WebGLTexture | null = null;
   private D: WebGLTexture | null = null;
   private G: WebGLTexture | null = null;
-  private tabs: Record<"pts" | "chain" | "span" | "fill" | "nb" | "ps", Tex>;
+  /** Lean: D as a renderbuffer (D stays null). */
+  private Drb: WebGLRenderbuffer | null = null;
+  private tabs: Record<TabKey, Tex>;
+  /** Lean: each table's texels as last uploaded (the row diff's reference). */
+  private last: Partial<Record<TabKey, Uint32Array>> = {};
   /** Texture units the draws bind: 5, or 6 in tentv (ps on unit 5). */
   private readonly nTex: number;
   private psBuf: Float32Array | undefined;
@@ -100,18 +116,31 @@ export class LabelBPass {
   probeSegFrac = 1;
   /** Probe knob (S3d): invalidate D after the draws (its store skipped; only when nothing reads D). */
   probeInvalidateDepth = false;
+  /** Lean (S3e): the lean fixed part (header). */
+  readonly lean: boolean;
+  /** Lean control (S3e): keep D's store (D not invalidated). */
+  leanStoreDepth = false;
+  /** Lean probe knob (S3e): upload every used row, the moving fabric's frame (no diff). */
+  probeAllDirty = false;
+  /** Bytes the last upload() sent (texImage2D and texSubImage2D data). */
+  uploadBytes = 0;
   private segVerts = TENT_SEG_VERTS;
 
-  /** probe: the tent's sources and segment strip length, replaced (K1040 S3d's cost split only). */
+  /**
+   * opts.lean: S3e's lean fixed part (header). The rest are probe knobs: the
+   * tent's sources and segment strip length, replaced (K1040 S3d's cost split only).
+   */
   constructor(
     gl: WebGL2RenderingContext,
     debug = false,
     mode: LabelBMode = "capsule",
-    probe: { tentSources?: LabelBTentSources; tentVSources?: LabelBTentVSources; segVerts?: number } = {},
+    opts: { lean?: boolean; tentSources?: LabelBTentSources; tentVSources?: LabelBTentVSources; segVerts?: number } = {},
   ) {
+    const probe = opts;
     this.gl = gl;
     this.debug = debug;
     this.mode = mode;
+    this.lean = !!opts.lean;
     if (debug && !gl.getExtension("EXT_color_buffer_float")) throw new Error("label_b debug: no EXT_color_buffer_float");
     const src = labelBSources(debug);
     this.capsule = compile(gl, src.capsuleVs, src.capsuleFs);
@@ -156,14 +185,35 @@ export class LabelBPass {
     const prevTex = gl.getParameter(gl.TEXTURE_BINDING_2D);
     const prevFb = gl.getParameter(gl.FRAMEBUFFER_BINDING);
     for (const t of [this.L, this.D, this.G]) if (t) gl.deleteTexture(t);
+    if (this.Drb) gl.deleteRenderbuffer(this.Drb);
+    this.Drb = null;
     this.width = w;
     this.height = h;
-    this.L = this.target(gl.R32UI, gl.RED_INTEGER, gl.UNSIGNED_INT);
-    this.D = this.target(gl.DEPTH_COMPONENT32F, gl.DEPTH_COMPONENT, gl.FLOAT);
+    if (this.lean) {
+      // Immutable L, and D a renderbuffer (the header's lean option).
+      const L = gl.createTexture() as WebGLTexture;
+      gl.bindTexture(gl.TEXTURE_2D, L);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texStorage2D(gl.TEXTURE_2D, 1, gl.R32UI, w, h);
+      this.L = L;
+      this.D = null;
+      const prevRb = gl.getParameter(gl.RENDERBUFFER_BINDING);
+      this.Drb = gl.createRenderbuffer() as WebGLRenderbuffer;
+      gl.bindRenderbuffer(gl.RENDERBUFFER, this.Drb);
+      gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT32F, w, h);
+      gl.bindRenderbuffer(gl.RENDERBUFFER, prevRb);
+    } else {
+      this.L = this.target(gl.R32UI, gl.RED_INTEGER, gl.UNSIGNED_INT);
+      this.D = this.target(gl.DEPTH_COMPONENT32F, gl.DEPTH_COMPONENT, gl.FLOAT);
+    }
     this.G = this.debug ? this.target(gl.RGBA32F, gl.RGBA, gl.FLOAT) : null;
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.L, 0);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.D, 0);
+    if (this.Drb) gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.Drb);
+    else gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.D, 0);
     if (this.G) gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, this.G, 0);
     gl.drawBuffers(this.G ? [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1] : [gl.COLOR_ATTACHMENT0]);
     const st = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
@@ -176,6 +226,7 @@ export class LabelBPass {
     return this.L;
   }
 
+  /** The depth texture; null in lean, where D is a renderbuffer nothing samples. */
   get depth(): WebGLTexture | null {
     return this.D;
   }
@@ -189,22 +240,90 @@ export class LabelBPass {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
       t.rows = rows;
     } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, TEX_W, rows, gl.RGBA, gl.FLOAT, data);
+    this.uploadBytes += TEX_W * rows * 16;
   }
 
-  /** Uploads a frame's tables; rebuilds the instances only on a layout change (K985). */
+  /**
+   * Lean: uploads the rows of the first `used` texels that differ from the last
+   * upload (all of them under probeAllDirty), a run of rows per call. A run
+   * ending at the last used row sends that row whole: its unused tail is at
+   * most one row (16 KB), cheaper than a second call. A rows change
+   * reallocates with the whole table, as uploadTab.
+   */
+  private uploadLean(key: TabKey, data: Float32Array, rows: number, used: number): void {
+    const gl = this.gl;
+    const t = this.tabs[key];
+    const cur = new Uint32Array(data.buffer, data.byteOffset, data.length);
+    gl.bindTexture(gl.TEXTURE_2D, t.tex);
+    if (t.rows !== rows) {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, TEX_W, rows, 0, gl.RGBA, gl.FLOAT, data);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      t.rows = rows;
+      this.last[key] = cur.slice();
+      this.uploadBytes += TEX_W * rows * 16;
+      return;
+    }
+    const last = this.last[key] as Uint32Array;
+    const RW = TEX_W * 4;
+    const usedRows = Math.min(rows, Math.ceil(used / TEX_W));
+    const send = (r0: number, r1: number) => {
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, r0, TEX_W, r1 - r0, gl.RGBA, gl.FLOAT, data, r0 * RW);
+      this.uploadBytes += TEX_W * (r1 - r0) * 16;
+      last.set(cur.subarray(r0 * RW, r1 * RW), r0 * RW);
+    };
+    let run = -1;
+    for (let r = 0; r < usedRows; r++) {
+      let dirty = this.probeAllDirty;
+      if (!dirty) {
+        const end = Math.min((r + 1) * RW, 4 * used);
+        for (let i = r * RW; i < end; i++)
+          if (cur[i] !== last[i]) {
+            dirty = true;
+            break;
+          }
+      }
+      if (dirty && run < 0) run = r;
+      else if (!dirty && run >= 0) {
+        send(run, r);
+        run = -1;
+      }
+    }
+    if (run >= 0) send(run, usedRows);
+  }
+
+  /**
+   * Uploads a frame's tables; rebuilds the instances only on a layout change
+   * (K985). Lean: only the changed rows of the tables the mode reads (header).
+   */
   upload(T: LabelBTables): void {
     const gl = this.gl;
     const prevTex = gl.getParameter(gl.TEXTURE_BINDING_2D);
     const prevBuf = gl.getParameter(gl.ARRAY_BUFFER_BINDING);
     const prevVao = gl.getParameter(gl.VERTEX_ARRAY_BINDING);
-    this.uploadTab(this.tabs.pts, T.pts, T.ptsRows);
-    this.uploadTab(this.tabs.chain, T.chain, T.chainRows);
-    this.uploadTab(this.tabs.span, T.span, T.spanRows);
-    this.uploadTab(this.tabs.fill, T.fill, T.fillRows);
-    if (this.mode === "tentv") {
-      this.psBuf = tentSpanRecord(T, this.psBuf);
-      this.uploadTab(this.tabs.ps, this.psBuf, T.ptsRows);
-    } else this.uploadTab(this.tabs.nb, T.nb, T.ptsRows);
+    this.uploadBytes = 0;
+    if (this.lean) {
+      const lc = 8 * (T.nChains - 1);
+      const nPts = T.nChains > 0 ? T.chain[lc] + T.chain[lc + 1] : 0;
+      const nSpan = T.nChains > 0 ? T.chain[lc + 6] + T.chain[lc + 7] : 0;
+      this.uploadLean("pts", T.pts, T.ptsRows, nPts);
+      this.uploadLean("chain", T.chain, T.chainRows, 2 * T.nChains);
+      this.uploadLean("span", T.span, T.spanRows, nSpan);
+      this.uploadLean("fill", T.fill, T.fillRows, FILL_TEXELS * T.nFills);
+      if (this.mode === "tentv") {
+        this.psBuf = tentSpanRecord(T, this.psBuf);
+        this.uploadLean("ps", this.psBuf, T.ptsRows, nPts);
+      } else if (this.mode === "capsule") this.uploadLean("nb", T.nb, T.ptsRows, nPts);
+    } else {
+      this.uploadTab(this.tabs.pts, T.pts, T.ptsRows);
+      this.uploadTab(this.tabs.chain, T.chain, T.chainRows);
+      this.uploadTab(this.tabs.span, T.span, T.spanRows);
+      this.uploadTab(this.tabs.fill, T.fill, T.fillRows);
+      if (this.mode === "tentv") {
+        this.psBuf = tentSpanRecord(T, this.psBuf);
+        this.uploadTab(this.tabs.ps, this.psBuf, T.ptsRows);
+      } else this.uploadTab(this.tabs.nb, T.nb, T.ptsRows);
+    }
     if (T.layoutKey !== this.layoutKey) {
       gl.bindVertexArray(this.vao);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.instBuf);
@@ -322,7 +441,7 @@ export class LabelBPass {
         gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.nFills);
       }
     }
-    if (this.probeInvalidateDepth) gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.DEPTH_ATTACHMENT]);
+    if (this.probeInvalidateDepth || (this.lean && !this.leanStoreDepth)) gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.DEPTH_ATTACHMENT]);
     if (q && this.tq) {
       gl.endQuery(this.tq.TIME_ELAPSED_EXT);
       this.pending.push(q);
@@ -435,6 +554,7 @@ export class LabelBPass {
   dispose(): void {
     const gl = this.gl;
     for (const t of [this.L, this.D, this.G]) if (t) gl.deleteTexture(t);
+    if (this.Drb) gl.deleteRenderbuffer(this.Drb);
     for (const t of Object.values(this.tabs)) gl.deleteTexture(t.tex);
     gl.deleteFramebuffer(this.fbo);
     gl.deleteBuffer(this.instBuf);

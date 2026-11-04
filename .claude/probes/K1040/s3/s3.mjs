@@ -47,6 +47,9 @@ const tent = val("--tent", "0") === "1";
 const lr = Number(val("--lr", 1));
 // K1040 S3d: --mode <name> a LabelBMode by name (tentv: the vertex-light tent); overrides --tent.
 const passMode = val("--mode", "") || undefined;
+// K1040 S3e: --lean 1 the pass's lean fixed part (label_b_pass.ts, option lean);
+// --rest 1 (time only) its row diff on a still fabric, not the moving case.
+const lean = val("--lean", "0") === "1", rest = val("--rest", "0") === "1";
 const tag = val("--tag", "");
 const pre = tag ? `${mode}_${tag}` : mode;
 // K1040 S3d: many --variants a,b,...: page.ts timeMany()'s cost split (render sync only).
@@ -81,7 +84,7 @@ const errors = [];
 let favicon = 0;
 const isFav = (u) => /favicon/i.test(u ?? "");
 const stamp = new Date().toISOString();
-const summary = [`# ${pre} ${stamp}`, "", `stride ${stride}, scale ${scale}, ${passMode ? `mode ${passMode}` : tent ? "TENT" : "capsule"} pass, lr ${lr}${mode === "time" ? `, frames ${frames}${noscan ? ", NO merge scan" : ""}` : ""}`, ""];
+const summary = [`# ${pre} ${stamp}`, "", `stride ${stride}, scale ${scale}, ${passMode ? `mode ${passMode}` : tent ? "TENT" : "capsule"} pass${lean ? `, LEAN fixed part${mode === "time" ? (rest ? " (at rest)" : " (moving: every used row)") : ""}` : ""}, lr ${lr}${mode === "time" ? `, frames ${frames}${noscan ? ", NO merge scan" : ""}` : ""}`, ""];
 try {
   const page = await browser.newPage();
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
@@ -113,8 +116,8 @@ try {
     }
     const res =
       mode === "verdict"
-        ? await page.evaluate((s, o) => window.s3.verdict(s, o), scene, { scale, stride, tent, mode: passMode, lr })
-        : await page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, noscan, tent, mode: passMode, lr });
+        ? await page.evaluate((s, o) => window.s3.verdict(s, o), scene, { scale, stride, tent, mode: passMode, lr, lean })
+        : await page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, noscan, tent, mode: passMode, lr, lean, rest });
     res.scene = name;
     res.wallMs = Date.now() - t0;
     writeFileSync(join(outDir, `${pre}_${name}.json`), JSON.stringify(res, null, 1));
@@ -126,7 +129,7 @@ try {
       summary.push(line);
       console.log(line);
     } else {
-      const line = `- ${name}: ${res.W}x${res.H}, gpu p50 ${res.gpu.p50?.toFixed(3)} p95 ${res.gpu.p95?.toFixed(3)} ms (n ${res.gpu.n}, timer ${res.timer}); sync p50 ${res.sync.p50.toFixed(3)} p95 ${res.sync.p95.toFixed(3)}; upload p50 ${res.upload.p50.toFixed(3)} ms (${res.upload.bytes} B); prep ${res.prepMs.toFixed(2)} ms; segs ${res.segs}, fills ${res.fills}, groups ${res.groups}; builds ${res.instanceBuilds}; lost ${res.lost}`;
+      const line = `- ${name}: ${res.W}x${res.H}, gpu p50 ${res.gpu.p50?.toFixed(3)} p95 ${res.gpu.p95?.toFixed(3)} ms (n ${res.gpu.n}, timer ${res.timer}); sync p50 ${res.sync.p50.toFixed(3)} p95 ${res.sync.p95.toFixed(3)}; upload p50 ${res.upload.p50.toFixed(3)} ms (${res.upload.bytes} B, sent ${res.sentBytes ?? "-"} B); prep ${res.prepMs.toFixed(2)} ms; segs ${res.segs}, fills ${res.fills}, groups ${res.groups}; builds ${res.instanceBuilds}; lost ${res.lost}`;
       summary.push(line);
       console.log(line);
     }
