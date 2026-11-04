@@ -294,6 +294,9 @@ Next free ID: K1146.
   and only their tips show. Move them out past the marker, or keep them as they are? Pictures, sent 2026-11-03:
   `.claude/probes/K1132/shots/` (sheet_desk.png, left now, right out; the out placement is
   `__knotKeyHintPlace("out")`, 6f23bf20)
+- **K1138** · The backdrop speed slider goes up to 8 times each backdrop's own pace. Should its top be
+  2 times, or 16 times? (Your other backdrop changes of 2026-11-03 are done: vellum faster, aurora
+  faster and taller, contours morphing, paper stronger.)
 
 ## In progress
 
@@ -504,9 +507,9 @@ Next free ID: K1146.
   clauses; the speed slider's top waits on Levi); B, batch 11's brief drafted from the Approved list, the
   Residuals in order and two design-doc stages (K144, K688).
   - owner: muse runs 10A-10B, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 08:51
-  - branch: mainline; last commit: `3e51b9da`
+  - branch: mainline; last commit: `27cb9202`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K1138/`
-  - next: Run A (K1138) running; then Run B
+  - next: Run A done; Run B next
   - brief: `docs/design/K1141_muse_batch10.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 10A-10B)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
@@ -748,12 +751,6 @@ Every other item below waits on the trigger it names.
   189-187 from 2.438h to 1.431h; F2 changes r at 155 corners. S1g made pops crops only: S1h makes at-rest
   before/after crops, Claude looks, and Levi gets a picture if it reads as a change (`K1040_s1g_gates.md` ##
   Handoff).
-- **K1138** · Backdrop tuning, Levi 2026-11-03: "vellum background speed should be x10 / aurora background
-  speed should be x2 / aurora background should stretch across the screen vertically more / contours
-  background should animate the line shapes rather than just slide the whole thing linearly / paper intensity
-  should be x4 / The background speed slider max should be x2" (asked: a 2x max, or 16x?). Pointers:
-  `src/render/background_model.ts` (profiles), `background_shaders.ts`, the panel's Backdrop speed and
-  intensity rows (`src/ui/tweakpane_panel.ts`); K160 is the slider curve. For Muse batch 10.
 
 ## Residuals (known, not fixed)
 
