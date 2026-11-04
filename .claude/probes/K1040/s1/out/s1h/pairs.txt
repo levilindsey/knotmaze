@@ -79,7 +79,7 @@
      play window (273 px): 549 px differ (lost 184, gained 273, area 77.2 px; F1 share 549, F2 share 0); bbox x -1.55..1.44h, y -0.21..1.66h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ
 17 [extra-tip] muse_hash/j99/301-299: r 2.518h -> 0.350h; tip move 0.403h (F1 0.403h, F2 0.000h); arm 301 L 2.569h -> 1.598h, Lcut 2.569h -> 1.598h
-     seen (zoom 4 window): A thread's run at V's left, about 2h long, moves right by 1 to 7 px, most (0.4h) at V's row (measured along rows): blue wedge at its old place, red wedge at its new one. The dark wedge that hugs the thread at V in the before is a light grey fade in the after.
+     seen (zoom 4 window): A thread's run left of V, about 2h long, is a smooth arc before and a straight diagonal with an elbow within 0.5h of V after: its edges move right by 1 to 7 px, most (0.4h) at V's row (measured along rows; blue wedge at the old place, red wedge at the new one). The dark wedge that hugs the thread at V in the before is a light grey fade in the after.
      zoom 4 window (119 px): 318 px differ (|d ink| > 0.02; ink lost 109, gained 106, area -9.6 px; F1 share 318, F2 share 0); bbox x -0.96..0.34h, y -1.06..1.29h
      play window (273 px): 318 px differ (lost 109, gained 106, area -9.6 px; F1 share 318, F2 share 0); bbox x -0.96..0.34h, y -1.06..1.29h
      checks: FormB({dEdge: skip, rootBand: 0}) vs frozen S1f ink: 0 px differ

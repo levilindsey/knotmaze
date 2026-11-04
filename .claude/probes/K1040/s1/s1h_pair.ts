@@ -350,7 +350,7 @@ const SEEN: Record<string, string> = {
   "muse_hash/j131/397-398":
     "The thread below V: before, a wide smooth arc with clear paper between it and V's fillet tip; after, it rises into a hump about 2.6h wide that peaks at V's tip (red, up to 13 px or 0.8h higher, measured along columns) and the old arc under the hump is gone (blue). The largest change of the 18.",
   "muse_hash/j99/301-299":
-    "A thread's run at V's left, about 2h long, moves right by 1 to 7 px, most (0.4h) at V's row (measured along rows): blue wedge at its old place, red wedge at its new one. The dark wedge that hugs the thread at V in the before is a light grey fade in the after.",
+    "A thread's run left of V, about 2h long, is a smooth arc before and a straight diagonal with an elbow within 0.5h of V after: its edges move right by 1 to 7 px, most (0.4h) at V's row (measured along rows; blue wedge at the old place, red wedge at the new one). The dark wedge that hugs the thread at V in the before is a light grey fade in the after.",
   "muse_hash/j73/222-220":
     "Two places. The small eye just below V: its right end, pointed with a slit through the outline before, is closed and rounded after (red in the slit and above the end, blue along its right and lower-right edge). About 2.7h above V: a thread tip's outer edge gains 1 to 2 px (a small red crescent about 8 px across).",
 };
