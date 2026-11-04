@@ -300,6 +300,18 @@ describe("fragile runs: the controller (K137)", () => {
     expect(c.stranded).toBe(true);
   });
 
+  it("K685: a respawn into stranded is judged at the start, collapse off", () => {
+    const w = graph(RUNS, "S", "X");
+    const c = new FabricMazeController(w, false, null, { fragile: "snap" });
+    for (const eid of [0, 3, 4, 1]) c.tapEdge(eid);
+    expect(c.collapseOn).toBe(false);
+    c.respawn();
+    expect(c.head).toBe("S");
+    expect(c.stranded).toBe(true);
+    expect(c.choices()).toEqual([]);
+    expect(c.runsLeft).toBe(Infinity);
+  });
+
   it("off changes nothing: no limit, no break, no strand", () => {
     const w = walkFor(3, 0.5);
     const a = new FabricMazeController(w, false, null);

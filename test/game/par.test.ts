@@ -199,6 +199,23 @@ describe("par (K137)", () => {
     expect(crack.parLost).toBe(true);
   });
 
+  it("K685: a respawn into out of strokes is judged at the start, collapse off", () => {
+    const w = graph(RUNS, "S", "X");
+    const c = new FabricMazeController(w, false, null, { parMode: "strict", parSlack: 0.25 });
+    for (const eid of [0, 3, 4]) c.tapEdge(eid);
+    expect(c.head).toBe("b");
+    expect(c.parLost).toBe(false);
+    expect(c.collapseOn).toBe(false);
+    c.respawn();
+    expect(c.head).toBe("S");
+    expect(c.parLost).toBe(true);
+    expect(c.strokes).toBe(3);
+    expect(c.par).toBe(4);
+    expect(c.runsLeft).toBe(3);
+    expect(c.strokesLeft).toBe(1);
+    expect(c.choices()).toEqual([]);
+  });
+
   it("strokes: never lost, the finish reads against par", () => {
     const w = graph(RUNS, "S", "X");
     const c = new FabricMazeController(w, false, null, { parMode: "strokes", parSlack: 0 });

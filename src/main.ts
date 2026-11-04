@@ -2562,9 +2562,10 @@ async function main(): Promise<void> {
             pendingWin = false;
             // K139: the respawn can end the game (a free collapse game
             // ends with its score; a collapsed start tail strands a
-            // finish one).
+            // finish one). K685: with collapse off, a respawn into
+            // stranded or out of strokes queues its banner too.
             if (fc.solved) pendingWin = true;
-            else if (fc.collapseOn && ruleLoss.over()) pendingLoss = true;
+            else if (ruleLoss.over()) pendingLoss = true;
             fabric.update(fc);
             updateHud();
             showCaughtToast(scene.chase?.catches ?? 1, false, heart);
@@ -2731,8 +2732,10 @@ async function main(): Promise<void> {
     scene.fabric.clearYarn();
     pendingWin = false;
     // K139: the respawn can end the game (see tickChase's catch).
+    // K685: with collapse off, a respawn into stranded or out of
+    // strokes queues its banner too.
     if (fc.solved) pendingWin = true;
-    else if (fc.collapseOn && ruleLoss.over()) pendingLoss = true;
+    else if (ruleLoss.over()) pendingLoss = true;
     turnWait = 0;
     scene.fabric.update(fc);
     // K270: re-sync the minotaur NOW (see above), then the feedback.
