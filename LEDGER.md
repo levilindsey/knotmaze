@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1163.
+Next free ID: K1166.
 
 ## Waiting on Levi
 
@@ -331,6 +331,9 @@ Next free ID: K1163.
   - evidence: .claude/probes/K863/trace/ (work30/, out30/, NOTES ## K1119)
   - next: Levi looks at the v7.0 sheets (b/v/w exits, the a/q dip, be/ve/we: v7.0 or e60, the br dip), then the c stage (K1112's next letter)
   - brief: docs/design/K1119_cursive_j3g.md (its Handoff); J3f's in docs/design/K1113_cursive_j3f.md
+- **K1163** · Corner rounding (K1114, 761ed081): the restore keeps a root-gate guard that leaves ten
+  near-straight corners up to 1 px tighter than before the junction rework. Keep it (rec), drop it (the round
+  jumps in size in motion again), or design a softer guard? Card: docs/asks/K1163.md.
 
 ## In progress
 
@@ -338,9 +341,9 @@ Next free ID: K1163.
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: 44ce69a1); S3 (K1097) merged short of its gate; S1g merged (52945e6e); S3b (K1097) merged (c4863a50, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
   - owner: nobody since 2026-11-03 14:04 (K1097 S3e merged); its stages run as K1097 and K1114
-  - branch: mainline; last commit: `a3c54463`
+  - branch: mainline; last commit: `761ed081`
   - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1), `s1/out/s1b/` and `s1/out/s1c/`, S1d's runs in `s1/out/s1d/`, S1e's in `s1/out/s1e/` (gate `s1/run_s1e_gate.ps1`, table `s1/gate_table.ps1`; probes `b_rate.ts`, `bend_s1e.ts`, `attr_f4f5.ts`, `lcut_far.ts`, `attr_c2.ts`, `arms_c3.ts`; commands in its Handoff)); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: the S3e phone gate (K1097's next) once Levi leaves the phone unlocked on its charger (card docs/asks/K1040.md), then S3f's brief; S1i (K1114) is restoring S1g's corner rounding, in flight
+  - next: the S3e phone gate (K1097's next) once Levi leaves the phone unlocked on its charger (card docs/asks/K1040.md), then S3f's brief; S1i (K1114) merged in 761ed081 (its root-gate veto: K1163)
   - brief: `docs/design/K1040_s3e_lean.md` (S3e's Handoff); `docs/design/K1114_s1i_rounding.md` (S1i)
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
@@ -529,6 +532,13 @@ Next free ID: K1163.
   - next: the S3e phone gate: with the Pixel awake and unlocked, run s3e_gate.ps1, then s3e_floor.ps1, then both split.mjs lines (the Handoff's Next); then S3f's brief from those numbers. S3f's 2 ms gate counts the upload call's main-thread time too (0.1-0.8 ms on the desktop, outside page.ts's timed window)
   - brief: `docs/design/K1040_s3e_lean.md` (its Handoff; S3d's: `docs/design/K1040_s3d_tent.md`)
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (it runs `run_phone.ps1`: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`
+- **K1164** · Rewrite master's history so no old commit carries the device addresses 756f76cb scrubbed from
+  the files (Levi approved the force-push 2026-11-03), then remap the SHAs the docs quote.
+  - owner: claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - branch: mainline; last commit: `3f6d8aef`
+  - evidence: `.claude/probes/K1164/` (the masked scans: `scrubbed.mjs`, `scan.mjs`, `inhead.mjs`, `mkrepl.mjs`, `align.mjs`; raw values never written to the repo)
+  - next: mirror backup to `C:\Users\lsl\Backups`, filter-repo `--replace-text` (scan rows F9-F14) on a fresh bare clone, verify (rescan clean, same tree), `--force-with-lease` master, reset the checkouts, remap the docs' SHAs from the commit-map
+  - brief: `.claude/probes/K1164/README.md` (the plan; untracked, no values)
 
 ## Next, in order
 
@@ -1686,6 +1696,9 @@ Every other item below waits on the trigger it names.
 - **K1151** · Invalidating the S3 label pass's sampled D32F depth after its draws adds 31-34 ms a pass on the
   Pixel (s3d2), where K923's invalidated D24 renderbuffer cost nothing; the mechanism is untested
   (`docs/design/K1040_s3d_tent.md`, Handoff). S3e tries the renderbuffer (K1097).
+- **K1165** · S1i leftovers (`docs/design/K1114_s1i_rounding.md` Handoff): sites 03/04 sit 2 px off S1f (another
+  corner's root gate); `dEdgeK` unused once `dEdgeTip` > 0; S1g's doc quotes gate699 as 0.125/0.0006 (probe:
+  0.1270/0.0007); q5 blobs 448 vs S1f's 451 (no g1 baseline); `s1i_angles.ts` misaligns its "today r" column.
 
 ## Approved, to schedule (2026-10-11)
 
