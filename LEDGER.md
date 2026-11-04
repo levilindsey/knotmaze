@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1147.
+Next free ID: K1149.
 
 ## Waiting on Levi
 
@@ -383,7 +383,7 @@ Next free ID: K1147.
   - owner: nobody since 2026-11-03 03:38 (round 2026-11-03 ended: K1124, K1125 closed)
   - branch: mainline; last commit: `feb565c5`
   - evidence: .claude/probes/rounds/2026-11-03/ (untracked)
-  - next: K1130 (first-shot probe capture); a later window starts with a fresh idle wait and -Phase check
+  - next: K1130 (first-shot probe capture); a later window starts with a fresh idle wait and -Phase check, which since K1142 also needs the launcher in front (`scripts/phone_pass/phone_ready.mjs`)
   - brief: docs/design/K156.md, "Round 2026-11-03"
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
@@ -878,9 +878,6 @@ Every other item below waits on the trigger it names.
 - **K236** · K145's hover glow, now K248's rim: a pluck's overlay hides it (`pluckColor` has no
   across coordinate; fix: an across varying in the overlay strip and mirror compose). Other gaps
   settled in 3321592. `docs/design/K111.md` ("Stage 3 handoff"), `docs/design/K93_K145.md`.
-- **K234** · `scripts/phone_pass.ps1`'s `-Phase check` and `-WaitReady` treat a phone in use as
-  ready (round 2026-10-14b saw Gmail in front); wait for 120 s without user activity (`dumpsys
-  power` activity ages). `docs/design/K156.md` ("Round 2026-10-14b handoff").
 - **K232** · Round 2026-10-14b (K156): the default link's load (`?b.J`, 54a2b43 vs 48da84d) is
   borderline worse: p95 33.4 -> 50.0 ms, first sleep 18.4 -> 19.6 s (2 reps). Rerun with 3 reps once
   the floor matches (K193, K195, K197); pre-worker numbers. `.claude/probes/rounds/2026-10-14-48da84d/pass/summary.md`
@@ -1708,6 +1705,12 @@ Every other item below waits on the trigger it names.
 - **K1144** · Cursive v7.0's leftovers (K1119's Handoff in `docs/design/K1119_cursive_j3g.md`): br, vr and wr dip
   into r as a tighter V (br newly fails roughness); five of six a/q joins fail it; q's low point is 0.4 u above
   the band; be, ve and we sit 40.8-42.0 u from the font (Levi: the v7.0 or the e60 column).
+- **K1147** · K1142's guard protects a person, not another agent's pass: the `scripts/` phone runners never
+  take the phone lock (`.claude/probes/agents/phone_lock_take.ps1`), and the watchdog arms only after the `am
+  start`, a few unwatched seconds (arm it first; `docs/design/K1142_phone_guard.md`, Handoff).
+- **K1148** · Hand-run phone tools skip K1142's check: `bench_frame.mjs --cdp`, `k923/sync.mjs --target
+  phone`, `k923/close_tabs.mjs` (a `--ready` flag calling `ensurePhoneReady({ allowChrome: true })`); and
+  `Find-Adb` / `findAdb` duplicate adb discovery (K1142 Handoff).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2013,6 +2016,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K234** · `scripts/phone_pass.ps1`'s `-Phase check` and `-WaitReady` called a phone in use ready: K1142's shared check (`scripts/phone_pass/phone_ready.mjs`) now needs the launcher in front and 120 s without a touch. Done in 2887abc5 (2026-11-03).
 - **K1142** · Phone kit guard: one shared read-only readiness check (`scripts/phone_pass/phone_ready.mjs`: screen on, unlocked, the launcher in front, 120 s without a touch) that every tracked phone runner calls before opening anything. Done in 2887abc5 (2026-11-03).
 - **K1141** · Muse batch 10: A, K1138's backdrop tuning (27cb9202; the slider's top waits on Levi); B, batch 11's draft, reviewed into K1146 with its Run B dropped. Done in 77d02919 (2026-11-03).
 - **K1137** · Muse batch 9: A, K1132's key-hint pictures; B, K1083 closed and K1133 kept open on the flow-on retrace; C, K1135's Reset test; D, batch 10's draft (K1141). Done in 5f769558 (2026-11-03).
