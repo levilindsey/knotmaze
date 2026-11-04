@@ -501,6 +501,10 @@ tail uniforms, reuse of S3's band evaluation; checks of section 3.
 
 ## 6. Questions for Levi
 
+**Answered (Levi, 2026-11-03): Q1 A, the light splits along the paths;
+Q2 toward you; Q3 straight through, without the dim moment.** So the
+stages run as section 5 plans them, S5 included.
+
 **Q1. When the light reaches a fork, how should it pass?**
 ![Q1](../../.claude/probes/K1139/out/doc/q1_fork.png)
 `q1_fork.png`, one fork, zoomed in, four moments a fifth of a second

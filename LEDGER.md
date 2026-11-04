@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1166.
+Next free ID: K1169.
 
 ## Waiting on Levi
 
@@ -124,9 +124,6 @@ Next free ID: K1166.
   K525's sheet shows white too.
 - **K627** · K114's spider (call 7): S, the minotaur engine with its own icon, or M, which adds
   spinning webs. Rec: S first.
-- **K628** · Confetti: (C-1) does the finish spray throw streamers? Rec: K336's sheet decides. (C-2)
-  when does K579 (GPU confetti) go? The phone check: the fall is ~50 fps, not CPU-bound (a tenfold
-  CPU cut gave +0.5 fps). Rec: after K318 s1.
 - **K629** · K546's Q1-Q7 (`K546_loss_effects.md`) set stages 2-4. Levi (2026-10-22): the recs stand; for the side cannons Levi wants more spread (K812 follow-up in the param batch). Rec, the design's: sparks; contact, 0.35 s, ~1 s, no
   skip; ash + vignette; a `lossAmount` slider; fire ends Burnt at the beat's end; full beat, then
   restart; dull pluck + thump (fire too).
@@ -248,10 +245,6 @@ Next free ID: K1166.
   greedy sim player goes from 2.22 to 9.40 catches a game, 15% unfinished at 600 moves); the
   follower looks like a sleeper asleep, amber waiting, red awake; the share tag shows N woken
   whenever a sleeper plays, 0 included
-- **K778** · K138 s3: no Undo control shows while the rules are on (Undo works only inside the
-  controller; the Stranded banner needs fragile runs or collapse, which turn the rules off), so a
-  regretted one-way move leaves only Restart. An Undo control beside the rules, or a Stranded-style
-  check that offers it? (docs/design/K138_s3.md, Residuals)
 - **K779** · K137 s4 lures and snares: 20 calls built as recommended, alternatives in the
   docs/design/K137_s4.md Handoff. The weightiest: both tools take no turn; a lure carries 6 runs and
   a cut or broken run blocks it; a lured minotaur drops its hunt; a snare goes only on a run at your
@@ -294,12 +287,9 @@ Next free ID: K1166.
   and only their tips show. Move them out past the marker, or keep them as they are? Pictures, sent 2026-11-03:
   `.claude/probes/K1132/shots/` (sheet_desk.png, left now, right out; the out placement is
   `__knotKeyHintPlace("out")`, f2c79236)
-- **K1138** · The backdrop speed slider goes up to 8 times each backdrop's own pace. Should its top be
-  2 times, or 16 times? (Your other backdrop changes of 2026-11-03 are done: vellum faster, aurora
-  faster and taller, contours morphing, paper stronger.)
 - **K144** · Accounts and shared stats, a stretch goal (Levi 10-13). The options doc is done
-  (`docs/design/K144_accounts.md`, 61a24a82; it recommends Cloudflare Workers + D1). Its Q1-Q5 wait on Levi:
-  the backend, sign-in providers, the sharing switch's words, same-day bands, cross-device resume.
+  (`docs/design/K144_accounts.md`, 61a24a82). Levi 2026-11-03: Workers + D1, Google sign-in first, results
+  synced first (Q1, Q2; stage 1 is K1168). Q3-Q5 still wait: the sharing switch's words, same-day bands, resume.
 - **K1150** · Under the beat, a new Beat indicator choice: the pulse you have today, a crisp ring that spreads
   from your marker on each beat, or off. Does the ring read well? Pictures: .claude/probes/K804/shots/ (K804,
   4f6ff982)
@@ -309,14 +299,6 @@ Next free ID: K1166.
 - **K207** · Fog on a path you walk back over: it used to clear a little more with each pass (crisp edges);
   since 16b1c56f it stays as the first walk left it (soft edges, a bit tighter). Keep the new look? Pictures:
   `.claude/probes/K207/shots/k207_fog_pair.png`.
-- **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
-  junctions"; plan the look, the checks and the build first). S1 done (a4dc218a): today's faults a-h (doc 1.3),
-  one light field over the lit tree (S2), stages S3-S6. Full text: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-03 10:05 (merged; agent `af1cda2ec844b5f38` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `a4dc218a`
-  - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
-  - next: Levi answers Q1-Q3 (sent with the pictures 2026-11-03 10:07; clips of the motion offered), then the S2 brief: the light field, folding in the wrong "world arc" comment on `litArms` (`src/game/route_plan.ts`, the length is lattice) and S5 if Q3 says straight through
-  - brief: `docs/design/K1139_s1_brief.md` (the plan: `docs/design/K1139_pulse_junctions.md`, stages S2-S6)
 - **K1140** · Memory modes, brainstormed 2026-11-03 at Levi's request (show the route, hide it, walk it):
   Glimpse (the base; a wrong move is one that does not shorten distToExit), Shuffle (a shake re-settles the
   knot after the glimpse; check it moves enough, else rotate or mirror the view), the myth (K80 4.23) plus a
@@ -334,16 +316,19 @@ Next free ID: K1166.
 - **K1163** · Corner rounding (K1114, 8b436272): the restore keeps a root-gate guard that leaves ten
   near-straight corners up to 1 px tighter than before the junction rework. Keep it (rec), drop it (the round
   jumps in size in motion again), or design a softer guard? Card: docs/asks/K1163.md.
+- **K1166** · After the history rewrite (K1164), two things only you can do: send GitHub Support the drafted
+  request so closed PR #1 stops serving the old commits, and reset the laptop's knotmaze copy before its next
+  use. Card: `docs/asks/K1166.md`.
 
 ## In progress
 
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
-  - owner: nobody since 2026-11-03 14:04 (K1097 S3e merged); its stages run as K1097 and K1114
+  - owner: nobody since 2026-11-03 18:54 (the S3e phone gate ran: the label missed 2 ms; S3f's brief next)
   - branch: mainline; last commit: `8b436272`
   - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1), `s1/out/s1b/` and `s1/out/s1c/`, S1d's runs in `s1/out/s1d/`, S1e's in `s1/out/s1e/` (gate `s1/run_s1e_gate.ps1`, table `s1/gate_table.ps1`; probes `b_rate.ts`, `bend_s1e.ts`, `attr_f4f5.ts`, `lcut_far.ts`, `attr_c2.ts`, `arms_c3.ts`; commands in its Handoff)); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: the S3e phone gate (K1097's next) once Levi leaves the phone unlocked on its charger (card docs/asks/K1040.md), then S3f's brief; S1i (K1114) merged in 8b436272 (its root-gate veto: K1163)
+  - next: S3f's brief from the S3e phone gate (K1097's next; `docs/design/K1040_s3e_lean.md` Step 3): the label 4.5-9.9 ms against 2, no better than today's part; S1i (K1114) merged in 8b436272 (its root-gate veto: K1163)
   - brief: `docs/design/K1040_s3e_lean.md` (S3e's Handoff); `docs/design/K1114_s1i_rounding.md` (S1i)
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
@@ -529,16 +514,17 @@ Next free ID: K1166.
   - owner: nobody since 2026-11-03 14:04 (merged; agent `aad38c5538dbcedc8` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
   - branch: mainline; last commit: `f00a59c1`
   - evidence: `.claude/probes/K1040/s3/` (`s3e_gate.ps1`, `s3e_floor.ps1`, `defects.ps1`, `split.mjs`'s s3e1 and s3e3 sets, `run_locked.ps1`, `phone_batch.ps1` + `run_phone.ps1`; `out/many_s3e*_summary.md`, `out/time_s3e*_summary.md`, `out/verdict_s3e*_summary.md`); oracle30 and the recordings: worktree k868-s3a (`.claude/probes/S3a/seq13/`)
-  - next: the S3e phone gate: with the Pixel awake and unlocked, run s3e_gate.ps1, then s3e_floor.ps1, then both split.mjs lines (the Handoff's Next); then S3f's brief from those numbers. S3f's 2 ms gate counts the upload call's main-thread time too (0.1-0.8 ms on the desktop, outside page.ts's timed window)
+  - next: S3f's brief. The S3e phone gate (2026-11-03; `out/split_s3e3.md`, `out/split_s3e1.md`, `out/phone_table_s3e.md`; the Handoff's Step 3) missed: leanempty - ideal 2.3-3.6 ms, mostly draw()'s state queries (save 1.9; the upload about 0.2; D32F's store free, D24 worse); the ideal floor 0.5; the label 4.5-9.9 against 2, no better than today's 4.1-9.6. S3f's 2 ms counts the upload call's main-thread time too (0.1-0.8 ms on the desktop)
   - brief: `docs/design/K1040_s3e_lean.md` (its Handoff; S3d's: `docs/design/K1040_s3d_tent.md`)
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (it runs `run_phone.ps1`: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`
-- **K1164** · Rewrite master's history so no old commit carries the device addresses 9326cf3f scrubbed from
-  the files (Levi approved the force-push 2026-11-03), then remap the SHAs the docs quote.
-  - owner: claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `9552711d`
-  - evidence: `.claude/probes/K1164/` (the masked scans: `scrubbed.mjs`, `scan.mjs`, `inhead.mjs`, `mkrepl.mjs`, `align.mjs`; raw values never written to the repo)
-  - next: mirror backup to `C:\Users\lsl\Backups`, filter-repo `--replace-text` (scan rows F9-F14) on a fresh bare clone, verify (rescan clean, same tree), `--force-with-lease` master, reset the checkouts, remap the docs' SHAs from the commit-map
-  - brief: `.claude/probes/K1164/README.md` (the plan; untracked, no values)
+- **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
+  junctions"). S1 done (a4dc218a). Answers (Levi 2026-11-03): the light splits at a fork (A), runs toward you
+  behind you, straight through your junction with no dim moment. S2-S6 next. Full text: `docs/ledger_notes.md`.
+  - owner: nobody since 2026-11-03 10:05 (merged; agent `af1cda2ec844b5f38` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `a4dc218a`
+  - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
+  - next: write the S2 brief (one light field over the lit tree, running toward you; fold in the wrong "world arc" comment on `litArms` in `src/game/route_plan.ts`, whose length is lattice) and launch it; then S3a-S6 as the plan's section 5 orders them, S5 included
+  - brief: `docs/design/K1139_s1_brief.md` (the plan: `docs/design/K1139_pulse_junctions.md`, stages S2-S6)
 
 ## Next, in order
 
@@ -558,6 +544,9 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
+- **K778** · K138 s3: an Undo button beside the extra rules (Levi 2026-11-03), and a new slider param for the
+  undos a run gets under them, 0 to 5 (default 1, my call; 0 hides the button). It replays your moves minus the
+  last, as the Stranded banner's Undo does. Brief to write (`docs/design/K778_undo.md`); a Muse candidate.
 - **K875** · K868 S1b, master's side: on Muse's link master registers only 58-80% with the oracle at
   j49/j123 and #6 finds every band end off (18/18, 19/19; cause untested: gaps or a reveal/fog state);
   its sdf and strip silhouettes differ in width; joinery.ts:1469-1471's comment is stale. s1b_oracle.md.
@@ -763,6 +752,9 @@ Every other item below waits on the trigger it names.
 - **K1143** · K1040 S3g (K1097), after S3f: F4's merge scan; F6's SNAP class (within 0.01 px: accept or
   tighten eps); F8's sharp joints; F9, lr 2's upsample class (DEFECT, its 1.9x rate unexplained); F12, a
   float64 mirror pin against labelAt. F10 went to S3d (`docs/design/K1040_s3d_tent.md`).
+- **K1168** · K144 stage 1: Google sign-in and per-account sync of the daily results, on a Cloudflare Worker +
+  D1 (`docs/design/K144_accounts.md` sections 9-10; brief to write). Built and tested locally first; deploying
+  needs a Google OAuth client and the Worker + D1 on the Cloudflare account, from Levi.
 
 ## Residuals (known, not fixed)
 
@@ -1699,6 +1691,9 @@ Every other item below waits on the trigger it names.
 - **K1165** · S1i leftovers (`docs/design/K1114_s1i_rounding.md` Handoff): sites 03/04 sit 2 px off S1f (another
   corner's root gate); `dEdgeK` unused once `dEdgeTip` > 0; S1g's doc quotes gate699 as 0.125/0.0006 (probe:
   0.1270/0.0007); q5 blobs 448 vs S1f's 451 (no g1 baseline); `s1i_angles.ts` misaligns its "today r" column.
+- **K1167** · Pre-rewrite knotmaze SHAs quoted in other repos (claude-config's ledgers, notes and memory;
+  levi.dev; hex-grid) name commits GitHub no longer serves. `.claude/probes/K1164/commit-map` (a copy in
+  ~/Backups) translates them; `remap.mjs` beside it rewrote this repo's (K1164).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2000,6 +1995,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1164** · Master's history rewritten without the device addresses (force-pushed 2026-11-03; 2,456 commits from 7645fe67 on) and 3,823 quoted SHAs remapped; the old history is mirrored in ~/Backups, the map is `.claude/probes/K1164/commit-map`; leftovers K1166, K1167. Done in 82aa5072 (2026-11-03).
+- **K628** · Confetti (Levi 2026-11-03): the finish spray throws no streamers (as built); GPU confetti (K579) goes after K318 stage 1, where it is queued. Done in this commit (2026-11-03).
+- **K1138** · The backdrop speed slider tops out at 16x (Levi's call, 2026-11-03). Done in 56e6262f (2026-11-03).
 - **K1114** · S1i: corner rounding back at the junction roots (rootBand 0.5). Done in 8b436272 (2026-11-03).
 - **K1161** · Muse batch 14: runs B-F landed K1160+K1159, K710, K711 (c), K732's desktop half and K740's first gap. Done in e11beadd (2026-11-03).
 - **K710** · a real-time catch (and an extra's, and the sword's touch) cannot land through a broken run; contact counts tails but not broken runs. Done in 4b347cad (2026-11-03).

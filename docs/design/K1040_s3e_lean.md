@@ -288,7 +288,17 @@ anything about the Pixel's tiler.
 ### Step 3: the gate
 
 1. The lean empty pass within 0.3 ms of the ideal floor on the Pixel:
-   **unmeasured.** On the desktop (one page, `many_s3e3c`)
+   **misses on every scene** (2026-11-03 18:45-18:54, `out/split_s3e3.md`):
+   `leanempty - ideal` is 2.3-3.6 (median 2.7). The split (medians): the
+   upload is about 0.2 (`lean noup` 2.5), draw()'s save 1.9 (`ns - ideal`
+   1.2), the rest 0.6 (`noupns - d32f`); `D store` -0.2 (invalidating
+   D32F is free) and D24 is worse (`leanempty24 - ideal` 3.2), so D stays
+   D32F. Not the upload S3d expected: draw()'s state queries are the
+   largest part. The ideal floor (`out/split_s3e1.md`, step 1's page):
+   median 0.5 (-0.2 to 1.3), over 1 ms only on muse_hash, so about 1.5
+   ms is left for the drawing; the empty pass is 2.3 and the fixed part
+   2.9 there. The phone had a media session playing during both runs
+   (none at 11:41). On the desktop (one page, `many_s3e3c`)
    `leanempty - ideal` is 0.2-0.3 on every scene, and 0.0-0.1 without
    draw()'s save (`ns - ideal`).
 2. tentv's census with the lean part (`verdict_s3eleantentv`):
@@ -305,25 +315,27 @@ anything about the Pixel's tiler.
 
 The Pixel's label cost (render-sync p50 minus floorall's, ms) against
 the 2 ms gate. Before: S3d's Handoff. After, tentv with the lean part:
-not run. The desktop beside it (2480x1800): the render sync on one
+`out/phone_table_s3e.md` (2026-11-03), 4.5-9.9 against 2 on every scene,
+and no better than today's part measured on the same pages
+(`s3etentv` minus floorall: 4.1-9.6). The desktop beside it (2480x1800): the render sync on one
 page minus floor (`many_s3e3`), moving and at rest, and the GPU timer's
 p50 (`time_s3etentv`, `time_s3eleantentv`).
 
 | scene | Pixel fit | Pixel tent | Pixel tentv | Pixel tentv lean | desk tentv | desk lean | desk lean at rest | GPU tentv | GPU lean |
 |---|---|---|---|---|---|---|---|---|---|
-| muse_hash | 38.5 | 10.8 | 7.0 | - | 1.1 | 1.1 | 1.0 | 0.655 | 0.647 |
-| muse_default_tw | 22.8 | 10.0 | 7.1 | - | 1.1 | 1.1 | 1.0 | 0.697 | 0.688 |
-| def | 24.1 | 10.9 | 8.5 | - | 1.2 | 1.2 | 1.0 | 0.719 | 0.711 |
-| fat | 20.0 | 6.7 | 5.7 | - | 0.9 | 0.8 | 0.8 | 0.484 | 0.476 |
-| ring | 11.4 | 5.8 | 4.6 | - | 0.7 | 0.7 | 0.6 | 0.323 | 0.315 |
-| user_tw42.lightpaper | 15.2 | 6.1 | 5.6 | - | 0.8 | 0.8 | 0.7 | 0.436 | 0.428 |
-| g41_def_tw42 | 21.7 | 11.6 | 9.4 | - | 1.1 | 1.1 | 0.9 | 0.732 | 0.724 |
-| g41_def_tw64 | 25.4 | 10.7 | 7.4 | - | 1.1 | 1.1 | 1.0 | 0.702 | 0.694 |
-| g41_ring_tw42 | 9.6 | 5.0 | 4.8 | - | 0.7 | 0.7 | 0.6 | 0.311 | 0.304 |
-| g41_ring_tw64 | 12.5 | 5.1 | 4.1 | - | 0.7 | 0.7 | 0.6 | 0.328 | 0.320 |
-| g41_user_tw42 | 14.7 | 6.2 | 4.7 | - | 0.8 | 0.8 | 0.7 | 0.435 | 0.428 |
-| g41_user_tw64 | 25.0 | 7.8 | 5.8 | - | 0.8 | 0.8 | 0.7 | 0.433 | 0.426 |
-| median | 21.7 | 7.8 | 5.8 | - | 0.9 | 0.8 | 0.8 | 0.484 | 0.476 |
+| muse_hash | 38.5 | 10.8 | 7.0 | 7.9 | 1.1 | 1.1 | 1.0 | 0.655 | 0.647 |
+| muse_default_tw | 22.8 | 10.0 | 7.1 | 5.4 | 1.1 | 1.1 | 1.0 | 0.697 | 0.688 |
+| def | 24.1 | 10.9 | 8.5 | 9.9 | 1.2 | 1.2 | 1.0 | 0.719 | 0.711 |
+| fat | 20.0 | 6.7 | 5.7 | 6.1 | 0.9 | 0.8 | 0.8 | 0.484 | 0.476 |
+| ring | 11.4 | 5.8 | 4.6 | 4.6 | 0.7 | 0.7 | 0.6 | 0.323 | 0.315 |
+| user_tw42.lightpaper | 15.2 | 6.1 | 5.6 | 5.4 | 0.8 | 0.8 | 0.7 | 0.436 | 0.428 |
+| g41_def_tw42 | 21.7 | 11.6 | 9.4 | 8.5 | 1.1 | 1.1 | 0.9 | 0.732 | 0.724 |
+| g41_def_tw64 | 25.4 | 10.7 | 7.4 | 7.6 | 1.1 | 1.1 | 1.0 | 0.702 | 0.694 |
+| g41_ring_tw42 | 9.6 | 5.0 | 4.8 | 4.5 | 0.7 | 0.7 | 0.6 | 0.311 | 0.304 |
+| g41_ring_tw64 | 12.5 | 5.1 | 4.1 | 5.1 | 0.7 | 0.7 | 0.6 | 0.328 | 0.320 |
+| g41_user_tw42 | 14.7 | 6.2 | 4.7 | 6.2 | 0.8 | 0.8 | 0.7 | 0.435 | 0.428 |
+| g41_user_tw64 | 25.0 | 7.8 | 5.8 | 6.3 | 0.8 | 0.8 | 0.7 | 0.433 | 0.426 |
+| median | 21.7 | 7.8 | 5.8 | 6.2 | 0.9 | 0.8 | 0.8 | 0.484 | 0.476 |
 
 On the desktop the lean part's GPU time is 0.007-0.009 ms under
 today's on every scene: the clears and stores it drops are nearly free
@@ -352,6 +364,9 @@ From the worktree, in PowerShell:
   'ideal,ideal32f,leanempty,leanemptynoup,leanemptyns,leanemptynoupns,empty,floor')`.
 
 ### Next
+
+Steps 1-4 ran on 2026-11-03 (the coordinator); their numbers are in
+Step 3 and the table above, and S3f's brief starts from them.
 
 1. With the phone awake and unlocked (the launcher in front, nobody
    touching it), run `s3e_gate.ps1` (six runs, about 15 min), then
