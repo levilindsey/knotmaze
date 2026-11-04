@@ -3137,10 +3137,11 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 
 ## K207 (2026-10-15, shortened by the diet)
 
-- **K207** · Fog stamps grow without bound within a solve: the spacing
-  filter checks only the last stamp, and `renderFog` redraws every stamp.
-  A spatial dedupe fixes both (`src/render/fabric_maze_renderer.ts`;
-  `docs/design/K100.md`, Stage 1 handoff).
+- **K207** · Fixed in 16b1c56f (2026-11-03): fog stamps are deduped
+  spatially, so the list stops growing within a solve, and a walked-back
+  path keeps its first walk's clearing (softer edges, a bit tighter).
+  Open: keep the new look or clear more (LEDGER.md K207;
+  `docs/asks/K207.md`).
 
 ## K205 (2026-10-15, shortened by the diet)
 

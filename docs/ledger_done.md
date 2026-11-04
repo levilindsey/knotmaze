@@ -1675,7 +1675,8 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 
 ## K440 (Done 2026-10-15)
 
-- **K440** · Real-time fire defaults: real time plays its own pair, 0.2 / 20 (`fsr`, `fdr`); turn keeps 0.75 / 0; speed floor 0.1. Done in 395756b (2026-10-15).
+- **K440** · Real-time fire defaults: real time plays its own pair, 0.2 / 20 (`fsr`, `fdr`); turn kept 0.75 / 0
+  then (0.6 / 0 since K280, 2026-10-20); speed floor 0.1. Done in 395756b (2026-10-15).
 
 ## K448 (Done 2026-10-15)
 

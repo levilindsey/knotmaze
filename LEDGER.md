@@ -119,9 +119,9 @@ Next free ID: K1178.
 - **K625** · K137's calls (`sooner_20261020.md`): (a) stages s2 helpers, s3a/s3b minotaur, s4 looks;
   (b) a broken run blocks the minotaur and fire; (c) strict par's slack: K155's middle profile
   strict half the time; (d) dead ends exempt from snaps. Rec: all yes.
-- **K626** · K525's telegraph styles (`mtl`): rims, line, both (or a fourth), in red or white like
-  the hover. Red can't pass for your hover but reads worse on a red section. Rec: the three, in red;
-  K525's sheet shows white too.
+- **K626** · K525's telegraph styles (`mtl`): rims, line, both (or a fourth), in red or white like the hover.
+  Red can't pass for your hover but reads worse on a red section. Rec: the three, in red; K525's sheet is red
+  only; white rims are still unshot (K525 handoff, What's left).
 - **K627** · K114's spider (call 7): S, the minotaur engine with its own icon, or M, which adds
   spinning webs. Rec: S first.
 - **K629** · K546's Q1-Q7 (`K546_loss_effects.md`) set stages 2-4. Levi (2026-10-22): the recs stand; for the side cannons Levi wants more spread (K812 follow-up in the param batch). Rec, the design's: sparks; contact, 0.35 s, ~1 s, no
@@ -139,8 +139,8 @@ Next free ID: K1178.
 - **K655** · K137's slack default: shipped 1 in [0, 1] (greedy makes strict par 30%, careful 89%);
   the brief's half-of-greedy target needs 3 in [0, 4] (48% / 100%). Rec: 3 in [0, 4].
   `docs/design/K137_s1.md` Handoff.
-- **K656** · K137's snap strands 40 of 50 greedy and explorer games (crack: none; the design
-  expected about 2 in 3): healing runs, a hard label, or a way out under the chase or fire (no Undo
+- **K656** · K137's snap strands 40 of 50 greedy and explorer games (pre-K840; not re-measured; crack: none;
+  the design expected about 2 in 3): healing runs, a hard label, or a way out under the chase or fire (no Undo
   there). Rec: the hard label.
 - **K664** · K74 s3's trap-zone finish (83d4405, K637) lengthens greedy games: 3+ catches 23% to
   33%, solve p90 181 to 310 s, 6% of no-minotaur greedy walks unfinished at 900 s; the dailies ship
@@ -155,9 +155,9 @@ Next free ID: K1178.
   Design): score by length collapsed; free ends only when stranded; a finish strand = Stranded +
   Undo; overrides fragile and par; chase and fire allowed (Restart only); snap look + sound (plays
   every move).
-- **K693** · K620: per-side stroke effects on the glyph root, not only the colours? 3fa7aab had
-  them, but its shader compiled slowly (loads 45-54 s against 27-33 s). Rec: no, keep the colour
-  blend (`docs/design/K620.md`)
+- **K693** · K620: per-side stroke effects on the glyph root, not only the colours? 3fa7aab had them, but its
+  shader compiled slowly (45-54 s loads against 20-30 s for A). Rec: no, keep the colour blend
+  (`docs/design/K620.md`)
 - **K694** · K114 cut calls, built as rec (`docs/design/K114_cut.md` Handoff): 1 scissors and Undo
   bottom left, U undoes (Z also moves on AZERTY); 2 a cut tapped mid-move waits for the move; 3 a
   cut counts only toward the cuts row and the share tag. Phone (K703): 15 of 15 checks pass
@@ -320,14 +320,6 @@ Next free ID: K1178.
 
 ## In progress
 
-- **K1169** · Muse batch 15 (`docs/design/K1169_muse_batch15.md`): run A K1139 S2 (the light field), run B
-  K778 (the Undo button, its 0-5 slider), run C K1162 (the doc errata). Claude reviews each run against the
-  primary record, then closes K1169.
-  - owner: Muse through the chain (`.claude/probes/K1053/`), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `b2ca45af`
-  - evidence: `.claude/probes/K1053/` (queue.txt, done.txt, chain.log; each run's Paseo report)
-  - next: Run C done; batch 15 complete, Claude reviews and closes K1169
-  - brief: `docs/design/K1169_muse_batch15.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
@@ -531,21 +523,6 @@ Next free ID: K1178.
   - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked, S2's record in `out/s2/`; the doc's appendix lists the commands)
   - next: S3b: the fan shader, on the phone with a sheet for Levi (the plan's section 5)
   - brief: docs/design/K1139_s3a.md; the plan: docs/design/K1139_pulse_junctions.md
-- **K1171** · One Rules dropdown for Fragile runs and Collapse (Levi 2026-11-03): off, crack, snap, collapse,
-  collapse (free); one link param; the Par rows greyed under the collapse options. Muse chain run 15E, after 15B
-  (K778 edits the same folder and the codec). Full text: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-03 21:31 (queued as Muse chain run 15E, `.claude/probes/K1053/queue.txt`; claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c coordinates)
-  - branch: mainline; last commit: `9a655597`
-  - evidence: `.claude/probes/K1171/` (shots/)
-  - next: Run 15E done; Claude reviews the Rules folder shots
-  - brief: `docs/design/K1171_rules_dropdown.md`
-- **K1173** · A Tug threads checkbox (a viewer preference, on by default, in Feel): off, a drag pans wherever
-  it starts and taps still pluck (Levi 2026-11-03). Muse chain run 15F.
-  - owner: nobody since 2026-11-03 21:31 (queued as Muse chain run 15F, `.claude/probes/K1053/queue.txt`; claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c coordinates)
-  - branch: mainline; last commit: `d41a02c9`
-  - evidence: `.claude/probes/K1173/`
-  - next: Run 15F done; Levi tries the checkbox on the phone
-  - brief: `docs/design/K1173_tug_toggle.md`
 
 ## Next, in order
 
@@ -690,9 +667,9 @@ Every other item below waits on the trigger it names.
   (inferred by the K137 s4 rebase)
 - **K873** · K868 integration needs flow (`fw`) as its own scene input: fw moves the drawn samples,
   so every K868 scene so far is `fw=0`. `docs/design/K868_s1a_notes.md`.
-- **K887** · Refresh the open-work report (K585's artifact): v7 (2026-10-22 09:27) predates the K138
-  slice 2, K809, K794, K795 and K137 s5 merges. List every test, as Levi asked; re-parse the ledger,
-  don't re-run patch_items.mjs (`docs/design/K777.md` Handoff).
+- **K887** · Refresh the open-work report (K585's artifact): v7 (2026-10-21 09:27) predates the K138 slice 2,
+  K809, K794, K795 and K137 s5 merges. List every test, as Levi asked; re-parse the ledger, don't re-run
+  patch_items.mjs (`docs/design/K777.md` Handoff).
 - **K890** · Move the K863 tracer into tracked `scripts/` (trace_k879.py, review_k879.py, K886's
   join_k886.py, the venv's requirements), without the chart or its crops, once K886 lands.
 - **K912** · Cursive generator follow-ups from K902: o and b exits per class (ok 10.9, or 6.5 u);
@@ -779,9 +756,6 @@ Every other item below waits on the trigger it names.
 
 ## Residuals (known, not fixed)
 
-- **K1162** · Doc and item-text errata the ask-card pass found (2026-11-03): stale SHAs, pointers and figures
-  in a dozen docs and items, and a phone-readiness rule no doc states. Full list: `docs/ledger_notes.md` ##
-  K1162. Docs-only; Muse batch 15 run C (K1169; item texts: Muse gives the lines, Claude applies).
 - **K1130** · K309 inject probes: a run's first normal screenshot can come back dark and nearly blank (round 2026-11-02 rimSeam, 3848 bytes against 628314; round 2026-11-03 handoff step 3b). Take a throwaway first shot, or shoot each state twice and diff the repeat, before believing a pair.
 - **K1048** · K1040's probe gaps (`docs/design/K1040_s1c_handoff_pops.md` F5; `K1040_s1d_corner.md` F1, Handoff 5):
   q5holes skips a hole with a partly OWN rim; q4's g41 crop holds no ink on the g41 rings; the free ends' oracle
@@ -1695,8 +1669,8 @@ Every other item below waits on the trigger it names.
   9-128 ms on the desktop and 11-104 ms on the Pixel (S5's `nbWindows`) (`K1040_s3b_label.md` ## Handoff).
 - **K1123** · `s3.mjs` and `phone_time.mjs` (`.claude/probes/K1040/s3/`) append to their summary files on
   every run, so the tracked `phone_time_summary.md` grows with each rerun (S3b's Handoff).
-- **K1128** · Sprint: no real phone pass yet (emulated 411x753); the s3a fragile page check is weak on the
-  hunter, and the fire side is unit-tested only (split from K748)
+- **K1128** · Sprint: the s3a fragile page check is weak on the hunter, and the fire side is unit-tested only
+  (split from K748). The real-phone pass landed in K749 (2026-10-21, build cdd3ed53).
 - **K1133** · Burn re-declare: fillet rebuilds on front-crossing frames, retraced with the flow on
   (K1137 Run B, K1077 stand): realtime 71/119 vs turn 59/119 (burn cross-check 0.56 vs 0.50 a frame); the
   12 without an update split uwRev 8, joint-key 4; a fix needs incremental fillets (joinery), not the declare.
@@ -2021,6 +1995,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1173** · A Tug threads checkbox in Touch & feel (per browser, on by default, never in a link): off, a drag pans wherever it starts and a tap still plucks (Muse run 15F). Done in d41a02c9 (2026-11-04).
+- **K1171** · One Rules dropdown, Fragile runs: off, crack, snap, collapse, collapse (free); one link param (codec v10, `&cl=` gone); the Par rows disabled under the collapse options (Muse run 15E; shots checked). Done in 9a655597 (2026-11-04).
+- **K1169** · Muse batch 15 (`docs/design/K1169_muse_batch15.md`): runs A (K1139 S2), B (K778) and C (K1162) done, each reviewed against its report and CI. Done in 95f8f0b0 (2026-11-04).
+- **K1162** · Doc and item-text errata from the ask-card pass, all 15 checked: Muse run 15C fixed the docs (b2ca45af; claims 4, 11 and half of 8 were wrong), Claude applied its seven item-text lines (K440, K626, K1128, K887, K656, K693 and the K207 note). Done in b2ca45af (2026-11-04).
 - **K1132** · key hints (the d-pad button that takes each run, K1170) sit out past the head marker; the reach placement and __knotKeyHintPlace are gone. Done in 415d131f (2026-11-03).
 - **K1158** · K1040's label pass keeps GL state from Pixi's tracking, without draw()'s queries (S3f step 1). Done in 1aac725b (2026-11-03).
 - **K778** · an Undo button in the HUD's rules row; ruleUndos 0-5 (default 1) sets how many a run gets; the Stranded banner's Undo unchanged. Done in 82537593 (2026-11-03).
