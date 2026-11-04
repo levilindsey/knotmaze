@@ -1,33 +1,44 @@
-# Muse batch 10 (draft, from K1137 Run D)
+# Muse batch 10 (K1141)
 
 Claude starts these runs through Paseo, one run at a time, after batch
-9 (`docs/design/K1137_muse_batch9.md`) has been reviewed and closed.
+9 (`docs/design/K1137_muse_batch9.md`, K1137) was reviewed and closed.
 Each run is a fresh Muse agent that reads this brief, does its run's
 tasks, and stops. Claude reviews each run on master afterwards and
-closes batch 10's item. This draft has ONE run: of the 69 items in
-`LEDGER.md`'s Next, in order, only K1138 fits this batch (see "Left
-out on purpose" at the end). Claude reviews the draft, opens batch
-10's item, fills its ID in below and renames this file.
+closes K1141. Two runs: A, K1138, the only one of the 69 items in
+`LEDGER.md`'s Next, in order, that fits this batch (see "Left out on
+purpose" at the end); B, batch 11's brief, drafted from the ledger
+lists this batch did not read. K1137's Run D drafted this brief
+(5f769558); Claude added rule 12 and Run B.
 
 Every task here is decided by a unit test, a desktop probe or a
-measurement table. None needs the phone or Levi. The one run changes
+measurement table. None needs the phone or Levi. Run A changes
 backdrop profiles and backdrop shader text only: no physics, no
-junctions, no cursive, and no thread ribbons' shader text.
+junctions, no cursive, and no thread ribbons' shader text. Run B
+writes one brief and changes no code.
 
 ## How to work
 
 Batch 8's "How to work" applies unchanged: read it in
 `docs/design/K1131_muse_batch8.md` (its ten rules and the paragraphs
 after them, which send you on to `docs/design/K1050_muse_week.md`)
-before anything else. Read batch 10's item wherever it says K1131,
+before anything else. Read K1141 wherever it says K1131,
 and K1137's rule 11 (a re-measurement copies the original stand's
 link verbatim, read from the old probe's source) wherever a stand is
 copied. Use ports 5550-5599 (batch 9 used 5500-5549; the run below
 names its range).
 
-After the run, update batch 10's handle:
-`ledger.mjs handle <batch-10 item> --last-commit <sha8> --next "Run A done; batch 10 complete, Claude reviews and closes <batch-10 item>"`
-(Claude fills the item ID in when opening batch 10).
+Rule 12, new in this batch: dependencies. Neither run should need a
+new or changed package. If one changes anyway (an install, a lockfile
+refresh), `npm audit` must report no high or critical advisory
+afterwards, and a security fix is taken even when it was published
+less than two weeks ago (batch 9's two-week age rule gives way to
+it); the commit says so. Batch 9's Run C pinned happy-dom 21.0.3 by
+the age rule while 21.0.4 fixed a high advisory (Claude bumped it in
+e857c810).
+
+After each run, update K1141's handle:
+- Run A: `ledger.mjs handle K1141 --last-commit <sha8> --next "Run A done; Run B next"`
+- Run B: `ledger.mjs handle K1141 --last-commit <sha8> --next "Run B done; batch 10 complete, Claude reviews and closes K1141"`
 
 ## Run A · K1138: Levi's backdrop tuning (five of six clauses)
 
@@ -192,6 +203,48 @@ morphing, paper stronger.)"
 If any Done row fails, keep K1138 in Next and record the stop in
 its text instead.
 Suggested ports: 5550-5559.
+
+## Run B · draft batch 11's brief (no run)
+
+Write `docs/design/K1141_batch11_draft.md`: a brief in this one's form
+(the header, "How to work" pointing at K1131's and at this brief's
+rules 11 and 12, then one section per run with Read first, the
+ledger's text quoted, what is there today, Tasks, Done and the close
+lines; ports 5500-5549, batch 9's range, free again), for up to six
+runs. This batch's Next list is used up (see the list below), so take
+candidates from these, in this order, and stop at six runs that fit:
+
+1. `## Approved, to schedule` in `LEDGER.md`: K22, K23, K322, K804
+   and K805. K804's beat indicators may fit without the dots at the
+   junctions (say which part a run takes, and why); K805 builds on
+   K797 (the paper look's next stage), so it fits only once K797 is
+   done.
+2. Then `## Residuals (known, not fixed)`, in ledger order. Name the
+   last residual you read in the draft's header, so batch 12's draft
+   starts after it.
+3. Then two Next items whose next step is a design document, each as
+   a run that writes an options document with a recommendation and
+   changes nothing in `src/`: K144 (accounts: the backend choices,
+   laid out for Levi) and K688 (healing cuts with the minotaur or the
+   fire: the heal count, the scissors' charges, the trapdoor's outcome,
+   and the build's stages across the controller, both minotaur clocks,
+   the fire, the saved attempts and the renderer). Both are in the list
+   below because they are not ready to build; the document is the step
+   that makes them ready.
+
+Skip what batch 9's Run D skipped (junctions, cursive, physics, the
+thread renderer's GPU performance, phone passes, items waiting on
+Levi, items In progress) and the list below, except where an item
+there has since become possible (say why). Read each candidate's code
+before writing its run: quote no line number you didn't read, and
+give any re-measurement's stand as the original probe's source holds
+it (rule 11). End the draft with a "Left out on purpose" list naming
+each candidate you read and skipped, and why.
+
+Commit it as a work commit (`K1141 B: batch 11 draft`). Close nothing
+and file nothing (put anything you would file in the draft's report
+for Claude): Claude reviews the draft, opens batch 11's item and
+renames the file.
 
 ## Left out on purpose, for a later batch
 
