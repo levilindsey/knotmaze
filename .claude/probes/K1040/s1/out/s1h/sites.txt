@@ -1,0 +1,95 @@
+Handoff's claim: FormB(scene, {dEdge: skip, rootBand: 0}) against S1f's final (form_b_s1f_q.ts), arms (L, Lcut) and corners (r, ω):
+  def                    arms 563/563 differ 0; corners 361/361 differ 0
+  fat                    arms 0/0 differ 0; corners 0/0 differ 0
+  ring                   arms 76/76 differ 0; corners 45/45 differ 0
+  user_tw42.lightpaper   arms 233/233 differ 0; corners 150/150 differ 0
+  g41_def_tw42           arms 563/563 differ 0; corners 385/385 differ 0
+  g41_def_tw64           arms 563/563 differ 0; corners 302/302 differ 0
+  muse_hash              arms 503/503 differ 0; corners 192/192 differ 0
+  muse_default_tw        arms 503/503 differ 0; corners 320/320 differ 0
+  g41_ring_tw42          arms 76/76 differ 0; corners 51/51 differ 0
+  g41_ring_tw64          arms 76/76 differ 0; corners 41/41 differ 0
+  g41_user_tw42          arms 233/233 differ 0; corners 150/150 differ 0
+  g41_user_tw64          arms 233/233 differ 0; corners 122/122 differ 0
+corners in all 12 scenes (the union of S1f's and today's lists): 2119; F2 (rootBand alone) moves r at 155; the S1g census lists 156
+
+h per scene:
+  def                    h 0.2600 world, 11.62 device px at dpr 2 (pxPerUnit 22.343)
+  fat                    h 0.2600 world, 11.83 device px at dpr 2 (pxPerUnit 22.757)
+  ring                   h 0.2900 world, 19.31 device px at dpr 2 (pxPerUnit 33.294)
+  user_tw42.lightpaper   h 0.2100 world, 14.27 device px at dpr 2 (pxPerUnit 33.967)
+  g41_def_tw42           h 0.2100 world, 9.44 device px at dpr 2 (pxPerUnit 22.464)
+  g41_def_tw64           h 0.3200 world, 14.21 device px at dpr 2 (pxPerUnit 22.196)
+  muse_hash              h 0.4000 world, 17.04 device px at dpr 2 (pxPerUnit 21.297)
+  muse_default_tw        h 0.2600 world, 11.57 device px at dpr 2 (pxPerUnit 22.246)
+  g41_ring_tw42          h 0.2100 world, 14.05 device px at dpr 2 (pxPerUnit 33.461)
+  g41_ring_tw64          h 0.3200 world, 21.24 device px at dpr 2 (pxPerUnit 33.186)
+  g41_user_tw42          h 0.2100 world, 14.27 device px at dpr 2 (pxPerUnit 33.967)
+  g41_user_tw64          h 0.3200 world, 21.05 device px at dpr 2 (pxPerUnit 32.885)
+
+F1: 4 corners lose fill: muse_hash/j0/0-1 (no corner in the defaults), muse_hash/j36/109-110, muse_hash/j155/471-472, muse_hash/j156/475-473 (no corner in the defaults)
+
+F2's ranking by r move (rootBand 0 -> 0.5, ctrlArc 0.47), first 14; the census's r move where it lists the corner:
+  muse_default_tw/j57/172-173: θ 2.820 dV 0.131h r 4.000h -> 0.678h (F2 tip move 0.068h; vs S1f: tip move 0.068h); census 4.000h -> 0.678h
+  muse_hash/j23/72-70: θ 2.953 dV 0.186h r 4.000h -> 1.252h (F2 tip move 0.052h; vs S1f: tip move 0.052h); census 4.000h -> 1.252h
+  muse_hash/j110/335-333: θ 2.758 dV 0.189h r 4.000h -> 1.283h (F2 tip move 0.042h; vs S1f: tip move 0.042h); census 4.000h -> 1.283h
+  muse_default_tw/j110/335-333: θ 2.689 dV 0.196h r 4.000h -> 1.362h (F2 tip move 0.049h; vs S1f: tip move 0.049h); census 4.000h -> 1.362h
+  muse_default_tw/j164/499-497: θ 2.561 dV 0.223h r 3.993h -> 1.683h (F2 tip move 0.096h; vs S1f: tip move 0.096h); census 3.993h -> 1.683h
+  muse_hash/j57/172-173: θ 2.909 dV 0.226h r 4.000h -> 1.716h (F2 tip move 0.036h; vs S1f: tip move 0.036h); census 4.000h -> 1.716h
+  g41_user_tw64/j12/36-37: θ 3.012 dV 0.036h r 2.000h -> 0.028h (F2 tip move 0.067h; vs S1f: tip move 0.067h); census 2.000h -> 0.028h
+  user_tw42.lightpaper/j49/151-152: θ 3.025 dV 0.041h r 2.000h -> 0.037h (F2 tip move 0.074h; vs S1f: tip move 0.074h); census 2.000h -> 0.037h
+  g41_user_tw42/j49/151-152: θ 3.024 dV 0.041h r 2.000h -> 0.037h (F2 tip move 0.074h; vs S1f: tip move 0.074h); census 2.000h -> 0.037h
+  muse_hash/j124/375-376: θ 2.218 dV 0.071h r 1.967h -> 0.078h (F2 tip move 0.087h; vs S1f: tip move 0.087h); census 1.967h -> 0.078h
+  g41_user_tw42/j12/36-37: θ 2.934 dV 0.079h r 2.000h -> 0.125h (F2 tip move 0.068h; vs S1f: tip move 0.068h); census 2.000h -> 0.125h
+  user_tw42.lightpaper/j12/36-37: θ 2.934 dV 0.079h r 2.000h -> 0.126h (F2 tip move 0.068h; vs S1f: tip move 0.068h); census 2.000h -> 0.126h
+  g41_def_tw64/j174/531-532: θ 2.890 dV 0.084h r 2.000h -> 0.137h (F2 tip move 0.077h; vs S1f: tip move 0.077h); census 2.000h -> 0.137h
+  g41_def_tw42/j174/531-532: θ 3.077 dV 0.089h r 2.000h -> 0.169h (F2 tip move 0.050h; vs S1f: tip move 0.050h); census 2.000h -> 0.169h
+
+the S1g census (out/s1g/gate699_rb05.txt) against the recompute: 156 rows, 0 with a different r pair (to 6e-4h); the recompute moves r at 155, 0 of them not in the census; the census's ten are the recompute's ten
+  census ten: muse_default_tw/j57/172-173: census r 4.000h -> 0.678h; recompute r 4.000h -> 0.678h
+  census ten: muse_hash/j23/72-70: census r 4.000h -> 1.252h; recompute r 4.000h -> 1.252h
+  census ten: muse_hash/j110/335-333: census r 4.000h -> 1.283h; recompute r 4.000h -> 1.283h
+  census ten: muse_default_tw/j110/335-333: census r 4.000h -> 1.362h; recompute r 4.000h -> 1.362h
+  census ten: muse_default_tw/j164/499-497: census r 3.993h -> 1.683h; recompute r 3.993h -> 1.683h
+  census ten: muse_hash/j57/172-173: census r 4.000h -> 1.716h; recompute r 4.000h -> 1.716h
+  census ten: g41_user_tw64/j12/36-37: census r 2.000h -> 0.028h; recompute r 2.000h -> 0.028h
+  census ten: user_tw42.lightpaper/j49/151-152: census r 2.000h -> 0.037h; recompute r 2.000h -> 0.037h
+  census ten: g41_user_tw42/j49/151-152: census r 2.000h -> 0.037h; recompute r 2.000h -> 0.037h
+  census ten: muse_hash/j124/375-376: census r 1.967h -> 0.078h; recompute r 1.967h -> 0.078h
+
+the largest F2-only tip moves (rootBand 0 -> 0.5), first 5:
+  muse_hash/j124/375-376: F2 tip move 0.087h, r 1.967h -> 0.078h
+  g41_user_tw64/j71/221-222: F2 tip move 0.093h, r 0.479h -> 0.266h
+  muse_default_tw/j164/499-497: F2 tip move 0.096h, r 3.993h -> 1.683h
+  g41_def_tw64/j174/531-532: F2 tip move 0.077h, r 2.000h -> 0.137h
+  g41_user_tw64/j12/36-37: F2 tip move 0.067h, r 2.000h -> 0.028h
+
+the largest overall tip moves (S1f final -> defaults), first 8:
+  muse_hash/j131/397-398: tip move 0.748h (F1 alone 0.748h, F2 alone 0.000h), θ 1.630, r 3.183h -> 0.392h
+  muse_hash/j36/109-110: tip move 0.656h (F1 alone 0.656h, F2 alone 0.000h), θ 1.804, r 2.721h -> 0.000h
+  muse_hash/j99/301-299: tip move 0.403h (F1 alone 0.403h, F2 alone 0.000h), θ 2.003, r 2.518h -> 0.350h
+  muse_hash/j73/222-220: tip move 0.337h (F1 alone 0.337h, F2 alone 0.000h), θ 1.309, r 0.297h -> 0.460h
+  muse_hash/j51/155-156: tip move 0.331h (F1 alone 0.331h, F2 alone 0.000h), θ 2.033, r 3.293h -> 1.377h
+  g41_user_tw64/j1/3-4: tip move 0.337h (F1 alone 0.337h, F2 alone 0.000h), θ 1.740, r 1.742h -> 0.591h
+  g41_def_tw64/j152/465-463: tip move 0.330h (F1 alone 0.330h, F2 alone 0.000h), θ 1.338, r 0.585h -> 0.021h
+  muse_default_tw/j99/301-299: tip move 0.399h (F1 alone 0.399h, F2 alone 0.000h), θ 1.739, r 3.552h -> 1.396h
+
+sites (18):
+  [F1-lost] muse_hash/j0/0-1 (V 23.267, 10.519) θ 1.476 dV 1.290h: r 0.043h -> 0.000h (no corner), ω 1.000 -> 0.000, ok true -> false, tip move 0.185h (F1 0.185h, F2 0.000h); arm 0 L 3.652h -> 2.116h, Lcut 9.517h -> 2.116h
+  [F1-lost] muse_hash/j36/109-110 (V 29.742, 20.159) θ 1.804 dV 0.842h: r 2.721h -> 0.000h, ω 1.000 -> 1.000, ok true -> true, tip move 0.656h (F1 0.656h, F2 0.000h); arm 109 L 2.950h -> 1.112h, Lcut 2.950h -> 1.112h
+  [F1-lost] muse_hash/j155/471-472 (V 9.337, 9.011) θ 0.933 dV 3.942h: r 0.120h -> 0.000h, ω 1.000 -> 1.000, ok true -> true, tip move 0.154h (F1 0.154h, F2 0.000h); arm 472 L 5.304h -> 4.234h, Lcut Infinityh -> 4.234h
+  [F1-lost] muse_hash/j156/475-473 (V 8.708, 8.924) θ 0.950 dV 3.887h: r 0.125h -> 0.000h (no corner), ω 1.000 -> 0.000, ok true -> false, tip move 0.185h (F1 0.185h, F2 0.000h); arm 473 L 5.401h -> 3.058h, Lcut Infinityh -> 3.058h
+  [F1-j62] muse_hash/j62/189-187 (V 29.091, 23.936) θ 2.032 dV 0.648h: r 2.438h -> 1.431h, ω 1.000 -> 1.000, ok true -> true, tip move 0.159h (F1 0.159h, F2 0.000h); arm 187 L 2.440h -> 2.165h, Lcut 2.440h -> 2.165h
+  [F2-r] muse_default_tw/j57/172-173 (V 34.360, 18.180) θ 2.820 dV 0.131h: r 4.000h -> 0.678h, ω 1.000 -> 1.000, ok true -> true, tip move 0.068h (F1 0.000h, F2 0.068h); arm 173 L 5.402h -> 4.077h, Lcut 5.402h -> 4.077h
+  [F2-r] muse_hash/j23/72-70 (V 0.351, 17.546) θ 2.953 dV 0.186h: r 4.000h -> 1.252h, ω 1.000 -> 1.000, ok true -> true, tip move 0.052h (F1 0.000h, F2 0.052h)
+  [F2-r] muse_hash/j110/335-333 (V 5.293, 4.051) θ 2.758 dV 0.189h: r 4.000h -> 1.283h, ω 1.000 -> 1.000, ok true -> true, tip move 0.042h (F1 0.000h, F2 0.042h); arm 335 L 2.408h -> 1.748h, Lcut 2.408h -> 1.748h
+  [F2-r] muse_default_tw/j110/335-333 (V 5.342, 4.198) θ 2.689 dV 0.196h: r 4.000h -> 1.362h, ω 1.000 -> 1.000, ok true -> true, tip move 0.049h (F1 0.000h, F2 0.049h); arm 335 L 3.720h -> 2.680h, Lcut 3.720h -> 2.680h
+  [F2-r] muse_default_tw/j164/499-497 (V 22.353, 23.226) θ 2.561 dV 0.223h: r 3.993h -> 1.683h, ω 1.000 -> 1.000, ok true -> true, tip move 0.096h (F1 0.000h, F2 0.096h); arm 497 L 4.248h -> 4.225h, Lcut 4.248h -> 4.225h
+  [F2-r] muse_hash/j57/172-173 (V 34.941, 18.224) θ 2.909 dV 0.226h: r 4.000h -> 1.716h, ω 1.000 -> 1.000, ok true -> true, tip move 0.036h (F1 0.000h, F2 0.036h); arm 173 L 3.006h -> 2.769h, Lcut 3.006h -> 2.769h
+  [F2-r] g41_user_tw64/j12/36-37 (V 21.272, 22.891) θ 3.012 dV 0.036h: r 2.000h -> 0.028h, ω 1.000 -> 1.000, ok true -> true, tip move 0.067h (F1 0.000h, F2 0.067h)
+  [F2-r] user_tw42.lightpaper/j49/151-152 (V 13.721, 6.030) θ 3.025 dV 0.041h: r 2.000h -> 0.037h, ω 1.000 -> 1.000, ok true -> true, tip move 0.074h (F1 0.000h, F2 0.074h)
+  [F2-r] g41_user_tw42/j49/151-152 (V 13.721, 6.030) θ 3.024 dV 0.041h: r 2.000h -> 0.037h, ω 1.000 -> 1.000, ok true -> true, tip move 0.074h (F1 0.000h, F2 0.074h)
+  [F2-r] muse_hash/j124/375-376 (V 13.412, 9.743) θ 2.218 dV 0.071h: r 1.967h -> 0.078h, ω 1.000 -> 1.000, ok true -> true, tip move 0.087h (F1 0.000h, F2 0.087h)
+  [extra-tip] muse_hash/j131/397-398 (V 28.594, 9.559) θ 1.630 dV 0.945h: r 3.183h -> 0.392h, ω 1.000 -> 1.000, ok true -> true, tip move 0.748h (F1 0.748h, F2 0.000h); arm 397 L 3.208h -> 2.135h, Lcut 3.208h -> 2.135h
+  [extra-tip] muse_hash/j99/301-299 (V 14.105, 14.474) θ 2.003 dV 0.752h: r 2.518h -> 0.350h, ω 1.000 -> 1.000, ok true -> true, tip move 0.403h (F1 0.403h, F2 0.000h); arm 301 L 2.569h -> 1.598h, Lcut 2.569h -> 1.598h
+  [extra-tip] muse_hash/j73/222-220 (V 5.355, 14.738) θ 1.309 dV 1.918h: r 0.297h -> 0.460h, ω 1.000 -> 1.000, ok true -> true, tip move 0.337h (F1 0.337h, F2 0.000h); arm 222 L 6.958h -> 4.229h, Lcut Infinityh -> 4.229h
