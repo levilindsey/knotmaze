@@ -14,8 +14,9 @@
 //   - the callback each row's change runs (dynamic: the row's own handler);
 //   - the commit whose diff first added the row's key to the panel file
 //     (one `git log --follow -p` pass), and its ledger item;
-//   - the source files that read the key (`.key` outside the ui plumbing; a
-//     heuristic: short keys such as gap or shape also match other objects).
+//   - the source files that read the key (`.key` outside the ui plumbing,
+//     plus a call to a `url_state` `*Of` settings builder for its keys; a
+//     heuristic: short keys such as gap or shape also match other objects; helper reads count beside the literal ones).
 //
 // Usage, from the checkout's root:
 //   node scripts/run_node.mjs --config scripts/panel_inventory.vite.config.mjs scripts/panel_inventory.ts [out.md]
@@ -316,7 +317,7 @@ const addedBy = (name: string): string => {
   return c ? `${itemOf(c.subject)} ${c.sha} ${c.date}` : "";
 };
 
-// --- Readers: `.key` in src outside the ui plumbing --------------------------
+// --- Readers: `.key` and `*Of` builder calls outside the ui plumbing ---------
 const PLUMBING = new Set([
   "src/ui/tweakpane_panel.ts",
   "src/ui/url_state.ts",
@@ -332,10 +333,140 @@ const walk = (dir: string): void => {
   }
 };
 walk(path.join(ROOT, "src"));
+// Settings builders in url_state: an exported `<name>Of` taking the params
+// (Pick/Omit<UrlParams, ...> or UrlParams), found in url_state's text, not
+// listed by hand, so a new builder joins on its own. A builder reads
+// `p.<key>` in its body, and a builder it calls in turn counts one hop
+// (beatSettingsOf and minoClockOf call clockOf).
+interface SettingsBuilder {
+  direct: Set<string>;
+  keys: Set<string>;
+  calls: string[];
+}
+const builderBody = (src: string, start: number): string => {
+  let open = src.indexOf("{", start);
+  const paren = src.indexOf("(", start);
+  if (paren >= 0 && paren < open) {
+    let pDepth = 0;
+    let closeParen = -1;
+    for (let i = paren; i < src.length; i++) {
+      if (src[i] === "(") pDepth++;
+      else if (src[i] === ")") {
+        pDepth--;
+        if (pDepth === 0) {
+          closeParen = i;
+          break;
+        }
+      }
+    }
+    if (closeParen >= 0) {
+      let cursor = closeParen + 1;
+      while (cursor < src.length && /\s/.test(src[cursor])) cursor++;
+      if (src[cursor] === ":") {
+        cursor++;
+        while (cursor < src.length && /\s/.test(src[cursor])) cursor++;
+        if (src[cursor] === "{") {
+          let bDepth = 0;
+          for (let i = cursor; i < src.length; i++) {
+            if (src[i] === "{") bDepth++;
+            else if (src[i] === "}") {
+              bDepth--;
+              if (bDepth === 0) {
+                cursor = i + 1;
+                break;
+              }
+            }
+          }
+        }
+      }
+      open = src.indexOf("{", cursor);
+    }
+  }
+  if (open < 0) return "";
+  let depth = 0;
+  let state: "code" | "line" | "block" | "sq" | "dq" | "tpl" = "code";
+  for (let i = open; i < src.length; i++) {
+    const c = src[i];
+    const n = src[i + 1] ?? "";
+    if (state === "line") {
+      if (c === "\n") state = "code";
+      continue;
+    }
+    if (state === "block") {
+      if (c === "*" && n === "/") {
+        state = "code";
+        i++;
+      }
+      continue;
+    }
+    if (state === "sq" || state === "dq" || state === "tpl") {
+      if (c === "\\") i++;
+      else if (
+        (state === "sq" && c === "'") ||
+        (state === "dq" && c === '"') ||
+        (state === "tpl" && c === "`")
+      )
+        state = "code";
+      continue;
+    }
+    if (c === "/" && n === "/") {
+      state = "line";
+      i++;
+      continue;
+    }
+    if (c === "/" && n === "*") {
+      state = "block";
+      i++;
+      continue;
+    }
+    if (c === "'") state = "sq";
+    else if (c === '"') state = "dq";
+    else if (c === "`") state = "tpl";
+    else if (c === "{") depth++;
+    else if (c === "}") {
+      depth--;
+      if (depth === 0) return src.slice(open + 1, i);
+    }
+  }
+  return src.slice(open + 1);
+};
+const builders = new Map<string, SettingsBuilder>();
+for (const m of urlSrc.matchAll(
+  /export function (\w+Of)\s*\(\s*(\w+)\s*:\s*(?:Pick<\s*UrlParams|Omit<\s*UrlParams|UrlParams\b)/g
+)) {
+  const body = builderBody(urlSrc, m.index ?? 0);
+  const direct = new Set(
+    [...body.matchAll(new RegExp(`\\b${m[2]}\\.([A-Za-z0-9_]+)`, "g"))].map((x) => x[1])
+  );
+  const calls = [
+    ...new Set([...body.matchAll(/\b(\w+Of)\s*\(/g)].map((x) => x[1])),
+  ].filter((name) => name !== m[1]);
+  builders.set(m[1], { direct, keys: new Set(direct), calls });
+}
+for (const b of builders.values()) {
+  for (const name of b.calls) {
+    const callee = builders.get(name);
+    if (callee) for (const k of callee.direct) b.keys.add(k);
+  }
+}
+const builderCalls = srcFiles.map((f) => {
+  const counts = new Map<string, number>();
+  for (const name of builders.keys()) {
+    const n = (f.text.match(new RegExp(`\\b${name}\\s*\\(`, "g")) ?? []).length;
+    if (n > 0) counts.set(name, n);
+  }
+  return counts;
+});
 const readersOf = (key: string): string => {
   const re = new RegExp(`\\.${key}\\b`, "g");
   const hits = srcFiles
-    .map((f) => ({ f: f.file.replace(/^src\//, ""), n: (f.text.match(re) ?? []).length }))
+    .map((f, i) => {
+      let n = (f.text.match(re) ?? []).length;
+      for (const [name, count] of builderCalls[i]) {
+        if (builders.get(name)?.keys.has(key)) n += count;
+      }
+      return { f: f.file.replace(/^src\//, ""), n };
+    })
     .filter((h) => h.n > 0)
     .sort((a, b) => b.n - a.n || a.f.localeCompare(b.f));
   if (!hits.length) return "none found";
@@ -420,7 +551,7 @@ L.push("- **Hidden when**: the row's line in `refreshCond`, with `params.` dropp
 L.push("- **Shows**: whether the row shows at today's defaults (maze mode), and in knot mode (`mf=0`); `in closed X` means a collapsed folder hides it until opened.");
 L.push("- **Effect**: the `PanelCallbacks` its change runs (onRegenerate rebuilds the design; the others apply live or restart the solve).");
 L.push("- **Added**: the commit whose diff first added the key to the panel file, and the ledger item in its subject.");
-L.push("- **Read by**: the source files that read `.key`, outside the ui plumbing (panel, url_state, param_codec, daily_link), with counts; a heuristic.");
+L.push("- **Read by**: the source files that read `.key`, outside the ui plumbing (panel, url_state, param_codec, daily_link), with counts; a file that calls one of url_state's `*Of` settings builders also counts as a reader of every key that builder reads (including a builder it calls, one hop), once per call site beside the literal hits; a heuristic.");
 L.push("- **Tip**: the row's tooltip, the binding's `api.element.title` (set by `row()` in `tweakpane_panel.ts`).");
 L.push("");
 L.push("The helpers `refreshCond` defines:");
