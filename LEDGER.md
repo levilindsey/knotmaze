@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1160.
+Next free ID: K1161.
 
 ## Waiting on Levi
 
@@ -527,9 +527,9 @@ Next free ID: K1160.
   (`docs/design/K1156_muse_batch13_run_a.md`) as `docs/design/K1156_muse_batch13.md`, runs B to G; Claude
   reviews it and queues them (ports 5500-5549).
   - owner: muse runs 13B-13G, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 14:40
-  - branch: mainline; last commit: `ce485d87`
+  - branch: mainline; last commit: `cbaca79f`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); the run's commit report
-  - next: Run B done; next Run C
+  - next: Run C done; next Run D
   - brief: `docs/design/K1156_muse_batch13.md` (Run A's: `docs/design/K1156_muse_batch13_run_a.md`)
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 13B-13G); a `hold.txt` beside it holds the chain before its next run
 - **K1114** · Junctions: look at S1g's at-rest changes. F1 empties j36 109-110 (muse_hash) and cuts j62
@@ -1705,12 +1705,12 @@ Every other item below waits on the trigger it names.
 - **K1154** · Loader clocks: the physics-off load's wall cap counts hidden-tab time (PhysicsCore's loadWall0
   in src/physics/physics_host.ts, and the worker host's loadInfo in src/physics/worker_host.ts beside it — the
   pre-settle already counts visible time with VisibleClock; split from K165)
-- **K1155** · `scripts/phone.ps1`'s `-TailscaleHost` default (8320cde2) is the phone's tailnet machine name,
-  in a public repo. Find the phone among `tailscale status --json`'s online peers instead, the param kept as
-  the override; a fixture with made-up names tests it.
 - **K1159** · Two adb lookups: scripts/phone_pass.ps1's Find-Adb and scripts/phone_pass/phone_ready.mjs's
   findAdb are copies (the pass hands its path over with --adb); fold them when either changes (K1142 Handoff,
   split from K1148). scripts/phone.ps1's own Find-Adb reads in a third order beside them.
+- **K1160** · scripts/phone_pass.ps1 carries the phone's tailnet machine name in three places (its
+  tailscaleHost variable, the match comment and the -Serial help); find the phone the way K1155 finds it in
+  scripts/phone.ps1, or pass the name in (split from K1155)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2018,6 +2018,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1155** · scripts/phone.ps1 finds the phone among online android peers; -TailscaleHost is the override, default empty. Done in cbaca79f (2026-11-03).
 - **K1148** · --ready guards bench_frame --cdp, k923 sync --target phone and close_tabs; the adb fold split out. Done in ce485d87 (2026-11-03).
 - **K1152** · phone_ready.mjs states its check in its own words (no deleted file, no rebased hash). Done in ce485d87 (2026-11-03).
 - **K1153** · Muse batch 12: K202's midnight rollover (7f03c0a6); K201's Played chip (e0ceba44); K125's whole bars (cbc02ded); K165 (a)'s HALTED stamp (1692f502, K1154 split off); K170's opt-in wake (8e6034a5); K308's exact fifth contour (b5082d44). Done in d3b337aa (2026-11-03).
