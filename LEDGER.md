@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1176.
+Next free ID: K1178.
 
 ## Waiting on Levi
 
@@ -773,6 +773,9 @@ Every other item below waits on the trigger it names.
 - **K1168** · K144 stage 1: Google sign-in and per-account sync of the daily results, on a Cloudflare Worker +
   D1 (`docs/design/K144_accounts.md` sections 9-10; brief to write). Built and tested locally first; deploying
   needs a Google OAuth client and the Worker + D1 on the Cloudflare account, from Levi.
+- **K1176** · Remove the merged, clean agent worktrees (50 under `.claude/worktrees/` on 2026-11-03; the 10-30
+  hand-off of session bf876705 found 21, and 3 holding closed items' WIP, K372, K578 and K441's old briefs: ask
+  Levi about those) after K1058, since a removal can empty node_modules.
 
 ## Residuals (known, not fixed)
 
@@ -1718,6 +1721,8 @@ Every other item below waits on the trigger it names.
 - **K1175** · Key hints can go stale under flow: the discs cache per vertex and stamp, and on a bisector run
   the fresh map can disagree (K1170's probe: mnode_109's run 221 showed up, read left;
   `.claude/probes/K332/out/after_k1170.json`). Check what a press of the shown key takes.
+- **K1177** · K907's `scripts/phone_pass/k539_g31.mjs` and `pixdiff_g31.mjs` are only parse-checked, never run
+  on the phone: round 2026-10-30's brief (b581f620) left them out. The next K156 round runs each once.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2010,9 +2015,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   later A/A may tighten it (`docs/design/K156.md`, Round 2026-11-03 handoff, Left over 2).
 - **K1145** · Cursive x5 (`R_DX=22 R_A1=-15 R_L1=10`): a steeper b, v and w exit (about -22 deg), if Levi
   wants v7.0's exits further down (K1119's Handoff).
-- **K1157** · K1040 label pass, upload levers for the Pixel's gate numbers to choose: x,y from K8's SAMP (a
-  quarter of the moving 212,992-901,120 B; needs a vertex-to-sample map) and the tables in one texture if the
-  per-call cost dominates (`docs/design/K1040_s3e_lean.md`, Handoff, step 2).
+- **K1157** · K1040 label pass, a lever for S5's live integration: x,y from K8's SAMP, at most a quarter of the
+  moving upload (0.3 of the Pixel's 1.3 ms; needs both tent shaders rewritten and a vertex-to-sample map). S3f2
+  dropped one texture: the bytes cost, not the calls (`docs/design/K1040_s3f2_levers.md`).
 
 ## Done
 
