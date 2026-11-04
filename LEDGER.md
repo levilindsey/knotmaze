@@ -527,9 +527,9 @@ Next free ID: K1155.
   K202's midnight rollover, K201's Played chip, K125's whole bars, K165 (a)'s HALTED stamp, K170's opt-in
   wake, K308's exact fifth contour.
   - owner: muse runs 12B-12G, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 12:29
-  - branch: mainline; last commit: `8e6034a5`
+  - branch: mainline; last commit: `b5082d44`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K202/`, `K201/`, `K125/`, `K165/`, `K308/`
-  - next: Run F done; next Run G
+  - next: Run G done; batch 12 complete, Claude reviews and closes K1153
   - brief: `docs/design/K1153_muse_batch12.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 12B-12G); a `hold.txt` beside it holds the chain before its next run
 
@@ -1102,9 +1102,6 @@ Every other item below waits on the trigger it names.
 - **K305** · In the daily's intro, k7_frames' frame-callback p50 (24.7 ms) exceeds its rAF-interval
   p50 (18 ms), unexplained; K7's summaries report fps, interval p95 and render alone
   (`docs/design/K7_worker.md`, "What was measured").
-- **K308** · `mod(floor(v + 0.5), 5.0)` in the background contours is a float quotient like K299's,
-  allowlisted in `ROUNDED_QUOTIENTS` (`test/render/paint_ring_lap.test.ts`); fix it when the
-  sha256-pinned programs are next re-pinned. `docs/design/K299_choice_pulse_bug.md` ("Residuals").
 - **K315** · `__knotPhys` calls `sys.readSlideStats()`, which resets the counters it reads; under
   K7's mirror it needs the diagnostic bridge or a worker-side count (decide in K7 s2 or s4).
   `docs/design/K7_worker.md` ("Stage 1 handoff", "For stage 2").
@@ -2010,6 +2007,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K308** · the contours' fifth line counts exactly (integer-corrected). Done in b5082d44 (2026-11-03).
 - **K170** · scripts/phone.ps1 wakes the phone only under -Wake. Done in 8e6034a5 (2026-11-03).
 - **K165** · a halted load keeps its HALTED stamp; the load wall clock split out. Done in 1692f502 (2026-11-03).
 - **K125** · Scarborough Fair loops on whole bars (closing rest 3). Done in cbc02ded (2026-11-03).
