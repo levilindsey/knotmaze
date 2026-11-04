@@ -123,6 +123,25 @@ export interface FormBParams {
    */
   dEdge?: "skip" | "mirror" | "near";
   /**
+   * S1i: the slope k of "near"'s cut, c = k·u (default 1, S1g F1). L still
+   * meets 0 at u = 0; above 1 the span's end sweeps k times as fast as the
+   * pass while that cut binds, and an arm whose pass sits close behind its
+   * root keeps more of its span (S1i F2).
+   */
+  dEdgeK?: number;
+  /**
+   * S1i: "near"'s slope from the arm's corners (0: off, the uniform dEdgeK).
+   * Where the cap gate holds a corner's r, its arc's tip moves
+   * g = tan((π − θ)/4) per unit of L (θ the corner's angle: 1 at 0, 0 at π),
+   * so the cut c = k·u with k = clamp(dEdgeTip / g, 1, dEdgeKMax), g the
+   * larger over the arm's corners, moves no fillet faster than dEdgeTip
+   * times the pass. g is continuous in the arms' angles, also as two arms
+   * swap order (g = 1 at θ = 0 on both sides).
+   */
+  dEdgeTip?: number;
+  /** S1i: dEdgeTip's largest k (an arm with no corner, g = 0, gets it). */
+  dEdgeKMax?: number;
+  /**
    * S1g: the root gate's band, in h (0: off, S1f's final; default 0.5, S1g
    * F2). A fourth factor of solveCorner's w (after the margin, steep and cap
    * gates), ss(d/band) on each tracked foot's distance d from its arm's
@@ -382,6 +401,11 @@ export class FormB {
   readonly reachSep: "chord" | "line";
   /** S1g: a pass behind an arm's root. */
   readonly dEdge: "skip" | "mirror" | "near";
+  /** S1i: the slope of "near"'s cut. */
+  readonly dEdgeK: number;
+  /** S1i: the corners' tip speed bound for "near"'s slope (0: off), and its largest k. */
+  readonly dEdgeTip: number;
+  readonly dEdgeKMax: number;
   /** S1g: the root gate's band, in h (0: off). */
   readonly rootBand: number;
   /** S3b: who names a surface in the label ("cover": its covering pieces and fills). */
@@ -428,6 +452,9 @@ export class FormB {
     this.reachSteps = params.reachSteps ?? 2;
     this.reachSep = params.reachSep ?? "chord";
     this.dEdge = params.dEdge ?? "near";
+    this.dEdgeK = params.dEdgeK ?? 1;
+    this.dEdgeTip = params.dEdgeTip ?? 0;
+    this.dEdgeKMax = params.dEdgeKMax ?? 4;
     this.rootBand = params.rootBand ?? 0.5;
     this.labelBy = params.labelBy ?? "cover";
     this.force = params.force ?? {};
@@ -564,6 +591,8 @@ export class FormB {
     // d_c − reach_c − h), reach_c = h·cot(θ_c/2) on straight threads
     // (curvedReachOf for reach "walk", S1e F4; quadReachOf for "quad", S1f).
     this.armsOf = this.polys.map(() => []);
+    const tipK = this.dEdge === "near" && this.dEdgeTip > 0;
+    const pend: { ai: number; L0: number; uB: number }[] = [];
     scene.junctions.forEach((j, ji) => {
       j.arms.forEach((arm, ei) => {
         const pi = this.idxOf.get(arm.chain);
@@ -601,6 +630,9 @@ export class FormB {
           return reach;
         };
         let Lcut = Infinity;
+        // S1i: with dEdgeTip, near's nearest pass behind the root (its cut
+        // waits for the arm's corners, after the loop).
+        let uB = Infinity;
         for (const x of this.passes[pi]) {
           const d = delta(x.s);
           // S1g: a pass behind the root (d < 0 on an open chain; on a closed
@@ -611,8 +643,9 @@ export class FormB {
           if (this.dEdge !== "skip") {
             const u = p.closed ? p.len - d : -d;
             if (p.closed || d < -1e-12) {
-              const c = this.dEdge === "near" ? u : u - reachAt(x, -dir, u) - h;
-              if (c < Lcut) Lcut = c;
+              const c = this.dEdge === "near" ? this.dEdgeK * u : u - reachAt(x, -dir, u) - h;
+              if (tipK) uB = Math.min(uB, u);
+              else if (c < Lcut) Lcut = c;
             }
           }
           // S1d F5: a pass past L still cuts while its cut c lies short of L
@@ -621,6 +654,7 @@ export class FormB {
           const c = d - reachAt(x, dir, d) - h;
           if (c < Lcut) Lcut = c;
         }
+        if (uB < Infinity) pend.push({ ai: this.arms.length, L0: L, uB });
         L = Math.max(0, Math.min(L, Lcut));
         // S1d F3: the oracle's armDir, the chord at 2h along the chain from the
         // scene arm's s (an END arm's sR is the chain's end extended to c',
@@ -645,6 +679,34 @@ export class FormB {
         this.arms.push({ j: ji, g: this.groupOf[ji], pi, sR, dir, kind: arm.kind, L, Lcut, ux, uy, ang: Math.atan2(uy, ux), ei });
       });
     });
+    // S1i: dEdgeTip's behind cut, c = k·u with k from the arm's corners: its
+    // two cyclic neighbours as the corner loop below takes them (a through
+    // pass's own two arms make none), g = tan((π − θ)/4) for θ < π, else 0.
+    for (const { ai, L0, uB } of pend) {
+      const A = this.arms[ai];
+      const J = scene.junctions[A.j];
+      const ais = this.arms.map((_, i) => i).filter((i) => this.arms[i].j === A.j);
+      ais.sort((u, v) => this.arms[u].ang - this.arms[v].ang);
+      const n = ais.length;
+      const at = ais.indexOf(ai);
+      let gMax = 0;
+      for (const [a, b] of [
+        [ais[(at + n - 1) % n], ai],
+        [ai, ais[(at + 1) % n]],
+      ]) {
+        if (a === b) continue;
+        const xa = J.arms[this.arms[a].ei];
+        const xb = J.arms[this.arms[b].ei];
+        if (xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && Math.abs(xa.s - xb.s) < 1e-6) continue;
+        let th = this.arms[b].ang - this.arms[a].ang;
+        th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+        if (th < Math.PI) gMax = Math.max(gMax, Math.tan((Math.PI - th) / 4));
+      }
+      const k = gMax > 0 ? Math.min(this.dEdgeKMax, Math.max(1, this.dEdgeTip / gMax)) : this.dEdgeKMax;
+      const c = k * uB;
+      if (c < A.Lcut) A.Lcut = c;
+      A.L = Math.max(0, Math.min(L0, A.Lcut));
+    }
 
     // 4. Corners: one per cyclically adjacent arm pair.
     this.cell = Math.max(2 * h, 0.25);

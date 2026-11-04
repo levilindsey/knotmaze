@@ -24,8 +24,8 @@ rep(
   "        const sR = r.sR;\n        const TRA = (globalThis as any).__s1iArm?.(ji, this.arms.length) as ((o: any) => void) | undefined;\n",
 );
 rep(
-  "              const c = this.dEdge === \"near\" ? u : u - reachAt(x, -dir, u) - h;\n",
-  "              const c = this.dEdge === \"near\" ? u : u - reachAt(x, -dir, u) - h;\n              TRA?.({ ev: \"behind\", s: x.s, d, u, c, theta: x.theta });\n",
+  "              const c = this.dEdge === \"near\" ? this.dEdgeK * u : u - reachAt(x, -dir, u) - h;\n",
+  "              const c = this.dEdge === \"near\" ? this.dEdgeK * u : u - reachAt(x, -dir, u) - h;\n              TRA?.({ ev: \"behind\", s: x.s, d, u, c, theta: x.theta });\n",
 );
 rep(
   "          const c = d - reachAt(x, dir, d) - h;\n          if (c < Lcut) Lcut = c;\n",
