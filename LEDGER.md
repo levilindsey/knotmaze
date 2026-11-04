@@ -526,11 +526,11 @@ Next free ID: K1178.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1, S2 done (a4dc218a, 16246c90). Answers: the light splits at a fork (A), runs toward you behind
   you, straight through your junction with no dim moment. S3a-S6 next. Full text: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-03 22:06 (queued as Muse chain run 15G, `.claude/probes/K1053/queue.txt`; claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c coordinates)
-  - branch: mainline; last commit: `cb9c3529`
+  - owner: nobody since 2026-11-04 01:33 (S3a done in Muse run 15G)
+  - branch: mainline; last commit: `4f625916`
   - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked, S2's record in `out/s2/`; the doc's appendix lists the commands)
-  - next: Muse run 15G (S3a, CPU side); then Claude reviews the band table and the A/B
-  - brief: `docs/design/K1139_s3a.md`; the plan: `docs/design/K1139_pulse_junctions.md`
+  - next: S3b: the fan shader, on the phone with a sheet for Levi (the plan's section 5)
+  - brief: docs/design/K1139_s3a.md; the plan: docs/design/K1139_pulse_junctions.md
 - **K1171** · One Rules dropdown for Fragile runs and Collapse (Levi 2026-11-03): off, crack, snap, collapse,
   collapse (free); one link param; the Par rows greyed under the collapse options. Muse chain run 15E, after 15B
   (K778 edits the same folder and the codec). Full text: `docs/ledger_notes.md`.
