@@ -4,6 +4,8 @@ import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
 import { buildWalkGraph, walkDistances } from "../../src/core/walk_graph";
 import type { WalkGraph, WalkVertex, WalkEdge } from "../../src/core/walk_graph";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { FabricMazeController } from "../../src/game/fabric_controller";
 import {
   armSafe,
@@ -291,5 +293,51 @@ describe("the fire model (K114)", () => {
       }
     }
     expect(checked).toBe(96);
+  });
+
+  it("K711 (c): a broken arm is never fire-safe", () => {
+    const w = graph(RUNS, "S", "X");
+    const f = buildFire(w, 0.5, 0);
+    // Broken set: run 3 (B-C, the only fire-safe arm at B at clock 3) is gone.
+    const broken3 = (eid: number) => eid === 3;
+    expect(safeArms(w, f, 3, "B", broken3)).toEqual([]);
+    expect(fireTrapped(w, f, 3, "B", broken3)).toBe(true);
+    // No predicate: today's answers stand (the broken arm still counts safe).
+    expect(safeArms(w, f, 3, "B")).toEqual([3]);
+    expect(fireTrapped(w, f, 3, "B")).toBe(false);
+  });
+
+  it("K711 (c): at 2.999 the B-A runs keep a player untrapped with 3 broken", () => {
+    const w = graph(RUNS, "S", "X");
+    const f = buildFire(w, 0.5, 0);
+    const broken3 = (eid: number) => eid === 3;
+    expect(safeArms(w, f, 2.999, "B", broken3)).toEqual([1, 2]);
+    expect(fireTrapped(w, f, 2.999, "B", broken3)).toBe(false);
+    // And without the predicate the same clock reads all three arms safe.
+    expect(safeArms(w, f, 2.999, "B")).toEqual([1, 2, 3]);
+  });
+
+  it("K711 (c): a blocked arm that was never fire-safe changes nothing", () => {
+    const w = graph(RUNS, "S", "X");
+    const f = buildFire(w, 0.5, 0);
+    // Run 1 (A-B) ties the fire at clock 3 (L + len = T(A)), so it is not
+    // fire-safe there; blocking it leaves the safe list as it was.
+    const broken1 = (eid: number) => eid === 1;
+    expect(safeArms(w, f, 3, "B", broken1)).toEqual([3]);
+    expect(fireTrapped(w, f, 3, "B", broken1)).toBe(false);
+    // A predicate that names nothing reads exactly the unpredicated answer.
+    expect(safeArms(w, f, 3, "B", () => false)).toEqual(safeArms(w, f, 3, "B"));
+    expect(fireTrapped(w, f, 3, "B", () => false)).toBe(fireTrapped(w, f, 3, "B"));
+  });
+
+  it("K711 (c): the controller passes its broken runs to the trap test", () => {
+    // A source scan, in the panel_rect.test.ts manner: the controller's own
+    // fire-and-fragile walk in k137b_block.test.ts does not reach a stated
+    // trap, so this pin, not a driven arrival, is the wiring gate.
+    const src = readFileSync(
+      fileURLToPath(new URL("../../src/game/fabric_controller.ts", import.meta.url)),
+      "utf8"
+    );
+    expect(src).toContain("fireTrapped(this.walk, fire, L, at, (eid) => this.broken(eid))");
   });
 });

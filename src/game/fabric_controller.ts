@@ -1593,7 +1593,7 @@ export class FabricMazeController {
     const L = this.fireL;
     const lead = fireLead(fire, at, L);
     if (lead < this.fireClosest) this.fireClosest = lead;
-    if (fireTrapped(this.walk, fire, L, at)) this.fireLost = true;
+    if (fireTrapped(this.walk, fire, L, at, (eid) => this.broken(eid))) this.fireLost = true;
   }
 
   // Does stepping from `from` across a run of `len` to `to` stay on a

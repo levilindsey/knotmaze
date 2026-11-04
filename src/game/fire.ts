@@ -97,16 +97,31 @@ export function armSafe(
 }
 
 // The safe arms at vertex `at` at clock L, in the vertex's edge order.
-export function safeArms(walk: WalkGraph, fire: Fire, L: number, at: string): number[] {
+// K711 (c): a run the `broken` predicate names (fragile breaks and cuts
+// alike; refire's own shape) is gone, so it is never safe, whatever
+// armSafe says. A caller that passes nothing reads today's answers.
+export function safeArms(
+  walk: WalkGraph,
+  fire: Fire,
+  L: number,
+  at: string,
+  broken?: (eid: number) => boolean
+): number[] {
   const v = walk.vertices.get(at);
   if (!v) return [];
-  return v.edges.filter((eid) => armSafe(walk, fire, L, at, eid));
+  return v.edges.filter((eid) => !(broken?.(eid) ?? false) && armSafe(walk, fire, L, at, eid));
 }
 
 // The loss test: no safe arm left at `at` (never at the exit: it wins).
-export function fireTrapped(walk: WalkGraph, fire: Fire, L: number, at: string): boolean {
+export function fireTrapped(
+  walk: WalkGraph,
+  fire: Fire,
+  L: number,
+  at: string,
+  broken?: (eid: number) => boolean
+): boolean {
   if (at === walk.exit) return false;
-  return safeArms(walk, fire, L, at).length === 0;
+  return safeArms(walk, fire, L, at, broken).length === 0;
 }
 
 // A run's state at clock L. `burnt` lists the burnt stretches as
