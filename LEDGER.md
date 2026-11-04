@@ -530,9 +530,9 @@ Next free ID: K1161.
   (`docs/design/K1156_muse_batch13_run_a.md`) as `docs/design/K1156_muse_batch13.md`, runs B to G; Claude
   reviews it and queues them (ports 5500-5549).
   - owner: muse runs 13B-13G, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 14:25
-  - branch: mainline; last commit: `cbaca79f`
+  - branch: mainline; last commit: `f809a275`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); the run's commit report
-  - next: Run C done; next Run D
+  - next: Run D done; next Run E
   - brief: `docs/design/K1156_muse_batch13.md` (Run A's: `docs/design/K1156_muse_batch13_run_a.md`)
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 13B-13G); a `hold.txt` beside it holds the chain before its next run
 
@@ -1696,9 +1696,6 @@ Every other item below waits on the trigger it names.
 - **K1151** · Invalidating the S3 label pass's sampled D32F depth after its draws adds 31-34 ms a pass on the
   Pixel (s3d2), where K923's invalidated D24 renderbuffer cost nothing; the mechanism is untested
   (`docs/design/K1040_s3d_tent.md`, Handoff). S3e tries the renderbuffer (K1097).
-- **K1154** · Loader clocks: the physics-off load's wall cap counts hidden-tab time (PhysicsCore's loadWall0
-  in src/physics/physics_host.ts, and the worker host's loadInfo in src/physics/worker_host.ts beside it — the
-  pre-settle already counts visible time with VisibleClock; split from K165)
 - **K1159** · Two adb lookups: scripts/phone_pass.ps1's Find-Adb and scripts/phone_pass/phone_ready.mjs's
   findAdb are copies (the pass hands its path over with --adb); fold them when either changes (K1142 Handoff,
   split from K1148). scripts/phone.ps1's own Find-Adb reads in a third order beside them.
@@ -2012,6 +2009,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1154** · the physics-off load's wall cap and reported time count visible time (both hosts). Done in f809a275 (2026-11-03).
 - **K1155** · scripts/phone.ps1 finds the phone among online android peers; -TailscaleHost is the override, default empty. Done in cbaca79f (2026-11-03).
 - **K1148** · --ready guards bench_frame --cdp, k923 sync --target phone and close_tabs; the adb fold split out. Done in ce485d87 (2026-11-03).
 - **K1152** · phone_ready.mjs states its check in its own words (no deleted file, no rebased hash). Done in ce485d87 (2026-11-03).
