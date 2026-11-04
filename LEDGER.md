@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1153.
+Next free ID: K1154.
 
 ## Waiting on Levi
 
@@ -501,11 +501,11 @@ Next free ID: K1153.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-03 12:07 (merged; agent `aeaeb7068fdeb974f` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `dbf129b2`
+  - owner: agent `aad38c5538dbcedc8` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 12:14 (S3e)
+  - branch: `worktree-agent-aaf87e9d3775b20e4`, worktree `.claude/worktrees/agent-aaf87e9d3775b20e4`; last commit: `dbf129b2`
   - evidence: `.claude/probes/K1040/s3/` (`run_locked.ps1`, `phone_batch.ps1` + `run_phone.ps1`, `s3d_gate.ps1`, `s3d_kick.ps1`, `split.mjs`, `s3d_table.mjs`; `out/s3d_table.md`, `out/split_s3d2.md`, `out/split_s3d3.md`, `out/defects_s3d.md`); oracle30 and the recordings: worktree k868-s3a (`.claude/probes/S3a/seq13/`)
-  - next: S3e (`docs/design/K1040_s3e_lean.md`): cut the pass's fixed part to its floor (the per-pass upload, L's and D's clears and stores) against the 2 ms gate as written (the coordinator's call); S3f the drawing, S3g K1143
-  - brief: `docs/design/K1040_s3d_tent.md` (its Handoff; S3c's: `docs/design/K1040_s3c_label.md`)
+  - next: S3e (`docs/design/K1040_s3e_lean.md`): step 0 (rebase, page.ts's floor comment, 15 min lock waits), step 1 the ideal floor on the Pixel, step 2 the lean fixed part (depth in L's word, no re-upload, no nb), step 3 the gate; then S3f the drawing, S3g K1143
+  - brief: `docs/design/K1040_s3e_lean.md` (S3d's Handoff: `docs/design/K1040_s3d_tent.md`)
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`; desktop timing through `.claude/probes/K1040/s3/run_locked.ps1`; the phone through `phone_batch.ps1` (it runs `run_phone.ps1`: both locks, then K1142's ready check)
 - **K1119** · Cursive J3g (v7.0), Levi's answers to v6.9 (2026-11-03): b, v and w exit between v6.8 and
   v6.9, closer to v6.8 ("still exit somewhat downward and with a swoosh"); the six a/q joins get v6.6's dip
@@ -523,6 +523,15 @@ Next free ID: K1153.
   - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
   - next: Levi answers Q1-Q3 (sent with the pictures 2026-11-03 10:07; clips of the motion offered), then the S2 brief: the light field, folding in the wrong "world arc" comment on `litArms` (`src/game/route_plan.ts`, the length is lattice) and S5 if Q3 says straight through
   - brief: `docs/design/K1139_s1_brief.md` (the plan: `docs/design/K1139_pulse_junctions.md`, stages S2-S6)
+- **K1153** · Muse batch 12: its Run A drafts the batch's brief from the ledger
+  (`docs/design/K1153_muse_batch12_run_a.md`); Claude reviews the draft, renames it
+  `docs/design/K1153_muse_batch12.md` and queues its runs (ports 5550-5599).
+  - owner: muse run 12A, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 12:14
+  - branch: mainline; last commit: `19e3f5ff`
+  - evidence: `.claude/probes/K1053/` (chain.log, done.txt); the draft `docs/design/K1153_batch12_draft.md`; Run A's commit report
+  - next: Run A drafts batch 12's brief; Claude reviews it, renames it to `docs/design/K1153_muse_batch12.md` and queues its runs
+  - brief: `docs/design/K1153_muse_batch12_run_a.md`
+  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, line 12A); a `hold.txt` beside it holds the chain before its next run
 
 ## Next, in order
 
@@ -748,7 +757,7 @@ Every other item below waits on the trigger it names.
 - **K1149** · Beat dots: dots at the beat points inside multi-beat runs, along threads and at junctions, that
   pop with a ring when the dot eats them; the dropdown and the pulse and ring at the dot are done (split from
   K804). Builds toward K805.
-- **K1143** · K1040 S3f (K1097), after S3e: F4's merge scan; F6's SNAP class (within 0.01 px: accept or
+- **K1143** · K1040 S3g (K1097), after S3f: F4's merge scan; F6's SNAP class (within 0.01 px: accept or
   tighten eps); F8's sharp joints; F9, lr 2's upsample class (DEFECT, its 1.9x rate unexplained); F12, a
   float64 mirror pin against labelAt. F10 went to S3d (`docs/design/K1040_s3d_tent.md`).
 
