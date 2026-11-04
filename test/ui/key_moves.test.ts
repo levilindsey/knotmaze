@@ -415,25 +415,26 @@ describe("K329 tie cycles", () => {
 });
 
 describe("K332 hintMap", () => {
-  it("the up-right / down-right / left fork: each run wears its nearest direction", () => {
-    // Runs up-right, down-right and left. Right alone ties between the
-    // two right-hand runs (up and down claim them), so both wear their
-    // chords; the left run wears left itself (err 0).
+  it("the up-right / down-right / left fork: each run wears the cardinal that takes it", () => {
+    // Runs up-right, down-right and left. Up takes the first run, down
+    // the second (right ties between them and settles nothing) and left
+    // the third: every run has a cardinal, so no chord shows - not even
+    // the diagonals at err 0 (K1170: a cardinal always beats a chord).
     const deps = [dep(1, -45), dep(2, 45), dep(3, 180)];
     expect(hintMap(deps)).toEqual([
-      { edge: 1, dir: "upRight", chord: true },
-      { edge: 2, dir: "downRight", chord: true },
+      { edge: 1, dir: "up", chord: false },
+      { edge: 2, dir: "down", chord: false },
       { edge: 3, dir: "left", chord: false },
     ]);
   });
 
-  it("an X: the tie cycle deals every arm a cardinal, the hints wear the nearer chords", () => {
+  it("an X: the tie cycle deals every arm a cardinal, the hints wear those cardinals", () => {
     expect(keysOf(keyMap(NODE_2))).toEqual([15, 54, 18, 53]);
     expect(hintMap(NODE_2)).toEqual([
-      { edge: 15, dir: "upRight", chord: true },
-      { edge: 18, dir: "downLeft", chord: true },
-      { edge: 53, dir: "upLeft", chord: true },
-      { edge: 54, dir: "downRight", chord: true },
+      { edge: 15, dir: "up", chord: false },
+      { edge: 18, dir: "down", chord: false },
+      { edge: 53, dir: "left", chord: false },
+      { edge: 54, dir: "right", chord: false },
     ]);
   });
 
@@ -452,22 +453,36 @@ describe("K332 hintMap", () => {
     ]);
   });
 
-  it("a run two keys take wears the nearer err; a cardinal beats a diagonal at equal err", () => {
-    // Right (20 deg), down (70) and down + right (25) all take run 2.
+  it("a cardinal shows on a run its diagonal takes with a smaller err (K1170)", () => {
+    // Run 5 at -30 deg: up (60) and right (30) take it, and up + right
+    // at 15 - the smallest err of the three, but a chord, so the nearer
+    // cardinal (right) shows.
+    expect(hintMap([dep(5, -30), dep(6, 180)])).toEqual([
+      { edge: 5, dir: "right", chord: false },
+      { edge: 6, dir: "left", chord: false },
+    ]);
+  });
+
+  it("a run two cardinals take wears the smaller err", () => {
+    // Right (20 deg) and down (70) both take run 2; right is nearer.
+    // (Down + right takes it too, at 25, and does not show.)
     expect(hintMap([dep(2, 20), dep(1, -90), dep(3, 180)])).toEqual([
       { edge: 1, dir: "up", chord: false },
       { edge: 2, dir: "right", chord: false },
       { edge: 3, dir: "left", chord: false },
     ]);
-    // Run 9 sits halfway between right and down + right (22.5 deg each).
-    expect(hintMap([dep(9, 22.5), dep(1, -90), dep(3, 180)])).toContainEqual({
-      edge: 9,
-      dir: "right",
-      chord: false,
-    });
   });
 
-  it("a tied run gets no hint", () => {
+  it("two cardinals at an exact tie show in KEY_DIRS order (up before right)", () => {
+    // Run 7 at -45 deg: up and right take it at 45 deg each; up is
+    // first in KEY_DIRS. Its chord (up + right, err 0) does not show.
+    expect(hintMap([dep(7, -45), dep(8, 180)])).toEqual([
+      { edge: 7, dir: "up", chord: false },
+      { edge: 8, dir: "left", chord: false },
+    ]);
+  });
+
+  it("a run nothing takes gets no hint", () => {
     // Three runs leave the same way: right and both its chords tie over
     // all three (no one-to-one deal), so none of them is hinted.
     const deps = [dep(1, 0), dep(2, 0), dep(3, 0), dep(4, 180)];

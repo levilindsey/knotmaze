@@ -557,11 +557,16 @@ export function arcPoint(
 }
 
 // K332's hintMap follows; holdRules is after it.
-// K332: one hint per run - the direction that takes it. `hintMap` inverts
-// keyMap and chordMap: a run two directions take wears the one with the
-// smaller err, and a cardinal beats a diagonal at equal err (within
-// 1e-12). A run no direction takes (a tie, nothing within tolerance)
-// gets no entry. Sorted by run id.
+// K332 + K1170: one hint per run - the d-pad button that takes it.
+// `hintMap` inverts keyMap and chordMap: a cardinal that takes a run
+// always beats a chord (the pad, the arrow keys and WASD have only the
+// four cardinals, and most runs leave diagonally, so the old smaller-err
+// rule named chords no pad button presses). Among cardinals the smaller
+// err wins, an exact tie (within 1e-12) in KEY_DIRS order. A chord's
+// diagonal shows only on a run no cardinal takes.
+// A run no direction takes (a tie, nothing within tolerance)
+// gets no entry. Sorted by run id. Which key takes which run does not
+// change: keyMap, chordMap, the picker and the holds are untouched.
 export interface HintEntry {
   edge: number;
   dir: KeyDir | Diagonal;
@@ -575,13 +580,19 @@ export function hintMap(
   const best = new Map<number, HintEntry & { err: number }>();
   const offer = (edge: number, dir: KeyDir | Diagonal, chord: boolean, err: number): void => {
     const cur = best.get(edge);
-    if (
-      !cur ||
-      err < cur.err - 1e-12 ||
-      (Math.abs(err - cur.err) <= 1e-12 && !chord && cur.chord)
-    ) {
+    if (!cur) {
       best.set(edge, { edge, dir, chord, err });
+      return;
     }
+    // K1170: a cardinal beats a chord at any err; a chord never
+    // displaces a cardinal. Within one kind the smaller err wins and
+    // an exact tie keeps the first offered (KEY_DIRS order for
+    // cardinals, DIAGONALS for chords).
+    if (cur.chord !== chord) {
+      if (!chord) best.set(edge, { edge, dir, chord, err });
+      return;
+    }
+    if (err < cur.err - 1e-12) best.set(edge, { edge, dir, chord, err });
   };
   const keys = keyMap(deps, o);
   for (const dir of KEY_DIRS) {
