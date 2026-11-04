@@ -297,6 +297,9 @@ Next free ID: K1149.
 - **K1138** · The backdrop speed slider goes up to 8 times each backdrop's own pace. Should its top be
   2 times, or 16 times? (Your other backdrop changes of 2026-11-03 are done: vellum faster, aurora
   faster and taller, contours morphing, paper stronger.)
+- **K144** · Accounts and shared stats, a stretch goal (Levi 10-13): OAuth, cross-device stats,
+  opt-in sharing, percentile bands, replay anti-cheat (K108, K47). Backends: Cloudflare Workers + D1
+  or the SnoringCat platform (Nakama). Next: design doc. `docs/design/levi_notes_2026-10-13.md`.
 
 ## In progress
 
@@ -507,9 +510,9 @@ Next free ID: K1149.
   range's ease by time; K144's accounts doc; K804's beat indicator (pulse, ring or off); K207's fog stamp
   dedupe; K688's healing-cuts doc. Run B (K1130) was dropped: it stays with K156's next phone round.
   - owner: muse runs 11C, 11E, 11A, 11D, 11F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 09:55
-  - branch: mainline; last commit: `7f929ae3`
+  - branch: mainline; last commit: `23e3bf79`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K252/`, `K804/`, `K207/`
-  - next: Run C done; next Run E
+  - next: Run E done; next Run A
   - brief: `docs/design/K1146_muse_batch11.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 11C-11F); a `hold.txt` beside it holds the chain before its next run
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
@@ -600,9 +603,6 @@ Every other item below waits on the trigger it names.
 - **K116** · Pluck instruments, accompaniment, lowest priority (`docs/design/K116_instruments.md`,
   2e60b00, `docs/design/levi_notes_2026-10-13.md`): skeleton (drone, bass, `pluckVoice` presets),
   then marimba, bells; `pvc`, `acc`, `acl` daily-exempt; Pixel audio probe first; loop K125.
-- **K144** · Accounts and shared stats, a stretch goal (Levi 10-13): OAuth, cross-device stats,
-  opt-in sharing, percentile bands, replay anti-cheat (K108, K47). Backends: Cloudflare Workers + D1
-  or the SnoringCat platform (Nakama). Next: design doc. `docs/design/levi_notes_2026-10-13.md`.
 - **K10** · Phone benchmark after every stage (Pixel 11; baseline 2026-10-11: 30 fps at rest, 51
   with `fw=0`; K79 stage A 60). Rerun `scripts/preview.ps1` per ref, `scripts/phone.ps1 -Ports ...`,
   `.claude/probes/K10/phone_bench.mjs`; numbers `.claude/probes/K10/bench_*.txt`.
