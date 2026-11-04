@@ -1,12 +1,12 @@
-# Muse batch 11 (draft, from K1141 Run B)
+# Muse batch 11 (K1146)
 
 Claude starts these runs through Paseo, one run at a time, after batch
-10 (`docs/design/K1141_muse_batch10.md`, K1141) has been reviewed and
+10 (`docs/design/K1141_muse_batch10.md`, K1141) was reviewed and
 closed. Each run is a fresh Muse agent that reads this brief, does its
 run's tasks, and stops. Claude reviews each run on master afterwards
-and closes batch 11's item. This draft has SIX runs. Claude reviews
-the draft, opens batch 11's item, fills its ID in below and renames
-this file.
+and closes K1146. Five runs, queued in the order C, E, A, D, F: Run B
+was dropped in review (its section says why). K1141's Run B drafted
+this brief (77d02919); Claude renamed it and dropped Run B.
 
 Where the runs came from (K1141 Run B's order): batch 10 used up this
 batch's `Next` list, so candidates came from (1) `## Approved, to
@@ -15,27 +15,29 @@ order), then (2) `## Residuals (known, not fixed)` in ledger order,
 then (3) two `Next` items whose next step is a design document (K144,
 K688). Residuals were read in ledger order through **K207** (the last
 residual read; batch 12's draft starts after K207). One run fits from
-Approved (K804, in part), three from the Residuals read through K207
-(K1130, K252, K207), and the two design-doc runs fill the batch. See
+Approved (K804, in part), two from the Residuals read through K207
+(K252, K207; K1130 was a third until review dropped it), and the two
+design-doc runs fill the batch. See
 "Left out on purpose" at the end for every candidate read and skipped,
 and why.
 
 Every task here is decided by a unit test, a desktop probe or a
 measurement table. None needs the phone or Levi. Runs A, C and D change
-game code, Run B changes a tracked probe script only, and Runs E and F
-write a design document and change nothing in `src/`. No run changes
-physics, junctions, the cursive, or the thread ribbons' shader text.
-Runs A and D both touch `src/render/fabric_maze_renderer.ts`, in
-different functions (the head pulse and ring; the fog stamps), so the
-run order A to F is load-bearing: each run starts from the latest
-master.
+game code, and Runs E and F write a design document and change nothing
+in `src/`. No run changes physics, junctions, the cursive, or the
+thread ribbons' shader text. Runs A and D both touch
+`src/render/fabric_maze_renderer.ts`, in different functions (the head
+pulse and ring; the fog stamps): each run starts from the latest
+master, in the queued order (C, E, A, D, F). C's gate is a pure table
+and E writes a document, so neither needs the perf lock: they go
+first, while a phone timing pass and the junction work hold it.
 
 ## How to work
 
 Batch 8's "How to work" applies unchanged: read it in
 `docs/design/K1131_muse_batch8.md` (its ten rules and the paragraphs
 after them, which send you on to `docs/design/K1050_muse_week.md`)
-before anything else. Read batch 11's item wherever it says K1131, and
+before anything else. Read K1146 wherever it says K1131, and
 K1137's rule 11 and K1141's rules 11 and 12 wherever they apply: rule
 11 (a re-measurement copies the original stand's link verbatim, read
 from the old probe's source, not from a summary of it, and its table
@@ -47,10 +49,10 @@ was published less than two weeks ago) wherever a dependency moves.
 Use ports 5500-5549 (batch 9's range, free again; each run below names
 its range).
 
-After each run, update batch 11's handle:
-`ledger.mjs handle <batch-11 item> --last-commit <sha8> --next "Run <X> done; next Run <Y>"`
-(after Run F: `--next "Run F done; batch 11 complete, Claude reviews and closes <batch-11 item>"`).
-(Claude fills the item ID in when opening batch 11.)
+After each run, update K1146's handle, naming the next run in the
+queued order (C, E, A, D, F):
+`ledger.mjs handle K1146 --last-commit <sha8> --next "Run <X> done; next Run <Y>"`
+(after Run F: `--next "Run F done; batch 11 complete, Claude reviews and closes K1146"`).
 
 ## Run A · K804: beat indicators at the dot (pulse or ring, no dots)
 
@@ -186,83 +188,16 @@ commit in):
 
 Suggested ports: 5500-5509.
 
-## Run B · K1130: the diagnostic screenshot takes its throwaway first
+## Run B · dropped in review (K1130 stays with K156's phone round)
 
-Read first: `.claude/rules/probes.md` (the verification rule and the
-K1130 lore); then `scripts/diag_screenshot.mjs` whole (it is the
-tracked diagnostic driver: a headed, hardware-GPU Chrome, one
-screenshot after the settle, its JSON report of stamp, timing and
-frame intervals), and `docs/design/K147.md` (the timing its header
-explains). No `src/` file changes in this run.
-
-The ledger says (Residuals):
-
-> **K1130** · K309 inject probes: a run's first normal screenshot can come back dark and nearly blank (round 2026-11-02 rimSeam, 3848 bytes against 628314; round 2026-11-03 handoff step 3b). Take a throwaway first shot, or shoot each state twice and diff the repeat, before believing a pair.
-
-What is there today (read it, don't trust this summary).
-`diag_screenshot.mjs` navigates, foregrounds the window, waits the
-settle argument, reads the page facts and takes exactly one
-screenshot, the saved one. Nothing in it warms the capture path, and
-its report does not say how large the saved file was: a dark first
-capture of the kind K1130 names would be saved and believed. The
-probes.md lore already tells every hand-written probe to take a
-throwaway first shot; the one driver every probe shares is the place
-that lore becomes automatic.
-
-Tasks, in order (ports 5510-5519, headed real-time Chrome):
-
-1. The before table. Serve a build (a `pwsh scripts/preview.ps1`
-   build, or the dev server) on a port in 5510-5519 and run
-   `node scripts/diag_screenshot.mjs <url> <out.png> [settleMs]` five
-   times on one full design link (a bare URL is today's daily, so
-   use a token link, e.g. a seed-7 design with `&am=instant&snd=none`
-   added; name the whole link in the table). For each run record the
-   saved file's byte count and its mean luma (read the PNG back in
-   the probe, not by eye), and say whether any saved shot is dark and
-   nearly blank in K1130's sense (state your threshold before the
-   runs: for example under 20,000 bytes, against K1130's 3,848 dark
-   and 628,314 normal). If none of the five is dark, say so: the
-   after table then proves the warm-up costs nothing and changes
-   nothing, not that it caught the fault.
-2. The throwaway. In `diag_screenshot.mjs`, at capture time, before
-   the saved screenshot: take one screenshot into memory and discard
-   it, then take the saved one as today. The report's JSON gains the
-   discarded shot's byte count beside the saved one's, and a line
-   that flags the saved shot when it falls under the threshold from
-   task 1 (state the constant once, at the top of the file, naming
-   K1130). Nothing else about the run changes: same settle, same
-   facts, same saved path, and the discarded shot is never written
-   to disk.
-3. The after table. The same five runs on the fixed driver: every
-   saved shot over the threshold, the discarded and saved byte
-   counts per run, and, for one run, the pixel difference between
-   the saved shot and a second saved shot of the same state taken
-   straight after it (the repeat diff K1130's text offers), so the
-   table says the warm-up did not change what a settled page draws.
-   `node --check scripts/diag_screenshot.mjs` passes, and one
-   before/after pair of the same link at the same settle reads the
-   same stamp and timing shape (its `frames` median a healthy
-   16.7 ms class, not the throttled class).
-
-Done:
-
-- The driver discards a first capture at capture time and reports
-  both byte counts, flagging a saved shot under the stated
-  threshold.
-- After table: five saved shots, none dark in K1130's sense; the
-  repeat diff and the stamp are as the before table's good runs
-  read.
-- `npm test` passes (the driver is not in the suite; the check is
-  the probe table and `node --check`).
-
-Report: the before and after tables, with the threshold stated, and
-whether the before table caught a dark shot at all.
-
-Close: `ledger.mjs done K1130 --commit <sha8> --what "diag screenshot discards a throwaway first capture and flags a near-blank save"`.
-If the after table still saves a dark shot in any of the five, close
-nothing, and record the counts in K1130's text instead.
-
-Suggested ports: 5510-5519.
+Claude dropped this run when reviewing the draft. K1130's dark, nearly
+blank first shots came from the K309 inject probes on the phone, in
+K156's rounds of 2026-11-02 and 2026-11-03 (`docs/design/K156.md`: the
+2026-11-03 round's step 3b and its Left over), not from
+`scripts/diag_screenshot.mjs`. A warm-up in the desktop driver would
+close K1130 without touching the probes it names. Phone passes are out
+of this batch, and K156's next round takes K1130 first. Runs A and D
+still take a throwaway first shot, as K1130's text advises.
 
 ## Run C · K252 (a): the pan range's ease by time, not by frame
 
