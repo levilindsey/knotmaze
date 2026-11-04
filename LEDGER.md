@@ -334,14 +334,6 @@ Next free ID: K1163.
 
 ## In progress
 
-- **K1114** · Junction corners at rest: bring back the rounding S1g's F1 took and keep S1g's pop fixes (Levi,
-  2026-11-03, on S1h's old | new picture: "I don't like that we've lost corner rounding with the new junction
-  changes"). S1i restores it and shows S1f | today | restored (`docs/design/K1114_s1i_rounding.md`).
-  - owner: agent `af4c9ecd37b7bc266` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-03 16:18, 2 h cap ~18:18)
-  - branch: `worktree-agent-af4c9ecd37b7bc266`, worktree `.claude/worktrees/agent-af4c9ecd37b7bc266`; last commit: `53974fbe`
-  - evidence: .claude/probes/K1040/s1/out/s1i/ (S1h's in out/s1h/)
-  - next: S1i: measure why near empties j36, j131, j99; candidates; the S1f | today | restored sheet
-  - brief: `docs/design/K1114_s1i_rounding.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: 44ce69a1); S3 (K1097) merged short of its gate; S1g merged (52945e6e); S3b (K1097) merged (c4863a50, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
@@ -1995,6 +1987,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1114** · S1i: corner rounding back at the junction roots (rootBand 0.5). Done in 761ed081 (2026-11-03).
 - **K1161** · Muse batch 14: runs B-F landed K1160+K1159, K710, K711 (c), K732's desktop half and K740's first gap. Done in 28d2c81f (2026-11-03).
 - **K710** · a real-time catch (and an extra's, and the sword's touch) cannot land through a broken run; contact counts tails but not broken runs. Done in 5f0b538e (2026-11-03).
 - **K1159** · adb lookup folded into phone_ready.mjs (findAdb picker); phone_pass.ps1 delegates with --find-adb; phone.ps1's own lookup left beside them. Done in 91c3d90f (2026-11-03).
