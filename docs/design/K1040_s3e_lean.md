@@ -139,3 +139,233 @@ list (K1143).
   - Then report: the gate's verdict, the table, a `Ledger items` list,
     and K1097's handle fields (owner, branch and last commit, evidence,
     next, brief, env).
+
+## Handoff
+
+S3e's agent, stopped 2026-11-03 at 13:27 (cap 14:13). Branch
+`worktree-agent-aaf87e9d3775b20e4` on `19e3f5ff`, never pushed.
+
+**The gate: undecided.** Its second and third conditions hold on the
+desktop. The first, and step 1's ideal floor, need the Pixel, which was
+never ready: K1142's ready check found the screen off and the phone
+locked at every try (12:27, 12:29, 12:37, 13:05, 13:09, 13:14, 13:18
+and 13:23), so this stage has no phone run. Both batches are committed
+and wait for it (Next).
+
+### What landed
+
+- `36543a12` step 0: page.ts's `opts.floor` comment says what it is
+  (the 1-px readback of L alone; K923's floor also cleared the
+  full-size default framebuffer). Gate batches wait 15 min for the
+  locks: `run_phone.ps1`, `phone_batch.ps1`, `s3d_gate.ps1`,
+  `s3d_kick.ps1`, `f11_run.ps1`. npm test passed.
+- `cf4b089e` step 1: page.ts's ideal family in timeMany (`ideal`,
+  `idealnoinv`, `idealnod`, `ideal8`, `ideal32f`, `idealpt`,
+  `idealpt32f`, `idealnoclr`, `idealfsq`; page.ts's header says what
+  each one does), split.mjs's `s3e1` set and `s3e_floor.ps1`.
+- `aae83cfe` step 2: the lean fixed part, the pass's option `lean`
+  (`label_b_pass.ts`'s header). The default pass is unchanged. In lean:
+  - L is immutable (texStorage2D);
+  - D is a DEPTH_COMPONENT32F renderbuffer, invalidated after the
+    draws, and `depth` reads null; `leanStoreDepth` keeps the store, as
+    a control;
+  - nb is uploaded only for the capsule, the one mode that reads it;
+  - each table sends only the rows that differ from its last upload, a
+    run of rows per texSubImage2D. `probeAllDirty` sends every used
+    row: the moving fabric's frame, which the gate times.
+    `uploadBytes` counts what an upload sent.
+
+  Also page.ts's lean variants, `--lean` and `--rest` in s3.mjs and
+  phone_time.mjs, `s3e_gate.ps1` and `defects.ps1`.
+- `c0c308dd` the D24 hedge: `probeDepth24` (D as K923's
+  DEPTH_COMPONENT24 renderbuffer), s3.mjs's `--d24 1`, the variants
+  `leanempty24` and `leantentv24`. npm test: 201 files passed.
+- `47a0856f` draw()'s GL state save, split out: `probeNoSave` (no
+  state queries, no restore, no timer query), the variants
+  `leanemptyns` and `leanemptynoupns`, and split.mjs's `save`,
+  `ns - ideal` and `noupns - d32f`. `s3e_gate.ps1` runs the one-page
+  split first.
+- The Handoff's own commit: this Handoff and the desktop summaries in
+  `out/` (`many_s3e1smoke`, `many_s3e3`, the `verdict_s3e*` and
+  `time_s3e*` summaries).
+
+### Step 1: the floor (desktop only)
+
+The Pixel's ideal floor is unmeasured (`s3e_floor.ps1`), so whether it
+is over 1 ms is open. The desktop (2480x1800, many, render-sync p50 in
+ms, which resolves 0.1; `out/many_s3e1smoke_summary.md`):
+
+| variant | muse_hash | ring |
+|---|---|---|
+| ideal | 0.5 | 0.5 |
+| idealnoinv | 0.5 | 0.5 |
+| idealnod | 0.5 | 0.5 |
+| ideal8 | 0.6 | 0.5 |
+| ideal32f | 0.6 | 0.6 |
+| idealpt | 0.6 | 0.5 |
+| idealpt32f | 0.6 | 0.6 |
+| idealnoclr | 0.4 | 0.3 |
+| idealfsq | 0.4 | 0.4 |
+| empty | 0.8 | 0.8 |
+| emptynoup | 0.7 | 0.7 |
+| floor | 0.3 | 0.3 |
+| kick | 0.3 | 0.3 |
+
+On the desktop the ideal floor is 0.2 ms over floor, the clears are
+worth 0.1-0.2, a clear as a full-screen draw costs about what the clear
+does, and the depth store costs nothing measurable. None of it says
+anything about the Pixel's tiler.
+
+### Step 2: what the lean part found
+
+- **S4 reads nothing from D.** F10's tie strips and D4's fade take both
+  z's from the CPU; the band inks only where L's surface code says its
+  surface is on top; the outer edge's AA fetches L; S1e's burial uses
+  the CPU's depth. No shader samples D and `get depth()` has no reader,
+  so there is nothing to carry into L's word, and D can be invalidated.
+  S3d's Handoff says S4 samples D: it does not.
+  - If S4 ever needs z on the GPU: D4's fade, ss(-ε_z, ε_z, Δz) at
+    ε 0.06, has a slope of up to 12.5 per z unit, so an error under
+    1/256 of the fade needs z to about 3e-4, 13-16 bits. L's word has
+    two free bits (30-31), so that takes a second word (RG32UI) or
+    bits freed elsewhere.
+  - D32F keeps today's keys exactly; D24 reads the same census (step
+    3).
+- **D's invalidation on the Pixel: unmeasured.** S3d's 31-34 ms came
+  from invalidating a sampled D32F texture; lean invalidates a D32F
+  renderbuffer that nothing samples. The s3e3 page carries both
+  fallbacks: `leantentvst` keeps the store (column `D store`), and
+  `leanempty24` and `leantentv24` use K923's D24 renderbuffer. D24's
+  census matches D32F's line for line, so D24 is a safe switch if the
+  Pixel punishes the D32F renderbuffer.
+- **The upload, moving and at rest.** Moving, every table changes
+  (every vertex moves), so lean sends today's bytes: 212,992-901,120 B
+  a pass (muse_hash 802,816; fat one unused 16 KB row less). S3d's
+  "212-410 KB" is wrong: `uploadBytes` reads these totals for today's
+  tentv too. At rest lean sends 0 B. S3d measured the moving upload at
+  1.1 ms (0.5-1.5) on the Pixel, so the moving lean empty pass is
+  probably over the 0.3 ms margin by its upload alone (inferred; `lean
+  noup` is the pass without it).
+- **What the live renderer already uploads.** K8's SAMP
+  (`samp_table.ts`, on by default) holds the chainSamples' x,y, which
+  equal the label's pts x,y except at the END arm's extension vertex.
+  s and z are on no live table, and nothing else matches. Reading x,y
+  from SAMP would cut 8 of tentv's ~32 B a vertex, a quarter of the
+  upload: 0.1-0.4 ms by S3d's 0.5-1.5 (inferred). Not built: it needs
+  the fetches rewritten, a map from the label's vertices to SAMP's
+  samples, and a probe page that runs the live renderer (the s3 page
+  builds the pass alone).
+- **draw()'s GL state save is the desktop's whole gap.** One page,
+  all 12 scenes (`many_s3e3c`): leanemptynoupns 0.5 = ideal 0.5 =
+  ideal32f 0.5; leanemptyns 0.5-0.6; leanemptynoup 0.7; leanempty
+  0.7-0.8. draw() queries 17 GL state values (6 of them texture
+  bindings), restores them and, on the desktop, runs a timer query;
+  the ideal does none of it. A pass inside Pixi's frame can restore
+  from Pixi's own state tracking instead (or reset Pixi's state cache
+  after it). On the Pixel each query may be a synchronous round trip
+  (inferred); the s3e3 page's `save` column measures it.
+- **The timed window leaves the upload call's CPU out.** page.ts's
+  time() times draw() and sync(); building the records, the row compare
+  and the copy into the transfer buffer run before the window opens.
+  On the desktop that call takes 0.1-0.8 ms of main-thread time, moving
+  or at rest (at rest it still builds every record and compares every
+  row). The upload's GPU work lands inside the window. The gate counts
+  the GPU's time; this main-thread time comes on top.
+- **nb:** lean uploads it for the capsule only (tent uploaded it;
+  tentv never did).
+- **lr 2: skipped.** F9's upsample class reads DEFECT at lr 2, so the
+  census would not hold.
+- **The clears on the Pixel's ANGLE: unmeasured.** Inferred from
+  ANGLE's Vulkan backend: a full, unscissored clear at a render pass's
+  start becomes its loadOp CLEAR, and an invalidate inside the open
+  render pass becomes storeOp DONT_CARE. The s3e1 page answers it:
+  `clears` (idealpt - idealnoclr, the clears over a DONT_CARE load)
+  near 0 means ANGLE folds them into the load op, and `fsq - ideal`
+  near 0 means a clear costs what a full-screen draw does. On the
+  desktop both are within 0.1-0.2 ms.
+
+### Step 3: the gate
+
+1. The lean empty pass within 0.3 ms of the ideal floor on the Pixel:
+   **unmeasured.** On the desktop (one page, `many_s3e3c`)
+   `leanempty - ideal` is 0.2-0.3 on every scene, and 0.0-0.1 without
+   draw()'s save (`ns - ideal`).
+2. tentv's census with the lean part (`verdict_s3eleantentv`):
+   **holds.** 794 DEFECT, 504 at 0.03 px or more, the same per scene as
+   S3d: muse_hash 212/149, muse_default_tw 44/28, def 50/22, fat 23/0,
+   ring 35/19, user_tw42.lightpaper 64/42, g41_def_tw42 32/9,
+   g41_def_tw64 58/36, g41_ring_tw42 11/4, g41_ring_tw64 40/27,
+   g41_user_tw42 55/41, g41_user_tw64 170/127. With D24
+   (`verdict_s3eleand24`): the same, line for line.
+3. The control's census: **holds.** 0 DEFECT (`verdict_s3ectl`), and 0
+   with the lean part (`verdict_s3ectllean`).
+
+### Before and after
+
+The Pixel's label cost (render-sync p50 minus floorall's, ms) against
+the 2 ms gate. Before: S3d's Handoff. After, tentv with the lean part:
+not run. The desktop beside it (2480x1800): the render sync on one
+page minus floor (`many_s3e3`), moving and at rest, and the GPU timer's
+p50 (`time_s3etentv`, `time_s3eleantentv`).
+
+| scene | Pixel fit | Pixel tent | Pixel tentv | Pixel tentv lean | desk tentv | desk lean | desk lean at rest | GPU tentv | GPU lean |
+|---|---|---|---|---|---|---|---|---|---|
+| muse_hash | 38.5 | 10.8 | 7.0 | - | 1.1 | 1.1 | 1.0 | 0.655 | 0.647 |
+| muse_default_tw | 22.8 | 10.0 | 7.1 | - | 1.1 | 1.1 | 1.0 | 0.697 | 0.688 |
+| def | 24.1 | 10.9 | 8.5 | - | 1.2 | 1.2 | 1.0 | 0.719 | 0.711 |
+| fat | 20.0 | 6.7 | 5.7 | - | 0.9 | 0.8 | 0.8 | 0.484 | 0.476 |
+| ring | 11.4 | 5.8 | 4.6 | - | 0.7 | 0.7 | 0.6 | 0.323 | 0.315 |
+| user_tw42.lightpaper | 15.2 | 6.1 | 5.6 | - | 0.8 | 0.8 | 0.7 | 0.436 | 0.428 |
+| g41_def_tw42 | 21.7 | 11.6 | 9.4 | - | 1.1 | 1.1 | 0.9 | 0.732 | 0.724 |
+| g41_def_tw64 | 25.4 | 10.7 | 7.4 | - | 1.1 | 1.1 | 1.0 | 0.702 | 0.694 |
+| g41_ring_tw42 | 9.6 | 5.0 | 4.8 | - | 0.7 | 0.7 | 0.6 | 0.311 | 0.304 |
+| g41_ring_tw64 | 12.5 | 5.1 | 4.1 | - | 0.7 | 0.7 | 0.6 | 0.328 | 0.320 |
+| g41_user_tw42 | 14.7 | 6.2 | 4.7 | - | 0.8 | 0.8 | 0.7 | 0.435 | 0.428 |
+| g41_user_tw64 | 25.0 | 7.8 | 5.8 | - | 0.8 | 0.8 | 0.7 | 0.433 | 0.426 |
+| median | 21.7 | 7.8 | 5.8 | - | 0.9 | 0.8 | 0.8 | 0.484 | 0.476 |
+
+On the desktop the lean part's GPU time is 0.007-0.009 ms under
+today's on every scene: the clears and stores it drops are nearly free
+there. The desktop cannot stand in for the Pixel's tiler.
+
+### Commands
+
+From the worktree, in PowerShell:
+- The gate's phone batch, then its split:
+  `& .claude\probes\K1040\s3\s3e_gate.ps1`, then, in
+  `.claude\probes\K1040\s3`, `node split.mjs s3e3 out/split_s3e3.md s3e3`.
+  The first condition is `leanempty - ideal` (and `leanempty - d32f`);
+  the label cost per scene is `out/phone_table_s3e.md`'s s3eleantentv
+  column.
+- Step 1's floor: `& .claude\probes\K1040\s3\s3e_floor.ps1`, then
+  `node split.mjs s3e1 out/split_s3e1.md s3e1`.
+- The desktop census: `& .claude\probes\K1040\s3\run_locked.ps1
+  -RunArgs @('verdict', '--mode', 'tentv', '--lean', '1', '--tag',
+  's3eleantentv')` (add `'--d24', '1'` for D24; leave out `--mode` for
+  the capsule control), then `& .claude\probes\K1040\s3\defects.ps1
+  s3eleantentv`.
+- The desktop timer: the same with `'time'` in place of `'verdict'`;
+  `'--rest', '1'` times the row diff at rest, and leaving out `--lean`
+  times today's part.
+- The desktop split: `-RunArgs @('many', '--tag', 's3e3c', '--variants',
+  'ideal,ideal32f,leanempty,leanemptynoup,leanemptyns,leanemptynoupns,empty,floor')`.
+
+### Next
+
+1. With the phone awake and unlocked (the launcher in front, nobody
+   touching it), run `s3e_gate.ps1` (six runs, about 15 min), then
+   `s3e_floor.ps1` (one page, about 6 min), then both split.mjs lines.
+2. Read the gate's first condition from `split_s3e3.md`. If
+   `leanempty - ideal` is over 0.3 on any scene, its columns split the
+   excess: `lean noup` minus `ideal` is the pass without its upload,
+   `save` is draw()'s state queries, and `D store` and
+   `leanempty24 - ideal` say whether invalidating the D32F renderbuffer
+   costs (if it does, switch D to D24: census-safe). The expected
+   excess is the moving upload (S3d: 1.1 ms). Its lever is fewer bytes,
+   SAMP's x,y first; dropping draw()'s queries belongs to the live pass.
+3. Read the ideal floor from `split_s3e1.md` (`ideal`). If it is over
+   1 ms on most scenes, less than 1 ms is left for the drawing, and
+   tentv's drawing (1.2-4.4) misses that on every scene. S3f starts from
+   that number.
+4. Hand S3f the label cost per scene against 2 ms:
+   `phone_table_s3e.md`'s s3eleantentv column.
