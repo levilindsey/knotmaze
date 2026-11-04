@@ -282,9 +282,6 @@ Next free ID: K1176.
   (K368, 89836d3b)
 - **K1127** · On a narrow phone, the hidden-runs line in the corner panel now wraps in whole phrases (no lone
   'them', no dot at a line's end). Does it read well? Pictures: .claude/probes/K1100/out/k1127/stills/ (360x740 and 320x640, stats off and on; K1100, 22b5ebab)
-- **K1132** · Key hints (the d-pad button that takes each run, K1170) sit mostly under your marker at the
-  default size: move them out past it? Sheets sent 2026-11-03, left now and right out (`__knotKeyHintPlace("out")`,
-  f2c79236): `.claude/probes/K1170/shots/sheet_desk.png`, `sheet_phone.png`. Full text: `docs/ledger_notes.md`.
 - **K144** · Accounts and shared stats, a stretch goal (Levi 10-13). The options doc is done
   (`docs/design/K144_accounts.md`, 61a24a82). Levi 2026-11-03: Workers + D1, Google sign-in first, results
   synced first (Q1, Q2; stage 1 is K1168). Q3-Q5 still wait: the sharing switch's words, same-day bands, resume.
@@ -317,8 +314,9 @@ Next free ID: K1176.
 - **K1166** · After the history rewrite (K1164), two things only you can do: send GitHub Support the drafted
   request so closed PR #1 stops serving the old commits, and reset the laptop's knotmaze copy before its next
   use. Card: `docs/asks/K1166.md`.
-- **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them, steer it
-  live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text: `docs/ledger_notes.md`)
+- **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them (and a tower
+  defense), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text:
+  `docs/ledger_notes.md`)
 
 ## In progress
 
@@ -519,11 +517,11 @@ Next free ID: K1176.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-03 22:43 (merged; agent `a8112b33d998f9629` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - owner: nobody since 2026-11-03 22:51 (queued as Muse chain run 15I, `.claude/probes/K1053/queue.txt`; claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c coordinates)
   - branch: mainline; last commit: `01f69cd0`
-  - evidence: `.claude/probes/K1040/s3/` on the branch (s3f_gate.ps1, span_bench.ts, vert_count.ts, out/); S3e's phone table only in the main checkout (`out/phone_table_s3e.md`)
+  - evidence: `.claude/probes/K1040/s3/` (s3f_gate.ps1, span_bench.ts, vert_count.ts; out/phone_table_s3f.md, out/split_s3f1.md, out/phone_table_s3e.md)
   - next: Muse chain run 15I: S3f2, the upload and the fixed part, timed on the Pixel (`docs/design/K1040_s3f2_levers.md`)
-  - brief: `docs/design/K1040_s3f_draw.md`
+  - brief: `docs/design/K1040_s3f2_levers.md` (S3f: `docs/design/K1040_s3f_draw.md`)
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1, S2 done (a4dc218a, 16246c90). Answers: the light splits at a fork (A), runs toward you behind
@@ -548,6 +546,14 @@ Next free ID: K1176.
   - evidence: `.claude/probes/K1173/`
   - next: Muse run 15F; then Levi tries the checkbox on the phone
   - brief: `docs/design/K1173_tug_toggle.md`
+- **K1132** · Key hints (the d-pad button that takes each run, K1170) move out past your marker: Levi chose out
+  on 2026-11-03 over the sheets (`.claude/probes/K1170/shots/`). Muse run 15H makes the out placement (f2c79236)
+  the only one and removes `__knotKeyHintPlace`. Full text: `docs/ledger_notes.md`.
+  - owner: nobody since 2026-11-03 22:51 (queued as Muse chain run 15H, `.claude/probes/K1053/queue.txt`; claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c coordinates)
+  - branch: mainline; last commit: `f2c79236`
+  - evidence: `.claude/probes/K1170/shots/` (sheet_desk.png, sheet_phone.png: left now, right out)
+  - next: Muse run 15H makes out the only placement, shoots `.claude/probes/K1132/shots/` and closes K1132
+  - brief: the 15H prompt in `.claude/probes/K1053/queue.txt`, under the How to work of `docs/design/K1169_muse_batch15.md`
 
 ## Next, in order
 
@@ -2015,12 +2021,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1157** · K1040 label pass, upload levers for the Pixel's gate numbers to choose: x,y from K8's SAMP (a
   quarter of the moving 212,992-901,120 B; needs a vertex-to-sample map) and the tables in one texture if the
   per-call cost dominates (`docs/design/K1040_s3e_lean.md`, Handoff, step 2).
-- **K1158** · K1040's live label pass restores GL state from Pixi's own tracking (or resets Pixi's state cache
-  after it), not draw()'s 17 queries and restore: the desktop's whole 0.2-0.3 ms over the ideal floor
-  (`docs/design/K1040_s3e_lean.md`, Handoff, step 2).
 
 ## Done
 
+- **K1158** · K1040's label pass keeps GL state from Pixi's tracking, without draw()'s queries (S3f step 1). Done in 1aac725b (2026-11-03).
 - **K778** · an Undo button in the HUD's rules row; ruleUndos 0-5 (default 1) sets how many a run gets; the Stranded banner's Undo unchanged. Done in 82537593 (2026-11-03).
 - **K1170** · The key hints show the d-pad button that takes each run (Levi 2026-11-03: the arrows point along the runs, mostly diagonals no pad button presses; `hintMap` picks the smallest err). Done in 81081ab9 (2026-11-03).
 - **K1164** · Master's history rewritten without the device addresses (force-pushed 2026-11-03; 2,456 commits from 7645fe67 on) and 3,823 quoted SHAs remapped; the old history is mirrored in ~/Backups, the map is `.claude/probes/K1164/commit-map`; leftovers K1166, K1167. Done in 82aa5072 (2026-11-03).

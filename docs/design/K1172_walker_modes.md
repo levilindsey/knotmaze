@@ -130,6 +130,36 @@ Impediments besides cuts:
 Scoring: survive a number of turns; seal them all in with the fewest
 cuts; or Delay it's score (the length walked), summed over the walkers.
 
+### A tower defense (Levi, later the same day)
+
+"Hmm, I also wonder if some sort of tower defense style game could be
+fun with these mazes. Or some twist on that kind of game"
+
+Stop them in real time: waves of walkers leave the start, each on its
+shortest route to the exit (K707's walker); you place defenses beside
+the threads, and each walker that gets through costs a life. Four
+twists that only a knot gives:
+1. Crossings are double sites. A defense on a crossing covers both
+   threads, and a route that crosses itself passes that spot twice. The
+   skill is reading the knot.
+2. The threads move, the defenses don't. Drag the walkers' run into a
+   defense's range, or bend it around one: you shape the path by moving
+   it, not by walling it off. A tug moves a run but does not lengthen
+   it, so what changes is which stretch of the route lies in range.
+   Risks: the knot relaxes back when you let go (a pin, as in Bend,
+   holds it), and drags compete with the taps that place defenses.
+3. Plucks as the attack. A pluck sends a wave along its thread that
+   stuns or pushes back the walkers it passes; in music mode, plucks on
+   the beat hit harder. A proposal: today's maze-mode pluck is drawn
+   only (`src/render/pluck_overlay.ts`), so the walkers would need a
+   wave they can read.
+4. Snap as the puzzle version. Under snap a run breaks once any walker
+   crosses it, so at most max-flow walkers can ever get out, and that
+   number is also the fewest cuts that seal the exit (A flock, Menger).
+   Every seed gets an exact par, which suits the daily.
+
+The coordinator's pick: twist 2, the one you play by moving the knot.
+
 ## Steer it live
 
 Real time, its next run telegraphed (R 2.7).

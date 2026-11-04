@@ -3625,7 +3625,7 @@ Found by the six ask-card agents on 2026-11-03 (their cards are in `docs/asks/`)
 
 ## K1132
 
-After you press an arrow key (or WASD) once, small arrows sit at the start of each run at your junction, showing which key takes it. At the default marker size they sit mostly under your own marker, and only their tips show. Move them out past the marker, or keep them as they are? Pictures, sent 2026-11-03: `.claude/probes/K1132/shots/` (sheet_desk.png, left now, right out; the out placement is `__knotKeyHintPlace("out")`, f2c79236). On hold until K1170 (Muse run 15D) lands: the hints become the d-pad's four directions, and its sheets (`.claude/probes/K1170/shots/`) replace these pictures.
+After you press an arrow key (or WASD) once, small arrows sit at the start of each run at your junction, showing which key takes it. At the default marker size they sit mostly under your own marker, and only their tips show. Move them out past the marker, or keep them as they are? Pictures, sent 2026-11-03: `.claude/probes/K1132/shots/` (sheet_desk.png, left now, right out; the out placement is `__knotKeyHintPlace("out")`, f2c79236). On hold until K1170 (Muse run 15D) lands: the hints become the d-pad's four directions, and its sheets (`.claude/probes/K1170/shots/`) replace these pictures. Levi chose out, 2026-11-03: “The d-pad markers should move out past the current location marker”. Muse chain run 15H makes the out placement the only one, removes the reach placement and `__knotKeyHintPlace`, and keeps K1170's rule for which hint a run shows (`hintMap`).
 
 ## K1171
 
@@ -3633,4 +3633,4 @@ One Rules dropdown for Fragile runs and Collapse: off, crack, snap, collapse, co
 
 ## K1172
 
-Walker modes, Levi's brainstorm (2026-11-03, four messages): guide it, program it (board-game command cards), a flock (Lemmings-like; under snap its par is a max flow), stop them (several walkers, a third knob for K707), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`)
+Walker modes, Levi's brainstorm (2026-11-03, five messages): guide it, program it (board-game command cards), a flock (Lemmings-like; under snap its par is a max flow), stop them (several walkers, a third knob for K707; and a tower defense, four twists, the coordinator's pick the one you play by moving the knot), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`)
