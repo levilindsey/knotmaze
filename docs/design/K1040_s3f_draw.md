@@ -129,3 +129,214 @@ S3e's Rules apply, with these changes:
   (owner, branch and last commit, evidence, next, brief, env).
 
 ## Handoff
+
+The S3f agent, 2026-11-03, 19:20 to 21:20 (the cap). Branch
+`worktree-agent-a8112b33d998f9629`, rebased onto origin/master
+`16246c90` (K1139 S2; still master at 20:45). The stage's commits sit
+on it, and the last one adds this Handoff.
+
+**The gate is undecided: nothing of S3f ran on the Pixel.** The gate
+batch started at 20:28, and K1142's ready check stopped it because the
+phone's screen was off (`out/gate_s3f_20261103_2028.log`). The desktop
+half ran.
+- Steps 1 and 4 are done.
+- Step 3 has its count and one lever, the facets, which fail the
+  census.
+- Step 2 needs the phone; it is the batch's s3f1 run.
+
+### What landed
+
+- `4ea95f35`, step 1 (K1158). The live pass keeps GL state without
+  querying it: no `getParameter` and no timer query on the per-frame
+  path.
+  - draw() ends with `release()`. It hands the context back through a
+    `LabelBHost`: `label_b_host.ts`, Pixi v8's, takes the viewport from
+    its adaptor's cache, then calls `resetState()`, so Pixi's next
+    draw rebinds what it uses.
+  - Uploads bind lazily, and uniform locations are cached per program.
+  - The first table bind of a frame sets UNPACK_FLIP_Y and PREMULTIPLY
+    false.
+  - sync() reads through READ_FRAMEBUFFER.
+  - `probeQuery` keeps S3e's query and restore (the control);
+    `probeTimer` keeps the timer for the desktop's GPU column.
+- `4ea1c0af`, step 1's proof.
+  - The same-state A/B (`s3.mjs ab`, `out/ab_s3fab2_summary.md`): the
+    old restore and the new host each differ from the control by 0 px
+    on all 12 scenes, with no GL error.
+  - Its negative controls show that it would see a missed state:
+    resetState without the viewport differs by 214574 px, and no
+    restore by 306k px with error 1282.
+  - The desktop split (`out/many_s3fsplit_summary.md`, sync p50):
+
+    | variant | ms |
+    |---|---|
+    | the new empty pass, `fempty` | 0.5-0.6 |
+    | S3e's no-save `leanemptyns` | 0.5-0.6 |
+    | `leanempty` | 0.7-0.8 |
+    | the new tentv, `ftentv` | 0.7-1.0 |
+    | `leantentv` | 0.8-1.1 |
+    | ideal | 0.5 |
+    | floor | 0.2-0.3 |
+- `ed9708c9` and `a69911c3`, step 4: `s3f_gate.ps1` and its dry run,
+  which touches no phone and takes no lock. The phone runs put the
+  gate's pair first:
+  - s3fnew, the new pass on a Pixi host;
+  - s3ffloorall;
+  - s3ftentv, S3e's tentv on today's code;
+  - s3ffit, the control;
+  - s3ffloorhost and s3fnewrest;
+  - last, s3f1: step 2's split on one page.
+- `c869c6c8`: the censuses on today's code (The census, below).
+- `cfa7981b`: the upload's CPU.
+  - The Pixel's upload calls cost 1.1-5.5 ms a frame (S3e's phone
+    JSONs, `upload.p50`). S3e measured as much at rest (0 bytes sent)
+    as moving, so the cost is CPU work, not transfer.
+  - `tentSpanRecord` (`label_b_tent.ts`) runs inside them every frame,
+    at 16 halvings a point. A chain whose spans are sorted now walks
+    from the previous point's span instead.
+  - The record is the same bit for bit. The tests check the walk
+    against S3d's halvings verbatim, including unsorted, NaN and
+    duplicate spans and 200 random chains. npm test: 207 files passed.
+  - `span_bench.ts` (`out/span_bench.md`, desktop Node, the 12 scenes):
+    the search falls from 0.095-0.574 ms to 0.038-0.235 (0.34 ms saved
+    on def), with the same bits on every scene.
+  - The at-rest row diff over the five tables costs 0.055-0.308 ms
+    there, untouched.
+- `49f13a81`: step 3's count and the facet knob.
+  - `vert_count.ts` (`out/vert_count.md`): tentv issues 64k-370k
+    vertices a frame. About 90% are segments (12 vertices each) and
+    8-10% caps (193 each).
+  - `s3.mjs --nw n` (page.ts `nwOpts`) sets the segments' wedge facets
+    (today 3), for the facet lever's census.
+  - The desktop gate times: `out/desktop_table_s3f.md`.
+- `6acc10b8`: the facet census (NW 2, NW 1), which fails.
+- The next commit: this Handoff.
+
+### The census
+
+| tag | pass | DEFECT | at >= 0.03 px |
+|---|---|---|---|
+| s3fq | today's tentv (S3e's query and restore) | 807 | 515 |
+| s3fnew | the new pass (K1158) | 807 | 515 |
+| s3fctl, s3fctllean | the control, live state (and lean) | 0 | 0 |
+| s3fnw2 | the new pass, NW 2 | 1071 | 681 |
+| s3fnw1 | the new pass, NW 1 | 2980 | 2290 |
+
+s3fnew equals s3fq scene by scene and class by class.
+
+Both are above the brief's 794 / 504. That figure is tentv's count
+from before master's two field commits since S3e: K1114 S1i F2 and F3
+(`ac5c2c9d`, `6c019b35`), both in `src/render/field/`. s3fq is tentv on
+today's code. So the new pass is no worse than tentv, but it does not
+meet the brief's literal numbers. **Whether the condition moves to
+807 / 515 is the coordinator's call.**
+
+Fewer facets fails:
+- NW 2 has more DEFECT on every scene. The smallest steps are fat (25
+  against 23) and g41_def_tw42 (40 against 32, with the same 9 at
+  0.03 px or more).
+- Most of NW 2's extra defects are gpu-hole (136 to 286) and lower (44
+  to 127).
+- NW 2 also has one class tentv lacks: `gpu-extra[cap,tie]`, 1 pixel.
+- NW 1 has 3.7 times tentv's DEFECT count.
+
+### Before and after, per scene (ms)
+
+Where the columns come from:
+- **Pixel before** is S3e's gate run on the same phone
+  (`out/phone_table_s3e.md` in the main checkout, and the upload p50
+  from S3e's phone JSONs). Its cost is s3eleantentv - s3efloorall, and
+  the gate's cost adds the upload.
+- **Pixel after** is not measured.
+- **Desktop** is the GPU timer p50 plus the upload calls' p50
+  (`out/desktop_table_s3f.md`, a 0.1 ms timer). Today's tentv is
+  s3ftentvtime (S3e's restore, with the walk) and the new pass is
+  s3fnewtime. At rest, both read the same as moving.
+- **Draw** is 10.8 ns a vertex times the vertices, from the fit below.
+  It is an inference.
+
+| scene | Pixel before: cost + upload = gate's cost | desktop tentv | desktop new | vertices | draw at 10.8 ns |
+|---|---|---|---|---|---|
+| muse_hash | 7.9 + 4.6 = 12.5 | 1.05 | 0.87 | 328196 | 3.5 |
+| muse_default_tw | 5.4 + 1.1 = 6.5 | 1.19 | 0.82 | 347624 | 3.8 |
+| def | 9.9 + 5.5 = 15.4 | 1.21 | 0.93 | 363206 | 3.9 |
+| fat | 6.1 + 1.6 = 7.7 | 0.78 | 0.66 | 207900 | 2.2 |
+| ring | 4.6 + 1.2 = 5.8 | 0.42 | 0.39 | 64354 | 0.7 |
+| user_tw42 | 5.4 + 2.2 = 7.6 | 0.63 | 0.53 | 155836 | 1.7 |
+| g41_def_tw42 | 8.5 + 5.5 = 14.0 | 1.13 | 0.82 | 369806 | 4.0 |
+| g41_def_tw64 | 7.6 + 5.3 = 12.9 | 1.09 | 0.85 | 353984 | 3.8 |
+| g41_ring_tw42 | 4.5 + 1.1 = 5.6 | 0.40 | 0.37 | 65878 | 0.7 |
+| g41_ring_tw64 | 5.1 + 1.1 = 6.2 | 0.42 | 0.39 | 63928 | 0.7 |
+| g41_user_tw42 | 6.2 + 2.3 = 8.5 | 0.63 | 0.53 | 155836 | 1.7 |
+| g41_user_tw64 | 6.3 + 2.2 = 8.5 | 0.63 | 0.57 | 151294 | 1.6 |
+
+The desktop's control fit (s3ffittime) reads 0.76-4.00.
+
+**What is left is inferred, not measured.** S3e's Pixel cost fits 10.8
+ns a vertex plus 4.1 ms (r 0.81), so the drawing alone cannot bring it
+to 2 ms. K1158 removes the state save; on the desktop, the new empty
+pass sits exactly at the no-save one. With the save gone, the brief's
+budget (from S3e's split) puts the fixed part near ideal + 0.8-1.2.
+
+Per scene, that leaves:
+- the floor and the fixed part, about 1.3-1.7 ms;
+- the drawing, 0.7-4.0 ms;
+- the upload, 1.1-5.5 ms before the walk. The walk's saving on the
+  Pixel is unmeasured.
+
+On that reading, no scene gets under 2 ms. Even ring, the smallest,
+sums 1.3-1.7 of floor and fixed part and about 0.7 of drawing, with
+the upload on top. **The gate needs both the drawing and the upload
+cut, not one of them.**
+
+### Commands
+
+Run them from the worktree root. `run_locked.ps1` takes the perf lock
+(owner `K1040-S3d`).
+
+**Never pipe `run_locked.ps1` through `Select-Object -First n`.** That
+stops the pipeline, its `finally` releases the lock, and node runs on
+unlocked. It happened twice in this stage, 20:34-20:36.
+
+- **The gate**, with the phone awake (K1142's check):
+  `& .claude\probes\K1040\s3\s3f_gate.ps1 -SkipDesktop` runs the seven
+  phone runs and the tables. `-SkipDesktop -PhoneRuns 3` runs only the
+  new pass, floorall and today's tentv, and `-DryRun` checks the plan
+  without the phone.
+  - The cost per scene is the last column of the s3fnew table in
+    `out/phone_table_s3f.md` (`s3fnew - s3ffloorall + upload`).
+  - Step 2's split is in `out/split_s3f1.md`.
+- **A census**: run
+  `& .claude\probes\K1040\s3\run_locked.ps1 -RunArgs @('verdict','--mode','tentv','--lean','1','--state','new','--tag','<t>')`,
+  then `& .claude\probes\K1040\s3\defects.ps1 <t>`. A lever adds its
+  knob, as `'--nw','2'` did.
+- **A desktop time**: `-RunArgs @('time','--mode','tentv','--lean','1','--state','host','--tag','<t>')`;
+  add `'--rest','1'` for the pass at rest. For every time and the
+  table: `s3f_gate.ps1 -SkipPhone -SkipVerdicts`.
+- **The A/B**: `-RunArgs @('ab','--tag','<t>')`.
+- **The counts**, in Node:
+  `node scripts/run_node.mjs .claude/probes/K1040/s3/vert_count.ts`.
+  `span_bench.ts` sits beside it and is a timing, so run it under the
+  perf lock.
+
+### Next
+
+1. **The gate on the Pixel**, the coordinator's run
+   (`s3f_gate.ps1 -SkipDesktop`). It measures K1158 there (s3fnew
+   against s3ftentv) and the walk (against S3e's s3eleantentv), plus
+   step 2's split (s3f1).
+2. **Step 2**, from s3f1: remove what is cheap in `noupns - d32f`.
+3. **The upload**, the largest term on the dense scenes (4.6-5.5 ms on
+   muse_hash, def and the g41_def pair):
+   - skip the span record and the row diff on a frame where nothing
+     moved;
+   - then cut the moving transfer (K1157: SAMP's x,y, and one
+     texture).
+4. **The drawing**:
+   - first, tents only within the junctions' reach. It is not built,
+     and not yet counted: `vert_count.ts` counts today's vertices only.
+   - then continuous strips per chain run.
+   - A circumscribed wedge is an untested way to keep fewer facets:
+     push its facet vertices out so the polygon contains the round
+     shape instead of sitting inside it. NW 2's added defects are
+     mostly holes.
