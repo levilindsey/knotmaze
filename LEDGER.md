@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1157.
+Next free ID: K1159.
 
 ## Waiting on Levi
 
@@ -503,10 +503,10 @@ Next free ID: K1157.
   Pixel's 2 ms.
   - owner: nobody since 2026-11-03 14:04 (merged; agent `aad38c5538dbcedc8` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
   - branch: mainline; last commit: `f0a2b33f`
-  - evidence: `.claude/probes/K1040/s3/` (`run_locked.ps1`, `phone_batch.ps1` + `run_phone.ps1`, `s3d_gate.ps1`, `s3d_kick.ps1`, `split.mjs`, `s3d_table.mjs`; `out/s3d_table.md`, `out/split_s3d2.md`, `out/split_s3d3.md`, `out/defects_s3d.md`); oracle30 and the recordings: worktree k868-s3a (`.claude/probes/S3a/seq13/`)
-  - next: the S3e phone gate: with the Pixel awake and unlocked, run s3e_gate.ps1, then s3e_floor.ps1, then both split.mjs lines (the Handoff's Next); then S3f's brief from those numbers
-  - brief: `docs/design/K1040_s3e_lean.md` (S3d's Handoff: `docs/design/K1040_s3d_tent.md`)
-  - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`; desktop timing through `.claude/probes/K1040/s3/run_locked.ps1`; the phone through `phone_batch.ps1` (it runs `run_phone.ps1`: both locks, then K1142's ready check)
+  - evidence: `.claude/probes/K1040/s3/` (`s3e_gate.ps1`, `s3e_floor.ps1`, `defects.ps1`, `split.mjs`'s s3e1 and s3e3 sets, `run_locked.ps1`, `phone_batch.ps1` + `run_phone.ps1`; `out/many_s3e*_summary.md`, `out/time_s3e*_summary.md`, `out/verdict_s3e*_summary.md`); oracle30 and the recordings: worktree k868-s3a (`.claude/probes/S3a/seq13/`)
+  - next: the S3e phone gate: with the Pixel awake and unlocked, run s3e_gate.ps1, then s3e_floor.ps1, then both split.mjs lines (the Handoff's Next); then S3f's brief from those numbers. S3f's 2 ms gate counts the upload call's main-thread time too (0.1-0.8 ms on the desktop, outside page.ts's timed window)
+  - brief: `docs/design/K1040_s3e_lean.md` (its Handoff; S3d's: `docs/design/K1040_s3d_tent.md`)
+  - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (it runs `run_phone.ps1`: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`
 - **K1119** · Cursive J3g (v7.0), Levi's answers to v6.9 (2026-11-03): b, v and w exit between v6.8 and
   v6.9, closer to v6.8 ("still exit somewhat downward and with a swoosh"); the six a/q joins get v6.6's dip
   back ("We need that dip"); the e after them decided by the checks. One sheet per letter for Levi.
@@ -2007,6 +2007,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   setting. Levi's picks pending.
 - **K1145** · Cursive x5 (`R_DX=22 R_A1=-15 R_L1=10`): a steeper b, v and w exit (about -22 deg), if Levi
   wants v7.0's exits further down (K1119's Handoff).
+- **K1157** · K1040 label pass, upload levers for the Pixel's gate numbers to choose: x,y from K8's SAMP (a
+  quarter of the moving 212,992-901,120 B; needs a vertex-to-sample map) and the tables in one texture if the
+  per-call cost dominates (`docs/design/K1040_s3e_lean.md`, Handoff, step 2).
+- **K1158** · K1040's live label pass restores GL state from Pixi's own tracking (or resets Pixi's state cache
+  after it), not draw()'s 17 queries and restore: the desktop's whole 0.2-0.3 ms over the ideal floor
+  (`docs/design/K1040_s3e_lean.md`, Handoff, step 2).
 
 ## Done
 

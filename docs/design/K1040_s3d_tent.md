@@ -139,7 +139,7 @@ scenes (`out/split_s3d2.md`, `out/split_s3d3.md`, `out/s3d_table.md`).
     floor is 33.3-42.2). K923's invalidated D24 renderbuffer showed
     nothing like it. The mechanism was not tested.
   - The record upload (empty - emptynoup) is 1.1 (0.5-1.5) on s3d3 and
-    1.1 (0.2-2.2) on s3d2, for 212-410 KB a pass.
+    1.1 (0.2-2.2) on s3d2, for 212-410 KB a pass [S3e: 212,992-901,120 B a pass, by `uploadBytes`].
 - The vertex-light tent's own drawing (tentv - empty) is 3.0 (1.2-3.5)
   on s3d2 and 2.8 (1.3-4.4) on s3d3. Under 2 ms: ring, g41_ring_tw42
   and g41_ring_tw64 on s3d2; g41_ring_tw42 alone on s3d3.
@@ -163,7 +163,7 @@ scenes (`out/split_s3d2.md`, `out/split_s3d3.md`, `out/s3d_table.md`).
     renderbuffer, invalidated after the draw (line 549).
   - S3's floorall is the readback alone (`page.ts` opts.floor, whose
     comment wrongly calls it K923's floor). S3's pass uploads its
-    records every pass and stores its D32F depth, which S4 samples.
+    records every pass and stores its D32F depth, which S4 samples [S3e: S4 samples nothing from D].
   - The kick run shows the missing render job costs nothing here. The
     gap is the upload and D's store, which invalidation could not
     isolate on this stack.
@@ -347,7 +347,7 @@ started at 11:38:18, 48 s after s3dr's last run ended.
    - the clears and stores of L and D (2.1, 1.3-3.1): a smaller L (lr
      2, whose class is F9's), and whether ANGLE folds the clears into
      load ops;
-   - D: S4 samples it, so its store stays unless S4 reads the depth
+   - D: S4 samples it [S3e: it does not], so its store stays unless S4 reads the depth
      from L's word. Invalidating the D32F texture cost 31-34 ms a pass
      on the Pixel, so try K923's setup (an invalidated renderbuffer)
      on the phone first.
