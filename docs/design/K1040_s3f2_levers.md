@@ -127,3 +127,141 @@ the lore.
 Report: the gate's verdict; the table per scene, before and after; the
 fixed part's split; the census; the test counts; the commits; and a
 `Ledger items` list for Claude to file.
+
+## Handoff
+
+Muse run 15I, 2026-11-03 23:13 to about 23:50, on master in the main
+checkout. Step 0's `Get-Date`: 23:13:08.
+
+**The gate missed: 3.3-9.9 ms against 2 on every scene** (s3f2newb,
+below). As the brief said, this run cannot pass it alone: it took the
+two CPU-side terms and left the drawing (median 2.6) for S3f3. What it
+did land: the at-rest upload is now 0.0 ms on the Pixel (S3e's row diff
+read 0.8-4.3 there, median 2.5, on the same pages), and the depth
+invalidate is gone.
+
+### What landed
+
+- `188f2ef1`, step 1 (the at-rest skip) and step 2's instrument.
+  `upload(T, unchanged)` in `label_b_pass.ts`: the caller asserts
+  nothing the pass reads has changed (from the physics' sleep state or
+  a position counter; the pass does not scan), and the pass skips
+  `tentSpanRecord` and the row diff entirely — no GL call, no bytes.
+  Never the first upload. `uploadCalls` counts the last upload's
+  texImage2D/texSubImage2D calls beside `uploadBytes`. Probe knobs
+  `probeBindOnly` / `probeNoClear` (default off) for step 3's split.
+  `test/render/field/label_b_upload.test.ts` (a recording fake GL): the
+  first upload never skips; an unchanged frame uploads nothing; one
+  moved particle uploads only its row (16,384 B, 1 call) and the
+  textures then equal a full upload's, bit for bit; `probeAllDirty`
+  still sends every used row.
+- `e9f96818`, the kit: `s3f2_gate.ps1` (copied from `s3f_gate.ps1`),
+  page.ts's rest wiring (`time --rest` asserts unchanged; timeMany's
+  `ftentvrest` asserts it while `leantentvrest` keeps S3e's row diff as
+  the before) and split variants (`femptyb` bind+viewport only,
+  `femptynoupnc` no clears, `femptynoupst` D's store kept), and
+  split.mjs's `s3f2` columns. Its `-DryRun` parses and plans, no phone,
+  no lock.
+- `6bff8fbb`, step 3's removal: lean `draw()` no longer invalidates D.
+  Nothing samples D, and the split read the invalidate at about 0.6 ms
+  (below). `probeInvalidateDepth` keeps the old way for the probes.
+- This Handoff's commit, with the tables (`out/phone_table_s3f2.md`,
+  `out/phone_table_s3f2b.md`, `out/split_s3f2.md`,
+  `out/desktop_table_s3f2.md`).
+
+Step 2's levers, both measured and dropped:
+
+- **The tables in one texture: dropped.** The moving upload is 4-5
+  calls at every size (desktop, `time_s3f2newtime`): 212,992 B reads
+  0.10 ms, 901,120 B 0.40. A fit over the 12 scenes gives an intercept
+  of 0.003 ms for all five calls and 0.45 ms per MB: the cost is the
+  bytes, not the calls. Merging the calls saves the intercept.
+- **x,y from K8's SAMP: dropped, not cheap.** It needs the vertex
+  fetches rewritten in both tent shaders, a vertex-to-sample map (SAMP
+  packs `chainSamples`, which differ from the label's pts at the END
+  arm's extension vertex; S3e's Handoff), and a probe page that runs
+  the live renderer — the s3 page builds the pass alone, so no SAMP
+  texture exists there to read. Its ceiling is a quarter of the moving
+  upload: about 0.3 ms of the Pixel's 1.3 median. It belongs with the
+  live integration (S5), not this run. Filed below.
+
+Step 3's split (Pixel, `out/split_s3f2.md`, medians): `fempty - d32f`
+1.7 (S3f: 1.5), of which the moving upload 1.0, the clears 0.5
+(`femptynoup - femptynoupnc`), the host restore 0.4, and the rest
+bind+viewport+sync (`no-clear rest` 0.7, which still held the
+invalidate). Keeping D's store read −0.2..−1.3 (median −0.6) on all 12
+scenes, so the invalidate was the one cheap removal; after it,
+`femptynoup` and `femptynoupst` read the same (confirmation batch
+`s3f2c`). Setup (`ftentvsetup - fempty`) 0.0. Nothing else there is
+cheap: the clears and the host restore are the pass's contract with
+S4 and Pixi.
+
+### The census and the A/B
+
+Unchanged after each lever. Desktop, under the perf lock:
+`s3f2new` (before the invalidate removal) and `s3f2newb` (after) both
+read 807 DEFECT, 515 at 0.03 px or more, scene by scene as S3f's
+`s3fnew`; the control `s3f2ctl` reads 0. The A/B (`s3f2ab`, `s3f2ab2`):
+the host arm differs from the control by 0 px on all 12 scenes, with
+the negative controls differing as before (214,574 px and about
+306k px with error 1282).
+
+### The Pixel
+
+One batch (`s3f2_gate.ps1 -SkipDesktop`, 23:23-23:32, exit 0; the
+phone cool, no media playing), S3f's passes beside the new ones, then
+a confirmation batch (`phone_batch.ps1 -Name s3f2b`, 23:36-23:40) after
+the invalidate removal. The label cost is `sync p50 - s3ffloorall p50
++ upload p50`:
+
+| scene | S3f's cost (2026-11-03 22:21) | s3f2new (this batch) | s3f2newb (after step 3) | at rest, upload skip / diff |
+|---|---|---|---|---|
+| muse_hash | 5.1 | 8.5 | 8.6 | 0.0 / 4.1 |
+| muse_default_tw | 4.8 | 4.8 | 5.6 | 0.0 / 3.9 |
+| def | 10.9 | 10.4 | 9.9 | 0.0 / 4.3 |
+| fat | 6.4 | 5.5 | 6.1 | 0.0 / 2.5 |
+| ring | 4.0 | 3.5 | 4.2 | 0.0 / 0.8 |
+| user_tw42.lightpaper | 5.5 | 5.5 | 5.5 | 0.0 / 1.8 |
+| g41_def_tw42 | 6.1 | 6.6 | 8.1 | 0.0 / 4.3 |
+| g41_def_tw64 | 9.4 | 8.6 | 6.4 | 0.0 / 4.2 |
+| g41_ring_tw42 | 4.8 | 4.0 | 3.3 | 0.0 / 0.8 |
+| g41_ring_tw64 | 4.4 | 4.4 | 3.8 | 0.0 / 0.8 |
+| g41_user_tw42 | 6.4 | 5.5 | 4.4 | 0.0 / 1.9 |
+| g41_user_tw64 | 5.4 | 5.5 | 5.5 | 0.0 / 1.9 |
+
+The at-rest columns are the split page's `rest up skip` (0.00 on every
+scene) against `rest up diff` (S3e's row diff, same pages). Two
+honesties: the batches disagree with each other by more than step 3's
+saving (the full-pass cost did not move measurably; the empty-pass
+split did), and `s3fnewrest` / `s3f2oldrest` in the gate batch also
+assert unchanged in `time --rest`, so their upload columns read 0.0
+too — the diff before is the split page's column, and S3f's recorded
+0.7-4.1. The gate's moving cost is unchanged because the drawing
+(median 2.6) and the moving upload (median 1.6 in `ftentv up`) are
+still there, over a fixed part of about 1.7 and a floor of 0.3-0.5.
+
+### Commands
+
+- Tests: `npx vitest run test/render/field/label_b_upload.test.ts
+  test/render/field/label_b_tentv.test.ts` (18 passed); `npm test`
+  (210 files, 2799 tests passed).
+- Desktop: `& .claude\probes\K1040\s3\s3f2_gate.ps1 -SkipPhone`;
+  the A/B and the post-step-3 census through `run_locked.ps1`
+  (`ab --tag s3f2ab2`, `verdict --mode tentv --lean 1 --state new
+  --tag s3f2newb`), then `defects.ps1 s3f2newb`.
+- Pixel: `& .claude\probes\K1040\s3\s3f2_gate.ps1 -SkipDesktop`;
+  `& .claude\probes\K1040\s3\phone_batch.ps1 -Name s3f2b -Runs
+  @('...s3f2newb...', '...s3f2floorb...', '...s3f2c variants...')`
+  as run at 23:36 (its full lines are in
+  `out/batch_s3f2b_20261103_2335.log`).
+
+### Next
+
+S3f3, the drawing: tents only within the junctions' reach first (not
+yet counted), then continuous strips per chain run, then the
+circumscribed wedge for fewer facets. With the drawing near 0.8, the
+fixed part near 1.1 (1.7 less the invalidate) and the moving upload
+near 1.3, the dense scenes still sit over 2 — the moving upload's
+remaining lever is SAMP's x,y at the live integration (S5), and the
+fixed part's is whatever S4's integration makes of the host restore
+and the clears.
