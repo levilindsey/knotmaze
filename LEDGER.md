@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1170.
+Next free ID: K1175.
 
 ## Waiting on Levi
 
@@ -177,7 +177,7 @@ Next free ID: K1170.
   is a turn; 6 nothing special for par 0. R.6.2 phone strip: `.claude/probes/K717/out/walker/r62_sheet.png`
 - **K707** · Keep it in balance (K114 walker probe): R.3.9 says moat 3 tips it to the walker, but
   the cutter wins 30 of 30 at radius 0-3 at one run a turn, 27-29 of 30 at two; pick the knob and
-  define moat (.claude/probes/K114/walker/balance.md)
+  define moat (.claude/probes/K114/walker/balance.md). Levi 2026-11-03 added several walkers to the mode, a third knob (K1172)
 - **K718** · K580 s5 calls (`docs/design/K580_s5.md` Handoff): the tapered a J bite (0.031-0.059
   LU): accept the square-offset root outline, or lean it (a taper change)? Waist spikes vs T
   (0.012-0.023): accept U as the target? The notaper J seam colour: glyph-only fix (joinery.ts) or
@@ -286,7 +286,7 @@ Next free ID: K1170.
   junction, showing which key takes it. At the default marker size they sit mostly under your own marker,
   and only their tips show. Move them out past the marker, or keep them as they are? Pictures, sent 2026-11-03:
   `.claude/probes/K1132/shots/` (sheet_desk.png, left now, right out; the out placement is
-  `__knotKeyHintPlace("out")`, f2c79236)
+  `__knotKeyHintPlace("out")`, f2c79236). On hold until K1170 (Muse run 15D) lands: the hints become the d-pad's four directions, and its sheets (`.claude/probes/K1170/shots/`) replace these pictures.
 - **K144** · Accounts and shared stats, a stretch goal (Levi 10-13). The options doc is done
   (`docs/design/K144_accounts.md`, 61a24a82). Levi 2026-11-03: Workers + D1, Google sign-in first, results
   synced first (Q1, Q2; stage 1 is K1168). Q3-Q5 still wait: the sharing switch's words, same-day bands, resume.
@@ -319,6 +319,10 @@ Next free ID: K1170.
 - **K1166** · After the history rewrite (K1164), two things only you can do: send GitHub Support the drafted
   request so closed PR #1 stops serving the old commits, and reset the laptop's knotmaze copy before its next
   use. Card: `docs/asks/K1166.md`.
+- **K1172** · Walker modes, Levi's brainstorm (2026-11-03, four messages): guide it, program it (board-game
+  command cards), a flock (Lemmings-like; under snap its par is a max flow), stop them (several walkers, a
+  third knob for K707), steer it live, bend and tilt. Which family first?
+  (`docs/design/K1172_walker_modes.md`)
 
 ## In progress
 
@@ -519,12 +523,12 @@ Next free ID: K1170.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: agent `a8112b33d998f9629` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-03 19:22, 2 h cap ~21:22)
-  - branch: `worktree-agent-a8112b33d998f9629`, worktree `.claude/worktrees/agent-a8112b33d998f9629`; last commit: `cd5dd277`
-  - evidence: .claude/probes/K1040/s3/ (the S3e kit; S3f adds s3f_gate.ps1 and its out/ sets)
-  - next: S3f running: K1158 (no GL state queries), the unexplained 0.6 ms, the drawing toward 1 ms, then s3f_gate.ps1 on the Pixel
+  - owner: nobody since 2026-11-03 21:04 (agent `a8112b33d998f9629` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, stopped at its cap; the Pixel gate waits on the phone)
+  - branch: `worktree-agent-a8112b33d998f9629`, worktree `.claude/worktrees/agent-a8112b33d998f9629`; last commit: 19889dd8 (WIP, unpushed)
+  - evidence: `.claude/probes/K1040/s3/` on the branch (s3f_gate.ps1, span_bench.ts, vert_count.ts, out/); S3e's phone table only in the main checkout (`out/phone_table_s3e.md`)
+  - next: with the phone awake on the launcher, run `& .claude\probes\K1040\s3\s3f_gate.ps1 -SkipDesktop` from the worktree (K1158 and the span walk on the Pixel, plus step 2's s3f1 split); then the upload levers (K1157) and the reach and strips levers (the Handoff's Next). The census bar is now 807 DEFECT / 515 at 0.03 px, today's tentv (the coordinator's call; the brief's 794 / 504 predates K1114 S1i F2/F3)
   - brief: `docs/design/K1040_s3f_draw.md`
-  - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (it runs `run_phone.ps1`: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`
+  - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1 done (a4dc218a). Answers (Levi 2026-11-03): the light splits at a fork (A), runs toward you
   behind you, straight through your junction with no dim moment. S2-S6 next. Full text: `docs/ledger_notes.md`.
@@ -533,6 +537,29 @@ Next free ID: K1170.
   - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
   - next: S3a: pulse bands, CPU side (the plan's section 5); S2's record in .claude/probes/K1139/out/s2/
   - brief: docs/design/K1169_muse_batch15.md (Run A); the plan: docs/design/K1139_pulse_junctions.md
+- **K1170** · The key hints show the d-pad button that takes each run (Levi 2026-11-03: the arrows point along
+  the runs, mostly diagonals no pad button presses; `hintMap` picks the smallest err). Muse chain run 15D.
+  - owner: nobody since 2026-11-03 21:31 (queued as Muse chain run 15D, `.claude/probes/K1053/queue.txt`; claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c coordinates)
+  - branch: mainline; last commit: `c3e20f17`
+  - evidence: `.claude/probes/K1170/` (shots/sheet_desk.png, sheet_phone.png)
+  - next: Muse run 15D; then Claude reviews the sheets, and K1132 goes back to Levi
+  - brief: `docs/design/K1170_dpad_hints.md`
+- **K1171** · One Rules dropdown for Fragile runs and Collapse: off, crack, snap, collapse, collapse (free);
+  one link param; the Par rows greyed under the collapse options (Levi 2026-11-03: “Seems like we should maybe
+  combine these two param drop downs?”). Muse chain run 15E, after 15B (K778 edits the same folder and the
+  codec).
+  - owner: nobody since 2026-11-03 21:31 (queued as Muse chain run 15E, `.claude/probes/K1053/queue.txt`; claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c coordinates)
+  - branch: mainline; last commit: `c3e20f17`
+  - evidence: `.claude/probes/K1171/` (shots/)
+  - next: Muse run 15E, after 15B and 15C; then Claude reviews the Rules folder shots
+  - brief: `docs/design/K1171_rules_dropdown.md`
+- **K1173** · A Tug threads checkbox (a viewer preference, on by default, in Feel): off, a drag pans wherever
+  it starts and taps still pluck (Levi 2026-11-03). Muse chain run 15F.
+  - owner: nobody since 2026-11-03 21:31 (queued as Muse chain run 15F, `.claude/probes/K1053/queue.txt`; claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c coordinates)
+  - branch: mainline; last commit: `c3e20f17`
+  - evidence: `.claude/probes/K1173/`
+  - next: Muse run 15F; then Levi tries the checkbox on the phone
+  - brief: `docs/design/K1173_tug_toggle.md`
 
 ## Next, in order
 
@@ -1702,6 +1729,9 @@ Every other item below waits on the trigger it names.
 - **K1167** · Pre-rewrite knotmaze SHAs quoted in other repos (claude-config's ledgers, notes and memory;
   levi.dev; hex-grid) name commits GitHub no longer serves. `.claude/probes/K1164/commit-map` (a copy in
   ~/Backups) translates them; `remap.mjs` beside it rewrote this repo's (K1164).
+- **K1174** · `run_locked.ps1` (the K1040 s3 kit) releases the perf lock in its `finally` but leaves node
+  running, so a pipeline stopped early (`Select-Object -First n`) times unlocked; S3f did it twice, 2026-11-03
+  20:34-20:36. Kill the child in the `finally` (`docs/design/K1040_s3f_draw.md`, Handoff, Commands).
 
 ## Approved, to schedule (2026-10-11)
 
