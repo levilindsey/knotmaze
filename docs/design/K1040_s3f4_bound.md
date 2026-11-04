@@ -181,3 +181,175 @@ the lore.
 Report: each variant and its check; the desktop split per scene; the
 dry run; the test counts; the commits; and a `Ledger items` list for
 Claude to file.
+
+## Handoff
+
+Muse run 16J, 2026-11-04 03:03 to 03:16 (step 0's `Get-Date`
+03:03:12 -08:00), on master in the main checkout. Desktop only, as
+the brief's Rules say: no phone command ran (`s3f4_gate.ps1
+-DryRun` touches no phone and takes no lock); the Pixel batch is
+written and dry-planned for the coordinator. No lever adopted, no
+default pixel moved: every variant is a probe option, off by
+default, and the A/B's host arm differs from the control by 0 px on
+all 12 scenes (s3f4ab, as S3f3's; the negative controls differ as
+before, 214,574 px and about 306k px with error 1282).
+
+**All six variants are built, and each passed its check on the
+desktop on all 12 scenes** (the label target read back after the
+pass, `LabelBPass.read()`'s word at every pixel of the 2480x1800
+target, compared as counts of pixels whose word differs — for
+ftentvclip against the clear value 0, for ftentvflat the mask of
+written pixels (word non-zero), for ftentvvid the word itself, bit
+for bit). One deviation from the brief's letter: its step 1 says
+commit at each variant that works; the five page-driven variants
+landed in one commit and `ftentvvid`, built last as the brief also
+orders, in the next. The checks below are per variant, from one
+`check` run over all 12 scenes.
+
+### What landed
+
+- `6bbb3f25`: the five page-driven variants and the check mode.
+  `LabelBPass` gains `probeSegLimit` / `probeSkipCapsFills` (all
+  default off); `page.ts` gains `ftentvone`, `ftentvhalf`,
+  `ftentvclip`, `ftentvflat` and `ftentvnw1c` beside `ftentv` in
+  `FNEW` (lean, the host) and `window.s3.check`; `s3.mjs` gains the
+  `check` mode (`out/check_s3f4chk_summary.md`).
+- `048159de`: `ftentvvid`. `labelBTentVidSources` in
+  `label_b_tent_glsl.ts` (tentv's segment vertex shader with the
+  corner from `gl_VertexID % (2 * NW + 6)`) and `probeVid` in
+  `label_b_pass.ts`: aSeg repeated per vertex (divisor 0) in a
+  buffer built with the layout, the strips separated by an index
+  buffer's primitive-restart index, one `drawElements` in place of
+  the instanced segment draw; caps and fills unchanged.
+- `a9b0a2de`: the counts. `vert_count.ts` extended and
+  `out/vert_count_s3f4.md` (per scene; today's by-draw count stands
+  as `out/vert_count_s3f3.md`'s).
+- `d2887c1c`: `split.mjs`'s set `s3f4` (step 4's columns, below)
+  and `s3f4_gate.ps1` (step 5).
+- `4d67cbc6`: the desktop split (two split-page runs,
+  `s3f4_gate.ps1 -SkipPhone` under the perf lock, errors 0) and the
+  check / A/B summaries (`out/split_s3f4_desktop.md`,
+  `out/check_s3f4chk_summary.md`, `out/ab_s3f4ab_summary.md`).
+- This Handoff's commit.
+
+### The variants and their checks (step 2, all 12 scenes)
+
+Compared as above; `ftentv`'s written pixels a scene run from
+879,514 (ring) to 1,796,036 (muse_hash) of 4,464,000.
+
+| variant | what it is | check | read |
+|---|---|---|---|
+| `ftentvone` | one segment instance, no caps or fills (`probeSegLimit` 1, `probeSkipCapsFills`) | writes at most one segment's pixels | 40-662 px written a scene (g41_def_tw42 to g41_ring_tw64); one segment's tent, as counted |
+| `ftentvhalf` | half the segment instances (`probeSegFrac` 0.5) | (the segments' own cost, timed) | writes 373,210-1,017,398 px, about half of `ftentv`'s a scene |
+| `ftentvclip` | every vertex clipped after its full computation, as `tentvdegen`, on today's lean pass (segment, cap and fill shaders) | leaves the label target as cleared | 0 px differ from the clear value on every scene |
+| `ftentvflat` | a fragment shader that reads every flat and varying (as `fs0`) but does none of the label arithmetic, its output kept off the clear value | writes the same pixels as `ftentv` | the written-pixel masks differ at 0 px on every scene; it writes exactly `ftentv`'s count |
+| `ftentvnw1c` | S3f3's circumscribed wedge at NW 1 (`facetOpts(1, true)`): 8 segment vertices against 12, slightly larger coverage | the pixels written by one and not the other | 51-269 px `ftentv` writes and it does not, 0 px the other way, a scene |
+| `ftentvvid` | the same segment strips as one non-instanced draw (primitive restart; above) | draws today's label, bit for bit | the word differs from `ftentv`'s at 0 px on every scene |
+
+Per scene (written px: `ftentv` / one / half; nw1c only-`ftentv`;
+clip, flat and vid read 0 everywhere, as above):
+
+| scene | ftentv | one | half | nw1c only-base (only-nw) |
+|---|---|---|---|---|
+| muse_hash | 1796036 | 429 | 1017398 | 269 (0) |
+| muse_default_tw | 1349565 | 196 | 737881 | 79 (0) |
+| def | 1368079 | 50 | 743591 | 65 (0) |
+| fat | 1283028 | 91 | 698908 | 71 (0) |
+| ring | 879514 | 555 | 492083 | 158 (0) |
+| user_tw42.lightpaper | 1105073 | 292 | 632913 | 86 (0) |
+| g41_def_tw42 | 1155808 | 40 | 616832 | 51 (0) |
+| g41_def_tw64 | 1604589 | 60 | 885266 | 106 (0) |
+| g41_ring_tw42 | 670443 | 292 | 373210 | 79 (0) |
+| g41_ring_tw64 | 952069 | 662 | 535121 | 158 (0) |
+| g41_user_tw42 | 1105096 | 293 | 632935 | 87 (0) |
+| g41_user_tw64 | 1477445 | 660 | 874923 | 215 (0) |
+
+Vertices a frame, per variant and scene, are
+`out/vert_count_s3f4.md`'s table (today's 64k-370k; `ftentvone` 12;
+`ftentvhalf` about half; `ftentvclip` / `ftentvflat` today's;
+`ftentvnw1c` segments x 8; `ftentvvid` today's vertices plus
+nInst*12 + nInst - 1 segment indices).
+
+### The desktop split (steps 3-4, `out/split_s3f4_desktop.md`)
+
+The split page run twice under the perf lock (`s3f4d1`, `s3f4d2`),
+render-sync p50 ms. The desktop's sync is quantized to 0.1 ms, so
+nearly every reading is at the quantization floor: the variants
+time, and the table is the worked example of the columns the Pixel
+will fill; it ranks nothing. Run 1, then the two runs' difference:
+
+| scene | drawing | a pass that draws | segments | caps/fills/rest | vertex side | fragment side | shading | vertex slope /100k | instancing |
+|---|---|---|---|---|---|---|---|---|---|
+| muse_hash | 0.40 | 0.10 | 0.20 | 0.10 | 0.20 | 0.10 | 0.10 | 0.00 | 0.00 |
+| muse_default_tw | 0.30 | 0.10 | 0.20 | 0.00 | 0.20 | 0.00 | 0.00 | 0.00 | 0.00 |
+| def | 0.40 | 0.20 | 0.20 | 0.00 | 0.10 | 0.10 | 0.10 | 0.00 | 0.10 |
+| fat | 0.20 | 0.00 | 0.20 | 0.00 | 0.10 | 0.10 | 0.00 | 0.00 | 0.00 |
+| ring | 0.10 | 0.00 | 0.00 | 0.10 | 0.00 | 0.10 | 0.00 | 0.00 | 0.00 |
+| user_tw42.lightpaper | 0.20 | 0.10 | 0.20 | -0.10 | 0.00 | 0.10 | 0.00 | 0.00 | 0.00 |
+| g41_def_tw42 | 0.40 | 0.20 | 0.40 | -0.20 | 0.10 | 0.10 | 0.10 | 0.10 | 0.10 |
+| g41_def_tw64 | 0.40 | 0.20 | 0.20 | -0.00 | 0.10 | 0.10 | 0.10 | 0.10 | 0.00 |
+| g41_ring_tw42 | 0.10 | 0.00 | 0.20 | -0.10 | 0.00 | 0.10 | 0.00 | 0.54 | 0.00 |
+| g41_ring_tw64 | 0.10 | 0.00 | 0.10 | -0.10 | 0.00 | 0.10 | 0.00 | 0.00 | 0.00 |
+| g41_user_tw42 | 0.20 | 0.10 | 0.20 | -0.10 | 0.00 | 0.10 | 0.00 | 0.00 | 0.00 |
+| g41_user_tw64 | 0.20 | 0.10 | 0.20 | -0.10 | 0.00 | 0.10 | 0.00 | 0.00 | 0.00 |
+| median | 0.20 | 0.10 | 0.20 | -0.00 | 0.10 | 0.10 | 0.00 | 0.00 | 0.00 |
+
+The runs' differences (the `d` columns of the file) are 0.00 at the
+median for every column, and at most 0.20 anywhere — the desktop's
+spread. `s3f4_gate.ps1 -DryRun` then planned all 4 phone runs
+(s3f4a, s3f4b, s3f3new, s3ffloorall) and printed the tables from
+the files in `out/`; it touched no phone and took no lock. The
+coordinator runs `s3f4_gate.ps1 -SkipDesktop` for the Pixel batch.
+
+### Commands
+
+- Checks, under the perf lock: `run_locked.ps1 -RunArgs
+  @('check','--tag','s3f4chk')` and `run_locked.ps1 -RunArgs
+  @('ab','--tag','s3f4ab')`.
+- Desktop: `& .claude\probes\K1040\s3\s3f4_gate.ps1 -SkipPhone`;
+  `& .claude\probes\K1040\s3\s3f4_gate.ps1 -DryRun`.
+- Counts: `node scripts/run_node.mjs
+  .claude/probes/K1040/s3/vert_count.ts`.
+- Tests: `npm test` (212 files passed, 2 skipped; 2826 tests
+  passed, 9 skipped; tsc first, as the build runs it).
+
+### Next
+
+The Pixel batch (`s3f4_gate.ps1 -SkipDesktop`, the coordinator's
+run): the split page twice (s3f4a, s3f4b) then s3f3new and
+s3ffloorall, filling `out/split_s3f4.md` and
+`out/phone_table_s3f4.md` in this split's columns. Read it as a
+rule, column by column, each reading against its two runs'
+difference (a reading smaller than that spread decides nothing):
+
+- **`a pass that draws` is the drawing's large term** (of the order
+  of the drawing itself): the cost is a pass that draws at all, not
+  what it draws — the lever family is the pass's attachments and
+  their stores (fewer or smaller attachments, their load/store
+  ops), not the geometry.
+- **`instancing` reads positive past the spread**: the instanced
+  draw itself costs; the lever is `ftentvvid`'s draw (already built
+  and bit-identical, so it needs no census — adopting it is the
+  coordinator's call, out of this run's scope).
+- **`vertex side` dominates**: the vertices' work and primitive
+  assembly bind — cheaper vertices (fewer fetches per vertex, a
+  cheaper span/point path), and, with **`vertex slope`** read with
+  it (ms per 100k segment vertices saved, times the scenes' counts
+  in `out/vert_count_s3f4.md`), whether fewer segment vertices at
+  the same outline pay.
+- **`segments` dominates and the slope is small**: the segments'
+  cost is not their vertex count — look at coverage per segment
+  (the fragment side) before vertex levers.
+- **`fragment side` dominates with `shading` small**: fewer covered
+  pixels (coverage: tighter tents, a smaller target) is the lever;
+  with **`shading` large**, the lever is cheaper fragment
+  arithmetic, not coverage.
+- **`caps/fills/rest` is large**: the caps' and fills' geometry
+  (their facet counts) is its own lever, separate from the segments.
+- If no column clears its spread on the Pixel either, the drawing
+  is spread across all of them at that size, and the 2 ms gate
+  waits on S4's fixed part and S5's upload as S3f3's Next said.
+
+K1097's gate stands where S3f3 left it: the Pixel reads 3.3-9.9 ms
+against 2, and this batch's split says where the drawing's 0.8 ms
+must come from.
