@@ -1,10 +1,12 @@
-# Muse batch 12 (K1153) — DRAFT for Claude's review
+# Muse batch 12 (K1153)
 
 Claude starts these runs through Paseo, one run at a time, after batch
 11 (`docs/design/K1146_muse_batch11.md`, K1146) was reviewed and
 closed. Each run is a fresh Muse agent that reads this brief, does its
 run's tasks, and stops. Claude reviews each run on master afterwards
-and closes K1153.
+and closes K1153. Run A was the drafting run
+(`docs/design/K1153_muse_batch12_run_a.md`, aca74311), so the runs
+here are B to G; Claude reviewed the draft and relabeled them.
 
 Where the runs came from (the drafting run's order, from
 `docs/design/K1153_muse_batch12_run_a.md`): (1) `## Approved, to
@@ -25,11 +27,11 @@ why.
 Every task here is decided by a unit test, a desktop probe or a
 measurement table. None needs the phone or Levi. No run changes
 physics, junctions, the cursive, or the thread ribbons' shader text.
-Run F changes one background program (contours), not a thread ribbon.
-Run E changes a phone tool's default but never runs it against the
+Run G changes one background program (contours), not a thread ribbon.
+Run F changes a phone tool's default but never runs it against the
 phone: its checks are a source scan, a PowerShell parse and `npm
 test`. No two runs touch one file, and each run starts from the
-latest master, in the order A to F.
+latest master, in the order B to G.
 
 ## How to work
 
@@ -48,11 +50,11 @@ was published less than two weeks ago) wherever a dependency moves.
 Use ports 5550-5599 (each run below names its range).
 
 After each run, update K1153's handle, naming the next run in the
-order A to F:
+order B to G:
 `ledger.mjs handle K1153 --last-commit <sha8> --next "Run <X> done; next Run <Y>"`
-(after Run F: `--next "Run F done; batch 12 complete, Claude reviews and closes K1153"`).
+(after Run G: `--next "Run G done; batch 12 complete, Claude reviews and closes K1153"`).
 
-## Run A · K202: an unstarted floating daily rolls over at midnight
+## Run B · K202: an unstarted floating daily rolls over at midnight
 
 Read first: `.claude/rules/gameplay-daily.md` (MAZE STATS + DAILY
 MAZE), `.claude/rules/probes.md`; then `parseLaunch`, `dailyQuery`
@@ -137,7 +139,7 @@ Report: the before and after tables, and how "begun" was read.
 Close: `ledger.mjs done K202 --commit <sha8> --what "an unstarted floating daily rolls to the new day at midnight"`.
 Suggested ports: 5550-5559.
 
-## Run B · K201: the History's Played chip counts what the tiles count
+## Run C · K201: the History's Played chip counts what the tiles count
 
 Read first: `.claude/rules/gameplay-daily.md` (MAZE STATS + DAILY
 MAZE); then `dailyHistory` and its `historyEntry`, and
@@ -213,7 +215,7 @@ Report: the before and after tables.
 Close: `ledger.mjs done K201 --commit <sha8> --what "the Played chip counts the tile's days; a practice row shows its count"`.
 Suggested ports: 5560-5569 (if any).
 
-## Run C · K125: Scarborough Fair's loop is whole 3/4 bars
+## Run D · K125: Scarborough Fair's loop is whole 3/4 bars
 
 Read first: `.claude/rules/gameplay-audio.md`; then
 `SCARBOROUGH_FAIR` in `src/audio/songs.ts` (its header transcribes
@@ -267,7 +269,7 @@ Report: the before and after sums.
 Close: `ledger.mjs done K125 --commit <sha8> --what "Scarborough Fair loops on whole bars (closing rest 3)"`.
 Suggested ports: 5570-5579 (if any).
 
-## Run D · K165 (a): a halted load keeps its HALTED stamp
+## Run E · K165 (a): a halted load keeps its HALTED stamp
 
 Read first: `.claude/rules/render-loop.md`,
 `.claude/rules/gameplay-motion.md` (where it lists
@@ -344,7 +346,7 @@ then close K165 for the half done:
 `ledger.mjs done K165 --commit <sha8> --what "a halted load keeps its HALTED stamp; the load wall clock split out"`.
 Suggested ports: 5580-5589 (if any).
 
-## Run E · K170: the phone tunnel does not wake the phone by default
+## Run F · K170: the phone tunnel does not wake the phone by default
 
 Read first: `.claude/rules/probes-phone.md`; then
 `scripts/phone.ps1` whole (it is short), the guard it must not
@@ -420,7 +422,7 @@ switch), and the parse result.
 Close: `ledger.mjs done K170 --commit <sha8> --what "scripts/phone.ps1 wakes the phone only under -Wake"`.
 Suggested ports: 5590-5594 (unused).
 
-## Run F · K308: the contours' fifth line counts exactly
+## Run G · K308: the contours' fifth line counts exactly
 
 Read first: `.claude/rules/render-backgrounds.md`,
 `.claude/rules/render-shaders.md` (where it lists
