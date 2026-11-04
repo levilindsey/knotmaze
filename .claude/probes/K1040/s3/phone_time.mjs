@@ -20,6 +20,7 @@ import { createServer } from "node:http";
 import { readFileSync, writeFileSync, mkdirSync, appendFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ensurePhoneReady, PhoneNotReady } from "../../../../scripts/phone_pass/phone_ready.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ADB = "C:\\Users\\lsl\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Google.PlatformTools_Microsoft.Winget.Source_8wekyb3d8bbwe\\platform-tools\\adb.exe";
@@ -130,7 +131,14 @@ try {
   summary.push(`start ${hms()}: ${fmtState(s0)}`);
   // K1040 S3c: an app in front may be in a hand (S3c's first run, 08:04, opened
   // the page over one a second before a touch): only from the launcher.
-  if (!/launcher/.test(s0.topPkg)) throw new Error(`${front(s0.topPkg)} in front, not the launcher: a person may be using the phone`);
+  // K1142 (adopted in S3d): the shared check, state only (screen on, unlocked,
+  // the launcher in front), right before the page opens; run_phone.ps1 ran
+  // the full one (the quiet window) with both locks held.
+  try {
+    await ensurePhoneReady({ adb: ADB, serial: dev, quietS: 0 });
+  } catch (e) {
+    throw new Error(e instanceof PhoneNotReady ? e.line : `ready check failed: ${String(e.message || e).split("\n")[0]}`);
+  }
 
   // The input watch: any event line means a person is handling the phone.
   ge = spawn(ADB, ["-s", dev, "shell", "getevent", "-q", "-l"], { stdio: ["ignore", "pipe", "ignore"] });
