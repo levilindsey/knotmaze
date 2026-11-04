@@ -42,29 +42,48 @@ export interface TentSpanTables {
  * by lo, the comparison lo <= s on the same float32 values), as (index, code,
  * the next span's lo or fround(1e30), 0). A span texel past the table reads 0
  * here; the GPU's out-of-range texelFetch is undefined (no chain has 0 spans).
+ *
+ * K1040 S3f: it runs on the main thread every frame (the pass's upload), so a
+ * chain whose spans are sorted (each lo at most the next, no NaN) and at most
+ * 65536 (where the 16 halvings always converge) WALKS from the previous
+ * point's span instead: forward while the next lo is at most s, back while
+ * this lo is not. On sorted spans "lo <= s" is true then false along the
+ * chain, so both find its last true span (span 0 if none, NaN s included):
+ * the same record, bit for bit (span_bench.ts; the test), in O(n + spans)
+ * rather than n halvings. Any other chain takes the halvings.
  */
 export function tentSpanRecord(T: TentSpanTables, out?: Float32Array): Float32Array {
   const ps = out && out.length === T.pts.length ? out : new Float32Array(T.pts.length);
   const { pts, chain, span } = T;
-  const at = (i: number) => (i < span.length ? span[i] : 0);
+  const L = span.length;
+  const at = (i: number) => (i < L ? span[i] : 0);
   for (let ci = 0; ci < T.nChains; ci++) {
     const off = chain[8 * ci];
     const n = chain[8 * ci + 1];
     const so = chain[8 * ci + 6];
     const ns = chain[8 * ci + 7];
+    let sorted = ns <= 65536;
+    for (let k = 1; sorted && k < ns; k++) sorted = at(4 * (so + k - 1)) <= at(4 * (so + k));
+    let k = 0;
     for (let j = off; j < off + n; j++) {
       const s = pts[4 * j + 2];
-      let lo = 0;
-      let hi = ns - 1;
-      for (let it = 0; it < 16; it++) {
-        if (lo >= hi) break;
-        const mid = (lo + hi + 1) >> 1;
-        if (at(4 * (so + mid)) <= s) lo = mid;
-        else hi = mid - 1;
+      if (sorted) {
+        while (k + 1 < ns && at(4 * (so + k + 1)) <= s) k++;
+        while (k > 0 && !(at(4 * (so + k)) <= s)) k--;
+      } else {
+        let lo = 0;
+        let hi = ns - 1;
+        for (let it = 0; it < 16; it++) {
+          if (lo >= hi) break;
+          const mid = (lo + hi + 1) >> 1;
+          if (at(4 * (so + mid)) <= s) lo = mid;
+          else hi = mid - 1;
+        }
+        k = lo;
       }
-      ps[4 * j] = lo;
-      ps[4 * j + 1] = Math.trunc(at(4 * (so + lo) + 1));
-      ps[4 * j + 2] = lo + 1 < ns ? at(4 * (so + lo + 1)) : 1e30;
+      ps[4 * j] = k;
+      ps[4 * j + 1] = Math.trunc(at(4 * (so + k) + 1));
+      ps[4 * j + 2] = k + 1 < ns ? at(4 * (so + k + 1)) : 1e30;
       ps[4 * j + 3] = 0;
     }
   }

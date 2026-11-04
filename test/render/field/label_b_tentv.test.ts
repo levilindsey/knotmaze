@@ -120,3 +120,65 @@ describe("tentSpanRecord", () => {
     expect(got.length).toBe(T.pts.length);
   });
 });
+
+/** S3d's search verbatim (16 halvings per point): what the S3f walk must reproduce bit for bit. */
+function halvings(T: TentSpanTables): Float32Array {
+  const ps = new Float32Array(T.pts.length);
+  const { pts, chain, span } = T;
+  const at = (i: number) => (i < span.length ? span[i] : 0);
+  for (let ci = 0; ci < T.nChains; ci++) {
+    const off = chain[8 * ci], n = chain[8 * ci + 1], so = chain[8 * ci + 6], ns = chain[8 * ci + 7];
+    for (let j = off; j < off + n; j++) {
+      const s = pts[4 * j + 2];
+      let lo = 0, hi = ns - 1;
+      for (let it = 0; it < 16; it++) {
+        if (lo >= hi) break;
+        const mid = (lo + hi + 1) >> 1;
+        if (at(4 * (so + mid)) <= s) lo = mid;
+        else hi = mid - 1;
+      }
+      ps.set([lo, Math.trunc(at(4 * (so + lo) + 1)), lo + 1 < ns ? at(4 * (so + lo + 1)) : 1e30, 0], 4 * j);
+    }
+  }
+  return ps;
+}
+const bits = (a: Float32Array) => Array.from(new Uint32Array(a.buffer, a.byteOffset, a.length));
+
+describe("tentSpanRecord's walk (K1040 S3f)", () => {
+  it("matches the halvings bit for bit: s backwards, repeated, NaN, unsorted and duplicate spans", () => {
+    const T = tables([
+      // s runs backwards and jumps: the walk steps back
+      { s: [0.9, 0.3, 0.3, 0.05, 0.6, 0.1, 2], spans: [[0.1, 3], [0.25, 7], [0.5, 2], [0.75, 9]] },
+      // NaN s reads span 0, as the halvings do
+      { s: [0.4, NaN, 0.8, NaN], spans: [[0.1, 1], [0.3, 2], [0.7, 3]] },
+      // unsorted spans: the halvings' answer, not the last lo <= s
+      { s: [0.05, 0.2, 0.45, 0.6, 0.9], spans: [[0.1, 1], [0.5, 2], [0.3, 3], [0.8, 4]] },
+      // duplicate lo values
+      { s: [0.1, 0.2, 0.3, 0.35], spans: [[0.1, 1], [0.2, 2], [0.2, 3], [0.2, 4], [0.3, 5]] },
+    ]);
+    expect(bits(tentSpanRecord(T))).toEqual(bits(halvings(T)));
+  });
+  it("matches the halvings on 200 random chains", () => {
+    let seed = 7;
+    const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 2 ** 32);
+    const chains: { s: number[]; spans: [number, number][] }[] = [];
+    for (let c = 0; c < 200; c++) {
+      const ns = 1 + Math.floor(rnd() * 40);
+      const los: number[] = [];
+      let lo = rnd();
+      for (let i = 0; i < ns; i++) { los.push(lo); if (rnd() > 0.15) lo += rnd() * 0.5; }
+      if (c % 9 === 0) los.reverse(); // some unsorted
+      const s: number[] = [];
+      let x = rnd() * 0.5;
+      const n = Math.floor(rnd() * 60);
+      for (let j = 0; j < n; j++) {
+        const r = rnd();
+        x = r < 0.1 ? los[Math.floor(rnd() * ns)] : r < 0.2 ? x - rnd() : x + rnd() * 0.4;
+        s.push(x);
+      }
+      chains.push({ s, spans: los.map((l, i) => [l, i + 1] as [number, number]) });
+    }
+    const T = tables(chains);
+    expect(bits(tentSpanRecord(T))).toEqual(bits(halvings(T)));
+  });
+});
