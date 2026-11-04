@@ -320,7 +320,13 @@ vec3 effect(vec2 p, float t, float I) {
   float fw = max(fwidth(v), 1e-4);
   float g = abs(fract(v + 0.5) - 0.5);
   float line = 1.0 - smoothstep(0.4 * fw, 1.4 * fw, g);
-  float idx = abs(mod(floor(v + 0.5), 5.0)) < 0.5 ? 1.0 : 0.55;
+  // K308: exact integer remainder, K299's corrected-division shape.
+  int band = int(floor(v + 0.5));
+  int lap5 = band / 5;
+  int rem5 = band - lap5 * 5;
+  if (rem5 < 0) { lap5 -= 1; rem5 += 5; }
+  else if (rem5 >= 5) { lap5 += 1; rem5 -= 5; }
+  float idx = rem5 == 0 ? 1.0 : 0.55;
   vec3 tint = mix(uA1.rgb, uA3.rgb, clamp(h * 0.8 + 0.5, 0.0, 1.0));
   return mix(uInk.rgb, tint, (0.06 * (h + 0.5) + 0.30 * line * idx) * I);
 }

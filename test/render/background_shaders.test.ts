@@ -30,7 +30,7 @@ const DEFAULT_PROGRAMS: Record<string, string> = {
   wash: "b57fe2536128eec13048f61ac182c6d5074d08679a737dd478dda896dfef9fc2",
   silk: "b0edde84bf825719122484e531d938734e720b1a81e04b5fe2d80ca11b4afd3f",
   aurora: "6ec843d4b5062862878d602dac884828b9e23596e808c33c0c2eee211abddba3",
-  contours: "8192726628a91f55ed02f80b56ed8ffcc7743c98edef50bb9179a1f7c0820260",
+  contours: "da94f9b5feeb8b58735963b768fbb009e7bd870a938698118eb3a4ee8de46ca7",
 };
 const SHARED_SOURCES: Record<string, [string, string]> = {
   QUAD_VERT: [
