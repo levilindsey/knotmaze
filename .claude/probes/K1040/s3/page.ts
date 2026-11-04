@@ -256,7 +256,7 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
   for (let k = 0; k < frames; k++) {
     if (!opts.b2b) await nextFrame();
     const u0 = performance.now();
-    if (!opts.floor) pass.upload(T);
+    if (!opts.floor) pass.upload(T, !!opts.rest);
     const u1 = performance.now();
     if (!opts.floor) pass.draw(M);
     pass.sync();
@@ -280,6 +280,7 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
     rest: !!opts.rest,
     state: live ? opts.state : "query",
     sentBytes: sent,
+    uploadCalls: pass.uploadCalls,
     lr,
     segs: T.nInst,
     fills: T.nFills,
@@ -343,7 +344,7 @@ const LEAN = ["leanempty", "leanemptynoup", "leantentv", "leantentvrest", "leant
 //                 host's restore (the viewport and Pixi's resetState())
 //   ffloor        the new sync alone (no query): the host floor
 // Every older variant runs S3e's query and restore (probeQuery).
-const FNEW = ["ftentv", "ftentvrest", "ftentvsetup", "fempty", "femptynoup", "femptynouph0", "ffloor"];
+const FNEW = ["ftentv", "ftentvrest", "ftentvsetup", "fempty", "femptynoup", "femptynouph0", "ffloor", "femptyb", "femptynoupnc", "femptynoupst"];
 const VARIANTS = ["tent", "empty", "noup", "degen", "fs0", "fsconst", "half", "nw1", "floor"];
 let kickFb: WebGLFramebuffer | null = null;
 const kickPx = new Uint32Array(4);
@@ -521,6 +522,9 @@ function variantPass(v: string, host: LabelBHost | null = null): LabelBPass {
     const p = new LabelBPass(gl, false, "tentv", { lean: true, host: v === "femptynouph0" ? null : host });
     p.probeAllDirty = v !== "ftentvrest";
     if (v.startsWith("fempty")) p.probeDraw = false;
+    p.probeBindOnly = v === "femptyb";
+    p.probeNoClear = v === "femptynoupnc";
+    p.leanStoreDepth = v === "femptynoupst";
     p.probeNoDrawCalls = v === "ftentvsetup";
     vpasses.set(v, p);
     return p;
@@ -582,7 +586,7 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
   const per = Math.ceil(frames / rounds);
   const host = vs.some((v) => FNEW.includes(v)) ? await probeHost() : null;
   const acc: Record<string, { up: number[]; sync: number[]; sent: number }> = {};
-  for (const v of vs) acc[v] = { up: [], sync: [], sent: 0 };
+  for (const v of vs) acc[v] = { up: [], sync: [], sent: 0, calls: 0 };
   for (let r = 0; r < rounds; r++) {
     for (const v of vs) {
       if (IDEAL.has(v)) {
@@ -606,9 +610,10 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
       }
       for (let k = 0; k < per; k++) {
         const u0 = performance.now();
-        const doUp = !["noup", "floor", "emptynoup", "leanemptynoup", "leanemptynoupns", "kick", "femptynoup", "femptynouph0", "ffloor"].includes(v);
-        if (doUp) pass.upload(T);
+        const doUp = !["noup", "floor", "emptynoup", "leanemptynoup", "leanemptynoupns", "kick", "femptynoup", "femptynouph0", "ffloor", "femptynoupnc", "femptynoupst"].includes(v);
+        if (doUp) pass.upload(T, v === "ftentvrest");
         acc[v].sent = doUp ? pass.uploadBytes : 0;
+        acc[v].calls = doUp ? pass.uploadCalls : 0;
         const u1 = performance.now();
         if (v !== "floor" && v !== "uponly" && v !== "kick" && v !== "ffloor") pass.draw(M);
         if (v === "kick") kickSync();
@@ -626,6 +631,7 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
       upload: { p50: pct(acc[v].up, 0.5), p95: pct(acc[v].up, 0.95) },
       // The bytes the variant's last timed upload sent (S3e: the lean row diff).
       sent: acc[v].sent,
+      calls: acc[v].calls,
     };
   return {
     lost,
