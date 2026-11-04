@@ -24,7 +24,7 @@ param(
   [string]$Url = "",
   [switch]$Wireless,
   [switch]$Wake,
-  [string]$TailscaleHost = "pixel-11"
+  [string]$TailscaleHost = ""
 )
 $ErrorActionPreference = "Stop"
 $TcpPort = 5555
@@ -40,6 +40,30 @@ function Find-Adb {
   throw "adb not found (install Android platform-tools or the Android SDK)."
 }
 
+# Chooses the phone's Tailscale IPv4 from a parsed `tailscale status
+# --json`, or $null when the choice is not settled. With $hostOverride,
+# the peer whose DNS label (the machine name `tailscale status` prints,
+# e.g. "test-phone") or HostName (the device's own, "Test Phone") equals
+# it wins, its first IPv4, online or not. With no override, the phone is
+# the one online peer whose OS is android; none, or more than one,
+# yields $null.
+function Select-TailscaleIp {
+  param($status, [string]$hostOverride)
+  if (-not $status -or -not $status.Peer) { return $null }
+  $peers = @($status.Peer.PSObject.Properties.Value)
+  if ($hostOverride) {
+    foreach ($peer in $peers) {
+      if (($peer.DNSName -split '\.')[0] -eq $hostOverride -or $peer.HostName -eq $hostOverride) {
+        return @($peer.TailscaleIPs | Where-Object { $_ -match '^\d+\.' })[0]
+      }
+    }
+    return $null
+  }
+  $android = @($peers | Where-Object { $_.Online -and $_.OS -eq "android" })
+  if ($android.Count -ne 1) { return $null }
+  return @($android[0].TailscaleIPs | Where-Object { $_ -match '^\d+\.' })[0]
+}
+
 # The phone's Tailscale IPv4 address, or $null without Tailscale.
 function Find-TailscaleIp {
   $ts = Get-Command tailscale -ErrorAction SilentlyContinue
@@ -47,14 +71,7 @@ function Find-TailscaleIp {
   try {
     $status = (& $ts.Source status --json) -join "`n" | ConvertFrom-Json
   } catch { return $null }
-  # Match the machine name (the DNS label `tailscale status` prints,
-  # e.g. "pixel-11"); HostName is the device's own ("Pixel 11").
-  foreach ($peer in $status.Peer.PSObject.Properties.Value) {
-    if (($peer.DNSName -split '\.')[0] -eq $TailscaleHost -or $peer.HostName -eq $TailscaleHost) {
-      return @($peer.TailscaleIPs | Where-Object { $_ -match '^\d+\.' })[0]
-    }
-  }
-  return $null
+  return Select-TailscaleIp $status $TailscaleHost
 }
 
 function Get-Devices {
@@ -71,7 +88,10 @@ $usbSerial = $devices | Where-Object { $_ -notmatch ":" } | Select-Object -First
 
 if ($Wireless) {
   if (-not $usbSerial) { throw "-Wireless needs the phone plugged in over USB once." }
-  if (-not $tsIp) { throw "Tailscale can't see '$TailscaleHost'. Is Tailscale on, on both devices?" }
+  if (-not $tsIp) {
+    if ($TailscaleHost) { throw "Tailscale can't see '$TailscaleHost'. Is Tailscale on, on both devices?" }
+    throw "Tailscale can't see the phone. Is Tailscale on, on both devices?"
+  }
   & $adb -s $usbSerial tcpip $TcpPort | Out-Null
   Start-Sleep -Seconds 3
 }
