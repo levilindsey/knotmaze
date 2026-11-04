@@ -60,7 +60,7 @@ function coarse(M: Affine, W: number, H: number, lr: number): { M: Affine; W: nu
   return { M: M.map((v) => v / lr) as unknown as Affine, W: Math.ceil(W / lr), H: Math.ceil(H / lr) };
 }
 
-function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; stride?: number; tent?: boolean; mode?: string; lr?: number; lean?: boolean } = {}) {
+function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; stride?: number; tent?: boolean; mode?: string; lr?: number; lean?: boolean; d24?: boolean } = {}) {
   const scale = opts.scale ?? 2;
   const stride = opts.stride ?? 1;
   const lr = opts.lr ?? 1;
@@ -73,6 +73,7 @@ function verdict(scene: FieldScene, opts: { scale?: number; maxSites?: number; s
   const dev = camera(scene, scale);
   const { M: Mc, W, H } = coarse(dev.M, dev.W, dev.H, lr);
   const pass = new LabelBPass(gl, true, modeOf(opts), { lean: !!opts.lean });
+  pass.probeDepth24 = !!opts.d24;
   pass.tentEpsPx /= lr;
   pass.resize(W, H);
   pass.upload(T);
@@ -291,7 +292,10 @@ async function time(scene: FieldScene, opts: { scale?: number; frames?: number; 
 //   leantentv      tentv with the lean part, every used row uploaded
 //   leantentvrest  leantentv with the row diff: a still scene uploads nothing
 //   leantentvst    leantentv with D's store kept (leanStoreDepth)
-const LEAN = ["leanempty", "leanemptynoup", "leantentv", "leantentvrest", "leantentvst"];
+//   leanempty24    leanempty with D a DEPTH_COMPONENT24 renderbuffer (K923's
+//                  format; probeDepth24), the hedge if D32F's invalidation is punished
+//   leantentv24    leantentv with D24 (its census: s3.mjs verdict --d24 1)
+const LEAN = ["leanempty", "leanemptynoup", "leantentv", "leantentvrest", "leantentvst", "leanempty24", "leantentv24"];
 const VARIANTS = ["tent", "empty", "noup", "degen", "fs0", "fsconst", "half", "nw1", "floor"];
 let kickFb: WebGLFramebuffer | null = null;
 const kickPx = new Uint32Array(4);
@@ -472,7 +476,8 @@ function variantPass(v: string): LabelBPass {
   if (lean) {
     pass.probeAllDirty = v !== "leantentvrest";
     pass.leanStoreDepth = v === "leantentvst";
-    if (v === "leanempty" || v === "leanemptynoup") pass.probeDraw = false;
+    pass.probeDepth24 = v.endsWith("24");
+    if (v === "leanempty" || v === "leanemptynoup" || v === "leanempty24") pass.probeDraw = false;
   }
   if (v === "empty" || v === "emptynoup" || v === "emptyinv") pass.probeDraw = false;
   if (v === "emptyinv" || v === "tentvinv") pass.probeInvalidateDepth = true;

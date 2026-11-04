@@ -50,6 +50,8 @@ const passMode = val("--mode", "") || undefined;
 // K1040 S3e: --lean 1 the pass's lean fixed part (label_b_pass.ts, option lean);
 // --rest 1 (time only) its row diff on a still fabric, not the moving case.
 const lean = val("--lean", "0") === "1", rest = val("--rest", "0") === "1";
+// --d24 1 (verdict, with --lean 1): D as a DEPTH_COMPONENT24 renderbuffer (probeDepth24).
+const d24 = val("--d24", "0") === "1";
 const tag = val("--tag", "");
 const pre = tag ? `${mode}_${tag}` : mode;
 // K1040 S3d: many --variants a,b,...: page.ts timeMany()'s cost split (render sync only).
@@ -84,7 +86,7 @@ const errors = [];
 let favicon = 0;
 const isFav = (u) => /favicon/i.test(u ?? "");
 const stamp = new Date().toISOString();
-const summary = [`# ${pre} ${stamp}`, "", `stride ${stride}, scale ${scale}, ${passMode ? `mode ${passMode}` : tent ? "TENT" : "capsule"} pass${lean ? `, LEAN fixed part${mode === "time" ? (rest ? " (at rest)" : " (moving: every used row)") : ""}` : ""}, lr ${lr}${mode === "time" ? `, frames ${frames}${noscan ? ", NO merge scan" : ""}` : ""}`, ""];
+const summary = [`# ${pre} ${stamp}`, "", `stride ${stride}, scale ${scale}, ${passMode ? `mode ${passMode}` : tent ? "TENT" : "capsule"} pass${lean ? `, LEAN fixed part${d24 ? ", D24" : ""}${mode === "time" ? (rest ? " (at rest)" : " (moving: every used row)") : ""}` : ""}, lr ${lr}${mode === "time" ? `, frames ${frames}${noscan ? ", NO merge scan" : ""}` : ""}`, ""];
 try {
   const page = await browser.newPage();
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
@@ -116,7 +118,7 @@ try {
     }
     const res =
       mode === "verdict"
-        ? await page.evaluate((s, o) => window.s3.verdict(s, o), scene, { scale, stride, tent, mode: passMode, lr, lean })
+        ? await page.evaluate((s, o) => window.s3.verdict(s, o), scene, { scale, stride, tent, mode: passMode, lr, lean, d24 })
         : await page.evaluate((s, o) => window.s3.time(s, o), scene, { scale, frames, noscan, tent, mode: passMode, lr, lean, rest });
     res.scene = name;
     res.wallMs = Date.now() - t0;

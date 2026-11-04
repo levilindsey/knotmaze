@@ -120,6 +120,8 @@ export class LabelBPass {
   readonly lean: boolean;
   /** Lean control (S3e): keep D's store (D not invalidated). */
   leanStoreDepth = false;
+  /** Lean probe knob (S3e): D as DEPTH_COMPONENT24 (K923's renderbuffer), set before resize(). */
+  probeDepth24 = false;
   /** Lean probe knob (S3e): upload every used row, the moving fabric's frame (no diff). */
   probeAllDirty = false;
   /** Bytes the last upload() sent (texImage2D and texSubImage2D data). */
@@ -203,7 +205,7 @@ export class LabelBPass {
       const prevRb = gl.getParameter(gl.RENDERBUFFER_BINDING);
       this.Drb = gl.createRenderbuffer() as WebGLRenderbuffer;
       gl.bindRenderbuffer(gl.RENDERBUFFER, this.Drb);
-      gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT32F, w, h);
+      gl.renderbufferStorage(gl.RENDERBUFFER, this.probeDepth24 ? gl.DEPTH_COMPONENT24 : gl.DEPTH_COMPONENT32F, w, h);
       gl.bindRenderbuffer(gl.RENDERBUFFER, prevRb);
     } else {
       this.L = this.target(gl.R32UI, gl.RED_INTEGER, gl.UNSIGNED_INT);

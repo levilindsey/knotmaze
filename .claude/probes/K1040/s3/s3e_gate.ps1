@@ -15,6 +15,6 @@ param([int]$MaxWaitMin = 15)
   '--fit 411x753 --label s3eleantentv --b2b --mode tentv --lean',
   '--fit 411x753 --label s3eleanrest --b2b --mode tentv --lean --rest',
   '--fit 411x753 --label s3efloorall --b2b --floor',
-  '--fit 411x753 --label s3e3 --variants ideal,ideal32f,leanempty,leanemptynoup,leantentv,leantentvrest,leantentvst,empty,tentv,floor'
+  '--fit 411x753 --label s3e3 --variants ideal,ideal32f,leanempty,leanemptynoup,leantentv,leantentvrest,leantentvst,leanempty24,leantentv24,empty,tentv,floor'
 ) -Tables @('s3eleantentv s3etentv s3eleanrest s3efit s3efloorall -Floor s3efloorall')
 exit $LASTEXITCODE
