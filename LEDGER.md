@@ -297,14 +297,6 @@ Next free ID: K1149.
 - **K1138** · The backdrop speed slider goes up to 8 times each backdrop's own pace. Should its top be
   2 times, or 16 times? (Your other backdrop changes of 2026-11-03 are done: vellum faster, aurora
   faster and taller, contours morphing, paper stronger.)
-- **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
-  junctions"; plan the look, the checks and the build first). S1 done (fc175b0f): today's faults a-h (doc 1.3),
-  one light field over the lit tree (S2), stages S3-S6. Full text: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-03 10:05 (merged; agent `af1cda2ec844b5f38` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `fc175b0f`
-  - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
-  - next: Levi answers Q1-Q3 (sent with the pictures 2026-11-03 10:07; clips of the motion offered), then the S2 brief: the light field, folding in the wrong "world arc" comment on `litArms` (`src/game/route_plan.ts`, the length is lattice) and S5 if Q3 says straight through
-  - brief: `docs/design/K1139_s1_brief.md` (the plan: `docs/design/K1139_pulse_junctions.md`, stages S2-S6)
 
 ## In progress
 
@@ -520,6 +512,14 @@ Next free ID: K1149.
   - next: Run C (K252 a) first; then E, A, D, F
   - brief: `docs/design/K1146_muse_batch11.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 11C-11F); a `hold.txt` beside it holds the chain before its next run
+- **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
+  junctions"; plan the look, the checks and the build first). S1 done (fc175b0f): today's faults a-h (doc 1.3),
+  one light field over the lit tree (S2), stages S3-S6. Full text: `docs/ledger_notes.md`.
+  - owner: nobody since 2026-11-03 10:05 (merged; agent `af1cda2ec844b5f38` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `fc175b0f`
+  - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked; the doc's appendix lists the commands)
+  - next: Levi answers Q1-Q3 (sent with the pictures 2026-11-03 10:07; clips of the motion offered), then the S2 brief: the light field, folding in the wrong "world arc" comment on `litArms` (`src/game/route_plan.ts`, the length is lattice) and S5 if Q3 says straight through
+  - brief: `docs/design/K1139_s1_brief.md` (the plan: `docs/design/K1139_pulse_junctions.md`, stages S2-S6)
 
 ## Next, in order
 
