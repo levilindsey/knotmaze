@@ -326,9 +326,9 @@ Next free ID: K1176.
   K778 (the Undo button, its 0-5 slider), run C K1162 (the doc errata). Claude reviews each run against the
   primary record, then closes K1169.
   - owner: Muse through the chain (`.claude/probes/K1053/`), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `cb9c3529`
+  - branch: mainline; last commit: `82537593`
   - evidence: `.claude/probes/K1053/` (queue.txt, done.txt, chain.log; each run's Paseo report)
-  - next: Run A done; next Run B
+  - next: Run B done; next Run C
   - brief: `docs/design/K1169_muse_batch15.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
@@ -567,9 +567,6 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
-- **K778** · K138 s3: an Undo button beside the extra rules (Levi 2026-11-03), and a new slider param for the
-  undos a run gets under them, 0 to 5 (default 1, my call; 0 hides the button). It replays your moves minus the
-  last, as the Stranded banner's Undo does. Muse batch 15 run B (K1169; `docs/design/K1169_muse_batch15.md`).
 - **K875** · K868 S1b, master's side: on Muse's link master registers only 58-80% with the oracle at
   j49/j123 and #6 finds every band end off (18/18, 19/19; cause untested: gaps or a reveal/fog state);
   its sdf and strip silhouettes differ in width; joinery.ts:1469-1471's comment is stale. s1b_oracle.md.
@@ -2024,6 +2021,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K778** · an Undo button in the HUD's rules row; ruleUndos 0-5 (default 1) sets how many a run gets; the Stranded banner's Undo unchanged. Done in 82537593 (2026-11-03).
 - **K1170** · The key hints show the d-pad button that takes each run (Levi 2026-11-03: the arrows point along the runs, mostly diagonals no pad button presses; `hintMap` picks the smallest err). Done in 81081ab9 (2026-11-03).
 - **K1164** · Master's history rewritten without the device addresses (force-pushed 2026-11-03; 2,456 commits from 7645fe67 on) and 3,823 quoted SHAs remapped; the old history is mirrored in ~/Backups, the map is `.claude/probes/K1164/commit-map`; leftovers K1166, K1167. Done in 82aa5072 (2026-11-03).
 - **K628** · Confetti (Levi 2026-11-03): the finish spray throws no streamers (as built); GPU confetti (K579) goes after K318 stage 1, where it is queued. Done in this commit (2026-11-03).
