@@ -530,9 +530,9 @@ Next free ID: K1161.
   (`docs/design/K1156_muse_batch13_run_a.md`) as `docs/design/K1156_muse_batch13.md`, runs B to G; Claude
   reviews it and queues them (ports 5500-5549).
   - owner: muse runs 13B-13G, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 14:25
-  - branch: mainline; last commit: `f809a275`
+  - branch: mainline; last commit: `88efd034`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); the run's commit report
-  - next: Run D done; next Run E
+  - next: Run E done; next Run F
   - brief: `docs/design/K1156_muse_batch13.md` (Run A's: `docs/design/K1156_muse_batch13_run_a.md`)
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 13B-13G); a `hold.txt` beside it holds the chain before its next run
 
@@ -1116,9 +1116,6 @@ Every other item below waits on the trigger it names.
 - **K349** · K120's key probe (`.claude/probes/K120/keys.mjs`, old copy `keys.pre-k329.mjs`) lags
   K329: "a held key keeps adding inputs" fails on master too; poll the queued-run check in the page.
   A first-press miss was not reproduced (`.claude/probes/K329/k120/out/keys-run2.log`).
-- **K351** · The "Read by" column of K339's inventory
-  (`scripts/panel_inventory.ts`, `docs/design/K339_inventory.md`) misses
-  params read through the `*Of` helpers.
 - **K354** · A dark three-armed star in a kink loop's eye under the pluck blur, the uncovered middle
   (a thin Y with the concave-side cap off); K77's "dark X" family? `docs/design/K344_pluck_cusp.md`
   (stage 1 handoff). K395 (2026-10-15): the X became a rounded square, still there.
@@ -2009,6 +2006,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K351** · the panel inventory's Read by follows url_state's *Of builders. Done in 88efd034 (2026-11-03).
 - **K1154** · the physics-off load's wall cap and reported time count visible time (both hosts). Done in f809a275 (2026-11-03).
 - **K1155** · scripts/phone.ps1 finds the phone among online android peers; -TailscaleHost is the override, default empty. Done in cbaca79f (2026-11-03).
 - **K1148** · --ready guards bench_frame --cdp, k923 sync --target phone and close_tabs; the adb fold split out. Done in ce485d87 (2026-11-03).
