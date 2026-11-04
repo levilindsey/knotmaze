@@ -542,9 +542,9 @@ Next free ID: K1178.
 - **K1173** · A Tug threads checkbox (a viewer preference, on by default, in Feel): off, a drag pans wherever
   it starts and taps still pluck (Levi 2026-11-03). Muse chain run 15F.
   - owner: nobody since 2026-11-03 21:31 (queued as Muse chain run 15F, `.claude/probes/K1053/queue.txt`; claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c coordinates)
-  - branch: mainline; last commit: `c3e20f17`
+  - branch: mainline; last commit: `d41a02c9`
   - evidence: `.claude/probes/K1173/`
-  - next: Muse run 15F; then Levi tries the checkbox on the phone
+  - next: Run 15F done; Levi tries the checkbox on the phone
   - brief: `docs/design/K1173_tug_toggle.md`
 
 ## Next, in order
