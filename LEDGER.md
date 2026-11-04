@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1154.
+Next free ID: K1155.
 
 ## Waiting on Levi
 
@@ -527,9 +527,9 @@ Next free ID: K1154.
   K202's midnight rollover, K201's Played chip, K125's whole bars, K165 (a)'s HALTED stamp, K170's opt-in
   wake, K308's exact fifth contour.
   - owner: muse runs 12B-12G, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 12:29
-  - branch: mainline; last commit: `cbc02ded`
+  - branch: mainline; last commit: `1692f502`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K202/`, `K201/`, `K125/`, `K165/`, `K308/`
-  - next: Run D done; next Run E
+  - next: Run E done; next Run F
   - brief: `docs/design/K1153_muse_batch12.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 12B-12G); a `hold.txt` beside it holds the chain before its next run
 
@@ -1049,9 +1049,6 @@ Every other item below waits on the trigger it names.
 - **K164** · At 4x CPU throttle, rendering alone costs about 76 ms a
   frame, so the intro stays slow there whatever physics does. Found by
   K147 (`docs/design/K147.md`).
-- **K165** · Two pre-existing loader bugs: `loadingTick` overwrites the
-  HALTED stamp with " | loading", and the physics-off loader's
-  `loadWall0` counts hidden-tab time. Found by K147.
 - **K166** · K81's render residuals (`docs/design/K81.md`, "Residuals to report"): the pluck overlay
   draws over the gold band; band edge cases (cover cap past a non-route arm, varying-width ribbons,
   non-adjacent routes, skipped wedges); setPaint runs a frame ahead of tickPaint at a tap.
@@ -1712,6 +1709,9 @@ Every other item below waits on the trigger it names.
 - **K1152** · `scripts/phone_pass/phone_ready.mjs` cites `phone_quiet.mjs` of K1097 at 680651fe (lines 10, 14,
   44, 48, 68): that commit was rebased away and S3d's step 0 deleted the file, so the comments point at
   nothing on master. Say what the check does in its own words.
+- **K1154** · Loader clocks: the physics-off load's wall cap counts hidden-tab time (PhysicsCore's loadWall0
+  in src/physics/physics_host.ts, and the worker host's loadInfo in src/physics/worker_host.ts beside it — the
+  pre-settle already counts visible time with VisibleClock; split from K165)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2013,6 +2013,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K165** · a halted load keeps its HALTED stamp; the load wall clock split out. Done in 1692f502 (2026-11-03).
 - **K125** · Scarborough Fair loops on whole bars (closing rest 3). Done in cbc02ded (2026-11-03).
 - **K201** · the Played chip counts the tile's days; a practice row shows its count. Done in e0ceba44 (2026-11-03).
 - **K202** · an unstarted floating daily rolls to the new day at midnight. Done in 7f03c0a6 (2026-11-03).
