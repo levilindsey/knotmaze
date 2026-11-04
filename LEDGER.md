@@ -537,15 +537,6 @@ Next free ID: K1163.
   - next: the S3e phone gate: with the Pixel awake and unlocked, run s3e_gate.ps1, then s3e_floor.ps1, then both split.mjs lines (the Handoff's Next); then S3f's brief from those numbers. S3f's 2 ms gate counts the upload call's main-thread time too (0.1-0.8 ms on the desktop, outside page.ts's timed window)
   - brief: `docs/design/K1040_s3e_lean.md` (its Handoff; S3d's: `docs/design/K1040_s3d_tent.md`)
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (it runs `run_phone.ps1`: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`
-- **K1161** · Muse batch 14: its Run A drafts the batch's brief from the ledger
-  (`docs/design/K1161_muse_batch14_run_a.md`) as `docs/design/K1161_muse_batch14.md`, runs B to G; Claude
-  reviews it and queues them (ports 5550-5599).
-  - owner: muse run 14A, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 16:40
-  - branch: mainline; last commit: `c59c4990`
-  - evidence: `.claude/probes/K1053/` (chain.log, done.txt); the run's commit report
-  - next: Run F done; batch 14 complete, Claude reviews and closes K1161
-  - brief: `docs/design/K1161_muse_batch14_run_a.md`
-  - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, line 14A); a `hold.txt` beside it holds the chain before its next run
 
 ## Next, in order
 
@@ -1458,9 +1449,10 @@ Every other item below waits on the trigger it names.
   (`.claude/probes/K324/census/census_tele.mjs`)
 - **K701** · Section shader lengths rose again, limits now 47,750 / 64,150 characters (K324 s2: +85
   each; `test/render/k320_slim.test.ts`)
-- **K711** · K137-b edges (K137_s3a.md Residuals b-f): runBurnAt may draw a burnt broken run as
-  burning; safeArms and fireTrapped count broken arms safe; refire is O(V^2) per breaking move;
-  __knotChaseTap ignores broken runs; broken-run counts need main.ts to report every accepted run
+- **K711** · K137-b edges (K137_s3a.md Residuals b, d-f): runBurnAt may draw a burnt broken run as
+  burning; refire is O(V^2) per breaking move; __knotChaseTap ignores broken runs; broken-run counts
+  need main.ts to report every accepted run (safeArms and fireTrapped count broken arms gone since
+  3721a57f)
 - **K712** · Lives (K137 s3a): hearts are in neither Undo nor saved attempts, and default 3 when
   switched on is tooltip advice only (a toggle or a 0-to-3 snap would make it real; K137_s3a.md
   Residuals g). First half checked cb73089e: no Undo or saved attempt can hold hearts today.
@@ -1476,11 +1468,10 @@ Every other item below waits on the trigger it names.
 - **K729** · K708 sim gaps: lives modelled off (run-outs and restarts unsimulated), the turn clock
   has hunter rows only, and the seeker is a greedy chaser, not a flee-tree predictor
   (docs/design/K708.md, Left over)
-- **K732** · K720 residuals: iOS unverified (a context created outside a tap waits for the next tap;
-  a suspended context keeps the song on the wall clock and skips the 1.2 s lead-in); in manual mode
-  the first snore hover after sound turns on creates the context but plays nothing (decode the snore
-  on an OfflineAudioContext); the snore and fabric mode under snd=none unchecked in a browser
-  (docs/design/K720.md Handoff)
+- **K732** · K720 residuals, iOS only: a context created outside a tap waits for the next tap, and a
+  suspended context keeps the song on the wall clock and skips the 1.2 s lead-in, both unverified
+  on iOS (docs/design/K720.md Handoff). The snore's offline decode landed with K343 (933571af); the
+  snore and fabric read silent under snd=none in a desktop browser (b5e1c021's message).
 - **K734** · K643: a hairline seam inside the i fork junction at xh 3, in the build at 6278cf8b,
   cause unknown (docs/design/K643.md Handoff)
 - **K737** · K137 s2 (K137_s2.md Handoff): with fragile runs or collapse the spool can leave no
@@ -1488,10 +1479,10 @@ Every other item below waits on the trigger it names.
   s; the path-display row does nothing under the spool; hints and the compass ignore the fire; a
   catch restart keeps hints used and chalk; the aids are off in walker modes; saved attempts keep no
   chalk or hints used (store version); the compass shares the hint mint
-- **K740** · Toast placement gaps (K698 Handoff): a control that appears while a toast shows does
-  not move it; the panel and the phone settings sheet are not avoided; the aids group is found by
-  its class, not the indicators avoid list; the sword toasts were checked shown directly, not after
-  a walked pickup; No hints left is unreachable by tap (Hint disables at 0)
+- **K740** · Toast placement gaps (K698 Handoff): the panel and the phone settings sheet are not
+  avoided; the aids group is found by its class, not the indicators avoid list; No hints left is
+  unreachable by tap (Hint disables at 0). A showing toast re-places when a control appears or
+  leaves since c59c4990.
   - K749: after a walked pickup on the real phone, all three sword toasts clear the pad
 - **K744** · K138 s1 page gaps: blips of other colors at some junctions under the rule colors (cause
   unverified, maybe the junction webs); not page-checked: a backtrack undoing a slide, ice with
@@ -2004,6 +1995,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1161** · Muse batch 14: runs B-F landed K1160+K1159, K710, K711 (c), K732's desktop half and K740's first gap. Done in 28d2c81f (2026-11-03).
 - **K710** · a real-time catch (and an extra's, and the sword's touch) cannot land through a broken run; contact counts tails but not broken runs. Done in 5f0b538e (2026-11-03).
 - **K1159** · adb lookup folded into phone_ready.mjs (findAdb picker); phone_pass.ps1 delegates with --find-adb; phone.ps1's own lookup left beside them. Done in 91c3d90f (2026-11-03).
 - **K1160** · scripts/phone_pass.ps1 finds the phone among online android peers; -TailscaleHost is the override, default empty. Done in 91c3d90f (2026-11-03).
