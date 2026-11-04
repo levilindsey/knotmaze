@@ -546,14 +546,6 @@ Next free ID: K1176.
   - evidence: `.claude/probes/K1173/`
   - next: Muse run 15F; then Levi tries the checkbox on the phone
   - brief: `docs/design/K1173_tug_toggle.md`
-- **K1132** · Key hints (the d-pad button that takes each run, K1170) move out past your marker: Levi chose out
-  on 2026-11-03 over the sheets (`.claude/probes/K1170/shots/`). Muse run 15H makes the out placement (f2c79236)
-  the only one and removes `__knotKeyHintPlace`. Full text: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-03 22:51 (queued as Muse chain run 15H, `.claude/probes/K1053/queue.txt`; claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c coordinates)
-  - branch: mainline; last commit: `f2c79236`
-  - evidence: `.claude/probes/K1170/shots/` (sheet_desk.png, sheet_phone.png: left now, right out)
-  - next: Muse run 15H makes out the only placement, shoots `.claude/probes/K1132/shots/` and closes K1132
-  - brief: the 15H prompt in `.claude/probes/K1053/queue.txt`, under the How to work of `docs/design/K1169_muse_batch15.md`
 
 ## Next, in order
 
@@ -2024,6 +2016,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1132** · key hints (the d-pad button that takes each run, K1170) sit out past the head marker; the reach placement and __knotKeyHintPlace are gone. Done in 415d131f (2026-11-03).
 - **K1158** · K1040's label pass keeps GL state from Pixi's tracking, without draw()'s queries (S3f step 1). Done in 1aac725b (2026-11-03).
 - **K778** · an Undo button in the HUD's rules row; ruleUndos 0-5 (default 1) sets how many a run gets; the Stranded banner's Undo unchanged. Done in 82537593 (2026-11-03).
 - **K1170** · The key hints show the d-pad button that takes each run (Levi 2026-11-03: the arrows point along the runs, mostly diagonals no pad button presses; `hintMap` picks the smallest err). Done in 81081ab9 (2026-11-03).
