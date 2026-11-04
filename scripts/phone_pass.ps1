@@ -329,7 +329,8 @@ function Do-Check {
   $adb = Find-Adb
   $ser = Find-Serial $adb $Serial
   $st = Phone-State $adb $ser
-  Say "phone ${ser}: display=$($st.Display)"
+  # The fields .claude/probes/K1040/s3/run_phone.ps1 parses for its log ("awake=.. locked=.. top=..", with "phone is ready" below): the kind in front, not its package name.
+  Say "phone ${ser}: awake=$($st.Awake) locked=$($st.Locked) top=$(if ($st.Top -match 'launcher') { 'launcher' } elseif ($st.Top -eq 'com.android.chrome') { 'chrome' } elseif ($st.Top -eq '?') { '?' } else { 'app' }) display=$($st.Display)"
   Assert-PhoneQuiet $adb $ser
   Say "tunnels already there (left alone): $((& $adb -s $ser reverse --list) -join '; ')"
   Say "forwards: $((& $adb forward --list) -join '; ')"

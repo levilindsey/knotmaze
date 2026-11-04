@@ -290,6 +290,15 @@ describe("K1142 phone_ready: no tracked runner opens the phone unguarded", () =>
     }
   });
 
+  // .claude/probes/K1040/s3/run_phone.ps1 runs `phone_pass.ps1 -Phase check` and reads two things from its text: the fields
+  // /awake=(\w+) locked=(\w+) top=(\S+)/ for its log line and /phone is ready/ as its gate. A reworded check must keep both
+  // (or move that runner to the shared module, as the K1142 handoff says).
+  it("-Phase check keeps the two texts run_phone.ps1 reads", () => {
+    const src = readFileSync(join(repo, "scripts", "phone_pass.ps1"), "utf8");
+    expect(src).toContain('Say "phone is ready (');
+    expect(src).toMatch(/Say "phone \$\{ser\}: awake=\$\(\$st\.Awake\) locked=\$\(\$st\.Locked\) top=/);
+  });
+
   it("the waiting helpers delegate to the shared check", () => {
     for (const rel of ["scripts/phone_pass/idle_wait.ps1", "scripts/phone_pass/retry_quiet.ps1"]) {
       expect(readFileSync(join(repo, rel), "utf8"), rel).toContain("phone_ready.mjs");

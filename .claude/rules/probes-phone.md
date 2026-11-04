@@ -35,7 +35,7 @@ long) are callers of it. The phone is never woken (the pass
 needs it ready first); the watchdog stops the pass on a touch, a key, a
 lock or another app in front, and `retry_quiet.ps1` retries once after 15
 quiet minutes (`-WaitReadyMin` more for a phone not ready); `-Phase
-check` is the one-shot read-only check. Never
+check` is the one-shot read-only check; its text keeps `phone is ready` and the `awake= locked= top=<kind>` fields that `.claude/probes/K1040/s3/run_phone.ps1` reads (pinned in `phone_ready.test.ts`). Never
 pipe a `-Dry -Phase start` run (its Chrome child inherits the pipe and
 the command never returns): redirect it to a file. Nor let a background
 or piped task be the one that starts the adb server: the server is the
