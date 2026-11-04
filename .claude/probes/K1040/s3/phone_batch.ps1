@@ -16,8 +16,12 @@ foreach ($r in $Runs) {
   $first = $false
   Say "run (ready check: no touch for $q s): $($runArgs -join ' ')"
   $global:LASTEXITCODE = 0
-  $o = @(& (Join-Path $s3 'run_phone.ps1') -RunArgs $runArgs -MaxWaitMin $MaxWaitMin -QuietS $q *>&1)
-  $code = $LASTEXITCODE
+  # A throw in run_phone.ps1 (its lock waits: "perf lock still held") is a
+  # stop too, logged; uncaught it ended the batch with no STOP line (S3d).
+  try {
+    $o = @(& (Join-Path $s3 'run_phone.ps1') -RunArgs $runArgs -MaxWaitMin $MaxWaitMin -QuietS $q *>&1)
+    $code = $LASTEXITCODE
+  } catch { $o = @("threw: $($_.Exception.Message)"); $code = 12 }
   $o | Select-Object -Last 10 | ForEach-Object { Say "  $_" }
   if ($code -ne 0) { Say "STOP: run_phone exit $code"; exit 11 }
 }
