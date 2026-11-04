@@ -64,7 +64,9 @@ at any speed, frame rate or mid-flight tap (`.claude/probes/K99/
 k99_fog.mjs` checks four timings; builds before K99 still need
 `ms=100000`). With those, master vs
 master was 0 px (under fog + mist, 76 px of dither); K5 M1's same-build
-controls differed by 4054-7979 px (K390), so run one first. Recipe:
+controls differed by 4054-7979 px (K390: the start marker flips between
+two states, cause unknown), so run one first, and pass `&phw=0`, which
+cut them to about 700 px (K5 R1 `checks2/pairs_fog3.txt`). Recipe:
 `.claude/probes/K83/k83_ab.mjs` (phy=0 for a deterministic layout, then
 every differing pixel attributed to a marker footprint).
 
@@ -117,9 +119,10 @@ for a flow-on retrace).
   same-build control read 88-8039 px. A same-state A/B runs with `&phy=0`
   (physics off) or `&phw=0` (in-thread, the same state every load) and
   checks the `__knotPhysDump` hashes. A burn needs its FX pinned
-  (`F.tickFireFx = function () {}`, then `F.fireFx.clear()`), and knot
-  mode needs a sensitivity control other than debug view 5 (hide
-  `renderer.root`). Recipe: the K550 kill's `ab_probe.mjs`
+  (`F.tickFireFx = function () {}`, then `F.fireFx.clear()`, then two
+  frames; `container.visible = false` does not stop the burn FX, K435),
+  and knot mode needs a sensitivity control other than debug view 5
+  (hide `renderer.root`). Recipe: the K550 kill's `ab_probe.mjs`
   (`.claude/probes/K550/kill/`).
 - *K75 (2026-10-12), cross-build frames:* a frozen page keeps the flow
   undulation at whatever flow time it had when frozen (main.ts re-syncs

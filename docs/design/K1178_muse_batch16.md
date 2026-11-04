@@ -42,6 +42,17 @@ pass, K1097, works there in its own lane, run 16J included). No
 two runs touch one file, and each run starts from the latest
 master, in the order B to G.
 
+Claude reviewed this draft on 2026-11-04, before the chain ran it,
+and amended five runs: Run B raises a k320 shader ceiling with a
+dated comment instead of stopping (task 4); Run D's census covers
+every script extension it finds; Run E gives the new `probes.md`
+GOTCHA sentence in its report instead of editing the file; Run F's
+K467 lines are 217-222; Run G substeps the whole streamer step,
+head included, adds a 960 x 1/480 row and an exact 1/30 case, and
+gates on the 60 fps body. K390 and K435 (two `probes.md` fixes)
+were folded in at review, in the same commit, so Run D's diff
+stays the frontmatter and the index row.
+
 ## How to work
 
 Batch 15's "How to work" applies unchanged: read it in
@@ -186,10 +197,16 @@ Tasks, in order (ports 5550-5559; the harness takes its host from
    (no gold, no crest; floor and hover kept — `arm_strip.ts`'s
    rows), so no bars paint under a band; a record with no pulse
    band reads exactly as today. `cpuJunctionField` in
-   `joinery.ts` mirrors the shader line for line. Keep the
-   junction-field shader under its `k320_slim.test.ts` ceiling
-   (30,650 today): if the crest pushes it over, stop and report
-   rather than raise the ceiling.
+   `joinery.ts` mirrors the shader line for line. The
+   junction-field shader has a `k320_slim.test.ts` ceiling
+   (30,650 today). If the crest pushes it over, raise the ceiling
+   to the measured length plus a small margin, with a dated
+   comment in the test's style:
+   `// K1139 S3b (2026-11-xx): the band crest adds N (<before> -> <after> measured here).`
+   Name both lengths in the report. Any other k320 ceiling S3b's
+   code pushes over is raised the same way. The Pixel batch's
+   compile-time probe (task 7) decides whether the length costs
+   anything.
 5. The after record, numeric first. P8 in the fan: debug view
    5's G at points along each band's centreline equals the CPU
    mirror's `kPulseBandV` within 4/255, and on the arms within
@@ -229,8 +246,9 @@ Done:
   (`test/physics/byte_identity.test.ts`, the K87 pin, the golden
   dailies, `test/ui/param_codec.test.ts`, `paint_gameplay`'s
   `kPulseV` values): S3b touches none, so if one moves, stop and
-  report it instead of re-freezing. The k320 shader ceilings do
-  not move either (task 4).
+  report it instead of re-freezing. A k320 shader ceiling moves
+  only as task 4 says: raised to a measured length, with its
+  dated comment.
 - The three sheets are in `out/doc/s3b_*.png`, and the Pixel
   batch plan is written. No phone was touched.
 
@@ -407,8 +425,10 @@ Tasks, in order (ports 5570-5574, unused; no server):
 
 Done:
 
-- The after census: every probe script (`.mjs`, `.ps1`) in the
-  tree is still covered by `probes.md`'s paths; no K863 trace
+- The after census: every probe script in the tree (`.mjs`,
+  `.ps1`, `.ts`, and any other script extension the census
+  finds, such as `.js`, `.cjs` or `.html`, each named in the
+  report) is still covered by `probes.md`'s paths; no K863 trace
   or data file is.
 - `docs/lore_index.md`'s row matches the frontmatter, and the
   lore's text is byte-identical (the diff is the frontmatter
@@ -474,7 +494,8 @@ in turn):
    tracked K1139 shape: `loadConfigFromFile` over the checkout's
    `vite.config.ts`, spread, with the private cache beside the
    wrapper file. Each header keeps its own folder, port and run
-   line (K104's names its own file after the fix). No wrapper
+   line (K104's names its own file after the fix, repo-relative
+   as K79's and K99's do). No wrapper
    gains a behaviour the exemplar does not have. K19-K20's
    wrapper changes only if task 1 shows it failing, and then
    the same way, said in the report.
@@ -492,7 +513,13 @@ Done:
 - `npm test` passes (the wrappers are not in the suite; say so).
 
 Report: the before and after tables (import shape, start,
-`GET /`), and any wrapper that already served.
+`GET /`), and any wrapper that already served. Then the new
+sentence for `probes.md`'s K80 GOTCHA: today it says the older
+private-cache wrappers fail with ERR_MODULE_NOT_FOUND and that
+K80's loads the config with `loadConfigFromFile`, which after
+this run is every wrapper's shape. Run D owns `probes.md` in this
+batch, so don't edit it: Claude applies your sentence after the
+batch (find the passage by its words, not a line number).
 
 Close: `ledger.mjs done K178 --commit <sha8> --what "K79, K99 and K104 private-cache wrappers load the config with loadConfigFromFile, as K1139's tracked copy does"`.
 Suggested ports: 5575-5579.
@@ -506,7 +533,7 @@ PHONES), `.claude/rules/probes.md`; then `SheetHistory`,
 history describe, lines 100-171), the wiring in
 `src/ui/tweakpane_panel.ts` (the `sheetHistory` construction and
 `setOpen`, lines 4020-4088), and the Handoff of
-`docs/design/K467.md` (its three history cases, lines 217-221).
+`docs/design/K467.md` (its three history cases, lines 217-222).
 This run takes the two countable cases only; the third (a live
 switch pushing an entry without a gesture, which Chrome may skip
 on Back) is browser policy the state machine does not decide,
@@ -636,33 +663,55 @@ Tasks, in order (ports 5590-5599, unused; no server):
 
 1. The before table, pure. With the test fixture's seeded
    streamer (copy how `confetti_model.test.ts` spawns one),
-   step 2 s of life as one run per rate — 240 x 1/120 (the
-   reference), 120 x 1/60, 60 x 1/30, 20 x 0.1 — and record,
-   per rate, the largest distance any body point ends from the
-   reference run's same point (screen px at the fixture's
-   height). The before table: those four numbers (the reference
-   against itself is 0).
-2. Substep the follow. In `stepStreamers`, the sag-and-follow
-   pass runs in substeps of at most 1/60 s (the head's advance
-   stays the one analytic step it is; the body's points sag
-   and are pulled in each substep, chained). At `dt <= 1/60`
-   the code path is the single pass it is today, so today's
+   step 2 s of life as one run per rate — 960 x 1/480 (how far
+   the reference itself is from the converged chain), 240 x
+   1/120 (the reference), 120 x 1/60, 60 x 1/30, 20 x 0.1 — and
+   record, per rate, the largest distance any body point ends
+   from the reference run's same point (screen px at the
+   fixture's height; if the streamer falls out of the screen
+   before 2 s at any rate, compare at the last time every run
+   still holds it, and say when). The before table: those five
+   numbers (the reference against itself is 0).
+2. Substep the streamer. In `stepStreamers`, a step longer than
+   1/60 s runs as `n = ceil(dt / (1/60))` equal substeps of
+   `h = dt / n`, each the whole per-streamer step it is today
+   with `h` for `dt`: the age, the release (`t = age < h ? age :
+   h`), the life and fall-out kills (a streamer that dies runs no
+   more substeps), the head's analytic advance, and the body's
+   sag and pull, chained. Substep the head too, not only the
+   body: a body that sags and follows in substeps behind a head
+   already at its end-of-step position still cuts the corner the
+   small-step chain walks around. The head's closed form
+   composes, so substeps move it by rounding only, and the head's
+   frame-rate case (`flies the head as cannon paper, at any frame
+   rate`, tolerance 0.05) passes unchanged. At `dt <= 1/60`, `n`
+   is 1 and the code path is the single pass it is today, so the
    body points at 60 fps and above do not move: the existing
    streamer cases pass with their numbers unchanged. Name the
-   substep cap in a comment with its reason.
-3. The after table: the task-1 rates again. The 120 x 1/60 run
-   is today's 60 fps body (identical, not merely close), and
-   the coarser rates land within 2 CSS px of the reference's
-   body points. If the cap misses that, halve it only if the
-   60 fps identity still holds (it does while the cap stays at
-   or above 1/60, so it cannot: report instead, and Claude
-   decides the cap).
+   substep cap in a constant, with its reason in a comment. Add
+   a rate case to `confetti_model.test.ts`: 60 x 1/30 reproduces
+   120 x 1/60 exactly (`(1/30) / 2 === 1/60` in doubles, so each
+   substep is a 60 fps step), and 20 x 0.1 lands within 0.001 px
+   of it.
+3. The after table: the task-1 rates again. 120 x 1/60 is
+   today's 60 fps body (identical, not merely close), 60 x 1/30
+   equals it, and 20 x 0.1 is within 0.001 px of it. Every frame
+   rate now steps the streamer in substeps of at most 1/60 s, so
+   the 60 fps body bounds how far any rate lands from the
+   small-step chain. The gate is that body against the
+   reference: the 120 x 1/60 row within 2 CSS px of 240 x 1/120
+   (the 960 x 1/480 row says how far the reference itself is
+   off). If it misses, report the numbers and stop there: a cap
+   below 1/60 moves the 60 fps body and the test numbers that
+   hold it, which is Claude's call (re-freezing them is allowed
+   pre-launch).
 
 Done:
 
-- After table: at 60 x 1/30 and 20 x 0.1 the body ends within
-  2 CSS px of the 240 x 1/120 reference; at dt <= 1/60 the
-  points are today's, exactly.
+- After table: 60 x 1/30 equals 120 x 1/60 exactly and 20 x 0.1
+  is within 0.001 px of it; at dt <= 1/60 the points are today's,
+  exactly; and the 120 x 1/60 body is within 2 CSS px of the
+  240 x 1/120 reference, or the run stopped and reported the miss.
 - `test/render/confetti_model.test.ts` passes with its existing
   numbers, plus the new rate cases; `npm test` passes.
 
