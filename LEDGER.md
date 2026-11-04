@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1149.
+Next free ID: K1151.
 
 ## Waiting on Levi
 
@@ -300,6 +300,9 @@ Next free ID: K1149.
 - **K144** · Accounts and shared stats, a stretch goal (Levi 10-13): OAuth, cross-device stats,
   opt-in sharing, percentile bands, replay anti-cheat (K108, K47). Backends: Cloudflare Workers + D1
   or the SnoringCat platform (Nakama). Next: design doc. `docs/design/levi_notes_2026-10-13.md`.
+- **K1150** · Under the beat, a new Beat indicator choice: the pulse you have today, a crisp ring that spreads
+  from your marker on each beat, or off. Does the ring read well? Pictures: .claude/probes/K804/shots/ (K804,
+  94e4b59c)
 
 ## In progress
 
@@ -510,9 +513,9 @@ Next free ID: K1149.
   range's ease by time; K144's accounts doc; K804's beat indicator (pulse, ring or off); K207's fog stamp
   dedupe; K688's healing-cuts doc. Run B (K1130) was dropped: it stays with K156's next phone round.
   - owner: muse runs 11C, 11E, 11A, 11D, 11F, chained by `.claude/probes/K1053/chain.ps1`, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 09:55
-  - branch: mainline; last commit: `23e3bf79`
+  - branch: mainline; last commit: `94e4b59c`
   - evidence: `.claude/probes/K1053/` (chain.log, done.txt); each run's commit report; `.claude/probes/K252/`, `K804/`, `K207/`
-  - next: Run E done; next Run A
+  - next: Run A done; next Run D
   - brief: `docs/design/K1146_muse_batch11.md`
   - env: `pwsh -NoProfile -File .claude/probes/K1053/start.ps1` from the repo root runs the queue (`queue.txt`, lines 11C-11F); a `hold.txt` beside it holds the chain before its next run
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
@@ -748,6 +751,9 @@ Every other item below waits on the trigger it names.
   189-187 from 2.438h to 1.431h; F2 changes r at 155 corners. S1g made pops crops only: S1h makes at-rest
   before/after crops, Claude looks, and Levi gets a picture if it reads as a change (`K1040_s1g_gates.md` ##
   Handoff).
+- **K1149** · Beat dots: dots at the beat points inside multi-beat runs, along threads and at junctions, that
+  pop with a ring when the dot eats them; the dropdown and the pulse and ring at the dot are done (split from
+  K804). Builds toward K805.
 
 ## Residuals (known, not fixed)
 
@@ -1719,10 +1725,6 @@ Every other item below waits on the trigger it names.
 - **K322** · Art, sound and music by people (Levi, 2026-10-14 21:47): commission or license better
   icon art, sound effects and music before launch; credit each artist on the credits page (K321)
   with their terms (`notices/credits.ts`).
-- **K804** · Beat indicators (Levi 2026-10-21, once there is budget): a dropdown param for showing
-  when and where beats fall, inside multi-beat runs too: a pulse or a pluck at the dot, a crisp ring
-  from its marker on each beat, or dots at the beat points along threads and junctions that pop with
-  a ring when eaten. Takes over K114 beat item 6, the pulse (`docs/design/levi_notes_2026-10-21.md`)
 - **K805** · Dot-eater mode (Levi 2026-10-21; after the paper look K797-K800, once there is budget):
   eat dots for points; wandering enemies (not ghosts: a shape of our own) send you to the start (the
   hit recorded, dots stay eaten, the trail erased); big dots flip who eats whom (you speed up,
@@ -2014,6 +2016,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K804** · beat indicator dropdown: pulse and ring at the dot; dots split out. Done in 94e4b59c (2026-11-03).
 - **K234** · `scripts/phone_pass.ps1`'s `-Phase check` and `-WaitReady` called a phone in use ready: K1142's shared check (`scripts/phone_pass/phone_ready.mjs`) now needs the launcher in front and 120 s without a touch. Done in 2887abc5 (2026-11-03).
 - **K1142** · Phone kit guard: one shared read-only readiness check (`scripts/phone_pass/phone_ready.mjs`: screen on, unlocked, the launcher in front, 120 s without a touch) that every tracked phone runner calls before opening anything. Done in 2887abc5 (2026-11-03).
 - **K1141** · Muse batch 10: A, K1138's backdrop tuning (27cb9202; the slider's top waits on Levi); B, batch 11's draft, reviewed into K1146 with its Run B dropped. Done in 77d02919 (2026-11-03).
