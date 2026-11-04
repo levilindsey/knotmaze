@@ -135,7 +135,7 @@ The S3f agent, 2026-11-03, 19:20 to 21:20 (the cap). Branch
 `16246c90` (K1139 S2; still master at 20:45). The stage's commits sit
 on it, and the last one adds this Handoff.
 
-**The gate is undecided: nothing of S3f ran on the Pixel.** K1142's
+**The gate missed on the Pixel: 4.0-10.9 ms against 2** (the coordinator's run, 22:21-22:29; The Pixel gate, at the end). Before it, K1142's
 ready check stopped the gate batch every time it was tried:
 - at 20:28, because the phone's screen was off
   (`out/gate_s3f_20261103_2028.log`);
@@ -347,3 +347,46 @@ unlocked. It happened twice in this stage, 20:34-20:36.
      push its facet vertices out so the polygon contains the round
      shape instead of sitting inside it. NW 2's added defects are
      mostly holes.
+
+## The Pixel gate
+
+The coordinator ran `s3f_gate.ps1 -SkipDesktop` on 2026-11-03,
+22:21-22:29: all seven phone runs, exit 0
+(`out/batch_s3f_20261103_2221.log`). The phone was cool (thermal 0,
+battery 27.2 C); a media session was playing, as in S3e's run.
+
+**The gate missed.** The label cost (`s3fnew - s3ffloorall + upload`,
+`out/phone_table_s3f.md`) is 4.0-10.9 ms (median 5.5) against 2, on
+every scene. S3e's lean pass measured 4.5-9.9 (median 6.2).
+
+| scene | label cost | K1158: s3ftentv - s3fnew (p50) | upload, moving / at rest |
+|---|---|---|---|
+| muse_hash | 5.1 | 3.4 | 1.2 / 2.5 |
+| muse_default_tw | 4.8 | 1.8 | 0.7 / 0.9 |
+| def | 10.9 | 0.9 | 2.8 / 4.1 |
+| fat | 6.4 | 1.8 | 1.5 / 1.4 |
+| ring | 4.0 | 1.6 | 0.6 / 0.7 |
+| user_tw42.lightpaper | 5.5 | 1.6 | 1.3 / 1.7 |
+| g41_def_tw42 | 6.1 | 4.8 | 2.6 / 4.0 |
+| g41_def_tw64 | 9.4 | 2.9 | 2.7 / 4.0 |
+| g41_ring_tw42 | 4.8 | 2.0 | 0.6 / 0.7 |
+| g41_ring_tw64 | 4.4 | 1.6 | 0.6 / 0.7 |
+| g41_user_tw42 | 6.4 | 2.0 | 1.3 / 1.7 |
+| g41_user_tw64 | 5.4 | 2.0 | 1.3 / 1.7 |
+
+The upload columns are the pass's main-thread time in its upload calls
+(the tables' `+x`; at rest from s3fnewrest). At rest it costs as much
+as moving, or more: the CPU work runs whether or not anything moved.
+
+- **K1158 works.** The new pass is 0.9-4.8 ms (median 1.9) faster than
+  S3e's query and restore on the same pages.
+- **The split** (`out/split_s3f1.md`, medians): the fixed part over the
+  ideal (`fempty - d32f`) 1.5 (0.9-2.4; S3e's `leanempty - ideal` was
+  2.7), of which the host restore 0.2 and `noupns - d32f` 0.5; the
+  drawing 2.5 (1.4-4.1); the ideal floor 0.3. With the upload (median
+  1.3) they add up to the median cost.
+- **What 2 ms needs.** Every term has to fall: for example the drawing
+  to about 0.8, the fixed part to about 0.6 and the upload to about
+  0.3, over the 0.3 floor.
+
+Next: S3f2 (`docs/design/K1040_s3f2_levers.md`), the Handoff's Next 2-4.
