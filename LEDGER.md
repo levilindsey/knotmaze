@@ -315,10 +315,10 @@ Next free ID: K1162.
 - **K1114** · Junction corners at rest: bring back the rounding S1g's F1 took and keep S1g's pop fixes (Levi,
   2026-11-03, on S1h's old | new picture: "I don't like that we've lost corner rounding with the new junction
   changes"). S1i restores it and shows S1f | today | restored (`docs/design/K1114_s1i_rounding.md`).
-  - owner: nobody since 2026-11-03 16:35 (S1i launches next, from its brief)
-  - branch: mainline; last commit: `84db41b2`
-  - evidence: `.claude/probes/K1040/s1/out/s1h/` (old_new.png, sheet.png, index.md); S1i's in `out/s1i/`
-  - next: launch S1i on its brief
+  - owner: agent `af4c9ecd37b7bc266` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-03 16:18, 2 h cap ~18:18)
+  - branch: `worktree-agent-af4c9ecd37b7bc266`, worktree `.claude/worktrees/agent-af4c9ecd37b7bc266`; last commit: `53974fbe`
+  - evidence: .claude/probes/K1040/s1/out/s1i/ (S1h's in out/s1h/)
+  - next: S1i: measure why near empties j36, j131, j99; candidates; the S1f | today | restored sheet
   - brief: `docs/design/K1114_s1i_rounding.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
