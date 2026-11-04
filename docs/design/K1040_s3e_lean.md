@@ -142,15 +142,16 @@ list (K1143).
 
 ## Handoff
 
-S3e's agent, stopped 2026-11-03 at 13:27 (cap 14:13). Branch
+S3e's agent, stopped 2026-11-03 at 13:58 (cap 14:13). Branch
 `worktree-agent-aaf87e9d3775b20e4` on `19e3f5ff`, never pushed.
 
 **The gate: undecided.** Its second and third conditions hold on the
 desktop. The first, and step 1's ideal floor, need the Pixel, which was
 never ready: K1142's ready check found the screen off and the phone
 locked at every try (12:27, 12:29, 12:37, 13:05, 13:09, 13:14, 13:18
-and 13:23), so this stage has no phone run. Both batches are committed
-and wait for it (Next).
+and 13:23, then 23 more about 77 s apart from 13:24 to 13:52), so this
+stage has no phone run. Both batches are committed and wait for it
+(Next).
 
 ### What landed
 
