@@ -501,10 +501,10 @@ Next free ID: K1157.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: agent `aad38c5538dbcedc8` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-03 12:14 (S3e)
-  - branch: `worktree-agent-aaf87e9d3775b20e4`, worktree `.claude/worktrees/agent-aaf87e9d3775b20e4`; last commit: `dbf129b2`
+  - owner: nobody since 2026-11-03 14:04 (merged; agent `aad38c5538dbcedc8` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `f0a2b33f`
   - evidence: `.claude/probes/K1040/s3/` (`run_locked.ps1`, `phone_batch.ps1` + `run_phone.ps1`, `s3d_gate.ps1`, `s3d_kick.ps1`, `split.mjs`, `s3d_table.mjs`; `out/s3d_table.md`, `out/split_s3d2.md`, `out/split_s3d3.md`, `out/defects_s3d.md`); oracle30 and the recordings: worktree k868-s3a (`.claude/probes/S3a/seq13/`)
-  - next: S3e (`docs/design/K1040_s3e_lean.md`): step 0 (rebase, page.ts's floor comment, 15 min lock waits), step 1 the ideal floor on the Pixel, step 2 the lean fixed part (depth in L's word, no re-upload, no nb), step 3 the gate; then S3f the drawing, S3g K1143
+  - next: the S3e phone gate: with the Pixel awake and unlocked, run s3e_gate.ps1, then s3e_floor.ps1, then both split.mjs lines (the Handoff's Next); then S3f's brief from those numbers
   - brief: `docs/design/K1040_s3e_lean.md` (S3d's Handoff: `docs/design/K1040_s3d_tent.md`)
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5403 --strictPort --host 127.0.0.1`; desktop timing through `.claude/probes/K1040/s3/run_locked.ps1`; the phone through `phone_batch.ps1` (it runs `run_phone.ps1`: both locks, then K1142's ready check)
 - **K1119** · Cursive J3g (v7.0), Levi's answers to v6.9 (2026-11-03): b, v and w exit between v6.8 and
